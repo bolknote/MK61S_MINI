@@ -17,11 +17,58 @@
 #include "ledcontrol.h"
 using namespace led;
 
+extern void reset_ext_program_state(void);
+
 const  class_LCD_Label  DFU_message(0, 0);
 const  class_LCD_Label  STORE_message(0, 0);
 const  class_LCD_Label  STORE_progress_message(0, 1);
 
 const u32 ERASE_SECTOR_TIMEOUT = 5000; // таймаут операции стирания сектора ППЗУ в ms
+
+static constexpr u8 MK61_STORE_REGISTER_F = 0x4F;
+static constexpr u8 MK61_LOAD_REGISTER_F  = 0x6F;
+
+static bool opcode_needs_expanded_memory(u8 opcode) {
+  return opcode == MK61_STORE_REGISTER_F || opcode == MK61_LOAD_REGISTER_F;
+}
+
+bool program_needs_expanded_memory(const u8* code_page, usize code_len) {
+  const usize bounded_len = (code_len > core_61::MAX_PROGRAM_STEP) ? core_61::MAX_PROGRAM_STEP : code_len;
+
+  for(usize i = core_61::CLASSIC_PROGRAM_STEP; i < bounded_len; i++) {
+    if(code_page[i] != 0) return true;
+  }
+
+  for(usize i = 0; i < bounded_len;) {
+    const u8 opcode = code_page[i];
+    if(opcode_needs_expanded_memory(opcode)) return true;
+    const usize opcode_len = core_61::len_code_command(opcode);
+    i += (opcode_len == 0) ? 1 : opcode_len;
+  }
+
+  return false;
+}
+
+void apply_program_memory_auto(const u8* code_page, usize code_len, bool preserve_program, bool force_expanded) {
+  const bool enable_expanded = force_expanded || program_needs_expanded_memory(code_page, code_len);
+  if(library_mk61::expanded_program_is_on() == enable_expanded) return;
+
+  u8 saved_code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  if(preserve_program) core_61::get_code_page(&saved_code_page[0]);
+
+  library_mk61::set_program_memory_state(enable_expanded);
+  library_mk61::refresh_menu_text();
+  library_mk61::store_settings_state();
+  reset_ext_program_state();
+  core_61::enable();
+
+  if(preserve_program) core_61::set_code_page(&saved_code_page[0]);
+}
+
+void ensure_program_memory_for_write(usize linear_addr, u8 opcode) {
+  const bool force_expanded = linear_addr >= core_61::CLASSIC_PROGRAM_STEP || opcode_needs_expanded_memory(opcode);
+  if(force_expanded) apply_program_memory_auto(NULL, 0, true, true);
+}
 
 void DFU_enable(void) {
     void (*SysMemBootJump)(void);
@@ -202,11 +249,18 @@ bool load_from(isize address) {
 
   dbgln(SPIROM, "SPIFLASH: read from address ", address);
 
-  const usize program_steps = core_61::program_steps();
-  for(usize i=0; i < program_steps; i++){
+  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  for(usize i=0; i < core_61::MAX_PROGRAM_STEP; i++) {
     u8 code = load_word(address, OFFSET_MK61_PROGRAMM + i);
     if(i >= core_61::CLASSIC_PROGRAM_STEP && code == 0xFF) code = 0;
-    MK61Emu_SetCode(core_61::get_ring_address(i), code);
+    code_page[i] = code;
+  }
+
+  apply_program_memory_auto(&code_page[0], core_61::MAX_PROGRAM_STEP, false);
+
+  const usize program_steps = core_61::program_steps();
+  for(usize i=0; i < program_steps; i++){
+    MK61Emu_SetCode(core_61::get_ring_address(i), code_page[i]);
   }
   return true;
 }

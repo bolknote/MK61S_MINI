@@ -63,6 +63,9 @@ extern  void  init_external_flash(void);
 
 extern usize  seek_program_END(u8* code_page);
 extern  void  insert_cmd_in_program(usize into_step, usize opcode);
+extern  bool  program_needs_expanded_memory(const u8* code_page, usize code_len);
+extern  void  apply_program_memory_auto(const u8* code_page, usize code_len, bool preserve_program, bool force_expanded = false);
+extern  void  ensure_program_memory_for_write(usize linear_addr, u8 opcode);
 
 inline bool IsOccupied(usize nSlot) {
    return (load_word(nSlot * FLASH_SECTOR_SIZE, OFFSET_FLAG_OCCUPIED) == SLOT_OCCUPIED);

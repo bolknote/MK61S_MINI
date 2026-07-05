@@ -417,41 +417,52 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     void  GetHexString(void) {
         usize i = 4 + 4 + 1;
         isize linear_addr = parse_addr(&input_buffer[4]);
-        const isize program_steps = (isize) core_61::program_steps();
+        if(linear_addr < 0 || linear_addr >= (isize) core_61::MAX_PROGRAM_STEP) {
+          ErrorReaction();
+          Serial.println(); Serial.println("BAD address!");
+          return;
+        }
+
+        u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+        core_61::get_code_page(&code_page[0]);
 
         Serial.println();
           while(i < MAX_INPUT_CHAR) {
-
-            if(linear_addr < 0 || linear_addr >= program_steps) {
+            if(linear_addr < 0 || linear_addr >= (isize) core_61::MAX_PROGRAM_STEP) {
               ErrorReaction();
               Serial.println(); Serial.println("BAD address!");
               return;
             }
 
             const u8 hi_char = input_buffer[i++];
-            if(hi_char == 0) {
+            if(hi_char == 0 || hi_char == CR) {
               Serial.println("\n\rStream recived!");
               break;
             }
             const isize hi_digit = HexdecimalDigit(hi_char);
 
             if(hi_digit < 0) {
-              Serial.print("Input from "); Serial.print(i); Serial.print(" recive non hexdecimal hi digit '"); Serial.write(hi_char); Serial.print("'$"); Serial.print(hi_char, HEX); Serial.println(") process halted!"); 
-              break;
-            } 
-                
+              Serial.print("Input from "); Serial.print(i); Serial.print(" recive non hexdecimal hi digit '"); Serial.write(hi_char); Serial.print("'$"); Serial.print(hi_char, HEX); Serial.println(") process halted!");
+              return;
+            }
+
             const u8 lo_char = input_buffer[i++];
             const isize lo_digit = HexdecimalDigit(lo_char);
-            
+
             if( lo_digit < 0 ) {
-              Serial.print("Input from "); Serial.print(i); Serial.print(" recive non hexdecimal lo digit '"); Serial.write(hi_char); Serial.print("'$"); Serial.print(hi_char, HEX); Serial.println(") process halted!"); 
-              break;
-            } 
-                
+              Serial.print("Input from "); Serial.print(i); Serial.print(" recive non hexdecimal lo digit '"); Serial.write(hi_char); Serial.print("'$"); Serial.print(hi_char, HEX); Serial.println(") process halted!");
+              return;
+            }
+
             const u8 byte_code = (hi_digit << 4) | lo_digit;
             Serial.print(byte_code, HEX); Serial.print(',');
-            MK61Emu_SetCode(core_61::get_ring_address(linear_addr++), byte_code);
+            code_page[linear_addr++] = byte_code;
           }
+
+        const usize code_len = (linear_addr < 0) ? 0 : (usize) linear_addr;
+        const bool force_expanded = code_len > core_61::CLASSIC_PROGRAM_STEP;
+        apply_program_memory_auto(&code_page[0], code_len, false, force_expanded);
+        core_61::set_code_page(&code_page[0]);
     }
 
     void  PutHexString(void) {
@@ -499,9 +510,20 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                   return;
                 }
 
+                if(AT < 0 || AT >= (isize) core_61::MAX_PROGRAM_STEP) {
+                  ErrorReaction();
+                  Serial.println("BAD address!");
+                  return;
+                }
+
                 Serial.print("TA = "); Serial.print(AT); Serial.print(" : "); Serial_writeln_hex((u8) code);
+                ensure_program_memory_for_write(AT, (u8) code);
                 MK61Emu_SetCode(core_61::get_ring_address(AT++), (u8) code);
               } while (*ptr_input++ == ' ');
+
+              u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+              core_61::get_code_page(&code_page[0]);
+              apply_program_memory_auto(&code_page[0], seek_program_END(&code_page[0]), true);
     }
 
     void  flash_map_list(void) {

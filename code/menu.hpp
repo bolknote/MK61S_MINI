@@ -12,7 +12,7 @@ namespace action {
 
 typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню 
 
-static constexpr int MENU_PUNCT = 11;
+static constexpr int MENU_PUNCT = 10;
 
 struct  t_punct {
     u8            size;
@@ -34,6 +34,9 @@ namespace library_mk61 {
   extern  bool  sound_is_on(void);
   extern  bool  language_is_ru(void);
   extern  bool  expanded_program_is_on(void);
+  extern  void  set_program_memory_state(bool enable);
+  extern  void  refresh_menu_text(void);
+  extern  void  store_settings_state(void);
   extern  void  load_settings_state(void);
   extern  bool  speed_is_max(void);
 

@@ -1,9 +1,11 @@
 #include  "library_pmk.hpp"
+#include  "Arduino.h"
 #include  "rust_types.h"
 #include  "mk61emu_core.h"
 #include  "lcd_gui.hpp"
 #include  "keyboard.h"
 #include  "cross_hal.h"
+#include  "tools.hpp"
 #include "debug.h"
 
 static  i8          selProgram, selGame;
@@ -198,6 +200,39 @@ static  u8          mk61_lib[] = {
 // registers = 0.0 {sign_num(8-bit)|sign_pow(7-bit)|len(bytes for mantisa), abs(pow), mantissa... }
 const u8 pack_clear_register[3] = {0x01, 0x00, 0x00};  // 0.0
 
+static constexpr u8 LOAD_INIT_CMD = 0xFE;
+static constexpr u8 LOAD_INIT_ANGLE = 0x01;
+static constexpr u8 LOAD_INIT_RANDOM_INT_REGISTER = 0x02;
+
+void unpack_positive_int_register(u8 nReg, u8 value) {
+  u8 pack_number[3] = {
+    0x01,
+    (u8) ((value >= 10) ? 0x01 : 0x00),
+    (u8) ((value >= 10) ? (((value / 10) << 4) | (value % 10)) : (value << 4))
+  };
+  MK61Emu_UnpackRegster(nReg, &pack_number[0]);
+}
+
+u8* run_load_init_command(u8* command, bool& random_seeded) {
+  switch(*command++) {
+    case LOAD_INIT_ANGLE:
+      MK61Emu_SetAngleUnit((AngleUnit) *command++);
+      break;
+    case LOAD_INIT_RANDOM_INT_REGISTER: {
+      const u8 nReg = *command++;
+      const u8 min_value = *command++;
+      const u8 max_value = *command++;
+      if(!random_seeded) {
+        randomSeed(micros() ^ millis());
+        random_seeded = true;
+      }
+      unpack_positive_int_register(nReg, (u8) random((long) min_value, (long) max_value + 1));
+      break;
+    }
+  }
+  return command;
+}
+
 void  init_library(void) {
   selProgram = 0;
   selGame = 0;
@@ -248,18 +283,27 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
 }
 
 void  load_from(usize offs, /*TPunct* list,*/ u8* data_stream) {
+  const u32 code_len = data_stream[offs++];
+  apply_program_memory_auto(&data_stream[offs], code_len, false);
+
   for(u8 nReg=0; nReg < 0x0F; nReg++) MK61Emu_UnpackRegster(nReg, (u8*) &pack_clear_register);  // clear registers
 
-  const u32 code_len = data_stream[offs++];
+  const usize code_offs = offs;
   const u32 program_steps = core_61::program_steps();
   for(u32 addr=0; addr < program_steps; addr++) {
-      const u8 store_data = (addr < code_len)? data_stream[offs++] : 0;
+      const u8 store_data = (addr < code_len)? data_stream[code_offs + addr] : 0;
       MK61Emu_SetCode(core_61::get_ring_address(addr), store_data);
   }
+  offs = code_offs + code_len;
 
+  bool random_seeded = false;
   u8* pPack_number = &data_stream[offs];
   while(*pPack_number != 0xFF) {
     const u8 RegisterN = *pPack_number++;
+    if(RegisterN == LOAD_INIT_CMD) {
+      pPack_number = run_load_init_command(pPack_number, random_seeded);
+      continue;
+    }
     dbghexln(LIB61, "unpack reg: ", RegisterN);
     pPack_number = MK61Emu_UnpackRegster(RegisterN, pPack_number);
   }
