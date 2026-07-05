@@ -1,10 +1,9 @@
-#include "LiquidCrystal.h"
 #include <string.h>
 #include "menu.hpp"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
 
-extern LiquidCrystal lcd;
+extern MK61Display lcd;
 extern t_time_ms runtime_ms;
 extern void reset_ext_program_state(void);
 extern isize mk61_quants_reload;
@@ -337,21 +336,35 @@ bool  mk61_games_select(void) {
 }
 
 void class_menu::draw(void) {
-  const int delta = (active_punct + 1) - SIZE_MENU_WINDOW;
-  const int up = (delta <= 0)? 0 : delta;
+  const int visible_count = (MENU_PUNCT_COUNT < SIZE_MENU_WINDOW) ? MENU_PUNCT_COUNT : SIZE_MENU_WINDOW;
+  const int max_up = MENU_PUNCT_COUNT - visible_count;
+  const int delta = (active_punct + 1) - visible_count;
+  int up = (delta <= 0)? 0 : delta;
+  if(up > max_up) up = max_up;
 
   if(library_mk61::language_is_ru()) {
-    const int top_index = up;
-    const int bottom_index = up + 1;
-    lcd_ru::print_menu_window(
-      (active_punct == top_index)? '>' : ' ', puncts[top_index]->text,
-      (active_punct == bottom_index)? '>' : ' ', puncts[bottom_index]->text
-    );
+    if(visible_count == 2) {
+      const int top_index = up;
+      const int bottom_index = up + 1;
+      lcd_ru::print_menu_window(
+        (active_punct == top_index)? '>' : ' ', puncts[top_index]->text,
+        (active_punct == bottom_index)? '>' : ' ', puncts[bottom_index]->text
+      );
+    } else {
+      for(int i=0; i < visible_count; i++) {
+        const int real_index = i + up;
+        lcd_ru::print_menu_line(i, (active_punct == real_index)? '>' : ' ', puncts[real_index]->text);
+      }
+    }
+    for(int i=visible_count; i < SIZE_MENU_WINDOW; i++) {
+      lcd.setCursor(0, i);
+      for(int x=0; x < lcd_display::COLS; x++) lcd.write((u8) ' ');
+    }
     previous_up = up;
     return;
   }
 
-  for(int i=0; i < SIZE_MENU_WINDOW; i++) {
+  for(int i=0; i < visible_count; i++) {
     lcd.setCursor(0,  i);
     const int real_index = i + up;
     const int previous_real_index = i + previous_up;
@@ -366,6 +379,10 @@ void class_menu::draw(void) {
     while(previous_punct_size-- > size) {
       lcd.print(' ');
     }
+  }
+  for(int i=visible_count; i < SIZE_MENU_WINDOW; i++) {
+    lcd.setCursor(0, i);
+    for(int x=0; x < lcd_display::COLS; x++) lcd.write((u8) ' ');
   }
   previous_up = up;
 }

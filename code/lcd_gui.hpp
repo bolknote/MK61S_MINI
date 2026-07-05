@@ -2,12 +2,38 @@
 #define LCD_FONT_PACK
 #include  "config.h"
 #include  "rust_types.h"
-#include  <LiquidCrystal.h>
+#include  "display.hpp"
 #include  "mk61emu_core.h"
 
-extern LiquidCrystal lcd;
+extern MK61Display lcd;
 
 static const u8 GE                = 0x00;
+#if defined(MK61_DISPLAY_UC1609)
+static const u8 P_RUS             = 0x10;
+static const u8 B_RUS             = 0x13;
+static const u8 D_RUS             = 0x12;
+static const u8 I_RUS             = 0x14;
+static const u8 G_RUS             = 0x11;
+static const u8 LCD_CHAR_POW2     = 0x15;
+static const u8 LCD_CHAR_POWY     = 0x16;
+static const u8 LCD_CHAR_XOR      = 0x17;
+
+/* Набор символов авторского UC1609-шрифта */
+static const u8 LCD_CYC_ARROW     = 0x05;
+static const u8 LCD_DIVIDE_CHAR   = 0x08;
+static const u8 LCD_NOT_EQU_CHAR  = 0x07;
+static const u8 LCD_POW_X_CHAR    = 0x06;
+static const u8 LCD_UP_ARROW_CHAR = 0x0B;
+static const u8 LCD_LT_ARROW_CHAR = 0x0D;
+static const u8 LCD_RT_ARROW_CHAR = 0x0C;
+static const u8 LCD_PI_CHAR       = 0x0A;
+static const u8 LCD_SQRT_CHAR     = 0x09;
+static const u8 LCD_Em1_CHAR      = 0x18;
+static const u8 LCD_GRAD_CHAR     = 0x0F;
+static const u8 LCD_QUOTE_CHAR    = 0x60;
+static const u8 LCD_DOUBLE_QUOTE_CHAR    = 0x22;
+static const u8 CH_RUS            = 0x04;
+#else
 static const u8 P_RUS             = 0x01;
 static const u8 B_RUS             = 0x02;
 static const u8 D_RUS             = 0x03;
@@ -32,6 +58,7 @@ static const u8 LCD_GRAD_CHAR     = 0xDF;
 static const u8 LCD_QUOTE_CHAR    = 0x60;
 static const u8 LCD_DOUBLE_QUOTE_CHAR    = 0x22;
 static const u8 CH_RUS            = 0xD1;
+#endif
 
 class class_LCD_Label {
   private:
@@ -238,6 +265,10 @@ class class_LCD_fonts {
 //    const u8* fonts = {&GE_bit, &P_ru, &B_ru, &D_ru, &I_ru, &G_ru, POWSQR_bit, &POWY_bit, &XOR_bit};
   public:
     void load(void) const {
+      #if defined(MK61_DISPLAY_UC1609)
+        lcd.clearCustomChars();
+        return;
+      #endif
       u32 ascii=0;
       for(int i=0; i < 9 * 8; i += 8) {
         lcd.createChar(ascii++, (uint8_t*) &fonts[i]);
@@ -245,6 +276,10 @@ class class_LCD_fonts {
     }
 
     void load(int offset, int nChar) const {
+      #if defined(MK61_DISPLAY_UC1609)
+        lcd.clearCustomChars();
+        return;
+      #endif
       lcd.createChar(nChar, (uint8_t*) &fonts[offset]);
     }
 };

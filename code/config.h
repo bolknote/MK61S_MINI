@@ -24,6 +24,9 @@
 //#define DEBUG
 //#define DEBUG_M61
 
+// Дисплей: по умолчанию старый LCD1602. Для ERM19264/UC1609 включить MK61_DISPLAY_UC1609.
+//#define MK61_DISPLAY_UC1609
+
 //#define CDU
 //#define LK432
 //#define SERIAL_OUTPUT
@@ -31,6 +34,18 @@
 //#define REVISION_V2
 #define MK61s
 //#define MK52s
+
+#if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)
+  #define MK61_DISPLAY_UC1609
+#endif
+
+#if defined(DISPLAY_LCD1602) && !defined(MK61_DISPLAY_LCD1602)
+  #define MK61_DISPLAY_LCD1602
+#endif
+
+#if !defined(MK61_DISPLAY_UC1609)
+  #define MK61_DISPLAY_LCD1602
+#endif
 
 #define IS_CORTEX_M4() (__ARM_ARCH == 7)
 //defined(__ARM_ARCH_7EM__)
@@ -311,7 +326,15 @@ static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как част�
       static constexpr usize   PIN_LED         =   PC13;
     #endif
   #endif
- #endif  
+ #endif
+#endif
+
+#ifdef MK61_DISPLAY_UC1609
+  static constexpr u8 PIN_GLCD_CD = PA2;
+  static constexpr u8 PIN_GLCD_RST = PA3;
+  static constexpr u8 PIN_GLCD_CS = PA1;
+  static constexpr u8 GLCD_UC1609_BIAS = 0x1F;
+  static constexpr u8 GLCD_UC1609_ADDRESS_SET = 0x02;
 #endif
 
 #endif

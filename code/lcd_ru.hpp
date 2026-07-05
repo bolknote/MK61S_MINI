@@ -5,7 +5,7 @@
 
 namespace lcd_ru {
 
-static constexpr u8 LCD_WIDTH = 16;
+static constexpr u8 LCD_WIDTH = lcd_display::COLS;
 static constexpr u8 CUSTOM_GLYPHS = 8;
 
 struct glyph_t {
@@ -224,6 +224,16 @@ inline void print_menu_window(char mark0, const char* text0, char mark1, const c
   lcd.setCursor(0, 1);
   lcd.write((u8) mark1);
   write_text(map, text1, LCD_WIDTH - 1);
+}
+
+inline void print_menu_line(u8 y, char mark, const char* text) {
+  font_map_t map = {{0}, 0, false};
+  scan_text(map, text, LCD_WIDTH - 1);
+  load_custom_font(map);
+
+  lcd.setCursor(0, y);
+  lcd.write((u8) mark);
+  write_text(map, text, LCD_WIDTH - 1);
 }
 
 } // namespace lcd_ru

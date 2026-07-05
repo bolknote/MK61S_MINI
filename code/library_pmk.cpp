@@ -476,18 +476,25 @@ void  init_library(void) {
 
 int   select_from(usize COUNT, TPunct* list, i8& selector) {
   do {
-    const int delta = (selector + 1) - 2;
-    const int up = (delta <= 0)? 0 : delta;
+    const int visible_count = ((int) COUNT < (int) lcd_display::ROWS) ? (int) COUNT : (int) lcd_display::ROWS;
+    const int max_up = (int) COUNT - visible_count;
+    const int delta = (selector + 1) - visible_count;
+    int up = (delta <= 0)? 0 : delta;
+    if(up > max_up) up = max_up;
 
-    for(int i=0; i < 2; i++) {
-      lcd.setCursor(0,i); 
+    for(int i=0; i < visible_count; i++) {
+      lcd.setCursor(0,i);
       const int real_index = i + up;
-      if(selector == real_index) { 
+      if(selector == real_index) {
         lcd.print('>');
       } else {
         lcd.print(' ');
       }
       lcd.print(list[real_index].text);
+    }
+    for(int i=visible_count; i < (int) lcd_display::ROWS; i++) {
+      lcd.setCursor(0, i);
+      for(int x=0; x < (int) lcd_display::COLS; x++) lcd.write((u8) ' ');
     }
 
     const i32 last_key_code = kbd::get_key_wait();

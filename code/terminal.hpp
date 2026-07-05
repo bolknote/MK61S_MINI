@@ -50,7 +50,7 @@ const   u8                  NL = 0x0A;
 static  constexpr usize     MAX_INPUT_CHAR = 240;
 
 extern  class_disassm_mk61  disassembler;
-extern  LiquidCrystal       lcd;
+extern  MK61Display         lcd;
 extern  void DFU_enable(void);
 
 static u8    input_buffer[MAX_INPUT_CHAR];

@@ -8,7 +8,7 @@ static  class_calc_config   config;
 
 using namespace kbd;
 
-#include <LiquidCrystal.h>
+#include "display.hpp"
 #include "lcd_gui.hpp"
 #include "mnemo.hpp"
 
@@ -24,7 +24,7 @@ using namespace led;
 
 #include "debug.h"
 
-LiquidCrystal lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7);
+MK61Display lcd;
 
 static class_menu           mk61_menu = class_menu((t_punct**) library_mk61::MENU, library_mk61::COUNT_PUNCTS);
 
@@ -142,7 +142,12 @@ void inline lcd_stack_output(void) {
   cvalue[14] = 0;
 
   lcd.clear();
-  if(YZ_ZT) {
+  if(lcd.rows() >= 4) {
+      lcd.setCursor(0,0); lcd.print("T "); lcd.print(read_stack_register(stack::T, cvalue, display_symbols));
+      lcd.setCursor(0,1); lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, display_symbols));
+      lcd.setCursor(0,2); lcd.print("Y "); lcd.print(read_stack_register(stack::Y, cvalue, display_symbols));
+      lcd.setCursor(0,3); lcd.print("X "); lcd.print(read_stack_register(stack::X, cvalue, display_symbols));
+  } else if(YZ_ZT) {
       lcd.setCursor(0,1); lcd.print("Y "); lcd.print(read_stack_register(stack::Y, cvalue, display_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_Y, display_symbols));
       lcd.setCursor(0,0); lcd.print("X1"); lcd.print(read_stack_register(stack::X1, cvalue, terminal_symbols));
@@ -186,11 +191,11 @@ void setup() {
   kbd::init();
   library_mk61::load_settings_state();
   
-  #if defined(REVISION_V2) || defined(REVISION_V3)
+  #if defined(MK61_DISPLAY_LCD1602) && (defined(REVISION_V2) || defined(REVISION_V3))
     pinMode(PIN_LCD_RW, OUTPUT);
     digitalWrite(PIN_LCD_RW, LOW);
   #endif
-  lcd.begin(16, 2);
+  lcd.begin(lcd_display::COLS, lcd_display::ROWS);
 
   glyph.draw(0);
   delay(1000);

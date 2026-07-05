@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "EEPROM.h"
-#include <LiquidCrystal.h>
 #include "lcd_gui.hpp"
 #include "tools.hpp"
 #include "mk61emu_core.h"

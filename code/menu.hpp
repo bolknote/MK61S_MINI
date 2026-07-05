@@ -81,7 +81,7 @@ namespace library_mk61 {
 
 class class_menu {
   private:
-    static constexpr int SIZE_MENU_WINDOW = 2;
+    static constexpr int SIZE_MENU_WINDOW = lcd_display::ROWS;
     int MENU_PUNCT_COUNT;
     u8 active_punct;
     u8 previous_up;
