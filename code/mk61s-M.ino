@@ -233,7 +233,9 @@ void setup() {
 
  // Система ззагрузки программ
   init_library();
+#if MK61_ENABLE_BASIC
   InitBasic();
+#endif
 
  // Запуск эмулятора MK61
   GRDLabel.print(load_grade_switch()); // считаем состояние переключателя ГРД отобразим градусную меру

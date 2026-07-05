@@ -2,6 +2,12 @@
 #include <cstdio>
 #include <cstring>
 
+#ifndef MK61_ENABLE_BASIC
+#define MK61_ENABLE_BASIC 1
+#endif
+
+#if MK61_ENABLE_BASIC
+
 extern "C" void BasicTestReset(void);
 extern "C" bool BasicTestCompile(const char* source);
 extern "C" int BasicTestAddProgram(const char* source);
@@ -182,3 +188,9 @@ int main(void) {
   std::printf("basic_self_test: ok\n");
   return 0;
 }
+#else
+int main(void) {
+  std::printf("basic_self_test: skipped (MK61_ENABLE_BASIC=0)\n");
+  return 0;
+}
+#endif

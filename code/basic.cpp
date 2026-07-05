@@ -246,6 +246,8 @@ class class_menu {
 #include <string.h>
 #endif
 
+#if MK61_ENABLE_BASIC
+
 using namespace kbd;
 
 extern MK61Display lcd;
@@ -2568,4 +2570,6 @@ extern "C" double BasicTestMkX(void) {
 extern "C" bool BasicTestStepAssigned(int step) {
   return BasicHasAssignedStep(step);
 }
+#endif
+
 #endif

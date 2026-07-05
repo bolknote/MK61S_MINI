@@ -37,6 +37,12 @@
 #define MK61s
 //#define MK52s
 
+// Встроенный БЕЙСИК включен по умолчанию. Поставьте 0, чтобы убрать его
+// редактор, рантайм, меню и привязку к шагам МК-61 из прошивки.
+#ifndef MK61_ENABLE_BASIC
+  #define MK61_ENABLE_BASIC 1
+#endif
+
 #if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)
   #define MK61_DISPLAY_UC1609
 #endif
