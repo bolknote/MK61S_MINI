@@ -275,26 +275,43 @@ static const char BASIC_key[40] = {
   '%', '%', '%', '%', '%'
 };
 
-static const char BASIC_alpha_key[40] = {
-  'D', 'E', 'F', 'G', '%',
-  'C', '%', '%', 'X', 'H',
-  'B', '%', '%', '%', 'I',
-  'A', 'Z', 'W', '%', 'J',
-  'T', 'Y', '%', '%', 'K',
-  'S', '$', 'V', 'U', 'L',
-  'R', '%', '%', '%', 'M',
-  'Q', 'P', 'O', '%', 'N'
+enum class BasicEditShift : u8 {
+  NONE,
+  ALPHA,
+  K
 };
 
-static const char BASIC_Kshift_key[40] = {
-  '!', ':', '(', ')', '%',
-  '^', '"', '%', '>', '#',
-  '&', '%', '%', '%', '%',
-  '|', '%', '%', '%', '%',
-  '%', '%', '%', '%', '%',
-  ',', '%', '%', '%', '%',
-  '%', '%', '%', '%', '%',
-  '%', '%', '%', '%', '%'
+static const char* const BASIC_key_text[40] = {
+  NULL, NULL, "*", "/", NULL,
+  "?", NULL, "+", "-", NULL,
+  NULL, "3", "6", "9", NULL,
+  ".", "2", "5", "8", NULL,
+  "0", "1", "4", "7", NULL,
+  " ", NULL, NULL, NULL, NULL,
+  "<>", ">=", "=", "<", NULL,
+  NULL, NULL, NULL, NULL, NULL
+};
+
+static const char* const BASIC_alpha_key_text[40] = {
+  "D", "E", "F", "G", NULL,
+  "C", NULL, NULL, "X", "H",
+  "B", NULL, NULL, NULL, "I",
+  "A", "Z", "W", NULL, "J",
+  "T", "Y", NULL, NULL, "K",
+  "S", "$", "V", "U", "L",
+  "R", NULL, NULL, NULL, "M",
+  "Q", "P", "O", NULL, "N"
+};
+
+static const char* const BASIC_Kshift_key_text[40] = {
+  "~", ":", "(", ")", NULL,
+  "^", "\"", NULL, ">", "#",
+  "&", NULL, NULL, NULL, NULL,
+  "|", "Z", "W", NULL, NULL,
+  NULL, "Y", NULL, NULL, NULL,
+  ",", NULL, "V", "U", NULL,
+  NULL, NULL, NULL, NULL, NULL,
+  NULL, NULL, NULL, NULL, NULL
 };
 
 static constexpr int BASIC_PROGRAM_COUNT       = 8;
@@ -312,6 +329,19 @@ static constexpr int BASIC_RUNTIME_STEPS_LIMIT = 2048;
 
 static constexpr u32 CURSOR_BLINK_MS = 850;
 static constexpr u8  CURSOR_ASCII    = 0xFF;
+
+static constexpr i32 BASIC_SCAN_B_UP  = 1;
+static constexpr i32 BASIC_SCAN_PRINT = 5;
+static constexpr i32 BASIC_SCAN_USER  = 19;
+static constexpr i32 BASIC_SCAN_JMP   = 26;
+static constexpr i32 BASIC_SCAN_XP    = 27;
+static constexpr i32 BASIC_SCAN_PX    = 28;
+static constexpr i32 BASIC_SCAN_RUN   = 30;
+static constexpr i32 BASIC_SCAN_RET   = 31;
+static constexpr i32 BASIC_SCAN_SF    = 32;
+static constexpr i32 BASIC_SCAN_SB    = 33;
+static constexpr i32 BASIC_SCAN_LOAD  = 35;
+static constexpr i32 BASIC_SCAN_SAVE  = 36;
 
 enum class TokenKind : u8 {
   END,
@@ -337,7 +367,8 @@ enum class BasicOp : u8 {
   GE,
   AND,
   OR,
-  XOR
+  XOR,
+  NOT
 };
 
 enum class ExprKind : u8 {
@@ -643,6 +674,40 @@ static void basic_copy_name(char* dst, const char* src) {
   dst[i] = 0;
 }
 
+static void basic_display_program_name(const char* name, char* out, usize size) {
+  if(size == 0) return;
+  out[0] = 0;
+
+  if(basic_language_is_ru() && basic_streq(name, "BASIC")) {
+    strncpy(out, "БЕЙСИК", size - 1);
+    out[size - 1] = 0;
+    return;
+  }
+
+  const char basic_prefix[] = "BASIC";
+  bool has_basic_prefix = basic_language_is_ru();
+  for(u8 i = 0; has_basic_prefix && i < 5; i++) {
+    if(name[i] == 0 || basic_upper(name[i]) != basic_prefix[i]) has_basic_prefix = false;
+  }
+
+  if(has_basic_prefix) {
+    bool digits_only = name[5] != 0;
+    for(u8 i = 5; name[i] != 0; i++) {
+      if(!basic_is_digit(name[i])) {
+        digits_only = false;
+        break;
+      }
+    }
+    if(digits_only) {
+      snprintf(out, size, "БЕЙСИК%s", name + 5);
+      return;
+    }
+  }
+
+  strncpy(out, name, size - 1);
+  out[size - 1] = 0;
+}
+
 static void basic_clear_vars(void) {
   memset(numeric_vars, 0, sizeof(numeric_vars));
   memset(numeric_var_set, 0, sizeof(numeric_var_set));
@@ -869,6 +934,7 @@ class Lexer {
         case '&': tok.kind = TokenKind::OP; tok.op = BasicOp::AND; break;
         case '|': tok.kind = TokenKind::OP; tok.op = BasicOp::OR; break;
         case '^': tok.kind = TokenKind::OP; tok.op = BasicOp::XOR; break;
+        case '~': tok.kind = TokenKind::OP; tok.op = BasicOp::NOT; break;
         default:
           if(c == (unsigned char) LCD_NOT_EQU_CHAR) {
             tok.kind = TokenKind::OP;
@@ -1354,6 +1420,7 @@ class Parser {
         case BasicOp::MUL:
         case BasicOp::DIV: return 6;
         case BasicOp::POW: return 7;
+        case BasicOp::NOT:
         case BasicOp::NONE: break;
       }
       return -1;
@@ -1363,6 +1430,12 @@ class Parser {
       if(accept_op(BasicOp::SUB)) {
         const i16 node = ast_new_expr(out, ExprKind::UNARY);
         out.exprs[node].op = BasicOp::SUB;
+        out.exprs[node].left = parse_unary();
+        return node;
+      }
+      if(accept_op(BasicOp::NOT)) {
+        const i16 node = ast_new_expr(out, ExprKind::UNARY);
+        out.exprs[node].op = BasicOp::NOT;
         out.exprs[node].left = parse_unary();
         return node;
       }
@@ -1592,6 +1665,7 @@ static int next_used_program(int from, int delta, bool allow_new) {
 
 static void draw_program_select(int active, bool allow_new) {
   char line1[17];
+  char ru_line_buffer[32];
   if(allow_new && active == BASIC_PROGRAM_COUNT) {
     strcpy(line1, ">NEW");
   } else if(active >= 0 && active < BASIC_PROGRAM_COUNT && programs[active].used) {
@@ -1603,8 +1677,17 @@ static void draw_program_select(int active, bool allow_new) {
   }
 
   const char* ru_line1 = line1;
-  if(allow_new && active == BASIC_PROGRAM_COUNT) ru_line1 = ">НОВ";
-  else if(!(active >= 0 && active < BASIC_PROGRAM_COUNT && programs[active].used)) ru_line1 = ">ПУСТО";
+  if(allow_new && active == BASIC_PROGRAM_COUNT) ru_line1 = ">НОВАЯ";
+  else if(active >= 0 && active < BASIC_PROGRAM_COUNT && programs[active].used) {
+    char display_name[22];
+    basic_display_program_name(programs[active].name, display_name, sizeof(display_name));
+    ru_line_buffer[0] = '>';
+    strncpy(&ru_line_buffer[1], display_name, sizeof(ru_line_buffer) - 2);
+    ru_line_buffer[sizeof(ru_line_buffer) - 1] = 0;
+    ru_line1 = ru_line_buffer;
+  } else {
+    ru_line1 = ">ПУСТО";
+  }
 
   basic_message_i18n("BASIC program", "Программа", line1, ru_line1);
 }
@@ -1644,8 +1727,12 @@ static int select_basic_program(bool allow_new) {
 
 static void display_ast_ok(const BasicProgram& program) {
   char line[17];
+  char ru_line[32];
   snprintf(line, sizeof(line), "%s %d/%d", program.name, ast.stmt_count, ast.expr_count);
-  basic_message_i18n("BASIC compiled", "БЕЙСИК готов", line, line);
+  char display_name[18];
+  basic_display_program_name(program.name, display_name, sizeof(display_name));
+  snprintf(ru_line, sizeof(ru_line), "%s %d/%d", display_name, ast.stmt_count, ast.expr_count);
+  basic_message_i18n("BASIC compiled", "БЕЙСИК готов", line, ru_line);
   delay(800);
 }
 
@@ -1741,7 +1828,7 @@ static bool eval_expr(i16 expr_id, BasicValue& value) {
       value = make_number(read_mk_ref(e.mk_ref, e.mk_reg));
       return true;
     case ExprKind::UNARY:
-      value = make_number(-eval_number(e.left));
+      value = make_number(e.op == BasicOp::NOT ? !basic_truth(eval_number(e.left)) : -eval_number(e.left));
       return true;
     case ExprKind::BINARY: {
       const double a = eval_number(e.left);
@@ -1761,6 +1848,7 @@ static bool eval_expr(i16 expr_id, BasicValue& value) {
         case BasicOp::AND: value = make_number(basic_truth(a) && basic_truth(b)); return true;
         case BasicOp::OR: value = make_number(basic_truth(a) || basic_truth(b)); return true;
         case BasicOp::XOR: value = make_number((bool) basic_truth(a) != (bool) basic_truth(b)); return true;
+        case BasicOp::NOT: break;
         case BasicOp::NONE: break;
       }
       value = make_number(0);
@@ -2141,10 +2229,11 @@ static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 windo
   }
   lcd.setCursor((u8) (cursor - window), 0);
   lcd.write(CURSOR_ASCII);
-  if(slot == BASIC_PROGRAM_COUNT) basic_print_text_at(0, 1, "NEW ", "НОВ ", 4);
+  if(slot == BASIC_PROGRAM_COUNT) basic_print_text_at(0, 1, "NEW", "НОВАЯ", 5);
   else {
-    lcd.setCursor(0, 1);
-    lcd.print(programs[slot].name);
+    char display_name[22];
+    basic_display_program_name(programs[slot].name, display_name, sizeof(display_name));
+    basic_print_text_at(0, 1, programs[slot].name, display_name, 10);
   }
   lcd.setCursor(10, 1);
   lcd.print(cursor);
@@ -2173,6 +2262,92 @@ static bool store_edited_program(int slot, char* source) {
   return true;
 }
 
+static bool basic_cursor_inside_string(const char* source, u16 cursor) {
+  bool inside = false;
+  for(u16 i = 0; i < cursor && source[i] != 0; i++) {
+    if(source[i] == '"') inside = !inside;
+  }
+  return inside;
+}
+
+static bool basic_token_equals(const char* source, int start, int end, const char* token) {
+  int pos = start;
+  while(pos < end && *token != 0) {
+    if(basic_upper(source[pos]) != basic_upper(*token)) return false;
+    pos++;
+    token++;
+  }
+  return pos == end && *token == 0;
+}
+
+static bool basic_cursor_expects_statement(const char* source, u16 cursor) {
+  if(basic_cursor_inside_string(source, cursor)) return false;
+
+  int pos = (int) cursor - 1;
+  while(pos >= 0 && (source[pos] == ' ' || source[pos] == '\t')) pos--;
+  if(pos < 0) return true;
+  if(source[pos] == ':' || source[pos] == ';') return true;
+
+  const int end = pos + 1;
+  while(pos >= 0 && (basic_is_alpha(source[pos]) || basic_is_digit(source[pos]))) pos--;
+  const int start = pos + 1;
+  if(start >= end) return false;
+
+  return basic_token_equals(source, start, end, "TH") ||
+         basic_token_equals(source, start, end, "THEN") ||
+         basic_token_equals(source, start, end, "EL") ||
+         basic_token_equals(source, start, end, "ELSE");
+}
+
+static const char* basic_statement_insert_text(i32 key_code) {
+  switch(key_code) {
+    case BASIC_SCAN_PRINT: return "? ";
+    case BASIC_SCAN_B_UP:  return "IN ";
+    case BASIC_SCAN_USER:  return "IF ";
+    case BASIC_SCAN_XP:    return "FOR ";
+    case BASIC_SCAN_PX:    return "NXT ";
+    case BASIC_SCAN_JMP:   return "GO ";
+    case BASIC_SCAN_RUN:   return "HLT ";
+    case BASIC_SCAN_RET:   return "END";
+    case BASIC_SCAN_SF:    return "DO";
+    case BASIC_SCAN_SB:    return "WH ";
+    case BASIC_SCAN_LOAD:  return "LD ";
+    case BASIC_SCAN_SAVE:  return "CLR";
+    default: break;
+  }
+  return NULL;
+}
+
+static const char* basic_editor_insert_text_for_key(BasicEditShift shift, i32 key_code, const char* source, u16 cursor) {
+  if(key_code < 0 || key_code >= 40) return NULL;
+
+  switch(shift) {
+    case BasicEditShift::NONE:
+      if(basic_cursor_expects_statement(source, cursor)) {
+        const char* statement_text = basic_statement_insert_text(key_code);
+        if(statement_text != NULL) return statement_text;
+      }
+      return BASIC_key_text[key_code];
+    case BasicEditShift::ALPHA:
+      return BASIC_alpha_key_text[key_code];
+    case BasicEditShift::K:
+      return BASIC_Kshift_key_text[key_code];
+  }
+
+  return NULL;
+}
+
+static bool basic_editor_insert_text(char* source, u16& len, u16& cursor, const char* text) {
+  if(text == NULL || text[0] == 0) return false;
+  const usize text_len = strlen(text);
+  if((usize) len + text_len >= BASIC_SOURCE_SIZE) return false;
+  memmove(&source[cursor + text_len], &source[cursor], len - cursor + 1);
+  memcpy(&source[cursor], text, text_len);
+  cursor = (u16) (cursor + text_len);
+  len = (u16) (len + text_len);
+  return true;
+}
+
 void EditBasic(void) {
   int slot = select_basic_program(true);
   if(slot < 0) return;
@@ -2184,7 +2359,7 @@ void EditBasic(void) {
   u16 len = (u16) strlen(source);
   u16 cursor = len;
   u16 window = (cursor > 15) ? cursor - 15 : 0;
-  char* key_table = (char*) BASIC_key;
+  BasicEditShift shift = BasicEditShift::NONE;
   u32 blink_time = millis() + CURSOR_BLINK_MS;
 
   kbd::debounce_init();
@@ -2200,46 +2375,43 @@ void EditBasic(void) {
       continue;
     }
 
-    if(key_code == KEY_K || key_code == KEY_ALPHA) {
-      key_table = (key_code == KEY_K) ? (char*) BASIC_Kshift_key : (char*) BASIC_alpha_key;
+    const bool shifted_key = shift != BasicEditShift::NONE;
+
+    if(!shifted_key && (key_code == KEY_K || key_code == KEY_ALPHA)) {
+      shift = (key_code == KEY_K) ? BasicEditShift::K : BasicEditShift::ALPHA;
       continue;
     }
 
-    if(key_code == KEY_ESC || key_code == KEY_ESC_PRESS) {
+    if(!shifted_key && (key_code == KEY_ESC || key_code == KEY_ESC_PRESS)) {
       store_edited_program(slot, source);
       return;
     }
 
-    if(key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) {
+    if(!shifted_key && (key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS)) {
       if(cursor > 0) cursor--;
-    } else if(key_code == KEY_RIGHT || key_code == KEY_RIGHT_PRESS) {
+    } else if(!shifted_key && (key_code == KEY_RIGHT || key_code == KEY_RIGHT_PRESS)) {
       if(cursor < len) cursor++;
-    } else if(key_code == KEY_DEGREE) {
+    } else if(!shifted_key && key_code == KEY_DEGREE) {
       if(cursor > 0) {
         memmove(&source[cursor - 1], &source[cursor], len - cursor + 1);
         cursor--;
         len--;
       }
-    } else if(key_code == 0) {
+    } else if(!shifted_key && key_code == 0) {
       memset(source, 0, sizeof(source));
       len = 0;
       cursor = 0;
-    } else if(key_code == KEY_OK || key_code == KEY_OK_PRESS) {
+    } else if(!shifted_key && (key_code == KEY_OK || key_code == KEY_OK_PRESS)) {
       if(len < BASIC_SOURCE_SIZE - 1) {
         memmove(&source[cursor + 1], &source[cursor], len - cursor + 1);
         source[cursor++] = ':';
         len++;
       }
-    } else if(key_code >= 0 && key_code < 40) {
-      const char input = key_table[key_code];
-      if(input != '%' && len < BASIC_SOURCE_SIZE - 1) {
-        memmove(&source[cursor + 1], &source[cursor], len - cursor + 1);
-        source[cursor++] = input;
-        len++;
-      }
+    } else {
+      basic_editor_insert_text(source, len, cursor, basic_editor_insert_text_for_key(shift, key_code, source, cursor));
     }
 
-    key_table = (char*) BASIC_key;
+    shift = BasicEditShift::NONE;
     if(cursor < window) window = cursor;
     if(cursor > window + 15) window = cursor - 15;
   }
@@ -2353,6 +2525,36 @@ extern "C" const char* BasicTestString(const char* name) {
   if(name[0] == '$') name++;
   const int idx = variable_index_from_name(name);
   return (idx < 0) ? "" : string_vars[idx];
+}
+
+extern "C" void BasicTestEditSequence(const int* keys, int count, char* out, int size) {
+  if(out == NULL || size <= 0) return;
+
+  char source[BASIC_SOURCE_SIZE];
+  memset(source, 0, sizeof(source));
+  u16 len = 0;
+  u16 cursor = 0;
+  BasicEditShift shift = BasicEditShift::NONE;
+
+  for(int i = 0; i < count; i++) {
+    const i32 key_code = keys[i];
+    const bool shifted_key = shift != BasicEditShift::NONE;
+
+    if(!shifted_key && (key_code == KEY_K || key_code == KEY_ALPHA)) {
+      shift = (key_code == KEY_K) ? BasicEditShift::K : BasicEditShift::ALPHA;
+      continue;
+    }
+
+    if(!shifted_key && (key_code == KEY_OK || key_code == KEY_OK_PRESS)) {
+      basic_editor_insert_text(source, len, cursor, ":");
+    } else {
+      basic_editor_insert_text(source, len, cursor, basic_editor_insert_text_for_key(shift, key_code, source, cursor));
+    }
+    shift = BasicEditShift::NONE;
+  }
+
+  strncpy(out, source, (usize) size - 1);
+  out[size - 1] = 0;
 }
 
 extern "C" const char* BasicTestLcdLine(int row) {

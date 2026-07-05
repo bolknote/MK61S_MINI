@@ -12,6 +12,7 @@ extern "C" const char* BasicTestLcdLine(int row);
 extern "C" double BasicTestMkX(void);
 extern "C" bool BasicTestStepAssigned(int step);
 extern "C" const char* BasicTestError(void);
+extern "C" void BasicTestEditSequence(const int* keys, int count, char* out, int size);
 
 static int failures;
 
@@ -129,6 +130,35 @@ static void test_basic_function_call_returns_x(void) {
   CHECK_NEAR(BasicTestNumber("B"), 9.0);
 }
 
+static void test_editor_shift_and_statement_keys(void) {
+  BasicTestReset();
+  char out[64];
+
+  const int shifted[] = {37, 27, 37, 17, 37, 1, 37, 0};
+  BasicTestEditSequence(shifted, (int) (sizeof(shifted) / sizeof(shifted[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "VW:~") == 0);
+
+  const int alpha_service[] = {38, 0, 38, 1, 38, 9, 38, 29, 38, 39};
+  BasicTestEditSequence(alpha_service, (int) (sizeof(alpha_service) / sizeof(alpha_service[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "DEHLN") == 0);
+
+  const int green_symbols[] = {37, 10, 37, 5, 37, 15, 37, 25};
+  BasicTestEditSequence(green_symbols, (int) (sizeof(green_symbols) / sizeof(green_symbols[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "&^|,") == 0);
+
+  const int statement[] = {5, 29, 26, 29, 30, 29, 1};
+  BasicTestEditSequence(statement, (int) (sizeof(statement) / sizeof(statement[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "? :GO :HLT :IN ") == 0);
+}
+
+static void test_logical_not_operator(void) {
+  BasicTestReset();
+  const int slot = add_program("A=~0:B=~1:HLT NOT");
+  BasicTestRun(slot);
+  CHECK_NEAR(BasicTestNumber("A"), 1.0);
+  CHECK_NEAR(BasicTestNumber("B"), 0.0);
+}
+
 int main(void) {
   test_compile_rejects_bad_syntax();
   test_arithmetic_and_print();
@@ -141,6 +171,8 @@ int main(void) {
   test_mk_stack_reference();
   test_mk_step_binding();
   test_basic_function_call_returns_x();
+  test_editor_shift_and_statement_keys();
+  test_logical_not_operator();
 
   if(failures != 0) {
     std::printf("basic_self_test: %d failure(s)\n", failures);

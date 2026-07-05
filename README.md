@@ -42,6 +42,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Programming.pdf
 **Инструкция по работе с Терминалом:**  
 https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 
+**Инструкция по работе с БЕЙСИКом:**<br>
+https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-BASIC.pdf
+
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 
 **Видеоинструкция по сборке от Виталия (FANJET)** - https://www.youtube.com/watch?v=JBStgbfmuOs
