@@ -275,7 +275,7 @@ static  u8          mk61_lib[] = {
 const u8 pack_clear_register[3] = {0x01, 0x00, 0x00};  // 0.0
 
 static constexpr usize SETUP_KEY_HOLD_STEPS = 4;
-static constexpr usize SETUP_KEY_SETTLE_STEPS = 4096;
+static constexpr usize SETUP_KEY_SETTLE_STEPS = 64;
 static constexpr usize SETUP_RUN_STEPS = 50000;
 
 void clear_registers(void) {
