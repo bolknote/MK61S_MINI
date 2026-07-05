@@ -303,6 +303,8 @@ void exit_auto_mode(void) { // Выход из режима ПРГ - событ�
 }
 
 void key_press_handler(i32 keycode) {
+  if(keycode == KEY_USER_PRESS && !core_61::edit_program) return;
+
   const TMK61_cross_key cross_key = KeyPairs[keycode];  // трансляция кода клавиши в координаты клавиши mk61
 
   dbg(KBD, "x,y = ", cross_key.x, ",", cross_key.y); dbghex(KBD, " scancode $", keycode); dbgln(KBD, " -> mk61")
@@ -405,6 +407,9 @@ void   mk61_baseloop_hook(i32 key) {
           insert_cmd_in_program(mk61_IP, MK61_NOP);
           //disassembler.enable(); //cache_IP_mk61 = MK61_ip + 1; 
           //lcd_std_display_redraw();
+        } else {
+          mk61_library_select();
+          lcd_std_display_redraw();
         }
       break;
     case  KEY_ESC_PRESS:
