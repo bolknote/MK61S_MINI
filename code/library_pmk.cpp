@@ -274,7 +274,8 @@ static  u8          mk61_lib[] = {
 // registers = 0.0 {sign_num(8-bit)|sign_pow(7-bit)|len(bytes for mantisa), abs(pow), mantissa... }
 const u8 pack_clear_register[3] = {0x01, 0x00, 0x00};  // 0.0
 
-static constexpr usize SETUP_KEY_SETTLE_STEPS = 64;
+static constexpr usize SETUP_KEY_HOLD_STEPS = 4;
+static constexpr usize SETUP_KEY_SETTLE_STEPS = 4096;
 static constexpr usize SETUP_RUN_STEPS = 50000;
 
 void clear_registers(void) {
@@ -311,12 +312,18 @@ void load_registers(usize offs, u8* data_stream) {
 void hidden_press_key(sw key) {
   const TMK61_cross_key cross_key = KeyPairs[(u8) key];
   core_61::clear_displayed();
-  MK61Emu_SetKeyPress(cross_key.x, cross_key.y);
+
+  for(usize i = 0; i < SETUP_KEY_HOLD_STEPS; i++) {
+    MK61Emu_SetKeyPress(cross_key.x, cross_key.y);
+    core_61::step();
+    if(core_61::is_RUN()) break;
+  }
 
   for(usize i = 0; i < SETUP_KEY_SETTLE_STEPS; i++) {
     core_61::step();
     if(core_61::is_RUN() || core_61::is_displayed()) break;
   }
+
   core_61::clear_displayed();
 }
 
