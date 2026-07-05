@@ -109,6 +109,10 @@ inline bool rom_char(u16 codepoint, u8& out) {
 
 inline bool fallback_char(u16 codepoint, u8& out) {
   codepoint = uppercase(codepoint);
+  if(codepoint == 0x0427) {
+    out = '4'; // Ч: acceptable only when all 8 custom glyphs are already used.
+    return true;
+  }
   if(codepoint == 0x0423) {
     out = 'Y'; // У: only when the current screen needs more than 8 custom glyphs.
     return true;
@@ -192,6 +196,19 @@ inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
   load_custom_font(map);
   lcd.setCursor(x, y);
   write_text(map, text, width);
+}
+
+inline void print_lines(const char* text0, const char* text1) {
+  font_map_t map = {{0}, 0, false};
+  scan_text(map, text0, LCD_WIDTH);
+  scan_text(map, text1, LCD_WIDTH);
+  load_custom_font(map);
+
+  lcd.setCursor(0, 0);
+  write_text(map, text0, LCD_WIDTH);
+
+  lcd.setCursor(0, 1);
+  write_text(map, text1, LCD_WIDTH);
 }
 
 inline void print_menu_window(char mark0, const char* text0, char mark1, const char* text1) {

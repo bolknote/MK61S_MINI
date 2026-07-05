@@ -1,4 +1,5 @@
 #include "LiquidCrystal.h"
+#include <string.h>
 #include "menu.hpp"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
@@ -33,10 +34,50 @@ static void set_speed_mode_state(SpeedMode mode) {
   ::mk61_quants_reload = (mode == SpeedMode::CLASSIC) ? cfg::CLASSIC_MK61_QUANTS : 1;
 }
 
+static void append_text(char*& out, char* end, const char* text) {
+  while(*text != 0 && out < end) *out++ = *text++;
+}
+
+static void append_until_space(char*& out, char* end, const char* text) {
+  while(*text != 0 && *text != ' ' && out < end) *out++ = *text++;
+}
+
+static void build_ru_memory_text(char* out, usize size) {
+  char* cursor = out;
+  char* end = out + size - 1;
+  const char* ram = strstr(mem_text, "RAM:");
+  const char* rom = strstr(mem_text, "ROM:");
+
+  if(ram == NULL || rom == NULL) {
+    append_text(cursor, end, mem_text);
+    *cursor = 0;
+    return;
+  }
+
+  append_text(cursor, end, "ОЗУ:");
+  append_until_space(cursor, end, ram + 4);
+  append_text(cursor, end, " ПЗУ:");
+  append_until_space(cursor, end, rom + 4);
+  *cursor = 0;
+}
+
 bool  HardwareInfo(void) {
-  lcd.clear(); 
-  lcd.setCursor(0,0); lcd.print(text("Chip:", "\321\004\001:")); lcd.print(chip_name);
-  lcd.setCursor(0,1); lcd.print(mem_text);
+  lcd.clear();
+  if(language_is_ru()) {
+    char chip_line[24] = "ЧИП:";
+    char memory_line[32];
+    char* cursor = &chip_line[sizeof("ЧИП:") - 1];
+    append_text(cursor, chip_line + sizeof(chip_line) - 1, chip_name);
+    *cursor = 0;
+    build_ru_memory_text(memory_line, sizeof(memory_line));
+    lcd_ru::print_lines(chip_line, memory_line);
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Chip:");
+    lcd.print(chip_name);
+    lcd.setCursor(0,1);
+    lcd.print(mem_text);
+  }
   kbd::get_key_wait();
   return action::MENU_BACK;
 }
