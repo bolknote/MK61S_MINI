@@ -2,6 +2,7 @@
 #include "menu.hpp"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
+#include "basic.hpp"
 
 extern MK61Display lcd;
 extern t_time_ms runtime_ms;
@@ -17,11 +18,12 @@ static constexpr int MENU_MEMORY   = 3;
 static constexpr int MENU_LANGUAGE = 4;
 static constexpr int MENU_LIBRARY  = 5;
 static constexpr int MENU_GAMES    = 6;
-static constexpr int MENU_RESET    = 7;
-static constexpr int MENU_ERASE    = 8;
-static constexpr int MENU_INFO     = 9;
-static constexpr int MENU_HW       = 10;
-static constexpr int MENU_CGROM    = 11;
+static constexpr int MENU_BASIC    = 7;
+static constexpr int MENU_RESET    = 8;
+static constexpr int MENU_ERASE    = 9;
+static constexpr int MENU_INFO     = 10;
+static constexpr int MENU_HW       = 11;
+static constexpr int MENU_CGROM    = 12;
 
 static bool sound_enabled = true;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
@@ -138,6 +140,7 @@ bool  LCDCGROMTest(void) {
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
 const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct GAME_61_punct       = {.size = 10, .action = &mk61_games_select,                  .text = "MK61 Games"};
+const t_punct BASIC_punct         = {.size = 11, .action = &BASIC_menu_select,                  .text = "BASIC tools"};
 const t_punct RESET_punct         = {.size = 12, .action = (menu_action) &NVIC_SystemReset,     .text = "Reset device"};
 const t_punct ERASE_punct         = {.size = 12, .action = (menu_action) &EraseFlash,           .text = "Erase FLASH!"};
 const t_punct SOUND_ON_punct      = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Sound ON       "};
@@ -157,6 +160,7 @@ const t_punct CGROM_punct         = {.size = 10, .action = (menu_action) &LCDCGR
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU ПРОШИВКА"};
 const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "БИБЛИОТЕКА"};
 const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "ИГРЫ MK61"};
+const t_punct RU_BASIC_punct      = {.size = 15, .action = &BASIC_menu_select,                  .text = "BASIC"};
 const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "СБРОС"};
 const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "СТЕРЕТЬ FLASH"};
 const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSound,            .text = "ЗВУК ВКЛ"};
@@ -179,6 +183,7 @@ t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &LANGUAGE_EN_punct,
       (t_punct*) &LIB_61_punct,
       (t_punct*) &GAME_61_punct,
+      (t_punct*) &BASIC_punct,
       (t_punct*) &RESET_punct,
       (t_punct*) &ERASE_punct,
       (t_punct*) &FLASH_punct,
@@ -257,6 +262,7 @@ void refresh_menu_text(void) {
   MENU[MENU_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_GAMES]    = (t_punct*) (russian_language ? &RU_GAME_61_punct : &GAME_61_punct);
+  MENU[MENU_BASIC]    = (t_punct*) (russian_language ? &RU_BASIC_punct : &BASIC_punct);
   MENU[MENU_RESET]    = (t_punct*) (russian_language ? &RU_RESET_punct : &RESET_punct);
   MENU[MENU_ERASE]    = (t_punct*) (russian_language ? &RU_ERASE_punct : &ERASE_punct);
   MENU[MENU_INFO]     = (t_punct*) (russian_language ? &RU_FLASH_punct : &FLASH_punct);
