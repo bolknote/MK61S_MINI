@@ -32,7 +32,8 @@ struct SettingsFlags {
       u8 language_ru : 1;
       u8 expanded_program : 1;
       u8 program_memory_auto : 1;
-      u8 reserved : 4;
+      u8 settings_layout : 1;
+      u8 reserved : 3;
     } bits;
   };
 
@@ -141,7 +142,8 @@ inline u8 read_counter_switch(void) {
 inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
   SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
   if(raw_flags == 0xFF) flags.bits.sound_on = 1;
-  if(raw_flags == 0xFF) flags.bits.program_memory_auto = 1;
+  if(raw_flags == 0xFF || flags.bits.settings_layout == 0) flags.bits.program_memory_auto = 1;
+  flags.bits.settings_layout = 1;
   flags.bits.reserved = 0;
   return flags;
 }
@@ -151,6 +153,7 @@ inline SettingsFlags read_settings_flags(void) {
 }
 
 inline void store_settings_flags(SettingsFlags flags) {
+  flags.bits.settings_layout = 1;
   flags.bits.reserved = 0;
   EEPROM.update(switch_settings, flags.raw);
 }
