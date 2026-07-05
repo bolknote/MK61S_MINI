@@ -33,6 +33,11 @@ jobs:
           arduino-cli core update-index
           arduino-cli core install "STMicroelectronics:stm32@$STM32_CORE_VERSION"
 
+      - name: Install Arduino libraries
+        run: |
+          arduino-cli lib update-index
+          arduino-cli lib install "LiquidCrystal"
+
       - name: Prepare sketch
         run: |
           mkdir -p "$RUNNER_TEMP/mk61s-M"
