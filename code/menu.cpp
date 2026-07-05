@@ -21,7 +21,6 @@ static constexpr int MENU_RESET    = 7;
 static constexpr int MENU_ERASE    = 8;
 static constexpr int MENU_INFO     = 9;
 static constexpr int MENU_HW       = 10;
-static constexpr int MENU_CGROM    = 11;
 
 static bool sound_enabled = true;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
@@ -100,41 +99,6 @@ bool  InfoData(void) {
   return false;
 }
 
-bool  LCDCGROMTest(void) {
-  lcd_ru::restore_default_font();
-
-  u8 page = 0xF0;
-  while(true) {
-    char header[17];
-    snprintf(header, sizeof(header), "CGROM %02X-%02X", page, (u8) (page + 0x0F));
-
-    {
-      MK61DisplayUpdate update(lcd);
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print(header);
-      lcd.setCursor(0, 1);
-      for(u8 i = 0; i < lcd_display::COLS; i++) {
-        lcd.write((u8) (page + i));
-      }
-    }
-
-    const i32 key = kbd::get_key_wait();
-    switch(key) {
-      case KEY_RIGHT_PRESS:
-        page = (page >= 0xF0) ? 0xA0 : (u8) (page + 0x10);
-        break;
-      case KEY_LEFT_PRESS:
-        page = (page <= 0xA0) ? 0xF0 : (u8) (page - 0x10);
-        break;
-      case KEY_OK_PRESS:
-      case KEY_ESC_PRESS:
-        lcd_ru::restore_default_font();
-        return action::MENU_BACK;
-    }
-  }
-}
-
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
 const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct GAME_61_punct       = {.size = 10, .action = &mk61_games_select,                  .text = "MK61 Games"};
@@ -152,7 +116,6 @@ const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLa
 const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Язык рус"};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
-const t_punct CGROM_punct         = {.size = 10, .action = (menu_action) &LCDCGROMTest,         .text = "LCD CGROM"};
 
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
 const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
@@ -169,7 +132,6 @@ const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnPr
 const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память авто"};
 const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "Информация"};
 const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "Плата"};
-const t_punct RU_CGROM_punct      = {.size = 15, .action = (menu_action) &LCDCGROMTest,         .text = "Тест LCD"};
 
 t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &DFU_mode_punct,
@@ -182,8 +144,7 @@ t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &RESET_punct,
       (t_punct*) &ERASE_punct,
       (t_punct*) &FLASH_punct,
-      (t_punct*) &HARDWARE_punct,
-      (t_punct*) &CGROM_punct
+      (t_punct*) &HARDWARE_punct
 };
 
 bool  sound_is_on(void) {
@@ -261,7 +222,6 @@ void refresh_menu_text(void) {
   MENU[MENU_ERASE]    = (t_punct*) (russian_language ? &RU_ERASE_punct : &ERASE_punct);
   MENU[MENU_INFO]     = (t_punct*) (russian_language ? &RU_FLASH_punct : &FLASH_punct);
   MENU[MENU_HW]       = (t_punct*) (russian_language ? &RU_HARDWARE_punct : &HARDWARE_punct);
-  MENU[MENU_CGROM]    = (t_punct*) (russian_language ? &RU_CGROM_punct : &CGROM_punct);
 }
 
 void  store_settings_state(void) {
