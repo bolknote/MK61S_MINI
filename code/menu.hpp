@@ -13,7 +13,7 @@ namespace action {
 
 typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню 
 
-static constexpr int MENU_PUNCT = 11;
+static constexpr int MENU_PUNCT = 12;
 
 enum class ProgramMemoryMode : u8 {
   CLASSIC_105,
@@ -39,6 +39,7 @@ extern bool TurnSound(void);
 extern bool TurnSpeed(void);
 extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
+extern bool LCDCGROMTest(void);
 
 namespace library_mk61 {
   const   int             COUNT_PUNCTS = MENU_PUNCT;

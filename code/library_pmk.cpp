@@ -279,63 +279,6 @@ static constexpr usize SETUP_KEY_HOLD_STEPS = 4;
 static constexpr usize SETUP_KEY_SETTLE_STEPS = 64;
 static constexpr usize SETUP_RUN_STEPS = 50000;
 
-#ifdef SERIAL_OUTPUT
-static u32 load_diag_start_ms = 0;
-static u32 load_diag_last_ms = 0;
-
-const char* hidden_key_name(sw key) {
-  switch(key) {
-    case sw::F: return "F";
-    case sw::NEG: return "NEG";
-    case sw::RET: return "RET";
-    case sw::RUN: return "RUN";
-    default: return "?";
-  }
-}
-
-void load_diag_begin(const char* item_text) {
-  load_diag_start_ms = millis();
-  load_diag_last_ms = load_diag_start_ms;
-  Serial.println();
-  Serial.print("[load] begin ");
-  Serial.println(item_text);
-}
-
-void load_diag(const char* phase) {
-  const u32 now = millis();
-  Serial.print("[load] ");
-  Serial.print(now - load_diag_start_ms);
-  Serial.print(" ms +");
-  Serial.print(now - load_diag_last_ms);
-  Serial.print(" ");
-  Serial.print(phase);
-  Serial.print(" IP=");
-  Serial.print(core_61::get_IP());
-  Serial.print(" run=");
-  Serial.print(core_61::is_RUN());
-  Serial.print(" calc=");
-  Serial.println(core_61::is_CALC());
-  load_diag_last_ms = now;
-}
-
-void load_diag_value(const char* phase, usize value) {
-  const u32 now = millis();
-  Serial.print("[load] ");
-  Serial.print(now - load_diag_start_ms);
-  Serial.print(" ms +");
-  Serial.print(now - load_diag_last_ms);
-  Serial.print(" ");
-  Serial.print(phase);
-  Serial.print("=");
-  Serial.println(value);
-  load_diag_last_ms = now;
-}
-#else
-inline void load_diag_begin(const char*) {}
-inline void load_diag(const char*) {}
-inline void load_diag_value(const char*, usize) {}
-#endif
-
 void clear_registers(void) {
   for(u8 nReg=0; nReg < 0x0F; nReg++) MK61Emu_UnpackRegster(nReg, (u8*) &pack_clear_register);
 }
@@ -370,102 +313,56 @@ void load_registers(usize offs, u8* data_stream) {
 void hidden_press_key(sw key) {
   const TMK61_cross_key cross_key = KeyPairs[(u8) key];
   core_61::clear_displayed();
-  usize hold_count = 0;
-  usize settle_count = 0;
-  #ifdef SERIAL_OUTPUT
-    const u32 start_ms = millis();
-  #endif
 
   for(usize i = 0; i < SETUP_KEY_HOLD_STEPS; i++) {
     MK61Emu_SetKeyPress(cross_key.x, cross_key.y);
     core_61::step();
-    hold_count++;
     if(core_61::is_RUN()) break;
   }
 
   for(usize i = 0; i < SETUP_KEY_SETTLE_STEPS; i++) {
     core_61::step();
-    settle_count++;
     if(core_61::is_RUN() || core_61::is_displayed()) break;
   }
 
   core_61::clear_displayed();
-  #ifdef SERIAL_OUTPUT
-    Serial.print("[key] ");
-    Serial.print(hidden_key_name(key));
-    Serial.print(" ms=");
-    Serial.print(millis() - start_ms);
-    Serial.print(" hold=");
-    Serial.print(hold_count);
-    Serial.print(" settle=");
-    Serial.print(settle_count);
-    Serial.print(" IP=");
-    Serial.print(core_61::get_IP());
-    Serial.print(" run=");
-    Serial.print(core_61::is_RUN());
-    Serial.print(" calc=");
-    Serial.println(core_61::is_CALC());
-  #endif
 }
 
 void hidden_return_to_program_start(void) {
-  load_diag("return start begin");
   core_61::set_IP(0);
   core_61::clear_displayed();
-  load_diag("return start end");
 }
 
 bool run_loaded_setup_program(void) {
-  load_diag("setup run begin");
   hidden_return_to_program_start();
   hidden_press_key(sw::RUN);
 
   if(!core_61::is_RUN()) {
-    load_diag("setup run failed to enter RUN");
     return false;
   }
 
-  #ifdef SERIAL_OUTPUT
-    const u32 start_ms = millis();
-  #endif
   for(usize i = 0; i < SETUP_RUN_STEPS; i++) {
     core_61::step();
     if(core_61::is_CALC()) {
       core_61::clear_displayed();
-      #ifdef SERIAL_OUTPUT
-        Serial.print("[setup-run] ms=");
-        Serial.print(millis() - start_ms);
-        Serial.print(" steps=");
-        Serial.print(i + 1);
-        Serial.print(" IP=");
-        Serial.println(core_61::get_IP());
-      #endif
-      load_diag("setup run stop");
       return true;
     }
   }
 
-  load_diag("setup run timeout");
   return false;
 }
 
 bool run_setup_from(usize setup_offs, u8* setup_stream, u8 setup_angle, bool force_expanded) {
-  load_diag_value("setup offset", setup_offs);
-  load_diag_value("setup code len", setup_stream[setup_offs]);
   const usize register_offs = load_code_only(setup_offs, setup_stream, force_expanded);
-  load_diag("setup code loaded");
   clear_registers();
-  load_diag("setup registers cleared");
 
   if(setup_angle == RADIAN || setup_angle == GRADE || setup_angle == DEGREE) {
     MK61Emu_SetAngleUnit((AngleUnit) setup_angle);
-    load_diag("setup angle set");
   }
 
   if(!run_loaded_setup_program()) return false;
 
   load_registers(register_offs, setup_stream);
-  load_diag("setup registers loaded");
   return true;
 }
 
@@ -508,12 +405,6 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
       case KEY_ESC_PRESS:
         return -1; // отмена
       case KEY_OK_PRESS:
-        #ifdef SERIAL_OUTPUT
-          Serial.print("load code '");
-          Serial.print(list[selector].text);
-          Serial.print("' offset: ");
-          Serial.println(list[selector].offset);
-        #endif
         return selector;
     }
 
@@ -544,49 +435,32 @@ void loaded_message(const TPunct& item) {
 
 bool  load_from(usize offs, /*TPunct* list,*/ u8* data_stream, bool force_expanded = false) {
   offs = load_code_only(offs, data_stream, force_expanded);
-  load_diag("main code loaded");
   clear_registers();
-  load_diag("main registers cleared");
   load_registers(offs, data_stream);
-  load_diag("main registers loaded");
   return true;
 }
 
 bool load_item(const TPunct& item, u8* code_stream, u8* setup_stream) {
-  load_diag_begin(item.text);
-  load_diag_value("main offset", item.offset);
-  load_diag_value("main code len", code_stream[item.offset]);
-  load_diag_value("setup offset", item.setup_offset);
   const bool needs_expanded = code_needs_expanded((usize) item.offset, code_stream);
-  load_diag_value("needs expanded", needs_expanded);
   if(!library_mk61::program_memory_mode_accepts(needs_expanded)) {
-    load_diag("memory mode error");
     memory_mode_error();
     return false;
   }
 
   if(item.setup_offset != NO_SETUP) {
     if(run_setup_from((usize) item.setup_offset, setup_stream, item.setup_angle, needs_expanded)) {
-      load_diag("setup finished");
       load_code_only((usize) item.offset, code_stream, needs_expanded);
-      load_diag("main code loaded");
       hidden_return_to_program_start();
-      load_diag("main return start done");
-      load_diag("loaded message begin");
       loaded_message(item);
-      load_diag("loaded message end");
       return true;
     } else {
-      load_diag("setup failed");
       ErrorReaction();
       return false;
     }
   }
 
   if(!load_from((usize) item.offset, code_stream, needs_expanded)) return false;
-  load_diag("loaded message begin");
   loaded_message(item);
-  load_diag("loaded message end");
   return true;
 }
 
