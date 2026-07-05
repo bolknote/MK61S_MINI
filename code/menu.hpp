@@ -28,8 +28,9 @@ extern bool TurnSpeed(void);
 namespace library_mk61 {
   const   int             COUNT_PUNCTS = MENU_PUNCT;
   extern  t_punct*        MENU[MENU_PUNCT];
-  
+
   extern  bool  sound_is_on(void);
+  extern  void  load_settings_state(void);
   extern  bool  speed_is_max(void);
 }
 

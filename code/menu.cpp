@@ -8,6 +8,8 @@ extern t_time_ms runtime_ms;
 
 namespace library_mk61 {
 
+static bool sound_enabled = true;
+
 bool  HardwareInfo(void) {
   lcd.clear(); 
   lcd.setCursor(0,0); lcd.print("Chip:"); lcd.print(chip_name);
@@ -53,7 +55,20 @@ t_punct* MENU[MENU_PUNCT] = {
 };
 
 bool  sound_is_on(void) {
-  return library_mk61::MENU[1] == &library_mk61::SOUND_ON_punct;
+  return sound_enabled;
+}
+
+void  set_sound_state(bool enable) {
+  sound_enabled = enable;
+  MENU[1] = (t_punct*) (enable ? &SOUND_ON_punct : &SOUND_OFF_punct);
+}
+
+void  store_settings_state(void) {
+  store_settings_flags(sound_enabled ? SETTINGS_SOUND_ON : 0);
+}
+
+void  load_settings_state(void) {
+  set_sound_state((read_settings_flags() & SETTINGS_SOUND_ON) != 0);
 }
 
 bool  speed_is_max(void) {
@@ -78,10 +93,11 @@ bool   TurnSpeed(void) {
 
 bool   TurnSound(void) {
   if(library_mk61::sound_is_on()) {
-    library_mk61::MENU[1] = (t_punct*) &library_mk61::SOUND_OFF_punct;
+    library_mk61::set_sound_state(false);
   } else {
-    library_mk61::MENU[1] = (t_punct*) &library_mk61::SOUND_ON_punct;
+    library_mk61::set_sound_state(true);
   }
+  library_mk61::store_settings_state();
 
   return action::MENU_BACK;
 }

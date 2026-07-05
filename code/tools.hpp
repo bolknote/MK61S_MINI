@@ -18,6 +18,9 @@ static constexpr isize BLOCK_SIZE           = 106 / 13;
 
 static const int switch_R_GRD_G = 106;
 static const int count_switch_R_GRD_G = 107;
+static const int switch_settings = 108;
+static constexpr u8 SETTINGS_SOUND_ON  = 0x01;
+static constexpr u8 SETTINGS_USED_MASK = SETTINGS_SOUND_ON;
 
 extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms);
@@ -96,6 +99,18 @@ inline AngleUnit read_grade_switch(void) {
 
 inline u8 read_counter_switch(void) {
   return EEPROM.read(count_switch_R_GRD_G);
+}
+
+inline u8 normalize_settings_flags(u8 flags) {
+  return (flags == 0xFF) ? SETTINGS_SOUND_ON : (flags & SETTINGS_USED_MASK);
+}
+
+inline u8 read_settings_flags(void) {
+  return normalize_settings_flags(EEPROM.read(switch_settings));
+}
+
+inline void store_settings_flags(u8 flags) {
+  EEPROM.update(switch_settings, flags & SETTINGS_USED_MASK);
 }
 
 inline AngleUnit load_grade_switch(void) {

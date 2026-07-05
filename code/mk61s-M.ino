@@ -174,6 +174,7 @@ void setup() {
 
   //  kbd::test();
   kbd::init();
+  library_mk61::load_settings_state();
   
   #if defined(REVISION_V2) || defined(REVISION_V3)
     pinMode(PIN_LCD_RW, OUTPUT);
@@ -503,4 +504,3 @@ void event_unhold_key(i32 unholded_key, i32 hold_quant) {
         break;
   }
 }
-
