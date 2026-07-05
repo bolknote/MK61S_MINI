@@ -56,25 +56,38 @@ inline void  event_start_prg_mk61(void) {
   runtime_ms  =   millis();
 }
 
+inline void service_run_keypress(void) {
+  const i32 keycode = kbd::get_key(PRESS);
+  if(keycode >= 0) key_press_handler(keycode);
+}
+
+inline void run_program_steps(void) {
+  const usize step_count = library_mk61::speed_is_turbo() ? cfg::TURBO_MK61_BATCH_STEPS : 1;
+
+  for(usize i = 0; i < step_count; i++) {
+      core_61::step();
+
+      if(core_61::is_CALC()) {
+          event_stop_in_prg_mk61();     // обработка события "ОСТАНОВ ПРОГРАММЫ"
+          break;
+      }
+  }
+
+  service_run_keypress();
+}
+
 /* АВТОМАТ конечных состояний МК-61 */
 inline void mk61_automate(void) {
   static constexpr i32 REQUEST_IDLE_LOOP  =   1;  // любое положительное число
   static constexpr i32 REQUEST_BASE_LOOP  =  -1;  // любое отрицательное число
   static i32 sending_keycode = REQUEST_BASE_LOOP;
 
-  if(core_61::is_RUN()) { 
+  if(core_61::is_RUN()) {
   // === режим работы по программе ===
       dbgln(MINI, "RUN: next steps");
 
-      core_61::step();
-            
-      const i32 keycode = kbd::get_key(PRESS);
-      if(keycode >= 0) key_press_handler(keycode); 
-
-      if(core_61::is_CALC()) {
-          event_stop_in_prg_mk61();     // обработка события "ОСТАНОВ ПРОГРАММЫ"
-      }
-  } else { 
+      run_program_steps();
+  } else {
   // === обычный режим работы каклькулятора ===
       if(sending_keycode >= 0) { 
         // в предыдущем цикле в ядро mk61 был передан код клавиши - запуск "холостых" циклов

@@ -6,7 +6,7 @@
 extern LiquidCrystal lcd;
 extern t_time_ms runtime_ms;
 extern void reset_ext_program_state(void);
-//extern isize mk61_quants_reload;
+extern isize mk61_quants_reload;
 
 namespace library_mk61 {
 
@@ -23,10 +23,15 @@ static constexpr int MENU_INFO     = 9;
 static constexpr int MENU_HW       = 10;
 
 static bool sound_enabled = true;
-static bool speed_max_enabled = true;
+static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
+
+static void set_speed_mode_state(SpeedMode mode) {
+  speed_mode_state = mode;
+  ::mk61_quants_reload = (mode == SpeedMode::CLASSIC) ? cfg::CLASSIC_MK61_QUANTS : 1;
+}
 
 bool  HardwareInfo(void) {
   lcd.clear(); 
@@ -57,6 +62,7 @@ const t_punct SOUND_ON_punct      = {.size = 15, .action = (menu_action) &TurnSo
 const t_punct SOUND_OFF_punct     = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Sound OFF      "};
 const t_punct SPEED_LOW_punct     = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
 const t_punct SPEED_HIGH_punct    = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
+const t_punct SPEED_TURBO_punct   = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed TURBO    "};
 const t_punct MEMORY_105_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 105     "};
 const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 112     "};
 const t_punct MEMORY_AUTO_punct   = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory AUTO    "};
@@ -74,6 +80,7 @@ const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSo
 const t_punct RU_SOUND_OFF_punct  = {.size = 15, .action = (menu_action) &TurnSound,            .text = "ЗВУК ВЫКЛ"};
 const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ НОРМА"};
 const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ МАКС"};
+const t_punct RU_SPEED_TURBO_punct= {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ ТУРБО"};
 const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 105"};
 const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 112"};
 const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ АВТО"};
@@ -145,10 +152,22 @@ static t_punct* memory_punct(void) {
   return (t_punct*) (russian_language ? &RU_MEMORY_105_punct : &MEMORY_105_punct);
 }
 
+static t_punct* speed_punct(void) {
+  switch(speed_mode_state) {
+    case SpeedMode::CLASSIC:
+      return (t_punct*) (russian_language ? &RU_SPEED_LOW_punct : &SPEED_LOW_punct);
+    case SpeedMode::TURBO:
+      return (t_punct*) (russian_language ? &RU_SPEED_TURBO_punct : &SPEED_TURBO_punct);
+    case SpeedMode::MAXIMUM:
+    default:
+      return (t_punct*) (russian_language ? &RU_SPEED_HIGH_punct : &SPEED_HIGH_punct);
+  }
+}
+
 void refresh_menu_text(void) {
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SOUND]    = (t_punct*) (russian_language ? (sound_enabled ? &RU_SOUND_ON_punct : &RU_SOUND_OFF_punct) : (sound_enabled ? &SOUND_ON_punct : &SOUND_OFF_punct));
-  MENU[MENU_SPEED]    = (t_punct*) (russian_language ? (speed_max_enabled ? &RU_SPEED_HIGH_punct : &RU_SPEED_LOW_punct) : (speed_max_enabled ? &SPEED_HIGH_punct : &SPEED_LOW_punct));
+  MENU[MENU_SPEED]    = speed_punct();
   MENU[MENU_MEMORY]   = memory_punct();
   MENU[MENU_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
@@ -165,6 +184,7 @@ void  store_settings_state(void) {
   flags.bits.language_ru = russian_language;
   flags.bits.expanded_program = expanded_program;
   flags.bits.program_memory_auto = (memory_mode == ProgramMemoryMode::AUTO);
+  flags.bits.speed_mode = (u8) speed_mode_state;
   store_settings_flags(flags);
 }
 
@@ -176,26 +196,39 @@ void  load_settings_state(void) {
   memory_mode = (flags.bits.program_memory_auto != 0)
     ? ProgramMemoryMode::AUTO
     : (expanded_program ? ProgramMemoryMode::EXPANDED_112 : ProgramMemoryMode::CLASSIC_105);
+  const u8 stored_speed = flags.bits.speed_mode;
+  set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
   refresh_menu_text();
 }
 
+SpeedMode speed_mode(void) {
+  return speed_mode_state;
+}
+
 bool  speed_is_max(void) {
-  return speed_max_enabled;
+  return speed_mode_state != SpeedMode::CLASSIC;
+}
+
+bool  speed_is_turbo(void) {
+  return speed_mode_state == SpeedMode::TURBO;
 }
 
 } // namespace library_mk61
 
 bool   TurnSpeed(void) {
-  extern isize mk61_quants_reload;
-
-  if(library_mk61::speed_is_max()) {
-    library_mk61::speed_max_enabled = false;
-    mk61_quants_reload = cfg::CLASSIC_MK61_QUANTS;
-  } else {
-    library_mk61::speed_max_enabled = true;
-    mk61_quants_reload = 1;
+  switch(library_mk61::speed_mode()) {
+    case SpeedMode::MAXIMUM:
+      library_mk61::set_speed_mode_state(SpeedMode::CLASSIC);
+      break;
+    case SpeedMode::CLASSIC:
+      library_mk61::set_speed_mode_state(SpeedMode::TURBO);
+      break;
+    case SpeedMode::TURBO:
+      library_mk61::set_speed_mode_state(SpeedMode::MAXIMUM);
+      break;
   }
   library_mk61::refresh_menu_text();
+  library_mk61::store_settings_state();
 
   return action::MENU_BACK;
 }

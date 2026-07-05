@@ -50,6 +50,8 @@ static  u32         wait_calc_time;
 static  bool        YZ_ZT;
 static  bool        lcd_hooked;
 static  bool        need_draw_lock_message;
+static  bool        turbo_display_dirty;
+static  t_time_ms   turbo_next_lcd_update;
 //static  bool        mk61_edit_program;
 
 const char terminal_symbols[16] = {
@@ -335,8 +337,18 @@ inline void mk61_process(void) {
   mk61_automate();
   if(core_61::is_displayed()) {
       core_61::clear_displayed();
-      if(!lcd_hooked) mk61_display_refresh();
+      turbo_display_dirty = true;
   }
+
+  if(!turbo_display_dirty) return;
+  if(core_61::is_RUN() && library_mk61::speed_is_turbo()) {
+      const t_time_ms now = millis();
+      if(now < turbo_next_lcd_update) return;
+      turbo_next_lcd_update = now + cfg::TURBO_LCD_UPDATE_MS;
+  }
+
+  turbo_display_dirty = false;
+  if(!lcd_hooked) mk61_display_refresh();
 }
 
 inline void message_of_unuse(void) {
@@ -455,15 +467,30 @@ void   mk61_baseloop_hook(i32 key) {
 }
 
 void  loop() {
+  idle_main_process();
+
   const time_t time_is_now = millis();
+  const bool turbo_run = core_61::is_RUN() && library_mk61::speed_is_turbo();
 
   // планируем реакцию на бездействие калькулятора (только для первого входа в процедуру)
   constexpr static time_t DELAY_UNUSED = 1000 * 60 * 5;
   static time_t time_message_of_unuse = time_is_now + DELAY_UNUSED; // 5 Минут повтор события
 
   #ifdef TERMINAL // Подмена полученной с терминала клавиши через буфер клавиатуры
-    const i32 key_from_terminal = terminal.serial_input_handler();
-    if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
+    static u8 turbo_serial_poll_divider;
+    bool terminal_poll_enabled = true;
+    if(turbo_run) {
+      terminal_poll_enabled = (turbo_serial_poll_divider == 0);
+      turbo_serial_poll_divider++;
+      if(turbo_serial_poll_divider >= cfg::TURBO_SERIAL_POLL_LOOPS) turbo_serial_poll_divider = 0;
+    } else {
+      turbo_serial_poll_divider = 0;
+    }
+
+    if(terminal_poll_enabled) {
+      const i32 key_from_terminal = terminal.serial_input_handler();
+      if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
+    }
   #endif
 
   const i32 used_key = kbd::last_key();

@@ -179,6 +179,9 @@ class class_calc_config {
 namespace cfg {
 
 static constexpr isize  CLASSIC_MK61_QUANTS    =    72500;   // Константна замедления ядра mk61s в классичесокм режиме
+static constexpr usize  TURBO_MK61_BATCH_STEPS =       16;   // Сколько шагов ядра делать за один проход RUN-обвязки в режиме TURBO
+static constexpr t_time_ms TURBO_LCD_UPDATE_MS =      120;   // Минимальная пауза между обновлениями LCD в TURBO RUN
+static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как часто опрашивать терминал в TURBO RUN
 
 }
 

@@ -960,6 +960,7 @@ inline  usize __attribute__((always_inline))  IK1306_GoZero(void) {
 void  cycle(void) {
   mtick_t signal_I;
   const int MAX_CYCLE = (sergey_anvarov_hack_enable)? 280 : 560;
+  const u8* active_end_ring_m = &ringM[core_61::ring_size()];
   for (int count = 1; count <= MAX_CYCLE; count++){
       signal_I = 0;
 
@@ -1017,7 +1018,6 @@ void  cycle(void) {
           CycleB(4);
           CycleE(5);    // 41
 
-          const u8* active_end_ring_m = &ringM[core_61::ring_size()];
           m_IK1302.pM += 42;
           m_IK1303.pM += 42;
           m_IK1306.pM += 42;

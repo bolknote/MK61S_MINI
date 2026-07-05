@@ -21,6 +21,12 @@ enum class ProgramMemoryMode : u8 {
   AUTO
 };
 
+enum class SpeedMode : u8 {
+  CLASSIC,
+  MAXIMUM,
+  TURBO
+};
+
 struct  t_punct {
     u8            size;
     menu_action   action;
@@ -48,7 +54,9 @@ namespace library_mk61 {
   extern  void  refresh_menu_text(void);
   extern  void  store_settings_state(void);
   extern  void  load_settings_state(void);
+  extern  SpeedMode speed_mode(void);
   extern  bool  speed_is_max(void);
+  extern  bool  speed_is_turbo(void);
 
   inline const char* text(const char* en, const char* ru) {
     return language_is_ru() ? ru : en;

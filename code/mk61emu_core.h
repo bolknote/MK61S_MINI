@@ -178,6 +178,7 @@ namespace core_61 {
   inline    u8    get_IPH(void)         { return  m_IK1302.R[34] & 0xF; }
   inline    u8    get_IPL(void)         { return  m_IK1302.R[31] & 0xF; }
   inline    u8    get_IP (void)         { return  get_IPH()*10 + get_IPL(); }
+  inline    void  set_IP(u8 address)    { m_IK1302.R[34] = (address / 10) & 0xF; m_IK1302.R[31] = address % 10; }
   extern    u8    get_code(i32 addr);
 
   inline    bool  is_displayed(void)    { return (m_IK1302.displayed != 0); }
