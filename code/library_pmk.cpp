@@ -6,41 +6,58 @@
 #include  "keyboard.h"
 #include  "cross_hal.h"
 #include  "tools.hpp"
+#include  "menu.hpp"
 #include "debug.h"
 
 static  i8          selProgram, selGame;
 
 static const u32 Factorial_size       = 1 + 8 + 1;
 static const u32 Fox_hunting_size     = 1 + 105 + 1;
-static const u32 Naval_battle_size    = 1 + 105 + 7*2 + 1;
-static const u32 Bumblebee_fly_size   = 1 + 105 + 3*7 + 2*4 + 6 + 2*4 + 7 + 4 + 1;
-static const u32 Double_interpol_size = 1 + 105 + 10*4 + 1;
-static const u32 Infinity_story_size  = 1 + 105 + 11*4 + 6 + 1;
-static const u32 Wumpus_size          = 1 + 105 + 9*4 + 5 + 3 + 5*5 + 1;
+static const u32 Naval_battle_size    = 1 + 105 + 1;
+static const u32 Bumblebee_fly_size   = 1 + 105 + 1;
+static const u32 Double_interpol_size = 1 + 105 + 1;
+static const u32 Infinity_story_size  = 1 + 105 + 1;
+static const u32 Wumpus_size          = 1 + 105 + 1;
 static const u32 Simple_num_size      = 1 +  27 + 1;
 static const u32 e_num_size           = 1 + (6 + 6 * 16) + 1;
-static const u32 lunolet1_size        = 1 + (2 + 6 * 16) + (4 + 8*4) + 1;
-static const u32 dec2nat              = 1 + (3 * 16 + 2) + 4 + 1;
+static const u32 lunolet1_size        = 1 + (2 + 6 * 16) + 1;
+static const u32 dec2nat              = 1 + (3 * 16 + 2) + 1;
 static const u32 powerUR              = 1 + (2 * 16 + 14) + 1;
+static const u32 Double_interpol_setup_size = 1 + 40 + 1;
+static const u32 dec2nat_setup_size         = 1 + 6 + 1;
+static const u32 Fox_hunting_setup_size     = 1 + 2 + 1;
+static const u32 Naval_battle_setup_size    = 1 + 10 + 7 + 1;
+static const u32 Bumblebee_fly_setup_size   = 1 + 17 + 3*7 + 6 + 7 + 1;
+static const u32 Infinity_story_setup_size  = 1 + 37 + 1;
+static const u32 lunolet1_setup_size        = 1 + 42 + 1;
+static const u32 Wumpus_setup_size          = 1 + 74 + 1;
+static constexpr usize Double_interpol_setup_offset = 0;
+static constexpr usize dec2nat_setup_offset = Double_interpol_setup_offset + Double_interpol_setup_size;
+static constexpr usize Fox_hunting_setup_offset = 0;
+static constexpr usize Naval_battle_setup_offset = Fox_hunting_setup_offset + Fox_hunting_setup_size;
+static constexpr usize Bumblebee_fly_setup_offset = Naval_battle_setup_offset + Naval_battle_setup_size;
+static constexpr usize Infinity_story_setup_offset = Bumblebee_fly_setup_offset + Bumblebee_fly_setup_size;
+static constexpr usize lunolet1_setup_offset = Infinity_story_setup_offset + Infinity_story_setup_size;
+static constexpr usize Wumpus_setup_offset = lunolet1_setup_offset + lunolet1_setup_size;
 
 static  TPunct programs[COUNT_PROGRAMS] = {
 //          0123456789ABCDEF
   {.text = "Factorial      ", .offset = 0},
-  {.text = "Double interpol", .offset = Factorial_size},
+  {.text = "Double interpol", .offset = Factorial_size, .setup_offset = Double_interpol_setup_offset},
   {.text = "Simple number  ", .offset = Factorial_size + Double_interpol_size},
   {.text = "Compute e-num  ", .offset = Factorial_size + Double_interpol_size + Simple_num_size},
-  {.text = "dec  => natural", .offset = Factorial_size + Double_interpol_size + Simple_num_size + e_num_size},
+  {.text = "dec  => natural", .offset = Factorial_size + Double_interpol_size + Simple_num_size + e_num_size, .setup_offset = dec2nat_setup_offset},
   {.text = "Power for U & R", .offset = Factorial_size + Double_interpol_size + Simple_num_size + e_num_size + dec2nat}
 };
 
 static  TPunct games[COUNT_GAMES] = {
 //          0123456789ABCDEF
-  {.text = "Fox hunting    ", .offset = 0},
-  {.text = "Naval battle   ", .offset = Fox_hunting_size},
-  {.text = "Bumblebee fly  ", .offset = Fox_hunting_size + Naval_battle_size},
-  {.text = "Infinity store ", .offset = Fox_hunting_size + Naval_battle_size + Bumblebee_fly_size},
-  {.text = "Lunolet-1      ", .offset = Fox_hunting_size + Naval_battle_size + Bumblebee_fly_size + Infinity_story_size},
-  {.text = "Wumpus         ", .offset = Fox_hunting_size + Naval_battle_size + Bumblebee_fly_size + Infinity_story_size + lunolet1_size}
+  {.text = "Fox hunting    ", .offset = 0, .setup_offset = Fox_hunting_setup_offset},
+  {.text = "Naval battle   ", .offset = Fox_hunting_size, .setup_offset = Naval_battle_setup_offset},
+  {.text = "Bumblebee fly  ", .offset = Fox_hunting_size + Naval_battle_size, .setup_offset = Bumblebee_fly_setup_offset},
+  {.text = "Infinity store ", .offset = Fox_hunting_size + Naval_battle_size + Bumblebee_fly_size, .setup_offset = Infinity_story_setup_offset},
+  {.text = "Lunolet-1      ", .offset = Fox_hunting_size + Naval_battle_size + Bumblebee_fly_size + Infinity_story_size, .setup_offset = lunolet1_setup_offset},
+  {.text = "Wumpus         ", .offset = Fox_hunting_size + Naval_battle_size + Bumblebee_fly_size + Infinity_story_size + lunolet1_size, .setup_offset = Wumpus_setup_offset, .setup_angle = (u8) RADIAN}
 };
 
 static  u8          mk61_games[] = {
@@ -65,9 +82,6 @@ static  u8          mk61_games[] = {
   0x5B, 0x63, 0x60, 0x41, 0x05, 0x4D, 0xAA, 0x6C, 0x0C, 0x02, 0x34, 0x52, 0x3E, 0x0F, 0x14, 0x0F, 
   0x13, 0x34, 0x0E, 0x25, 0x12, 0x01, 0x11, 0x11, 0x52, 0x15, 0x0F, 0x34, 0xAB, 0x57, 0x68, 0x53, 
   0x42, 0x61, 0x5B, 0x87, 0x6B, 0x52, 0x00, 0x00, 0x00,
-// registers {nReg, sign_num|sign_pow|len, abs(pow), mantissa... }
-  0x0A, 0x04, 0x07, 0x33, 0x33, 0x33, 0x31,
-  0x0B, 0xC4, 0x07, 0x8C, 0xEC, 0x6A, 0xBA,
   0xFF,
 // Bumble fly
   9 + 6 * 16,
@@ -78,18 +92,7 @@ static  u8          mk61_games[] = {
   0x4D, 0xD6, 0x6D, 0x69, 0x21, 0x12, 0x4D, 0x34, 0x57, 0x31, 0x6E, 0x10, 0x4E, 0x60, 0x66, 0x10,
   0x46, 0x15, 0x13, 0x6D, 0x68, 0x10, 0xD8, 0x37, 0x35, 0x23, 0x07, 0x6E, 0x11, 0x59, 0x59, 0x66,
   0x6E, 0x15, 0x13, 0x68, 0x10, 0x6B, 0x37, 0x34, 0x23, 0x68, 0x44, 0x6D, 0x4A, 0x89, 0x65, 0x0E,
-  0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x69, 0x1D, 0x32, 0x52,  
-// registers {nReg, sign_num|sign_pow|len, abs(pow), mantissa... }
-  0x01, 0x04, 0x00, 0x8B, 0x72, 0x73, 0xE6,
-  0x02, 0x04, 0x00, 0x83, 0x7E, 0x73, 0x36,
-  0x03, 0x04, 0x00, 0x83, 0x62, 0x73, 0xE6,
-  0x04, 0x01, 0x00, 0x10,
-  0x05, 0x01, 0x00, 0x00,
-  0x07, 0x03, 0x05, 0xDE, 0xCE, 0x55,
-  0x09, 0x01, 0x02, 0x10,
-  0x0A, 0x41, 0x98, 0x10,
-  0x0B, 0x04, 0x00, 0x8A, 0xBB, 0x9B, 0xFB,
-  0x0C, 0x01, 0x01, 0x94,
+  0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x69, 0x1D, 0x32, 0x52,
   0xFF,
 // Infinity story  
   9 + 6 * 16,
@@ -101,18 +104,6 @@ static  u8          mk61_games[] = {
   0x65, 0x0F, 0x01, 0x11, 0x11, 0x5E, 0x78, 0x66, 0x64, 0x11, 0x59, 0x78, 0x6B, 0x45, 0x65, 0x6E, 
   0x11, 0x5E, 0x85, 0x6D, 0x50, 0x6B, 0x65, 0x11, 0x5E, 0x96, 0x05, 0x64, 0x11, 0x5E, 0x96, 0x50, 
   0x64, 0xA8, 0x65, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E,
-  0x00, 0x01, 0x02, 0x10, // R0 = 100
-  0x01, 0x01, 0x01, 0x10, // R1 = 10
-  0x03, 0x01, 0x00, 0x10, // R3 = 1
-  0x06, 0x81, 0x01, 0x07, // R6 = -7
-  0x07, 0x01, 0x01, 0x37, // R7 = 37
-  0x08, 0x01, 0x01, 0x99, // R8 = 99
-  0x09, 0x01, 0x01, 0x10, // R9 = 10
-  0x0A, 0x01, 0x02, 0x10, // RA = 100
-  0x0B, 0x81, 0x01, 0x40, // RB = -40
-  0x0C, 0x01, 0x02, 0x10, // RC = 100
-  0x0E, 0x81, 0x01, 0x39, // RE = -39
-  0x0D, 0x03, 0x00, 0xDD, 0xD0, 0xDF, // RD = Г.ГГОГ
   0xFF,
 // Lunalet-1
   6 * 16 + 2,
@@ -124,15 +115,6 @@ static  u8          mk61_games[] = {
   0x10, 0x4B, 0x0F, 0x10, 0x02, 0x13, 0x62, 0x12, 0x6A, 0x10, 0x4A, 0x6C, 0x62, 0x60, 0x12, 0x11,
   0x4C, 0x6D, 0x61, 0x11, 0x4D, 0x52, 0x66, 0x69, 0x50, 0x0D, 0x41, 0x14, 0x42, 0x5C, 0x50, 0x63,
   0x51, 0x59,
-// registers {nReg, sign_num(8-bit)|sign_pow(7-bit)|len(bytes for mantisa), abs(pow), mantissa... }
-  0x00, 0x01, 0x00, 0x10,       // R0 = 1
-  0x04, 0x02, 0x00, 0x16, 0x20, // R4 = 1.62
-  0x05, 0x02, 0x03, 0x22, 0x50, // R5 = 2250
-  0x06, 0x02, 0x03, 0x36, 0x60, // R6 = 3660
-  0x07, 0x02, 0x01, 0x29, 0x43, // R7 = 29.43 3G
-  0x09, 0x01, 0x00, 0xD0,       // R9 = Г
-  0x0D, 0x01, 0x02, 0x40,       // RD = 2250
-  0x0C, 0x01, 0x03, 0x36,       // RC = 3600
   0xFF,
 // Wumpus
   105,
@@ -144,23 +126,97 @@ static  u8          mk61_games[] = {
   0x66, 0x11, 0xED, 0x29, 0x66, 0x68, 0x11, 0x7A, 0x66, 0x61, 0x11, 0x66, 0x62, 0x11, 0x12, 0x7A,
   0x66, 0x63, 0x11, 0x66, 0x64, 0x11, 0x12, 0xED, 0x3B, 0x6B, 0x12, 0x0E, 0x35, 0x11, 0x01, 0x10,
   0x46, 0x51, 0x68, 0x66, 0x11, 0x1D, 0x6D, 0x11, 0x52,
-// registers; R1-R4 and R8 are randomized after loading.
-  0x00, 0x01, 0x00, 0x50,       // R0 = 5
-  0x0B, 0x01, 0x01, 0x20,       // RB = 20
-  0x05, 0x01, 0x00, 0x00,       // R5 = 0
-  0x06, 0x01, 0x00, 0x10,       // R6 = 1
-  0x07, 0x01, 0x00, 0x00,       // R7 = 0
-  0x09, 0x01, 0x01, 0x99,       // R9 = 99
-  0x0A, 0x01, 0x01, 0x67,       // RA = 67
-  0x0C, 0x01, 0x01, 0x10,       // RC = 10
-  0x0D, 0x41, 0x99, 0x80,       // RD = 0.8
-  0x0E, 0x02, 0x02, 0x77, 0x70, // RE = 777
-  0xFE, 0x01, RADIAN,           // angle unit = radians
-  0xFE, 0x02, 0x01, 0x01, 0x14, // R1 = random room 1..20
-  0xFE, 0x02, 0x02, 0x01, 0x14, // R2 = random room 1..20
-  0xFE, 0x02, 0x03, 0x01, 0x14, // R3 = random room 1..20
-  0xFE, 0x02, 0x04, 0x01, 0x14, // R4 = random room 1..20
-  0xFE, 0x02, 0x08, 0x01, 0x14, // R8 = random room 1..20
+  0xFF
+};
+
+static  u8          mk61_program_setups[] = {
+// Double interpolate setup
+  40,
+  0x04, 0x00, 0x41,                   // 40 xP1
+  0x08, 0x00, 0x00, 0x42,             // 800 xP2
+  0x01, 0x00, 0x00, 0x00, 0x43,       // 1000 xP3
+  0x02, 0x00, 0x44,                   // 20 xP4
+  0x05, 0x00, 0x00, 0x45,             // 500 xP5
+  0x06, 0x00, 0x00, 0x46,             // 600 xP6
+  0x03, 0x00, 0x00, 0x48,             // 300 xP8
+  0x01, 0x00, 0x00, 0x00, 0x49,       // 1000 xP9
+  0x08, 0x00, 0x00, 0x4A,             // 800 xPA
+  0x02, 0x02, 0x4B,                   // 22 xPB
+  0x50,                               // S/P
+  0xFF,
+// Decimal fraction to natural setup
+  6,
+  0x01, 0x0C, 0x0B, 0x07, 0x49, 0x50, // 1 ВП /-/ 7 xP9; S/P
+  0xFF
+};
+
+static  u8          mk61_game_setups[] = {
+// Fox hunting setup
+  2,
+  0x3B, 0x50,                         // КСЧ; S/P
+  0xFF,
+// Naval battle setup
+  10,
+  0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x4A, 0x50, // 33333331 xPA; S/P
+  0x0B, 0xC4, 0x07, 0x8C, 0xEC, 0x6A, 0xBA, // RB = -8CEC6-L-
+  0xFF,
+// Bumblebee fly setup
+  17,
+  0x01, 0x44,                         // 1 xP4
+  0x00, 0x45,                         // 0 xP5
+  0x01, 0x00, 0x00, 0x49,             // 100 xP9
+  0x01, 0x0C, 0x0B, 0x02, 0x4A,       // 1E-2 xPA
+  0x09, 0x04, 0x4C,                   // 94 xPC
+  0x50,                               // S/P
+  0x01, 0x04, 0x00, 0x8B, 0x72, 0x73, 0xE6,
+  0x02, 0x04, 0x00, 0x83, 0x7E, 0x73, 0x36,
+  0x03, 0x04, 0x00, 0x83, 0x62, 0x73, 0xE6,
+  0x07, 0x03, 0x05, 0xDE, 0xCE, 0x55,
+  0x0B, 0x04, 0x00, 0x8A, 0xBB, 0x9B, 0xFB,
+  0xFF,
+// Infinity story setup
+  37,
+  0x03, 0x07, 0x47,                   // 37 xP7
+  0x09, 0x09, 0x48,                   // 99 xP8
+  0x01, 0x00, 0x49, 0x41,             // 10 xP9 xP1
+  0x01, 0x43,                         // 1 xP3
+  0x01, 0x00, 0x00, 0x40, 0x4A, 0x4C, // 100 xP0 xPA xPC
+  0x07, 0x0B, 0x46,                   // 7 /-/ xP6
+  0x04, 0x00, 0x0B, 0x4B,             // 40 /-/ xPB
+  0x03, 0x09, 0x0B, 0x4E,             // 39 /-/ xPE
+  0x0D, 0x44, 0x45, 0x42, 0x13, 0x0C, 0x4D, // Cx xP4 xP5 xP2 / ВП xPD
+  0x50,                               // S/P
+  0xFF,
+// Lunolet-1 setup
+  42,
+  0x01, 0x40,                         // 1 xP0
+  0x01, 0x0A, 0x06, 0x02, 0x44,       // 1.62 xP4
+  0x02, 0x02, 0x05, 0x00, 0x45,       // 2250 xP5
+  0x03, 0x06, 0x06, 0x00, 0x46,       // 3660 xP6
+  0x02, 0x09, 0x0A, 0x04, 0x03, 0x47, // 29.43 xP7
+  0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x49, // 88888888 xP9
+  0x03, 0x06, 0x00, 0x00, 0x4C,       // 3600 xPC
+  0x04, 0x00, 0x00, 0x4D,             // 400 xPD
+  0x50,                               // S/P
+  0xFF,
+// Wumpus setup
+  74,
+  0x05, 0x40,                         // 5 xP0
+  0x02, 0x00, 0x4B,                   // 20 xPB
+  0x3B, 0x6B, 0x12, 0x0E, 0x35, 0x11, 0x01, 0x10, 0x41, // random xP1
+  0x3B, 0x6B, 0x12, 0x0E, 0x35, 0x11, 0x01, 0x10, 0x42, // random xP2
+  0x3B, 0x6B, 0x12, 0x0E, 0x35, 0x11, 0x01, 0x10, 0x43, // random xP3
+  0x3B, 0x6B, 0x12, 0x0E, 0x35, 0x11, 0x01, 0x10, 0x44, // random xP4
+  0x00, 0x45,                         // 0 xP5
+  0x01, 0x46,                         // 1 xP6
+  0x00, 0x47,                         // 0 xP7
+  0x3B, 0x6B, 0x12, 0x0E, 0x35, 0x11, 0x01, 0x10, 0x48, // random xP8
+  0x09, 0x09, 0x49,                   // 99 xP9
+  0x06, 0x07, 0x4A,                   // 67 xPA
+  0x01, 0x00, 0x4C,                   // 10 xPC
+  0x00, 0x0A, 0x08, 0x4D,             // 0.8 xPD
+  0x07, 0x07, 0x07, 0x4E,             // 777 xPE
+  0x50,                               // S/P
   0xFF
 };
 
@@ -179,18 +235,8 @@ static  u8          mk61_lib[] = {
   0x65, 0x12, 0x0E, 0x67, 0x10, 0x47, 0x6A, 0x0E, 0x68, 0x11, 0x0E, 0x61, 0x0E, 0x6B, 0x11, 0x0E,
   0x25, 0x25, 0x25, 0x12, 0x0E, 0x66, 0x12, 0x0E, 0x67, 0x10, 0x47, 0x69, 0x0E, 0x6A, 0x11, 0x0E, 
   0x6B, 0x0E, 0x64, 0x11, 0x0E, 0x25, 0x25, 0x25, 0x12, 0x0E, 0x62, 0x12, 0x0E, 0x67, 0x10, 0x47, 
-  0x6A, 0x0E, 0x68, 0x11, 0x0E, 0x6B, 0x0E, 0x64, 0x11, 0x0E, 0x25, 0x25, 0x25, 0x12, 0x0E, 0x63, 
+  0x6A, 0x0E, 0x68, 0x11, 0x0E, 0x6B, 0x0E, 0x64, 0x11, 0x0E, 0x25, 0x25, 0x25, 0x12, 0x0E, 0x63,
   0x12, 0x0E, 0x67, 0x10, 0x47, 0x0E, 0x60, 0x13, 0x50,
-  0x01, 0x01, 0x01, 0x40,  // 40
-  0x02, 0x01, 0x02, 0x80,  // 800
-  0x03, 0x01, 0x03, 0x10,  // 1000
-  0x04, 0x01, 0x01, 0x20,  // 20
-  0x05, 0x01, 0x02, 0x50,  // 500
-  0x06, 0x01, 0x02, 0x60,  // 600
-  0x08, 0x01, 0x02, 0x30,  // 300
-  0x09, 0x01, 0x03, 0x10,  // 1000
-  0x0A, 0x01, 0x02, 0x80,  // 800
-  0x0B, 0x01, 0x01, 0x22,  // 22
   0xFF,
 // Simple numbers
   27,
@@ -214,10 +260,8 @@ static  u8          mk61_lib[] = {
 //  0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
   0x40, 0x41, 0x34, 0x43, 0x01, 0x42, 0x46, 0x00, 0x45, 0x61, 0x35, 0x23, 0x41, 0x61, 0x34, 0x63, 
   0x12, 0x62, 0x10, 0x44, 0x61, 0x34, 0x66, 0x12, 0x65, 0x10, 0x47, 0x63, 0x42, 0x64, 0x43, 0x66,
-  0x45, 0x67, 0x46, 0x64, 0x67, 0x13, 0x60, 0x11, 0x31, 0x69, 0x11, 0x5C, 0x09, 0x67, 0x64, 0x50, 
+  0x45, 0x67, 0x46, 0x64, 0x67, 0x13, 0x60, 0x11, 0x31, 0x69, 0x11, 0x5C, 0x09, 0x67, 0x64, 0x50,
   0x51, 0x00,
-//
-  0x09, 0x41, 0x93, 0x10,       // R9 = 1E-7
   0xFF,
 // Подсчет мощности на резисторе U,R
   2*16 + 14,
@@ -230,37 +274,87 @@ static  u8          mk61_lib[] = {
 // registers = 0.0 {sign_num(8-bit)|sign_pow(7-bit)|len(bytes for mantisa), abs(pow), mantissa... }
 const u8 pack_clear_register[3] = {0x01, 0x00, 0x00};  // 0.0
 
-static constexpr u8 LOAD_INIT_CMD = 0xFE;
-static constexpr u8 LOAD_INIT_ANGLE = 0x01;
-static constexpr u8 LOAD_INIT_RANDOM_INT_REGISTER = 0x02;
+static constexpr usize SETUP_KEY_SETTLE_STEPS = 64;
+static constexpr usize SETUP_RUN_STEPS = 50000;
 
-void unpack_positive_int_register(u8 nReg, u8 value) {
-  u8 pack_number[3] = {
-    0x01,
-    (u8) ((value >= 10) ? 0x01 : 0x00),
-    (u8) ((value >= 10) ? (((value / 10) << 4) | (value % 10)) : (value << 4))
-  };
-  MK61Emu_UnpackRegster(nReg, &pack_number[0]);
+void clear_registers(void) {
+  for(u8 nReg=0; nReg < 0x0F; nReg++) MK61Emu_UnpackRegster(nReg, (u8*) &pack_clear_register);
 }
 
-u8* run_load_init_command(u8* command, bool& random_seeded) {
-  switch(*command++) {
-    case LOAD_INIT_ANGLE:
-      MK61Emu_SetAngleUnit((AngleUnit) *command++);
-      break;
-    case LOAD_INIT_RANDOM_INT_REGISTER: {
-      const u8 nReg = *command++;
-      const u8 min_value = *command++;
-      const u8 max_value = *command++;
-      if(!random_seeded) {
-        randomSeed(micros() ^ millis());
-        random_seeded = true;
-      }
-      unpack_positive_int_register(nReg, (u8) random((long) min_value, (long) max_value + 1));
-      break;
+bool code_needs_expanded(usize offs, const u8* data_stream) {
+  const u32 code_len = data_stream[offs];
+  return program_needs_expanded_memory(&data_stream[offs + 1], code_len);
+}
+
+usize load_code_only(usize offs, const u8* data_stream, bool force_expanded = false) {
+  const u32 code_len = data_stream[offs++];
+  apply_program_memory_auto(&data_stream[offs], code_len, false, force_expanded);
+
+  const usize code_offs = offs;
+  const u32 program_steps = core_61::program_steps();
+  for(u32 addr=0; addr < program_steps; addr++) {
+      const u8 store_data = (addr < code_len)? data_stream[code_offs + addr] : 0;
+      MK61Emu_SetCode(core_61::get_ring_address(addr), store_data);
+  }
+  return code_offs + code_len;
+}
+
+void load_registers(usize offs, u8* data_stream) {
+  u8* pPack_number = &data_stream[offs];
+  while(*pPack_number != 0xFF) {
+    const u8 RegisterN = *pPack_number++;
+    dbghexln(LIB61, "unpack reg: ", RegisterN);
+    pPack_number = MK61Emu_UnpackRegster(RegisterN, pPack_number);
+  }
+}
+
+void hidden_press_key(sw key) {
+  const TMK61_cross_key cross_key = KeyPairs[(u8) key];
+  core_61::clear_displayed();
+  MK61Emu_SetKeyPress(cross_key.x, cross_key.y);
+
+  for(usize i = 0; i < SETUP_KEY_SETTLE_STEPS; i++) {
+    core_61::step();
+    if(core_61::is_RUN() || core_61::is_displayed()) break;
+  }
+  core_61::clear_displayed();
+}
+
+void hidden_return_to_program_start(void) {
+  hidden_press_key(sw::F);
+  hidden_press_key(sw::NEG);
+  hidden_press_key(sw::RET);
+}
+
+bool run_loaded_setup_program(void) {
+  hidden_return_to_program_start();
+  hidden_press_key(sw::RUN);
+
+  if(!core_61::is_RUN()) return false;
+
+  for(usize i = 0; i < SETUP_RUN_STEPS; i++) {
+    core_61::step();
+    if(core_61::is_CALC()) {
+      core_61::clear_displayed();
+      return true;
     }
   }
-  return command;
+
+  return false;
+}
+
+bool run_setup_from(usize setup_offs, u8* setup_stream, u8 setup_angle, bool force_expanded) {
+  const usize register_offs = load_code_only(setup_offs, setup_stream, force_expanded);
+  clear_registers();
+
+  if(setup_angle == RADIAN || setup_angle == GRADE || setup_angle == DEGREE) {
+    MK61Emu_SetAngleUnit((AngleUnit) setup_angle);
+  }
+
+  if(!run_loaded_setup_program()) return false;
+
+  load_registers(register_offs, setup_stream);
+  return true;
 }
 
 void  init_library(void) {
@@ -300,43 +394,59 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
           Serial.print(list[selector].text);
           Serial.print("' offset: ");
           Serial.println(list[selector].offset);
-        #endif 
-        lcd.clear();
-        lcd.setCursor(0, 0); lcd.print(list[selector].text);
-        //                              456789AbCDEF
-        lcd.setCursor(0, 2); lcd.print("is loaded.");
-        delay(1500);
+        #endif
         return selector;
     }
 
   } while(true);
 }
 
-void  load_from(usize offs, /*TPunct* list,*/ u8* data_stream) {
-  const u32 code_len = data_stream[offs++];
-  apply_program_memory_auto(&data_stream[offs], code_len, false);
+void memory_mode_error(void) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(library_mk61::text("Memory mode!", "MEM MODE"));
+  ErrorReaction();
+  delay(1500);
+}
 
-  for(u8 nReg=0; nReg < 0x0F; nReg++) MK61Emu_UnpackRegster(nReg, (u8*) &pack_clear_register);  // clear registers
+void loaded_message(const TPunct& item) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(item.text);
+  lcd.setCursor(0, 1);
+  lcd.print("is loaded.");
+  delay(1500);
+}
 
-  const usize code_offs = offs;
-  const u32 program_steps = core_61::program_steps();
-  for(u32 addr=0; addr < program_steps; addr++) {
-      const u8 store_data = (addr < code_len)? data_stream[code_offs + addr] : 0;
-      MK61Emu_SetCode(core_61::get_ring_address(addr), store_data);
+bool  load_from(usize offs, /*TPunct* list,*/ u8* data_stream, bool force_expanded = false) {
+  offs = load_code_only(offs, data_stream, force_expanded);
+  clear_registers();
+  load_registers(offs, data_stream);
+  return true;
+}
+
+bool load_item(const TPunct& item, u8* code_stream, u8* setup_stream) {
+  const bool needs_expanded = code_needs_expanded((usize) item.offset, code_stream);
+  if(!library_mk61::program_memory_mode_accepts(needs_expanded)) {
+    memory_mode_error();
+    return false;
   }
-  offs = code_offs + code_len;
 
-  bool random_seeded = false;
-  u8* pPack_number = &data_stream[offs];
-  while(*pPack_number != 0xFF) {
-    const u8 RegisterN = *pPack_number++;
-    if(RegisterN == LOAD_INIT_CMD) {
-      pPack_number = run_load_init_command(pPack_number, random_seeded);
-      continue;
+  if(item.setup_offset != NO_SETUP) {
+    if(run_setup_from((usize) item.setup_offset, setup_stream, item.setup_angle, needs_expanded)) {
+      load_code_only((usize) item.offset, code_stream, needs_expanded);
+      hidden_return_to_program_start();
+      loaded_message(item);
+      return true;
+    } else {
+      ErrorReaction();
+      return false;
     }
-    dbghexln(LIB61, "unpack reg: ", RegisterN);
-    pPack_number = MK61Emu_UnpackRegster(RegisterN, pPack_number);
   }
+
+  if(!load_from((usize) item.offset, code_stream, needs_expanded)) return false;
+  loaded_message(item);
+  return true;
 }
 
 int   select_program(void) {
@@ -347,10 +457,10 @@ int   select_game(void) {
   return select_from(COUNT_GAMES, games, selGame);
 }
 
-void  load_program(usize nProg_for_load) {
-  load_from(/*nProg_for_load,*/ programs[nProg_for_load].offset, mk61_lib);
+bool  load_program(usize nProg_for_load) {
+  return load_item(programs[nProg_for_load], mk61_lib, mk61_program_setups);
 }
 
-void  load_game(usize nGame_for_load) {
-  load_from(/*nGame_for_load,*/ games[nGame_for_load].offset, mk61_games);
+bool  load_game(usize nGame_for_load) {
+  return load_item(games[nGame_for_load], mk61_games, mk61_game_setups);
 }

@@ -12,7 +12,13 @@ namespace action {
 
 typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню 
 
-static constexpr int MENU_PUNCT = 10;
+static constexpr int MENU_PUNCT = 11;
+
+enum class ProgramMemoryMode : u8 {
+  CLASSIC_105,
+  EXPANDED_112,
+  AUTO
+};
 
 struct  t_punct {
     u8            size;
@@ -34,7 +40,10 @@ namespace library_mk61 {
   extern  bool  sound_is_on(void);
   extern  bool  language_is_ru(void);
   extern  bool  expanded_program_is_on(void);
+  extern  ProgramMemoryMode program_memory_mode(void);
+  extern  bool  program_memory_mode_accepts(bool needs_expanded);
   extern  void  set_program_memory_state(bool enable);
+  extern  void  set_program_memory_mode(ProgramMemoryMode mode);
   extern  void  refresh_menu_text(void);
   extern  void  store_settings_state(void);
   extern  void  load_settings_state(void);

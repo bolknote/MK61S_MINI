@@ -31,7 +31,8 @@ struct SettingsFlags {
       u8 sound_on : 1;
       u8 language_ru : 1;
       u8 expanded_program : 1;
-      u8 reserved : 5;
+      u8 program_memory_auto : 1;
+      u8 reserved : 4;
     } bits;
   };
 
@@ -140,6 +141,7 @@ inline u8 read_counter_switch(void) {
 inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
   SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
   if(raw_flags == 0xFF) flags.bits.sound_on = 1;
+  if(raw_flags == 0xFF) flags.bits.program_memory_auto = 1;
   flags.bits.reserved = 0;
   return flags;
 }

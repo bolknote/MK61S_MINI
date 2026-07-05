@@ -13,18 +13,20 @@ namespace library_mk61 {
 static constexpr int MENU_DFU      = 0;
 static constexpr int MENU_SOUND    = 1;
 static constexpr int MENU_SPEED    = 2;
-static constexpr int MENU_LANGUAGE = 3;
-static constexpr int MENU_LIBRARY  = 4;
-static constexpr int MENU_GAMES    = 5;
-static constexpr int MENU_RESET    = 6;
-static constexpr int MENU_ERASE    = 7;
-static constexpr int MENU_INFO     = 8;
-static constexpr int MENU_HW       = 9;
+static constexpr int MENU_MEMORY   = 3;
+static constexpr int MENU_LANGUAGE = 4;
+static constexpr int MENU_LIBRARY  = 5;
+static constexpr int MENU_GAMES    = 6;
+static constexpr int MENU_RESET    = 7;
+static constexpr int MENU_ERASE    = 8;
+static constexpr int MENU_INFO     = 9;
+static constexpr int MENU_HW       = 10;
 
 static bool sound_enabled = true;
 static bool speed_max_enabled = true;
 static bool russian_language = false;
 static bool expanded_program = false;
+static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
 
 bool  HardwareInfo(void) {
   lcd.clear(); 
@@ -57,8 +59,9 @@ const t_punct SPEED_LOW_punct     = {.size = 15, .action = (menu_action) &TurnSp
 const t_punct SPEED_HIGH_punct    = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
 const t_punct MEMORY_105_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 105     "};
 const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 112     "};
+const t_punct MEMORY_AUTO_punct   = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory AUTO    "};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
-const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "ЯЗЫК РУ"};
+const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "ЯЗЫК РУС"};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
 
@@ -73,6 +76,7 @@ const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSp
 const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ МАКС"};
 const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 105"};
 const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 112"};
+const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ АВТО"};
 const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "ИНФОРМАЦИЯ"};
 const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "ПЛАТА"};
 
@@ -80,6 +84,7 @@ t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &DFU_mode_punct,
       (t_punct*) &SOUND_ON_punct,
       (t_punct*) &SPEED_HIGH_punct,
+      (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &LANGUAGE_EN_punct,
       (t_punct*) &LIB_61_punct,
       (t_punct*) &GAME_61_punct,
@@ -114,10 +119,37 @@ void  set_program_memory_state(bool enable) {
   core_61::set_expanded_program_mode(enable);
 }
 
+ProgramMemoryMode program_memory_mode(void) {
+  return memory_mode;
+}
+
+bool program_memory_mode_accepts(bool needs_expanded) {
+  if(memory_mode == ProgramMemoryMode::AUTO) return true;
+  return needs_expanded == (memory_mode == ProgramMemoryMode::EXPANDED_112);
+}
+
+void set_program_memory_mode(ProgramMemoryMode mode) {
+  memory_mode = mode;
+  if(memory_mode != ProgramMemoryMode::AUTO) {
+    set_program_memory_state(memory_mode == ProgramMemoryMode::EXPANDED_112);
+  }
+}
+
+static t_punct* memory_punct(void) {
+  if(memory_mode == ProgramMemoryMode::AUTO) {
+    return (t_punct*) (russian_language ? &RU_MEMORY_AUTO_punct : &MEMORY_AUTO_punct);
+  }
+  if(memory_mode == ProgramMemoryMode::EXPANDED_112) {
+    return (t_punct*) (russian_language ? &RU_MEMORY_112_punct : &MEMORY_112_punct);
+  }
+  return (t_punct*) (russian_language ? &RU_MEMORY_105_punct : &MEMORY_105_punct);
+}
+
 void refresh_menu_text(void) {
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SOUND]    = (t_punct*) (russian_language ? (sound_enabled ? &RU_SOUND_ON_punct : &RU_SOUND_OFF_punct) : (sound_enabled ? &SOUND_ON_punct : &SOUND_OFF_punct));
   MENU[MENU_SPEED]    = (t_punct*) (russian_language ? (speed_max_enabled ? &RU_SPEED_HIGH_punct : &RU_SPEED_LOW_punct) : (speed_max_enabled ? &SPEED_HIGH_punct : &SPEED_LOW_punct));
+  MENU[MENU_MEMORY]   = memory_punct();
   MENU[MENU_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_GAMES]    = (t_punct*) (russian_language ? &RU_GAME_61_punct : &GAME_61_punct);
@@ -132,6 +164,7 @@ void  store_settings_state(void) {
   flags.bits.sound_on = sound_enabled;
   flags.bits.language_ru = russian_language;
   flags.bits.expanded_program = expanded_program;
+  flags.bits.program_memory_auto = (memory_mode == ProgramMemoryMode::AUTO);
   store_settings_flags(flags);
 }
 
@@ -140,6 +173,9 @@ void  load_settings_state(void) {
   set_sound_state(flags.bits.sound_on != 0);
   set_language_state(flags.bits.language_ru != 0);
   set_program_memory_state(flags.bits.expanded_program != 0);
+  memory_mode = (flags.bits.program_memory_auto != 0)
+    ? ProgramMemoryMode::AUTO
+    : (expanded_program ? ProgramMemoryMode::EXPANDED_112 : ProgramMemoryMode::CLASSIC_105);
   refresh_menu_text();
 }
 
@@ -185,11 +221,27 @@ bool   TurnLanguage(void) {
 }
 
 bool   TurnProgramMemory(void) {
-  library_mk61::set_program_memory_state(!library_mk61::expanded_program_is_on());
+  const bool was_expanded = library_mk61::expanded_program_is_on();
+
+  switch(library_mk61::program_memory_mode()) {
+    case ProgramMemoryMode::CLASSIC_105:
+      library_mk61::set_program_memory_mode(ProgramMemoryMode::EXPANDED_112);
+      break;
+    case ProgramMemoryMode::EXPANDED_112:
+      library_mk61::set_program_memory_mode(ProgramMemoryMode::AUTO);
+      break;
+    case ProgramMemoryMode::AUTO:
+      library_mk61::set_program_memory_mode(ProgramMemoryMode::CLASSIC_105);
+      break;
+  }
+
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
-  reset_ext_program_state();
-  core_61::enable();
+
+  if(was_expanded != library_mk61::expanded_program_is_on()) {
+    reset_ext_program_state();
+    core_61::enable();
+  }
 
   return action::MENU_BACK;
 }
@@ -198,7 +250,7 @@ bool  mk61_library_select(void) {
   const int n = select_program();
   if(n < 0) return action::MENU_BACK;
 
-  load_program(n);
+  if(!load_program(n)) return action::MENU_BACK;
   return action::MENU_EXIT;
 }
 
@@ -206,7 +258,7 @@ bool  mk61_games_select(void) {
   const int n = select_game();
   if(n < 0) return action::MENU_BACK;
 
-  load_game(n);
+  if(!load_game(n)) return action::MENU_BACK;
   return action::MENU_EXIT;
 }
 
