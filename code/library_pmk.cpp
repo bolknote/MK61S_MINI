@@ -420,9 +420,9 @@ void loaded_message(const TPunct& item) {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(item.text);
-  lcd.setCursor(0, 1);
-  lcd.print("is loaded.");
+  library_mk61::print_localized_at(0, 1, "ЗАГРУЖЕНО", "is loaded.");
   delay(1500);
+  library_mk61::restore_localized_font();
 }
 
 bool  load_from(usize offs, /*TPunct* list,*/ u8* data_stream, bool force_expanded = false) {

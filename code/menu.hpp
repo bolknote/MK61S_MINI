@@ -4,6 +4,7 @@
 #include  "keyboard.h"
 #include  "tools.hpp"
 #include  "library_pmk.hpp"
+#include  "lcd_ru.hpp"
 
 namespace action {
   static constexpr bool MENU_EXIT = true;
@@ -51,6 +52,22 @@ namespace library_mk61 {
 
   inline const char* text(const char* en, const char* ru) {
     return language_is_ru() ? ru : en;
+  }
+
+  inline void print_localized_at(u8 x, u8 y, const char* ru, const char* en, u8 width = lcd_ru::LCD_WIDTH) {
+    if(language_is_ru()) {
+      lcd_ru::print_at(x, y, ru, width);
+      return;
+    }
+
+    lcd.setCursor(x, y);
+    u8 used = 0;
+    while(en[used] != 0 && used < width) lcd.write((u8) en[used++]);
+    while(used++ < width) lcd.write((u8) ' ');
+  }
+
+  inline void restore_localized_font(void) {
+    if(language_is_ru()) lcd_ru::restore_default_font();
   }
 }
 

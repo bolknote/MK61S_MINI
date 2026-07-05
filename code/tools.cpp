@@ -19,7 +19,6 @@ using namespace led;
 
 extern void reset_ext_program_state(void);
 
-const  class_LCD_Label  DFU_message(0, 0);
 const  class_LCD_Label  STORE_message(0, 0);
 const  class_LCD_Label  STORE_progress_message(0, 1);
 
@@ -74,7 +73,7 @@ void DFU_enable(void) {
     void (*SysMemBootJump)(void);
 
   lcd.clear();
-  DFU_message.print(library_mk61::text(" DFU flash mode!", " DFU FLASH!    "));
+  library_mk61::print_localized_at(0, 0, "ПРОШИВКА DFU", " DFU flash mode!");
     __enable_irq();
     HAL_RCC_DeInit();
     HAL_DeInit();
