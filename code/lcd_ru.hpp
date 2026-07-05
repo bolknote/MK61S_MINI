@@ -2,6 +2,7 @@
 #define LCD_RU_ENCODER
 
 #include "lcd_gui.hpp"
+#include "lcd_charset.hpp"
 
 namespace lcd_ru {
 
@@ -82,7 +83,58 @@ inline u16 read_utf8(const char*& text) {
   return '?';
 }
 
-inline bool rom_char(u16 codepoint, u8& out) {
+inline bool a02_rom_char(u16 codepoint, u8& out) {
+#if defined(MK61_LCD1602_A02)
+  codepoint = uppercase(codepoint);
+  if(codepoint < 0x80) {
+    out = (u8) codepoint;
+    return true;
+  }
+
+  switch(codepoint) {
+    case 0x0410: out = 'A'; return true; // А
+    case 0x0411: out = lcd_charset::CYR_BE; return true; // Б
+    case 0x0412: out = 'B'; return true; // В
+    case 0x0413: out = lcd_charset::CYR_GHE; return true; // Г
+    case 0x0414: out = lcd_charset::CYR_DE; return true; // Д
+    case 0x0415: out = 'E'; return true; // Е
+    case 0x0401: out = lcd_charset::CYR_IO; return true; // Ё
+    case 0x0416: out = lcd_charset::CYR_ZHE; return true; // Ж
+    case 0x0417: out = lcd_charset::CYR_ZE; return true; // З
+    case 0x0418: out = lcd_charset::CYR_I; return true; // И
+    case 0x0419: out = lcd_charset::CYR_SHORT_I; return true; // Й
+    case 0x041A: out = 'K'; return true; // К
+    case 0x041B: out = lcd_charset::CYR_EL; return true; // Л
+    case 0x041C: out = 'M'; return true; // М
+    case 0x041D: out = 'H'; return true; // Н
+    case 0x041E: out = 'O'; return true; // О
+    case 0x041F: out = lcd_charset::CYR_PE; return true; // П
+    case 0x0420: out = 'P'; return true; // Р
+    case 0x0421: out = 'C'; return true; // С
+    case 0x0422: out = 'T'; return true; // Т
+    case 0x0423: out = lcd_charset::CYR_U; return true; // У
+    case 0x0424: out = lcd_charset::CYR_EF; return true; // Ф
+    case 0x0425: out = 'X'; return true; // Х
+    case 0x0426: out = lcd_charset::CYR_TSE; return true; // Ц
+    case 0x0427: out = lcd_charset::CYR_CHE; return true; // Ч
+    case 0x0428: out = lcd_charset::CYR_SHA; return true; // Ш
+    case 0x0429: out = lcd_charset::CYR_SHCHA; return true; // Щ
+    case 0x042A: out = lcd_charset::CYR_HARD; return true; // Ъ
+    case 0x042B: out = lcd_charset::CYR_YERU; return true; // Ы
+    case 0x042C: out = 'b'; return true; // Ь: closest built-in fallback
+    case 0x042D: out = lcd_charset::CYR_E; return true; // Э
+    case 0x042E: out = lcd_charset::CYR_YU; return true; // Ю
+    case 0x042F: out = lcd_charset::CYR_YA; return true; // Я
+    default: return false;
+  }
+#else
+  (void) codepoint;
+  (void) out;
+  return false;
+#endif
+}
+
+inline bool a00_rom_char(u16 codepoint, u8& out) {
   codepoint = uppercase(codepoint);
   if(codepoint < 0x80) {
     out = (u8) codepoint;
@@ -93,7 +145,7 @@ inline bool rom_char(u16 codepoint, u8& out) {
     case 0x0410: out = 'A'; return true; // А
     case 0x0412: out = 'B'; return true; // В
     case 0x0415: out = 'E'; return true; // Е
-    case 0x0401: out = 'E'; return true; // Ё
+    case 0x0401: out = 'E'; return true; // Ё -> Е for Japanese A00
     case 0x0417: out = '3'; return true; // З
     case 0x041A: out = 'K'; return true; // К
     case 0x041C: out = 'M'; return true; // М
@@ -103,8 +155,14 @@ inline bool rom_char(u16 codepoint, u8& out) {
     case 0x0421: out = 'C'; return true; // С
     case 0x0422: out = 'T'; return true; // Т
     case 0x0425: out = 'X'; return true; // Х
+    case 0x042C: out = 'b'; return true; // Ь
     default: return false;
   }
+}
+
+inline bool rom_char(u16 codepoint, u8& out) {
+  if(a02_rom_char(codepoint, out)) return true;
+  return a00_rom_char(codepoint, out);
 }
 
 inline bool fallback_char(u16 codepoint, u8& out) {

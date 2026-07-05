@@ -3,6 +3,7 @@
 #include  "config.h"
 #include  "rust_types.h"
 #include  "display.hpp"
+#include  "lcd_charset.hpp"
 #include  "mk61emu_core.h"
 
 extern MK61Display lcd;
@@ -33,6 +34,31 @@ static const u8 LCD_GRAD_CHAR     = 0x0F;
 static const u8 LCD_QUOTE_CHAR    = 0x60;
 static const u8 LCD_DOUBLE_QUOTE_CHAR    = 0x22;
 static const u8 CH_RUS            = 0x04;
+#elif defined(MK61_LCD1602_A02)
+static const u8 P_RUS             = lcd_charset::CYR_PE;
+static const u8 B_RUS             = lcd_charset::CYR_BE;
+static const u8 D_RUS             = lcd_charset::CYR_DE;
+static const u8 I_RUS             = lcd_charset::CYR_I;
+static const u8 G_RUS             = lcd_charset::CYR_GHE;
+static const u8 LCD_CHAR_POW2     = 0xB2;
+static const u8 LCD_CHAR_POWY     = 0x01;
+static const u8 LCD_CHAR_XOR      = 0x02;
+
+/* Набор символов LCD1602 A02 */
+static const u8 LCD_CYC_ARROW     = 0x05;
+static const u8 LCD_DIVIDE_CHAR   = 0xF7;
+static const u8 LCD_NOT_EQU_CHAR  = 0x03;
+static const u8 LCD_POW_X_CHAR    = 0x06;
+static const u8 LCD_UP_ARROW_CHAR = '^';
+static const u8 LCD_LT_ARROW_CHAR = 0x7F;
+static const u8 LCD_RT_ARROW_CHAR = 0x7E;
+static const u8 LCD_PI_CHAR       = 0x93;
+static const u8 LCD_SQRT_CHAR     = 0x04;
+static const u8 LCD_Em1_CHAR      = 0xB9;
+static const u8 LCD_GRAD_CHAR     = 0xB7;
+static const u8 LCD_QUOTE_CHAR    = 0x60;
+static const u8 LCD_DOUBLE_QUOTE_CHAR    = 0x22;
+static const u8 CH_RUS            = lcd_charset::CYR_CHE;
 #else
 static const u8 P_RUS             = 0x01;
 static const u8 B_RUS             = 0x02;
@@ -273,6 +299,36 @@ class class_LCD_fonts {
       0b01110,
       0b00000
 };
+    const u8 not_equal_bit[8] = {
+      0b00001,
+      0b00010,
+      0b11111,
+      0b00100,
+      0b11111,
+      0b01000,
+      0b10000,
+      0b00000
+    };
+    const u8 sqrt_bit[8] = {
+      0b00001,
+      0b00010,
+      0b00010,
+      0b10100,
+      0b01000,
+      0b00000,
+      0b00000,
+      0b00000
+    };
+    const u8 pow_x_bit[8] = {
+      0b00000,
+      0b00000,
+      0b01010,
+      0b00100,
+      0b01010,
+      0b00000,
+      0b00000,
+      0b00000
+    };
 //    const u8* fonts = {&GE_bit, &P_ru, &B_ru, &D_ru, &I_ru, &G_ru, POWSQR_bit, &POWY_bit, &XOR_bit};
   public:
     void load(void) const {
@@ -281,6 +337,16 @@ class class_LCD_fonts {
         return;
       #endif
       u32 ascii=0;
+      #if defined(MK61_LCD1602_A02)
+        lcd.createChar(GE, (uint8_t*) &fonts[0]);
+        lcd.createChar(LCD_CHAR_POWY, (uint8_t*) &fonts[7 * 8]);
+        lcd.createChar(LCD_CHAR_XOR, (uint8_t*) &fonts[8 * 8]);
+        lcd.createChar(LCD_NOT_EQU_CHAR, (uint8_t*) &not_equal_bit[0]);
+        lcd.createChar(LCD_SQRT_CHAR, (uint8_t*) &sqrt_bit[0]);
+        lcd.createChar(LCD_CYC_ARROW, (uint8_t*) &ROUND_ARROW_bit[0]);
+        lcd.createChar(LCD_POW_X_CHAR, (uint8_t*) &pow_x_bit[0]);
+        return;
+      #endif
       for(int i=0; i < 9 * 8; i += 8) {
         lcd.createChar(ascii++, (uint8_t*) &fonts[i]);
       }

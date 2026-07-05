@@ -149,27 +149,27 @@ const t_punct MEMORY_105_punct    = {.size = 15, .action = (menu_action) &TurnPr
 const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 112     "};
 const t_punct MEMORY_AUTO_punct   = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory AUTO    "};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
-const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "ЯЗЫК РУС"};
+const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Язык рус"};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
 const t_punct CGROM_punct         = {.size = 10, .action = (menu_action) &LCDCGROMTest,         .text = "LCD CGROM"};
 
-const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU ПРОШИВКА"};
-const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "БИБЛИОТЕКА"};
-const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "ИГРЫ MK61"};
-const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "СБРОС"};
-const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "СТЕРЕТЬ FLASH"};
-const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSound,            .text = "ЗВУК ВКЛ"};
-const t_punct RU_SOUND_OFF_punct  = {.size = 15, .action = (menu_action) &TurnSound,            .text = "ЗВУК ВЫКЛ"};
-const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ НОРМА"};
-const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ МАКС"};
-const t_punct RU_SPEED_TURBO_punct= {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ ТУРБО"};
-const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 105"};
-const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 112"};
-const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ АВТО"};
-const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "ИНФОРМАЦИЯ"};
-const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "ПЛАТА"};
-const t_punct RU_CGROM_punct      = {.size = 15, .action = (menu_action) &LCDCGROMTest,         .text = "ТЕСТ LCD"};
+const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
+const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
+const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "Игры MK61"};
+const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "Сброс"};
+const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "Стереть FLASH"};
+const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Звук вкл"};
+const t_punct RU_SOUND_OFF_punct  = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Звук выкл"};
+const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость норма"};
+const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость макс"};
+const t_punct RU_SPEED_TURBO_punct= {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость турбо"};
+const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 105"};
+const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 112"};
+const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память авто"};
+const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "Информация"};
+const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "Плата"};
+const t_punct RU_CGROM_punct      = {.size = 15, .action = (menu_action) &LCDCGROMTest,         .text = "Тест LCD"};
 
 t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &DFU_mode_punct,

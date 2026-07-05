@@ -24,9 +24,9 @@ const TMK61_cross_key KeyPairs[40] = {
 };
 
 const char m_Cx[]   = {2, 'C', 'x'};
-const char m_Bx[]   = {2, 'B', 0xC4};
+const char m_Bx[]   = {2, 'B', LCD_UP_ARROW_CHAR};
 const char m_mul[]  = {1, 'x'};
-const char m_div[]  = {1, 0xFD};
+const char m_div[]  = {1, LCD_DIVIDE_CHAR};
 const char m_G[]    = {3, ' ', ' ', G_RUS};
 const char m_E[]    = {2, 'B', P_RUS};
 const char m_XY[]   = {2, LCD_LT_ARROW_CHAR, LCD_RT_ARROW_CHAR};

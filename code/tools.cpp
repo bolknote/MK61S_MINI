@@ -72,7 +72,7 @@ void DFU_enable(void) {
     void (*SysMemBootJump)(void);
 
   lcd.clear();
-  library_mk61::print_localized_at(0, 0, "ПРОШИВКА DFU", " DFU flash mode!");
+  library_mk61::print_localized_at(0, 0, "Прошивка DFU", " DFU flash mode!");
     __enable_irq();
     HAL_RCC_DeInit();
     HAL_DeInit();

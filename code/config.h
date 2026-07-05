@@ -26,6 +26,8 @@
 
 // Дисплей: по умолчанию старый LCD1602. Для ERM19264/UC1609 включить MK61_DISPLAY_UC1609.
 //#define MK61_DISPLAY_UC1609
+// CGROM LCD1602: по умолчанию японский A00. Для европейского A02 включить MK61_LCD1602_A02.
+//#define MK61_LCD1602_A02
 
 //#define CDU
 //#define LK432
@@ -45,6 +47,22 @@
 
 #if !defined(MK61_DISPLAY_UC1609)
   #define MK61_DISPLAY_LCD1602
+#endif
+
+#if defined(DISPLAY_LCD1602_A00) && !defined(MK61_LCD1602_A00)
+  #define MK61_LCD1602_A00
+#endif
+
+#if defined(DISPLAY_LCD1602_A02) && !defined(MK61_LCD1602_A02)
+  #define MK61_LCD1602_A02
+#endif
+
+#if defined(MK61_LCD1602_A00) && defined(MK61_LCD1602_A02)
+  #error "Select only one LCD1602 CGROM variant"
+#endif
+
+#if defined(MK61_DISPLAY_LCD1602) && !defined(MK61_LCD1602_A00) && !defined(MK61_LCD1602_A02)
+  #define MK61_LCD1602_A00
 #endif
 
 #define IS_CORTEX_M4() (__ARM_ARCH == 7)

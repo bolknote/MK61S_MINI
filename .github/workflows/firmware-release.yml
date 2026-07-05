@@ -45,13 +45,23 @@ jobs:
           cp -R code/. "$RUNNER_TEMP/mk61s-M/"
           mkdir -p firmware
 
-      - name: Build LCD1602 firmware
+      - name: Build LCD1602 A00 firmware
         run: |
           arduino-cli compile \
             --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-lcd1602" \
+            --build-path "$RUNNER_TEMP/build-lcd1602-a00" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00" \
             "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-lcd1602/mk61s-M.ino.bin" "firmware/mk61s-M-lcd1602-f411-${GITHUB_SHA::7}.bin"
+          cp "$RUNNER_TEMP/build-lcd1602-a00/mk61s-M.ino.bin" "firmware/mk61s-M-lcd1602-a00-f411-${GITHUB_SHA::7}.bin"
+
+      - name: Build LCD1602 A02 firmware
+        run: |
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --build-path "$RUNNER_TEMP/build-lcd1602-a02" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A02" \
+            "$RUNNER_TEMP/mk61s-M"
+          cp "$RUNNER_TEMP/build-lcd1602-a02/mk61s-M.ino.bin" "firmware/mk61s-M-lcd1602-a02-f411-${GITHUB_SHA::7}.bin"
 
       - name: Build UC1609 firmware
         run: |

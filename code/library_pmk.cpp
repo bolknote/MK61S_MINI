@@ -436,7 +436,7 @@ void loaded_message(const TPunct& item) {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(item.text);
-    library_mk61::print_localized_at(0, 1, "ЗАГРУЖЕНО", "is loaded.");
+    library_mk61::print_localized_at(0, 1, "Загружено", "is loaded.");
   }
   delay(1500);
   library_mk61::restore_localized_font();
