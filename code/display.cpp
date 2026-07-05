@@ -15,6 +15,10 @@ void MK61Display::clear(void) {
 
 void MK61Display::flush(void) {}
 
+void MK61Display::beginUpdate(void) {}
+
+void MK61Display::endUpdate(void) {}
+
 void MK61Display::setCursor(u8 x, u8 y) {
   lcd.setCursor(x, y);
 }
@@ -43,6 +47,8 @@ MK61Display::MK61Display(void)
     full_screen(screen_buffer, lcd_display::PIXEL_WIDTH, lcd_display::PIXEL_HEIGHT, 0, 0),
     custom_glyphs{{0}},
     custom_valid{false},
+    dirty(false),
+    update_depth(0),
     cursor_x(0),
     cursor_y(0) {}
 
@@ -51,7 +57,7 @@ void MK61Display::begin(u8, u8) {
   lcd.LCDFillScreen(0x00, 0);
   lcd.ActiveBuffer = &full_screen;
   lcd.setFontNum(UC1609Font_Default);
-  lcd.setTextWrap(true);
+  lcd.setTextWrap(false);
   lcd.setTextSize(2);
   lcd.setTextColor(FOREGROUND, BACKGROUND);
   clear();
@@ -62,11 +68,22 @@ void MK61Display::clear(void) {
   cursor_x = 0;
   cursor_y = 0;
   movePixelCursor();
-  flush();
+  markDirty();
 }
 
 void MK61Display::flush(void) {
+  if(!dirty) return;
   lcd.LCDupdate();
+  dirty = false;
+}
+
+void MK61Display::beginUpdate(void) {
+  update_depth++;
+}
+
+void MK61Display::endUpdate(void) {
+  if(update_depth > 0) update_depth--;
+  if(update_depth == 0) flush();
 }
 
 void MK61Display::setCursor(u8 x, u8 y) {
@@ -83,6 +100,11 @@ void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
 
 void MK61Display::clearCustomChars(void) {
   for(u8 i = 0; i < CUSTOM_GLYPHS; i++) custom_valid[i] = false;
+}
+
+void MK61Display::markDirty(void) {
+  dirty = true;
+  if(update_depth == 0) flush();
 }
 
 void MK61Display::movePixelCursor(void) {
@@ -129,7 +151,6 @@ void MK61Display::write(uint8_t value) {
     cursor_x = 0;
     if(cursor_y + 1 < lcd_display::ROWS) cursor_y++;
     movePixelCursor();
-    flush();
 #if ARDUINO >= 100
     return 1;
 #else
@@ -144,7 +165,7 @@ void MK61Display::write(uint8_t value) {
     lcd.write(value);
   }
   advanceCursor();
-  flush();
+  markDirty();
 
 #if ARDUINO >= 100
   return 1;

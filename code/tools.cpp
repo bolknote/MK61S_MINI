@@ -92,11 +92,14 @@ void DFU_enable(void) {
 bool  Confirmation(void) {
   extern void lcd_std_display_redraw(void);
 
+  {
+    MK61DisplayUpdate update(lcd);
     lcd.setCursor(0,0); lcd.print(library_mk61::text("press OK confirm", "OK \001O\003TBEP\003"));
-    i32 key = kbd::get_key_wait();
-    lcd_std_display_redraw();
+  }
+  i32 key = kbd::get_key_wait();
+  lcd_std_display_redraw();
 
-    return (key == KEY_OK);
+  return (key == KEY_OK);
 }
 
 void  sound(usize pin, isize freq_Hz, usize duration_ms) {
@@ -107,7 +110,10 @@ void  sound(usize pin, isize freq_Hz, usize duration_ms) {
 
 void message_and_waitkey(const char* lcd_message) {
   led::on();
-  lcd.setCursor(0, 1); lcd.print(lcd_message);
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.setCursor(0, 1); lcd.print(lcd_message);
+  }
   kbd::get_key_wait();
   led::off();
 }
@@ -271,10 +277,13 @@ bool Load(usize nSlot) {
 }
 
 bool Load(void) {
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd.print(library_mk61::text("Load ", "\321T ")); 
-
-  const isize address = calc_address();
+  isize address;
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    lcd.setCursor(0, 0); lcd.print(library_mk61::text("Load ", "\321T "));
+    address = calc_address();
+  }
   if(address < 0) return false; // error
 
   return load_from(address);
@@ -393,13 +402,19 @@ bool Store(usize nSlot) {
 }
 
 bool Store(void) {
-  lcd.clear(); lcd.setCursor(0, 0);
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear(); lcd.setCursor(0, 0);
+  }
 
   if(check_empty_program()) return false; // error
 
-  lcd.print(library_mk61::text("Save ", "\001\004C ")); //lcd.setCursor(7, 0); 
-
-  const isize address = calc_address();
+  isize address;
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.print(library_mk61::text("Save ", "\001\004C ")); //lcd.setCursor(7, 0);
+    address = calc_address();
+  }
   if(address < 0) return false; // error
 
   if(load_word(address, OFFSET_FLAG_OCCUPIED) == SLOT_OCCUPIED) {
@@ -408,7 +423,10 @@ bool Store(void) {
       Serial.println(address);
     #endif
     sound(PIN_BUZZER, 4000, 750);
-    lcd.setCursor(0, 0); lcd.print(library_mk61::text("OVER", "OVER")); lcd.setCursor(8, 0); lcd.print(library_mk61::text("press OK", "OK?"));
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(0, 0); lcd.print(library_mk61::text("OVER", "OVER")); lcd.setCursor(8, 0); lcd.print(library_mk61::text("press OK", "OK?"));
+    }
     if(kbd::get_key_wait() != KEY_OK) return false; // error
   }
 
@@ -434,8 +452,11 @@ bool Store(void) {
     #ifdef SERIAL_OUTPUT
       Serial.write('#');
     #endif
-    const u8 x = i / BLOCK_SIZE; 
-    lcd.setCursor(x, 1); lcd.print((char) 0xFF); lcd.print(i);
+    const u8 x = i / BLOCK_SIZE;
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(x, 1); lcd.print((char) 0xFF); lcd.print(i);
+    }
   }
   for(usize i = program_steps; i < core_61::MAX_PROGRAM_STEP; i++) {
     store_word(address, OFFSET_MK61_PROGRAMM + i, 0);
@@ -450,14 +471,23 @@ bool Store(void) {
 using namespace action;
 
 bool  EraseFlash(void) {
-  sound(PIN_BUZZER, 4000, 750);   
-  lcd.setCursor(0, 0); lcd.print(library_mk61::text("press OK ERASED!", "OK CTEP FLASH")); 
-  if(kbd::get_key_wait() != KEY_OK) return action::MENU_BACK; 
- // стираем внешний флеш 
-  lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase slot ", "CTEP SLOT "));
+  sound(PIN_BUZZER, 4000, 750);
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.setCursor(0, 0); lcd.print(library_mk61::text("press OK ERASED!", "OK CTEP FLASH"));
+  }
+  if(kbd::get_key_wait() != KEY_OK) return action::MENU_BACK;
+ // стираем внешний флеш
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase slot ", "CTEP SLOT "));
+  }
   for(usize i=0; i <= MAX_SLOT_FOR_PROGRAM; i++){
      while (!flash.eraseSector(i * FLASH_SECTOR_SIZE));
-     lcd.setCursor(11, 0); lcd.print(i);
+     {
+       MK61DisplayUpdate update(lcd);
+       lcd.setCursor(11, 0); lcd.print(i);
+     }
   }
   sound(PIN_BUZZER, 1000, 300);
   message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));

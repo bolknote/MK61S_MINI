@@ -379,19 +379,22 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
     int up = (delta <= 0)? 0 : delta;
     if(up > max_up) up = max_up;
 
-    for(int i=0; i < visible_count; i++) {
-      lcd.setCursor(0,i);
-      const int real_index = i + up;
-      if(selector == real_index) {
-        lcd.print('>');
-      } else {
-        lcd.print(' ');
+    {
+      MK61DisplayUpdate update(lcd);
+      for(int i=0; i < visible_count; i++) {
+        lcd.setCursor(0,i);
+        const int real_index = i + up;
+        if(selector == real_index) {
+          lcd.print('>');
+        } else {
+          lcd.print(' ');
+        }
+        lcd.print(list[real_index].text);
       }
-      lcd.print(list[real_index].text);
-    }
-    for(int i=visible_count; i < (int) lcd_display::ROWS; i++) {
-      lcd.setCursor(0, i);
-      for(int x=0; x < (int) lcd_display::COLS; x++) lcd.write((u8) ' ');
+      for(int i=visible_count; i < (int) lcd_display::ROWS; i++) {
+        lcd.setCursor(0, i);
+        for(int x=0; x < (int) lcd_display::COLS; x++) lcd.write((u8) ' ');
+      }
     }
 
     const i32 last_key_code = kbd::get_key_wait();
@@ -412,9 +415,12 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
 }
 
 void memory_mode_error(void) {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(library_mk61::text("Memory mode!", "MEM MODE"));
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(library_mk61::text("Memory mode!", "MEM MODE"));
+  }
   ErrorReaction();
   delay(1500);
 }
@@ -425,10 +431,13 @@ void loaded_message(const TPunct& item) {
     return;
   }
 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(item.text);
-  library_mk61::print_localized_at(0, 1, "ЗАГРУЖЕНО", "is loaded.");
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(item.text);
+    library_mk61::print_localized_at(0, 1, "ЗАГРУЖЕНО", "is loaded.");
+  }
   delay(1500);
   library_mk61::restore_localized_font();
 }

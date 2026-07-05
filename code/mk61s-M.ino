@@ -104,6 +104,7 @@ void reset_ext_program_state(void) {
 #include  "automate.hpp"
 
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
+    MK61DisplayUpdate update(lcd);
     lcd.clear();
     GRDLabel.print(MK61Emu_GetAngleUnit());
     display_text[0] = (char) -1;
@@ -114,6 +115,7 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
 }
 
 void mk61_display_refresh(void) {
+  MK61DisplayUpdate update(lcd);
   // Обновление дисплея МК61, если изменилась информация на экране
     if(!core_61::update_indicator(&display_text[0], display_symbols)) {
       if(core_61::edit_program) { // калькулятор в режиме редактирования программы МК61 (ПРГ)
@@ -138,6 +140,7 @@ void mk61_display_refresh(void) {
 }
 
 void inline lcd_stack_output(void) {
+  MK61DisplayUpdate update(lcd);
   char cvalue[15];
   cvalue[14] = 0;
 
@@ -200,11 +203,14 @@ void setup() {
   glyph.draw(0);
   delay(1000);
   for(int i=1; i < 17; i++) {
-    // смещение глифа на 1 колонку вправо
-    glyph.draw(i);
-    // вывод версии ПО как "бегущей строки" вслед за смещением вправо глифа
-    lcd.setCursor(0,0); lcd.print((char*) &FULL_MODEL_NAME[16-i]);
-    lcd.setCursor(0,1); lcd.print((char*) &FIRMWARE_VER[16-i]);
+    {
+      MK61DisplayUpdate update(lcd);
+      // смещение глифа на 1 колонку вправо
+      glyph.draw(i);
+      // вывод версии ПО как "бегущей строки" вслед за смещением вправо глифа
+      lcd.setCursor(0,0); lcd.print((char*) &FULL_MODEL_NAME[16-i]);
+      lcd.setCursor(0,1); lcd.print((char*) &FIRMWARE_VER[16-i]);
+    }
     delay(2000/16);
   }
   sound(PIN_BUZZER, 300, 200);
@@ -258,7 +264,10 @@ void  edit_extend_program(void) {
 
   i32 ext_code = ext61_program[back_step];
   while(true) {
-    lcd.setCursor(0, 0); lcd.print(">          "); lcd.print(mnemo[ext_code]);
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(0, 0); lcd.print(">          "); lcd.print(mnemo[ext_code]);
+    }
 
     const i32 last_key_code = kbd::get_key_wait();
     if(last_key_code == KEY_ESC) break;

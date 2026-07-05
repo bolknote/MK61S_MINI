@@ -102,12 +102,14 @@ class key_mnenonic {
       char mnemo[8];
       if(on) {
         build_mnemo(keycode);
+        MK61DisplayUpdate update(lcd);
         *(u64*) &mnemo = pad_left_8_char(mnemo_buffer);
         lcd.setCursor(X, Y); lcd.print(mnemo);
       }
     }
 
     void  disable(void) {
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(X, Y); lcd.print("      "); // blank
       on = false;
     }

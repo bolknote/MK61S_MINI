@@ -117,13 +117,19 @@ void  InitBasic(void) {
 
 void RunBasic(int BasicN) {
   int offset = BasicList[BasicN];
-  lcd.setCursor(0, 0); lcd.print("                ");
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.setCursor(0, 0); lcd.print("                ");
+  }
   do {
     const BASIC_WORD word = (BASIC_WORD) picode[offset++];
     switch(word) {
       case BASIC_WORD::_PRINT:
+        {
+          MK61DisplayUpdate update(lcd);
           lcd.setCursor(0, 0);
           lcd.print((char*) &picode[offset]);
+        }
         break;
       case BASIC_WORD::_INPUT:
       case BASIC_WORD::_IF:
@@ -140,17 +146,26 @@ int  AssignBasic(void) {
 
   lcd.clear();
   if(NextBasic < 0) {
-    lcd.setCursor(0, 0); lcd.print("BASIC is empty!");
-    lcd.setCursor(0, 1); lcd.print("Press any key...");
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(0, 0); lcd.print("BASIC is empty!");
+      lcd.setCursor(0, 1); lcd.print("Press any key...");
+    }
     kbd::get_key_wait();
   } else {
 
-    lcd.setCursor(0, 0); lcd.print("Assign BASIC:");
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(0, 0); lcd.print("Assign BASIC:");
+    }
     do{
-      lcd.setCursor(0, 1);
-      for(int i = 0; i <= NextBasic; i++) {
-        lcd.print(i); 
-        if(i == active) lcd.write(LCD_LT_ARROW_CHAR); else lcd.write(' ');
+      {
+        MK61DisplayUpdate update(lcd);
+        lcd.setCursor(0, 1);
+        for(int i = 0; i <= NextBasic; i++) {
+          lcd.print(i);
+          if(i == active) lcd.write(LCD_LT_ARROW_CHAR); else lcd.write(' ');
+        }
       }
       const i32 key = kbd::get_key_wait();
       switch(key) {
@@ -206,8 +221,11 @@ bool  IsDigit(char symbol) {
 }
 
 bool ErrorBasic(const char* text) {
-  lcd.setCursor(0,0); lcd.print("Error BASIC!");
-  lcd.setCursor(0,1); lcd.print(text);
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.setCursor(0,0); lcd.print("Error BASIC!");
+    lcd.setCursor(0,1); lcd.print(text);
+  }
   kbd::get_key_wait();
   return false;
 }
@@ -302,10 +320,13 @@ void  EditBasic(void) { // Редактирования строки BASIC
     memset(&program, ' ', sizeof(program));
     program[0][16] = 0; program[1][16] = 0;
 
-  lcd.clear(); 
-  lcd.setCursor(0,0); lcd.print((char*) &program[0][0]);
-  lcd.setCursor(0,1); lcd.print((char*) &program[1][0]);
-  lcd.setCursor(0,0); lcd.write(cursor_blinked_char); lcd.setCursor(0,0);
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    lcd.setCursor(0,0); lcd.print((char*) &program[0][0]);
+    lcd.setCursor(0,1); lcd.print((char*) &program[1][0]);
+    lcd.setCursor(0,0); lcd.write(cursor_blinked_char); lcd.setCursor(0,0);
+  }
 
   kbd::debounce_init();
   blink_cursor_time = millis() + CURSOR_BLINK_MS;
@@ -320,13 +341,19 @@ void  EditBasic(void) { // Редактирования строки BASIC
           cursor_blinked_char = (cursor_blink_on)? cursor : program[line][idx];
           cursor_blink_on = ~cursor_blink_on;
 
-          lcd.setCursor(idx, line); lcd.write(cursor_blinked_char); lcd.setCursor(idx, line);
+          {
+            MK61DisplayUpdate update(lcd);
+            lcd.setCursor(idx, line); lcd.write(cursor_blinked_char); lcd.setCursor(idx, line);
+          }
           blink_cursor_time = millis() + CURSOR_BLINK_MS;
       }
 
       if(key_code < 0) continue;
 
-    lcd.setCursor(idx, line); lcd.write(program[line][idx]); lcd.setCursor(idx, line);
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(idx, line); lcd.write(program[line][idx]); lcd.setCursor(idx, line);
+    }
 
     const char input_char = pTABLE_key[key_code]; 
     if(key_code != KEY_DEGREE && cursor == SHIFT_CURSOR) { //Если нажат шифт и кнопка не ЗАБОЙ то вводим символ
@@ -371,8 +398,11 @@ void  EditBasic(void) { // Редактирования строки BASIC
             Serial.print(" -> "); Serial.println((char*) &program[line][0]);
           #endif
           program[line][15] = ' ';
-          lcd.setCursor(0, line);
-          lcd.print((char*) &program[line][0]);
+          {
+            MK61DisplayUpdate update(lcd);
+            lcd.setCursor(0, line);
+            lcd.print((char*) &program[line][0]);
+          }
         }
         break;
       case KEY_OK: /* ENTER */
@@ -396,8 +426,11 @@ void  EditBasic(void) { // Редактирования строки BASIC
       default:
         if(idx < 16) {
           program[line][idx] = input_char;
-          lcd.setCursor(0, line);
-          lcd.print((char*) &program[line][0]);
+          {
+            MK61DisplayUpdate update(lcd);
+            lcd.setCursor(0, line);
+            lcd.print((char*) &program[line][0]);
+          }
           idx++;
         }
     }
@@ -406,6 +439,9 @@ void  EditBasic(void) { // Редактирования строки BASIC
     pTABLE_key  = (char*) &BASIC_key;
     cursor      = CURSOR_ASCII;
 
-    lcd.setCursor(idx, line); lcd.write(CURSOR_ASCII); lcd.setCursor(idx, line);
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(idx, line); lcd.write(CURSOR_ASCII); lcd.setCursor(idx, line);
+    }
   }
 }

@@ -191,6 +191,7 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
 }
 
 inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
+  MK61DisplayUpdate update(lcd);
   font_map_t map = {{0}, 0, false};
   scan_text(map, text, width);
   load_custom_font(map);
@@ -199,6 +200,7 @@ inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
 }
 
 inline void print_lines(const char* text0, const char* text1) {
+  MK61DisplayUpdate update(lcd);
   font_map_t map = {{0}, 0, false};
   scan_text(map, text0, LCD_WIDTH);
   scan_text(map, text1, LCD_WIDTH);
@@ -212,6 +214,7 @@ inline void print_lines(const char* text0, const char* text1) {
 }
 
 inline void print_menu_window(char mark0, const char* text0, char mark1, const char* text1) {
+  MK61DisplayUpdate update(lcd);
   font_map_t map = {{0}, 0, false};
   scan_text(map, text0, LCD_WIDTH - 1);
   scan_text(map, text1, LCD_WIDTH - 1);
@@ -227,6 +230,7 @@ inline void print_menu_window(char mark0, const char* text0, char mark1, const c
 }
 
 inline void print_menu_line(u8 y, char mark, const char* text) {
+  MK61DisplayUpdate update(lcd);
   font_map_t map = {{0}, 0, false};
   scan_text(map, text, LCD_WIDTH - 1);
   load_custom_font(map);

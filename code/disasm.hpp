@@ -185,12 +185,14 @@ class class_disassm_mk61 {
     inline void  print(void) {
       char disasm[LEN_DISASM_LINE+1];
 
+      MK61DisplayUpdate update(lcd);
       if(is_update(&disasm[0])) { // Включен режим отображения дизассемблера МК61
         lcd.setCursor(X, Y); lcd.print(disasm);
       }
     }
 
     void  print(const char* text) {
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(X, Y); lcd.print(text);
     }
 
@@ -209,12 +211,14 @@ class class_disassm_mk61 {
     void  disable(void) {
       dbgln(DISASM, "disassembler OFF!")
       lcd_enable = false;
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(X, Y); lcd.print("      ");
     }
 
     void  disable(const char* text) {
       dbgln(DISASM, "disassembler OFF!")
       lcd_enable = false;
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(X, Y); lcd.print(text);
     }
 

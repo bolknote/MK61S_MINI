@@ -68,18 +68,22 @@ class class_LCD_Label {
 
     class_LCD_Label(u8 to_x, u8 to_y) : x(to_x), y(to_y) {}
     void print(const char* text) const {
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(x, y);
       lcd.print(text);
     }
     void print(char symbol) const {
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(x, y);
       lcd.print(symbol);
     }
     void print(int num) const {
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(x, y);
       lcd.print(num);
     }
     void print_hex(int num) const {
+      MK61DisplayUpdate update(lcd);
       lcd.setCursor(x, y);
       if(num < 10) lcd.print(' ');
       lcd.print(num, HEX);
@@ -105,38 +109,45 @@ class LCD_GRD_Label {
     LCD_GRD_Label(void) : on(true) {};
 
     void  disable(void) {
+      MK61DisplayUpdate update(lcd);
+      lcd.setCursor(X, Y);
+      lcd.print("  ");
       on = false;
-      lcd.setCursor(X, Y); print("  "); // clear
     };
 
     void  enable(void)  {on = true;};
 
     void  print(AngleUnit angle) {
       if(on) {
+        MK61DisplayUpdate update(lcd);
         lcd.setCursor(X, Y); lcd.print((const char*) &ANGLE_UNIT_TEXT[angle - RADIAN]);
       }
     }
 
     void  print(const char* text) const {
       if(on) {
+        MK61DisplayUpdate update(lcd);
         lcd.setCursor(X, Y); lcd.print(text);
       }
     }
 
     void  print(char symbol) const {
       if(on) {
+        MK61DisplayUpdate update(lcd);
         lcd.setCursor(X, Y); lcd.print(symbol);
       }
     }
 
     void  print(int num) const {
       if(on) {
+        MK61DisplayUpdate update(lcd);
         lcd.setCursor(X, Y); lcd.print(num);
       }
     }
 
     void  print_hex(int num) const {
       if(on) {
+        MK61DisplayUpdate update(lcd);
         lcd.setCursor(X, Y);
         if(num < 10) lcd.print(' ');
         lcd.print(num, HEX);
@@ -326,9 +337,10 @@ class   class_glyph {
   //  class_glyph(LiquidCrystal to_lcd) : lcd(to_lcd) {};
 
     void  draw(int x) const {
+      MK61DisplayUpdate update(lcd);
       // load char set
       for(int i=0; i < CUSTOM_CHARS; i++) {
-        lcd.createChar(i, (u8*) &custom_char[i]);  
+        lcd.createChar(i, (u8*) &custom_char[i]);
       }
       // draw glyph 
       for(int j=0; j < 2; j++) {

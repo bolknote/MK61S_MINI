@@ -38,7 +38,7 @@ static constexpr u8 ROWS = 2;
 static constexpr u8 ROWS = 4;
 static constexpr u8 PIXEL_WIDTH = 192;
 static constexpr u8 PIXEL_HEIGHT = 64;
-static constexpr u8 CELL_WIDTH = 11;
+static constexpr u8 CELL_WIDTH = 12;
 static constexpr u8 CELL_HEIGHT = 16;
 #endif
 
@@ -51,6 +51,8 @@ class MK61Display : public Print {
     void begin(u8 cols = lcd_display::COLS, u8 rows = lcd_display::ROWS);
     void clear(void);
     void flush(void);
+    void beginUpdate(void);
+    void endUpdate(void);
     void setCursor(u8 x, u8 y);
     void createChar(u8 nChar, uint8_t* glyph);
     void clearCustomChars(void);
@@ -77,13 +79,33 @@ class MK61Display : public Print {
     ERM19264_UC1609_Screen full_screen;
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
+    bool dirty;
+    usize update_depth;
     u8 cursor_x;
     u8 cursor_y;
 
     void drawCustomChar(u8 value);
     void advanceCursor(void);
+    void markDirty(void);
     void movePixelCursor(void);
 #endif
+};
+
+class MK61DisplayUpdate {
+  public:
+    explicit MK61DisplayUpdate(MK61Display& display) : display(display) {
+      display.beginUpdate();
+    }
+
+    ~MK61DisplayUpdate(void) {
+      display.endUpdate();
+    }
+
+    MK61DisplayUpdate(const MK61DisplayUpdate&) = delete;
+    MK61DisplayUpdate& operator=(const MK61DisplayUpdate&) = delete;
+
+  private:
+    MK61Display& display;
 };
 
 extern MK61Display lcd;

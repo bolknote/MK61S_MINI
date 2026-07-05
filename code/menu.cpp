@@ -62,34 +62,40 @@ static void build_ru_memory_text(char* out, usize size) {
 }
 
 bool  HardwareInfo(void) {
-  lcd.clear();
-  if(language_is_ru()) {
-    char chip_line[24] = "ЧИП:";
-    char memory_line[32];
-    char* cursor = &chip_line[sizeof("ЧИП:") - 1];
-    append_text(cursor, chip_line + sizeof(chip_line) - 1, chip_name);
-    *cursor = 0;
-    build_ru_memory_text(memory_line, sizeof(memory_line));
-    lcd_ru::print_lines(chip_line, memory_line);
-  } else {
-    lcd.setCursor(0, 0);
-    lcd.print("Chip:");
-    lcd.print(chip_name);
-    lcd.setCursor(0,1);
-    lcd.print(mem_text);
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    if(language_is_ru()) {
+      char chip_line[24] = "ЧИП:";
+      char memory_line[32];
+      char* cursor = &chip_line[sizeof("ЧИП:") - 1];
+      append_text(cursor, chip_line + sizeof(chip_line) - 1, chip_name);
+      *cursor = 0;
+      build_ru_memory_text(memory_line, sizeof(memory_line));
+      lcd_ru::print_lines(chip_line, memory_line);
+    } else {
+      lcd.setCursor(0, 0);
+      lcd.print("Chip:");
+      lcd.print(chip_name);
+      lcd.setCursor(0,1);
+      lcd.print(mem_text);
+    }
   }
   kbd::get_key_wait();
   return action::MENU_BACK;
 }
 
 bool  InfoData(void) {
-  lcd.clear(); 
-  lcd.setCursor(0,0); 
-  lcd.print(text("cnt:", "N:")); lcd.print(read_counter_switch());
-  lcd.print(text(" sw:", " P:")); lcd.print((u8) read_grade_switch());
-  if(flash_is_ok) lcd.print(" W25"); 
-  lcd.setCursor(0,1); 
-  lcd.print(text("run ", "T:")); lcd.print(runtime_ms); lcd.print(" ms");
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print(text("cnt:", "N:")); lcd.print(read_counter_switch());
+    lcd.print(text(" sw:", " P:")); lcd.print((u8) read_grade_switch());
+    if(flash_is_ok) lcd.print(" W25");
+    lcd.setCursor(0,1);
+    lcd.print(text("run ", "T:")); lcd.print(runtime_ms); lcd.print(" ms");
+  }
   kbd::get_key_wait();
   return false;
 }
@@ -102,14 +108,16 @@ bool  LCDCGROMTest(void) {
     char header[17];
     snprintf(header, sizeof(header), "CGROM %02X-%02X", page, (u8) (page + 0x0F));
 
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(header);
-    lcd.setCursor(0, 1);
-    for(u8 i = 0; i < lcd_display::COLS; i++) {
-      lcd.write((u8) (page + i));
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(header);
+      lcd.setCursor(0, 1);
+      for(u8 i = 0; i < lcd_display::COLS; i++) {
+        lcd.write((u8) (page + i));
+      }
     }
-    lcd.flush();
 
     const i32 key = kbd::get_key_wait();
     switch(key) {
@@ -374,6 +382,7 @@ bool  mk61_games_select(void) {
 }
 
 void class_menu::draw(void) {
+  MK61DisplayUpdate update(lcd);
   const int visible_count = (MENU_PUNCT_COUNT < SIZE_MENU_WINDOW) ? MENU_PUNCT_COUNT : SIZE_MENU_WINDOW;
   const int max_up = MENU_PUNCT_COUNT - visible_count;
   const int delta = (active_punct + 1) - visible_count;
