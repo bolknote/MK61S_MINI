@@ -1,6 +1,7 @@
 #include "LiquidCrystal.h"
-#include "menu.hpp"    
+#include "menu.hpp"
 #include "cross_hal.h"
+#include "lcd_ru.hpp"
 
 extern LiquidCrystal lcd;
 extern t_time_ms runtime_ms;
@@ -53,21 +54,21 @@ const t_punct SOUND_OFF_punct     = {.size = 15, .action = (menu_action) &TurnSo
 const t_punct SPEED_LOW_punct     = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
 const t_punct SPEED_HIGH_punct    = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
-const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language RU    "};
+const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "ЯЗЫК РУ"};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
 
-const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU FLASH      "};
-const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "\001P\005 MK61      "};
-const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "MK61 \004\005P      "};
-const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "C\002POC         "};
-const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "CTEP FLASH    "};
-const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSound,            .text = "\002\004\001 \003" "A        "};
-const t_punct RU_SOUND_OFF_punct  = {.size = 15, .action = (menu_action) &TurnSound,            .text = "\002\004\001 HET       "};
-const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "CKOP HOPMA    "};
-const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "CKOP MAX      "};
-const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "INFO          "};
-const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "\321\004\001           "};
+const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU ПРОШИВКА"};
+const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "БИБЛИОТЕКА"};
+const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "ИГРЫ MK61"};
+const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "СБРОС"};
+const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "СТЕРЕТЬ FLASH"};
+const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSound,            .text = "ЗВУК ВКЛ"};
+const t_punct RU_SOUND_OFF_punct  = {.size = 15, .action = (menu_action) &TurnSound,            .text = "ЗВУК ВЫКЛ"};
+const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ НОРМА"};
+const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ МАКС"};
+const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "ИНФОРМАЦИЯ"};
+const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "ПЛАТА"};
 
 t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &DFU_mode_punct,
@@ -183,8 +184,19 @@ void class_menu::draw(void) {
   const int delta = (active_punct + 1) - SIZE_MENU_WINDOW;
   const int up = (delta <= 0)? 0 : delta;
 
+  if(library_mk61::language_is_ru()) {
+    const int top_index = up;
+    const int bottom_index = up + 1;
+    lcd_ru::print_menu_window(
+      (active_punct == top_index)? '>' : ' ', puncts[top_index]->text,
+      (active_punct == bottom_index)? '>' : ' ', puncts[bottom_index]->text
+    );
+    previous_up = up;
+    return;
+  }
+
   for(int i=0; i < SIZE_MENU_WINDOW; i++) {
-    lcd.setCursor(0,  i); 
+    lcd.setCursor(0,  i);
     const int real_index = i + up;
     const int previous_real_index = i + previous_up;
 
@@ -216,13 +228,15 @@ void class_menu::select(void) {
         break;
       case KEY_OK_PRESS:
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
+            lcd_ru::restore_default_font();
             if(puncts[active_punct]->action() == action::MENU_EXIT) {
-              return; 
-            } else { 
+              return;
+            } else {
               lcd.clear();
               break;
             }
       case KEY_ESC_PRESS:
+            lcd_ru::restore_default_font();
             return; // отмена
     }
   } while(true);
@@ -241,13 +255,15 @@ i32 class_menu::select(i32 key) {
         break;
       case KEY_OK_PRESS:
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
+            lcd_ru::restore_default_font();
             if(puncts[active_punct]->action() == action::MENU_EXIT) {
-              return -1; 
-            } else { 
+              return -1;
+            } else {
               lcd.clear();
               break;
             }
       case KEY_ESC_PRESS:
+            lcd_ru::restore_default_font();
             return -1; // отмена
     }
   
