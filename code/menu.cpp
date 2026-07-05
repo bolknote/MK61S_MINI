@@ -16,8 +16,8 @@ static constexpr int MENU_SOUND    = 1;
 static constexpr int MENU_SPEED    = 2;
 static constexpr int MENU_MEMORY   = 3;
 static constexpr int MENU_LANGUAGE = 4;
-static constexpr int MENU_LIBRARY  = 5;
-static constexpr int MENU_GAMES    = 6;
+static constexpr int MENU_GAMES    = 5;
+static constexpr int MENU_LIBRARY  = 6;
 static constexpr int MENU_BASIC    = 7;
 static constexpr int MENU_RESET    = 8;
 static constexpr int MENU_ERASE    = 9;
@@ -143,8 +143,8 @@ t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &SPEED_HIGH_punct,
       (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &LANGUAGE_EN_punct,
-      (t_punct*) &LIB_61_punct,
       (t_punct*) &GAME_61_punct,
+      (t_punct*) &LIB_61_punct,
       (t_punct*) &BASIC_punct,
       (t_punct*) &RESET_punct,
       (t_punct*) &ERASE_punct,

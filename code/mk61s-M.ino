@@ -408,7 +408,7 @@ void   mk61_baseloop_hook(i32 key) {
           //disassembler.enable(); //cache_IP_mk61 = MK61_ip + 1; 
           //lcd_std_display_redraw();
         } else {
-          mk61_library_select();
+          mk61_games_select();
           lcd_std_display_redraw();
         }
       break;
