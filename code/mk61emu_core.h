@@ -29,24 +29,20 @@
 #include <stdbool.h>
 
 static  constexpr usize MK61_NOP= 0x54; // NOP
-
-#ifdef EXPAND_RING_MK61
-  //                                              IR1   IR2  IKF  1302 1303 1306
-  static constexpr  usize   SIZE_RING_M         = 252 + 252 + 42 + 42 + 42 + 42;
-  //                                              IR1  IKF  1302 1303 1306
-  static constexpr  usize   OFFSET_IK1302       = 252 + 42 + 42;
-  static constexpr  usize   OFFSET_IK1303       = 252 + 42 + 42 + 42;
-  static constexpr  usize   OFFSET_IK1306       = 252 + 42 + 42 + 42 + 42;
-  static constexpr  usize   MK61_LAST_PRG_STEP  = 105 + 7;
-#else
-  //                                              IR1   IR2  1302 1303 1306
-  static constexpr  usize   SIZE_RING_M         = 252 + 252 + 42 + 42 + 42;
-  //                                              IR1  1302 1303 1306
-  static constexpr  usize   OFFSET_IK1302       = 252 + 42;
-  static constexpr  usize   OFFSET_IK1303       = 252 + 42 + 42;
-  static constexpr  usize   OFFSET_IK1306       = 252 + 42 + 42 + 42;
-  static constexpr  usize   MK61_LAST_PRG_STEP  = 105;
-#endif
+static  constexpr usize MK61_CLASSIC_PROGRAM_STEPS = 105;
+static  constexpr usize MK61_EXPANDED_PROGRAM_STEPS = MK61_CLASSIC_PROGRAM_STEPS + 7;
+static constexpr  usize   MK61_CLASSIC_RING_SIZE       = 252 + 252 + 42 + 42 + 42;
+static constexpr  usize   MK61_EXPANDED_RING_SIZE      = MK61_CLASSIC_RING_SIZE + 42;
+static constexpr  usize   SIZE_RING_M                  = MK61_EXPANDED_RING_SIZE;
+static constexpr  usize   MK61_LAST_PRG_STEP           = MK61_CLASSIC_PROGRAM_STEPS;
+static constexpr  usize   OFFSET_IK1302_CLASSIC        = 252 + 42;
+static constexpr  usize   OFFSET_IK1303_CLASSIC        = 252 + 42 + 42;
+static constexpr  usize   OFFSET_IK1306_CLASSIC        = 252 + 42 + 42 + 42;
+static constexpr  usize   OFFSET_IR2_1_1_CLASSIC       = 42 + 252 + 42 + 42 + 42;
+static constexpr  usize   OFFSET_IK1302_EXPANDED       = 252 + 42 + 42;
+static constexpr  usize   OFFSET_IK1303_EXPANDED       = 252 + 42 + 42 + 42;
+static constexpr  usize   OFFSET_IK1306_EXPANDED       = 252 + 42 + 42 + 42 + 42;
+static constexpr  usize   OFFSET_IR2_1_1_EXPANDED      = 42 + 42 + 252 + 42 + 42 + 42;
 
 namespace ring_M {
   struct  K745 {
@@ -57,27 +53,28 @@ namespace ring_M {
   static constexpr K745 IR2_2   = {.NAME = "IR2.2",   .OFFSET = 42};
   static constexpr K745 IK130X  = {.NAME = "IK130X",  .OFFSET = 42 + 42};
 
-#ifdef EXPAND_RING_MK61
-  static constexpr K745 IK1302  = {.NAME = "IK1302",  .OFFSET = 42 + 42 + 252};
-  static constexpr K745 IK1303  = {.NAME = "IK1303",  .OFFSET = 42 + 42 + 252 + 42};
-  static constexpr K745 IK1306  = {.NAME = "IK1306",  .OFFSET = 42 + 42 + 252 + 42 + 42};
-  static constexpr K745 IR2_1_1 = {.NAME = "IR2.1_1", .OFFSET = 42 + 42 + 252 + 42 + 42 + 42};
-  static const K745 CHIP[6] = {IR2_1_0, IR2_2, IK130X, IK1302, IK1303, IK1306, IR2_1_1};
-#else
-  static constexpr K745 IK1302  = {.NAME = "IK1302",  .OFFSET = 42 + 252};
-  static constexpr K745 IK1303  = {.NAME = "IK1303",  .OFFSET = 42 + 252 + 42};
-  static constexpr K745 IK1306  = {.NAME = "IK1306",  .OFFSET = 42 + 252 + 42 + 42};
-  static constexpr K745 IR2_1_1 = {.NAME = "IR2.1_1", .OFFSET = 42 + 252 + 42 + 42 + 42};
-  static const K745 CHIP[6] = {IR2_1_0, IR2_2, IK1302, IK1303, IK1306, IR2_1_1};
-#endif
+  static constexpr K745 IK1302_CLASSIC  = {.NAME = "IK1302",  .OFFSET = OFFSET_IK1302_CLASSIC};
+  static constexpr K745 IK1303_CLASSIC  = {.NAME = "IK1303",  .OFFSET = OFFSET_IK1303_CLASSIC};
+  static constexpr K745 IK1306_CLASSIC  = {.NAME = "IK1306",  .OFFSET = OFFSET_IK1306_CLASSIC};
+  static constexpr K745 IR2_1_1_CLASSIC = {.NAME = "IR2.1_1", .OFFSET = OFFSET_IR2_1_1_CLASSIC};
+  static constexpr K745 IK1302_EXPANDED  = {.NAME = "IK1302",  .OFFSET = OFFSET_IK1302_EXPANDED};
+  static constexpr K745 IK1303_EXPANDED  = {.NAME = "IK1303",  .OFFSET = OFFSET_IK1303_EXPANDED};
+  static constexpr K745 IK1306_EXPANDED  = {.NAME = "IK1306",  .OFFSET = OFFSET_IK1306_EXPANDED};
+  static constexpr K745 IR2_1_1_EXPANDED = {.NAME = "IR2.1_1", .OFFSET = OFFSET_IR2_1_1_EXPANDED};
+  static const K745 CLASSIC_CHIP[] = {IR2_1_0, IR2_2, IK1302_CLASSIC, IK1303_CLASSIC, IK1306_CLASSIC, IR2_1_1_CLASSIC};
+  static const K745 EXPANDED_CHIP[] = {IR2_1_0, IR2_2, IK130X, IK1302_EXPANDED, IK1303_EXPANDED, IK1306_EXPANDED, IR2_1_1_EXPANDED};
+  static constexpr usize CLASSIC_CHIP_COUNT = sizeof(CLASSIC_CHIP) / sizeof(CLASSIC_CHIP[0]);
+  static constexpr usize EXPANDED_CHIP_COUNT = sizeof(EXPANDED_CHIP) / sizeof(EXPANDED_CHIP[0]);
+  const K745* active_chips(void);
+  usize active_chip_count(void);
 } // namespace ring_M
 
 typedef enum { 
-  X1 = ring_M::IR2_1_1.OFFSET + (42 * 0), 
-  X  = ring_M::IR2_1_1.OFFSET + (42 * 1),
-  Y  = ring_M::IR2_1_1.OFFSET + (42 * 2),
-  Z  = ring_M::IR2_1_1.OFFSET + (42 * 3),
-  T  = ring_M::IR2_1_1.OFFSET + (42 * 4)
+  X1 = 0,
+  X  = 1,
+  Y  = 2,
+  Z  = 3,
+  T  = 4
 } stack;
 
 //enum enum_core61_stage {START, NEXT};
@@ -159,9 +156,17 @@ namespace core_61 {
   };
   #pragma pack(pop)
 
-  static constexpr  usize   LAST_PROGRAM_STEP   =   MK61_LAST_PRG_STEP;
+  static constexpr  usize   CLASSIC_PROGRAM_STEP    =   MK61_CLASSIC_PROGRAM_STEPS;
+  static constexpr  usize   MAX_PROGRAM_STEP        =   MK61_EXPANDED_PROGRAM_STEPS;
+  static constexpr  usize   LAST_PROGRAM_STEP       =   MK61_LAST_PRG_STEP;
+  static constexpr  usize   CODE_PAGE_BUFFER_SIZE   =   MAX_PROGRAM_STEP + 1;
   static constexpr  usize   COMMA_RUN_POSITION  =   11;
   extern    bool  edit_program;
+  bool      expanded_program_is_on(void);
+  void      set_expanded_program_mode(bool enable);
+  usize     program_steps(void);
+  usize     ring_size(void);
+  usize     stack_address(stack reg);
 
   inline    isize get_ring_address(isize linear_address) {
     const isize cycle_x = ((linear_address % 7) == 0)?  linear_address : (linear_address - 7);

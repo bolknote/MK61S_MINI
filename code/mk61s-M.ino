@@ -83,7 +83,7 @@ struct {
 
 enum  ext_run_stop {ENOP=0, WAIT_02, WAIT_05, WAIT_1, WAIT_2, WR_R10, RD_R10, WR_R11, RD_R11};
 
-static  u8  ext61_program[core_61::LAST_PROGRAM_STEP + 1];
+static  u8  ext61_program[core_61::CODE_PAGE_BUFFER_SIZE];
 //static  u8  ext61_reg[16][8+1+2+1];
 static  core_61::bcd_value  ext61_reg[16];
 
@@ -92,6 +92,12 @@ static  constexpr char  PX10[8] = {P_RUS, '-', '>', 'x', '1', '0', ' ', 0};
 static  constexpr i32   COUNT_EXT_COMMAND = 7;
 const   char* mnemo[COUNT_EXT_COMMAND] = {"empty ", "0.2 sec", "0.5 sec", "1.0 sec", "2.0 sec", XP10, PX10};
 /*===============================================================================================================*/
+
+void reset_ext_program_state(void) {
+  memset(&ext61_program, 0, sizeof(ext61_program));
+  ext_command.code = 0;
+  auto_start_time = 0;
+}
 
 #include  "automate.hpp"
 
@@ -111,8 +117,10 @@ void mk61_display_refresh(void) {
       if(core_61::edit_program) { // калькулятор в режиме редактирования программы МК61 (ПРГ)
         const i32 back_step = core_61::get_IP() - 1;
         for(int i = 0; i < 3; i++) {
-          const i32 code = core_61::get_code(core_61::get_ring_address(back_step - i));
-          if(code == 0x50 && ext61_program[back_step - i] != 0) { // Есть код расширения режима старт/стоп!
+          const i32 program_step = back_step - i;
+          if(program_step < 0 || program_step >= (i32) core_61::program_steps()) continue;
+          const i32 code = core_61::get_code(core_61::get_ring_address(program_step));
+          if(code == 0x50 && ext61_program[program_step] != 0) { // Есть код расширения режима старт/стоп!
             display_text[0 + i*3] = LCD_RT_ARROW_CHAR; 
           }
         }
@@ -224,12 +232,9 @@ void setup() {
   mk61_quants         =   mk61_quants_reload;
   //mk61_edit_program   =   false;
 
-  memset(&ext61_program, 0, sizeof(ext61_program));
+  reset_ext_program_state();
   memset(&ext61_reg, 0, sizeof(ext61_reg));
   dbgln(EXT_RUN, "Extended register sizeof = ", sizeof(ext61_reg));
-
-  ext_command.code = 0;
-  auto_start_time = 0;
 
   core_61::enable();
 
@@ -241,6 +246,7 @@ void setup() {
 //===================================================================
 void  edit_extend_program(void) { 
   const i32 back_step = core_61::get_IP() - 1;
+  if(back_step < 0 || back_step >= (i32) core_61::program_steps()) return;
   if(core_61::get_code(core_61::get_ring_address(back_step)) != 0x50) return;
 
   i32 ext_code = ext61_program[back_step];

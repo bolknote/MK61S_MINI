@@ -71,6 +71,7 @@ void IK1306_Tick(mtick_t signal_I, usize J_signal_I);
 /* Кольцо ДОЗУ - последовательно соединенная память комплектов микросхем К145ИК(02,03,06) в МК61 */
 u8 ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
 const u8* END_ring_M = &ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
+static bool expanded_program_mode = false;
 
 const bool sergey_anvarov_hack_enable = true;
 
@@ -401,9 +402,17 @@ IK1302  m_IK1302;
 static  IK1303  m_IK1303;
 static  IK1306  m_IK1306;
 
-static  constexpr   u8* IK1302_M_START = &ringM[OFFSET_IK1302/*252+42+42*/];
-static  constexpr   u8* IK1303_M_START = &ringM[OFFSET_IK1303/*252+42+42+42*/];
-static  constexpr   u8* IK1306_M_START = &ringM[OFFSET_IK1306/*252+42+42+42+42*/];
+inline u8* IK1302_M_START(void) {
+  return &ringM[expanded_program_mode ? OFFSET_IK1302_EXPANDED : OFFSET_IK1302_CLASSIC];
+}
+
+inline u8* IK1303_M_START(void) {
+  return &ringM[expanded_program_mode ? OFFSET_IK1303_EXPANDED : OFFSET_IK1303_CLASSIC];
+}
+
+inline u8* IK1306_M_START(void) {
+  return &ringM[expanded_program_mode ? OFFSET_IK1306_EXPANDED : OFFSET_IK1306_CLASSIC];
+}
 
 static  const   u8  IK1302_DCW[68] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1008,16 +1017,17 @@ void  cycle(void) {
           CycleB(4);
           CycleE(5);    // 41
 
+          const u8* active_end_ring_m = &ringM[core_61::ring_size()];
           m_IK1302.pM += 42;
           m_IK1303.pM += 42;
           m_IK1306.pM += 42;
-          if(m_IK1302.pM == END_ring_M/*&ringM[252+252+42+42+42]*/){
+          if(m_IK1302.pM == active_end_ring_m){
                   m_IK1302.pM = &ringM[0];
           }
-          else if(m_IK1303.pM == END_ring_M/*&ringM[252+252+42+42+42]*/){
+          else if(m_IK1303.pM == active_end_ring_m){
                   m_IK1303.pM = &ringM[0];
           }
-          else if(m_IK1306.pM == END_ring_M/*&ringM[252+252+42+42+42]*/){
+          else if(m_IK1306.pM == active_end_ring_m){
                    m_IK1306.pM = &ringM[0];
           }
   }
@@ -1459,7 +1469,7 @@ inline  void  __attribute__((always_inline))  IK1302_Clear(void) {
     const usize size_IK1302 = sizeof(m_IK1302);
     dbgln(CORE61, "cleared IK1302 size = ", size_IK1302);
     memset(&m_IK1302, 0, size_IK1302);
-    m_IK1302.pM = (uint8_t*) IK1302_M_START;
+    m_IK1302.pM = (uint8_t*) IK1302_M_START();
     m_IK1302.pAND_AMK = (uint8_t*) &IK1302_AND_AMK[0];
     m_IK1302.pAND_AMK1 = (uint8_t*) &IK1302_AND_AMK[0];
 }
@@ -1468,7 +1478,7 @@ inline  void  __attribute__((always_inline))  IK1303_Clear(void) {
     const usize size_IK1303 = sizeof(m_IK1303);
     dbgln(CORE61, "cleared IK1303 size = ", size_IK1303);
     memset(&m_IK1303, 0, size_IK1303);
-    m_IK1303.pM = (uint8_t*) IK1303_M_START;
+    m_IK1303.pM = (uint8_t*) IK1303_M_START();
     m_IK1303.pAND_AMK = (uint8_t*) &IK1303_AND_AMK[0];
     m_IK1303.pAND_AMK1 = (uint8_t*) &IK1303_AND_AMK[0];
 }
@@ -1477,7 +1487,7 @@ inline  void  __attribute__((always_inline))  IK1306_Clear(void) {
     const usize size_IK1306 = sizeof(m_IK1306);
     dbgln(CORE61, "cleared IK1306 size = ", size_IK1306);
     memset(&m_IK1306, 0, size_IK1306);
-    m_IK1306.pM = (uint8_t*) IK1306_M_START;
+    m_IK1306.pM = (uint8_t*) IK1306_M_START();
     m_IK1306.pAND_AMK = (uint8_t*) &IK1306_AND_AMK[0];
     m_IK1306.pAND_AMK1 = (uint8_t*) &IK1306_AND_AMK[0];
 }
@@ -1527,7 +1537,7 @@ AngleUnit MK61Emu_GetAngleUnit(void) {
 }
 
 void write_stack_register(stack reg, char sign, char cmantissa[8], isize pow) {
-  isize addr = (isize) reg + 1;
+  isize addr = (isize) core_61::stack_address(reg) + 1;
   // mantissa convert
   for(isize i=7; i >= 0; i--) {
     ringM[addr] = cmantissa[i] - '0';
@@ -1551,7 +1561,7 @@ void write_stack_register(stack reg, char sign, char cmantissa[8], isize pow) {
 */
 const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_set) {
   // mantissa convert
-  usize i = (usize) reg + 1;
+  usize i = core_61::stack_address(reg) + 1;
   isize pos = 9;
   do {
     if(pos == 2) cvalue[pos--] = '.';
@@ -1580,15 +1590,49 @@ const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_
 //                                           mantisa                   |    pow
 //                                       0   1   2   3   4  5  6  7  8   9  10  11
 static const usize indicator_pos[12] = {24, 21, 18, 15, 12, 9, 6, 3, 0, 33, 30, 27};
+
+namespace ring_M {
+
+const K745* active_chips(void) {
+  return expanded_program_mode ? EXPANDED_CHIP : CLASSIC_CHIP;
+}
+
+usize active_chip_count(void) {
+  return expanded_program_mode ? EXPANDED_CHIP_COUNT : CLASSIC_CHIP_COUNT;
+}
+
+} // namespace ring_M
+
 namespace   core_61   {
 
 static  usize   backstep_comma_position;
 bool            edit_program;
 
+bool expanded_program_is_on(void) {
+  return expanded_program_mode;
+}
+
+void set_expanded_program_mode(bool enable) {
+  expanded_program_mode = enable;
+}
+
+usize program_steps(void) {
+  return expanded_program_mode ? MAX_PROGRAM_STEP : CLASSIC_PROGRAM_STEP;
+}
+
+usize ring_size(void) {
+  return expanded_program_mode ? MK61_EXPANDED_RING_SIZE : MK61_CLASSIC_RING_SIZE;
+}
+
+usize stack_address(stack reg) {
+  const usize base = expanded_program_mode ? OFFSET_IR2_1_1_EXPANDED : OFFSET_IR2_1_1_CLASSIC;
+  return base + ((usize) reg * 42);
+}
+
 void  set_stack_register(stack reg, bcd_value *value) {
   //                         +3   +3   +3   +3   +3   +3   +3   +3   +3    +3    +3
   // Конвертируем мантиссу 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> S -> ph -> pl -> s
-  usize addr = (usize) reg + 1 + (3 * 7) + (3 * 4);
+  usize addr = stack_address(reg) + 1 + (3 * 7) + (3 * 4);
 
   // Знак мантиссы, младший разряд порядка, старщий разряд порядка, знак степени
   usize temp =  value->signs_and_pow; 
@@ -1613,7 +1657,7 @@ void  set_stack_register(stack reg, bcd_value *value) {
 
 void  get_stack_register(stack reg, bcd_value &value) {
   // Конвертируем мантиссу
-  usize addr = (usize) reg + 1;
+  usize addr = stack_address(reg) + 1;
 
   for(isize j = 0; j < 8; j++) {
     const u32 digit = ringM[addr];
@@ -1706,7 +1750,8 @@ bool  update_indicator(char* buffer, const char* display_symbols) { // возр�
 }
 
 void  set_code_page(uint8_t* page) {
-  for(usize i = 41; i < SIZE_RING_M/*672*/; i+=42) {
+  const usize active_ring_size = core_61::ring_size();
+  for(usize i = 41; i < active_ring_size; i+=42) {
     MK61Emu_SetCode(i, *page++);
     usize addr = i - 36;
     while(addr < i) {
@@ -1717,14 +1762,17 @@ void  set_code_page(uint8_t* page) {
 }
 
 void  get_code_page(uint8_t* page) {
-  for(usize i = 41; i < SIZE_RING_M/*672*/; i+=42) {
-    *page++ = core_61::get_code(i);
+  uint8_t* out = page;
+  const usize active_ring_size = core_61::ring_size();
+  for(usize i = 41; i < active_ring_size; i+=42) {
+    *out++ = core_61::get_code(i);
     usize addr = i - 36;
     while(addr < i) {
-          *page++ = core_61::get_code(addr);
+          *out++ = core_61::get_code(addr);
           addr += 6;
     }
   }
+  while((usize) (out - page) < core_61::CODE_PAGE_BUFFER_SIZE) *out++ = 0;
 }
 
 u8    get_code(i32 addr){
@@ -1852,7 +1900,8 @@ void MK61Emu_SetCode(int addr, uint8_t data) {
 }
 
 void  MK61Emu_ClearCodePage(void) {
-    for(usize i = 41; i < SIZE_RING_M/*672*/; i+=42) {
+    const usize active_ring_size = core_61::ring_size();
+    for(usize i = 41; i < active_ring_size; i+=42) {
       MK61Emu_SetCode(i, 0);
       for(usize addr=i-36; addr < i; addr+=6) {
         MK61Emu_SetCode(addr, 0);

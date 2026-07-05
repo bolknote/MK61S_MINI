@@ -5,6 +5,7 @@
 
 extern LiquidCrystal lcd;
 extern t_time_ms runtime_ms;
+extern void reset_ext_program_state(void);
 //extern isize mk61_quants_reload;
 
 namespace library_mk61 {
@@ -12,17 +13,19 @@ namespace library_mk61 {
 static constexpr int MENU_DFU      = 0;
 static constexpr int MENU_SOUND    = 1;
 static constexpr int MENU_SPEED    = 2;
-static constexpr int MENU_LANGUAGE = 3;
-static constexpr int MENU_LIBRARY  = 4;
-static constexpr int MENU_GAMES    = 5;
-static constexpr int MENU_RESET    = 6;
-static constexpr int MENU_ERASE    = 7;
-static constexpr int MENU_INFO     = 8;
-static constexpr int MENU_HW       = 9;
+static constexpr int MENU_MEMORY   = 3;
+static constexpr int MENU_LANGUAGE = 4;
+static constexpr int MENU_LIBRARY  = 5;
+static constexpr int MENU_GAMES    = 6;
+static constexpr int MENU_RESET    = 7;
+static constexpr int MENU_ERASE    = 8;
+static constexpr int MENU_INFO     = 9;
+static constexpr int MENU_HW       = 10;
 
 static bool sound_enabled = true;
 static bool speed_max_enabled = true;
 static bool russian_language = false;
+static bool expanded_program = false;
 
 bool  HardwareInfo(void) {
   lcd.clear(); 
@@ -53,6 +56,8 @@ const t_punct SOUND_ON_punct      = {.size = 15, .action = (menu_action) &TurnSo
 const t_punct SOUND_OFF_punct     = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Sound OFF      "};
 const t_punct SPEED_LOW_punct     = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
 const t_punct SPEED_HIGH_punct    = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
+const t_punct MEMORY_105_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 105     "};
+const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 112     "};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
 const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "ЯЗЫК РУ"};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
@@ -67,6 +72,8 @@ const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSo
 const t_punct RU_SOUND_OFF_punct  = {.size = 15, .action = (menu_action) &TurnSound,            .text = "ЗВУК ВЫКЛ"};
 const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ НОРМА"};
 const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "СКОРОСТЬ МАКС"};
+const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 105"};
+const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "ПАМЯТЬ 112"};
 const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "ИНФОРМАЦИЯ"};
 const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "ПЛАТА"};
 
@@ -74,6 +81,7 @@ t_punct* MENU[MENU_PUNCT] = {
       (t_punct*) &DFU_mode_punct,
       (t_punct*) &SOUND_ON_punct,
       (t_punct*) &SPEED_HIGH_punct,
+      (t_punct*) &MEMORY_105_punct,
       (t_punct*) &LANGUAGE_EN_punct,
       (t_punct*) &LIB_61_punct,
       (t_punct*) &GAME_61_punct,
@@ -99,10 +107,20 @@ void  set_language_state(bool enable) {
   russian_language = enable;
 }
 
+bool  expanded_program_is_on(void) {
+  return expanded_program;
+}
+
+void  set_program_memory_state(bool enable) {
+  expanded_program = enable;
+  core_61::set_expanded_program_mode(enable);
+}
+
 void refresh_menu_text(void) {
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SOUND]    = (t_punct*) (russian_language ? (sound_enabled ? &RU_SOUND_ON_punct : &RU_SOUND_OFF_punct) : (sound_enabled ? &SOUND_ON_punct : &SOUND_OFF_punct));
   MENU[MENU_SPEED]    = (t_punct*) (russian_language ? (speed_max_enabled ? &RU_SPEED_HIGH_punct : &RU_SPEED_LOW_punct) : (speed_max_enabled ? &SPEED_HIGH_punct : &SPEED_LOW_punct));
+  MENU[MENU_MEMORY]   = (t_punct*) (russian_language ? (expanded_program ? &RU_MEMORY_112_punct : &RU_MEMORY_105_punct) : (expanded_program ? &MEMORY_112_punct : &MEMORY_105_punct));
   MENU[MENU_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_GAMES]    = (t_punct*) (russian_language ? &RU_GAME_61_punct : &GAME_61_punct);
@@ -113,13 +131,18 @@ void refresh_menu_text(void) {
 }
 
 void  store_settings_state(void) {
-  store_settings_flags((sound_enabled ? SETTINGS_SOUND_ON : 0) | (russian_language ? SETTINGS_LANGUAGE_RU : 0));
+  SettingsFlags flags;
+  flags.bits.sound_on = sound_enabled;
+  flags.bits.language_ru = russian_language;
+  flags.bits.expanded_program = expanded_program;
+  store_settings_flags(flags);
 }
 
 void  load_settings_state(void) {
-  const u8 flags = read_settings_flags();
-  set_sound_state((flags & SETTINGS_SOUND_ON) != 0);
-  set_language_state((flags & SETTINGS_LANGUAGE_RU) != 0);
+  const SettingsFlags flags = read_settings_flags();
+  set_sound_state(flags.bits.sound_on != 0);
+  set_language_state(flags.bits.language_ru != 0);
+  set_program_memory_state(flags.bits.expanded_program != 0);
   refresh_menu_text();
 }
 
@@ -160,6 +183,16 @@ bool   TurnLanguage(void) {
   library_mk61::set_language_state(!library_mk61::language_is_ru());
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
+
+  return action::MENU_BACK;
+}
+
+bool   TurnProgramMemory(void) {
+  library_mk61::set_program_memory_state(!library_mk61::expanded_program_is_on());
+  library_mk61::refresh_menu_text();
+  library_mk61::store_settings_state();
+  reset_ext_program_state();
+  core_61::enable();
 
   return action::MENU_BACK;
 }

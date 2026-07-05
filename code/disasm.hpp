@@ -110,7 +110,7 @@ class class_disassm_mk61 {
           *((u32*) &buffer[0]) = (u32) 0; *((u16*) &buffer[4]) = (u16) 0;
           // дизассемблируем с адреса IP_mk61     DISP [___ ___ ___]
           const u8 addr = IP_mk61 - 1;
-          if(addr < 0xC3) { // до адреса 0xC3
+          if(addr < core_61::program_steps()) {
             const u8 code = core_61::get_code(core_61::get_ring_address(addr));
             #ifdef DEBUG_DISASMBLER
               Serial.print("mk61 IP "); Serial.print(mk61s.get_IPH()); Serial.print(':'); Serial.print(mk61s.get_IPL());

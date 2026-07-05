@@ -251,7 +251,8 @@ void  load_from(usize offs, /*TPunct* list,*/ u8* data_stream) {
   for(u8 nReg=0; nReg < 0x0F; nReg++) MK61Emu_UnpackRegster(nReg, (u8*) &pack_clear_register);  // clear registers
 
   const u32 code_len = data_stream[offs++];
-  for(u32 addr=0; addr < 105; addr++) {
+  const u32 program_steps = core_61::program_steps();
+  for(u32 addr=0; addr < program_steps; addr++) {
       const u8 store_data = (addr < code_len)? data_stream[offs++] : 0;
       MK61Emu_SetCode(core_61::get_ring_address(addr), store_data);
   }

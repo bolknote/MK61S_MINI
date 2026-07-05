@@ -30,6 +30,10 @@ inline  void  event_stop_in_prg_mk61(void) {
   
   // >>>>>> Расширение системы команд МК-61 по режиму старт/стоп  <<<<<<<
   const i32 back_step = core_61::get_IP() - 1;
+  if(back_step < 0 || back_step >= (i32) core_61::program_steps()) {
+      return_auto_mode();
+      return;
+  }
   const i32 code = core_61::get_code(core_61::get_ring_address(back_step));
   dbgln(EXT_RUN, "IP = ", back_step, ". MK61 code = ", code);
   if(code == 0x50 && ext61_program[back_step] != 0) { 

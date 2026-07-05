@@ -69,7 +69,7 @@ void message_and_waitkey(const char* lcd_message) {
 
 // Вставка команды opcode, в программу mk61s с шага step, с коррекцией команд с переходом по адресу перехода
 void  insert_cmd_in_program(usize into_step, usize opcode) {
-  u8 code_page[106];  
+  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
 
   dbgln(MINI, "Insert comand <", opcode, "> in program step ", into_step);
   
@@ -78,7 +78,8 @@ void  insert_cmd_in_program(usize into_step, usize opcode) {
   bool  inc_operand = false;
   u8    move_code, copy_code = opcode;
 
-  for(usize i = into_step; i < core_61::LAST_PROGRAM_STEP; i++) {
+  const usize program_steps = core_61::program_steps();
+  for(usize i = into_step; i < program_steps; i++) {
     move_code = code_page[i];
 
     if(inc_operand) {
@@ -129,13 +130,15 @@ bool erase_slot(usize nSlot) {
 }
 
 usize seek_program_END(u8* code_page) {
-  isize lastCommand = 105;
-  while (code_page[lastCommand] == 0) {
+  const isize program_steps = (isize) core_61::program_steps();
+  isize lastCommand = program_steps;
+  while (lastCommand > 0 && code_page[lastCommand] == 0) {
     lastCommand--;
   }
 
-  if(lastCommand < 105) lastCommand++;
-  if(lastCommand < 105) lastCommand++;
+  if(lastCommand == 0 && code_page[0] == 0) return 0;
+  if(lastCommand < program_steps) lastCommand++;
+  if(lastCommand < program_steps) lastCommand++;
 
   return lastCommand;
 }
@@ -199,8 +202,11 @@ bool load_from(isize address) {
 
   dbgln(SPIROM, "SPIFLASH: read from address ", address);
 
-  for(isize i=0; i<105; i++){
-    MK61Emu_SetCode(core_61::get_ring_address(i), load_word(address, OFFSET_MK61_PROGRAMM + i));
+  const usize program_steps = core_61::program_steps();
+  for(usize i=0; i < program_steps; i++){
+    u8 code = load_word(address, OFFSET_MK61_PROGRAMM + i);
+    if(i >= core_61::CLASSIC_PROGRAM_STEP && code == 0xFF) code = 0;
+    MK61Emu_SetCode(core_61::get_ring_address(i), code);
   }
   return true;
 }
@@ -232,7 +238,8 @@ inline void store_word(isize segment_address, isize offset, u8 data) {
 
 inline bool check_empty_program(void) {
   usize all_to_or = 0;
-  for(isize i=0; i < 105; i++) all_to_or |= (usize) core_61::get_code(/*mk61s.*/core_61::get_ring_address(i));
+  const usize program_steps = core_61::program_steps();
+  for(usize i=0; i < program_steps; i++) all_to_or |= (usize) core_61::get_code(/*mk61s.*/core_61::get_ring_address(i));
   if(all_to_or == 0) {
     lcd.print(library_mk61::text("No program...", "HET \001PO\005PAMM"));
     sound(PIN_BUZZER, 4000, 750);
@@ -277,8 +284,8 @@ bool Rename(usize nSlot, char* slot_name) {
   }
   
   if(flash_is_ok) {
-    // Сотрем сектор флеша, перед этим забэкапив область программ 105 шагов и область регистров 168 байт + 1 флаг занятости
-      u8 backup[1 + 105 + 168];
+    // Сотрем сектор флеша, перед этим забэкапив область программ, регистров и флага занятости.
+      u8 backup[1 + core_61::MAX_PROGRAM_STEP + 168];
       for(usize i=0; i < sizeof(backup); i++) backup[i] = flash.readByte(segment_address + i);
       dbgln(SPIROM, "SPIFLASH: erase sector...");
       //while (!flash.eraseSector(segment_address)); // Старая версия обращения для стирания сектора ППЗУ
@@ -320,10 +327,14 @@ bool Store(usize nSlot) {
 
   dbg(MINI, "Save ");
   store_word(address, OFFSET_FLAG_OCCUPIED, SLOT_OCCUPIED);
-  for(isize i = 0; i < 105; i++){
+  const usize program_steps = core_61::program_steps();
+  for(usize i = 0; i < program_steps; i++){
     const u8 mk61_prg_word = core_61::get_code(core_61::get_ring_address(i));
     store_word(address, OFFSET_MK61_PROGRAMM + i, mk61_prg_word);
     dbg(MINI, "#");
+  }
+  for(usize i = program_steps; i < core_61::MAX_PROGRAM_STEP; i++) {
+    store_word(address, OFFSET_MK61_PROGRAMM + i, 0);
   }
   dbg(MINI, "\nProgramm saved!");
   return true;
@@ -364,7 +375,8 @@ bool Store(void) {
   #endif
 
   store_word(address, OFFSET_FLAG_OCCUPIED, SLOT_OCCUPIED);
-  for(isize i = 0; i < 105; i++){
+  const usize program_steps = core_61::program_steps();
+  for(usize i = 0; i < program_steps; i++){
     const u8 mk61_prg_word = core_61::get_code(core_61::get_ring_address(i));
     store_word(address, OFFSET_MK61_PROGRAMM + i, mk61_prg_word);
     #ifdef SERIAL_OUTPUT
@@ -372,6 +384,9 @@ bool Store(void) {
     #endif
     const u8 x = i / BLOCK_SIZE; 
     lcd.setCursor(x, 1); lcd.print((char) 0xFF); lcd.print(i);
+  }
+  for(usize i = program_steps; i < core_61::MAX_PROGRAM_STEP; i++) {
+    store_word(address, OFFSET_MK61_PROGRAMM + i, 0);
   }
 
   #ifdef SERIAL_OUTPUT

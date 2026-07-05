@@ -11,17 +11,35 @@ static constexpr usize FLASH_SECTOR_SIZE    = 4096;
 static constexpr u8    SLOT_OCCUPIED        = 0x55;
 static constexpr usize OFFSET_FLAG_OCCUPIED = 0;
 static constexpr usize OFFSET_MK61_PROGRAMM = 1;
+static constexpr usize OFFSET_AFTER_PROGRAM = OFFSET_MK61_PROGRAMM + core_61::MAX_PROGRAM_STEP;
 static constexpr usize OFFSET_SLOT_NAME     = 384;
 static constexpr usize SIZEOF_SLOT_NAME     = 16;
 static constexpr isize MAX_SLOT_FOR_PROGRAM = 99;
-static constexpr isize BLOCK_SIZE           = 106 / 13;
+static constexpr isize BLOCK_SIZE           = (core_61::MAX_PROGRAM_STEP + 1) / 13;
 
-static const int switch_R_GRD_G = 106;
-static const int count_switch_R_GRD_G = 107;
-static const int switch_settings = 108;
-static constexpr u8 SETTINGS_SOUND_ON   = 0x01;
-static constexpr u8 SETTINGS_LANGUAGE_RU = 0x02;
-static constexpr u8 SETTINGS_USED_MASK  = SETTINGS_SOUND_ON | SETTINGS_LANGUAGE_RU;
+static constexpr usize switch_R_GRD_G = OFFSET_AFTER_PROGRAM;
+static constexpr usize count_switch_R_GRD_G = switch_R_GRD_G + 1;
+static constexpr usize switch_settings = switch_R_GRD_G + 2;
+static constexpr usize legacy_switch_R_GRD_G = OFFSET_MK61_PROGRAMM + core_61::CLASSIC_PROGRAM_STEP;
+static constexpr usize legacy_count_switch_R_GRD_G = legacy_switch_R_GRD_G + 1;
+static constexpr usize legacy_switch_settings = legacy_switch_R_GRD_G + 2;
+
+struct SettingsFlags {
+  union {
+    u8 raw;
+    struct {
+      u8 sound_on : 1;
+      u8 language_ru : 1;
+      u8 expanded_program : 1;
+      u8 reserved : 5;
+    } bits;
+  };
+
+  SettingsFlags(void) : raw(0) {}
+  explicit SettingsFlags(u8 value) : raw(value) {}
+};
+
+static_assert(sizeof(SettingsFlags) == 1, "SettingsFlags must fit one EEPROM byte");
 
 extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms);
@@ -94,28 +112,46 @@ inline u64 pad_left_8_char(char* string_8_char) {
   return result;
 }
 
+inline u8 read_eeprom_with_legacy(usize current_addr, usize legacy_addr) {
+  const u8 current_value = EEPROM.read(current_addr);
+  if(current_value != 0xFF) return current_value;
+
+  const u8 legacy_value = EEPROM.read(legacy_addr);
+  if(legacy_value != 0xFF) {
+    EEPROM.update(current_addr, legacy_value);
+    EEPROM.update(legacy_addr, 0);
+    return legacy_value;
+  }
+
+  return current_value;
+}
+
 inline AngleUnit read_grade_switch(void) {
-  return (AngleUnit) EEPROM.read(switch_R_GRD_G);
+  return (AngleUnit) read_eeprom_with_legacy(switch_R_GRD_G, legacy_switch_R_GRD_G);
 }
 
 inline u8 read_counter_switch(void) {
-  return EEPROM.read(count_switch_R_GRD_G);
+  return read_eeprom_with_legacy(count_switch_R_GRD_G, legacy_count_switch_R_GRD_G);
 }
 
-inline u8 normalize_settings_flags(u8 flags) {
-  return (flags == 0xFF) ? SETTINGS_SOUND_ON : (flags & SETTINGS_USED_MASK);
+inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
+  SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
+  if(raw_flags == 0xFF) flags.bits.sound_on = 1;
+  flags.bits.reserved = 0;
+  return flags;
 }
 
-inline u8 read_settings_flags(void) {
-  return normalize_settings_flags(EEPROM.read(switch_settings));
+inline SettingsFlags read_settings_flags(void) {
+  return normalize_settings_flags(read_eeprom_with_legacy(switch_settings, legacy_switch_settings));
 }
 
-inline void store_settings_flags(u8 flags) {
-  EEPROM.update(switch_settings, flags & SETTINGS_USED_MASK);
+inline void store_settings_flags(SettingsFlags flags) {
+  flags.bits.reserved = 0;
+  EEPROM.update(switch_settings, flags.raw);
 }
 
 inline AngleUnit load_grade_switch(void) {
-  static const AngleUnit rom_angle = (AngleUnit) EEPROM.read(switch_R_GRD_G);
+  static const AngleUnit rom_angle = read_grade_switch();
   if(rom_angle == RADIAN || rom_angle == GRADE || rom_angle == DEGREE) { // состояние переключателя считано из флеш как определнное (радианы или грады)
     MK61Emu_SetAngleUnit(rom_angle);
     dbgln(SPIROM, "get grade_switch ", rom_angle);

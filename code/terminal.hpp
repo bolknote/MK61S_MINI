@@ -138,11 +138,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     void list_mk61_code_page(void) {
-      u8 code_page[106];
+      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
       core_61::get_code_page(&code_page[0]);
+      const usize program_steps = core_61::program_steps();
 
       for(int j = 0; j < 16; j++) {
-        for(int i = j; i < 105; i += 16) {
+        for(usize i = j; i < program_steps; i += 16) {
           if(i > 99) {
             Serial.write('A');
             Serial.print(i-100);
@@ -160,18 +161,19 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     void dump_mk61_code_page(void) {
-      u8 code_page[106];
+      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
       core_61::get_code_page(&code_page[0]);
+      const isize program_steps = (isize) core_61::program_steps();
       isize j = 0;
       do {
         for(isize i = 0; i < 16; i++) {
           Serial_write_hex(code_page[j]);
-          Serial.print("  ");          
+          Serial.print("  ");
           j++;
-          if ( j >= 105 ) break;
+          if ( j >= program_steps ) break;
         }
         Serial.println();
-      } while (j < 105);
+      } while (j < program_steps);
     }
 
     char* ISA_61_code(u8 opcode, char* text) {
@@ -330,17 +332,18 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     void pub_mk61_code_page(void) {
       char op[MAX_LEN_CLASSIC_MNEMO+1];
-      u8 code_page[106];
+      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
       core_61::get_code_page(&code_page[0]);
       isize last_cmd_addr = seek_program_END(&code_page[0]);
-      isize address = 0;     
+      const isize program_steps = (isize) core_61::program_steps();
+      isize address = 0;
       for (int i=0; i<30; i++) {
         if(i > last_cmd_addr) break;
         for (int ii=0; ii<4; ii++) {
           address = ii*30 + i;
           if(address > last_cmd_addr) break;
-          if (address < 105) {
-            print_address_as_MK61(address); Serial.print(". ");  
+          if (address < program_steps) {
+            print_address_as_MK61(address); Serial.print(". ");
 
             const u8 code = code_page[address];
             if(address > 0 && core_61::len_code_command(code_page[address-1]) == 2) {
@@ -359,7 +362,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     void  lasm_mk61_code_page(mnemo_type type) {
       char op[7+1];
-      u8 code_page[106];
+      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
 
       core_61::get_code_page(&code_page[0]);
       isize lastCommand = seek_program_END(&code_page[0]);
@@ -414,11 +417,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     void  GetHexString(void) {
         usize i = 4 + 4 + 1;
         isize linear_addr = parse_addr(&input_buffer[4]);
+        const isize program_steps = (isize) core_61::program_steps();
 
         Serial.println();
           while(i < MAX_INPUT_CHAR) {
 
-            if(linear_addr < 0 || linear_addr > 105) {
+            if(linear_addr < 0 || linear_addr >= program_steps) {
               ErrorReaction();
               Serial.println(); Serial.println("BAD address!");
               return;
@@ -451,7 +455,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     void  PutHexString(void) {
-      u8 code_page[106];
+      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
       core_61::get_code_page(&code_page[0]);
       isize last_cmd_addr = seek_program_END(&code_page[0]);
       dbgln(MINI, "Last step in programm: ", last_cmd_addr);
@@ -776,12 +780,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               usize i = 0;
               usize n_chip = 0;
               usize count = 0;
+              const ring_M::K745* chips = ring_M::active_chips();
+              const usize chip_count = ring_M::active_chip_count();
+              const usize ring_size = core_61::ring_size();
               Serial.print("MK61 ring M dump:");
-              for(u8 ring_cell : ringM) {
+              while(count < ring_size) {
+                const u8 ring_cell = ringM[count];
                 if(i == 0) {
                   i = 42;
-                  Serial.println(); 
-                  if(ring_M::CHIP[n_chip].OFFSET == count) Serial.println(ring_M::CHIP[n_chip++].NAME);
+                  Serial.println();
+                  if(n_chip < chip_count && chips[n_chip].OFFSET == count) Serial.println(chips[n_chip++].NAME);
 
                   if(count < 100) Serial.write('0');
                   if(count < 10) Serial.write('0');
@@ -809,12 +817,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               /*
               dbgln(MINI, "Insert comand <", opcode, "> in program step ", into_step);
               
-              u8 code_page[106];  
+              u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
               core_61::get_code_page(&code_page[0]);
               
               u8 move_code, copy_code = opcode;
               bool inc_operand = false;
-              for(usize i = into_step; i < core_61::LAST_PROGRAM_STEP; i++) {
+              for(usize i = into_step; i < core_61::program_steps(); i++) {
                 move_code = code_page[i];
 
                 if(inc_operand) {
