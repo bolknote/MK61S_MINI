@@ -496,22 +496,119 @@ static bool string_var_set[BASIC_VARIABLE_COUNT];
 static BasicMkContext mk_context;
 static int NextBasic;
 
-static void basic_message(const char* line0, const char* line1 = NULL) {
+static void basic_print_ascii_line(u8 row, const char* text) {
+  lcd.setCursor(0, row);
+  u8 used = 0;
+  if(text != NULL) {
+    while(text[used] != 0 && used < 16) {
+      lcd.write((u8) text[used]);
+      used++;
+    }
+  }
+  while(used++ < 16) lcd.write((u8) ' ');
+}
+
+static bool basic_language_is_ru(void) {
+#ifdef BASIC_HOST_TEST
+  return false;
+#else
+  return library_mk61::language_is_ru();
+#endif
+}
+
+static void basic_print_text_at(u8 x, u8 y, const char* en, const char* ru, u8 width = 16) {
+#ifdef BASIC_HOST_TEST
+  (void) ru;
+#endif
+#ifndef BASIC_HOST_TEST
+  if(basic_language_is_ru()) {
+    library_mk61::print_localized_at(x, y, ru, en, width);
+    return;
+  }
+#endif
+
+  lcd.setCursor(x, y);
+  u8 used = 0;
+  while(en != NULL && en[used] != 0 && used < width) lcd.write((u8) en[used++]);
+  while(used++ < width) lcd.write((u8) ' ');
+}
+
+static void basic_message_i18n(const char* en0, const char* ru0, const char* en1 = NULL, const char* ru1 = NULL) {
+  if(ru0 == NULL) ru0 = en0;
+  if(ru1 == NULL) ru1 = en1;
+
+#ifndef BASIC_HOST_TEST
+  if(basic_language_is_ru()) {
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.clear();
+    }
+    lcd_ru::print_lines(ru0, ru1 == NULL ? "" : ru1);
+    return;
+  }
+#endif
+
   MK61DisplayUpdate update(lcd);
   lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(line0);
-  if(line1 != NULL) {
-    lcd.setCursor(0, 1);
-    lcd.print(line1);
+  basic_print_ascii_line(0, en0);
+  if(en1 != NULL) basic_print_ascii_line(1, en1);
+}
+
+static const char* basic_error_ru_text(const char* text) {
+  struct ErrorMap {
+    const char* en;
+    const char* ru;
+  };
+
+  static const ErrorMap errors[] = {
+    {"expr overflow", "много выраж."},
+    {"stmt overflow", "много строк"},
+    {"label overflow", "много меток"},
+    {"dup label", "метка занята"},
+    {"$var?", "$перем?"},
+    {".ref?", ".ссылка?"},
+    {"statement?", "оператор?"},
+    {"input target?", "куда ввод?"},
+    {"TH?", "нет TH"},
+    {"FOR var?", "FOR перем?"},
+    {"FOR =?", "FOR =?"},
+    {"TO?", "нет TO"},
+    {"GO label?", "GO метка?"},
+    {"mk step?", "MK шаг?"},
+    {"mk step range", "MK шаг вне"},
+    {"mk =?", "MK =?"},
+    {"mk name?", "MK имя?"},
+    {"LET target?", "LET куда?"},
+    {"LET =?", "LET =?"},
+    {") missing", "нет )"},
+    {"expr?", "выражение?"},
+    {"name?", "имя?"},
+    {"args overflow", "много арг."},
+    {"loop stack", "стек циклов"},
+    {"NXT?", "нет NXT"},
+    {"END?", "нет END"},
+    {"loop open", "цикл открыт"},
+    {"program full", "нет места"},
+    {"no program", "нет программ"},
+    {"call depth", "стек вызовов"},
+    {"run limit", "цикл завис"},
+    {"FOR stack", "стек FOR"},
+    {"NXT stack", "стек NXT"},
+    {"no label", "нет метки"},
+    {"LD failed", "LD не найден"}
+  };
+
+  for(usize i = 0; i < sizeof(errors) / sizeof(errors[0]); i++) {
+    if(strcmp(text, errors[i].en) == 0) return errors[i].ru;
   }
+  return text;
 }
 
 static bool basic_error(const char* text) {
   char line[17];
   strncpy(line, text, sizeof(line) - 1);
   line[sizeof(line) - 1] = 0;
-  basic_message("Error BASIC!", line);
+  basic_message_i18n("Error BASIC!", "Ошибка БЕЙСИК", line, basic_error_ru_text(text));
   kbd::get_key_wait();
   return false;
 }
@@ -1494,19 +1591,22 @@ static int next_used_program(int from, int delta, bool allow_new) {
 }
 
 static void draw_program_select(int active, bool allow_new) {
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("BASIC program");
-  lcd.setCursor(0, 1);
+  char line1[17];
   if(allow_new && active == BASIC_PROGRAM_COUNT) {
-    lcd.print(">NEW");
+    strcpy(line1, ">NEW");
   } else if(active >= 0 && active < BASIC_PROGRAM_COUNT && programs[active].used) {
-    lcd.print('>');
-    lcd.print(programs[active].name);
+    line1[0] = '>';
+    strncpy(&line1[1], programs[active].name, sizeof(line1) - 2);
+    line1[sizeof(line1) - 1] = 0;
   } else {
-    lcd.print(">empty");
+    strcpy(line1, ">empty");
   }
+
+  const char* ru_line1 = line1;
+  if(allow_new && active == BASIC_PROGRAM_COUNT) ru_line1 = ">НОВ";
+  else if(!(active >= 0 && active < BASIC_PROGRAM_COUNT && programs[active].used)) ru_line1 = ">ПУСТО";
+
+  basic_message_i18n("BASIC program", "Программа", line1, ru_line1);
 }
 
 static int select_basic_program(bool allow_new) {
@@ -1519,7 +1619,7 @@ static int select_basic_program(bool allow_new) {
   }
   if(active < 0) active = allow_new ? BASIC_PROGRAM_COUNT : -1;
   if(active < 0) {
-    basic_message("BASIC is empty", "Press any key");
+    basic_message_i18n("BASIC is empty", "БЕЙСИК пуст", "Press any key", "Любая клавиша");
     kbd::get_key_wait();
     return -1;
   }
@@ -1545,7 +1645,7 @@ static int select_basic_program(bool allow_new) {
 static void display_ast_ok(const BasicProgram& program) {
   char line[17];
   snprintf(line, sizeof(line), "%s %d/%d", program.name, ast.stmt_count, ast.expr_count);
-  basic_message("BASIC compiled", line);
+  basic_message_i18n("BASIC compiled", "БЕЙСИК готов", line, line);
   delay(800);
 }
 
@@ -1731,19 +1831,24 @@ static void value_to_display_text(const BasicValue& value, char* buffer, usize s
 
 static double read_number_from_keyboard(const BasicStmt& stmt) {
   char buffer[17];
+  char en_prompt[17];
+  char ru_prompt[17];
   memset(buffer, 0, sizeof(buffer));
   u8 len = 0;
   while(true) {
-    {
-      MK61DisplayUpdate update(lcd);
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("IN ");
-      if((TargetKind) stmt.target_kind == TargetKind::NUM_VAR) lcd.print((char) ('A' + (stmt.var_index / 11)));
-      else if((TargetKind) stmt.target_kind == TargetKind::MK_REF) lcd.print(".MK");
-      lcd.setCursor(0, 1);
-      lcd.print(buffer);
+    if((TargetKind) stmt.target_kind == TargetKind::NUM_VAR) {
+      const char var = (char) ('A' + (stmt.var_index / 11));
+      snprintf(en_prompt, sizeof(en_prompt), "IN %c", var);
+      snprintf(ru_prompt, sizeof(ru_prompt), "ВВОД %c", var);
+    } else if((TargetKind) stmt.target_kind == TargetKind::MK_REF) {
+      strcpy(en_prompt, "IN .MK");
+      strcpy(ru_prompt, "ВВОД MK");
+    } else {
+      strcpy(en_prompt, "IN");
+      strcpy(ru_prompt, "ВВОД");
     }
+    basic_message_i18n(en_prompt, ru_prompt, buffer, buffer);
+
     const i32 key = kbd::get_key_wait();
     if(key == KEY_OK || key == KEY_OK_PRESS || key == KEY_ESC || key == KEY_ESC_PRESS) break;
     if(key == 0) {
@@ -2013,8 +2118,8 @@ int AssignBasic(void) {
   if(step >= 0 && step < (int) core_61::MAX_PROGRAM_STEP) {
     basic_step_program[step] = (i8) program;
     char line[17];
-    snprintf(line, sizeof(line), "step %d", step);
-    basic_message("BASIC assigned", line);
+    snprintf(line, sizeof(line), basic_language_is_ru() ? "шаг %d" : "step %d", step);
+    basic_message_i18n("BASIC assigned", "БЕЙСИК связан", line, line);
     delay(900);
   }
   return program;
@@ -2036,9 +2141,11 @@ static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 windo
   }
   lcd.setCursor((u8) (cursor - window), 0);
   lcd.write(CURSOR_ASCII);
-  lcd.setCursor(0, 1);
-  if(slot == BASIC_PROGRAM_COUNT) lcd.print("NEW ");
-  else lcd.print(programs[slot].name);
+  if(slot == BASIC_PROGRAM_COUNT) basic_print_text_at(0, 1, "NEW ", "НОВ ", 4);
+  else {
+    lcd.setCursor(0, 1);
+    lcd.print(programs[slot].name);
+  }
   lcd.setCursor(10, 1);
   lcd.print(cursor);
   lcd.print('/');
@@ -2140,7 +2247,7 @@ void EditBasic(void) {
 
 static bool BASIC_clear_data(void) {
   basic_clear_vars();
-  basic_message("BASIC data", "cleared");
+  basic_message_i18n("BASIC data", "Данные", "cleared", "очищены");
   delay(700);
   return true;
 }
@@ -2164,12 +2271,26 @@ static constexpr t_punct BASIC_RUN_PUNCT    = {.size = 9,  .action = &BASIC_run_
 static constexpr t_punct BASIC_ASSIGN_PUNCT = {.size = 12, .action = &BASIC_assign_menu,.text = "Assign STEP"};
 static constexpr t_punct BASIC_CLEAR_PUNCT  = {.size = 10, .action = &BASIC_clear_data, .text = "Clear DATA"};
 
+#ifndef BASIC_HOST_TEST
+static constexpr t_punct RU_BASIC_EDIT_PUNCT   = {.size = 15, .action = &BASIC_edit_menu,  .text = "Правка"};
+static constexpr t_punct RU_BASIC_RUN_PUNCT    = {.size = 15, .action = &BASIC_run_menu,   .text = "Запуск"};
+static constexpr t_punct RU_BASIC_ASSIGN_PUNCT = {.size = 15, .action = &BASIC_assign_menu,.text = "Назначить шаг"};
+static constexpr t_punct RU_BASIC_CLEAR_PUNCT  = {.size = 15, .action = &BASIC_clear_data, .text = "Сброс данных"};
+#endif
+
 bool BASIC_menu_select(void) {
   t_punct* items[] = {
+#ifndef BASIC_HOST_TEST
+    (t_punct*) (basic_language_is_ru() ? &RU_BASIC_EDIT_PUNCT : &BASIC_EDIT_PUNCT),
+    (t_punct*) (basic_language_is_ru() ? &RU_BASIC_RUN_PUNCT : &BASIC_RUN_PUNCT),
+    (t_punct*) (basic_language_is_ru() ? &RU_BASIC_ASSIGN_PUNCT : &BASIC_ASSIGN_PUNCT),
+    (t_punct*) (basic_language_is_ru() ? &RU_BASIC_CLEAR_PUNCT : &BASIC_CLEAR_PUNCT)
+#else
     (t_punct*) &BASIC_EDIT_PUNCT,
     (t_punct*) &BASIC_RUN_PUNCT,
     (t_punct*) &BASIC_ASSIGN_PUNCT,
     (t_punct*) &BASIC_CLEAR_PUNCT
+#endif
   };
   class_menu menu = class_menu(items, sizeof(items) / sizeof(items[0]));
   menu.select();
