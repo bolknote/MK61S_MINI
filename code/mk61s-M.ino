@@ -36,8 +36,6 @@ static  LCD_GRD_Label       GRDLabel;
 static  key_mnenonic        MnemoLabel;
 
 static  class_disassm_mk61  disassembler;
-static  usize               exeq;
-static  enum_core61_stage   core_stage;
 static  isize               mk61_quants;
 isize                       mk61_quants_reload;
 
@@ -75,6 +73,8 @@ char        display_text[15];          //-12345678.-12
 
 time_t auto_start_time;
 
+void key_press_handler(i32 keycode);
+
 /* ===================================    Extended ISA variables    ============================================ */
 struct {
   u8          code;
@@ -93,11 +93,13 @@ static  constexpr i32   COUNT_EXT_COMMAND = 7;
 const   char* mnemo[COUNT_EXT_COMMAND] = {"empty ", "0.2 sec", "0.5 sec", "1.0 sec", "2.0 sec", XP10, PX10};
 /*===============================================================================================================*/
 
+#include  "automate.hpp"
+
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
     lcd.clear();
     GRDLabel.print(MK61Emu_GetAngleUnit());
     display_text[0] = (char) -1;
-    if(exeq == 1) {
+    if(core_61::is_RUN()) {
       lcd.setCursor(0, 0); lcd.print("RUN");
     }
     mk61_display_refresh();
@@ -119,8 +121,8 @@ void mk61_display_refresh(void) {
       dbgln(MINI, "[mk61_display_refresh] ", display_text);
     }
 
-  // вывод содержимого счетчика команд в режимем АВТ, для отладки по ПП
-    if(exeq == 0) { // Режим АВТ работа с калькулятором в диалоговом режиме
+  // вывод содержимого счетчика команд в режимем CALC, для отладки по ПП
+    if(core_61::is_CALC()) { // Режим CALC работа с калькулятором в диалоговом режиме
       disassembler.print();
     }
 }
@@ -133,21 +135,32 @@ void inline lcd_stack_output(void) {
   if(YZ_ZT) {
       lcd.setCursor(0,1); lcd.print("Y "); lcd.print(read_stack_register(stack::Y, cvalue, display_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_Y, display_symbols));
-      lcd.setCursor(0,0); //lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, terminal_symbols));
+      lcd.setCursor(0,0); lcd.print("X1"); lcd.print(read_stack_register(stack::X1, cvalue, terminal_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_Z, display_symbols));
       YZ_ZT = false;  // флаг чередования вывода пар регистров YZ или ZT -> ZT
   } else {
       lcd.setCursor(0,0); lcd.print("T "); lcd.print(read_stack_register(stack::T, cvalue, display_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_T, display_symbols));
-      lcd.setCursor(0,1); 
+      lcd.setCursor(0,1); lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, display_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_Z, display_symbols));
       YZ_ZT = true;   // флаг чередования вывода пар регистров YZ или ZT -> YZ
   }
-  lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, display_symbols));
+  //lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, display_symbols));
 }
 
-
 void setup() {
+  // При входе с зажатой кнопко ESC вызывается DFU-loader
+  pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
+  pinMode(PIN_KBD_ROW0, OUTPUT);
+  digitalWrite(PIN_KBD_ROW0, HIGH);
+
+  if(digitalRead(PIN_KBD_COL0) != LOW) {
+    dbgln(MINI, "BOOT pressed! Need load program from DFU!");
+    DFU_enable();
+  } else {
+    dbgln(MINI, "ESC unpressed!");
+  }
+
   led::init();
 
   #ifdef SERIAL_OUTPUT
@@ -205,8 +218,6 @@ void setup() {
   wait_calc_time = millis() + CALC_WAIT_MS;
   update_R_GRD_G = millis() + ANGLE_SAVE_UPDATE_MS;
 
-  core_stage          =   START;
-  exeq                =   0;
  // Настройки режима MAXIMAL  
   mk61_quants_reload  =   1;
   mk61_quants         =   mk61_quants_reload;
@@ -302,101 +313,6 @@ void key_press_handler(i32 keycode) {
   }
 }
 
-static constexpr usize hz_STOP_SIGNAL  =   200;  // Hz
-static constexpr usize ms_STOP_SIGNAL  =   850;  // ms
-
-inline  void  return_auto_mode(void) { // возвращение в режим АВТ
-    sound(PIN_BUZZER, hz_STOP_SIGNAL, ms_STOP_SIGNAL);
-    MnemoLabel.enable();
-    if(!config.disassm) disassembler.disable(); // если дизассемблер включен в конфигурации "ВСЕГДА" то выключение ненужно
-    #ifdef MK61_EXTENDED
-      disassembler.disable();
-      lcd.setCursor(0,0);
-      for(usize i = 0; i < 5; i++) {
-        const u8 byte = mk61s.byte_from_R(14, i);
-        const char letter = (byte == 0)? ' ' : ((char) byte);
-        lcd.write(letter);
-      }
-    #endif
-}
-
-/* СОБЫТИЯ автомата конечных состояний МК-61 */
-inline  void  event_stop_in_prg_mk61(void) {
-  runtime_ms = millis() - runtime_ms;
-  // Для измерений производительности 
-  #ifdef DEBUG_MEASURE
-    char mk61_display[14];
-    core_61::update_indicator(&mk61_display[0], terminal_symbols);
-    dbgln(MEASURE, "time elapsed (ms): ", runtime_ms, " : ", mk61_display);
-  #endif
-
-  dbgln(MINI, "PRG: STOP dt = ", runtime_ms, " mk61_reload_quant = ", mk61_quants_reload);
-  
-  // >>>>>> Расширение системы команд МК-61 по режиму старт/стоп  <<<<<<<
-  const i32 back_step = core_61::get_IP() - 1;
-  const i32 code = core_61::get_code(core_61::get_ring_address(back_step));
-  dbgln(EXT_RUN, "IP = ", back_step, ". MK61 code = ", code);
-  if(code == 0x50 && ext61_program[back_step] != 0) { // Есть код расширения режима старт/стоп!
-
-    ext_command.code  = ext61_program[back_step];
-    ext_command.time  = millis();
-    dbgln(EXT_RUN, "Extended code = ", ext_command.code);
-  } else { // Если нет расширенного кода то обычная работа в режиме ОСТАНОВ
-
-    return_auto_mode();
-  }
-
-  exeq        =   0;
-  core_stage  =   START;
-}
-
-inline void  event_start_prg_mk61(void) {
-  dbgln(MINI, "PRG: first step dt = ", runtime_ms, " mk61_reload_quant = ", mk61_quants_reload);
-  MnemoLabel.disable();
-  disassembler.disable("RUN");
-  exeq        =   1;
-  mk61_quants =   mk61_quants_reload;
-  runtime_ms  =   millis();
-}
-
-/* АВТОМАТ конечных состояний МК-61 */
-inline void mk61_automate(void) {
-  i32 keycode;
-
-  switch(core_stage) {
-    case  START:
-      
-      keycode = kbd::get_key(PRESS);
-      if(keycode >= 0) {
-        key_press_handler(keycode);
-        core_61::step();
-      }
-
-      core_stage = NEXT;
-      break;
-    case  NEXT:
-      core_61::step();
-      const bool comma_in_11 = (core_61::comma_position() == 11);
-
-      if(exeq == 0) { // MK61 в режиме вычислений
-        if(comma_in_11) { // MK61 был первый шаг по программе старт с С/П
-          event_start_prg_mk61();
-        } else { 
-          if(core_61::is_displayed()) core_stage = START;
-        }
-      } else { // MK61 в режиме работы по программме 
-        dbgln(MINI, "PRG: next steps");
-
-        keycode = kbd::get_key(PRESS);
-        if(keycode >= 0) key_press_handler(keycode);
-
-        if(!comma_in_11) { // MK61 произвел останов С/П при работе по программе
-          event_stop_in_prg_mk61();
-        }
-      }
-  } // end switch 
-}
-
 inline void monitor_switch_angle_unit(t_time_ms now) {
   const AngleUnit new_angle = MK61Emu_GetAngleUnit();
   const AngleUnit old_angle = read_grade_switch();
@@ -416,16 +332,38 @@ inline void mk61_process(void) {
   }
 }
 
-void loop() {
+inline void message_of_unuse(void) {
+  // выдача трех сигналов
+  for(int i=0; i<3; i++) {
+    sound(PIN_BUZZER, 4000, 200);
+    delay(250);
+  }
+}
 
-  #ifdef TERMINAL // Подмена полученной с терминала клавиши через буфер клавиатуры
-    const i32 key_from_terminal = terminal.serial_input_handler();
-    if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
-  #endif
+// ***********************************************************************************************
+// *******************************   ЦИКЛ РАБОТЫ ОС mk61s ****************************************
+// ***********************************************************************************************
+void   mk61_baseloop_hook(i32 key);
+void   mk61_menu_hook(i32 key);
 
-  switch(kbd::last_key()) {
+using HookFunc = void (*)(i32 key);
+static HookFunc input_focus = &mk61_baseloop_hook;
+
+void   mk61_menu_hook(i32 key) {
+    if(key >= 0) {
+      const i32 result = mk61_menu.select(kbd::get_key());
+      if( result < 0) {
+        lcd_std_display_redraw();
+        input_focus = &mk61_baseloop_hook;
+        dbgln(MENU, "menu quit");
+      }
+    }
+}
+
+void   mk61_baseloop_hook(i32 key) {
+  switch(key) {
     case  KEY_USER_RELEASE:
-        kbd::get_key(); // очистим буфер клавиатуры от этого кода
+      kbd::get_key(); // очистим буфер клавиатуры от этого кода
         if(core_61::edit_program) {
           const isize mk61_IP = core_61::get_IP();
           dbgln(MENU, "release [USER], insert NOP to MK61 program in step ", mk61_IP);
@@ -436,9 +374,8 @@ void loop() {
       break;
     case  KEY_ESC_PRESS:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
-        mk61_menu.select();
-        lcd_std_display_redraw();
-        dbgln(MENU, "menu exit");
+        input_focus = &mk61_menu_hook;
+        mk61_menu.select(-1);  // Отобразим меню
       break;
     case  KEY_LOAD:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
@@ -456,8 +393,9 @@ void loop() {
           auto_start_time = 0;
           return_auto_mode();
         }
+      /*!!!без брейка так задумано!!!!*/
     default:
-      if(exeq == 0) { // Режим автоматической работы (АВТ) без задержки!
+      if(core_61::is_CALC()) { // Режим автоматической работы CALC без задержки!
         const u32 now = millis();
         monitor_switch_angle_unit(now); // слежение за положением b сохранением в flash переключателя градусной меры (только в АВТ режиме)
 
@@ -507,7 +445,35 @@ void loop() {
         }
       }
   }
-  
+}
+
+void  loop() {
+  const time_t time_is_now = millis();
+
+  // планируем реакцию на бездействие калькулятора (только для первого входа в процедуру)
+  constexpr static time_t DELAY_UNUSED = 1000 * 60 * 5;
+  static time_t time_message_of_unuse = time_is_now + DELAY_UNUSED; // 5 Минут повтор события
+
+  #ifdef TERMINAL // Подмена полученной с терминала клавиши через буфер клавиатуры
+    const i32 key_from_terminal = terminal.serial_input_handler();
+    if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
+  #endif
+
+  const i32 used_key = kbd::last_key();
+  if(used_key >= 0) { 
+  //== кнопка нажата - перепланировка выдачи сообщения о бездействии на следующие 5 минут
+    time_message_of_unuse = time_is_now + DELAY_UNUSED;
+  } else { 
+  //== однако если нет нажатий проверим пора ли выдать предупреждение
+    if(time_message_of_unuse < time_is_now) { // достигнуто время реакции на бездействие!!!
+        time_message_of_unuse = time_is_now + DELAY_UNUSED; // через 5 Минут повтор события
+      // в режиме счета по программе выдачи звукового оповещения не производится 
+        if(core_61::is_CALC()) message_of_unuse();
+    }
+  }
+
+  // Перехват клавиатуры программным модулем
+  input_focus(used_key);
   kbd::scan();
 }
 

@@ -150,3 +150,31 @@ void class_menu::select(void) {
     }
   } while(true);
 }
+
+i32 class_menu::select(i32 key) {
+  lcd.clear();
+  dbgln(MENU, "select entry");
+
+    switch(key) {
+      case KEY_RIGHT_PRESS:
+              if(active_punct < (MENU_PUNCT_COUNT-1)) active_punct++;
+        break;
+      case KEY_LEFT_PRESS:
+              if(active_punct > 0) active_punct--;
+        break;
+      case KEY_OK_PRESS:
+            dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
+            if(puncts[active_punct]->action() == action::MENU_EXIT) {
+              return -1; 
+            } else { 
+              lcd.clear();
+              break;
+            }
+      case KEY_ESC_PRESS:
+            return -1; // отмена
+    }
+  
+  draw();
+  dbgln(MENU, "select exit");
+  return 0;
+}

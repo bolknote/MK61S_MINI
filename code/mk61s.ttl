@@ -1,0 +1,132 @@
+code2str LN $0A0D
+
+; 1. Инициализация и настройка
+connect '/C=16'
+pause 1
+setsync 1
+timeout = 5
+
+; ТЕСТ 6!
+send 'ver' 13
+send 'hin 0000 34400160125D0350' 13
+send 'poke X 0.6e01' 13
+send 'run' 13
+
+waitln 'run'
+flushrecv
+
+; 3. Ожидание строки, содержащей маркер " : "
+waitln ' : '
+if result = 0 then
+    messagebox 'Ошибка: не получен ответ от устройства (таймаут)' 'Ошибка'
+    end
+endif
+
+; 4. Извлечение числа после маркера
+strscan inputstr ' : '
+if result = 0 then
+    messagebox 'Ошибка: неверный формат ответа' 'Ошибка'
+    end
+endif
+
+number_start = result + 3
+strcopy inputstr number_start 255 number_str
+strtrim number_str ' .\t\n\r'
+
+; 6. Проверка результата
+strcompare number_str '720'
+if result != 0 then
+    sprintf2 msg 'Число не равно 720, получено: %s' number_str
+    strconcat error_test '6! ОШИБКА! ('
+    strconcat error_test msg
+else
+    strconcat error_test '6! = 720, пройден!'
+endif
+strconcat error_test LN
+
+;=====================================================
+; ТЕСТ K-
+;=====================================================
+send 'kbd 25' 13
+send 'kbd 8' 13
+pause 1
+
+send '1302' 13
+waitln '1302'
+
+waitn 24
+strcopy inputstr 10 255 error_str
+strcompare error_str 'D00000D00D00E00'
+if result != 0 then
+    strconcat error_test 'K- ОШИБКА!'
+else
+    strconcat error_test 'K- пройден'
+endif
+strconcat error_test LN
+
+;=====================================================
+; ТЕСТ K /
+;=====================================================
+send 'kbd 25' 13
+send 'kbd 3' 13
+pause 1
+
+send '1302' 13
+waitln '1302'
+
+waitn 24
+strcopy inputstr 10 255 error_str
+strcompare error_str 'D00000D00D00E00'
+if result != 0 then
+    strconcat error_test 'K- ОШИБКА!'
+else
+    strconcat error_test 'K: пройден'
+endif
+strconcat error_test LN
+
+;=====================================================
+; ТЕСТ K *
+;=====================================================
+send 'kbd 25' 13
+send 'kbd 2' 13
+pause 1
+
+send '1302' 13
+waitln '1302'
+
+waitn 24
+strcopy inputstr 10 255 error_str
+strcompare error_str 'D00000D00D00E00'
+if result != 0 then
+    strconcat error_test 'K* ОШИБКА!'
+else
+    strconcat error_test 'K* пройден'
+endif
+strconcat error_test LN
+
+;=====================================================
+; ТЕСТ ДЕЛЕНИЕ НА НОЛЬ
+;=====================================================
+send 'kbd 15' 13
+send 'kbd 1' 13
+send 'kbd 14' 13
+send 'kbd 3' 13
+pause 1
+
+send '1302' 13
+waitln '1302'
+
+waitn 24
+strcopy inputstr 10 255 error_str
+strcompare error_str 'D00000D00D00E00'
+if result != 0 then
+    strconcat error_test '/0 ОШИБКА!'
+else
+    strconcat error_test '/0 пройден'
+endif
+strconcat error_test LN
+
+
+messagebox error_test 'Тесты ЕГГОГ'
+
+setsync 0

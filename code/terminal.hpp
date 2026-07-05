@@ -844,10 +844,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               flash_map_list();
             break;
           case  T_RUN: 
-              kbd::push(38); // F
-              kbd::push(10); // /-/
-              kbd::push(31); // В/О
-              kbd::push(30); // C/П
+              kbd::push((i8) sw::F);   // F
+              kbd::push((i8) sw::NEG); // /-/
+              kbd::push((i8) sw::RET); // В/О
+              kbd::push((i8) sw::RUN); // C/П
             break;
           case  T_POKE_CODE:
               input_R_stack();

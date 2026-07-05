@@ -80,7 +80,7 @@ typedef enum {
   T  = ring_M::IR2_1_1.OFFSET + (42 * 4)
 } stack;
 
-enum enum_core61_stage {START, NEXT};
+//enum enum_core61_stage {START, NEXT};
 
 typedef enum
 {
@@ -159,7 +159,8 @@ namespace core_61 {
   };
   #pragma pack(pop)
 
-  static constexpr  usize LAST_PROGRAM_STEP = MK61_LAST_PRG_STEP;
+  static constexpr  usize   LAST_PROGRAM_STEP   =   MK61_LAST_PRG_STEP;
+  static constexpr  usize   COMMA_RUN_POSITION  =   11;
   extern    bool  edit_program;
 
   inline    isize get_ring_address(isize linear_address) {
@@ -176,6 +177,8 @@ namespace core_61 {
 
   inline    bool  is_displayed(void)    { return (m_IK1302.displayed != 0); }
   inline    usize comma_position(void)  { return m_IK1302.comma; }
+  inline    bool  is_RUN(void)          { return (comma_position() == COMMA_RUN_POSITION); }
+  inline    bool  is_CALC(void)         { return (comma_position() != COMMA_RUN_POSITION); }
 
   extern    usize len_code_command(u8 cod);
   extern    void  set_code_page(uint8_t* page);
