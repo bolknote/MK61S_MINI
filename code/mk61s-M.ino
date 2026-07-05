@@ -18,6 +18,7 @@ using namespace kbd;
 #include "disasm.hpp"
 #include "tools.hpp"
 #include "menu.hpp"
+#include "basic.hpp"
 
 #include "ledcontrol.h"
 using namespace led;
@@ -232,6 +233,7 @@ void setup() {
 
  // Система ззагрузки программ
   init_library();
+  InitBasic();
 
  // Запуск эмулятора MK61
   GRDLabel.print(load_grade_switch()); // считаем состояние переключателя ГРД отобразим градусную меру

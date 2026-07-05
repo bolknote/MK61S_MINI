@@ -13,7 +13,7 @@ namespace action {
 
 typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню 
 
-static constexpr int MENU_PUNCT = 11;
+static constexpr int MENU_PUNCT = 12;
 
 enum class ProgramMemoryMode : u8 {
   CLASSIC_105,

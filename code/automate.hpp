@@ -36,7 +36,12 @@ inline  void  event_stop_in_prg_mk61(void) {
   }
   const i32 code = core_61::get_code(core_61::get_ring_address(back_step));
   dbgln(EXT_RUN, "IP = ", back_step, ". MK61 code = ", code);
-  if(code == 0x50 && ext61_program[back_step] != 0) { 
+  if(code == 0x50 && BasicHasAssignedStep(back_step)) {
+    return_auto_mode();
+    BasicRunAssignedForStep(back_step);
+    return;
+  }
+  if(code == 0x50 && ext61_program[back_step] != 0) {
     // Есть код расширения режима старт/стоп!
       ext_command.code  = ext61_program[back_step];
       ext_command.time  = millis();
