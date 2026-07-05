@@ -19,8 +19,9 @@ static constexpr isize BLOCK_SIZE           = 106 / 13;
 static const int switch_R_GRD_G = 106;
 static const int count_switch_R_GRD_G = 107;
 static const int switch_settings = 108;
-static constexpr u8 SETTINGS_SOUND_ON  = 0x01;
-static constexpr u8 SETTINGS_USED_MASK = SETTINGS_SOUND_ON;
+static constexpr u8 SETTINGS_SOUND_ON   = 0x01;
+static constexpr u8 SETTINGS_LANGUAGE_RU = 0x02;
+static constexpr u8 SETTINGS_USED_MASK  = SETTINGS_SOUND_ON | SETTINGS_LANGUAGE_RU;
 
 extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms);

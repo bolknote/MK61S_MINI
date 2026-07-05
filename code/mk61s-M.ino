@@ -380,12 +380,12 @@ void   mk61_baseloop_hook(i32 key) {
       break;
     case  KEY_LOAD:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
-        if(Load()) message_and_waitkey(" press any key! ");
+        if(Load()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
         lcd_std_display_redraw(); 
       break;
     case  KEY_SAVE:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
-        if(Store()) message_and_waitkey(" press any key! ");
+        if(Store()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
         lcd_std_display_redraw(); 
       break;
     case  KEY_RUN_PRESS:

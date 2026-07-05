@@ -12,7 +12,7 @@ namespace action {
 
 typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню 
 
-static constexpr int MENU_PUNCT = 9;
+static constexpr int MENU_PUNCT = 10;
 
 struct  t_punct {
     u8            size;
@@ -24,14 +24,20 @@ extern bool mk61_library_select(void);
 extern bool mk61_games_select(void);
 extern bool TurnSound(void);
 extern bool TurnSpeed(void);
+extern bool TurnLanguage(void);
 
 namespace library_mk61 {
   const   int             COUNT_PUNCTS = MENU_PUNCT;
   extern  t_punct*        MENU[MENU_PUNCT];
 
   extern  bool  sound_is_on(void);
+  extern  bool  language_is_ru(void);
   extern  void  load_settings_state(void);
   extern  bool  speed_is_max(void);
+
+  inline const char* text(const char* en, const char* ru) {
+    return language_is_ru() ? ru : en;
+  }
 }
 
 class class_menu {

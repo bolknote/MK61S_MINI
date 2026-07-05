@@ -27,7 +27,7 @@ void DFU_enable(void) {
     void (*SysMemBootJump)(void);
 
   lcd.clear();
-  DFU_message.print(" DFU flash mode!");
+  DFU_message.print(library_mk61::text(" DFU flash mode!", " DFU FLASH!    "));
     __enable_irq();
     HAL_RCC_DeInit();
     HAL_DeInit();
@@ -47,7 +47,7 @@ void DFU_enable(void) {
 bool  Confirmation(void) {
   extern void lcd_std_display_redraw(void);
 
-    lcd.setCursor(0,0); lcd.print("press OK confirm");
+    lcd.setCursor(0,0); lcd.print(library_mk61::text("press OK confirm", "OK \001O\003TBEP\003"));
     i32 key = kbd::get_key_wait();
     lcd_std_display_redraw();
 
@@ -153,7 +153,7 @@ isize  calc_address(void) {
   const isize n_cell = MK61Emu_GetDisplayReg();
 
   if(n_cell > MAX_SLOT_FOR_PROGRAM) {
-    lcd.setCursor(0, 0); lcd.print("Error! slot > "); lcd.print(MAX_SLOT_FOR_PROGRAM);
+    lcd.setCursor(0, 0); lcd.print(library_mk61::text("Error! slot > ", "SLOT > ")); lcd.print(MAX_SLOT_FOR_PROGRAM);
     return -1;
   } else {
     /*lcd.print("slot ");*/ lcd.print(n_cell);
@@ -191,7 +191,7 @@ u8 load_word(isize segment_address, isize offset) {
 bool load_from(isize address) {
   if(load_word(address, OFFSET_FLAG_OCCUPIED) != SLOT_OCCUPIED) {
     dbgln(SPIROM, "SPIFLASH: SLOT IS EMPTY ", address, "Nothing to load! canceled!");
-    lcd.print(" is empty");
+    lcd.print(library_mk61::text(" is empty", " HET"));
     sound(PIN_BUZZER, 4000, 750);
     delay(1500);
     return false; // error
@@ -214,7 +214,7 @@ bool Load(usize nSlot) {
 
 bool Load(void) {
   lcd.clear();
-  lcd.setCursor(0, 0); lcd.print("Load "); 
+  lcd.setCursor(0, 0); lcd.print(library_mk61::text("Load ", "\321T ")); 
 
   const isize address = calc_address();
   if(address < 0) return false; // error
@@ -234,7 +234,7 @@ inline bool check_empty_program(void) {
   usize all_to_or = 0;
   for(isize i=0; i < 105; i++) all_to_or |= (usize) core_61::get_code(/*mk61s.*/core_61::get_ring_address(i));
   if(all_to_or == 0) {
-    lcd.print("No program...");
+    lcd.print(library_mk61::text("No program...", "HET \001PO\005PAMM"));
     sound(PIN_BUZZER, 4000, 750);
     delay(1500);
     return true; 
@@ -334,7 +334,7 @@ bool Store(void) {
 
   if(check_empty_program()) return false; // error
 
-  lcd.print("Save "); //lcd.setCursor(7, 0); 
+  lcd.print(library_mk61::text("Save ", "\001\004C ")); //lcd.setCursor(7, 0); 
 
   const isize address = calc_address();
   if(address < 0) return false; // error
@@ -345,7 +345,7 @@ bool Store(void) {
       Serial.println(address);
     #endif
     sound(PIN_BUZZER, 4000, 750);
-    lcd.setCursor(0, 0); lcd.print("OVER"); lcd.setCursor(8, 0); lcd.print("press OK");
+    lcd.setCursor(0, 0); lcd.print(library_mk61::text("OVER", "OVER")); lcd.setCursor(8, 0); lcd.print(library_mk61::text("press OK", "OK?"));
     if(kbd::get_key_wait() != KEY_OK) return false; // error
   }
 
@@ -384,15 +384,15 @@ using namespace action;
 
 bool  EraseFlash(void) {
   sound(PIN_BUZZER, 4000, 750);   
-  lcd.setCursor(0, 0); lcd.print("press OK ERASED!"); 
+  lcd.setCursor(0, 0); lcd.print(library_mk61::text("press OK ERASED!", "OK CTEP FLASH")); 
   if(kbd::get_key_wait() != KEY_OK) return action::MENU_BACK; 
  // стираем внешний флеш 
-  lcd.clear(); lcd.setCursor(0, 0); lcd.print("Erase slot ");
+  lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase slot ", "CTEP SLOT "));
   for(usize i=0; i <= MAX_SLOT_FOR_PROGRAM; i++){
      while (!flash.eraseSector(i * FLASH_SECTOR_SIZE));
      lcd.setCursor(11, 0); lcd.print(i);
   }
   sound(PIN_BUZZER, 1000, 300);
-  message_and_waitkey(" press any key! ");
+  message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
   return action::MENU_EXIT;
 }
