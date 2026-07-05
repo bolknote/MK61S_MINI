@@ -1,0 +1,3 @@
+# Local firmware build outputs
+/*.bin
+/binary/
