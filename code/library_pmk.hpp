@@ -5,7 +5,7 @@
 #include "rust_types.h"
 
 static  constexpr usize    COUNT_PROGRAMS = 6;
-static  constexpr usize    COUNT_GAMES    = 5;
+static  constexpr usize    COUNT_GAMES    = 6;
 struct  TPunct {
   char  text[16];
   int   offset;
