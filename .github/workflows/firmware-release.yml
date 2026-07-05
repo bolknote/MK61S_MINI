@@ -1,0 +1,79 @@
+name: Firmware release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build and publish firmware
+    runs-on: ubuntu-latest
+
+    env:
+      STM32_CORE_VERSION: 2.12.0
+      STM32_PACKAGE_URL: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
+      FQBN: STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install STM32 core
+        run: |
+          arduino-cli config init --overwrite
+          arduino-cli config set board_manager.additional_urls "$STM32_PACKAGE_URL"
+          arduino-cli core update-index
+          arduino-cli core install "STMicroelectronics:stm32@$STM32_CORE_VERSION"
+
+      - name: Prepare sketch
+        run: |
+          mkdir -p "$RUNNER_TEMP/mk61s-M"
+          cp -R code/. "$RUNNER_TEMP/mk61s-M/"
+          mkdir -p firmware
+
+      - name: Build LCD1602 firmware
+        run: |
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --build-path "$RUNNER_TEMP/build-lcd1602" \
+            "$RUNNER_TEMP/mk61s-M"
+          cp "$RUNNER_TEMP/build-lcd1602/mk61s-M.ino.bin" "firmware/mk61s-M-lcd1602-f411-${GITHUB_SHA::7}.bin"
+
+      - name: Build UC1609 firmware
+        run: |
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --build-path "$RUNNER_TEMP/build-uc1609" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_DISPLAY_UC1609" \
+            "$RUNNER_TEMP/mk61s-M"
+          cp "$RUNNER_TEMP/build-uc1609/mk61s-M.ino.bin" "firmware/mk61s-M-uc1609-f411-${GITHUB_SHA::7}.bin"
+
+      - name: Write checksums
+        run: |
+          cd firmware
+          sha256sum *.bin > SHA256SUMS.txt
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mk61s-firmware-${{ github.sha }}
+          path: firmware/*
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: firmware-${{ github.run_number }}-${{ github.sha }}
+        run: |
+          gh release create "$RELEASE_TAG" firmware/* \
+            --target "$GITHUB_SHA" \
+            --title "Firmware ${GITHUB_SHA::7}" \
+            --notes "Automated firmware build for ${GITHUB_SHA}."
