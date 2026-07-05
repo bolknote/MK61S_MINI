@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "menu.hpp"
 #include "cross_hal.h"
@@ -87,15 +88,24 @@ bool  HardwareInfo(void) {
 }
 
 bool  InfoData(void) {
-  {
+  if(language_is_ru()) {
+    char line0[24];
+    char line1[24];
+    snprintf(line0, sizeof(line0), "СЧ:%u УГ:%u%s",
+      (u32) read_counter_switch(),
+      (u32) ((u8) read_grade_switch()),
+      flash_is_ok ? " ФЛ" : "");
+    snprintf(line1, sizeof(line1), "ВР:%lu МС", (unsigned long) runtime_ms);
+    lcd_ru::print_lines(line0, line1);
+  } else {
     MK61DisplayUpdate update(lcd);
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print(text("cnt:", "N:")); lcd.print(read_counter_switch());
-    lcd.print(text(" sw:", " P:")); lcd.print((u8) read_grade_switch());
+    lcd.print("cnt:"); lcd.print(read_counter_switch());
+    lcd.print(" sw:"); lcd.print((u8) read_grade_switch());
     if(flash_is_ok) lcd.print(" W25");
     lcd.setCursor(0,1);
-    lcd.print(text("run ", "T:")); lcd.print(runtime_ms); lcd.print(" ms");
+    lcd.print("run "); lcd.print(runtime_ms); lcd.print(" ms");
   }
   kbd::get_key_wait();
   return false;
