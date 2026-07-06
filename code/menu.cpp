@@ -30,16 +30,18 @@ static constexpr int MENU_INFO     = MENU_ERASE + 1;
 static constexpr int MENU_HW       = MENU_INFO + 1;
 
 static constexpr int SETTINGS_VOLUME  = 0;
-static constexpr int SETTINGS_SPEED   = 1;
-static constexpr int SETTINGS_MEMORY  = 2;
-static constexpr int SETTINGS_LANGUAGE = 3;
-static constexpr int SETTINGS_USB_DISK = 4;
+static constexpr int SETTINGS_IDLE_SIGNAL = 1;
+static constexpr int SETTINGS_SPEED   = 2;
+static constexpr int SETTINGS_MEMORY  = 3;
+static constexpr int SETTINGS_LANGUAGE = 4;
+static constexpr int SETTINGS_USB_DISK = 5;
 
 static u8 sound_volume_state = 10;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
 static bool usb_disk_state = false;
+static bool idle_signal_state = true;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
 static DeferredSave settings_save;
 static constexpr t_time_ms SETTINGS_SAVE_IDLE_MS = 1000;
@@ -150,6 +152,8 @@ const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLa
 const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Язык рус"};
 const t_punct USB_DISK_OFF_punct  = {.size = 15, .action = (menu_action) &TurnUsbDisk,          .text = "USB Disk OFF   "};
 const t_punct USB_DISK_ON_punct   = {.size = 15, .action = (menu_action) &TurnUsbDisk,          .text = "USB Disk ON    "};
+const t_punct IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep OFF "};
+const t_punct IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep ON  "};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
 
@@ -168,6 +172,8 @@ const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnPr
 const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память АВТО"};
 const t_punct RU_USB_DISK_OFF_punct = {.size = 15, .action = (menu_action) &TurnUsbDisk,        .text = "USB-диск выкл"};
 const t_punct RU_USB_DISK_ON_punct  = {.size = 15, .action = (menu_action) &TurnUsbDisk,        .text = "USB-диск вкл"};
+const t_punct RU_IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук выкл"};
+const t_punct RU_IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук вкл"};
 const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "Информация"};
 const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "Плата"};
 
@@ -187,6 +193,7 @@ extern const int COUNT_PUNCTS = sizeof(MENU) / sizeof(MENU[0]);
 
 t_punct* SETTINGS_MENU[] = {
       (t_punct*) &VOLUME_punct,
+      (t_punct*) &IDLE_SIGNAL_ON_punct,
       (t_punct*) &SPEED_HIGH_punct,
       (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &LANGUAGE_EN_punct,
@@ -225,6 +232,14 @@ bool usb_disk_is_on(void) {
 
 void set_usb_disk_state(bool enable) {
   usb_disk_state = enable;
+}
+
+bool idle_signal_is_on(void) {
+  return idle_signal_state;
+}
+
+void set_idle_signal_state(bool enable) {
+  idle_signal_state = enable;
 }
 
 bool  expanded_program_is_on(void) {
@@ -280,6 +295,11 @@ static t_punct* usb_disk_punct(void) {
   return (t_punct*) (russian_language ? &RU_USB_DISK_OFF_punct : &USB_DISK_OFF_punct);
 }
 
+static t_punct* idle_signal_punct(void) {
+  if(idle_signal_is_on()) return (t_punct*) (russian_language ? &RU_IDLE_SIGNAL_ON_punct : &IDLE_SIGNAL_ON_punct);
+  return (t_punct*) (russian_language ? &RU_IDLE_SIGNAL_OFF_punct : &IDLE_SIGNAL_OFF_punct);
+}
+
 static void format_volume_text(void) {
   int used = snprintf(VOLUME_punct.text, sizeof(VOLUME_punct.text), "Volume %u", (u32) sound_volume_state);
   if(used < 0) used = 0;
@@ -306,6 +326,7 @@ void refresh_menu_text(void) {
   MENU[MENU_HW]       = (t_punct*) (russian_language ? &RU_HARDWARE_punct : &HARDWARE_punct);
 
   SETTINGS_MENU[SETTINGS_VOLUME]   = (t_punct*) (russian_language ? &RU_VOLUME_punct : &VOLUME_punct);
+  SETTINGS_MENU[SETTINGS_IDLE_SIGNAL] = idle_signal_punct();
   SETTINGS_MENU[SETTINGS_SPEED]    = speed_punct();
   SETTINGS_MENU[SETTINGS_MEMORY]   = memory_punct();
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
@@ -318,6 +339,7 @@ void  store_settings_state(void) {
   flags.bits.program_memory_mode = (u8) memory_mode;
   flags.bits.speed_mode = (u8) speed_mode_state;
   flags.bits.usb_disk = usb_disk_state ? 1 : 0;
+  flags.bits.idle_signal_off = idle_signal_state ? 0 : 1;
   store_settings_flags(flags);
 
   SoundSettings sound_settings;
@@ -352,6 +374,7 @@ void  load_settings_state(void) {
   const u8 stored_speed = flags.bits.speed_mode;
   set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
   set_usb_disk_state(flags.bits.usb_disk != 0);
+  set_idle_signal_state(flags.bits.idle_signal_off == 0);
   set_sound_volume(read_sound_settings().bits.volume);
   refresh_menu_text();
 }
@@ -490,6 +513,14 @@ bool   TurnUsbDisk(void) {
       usb_start_terminal_mode();
     }
   }
+
+  return action::MENU_BACK;
+}
+
+bool TurnIdleSignal(void) {
+  library_mk61::set_idle_signal_state(!library_mk61::idle_signal_is_on());
+  library_mk61::refresh_menu_text();
+  library_mk61::mark_settings_dirty();
 
   return action::MENU_BACK;
 }
@@ -637,6 +668,18 @@ bool class_menu::handle_settings_adjustment(i32 key) {
 
       if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
         TurnUsbDisk();
+        return true;
+      }
+      break;
+
+    case library_mk61::SETTINGS_IDLE_SIGNAL:
+      if(key == KEY_OK_PRESS) {
+        TurnIdleSignal();
+        return true;
+      }
+
+      if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+        TurnIdleSignal();
         return true;
       }
       break;

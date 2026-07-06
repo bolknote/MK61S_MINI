@@ -609,7 +609,7 @@ void  loop() {
     if(time_message_of_unuse < time_is_now) { // достигнуто время реакции на бездействие!!!
         time_message_of_unuse = time_is_now + DELAY_UNUSED; // через 5 Минут повтор события
       // в режиме счета по программе выдачи звукового оповещения не производится 
-        if(core_61::is_CALC()) message_of_unuse();
+        if(core_61::is_CALC() && library_mk61::idle_signal_is_on()) message_of_unuse();
     }
   }
 
