@@ -325,7 +325,6 @@ static constexpr t_punct RU_FOCAL_DEV_PUNCT = {.size = 15, .action = &focal_acti
 } // namespace
 
 bool program_store_explorer_select(void) {
-  program_store::refresh();
   int active = 0;
 
   while(true) {
@@ -349,7 +348,6 @@ bool program_store_explorer_select(void) {
     } else if(key == EXPLORER_KEY_LONG_OK) {
       program_store::Entry entry;
       if(explorer_entry(active, entry)) explorer_item_menu(entry);
-      program_store::refresh();
     }
   }
 }

@@ -1784,7 +1784,6 @@ static void draw_program_select(int active, bool allow_new) {
 
 static int select_basic_program(bool allow_new) {
 #ifndef BASIC_HOST_TEST
-  program_store::refresh();
   const int stored_count = program_store::count(program_store::ProgramType::BASIC);
   if(stored_count <= 0 && !allow_new) {
     basic_message_i18n("BASIC is empty", "БЕЙСИК пуст", "Press any key", "Любая клавиша");
