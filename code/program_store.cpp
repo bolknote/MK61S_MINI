@@ -26,6 +26,17 @@ static constexpr u8 SECTOR_TAG1 = '1';
 static constexpr usize SECTOR_HEADER_SIZE = 7;
 static constexpr usize STORE_SECTOR_COUNT = (usize) MAX_SLOT_FOR_PROGRAM + 1;
 static constexpr usize CATALOG_SECTOR = STORE_SECTOR_COUNT;
+static constexpr usize SETTINGS_SECTOR = STORE_SECTOR_COUNT + 1;
+static constexpr usize VFAT_STAGE_FIRST_SECTOR = SETTINGS_SECTOR + 1;
+static constexpr usize VFAT_STAGE_SECTOR_COUNT = 128;
+static constexpr u16 VFAT_STAGE_FIRST_CLUSTER = 2;
+static constexpr u16 VFAT_STAGE_CLUSTER_COUNT = 800;
+static constexpr u16 VFAT_STAGE_DATA_SIZE = 512;
+static constexpr u16 VFAT_STAGE_HEADER_SIZE = 8;
+static constexpr u16 VFAT_STAGE_RECORD_SIZE = VFAT_STAGE_HEADER_SIZE + VFAT_STAGE_DATA_SIZE;
+static constexpr u8 VFAT_STAGE_RECORDS_PER_SECTOR = FLASH_SECTOR_SIZE / VFAT_STAGE_RECORD_SIZE;
+static constexpr u8 VFAT_STAGE_TAG0 = 'V';
+static constexpr u8 VFAT_STAGE_TAG1 = 'S';
 static constexpr u8 CATALOG_TAG0 = 'C';
 static constexpr u8 CATALOG_TAG1 = '1';
 static constexpr usize CATALOG_HEADER_SIZE = 9;
@@ -71,11 +82,16 @@ struct RecordMeta {
 
 static SectorInfo sectors[STORE_SECTOR_COUNT];
 static IndexEntry index_entries[MAX_ENTRIES];
+static u16 vfat_stage_refs[VFAT_STAGE_CLUSTER_COUNT];
+static bool vfat_stage_sector_prepared[VFAT_STAGE_SECTOR_COUNT];
 static u8 index_count;
 static bool index_valid;
 static u32 next_generation = 1;
 static u8 disk_activity_depth;
 static u8 disk_led_poll_divider;
+static u16 vfat_stage_active_count;
+static u16 vfat_stage_offset;
+static u8 vfat_stage_sector;
 
 static void disk_led_poll(void) {
   if(disk_activity_depth == 0) return;
@@ -259,6 +275,143 @@ static u16 make_crc(ProgramType type, const char* name, u8 name_len, const u8* d
   for(u8 i = 0; i < name_len; i++) crc = crc16_update(crc, (u8) name[i]);
   for(u16 i = 0; i < data_len; i++) crc = crc16_update(crc, data[i]);
   return crc;
+}
+
+static bool vfat_stage_cluster_index(u16 cluster, u16& index) {
+  if(cluster < VFAT_STAGE_FIRST_CLUSTER) return false;
+  const u16 relative = (u16) (cluster - VFAT_STAGE_FIRST_CLUSTER);
+  if(relative >= VFAT_STAGE_CLUSTER_COUNT) return false;
+  index = relative;
+  return true;
+}
+
+static u32 vfat_stage_base(void) {
+  return sector_base(VFAT_STAGE_FIRST_SECTOR);
+}
+
+static u32 vfat_stage_ref_address(u16 ref) {
+  if(ref == 0) return 0;
+  ref--;
+  const u16 sector = (u16) (ref / VFAT_STAGE_RECORDS_PER_SECTOR);
+  const u16 record = (u16) (ref % VFAT_STAGE_RECORDS_PER_SECTOR);
+  return vfat_stage_base() +
+         (u32) sector * FLASH_SECTOR_SIZE +
+         (u32) record * VFAT_STAGE_RECORD_SIZE;
+}
+
+static u16 vfat_stage_current_ref(void) {
+  const u16 record = (u16) (vfat_stage_offset / VFAT_STAGE_RECORD_SIZE);
+  return (u16) (vfat_stage_sector * VFAT_STAGE_RECORDS_PER_SECTOR + record + 1);
+}
+
+static u32 vfat_stage_capacity_bytes(void) {
+#ifdef SPI_FLASH
+  return (u32) flash.getCapacity() * 1024UL;
+#else
+  return 0;
+#endif
+}
+
+static bool vfat_stage_available(void) {
+#ifdef SPI_FLASH
+  if(!flash_is_ok) return false;
+  const u32 end_address = sector_base(VFAT_STAGE_FIRST_SECTOR + VFAT_STAGE_SECTOR_COUNT);
+  return end_address <= vfat_stage_capacity_bytes();
+#else
+  return false;
+#endif
+}
+
+static u16 vfat_stage_crc(u16 cluster, const u8* data) {
+  u16 crc = 0xFFFF;
+  crc = crc16_update(crc, (u8) (cluster & 0xFF));
+  crc = crc16_update(crc, (u8) (cluster >> 8));
+  for(u16 i = 0; i < VFAT_STAGE_DATA_SIZE; i++) crc = crc16_update(crc, data[i]);
+  return crc;
+}
+
+void vfat_stage_clear(void) {
+  memset(vfat_stage_refs, 0, sizeof(vfat_stage_refs));
+  memset(vfat_stage_sector_prepared, 0, sizeof(vfat_stage_sector_prepared));
+  vfat_stage_active_count = 0;
+  vfat_stage_sector = 0;
+  vfat_stage_offset = 0;
+}
+
+static bool vfat_stage_prepare_sector(u8 sector) {
+  if(sector >= VFAT_STAGE_SECTOR_COUNT) return false;
+  if(vfat_stage_sector_prepared[sector]) return true;
+  if(!erase_sector(VFAT_STAGE_FIRST_SECTOR + sector)) return false;
+  vfat_stage_sector_prepared[sector] = true;
+  return true;
+}
+
+static bool vfat_stage_advance_record(void) {
+  if(vfat_stage_offset + VFAT_STAGE_RECORD_SIZE <= FLASH_SECTOR_SIZE) return true;
+  vfat_stage_sector++;
+  vfat_stage_offset = 0;
+
+  if(vfat_stage_sector < VFAT_STAGE_SECTOR_COUNT) return true;
+  if(vfat_stage_active_count != 0) return false;
+
+  vfat_stage_clear();
+  return true;
+}
+
+bool vfat_stage_write(u16 cluster, const u8* data) {
+  DiskActivity disk_activity;
+  if(data == NULL || !vfat_stage_available()) return false;
+
+  u16 index = 0;
+  if(!vfat_stage_cluster_index(cluster, index)) return false;
+  if(!vfat_stage_advance_record()) return false;
+  if(!vfat_stage_prepare_sector(vfat_stage_sector)) return false;
+
+  const u32 address = vfat_stage_base() +
+                      (u32) vfat_stage_sector * FLASH_SECTOR_SIZE +
+                      vfat_stage_offset;
+  const u16 crc = vfat_stage_crc(cluster, data);
+
+  write_byte(address, VFAT_STAGE_TAG0);
+  write_byte(address + 1, VFAT_STAGE_TAG1);
+  write_le16(address + 2, cluster);
+  write_le16(address + 4, crc);
+  write_byte(address + 6, 0);
+  write_byte(address + 7, 0);
+  for(u16 i = 0; i < VFAT_STAGE_DATA_SIZE; i++) write_byte(address + VFAT_STAGE_HEADER_SIZE + i, data[i]);
+
+  if(vfat_stage_refs[index] == 0) vfat_stage_active_count++;
+  vfat_stage_refs[index] = vfat_stage_current_ref();
+  vfat_stage_offset = (u16) (vfat_stage_offset + VFAT_STAGE_RECORD_SIZE);
+  return true;
+}
+
+bool vfat_stage_read(u16 cluster, u8* data) {
+  if(data == NULL) return false;
+
+  u16 index = 0;
+  if(!vfat_stage_cluster_index(cluster, index)) return false;
+  const u32 address = vfat_stage_ref_address(vfat_stage_refs[index]);
+  if(address == 0) return false;
+  if(!vfat_stage_available()) return false;
+
+  DiskActivity disk_activity;
+  if(read_byte(address) != VFAT_STAGE_TAG0 || read_byte(address + 1) != VFAT_STAGE_TAG1) return false;
+  if(read_le16(address + 2) != cluster) return false;
+  const u16 expected_crc = read_le16(address + 4);
+  for(u16 i = 0; i < VFAT_STAGE_DATA_SIZE; i++) data[i] = read_byte(address + VFAT_STAGE_HEADER_SIZE + i);
+  return vfat_stage_crc(cluster, data) == expected_crc;
+}
+
+void vfat_stage_forget(u16 start_cluster, u16 clusters) {
+  if(clusters == 0) return;
+  for(u16 i = 0; i < clusters; i++) {
+    u16 index = 0;
+    if(!vfat_stage_cluster_index((u16) (start_cluster + i), index)) continue;
+    if(vfat_stage_refs[index] == 0) continue;
+    vfat_stage_refs[index] = 0;
+    if(vfat_stage_active_count != 0) vfat_stage_active_count--;
+  }
 }
 
 static bool read_name(u32 address, const RecordMeta& meta, char* out) {
@@ -557,6 +710,7 @@ bool refresh(void) {
 }
 
 void init(void) {
+  vfat_stage_clear();
   index_valid = false;
   if(load_catalog()) return;
   reset_to_ignored_store();
@@ -574,6 +728,7 @@ bool format(void) {
     if(!erase_sector(i)) return false;
   }
   (void) erase_sector(CATALOG_SECTOR);
+  vfat_stage_clear();
   reset_state();
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) sectors[i].empty = true;
   index_valid = true;

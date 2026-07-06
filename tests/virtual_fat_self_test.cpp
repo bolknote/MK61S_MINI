@@ -16,6 +16,14 @@ struct StoredProgram {
 
 static StoredProgram programs[16];
 
+struct StagedSector {
+  bool used;
+  u16 cluster;
+  u8 data[512];
+};
+
+static StagedSector staged_sectors[64];
+
 static StoredProgram* find_program(program_store::ProgramType type, const char* name) {
   for(StoredProgram& program : programs) {
     if(!program.used || program.type != type) continue;
@@ -148,6 +156,46 @@ bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len) {
   return true;
 }
 
+bool vfat_stage_write(u16 cluster, const u8* data) {
+  if(data == NULL) return false;
+
+  StagedSector* free_slot = NULL;
+  for(StagedSector& staged : staged_sectors) {
+    if(staged.used && staged.cluster == cluster) {
+      memcpy(staged.data, data, sizeof(staged.data));
+      return true;
+    }
+    if(!staged.used && free_slot == NULL) free_slot = &staged;
+  }
+
+  if(free_slot == NULL) return false;
+  free_slot->used = true;
+  free_slot->cluster = cluster;
+  memcpy(free_slot->data, data, sizeof(free_slot->data));
+  return true;
+}
+
+bool vfat_stage_read(u16 cluster, u8* data) {
+  if(data == NULL) return false;
+  for(StagedSector& staged : staged_sectors) {
+    if(!staged.used || staged.cluster != cluster) continue;
+    memcpy(data, staged.data, sizeof(staged.data));
+    return true;
+  }
+  return false;
+}
+
+void vfat_stage_forget(u16 start_cluster, u16 clusters) {
+  for(StagedSector& staged : staged_sectors) {
+    if(!staged.used) continue;
+    if(staged.cluster >= start_cluster && staged.cluster < (u16) (start_cluster + clusters)) staged.used = false;
+  }
+}
+
+void vfat_stage_clear(void) {
+  memset(staged_sectors, 0, sizeof(staged_sectors));
+}
+
 } // namespace program_store
 
 #include "../code/virtual_fat.cpp"
@@ -160,6 +208,7 @@ static void reset_virtual_fat_state(void) {
   memset(virtual_fat::pending_deletes, 0, sizeof(virtual_fat::pending_deletes));
   memset(virtual_fat::write_cache, 0, sizeof(virtual_fat::write_cache));
   memset(virtual_fat::ignored_ranges, 0, sizeof(virtual_fat::ignored_ranges));
+  program_store::vfat_stage_clear();
   memset(&virtual_fat::root_lfn_state, 0, sizeof(virtual_fat::root_lfn_state));
   virtual_fat::root_lfn_next_sector = 0;
   virtual_fat::next_cache_slot = 0;
@@ -237,20 +286,63 @@ static void test_incomplete_pending_flush_fails_until_data_arrives(void) {
   assert(stored[99] == 0x5A);
 }
 
-static void test_pending_delete_queue_overflow_fails(void) {
+static void test_staging_survives_mass_copy_before_directory_update(void) {
   reset_virtual_fat_state();
 
-  const u8 byte = 0x24;
-  assert(program_store::write(program_store::ProgramType::MK61, "P0", &byte, 1));
-  assert(program_store::write(program_store::ProgramType::MK61, "P1", &byte, 1));
-  assert(program_store::write(program_store::ProgramType::MK61, "P2", &byte, 1));
-  assert(program_store::write(program_store::ProgramType::MK61, "P3", &byte, 1));
+  static const u8 FILES = 12;
+  u8 sector[virtual_fat::SECTOR_SIZE];
+  for(u8 i = 0; i < FILES; i++) {
+    memset(sector, (int) (0x40 + i), sizeof(sector));
+    assert(virtual_fat::write_sector(data_lba() + i, sector));
+  }
 
   u8 root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), root));
-  for(u8 i = 1; i <= 4; i++) root[(u16) i * 32] = 0xE5;
+  for(u8 i = 0; i < FILES; i++) {
+    char short_name[12] = "F00     M61";
+    short_name[1] = (char) ('0' + i / 10);
+    short_name[2] = (char) ('0' + i % 10);
+    fill_short_dir_entry(root + (u16) (i + 1) * 32, short_name, (u16) (2 + i), (u32) (100 + i));
+  }
 
-  assert(!virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  for(u8 i = 0; i < FILES; i++) {
+    char name[program_store::NAME_SIZE];
+    snprintf(name, sizeof(name), "F%02u", (unsigned) i);
+    u8 stored[128];
+    u16 stored_len = 0;
+    assert(program_store::read(program_store::ProgramType::MK61, name, stored, sizeof(stored), &stored_len));
+    assert(stored_len == (u16) (100 + i));
+    assert(stored[0] == (u8) (0x40 + i));
+    assert(stored[stored_len - 1] == (u8) (0x40 + i));
+  }
+}
+
+static void test_mass_delete_queues_whole_directory_sector(void) {
+  reset_virtual_fat_state();
+
+  static const u8 FILES = 12;
+  const u8 byte = 0x24;
+  for(u8 i = 0; i < FILES; i++) {
+    char name[program_store::NAME_SIZE];
+    snprintf(name, sizeof(name), "P%02u", (unsigned) i);
+    assert(program_store::write(program_store::ProgramType::MK61, name, &byte, 1));
+  }
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  for(u8 i = 1; i <= FILES; i++) root[(u16) i * 32] = 0xE5;
+
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  for(u8 i = 0; i < FILES; i++) {
+    char name[program_store::NAME_SIZE];
+    snprintf(name, sizeof(name), "P%02u", (unsigned) i);
+    assert(!program_store::exists(program_store::ProgramType::MK61, name));
+  }
 }
 
 } // namespace
@@ -258,7 +350,8 @@ static void test_pending_delete_queue_overflow_fails(void) {
 int main(void) {
   test_lfn_aliases_are_unique();
   test_incomplete_pending_flush_fails_until_data_arrives();
-  test_pending_delete_queue_overflow_fails();
+  test_staging_survives_mass_copy_before_directory_update();
+  test_mass_delete_queues_whole_directory_sector();
   printf("virtual_fat_self_test: ok\n");
   return 0;
 }

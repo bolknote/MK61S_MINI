@@ -36,6 +36,11 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
 bool remove(ProgramType type, const char* name);
 bool rename(ProgramType type, const char* old_name, const char* new_name);
 
+bool vfat_stage_write(u16 cluster, const u8* data);
+bool vfat_stage_read(u16 cluster, u8* data);
+void vfat_stage_forget(u16 start_cluster, u16 clusters);
+void vfat_stage_clear(void);
+
 bool write_mk61(const char* name, const u8* code, u16 code_len);
 bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len);
 

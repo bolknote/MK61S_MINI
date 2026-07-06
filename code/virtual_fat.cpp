@@ -23,7 +23,7 @@ static constexpr u16 FIRST_DATA_CLUSTER = 2;
 static constexpr u16 MAX_IMPORTED_LEN = program_store::MAX_MK61_TEXT_SIZE;
 static constexpr u16 MAX_LFN_CHARS = program_store::NAME_SIZE + 3;
 static constexpr u8 MAX_PENDING_WRITES = 3;
-static constexpr u8 MAX_PENDING_DELETES = 3;
+static constexpr u8 MAX_PENDING_DELETES = program_store::MAX_ENTRIES;
 static constexpr u8 WRITE_CACHE_SECTORS = 10;
 static constexpr u8 IGNORED_WRITE_RANGES = 4;
 static constexpr u8 FAT_ATTR_VOLUME = 0x08;
@@ -671,17 +671,46 @@ static CachedSector* cached_sector(u16 cluster) {
   return NULL;
 }
 
+static void forget_cached_range(u16 start_cluster, u16 clusters);
+
+static bool read_buffered_sector(u16 cluster, u8* out) {
+  CachedSector* cached = cached_sector(cluster);
+  if(cached != NULL) {
+    memcpy(out, cached->data, SECTOR_SIZE);
+    return true;
+  }
+  return program_store::vfat_stage_read(cluster, out);
+}
+
+static bool buffered_sector_exists(u16 cluster) {
+  if(cached_sector(cluster) != NULL) return true;
+  u8 scratch[SECTOR_SIZE];
+  return program_store::vfat_stage_read(cluster, scratch);
+}
+
+static bool read_pending_data_sector(u16 cluster, u8* out) {
+  PendingWrite* pending = pending_for_cluster(cluster);
+  if(pending == NULL) return false;
+
+  const u16 sector_index = (u16) (cluster - pending->start_cluster);
+  if(sector_index >= 8 || (pending->sectors_seen & (1U << sector_index)) == 0) return false;
+
+  memset(out, 0, SECTOR_SIZE);
+  const u16 offset = (u16) (sector_index * SECTOR_SIZE);
+  const u16 remaining = (pending->data_len > offset) ? (u16) (pending->data_len - offset) : 0;
+  const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
+  if(copy_len != 0) memcpy(out, pending->data + offset, copy_len);
+  return true;
+}
+
 static bool read_data_sector(u32 data_sector, u8* out) {
   memset(out, 0, SECTOR_SIZE);
   const u16 cluster = (u16) (data_sector + FIRST_DATA_CLUSTER);
 
   if(read_trace_data_sector(cluster, out)) return true;
 
-  CachedSector* cached = cached_sector(cluster);
-  if(cached != NULL) {
-    memcpy(out, cached->data, SECTOR_SIZE);
-    return true;
-  }
+  if(read_pending_data_sector(cluster, out)) return true;
+  if(read_buffered_sector(cluster, out)) return true;
 
   program_store::Entry entry;
   u16 start_cluster = 0;
@@ -949,6 +978,12 @@ static PendingWrite* allocate_pending(void) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
     if(!pending_writes[i].used) return &pending_writes[i];
   }
+
+  (void) flush_pending();
+  for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
+    if(!pending_writes[i].used) return &pending_writes[i];
+  }
+
   tracef("WRITE queue full");
   return NULL;
 }
@@ -965,7 +1000,10 @@ static bool pending_has_all_data(const PendingWrite& pending) {
 static bool try_commit_pending(PendingWrite& pending) {
   if(!pending.used || !pending_has_all_data(pending)) return true;
   tracef("COMMIT %s.%s c=%u len=%u mask=%02X", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len, pending.sectors_seen);
+  const u16 start_cluster = pending.start_cluster;
+  const u16 clusters = clusters_for_len(pending.data_len);
   if(!program_store::write(pending.type, pending.name, pending.data, pending.data_len)) return false;
+  forget_cached_range(start_cluster, clusters);
   memset(&pending, 0, sizeof(pending));
   return true;
 }
@@ -973,14 +1011,20 @@ static bool try_commit_pending(PendingWrite& pending) {
 static void seed_pending_from_cache(PendingWrite& pending) {
   if(pending.data_len == 0 || pending.start_cluster < FIRST_DATA_CLUSTER) return;
 
+  u8 staged[SECTOR_SIZE];
   const u16 clusters = clusters_for_len(pending.data_len);
   for(u16 i = 0; i < clusters; i++) {
-    CachedSector* cached = cached_sector((u16) (pending.start_cluster + i));
-    if(cached == NULL) continue;
+    const u16 cluster = (u16) (pending.start_cluster + i);
+    const u8* source = NULL;
+    CachedSector* cached = cached_sector(cluster);
+    if(cached != NULL) source = cached->data;
+    else if(program_store::vfat_stage_read(cluster, staged)) source = staged;
+    if(source == NULL) continue;
+
     const u16 offset = (u16) (i * SECTOR_SIZE);
     const u16 remaining = (pending.data_len > offset) ? (u16) (pending.data_len - offset) : 0;
     const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
-    if(copy_len != 0) memcpy(pending.data + offset, cached->data, copy_len);
+    if(copy_len != 0) memcpy(pending.data + offset, source, copy_len);
     pending.sectors_seen = (u8) (pending.sectors_seen | (1U << i));
   }
 }
@@ -990,7 +1034,7 @@ static bool cache_has_all_data(u16 start_cluster, u16 data_len) {
   if(start_cluster < FIRST_DATA_CLUSTER) return false;
   const u16 clusters = clusters_for_len(data_len);
   for(u16 i = 0; i < clusters; i++) {
-    if(cached_sector((u16) (start_cluster + i)) == NULL) return false;
+    if(!buffered_sector_exists((u16) (start_cluster + i))) return false;
   }
   return true;
 }
@@ -1009,6 +1053,7 @@ static void forget_cached_range(u16 start_cluster, u16 clusters) {
     if(!cached.used) continue;
     if(cached.cluster >= start_cluster && cached.cluster < (u16) (start_cluster + clusters)) cached.used = false;
   }
+  program_store::vfat_stage_forget(start_cluster, clusters);
 }
 
 static bool ignored_cluster(u16 cluster) {
@@ -1278,13 +1323,38 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
   return true;
 }
 
+static bool cached_sector_evictable(const CachedSector& cached) {
+  if(!cached.used) return true;
+
+  PendingWrite* pending = pending_for_cluster(cached.cluster);
+  if(pending != NULL) {
+    const u16 sector_index = (u16) (cached.cluster - pending->start_cluster);
+    if(sector_index < 8 && (pending->sectors_seen & (1U << sector_index)) != 0) return true;
+    return false;
+  }
+
+  return committed_cluster(cached.cluster) || ignored_cluster(cached.cluster);
+}
+
+static CachedSector* allocate_cached_sector(void) {
+  for(u8 i = 0; i < WRITE_CACHE_SECTORS; i++) {
+    if(!write_cache[i].used) return &write_cache[i];
+  }
+
+  for(u8 i = 0; i < WRITE_CACHE_SECTORS; i++) {
+    CachedSector& cached = write_cache[i];
+    if(cached_sector_evictable(cached)) return &cached;
+  }
+
+  CachedSector* cached = &write_cache[next_cache_slot];
+  next_cache_slot = (u8) ((next_cache_slot + 1) % WRITE_CACHE_SECTORS);
+  return cached;
+}
+
 static void cache_data_sector(u16 cluster, const u8* data) {
   tracef("DATA c=%u %s", cluster, trace_sector_is_zero(data) ? "zero" : "data");
   CachedSector* cached = cached_sector(cluster);
-  if(cached == NULL) {
-    cached = &write_cache[next_cache_slot];
-    next_cache_slot = (u8) ((next_cache_slot + 1) % WRITE_CACHE_SECTORS);
-  }
+  if(cached == NULL) cached = allocate_cached_sector();
   cached->used = true;
   cached->cluster = cluster;
   memcpy(cached->data, data, SECTOR_SIZE);
@@ -1298,7 +1368,9 @@ static bool write_data_sector(u32 data_sector, const u8* data) {
   if(pending == NULL) {
     if(committed_cluster(cluster)) {
       cache_data_sector(cluster, data);
-      return write_committed_data_sector(cluster, data);
+      const bool ok = write_committed_data_sector(cluster, data);
+      if(ok) forget_cached_range(cluster, 1);
+      return ok;
     }
     if(ignored_cluster(cluster)) {
       return true;
@@ -1306,11 +1378,8 @@ static bool write_data_sector(u32 data_sector, const u8* data) {
     if(sector_is_zero(data)) {
       return true;
     }
-    cache_data_sector(cluster, data);
-    return true;
+    return program_store::vfat_stage_write(cluster, data);
   }
-
-  cache_data_sector(cluster, data);
 
   const u16 sector_index = (u16) (cluster - pending->start_cluster);
   if(sector_index >= 8) {
