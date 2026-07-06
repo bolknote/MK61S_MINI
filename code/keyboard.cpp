@@ -231,11 +231,10 @@ isize scan(void) {
   const u8 row = scan_line;
   const u8 bit_changed = RowArray[row].input();
 
-
-    pinMode(scan_pins[scan_line], INPUT);
-    if(scan_line == (KEY_IN_ROW-1)) scan_line = 0; else scan_line++;
-    pinMode(scan_pins[scan_line], OUTPUT);
-  
+  pinMode(scan_pins[scan_line], INPUT);
+  if(scan_line == (KEY_IN_ROW-1)) scan_line = 0; else scan_line++;
+  pinMode(scan_pins[scan_line], OUTPUT);
+  digitalWrite(scan_pins[scan_line], HIGH);
 
   if(bit_changed == 0) {    // нет изменений в столбцах клавиатуры (выход)
     check_hold_key();       // Проверка врремени удержания 

@@ -4,6 +4,53 @@
 #include "rust_types.h"
 #include "keyboard.h"
 
+class __attribute__((__packed__)) TMK61_cross_key {
+  public:
+    u8 x, y;
+    u16 as_u16(void) const {
+      return *(u16*) this;
+    }
+};
+
+#if defined(MK61_KEYBOARD_CLASSIC)
+static const u32               KEY_Px     =   23;
+static const u32               KEY_xP     =   22;
+static const u32               KEY_BP     =   21;
+static const u32               KEY_PP     =   20;
+static const u32               KEY_RUN    =   25;
+static const u32               KEY_RET    =   26;
+static const u32               KEY_FRW    =   28;
+static const u32               KEY_BKW    =   27;
+static const u32               KEY_BASIC  =   34;
+static const u32               KEY_K      =   24;
+static const u32               KEY_F      =   29;
+static const u32               KEY_ESC    =   39;
+
+static constexpr i32 KEY_PUSH_B   =   5;
+static constexpr i32 KEY_DEGREE   =   30;
+static constexpr i32 KEY_EPOWER   =   1;
+static constexpr i32 KEY_NEG      =   3;
+static constexpr i32 KEY_GRADE    =   31;
+static constexpr i32 KEY_RADIAN   =   32;
+static constexpr i32 KEY_USER     =   35;
+static constexpr i32 KEY_SAVE     =   34;
+static constexpr i32 KEY_LOAD     =   33;
+static constexpr i32 KEY_LEFT     =   38;
+static constexpr i32 KEY_RIGHT    =   36;
+static constexpr i32 KEY_ALPHA    =   KEY_F;
+static constexpr i32 KEY_OK       =   37;
+
+enum class sw : u32 {
+  CX  =00, POW, NEG, DOT, _0,
+  Bx  =05, XY,  _3,  _2,  _1,
+  MUL =10, ADD, _6,  _5,  _4,
+  DIV =15, SUB, _9,  _8,  _7,
+  JSR =20, JP,  xP,  Px,  K,
+  RUN =25, RET, FW,  BK,  F,
+  NON =30, NO1, NO2, NO3, NO4
+};
+
+#else
 static const u32               KEY_Px     =   28;
 static const u32               KEY_xP     =   27;
 static const u32               KEY_BP     =   26;
@@ -30,29 +77,9 @@ static constexpr i32 KEY_RIGHT    =   24;
 static constexpr i32 KEY_ALPHA    =   KEY_F;
 static constexpr i32 KEY_OK       =   29;
 
-static const i32 KEY_LOAD_PRESS   =   35        | (i32) key_state::PRESSED;
-static const i32 KEY_USER_PRESS   =   19        | (i32) key_state::PRESSED;
-static const i32 KEY_ESC_PRESS    =   39        | (i32) key_state::PRESSED;
-static const i32 KEY_LEFT_PRESS   =   KEY_LEFT  | (i32) key_state::PRESSED;
-static const i32 KEY_RIGHT_PRESS  =   KEY_RIGHT | (i32) key_state::PRESSED;
-static const i32 KEY_OK_PRESS     =   KEY_OK    | (i32) key_state::PRESSED;
-static const i32 KEY_RUN_PRESS    =   KEY_RUN   | (i32) key_state::PRESSED;
-
-static const i32 KEY_USER_RELEASE =   19        | (i32) key_state::RELEASED;
-static const i32 KEY_ESC_RELEASE  =   39        | (i32) key_state::RELEASED;
-static const i32 KEY_RUN_RELEASE  =   KEY_RUN   | (i32) key_state::RELEASED;
-
-class __attribute__((__packed__)) TMK61_cross_key {
-  public:
-    u8 x, y;
-    u16 as_u16(void) const {
-      return *(u16*) this;
-    }
-};
-
 enum class sw : u32 {
-  CX  =00, Bx, MUL, DIV, 
-  POW =05, XY, ADD, SUB, 
+  CX  =00, Bx, MUL, DIV,
+  POW =05, XY, ADD, SUB,
   NEG =10, _3, _6, _9, 
   DOT =15, _2, _5, _8, 
   _0  =20, _1, _4, _7, 
@@ -60,6 +87,19 @@ enum class sw : u32 {
   RUN =30, RET, FW, BK,
   NON =35, NO1, K, F
 };
+#endif
+
+static const i32 KEY_LOAD_PRESS   =   KEY_LOAD  | (i32) key_state::PRESSED;
+static const i32 KEY_USER_PRESS   =   KEY_USER  | (i32) key_state::PRESSED;
+static const i32 KEY_ESC_PRESS    =   KEY_ESC   | (i32) key_state::PRESSED;
+static const i32 KEY_LEFT_PRESS   =   KEY_LEFT  | (i32) key_state::PRESSED;
+static const i32 KEY_RIGHT_PRESS  =   KEY_RIGHT | (i32) key_state::PRESSED;
+static const i32 KEY_OK_PRESS     =   KEY_OK    | (i32) key_state::PRESSED;
+static const i32 KEY_RUN_PRESS    =   KEY_RUN   | (i32) key_state::PRESSED;
+
+static const i32 KEY_USER_RELEASE =   KEY_USER  | (i32) key_state::RELEASED;
+static const i32 KEY_ESC_RELEASE  =   KEY_ESC   | (i32) key_state::RELEASED;
+static const i32 KEY_RUN_RELEASE  =   KEY_RUN   | (i32) key_state::RELEASED;
 
 constexpr u32 seq(sw KEY0, sw KEY1, sw KEY2, sw KEY3) {return i32 ( ((u32) KEY3 << 24) | ((u32) KEY2 << 16) | ((u32) KEY1 << 8) | (u32) KEY0 );}
 constexpr u32 seq(sw KEY0, sw KEY1, sw KEY2) {return i32 (0xFF000000 | ( ((u32) KEY2 << 16) | ((u32) KEY1 << 8) | (u32) KEY0 ));}

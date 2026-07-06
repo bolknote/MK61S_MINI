@@ -83,6 +83,20 @@
   #define MK61_LCD1602_A00
 #endif
 
+// Клавиатура: у classic-платформы с UC1609 другая физическая матрица и коды.
+// Если вариант не задан явно, LCD1602 остается mk61s-mini, UC1609 выбирает classic.
+#if defined(MK61_DISPLAY_UC1609) && !defined(MK61_KEYBOARD_MINI) && !defined(MK61_KEYBOARD_CLASSIC)
+  #define MK61_KEYBOARD_CLASSIC
+#endif
+
+#if !defined(MK61_KEYBOARD_CLASSIC) && !defined(MK61_KEYBOARD_MINI)
+  #define MK61_KEYBOARD_MINI
+#endif
+
+#if defined(MK61_KEYBOARD_CLASSIC) && defined(MK61_KEYBOARD_MINI)
+  #error "Select only one keyboard layout"
+#endif
+
 #define IS_CORTEX_M4() (__ARM_ARCH == 7)
 //defined(__ARM_ARCH_7EM__)
 //defined(__ARM_FEATURE_SIMD32)

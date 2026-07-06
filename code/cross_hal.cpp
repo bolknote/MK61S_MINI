@@ -12,6 +12,18 @@ const TMK61_cross_key KeyPairs[40] = {
 };
 
 #else
+#if defined(MK61_KEYBOARD_CLASSIC)
+const TMK61_cross_key KeyPairs[40] = {
+   Cx, POW, NEG, DOT, _0_,
+   Bx,  XY, _3_, _2_, _1_,
+  MUL, ADD, _6_, _5_, _4_,
+  DIV, SUB, _9_, _8_, _7_,
+  JSR, JMP,  xP,  Px,   K,
+  RUN, RET,  SF,  SB,   F,
+  NON, NON, NON, NON, NON,
+  NON, NON, NON, NON, NON
+};
+#else
 const TMK61_cross_key KeyPairs[40] = {
    Cx,  Bx, MUL, DIV, NON,
   POW,  XY, ADD, SUB, NON,
@@ -22,6 +34,7 @@ const TMK61_cross_key KeyPairs[40] = {
   RUN, RET,  SF,  SB, NON,
   NON, NON,   K,   F, NON
 };
+#endif
 
 const char m_Cx[]   = {2, 'C', 'x'};
 const char m_Bx[]   = {2, 'B', LCD_UP_ARROW_CHAR};
@@ -38,7 +51,11 @@ const char m_3[]    = {1, '3'};
 const char m_6[]    = {1, '6'};
 const char m_9[]    = {1, '9'};
 const char m_R[]    = {1, 'P'};
+#if defined(MK61_KEYBOARD_CLASSIC)
+const char m_DP[]   = {1, '.'};
+#else
 const char m_DP[]   = {1, 0xA5};
+#endif
 const char m_2[]    = {1, '2'};
 const char m_5[]    = {1, '5'};
 const char m_8[]    = {1, '8'};
@@ -63,6 +80,18 @@ const char m_F[]    = {1|STORE_KEY, 'F'};
 const char m_K[]    = {1|STORE_KEY, 'K'};
 const char m__[]    = {1, ' '};
 
+#if defined(MK61_KEYBOARD_CLASSIC)
+const char* mnemo_code[40] = {
+  m_Cx,   m_E,    m_NEG,  m_DP,   m_0,
+  m_Bx,   m_XY,   m_3,    m_2,    m_1,
+  m_mul,  m_add,  m_6,    m_5,    m_4,
+  m_div,  m_sub,  m_9,    m_8,    m_7,
+  m_PP,   m_BP,   m_xP,   m_Px,   m_K,
+  m_SP,   m_BO,   m_SF,   m_SB,   m_F,
+  m__,    m__,    m__,    m__,    m__,
+  m__,    m__,    m__,    m__,    m__
+};
+#else
 const char* mnemo_code[40] = {
   m_Cx,   m_Bx,   m_mul,  m_div,  m_G,
   m_E,    m_XY,   m_add,  m_sub,  m_GRD,
@@ -73,6 +102,7 @@ const char* mnemo_code[40] = {
   m_SP,   m_BO,   m_SF,   m_SB,   m__,
   m__,    m__,    m_K,    m_F,    m__
 };
+#endif
 /*
 const char* mnemo_code[40] = {
   "Cx",        "B\xC4",    "x",       "\xFD",     "  \x05",       
@@ -86,15 +116,28 @@ const char* mnemo_code[40] = {
 };*/
 //"X\x7E\x01", "\x01\x7EX"
 
+#if defined(MK61_KEYBOARD_CLASSIC)
+const u8 mnemo_code_register[40] = {
+  D_RUS,  'C',  'B', 'A', '0',
+  'E',    '?',  '3', '2', '1',
+  '?',    '?',  '6', '5', '4',
+  '?',    '?',  '9', '8', '7',
+  '?',    '?',  '?', '?', '?',
+  '?',    '?',  '?', '?', '?',
+  '?',    '?',  '?', '?', '?',
+  '?',    '?',  '?', '?', '?'
+};
+#else
 const u8 mnemo_code_register[40] = {
   D_RUS,  'E',  '?', '?', '?',
-  'C',    '?',  '?', '?', '?', 
+  'C',    '?',  '?', '?', '?',
   'B',    '3',  '6', '9', '?',
   'A',    '2',  '5', '8', '?',
   '0',    '1',  '4', '7', '?',
-  '?',    '?',  '?', '?', '?', 
-  '?',    '?',  '?', '?', '?' 
+  '?',    '?',  '?', '?', '?',
+  '?',    '?',  '?', '?', '?'
 };
+#endif
 
 const char m_FCx[]  = {2, 'C', 'F'};
 const char m_FBx[]  = {2, 'B', 'x'};
@@ -127,6 +170,18 @@ const char m_FPx[]  = {2, 'L', '0'};
 const char m_FF[]   = {0|STORE_KEY, 0};
 const char m_null[] = {0, 0};
 
+#if defined(MK61_KEYBOARD_CLASSIC)
+const char* mnemo_code_F[40] = {
+  m_FCx,  m_FE,   m_FNEG, m_FDP,  m_F0,
+  m_FBx,  m_FXY,  m_F3,   m_F2,   m_F1,
+  m_FX2,  m_FPI,  m_F6,   m_F5,   m_F4,
+  m_1DX,  m_FRT,  m_F9,   m_F8,   m_F7,
+  m_FPP,  m_FBP,  m_FxP,  m_FPx,  m_K,
+  m_FSP,  m_FBO,  m_FSB,  m_FSF,  m_FF,
+  m__,    m__,    m__,    m__,    m__,
+  m__,    m__,    m__,    m__,    m__
+};
+#else
 const char* mnemo_code_F[40] = {
   m_FCx,  m_FBx,  m_FX2,  m_1DX,  m__,
   m_FE,   m_FXY,  m_FPI,  m_FRT,  m__,
@@ -137,6 +192,7 @@ const char* mnemo_code_F[40] = {
   m_FSP,  m_FBO,  m_FSB,  m_FSF,  m__,
   m__,    m__,    m_K,    m_FF,   m__
 };
+#endif
 
 const char m_KCx[]  = {3, I_RUS, 'H', 'B'};
 const char m_KBx[]  = {2, 'C', CH_RUS};
@@ -160,6 +216,18 @@ const char m_KBO[]  = {4|STORE_KEY, 'x', '>', '=', '0'};
 const char m_KSP[]  = {3|STORE_KEY, 'x', LCD_NOT_EQU_CHAR, '0'};
 const char m_KPP[]  = {2|STORE_KEY, P_RUS, P_RUS};
 
+#if defined(MK61_KEYBOARD_CLASSIC)
+const char* mnemo_code_K[40] = {
+  m_KCx,  m_KE,   m_KNEG, m_KDP,  m_K0,
+  m_KBx,  m_KXY,  m_K3,   m__,    m__,
+  m__,    m_KDIV, m_K6,   m_K5,   m_K4,
+  m__,    m__,    m_K9,   m_K8,   m_K7,
+  m_KPP,  m_BP,   m_xP,   m_Px,   m_KK,
+  m_KSP,  m_KBO,  m_KSF,  m_KSB,  m_F,
+  m__,    m__,    m__,    m__,    m__,
+  m__,    m__,    m__,    m__,    m__
+};
+#else
 const char* mnemo_code_K[40] = {
   m_KCx,  m_KBx,  m__,    m__,    m__,
   m_KE,   m_KXY,  m_KDIV, m__,    m__,
@@ -170,5 +238,6 @@ const char* mnemo_code_K[40] = {
   m_KSP,  m_KBO,  m_KSF,  m_KSB,  m__,
   m__,    m__,    m_KK,   m_F,    m__
 };
+#endif
 
 #endif
