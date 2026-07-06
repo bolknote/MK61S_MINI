@@ -5,6 +5,7 @@
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
 #include "basic.hpp"
+#include "focal.hpp"
 
 extern MK61Display lcd;
 extern t_time_ms runtime_ms;
@@ -20,18 +21,23 @@ static constexpr int MENU_MEMORY   = 3;
 static constexpr int MENU_LANGUAGE = 4;
 static constexpr int MENU_GAMES    = 5;
 static constexpr int MENU_LIBRARY  = 6;
+static constexpr int MENU_AFTER_LIBRARY = MENU_LIBRARY + 1;
 #if MK61_ENABLE_BASIC
-static constexpr int MENU_BASIC    = 7;
-static constexpr int MENU_RESET    = 8;
-static constexpr int MENU_ERASE    = 9;
-static constexpr int MENU_INFO     = 10;
-static constexpr int MENU_HW       = 11;
+static constexpr int MENU_BASIC    = MENU_AFTER_LIBRARY;
+static constexpr int MENU_AFTER_BASIC = MENU_BASIC + 1;
 #else
-static constexpr int MENU_RESET    = 7;
-static constexpr int MENU_ERASE    = 8;
-static constexpr int MENU_INFO     = 9;
-static constexpr int MENU_HW       = 10;
+static constexpr int MENU_AFTER_BASIC = MENU_AFTER_LIBRARY;
 #endif
+#if MK61_ENABLE_FOCAL
+static constexpr int MENU_FOCAL    = MENU_AFTER_BASIC;
+static constexpr int MENU_AFTER_FOCAL = MENU_FOCAL + 1;
+#else
+static constexpr int MENU_AFTER_FOCAL = MENU_AFTER_BASIC;
+#endif
+static constexpr int MENU_RESET    = MENU_AFTER_FOCAL;
+static constexpr int MENU_ERASE    = MENU_RESET + 1;
+static constexpr int MENU_INFO     = MENU_ERASE + 1;
+static constexpr int MENU_HW       = MENU_INFO + 1;
 
 static bool sound_enabled = true;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
@@ -125,6 +131,9 @@ const t_punct GAME_61_punct       = {.size = 10, .action = &mk61_games_select,  
 #if MK61_ENABLE_BASIC
 const t_punct BASIC_punct         = {.size = 11, .action = &BASIC_menu_select,                  .text = "BASIC tools"};
 #endif
+#if MK61_ENABLE_FOCAL
+const t_punct FOCAL_punct         = {.size = 11, .action = &FOCAL_menu_select,                  .text = "FOCAL tools"};
+#endif
 const t_punct RESET_punct         = {.size = 12, .action = (menu_action) &NVIC_SystemReset,     .text = "Reset device"};
 const t_punct ERASE_punct         = {.size = 12, .action = (menu_action) &EraseFlash,           .text = "Erase FLASH!"};
 const t_punct SOUND_ON_punct      = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Sound ON       "};
@@ -145,6 +154,9 @@ const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,
 const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "Игры MK61"};
 #if MK61_ENABLE_BASIC
 const t_punct RU_BASIC_punct      = {.size = 15, .action = &BASIC_menu_select,                  .text = "БЕЙСИК"};
+#endif
+#if MK61_ENABLE_FOCAL
+const t_punct RU_FOCAL_punct      = {.size = 15, .action = &FOCAL_menu_select,                  .text = "FOCAL"};
 #endif
 const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "Сброс"};
 const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "Стереть FLASH"};
@@ -169,6 +181,9 @@ t_punct* MENU[] = {
       (t_punct*) &LIB_61_punct,
 #if MK61_ENABLE_BASIC
       (t_punct*) &BASIC_punct,
+#endif
+#if MK61_ENABLE_FOCAL
+      (t_punct*) &FOCAL_punct,
 #endif
       (t_punct*) &RESET_punct,
       (t_punct*) &ERASE_punct,
@@ -251,6 +266,9 @@ void refresh_menu_text(void) {
   MENU[MENU_GAMES]    = (t_punct*) (russian_language ? &RU_GAME_61_punct : &GAME_61_punct);
 #if MK61_ENABLE_BASIC
   MENU[MENU_BASIC]    = (t_punct*) (russian_language ? &RU_BASIC_punct : &BASIC_punct);
+#endif
+#if MK61_ENABLE_FOCAL
+  MENU[MENU_FOCAL]    = (t_punct*) (russian_language ? &RU_FOCAL_punct : &FOCAL_punct);
 #endif
   MENU[MENU_RESET]    = (t_punct*) (russian_language ? &RU_RESET_punct : &RESET_punct);
   MENU[MENU_ERASE]    = (t_punct*) (russian_language ? &RU_ERASE_punct : &ERASE_punct);

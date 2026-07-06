@@ -19,6 +19,7 @@ using namespace kbd;
 #include "tools.hpp"
 #include "menu.hpp"
 #include "basic.hpp"
+#include "focal.hpp"
 
 #include "ledcontrol.h"
 using namespace led;
@@ -235,6 +236,9 @@ void setup() {
   init_library();
 #if MK61_ENABLE_BASIC
   InitBasic();
+#endif
+#if MK61_ENABLE_FOCAL
+  InitFocal();
 #endif
 
  // Запуск эмулятора MK61

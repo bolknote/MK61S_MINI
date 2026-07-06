@@ -43,6 +43,12 @@
   #define MK61_ENABLE_BASIC 1
 #endif
 
+// Встроенный FOCAL включен по умолчанию. Поставьте 0, чтобы убрать его
+// редактор, рантайм и меню из прошивки.
+#ifndef MK61_ENABLE_FOCAL
+  #define MK61_ENABLE_FOCAL 1
+#endif
+
 #if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)
   #define MK61_DISPLAY_UC1609
 #endif
