@@ -38,6 +38,7 @@ bool rename(ProgramType type, const char* old_name, const char* new_name);
 
 bool vfat_stage_write(u16 cluster, const u8* data);
 bool vfat_stage_read(u16 cluster, u8* data);
+bool vfat_stage_exists(u16 cluster);
 void vfat_stage_forget(u16 start_cluster, u16 clusters);
 void vfat_stage_clear(void);
 

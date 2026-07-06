@@ -185,6 +185,13 @@ bool vfat_stage_read(u16 cluster, u8* data) {
   return false;
 }
 
+bool vfat_stage_exists(u16 cluster) {
+  for(StagedSector& staged : staged_sectors) {
+    if(staged.used && staged.cluster == cluster) return true;
+  }
+  return false;
+}
+
 void vfat_stage_forget(u16 start_cluster, u16 clusters) {
   for(StagedSector& staged : staged_sectors) {
     if(!staged.used) continue;
@@ -221,12 +228,27 @@ static u32 root_lba(void) {
   return read_le16(boot, 14) + (u32) boot[16] * read_le16(boot, 22);
 }
 
+static u32 fat_lba(void) {
+  u8 boot[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(0, boot));
+  return read_le16(boot, 14);
+}
+
 static u32 data_lba(void) {
   u8 boot[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(0, boot));
   const u16 root_entries = read_le16(boot, 17);
   const u32 root_sectors = ((u32) root_entries * 32 + virtual_fat::SECTOR_SIZE - 1) / virtual_fat::SECTOR_SIZE;
   return root_lba() + root_sectors;
+}
+
+static u16 fat12_entry(u16 cluster) {
+  u8 fat[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(fat_lba(), fat));
+  const u16 offset = (u16) (cluster + cluster / 2);
+  u16 value = (u16) (fat[offset] | ((u16) fat[offset + 1] << 8));
+  if((cluster & 1) != 0) value >>= 4;
+  return (u16) (value & 0x0FFF);
 }
 
 static void fill_short_dir_entry(u8* entry, const char* short_name, u16 cluster, u32 len) {
@@ -262,7 +284,7 @@ static void test_lfn_aliases_are_unique(void) {
   assert(short_names[1][5] == '~');
 }
 
-static void test_incomplete_pending_flush_fails_until_data_arrives(void) {
+static void test_incomplete_pending_flush_keeps_waiting_for_data(void) {
   reset_virtual_fat_state();
 
   u8 root[virtual_fat::SECTOR_SIZE];
@@ -270,7 +292,7 @@ static void test_incomplete_pending_flush_fails_until_data_arrives(void) {
   fill_short_dir_entry(root + 32, "NEW     M61", 2, 100);
 
   assert(virtual_fat::write_sector(root_lba(), root));
-  assert(!virtual_fat::flush_pending());
+  assert(virtual_fat::flush_pending());
   assert(!program_store::exists(program_store::ProgramType::MK61, "NEW"));
 
   u8 data[virtual_fat::SECTOR_SIZE];
@@ -284,6 +306,34 @@ static void test_incomplete_pending_flush_fails_until_data_arrives(void) {
   assert(stored_len == 100);
   assert(stored[0] == 0x5A);
   assert(stored[99] == 0x5A);
+}
+
+static void test_staging_does_not_shadow_committed_file_data(void) {
+  reset_virtual_fat_state();
+
+  u8 committed[100];
+  memset(committed, 0x31, sizeof(committed));
+  assert(program_store::write(program_store::ProgramType::MK61, "OLD", committed, sizeof(committed)));
+
+  u8 staged[virtual_fat::SECTOR_SIZE];
+  memset(staged, 0x62, sizeof(staged));
+  assert(program_store::vfat_stage_write(2, staged));
+
+  u8 readback[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(data_lba(), readback));
+  assert(readback[0] == 0x31);
+  assert(readback[99] == 0x31);
+  assert(readback[100] == 0);
+}
+
+static void test_staged_cluster_is_not_advertised_as_free(void) {
+  reset_virtual_fat_state();
+
+  u8 staged[virtual_fat::SECTOR_SIZE];
+  memset(staged, 0x72, sizeof(staged));
+  assert(program_store::vfat_stage_write(2, staged));
+
+  assert(fat12_entry(2) == 0x0FFF);
 }
 
 static void test_staging_survives_mass_copy_before_directory_update(void) {
@@ -349,7 +399,9 @@ static void test_mass_delete_queues_whole_directory_sector(void) {
 
 int main(void) {
   test_lfn_aliases_are_unique();
-  test_incomplete_pending_flush_fails_until_data_arrives();
+  test_incomplete_pending_flush_keeps_waiting_for_data();
+  test_staging_does_not_shadow_committed_file_data();
+  test_staged_cluster_is_not_advertised_as_free();
   test_staging_survives_mass_copy_before_directory_update();
   test_mass_delete_queues_whole_directory_sector();
   printf("virtual_fat_self_test: ok\n");

@@ -335,7 +335,9 @@ static u16 fat_value(u16 cluster) {
 
   program_store::Entry entry;
   u16 start_cluster = 0;
-  if(!cluster_info(cluster, entry, start_cluster)) return CLUSTER_FREE;
+  if(!cluster_info(cluster, entry, start_cluster)) {
+    return program_store::vfat_stage_exists(cluster) ? CLUSTER_EOF : CLUSTER_FREE;
+  }
 
   const u16 offset = (u16) (cluster - start_cluster);
   const u16 used = clusters_for_len(entry.data_len);
@@ -710,11 +712,10 @@ static bool read_data_sector(u32 data_sector, u8* out) {
   if(read_trace_data_sector(cluster, out)) return true;
 
   if(read_pending_data_sector(cluster, out)) return true;
-  if(read_buffered_sector(cluster, out)) return true;
 
   program_store::Entry entry;
   u16 start_cluster = 0;
-  if(!cluster_info(cluster, entry, start_cluster)) return true;
+  if(!cluster_info(cluster, entry, start_cluster)) return read_buffered_sector(cluster, out);
 
   const u16 file_offset = (u16) ((cluster - start_cluster) * SECTOR_SIZE);
   u16 copied = 0;
@@ -1118,7 +1119,6 @@ bool flush_pending(void) {
     seed_pending_from_cache(pending);
     if(!pending_has_all_data(pending)) {
       tracef("SYNC incomplete %s.%s c=%u len=%u mask=%02X", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len, pending.sectors_seen);
-      ok = false;
       continue;
     }
     if(!try_commit_pending(pending)) ok = false;

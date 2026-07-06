@@ -409,6 +409,12 @@ bool vfat_stage_read(u16 cluster, u8* data) {
   return vfat_stage_crc(cluster, data) == expected_crc;
 }
 
+bool vfat_stage_exists(u16 cluster) {
+  u16 index = 0;
+  if(!vfat_stage_cluster_index(cluster, index)) return false;
+  return vfat_stage_refs[index] != 0;
+}
+
 void vfat_stage_forget(u16 start_cluster, u16 clusters) {
   if(clusters == 0) return;
   for(u16 i = 0; i < clusters; i++) {
