@@ -2777,7 +2777,7 @@ static void EditBasicSlot(int slot) {
     i32 key_code = kbd::get_key(key_state::PRESSED);
     if(key_code < 0) {
       lcd.flush();
-      delay(30);
+      delay(1);
       continue;
     }
     dirty = true;

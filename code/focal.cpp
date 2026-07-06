@@ -148,7 +148,7 @@ static constexpr int FOCAL_NAME_SIZE           = 16;
 static constexpr int FOCAL_EXPR_BUFFER_SIZE    = 112;
 static constexpr int FOCAL_PRINT_BUFFER_SIZE   = 96;
 static constexpr int FOCAL_CALL_DEPTH          = 8;
-static constexpr int FOCAL_RUNTIME_STEPS_LIMIT = 4096;
+static constexpr int FOCAL_RUNTIME_STEPS_LIMIT = 100000;
 
 static constexpr u32 SMS_INPUT_TIMEOUT_MS = 1200;
 static constexpr u8  CURSOR_ASCII        = 0xFF;
@@ -565,6 +565,7 @@ static const char* focal_error_ru_text(const char* error) {
   if(focal_streq(error, "FULL?")) return "НЕТ МЕСТА";
   if(focal_streq(error, "RETURN?")) return "ВОЗВРАТ?";
   if(focal_streq(error, "STACK?")) return "СТЕК?";
+  if(focal_streq(error, "LIMIT?")) return "ЛИМИТ?";
   if(focal_streq(error, "MATH?")) return "МАТ?";
   return "ОШИБКА?";
 }
@@ -1517,7 +1518,7 @@ static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int d
   focal_trace_line("EXEC", current_pc, line);
   if(++steps > FOCAL_RUNTIME_STEPS_LIMIT) {
     flow = focal_flow(FocalFlowKind::ERROR, current_pc);
-    return focal_error("STACK?");
+    return focal_error("LIMIT?");
   }
   if(depth >= FOCAL_CALL_DEPTH) {
     flow = focal_flow(FocalFlowKind::ERROR, current_pc);
@@ -2478,7 +2479,7 @@ static void EditFocalSlot(int slot) {
     i32 key_code = kbd::get_key(key_state::PRESSED);
     if(key_code < 0) {
       lcd.flush();
-      delay(30);
+      delay(1);
       continue;
     }
     dirty = true;

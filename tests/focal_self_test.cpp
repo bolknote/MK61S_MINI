@@ -100,6 +100,21 @@ static void test_ask_leibniz_pi_program(void) {
   CHECK_STARTS(FocalTestLcdLine(0), "3.4666667");
 }
 
+static void test_ask_long_for_loop(void) {
+  FocalTestReset();
+  FocalTestSetAskValue(9000.0);
+  const int slot = add_program(
+    "01.10 ASK N\n"
+    "01.20 SET S=0\n"
+    "01.30 FOR I=1,N; SET S=S+1\n"
+    "01.40 PRINT S\n"
+    "01.50 EXIT");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("N"), 9000.0);
+  CHECK_NEAR(FocalTestNumber("S"), 9000.0);
+  CHECK_STARTS(FocalTestLcdLine(0), "9000");
+}
+
 static void test_for_loop_sum(void) {
   FocalTestReset();
   const int slot = add_program("01.10 S S=0\n01.20 F I=1,5; S S=S+I\n01.30 P S\n01.40 E");
@@ -357,6 +372,7 @@ int main(void) {
   test_arithmetic_and_print();
   test_print_newline();
   test_ask_leibniz_pi_program();
+  test_ask_long_for_loop();
   test_for_loop_sum();
   test_for_loop_start_step_end();
   test_do_exact_line();
