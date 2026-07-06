@@ -224,17 +224,6 @@ static const char* const FOCAL_key_text[40] = {
   NULL, NULL, NULL, NULL, NULL
 };
 
-static const char* const FOCAL_alpha_key_text[40] = {
-  "D", "E", "F", "G", NULL,
-  "C", NULL, NULL, "X", "H",
-  "B", NULL, NULL, NULL, "I",
-  "A", "Z", "W", NULL, "J",
-  "T", "Y", NULL, NULL, "K",
-  "S", NULL, "V", "U", "L",
-  "R", NULL, NULL, NULL, "M",
-  NULL, "P", "O", NULL, "N"
-};
-
 static const char* const FOCAL_Kshift_key_text[40] = {
   NULL, NULL, NULL, NULL, NULL,
   NULL, "\"", "=", NULL, NULL,
@@ -1712,18 +1701,32 @@ static bool focal_cursor_expects_statement(const char* source, u16 cursor) {
   return has_space_after_address && p == end;
 }
 
-static const char* focal_statement_insert_text(i32 key_code) {
+static bool focal_cursor_after_line_address(const char* source, u16 cursor, FocalAddress* out = NULL) {
+  if(focal_cursor_inside_string(source, cursor)) return false;
+
+  const u16 line_start = focal_line_start_for_cursor(source, cursor);
+  const char* p = source + line_start;
+  const char* end = source + cursor;
+  while(p < end && focal_is_space(*p)) p++;
+
+  FocalAddress address;
+  if(!focal_parse_address(p, address)) return false;
+  if(out != NULL) *out = address;
+  return p == end;
+}
+
+static const char* focal_statement_insert_text(i32 key_code, bool leading_space = false) {
   switch(key_code) {
-    case 15:         return "ASK ";
-    case 10:         return "BRANCH ";
-    case 5:          return "COMMENT ";
-    case 0:          return "DO ";
-    case 1:          return "EXIT";
-    case 2:          return "FOR ";
-    case KEY_DEGREE: return "GOTO ";
-    case KEY_RADIAN: return "PRINT ";
-    case KEY_xP:     return "SET ";
-    case KEY_RET:    return "RETURN";
+    case 15:         return leading_space ? " ASK " : "ASK ";
+    case 10:         return leading_space ? " BRANCH " : "BRANCH ";
+    case 5:          return leading_space ? " COMMENT " : "COMMENT ";
+    case 0:          return leading_space ? " DO " : "DO ";
+    case 1:          return leading_space ? " EXIT" : "EXIT";
+    case 2:          return leading_space ? " FOR " : "FOR ";
+    case KEY_DEGREE: return leading_space ? " GOTO " : "GOTO ";
+    case KEY_RADIAN: return leading_space ? " PRINT " : "PRINT ";
+    case KEY_xP:     return leading_space ? " SET " : "SET ";
+    case KEY_RET:    return leading_space ? " RETURN" : "RETURN";
     default: break;
   }
   return NULL;
@@ -1737,11 +1740,26 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
         const char* statement = focal_statement_insert_text(key_code);
         if(statement != NULL) return statement;
       }
+      FocalAddress address;
+      if(focal_cursor_after_line_address(source, cursor, &address)) {
+        if(key_code == 15 && !address.has_minor) return FOCAL_key_text[key_code];
+        const char* statement = focal_statement_insert_text(key_code, true);
+        if(statement != NULL) return statement;
+      }
       return FOCAL_key_text[key_code];
     case FocalEditShift::ALPHA:
-      return FOCAL_alpha_key_text[key_code];
-    case FocalEditShift::K:
+      return NULL;
+    case FocalEditShift::K: {
+      FocalAddress address;
+      if(focal_cursor_after_line_address(source, cursor, &address)) {
+        const char* statement = focal_statement_insert_text(key_code, true);
+        if(statement != NULL) return statement;
+      } else {
+        const char* statement = focal_statement_insert_text(key_code);
+        if(statement != NULL) return statement;
+      }
       return FOCAL_Kshift_key_text[key_code];
+    }
   }
   return NULL;
 }

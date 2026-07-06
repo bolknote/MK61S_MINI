@@ -144,15 +144,15 @@ static void test_editor_expression_macros(void) {
   FocalTestReset();
   char out[64];
 
-  const int square[] = {38, 8, 38, 2};
+  const int square[] = {37, 13, 13, 38, 2};
   FocalTestEditSequence(square, (int) (sizeof(square) / sizeof(square[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "X^2") == 0);
 
-  const int inverse[] = {38, 15, 7, 38, 10, 38, 3};
+  const int inverse[] = {37, 16, 7, 37, 16, 16, 38, 3};
   FocalTestEditSequence(inverse, (int) (sizeof(inverse) / sizeof(inverse[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1/(A+B)") == 0);
 
-  const int pow10[] = {38, 8, 38, 5};
+  const int pow10[] = {37, 13, 13, 38, 5};
   FocalTestEditSequence(pow10, (int) (sizeof(pow10) / sizeof(pow10[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "10^X") == 0);
 }
@@ -177,6 +177,10 @@ static void test_editor_digit_symbol_and_sms_input(void) {
   FocalTestEditSequence(sms_text, (int) (sizeof(sms_text) / sizeof(sms_text[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "AEM") == 0);
 
+  const int f_a_is_not_letter_input[] = {38, 15};
+  FocalTestEditSequence(f_a_is_not_letter_input, (int) (sizeof(f_a_is_not_letter_input) / sizeof(f_a_is_not_letter_input[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "") == 0);
+
   const int sms_zero_exits_with_space[] = {37, 16, 16, 20, 16};
   FocalTestEditSequence(sms_zero_exits_with_space, (int) (sizeof(sms_zero_exits_with_space) / sizeof(sms_zero_exits_with_space[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "B 2") == 0);
@@ -198,8 +202,20 @@ static void test_editor_operator_keys_insert_full_names(void) {
   FocalTestReset();
   char out[128];
 
+  const int branch_no_space[] = {21, 15, 21, 20, 10};
+  FocalTestEditSequence(branch_no_space, (int) (sizeof(branch_no_space) / sizeof(branch_no_space[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.10 BRANCH ") == 0);
+
+  const int k_branch_no_space[] = {21, 15, 21, 20, 37, 10};
+  FocalTestEditSequence(k_branch_no_space, (int) (sizeof(k_branch_no_space) / sizeof(k_branch_no_space[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.10 BRANCH ") == 0);
+
   const int ask[] = {21, 15, 21, 20, 25, 15};
   FocalTestEditSequence(ask, (int) (sizeof(ask) / sizeof(ask[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.10 ASK ") == 0);
+
+  const int k_ask[] = {21, 15, 21, 20, 37, 15};
+  FocalTestEditSequence(k_ask, (int) (sizeof(k_ask) / sizeof(k_ask[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.10 ASK ") == 0);
 
   const int print[] = {21, 15, 16, 20, 25, 14};
@@ -210,11 +226,19 @@ static void test_editor_operator_keys_insert_full_names(void) {
   FocalTestEditSequence(go_to, (int) (sizeof(go_to) / sizeof(go_to[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.30 GOTO ") == 0);
 
+  const int k_go_to[] = {21, 15, 11, 20, 37, 4};
+  FocalTestEditSequence(k_go_to, (int) (sizeof(k_go_to) / sizeof(k_go_to[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.30 GOTO ") == 0);
+
+  const int k_print[] = {21, 15, 16, 20, 37, 14};
+  FocalTestEditSequence(k_print, (int) (sizeof(k_print) / sizeof(k_print[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.20 PRINT ") == 0);
+
   const int set[] = {21, 15, 22, 20, 25, 27};
   FocalTestEditSequence(set, (int) (sizeof(set) / sizeof(set[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.40 SET ") == 0);
 
-  const int set_equals[] = {21, 15, 22, 20, 25, 27, 38, 8, 37, 7};
+  const int set_equals[] = {21, 15, 22, 20, 25, 27, 37, 13, 13, 37, 7};
   FocalTestEditSequence(set_equals, (int) (sizeof(set_equals) / sizeof(set_equals[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.40 SET X=") == 0);
 
@@ -233,7 +257,7 @@ static void test_editor_backspace_is_f_left(void) {
 
   const int degree_is_not_backspace[] = {21, 20, 4};
   FocalTestEditSequence(degree_is_not_backspace, (int) (sizeof(degree_is_not_backspace) / sizeof(degree_is_not_backspace[0])), out, sizeof(out));
-  CHECK(std::strcmp(out, "10") == 0);
+  CHECK(std::strcmp(out, "10 GOTO ") == 0);
 }
 
 static void test_editor_draws_cursor(void) {
