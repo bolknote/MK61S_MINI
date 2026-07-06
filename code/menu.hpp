@@ -54,6 +54,9 @@ namespace library_mk61 {
   extern  void  set_program_memory_mode(ProgramMemoryMode mode);
   extern  void  refresh_menu_text(void);
   extern  void  store_settings_state(void);
+  extern  void  defer_settings_state_save(void);
+  extern  void  flush_settings_state(void);
+  extern  void  poll_settings_state_save(void);
   extern  void  load_settings_state(void);
   extern  SpeedMode speed_mode(void);
   extern  bool  speed_is_max(void);

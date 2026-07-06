@@ -300,6 +300,10 @@ static void mark_settings_dirty(void) {
   settings_save.schedule(millis(), SETTINGS_SAVE_IDLE_MS);
 }
 
+void defer_settings_state_save(void) {
+  if(settings_save.pending()) settings_save.schedule(millis(), SETTINGS_SAVE_IDLE_MS);
+}
+
 void flush_settings_state(void) {
   if(!settings_save.pending()) return;
   store_settings_state();
@@ -397,7 +401,7 @@ bool settings_select(void) {
   library_mk61::refresh_menu_text();
   class_menu settings_menu = class_menu((t_punct**) library_mk61::SETTINGS_MENU, library_mk61::COUNT_SETTINGS_PUNCTS);
   settings_menu.select();
-  library_mk61::flush_settings_state();
+  library_mk61::defer_settings_state_save();
   library_mk61::refresh_menu_text();
   return action::MENU_BACK;
 }
@@ -554,7 +558,6 @@ void class_menu::draw(void) {
 i32 class_menu::wait_key(void) {
   do {
     idle_main_process();
-    if(puncts == library_mk61::SETTINGS_MENU) library_mk61::poll_settings_state_save();
 
     const i32 scan_code = kbd::scan_and_debounced();
     if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {

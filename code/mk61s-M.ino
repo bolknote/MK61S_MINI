@@ -555,7 +555,9 @@ void  loop() {
   if(used_key >= 0) { 
   //== кнопка нажата - перепланировка выдачи сообщения о бездействии на следующие 5 минут
     time_message_of_unuse = time_is_now + DELAY_UNUSED;
+    library_mk61::defer_settings_state_save();
   } else { 
+    if(input_focus == &mk61_baseloop_hook) library_mk61::poll_settings_state_save();
   //== однако если нет нажатий проверим пора ли выдать предупреждение
     if(time_message_of_unuse < time_is_now) { // достигнуто время реакции на бездействие!!!
         time_message_of_unuse = time_is_now + DELAY_UNUSED; // через 5 Минут повтор события
