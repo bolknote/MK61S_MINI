@@ -7,6 +7,7 @@
 #include "basic.hpp"
 #include "development.hpp"
 #include "focal.hpp"
+#include "tinybasic.hpp"
 
 extern MK61Display lcd;
 extern t_time_ms runtime_ms;

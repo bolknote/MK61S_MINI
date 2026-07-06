@@ -21,6 +21,7 @@ using namespace kbd;
 #include "menu.hpp"
 #include "basic.hpp"
 #include "focal.hpp"
+#include "tinybasic.hpp"
 #include "usb_mass_storage.hpp"
 
 #include "ledcontrol.h"
@@ -267,6 +268,9 @@ void setup() {
 #endif
 #if MK61_ENABLE_FOCAL
   InitFocal();
+#endif
+#if MK61_ENABLE_TINYBASIC
+  InitTinyBasic();
 #endif
 
  // Запуск эмулятора MK61

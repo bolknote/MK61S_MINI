@@ -8,6 +8,10 @@
 #endif
 #include <string.h>
 
+#ifndef MK61_ENABLE_TINYBASIC
+  #define MK61_ENABLE_TINYBASIC 1
+#endif
+
 namespace virtual_fat {
 
 static constexpr u8 FAT_COUNT = 2;
@@ -34,6 +38,10 @@ static const program_store::ProgramType FILE_TYPES[] = {
   program_store::ProgramType::MK61,
   program_store::ProgramType::BASIC,
   program_store::ProgramType::FOCAL
+#if MK61_ENABLE_TINYBASIC
+  ,
+  program_store::ProgramType::TINYBASIC
+#endif
 };
 
 struct PendingWrite {
@@ -320,6 +328,9 @@ static const char* extension_for_type(program_store::ProgramType type) {
     case program_store::ProgramType::MK61:  return "M61";
     case program_store::ProgramType::BASIC: return "BAS";
     case program_store::ProgramType::FOCAL: return "FOC";
+#if MK61_ENABLE_TINYBASIC
+    case program_store::ProgramType::TINYBASIC: return "TBI";
+#endif
   }
   return "M61";
 }
@@ -826,6 +837,9 @@ static u16 max_len_for_type(program_store::ProgramType type) {
     case program_store::ProgramType::MK61:  return program_store::MAX_MK61_TEXT_SIZE;
     case program_store::ProgramType::BASIC: return 511;
     case program_store::ProgramType::FOCAL: return 639;
+#if MK61_ENABLE_TINYBASIC
+    case program_store::ProgramType::TINYBASIC: return 1023;
+#endif
   }
   return 0;
 }
@@ -865,6 +879,12 @@ static bool parse_extension(const u8* ext, program_store::ProgramType& type) {
     type = program_store::ProgramType::FOCAL;
     return true;
   }
+#if MK61_ENABLE_TINYBASIC
+  if(memcmp(normalized, "TBI", 3) == 0) {
+    type = program_store::ProgramType::TINYBASIC;
+    return true;
+  }
+#endif
   return false;
 }
 

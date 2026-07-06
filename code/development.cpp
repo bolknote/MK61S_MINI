@@ -5,6 +5,7 @@
 #include "config.h"
 #include "cross_hal.h"
 #include "focal.hpp"
+#include "tinybasic.hpp"
 #include "keyboard.h"
 #include "lcd_gui.hpp"
 #include "lcd_ru.hpp"
@@ -41,6 +42,7 @@ static char type_char(program_store::ProgramType type) {
     case program_store::ProgramType::MK61:  return 'M';
     case program_store::ProgramType::BASIC: return 'B';
     case program_store::ProgramType::FOCAL: return 'F';
+    case program_store::ProgramType::TINYBASIC: return 'T';
   }
   return '?';
 }
@@ -127,7 +129,11 @@ static i32 wait_explorer_key(bool allow_long_ok) {
 static int total_file_count(void) {
   return program_store::count(program_store::ProgramType::MK61) +
          program_store::count(program_store::ProgramType::BASIC) +
-         program_store::count(program_store::ProgramType::FOCAL);
+         program_store::count(program_store::ProgramType::FOCAL)
+#if MK61_ENABLE_TINYBASIC
+         + program_store::count(program_store::ProgramType::TINYBASIC)
+#endif
+         ;
 }
 
 static bool explorer_entry(int index, program_store::Entry& out) {
@@ -136,6 +142,10 @@ static bool explorer_entry(int index, program_store::Entry& out) {
     program_store::ProgramType::MK61,
     program_store::ProgramType::BASIC,
     program_store::ProgramType::FOCAL
+#if MK61_ENABLE_TINYBASIC
+    ,
+    program_store::ProgramType::TINYBASIC
+#endif
   };
 
   for(usize i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
@@ -287,6 +297,10 @@ static bool entry_can_edit(const program_store::Entry& entry) {
     case program_store::ProgramType::FOCAL:
       return true;
 #endif
+#if MK61_ENABLE_TINYBASIC
+    case program_store::ProgramType::TINYBASIC:
+      return true;
+#endif
     default:
       return false;
   }
@@ -302,6 +316,10 @@ static bool entry_can_run(const program_store::Entry& entry) {
 #endif
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
+      return true;
+#endif
+#if MK61_ENABLE_TINYBASIC
+    case program_store::ProgramType::TINYBASIC:
       return true;
 #endif
     default:
@@ -378,6 +396,11 @@ static bool run_entry(const program_store::Entry& entry) {
       ok = RunFocalProgram(entry.name);
       break;
 #endif
+#if MK61_ENABLE_TINYBASIC
+    case program_store::ProgramType::TINYBASIC:
+      ok = RunTinyBasicProgram(entry.name);
+      break;
+#endif
     default:
       break;
   }
@@ -399,6 +422,11 @@ static void edit_entry(const program_store::Entry& entry) {
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
       ok = EditFocalProgram(entry.name);
+      break;
+#endif
+#if MK61_ENABLE_TINYBASIC
+    case program_store::ProgramType::TINYBASIC:
+      ok = EditTinyBasicProgram(entry.name);
       break;
 #endif
     default:
@@ -472,6 +500,16 @@ static constexpr t_punct FOCAL_DEV_PUNCT = {.size = 11, .action = &focal_action,
 static constexpr t_punct RU_FOCAL_DEV_PUNCT = {.size = 15, .action = &focal_action, .text = "ФОКАЛ"};
 #endif
 
+#if MK61_ENABLE_TINYBASIC
+static bool tinybasic_action(void) {
+  TinyBASIC_menu_select();
+  return action::MENU_BACK;
+}
+
+static constexpr t_punct TINYBASIC_DEV_PUNCT = {.size = 11, .action = &tinybasic_action, .text = "TinyBASIC"};
+static constexpr t_punct RU_TINYBASIC_DEV_PUNCT = {.size = 15, .action = &tinybasic_action, .text = "TinyBASIC"};
+#endif
+
 } // namespace
 
 bool program_store_explorer_select(void) {
@@ -510,6 +548,9 @@ bool development_select(void) {
 #endif
 #if MK61_ENABLE_FOCAL
     (t_punct*) (library_mk61::language_is_ru() ? &RU_FOCAL_DEV_PUNCT : &FOCAL_DEV_PUNCT),
+#endif
+#if MK61_ENABLE_TINYBASIC
+    (t_punct*) (library_mk61::language_is_ru() ? &RU_TINYBASIC_DEV_PUNCT : &TINYBASIC_DEV_PUNCT),
 #endif
   };
 

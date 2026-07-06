@@ -55,6 +55,12 @@
   #define MK61_ENABLE_FOCAL 1
 #endif
 
+// TinyBASIC включен по умолчанию. Поставьте 0, чтобы убрать его
+// редактор, рантайм и меню из прошивки.
+#ifndef MK61_ENABLE_TINYBASIC
+  #define MK61_ENABLE_TINYBASIC 1
+#endif
+
 // Короткое нажатие [USER] открывает меню игр. Поставьте 0, чтобы оставить
 // [USER] только для удержания стека и функций режима ПРГ.
 #ifndef MK61_USER_GAMES_MENU_SHORTCUT

@@ -204,11 +204,11 @@ static u16 crc16_update(u16 crc, u8 value) {
 }
 
 static ProgramType type_from_tag(u8 tag0, u8 tag1, bool& ok) {
-  ok = tag1 == '1';
-  if(!ok) return ProgramType::MK61;
-  if(tag0 == 'M') return ProgramType::MK61;
-  if(tag0 == 'B') return ProgramType::BASIC;
-  if(tag0 == 'F') return ProgramType::FOCAL;
+  ok = true;
+  if(tag0 == 'M' && tag1 == '1') return ProgramType::MK61;
+  if(tag0 == 'B' && tag1 == '1') return ProgramType::BASIC;
+  if(tag0 == 'F' && tag1 == '1') return ProgramType::FOCAL;
+  if(tag0 == 'B' && tag1 == '2') return ProgramType::TINYBASIC;
   ok = false;
   return ProgramType::MK61;
 }
@@ -218,8 +218,21 @@ static u8 tag0_for_type(ProgramType type) {
     case ProgramType::MK61:  return 'M';
     case ProgramType::BASIC: return 'B';
     case ProgramType::FOCAL: return 'F';
+    case ProgramType::TINYBASIC: return 'B';
   }
   return 'M';
+}
+
+static u8 tag1_for_type(ProgramType type) {
+  switch(type) {
+    case ProgramType::MK61:
+    case ProgramType::BASIC:
+    case ProgramType::FOCAL:
+      return '1';
+    case ProgramType::TINYBASIC:
+      return '2';
+  }
+  return '1';
 }
 
 static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& empty) {
@@ -268,7 +281,7 @@ static u16 record_crc(u32 address, const RecordMeta& meta) {
 static u16 make_crc(ProgramType type, const char* name, u8 name_len, const u8* data, u16 data_len) {
   u16 crc = 0xFFFF;
   crc = crc16_update(crc, tag0_for_type(type));
-  crc = crc16_update(crc, '1');
+  crc = crc16_update(crc, tag1_for_type(type));
   crc = crc16_update(crc, name_len);
   crc = crc16_update(crc, (u8) (data_len & 0xFF));
   crc = crc16_update(crc, (u8) (data_len >> 8));
@@ -688,7 +701,7 @@ static bool load_catalog(void) {
   for(u8 i = 0; i < entry_count; i++) {
     IndexEntry& entry = index_entries[index_count];
     const u8 type = read_byte(pos++);
-    if(type > (u8) ProgramType::FOCAL) return false;
+    if(type > (u8) ProgramType::TINYBASIC) return false;
     entry.type = (ProgramType) type;
     entry.name_len = read_byte(pos++);
     const u8 sector = read_byte(pos++);
@@ -982,7 +995,7 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   const u16 crc = make_crc(type, name, nlen, data, data_len);
 
   write_byte(address, tag0_for_type(type));
-  write_byte(address + 1, '1');
+  write_byte(address + 1, tag1_for_type(type));
   write_byte(address + 2, STATE_WRITING);
   write_byte(address + 3, nlen);
   write_le16(address + 4, data_len);
