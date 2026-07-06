@@ -28,6 +28,12 @@ static constexpr i32 EXPLORER_KEY_ESC = -6;
 
 static u8 explorer_buffer[768];
 
+enum class ItemMenuAction : u8 {
+  VIEW,
+  EDIT,
+  DELETE
+};
+
 static char type_char(program_store::ProgramType type) {
   switch(type) {
     case program_store::ProgramType::MK61:  return 'M';
@@ -267,28 +273,109 @@ static void delete_entry(const program_store::Entry& entry) {
   delay(700);
 }
 
-static void draw_item_menu(int active) {
+static bool entry_can_edit(const program_store::Entry& entry) {
+  switch(entry.type) {
+#if MK61_ENABLE_BASIC
+    case program_store::ProgramType::BASIC:
+      return true;
+#endif
+#if MK61_ENABLE_FOCAL
+    case program_store::ProgramType::FOCAL:
+      return true;
+#endif
+    default:
+      return false;
+  }
+}
+
+static int item_menu_actions(const program_store::Entry& entry, ItemMenuAction* actions, int capacity) {
+  int count = 0;
+  if(count < capacity) actions[count++] = ItemMenuAction::VIEW;
+  if(entry_can_edit(entry) && count < capacity) actions[count++] = ItemMenuAction::EDIT;
+  if(count < capacity) actions[count++] = ItemMenuAction::DELETE;
+  return count;
+}
+
+static const char* item_menu_text(ItemMenuAction action, bool ru) {
+  switch(action) {
+    case ItemMenuAction::VIEW:
+      return ru ? "Просмотр" : "View";
+    case ItemMenuAction::EDIT:
+      return ru ? "Редактировать" : "Edit";
+    case ItemMenuAction::DELETE:
+      return ru ? "Удалить" : "Delete";
+  }
+  return "";
+}
+
+static void draw_item_menu(const program_store::Entry& entry, int active) {
+  ItemMenuAction actions[3];
+  const int count = item_menu_actions(entry, actions, 3);
+  const int visible = (count < lcd_display::ROWS) ? count : lcd_display::ROWS;
+  int top = active - visible + 1;
+  if(top < 0) top = 0;
+  if(top > count - visible) top = count - visible;
+
   MK61DisplayUpdate update(lcd);
   lcd.clear();
-  if(library_mk61::language_is_ru()) {
-    lcd_ru::print_menu_line(0, active == 0 ? '>' : ' ', "Просмотр");
-    lcd_ru::print_menu_line(1, active == 1 ? '>' : ' ', "Удалить");
-  } else {
-    print_line(0, active == 0 ? ">View" : " View");
-    print_line(1, active == 1 ? ">Delete" : " Delete");
+  for(int row = 0; row < visible; row++) {
+    const int index = top + row;
+    const char marker = active == index ? '>' : ' ';
+    const char* text = item_menu_text(actions[index], library_mk61::language_is_ru());
+    if(library_mk61::language_is_ru()) {
+      lcd_ru::print_menu_line((u8) row, marker, text);
+    } else {
+      char line[18];
+      snprintf(line, sizeof(line), "%c%s", marker, text);
+      print_line((u8) row, line);
+    }
+  }
+}
+
+static void edit_entry(const program_store::Entry& entry) {
+  bool ok = false;
+  switch(entry.type) {
+#if MK61_ENABLE_BASIC
+    case program_store::ProgramType::BASIC:
+      ok = EditBasicProgram(entry.name);
+      break;
+#endif
+#if MK61_ENABLE_FOCAL
+    case program_store::ProgramType::FOCAL:
+      ok = EditFocalProgram(entry.name);
+      break;
+#endif
+    default:
+      break;
+  }
+  if(!ok) {
+    show_message("Edit error", "Ошибка правки", entry.name, entry.name);
+    delay(900);
   }
 }
 
 static void explorer_item_menu(const program_store::Entry& entry) {
+  ItemMenuAction actions[3];
+  const int count = item_menu_actions(entry, actions, 3);
   int active = 0;
   while(true) {
-    draw_item_menu(active);
+    draw_item_menu(entry, active);
     const i32 key = wait_explorer_key(false);
     if(key == EXPLORER_KEY_ESC) return;
-    if(key == EXPLORER_KEY_UP || key == EXPLORER_KEY_DOWN) active = active == 0 ? 1 : 0;
+    if(key == EXPLORER_KEY_UP) active = (active <= 0) ? count - 1 : active - 1;
+    if(key == EXPLORER_KEY_DOWN) active = (active + 1) % count;
     if(key == EXPLORER_KEY_OK) {
-      if(active == 0) view_entry(entry);
-      else delete_entry(entry);
+      switch(actions[active]) {
+        case ItemMenuAction::VIEW:
+          view_entry(entry);
+          break;
+        case ItemMenuAction::EDIT:
+          edit_entry(entry);
+          break;
+        case ItemMenuAction::DELETE:
+          delete_entry(entry);
+          break;
+      }
       return;
     }
   }

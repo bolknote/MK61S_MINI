@@ -2086,10 +2086,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
   return true;
 }
 
-void EditFocal(void) {
-  int slot = select_focal_program(true);
-  if(slot < 0) return;
-
+static void EditFocalSlot(int slot) {
   char source[FOCAL_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
   if(slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(source, sizeof(source), programs[slot].source);
@@ -2199,6 +2196,24 @@ void EditFocal(void) {
     }
     shift = FocalEditShift::NONE;
   }
+}
+
+void EditFocal(void) {
+  const int slot = select_focal_program(true);
+  if(slot < 0) return;
+  EditFocalSlot(slot);
+}
+
+bool EditFocalProgram(const char* name) {
+#ifndef FOCAL_HOST_TEST
+  const int slot = load_focal_program_from_store(name);
+  if(slot < 0) return false;
+  EditFocalSlot(slot);
+  return true;
+#else
+  (void) name;
+  return false;
+#endif
 }
 
 static bool FOCAL_clear_data(void) {

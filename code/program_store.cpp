@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include "config.h"
+#include "ledcontrol.h"
 #include "tools.hpp"
 
 #ifdef SPI_FLASH
@@ -31,6 +32,8 @@ static constexpr usize CATALOG_HEADER_SIZE = 9;
 static constexpr usize CATALOG_SECTOR_INFO_SIZE = 9;
 static constexpr usize CATALOG_ENTRY_SIZE = 25;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
+static constexpr t_time_ms DISK_LED_ON_MS = 35;
+static constexpr t_time_ms DISK_LED_OFF_MS = 35;
 
 static constexpr u8 SECTOR_FLAG_EMPTY = 0x01;
 static constexpr u8 SECTOR_FLAG_ACTIVE = 0x02;
@@ -71,6 +74,30 @@ static IndexEntry index_entries[MAX_ENTRIES];
 static u8 index_count;
 static bool index_valid;
 static u32 next_generation = 1;
+static u8 disk_activity_depth;
+static u8 disk_led_poll_divider;
+
+static void disk_led_poll(void) {
+  if(disk_activity_depth == 0) return;
+  disk_led_poll_divider++;
+  if((disk_led_poll_divider & 0x0F) == 0) led::control();
+}
+
+class DiskActivity {
+  public:
+    DiskActivity(void) {
+      if(disk_activity_depth++ == 0) {
+        disk_led_poll_divider = 0;
+        led::blink_continuous(DISK_LED_ON_MS, DISK_LED_OFF_MS);
+      }
+    }
+
+    ~DiskActivity(void) {
+      if(disk_activity_depth == 0) return;
+      disk_activity_depth--;
+      if(disk_activity_depth == 0) led::blink_stop();
+    }
+};
 
 static u32 sector_base(usize sector) {
   return (u32) sector * (u32) FLASH_SECTOR_SIZE;
@@ -78,7 +105,11 @@ static u32 sector_base(usize sector) {
 
 static u8 read_byte(u32 address) {
 #ifdef SPI_FLASH
-  if(flash_is_ok) return flash.readByte(address);
+  if(flash_is_ok) {
+    const u8 value = flash.readByte(address);
+    disk_led_poll();
+    return value;
+  }
 #endif
   (void) address;
   return 0xFF;
@@ -86,7 +117,10 @@ static u8 read_byte(u32 address) {
 
 static void write_byte(u32 address, u8 value) {
 #ifdef SPI_FLASH
-  if(flash_is_ok) flash.writeByte(address, value);
+  if(flash_is_ok) {
+    flash.writeByte(address, value);
+    disk_led_poll();
+  }
 #else
   (void) address;
   (void) value;
@@ -99,8 +133,10 @@ static bool erase_sector(usize sector) {
   const u32 address = sector_base(sector);
   const u32 stop_at = millis() + ERASE_TIMEOUT_MS;
   while(!flash.eraseSector(address)) {
+    led::control();
     if((i32) (millis() - stop_at) >= 0) return false;
   }
+  led::control();
   return true;
 #else
   (void) sector;
@@ -684,6 +720,7 @@ static bool rebuild_from_records(bool persist_catalog) {
 }
 
 bool refresh(void) {
+  DiskActivity disk_activity;
   index_valid = false;
   if(load_catalog()) return true;
   return rebuild_from_records(true);
@@ -699,6 +736,7 @@ static bool ensure_index(void) {
 }
 
 bool format(void) {
+  DiskActivity disk_activity;
 #ifdef SPI_FLASH
   if(!flash_is_ok) return false;
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
@@ -911,6 +949,7 @@ static void mark_all_deleted(ProgramType type, const char* name, u32 keep_addres
 }
 
 bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
+  DiskActivity disk_activity;
   if(data == NULL && data_len != 0) return false;
   if(!valid_write(type, name, data_len)) return false;
   if(!ensure_index()) return false;
@@ -969,6 +1008,7 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
 }
 
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len) {
+  DiskActivity disk_activity;
   if(out_len != NULL) *out_len = 0;
   if(data == NULL && capacity != 0) return false;
   if(!ensure_index()) return false;
@@ -984,6 +1024,7 @@ bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_l
 }
 
 bool remove(ProgramType type, const char* name) {
+  DiskActivity disk_activity;
   if(!ensure_index()) return false;
   const int idx = find_index(type, name);
   if(idx < 0) return false;
@@ -997,6 +1038,7 @@ bool remove(ProgramType type, const char* name) {
 }
 
 bool rename(ProgramType type, const char* old_name, const char* new_name) {
+  DiskActivity disk_activity;
   if(old_name == NULL || new_name == NULL || old_name[0] == 0 || new_name[0] == 0) return false;
   u8 buffer[core_61::MAX_PROGRAM_STEP > 700 ? core_61::MAX_PROGRAM_STEP : 700];
   u16 len = 0;

@@ -2592,10 +2592,7 @@ static bool basic_input_program_name(char* name, usize size) {
   }
 }
 
-void EditBasic(void) {
-  int slot = select_basic_program(true);
-  if(slot < 0) return;
-
+static void EditBasicSlot(int slot) {
   char source[BASIC_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
   if(slot < BASIC_PROGRAM_COUNT && programs[slot].used) strncpy(source, programs[slot].source, sizeof(source) - 1);
@@ -2665,6 +2662,23 @@ void EditBasic(void) {
     if(cursor < window) window = cursor;
     if(cursor > window + 15) window = cursor - 15;
   }
+}
+
+void EditBasic(void) {
+  const int slot = select_basic_program(true);
+  if(slot < 0) return;
+  EditBasicSlot(slot);
+}
+
+bool EditBasicProgram(const char* name) {
+#ifndef BASIC_HOST_TEST
+  const int slot = load_basic_program_from_store(name);
+#else
+  const int slot = find_program_by_name(name);
+#endif
+  if(slot < 0) return false;
+  EditBasicSlot(slot);
+  return true;
 }
 
 static bool BASIC_clear_data(void) {
