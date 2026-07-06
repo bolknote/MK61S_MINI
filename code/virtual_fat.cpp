@@ -19,6 +19,7 @@ static constexpr u16 FIRST_DATA_CLUSTER = 2;
 static constexpr u16 MAX_IMPORTED_LEN = 640;
 static constexpr u16 MAX_LFN_CHARS = program_store::NAME_SIZE + 3;
 static constexpr u8 MAX_PENDING_WRITES = 3;
+static constexpr u8 MAX_PENDING_DELETES = 3;
 static constexpr u8 WRITE_CACHE_SECTORS = 6;
 static constexpr u8 FAT_ATTR_VOLUME = 0x08;
 static constexpr u8 FAT_ATTR_DIRECTORY = 0x10;
@@ -39,6 +40,14 @@ struct PendingWrite {
   u16 data_len;
   u8 sectors_seen;
   u8 data[MAX_IMPORTED_LEN];
+};
+
+struct PendingDelete {
+  bool used;
+  program_store::ProgramType type;
+  char name[program_store::NAME_SIZE];
+  u16 start_cluster;
+  u16 data_len;
 };
 
 struct CachedSector {
@@ -64,6 +73,7 @@ struct LfnState {
 };
 
 static PendingWrite pending_writes[MAX_PENDING_WRITES];
+static PendingDelete pending_deletes[MAX_PENDING_DELETES];
 static CachedSector write_cache[WRITE_CACHE_SECTORS];
 static LfnState root_lfn_state;
 static u8 next_cache_slot = 0;
@@ -402,6 +412,8 @@ static PendingWrite* pending_entry(int index) {
   return NULL;
 }
 
+static bool entry_is_pending_delete(const program_store::Entry& entry);
+
 static void fill_pending_dir_entry(u8* out, const PendingWrite& pending) {
   fill_pending_name(pending, out);
   out[11] = FAT_ATTR_ARCHIVE;
@@ -472,7 +484,7 @@ static void read_root_sector(u32 root_sector, u8* out) {
       if(!file_entry(file_index, entry)) continue;
       const u8 entries = dir_entries_for_name(entry.name, entry.type);
       if(dir_index >= cursor && dir_index < cursor + entries) {
-        render_committed_dir_entry(item, entry, file_index, (u8) (dir_index - cursor));
+        if(!entry_is_pending_delete(entry)) render_committed_dir_entry(item, entry, file_index, (u8) (dir_index - cursor));
         rendered = true;
         break;
       }
@@ -643,6 +655,58 @@ static bool committed_short_entry_at_dir_index(int dir_index, program_store::Ent
   return false;
 }
 
+static PendingDelete* find_pending_delete(program_store::ProgramType type, const char* name) {
+  for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
+    PendingDelete& pending = pending_deletes[i];
+    if(!pending.used || pending.type != type) continue;
+    if(strncmp(pending.name, name, program_store::NAME_SIZE) == 0) return &pending;
+  }
+  return NULL;
+}
+
+static PendingDelete* find_pending_delete_for_cluster(program_store::ProgramType type, u16 start_cluster, u16 data_len) {
+  for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
+    PendingDelete& pending = pending_deletes[i];
+    if(!pending.used || pending.type != type) continue;
+    if(pending.start_cluster == start_cluster && pending.data_len == data_len) return &pending;
+  }
+  return NULL;
+}
+
+static PendingDelete* allocate_pending_delete(void) {
+  for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
+    if(!pending_deletes[i].used) return &pending_deletes[i];
+  }
+  return &pending_deletes[0];
+}
+
+static bool entry_is_pending_delete(const program_store::Entry& entry) {
+  return find_pending_delete(entry.type, entry.name) != NULL;
+}
+
+static void clear_pending_delete(PendingDelete* pending) {
+  if(pending != NULL) memset(pending, 0, sizeof(*pending));
+}
+
+static void mark_pending_delete(const program_store::Entry& entry, int flat_index) {
+  PendingDelete* pending = find_pending_delete(entry.type, entry.name);
+  if(pending == NULL) pending = allocate_pending_delete();
+
+  memset(pending, 0, sizeof(*pending));
+  pending->used = true;
+  pending->type = entry.type;
+  strncpy(pending->name, entry.name, program_store::NAME_SIZE - 1);
+  pending->name[program_store::NAME_SIZE - 1] = 0;
+  pending->start_cluster = start_cluster_for_file(flat_index);
+  pending->data_len = entry.data_len;
+}
+
+static bool committed_entry_matches_dir(const program_store::Entry& entry, int flat_index, const ParsedDirEntry& parsed) {
+  return entry.type == parsed.type &&
+         entry.data_len == parsed.data_len &&
+         start_cluster_for_file(flat_index) == parsed.start_cluster;
+}
+
 static bool generated_dir_entry_matches(int dir_index, const u8* item) {
   program_store::Entry entry;
   int file_index = 0;
@@ -702,6 +766,16 @@ static void seed_pending_from_cache(PendingWrite& pending) {
   }
 }
 
+static bool cache_has_all_data(u16 start_cluster, u16 data_len) {
+  if(data_len == 0) return true;
+  if(start_cluster < FIRST_DATA_CLUSTER) return false;
+  const u16 clusters = clusters_for_len(data_len);
+  for(u16 i = 0; i < clusters; i++) {
+    if(cached_sector((u16) (start_cluster + i)) == NULL) return false;
+  }
+  return true;
+}
+
 bool flush_pending(void) {
   bool ok = true;
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
@@ -711,10 +785,52 @@ bool flush_pending(void) {
     if(!pending_has_all_data(pending)) continue;
     if(!try_commit_pending(pending)) ok = false;
   }
+  for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
+    PendingDelete& pending = pending_deletes[i];
+    if(!pending.used) continue;
+    if(program_store::exists(pending.type, pending.name) && !program_store::remove(pending.type, pending.name)) ok = false;
+    memset(&pending, 0, sizeof(pending));
+  }
   return ok;
 }
 
-static bool upsert_pending(const ParsedDirEntry& parsed) {
+static bool rename_committed_entry(const ParsedDirEntry& parsed, const char* old_name) {
+  if(strncmp(old_name, parsed.name, program_store::NAME_SIZE) == 0) return true;
+  return program_store::rename(parsed.type, old_name, parsed.name);
+}
+
+static bool try_rename_existing_entry(int dir_index, const ParsedDirEntry& parsed) {
+  program_store::Entry entry;
+  int file_index = 0;
+  if(!committed_short_entry_at_dir_index(dir_index, entry, file_index)) return false;
+  if(!committed_entry_matches_dir(entry, file_index, parsed)) return false;
+
+  PendingDelete* pending_delete = find_pending_delete(entry.type, entry.name);
+  if(!rename_committed_entry(parsed, entry.name)) return false;
+  clear_pending_delete(pending_delete);
+  return true;
+}
+
+static bool try_rename_pending_delete(const ParsedDirEntry& parsed) {
+  PendingDelete* pending_delete = find_pending_delete_for_cluster(parsed.type, parsed.start_cluster, parsed.data_len);
+  if(pending_delete == NULL) return false;
+
+  char old_name[program_store::NAME_SIZE];
+  strncpy(old_name, pending_delete->name, sizeof(old_name) - 1);
+  old_name[sizeof(old_name) - 1] = 0;
+
+  if(!rename_committed_entry(parsed, old_name)) return false;
+  clear_pending_delete(pending_delete);
+  return true;
+}
+
+static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
+  const bool has_new_data = parsed.data_len != 0 && cache_has_all_data(parsed.start_cluster, parsed.data_len);
+  if(!has_new_data) {
+    if(try_rename_existing_entry(dir_index, parsed)) return true;
+    if(try_rename_pending_delete(parsed)) return true;
+  }
+
   PendingWrite* pending = find_pending(parsed.type, parsed.name);
   if(pending == NULL) pending = allocate_pending();
 
@@ -732,7 +848,7 @@ static bool upsert_pending(const ParsedDirEntry& parsed) {
 static void remove_existing_dir_slot(int dir_index) {
   program_store::Entry entry;
   int file_index = 0;
-  if(committed_short_entry_at_dir_index(dir_index, entry, file_index)) (void) program_store::remove(entry.type, entry.name);
+  if(committed_short_entry_at_dir_index(dir_index, entry, file_index)) mark_pending_delete(entry, file_index);
 }
 
 static void reset_lfn_state(LfnState& lfn) {
@@ -838,7 +954,7 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
     const bool parsed_ok = parse_dir_entry(item, lfn_name, parsed);
     reset_lfn_state(lfn);
     if(!parsed_ok) continue;
-    if(!upsert_pending(parsed)) return false;
+    if(!upsert_pending(parsed, dir_index)) return false;
   }
 
   return true;
