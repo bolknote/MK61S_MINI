@@ -37,8 +37,7 @@ static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
-static bool settings_dirty = false;
-static t_time_ms settings_save_at = 0;
+static DeferredSave settings_save;
 static constexpr t_time_ms SETTINGS_SAVE_IDLE_MS = 1000;
 
 struct MutablePunct {
@@ -298,18 +297,17 @@ void  store_settings_state(void) {
 }
 
 static void mark_settings_dirty(void) {
-  settings_dirty = true;
-  settings_save_at = millis() + SETTINGS_SAVE_IDLE_MS;
+  settings_save.schedule(millis(), SETTINGS_SAVE_IDLE_MS);
 }
 
 void flush_settings_state(void) {
-  if(!settings_dirty) return;
+  if(!settings_save.pending()) return;
   store_settings_state();
-  settings_dirty = false;
+  settings_save.clear();
 }
 
 void poll_settings_state_save(void) {
-  if(settings_dirty && (i32) (millis() - settings_save_at) >= 0) flush_settings_state();
+  if(settings_save.due(millis())) flush_settings_state();
 }
 
 void  load_settings_state(void) {

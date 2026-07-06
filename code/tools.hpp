@@ -27,6 +27,32 @@ static constexpr usize switch_sound_settings = switch_settings + 1;
 static constexpr usize legacy_switch_R_GRD_G = OFFSET_MK61_PROGRAMM + core_61::CLASSIC_PROGRAM_STEP;
 static constexpr usize legacy_count_switch_R_GRD_G = legacy_switch_R_GRD_G + 1;
 
+class DeferredSave {
+  private:
+    bool pending_save;
+    t_time_ms save_at;
+
+  public:
+    DeferredSave(void) : pending_save(false), save_at(0) {}
+
+    bool pending(void) const {
+      return pending_save;
+    }
+
+    void schedule(t_time_ms now, t_time_ms delay_ms) {
+      pending_save = true;
+      save_at = now + delay_ms;
+    }
+
+    bool due(t_time_ms now) const {
+      return pending_save && (i32) (now - save_at) >= 0;
+    }
+
+    void clear(void) {
+      pending_save = false;
+    }
+};
+
 struct SettingsFlags {
   union {
     u8 raw;
@@ -151,8 +177,12 @@ inline u8 read_eeprom_with_legacy(usize current_addr, usize legacy_addr) {
   return current_value;
 }
 
-inline AngleUnit read_grade_switch(void) {
+inline AngleUnit read_stored_grade_switch(void) {
   return (AngleUnit) read_eeprom_with_legacy(switch_R_GRD_G, legacy_switch_R_GRD_G);
+}
+
+inline AngleUnit read_grade_switch(void) {
+  return MK61Emu_GetAngleUnit();
 }
 
 inline u8 read_counter_switch(void) {
@@ -193,7 +223,7 @@ inline void store_sound_settings(SoundSettings settings) {
 }
 
 inline AngleUnit load_grade_switch(void) {
-  static const AngleUnit rom_angle = read_grade_switch();
+  static const AngleUnit rom_angle = read_stored_grade_switch();
   if(rom_angle == RADIAN || rom_angle == GRADE || rom_angle == DEGREE) { // состояние переключателя считано из флеш как определнное (радианы или грады)
     MK61Emu_SetAngleUnit(rom_angle);
     dbgln(SPIROM, "get grade_switch ", rom_angle);

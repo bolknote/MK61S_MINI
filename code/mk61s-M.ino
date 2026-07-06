@@ -46,8 +46,8 @@ static constexpr t_time_ms  ANGLE_SAVE_UPDATE_MS   =   3000;  // Время (м�
 
 t_time_ms   runtime_ms; // время работы программы в ms
 
-static  u32         update_R_GRD_G;
 static  u32         wait_calc_time;
+static  DeferredSave angle_save;
 
 static  bool        YZ_ZT;
 static  bool        lcd_hooked;
@@ -246,7 +246,7 @@ void setup() {
 
   YZ_ZT = true;
   wait_calc_time = millis() + CALC_WAIT_MS;
-  update_R_GRD_G = millis() + ANGLE_SAVE_UPDATE_MS;
+  angle_save.schedule(millis(), ANGLE_SAVE_UPDATE_MS);
 
  // Настройки режима MAXIMAL  
   mk61_quants_reload  =   1;
@@ -327,17 +327,17 @@ void key_press_handler(i32 keycode) {
     case KEY_DEGREE:
         MK61Emu_SetAngleUnit(DEGREE);
         GRDLabel.print("  \x05");
-        update_R_GRD_G = now + ANGLE_SAVE_UPDATE_MS;
+        angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
       break;
     case KEY_GRADE: 
         MK61Emu_SetAngleUnit(GRADE);
         GRDLabel.print("\x05P\x03");
-        update_R_GRD_G = now + ANGLE_SAVE_UPDATE_MS;
+        angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
       break;
     case KEY_RADIAN:
         MK61Emu_SetAngleUnit(RADIAN);
         GRDLabel.print("P  ");
-        update_R_GRD_G = now + ANGLE_SAVE_UPDATE_MS;
+        angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
       break;
     default:
       if(keycode >= 0) {
@@ -347,11 +347,13 @@ void key_press_handler(i32 keycode) {
 }
 
 inline void monitor_switch_angle_unit(t_time_ms now) {
+  if(!angle_save.due(now)) return;
+  angle_save.clear();
+
   const AngleUnit new_angle = MK61Emu_GetAngleUnit();
-  const AngleUnit old_angle = read_grade_switch();
+  const AngleUnit old_angle = read_stored_grade_switch();
   
-  if( old_angle != new_angle && now >= update_R_GRD_G) { // Сохраним состояние переключателя градусной меры
-    update_R_GRD_G = now + ANGLE_SAVE_UPDATE_MS;
+  if(old_angle != new_angle) { // Сохраним состояние переключателя градусной меры
     store_grade_switch(new_angle);
     dbgln(MINI, "store switch from ", old_angle, " to ", new_angle);
   }
