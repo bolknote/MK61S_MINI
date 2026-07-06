@@ -566,6 +566,7 @@ void  loop() {
 }
 
 void idle_main_process(void) {
+  sound_poll();
   led::control();
 }
 

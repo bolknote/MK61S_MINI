@@ -20,21 +20,18 @@ static constexpr isize BLOCK_SIZE           = (core_61::MAX_PROGRAM_STEP + 1) / 
 static constexpr usize switch_R_GRD_G = OFFSET_AFTER_PROGRAM;
 static constexpr usize count_switch_R_GRD_G = switch_R_GRD_G + 1;
 static constexpr usize switch_settings = switch_R_GRD_G + 2;
+static constexpr usize switch_sound_settings = switch_settings + 1;
 static constexpr usize legacy_switch_R_GRD_G = OFFSET_MK61_PROGRAMM + core_61::CLASSIC_PROGRAM_STEP;
 static constexpr usize legacy_count_switch_R_GRD_G = legacy_switch_R_GRD_G + 1;
-static constexpr usize legacy_switch_settings = legacy_switch_R_GRD_G + 2;
 
 struct SettingsFlags {
   union {
     u8 raw;
     struct {
-      u8 sound_on : 1;
       u8 language_ru : 1;
-      u8 expanded_program : 1;
-      u8 program_memory_auto : 1;
-      u8 settings_layout : 1;
+      u8 program_memory_mode : 2;
       u8 speed_mode : 2;
-      u8 settings_layout_v2 : 1;
+      u8 reserved : 3;
     } bits;
   };
 
@@ -44,8 +41,24 @@ struct SettingsFlags {
 
 static_assert(sizeof(SettingsFlags) == 1, "SettingsFlags must fit one EEPROM byte");
 
+struct SoundSettings {
+  union {
+    u8 raw;
+    struct {
+      u8 volume : 4;
+      u8 reserved : 4;
+    } bits;
+  };
+
+  SoundSettings(void) : raw(0) {}
+  explicit SoundSettings(u8 value) : raw(value) {}
+};
+
+static_assert(sizeof(SoundSettings) == 1, "SoundSettings must fit one EEPROM byte");
+
 extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms);
+extern  void  sound_poll(void);
 
 extern  void  message_and_waitkey(const char* lcd_message);
 extern  bool  Confirmation(void);
@@ -142,22 +155,35 @@ inline u8 read_counter_switch(void) {
 
 inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
   SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
-  if(raw_flags == 0xFF) flags.bits.sound_on = 1;
-  if(raw_flags == 0xFF || flags.bits.settings_layout == 0) flags.bits.program_memory_auto = 1;
-  if(raw_flags == 0xFF || flags.bits.settings_layout_v2 == 0) flags.bits.speed_mode = 1;
-  flags.bits.settings_layout = 1;
-  flags.bits.settings_layout_v2 = 1;
+  if(raw_flags == 0xFF || flags.bits.program_memory_mode > 2) flags.bits.program_memory_mode = 2;
+  if(raw_flags == 0xFF || flags.bits.speed_mode > 2) flags.bits.speed_mode = 1;
+  flags.bits.reserved = 0;
   return flags;
 }
 
 inline SettingsFlags read_settings_flags(void) {
-  return normalize_settings_flags(read_eeprom_with_legacy(switch_settings, legacy_switch_settings));
+  return normalize_settings_flags(EEPROM.read(switch_settings));
 }
 
 inline void store_settings_flags(SettingsFlags flags) {
-  flags.bits.settings_layout = 1;
-  flags.bits.settings_layout_v2 = 1;
+  flags.bits.reserved = 0;
   EEPROM.update(switch_settings, flags.raw);
+}
+
+inline SoundSettings normalize_sound_settings(u8 raw_settings) {
+  SoundSettings settings((raw_settings == 0xFF) ? 0 : raw_settings);
+  if(raw_settings == 0xFF || settings.bits.volume > 10) settings.bits.volume = 10;
+  settings.bits.reserved = 0;
+  return settings;
+}
+
+inline SoundSettings read_sound_settings(void) {
+  return normalize_sound_settings(EEPROM.read(switch_sound_settings));
+}
+
+inline void store_sound_settings(SoundSettings settings) {
+  settings.bits.reserved = 0;
+  EEPROM.update(switch_sound_settings, settings.raw);
 }
 
 inline AngleUnit load_grade_switch(void) {

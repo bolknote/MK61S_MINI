@@ -102,10 +102,42 @@ bool  Confirmation(void) {
   return (key == KEY_OK);
 }
 
+static bool sound_active = false;
+static usize sound_active_pin = PIN_BUZZER;
+static t_time_ms sound_stop_at = 0;
+
+static u8 sound_pwm_duty(void) {
+  return (u8) (((u32) library_mk61::sound_volume() * 128 + 5) / 10);
+}
+
+static void sound_stop(void) {
+  if(!sound_active) return;
+  analogWrite(sound_active_pin, 0);
+  digitalWrite(sound_active_pin, LOW);
+  sound_active = false;
+}
+
+void sound_poll(void) {
+  if(sound_active && (i32) (millis() - sound_stop_at) >= 0) sound_stop();
+}
+
 void  sound(usize pin, isize freq_Hz, usize duration_ms) {
-  if(library_mk61::sound_is_on()) {
-    tone(pin, freq_Hz, duration_ms);
+  sound_poll();
+
+  if(!library_mk61::sound_is_on() || freq_Hz <= 0 || duration_ms == 0) {
+    sound_stop();
+    return;
   }
+
+  if(sound_active && sound_active_pin != pin) sound_stop();
+
+  analogWriteResolution(8);
+  analogWriteFrequency((u32) freq_Hz);
+  analogWrite(pin, sound_pwm_duty());
+
+  sound_active = true;
+  sound_active_pin = pin;
+  sound_stop_at = millis() + duration_ms;
 }
 
 void message_and_waitkey(const char* lcd_message) {

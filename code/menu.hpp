@@ -33,7 +33,8 @@ struct  t_punct {
 
 extern bool mk61_library_select(void);
 extern bool mk61_games_select(void);
-extern bool TurnSound(void);
+extern bool settings_select(void);
+extern bool TurnSoundVolume(void);
 extern bool TurnSpeed(void);
 extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
@@ -43,6 +44,8 @@ namespace library_mk61 {
   extern  t_punct*        MENU[];
 
   extern  bool  sound_is_on(void);
+  extern  u8    sound_volume(void);
+  extern  void  set_sound_volume(u8 volume);
   extern  bool  language_is_ru(void);
   extern  bool  expanded_program_is_on(void);
   extern  ProgramMemoryMode program_memory_mode(void);

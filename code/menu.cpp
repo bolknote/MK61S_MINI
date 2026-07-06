@@ -15,12 +15,9 @@ extern isize mk61_quants_reload;
 namespace library_mk61 {
 
 static constexpr int MENU_DFU      = 0;
-static constexpr int MENU_SOUND    = 1;
-static constexpr int MENU_SPEED    = 2;
-static constexpr int MENU_MEMORY   = 3;
-static constexpr int MENU_LANGUAGE = 4;
-static constexpr int MENU_GAMES    = 5;
-static constexpr int MENU_LIBRARY  = 6;
+static constexpr int MENU_SETTINGS = 1;
+static constexpr int MENU_GAMES    = 2;
+static constexpr int MENU_LIBRARY  = 3;
 static constexpr int MENU_AFTER_LIBRARY = MENU_LIBRARY + 1;
 #if MK61_ENABLE_BASIC
 static constexpr int MENU_BASIC    = MENU_AFTER_LIBRARY;
@@ -39,11 +36,25 @@ static constexpr int MENU_ERASE    = MENU_RESET + 1;
 static constexpr int MENU_INFO     = MENU_ERASE + 1;
 static constexpr int MENU_HW       = MENU_INFO + 1;
 
-static bool sound_enabled = true;
+static constexpr int SETTINGS_VOLUME  = 0;
+static constexpr int SETTINGS_SPEED   = 1;
+static constexpr int SETTINGS_MEMORY  = 2;
+static constexpr int SETTINGS_LANGUAGE = 3;
+
+static u8 sound_volume_state = 10;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
+
+struct MutablePunct {
+  u8            size;
+  menu_action   action;
+  char          text[32];
+};
+
+static MutablePunct VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Volume 10      "};
+static MutablePunct RU_VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Громкость 10"};
 
 static void set_speed_mode_state(SpeedMode mode) {
   speed_mode_state = mode;
@@ -126,6 +137,7 @@ bool  InfoData(void) {
 }
 
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
+const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
 const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct GAME_61_punct       = {.size = 10, .action = &mk61_games_select,                  .text = "MK61 Games"};
 #if MK61_ENABLE_BASIC
@@ -136,8 +148,6 @@ const t_punct FOCAL_punct         = {.size = 11, .action = &FOCAL_menu_select,  
 #endif
 const t_punct RESET_punct         = {.size = 12, .action = (menu_action) &NVIC_SystemReset,     .text = "Reset device"};
 const t_punct ERASE_punct         = {.size = 12, .action = (menu_action) &EraseFlash,           .text = "Erase FLASH!"};
-const t_punct SOUND_ON_punct      = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Sound ON       "};
-const t_punct SOUND_OFF_punct     = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Sound OFF      "};
 const t_punct SPEED_LOW_punct     = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
 const t_punct SPEED_HIGH_punct    = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
 const t_punct SPEED_TURBO_punct   = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed TURBO    "};
@@ -150,6 +160,7 @@ const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoDa
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
 
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
+const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
 const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
 const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "Игры MK61"};
 #if MK61_ENABLE_BASIC
@@ -160,8 +171,6 @@ const t_punct RU_FOCAL_punct      = {.size = 15, .action = &FOCAL_menu_select,  
 #endif
 const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "Сброс"};
 const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "Стереть FLASH"};
-const t_punct RU_SOUND_ON_punct   = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Звук вкл"};
-const t_punct RU_SOUND_OFF_punct  = {.size = 15, .action = (menu_action) &TurnSound,            .text = "Звук выкл"};
 const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость норма"};
 const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость макс"};
 const t_punct RU_SPEED_TURBO_punct= {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость турбо"};
@@ -173,10 +182,7 @@ const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &Hardwa
 
 t_punct* MENU[] = {
       (t_punct*) &DFU_mode_punct,
-      (t_punct*) &SOUND_ON_punct,
-      (t_punct*) &SPEED_HIGH_punct,
-      (t_punct*) &MEMORY_AUTO_punct,
-      (t_punct*) &LANGUAGE_EN_punct,
+      (t_punct*) &SETTINGS_punct,
       (t_punct*) &GAME_61_punct,
       (t_punct*) &LIB_61_punct,
 #if MK61_ENABLE_BASIC
@@ -193,12 +199,25 @@ t_punct* MENU[] = {
 
 extern const int COUNT_PUNCTS = sizeof(MENU) / sizeof(MENU[0]);
 
+t_punct* SETTINGS_MENU[] = {
+      (t_punct*) &VOLUME_punct,
+      (t_punct*) &SPEED_HIGH_punct,
+      (t_punct*) &MEMORY_AUTO_punct,
+      (t_punct*) &LANGUAGE_EN_punct
+};
+
+extern const int COUNT_SETTINGS_PUNCTS = sizeof(SETTINGS_MENU) / sizeof(SETTINGS_MENU[0]);
+
 bool  sound_is_on(void) {
-  return sound_enabled;
+  return sound_volume_state != 0;
 }
 
-void  set_sound_state(bool enable) {
-  sound_enabled = enable;
+u8  sound_volume(void) {
+  return sound_volume_state;
+}
+
+void  set_sound_volume(u8 volume) {
+  sound_volume_state = (volume > 10) ? 10 : volume;
 }
 
 bool  language_is_ru(void) {
@@ -256,12 +275,23 @@ static t_punct* speed_punct(void) {
   }
 }
 
+static void format_volume_text(void) {
+  int used = snprintf(VOLUME_punct.text, sizeof(VOLUME_punct.text), "Volume %u", (u32) sound_volume_state);
+  if(used < 0) used = 0;
+  if(used > 15) used = 15;
+  while(used < 15) VOLUME_punct.text[used++] = ' ';
+  VOLUME_punct.text[used] = 0;
+  VOLUME_punct.size = 15;
+
+  snprintf(RU_VOLUME_punct.text, sizeof(RU_VOLUME_punct.text), "Громкость %u", (u32) sound_volume_state);
+  RU_VOLUME_punct.size = 15;
+}
+
 void refresh_menu_text(void) {
+  format_volume_text();
+
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
-  MENU[MENU_SOUND]    = (t_punct*) (russian_language ? (sound_enabled ? &RU_SOUND_ON_punct : &RU_SOUND_OFF_punct) : (sound_enabled ? &SOUND_ON_punct : &SOUND_OFF_punct));
-  MENU[MENU_SPEED]    = speed_punct();
-  MENU[MENU_MEMORY]   = memory_punct();
-  MENU[MENU_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
+  MENU[MENU_SETTINGS] = (t_punct*) (russian_language ? &RU_SETTINGS_punct : &SETTINGS_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_GAMES]    = (t_punct*) (russian_language ? &RU_GAME_61_punct : &GAME_61_punct);
 #if MK61_ENABLE_BASIC
@@ -274,28 +304,34 @@ void refresh_menu_text(void) {
   MENU[MENU_ERASE]    = (t_punct*) (russian_language ? &RU_ERASE_punct : &ERASE_punct);
   MENU[MENU_INFO]     = (t_punct*) (russian_language ? &RU_FLASH_punct : &FLASH_punct);
   MENU[MENU_HW]       = (t_punct*) (russian_language ? &RU_HARDWARE_punct : &HARDWARE_punct);
+
+  SETTINGS_MENU[SETTINGS_VOLUME]   = (t_punct*) (russian_language ? &RU_VOLUME_punct : &VOLUME_punct);
+  SETTINGS_MENU[SETTINGS_SPEED]    = speed_punct();
+  SETTINGS_MENU[SETTINGS_MEMORY]   = memory_punct();
+  SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
 }
 
 void  store_settings_state(void) {
   SettingsFlags flags;
-  flags.bits.sound_on = sound_enabled;
   flags.bits.language_ru = russian_language;
-  flags.bits.expanded_program = expanded_program;
-  flags.bits.program_memory_auto = (memory_mode == ProgramMemoryMode::AUTO);
+  flags.bits.program_memory_mode = (u8) memory_mode;
   flags.bits.speed_mode = (u8) speed_mode_state;
   store_settings_flags(flags);
+
+  SoundSettings sound_settings;
+  sound_settings.bits.volume = sound_volume_state;
+  store_sound_settings(sound_settings);
 }
 
 void  load_settings_state(void) {
   const SettingsFlags flags = read_settings_flags();
-  set_sound_state(flags.bits.sound_on != 0);
   set_language_state(flags.bits.language_ru != 0);
-  set_program_memory_state(flags.bits.expanded_program != 0);
-  memory_mode = (flags.bits.program_memory_auto != 0)
-    ? ProgramMemoryMode::AUTO
-    : (expanded_program ? ProgramMemoryMode::EXPANDED_112 : ProgramMemoryMode::CLASSIC_105);
+  const u8 stored_memory = flags.bits.program_memory_mode;
+  memory_mode = (stored_memory <= (u8) ProgramMemoryMode::AUTO) ? (ProgramMemoryMode) stored_memory : ProgramMemoryMode::AUTO;
+  set_program_memory_state(memory_mode == ProgramMemoryMode::EXPANDED_112);
   const u8 stored_speed = flags.bits.speed_mode;
   set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
+  set_sound_volume(read_sound_settings().bits.volume);
   refresh_menu_text();
 }
 
@@ -331,15 +367,21 @@ bool   TurnSpeed(void) {
   return action::MENU_BACK;
 }
 
-bool   TurnSound(void) {
-  if(library_mk61::sound_is_on()) {
-    library_mk61::set_sound_state(false);
-  } else {
-    library_mk61::set_sound_state(true);
-  }
+bool   TurnSoundVolume(void) {
+  const u8 next_volume = (library_mk61::sound_volume() >= 10) ? 0 : (library_mk61::sound_volume() + 1);
+  library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
+  sound(PIN_BUZZER, 2000, 120);
 
+  return action::MENU_BACK;
+}
+
+bool settings_select(void) {
+  library_mk61::refresh_menu_text();
+  class_menu settings_menu = class_menu((t_punct**) library_mk61::SETTINGS_MENU, library_mk61::COUNT_SETTINGS_PUNCTS);
+  settings_menu.select();
+  library_mk61::refresh_menu_text();
   return action::MENU_BACK;
 }
 
