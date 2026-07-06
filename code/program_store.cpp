@@ -144,14 +144,6 @@ static bool erase_sector(usize sector) {
 #endif
 }
 
-static bool is_empty_sector(usize sector) {
-  const u32 base = sector_base(sector);
-  for(usize i = 0; i < FLASH_SECTOR_SIZE; i++) {
-    if(read_byte(base + (u32) i) != 0xFF) return false;
-  }
-  return true;
-}
-
 static u16 read_le16(u32 address) {
   const u16 lo = read_byte(address);
   const u16 hi = read_byte(address + 1);
@@ -343,92 +335,9 @@ static void move_live_to_dead(u32 address, u16 total_len) {
   if((usize) info.dead + total_len <= 0xFFFF) info.dead = (u16) (info.dead + total_len);
 }
 
-static void scan_sector_header(usize sector) {
-  SectorInfo& info = sectors[sector];
-  memset(&info, 0, sizeof(info));
-
-  const u32 base = sector_base(sector);
-  if(read_byte(base) == SECTOR_TAG0 && read_byte(base + 1) == SECTOR_TAG1 && read_byte(base + 2) == STATE_ACTIVE) {
-    info.active = true;
-    info.generation = read_le32(base + 3);
-    info.used = SECTOR_HEADER_SIZE;
-    return;
-  }
-
-  if(is_empty_sector(sector)) {
-    info.empty = true;
-    info.used = 0;
-    return;
-  }
-
-  info.foreign = true;
-  info.used = FLASH_SECTOR_SIZE;
-  info.dead = FLASH_SECTOR_SIZE;
-}
-
-static int next_sector_by_generation(bool processed[STORE_SECTOR_COUNT]) {
-  int best = -1;
-  for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
-    if(processed[i] || !sectors[i].active) continue;
-    if(best < 0 || sectors[i].generation < sectors[best].generation) best = (int) i;
-  }
-  return best;
-}
-
 static bool record_is_latest(u32 address, const RecordMeta& meta, const char* name) {
   const int idx = find_index(meta.type, name);
   return idx >= 0 && index_entries[idx].address == address;
-}
-
-static void scan_records_for_index(usize sector) {
-  SectorInfo& info = sectors[sector];
-  if(!info.active) return;
-
-  u16 offset = SECTOR_HEADER_SIZE;
-  while(offset < FLASH_SECTOR_SIZE) {
-    RecordMeta meta;
-    bool empty = false;
-    const u32 address = sector_base(sector) + offset;
-    if(!parse_record(address, offset, meta, empty)) {
-      info.used = empty ? offset : FLASH_SECTOR_SIZE;
-      return;
-    }
-
-    if(meta.state == STATE_ACTIVE && record_crc(address, meta) == meta.crc) {
-      char name[NAME_SIZE];
-      if(read_name(address, meta, name)) update_index(meta, name, address);
-    }
-    offset = (u16) (offset + meta.total_len);
-  }
-  info.used = FLASH_SECTOR_SIZE;
-}
-
-static void scan_records_for_stats(usize sector) {
-  SectorInfo& info = sectors[sector];
-  info.live = 0;
-  info.dead = 0;
-  if(!info.active) return;
-
-  u16 offset = SECTOR_HEADER_SIZE;
-  while(offset < info.used) {
-    RecordMeta meta;
-    bool empty = false;
-    const u32 address = sector_base(sector) + offset;
-    if(!parse_record(address, offset, meta, empty)) {
-      info.dead = (u16) (info.dead + (info.used - offset));
-      return;
-    }
-
-    bool live = false;
-    if(meta.state == STATE_ACTIVE && record_crc(address, meta) == meta.crc) {
-      char name[NAME_SIZE];
-      live = read_name(address, meta, name) && record_is_latest(address, meta, name);
-    }
-
-    if(live) info.live = (u16) (info.live + meta.total_len);
-    else info.dead = (u16) (info.dead + meta.total_len);
-    offset = (u16) (offset + meta.total_len);
-  }
 }
 
 static void reset_state(void) {
@@ -436,6 +345,16 @@ static void reset_state(void) {
   memset(index_entries, 0, sizeof(index_entries));
   index_count = 0;
   next_generation = 1;
+}
+
+static void reset_to_ignored_store(void) {
+  reset_state();
+  for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
+    sectors[i].foreign = true;
+    sectors[i].used = FLASH_SECTOR_SIZE;
+    sectors[i].dead = FLASH_SECTOR_SIZE;
+  }
+  index_valid = true;
 }
 
 static u8 flags_for_sector(const SectorInfo& info) {
@@ -506,46 +425,6 @@ static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len) {
   }
 
   return crc;
-}
-
-static bool catalog_sector_matches_flash(usize sector) {
-  const SectorInfo& info = sectors[sector];
-  const u32 base = sector_base(sector);
-  const u8 tag0 = read_byte(base);
-  const u8 tag1 = read_byte(base + 1);
-  const u8 state = read_byte(base + 2);
-
-  if(info.empty) return tag0 == 0xFF;
-
-  if(info.active) {
-    if(tag0 != SECTOR_TAG0 || tag1 != SECTOR_TAG1 || state != STATE_ACTIVE) return false;
-    if(read_le32(base + 3) != info.generation) return false;
-    if(info.used < FLASH_SECTOR_SIZE && read_byte(base + info.used) != 0xFF) return false;
-    return true;
-  }
-
-  if(info.foreign) {
-    if(tag0 == 0xFF) return false;
-    if(tag0 == SECTOR_TAG0 && tag1 == SECTOR_TAG1 && state == STATE_ACTIVE) return false;
-    return true;
-  }
-
-  return false;
-}
-
-static bool catalog_entry_matches_flash(const IndexEntry& entry) {
-  const int sector = sector_from_address(entry.address);
-  if(sector < 0 || !sectors[sector].active) return false;
-  const u16 offset = offset_in_sector(entry.address);
-  RecordMeta meta;
-  bool empty = false;
-  if(!parse_record(entry.address, offset, meta, empty)) return false;
-  if(meta.state != STATE_ACTIVE) return false;
-  if(meta.type != entry.type || meta.name_len != entry.name_len || meta.data_len != entry.data_len || meta.total_len != entry.total_len) return false;
-
-  char name[NAME_SIZE];
-  if(!read_name(entry.address, meta, name)) return false;
-  return strncmp(name, entry.name, NAME_SIZE) == 0;
 }
 
 static bool save_catalog(void) {
@@ -653,8 +532,6 @@ static bool load_catalog(void) {
       if(used != FLASH_SECTOR_SIZE || live != 0) return false;
       info.dead = FLASH_SECTOR_SIZE;
     }
-
-    if(!catalog_sector_matches_flash(i)) return false;
   }
 
   for(u8 i = 0; i < entry_count; i++) {
@@ -667,15 +544,17 @@ static bool load_catalog(void) {
     const u16 offset = read_le16(pos); pos += 2;
     entry.data_len = read_le16(pos); pos += 2;
     entry.total_len = read_le16(pos); pos += 2;
+    const u16 header_len = (entry.type == ProgramType::MK61) ? 7 : 8;
     if(entry.name_len == 0 || entry.name_len >= NAME_SIZE) return false;
-    if(sector >= STORE_SECTOR_COUNT || offset < SECTOR_HEADER_SIZE) return false;
+    if(entry.total_len != header_len + entry.name_len + entry.data_len) return false;
+    if(entry.type == ProgramType::MK61 && entry.data_len > core_61::MAX_PROGRAM_STEP) return false;
+    if(sector >= STORE_SECTOR_COUNT || !sectors[sector].active || offset < SECTOR_HEADER_SIZE) return false;
     if((usize) offset + entry.total_len > FLASH_SECTOR_SIZE) return false;
     for(u8 n = 0; n < NAME_SIZE; n++) entry.name[n] = (char) read_byte(pos++);
     entry.name[NAME_SIZE - 1] = 0;
     if(entry.name[entry.name_len] != 0) return false;
     entry.address = sector_base(sector) + offset;
     entry.used = true;
-    if(!catalog_entry_matches_flash(entry)) return false;
     index_count++;
   }
 
@@ -683,52 +562,18 @@ static bool load_catalog(void) {
   return true;
 }
 
-static bool rebuild_from_records(bool persist_catalog) {
-  reset_state();
-
-#ifdef SPI_FLASH
-  if(!flash_is_ok) {
-    index_valid = true;
-    return false;
-  }
-#else
-  index_valid = true;
-  return false;
-#endif
-
-  for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
-    scan_sector_header(i);
-    if(sectors[i].active && sectors[i].generation >= next_generation) {
-      next_generation = sectors[i].generation + 1;
-      if(next_generation == 0) next_generation = 1;
-    }
-  }
-
-  bool processed[STORE_SECTOR_COUNT];
-  memset(processed, 0, sizeof(processed));
-  while(true) {
-    const int sector = next_sector_by_generation(processed);
-    if(sector < 0) break;
-    processed[sector] = true;
-    scan_records_for_index((usize) sector);
-  }
-
-  for(usize i = 0; i < STORE_SECTOR_COUNT; i++) scan_records_for_stats(i);
-  index_valid = true;
-  if(persist_catalog) (void) save_catalog();
-  return true;
-}
-
 bool refresh(void) {
   DiskActivity disk_activity;
   index_valid = false;
   if(load_catalog()) return true;
-  return rebuild_from_records(true);
+  reset_to_ignored_store();
+  return true;
 }
 
 void init(void) {
   index_valid = false;
-  refresh();
+  if(load_catalog()) return;
+  reset_to_ignored_store();
 }
 
 static bool ensure_index(void) {
@@ -775,6 +620,22 @@ static int empty_sector_count(void) {
   return count;
 }
 
+static bool reclaim_foreign_sector(void) {
+  const int sector = foreign_sector();
+  if(sector < 0) return false;
+  if(!erase_sector((usize) sector)) return false;
+  memset(&sectors[sector], 0, sizeof(sectors[sector]));
+  sectors[sector].empty = true;
+  return true;
+}
+
+static bool ensure_empty_sector_count(usize min_count) {
+  while((usize) empty_sector_count() < min_count) {
+    if(!reclaim_foreign_sector()) return false;
+  }
+  return true;
+}
+
 static int current_sector(void) {
   int best = -1;
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
@@ -805,13 +666,7 @@ static bool open_sector(usize sector) {
 static bool prepare_empty_sector(void) {
   int sector = empty_sector();
   if(sector >= 0) return true;
-
-  sector = foreign_sector();
-  if(sector < 0) return false;
-  if(!erase_sector((usize) sector)) return false;
-  memset(&sectors[sector], 0, sizeof(sectors[sector]));
-  sectors[sector].empty = true;
-  return true;
+  return reclaim_foreign_sector();
 }
 
 static bool copy_live_records(usize victim, usize destination, u16& dest_used) {
@@ -887,7 +742,15 @@ static bool ensure_space(u16 record_len) {
   int current = current_sector();
   if(current >= 0 && (usize) sectors[current].used + record_len <= FLASH_SECTOR_SIZE) return true;
 
-  if(empty_sector_count() >= 2) {
+  if(current < 0) {
+    if(empty_sector() < 0 && !prepare_empty_sector()) return false;
+    const int empty = empty_sector();
+    if(empty < 0 || !open_sector((usize) empty)) return false;
+    current = current_sector();
+    return current >= 0 && (usize) sectors[current].used + record_len <= FLASH_SECTOR_SIZE;
+  }
+
+  if(empty_sector_count() >= 2 || ensure_empty_sector_count(2)) {
     const int empty = empty_sector();
     if(empty < 0 || !open_sector((usize) empty)) return false;
     current = current_sector();
@@ -897,11 +760,6 @@ static bool ensure_space(u16 record_len) {
   if(garbage_collect(record_len)) {
     current = current_sector();
     return current >= 0 && (usize) sectors[current].used + record_len <= FLASH_SECTOR_SIZE;
-  }
-
-  if(current < 0 && prepare_empty_sector()) {
-    const int empty = empty_sector();
-    if(empty >= 0 && open_sector((usize) empty)) return true;
   }
 
   return false;
