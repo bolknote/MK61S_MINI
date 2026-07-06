@@ -372,7 +372,18 @@ bool   TurnSoundVolume(void) {
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
-  sound(PIN_BUZZER, 2000, 120);
+  sound(PIN_BUZZER, 2000, 40);
+
+  return action::MENU_BACK;
+}
+
+bool   TurnSoundVolumeDown(void) {
+  const u8 volume = library_mk61::sound_volume();
+  const u8 next_volume = (volume == 0) ? 10 : (volume - 1);
+  library_mk61::set_sound_volume(next_volume);
+  library_mk61::refresh_menu_text();
+  library_mk61::store_settings_state();
+  sound(PIN_BUZZER, 2000, 40);
 
   return action::MENU_BACK;
 }
@@ -435,6 +446,30 @@ bool  mk61_games_select(void) {
   return action::MENU_EXIT;
 }
 
+static constexpr i32 KEY_K_RELEASE = KEY_K | (i32) key_state::RELEASED;
+
+bool class_menu::handle_k_modifier(i32 key) {
+  if(k_modifier) {
+    if(key == KEY_OK_PRESS) {
+      k_modifier = false;
+      TurnSoundVolumeDown();
+      return true;
+    }
+    if(key == KEY_K_RELEASE) {
+      k_modifier = false;
+      return true;
+    }
+    k_modifier = false;
+  }
+
+  if(key == (i32) KEY_K) {
+    k_modifier = true;
+    return true;
+  }
+
+  return false;
+}
+
 void class_menu::draw(void) {
   MK61DisplayUpdate update(lcd);
   const int visible_count = (MENU_PUNCT_COUNT < SIZE_MENU_WINDOW) ? MENU_PUNCT_COUNT : SIZE_MENU_WINDOW;
@@ -493,6 +528,10 @@ void class_menu::select(void) {
   do{
     draw();
     const i32 last_key_code = kbd::get_key_wait();
+    if(handle_k_modifier(last_key_code)) {
+      lcd.clear();
+      continue;
+    }
     switch(last_key_code) {
       case KEY_RIGHT_PRESS:
               if(active_punct < (MENU_PUNCT_COUNT-1)) active_punct++;
@@ -519,6 +558,12 @@ void class_menu::select(void) {
 i32 class_menu::select(i32 key) {
   lcd.clear();
   dbgln(MENU, "select entry");
+
+    if(handle_k_modifier(key)) {
+      draw();
+      dbgln(MENU, "select exit");
+      return 0;
+    }
 
     switch(key) {
       case KEY_RIGHT_PRESS:

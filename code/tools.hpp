@@ -59,6 +59,7 @@ static_assert(sizeof(SoundSettings) == 1, "SoundSettings must fit one EEPROM byt
 extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms);
 extern  void  sound_poll(void);
+extern  void  delay_with_sound_poll(t_time_ms duration_ms);
 
 extern  void  message_and_waitkey(const char* lcd_message);
 extern  bool  Confirmation(void);

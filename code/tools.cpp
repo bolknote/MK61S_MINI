@@ -121,6 +121,15 @@ void sound_poll(void) {
   if(sound_active && (i32) (millis() - sound_stop_at) >= 0) sound_stop();
 }
 
+void delay_with_sound_poll(t_time_ms duration_ms) {
+  const t_time_ms stop_at = millis() + duration_ms;
+  do {
+    sound_poll();
+    delay(1);
+  } while((i32) (millis() - stop_at) < 0);
+  sound_poll();
+}
+
 void  sound(usize pin, isize freq_Hz, usize duration_ms) {
   sound_poll();
 
@@ -279,7 +288,7 @@ bool load_from(isize address) {
     dbgln(SPIROM, "SPIFLASH: SLOT IS EMPTY ", address, "Nothing to load! canceled!");
     lcd.print(library_mk61::text(" is empty", " HET"));
     sound(PIN_BUZZER, 4000, 750);
-    delay(1500);
+    delay_with_sound_poll(1500);
     return false; // error
   }
 
@@ -336,8 +345,8 @@ inline bool check_empty_program(void) {
   if(all_to_or == 0) {
     lcd.print(library_mk61::text("No program...", "HET \001PO\005PAMM"));
     sound(PIN_BUZZER, 4000, 750);
-    delay(1500);
-    return true; 
+    delay_with_sound_poll(1500);
+    return true;
   }
   return false;
 }
