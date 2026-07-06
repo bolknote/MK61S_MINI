@@ -7,12 +7,13 @@
 #include "basic.hpp"
 #include "development.hpp"
 #include "focal.hpp"
-#include "usb_mass_storage.hpp"
 
 extern MK61Display lcd;
 extern t_time_ms runtime_ms;
 extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
+extern bool usb_start_mass_storage_mode(void);
+extern void usb_start_terminal_mode(void);
 extern isize mk61_quants_reload;
 
 namespace library_mk61 {
@@ -471,7 +472,17 @@ bool   TurnUsbDisk(void) {
 #endif
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
-  if(was_on && !library_mk61::usb_disk_is_on()) usb_mass_storage::deinit();
+  const bool is_on = library_mk61::usb_disk_is_on();
+  if(was_on && !is_on) {
+    usb_start_terminal_mode();
+  } else if(!was_on && is_on) {
+    if(!usb_start_mass_storage_mode()) {
+      library_mk61::set_usb_disk_state(false);
+      library_mk61::refresh_menu_text();
+      library_mk61::mark_settings_dirty();
+      usb_start_terminal_mode();
+    }
+  }
 
   return action::MENU_BACK;
 }

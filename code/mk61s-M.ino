@@ -81,6 +81,25 @@ time_t auto_start_time;
 
 void key_press_handler(i32 keycode);
 
+bool usb_start_mass_storage_mode(void) {
+  #if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
+    Serial.end();
+    delay(50);
+  #endif
+
+  return usb_mass_storage::init();
+}
+
+void usb_start_terminal_mode(void) {
+  usb_mass_storage::deinit();
+  delay(50);
+
+  #ifdef SERIAL_OUTPUT
+    terminal.init();
+    dbgln(MINI, FIRMWARE_VER);
+  #endif
+}
+
 /* ===================================    Extended ISA variables    ============================================ */
 struct {
   u8          code;
@@ -193,12 +212,9 @@ void setup() {
   library_mk61::load_settings_state();
 
   if(library_mk61::usb_disk_is_on()) {
-    usb_mass_storage::init();
+    if(!usb_start_mass_storage_mode()) usb_start_terminal_mode();
   } else {
-    #ifdef SERIAL_OUTPUT
-      terminal.init();
-    #endif
-    dbgln(MINI, FIRMWARE_VER);
+    usb_start_terminal_mode();
   }
 
   //  kbd::test();
@@ -565,7 +581,7 @@ void  loop() {
       turbo_serial_poll_divider = 0;
     }
 
-    if(terminal_poll_enabled) {
+    if(terminal_poll_enabled && !usb_mass_storage::active()) {
       const i32 key_from_terminal = terminal.serial_input_handler();
       if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
     }
