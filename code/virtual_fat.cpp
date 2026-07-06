@@ -25,7 +25,7 @@ static constexpr u16 MAX_LFN_CHARS = program_store::NAME_SIZE + 3;
 static constexpr u8 MAX_PENDING_WRITES = 3;
 static constexpr u8 MAX_PENDING_DELETES = program_store::MAX_ENTRIES;
 static constexpr u8 WRITE_CACHE_SECTORS = 10;
-static constexpr u8 IGNORED_WRITE_RANGES = 4;
+static constexpr u8 IGNORED_WRITE_RANGES = program_store::MAX_ENTRIES;
 static constexpr u8 FAT_ATTR_VOLUME = 0x08;
 static constexpr u8 FAT_ATTR_DIRECTORY = 0x10;
 static constexpr u8 FAT_ATTR_ARCHIVE = 0x20;
@@ -67,6 +67,13 @@ struct IgnoredWriteRange {
   u16 clusters;
 };
 
+struct ClusterMap {
+  bool used;
+  program_store::ProgramType type;
+  char name[program_store::NAME_SIZE];
+  u16 start_cluster;
+};
+
 struct ParsedDirEntry {
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
@@ -87,6 +94,7 @@ static PendingWrite pending_writes[MAX_PENDING_WRITES];
 static PendingDelete pending_deletes[MAX_PENDING_DELETES];
 static CachedSector write_cache[WRITE_CACHE_SECTORS];
 static IgnoredWriteRange ignored_ranges[IGNORED_WRITE_RANGES];
+static ClusterMap cluster_maps[program_store::MAX_ENTRIES];
 static LfnState root_lfn_state;
 static u32 root_lfn_next_sector = 0;
 static u8 next_cache_slot = 0;
@@ -158,9 +166,19 @@ static int first_program_dir_index(void) {
 #endif
 }
 
+static bool entry_name_visible(const char* name) {
+  return name != NULL && name[0] != 0 && name[0] != '.' && name[0] != '_';
+}
+
 static int file_count(void) {
   int count = 0;
-  for(program_store::ProgramType type : FILE_TYPES) count += program_store::count(type);
+  for(program_store::ProgramType type : FILE_TYPES) {
+    const int type_count = program_store::count(type);
+    for(int i = 0; i < type_count; i++) {
+      program_store::Entry entry;
+      if(program_store::entry(type, i, entry) && entry_name_visible(entry.name)) count++;
+    }
+  }
   const int max_files = ROOT_ENTRIES - 1;
   return (count > max_files) ? max_files : count;
 }
@@ -168,14 +186,90 @@ static int file_count(void) {
 static bool file_entry(int flat_index, program_store::Entry& out) {
   if(flat_index < 0) return false;
 
-  int base = 0;
+  int visible = 0;
   for(program_store::ProgramType type : FILE_TYPES) {
     const int count = program_store::count(type);
-    if(flat_index < base + count) return program_store::entry(type, flat_index - base, out);
-    base += count;
+    for(int i = 0; i < count; i++) {
+      program_store::Entry entry;
+      if(!program_store::entry(type, i, entry) || !entry_name_visible(entry.name)) continue;
+      if(visible++ == flat_index) {
+        out = entry;
+        return true;
+      }
+    }
   }
 
   return false;
+}
+
+static bool same_key(program_store::ProgramType type, const char* name, const ClusterMap& map) {
+  return name != NULL &&
+         map.used &&
+         map.type == type &&
+         strncmp(map.name, name, program_store::NAME_SIZE) == 0;
+}
+
+static ClusterMap* find_cluster_map(program_store::ProgramType type, const char* name) {
+  for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
+    if(same_key(type, name, cluster_maps[i])) return &cluster_maps[i];
+  }
+  return NULL;
+}
+
+static ClusterMap* allocate_cluster_map(void) {
+  for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
+    if(!cluster_maps[i].used) return &cluster_maps[i];
+  }
+  return NULL;
+}
+
+static void forget_cluster_map(program_store::ProgramType type, const char* name) {
+  ClusterMap* map = find_cluster_map(type, name);
+  if(map != NULL) memset(map, 0, sizeof(*map));
+}
+
+static void remember_cluster_map(program_store::ProgramType type, const char* name, u16 start_cluster) {
+  if(name == NULL || name[0] == 0 || start_cluster < first_program_cluster()) {
+    forget_cluster_map(type, name);
+    return;
+  }
+
+  ClusterMap* map = find_cluster_map(type, name);
+  if(map == NULL) map = allocate_cluster_map();
+  if(map == NULL) return;
+
+  memset(map, 0, sizeof(*map));
+  map->used = true;
+  map->type = type;
+  strncpy(map->name, name, program_store::NAME_SIZE - 1);
+  map->name[program_store::NAME_SIZE - 1] = 0;
+  map->start_cluster = start_cluster;
+}
+
+static void rename_cluster_map(program_store::ProgramType type, const char* old_name, const char* new_name, u16 start_cluster) {
+  ClusterMap* map = find_cluster_map(type, old_name);
+  if(map == NULL) {
+    remember_cluster_map(type, new_name, start_cluster);
+    return;
+  }
+
+  strncpy(map->name, new_name, program_store::NAME_SIZE - 1);
+  map->name[program_store::NAME_SIZE - 1] = 0;
+  map->start_cluster = start_cluster;
+}
+
+static u16 compact_start_cluster_for_file(int flat_index) {
+  u16 cluster = first_program_cluster();
+  for(int i = 0; i < flat_index; i++) {
+    program_store::Entry entry;
+    if(file_entry(i, entry)) cluster = (u16) (cluster + clusters_for_len(entry.data_len));
+  }
+  return cluster;
+}
+
+static u16 mapped_start_cluster_for_file(int flat_index, const program_store::Entry& entry) {
+  ClusterMap* map = find_cluster_map(entry.type, entry.name);
+  return (map != NULL && map->start_cluster >= first_program_cluster()) ? map->start_cluster : compact_start_cluster_for_file(flat_index);
 }
 
 static u16 data_cluster_count(void) {
@@ -183,7 +277,14 @@ static u16 data_cluster_count(void) {
   const int count = file_count();
   for(int i = 0; i < count; i++) {
     program_store::Entry entry;
-    if(file_entry(i, entry)) clusters = (u16) (clusters + clusters_for_len(entry.data_len));
+    if(!file_entry(i, entry)) continue;
+
+    const u16 used = clusters_for_len(entry.data_len);
+    if(used == 0) continue;
+    const u16 start_cluster = mapped_start_cluster_for_file(i, entry);
+    const u16 end_cluster = (u16) (start_cluster + used);
+    const u16 needed = (end_cluster > FIRST_DATA_CLUSTER) ? (u16) (end_cluster - FIRST_DATA_CLUSTER) : 0;
+    if(needed > clusters) clusters = needed;
   }
   return clusters;
 }
@@ -289,18 +390,17 @@ static void read_boot_sector(u8* out) {
 static bool cluster_info(u16 cluster, program_store::Entry& out, u16& start_cluster) {
   if(cluster < FIRST_DATA_CLUSTER) return false;
 
-  u16 current = first_program_cluster();
   const int count = file_count();
   for(int i = 0; i < count; i++) {
     program_store::Entry entry;
     if(!file_entry(i, entry)) continue;
+    const u16 current = mapped_start_cluster_for_file(i, entry);
     const u16 used = clusters_for_len(entry.data_len);
     if(cluster >= current && cluster < (u16) (current + used)) {
       out = entry;
       start_cluster = current;
       return true;
     }
-    current = (u16) (current + used);
   }
 
   return false;
@@ -498,12 +598,9 @@ static void fill_lfn_entry(u8* out, const char* full_name, u8 sequence, u8 total
 }
 
 static u16 start_cluster_for_file(int flat_index) {
-  u16 cluster = first_program_cluster();
-  for(int i = 0; i < flat_index; i++) {
-    program_store::Entry entry;
-    if(file_entry(i, entry)) cluster = (u16) (cluster + clusters_for_len(entry.data_len));
-  }
-  return cluster;
+  program_store::Entry entry;
+  if(file_entry(flat_index, entry)) return mapped_start_cluster_for_file(flat_index, entry);
+  return compact_start_cluster_for_file(flat_index);
 }
 
 static void fill_dir_entry(u8* out, const program_store::Entry& entry, int flat_index) {
@@ -695,9 +792,14 @@ static bool read_pending_data_sector(u16 cluster, u8* out) {
   if(pending == NULL) return false;
 
   const u16 sector_index = (u16) (cluster - pending->start_cluster);
-  if(sector_index >= 8 || (pending->sectors_seen & (1U << sector_index)) == 0) return false;
+  if(sector_index >= 8) return false;
 
   memset(out, 0, SECTOR_SIZE);
+  if((pending->sectors_seen & (1U << sector_index)) == 0) {
+    (void) read_buffered_sector(cluster, out);
+    return true;
+  }
+
   const u16 offset = (u16) (sector_index * SECTOR_SIZE);
   const u16 remaining = (pending->data_len > offset) ? (u16) (pending->data_len - offset) : 0;
   const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
@@ -715,7 +817,10 @@ static bool read_data_sector(u32 data_sector, u8* out) {
 
   program_store::Entry entry;
   u16 start_cluster = 0;
-  if(!cluster_info(cluster, entry, start_cluster)) return read_buffered_sector(cluster, out);
+  if(!cluster_info(cluster, entry, start_cluster)) {
+    (void) read_buffered_sector(cluster, out);
+    return true;
+  }
 
   const u16 file_offset = (u16) ((cluster - start_cluster) * SECTOR_SIZE);
   u16 copied = 0;
@@ -797,6 +902,8 @@ static bool parse_extension(const u8* ext, program_store::ProgramType& type) {
 }
 
 static bool parse_lfn_filename(const char* full_name, ParsedDirEntry& parsed) {
+  if(full_name == NULL || full_name[0] == '.') return false;
+
   int dot = -1;
   int len = 0;
   while(len <= (int) MAX_LFN_CHARS && full_name[len] != 0) {
@@ -823,6 +930,7 @@ static bool parse_lfn_filename(const char* full_name, ParsedDirEntry& parsed) {
 
 static bool parse_short_filename(const u8* item, ParsedDirEntry& parsed) {
   if(!parse_extension(item + 8, parsed.type)) return false;
+  if(item[0] == '.' || item[0] == '_') return false;
   u8 name_len = 0;
   bool padding = false;
   for(u8 i = 0; i < 8; i++) {
@@ -1004,6 +1112,7 @@ static bool try_commit_pending(PendingWrite& pending) {
   const u16 start_cluster = pending.start_cluster;
   const u16 clusters = clusters_for_len(pending.data_len);
   if(!program_store::write(pending.type, pending.name, pending.data, pending.data_len)) return false;
+  remember_cluster_map(pending.type, pending.name, start_cluster);
   forget_cached_range(start_cluster, clusters);
   memset(&pending, 0, sizeof(pending));
   return true;
@@ -1110,6 +1219,19 @@ static void clear_ignored_ranges(void) {
   next_ignored_slot = 0;
 }
 
+void reset_session(void) {
+  memset(pending_writes, 0, sizeof(pending_writes));
+  memset(pending_deletes, 0, sizeof(pending_deletes));
+  memset(write_cache, 0, sizeof(write_cache));
+  memset(ignored_ranges, 0, sizeof(ignored_ranges));
+  memset(cluster_maps, 0, sizeof(cluster_maps));
+  memset(&root_lfn_state, 0, sizeof(root_lfn_state));
+  root_lfn_next_sector = 0;
+  next_cache_slot = 0;
+  next_ignored_slot = 0;
+  program_store::vfat_stage_clear();
+}
+
 bool flush_pending(void) {
   tracef("SYNC");
   bool ok = true;
@@ -1130,6 +1252,7 @@ bool flush_pending(void) {
       ok = false;
       continue;
     }
+    forget_cluster_map(pending.type, pending.name);
     memset(&pending, 0, sizeof(pending));
   }
   clear_ignored_ranges();
@@ -1139,7 +1262,9 @@ bool flush_pending(void) {
 static bool rename_committed_entry(const ParsedDirEntry& parsed, const char* old_name) {
   if(strncmp(old_name, parsed.name, program_store::NAME_SIZE) == 0) return true;
   tracef("RENAME %s.%s -> %s.%s", old_name, extension_for_type(parsed.type), parsed.name, extension_for_type(parsed.type));
-  return program_store::rename(parsed.type, old_name, parsed.name);
+  if(!program_store::rename(parsed.type, old_name, parsed.name)) return false;
+  rename_cluster_map(parsed.type, old_name, parsed.name, parsed.start_cluster);
+  return true;
 }
 
 static bool try_rename_existing_entry(int dir_index, const ParsedDirEntry& parsed) {
@@ -1289,6 +1414,7 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
       continue;
     }
     if((attr & FAT_ATTR_DIRECTORY) != 0) {
+      ignore_write_range(get_le16(item, 26), SECTOR_SIZE);
       reset_lfn_state(lfn);
       continue;
     }

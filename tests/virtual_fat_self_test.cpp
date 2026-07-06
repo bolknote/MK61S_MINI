@@ -43,6 +43,13 @@ static u16 read_le16(const u8* data, u16 offset) {
   return (u16) (data[offset] | ((u16) data[offset + 1] << 8));
 }
 
+static u32 read_le32(const u8* data, u16 offset) {
+  return (u32) data[offset] |
+         ((u32) data[offset + 1] << 8) |
+         ((u32) data[offset + 2] << 16) |
+         ((u32) data[offset + 3] << 24);
+}
+
 static void write_le16(u8* data, u16 offset, u16 value) {
   data[offset] = (u8) (value & 0xFF);
   data[offset + 1] = (u8) (value >> 8);
@@ -211,15 +218,7 @@ namespace {
 
 static void reset_virtual_fat_state(void) {
   program_store::format();
-  memset(virtual_fat::pending_writes, 0, sizeof(virtual_fat::pending_writes));
-  memset(virtual_fat::pending_deletes, 0, sizeof(virtual_fat::pending_deletes));
-  memset(virtual_fat::write_cache, 0, sizeof(virtual_fat::write_cache));
-  memset(virtual_fat::ignored_ranges, 0, sizeof(virtual_fat::ignored_ranges));
-  program_store::vfat_stage_clear();
-  memset(&virtual_fat::root_lfn_state, 0, sizeof(virtual_fat::root_lfn_state));
-  virtual_fat::root_lfn_next_sector = 0;
-  virtual_fat::next_cache_slot = 0;
-  virtual_fat::next_ignored_slot = 0;
+  virtual_fat::reset_session();
 }
 
 static u32 root_lba(void) {
@@ -257,6 +256,23 @@ static void fill_short_dir_entry(u8* entry, const char* short_name, u16 cluster,
   entry[11] = 0x20;
   write_le16(entry, 26, cluster);
   write_le32(entry, 28, len);
+}
+
+static const u8* first_archive_entry(const u8* root) {
+  for(u8 i = 0; i < 16; i++) {
+    const u8* entry = root + (u16) i * 32;
+    if(entry[0] != 0 && entry[11] == 0x20) return entry;
+  }
+  return NULL;
+}
+
+static u8 archive_entry_count(const u8* root) {
+  u8 count = 0;
+  for(u8 i = 0; i < 16; i++) {
+    const u8* entry = root + (u16) i * 32;
+    if(entry[0] != 0 && entry[11] == 0x20) count++;
+  }
+  return count;
 }
 
 static void test_lfn_aliases_are_unique(void) {
@@ -370,6 +386,133 @@ static void test_staging_survives_mass_copy_before_directory_update(void) {
   }
 }
 
+static void test_hidden_stored_entries_do_not_shift_visible_files(void) {
+  reset_virtual_fat_state();
+
+  u8 hidden[512];
+  memset(hidden, 0xA7, sizeof(hidden));
+  assert(program_store::write(program_store::ProgramType::FOCAL, "_PI", hidden, sizeof(hidden)));
+
+  u8 visible[169];
+  memset(visible, 0x51, sizeof(visible));
+  assert(program_store::write(program_store::ProgramType::FOCAL, "PI", visible, sizeof(visible)));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  assert(archive_entry_count(root) == 1);
+
+  const u8* pi_entry = first_archive_entry(root);
+  assert(pi_entry != NULL);
+  assert(memcmp(pi_entry, "PI      FOC", 11) == 0);
+  assert(read_le16(pi_entry, 26) == 2);
+  assert(read_le32(pi_entry, 28) == sizeof(visible));
+
+  u8 readback[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(data_lba(), readback));
+  assert(readback[0] == 0x51);
+  assert(readback[168] == 0x51);
+  assert(readback[169] == 0);
+}
+
+static void test_appledouble_entry_does_not_relocate_visible_file(void) {
+  reset_virtual_fat_state();
+
+  const u16 sidecar_cluster = 2;
+  const u16 real_cluster = 10;
+
+  u8 sidecar[virtual_fat::SECTOR_SIZE];
+  memset(sidecar, 0xA5, sizeof(sidecar));
+  for(u8 i = 0; i < 8; i++) {
+    assert(virtual_fat::write_sector(data_lba() + i, sidecar));
+  }
+
+  u8 real[virtual_fat::SECTOR_SIZE];
+  memset(real, 0x51, sizeof(real));
+  assert(virtual_fat::write_sector(data_lba() + real_cluster - 2, real));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+
+  const u8 hidden_short[11] = {'_', 'P', 'I', ' ', ' ', ' ', ' ', ' ', 'F', 'O', 'C'};
+  virtual_fat::fill_lfn_entry(root + 32, "._PI.FOC", 1, 1, virtual_fat::short_name_checksum(hidden_short));
+  fill_short_dir_entry(root + 64, "_PI     FOC", sidecar_cluster, 4096);
+  fill_short_dir_entry(root + 96, "PI      FOC", real_cluster, 169);
+
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+  assert(!program_store::exists(program_store::ProgramType::FOCAL, "_PI"));
+
+  u8 stored[169];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::FOCAL, "PI", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(stored[0] == 0x51);
+  assert(stored[168] == 0x51);
+
+  u8 generated_root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), generated_root));
+  assert(archive_entry_count(generated_root) == 1);
+  const u8* pi_entry = first_archive_entry(generated_root);
+  assert(pi_entry != NULL);
+  assert(memcmp(pi_entry, "PI      FOC", 11) == 0);
+  assert(read_le16(pi_entry, 26) == real_cluster);
+  assert(read_le32(pi_entry, 28) == sizeof(stored));
+
+  assert(fat12_entry(sidecar_cluster) == 0x000);
+  assert(fat12_entry(real_cluster) == 0x0FFF);
+
+  u8 readback[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(data_lba() + real_cluster - 2, readback));
+  assert(readback[0] == 0x51);
+  assert(readback[168] == 0x51);
+  assert(readback[169] == 0);
+
+  u8 free_read[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(data_lba(), free_read));
+  assert(free_read[0] == 0);
+}
+
+static void test_ignored_directory_does_not_relocate_visible_file(void) {
+  reset_virtual_fat_state();
+
+  const u16 dir_cluster = 2;
+  const u16 real_cluster = 3;
+
+  u8 dir_data[virtual_fat::SECTOR_SIZE];
+  memset(dir_data, 0xD1, sizeof(dir_data));
+  assert(virtual_fat::write_sector(data_lba() + dir_cluster - 2, dir_data));
+
+  u8 real[virtual_fat::SECTOR_SIZE];
+  memset(real, 0x52, sizeof(real));
+  assert(virtual_fat::write_sector(data_lba() + real_cluster - 2, real));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 32, "FSEVENTS   ", dir_cluster, 0);
+  root[32 + 11] = 0x10;
+  fill_short_dir_entry(root + 64, "PI      FOC", real_cluster, 169);
+
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 generated_root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), generated_root));
+  assert(archive_entry_count(generated_root) == 1);
+  const u8* pi_entry = first_archive_entry(generated_root);
+  assert(pi_entry != NULL);
+  assert(memcmp(pi_entry, "PI      FOC", 11) == 0);
+  assert(read_le16(pi_entry, 26) == real_cluster);
+
+  assert(fat12_entry(dir_cluster) == 0x000);
+  assert(fat12_entry(real_cluster) == 0x0FFF);
+
+  u8 readback[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(data_lba() + real_cluster - 2, readback));
+  assert(readback[0] == 0x52);
+  assert(readback[168] == 0x52);
+  assert(readback[169] == 0);
+}
+
 static void test_mass_delete_queues_whole_directory_sector(void) {
   reset_virtual_fat_state();
 
@@ -403,6 +546,9 @@ int main(void) {
   test_staging_does_not_shadow_committed_file_data();
   test_staged_cluster_is_not_advertised_as_free();
   test_staging_survives_mass_copy_before_directory_update();
+  test_hidden_stored_entries_do_not_shift_visible_files();
+  test_appledouble_entry_does_not_relocate_visible_file();
+  test_ignored_directory_does_not_relocate_visible_file();
   test_mass_delete_queues_whole_directory_sector();
   printf("virtual_fat_self_test: ok\n");
   return 0;

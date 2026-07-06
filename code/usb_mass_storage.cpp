@@ -191,6 +191,8 @@ bool init(void) {
   if(initialized) return true;
   if(!library_mk61::usb_disk_is_on()) return false;
 
+  virtual_fat::reset_session();
+
   if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) return false;
   if(USBD_RegisterClass(&usb_device, USBD_MSC_CLASS) != USBD_OK) return false;
   if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) return false;
