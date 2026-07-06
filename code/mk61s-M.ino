@@ -395,6 +395,7 @@ static bool user_short_press_pending = false;
 
 void   mk61_menu_hook(i32 key) {
     if(key >= 0) {
+      #if MK61_USER_GAMES_MENU_SHORTCUT
       if(key == KEY_USER_PRESS) {
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
         lcd_ru::restore_default_font();
@@ -407,6 +408,7 @@ void   mk61_menu_hook(i32 key) {
         }
         return;
       }
+      #endif
 
       const i32 result = mk61_menu.select(kbd::get_key());
       if( result < 0) {
@@ -418,11 +420,13 @@ void   mk61_menu_hook(i32 key) {
 }
 
 void   mk61_baseloop_hook(i32 key) {
+  #if MK61_USER_GAMES_MENU_SHORTCUT
   if(key == KEY_USER_PRESS && !core_61::edit_program) {
     kbd::get_key(); // сервисная клавиша, не передаем ее в автомат МК-61
     user_short_press_pending = true;
     return;
   }
+  #endif
 
   switch(key) {
     case  KEY_USER_RELEASE:
@@ -433,10 +437,12 @@ void   mk61_baseloop_hook(i32 key) {
           insert_cmd_in_program(mk61_IP, MK61_NOP);
           //disassembler.enable(); //cache_IP_mk61 = MK61_ip + 1; 
           //lcd_std_display_redraw();
+        #if MK61_USER_GAMES_MENU_SHORTCUT
         } else if(user_short_press_pending) {
           user_short_press_pending = false;
           mk61_games_select();
           lcd_std_display_redraw();
+        #endif
         }
       break;
     case  KEY_ESC_PRESS:
@@ -566,7 +572,9 @@ void idle_main_process(void) {
 void event_hold_key(i32 holded_key, i32 hold_quant) {
   switch(holded_key) {
       case KEY_USER_PRESS: // Удержание USER KEY, вывод стека XYZT на экран
+          #if MK61_USER_GAMES_MENU_SHORTCUT
           user_short_press_pending = false;
+          #endif
           lcd_hooked = true;  // перехват экрана
           dbgln(MENU, "HOLD [USER], quant = ", hold_quant);
           lcd_stack_output();
@@ -579,7 +587,9 @@ void event_hold_key(i32 holded_key, i32 hold_quant) {
 void event_unhold_key(i32 unholded_key, i32 hold_quant) {
   switch(unholded_key) {
       case KEY_USER_PRESS:
+          #if MK61_USER_GAMES_MENU_SHORTCUT
           user_short_press_pending = false;
+          #endif
           lcd_hooked = false;
           dbgln(MENU, "UNHOLD [USER], quant = ", hold_quant);
           kbd::exclude_before(KEY_USER_PRESS); // уберем все коды отпускания/нажатия клавиш включая нажатие KEY_USER, из очереди клавиатуры
