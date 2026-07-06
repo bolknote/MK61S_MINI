@@ -306,7 +306,7 @@ static u16 vfat_stage_current_ref(void) {
 
 static u32 vfat_stage_capacity_bytes(void) {
 #ifdef SPI_FLASH
-  return (u32) flash.getCapacity() * 1024UL;
+  return flash.getCapacity();
 #else
   return 0;
 #endif
