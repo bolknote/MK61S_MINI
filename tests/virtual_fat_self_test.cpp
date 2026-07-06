@@ -159,9 +159,11 @@ static void reset_virtual_fat_state(void) {
   memset(virtual_fat::pending_writes, 0, sizeof(virtual_fat::pending_writes));
   memset(virtual_fat::pending_deletes, 0, sizeof(virtual_fat::pending_deletes));
   memset(virtual_fat::write_cache, 0, sizeof(virtual_fat::write_cache));
+  memset(virtual_fat::ignored_ranges, 0, sizeof(virtual_fat::ignored_ranges));
   memset(&virtual_fat::root_lfn_state, 0, sizeof(virtual_fat::root_lfn_state));
   virtual_fat::root_lfn_next_sector = 0;
   virtual_fat::next_cache_slot = 0;
+  virtual_fat::next_ignored_slot = 0;
 }
 
 static u32 root_lba(void) {

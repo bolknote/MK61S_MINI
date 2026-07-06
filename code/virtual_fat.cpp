@@ -24,7 +24,8 @@ static constexpr u16 MAX_IMPORTED_LEN = 640;
 static constexpr u16 MAX_LFN_CHARS = program_store::NAME_SIZE + 3;
 static constexpr u8 MAX_PENDING_WRITES = 3;
 static constexpr u8 MAX_PENDING_DELETES = 3;
-static constexpr u8 WRITE_CACHE_SECTORS = 6;
+static constexpr u8 WRITE_CACHE_SECTORS = 10;
+static constexpr u8 IGNORED_WRITE_RANGES = 4;
 static constexpr u8 FAT_ATTR_VOLUME = 0x08;
 static constexpr u8 FAT_ATTR_DIRECTORY = 0x10;
 static constexpr u8 FAT_ATTR_ARCHIVE = 0x20;
@@ -60,6 +61,12 @@ struct CachedSector {
   u8 data[SECTOR_SIZE];
 };
 
+struct IgnoredWriteRange {
+  bool used;
+  u16 start_cluster;
+  u16 clusters;
+};
+
 struct ParsedDirEntry {
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
@@ -79,9 +86,18 @@ struct LfnState {
 static PendingWrite pending_writes[MAX_PENDING_WRITES];
 static PendingDelete pending_deletes[MAX_PENDING_DELETES];
 static CachedSector write_cache[WRITE_CACHE_SECTORS];
+static IgnoredWriteRange ignored_ranges[IGNORED_WRITE_RANGES];
 static LfnState root_lfn_state;
 static u32 root_lfn_next_sector = 0;
 static u8 next_cache_slot = 0;
+static u8 next_ignored_slot = 0;
+
+static bool sector_is_zero(const u8* data) {
+  for(u16 i = 0; i < SECTOR_SIZE; i++) {
+    if(data[i] != 0) return false;
+  }
+  return true;
+}
 
 #if defined(MK61_VFAT_TRACE)
 static constexpr u8 TRACE_LINES = 96;
@@ -288,6 +304,12 @@ static bool cluster_info(u16 cluster, program_store::Entry& out, u16& start_clus
   }
 
   return false;
+}
+
+static bool committed_cluster(u16 cluster) {
+  program_store::Entry entry;
+  u16 start_cluster = 0;
+  return cluster_info(cluster, entry, start_cluster);
 }
 
 static PendingWrite* pending_for_cluster(u16 cluster) {
@@ -971,6 +993,75 @@ static bool cache_has_all_data(u16 start_cluster, u16 data_len) {
   return true;
 }
 
+static bool ranges_overlap(u16 start_a, u16 clusters_a, u16 start_b, u16 clusters_b) {
+  if(clusters_a == 0 || clusters_b == 0) return false;
+  const u16 end_a = (u16) (start_a + clusters_a);
+  const u16 end_b = (u16) (start_b + clusters_b);
+  return start_a < end_b && start_b < end_a;
+}
+
+static void forget_cached_range(u16 start_cluster, u16 clusters) {
+  if(clusters == 0) return;
+  for(u8 i = 0; i < WRITE_CACHE_SECTORS; i++) {
+    CachedSector& cached = write_cache[i];
+    if(!cached.used) continue;
+    if(cached.cluster >= start_cluster && cached.cluster < (u16) (start_cluster + clusters)) cached.used = false;
+  }
+}
+
+static bool ignored_cluster(u16 cluster) {
+  for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
+    const IgnoredWriteRange& range = ignored_ranges[i];
+    if(!range.used) continue;
+    if(cluster >= range.start_cluster && cluster < (u16) (range.start_cluster + range.clusters)) return true;
+  }
+  return false;
+}
+
+static void clear_ignored_range(u16 start_cluster, u16 data_len) {
+  if(data_len == 0 || start_cluster < FIRST_DATA_CLUSTER) return;
+  const u16 clusters = clusters_for_len(data_len);
+  for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
+    IgnoredWriteRange& range = ignored_ranges[i];
+    if(!range.used) continue;
+    if(ranges_overlap(start_cluster, clusters, range.start_cluster, range.clusters)) range.used = false;
+  }
+}
+
+static void ignore_write_range(u16 start_cluster, u32 data_len) {
+  if(data_len == 0 || start_cluster < FIRST_DATA_CLUSTER) return;
+  if(data_len > (u32) DATA_CLUSTER_CAPACITY * SECTOR_SIZE) return;
+
+  const u16 clusters = (u16) ((data_len + SECTOR_SIZE - 1) / SECTOR_SIZE);
+  if(clusters == 0) return;
+
+  IgnoredWriteRange* range = NULL;
+  for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
+    if(!ignored_ranges[i].used) {
+      range = &ignored_ranges[i];
+      break;
+    }
+  }
+  if(range == NULL) {
+    range = &ignored_ranges[next_ignored_slot];
+    next_ignored_slot = (u8) ((next_ignored_slot + 1) % IGNORED_WRITE_RANGES);
+  }
+
+  range->used = true;
+  range->start_cluster = start_cluster;
+  range->clusters = clusters;
+  forget_cached_range(start_cluster, clusters);
+}
+
+static void ignore_dir_entry_range(const u8* item) {
+  ignore_write_range(get_le16(item, 26), get_le32(item, 28));
+}
+
+static void clear_ignored_ranges(void) {
+  memset(ignored_ranges, 0, sizeof(ignored_ranges));
+  next_ignored_slot = 0;
+}
+
 bool flush_pending(void) {
   tracef("SYNC");
   bool ok = true;
@@ -994,6 +1085,7 @@ bool flush_pending(void) {
     }
     memset(&pending, 0, sizeof(pending));
   }
+  clear_ignored_ranges();
   return ok;
 }
 
@@ -1154,6 +1246,7 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
       continue;
     }
     if(has_lfn && lfn_name == NULL) {
+      ignore_dir_entry_range(item);
       reset_lfn_state(lfn);
       continue;
     }
@@ -1166,7 +1259,11 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
     bool parsed_ok = parse_dir_entry(item, lfn_name, parsed);
     if(!parsed_ok && lfn_name == NULL) parsed_ok = parse_generated_dir_entry(dir_index, item, parsed);
     reset_lfn_state(lfn);
-    if(!parsed_ok) continue;
+    if(!parsed_ok) {
+      ignore_dir_entry_range(item);
+      continue;
+    }
+    clear_ignored_range(parsed.start_cluster, parsed.data_len);
     tracef("DIR %d %s.%s c=%u len=%u", dir_index, parsed.name, extension_for_type(parsed.type), parsed.start_cluster, parsed.data_len);
     if(!upsert_pending(parsed, dir_index)) return false;
   }
@@ -1194,10 +1291,24 @@ static void cache_data_sector(u16 cluster, const u8* data) {
 static bool write_data_sector(u32 data_sector, const u8* data) {
   const u16 cluster = (u16) (data_sector + FIRST_DATA_CLUSTER);
   if(trace_cluster(cluster)) return true;
-  cache_data_sector(cluster, data);
 
   PendingWrite* pending = pending_for_cluster(cluster);
-  if(pending == NULL) return write_committed_data_sector(cluster, data);
+  if(pending == NULL) {
+    if(committed_cluster(cluster)) {
+      cache_data_sector(cluster, data);
+      return write_committed_data_sector(cluster, data);
+    }
+    if(ignored_cluster(cluster)) {
+      return true;
+    }
+    if(sector_is_zero(data)) {
+      return true;
+    }
+    cache_data_sector(cluster, data);
+    return true;
+  }
+
+  cache_data_sector(cluster, data);
 
   const u16 sector_index = (u16) (cluster - pending->start_cluster);
   if(sector_index >= 8) {
