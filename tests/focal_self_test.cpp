@@ -17,8 +17,12 @@ extern "C" const char* FocalTestLcdLine(int row);
 extern "C" const char* FocalTestError(void);
 extern "C" void FocalTestDrawNewEditor(const char* source, int cursor);
 extern "C" void FocalTestDrawNewEditorSms(const char* source, int cursor);
+extern "C" void FocalTestSetLcdRows(int rows);
+extern "C" int FocalTestEnsureViewTop(const char* source, int cursor, int view_top);
+extern "C" void FocalTestDrawNewEditorAt(const char* source, int cursor, int view_top);
 extern "C" int FocalTestMoveCursorLine(const char* source, int cursor, int delta);
 extern "C" int FocalTestMoveCursorHorizontal(const char* source, int cursor, int delta);
+extern "C" int FocalTestMoveCursorLineKey(const char* source, int cursor, int key_code);
 extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int size);
 
 static int failures;
@@ -284,6 +288,29 @@ static void test_editor_draws_visible_program_lines(void) {
   CHECK_STARTS(FocalTestLcdLine(3), " 1.40 COMMENT");
 }
 
+static void test_editor_two_line_viewport_scrolls_like_a00(void) {
+  FocalTestReset();
+  FocalTestSetLcdRows(2);
+
+  const char* one_line_and_new = "1.10 ASK X\n";
+  int view_top = FocalTestEnsureViewTop(one_line_and_new, (int) std::strlen(one_line_and_new), 0);
+  CHECK(view_top == 0);
+  FocalTestDrawNewEditorAt(one_line_and_new, (int) std::strlen(one_line_and_new), view_top);
+  CHECK_STARTS(FocalTestLcdLine(0), " 1.10 ASK X");
+  CHECK(FocalTestLcdLine(1)[0] == '>');
+  CHECK(FocalTestLcdLine(1)[1] == (char) 0xFF);
+
+  const char* two_lines_and_new = "1.10 ASK X\n1.20 PRINT X\n";
+  view_top = FocalTestEnsureViewTop(two_lines_and_new, (int) std::strlen(two_lines_and_new), view_top);
+  CHECK(view_top == 11);
+  FocalTestDrawNewEditorAt(two_lines_and_new, (int) std::strlen(two_lines_and_new), view_top);
+  CHECK_STARTS(FocalTestLcdLine(0), " 1.20 PRINT X");
+  CHECK(FocalTestLcdLine(1)[0] == '>');
+  CHECK(FocalTestLcdLine(1)[1] == (char) 0xFF);
+
+  FocalTestSetLcdRows(4);
+}
+
 static void test_editor_line_navigation(void) {
   const char* source = "ABC\nD\nEFGH";
   CHECK(FocalTestMoveCursorLine(source, 1, 1) == 5);
@@ -291,6 +318,8 @@ static void test_editor_line_navigation(void) {
   CHECK(FocalTestMoveCursorLine(source, 7, -1) == 5);
   CHECK(FocalTestMoveCursorHorizontal(source, 3, 1) == 3);
   CHECK(FocalTestMoveCursorHorizontal(source, 4, -1) == 4);
+  CHECK(FocalTestMoveCursorLineKey(source, 5, 32) == 1);
+  CHECK(FocalTestMoveCursorLineKey(source, 1, 33) == 5);
 }
 
 int main(void) {
@@ -310,6 +339,7 @@ int main(void) {
   test_editor_backspace_is_f_left();
   test_editor_draws_cursor();
   test_editor_draws_visible_program_lines();
+  test_editor_two_line_viewport_scrolls_like_a00();
   test_editor_line_navigation();
 
   if(failures != 0) {
