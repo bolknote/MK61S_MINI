@@ -211,11 +211,15 @@ void setup() {
 
   library_mk61::load_settings_state();
 
+  #ifdef MK61_FOCAL_TRACE
+    usb_start_terminal_mode();
+  #else
   if(library_mk61::usb_disk_is_on()) {
     if(!usb_start_mass_storage_mode()) usb_start_terminal_mode();
   } else {
     usb_start_terminal_mode();
   }
+  #endif
 
   //  kbd::test();
   kbd::init();

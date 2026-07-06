@@ -11,6 +11,7 @@
 extern "C" void FocalTestReset(void);
 extern "C" bool FocalTestCompile(const char* source);
 extern "C" int FocalTestAddProgram(const char* source);
+extern "C" void FocalTestSetAskValue(double value);
 extern "C" void FocalTestRun(int slot);
 extern "C" double FocalTestNumber(const char* name);
 extern "C" const char* FocalTestLcdLine(int row);
@@ -76,6 +77,27 @@ static void test_print_newline(void) {
   FocalTestRun(slot);
   CHECK_STARTS(FocalTestLcdLine(0), "7");
   CHECK_STARTS(FocalTestLcdLine(1), "9");
+}
+
+static void test_ask_leibniz_pi_program(void) {
+  FocalTestReset();
+  FocalTestSetAskValue(3.0);
+  const int slot = add_program(
+    "01.20 ASK N\n"
+    "01.30 SET S=0\n"
+    "01.40 SET Q=1\n"
+    "01.50 SET D=1\n"
+    "01.60 FOR I=1,N; DO 2\n"
+    "01.70 SET P=4*S\n"
+    "01.80 PRINT P\n"
+    "01.90 EXIT\n"
+    "02.10 SET S=S+Q/D\n"
+    "02.20 SET Q=-Q\n"
+    "02.30 SET D=D+2");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("N"), 3.0);
+  CHECK_NEAR(FocalTestNumber("P"), 3.4666666667);
+  CHECK_STARTS(FocalTestLcdLine(0), "3.4666667");
 }
 
 static void test_for_loop_sum(void) {
@@ -334,6 +356,7 @@ int main(void) {
   test_compile_rejects_basic_aliases();
   test_arithmetic_and_print();
   test_print_newline();
+  test_ask_leibniz_pi_program();
   test_for_loop_sum();
   test_for_loop_start_step_end();
   test_do_exact_line();

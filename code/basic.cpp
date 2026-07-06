@@ -680,6 +680,108 @@ static void basic_copy_name(char* dst, const char* src) {
   dst[i] = 0;
 }
 
+static void basic_copy_text(char* dst, usize dst_size, const char* src) {
+  if(dst_size == 0) return;
+  if(src == NULL) src = "";
+  strncpy(dst, src, dst_size - 1);
+  dst[dst_size - 1] = 0;
+}
+
+static void basic_append_char(char*& out, char* end, char ch) {
+  if(out < end) *out++ = ch;
+}
+
+static void basic_append_uint(char*& out, char* end, unsigned long long value) {
+  char digits[24];
+  u8 count = 0;
+  do {
+    digits[count++] = (char) ('0' + (value % 10ULL));
+    value /= 10ULL;
+  } while(value > 0 && count < sizeof(digits));
+  while(count > 0) basic_append_char(out, end, digits[--count]);
+}
+
+static void basic_format_fixed(double value, int decimals, char* out, usize size) {
+  if(size == 0) return;
+  if(decimals < 0) decimals = 0;
+  if(decimals > 12) decimals = 12;
+
+  const bool negative = value < 0.0;
+  double abs_value = negative ? -value : value;
+  unsigned long long scale = 1ULL;
+  for(int i = 0; i < decimals; i++) scale *= 10ULL;
+
+  const unsigned long long scaled = (unsigned long long) (abs_value * (double) scale + 0.5);
+  const unsigned long long integer = scaled / scale;
+  unsigned long long fraction = (scale == 0ULL) ? 0ULL : (scaled % scale);
+
+  char temp[40];
+  char* cursor = temp;
+  char* end = temp + sizeof(temp) - 1;
+  if(negative && scaled != 0ULL) basic_append_char(cursor, end, '-');
+  basic_append_uint(cursor, end, integer);
+  if(decimals > 0) {
+    basic_append_char(cursor, end, '.');
+    char fractional[13];
+    for(int i = decimals - 1; i >= 0; i--) {
+      fractional[i] = (char) ('0' + (fraction % 10ULL));
+      fraction /= 10ULL;
+    }
+    for(int i = 0; i < decimals; i++) basic_append_char(cursor, end, fractional[i]);
+    while(cursor > temp && *(cursor - 1) == '0') cursor--;
+    if(cursor > temp && *(cursor - 1) == '.') cursor--;
+  }
+  *cursor = 0;
+  basic_copy_text(out, size, temp);
+}
+
+static void basic_format_number(double value, char* out, usize size) {
+  if(size == 0) return;
+  if(isnan(value)) {
+    basic_copy_text(out, size, "NAN");
+    return;
+  }
+  if(isinf(value)) {
+    basic_copy_text(out, size, value < 0.0 ? "-INF" : "INF");
+    return;
+  }
+  if(value == 0.0) {
+    basic_copy_text(out, size, "0");
+    return;
+  }
+
+  const double abs_value = fabs(value);
+  int exp10 = (int) floor(log10(abs_value));
+  if(exp10 >= 8 || exp10 < -4) {
+    char mantissa[24];
+    double scaled = value / pow(10.0, (double) exp10);
+    basic_format_fixed(scaled, 7, mantissa, sizeof(mantissa));
+    if(mantissa[0] == '1' && mantissa[1] == '0') {
+      exp10++;
+      basic_format_fixed(value < 0.0 ? -1.0 : 1.0, 7, mantissa, sizeof(mantissa));
+    }
+    char temp[32];
+    basic_copy_text(temp, sizeof(temp), mantissa);
+    strncat(temp, "E", sizeof(temp) - strlen(temp) - 1);
+    char* cursor = temp + strlen(temp);
+    char* end = temp + sizeof(temp) - 1;
+    if(exp10 < 0) {
+      basic_append_char(cursor, end, '-');
+      basic_append_uint(cursor, end, (unsigned long long) -exp10);
+    } else {
+      basic_append_char(cursor, end, '+');
+      basic_append_uint(cursor, end, (unsigned long long) exp10);
+    }
+    *cursor = 0;
+    basic_copy_text(out, size, temp);
+    return;
+  }
+
+  int decimals = 7 - exp10;
+  if(decimals < 0) decimals = 0;
+  basic_format_fixed(value, decimals, out, size);
+}
+
 static void basic_display_program_name(const char* name, char* out, usize size) {
   if(size == 0) return;
   out[0] = 0;
@@ -1786,6 +1888,32 @@ static void draw_program_select(int active, bool allow_new) {
 #endif
 }
 
+#ifndef BASIC_HOST_TEST
+static void basic_wait_keys_released(void) {
+  kbd::clear_hold_key();
+  while(kbd::get_key() >= 0) {
+  }
+  while(kbd::any_key_pressed()) {
+    kbd::scan_and_debounced();
+    delay(10);
+  }
+  kbd::debounce_init();
+}
+
+static i32 basic_wait_for_fresh_key(void) {
+  basic_wait_keys_released();
+  while(true) {
+    const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      kbd::exclude_before(scan_code);
+      kbd::clear_hold_key();
+      return scan_code;
+    }
+    delay(10);
+  }
+}
+#endif
+
 static int select_basic_program(bool allow_new) {
 #ifndef BASIC_HOST_TEST
   const int stored_count = program_store::count(program_store::ProgramType::BASIC);
@@ -1817,11 +1945,16 @@ static int select_basic_program(bool allow_new) {
         }
         break;
       case KEY_OK:
-        if(allow_new && active == stored_count) return BASIC_PROGRAM_COUNT;
+        if(allow_new && active == stored_count) {
+          basic_wait_keys_released();
+          return BASIC_PROGRAM_COUNT;
+        }
         {
           program_store::Entry entry;
           if(!program_store::entry(program_store::ProgramType::BASIC, active, entry)) return -1;
-          return load_basic_program_from_store(entry.name);
+          const int slot = load_basic_program_from_store(entry.name);
+          basic_wait_keys_released();
+          return slot;
         }
       case KEY_ESC:
         return -1;
@@ -2058,7 +2191,7 @@ static void value_to_display_text(const BasicValue& value, char* buffer, usize s
     buffer[size - 1] = 0;
     return;
   }
-  snprintf(buffer, size, "%.8g", value.number);
+  basic_format_number(value.number, buffer, size);
 }
 
 static double read_number_from_keyboard(const BasicStmt& stmt) {
@@ -2198,7 +2331,7 @@ static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR
       if(value.is_string) assign_string_target(stmt, value.text);
       else {
         char temp[BASIC_STRING_SIZE + 1];
-        snprintf(temp, sizeof(temp), "%.8g", value.number);
+        basic_format_number(value.number, temp, sizeof(temp));
         assign_string_target(stmt, temp);
       }
       pc = stmt.next;
@@ -2367,14 +2500,7 @@ bool BasicIsReady(void) {
 
 static void basic_wait_after_menu_run(void) {
 #ifndef BASIC_HOST_TEST
-  kbd::clear_hold_key();
-  while(kbd::get_key() >= 0) {}
-  while(kbd::any_key_pressed()) {
-    kbd::scan_and_debounced();
-    delay(10);
-  }
-  kbd::debounce_init();
-  kbd::get_key_wait();
+  basic_wait_for_fresh_key();
 #endif
 }
 

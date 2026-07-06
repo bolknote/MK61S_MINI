@@ -195,6 +195,13 @@
   constexpr bool DBG_EXT_RUN = false;
 #endif
 
+#ifdef MK61_FOCAL_TRACE
+  constexpr bool DBG_FOCAL = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_FOCAL = false;
+#endif
+
 #ifdef ARDUINO_BLACKPILL_F411CE
   const char chip_name[] = "STM32F411CE";
   const char mem_text[] = "RAM:128 ROM:512";
