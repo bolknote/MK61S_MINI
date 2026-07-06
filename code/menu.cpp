@@ -435,21 +435,46 @@ bool  mk61_games_select(void) {
 }
 
 bool class_menu::handle_settings_adjustment(i32 key) {
-  if(puncts != library_mk61::SETTINGS_MENU || active_punct != library_mk61::SETTINGS_VOLUME) return false;
+  if(puncts != library_mk61::SETTINGS_MENU) return false;
 
-  if(key == KEY_OK_PRESS) {
-    CycleSoundVolumeUp();
-    return true;
-  }
+  switch(active_punct) {
+    case library_mk61::SETTINGS_VOLUME:
+      if(key == KEY_OK_PRESS) {
+        CycleSoundVolumeUp();
+        return true;
+      }
 
-  if(key == KEY_SHG_RIGHT_PRESS) {
-    StepSoundVolume(1);
-    return true;
-  }
+      if(key == KEY_SHG_RIGHT_PRESS) {
+        StepSoundVolume(1);
+        return true;
+      }
 
-  if(key == KEY_SHG_LEFT_PRESS) {
-    StepSoundVolume(-1);
-    return true;
+      if(key == KEY_SHG_LEFT_PRESS) {
+        StepSoundVolume(-1);
+        return true;
+      }
+      break;
+
+    case library_mk61::SETTINGS_SPEED:
+      if(key == KEY_OK_PRESS) {
+        TurnSpeed();
+        return true;
+      }
+      break;
+
+    case library_mk61::SETTINGS_MEMORY:
+      if(key == KEY_OK_PRESS) {
+        TurnProgramMemory();
+        return true;
+      }
+      break;
+
+    case library_mk61::SETTINGS_LANGUAGE:
+      if(key == KEY_OK_PRESS) {
+        TurnLanguage();
+        return true;
+      }
+      break;
   }
 
   return false;
