@@ -6,6 +6,7 @@
 #include "lcd_gui.hpp"
 #include "tools.hpp"
 #include "program_store.hpp"
+#include "m61_text.hpp"
 #include "mk61emu_core.h"
 #include "keyboard.h"
 #include "cross_hal.h"
@@ -29,6 +30,7 @@ const u32 ERASE_SECTOR_TIMEOUT = 5000; // таймаут операции сти
 
 static constexpr u8 MK61_STORE_REGISTER_F = 0x4F;
 static constexpr u8 MK61_LOAD_REGISTER_F  = 0x6F;
+static u8 m61_script_buffer[program_store::MAX_MK61_TEXT_SIZE];
 
 static bool opcode_needs_expanded_memory(u8 opcode) {
   return opcode == MK61_STORE_REGISTER_F || opcode == MK61_LOAD_REGISTER_F;
@@ -511,16 +513,9 @@ bool Load(usize nSlot) {
 
 bool LoadProgram(const char* name) {
   if(name == NULL || name[0] == 0) return false;
-  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-  u8 code_len = 0;
-  if(!program_store::read_mk61(name, &code_page[0], core_61::MAX_PROGRAM_STEP, &code_len)) return false;
-
-  apply_program_memory_auto(&code_page[0], code_len, false);
-  const usize program_steps = core_61::program_steps();
-  for(usize i = 0; i < program_steps; i++) {
-    MK61Emu_SetCode(core_61::get_ring_address(i), code_page[i]);
-  }
-  return true;
+  u16 script_len = 0;
+  if(!program_store::read_mk61(name, &m61_script_buffer[0], sizeof(m61_script_buffer), &script_len)) return false;
+  return m61_text::execute(&m61_script_buffer[0], script_len);
 }
 
 bool Load(void) {
@@ -584,10 +579,9 @@ bool Store(usize nSlot) {
 
   char name[8];
   snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
-  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-  core_61::get_code_page(&code_page[0]);
-  const u8 code_len = (u8) seek_program_END(&code_page[0]);
-  if(!program_store::write_mk61(name, &code_page[0], code_len)) return false;
+  u16 script_len = 0;
+  if(!m61_text::format_current_program(&m61_script_buffer[0], sizeof(m61_script_buffer), &script_len)) return false;
+  if(!program_store::write_mk61(name, &m61_script_buffer[0], script_len)) return false;
 
   dbg(MINI, "\nProgramm saved!");
   return true;
@@ -634,7 +628,10 @@ bool Store(void) {
   #endif
   u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
   core_61::get_code_page(&code_page[0]);
-  const u8 code_len = (u8) seek_program_END(&code_page[0]);
+  const usize code_len = seek_program_END(&code_page[0]);
+
+  u16 script_len = 0;
+  if(!m61_text::format_current_program(&m61_script_buffer[0], sizeof(m61_script_buffer), &script_len)) return false;
 
   #ifdef SERIAL_OUTPUT
     Serial.print("Save ");
@@ -650,7 +647,7 @@ bool Store(void) {
       lcd.setCursor(x, 1); lcd.print((char) 0xFF); lcd.print(i);
     }
   }
-  if(!program_store::write_mk61(name, &code_page[0], code_len)) return false;
+  if(!program_store::write_mk61(name, &m61_script_buffer[0], script_len)) return false;
 
   #ifdef SERIAL_OUTPUT
     Serial.println("\nProgramm saved!");

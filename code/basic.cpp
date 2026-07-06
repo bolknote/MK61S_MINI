@@ -2260,15 +2260,7 @@ static double read_number_from_keyboard(const BasicStmt& stmt) {
 
 static bool load_mk_program_by_name(const char* name) {
 #ifndef BASIC_HOST_TEST
-  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-  u8 code_len = 0;
-  if(!program_store::read_mk61(name, &code_page[0], core_61::MAX_PROGRAM_STEP, &code_len)) return false;
-  apply_program_memory_auto(&code_page[0], code_len, false);
-  const usize program_steps = core_61::program_steps();
-  for(usize i = 0; i < program_steps; i++) {
-    MK61Emu_SetCode(core_61::get_ring_address(i), code_page[i]);
-  }
-  return true;
+  return LoadProgram(name);
 #else
   if(name[0] != 0 && basic_is_digit(name[0])) {
     const int slot = atoi(name);

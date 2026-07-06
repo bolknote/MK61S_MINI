@@ -27,7 +27,7 @@ static constexpr i32 EXPLORER_KEY_OK = -4;
 static constexpr i32 EXPLORER_KEY_LONG_OK = -5;
 static constexpr i32 EXPLORER_KEY_ESC = -6;
 
-static u8 explorer_buffer[768];
+static u8 explorer_buffer[program_store::MAX_MK61_TEXT_SIZE];
 
 enum class ItemMenuAction : u8 {
   RUN,
@@ -186,8 +186,7 @@ static void draw_explorer(int active) {
 static bool read_entry_data(const program_store::Entry& entry, u16& out_len) {
   memset(explorer_buffer, 0, sizeof(explorer_buffer));
   out_len = 0;
-  const u16 capacity = (entry.type == program_store::ProgramType::MK61) ? core_61::MAX_PROGRAM_STEP : sizeof(explorer_buffer);
-  return program_store::read(entry.type, entry.name, explorer_buffer, capacity, &out_len);
+  return program_store::read(entry.type, entry.name, explorer_buffer, sizeof(explorer_buffer), &out_len);
 }
 
 static char hex_digit(u8 value) {
@@ -227,11 +226,10 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
   print_line(0, header);
 
   const u8 payload_rows = lcd_display::ROWS > 1 ? lcd_display::ROWS - 1 : 1;
-  const u8 bytes_per_row = (entry.type == program_store::ProgramType::MK61) ? 8 : 16;
+  const u8 bytes_per_row = 16;
   for(u8 row = 0; row < payload_rows; row++) {
     const u16 row_offset = (u16) (offset + row * bytes_per_row);
-    if(entry.type == program_store::ProgramType::MK61) draw_hex_payload_row((u8) (row + 1), data, len, row_offset);
-    else draw_text_payload_row((u8) (row + 1), data, len, row_offset);
+    draw_text_payload_row((u8) (row + 1), data, len, row_offset);
   }
 }
 
@@ -251,7 +249,7 @@ static void view_entry(const program_store::Entry& entry) {
   }
 
   const u8 rows = lcd_display::ROWS > 1 ? lcd_display::ROWS - 1 : 1;
-  const u16 page = (u16) ((entry.type == program_store::ProgramType::MK61) ? rows * 8 : rows * 16);
+  const u16 page = (u16) (rows * 16);
   u16 offset = 0;
   while(true) {
     draw_file_view(entry, explorer_buffer, len, offset);

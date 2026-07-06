@@ -223,16 +223,10 @@ static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& 
   out.name_len = read_byte(address + 3);
   if(out.name_len == 0 || out.name_len >= NAME_SIZE) return false;
 
-  if(out.type == ProgramType::MK61) {
-    out.data_len = read_byte(address + 4);
-    out.crc = read_le16(address + 5);
-    out.header_len = 7;
-    if(out.data_len > core_61::MAX_PROGRAM_STEP) return false;
-  } else {
-    out.data_len = read_le16(address + 4);
-    out.crc = read_le16(address + 6);
-    out.header_len = 8;
-  }
+  out.data_len = read_le16(address + 4);
+  out.crc = read_le16(address + 6);
+  out.header_len = 8;
+  if(out.type == ProgramType::MK61 && out.data_len > MAX_MK61_TEXT_SIZE) return false;
 
   out.total_len = (u16) (out.header_len + out.name_len + out.data_len);
   if(out.total_len < out.header_len) return false;
@@ -245,12 +239,8 @@ static u16 record_crc(u32 address, const RecordMeta& meta) {
   crc = crc16_update(crc, read_byte(address));
   crc = crc16_update(crc, read_byte(address + 1));
   crc = crc16_update(crc, meta.name_len);
-  if(meta.type == ProgramType::MK61) {
-    crc = crc16_update(crc, (u8) meta.data_len);
-  } else {
-    crc = crc16_update(crc, (u8) (meta.data_len & 0xFF));
-    crc = crc16_update(crc, (u8) (meta.data_len >> 8));
-  }
+  crc = crc16_update(crc, (u8) (meta.data_len & 0xFF));
+  crc = crc16_update(crc, (u8) (meta.data_len >> 8));
 
   const u32 payload = address + meta.header_len;
   for(u16 i = 0; i < (u16) (meta.name_len + meta.data_len); i++) {
@@ -264,12 +254,8 @@ static u16 make_crc(ProgramType type, const char* name, u8 name_len, const u8* d
   crc = crc16_update(crc, tag0_for_type(type));
   crc = crc16_update(crc, '1');
   crc = crc16_update(crc, name_len);
-  if(type == ProgramType::MK61) {
-    crc = crc16_update(crc, (u8) data_len);
-  } else {
-    crc = crc16_update(crc, (u8) (data_len & 0xFF));
-    crc = crc16_update(crc, (u8) (data_len >> 8));
-  }
+  crc = crc16_update(crc, (u8) (data_len & 0xFF));
+  crc = crc16_update(crc, (u8) (data_len >> 8));
   for(u8 i = 0; i < name_len; i++) crc = crc16_update(crc, (u8) name[i]);
   for(u16 i = 0; i < data_len; i++) crc = crc16_update(crc, data[i]);
   return crc;
@@ -544,10 +530,10 @@ static bool load_catalog(void) {
     const u16 offset = read_le16(pos); pos += 2;
     entry.data_len = read_le16(pos); pos += 2;
     entry.total_len = read_le16(pos); pos += 2;
-    const u16 header_len = (entry.type == ProgramType::MK61) ? 7 : 8;
+    const u16 header_len = 8;
     if(entry.name_len == 0 || entry.name_len >= NAME_SIZE) return false;
     if(entry.total_len != header_len + entry.name_len + entry.data_len) return false;
-    if(entry.type == ProgramType::MK61 && entry.data_len > core_61::MAX_PROGRAM_STEP) return false;
+    if(entry.type == ProgramType::MK61 && entry.data_len > MAX_MK61_TEXT_SIZE) return false;
     if(sector >= STORE_SECTOR_COUNT || !sectors[sector].active || offset < SECTOR_HEADER_SIZE) return false;
     if((usize) offset + entry.total_len > FLASH_SECTOR_SIZE) return false;
     for(u8 n = 0; n < NAME_SIZE; n++) entry.name[n] = (char) read_byte(pos++);
@@ -775,7 +761,7 @@ static u8 name_len_of(const char* name) {
 static bool valid_write(ProgramType type, const char* name, u16 data_len) {
   const u8 nlen = name_len_of(name);
   if(nlen == 0 || nlen >= NAME_SIZE) return false;
-  if(type == ProgramType::MK61 && data_len > core_61::MAX_PROGRAM_STEP) return false;
+  if(type == ProgramType::MK61 && data_len > MAX_MK61_TEXT_SIZE) return false;
   return true;
 }
 
@@ -816,7 +802,7 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   if(old_idx < 0 && index_count >= MAX_ENTRIES) return false;
 
   const u8 nlen = name_len_of(name);
-  const u16 header_len = (type == ProgramType::MK61) ? 7 : 8;
+  const u16 header_len = 8;
   const u16 record_len = (u16) (header_len + nlen + data_len);
   if(!ensure_space(record_len)) return false;
 
@@ -832,13 +818,8 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   write_byte(address + 1, '1');
   write_byte(address + 2, STATE_WRITING);
   write_byte(address + 3, nlen);
-  if(type == ProgramType::MK61) {
-    write_byte(address + 4, (u8) data_len);
-    write_le16(address + 5, crc);
-  } else {
-    write_le16(address + 4, data_len);
-    write_le16(address + 6, crc);
-  }
+  write_le16(address + 4, data_len);
+  write_le16(address + 6, crc);
 
   u32 pos = address + header_len;
   for(u8 i = 0; i < nlen; i++) write_byte(pos++, (u8) name[i]);
@@ -875,7 +856,7 @@ bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_l
   const IndexEntry& entry = index_entries[idx];
   if(entry.data_len > capacity) return false;
 
-  const u32 payload = entry.address + ((entry.type == ProgramType::MK61) ? 7 : 8) + entry.name_len;
+  const u32 payload = entry.address + 8 + entry.name_len;
   for(u16 i = 0; i < entry.data_len; i++) data[i] = read_byte(payload + i);
   if(out_len != NULL) *out_len = entry.data_len;
   return true;
@@ -894,7 +875,7 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
   u16 available = (u16) (entry.data_len - offset);
   if(available > len) available = len;
 
-  const u32 payload = entry.address + ((entry.type == ProgramType::MK61) ? 7 : 8) + entry.name_len + offset;
+  const u32 payload = entry.address + 8 + entry.name_len + offset;
   for(u16 i = 0; i < available; i++) data[i] = read_byte(payload + i);
   if(out_len != NULL) *out_len = available;
   return true;
@@ -917,10 +898,10 @@ bool remove(ProgramType type, const char* name) {
 bool rename(ProgramType type, const char* old_name, const char* new_name) {
   DiskActivity disk_activity;
   if(old_name == NULL || new_name == NULL || old_name[0] == 0 || new_name[0] == 0) return false;
-  u8 buffer[core_61::MAX_PROGRAM_STEP > 700 ? core_61::MAX_PROGRAM_STEP : 700];
+  u8 buffer[MAX_MK61_TEXT_SIZE > 700 ? MAX_MK61_TEXT_SIZE : 700];
   u16 len = 0;
   if(type == ProgramType::MK61) {
-    if(!read(type, old_name, buffer, core_61::MAX_PROGRAM_STEP, &len)) return false;
+    if(!read(type, old_name, buffer, MAX_MK61_TEXT_SIZE, &len)) return false;
   } else {
     if(!read(type, old_name, buffer, sizeof(buffer), &len)) return false;
   }
@@ -958,14 +939,14 @@ bool exists(ProgramType type, const char* name) {
   return find_index(type, name) >= 0;
 }
 
-bool write_mk61(const char* name, const u8* code, u8 code_len) {
+bool write_mk61(const char* name, const u8* code, u16 code_len) {
   return write(ProgramType::MK61, name, code, code_len);
 }
 
-bool read_mk61(const char* name, u8* code, u8 capacity, u8* out_len) {
+bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len) {
   u16 len = 0;
   if(!read(ProgramType::MK61, name, code, capacity, &len)) return false;
-  if(out_len != NULL) *out_len = (u8) len;
+  if(out_len != NULL) *out_len = len;
   return true;
 }
 

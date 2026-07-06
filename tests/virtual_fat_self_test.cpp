@@ -137,14 +137,14 @@ bool rename(ProgramType type, const char* old_name, const char* new_name) {
   return true;
 }
 
-bool write_mk61(const char* name, const u8* code, u8 code_len) {
+bool write_mk61(const char* name, const u8* code, u16 code_len) {
   return write(ProgramType::MK61, name, code, code_len);
 }
 
-bool read_mk61(const char* name, u8* code, u8 capacity, u8* out_len) {
+bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len) {
   u16 len = 0;
   if(!read(ProgramType::MK61, name, code, capacity, &len)) return false;
-  if(out_len != NULL) *out_len = (u8) len;
+  if(out_len != NULL) *out_len = len;
   return true;
 }
 

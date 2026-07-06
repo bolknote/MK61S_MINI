@@ -20,7 +20,7 @@ static constexpr u16 MEDIA_DESCRIPTOR = 0xF8;
 static constexpr u16 CLUSTER_FREE = 0x000;
 static constexpr u16 CLUSTER_EOF = 0xFFF;
 static constexpr u16 FIRST_DATA_CLUSTER = 2;
-static constexpr u16 MAX_IMPORTED_LEN = 640;
+static constexpr u16 MAX_IMPORTED_LEN = program_store::MAX_MK61_TEXT_SIZE;
 static constexpr u16 MAX_LFN_CHARS = program_store::NAME_SIZE + 3;
 static constexpr u8 MAX_PENDING_WRITES = 3;
 static constexpr u8 MAX_PENDING_DELETES = 3;
@@ -721,7 +721,7 @@ static bool write_committed_data_sector(u16 cluster, const u8* data) {
 
 static u16 max_len_for_type(program_store::ProgramType type) {
   switch(type) {
-    case program_store::ProgramType::MK61:  return core_61::MAX_PROGRAM_STEP;
+    case program_store::ProgramType::MK61:  return program_store::MAX_MK61_TEXT_SIZE;
     case program_store::ProgramType::BASIC: return 511;
     case program_store::ProgramType::FOCAL: return 639;
   }
@@ -740,8 +740,10 @@ static char normalize_short_char(u8 c) {
 }
 
 static char normalize_lfn_name_char(char c) {
-  if(c >= 'a' && c <= 'z') c = (char) (c - 'a' + 'A');
-  if((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-') return c;
+  if((c >= 'A' && c <= 'Z') ||
+     (c >= 'a' && c <= 'z') ||
+     (c >= '0' && c <= '9') ||
+     c == '_' || c == '-' || c == ' ') return c;
   return 0;
 }
 

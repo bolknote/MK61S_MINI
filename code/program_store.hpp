@@ -8,6 +8,7 @@ namespace program_store {
 
 static constexpr usize NAME_SIZE = 16;
 static constexpr usize MAX_ENTRIES = 64;
+static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
 
 enum class ProgramType : u8 {
   MK61,
@@ -35,8 +36,8 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
 bool remove(ProgramType type, const char* name);
 bool rename(ProgramType type, const char* old_name, const char* new_name);
 
-bool write_mk61(const char* name, const u8* code, u8 code_len);
-bool read_mk61(const char* name, u8* code, u8 capacity, u8* out_len);
+bool write_mk61(const char* name, const u8* code, u16 code_len);
+bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len);
 
 } // namespace program_store
 
