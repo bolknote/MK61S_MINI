@@ -16,6 +16,11 @@ static const int KEY_ESC = 39;
 static const int KEY_K = 37;
 static const int KEY_ALPHA = KEY_K + 1;
 static const int KEY_DEGREE = 4;
+static const int KEY_PP = 25;
+static const int KEY_FRW = 32;
+static const int KEY_BKW = 33;
+static const int KEY_SHG_RIGHT_PRESS = KEY_BKW;
+static const int KEY_SHG_LEFT_PRESS = KEY_FRW;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -75,6 +80,7 @@ class MK61Display {
       print(buffer);
     }
     void createChar(u8, uint8_t*) {}
+    u8 rows(void) const { return 4; }
     const char* line(u8 row) const { return lines[(row < 4) ? row : 0]; }
 
   private:
@@ -253,6 +259,11 @@ class class_menu {
 #include <string.h>
 #endif
 
+#ifdef BASIC_HOST_TEST
+#define TEXT_EDITOR_HOST_TEST
+#endif
+#include "text_editor.hpp"
+
 #if MK61_ENABLE_BASIC
 
 using namespace kbd;
@@ -337,8 +348,6 @@ static constexpr int BASIC_FOR_STACK_DEPTH     = 8;
 static constexpr int BASIC_CALL_DEPTH          = 2;
 static constexpr int BASIC_MAX_ARGS            = 4;
 static constexpr int BASIC_VARIABLE_COUNT      = 26 * 11;
-
-static constexpr u8  CURSOR_ASCII    = 0xFF;
 
 static constexpr i32 BASIC_SCAN_B_UP  = 1;
 static constexpr i32 BASIC_SCAN_PRINT = 5;
@@ -555,23 +564,6 @@ static bool basic_language_is_ru(void) {
 #else
   return library_mk61::language_is_ru();
 #endif
-}
-
-static void basic_print_text_at(u8 x, u8 y, const char* en, const char* ru, u8 width = 16) {
-#ifdef BASIC_HOST_TEST
-  (void) ru;
-#endif
-#ifndef BASIC_HOST_TEST
-  if(basic_language_is_ru()) {
-    library_mk61::print_localized_at(x, y, ru, en, width);
-    return;
-  }
-#endif
-
-  lcd.setCursor(x, y);
-  u8 used = 0;
-  while(en != NULL && en[used] != 0 && used < width) lcd.write((u8) en[used++]);
-  while(used++ < width) lcd.write((u8) ' ');
 }
 
 static void basic_message_i18n(const char* en0, const char* ru0, const char* en1 = NULL, const char* ru1 = NULL) {
@@ -2542,27 +2534,9 @@ bool BASIC_library_select(void) {
   return true;
 }
 
-static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 window, int slot) {
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  for(u8 i = 0; i < 16; i++) {
-    const u16 pos = window + i;
-    lcd.write((u8) ((pos < len) ? source[pos] : ' '));
-  }
-  if(slot == BASIC_PROGRAM_COUNT) basic_print_text_at(0, 1, "NEW", "НОВАЯ", 5);
-  else {
-    char display_name[22];
-    basic_display_program_name(programs[slot].name, display_name, sizeof(display_name));
-    basic_print_text_at(0, 1, programs[slot].name, display_name, 10);
-  }
-  lcd.setCursor(10, 1);
-  lcd.print(cursor);
-  lcd.print('/');
-  lcd.print(len);
-  lcd.setCursor((u8) (cursor - window), 0);
-  if(lcd.supportsCursor()) lcd.cursorOn();
-  else lcd.write(CURSOR_ASCII);
+static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 view_top, int slot) {
+  text_editor::draw(lcd, source, len, cursor, view_top);
+  (void) slot;
 }
 
 static bool store_edited_program(int slot, char* source, const char* store_name) {
@@ -2629,7 +2603,7 @@ static bool basic_cursor_expects_statement(const char* source, u16 cursor) {
   int pos = (int) cursor - 1;
   while(pos >= 0 && (source[pos] == ' ' || source[pos] == '\t')) pos--;
   if(pos < 0) return true;
-  if(source[pos] == ':' || source[pos] == ';') return true;
+  if(source[pos] == ':' || source[pos] == ';' || source[pos] == '\n' || source[pos] == '\r') return true;
 
   const int end = pos + 1;
   while(pos >= 0 && (basic_is_alpha(source[pos]) || basic_is_digit(source[pos]))) pos--;
@@ -2680,16 +2654,39 @@ static const char* basic_editor_insert_text_for_key(BasicEditShift shift, i32 ke
   return NULL;
 }
 
-static bool basic_editor_insert_text(char* source, u16& len, u16& cursor, const char* text) {
-  if(text == NULL || text[0] == 0) return false;
-  const usize text_len = strlen(text);
-  if((usize) len + text_len >= BASIC_SOURCE_SIZE) return false;
-  memmove(&source[cursor + text_len], &source[cursor], len - cursor + 1);
-  memcpy(&source[cursor], text, text_len);
-  cursor = (u16) (cursor + text_len);
-  len = (u16) (len + text_len);
-  return true;
+static const char* basic_editor_insert_text_hook(text_editor::Shift shift, i32 key_code, const char* source, u16 cursor, void*) {
+  return basic_editor_insert_text_for_key((BasicEditShift) shift, key_code, source, cursor);
 }
+
+static const text_editor::KeyMap BASIC_EDITOR_KEYS = {
+  (i32) KEY_LEFT,
+  KEY_LEFT_PRESS,
+  (i32) KEY_RIGHT,
+  KEY_RIGHT_PRESS,
+  (i32) KEY_OK,
+  KEY_OK_PRESS,
+  (i32) KEY_ESC,
+  KEY_ESC_PRESS,
+  KEY_SHG_LEFT_PRESS,
+  KEY_SHG_RIGHT_PRESS,
+  (i32) KEY_K,
+  KEY_ALPHA,
+  (i32) KEY_PP
+};
+
+static const text_editor::Hooks BASIC_EDITOR_HOOKS = {
+  &basic_editor_insert_text_hook,
+  NULL,
+  NULL
+};
+
+static const text_editor::Options BASIC_EDITOR_OPTIONS = {
+  "\n",
+  false,
+  false,
+  false,
+  (i32) KEY_DEGREE
+};
 
 static bool basic_confirm_save(void) {
   basic_message_i18n("Save BASIC?", "Сохранить?", "OK=yes ESC=no", "OK=да ESC=нет");
@@ -2764,16 +2761,16 @@ static void EditBasicSlot(int slot) {
   memset(source, 0, sizeof(source));
   if(slot < BASIC_PROGRAM_COUNT && programs[slot].used) strncpy(source, programs[slot].source, sizeof(source) - 1);
 
-  u16 len = (u16) strlen(source);
-  u16 cursor = len;
-  u16 window = (cursor > 15) ? cursor - 15 : 0;
-  BasicEditShift shift = BasicEditShift::NONE;
+  text_editor::Buffer editor;
+  text_editor::init(editor, source, BASIC_SOURCE_SIZE);
+  editor.cursor = editor.len;
   bool dirty = true;
 
   kbd::debounce_init();
   while(true) {
     if(dirty) {
-      draw_basic_editor(source, len, cursor, window, slot);
+      text_editor::ensure_cursor_visible(lcd, source, editor.len, editor.cursor, editor.view_top);
+      draw_basic_editor(source, editor.len, editor.cursor, editor.view_top, slot);
       dirty = false;
     }
 
@@ -2784,16 +2781,10 @@ static void EditBasicSlot(int slot) {
       delay(1);
       continue;
     }
-    dirty = true;
+    const text_editor::KeyResult result = text_editor::handle_key(editor, BASIC_EDITOR_KEYS, BASIC_EDITOR_HOOKS, BASIC_EDITOR_OPTIONS, key_code, millis());
+    dirty = result != text_editor::KeyResult::NONE;
 
-    const bool shifted_key = shift != BasicEditShift::NONE;
-
-    if(!shifted_key && (key_code == KEY_K || key_code == KEY_ALPHA)) {
-      shift = (key_code == KEY_K) ? BasicEditShift::K : BasicEditShift::ALPHA;
-      continue;
-    }
-
-    if(!shifted_key && (key_code == KEY_ESC || key_code == KEY_ESC_PRESS)) {
+    if(result == text_editor::KeyResult::SAVE) {
       lcd.cursorOff();
       if(!basic_confirm_save()) return;
       char name[BASIC_NAME_SIZE];
@@ -2804,34 +2795,6 @@ static void EditBasicSlot(int slot) {
       kbd::debounce_init();
       return;
     }
-
-    if(!shifted_key && (key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS)) {
-      if(cursor > 0) cursor--;
-    } else if(!shifted_key && (key_code == KEY_RIGHT || key_code == KEY_RIGHT_PRESS)) {
-      if(cursor < len) cursor++;
-    } else if(!shifted_key && key_code == KEY_DEGREE) {
-      if(cursor > 0) {
-        memmove(&source[cursor - 1], &source[cursor], len - cursor + 1);
-        cursor--;
-        len--;
-      }
-    } else if(!shifted_key && key_code == 0) {
-      memset(source, 0, sizeof(source));
-      len = 0;
-      cursor = 0;
-    } else if(!shifted_key && (key_code == KEY_OK || key_code == KEY_OK_PRESS)) {
-      if(len < BASIC_SOURCE_SIZE - 1) {
-        memmove(&source[cursor + 1], &source[cursor], len - cursor + 1);
-        source[cursor++] = ':';
-        len++;
-      }
-    } else {
-      basic_editor_insert_text(source, len, cursor, basic_editor_insert_text_for_key(shift, key_code, source, cursor));
-    }
-
-    shift = BasicEditShift::NONE;
-    if(cursor < window) window = cursor;
-    if(cursor > window + 15) window = cursor - 15;
   }
 }
 
@@ -2967,25 +2930,12 @@ extern "C" void BasicTestEditSequence(const int* keys, int count, char* out, int
 
   char source[BASIC_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
-  u16 len = 0;
-  u16 cursor = 0;
-  BasicEditShift shift = BasicEditShift::NONE;
+  text_editor::Buffer editor;
+  text_editor::init(editor, source, BASIC_SOURCE_SIZE);
 
   for(int i = 0; i < count; i++) {
     const i32 key_code = keys[i];
-    const bool shifted_key = shift != BasicEditShift::NONE;
-
-    if(!shifted_key && (key_code == KEY_K || key_code == KEY_ALPHA)) {
-      shift = (key_code == KEY_K) ? BasicEditShift::K : BasicEditShift::ALPHA;
-      continue;
-    }
-
-    if(!shifted_key && (key_code == KEY_OK || key_code == KEY_OK_PRESS)) {
-      basic_editor_insert_text(source, len, cursor, ":");
-    } else {
-      basic_editor_insert_text(source, len, cursor, basic_editor_insert_text_for_key(shift, key_code, source, cursor));
-    }
-    shift = BasicEditShift::NONE;
+    text_editor::handle_key(editor, BASIC_EDITOR_KEYS, BASIC_EDITOR_HOOKS, BASIC_EDITOR_OPTIONS, key_code, millis());
   }
 
   strncpy(out, source, (usize) size - 1);

@@ -60,11 +60,30 @@ struct Hooks {
   void* context;
 };
 
+struct Options {
+  const char* ok_insert_text;
+  bool sms_enabled;
+  bool alpha_digit_symbols;
+  bool alpha_left_backspace;
+  i32 backspace_key;
+};
+
 enum class KeyResult : u8 {
   NONE,
   DIRTY,
   SAVE
 };
+
+inline const Options& default_options(void) {
+  static const Options options = {
+    "\n",
+    true,
+    true,
+    true,
+    -1
+  };
+  return options;
+}
 
 inline void sms_reset(SmsState& sms) {
   sms.active = false;
@@ -337,9 +356,9 @@ inline bool sms_tap(char* source, u16& len, u16& cursor, u16 capacity, SmsState&
   return insert_text(source, len, cursor, capacity, text);
 }
 
-inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hooks, i32 key_code, u32 now) {
+inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hooks, const Options& options, i32 key_code, u32 now) {
   const bool shifted_key = editor.shift != Shift::NONE;
-  if(!shifted_key && editor.sms.active) {
+  if(options.sms_enabled && !shifted_key && editor.sms.active) {
     if(sms_key_is_letters(key_code)) {
       sms_tap(editor.source, editor.len, editor.cursor, editor.capacity, editor.sms, key_code, now);
       return KeyResult::DIRTY;
@@ -367,25 +386,25 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     return KeyResult::DIRTY;
   }
 
-  if(editor.shift == Shift::K && sms_key_is_letters(key_code)) {
+  if(options.sms_enabled && editor.shift == Shift::K && sms_key_is_letters(key_code)) {
     sms_tap(editor.source, editor.len, editor.cursor, editor.capacity, editor.sms, key_code, now);
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
   }
-  if(editor.shift == Shift::K && sms_key_is_space(key_code)) {
+  if(options.sms_enabled && editor.shift == Shift::K && sms_key_is_space(key_code)) {
     sms_reset(editor.sms);
     insert_text(editor.source, editor.len, editor.cursor, editor.capacity, " ");
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
   }
 
-  if(editor.shift == Shift::ALPHA && digit_from_key(key_code) >= 0) {
+  if(options.alpha_digit_symbols && editor.shift == Shift::ALPHA && digit_from_key(key_code) >= 0) {
     insert_text(editor.source, editor.len, editor.cursor, editor.capacity, symbol_for_digit_key(key_code));
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
   }
 
-  if(editor.shift == Shift::ALPHA && (key_code == keys.left || key_code == keys.left_press)) {
+  if(options.alpha_left_backspace && editor.shift == Shift::ALPHA && (key_code == keys.left || key_code == keys.left_press)) {
     backspace(editor.source, editor.len, editor.cursor);
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
@@ -409,6 +428,8 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     move_cursor_line(editor.source, editor.len, editor.cursor, -1);
   } else if(!shifted_key && key_code == keys.shg_right_press) {
     move_cursor_line(editor.source, editor.len, editor.cursor, 1);
+  } else if(!shifted_key && key_code == options.backspace_key) {
+    backspace(editor.source, editor.len, editor.cursor);
   } else if(!shifted_key && key_code == 0) {
     if(editor.source != NULL && editor.capacity > 0) editor.source[0] = 0;
     editor.len = 0;
@@ -416,7 +437,7 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     editor.view_top = 0;
     sms_reset(editor.sms);
   } else if(!shifted_key && (key_code == keys.ok || key_code == keys.ok_press)) {
-    insert_text(editor.source, editor.len, editor.cursor, editor.capacity, "\n");
+    insert_text(editor.source, editor.len, editor.cursor, editor.capacity, options.ok_insert_text);
   } else {
     const char* text = NULL;
     if(hooks.insert_text_for_key != NULL) {
@@ -426,6 +447,10 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   }
   editor.shift = Shift::NONE;
   return KeyResult::DIRTY;
+}
+
+inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hooks, i32 key_code, u32 now) {
+  return handle_key(editor, keys, hooks, default_options(), key_code, now);
 }
 
 } // namespace text_editor

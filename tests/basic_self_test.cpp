@@ -67,6 +67,14 @@ static void test_arithmetic_and_print(void) {
   CHECK_STARTS(BasicTestLcdLine(0), "7");
 }
 
+static void test_multiline_program(void) {
+  BasicTestReset();
+  const int slot = add_program("A=1\nB=A+2\n? B\nHLT MULTI");
+  BasicTestRun(slot);
+  CHECK_NEAR(BasicTestNumber("B"), 3.0);
+  CHECK_STARTS(BasicTestLcdLine(0), "3");
+}
+
 static void test_if_then_else(void) {
   BasicTestReset();
   const int slot = add_program("A=0:IF A=1 TH B=1 EL B=2:HLT IFEL");
@@ -152,9 +160,13 @@ static void test_editor_shift_and_statement_keys(void) {
   BasicTestEditSequence(green_symbols, (int) (sizeof(green_symbols) / sizeof(green_symbols[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "&^|,") == 0);
 
+  const int backspace[] = {21, 16, 4, 11};
+  BasicTestEditSequence(backspace, (int) (sizeof(backspace) / sizeof(backspace[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "13") == 0);
+
   const int statement[] = {5, 29, 26, 29, 30, 29, 1};
   BasicTestEditSequence(statement, (int) (sizeof(statement) / sizeof(statement[0])), out, sizeof(out));
-  CHECK(std::strcmp(out, "? :GO :HLT :IN ") == 0);
+  CHECK(std::strcmp(out, "? \nGO \nHLT \nIN ") == 0);
 }
 
 static void test_logical_not_operator(void) {
@@ -168,6 +180,7 @@ static void test_logical_not_operator(void) {
 int main(void) {
   test_compile_rejects_bad_syntax();
   test_arithmetic_and_print();
+  test_multiline_program();
   test_if_then_else();
   test_for_next_loop();
   test_while_end_loop();
