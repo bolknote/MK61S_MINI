@@ -258,6 +258,9 @@ class class_menu {
 using namespace kbd;
 
 extern MK61Display lcd;
+#ifndef BASIC_HOST_TEST
+extern void idle_main_process(void);
+#endif
 
 static const char basic_display_symbols[16] = {
     'O', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', G_RUS, 'E', ' '
@@ -649,6 +652,21 @@ static bool basic_error(const char* text) {
   line[sizeof(line) - 1] = 0;
   basic_message_i18n("Error BASIC!", "Ошибка БЕЙСИК", line, basic_error_ru_text(text));
   kbd::get_key_wait();
+  return false;
+}
+
+static bool basic_runtime_interrupted(void) {
+#ifndef BASIC_HOST_TEST
+  idle_main_process();
+  kbd::scan_and_debounced();
+  const i32 key = kbd::last_key();
+  if(key == KEY_ESC || key == KEY_ESC_PRESS) {
+    (void) kbd::get_key();
+    kbd::clear_hold_key();
+    basic_message_i18n("BASIC stopped", "БЕЙСИК стоп", "ESC", "ESC");
+    return true;
+  }
+#endif
   return false;
 }
 
@@ -2295,6 +2313,7 @@ static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR
 
 static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR_STACK_DEPTH], i8& for_sp, int& steps) {
   if(stmt_id < 0 || stmt_id >= ast.stmt_count) return false;
+  if(basic_runtime_interrupted()) return false;
   if(++steps > BASIC_RUNTIME_STEPS_LIMIT) {
     basic_error("run limit");
     return false;

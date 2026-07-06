@@ -138,6 +138,9 @@ namespace library_mk61 {
 using namespace kbd;
 
 extern MK61Display lcd;
+#ifndef FOCAL_HOST_TEST
+extern void idle_main_process(void);
+#endif
 
 static constexpr int FOCAL_PROGRAM_COUNT       = 8;
 static constexpr int FOCAL_SOURCE_SIZE         = 640;
@@ -602,6 +605,21 @@ static bool focal_error(const char* error) {
   focal_copy_text(focal_last_error, sizeof(focal_last_error), error);
   focal_copy_text(focal_ast.error, sizeof(focal_ast.error), error);
   focal_message_i18n(error, focal_error_ru_text(error), "FOCAL", "ФОКАЛ");
+  return false;
+}
+
+static bool focal_runtime_interrupted(void) {
+#ifndef FOCAL_HOST_TEST
+  idle_main_process();
+  kbd::scan_and_debounced();
+  const i32 key = kbd::last_key();
+  if(key == KEY_ESC || key == KEY_ESC_PRESS) {
+    (void) kbd::get_key();
+    kbd::clear_hold_key();
+    focal_message_i18n("FOCAL stopped", "ФОКАЛ стоп", "ESC", "ESC");
+    return true;
+  }
+#endif
   return false;
 }
 
@@ -1516,6 +1534,10 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, in
 
 static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, int& steps, FocalFlow& flow) {
   focal_trace_line("EXEC", current_pc, line);
+  if(focal_runtime_interrupted()) {
+    flow = focal_flow(FocalFlowKind::STOP, current_pc);
+    return true;
+  }
   if(++steps > FOCAL_RUNTIME_STEPS_LIMIT) {
     flow = focal_flow(FocalFlowKind::ERROR, current_pc);
     return focal_error("LIMIT?");
