@@ -106,14 +106,16 @@ static i32 wait_explorer_key(bool allow_long_ok) {
     const bool released = (scan_code & (i32) key_state::RELEASED) != 0;
     const i32 code = scan_code & ~(i32) key_state::RELEASED;
     if(released) {
-      if(ok_down && code == (i32) KEY_OK) return EXPLORER_KEY_OK;
+      if(ok_down && code == (i32) KEY_OK) {
+        kbd::clear_hold_key();
+        return EXPLORER_KEY_OK;
+      }
       continue;
     }
 
     if(code == (i32) KEY_OK) {
       ok_down = true;
       long_ok_at = millis() + EXPLORER_LONG_OK_MS;
-      if(!allow_long_ok) return EXPLORER_KEY_OK;
       continue;
     }
     if(code == (i32) KEY_ESC) return EXPLORER_KEY_ESC;

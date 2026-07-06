@@ -54,6 +54,11 @@ class MK61Display : public Print {
     void beginUpdate(void);
     void endUpdate(void);
     void setCursor(u8 x, u8 y);
+    void cursorOn(void);
+    void cursorOff(void);
+    void blinkOn(void);
+    void blinkOff(void);
+    bool hasHardwareCursor(void) const;
     void createChar(u8 nChar, uint8_t* glyph);
     void writeGlyph(const uint8_t* glyph);
     void clearCustomChars(void);

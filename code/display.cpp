@@ -8,9 +8,13 @@ MK61Display::MK61Display(void)
 
 void MK61Display::begin(u8 cols, u8 rows) {
   lcd.begin(cols, rows);
+  lcd.noCursor();
+  lcd.noBlink();
 }
 
 void MK61Display::clear(void) {
+  lcd.noCursor();
+  lcd.noBlink();
   lcd.clear();
 }
 
@@ -22,6 +26,27 @@ void MK61Display::endUpdate(void) {}
 
 void MK61Display::setCursor(u8 x, u8 y) {
   lcd.setCursor(x, y);
+}
+
+void MK61Display::cursorOn(void) {
+  lcd.cursor();
+}
+
+void MK61Display::cursorOff(void) {
+  lcd.noCursor();
+  lcd.noBlink();
+}
+
+void MK61Display::blinkOn(void) {
+  lcd.blink();
+}
+
+void MK61Display::blinkOff(void) {
+  lcd.noBlink();
+}
+
+bool MK61Display::hasHardwareCursor(void) const {
+  return true;
 }
 
 void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
@@ -121,6 +146,18 @@ void MK61Display::endUpdate(void) {
 void MK61Display::setCursor(u8 x, u8 y) {
   cursor_x = (x < lcd_display::COLS) ? x : (lcd_display::COLS - 1);
   cursor_y = (y < lcd_display::ROWS) ? y : (lcd_display::ROWS - 1);
+}
+
+void MK61Display::cursorOn(void) {}
+
+void MK61Display::cursorOff(void) {}
+
+void MK61Display::blinkOn(void) {}
+
+void MK61Display::blinkOff(void) {}
+
+bool MK61Display::hasHardwareCursor(void) const {
+  return false;
 }
 
 void MK61Display::createChar(u8 nChar, uint8_t* glyph) {

@@ -45,6 +45,11 @@ class MK61Display {
       x = (col < 16) ? col : 15;
       y = (row < 4) ? row : 3;
     }
+    void cursorOn(void) {}
+    void cursorOff(void) {}
+    void blinkOn(void) {}
+    void blinkOff(void) {}
+    bool hasHardwareCursor(void) const { return false; }
 
     void write(u8 value) {
       if(x < 16 && y < 4) lines[y][x++] = (char) value;
@@ -329,7 +334,6 @@ static constexpr int BASIC_MAX_ARGS            = 4;
 static constexpr int BASIC_VARIABLE_COUNT      = 26 * 11;
 static constexpr int BASIC_RUNTIME_STEPS_LIMIT = 2048;
 
-static constexpr u32 CURSOR_BLINK_MS = 850;
 static constexpr u8  CURSOR_ASCII    = 0xFF;
 
 static constexpr i32 BASIC_SCAN_B_UP  = 1;
@@ -2329,6 +2333,8 @@ void RunBasic(int BasicN) {
   }
 }
 
+static void basic_wait_after_menu_run(void);
+
 bool RunBasicProgram(const char* name) {
 #ifndef BASIC_HOST_TEST
   const int slot = load_basic_program_from_store(name);
@@ -2337,6 +2343,7 @@ bool RunBasicProgram(const char* name) {
 #endif
   if(slot < 0) return false;
   RunBasic(slot);
+  basic_wait_after_menu_run();
   return true;
 }
 
@@ -2356,6 +2363,19 @@ bool BasicHasAssignedStep(int mk61_step) {
 
 bool BasicIsReady(void) {
   return basic_program_count() > 0;
+}
+
+static void basic_wait_after_menu_run(void) {
+#ifndef BASIC_HOST_TEST
+  kbd::clear_hold_key();
+  while(kbd::get_key() >= 0) {}
+  while(kbd::any_key_pressed()) {
+    kbd::scan_and_debounced();
+    delay(10);
+  }
+  kbd::debounce_init();
+  kbd::get_key_wait();
+#endif
 }
 
 void InitBasic(void) {
@@ -2383,7 +2403,10 @@ int AssignBasic(void) {
 
 bool BASIC_library_select(void) {
   const int program = select_basic_program(false);
-  if(program >= 0) RunBasic(program);
+  if(program >= 0) {
+    RunBasic(program);
+    basic_wait_after_menu_run();
+  }
   return true;
 }
 
@@ -2395,8 +2418,6 @@ static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 windo
     const u16 pos = window + i;
     lcd.write((u8) ((pos < len) ? source[pos] : ' '));
   }
-  lcd.setCursor((u8) (cursor - window), 0);
-  lcd.write(CURSOR_ASCII);
   if(slot == BASIC_PROGRAM_COUNT) basic_print_text_at(0, 1, "NEW", "НОВАЯ", 5);
   else {
     char display_name[22];
@@ -2407,6 +2428,9 @@ static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 windo
   lcd.print(cursor);
   lcd.print('/');
   lcd.print(len);
+  lcd.setCursor((u8) (cursor - window), 0);
+  if(lcd.hasHardwareCursor()) lcd.cursorOn();
+  else lcd.write(CURSOR_ASCII);
 }
 
 static bool store_edited_program(int slot, char* source, const char* store_name) {
@@ -2612,13 +2636,14 @@ static void EditBasicSlot(int slot) {
   u16 cursor = len;
   u16 window = (cursor > 15) ? cursor - 15 : 0;
   BasicEditShift shift = BasicEditShift::NONE;
-  u32 blink_time = millis() + CURSOR_BLINK_MS;
+  bool dirty = true;
 
   kbd::debounce_init();
   while(true) {
-    const u32 now = millis();
-    draw_basic_editor(source, len, cursor, window, slot);
-    if(now >= blink_time) blink_time = now + CURSOR_BLINK_MS;
+    if(dirty) {
+      draw_basic_editor(source, len, cursor, window, slot);
+      dirty = false;
+    }
 
     kbd::scan_and_debounced();
     i32 key_code = kbd::get_key(key_state::PRESSED);
@@ -2626,6 +2651,7 @@ static void EditBasicSlot(int slot) {
       delay(30);
       continue;
     }
+    dirty = true;
 
     const bool shifted_key = shift != BasicEditShift::NONE;
 
@@ -2635,6 +2661,7 @@ static void EditBasicSlot(int slot) {
     }
 
     if(!shifted_key && (key_code == KEY_ESC || key_code == KEY_ESC_PRESS)) {
+      lcd.cursorOff();
       if(!basic_confirm_save()) return;
       char name[BASIC_NAME_SIZE];
       memset(name, 0, sizeof(name));

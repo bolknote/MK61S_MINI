@@ -70,6 +70,14 @@ static void test_arithmetic_and_print(void) {
   CHECK_STARTS(FocalTestLcdLine(0), "7");
 }
 
+static void test_print_newline(void) {
+  FocalTestReset();
+  const int slot = add_program("01.10 S A=7\n01.20 S B=9\n01.30 P A,!,B\n01.40 E");
+  FocalTestRun(slot);
+  CHECK_STARTS(FocalTestLcdLine(0), "7");
+  CHECK_STARTS(FocalTestLcdLine(1), "9");
+}
+
 static void test_for_loop_sum(void) {
   FocalTestReset();
   const int slot = add_program("01.10 S S=0\n01.20 F I=1,5; S S=S+I\n01.30 P S\n01.40 E");
@@ -325,6 +333,7 @@ static void test_editor_line_navigation(void) {
 int main(void) {
   test_compile_rejects_basic_aliases();
   test_arithmetic_and_print();
+  test_print_newline();
   test_for_loop_sum();
   test_for_loop_start_step_end();
   test_do_exact_line();

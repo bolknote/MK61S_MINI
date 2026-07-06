@@ -43,6 +43,11 @@ class MK61Display {
       x = (col < 16) ? col : 15;
       y = (row < 4) ? row : 3;
     }
+    void cursorOn(void) {}
+    void cursorOff(void) {}
+    void blinkOn(void) {}
+    void blinkOff(void) {}
+    bool hasHardwareCursor(void) const { return false; }
 
     void write(u8 value) {
       if(x < 16 && y < 4) lines[y][x++] = (char) value;
@@ -143,7 +148,6 @@ static constexpr int FOCAL_PRINT_BUFFER_SIZE   = 96;
 static constexpr int FOCAL_CALL_DEPTH          = 8;
 static constexpr int FOCAL_RUNTIME_STEPS_LIMIT = 4096;
 
-static constexpr u32 CURSOR_BLINK_MS     = 850;
 static constexpr u32 SMS_INPUT_TIMEOUT_MS = 1200;
 static constexpr u8  CURSOR_ASCII        = 0xFF;
 static constexpr u8  SMS_CURSOR_ASCII    = '_';
@@ -978,11 +982,18 @@ static void focal_append_print(char* out, usize size, const char* text) {
   strncat(out, text, size - strlen(out) - 1);
 }
 
+static void focal_flush_print_line(char* output, u8 row) {
+  if(output[0] == 0) return;
+  focal_display_line(row, output);
+  output[0] = 0;
+}
+
 static bool focal_execute_print(const char* operand) {
   const char* begin = operand;
   const char* end = operand + strlen(operand);
   char output[FOCAL_PRINT_BUFFER_SIZE];
   output[0] = 0;
+  u8 output_row = 0;
 
   while(begin < end) {
     const char* comma = focal_find_top_level(begin, end, ',');
@@ -992,7 +1003,8 @@ static bool focal_execute_print(const char* operand) {
 
     if(begin < item_end) {
       if((item_end - begin) == 1 && *begin == '!') {
-        if(output[0] != 0) focal_display_line(0, output);
+        focal_flush_print_line(output, output_row);
+        if(output_row + 1 < lcd.rows()) output_row++;
       } else if(*begin == '"') {
         begin++;
         const char* quote = begin;
@@ -1014,8 +1026,21 @@ static bool focal_execute_print(const char* operand) {
     begin = comma + 1;
   }
 
-  if(output[0] != 0) focal_display_line(0, output);
+  focal_flush_print_line(output, output_row);
   return true;
+}
+
+static void focal_wait_after_menu_run(void) {
+#ifndef FOCAL_HOST_TEST
+  kbd::clear_hold_key();
+  while(kbd::get_key() >= 0) {}
+  while(kbd::any_key_pressed()) {
+    kbd::scan_and_debounced();
+    delay(10);
+  }
+  kbd::debounce_init();
+  kbd::get_key_wait();
+#endif
 }
 
 static bool focal_execute_goto(const char* operand, FocalFlow& flow) {
@@ -1305,7 +1330,7 @@ static bool focal_store_name_is_valid(const char* name) {
   return name != NULL && name[0] != 0 && strlen(name) < program_store::NAME_SIZE;
 }
 
-static int load_focal_program_from_store(const char* name) {
+static int load_focal_program_from_store(const char* name, bool compile = true) {
   if(!focal_store_name_is_valid(name)) return -1;
 
   char source[FOCAL_SOURCE_SIZE];
@@ -1314,7 +1339,7 @@ static int load_focal_program_from_store(const char* name) {
   if(!program_store::read(program_store::ProgramType::FOCAL, name, (u8*) source, FOCAL_SOURCE_SIZE - 1, &len)) return -1;
   source[len] = 0;
 
-  if(!focal_compile_source(source, focal_ast)) return -1;
+  if(compile && !focal_compile_source(source, focal_ast)) return -1;
 
   const int slot = focal_alloc_program_slot(name);
   focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
@@ -1422,6 +1447,7 @@ bool RunFocalProgram(const char* name) {
 #endif
   if(slot < 0) return false;
   RunFocal(slot);
+  focal_wait_after_menu_run();
   return true;
 }
 
@@ -1529,7 +1555,7 @@ static int select_focal_program(bool allow_new) {
         {
           program_store::Entry entry;
           if(!program_store::entry(program_store::ProgramType::FOCAL, active, entry)) return -1;
-          return load_focal_program_from_store(entry.name);
+          return load_focal_program_from_store(entry.name, !allow_new);
         }
       case KEY_ESC:
         return -1;
@@ -1571,7 +1597,10 @@ static int select_focal_program(bool allow_new) {
 
 bool FOCAL_library_select(void) {
   const int program = select_focal_program(false);
-  if(program >= 0) RunFocal(program);
+  if(program >= 0) {
+    RunFocal(program);
+    focal_wait_after_menu_run();
+  }
   return true;
 }
 
@@ -1713,7 +1742,8 @@ static void draw_focal_editor(const char* source, u16 len, u16 cursor, u16 view_
   }
 
   lcd.setCursor(cursor_screen_col, cursor_screen_row);
-  lcd.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
+  if(lcd.hasHardwareCursor()) lcd.cursorOn();
+  else lcd.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
 
   (void) slot;
 }
@@ -2117,19 +2147,24 @@ static void EditFocalSlot(int slot) {
   if(slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(source, sizeof(source), programs[slot].source);
 
   u16 len = (u16) strlen(source);
-  u16 cursor = len;
-  u16 view_top = focal_line_start_for_cursor(source, cursor);
+  u16 cursor = 0;
+  u16 view_top = 0;
   FocalEditShift shift = FocalEditShift::NONE;
   FocalSmsState sms = {};
-  u32 blink_time = millis() + CURSOR_BLINK_MS;
+  bool dirty = true;
 
   kbd::debounce_init();
   while(true) {
     const u32 now = millis();
-    if(sms.active && now >= sms.deadline_ms) focal_sms_reset(sms);
-    focal_editor_ensure_cursor_visible(source, len, cursor, view_top);
-    draw_focal_editor(source, len, cursor, view_top, slot, sms.active);
-    if(now >= blink_time) blink_time = now + CURSOR_BLINK_MS;
+    if(sms.active && now >= sms.deadline_ms) {
+      focal_sms_reset(sms);
+      dirty = true;
+    }
+    if(dirty) {
+      focal_editor_ensure_cursor_visible(source, len, cursor, view_top);
+      draw_focal_editor(source, len, cursor, view_top, slot, sms.active);
+      dirty = false;
+    }
 
     kbd::scan_and_debounced();
     i32 key_code = kbd::get_key(key_state::PRESSED);
@@ -2137,6 +2172,7 @@ static void EditFocalSlot(int slot) {
       delay(30);
       continue;
     }
+    dirty = true;
 
     const bool shifted_key = shift != FocalEditShift::NONE;
     if(!shifted_key && sms.active) {
@@ -2197,6 +2233,7 @@ static void EditFocalSlot(int slot) {
     }
 
     if(!shifted_key && (key_code == KEY_ESC || key_code == KEY_ESC_PRESS)) {
+      lcd.cursorOff();
       if(!focal_confirm_save()) return;
       char name[FOCAL_NAME_SIZE];
       memset(name, 0, sizeof(name));
@@ -2237,7 +2274,7 @@ void EditFocal(void) {
 
 bool EditFocalProgram(const char* name) {
 #ifndef FOCAL_HOST_TEST
-  const int slot = load_focal_program_from_store(name);
+  const int slot = load_focal_program_from_store(name, false);
   if(slot < 0) return false;
   EditFocalSlot(slot);
   return true;
