@@ -215,9 +215,13 @@ inline void scan_text(font_map_t& map, const char* text, u8 width) {
 }
 
 inline void load_custom_font(const font_map_t& map) {
+#if defined(MK61_DISPLAY_UC1609)
+  (void) map;
+#else
   for(u8 i = 0; i < map.count; i++) {
     lcd.createChar(i, (uint8_t*) glyph_for(map.codepoints[i]));
   }
+#endif
 }
 
 inline void restore_default_font(void) {
@@ -233,6 +237,16 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
     if(rom_char(codepoint, out)) {
       lcd.write(out);
     } else {
+#if defined(MK61_DISPLAY_UC1609)
+      const u8* glyph = glyph_for(codepoint);
+      if(glyph != NULL) {
+        lcd.writeGlyph(glyph);
+      } else if(fallback_char(codepoint, out)) {
+        lcd.write(out);
+      } else {
+        lcd.write((u8) '?');
+      }
+#else
       const i8 slot = slot_for(map, codepoint);
       if(slot >= 0) {
         lcd.write((u8) slot);
@@ -241,6 +255,7 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
       } else {
         lcd.write((u8) '?');
       }
+#endif
     }
     used++;
   }

@@ -28,6 +28,10 @@ void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   lcd.createChar(nChar, glyph);
 }
 
+void MK61Display::writeGlyph(const uint8_t*) {
+  write((uint8_t) '?');
+}
+
 void MK61Display::clearCustomChars(void) {}
 
 #if ARDUINO >= 100
@@ -47,6 +51,8 @@ MK61Display::MK61Display(void)
     lcd(lcd_display::PIXEL_WIDTH, lcd_display::PIXEL_HEIGHT, PIN_GLCD_CD, PIN_GLCD_RST, PIN_GLCD_CS),
     render_screen(render_buffer, lcd_display::PIXEL_WIDTH, lcd_display::CELL_HEIGHT, 0, 0),
     cells{{0}},
+    cell_glyphs{{{0}}},
+    cell_glyph_valid{{false}},
     dirty_cols{0},
     custom_glyphs{{0}},
     custom_valid{false},
@@ -123,6 +129,19 @@ void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   custom_valid[nChar] = true;
 }
 
+void MK61Display::writeGlyph(const uint8_t* glyph) {
+  if(glyph == NULL) {
+    write((uint8_t) '?');
+    return;
+  }
+
+  cells[cursor_y][cursor_x] = 0;
+  memcpy(cell_glyphs[cursor_y][cursor_x], glyph, sizeof(cell_glyphs[cursor_y][cursor_x]));
+  cell_glyph_valid[cursor_y][cursor_x] = true;
+  markCellDirty(cursor_x, cursor_y);
+  advanceCursor();
+}
+
 void MK61Display::clearCustomChars(void) {
   for(u8 i = 0; i < CUSTOM_GLYPHS; i++) custom_valid[i] = false;
 }
@@ -131,6 +150,7 @@ void MK61Display::clearShadow(void) {
   for(u8 row = 0; row < lcd_display::ROWS; row++) {
     for(u8 col = 0; col < lcd_display::COLS; col++) {
       cells[row][col] = ' ';
+      cell_glyph_valid[row][col] = false;
     }
     dirty_cols[row] = 0;
   }
@@ -164,10 +184,10 @@ void MK61Display::advanceCursor(void) {
   }
 }
 
-void MK61Display::drawCustomChar(u8 x, u8 value) {
+void MK61Display::drawGlyph(u8 x, const uint8_t* glyph) {
   lcd.fillRect(x, 0, lcd_display::CELL_WIDTH, lcd_display::CELL_HEIGHT, BACKGROUND);
   for(u8 row = 0; row < 8; row++) {
-    const u8 bits = custom_glyphs[value][row];
+    const u8 bits = glyph[row];
     for(u8 col = 0; col < 5; col++) {
       if((bits & (0x10 >> col)) != 0) {
         lcd.fillRect(x + col * 2, row * 2, 2, 2, FOREGROUND);
@@ -187,8 +207,11 @@ void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
   for(u8 i = 0; i < count; i++) {
     const u8 value = cells[row][first_col + i];
     const u8 x = i * lcd_display::CELL_WIDTH;
-    if(value < CUSTOM_GLYPHS && custom_valid[value]) {
-      drawCustomChar(x, value);
+    const u8 col = first_col + i;
+    if(cell_glyph_valid[row][col]) {
+      drawGlyph(x, cell_glyphs[row][col]);
+    } else if(value < CUSTOM_GLYPHS && custom_valid[value]) {
+      drawGlyph(x, custom_glyphs[value]);
     } else {
       lcd.drawChar(x, 0, value, FOREGROUND, BACKGROUND, 2);
     }
@@ -222,6 +245,12 @@ void MK61Display::write(uint8_t value) {
   }
 
   cells[cursor_y][cursor_x] = value;
+  if(value < CUSTOM_GLYPHS && custom_valid[value]) {
+    memcpy(cell_glyphs[cursor_y][cursor_x], custom_glyphs[value], sizeof(cell_glyphs[cursor_y][cursor_x]));
+    cell_glyph_valid[cursor_y][cursor_x] = true;
+  } else {
+    cell_glyph_valid[cursor_y][cursor_x] = false;
+  }
   markCellDirty(cursor_x, cursor_y);
   advanceCursor();
 

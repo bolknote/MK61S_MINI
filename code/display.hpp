@@ -55,6 +55,7 @@ class MK61Display : public Print {
     void endUpdate(void);
     void setCursor(u8 x, u8 y);
     void createChar(u8 nChar, uint8_t* glyph);
+    void writeGlyph(const uint8_t* glyph);
     void clearCustomChars(void);
     u8 cols(void) const { return lcd_display::COLS; }
     u8 rows(void) const { return lcd_display::ROWS; }
@@ -78,6 +79,8 @@ class MK61Display : public Print {
     ERM19264_UC1609 lcd;
     ERM19264_UC1609_Screen render_screen;
     uint8_t cells[lcd_display::ROWS][lcd_display::COLS];
+    uint8_t cell_glyphs[lcd_display::ROWS][lcd_display::COLS][8];
+    bool cell_glyph_valid[lcd_display::ROWS][lcd_display::COLS];
     uint16_t dirty_cols[lcd_display::ROWS];
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
@@ -89,7 +92,7 @@ class MK61Display : public Print {
 
     void clearShadow(void);
     void clearPhysicalScreen(void);
-    void drawCustomChar(u8 x, u8 value);
+    void drawGlyph(u8 x, const uint8_t* glyph);
     void advanceCursor(void);
     void markCellDirty(u8 x, u8 y);
     void markScreenDirty(void);
