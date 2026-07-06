@@ -386,6 +386,46 @@ static void test_staging_survives_mass_copy_before_directory_update(void) {
   }
 }
 
+static void test_many_pending_directory_entries_wait_for_late_data(void) {
+  reset_virtual_fat_state();
+
+  static const u8 FILES = 12;
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  for(u8 i = 0; i < FILES; i++) {
+    char short_name[12] = "L00     M61";
+    short_name[1] = (char) ('0' + i / 10);
+    short_name[2] = (char) ('0' + i % 10);
+    fill_short_dir_entry(root + (u16) (i + 1) * 32, short_name, (u16) (2 + i), (u32) (100 + i));
+  }
+
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+  for(u8 i = 0; i < FILES; i++) {
+    char name[program_store::NAME_SIZE];
+    snprintf(name, sizeof(name), "L%02u", (unsigned) i);
+    assert(!program_store::exists(program_store::ProgramType::MK61, name));
+  }
+
+  u8 sector[virtual_fat::SECTOR_SIZE];
+  for(u8 i = 0; i < FILES; i++) {
+    memset(sector, (int) (0x60 + i), sizeof(sector));
+    assert(virtual_fat::write_sector(data_lba() + i, sector));
+  }
+  assert(virtual_fat::flush_pending());
+
+  for(u8 i = 0; i < FILES; i++) {
+    char name[program_store::NAME_SIZE];
+    snprintf(name, sizeof(name), "L%02u", (unsigned) i);
+    u8 stored[128];
+    u16 stored_len = 0;
+    assert(program_store::read(program_store::ProgramType::MK61, name, stored, sizeof(stored), &stored_len));
+    assert(stored_len == (u16) (100 + i));
+    assert(stored[0] == (u8) (0x60 + i));
+    assert(stored[stored_len - 1] == (u8) (0x60 + i));
+  }
+}
+
 static void test_hidden_stored_entries_do_not_shift_visible_files(void) {
   reset_virtual_fat_state();
 
@@ -546,6 +586,7 @@ int main(void) {
   test_staging_does_not_shadow_committed_file_data();
   test_staged_cluster_is_not_advertised_as_free();
   test_staging_survives_mass_copy_before_directory_update();
+  test_many_pending_directory_entries_wait_for_late_data();
   test_hidden_stored_entries_do_not_shift_visible_files();
   test_appledouble_entry_does_not_relocate_visible_file();
   test_ignored_directory_does_not_relocate_visible_file();
