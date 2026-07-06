@@ -469,6 +469,7 @@ bool load_item(const TPunct& item, u8* code_stream, u8* setup_stream) {
   }
 
   if(!load_from((usize) item.offset, code_stream, needs_expanded)) return false;
+  hidden_return_to_program_start();
   loaded_message(item);
   return true;
 }
