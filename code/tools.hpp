@@ -59,7 +59,8 @@ struct SettingsFlags {
       u8 language_ru : 1;
       u8 program_memory_mode : 2;
       u8 speed_mode : 2;
-      u8 reserved : 3;
+      u8 usb_disk : 1;
+      u8 reserved : 2;
     } bits;
   };
 

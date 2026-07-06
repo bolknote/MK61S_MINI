@@ -881,6 +881,25 @@ bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_l
   return true;
 }
 
+bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 len, u16* out_len) {
+  DiskActivity disk_activity;
+  if(out_len != NULL) *out_len = 0;
+  if(data == NULL && len != 0) return false;
+  if(!ensure_index()) return false;
+  const int idx = find_index(type, name);
+  if(idx < 0) return false;
+  const IndexEntry& entry = index_entries[idx];
+  if(offset >= entry.data_len) return true;
+
+  u16 available = (u16) (entry.data_len - offset);
+  if(available > len) available = len;
+
+  const u32 payload = entry.address + ((entry.type == ProgramType::MK61) ? 7 : 8) + entry.name_len + offset;
+  for(u16 i = 0; i < available; i++) data[i] = read_byte(payload + i);
+  if(out_len != NULL) *out_len = available;
+  return true;
+}
+
 bool remove(ProgramType type, const char* name) {
   DiskActivity disk_activity;
   if(!ensure_index()) return false;

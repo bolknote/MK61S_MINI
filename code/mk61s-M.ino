@@ -21,6 +21,7 @@ using namespace kbd;
 #include "menu.hpp"
 #include "basic.hpp"
 #include "focal.hpp"
+#include "usb_mass_storage.hpp"
 
 #include "ledcontrol.h"
 using namespace led;
@@ -185,18 +186,23 @@ void setup() {
   led::init();
   sound_driver_init(PIN_BUZZER);
 
-  #ifdef SERIAL_OUTPUT
-    terminal.init();
-  #endif
-  dbgln(MINI, FIRMWARE_VER);
-
   #ifdef SPI_FLASH
       init_external_flash();
   #endif
 
+  library_mk61::load_settings_state();
+
+  if(library_mk61::usb_disk_is_on()) {
+    usb_mass_storage::init();
+  } else {
+    #ifdef SERIAL_OUTPUT
+      terminal.init();
+    #endif
+    dbgln(MINI, FIRMWARE_VER);
+  }
+
   //  kbd::test();
   kbd::init();
-  library_mk61::load_settings_state();
   
   #if defined(MK61_DISPLAY_LCD1602) && (defined(REVISION_V2) || defined(REVISION_V3))
     pinMode(PIN_LCD_RW, OUTPUT);
