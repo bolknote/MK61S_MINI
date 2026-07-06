@@ -377,8 +377,18 @@ bool   TurnSoundVolume(void) {
   return action::MENU_BACK;
 }
 
-static void StepSoundVolume(i8 delta) {
+static void ApplySoundVolume(u8 next_volume) {
   sound(PIN_BUZZER, 0, 0);
+  const u8 volume = library_mk61::sound_volume();
+  if(next_volume == volume) return;
+
+  library_mk61::set_sound_volume(next_volume);
+  library_mk61::refresh_menu_text();
+  library_mk61::store_settings_state();
+  sound(PIN_BUZZER, 2500, 20);
+}
+
+static void StepSoundVolume(i8 delta) {
   const u8 volume = library_mk61::sound_volume();
 
   u8 next_volume = volume;
@@ -388,12 +398,12 @@ static void StepSoundVolume(i8 delta) {
     next_volume = volume - 1;
   }
 
-  if(next_volume == volume) return;
+  ApplySoundVolume(next_volume);
+}
 
-  library_mk61::set_sound_volume(next_volume);
-  library_mk61::refresh_menu_text();
-  library_mk61::store_settings_state();
-  sound(PIN_BUZZER, 2500, 20);
+static void CycleSoundVolumeUp(void) {
+  const u8 volume = library_mk61::sound_volume();
+  ApplySoundVolume((volume >= 10) ? 0 : (volume + 1));
 }
 
 bool settings_select(void) {
@@ -456,6 +466,11 @@ bool  mk61_games_select(void) {
 
 bool class_menu::handle_settings_adjustment(i32 key) {
   if(puncts != library_mk61::SETTINGS_MENU || active_punct != library_mk61::SETTINGS_VOLUME) return false;
+
+  if(key == KEY_OK_PRESS) {
+    CycleSoundVolumeUp();
+    return true;
+  }
 
   if(key == KEY_SHG_RIGHT_PRESS) {
     StepSoundVolume(1);
