@@ -312,14 +312,20 @@ static u32 vfat_stage_capacity_bytes(void) {
 #endif
 }
 
-static bool vfat_stage_available(void) {
+static u8 vfat_stage_sector_limit(void) {
 #ifdef SPI_FLASH
-  if(!flash_is_ok) return false;
-  const u32 end_address = sector_base(VFAT_STAGE_FIRST_SECTOR + VFAT_STAGE_SECTOR_COUNT);
-  return end_address <= vfat_stage_capacity_bytes();
+  if(!flash_is_ok) return 0;
+  const u32 sectors = vfat_stage_capacity_bytes() / FLASH_SECTOR_SIZE;
+  if(sectors <= VFAT_STAGE_FIRST_SECTOR) return 0;
+  const u32 available = sectors - VFAT_STAGE_FIRST_SECTOR;
+  return (available > VFAT_STAGE_SECTOR_COUNT) ? VFAT_STAGE_SECTOR_COUNT : (u8) available;
 #else
-  return false;
+  return 0;
 #endif
+}
+
+static bool vfat_stage_available(void) {
+  return vfat_stage_sector_limit() != 0;
 }
 
 static u16 vfat_stage_crc(u16 cluster, const u8* data) {
@@ -339,7 +345,7 @@ void vfat_stage_clear(void) {
 }
 
 static bool vfat_stage_prepare_sector(u8 sector) {
-  if(sector >= VFAT_STAGE_SECTOR_COUNT) return false;
+  if(sector >= vfat_stage_sector_limit()) return false;
   if(vfat_stage_sector_prepared[sector]) return true;
   if(!erase_sector(VFAT_STAGE_FIRST_SECTOR + sector)) return false;
   vfat_stage_sector_prepared[sector] = true;
@@ -351,11 +357,11 @@ static bool vfat_stage_advance_record(void) {
   vfat_stage_sector++;
   vfat_stage_offset = 0;
 
-  if(vfat_stage_sector < VFAT_STAGE_SECTOR_COUNT) return true;
+  if(vfat_stage_sector < vfat_stage_sector_limit()) return true;
   if(vfat_stage_active_count != 0) return false;
 
   vfat_stage_clear();
-  return true;
+  return vfat_stage_available();
 }
 
 bool vfat_stage_write(u16 cluster, const u8* data) {
