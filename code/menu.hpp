@@ -89,6 +89,7 @@ class class_menu {
     t_punct** puncts;
 
     void draw(void);
+    i32 wait_key(void);
     bool handle_settings_adjustment(i32 key);
 
   public:

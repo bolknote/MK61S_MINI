@@ -10,6 +10,7 @@
 
 extern MK61Display lcd;
 extern t_time_ms runtime_ms;
+extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
 extern isize mk61_quants_reload;
 
@@ -36,6 +37,9 @@ static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
+static bool settings_dirty = false;
+static t_time_ms settings_save_at = 0;
+static constexpr t_time_ms SETTINGS_SAVE_IDLE_MS = 1000;
 
 struct MutablePunct {
   u8            size;
@@ -293,6 +297,21 @@ void  store_settings_state(void) {
   store_sound_settings(sound_settings);
 }
 
+static void mark_settings_dirty(void) {
+  settings_dirty = true;
+  settings_save_at = millis() + SETTINGS_SAVE_IDLE_MS;
+}
+
+void flush_settings_state(void) {
+  if(!settings_dirty) return;
+  store_settings_state();
+  settings_dirty = false;
+}
+
+void poll_settings_state_save(void) {
+  if(settings_dirty && (i32) (millis() - settings_save_at) >= 0) flush_settings_state();
+}
+
 void  load_settings_state(void) {
   const SettingsFlags flags = read_settings_flags();
   set_language_state(flags.bits.language_ru != 0);
@@ -332,7 +351,7 @@ bool   TurnSpeed(void) {
       break;
   }
   library_mk61::refresh_menu_text();
-  library_mk61::store_settings_state();
+  library_mk61::mark_settings_dirty();
 
   return action::MENU_BACK;
 }
@@ -342,7 +361,7 @@ bool   TurnSoundVolume(void) {
   const u8 next_volume = (library_mk61::sound_volume() >= 10) ? 0 : (library_mk61::sound_volume() + 1);
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
-  library_mk61::store_settings_state();
+  library_mk61::mark_settings_dirty();
 
   return action::MENU_BACK;
 }
@@ -354,7 +373,7 @@ static void ApplySoundVolume(u8 next_volume) {
 
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
-  library_mk61::store_settings_state();
+  library_mk61::mark_settings_dirty();
   sound(PIN_BUZZER, 2500, 20);
 }
 
@@ -380,6 +399,7 @@ bool settings_select(void) {
   library_mk61::refresh_menu_text();
   class_menu settings_menu = class_menu((t_punct**) library_mk61::SETTINGS_MENU, library_mk61::COUNT_SETTINGS_PUNCTS);
   settings_menu.select();
+  library_mk61::flush_settings_state();
   library_mk61::refresh_menu_text();
   return action::MENU_BACK;
 }
@@ -387,7 +407,7 @@ bool settings_select(void) {
 bool   TurnLanguage(void) {
   library_mk61::set_language_state(!library_mk61::language_is_ru());
   library_mk61::refresh_menu_text();
-  library_mk61::store_settings_state();
+  library_mk61::mark_settings_dirty();
 
   return action::MENU_BACK;
 }
@@ -408,7 +428,7 @@ bool   TurnProgramMemory(void) {
   }
 
   library_mk61::refresh_menu_text();
-  library_mk61::store_settings_state();
+  library_mk61::mark_settings_dirty();
 
   if(was_expanded != library_mk61::expanded_program_is_on()) {
     reset_ext_program_state();
@@ -533,11 +553,24 @@ void class_menu::draw(void) {
   previous_up = up;
 }
 
+i32 class_menu::wait_key(void) {
+  do {
+    idle_main_process();
+    if(puncts == library_mk61::SETTINGS_MENU) library_mk61::poll_settings_state_save();
+
+    const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      kbd::exclude_before(scan_code);
+      return scan_code;
+    }
+  } while(true);
+}
+
 void class_menu::select(void) {
   lcd.clear();
   do{
     draw();
-    const i32 last_key_code = kbd::get_key_wait();
+    const i32 last_key_code = wait_key();
     if(handle_settings_adjustment(last_key_code)) continue;
     switch(last_key_code) {
       case KEY_RIGHT_PRESS:
