@@ -98,6 +98,13 @@ static const i32 KEY_OK_PRESS     =   KEY_OK    | (i32) key_state::PRESSED;
 static const i32 KEY_RUN_PRESS    =   KEY_RUN   | (i32) key_state::PRESSED;
 static const i32 KEY_FRW_PRESS    =   KEY_FRW   | (i32) key_state::PRESSED;
 static const i32 KEY_BKW_PRESS    =   KEY_BKW   | (i32) key_state::PRESSED;
+#if defined(MK61_KEYBOARD_MINI)
+static const i32 KEY_SHG_RIGHT_PRESS = KEY_BKW_PRESS;
+static const i32 KEY_SHG_LEFT_PRESS  = KEY_FRW_PRESS;
+#else
+static const i32 KEY_SHG_RIGHT_PRESS = KEY_FRW_PRESS;
+static const i32 KEY_SHG_LEFT_PRESS  = KEY_BKW_PRESS;
+#endif
 
 static const i32 KEY_USER_RELEASE =   KEY_USER  | (i32) key_state::RELEASED;
 static const i32 KEY_ESC_RELEASE  =   KEY_ESC   | (i32) key_state::RELEASED;

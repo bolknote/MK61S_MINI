@@ -393,6 +393,7 @@ static void StepSoundVolume(i8 delta) {
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
+  sound(PIN_BUZZER, 2500, 20);
 }
 
 bool settings_select(void) {
@@ -456,12 +457,12 @@ bool  mk61_games_select(void) {
 bool class_menu::handle_settings_adjustment(i32 key) {
   if(puncts != library_mk61::SETTINGS_MENU || active_punct != library_mk61::SETTINGS_VOLUME) return false;
 
-  if(key == KEY_FRW_PRESS) {
+  if(key == KEY_SHG_RIGHT_PRESS) {
     StepSoundVolume(1);
     return true;
   }
 
-  if(key == KEY_BKW_PRESS) {
+  if(key == KEY_SHG_LEFT_PRESS) {
     StepSoundVolume(-1);
     return true;
   }
