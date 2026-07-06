@@ -7,6 +7,7 @@
 #include "basic.hpp"
 #include "development.hpp"
 #include "focal.hpp"
+#include "usb_mass_storage.hpp"
 
 extern MK61Display lcd;
 extern t_time_ms runtime_ms;
@@ -462,6 +463,7 @@ bool   TurnLanguage(void) {
 }
 
 bool   TurnUsbDisk(void) {
+  const bool was_on = library_mk61::usb_disk_is_on();
 #ifdef MK61_USB_DISK_FORCE_ON
   library_mk61::set_usb_disk_state(!usb_disk_state);
 #else
@@ -469,6 +471,7 @@ bool   TurnUsbDisk(void) {
 #endif
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
+  if(was_on && !library_mk61::usb_disk_is_on()) usb_mass_storage::deinit();
 
   return action::MENU_BACK;
 }

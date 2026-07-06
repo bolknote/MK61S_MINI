@@ -200,6 +200,14 @@ bool init(void) {
   return true;
 }
 
+void deinit(void) {
+  if(!initialized) return;
+  (void) USBD_Stop(&usb_device);
+  (void) USBD_DeInit(&usb_device);
+  memset(&usb_device, 0, sizeof(usb_device));
+  initialized = false;
+}
+
 bool active(void) {
   return initialized;
 }
@@ -210,6 +218,7 @@ bool active(void) {
 
 namespace usb_mass_storage {
 bool init(void) { return false; }
+void deinit(void) {}
 bool active(void) { return false; }
 }
 
