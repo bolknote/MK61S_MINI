@@ -113,6 +113,7 @@ static u8 sound_pwm_duty(void) {
 static void sound_stop(void) {
   if(!sound_active) return;
   analogWrite(sound_active_pin, 0);
+  pinMode(sound_active_pin, OUTPUT);
   digitalWrite(sound_active_pin, LOW);
   sound_active = false;
 }

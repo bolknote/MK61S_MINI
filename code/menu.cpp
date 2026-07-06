@@ -368,22 +368,22 @@ bool   TurnSpeed(void) {
 }
 
 bool   TurnSoundVolume(void) {
+  sound(PIN_BUZZER, 0, 0);
   const u8 next_volume = (library_mk61::sound_volume() >= 10) ? 0 : (library_mk61::sound_volume() + 1);
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
-  sound(PIN_BUZZER, 2000, 40);
 
   return action::MENU_BACK;
 }
 
 bool   TurnSoundVolumeDown(void) {
+  sound(PIN_BUZZER, 0, 0);
   const u8 volume = library_mk61::sound_volume();
   const u8 next_volume = (volume == 0) ? 10 : (volume - 1);
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
-  sound(PIN_BUZZER, 2000, 40);
 
   return action::MENU_BACK;
 }
