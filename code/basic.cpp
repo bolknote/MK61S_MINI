@@ -40,6 +40,7 @@ class MK61Display {
       x = 0;
       y = 0;
     }
+    void flush(void) {}
 
     void setCursor(u8 col, u8 row) {
       x = (col < 16) ? col : 15;
@@ -49,6 +50,7 @@ class MK61Display {
     void cursorOff(void) {}
     void blinkOn(void) {}
     void blinkOff(void) {}
+    bool supportsCursor(void) const { return false; }
     bool hasHardwareCursor(void) const { return false; }
 
     void write(u8 value) {
@@ -2555,7 +2557,7 @@ static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 windo
   lcd.print('/');
   lcd.print(len);
   lcd.setCursor((u8) (cursor - window), 0);
-  if(lcd.hasHardwareCursor()) lcd.cursorOn();
+  if(lcd.supportsCursor()) lcd.cursorOn();
   else lcd.write(CURSOR_ASCII);
 }
 
@@ -2774,6 +2776,7 @@ static void EditBasicSlot(int slot) {
     kbd::scan_and_debounced();
     i32 key_code = kbd::get_key(key_state::PRESSED);
     if(key_code < 0) {
+      lcd.flush();
       delay(30);
       continue;
     }

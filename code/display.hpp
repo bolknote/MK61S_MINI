@@ -58,6 +58,7 @@ class MK61Display : public Print {
     void cursorOff(void);
     void blinkOn(void);
     void blinkOff(void);
+    bool supportsCursor(void) const;
     bool hasHardwareCursor(void) const;
     void createChar(u8 nChar, uint8_t* glyph);
     void writeGlyph(const uint8_t* glyph);
@@ -94,13 +95,23 @@ class MK61Display : public Print {
     usize update_depth;
     u8 cursor_x;
     u8 cursor_y;
+    bool cursor_underline;
+    bool cursor_blink;
+    bool cursor_blink_phase;
+    t_time_ms cursor_next_blink_ms;
 
     void clearShadow(void);
     void clearPhysicalScreen(void);
     void drawGlyph(u8 x, const uint8_t* glyph);
+    void drawCursor(u8 x, bool block);
     void advanceCursor(void);
+    void moveCursorTo(u8 x, u8 y);
+    bool cursorOverlayVisible(void) const;
+    void markCellDirtyDeferred(u8 x, u8 y);
+    void markCursorCellDirty(void);
     void markCellDirty(u8 x, u8 y);
     void markScreenDirty(void);
+    void updateCursorBlink(void);
     void renderRun(u8 row, u8 first_col, u8 count);
 #endif
 };

@@ -38,6 +38,7 @@ class MK61Display {
       x = 0;
       y = 0;
     }
+    void flush(void) {}
 
     void setCursor(u8 col, u8 row) {
       x = (col < 16) ? col : 15;
@@ -47,6 +48,7 @@ class MK61Display {
     void cursorOff(void) {}
     void blinkOn(void) {}
     void blinkOff(void) {}
+    bool supportsCursor(void) const { return false; }
     bool hasHardwareCursor(void) const { return false; }
 
     void write(u8 value) {
@@ -2048,7 +2050,7 @@ static void draw_focal_editor(const char* source, u16 len, u16 cursor, u16 view_
   }
 
   lcd.setCursor(cursor_screen_col, cursor_screen_row);
-  if(lcd.hasHardwareCursor()) lcd.cursorOn();
+  if(lcd.supportsCursor()) lcd.cursorOn();
   else lcd.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
 
   (void) slot;
@@ -2475,6 +2477,7 @@ static void EditFocalSlot(int slot) {
     kbd::scan_and_debounced();
     i32 key_code = kbd::get_key(key_state::PRESSED);
     if(key_code < 0) {
+      lcd.flush();
       delay(30);
       continue;
     }

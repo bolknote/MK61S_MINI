@@ -45,6 +45,10 @@ void MK61Display::blinkOff(void) {
   lcd.noBlink();
 }
 
+bool MK61Display::supportsCursor(void) const {
+  return true;
+}
+
 bool MK61Display::hasHardwareCursor(void) const {
   return true;
 }
@@ -71,6 +75,12 @@ void MK61Display::write(uint8_t value) {
 
 #else
 
+static constexpr t_time_ms CURSOR_BLINK_MS = 500;
+
+static inline bool timeReached(t_time_ms now, t_time_ms target) {
+  return (i32) (now - target) >= 0;
+}
+
 MK61Display::MK61Display(void)
   : render_buffer{0},
     lcd(lcd_display::PIXEL_WIDTH, lcd_display::PIXEL_HEIGHT, PIN_GLCD_CD, PIN_GLCD_RST, PIN_GLCD_CS),
@@ -85,7 +95,11 @@ MK61Display::MK61Display(void)
     dirty(false),
     update_depth(0),
     cursor_x(0),
-    cursor_y(0) {}
+    cursor_y(0),
+    cursor_underline(false),
+    cursor_blink(false),
+    cursor_blink_phase(false),
+    cursor_next_blink_ms(0) {}
 
 void MK61Display::begin(u8, u8) {
   lcd.LCDbegin(GLCD_UC1609_BIAS, GLCD_UC1609_ADDRESS_SET);
@@ -102,10 +116,15 @@ void MK61Display::clear(void) {
   clearShadow();
   cursor_x = 0;
   cursor_y = 0;
+  cursor_underline = false;
+  cursor_blink = false;
+  cursor_blink_phase = false;
+  cursor_next_blink_ms = 0;
   markScreenDirty();
 }
 
 void MK61Display::flush(void) {
+  updateCursorBlink();
   if(!dirty && !screen_dirty) return;
 
   if(screen_dirty) {
@@ -144,17 +163,47 @@ void MK61Display::endUpdate(void) {
 }
 
 void MK61Display::setCursor(u8 x, u8 y) {
-  cursor_x = (x < lcd_display::COLS) ? x : (lcd_display::COLS - 1);
-  cursor_y = (y < lcd_display::ROWS) ? y : (lcd_display::ROWS - 1);
+  moveCursorTo(x, y);
 }
 
-void MK61Display::cursorOn(void) {}
+void MK61Display::cursorOn(void) {
+  if(cursor_underline) return;
+  cursor_underline = true;
+  markCursorCellDirty();
+  if(update_depth == 0) flush();
+}
 
-void MK61Display::cursorOff(void) {}
+void MK61Display::cursorOff(void) {
+  if(!cursor_underline && !cursor_blink && !cursor_blink_phase) return;
+  cursor_underline = false;
+  cursor_blink = false;
+  cursor_blink_phase = false;
+  cursor_next_blink_ms = 0;
+  markCursorCellDirty();
+  if(update_depth == 0) flush();
+}
 
-void MK61Display::blinkOn(void) {}
+void MK61Display::blinkOn(void) {
+  if(cursor_blink) return;
+  cursor_blink = true;
+  cursor_blink_phase = true;
+  cursor_next_blink_ms = millis() + CURSOR_BLINK_MS;
+  markCursorCellDirty();
+  if(update_depth == 0) flush();
+}
 
-void MK61Display::blinkOff(void) {}
+void MK61Display::blinkOff(void) {
+  if(!cursor_blink && !cursor_blink_phase) return;
+  cursor_blink = false;
+  cursor_blink_phase = false;
+  cursor_next_blink_ms = 0;
+  markCursorCellDirty();
+  if(update_depth == 0) flush();
+}
+
+bool MK61Display::supportsCursor(void) const {
+  return true;
+}
 
 bool MK61Display::hasHardwareCursor(void) const {
   return false;
@@ -175,8 +224,9 @@ void MK61Display::writeGlyph(const uint8_t* glyph) {
   cells[cursor_y][cursor_x] = 0;
   memcpy(cell_glyphs[cursor_y][cursor_x], glyph, sizeof(cell_glyphs[cursor_y][cursor_x]));
   cell_glyph_valid[cursor_y][cursor_x] = true;
-  markCellDirty(cursor_x, cursor_y);
+  markCellDirtyDeferred(cursor_x, cursor_y);
   advanceCursor();
+  if(update_depth == 0) flush();
 }
 
 void MK61Display::clearCustomChars(void) {
@@ -208,17 +258,45 @@ void MK61Display::markScreenDirty(void) {
   if(update_depth == 0) flush();
 }
 
-void MK61Display::markCellDirty(u8 x, u8 y) {
+void MK61Display::markCellDirtyDeferred(u8 x, u8 y) {
+  if(x >= lcd_display::COLS || y >= lcd_display::ROWS) return;
   dirty_cols[y] |= ((uint16_t) 1 << x);
   dirty = true;
+}
+
+void MK61Display::markCellDirty(u8 x, u8 y) {
+  markCellDirtyDeferred(x, y);
+  if(update_depth == 0) flush();
+}
+
+bool MK61Display::cursorOverlayVisible(void) const {
+  return cursor_underline || (cursor_blink && cursor_blink_phase);
+}
+
+void MK61Display::markCursorCellDirty(void) {
+  markCellDirtyDeferred(cursor_x, cursor_y);
+}
+
+void MK61Display::moveCursorTo(u8 x, u8 y) {
+  const u8 next_x = (x < lcd_display::COLS) ? x : (lcd_display::COLS - 1);
+  const u8 next_y = (y < lcd_display::ROWS) ? y : (lcd_display::ROWS - 1);
+  if(next_x == cursor_x && next_y == cursor_y) return;
+
+  if(cursorOverlayVisible()) markCursorCellDirty();
+  cursor_x = next_x;
+  cursor_y = next_y;
+  if(cursorOverlayVisible()) markCursorCellDirty();
   if(update_depth == 0) flush();
 }
 
 void MK61Display::advanceCursor(void) {
-  if(++cursor_x >= lcd_display::COLS) {
-    cursor_x = 0;
-    if(cursor_y + 1 < lcd_display::ROWS) cursor_y++;
+  u8 next_x = cursor_x + 1;
+  u8 next_y = cursor_y;
+  if(next_x >= lcd_display::COLS) {
+    next_x = 0;
+    if(next_y + 1 < lcd_display::ROWS) next_y++;
   }
+  moveCursorTo(next_x, next_y);
 }
 
 void MK61Display::drawGlyph(u8 x, const uint8_t* glyph) {
@@ -231,6 +309,27 @@ void MK61Display::drawGlyph(u8 x, const uint8_t* glyph) {
       }
     }
   }
+}
+
+void MK61Display::drawCursor(u8 x, bool block) {
+  static constexpr u8 CURSOR_WIDTH = 10;
+  if(block) lcd.fillRect(x, 0, CURSOR_WIDTH, lcd_display::CELL_HEIGHT, FOREGROUND);
+  else lcd.fillRect(x, lcd_display::CELL_HEIGHT - 2, CURSOR_WIDTH, 2, FOREGROUND);
+}
+
+void MK61Display::updateCursorBlink(void) {
+  if(!cursor_blink) return;
+
+  const t_time_ms now = millis();
+  if(cursor_next_blink_ms == 0) cursor_next_blink_ms = now + CURSOR_BLINK_MS;
+  if(!timeReached(now, cursor_next_blink_ms)) return;
+
+  do {
+    cursor_next_blink_ms += CURSOR_BLINK_MS;
+  } while(timeReached(now, cursor_next_blink_ms));
+
+  cursor_blink_phase = !cursor_blink_phase;
+  markCursorCellDirty();
 }
 
 void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
@@ -252,6 +351,10 @@ void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
     } else {
       lcd.drawChar(x, 0, value, FOREGROUND, BACKGROUND, 2);
     }
+    if(row == cursor_y && col == cursor_x) {
+      if(cursor_blink && cursor_blink_phase) drawCursor(x, true);
+      else if(cursor_underline) drawCursor(x, false);
+    }
   }
 
   lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, row * lcd_display::CELL_HEIGHT,
@@ -272,8 +375,9 @@ void MK61Display::write(uint8_t value) {
   }
 
   if(value == '\n') {
-    cursor_x = 0;
-    if(cursor_y + 1 < lcd_display::ROWS) cursor_y++;
+    u8 next_y = cursor_y;
+    if(next_y + 1 < lcd_display::ROWS) next_y++;
+    moveCursorTo(0, next_y);
 #if ARDUINO >= 100
     return 1;
 #else
@@ -288,8 +392,9 @@ void MK61Display::write(uint8_t value) {
   } else {
     cell_glyph_valid[cursor_y][cursor_x] = false;
   }
-  markCellDirty(cursor_x, cursor_y);
+  markCellDirtyDeferred(cursor_x, cursor_y);
   advanceCursor();
+  if(update_depth == 0) flush();
 
 #if ARDUINO >= 100
   return 1;
