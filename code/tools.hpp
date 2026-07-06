@@ -2,7 +2,6 @@
 #define TOOLS
 
 #include "rust_types.h"
-#include "EEPROM.h"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 
@@ -168,31 +167,13 @@ inline u64 pad_left_8_char(char* string_8_char) {
   return result;
 }
 
-inline u8 read_eeprom_with_legacy(usize current_addr, usize legacy_addr) {
-  const u8 current_value = EEPROM.read(current_addr);
-  if(current_value != 0xFF) return current_value;
-
-  const u8 legacy_value = EEPROM.read(legacy_addr);
-  if(legacy_value != 0xFF) {
-    EEPROM.update(current_addr, legacy_value);
-    EEPROM.update(legacy_addr, 0);
-    return legacy_value;
-  }
-
-  return current_value;
-}
-
-inline AngleUnit read_stored_grade_switch(void) {
-  return (AngleUnit) read_eeprom_with_legacy(switch_R_GRD_G, legacy_switch_R_GRD_G);
-}
+AngleUnit read_stored_grade_switch(void);
 
 inline AngleUnit read_grade_switch(void) {
   return MK61Emu_GetAngleUnit();
 }
 
-inline u8 read_counter_switch(void) {
-  return read_eeprom_with_legacy(count_switch_R_GRD_G, legacy_count_switch_R_GRD_G);
-}
+u8 read_counter_switch(void);
 
 inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
   SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
@@ -202,14 +183,8 @@ inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
   return flags;
 }
 
-inline SettingsFlags read_settings_flags(void) {
-  return normalize_settings_flags(EEPROM.read(switch_settings));
-}
-
-inline void store_settings_flags(SettingsFlags flags) {
-  flags.bits.reserved = 0;
-  EEPROM.update(switch_settings, flags.raw);
-}
+SettingsFlags read_settings_flags(void);
+void store_settings_flags(SettingsFlags flags);
 
 inline SoundSettings normalize_sound_settings(u8 raw_settings) {
   SoundSettings settings((raw_settings == 0xFF) ? 0 : raw_settings);
@@ -218,14 +193,8 @@ inline SoundSettings normalize_sound_settings(u8 raw_settings) {
   return settings;
 }
 
-inline SoundSettings read_sound_settings(void) {
-  return normalize_sound_settings(EEPROM.read(switch_sound_settings));
-}
-
-inline void store_sound_settings(SoundSettings settings) {
-  settings.bits.reserved = 0;
-  EEPROM.update(switch_sound_settings, settings.raw);
-}
+SoundSettings read_sound_settings(void);
+void store_sound_settings(SoundSettings settings);
 
 inline AngleUnit load_grade_switch(void) {
   static const AngleUnit rom_angle = read_stored_grade_switch();
@@ -240,9 +209,6 @@ inline AngleUnit load_grade_switch(void) {
   }
 }
 
-inline void store_grade_switch(AngleUnit angle_unit) {
-  EEPROM.update(switch_R_GRD_G, (u8) angle_unit);
-  EEPROM.update(count_switch_R_GRD_G, read_counter_switch() + 1);
-}
+void store_grade_switch(AngleUnit angle_unit);
 
 #endif

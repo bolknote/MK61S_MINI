@@ -8,7 +8,6 @@
     - заменить таблицу адресов в кольце, функцией вычисления адреса по алгоритму, что позволит снизить объем требуемого ROM
 */
 #include "Arduino.h"
-#include "EEPROM.h"
 #include "config.h"
 #include "rust_types.h"
 #include "cross_hal.h"

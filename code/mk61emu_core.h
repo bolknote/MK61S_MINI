@@ -128,8 +128,8 @@ typedef struct { // Структура микросхемы К145IИК302
     uint8_t   R[IK13_MTICK_COUNT];
     uint8_t   ST[IK13_MTICK_COUNT];
 
-    uint8_t*  pAND_AMK1;                            // Precalc offset from microprograms for signal_I 27..35
-    uint8_t*  pAND_AMK;
+    const uint8_t*  pAND_AMK1;                      // Precalc offset from microprograms for signal_I 27..35
+    const uint8_t*  pAND_AMK;
     uint8_t*  pM;
 }  IK1302;
 

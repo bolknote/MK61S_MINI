@@ -24,6 +24,12 @@
 //#define DEBUG
 //#define DEBUG_M61
 
+// Старый fallback хранения через Arduino EEPROM тянет 8 КБ RAM-буфер на STM32F4.
+// Штатная A00-конфигурация хранит программы и настройки во внешней SPI flash.
+#ifndef MK61_USE_ARDUINO_EEPROM_FALLBACK
+  #define MK61_USE_ARDUINO_EEPROM_FALLBACK 0
+#endif
+
 // Дисплей: по умолчанию старый LCD1602. Для ERM19264/UC1609 включить MK61_DISPLAY_UC1609.
 //#define MK61_DISPLAY_UC1609
 // CGROM LCD1602: по умолчанию японский A00. Для европейского A02 включить MK61_LCD1602_A02.

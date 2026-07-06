@@ -1,5 +1,8 @@
 #include <Arduino.h>
-#include "EEPROM.h"
+#include "config.h"
+#if MK61_USE_ARDUINO_EEPROM_FALLBACK
+  #include "EEPROM.h"
+#endif
 #include "lcd_gui.hpp"
 #include "tools.hpp"
 #include "program_store.hpp"
@@ -12,7 +15,6 @@
   #include <SPIFlash.h>
 #endif
 #include "menu.hpp"
-#include "config.h"
 #include "debug.h"
 
 #include "ledcontrol.h"
@@ -170,6 +172,215 @@ void  insert_cmd_in_program(usize into_step, usize opcode) {
 SPIFlash  flash(PIN_SPIFLASH_CS);
 bool      flash_is_ok;
 
+static constexpr u32 SETTINGS_FLASH_SECTOR = (MAX_SLOT_FOR_PROGRAM + 2) * FLASH_SECTOR_SIZE;
+static constexpr usize SETTINGS_RECORD_SIZE = 16;
+static constexpr u8 SETTINGS_RECORD_VERSION = 1;
+static constexpr u8 SETTINGS_MAGIC_0 = 'M';
+static constexpr u8 SETTINGS_MAGIC_1 = '6';
+static constexpr u8 SETTINGS_MAGIC_2 = '1';
+static constexpr u8 SETTINGS_MAGIC_3 = 'S';
+static constexpr u8 SETTINGS_IDX_MAGIC_0 = 0;
+static constexpr u8 SETTINGS_IDX_MAGIC_1 = 1;
+static constexpr u8 SETTINGS_IDX_MAGIC_2 = 2;
+static constexpr u8 SETTINGS_IDX_MAGIC_3 = 3;
+static constexpr u8 SETTINGS_IDX_VERSION = 4;
+static constexpr u8 SETTINGS_IDX_GRADE = 5;
+static constexpr u8 SETTINGS_IDX_COUNTER = 6;
+static constexpr u8 SETTINGS_IDX_FLAGS = 7;
+static constexpr u8 SETTINGS_IDX_SOUND = 8;
+static constexpr u8 SETTINGS_IDX_CRC = 9;
+static constexpr u32 LEGACY_EEPROM_PAGE_SIZE = 8 * 1024;
+
+struct PersistentSettings {
+  u8 grade;
+  u8 counter;
+  u8 flags;
+  u8 sound;
+};
+
+static PersistentSettings persistent_settings = {0xFF, 0, 0xFF, 0xFF};
+static bool persistent_settings_loaded = false;
+static bool persistent_settings_sector_dirty = false;
+static u32 persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+
+static u8 settings_record_crc(const u8* record) {
+  u8 crc = 0xA5;
+  for(u8 i = 0; i < SETTINGS_IDX_CRC; i++) {
+    crc = (u8) ((crc << 1) | (crc >> 7));
+    crc ^= record[i];
+  }
+  return crc;
+}
+
+static bool settings_record_is_valid(const u8* record) {
+  if(record[SETTINGS_IDX_MAGIC_0] != SETTINGS_MAGIC_0) return false;
+  if(record[SETTINGS_IDX_MAGIC_1] != SETTINGS_MAGIC_1) return false;
+  if(record[SETTINGS_IDX_MAGIC_2] != SETTINGS_MAGIC_2) return false;
+  if(record[SETTINGS_IDX_MAGIC_3] != SETTINGS_MAGIC_3) return false;
+  if(record[SETTINGS_IDX_VERSION] != SETTINGS_RECORD_VERSION) return false;
+  return record[SETTINGS_IDX_CRC] == settings_record_crc(record);
+}
+
+static void apply_settings_record(const u8* record) {
+  persistent_settings.grade = record[SETTINGS_IDX_GRADE];
+  persistent_settings.counter = record[SETTINGS_IDX_COUNTER];
+  persistent_settings.flags = record[SETTINGS_IDX_FLAGS];
+  persistent_settings.sound = record[SETTINGS_IDX_SOUND];
+}
+
+static u16 internal_flash_size_kb(void) {
+#if defined(FLASHSIZE_BASE)
+  return *((const volatile u16*) FLASHSIZE_BASE);
+#else
+  return 0;
+#endif
+}
+
+static u8 read_legacy_eeprom_byte(usize offset) {
+#if defined(FLASH_BASE)
+  const u16 flash_size_kb = internal_flash_size_kb();
+  if(flash_size_kb == 0 || flash_size_kb == 0xFFFF) return 0xFF;
+  const u32 base = FLASH_BASE + ((u32) flash_size_kb * 1024UL) - LEGACY_EEPROM_PAGE_SIZE;
+  return *((const volatile u8*) (base + offset));
+#else
+  (void) offset;
+  return 0xFF;
+#endif
+}
+
+static u8 read_legacy_eeprom_with_legacy(usize current_addr, usize legacy_addr) {
+  const u8 current_value = read_legacy_eeprom_byte(current_addr);
+  if(current_value != 0xFF) return current_value;
+  return read_legacy_eeprom_byte(legacy_addr);
+}
+
+static void import_legacy_settings(void) {
+  const u8 grade = read_legacy_eeprom_with_legacy(switch_R_GRD_G, legacy_switch_R_GRD_G);
+  const u8 counter = read_legacy_eeprom_with_legacy(count_switch_R_GRD_G, legacy_count_switch_R_GRD_G);
+  const u8 flags = read_legacy_eeprom_byte(switch_settings);
+  const u8 sound = read_legacy_eeprom_byte(switch_sound_settings);
+
+  persistent_settings.grade = grade;
+  persistent_settings.counter = (counter == 0xFF) ? 0 : counter;
+  persistent_settings.flags = flags;
+  persistent_settings.sound = sound;
+}
+
+static void load_persistent_settings(void) {
+  if(persistent_settings_loaded) return;
+  persistent_settings_loaded = true;
+  persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+  persistent_settings_sector_dirty = false;
+
+  if(!flash_is_ok) {
+    import_legacy_settings();
+    return;
+  }
+
+  const u32 end_address = SETTINGS_FLASH_SECTOR + FLASH_SECTOR_SIZE;
+  for(u32 address = SETTINGS_FLASH_SECTOR; address + SETTINGS_RECORD_SIZE <= end_address; address += SETTINGS_RECORD_SIZE) {
+    const u8 first = flash.readByte(address);
+    if(first == 0xFF) {
+      if(address == SETTINGS_FLASH_SECTOR) import_legacy_settings();
+      persistent_settings_next_address = address;
+      return;
+    }
+
+    u8 record[SETTINGS_IDX_CRC + 1];
+    record[0] = first;
+    for(u8 i = 1; i < sizeof(record); i++) record[i] = flash.readByte(address + i);
+
+    if(!settings_record_is_valid(record)) {
+      persistent_settings_next_address = end_address;
+      persistent_settings_sector_dirty = true;
+      return;
+    }
+
+    apply_settings_record(record);
+    persistent_settings_next_address = address + SETTINGS_RECORD_SIZE;
+  }
+
+  persistent_settings_sector_dirty = true;
+}
+
+static void write_persistent_settings(void) {
+  load_persistent_settings();
+  if(!flash_is_ok) return;
+
+  const u32 end_address = SETTINGS_FLASH_SECTOR + FLASH_SECTOR_SIZE;
+  if(persistent_settings_sector_dirty || persistent_settings_next_address + SETTINGS_RECORD_SIZE > end_address) {
+    if(!flash.eraseSector(SETTINGS_FLASH_SECTOR)) return;
+    persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+    persistent_settings_sector_dirty = false;
+  }
+
+  u8 record[SETTINGS_IDX_CRC + 1] = {
+    SETTINGS_MAGIC_0,
+    SETTINGS_MAGIC_1,
+    SETTINGS_MAGIC_2,
+    SETTINGS_MAGIC_3,
+    SETTINGS_RECORD_VERSION,
+    persistent_settings.grade,
+    persistent_settings.counter,
+    persistent_settings.flags,
+    persistent_settings.sound,
+    0
+  };
+  record[SETTINGS_IDX_CRC] = settings_record_crc(record);
+
+  const u32 address = persistent_settings_next_address;
+  for(u8 i = 0; i < sizeof(record); i++) flash.writeByte(address + i, record[i]);
+  persistent_settings_next_address += SETTINGS_RECORD_SIZE;
+}
+
+AngleUnit read_stored_grade_switch(void) {
+  load_persistent_settings();
+  return (AngleUnit) persistent_settings.grade;
+}
+
+u8 read_counter_switch(void) {
+  load_persistent_settings();
+  return persistent_settings.counter;
+}
+
+SettingsFlags read_settings_flags(void) {
+  load_persistent_settings();
+  return normalize_settings_flags(persistent_settings.flags);
+}
+
+void store_settings_flags(SettingsFlags flags) {
+  load_persistent_settings();
+  flags = normalize_settings_flags(flags.raw);
+  if(persistent_settings.flags == flags.raw) return;
+
+  persistent_settings.flags = flags.raw;
+  write_persistent_settings();
+}
+
+SoundSettings read_sound_settings(void) {
+  load_persistent_settings();
+  return normalize_sound_settings(persistent_settings.sound);
+}
+
+void store_sound_settings(SoundSettings settings) {
+  load_persistent_settings();
+  settings = normalize_sound_settings(settings.raw);
+  if(persistent_settings.sound == settings.raw) return;
+
+  persistent_settings.sound = settings.raw;
+  write_persistent_settings();
+}
+
+void store_grade_switch(AngleUnit angle_unit) {
+  load_persistent_settings();
+  const u8 next_counter = read_counter_switch() + 1;
+  if(persistent_settings.grade == (u8) angle_unit && persistent_settings.counter == next_counter) return;
+
+  persistent_settings.grade = (u8) angle_unit;
+  persistent_settings.counter = next_counter;
+  write_persistent_settings();
+}
+
 bool erase_slot_old(usize nSlot) {
   const isize segment_address = calc_address(nSlot);
   if(segment_address < 0) return false;
@@ -257,7 +468,12 @@ void init_external_flash(void) {
 }
 
 u8 load_word(isize segment_address, isize offset) {
-  return (flash_is_ok)? flash.readByte(offset + segment_address) : EEPROM.read(offset);
+  if(flash_is_ok) return flash.readByte(offset + segment_address);
+#if MK61_USE_ARDUINO_EEPROM_FALLBACK
+  return EEPROM.read(offset);
+#else
+  return 0xFF;
+#endif
 }
 
 bool load_from(isize address) {
@@ -319,9 +535,12 @@ bool Load(void) {
 inline void store_word(isize segment_address, isize offset, u8 data) {
     if(flash_is_ok) {
       flash.writeByte(offset + segment_address, data);
-    } else {
+    }
+#if MK61_USE_ARDUINO_EEPROM_FALLBACK
+    else {
       EEPROM.update(offset, data);
     }
+#endif
 }
 
 inline bool check_empty_program(void) {
