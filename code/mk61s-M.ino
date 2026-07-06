@@ -625,6 +625,7 @@ void  loop() {
 void idle_main_process(void) {
   sound_poll();
   led::control();
+  lcd.flush();
 }
 
 void event_hold_key(i32 holded_key, i32 hold_quant) {
