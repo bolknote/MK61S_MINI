@@ -16,8 +16,11 @@ static const int KEY_K = 37;
 static const int KEY_ALPHA = KEY_K + 1;
 static const int KEY_DEGREE = 4;
 static const int KEY_RADIAN = 14;
+static const int KEY_PP = 25;
 static const int KEY_xP = 27;
 static const int KEY_RET = 31;
+static const int KEY_FRW = 32;
+static const int KEY_BKW = 33;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -136,8 +139,10 @@ static constexpr int FOCAL_PRINT_BUFFER_SIZE   = 96;
 static constexpr int FOCAL_CALL_DEPTH          = 8;
 static constexpr int FOCAL_RUNTIME_STEPS_LIMIT = 4096;
 
-static constexpr u32 CURSOR_BLINK_MS = 850;
-static constexpr u8  CURSOR_ASCII    = 0xFF;
+static constexpr u32 CURSOR_BLINK_MS     = 850;
+static constexpr u32 SMS_INPUT_TIMEOUT_MS = 1200;
+static constexpr u8  CURSOR_ASCII        = 0xFF;
+static constexpr u8  SMS_CURSOR_ASCII    = '_';
 
 enum class FocalOp : u8 {
   NOP,
@@ -232,7 +237,7 @@ static const char* const FOCAL_alpha_key_text[40] = {
 
 static const char* const FOCAL_Kshift_key_text[40] = {
   NULL, NULL, NULL, NULL, NULL,
-  NULL, "\"", NULL, NULL, NULL,
+  NULL, "\"", "=", NULL, NULL,
   NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL, ")",
@@ -240,6 +245,69 @@ static const char* const FOCAL_Kshift_key_text[40] = {
   "!", NULL, NULL, NULL, "(",
   NULL, NULL, NULL, NULL, NULL
 };
+
+struct FocalSmsState {
+  bool active;
+  i32 key_code;
+  u8 index;
+  u32 deadline_ms;
+};
+
+static int focal_digit_from_key(i32 key_code) {
+  switch(key_code) {
+    case 20: return 0;
+    case 21: return 1;
+    case 16: return 2;
+    case 11: return 3;
+    case 22: return 4;
+    case 17: return 5;
+    case 12: return 6;
+    case 23: return 7;
+    case 18: return 8;
+    case 13: return 9;
+    default: break;
+  }
+  return -1;
+}
+
+static const char* focal_sms_letters_for_key(i32 key_code) {
+  switch(focal_digit_from_key(key_code)) {
+    case 2: return "ABC";
+    case 3: return "DEF";
+    case 4: return "GHI";
+    case 5: return "JKL";
+    case 6: return "MNO";
+    case 7: return "PQRS";
+    case 8: return "TUV";
+    case 9: return "WXYZ";
+    default: break;
+  }
+  return NULL;
+}
+
+static const char* focal_symbol_for_digit_key(i32 key_code) {
+  switch(focal_digit_from_key(key_code)) {
+    case 0: return "!";
+    case 1: return "@";
+    case 2: return "#";
+    case 3: return "$";
+    case 4: return "%";
+    case 5: return "^";
+    case 6: return "&";
+    case 7: return "*";
+    case 8: return "(";
+    case 9: return ")";
+    default: break;
+  }
+  return NULL;
+}
+
+static void focal_sms_reset(FocalSmsState& sms) {
+  sms.active = false;
+  sms.key_code = -1;
+  sms.index = 0;
+  sms.deadline_ms = 0;
+}
 
 static char focal_upper(char ch) {
   if(ch >= 'a' && ch <= 'z') return (char) (ch - 'a' + 'A');
@@ -332,23 +400,6 @@ static void focal_message_i18n(const char* en0, const char* ru0, const char* en1
   lcd.print(en0);
   lcd.setCursor(0, 1);
   lcd.print(en1);
-}
-
-static void focal_print_text_at(u8 x, u8 y, const char* en, const char* ru, u8 width = 16) {
-#ifdef FOCAL_HOST_TEST
-  (void) ru;
-#endif
-#ifndef FOCAL_HOST_TEST
-  if(focal_language_is_ru()) {
-    library_mk61::print_localized_at(x, y, ru, en, width);
-    return;
-  }
-#endif
-
-  lcd.setCursor(x, y);
-  u8 used = 0;
-  while(en != NULL && en[used] != 0 && used < width) lcd.write((u8) en[used++]);
-  while(used++ < width) lcd.write((u8) ' ');
 }
 
 static bool focal_error(const char* error) {
@@ -1396,6 +1447,12 @@ static u16 focal_line_start_for_cursor(const char* source, u16 cursor) {
   return start;
 }
 
+static u16 focal_line_end_for_start(const char* source, u16 start, u16 len) {
+  u16 end = start;
+  while(end < len && source[end] != '\n' && source[end] != '\r') end++;
+  return end;
+}
+
 static u16 focal_next_line_start(const char* source, u16 start, u16 len) {
   u16 pos = start;
   while(pos < len && source[pos] != '\n' && source[pos] != '\r') pos++;
@@ -1403,7 +1460,52 @@ static u16 focal_next_line_start(const char* source, u16 start, u16 len) {
   return pos;
 }
 
-static void draw_focal_editor(const char* source, u16 len, u16 cursor, int slot) {
+static u16 focal_previous_line_start(const char* source, u16 start) {
+  if(start == 0) return 0;
+  u16 pos = start;
+  while(pos > 0 && (source[pos - 1] == '\n' || source[pos - 1] == '\r')) pos--;
+  while(pos > 0 && source[pos - 1] != '\n' && source[pos - 1] != '\r') pos--;
+  return pos;
+}
+
+static bool focal_editor_move_cursor_left(const char* source, u16& cursor) {
+  const u16 line_start = focal_line_start_for_cursor(source, cursor);
+  if(cursor <= line_start) return false;
+  cursor--;
+  return true;
+}
+
+static bool focal_editor_move_cursor_right(const char* source, u16 len, u16& cursor) {
+  const u16 line_start = focal_line_start_for_cursor(source, cursor);
+  const u16 line_end = focal_line_end_for_start(source, line_start, len);
+  if(cursor >= line_end) return false;
+  cursor++;
+  return true;
+}
+
+static bool focal_editor_move_cursor_line(const char* source, u16 len, u16& cursor, int delta) {
+  const u16 line_start = focal_line_start_for_cursor(source, cursor);
+  const u16 line_end = focal_line_end_for_start(source, line_start, len);
+  const u16 column = cursor - line_start;
+  u16 target_start = line_start;
+
+  if(delta < 0) {
+    if(line_start == 0) return false;
+    target_start = focal_previous_line_start(source, line_start);
+  } else if(delta > 0) {
+    if(line_end >= len) return false;
+    target_start = focal_next_line_start(source, line_start, len);
+  } else {
+    return false;
+  }
+
+  const u16 target_end = focal_line_end_for_start(source, target_start, len);
+  const u16 target_len = target_end - target_start;
+  cursor = target_start + ((column < target_len) ? column : target_len);
+  return true;
+}
+
+static void draw_focal_editor(const char* source, u16 len, u16 cursor, int slot, bool sms_cursor = false) {
   MK61DisplayUpdate update(lcd);
   lcd.clear();
   const u8 rows = lcd.rows();
@@ -1430,21 +1532,9 @@ static void draw_focal_editor(const char* source, u16 len, u16 cursor, int slot)
   }
 
   lcd.setCursor(cursor_screen_col, 0);
-  lcd.write(CURSOR_ASCII);
+  lcd.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
 
-  if(rows >= 2) {
-    lcd.setCursor(10, rows - 1);
-    lcd.print(cursor);
-    lcd.print('/');
-    lcd.print(len);
-    if(slot == FOCAL_PROGRAM_COUNT) {
-      focal_print_text_at(1, rows - 1, "NEW", "НОВАЯ", 5);
-    } else if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) {
-      char display_name[24];
-      focal_display_program_name(programs[slot].name, display_name, sizeof(display_name));
-      focal_print_text_at(1, rows - 1, programs[slot].name, display_name, 10);
-    }
-  }
+  (void) slot;
 }
 
 static bool focal_editor_insert_text(char* source, u16& len, u16& cursor, const char* text) {
@@ -1464,6 +1554,29 @@ static bool focal_editor_backspace(char* source, u16& len, u16& cursor) {
   cursor--;
   len--;
   return true;
+}
+
+static bool focal_editor_sms_tap(char* source, u16& len, u16& cursor, FocalSmsState& sms, i32 key_code, u32 now) {
+  const char* letters = focal_sms_letters_for_key(key_code);
+  if(letters == NULL || letters[0] == 0) {
+    focal_sms_reset(sms);
+    return false;
+  }
+
+  if(sms.active && sms.key_code == key_code && cursor > 0) {
+    const usize count = strlen(letters);
+    sms.index = (u8) ((sms.index + 1) % count);
+    source[cursor - 1] = letters[sms.index];
+    sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
+    return true;
+  }
+
+  sms.active = true;
+  sms.key_code = key_code;
+  sms.index = 0;
+  sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
+  char text[2] = {letters[0], 0};
+  return focal_editor_insert_text(source, len, cursor, text);
 }
 
 static bool focal_find_expression_before_cursor(const char* source, u16 cursor, u16& start, u16& end) {
@@ -1547,7 +1660,7 @@ static bool focal_editor_replace_range(char* source, u16& len, u16& cursor, u16 
 }
 
 static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, i32 key_code) {
-  if(key_code != 2 && key_code != 3 && key_code != 20) return false;
+  if(key_code != 2 && key_code != 3 && key_code != 5) return false;
 
   u16 start = 0;
   u16 end = 0;
@@ -1616,28 +1729,6 @@ static const char* focal_statement_insert_text(i32 key_code) {
   return NULL;
 }
 
-static bool focal_cursor_expects_assignment_equals(const char* source, u16 cursor) {
-  if(focal_cursor_inside_string(source, cursor)) return false;
-
-  const u16 line_start = focal_line_start_for_cursor(source, cursor);
-  const char* p = source + line_start;
-  const char* end = source + cursor;
-
-  FocalAddress address;
-  if(!focal_parse_address(p, address)) return false;
-  p = focal_skip_spaces(p);
-
-  FocalOp op = FocalOp::NOP;
-  if(!focal_parse_operator(p, op)) return false;
-  if(op != FocalOp::SET && op != FocalOp::FOR) return false;
-
-  p = focal_skip_spaces(p);
-  if(!focal_is_alpha(*p)) return false;
-  p++;
-  p = focal_skip_spaces(p);
-  return p == end;
-}
-
 static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 key_code, const char* source, u16 cursor) {
   if(key_code < 0 || key_code >= 40) return NULL;
   switch(shift) {
@@ -1646,7 +1737,6 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
         const char* statement = focal_statement_insert_text(key_code);
         if(statement != NULL) return statement;
       }
-      if(key_code == KEY_xP && focal_cursor_expects_assignment_equals(source, cursor)) return "=";
       return FOCAL_key_text[key_code];
     case FocalEditShift::ALPHA:
       return FOCAL_alpha_key_text[key_code];
@@ -1683,12 +1773,14 @@ void EditFocal(void) {
   u16 len = (u16) strlen(source);
   u16 cursor = len;
   FocalEditShift shift = FocalEditShift::NONE;
+  FocalSmsState sms = {};
   u32 blink_time = millis() + CURSOR_BLINK_MS;
 
   kbd::debounce_init();
   while(true) {
     const u32 now = millis();
-    draw_focal_editor(source, len, cursor, slot);
+    if(sms.active && now >= sms.deadline_ms) focal_sms_reset(sms);
+    draw_focal_editor(source, len, cursor, slot, sms.active);
     if(now >= blink_time) blink_time = now + CURSOR_BLINK_MS;
 
     kbd::scan_and_debounced();
@@ -1699,8 +1791,43 @@ void EditFocal(void) {
     }
 
     const bool shifted_key = shift != FocalEditShift::NONE;
+    if(!shifted_key && sms.active) {
+      const int sms_digit = focal_digit_from_key(key_code);
+      if(sms_digit >= 2 && sms_digit <= 9) {
+        focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
+        continue;
+      }
+      if(sms_digit == 0) {
+        focal_sms_reset(sms);
+        focal_editor_insert_text(source, len, cursor, " ");
+        continue;
+      }
+      if(sms_digit == 1) {
+        focal_sms_reset(sms);
+        continue;
+      }
+      if(key_code == KEY_PP) {
+        focal_sms_reset(sms);
+        focal_editor_insert_text(source, len, cursor, " ");
+        continue;
+      }
+      focal_sms_reset(sms);
+    }
+
     if(!shifted_key && (key_code == KEY_K || key_code == KEY_ALPHA)) {
       shift = (key_code == KEY_K) ? FocalEditShift::K : FocalEditShift::ALPHA;
+      continue;
+    }
+
+    if(shift == FocalEditShift::K && focal_digit_from_key(key_code) >= 2 && focal_digit_from_key(key_code) <= 9) {
+      focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+
+    if(shift == FocalEditShift::ALPHA && focal_digit_from_key(key_code) >= 0) {
+      focal_editor_insert_text(source, len, cursor, focal_symbol_for_digit_key(key_code));
+      shift = FocalEditShift::NONE;
       continue;
     }
 
@@ -1721,9 +1848,13 @@ void EditFocal(void) {
     }
 
     if(!shifted_key && (key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS)) {
-      if(cursor > 0) cursor--;
+      focal_editor_move_cursor_left(source, cursor);
     } else if(!shifted_key && (key_code == KEY_RIGHT || key_code == KEY_RIGHT_PRESS)) {
-      if(cursor < len) cursor++;
+      focal_editor_move_cursor_right(source, len, cursor);
+    } else if(!shifted_key && key_code == KEY_BKW) {
+      focal_editor_move_cursor_line(source, len, cursor, -1);
+    } else if(!shifted_key && key_code == KEY_FRW) {
+      focal_editor_move_cursor_line(source, len, cursor, 1);
     } else if(!shifted_key && key_code == 0) {
       memset(source, 0, sizeof(source));
       len = 0;
@@ -1829,6 +1960,33 @@ extern "C" void FocalTestDrawNewEditor(const char* source, int cursor) {
   draw_focal_editor(source, len, safe_cursor, FOCAL_PROGRAM_COUNT);
 }
 
+extern "C" void FocalTestDrawNewEditorSms(const char* source, int cursor) {
+  if(source == NULL) source = "";
+  const u16 len = (u16) strlen(source);
+  u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
+  if(safe_cursor > len) safe_cursor = len;
+  draw_focal_editor(source, len, safe_cursor, FOCAL_PROGRAM_COUNT, true);
+}
+
+extern "C" int FocalTestMoveCursorLine(const char* source, int cursor, int delta) {
+  if(source == NULL) source = "";
+  const u16 len = (u16) strlen(source);
+  u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
+  if(safe_cursor > len) safe_cursor = len;
+  focal_editor_move_cursor_line(source, len, safe_cursor, delta);
+  return safe_cursor;
+}
+
+extern "C" int FocalTestMoveCursorHorizontal(const char* source, int cursor, int delta) {
+  if(source == NULL) source = "";
+  const u16 len = (u16) strlen(source);
+  u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
+  if(safe_cursor > len) safe_cursor = len;
+  if(delta < 0) focal_editor_move_cursor_left(source, safe_cursor);
+  else if(delta > 0) focal_editor_move_cursor_right(source, len, safe_cursor);
+  return safe_cursor;
+}
+
 extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int size) {
   if(out == NULL || size <= 0) return;
 
@@ -1837,12 +1995,47 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
   u16 len = 0;
   u16 cursor = 0;
   FocalEditShift shift = FocalEditShift::NONE;
+  FocalSmsState sms = {};
 
   for(int i = 0; i < count; i++) {
+    const u32 now = millis();
     const i32 key_code = keys[i];
     const bool shifted_key = shift != FocalEditShift::NONE;
+    if(!shifted_key && sms.active) {
+      const int sms_digit = focal_digit_from_key(key_code);
+      if(sms_digit >= 2 && sms_digit <= 9) {
+        focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
+        continue;
+      }
+      if(sms_digit == 0) {
+        focal_sms_reset(sms);
+        focal_editor_insert_text(source, len, cursor, " ");
+        continue;
+      }
+      if(sms_digit == 1) {
+        focal_sms_reset(sms);
+        continue;
+      }
+      if(key_code == KEY_PP) {
+        focal_sms_reset(sms);
+        focal_editor_insert_text(source, len, cursor, " ");
+        continue;
+      }
+      focal_sms_reset(sms);
+    }
+
     if(!shifted_key && (key_code == KEY_K || key_code == KEY_ALPHA)) {
       shift = (key_code == KEY_K) ? FocalEditShift::K : FocalEditShift::ALPHA;
+      continue;
+    }
+    if(shift == FocalEditShift::K && focal_digit_from_key(key_code) >= 2 && focal_digit_from_key(key_code) <= 9) {
+      focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+    if(shift == FocalEditShift::ALPHA && focal_digit_from_key(key_code) >= 0) {
+      focal_editor_insert_text(source, len, cursor, focal_symbol_for_digit_key(key_code));
+      shift = FocalEditShift::NONE;
       continue;
     }
     if(shift == FocalEditShift::ALPHA && (key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS)) {

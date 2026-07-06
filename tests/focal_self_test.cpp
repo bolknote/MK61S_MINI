@@ -16,6 +16,9 @@ extern "C" double FocalTestNumber(const char* name);
 extern "C" const char* FocalTestLcdLine(int row);
 extern "C" const char* FocalTestError(void);
 extern "C" void FocalTestDrawNewEditor(const char* source, int cursor);
+extern "C" void FocalTestDrawNewEditorSms(const char* source, int cursor);
+extern "C" int FocalTestMoveCursorLine(const char* source, int cursor, int delta);
+extern "C" int FocalTestMoveCursorHorizontal(const char* source, int cursor, int delta);
 extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int size);
 
 static int failures;
@@ -149,9 +152,46 @@ static void test_editor_expression_macros(void) {
   FocalTestEditSequence(inverse, (int) (sizeof(inverse) / sizeof(inverse[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1/(A+B)") == 0);
 
-  const int pow10[] = {38, 8, 38, 20};
+  const int pow10[] = {38, 8, 38, 5};
   FocalTestEditSequence(pow10, (int) (sizeof(pow10) / sizeof(pow10[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "10^X") == 0);
+}
+
+static void test_editor_digit_symbol_and_sms_input(void) {
+  FocalTestReset();
+  char out[64];
+
+  const int digits[] = {20, 21, 16, 11, 22, 17, 12, 23, 18, 13};
+  FocalTestEditSequence(digits, (int) (sizeof(digits) / sizeof(digits[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "0123456789") == 0);
+
+  const int symbols[] = {38, 20, 38, 21, 38, 16, 38, 11, 38, 22, 38, 17, 38, 12, 38, 23, 38, 18, 38, 13};
+  FocalTestEditSequence(symbols, (int) (sizeof(symbols) / sizeof(symbols[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "!@#$%^&*()") == 0);
+
+  const int sms_cycle[] = {37, 16, 16, 16};
+  FocalTestEditSequence(sms_cycle, (int) (sizeof(sms_cycle) / sizeof(sms_cycle[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "C") == 0);
+
+  const int sms_text[] = {37, 16, 11, 11, 12};
+  FocalTestEditSequence(sms_text, (int) (sizeof(sms_text) / sizeof(sms_text[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "AEM") == 0);
+
+  const int sms_zero_exits_with_space[] = {37, 16, 16, 20, 16};
+  FocalTestEditSequence(sms_zero_exits_with_space, (int) (sizeof(sms_zero_exits_with_space) / sizeof(sms_zero_exits_with_space[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "B 2") == 0);
+
+  const int sms_one_exits[] = {37, 16, 16, 21, 16};
+  FocalTestEditSequence(sms_one_exits, (int) (sizeof(sms_one_exits) / sizeof(sms_one_exits[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "B2") == 0);
+
+  const int sms_space_exits[] = {37, 16, 25, 16};
+  FocalTestEditSequence(sms_space_exits, (int) (sizeof(sms_space_exits) / sizeof(sms_space_exits[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "A 2") == 0);
+
+  const int k_zero_does_not_start_sms[] = {37, 20};
+  FocalTestEditSequence(k_zero_does_not_start_sms, (int) (sizeof(k_zero_does_not_start_sms) / sizeof(k_zero_does_not_start_sms[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "") == 0);
 }
 
 static void test_editor_operator_keys_insert_full_names(void) {
@@ -174,7 +214,7 @@ static void test_editor_operator_keys_insert_full_names(void) {
   FocalTestEditSequence(set, (int) (sizeof(set) / sizeof(set[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.40 SET ") == 0);
 
-  const int set_equals[] = {21, 15, 22, 20, 25, 27, 38, 8, 27};
+  const int set_equals[] = {21, 15, 22, 20, 25, 27, 38, 8, 37, 7};
   FocalTestEditSequence(set_equals, (int) (sizeof(set_equals) / sizeof(set_equals[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.40 SET X=") == 0);
 
@@ -205,6 +245,28 @@ static void test_editor_draws_cursor(void) {
   FocalTestDrawNewEditor("01.10 COMMENT LONG LINE", 21);
   CHECK(FocalTestLcdLine(0)[0] == '>');
   CHECK(FocalTestLcdLine(0)[15] == (char) 0xFF);
+
+  FocalTestDrawNewEditorSms("", 0);
+  CHECK(FocalTestLcdLine(0)[0] == '>');
+  CHECK(FocalTestLcdLine(0)[1] == '_');
+}
+
+static void test_editor_draws_visible_program_lines(void) {
+  FocalTestReset();
+  FocalTestDrawNewEditor("1.10 ASK X\n1.20 PRINT X\n1.30 EXIT\n1.40 COMMENT END\n1.50 EXIT", 0);
+  CHECK(FocalTestLcdLine(0)[0] == '>');
+  CHECK_STARTS(FocalTestLcdLine(1), " 1.20 PRINT X");
+  CHECK_STARTS(FocalTestLcdLine(2), " 1.30 EXIT");
+  CHECK_STARTS(FocalTestLcdLine(3), " 1.40 COMMENT");
+}
+
+static void test_editor_line_navigation(void) {
+  const char* source = "ABC\nD\nEFGH";
+  CHECK(FocalTestMoveCursorLine(source, 1, 1) == 5);
+  CHECK(FocalTestMoveCursorLine(source, 5, 1) == 7);
+  CHECK(FocalTestMoveCursorLine(source, 7, -1) == 5);
+  CHECK(FocalTestMoveCursorHorizontal(source, 3, 1) == 3);
+  CHECK(FocalTestMoveCursorHorizontal(source, 4, -1) == 4);
 }
 
 int main(void) {
@@ -219,9 +281,12 @@ int main(void) {
   test_functions();
   test_editor_shift_parentheses();
   test_editor_expression_macros();
+  test_editor_digit_symbol_and_sms_input();
   test_editor_operator_keys_insert_full_names();
   test_editor_backspace_is_f_left();
   test_editor_draws_cursor();
+  test_editor_draws_visible_program_lines();
+  test_editor_line_navigation();
 
   if(failures != 0) {
     std::printf("focal_self_test: %d failure(s)\n", failures);
