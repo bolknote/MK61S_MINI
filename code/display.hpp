@@ -74,20 +74,26 @@ class MK61Display : public Print {
     LiquidCrystal lcd;
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
-    uint8_t screen_buffer[lcd_display::PIXEL_WIDTH * lcd_display::PIXEL_HEIGHT / 8];
+    uint8_t render_buffer[lcd_display::PIXEL_WIDTH * lcd_display::CELL_HEIGHT / 8];
     ERM19264_UC1609 lcd;
-    ERM19264_UC1609_Screen full_screen;
+    ERM19264_UC1609_Screen render_screen;
+    uint8_t cells[lcd_display::ROWS][lcd_display::COLS];
+    uint16_t dirty_cols[lcd_display::ROWS];
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
+    bool screen_dirty;
     bool dirty;
     usize update_depth;
     u8 cursor_x;
     u8 cursor_y;
 
-    void drawCustomChar(u8 value);
+    void clearShadow(void);
+    void clearPhysicalScreen(void);
+    void drawCustomChar(u8 x, u8 value);
     void advanceCursor(void);
-    void markDirty(void);
-    void movePixelCursor(void);
+    void markCellDirty(u8 x, u8 y);
+    void markScreenDirty(void);
+    void renderRun(u8 row, u8 first_col, u8 count);
 #endif
 };
 
