@@ -48,8 +48,20 @@ static void force_buzzer_low(void) {
   digitalWrite(pwm_pin, LOW);
 }
 
-static void stop_from_timer(void) {
+static void clear_cutoff_interrupt(void) {
+  TIM_HandleTypeDef* handle = cutoff_timer.getHandle();
+  if(handle != NULL) {
+    __HAL_TIM_CLEAR_FLAG(handle, TIM_FLAG_UPDATE);
+  }
+}
+
+static void pause_cutoff_timer(void) {
   cutoff_timer.pause();
+  clear_cutoff_interrupt();
+}
+
+static void stop_from_timer(void) {
+  pause_cutoff_timer();
 
   if(pwm_ready) {
     pwm_timer.pauseChannel(pwm_channel);
@@ -92,7 +104,7 @@ void sound_driver_init(usize pin) {
 
   pwm_ready = configure_pwm_mapping(pin);
 
-  cutoff_timer.pause();
+  pause_cutoff_timer();
   cutoff_timer.detachInterrupt();
 }
 
@@ -112,7 +124,7 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
     return;
   }
 
-  cutoff_timer.pause();
+  pause_cutoff_timer();
   cutoff_timer.detachInterrupt();
   pwm_timer.pauseChannel(pwm_channel);
   pwm_timer.pause();
@@ -131,13 +143,16 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
   // itself and the PWM timer.
   cutoff_timer.setOverflow(duration_ms_to_us(duration_ms), MICROSEC_FORMAT);
   cutoff_timer.setCount(0);
+  clear_cutoff_interrupt();
   cutoff_timer.attachInterrupt(stop_from_timer);
+  clear_cutoff_interrupt();
   cutoff_timer.resume();
 }
 
 void sound_driver_stop(void) {
-  cutoff_timer.pause();
+  pause_cutoff_timer();
   cutoff_timer.detachInterrupt();
+  clear_cutoff_interrupt();
 
   if(pwm_ready) {
     pwm_timer.pauseChannel(pwm_channel);
