@@ -134,6 +134,7 @@ static constexpr int FOCAL_CALL_DEPTH          = 8;
 static constexpr int FOCAL_RUNTIME_STEPS_LIMIT = 4096;
 
 static constexpr u32 CURSOR_BLINK_MS = 850;
+static constexpr u8  CURSOR_ASCII    = 0xFF;
 
 enum class FocalOp : u8 {
   NOP,
@@ -1405,12 +1406,16 @@ static void draw_focal_editor(const char* source, u16 len, u16 cursor, int slot)
   const u8 rows = lcd.rows();
   const u8 visible_rows = rows < 2 ? 1 : rows;
   u16 line_start = focal_line_start_for_cursor(source, cursor);
+  const u16 cursor_line_start = line_start;
+  const u16 cursor_line_column = cursor - cursor_line_start;
+  const u16 cursor_window = (cursor_line_column > 14) ? (cursor_line_column - 14) : 0;
+  const u8 cursor_screen_col = (u8) (1 + cursor_line_column - cursor_window);
 
   for(u8 row = 0; row < visible_rows; row++) {
     if(line_start > len) break;
     lcd.setCursor(0, row);
     lcd.write((u8) ((row == 0) ? '>' : ' '));
-    u16 pos = line_start;
+    u16 pos = line_start + ((row == 0) ? cursor_window : 0);
     u8 col = 1;
     while(pos < len && source[pos] != '\n' && source[pos] != '\r' && col < 16) {
       lcd.write((u8) source[pos++]);
@@ -1420,6 +1425,9 @@ static void draw_focal_editor(const char* source, u16 len, u16 cursor, int slot)
     line_start = focal_next_line_start(source, line_start, len);
     if(line_start >= len) break;
   }
+
+  lcd.setCursor(cursor_screen_col, 0);
+  lcd.write(CURSOR_ASCII);
 
   if(rows >= 2) {
     lcd.setCursor(10, rows - 1);
@@ -1762,6 +1770,14 @@ extern "C" double FocalTestNumber(const char* name) {
 
 extern "C" const char* FocalTestLcdLine(int row) {
   return lcd.line((u8) row);
+}
+
+extern "C" void FocalTestDrawNewEditor(const char* source, int cursor) {
+  if(source == NULL) source = "";
+  const u16 len = (u16) strlen(source);
+  u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
+  if(safe_cursor > len) safe_cursor = len;
+  draw_focal_editor(source, len, safe_cursor, FOCAL_PROGRAM_COUNT);
 }
 
 extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int size) {

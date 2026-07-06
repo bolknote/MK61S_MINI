@@ -15,6 +15,7 @@ extern "C" void FocalTestRun(int slot);
 extern "C" double FocalTestNumber(const char* name);
 extern "C" const char* FocalTestLcdLine(int row);
 extern "C" const char* FocalTestError(void);
+extern "C" void FocalTestDrawNewEditor(const char* source, int cursor);
 extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int size);
 
 static int failures;
@@ -153,6 +154,17 @@ static void test_editor_expression_macros(void) {
   CHECK(std::strcmp(out, "10^X") == 0);
 }
 
+static void test_editor_draws_cursor(void) {
+  FocalTestReset();
+  FocalTestDrawNewEditor("", 0);
+  CHECK(FocalTestLcdLine(0)[0] == '>');
+  CHECK(FocalTestLcdLine(0)[1] == (char) 0xFF);
+
+  FocalTestDrawNewEditor("01.10 COMMENT LONG LINE", 21);
+  CHECK(FocalTestLcdLine(0)[0] == '>');
+  CHECK(FocalTestLcdLine(0)[15] == (char) 0xFF);
+}
+
 int main(void) {
   test_compile_rejects_basic_aliases();
   test_arithmetic_and_print();
@@ -165,6 +177,7 @@ int main(void) {
   test_functions();
   test_editor_shift_parentheses();
   test_editor_expression_macros();
+  test_editor_draws_cursor();
 
   if(failures != 0) {
     std::printf("focal_self_test: %d failure(s)\n", failures);
