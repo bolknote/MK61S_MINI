@@ -4,8 +4,11 @@
 #include "rust_types.h"
 #include "EEPROM.h"
 #include "mk61emu_core.h"
+#include "program_store.hpp"
 
 #include "debug.h"
+
+#include <stdio.h>
 
 static constexpr usize FLASH_SECTOR_SIZE    = 4096;
 static constexpr u8    SLOT_OCCUPIED        = 0x55;
@@ -85,7 +88,9 @@ extern  void  apply_program_memory_auto(const u8* code_page, usize code_len, boo
 extern  void  ensure_program_memory_for_write(usize linear_addr, u8 opcode);
 
 inline bool IsOccupied(usize nSlot) {
-   return (load_word(nSlot * FLASH_SECTOR_SIZE, OFFSET_FLAG_OCCUPIED) == SLOT_OCCUPIED);
+   char name[8];
+   snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+   return program_store::exists(program_store::ProgramType::MK61, name);
 }
 
 inline void ErrorReaction(void) {

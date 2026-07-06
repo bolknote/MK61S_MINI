@@ -5,6 +5,7 @@
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
 #include "basic.hpp"
+#include "development.hpp"
 #include "focal.hpp"
 
 extern MK61Display lcd;
@@ -19,19 +20,8 @@ static constexpr int MENU_SETTINGS = 1;
 static constexpr int MENU_GAMES    = 2;
 static constexpr int MENU_LIBRARY  = 3;
 static constexpr int MENU_AFTER_LIBRARY = MENU_LIBRARY + 1;
-#if MK61_ENABLE_BASIC
-static constexpr int MENU_BASIC    = MENU_AFTER_LIBRARY;
-static constexpr int MENU_AFTER_BASIC = MENU_BASIC + 1;
-#else
-static constexpr int MENU_AFTER_BASIC = MENU_AFTER_LIBRARY;
-#endif
-#if MK61_ENABLE_FOCAL
-static constexpr int MENU_FOCAL    = MENU_AFTER_BASIC;
-static constexpr int MENU_AFTER_FOCAL = MENU_FOCAL + 1;
-#else
-static constexpr int MENU_AFTER_FOCAL = MENU_AFTER_BASIC;
-#endif
-static constexpr int MENU_RESET    = MENU_AFTER_FOCAL;
+static constexpr int MENU_DEVELOP  = MENU_AFTER_LIBRARY;
+static constexpr int MENU_RESET    = MENU_DEVELOP + 1;
 static constexpr int MENU_ERASE    = MENU_RESET + 1;
 static constexpr int MENU_INFO     = MENU_ERASE + 1;
 static constexpr int MENU_HW       = MENU_INFO + 1;
@@ -140,12 +130,7 @@ const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_en
 const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
 const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct GAME_61_punct       = {.size = 10, .action = &mk61_games_select,                  .text = "MK61 Games"};
-#if MK61_ENABLE_BASIC
-const t_punct BASIC_punct         = {.size = 11, .action = &BASIC_menu_select,                  .text = "BASIC tools"};
-#endif
-#if MK61_ENABLE_FOCAL
-const t_punct FOCAL_punct         = {.size = 11, .action = &FOCAL_menu_select,                  .text = "FOCAL tools"};
-#endif
+const t_punct DEVELOPMENT_punct   = {.size = 11, .action = &development_select,                 .text = "Development"};
 const t_punct RESET_punct         = {.size = 12, .action = (menu_action) &NVIC_SystemReset,     .text = "Reset device"};
 const t_punct ERASE_punct         = {.size = 12, .action = (menu_action) &EraseFlash,           .text = "Erase FLASH!"};
 const t_punct SPEED_LOW_punct     = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
@@ -163,12 +148,7 @@ const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_en
 const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
 const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
 const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "Игры MK61"};
-#if MK61_ENABLE_BASIC
-const t_punct RU_BASIC_punct      = {.size = 15, .action = &BASIC_menu_select,                  .text = "БЕЙСИК"};
-#endif
-#if MK61_ENABLE_FOCAL
-const t_punct RU_FOCAL_punct      = {.size = 15, .action = &FOCAL_menu_select,                  .text = "ФОКАЛ"};
-#endif
+const t_punct RU_DEVELOPMENT_punct= {.size = 15, .action = &development_select,                 .text = "Разработка"};
 const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "Сброс"};
 const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "Стереть FLASH"};
 const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость норма"};
@@ -185,12 +165,7 @@ t_punct* MENU[] = {
       (t_punct*) &SETTINGS_punct,
       (t_punct*) &GAME_61_punct,
       (t_punct*) &LIB_61_punct,
-#if MK61_ENABLE_BASIC
-      (t_punct*) &BASIC_punct,
-#endif
-#if MK61_ENABLE_FOCAL
-      (t_punct*) &FOCAL_punct,
-#endif
+      (t_punct*) &DEVELOPMENT_punct,
       (t_punct*) &RESET_punct,
       (t_punct*) &ERASE_punct,
       (t_punct*) &FLASH_punct,
@@ -294,12 +269,7 @@ void refresh_menu_text(void) {
   MENU[MENU_SETTINGS] = (t_punct*) (russian_language ? &RU_SETTINGS_punct : &SETTINGS_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_GAMES]    = (t_punct*) (russian_language ? &RU_GAME_61_punct : &GAME_61_punct);
-#if MK61_ENABLE_BASIC
-  MENU[MENU_BASIC]    = (t_punct*) (russian_language ? &RU_BASIC_punct : &BASIC_punct);
-#endif
-#if MK61_ENABLE_FOCAL
-  MENU[MENU_FOCAL]    = (t_punct*) (russian_language ? &RU_FOCAL_punct : &FOCAL_punct);
-#endif
+  MENU[MENU_DEVELOP]  = (t_punct*) (russian_language ? &RU_DEVELOPMENT_punct : &DEVELOPMENT_punct);
   MENU[MENU_RESET]    = (t_punct*) (russian_language ? &RU_RESET_punct : &RESET_punct);
   MENU[MENU_ERASE]    = (t_punct*) (russian_language ? &RU_ERASE_punct : &ERASE_punct);
   MENU[MENU_INFO]     = (t_punct*) (russian_language ? &RU_FLASH_punct : &FLASH_punct);

@@ -21,6 +21,8 @@ static const int KEY_xP = 27;
 static const int KEY_RET = 31;
 static const int KEY_FRW = 32;
 static const int KEY_BKW = 33;
+static const int KEY_SHG_RIGHT_PRESS = KEY_BKW;
+static const int KEY_SHG_LEFT_PRESS = KEY_FRW;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -28,7 +30,7 @@ static const int KEY_ESC_PRESS = KEY_ESC;
 
 class MK61Display {
   public:
-    MK61Display(void) : x(0), y(0) { clear(); }
+    MK61Display(void) : x(0), y(0), row_count(4) { clear(); }
 
     void clear(void) {
       memset(lines, ' ', sizeof(lines));
@@ -58,12 +60,14 @@ class MK61Display {
       print(buffer);
     }
 
-    u8 rows(void) const { return 4; }
+    u8 rows(void) const { return row_count; }
+    void setRows(u8 rows) { row_count = (rows < 1) ? 1 : ((rows > 4) ? 4 : rows); }
     const char* line(u8 row) const { return lines[(row < 4) ? row : 0]; }
 
   private:
     u8 x;
     u8 y;
+    u8 row_count;
     char lines[4][17];
 };
 
@@ -1246,11 +1250,15 @@ static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int d
 }
 
 static int focal_program_count(void) {
+#ifndef FOCAL_HOST_TEST
+  return program_store::count(program_store::ProgramType::FOCAL);
+#else
   int count = 0;
   for(int i = 0; i < FOCAL_PROGRAM_COUNT; i++) {
     if(programs[i].used) count++;
   }
   return count;
+#endif
 }
 
 static int find_free_program(void) {
@@ -1259,6 +1267,56 @@ static int find_free_program(void) {
   }
   return -1;
 }
+
+#ifndef FOCAL_HOST_TEST
+static int find_program_by_name(const char* name) {
+  for(int i = 0; i < FOCAL_PROGRAM_COUNT; i++) {
+    if(programs[i].used && focal_streq(programs[i].name, name)) return i;
+  }
+  return -1;
+}
+
+static void focal_release_program_slot(int slot) {
+  if(slot < 0 || slot >= FOCAL_PROGRAM_COUNT) return;
+  memset(&programs[slot], 0, sizeof(programs[slot]));
+}
+
+static int focal_alloc_program_slot(const char* name) {
+  const int existing = find_program_by_name(name);
+  if(existing >= 0) return existing;
+
+  const int free_slot = find_free_program();
+  if(free_slot >= 0) return free_slot;
+
+  const int slot = (NextFocal >= 0 && NextFocal < FOCAL_PROGRAM_COUNT) ? NextFocal : 0;
+  focal_release_program_slot(slot);
+  return slot;
+}
+
+static bool focal_store_name_is_valid(const char* name) {
+  return name != NULL && name[0] != 0 && strlen(name) < program_store::NAME_SIZE;
+}
+
+static int load_focal_program_from_store(const char* name) {
+  if(!focal_store_name_is_valid(name)) return -1;
+
+  char source[FOCAL_SOURCE_SIZE];
+  memset(source, 0, sizeof(source));
+  u16 len = 0;
+  if(!program_store::read(program_store::ProgramType::FOCAL, name, (u8*) source, FOCAL_SOURCE_SIZE - 1, &len)) return -1;
+  source[len] = 0;
+
+  if(!focal_compile_source(source, focal_ast)) return -1;
+
+  const int slot = focal_alloc_program_slot(name);
+  focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
+  programs[slot].source_len = (u16) strlen(programs[slot].source);
+  focal_copy_text(programs[slot].name, sizeof(programs[slot].name), name);
+  programs[slot].used = true;
+  NextFocal = (i8) slot;
+  return slot;
+}
+#endif
 
 static void focal_program_default_name(int slot, char* out, usize size) {
   snprintf(out, size, "FOCAL%d", slot);
@@ -1316,6 +1374,9 @@ bool CompileFocal(char* program) {
   focal_program_default_name(slot, programs[slot].name, sizeof(programs[slot].name));
   programs[slot].used = true;
   NextFocal = (i8) slot;
+#ifndef FOCAL_HOST_TEST
+  program_store::write(program_store::ProgramType::FOCAL, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len);
+#endif
   display_focal_ok(programs[slot]);
   return true;
 }
@@ -1374,6 +1435,28 @@ static int next_used_program(int active, int delta, bool allow_new) {
 }
 
 static void draw_program_select(int active, bool allow_new) {
+#ifndef FOCAL_HOST_TEST
+  const int stored_count = program_store::count(program_store::ProgramType::FOCAL);
+  if(allow_new && active == stored_count) {
+    focal_message_i18n("FOCAL program", "Программа", ">NEW", ">НОВАЯ");
+    return;
+  }
+
+  program_store::Entry entry;
+  if(active >= 0 && program_store::entry(program_store::ProgramType::FOCAL, active, entry)) {
+    char line1[17];
+    char ru_line1[17];
+    char display_name[24];
+    focal_display_program_name(entry.name, display_name, sizeof(display_name));
+    snprintf(line1, sizeof(line1), ">%s", entry.name);
+    snprintf(ru_line1, sizeof(ru_line1), ">%s", display_name);
+    focal_message_i18n("FOCAL program", "Программа", line1, ru_line1);
+    return;
+  }
+
+  focal_message_i18n("FOCAL program", "Программа", ">EMPTY", ">ПУСТО");
+  (void) allow_new;
+#else
   char line1[17];
   char ru_line1[17];
   if(allow_new && active == FOCAL_PROGRAM_COUNT) {
@@ -1389,9 +1472,52 @@ static void draw_program_select(int active, bool allow_new) {
     focal_copy_text(ru_line1, sizeof(ru_line1), ">ПУСТО");
   }
   focal_message_i18n("FOCAL program", "Программа", line1, ru_line1);
+#endif
 }
 
 static int select_focal_program(bool allow_new) {
+#ifndef FOCAL_HOST_TEST
+  program_store::refresh();
+  const int stored_count = program_store::count(program_store::ProgramType::FOCAL);
+  if(stored_count <= 0 && !allow_new) {
+    focal_message_i18n("FOCAL is empty", "ФОКАЛ пуст", "Press any key", "Любая клавиша");
+    kbd::get_key_wait();
+    return -1;
+  }
+
+  int active = (stored_count > 0) ? 0 : stored_count;
+  while(true) {
+    draw_program_select(active, allow_new);
+    const i32 key = kbd::get_key_wait();
+    switch(key) {
+      case KEY_LEFT:
+        if(allow_new) {
+          active--;
+          if(active < 0) active = stored_count;
+        } else if(stored_count > 0) {
+          active = (active <= 0) ? stored_count - 1 : active - 1;
+        }
+        break;
+      case KEY_RIGHT:
+        if(allow_new) {
+          active++;
+          if(active > stored_count) active = 0;
+        } else if(stored_count > 0) {
+          active = (active + 1) % stored_count;
+        }
+        break;
+      case KEY_OK:
+        if(allow_new && active == stored_count) return FOCAL_PROGRAM_COUNT;
+        {
+          program_store::Entry entry;
+          if(!program_store::entry(program_store::ProgramType::FOCAL, active, entry)) return -1;
+          return load_focal_program_from_store(entry.name);
+        }
+      case KEY_ESC:
+        return -1;
+    }
+  }
+#else
   int active = -1;
   for(int i = 0; i < FOCAL_PROGRAM_COUNT; i++) {
     if(programs[i].used) {
@@ -1422,6 +1548,7 @@ static int select_focal_program(bool allow_new) {
         return -1;
     }
   }
+#endif
 }
 
 bool FOCAL_library_select(void) {
@@ -1494,33 +1621,80 @@ static bool focal_editor_move_cursor_line(const char* source, u16 len, u16& curs
   return true;
 }
 
-static void draw_focal_editor(const char* source, u16 len, u16 cursor, int slot, bool sms_cursor = false) {
+static u8 focal_editor_visible_rows(void) {
+  const u8 rows = lcd.rows();
+  return rows < 2 ? 2 : rows;
+}
+
+static void focal_editor_ensure_cursor_visible(const char* source, u16 len, u16 cursor, u16& view_top) {
+  if(view_top > len) view_top = len;
+  view_top = focal_line_start_for_cursor(source, view_top);
+
+  const u16 cursor_line_start = focal_line_start_for_cursor(source, cursor);
+  if(cursor_line_start < view_top) {
+    view_top = cursor_line_start;
+    return;
+  }
+
+  const u8 visible_rows = focal_editor_visible_rows();
+  u16 line_start = view_top;
+  for(u8 row = 0; row < visible_rows; row++) {
+    if(line_start == cursor_line_start) return;
+    if(line_start >= len) break;
+    const u16 next_line = focal_next_line_start(source, line_start, len);
+    if(next_line == line_start) break;
+    line_start = next_line;
+  }
+
+  view_top = cursor_line_start;
+  for(u8 row = 1; row < visible_rows && view_top > 0; row++) {
+    view_top = focal_previous_line_start(source, view_top);
+  }
+}
+
+static u8 focal_editor_cursor_screen_row(const char* source, u16 len, u16 cursor, u16 view_top) {
+  const u16 cursor_line_start = focal_line_start_for_cursor(source, cursor);
+  u16 line_start = view_top;
+  const u8 visible_rows = focal_editor_visible_rows();
+  for(u8 row = 0; row < visible_rows; row++) {
+    if(line_start == cursor_line_start) return row;
+    if(line_start >= len) break;
+    const u16 next_line = focal_next_line_start(source, line_start, len);
+    if(next_line == line_start) break;
+    line_start = next_line;
+  }
+  return 0;
+}
+
+static void draw_focal_editor(const char* source, u16 len, u16 cursor, u16 view_top, int slot, bool sms_cursor = false) {
   MK61DisplayUpdate update(lcd);
   lcd.clear();
-  const u8 rows = lcd.rows();
-  const u8 visible_rows = rows < 2 ? 1 : rows;
-  u16 line_start = focal_line_start_for_cursor(source, cursor);
-  const u16 cursor_line_start = line_start;
-  const u16 cursor_line_column = cursor - cursor_line_start;
-  const u16 cursor_window = (cursor_line_column > 14) ? (cursor_line_column - 14) : 0;
-  const u8 cursor_screen_col = (u8) (1 + cursor_line_column - cursor_window);
+  const u8 visible_rows = focal_editor_visible_rows();
+  u16 line_start = view_top;
+  const u16 active_line_start = focal_line_start_for_cursor(source, cursor);
+  const u16 active_line_column = cursor - active_line_start;
+  const u16 active_line_window = (active_line_column > 14) ? (active_line_column - 14) : 0;
+  const u8 cursor_screen_row = focal_editor_cursor_screen_row(source, len, cursor, view_top);
+  const u8 cursor_screen_col = (u8) (1 + active_line_column - active_line_window);
 
   for(u8 row = 0; row < visible_rows; row++) {
     if(line_start > len) break;
+    const bool empty_end_line = line_start == len;
     lcd.setCursor(0, row);
-    lcd.write((u8) ((row == 0) ? '>' : ' '));
-    u16 pos = line_start + ((row == 0) ? cursor_window : 0);
+    const bool active_row = line_start == active_line_start;
+    lcd.write((u8) (active_row ? '>' : ' '));
+    u16 pos = line_start + (active_row ? active_line_window : 0);
     u8 col = 1;
     while(pos < len && source[pos] != '\n' && source[pos] != '\r' && col < 16) {
       lcd.write((u8) source[pos++]);
       col++;
     }
     while(col++ < 16) lcd.write((u8) ' ');
+    if(empty_end_line) break;
     line_start = focal_next_line_start(source, line_start, len);
-    if(line_start >= len) break;
   }
 
-  lcd.setCursor(cursor_screen_col, 0);
+  lcd.setCursor(cursor_screen_col, cursor_screen_row);
   lcd.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
 
   (void) slot;
@@ -1764,18 +1938,151 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
   return NULL;
 }
 
-static bool store_edited_program(int slot, char* source) {
+static bool focal_confirm_save(void) {
+  focal_message_i18n("Save FOCAL?", "Сохранить?", "OK=yes ESC=no", "OK=да ESC=нет");
+  while(true) {
+    const i32 key = kbd::get_key_wait();
+    if(key == KEY_OK || key == KEY_OK_PRESS) return true;
+    if(key == KEY_ESC || key == KEY_ESC_PRESS) return false;
+  }
+}
+
+static void draw_focal_name_editor(const char* name, bool sms_cursor) {
+  char line[17];
+  snprintf(line, sizeof(line), ">%s", name);
+  focal_message_i18n("FOCAL name", "Имя ФОКАЛ", line, line);
+  if(sms_cursor) {
+    MK61DisplayUpdate update(lcd);
+    const u8 pos = (u8) strlen(line);
+    lcd.setCursor(pos < 16 ? pos : 15, 1);
+    lcd.write(SMS_CURSOR_ASCII);
+  }
+}
+
+static bool focal_name_insert_char(char* name, u8& len, char ch) {
+  if(ch == ' ') return false;
+  if(len >= FOCAL_NAME_SIZE - 1) return false;
+  name[len++] = focal_upper(ch);
+  name[len] = 0;
+  return true;
+}
+
+static bool focal_name_sms_tap(char* name, u8& len, FocalSmsState& sms, i32 key_code, u32 now) {
+  const char* letters = focal_sms_letters_for_key(key_code);
+  if(letters == NULL || letters[0] == 0) {
+    focal_sms_reset(sms);
+    return false;
+  }
+
+  if(sms.active && sms.key_code == key_code && len > 0) {
+    const usize count = strlen(letters);
+    sms.index = (u8) ((sms.index + 1) % count);
+    name[len - 1] = letters[sms.index];
+    sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
+    return true;
+  }
+
+  sms.active = true;
+  sms.key_code = key_code;
+  sms.index = 0;
+  sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
+  return focal_name_insert_char(name, len, letters[0]);
+}
+
+static bool focal_input_program_name(char* name, usize size) {
+  if(size == 0) return false;
+  name[size - 1] = 0;
+  u8 len = (u8) strlen(name);
+  if(len >= size) len = (u8) size - 1;
+  FocalSmsState sms = {};
+  FocalEditShift shift = FocalEditShift::NONE;
+
+  while(true) {
+    const u32 now = millis();
+    if(sms.active && now >= sms.deadline_ms) focal_sms_reset(sms);
+    draw_focal_name_editor(name, sms.active);
+    const i32 key = kbd::get_key_wait();
+    const bool shifted_key = shift != FocalEditShift::NONE;
+
+    if(!shifted_key && (key == KEY_K || key == KEY_ALPHA)) {
+      shift = (key == KEY_K) ? FocalEditShift::K : FocalEditShift::ALPHA;
+      focal_sms_reset(sms);
+      continue;
+    }
+    if(!shifted_key && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
+    if(!shifted_key && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
+    if(!shifted_key && key == KEY_DEGREE) {
+      focal_sms_reset(sms);
+      if(len > 0) name[--len] = 0;
+      continue;
+    }
+    if(!shifted_key && key == 0) {
+      focal_sms_reset(sms);
+      len = 0;
+      name[0] = 0;
+      continue;
+    }
+
+    const int digit = focal_digit_from_key(key);
+    if(shift == FocalEditShift::ALPHA && digit >= 0) {
+      const char* symbol = focal_symbol_for_digit_key(key);
+      if(symbol != NULL && symbol[0] != 0) focal_name_insert_char(name, len, symbol[0]);
+      shift = FocalEditShift::NONE;
+      focal_sms_reset(sms);
+      continue;
+    }
+    if(digit >= 2 && digit <= 9) {
+      focal_name_sms_tap(name, len, sms, key, now);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+    if(digit == 0 || key == KEY_PP) {
+      focal_sms_reset(sms);
+      focal_name_insert_char(name, len, '0');
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+    if(digit == 1) {
+      focal_sms_reset(sms);
+      focal_name_insert_char(name, len, '1');
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+
+    shift = FocalEditShift::NONE;
+  }
+}
+
+static bool store_edited_program(int slot, char* source, const char* store_name) {
+  char old_name[FOCAL_NAME_SIZE] = "";
+  if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) {
+    focal_copy_text(old_name, sizeof(old_name), programs[slot].name);
+  }
+
   if(slot == FOCAL_PROGRAM_COUNT) {
+#ifdef FOCAL_HOST_TEST
     slot = find_free_program();
     if(slot < 0) return focal_error("FULL?");
+#else
+    slot = focal_alloc_program_slot(store_name);
+#endif
   }
   if(!focal_compile_source(source, focal_ast)) return false;
 
   focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
-  focal_program_default_name(slot, programs[slot].name, sizeof(programs[slot].name));
+  if(store_name != NULL && store_name[0] != 0) focal_copy_text(programs[slot].name, sizeof(programs[slot].name), store_name);
+  else focal_program_default_name(slot, programs[slot].name, sizeof(programs[slot].name));
   programs[slot].used = true;
   NextFocal = (i8) slot;
+#ifndef FOCAL_HOST_TEST
+  if(!program_store::write(program_store::ProgramType::FOCAL, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len)) {
+    return focal_error("FULL?");
+  }
+  if(old_name[0] != 0 && !focal_streq(old_name, programs[slot].name)) {
+    program_store::remove(program_store::ProgramType::FOCAL, old_name);
+  }
+#endif
   display_focal_ok(programs[slot]);
   return true;
 }
@@ -1790,6 +2097,7 @@ void EditFocal(void) {
 
   u16 len = (u16) strlen(source);
   u16 cursor = len;
+  u16 view_top = focal_line_start_for_cursor(source, cursor);
   FocalEditShift shift = FocalEditShift::NONE;
   FocalSmsState sms = {};
   u32 blink_time = millis() + CURSOR_BLINK_MS;
@@ -1798,7 +2106,8 @@ void EditFocal(void) {
   while(true) {
     const u32 now = millis();
     if(sms.active && now >= sms.deadline_ms) focal_sms_reset(sms);
-    draw_focal_editor(source, len, cursor, slot, sms.active);
+    focal_editor_ensure_cursor_visible(source, len, cursor, view_top);
+    draw_focal_editor(source, len, cursor, view_top, slot, sms.active);
     if(now >= blink_time) blink_time = now + CURSOR_BLINK_MS;
 
     kbd::scan_and_debounced();
@@ -1861,7 +2170,13 @@ void EditFocal(void) {
     }
 
     if(!shifted_key && (key_code == KEY_ESC || key_code == KEY_ESC_PRESS)) {
-      store_edited_program(slot, source);
+      if(!focal_confirm_save()) return;
+      char name[FOCAL_NAME_SIZE];
+      memset(name, 0, sizeof(name));
+      if(slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(name, sizeof(name), programs[slot].name);
+      else focal_program_default_name(find_free_program() < 0 ? 0 : find_free_program(), name, sizeof(name));
+      if(focal_input_program_name(name, sizeof(name)) && store_edited_program(slot, source, name)) return;
+      kbd::debounce_init();
       return;
     }
 
@@ -1869,14 +2184,15 @@ void EditFocal(void) {
       focal_editor_move_cursor_left(source, cursor);
     } else if(!shifted_key && (key_code == KEY_RIGHT || key_code == KEY_RIGHT_PRESS)) {
       focal_editor_move_cursor_right(source, len, cursor);
-    } else if(!shifted_key && key_code == KEY_BKW) {
+    } else if(!shifted_key && key_code == KEY_SHG_LEFT_PRESS) {
       focal_editor_move_cursor_line(source, len, cursor, -1);
-    } else if(!shifted_key && key_code == KEY_FRW) {
+    } else if(!shifted_key && key_code == KEY_SHG_RIGHT_PRESS) {
       focal_editor_move_cursor_line(source, len, cursor, 1);
     } else if(!shifted_key && key_code == 0) {
       memset(source, 0, sizeof(source));
       len = 0;
       cursor = 0;
+      view_top = 0;
     } else if(!shifted_key && (key_code == KEY_OK || key_code == KEY_OK_PRESS)) {
       focal_editor_insert_text(source, len, cursor, "\n");
     } else {
@@ -1932,6 +2248,7 @@ bool FOCAL_menu_select(void) {
 #ifdef FOCAL_SELF_TEST
 extern "C" void FocalTestReset(void) {
   InitFocal();
+  lcd.setRows(4);
   lcd.clear();
 }
 
@@ -1975,7 +2292,9 @@ extern "C" void FocalTestDrawNewEditor(const char* source, int cursor) {
   const u16 len = (u16) strlen(source);
   u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
   if(safe_cursor > len) safe_cursor = len;
-  draw_focal_editor(source, len, safe_cursor, FOCAL_PROGRAM_COUNT);
+  u16 view_top = focal_line_start_for_cursor(source, safe_cursor);
+  focal_editor_ensure_cursor_visible(source, len, safe_cursor, view_top);
+  draw_focal_editor(source, len, safe_cursor, view_top, FOCAL_PROGRAM_COUNT);
 }
 
 extern "C" void FocalTestDrawNewEditorSms(const char* source, int cursor) {
@@ -1983,7 +2302,33 @@ extern "C" void FocalTestDrawNewEditorSms(const char* source, int cursor) {
   const u16 len = (u16) strlen(source);
   u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
   if(safe_cursor > len) safe_cursor = len;
-  draw_focal_editor(source, len, safe_cursor, FOCAL_PROGRAM_COUNT, true);
+  u16 view_top = focal_line_start_for_cursor(source, safe_cursor);
+  focal_editor_ensure_cursor_visible(source, len, safe_cursor, view_top);
+  draw_focal_editor(source, len, safe_cursor, view_top, FOCAL_PROGRAM_COUNT, true);
+}
+
+extern "C" void FocalTestSetLcdRows(int rows) {
+  lcd.setRows((u8) rows);
+}
+
+extern "C" int FocalTestEnsureViewTop(const char* source, int cursor, int view_top) {
+  if(source == NULL) source = "";
+  const u16 len = (u16) strlen(source);
+  u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
+  if(safe_cursor > len) safe_cursor = len;
+  u16 safe_view_top = (view_top < 0) ? 0 : (u16) view_top;
+  focal_editor_ensure_cursor_visible(source, len, safe_cursor, safe_view_top);
+  return safe_view_top;
+}
+
+extern "C" void FocalTestDrawNewEditorAt(const char* source, int cursor, int view_top) {
+  if(source == NULL) source = "";
+  const u16 len = (u16) strlen(source);
+  u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
+  if(safe_cursor > len) safe_cursor = len;
+  u16 safe_view_top = (view_top < 0) ? 0 : (u16) view_top;
+  focal_editor_ensure_cursor_visible(source, len, safe_cursor, safe_view_top);
+  draw_focal_editor(source, len, safe_cursor, safe_view_top, FOCAL_PROGRAM_COUNT);
 }
 
 extern "C" int FocalTestMoveCursorLine(const char* source, int cursor, int delta) {
@@ -2002,6 +2347,16 @@ extern "C" int FocalTestMoveCursorHorizontal(const char* source, int cursor, int
   if(safe_cursor > len) safe_cursor = len;
   if(delta < 0) focal_editor_move_cursor_left(source, safe_cursor);
   else if(delta > 0) focal_editor_move_cursor_right(source, len, safe_cursor);
+  return safe_cursor;
+}
+
+extern "C" int FocalTestMoveCursorLineKey(const char* source, int cursor, int key_code) {
+  if(source == NULL) source = "";
+  const u16 len = (u16) strlen(source);
+  u16 safe_cursor = (cursor < 0) ? 0 : (u16) cursor;
+  if(safe_cursor > len) safe_cursor = len;
+  if(key_code == KEY_SHG_LEFT_PRESS) focal_editor_move_cursor_line(source, len, safe_cursor, -1);
+  else if(key_code == KEY_SHG_RIGHT_PRESS) focal_editor_move_cursor_line(source, len, safe_cursor, 1);
   return safe_cursor;
 }
 

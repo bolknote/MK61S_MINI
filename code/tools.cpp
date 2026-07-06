@@ -2,6 +2,7 @@
 #include "EEPROM.h"
 #include "lcd_gui.hpp"
 #include "tools.hpp"
+#include "program_store.hpp"
 #include "mk61emu_core.h"
 #include "keyboard.h"
 #include "cross_hal.h"
@@ -278,6 +279,7 @@ void init_external_flash(void) {
       Serial.println("ERROR!");
     }
   #endif
+  if(flash_is_ok) program_store::init();
 }
 
 u8 load_word(isize segment_address, isize offset) {
@@ -312,10 +314,19 @@ bool load_from(isize address) {
 }
 
 bool Load(usize nSlot) {
-  const isize address = calc_address(nSlot);
-  if(address < 0) return false; // error
+  char name[8];
+  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
 
-  return load_from(address);
+  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  u8 code_len = 0;
+  if(!program_store::read_mk61(name, &code_page[0], core_61::MAX_PROGRAM_STEP, &code_len)) return false;
+
+  apply_program_memory_auto(&code_page[0], code_len, false);
+  const usize program_steps = core_61::program_steps();
+  for(usize i = 0; i < program_steps; i++) {
+    MK61Emu_SetCode(core_61::get_ring_address(i), code_page[i]);
+  }
+  return true;
 }
 
 bool Load(void) {
@@ -353,92 +364,34 @@ inline bool check_empty_program(void) {
 }
 
 char* ReadSlotName(usize nSlot, char* slot_name) {
-  const isize segment_address = calc_address(nSlot);
-  if(segment_address < 0) return NULL;
-
-  usize i = 0;
-  while(i < SIZEOF_SLOT_NAME) {
-    const char symbol = flash.readByte(segment_address + OFFSET_SLOT_NAME + i);
-    slot_name[i++] = symbol;
-    if(symbol == 0) return slot_name;
-  }
+  char name[8];
+  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+  if(!program_store::exists(program_store::ProgramType::MK61, name)) return NULL;
+  strncpy(slot_name, name, SIZEOF_SLOT_NAME - 1);
   slot_name[SIZEOF_SLOT_NAME - 1] = 0;
   return slot_name;
 }
 
 bool clear_storage(void) {
-  if(!flash_is_ok) return false;
-
-  for(usize nSlot=0; nSlot <= MAX_SLOT_FOR_PROGRAM; nSlot++) {
-    while (!flash.eraseSector(nSlot * FLASH_SECTOR_SIZE));
-  }
-  return true;
+  return program_store::format();
 }
 
 bool Rename(usize nSlot, char* slot_name) {
-  const isize segment_address = calc_address(nSlot);
-  if(segment_address < 0) return false;
-  
-  if(load_word(segment_address, OFFSET_FLAG_OCCUPIED) != SLOT_OCCUPIED) {
-    #ifdef SERIAL_OUTPUT
-      Serial.println("Empty slot cannot be renamed!");
-    #endif
-    ErrorReaction();
-  }
-  
-  if(flash_is_ok) {
-    // Сотрем сектор флеша, перед этим забэкапив область программ, регистров и флага занятости.
-      u8 backup[1 + core_61::MAX_PROGRAM_STEP + 168];
-      for(usize i=0; i < sizeof(backup); i++) backup[i] = flash.readByte(segment_address + i);
-      dbgln(SPIROM, "SPIFLASH: erase sector...");
-      //while (!flash.eraseSector(segment_address)); // Старая версия обращения для стирания сектора ППЗУ
-
-      const u32 TimeIsOut = millis() + ERASE_SECTOR_TIMEOUT; // Запоминаем время начала
-      while (!flash.eraseSector(segment_address)) {
-        if (millis() >= TimeIsOut) { // Проверяем превышение таймаута
-          dbgln(SPIROM, "SPIFLASH: erase sector timeout!");
-          return false;
-        }
-        // Возможна короткая пауза для снижения нагрузки на процессор
-        // HAL_Delay(1); // Раскомментировать при необходимости
-      }
-
-      for(usize i=0; i < sizeof(backup); i++) flash.writeByte(segment_address + i, backup[i]);
-    // запись имени слота  
-      for(usize i=0; i < SIZEOF_SLOT_NAME; i++) {
-        const char symbol = slot_name[i];
-        flash.writeByte(segment_address + OFFSET_SLOT_NAME + i, symbol);
-        if(symbol == 0) break;
-      }
-  }
-  return true;
+  char old_name[8];
+  snprintf(old_name, sizeof(old_name), "%u", (unsigned) nSlot);
+  return program_store::rename(program_store::ProgramType::MK61, old_name, slot_name);
 }
 
 bool Store(usize nSlot) {
   if(check_empty_program()) return false; // error
 
-  const isize address = calc_address(nSlot);
-  if(address < 0) return false; // error
+  char name[8];
+  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  core_61::get_code_page(&code_page[0]);
+  const u8 code_len = (u8) seek_program_END(&code_page[0]);
+  if(!program_store::write_mk61(name, &code_page[0], code_len)) return false;
 
-  if(load_word(address, OFFSET_FLAG_OCCUPIED) == SLOT_OCCUPIED) {
-    dbgln(SPIROM, "SPIFLASH: SLOT IS OCCUPIED ", address);
-  }
-
-  dbgln(SPIROM, "SPIFLASH: write to address ", address);
-  dbgln(SPIROM, "SPIFLASH: erase sector...");
-  while (!flash.eraseSector(address));
-
-  dbg(MINI, "Save ");
-  store_word(address, OFFSET_FLAG_OCCUPIED, SLOT_OCCUPIED);
-  const usize program_steps = core_61::program_steps();
-  for(usize i = 0; i < program_steps; i++){
-    const u8 mk61_prg_word = core_61::get_code(core_61::get_ring_address(i));
-    store_word(address, OFFSET_MK61_PROGRAMM + i, mk61_prg_word);
-    dbg(MINI, "#");
-  }
-  for(usize i = program_steps; i < core_61::MAX_PROGRAM_STEP; i++) {
-    store_word(address, OFFSET_MK61_PROGRAMM + i, 0);
-  }
   dbg(MINI, "\nProgramm saved!");
   return true;
 }
@@ -459,7 +412,9 @@ bool Store(void) {
   }
   if(address < 0) return false; // error
 
-  if(load_word(address, OFFSET_FLAG_OCCUPIED) == SLOT_OCCUPIED) {
+  char name[8];
+  snprintf(name, sizeof(name), "%u", (unsigned) (address / FLASH_SECTOR_SIZE));
+  if(program_store::exists(program_store::ProgramType::MK61, name)) {
     #ifdef DEBUG_SPIFLASH
       Serial.print("SPIFLASH: SLOT IS OCCUPIED ");
       Serial.println(address);
@@ -480,17 +435,15 @@ bool Store(void) {
   #ifdef DEBUG_SPIFLASH
     Serial.print("SPIFLASH: erase sector...");
   #endif
-  while (!flash.eraseSector(address));
+  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  core_61::get_code_page(&code_page[0]);
+  const u8 code_len = (u8) seek_program_END(&code_page[0]);
 
   #ifdef SERIAL_OUTPUT
     Serial.print("Save ");
   #endif
 
-  store_word(address, OFFSET_FLAG_OCCUPIED, SLOT_OCCUPIED);
-  const usize program_steps = core_61::program_steps();
-  for(usize i = 0; i < program_steps; i++){
-    const u8 mk61_prg_word = core_61::get_code(core_61::get_ring_address(i));
-    store_word(address, OFFSET_MK61_PROGRAMM + i, mk61_prg_word);
+  for(usize i = 0; i < code_len; i++){
     #ifdef SERIAL_OUTPUT
       Serial.write('#');
     #endif
@@ -500,9 +453,7 @@ bool Store(void) {
       lcd.setCursor(x, 1); lcd.print((char) 0xFF); lcd.print(i);
     }
   }
-  for(usize i = program_steps; i < core_61::MAX_PROGRAM_STEP; i++) {
-    store_word(address, OFFSET_MK61_PROGRAMM + i, 0);
-  }
+  if(!program_store::write_mk61(name, &code_page[0], code_len)) return false;
 
   #ifdef SERIAL_OUTPUT
     Serial.println("\nProgramm saved!");
@@ -525,12 +476,13 @@ bool  EraseFlash(void) {
     lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase slot ", "CTEP SLOT "));
   }
   for(usize i=0; i <= MAX_SLOT_FOR_PROGRAM; i++){
-     while (!flash.eraseSector(i * FLASH_SECTOR_SIZE));
+     erase_slot(i);
      {
        MK61DisplayUpdate update(lcd);
        lcd.setCursor(11, 0); lcd.print(i);
      }
   }
+  program_store::init();
   sound(PIN_BUZZER, 1000, 300);
   message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
   return action::MENU_EXIT;

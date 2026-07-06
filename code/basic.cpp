@@ -1644,12 +1644,69 @@ static int find_free_program(void) {
   return -1;
 }
 
+#ifndef BASIC_HOST_TEST
+static void basic_release_program_slot(int slot) {
+  if(slot < 0 || slot >= BASIC_PROGRAM_COUNT) return;
+  memset(&programs[slot], 0, sizeof(programs[slot]));
+  for(usize i = 0; i < core_61::MAX_PROGRAM_STEP; i++) {
+    if(basic_step_program[i] == slot) basic_step_program[i] = -1;
+  }
+}
+
+static int basic_alloc_program_slot(const char* name) {
+  const int existing = find_program_by_name(name);
+  if(existing >= 0) return existing;
+
+  const int free_slot = find_free_program();
+  if(free_slot >= 0) return free_slot;
+
+  const int slot = (NextBasic >= 0 && NextBasic < BASIC_PROGRAM_COUNT) ? NextBasic : 0;
+  basic_release_program_slot(slot);
+  return slot;
+}
+
+static bool basic_store_name_is_valid(const char* name) {
+  return name != NULL && name[0] != 0 && strlen(name) < program_store::NAME_SIZE;
+}
+
+static int load_basic_program_from_store(const char* name) {
+  if(!basic_store_name_is_valid(name)) return -1;
+
+  char source[BASIC_SOURCE_SIZE];
+  memset(source, 0, sizeof(source));
+  u16 len = 0;
+  if(!program_store::read(program_store::ProgramType::BASIC, name, (u8*) source, BASIC_SOURCE_SIZE - 1, &len)) return -1;
+  source[len] = 0;
+
+  if(!compile_source(source, ast)) return -1;
+
+  const int slot = basic_alloc_program_slot(name);
+  strncpy(programs[slot].source, source, BASIC_SOURCE_SIZE - 1);
+  programs[slot].source[BASIC_SOURCE_SIZE - 1] = 0;
+  programs[slot].source_len = (u16) strlen(programs[slot].source);
+  basic_copy_name(programs[slot].name, name);
+  programs[slot].used = true;
+  NextBasic = slot;
+  return slot;
+}
+
+static int ensure_basic_program_loaded(const char* name) {
+  const int loaded = find_program_by_name(name);
+  if(loaded >= 0) return loaded;
+  return load_basic_program_from_store(name);
+}
+#endif
+
 static int basic_program_count(void) {
+#ifndef BASIC_HOST_TEST
+  return program_store::count(program_store::ProgramType::BASIC);
+#else
   int count = 0;
   for(int i = 0; i < BASIC_PROGRAM_COUNT; i++) {
     if(programs[i].used) count++;
   }
   return count;
+#endif
 }
 
 static int next_used_program(int from, int delta, bool allow_new) {
@@ -1666,6 +1723,36 @@ static int next_used_program(int from, int delta, bool allow_new) {
 }
 
 static void draw_program_select(int active, bool allow_new) {
+#ifndef BASIC_HOST_TEST
+  char name[BASIC_NAME_SIZE] = "";
+  char line1[17];
+  char ru_line_buffer[32];
+  const int stored_count = program_store::count(program_store::ProgramType::BASIC);
+  if(allow_new && active == stored_count) {
+    strcpy(line1, ">NEW");
+    basic_message_i18n("BASIC program", "Программа", line1, ">НОВАЯ");
+    return;
+  }
+
+  program_store::Entry entry;
+  if(active >= 0 && program_store::entry(program_store::ProgramType::BASIC, active, entry)) {
+    basic_copy_name(name, entry.name);
+    line1[0] = '>';
+    strncpy(&line1[1], name, sizeof(line1) - 2);
+    line1[sizeof(line1) - 1] = 0;
+
+    char display_name[22];
+    basic_display_program_name(name, display_name, sizeof(display_name));
+    ru_line_buffer[0] = '>';
+    strncpy(&ru_line_buffer[1], display_name, sizeof(ru_line_buffer) - 2);
+    ru_line_buffer[sizeof(ru_line_buffer) - 1] = 0;
+    basic_message_i18n("BASIC program", "Программа", line1, ru_line_buffer);
+    return;
+  }
+
+  basic_message_i18n("BASIC program", "Программа", ">empty", ">ПУСТО");
+  (void) allow_new;
+#else
   char line1[17];
   char ru_line_buffer[32];
   if(allow_new && active == BASIC_PROGRAM_COUNT) {
@@ -1692,9 +1779,52 @@ static void draw_program_select(int active, bool allow_new) {
   }
 
   basic_message_i18n("BASIC program", "Программа", line1, ru_line1);
+#endif
 }
 
 static int select_basic_program(bool allow_new) {
+#ifndef BASIC_HOST_TEST
+  program_store::refresh();
+  const int stored_count = program_store::count(program_store::ProgramType::BASIC);
+  if(stored_count <= 0 && !allow_new) {
+    basic_message_i18n("BASIC is empty", "БЕЙСИК пуст", "Press any key", "Любая клавиша");
+    kbd::get_key_wait();
+    return -1;
+  }
+
+  int active = (stored_count > 0) ? 0 : stored_count;
+  while(true) {
+    draw_program_select(active, allow_new);
+    const i32 key = kbd::get_key_wait();
+    switch(key) {
+      case KEY_LEFT:
+        if(allow_new) {
+          active--;
+          if(active < 0) active = stored_count;
+        } else if(stored_count > 0) {
+          active = (active <= 0) ? stored_count - 1 : active - 1;
+        }
+        break;
+      case KEY_RIGHT:
+        if(allow_new) {
+          active++;
+          if(active > stored_count) active = 0;
+        } else if(stored_count > 0) {
+          active = (active + 1) % stored_count;
+        }
+        break;
+      case KEY_OK:
+        if(allow_new && active == stored_count) return BASIC_PROGRAM_COUNT;
+        {
+          program_store::Entry entry;
+          if(!program_store::entry(program_store::ProgramType::BASIC, active, entry)) return -1;
+          return load_basic_program_from_store(entry.name);
+        }
+      case KEY_ESC:
+        return -1;
+    }
+  }
+#else
   int active = -1;
   for(int i = 0; i < BASIC_PROGRAM_COUNT; i++) {
     if(programs[i].used) {
@@ -1725,6 +1855,7 @@ static int select_basic_program(bool allow_new) {
         return -1;
     }
   }
+#endif
 }
 
 static void display_ast_ok(const BasicProgram& program) {
@@ -1755,6 +1886,9 @@ bool CompileBasic(char* program) {
   if(programs[slot].name[0] == 0) snprintf(programs[slot].name, sizeof(programs[slot].name), "BASIC%d", slot);
   programs[slot].used = true;
   NextBasic = slot;
+#ifndef BASIC_HOST_TEST
+  program_store::write(program_store::ProgramType::BASIC, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len);
+#endif
   display_ast_ok(programs[slot]);
   return true;
 }
@@ -1881,7 +2015,12 @@ static bool eval_expr(i16 expr_id, BasicValue& value) {
     else if(basic_streq(name, "INT")) value = make_number(floor(eval_number(e.args[0])));
     else if(basic_streq(name, "SQRT")) value = make_number(sqrt(eval_number(e.args[0])));
     else {
-      const int program = find_program_by_name(name);
+      const int program =
+#ifndef BASIC_HOST_TEST
+        ensure_basic_program_loaded(name);
+#else
+        find_program_by_name(name);
+#endif
       if(program >= 0) {
         value = make_number(run_basic_function_call(program));
       } else {
@@ -1964,6 +2103,17 @@ static double read_number_from_keyboard(const BasicStmt& stmt) {
 }
 
 static bool load_mk_program_by_name(const char* name) {
+#ifndef BASIC_HOST_TEST
+  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  u8 code_len = 0;
+  if(!program_store::read_mk61(name, &code_page[0], core_61::MAX_PROGRAM_STEP, &code_len)) return false;
+  apply_program_memory_auto(&code_page[0], code_len, false);
+  const usize program_steps = core_61::program_steps();
+  for(usize i = 0; i < program_steps; i++) {
+    MK61Emu_SetCode(core_61::get_ring_address(i), code_page[i]);
+  }
+  return true;
+#else
   if(name[0] != 0 && basic_is_digit(name[0])) {
     const int slot = atoi(name);
     if(slot >= 0 && slot <= MAX_SLOT_FOR_PROGRAM) return Load((usize) slot);
@@ -1976,6 +2126,7 @@ static bool load_mk_program_by_name(const char* name) {
     if(basic_streq(slot_name, name)) return Load(slot);
   }
   return false;
+#endif
 }
 
 static void save_mk_context(void) {
@@ -2144,7 +2295,12 @@ static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR
       pc = stmt.next;
       return true;
     case StmtKind::MK_BIND: {
-      const int program = find_program_by_name(stmt.text);
+      const int program =
+#ifndef BASIC_HOST_TEST
+        ensure_basic_program_loaded(stmt.text);
+#else
+        find_program_by_name(stmt.text);
+#endif
       if(program >= 0) basic_step_program[stmt.mk_step] = (i8) program;
       else basic_error("mk name?");
       pc = stmt.next;
@@ -2243,10 +2399,20 @@ static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 windo
   lcd.print(len);
 }
 
-static bool store_edited_program(int slot, char* source) {
+static bool store_edited_program(int slot, char* source, const char* store_name) {
+  char old_name[BASIC_NAME_SIZE] = "";
+  if(slot >= 0 && slot < BASIC_PROGRAM_COUNT && programs[slot].used) {
+    strncpy(old_name, programs[slot].name, sizeof(old_name) - 1);
+    old_name[sizeof(old_name) - 1] = 0;
+  }
+
   if(slot == BASIC_PROGRAM_COUNT) {
+#ifdef BASIC_HOST_TEST
     slot = find_free_program();
     if(slot < 0) return basic_error("program full");
+#else
+    slot = basic_alloc_program_slot(store_name);
+#endif
   }
 
   if(!compile_source(source, ast)) {
@@ -2256,10 +2422,19 @@ static bool store_edited_program(int slot, char* source) {
   strncpy(programs[slot].source, source, BASIC_SOURCE_SIZE - 1);
   programs[slot].source[BASIC_SOURCE_SIZE - 1] = 0;
   programs[slot].source_len = (u16) strlen(programs[slot].source);
-  basic_copy_name(programs[slot].name, ast.program_name);
+  if(store_name != NULL && store_name[0] != 0) basic_copy_name(programs[slot].name, store_name);
+  else basic_copy_name(programs[slot].name, ast.program_name);
   if(programs[slot].name[0] == 0) snprintf(programs[slot].name, sizeof(programs[slot].name), "BASIC%d", slot);
   programs[slot].used = true;
   NextBasic = slot;
+#ifndef BASIC_HOST_TEST
+  if(!program_store::write(program_store::ProgramType::BASIC, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len)) {
+    return basic_error("program full");
+  }
+  if(old_name[0] != 0 && !basic_streq(old_name, programs[slot].name)) {
+    program_store::remove(program_store::ProgramType::BASIC, old_name);
+  }
+#endif
   display_ast_ok(programs[slot]);
   return true;
 }
@@ -2350,6 +2525,74 @@ static bool basic_editor_insert_text(char* source, u16& len, u16& cursor, const 
   return true;
 }
 
+static bool basic_confirm_save(void) {
+  basic_message_i18n("Save BASIC?", "Сохранить?", "OK=yes ESC=no", "OK=да ESC=нет");
+  while(true) {
+    const i32 key = kbd::get_key_wait();
+    if(key == KEY_OK || key == KEY_OK_PRESS) return true;
+    if(key == KEY_ESC || key == KEY_ESC_PRESS) return false;
+  }
+}
+
+static bool basic_name_insert_text(char* name, u8& len, const char* text) {
+  if(text == NULL || text[0] == 0) return false;
+  for(usize i = 0; text[i] != 0; i++) {
+    char ch = basic_upper(text[i]);
+    if(ch == ' ') continue;
+    if(len >= BASIC_NAME_SIZE - 1) return false;
+    name[len++] = ch;
+    name[len] = 0;
+  }
+  return true;
+}
+
+static void draw_basic_name_editor(const char* name) {
+  char line[17];
+  snprintf(line, sizeof(line), ">%s", name);
+  basic_message_i18n("BASIC name", "Имя БЕЙСИК", line, line);
+}
+
+static bool basic_input_program_name(char* name, usize size) {
+  if(size == 0) return false;
+  name[size - 1] = 0;
+  u8 len = (u8) strlen(name);
+  if(len >= size) len = (u8) size - 1;
+  BasicEditShift shift = BasicEditShift::NONE;
+
+  while(true) {
+    draw_basic_name_editor(name);
+    const i32 key = kbd::get_key_wait();
+    const bool shifted_key = shift != BasicEditShift::NONE;
+
+    if(!shifted_key && (key == KEY_K || key == KEY_ALPHA)) {
+      shift = (key == KEY_K) ? BasicEditShift::K : BasicEditShift::ALPHA;
+      continue;
+    }
+    if(!shifted_key && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
+    if(!shifted_key && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
+    if(!shifted_key && key == KEY_DEGREE) {
+      if(len > 0) name[--len] = 0;
+      continue;
+    }
+    if(!shifted_key && key == 0) {
+      len = 0;
+      name[0] = 0;
+      continue;
+    }
+
+    if(key >= 0 && key < 40) {
+      const char* text = NULL;
+      switch(shift) {
+        case BasicEditShift::NONE:  text = BASIC_key_text[key]; break;
+        case BasicEditShift::ALPHA: text = BASIC_alpha_key_text[key]; break;
+        case BasicEditShift::K:     text = BASIC_Kshift_key_text[key]; break;
+      }
+      basic_name_insert_text(name, len, text);
+    }
+    shift = BasicEditShift::NONE;
+  }
+}
+
 void EditBasic(void) {
   int slot = select_basic_program(true);
   if(slot < 0) return;
@@ -2385,7 +2628,13 @@ void EditBasic(void) {
     }
 
     if(!shifted_key && (key_code == KEY_ESC || key_code == KEY_ESC_PRESS)) {
-      store_edited_program(slot, source);
+      if(!basic_confirm_save()) return;
+      char name[BASIC_NAME_SIZE];
+      memset(name, 0, sizeof(name));
+      if(slot < BASIC_PROGRAM_COUNT && programs[slot].used) strncpy(name, programs[slot].name, sizeof(name) - 1);
+      else snprintf(name, sizeof(name), "BASIC%d", find_free_program() < 0 ? 0 : find_free_program());
+      if(basic_input_program_name(name, sizeof(name)) && store_edited_program(slot, source, name)) return;
+      kbd::debounce_init();
       return;
     }
 
