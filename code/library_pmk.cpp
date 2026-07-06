@@ -419,8 +419,8 @@ void memory_mode_error(void) {
   {
     MK61DisplayUpdate update(lcd);
     lcd.clear();
-    library_mk61::print_localized_at(0, 0, "НЕВЕРНО ВЫБРАН", "WRONG MEMORY");
-    library_mk61::print_localized_at(0, 1, "РЕЖИМ ПАМЯТИ", "MODE SELECTED");
+    library_mk61::print_localized_at(0, 0, "Неверно выбран", "Wrong memory");
+    library_mk61::print_localized_at(0, 1, "Режим памяти", "mode selected");
   }
   ErrorReaction();
   delay(1500);
