@@ -17,6 +17,7 @@ using namespace kbd;
 #include "cross_hal.h"
 #include "disasm.hpp"
 #include "tools.hpp"
+#include "sound_driver.hpp"
 #include "menu.hpp"
 #include "basic.hpp"
 #include "focal.hpp"
@@ -182,6 +183,7 @@ void setup() {
   }
 
   led::init();
+  sound_driver_init(PIN_BUZZER);
 
   #ifdef SERIAL_OUTPUT
     terminal.init();
