@@ -67,6 +67,22 @@ static i32 scan_direct_key(void) {
   return scan_code;
 }
 
+static void wait_ok_release(void) {
+  while(true) {
+    idle_main_process();
+    const i32 scan_code = scan_direct_key();
+    if(scan_code >= 0) {
+      const bool released = (scan_code & (i32) key_state::RELEASED) != 0;
+      const i32 code = scan_code & ~(i32) key_state::RELEASED;
+      if(released && code == (i32) KEY_OK) {
+        kbd::clear_hold_key();
+        return;
+      }
+    }
+    delay(10);
+  }
+}
+
 static i32 wait_explorer_key(bool allow_long_ok) {
   bool ok_down = false;
   u32 long_ok_at = 0;
@@ -350,8 +366,13 @@ static void explorer_item_menu(const program_store::Entry& entry) {
   ItemMenuAction actions[3];
   const int count = item_menu_actions(entry, actions, 3);
   int active = 0;
+  bool wait_initial_ok_release = true;
   while(true) {
     draw_item_menu(entry, active);
+    if(wait_initial_ok_release) {
+      wait_ok_release();
+      wait_initial_ok_release = false;
+    }
     const i32 key = wait_explorer_key(false);
     if(key == EXPLORER_KEY_ESC) return;
     if(key == EXPLORER_KEY_UP) active = (active <= 0) ? count - 1 : active - 1;
