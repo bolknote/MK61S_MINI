@@ -154,6 +154,48 @@ static void test_editor_expression_macros(void) {
   CHECK(std::strcmp(out, "10^X") == 0);
 }
 
+static void test_editor_operator_keys_insert_full_names(void) {
+  FocalTestReset();
+  char out[128];
+
+  const int ask[] = {21, 15, 21, 20, 25, 15};
+  FocalTestEditSequence(ask, (int) (sizeof(ask) / sizeof(ask[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.10 ASK ") == 0);
+
+  const int print[] = {21, 15, 16, 20, 25, 14};
+  FocalTestEditSequence(print, (int) (sizeof(print) / sizeof(print[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.20 PRINT ") == 0);
+
+  const int go_to[] = {21, 15, 11, 20, 25, 4};
+  FocalTestEditSequence(go_to, (int) (sizeof(go_to) / sizeof(go_to[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.30 GOTO ") == 0);
+
+  const int set[] = {21, 15, 22, 20, 25, 27};
+  FocalTestEditSequence(set, (int) (sizeof(set) / sizeof(set[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.40 SET ") == 0);
+
+  const int set_equals[] = {21, 15, 22, 20, 25, 27, 38, 8, 27};
+  FocalTestEditSequence(set_equals, (int) (sizeof(set_equals) / sizeof(set_equals[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.40 SET X=") == 0);
+
+  const int return_op[] = {21, 15, 17, 20, 25, 31};
+  FocalTestEditSequence(return_op, (int) (sizeof(return_op) / sizeof(return_op[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.50 RETURN") == 0);
+}
+
+static void test_editor_backspace_is_f_left(void) {
+  FocalTestReset();
+  char out[32];
+
+  const int f_left[] = {21, 20, 38, 34};
+  FocalTestEditSequence(f_left, (int) (sizeof(f_left) / sizeof(f_left[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1") == 0);
+
+  const int degree_is_not_backspace[] = {21, 20, 4};
+  FocalTestEditSequence(degree_is_not_backspace, (int) (sizeof(degree_is_not_backspace) / sizeof(degree_is_not_backspace[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "10") == 0);
+}
+
 static void test_editor_draws_cursor(void) {
   FocalTestReset();
   FocalTestDrawNewEditor("", 0);
@@ -177,6 +219,8 @@ int main(void) {
   test_functions();
   test_editor_shift_parentheses();
   test_editor_expression_macros();
+  test_editor_operator_keys_insert_full_names();
+  test_editor_backspace_is_f_left();
   test_editor_draws_cursor();
 
   if(failures != 0) {

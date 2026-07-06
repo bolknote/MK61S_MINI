@@ -15,6 +15,9 @@ static const int KEY_ESC = 39;
 static const int KEY_K = 37;
 static const int KEY_ALPHA = KEY_K + 1;
 static const int KEY_DEGREE = 4;
+static const int KEY_RADIAN = 14;
+static const int KEY_xP = 27;
+static const int KEY_RET = 31;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -1455,6 +1458,14 @@ static bool focal_editor_insert_text(char* source, u16& len, u16& cursor, const 
   return true;
 }
 
+static bool focal_editor_backspace(char* source, u16& len, u16& cursor) {
+  if(cursor == 0) return false;
+  memmove(&source[cursor - 1], &source[cursor], len - cursor + 1);
+  cursor--;
+  len--;
+  return true;
+}
+
 static bool focal_find_expression_before_cursor(const char* source, u16 cursor, u16& start, u16& end) {
   end = cursor;
   while(end > 0 && focal_is_space(source[end - 1])) end--;
@@ -1567,27 +1578,64 @@ static bool focal_cursor_inside_string(const char* source, u16 cursor) {
 
 static bool focal_cursor_expects_statement(const char* source, u16 cursor) {
   if(focal_cursor_inside_string(source, cursor)) return false;
+
+  const u16 line_start = focal_line_start_for_cursor(source, cursor);
   int pos = (int) cursor - 1;
   while(pos >= 0 && (source[pos] == ' ' || source[pos] == '\t')) pos--;
-  if(pos < 0) return false;
-  return source[pos] == '\n' || source[pos] == '\r';
+  if(pos >= (int) line_start && source[pos] == ';') return true;
+
+  const char* p = source + line_start;
+  const char* end = source + cursor;
+  while(p < end && focal_is_space(*p)) p++;
+
+  FocalAddress address;
+  if(!focal_parse_address(p, address)) return false;
+
+  bool has_space_after_address = false;
+  while(p < end && focal_is_space(*p)) {
+    has_space_after_address = true;
+    p++;
+  }
+  return has_space_after_address && p == end;
 }
 
 static const char* focal_statement_insert_text(i32 key_code) {
   switch(key_code) {
-    case 15: return "A ";
-    case 10: return "B ";
-    case 5:  return "C ";
-    case 0:  return "D ";
-    case 1:  return "E ";
-    case 2:  return "F ";
-    case 3:  return "G ";
-    case 36: return "P ";
-    case 27: return "S ";
-    case 31: return "R ";
+    case 15:         return "ASK ";
+    case 10:         return "BRANCH ";
+    case 5:          return "COMMENT ";
+    case 0:          return "DO ";
+    case 1:          return "EXIT";
+    case 2:          return "FOR ";
+    case KEY_DEGREE: return "GOTO ";
+    case KEY_RADIAN: return "PRINT ";
+    case KEY_xP:     return "SET ";
+    case KEY_RET:    return "RETURN";
     default: break;
   }
   return NULL;
+}
+
+static bool focal_cursor_expects_assignment_equals(const char* source, u16 cursor) {
+  if(focal_cursor_inside_string(source, cursor)) return false;
+
+  const u16 line_start = focal_line_start_for_cursor(source, cursor);
+  const char* p = source + line_start;
+  const char* end = source + cursor;
+
+  FocalAddress address;
+  if(!focal_parse_address(p, address)) return false;
+  p = focal_skip_spaces(p);
+
+  FocalOp op = FocalOp::NOP;
+  if(!focal_parse_operator(p, op)) return false;
+  if(op != FocalOp::SET && op != FocalOp::FOR) return false;
+
+  p = focal_skip_spaces(p);
+  if(!focal_is_alpha(*p)) return false;
+  p++;
+  p = focal_skip_spaces(p);
+  return p == end;
 }
 
 static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 key_code, const char* source, u16 cursor) {
@@ -1598,6 +1646,7 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
         const char* statement = focal_statement_insert_text(key_code);
         if(statement != NULL) return statement;
       }
+      if(key_code == KEY_xP && focal_cursor_expects_assignment_equals(source, cursor)) return "=";
       return FOCAL_key_text[key_code];
     case FocalEditShift::ALPHA:
       return FOCAL_alpha_key_text[key_code];
@@ -1655,6 +1704,12 @@ void EditFocal(void) {
       continue;
     }
 
+    if(shift == FocalEditShift::ALPHA && (key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS)) {
+      focal_editor_backspace(source, len, cursor);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+
     if(shift == FocalEditShift::ALPHA && focal_editor_apply_expr_macro(source, len, cursor, key_code)) {
       shift = FocalEditShift::NONE;
       continue;
@@ -1669,12 +1724,6 @@ void EditFocal(void) {
       if(cursor > 0) cursor--;
     } else if(!shifted_key && (key_code == KEY_RIGHT || key_code == KEY_RIGHT_PRESS)) {
       if(cursor < len) cursor++;
-    } else if(!shifted_key && key_code == KEY_DEGREE) {
-      if(cursor > 0) {
-        memmove(&source[cursor - 1], &source[cursor], len - cursor + 1);
-        cursor--;
-        len--;
-      }
     } else if(!shifted_key && key_code == 0) {
       memset(source, 0, sizeof(source));
       len = 0;
@@ -1794,6 +1843,11 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
     const bool shifted_key = shift != FocalEditShift::NONE;
     if(!shifted_key && (key_code == KEY_K || key_code == KEY_ALPHA)) {
       shift = (key_code == KEY_K) ? FocalEditShift::K : FocalEditShift::ALPHA;
+      continue;
+    }
+    if(shift == FocalEditShift::ALPHA && (key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS)) {
+      focal_editor_backspace(source, len, cursor);
+      shift = FocalEditShift::NONE;
       continue;
     }
     if(shift == FocalEditShift::ALPHA && focal_editor_apply_expr_macro(source, len, cursor, key_code)) {
