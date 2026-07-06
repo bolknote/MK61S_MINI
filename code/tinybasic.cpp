@@ -131,10 +131,12 @@ extern MK61Display lcd;
 extern void idle_main_process(void);
 #endif
 
+#ifdef TINYBASIC_HOST_TEST
 static constexpr int TB_PROGRAM_COUNT = 8;
+#else
+static constexpr int TB_PROGRAM_COUNT = 1;
+#endif
 static constexpr int TB_SOURCE_SIZE = 1024;
-static constexpr int TB_LINE_TEXT_SIZE = 96;
-static constexpr int TB_LINE_BUFFER_SIZE = 128;
 static constexpr int TB_MAX_LINES = 96;
 static constexpr int TB_NAME_SIZE = 16;
 static constexpr int TB_PRINT_BUFFER_SIZE = 96;
@@ -166,12 +168,14 @@ enum class TbCommand : u8 {
 
 struct TbLine {
   i16 number;
-  char text[TB_LINE_TEXT_SIZE];
+  u16 offset;
+  u16 len;
 };
 
 struct TbAst {
   bool ok;
   char error[17];
+  const char* source;
   TbLine lines[TB_MAX_LINES];
   i16 line_count;
 };
@@ -672,6 +676,7 @@ static bool tb_parse_line_number(const char*& p, i16& number) {
 static bool tb_compile_source(const char* source, TbAst& ast) {
   tb_ast_reset(ast);
   if(source == NULL) return tb_error("WHAT?");
+  ast.source = source;
 
   const char* cursor = source;
   while(*cursor != 0) {
@@ -682,20 +687,21 @@ static bool tb_compile_source(const char* source, TbAst& ast) {
     while(*cursor != 0 && *cursor != '\n' && *cursor != '\r') cursor++;
     const char* line_end = cursor;
 
-    char line_text[TB_LINE_BUFFER_SIZE];
-    tb_copy_trim(line_text, sizeof(line_text), line_begin, line_end);
-    if(line_text[0] == 0) continue;
+    while(line_begin < line_end && tb_is_space(*line_begin)) line_begin++;
+    while(line_end > line_begin && tb_is_space(*(line_end - 1))) line_end--;
+    if(line_begin >= line_end) continue;
     if(ast.line_count >= TB_MAX_LINES) return tb_error("SORRY");
 
-    const char* p = line_text;
+    const char* p = line_begin;
     i16 number = 0;
     if(!tb_parse_line_number(p, number)) return tb_error("WHAT?");
     p = tb_skip_spaces(p);
-    if(*p == 0) return tb_error("WHAT?");
+    if(p >= line_end) return tb_error("WHAT?");
 
     TbLine& line = ast.lines[ast.line_count++];
     line.number = number;
-    tb_copy_text(line.text, sizeof(line.text), p);
+    line.offset = (u16) (p - source);
+    line.len = (u16) (line_end - p);
   }
 
   if(ast.line_count == 0) return tb_error("WHAT?");
@@ -1071,8 +1077,9 @@ void RunTinyBasic(int program_index) {
   while(pc >= 0 && pc < tb_ast.line_count) {
     if(tb_runtime_interrupted()) break;
     TbFlow flow = tb_flow(TbFlowKind::NEXT, (i16) (pc + 1));
-    const char* begin = tb_ast.lines[pc].text;
-    const char* end = begin + strlen(begin);
+    const TbLine& line = tb_ast.lines[pc];
+    const char* begin = tb_ast.source + line.offset;
+    const char* end = begin + line.len;
     if(!tb_execute_command_list(begin, end, pc, state, flow)) break;
     if(flow.kind == TbFlowKind::NEXT) pc = (i16) (pc + 1);
     else if(flow.kind == TbFlowKind::JUMP) pc = flow.pc;
@@ -1133,6 +1140,7 @@ static int load_tinybasic_program_from_store(const char* name, bool compile = tr
   tb_copy_text(programs[slot].name, sizeof(programs[slot].name), name);
   programs[slot].used = true;
   NextTinyBasic = (i8) slot;
+  if(compile && !tb_compile_source(programs[slot].source, tb_ast)) return -1;
   return slot;
 }
 #endif
@@ -1437,6 +1445,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
   if(!tb_compile_source(source, tb_ast)) return false;
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
+  if(!tb_compile_source(programs[slot].source, tb_ast)) return false;
   if(store_name != NULL && store_name[0] != 0) tb_copy_text(programs[slot].name, sizeof(programs[slot].name), store_name);
   else tb_program_default_name(slot, programs[slot].name, sizeof(programs[slot].name));
   programs[slot].used = true;
@@ -1590,6 +1599,7 @@ extern "C" int TinyBasicTestAddProgram(const char* source, const char* name) {
   if(!tb_compile_source(source, tb_ast)) return -1;
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
+  if(!tb_compile_source(programs[slot].source, tb_ast)) return -1;
   tb_copy_text(programs[slot].name, sizeof(programs[slot].name), name == NULL ? "TEST" : name);
   programs[slot].used = true;
   NextTinyBasic = (i8) slot;
