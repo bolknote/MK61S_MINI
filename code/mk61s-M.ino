@@ -397,6 +397,7 @@ using HookFunc = void (*)(i32 key);
 static HookFunc input_focus = &mk61_baseloop_hook;
 static bool user_short_press_pending = false;
 static bool drop_menu_exit_key_events = false;
+static u8 drop_menu_exit_scan_count = 0;
 
 static void drop_pending_key_events(void) {
   while(kbd::get_key() >= 0) {}
@@ -407,6 +408,7 @@ static void leave_menu_mode(void) {
   drop_pending_key_events();
   user_short_press_pending = false;
   drop_menu_exit_key_events = true;
+  drop_menu_exit_scan_count = 0;
   lcd_std_display_redraw();
   input_focus = &mk61_baseloop_hook;
 }
@@ -565,14 +567,13 @@ void  loop() {
 
   const i32 used_key = kbd::last_key();
   if(drop_menu_exit_key_events) {
-    if(used_key >= 0) {
-      drop_pending_key_events();
-      kbd::scan();
-      return;
-    }
-
+    drop_pending_key_events();
     kbd::scan();
-    if(kbd::last_key() < 0) drop_menu_exit_key_events = false;
+    if(drop_menu_exit_scan_count < 8) drop_menu_exit_scan_count++;
+    drop_pending_key_events();
+    if(drop_menu_exit_scan_count >= 8 && !kbd::any_key_pressed() && kbd::last_key() < 0) {
+      drop_menu_exit_key_events = false;
+    }
     return;
   }
 

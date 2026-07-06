@@ -25,6 +25,7 @@ namespace kbd {
   extern  i32     get_key_wait(void);
   extern  void    exclude_before(i32 before_key);
   extern  void    clear_hold_key(void);
+  extern  bool    any_key_pressed(void);
   extern  isize   scan(void);
   extern  isize   scan_and_debounced(void);
 }
