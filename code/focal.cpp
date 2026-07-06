@@ -151,7 +151,6 @@ static constexpr int FOCAL_NAME_SIZE           = 16;
 static constexpr int FOCAL_EXPR_BUFFER_SIZE    = 112;
 static constexpr int FOCAL_PRINT_BUFFER_SIZE   = 96;
 static constexpr int FOCAL_CALL_DEPTH          = 8;
-static constexpr int FOCAL_RUNTIME_STEPS_LIMIT = 100000;
 
 static constexpr u32 SMS_INPUT_TIMEOUT_MS = 1200;
 static constexpr u8  CURSOR_ASCII        = 0xFF;
@@ -568,7 +567,6 @@ static const char* focal_error_ru_text(const char* error) {
   if(focal_streq(error, "FULL?")) return "НЕТ МЕСТА";
   if(focal_streq(error, "RETURN?")) return "ВОЗВРАТ?";
   if(focal_streq(error, "STACK?")) return "СТЕК?";
-  if(focal_streq(error, "LIMIT?")) return "ЛИМИТ?";
   if(focal_streq(error, "MATH?")) return "МАТ?";
   return "ОШИБКА?";
 }
@@ -1134,9 +1132,9 @@ static double focal_read_mk_x(void) {
 }
 #endif
 
-static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, int& steps, FocalFlow& flow);
+static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, FocalFlow& flow);
 
-static bool focal_execute_inline_statement(const char* text, i16 current_pc, int depth, int& steps, FocalFlow& flow) {
+static bool focal_execute_inline_statement(const char* text, i16 current_pc, int depth, FocalFlow& flow) {
   FocalLine line;
   memset(&line, 0, sizeof(line));
   line.number.major = 0;
@@ -1146,10 +1144,10 @@ static bool focal_execute_inline_statement(const char* text, i16 current_pc, int
     flow = focal_flow(FocalFlowKind::ERROR, current_pc);
     return focal_error("SYNTAX?");
   }
-  return focal_execute_statement(line, current_pc, depth, steps, flow);
+  return focal_execute_statement(line, current_pc, depth, flow);
 }
 
-static bool focal_execute_group(i16 major, int depth, int& steps, FocalFlow& flow) {
+static bool focal_execute_group(i16 major, int depth, FocalFlow& flow) {
   focal_trace_int("DO group start ", major);
   if(depth >= FOCAL_CALL_DEPTH) {
     flow = focal_flow(FocalFlowKind::ERROR, -1);
@@ -1164,7 +1162,7 @@ static bool focal_execute_group(i16 major, int depth, int& steps, FocalFlow& flo
 
   while(pc >= 0 && pc < focal_ast.line_count && focal_ast.lines[pc].number.major == major) {
     FocalFlow local_flow = focal_flow(FocalFlowKind::NEXT, (i16) (pc + 1));
-    if(!focal_execute_statement(focal_ast.lines[pc], (i16) pc, depth + 1, steps, local_flow)) {
+    if(!focal_execute_statement(focal_ast.lines[pc], (i16) pc, depth + 1, local_flow)) {
       flow = local_flow;
       return false;
     }
@@ -1387,7 +1385,7 @@ static bool focal_execute_branch(const char* operand, FocalFlow& flow) {
   return true;
 }
 
-static bool focal_execute_do(const char* operand, i16 current_pc, int depth, int& steps, FocalFlow& flow) {
+static bool focal_execute_do(const char* operand, i16 current_pc, int depth, FocalFlow& flow) {
   const char* p = operand;
   FocalAddress address;
   if(!focal_parse_address(p, address)) {
@@ -1415,7 +1413,7 @@ static bool focal_execute_do(const char* operand, i16 current_pc, int depth, int
     }
 
     FocalFlow local_flow = focal_flow(FocalFlowKind::NEXT, (i16) (target + 1));
-    if(!focal_execute_statement(focal_ast.lines[target], (i16) target, depth + 1, steps, local_flow)) {
+    if(!focal_execute_statement(focal_ast.lines[target], (i16) target, depth + 1, local_flow)) {
       flow = local_flow;
       return false;
     }
@@ -1428,7 +1426,7 @@ static bool focal_execute_do(const char* operand, i16 current_pc, int depth, int
   }
 
   FocalFlow group_flow = focal_flow(FocalFlowKind::NEXT, 0);
-  if(!focal_execute_group(address.major, depth, steps, group_flow)) {
+  if(!focal_execute_group(address.major, depth, group_flow)) {
     flow = group_flow;
     return false;
   }
@@ -1440,7 +1438,7 @@ static bool focal_execute_do(const char* operand, i16 current_pc, int depth, int
   return group_flow.kind != FocalFlowKind::ERROR;
 }
 
-static bool focal_execute_for(const char* operand, i16 current_pc, int depth, int& steps, FocalFlow& flow) {
+static bool focal_execute_for(const char* operand, i16 current_pc, int depth, FocalFlow& flow) {
   const char* semi = focal_find_top_level(operand, operand + strlen(operand), ';');
   if(semi == NULL) {
     flow = focal_flow(FocalFlowKind::ERROR, -1);
@@ -1518,7 +1516,7 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, in
       Serial.flush();
     #endif
     FocalFlow body_flow = focal_flow(FocalFlowKind::NEXT, (i16) (current_pc + 1));
-    if(!focal_execute_inline_statement(body, current_pc, depth, steps, body_flow)) {
+    if(!focal_execute_inline_statement(body, current_pc, depth, body_flow)) {
       flow = body_flow;
       return false;
     }
@@ -1532,15 +1530,11 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, in
   return true;
 }
 
-static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, int& steps, FocalFlow& flow) {
+static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, FocalFlow& flow) {
   focal_trace_line("EXEC", current_pc, line);
   if(focal_runtime_interrupted()) {
     flow = focal_flow(FocalFlowKind::STOP, current_pc);
     return true;
-  }
-  if(++steps > FOCAL_RUNTIME_STEPS_LIMIT) {
-    flow = focal_flow(FocalFlowKind::ERROR, current_pc);
-    return focal_error("LIMIT?");
   }
   if(depth >= FOCAL_CALL_DEPTH) {
     flow = focal_flow(FocalFlowKind::ERROR, current_pc);
@@ -1584,9 +1578,9 @@ static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int d
     case FocalOp::BRANCH:
       return focal_execute_branch(line.operand, flow);
     case FocalOp::DO:
-      return focal_execute_do(line.operand, current_pc, depth, steps, flow);
+      return focal_execute_do(line.operand, current_pc, depth, flow);
     case FocalOp::FOR:
-      return focal_execute_for(line.operand, current_pc, depth, steps, flow);
+      return focal_execute_for(line.operand, current_pc, depth, flow);
   }
 
   flow = focal_flow(FocalFlowKind::ERROR, current_pc);
@@ -1747,10 +1741,9 @@ void RunFocal(int FocalN) {
   }
 
   i16 pc = 0;
-  int steps = 0;
   while(pc >= 0 && pc < focal_ast.line_count) {
     FocalFlow flow = focal_flow(FocalFlowKind::NEXT, (i16) (pc + 1));
-    if(!focal_execute_statement(focal_ast.lines[pc], pc, 0, steps, flow)) break;
+    if(!focal_execute_statement(focal_ast.lines[pc], pc, 0, flow)) break;
     focal_trace_flow(flow);
     if(flow.kind == FocalFlowKind::NEXT || flow.kind == FocalFlowKind::JUMP) {
       pc = flow.pc;

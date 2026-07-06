@@ -337,7 +337,6 @@ static constexpr int BASIC_FOR_STACK_DEPTH     = 8;
 static constexpr int BASIC_CALL_DEPTH          = 2;
 static constexpr int BASIC_MAX_ARGS            = 4;
 static constexpr int BASIC_VARIABLE_COUNT      = 26 * 11;
-static constexpr int BASIC_RUNTIME_STEPS_LIMIT = 2048;
 
 static constexpr u8  CURSOR_ASCII    = 0xFF;
 
@@ -633,7 +632,6 @@ static const char* basic_error_ru_text(const char* text) {
     {"program full", "нет места"},
     {"no program", "нет программ"},
     {"call depth", "стек вызовов"},
-    {"run limit", "цикл завис"},
     {"FOR stack", "стек FOR"},
     {"NXT stack", "стек NXT"},
     {"no label", "нет метки"},
@@ -2301,15 +2299,11 @@ static void restore_mk_context(void) {
   }
 }
 
-static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR_STACK_DEPTH], i8& for_sp, int& steps);
+static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR_STACK_DEPTH], i8& for_sp);
 
-static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR_STACK_DEPTH], i8& for_sp, int& steps) {
+static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR_STACK_DEPTH], i8& for_sp) {
   if(stmt_id < 0 || stmt_id >= ast.stmt_count) return false;
   if(basic_runtime_interrupted()) return false;
-  if(++steps > BASIC_RUNTIME_STEPS_LIMIT) {
-    basic_error("run limit");
-    return false;
-  }
 
   const BasicStmt& stmt = ast.stmts[stmt_id];
   switch(stmt.kind) {
@@ -2355,7 +2349,7 @@ static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR
         if(stmt.child0 >= 0) {
           const StmtKind child_kind = ast.stmts[stmt.child0].kind;
           i16 child_pc = stmt.child0;
-          if(!execute_statement(stmt.child0, child_pc, for_stack, for_sp, steps)) return false;
+          if(!execute_statement(stmt.child0, child_pc, for_stack, for_sp)) return false;
           if(child_kind == StmtKind::GO) {
             pc = child_pc;
             return true;
@@ -2364,7 +2358,7 @@ static bool execute_statement(i16 stmt_id, i16& pc, ForFrame for_stack[BASIC_FOR
       } else if(stmt.child1 >= 0) {
         const StmtKind child_kind = ast.stmts[stmt.child1].kind;
         i16 child_pc = stmt.child1;
-        if(!execute_statement(stmt.child1, child_pc, for_stack, for_sp, steps)) return false;
+        if(!execute_statement(stmt.child1, child_pc, for_stack, for_sp)) return false;
         if(child_kind == StmtKind::GO) {
           pc = child_pc;
           return true;
@@ -2472,10 +2466,9 @@ void RunBasic(int BasicN) {
   ForFrame for_stack[BASIC_FOR_STACK_DEPTH];
   i8 for_sp = -1;
   i16 pc = ast.first_stmt;
-  int steps = 0;
 
   while(pc >= 0) {
-    if(!execute_statement(pc, pc, for_stack, for_sp, steps)) break;
+    if(!execute_statement(pc, pc, for_stack, for_sp)) break;
   }
 }
 
