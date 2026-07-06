@@ -396,6 +396,20 @@ void   mk61_menu_hook(i32 key);
 using HookFunc = void (*)(i32 key);
 static HookFunc input_focus = &mk61_baseloop_hook;
 static bool user_short_press_pending = false;
+static bool drop_menu_exit_key_events = false;
+
+static void drop_pending_key_events(void) {
+  while(kbd::get_key() >= 0) {}
+  kbd::clear_hold_key();
+}
+
+static void leave_menu_mode(void) {
+  drop_pending_key_events();
+  user_short_press_pending = false;
+  drop_menu_exit_key_events = true;
+  lcd_std_display_redraw();
+  input_focus = &mk61_baseloop_hook;
+}
 
 void   mk61_menu_hook(i32 key) {
     if(key >= 0) {
@@ -404,8 +418,7 @@ void   mk61_menu_hook(i32 key) {
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
         lcd_ru::restore_default_font();
         if(mk61_games_select() == action::MENU_EXIT) {
-          lcd_std_display_redraw();
-          input_focus = &mk61_baseloop_hook;
+          leave_menu_mode();
           dbgln(MENU, "menu quit");
         } else {
           mk61_menu.select(-1);
@@ -416,8 +429,7 @@ void   mk61_menu_hook(i32 key) {
 
       const i32 result = mk61_menu.select(kbd::get_key());
       if( result < 0) {
-        lcd_std_display_redraw();
-        input_focus = &mk61_baseloop_hook;
+        leave_menu_mode();
         dbgln(MENU, "menu quit");
       }
     }
@@ -552,6 +564,18 @@ void  loop() {
   #endif
 
   const i32 used_key = kbd::last_key();
+  if(drop_menu_exit_key_events) {
+    if(used_key >= 0) {
+      drop_pending_key_events();
+      kbd::scan();
+      return;
+    }
+
+    kbd::scan();
+    if(kbd::last_key() < 0) drop_menu_exit_key_events = false;
+    return;
+  }
+
   if(used_key >= 0) { 
   //== кнопка нажата - перепланировка выдачи сообщения о бездействии на следующие 5 минут
     time_message_of_unuse = time_is_now + DELAY_UNUSED;

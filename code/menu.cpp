@@ -358,6 +358,25 @@ bool   TurnSpeed(void) {
   return action::MENU_BACK;
 }
 
+static void StepSpeedMode(i8 delta) {
+  SpeedMode next_mode = library_mk61::speed_mode();
+  switch(library_mk61::speed_mode()) {
+    case SpeedMode::CLASSIC:
+      next_mode = (delta > 0) ? SpeedMode::MAXIMUM : SpeedMode::TURBO;
+      break;
+    case SpeedMode::MAXIMUM:
+      next_mode = (delta > 0) ? SpeedMode::TURBO : SpeedMode::CLASSIC;
+      break;
+    case SpeedMode::TURBO:
+      next_mode = (delta > 0) ? SpeedMode::CLASSIC : SpeedMode::MAXIMUM;
+      break;
+  }
+
+  library_mk61::set_speed_mode_state(next_mode);
+  library_mk61::refresh_menu_text();
+  library_mk61::mark_settings_dirty();
+}
+
 bool   TurnSoundVolume(void) {
   sound_stop();
   const u8 next_volume = (library_mk61::sound_volume() >= 10) ? 0 : (library_mk61::sound_volume() + 1);
@@ -440,6 +459,32 @@ bool   TurnProgramMemory(void) {
   return action::MENU_BACK;
 }
 
+static void StepProgramMemoryMode(i8 delta) {
+  const bool was_expanded = library_mk61::expanded_program_is_on();
+
+  ProgramMemoryMode next_mode = library_mk61::program_memory_mode();
+  switch(library_mk61::program_memory_mode()) {
+    case ProgramMemoryMode::CLASSIC_105:
+      next_mode = (delta > 0) ? ProgramMemoryMode::EXPANDED_112 : ProgramMemoryMode::AUTO;
+      break;
+    case ProgramMemoryMode::EXPANDED_112:
+      next_mode = (delta > 0) ? ProgramMemoryMode::AUTO : ProgramMemoryMode::CLASSIC_105;
+      break;
+    case ProgramMemoryMode::AUTO:
+      next_mode = (delta > 0) ? ProgramMemoryMode::CLASSIC_105 : ProgramMemoryMode::EXPANDED_112;
+      break;
+  }
+
+  library_mk61::set_program_memory_mode(next_mode);
+  library_mk61::refresh_menu_text();
+  library_mk61::mark_settings_dirty();
+
+  if(was_expanded != library_mk61::expanded_program_is_on()) {
+    reset_ext_program_state();
+    core_61::enable();
+  }
+}
+
 bool  mk61_library_select(void) {
   const int n = select_program();
   if(n < 0) return action::MENU_BACK;
@@ -482,6 +527,16 @@ bool class_menu::handle_settings_adjustment(i32 key) {
         TurnSpeed();
         return true;
       }
+
+      if(key == KEY_SHG_RIGHT_PRESS) {
+        StepSpeedMode(1);
+        return true;
+      }
+
+      if(key == KEY_SHG_LEFT_PRESS) {
+        StepSpeedMode(-1);
+        return true;
+      }
       break;
 
     case library_mk61::SETTINGS_MEMORY:
@@ -489,10 +544,25 @@ bool class_menu::handle_settings_adjustment(i32 key) {
         TurnProgramMemory();
         return true;
       }
+
+      if(key == KEY_SHG_RIGHT_PRESS) {
+        StepProgramMemoryMode(1);
+        return true;
+      }
+
+      if(key == KEY_SHG_LEFT_PRESS) {
+        StepProgramMemoryMode(-1);
+        return true;
+      }
       break;
 
     case library_mk61::SETTINGS_LANGUAGE:
       if(key == KEY_OK_PRESS) {
+        TurnLanguage();
+        return true;
+      }
+
+      if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
         TurnLanguage();
         return true;
       }
