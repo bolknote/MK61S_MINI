@@ -330,6 +330,23 @@ static void focal_message_i18n(const char* en0, const char* ru0, const char* en1
   lcd.print(en1);
 }
 
+static void focal_print_text_at(u8 x, u8 y, const char* en, const char* ru, u8 width = 16) {
+#ifdef FOCAL_HOST_TEST
+  (void) ru;
+#endif
+#ifndef FOCAL_HOST_TEST
+  if(focal_language_is_ru()) {
+    library_mk61::print_localized_at(x, y, ru, en, width);
+    return;
+  }
+#endif
+
+  lcd.setCursor(x, y);
+  u8 used = 0;
+  while(en != NULL && en[used] != 0 && used < width) lcd.write((u8) en[used++]);
+  while(used++ < width) lcd.write((u8) ' ');
+}
+
 static bool focal_error(const char* error) {
   focal_copy_text(focal_last_error, sizeof(focal_last_error), error);
   focal_copy_text(focal_ast.error, sizeof(focal_ast.error), error);
@@ -1203,10 +1220,41 @@ static void focal_program_default_name(int slot, char* out, usize size) {
   snprintf(out, size, "FOCAL%d", slot);
 }
 
+static void focal_display_program_name(const char* name, char* out, usize size) {
+  if(size == 0) return;
+  out[0] = 0;
+
+#ifndef FOCAL_HOST_TEST
+  const char focal_prefix[] = "FOCAL";
+  bool has_focal_prefix = focal_language_is_ru();
+  for(u8 i = 0; has_focal_prefix && i < 5; i++) {
+    if(name[i] == 0 || focal_upper(name[i]) != focal_prefix[i]) has_focal_prefix = false;
+  }
+
+  if(has_focal_prefix) {
+    bool digits_only = name[5] != 0;
+    for(u8 i = 5; name[i] != 0; i++) {
+      if(!focal_is_digit(name[i])) {
+        digits_only = false;
+        break;
+      }
+    }
+    if(digits_only) {
+      snprintf(out, size, "ФОКАЛ%s", name + 5);
+      return;
+    }
+  }
+#endif
+
+  focal_copy_text(out, size, name);
+}
+
 static void display_focal_ok(const FocalProgram& program) {
   char line[17];
-  snprintf(line, sizeof(line), "%s %d", program.name, (int) focal_ast.line_count);
-  focal_message_i18n("FOCAL compiled", "FOCAL готов", line, line);
+  char display_name[24];
+  focal_display_program_name(program.name, display_name, sizeof(display_name));
+  snprintf(line, sizeof(line), "%s %d", display_name, (int) focal_ast.line_count);
+  focal_message_i18n("FOCAL compiled", "ФОКАЛ готов", line, line);
   delay(700);
 }
 
@@ -1283,14 +1331,20 @@ static int next_used_program(int active, int delta, bool allow_new) {
 
 static void draw_program_select(int active, bool allow_new) {
   char line1[17];
+  char ru_line1[17];
   if(allow_new && active == FOCAL_PROGRAM_COUNT) {
     focal_copy_text(line1, sizeof(line1), ">NEW");
+    focal_copy_text(ru_line1, sizeof(ru_line1), ">НОВАЯ");
   } else if(active >= 0 && active < FOCAL_PROGRAM_COUNT && programs[active].used) {
+    char display_name[24];
+    focal_display_program_name(programs[active].name, display_name, sizeof(display_name));
     snprintf(line1, sizeof(line1), ">%s", programs[active].name);
+    snprintf(ru_line1, sizeof(ru_line1), ">%s", display_name);
   } else {
     focal_copy_text(line1, sizeof(line1), ">EMPTY");
+    focal_copy_text(ru_line1, sizeof(ru_line1), ">ПУСТО");
   }
-  focal_message_i18n("FOCAL program", "Программа", line1, line1);
+  focal_message_i18n("FOCAL program", "Программа", line1, ru_line1);
 }
 
 static int select_focal_program(bool allow_new) {
@@ -1303,7 +1357,7 @@ static int select_focal_program(bool allow_new) {
   }
   if(active < 0) active = allow_new ? FOCAL_PROGRAM_COUNT : -1;
   if(active < 0) {
-    focal_message_i18n("FOCAL is empty", "FOCAL пуст", "Press any key", "Любая клавиша");
+    focal_message_i18n("FOCAL is empty", "ФОКАЛ пуст", "Press any key", "Любая клавиша");
     kbd::get_key_wait();
     return -1;
   }
@@ -1373,8 +1427,11 @@ static void draw_focal_editor(const char* source, u16 len, u16 cursor, int slot)
     lcd.print('/');
     lcd.print(len);
     if(slot == FOCAL_PROGRAM_COUNT) {
-      lcd.setCursor(1, rows - 1);
-      lcd.print("NEW");
+      focal_print_text_at(1, rows - 1, "NEW", "НОВАЯ", 5);
+    } else if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) {
+      char display_name[24];
+      focal_display_program_name(programs[slot].name, display_name, sizeof(display_name));
+      focal_print_text_at(1, rows - 1, programs[slot].name, display_name, 10);
     }
   }
 }

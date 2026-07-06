@@ -156,7 +156,7 @@ const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,  
 const t_punct RU_BASIC_punct      = {.size = 15, .action = &BASIC_menu_select,                  .text = "БЕЙСИК"};
 #endif
 #if MK61_ENABLE_FOCAL
-const t_punct RU_FOCAL_punct      = {.size = 15, .action = &FOCAL_menu_select,                  .text = "FOCAL"};
+const t_punct RU_FOCAL_punct      = {.size = 15, .action = &FOCAL_menu_select,                  .text = "ФОКАЛ"};
 #endif
 const t_punct RU_RESET_punct      = {.size = 15, .action = (menu_action) &NVIC_SystemReset,     .text = "Сброс"};
 const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "Стереть FLASH"};
