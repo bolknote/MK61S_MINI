@@ -329,8 +329,9 @@ void hidden_press_key(sw key) {
 }
 
 void hidden_return_to_program_start(void) {
-  core_61::set_IP(0);
-  core_61::clear_displayed();
+  hidden_press_key(sw::F);
+  hidden_press_key(sw::NEG);
+  hidden_press_key(sw::RET);
 }
 
 bool run_loaded_setup_program(void) {
@@ -418,8 +419,8 @@ void memory_mode_error(void) {
   {
     MK61DisplayUpdate update(lcd);
     lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(library_mk61::text("Memory mode!", "MEM MODE"));
+    library_mk61::print_localized_at(0, 0, "НЕВЕРНО ВЫБРАН", "WRONG MEMORY");
+    library_mk61::print_localized_at(0, 1, "РЕЖИМ ПАМЯТИ", "MODE SELECTED");
   }
   ErrorReaction();
   delay(1500);
@@ -455,10 +456,11 @@ bool load_item(const TPunct& item, u8* code_stream, u8* setup_stream) {
     memory_mode_error();
     return false;
   }
+  const bool force_expanded = needs_expanded || library_mk61::program_memory_mode() == ProgramMemoryMode::EXPANDED_112;
 
   if(item.setup_offset != NO_SETUP) {
-    if(run_setup_from((usize) item.setup_offset, setup_stream, item.setup_angle, needs_expanded)) {
-      load_code_only((usize) item.offset, code_stream, needs_expanded);
+    if(run_setup_from((usize) item.setup_offset, setup_stream, item.setup_angle, force_expanded)) {
+      load_code_only((usize) item.offset, code_stream, force_expanded);
       hidden_return_to_program_start();
       loaded_message(item);
       return true;
@@ -468,7 +470,7 @@ bool load_item(const TPunct& item, u8* code_stream, u8* setup_stream) {
     }
   }
 
-  if(!load_from((usize) item.offset, code_stream, needs_expanded)) return false;
+  if(!load_from((usize) item.offset, code_stream, force_expanded)) return false;
   hidden_return_to_program_start();
   loaded_message(item);
   return true;

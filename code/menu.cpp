@@ -221,7 +221,8 @@ ProgramMemoryMode program_memory_mode(void) {
 
 bool program_memory_mode_accepts(bool needs_expanded) {
   if(memory_mode == ProgramMemoryMode::AUTO) return true;
-  return needs_expanded == (memory_mode == ProgramMemoryMode::EXPANDED_112);
+  if(memory_mode == ProgramMemoryMode::EXPANDED_112) return true;
+  return !needs_expanded;
 }
 
 void set_program_memory_mode(ProgramMemoryMode mode) {
