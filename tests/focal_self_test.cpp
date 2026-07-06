@@ -148,15 +148,15 @@ static void test_editor_expression_macros(void) {
   FocalTestReset();
   char out[64];
 
-  const int square[] = {37, 13, 13, 38, 2};
+  const int square[] = {37, 11, 11, 38, 2};
   FocalTestEditSequence(square, (int) (sizeof(square) / sizeof(square[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "X^2") == 0);
 
-  const int inverse[] = {37, 16, 7, 37, 16, 16, 38, 3};
+  const int inverse[] = {37, 18, 7, 37, 18, 18, 38, 3};
   FocalTestEditSequence(inverse, (int) (sizeof(inverse) / sizeof(inverse[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1/(A+B)") == 0);
 
-  const int pow10[] = {37, 13, 13, 38, 5};
+  const int pow10[] = {37, 11, 11, 38, 5};
   FocalTestEditSequence(pow10, (int) (sizeof(pow10) / sizeof(pow10[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "10^X") == 0);
 }
@@ -173,11 +173,11 @@ static void test_editor_digit_symbol_and_sms_input(void) {
   FocalTestEditSequence(symbols, (int) (sizeof(symbols) / sizeof(symbols[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "!@#$%^&*()") == 0);
 
-  const int sms_cycle[] = {37, 16, 16, 16};
+  const int sms_cycle[] = {37, 18, 18, 18};
   FocalTestEditSequence(sms_cycle, (int) (sizeof(sms_cycle) / sizeof(sms_cycle[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "C") == 0);
 
-  const int sms_text[] = {37, 16, 11, 11, 12};
+  const int sms_text[] = {37, 18, 13, 13, 12};
   FocalTestEditSequence(sms_text, (int) (sizeof(sms_text) / sizeof(sms_text[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "AEM") == 0);
 
@@ -185,15 +185,15 @@ static void test_editor_digit_symbol_and_sms_input(void) {
   FocalTestEditSequence(f_a_is_not_letter_input, (int) (sizeof(f_a_is_not_letter_input) / sizeof(f_a_is_not_letter_input[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "") == 0);
 
-  const int sms_zero_exits_with_space[] = {37, 16, 16, 20, 16};
-  FocalTestEditSequence(sms_zero_exits_with_space, (int) (sizeof(sms_zero_exits_with_space) / sizeof(sms_zero_exits_with_space[0])), out, sizeof(out));
+  const int sms_seven_exits_with_space[] = {37, 18, 18, 23, 16};
+  FocalTestEditSequence(sms_seven_exits_with_space, (int) (sizeof(sms_seven_exits_with_space) / sizeof(sms_seven_exits_with_space[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "B 2") == 0);
 
-  const int sms_one_exits[] = {37, 16, 16, 21, 16};
-  FocalTestEditSequence(sms_one_exits, (int) (sizeof(sms_one_exits) / sizeof(sms_one_exits[0])), out, sizeof(out));
-  CHECK(std::strcmp(out, "B2") == 0);
+  const int sms_one_cycles_pqrs[] = {37, 21, 21, 21, 21};
+  FocalTestEditSequence(sms_one_cycles_pqrs, (int) (sizeof(sms_one_cycles_pqrs) / sizeof(sms_one_cycles_pqrs[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "S") == 0);
 
-  const int sms_space_exits[] = {37, 16, 25, 16};
+  const int sms_space_exits[] = {37, 18, 25, 16};
   FocalTestEditSequence(sms_space_exits, (int) (sizeof(sms_space_exits) / sizeof(sms_space_exits[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "A 2") == 0);
 
@@ -242,7 +242,7 @@ static void test_editor_operator_keys_insert_full_names(void) {
   FocalTestEditSequence(set, (int) (sizeof(set) / sizeof(set[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.40 SET ") == 0);
 
-  const int set_equals[] = {21, 15, 22, 20, 25, 27, 37, 13, 13, 37, 7};
+  const int set_equals[] = {21, 15, 22, 20, 25, 27, 37, 11, 11, 37, 7};
   FocalTestEditSequence(set_equals, (int) (sizeof(set_equals) / sizeof(set_equals[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.40 SET X=") == 0);
 

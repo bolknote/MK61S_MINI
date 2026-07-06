@@ -265,17 +265,25 @@ static int focal_digit_from_key(i32 key_code) {
 
 static const char* focal_sms_letters_for_key(i32 key_code) {
   switch(focal_digit_from_key(key_code)) {
-    case 2: return "ABC";
-    case 3: return "DEF";
+    case 1: return "PQRS";
+    case 2: return "TUV";
+    case 3: return "WXYZ";
     case 4: return "GHI";
     case 5: return "JKL";
     case 6: return "MNO";
-    case 7: return "PQRS";
-    case 8: return "TUV";
-    case 9: return "WXYZ";
+    case 8: return "ABC";
+    case 9: return "DEF";
     default: break;
   }
   return NULL;
+}
+
+static bool focal_sms_key_is_letters(i32 key_code) {
+  return focal_sms_letters_for_key(key_code) != NULL;
+}
+
+static bool focal_sms_key_is_space(i32 key_code) {
+  return focal_digit_from_key(key_code) == 7;
 }
 
 static const char* focal_symbol_for_digit_key(i32 key_code) {
@@ -2030,8 +2038,14 @@ static bool focal_input_program_name(char* name, usize size) {
       focal_sms_reset(sms);
       continue;
     }
-    if(digit >= 2 && digit <= 9) {
+    if(focal_sms_key_is_letters(key)) {
       focal_name_sms_tap(name, len, sms, key, now);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+    if(focal_sms_key_is_space(key)) {
+      focal_sms_reset(sms);
+      focal_name_insert_char(name, len, ' ');
       shift = FocalEditShift::NONE;
       continue;
     }
@@ -2115,17 +2129,17 @@ static void EditFocalSlot(int slot) {
 
     const bool shifted_key = shift != FocalEditShift::NONE;
     if(!shifted_key && sms.active) {
-      const int sms_digit = focal_digit_from_key(key_code);
-      if(sms_digit >= 2 && sms_digit <= 9) {
+      if(focal_sms_key_is_letters(key_code)) {
         focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
         continue;
       }
-      if(sms_digit == 0) {
+      if(focal_sms_key_is_space(key_code)) {
         focal_sms_reset(sms);
         focal_editor_insert_text(source, len, cursor, " ");
         continue;
       }
-      if(sms_digit == 1) {
+      const int sms_digit = focal_digit_from_key(key_code);
+      if(sms_digit == 0) {
         focal_sms_reset(sms);
         continue;
       }
@@ -2142,8 +2156,14 @@ static void EditFocalSlot(int slot) {
       continue;
     }
 
-    if(shift == FocalEditShift::K && focal_digit_from_key(key_code) >= 2 && focal_digit_from_key(key_code) <= 9) {
+    if(shift == FocalEditShift::K && focal_sms_key_is_letters(key_code)) {
       focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+    if(shift == FocalEditShift::K && focal_sms_key_is_space(key_code)) {
+      focal_sms_reset(sms);
+      focal_editor_insert_text(source, len, cursor, " ");
       shift = FocalEditShift::NONE;
       continue;
     }
@@ -2389,17 +2409,17 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
     const i32 key_code = keys[i];
     const bool shifted_key = shift != FocalEditShift::NONE;
     if(!shifted_key && sms.active) {
-      const int sms_digit = focal_digit_from_key(key_code);
-      if(sms_digit >= 2 && sms_digit <= 9) {
+      if(focal_sms_key_is_letters(key_code)) {
         focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
         continue;
       }
-      if(sms_digit == 0) {
+      if(focal_sms_key_is_space(key_code)) {
         focal_sms_reset(sms);
         focal_editor_insert_text(source, len, cursor, " ");
         continue;
       }
-      if(sms_digit == 1) {
+      const int sms_digit = focal_digit_from_key(key_code);
+      if(sms_digit == 0) {
         focal_sms_reset(sms);
         continue;
       }
@@ -2415,8 +2435,14 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
       shift = (key_code == KEY_K) ? FocalEditShift::K : FocalEditShift::ALPHA;
       continue;
     }
-    if(shift == FocalEditShift::K && focal_digit_from_key(key_code) >= 2 && focal_digit_from_key(key_code) <= 9) {
+    if(shift == FocalEditShift::K && focal_sms_key_is_letters(key_code)) {
       focal_editor_sms_tap(source, len, cursor, sms, key_code, now);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+    if(shift == FocalEditShift::K && focal_sms_key_is_space(key_code)) {
+      focal_sms_reset(sms);
+      focal_editor_insert_text(source, len, cursor, " ");
       shift = FocalEditShift::NONE;
       continue;
     }
