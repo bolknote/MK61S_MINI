@@ -377,15 +377,22 @@ bool   TurnSoundVolume(void) {
   return action::MENU_BACK;
 }
 
-bool   TurnSoundVolumeDown(void) {
+static void StepSoundVolume(i8 delta) {
   sound(PIN_BUZZER, 0, 0);
   const u8 volume = library_mk61::sound_volume();
-  const u8 next_volume = (volume == 0) ? 10 : (volume - 1);
+
+  u8 next_volume = volume;
+  if(delta > 0 && volume < 10) {
+    next_volume = volume + 1;
+  } else if(delta < 0 && volume > 0) {
+    next_volume = volume - 1;
+  }
+
+  if(next_volume == volume) return;
+
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
   library_mk61::store_settings_state();
-
-  return action::MENU_BACK;
 }
 
 bool settings_select(void) {
@@ -446,24 +453,16 @@ bool  mk61_games_select(void) {
   return action::MENU_EXIT;
 }
 
-static constexpr i32 KEY_K_RELEASE = KEY_K | (i32) key_state::RELEASED;
+bool class_menu::handle_settings_adjustment(i32 key) {
+  if(puncts != library_mk61::SETTINGS_MENU || active_punct != library_mk61::SETTINGS_VOLUME) return false;
 
-bool class_menu::handle_k_modifier(i32 key) {
-  if(k_modifier) {
-    if(key == KEY_OK_PRESS) {
-      k_modifier = false;
-      TurnSoundVolumeDown();
-      return true;
-    }
-    if(key == KEY_K_RELEASE) {
-      k_modifier = false;
-      return true;
-    }
-    k_modifier = false;
+  if(key == KEY_FRW_PRESS) {
+    StepSoundVolume(1);
+    return true;
   }
 
-  if(key == (i32) KEY_K) {
-    k_modifier = true;
+  if(key == KEY_BKW_PRESS) {
+    StepSoundVolume(-1);
     return true;
   }
 
@@ -528,10 +527,7 @@ void class_menu::select(void) {
   do{
     draw();
     const i32 last_key_code = kbd::get_key_wait();
-    if(handle_k_modifier(last_key_code)) {
-      lcd.clear();
-      continue;
-    }
+    if(handle_settings_adjustment(last_key_code)) continue;
     switch(last_key_code) {
       case KEY_RIGHT_PRESS:
               if(active_punct < (MENU_PUNCT_COUNT-1)) active_punct++;
@@ -541,6 +537,7 @@ void class_menu::select(void) {
         break;
       case KEY_OK_PRESS:
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
+            lcd.clear();
             lcd_ru::restore_default_font();
             if(puncts[active_punct]->action() == action::MENU_EXIT) {
               return;
@@ -559,13 +556,13 @@ i32 class_menu::select(i32 key) {
   lcd.clear();
   dbgln(MENU, "select entry");
 
-    if(handle_k_modifier(key)) {
-      draw();
-      dbgln(MENU, "select exit");
-      return 0;
-    }
+  if(handle_settings_adjustment(key)) {
+    draw();
+    dbgln(MENU, "select exit");
+    return 0;
+  }
 
-    switch(key) {
+  switch(key) {
       case KEY_RIGHT_PRESS:
               if(active_punct < (MENU_PUNCT_COUNT-1)) active_punct++;
         break;
@@ -574,6 +571,7 @@ i32 class_menu::select(i32 key) {
         break;
       case KEY_OK_PRESS:
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
+            lcd.clear();
             lcd_ru::restore_default_font();
             if(puncts[active_punct]->action() == action::MENU_EXIT) {
               return -1;

@@ -392,45 +392,6 @@ void   mk61_menu_hook(i32 key);
 using HookFunc = void (*)(i32 key);
 static HookFunc input_focus = &mk61_baseloop_hook;
 static bool user_short_press_pending = false;
-static bool k_volume_pending = false;
-static constexpr i32 KEY_K_RELEASE = KEY_K | (i32) key_state::RELEASED;
-
-static void pass_pending_k_to_core(void) {
-  key_press_handler(KEY_K);
-  core_61::step();
-}
-
-static bool handle_sound_volume_shortcut(i32 key) {
-  if(key < 0) return false;
-
-  if(k_volume_pending) {
-    if(key == KEY_OK_PRESS) {
-      kbd::get_key();
-      k_volume_pending = false;
-      TurnSoundVolumeDown();
-      return true;
-    }
-
-    if(key == KEY_K_RELEASE) {
-      kbd::get_key();
-      pass_pending_k_to_core();
-      k_volume_pending = false;
-      return true;
-    }
-
-    pass_pending_k_to_core();
-    k_volume_pending = false;
-    return false;
-  }
-
-  if(core_61::is_CALC() && key == (i32) KEY_K) {
-    kbd::get_key();
-    k_volume_pending = true;
-    return true;
-  }
-
-  return false;
-}
 
 void   mk61_menu_hook(i32 key) {
     if(key >= 0) {
@@ -459,8 +420,6 @@ void   mk61_menu_hook(i32 key) {
 }
 
 void   mk61_baseloop_hook(i32 key) {
-  if(handle_sound_volume_shortcut(key)) return;
-
   #if MK61_USER_GAMES_MENU_SHORTCUT
   if(key == KEY_USER_PRESS && !core_61::edit_program) {
     kbd::get_key(); // сервисная клавиша, не передаем ее в автомат МК-61

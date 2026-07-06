@@ -35,7 +35,6 @@ extern bool mk61_library_select(void);
 extern bool mk61_games_select(void);
 extern bool settings_select(void);
 extern bool TurnSoundVolume(void);
-extern bool TurnSoundVolumeDown(void);
 extern bool TurnSpeed(void);
 extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
@@ -87,14 +86,13 @@ class class_menu {
     int MENU_PUNCT_COUNT;
     u8 active_punct;
     u8 previous_up;
-    bool k_modifier;
     t_punct** puncts;
 
     void draw(void);
-    bool handle_k_modifier(i32 key);
+    bool handle_settings_adjustment(i32 key);
 
   public:
-    class_menu(t_punct** punts_of_menu, int count_of_puncts) : MENU_PUNCT_COUNT(count_of_puncts), active_punct(0), previous_up(0), k_modifier(false), puncts(punts_of_menu) {};
+    class_menu(t_punct** punts_of_menu, int count_of_puncts) : MENU_PUNCT_COUNT(count_of_puncts), active_punct(0), previous_up(0), puncts(punts_of_menu) {};
     void select(void);
     i32  select(i32 key);
 };
