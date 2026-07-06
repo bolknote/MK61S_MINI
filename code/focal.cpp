@@ -1276,7 +1276,6 @@ static int find_free_program(void) {
   return -1;
 }
 
-#ifndef FOCAL_HOST_TEST
 static int find_program_by_name(const char* name) {
   for(int i = 0; i < FOCAL_PROGRAM_COUNT; i++) {
     if(programs[i].used && focal_streq(programs[i].name, name)) return i;
@@ -1284,6 +1283,7 @@ static int find_program_by_name(const char* name) {
   return -1;
 }
 
+#ifndef FOCAL_HOST_TEST
 static void focal_release_program_slot(int slot) {
   if(slot < 0 || slot >= FOCAL_PROGRAM_COUNT) return;
   memset(&programs[slot], 0, sizeof(programs[slot]));
@@ -1412,6 +1412,17 @@ void RunFocal(int FocalN) {
     }
     break;
   }
+}
+
+bool RunFocalProgram(const char* name) {
+#ifndef FOCAL_HOST_TEST
+  const int slot = load_focal_program_from_store(name);
+#else
+  const int slot = find_program_by_name(name);
+#endif
+  if(slot < 0) return false;
+  RunFocal(slot);
+  return true;
 }
 
 bool FocalIsReady(void) {

@@ -506,7 +506,11 @@ bool load_from(isize address) {
 bool Load(usize nSlot) {
   char name[8];
   snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+  return LoadProgram(name);
+}
 
+bool LoadProgram(const char* name) {
+  if(name == NULL || name[0] == 0) return false;
   u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
   u8 code_len = 0;
   if(!program_store::read_mk61(name, &code_page[0], core_61::MAX_PROGRAM_STEP, &code_len)) return false;

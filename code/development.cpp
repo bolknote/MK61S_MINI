@@ -10,6 +10,7 @@
 #include "lcd_ru.hpp"
 #include "menu.hpp"
 #include "program_store.hpp"
+#include "tools.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,7 @@ static constexpr i32 EXPLORER_KEY_ESC = -6;
 static u8 explorer_buffer[768];
 
 enum class ItemMenuAction : u8 {
+  RUN,
   VIEW,
   EDIT,
   DELETE
@@ -290,8 +292,26 @@ static bool entry_can_edit(const program_store::Entry& entry) {
   }
 }
 
+static bool entry_can_run(const program_store::Entry& entry) {
+  switch(entry.type) {
+    case program_store::ProgramType::MK61:
+      return true;
+#if MK61_ENABLE_BASIC
+    case program_store::ProgramType::BASIC:
+      return true;
+#endif
+#if MK61_ENABLE_FOCAL
+    case program_store::ProgramType::FOCAL:
+      return true;
+#endif
+    default:
+      return false;
+  }
+}
+
 static int item_menu_actions(const program_store::Entry& entry, ItemMenuAction* actions, int capacity) {
   int count = 0;
+  if(entry_can_run(entry) && count < capacity) actions[count++] = ItemMenuAction::RUN;
   if(count < capacity) actions[count++] = ItemMenuAction::VIEW;
   if(entry_can_edit(entry) && count < capacity) actions[count++] = ItemMenuAction::EDIT;
   if(count < capacity) actions[count++] = ItemMenuAction::DELETE;
@@ -300,6 +320,8 @@ static int item_menu_actions(const program_store::Entry& entry, ItemMenuAction* 
 
 static const char* item_menu_text(ItemMenuAction action, bool ru) {
   switch(action) {
+    case ItemMenuAction::RUN:
+      return ru ? "Запуск" : "Run";
     case ItemMenuAction::VIEW:
       return ru ? "Просмотр" : "View";
     case ItemMenuAction::EDIT:
@@ -311,8 +333,8 @@ static const char* item_menu_text(ItemMenuAction action, bool ru) {
 }
 
 static void draw_item_menu(const program_store::Entry& entry, int active) {
-  ItemMenuAction actions[3];
-  const int count = item_menu_actions(entry, actions, 3);
+  ItemMenuAction actions[4];
+  const int count = item_menu_actions(entry, actions, 4);
   const int visible = (count < lcd_display::ROWS) ? count : lcd_display::ROWS;
   int top = active - visible + 1;
   if(top < 0) top = 0;
@@ -340,6 +362,32 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
   }
 }
 
+static bool run_entry(const program_store::Entry& entry) {
+  bool ok = false;
+  switch(entry.type) {
+    case program_store::ProgramType::MK61:
+      ok = LoadProgram(entry.name);
+      break;
+#if MK61_ENABLE_BASIC
+    case program_store::ProgramType::BASIC:
+      ok = RunBasicProgram(entry.name);
+      break;
+#endif
+#if MK61_ENABLE_FOCAL
+    case program_store::ProgramType::FOCAL:
+      ok = RunFocalProgram(entry.name);
+      break;
+#endif
+    default:
+      break;
+  }
+  if(!ok) {
+    show_message("Run error", "Ошибка запуска", entry.name, entry.name);
+    delay(900);
+  }
+  return ok;
+}
+
 static void edit_entry(const program_store::Entry& entry) {
   bool ok = false;
   switch(entry.type) {
@@ -362,9 +410,9 @@ static void edit_entry(const program_store::Entry& entry) {
   }
 }
 
-static void explorer_item_menu(const program_store::Entry& entry) {
-  ItemMenuAction actions[3];
-  const int count = item_menu_actions(entry, actions, 3);
+static bool explorer_item_menu(const program_store::Entry& entry) {
+  ItemMenuAction actions[4];
+  const int count = item_menu_actions(entry, actions, 4);
   int active = 0;
   bool wait_initial_ok_release = true;
   while(true) {
@@ -374,11 +422,14 @@ static void explorer_item_menu(const program_store::Entry& entry) {
       wait_initial_ok_release = false;
     }
     const i32 key = wait_explorer_key(false);
-    if(key == EXPLORER_KEY_ESC) return;
+    if(key == EXPLORER_KEY_ESC) return action::MENU_BACK;
     if(key == EXPLORER_KEY_UP) active = (active <= 0) ? count - 1 : active - 1;
     if(key == EXPLORER_KEY_DOWN) active = (active + 1) % count;
     if(key == EXPLORER_KEY_OK) {
       switch(actions[active]) {
+        case ItemMenuAction::RUN:
+          if(run_entry(entry)) return action::MENU_EXIT;
+          return action::MENU_BACK;
         case ItemMenuAction::VIEW:
           view_entry(entry);
           break;
@@ -389,14 +440,13 @@ static void explorer_item_menu(const program_store::Entry& entry) {
           delete_entry(entry);
           break;
       }
-      return;
+      return action::MENU_BACK;
     }
   }
 }
 
 static bool explorer_action(void) {
-  program_store_explorer_select();
-  return action::MENU_BACK;
+  return program_store_explorer_select();
 }
 
 static bool basic_action(void) {
@@ -447,7 +497,7 @@ bool program_store_explorer_select(void) {
       if(explorer_entry(active, entry)) view_entry(entry);
     } else if(key == EXPLORER_KEY_LONG_OK) {
       program_store::Entry entry;
-      if(explorer_entry(active, entry)) explorer_item_menu(entry);
+      if(explorer_entry(active, entry) && explorer_item_menu(entry) == action::MENU_EXIT) return action::MENU_EXIT;
     }
   }
 }

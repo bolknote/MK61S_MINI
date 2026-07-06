@@ -16,6 +16,7 @@ extern bool CompileFocal(char* program);
 extern void InitFocal(void);
 extern bool FocalIsReady(void);
 extern void RunFocal(int FocalN);
+extern bool RunFocalProgram(const char* name);
 extern void EditFocal(void);
 extern bool EditFocalProgram(const char* name);
 #else
@@ -25,6 +26,7 @@ inline bool CompileFocal(char*) { return false; }
 inline void InitFocal(void) {}
 inline bool FocalIsReady(void) { return false; }
 inline void RunFocal(int) {}
+inline bool RunFocalProgram(const char*) { return false; }
 inline void EditFocal(void) {}
 inline bool EditFocalProgram(const char*) { return false; }
 #endif

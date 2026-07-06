@@ -2329,6 +2329,17 @@ void RunBasic(int BasicN) {
   }
 }
 
+bool RunBasicProgram(const char* name) {
+#ifndef BASIC_HOST_TEST
+  const int slot = load_basic_program_from_store(name);
+#else
+  const int slot = find_program_by_name(name);
+#endif
+  if(slot < 0) return false;
+  RunBasic(slot);
+  return true;
+}
+
 bool BasicRunAssignedForStep(int mk61_step) {
   if(mk61_step < 0 || mk61_step >= (int) core_61::MAX_PROGRAM_STEP) return false;
   const int program = basic_step_program[mk61_step];

@@ -21,6 +21,7 @@ extern void InitBasic(void);
 extern int  AssignBasic(void);
 extern bool BasicIsReady(void);
 extern void RunBasic(int BasicN);
+extern bool RunBasicProgram(const char* name);
 extern void EditBasic(void);
 extern bool EditBasicProgram(const char* name);
 extern bool BasicRunAssignedForStep(int mk61_step);
@@ -33,6 +34,7 @@ inline void InitBasic(void) {}
 inline int AssignBasic(void) { return -1; }
 inline bool BasicIsReady(void) { return false; }
 inline void RunBasic(int) {}
+inline bool RunBasicProgram(const char*) { return false; }
 inline void EditBasic(void) {}
 inline bool EditBasicProgram(const char*) { return false; }
 inline bool BasicRunAssignedForStep(int) { return false; }
