@@ -11,8 +11,10 @@
 #ifndef MK61_SOUND_CUTOFF_TIMER
   #ifdef TIMER_TONE
     #define MK61_SOUND_CUTOFF_TIMER TIMER_TONE
-  #else
+  #elif defined(TIM10)
     #define MK61_SOUND_CUTOFF_TIMER TIM10
+  #else
+    #error "No timer available for sound cutoff. Define MK61_SOUND_CUTOFF_TIMER in config.h."
   #endif
 #endif
 
@@ -24,11 +26,28 @@ static constexpr u32   SOUND_DUTY_MAX   = 128; // 50% in 8-bit PWM terms, same l
 static HardwareTimer pwm_timer;
 static HardwareTimer cutoff_timer(MK61_SOUND_CUTOFF_TIMER);
 
-static bool pwm_ready = false;
+static volatile bool pwm_ready = false;
 static usize pwm_pin = PIN_BUZZER;
 static PinName pwm_pin_name = NC;
 static uint32_t pwm_channel = 0;
+static uint32_t pwm_ll_channel = 0;
+static TIM_TypeDef* pwm_timer_instance = NULL;
 static volatile bool sound_active = false;
+static volatile bool stop_cleanup_pending = false;
+
+struct InterruptState {
+  uint32_t primask;
+};
+
+static InterruptState disable_interrupts(void) {
+  const InterruptState state = { __get_PRIMASK() };
+  __disable_irq();
+  return state;
+}
+
+static void restore_interrupts(InterruptState state) {
+  __set_PRIMASK(state.primask);
+}
 
 static usize clamp_volume(usize volume) {
   return (volume > SOUND_VOLUME_MAX) ? SOUND_VOLUME_MAX : volume;
@@ -60,19 +79,34 @@ static void pause_cutoff_timer(void) {
   clear_cutoff_interrupt();
 }
 
-static void stop_from_timer(void) {
-  pause_cutoff_timer();
-
-  if(pwm_ready) {
-    pwm_timer.pauseChannel(pwm_channel);
-    pwm_timer.pause();
+static void stop_cutoff_from_interrupt(void) {
+  TIM_HandleTypeDef* handle = cutoff_timer.getHandle();
+  if(handle != NULL) {
+    __HAL_TIM_DISABLE_IT(handle, TIM_IT_UPDATE);
+    LL_TIM_DisableCounter(handle->Instance);
+    __HAL_TIM_CLEAR_FLAG(handle, TIM_FLAG_UPDATE);
   }
+}
 
-  force_buzzer_low();
+static void mute_pwm_from_interrupt(void) {
+  if(pwm_ready && pwm_timer_instance != NULL && pwm_ll_channel != 0) {
+    LL_TIM_OC_SetMode(pwm_timer_instance, pwm_ll_channel, LL_TIM_OCMODE_FORCED_INACTIVE);
+    LL_TIM_DisableCounter(pwm_timer_instance);
+  }
+}
+
+static void stop_from_timer(void) {
+  stop_cutoff_from_interrupt();
+  mute_pwm_from_interrupt();
   sound_active = false;
+  stop_cleanup_pending = true;
 }
 
 static bool configure_pwm_mapping(usize pin) {
+  pwm_ready = false;
+  pwm_timer_instance = NULL;
+  pwm_ll_channel = 0;
+
   const PinName pin_name = digitalPinToPinName(pin);
   if(pin_name == NC) return false;
 
@@ -90,6 +124,8 @@ static bool configure_pwm_mapping(usize pin) {
   // The mapping is resolved here once, explicitly: PIN_BUZZER -> PinName ->
   // TIMx_CHy from the active STM32duino variant's PinMap_TIM table.
   pwm_timer.setup(timer_instance);
+  pwm_timer_instance = timer_instance;
+  pwm_ll_channel = pwm_timer.getLLChannel(pwm_channel);
   pwm_timer.pause();
   pwm_ready = true;
 
@@ -102,10 +138,14 @@ static bool configure_pwm_mapping(usize pin) {
 void sound_driver_init(usize pin) {
   sound_driver_stop();
 
-  pwm_ready = configure_pwm_mapping(pin);
+  configure_pwm_mapping(pin);
 
+  const InterruptState irq = disable_interrupts();
   pause_cutoff_timer();
   cutoff_timer.detachInterrupt();
+  stop_cleanup_pending = false;
+  sound_active = false;
+  restore_interrupts(irq);
 }
 
 void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize volume) {
@@ -124,6 +164,8 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
     return;
   }
 
+  const InterruptState irq = disable_interrupts();
+  stop_cleanup_pending = false;
   pause_cutoff_timer();
   cutoff_timer.detachInterrupt();
   pwm_timer.pauseChannel(pwm_channel);
@@ -147,9 +189,11 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
   cutoff_timer.attachInterrupt(stop_from_timer);
   clear_cutoff_interrupt();
   cutoff_timer.resume();
+  restore_interrupts(irq);
 }
 
 void sound_driver_stop(void) {
+  const InterruptState irq = disable_interrupts();
   pause_cutoff_timer();
   cutoff_timer.detachInterrupt();
   clear_cutoff_interrupt();
@@ -159,19 +203,40 @@ void sound_driver_stop(void) {
     pwm_timer.pause();
   }
 
-  force_buzzer_low();
   sound_active = false;
+  stop_cleanup_pending = false;
+  restore_interrupts(irq);
+
+  force_buzzer_low();
 }
 
 void sound_driver_poll(void) {
-  // Duration cutoff is handled by cutoff_timer interrupt. The polling hook is
-  // intentionally kept so existing firmware loops do not depend on driver type.
-  (void) sound_active;
+  if(!stop_cleanup_pending) {
+    return;
+  }
+
+  const InterruptState irq = disable_interrupts();
+  const bool cleanup_needed = stop_cleanup_pending && !sound_active;
+  if(cleanup_needed) {
+    stop_cleanup_pending = false;
+  }
+  restore_interrupts(irq);
+
+  if(cleanup_needed) {
+    sound_driver_stop();
+  }
 }
 
 #else
 
+namespace {
+
+static usize fallback_pin = PIN_BUZZER;
+
+} // namespace
+
 void sound_driver_init(usize pin) {
+  fallback_pin = pin;
   pinMode(pin, OUTPUT);
   digitalWrite(pin, LOW);
 }
@@ -182,13 +247,14 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
     return;
   }
 
+  fallback_pin = pin;
   tone(pin, (unsigned int) frequency_Hz, (unsigned long) duration_ms);
 }
 
 void sound_driver_stop(void) {
-  noTone(PIN_BUZZER);
-  pinMode(PIN_BUZZER, OUTPUT);
-  digitalWrite(PIN_BUZZER, LOW);
+  noTone(fallback_pin);
+  pinMode(fallback_pin, OUTPUT);
+  digitalWrite(fallback_pin, LOW);
 }
 
 void sound_driver_poll(void) {}
