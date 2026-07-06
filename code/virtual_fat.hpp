@@ -12,7 +12,10 @@ bool read_sector(u32 lba, u8* out);
 bool read_sectors(u32 lba, u8* out, u16 count);
 bool write_sector(u32 lba, const u8* data);
 bool write_sectors(u32 lba, const u8* data, u16 count);
+bool flush_pending(void);
 
 } // namespace virtual_fat
+
+extern "C" u8 MK61_VirtualFatSync(void);
 
 #endif

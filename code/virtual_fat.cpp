@@ -702,6 +702,18 @@ static void seed_pending_from_cache(PendingWrite& pending) {
   }
 }
 
+bool flush_pending(void) {
+  bool ok = true;
+  for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
+    PendingWrite& pending = pending_writes[i];
+    if(!pending.used) continue;
+    seed_pending_from_cache(pending);
+    if(!pending_has_all_data(pending)) continue;
+    if(!try_commit_pending(pending)) ok = false;
+  }
+  return ok;
+}
+
 static bool upsert_pending(const ParsedDirEntry& parsed) {
   PendingWrite* pending = find_pending(parsed.type, parsed.name);
   if(pending == NULL) pending = allocate_pending();
@@ -917,3 +929,7 @@ bool write_sectors(u32 lba, const u8* data, u16 count) {
 }
 
 } // namespace virtual_fat
+
+extern "C" u8 MK61_VirtualFatSync(void) {
+  return virtual_fat::flush_pending() ? 0 : 1;
+}

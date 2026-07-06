@@ -28,6 +28,8 @@ EndBSPDependencies */
 #include "usbd_msc.h"
 #include "usbd_msc_data.h"
 
+extern uint8_t MK61_VirtualFatSync(void);
+
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
   * @{
@@ -92,6 +94,7 @@ static int8_t SCSI_Write12(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *param
 static int8_t SCSI_Read10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
 static int8_t SCSI_Read12(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
 static int8_t SCSI_Verify10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
+static int8_t SCSI_SynchronizeCache(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
 static int8_t SCSI_CheckAddressRange(USBD_HandleTypeDef *pdev, uint8_t lun,
                                      uint32_t blk_offset, uint32_t blk_nbr);
 
@@ -188,6 +191,11 @@ int8_t SCSI_ProcessCmd(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *cmd)
 
     case SCSI_VERIFY10:
       ret = SCSI_Verify10(pdev, lun, cmd);
+      break;
+
+    case SCSI_SYNCHRONIZE_CACHE10:
+    case SCSI_SYNCHRONIZE_CACHE16:
+      ret = SCSI_SynchronizeCache(pdev, lun, cmd);
       break;
 
     default:
@@ -646,16 +654,55 @@ static int8_t SCSI_StartStopUnit(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t 
   }
   else if ((params[4] & 0x3U) == 0x2U) /* START=0 and LOEJ Load Eject=1 */
   {
+    if (SCSI_SynchronizeCache(pdev, lun, params) < 0)
+    {
+      return -1;
+    }
     hmsc->scsi_medium_state = SCSI_MEDIUM_EJECTED;
   }
   else if ((params[4] & 0x3U) == 0x3U) /* START=1 and LOEJ Load Eject=1 */
   {
     hmsc->scsi_medium_state = SCSI_MEDIUM_UNLOCKED;
   }
+  else if ((params[4] & 0x3U) == 0x0U) /* START=0 */
+  {
+    if (SCSI_SynchronizeCache(pdev, lun, params) < 0)
+    {
+      return -1;
+    }
+  }
   else
   {
     /* .. */
   }
+  hmsc->bot_data_length = 0U;
+
+  return 0;
+}
+
+/**
+  * @brief  SCSI_SynchronizeCache
+  *         Flush pending virtual FAT writes to the program store.
+  * @param  lun: Logical unit number
+  * @param  params: Command parameters
+  * @retval status
+  */
+static int8_t SCSI_SynchronizeCache(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params)
+{
+  UNUSED(params);
+  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+
+  if (hmsc == NULL)
+  {
+    return -1;
+  }
+
+  if (MK61_VirtualFatSync() != 0U)
+  {
+    SCSI_SenseCode(pdev, lun, HARDWARE_ERROR, WRITE_FAULT);
+    return -1;
+  }
+
   hmsc->bot_data_length = 0U;
 
   return 0;
@@ -1215,4 +1262,3 @@ static int8_t SCSI_UpdateBotData(USBD_MSC_BOT_HandleTypeDef *hmsc,
 /**
   * @}
   */
-
