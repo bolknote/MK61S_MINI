@@ -67,19 +67,6 @@ static i32 scan_direct_key(void) {
   return scan_code;
 }
 
-static void wait_ok_release(void) {
-  while(true) {
-    idle_main_process();
-    const i32 scan_code = scan_direct_key();
-    if(scan_code >= 0) {
-      const bool released = (scan_code & (i32) key_state::RELEASED) != 0;
-      const i32 code = scan_code & ~(i32) key_state::RELEASED;
-      if(released && code == (i32) KEY_OK) return;
-    }
-    delay(10);
-  }
-}
-
 static i32 wait_explorer_key(bool allow_long_ok) {
   bool ok_down = false;
   u32 long_ok_at = 0;
@@ -89,7 +76,6 @@ static i32 wait_explorer_key(bool allow_long_ok) {
     idle_main_process();
     if(allow_long_ok && ok_down && (i32) (millis() - long_ok_at) >= 0) {
       kbd::clear_hold_key();
-      wait_ok_release();
       return EXPLORER_KEY_LONG_OK;
     }
 
@@ -318,15 +304,21 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
 
   MK61DisplayUpdate update(lcd);
   lcd.clear();
-  for(int row = 0; row < visible; row++) {
-    const int index = top + row;
-    const char marker = active == index ? '>' : ' ';
-    const char* text = item_menu_text(actions[index], library_mk61::language_is_ru());
-    if(library_mk61::language_is_ru()) {
-      lcd_ru::print_menu_line((u8) row, marker, text);
-    } else {
+
+  if(library_mk61::language_is_ru()) {
+    const int index0 = top;
+    const int index1 = top + 1;
+    lcd_ru::print_menu_window(
+      active == index0 ? '>' : ' ',
+      item_menu_text(actions[index0], true),
+      (visible > 1 && index1 < count && active == index1) ? '>' : ' ',
+      (visible > 1 && index1 < count) ? item_menu_text(actions[index1], true) : ""
+    );
+  } else {
+    for(int row = 0; row < visible; row++) {
+      const int index = top + row;
       char line[18];
-      snprintf(line, sizeof(line), "%c%s", marker, text);
+      snprintf(line, sizeof(line), "%c%s", active == index ? '>' : ' ', item_menu_text(actions[index], false));
       print_line((u8) row, line);
     }
   }
