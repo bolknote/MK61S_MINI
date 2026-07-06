@@ -10,7 +10,7 @@ struct StoredProgram {
   bool used;
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
-  u8 data[700];
+  u8 data[1536];
   u16 data_len;
 };
 
@@ -553,6 +553,118 @@ static void test_ignored_directory_does_not_relocate_visible_file(void) {
   assert(readback[169] == 0);
 }
 
+static void test_recreated_generated_entry_cancels_pending_delete(void) {
+  reset_virtual_fat_state();
+
+  u8 old_data[100];
+  memset(old_data, 0x31, sizeof(old_data));
+  assert(program_store::write(program_store::ProgramType::MK61, "WUMPUS", old_data, sizeof(old_data)));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+
+  u8 deleted_root[virtual_fat::SECTOR_SIZE];
+  memcpy(deleted_root, root, sizeof(deleted_root));
+  deleted_root[32] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), deleted_root));
+
+  u8 new_data[virtual_fat::SECTOR_SIZE];
+  memset(new_data, 0x77, sizeof(new_data));
+  assert(virtual_fat::write_sector(data_lba(), new_data));
+
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[100];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "WUMPUS", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(stored[0] == 0x77);
+  assert(stored[99] == 0x77);
+}
+
+static void test_rewrite_after_delete_cancels_pending_delete(void) {
+  reset_virtual_fat_state();
+
+  u8 old_data[100];
+  memset(old_data, 0x41, sizeof(old_data));
+  assert(program_store::write(program_store::ProgramType::MK61, "F00", old_data, sizeof(old_data)));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  root[32] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), root));
+
+  u8 new_sector[virtual_fat::SECTOR_SIZE];
+  memset(new_sector, 0x62, sizeof(new_sector));
+  assert(virtual_fat::write_sector(data_lba() + 1, new_sector));
+
+  u8 new_root[virtual_fat::SECTOR_SIZE];
+  memset(new_root, 0, sizeof(new_root));
+  assert(virtual_fat::read_sector(root_lba(), new_root));
+  fill_short_dir_entry(new_root + 32, "F00     M61", 3, sizeof(old_data));
+  assert(virtual_fat::write_sector(root_lba(), new_root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[100];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "F00", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(stored[0] == 0x62);
+  assert(stored[99] == 0x62);
+}
+
+static void test_ignored_range_data_can_be_reclassified(void) {
+  reset_virtual_fat_state();
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 32, "_TMP    M61", 2, 4096);
+  assert(virtual_fat::write_sector(root_lba(), root));
+
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0x73, sizeof(data));
+  assert(virtual_fat::write_sector(data_lba(), data));
+
+  u8 real_root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), real_root));
+  fill_short_dir_entry(real_root + 32, "REAL    M61", 2, 100);
+  assert(virtual_fat::write_sector(root_lba(), real_root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[100];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "REAL", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(stored[0] == 0x73);
+  assert(stored[99] == 0x73);
+}
+
+static void test_stale_directory_entries_do_not_cancel_deletes(void) {
+  reset_virtual_fat_state();
+
+  const u8 byte = 0x55;
+  assert(program_store::write(program_store::ProgramType::MK61, "WUMPUS", &byte, 1));
+  assert(program_store::write(program_store::ProgramType::FOCAL, "PI", &byte, 1));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+
+  u8 delete_pi[virtual_fat::SECTOR_SIZE];
+  memcpy(delete_pi, root, sizeof(delete_pi));
+  delete_pi[64] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), delete_pi));
+
+  u8 delete_wumpus_with_stale_pi[virtual_fat::SECTOR_SIZE];
+  memcpy(delete_wumpus_with_stale_pi, root, sizeof(delete_wumpus_with_stale_pi));
+  delete_wumpus_with_stale_pi[32] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), delete_wumpus_with_stale_pi));
+
+  assert(virtual_fat::flush_pending());
+  assert(!program_store::exists(program_store::ProgramType::MK61, "WUMPUS"));
+  assert(!program_store::exists(program_store::ProgramType::FOCAL, "PI"));
+}
+
 static void test_mass_delete_queues_whole_directory_sector(void) {
   reset_virtual_fat_state();
 
@@ -578,6 +690,212 @@ static void test_mass_delete_queues_whole_directory_sector(void) {
   }
 }
 
+// rm + copy of a new file into the clusters the host just freed must not
+// resurrect the deleted file or corrupt the new one.
+static void test_delete_then_reuse_clusters_keeps_delete_and_new_file(void) {
+  reset_virtual_fat_state();
+
+  u8 old_data[600];
+  memset(old_data, 0x11, sizeof(old_data));
+  assert(program_store::write(program_store::ProgramType::MK61, "OLDGAME", old_data, sizeof(old_data)));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  const u8* old_entry = first_archive_entry(root);
+  assert(old_entry != NULL);
+  const u16 old_cluster = read_le16(old_entry, 26);
+
+  u8 deleted_root[virtual_fat::SECTOR_SIZE];
+  memcpy(deleted_root, root, sizeof(deleted_root));
+  deleted_root[32] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), deleted_root));
+
+  // Host reuses the freed clusters for a different file.
+  u8 sector[virtual_fat::SECTOR_SIZE];
+  memset(sector, 0x22, sizeof(sector));
+  assert(virtual_fat::write_sector(data_lba() + (old_cluster - 2), sector));
+
+  u8 new_root[virtual_fat::SECTOR_SIZE];
+  memcpy(new_root, deleted_root, sizeof(new_root));
+  fill_short_dir_entry(new_root + 64, "NEWGAME M61", old_cluster, 300);
+  assert(virtual_fat::write_sector(root_lba(), new_root));
+  assert(virtual_fat::flush_pending());
+
+  assert(!program_store::exists(program_store::ProgramType::MK61, "OLDGAME"));
+
+  u8 stored[300];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "NEWGAME", stored, sizeof(stored), &stored_len));
+  assert(stored_len == 300);
+  assert(stored[0] == 0x22);
+  assert(stored[299] == 0x22);
+}
+
+// Deleting one file must not move the clusters of the remaining files while
+// the host stays mounted (the host caches FAT and directory).
+static void test_delete_does_not_shift_other_files_clusters(void) {
+  reset_virtual_fat_state();
+
+  u8 data_a[400];
+  memset(data_a, 0xAA, sizeof(data_a));
+  u8 data_b[400];
+  memset(data_b, 0xBB, sizeof(data_b));
+  assert(program_store::write(program_store::ProgramType::MK61, "AAA", data_a, sizeof(data_a)));
+  assert(program_store::write(program_store::ProgramType::MK61, "BBB", data_b, sizeof(data_b)));
+  virtual_fat::reset_session();
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+
+  u16 cluster_b_before = 0;
+  for(u8 i = 0; i < 16; i++) {
+    const u8* entry = root + (u16) i * 32;
+    if(entry[0] != 0 && entry[11] == 0x20 && memcmp(entry, "BBB     M61", 11) == 0) {
+      cluster_b_before = read_le16(entry, 26);
+    }
+  }
+  assert(cluster_b_before != 0);
+
+  u8 deleted_root[virtual_fat::SECTOR_SIZE];
+  memcpy(deleted_root, root, sizeof(deleted_root));
+  deleted_root[32] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), deleted_root));
+  assert(virtual_fat::flush_pending());
+  assert(!program_store::exists(program_store::ProgramType::MK61, "AAA"));
+
+  u8 root_after[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root_after));
+  u16 cluster_b_after = 0;
+  for(u8 i = 0; i < 16; i++) {
+    const u8* entry = root_after + (u16) i * 32;
+    if(entry[0] != 0 && entry[0] != 0xE5 && entry[11] == 0x20 && memcmp(entry, "BBB     M61", 11) == 0) {
+      cluster_b_after = read_le16(entry, 26);
+    }
+  }
+  assert(cluster_b_after == cluster_b_before);
+
+  // Data must still be readable from the same clusters.
+  u8 readback[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(data_lba() + (cluster_b_after - 2), readback));
+  assert(readback[0] == 0xBB);
+}
+
+// A fragmented file: the host writes its FAT chain, and the device must
+// assemble the data in chain order rather than assuming contiguity.
+static void test_fragmented_file_follows_host_fat_chain(void) {
+  reset_virtual_fat_state();
+
+  // Chain: 5 -> 9 -> 3, 1100 bytes (3 sectors).
+  u8 fat[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(fat_lba(), fat));
+  auto set_fat12 = [&fat](u16 cluster, u16 value) {
+    const u16 offset = (u16) (cluster + cluster / 2);
+    if((cluster & 1) == 0) {
+      fat[offset] = (u8) (value & 0xFF);
+      fat[offset + 1] = (u8) ((fat[offset + 1] & 0xF0) | ((value >> 8) & 0x0F));
+    } else {
+      fat[offset] = (u8) ((fat[offset] & 0x0F) | ((value << 4) & 0xF0));
+      fat[offset + 1] = (u8) (value >> 4);
+    }
+  };
+  set_fat12(5, 9);
+  set_fat12(9, 3);
+  set_fat12(3, 0xFFF);
+  assert(virtual_fat::write_sector(fat_lba(), fat));
+
+  u8 part1[virtual_fat::SECTOR_SIZE];
+  u8 part2[virtual_fat::SECTOR_SIZE];
+  u8 part3[virtual_fat::SECTOR_SIZE];
+  memset(part1, 0x51, sizeof(part1));
+  memset(part2, 0x52, sizeof(part2));
+  memset(part3, 0x53, sizeof(part3));
+  assert(virtual_fat::write_sector(data_lba() + (5 - 2), part1));
+  assert(virtual_fat::write_sector(data_lba() + (9 - 2), part2));
+  assert(virtual_fat::write_sector(data_lba() + (3 - 2), part3));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 32, "FRAG    M61", 5, 1100);
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[1100];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "FRAG", stored, sizeof(stored), &stored_len));
+  assert(stored_len == 1100);
+  assert(stored[0] == 0x51);
+  assert(stored[511] == 0x51);
+  assert(stored[512] == 0x52);
+  assert(stored[1023] == 0x52);
+  assert(stored[1024] == 0x53);
+  assert(stored[1099] == 0x53);
+}
+
+// Directory echo with stale (shifted) indexes must not spawn ghost files or
+// delete the wrong entry.
+static void test_stale_echo_after_flush_does_not_create_ghosts(void) {
+  reset_virtual_fat_state();
+
+  u8 data_a[100];
+  memset(data_a, 0xA1, sizeof(data_a));
+  u8 data_b[100];
+  memset(data_b, 0xB1, sizeof(data_b));
+  assert(program_store::write(program_store::ProgramType::MK61, "AAA", data_a, sizeof(data_a)));
+  assert(program_store::write(program_store::ProgramType::MK61, "BBB", data_b, sizeof(data_b)));
+  virtual_fat::reset_session();
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+
+  // Delete AAA and flush (macOS sends SYNCHRONIZE CACHE mid-session).
+  u8 deleted_root[virtual_fat::SECTOR_SIZE];
+  memcpy(deleted_root, root, sizeof(deleted_root));
+  deleted_root[32] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), deleted_root));
+  assert(virtual_fat::flush_pending());
+
+  // Host later rewrites the same sector from its stale cache.
+  assert(virtual_fat::write_sector(root_lba(), deleted_root));
+  assert(virtual_fat::flush_pending());
+
+  assert(!program_store::exists(program_store::ProgramType::MK61, "AAA"));
+  u8 stored[100];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "BBB", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(stored[0] == 0xB1);
+}
+
+// Deleting a file must never remove a different file that happens to sit at
+// the same directory index after layout changes.
+static void test_tombstone_identity_check_protects_other_files(void) {
+  reset_virtual_fat_state();
+
+  u8 data_a[100];
+  memset(data_a, 0xA2, sizeof(data_a));
+  u8 data_b[200];
+  memset(data_b, 0xB2, sizeof(data_b));
+  assert(program_store::write(program_store::ProgramType::MK61, "AAA", data_a, sizeof(data_a)));
+  assert(program_store::write(program_store::ProgramType::MK61, "BBB", data_b, sizeof(data_b)));
+  virtual_fat::reset_session();
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+
+  // Tombstone at AAA's slot but carrying BBB's identity (stale cache after
+  // the host saw a different layout): must delete BBB, not AAA.
+  u8 fake_root[virtual_fat::SECTOR_SIZE];
+  memcpy(fake_root, root, sizeof(fake_root));
+  memcpy(fake_root + 32, root + 64, 32);
+  fake_root[32] = 0xE5;
+  memset(fake_root + 64, 0, 32);
+  assert(virtual_fat::write_sector(root_lba(), fake_root));
+  assert(virtual_fat::flush_pending());
+
+  assert(program_store::exists(program_store::ProgramType::MK61, "AAA"));
+  assert(!program_store::exists(program_store::ProgramType::MK61, "BBB"));
+}
+
 } // namespace
 
 int main(void) {
@@ -590,7 +908,16 @@ int main(void) {
   test_hidden_stored_entries_do_not_shift_visible_files();
   test_appledouble_entry_does_not_relocate_visible_file();
   test_ignored_directory_does_not_relocate_visible_file();
+  test_recreated_generated_entry_cancels_pending_delete();
+  test_rewrite_after_delete_cancels_pending_delete();
+  test_ignored_range_data_can_be_reclassified();
+  test_stale_directory_entries_do_not_cancel_deletes();
   test_mass_delete_queues_whole_directory_sector();
+  test_delete_then_reuse_clusters_keeps_delete_and_new_file();
+  test_delete_does_not_shift_other_files_clusters();
+  test_fragmented_file_follows_host_fat_chain();
+  test_stale_echo_after_flush_does_not_create_ghosts();
+  test_tombstone_identity_check_protects_other_files();
   printf("virtual_fat_self_test: ok\n");
   return 0;
 }

@@ -204,6 +204,8 @@ bool init(void) {
 
 void deinit(void) {
   if(!initialized) return;
+  // Persist queued writes/deletes even when the host never ejected cleanly.
+  (void) virtual_fat::flush_pending();
   (void) USBD_Stop(&usb_device);
   (void) USBD_DeInit(&usb_device);
   memset(&usb_device, 0, sizeof(usb_device));

@@ -1078,7 +1078,9 @@ bool remove(ProgramType type, const char* name) {
 bool rename(ProgramType type, const char* old_name, const char* new_name) {
   DiskActivity disk_activity;
   if(old_name == NULL || new_name == NULL || old_name[0] == 0 || new_name[0] == 0) return false;
-  u8 buffer[MAX_MK61_TEXT_SIZE > 700 ? MAX_MK61_TEXT_SIZE : 700];
+  // Called from the USB MSC path which may run in interrupt context; keep
+  // the large buffer off the stack.
+  static u8 buffer[MAX_MK61_TEXT_SIZE > 1024 ? MAX_MK61_TEXT_SIZE : 1024];
   u16 len = 0;
   if(type == ProgramType::MK61) {
     if(!read(type, old_name, buffer, MAX_MK61_TEXT_SIZE, &len)) return false;
