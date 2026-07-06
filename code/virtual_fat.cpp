@@ -2,6 +2,10 @@
 
 #include "program_store.hpp"
 
+#if defined(MK61_VFAT_TRACE)
+#include <stdarg.h>
+#include <stdio.h>
+#endif
 #include <string.h>
 
 namespace virtual_fat {
@@ -76,11 +80,66 @@ static PendingWrite pending_writes[MAX_PENDING_WRITES];
 static PendingDelete pending_deletes[MAX_PENDING_DELETES];
 static CachedSector write_cache[WRITE_CACHE_SECTORS];
 static LfnState root_lfn_state;
+static u32 root_lfn_next_sector = 0;
 static u8 next_cache_slot = 0;
 
+#if defined(MK61_VFAT_TRACE)
+static constexpr u8 TRACE_LINES = 96;
+static constexpr u8 TRACE_LINE_SIZE = 64;
+static constexpr u16 TRACE_FILE_CLUSTERS = 13;
+static char trace_lines[TRACE_LINES][TRACE_LINE_SIZE];
+static u16 trace_next_line;
+static u16 trace_line_count;
+
+static void tracef(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  vsnprintf(trace_lines[trace_next_line], TRACE_LINE_SIZE, format, args);
+  va_end(args);
+
+  trace_next_line = (u16) ((trace_next_line + 1) % TRACE_LINES);
+  if(trace_line_count < TRACE_LINES) trace_line_count++;
+}
+
+static bool trace_sector_is_zero(const u8* data) {
+  for(u16 i = 0; i < SECTOR_SIZE; i++) {
+    if(data[i] != 0) return false;
+  }
+  return true;
+}
+
+static u16 trace_line_index(u16 visible_index) {
+  const u16 first = (trace_line_count < TRACE_LINES) ? 0 : trace_next_line;
+  return (u16) ((first + visible_index) % TRACE_LINES);
+}
+
+#else
+static void tracef(const char*, ...) {}
+static bool trace_sector_is_zero(const u8*) { return false; }
+#endif
+
 static u16 clusters_for_len(u16 len) {
-  const u16 clusters = (u16) ((len + SECTOR_SIZE - 1) / SECTOR_SIZE);
-  return (clusters == 0) ? 1 : clusters;
+  return (u16) ((len + SECTOR_SIZE - 1) / SECTOR_SIZE);
+}
+
+static u16 trace_cluster_count(void) {
+#if defined(MK61_VFAT_TRACE)
+  return TRACE_FILE_CLUSTERS;
+#else
+  return 0;
+#endif
+}
+
+static u16 first_program_cluster(void) {
+  return (u16) (FIRST_DATA_CLUSTER + trace_cluster_count());
+}
+
+static int first_program_dir_index(void) {
+#if defined(MK61_VFAT_TRACE)
+  return 2;
+#else
+  return 1;
+#endif
 }
 
 static int file_count(void) {
@@ -104,7 +163,7 @@ static bool file_entry(int flat_index, program_store::Entry& out) {
 }
 
 static u16 data_cluster_count(void) {
-  u16 clusters = 0;
+  u16 clusters = trace_cluster_count();
   const int count = file_count();
   for(int i = 0; i < count; i++) {
     program_store::Entry entry;
@@ -214,7 +273,7 @@ static void read_boot_sector(u8* out) {
 static bool cluster_info(u16 cluster, program_store::Entry& out, u16& start_cluster) {
   if(cluster < FIRST_DATA_CLUSTER) return false;
 
-  u16 current = FIRST_DATA_CLUSTER;
+  u16 current = first_program_cluster();
   const int count = file_count();
   for(int i = 0; i < count; i++) {
     program_store::Entry entry;
@@ -244,6 +303,13 @@ static PendingWrite* pending_for_cluster(u16 cluster) {
 static u16 fat_value(u16 cluster) {
   if(cluster == 0) return (u16) (0xFF0 | MEDIA_DESCRIPTOR);
   if(cluster == 1) return CLUSTER_EOF;
+
+#if defined(MK61_VFAT_TRACE)
+  const u16 trace_clusters = trace_cluster_count();
+  if(cluster >= FIRST_DATA_CLUSTER && cluster < (u16) (FIRST_DATA_CLUSTER + trace_clusters)) {
+    return (cluster + 1 >= (u16) (FIRST_DATA_CLUSTER + trace_clusters)) ? CLUSTER_EOF : (u16) (cluster + 1);
+  }
+#endif
 
   program_store::Entry entry;
   u16 start_cluster = 0;
@@ -296,27 +362,70 @@ static char safe_name_char(char c) {
   return 0;
 }
 
-static void fill_83_name(const program_store::Entry& entry, int flat_index, u8* out) {
+static char short_alias_digit(u16 value) {
+  value = (u16) (value % 36);
+  return (value < 10) ? (char) ('0' + value) : (char) ('A' + value - 10);
+}
+
+static bool name_is_83_compatible(const char* name) {
+  if(name == NULL || name[0] == 0) return false;
+
+  u8 len = 0;
+  while(len < program_store::NAME_SIZE && name[len] != 0) {
+    if(len >= 8) return false;
+    if(safe_name_char(name[len]) != name[len]) return false;
+    len++;
+  }
+
+  return len != 0 && len < program_store::NAME_SIZE;
+}
+
+static bool needs_lfn(const char* name) {
+  return name != NULL && name[0] != 0 && !name_is_83_compatible(name);
+}
+
+static void fill_short_name(const char* name, program_store::ProgramType type, int unique_index, u8* out) {
   memset(out, ' ', 11);
-  u8 pos = 0;
-  for(u8 i = 0; entry.name[i] != 0 && pos < 8; i++) {
-    const char c = safe_name_char(entry.name[i]);
-    if(c != 0) out[pos++] = (u8) c;
+  const bool alias = needs_lfn(name);
+
+  if(alias) {
+    u8 pos = 0;
+    for(u8 i = 0; i < program_store::NAME_SIZE - 1 && name[i] != 0 && pos < 5; i++) {
+      const char c = safe_name_char(name[i]);
+      if(c != 0) out[pos++] = (u8) c;
+    }
+    if(pos == 0) out[pos++] = 'P';
+    while(pos < 5) out[pos++] = '_';
+
+    const u16 suffix = (unique_index < 0) ? 0 : (u16) ((u32) unique_index % (36UL * 36UL));
+    out[5] = '~';
+    out[6] = (u8) short_alias_digit((u16) (suffix / 36));
+    out[7] = (u8) short_alias_digit((u16) (suffix % 36));
+  } else {
+    u8 pos = 0;
+    for(u8 i = 0; i < program_store::NAME_SIZE - 1 && name[i] != 0 && pos < 8; i++) {
+      const char c = safe_name_char(name[i]);
+      if(c != 0) out[pos++] = (u8) c;
+    }
+
+    if(pos == 0) {
+      out[0] = 'P';
+      out[1] = (u8) ('0' + ((unique_index / 100) % 10));
+      out[2] = (u8) ('0' + ((unique_index / 10) % 10));
+      out[3] = (u8) ('0' + (unique_index % 10));
+    }
   }
 
-  if(pos == 0) {
-    out[0] = 'P';
-    out[1] = (u8) ('0' + ((flat_index / 100) % 10));
-    out[2] = (u8) ('0' + ((flat_index / 10) % 10));
-    out[3] = (u8) ('0' + (flat_index % 10));
-  }
+  memcpy(out + 8, extension_for_type(type), 3);
+}
 
-  memcpy(out + 8, extension_for_type(entry.type), 3);
+static void fill_83_name(const program_store::Entry& entry, int flat_index, u8* out) {
+  fill_short_name(entry.name, entry.type, flat_index, out);
 }
 
 static void format_full_name(program_store::ProgramType type, const char* name, char* out) {
   u8 pos = 0;
-  while(name[pos] != 0 && pos < program_store::NAME_SIZE - 1) {
+  while(pos < program_store::NAME_SIZE - 1 && name[pos] != 0) {
     out[pos] = name[pos];
     pos++;
   }
@@ -328,15 +437,9 @@ static void format_full_name(program_store::ProgramType type, const char* name, 
   out[pos] = 0;
 }
 
-static bool needs_lfn(const char* name) {
-  u8 len = 0;
-  while(name[len] != 0 && len < program_store::NAME_SIZE) len++;
-  return len > 8;
-}
-
 static u8 lfn_count_for_name(const char* full_name) {
   u8 len = 0;
-  while(full_name[len] != 0 && len < MAX_LFN_CHARS) len++;
+  while(len < MAX_LFN_CHARS && full_name[len] != 0) len++;
   return (u8) ((len + 12) / 13);
 }
 
@@ -358,7 +461,7 @@ static void fill_lfn_entry(u8* out, const char* full_name, u8 sequence, u8 total
   out[27] = 0;
 
   u8 len = 0;
-  while(full_name[len] != 0 && len < MAX_LFN_CHARS) len++;
+  while(len < MAX_LFN_CHARS && full_name[len] != 0) len++;
 
   const u8 base = (u8) ((sequence - 1) * 13);
   for(u8 i = 0; i < 13; i++) {
@@ -371,7 +474,7 @@ static void fill_lfn_entry(u8* out, const char* full_name, u8 sequence, u8 total
 }
 
 static u16 start_cluster_for_file(int flat_index) {
-  u16 cluster = FIRST_DATA_CLUSTER;
+  u16 cluster = first_program_cluster();
   for(int i = 0; i < flat_index; i++) {
     program_store::Entry entry;
     if(file_entry(i, entry)) cluster = (u16) (cluster + clusters_for_len(entry.data_len));
@@ -384,42 +487,69 @@ static void fill_dir_entry(u8* out, const program_store::Entry& entry, int flat_
   out[11] = FAT_ATTR_ARCHIVE;
   put_le16(out, 22, 0);
   put_le16(out, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 6));
-  put_le16(out, 26, start_cluster_for_file(flat_index));
+  put_le16(out, 26, entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index));
   put_le32(out, 28, entry.data_len);
 }
 
-static void fill_pending_name(const PendingWrite& pending, u8* out) {
-  memset(out, ' ', 11);
-  u8 pos = 0;
-  while(pending.name[pos] != 0 && pos < 8) {
-    out[pos] = (u8) pending.name[pos];
-    pos++;
+#if defined(MK61_VFAT_TRACE)
+static void fill_trace_dir_entry(u8* out) {
+  memcpy(out, "VFAT    LOG", 11);
+  out[11] = FAT_ATTR_ARCHIVE;
+  put_le16(out, 22, 0);
+  put_le16(out, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 6));
+  put_le16(out, 26, FIRST_DATA_CLUSTER);
+  put_le32(out, 28, (u32) TRACE_FILE_CLUSTERS * SECTOR_SIZE);
+}
+
+static bool trace_cluster(u16 cluster) {
+  const u16 clusters = trace_cluster_count();
+  return cluster >= FIRST_DATA_CLUSTER && cluster < (u16) (FIRST_DATA_CLUSTER + clusters);
+}
+
+static bool read_trace_data_sector(u16 cluster, u8* out) {
+  memset(out, ' ', SECTOR_SIZE);
+  if(!trace_cluster(cluster)) return false;
+
+  const u32 sector_start = (u32) (cluster - FIRST_DATA_CLUSTER) * SECTOR_SIZE;
+  u32 source_pos = 0;
+  u16 written = 0;
+
+  for(u16 i = 0; i < trace_line_count && written < SECTOR_SIZE; i++) {
+    const char* line = trace_lines[trace_line_index(i)];
+    const u16 line_len = (u16) strlen(line);
+    for(u16 j = 0; j < line_len && written < SECTOR_SIZE; j++) {
+      if(source_pos >= sector_start) out[written++] = (u8) line[j];
+      source_pos++;
+    }
+    if(source_pos >= sector_start && written < SECTOR_SIZE) out[written++] = '\r';
+    source_pos++;
+    if(source_pos >= sector_start && written < SECTOR_SIZE) out[written++] = '\n';
+    source_pos++;
   }
 
-  memcpy(out + 8, extension_for_type(pending.type), 3);
+  return true;
+}
+#else
+static bool trace_cluster(u16) { return false; }
+static bool read_trace_data_sector(u16, u8*) { return false; }
+#endif
+
+static void fill_pending_name(const PendingWrite& pending, int unique_index, u8* out) {
+  fill_short_name(pending.name, pending.type, unique_index, out);
 }
 
 static bool pending_visible(const PendingWrite& pending) {
   return pending.used && pending.name[0] != 0;
 }
 
-static PendingWrite* pending_entry(int index) {
-  int seen = 0;
-  for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    if(!pending_visible(pending_writes[i])) continue;
-    if(seen++ == index) return &pending_writes[i];
-  }
-  return NULL;
-}
-
 static bool entry_is_pending_delete(const program_store::Entry& entry);
 
-static void fill_pending_dir_entry(u8* out, const PendingWrite& pending) {
-  fill_pending_name(pending, out);
+static void fill_pending_dir_entry(u8* out, const PendingWrite& pending, int unique_index) {
+  fill_pending_name(pending, unique_index, out);
   out[11] = FAT_ATTR_ARCHIVE;
   put_le16(out, 22, 0);
   put_le16(out, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 6));
-  put_le16(out, 26, pending.start_cluster);
+  put_le16(out, 26, pending.data_len == 0 ? 0 : pending.start_cluster);
   put_le32(out, 28, pending.data_len);
 }
 
@@ -446,17 +576,17 @@ static void render_committed_dir_entry(u8* out, const program_store::Entry& entr
   fill_lfn_entry(out, full_name, sequence, lfn_count, short_name_checksum(short_name));
 }
 
-static void render_pending_dir_entry(u8* out, const PendingWrite& pending, u8 offset) {
+static void render_pending_dir_entry(u8* out, const PendingWrite& pending, int unique_index, u8 offset) {
   const u8 entries = dir_entries_for_name(pending.name, pending.type);
   if(entries == 1 || offset + 1 == entries) {
-    fill_pending_dir_entry(out, pending);
+    fill_pending_dir_entry(out, pending, unique_index);
     return;
   }
 
   char full_name[MAX_LFN_CHARS + 1];
   u8 short_name[11];
   format_full_name(pending.type, pending.name, full_name);
-  fill_pending_name(pending, short_name);
+  fill_pending_name(pending, unique_index, short_name);
   const u8 lfn_count = (u8) (entries - 1);
   const u8 sequence = (u8) (lfn_count - offset);
   fill_lfn_entry(out, full_name, sequence, lfn_count, short_name_checksum(short_name));
@@ -477,7 +607,14 @@ static void read_root_sector(u32 root_sector, u8* out) {
       continue;
     }
 
-    int cursor = 1;
+#if defined(MK61_VFAT_TRACE)
+    if(dir_index == 1) {
+      fill_trace_dir_entry(item);
+      continue;
+    }
+#endif
+
+    int cursor = first_program_dir_index();
     bool rendered = false;
     for(int file_index = 0; file_index < committed_files; file_index++) {
       program_store::Entry entry;
@@ -497,7 +634,7 @@ static void read_root_sector(u32 root_sector, u8* out) {
       if(!pending_visible(pending)) continue;
       const u8 entries = dir_entries_for_name(pending.name, pending.type);
       if(dir_index >= cursor && dir_index < cursor + entries) {
-        render_pending_dir_entry(item, pending, (u8) (dir_index - cursor));
+        render_pending_dir_entry(item, pending, committed_files + pending_index, (u8) (dir_index - cursor));
         break;
       }
       cursor += entries;
@@ -516,6 +653,8 @@ static bool read_data_sector(u32 data_sector, u8* out) {
   memset(out, 0, SECTOR_SIZE);
   const u16 cluster = (u16) (data_sector + FIRST_DATA_CLUSTER);
 
+  if(read_trace_data_sector(cluster, out)) return true;
+
   CachedSector* cached = cached_sector(cluster);
   if(cached != NULL) {
     memcpy(out, cached->data, SECTOR_SIZE);
@@ -531,6 +670,31 @@ static bool read_data_sector(u32 data_sector, u8* out) {
   if(!program_store::read_range(entry.type, entry.name, file_offset, out, SECTOR_SIZE, &copied)) return false;
   if(copied < SECTOR_SIZE) memset(out + copied, 0, SECTOR_SIZE - copied);
   return true;
+}
+
+static bool write_committed_data_sector(u16 cluster, const u8* data) {
+  program_store::Entry entry;
+  u16 start_cluster = 0;
+  if(!cluster_info(cluster, entry, start_cluster)) return true;
+  if(entry.data_len > MAX_IMPORTED_LEN) {
+    tracef("UPDATE reject %s.%s len=%u", entry.name, extension_for_type(entry.type), entry.data_len);
+    return false;
+  }
+
+  const u16 file_offset = (u16) ((cluster - start_cluster) * SECTOR_SIZE);
+  if(file_offset >= entry.data_len) return true;
+
+  u8 file_data[MAX_IMPORTED_LEN];
+  u16 stored_len = 0;
+  if(!program_store::read(entry.type, entry.name, file_data, sizeof(file_data), &stored_len)) return false;
+  if(stored_len < entry.data_len) memset(file_data + stored_len, 0, (u16) (entry.data_len - stored_len));
+
+  const u16 remaining = (u16) (entry.data_len - file_offset);
+  const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
+  memcpy(file_data + file_offset, data, copy_len);
+
+  tracef("UPDATE %s.%s c=%u off=%u len=%u %s", entry.name, extension_for_type(entry.type), cluster, file_offset, copy_len, trace_sector_is_zero(data) ? "zero" : "data");
+  return program_store::write(entry.type, entry.name, file_data, entry.data_len);
 }
 
 static u16 max_len_for_type(program_store::ProgramType type) {
@@ -581,7 +745,7 @@ static bool parse_extension(const u8* ext, program_store::ProgramType& type) {
 static bool parse_lfn_filename(const char* full_name, ParsedDirEntry& parsed) {
   int dot = -1;
   int len = 0;
-  while(full_name[len] != 0 && len <= (int) MAX_LFN_CHARS) {
+  while(len <= (int) MAX_LFN_CHARS && full_name[len] != 0) {
     if(full_name[len] == '.') dot = len;
     len++;
   }
@@ -634,12 +798,13 @@ static bool parse_dir_entry(const u8* item, const char* lfn_name, ParsedDirEntry
   if(len > max_len_for_type(parsed.type)) return false;
   parsed.data_len = (u16) len;
   parsed.start_cluster = get_le16(item, 26);
-  if(parsed.data_len != 0 && parsed.start_cluster < FIRST_DATA_CLUSTER) return false;
+  if(parsed.data_len == 0) parsed.start_cluster = 0;
+  else if(parsed.start_cluster < FIRST_DATA_CLUSTER) return false;
   return true;
 }
 
 static bool committed_short_entry_at_dir_index(int dir_index, program_store::Entry& entry, int& flat_index) {
-  int cursor = 1;
+  int cursor = first_program_dir_index();
   const int committed_files = file_count();
   for(int i = 0; i < committed_files; i++) {
     program_store::Entry current;
@@ -677,7 +842,8 @@ static PendingDelete* allocate_pending_delete(void) {
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
     if(!pending_deletes[i].used) return &pending_deletes[i];
   }
-  return &pending_deletes[0];
+  tracef("DELETE queue full");
+  return NULL;
 }
 
 static bool entry_is_pending_delete(const program_store::Entry& entry) {
@@ -688,23 +854,27 @@ static void clear_pending_delete(PendingDelete* pending) {
   if(pending != NULL) memset(pending, 0, sizeof(*pending));
 }
 
-static void mark_pending_delete(const program_store::Entry& entry, int flat_index) {
+static bool mark_pending_delete(const program_store::Entry& entry, int flat_index) {
   PendingDelete* pending = find_pending_delete(entry.type, entry.name);
   if(pending == NULL) pending = allocate_pending_delete();
+  if(pending == NULL) return false;
 
   memset(pending, 0, sizeof(*pending));
   pending->used = true;
   pending->type = entry.type;
   strncpy(pending->name, entry.name, program_store::NAME_SIZE - 1);
   pending->name[program_store::NAME_SIZE - 1] = 0;
-  pending->start_cluster = start_cluster_for_file(flat_index);
+  pending->start_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index);
   pending->data_len = entry.data_len;
+  tracef("DELETE? %s.%s c=%u len=%u", pending->name, extension_for_type(pending->type), pending->start_cluster, pending->data_len);
+  return true;
 }
 
 static bool committed_entry_matches_dir(const program_store::Entry& entry, int flat_index, const ParsedDirEntry& parsed) {
+  const u16 expected_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index);
   return entry.type == parsed.type &&
          entry.data_len == parsed.data_len &&
-         start_cluster_for_file(flat_index) == parsed.start_cluster;
+         expected_cluster == parsed.start_cluster;
 }
 
 static bool generated_dir_entry_matches(int dir_index, const u8* item) {
@@ -715,8 +885,31 @@ static bool generated_dir_entry_matches(int dir_index, const u8* item) {
   u8 name[11];
   fill_83_name(entry, file_index, name);
   if(memcmp(name, item, 11) != 0) return false;
-  if(get_le16(item, 26) != start_cluster_for_file(file_index)) return false;
+  const u16 expected_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(file_index);
+  if(get_le16(item, 26) != expected_cluster) return false;
   return get_le32(item, 28) == entry.data_len;
+}
+
+static bool parse_generated_dir_entry(int dir_index, const u8* item, ParsedDirEntry& parsed) {
+  program_store::Entry entry;
+  int file_index = 0;
+  if(!committed_short_entry_at_dir_index(dir_index, entry, file_index)) return false;
+
+  u8 name[11];
+  fill_83_name(entry, file_index, name);
+  if(memcmp(name, item, 11) != 0) return false;
+
+  const u32 len = get_le32(item, 28);
+  if(len > max_len_for_type(entry.type)) return false;
+
+  parsed.type = entry.type;
+  strncpy(parsed.name, entry.name, program_store::NAME_SIZE - 1);
+  parsed.name[program_store::NAME_SIZE - 1] = 0;
+  parsed.data_len = (u16) len;
+  parsed.start_cluster = get_le16(item, 26);
+  if(parsed.data_len == 0) parsed.start_cluster = 0;
+  else if(parsed.start_cluster < FIRST_DATA_CLUSTER) return false;
+  return true;
 }
 
 static PendingWrite* find_pending(program_store::ProgramType type, const char* name) {
@@ -732,7 +925,8 @@ static PendingWrite* allocate_pending(void) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
     if(!pending_writes[i].used) return &pending_writes[i];
   }
-  return &pending_writes[0];
+  tracef("WRITE queue full");
+  return NULL;
 }
 
 static bool pending_has_all_data(const PendingWrite& pending) {
@@ -746,6 +940,7 @@ static bool pending_has_all_data(const PendingWrite& pending) {
 
 static bool try_commit_pending(PendingWrite& pending) {
   if(!pending.used || !pending_has_all_data(pending)) return true;
+  tracef("COMMIT %s.%s c=%u len=%u mask=%02X", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len, pending.sectors_seen);
   if(!program_store::write(pending.type, pending.name, pending.data, pending.data_len)) return false;
   memset(&pending, 0, sizeof(pending));
   return true;
@@ -777,18 +972,26 @@ static bool cache_has_all_data(u16 start_cluster, u16 data_len) {
 }
 
 bool flush_pending(void) {
+  tracef("SYNC");
   bool ok = true;
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
     PendingWrite& pending = pending_writes[i];
     if(!pending.used) continue;
     seed_pending_from_cache(pending);
-    if(!pending_has_all_data(pending)) continue;
+    if(!pending_has_all_data(pending)) {
+      tracef("SYNC incomplete %s.%s c=%u len=%u mask=%02X", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len, pending.sectors_seen);
+      ok = false;
+      continue;
+    }
     if(!try_commit_pending(pending)) ok = false;
   }
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
     PendingDelete& pending = pending_deletes[i];
     if(!pending.used) continue;
-    if(program_store::exists(pending.type, pending.name) && !program_store::remove(pending.type, pending.name)) ok = false;
+    if(program_store::exists(pending.type, pending.name) && !program_store::remove(pending.type, pending.name)) {
+      ok = false;
+      continue;
+    }
     memset(&pending, 0, sizeof(pending));
   }
   return ok;
@@ -796,6 +999,7 @@ bool flush_pending(void) {
 
 static bool rename_committed_entry(const ParsedDirEntry& parsed, const char* old_name) {
   if(strncmp(old_name, parsed.name, program_store::NAME_SIZE) == 0) return true;
+  tracef("RENAME %s.%s -> %s.%s", old_name, extension_for_type(parsed.type), parsed.name, extension_for_type(parsed.type));
   return program_store::rename(parsed.type, old_name, parsed.name);
 }
 
@@ -825,6 +1029,11 @@ static bool try_rename_pending_delete(const ParsedDirEntry& parsed) {
 }
 
 static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
+  if(parsed.data_len > MAX_IMPORTED_LEN) {
+    tracef("DIR reject %s.%s len=%u", parsed.name, extension_for_type(parsed.type), parsed.data_len);
+    return false;
+  }
+
   const bool has_new_data = parsed.data_len != 0 && cache_has_all_data(parsed.start_cluster, parsed.data_len);
   if(!has_new_data) {
     if(try_rename_existing_entry(dir_index, parsed)) return true;
@@ -833,6 +1042,7 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
 
   PendingWrite* pending = find_pending(parsed.type, parsed.name);
   if(pending == NULL) pending = allocate_pending();
+  if(pending == NULL) return false;
 
   memset(pending, 0, sizeof(*pending));
   pending->used = true;
@@ -845,10 +1055,11 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
   return try_commit_pending(*pending);
 }
 
-static void remove_existing_dir_slot(int dir_index) {
+static bool remove_existing_dir_slot(int dir_index) {
   program_store::Entry entry;
   int file_index = 0;
-  if(committed_short_entry_at_dir_index(dir_index, entry, file_index)) mark_pending_delete(entry, file_index);
+  if(committed_short_entry_at_dir_index(dir_index, entry, file_index)) return mark_pending_delete(entry, file_index);
+  return true;
 }
 
 static void reset_lfn_state(LfnState& lfn) {
@@ -905,7 +1116,8 @@ static const char* accepted_lfn_name(const LfnState& lfn, const u8* short_entry)
 static bool write_root_sector(u32 root_sector, const u8* data) {
   const int first_entry = (int) (root_sector * (SECTOR_SIZE / 32));
   LfnState& lfn = root_lfn_state;
-  if(root_sector == 0) reset_lfn_state(lfn);
+  if(root_sector == 0 || !lfn.active || root_sector != root_lfn_next_sector) reset_lfn_state(lfn);
+  root_lfn_next_sector = 0;
 
   for(int i = 0; i < (SECTOR_SIZE / 32); i++) {
     const int dir_index = first_entry + i;
@@ -925,7 +1137,7 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
     }
 
     if(first == 0xE5) {
-      remove_existing_dir_slot(dir_index);
+      if(!remove_existing_dir_slot(dir_index)) return false;
       reset_lfn_state(lfn);
       continue;
     }
@@ -951,16 +1163,24 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
     }
 
     ParsedDirEntry parsed;
-    const bool parsed_ok = parse_dir_entry(item, lfn_name, parsed);
+    bool parsed_ok = parse_dir_entry(item, lfn_name, parsed);
+    if(!parsed_ok && lfn_name == NULL) parsed_ok = parse_generated_dir_entry(dir_index, item, parsed);
     reset_lfn_state(lfn);
     if(!parsed_ok) continue;
+    tracef("DIR %d %s.%s c=%u len=%u", dir_index, parsed.name, extension_for_type(parsed.type), parsed.start_cluster, parsed.data_len);
     if(!upsert_pending(parsed, dir_index)) return false;
   }
 
+  if(lfn.active && lfn.valid) {
+    root_lfn_next_sector = root_sector + 1;
+  } else if(lfn.active) {
+    reset_lfn_state(lfn);
+  }
   return true;
 }
 
 static void cache_data_sector(u16 cluster, const u8* data) {
+  tracef("DATA c=%u %s", cluster, trace_sector_is_zero(data) ? "zero" : "data");
   CachedSector* cached = cached_sector(cluster);
   if(cached == NULL) {
     cached = &write_cache[next_cache_slot];
@@ -973,13 +1193,17 @@ static void cache_data_sector(u16 cluster, const u8* data) {
 
 static bool write_data_sector(u32 data_sector, const u8* data) {
   const u16 cluster = (u16) (data_sector + FIRST_DATA_CLUSTER);
+  if(trace_cluster(cluster)) return true;
   cache_data_sector(cluster, data);
 
   PendingWrite* pending = pending_for_cluster(cluster);
-  if(pending == NULL) return true;
+  if(pending == NULL) return write_committed_data_sector(cluster, data);
 
   const u16 sector_index = (u16) (cluster - pending->start_cluster);
-  if(sector_index >= 8) return true;
+  if(sector_index >= 8) {
+    tracef("DATA reject c=%u sector=%u", cluster, sector_index);
+    return false;
+  }
   const u16 offset = (u16) (sector_index * SECTOR_SIZE);
   const u16 remaining = (pending->data_len > offset) ? (u16) (pending->data_len - offset) : 0;
   const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
