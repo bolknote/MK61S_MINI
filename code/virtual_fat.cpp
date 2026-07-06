@@ -20,7 +20,8 @@ static constexpr u16 MAX_IMPORTED_LEN = 640;
 static constexpr u16 MAX_LFN_CHARS = program_store::NAME_SIZE + 3;
 static constexpr u8 MAX_PENDING_WRITES = 3;
 static constexpr u8 MAX_PENDING_DELETES = 3;
-static constexpr u8 WRITE_CACHE_SECTORS = 6;
+static constexpr u8 WRITE_CACHE_SECTORS = 10;
+static constexpr u8 IGNORED_WRITE_RANGES = 4;
 static constexpr u8 FAT_ATTR_VOLUME = 0x08;
 static constexpr u8 FAT_ATTR_DIRECTORY = 0x10;
 static constexpr u8 FAT_ATTR_ARCHIVE = 0x20;
@@ -56,6 +57,12 @@ struct CachedSector {
   u8 data[SECTOR_SIZE];
 };
 
+struct IgnoredWriteRange {
+  bool used;
+  u16 start_cluster;
+  u16 clusters;
+};
+
 struct ParsedDirEntry {
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
@@ -75,12 +82,20 @@ struct LfnState {
 static PendingWrite pending_writes[MAX_PENDING_WRITES];
 static PendingDelete pending_deletes[MAX_PENDING_DELETES];
 static CachedSector write_cache[WRITE_CACHE_SECTORS];
+static IgnoredWriteRange ignored_ranges[IGNORED_WRITE_RANGES];
 static LfnState root_lfn_state;
 static u8 next_cache_slot = 0;
+static u8 next_ignored_slot = 0;
+
+static bool sector_is_zero(const u8* data) {
+  for(u16 i = 0; i < SECTOR_SIZE; i++) {
+    if(data[i] != 0) return false;
+  }
+  return true;
+}
 
 static u16 clusters_for_len(u16 len) {
-  const u16 clusters = (u16) ((len + SECTOR_SIZE - 1) / SECTOR_SIZE);
-  return (clusters == 0) ? 1 : clusters;
+  return (u16) ((len + SECTOR_SIZE - 1) / SECTOR_SIZE);
 }
 
 static int file_count(void) {
@@ -229,6 +244,12 @@ static bool cluster_info(u16 cluster, program_store::Entry& out, u16& start_clus
   }
 
   return false;
+}
+
+static bool committed_cluster(u16 cluster) {
+  program_store::Entry entry;
+  u16 start_cluster = 0;
+  return cluster_info(cluster, entry, start_cluster);
 }
 
 static PendingWrite* pending_for_cluster(u16 cluster) {
@@ -384,7 +405,7 @@ static void fill_dir_entry(u8* out, const program_store::Entry& entry, int flat_
   out[11] = FAT_ATTR_ARCHIVE;
   put_le16(out, 22, 0);
   put_le16(out, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 6));
-  put_le16(out, 26, start_cluster_for_file(flat_index));
+  put_le16(out, 26, entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index));
   put_le32(out, 28, entry.data_len);
 }
 
@@ -419,7 +440,7 @@ static void fill_pending_dir_entry(u8* out, const PendingWrite& pending) {
   out[11] = FAT_ATTR_ARCHIVE;
   put_le16(out, 22, 0);
   put_le16(out, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 6));
-  put_le16(out, 26, pending.start_cluster);
+  put_le16(out, 26, pending.data_len == 0 ? 0 : pending.start_cluster);
   put_le32(out, 28, pending.data_len);
 }
 
@@ -531,6 +552,26 @@ static bool read_data_sector(u32 data_sector, u8* out) {
   if(!program_store::read_range(entry.type, entry.name, file_offset, out, SECTOR_SIZE, &copied)) return false;
   if(copied < SECTOR_SIZE) memset(out + copied, 0, SECTOR_SIZE - copied);
   return true;
+}
+
+static bool write_committed_data_sector(u16 cluster, const u8* data) {
+  program_store::Entry entry;
+  u16 start_cluster = 0;
+  if(!cluster_info(cluster, entry, start_cluster)) return true;
+
+  const u16 file_offset = (u16) ((cluster - start_cluster) * SECTOR_SIZE);
+  if(file_offset >= entry.data_len) return true;
+
+  u8 file_data[MAX_IMPORTED_LEN];
+  u16 stored_len = 0;
+  if(!program_store::read(entry.type, entry.name, file_data, sizeof(file_data), &stored_len)) return false;
+  if(stored_len < entry.data_len) memset(file_data + stored_len, 0, (u16) (entry.data_len - stored_len));
+
+  const u16 remaining = (u16) (entry.data_len - file_offset);
+  const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
+  memcpy(file_data + file_offset, data, copy_len);
+
+  return program_store::write(entry.type, entry.name, file_data, entry.data_len);
 }
 
 static u16 max_len_for_type(program_store::ProgramType type) {
@@ -697,14 +738,15 @@ static void mark_pending_delete(const program_store::Entry& entry, int flat_inde
   pending->type = entry.type;
   strncpy(pending->name, entry.name, program_store::NAME_SIZE - 1);
   pending->name[program_store::NAME_SIZE - 1] = 0;
-  pending->start_cluster = start_cluster_for_file(flat_index);
+  pending->start_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index);
   pending->data_len = entry.data_len;
 }
 
 static bool committed_entry_matches_dir(const program_store::Entry& entry, int flat_index, const ParsedDirEntry& parsed) {
+  const u16 expected_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index);
   return entry.type == parsed.type &&
          entry.data_len == parsed.data_len &&
-         start_cluster_for_file(flat_index) == parsed.start_cluster;
+         expected_cluster == parsed.start_cluster;
 }
 
 static bool generated_dir_entry_matches(int dir_index, const u8* item) {
@@ -715,7 +757,8 @@ static bool generated_dir_entry_matches(int dir_index, const u8* item) {
   u8 name[11];
   fill_83_name(entry, file_index, name);
   if(memcmp(name, item, 11) != 0) return false;
-  if(get_le16(item, 26) != start_cluster_for_file(file_index)) return false;
+  const u16 expected_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(file_index);
+  if(get_le16(item, 26) != expected_cluster) return false;
   return get_le32(item, 28) == entry.data_len;
 }
 
@@ -776,6 +819,75 @@ static bool cache_has_all_data(u16 start_cluster, u16 data_len) {
   return true;
 }
 
+static bool ranges_overlap(u16 start_a, u16 clusters_a, u16 start_b, u16 clusters_b) {
+  if(clusters_a == 0 || clusters_b == 0) return false;
+  const u16 end_a = (u16) (start_a + clusters_a);
+  const u16 end_b = (u16) (start_b + clusters_b);
+  return start_a < end_b && start_b < end_a;
+}
+
+static void forget_cached_range(u16 start_cluster, u16 clusters) {
+  if(clusters == 0) return;
+  for(u8 i = 0; i < WRITE_CACHE_SECTORS; i++) {
+    CachedSector& cached = write_cache[i];
+    if(!cached.used) continue;
+    if(cached.cluster >= start_cluster && cached.cluster < (u16) (start_cluster + clusters)) cached.used = false;
+  }
+}
+
+static bool ignored_cluster(u16 cluster) {
+  for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
+    const IgnoredWriteRange& range = ignored_ranges[i];
+    if(!range.used) continue;
+    if(cluster >= range.start_cluster && cluster < (u16) (range.start_cluster + range.clusters)) return true;
+  }
+  return false;
+}
+
+static void clear_ignored_range(u16 start_cluster, u16 data_len) {
+  if(data_len == 0 || start_cluster < FIRST_DATA_CLUSTER) return;
+  const u16 clusters = clusters_for_len(data_len);
+  for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
+    IgnoredWriteRange& range = ignored_ranges[i];
+    if(!range.used) continue;
+    if(ranges_overlap(start_cluster, clusters, range.start_cluster, range.clusters)) range.used = false;
+  }
+}
+
+static void ignore_write_range(u16 start_cluster, u32 data_len) {
+  if(data_len == 0 || start_cluster < FIRST_DATA_CLUSTER) return;
+  if(data_len > (u32) DATA_CLUSTER_CAPACITY * SECTOR_SIZE) return;
+
+  const u16 clusters = (u16) ((data_len + SECTOR_SIZE - 1) / SECTOR_SIZE);
+  if(clusters == 0) return;
+
+  IgnoredWriteRange* range = NULL;
+  for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
+    if(!ignored_ranges[i].used) {
+      range = &ignored_ranges[i];
+      break;
+    }
+  }
+  if(range == NULL) {
+    range = &ignored_ranges[next_ignored_slot];
+    next_ignored_slot = (u8) ((next_ignored_slot + 1) % IGNORED_WRITE_RANGES);
+  }
+
+  range->used = true;
+  range->start_cluster = start_cluster;
+  range->clusters = clusters;
+  forget_cached_range(start_cluster, clusters);
+}
+
+static void ignore_dir_entry_range(const u8* item) {
+  ignore_write_range(get_le16(item, 26), get_le32(item, 28));
+}
+
+static void clear_ignored_ranges(void) {
+  memset(ignored_ranges, 0, sizeof(ignored_ranges));
+  next_ignored_slot = 0;
+}
+
 bool flush_pending(void) {
   bool ok = true;
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
@@ -791,6 +903,7 @@ bool flush_pending(void) {
     if(program_store::exists(pending.type, pending.name) && !program_store::remove(pending.type, pending.name)) ok = false;
     memset(&pending, 0, sizeof(pending));
   }
+  clear_ignored_ranges();
   return ok;
 }
 
@@ -942,6 +1055,7 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
       continue;
     }
     if(has_lfn && lfn_name == NULL) {
+      ignore_dir_entry_range(item);
       reset_lfn_state(lfn);
       continue;
     }
@@ -953,7 +1067,11 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
     ParsedDirEntry parsed;
     const bool parsed_ok = parse_dir_entry(item, lfn_name, parsed);
     reset_lfn_state(lfn);
-    if(!parsed_ok) continue;
+    if(!parsed_ok) {
+      ignore_dir_entry_range(item);
+      continue;
+    }
+    clear_ignored_range(parsed.start_cluster, parsed.data_len);
     if(!upsert_pending(parsed, dir_index)) return false;
   }
 
@@ -973,10 +1091,24 @@ static void cache_data_sector(u16 cluster, const u8* data) {
 
 static bool write_data_sector(u32 data_sector, const u8* data) {
   const u16 cluster = (u16) (data_sector + FIRST_DATA_CLUSTER);
-  cache_data_sector(cluster, data);
 
   PendingWrite* pending = pending_for_cluster(cluster);
-  if(pending == NULL) return true;
+  if(pending == NULL) {
+    if(committed_cluster(cluster)) {
+      cache_data_sector(cluster, data);
+      return write_committed_data_sector(cluster, data);
+    }
+    if(ignored_cluster(cluster)) {
+      return true;
+    }
+    if(sector_is_zero(data)) {
+      return true;
+    }
+    cache_data_sector(cluster, data);
+    return true;
+  }
+
+  cache_data_sector(cluster, data);
 
   const u16 sector_index = (u16) (cluster - pending->start_cluster);
   if(sector_index >= 8) return true;
