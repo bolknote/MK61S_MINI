@@ -39,6 +39,7 @@ extern bool TurnSpeed(void);
 extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
 extern bool TurnUsbDisk(void);
+extern bool ResetDevice(void);
 
 namespace library_mk61 {
   extern  const int       COUNT_PUNCTS;
