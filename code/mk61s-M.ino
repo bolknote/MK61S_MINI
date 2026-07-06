@@ -217,7 +217,7 @@ void setup() {
     }
     delay(2000/16);
   }
-  sound(PIN_BUZZER, 300, 200);
+  sound(PIN_BUZZER, 300, 200, library_mk61::sound_volume());
   led::on();
   delay_with_sound_poll(1500);
   led::off();
@@ -382,7 +382,7 @@ inline void mk61_process(void) {
 inline void message_of_unuse(void) {
   // выдача трех сигналов
   for(int i=0; i<3; i++) {
-    sound(PIN_BUZZER, 4000, 200);
+    sound(PIN_BUZZER, 4000, 200, library_mk61::sound_volume());
     delay_with_sound_poll(250);
   }
 }

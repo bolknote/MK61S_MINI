@@ -355,7 +355,7 @@ bool   TurnSpeed(void) {
 }
 
 bool   TurnSoundVolume(void) {
-  sound(PIN_BUZZER, 0, 0);
+  sound_stop();
   const u8 next_volume = (library_mk61::sound_volume() >= 10) ? 0 : (library_mk61::sound_volume() + 1);
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
@@ -365,14 +365,14 @@ bool   TurnSoundVolume(void) {
 }
 
 static void ApplySoundVolume(u8 next_volume) {
-  sound(PIN_BUZZER, 0, 0);
+  sound_stop();
   const u8 volume = library_mk61::sound_volume();
   if(next_volume == volume) return;
 
   library_mk61::set_sound_volume(next_volume);
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
-  sound(PIN_BUZZER, 2500, 20);
+  sound(PIN_BUZZER, 2500, 20, library_mk61::sound_volume());
 }
 
 static void StepSoundVolume(i8 delta) {

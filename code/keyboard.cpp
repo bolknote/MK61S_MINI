@@ -248,7 +248,7 @@ isize scan(void) {
 
   dbgln(KBD, "changed ", bit_changed, ",column ", column, ",row ", row,", scan_code ", scan_code);
 
-  if(state == 0) sound(PIN_BUZZER, 140, 14);
+  if(state == 0) sound(PIN_BUZZER, 140, 14, library_mk61::sound_volume());
   cir_buff_write(scan_code);
 
   if(state == 0) {

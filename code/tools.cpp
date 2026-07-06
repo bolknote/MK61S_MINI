@@ -117,12 +117,12 @@ void delay_with_sound_poll(t_time_ms duration_ms) {
   sound_poll();
 }
 
-void  sound(usize pin, isize freq_Hz, usize duration_ms) {
-  sound(pin, freq_Hz, duration_ms, library_mk61::sound_volume());
-}
-
 void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume) {
   sound_driver_play(pin, freq_Hz, duration_ms, volume);
+}
+
+void  sound_stop(void) {
+  sound_driver_stop();
 }
 
 void message_and_waitkey(const char* lcd_message) {
@@ -264,7 +264,7 @@ bool load_from(isize address) {
   if(load_word(address, OFFSET_FLAG_OCCUPIED) != SLOT_OCCUPIED) {
     dbgln(SPIROM, "SPIFLASH: SLOT IS EMPTY ", address, "Nothing to load! canceled!");
     lcd.print(library_mk61::text(" is empty", " HET"));
-    sound(PIN_BUZZER, 4000, 750);
+    sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
     delay_with_sound_poll(1500);
     return false; // error
   }
@@ -330,7 +330,7 @@ inline bool check_empty_program(void) {
   for(usize i=0; i < program_steps; i++) all_to_or |= (usize) core_61::get_code(/*mk61s.*/core_61::get_ring_address(i));
   if(all_to_or == 0) {
     lcd.print(library_mk61::text("No program...", "HET \001PO\005PAMM"));
-    sound(PIN_BUZZER, 4000, 750);
+    sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
     delay_with_sound_poll(1500);
     return true;
   }
@@ -393,7 +393,7 @@ bool Store(void) {
       Serial.print("SPIFLASH: SLOT IS OCCUPIED ");
       Serial.println(address);
     #endif
-    sound(PIN_BUZZER, 4000, 750);
+    sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
     {
       MK61DisplayUpdate update(lcd);
       lcd.setCursor(0, 0); lcd.print(library_mk61::text("OVER", "OVER")); lcd.setCursor(8, 0); lcd.print(library_mk61::text("press OK", "OK?"));
@@ -438,7 +438,7 @@ bool Store(void) {
 using namespace action;
 
 bool  EraseFlash(void) {
-  sound(PIN_BUZZER, 4000, 750);
+  sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
   {
     MK61DisplayUpdate update(lcd);
     lcd.setCursor(0, 0); lcd.print(library_mk61::text("press OK ERASED!", "OK CTEP FLASH"));
@@ -457,7 +457,7 @@ bool  EraseFlash(void) {
      }
   }
   program_store::init();
-  sound(PIN_BUZZER, 1000, 300);
+  sound(PIN_BUZZER, 1000, 300, library_mk61::sound_volume());
   message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
   return action::MENU_EXIT;
 }

@@ -960,7 +960,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         if(not_EOF()) 
           input_buffer[recive_pos++] = rx_char;
         else
-          sound(PIN_BUZZER, 4000, 750);
+          sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
 
         if(rx_char == CR) return execute();
         //wait += 2000;

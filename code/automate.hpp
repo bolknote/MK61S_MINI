@@ -2,7 +2,7 @@ static constexpr usize hz_STOP_SIGNAL  =   200;  // Hz
 static constexpr usize ms_STOP_SIGNAL  =   850;  // ms
 
 inline  void  return_auto_mode(void) { // возвращение в режим АВТ
-    sound(PIN_BUZZER, hz_STOP_SIGNAL, ms_STOP_SIGNAL);
+    sound(PIN_BUZZER, hz_STOP_SIGNAL, ms_STOP_SIGNAL, library_mk61::sound_volume());
     MnemoLabel.enable();
     if(!config.disassm) disassembler.disable(); // если дизассемблер включен в конфигурации "ВСЕГДА" то выключение ненужно
     #ifdef MK61_EXTENDED

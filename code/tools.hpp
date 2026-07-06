@@ -85,9 +85,13 @@ struct SoundSettings {
 
 static_assert(sizeof(SoundSettings) == 1, "SoundSettings must fit one EEPROM byte");
 
+namespace library_mk61 {
+  extern  u8    sound_volume(void);
+}
+
 extern  void  DFU_enable(void);
-extern  void  sound(usize pin, isize freq_Hz, usize duration_ms);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume);
+extern  void  sound_stop(void);
 extern  void  sound_poll(void);
 extern  void  delay_with_sound_poll(t_time_ms duration_ms);
 
@@ -121,7 +125,7 @@ inline bool IsOccupied(usize nSlot) {
 }
 
 inline void ErrorReaction(void) {
-  sound(PIN_BUZZER, 4000, 750);
+  sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
 }
 
 inline bool IsDecimalDigit(char symbol) {
