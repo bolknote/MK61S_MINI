@@ -11,6 +11,7 @@
 #include "lcd_ru.hpp"
 #include "menu.hpp"
 #include "program_store.hpp"
+#include "shared_scratch.hpp"
 #include "tools.hpp"
 
 #include <stdio.h>
@@ -28,7 +29,7 @@ static constexpr i32 EXPLORER_KEY_OK = -4;
 static constexpr i32 EXPLORER_KEY_LONG_OK = -5;
 static constexpr i32 EXPLORER_KEY_ESC = -6;
 
-static u8 explorer_buffer[program_store::MAX_MK61_TEXT_SIZE];
+static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for explorer view");
 
 enum class ItemMenuAction : u8 {
   RUN,
@@ -194,10 +195,10 @@ static void draw_explorer(int active) {
   }
 }
 
-static bool read_entry_data(const program_store::Entry& entry, u16& out_len) {
-  memset(explorer_buffer, 0, sizeof(explorer_buffer));
+static bool read_entry_data(const program_store::Entry& entry, u8* data, usize capacity, u16& out_len) {
+  memset(data, 0, capacity);
   out_len = 0;
-  return program_store::read(entry.type, entry.name, explorer_buffer, sizeof(explorer_buffer), &out_len);
+  return program_store::read(entry.type, entry.name, data, capacity, &out_len);
 }
 
 static char hex_digit(u8 value) {
@@ -253,8 +254,16 @@ static void show_message(const char* en0, const char* ru0, const char* en1 = "",
 }
 
 static void view_entry(const program_store::Entry& entry) {
+  shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_MK61_TEXT_SIZE);
+  if(!scratch.ok()) {
+    show_message("Busy", "Занято", entry.name, entry.name);
+    kbd::get_key_wait();
+    return;
+  }
+
+  u8* data = scratch.data();
   u16 len = 0;
-  if(!read_entry_data(entry, len)) {
+  if(!read_entry_data(entry, data, scratch.size(), len)) {
     show_message("Read error", "Ошибка чтения", entry.name, entry.name);
     kbd::get_key_wait();
     return;
@@ -265,7 +274,7 @@ static void view_entry(const program_store::Entry& entry) {
   const u16 page = (u16) (rows * 16);
   u16 offset = 0;
   while(true) {
-    draw_file_view(entry, explorer_buffer, len, offset);
+    draw_file_view(entry, data, len, offset);
     const i32 key = wait_explorer_key(false);
     if(key == EXPLORER_KEY_ESC || key == EXPLORER_KEY_OK) return;
     if(key == EXPLORER_KEY_DOWN && offset + page < len) offset = (u16) (offset + page);

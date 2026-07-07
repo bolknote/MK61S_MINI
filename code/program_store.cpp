@@ -3,6 +3,7 @@
 #include "Arduino.h"
 #include "config.h"
 #include "ledcontrol.h"
+#include "shared_scratch.hpp"
 #include "tools.hpp"
 
 #ifdef SPI_FLASH
@@ -1078,14 +1079,14 @@ bool remove(ProgramType type, const char* name) {
 bool rename(ProgramType type, const char* old_name, const char* new_name) {
   DiskActivity disk_activity;
   if(old_name == NULL || new_name == NULL || old_name[0] == 0 || new_name[0] == 0) return false;
-  // Called from the USB MSC path which may run in interrupt context; keep
-  // the large buffer off the stack.
-  static u8 buffer[MAX_MK61_TEXT_SIZE > 1024 ? MAX_MK61_TEXT_SIZE : 1024];
+  shared_scratch::Lease scratch(shared_scratch::Owner::PROGRAM_STORE_RENAME, MAX_MK61_TEXT_SIZE);
+  if(!scratch.ok()) return false;
+  u8* buffer = scratch.data();
   u16 len = 0;
   if(type == ProgramType::MK61) {
     if(!read(type, old_name, buffer, MAX_MK61_TEXT_SIZE, &len)) return false;
   } else {
-    if(!read(type, old_name, buffer, sizeof(buffer), &len)) return false;
+    if(!read(type, old_name, buffer, scratch.size(), &len)) return false;
   }
   if(!write(type, new_name, buffer, len)) return false;
   remove(type, old_name);

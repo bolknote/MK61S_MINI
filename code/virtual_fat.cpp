@@ -1,6 +1,7 @@
 #include "virtual_fat.hpp"
 
 #include "program_store.hpp"
+#include "shared_scratch.hpp"
 
 #if defined(MK61_VFAT_TRACE)
 #include <stdarg.h>
@@ -117,10 +118,7 @@ static u8 next_ignored_slot = 0;
 static u8 host_fat[HOST_FAT_SECTORS * SECTOR_SIZE];
 static u8 host_fat_written;
 
-// USB MSC callbacks may run in interrupt context; keep the large scratch
-// buffers off the stack.
-static u8 commit_file_data[MAX_IMPORTED_LEN];
-static u8 commit_sector[SECTOR_SIZE];
+static_assert(shared_scratch::SIZE >= MAX_IMPORTED_LEN, "shared scratch too small for virtual FAT commits");
 
 static PendingDelete* find_pending_delete(program_store::ProgramType type, const char* name);
 static void clear_pending_delete(PendingDelete* pending);
@@ -981,8 +979,11 @@ static bool write_committed_data_sector(const program_store::Entry& entry, u8 po
   const u16 file_offset = (u16) (pos * SECTOR_SIZE);
   if(file_offset >= entry.data_len) return true;
 
+  shared_scratch::Lease scratch(shared_scratch::Owner::VFAT_COMMIT, MAX_IMPORTED_LEN);
+  if(!scratch.ok()) return false;
+  u8* commit_file_data = scratch.data();
   u16 stored_len = 0;
-  if(!program_store::read(entry.type, entry.name, commit_file_data, sizeof(commit_file_data), &stored_len)) return false;
+  if(!program_store::read(entry.type, entry.name, commit_file_data, scratch.size(), &stored_len)) return false;
   if(stored_len < entry.data_len) memset(commit_file_data + stored_len, 0, (u16) (entry.data_len - stored_len));
 
   const u16 remaining = (u16) (entry.data_len - file_offset);
@@ -1259,19 +1260,20 @@ static bool pending_has_any_data(const PendingWrite& pending) {
 static bool try_commit_pending(PendingWrite& pending) {
   if(!pending.used) return true;
   if(!pending_has_all_data(pending)) return true;
+  if(pending.data_len > MAX_IMPORTED_LEN) return false;
+
+  shared_scratch::Lease scratch(shared_scratch::Owner::VFAT_COMMIT, MAX_IMPORTED_LEN);
+  if(!scratch.ok()) return false;
+  u8* commit_file_data = scratch.data();
 
   FileClusters chain;
   pending_clusters(pending, chain);
   tracef("COMMIT %s.%s c=%u len=%u n=%u", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len, chain.count);
 
   for(u8 i = 0; i < chain.count; i++) {
-    memset(commit_sector, 0, sizeof(commit_sector));
-    if(!read_staged_sector(chain.clusters[i], commit_sector)) return false;
-
     const u16 offset = (u16) (i * SECTOR_SIZE);
-    const u16 remaining = (pending.data_len > offset) ? (u16) (pending.data_len - offset) : 0;
-    const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
-    if(copy_len != 0) memcpy(commit_file_data + offset, commit_sector, copy_len);
+    if((usize) offset + SECTOR_SIZE > scratch.size()) return false;
+    if(!read_staged_sector(chain.clusters[i], commit_file_data + offset)) return false;
   }
 
   tracef("COMMIT-DATA %s.%s len=%u b0=%02X", pending.name, extension_for_type(pending.type), pending.data_len, pending.data_len == 0 ? 0 : commit_file_data[0]);

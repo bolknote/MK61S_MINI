@@ -76,7 +76,7 @@ class class_terminal {
     enum class mnemo_type {ISA_61, ISA_CLASSIC};
     static constexpr usize MAX_LEN_CLASSIC_MNEMO = 8; // максимальная длинна классической инструкции
 
-    const char ISA_CLASSIC_61[1320] = 
+    const char* const ISA_CLASSIC_61 =
 "0,1,2,3,4,5,6,7,8,9,.,/-/,В\317,CX,B^,Bx,+,-,*,:,XY,F10^x,Fe^x,Flg,Fln,Fasin,Facos,Fatg,Fsin,Fcos,Ftg,?,\
 \317\xE8,V\"\"\",Fx^2,F1/x,Fx^y,(),Ko->',?,?,?,Ko->'\",?,?,?,?,?,Ko<-'\",|x|,3H,Ko<-',K[x],K{x},Kmax,K^,Kv,K(+),\310HB,C\327,?,Ko->'\",?,?,\
 X->\3170,X->\3171,X->\3172,X->\3173,X->\3174,X->\3175,X->\3176,X->\3177,X->\3178,X->\3179,X->\317A,X->\317B,X->\317C,X->\317\304,X->\317E,?,\
@@ -194,7 +194,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       isize comma_count = opcode;
       isize i = 0;
 
-      for(u8 symbol : ISA_CLASSIC_61) {
+      for(const char* p = ISA_CLASSIC_61; *p != 0; p++) {
+        const u8 symbol = (u8) *p;
         if(symbol == 0) break;
         if(symbol == ',') {
           comma_count--;

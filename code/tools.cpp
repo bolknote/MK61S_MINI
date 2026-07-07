@@ -7,6 +7,7 @@
 #include "tools.hpp"
 #include "program_store.hpp"
 #include "m61_text.hpp"
+#include "shared_scratch.hpp"
 #include "mk61emu_core.h"
 #include "keyboard.h"
 #include "cross_hal.h"
@@ -30,7 +31,7 @@ const u32 ERASE_SECTOR_TIMEOUT = 5000; // таймаут операции сти
 
 static constexpr u8 MK61_STORE_REGISTER_F = 0x4F;
 static constexpr u8 MK61_LOAD_REGISTER_F  = 0x6F;
-static u8 m61_script_buffer[program_store::MAX_MK61_TEXT_SIZE];
+static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for MK61 scripts");
 
 struct SoundNote {
   isize frequency_Hz;
@@ -573,9 +574,12 @@ bool Load(usize nSlot) {
 
 bool LoadProgram(const char* name) {
   if(name == NULL || name[0] == 0) return false;
+  shared_scratch::Lease scratch(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
+  if(!scratch.ok()) return false;
+  u8* script_buffer = scratch.data();
   u16 script_len = 0;
-  if(!program_store::read_mk61(name, &m61_script_buffer[0], sizeof(m61_script_buffer), &script_len)) return false;
-  return m61_text::execute(&m61_script_buffer[0], script_len);
+  if(!program_store::read_mk61(name, script_buffer, scratch.size(), &script_len)) return false;
+  return m61_text::execute(script_buffer, script_len);
 }
 
 bool Load(void) {
@@ -639,9 +643,12 @@ bool Store(usize nSlot) {
 
   char name[8];
   snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+  shared_scratch::Lease scratch(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
+  if(!scratch.ok()) return false;
+  u8* script_buffer = scratch.data();
   u16 script_len = 0;
-  if(!m61_text::format_current_program(&m61_script_buffer[0], sizeof(m61_script_buffer), &script_len)) return false;
-  if(!program_store::write_mk61(name, &m61_script_buffer[0], script_len)) return false;
+  if(!m61_text::format_current_program(script_buffer, scratch.size(), &script_len)) return false;
+  if(!program_store::write_mk61(name, script_buffer, script_len)) return false;
 
   dbg(MINI, "\nProgramm saved!");
   return true;
@@ -690,8 +697,11 @@ bool Store(void) {
   core_61::get_code_page(&code_page[0]);
   const usize code_len = seek_program_END(&code_page[0]);
 
+  shared_scratch::Lease scratch(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
+  if(!scratch.ok()) return false;
+  u8* script_buffer = scratch.data();
   u16 script_len = 0;
-  if(!m61_text::format_current_program(&m61_script_buffer[0], sizeof(m61_script_buffer), &script_len)) return false;
+  if(!m61_text::format_current_program(script_buffer, scratch.size(), &script_len)) return false;
 
   #ifdef SERIAL_OUTPUT
     Serial.print("Save ");
@@ -707,7 +717,7 @@ bool Store(void) {
       lcd.setCursor(x, 1); lcd.print((char) 0xFF); lcd.print(i);
     }
   }
-  if(!program_store::write_mk61(name, &m61_script_buffer[0], script_len)) return false;
+  if(!program_store::write_mk61(name, script_buffer, script_len)) return false;
 
   #ifdef SERIAL_OUTPUT
     Serial.println("\nProgramm saved!");

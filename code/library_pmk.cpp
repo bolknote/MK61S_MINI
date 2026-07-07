@@ -8,6 +8,7 @@
 #include  "tools.hpp"
 #include  "menu.hpp"
 #include  "ledcontrol.h"
+#include  "shared_scratch.hpp"
 #include "debug.h"
 #include <string.h>
 
@@ -315,12 +316,16 @@ int   select_program(void) {
   return select_from(COUNT_PROGRAMS, programs, selProgram);
 }
 
-static TPunct stored_m61_items[program_store::MAX_ENTRIES];
+static_assert(
+  shared_scratch::SIZE >= sizeof(TPunct) * program_store::MAX_ENTRIES,
+  "shared scratch must fit stored M61 menu items"
+);
 
-static usize fill_stored_m61_items(void) {
+static usize fill_stored_m61_items(TPunct* stored_m61_items, usize capacity) {
   const int count = program_store::count(program_store::ProgramType::MK61);
   const usize limit = (count > (int) program_store::MAX_ENTRIES) ? program_store::MAX_ENTRIES : (usize) count;
-  for(usize i = 0; i < limit; i++) {
+  const usize item_count = (limit > capacity) ? capacity : limit;
+  for(usize i = 0; i < item_count; i++) {
     program_store::Entry entry;
     memset(&stored_m61_items[i], 0, sizeof(stored_m61_items[i]));
     if(!program_store::entry(program_store::ProgramType::MK61, (int) i, entry)) continue;
@@ -330,11 +335,18 @@ static usize fill_stored_m61_items(void) {
     while(name_len < sizeof(stored_m61_items[i].text) - 1 && entry.name[name_len] != 0) name_len++;
     memcpy(stored_m61_items[i].text, entry.name, name_len);
   }
-  return limit;
+  return item_count;
 }
 
 int   select_game(void) {
-  const usize count = fill_stored_m61_items();
+  shared_scratch::Lease scratch(
+    shared_scratch::Owner::STORED_M61_MENU,
+    sizeof(TPunct) * program_store::MAX_ENTRIES
+  );
+  if(!scratch.ok()) return -1;
+
+  TPunct* stored_m61_items = (TPunct*) scratch.data();
+  const usize count = fill_stored_m61_items(stored_m61_items, scratch.size() / sizeof(TPunct));
   if(count == 0) {
     {
       MK61DisplayUpdate update(lcd);
