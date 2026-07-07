@@ -311,17 +311,8 @@ u8 MK61Display::glyphHeightForRows(u8 rows) {
 }
 
 u8 MK61Display::glyphWidthForRows(u8 rows) {
-  switch(rows) {
-    case lcd_display::DEFAULT_ROWS:
-      return 10;
-    case lcd_display::SPACED_ROWS_5:
-      return 8;
-    case lcd_display::SPACED_ROWS_7:
-      return 6;
-    case lcd_display::COMPACT_ROWS:
-    default:
-      return 5;
-  }
+  (void) rows;
+  return 10;
 }
 
 u8 MK61Display::rowTop(u8 row) const {
