@@ -93,6 +93,7 @@ namespace library_mk61 {
 
 extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume);
+extern  void  sound_scaled(usize pin, isize freq_Hz, usize duration_ms, usize volume, usize volume_percent);
 extern  void  sound_stop(void);
 extern  void  sound_poll(void);
 extern  void  sound_startup(void);

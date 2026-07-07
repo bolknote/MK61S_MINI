@@ -176,9 +176,13 @@ void delay_with_sound_poll(t_time_ms duration_ms) {
   sound_poll();
 }
 
-void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume) {
+void sound_scaled(usize pin, isize freq_Hz, usize duration_ms, usize volume, usize volume_percent) {
   sound_sequence_cancel();
-  sound_driver_play(pin, freq_Hz, duration_ms, volume);
+  sound_driver_play_scaled(pin, freq_Hz, duration_ms, volume, volume_percent);
+}
+
+void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume) {
+  sound_scaled(pin, freq_Hz, duration_ms, volume, 100);
 }
 
 void  sound_stop(void) {
