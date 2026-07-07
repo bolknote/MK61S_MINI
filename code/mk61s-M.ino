@@ -196,9 +196,9 @@ void setup() {
   pinMode(PIN_KBD_ROW0, OUTPUT);
   digitalWrite(PIN_KBD_ROW0, HIGH);
 
-  if(digitalRead(PIN_KBD_COL0) != LOW) {
+  const bool dfu_requested = digitalRead(PIN_KBD_COL0) != LOW;
+  if(dfu_requested) {
     dbgln(MINI, "BOOT pressed! Need load program from DFU!");
-    DFU_enable();
   } else {
     dbgln(MINI, "ESC unpressed!");
   }
@@ -212,7 +212,7 @@ void setup() {
 
   library_mk61::load_settings_state();
 
-  usb_start_terminal_mode();
+  if(!dfu_requested) usb_start_terminal_mode();
 
   //  kbd::test();
   kbd::init();
@@ -237,6 +237,11 @@ void setup() {
     }
     delay(2000/16);
   }
+
+  if(dfu_requested) {
+    DFU_enable();
+  }
+
  //---  Настройка отрисовки экрана
   lcd_hooked = false;               // экран не перeхвачен
   need_draw_lock_message = true;    // флаг уже отрисованного сообщения блокировки ядра
