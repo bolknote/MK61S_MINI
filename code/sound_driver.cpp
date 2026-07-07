@@ -123,9 +123,11 @@ static bool configure_pwm_mapping(usize pin) {
 
   // The mapping is resolved here once, explicitly: PIN_BUZZER -> PinName ->
   // TIMx_CHy from the active STM32duino variant's PinMap_TIM table.
+  // pwm_ll_channel is NOT resolved here: HardwareTimer::getLLChannel() returns
+  // a valid mask only after setMode() marks the channel as used, so it is
+  // resolved in sound_driver_play() right after setMode().
   pwm_timer.setup(timer_instance);
   pwm_timer_instance = timer_instance;
-  pwm_ll_channel = pwm_timer.getLLChannel(pwm_channel);
   pwm_timer.pause();
   pwm_ready = true;
 
@@ -174,6 +176,9 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
   // Configure PWM output every time before starting: stop() returns the pin to
   // GPIO LOW, so setMode() restores the alternate-function PWM routing.
   pwm_timer.setMode(pwm_channel, TIMER_OUTPUT_COMPARE_PWM1, pwm_pin_name);
+  // getLLChannel() returns 0 until setMode() marks the channel as used, so the
+  // LL mask for mute_pwm_from_interrupt() must be resolved after setMode().
+  pwm_ll_channel = pwm_timer.getLLChannel(pwm_channel);
   pwm_timer.setOverflow((u32) frequency_Hz, HERTZ_FORMAT);
   pwm_timer.setCaptureCompare(pwm_channel, duty, RESOLUTION_8B_COMPARE_FORMAT);
   pwm_timer.resume();
