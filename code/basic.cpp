@@ -259,6 +259,8 @@ class class_menu {
 #include <string.h>
 #endif
 
+#include "mk_math.hpp"
+
 #ifdef BASIC_HOST_TEST
 #define TEXT_EDITOR_HOST_TEST
 #endif
@@ -747,11 +749,11 @@ static void basic_format_fixed(double value, int decimals, char* out, usize size
 
 static void basic_format_number(double value, char* out, usize size) {
   if(size == 0) return;
-  if(isnan(value)) {
+  if(mk_math::is_nan(value)) {
     basic_copy_text(out, size, "NAN");
     return;
   }
-  if(isinf(value)) {
+  if(mk_math::is_inf(value)) {
     basic_copy_text(out, size, value < 0.0 ? "-INF" : "INF");
     return;
   }
@@ -760,11 +762,11 @@ static void basic_format_number(double value, char* out, usize size) {
     return;
   }
 
-  const double abs_value = fabs(value);
-  int exp10 = (int) floor(log10(abs_value));
+  const double abs_value = mk_math::fabs(value);
+  int exp10 = mk_math::log10_floor(abs_value);
   if(exp10 >= 8 || exp10 < -4) {
     char mantissa[24];
-    double scaled = value / pow(10.0, (double) exp10);
+    double scaled = value / mk_math::pow10_int(exp10);
     basic_format_fixed(scaled, 7, mantissa, sizeof(mantissa));
     if(mantissa[0] == '1' && mantissa[1] == '0') {
       exp10++;
@@ -865,7 +867,7 @@ static double parse_mk61_display_number(const char* value) {
   *out++ = (value[12] == 'O') ? '0' : value[12];
   *out++ = (value[13] == 'O') ? '0' : value[13];
   *out = 0;
-  return strtod(buffer, NULL);
+  return mk_math::atof(buffer);
 }
 
 static double read_mk_ref(u8 mk_ref, u8 mk_reg) {
@@ -893,8 +895,8 @@ static void double_to_mk61_parts(double value, char& sign, char mantissa[8], isi
     return;
   }
 
-  pow10 = (isize) floor(log10(value));
-  double normalized = value / pow(10.0, (double) pow10);
+  pow10 = (isize) mk_math::log10_floor(value);
+  double normalized = value / mk_math::pow10_int((int) pow10);
   if(normalized >= 10.0) {
     normalized /= 10.0;
     pow10++;
@@ -904,7 +906,7 @@ static void double_to_mk61_parts(double value, char& sign, char mantissa[8], isi
     pow10--;
   }
 
-  long scaled = (long) floor(normalized * 10000000.0 + 0.5);
+  long scaled = (long) mk_math::floor(normalized * 10000000.0 + 0.5);
   if(scaled >= 100000000L) {
     scaled /= 10;
     pow10++;
@@ -992,7 +994,7 @@ class Lexer {
           }
         }
         buffer[i] = 0;
-        tok.number = strtod(buffer, NULL);
+        tok.number = mk_math::atof(buffer);
         return;
       }
 
@@ -2061,7 +2063,7 @@ static BasicValue make_string(const char* value) {
 }
 
 static double basic_truth(double value) {
-  return fabs(value) > 0.0000001 ? 1.0 : 0.0;
+  return mk_math::fabs(value) > 0.0000001 ? 1.0 : 0.0;
 }
 
 static bool eval_expr(i16 expr_id, BasicValue& value);
@@ -2082,7 +2084,7 @@ static double run_basic_function_call(int program) {
 static double eval_number(i16 expr_id) {
   BasicValue value;
   if(!eval_expr(expr_id, value)) return 0.0;
-  if(value.is_string) return strtod(value.text, NULL);
+  if(value.is_string) return mk_math::atof(value.text);
   return value.number;
 }
 
@@ -2120,7 +2122,7 @@ static bool eval_expr(i16 expr_id, BasicValue& value) {
         case BasicOp::SUB: value = make_number(a - b); return true;
         case BasicOp::MUL: value = make_number(a * b); return true;
         case BasicOp::DIV: value = make_number(b == 0.0 ? 0.0 : a / b); return true;
-        case BasicOp::POW: value = make_number(pow(a, b)); return true;
+        case BasicOp::POW: value = make_number(mk_math::pow(a, b)); return true;
         case BasicOp::EQ: value = make_number(basic_truth(a == b)); return true;
         case BasicOp::NE: value = make_number(basic_truth(a != b)); return true;
         case BasicOp::LT: value = make_number(basic_truth(a < b)); return true;
@@ -2151,15 +2153,15 @@ static bool eval_expr(i16 expr_id, BasicValue& value) {
   }
 
   if(e.kind == ExprKind::CALL) {
-    if(basic_streq(name, "SIN")) value = make_number(sin(eval_number(e.args[0])));
-    else if(basic_streq(name, "COS")) value = make_number(cos(eval_number(e.args[0])));
-    else if(basic_streq(name, "TG") || basic_streq(name, "TAN")) value = make_number(tan(eval_number(e.args[0])));
-    else if(basic_streq(name, "ASIN")) value = make_number(asin(eval_number(e.args[0])));
-    else if(basic_streq(name, "ACOS")) value = make_number(acos(eval_number(e.args[0])));
-    else if(basic_streq(name, "ATG") || basic_streq(name, "ATAN")) value = make_number(atan(eval_number(e.args[0])));
-    else if(basic_streq(name, "ABS")) value = make_number(fabs(eval_number(e.args[0])));
-    else if(basic_streq(name, "INT")) value = make_number(floor(eval_number(e.args[0])));
-    else if(basic_streq(name, "SQRT")) value = make_number(sqrt(eval_number(e.args[0])));
+    if(basic_streq(name, "SIN")) value = make_number(mk_math::sin(eval_number(e.args[0])));
+    else if(basic_streq(name, "COS")) value = make_number(mk_math::cos(eval_number(e.args[0])));
+    else if(basic_streq(name, "TG") || basic_streq(name, "TAN")) value = make_number(mk_math::tan(eval_number(e.args[0])));
+    else if(basic_streq(name, "ASIN")) value = make_number(mk_math::asin(eval_number(e.args[0])));
+    else if(basic_streq(name, "ACOS")) value = make_number(mk_math::acos(eval_number(e.args[0])));
+    else if(basic_streq(name, "ATG") || basic_streq(name, "ATAN")) value = make_number(mk_math::atan(eval_number(e.args[0])));
+    else if(basic_streq(name, "ABS")) value = make_number(mk_math::fabs(eval_number(e.args[0])));
+    else if(basic_streq(name, "INT")) value = make_number(mk_math::floor(eval_number(e.args[0])));
+    else if(basic_streq(name, "SQRT")) value = make_number(mk_math::sqrt(eval_number(e.args[0])));
     else {
       const int program =
 #ifndef BASIC_HOST_TEST
@@ -2245,7 +2247,7 @@ static double read_number_from_keyboard(const BasicStmt& stmt) {
       }
     }
   }
-  return strtod(buffer, NULL);
+  return mk_math::atof(buffer);
 }
 
 static bool load_mk_program_by_name(const char* name) {

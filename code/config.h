@@ -62,6 +62,16 @@
   #define MK61_ENABLE_TINYBASIC 1
 #endif
 
+// Математический бэкенд языков (FOCAL/BASIC/TinyBASIC).
+//  LIBM (умолчание) — трансцендентные функции через <math.h>.
+//  CORE             — вычисление на ядре МК-61; убирает libm из прошивки
+//                     ценой ~8 значащих цифр и меньшей скорости.
+#define MK61_MATH_BACKEND_LIBM 0
+#define MK61_MATH_BACKEND_CORE 1
+#ifndef MK61_MATH_BACKEND
+  #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
+#endif
+
 // Короткое нажатие [USER] открывает меню игр. Поставьте 0, чтобы оставить
 // [USER] только для удержания стека и функций режима ПРГ.
 #ifndef MK61_USER_GAMES_MENU_SHORTCUT

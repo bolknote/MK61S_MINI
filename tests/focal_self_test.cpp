@@ -181,6 +181,20 @@ static void test_functions(void) {
   CHECK_STARTS(FocalTestLcdLine(0), "10");
 }
 
+static void test_mk_math_dispatch_and_format(void) {
+  // Transcendental dispatch now routes through mk_math:: (LIBM backend here);
+  // this checks the wiring and the libm-free scientific formatter path.
+  FocalTestReset();
+  const int slot = add_program(
+      "01.10 S A=SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))\n"
+      "01.20 S B=100000000\n"
+      "01.30 P B\n"
+      "01.40 E");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("A"), 6.0); // 0 + 1 + 4 + 1
+  CHECK_STARTS(FocalTestLcdLine(0), "1E+8");
+}
+
 static void test_editor_shift_parentheses(void) {
   FocalTestReset();
   char out[32];
@@ -387,6 +401,7 @@ int main(void) {
   test_return_early_from_group();
   test_goto_and_branch();
   test_functions();
+  test_mk_math_dispatch_and_format();
   test_editor_shift_parentheses();
   test_editor_expression_macros();
   test_editor_digit_symbol_and_sms_input();

@@ -118,6 +118,8 @@ namespace library_mk61 {
 #include <string.h>
 #endif
 
+#include "mk_math.hpp"
+
 #ifdef TINYBASIC_HOST_TEST
 #define TEXT_EDITOR_HOST_TEST
 #endif
@@ -426,11 +428,11 @@ static void tb_format_fixed(double value, int decimals, char* out, usize size) {
 // number is formatted by hand the same way BASIC and FOCAL do.
 static void tb_format_number(double value, char* out, usize size) {
   if(size == 0) return;
-  if(isnan(value)) {
+  if(mk_math::is_nan(value)) {
     tb_copy_text(out, size, "NAN");
     return;
   }
-  if(isinf(value)) {
+  if(mk_math::is_inf(value)) {
     tb_copy_text(out, size, value < 0.0 ? "-INF" : "INF");
     return;
   }
@@ -439,11 +441,11 @@ static void tb_format_number(double value, char* out, usize size) {
     return;
   }
 
-  const double abs_value = fabs(value);
-  int exp10 = (int) floor(log10(abs_value));
+  const double abs_value = mk_math::fabs(value);
+  int exp10 = mk_math::log10_floor(abs_value);
   if(exp10 >= 10 || exp10 < -4) { // %g switches to scientific outside [-4, precision)
     char mantissa[24];
-    double scaled = abs_value / pow(10.0, (double) exp10);
+    double scaled = abs_value / mk_math::pow10_int(exp10);
     tb_format_fixed(scaled, 9, mantissa, sizeof(mantissa));
     if(mantissa[0] == '1' && mantissa[1] == '0') { // rounding overflowed to 10.0
       exp10++;
@@ -653,7 +655,7 @@ class TbExprParser {
         } else if(match_word("MOD")) {
           const double right = parse_power();
           if(right == 0.0) ok = false;
-          else left = left - floor(left / right) * right;
+          else left = left - mk_math::floor(left / right) * right;
         } else if(match_word("AND")) {
           left = (left != 0.0 && parse_power() != 0.0) ? 1.0 : 0.0;
         } else break;
@@ -663,7 +665,7 @@ class TbExprParser {
 
     double parse_power(void) {
       double left = parse_unary();
-      while(ok && match_char('^')) left = pow(left, parse_unary());
+      while(ok && match_char('^')) left = mk_math::pow(left, parse_unary());
       return left;
     }
 
@@ -688,8 +690,8 @@ class TbExprParser {
       }
 
       if(tb_is_digit(*p) || *p == '.') {
-        char* after = NULL;
-        const double value = strtod(p, &after);
+        const char* after = NULL;
+        const double value = mk_math::strtod(p, &after);
         if(after == p || after > end) {
           ok = false;
           return 0.0;
@@ -718,12 +720,12 @@ class TbExprParser {
           if(match_char(')')) return tb_next_random();
           const double max_value = parse_compare();
           if(!match_char(')')) ok = false;
-          const int limit = (int) floor(max_value);
+          const int limit = (int) mk_math::floor(max_value);
           if(limit < 1) {
             ok = false;
             return 0.0;
           }
-          return 1.0 + floor(tb_next_random() * limit);
+          return 1.0 + mk_math::floor(tb_next_random() * limit);
         }
 
         const double a = parse_compare();
@@ -738,20 +740,20 @@ class TbExprParser {
           return 0.0;
         }
 
-        if(tb_streq(word, "SIN")) return sin(a);
-        if(tb_streq(word, "COS")) return cos(a);
-        if(tb_streq(word, "TG")) return tan(a);
-        if(tb_streq(word, "ASIN")) return asin(a);
-        if(tb_streq(word, "ACOS")) return acos(a);
-        if(tb_streq(word, "ATG")) return atan(a);
-        if(tb_streq(word, "LN")) return log(a);
-        if(tb_streq(word, "LG")) return log10(a);
-        if(tb_streq(word, "EXP")) return exp(a);
-        if(tb_streq(word, "SQRT")) return sqrt(a);
-        if(tb_streq(word, "ABS")) return fabs(a);
-        if(tb_streq(word, "INT")) return floor(a);
-        if(tb_streq(word, "FRAC")) return a - floor(a);
-        if(tb_streq(word, "ROUND")) return floor(a + 0.5);
+        if(tb_streq(word, "SIN")) return mk_math::sin(a);
+        if(tb_streq(word, "COS")) return mk_math::cos(a);
+        if(tb_streq(word, "TG")) return mk_math::tan(a);
+        if(tb_streq(word, "ASIN")) return mk_math::asin(a);
+        if(tb_streq(word, "ACOS")) return mk_math::acos(a);
+        if(tb_streq(word, "ATG")) return mk_math::atan(a);
+        if(tb_streq(word, "LN")) return mk_math::ln(a);
+        if(tb_streq(word, "LG")) return mk_math::log10(a);
+        if(tb_streq(word, "EXP")) return mk_math::exp(a);
+        if(tb_streq(word, "SQRT")) return mk_math::sqrt(a);
+        if(tb_streq(word, "ABS")) return mk_math::fabs(a);
+        if(tb_streq(word, "INT")) return mk_math::floor(a);
+        if(tb_streq(word, "FRAC")) return a - mk_math::floor(a);
+        if(tb_streq(word, "ROUND")) return mk_math::floor(a + 0.5);
         if(tb_streq(word, "SGN")) return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
         if(tb_streq(word, "MAX") && has_b) return (a > b) ? a : b;
       }
@@ -850,8 +852,8 @@ static int tb_find_line_number(int number) {
 }
 
 static int tb_line_number_from_value(double value) {
-  const int number = (int) floor(value + 0.5);
-  if(fabs(value - number) > 0.0000001 || number < 1 || number > 32767) return -1;
+  const int number = (int) mk_math::floor(value + 0.5);
+  if(mk_math::fabs(value - number) > 0.0000001 || number < 1 || number > 32767) return -1;
   return number;
 }
 
@@ -902,7 +904,7 @@ static double tb_read_number_from_keyboard(const char* prompt) {
       }
     }
   }
-  return strtod(buffer, NULL);
+  return mk_math::atof(buffer);
 #endif
 }
 

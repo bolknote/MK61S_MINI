@@ -142,9 +142,24 @@ static void test_format_number(void) {
   expect_format(9.99999999999e9, "10000000000");
 }
 
+// Transcendental functions now dispatch through mk_math:: (LIBM backend here);
+// this confirms the wiring produces the expected values.
+static void test_mk_math_dispatch(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "10 A=SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))\n"
+    "20 PRINT A\n",
+    "MATH");
+  assert(slot >= 0);
+  TinyBasicTestRun(slot);
+  assert(std::fabs(TinyBasicTestNumber("A") - 6.0) < 0.000001);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "6", 1) == 0);
+}
+
 int main(void) {
   test_compile_and_print();
   test_format_number();
+  test_mk_math_dispatch();
   test_if_and_goto();
   test_gosub();
   test_for_next();

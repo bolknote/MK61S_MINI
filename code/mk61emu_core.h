@@ -195,6 +195,13 @@ namespace core_61 {
   extern    void  enable(void);
   extern    void  step(void);
 
+  // Snapshot of the whole core state (RAM ring + the three chip structs +
+  // angle unit). Lets a transient consumer borrow the engine and restore the
+  // user's stack/registers afterwards. Buffer must be context_size() bytes.
+  extern    usize context_size(void);
+  extern    void  save_context(u8* buffer);
+  extern    void  restore_context(const u8* buffer);
+
   // возращает false - есть изменения в дисплейной строке/ true - нет изменений
   //  - дисплейный буфер buffer обновляется только измененным содержимым
   //  - display_symbols - массив набор символов замены знаков индикатора 

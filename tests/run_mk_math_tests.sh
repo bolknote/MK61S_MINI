@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+out="${TMPDIR:-/tmp}/mk61_mk_math_self_test"
+
+# Build the CORE backend together with the real MK-61 engine on the host.
+# Shim headers (Arduino.h/debug.h) come first on the include path so the
+# firmware-only dependencies resolve to host stubs.
+clang++ -std=c++17 -Wall -Wextra -Wno-unused -Wno-array-parameter \
+  -DMK61_MATH_BACKEND=1 \
+  -include "$root/tests/mk_math_shim/debug.h" \
+  -I"$root/tests/mk_math_shim" \
+  -I"$root/code" \
+  "$root/tests/mk_math_self_test.cpp" \
+  "$root/code/mk_math_core.cpp" \
+  "$root/code/mk61emu_core.cpp" \
+  -o "$out"
+
+"$out"

@@ -134,6 +134,8 @@ namespace library_mk61 {
 #include <string.h>
 #endif
 
+#include "mk_math.hpp"
+
 #ifdef FOCAL_HOST_TEST
 #define TEXT_EDITOR_HOST_TEST
 #endif
@@ -481,11 +483,11 @@ static void focal_format_fixed(double value, int decimals, char* out, usize size
 
 static void focal_format_number(double value, char* out, usize size) {
   if(size == 0) return;
-  if(isnan(value)) {
+  if(mk_math::is_nan(value)) {
     focal_copy_text(out, size, "NAN");
     return;
   }
-  if(isinf(value)) {
+  if(mk_math::is_inf(value)) {
     focal_copy_text(out, size, value < 0.0 ? "-INF" : "INF");
     return;
   }
@@ -494,11 +496,11 @@ static void focal_format_number(double value, char* out, usize size) {
     return;
   }
 
-  const double abs_value = fabs(value);
-  int exp10 = (int) floor(log10(abs_value));
+  const double abs_value = mk_math::fabs(value);
+  int exp10 = mk_math::log10_floor(abs_value);
   if(exp10 >= 8 || exp10 < -4) {
     char mantissa[24];
-    double scaled = value / pow(10.0, (double) exp10);
+    double scaled = value / mk_math::pow10_int(exp10);
     focal_format_fixed(scaled, 7, mantissa, sizeof(mantissa));
     if(mantissa[0] == '1' && mantissa[1] == '0') {
       exp10++;
@@ -881,20 +883,20 @@ static double expr_parse_identifier(ExprParser& parser) {
     return 0.0;
   }
 
-  if(focal_streq(name, "SIN")) return sin(a);
-  if(focal_streq(name, "COS")) return cos(a);
-  if(focal_streq(name, "TG")) return tan(a);
-  if(focal_streq(name, "ASIN")) return asin(a);
-  if(focal_streq(name, "ACOS")) return acos(a);
-  if(focal_streq(name, "ATG")) return atan(a);
-  if(focal_streq(name, "LN")) return log(a);
-  if(focal_streq(name, "LG")) return log10(a);
-  if(focal_streq(name, "EXP")) return exp(a);
-  if(focal_streq(name, "SQRT")) return sqrt(a);
-  if(focal_streq(name, "ABS")) return fabs(a);
-  if(focal_streq(name, "INT")) return floor(a);
-  if(focal_streq(name, "FRAC")) return a - floor(a);
-  if(focal_streq(name, "ROUND")) return (a >= 0.0) ? floor(a + 0.5) : ceil(a - 0.5);
+  if(focal_streq(name, "SIN")) return mk_math::sin(a);
+  if(focal_streq(name, "COS")) return mk_math::cos(a);
+  if(focal_streq(name, "TG")) return mk_math::tan(a);
+  if(focal_streq(name, "ASIN")) return mk_math::asin(a);
+  if(focal_streq(name, "ACOS")) return mk_math::acos(a);
+  if(focal_streq(name, "ATG")) return mk_math::atan(a);
+  if(focal_streq(name, "LN")) return mk_math::ln(a);
+  if(focal_streq(name, "LG")) return mk_math::log10(a);
+  if(focal_streq(name, "EXP")) return mk_math::exp(a);
+  if(focal_streq(name, "SQRT")) return mk_math::sqrt(a);
+  if(focal_streq(name, "ABS")) return mk_math::fabs(a);
+  if(focal_streq(name, "INT")) return mk_math::floor(a);
+  if(focal_streq(name, "FRAC")) return mk_math::frac(a);
+  if(focal_streq(name, "ROUND")) return mk_math::round_half(a);
   if(focal_streq(name, "SGN")) return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
   if(focal_streq(name, "MAX")) return (a > b) ? a : b;
 
@@ -917,8 +919,8 @@ static double expr_parse_primary(ExprParser& parser) {
 
   if(focal_is_alpha(*parser.p)) return expr_parse_identifier(parser);
 
-  char* after = NULL;
-  const double value = strtod(parser.p, &after);
+  const char* after = NULL;
+  const double value = mk_math::strtod(parser.p, &after);
   if(after != NULL && after > parser.p && after <= parser.end) {
     parser.p = after;
     return value;
@@ -940,7 +942,7 @@ static double expr_parse_power(ExprParser& parser) {
   expr_skip_spaces(parser);
   if(expr_match(parser, '^')) {
     const double right = expr_parse_power(parser);
-    left = pow(left, right);
+    left = mk_math::pow(left, right);
   }
   return left;
 }
@@ -952,7 +954,7 @@ static double expr_parse_multiplicative(ExprParser& parser) {
       left *= expr_parse_power(parser);
     } else if(expr_match(parser, '/')) {
       const double right = expr_parse_power(parser);
-      if(fabs(right) < 1e-14) {
+      if(mk_math::fabs(right) < 1e-14) {
         expr_set_error(parser, "MATH?");
         return 0.0;
       }
@@ -1067,7 +1069,7 @@ static double focal_read_number_from_keyboard(char var_name) {
       }
     }
   }
-  const double value = strtod(buffer, NULL);
+  const double value = mk_math::atof(buffer);
   #if defined(MK61_FOCAL_TRACE) && !defined(FOCAL_HOST_TEST)
     focal_trace_header();
     Serial.print("ASK ");
@@ -1105,7 +1107,7 @@ static double focal_parse_mk61_display_number(const char* value) {
   *out++ = (value[12] == 'O') ? '0' : value[12];
   *out++ = (value[13] == 'O') ? '0' : value[13];
   *out = 0;
-  return strtod(buffer, NULL);
+  return mk_math::atof(buffer);
 }
 
 static double focal_read_mk_x(void) {
@@ -1466,7 +1468,7 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, Fo
     }
   }
 
-  if(fabs(step_value) < 1e-14) {
+  if(mk_math::fabs(step_value) < 1e-14) {
     flow = focal_flow(FocalFlowKind::ERROR, -1);
     return focal_error("FOR?");
   }
@@ -2001,8 +2003,8 @@ static bool focal_segment_is_simple(const char* begin, const char* end) {
 
   char buffer[FOCAL_EXPR_BUFFER_SIZE];
   focal_copy_trim(buffer, sizeof(buffer), begin, end);
-  char* after = NULL;
-  strtod(buffer, &after);
+  const char* after = NULL;
+  mk_math::strtod(buffer, &after);
   return after != NULL && *after == 0;
 }
 

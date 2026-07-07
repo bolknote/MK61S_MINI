@@ -1694,6 +1694,31 @@ void step(void) {
     m_IK1302.key_y = 0;
 }
 
+// Full core state = the DOZU ring plus the three chip structs plus the angle
+// unit. Pointers inside the chip structs point into this process, so copying
+// them verbatim is safe as long as save/restore happen in the same run.
+usize context_size(void) {
+  return sizeof(ringM) + sizeof(m_IK1302) + sizeof(m_IK1303) + sizeof(m_IK1306) + sizeof(m_emu);
+}
+
+void save_context(u8* buffer) {
+  usize offset = 0;
+  memcpy(buffer + offset, ringM, sizeof(ringM));        offset += sizeof(ringM);
+  memcpy(buffer + offset, &m_IK1302, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
+  memcpy(buffer + offset, &m_IK1303, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
+  memcpy(buffer + offset, &m_IK1306, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
+  memcpy(buffer + offset, &m_emu, sizeof(m_emu));
+}
+
+void restore_context(const u8* buffer) {
+  usize offset = 0;
+  memcpy(ringM, buffer + offset, sizeof(ringM));        offset += sizeof(ringM);
+  memcpy(&m_IK1302, buffer + offset, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
+  memcpy(&m_IK1303, buffer + offset, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
+  memcpy(&m_IK1306, buffer + offset, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
+  memcpy(&m_emu, buffer + offset, sizeof(m_emu));
+}
+
 void enable(void) {
     MK61Emu_Cleanup();
     //MK61Emu_SetAngleUnit(RADIAN);
