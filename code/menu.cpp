@@ -762,7 +762,7 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
 
   for(u8 row = visible_fields; row < rows; row++) {
     if(row == visible_fields) {
-      printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "Память 105ШГ" : "Memory 105+F");
+      printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "Образец 123АБВ" : "Sample 123ABC");
     } else {
       printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "0123456789+-*/" : "0123456789+-*/");
     }
