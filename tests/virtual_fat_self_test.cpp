@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../code/program_store.hpp"
+#include "../code/language_workspace.hpp"
 
 namespace {
 
@@ -211,6 +212,26 @@ void vfat_stage_clear(void) {
 }
 
 } // namespace program_store
+
+namespace language_workspace {
+
+alignas(8) static u8 workspace[SIZE];
+static Owner owner = Owner::NONE;
+
+void* acquire(Owner next_owner, usize required) {
+  if(required > sizeof(workspace)) return NULL;
+  if(owner != next_owner) {
+    memset(workspace, 0, sizeof(workspace));
+    owner = next_owner;
+  }
+  return workspace;
+}
+
+Owner current_owner(void) {
+  return owner;
+}
+
+} // namespace language_workspace
 
 #include "../code/virtual_fat.cpp"
 

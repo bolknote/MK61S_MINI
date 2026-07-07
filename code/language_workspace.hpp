@@ -8,7 +8,8 @@ namespace language_workspace {
 enum class Owner : u8 {
   NONE,
   FOCAL,
-  TINYBASIC
+  TINYBASIC,
+  USB_DISK
 };
 
 static constexpr usize SIZE = 8192;

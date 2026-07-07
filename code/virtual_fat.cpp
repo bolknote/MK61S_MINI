@@ -1,5 +1,6 @@
 #include "virtual_fat.hpp"
 
+#include "language_workspace.hpp"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
 
@@ -104,19 +105,38 @@ struct LfnState {
   char name[MAX_LFN_CHARS + 1];
 };
 
-static PendingWrite pending_writes[MAX_PENDING_WRITES];
-static PendingDelete pending_deletes[MAX_PENDING_DELETES];
-static IgnoredWriteRange ignored_ranges[IGNORED_WRITE_RANGES];
-static ClusterMap cluster_maps[program_store::MAX_ENTRIES];
-static LfnState root_lfn_state;
-static u32 root_lfn_next_sector = 0;
-static u8 next_ignored_slot = 0;
+struct SessionState {
+  PendingWrite pending_writes[MAX_PENDING_WRITES];
+  PendingDelete pending_deletes[MAX_PENDING_DELETES];
+  IgnoredWriteRange ignored_ranges[IGNORED_WRITE_RANGES];
+  ClusterMap cluster_maps[program_store::MAX_ENTRIES];
+  LfnState root_lfn_state;
+  u32 root_lfn_next_sector;
+  u8 next_ignored_slot;
 
-// Raw copy of the FAT sectors the host has written this session. This is the
-// only way to learn the real (possibly fragmented) cluster chains the host
-// allocated for new files.
-static u8 host_fat[HOST_FAT_SECTORS * SECTOR_SIZE];
-static u8 host_fat_written;
+  // Raw copy of the FAT sectors the host has written this session. This is the
+  // only way to learn the real (possibly fragmented) cluster chains the host
+  // allocated for new files.
+  u8 host_fat[HOST_FAT_SECTORS * SECTOR_SIZE];
+  u8 host_fat_written;
+};
+
+static_assert(language_workspace::SIZE >= sizeof(SessionState), "language workspace must fit virtual FAT session");
+
+static SessionState* session_state_ptr = NULL;
+
+static bool ensure_session_state(void) {
+  if(session_state_ptr != NULL && language_workspace::current_owner() == language_workspace::Owner::USB_DISK) return true;
+  void* storage = language_workspace::acquire(language_workspace::Owner::USB_DISK, sizeof(SessionState));
+  if(storage == NULL) return false;
+  session_state_ptr = (SessionState*) storage;
+  return true;
+}
+
+static SessionState& session_state(void) {
+  (void) ensure_session_state();
+  return *session_state_ptr;
+}
 
 static_assert(shared_scratch::SIZE >= MAX_IMPORTED_LEN, "shared scratch too small for virtual FAT commits");
 
@@ -224,15 +244,15 @@ static bool file_entry(int flat_index, program_store::Entry& out) {
 
 static void record_host_fat_sector(u32 fat_index, const u8* data) {
   if(fat_index >= HOST_FAT_SECTORS) return;
-  memcpy(host_fat + fat_index * SECTOR_SIZE, data, SECTOR_SIZE);
-  host_fat_written = (u8) (host_fat_written | (1U << fat_index));
+  memcpy(session_state().host_fat + fat_index * SECTOR_SIZE, data, SECTOR_SIZE);
+  session_state().host_fat_written = (u8) (session_state().host_fat_written | (1U << fat_index));
 }
 
 static bool host_fat_byte(u32 offset, u8& out) {
   const u32 sector = offset / SECTOR_SIZE;
   if(sector >= HOST_FAT_SECTORS) return false;
-  if((host_fat_written & (1U << sector)) == 0) return false;
-  out = host_fat[offset];
+  if((session_state().host_fat_written & (1U << sector)) == 0) return false;
+  out = session_state().host_fat[offset];
   return true;
 }
 
@@ -277,7 +297,7 @@ static void pending_clusters(const PendingWrite& pending, FileClusters& out) {
 
 static PendingWrite* pending_for_cluster(u16 cluster, int* out_index = NULL) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    PendingWrite& pending = pending_writes[i];
+    PendingWrite& pending = session_state().pending_writes[i];
     if(!pending.used || pending.start_cluster < FIRST_DATA_CLUSTER) continue;
     FileClusters chain;
     pending_clusters(pending, chain);
@@ -301,14 +321,14 @@ static bool same_key(program_store::ProgramType type, const char* name, const Cl
 
 static ClusterMap* find_cluster_map(program_store::ProgramType type, const char* name) {
   for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
-    if(same_key(type, name, cluster_maps[i])) return &cluster_maps[i];
+    if(same_key(type, name, session_state().cluster_maps[i])) return &session_state().cluster_maps[i];
   }
   return NULL;
 }
 
 static ClusterMap* allocate_cluster_map(void) {
   for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
-    if(!cluster_maps[i].used) return &cluster_maps[i];
+    if(!session_state().cluster_maps[i].used) return &session_state().cluster_maps[i];
   }
   return NULL;
 }
@@ -320,7 +340,7 @@ static void forget_cluster_map(program_store::ProgramType type, const char* name
 
 static void purge_stale_cluster_maps(void) {
   for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
-    ClusterMap& map = cluster_maps[i];
+    ClusterMap& map = session_state().cluster_maps[i];
     if(!map.used) continue;
     if(!program_store::exists(map.type, map.name)) memset(&map, 0, sizeof(map));
   }
@@ -328,7 +348,7 @@ static void purge_stale_cluster_maps(void) {
 
 static bool cluster_in_maps(u16 cluster) {
   for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
-    const ClusterMap& map = cluster_maps[i];
+    const ClusterMap& map = session_state().cluster_maps[i];
     if(!map.used) continue;
     for(u8 j = 0; j < map.count; j++) {
       if(map.chain[j] == cluster) return true;
@@ -920,7 +940,7 @@ static void read_root_sector(u32 root_sector, u8* out) {
     if(rendered) continue;
 
     for(u8 pending_index = 0; pending_index < MAX_PENDING_WRITES; pending_index++) {
-      PendingWrite& pending = pending_writes[pending_index];
+      PendingWrite& pending = session_state().pending_writes[pending_index];
       if(!pending_visible(pending)) continue;
       const u8 entries = dir_entries_for_name(pending.name, pending.type);
       if(dir_index >= cursor && dir_index < cursor + entries) {
@@ -1135,7 +1155,7 @@ static bool committed_short_entry_at_dir_index(int dir_index, program_store::Ent
 
 static PendingDelete* find_pending_delete(program_store::ProgramType type, const char* name) {
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
-    PendingDelete& pending = pending_deletes[i];
+    PendingDelete& pending = session_state().pending_deletes[i];
     if(!pending.used || pending.type != type) continue;
     if(strncmp(pending.name, name, program_store::NAME_SIZE) == 0) return &pending;
   }
@@ -1144,7 +1164,7 @@ static PendingDelete* find_pending_delete(program_store::ProgramType type, const
 
 static PendingDelete* find_pending_delete_for_cluster(program_store::ProgramType type, u16 start_cluster, u16 data_len) {
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
-    PendingDelete& pending = pending_deletes[i];
+    PendingDelete& pending = session_state().pending_deletes[i];
     if(!pending.used || pending.type != type) continue;
     if(pending.start_cluster == start_cluster && pending.data_len == data_len) return &pending;
   }
@@ -1153,7 +1173,7 @@ static PendingDelete* find_pending_delete_for_cluster(program_store::ProgramType
 
 static PendingDelete* allocate_pending_delete(void) {
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
-    if(!pending_deletes[i].used) return &pending_deletes[i];
+    if(!session_state().pending_deletes[i].used) return &session_state().pending_deletes[i];
   }
   tracef("DELETE queue full");
   return NULL;
@@ -1215,7 +1235,7 @@ static bool parse_generated_dir_entry(int dir_index, const u8* item, ParsedDirEn
 
 static PendingWrite* find_pending(program_store::ProgramType type, const char* name) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    PendingWrite& pending = pending_writes[i];
+    PendingWrite& pending = session_state().pending_writes[i];
     if(!pending.used || pending.type != type) continue;
     if(strncmp(pending.name, name, program_store::NAME_SIZE) == 0) return &pending;
   }
@@ -1224,12 +1244,12 @@ static PendingWrite* find_pending(program_store::ProgramType type, const char* n
 
 static PendingWrite* allocate_pending(void) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    if(!pending_writes[i].used) return &pending_writes[i];
+    if(!session_state().pending_writes[i].used) return &session_state().pending_writes[i];
   }
 
   (void) flush_pending();
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    if(!pending_writes[i].used) return &pending_writes[i];
+    if(!session_state().pending_writes[i].used) return &session_state().pending_writes[i];
   }
 
   tracef("WRITE queue full");
@@ -1309,7 +1329,7 @@ static bool ranges_overlap(u16 start_a, u16 clusters_a, u16 start_b, u16 cluster
 
 static bool ignored_cluster(u16 cluster) {
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
-    const IgnoredWriteRange& range = ignored_ranges[i];
+    const IgnoredWriteRange& range = session_state().ignored_ranges[i];
     if(!range.used) continue;
     if(cluster >= range.start_cluster && cluster < (u16) (range.start_cluster + range.clusters)) return true;
   }
@@ -1320,7 +1340,7 @@ static void clear_ignored_range(u16 start_cluster, u16 data_len) {
   if(data_len == 0 || start_cluster < FIRST_DATA_CLUSTER) return;
   const u16 clusters = clusters_for_len(data_len);
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
-    IgnoredWriteRange& range = ignored_ranges[i];
+    IgnoredWriteRange& range = session_state().ignored_ranges[i];
     if(!range.used) continue;
     if(ranges_overlap(start_cluster, clusters, range.start_cluster, range.clusters)) range.used = false;
   }
@@ -1335,14 +1355,14 @@ static void ignore_write_range(u16 start_cluster, u32 data_len) {
 
   IgnoredWriteRange* range = NULL;
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
-    if(!ignored_ranges[i].used) {
-      range = &ignored_ranges[i];
+    if(!session_state().ignored_ranges[i].used) {
+      range = &session_state().ignored_ranges[i];
       break;
     }
   }
   if(range == NULL) {
-    range = &ignored_ranges[next_ignored_slot];
-    next_ignored_slot = (u8) ((next_ignored_slot + 1) % IGNORED_WRITE_RANGES);
+    range = &session_state().ignored_ranges[session_state().next_ignored_slot];
+    session_state().next_ignored_slot = (u8) ((session_state().next_ignored_slot + 1) % IGNORED_WRITE_RANGES);
   }
 
   range->used = true;
@@ -1357,8 +1377,8 @@ static void ignore_dir_entry_range(const u8* item) {
 }
 
 static void clear_ignored_ranges(void) {
-  memset(ignored_ranges, 0, sizeof(ignored_ranges));
-  next_ignored_slot = 0;
+  memset(session_state().ignored_ranges, 0, sizeof(session_state().ignored_ranges));
+  session_state().next_ignored_slot = 0;
 }
 
 // Assign every committed file its cluster range up front so the layout the
@@ -1374,15 +1394,15 @@ static void pin_committed_files(void) {
 }
 
 void reset_session(void) {
-  memset(pending_writes, 0, sizeof(pending_writes));
-  memset(pending_deletes, 0, sizeof(pending_deletes));
-  memset(ignored_ranges, 0, sizeof(ignored_ranges));
-  memset(cluster_maps, 0, sizeof(cluster_maps));
-  memset(&root_lfn_state, 0, sizeof(root_lfn_state));
-  memset(host_fat, 0, sizeof(host_fat));
-  host_fat_written = 0;
-  root_lfn_next_sector = 0;
-  next_ignored_slot = 0;
+  memset(session_state().pending_writes, 0, sizeof(session_state().pending_writes));
+  memset(session_state().pending_deletes, 0, sizeof(session_state().pending_deletes));
+  memset(session_state().ignored_ranges, 0, sizeof(session_state().ignored_ranges));
+  memset(session_state().cluster_maps, 0, sizeof(session_state().cluster_maps));
+  memset(&session_state().root_lfn_state, 0, sizeof(session_state().root_lfn_state));
+  memset(session_state().host_fat, 0, sizeof(session_state().host_fat));
+  session_state().host_fat_written = 0;
+  session_state().root_lfn_next_sector = 0;
+  session_state().next_ignored_slot = 0;
   program_store::vfat_stage_clear();
   pin_committed_files();
 }
@@ -1413,7 +1433,7 @@ static bool try_rename_pending_delete(const ParsedDirEntry& parsed) {
 // losing the file.
 static void reconcile_pending_renames(void) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    PendingWrite& pending = pending_writes[i];
+    PendingWrite& pending = session_state().pending_writes[i];
     if(!pending.used || pending.data_len == 0) continue;
     if(pending_has_any_data(pending)) continue;
     if(program_store::exists(pending.type, pending.name)) continue;
@@ -1432,7 +1452,7 @@ bool flush_pending(void) {
   tracef("SYNC");
   bool ok = true;
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    PendingWrite& pending = pending_writes[i];
+    PendingWrite& pending = session_state().pending_writes[i];
     if(!pending.used) continue;
     if(!pending_has_all_data(pending)) {
       tracef("SYNC incomplete %s.%s c=%u len=%u", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len);
@@ -1442,7 +1462,7 @@ bool flush_pending(void) {
   }
   reconcile_pending_renames();
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
-    PendingDelete& pending = pending_deletes[i];
+    PendingDelete& pending = session_state().pending_deletes[i];
     if(!pending.used) continue;
     if(program_store::exists(pending.type, pending.name) && !program_store::remove(pending.type, pending.name)) {
       ok = false;
@@ -1534,7 +1554,7 @@ static bool remove_existing_dir_slot(int dir_index, const u8* item) {
   const u16 item_cluster = get_le16(item, 26);
   const u32 item_len = get_le32(item, 28);
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
-    PendingWrite& pending = pending_writes[i];
+    PendingWrite& pending = session_state().pending_writes[i];
     if(!pending.used) continue;
     if(pending.start_cluster != item_cluster || pending.data_len != item_len) continue;
     FileClusters chain;
@@ -1618,9 +1638,9 @@ static const char* accepted_lfn_name(const LfnState& lfn, const u8* short_entry)
 
 static bool write_root_sector(u32 root_sector, const u8* data) {
   const int first_entry = (int) (root_sector * (SECTOR_SIZE / 32));
-  LfnState& lfn = root_lfn_state;
-  if(root_sector == 0 || !lfn.active || root_sector != root_lfn_next_sector) reset_lfn_state(lfn);
-  root_lfn_next_sector = 0;
+  LfnState& lfn = session_state().root_lfn_state;
+  if(root_sector == 0 || !lfn.active || root_sector != session_state().root_lfn_next_sector) reset_lfn_state(lfn);
+  session_state().root_lfn_next_sector = 0;
 
   for(int i = 0; i < (SECTOR_SIZE / 32); i++) {
     const int dir_index = first_entry + i;
@@ -1680,7 +1700,7 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
   }
 
   if(lfn.active && lfn.valid) {
-    root_lfn_next_sector = root_sector + 1;
+    session_state().root_lfn_next_sector = root_sector + 1;
   } else if(lfn.active) {
     reset_lfn_state(lfn);
   }

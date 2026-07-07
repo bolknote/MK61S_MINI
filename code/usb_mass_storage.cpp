@@ -1,6 +1,5 @@
 #include "usb_mass_storage.hpp"
 
-#include "menu.hpp"
 #include "rust_types.h"
 #include "virtual_fat.hpp"
 
@@ -139,7 +138,7 @@ static int8_t storage_capacity(uint8_t lun, uint32_t* block_num, uint16_t* block
 
 static int8_t storage_ready(uint8_t lun) {
   (void) lun;
-  return library_mk61::usb_disk_is_on() ? 0 : -1;
+  return initialized ? 0 : -1;
 }
 
 static int8_t storage_write_protected(uint8_t lun) {
@@ -189,16 +188,29 @@ static USBD_StorageTypeDef storage = {
 
 bool init(void) {
   if(initialized) return true;
-  if(!library_mk61::usb_disk_is_on()) return false;
 
   virtual_fat::reset_session();
 
   if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) return false;
-  if(USBD_RegisterClass(&usb_device, USBD_MSC_CLASS) != USBD_OK) return false;
-  if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) return false;
-  if(USBD_Start(&usb_device) != USBD_OK) return false;
+  if(USBD_RegisterClass(&usb_device, USBD_MSC_CLASS) != USBD_OK) {
+    (void) USBD_DeInit(&usb_device);
+    memset(&usb_device, 0, sizeof(usb_device));
+    return false;
+  }
+  if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) {
+    (void) USBD_DeInit(&usb_device);
+    memset(&usb_device, 0, sizeof(usb_device));
+    return false;
+  }
 
   initialized = true;
+  if(USBD_Start(&usb_device) != USBD_OK) {
+    initialized = false;
+    (void) USBD_DeInit(&usb_device);
+    memset(&usb_device, 0, sizeof(usb_device));
+    return false;
+  }
+
   return true;
 }
 

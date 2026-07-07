@@ -20,9 +20,10 @@ extern isize mk61_quants_reload;
 namespace library_mk61 {
 
 static constexpr int MENU_DFU      = 0;
-static constexpr int MENU_SETTINGS = 1;
-static constexpr int MENU_GAMES    = 2;
-static constexpr int MENU_LIBRARY  = 3;
+static constexpr int MENU_USB_DISK = 1;
+static constexpr int MENU_SETTINGS = 2;
+static constexpr int MENU_GAMES    = 3;
+static constexpr int MENU_LIBRARY  = 4;
 static constexpr int MENU_AFTER_LIBRARY = MENU_LIBRARY + 1;
 static constexpr int MENU_DEVELOP  = MENU_AFTER_LIBRARY;
 static constexpr int MENU_RESET    = MENU_DEVELOP + 1;
@@ -35,14 +36,12 @@ static constexpr int SETTINGS_IDLE_SIGNAL = 1;
 static constexpr int SETTINGS_SPEED   = 2;
 static constexpr int SETTINGS_MEMORY  = 3;
 static constexpr int SETTINGS_LANGUAGE = 4;
-static constexpr int SETTINGS_USB_DISK = 5;
-static constexpr int SETTINGS_DISPLAY_ROWS = 6;
+static constexpr int SETTINGS_DISPLAY_ROWS = 5;
 
 static u8 sound_volume_state = 10;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
-static bool usb_disk_state = false;
 static bool idle_signal_state = true;
 static u8 display_rows_state = lcd_display::DEFAULT_ROWS;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
@@ -184,6 +183,7 @@ bool  InfoData(void) {
 }
 
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
+const t_punct USB_DISK_punct      = {.size = 8,  .action = (menu_action) &UsbDiskMode,          .text = "USB Disk"};
 const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
 const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct GAME_61_punct       = {.size = 10, .action = &mk61_games_select,                  .text = "MK61 Games"};
@@ -198,14 +198,13 @@ const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnPr
 const t_punct MEMORY_AUTO_punct   = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory Auto    "};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
 const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Язык рус"};
-const t_punct USB_DISK_OFF_punct  = {.size = 15, .action = (menu_action) &TurnUsbDisk,          .text = "USB Disk OFF   "};
-const t_punct USB_DISK_ON_punct   = {.size = 15, .action = (menu_action) &TurnUsbDisk,          .text = "USB Disk ON    "};
 const t_punct IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep OFF "};
 const t_punct IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep ON  "};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
 
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
+const t_punct RU_USB_DISK_punct   = {.size = 15, .action = (menu_action) &UsbDiskMode,          .text = "USB-диск"};
 const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
 const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
 const t_punct RU_GAME_61_punct    = {.size = 15, .action = &mk61_games_select,                  .text = "Игры MK61"};
@@ -218,8 +217,6 @@ const t_punct RU_SPEED_TURBO_punct= {.size = 15, .action = (menu_action) &TurnSp
 const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 105ШГ"};
 const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 112ШГ+ПF"};
 const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память АВТО"};
-const t_punct RU_USB_DISK_OFF_punct = {.size = 15, .action = (menu_action) &TurnUsbDisk,        .text = "USB-диск выкл"};
-const t_punct RU_USB_DISK_ON_punct  = {.size = 15, .action = (menu_action) &TurnUsbDisk,        .text = "USB-диск вкл"};
 const t_punct RU_IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук выкл"};
 const t_punct RU_IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук вкл"};
 const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "Информация"};
@@ -227,6 +224,7 @@ const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &Hardwa
 
 t_punct* MENU[] = {
       (t_punct*) &DFU_mode_punct,
+      (t_punct*) &USB_DISK_punct,
       (t_punct*) &SETTINGS_punct,
       (t_punct*) &GAME_61_punct,
       (t_punct*) &LIB_61_punct,
@@ -245,7 +243,6 @@ t_punct* SETTINGS_MENU[] = {
       (t_punct*) &SPEED_HIGH_punct,
       (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &LANGUAGE_EN_punct,
-      (t_punct*) &USB_DISK_OFF_punct,
 #if defined(MK61_DISPLAY_UC1609)
       (t_punct*) &ROWS_punct,
 #endif
@@ -271,18 +268,6 @@ bool  language_is_ru(void) {
 
 void  set_language_state(bool enable) {
   russian_language = enable;
-}
-
-bool usb_disk_is_on(void) {
-#ifdef MK61_USB_DISK_FORCE_ON
-  return true;
-#else
-  return usb_disk_state;
-#endif
-}
-
-void set_usb_disk_state(bool enable) {
-  usb_disk_state = enable;
 }
 
 bool idle_signal_is_on(void) {
@@ -354,11 +339,6 @@ static t_punct* speed_punct(void) {
   }
 }
 
-static t_punct* usb_disk_punct(void) {
-  if(usb_disk_is_on()) return (t_punct*) (russian_language ? &RU_USB_DISK_ON_punct : &USB_DISK_ON_punct);
-  return (t_punct*) (russian_language ? &RU_USB_DISK_OFF_punct : &USB_DISK_OFF_punct);
-}
-
 static t_punct* idle_signal_punct(void) {
   if(idle_signal_is_on()) return (t_punct*) (russian_language ? &RU_IDLE_SIGNAL_ON_punct : &IDLE_SIGNAL_ON_punct);
   return (t_punct*) (russian_language ? &RU_IDLE_SIGNAL_OFF_punct : &IDLE_SIGNAL_OFF_punct);
@@ -404,6 +384,7 @@ void refresh_menu_text(void) {
 
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SETTINGS] = (t_punct*) (russian_language ? &RU_SETTINGS_punct : &SETTINGS_punct);
+  MENU[MENU_USB_DISK] = (t_punct*) (russian_language ? &RU_USB_DISK_punct : &USB_DISK_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_GAMES]    = (t_punct*) (russian_language ? &RU_GAME_61_punct : &GAME_61_punct);
   MENU[MENU_DEVELOP]  = (t_punct*) (russian_language ? &RU_DEVELOPMENT_punct : &DEVELOPMENT_punct);
@@ -417,7 +398,6 @@ void refresh_menu_text(void) {
   SETTINGS_MENU[SETTINGS_SPEED]    = speed_punct();
   SETTINGS_MENU[SETTINGS_MEMORY]   = memory_punct();
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
-  SETTINGS_MENU[SETTINGS_USB_DISK] = usb_disk_punct();
 #if defined(MK61_DISPLAY_UC1609)
   SETTINGS_MENU[SETTINGS_DISPLAY_ROWS] = display_rows_punct();
 #endif
@@ -428,7 +408,7 @@ void  store_settings_state(void) {
   flags.bits.language_ru = russian_language;
   flags.bits.program_memory_mode = (u8) memory_mode;
   flags.bits.speed_mode = (u8) speed_mode_state;
-  flags.bits.usb_disk = usb_disk_state ? 1 : 0;
+  flags.bits.reserved = 0;
   flags.bits.idle_signal_off = idle_signal_state ? 0 : 1;
 #if defined(MK61_DISPLAY_UC1609)
   flags.bits.display_rows_8 = (display_rows_state == lcd_display::COMPACT_ROWS) ? 1 : 0;
@@ -472,7 +452,6 @@ void  load_settings_state(void) {
   set_program_memory_state(memory_mode == ProgramMemoryMode::EXPANDED_112);
   const u8 stored_speed = flags.bits.speed_mode;
   set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
-  set_usb_disk_state(flags.bits.usb_disk != 0);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
 #if defined(MK61_DISPLAY_UC1609)
   const u8 stored_rows_mode = sound_settings.bits.display_rows_mode;
@@ -600,28 +579,37 @@ bool   TurnLanguage(void) {
   return action::MENU_BACK;
 }
 
-bool   TurnUsbDisk(void) {
-  const bool was_on = library_mk61::usb_disk_is_on();
-#ifdef MK61_USB_DISK_FORCE_ON
-  library_mk61::set_usb_disk_state(!usb_disk_state);
-#else
-  library_mk61::set_usb_disk_state(!library_mk61::usb_disk_is_on());
-#endif
-  library_mk61::refresh_menu_text();
-  library_mk61::mark_settings_dirty();
-  const bool is_on = library_mk61::usb_disk_is_on();
-  if(was_on && !is_on) {
+static void draw_usb_disk_status(const char* ru0, const char* en0, const char* ru1, const char* en1) {
+  MK61DisplayUpdate update(lcd);
+  lcd.clear();
+  library_mk61::print_localized_at(0, 0, ru0, en0);
+  library_mk61::print_localized_at(0, 1, ru1, en1);
+}
+
+bool UsbDiskMode(void) {
+  library_mk61::flush_settings_state();
+  draw_usb_disk_status("USB-диск", "USB Disk", "Запуск...", "Starting...");
+
+  if(!usb_start_mass_storage_mode()) {
     usb_start_terminal_mode();
-  } else if(!was_on && is_on) {
-    if(!usb_start_mass_storage_mode()) {
-      library_mk61::set_usb_disk_state(false);
-      library_mk61::refresh_menu_text();
-      library_mk61::mark_settings_dirty();
-      usb_start_terminal_mode();
+    draw_usb_disk_status("Ошибка USB", "USB error", "ESC", "ESC");
+    kbd::get_key_wait();
+    return action::MENU_BACK;
+  }
+
+  draw_usb_disk_status("USB-диск", "USB Disk", "ESC выход", "ESC exit");
+  while(true) {
+    idle_main_process();
+    const i32 key = kbd::scan_and_debounced();
+    if(key == KEY_ESC_PRESS) {
+      kbd::exclude_before(key);
+      break;
     }
   }
 
-  return action::MENU_BACK;
+  usb_start_terminal_mode();
+  lcd_ru::restore_default_font();
+  return action::MENU_EXIT;
 }
 
 bool TurnIdleSignal(void) {
@@ -793,18 +781,6 @@ bool class_menu::handle_settings_adjustment(i32 key) {
 
       if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
         TurnLanguage();
-        return true;
-      }
-      break;
-
-    case library_mk61::SETTINGS_USB_DISK:
-      if(key == KEY_OK_PRESS) {
-        TurnUsbDisk();
-        return true;
-      }
-
-      if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-        TurnUsbDisk();
         return true;
       }
       break;
