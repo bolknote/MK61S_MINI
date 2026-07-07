@@ -580,10 +580,21 @@ bool   TurnLanguage(void) {
 }
 
 static void draw_usb_disk_status(const char* ru0, const char* en0, const char* ru1, const char* en1) {
+  if(library_mk61::language_is_ru()) {
+    {
+      MK61DisplayUpdate update(lcd);
+      lcd.clear();
+    }
+    lcd_ru::print_lines(ru0, ru1);
+    return;
+  }
+
   MK61DisplayUpdate update(lcd);
   lcd.clear();
-  library_mk61::print_localized_at(0, 0, ru0, en0);
-  library_mk61::print_localized_at(0, 1, ru1, en1);
+  lcd.setCursor(0, 0);
+  lcd.print(en0);
+  lcd.setCursor(0, 1);
+  lcd.print(en1);
 }
 
 bool UsbDiskMode(void) {
