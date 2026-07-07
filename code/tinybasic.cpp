@@ -121,6 +121,9 @@ namespace library_mk61 {
 #define TEXT_EDITOR_HOST_TEST
 #endif
 #include "text_editor.hpp"
+#ifndef TINYBASIC_HOST_TEST
+#include "language_workspace.hpp"
+#endif
 
 #if MK61_ENABLE_TINYBASIC
 
@@ -211,14 +214,38 @@ struct TbWord {
   const char* end;
 };
 
-static TbProgram programs[TB_PROGRAM_COUNT];
-static TbAst tb_ast;
-static double tb_vars[26];
-static i8 NextTinyBasic = -1;
-static char tb_last_error[17];
+struct TinyBasicRuntime {
+  TbProgram programs[TB_PROGRAM_COUNT];
+  TbAst tb_ast;
+  double tb_vars[26];
+  i8 NextTinyBasic;
+  char tb_last_error[17];
+  char tb_pending_print[TB_PRINT_BUFFER_SIZE];
+  u8 tb_print_row;
+};
+
+#ifdef TINYBASIC_HOST_TEST
+static TinyBasicRuntime tinybasic_runtime_storage;
+static TinyBasicRuntime& tinybasic_runtime(void) {
+  return tinybasic_runtime_storage;
+}
+#else
+static_assert(sizeof(TinyBasicRuntime) <= language_workspace::SIZE, "TinyBASIC runtime does not fit language workspace");
+static TinyBasicRuntime& tinybasic_runtime(void) {
+  void* memory = language_workspace::acquire(language_workspace::Owner::TINYBASIC, sizeof(TinyBasicRuntime));
+  return *((TinyBasicRuntime*) memory);
+}
+#endif
+
+#define programs         (tinybasic_runtime().programs)
+#define tb_ast           (tinybasic_runtime().tb_ast)
+#define tb_vars          (tinybasic_runtime().tb_vars)
+#define NextTinyBasic    (tinybasic_runtime().NextTinyBasic)
+#define tb_last_error    (tinybasic_runtime().tb_last_error)
+#define tb_pending_print (tinybasic_runtime().tb_pending_print)
+#define tb_print_row     (tinybasic_runtime().tb_print_row)
+
 static u32 tb_random_state = 0x3B6B120EUL;
-static char tb_pending_print[TB_PRINT_BUFFER_SIZE];
-static u8 tb_print_row;
 #ifdef TINYBASIC_HOST_TEST
 static double tb_host_input_value = 0.0;
 #endif

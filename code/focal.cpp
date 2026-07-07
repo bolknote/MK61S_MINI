@@ -137,6 +137,9 @@ namespace library_mk61 {
 #define TEXT_EDITOR_HOST_TEST
 #endif
 #include "text_editor.hpp"
+#ifndef FOCAL_HOST_TEST
+#include "language_workspace.hpp"
+#endif
 
 #if MK61_ENABLE_FOCAL
 
@@ -147,7 +150,11 @@ extern MK61Display lcd;
 extern void idle_main_process(void);
 #endif
 
+#ifdef FOCAL_HOST_TEST
 static constexpr int FOCAL_PROGRAM_COUNT       = 8;
+#else
+static constexpr int FOCAL_PROGRAM_COUNT       = 1;
+#endif
 static constexpr int FOCAL_SOURCE_SIZE         = 640;
 static constexpr int FOCAL_LINE_TEXT_SIZE      = 80;
 static constexpr int FOCAL_LINE_BUFFER_SIZE    = 128;
@@ -216,12 +223,34 @@ struct FocalFlow {
   i16 pc;
 };
 
-static FocalProgram programs[FOCAL_PROGRAM_COUNT];
-static FocalAst focal_ast;
-static double focal_vars[26];
-static bool focal_var_set[26];
-static i8 NextFocal = -1;
-static char focal_last_error[17];
+struct FocalRuntime {
+  FocalProgram programs[FOCAL_PROGRAM_COUNT];
+  FocalAst focal_ast;
+  double focal_vars[26];
+  bool focal_var_set[26];
+  i8 NextFocal;
+  char focal_last_error[17];
+};
+
+#ifdef FOCAL_HOST_TEST
+static FocalRuntime focal_runtime_storage;
+static FocalRuntime& focal_runtime(void) {
+  return focal_runtime_storage;
+}
+#else
+static_assert(sizeof(FocalRuntime) <= language_workspace::SIZE, "FOCAL runtime does not fit language workspace");
+static FocalRuntime& focal_runtime(void) {
+  void* memory = language_workspace::acquire(language_workspace::Owner::FOCAL, sizeof(FocalRuntime));
+  return *((FocalRuntime*) memory);
+}
+#endif
+
+#define programs         (focal_runtime().programs)
+#define focal_ast        (focal_runtime().focal_ast)
+#define focal_vars       (focal_runtime().focal_vars)
+#define focal_var_set    (focal_runtime().focal_var_set)
+#define NextFocal        (focal_runtime().NextFocal)
+#define focal_last_error (focal_runtime().focal_last_error)
 #ifdef FOCAL_HOST_TEST
 static u32 focal_random_state = 0x3B6B120EUL;
 static double focal_host_ask_value = 0.0;
