@@ -76,7 +76,8 @@ struct SoundSettings {
     u8 raw;
     struct {
       u8 volume : 4;
-      u8 reserved : 4;
+      u8 display_rows_mode : 2;
+      u8 reserved : 2;
     } bits;
   };
 

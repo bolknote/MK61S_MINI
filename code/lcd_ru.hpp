@@ -53,7 +53,42 @@ static const glyph_t CYRILLIC_GLYPHS[] = {
   {0x042C, {0b10000, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}}, // Ь
   {0x042D, {0b11110, 0b00001, 0b00001, 0b01111, 0b00001, 0b00001, 0b11110, 0b00000}}, // Э
   {0x042E, {0b10010, 0b10101, 0b10101, 0b11101, 0b10101, 0b10101, 0b10010, 0b00000}}, // Ю
-  {0x042F, {0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b10001, 0b00000}}  // Я
+  {0x042F, {0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b10001, 0b00000}}, // Я
+#if defined(MK61_DISPLAY_UC1609)
+  {0x0430, {0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000}}, // а
+  {0x0431, {0b00111, 0b01000, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110, 0b00000}}, // б
+  {0x0432, {0b00000, 0b11110, 0b10001, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}}, // в
+  {0x0433, {0b00000, 0b11111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000}}, // г
+  {0x0434, {0b00000, 0b00110, 0b01010, 0b01010, 0b01010, 0b11111, 0b10001, 0b00000}}, // д
+  {0x0435, {0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000}}, // е
+  {0x0451, {0b01010, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b01110, 0b00000}}, // ё
+  {0x0436, {0b00000, 0b10101, 0b10101, 0b01110, 0b01110, 0b10101, 0b10101, 0b00000}}, // ж
+  {0x0437, {0b00000, 0b11110, 0b00001, 0b00110, 0b00001, 0b00001, 0b11110, 0b00000}}, // з
+  {0x0438, {0b00000, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b10001, 0b00000}}, // и
+  {0x0439, {0b01010, 0b00100, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b00000}}, // й
+  {0x043A, {0b00000, 0b10001, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010, 0b00000}}, // к
+  {0x043B, {0b00000, 0b00111, 0b01001, 0b01001, 0b01001, 0b01001, 0b10001, 0b00000}}, // л
+  {0x043C, {0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10001, 0b10001, 0b00000}}, // м
+  {0x043D, {0b00000, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b00000}}, // н
+  {0x043E, {0b00000, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000}}, // о
+  {0x043F, {0b00000, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000}}, // п
+  {0x0440, {0b00000, 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000}}, // р
+  {0x0441, {0b00000, 0b01111, 0b10000, 0b10000, 0b10000, 0b10000, 0b01111, 0b00000}}, // с
+  {0x0442, {0b00000, 0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000}}, // т
+  {0x0443, {0b00000, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b11110, 0b00000}}, // у
+  {0x0444, {0b00100, 0b01110, 0b10101, 0b10101, 0b10101, 0b01110, 0b00100, 0b00000}}, // ф
+  {0x0445, {0b00000, 0b10001, 0b01010, 0b00100, 0b01010, 0b10001, 0b10001, 0b00000}}, // х
+  {0x0446, {0b00000, 0b10010, 0b10010, 0b10010, 0b10010, 0b11111, 0b00001, 0b00000}}, // ц
+  {0x0447, {0b00000, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b00001, 0b00000}}, // ч
+  {0x0448, {0b00000, 0b10101, 0b10101, 0b10101, 0b10101, 0b10101, 0b11111, 0b00000}}, // ш
+  {0x0449, {0b00000, 0b10101, 0b10101, 0b10101, 0b10101, 0b11111, 0b00001, 0b00000}}, // щ
+  {0x044A, {0b00000, 0b11000, 0b01000, 0b01110, 0b01001, 0b01001, 0b01110, 0b00000}}, // ъ
+  {0x044B, {0b00000, 0b10001, 0b10001, 0b11101, 0b10011, 0b10011, 0b11101, 0b00000}}, // ы
+  {0x044C, {0b00000, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}}, // ь
+  {0x044D, {0b00000, 0b11110, 0b00001, 0b01111, 0b00001, 0b00001, 0b11110, 0b00000}}, // э
+  {0x044E, {0b00000, 0b10010, 0b10101, 0b10101, 0b11101, 0b10101, 0b10010, 0b00000}}, // ю
+  {0x044F, {0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b00000}}  // я
+#endif
 };
 
 inline u16 uppercase(u16 codepoint) {
@@ -161,8 +196,17 @@ inline bool a00_rom_char(u16 codepoint, u8& out) {
 }
 
 inline bool rom_char(u16 codepoint, u8& out) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(codepoint < 0x80) {
+    out = (u8) codepoint;
+    return true;
+  }
+  (void) out;
+  return false;
+#else
   if(a02_rom_char(codepoint, out)) return true;
   return a00_rom_char(codepoint, out);
+#endif
 }
 
 inline bool fallback_char(u16 codepoint, u8& out) {
@@ -179,10 +223,20 @@ inline bool fallback_char(u16 codepoint, u8& out) {
 }
 
 inline const u8* glyph_for(u16 codepoint) {
+#if !defined(MK61_DISPLAY_UC1609)
   codepoint = uppercase(codepoint);
+#endif
   for(usize i = 0; i < sizeof(CYRILLIC_GLYPHS) / sizeof(CYRILLIC_GLYPHS[0]); i++) {
     if(CYRILLIC_GLYPHS[i].codepoint == codepoint) return CYRILLIC_GLYPHS[i].rows;
   }
+#if defined(MK61_DISPLAY_UC1609)
+  const u16 upper = uppercase(codepoint);
+  if(upper != codepoint) {
+    for(usize i = 0; i < sizeof(CYRILLIC_GLYPHS) / sizeof(CYRILLIC_GLYPHS[0]); i++) {
+      if(CYRILLIC_GLYPHS[i].codepoint == upper) return CYRILLIC_GLYPHS[i].rows;
+    }
+  }
+#endif
   return NULL;
 }
 
@@ -225,14 +279,23 @@ inline void load_custom_font(const font_map_t& map) {
 }
 
 inline void restore_default_font(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  lcd.clearCustomChars();
+#else
   const class_LCD_fonts lcd_fonts;
   lcd_fonts.load();
+#endif
 }
 
 inline void write_text(const font_map_t& map, const char* text, u8 width) {
   u8 used = 0;
   while(*text != 0 && used < width) {
-    const u16 codepoint = uppercase(read_utf8(text));
+    const u16 raw_codepoint = read_utf8(text);
+#if defined(MK61_DISPLAY_UC1609)
+    const u16 codepoint = raw_codepoint;
+#else
+    const u16 codepoint = uppercase(raw_codepoint);
+#endif
     u8 out;
     if(rom_char(codepoint, out)) {
       lcd.write(out);

@@ -62,6 +62,47 @@ static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &TurnDispl
 static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &TurnDisplayRows, .text = "Строк: 4"};
 #endif
 
+#if defined(MK61_DISPLAY_UC1609)
+static constexpr u8 DISPLAY_ROW_OPTIONS[] = {
+  lcd_display::DEFAULT_ROWS,
+  lcd_display::SPACED_ROWS_5,
+  lcd_display::SPACED_ROWS_7,
+  lcd_display::COMPACT_ROWS
+};
+
+static u8 normalize_display_rows(u8 rows) {
+  for(u8 i = 0; i < sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]); i++) {
+    if(DISPLAY_ROW_OPTIONS[i] == rows) return rows;
+  }
+  return lcd_display::DEFAULT_ROWS;
+}
+
+static u8 display_rows_mode(u8 rows) {
+  rows = normalize_display_rows(rows);
+  for(u8 i = 0; i < sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]); i++) {
+    if(DISPLAY_ROW_OPTIONS[i] == rows) return i;
+  }
+  return 0;
+}
+
+static u8 display_rows_from_mode(u8 mode) {
+  return (mode < sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]))
+    ? DISPLAY_ROW_OPTIONS[mode]
+    : lcd_display::DEFAULT_ROWS;
+}
+
+static u8 step_display_rows_value(u8 rows, i8 delta) {
+  const u8 count = sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]);
+  u8 index = display_rows_mode(rows);
+  if(delta >= 0) {
+    index = (u8) ((index + 1) % count);
+  } else {
+    index = (index == 0) ? (count - 1) : (u8) (index - 1);
+  }
+  return DISPLAY_ROW_OPTIONS[index];
+}
+#endif
+
 static void set_speed_mode_state(SpeedMode mode) {
   speed_mode_state = mode;
   ::mk61_quants_reload = (mode == SpeedMode::CLASSIC) ? cfg::CLASSIC_MK61_QUANTS : 1;
@@ -258,7 +299,7 @@ u8 display_rows(void) {
 
 void set_display_rows(u8 rows) {
 #if defined(MK61_DISPLAY_UC1609)
-  display_rows_state = (rows >= lcd_display::COMPACT_ROWS) ? lcd_display::COMPACT_ROWS : lcd_display::DEFAULT_ROWS;
+  display_rows_state = normalize_display_rows(rows);
 #else
   (void) rows;
   display_rows_state = lcd_display::DEFAULT_ROWS;
@@ -390,7 +431,7 @@ void  store_settings_state(void) {
   flags.bits.usb_disk = usb_disk_state ? 1 : 0;
   flags.bits.idle_signal_off = idle_signal_state ? 0 : 1;
 #if defined(MK61_DISPLAY_UC1609)
-  flags.bits.display_rows_8 = (display_rows_state >= lcd_display::COMPACT_ROWS) ? 1 : 0;
+  flags.bits.display_rows_8 = (display_rows_state == lcd_display::COMPACT_ROWS) ? 1 : 0;
 #else
   flags.bits.display_rows_8 = 0;
 #endif
@@ -398,6 +439,9 @@ void  store_settings_state(void) {
 
   SoundSettings sound_settings;
   sound_settings.bits.volume = sound_volume_state;
+#if defined(MK61_DISPLAY_UC1609)
+  sound_settings.bits.display_rows_mode = display_rows_mode(display_rows_state);
+#endif
   store_sound_settings(sound_settings);
 }
 
@@ -421,6 +465,7 @@ void poll_settings_state_save(void) {
 
 void  load_settings_state(void) {
   const SettingsFlags flags = read_settings_flags();
+  const SoundSettings sound_settings = read_sound_settings();
   set_language_state(flags.bits.language_ru != 0);
   const u8 stored_memory = flags.bits.program_memory_mode;
   memory_mode = (stored_memory <= (u8) ProgramMemoryMode::AUTO) ? (ProgramMemoryMode) stored_memory : ProgramMemoryMode::AUTO;
@@ -430,11 +475,14 @@ void  load_settings_state(void) {
   set_usb_disk_state(flags.bits.usb_disk != 0);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
 #if defined(MK61_DISPLAY_UC1609)
-  set_display_rows(flags.bits.display_rows_8 ? lcd_display::COMPACT_ROWS : lcd_display::DEFAULT_ROWS);
+  const u8 stored_rows_mode = sound_settings.bits.display_rows_mode;
+  set_display_rows((stored_rows_mode == 0 && flags.bits.display_rows_8)
+    ? lcd_display::COMPACT_ROWS
+    : display_rows_from_mode(stored_rows_mode));
 #else
   set_display_rows(lcd_display::DEFAULT_ROWS);
 #endif
-  set_sound_volume(read_sound_settings().bits.volume);
+  set_sound_volume(sound_settings.bits.volume);
   refresh_menu_text();
 }
 
@@ -600,18 +648,17 @@ static void ApplyDisplayRows(u8 rows) {
 
 bool TurnDisplayRows(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  const u8 next_rows = (library_mk61::display_rows() >= lcd_display::COMPACT_ROWS)
-    ? lcd_display::DEFAULT_ROWS
-    : lcd_display::COMPACT_ROWS;
-  ApplyDisplayRows(next_rows);
+  ApplyDisplayRows(library_mk61::step_display_rows_value(library_mk61::display_rows(), 1));
 #endif
 
   return action::MENU_BACK;
 }
 
-static void StepDisplayRows(i8) {
+static void StepDisplayRows(i8 delta) {
 #if defined(MK61_DISPLAY_UC1609)
-  TurnDisplayRows();
+  ApplyDisplayRows(library_mk61::step_display_rows_value(library_mk61::display_rows(), delta));
+#else
+  (void) delta;
 #endif
 }
 
@@ -782,7 +829,7 @@ bool class_menu::handle_settings_adjustment(i32 key) {
       }
 
       if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-        StepDisplayRows(1);
+        StepDisplayRows((key == KEY_SHG_LEFT_PRESS) ? -1 : 1);
         return true;
       }
       break;

@@ -90,7 +90,7 @@ static inline bool timeReached(t_time_ms now, t_time_ms target) {
 MK61Display::MK61Display(void)
   : render_buffer{0},
     lcd(lcd_display::PIXEL_WIDTH, lcd_display::PIXEL_HEIGHT, PIN_GLCD_CD, PIN_GLCD_RST, PIN_GLCD_CS),
-    render_screen(render_buffer, lcd_display::PIXEL_WIDTH, lcd_display::CELL_HEIGHT, 0, 0),
+    render_screen(render_buffer, lcd_display::PIXEL_WIDTH, MAX_RENDER_PAGES * 8, 0, 0),
     cells{{0}},
     cell_glyphs{{{0}}},
     cell_glyph_valid{{false}},
@@ -158,6 +158,14 @@ void MK61Display::flush(void) {
         col++;
       } while(col < lcd_display::COLS && (mask & ((uint16_t) 1 << col)) != 0);
       renderRun(row, first_col, col - first_col);
+
+      uint16_t run_mask = 0;
+      for(u8 run_col = first_col; run_col < col; run_col++) {
+        run_mask |= ((uint16_t) 1 << run_col);
+      }
+      for(u8 dirty_row = 0; dirty_row < active_rows; dirty_row++) {
+        dirty_cols[dirty_row] &= (uint16_t) ~run_mask;
+      }
     }
   }
 
@@ -279,11 +287,69 @@ void MK61Display::clearPhysicalScreen(void) {
 }
 
 u8 MK61Display::sanitizeRows(u8 rows) {
-  return (rows >= lcd_display::COMPACT_ROWS) ? lcd_display::COMPACT_ROWS : lcd_display::DEFAULT_ROWS;
+  switch(rows) {
+    case lcd_display::SPACED_ROWS_5:
+    case lcd_display::SPACED_ROWS_7:
+    case lcd_display::COMPACT_ROWS:
+      return rows;
+    default:
+      return lcd_display::DEFAULT_ROWS;
+  }
 }
 
-u8 MK61Display::cellHeight(void) const {
-  return (u8) (lcd_display::PIXEL_HEIGHT / active_rows);
+u8 MK61Display::glyphHeightForRows(u8 rows) {
+  switch(rows) {
+    case lcd_display::DEFAULT_ROWS:
+      return 16;
+    case lcd_display::SPACED_ROWS_5:
+      return 10;
+    case lcd_display::SPACED_ROWS_7:
+    case lcd_display::COMPACT_ROWS:
+    default:
+      return 8;
+  }
+}
+
+u8 MK61Display::glyphWidthForRows(u8 rows) {
+  switch(rows) {
+    case lcd_display::DEFAULT_ROWS:
+      return 10;
+    case lcd_display::SPACED_ROWS_5:
+      return 8;
+    case lcd_display::SPACED_ROWS_7:
+      return 6;
+    case lcd_display::COMPACT_ROWS:
+    default:
+      return 5;
+  }
+}
+
+u8 MK61Display::rowTop(u8 row) const {
+  return (u8) (((u16) row * lcd_display::PIXEL_HEIGHT) / active_rows);
+}
+
+u8 MK61Display::rowPitch(u8 row) const {
+  const u8 top = rowTop(row);
+  const u8 bottom = (u8) ((((u16) row + 1) * lcd_display::PIXEL_HEIGHT) / active_rows);
+  return bottom - top;
+}
+
+u8 MK61Display::glyphHeight(u8 row) const {
+  const u8 pitch = rowPitch(row);
+  const u8 height = glyphHeightForRows(active_rows);
+  return (height < pitch) ? height : pitch;
+}
+
+u8 MK61Display::glyphTop(u8 row) const {
+  return (u8) ((rowPitch(row) - glyphHeight(row)) / 2);
+}
+
+u8 MK61Display::glyphWidth(void) const {
+  return glyphWidthForRows(active_rows);
+}
+
+u8 MK61Display::glyphLeft(void) const {
+  return (u8) ((lcd_display::CELL_WIDTH - glyphWidth()) / 2);
 }
 
 void MK61Display::markScreenDirty(void) {
@@ -333,46 +399,57 @@ void MK61Display::advanceCursor(void) {
   moveCursorTo(next_x, next_y);
 }
 
-void MK61Display::drawGlyph(u8 x, const uint8_t* glyph) {
-  const u8 height = cellHeight();
-  const u8 scale_y = height / 8;
-  lcd.fillRect(x, 0, lcd_display::CELL_WIDTH, height, BACKGROUND);
-  for(u8 row = 0; row < 8; row++) {
-    const u8 bits = glyph[row];
-    for(u8 col = 0; col < 5; col++) {
-      if((bits & (0x10 >> col)) != 0) {
-        lcd.fillRect(x + col * 2, row * scale_y, 2, scale_y, FOREGROUND);
+void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph) {
+  const u8 pitch = rowPitch(row);
+  const u8 height = glyphHeight(row);
+  const u8 width = glyphWidth();
+  const u8 glyph_x = x + glyphLeft();
+  const u8 glyph_y = row_y + glyphTop(row);
+  lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
+  for(u8 dest_y = 0; dest_y < height; dest_y++) {
+    const u8 src_y = (u8) (((u16) dest_y * 8) / height);
+    const u8 bits = glyph[src_y];
+    for(u8 dest_x = 0; dest_x < width; dest_x++) {
+      const u8 src_x = (u8) (((u16) dest_x * 5) / width);
+      if((bits & (0x10 >> src_x)) != 0) {
+        lcd.drawPixel(glyph_x + dest_x, glyph_y + dest_y, FOREGROUND);
       }
     }
   }
 }
 
-void MK61Display::drawDefaultChar(u8 x, u8 value) {
+void MK61Display::drawDefaultChar(u8 x, u8 row_y, u8 row, u8 value) {
   static constexpr u8 FONT_WIDTH = 5;
   static constexpr u8 FONT_HEIGHT = 8;
-  const u8 height = cellHeight();
-  const u8 scale_y = height / FONT_HEIGHT;
+  const u8 pitch = rowPitch(row);
+  const u8 height = glyphHeight(row);
+  const u8 width = glyphWidth();
+  const u8 glyph_x = x + glyphLeft();
+  const u8 glyph_y = row_y + glyphTop(row);
   const u8 safe_value = (value < 128) ? value : (u8) '?';
   const unsigned char* glyph = &pFontDefaultptr[(usize) safe_value * FONT_WIDTH];
 
-  lcd.fillRect(x, 0, lcd_display::CELL_WIDTH, height, BACKGROUND);
-  for(u8 col = 0; col < FONT_WIDTH; col++) {
-    u8 bits = glyph[col];
-    for(u8 row = 0; row < FONT_HEIGHT; row++) {
-      if((bits & 0x01) != 0) {
-        lcd.fillRect(x + col * 2, row * scale_y, 2, scale_y, FOREGROUND);
+  lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
+  for(u8 dest_x = 0; dest_x < width; dest_x++) {
+    const u8 src_x = (u8) (((u16) dest_x * FONT_WIDTH) / width);
+    const u8 bits = glyph[src_x];
+    for(u8 dest_y = 0; dest_y < height; dest_y++) {
+      const u8 src_y = (u8) (((u16) dest_y * FONT_HEIGHT) / height);
+      if((bits & ((u8) 1 << src_y)) != 0) {
+        lcd.drawPixel(glyph_x + dest_x, glyph_y + dest_y, FOREGROUND);
       }
-      bits >>= 1;
     }
   }
 }
 
-void MK61Display::drawCursor(u8 x, bool block) {
-  static constexpr u8 CURSOR_WIDTH = 10;
-  const u8 height = cellHeight();
+void MK61Display::drawCursor(u8 x, u8 row_y, u8 row, bool block) {
+  const u8 cursor_width = glyphWidth();
+  const u8 cursor_x = x + glyphLeft();
+  const u8 height = glyphHeight(row);
+  const u8 glyph_y = row_y + glyphTop(row);
   const u8 underline_height = (height >= 16) ? 2 : 1;
-  if(block) lcd.fillRect(x, 0, CURSOR_WIDTH, height, FOREGROUND);
-  else lcd.fillRect(x, height - underline_height, CURSOR_WIDTH, underline_height, FOREGROUND);
+  if(block) lcd.fillRect(cursor_x, glyph_y, cursor_width, height, FOREGROUND);
+  else lcd.fillRect(cursor_x, glyph_y + height - underline_height, cursor_width, underline_height, FOREGROUND);
 }
 
 void MK61Display::updateCursorBlink(void) {
@@ -392,32 +469,35 @@ void MK61Display::updateCursorBlink(void) {
 
 void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
   if(count == 0) return;
+  (void) row;
 
   const u8 run_width = count * lcd_display::CELL_WIDTH;
-  const u8 height = cellHeight();
   render_screen.width = run_width;
-  render_screen.height = height;
-  memset(render_buffer, 0x00, run_width * (height / 8));
+  render_screen.height = lcd_display::PIXEL_HEIGHT;
+  memset(render_buffer, 0x00, run_width * MAX_RENDER_PAGES);
 
-  for(u8 i = 0; i < count; i++) {
-    const u8 value = cells[row][first_col + i];
-    const u8 x = i * lcd_display::CELL_WIDTH;
-    const u8 col = first_col + i;
-    if(cell_glyph_valid[row][col]) {
-      drawGlyph(x, cell_glyphs[row][col]);
-    } else if(value < CUSTOM_GLYPHS && custom_valid[value]) {
-      drawGlyph(x, custom_glyphs[value]);
-    } else {
-      drawDefaultChar(x, value);
-    }
-    if(row == cursor_y && col == cursor_x) {
-      if(cursor_blink && cursor_blink_phase) drawCursor(x, true);
-      else if(cursor_underline) drawCursor(x, false);
+  for(u8 render_row = 0; render_row < active_rows; render_row++) {
+    const u8 row_y = rowTop(render_row);
+    for(u8 i = 0; i < count; i++) {
+      const u8 col = first_col + i;
+      const u8 value = cells[render_row][col];
+      const u8 x = i * lcd_display::CELL_WIDTH;
+      if(cell_glyph_valid[render_row][col]) {
+        drawGlyph(x, row_y, render_row, cell_glyphs[render_row][col]);
+      } else if(value < CUSTOM_GLYPHS && custom_valid[value]) {
+        drawGlyph(x, row_y, render_row, custom_glyphs[value]);
+      } else {
+        drawDefaultChar(x, row_y, render_row, value);
+      }
+      if(render_row == cursor_y && col == cursor_x) {
+        if(cursor_blink && cursor_blink_phase) drawCursor(x, row_y, render_row, true);
+        else if(cursor_underline) drawCursor(x, row_y, render_row, false);
+      }
     }
   }
 
-  lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, row * height,
-                run_width, height, render_buffer);
+  lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, 0,
+                run_width, lcd_display::PIXEL_HEIGHT, render_buffer);
 }
 
 #if ARDUINO >= 100

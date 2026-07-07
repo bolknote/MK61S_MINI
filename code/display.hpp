@@ -41,6 +41,8 @@ static constexpr u8 MAX_ROWS = ROWS;
 // COMPACT_ROWS at runtime while keeping the same 16-column UI.
 static constexpr u8 ROWS = 4;
 static constexpr u8 DEFAULT_ROWS = 4;
+static constexpr u8 SPACED_ROWS_5 = 5;
+static constexpr u8 SPACED_ROWS_7 = 7;
 static constexpr u8 COMPACT_ROWS = 8;
 static constexpr u8 MAX_ROWS = COMPACT_ROWS;
 static constexpr u8 PIXEL_WIDTH = 192;
@@ -93,7 +95,8 @@ class MK61Display : public Print {
     LiquidCrystal lcd;
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
-    uint8_t render_buffer[lcd_display::PIXEL_WIDTH * lcd_display::CELL_HEIGHT / 8];
+    static constexpr u8 MAX_RENDER_PAGES = lcd_display::PIXEL_HEIGHT / 8;
+    uint8_t render_buffer[lcd_display::PIXEL_WIDTH * MAX_RENDER_PAGES];
     ERM19264_UC1609 lcd;
     ERM19264_UC1609_Screen render_screen;
     uint8_t cells[lcd_display::MAX_ROWS][lcd_display::COLS];
@@ -117,10 +120,17 @@ class MK61Display : public Print {
     void clearShadow(void);
     void clearPhysicalScreen(void);
     static u8 sanitizeRows(u8 rows);
-    u8 cellHeight(void) const;
-    void drawGlyph(u8 x, const uint8_t* glyph);
-    void drawDefaultChar(u8 x, u8 value);
-    void drawCursor(u8 x, bool block);
+    static u8 glyphHeightForRows(u8 rows);
+    static u8 glyphWidthForRows(u8 rows);
+    u8 rowTop(u8 row) const;
+    u8 rowPitch(u8 row) const;
+    u8 glyphHeight(u8 row) const;
+    u8 glyphTop(u8 row) const;
+    u8 glyphWidth(void) const;
+    u8 glyphLeft(void) const;
+    void drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph);
+    void drawDefaultChar(u8 x, u8 row_y, u8 row, u8 value);
+    void drawCursor(u8 x, u8 row_y, u8 row, bool block);
     void advanceCursor(void);
     void moveCursorTo(u8 x, u8 y);
     bool cursorOverlayVisible(void) const;
