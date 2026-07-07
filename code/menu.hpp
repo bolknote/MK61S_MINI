@@ -40,6 +40,7 @@ extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
 extern bool TurnUsbDisk(void);
 extern bool TurnIdleSignal(void);
+extern bool TurnDisplayRows(void);
 extern bool ResetDevice(void);
 
 namespace library_mk61 {
@@ -53,12 +54,14 @@ namespace library_mk61 {
   extern  bool  expanded_program_is_on(void);
   extern  bool  usb_disk_is_on(void);
   extern  bool  idle_signal_is_on(void);
+  extern  u8    display_rows(void);
   extern  ProgramMemoryMode program_memory_mode(void);
   extern  bool  program_memory_mode_accepts(bool needs_expanded);
   extern  void  set_program_memory_state(bool enable);
   extern  void  set_program_memory_mode(ProgramMemoryMode mode);
   extern  void  set_usb_disk_state(bool enable);
   extern  void  set_idle_signal_state(bool enable);
+  extern  void  set_display_rows(u8 rows);
   extern  void  refresh_menu_text(void);
   extern  void  store_settings_state(void);
   extern  void  defer_settings_state_save(void);
@@ -92,7 +95,6 @@ namespace library_mk61 {
 
 class class_menu {
   private:
-    static constexpr int SIZE_MENU_WINDOW = lcd_display::ROWS;
     int MENU_PUNCT_COUNT;
     u8 active_punct;
     u8 previous_up;

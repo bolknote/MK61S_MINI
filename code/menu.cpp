@@ -36,6 +36,7 @@ static constexpr int SETTINGS_SPEED   = 2;
 static constexpr int SETTINGS_MEMORY  = 3;
 static constexpr int SETTINGS_LANGUAGE = 4;
 static constexpr int SETTINGS_USB_DISK = 5;
+static constexpr int SETTINGS_DISPLAY_ROWS = 6;
 
 static u8 sound_volume_state = 10;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
@@ -43,6 +44,7 @@ static bool russian_language = false;
 static bool expanded_program = false;
 static bool usb_disk_state = false;
 static bool idle_signal_state = true;
+static u8 display_rows_state = lcd_display::DEFAULT_ROWS;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
 static DeferredSave settings_save;
 static constexpr t_time_ms SETTINGS_SAVE_IDLE_MS = 1000;
@@ -55,6 +57,10 @@ struct MutablePunct {
 
 static MutablePunct VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Volume 10      "};
 static MutablePunct RU_VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Громкость 10"};
+#if defined(MK61_DISPLAY_UC1609)
+static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &TurnDisplayRows, .text = "Rows: 4        "};
+static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &TurnDisplayRows, .text = "Строк: 4"};
+#endif
 
 static void set_speed_mode_state(SpeedMode mode) {
   speed_mode_state = mode;
@@ -198,7 +204,10 @@ t_punct* SETTINGS_MENU[] = {
       (t_punct*) &SPEED_HIGH_punct,
       (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &LANGUAGE_EN_punct,
-      (t_punct*) &USB_DISK_OFF_punct
+      (t_punct*) &USB_DISK_OFF_punct,
+#if defined(MK61_DISPLAY_UC1609)
+      (t_punct*) &ROWS_punct,
+#endif
 };
 
 extern const int COUNT_SETTINGS_PUNCTS = sizeof(SETTINGS_MENU) / sizeof(SETTINGS_MENU[0]);
@@ -241,6 +250,19 @@ bool idle_signal_is_on(void) {
 
 void set_idle_signal_state(bool enable) {
   idle_signal_state = enable;
+}
+
+u8 display_rows(void) {
+  return display_rows_state;
+}
+
+void set_display_rows(u8 rows) {
+#if defined(MK61_DISPLAY_UC1609)
+  display_rows_state = (rows >= lcd_display::COMPACT_ROWS) ? lcd_display::COMPACT_ROWS : lcd_display::DEFAULT_ROWS;
+#else
+  (void) rows;
+  display_rows_state = lcd_display::DEFAULT_ROWS;
+#endif
 }
 
 bool  expanded_program_is_on(void) {
@@ -301,6 +323,12 @@ static t_punct* idle_signal_punct(void) {
   return (t_punct*) (russian_language ? &RU_IDLE_SIGNAL_OFF_punct : &IDLE_SIGNAL_OFF_punct);
 }
 
+#if defined(MK61_DISPLAY_UC1609)
+static t_punct* display_rows_punct(void) {
+  return (t_punct*) (russian_language ? &RU_ROWS_punct : &ROWS_punct);
+}
+#endif
+
 static void format_volume_text(void) {
   int used = snprintf(VOLUME_punct.text, sizeof(VOLUME_punct.text), "Volume %u", (u32) sound_volume_state);
   if(used < 0) used = 0;
@@ -313,8 +341,25 @@ static void format_volume_text(void) {
   RU_VOLUME_punct.size = 15;
 }
 
+#if defined(MK61_DISPLAY_UC1609)
+static void format_display_rows_text(void) {
+  int used = snprintf(ROWS_punct.text, sizeof(ROWS_punct.text), "Rows: %u", (u32) display_rows_state);
+  if(used < 0) used = 0;
+  if(used > 15) used = 15;
+  while(used < 15) ROWS_punct.text[used++] = ' ';
+  ROWS_punct.text[used] = 0;
+  ROWS_punct.size = 15;
+
+  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "Строк: %u", (u32) display_rows_state);
+  RU_ROWS_punct.size = 15;
+}
+#endif
+
 void refresh_menu_text(void) {
   format_volume_text();
+#if defined(MK61_DISPLAY_UC1609)
+  format_display_rows_text();
+#endif
 
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SETTINGS] = (t_punct*) (russian_language ? &RU_SETTINGS_punct : &SETTINGS_punct);
@@ -332,6 +377,9 @@ void refresh_menu_text(void) {
   SETTINGS_MENU[SETTINGS_MEMORY]   = memory_punct();
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
   SETTINGS_MENU[SETTINGS_USB_DISK] = usb_disk_punct();
+#if defined(MK61_DISPLAY_UC1609)
+  SETTINGS_MENU[SETTINGS_DISPLAY_ROWS] = display_rows_punct();
+#endif
 }
 
 void  store_settings_state(void) {
@@ -341,6 +389,11 @@ void  store_settings_state(void) {
   flags.bits.speed_mode = (u8) speed_mode_state;
   flags.bits.usb_disk = usb_disk_state ? 1 : 0;
   flags.bits.idle_signal_off = idle_signal_state ? 0 : 1;
+#if defined(MK61_DISPLAY_UC1609)
+  flags.bits.display_rows_8 = (display_rows_state >= lcd_display::COMPACT_ROWS) ? 1 : 0;
+#else
+  flags.bits.display_rows_8 = 0;
+#endif
   store_settings_flags(flags);
 
   SoundSettings sound_settings;
@@ -376,6 +429,11 @@ void  load_settings_state(void) {
   set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
   set_usb_disk_state(flags.bits.usb_disk != 0);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
+#if defined(MK61_DISPLAY_UC1609)
+  set_display_rows(flags.bits.display_rows_8 ? lcd_display::COMPACT_ROWS : lcd_display::DEFAULT_ROWS);
+#else
+  set_display_rows(lcd_display::DEFAULT_ROWS);
+#endif
   set_sound_volume(read_sound_settings().bits.volume);
   refresh_menu_text();
 }
@@ -524,6 +582,37 @@ bool TurnIdleSignal(void) {
   library_mk61::mark_settings_dirty();
 
   return action::MENU_BACK;
+}
+
+static void ApplyDisplayRows(u8 rows) {
+#if defined(MK61_DISPLAY_UC1609)
+  const u8 previous_rows = library_mk61::display_rows();
+  library_mk61::set_display_rows(rows);
+  if(library_mk61::display_rows() == previous_rows) return;
+
+  lcd.setRows(library_mk61::display_rows());
+  library_mk61::refresh_menu_text();
+  library_mk61::mark_settings_dirty();
+#else
+  (void) rows;
+#endif
+}
+
+bool TurnDisplayRows(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  const u8 next_rows = (library_mk61::display_rows() >= lcd_display::COMPACT_ROWS)
+    ? lcd_display::DEFAULT_ROWS
+    : lcd_display::COMPACT_ROWS;
+  ApplyDisplayRows(next_rows);
+#endif
+
+  return action::MENU_BACK;
+}
+
+static void StepDisplayRows(i8) {
+#if defined(MK61_DISPLAY_UC1609)
+  TurnDisplayRows();
+#endif
 }
 
 bool   TurnProgramMemory(void) {
@@ -684,6 +773,20 @@ bool class_menu::handle_settings_adjustment(i32 key) {
         return true;
       }
       break;
+
+#if defined(MK61_DISPLAY_UC1609)
+    case library_mk61::SETTINGS_DISPLAY_ROWS:
+      if(key == KEY_OK_PRESS) {
+        TurnDisplayRows();
+        return true;
+      }
+
+      if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+        StepDisplayRows(1);
+        return true;
+      }
+      break;
+#endif
   }
 
   return false;
@@ -691,7 +794,8 @@ bool class_menu::handle_settings_adjustment(i32 key) {
 
 void class_menu::draw(void) {
   MK61DisplayUpdate update(lcd);
-  const int visible_count = (MENU_PUNCT_COUNT < SIZE_MENU_WINDOW) ? MENU_PUNCT_COUNT : SIZE_MENU_WINDOW;
+  const int size_menu_window = lcd.rows();
+  const int visible_count = (MENU_PUNCT_COUNT < size_menu_window) ? MENU_PUNCT_COUNT : size_menu_window;
   const int max_up = MENU_PUNCT_COUNT - visible_count;
   const int delta = (active_punct + 1) - visible_count;
   int up = (delta <= 0)? 0 : delta;
@@ -711,7 +815,7 @@ void class_menu::draw(void) {
         lcd_ru::print_menu_line(i, (active_punct == real_index)? '>' : ' ', puncts[real_index]->text);
       }
     }
-    for(int i=visible_count; i < SIZE_MENU_WINDOW; i++) {
+    for(int i=visible_count; i < size_menu_window; i++) {
       lcd.setCursor(0, i);
       for(int x=0; x < lcd_display::COLS; x++) lcd.write((u8) ' ');
     }
@@ -735,7 +839,7 @@ void class_menu::draw(void) {
       lcd.print(' ');
     }
   }
-  for(int i=visible_count; i < SIZE_MENU_WINDOW; i++) {
+  for(int i=visible_count; i < size_menu_window; i++) {
     lcd.setCursor(0, i);
     for(int x=0; x < lcd_display::COLS; x++) lcd.write((u8) ' ');
   }

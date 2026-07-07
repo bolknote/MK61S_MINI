@@ -208,7 +208,8 @@ void  init_library(void) {
 
 int   select_from(usize COUNT, TPunct* list, i8& selector) {
   do {
-    const int visible_count = ((int) COUNT < (int) lcd_display::ROWS) ? (int) COUNT : (int) lcd_display::ROWS;
+    const int display_rows = lcd.rows();
+    const int visible_count = ((int) COUNT < display_rows) ? (int) COUNT : display_rows;
     const int max_up = (int) COUNT - visible_count;
     const int delta = (selector + 1) - visible_count;
     int up = (delta <= 0)? 0 : delta;
@@ -226,7 +227,7 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
         }
         lcd.print(list[real_index].text);
       }
-      for(int i=visible_count; i < (int) lcd_display::ROWS; i++) {
+      for(int i=visible_count; i < display_rows; i++) {
         lcd.setCursor(0, i);
         for(int x=0; x < (int) lcd_display::COLS; x++) lcd.write((u8) ' ');
       }

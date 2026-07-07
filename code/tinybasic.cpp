@@ -28,23 +28,24 @@ static const int KEY_ESC_PRESS = KEY_ESC;
 
 class MK61Display {
   public:
+    static constexpr u8 MAX_ROWS = 8;
     MK61Display(void) : x(0), y(0), row_count(4) { clear(); }
     void clear(void) {
       memset(lines, ' ', sizeof(lines));
-      for(int row = 0; row < 4; row++) lines[row][16] = 0;
+      for(int row = 0; row < MAX_ROWS; row++) lines[row][16] = 0;
       x = 0;
       y = 0;
     }
     void flush(void) {}
     void setCursor(u8 col, u8 row) {
       x = (col < 16) ? col : 15;
-      y = (row < 4) ? row : 3;
+      y = (row < MAX_ROWS) ? row : (MAX_ROWS - 1);
     }
     void cursorOn(void) {}
     void cursorOff(void) {}
     bool supportsCursor(void) const { return false; }
     void write(u8 value) {
-      if(x < 16 && y < 4) lines[y][x++] = (char) value;
+      if(x < 16 && y < MAX_ROWS) lines[y][x++] = (char) value;
     }
     void print(const char* text) {
       if(text == NULL) return;
@@ -52,13 +53,13 @@ class MK61Display {
     }
     void print(char value) { write((u8) value); }
     u8 rows(void) const { return row_count; }
-    void setRows(u8 rows) { row_count = (rows < 1) ? 1 : ((rows > 4) ? 4 : rows); }
-    const char* line(u8 row) const { return lines[(row < 4) ? row : 0]; }
+    void setRows(u8 rows) { row_count = (rows < 1) ? 1 : ((rows > MAX_ROWS) ? MAX_ROWS : rows); }
+    const char* line(u8 row) const { return lines[(row < MAX_ROWS) ? row : 0]; }
   private:
     u8 x;
     u8 y;
     u8 row_count;
-    char lines[4][17];
+    char lines[MAX_ROWS][17];
 };
 
 class MK61DisplayUpdate {

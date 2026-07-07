@@ -61,7 +61,7 @@ struct SettingsFlags {
       u8 speed_mode : 2;
       u8 usb_disk : 1;
       u8 idle_signal_off : 1;
-      u8 reserved : 1;
+      u8 display_rows_8 : 1;
     } bits;
   };
 
@@ -182,7 +182,7 @@ inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
   SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
   if(raw_flags == 0xFF || flags.bits.program_memory_mode > 2) flags.bits.program_memory_mode = 2;
   if(raw_flags == 0xFF || flags.bits.speed_mode > 2) flags.bits.speed_mode = 1;
-  flags.bits.reserved = 0;
+  if(raw_flags == 0xFF) flags.bits.display_rows_8 = 0;
   return flags;
 }
 

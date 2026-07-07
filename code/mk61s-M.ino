@@ -229,7 +229,7 @@ void setup() {
     pinMode(PIN_LCD_RW, OUTPUT);
     digitalWrite(PIN_LCD_RW, LOW);
   #endif
-  lcd.begin(lcd_display::COLS, lcd_display::ROWS);
+  lcd.begin(lcd_display::COLS, library_mk61::display_rows());
 
   glyph.draw(0);
   delay(1000);

@@ -331,6 +331,13 @@ static void test_editor_draws_visible_program_lines(void) {
   CHECK_STARTS(FocalTestLcdLine(1), " 1.20 PRINT X");
   CHECK_STARTS(FocalTestLcdLine(2), " 1.30 EXIT");
   CHECK_STARTS(FocalTestLcdLine(3), " 1.40 COMMENT");
+
+  FocalTestSetLcdRows(8);
+  FocalTestDrawNewEditor("1.10 A\n1.20 B\n1.30 C\n1.40 D\n1.50 E\n1.60 F\n1.70 G\n1.80 H\n1.90 I", 0);
+  CHECK(FocalTestLcdLine(0)[0] == '>');
+  CHECK_STARTS(FocalTestLcdLine(4), " 1.50 E");
+  CHECK_STARTS(FocalTestLcdLine(7), " 1.80 H");
+  FocalTestSetLcdRows(4);
 }
 
 static void test_editor_two_line_viewport_scrolls_like_a00(void) {

@@ -167,7 +167,8 @@ static void draw_explorer(int active) {
     return;
   }
 
-  const int visible = (count < lcd_display::ROWS) ? count : lcd_display::ROWS;
+  const int display_rows = lcd.rows();
+  const int visible = (count < display_rows) ? count : display_rows;
   const int max_top = count - visible;
   int top = active - visible + 1;
   if(top < 0) top = 0;
@@ -235,7 +236,8 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
   snprintf(header, sizeof(header), "%c %s %u", type_char(entry.type), entry.name, (u32) len);
   print_line(0, header);
 
-  const u8 payload_rows = lcd_display::ROWS > 1 ? lcd_display::ROWS - 1 : 1;
+  const u8 display_rows = lcd.rows();
+  const u8 payload_rows = display_rows > 1 ? (u8) (display_rows - 1) : 1;
   const u8 bytes_per_row = 16;
   for(u8 row = 0; row < payload_rows; row++) {
     const u16 row_offset = (u16) (offset + row * bytes_per_row);
@@ -258,7 +260,8 @@ static void view_entry(const program_store::Entry& entry) {
     return;
   }
 
-  const u8 rows = lcd_display::ROWS > 1 ? lcd_display::ROWS - 1 : 1;
+  const u8 display_rows = lcd.rows();
+  const u8 rows = display_rows > 1 ? (u8) (display_rows - 1) : 1;
   const u16 page = (u16) (rows * 16);
   u16 offset = 0;
   while(true) {
@@ -353,7 +356,8 @@ static const char* item_menu_text(ItemMenuAction action, bool ru) {
 static void draw_item_menu(const program_store::Entry& entry, int active) {
   ItemMenuAction actions[4];
   const int count = item_menu_actions(entry, actions, 4);
-  const int visible = (count < lcd_display::ROWS) ? count : lcd_display::ROWS;
+  const int display_rows = lcd.rows();
+  const int visible = (count < display_rows) ? count : display_rows;
   int top = active - visible + 1;
   if(top < 0) top = 0;
   if(top > count - visible) top = count - visible;
@@ -364,12 +368,19 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
   if(library_mk61::language_is_ru()) {
     const int index0 = top;
     const int index1 = top + 1;
-    lcd_ru::print_menu_window(
-      active == index0 ? '>' : ' ',
-      item_menu_text(actions[index0], true),
-      (visible > 1 && index1 < count && active == index1) ? '>' : ' ',
-      (visible > 1 && index1 < count) ? item_menu_text(actions[index1], true) : ""
-    );
+    if(visible == 2) {
+      lcd_ru::print_menu_window(
+        active == index0 ? '>' : ' ',
+        item_menu_text(actions[index0], true),
+        (index1 < count && active == index1) ? '>' : ' ',
+        (index1 < count) ? item_menu_text(actions[index1], true) : ""
+      );
+    } else {
+      for(int row = 0; row < visible; row++) {
+        const int index = top + row;
+        lcd_ru::print_menu_line((u8) row, active == index ? '>' : ' ', item_menu_text(actions[index], true));
+      }
+    }
   } else {
     for(int row = 0; row < visible; row++) {
       const int index = top + row;
