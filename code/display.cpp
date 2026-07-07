@@ -30,6 +30,12 @@ void MK61Display::endUpdate(void) {}
 
 void MK61Display::setRows(u8) {}
 
+void MK61Display::setTextProfile(lcd_display::TextProfile) {}
+
+lcd_display::TextProfile MK61Display::textProfile(void) const {
+  return lcd_display::defaultTextProfileForRows(lcd_display::ROWS);
+}
+
 void MK61Display::setCursor(u8 x, u8 y) {
   lcd.setCursor(x, y);
 }
@@ -87,6 +93,54 @@ static inline bool timeReached(t_time_ms now, t_time_ms target) {
   return (i32) (now - target) >= 0;
 }
 
+static u8 textEffectVirtualHeight(u8 effect) {
+  return (effect == lcd_display::TEXT_EFFECT_BELT || effect == lcd_display::TEXT_EFFECT_HIGH) ? 16 : 8;
+}
+
+static u8 applyTextEffectBits(u8 bits, u8 src_y, u8 effect) {
+  bits &= 0x1F;
+  switch(effect) {
+    case lcd_display::TEXT_EFFECT_BOLD:
+      return (u8) ((bits | (bits >> 1)) & 0x1F);
+    case lcd_display::TEXT_EFFECT_SPECCY_1:
+      return (src_y == 4) ? (u8) ((bits | (bits >> 2)) & 0x1F) : bits;
+    case lcd_display::TEXT_EFFECT_SPECCY_2:
+      return (src_y > 4) ? (u8) ((bits | (bits >> 2)) & 0x1F) : bits;
+    case lcd_display::TEXT_EFFECT_ITALIC:
+      return (u8) ((bits >> (src_y >> 2)) & 0x1F);
+    default:
+      return bits;
+  }
+}
+
+static u8 customGlyphRowBits(const uint8_t* glyph, u8 effect_y, u8 effect) {
+  if(effect == lcd_display::TEXT_EFFECT_BELT) {
+    if((effect_y & 1) != 0) return 0;
+    effect_y >>= 1;
+  } else if(effect == lcd_display::TEXT_EFFECT_HIGH) {
+    effect_y >>= 1;
+  }
+  if(effect_y > 7) effect_y = 7;
+  return applyTextEffectBits(glyph[effect_y], effect_y, effect);
+}
+
+static u8 defaultGlyphRowBits(const unsigned char* glyph, u8 effect_y, u8 effect) {
+  static constexpr u8 FONT_WIDTH = 5;
+  if(effect == lcd_display::TEXT_EFFECT_BELT) {
+    if((effect_y & 1) != 0) return 0;
+    effect_y >>= 1;
+  } else if(effect == lcd_display::TEXT_EFFECT_HIGH) {
+    effect_y >>= 1;
+  }
+  if(effect_y > 7) effect_y = 7;
+
+  u8 bits = 0;
+  for(u8 src_x = 0; src_x < FONT_WIDTH; src_x++) {
+    if((glyph[src_x] & ((u8) 1 << effect_y)) != 0) bits |= (0x10 >> src_x);
+  }
+  return applyTextEffectBits(bits, effect_y, effect);
+}
+
 MK61Display::MK61Display(void)
   : render_buffer{0},
     lcd(lcd_display::PIXEL_WIDTH, lcd_display::PIXEL_HEIGHT, PIN_GLCD_CD, PIN_GLCD_RST, PIN_GLCD_CS),
@@ -101,6 +155,7 @@ MK61Display::MK61Display(void)
     screen_dirty(false),
     dirty(false),
     update_depth(0),
+    active_profile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS)),
     active_rows(lcd_display::DEFAULT_ROWS),
     cursor_x(0),
     cursor_y(0),
@@ -110,7 +165,8 @@ MK61Display::MK61Display(void)
     cursor_next_blink_ms(0) {}
 
 void MK61Display::begin(u8, u8 rows) {
-  active_rows = sanitizeRows(rows);
+  active_profile = lcd_display::defaultTextProfileForRows(sanitizeRows(rows));
+  active_rows = active_profile.rows;
   lcd.LCDbegin(GLCD_UC1609_BIAS, GLCD_UC1609_ADDRESS_SET);
   lcd.ActiveBuffer = &render_screen;
   lcd.setFontNum(UC1609Font_Default);
@@ -182,10 +238,19 @@ void MK61Display::endUpdate(void) {
 }
 
 void MK61Display::setRows(u8 rows) {
-  const u8 next_rows = sanitizeRows(rows);
-  if(next_rows == active_rows) return;
+  setTextProfile(lcd_display::defaultTextProfileForRows(sanitizeRows(rows)));
+}
 
-  active_rows = next_rows;
+void MK61Display::setTextProfile(lcd_display::TextProfile profile) {
+  const lcd_display::TextProfile next_profile = lcd_display::normalizeTextProfile(profile);
+  if(next_profile.rows == active_profile.rows &&
+     next_profile.glyph_width == active_profile.glyph_width &&
+     next_profile.glyph_height == active_profile.glyph_height &&
+     next_profile.line_gap == active_profile.line_gap &&
+     next_profile.effect == active_profile.effect) return;
+
+  active_profile = next_profile;
+  active_rows = active_profile.rows;
   clearShadow();
   cursor_x = 0;
   cursor_y = 0;
@@ -194,6 +259,10 @@ void MK61Display::setRows(u8 rows) {
   cursor_blink_phase = false;
   cursor_next_blink_ms = 0;
   markScreenDirty();
+}
+
+lcd_display::TextProfile MK61Display::textProfile(void) const {
+  return active_profile;
 }
 
 void MK61Display::setCursor(u8 x, u8 y) {
@@ -287,56 +356,33 @@ void MK61Display::clearPhysicalScreen(void) {
 }
 
 u8 MK61Display::sanitizeRows(u8 rows) {
-  switch(rows) {
-    case lcd_display::SPACED_ROWS_5:
-    case lcd_display::SPACED_ROWS_7:
-    case lcd_display::COMPACT_ROWS:
-      return rows;
-    default:
-      return lcd_display::DEFAULT_ROWS;
-  }
-}
-
-u8 MK61Display::glyphHeightForRows(u8 rows) {
-  switch(rows) {
-    case lcd_display::DEFAULT_ROWS:
-      return 16;
-    case lcd_display::SPACED_ROWS_5:
-      return 10;
-    case lcd_display::SPACED_ROWS_7:
-    case lcd_display::COMPACT_ROWS:
-    default:
-      return 8;
-  }
-}
-
-u8 MK61Display::glyphWidthForRows(u8 rows) {
-  (void) rows;
-  return 10;
+  return lcd_display::clamp_u8(rows, lcd_display::DEFAULT_ROWS, lcd_display::COMPACT_ROWS);
 }
 
 u8 MK61Display::rowTop(u8 row) const {
-  return (u8) (((u16) row * lcd_display::PIXEL_HEIGHT) / active_rows);
+  return (u8) ((u16) row * (active_profile.glyph_height + active_profile.line_gap));
 }
 
 u8 MK61Display::rowPitch(u8 row) const {
   const u8 top = rowTop(row);
-  const u8 bottom = (u8) ((((u16) row + 1) * lcd_display::PIXEL_HEIGHT) / active_rows);
-  return bottom - top;
+  const u8 pitch = active_profile.glyph_height + active_profile.line_gap;
+  if(row + 1 >= active_rows) return lcd_display::PIXEL_HEIGHT - top;
+  return (top + pitch > lcd_display::PIXEL_HEIGHT) ? (lcd_display::PIXEL_HEIGHT - top) : pitch;
 }
 
 u8 MK61Display::glyphHeight(u8 row) const {
   const u8 pitch = rowPitch(row);
-  const u8 height = glyphHeightForRows(active_rows);
+  const u8 height = active_profile.glyph_height;
   return (height < pitch) ? height : pitch;
 }
 
 u8 MK61Display::glyphTop(u8 row) const {
-  return (u8) ((rowPitch(row) - glyphHeight(row)) / 2);
+  (void) row;
+  return 0;
 }
 
 u8 MK61Display::glyphWidth(void) const {
-  return glyphWidthForRows(active_rows);
+  return active_profile.glyph_width;
 }
 
 u8 MK61Display::glyphLeft(void) const {
@@ -394,12 +440,14 @@ void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph) {
   const u8 pitch = rowPitch(row);
   const u8 height = glyphHeight(row);
   const u8 width = glyphWidth();
+  const u8 effect = active_profile.effect;
+  const u8 effect_height = textEffectVirtualHeight(effect);
   const u8 glyph_x = x + glyphLeft();
   const u8 glyph_y = row_y + glyphTop(row);
   lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
   for(u8 dest_y = 0; dest_y < height; dest_y++) {
-    const u8 src_y = (u8) (((u16) dest_y * 8) / height);
-    const u8 bits = glyph[src_y];
+    const u8 effect_y = (u8) (((u16) dest_y * effect_height) / height);
+    const u8 bits = customGlyphRowBits(glyph, effect_y, effect);
     for(u8 dest_x = 0; dest_x < width; dest_x++) {
       const u8 src_x = (u8) (((u16) dest_x * 5) / width);
       if((bits & (0x10 >> src_x)) != 0) {
@@ -411,22 +459,23 @@ void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph) {
 
 void MK61Display::drawDefaultChar(u8 x, u8 row_y, u8 row, u8 value) {
   static constexpr u8 FONT_WIDTH = 5;
-  static constexpr u8 FONT_HEIGHT = 8;
   const u8 pitch = rowPitch(row);
   const u8 height = glyphHeight(row);
   const u8 width = glyphWidth();
+  const u8 effect = active_profile.effect;
+  const u8 effect_height = textEffectVirtualHeight(effect);
   const u8 glyph_x = x + glyphLeft();
   const u8 glyph_y = row_y + glyphTop(row);
   const u8 safe_value = (value < 128) ? value : (u8) '?';
   const unsigned char* glyph = &pFontDefaultptr[(usize) safe_value * FONT_WIDTH];
 
   lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
-  for(u8 dest_x = 0; dest_x < width; dest_x++) {
-    const u8 src_x = (u8) (((u16) dest_x * FONT_WIDTH) / width);
-    const u8 bits = glyph[src_x];
-    for(u8 dest_y = 0; dest_y < height; dest_y++) {
-      const u8 src_y = (u8) (((u16) dest_y * FONT_HEIGHT) / height);
-      if((bits & ((u8) 1 << src_y)) != 0) {
+  for(u8 dest_y = 0; dest_y < height; dest_y++) {
+    const u8 effect_y = (u8) (((u16) dest_y * effect_height) / height);
+    const u8 bits = defaultGlyphRowBits(glyph, effect_y, effect);
+    for(u8 dest_x = 0; dest_x < width; dest_x++) {
+      const u8 src_x = (u8) (((u16) dest_x * FONT_WIDTH) / width);
+      if((bits & (0x10 >> src_x)) != 0) {
         lcd.drawPixel(glyph_x + dest_x, glyph_y + dest_y, FOREGROUND);
       }
     }

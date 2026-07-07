@@ -222,6 +222,7 @@ void setup() {
     digitalWrite(PIN_LCD_RW, LOW);
   #endif
   lcd.begin(lcd_display::COLS, library_mk61::display_rows());
+  lcd.setTextProfile(library_mk61::display_text_profile());
 
   glyph.draw(0);
   delay(1000);

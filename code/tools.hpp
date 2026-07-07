@@ -2,6 +2,7 @@
 #define TOOLS
 
 #include "rust_types.h"
+#include "display.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 
@@ -202,6 +203,8 @@ inline SoundSettings normalize_sound_settings(u8 raw_settings) {
 
 SoundSettings read_sound_settings(void);
 void store_sound_settings(SoundSettings settings);
+bool read_display_text_profile(lcd_display::TextProfile& out);
+void store_display_text_profile(lcd_display::TextProfile profile);
 
 inline AngleUnit load_grade_switch(void) {
   static const AngleUnit rom_angle = read_stored_grade_switch();

@@ -44,6 +44,7 @@ static bool russian_language = false;
 static bool expanded_program = false;
 static bool idle_signal_state = true;
 static u8 display_rows_state = lcd_display::DEFAULT_ROWS;
+static lcd_display::TextProfile display_text_profile_state = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
 static DeferredSave settings_save;
 static constexpr t_time_ms SETTINGS_SAVE_IDLE_MS = 1000;
@@ -57,48 +58,51 @@ struct MutablePunct {
 static MutablePunct VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Volume 10      "};
 static MutablePunct RU_VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Громкость 10"};
 #if defined(MK61_DISPLAY_UC1609)
-static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &TurnDisplayRows, .text = "Rows: 4        "};
-static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &TurnDisplayRows, .text = "Строк: 4"};
+static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Font setup     "};
+static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Настр. шрифта"};
 #endif
 
 #if defined(MK61_DISPLAY_UC1609)
-static constexpr u8 DISPLAY_ROW_OPTIONS[] = {
-  lcd_display::DEFAULT_ROWS,
-  lcd_display::SPACED_ROWS_5,
-  lcd_display::SPACED_ROWS_7,
-  lcd_display::COMPACT_ROWS
-};
-
 static u8 normalize_display_rows(u8 rows) {
-  for(u8 i = 0; i < sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]); i++) {
-    if(DISPLAY_ROW_OPTIONS[i] == rows) return rows;
-  }
-  return lcd_display::DEFAULT_ROWS;
+  return lcd_display::clamp_u8(rows, lcd_display::DEFAULT_ROWS, lcd_display::COMPACT_ROWS);
 }
 
 static u8 display_rows_mode(u8 rows) {
   rows = normalize_display_rows(rows);
-  for(u8 i = 0; i < sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]); i++) {
-    if(DISPLAY_ROW_OPTIONS[i] == rows) return i;
+  switch(rows) {
+    case lcd_display::SPACED_ROWS_5:
+      return 1;
+    case lcd_display::SPACED_ROWS_7:
+      return 2;
+    case lcd_display::COMPACT_ROWS:
+      return 3;
+    default:
+      return 0;
   }
-  return 0;
 }
 
 static u8 display_rows_from_mode(u8 mode) {
-  return (mode < sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]))
-    ? DISPLAY_ROW_OPTIONS[mode]
-    : lcd_display::DEFAULT_ROWS;
+  switch(mode) {
+    case 1:
+      return lcd_display::SPACED_ROWS_5;
+    case 2:
+      return lcd_display::SPACED_ROWS_7;
+    case 3:
+      return lcd_display::COMPACT_ROWS;
+    default:
+      return lcd_display::DEFAULT_ROWS;
+  }
 }
 
 static u8 step_display_rows_value(u8 rows, i8 delta) {
-  const u8 count = sizeof(DISPLAY_ROW_OPTIONS) / sizeof(DISPLAY_ROW_OPTIONS[0]);
-  u8 index = display_rows_mode(rows);
-  if(delta >= 0) {
-    index = (u8) ((index + 1) % count);
-  } else {
-    index = (index == 0) ? (count - 1) : (u8) (index - 1);
+  rows = normalize_display_rows(rows);
+  if(delta > 0 && rows < lcd_display::COMPACT_ROWS) {
+    return rows + 1;
   }
-  return DISPLAY_ROW_OPTIONS[index];
+  if(delta < 0 && rows > lcd_display::DEFAULT_ROWS) {
+    return rows - 1;
+  }
+  return rows;
 }
 #endif
 
@@ -282,12 +286,26 @@ u8 display_rows(void) {
   return display_rows_state;
 }
 
+lcd_display::TextProfile display_text_profile(void) {
+  return display_text_profile_state;
+}
+
+void set_display_text_profile(lcd_display::TextProfile profile) {
+#if defined(MK61_DISPLAY_UC1609)
+  display_text_profile_state = lcd_display::normalizeTextProfile(profile);
+#else
+  (void) profile;
+  display_text_profile_state = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+#endif
+  display_rows_state = display_text_profile_state.rows;
+}
+
 void set_display_rows(u8 rows) {
 #if defined(MK61_DISPLAY_UC1609)
-  display_rows_state = normalize_display_rows(rows);
+  set_display_text_profile(lcd_display::defaultTextProfileForRows(normalize_display_rows(rows)));
 #else
   (void) rows;
-  display_rows_state = lcd_display::DEFAULT_ROWS;
+  set_display_text_profile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS));
 #endif
 }
 
@@ -364,14 +382,14 @@ static void format_volume_text(void) {
 
 #if defined(MK61_DISPLAY_UC1609)
 static void format_display_rows_text(void) {
-  int used = snprintf(ROWS_punct.text, sizeof(ROWS_punct.text), "Rows: %u", (u32) display_rows_state);
+  int used = snprintf(ROWS_punct.text, sizeof(ROWS_punct.text), "Font setup");
   if(used < 0) used = 0;
   if(used > 15) used = 15;
   while(used < 15) ROWS_punct.text[used++] = ' ';
   ROWS_punct.text[used] = 0;
   ROWS_punct.size = 15;
 
-  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "Строк: %u", (u32) display_rows_state);
+  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "Настр. шрифта");
   RU_ROWS_punct.size = 15;
 }
 #endif
@@ -411,7 +429,7 @@ void  store_settings_state(void) {
   flags.bits.reserved = 0;
   flags.bits.idle_signal_off = idle_signal_state ? 0 : 1;
 #if defined(MK61_DISPLAY_UC1609)
-  flags.bits.display_rows_8 = (display_rows_state == lcd_display::COMPACT_ROWS) ? 1 : 0;
+  flags.bits.display_rows_8 = (display_text_profile_state.rows == lcd_display::COMPACT_ROWS) ? 1 : 0;
 #else
   flags.bits.display_rows_8 = 0;
 #endif
@@ -420,9 +438,12 @@ void  store_settings_state(void) {
   SoundSettings sound_settings;
   sound_settings.bits.volume = sound_volume_state;
 #if defined(MK61_DISPLAY_UC1609)
-  sound_settings.bits.display_rows_mode = display_rows_mode(display_rows_state);
+  sound_settings.bits.display_rows_mode = display_rows_mode(display_text_profile_state.rows);
 #endif
   store_sound_settings(sound_settings);
+#if defined(MK61_DISPLAY_UC1609)
+  store_display_text_profile(display_text_profile_state);
+#endif
 }
 
 static void mark_settings_dirty(void) {
@@ -454,10 +475,15 @@ void  load_settings_state(void) {
   set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
 #if defined(MK61_DISPLAY_UC1609)
+  lcd_display::TextProfile stored_profile;
   const u8 stored_rows_mode = sound_settings.bits.display_rows_mode;
-  set_display_rows((stored_rows_mode == 0 && flags.bits.display_rows_8)
-    ? lcd_display::COMPACT_ROWS
-    : display_rows_from_mode(stored_rows_mode));
+  if(read_display_text_profile(stored_profile)) {
+    set_display_text_profile(stored_profile);
+  } else {
+    set_display_rows((stored_rows_mode == 0 && flags.bits.display_rows_8)
+      ? lcd_display::COMPACT_ROWS
+      : display_rows_from_mode(stored_rows_mode));
+  }
 #else
   set_display_rows(lcd_display::DEFAULT_ROWS);
 #endif
@@ -631,34 +657,229 @@ bool TurnIdleSignal(void) {
   return action::MENU_BACK;
 }
 
-static void ApplyDisplayRows(u8 rows) {
-#if defined(MK61_DISPLAY_UC1609)
-  const u8 previous_rows = library_mk61::display_rows();
-  library_mk61::set_display_rows(rows);
-  if(library_mk61::display_rows() == previous_rows) return;
+static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProfile right) {
+  left = lcd_display::normalizeTextProfile(left);
+  right = lcd_display::normalizeTextProfile(right);
+  return left.rows == right.rows &&
+    left.glyph_width == right.glyph_width &&
+    left.glyph_height == right.glyph_height &&
+    left.line_gap == right.line_gap &&
+    left.effect == right.effect;
+}
 
-  lcd.setRows(library_mk61::display_rows());
+static const char* textEffectName(u8 effect, bool ru) {
+  switch(effect) {
+    case lcd_display::TEXT_EFFECT_BELT:
+      return ru ? "лента" : "Belt";
+    case lcd_display::TEXT_EFFECT_BOLD:
+      return ru ? "жирный" : "Bold";
+    case lcd_display::TEXT_EFFECT_SPECCY_1:
+      return ru ? "Спекки 1" : "Speccy 1";
+    case lcd_display::TEXT_EFFECT_SPECCY_2:
+      return ru ? "Спекки 2" : "Speccy 2";
+    case lcd_display::TEXT_EFFECT_HIGH:
+      return ru ? "высокий" : "High";
+    case lcd_display::TEXT_EFFECT_ITALIC:
+      return ru ? "наклон" : "Italic";
+    case lcd_display::TEXT_EFFECT_NONE:
+    default:
+      return ru ? "нет" : "None";
+  }
+}
+
+static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::TextProfile profile) {
+  if(library_mk61::language_is_ru()) {
+    switch(field) {
+      case 0:
+        snprintf(out, size, "Строки:%u", (u32) profile.rows);
+        break;
+      case 1:
+        snprintf(out, size, "Шрифт:%ux%u", (u32) profile.glyph_width, (u32) profile.glyph_height);
+        break;
+      case 2:
+        snprintf(out, size, "Интервал:%u", (u32) profile.line_gap);
+        break;
+      case 3:
+        snprintf(out, size, "Ширина:%u", (u32) profile.glyph_width);
+        break;
+      case 4:
+      default:
+        snprintf(out, size, "Эффект:%s", textEffectName(profile.effect, true));
+        break;
+    }
+    return;
+  }
+
+  switch(field) {
+    case 0:
+      snprintf(out, size, "Rows:%u", (u32) profile.rows);
+      break;
+    case 1:
+      snprintf(out, size, "Font:%ux%u", (u32) profile.glyph_width, (u32) profile.glyph_height);
+      break;
+    case 2:
+      snprintf(out, size, "Gap:%u", (u32) profile.line_gap);
+      break;
+    case 3:
+      snprintf(out, size, "Width:%u", (u32) profile.glyph_width);
+      break;
+    case 4:
+    default:
+      snprintf(out, size, "Effect:%s", textEffectName(profile.effect, false));
+      break;
+  }
+}
+
+static void printFontSetupLine(u8 row, char mark, const char* text) {
+  if(library_mk61::language_is_ru()) {
+    lcd_ru::print_menu_line(row, mark, text);
+    return;
+  }
+
+  lcd.setCursor(0, row);
+  lcd.write((u8) mark);
+  u8 used = 0;
+  while(text[used] != 0 && used < lcd_display::COLS - 1) {
+    lcd.write((u8) text[used++]);
+  }
+  while(used++ < lcd_display::COLS - 1) lcd.write((u8) ' ');
+}
+
+static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
+  static constexpr u8 FIELD_COUNT = 5;
+  MK61DisplayUpdate update(lcd);
+  const u8 rows = lcd.rows();
+  const u8 visible_fields = (rows < FIELD_COUNT) ? rows : FIELD_COUNT;
+  u8 top = (active + 1 > visible_fields) ? (u8) (active + 1 - visible_fields) : 0;
+  if(top + visible_fields > FIELD_COUNT) top = FIELD_COUNT - visible_fields;
+
+  char line[32];
+  for(u8 row = 0; row < visible_fields; row++) {
+    const u8 field = top + row;
+    formatFontSetupLine(line, sizeof(line), field, profile);
+    printFontSetupLine(row, (field == active) ? '>' : ' ', line);
+  }
+
+  for(u8 row = visible_fields; row < rows; row++) {
+    if(row == visible_fields) {
+      printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "Память 105ШГ" : "Memory 105+F");
+    } else {
+      printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "0123456789+-*/" : "0123456789+-*/");
+    }
+  }
+}
+
+static void applyFontSetupProfile(lcd_display::TextProfile profile) {
+#if defined(MK61_DISPLAY_UC1609)
+  profile = lcd_display::normalizeTextProfile(profile);
+  if(sameTextProfile(profile, library_mk61::display_text_profile())) return;
+
+  library_mk61::set_display_text_profile(profile);
+  lcd.setTextProfile(library_mk61::display_text_profile());
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
 #else
-  (void) rows;
+  (void) profile;
+#endif
+}
+
+static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8 delta) {
+#if defined(MK61_DISPLAY_UC1609)
+  profile = lcd_display::normalizeTextProfile(profile);
+  switch(field) {
+    case 0: {
+      const u8 next_rows = library_mk61::step_display_rows_value(profile.rows, delta);
+      lcd_display::TextProfile next_profile = lcd_display::defaultTextProfileForRows(next_rows);
+      next_profile.effect = profile.effect;
+      profile = next_profile;
+      break;
+    }
+    case 1: {
+      const u8 max_height = lcd_display::PIXEL_HEIGHT / profile.rows;
+      if(delta > 0 && profile.glyph_height < max_height) profile.glyph_height++;
+      if(delta < 0 && profile.glyph_height > 8) profile.glyph_height--;
+      break;
+    }
+    case 2: {
+      const u8 max_gap = lcd_display::maxLineGap(profile.rows, profile.glyph_height);
+      if(delta > 0 && profile.line_gap < max_gap) profile.line_gap++;
+      if(delta < 0 && profile.line_gap > 0) profile.line_gap--;
+      break;
+    }
+    case 3:
+      if(delta > 0 && profile.glyph_width < 10) profile.glyph_width++;
+      if(delta < 0 && profile.glyph_width > 5) profile.glyph_width--;
+      break;
+    case 4:
+      if(delta > 0) {
+        profile.effect = (u8) ((profile.effect + 1) % lcd_display::TEXT_EFFECT_COUNT);
+      } else {
+        profile.effect = (profile.effect == 0) ? (lcd_display::TEXT_EFFECT_COUNT - 1) : (u8) (profile.effect - 1);
+      }
+      break;
+  }
+  profile = lcd_display::normalizeTextProfile(profile);
+#else
+  (void) profile;
+  (void) field;
+  (void) delta;
+#endif
+}
+
+static i32 waitFontSetupKey(void) {
+  do {
+    idle_main_process();
+    const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      kbd::exclude_before(scan_code);
+      return scan_code;
+    }
+  } while(true);
+}
+
+bool FontSetup(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  static constexpr u8 FIELD_COUNT = 5;
+  lcd_display::TextProfile profile = library_mk61::display_text_profile();
+  u8 active = 0;
+
+  do {
+    profile = lcd_display::normalizeTextProfile(profile);
+    drawFontSetup(active, profile);
+    const i32 key = waitFontSetupKey();
+    if(key == KEY_ESC_PRESS) {
+      lcd_ru::restore_default_font();
+      return action::MENU_BACK;
+    }
+
+    if(key == KEY_OK_PRESS) {
+      active = (u8) ((active + 1) % FIELD_COUNT);
+      continue;
+    }
+
+    if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
+      stepFontSetupProfile(profile, active, 1);
+      applyFontSetupProfile(profile);
+      continue;
+    }
+
+    if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+      stepFontSetupProfile(profile, active, -1);
+      applyFontSetupProfile(profile);
+      continue;
+    }
+  } while(true);
+#else
+  return action::MENU_BACK;
 #endif
 }
 
 bool TurnDisplayRows(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  ApplyDisplayRows(library_mk61::step_display_rows_value(library_mk61::display_rows(), 1));
+  return FontSetup();
 #endif
 
   return action::MENU_BACK;
-}
-
-static void StepDisplayRows(i8 delta) {
-#if defined(MK61_DISPLAY_UC1609)
-  ApplyDisplayRows(library_mk61::step_display_rows_value(library_mk61::display_rows(), delta));
-#else
-  (void) delta;
-#endif
 }
 
 bool   TurnProgramMemory(void) {
@@ -811,12 +1032,12 @@ bool class_menu::handle_settings_adjustment(i32 key) {
 #if defined(MK61_DISPLAY_UC1609)
     case library_mk61::SETTINGS_DISPLAY_ROWS:
       if(key == KEY_OK_PRESS) {
-        TurnDisplayRows();
+        FontSetup();
         return true;
       }
 
       if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-        StepDisplayRows((key == KEY_SHG_LEFT_PRESS) ? -1 : 1);
+        FontSetup();
         return true;
       }
       break;

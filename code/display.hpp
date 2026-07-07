@@ -32,10 +32,35 @@ namespace lcd_display {
 
 static constexpr u8 COLS = 16;
 
+struct TextProfile {
+  u8 rows;
+  u8 glyph_width;
+  u8 glyph_height;
+  u8 line_gap;
+  u8 effect;
+};
+
+enum TextEffect : u8 {
+  TEXT_EFFECT_NONE = 0,
+  TEXT_EFFECT_BELT = 1,
+  TEXT_EFFECT_BOLD = 2,
+  TEXT_EFFECT_SPECCY_1 = 3,
+  TEXT_EFFECT_SPECCY_2 = 4,
+  TEXT_EFFECT_HIGH = 5,
+  TEXT_EFFECT_ITALIC = 6,
+  TEXT_EFFECT_COUNT = 7
+};
+
 #if defined(MK61_DISPLAY_LCD1602)
 static constexpr u8 ROWS = 2;
 static constexpr u8 DEFAULT_ROWS = ROWS;
 static constexpr u8 MAX_ROWS = ROWS;
+static inline TextProfile defaultTextProfileForRows(u8) {
+  return {ROWS, 5, 8, 0, TEXT_EFFECT_NONE};
+}
+static inline TextProfile normalizeTextProfile(TextProfile) {
+  return defaultTextProfileForRows(ROWS);
+}
 #else
 // ROWS is the legacy/default text grid. Graphical displays can switch to
 // COMPACT_ROWS at runtime while keeping the same 16-column UI.
@@ -49,6 +74,46 @@ static constexpr u8 PIXEL_WIDTH = 192;
 static constexpr u8 PIXEL_HEIGHT = 64;
 static constexpr u8 CELL_WIDTH = 12;
 static constexpr u8 CELL_HEIGHT = 16;
+
+static inline u8 clamp_u8(u8 value, u8 min_value, u8 max_value) {
+  if(value < min_value) return min_value;
+  if(value > max_value) return max_value;
+  return value;
+}
+
+static inline u8 maxLineGap(u8 rows, u8 glyph_height) {
+  if(rows <= 1) return 0;
+  if((u16) rows * glyph_height >= PIXEL_HEIGHT) return 0;
+  return (u8) ((PIXEL_HEIGHT - (u16) rows * glyph_height) / (rows - 1));
+}
+
+static inline TextProfile defaultTextProfileForRows(u8 rows) {
+  rows = clamp_u8(rows, DEFAULT_ROWS, COMPACT_ROWS);
+  switch(rows) {
+    case DEFAULT_ROWS:
+      return {DEFAULT_ROWS, 10, 16, 0, TEXT_EFFECT_NONE};
+    case SPACED_ROWS_5:
+      return {SPACED_ROWS_5, 10, 10, 2, TEXT_EFFECT_NONE};
+    case 6:
+      return {6, 10, 8, 2, TEXT_EFFECT_NONE};
+    case SPACED_ROWS_7:
+      return {SPACED_ROWS_7, 10, 8, 1, TEXT_EFFECT_NONE};
+    case COMPACT_ROWS:
+    default:
+      return {COMPACT_ROWS, 10, 8, 0, TEXT_EFFECT_NONE};
+  }
+}
+
+static inline TextProfile normalizeTextProfile(TextProfile profile) {
+  profile.rows = clamp_u8(profile.rows, DEFAULT_ROWS, COMPACT_ROWS);
+  profile.glyph_width = clamp_u8(profile.glyph_width, 5, 10);
+
+  const u8 max_height = PIXEL_HEIGHT / profile.rows;
+  profile.glyph_height = clamp_u8(profile.glyph_height, 8, max_height);
+  profile.line_gap = clamp_u8(profile.line_gap, 0, maxLineGap(profile.rows, profile.glyph_height));
+  if(profile.effect >= TEXT_EFFECT_COUNT) profile.effect = TEXT_EFFECT_NONE;
+  return profile;
+}
 #endif
 
 } // namespace lcd_display
@@ -63,6 +128,8 @@ class MK61Display : public Print {
     void beginUpdate(void);
     void endUpdate(void);
     void setRows(u8 rows);
+    void setTextProfile(lcd_display::TextProfile profile);
+    lcd_display::TextProfile textProfile(void) const;
     void setCursor(u8 x, u8 y);
     void cursorOn(void);
     void cursorOff(void);
@@ -109,6 +176,7 @@ class MK61Display : public Print {
     bool screen_dirty;
     bool dirty;
     usize update_depth;
+    lcd_display::TextProfile active_profile;
     u8 active_rows;
     u8 cursor_x;
     u8 cursor_y;
@@ -120,8 +188,6 @@ class MK61Display : public Print {
     void clearShadow(void);
     void clearPhysicalScreen(void);
     static u8 sanitizeRows(u8 rows);
-    static u8 glyphHeightForRows(u8 rows);
-    static u8 glyphWidthForRows(u8 rows);
     u8 rowTop(u8 row) const;
     u8 rowPitch(u8 row) const;
     u8 glyphHeight(u8 row) const;

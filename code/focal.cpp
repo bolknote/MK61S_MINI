@@ -31,7 +31,7 @@ static const int KEY_ESC_PRESS = KEY_ESC;
 class MK61Display {
   public:
     static constexpr u8 MAX_ROWS = 8;
-    MK61Display(void) : x(0), y(0), row_count(4) { clear(); }
+    MK61Display(void) : x(0), y(0), row_count(MAX_ROWS) { clear(); }
 
     void clear(void) {
       memset(lines, ' ', sizeof(lines));
@@ -2419,7 +2419,6 @@ bool FOCAL_menu_select(void) {
 #ifdef FOCAL_SELF_TEST
 extern "C" void FocalTestReset(void) {
   InitFocal();
-  lcd.setRows(4);
   lcd.clear();
 }
 

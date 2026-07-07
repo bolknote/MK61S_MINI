@@ -41,6 +41,7 @@ extern bool TurnProgramMemory(void);
 extern bool UsbDiskMode(void);
 extern bool TurnIdleSignal(void);
 extern bool TurnDisplayRows(void);
+extern bool FontSetup(void);
 extern bool ResetDevice(void);
 
 namespace library_mk61 {
@@ -54,12 +55,14 @@ namespace library_mk61 {
   extern  bool  expanded_program_is_on(void);
   extern  bool  idle_signal_is_on(void);
   extern  u8    display_rows(void);
+  extern  lcd_display::TextProfile display_text_profile(void);
   extern  ProgramMemoryMode program_memory_mode(void);
   extern  bool  program_memory_mode_accepts(bool needs_expanded);
   extern  void  set_program_memory_state(bool enable);
   extern  void  set_program_memory_mode(ProgramMemoryMode mode);
   extern  void  set_idle_signal_state(bool enable);
   extern  void  set_display_rows(u8 rows);
+  extern  void  set_display_text_profile(lcd_display::TextProfile profile);
   extern  void  refresh_menu_text(void);
   extern  void  store_settings_state(void);
   extern  void  defer_settings_state_save(void);

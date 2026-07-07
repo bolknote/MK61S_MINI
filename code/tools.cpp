@@ -241,7 +241,8 @@ bool      flash_is_ok;
 
 static constexpr u32 SETTINGS_FLASH_SECTOR = (MAX_SLOT_FOR_PROGRAM + 2) * FLASH_SECTOR_SIZE;
 static constexpr usize SETTINGS_RECORD_SIZE = 16;
-static constexpr u8 SETTINGS_RECORD_VERSION = 1;
+static constexpr u8 SETTINGS_RECORD_VERSION_1 = 1;
+static constexpr u8 SETTINGS_RECORD_VERSION = 2;
 static constexpr u8 SETTINGS_MAGIC_0 = 'M';
 static constexpr u8 SETTINGS_MAGIC_1 = '6';
 static constexpr u8 SETTINGS_MAGIC_2 = '1';
@@ -255,7 +256,13 @@ static constexpr u8 SETTINGS_IDX_GRADE = 5;
 static constexpr u8 SETTINGS_IDX_COUNTER = 6;
 static constexpr u8 SETTINGS_IDX_FLAGS = 7;
 static constexpr u8 SETTINGS_IDX_SOUND = 8;
-static constexpr u8 SETTINGS_IDX_CRC = 9;
+static constexpr u8 SETTINGS_IDX_V1_CRC = 9;
+static constexpr u8 SETTINGS_IDX_TEXT_ROWS = 9;
+static constexpr u8 SETTINGS_IDX_TEXT_WIDTH = 10;
+static constexpr u8 SETTINGS_IDX_TEXT_HEIGHT = 11;
+static constexpr u8 SETTINGS_IDX_TEXT_GAP = 12;
+static constexpr u8 SETTINGS_IDX_TEXT_EFFECT = 13;
+static constexpr u8 SETTINGS_IDX_CRC = 14;
 static constexpr u32 LEGACY_EEPROM_PAGE_SIZE = 8 * 1024;
 
 struct PersistentSettings {
@@ -263,16 +270,25 @@ struct PersistentSettings {
   u8 counter;
   u8 flags;
   u8 sound;
+  lcd_display::TextProfile text_profile;
+  bool text_profile_stored;
 };
 
-static PersistentSettings persistent_settings = {0xFF, 0, 0xFF, 0xFF};
+static PersistentSettings persistent_settings = {
+  0xFF,
+  0,
+  0xFF,
+  0xFF,
+  lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS),
+  false
+};
 static bool persistent_settings_loaded = false;
 static bool persistent_settings_sector_dirty = false;
 static u32 persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
 
-static u8 settings_record_crc(const u8* record) {
+static u8 settings_record_crc(const u8* record, u8 crc_index) {
   u8 crc = 0xA5;
-  for(u8 i = 0; i < SETTINGS_IDX_CRC; i++) {
+  for(u8 i = 0; i < crc_index; i++) {
     crc = (u8) ((crc << 1) | (crc >> 7));
     crc ^= record[i];
   }
@@ -284,8 +300,13 @@ static bool settings_record_is_valid(const u8* record) {
   if(record[SETTINGS_IDX_MAGIC_1] != SETTINGS_MAGIC_1) return false;
   if(record[SETTINGS_IDX_MAGIC_2] != SETTINGS_MAGIC_2) return false;
   if(record[SETTINGS_IDX_MAGIC_3] != SETTINGS_MAGIC_3) return false;
-  if(record[SETTINGS_IDX_VERSION] != SETTINGS_RECORD_VERSION) return false;
-  return record[SETTINGS_IDX_CRC] == settings_record_crc(record);
+  if(record[SETTINGS_IDX_VERSION] == SETTINGS_RECORD_VERSION_1) {
+    return record[SETTINGS_IDX_V1_CRC] == settings_record_crc(record, SETTINGS_IDX_V1_CRC);
+  }
+  if(record[SETTINGS_IDX_VERSION] == SETTINGS_RECORD_VERSION) {
+    return record[SETTINGS_IDX_CRC] == settings_record_crc(record, SETTINGS_IDX_CRC);
+  }
+  return false;
 }
 
 static void apply_settings_record(const u8* record) {
@@ -293,6 +314,17 @@ static void apply_settings_record(const u8* record) {
   persistent_settings.counter = record[SETTINGS_IDX_COUNTER];
   persistent_settings.flags = record[SETTINGS_IDX_FLAGS];
   persistent_settings.sound = record[SETTINGS_IDX_SOUND];
+  persistent_settings.text_profile_stored = false;
+  if(record[SETTINGS_IDX_VERSION] == SETTINGS_RECORD_VERSION) {
+    persistent_settings.text_profile = lcd_display::normalizeTextProfile({
+      record[SETTINGS_IDX_TEXT_ROWS],
+      record[SETTINGS_IDX_TEXT_WIDTH],
+      record[SETTINGS_IDX_TEXT_HEIGHT],
+      record[SETTINGS_IDX_TEXT_GAP],
+      record[SETTINGS_IDX_TEXT_EFFECT]
+    });
+    persistent_settings.text_profile_stored = true;
+  }
 }
 
 static u16 internal_flash_size_kb(void) {
@@ -331,6 +363,8 @@ static void import_legacy_settings(void) {
   persistent_settings.counter = (counter == 0xFF) ? 0 : counter;
   persistent_settings.flags = flags;
   persistent_settings.sound = sound;
+  persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+  persistent_settings.text_profile_stored = false;
 }
 
 static void load_persistent_settings(void) {
@@ -353,7 +387,7 @@ static void load_persistent_settings(void) {
       return;
     }
 
-    u8 record[SETTINGS_IDX_CRC + 1];
+    u8 record[SETTINGS_RECORD_SIZE];
     record[0] = first;
     for(u8 i = 1; i < sizeof(record); i++) record[i] = flash.readByte(address + i);
 
@@ -381,7 +415,7 @@ static void write_persistent_settings(void) {
     persistent_settings_sector_dirty = false;
   }
 
-  u8 record[SETTINGS_IDX_CRC + 1] = {
+  u8 record[SETTINGS_RECORD_SIZE] = {
     SETTINGS_MAGIC_0,
     SETTINGS_MAGIC_1,
     SETTINGS_MAGIC_2,
@@ -391,9 +425,15 @@ static void write_persistent_settings(void) {
     persistent_settings.counter,
     persistent_settings.flags,
     persistent_settings.sound,
-    0
+    persistent_settings.text_profile.rows,
+    persistent_settings.text_profile.glyph_width,
+    persistent_settings.text_profile.glyph_height,
+    persistent_settings.text_profile.line_gap,
+    persistent_settings.text_profile.effect,
+    0xFF,
+    0xFF
   };
-  record[SETTINGS_IDX_CRC] = settings_record_crc(record);
+  record[SETTINGS_IDX_CRC] = settings_record_crc(record, SETTINGS_IDX_CRC);
 
   const u32 address = persistent_settings_next_address;
   for(u8 i = 0; i < sizeof(record); i++) flash.writeByte(address + i, record[i]);
@@ -435,6 +475,30 @@ void store_sound_settings(SoundSettings settings) {
   if(persistent_settings.sound == settings.raw) return;
 
   persistent_settings.sound = settings.raw;
+  write_persistent_settings();
+}
+
+bool read_display_text_profile(lcd_display::TextProfile& out) {
+  load_persistent_settings();
+  if(!persistent_settings.text_profile_stored) return false;
+
+  out = lcd_display::normalizeTextProfile(persistent_settings.text_profile);
+  return true;
+}
+
+void store_display_text_profile(lcd_display::TextProfile profile) {
+  load_persistent_settings();
+  profile = lcd_display::normalizeTextProfile(profile);
+  const bool unchanged = persistent_settings.text_profile_stored &&
+    persistent_settings.text_profile.rows == profile.rows &&
+    persistent_settings.text_profile.glyph_width == profile.glyph_width &&
+    persistent_settings.text_profile.glyph_height == profile.glyph_height &&
+    persistent_settings.text_profile.line_gap == profile.line_gap &&
+    persistent_settings.text_profile.effect == profile.effect;
+  if(unchanged) return;
+
+  persistent_settings.text_profile = profile;
+  persistent_settings.text_profile_stored = true;
   write_persistent_settings();
 }
 

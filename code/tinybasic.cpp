@@ -29,7 +29,7 @@ static const int KEY_ESC_PRESS = KEY_ESC;
 class MK61Display {
   public:
     static constexpr u8 MAX_ROWS = 8;
-    MK61Display(void) : x(0), y(0), row_count(4) { clear(); }
+    MK61Display(void) : x(0), y(0), row_count(MAX_ROWS) { clear(); }
     void clear(void) {
       memset(lines, ' ', sizeof(lines));
       for(int row = 0; row < MAX_ROWS; row++) lines[row][16] = 0;
@@ -1698,7 +1698,6 @@ bool TinyBASIC_menu_select(void) {
 #ifdef TINYBASIC_SELF_TEST
 extern "C" void TinyBasicTestReset(void) {
   InitTinyBasic();
-  lcd.setRows(4);
   lcd.clear();
 }
 
