@@ -858,7 +858,7 @@ i32 class_menu::wait_key(void) {
   } while(true);
 }
 
-void class_menu::select(void) {
+bool class_menu::select(void) {
   lcd.clear();
   do{
     draw();
@@ -876,14 +876,14 @@ void class_menu::select(void) {
             lcd.clear();
             lcd_ru::restore_default_font();
             if(puncts[active_punct]->action() == action::MENU_EXIT) {
-              return;
+              return action::MENU_EXIT;
             } else {
               lcd.clear();
               break;
             }
       case KEY_ESC_PRESS:
             lcd_ru::restore_default_font();
-            return; // отмена
+            return action::MENU_BACK; // отмена
     }
   } while(true);
 }

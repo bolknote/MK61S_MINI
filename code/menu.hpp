@@ -106,7 +106,7 @@ class class_menu {
 
   public:
     class_menu(t_punct** punts_of_menu, int count_of_puncts) : MENU_PUNCT_COUNT(count_of_puncts), active_punct(0), previous_up(0), puncts(punts_of_menu) {};
-    void select(void);
+    bool select(void);
     i32  select(i32 key);
 };
 

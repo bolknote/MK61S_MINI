@@ -566,6 +566,5 @@ bool development_select(void) {
   };
 
   class_menu menu = class_menu(items, sizeof(items) / sizeof(items[0]));
-  menu.select();
-  return action::MENU_BACK;
+  return menu.select();
 }
