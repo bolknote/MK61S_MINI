@@ -36,14 +36,15 @@ static void check_true(const char* label, bool cond) {
   }
 }
 
-// Read the live X register the same way the interpreters do.
-static double read_live_x(void) {
-  static const char symbols[16] = {
-      '0','1','2','3','4','5','6','7','8','9','-',' ',' ',' ',' ',' '
-  };
+static const char SYMBOLS[16] = {
+    '0','1','2','3','4','5','6','7','8','9','-',' ',' ',' ',' ',' '
+};
+
+// Read any live stack register the same way the interpreters read X.
+static double read_live_reg(stack reg) {
   char value[15];
   value[14] = 0;
-  read_stack_register(stack::X, value, symbols);
+  read_stack_register(reg, value, SYMBOLS);
 
   char buffer[24];
   char* out = buffer;
@@ -59,6 +60,8 @@ static double read_live_x(void) {
   *out = 0;
   return mk_math::atof(buffer);
 }
+
+static double read_live_x(void) { return read_live_reg(stack::X); }
 
 static void test_pure_helpers(void) {
   std::printf("pure helpers vs <math.h>:\n");
@@ -117,17 +120,34 @@ static void test_save_restore(void) {
   core_61::enable();
   MK61Emu_SetAngleUnit(DEGREE);
 
-  char mantissa[8] = {'1','2','3','4','5','0','0','0'}; // 1.2345000
-  write_stack_register(stack::X, ' ', mantissa, 2);     // -> 123.45
-  const double before = read_live_x();
+  // Load the whole stack with distinct values.
+  char mX[8] = {'1','2','3','4','5','0','0','0'}; write_stack_register(stack::X, ' ', mX, 2); // 123.45
+  char mY[8] = {'6','7','8','9','0','0','0','0'}; write_stack_register(stack::Y, '-', mY, 0); // -6.789
+  char mZ[8] = {'1','1','1','1','1','1','1','1'}; write_stack_register(stack::Z, ' ', mZ, 1); // 11.111111
+  char mT[8] = {'9','8','7','6','5','4','3','2'}; write_stack_register(stack::T, ' ', mT, -3); // 0.0098765...
 
-  // Borrow the core for a math op; it must leave live state intact.
-  const double s = mk_math::sin(1.0);
-  (void) s;
+  const double bX = read_live_reg(stack::X);
+  const double bY = read_live_reg(stack::Y);
+  const double bZ = read_live_reg(stack::Z);
+  const double bT = read_live_reg(stack::T);
+  // X2 == the screen/display latch, kept separately from stack X.
+  char x2_before[24]; std::strncpy(x2_before, MK61Emu_GetIndicatorStr(SYMBOLS), sizeof(x2_before) - 1);
+  x2_before[sizeof(x2_before) - 1] = 0;
 
-  const double after = read_live_x();
+  // Borrow the core for a normal op and for a domain error (√ of a negative,
+  // which latches ЕГГОГ inside the borrow); neither may leak into live state.
+  (void) mk_math::sin(1.0);
+  (void) mk_math::sqrt(-4.0);
+
+  char x2_after[24]; std::strncpy(x2_after, MK61Emu_GetIndicatorStr(SYMBOLS), sizeof(x2_after) - 1);
+  x2_after[sizeof(x2_after) - 1] = 0;
+
   check_true("angle preserved (DEGREE)", MK61Emu_GetAngleUnit() == DEGREE);
-  check_near("X preserved", after, before, 1e-6);
+  check_near("X preserved", read_live_reg(stack::X), bX, 1e-6);
+  check_near("Y preserved", read_live_reg(stack::Y), bY, 1e-6);
+  check_near("Z preserved", read_live_reg(stack::Z), bZ, 1e-6);
+  check_near("T preserved", read_live_reg(stack::T), bT, 1e-6);
+  check_true("X2/display preserved", std::strcmp(x2_before, x2_after) == 0);
 }
 
 int main(void) {

@@ -1696,28 +1696,33 @@ void step(void) {
 
 // Full core state = the DOZU ring plus the three chip structs plus the angle
 // unit. Pointers inside the chip structs point into this process, so copying
-// them verbatim is safe as long as save/restore happen in the same run.
-usize context_size(void) {
-  return sizeof(ringM) + sizeof(m_IK1302) + sizeof(m_IK1303) + sizeof(m_IK1306) + sizeof(m_emu);
+// them verbatim is safe as long as save/restore happen in the same run. This
+// captures everything the user can observe, including the screen register X2
+// (the IK1302 display latch, kept separately from stack X) and the error latch.
+//
+// The scratch buffer is sized exactly to those structs and is compiled only in
+// the CORE math backend, so the default LIBM build carries no extra RAM.
+#if MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
+static u8 context_snapshot[sizeof(ringM) + sizeof(m_IK1302) + sizeof(m_IK1303) + sizeof(m_IK1306) + sizeof(m_emu)];
+
+void save_context(void) {
+  usize offset = 0;
+  memcpy(context_snapshot + offset, ringM, sizeof(ringM));        offset += sizeof(ringM);
+  memcpy(context_snapshot + offset, &m_IK1302, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
+  memcpy(context_snapshot + offset, &m_IK1303, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
+  memcpy(context_snapshot + offset, &m_IK1306, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
+  memcpy(context_snapshot + offset, &m_emu, sizeof(m_emu));
 }
 
-void save_context(u8* buffer) {
+void restore_context(void) {
   usize offset = 0;
-  memcpy(buffer + offset, ringM, sizeof(ringM));        offset += sizeof(ringM);
-  memcpy(buffer + offset, &m_IK1302, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
-  memcpy(buffer + offset, &m_IK1303, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
-  memcpy(buffer + offset, &m_IK1306, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
-  memcpy(buffer + offset, &m_emu, sizeof(m_emu));
+  memcpy(ringM, context_snapshot + offset, sizeof(ringM));        offset += sizeof(ringM);
+  memcpy(&m_IK1302, context_snapshot + offset, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
+  memcpy(&m_IK1303, context_snapshot + offset, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
+  memcpy(&m_IK1306, context_snapshot + offset, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
+  memcpy(&m_emu, context_snapshot + offset, sizeof(m_emu));
 }
-
-void restore_context(const u8* buffer) {
-  usize offset = 0;
-  memcpy(ringM, buffer + offset, sizeof(ringM));        offset += sizeof(ringM);
-  memcpy(&m_IK1302, buffer + offset, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
-  memcpy(&m_IK1303, buffer + offset, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
-  memcpy(&m_IK1306, buffer + offset, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
-  memcpy(&m_emu, buffer + offset, sizeof(m_emu));
-}
+#endif // MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
 
 void enable(void) {
     MK61Emu_Cleanup();

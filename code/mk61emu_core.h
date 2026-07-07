@@ -192,15 +192,17 @@ namespace core_61 {
   extern    void  get_stack_register(stack reg, bcd_value &value);
   extern    void  set_stack_register(stack reg, bcd_value *value);
 
+  // Snapshot / restore the whole live calculator state (stack ring, the three
+  // chip structs and the angle unit) into an internal, exactly-sized buffer.
+  // Defined only in the CORE math backend; used to borrow the engine for a
+  // transcendental evaluation and hand it back byte-for-byte, including the
+  // screen register X2 and any error latch. The default LIBM build never
+  // references them, so it pays no RAM for the snapshot buffer.
+  extern    void  save_context(void);
+  extern    void  restore_context(void);
+
   extern    void  enable(void);
   extern    void  step(void);
-
-  // Snapshot of the whole core state (RAM ring + the three chip structs +
-  // angle unit). Lets a transient consumer borrow the engine and restore the
-  // user's stack/registers afterwards. Buffer must be context_size() bytes.
-  extern    usize context_size(void);
-  extern    void  save_context(u8* buffer);
-  extern    void  restore_context(const u8* buffer);
 
   // возращает false - есть изменения в дисплейной строке/ true - нет изменений
   //  - дисплейный буфер buffer обновляется только измененным содержимым

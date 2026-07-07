@@ -38,12 +38,6 @@ const char CORE_SYMBOLS[16] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', ' ', ' ', ' ', ' ', ' '
 };
 
-// Scratch snapshot of the live core taken around every borrow. Kept file-static
-// (not on the stack) because it is larger than a comfortable embedded frame.
-// 2 KB comfortably exceeds context_size() on both the 32-bit target (~0.9 KB)
-// and a 64-bit host (~1.2 KB, larger pointers).
-u8 saved_state[2048];
-
 void press(const MatrixKey& key) {
   core_61::clear_displayed();
   // Hold phase, mirroring hidden_press_key() in library_pmk.cpp.
@@ -104,15 +98,23 @@ double read_x(void) {
 }
 
 // Borrow the core to run F+<key> on the argument, then hand it back untouched.
+//
+// The whole live state is snapshotted first, so restoring it afterwards puts
+// back every user-visible register byte-for-byte: the stack (X1/X/Y/Z/T), the
+// memory registers, the angle unit, the screen register X2 (display latch) and
+// any pending error latch. A domain error during the borrow (e.g. √ of a
+// negative) therefore cannot leak out - restore_context() wipes it.
 double eval_unary(double x, const MatrixKey& op) {
-  core_61::save_context(saved_state);
-  core_61::enable();
+  core_61::save_context();
+
+  core_61::enable();          // clean calculator: no leftover prefix/error
   MK61Emu_SetAngleUnit(RADIAN);
   set_x(x);
   press(KEY_F);
   press(op);
-  double result = read_x();
-  core_61::restore_context(saved_state);
+  const double result = read_x();
+
+  core_61::restore_context(); // hand the calculator back exactly as it was
   return result;
 }
 
