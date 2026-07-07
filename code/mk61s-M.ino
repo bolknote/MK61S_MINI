@@ -244,11 +244,6 @@ void setup() {
     }
     delay(2000/16);
   }
-  sound(PIN_BUZZER, 300, 200, library_mk61::sound_volume());
-  led::on();
-  delay_with_sound_poll(1500);
-  led::off();
-
  //---  Настройка отрисовки экрана
   lcd_hooked = false;               // экран не перeхвачен
   need_draw_lock_message = true;    // флаг уже отрисованного сообщения блокировки ядра
@@ -290,6 +285,8 @@ void setup() {
   dbgln(EXT_RUN, "Extended register sizeof = ", sizeof(ext61_reg));
 
   core_61::enable();
+  sound_startup();
+  sound_poll();
 
   dbgln(MINI, "ON");
 }

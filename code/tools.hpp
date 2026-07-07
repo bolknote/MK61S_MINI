@@ -94,6 +94,7 @@ extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume);
 extern  void  sound_stop(void);
 extern  void  sound_poll(void);
+extern  void  sound_startup(void);
 extern  void  delay_with_sound_poll(t_time_ms duration_ms);
 
 extern  void  message_and_waitkey(const char* lcd_message);

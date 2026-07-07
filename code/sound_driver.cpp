@@ -57,6 +57,12 @@ static u32 volume_to_duty(usize volume) {
   return (u32) ((clamp_volume(volume) * SOUND_DUTY_MAX + (SOUND_VOLUME_MAX / 2)) / SOUND_VOLUME_MAX);
 }
 
+static u32 scale_duty(u32 duty, usize volume_percent) {
+  if(volume_percent >= 100) return duty;
+  const u32 scaled = (u32) ((duty * volume_percent + 50) / 100);
+  return (scaled == 0 && duty != 0 && volume_percent != 0) ? 1 : scaled;
+}
+
 static u32 duration_ms_to_us(usize duration_ms) {
   const u64 duration_us = (u64) duration_ms * 1000;
   return (duration_us > 0xFFFFFFFFu) ? 0xFFFFFFFFu : (u32) duration_us;
@@ -150,8 +156,8 @@ void sound_driver_init(usize pin) {
   restore_interrupts(irq);
 }
 
-void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize volume) {
-  const u32 duty = volume_to_duty(volume);
+void sound_driver_play_scaled(usize pin, isize frequency_Hz, usize duration_ms, usize volume, usize volume_percent) {
+  const u32 duty = scale_duty(volume_to_duty(volume), volume_percent);
   if(frequency_Hz <= 0 || duration_ms == 0 || duty == 0) {
     sound_driver_stop();
     return;
@@ -195,6 +201,10 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
   clear_cutoff_interrupt();
   cutoff_timer.resume();
   restore_interrupts(irq);
+}
+
+void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize volume) {
+  sound_driver_play_scaled(pin, frequency_Hz, duration_ms, volume, 100);
 }
 
 void sound_driver_stop(void) {
@@ -246,7 +256,8 @@ void sound_driver_init(usize pin) {
   digitalWrite(pin, LOW);
 }
 
-void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize volume) {
+void sound_driver_play_scaled(usize pin, isize frequency_Hz, usize duration_ms, usize volume, usize volume_percent) {
+  (void) volume_percent;
   if(frequency_Hz <= 0 || duration_ms == 0 || volume == 0) {
     sound_driver_stop();
     return;
@@ -254,6 +265,10 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
 
   fallback_pin = pin;
   tone(pin, (unsigned int) frequency_Hz, (unsigned long) duration_ms);
+}
+
+void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize volume) {
+  sound_driver_play_scaled(pin, frequency_Hz, duration_ms, volume, 100);
 }
 
 void sound_driver_stop(void) {

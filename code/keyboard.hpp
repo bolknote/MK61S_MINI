@@ -16,6 +16,8 @@ static constexpr usize KEY_RELEASE_BIT        =   6;
 static constexpr t_time_ms  TIME_DEBOUNCE     =   30;
 static constexpr t_time_ms  TIME_SCAN_LINE    =   30;
 static constexpr t_time_ms  KEY_HOLD_MS       =   1500;  // константный период времени удержания клавиши до генерации события
+static constexpr isize      KEY_CLICK_FREQ_HZ =   2500;
+static constexpr usize      KEY_CLICK_MS      =   8;
 
 enum class key_state {PRESSED=0, RELEASED=0x40};
 
@@ -247,7 +249,7 @@ class   class_keyboard {
 
       dbgln(KBD, "changed ", bit_changed, ",column ", column, ",row ", row,", scan_code ", scan_code);
       
-      if(state == 0) sound(PIN_BUZZER, 140, 14, library_mk61::sound_volume());
+      if(state == 0) sound(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS, library_mk61::sound_volume());
       cir_buff.write(scan_code);
 
       if(state == 0) {

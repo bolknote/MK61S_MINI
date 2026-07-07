@@ -32,6 +32,59 @@ static constexpr u8 MK61_STORE_REGISTER_F = 0x4F;
 static constexpr u8 MK61_LOAD_REGISTER_F  = 0x6F;
 static u8 m61_script_buffer[program_store::MAX_MK61_TEXT_SIZE];
 
+struct SoundNote {
+  isize frequency_Hz;
+  usize duration_ms;
+  usize gap_ms;
+  usize volume_percent;
+};
+
+static const SoundNote STARTUP_JINGLE[] = {
+  {392, 120, 25, 25},
+  {523, 120, 25, 25},
+  {587, 120, 25, 25},
+  {659, 240, 0, 25},
+};
+
+static const SoundNote* sound_sequence = NULL;
+static usize sound_sequence_len = 0;
+static usize sound_sequence_index = 0;
+static usize sound_sequence_pin = PIN_BUZZER;
+static t_time_ms sound_sequence_next_at = 0;
+
+static void sound_sequence_cancel(void) {
+  sound_sequence = NULL;
+  sound_sequence_len = 0;
+  sound_sequence_index = 0;
+}
+
+static void sound_sequence_start(const SoundNote* sequence, usize len, usize pin) {
+  sound_sequence = sequence;
+  sound_sequence_len = len;
+  sound_sequence_index = 0;
+  sound_sequence_pin = pin;
+  sound_sequence_next_at = millis();
+}
+
+static void sound_sequence_poll(void) {
+  const t_time_ms now = millis();
+  if(sound_sequence == NULL || (i32) (now - sound_sequence_next_at) < 0) {
+    return;
+  }
+
+  if(sound_sequence_index >= sound_sequence_len) {
+    sound_sequence_cancel();
+    return;
+  }
+
+  const SoundNote note = sound_sequence[sound_sequence_index++];
+  const usize volume = library_mk61::sound_volume();
+  if(note.frequency_Hz > 0 && note.duration_ms > 0 && volume > 0) {
+    sound_driver_play_scaled(sound_sequence_pin, note.frequency_Hz, note.duration_ms, volume, note.volume_percent);
+  }
+  sound_sequence_next_at = now + note.duration_ms + note.gap_ms;
+}
+
 static bool opcode_needs_expanded_memory(u8 opcode) {
   return opcode == MK61_STORE_REGISTER_F || opcode == MK61_LOAD_REGISTER_F;
 }
@@ -110,6 +163,7 @@ bool  Confirmation(void) {
 
 void sound_poll(void) {
   sound_driver_poll();
+  sound_sequence_poll();
 }
 
 void delay_with_sound_poll(t_time_ms duration_ms) {
@@ -122,11 +176,17 @@ void delay_with_sound_poll(t_time_ms duration_ms) {
 }
 
 void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume) {
+  sound_sequence_cancel();
   sound_driver_play(pin, freq_Hz, duration_ms, volume);
 }
 
 void  sound_stop(void) {
+  sound_sequence_cancel();
   sound_driver_stop();
+}
+
+void sound_startup(void) {
+  sound_sequence_start(STARTUP_JINGLE, sizeof(STARTUP_JINGLE) / sizeof(STARTUP_JINGLE[0]), PIN_BUZZER);
 }
 
 void message_and_waitkey(const char* lcd_message) {

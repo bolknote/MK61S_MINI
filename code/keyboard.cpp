@@ -16,6 +16,8 @@ static const   u8   scan_pins[KEY_IN_ROW]     =   {PIN_KBD_ROW4, PIN_KBD_ROW3, P
 static constexpr t_time_ms  TIME_DEBOUNCE     =   30;
 static constexpr u32        TIME_SCAN_SETTLE_US = 1000;
 static constexpr t_time_ms  KEY_HOLD_MS       =   1500;  // константный период времени удержания клавиши до генерации события
+static constexpr isize      KEY_CLICK_FREQ_HZ =   2500;
+static constexpr usize      KEY_CLICK_MS      =   8;
 
 extern void idle_main_process(void);
 extern void event_hold_key(i32 holded_key, i32 hold_quant);
@@ -297,7 +299,7 @@ isize scan(void) {
 
   dbgln(KBD, "changed ", bit_changed, ",column ", column, ",row ", row,", scan_code ", scan_code);
 
-  if(state == 0) sound(PIN_BUZZER, 140, 14, library_mk61::sound_volume());
+  if(state == 0) sound(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS, library_mk61::sound_volume());
   cir_buff_write(scan_code);
 
   if(state == 0) {
