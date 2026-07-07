@@ -261,7 +261,7 @@ static constexpr u8 SETTINGS_IDX_TEXT_ROWS = 9;
 static constexpr u8 SETTINGS_IDX_TEXT_WIDTH = 10;
 static constexpr u8 SETTINGS_IDX_TEXT_HEIGHT = 11;
 static constexpr u8 SETTINGS_IDX_TEXT_GAP = 12;
-static constexpr u8 SETTINGS_IDX_TEXT_EFFECT = 13;
+static constexpr u8 SETTINGS_IDX_TEXT_RESERVED = 13;
 static constexpr u8 SETTINGS_IDX_CRC = 14;
 static constexpr u32 LEGACY_EEPROM_PAGE_SIZE = 8 * 1024;
 
@@ -320,8 +320,7 @@ static void apply_settings_record(const u8* record) {
       record[SETTINGS_IDX_TEXT_ROWS],
       record[SETTINGS_IDX_TEXT_WIDTH],
       record[SETTINGS_IDX_TEXT_HEIGHT],
-      record[SETTINGS_IDX_TEXT_GAP],
-      record[SETTINGS_IDX_TEXT_EFFECT]
+      record[SETTINGS_IDX_TEXT_GAP]
     });
     persistent_settings.text_profile_stored = true;
   }
@@ -429,10 +428,11 @@ static void write_persistent_settings(void) {
     persistent_settings.text_profile.glyph_width,
     persistent_settings.text_profile.glyph_height,
     persistent_settings.text_profile.line_gap,
-    persistent_settings.text_profile.effect,
+    0xFF,
     0xFF,
     0xFF
   };
+  record[SETTINGS_IDX_TEXT_RESERVED] = 0xFF;
   record[SETTINGS_IDX_CRC] = settings_record_crc(record, SETTINGS_IDX_CRC);
 
   const u32 address = persistent_settings_next_address;
@@ -493,8 +493,7 @@ void store_display_text_profile(lcd_display::TextProfile profile) {
     persistent_settings.text_profile.rows == profile.rows &&
     persistent_settings.text_profile.glyph_width == profile.glyph_width &&
     persistent_settings.text_profile.glyph_height == profile.glyph_height &&
-    persistent_settings.text_profile.line_gap == profile.line_gap &&
-    persistent_settings.text_profile.effect == profile.effect;
+    persistent_settings.text_profile.line_gap == profile.line_gap;
   if(unchanged) return;
 
   persistent_settings.text_profile = profile;

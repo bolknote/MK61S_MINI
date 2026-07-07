@@ -663,28 +663,7 @@ static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProf
   return left.rows == right.rows &&
     left.glyph_width == right.glyph_width &&
     left.glyph_height == right.glyph_height &&
-    left.line_gap == right.line_gap &&
-    left.effect == right.effect;
-}
-
-static const char* textEffectName(u8 effect, bool ru) {
-  switch(effect) {
-    case lcd_display::TEXT_EFFECT_BELT:
-      return ru ? "лента" : "Belt";
-    case lcd_display::TEXT_EFFECT_BOLD:
-      return ru ? "жирный" : "Bold";
-    case lcd_display::TEXT_EFFECT_SPECCY_1:
-      return ru ? "Спекки 1" : "Speccy 1";
-    case lcd_display::TEXT_EFFECT_SPECCY_2:
-      return ru ? "Спекки 2" : "Speccy 2";
-    case lcd_display::TEXT_EFFECT_HIGH:
-      return ru ? "высокий" : "High";
-    case lcd_display::TEXT_EFFECT_ITALIC:
-      return ru ? "наклон" : "Italic";
-    case lcd_display::TEXT_EFFECT_NONE:
-    default:
-      return ru ? "нет" : "None";
-  }
+    left.line_gap == right.line_gap;
 }
 
 static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::TextProfile profile) {
@@ -700,11 +679,8 @@ static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::Te
         snprintf(out, size, "Интервал:%u", (u32) profile.line_gap);
         break;
       case 3:
-        snprintf(out, size, "Ширина:%u", (u32) profile.glyph_width);
-        break;
-      case 4:
       default:
-        snprintf(out, size, "Эффект:%s", textEffectName(profile.effect, true));
+        snprintf(out, size, "Ширина:%u", (u32) profile.glyph_width);
         break;
     }
     return;
@@ -721,11 +697,8 @@ static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::Te
       snprintf(out, size, "Gap:%u", (u32) profile.line_gap);
       break;
     case 3:
-      snprintf(out, size, "Width:%u", (u32) profile.glyph_width);
-      break;
-    case 4:
     default:
-      snprintf(out, size, "Effect:%s", textEffectName(profile.effect, false));
+      snprintf(out, size, "Width:%u", (u32) profile.glyph_width);
       break;
   }
 }
@@ -746,7 +719,7 @@ static void printFontSetupLine(u8 row, char mark, const char* text) {
 }
 
 static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
-  static constexpr u8 FIELD_COUNT = 5;
+  static constexpr u8 FIELD_COUNT = 4;
   MK61DisplayUpdate update(lcd);
   const u8 rows = lcd.rows();
   const u8 visible_fields = (rows < FIELD_COUNT) ? rows : FIELD_COUNT;
@@ -789,9 +762,7 @@ static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8
   switch(field) {
     case 0: {
       const u8 next_rows = library_mk61::step_display_rows_value(profile.rows, delta);
-      lcd_display::TextProfile next_profile = lcd_display::defaultTextProfileForRows(next_rows);
-      next_profile.effect = profile.effect;
-      profile = next_profile;
+      profile = lcd_display::defaultTextProfileForRows(next_rows);
       break;
     }
     case 1: {
@@ -809,13 +780,6 @@ static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8
     case 3:
       if(delta > 0 && profile.glyph_width < 10) profile.glyph_width++;
       if(delta < 0 && profile.glyph_width > 5) profile.glyph_width--;
-      break;
-    case 4:
-      if(delta > 0) {
-        profile.effect = (u8) ((profile.effect + 1) % lcd_display::TEXT_EFFECT_COUNT);
-      } else {
-        profile.effect = (profile.effect == 0) ? (lcd_display::TEXT_EFFECT_COUNT - 1) : (u8) (profile.effect - 1);
-      }
       break;
   }
   profile = lcd_display::normalizeTextProfile(profile);
@@ -839,7 +803,7 @@ static i32 waitFontSetupKey(void) {
 
 bool FontSetup(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  static constexpr u8 FIELD_COUNT = 5;
+  static constexpr u8 FIELD_COUNT = 4;
   lcd_display::TextProfile profile = library_mk61::display_text_profile();
   u8 active = 0;
 

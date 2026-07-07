@@ -37,18 +37,6 @@ struct TextProfile {
   u8 glyph_width;
   u8 glyph_height;
   u8 line_gap;
-  u8 effect;
-};
-
-enum TextEffect : u8 {
-  TEXT_EFFECT_NONE = 0,
-  TEXT_EFFECT_BELT = 1,
-  TEXT_EFFECT_BOLD = 2,
-  TEXT_EFFECT_SPECCY_1 = 3,
-  TEXT_EFFECT_SPECCY_2 = 4,
-  TEXT_EFFECT_HIGH = 5,
-  TEXT_EFFECT_ITALIC = 6,
-  TEXT_EFFECT_COUNT = 7
 };
 
 #if defined(MK61_DISPLAY_LCD1602)
@@ -56,7 +44,7 @@ static constexpr u8 ROWS = 2;
 static constexpr u8 DEFAULT_ROWS = ROWS;
 static constexpr u8 MAX_ROWS = ROWS;
 static inline TextProfile defaultTextProfileForRows(u8) {
-  return {ROWS, 5, 8, 0, TEXT_EFFECT_NONE};
+  return {ROWS, 5, 8, 0};
 }
 static inline TextProfile normalizeTextProfile(TextProfile) {
   return defaultTextProfileForRows(ROWS);
@@ -91,16 +79,16 @@ static inline TextProfile defaultTextProfileForRows(u8 rows) {
   rows = clamp_u8(rows, DEFAULT_ROWS, COMPACT_ROWS);
   switch(rows) {
     case DEFAULT_ROWS:
-      return {DEFAULT_ROWS, 10, 16, 0, TEXT_EFFECT_NONE};
+      return {DEFAULT_ROWS, 10, 16, 0};
     case SPACED_ROWS_5:
-      return {SPACED_ROWS_5, 10, 10, 2, TEXT_EFFECT_NONE};
+      return {SPACED_ROWS_5, 10, 10, 2};
     case 6:
-      return {6, 10, 8, 2, TEXT_EFFECT_NONE};
+      return {6, 10, 8, 2};
     case SPACED_ROWS_7:
-      return {SPACED_ROWS_7, 10, 8, 1, TEXT_EFFECT_NONE};
+      return {SPACED_ROWS_7, 10, 8, 1};
     case COMPACT_ROWS:
     default:
-      return {COMPACT_ROWS, 10, 8, 0, TEXT_EFFECT_NONE};
+      return {COMPACT_ROWS, 10, 8, 0};
   }
 }
 
@@ -111,7 +99,6 @@ static inline TextProfile normalizeTextProfile(TextProfile profile) {
   const u8 max_height = PIXEL_HEIGHT / profile.rows;
   profile.glyph_height = clamp_u8(profile.glyph_height, 8, max_height);
   profile.line_gap = clamp_u8(profile.line_gap, 0, maxLineGap(profile.rows, profile.glyph_height));
-  if(profile.effect >= TEXT_EFFECT_COUNT) profile.effect = TEXT_EFFECT_NONE;
   return profile;
 }
 #endif
