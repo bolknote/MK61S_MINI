@@ -372,6 +372,58 @@ static void tb_display_line(u8 row, const char* text) {
   if(text != NULL) lcd.print(text);
 }
 
+static void tb_append_char(char*& out, char* end, char ch) {
+  if(out < end) *out++ = ch;
+}
+
+static void tb_append_uint(char*& out, char* end, unsigned long long value) {
+  char digits[24];
+  u8 count = 0;
+  do {
+    digits[count++] = (char) ('0' + (value % 10ULL));
+    value /= 10ULL;
+  } while(value > 0 && count < sizeof(digits));
+  while(count > 0) tb_append_char(out, end, digits[--count]);
+}
+
+static void tb_format_fixed(double value, int decimals, char* out, usize size) {
+  if(size == 0) return;
+  if(decimals < 0) decimals = 0;
+  if(decimals > 13) decimals = 13; // 10 significant digits at exp10 = -4 need 13 decimals
+
+  const bool negative = value < 0.0;
+  double abs_value = negative ? -value : value;
+  unsigned long long scale = 1ULL;
+  for(int i = 0; i < decimals; i++) scale *= 10ULL;
+
+  const unsigned long long scaled = (unsigned long long) (abs_value * (double) scale + 0.5);
+  const unsigned long long integer = scaled / scale;
+  unsigned long long fraction = (scale == 0ULL) ? 0ULL : (scaled % scale);
+
+  char temp[40];
+  char* cursor = temp;
+  char* end = temp + sizeof(temp) - 1;
+  if(negative && scaled != 0ULL) tb_append_char(cursor, end, '-');
+  tb_append_uint(cursor, end, integer);
+  if(decimals > 0) {
+    tb_append_char(cursor, end, '.');
+    char fractional[14];
+    for(int i = decimals - 1; i >= 0; i--) {
+      fractional[i] = (char) ('0' + (fraction % 10ULL));
+      fraction /= 10ULL;
+    }
+    for(int i = 0; i < decimals; i++) tb_append_char(cursor, end, fractional[i]);
+    while(cursor > temp && *(cursor - 1) == '0') cursor--;
+    if(cursor > temp && *(cursor - 1) == '.') cursor--;
+  }
+  *cursor = 0;
+  tb_copy_text(out, size, temp);
+}
+
+// TinyBASIC prints numbers with 10 significant digits, like the "%.10g" it
+// used before. The firmware links newlib-nano without float printf support
+// (no "-u _printf_float"), where snprintf silently drops %g values, so the
+// number is formatted by hand the same way BASIC and FOCAL do.
 static void tb_format_number(double value, char* out, usize size) {
   if(size == 0) return;
   if(isnan(value)) {
@@ -382,7 +434,42 @@ static void tb_format_number(double value, char* out, usize size) {
     tb_copy_text(out, size, value < 0.0 ? "-INF" : "INF");
     return;
   }
-  snprintf(out, size, "%.10g", value);
+  if(value == 0.0) {
+    tb_copy_text(out, size, "0");
+    return;
+  }
+
+  const double abs_value = fabs(value);
+  int exp10 = (int) floor(log10(abs_value));
+  if(exp10 >= 10 || exp10 < -4) { // %g switches to scientific outside [-4, precision)
+    char mantissa[24];
+    double scaled = abs_value / pow(10.0, (double) exp10);
+    tb_format_fixed(scaled, 9, mantissa, sizeof(mantissa));
+    if(mantissa[0] == '1' && mantissa[1] == '0') { // rounding overflowed to 10.0
+      exp10++;
+      tb_format_fixed(1.0, 9, mantissa, sizeof(mantissa));
+    }
+    char temp[40];
+    char* cursor = temp;
+    char* end = temp + sizeof(temp) - 1;
+    if(value < 0.0) tb_append_char(cursor, end, '-');
+    for(const char* m = mantissa; *m != 0; m++) tb_append_char(cursor, end, *m);
+    tb_append_char(cursor, end, 'E');
+    if(exp10 < 0) {
+      tb_append_char(cursor, end, '-');
+      tb_append_uint(cursor, end, (unsigned long long) -exp10);
+    } else {
+      tb_append_char(cursor, end, '+');
+      tb_append_uint(cursor, end, (unsigned long long) exp10);
+    }
+    *cursor = 0;
+    tb_copy_text(out, size, temp);
+    return;
+  }
+
+  int decimals = 9 - exp10;
+  if(decimals < 0) decimals = 0;
+  tb_format_fixed(value, decimals, out, size);
 }
 
 static void tb_ast_reset(TbAst& ast) {
@@ -1651,6 +1738,10 @@ extern "C" double TinyBasicTestNumber(const char* name) {
 
 extern "C" const char* TinyBasicTestLcdLine(int row) {
   return lcd.line((u8) row);
+}
+
+extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size) {
+  tb_format_number(value, out, (usize) size);
 }
 
 extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out, int size) {

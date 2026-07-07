@@ -12,6 +12,7 @@ extern "C" void TinyBasicTestRun(int slot);
 extern "C" double TinyBasicTestNumber(const char* name);
 extern "C" const char* TinyBasicTestLcdLine(int row);
 extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out, int size);
+extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size);
 
 static constexpr int KEY_K = 37;
 static constexpr int KEY_OK = 29;
@@ -111,8 +112,39 @@ static void test_editor_has_no_operator_macros(void) {
   assert(std::strcmp(out, ":;") == 0);
 }
 
+static void expect_format(double value, const char* expected) {
+  char out[32];
+  TinyBasicTestFormatNumber(value, out, sizeof(out));
+  if(std::strcmp(out, expected) != 0) {
+    std::printf("format %.17g: got \"%s\", want \"%s\"\n", value, out, expected);
+    assert(false);
+  }
+}
+
+// The firmware formatter must not depend on printf float support (newlib-nano
+// links without it), so it is compared against the old "%.10g" behaviour here.
+static void test_format_number(void) {
+  expect_format(0.0, "0");
+  expect_format(1.0, "1");
+  expect_format(-1.0, "-1");
+  expect_format(2.8, "2.8");
+  expect_format(14.0 / 5.0, "2.8");
+  expect_format(0.5, "0.5");
+  expect_format(-0.125, "-0.125");
+  expect_format(10.0, "10");
+  expect_format(1234567890.0, "1234567890");
+  expect_format(0.0001, "0.0001");
+  expect_format(1.0 / 3.0, "0.3333333333");
+  expect_format(-2.0 / 3.0, "-0.6666666667");
+  expect_format(12345678901.0, "1.23456789E+10");
+  expect_format(0.00001, "1E-5");
+  expect_format(-0.0000123, "-1.23E-5");
+  expect_format(9.99999999999e9, "10000000000");
+}
+
 int main(void) {
   test_compile_and_print();
+  test_format_number();
   test_if_and_goto();
   test_gosub();
   test_for_next();
