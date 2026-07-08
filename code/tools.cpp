@@ -3,8 +3,11 @@
 #if MK61_USE_ARDUINO_EEPROM_FALLBACK
   #include "EEPROM.h"
 #endif
+#include "basic.hpp"
 #include "lcd_gui.hpp"
 #include "tools.hpp"
+#include "development.hpp"
+#include "focal.hpp"
 #include "program_store.hpp"
 #include "m61_text.hpp"
 #include "shared_scratch.hpp"
@@ -12,6 +15,7 @@
 #include "keyboard.h"
 #include "cross_hal.h"
 #include "sound_driver.hpp"
+#include "tinybasic.hpp"
 #ifdef SPI_FLASH
   #include <SPI.h>
   #include <SPIFlash.h>
@@ -20,6 +24,7 @@
 #include "debug.h"
 
 #include "ledcontrol.h"
+#include <string.h>
 using namespace led;
 
 extern void reset_ext_program_state(void);
@@ -46,6 +51,143 @@ static const SoundNote STARTUP_JINGLE[] = {
   {587, 120, 25, 25},
   {659, 240, 0, 25},
 };
+
+static bool stored_file_is_line_end(char c) {
+  return c == 0 || c == '\r' || c == '\n';
+}
+
+static bool stored_file_is_space(char c) {
+  return c == ' ' || c == '\t';
+}
+
+static const char* stored_file_skip_spaces(const char* p) {
+  while(p != NULL && stored_file_is_space(*p)) p++;
+  return p;
+}
+
+static char stored_file_ascii_lower(char ch) {
+  return (ch >= 'A' && ch <= 'Z') ? (char) (ch - 'A' + 'a') : ch;
+}
+
+static bool stored_file_ends_with_ci(const char* text, const char* suffix) {
+  const usize text_len = strlen(text);
+  const usize suffix_len = strlen(suffix);
+  if(suffix_len > text_len) return false;
+  const char* tail = text + text_len - suffix_len;
+  for(usize i = 0; i < suffix_len; i++) {
+    if(stored_file_ascii_lower(tail[i]) != stored_file_ascii_lower(suffix[i])) return false;
+  }
+  return true;
+}
+
+static bool stored_file_strip_suffix_ci(char* text, const char* suffix) {
+  if(!stored_file_ends_with_ci(text, suffix)) return false;
+  text[strlen(text) - strlen(suffix)] = 0;
+  return true;
+}
+
+static bool stored_file_copy_name(const char* args, char* name, usize capacity) {
+  args = stored_file_skip_spaces(args);
+  if(args == NULL || name == NULL || capacity == 0) return false;
+  usize len = 0;
+  while(!stored_file_is_line_end(args[len])) len++;
+  while(len > 0 && stored_file_is_space(args[len - 1])) len--;
+  if(len == 0 || len >= capacity) return false;
+  for(usize i = 0; i < len; i++) name[i] = args[i];
+  name[len] = 0;
+  return true;
+}
+
+static bool stored_file_entry_by_name(program_store::ProgramType type, const char* name, program_store::Entry& out) {
+  if(name == NULL || name[0] == 0) return false;
+  const int count = program_store::count(type);
+  for(int i = 0; i < count; i++) {
+    program_store::Entry entry;
+    if(!program_store::entry(type, i, entry)) continue;
+    if(strncmp(entry.name, name, program_store::NAME_SIZE) == 0) {
+      out = entry;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
+  char name[program_store::NAME_SIZE + 16];
+  if(!stored_file_copy_name(args, name, sizeof(name))) return false;
+
+  program_store::ProgramType preferred_type = program_store::ProgramType::MK61;
+  bool has_preferred_type = false;
+  if(stored_file_strip_suffix_ci(name, ".state.txt")) {
+    preferred_type = program_store::ProgramType::MK61_STATE;
+    has_preferred_type = true;
+  } else if(stored_file_strip_suffix_ci(name, ".m61")) {
+    preferred_type = program_store::ProgramType::MK61;
+    has_preferred_type = true;
+  } else if(stored_file_strip_suffix_ci(name, ".bas")) {
+    preferred_type = program_store::ProgramType::BASIC;
+    has_preferred_type = true;
+  } else if(stored_file_strip_suffix_ci(name, ".foc")) {
+    preferred_type = program_store::ProgramType::FOCAL;
+    has_preferred_type = true;
+#if MK61_ENABLE_TINYBASIC
+  } else if(stored_file_strip_suffix_ci(name, ".tbi")) {
+    preferred_type = program_store::ProgramType::TINYBASIC;
+    has_preferred_type = true;
+#endif
+  } else if(stored_file_strip_suffix_ci(name, ".txt") || stored_file_strip_suffix_ci(name, ".t1")) {
+    preferred_type = program_store::ProgramType::TEXT;
+    has_preferred_type = true;
+  } else if(stored_file_strip_suffix_ci(name, ".m2")) {
+    preferred_type = program_store::ProgramType::MK61_STATE;
+    has_preferred_type = true;
+  }
+
+  if(name[0] == 0 || strlen(name) >= program_store::NAME_SIZE) return false;
+  if(has_preferred_type) return stored_file_entry_by_name(preferred_type, name, entry);
+
+  const program_store::ProgramType types[] = {
+    program_store::ProgramType::TEXT,
+    program_store::ProgramType::MK61_STATE,
+    program_store::ProgramType::MK61,
+    program_store::ProgramType::BASIC,
+    program_store::ProgramType::FOCAL
+#if MK61_ENABLE_TINYBASIC
+    ,
+    program_store::ProgramType::TINYBASIC
+#endif
+  };
+  for(usize i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
+    if(stored_file_entry_by_name(types[i], name, entry)) return true;
+  }
+  return false;
+}
+
+bool OpenStoredFile(const char* args) {
+  program_store::Entry entry;
+  if(!ResolveStoredFile(args, entry)) return false;
+
+  switch(entry.type) {
+    case program_store::ProgramType::MK61:
+      return LoadProgram(entry.name);
+#if MK61_ENABLE_BASIC
+    case program_store::ProgramType::BASIC:
+      return RunBasicProgram(entry.name);
+#endif
+#if MK61_ENABLE_FOCAL
+    case program_store::ProgramType::FOCAL:
+      return RunFocalProgram(entry.name);
+#endif
+#if MK61_ENABLE_TINYBASIC
+    case program_store::ProgramType::TINYBASIC:
+      return RunTinyBasicProgram(entry.name);
+#endif
+    case program_store::ProgramType::TEXT:
+    case program_store::ProgramType::MK61_STATE:
+      return program_store_view_entry(entry.type, entry.name);
+  }
+  return false;
+}
 
 static const SoundNote* sound_sequence = NULL;
 static usize sound_sequence_len = 0;

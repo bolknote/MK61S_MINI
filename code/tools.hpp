@@ -112,6 +112,8 @@ extern  bool  Store(usize nSlot);
 extern  bool  Load(void);
 extern  bool  Load(usize nSlot);
 extern  bool  LoadProgram(const char* name);
+extern  bool  ResolveStoredFile(const char* args, program_store::Entry& entry);
+extern  bool  OpenStoredFile(const char* args);
 extern  u8    load_word(isize segment_address, isize offset);
 extern  bool  EraseFlash(void);
 extern  bool  clear_storage(void);

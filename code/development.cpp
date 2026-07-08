@@ -257,6 +257,20 @@ static bool explorer_entry(int index, program_store::Entry& out) {
   return false;
 }
 
+static bool entry_by_type_name(program_store::ProgramType type, const char* name, program_store::Entry& out) {
+  if(name == NULL || name[0] == 0) return false;
+  const int count = program_store::count(type);
+  for(int i = 0; i < count; i++) {
+    program_store::Entry entry;
+    if(!program_store::entry(type, i, entry)) continue;
+    if(strncmp(entry.name, name, program_store::NAME_SIZE) == 0) {
+      out = entry;
+      return true;
+    }
+  }
+  return false;
+}
+
 static char ascii_upper(char ch) {
   return (ch >= 'a' && ch <= 'z') ? (char) (ch - 'a' + 'A') : ch;
 }
@@ -1318,6 +1332,13 @@ bool program_store_explorer_select(void) {
       }
     }
   }
+}
+
+bool program_store_view_entry(program_store::ProgramType type, const char* name) {
+  program_store::Entry entry;
+  if(!entry_by_type_name(type, name, entry)) return false;
+  view_entry(entry);
+  return true;
 }
 
 bool development_select(void) {

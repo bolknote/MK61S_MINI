@@ -127,6 +127,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     static constexpr u32 T_DIR          = 0x72696473; // sdir
     static constexpr u32 T_DEL_SLOT     = 0x6C656473; // sdel
     static constexpr u32 T_RUN          = 0x006E7572; // run (F АВТ, В/О, С/П)
+    static constexpr u32 T_OPEN         = 0x6E65706F; // open
     static constexpr u32 T_ERASE_STORAGE= 0x61726573; // sera
     static constexpr u32 T_INSERT_CMD   = 0x20736E69; // ins <шаг> <opcode>
 
@@ -895,11 +896,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  T_MAP_FLASH:
               flash_map_list();
             break;
-          case  T_RUN: 
+          case  T_RUN:
               kbd::push((i8) sw::F);   // F
               kbd::push((i8) sw::NEG); // /-/
               kbd::push((i8) sw::RET); // В/О
               kbd::push((i8) sw::RUN); // C/П
+            break;
+          case T_OPEN: {
+              const char* args = (input_buffer[4] == ' ') ? (const char*) &input_buffer[5] : "";
+              if(!OpenStoredFile(args)) Serial.println("Open failed!");
+            }
             break;
           case  T_POKE_CODE:
               input_R_stack();
