@@ -95,6 +95,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     u32     terminal_last_cmd;
     isize   nSlot;
 
+    static constexpr i32 SCRIPT_COMMAND_ERROR = -2;
+
     static constexpr u32 T_VERSION      = 0x00726576; // ver
     static constexpr u32 T_LIST         = 0x7473696C; // list
     static constexpr u32 T_ISA_61       = 0x00617369; // isa
@@ -284,15 +286,25 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
   public:
     usize recive_pos;
 
-    void  init(void) {
+    void reset_command_state(void) {
       AT                    = 0;
       recive_pos            = 0;
       terminal_last_cmd     = 0;
       nSlot                 = -1;
+    }
+
+    void  init(void) {
+      reset_command_state();
       Serial.begin(115200);
       delay(1800);
       output_version();
     }
+
+    void init_script(void) {
+      reset_command_state();
+    }
+
+    i32 execute_script_line(const char* line);
 
     void  echo_mk61_stack(void) {
       char cvalue[15];
@@ -714,22 +726,32 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
     }
 
-    isize execute(void) {
+    isize execute(bool script_mode = false) {
         if(input_buffer[0] == 'y' || input_buffer[0] == 'Y') {
+          bool confirmed = false;
           switch(terminal_last_cmd) {
             case  T_CLEAR_PRG61:
                 MK61Emu_ClearCodePage();
                 Serial.println("Code page cleared!");
+                confirmed = true;
               break;
             case  T_DEL_SLOT:
                 if(!erase_slot(nSlot)) Serial.println("Error: address out of range!");
+                confirmed = true;
               break;
             case  T_SAVE:
                 if(!Store(nSlot)) Serial.println("Failed save attempt!");
+                confirmed = true;
               break;
             case  T_ERASE_STORAGE:
                 clear_storage();
+                confirmed = true;
               break;
+          }
+          if(script_mode && confirmed) {
+            terminal_last_cmd = 0;
+            recive_pos = 0;
+            return -1;
           }
         }
 
@@ -944,6 +966,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             break;
           case  T_ASSEMBLED:
               Assembler();
+            break;
+          default:
+              if(script_mode) {
+                recive_pos = 0;
+                return SCRIPT_COMMAND_ERROR;
+              }
         }
 
       recive_pos = 0;
@@ -970,5 +998,22 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
     
 };
+
+inline i32 class_terminal::execute_script_line(const char* line) {
+  if(line == NULL) return SCRIPT_COMMAND_ERROR;
+
+  usize len = 0;
+  while(line[len] != 0) {
+    if(len + 1 >= MAX_INPUT_CHAR) {
+      recive_pos = 0;
+      return SCRIPT_COMMAND_ERROR;
+    }
+    input_buffer[len] = (u8) line[len];
+    len++;
+  }
+  input_buffer[len] = CR;
+  recive_pos = len + 1;
+  return execute(true);
+}
 
 #endif

@@ -640,13 +640,7 @@ bool Load(usize nSlot) {
 }
 
 bool LoadProgram(const char* name) {
-  if(name == NULL || name[0] == 0) return false;
-  shared_scratch::Lease scratch(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
-  if(!scratch.ok()) return false;
-  u8* script_buffer = scratch.data();
-  u16 script_len = 0;
-  if(!program_store::read_mk61(name, script_buffer, scratch.size(), &script_len)) return false;
-  return m61_text::execute(script_buffer, script_len);
+  return m61_text::load_program(name);
 }
 
 bool Load(void) {
