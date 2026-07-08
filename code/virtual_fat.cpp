@@ -4,9 +4,9 @@
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
 
+#include <stdio.h>
 #if defined(MK61_VFAT_TRACE)
 #include <stdarg.h>
-#include <stdio.h>
 #endif
 #include <string.h>
 
@@ -29,7 +29,8 @@ static constexpr u16 FIRST_DATA_CLUSTER = 2;
 static constexpr u16 CLUSTER_LIMIT = FIRST_DATA_CLUSTER + DATA_CLUSTER_CAPACITY;
 static constexpr u16 MAX_IMPORTED_LEN = program_store::MAX_MK61_TEXT_SIZE;
 static constexpr u8 MAX_FILE_CLUSTERS = (MAX_IMPORTED_LEN + SECTOR_SIZE - 1) / SECTOR_SIZE;
-static constexpr u16 MAX_LFN_CHARS = program_store::NAME_SIZE + 3;
+static constexpr u16 MAX_LFN_CHARS = 64;
+static constexpr u16 MAX_LFN_CODE_UNITS = 104;
 static constexpr u8 MAX_PENDING_WRITES = program_store::MAX_ENTRIES;
 static constexpr u8 MAX_PENDING_DELETES = program_store::MAX_ENTRIES;
 static constexpr u8 IGNORED_WRITE_RANGES = program_store::MAX_ENTRIES;
@@ -48,6 +49,9 @@ static const program_store::ProgramType FILE_TYPES[] = {
   ,
   program_store::ProgramType::TINYBASIC
 #endif
+  ,
+  program_store::ProgramType::TEXT,
+  program_store::ProgramType::MK61_STATE
 };
 
 struct PendingWrite {
@@ -102,7 +106,7 @@ struct LfnState {
   u8 expected;
   u16 seen_mask;
   u8 checksum;
-  char name[MAX_LFN_CHARS + 1];
+  u16 name[MAX_LFN_CODE_UNITS + 1];
 };
 
 struct SessionState {
@@ -547,8 +551,18 @@ static const char* extension_for_type(program_store::ProgramType type) {
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC: return "TBI";
 #endif
+    case program_store::ProgramType::TEXT: return "T1 ";
+    case program_store::ProgramType::MK61_STATE: return "M2 ";
   }
   return "M61";
+}
+
+static const char* visible_extension_for_type(program_store::ProgramType type) {
+  switch(type) {
+    case program_store::ProgramType::TEXT: return "txt";
+    case program_store::ProgramType::MK61_STATE: return "state.txt";
+    default: return extension_for_type(type);
+  }
 }
 
 static u8 short_name_checksum(const u8* short_name) {
@@ -704,13 +718,14 @@ static bool name_is_83_compatible(const char* name) {
   return len != 0 && len < program_store::NAME_SIZE;
 }
 
-static bool needs_lfn(const char* name) {
+static bool needs_lfn(program_store::ProgramType type, const char* name) {
+  if(type == program_store::ProgramType::TEXT || type == program_store::ProgramType::MK61_STATE) return true;
   return name != NULL && name[0] != 0 && !name_is_83_compatible(name);
 }
 
 static void fill_short_name(const char* name, program_store::ProgramType type, int unique_index, u8* out) {
   memset(out, ' ', 11);
-  const bool alias = needs_lfn(name);
+  const bool alias = needs_lfn(type, name);
 
   if(alias) {
     u8 pos = 0;
@@ -754,10 +769,8 @@ static void format_full_name(program_store::ProgramType type, const char* name, 
     pos++;
   }
   out[pos++] = '.';
-  const char* ext = extension_for_type(type);
-  out[pos++] = ext[0];
-  out[pos++] = ext[1];
-  out[pos++] = ext[2];
+  const char* ext = visible_extension_for_type(type);
+  for(u8 i = 0; ext[i] != 0 && pos < MAX_LFN_CHARS; i++) out[pos++] = ext[i];
   out[pos] = 0;
 }
 
@@ -861,7 +874,7 @@ static void fill_pending_dir_entry(u8* out, const PendingWrite& pending, int uni
 }
 
 static u8 dir_entries_for_name(const char* name, program_store::ProgramType type) {
-  if(!needs_lfn(name)) return 1;
+  if(!needs_lfn(type, name)) return 1;
   char full_name[MAX_LFN_CHARS + 1];
   format_full_name(type, name, full_name);
   return (u8) (lfn_count_for_name(full_name) + 1);
@@ -1024,6 +1037,8 @@ static u16 max_len_for_type(program_store::ProgramType type) {
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC: return 1023;
 #endif
+    case program_store::ProgramType::TEXT: return program_store::MAX_MK61_TEXT_SIZE;
+    case program_store::ProgramType::MK61_STATE: return program_store::MAX_MK61_TEXT_SIZE;
   }
   return 0;
 }
@@ -1036,14 +1051,6 @@ static char upper_short_char(u8 c) {
 static char normalize_short_char(u8 c) {
   const char upper = upper_short_char(c);
   if((upper >= 'A' && upper <= 'Z') || (upper >= '0' && upper <= '9') || upper == '_' || upper == '-') return upper;
-  return 0;
-}
-
-static char normalize_lfn_name_char(char c) {
-  if((c >= 'A' && c <= 'Z') ||
-     (c >= 'a' && c <= 'z') ||
-     (c >= '0' && c <= '9') ||
-     c == '_' || c == '-' || c == ' ') return c;
   return 0;
 }
 
@@ -1069,33 +1076,250 @@ static bool parse_extension(const u8* ext, program_store::ProgramType& type) {
     return true;
   }
 #endif
+  if(memcmp(normalized, "T1 ", 3) == 0) {
+    type = program_store::ProgramType::TEXT;
+    return true;
+  }
+  if(memcmp(normalized, "TXT", 3) == 0) {
+    type = program_store::ProgramType::TEXT;
+    return true;
+  }
+  if(memcmp(normalized, "M2 ", 3) == 0) {
+    type = program_store::ProgramType::MK61_STATE;
+    return true;
+  }
   return false;
 }
 
-static bool parse_lfn_filename(const char* full_name, ParsedDirEntry& parsed) {
+static bool lfn_ascii_equal_ci(const u16* name, u16 start, const char* suffix) {
+  for(u16 i = 0; suffix[i] != 0; i++) {
+    const u16 value = name[start + i];
+    char expected = suffix[i];
+    char actual = 0;
+    if(value >= 'A' && value <= 'Z') actual = (char) (value - 'A' + 'a');
+    else if(value >= 'a' && value <= 'z') actual = (char) value;
+    else if(value >= '0' && value <= '9') actual = (char) value;
+    else if(value == '.' || value == '_' || value == '-') actual = (char) value;
+    else return false;
+    if(expected >= 'A' && expected <= 'Z') expected = (char) (expected - 'A' + 'a');
+    if(actual != expected) return false;
+  }
+  return true;
+}
+
+static u16 lfn_len(const u16* full_name) {
+  u16 len = 0;
+  while(len < MAX_LFN_CODE_UNITS && full_name[len] != 0) len++;
+  return len;
+}
+
+static bool lfn_ends_with_ci(const u16* full_name, u16 len, const char* suffix) {
+  u16 suffix_len = 0;
+  while(suffix[suffix_len] != 0) suffix_len++;
+  if(len <= suffix_len) return false;
+  return lfn_ascii_equal_ci(full_name, (u16) (len - suffix_len), suffix);
+}
+
+static bool lfn_is_separator(u16 value) {
+  switch(value) {
+    case ' ': case '\t': case '_': case '-': case '.': case ',': case ';':
+    case ':': case '(': case ')': case '[': case ']': case '{': case '}':
+    case '+': case '=': case '&': case '!': case '?': case '#': case '\'':
+      return true;
+  }
+  return false;
+}
+
+static bool append_char(char* out, u8 capacity, u8& len, char value) {
+  if(len + 1 >= capacity) return false;
+  out[len++] = value;
+  out[len] = 0;
+  return true;
+}
+
+static void append_text(char* out, u8 capacity, u8& len, const char* text) {
+  for(u8 i = 0; text[i] != 0; i++) (void) append_char(out, capacity, len, text[i]);
+}
+
+static bool append_translit(u16 value, char* out, u8 capacity, u8& len) {
+  if(value >= '0' && value <= '9') return append_char(out, capacity, len, (char) value);
+  if(value >= 'A' && value <= 'Z') return append_char(out, capacity, len, (char) value);
+  if(value >= 'a' && value <= 'z') return append_char(out, capacity, len, (char) (value - 'a' + 'A'));
+
+  switch(value) {
+    case 0x0410: case 0x0430: append_text(out, capacity, len, "A"); return true;
+    case 0x0411: case 0x0431: append_text(out, capacity, len, "B"); return true;
+    case 0x0412: case 0x0432: append_text(out, capacity, len, "V"); return true;
+    case 0x0413: case 0x0433: case 0x0490: case 0x0491: append_text(out, capacity, len, "G"); return true;
+    case 0x0414: case 0x0434: append_text(out, capacity, len, "D"); return true;
+    case 0x0415: case 0x0435: case 0x0401: case 0x0451: case 0x0404: case 0x0454: append_text(out, capacity, len, "E"); return true;
+    case 0x0416: case 0x0436: append_text(out, capacity, len, "ZH"); return true;
+    case 0x0417: case 0x0437: append_text(out, capacity, len, "Z"); return true;
+    case 0x0418: case 0x0438: case 0x0406: case 0x0456: append_text(out, capacity, len, "I"); return true;
+    case 0x0419: case 0x0439: case 0x0407: case 0x0457: append_text(out, capacity, len, "Y"); return true;
+    case 0x041A: case 0x043A: append_text(out, capacity, len, "K"); return true;
+    case 0x041B: case 0x043B: append_text(out, capacity, len, "L"); return true;
+    case 0x041C: case 0x043C: append_text(out, capacity, len, "M"); return true;
+    case 0x041D: case 0x043D: append_text(out, capacity, len, "N"); return true;
+    case 0x041E: case 0x043E: append_text(out, capacity, len, "O"); return true;
+    case 0x041F: case 0x043F: append_text(out, capacity, len, "P"); return true;
+    case 0x0420: case 0x0440: append_text(out, capacity, len, "R"); return true;
+    case 0x0421: case 0x0441: append_text(out, capacity, len, "S"); return true;
+    case 0x0422: case 0x0442: append_text(out, capacity, len, "T"); return true;
+    case 0x0423: case 0x0443: case 0x040E: case 0x045E: append_text(out, capacity, len, "U"); return true;
+    case 0x0424: case 0x0444: append_text(out, capacity, len, "F"); return true;
+    case 0x0425: case 0x0445: append_text(out, capacity, len, "H"); return true;
+    case 0x0426: case 0x0446: append_text(out, capacity, len, "TS"); return true;
+    case 0x0427: case 0x0447: append_text(out, capacity, len, "CH"); return true;
+    case 0x0428: case 0x0448: append_text(out, capacity, len, "SH"); return true;
+    case 0x0429: case 0x0449: append_text(out, capacity, len, "SCH"); return true;
+    case 0x042B: case 0x044B: append_text(out, capacity, len, "Y"); return true;
+    case 0x042D: case 0x044D: append_text(out, capacity, len, "E"); return true;
+    case 0x042E: case 0x044E: append_text(out, capacity, len, "YU"); return true;
+    case 0x042F: case 0x044F: append_text(out, capacity, len, "YA"); return true;
+    case 0x042C: case 0x044C: case 0x042A: case 0x044A: return true;
+  }
+  return false;
+}
+
+static bool source_is_direct_internal_name(const u16* full_name, u16 base_len, const char* candidate) {
+  u16 i = 0;
+  while(i < base_len && i < program_store::NAME_SIZE - 1 && candidate[i] != 0) {
+    if(full_name[i] != (u8) candidate[i]) return false;
+    i++;
+  }
+  return i == base_len && candidate[i] == 0;
+}
+
+static bool name_exists_or_pending(program_store::ProgramType type, const char* name) {
+  if(program_store::exists(type, name)) return true;
+  for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
+    const PendingWrite& pending = session_state().pending_writes[i];
+    if(!pending.used || pending.type != type) continue;
+    if(strncmp(pending.name, name, program_store::NAME_SIZE) == 0) return true;
+  }
+  return false;
+}
+
+static bool build_normalized_name(const u16* full_name, u16 base_len, char* out) {
+  static constexpr u8 MAX_WORDS = 12;
+  static constexpr u8 WORD_SIZE = 16;
+  char words[MAX_WORDS][WORD_SIZE];
+  u8 word_len[MAX_WORDS];
+  u8 word_count = 0;
+  u8 current_len = 0;
+  memset(words, 0, sizeof(words));
+  memset(word_len, 0, sizeof(word_len));
+
+  for(u16 i = 0; i < base_len; i++) {
+    const u16 value = full_name[i];
+    if(lfn_is_separator(value)) {
+      if(current_len != 0) {
+        word_len[word_count] = current_len;
+        word_count++;
+        current_len = 0;
+        if(word_count >= MAX_WORDS) break;
+      }
+      continue;
+    }
+    if(word_count >= MAX_WORDS) break;
+    if(!append_translit(value, words[word_count], WORD_SIZE, current_len)) continue;
+  }
+
+  if(word_count < MAX_WORDS && current_len != 0) {
+    word_len[word_count] = current_len;
+    word_count++;
+  }
+
+  if(word_count == 0) {
+    strcpy(out, "FILE");
+    return true;
+  }
+
+  u8 limit[MAX_WORDS];
+  u16 total = 0;
+  for(u8 i = 0; i < word_count; i++) {
+    limit[i] = (word_len[i] > 5) ? 5 : word_len[i];
+    total = (u16) (total + limit[i]);
+  }
+
+  while(total > program_store::NAME_SIZE - 1) {
+    u8 best = MAX_WORDS;
+    for(u8 i = 0; i < word_count; i++) {
+      if(limit[i] <= 1) continue;
+      if(best == MAX_WORDS || limit[i] > limit[best]) best = i;
+    }
+    if(best == MAX_WORDS) break;
+    limit[best]--;
+    total--;
+  }
+
+  u8 pos = 0;
+  for(u8 i = 0; i < word_count && pos < program_store::NAME_SIZE - 1; i++) {
+    for(u8 j = 0; j < limit[i] && words[i][j] != 0 && pos < program_store::NAME_SIZE - 1; j++) {
+      out[pos++] = words[i][j];
+    }
+  }
+  out[pos] = 0;
+  return pos != 0;
+}
+
+static void make_import_name_unique(program_store::ProgramType type, const u16* full_name, u16 base_len, char* name) {
+  if(source_is_direct_internal_name(full_name, base_len, name)) return;
+  if(!name_exists_or_pending(type, name)) return;
+
+  char base[program_store::NAME_SIZE];
+  strncpy(base, name, sizeof(base) - 1);
+  base[sizeof(base) - 1] = 0;
+
+  for(u16 counter = 1; counter < 1000; counter++) {
+    char suffix[4];
+    snprintf(suffix, sizeof(suffix), "%u", (unsigned) counter);
+    const u8 suffix_len = (u8) strlen(suffix);
+    const u8 prefix_len = (u8) ((program_store::NAME_SIZE - 1 > suffix_len) ? (program_store::NAME_SIZE - 1 - suffix_len) : 0);
+    u8 pos = 0;
+    while(pos < prefix_len && base[pos] != 0) {
+      name[pos] = base[pos];
+      pos++;
+    }
+    for(u8 i = 0; suffix[i] != 0 && pos < program_store::NAME_SIZE - 1; i++) name[pos++] = suffix[i];
+    name[pos] = 0;
+    if(!name_exists_or_pending(type, name)) return;
+  }
+}
+
+static bool parse_lfn_filename(const u16* full_name, ParsedDirEntry& parsed) {
   if(full_name == NULL || full_name[0] == '.') return false;
 
-  int dot = -1;
-  int len = 0;
-  while(len <= (int) MAX_LFN_CHARS && full_name[len] != 0) {
-    if(full_name[len] == '.') dot = len;
-    len++;
-  }
-  if(dot <= 0 || len - dot - 1 != 3) return false;
-  if(dot >= (int) program_store::NAME_SIZE) return false;
+  const u16 len = lfn_len(full_name);
+  if(len == 0) return false;
 
-  char ext[3];
-  ext[0] = full_name[dot + 1];
-  ext[1] = full_name[dot + 2];
-  ext[2] = full_name[dot + 3];
-  if(!parse_extension((const u8*) ext, parsed.type)) return false;
-
-  for(int i = 0; i < dot; i++) {
-    const char c = normalize_lfn_name_char(full_name[i]);
-    if(c == 0) return false;
-    parsed.name[i] = c;
+  u16 base_len = 0;
+  if(lfn_ends_with_ci(full_name, len, ".state.txt")) {
+    parsed.type = program_store::ProgramType::MK61_STATE;
+    base_len = (u16) (len - 10);
+  } else if(lfn_ends_with_ci(full_name, len, ".txt")) {
+    parsed.type = program_store::ProgramType::TEXT;
+    base_len = (u16) (len - 4);
+  } else {
+    int dot = -1;
+    for(u16 i = 0; i < len; i++) {
+      if(full_name[i] == '.') dot = (int) i;
+    }
+    if(dot <= 0 || len - (u16) dot - 1 != 3) return false;
+    char ext[3];
+    for(u8 i = 0; i < 3; i++) {
+      const u16 value = full_name[(u16) dot + 1 + i];
+      if(value > 0x7F) return false;
+      ext[i] = (char) value;
+    }
+    if(!parse_extension((const u8*) ext, parsed.type)) return false;
+    base_len = (u16) dot;
   }
-  parsed.name[dot] = 0;
+
+  if(base_len == 0) return false;
+  if(!build_normalized_name(full_name, base_len, parsed.name)) return false;
+  make_import_name_unique(parsed.type, full_name, base_len, parsed.name);
   return true;
 }
 
@@ -1120,7 +1344,7 @@ static bool parse_short_filename(const u8* item, ParsedDirEntry& parsed) {
   return true;
 }
 
-static bool parse_dir_entry(const u8* item, const char* lfn_name, ParsedDirEntry& parsed) {
+static bool parse_dir_entry(const u8* item, const u16* lfn_name, ParsedDirEntry& parsed) {
   if(lfn_name != NULL) {
     if(!parse_lfn_filename(lfn_name, parsed)) return false;
   } else if(!parse_short_filename(item, parsed)) {
@@ -1618,17 +1842,17 @@ static void parse_lfn_entry(const u8* item, LfnState& lfn) {
     const u16 name_index = (u16) ((sequence - 1) * 13 + i);
     if(value == 0x0000) break;
     if(value == 0xFFFF) continue;
-    if(value < 0x20 || value > 0x7E || name_index >= MAX_LFN_CHARS) {
+    if(value < 0x20 || name_index >= MAX_LFN_CODE_UNITS) {
       lfn.valid = false;
       continue;
     }
-    lfn.name[name_index] = (char) value;
+    lfn.name[name_index] = value;
   }
 
   lfn.seen_mask = (u16) (lfn.seen_mask | (1U << (sequence - 1)));
 }
 
-static const char* accepted_lfn_name(const LfnState& lfn, const u8* short_entry) {
+static const u16* accepted_lfn_name(const LfnState& lfn, const u8* short_entry) {
   if(!lfn.active || !lfn.valid || lfn.expected == 0 || lfn.expected > 8) return NULL;
   const u16 expected_mask = (u16) ((1U << lfn.expected) - 1U);
   if((lfn.seen_mask & expected_mask) != expected_mask) return NULL;
@@ -1666,7 +1890,7 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
     }
 
     const bool has_lfn = lfn.active;
-    const char* lfn_name = accepted_lfn_name(lfn, item);
+    const u16* lfn_name = accepted_lfn_name(lfn, item);
 
     if(dir_index == 0 || (attr & FAT_ATTR_VOLUME) != 0) {
       reset_lfn_state(lfn);

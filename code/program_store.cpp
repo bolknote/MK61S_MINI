@@ -210,6 +210,8 @@ static ProgramType type_from_tag(u8 tag0, u8 tag1, bool& ok) {
   if(tag0 == 'B' && tag1 == '1') return ProgramType::BASIC;
   if(tag0 == 'F' && tag1 == '1') return ProgramType::FOCAL;
   if(tag0 == 'B' && tag1 == '2') return ProgramType::TINYBASIC;
+  if(tag0 == 'T' && tag1 == '1') return ProgramType::TEXT;
+  if(tag0 == 'M' && tag1 == '2') return ProgramType::MK61_STATE;
   ok = false;
   return ProgramType::MK61;
 }
@@ -220,6 +222,8 @@ static u8 tag0_for_type(ProgramType type) {
     case ProgramType::BASIC: return 'B';
     case ProgramType::FOCAL: return 'F';
     case ProgramType::TINYBASIC: return 'B';
+    case ProgramType::TEXT: return 'T';
+    case ProgramType::MK61_STATE: return 'M';
   }
   return 'M';
 }
@@ -231,6 +235,10 @@ static u8 tag1_for_type(ProgramType type) {
     case ProgramType::FOCAL:
       return '1';
     case ProgramType::TINYBASIC:
+      return '2';
+    case ProgramType::TEXT:
+      return '1';
+    case ProgramType::MK61_STATE:
       return '2';
   }
   return '1';
@@ -256,7 +264,7 @@ static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& 
   out.data_len = read_le16(address + 4);
   out.crc = read_le16(address + 6);
   out.header_len = 8;
-  if(out.type == ProgramType::MK61 && out.data_len > MAX_MK61_TEXT_SIZE) return false;
+  if(out.data_len > MAX_MK61_TEXT_SIZE) return false;
 
   out.total_len = (u16) (out.header_len + out.name_len + out.data_len);
   if(out.total_len < out.header_len) return false;
@@ -702,7 +710,7 @@ static bool load_catalog(void) {
   for(u8 i = 0; i < entry_count; i++) {
     IndexEntry& entry = index_entries[index_count];
     const u8 type = read_byte(pos++);
-    if(type > (u8) ProgramType::TINYBASIC) return false;
+    if(type > (u8) ProgramType::MK61_STATE) return false;
     entry.type = (ProgramType) type;
     entry.name_len = read_byte(pos++);
     const u8 sector = read_byte(pos++);
@@ -712,7 +720,7 @@ static bool load_catalog(void) {
     const u16 header_len = 8;
     if(entry.name_len == 0 || entry.name_len >= NAME_SIZE) return false;
     if(entry.total_len != header_len + entry.name_len + entry.data_len) return false;
-    if(entry.type == ProgramType::MK61 && entry.data_len > MAX_MK61_TEXT_SIZE) return false;
+    if(entry.data_len > MAX_MK61_TEXT_SIZE) return false;
     if(sector >= STORE_SECTOR_COUNT || !sectors[sector].active || offset < SECTOR_HEADER_SIZE) return false;
     if((usize) offset + entry.total_len > FLASH_SECTOR_SIZE) return false;
     for(u8 n = 0; n < NAME_SIZE; n++) entry.name[n] = (char) read_byte(pos++);
@@ -942,7 +950,7 @@ static u8 name_len_of(const char* name) {
 static bool valid_write(ProgramType type, const char* name, u16 data_len) {
   const u8 nlen = name_len_of(name);
   if(nlen == 0 || nlen >= NAME_SIZE) return false;
-  if(type == ProgramType::MK61 && data_len > MAX_MK61_TEXT_SIZE) return false;
+  if(data_len > MAX_MK61_TEXT_SIZE) return false;
   return true;
 }
 

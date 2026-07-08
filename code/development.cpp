@@ -47,14 +47,16 @@ struct ExplorerSearch {
   text_editor::Shift shift;
 };
 
-static char type_char(program_store::ProgramType type) {
+static const char* type_label(program_store::ProgramType type) {
   switch(type) {
-    case program_store::ProgramType::MK61:  return 'M';
-    case program_store::ProgramType::BASIC: return 'B';
-    case program_store::ProgramType::FOCAL: return 'F';
-    case program_store::ProgramType::TINYBASIC: return 'T';
+    case program_store::ProgramType::MK61: return "M1";
+    case program_store::ProgramType::BASIC: return "B1";
+    case program_store::ProgramType::FOCAL: return "F1";
+    case program_store::ProgramType::TINYBASIC: return "B2";
+    case program_store::ProgramType::TEXT: return "T1";
+    case program_store::ProgramType::MK61_STATE: return "M2";
   }
-  return '?';
+  return "??";
 }
 
 static void print_line(u8 row, const char* text) {
@@ -144,6 +146,8 @@ static int total_file_count(void) {
 #if MK61_ENABLE_TINYBASIC
          + program_store::count(program_store::ProgramType::TINYBASIC)
 #endif
+         + program_store::count(program_store::ProgramType::TEXT)
+         + program_store::count(program_store::ProgramType::MK61_STATE)
          ;
 }
 
@@ -157,6 +161,9 @@ static bool explorer_entry(int index, program_store::Entry& out) {
     ,
     program_store::ProgramType::TINYBASIC
 #endif
+    ,
+    program_store::ProgramType::TEXT,
+    program_store::ProgramType::MK61_STATE
   };
 
   for(usize i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
@@ -310,7 +317,7 @@ static void draw_explorer(int active, const char* search_text = NULL) {
     program_store::Entry entry;
     char line[24];
     if(explorer_entry(index, entry)) {
-      snprintf(line, sizeof(line), "%c %-11s %u", type_char(entry.type), entry.name, (u32) entry.data_len);
+      snprintf(line, sizeof(line), "%s %-10s %u", type_label(entry.type), entry.name, (u32) entry.data_len);
     } else {
       strcpy(line, "?");
     }
@@ -366,6 +373,40 @@ static u16 consume_line_break(const u8* data, u16 len, u16 offset) {
   return offset;
 }
 
+static bool utf8_continuation(u8 value) {
+  return (value & 0xC0) == 0x80;
+}
+
+static u16 next_text_char_offset(const u8* data, u16 len, u16 offset) {
+  if(offset >= len) return len;
+
+  const u8 first = data[offset];
+  if(first < 0x80) return (u16) (offset + 1);
+
+  if((first & 0xE0) == 0xC0 &&
+     offset + 1 < len &&
+     utf8_continuation(data[offset + 1])) {
+    return (u16) (offset + 2);
+  }
+
+  if((first & 0xF0) == 0xE0 &&
+     offset + 2 < len &&
+     utf8_continuation(data[offset + 1]) &&
+     utf8_continuation(data[offset + 2])) {
+    return (u16) (offset + 3);
+  }
+
+  if((first & 0xF8) == 0xF0 &&
+     offset + 3 < len &&
+     utf8_continuation(data[offset + 1]) &&
+     utf8_continuation(data[offset + 2]) &&
+     utf8_continuation(data[offset + 3])) {
+    return (u16) (offset + 4);
+  }
+
+  return (u16) (offset + 1);
+}
+
 static u16 next_visual_line_offset(const u8* data, u16 len, u16 offset) {
   if(offset >= len) return len;
 
@@ -373,7 +414,7 @@ static u16 next_visual_line_offset(const u8* data, u16 len, u16 offset) {
   while(offset < len) {
     if(is_line_break(data[offset])) return consume_line_break(data, len, offset);
 
-    offset++;
+    offset = next_text_char_offset(data, len, offset);
     used++;
     if(used >= lcd_display::COLS) {
       if(offset < len && is_line_break(data[offset])) offset = consume_line_break(data, len, offset);
@@ -408,15 +449,44 @@ static u16 visual_line_offset(const u8* data, u16 len, u16 line_index) {
   return offset;
 }
 
-static void draw_text_payload_line(u8 row, const u8* data, u16 len, u16 line_index) {
+static void append_text_view_char(const u8* data, u16 len, u16& offset, char* line, u8 capacity, u8& pos) {
+  const u16 next = next_text_char_offset(data, len, offset);
+  const u16 bytes = (u16) (next - offset);
+  if(bytes == 1) {
+    const u8 value = data[offset];
+    line[pos++] = (value >= 0x20 && value < 0x7F) ? (char) value : '?';
+    offset = next;
+    return;
+  }
+
+  if(bytes == 2 || bytes == 3) {
+    if(pos + bytes < capacity) {
+      for(u16 i = 0; i < bytes; i++) line[pos++] = (char) data[offset + i];
+    } else {
+      line[pos++] = '?';
+    }
+    offset = next;
+    return;
+  }
+
+  line[pos++] = '?';
+  offset = next;
+}
+
+static void build_text_payload_line(const u8* data, u16 len, u16 line_index, char* line, u8 capacity) {
   u16 offset = visual_line_offset(data, len, line_index);
-  char line[17];
   u8 pos = 0;
-  while(pos < lcd_display::COLS && offset < len && !is_line_break(data[offset])) {
-    line[pos++] = (char) data[offset++];
+  u8 used = 0;
+  while(used < lcd_display::COLS && offset < len && !is_line_break(data[offset])) {
+    if(pos + 4 >= capacity) {
+      line[pos++] = '?';
+      offset = next_text_char_offset(data, len, offset);
+    } else {
+      append_text_view_char(data, len, offset, line, capacity, pos);
+    }
+    used++;
   }
   line[pos] = 0;
-  print_line(row, line);
 }
 
 static void draw_file_view(const program_store::Entry& entry, const u8* data, u16 len, u16 top_line) {
@@ -424,16 +494,27 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
   lcd.clear();
 
   char header[24];
-  snprintf(header, sizeof(header), "%c %s %u", type_char(entry.type), entry.name, (u32) len);
+  snprintf(header, sizeof(header), "%s %s %u", type_label(entry.type), entry.name, (u32) len);
   print_line(0, header);
 
   const u8 display_rows = lcd.rows();
   const u8 payload_rows = display_rows > 1 ? (u8) (display_rows - 1) : 1;
   const u16 total_lines = visual_line_count(data, len);
+
+  static constexpr u8 TEXT_VIEW_LINE_BYTES = lcd_display::COLS * 3 + 1;
+  char rows[lcd_display::MAX_ROWS][TEXT_VIEW_LINE_BYTES];
   for(u8 row = 0; row < payload_rows; row++) {
     const u16 line_index = (u16) (top_line + row);
-    if(line_index < total_lines) draw_text_payload_line((u8) (row + 1), data, len, line_index);
-    else print_line((u8) (row + 1), "");
+    if(line_index < total_lines) build_text_payload_line(data, len, line_index, rows[row], TEXT_VIEW_LINE_BYTES);
+    else rows[row][0] = 0;
+  }
+
+  lcd_ru::font_map_t map = {{0}, 0, false};
+  for(u8 row = 0; row < payload_rows; row++) lcd_ru::scan_text(map, rows[row], lcd_display::COLS);
+  lcd_ru::load_custom_font(map);
+  for(u8 row = 0; row < payload_rows; row++) {
+    lcd.setCursor(0, (u8) (row + 1));
+    lcd_ru::write_text(map, rows[row], lcd_display::COLS);
   }
 }
 

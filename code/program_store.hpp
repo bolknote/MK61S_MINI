@@ -14,7 +14,9 @@ enum class ProgramType : u8 {
   MK61,
   BASIC,
   FOCAL,
-  TINYBASIC
+  TINYBASIC,
+  TEXT,
+  MK61_STATE
 };
 
 struct Entry {

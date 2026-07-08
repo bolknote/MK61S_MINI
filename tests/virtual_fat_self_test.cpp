@@ -279,6 +279,69 @@ static void fill_short_dir_entry(u8* entry, const char* short_name, u16 cluster,
   write_le32(entry, 28, len);
 }
 
+static u16 utf16_len(const u16* text) {
+  u16 len = 0;
+  while(text[len] != 0) len++;
+  return len;
+}
+
+static void fill_lfn_entry_utf16(u8* entry, const u16* full_name, u8 sequence, u8 total, u8 checksum) {
+  static const u8 offsets[13] = {1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30};
+  memset(entry, 0xFF, 32);
+  entry[0] = sequence;
+  if(sequence == total) entry[0] |= 0x40;
+  entry[11] = 0x0F;
+  entry[12] = 0;
+  entry[13] = checksum;
+  entry[26] = 0;
+  entry[27] = 0;
+
+  const u16 full_len = utf16_len(full_name);
+  for(u8 i = 0; i < 13; i++) {
+    const u16 index = (u16) ((sequence - 1) * 13 + i);
+    const u16 value = (index < full_len) ? full_name[index] : (index == full_len ? 0x0000 : 0xFFFF);
+    write_le16(entry, offsets[i], value);
+  }
+}
+
+static void fill_lfn_entries_utf16(u8* first_entry, const u16* full_name, const u8* short_name) {
+  const u8 total = (u8) ((utf16_len(full_name) + 12) / 13);
+  const u8 checksum = virtual_fat::short_name_checksum(short_name);
+  for(u8 i = 0; i < total; i++) {
+    const u8 sequence = (u8) (total - i);
+    fill_lfn_entry_utf16(first_entry + (u16) i * 32, full_name, sequence, total, checksum);
+  }
+}
+
+static bool lfn_equals_ascii(const u16* lfn_name, const char* expected) {
+  if(lfn_name == NULL) return false;
+  u16 i = 0;
+  while(expected[i] != 0) {
+    if(lfn_name[i] != (u8) expected[i]) return false;
+    i++;
+  }
+  return lfn_name[i] == 0;
+}
+
+static bool root_has_lfn_name(const u8* root, const char* expected) {
+  virtual_fat::LfnState lfn;
+  memset(&lfn, 0, sizeof(lfn));
+  for(u8 i = 0; i < 16; i++) {
+    const u8* entry = root + (u16) i * 32;
+    if(entry[0] == 0) {
+      memset(&lfn, 0, sizeof(lfn));
+      continue;
+    }
+    if((entry[11] & 0x3F) == 0x0F) {
+      virtual_fat::parse_lfn_entry(entry, lfn);
+      continue;
+    }
+    if(entry[11] == 0x20 && lfn_equals_ascii(virtual_fat::accepted_lfn_name(lfn, entry), expected)) return true;
+    memset(&lfn, 0, sizeof(lfn));
+  }
+  return false;
+}
+
 static const u8* first_archive_entry(const u8* root) {
   for(u8 i = 0; i < 16; i++) {
     const u8* entry = root + (u16) i * 32;
@@ -343,6 +406,95 @@ static void test_incomplete_pending_flush_keeps_waiting_for_data(void) {
   assert(stored_len == 100);
   assert(stored[0] == 0x5A);
   assert(stored[99] == 0x5A);
+}
+
+static void test_short_txt_import_stores_text_type(void) {
+  reset_virtual_fat_state();
+
+  const char payload[] = "plain text\n";
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0, sizeof(data));
+  memcpy(data, payload, sizeof(payload) - 1);
+  assert(virtual_fat::write_sector(data_lba(), data));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 32, "README  TXT", 2, sizeof(payload) - 1);
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[32];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::TEXT, "README", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(payload) - 1);
+  assert(memcmp(stored, payload, stored_len) == 0);
+}
+
+static void test_m61_lfn_import_normalizes_cyrillic_name(void) {
+  reset_virtual_fat_state();
+
+  const u16 full_name[] = {
+    0x043A, 0x043B, 0x0430, 0x0434, 0x043E, 0x0438, 0x0441, 0x043A, 0x0430, 0x0442, 0x0435, 0x043B, 0x044C,
+    '.', 'm', '6', '1',
+    0
+  };
+  const u8 short_name[11] = {'K', 'L', 'A', 'D', 'O', 'I', '~', '1', 'M', '6', '1'};
+  const u8 payload[] = {0x01, 0x02, 0x03};
+
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0, sizeof(data));
+  memcpy(data, payload, sizeof(payload));
+  assert(virtual_fat::write_sector(data_lba(), data));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_lfn_entries_utf16(root + 32, full_name, short_name);
+  fill_short_dir_entry(root + 32 * 3, (const char*) short_name, 2, sizeof(payload));
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[8];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "KLADO", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(payload));
+  assert(memcmp(stored, payload, stored_len) == 0);
+}
+
+static void test_state_txt_lfn_import_normalizes_cyrillic(void) {
+  reset_virtual_fat_state();
+
+  const u16 full_name[] = {
+    0x043A, 0x043E, 0x043E, 0x043F, 0x0435, 0x0440, 0x0430, 0x0442, 0x0438, 0x0432, 0x043D, 0x043E, 0x0435,
+    ' ',
+    0x043A, 0x0430, 0x0444, 0x0435,
+    ' ', '2',
+    '.', 's', 't', 'a', 't', 'e', '.', 't', 'x', 't',
+    0
+  };
+  const u8 short_name[11] = {'K', 'O', 'O', 'P', 'E', 'R', '~', '1', 'T', 'X', 'T'};
+  const char payload[] = "{\"pc\":0,\"stack\":[1,2,3]}\n";
+
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0, sizeof(data));
+  memcpy(data, payload, sizeof(payload) - 1);
+  assert(virtual_fat::write_sector(data_lba(), data));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_lfn_entries_utf16(root + 32, full_name, short_name);
+  fill_short_dir_entry(root + 32 * 4, (const char*) short_name, 2, sizeof(payload) - 1);
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[64];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61_STATE, "KOOPEKAFE2", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(payload) - 1);
+  assert(memcmp(stored, payload, stored_len) == 0);
+
+  u8 generated_root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), generated_root));
+  assert(root_has_lfn_name(generated_root, "KOOPEKAFE2.state.txt"));
 }
 
 static void test_staging_does_not_shadow_committed_file_data(void) {
@@ -922,6 +1074,9 @@ static void test_tombstone_identity_check_protects_other_files(void) {
 int main(void) {
   test_lfn_aliases_are_unique();
   test_incomplete_pending_flush_keeps_waiting_for_data();
+  test_short_txt_import_stores_text_type();
+  test_m61_lfn_import_normalizes_cyrillic_name();
+  test_state_txt_lfn_import_normalizes_cyrillic();
   test_staging_does_not_shadow_committed_file_data();
   test_staged_cluster_is_not_advertised_as_free();
   test_staging_survives_mass_copy_before_directory_update();
