@@ -19,6 +19,7 @@ using namespace kbd;
 #include "tools.hpp"
 #include "sound_driver.hpp"
 #include "menu.hpp"
+#include "development.hpp"
 #include "basic.hpp"
 #include "focal.hpp"
 #include "tinybasic.hpp"
@@ -440,11 +441,11 @@ static void leave_menu_mode(void) {
 
 void   mk61_menu_hook(i32 key) {
     if(key >= 0) {
-      #if MK61_USER_GAMES_MENU_SHORTCUT
+      #if MK61_USER_EXPLORER_SHORTCUT
       if(key == KEY_USER_PRESS) {
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
         lcd_ru::restore_default_font();
-        if(mk61_games_select() == action::MENU_EXIT) {
+        if(program_store_explorer_select() == action::MENU_EXIT) {
           leave_menu_mode();
           dbgln(MENU, "menu quit");
         } else {
@@ -463,7 +464,7 @@ void   mk61_menu_hook(i32 key) {
 }
 
 void   mk61_baseloop_hook(i32 key) {
-  #if MK61_USER_GAMES_MENU_SHORTCUT
+  #if MK61_USER_EXPLORER_SHORTCUT
   if(key == KEY_USER_PRESS && !core_61::edit_program) {
     kbd::get_key(); // сервисная клавиша, не передаем ее в автомат МК-61
     user_short_press_pending = true;
@@ -480,10 +481,10 @@ void   mk61_baseloop_hook(i32 key) {
           insert_cmd_in_program(mk61_IP, MK61_NOP);
           //disassembler.enable(); //cache_IP_mk61 = MK61_ip + 1; 
           //lcd_std_display_redraw();
-        #if MK61_USER_GAMES_MENU_SHORTCUT
+        #if MK61_USER_EXPLORER_SHORTCUT
         } else if(user_short_press_pending) {
           user_short_press_pending = false;
-          mk61_games_select();
+          program_store_explorer_select();
           lcd_std_display_redraw();
         #endif
         }
@@ -630,7 +631,7 @@ void idle_main_process(void) {
 void event_hold_key(i32 holded_key, i32 hold_quant) {
   switch(holded_key) {
       case KEY_USER_PRESS: // Удержание USER KEY, вывод стека XYZT на экран
-          #if MK61_USER_GAMES_MENU_SHORTCUT
+          #if MK61_USER_EXPLORER_SHORTCUT
           user_short_press_pending = false;
           #endif
           lcd_hooked = true;  // перехват экрана
@@ -645,7 +646,7 @@ void event_hold_key(i32 holded_key, i32 hold_quant) {
 void event_unhold_key(i32 unholded_key, i32 hold_quant) {
   switch(unholded_key) {
       case KEY_USER_PRESS:
-          #if MK61_USER_GAMES_MENU_SHORTCUT
+          #if MK61_USER_EXPLORER_SHORTCUT
           user_short_press_pending = false;
           #endif
           lcd_hooked = false;

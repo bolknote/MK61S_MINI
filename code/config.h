@@ -72,10 +72,10 @@
   #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
 #endif
 
-// Короткое нажатие [USER] открывает меню игр. Поставьте 0, чтобы оставить
+// Короткое нажатие [USER] открывает Проводник. Поставьте 0, чтобы оставить
 // [USER] только для удержания стека и функций режима ПРГ.
-#ifndef MK61_USER_GAMES_MENU_SHORTCUT
-  #define MK61_USER_GAMES_MENU_SHORTCUT 1
+#ifndef MK61_USER_EXPLORER_SHORTCUT
+  #define MK61_USER_EXPLORER_SHORTCUT 1
 #endif
 
 #if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)
