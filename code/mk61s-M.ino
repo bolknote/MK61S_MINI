@@ -620,11 +620,6 @@ void  loop() {
     }
   }
 
-  if(m61_text::handle_key(used_key)) {
-    kbd::scan();
-    return;
-  }
-
   // Перехват клавиатуры программным модулем
   input_focus(used_key);
   kbd::scan();

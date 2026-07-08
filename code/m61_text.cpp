@@ -5,6 +5,7 @@
 #include "development.hpp"
 #include "focal.hpp"
 #include "keyboard.h"
+#include "library_pmk.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
@@ -21,9 +22,7 @@ static constexpr u8 HIN_BYTES_PER_LINE = 24;
 enum class RunnerState : u8 {
   IDLE,
   EXECUTING,
-  WAIT_RUN_START,
-  WAIT_RUN_STOP,
-  PAUSED_AFTER_RUN
+  WAIT_RUN_STOP
 };
 
 enum class ScriptSource : u8 {
@@ -37,6 +36,7 @@ struct ScriptFrame {
   char name[program_store::NAME_SIZE];
   u16 len;
   u16 pos;
+  bool code_loaded_since_run;
 };
 
 static constexpr u8 SCRIPT_STACK_DEPTH = 8;
@@ -46,6 +46,7 @@ static ScriptSource script_source = ScriptSource::NONE;
 static char script_name[program_store::NAME_SIZE] = {};
 static u16 script_len = 0;
 static u16 script_pos = 0;
+static bool script_code_loaded_since_run = false;
 static bool script_error = false;
 static class_terminal script_terminal;
 static ScriptFrame script_stack[SCRIPT_STACK_DEPTH];
@@ -93,6 +94,7 @@ static void clear_current_script(void) {
   script_name[0] = 0;
   script_len = 0;
   script_pos = 0;
+  script_code_loaded_since_run = false;
 }
 
 static bool stack_uses_script_buffer(void) {
@@ -127,6 +129,7 @@ static void store_current_frame(ScriptFrame& frame) {
   copy_script_name(frame.name, script_name);
   frame.len = script_len;
   frame.pos = script_pos;
+  frame.code_loaded_since_run = script_code_loaded_since_run;
 }
 
 static void restore_frame(const ScriptFrame& frame) {
@@ -134,6 +137,7 @@ static void restore_frame(const ScriptFrame& frame) {
   copy_script_name(script_name, frame.name);
   script_len = frame.len;
   script_pos = frame.pos;
+  script_code_loaded_since_run = frame.code_loaded_since_run;
 }
 
 static bool make_store_frame(const char* name, ScriptFrame& frame) {
@@ -143,6 +147,7 @@ static bool make_store_frame(const char* name, ScriptFrame& frame) {
   copy_script_name(frame.name, entry.name);
   frame.len = entry.data_len;
   frame.pos = 0;
+  frame.code_loaded_since_run = false;
   return true;
 }
 
@@ -265,6 +270,14 @@ static bool run_named_program(const char* args) {
   return false;
 }
 
+// Terminal commands that rewrite the MK61 code page ("set$" is followed by the
+// address directly, without a separating space).
+static bool command_loads_code_page(const char* line) {
+  return (starts_with(line, "hin") && is_space(line[3])) ||
+         starts_with(line, "set$") ||
+         (starts_with(line, "asm") && is_space(line[3]));
+}
+
 static bool open_store_script(const char* name) {
   ScriptFrame child;
   if(!make_store_frame(name, child)) return false;
@@ -300,11 +313,36 @@ static bool open_entry(const program_store::Entry& entry) {
   return false;
 }
 
-static void queue_current_program_run(void) {
-  kbd::push((i8) sw::F);
-  kbd::push((i8) sw::NEG);
-  kbd::push((i8) sw::RET);
-  kbd::push((i8) sw::RUN);
+// Press F АВТ, В/О, С/П directly on the core: keys queued through the keyboard
+// buffer would be flushed when the menu/explorer exits (leave_menu_mode).
+static void start_current_program(void) {
+  script_code_loaded_since_run = false;
+  hidden_return_to_program_start();
+  hidden_press_key(sw::RUN);
+  runner_state = RunnerState::WAIT_RUN_STOP;
+}
+
+// Apply "kbd <scancode>" to the core directly, for the same reason as above.
+static bool press_scan_code(i32 keycode) {
+  if(keycode == KEY_DEGREE) {
+    MK61Emu_SetAngleUnit(DEGREE);
+    return true;
+  }
+  if(keycode == KEY_GRADE) {
+    MK61Emu_SetAngleUnit(GRADE);
+    return true;
+  }
+  if(keycode == KEY_RADIAN) {
+    MK61Emu_SetAngleUnit(RADIAN);
+    return true;
+  }
+  if(keycode < 0 || keycode >= 40) return false;
+
+  const TMK61_cross_key cross_key = KeyPairs[keycode];
+  if(cross_key.as_u16() == NON.as_u16()) return false;
+
+  hidden_press_key((sw) keycode);
+  return true;
 }
 
 static bool execute_script_line(const char* raw_line) {
@@ -314,8 +352,7 @@ static bool execute_script_line(const char* raw_line) {
   if(starts_with(line, "run") && (token_ends(line + 3) || is_space(line[3]))) {
     const char* args = skip_spaces(line + 3);
     if(!is_line_end(*args)) return run_named_program(args);
-    queue_current_program_run();
-    runner_state = RunnerState::WAIT_RUN_START;
+    start_current_program();
     return true;
   }
 
@@ -326,29 +363,27 @@ static bool execute_script_line(const char* raw_line) {
   }
 
   const i32 result = script_terminal.execute_script_line(line);
-  if(result >= 0) {
-    kbd::push((i8) result);
-    return true;
-  }
-  return result == -1;
+  if(result >= 0) return press_scan_code(result);
+  if(result != -1) return false;
+  if(command_loads_code_page(line)) script_code_loaded_since_run = true;
+  return true;
 }
 
 void service(void) {
-  if(runner_state == RunnerState::WAIT_RUN_START) {
-    if(core_61::is_RUN()) runner_state = RunnerState::WAIT_RUN_STOP;
-    return;
-  }
-
   if(runner_state == RunnerState::WAIT_RUN_STOP) {
-    if(core_61::is_CALC()) {
-      core_61::clear_displayed();
-      runner_state = RunnerState::PAUSED_AFTER_RUN;
-    }
-    return;
+    if(!core_61::is_CALC()) return;
+    // The MK program has stopped: control returns to the next script line.
+    core_61::clear_displayed();
+    runner_state = RunnerState::EXECUTING;
   }
 
   while(runner_state == RunnerState::EXECUTING) {
     if(script_pos >= script_len) {
+      if(script_code_loaded_since_run) {
+        // The file ends without "run": start the loaded program automatically.
+        start_current_program();
+        return;
+      }
       finish_script();
       return;
     }
@@ -365,26 +400,6 @@ void service(void) {
   }
 }
 
-bool handle_key(i32 key) {
-  if(runner_state != RunnerState::PAUSED_AFTER_RUN) return false;
-
-  // C/P stays available to the MK program; OK means "return to the script".
-  if(key == KEY_OK || key == KEY_OK_PRESS) {
-    kbd::get_key();
-    runner_state = RunnerState::EXECUTING;
-    service();
-    return true;
-  }
-
-  if(key == KEY_ESC || key == KEY_ESC_PRESS) {
-    kbd::get_key();
-    cancel();
-    return true;
-  }
-
-  return false;
-}
-
 bool start(const u8* text, u16 len) {
   if(text == NULL && len != 0) return false;
   if(len > program_store::MAX_MK61_TEXT_SIZE) return false;
@@ -398,6 +413,7 @@ bool start(const u8* text, u16 len) {
   script_name[0] = 0;
   script_len = len;
   script_pos = 0;
+  script_code_loaded_since_run = false;
   script_stack_depth = 0;
   script_error = false;
   script_terminal.init_script();
@@ -416,6 +432,7 @@ bool load_program(const char* name) {
 
   restore_frame(frame);
   script_stack_depth = 0;
+  script_code_loaded_since_run = false;
   script_error = false;
   script_terminal.init_script();
   MK61Emu_ClearCodePage();
