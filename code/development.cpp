@@ -169,26 +169,28 @@ static const u8* type_glyph(program_store::ProgramType type) {
   return TYPE_MK61_GLYPH;
 }
 
-static void write_custom_glyph(u8 slot, const u8* glyph) {
+static void write_custom_glyph_at(u8 slot, const u8* glyph, u8 col, u8 row) {
 #if defined(MK61_DISPLAY_UC1609)
   (void) slot;
+  lcd.setCursor(col, row);
   lcd.writeGlyph(glyph);
 #else
   lcd.createChar(slot, (uint8_t*) glyph);
+  lcd.setCursor(col, row);
   lcd.write(slot);
 #endif
 }
 
-static void write_type_glyph(u8 slot, program_store::ProgramType type, bool active) {
+static void write_type_glyph(u8 slot, program_store::ProgramType type, bool active, u8 col, u8 row) {
   const u8* glyph = type_glyph(type);
   if(!active) {
-    write_custom_glyph(slot, glyph);
+    write_custom_glyph_at(slot, glyph, col, row);
     return;
   }
 
   u8 inverted[8];
   for(u8 i = 0; i < 8; i++) inverted[i] = (u8) (glyph[i] ^ 0x1F);
-  write_custom_glyph(slot, inverted);
+  write_custom_glyph_at(slot, inverted, col, row);
 }
 
 static void print_line(u8 row, const char* text) {
@@ -517,7 +519,7 @@ static void draw_explorer_name(const char* name, u8 row, u8 offset, bool active)
   if(overflow && offset == 0) {
     const u8 text_width = width > 1 ? (u8) (width - 1) : 0;
     for(u8 i = 0; i < text_width; i++) lcd.write((u8) name[i]);
-    write_custom_glyph(EXPLORER_ELLIPSIS_SLOT, ELLIPSIS_GLYPH);
+    write_custom_glyph_at(EXPLORER_ELLIPSIS_SLOT, ELLIPSIS_GLYPH, (u8) (EXPLORER_NAME_COL + text_width), row);
     return;
   }
 
@@ -527,15 +529,14 @@ static void draw_explorer_name(const char* name, u8 row, u8 offset, bool active)
     used++;
   }
   if(overflow && active && used < width) {
-    write_custom_glyph(EXPLORER_ELLIPSIS_SLOT, ELLIPSIS_GLYPH);
+    write_custom_glyph_at(EXPLORER_ELLIPSIS_SLOT, ELLIPSIS_GLYPH, (u8) (EXPLORER_NAME_COL + used), row);
     used++;
   }
   while(used++ < width) lcd.write((u8) ' ');
 }
 
 static void draw_explorer_row(u8 row, bool active, const program_store::Entry& entry, u8 scroll_offset) {
-  lcd.setCursor(EXPLORER_TYPE_COL, row);
-  write_type_glyph(row, entry.type, active);
+  write_type_glyph(row, entry.type, active, EXPLORER_TYPE_COL, row);
   lcd.write((u8) ' ');
   draw_explorer_name(entry.name, row, scroll_offset, active);
 }
