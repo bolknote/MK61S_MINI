@@ -33,9 +33,9 @@ static constexpr i32 EXPLORER_KEY_TICK = -7;
 static constexpr u16 EXPLORER_SCROLL_START_MS = 900;
 static constexpr u16 EXPLORER_SCROLL_STEP_MS = 450;
 static constexpr u16 EXPLORER_SCROLL_EDGE_MS = 900;
-static constexpr u8 EXPLORER_TYPE_COL = 0;
-static constexpr u8 EXPLORER_NAME_COL = 2;
+static constexpr u8 EXPLORER_NAME_COL = 0;
 static constexpr u8 EXPLORER_ELLIPSIS_SLOT = 7;
+static constexpr u8 EXPLORER_NO_CURSOR_ROW = 0xFF;
 
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for explorer view");
 
@@ -74,71 +74,10 @@ static const char* type_label(program_store::ProgramType type) {
   return "??";
 }
 
-static const u8 TYPE_MK61_GLYPH[8] = {
-  0b11111,
-  0b11111,
-  0b10001,
-  0b10101,
-  0b10001,
-  0b10101,
-  0b10101,
-  0b11111
-};
-
-static const u8 TYPE_BASIC_GLYPH[8] = {
-  0b11111,
-  0b11111,
-  0b10001,
-  0b11101,
-  0b10011,
-  0b10011,
-  0b11101,
-  0b11111
-};
-
-static const u8 TYPE_FOCAL_GLYPH[8] = {
-  0b11111,
-  0b10101,
-  0b11111,
-  0b10101,
-  0b11111,
-  0b10101,
-  0b10101,
-  0b11111
-};
-
-static const u8 TYPE_TINYBASIC_GLYPH[8] = {
-  0b11111,
-  0b11101,
-  0b11011,
-  0b11111,
-  0b11011,
-  0b11011,
-  0b11111,
-  0b11111
-};
-
-static const u8 TYPE_TEXT_GLYPH[8] = {
-  0b11111,
-  0b10011,
-  0b10101,
-  0b10001,
-  0b11101,
-  0b10001,
-  0b11101,
-  0b11111
-};
-
-static const u8 TYPE_STATE_GLYPH[8] = {
-  0b11111,
-  0b11111,
-  0b10101,
-  0b11111,
-  0b10001,
-  0b10101,
-  0b10001,
-  0b11111
-};
+static char type_marker(program_store::ProgramType type) {
+  const char* label = type_label(type);
+  return (label != NULL && label[0] != 0) ? label[0] : '?';
+}
 
 static const u8 ELLIPSIS_GLYPH[8] = {
   0b00000,
@@ -151,24 +90,6 @@ static const u8 ELLIPSIS_GLYPH[8] = {
   0b00000
 };
 
-static const u8* type_glyph(program_store::ProgramType type) {
-  switch(type) {
-    case program_store::ProgramType::MK61:
-      return TYPE_MK61_GLYPH;
-    case program_store::ProgramType::BASIC:
-      return TYPE_BASIC_GLYPH;
-    case program_store::ProgramType::FOCAL:
-      return TYPE_FOCAL_GLYPH;
-    case program_store::ProgramType::TINYBASIC:
-      return TYPE_TINYBASIC_GLYPH;
-    case program_store::ProgramType::TEXT:
-      return TYPE_TEXT_GLYPH;
-    case program_store::ProgramType::MK61_STATE:
-      return TYPE_STATE_GLYPH;
-  }
-  return TYPE_MK61_GLYPH;
-}
-
 static void write_custom_glyph_at(u8 slot, const u8* glyph, u8 col, u8 row) {
 #if defined(MK61_DISPLAY_UC1609)
   (void) slot;
@@ -179,18 +100,6 @@ static void write_custom_glyph_at(u8 slot, const u8* glyph, u8 col, u8 row) {
   lcd.setCursor(col, row);
   lcd.write(slot);
 #endif
-}
-
-static void write_type_glyph(u8 slot, program_store::ProgramType type, bool active, u8 col, u8 row) {
-  const u8* glyph = type_glyph(type);
-  if(!active) {
-    write_custom_glyph_at(slot, glyph, col, row);
-    return;
-  }
-
-  u8 inverted[8];
-  for(u8 i = 0; i < 8; i++) inverted[i] = (u8) (glyph[i] ^ 0x1F);
-  write_custom_glyph_at(slot, inverted, col, row);
 }
 
 static void print_line(u8 row, const char* text) {
@@ -253,11 +162,28 @@ static bool explorer_time_reached(u32 now, u32 target) {
   return (i32) (now - target) >= 0;
 }
 
-static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0) {
+static u8 explorer_type_col(void) {
+  const u8 cols = lcd.cols();
+  return cols > 0 ? (u8) (cols - 1) : 0;
+}
+
+static void explorer_cursor_off(void) {
+  if(lcd.supportsCursor()) lcd.cursorOff();
+}
+
+static void explorer_cursor_on(u8 cursor_row) {
+  if(cursor_row == EXPLORER_NO_CURSOR_ROW || cursor_row >= lcd.rows() || !lcd.supportsCursor()) return;
+  lcd.cursorOff();
+  lcd.setCursor(explorer_type_col(), cursor_row);
+  lcd.blinkOn();
+}
+
+static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row = EXPLORER_NO_CURSOR_ROW) {
   bool ok_down = false;
   u32 long_ok_at = 0;
   const u32 tick_at = tick_ms == 0 ? 0 : millis() + tick_ms;
   kbd::debounce_init();
+  explorer_cursor_on(cursor_row);
 
   while(true) {
     idle_main_process();
@@ -440,8 +366,8 @@ static void explorer_scroll_reset(ExplorerScroll& scroll) {
 }
 
 static u8 explorer_name_width(void) {
-  const u8 cols = lcd.cols();
-  return cols > EXPLORER_NAME_COL ? (u8) (cols - EXPLORER_NAME_COL) : 0;
+  const u8 type_col = explorer_type_col();
+  return type_col > EXPLORER_NAME_COL ? (u8) (type_col - EXPLORER_NAME_COL) : 0;
 }
 
 static u8 explorer_name_len(const char* name) {
@@ -536,12 +462,16 @@ static void draw_explorer_name(const char* name, u8 row, u8 offset, bool active)
 }
 
 static void draw_explorer_row(u8 row, bool active, const program_store::Entry& entry, u8 scroll_offset) {
-  write_type_glyph(row, entry.type, active, EXPLORER_TYPE_COL, row);
-  lcd.write((u8) ' ');
   draw_explorer_name(entry.name, row, scroll_offset, active);
+  lcd.setCursor(explorer_type_col(), row);
+  lcd.write((u8) type_marker(entry.type));
 }
 
-static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_text = NULL) {
+static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_text = NULL,
+                         u8* cursor_row_out = NULL) {
+  if(cursor_row_out != NULL) *cursor_row_out = EXPLORER_NO_CURSOR_ROW;
+  explorer_cursor_off();
+
   MK61DisplayUpdate update(lcd);
   lcd.clear();
 
@@ -598,14 +528,19 @@ static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_
     program_store::Entry entry;
     if(explorer_entry(index, entry)) {
       const u8 scroll_offset = (active == index) ? scroll.offset : 0;
-      draw_explorer_row((u8) (first_row + row), active == index, entry, scroll_offset);
+      const u8 screen_row = (u8) (first_row + row);
+      const bool selected = active == index;
+      draw_explorer_row(screen_row, selected, entry, scroll_offset);
+      if(selected && cursor_row_out != NULL) *cursor_row_out = screen_row;
     } else {
       print_line((u8) (first_row + row), "?");
     }
   }
 
   for(int row = first_row + visible; row < display_rows; row++) print_line((u8) row, "");
-  if(filtered) draw_search_cursor(search_text);
+  if(filtered && (cursor_row_out == NULL || *cursor_row_out == EXPLORER_NO_CURSOR_ROW)) {
+    draw_search_cursor(search_text);
+  }
   return scroll_timeout;
 }
 
@@ -1323,7 +1258,10 @@ bool program_store_explorer_select(void) {
     if(count <= 0) {
       draw_explorer(0, scroll);
       const i32 key = wait_explorer_key(false);
-      if(key == EXPLORER_KEY_ESC || key == EXPLORER_KEY_OK) return action::MENU_BACK;
+      if(key == EXPLORER_KEY_ESC || key == EXPLORER_KEY_OK) {
+        explorer_cursor_off();
+        return action::MENU_BACK;
+      }
       explorer_search_handle_key(search, key);
       continue;
     }
@@ -1334,8 +1272,9 @@ bool program_store_explorer_select(void) {
       if(first >= 0) active = first;
     }
 
-    const u16 scroll_timeout = draw_explorer(active, scroll, search.text);
-    const i32 key = wait_explorer_key(true, scroll_timeout);
+    u8 cursor_row = EXPLORER_NO_CURSOR_ROW;
+    const u16 scroll_timeout = draw_explorer(active, scroll, search.text, &cursor_row);
+    const i32 key = wait_explorer_key(true, scroll_timeout, cursor_row);
     if(key == EXPLORER_KEY_TICK) continue;
     if(key == EXPLORER_KEY_ESC) {
       if(search_active(search.text)) {
@@ -1343,6 +1282,7 @@ bool program_store_explorer_select(void) {
         explorer_scroll_reset(scroll);
         continue;
       }
+      explorer_cursor_off();
       return action::MENU_BACK;
     }
     if(explorer_search_handle_key(search, key)) {
@@ -1363,6 +1303,7 @@ bool program_store_explorer_select(void) {
     else if(key == EXPLORER_KEY_OK) {
       program_store::Entry entry;
       if(visible_count > 0 && explorer_entry(active, entry)) {
+        explorer_cursor_off();
         if(entry_can_run(entry)) {
           if(run_entry(entry)) return action::MENU_EXIT;
         } else {
@@ -1371,8 +1312,9 @@ bool program_store_explorer_select(void) {
       }
     } else if(key == EXPLORER_KEY_LONG_OK) {
       program_store::Entry entry;
-      if(visible_count > 0 && explorer_entry(active, entry) && explorer_item_menu(entry) == action::MENU_EXIT) {
-        return action::MENU_EXIT;
+      if(visible_count > 0 && explorer_entry(active, entry)) {
+        explorer_cursor_off();
+        if(explorer_item_menu(entry) == action::MENU_EXIT) return action::MENU_EXIT;
       }
     }
   }
