@@ -68,9 +68,18 @@ jobs:
           arduino-cli compile \
             --fqbn "$FQBN" \
             --build-path "$RUNNER_TEMP/build-uc1609" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_DISPLAY_UC1609" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC" \
             "$RUNNER_TEMP/mk61s-M"
           cp "$RUNNER_TEMP/build-uc1609/mk61s-M.ino.bin" "firmware/mk61s-M-uc1609-f411-${GITHUB_SHA::7}.bin"
+
+      - name: Build MK61s 40th firmware
+        run: |
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --build-path "$RUNNER_TEMP/build-40th" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_40TH" \
+            "$RUNNER_TEMP/mk61s-M"
+          cp "$RUNNER_TEMP/build-40th/mk61s-M.ino.bin" "firmware/mk61s-M-40th-f411-${GITHUB_SHA::7}.bin"
 
       - name: Write checksums
         run: |

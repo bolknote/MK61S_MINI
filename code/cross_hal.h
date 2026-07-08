@@ -50,6 +50,47 @@ enum class sw : u32 {
   NON =30, NO1, NO2, NO3, NO4
 };
 
+#elif defined(MK61_KEYBOARD_40TH)
+// The 40th snapshot uses the mini matrix table with classic scan codes for
+// MK program/navigation keys and mini scan codes for UI/service keys.
+static const u32               KEY_Px     =   23;
+static const u32               KEY_xP     =   22;
+static const u32               KEY_BP     =   21;
+static const u32               KEY_PP     =   20;
+static const u32               KEY_RUN    =   25;
+static const u32               KEY_RET    =   26;
+static const u32               KEY_FRW    =   28;
+static const u32               KEY_BKW    =   27;
+static const u32               KEY_BASIC  =   34;
+static const u32               KEY_K      =   24;
+static const u32               KEY_F      =   29;
+static const u32               KEY_ESC    =   39;
+
+static constexpr i32 KEY_PUSH_B   =   1;
+static constexpr i32 KEY_DEGREE   =   4;
+static constexpr i32 KEY_EPOWER   =   5;
+static constexpr i32 KEY_NEG      =   10;
+static constexpr i32 KEY_GRADE    =   9;
+static constexpr i32 KEY_RADIAN   =   14;
+static constexpr i32 KEY_USER     =   19;
+static constexpr i32 KEY_SAVE     =   36;
+static constexpr i32 KEY_LOAD     =   35;
+static constexpr i32 KEY_LEFT     =   34;
+static constexpr i32 KEY_RIGHT    =   24;
+static constexpr i32 KEY_ALPHA    =   KEY_F;
+static constexpr i32 KEY_OK       =   29;
+
+enum class sw : u32 {
+  CX  =00, Bx, MUL, DIV,
+  POW =05, XY, ADD, SUB,
+  NEG =10, _3, _6, _9,
+  DOT =15, _2, _5, _8,
+  _0  =20, _1, _4, _7,
+  JSR =25, JP, xP, Px,
+  RUN =30, RET, FW, BK,
+  NON =35, NO1, K, F
+};
+
 #else
 static const u32               KEY_Px     =   28;
 static const u32               KEY_xP     =   27;
@@ -98,7 +139,7 @@ static const i32 KEY_OK_PRESS     =   KEY_OK    | (i32) key_state::PRESSED;
 static const i32 KEY_RUN_PRESS    =   KEY_RUN   | (i32) key_state::PRESSED;
 static const i32 KEY_FRW_PRESS    =   KEY_FRW   | (i32) key_state::PRESSED;
 static const i32 KEY_BKW_PRESS    =   KEY_BKW   | (i32) key_state::PRESSED;
-#if defined(MK61_KEYBOARD_MINI)
+#if defined(MK61_KEYBOARD_MINI) || defined(MK61_KEYBOARD_40TH)
 static const i32 KEY_SHG_RIGHT_PRESS = KEY_BKW_PRESS;
 static const i32 KEY_SHG_LEFT_PRESS  = KEY_FRW_PRESS;
 #else

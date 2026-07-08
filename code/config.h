@@ -86,6 +86,17 @@
   #define MK61_DISPLAY_LCD1602
 #endif
 
+// MK61s 40th profile: UC1609 display with the keyboard wiring/layout used by
+// the older 40-key firmware snapshot.
+#if defined(MK61_BOARD_40TH)
+  #if !defined(MK61_DISPLAY_UC1609)
+    #define MK61_DISPLAY_UC1609
+  #endif
+  #if !defined(MK61_KEYBOARD_40TH)
+    #define MK61_KEYBOARD_40TH
+  #endif
+#endif
+
 #if !defined(MK61_DISPLAY_UC1609)
   #define MK61_DISPLAY_LCD1602
 #endif
@@ -108,15 +119,15 @@
 
 // Клавиатура: у classic-платформы с UC1609 другая физическая матрица и коды.
 // Если вариант не задан явно, LCD1602 остается mk61s-mini, UC1609 выбирает classic.
-#if defined(MK61_DISPLAY_UC1609) && !defined(MK61_KEYBOARD_MINI) && !defined(MK61_KEYBOARD_CLASSIC)
+#if defined(MK61_DISPLAY_UC1609) && !defined(MK61_KEYBOARD_MINI) && !defined(MK61_KEYBOARD_CLASSIC) && !defined(MK61_KEYBOARD_40TH)
   #define MK61_KEYBOARD_CLASSIC
 #endif
 
-#if !defined(MK61_KEYBOARD_CLASSIC) && !defined(MK61_KEYBOARD_MINI)
+#if !defined(MK61_KEYBOARD_CLASSIC) && !defined(MK61_KEYBOARD_MINI) && !defined(MK61_KEYBOARD_40TH)
   #define MK61_KEYBOARD_MINI
 #endif
 
-#if defined(MK61_KEYBOARD_CLASSIC) && defined(MK61_KEYBOARD_MINI)
+#if (defined(MK61_KEYBOARD_CLASSIC) + defined(MK61_KEYBOARD_MINI) + defined(MK61_KEYBOARD_40TH)) > 1
   #error "Select only one keyboard layout"
 #endif
 
@@ -253,9 +264,15 @@
 #endif
 
 #ifdef MK61s
+    #ifdef MK61_BOARD_40TH
+      const char MODEL[] = "MK61s-40th";
+      //                       0123456789ABCDEF
+      const char FULL_MODEL_NAME[] = "MK61s-40thUC1609";
+    #else
       const char MODEL[] = "MK61s";
       //                       0123456789ABCDEF
       const char FULL_MODEL_NAME[] = "MK61s *firmware*";
+    #endif
   #else 
     #ifdef MK52s
       const char MODEL[] = "MK52s";
