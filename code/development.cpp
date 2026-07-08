@@ -213,6 +213,22 @@ static void wait_ok_release(void) {
   }
 }
 
+static void wait_all_keys_released(void) {
+  kbd::clear_hold_key();
+
+  while(true) {
+    idle_main_process();
+    const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0) kbd::exclude_before(scan_code);
+
+    if(!kbd::any_key_pressed() && kbd::last_key() < 0) {
+      kbd::clear_hold_key();
+      return;
+    }
+    delay(10);
+  }
+}
+
 static bool explorer_time_reached(u32 now, u32 target) {
   return (i32) (now - target) >= 0;
 }
@@ -1281,6 +1297,7 @@ bool program_store_explorer_select(void) {
   ExplorerScroll scroll;
   explorer_search_reset(search);
   explorer_scroll_reset(scroll);
+  wait_all_keys_released();
 
   while(true) {
     explorer_search_expire_sms(search, millis());
