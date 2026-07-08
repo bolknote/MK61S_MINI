@@ -34,7 +34,11 @@ static constexpr u16 EXPLORER_SCROLL_START_MS = 900;
 static constexpr u16 EXPLORER_SCROLL_STEP_MS = 450;
 static constexpr u16 EXPLORER_SCROLL_EDGE_MS = 900;
 static constexpr u8 EXPLORER_TYPE_COL = 1;
+#if defined(MK61_DISPLAY_LCD1602)
+static constexpr u8 EXPLORER_NAME_COL = 4;
+#else
 static constexpr u8 EXPLORER_NAME_COL = 2;
+#endif
 static constexpr u8 EXPLORER_ELLIPSIS_SLOT = 7;
 
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for explorer view");
@@ -519,7 +523,12 @@ static void draw_explorer_row(u8 row, bool active, const program_store::Entry& e
   lcd.setCursor(0, row);
   lcd.write((u8) (active ? '>' : ' '));
   lcd.setCursor(EXPLORER_TYPE_COL, row);
+#if defined(MK61_DISPLAY_LCD1602)
+  lcd.print(type_label(entry.type));
+  lcd.write((u8) ' ');
+#else
   write_custom_glyph(row, type_glyph(entry.type));
+#endif
   draw_explorer_name(entry.name, row, scroll_offset, active);
 }
 
