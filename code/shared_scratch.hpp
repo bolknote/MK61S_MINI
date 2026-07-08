@@ -33,6 +33,9 @@ class Lease {
     u8* buffer;
 };
 
+u8* acquire(Owner owner, usize required);
+void release(Owner owner);
+u8* data(Owner owner);
 Owner current_owner(void);
 
 } // namespace shared_scratch

@@ -1,10 +1,11 @@
 #include "config.h"
 
-static  class_calc_config   config;
+class_calc_config config;
 
 #include <Arduino.h>
 #include "rust_types.h"
 #include "keyboard.h"
+#include "m61_text.hpp"
 
 using namespace kbd;
 
@@ -41,7 +42,7 @@ const  class_LCD_Label      XLabel(0, 1);
 static  LCD_GRD_Label       GRDLabel;
 static  key_mnenonic        MnemoLabel;
 
-static  class_disassm_mk61  disassembler;
+class_disassm_mk61 disassembler;
 static  isize               mk61_quants;
 isize                       mk61_quants_reload;
 
@@ -60,7 +61,7 @@ static  bool        turbo_display_dirty;
 static  t_time_ms   turbo_next_lcd_update;
 //static  bool        mk61_edit_program;
 
-const char terminal_symbols[16] = {
+extern const char terminal_symbols[16] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', '\303', 'E', ' '
 };
 
@@ -496,7 +497,7 @@ void   mk61_baseloop_hook(i32 key) {
       break;
     case  KEY_LOAD:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
-        if(Load()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
+        if(Load() && !m61_text::active()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
         lcd_std_display_redraw(); 
       break;
     case  KEY_SAVE:
@@ -591,6 +592,8 @@ void  loop() {
     }
   #endif
 
+  m61_text::service();
+
   const i32 used_key = kbd::last_key();
   if(drop_menu_exit_key_events) {
     drop_pending_key_events();
@@ -615,6 +618,11 @@ void  loop() {
       // в режиме счета по программе выдачи звукового оповещения не производится 
         if(core_61::is_CALC() && library_mk61::idle_signal_is_on()) message_of_unuse();
     }
+  }
+
+  if(m61_text::handle_key(used_key)) {
+    kbd::scan();
+    return;
   }
 
   // Перехват клавиатуры программным модулем

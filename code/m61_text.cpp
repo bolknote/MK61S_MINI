@@ -1,23 +1,42 @@
 #include "m61_text.hpp"
 
+#include "basic.hpp"
 #include "cross_hal.h"
-#include "library_pmk.hpp"
+#include "focal.hpp"
+#include "keyboard.h"
 #include "mk61emu_core.h"
-#include "tools.hpp"
+#include "program_store.hpp"
+#include "shared_scratch.hpp"
+#include "terminal.hpp"
+#include "tinybasic.hpp"
+
+#include <string.h>
 
 namespace m61_text {
 
 static constexpr u16 MAX_LINE_SIZE = 240;
-static constexpr usize SCRIPT_KEY_HOLD_STEPS = 4;
-static constexpr usize SCRIPT_KEY_SETTLE_STEPS = 64;
 static constexpr u8 HIN_BYTES_PER_LINE = 24;
 
-static bool is_space(char c) {
-  return c == ' ' || c == '\t';
-}
+enum class RunnerState : u8 {
+  IDLE,
+  EXECUTING,
+  WAIT_RUN_START,
+  WAIT_RUN_STOP,
+  PAUSED_AFTER_RUN
+};
+
+static RunnerState runner_state = RunnerState::IDLE;
+static u16 script_len = 0;
+static u16 script_pos = 0;
+static bool script_error = false;
+static class_terminal script_terminal;
 
 static bool is_line_end(char c) {
   return c == 0 || c == '\r' || c == '\n';
+}
+
+static bool is_space(char c) {
+  return c == ' ' || c == '\t';
 }
 
 static const char* skip_spaces(const char* p) {
@@ -37,149 +56,205 @@ static bool starts_with(const char* line, const char* token) {
   return true;
 }
 
-static bool parse_decimal4(const char* p, u16& out) {
-  u16 value = 0;
-  for(u8 i = 0; i < 4; i++) {
-    if(p[i] < '0' || p[i] > '9') return false;
-    value = (u16) (value * 10 + (u16) (p[i] - '0'));
-  }
-  out = value;
-  return true;
+static u8* script_buffer(void) {
+  return shared_scratch::data(shared_scratch::Owner::M61_SCRIPT);
 }
 
-static bool parse_hex_digit(char c, u8& out) {
-  if(c >= '0' && c <= '9') {
-    out = (u8) (c - '0');
-    return true;
-  }
-  if(c >= 'A' && c <= 'F') {
-    out = (u8) (c - 'A' + 10);
-    return true;
-  }
-  if(c >= 'a' && c <= 'f') {
-    out = (u8) (c - 'a' + 10);
-    return true;
-  }
-  return false;
+bool active(void) {
+  return runner_state != RunnerState::IDLE;
 }
 
-static bool parse_hex_number(const char* p, u16& out) {
-  p = skip_spaces(p);
-  u16 value = 0;
-  bool any = false;
-  while(!is_line_end(*p) && !is_space(*p)) {
-    u8 digit = 0;
-    if(!parse_hex_digit(*p++, digit)) return false;
-    value = (u16) ((value << 4) | digit);
-    any = true;
-  }
-  if(!any) return false;
-  out = value;
-  return token_ends(p);
+void cancel(void) {
+  runner_state = RunnerState::IDLE;
+  script_len = 0;
+  script_pos = 0;
+  script_error = false;
+  shared_scratch::release(shared_scratch::Owner::M61_SCRIPT);
 }
 
-static bool press_scan_code(u16 keycode) {
-  if(keycode == KEY_DEGREE) {
-    MK61Emu_SetAngleUnit(DEGREE);
-    return true;
-  }
-  if(keycode == KEY_GRADE) {
-    MK61Emu_SetAngleUnit(GRADE);
-    return true;
-  }
-  if(keycode == KEY_RADIAN) {
-    MK61Emu_SetAngleUnit(RADIAN);
-    return true;
-  }
-  if(keycode >= 40) return false;
-
-  const TMK61_cross_key cross_key = KeyPairs[keycode];
-  if(cross_key.as_u16() == NON.as_u16()) return false;
-
-  core_61::clear_displayed();
-  for(usize i = 0; i < SCRIPT_KEY_HOLD_STEPS; i++) {
-    MK61Emu_SetKeyPress(cross_key.x, cross_key.y);
-    core_61::step();
-    if(core_61::is_RUN()) break;
-  }
-
-  for(usize i = 0; i < SCRIPT_KEY_SETTLE_STEPS; i++) {
-    core_61::step();
-    if(core_61::is_RUN() || core_61::is_displayed()) break;
-  }
-
-  core_61::clear_displayed();
-  return true;
+static void finish_script(void) {
+  cancel();
 }
 
-static bool execute_hin(const char* line) {
-  u16 address = 0;
-  if(!parse_decimal4(line + 4, address)) return false;
-  if(address >= core_61::MAX_PROGRAM_STEP) return false;
-
-  const char* p = line + 8;
-  if(!is_space(*p)) return false;
-  p = skip_spaces(p);
-
-  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-  core_61::get_code_page(&code_page[0]);
-
-  u16 linear_addr = address;
-  while(!is_line_end(*p)) {
-    if(is_space(*p)) {
-      p++;
-      continue;
-    }
-
-    if(linear_addr >= core_61::MAX_PROGRAM_STEP) return false;
-    u8 hi = 0;
-    u8 lo = 0;
-    if(!parse_hex_digit(*p++, hi)) return false;
-    if(!parse_hex_digit(*p++, lo)) return false;
-    code_page[linear_addr++] = (u8) ((hi << 4) | lo);
-  }
-
-  const bool force_expanded = linear_addr > core_61::CLASSIC_PROGRAM_STEP;
-  apply_program_memory_auto(&code_page[0], linear_addr, false, force_expanded);
-  core_61::set_code_page(&code_page[0]);
-  return true;
+static void fail_script(void) {
+  cancel();
+  script_error = true;
 }
 
-static bool execute_kbd(const char* line) {
-  u16 keycode = 0;
-  if(!parse_hex_number(line + 4, keycode)) return false;
-  return press_scan_code(keycode);
-}
+static bool read_next_line(char* line, u16 capacity) {
+  if(line == NULL || capacity == 0) return false;
+  u8* buffer = script_buffer();
+  if(buffer == NULL) return false;
 
-static bool execute_line(const char* line) {
-  line = skip_spaces(line);
-  if(is_line_end(*line)) return true;
-  if(starts_with(line, "hin ")) return execute_hin(line);
-  if(starts_with(line, "kbd ")) return execute_kbd(line);
-  if(starts_with(line, "run") && token_ends(line + 3)) return run_loaded_setup_program();
-  return false;
-}
-
-bool execute(const u8* text, u16 len) {
-  if(text == NULL && len != 0) return false;
-
-  MK61Emu_ClearCodePage();
-
-  char line[MAX_LINE_SIZE + 1];
   u16 line_len = 0;
-  for(u16 i = 0; i <= len; i++) {
-    const char c = (i < len) ? (char) text[i] : '\n';
+  while(script_pos <= script_len) {
+    const char c = (script_pos < script_len) ? (char) buffer[script_pos++] : '\n';
     if(c == '\r') continue;
     if(c == '\n' || c == 0) {
       line[line_len] = 0;
-      if(!execute_line(line)) return false;
-      line_len = 0;
-      continue;
+      return true;
     }
-    if(line_len >= MAX_LINE_SIZE) return false;
+    if(line_len + 1 >= capacity) return false;
     line[line_len++] = c;
   }
+
+  line[0] = 0;
   return true;
+}
+
+static bool copy_run_name(const char* args, char* name, usize capacity) {
+  args = skip_spaces(args);
+  usize len = 0;
+  while(!is_line_end(args[len])) len++;
+  while(len > 0 && is_space(args[len - 1])) len--;
+  if(len == 0 || len >= capacity) return false;
+  for(usize i = 0; i < len; i++) name[i] = args[i];
+  name[len] = 0;
+
+  char* dot = strrchr(name, '.');
+  if(dot != NULL) *dot = 0;
+  return name[0] != 0;
+}
+
+static bool run_named_program(const char* args) {
+  char name[program_store::NAME_SIZE];
+  if(!copy_run_name(args, name, sizeof(name))) return false;
+
+#if MK61_ENABLE_BASIC
+  if(program_store::exists(program_store::ProgramType::BASIC, name)) return RunBasicProgram(name);
+#endif
+#if MK61_ENABLE_FOCAL
+  if(program_store::exists(program_store::ProgramType::FOCAL, name)) return RunFocalProgram(name);
+#endif
+#if MK61_ENABLE_TINYBASIC
+  if(program_store::exists(program_store::ProgramType::TINYBASIC, name)) return RunTinyBasicProgram(name);
+#endif
+  return false;
+}
+
+static void queue_current_program_run(void) {
+  kbd::push((i8) sw::F);
+  kbd::push((i8) sw::NEG);
+  kbd::push((i8) sw::RET);
+  kbd::push((i8) sw::RUN);
+}
+
+static bool execute_script_line(const char* raw_line) {
+  const char* line = skip_spaces(raw_line);
+  if(is_line_end(*line)) return true;
+
+  if(starts_with(line, "run") && (token_ends(line + 3) || is_space(line[3]))) {
+    const char* args = skip_spaces(line + 3);
+    if(!is_line_end(*args)) return run_named_program(args);
+    queue_current_program_run();
+    runner_state = RunnerState::WAIT_RUN_START;
+    return true;
+  }
+
+  const i32 result = script_terminal.execute_script_line(line);
+  if(result >= 0) {
+    kbd::push((i8) result);
+    return true;
+  }
+  return result == -1;
+}
+
+void service(void) {
+  if(runner_state == RunnerState::WAIT_RUN_START) {
+    if(core_61::is_RUN()) runner_state = RunnerState::WAIT_RUN_STOP;
+    return;
+  }
+
+  if(runner_state == RunnerState::WAIT_RUN_STOP) {
+    if(core_61::is_CALC()) {
+      core_61::clear_displayed();
+      runner_state = RunnerState::PAUSED_AFTER_RUN;
+    }
+    return;
+  }
+
+  while(runner_state == RunnerState::EXECUTING) {
+    if(script_pos >= script_len) {
+      finish_script();
+      return;
+    }
+
+    char line[MAX_LINE_SIZE + 1];
+    if(!read_next_line(line, sizeof(line))) {
+      fail_script();
+      return;
+    }
+    if(!execute_script_line(line)) {
+      fail_script();
+      return;
+    }
+  }
+}
+
+bool handle_key(i32 key) {
+  if(runner_state != RunnerState::PAUSED_AFTER_RUN) return false;
+
+  // C/P stays available to the MK program; OK means "return to the script".
+  if(key == KEY_OK || key == KEY_OK_PRESS) {
+    kbd::get_key();
+    runner_state = RunnerState::EXECUTING;
+    service();
+    return true;
+  }
+
+  if(key == KEY_ESC || key == KEY_ESC_PRESS) {
+    kbd::get_key();
+    cancel();
+    return true;
+  }
+
+  return false;
+}
+
+bool start(const u8* text, u16 len) {
+  if(text == NULL && len != 0) return false;
+  if(len > program_store::MAX_MK61_TEXT_SIZE) return false;
+  if(active()) cancel();
+
+  u8* buffer = shared_scratch::acquire(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
+  if(buffer == NULL) return false;
+  if(len != 0) memcpy(buffer, text, len);
+
+  script_len = len;
+  script_pos = 0;
+  script_error = false;
+  script_terminal.init_script();
+  MK61Emu_ClearCodePage();
+  runner_state = RunnerState::EXECUTING;
+  service();
+  return !script_error;
+}
+
+bool load_program(const char* name) {
+  if(name == NULL || name[0] == 0) return false;
+  if(active()) cancel();
+
+  u8* buffer = shared_scratch::acquire(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
+  if(buffer == NULL) return false;
+
+  u16 len = 0;
+  if(!program_store::read_mk61(name, buffer, program_store::MAX_MK61_TEXT_SIZE, &len)) {
+    shared_scratch::release(shared_scratch::Owner::M61_SCRIPT);
+    return false;
+  }
+
+  script_len = len;
+  script_pos = 0;
+  script_error = false;
+  script_terminal.init_script();
+  MK61Emu_ClearCodePage();
+  runner_state = RunnerState::EXECUTING;
+  service();
+  return !script_error;
+}
+
+bool execute(const u8* text, u16 len) {
+  return start(text, len);
 }
 
 static bool append_char(u8* out, u16 capacity, u16& pos, char c) {
