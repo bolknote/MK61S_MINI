@@ -33,12 +33,8 @@ static constexpr i32 EXPLORER_KEY_TICK = -7;
 static constexpr u16 EXPLORER_SCROLL_START_MS = 900;
 static constexpr u16 EXPLORER_SCROLL_STEP_MS = 450;
 static constexpr u16 EXPLORER_SCROLL_EDGE_MS = 900;
-static constexpr u8 EXPLORER_TYPE_COL = 1;
-#if defined(MK61_DISPLAY_LCD1602)
-static constexpr u8 EXPLORER_NAME_COL = 4;
-#else
+static constexpr u8 EXPLORER_TYPE_COL = 0;
 static constexpr u8 EXPLORER_NAME_COL = 2;
-#endif
 static constexpr u8 EXPLORER_ELLIPSIS_SLOT = 7;
 
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for explorer view");
@@ -78,70 +74,70 @@ static const char* type_label(program_store::ProgramType type) {
   return "??";
 }
 
-static const u8 TYPE_M1_GLYPH[8] = {
+static const u8 TYPE_MK61_GLYPH[8] = {
+  0b11111,
+  0b11111,
+  0b10001,
+  0b10101,
+  0b10001,
+  0b10101,
+  0b10101,
+  0b11111
+};
+
+static const u8 TYPE_BASIC_GLYPH[8] = {
+  0b11111,
+  0b11111,
+  0b10001,
+  0b11101,
+  0b10011,
+  0b10011,
+  0b11101,
+  0b11111
+};
+
+static const u8 TYPE_FOCAL_GLYPH[8] = {
+  0b11111,
   0b10101,
   0b11111,
-  0b11101,
+  0b10101,
+  0b11111,
   0b10101,
   0b10101,
-  0b10101,
-  0b10111,
-  0b00000
+  0b11111
 };
 
-static const u8 TYPE_B1_GLYPH[8] = {
-  0b11001,
-  0b10111,
-  0b11001,
-  0b10101,
-  0b10101,
-  0b10101,
+static const u8 TYPE_TINYBASIC_GLYPH[8] = {
+  0b11111,
+  0b11101,
   0b11011,
-  0b00000
+  0b11111,
+  0b11011,
+  0b11011,
+  0b11111,
+  0b11111
 };
 
-static const u8 TYPE_F1_GLYPH[8] = {
-  0b11101,
+static const u8 TYPE_TEXT_GLYPH[8] = {
+  0b11111,
   0b10011,
-  0b11001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10011,
-  0b00000
-};
-
-static const u8 TYPE_B2_GLYPH[8] = {
-  0b11011,
   0b10101,
-  0b11001,
-  0b10111,
-  0b10110,
-  0b10110,
-  0b11011,
-  0b00000
+  0b10001,
+  0b11101,
+  0b10001,
+  0b11101,
+  0b11111
 };
 
-static const u8 TYPE_T1_GLYPH[8] = {
-  0b11101,
-  0b01011,
-  0b01001,
-  0b01001,
-  0b01001,
-  0b01001,
-  0b01011,
-  0b00000
-};
-
-static const u8 TYPE_M2_GLYPH[8] = {
-  0b10111,
-  0b11101,
-  0b11101,
-  0b10111,
-  0b10110,
-  0b10110,
-  0b10111,
-  0b00000
+static const u8 TYPE_STATE_GLYPH[8] = {
+  0b11111,
+  0b11111,
+  0b10101,
+  0b11111,
+  0b10001,
+  0b10101,
+  0b10001,
+  0b11111
 };
 
 static const u8 ELLIPSIS_GLYPH[8] = {
@@ -157,14 +153,20 @@ static const u8 ELLIPSIS_GLYPH[8] = {
 
 static const u8* type_glyph(program_store::ProgramType type) {
   switch(type) {
-    case program_store::ProgramType::MK61: return TYPE_M1_GLYPH;
-    case program_store::ProgramType::BASIC: return TYPE_B1_GLYPH;
-    case program_store::ProgramType::FOCAL: return TYPE_F1_GLYPH;
-    case program_store::ProgramType::TINYBASIC: return TYPE_B2_GLYPH;
-    case program_store::ProgramType::TEXT: return TYPE_T1_GLYPH;
-    case program_store::ProgramType::MK61_STATE: return TYPE_M2_GLYPH;
+    case program_store::ProgramType::MK61:
+      return TYPE_MK61_GLYPH;
+    case program_store::ProgramType::BASIC:
+      return TYPE_BASIC_GLYPH;
+    case program_store::ProgramType::FOCAL:
+      return TYPE_FOCAL_GLYPH;
+    case program_store::ProgramType::TINYBASIC:
+      return TYPE_TINYBASIC_GLYPH;
+    case program_store::ProgramType::TEXT:
+      return TYPE_TEXT_GLYPH;
+    case program_store::ProgramType::MK61_STATE:
+      return TYPE_STATE_GLYPH;
   }
-  return TYPE_M1_GLYPH;
+  return TYPE_MK61_GLYPH;
 }
 
 static void write_custom_glyph(u8 slot, const u8* glyph) {
@@ -175,6 +177,18 @@ static void write_custom_glyph(u8 slot, const u8* glyph) {
   lcd.createChar(slot, (uint8_t*) glyph);
   lcd.write(slot);
 #endif
+}
+
+static void write_type_glyph(u8 slot, program_store::ProgramType type, bool active) {
+  const u8* glyph = type_glyph(type);
+  if(!active) {
+    write_custom_glyph(slot, glyph);
+    return;
+  }
+
+  u8 inverted[8];
+  for(u8 i = 0; i < 8; i++) inverted[i] = (u8) (glyph[i] ^ 0x1F);
+  write_custom_glyph(slot, inverted);
 }
 
 static void print_line(u8 row, const char* text) {
@@ -520,15 +534,9 @@ static void draw_explorer_name(const char* name, u8 row, u8 offset, bool active)
 }
 
 static void draw_explorer_row(u8 row, bool active, const program_store::Entry& entry, u8 scroll_offset) {
-  lcd.setCursor(0, row);
-  lcd.write((u8) (active ? '>' : ' '));
   lcd.setCursor(EXPLORER_TYPE_COL, row);
-#if defined(MK61_DISPLAY_LCD1602)
-  lcd.print(type_label(entry.type));
+  write_type_glyph(row, entry.type, active);
   lcd.write((u8) ' ');
-#else
-  write_custom_glyph(row, type_glyph(entry.type));
-#endif
   draw_explorer_name(entry.name, row, scroll_offset, active);
 }
 
