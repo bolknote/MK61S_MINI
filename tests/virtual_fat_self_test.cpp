@@ -434,7 +434,7 @@ static void test_m61_lfn_import_normalizes_cyrillic_name(void) {
   reset_virtual_fat_state();
 
   const u16 full_name[] = {
-    0x043A, 0x043B, 0x0430, 0x0434, 0x043E, 0x0438, 0x0441, 0x043A, 0x0430, 0x0442, 0x0435, 0x043B, 0x044C,
+    0x041A, 0x043B, 0x0430, 0x0434, 0x043E, 0x0438, 0x0441, 0x043A, 0x0430, 0x0442, 0x0435, 0x043B, 0x044C,
     '.', 'm', '6', '1',
     0
   };
@@ -455,7 +455,7 @@ static void test_m61_lfn_import_normalizes_cyrillic_name(void) {
 
   u8 stored[8];
   u16 stored_len = 0;
-  assert(program_store::read(program_store::ProgramType::MK61, "KLADO", stored, sizeof(stored), &stored_len));
+  assert(program_store::read(program_store::ProgramType::MK61, "Klado", stored, sizeof(stored), &stored_len));
   assert(stored_len == sizeof(payload));
   assert(memcmp(stored, payload, stored_len) == 0);
 }
@@ -488,13 +488,13 @@ static void test_state_txt_lfn_import_normalizes_cyrillic(void) {
 
   u8 stored[64];
   u16 stored_len = 0;
-  assert(program_store::read(program_store::ProgramType::MK61_STATE, "KOOPEKAFE2", stored, sizeof(stored), &stored_len));
+  assert(program_store::read(program_store::ProgramType::MK61_STATE, "koopekafe2", stored, sizeof(stored), &stored_len));
   assert(stored_len == sizeof(payload) - 1);
   assert(memcmp(stored, payload, stored_len) == 0);
 
   u8 generated_root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), generated_root));
-  assert(root_has_lfn_name(generated_root, "KOOPEKAFE2.state.txt"));
+  assert(root_has_lfn_name(generated_root, "koopekafe2.state.txt"));
 }
 
 static void test_staging_does_not_shadow_committed_file_data(void) {
