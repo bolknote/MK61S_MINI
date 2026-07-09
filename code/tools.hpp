@@ -98,11 +98,13 @@ extern  void  sound_scaled(usize pin, isize freq_Hz, usize duration_ms, usize vo
 extern  void  sound_stop(void);
 
 // Асинхронный звуковой паттерн (команда beep): частота 0 - пауза.
+// Узкие типы намеренно: буфер паттерна живёт в ОЗУ постоянно (8 байт на ноту
+// вместо 16), а 65 кГц / 65 с на ноту хватает с запасом.
 struct SoundNote {
-  isize frequency_Hz;
-  usize duration_ms;
-  usize gap_ms;
-  usize volume_percent;
+  u16 frequency_Hz;
+  u16 duration_ms;
+  u16 gap_ms;
+  u8  volume_percent;
 };
 static constexpr usize SOUND_PATTERN_MAX = 16;
 extern  bool  sound_pattern_start(const SoundNote* notes, usize count);

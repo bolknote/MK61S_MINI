@@ -55,7 +55,6 @@ extern  class_disassm_mk61  disassembler;
 extern  MK61Display         lcd;
 extern  void DFU_enable(void);
 
-static u8    input_buffer[MAX_INPUT_CHAR];
 
 
 // ====== Диспетчер команд: имя -> id через CRC-8 индекс ======
@@ -248,24 +247,37 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     bool    input_overflow;
     const char* script_args_ptr;
 
+    // Аргументы скриптового действия переживают восстановление input_buffer:
+    // script_args_ptr указывает внутрь буфера строки, поэтому перед возвратом
+    // из execute_script_line() они переносятся сюда. Скрипт один в момент
+    // времени - хранилище общее (static).
+    static inline char script_args_storage[MAX_INPUT_CHAR];
+
+    // Буфер строки один на прошивку (C++17 inline): экземпляров терминала два
+    // (интерактивный и скриптовый m61), но раньше из-за слияния weak-методов
+    // линкером реально использовалась одна копия, вторая была мёртвым грузом.
+    static inline u8 input_buffer[MAX_INPUT_CHAR];
+
     // ====== История команд: байтовое кольцо + каталог записей ======
     // Каталог хранит позицию и длину каждой записи, поэтому доступ по номеру
     // (стрелки вверх/вниз) O(1) и нет сдвигов памяти при вытеснении старых.
     static constexpr u16 HISTORY_TEXT_SIZE = 256;
     static constexpr u8  HISTORY_DEPTH     = 8;
 
-    char  hist_text[HISTORY_TEXT_SIZE];
-    u16   hist_start[HISTORY_DEPTH];
-    u8    hist_length[HISTORY_DEPTH];
-    u8    hist_head;                    // номер самой старой записи в каталоге
-    u8    hist_count;
-    u16   hist_used;                    // занято байт в текстовом кольце
-    u16   hist_write;                   // позиция записи в текстовом кольце
-    i8    hist_nav;                     // -1 - не в истории, 0 - самая новая
-    u8    esc_state;                    // разбор escape-последовательностей
-    u8    prev_terminator;              // съедание второго символа пары CRLF
-    u8    saved_line[MAX_INPUT_CHAR];   // строка, редактируемая до входа в историю
-    usize saved_len;
+    // static inline: серийный ввод ведёт только интерактивный экземпляр,
+    // держать копию истории в каждом экземпляре (script_terminal) - потеря ОЗУ.
+    static inline char  hist_text[HISTORY_TEXT_SIZE];
+    static inline u16   hist_start[HISTORY_DEPTH];
+    static inline u8    hist_length[HISTORY_DEPTH];
+    static inline u8    hist_head;                    // номер самой старой записи в каталоге
+    static inline u8    hist_count;
+    static inline u16   hist_used;                    // занято байт в текстовом кольце
+    static inline u16   hist_write;                   // позиция записи в текстовом кольце
+    static inline i8    hist_nav;                     // -1 - не в истории, 0 - самая новая
+    static inline u8    esc_state;                    // разбор escape-последовательностей
+    static inline u8    prev_terminator;              // съедание второго символа пары CRLF
+    static inline u8    saved_line[MAX_INPUT_CHAR];   // строка, редактируемая до входа в историю
+    static inline usize saved_len;
 
     void history_drop_oldest(void) {
       hist_used -= hist_length[hist_head];
@@ -376,8 +388,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     // Скриптовое действие для m61: аргументы остаются доступны через script_args().
+    // args обычно указывает внутрь input_buffer, который execute_script_line()
+    // восстановит перед возвратом, поэтому копируем в собственное хранилище.
     isize script_action(i32 action, const char* args) {
-      script_args_ptr = args;
+      usize len = 0;
+      while(args[len] != 0 && len < sizeof(script_args_storage) - 1) {
+        script_args_storage[len] = args[len];
+        len++;
+      }
+      script_args_storage[len] = 0;
+      script_args_ptr = script_args_storage;
       recive_pos = 0;
       return action;
     }
@@ -545,6 +565,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       nSlot                 = -1;
       input_overflow        = false;
       script_args_ptr       = "";
+    }
+
+    // История и редактор строки общие (static): сбрасываются только при
+    // старте интерактивного терминала, скриптовый init их не трогает.
+    void reset_line_editor(void) {
       esc_state             = 0;
       prev_terminator       = 0;
       hist_nav              = -1;
@@ -557,6 +582,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     void  init(void) {
       reset_command_state();
+      reset_line_editor();
       Serial.begin(115200);
       delay(1800);
       output_version();
@@ -1037,8 +1063,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       usize count = 0;
       for(isize i = 0; i < n; i += 2) {
         if(values[i] > 1) return false;
+        if(i + 1 < n && values[i + 1] > 65535) return false; // пауза хранится в u16
         steps[count].on = (u8) values[i];
-        steps[count].hold_ms = (i + 1 < n) ? values[i + 1] : 0;
+        steps[count].hold_ms = (u16) ((i + 1 < n) ? values[i + 1] : 0);
         count++;
       }
       return led::pattern_start(steps, count);
@@ -1054,8 +1081,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       SoundNote notes[SOUND_PATTERN_MAX];
       const usize count = (usize) n / 2;
       for(usize i = 0; i < count; i++) {
-        notes[i].frequency_Hz = (isize) values[2 * i];
-        notes[i].duration_ms = values[2 * i + 1];
+        if(values[2 * i] > 65535 || values[2 * i + 1] > 65535) return false; // u16 в SoundNote
+        notes[i].frequency_Hz = (u16) values[2 * i];
+        notes[i].duration_ms = (u16) values[2 * i + 1];
         notes[i].gap_ms = 0;
         notes[i].volume_percent = 100;
       }
@@ -1578,18 +1606,34 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 inline i32 class_terminal::execute_script_line(const char* line) {
   if(line == NULL) return SCRIPT_COMMAND_ERROR;
 
+  // input_buffer один на прошивку: пока скрипт исполняется между итерациями
+  // loop(), в буфере может лежать недонабранная строка интерактивного
+  // терминала. Сохраняем её на стеке и возвращаем после выполнения строки.
+  u8 interactive_line[MAX_INPUT_CHAR];
+  memcpy(interactive_line, input_buffer, MAX_INPUT_CHAR);
+
+  i32 result = SCRIPT_COMMAND_ERROR;
   usize len = 0;
+  bool too_long = false;
   while(line[len] != 0) {
     if(len + 1 >= MAX_INPUT_CHAR) {
-      recive_pos = 0;
-      return SCRIPT_COMMAND_ERROR;
+      too_long = true;
+      break;
     }
     input_buffer[len] = (u8) line[len];
     len++;
   }
-  input_buffer[len] = CR;
-  recive_pos = len + 1;
-  return execute(true);
+
+  if(too_long) {
+    recive_pos = 0;
+  } else {
+    input_buffer[len] = CR;
+    recive_pos = len + 1;
+    result = execute(true);
+  }
+
+  memcpy(input_buffer, interactive_line, MAX_INPUT_CHAR);
+  return result;
 }
 
 #endif
