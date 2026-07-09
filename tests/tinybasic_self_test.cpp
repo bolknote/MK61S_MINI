@@ -10,6 +10,9 @@ extern "C" int TinyBasicTestAddProgram(const char* source, const char* name);
 extern "C" void TinyBasicTestSetInput(double value);
 extern "C" void TinyBasicTestRun(int slot);
 extern "C" double TinyBasicTestNumber(const char* name);
+extern "C" double TinyBasicTestMkX(void);
+extern "C" double TinyBasicTestMkRegister(int reg);
+extern "C" void TinyBasicTestSetRfEnabled(bool enabled);
 extern "C" const char* TinyBasicTestLcdLine(int row);
 extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out, int size);
 extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size);
@@ -156,10 +159,65 @@ static void test_mk_math_dispatch(void) {
   assert(std::strncmp(TinyBasicTestLcdLine(0), "6", 1) == 0);
 }
 
+static void test_mk_register_references(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "10 .X=42\n"
+    "20 A=.X+1\n"
+    "30 LET .R0=A\n"
+    "40 LET .RE=.R0+2\n"
+    "50 PRINT .RE\n",
+    "MKREF");
+  assert(slot >= 0);
+  TinyBasicTestRun(slot);
+  assert(std::fabs(TinyBasicTestMkX() - 42.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("A") - 43.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(0) - 43.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(14) - 45.0) < 0.000001);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "45", 2) == 0);
+}
+
+static void test_input_mk_stack_reference(void) {
+  TinyBasicTestReset();
+  TinyBasicTestSetInput(7.0);
+  const int slot = TinyBasicTestAddProgram(
+    "10 INPUT .Y\n"
+    "20 A=.Y\n",
+    "INMK");
+  assert(slot >= 0);
+  TinyBasicTestRun(slot);
+  assert(std::fabs(TinyBasicTestNumber("A") - 7.0) < 0.000001);
+}
+
+static void test_mk_rf_requires_expanded_mode(void) {
+  TinyBasicTestReset();
+  int slot = TinyBasicTestAddProgram(
+    "10 .RF=1\n"
+    "20 END\n",
+    "BADRF");
+  assert(slot >= 0);
+  TinyBasicTestRun(slot);
+  assert(std::strcmp(TinyBasicTestError(), "WHAT?") == 0);
+
+  TinyBasicTestReset();
+  TinyBasicTestSetRfEnabled(true);
+  slot = TinyBasicTestAddProgram(
+    "10 .RF=-7\n"
+    "20 A=.RF\n",
+    "RF");
+  assert(slot >= 0);
+  TinyBasicTestRun(slot);
+  assert(std::fabs(TinyBasicTestMkRegister(15) + 7.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("A") + 7.0) < 0.000001);
+}
+
 int main(void) {
   test_compile_and_print();
   test_format_number();
   test_mk_math_dispatch();
+  test_mk_register_references();
+  test_input_mk_stack_reference();
+  test_mk_rf_requires_expanded_mode();
   test_if_and_goto();
   test_gosub();
   test_for_next();

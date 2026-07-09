@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const u8 G_RUS             = 0x05;
 static const u8 LCD_NOT_EQU_CHAR  = 0xB7;
 static const int KEY_LEFT = 34;
 static const int KEY_RIGHT = 24;
@@ -129,10 +128,13 @@ typedef enum {
   T  = 4
 } stack;
 
-u8 ringM[15 * 42 + 128];
+u8 ringM[16 * 42 + 128];
 
-static double host_stack_value[5];
-static double host_register_value[15];
+namespace mk61_ref {
+  double host_stack_value[5];
+  double host_register_value[16];
+  bool host_rf_enabled;
+}
 
 static void format_mk61_number(double value, char out[15]) {
   char sign = ' ';
@@ -191,17 +193,17 @@ namespace core_61 {
   usize program_steps(void) { return MAX_PROGRAM_STEP; }
 
   void get_stack_register(stack reg, bcd_value& value) {
-    value.mantissa = (u32) (host_stack_value[(int) reg] * 1000.0);
+    value.mantissa = (u32) (mk61_ref::host_stack_value[(int) reg] * 1000.0);
     value.signs_and_pow = 0;
   }
 
   void set_stack_register(stack reg, bcd_value* value) {
-    host_stack_value[(int) reg] = ((double) value->mantissa) / 1000.0;
+    mk61_ref::host_stack_value[(int) reg] = ((double) value->mantissa) / 1000.0;
   }
 }
 
 const char* read_stack_register(stack reg, char cvalue[15], const char*) {
-  format_mk61_number(host_stack_value[(int) reg], cvalue);
+  format_mk61_number(mk61_ref::host_stack_value[(int) reg], cvalue);
   return cvalue;
 }
 
@@ -210,19 +212,19 @@ void write_stack_register(stack reg, char sign, char cmantissa[8], isize pow10) 
   for(int i = 0; i < 8; i++) scaled = scaled * 10 + (cmantissa[i] - '0');
   double value = ((double) scaled) / 10000000.0 * pow(10.0, (double) pow10);
   if(sign == '-') value = -value;
-  host_stack_value[(int) reg] = value;
+  mk61_ref::host_stack_value[(int) reg] = value;
 }
 
 void MK61Emu_ReadRegister(int nReg, char* buffer, const char* symbols) {
   (void) symbols;
-  format_mk61_number(host_register_value[nReg], buffer);
+  format_mk61_number(mk61_ref::host_register_value[nReg], buffer);
 }
 
 void MK61Emu_WriteRegister(int nReg, char* buffer) {
   long scaled = 0;
   for(int i = 0; i < 8; i++) scaled = scaled * 10 + (buffer[i] - '0');
   int pow10 = (buffer[9] - '0') * 10 + (buffer[10] - '0');
-  host_register_value[nReg] = ((double) scaled) / 10000000.0 * pow(10.0, (double) pow10);
+  mk61_ref::host_register_value[nReg] = ((double) scaled) / 10000000.0 * pow(10.0, (double) pow10);
 }
 
 bool Load(usize) { return true; }
@@ -260,6 +262,10 @@ class class_menu {
 #endif
 
 #include "mk_math.hpp"
+#ifdef BASIC_HOST_TEST
+#define MK61_REF_HOST_TEST
+#endif
+#include "mk61_ref.hpp"
 
 #ifdef BASIC_HOST_TEST
 #define TEXT_EDITOR_HOST_TEST
@@ -274,10 +280,6 @@ extern MK61Display lcd;
 #ifndef BASIC_HOST_TEST
 extern void idle_main_process(void);
 #endif
-
-static const char basic_display_symbols[16] = {
-    'O', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', G_RUS, 'E', ' '
-};
 
 /*
    Cx,  Bx, MUL, DIV, NON,
@@ -436,13 +438,7 @@ enum class TargetKind : u8 {
   MK_REF
 };
 
-enum class MkRefKind : u8 {
-  X,
-  Y,
-  Z,
-  T,
-  R
-};
+using MkRefKind = mk61_ref::Kind;
 
 struct Token {
   TokenKind kind;
@@ -843,100 +839,20 @@ static int variable_index_from_name(const char* name) {
   return -1;
 }
 
-static stack stack_from_mk_ref(u8 mk_ref) {
-  switch((MkRefKind) mk_ref) {
-    case MkRefKind::X: return stack::X;
-    case MkRefKind::Y: return stack::Y;
-    case MkRefKind::Z: return stack::Z;
-    case MkRefKind::T: return stack::T;
-    case MkRefKind::R: break;
-  }
-  return stack::X;
+static bool read_mk_ref(u8 mk_ref, u8 mk_reg, double& value) {
+  const mk61_ref::Ref ref = {(MkRefKind) mk_ref, mk_reg};
+  return mk61_ref::read(ref, value);
 }
 
-static double parse_mk61_display_number(const char* value) {
-  char buffer[20];
-  char* out = buffer;
-  if(value[0] == '-') *out++ = '-';
-  for(int i = 1; i <= 9; i++) {
-    if(value[i] == ' ') continue;
-    *out++ = (value[i] == 'O') ? '0' : value[i];
-  }
-  *out++ = 'e';
-  *out++ = (value[11] == '-') ? '-' : '+';
-  *out++ = (value[12] == 'O') ? '0' : value[12];
-  *out++ = (value[13] == 'O') ? '0' : value[13];
-  *out = 0;
-  return mk_math::atof(buffer);
+static double read_mk_ref_value(u8 mk_ref, u8 mk_reg) {
+  double value = 0.0;
+  if(!read_mk_ref(mk_ref, mk_reg, value)) basic_error("mk ref?");
+  return value;
 }
 
-static double read_mk_ref(u8 mk_ref, u8 mk_reg) {
-  char value[15];
-  value[14] = 0;
-  if((MkRefKind) mk_ref == MkRefKind::R) {
-    MK61Emu_ReadRegister(mk_reg, value, basic_display_symbols);
-  } else {
-    read_stack_register(stack_from_mk_ref(mk_ref), value, basic_display_symbols);
-  }
-  return parse_mk61_display_number(value);
-}
-
-static void double_to_mk61_parts(double value, char& sign, char mantissa[8], isize& pow10) {
-  if(value < 0) {
-    sign = '-';
-    value = -value;
-  } else {
-    sign = ' ';
-  }
-
-  if(value == 0.0) {
-    memset(mantissa, '0', 8);
-    pow10 = 0;
-    return;
-  }
-
-  pow10 = (isize) mk_math::log10_floor(value);
-  double normalized = value / mk_math::pow10_int((int) pow10);
-  if(normalized >= 10.0) {
-    normalized /= 10.0;
-    pow10++;
-  }
-  if(normalized < 1.0) {
-    normalized *= 10.0;
-    pow10--;
-  }
-
-  long scaled = (long) mk_math::floor(normalized * 10000000.0 + 0.5);
-  if(scaled >= 100000000L) {
-    scaled /= 10;
-    pow10++;
-  }
-
-  for(int i = 7; i >= 0; i--) {
-    mantissa[i] = (char) ('0' + (scaled % 10));
-    scaled /= 10;
-  }
-}
-
-static void write_mk_ref(u8 mk_ref, u8 mk_reg, double value) {
-  char sign;
-  char mantissa[8];
-  isize pow10;
-  double_to_mk61_parts(value, sign, mantissa, pow10);
-
-  if((MkRefKind) mk_ref == MkRefKind::R) {
-    char buffer[12];
-    memcpy(buffer, mantissa, 8);
-    buffer[8] = ' ';
-    const isize bounded_pow = (pow10 < 0) ? -pow10 : pow10;
-    buffer[9] = (char) ('0' + ((bounded_pow / 10) % 10));
-    buffer[10] = (char) ('0' + (bounded_pow % 10));
-    buffer[11] = 0;
-    MK61Emu_WriteRegister(mk_reg, buffer);
-    return;
-  }
-
-  write_stack_register(stack_from_mk_ref(mk_ref), sign, mantissa, pow10);
+static bool write_mk_ref(u8 mk_ref, u8 mk_reg, double value) {
+  const mk61_ref::Ref ref = {(MkRefKind) mk_ref, mk_reg};
+  return mk61_ref::write(ref, value);
 }
 
 class Lexer {
@@ -1240,41 +1156,14 @@ class Parser {
 
       if(accept_symbol('.')) {
         if(lex.current().kind != TokenKind::IDENT) return ast_fail(out, ".ref?");
-        if(basic_streq(lex.current().text, "X")) {
-          target.kind = TargetKind::MK_REF;
-          target.mk_ref = (u8) MkRefKind::X;
-          lex.next();
-          return true;
-        }
-        if(basic_streq(lex.current().text, "Y")) {
-          target.kind = TargetKind::MK_REF;
-          target.mk_ref = (u8) MkRefKind::Y;
-          lex.next();
-          return true;
-        }
-        if(basic_streq(lex.current().text, "Z")) {
-          target.kind = TargetKind::MK_REF;
-          target.mk_ref = (u8) MkRefKind::Z;
-          lex.next();
-          return true;
-        }
-        if(basic_streq(lex.current().text, "T")) {
-          target.kind = TargetKind::MK_REF;
-          target.mk_ref = (u8) MkRefKind::T;
-          lex.next();
-          return true;
-        }
-        if(lex.current().text[0] == 'R') {
-          const int reg = HexdecimalDigit(lex.current().text[1]);
-          if(reg >= 0 && reg <= 0x0E && lex.current().text[2] == 0) {
-            target.kind = TargetKind::MK_REF;
-            target.mk_ref = (u8) MkRefKind::R;
-            target.mk_reg = (u8) reg;
-            lex.next();
-            return true;
-          }
-        }
-        return ast_fail(out, ".ref?");
+        mk61_ref::Ref ref;
+        if(!mk61_ref::parse_name(lex.current().text, ref)) return ast_fail(out, ".ref?");
+        if(ref.kind == MkRefKind::R && !mk61_ref::register_available(ref.reg)) return ast_fail(out, ".ref?");
+        target.kind = TargetKind::MK_REF;
+        target.mk_ref = (u8) ref.kind;
+        target.mk_reg = ref.reg;
+        lex.next();
+        return true;
       }
 
       if(lex.current().kind != TokenKind::IDENT) return false;
@@ -1622,26 +1511,20 @@ class Parser {
     }
 
     i16 parse_mk_ref_expr(void) {
-      BasicTarget target;
-      memset(&target, 0, sizeof(target));
       if(lex.current().kind != TokenKind::IDENT) {
         ast_fail(out, ".ref?");
         return -1;
       }
-      char name[BASIC_NAME_SIZE];
-      basic_copy_name(name, lex.current().text);
+      mk61_ref::Ref ref;
+      if(!mk61_ref::parse_name(lex.current().text, ref) ||
+         (ref.kind == MkRefKind::R && !mk61_ref::register_available(ref.reg))) {
+        ast_fail(out, ".ref?");
+        return -1;
+      }
       lex.next();
       const i16 node = ast_new_expr(out, ExprKind::MK_REF);
-      if(basic_streq(name, "X")) out.exprs[node].mk_ref = (u8) MkRefKind::X;
-      else if(basic_streq(name, "Y")) out.exprs[node].mk_ref = (u8) MkRefKind::Y;
-      else if(basic_streq(name, "Z")) out.exprs[node].mk_ref = (u8) MkRefKind::Z;
-      else if(basic_streq(name, "T")) out.exprs[node].mk_ref = (u8) MkRefKind::T;
-      else if(name[0] == 'R' && name[2] == 0 && HexdecimalDigit(name[1]) >= 0) {
-        out.exprs[node].mk_ref = (u8) MkRefKind::R;
-        out.exprs[node].mk_reg = (u8) HexdecimalDigit(name[1]);
-      } else {
-        ast_fail(out, ".ref?");
-      }
+      out.exprs[node].mk_ref = (u8) ref.kind;
+      out.exprs[node].mk_reg = ref.reg;
       return node;
     }
 
@@ -2080,7 +1963,7 @@ static double run_basic_function_call(int program) {
   ast_call_stack[ast_call_sp++] = ast;
   RunBasic(program);
   ast = ast_call_stack[--ast_call_sp];
-  return read_mk_ref((u8) MkRefKind::X, 0);
+  return read_mk_ref_value((u8) MkRefKind::X, 0);
 }
 
 static double eval_number(i16 expr_id) {
@@ -2110,9 +1993,16 @@ static bool eval_expr(i16 expr_id, BasicValue& value) {
     case ExprKind::STR_VAR:
       value = make_string(string_vars[e.var_index]);
       return true;
-    case ExprKind::MK_REF:
-      value = make_number(read_mk_ref(e.mk_ref, e.mk_reg));
+    case ExprKind::MK_REF: {
+      double number = 0.0;
+      if(!read_mk_ref(e.mk_ref, e.mk_reg, number)) {
+        basic_error("mk ref?");
+        value = make_number(0);
+        return false;
+      }
+      value = make_number(number);
       return true;
+    }
     case ExprKind::UNARY:
       value = make_number(e.op == BasicOp::NOT ? !basic_truth(eval_number(e.left)) : -eval_number(e.left));
       return true;
@@ -2180,13 +2070,13 @@ static bool eval_expr(i16 expr_id, BasicValue& value) {
     return true;
   }
 
-  value = make_number(read_mk_ref((u8) MkRefKind::X, 0));
+  value = make_number(read_mk_ref_value((u8) MkRefKind::X, 0));
   return true;
 }
 
 static void assign_number_target(const BasicStmt& stmt, double value) {
   if((TargetKind) stmt.target_kind == TargetKind::MK_REF) {
-    write_mk_ref(stmt.mk_ref, stmt.mk_reg, value);
+    if(!write_mk_ref(stmt.mk_ref, stmt.mk_reg, value)) basic_error("mk ref?");
     return;
   }
   numeric_vars[stmt.var_index] = value;
@@ -2877,8 +2767,7 @@ extern "C" void BasicTestReset(void) {
   lcd.clear();
   ast_call_sp = 0;
   #ifdef BASIC_HOST_TEST
-    memset(host_stack_value, 0, sizeof(host_stack_value));
-    memset(host_register_value, 0, sizeof(host_register_value));
+    mk61_ref::host_reset();
     memset(ringM, 0, sizeof(ringM));
   #endif
 }
@@ -2951,7 +2840,15 @@ extern "C" const char* BasicTestLcdLine(int row) {
 }
 
 extern "C" double BasicTestMkX(void) {
-  return read_mk_ref((u8) MkRefKind::X, 0);
+  return read_mk_ref_value((u8) MkRefKind::X, 0);
+}
+
+extern "C" double BasicTestMkRegister(int reg) {
+  return reg >= 0 && reg < 16 ? mk61_ref::host_get_register((u8) reg) : 0.0;
+}
+
+extern "C" void BasicTestSetRfEnabled(bool enabled) {
+  mk61_ref::host_set_rf_enabled(enabled);
 }
 
 extern "C" bool BasicTestStepAssigned(int step) {

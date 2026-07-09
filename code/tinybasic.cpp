@@ -26,6 +26,20 @@ static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
 static const int KEY_ESC_PRESS = KEY_ESC;
 
+typedef enum {
+  X1 = 0,
+  X  = 1,
+  Y  = 2,
+  Z  = 3,
+  T  = 4
+} stack;
+
+namespace mk61_ref {
+  double host_stack_value[5];
+  double host_register_value[16];
+  bool host_rf_enabled;
+}
+
 class MK61Display {
   public:
     static constexpr u8 MAX_ROWS = 8;
@@ -119,6 +133,10 @@ namespace library_mk61 {
 #endif
 
 #include "mk_math.hpp"
+#ifdef TINYBASIC_HOST_TEST
+#define MK61_REF_HOST_TEST
+#endif
+#include "mk61_ref.hpp"
 
 #ifdef TINYBASIC_HOST_TEST
 #define TEXT_EDITOR_HOST_TEST
@@ -215,6 +233,17 @@ struct TbWord {
   char text[12];
   bool dotted;
   const char* end;
+};
+
+enum class TbTargetKind : u8 {
+  VAR,
+  MK_REF
+};
+
+struct TbTarget {
+  TbTargetKind kind;
+  int var_index;
+  mk61_ref::Ref mk_ref;
 };
 
 struct TinyBasicRuntime {
@@ -510,6 +539,56 @@ static bool tb_word_matches(const TbWord& word, const char* full, u8 min_abbrev)
   return true;
 }
 
+static bool tb_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref& ref) {
+  p = tb_skip_spaces(p);
+  if(p >= end || *p != '.') return false;
+  const char* cursor = p + 1;
+  if(cursor >= end || !tb_is_alpha(*cursor)) return false;
+
+  char name[4];
+  u8 len = 0;
+  while(cursor < end && (tb_is_alpha(*cursor) || tb_is_digit(*cursor))) {
+    if(len < sizeof(name) - 1) name[len++] = tb_upper(*cursor);
+    cursor++;
+  }
+  name[len] = 0;
+
+  if(!mk61_ref::parse_name(name, ref)) return false;
+  if(ref.kind == mk61_ref::Kind::R && !mk61_ref::register_available(ref.reg)) return false;
+  p = cursor;
+  return true;
+}
+
+static bool tb_parse_target_token(const char*& p, const char* end, TbTarget& target) {
+  p = tb_skip_spaces(p);
+  if(p >= end) return false;
+
+  mk61_ref::Ref ref;
+  if(*p == '.') {
+    if(!tb_parse_mk_ref_token(p, end, ref)) return false;
+    target.kind = TbTargetKind::MK_REF;
+    target.var_index = -1;
+    target.mk_ref = ref;
+    return true;
+  }
+
+  if(!tb_is_alpha(*p)) return false;
+  const int var = tb_upper(*p++) - 'A';
+  if(var < 0 || var >= 26) return false;
+  target.kind = TbTargetKind::VAR;
+  target.var_index = var;
+  target.mk_ref = {mk61_ref::Kind::X, 0};
+  return true;
+}
+
+static bool tb_write_target(const TbTarget& target, double value) {
+  if(target.kind == TbTargetKind::VAR) {
+    tb_vars[target.var_index] = value;
+    return true;
+  }
+  return mk61_ref::write(target.mk_ref, value);
+}
+
 static bool tb_parse_command_word(const char*& p, TbCommand& command) {
   TbWord word;
   if(!tb_read_word(p, word)) return false;
@@ -686,6 +765,20 @@ class TbExprParser {
       if(match_char('(')) {
         const double value = parse_compare();
         if(!match_char(')')) ok = false;
+        return value;
+      }
+
+      if(*p == '.' && p + 1 < end && tb_is_alpha(*(p + 1))) {
+        mk61_ref::Ref ref;
+        if(!tb_parse_mk_ref_token(p, end, ref)) {
+          ok = false;
+          return 0.0;
+        }
+        double value = 0.0;
+        if(!mk61_ref::read(ref, value)) {
+          ok = false;
+          return 0.0;
+        }
         return value;
       }
 
@@ -912,13 +1005,20 @@ static bool tb_execute_command_list(const char* begin, const char* end, i16 curr
 
 static bool tb_execute_assignment(const char* begin, const char* end) {
   const char* p = tb_skip_spaces(begin);
-  if(!tb_is_alpha(*p)) return tb_error("WHAT?");
-  int var = tb_upper(*p++) - 'A';
-  if(var < 0 || var >= 26) return tb_error("WHAT?");
+  TbTarget target;
+  if(!tb_parse_target_token(p, end, target)) return tb_error("WHAT?");
   p = tb_skip_spaces(p);
   if(*p != '=') return tb_error("WHAT?");
   p++;
 
+  if(target.kind == TbTargetKind::MK_REF) {
+    double value = 0.0;
+    if(!tb_eval_expr_range(p, end, value)) return tb_error("HOW?");
+    if(!tb_write_target(target, value)) return tb_error("HOW?");
+    return true;
+  }
+
+  int var = target.var_index;
   while(true) {
     const char* item_end = tb_find_top_level(p, end, ',');
     if(item_end == NULL) item_end = end;
@@ -993,14 +1093,12 @@ static bool tb_execute_input(const char* begin, const char* end) {
       if(p >= end) return tb_error("WHAT?");
       tb_copy_trim(prompt, sizeof(prompt), text_begin, p);
       p++;
-    } else if(tb_is_alpha(*p)) {
-      const int var = tb_upper(*p++) - 'A';
-      if(var < 0 || var >= 26) return tb_error("WHAT?");
-      tb_vars[var] = tb_read_number_from_keyboard(prompt);
+    } else {
+      TbTarget target;
+      if(!tb_parse_target_token(p, end, target)) return tb_error("WHAT?");
+      if(!tb_write_target(target, tb_read_number_from_keyboard(prompt))) return tb_error("HOW?");
       prompt[0] = ':';
       prompt[1] = 0;
-    } else {
-      return tb_error("WHAT?");
     }
 
     p = tb_skip_spaces(p);
@@ -1699,6 +1797,9 @@ bool TinyBASIC_menu_select(void) {
 extern "C" void TinyBasicTestReset(void) {
   InitTinyBasic();
   lcd.clear();
+#ifdef TINYBASIC_HOST_TEST
+  mk61_ref::host_reset();
+#endif
 }
 
 extern "C" bool TinyBasicTestCompile(const char* source) {
@@ -1735,6 +1836,18 @@ extern "C" double TinyBasicTestNumber(const char* name) {
   if(name == NULL || name[0] == 0) return 0.0;
   const int idx = tb_upper(name[0]) - 'A';
   return (idx < 0 || idx >= 26) ? 0.0 : tb_vars[idx];
+}
+
+extern "C" double TinyBasicTestMkX(void) {
+  return mk61_ref::host_get_stack(mk61_ref::Kind::X);
+}
+
+extern "C" double TinyBasicTestMkRegister(int reg) {
+  return reg >= 0 && reg < 16 ? mk61_ref::host_get_register((u8) reg) : 0.0;
+}
+
+extern "C" void TinyBasicTestSetRfEnabled(bool enabled) {
+  mk61_ref::host_set_rf_enabled(enabled);
 }
 
 extern "C" const char* TinyBasicTestLcdLine(int row) {
