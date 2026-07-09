@@ -26,6 +26,10 @@ static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
 static const int KEY_ESC_PRESS = KEY_ESC;
 
+namespace lcd_display {
+  static constexpr u8 COLS = 16;
+}
+
 typedef enum {
   X1 = 0,
   X  = 1,
@@ -90,6 +94,7 @@ namespace kbd {
   isize scan_and_debounced(void) { return 0; }
   i32 get_key(key_state) { return -1; }
   i32 get_key_wait(void) { return KEY_OK; }
+  bool is_key_pressed(i32) { return false; }
 }
 
 static u32 tinybasic_host_millis;
@@ -1550,32 +1555,46 @@ static bool tb_confirm_save(void) {
   }
 }
 
-static bool tb_name_insert_char(char* name, u8& len, char ch) {
+static bool tb_name_insert_char(char* name, u16& len, u16& cursor, char ch) {
   if(ch == ' ') return false;
-  if(len >= TB_NAME_SIZE - 1) return false;
-  name[len++] = tb_upper(ch);
-  name[len] = 0;
-  return true;
+  char text[2] = {tb_upper(ch), 0};
+  return text_editor::insert_text(name, len, cursor, TB_NAME_SIZE, text);
+}
+
+static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
+  const u16 len = (u16) strlen(name);
+  if(cursor > len) cursor = len;
+  const u16 window = (cursor > lcd_display::COLS - 2) ? (u16) (cursor - (lcd_display::COLS - 2)) : 0;
+  char line[17];
+  line[0] = '>';
+  u8 pos = 1;
+  while(pos < lcd_display::COLS && name[window + pos - 1] != 0) {
+    line[pos] = name[window + pos - 1];
+    pos++;
+  }
+  while(pos < lcd_display::COLS) line[pos++] = ' ';
+  line[lcd_display::COLS] = 0;
+  tb_message_i18n("TinyBASIC name", "Имя", line, line);
+
+  MK61DisplayUpdate update(lcd);
+  const u8 cursor_col = (u8) (1 + cursor - window);
+  lcd.setCursor(cursor_col, 1);
+  if(lcd.supportsCursor()) lcd.cursorOn();
+  else lcd.write(sms_cursor ? text_editor::SMS_CURSOR_ASCII : text_editor::CURSOR_ASCII);
 }
 
 static bool tb_input_program_name(char* name, usize size) {
   if(size == 0) return false;
   name[size - 1] = 0;
-  u8 len = (u8) strlen(name);
+  u16 len = (u16) strlen(name);
+  if(len >= size) len = (u16) size - 1;
+  u16 cursor = len;
   text_editor::SmsState sms = {};
   text_editor::Shift shift = text_editor::Shift::NONE;
   while(true) {
     const u32 now = millis();
     if(sms.active && now >= sms.deadline_ms) text_editor::sms_reset(sms);
-    char line[17];
-    snprintf(line, sizeof(line), ">%s", name);
-    tb_message_i18n("TinyBASIC name", "Имя", line, line);
-    if(sms.active) {
-      MK61DisplayUpdate update(lcd);
-      const u8 pos = (u8) strlen(line);
-      lcd.setCursor(pos < 16 ? pos : 15, 1);
-      lcd.write(text_editor::SMS_CURSOR_ASCII);
-    }
+    tb_draw_name_editor(name, cursor, sms.active);
     const i32 key = kbd::get_key_wait();
     const bool shifted = shift != text_editor::Shift::NONE;
     if(!shifted && (key == KEY_K || key == KEY_ALPHA)) {
@@ -1585,57 +1604,76 @@ static bool tb_input_program_name(char* name, usize size) {
     }
     if(!shifted && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
     if(!shifted && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
+    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+        (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(sms);
+      text_editor::backspace(name, len, cursor);
+      shift = text_editor::Shift::NONE;
+      continue;
+    }
     if(!shifted && key == KEY_DEGREE) {
       text_editor::sms_reset(sms);
-      if(len > 0) name[--len] = 0;
+      text_editor::backspace(name, len, cursor);
+      continue;
+    }
+    if(!shifted && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
+      text_editor::sms_reset(sms);
+      text_editor::move_cursor_left(name, cursor);
+      continue;
+    }
+    if(!shifted && (key == KEY_RIGHT || key == KEY_RIGHT_PRESS)) {
+      text_editor::sms_reset(sms);
+      text_editor::move_cursor_right(name, len, cursor);
       continue;
     }
     if(!shifted && key == 0) {
       text_editor::sms_reset(sms);
       len = 0;
+      cursor = 0;
       name[0] = 0;
       continue;
     }
+
     const int digit = text_editor::digit_from_key(key);
     if(shift == text_editor::Shift::ALPHA && digit >= 0) {
       const char* symbol = text_editor::symbol_for_digit_key(key);
-      if(symbol != NULL && symbol[0] != 0) tb_name_insert_char(name, len, symbol[0]);
+      if(symbol != NULL && symbol[0] != 0) tb_name_insert_char(name, len, cursor, symbol[0]);
       shift = text_editor::Shift::NONE;
       text_editor::sms_reset(sms);
       continue;
     }
     const char* letters = text_editor::sms_letters_for_key(key);
     if(letters != NULL) {
-      if(sms.active && sms.key_code == key && len > 0) {
+      if(sms.active && sms.key_code == key && cursor > 0) {
         const usize count = strlen(letters);
         sms.index = (u8) ((sms.index + 1) % count);
-        name[len - 1] = letters[sms.index];
+        name[cursor - 1] = letters[sms.index];
         sms.deadline_ms = now + text_editor::SMS_INPUT_TIMEOUT_MS;
       } else {
         sms.active = true;
         sms.key_code = key;
         sms.index = 0;
         sms.deadline_ms = now + text_editor::SMS_INPUT_TIMEOUT_MS;
-        tb_name_insert_char(name, len, letters[0]);
+        tb_name_insert_char(name, len, cursor, letters[0]);
       }
       shift = text_editor::Shift::NONE;
       continue;
     }
     if(text_editor::sms_key_is_space(key)) {
       text_editor::sms_reset(sms);
-      tb_name_insert_char(name, len, ' ');
+      tb_name_insert_char(name, len, cursor, ' ');
       shift = text_editor::Shift::NONE;
       continue;
     }
     if(digit == 0 || key == KEY_PP) {
       text_editor::sms_reset(sms);
-      tb_name_insert_char(name, len, '0');
+      tb_name_insert_char(name, len, cursor, '0');
       shift = text_editor::Shift::NONE;
       continue;
     }
     if(digit == 1) {
       text_editor::sms_reset(sms);
-      tb_name_insert_char(name, len, '1');
+      tb_name_insert_char(name, len, cursor, '1');
       shift = text_editor::Shift::NONE;
       continue;
     }

@@ -27,9 +27,17 @@ static inline bool time_reached(t_time_ms now, t_time_ms target) {
 
 namespace led {
 
+static inline u8 active_level(void) {
+  return PIN_LED_ACTIVE_LOW ? LOW : HIGH;
+}
+
+static inline u8 inactive_level(void) {
+  return active_level() == HIGH ? LOW : HIGH;
+}
+
 void init(void) {
   pinMode(PIN_LED, OUTPUT);
-  digitalWrite(PIN_LED, LOW);
+  digitalWrite(PIN_LED, inactive_level());
   blink_state = {};
 }
 
@@ -85,11 +93,11 @@ void control(t_time_ms now) {
 }
 
 void on(void) {
-  digitalWrite(PIN_LED, HIGH);
+  digitalWrite(PIN_LED, active_level());
 }
 
 void off(void) {
-  digitalWrite(PIN_LED, LOW);
+  digitalWrite(PIN_LED, inactive_level());
 }
 
 void blink(usize count, t_time_ms on_ms, t_time_ms off_ms) {

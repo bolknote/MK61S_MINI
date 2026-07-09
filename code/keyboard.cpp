@@ -21,6 +21,7 @@ static constexpr usize      KEY_CLICK_MS      =   8;
 static constexpr usize      KEY_CLICK_VOLUME_PERCENT = 35;
 
 extern void idle_main_process(void);
+extern void idle_signal_reset(void);
 extern void event_hold_key(i32 holded_key, i32 hold_quant);
 extern void event_unhold_key(i32 unholded_key, i32 hold_quant);
 
@@ -209,6 +210,14 @@ bool any_key_pressed(void) {
   return false;
 }
 
+bool is_key_pressed(i32 key_code) {
+  if(key_code < 0 || key_code >= (i32) KEY_IN_KEYBOARD) return false;
+  const usize code = (usize) key_code;
+  const usize row = code % KEY_IN_ROW;
+  const usize column = code / KEY_IN_ROW;
+  return (RowArray[row].now & (u8) (1u << column)) != 0;
+}
+
 void  exclude_before(i32 before_key) { // убрать все коды клавиш в том числе before_key, из очереди клавиатуры
   i32 exclude_key;
   do {
@@ -304,6 +313,7 @@ isize scan(void) {
   cir_buff_write(scan_code);
 
   if(state == 0) {
+    idle_signal_reset();
   // было нажатие, принимаем на удержание клавишу (учет только одного последнего удержания)
     hold_quant_counter  =   -1;
     holded_scan_code    =   scan_code;

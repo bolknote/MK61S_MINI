@@ -801,17 +801,26 @@ static void delete_entry(const program_store::Entry& entry) {
   delay(700);
 }
 
-static void draw_rename_editor(const char* name) {
+static void draw_rename_editor(const char* name, u16 cursor) {
   MK61DisplayUpdate update(lcd);
   lcd.clear();
   print_localized_line(0, "Rename", "Имя файла");
 
+  const usize len = strlen(name);
+  if(cursor > len) cursor = (u16) len;
+  const u16 window = (cursor > lcd_display::COLS - 2) ? (u16) (cursor - (lcd_display::COLS - 2)) : 0;
   char line[18];
-  snprintf(line, sizeof(line), ">%s", name);
+  line[0] = '>';
+  u8 pos = 1;
+  while(pos < lcd_display::COLS && name[window + pos - 1] != 0) {
+    line[pos] = name[window + pos - 1];
+    pos++;
+  }
+  while(pos < lcd_display::COLS) line[pos++] = ' ';
+  line[lcd_display::COLS] = 0;
   print_line(1, line);
 
-  const usize len = strlen(name);
-  const u8 cursor_col = (len + 1 < lcd_display::COLS) ? (u8) (len + 1) : (u8) (lcd_display::COLS - 1);
+  const u8 cursor_col = (u8) (1 + cursor - window);
   lcd.setCursor(cursor_col, 1);
   lcd.cursorOn();
 }
@@ -835,12 +844,11 @@ static bool input_entry_name(char* name) {
   while(true) {
     const u32 draw_now = millis();
     if(sms.active && draw_now >= sms.deadline_ms) text_editor::sms_reset(sms);
-    draw_rename_editor(name);
+    draw_rename_editor(name, cursor);
 
     const i32 key = kbd::get_key_wait();
     const u32 key_now = millis();
     if(sms.active && key_now >= sms.deadline_ms) text_editor::sms_reset(sms);
-    cursor = len;
     const bool shifted_key = shift != text_editor::Shift::NONE;
 
     if(!shifted_key && (key == KEY_K || key == KEY_ALPHA)) {
@@ -850,9 +858,26 @@ static bool input_entry_name(char* name) {
     }
     if(!shifted_key && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
     if(!shifted_key && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
+    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+        (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(sms);
+      text_editor::backspace(name, len, cursor);
+      shift = text_editor::Shift::NONE;
+      continue;
+    }
     if(!shifted_key && key == KEY_DEGREE) {
       text_editor::sms_reset(sms);
       text_editor::backspace(name, len, cursor);
+      continue;
+    }
+    if(!shifted_key && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
+      text_editor::sms_reset(sms);
+      text_editor::move_cursor_left(name, cursor);
+      continue;
+    }
+    if(!shifted_key && (key == KEY_RIGHT || key == KEY_RIGHT_PRESS)) {
+      text_editor::sms_reset(sms);
+      text_editor::move_cursor_right(name, len, cursor);
       continue;
     }
     if(!shifted_key && key == 0) {
@@ -860,13 +885,6 @@ static bool input_entry_name(char* name) {
       len = 0;
       cursor = 0;
       name[0] = 0;
-      continue;
-    }
-
-    if(shift == text_editor::Shift::ALPHA && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
-      text_editor::sms_reset(sms);
-      text_editor::backspace(name, len, cursor);
-      shift = text_editor::Shift::NONE;
       continue;
     }
 

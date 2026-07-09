@@ -110,17 +110,19 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
   { "run",     CMD_RUN,           "run [name] - run program / stored file" },
   { "open",    CMD_OPEN,          "open <name> - run stored file" },
-  { "save",    CMD_SAVE,          "save <slot> - store program (Y/y)" },
-  { "load",    CMD_LOAD,          "load <slot> - load program" },
-  { "smap",    CMD_SMAP,          "slot occupancy map" },
-  { "sdir",    CMD_DIR,           "list of occupied slots" },
+  { "save",    CMD_SAVE,          "save <slot|name.m61> - store program (Y/y)" },
+  { "load",    CMD_LOAD,          "load <slot|name.m61> - load program" },
+  { "dir",     CMD_FS_LIST,       "list files in program store" },
+  { "del",     CMD_FS_REMOVE,     "del <name[.m61]|name.ext> - delete stored file" },
+  { "smap",    CMD_SMAP,          "numeric M1 slot occupancy map" },
+  { "sdir",    CMD_DIR,           "list numeric M1 slots" },
   { "snm",     CMD_RENAME,        "snm <slot> <name> - rename slot" },
-  { "sdel",    CMD_DEL_SLOT,      "sdel <slot> - erase slot (Y/y)" },
+  { "sdel",    CMD_DEL_SLOT,      "sdel <slot> - delete numeric M1 slot (Y/y)" },
   { "sera",    CMD_ERASE_STORAGE, "erase all slots (Y/y)" },
   { "clr",     CMD_CLEAR,         "clear program memory (Y/y)" },
   { "vlog",    CMD_VFAT_LOG,      "dump virtual FAT trace log" },
-  { "fsls",    CMD_FS_LIST,       "list files in program store" },
-  { "fsrm",    CMD_FS_REMOVE,     "fsrm <name.ext> - delete stored file" },
+  { "fsls",    CMD_FS_LIST,       "alias for dir" },
+  { "fsrm",    CMD_FS_REMOVE,     "alias for del" },
   { "fsclean", CMD_FS_CLEAN,      "remove all zero-length store entries" },
   { "disa",    CMD_DISASM,        "toggle disassembler on display" },
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
@@ -235,6 +237,79 @@ static bool terminal_split_fs_name(const char* args, char* name_out, program_sto
   return false;
 }
 
+static const char* terminal_skip_spaces(const char* p) {
+  while(p != NULL && (*p == ' ' || *p == '\t')) p++;
+  return p;
+}
+
+static bool terminal_arg_end(const char* p) {
+  p = terminal_skip_spaces(p);
+  return p == NULL || *p == 0 || *p == '\r' || *p == '\n';
+}
+
+static bool terminal_parse_slot_arg(const char* args, usize& slot_out) {
+  args = terminal_skip_spaces(args);
+  if(args == NULL || *args < '0' || *args > '9') return false;
+
+  usize slot = 0;
+  const char* p = args;
+  while(*p >= '0' && *p <= '9') {
+    slot = slot * 10 + (usize) (*p - '0');
+    if(slot > MAX_SLOT_FOR_PROGRAM) return false;
+    p++;
+  }
+  if(!terminal_arg_end(p)) return false;
+  slot_out = slot;
+  return true;
+}
+
+static bool terminal_copy_arg(char* out, usize capacity, const char* args) {
+  args = terminal_skip_spaces(args);
+  if(out == NULL || capacity == 0 || args == NULL) return false;
+  usize len = 0;
+  while(args[len] != 0 && args[len] != '\r' && args[len] != '\n') len++;
+  while(len > 0 && (args[len - 1] == ' ' || args[len - 1] == '\t')) len--;
+  if(len == 0 || len >= capacity) return false;
+  memcpy(out, args, len);
+  out[len] = 0;
+  return true;
+}
+
+static bool terminal_strip_suffix_ci(char* text, const char* suffix) {
+  const usize text_len = strlen(text);
+  const usize suffix_len = strlen(suffix);
+  if(suffix_len > text_len) return false;
+  char* tail = text + text_len - suffix_len;
+  for(usize i = 0; i < suffix_len; i++) {
+    char a = tail[i];
+    char b = suffix[i];
+    if(a >= 'A' && a <= 'Z') a = (char) (a - 'A' + 'a');
+    if(b >= 'A' && b <= 'Z') b = (char) (b - 'A' + 'a');
+    if(a != b) return false;
+  }
+  *tail = 0;
+  return true;
+}
+
+static bool terminal_copy_mk61_name(const char* args, char* name_out) {
+  char name[program_store::NAME_SIZE + 5];
+  if(!terminal_copy_arg(name, sizeof(name), args)) return false;
+  (void) terminal_strip_suffix_ci(name, ".m61");
+  if(name[0] == 0 || strlen(name) >= program_store::NAME_SIZE) return false;
+  strncpy(name_out, name, program_store::NAME_SIZE - 1);
+  name_out[program_store::NAME_SIZE - 1] = 0;
+  return true;
+}
+
+static bool terminal_split_fs_name_or_mk61(const char* args, char* name_out, program_store::ProgramType& type_out) {
+  char trimmed[program_store::NAME_SIZE + 16];
+  if(!terminal_copy_arg(trimmed, sizeof(trimmed), args)) return false;
+  if(terminal_split_fs_name(trimmed, name_out, type_out)) return true;
+  if(!terminal_copy_mk61_name(trimmed, name_out)) return false;
+  type_out = program_store::ProgramType::MK61;
+  return true;
+}
+
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 static u8 terminal_command_lookup(const u8* line) {
   usize len = 0;
@@ -298,6 +373,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     isize   nSlot;
     bool    input_overflow;
     const char* script_args_ptr;
+    char    pending_save_name[program_store::NAME_SIZE];
 
     // Аргументы скриптового действия переживают восстановление input_buffer:
     // script_args_ptr указывает внутрь буфера строки, поэтому перед возвратом
@@ -617,6 +693,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       nSlot                 = -1;
       input_overflow        = false;
       script_args_ptr       = "";
+      pending_save_name[0]  = 0;
     }
 
     // История и редактор строки общие (static): сбрасываются только при
@@ -896,7 +973,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print("     0  1  2  3  4  5  6  7  8  9\r\n0 - ");
       usize slot = 0;
       do { // пробежим все слоты от 0 до 99
-        if(load_word(slot * FLASH_SECTOR_SIZE, OFFSET_FLAG_OCCUPIED) == SLOT_OCCUPIED) 
+        if(IsOccupied(slot))
           Serial.print("[X]");
         else
           Serial.print("[ ]");
@@ -1272,11 +1349,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 confirmed = true;
               break;
             case  CMD_DEL_SLOT:
-                if(!erase_slot(nSlot)) Serial.println("Error: address out of range!");
+                if(!DeleteSlot(nSlot)) Serial.println("Delete failed (no such file?)");
                 confirmed = true;
               break;
             case  CMD_SAVE:
-                if(!Store(nSlot)) Serial.println("Failed save attempt!");
+                if(pending_save_name[0] != 0) {
+                  if(!StoreProgram(pending_save_name)) Serial.println("Failed save attempt!");
+                } else {
+                  if(!Store(nSlot)) Serial.println("Failed save attempt!");
+                }
                 confirmed = true;
               break;
             case  CMD_ERASE_STORAGE:
@@ -1287,6 +1368,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           if(script_mode && confirmed) {
             terminal_last_cmd = 0;
             recive_pos = 0;
+            pending_save_name[0] = 0;
             return -1;
           }
         }
@@ -1352,15 +1434,39 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_DISASM:  // включить/выключить режим верхней строки с дизассемблером МК61
               config.disassm = disassembler.turn_on_off();
             break;
-          case  CMD_SAVE: 
-              nSlot = parse_dec_numeric((char*) &input_buffer[5]);
+          case  CMD_SAVE: {
+              const char* args = command_args();
+              usize slot = 0;
+              pending_save_name[0] = 0;
+              if(terminal_parse_slot_arg(args, slot)) {
+                nSlot = (isize) slot;
+              } else if(terminal_copy_mk61_name(args, pending_save_name)) {
+                nSlot = -1;
+              } else {
+                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
+                Serial.println("Usage: save <slot|name[.m61]>");
+                break;
+              }
               Serial.println("Enter Y/y to confirm the operation!");
+            }
             break;
           case  CMD_LOAD: {
-              // В скрипте слот выполняется вложенно (Load() отменил бы сценарий).
-              if(script_mode) return script_action(SCRIPT_LOAD_SLOT, (const char*) &input_buffer[4]);
-              const isize nSlot = parse_dec_numeric((char*) &input_buffer[5]);
-              if(!Load(nSlot)) Serial.println("Failed load attempt!");
+              const char* args = command_args();
+              usize slot = 0;
+              if(terminal_parse_slot_arg(args, slot)) {
+                // В скрипте слот выполняется вложенно (Load() отменил бы сценарий).
+                if(script_mode) return script_action(SCRIPT_LOAD_SLOT, args);
+                if(!Load(slot)) Serial.println("Failed load attempt!");
+              } else {
+                char name[program_store::NAME_SIZE];
+                if(!terminal_copy_mk61_name(args, name)) {
+                  if(script_mode) return SCRIPT_COMMAND_ERROR;
+                  Serial.println("Usage: load <slot|name[.m61]>");
+                  break;
+                }
+                if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
+                if(!LoadProgram(name)) Serial.println("Failed load attempt!");
+              }
             }
             break;
           case  CMD_PUB:
@@ -1468,15 +1574,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 }
               }
               Serial.print(total); Serial.print(" of "); Serial.print(program_store::MAX_ENTRIES); Serial.println(" entries used.");
-            }
+          }
             break;
           case  CMD_FS_REMOVE: {
-              const char* args = (const char*) &input_buffer[4];
-              while(*args == ' ') args++;
+              const char* args = command_args();
               program_store::ProgramType type;
               char fs_name[program_store::NAME_SIZE];
-              if(!terminal_split_fs_name(args, fs_name, type)) {
-                Serial.println("Usage: fsrm <name.ext> (ext: M61 BAS FOC TBI T1 M2)");
+              if(!terminal_split_fs_name_or_mk61(args, fs_name, type)) {
+                Serial.println("Usage: del <name[.m61]|name.ext> (ext: M61 BAS FOC TBI T1 M2)");
                 break;
               }
               if(!program_store::remove(type, fs_name)) Serial.println("Delete failed (no such file?)");
@@ -1535,7 +1640,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 break;
               }
               nSlot = parse_dec_numeric((char*) &input_buffer[5]);
-              Serial.print("\n\rClear slot #"); Serial.println(nSlot);
+              Serial.print("\n\rDelete slot #"); Serial.println(nSlot);
               if(nSlot < 0 || nSlot > 99) {
                  Serial.println("Error: is out of range 0..99 !");
                 break;

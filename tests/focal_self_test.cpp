@@ -19,6 +19,10 @@ extern "C" double FocalTestMkRegister(int reg);
 extern "C" void FocalTestSetRfEnabled(bool enabled);
 extern "C" const char* FocalTestLcdLine(int row);
 extern "C" const char* FocalTestError(void);
+extern "C" void FocalTestSetAlphaHeld(bool held);
+extern "C" bool FocalTestStoreDraft(const char* source, const char* name);
+extern "C" const char* FocalTestProgramName(int slot);
+extern "C" const char* FocalTestProgramSource(int slot);
 extern "C" void FocalTestDrawNewEditor(const char* source, int cursor);
 extern "C" void FocalTestDrawNewEditorSms(const char* source, int cursor);
 extern "C" void FocalTestSetLcdRows(int rows);
@@ -364,9 +368,23 @@ static void test_editor_backspace_is_f_left(void) {
   FocalTestEditSequence(f_left, (int) (sizeof(f_left) / sizeof(f_left[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1") == 0);
 
+  FocalTestSetAlphaHeld(true);
+  const int held_f_left[] = {21, 20, 16, 34, 34};
+  FocalTestEditSequence(held_f_left, (int) (sizeof(held_f_left) / sizeof(held_f_left[0])), out, sizeof(out));
+  FocalTestSetAlphaHeld(false);
+  CHECK(std::strcmp(out, "1") == 0);
+
   const int degree_is_not_backspace[] = {21, 20, 4};
   FocalTestEditSequence(degree_is_not_backspace, (int) (sizeof(degree_is_not_backspace) / sizeof(degree_is_not_backspace[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "10 GOTO ") == 0);
+}
+
+static void test_editor_save_keeps_invalid_draft(void) {
+  FocalTestReset();
+  CHECK(!FocalTestCompile("BROKEN"));
+  CHECK(FocalTestStoreDraft("BROKEN", "DRAFT"));
+  CHECK(std::strcmp(FocalTestProgramName(0), "DRAFT") == 0);
+  CHECK(std::strcmp(FocalTestProgramSource(0), "BROKEN") == 0);
 }
 
 static void test_editor_draws_cursor(void) {
@@ -456,6 +474,7 @@ int main(void) {
   test_editor_digit_symbol_and_sms_input();
   test_editor_operator_keys_insert_full_names();
   test_editor_backspace_is_f_left();
+  test_editor_save_keeps_invalid_draft();
   test_editor_draws_cursor();
   test_editor_draws_visible_program_lines();
   test_editor_two_line_viewport_scrolls_like_a00();

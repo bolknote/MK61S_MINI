@@ -121,6 +121,7 @@ extern  char* ReadSlotName(usize nSlot, char* slot_name);
 extern  bool  Rename(usize nSlot, char* slot_name);
 extern  bool  Store(void);
 extern  bool  Store(usize nSlot);
+extern  bool  StoreProgram(const char* name);
 extern  bool  Load(void);
 extern  bool  Load(usize nSlot);
 extern  bool  LoadProgram(const char* name);
@@ -131,6 +132,7 @@ extern  u8    load_word(isize segment_address, isize offset);
 extern  bool  EraseFlash(void);
 extern  bool  clear_storage(void);
 extern  bool  erase_slot(usize nSlot);
+extern  bool  DeleteSlot(usize nSlot);
 extern  void  init_external_flash(void);
 
 extern usize  seek_program_END(u8* code_page);

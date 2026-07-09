@@ -48,10 +48,12 @@ isize                       mk61_quants_reload;
 
 static constexpr t_time_ms  CALC_WAIT_MS           =     10;
 static constexpr t_time_ms  ANGLE_SAVE_UPDATE_MS   =   3000;  // Время (мс) для запуска процесса сохранения переключателя угловых единиц Р-ГРД-Г
+static constexpr t_time_ms  IDLE_SIGNAL_DELAY_MS   = 300000;  // 5 минут до сигнала бездействия
 
 t_time_ms   runtime_ms; // время работы программы в ms
 
 static  u32         wait_calc_time;
+static  t_time_ms   idle_signal_at;
 static  DeferredSave angle_save;
 
 static  bool        YZ_ZT;
@@ -83,6 +85,8 @@ char        display_text[15];          //-12345678.-12
 time_t auto_start_time;
 
 void key_press_handler(i32 keycode);
+void idle_signal_reset(void);
+void idle_signal_poll(void);
 
 bool usb_start_mass_storage_mode(void) {
   #if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
@@ -287,6 +291,7 @@ void setup() {
   core_61::enable();
   sound_startup();
   sound_poll();
+  idle_signal_reset();
 
   dbgln(MINI, "ON");
 }
@@ -412,6 +417,23 @@ inline void message_of_unuse(void) {
     sound(PIN_BUZZER, 4000, 200, library_mk61::sound_volume());
     delay_with_sound_poll(250);
   }
+}
+
+void idle_signal_reset(void) {
+  idle_signal_at = millis() + IDLE_SIGNAL_DELAY_MS;
+}
+
+void idle_signal_poll(void) {
+  const t_time_ms now = millis();
+  if(idle_signal_at == 0) {
+    idle_signal_at = now + IDLE_SIGNAL_DELAY_MS;
+    return;
+  }
+  if((i32) (now - idle_signal_at) < 0) return;
+
+  idle_signal_at = now + IDLE_SIGNAL_DELAY_MS;
+  // в режиме счета по программе выдачи звукового оповещения не производится
+  if(core_61::is_CALC() && library_mk61::idle_signal_is_on()) message_of_unuse();
 }
 
 // ***********************************************************************************************
@@ -568,12 +590,7 @@ void   mk61_baseloop_hook(i32 key) {
 void  loop() {
   idle_main_process();
 
-  const time_t time_is_now = millis();
   const bool turbo_run = core_61::is_RUN() && library_mk61::speed_is_turbo();
-
-  // планируем реакцию на бездействие калькулятора (только для первого входа в процедуру)
-  constexpr static time_t DELAY_UNUSED = 1000 * 60 * 5;
-  static time_t time_message_of_unuse = time_is_now + DELAY_UNUSED; // 5 Минут повтор события
 
   #ifdef TERMINAL // Подмена полученной с терминала клавиши через буфер клавиатуры
     static u8 turbo_serial_poll_divider;
@@ -608,16 +625,10 @@ void  loop() {
 
   if(used_key >= 0) { 
   //== кнопка нажата - перепланировка выдачи сообщения о бездействии на следующие 5 минут
-    time_message_of_unuse = time_is_now + DELAY_UNUSED;
+    idle_signal_reset();
     library_mk61::defer_settings_state_save();
   } else { 
     if(input_focus == &mk61_baseloop_hook) library_mk61::poll_settings_state_save();
-  //== однако если нет нажатий проверим пора ли выдать предупреждение
-    if(time_message_of_unuse < time_is_now) { // достигнуто время реакции на бездействие!!!
-        time_message_of_unuse = time_is_now + DELAY_UNUSED; // через 5 Минут повтор события
-      // в режиме счета по программе выдачи звукового оповещения не производится 
-        if(core_61::is_CALC() && library_mk61::idle_signal_is_on()) message_of_unuse();
-    }
   }
 
   // Перехват клавиатуры программным модулем
@@ -629,6 +640,7 @@ void idle_main_process(void) {
   sound_poll();
   led::control();
   lcd.flush();
+  idle_signal_poll();
 }
 
 void event_hold_key(i32 holded_key, i32 hold_quant) {

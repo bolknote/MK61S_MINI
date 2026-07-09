@@ -28,6 +28,10 @@ static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
 static const int KEY_ESC_PRESS = KEY_ESC;
 
+namespace lcd_display {
+  static constexpr u8 COLS = 16;
+}
+
 typedef enum {
   X1 = 0,
   X  = 1,
@@ -103,10 +107,12 @@ MK61Display lcd;
 enum class key_state {PRESSED=0, RELEASED=0x40};
 
 namespace kbd {
+  static bool host_alpha_pressed;
   void debounce_init(void) {}
   isize scan_and_debounced(void) { return 0; }
   i32 get_key(key_state) { return -1; }
   i32 get_key_wait(void) { return KEY_OK; }
+  bool is_key_pressed(i32 key_code) { return key_code == KEY_ALPHA && host_alpha_pressed; }
 }
 
 static u32 focal_host_millis;
@@ -1839,6 +1845,13 @@ static void display_focal_ok(const FocalProgram& program) {
   delay(700);
 }
 
+static void display_focal_saved(const FocalProgram& program) {
+  char display_name[24];
+  focal_display_program_name(program.name, display_name, sizeof(display_name));
+  focal_message_i18n("FOCAL saved", "ФОКАЛ сохранен", display_name, display_name);
+  delay(700);
+}
+
 bool CompileFocal(char* program) {
   const int slot = find_free_program();
   if(slot < 0) return focal_error("FULL?");
@@ -2314,37 +2327,44 @@ static bool focal_confirm_save(void) {
   }
 }
 
-static void draw_focal_name_editor(const char* name, bool sms_cursor) {
+static void draw_focal_name_editor(const char* name, u16 cursor, bool sms_cursor) {
+  const u16 len = (u16) strlen(name);
+  if(cursor > len) cursor = len;
+  const u16 window = (cursor > lcd_display::COLS - 2) ? (u16) (cursor - (lcd_display::COLS - 2)) : 0;
   char line[17];
-  snprintf(line, sizeof(line), ">%s", name);
-  focal_message_i18n("FOCAL name", "Имя ФОКАЛ", line, line);
-  if(sms_cursor) {
-    MK61DisplayUpdate update(lcd);
-    const u8 pos = (u8) strlen(line);
-    lcd.setCursor(pos < 16 ? pos : 15, 1);
-    lcd.write(SMS_CURSOR_ASCII);
+  line[0] = '>';
+  u8 pos = 1;
+  while(pos < lcd_display::COLS && name[window + pos - 1] != 0) {
+    line[pos] = name[window + pos - 1];
+    pos++;
   }
+  while(pos < lcd_display::COLS) line[pos++] = ' ';
+  line[lcd_display::COLS] = 0;
+  focal_message_i18n("FOCAL name", "Имя ФОКАЛ", line, line);
+  MK61DisplayUpdate update(lcd);
+  const u8 cursor_col = (u8) (1 + cursor - window);
+  lcd.setCursor(cursor_col, 1);
+  if(lcd.supportsCursor()) lcd.cursorOn();
+  else lcd.write(sms_cursor ? SMS_CURSOR_ASCII : text_editor::CURSOR_ASCII);
 }
 
-static bool focal_name_insert_char(char* name, u8& len, char ch) {
+static bool focal_name_insert_char(char* name, u16& len, u16& cursor, char ch) {
   if(ch == ' ') return false;
-  if(len >= FOCAL_NAME_SIZE - 1) return false;
-  name[len++] = focal_upper(ch);
-  name[len] = 0;
-  return true;
+  char text[2] = {focal_upper(ch), 0};
+  return text_editor::insert_text(name, len, cursor, FOCAL_NAME_SIZE, text);
 }
 
-static bool focal_name_sms_tap(char* name, u8& len, FocalSmsState& sms, i32 key_code, u32 now) {
+static bool focal_name_sms_tap(char* name, u16& len, u16& cursor, FocalSmsState& sms, i32 key_code, u32 now) {
   const char* letters = focal_sms_letters_for_key(key_code);
   if(letters == NULL || letters[0] == 0) {
     focal_sms_reset(sms);
     return false;
   }
 
-  if(sms.active && sms.key_code == key_code && len > 0) {
+  if(sms.active && sms.key_code == key_code && cursor > 0) {
     const usize count = strlen(letters);
     sms.index = (u8) ((sms.index + 1) % count);
-    name[len - 1] = letters[sms.index];
+    name[cursor - 1] = letters[sms.index];
     sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
     return true;
   }
@@ -2353,21 +2373,22 @@ static bool focal_name_sms_tap(char* name, u8& len, FocalSmsState& sms, i32 key_
   sms.key_code = key_code;
   sms.index = 0;
   sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
-  return focal_name_insert_char(name, len, letters[0]);
+  return focal_name_insert_char(name, len, cursor, letters[0]);
 }
 
 static bool focal_input_program_name(char* name, usize size) {
   if(size == 0) return false;
   name[size - 1] = 0;
-  u8 len = (u8) strlen(name);
-  if(len >= size) len = (u8) size - 1;
+  u16 len = (u16) strlen(name);
+  if(len >= size) len = (u16) size - 1;
+  u16 cursor = len;
   FocalSmsState sms = {};
   FocalEditShift shift = FocalEditShift::NONE;
 
   while(true) {
     const u32 now = millis();
     if(sms.active && now >= sms.deadline_ms) focal_sms_reset(sms);
-    draw_focal_name_editor(name, sms.active);
+    draw_focal_name_editor(name, cursor, sms.active);
     const i32 key = kbd::get_key_wait();
     const bool shifted_key = shift != FocalEditShift::NONE;
 
@@ -2378,14 +2399,32 @@ static bool focal_input_program_name(char* name, usize size) {
     }
     if(!shifted_key && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
     if(!shifted_key && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
+    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+        (shift == FocalEditShift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      focal_sms_reset(sms);
+      text_editor::backspace(name, len, cursor);
+      shift = FocalEditShift::NONE;
+      continue;
+    }
     if(!shifted_key && key == KEY_DEGREE) {
       focal_sms_reset(sms);
-      if(len > 0) name[--len] = 0;
+      text_editor::backspace(name, len, cursor);
+      continue;
+    }
+    if(!shifted_key && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
+      focal_sms_reset(sms);
+      text_editor::move_cursor_left(name, cursor);
+      continue;
+    }
+    if(!shifted_key && (key == KEY_RIGHT || key == KEY_RIGHT_PRESS)) {
+      focal_sms_reset(sms);
+      text_editor::move_cursor_right(name, len, cursor);
       continue;
     }
     if(!shifted_key && key == 0) {
       focal_sms_reset(sms);
       len = 0;
+      cursor = 0;
       name[0] = 0;
       continue;
     }
@@ -2393,31 +2432,31 @@ static bool focal_input_program_name(char* name, usize size) {
     const int digit = focal_digit_from_key(key);
     if(shift == FocalEditShift::ALPHA && digit >= 0) {
       const char* symbol = focal_symbol_for_digit_key(key);
-      if(symbol != NULL && symbol[0] != 0) focal_name_insert_char(name, len, symbol[0]);
+      if(symbol != NULL && symbol[0] != 0) focal_name_insert_char(name, len, cursor, symbol[0]);
       shift = FocalEditShift::NONE;
       focal_sms_reset(sms);
       continue;
     }
     if(focal_sms_key_is_letters(key)) {
-      focal_name_sms_tap(name, len, sms, key, now);
+      focal_name_sms_tap(name, len, cursor, sms, key, now);
       shift = FocalEditShift::NONE;
       continue;
     }
     if(focal_sms_key_is_space(key)) {
       focal_sms_reset(sms);
-      focal_name_insert_char(name, len, ' ');
+      focal_name_insert_char(name, len, cursor, ' ');
       shift = FocalEditShift::NONE;
       continue;
     }
     if(digit == 0 || key == KEY_PP) {
       focal_sms_reset(sms);
-      focal_name_insert_char(name, len, '0');
+      focal_name_insert_char(name, len, cursor, '0');
       shift = FocalEditShift::NONE;
       continue;
     }
     if(digit == 1) {
       focal_sms_reset(sms);
-      focal_name_insert_char(name, len, '1');
+      focal_name_insert_char(name, len, cursor, '1');
       shift = FocalEditShift::NONE;
       continue;
     }
@@ -2440,7 +2479,6 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
     slot = focal_alloc_program_slot(store_name);
 #endif
   }
-  if(!focal_compile_source(source, focal_ast)) return false;
 
   focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
@@ -2456,7 +2494,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
     program_store::remove(program_store::ProgramType::FOCAL, old_name);
   }
 #endif
-  display_focal_ok(programs[slot]);
+  display_focal_saved(programs[slot]);
   return true;
 }
 
@@ -2487,6 +2525,14 @@ static void EditFocalSlot(int slot) {
     if(key_code < 0) {
       lcd.flush();
       delay(1);
+      continue;
+    }
+    if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      text_editor::backspace(editor.source, editor.len, editor.cursor);
+      editor.shift = text_editor::Shift::NONE;
+      dirty = true;
       continue;
     }
     const text_editor::KeyResult result = text_editor::handle_key(editor, FOCAL_EDITOR_KEYS, FOCAL_EDITOR_HOOKS, key_code, now);
@@ -2573,6 +2619,7 @@ extern "C" void FocalTestReset(void) {
   lcd.clear();
 #ifdef FOCAL_HOST_TEST
   mk61_ref::host_reset();
+  kbd::host_alpha_pressed = false;
 #endif
 }
 
@@ -2582,6 +2629,14 @@ extern "C" bool FocalTestCompile(const char* source) {
 
 extern "C" const char* FocalTestError(void) {
   return focal_last_error;
+}
+
+extern "C" void FocalTestSetAlphaHeld(bool held) {
+#ifdef FOCAL_HOST_TEST
+  kbd::host_alpha_pressed = held;
+#else
+  (void) held;
+#endif
 }
 
 extern "C" int FocalTestAddProgram(const char* source) {
@@ -2594,6 +2649,20 @@ extern "C" int FocalTestAddProgram(const char* source) {
   programs[slot].used = true;
   NextFocal = (i8) slot;
   return slot;
+}
+
+extern "C" bool FocalTestStoreDraft(const char* source, const char* name) {
+  char buffer[FOCAL_SOURCE_SIZE];
+  focal_copy_text(buffer, sizeof(buffer), source == NULL ? "" : source);
+  return store_edited_program(FOCAL_PROGRAM_COUNT, buffer, name == NULL ? "DRAFT" : name);
+}
+
+extern "C" const char* FocalTestProgramName(int slot) {
+  return (slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) ? programs[slot].name : "";
+}
+
+extern "C" const char* FocalTestProgramSource(int slot) {
+  return (slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) ? programs[slot].source : "";
 }
 
 extern "C" void FocalTestSetAskValue(double value) {
@@ -2715,6 +2784,13 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
   for(int i = 0; i < count; i++) {
     const u32 now = millis();
     const i32 key_code = keys[i];
+    if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      text_editor::backspace(editor.source, editor.len, editor.cursor);
+      editor.shift = text_editor::Shift::NONE;
+      continue;
+    }
     text_editor::handle_key(editor, FOCAL_EDITOR_KEYS, FOCAL_EDITOR_HOOKS, key_code, now);
   }
 

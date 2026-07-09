@@ -827,6 +827,10 @@ bool Load(void) {
   }
   if(address < 0) return false; // error
 
+  const usize slot = (usize) (address / FLASH_SECTOR_SIZE);
+  if(Load(slot)) return true;
+
+  // Fallback for raw sectors written by older firmware revisions.
   return load_from(address);
 }
 
@@ -873,11 +877,17 @@ bool Rename(usize nSlot, char* slot_name) {
   return program_store::rename(program_store::ProgramType::MK61, old_name, slot_name);
 }
 
-bool Store(usize nSlot) {
-  if(check_empty_program()) return false; // error
-
+bool DeleteSlot(usize nSlot) {
+  if(nSlot > MAX_SLOT_FOR_PROGRAM) return false;
   char name[8];
   snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+  return program_store::remove(program_store::ProgramType::MK61, name);
+}
+
+bool StoreProgram(const char* name) {
+  if(check_empty_program()) return false; // error
+  if(name == NULL || name[0] == 0) return false;
+
   shared_scratch::Lease scratch(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
   if(!scratch.ok()) return false;
   u8* script_buffer = scratch.data();
@@ -887,6 +897,12 @@ bool Store(usize nSlot) {
 
   dbg(MINI, "\nProgramm saved!");
   return true;
+}
+
+bool Store(usize nSlot) {
+  char name[8];
+  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+  return StoreProgram(name);
 }
 
 bool Store(void) {

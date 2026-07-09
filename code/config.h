@@ -376,6 +376,7 @@ static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как част�
     static const u8   PIN_BUZZER      =   PB10;
     static const u8   PIN_SPIFLASH_CS =   PA4;
     static const u8   PIN_LED         =   PC13;
+    static constexpr u8 PIN_LED_ACTIVE_LOW = 1;
   #else
     #ifdef REVISION_V3
  /* REVISION_V3 Описание ног для STM32F411CEU6 aka BlackPill MK61s-mini_v3*/
@@ -401,6 +402,7 @@ static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как част�
       static const u8   PIN_KBD_ROW0    =   PB4;
       static const u8   PIN_BUZZER      =   PA0;
       static const u8   PIN_LED         =   PC13;
+      static constexpr u8 PIN_LED_ACTIVE_LOW = 1;
       static const u8   PIN_OUT_PWR     =   PB9;
       static const u8   PIN_SPIFLASH_CS =   PA4;
     #else 
@@ -427,6 +429,7 @@ static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как част�
       static constexpr usize   PIN_SPIFLASH_CS =   PA4;
       static constexpr usize   PIN_BUZZER      =   PB10;
       static constexpr usize   PIN_LED         =   PC13;
+      static constexpr u8      PIN_LED_ACTIVE_LOW = 1;
     #endif
   #endif
  #endif
