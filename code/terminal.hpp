@@ -1215,7 +1215,6 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.println();
         dbgln(MINI,"[", recive_pos, "] '", (char*) input_buffer);
 
-        const int nReg = (input_buffer[1] - '0');
         const u8 command_id = terminal_command_lookup(&input_buffer[0]);
         terminal_last_cmd = command_id;
         dbgln(MINI, "command id ", (int) command_id);
@@ -1238,8 +1237,18 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_REG_DUMP:
               DumpRegisters();
             break;
-          case  CMD_REG_SET:
-              MK61Emu_WriteRegister(nReg, (char*) &input_buffer[4]);
+          case  CMD_REG_SET: {
+              // Индекс - hex-цифра: R0..RE, RF только в расширенной памяти
+              // (иначе запись ушла бы за пределы классического кольца).
+              const isize reg = HexdecimalDigit((char) input_buffer[1]);
+              const isize reg_limit = core_61::expanded_program_is_on() ? 15 : 14;
+              if(reg < 0 || reg > reg_limit) {
+                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
+                Serial.println("Illegal register, R0..RE (RF in expanded mode)!");
+                break;
+              }
+              MK61Emu_WriteRegister((int) reg, (char*) &input_buffer[4]);
+            }
             break;
           case  CMD_1302:
               Dump1302();
