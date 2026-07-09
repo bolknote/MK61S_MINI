@@ -3,6 +3,9 @@
 
 #include "lcd_gui.hpp"
 #include "lcd_charset.hpp"
+#if defined(MK61_DISPLAY_UC1609)
+  #include "ERM19264_graphics_font.h"
+#endif
 
 namespace lcd_ru {
 
@@ -301,8 +304,12 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
       lcd.write(out);
     } else {
 #if defined(MK61_DISPLAY_UC1609)
-      const u8* glyph = glyph_for(codepoint);
-      if(glyph != NULL) {
+      const unsigned char* glyph3x5 = lcd_display::isTextProfile3x5(lcd.textProfile())
+        ? font3x5Glyph(codepoint)
+        : NULL;
+      if(glyph3x5 != NULL) {
+        lcd.writeGlyph3x5(glyph3x5);
+      } else if(const u8* glyph = glyph_for(codepoint)) {
         lcd.writeGlyph(glyph);
       } else if(fallback_char(codepoint, out)) {
         lcd.write(out);

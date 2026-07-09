@@ -468,6 +468,7 @@ static void apply_settings_record(const u8* record) {
   persistent_settings.flags = record[SETTINGS_IDX_FLAGS];
   persistent_settings.sound = record[SETTINGS_IDX_SOUND];
   persistent_settings.text_profile_stored = false;
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   if(record[SETTINGS_IDX_VERSION] == SETTINGS_RECORD_VERSION) {
     persistent_settings.text_profile = lcd_display::normalizeTextProfile({
       record[SETTINGS_IDX_TEXT_ROWS],
@@ -477,6 +478,9 @@ static void apply_settings_record(const u8* record) {
     });
     persistent_settings.text_profile_stored = true;
   }
+#else
+  persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+#endif
 }
 
 static u16 internal_flash_size_kb(void) {
@@ -577,10 +581,17 @@ static void write_persistent_settings(void) {
     persistent_settings.counter,
     persistent_settings.flags,
     persistent_settings.sound,
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
     persistent_settings.text_profile.rows,
     persistent_settings.text_profile.glyph_width,
     persistent_settings.text_profile.glyph_height,
     persistent_settings.text_profile.line_gap,
+#else
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+#endif
     0xFF,
     0xFF,
     0xFF
@@ -632,14 +643,21 @@ void store_sound_settings(SoundSettings settings) {
 }
 
 bool read_display_text_profile(lcd_display::TextProfile& out) {
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   load_persistent_settings();
   if(!persistent_settings.text_profile_stored) return false;
 
   out = lcd_display::normalizeTextProfile(persistent_settings.text_profile);
   return true;
+#else
+  (void) out;
+  load_persistent_settings();
+  return false;
+#endif
 }
 
 void store_display_text_profile(lcd_display::TextProfile profile) {
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   load_persistent_settings();
   profile = lcd_display::normalizeTextProfile(profile);
   const bool unchanged = persistent_settings.text_profile_stored &&
@@ -652,6 +670,9 @@ void store_display_text_profile(lcd_display::TextProfile profile) {
   persistent_settings.text_profile = profile;
   persistent_settings.text_profile_stored = true;
   write_persistent_settings();
+#else
+  (void) profile;
+#endif
 }
 
 void store_grade_switch(AngleUnit angle_unit) {

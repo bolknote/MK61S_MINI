@@ -62,6 +62,12 @@
   #define MK61_ENABLE_TINYBASIC 1
 #endif
 
+// Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
+// графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.
+#ifndef MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  #define MK61_ENABLE_EXTENDED_FONT_SETTINGS 0
+#endif
+
 // Математический бэкенд языков (FOCAL/BASIC/TinyBASIC).
 //  LIBM (умолчание) — трансцендентные функции через <math.h>.
 //  CORE             — вычисление на ядре МК-61; убирает libm из прошивки

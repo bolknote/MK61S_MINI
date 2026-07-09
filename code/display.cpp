@@ -73,6 +73,10 @@ void MK61Display::writeGlyph(const uint8_t*) {
   write((uint8_t) '?');
 }
 
+void MK61Display::writeGlyph3x5(const uint8_t*) {
+  write((uint8_t) '?');
+}
+
 void MK61Display::clearCustomChars(void) {}
 
 #if ARDUINO >= 100
@@ -99,6 +103,7 @@ MK61Display::MK61Display(void)
     render_screen(render_buffer, lcd_display::PIXEL_WIDTH, MAX_RENDER_PAGES * 8, 0, 0),
     cells{{0}},
     cell_glyphs{{{0}}},
+    cell_glyph_3x5_rows{0},
     cell_glyph_valid{{false}},
     dirty_cols{0},
     custom_glyphs{{0}},
@@ -277,6 +282,23 @@ void MK61Display::writeGlyph(const uint8_t* glyph) {
 
   cells[cursor_y][cursor_x] = 0;
   memcpy(cell_glyphs[cursor_y][cursor_x], glyph, sizeof(cell_glyphs[cursor_y][cursor_x]));
+  cell_glyph_3x5_rows[cursor_y] &= (uint16_t) ~((uint16_t) 1 << cursor_x);
+  cell_glyph_valid[cursor_y][cursor_x] = true;
+  markCellDirtyDeferred(cursor_x, cursor_y);
+  advanceCursor();
+  if(update_depth == 0) flush();
+}
+
+void MK61Display::writeGlyph3x5(const uint8_t* glyph) {
+  if(glyph == NULL) {
+    write((uint8_t) '?');
+    return;
+  }
+
+  cells[cursor_y][cursor_x] = 0;
+  memset(cell_glyphs[cursor_y][cursor_x], 0, sizeof(cell_glyphs[cursor_y][cursor_x]));
+  memcpy(cell_glyphs[cursor_y][cursor_x], glyph, 5);
+  cell_glyph_3x5_rows[cursor_y] |= ((uint16_t) 1 << cursor_x);
   cell_glyph_valid[cursor_y][cursor_x] = true;
   markCellDirtyDeferred(cursor_x, cursor_y);
   advanceCursor();
@@ -293,6 +315,7 @@ void MK61Display::clearShadow(void) {
       cells[row][col] = ' ';
       cell_glyph_valid[row][col] = false;
     }
+    cell_glyph_3x5_rows[row] = 0;
     dirty_cols[row] = 0;
   }
 }
@@ -307,7 +330,7 @@ void MK61Display::clearPhysicalScreen(void) {
 }
 
 u8 MK61Display::sanitizeRows(u8 rows) {
-  return lcd_display::clamp_u8(rows, lcd_display::DEFAULT_ROWS, lcd_display::COMPACT_ROWS);
+  return lcd_display::clamp_u8(rows, lcd_display::DEFAULT_ROWS, lcd_display::MAX_ROWS);
 }
 
 u8 MK61Display::rowTop(u8 row) const {
@@ -387,19 +410,24 @@ void MK61Display::advanceCursor(void) {
   moveCursorTo(next_x, next_y);
 }
 
-void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph) {
+void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph, bool source_3x5) {
   const u8 pitch = rowPitch(row);
   const u8 height = glyphHeight(row);
   const u8 width = glyphWidth();
   const u8 glyph_x = x + glyphLeft();
   const u8 glyph_y = row_y + glyphTop(row);
+  const u8 source_width = source_3x5 ? 3 : 5;
+  const u8 source_height = source_3x5 ? 5 : 8;
   lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
   for(u8 dest_y = 0; dest_y < height; dest_y++) {
-    const u8 src_y = (u8) (((u16) dest_y * 8) / height);
+    const u8 src_y = (u8) (((u16) dest_y * source_height) / height);
     const u8 bits = glyph[src_y];
     for(u8 dest_x = 0; dest_x < width; dest_x++) {
-      const u8 src_x = (u8) (((u16) dest_x * 5) / width);
-      if((bits & (0x10 >> src_x)) != 0) {
+      const u8 src_x = (u8) (((u16) dest_x * source_width) / width);
+      const bool pixel_on = source_3x5
+        ? ((bits & ((u8) 1 << src_x)) != 0)
+        : ((bits & (0x10 >> src_x)) != 0);
+      if(pixel_on) {
         lcd.drawPixel(glyph_x + dest_x, glyph_y + dest_y, FOREGROUND);
       }
     }
@@ -409,6 +437,13 @@ void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph) {
 void MK61Display::drawDefaultChar(u8 x, u8 row_y, u8 row, u8 value) {
   static constexpr u8 FONT_WIDTH = 5;
   static constexpr u8 FONT_HEIGHT = 8;
+  if(lcd_display::isTextProfile3x5(active_profile)) {
+    const unsigned char* glyph = font3x5Glyph((uint16_t) value);
+    if(glyph == NULL) glyph = font3x5Glyph((uint16_t) '?');
+    drawGlyph(x, row_y, row, glyph, true);
+    return;
+  }
+
   const u8 pitch = rowPitch(row);
   const u8 height = glyphHeight(row);
   const u8 width = glyphWidth();
@@ -471,9 +506,10 @@ void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
       const u8 value = cells[render_row][col];
       const u8 x = i * lcd_display::CELL_WIDTH;
       if(cell_glyph_valid[render_row][col]) {
-        drawGlyph(x, row_y, render_row, cell_glyphs[render_row][col]);
+        const bool source_3x5 = (cell_glyph_3x5_rows[render_row] & ((uint16_t) 1 << col)) != 0;
+        drawGlyph(x, row_y, render_row, cell_glyphs[render_row][col], source_3x5);
       } else if(value < CUSTOM_GLYPHS && custom_valid[value]) {
-        drawGlyph(x, row_y, render_row, custom_glyphs[value]);
+        drawGlyph(x, row_y, render_row, custom_glyphs[value], false);
       } else {
         drawDefaultChar(x, row_y, render_row, value);
       }
@@ -515,8 +551,10 @@ void MK61Display::write(uint8_t value) {
   cells[cursor_y][cursor_x] = value;
   if(value < CUSTOM_GLYPHS && custom_valid[value]) {
     memcpy(cell_glyphs[cursor_y][cursor_x], custom_glyphs[value], sizeof(cell_glyphs[cursor_y][cursor_x]));
+    cell_glyph_3x5_rows[cursor_y] &= (uint16_t) ~((uint16_t) 1 << cursor_x);
     cell_glyph_valid[cursor_y][cursor_x] = true;
   } else {
+    cell_glyph_3x5_rows[cursor_y] &= (uint16_t) ~((uint16_t) 1 << cursor_x);
     cell_glyph_valid[cursor_y][cursor_x] = false;
   }
   markCellDirtyDeferred(cursor_x, cursor_y);

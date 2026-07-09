@@ -50,14 +50,15 @@ static inline TextProfile normalizeTextProfile(TextProfile) {
   return defaultTextProfileForRows(ROWS);
 }
 #else
-// ROWS is the legacy/default text grid. Graphical displays can switch to
-// COMPACT_ROWS at runtime while keeping the same 16-column UI.
-static constexpr u8 ROWS = 4;
-static constexpr u8 DEFAULT_ROWS = 4;
-static constexpr u8 SPACED_ROWS_5 = 5;
-static constexpr u8 SPACED_ROWS_7 = 7;
-static constexpr u8 COMPACT_ROWS = 8;
-static constexpr u8 MAX_ROWS = COMPACT_ROWS;
+// ROWS is the default text grid. Graphical displays keep the same 16-column UI
+// and switch between a few fixed font presets at runtime.
+static constexpr u8 FONT_5X8_ROWS = 6;
+static constexpr u8 FONT_5X9_ROWS = 7;
+static constexpr u8 FONT_3X5_ROWS = 10;
+static constexpr u8 ROWS = FONT_5X8_ROWS;
+static constexpr u8 DEFAULT_ROWS = FONT_5X8_ROWS;
+static constexpr u8 COMPACT_ROWS = 8; // legacy persisted "8 rows" mode
+static constexpr u8 MAX_ROWS = FONT_3X5_ROWS;
 static constexpr u8 PIXEL_WIDTH = 192;
 static constexpr u8 PIXEL_HEIGHT = 64;
 static constexpr u8 CELL_WIDTH = 12;
@@ -75,31 +76,46 @@ static inline u8 maxLineGap(u8 rows, u8 glyph_height) {
   return (u8) ((PIXEL_HEIGHT - (u16) rows * glyph_height) / (rows - 1));
 }
 
+static inline TextProfile textProfile5x8(void) {
+  return {FONT_5X8_ROWS, 5, 8, 2};
+}
+
+static inline TextProfile textProfile5x9(void) {
+  return {FONT_5X9_ROWS, 5, 9, 0};
+}
+
+static inline TextProfile textProfile3x5(void) {
+  return {FONT_3X5_ROWS, 3, 5, 1};
+}
+
+static inline bool isTextProfile3x5(TextProfile profile) {
+  return profile.glyph_width == 3 && profile.glyph_height == 5;
+}
+
 static inline TextProfile defaultTextProfileForRows(u8 rows) {
-  rows = clamp_u8(rows, DEFAULT_ROWS, COMPACT_ROWS);
-  switch(rows) {
-    case DEFAULT_ROWS:
-      return {DEFAULT_ROWS, 10, 16, 0};
-    case SPACED_ROWS_5:
-      return {SPACED_ROWS_5, 10, 10, 2};
-    case 6:
-      return {6, 10, 8, 2};
-    case SPACED_ROWS_7:
-      return {SPACED_ROWS_7, 10, 8, 1};
-    case COMPACT_ROWS:
-    default:
-      return {COMPACT_ROWS, 10, 8, 0};
-  }
+  if(rows <= FONT_5X8_ROWS) return textProfile5x8();
+  if(rows == FONT_5X9_ROWS) return textProfile5x9();
+  return textProfile3x5();
+}
+
+static inline TextProfile presetTextProfile(TextProfile profile) {
+  if(profile.glyph_width <= 3 || profile.rows >= FONT_3X5_ROWS) return textProfile3x5();
+  if(profile.glyph_height >= 9 || profile.rows == FONT_5X9_ROWS) return textProfile5x9();
+  return textProfile5x8();
 }
 
 static inline TextProfile normalizeTextProfile(TextProfile profile) {
-  profile.rows = clamp_u8(profile.rows, DEFAULT_ROWS, COMPACT_ROWS);
-  profile.glyph_width = clamp_u8(profile.glyph_width, 5, 10);
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  profile.rows = clamp_u8(profile.rows, DEFAULT_ROWS, MAX_ROWS);
+  profile.glyph_width = clamp_u8(profile.glyph_width, 3, 10);
 
   const u8 max_height = PIXEL_HEIGHT / profile.rows;
-  profile.glyph_height = clamp_u8(profile.glyph_height, 8, max_height);
+  profile.glyph_height = clamp_u8(profile.glyph_height, 5, max_height);
   profile.line_gap = clamp_u8(profile.line_gap, 0, maxLineGap(profile.rows, profile.glyph_height));
   return profile;
+#else
+  return presetTextProfile(profile);
+#endif
 }
 #endif
 
@@ -126,6 +142,7 @@ class MK61Display : public Print {
     bool hasHardwareCursor(void) const;
     void createChar(u8 nChar, uint8_t* glyph);
     void writeGlyph(const uint8_t* glyph);
+    void writeGlyph3x5(const uint8_t* glyph);
     void clearCustomChars(void);
     u8 cols(void) const { return lcd_display::COLS; }
 #if defined(MK61_DISPLAY_LCD1602)
@@ -155,6 +172,7 @@ class MK61Display : public Print {
     ERM19264_UC1609_Screen render_screen;
     uint8_t cells[lcd_display::MAX_ROWS][lcd_display::COLS];
     uint8_t cell_glyphs[lcd_display::MAX_ROWS][lcd_display::COLS][8];
+    uint16_t cell_glyph_3x5_rows[lcd_display::MAX_ROWS];
     bool cell_glyph_valid[lcd_display::MAX_ROWS][lcd_display::COLS];
     uint16_t dirty_cols[lcd_display::MAX_ROWS];
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
@@ -181,7 +199,7 @@ class MK61Display : public Print {
     u8 glyphTop(u8 row) const;
     u8 glyphWidth(void) const;
     u8 glyphLeft(void) const;
-    void drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph);
+    void drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph, bool source_3x5);
     void drawDefaultChar(u8 x, u8 row_y, u8 row, u8 value);
     void drawCursor(u8 x, u8 row_y, u8 row, bool block);
     void advanceCursor(void);

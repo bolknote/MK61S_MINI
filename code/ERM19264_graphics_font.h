@@ -69,6 +69,7 @@
 
 #ifdef UC1609_Font_One 
 extern const unsigned char * pFontDefaultptr; /**< Pointer to Default  font data */
+const unsigned char* font3x5Glyph(uint16_t codepoint);
 #endif
 #ifdef UC1609_Font_Two 
 extern const unsigned char * pFontThickptr; /**< Pointer to thick font data */
