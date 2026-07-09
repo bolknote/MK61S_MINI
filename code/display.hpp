@@ -55,6 +55,7 @@ static inline TextProfile normalizeTextProfile(TextProfile) {
 static constexpr u8 FONT_5X8_ROWS = 6;
 static constexpr u8 FONT_5X9_ROWS = 7;
 static constexpr u8 FONT_3X5_ROWS = 10;
+static constexpr u8 MIN_ROWS = 4; // lower bound for extended custom profiles
 static constexpr u8 ROWS = FONT_5X8_ROWS;
 static constexpr u8 DEFAULT_ROWS = FONT_5X8_ROWS;
 static constexpr u8 COMPACT_ROWS = 8; // legacy persisted "8 rows" mode
@@ -106,7 +107,7 @@ static inline TextProfile presetTextProfile(TextProfile profile) {
 
 static inline TextProfile normalizeTextProfile(TextProfile profile) {
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  profile.rows = clamp_u8(profile.rows, DEFAULT_ROWS, MAX_ROWS);
+  profile.rows = clamp_u8(profile.rows, MIN_ROWS, MAX_ROWS);
   profile.glyph_width = clamp_u8(profile.glyph_width, 3, 10);
 
   const u8 max_height = PIXEL_HEIGHT / profile.rows;

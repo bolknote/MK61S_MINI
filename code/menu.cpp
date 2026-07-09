@@ -65,8 +65,15 @@ static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSe
 #endif
 
 #if defined(MK61_DISPLAY_UC1609)
+static constexpr u8 DISPLAY_ROWS_MIN =
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  lcd_display::MIN_ROWS;
+#else
+  lcd_display::DEFAULT_ROWS;
+#endif
+
 static u8 normalize_display_rows(u8 rows) {
-  return lcd_display::clamp_u8(rows, lcd_display::DEFAULT_ROWS, lcd_display::MAX_ROWS);
+  return lcd_display::clamp_u8(rows, DISPLAY_ROWS_MIN, lcd_display::MAX_ROWS);
 }
 
 static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProfile right) {
@@ -121,7 +128,7 @@ static u8 step_display_rows_value(u8 rows, i8 delta) {
   if(delta > 0 && rows < lcd_display::MAX_ROWS) {
     return rows + 1;
   }
-  if(delta < 0 && rows > lcd_display::DEFAULT_ROWS) {
+  if(delta < 0 && rows > DISPLAY_ROWS_MIN) {
     return rows - 1;
   }
   return rows;
