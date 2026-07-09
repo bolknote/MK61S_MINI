@@ -1124,29 +1124,7 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
 }
 
 static bool run_entry(const program_store::Entry& entry) {
-  bool ok = false;
-  switch(entry.type) {
-    case program_store::ProgramType::MK61:
-      ok = LoadProgram(entry.name);
-      break;
-#if MK61_ENABLE_BASIC
-    case program_store::ProgramType::BASIC:
-      ok = RunBasicProgram(entry.name);
-      break;
-#endif
-#if MK61_ENABLE_FOCAL
-    case program_store::ProgramType::FOCAL:
-      ok = RunFocalProgram(entry.name);
-      break;
-#endif
-#if MK61_ENABLE_TINYBASIC
-    case program_store::ProgramType::TINYBASIC:
-      ok = RunTinyBasicProgram(entry.name);
-      break;
-#endif
-    default:
-      break;
-  }
+  const bool ok = OpenStoredEntry(entry);
   if(!ok) {
     show_message("Run error", "Ошибка запуска", entry.name, entry.name);
     delay(900);

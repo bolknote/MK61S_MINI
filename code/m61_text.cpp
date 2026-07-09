@@ -1,16 +1,11 @@
 #include "m61_text.hpp"
 
-#include "basic.hpp"
-#include "cross_hal.h"
-#include "development.hpp"
-#include "focal.hpp"
-#include "keyboard.h"
 #include "library_pmk.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
 #include "terminal.hpp"
-#include "tinybasic.hpp"
+#include "tools.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -67,13 +62,6 @@ static const char* skip_spaces(const char* p) {
 static bool token_ends(const char* p) {
   p = skip_spaces(p);
   return is_line_end(*p);
-}
-
-static bool starts_with(const char* line, const char* token) {
-  while(*token != 0) {
-    if(*line++ != *token++) return false;
-  }
-  return true;
 }
 
 static u8* script_buffer(void) {
@@ -235,36 +223,6 @@ static bool read_next_line(char* line, u16 capacity) {
   }
 }
 
-static bool copy_run_name(const char* args, char* name, usize capacity) {
-  args = skip_spaces(args);
-  usize len = 0;
-  while(!is_line_end(args[len])) len++;
-  while(len > 0 && is_space(args[len - 1])) len--;
-  if(len == 0 || len >= capacity) return false;
-  for(usize i = 0; i < len; i++) name[i] = args[i];
-  name[len] = 0;
-
-  char* dot = strrchr(name, '.');
-  if(dot != NULL) *dot = 0;
-  return name[0] != 0;
-}
-
-static bool run_named_program(const char* args) {
-  char name[program_store::NAME_SIZE];
-  if(!copy_run_name(args, name, sizeof(name))) return false;
-
-#if MK61_ENABLE_BASIC
-  if(program_store::exists(program_store::ProgramType::BASIC, name)) return RunBasicProgram(name);
-#endif
-#if MK61_ENABLE_FOCAL
-  if(program_store::exists(program_store::ProgramType::FOCAL, name)) return RunFocalProgram(name);
-#endif
-#if MK61_ENABLE_TINYBASIC
-  if(program_store::exists(program_store::ProgramType::TINYBASIC, name)) return RunTinyBasicProgram(name);
-#endif
-  return false;
-}
-
 static bool open_store_script(const char* name) {
   ScriptFrame child;
   if(!make_store_frame(name, child)) return false;
@@ -277,98 +235,49 @@ static bool open_store_script(const char* name) {
   return true;
 }
 
-static bool open_entry(const program_store::Entry& entry) {
-  switch(entry.type) {
-    case program_store::ProgramType::MK61:
-      return open_store_script(entry.name);
-#if MK61_ENABLE_BASIC
-    case program_store::ProgramType::BASIC:
-      return RunBasicProgram(entry.name);
-#endif
-#if MK61_ENABLE_FOCAL
-    case program_store::ProgramType::FOCAL:
-      return RunFocalProgram(entry.name);
-#endif
-#if MK61_ENABLE_TINYBASIC
-    case program_store::ProgramType::TINYBASIC:
-      return RunTinyBasicProgram(entry.name);
-#endif
-    case program_store::ProgramType::TEXT:
-    case program_store::ProgramType::MK61_STATE:
-      return program_store_view_entry(entry.type, entry.name);
-  }
-  return false;
-}
-
-// Press F АВТ, В/О, С/П directly on the core: keys queued through the keyboard
-// buffer would be flushed when the menu/explorer exits (leave_menu_mode).
+// Запуск загруженной программы прямо на ядре, ожидание останова — асинхронно
+// из service(). Клавиши через буфер клавиатуры терялись бы при выходе из меню.
 static void start_current_program(void) {
-  hidden_return_to_program_start();
-  hidden_press_key(sw::RUN);
+  hidden_start_loaded_program();
   runner_state = RunnerState::WAIT_RUN_STOP;
 }
 
-// Apply "kbd <scancode>" to the core directly, for the same reason as above.
-static bool press_scan_code(i32 keycode) {
-  if(keycode == KEY_DEGREE) {
-    MK61Emu_SetAngleUnit(DEGREE);
-    return true;
+// "load N" внутри сценария: слот выполняется как вложенный скрипт с возвратом
+// на следующую строку (Load() терминала отменил бы текущий сценарий).
+static bool open_slot(const char* args) {
+  args = skip_spaces(args);
+  usize slot = 0;
+  usize digits = 0;
+  while(args[digits] >= '0' && args[digits] <= '9') {
+    slot = slot * 10 + (usize) (args[digits] - '0');
+    digits++;
   }
-  if(keycode == KEY_GRADE) {
-    MK61Emu_SetAngleUnit(GRADE);
-    return true;
-  }
-  if(keycode == KEY_RADIAN) {
-    MK61Emu_SetAngleUnit(RADIAN);
-    return true;
-  }
-  if(keycode < 0 || keycode >= 40) return false;
+  if(digits == 0 || slot > 99 || !token_ends(args + digits)) return false;
 
-  const TMK61_cross_key cross_key = KeyPairs[keycode];
-  if(cross_key.as_u16() == NON.as_u16()) return false;
-
-  hidden_press_key((sw) keycode);
-  return true;
+  char name[8];
+  snprintf(name, sizeof(name), "%u", (unsigned) slot);
+  return open_store_script(name);
 }
 
+// Вся грамматика команд разбирается терминалом (единый диспетчер интерактивного
+// и скриптового режимов). Сценарию терминал возвращает только действия,
+// влияющие на поток выполнения: run, open, load.
 static bool execute_script_line(const char* raw_line) {
   const char* line = skip_spaces(raw_line);
   if(is_line_end(*line)) return true;
 
-  if(starts_with(line, "run") && (token_ends(line + 3) || is_space(line[3]))) {
-    const char* args = skip_spaces(line + 3);
-    if(!is_line_end(*args)) return run_named_program(args);
-    start_current_program();
-    return true;
+  switch(script_terminal.execute_script_line(line)) {
+    case class_terminal::SCRIPT_RESULT_OK:
+      return true;
+    case class_terminal::SCRIPT_RUN_PROGRAM:
+      start_current_program();
+      return true;
+    case class_terminal::SCRIPT_OPEN_FILE:
+      return OpenStoredFile(script_terminal.script_args());
+    case class_terminal::SCRIPT_LOAD_SLOT:
+      return open_slot(script_terminal.script_args());
   }
-
-  if(starts_with(line, "open") && (token_ends(line + 4) || is_space(line[4]))) {
-    program_store::Entry entry;
-    if(!ResolveStoredFile(skip_spaces(line + 4), entry)) return false;
-    return open_entry(entry);
-  }
-
-  // "load N" must not reach the terminal: Load() would cancel and restart the
-  // running script recursively (the terminal matches any "load" prefix, so
-  // intercept all of them). Run the slot as a nested script instead.
-  if(starts_with(line, "load")) {
-    const char* args = skip_spaces(line + 4);
-    usize slot = 0;
-    usize digits = 0;
-    while(args[digits] >= '0' && args[digits] <= '9') {
-      slot = slot * 10 + (usize) (args[digits] - '0');
-      digits++;
-    }
-    if(digits == 0 || slot > 99 || !token_ends(args + digits)) return false;
-
-    char name[8];
-    snprintf(name, sizeof(name), "%u", (unsigned) slot);
-    return open_store_script(name);
-  }
-
-  const i32 result = script_terminal.execute_script_line(line);
-  if(result >= 0) return press_scan_code(result);
-  return result == -1;
+  return false;
 }
 
 void service(void) {
@@ -434,6 +343,14 @@ bool load_program(const char* name) {
   runner_state = RunnerState::EXECUTING;
   service();
   return !script_error;
+}
+
+// Единственная точка открытия МК61-скрипта по имени (через OpenStoredEntry):
+// изнутри выполняющегося сценария — вложенный вызов с возвратом на следующую
+// строку, извне (терминал, проводник, меню) — свежая загрузка.
+bool open_program(const char* name) {
+  if(runner_state == RunnerState::EXECUTING) return open_store_script(name);
+  return load_program(name);
 }
 
 bool execute(const u8* text, u16 len) {

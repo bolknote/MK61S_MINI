@@ -22,6 +22,8 @@ bool load_game(usize nGame_for_load);
 void init_library(void);
 void hidden_press_key(sw key);
 void hidden_return_to_program_start(void);
+void hidden_start_loaded_program(void);
+bool hidden_press_scan_code(i32 keycode);
 bool run_loaded_setup_program(void);
 
 #endif

@@ -14,6 +14,7 @@
 #include "mk61emu_core.h"
 #include "disasm.hpp"
 #include "tools.hpp"
+#include "library_pmk.hpp"
 
 extern  const char terminal_symbols[16];
 
@@ -95,8 +96,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     u32     terminal_last_cmd;
     isize   nSlot;
     bool    input_overflow;
+    const char* script_args_ptr;
 
-    static constexpr i32 SCRIPT_COMMAND_ERROR = -2;
+    // Скриптовое действие для m61: аргументы остаются доступны через script_args().
+    isize script_action(i32 action, const char* args) {
+      script_args_ptr = args;
+      recive_pos = 0;
+      return action;
+    }
 
     static constexpr u32 T_VERSION      = 0x00726576; // ver
     static constexpr u32 T_LIST         = 0x7473696C; // list
@@ -128,6 +135,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     static constexpr u32 T_DIR          = 0x72696473; // sdir
     static constexpr u32 T_DEL_SLOT     = 0x6C656473; // sdel
     static constexpr u32 T_RUN          = 0x006E7572; // run (F АВТ, В/О, С/П)
+    static constexpr u32 T_RUN_ARGS     = 0x206E7572; // run <имя> — синоним open
     static constexpr u32 T_OPEN         = 0x6E65706F; // open
     static constexpr u32 T_ERASE_STORAGE= 0x61726573; // sera
     static constexpr u32 T_INSERT_CMD   = 0x20736E69; // ins <шаг> <opcode>
@@ -294,6 +302,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       terminal_last_cmd     = 0;
       nSlot                 = -1;
       input_overflow        = false;
+      script_args_ptr       = "";
     }
 
     void  init(void) {
@@ -307,7 +316,19 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       reset_command_state();
     }
 
+    // Протокол скриптового режима: отрицательный код — результат или действие,
+    // которое должен выполнить движок сценариев (он владеет стеком скриптов).
+    static constexpr i32 SCRIPT_RESULT_OK     = -1;
+    static constexpr i32 SCRIPT_COMMAND_ERROR = -2;
+    static constexpr i32 SCRIPT_RUN_PROGRAM   = -3; // запустить загруженную программу
+    static constexpr i32 SCRIPT_OPEN_FILE     = -4; // открыть файл script_args()
+    static constexpr i32 SCRIPT_LOAD_SLOT     = -5; // выполнить слот script_args()
+
     i32 execute_script_line(const char* line);
+
+    const char* script_args(void) const {
+      return script_args_ptr;
+    }
 
     void  echo_mk61_stack(void) {
       char cvalue[15];
@@ -617,7 +638,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return hex;
     }
 
-    i32  command_to_kbd(void) {
+    i32  command_to_kbd(bool script_mode) {
       const usize code_61 = parse_hex_numeric((char*) &input_buffer[4]);
       usize sequence = key_sequence_on_cmd[code_61];
       dbgln(MK61E, "mk61 <- ", (u8) code_61);
@@ -627,7 +648,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         const i8 scan_code = sequence & 0xFF;
         if(scan_code < 0) break;
 
-        kbd::push(scan_code);
+        // В скрипте — прямо на ядро: буфер клавиатуры чистится при выходе из меню.
+        if(script_mode) hidden_press_key((sw) scan_code);
+        else kbd::push(scan_code);
         sequence >>= 8;
       }
       return -1;//key_sequence_on_cmd[code_61];
@@ -798,11 +821,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             break;
           case  T_CMD_EMULATED: 
               recive_pos = 0;
-            return command_to_kbd();
+            return command_to_kbd(script_mode);
           case  T_KBD_EMULATED: {
               recive_pos = 0;
               const i32 scancode = scancode_to_kbd();
               if(scancode < 0) break;
+              // В скрипте клавиша нажимается сразу на ядре, интерактивно —
+              // скан-код уходит в буфер клавиатуры через loop().
+              if(script_mode) return hidden_press_scan_code(scancode) ? SCRIPT_RESULT_OK : SCRIPT_COMMAND_ERROR;
               return scancode;
             }
           case  T_DISASM:  // включить/выключить режим верхней строки с дизассемблером МК61
@@ -813,6 +839,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               Serial.println("Enter Y/y to confirm the operation!");
             break;
           case  T_LOAD: {
+              // В скрипте слот выполняется вложенно (Load() отменил бы сценарий).
+              if(script_mode) return script_action(SCRIPT_LOAD_SLOT, (const char*) &input_buffer[4]);
               const isize nSlot = parse_dec_numeric((char*) &input_buffer[5]);
               if(!Load(nSlot)) Serial.println("Failed load attempt!");
             }
@@ -899,13 +927,25 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               flash_map_list();
             break;
           case  T_RUN:
+          case  T_RUN_ARGS: {
+              // "run <имя>" — синоним open; без имени — запуск программы МК61.
+              const char* args = (const char*) &input_buffer[3];
+              while(*args == ' ') args++;
+              if(*args != 0) {
+                if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
+                if(!OpenStoredFile(args)) Serial.println("Open failed!");
+                break;
+              }
+              if(script_mode) return script_action(SCRIPT_RUN_PROGRAM, "");
               kbd::push((i8) sw::F);   // F
               kbd::push((i8) sw::NEG); // /-/
               kbd::push((i8) sw::RET); // В/О
               kbd::push((i8) sw::RUN); // C/П
+            }
             break;
           case T_OPEN: {
               const char* args = (input_buffer[4] == ' ') ? (const char*) &input_buffer[5] : "";
+              if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
               if(!OpenStoredFile(args)) Serial.println("Open failed!");
             }
             break;

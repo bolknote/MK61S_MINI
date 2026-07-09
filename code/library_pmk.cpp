@@ -169,9 +169,38 @@ void hidden_return_to_program_start(void) {
   hidden_press_key(sw::RET);
 }
 
-bool run_loaded_setup_program(void) {
+// F АВТ, В/О, С/П прямо на ядре, минуя буфер клавиатуры (его чистит выход из
+// меню/проводника). Общий примитив терминала, m61-сценариев и библиотеки.
+void hidden_start_loaded_program(void) {
   hidden_return_to_program_start();
   hidden_press_key(sw::RUN);
+}
+
+// Скан-код клавиши прямо на ядро, по той же причине.
+bool hidden_press_scan_code(i32 keycode) {
+  if(keycode == KEY_DEGREE) {
+    MK61Emu_SetAngleUnit(DEGREE);
+    return true;
+  }
+  if(keycode == KEY_GRADE) {
+    MK61Emu_SetAngleUnit(GRADE);
+    return true;
+  }
+  if(keycode == KEY_RADIAN) {
+    MK61Emu_SetAngleUnit(RADIAN);
+    return true;
+  }
+  if(keycode < 0 || keycode >= 40) return false;
+
+  const TMK61_cross_key cross_key = KeyPairs[keycode];
+  if(cross_key.as_u16() == NON.as_u16()) return false;
+
+  hidden_press_key((sw) keycode);
+  return true;
+}
+
+bool run_loaded_setup_program(void) {
+  hidden_start_loaded_program();
 
   if(!core_61::is_RUN()) {
     return false;

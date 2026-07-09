@@ -163,13 +163,13 @@ bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
   return false;
 }
 
-bool OpenStoredFile(const char* args) {
-  program_store::Entry entry;
-  if(!ResolveStoredFile(args, entry)) return false;
-
+// Единая точка запуска сохранённого файла: используется терминалом,
+// m61-сценариями и проводником. МК61-скрипты уходят в m61_text::open_program,
+// который сам решает — вложенный вызов (изнутри сценария) или свежая загрузка.
+bool OpenStoredEntry(const program_store::Entry& entry) {
   switch(entry.type) {
     case program_store::ProgramType::MK61:
-      return LoadProgram(entry.name);
+      return m61_text::open_program(entry.name);
 #if MK61_ENABLE_BASIC
     case program_store::ProgramType::BASIC:
       return RunBasicProgram(entry.name);
@@ -187,6 +187,12 @@ bool OpenStoredFile(const char* args) {
       return program_store_view_entry(entry.type, entry.name);
   }
   return false;
+}
+
+bool OpenStoredFile(const char* args) {
+  program_store::Entry entry;
+  if(!ResolveStoredFile(args, entry)) return false;
+  return OpenStoredEntry(entry);
 }
 
 static const SoundNote* sound_sequence = NULL;
