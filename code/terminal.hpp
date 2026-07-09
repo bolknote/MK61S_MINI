@@ -17,6 +17,8 @@
 #include "library_pmk.hpp"
 #include "ledcontrol.h"
 #include "mk_math.hpp"
+#include "virtual_fat.hpp"
+#include "program_store.hpp"
 
 extern  const char terminal_symbols[16];
 
@@ -72,7 +74,7 @@ enum : u8 {
   CMD_SET_CODE, CMD_POKE, CMD_DFU, CMD_DUMP, CMD_PUB, CMD_SMAP, CMD_STACK,
   CMD_KBD, CMD_CMD, CMD_CLEAR, CMD_RING, CMD_RENAME, CMD_DIR, CMD_DEL_SLOT,
   CMD_RUN, CMD_OPEN, CMD_ERASE_STORAGE, CMD_INS, CMD_HELP, CMD_HISTORY,
-  CMD_LED, CMD_BEEP, CMD_IF
+  CMD_LED, CMD_BEEP, CMD_IF, CMD_VFAT_LOG, CMD_FS_LIST, CMD_FS_REMOVE, CMD_FS_CLEAN
 };
 
 struct TerminalCommand {
@@ -116,6 +118,10 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "sdel",    CMD_DEL_SLOT,      "sdel <slot> - erase slot (Y/y)" },
   { "sera",    CMD_ERASE_STORAGE, "erase all slots (Y/y)" },
   { "clr",     CMD_CLEAR,         "clear program memory (Y/y)" },
+  { "vlog",    CMD_VFAT_LOG,      "dump virtual FAT trace log" },
+  { "fsls",    CMD_FS_LIST,       "list files in program store" },
+  { "fsrm",    CMD_FS_REMOVE,     "fsrm <name.ext> - delete stored file" },
+  { "fsclean", CMD_FS_CLEAN,      "remove all zero-length store entries" },
   { "disa",    CMD_DISASM,        "toggle disassembler on display" },
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
   { "dfu",     CMD_DFU,           "enter DFU bootloader" },
@@ -182,6 +188,52 @@ constexpr bool terminal_index_resolves_all(void) {
   return true;
 }
 static_assert(terminal_index_resolves_all(), "terminal command index: a command is unreachable (CRC cluster or duplicate name)");
+
+// ====== Файлы хранилища программ (fsls/fsrm) ======
+struct TerminalFsType {
+  program_store::ProgramType type;
+  const char* ext;
+};
+
+static constexpr TerminalFsType terminal_fs_types[] = {
+  { program_store::ProgramType::MK61,       "M61" },
+  { program_store::ProgramType::BASIC,      "BAS" },
+  { program_store::ProgramType::FOCAL,      "FOC" },
+  { program_store::ProgramType::TINYBASIC,  "TBI" },
+  { program_store::ProgramType::TEXT,       "T1"  },
+  { program_store::ProgramType::MK61_STATE, "M2"  },
+};
+static constexpr u8 TERMINAL_FS_TYPE_COUNT = sizeof(terminal_fs_types) / sizeof(terminal_fs_types[0]);
+
+// Разбирает "имя.расширение" (расширение без учета регистра) в имя и тип
+// хранилища. Точка берется последняя: имена файлов могут содержать точки.
+static bool terminal_split_fs_name(const char* args, char* name_out, program_store::ProgramType& type_out) {
+  isize dot = -1;
+  isize len = 0;
+  while(args[len] != 0) {
+    if(args[len] == '.') dot = len;
+    len++;
+  }
+  if(dot <= 0 || dot >= (isize) program_store::NAME_SIZE) return false;
+
+  for(u8 t = 0; t < TERMINAL_FS_TYPE_COUNT; t++) {
+    const char* ext = terminal_fs_types[t].ext;
+    isize i = 0;
+    bool match = true;
+    while(ext[i] != 0 || args[dot + 1 + i] != 0) {
+      char a = args[dot + 1 + i];
+      if(a >= 'a' && a <= 'z') a = (char) (a - 'a' + 'A');
+      if(a != ext[i]) { match = false; break; }
+      i++;
+    }
+    if(!match) continue;
+    memcpy(name_out, args, (usize) dot);
+    name_out[dot] = 0;
+    type_out = terminal_fs_types[t].type;
+    return true;
+  }
+  return false;
+}
 
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 static u8 terminal_command_lookup(const u8* line) {
@@ -1391,6 +1443,52 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             break;
           case  CMD_SMAP:
               flash_map_list();
+            break;
+          case  CMD_VFAT_LOG: {
+              const char* line = virtual_fat::trace_line_at(0);
+              if(line == NULL) Serial.println("Trace is empty (build with MK61_VFAT_TRACE).");
+              for(u16 i = 0; (line = virtual_fat::trace_line_at(i)) != NULL; i++) Serial.println(line);
+            }
+            break;
+          case  CMD_FS_LIST: {
+              usize total = 0;
+              for(u8 t = 0; t < TERMINAL_FS_TYPE_COUNT; t++) {
+                const program_store::ProgramType type = terminal_fs_types[t].type;
+                const int count = program_store::count(type);
+                for(int i = 0; i < count; i++) {
+                  program_store::Entry file;
+                  if(!program_store::entry(type, i, file)) continue;
+                  Serial.print(file.name);
+                  Serial.print('.');
+                  Serial.print(terminal_fs_types[t].ext);
+                  Serial.print('\t');
+                  Serial.print(file.data_len);
+                  Serial.println(" B");
+                  total++;
+                }
+              }
+              Serial.print(total); Serial.print(" of "); Serial.print(program_store::MAX_ENTRIES); Serial.println(" entries used.");
+            }
+            break;
+          case  CMD_FS_REMOVE: {
+              const char* args = (const char*) &input_buffer[4];
+              while(*args == ' ') args++;
+              program_store::ProgramType type;
+              char fs_name[program_store::NAME_SIZE];
+              if(!terminal_split_fs_name(args, fs_name, type)) {
+                Serial.println("Usage: fsrm <name.ext> (ext: M61 BAS FOC TBI T1 M2)");
+                break;
+              }
+              if(!program_store::remove(type, fs_name)) Serial.println("Delete failed (no such file?)");
+              else Serial.println("Deleted.");
+            }
+            break;
+          case  CMD_FS_CLEAN: {
+              const u16 purged = program_store::purge_empty();
+              Serial.print("Removed ");
+              Serial.print(purged);
+              Serial.println(" empty entries.");
+            }
             break;
           case  CMD_RUN: {
               // "run <имя>" — синоним open; без имени — запуск программы МК61.

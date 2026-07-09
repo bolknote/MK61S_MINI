@@ -216,12 +216,14 @@ bool init(void) {
 
 void deinit(void) {
   if(!initialized) return;
+  // Stop USB first: its interrupt drives the same SPI flash, and a storage
+  // callback racing this flush would corrupt both transfers.
+  initialized = false;
+  (void) USBD_Stop(&usb_device);
   // Persist queued writes/deletes even when the host never ejected cleanly.
   (void) virtual_fat::flush_pending();
-  (void) USBD_Stop(&usb_device);
   (void) USBD_DeInit(&usb_device);
   memset(&usb_device, 0, sizeof(usb_device));
-  initialized = false;
 }
 
 bool active(void) {

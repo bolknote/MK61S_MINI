@@ -455,7 +455,39 @@ static void test_m61_lfn_import_normalizes_cyrillic_name(void) {
 
   u8 stored[8];
   u16 stored_len = 0;
-  assert(program_store::read(program_store::ProgramType::MK61, "Klado", stored, sizeof(stored), &stored_len));
+  assert(program_store::read(program_store::ProgramType::MK61, "Kladoiskatel", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(payload));
+  assert(memcmp(stored, payload, stored_len) == 0);
+}
+
+// A host filename that fits the store limit must be kept verbatim, spaces
+// included, so the name macOS reads back matches the name it wrote.
+static void test_lfn_import_keeps_short_names_verbatim(void) {
+  reset_virtual_fat_state();
+
+  const u16 full_name[] = {
+    'B', 'u', 'm', 'b', 'l', 'e', 'b', 'e', 'e', ' ', 'F', 'l', 'y',
+    '.', 'm', '6', '1',
+    0
+  };
+  const u8 short_name[11] = {'B', 'U', 'M', 'B', 'L', 'E', '~', '1', 'M', '6', '1'};
+  const u8 payload[] = {0x11, 0x22, 0x33};
+
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0, sizeof(data));
+  memcpy(data, payload, sizeof(payload));
+  assert(virtual_fat::write_sector(data_lba(), data));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_lfn_entries_utf16(root + 32, full_name, short_name);
+  fill_short_dir_entry(root + 32 * 3, (const char*) short_name, 2, sizeof(payload));
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[8];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "Bumblebee Fly", stored, sizeof(stored), &stored_len));
   assert(stored_len == sizeof(payload));
   assert(memcmp(stored, payload, stored_len) == 0);
 }
@@ -488,13 +520,13 @@ static void test_state_txt_lfn_import_normalizes_cyrillic(void) {
 
   u8 stored[64];
   u16 stored_len = 0;
-  assert(program_store::read(program_store::ProgramType::MK61_STATE, "koopekafe2", stored, sizeof(stored), &stored_len));
+  assert(program_store::read(program_store::ProgramType::MK61_STATE, "kooperativkafe2", stored, sizeof(stored), &stored_len));
   assert(stored_len == sizeof(payload) - 1);
   assert(memcmp(stored, payload, stored_len) == 0);
 
   u8 generated_root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), generated_root));
-  assert(root_has_lfn_name(generated_root, "koopekafe2.state.txt"));
+  assert(root_has_lfn_name(generated_root, "kooperativkafe2.state.txt"));
 }
 
 static void test_staging_does_not_shadow_committed_file_data(void) {
@@ -1069,6 +1101,32 @@ static void test_tombstone_identity_check_protects_other_files(void) {
   assert(!program_store::exists(program_store::ProgramType::MK61, "BBB"));
 }
 
+// A zero-length directory entry carries no identity: it must not steal the
+// name of a pending-deleted file (the Bumbl5/Bumbl6/... rename storm), and
+// empty files must never reach the program store.
+static void test_empty_entry_neither_renames_nor_commits(void) {
+  reset_virtual_fat_state();
+
+  const u8 payload = 0xEE;
+  assert(program_store::write(program_store::ProgramType::MK61, "EMPTY1", &payload, 1));
+  virtual_fat::reset_session();
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+
+  // Host deletes the empty file and creates a new empty entry in one write
+  // (macOS creates the directory entry before sending any data).
+  u8 updated[virtual_fat::SECTOR_SIZE];
+  memcpy(updated, root, sizeof(updated));
+  updated[32] = 0xE5;
+  fill_short_dir_entry(updated + 64, "NEWFILE M61", 0, 0);
+  assert(virtual_fat::write_sector(root_lba(), updated));
+  assert(virtual_fat::flush_pending());
+
+  assert(!program_store::exists(program_store::ProgramType::MK61, "EMPTY1"));
+  assert(!program_store::exists(program_store::ProgramType::MK61, "NEWFILE"));
+}
+
 } // namespace
 
 int main(void) {
@@ -1076,6 +1134,7 @@ int main(void) {
   test_incomplete_pending_flush_keeps_waiting_for_data();
   test_short_txt_import_stores_text_type();
   test_m61_lfn_import_normalizes_cyrillic_name();
+  test_lfn_import_keeps_short_names_verbatim();
   test_state_txt_lfn_import_normalizes_cyrillic();
   test_staging_does_not_shadow_committed_file_data();
   test_staged_cluster_is_not_advertised_as_free();
@@ -1094,6 +1153,7 @@ int main(void) {
   test_fragmented_file_follows_host_fat_chain();
   test_stale_echo_after_flush_does_not_create_ghosts();
   test_tombstone_identity_check_protects_other_files();
+  test_empty_entry_neither_renames_nor_commits();
   printf("virtual_fat_self_test: ok\n");
   return 0;
 }

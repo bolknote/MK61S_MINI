@@ -144,6 +144,36 @@ static void write_byte(u32 address, u8 value) {
 #endif
 }
 
+// Byte-at-a-time flash access costs a full SPI transaction (busy poll, command,
+// 3 address bytes) per byte, which made every VFAT sector ~500 transactions and
+// dominated USB disk mount time. Bulk transfers do the same work in one go.
+static void read_bytes(u32 address, u8* out, usize len) {
+  if(len == 0) return;
+#ifdef SPI_FLASH
+  if(flash_is_ok) {
+    if(flash.readByteArray(address, out, len)) {
+      disk_led_poll();
+      return;
+    }
+  }
+#endif
+  (void) address;
+  memset(out, 0xFF, len);
+}
+
+static void write_bytes(u32 address, const u8* data, usize len) {
+  if(len == 0) return;
+#ifdef SPI_FLASH
+  if(flash_is_ok) {
+    flash.writeByteArray(address, (uint8_t*) data, len);
+    disk_led_poll();
+  }
+#else
+  (void) address;
+  (void) data;
+#endif
+}
+
 static bool erase_sector(usize sector) {
 #ifdef SPI_FLASH
   if(!flash_is_ok) return false;
@@ -246,23 +276,25 @@ static u8 tag1_for_type(ProgramType type) {
 
 static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& empty) {
   empty = false;
-  const u8 tag0 = read_byte(address);
+  u8 header[8];
+  read_bytes(address, header, sizeof(header));
+  const u8 tag0 = header[0];
   if(tag0 == 0xFF) {
     empty = true;
     return false;
   }
 
-  const u8 tag1 = read_byte(address + 1);
+  const u8 tag1 = header[1];
   bool tag_ok = false;
   out.type = type_from_tag(tag0, tag1, tag_ok);
   if(!tag_ok) return false;
 
-  out.state = read_byte(address + 2);
-  out.name_len = read_byte(address + 3);
+  out.state = header[2];
+  out.name_len = header[3];
   if(out.name_len == 0 || out.name_len >= NAME_SIZE) return false;
 
-  out.data_len = read_le16(address + 4);
-  out.crc = read_le16(address + 6);
+  out.data_len = (u16) (header[4] | (header[5] << 8));
+  out.crc = (u16) (header[6] | (header[7] << 8));
   out.header_len = 8;
   if(out.data_len > MAX_MK61_TEXT_SIZE) return false;
 
@@ -272,19 +304,28 @@ static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& 
   return true;
 }
 
+static u16 crc16_over_flash(u16 crc, u32 address, u16 len) {
+  u8 chunk[64];
+  while(len != 0) {
+    const u16 step = (len > sizeof(chunk)) ? (u16) sizeof(chunk) : len;
+    read_bytes(address, chunk, step);
+    for(u16 i = 0; i < step; i++) crc = crc16_update(crc, chunk[i]);
+    address += step;
+    len = (u16) (len - step);
+  }
+  return crc;
+}
+
 static u16 record_crc(u32 address, const RecordMeta& meta) {
   u16 crc = 0xFFFF;
-  crc = crc16_update(crc, read_byte(address));
-  crc = crc16_update(crc, read_byte(address + 1));
+  u8 tags[2];
+  read_bytes(address, tags, sizeof(tags));
+  crc = crc16_update(crc, tags[0]);
+  crc = crc16_update(crc, tags[1]);
   crc = crc16_update(crc, meta.name_len);
   crc = crc16_update(crc, (u8) (meta.data_len & 0xFF));
   crc = crc16_update(crc, (u8) (meta.data_len >> 8));
-
-  const u32 payload = address + meta.header_len;
-  for(u16 i = 0; i < (u16) (meta.name_len + meta.data_len); i++) {
-    crc = crc16_update(crc, read_byte(payload + i));
-  }
-  return crc;
+  return crc16_over_flash(crc, address + meta.header_len, (u16) (meta.name_len + meta.data_len));
 }
 
 static u16 make_crc(ProgramType type, const char* name, u8 name_len, const u8* data, u16 data_len) {
@@ -400,13 +441,14 @@ bool vfat_stage_write(u16 cluster, const u8* data) {
                       vfat_stage_offset;
   const u16 crc = vfat_stage_crc(cluster, data);
 
-  write_byte(address, VFAT_STAGE_TAG0);
-  write_byte(address + 1, VFAT_STAGE_TAG1);
-  write_le16(address + 2, cluster);
-  write_le16(address + 4, crc);
-  write_byte(address + 6, 0);
-  write_byte(address + 7, 0);
-  for(u16 i = 0; i < VFAT_STAGE_DATA_SIZE; i++) write_byte(address + VFAT_STAGE_HEADER_SIZE + i, data[i]);
+  const u8 header[VFAT_STAGE_HEADER_SIZE] = {
+    VFAT_STAGE_TAG0, VFAT_STAGE_TAG1,
+    (u8) (cluster & 0xFF), (u8) (cluster >> 8),
+    (u8) (crc & 0xFF), (u8) (crc >> 8),
+    0, 0
+  };
+  write_bytes(address, header, sizeof(header));
+  write_bytes(address + VFAT_STAGE_HEADER_SIZE, data, VFAT_STAGE_DATA_SIZE);
 
   if(vfat_stage_refs[index] == 0) vfat_stage_active_count++;
   vfat_stage_refs[index] = vfat_stage_current_ref();
@@ -424,10 +466,12 @@ bool vfat_stage_read(u16 cluster, u8* data) {
   if(!vfat_stage_available()) return false;
 
   DiskActivity disk_activity;
-  if(read_byte(address) != VFAT_STAGE_TAG0 || read_byte(address + 1) != VFAT_STAGE_TAG1) return false;
-  if(read_le16(address + 2) != cluster) return false;
-  const u16 expected_crc = read_le16(address + 4);
-  for(u16 i = 0; i < VFAT_STAGE_DATA_SIZE; i++) data[i] = read_byte(address + VFAT_STAGE_HEADER_SIZE + i);
+  u8 header[VFAT_STAGE_HEADER_SIZE];
+  read_bytes(address, header, sizeof(header));
+  if(header[0] != VFAT_STAGE_TAG0 || header[1] != VFAT_STAGE_TAG1) return false;
+  if((u16) (header[2] | (header[3] << 8)) != cluster) return false;
+  const u16 expected_crc = (u16) (header[4] | (header[5] << 8));
+  read_bytes(address + VFAT_STAGE_HEADER_SIZE, data, VFAT_STAGE_DATA_SIZE);
   return vfat_stage_crc(cluster, data) == expected_crc;
 }
 
@@ -450,8 +494,7 @@ void vfat_stage_forget(u16 start_cluster, u16 clusters) {
 
 static bool read_name(u32 address, const RecordMeta& meta, char* out) {
   if(meta.name_len == 0 || meta.name_len >= NAME_SIZE) return false;
-  const u32 name_addr = address + meta.header_len;
-  for(u8 i = 0; i < meta.name_len; i++) out[i] = (char) read_byte(name_addr + i);
+  read_bytes(address + meta.header_len, (u8*) out, meta.name_len);
   out[meta.name_len] = 0;
   return true;
 }
@@ -545,16 +588,15 @@ static u16 catalog_snapshot_len(u8 entry_count) {
 
 static u16 catalog_crc_from_flash(u32 base, u16 total_len) {
   u16 crc = 0xFFFF;
-  crc = crc16_update(crc, read_byte(base));
-  crc = crc16_update(crc, read_byte(base + 1));
+  u8 header[CATALOG_HEADER_SIZE];
+  read_bytes(base, header, sizeof(header));
+  crc = crc16_update(crc, header[0]);
+  crc = crc16_update(crc, header[1]);
   for(u8 i = 3; i < CATALOG_HEADER_SIZE; i++) {
     if(i == 7 || i == 8) continue;
-    crc = crc16_update(crc, read_byte(base + i));
+    crc = crc16_update(crc, header[i]);
   }
-  for(u16 i = CATALOG_HEADER_SIZE; i < total_len; i++) {
-    crc = crc16_update(crc, read_byte(base + i));
-  }
-  return crc;
+  return crc16_over_flash(crc, base + CATALOG_HEADER_SIZE, (u16) (total_len - CATALOG_HEADER_SIZE));
 }
 
 static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len) {
@@ -615,21 +657,25 @@ static bool save_catalog(void) {
 
   const u32 base = sector_base(CATALOG_SECTOR);
   const u16 crc = catalog_crc_from_ram(entry_count, total_len);
-  write_byte(base, CATALOG_TAG0);
-  write_byte(base + 1, CATALOG_TAG1);
-  write_byte(base + 2, STATE_WRITING);
-  write_byte(base + 3, (u8) STORE_SECTOR_COUNT);
-  write_byte(base + 4, entry_count);
-  write_le16(base + 5, total_len);
-  write_le16(base + 7, crc);
+  const u8 header[CATALOG_HEADER_SIZE] = {
+    CATALOG_TAG0, CATALOG_TAG1, STATE_WRITING, (u8) STORE_SECTOR_COUNT, entry_count,
+    (u8) (total_len & 0xFF), (u8) (total_len >> 8),
+    (u8) (crc & 0xFF), (u8) (crc >> 8)
+  };
+  write_bytes(base, header, sizeof(header));
 
   u32 pos = base + CATALOG_HEADER_SIZE;
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
     const SectorInfo& info = sectors[i];
-    write_byte(pos++, flags_for_sector(info));
-    write_le32(pos, info.generation); pos += 4;
-    write_le16(pos, info.used); pos += 2;
-    write_le16(pos, info.live); pos += 2;
+    const u8 record[CATALOG_SECTOR_INFO_SIZE] = {
+      flags_for_sector(info),
+      (u8) (info.generation & 0xFF), (u8) ((info.generation >> 8) & 0xFF),
+      (u8) ((info.generation >> 16) & 0xFF), (u8) ((info.generation >> 24) & 0xFF),
+      (u8) (info.used & 0xFF), (u8) (info.used >> 8),
+      (u8) (info.live & 0xFF), (u8) (info.live >> 8)
+    };
+    write_bytes(pos, record, sizeof(record));
+    pos += sizeof(record);
   }
 
   for(u8 i = 0; i < index_count; i++) {
@@ -638,13 +684,19 @@ static bool save_catalog(void) {
     const int sector = sector_from_address(entry.address);
     if(sector < 0) return false;
     const u16 offset = offset_in_sector(entry.address);
-    write_byte(pos++, (u8) entry.type);
-    write_byte(pos++, entry.name_len);
-    write_byte(pos++, (u8) sector);
-    write_le16(pos, offset); pos += 2;
-    write_le16(pos, entry.data_len); pos += 2;
-    write_le16(pos, entry.total_len); pos += 2;
-    for(u8 n = 0; n < NAME_SIZE; n++) write_byte(pos++, (u8) entry.name[n]);
+    u8 record[CATALOG_ENTRY_SIZE];
+    record[0] = (u8) entry.type;
+    record[1] = entry.name_len;
+    record[2] = (u8) sector;
+    record[3] = (u8) (offset & 0xFF);
+    record[4] = (u8) (offset >> 8);
+    record[5] = (u8) (entry.data_len & 0xFF);
+    record[6] = (u8) (entry.data_len >> 8);
+    record[7] = (u8) (entry.total_len & 0xFF);
+    record[8] = (u8) (entry.total_len >> 8);
+    for(u8 n = 0; n < NAME_SIZE; n++) record[9 + n] = (u8) entry.name[n];
+    write_bytes(pos, record, sizeof(record));
+    pos += sizeof(record);
   }
 
   write_byte(base + 2, STATE_ACTIVE);
@@ -675,10 +727,13 @@ static bool load_catalog(void) {
   reset_state();
   u32 pos = base + CATALOG_HEADER_SIZE;
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
-    const u8 flags = read_byte(pos++);
-    const u32 generation = read_le32(pos); pos += 4;
-    const u16 used = read_le16(pos); pos += 2;
-    const u16 live = read_le16(pos); pos += 2;
+    u8 record[CATALOG_SECTOR_INFO_SIZE];
+    read_bytes(pos, record, sizeof(record));
+    pos += sizeof(record);
+    const u8 flags = record[0];
+    const u32 generation = (u32) record[1] | ((u32) record[2] << 8) | ((u32) record[3] << 16) | ((u32) record[4] << 24);
+    const u16 used = (u16) (record[5] | (record[6] << 8));
+    const u16 live = (u16) (record[7] | (record[8] << 8));
 
     const u8 known_flags = (u8) (flags & (SECTOR_FLAG_EMPTY | SECTOR_FLAG_ACTIVE | SECTOR_FLAG_FOREIGN));
     if(known_flags == 0 || (known_flags & (known_flags - 1)) != 0) return false;
@@ -948,9 +1003,10 @@ static u8 name_len_of(const char* name) {
 }
 
 static bool valid_write(ProgramType type, const char* name, u16 data_len) {
+  (void) type;
   const u8 nlen = name_len_of(name);
   if(nlen == 0 || nlen >= NAME_SIZE) return false;
-  if(data_len > MAX_MK61_TEXT_SIZE) return false;
+  if(data_len == 0 || data_len > MAX_MK61_TEXT_SIZE) return false;
   return true;
 }
 
@@ -1003,16 +1059,14 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   const u32 address = sector_base((usize) sector) + sectors[sector].used;
   const u16 crc = make_crc(type, name, nlen, data, data_len);
 
-  write_byte(address, tag0_for_type(type));
-  write_byte(address + 1, tag1_for_type(type));
-  write_byte(address + 2, STATE_WRITING);
-  write_byte(address + 3, nlen);
-  write_le16(address + 4, data_len);
-  write_le16(address + 6, crc);
-
-  u32 pos = address + header_len;
-  for(u8 i = 0; i < nlen; i++) write_byte(pos++, (u8) name[i]);
-  for(u16 i = 0; i < data_len; i++) write_byte(pos++, data[i]);
+  const u8 header[8] = {
+    tag0_for_type(type), tag1_for_type(type), STATE_WRITING, nlen,
+    (u8) (data_len & 0xFF), (u8) (data_len >> 8),
+    (u8) (crc & 0xFF), (u8) (crc >> 8)
+  };
+  write_bytes(address, header, sizeof(header));
+  write_bytes(address + header_len, (const u8*) name, nlen);
+  write_bytes(address + header_len + nlen, data, data_len);
   write_byte(address + 2, STATE_ACTIVE);
 
   sectors[sector].used = (u16) (sectors[sector].used + record_len);
@@ -1046,7 +1100,7 @@ bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_l
   if(entry.data_len > capacity) return false;
 
   const u32 payload = entry.address + 8 + entry.name_len;
-  for(u16 i = 0; i < entry.data_len; i++) data[i] = read_byte(payload + i);
+  read_bytes(payload, data, entry.data_len);
   if(out_len != NULL) *out_len = entry.data_len;
   return true;
 }
@@ -1065,7 +1119,7 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
   if(available > len) available = len;
 
   const u32 payload = entry.address + 8 + entry.name_len + offset;
-  for(u16 i = 0; i < available; i++) data[i] = read_byte(payload + i);
+  read_bytes(payload, data, available);
   if(out_len != NULL) *out_len = available;
   return true;
 }
@@ -1082,6 +1136,28 @@ bool remove(ProgramType type, const char* name) {
   remove_index_at((u8) idx);
   (void) save_catalog();
   return true;
+}
+
+u16 purge_empty(void) {
+  DiskActivity disk_activity;
+  if(!ensure_index()) return 0;
+
+  u16 purged = 0;
+  for(u8 i = 0; i < index_count; ) {
+    if(!index_entries[i].used || index_entries[i].data_len != 0) {
+      i++;
+      continue;
+    }
+    const u32 address = index_entries[i].address;
+    const u16 total_len = index_entries[i].total_len;
+    mark_deleted_at(address);
+    move_live_to_dead(address, total_len);
+    remove_index_at(i);
+    purged++;
+  }
+
+  if(purged != 0) (void) save_catalog();
+  return purged;
 }
 
 bool rename(ProgramType type, const char* old_name, const char* new_name) {
