@@ -14,6 +14,9 @@ extern "C" int FocalTestAddProgram(const char* source);
 extern "C" void FocalTestSetAskValue(double value);
 extern "C" void FocalTestRun(int slot);
 extern "C" double FocalTestNumber(const char* name);
+extern "C" double FocalTestMkX(void);
+extern "C" double FocalTestMkRegister(int reg);
+extern "C" void FocalTestSetRfEnabled(bool enabled);
 extern "C" const char* FocalTestLcdLine(int row);
 extern "C" const char* FocalTestError(void);
 extern "C" void FocalTestDrawNewEditor(const char* source, int cursor);
@@ -193,6 +196,49 @@ static void test_mk_math_dispatch_and_format(void) {
   FocalTestRun(slot);
   CHECK_NEAR(FocalTestNumber("A"), 6.0); // 0 + 1 + 4 + 1
   CHECK_STARTS(FocalTestLcdLine(0), "1E+8");
+}
+
+static void test_mk_register_references(void) {
+  FocalTestReset();
+  const int slot = add_program(
+      "01.10 S .X=42\n"
+      "01.20 S A=.X+1\n"
+      "01.30 S .R0=A\n"
+      "01.40 S .RE=.R0+2\n"
+      "01.50 P .RE\n"
+      "01.60 E");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestMkX(), 42.0);
+  CHECK_NEAR(FocalTestNumber("A"), 43.0);
+  CHECK_NEAR(FocalTestMkRegister(0), 43.0);
+  CHECK_NEAR(FocalTestMkRegister(14), 45.0);
+  CHECK_STARTS(FocalTestLcdLine(0), "45");
+}
+
+static void test_ask_mk_stack_reference(void) {
+  FocalTestReset();
+  FocalTestSetAskValue(7.0);
+  const int slot = add_program(
+      "01.10 A .Y\n"
+      "01.20 S A=.Y\n"
+      "01.30 E");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("A"), 7.0);
+}
+
+static void test_mk_rf_requires_expanded_mode(void) {
+  FocalTestReset();
+  CHECK(!FocalTestCompile("01.10 S .RF=1\n01.20 E"));
+
+  FocalTestReset();
+  FocalTestSetRfEnabled(true);
+  const int slot = add_program(
+      "01.10 S .RF=-7\n"
+      "01.20 S A=.RF\n"
+      "01.30 E");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestMkRegister(15), -7.0);
+  CHECK_NEAR(FocalTestNumber("A"), -7.0);
 }
 
 static void test_editor_shift_parentheses(void) {
@@ -402,6 +448,9 @@ int main(void) {
   test_goto_and_branch();
   test_functions();
   test_mk_math_dispatch_and_format();
+  test_mk_register_references();
+  test_ask_mk_stack_reference();
+  test_mk_rf_requires_expanded_mode();
   test_editor_shift_parentheses();
   test_editor_expression_macros();
   test_editor_digit_symbol_and_sms_input();

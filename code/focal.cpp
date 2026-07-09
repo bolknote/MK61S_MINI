@@ -28,6 +28,20 @@ static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
 static const int KEY_ESC_PRESS = KEY_ESC;
 
+typedef enum {
+  X1 = 0,
+  X  = 1,
+  Y  = 2,
+  Z  = 3,
+  T  = 4
+} stack;
+
+namespace mk61_ref {
+  double host_stack_value[5];
+  double host_register_value[16];
+  bool host_rf_enabled;
+}
+
 class MK61Display {
   public:
     static constexpr u8 MAX_ROWS = 8;
@@ -135,6 +149,10 @@ namespace library_mk61 {
 #endif
 
 #include "mk_math.hpp"
+#ifdef FOCAL_HOST_TEST
+#define MK61_REF_HOST_TEST
+#endif
+#include "mk61_ref.hpp"
 
 #ifdef FOCAL_HOST_TEST
 #define TEXT_EDITOR_HOST_TEST
@@ -205,6 +223,17 @@ struct FocalLine {
   FocalAddress number;
   FocalOp op;
   char operand[FOCAL_LINE_TEXT_SIZE];
+};
+
+enum class FocalTargetKind : u8 {
+  VAR,
+  MK_REF
+};
+
+struct FocalTarget {
+  FocalTargetKind kind;
+  int var_index;
+  mk61_ref::Ref mk_ref;
 };
 
 struct FocalAst {
@@ -710,6 +739,68 @@ static bool focal_parse_statement_text(const char* text, FocalLine& line) {
   return true;
 }
 
+static bool focal_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref& ref) {
+  p = focal_skip_spaces(p);
+  if(p >= end || *p != '.') return false;
+  const char* cursor = p + 1;
+  if(cursor >= end || !focal_is_alpha(*cursor)) return false;
+
+  char name[4];
+  u8 len = 0;
+  while(cursor < end && (focal_is_alpha(*cursor) || focal_is_digit(*cursor))) {
+    if(len < sizeof(name) - 1) name[len++] = focal_upper(*cursor);
+    cursor++;
+  }
+  name[len] = 0;
+
+  if(!mk61_ref::parse_name(name, ref)) return false;
+  if(ref.kind == mk61_ref::Kind::R && !mk61_ref::register_available(ref.reg)) return false;
+  p = cursor;
+  return true;
+}
+
+static bool focal_parse_target_token(const char*& p, const char* end, FocalTarget& target) {
+  p = focal_skip_spaces(p);
+  if(p >= end) return false;
+
+  mk61_ref::Ref ref;
+  if(*p == '.') {
+    if(!focal_parse_mk_ref_token(p, end, ref)) return false;
+    target.kind = FocalTargetKind::MK_REF;
+    target.var_index = -1;
+    target.mk_ref = ref;
+    return true;
+  }
+
+  if(!focal_is_alpha(*p)) return false;
+  const int var_index = focal_upper(*p++) - 'A';
+  if(var_index < 0 || var_index >= 26) return false;
+  target.kind = FocalTargetKind::VAR;
+  target.var_index = var_index;
+  target.mk_ref = {mk61_ref::Kind::X, 0};
+  return true;
+}
+
+static bool focal_target_assignment(const char* text, FocalTarget& target, const char*& expr_begin) {
+  const char* begin = focal_skip_spaces(text);
+  const char* end = begin + strlen(begin);
+  const char* p = begin;
+  if(!focal_parse_target_token(p, end, target)) return false;
+  p = focal_skip_spaces(p);
+  if(p >= end || *p != '=') return false;
+  expr_begin = p + 1;
+  return true;
+}
+
+static bool focal_target_only(const char* text, FocalTarget& target) {
+  const char* begin = focal_skip_spaces(text);
+  const char* end = begin + strlen(begin);
+  const char* p = begin;
+  if(!focal_parse_target_token(p, end, target)) return false;
+  p = focal_skip_spaces(p);
+  return p == end;
+}
+
 static bool focal_parse_line_text(const char* text, FocalLine& line) {
   const char* p = text;
   if(!focal_parse_address(p, line.number)) return false;
@@ -720,13 +811,15 @@ static bool focal_parse_line_text(const char* text, FocalLine& line) {
 static bool focal_validate_statement(const FocalLine& line) {
   const char* p = focal_skip_spaces(line.operand);
   switch(line.op) {
-    case FocalOp::ASK:
-      return focal_is_alpha(*p) && !focal_is_alpha(*(p + 1));
-    case FocalOp::SET:
-      if(!focal_is_alpha(*p)) return false;
-      p++;
-      p = focal_skip_spaces(p);
-      return *p == '=';
+    case FocalOp::ASK: {
+      FocalTarget target;
+      return focal_target_only(p, target);
+    }
+    case FocalOp::SET: {
+      FocalTarget target;
+      const char* expr_begin = NULL;
+      return focal_target_assignment(p, target, expr_begin);
+    }
     case FocalOp::FOR:
       if(!focal_is_alpha(*p)) return false;
       return strchr(line.operand, '=') != NULL && strchr(line.operand, ';') != NULL;
@@ -819,6 +912,21 @@ static bool expr_match(ExprParser& parser, char ch) {
   if(parser.p >= parser.end || *parser.p != ch) return false;
   parser.p++;
   return true;
+}
+
+static double expr_parse_mk_ref(ExprParser& parser) {
+  mk61_ref::Ref ref;
+  if(!focal_parse_mk_ref_token(parser.p, parser.end, ref)) {
+    expr_set_error(parser, "MK?");
+    return 0.0;
+  }
+
+  double value = 0.0;
+  if(!mk61_ref::read(ref, value)) {
+    expr_set_error(parser, "MK?");
+    return 0.0;
+  }
+  return value;
 }
 
 static double expr_parse_additive(ExprParser& parser);
@@ -918,6 +1026,9 @@ static double expr_parse_primary(ExprParser& parser) {
   }
 
   if(focal_is_alpha(*parser.p)) return expr_parse_identifier(parser);
+  if(*parser.p == '.' && parser.p + 1 < parser.end && focal_is_alpha(*(parser.p + 1))) {
+    return expr_parse_mk_ref(parser);
+  }
 
   const char* after = NULL;
   const double value = mk_math::strtod(parser.p, &after);
@@ -1025,16 +1136,16 @@ static bool focal_parse_var_assignment(const char* text, int& var_index, const c
   return var_index >= 0 && var_index < 26;
 }
 
-static double focal_read_number_from_keyboard(char var_name) {
+static double focal_read_number_from_keyboard(const char* target_name) {
 #ifdef FOCAL_HOST_TEST
-  (void) var_name;
+  (void) target_name;
   return focal_host_ask_value;
 #else
   char buffer[17];
   char prompt[17];
   memset(buffer, 0, sizeof(buffer));
   u8 len = 0;
-  snprintf(prompt, sizeof(prompt), focal_language_is_ru() ? "ВВОД %c" : "ASK %c", var_name);
+  snprintf(prompt, sizeof(prompt), focal_language_is_ru() ? "ВВОД %s" : "ASK %s", target_name);
   while(true) {
     focal_message_i18n(prompt, prompt, buffer, buffer);
     const i32 key = kbd::get_key_wait();
@@ -1073,7 +1184,7 @@ static double focal_read_number_from_keyboard(char var_name) {
   #if defined(MK61_FOCAL_TRACE) && !defined(FOCAL_HOST_TEST)
     focal_trace_header();
     Serial.print("ASK ");
-    Serial.print(var_name);
+    Serial.print(target_name);
     Serial.print("=");
     Serial.println(value, 10);
     Serial.flush();
@@ -1090,31 +1201,11 @@ static FocalFlow focal_flow(FocalFlowKind kind, i16 pc) {
 }
 
 #ifndef FOCAL_HOST_TEST
-static const char focal_display_symbols[16] = {
-    'O', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', G_RUS, 'E', ' '
-};
-
-static double focal_parse_mk61_display_number(const char* value) {
-  char buffer[20];
-  char* out = buffer;
-  if(value[0] == '-') *out++ = '-';
-  for(int i = 1; i <= 9; i++) {
-    if(value[i] == ' ') continue;
-    *out++ = (value[i] == 'O') ? '0' : value[i];
-  }
-  *out++ = 'e';
-  *out++ = (value[11] == '-') ? '-' : '+';
-  *out++ = (value[12] == 'O') ? '0' : value[12];
-  *out++ = (value[13] == 'O') ? '0' : value[13];
-  *out = 0;
-  return mk_math::atof(buffer);
-}
-
 static double focal_read_mk_x(void) {
-  char value[15];
-  value[14] = 0;
-  read_stack_register(stack::X, value, focal_display_symbols);
-  return focal_parse_mk61_display_number(value);
+  double value = 0.0;
+  const mk61_ref::Ref ref = {mk61_ref::Kind::X, 0};
+  if(!mk61_ref::read(ref, value)) return 0.0;
+  return value;
 }
 #endif
 
@@ -1169,18 +1260,76 @@ static bool focal_execute_group(i16 major, int depth, FocalFlow& flow) {
   return true;
 }
 
+static char focal_hex_char(u8 value) {
+  return (value < 10) ? (char) ('0' + value) : (char) ('A' + value - 10);
+}
+
+static void focal_target_name(const FocalTarget& target, char* out, usize size) {
+  if(size == 0) return;
+  if(target.kind == FocalTargetKind::VAR) {
+    out[0] = (char) ('A' + target.var_index);
+    if(size > 1) out[1] = 0;
+    return;
+  }
+
+  if(size < 3) {
+    out[0] = 0;
+    return;
+  }
+  out[0] = '.';
+  switch(target.mk_ref.kind) {
+    case mk61_ref::Kind::X:
+      out[1] = 'X';
+      out[2] = 0;
+      return;
+    case mk61_ref::Kind::Y:
+      out[1] = 'Y';
+      out[2] = 0;
+      return;
+    case mk61_ref::Kind::Z:
+      out[1] = 'Z';
+      out[2] = 0;
+      return;
+    case mk61_ref::Kind::T:
+      out[1] = 'T';
+      out[2] = 0;
+      return;
+    case mk61_ref::Kind::R:
+      if(size < 4) {
+        out[0] = 0;
+        return;
+      }
+      out[1] = 'R';
+      out[2] = focal_hex_char(target.mk_ref.reg);
+      out[3] = 0;
+      return;
+  }
+  out[0] = 0;
+}
+
+static bool focal_write_target(const FocalTarget& target, double value) {
+  if(target.kind == FocalTargetKind::VAR) {
+    focal_vars[target.var_index] = value;
+    focal_var_set[target.var_index] = true;
+    return true;
+  }
+  if(!mk61_ref::write(target.mk_ref, value)) return focal_error("MK?");
+  return true;
+}
+
 static bool focal_execute_set(const char* operand) {
-  int var_index = -1;
+  FocalTarget target;
   const char* expr_begin = NULL;
-  if(!focal_parse_var_assignment(operand, var_index, expr_begin)) return focal_error("SYNTAX?");
+  if(!focal_target_assignment(operand, target, expr_begin)) return focal_error("SYNTAX?");
   double value = 0.0;
   if(!focal_eval_expr_text(expr_begin, value)) return false;
-  focal_vars[var_index] = value;
-  focal_var_set[var_index] = true;
+  if(!focal_write_target(target, value)) return false;
   #if defined(MK61_FOCAL_TRACE) && !defined(FOCAL_HOST_TEST)
+    char name[5];
+    focal_target_name(target, name, sizeof(name));
     focal_trace_header();
     Serial.print("SET ");
-    Serial.write((char) ('A' + var_index));
+    Serial.print(name);
     Serial.print("=");
     Serial.println(value, 10);
     Serial.flush();
@@ -1189,13 +1338,11 @@ static bool focal_execute_set(const char* operand) {
 }
 
 static bool focal_execute_ask(const char* operand) {
-  const char* p = focal_skip_spaces(operand);
-  if(!focal_is_alpha(*p)) return focal_error("VAR?");
-  const int var_index = focal_upper(*p) - 'A';
-  if(var_index < 0 || var_index >= 26) return focal_error("VAR?");
-  focal_vars[var_index] = focal_read_number_from_keyboard((char) ('A' + var_index));
-  focal_var_set[var_index] = true;
-  return true;
+  FocalTarget target;
+  if(!focal_target_only(operand, target)) return focal_error("VAR?");
+  char name[5];
+  focal_target_name(target, name, sizeof(name));
+  return focal_write_target(target, focal_read_number_from_keyboard(name));
 }
 
 static void focal_append_print(char* out, usize size, const char* text) {
@@ -2424,6 +2571,9 @@ bool FOCAL_menu_select(void) {
 extern "C" void FocalTestReset(void) {
   InitFocal();
   lcd.clear();
+#ifdef FOCAL_HOST_TEST
+  mk61_ref::host_reset();
+#endif
 }
 
 extern "C" bool FocalTestCompile(const char* source) {
@@ -2463,6 +2613,18 @@ extern "C" double FocalTestNumber(const char* name) {
   if(name == NULL || name[0] == 0) return 0.0;
   const int idx = focal_upper(name[0]) - 'A';
   return (idx < 0 || idx >= 26) ? 0.0 : focal_vars[idx];
+}
+
+extern "C" double FocalTestMkX(void) {
+  return mk61_ref::host_get_stack(mk61_ref::Kind::X);
+}
+
+extern "C" double FocalTestMkRegister(int reg) {
+  return reg >= 0 && reg < 16 ? mk61_ref::host_get_register((u8) reg) : 0.0;
+}
+
+extern "C" void FocalTestSetRfEnabled(bool enabled) {
+  mk61_ref::host_set_rf_enabled(enabled);
 }
 
 extern "C" const char* FocalTestLcdLine(int row) {

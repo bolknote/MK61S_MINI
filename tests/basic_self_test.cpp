@@ -16,6 +16,8 @@ extern "C" double BasicTestNumber(const char* name);
 extern "C" const char* BasicTestString(const char* name);
 extern "C" const char* BasicTestLcdLine(int row);
 extern "C" double BasicTestMkX(void);
+extern "C" double BasicTestMkRegister(int reg);
+extern "C" void BasicTestSetRfEnabled(bool enabled);
 extern "C" bool BasicTestStepAssigned(int step);
 extern "C" const char* BasicTestError(void);
 extern "C" void BasicTestEditSequence(const int* keys, int count, char* out, int size);
@@ -128,6 +130,28 @@ static void test_mk_stack_reference(void) {
   CHECK_NEAR(BasicTestMkX(), 42.0);
 }
 
+static void test_mk_register_references(void) {
+  BasicTestReset();
+  const int slot = add_program(".R0=12.5:.RE=.R0+2:A=.RE:.Y=-3:B=.Y:HLT MKREG");
+  BasicTestRun(slot);
+  CHECK_NEAR(BasicTestMkRegister(0), 12.5);
+  CHECK_NEAR(BasicTestMkRegister(14), 14.5);
+  CHECK_NEAR(BasicTestNumber("A"), 14.5);
+  CHECK_NEAR(BasicTestNumber("B"), -3.0);
+}
+
+static void test_mk_rf_requires_expanded_mode(void) {
+  BasicTestReset();
+  CHECK(!BasicTestCompile(".RF=1:HLT BADRF"));
+
+  BasicTestReset();
+  BasicTestSetRfEnabled(true);
+  const int slot = add_program(".RF=-7:A=.RF:HLT RF");
+  BasicTestRun(slot);
+  CHECK_NEAR(BasicTestMkRegister(15), -7.0);
+  CHECK_NEAR(BasicTestNumber("A"), -7.0);
+}
+
 static void test_mk_step_binding(void) {
   BasicTestReset();
   add_program("? \"X\":HLT FOO");
@@ -188,6 +212,8 @@ int main(void) {
   test_labels_and_go_from_if();
   test_string_variables();
   test_mk_stack_reference();
+  test_mk_register_references();
+  test_mk_rf_requires_expanded_mode();
   test_mk_step_binding();
   test_basic_function_call_returns_x();
   test_editor_shift_and_statement_keys();
