@@ -2007,13 +2007,15 @@ static int select_basic_program(bool allow_new) {
 }
 
 static void display_ast_ok(const BasicProgram& program) {
-  char line[17];
-  char ru_line[32];
-  snprintf(line, sizeof(line), "%s %d/%d", program.name, ast.stmt_count, ast.expr_count);
+  // The counters go to the top line: appended to the name they looked like
+  // the program had been renamed to "NAME <digits>".
+  char top_en[17];
+  char top_ru[32];
+  snprintf(top_en, sizeof(top_en), "BASIC: %d/%d", ast.stmt_count, ast.expr_count);
+  snprintf(top_ru, sizeof(top_ru), "БЕЙСИК: %d/%d", ast.stmt_count, ast.expr_count);
   char display_name[18];
   basic_display_program_name(program.name, display_name, sizeof(display_name));
-  snprintf(ru_line, sizeof(ru_line), "%s %d/%d", display_name, ast.stmt_count, ast.expr_count);
-  basic_message_i18n("BASIC compiled", "БЕЙСИК готов", line, ru_line);
+  basic_message_i18n(top_en, top_ru, program.name, display_name);
   delay(800);
 }
 

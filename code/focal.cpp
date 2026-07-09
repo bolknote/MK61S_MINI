@@ -1680,11 +1680,15 @@ static void focal_display_program_name(const char* name, char* out, usize size) 
 }
 
 static void display_focal_ok(const FocalProgram& program) {
-  char line[17];
+  // The line count goes to the top line: appended to the name it looked like
+  // the program had been renamed to "NAME <digit>".
+  char top_en[17];
+  char top_ru[32];
+  snprintf(top_en, sizeof(top_en), "FOCAL: %d lines", (int) focal_ast.line_count);
+  snprintf(top_ru, sizeof(top_ru), "ФОКАЛ готов: %d", (int) focal_ast.line_count);
   char display_name[24];
   focal_display_program_name(program.name, display_name, sizeof(display_name));
-  snprintf(line, sizeof(line), "%s %d", display_name, (int) focal_ast.line_count);
-  focal_message_i18n("FOCAL compiled", "ФОКАЛ готов", line, line);
+  focal_message_i18n(top_en, top_ru, display_name, display_name);
   delay(700);
 }
 
