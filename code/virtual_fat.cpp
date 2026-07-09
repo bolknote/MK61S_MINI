@@ -973,54 +973,50 @@ static void render_pending_dir_entry(u8* out, const PendingWrite& pending, int u
 
 static void read_root_sector(u32 root_sector, u8* out) {
   memset(out, 0, SECTOR_SIZE);
-  const int first_entry = (int) (root_sector * (SECTOR_SIZE / 32));
-  const int committed_files = file_count();
+  const int entries_per_sector = SECTOR_SIZE / 32;
+  const int first_entry = (int) (root_sector * entries_per_sector);
+  const int last_entry = first_entry + entries_per_sector;
 
-  for(int i = 0; i < (SECTOR_SIZE / 32); i++) {
-    const int dir_index = first_entry + i;
-    u8* item = out + i * 32;
-
-    if(dir_index == 0) {
-      memcpy(item, "MK61S FS   ", 11);
-      item[11] = FAT_ATTR_VOLUME;
-      continue;
-    }
+  if(first_entry == 0) {
+    memcpy(out, "MK61S FS   ", 11);
+    out[11] = FAT_ATTR_VOLUME;
+  }
 
 #if defined(MK61_VFAT_TRACE)
-    if(dir_index == 1) {
-      fill_trace_dir_entry(item);
-      continue;
-    }
+  if(first_entry <= 1 && 1 < last_entry) fill_trace_dir_entry(out + (1 - first_entry) * 32);
 #endif
 
-    int cursor = first_program_dir_index();
-    bool rendered = false;
-    for(int file_index = 0; file_index < committed_files; file_index++) {
-      program_store::Entry entry;
-      if(!file_entry(file_index, entry)) continue;
-      const u8 entries = dir_entries_for_name(entry.name, entry.type);
-      if(dir_index >= cursor && dir_index < cursor + entries) {
-        render_committed_dir_entry(item, entry, file_index, (u8) (dir_index - cursor));
-        // Files queued for deletion keep their slots but are shown as
-        // deleted; a zeroed slot would terminate directory enumeration.
-        if(entry_is_pending_delete(entry)) item[0] = 0xE5;
-        rendered = true;
-        break;
-      }
-      cursor += entries;
-    }
-    if(rendered) continue;
+  // Single pass over the files with a running cursor: rescanning the whole
+  // store for each of the 16 slots made every sector read O(files * slots).
+  const int committed_files = file_count();
+  int cursor = first_program_dir_index();
 
-    for(u8 pending_index = 0; pending_index < MAX_PENDING_WRITES; pending_index++) {
-      PendingWrite& pending = session_state().pending_writes[pending_index];
-      if(!pending_visible(pending)) continue;
-      const u8 entries = dir_entries_for_name(pending.name, pending.type);
-      if(dir_index >= cursor && dir_index < cursor + entries) {
-        render_pending_dir_entry(item, pending, committed_files + pending_index, (u8) (dir_index - cursor));
-        break;
-      }
-      cursor += entries;
+  for(int file_index = 0; file_index < committed_files && cursor < last_entry; file_index++) {
+    program_store::Entry entry;
+    if(!file_entry(file_index, entry)) continue;
+    const u8 entries = dir_entries_for_name(entry.name, entry.type);
+    for(u8 offset = 0; offset < entries; offset++) {
+      const int dir_index = cursor + offset;
+      if(dir_index < first_entry || dir_index >= last_entry) continue;
+      u8* item = out + (dir_index - first_entry) * 32;
+      render_committed_dir_entry(item, entry, file_index, offset);
+      // Files queued for deletion keep their slots but are shown as
+      // deleted; a zeroed slot would terminate directory enumeration.
+      if(entry_is_pending_delete(entry)) item[0] = 0xE5;
     }
+    cursor += entries;
+  }
+
+  for(u8 pending_index = 0; pending_index < MAX_PENDING_WRITES && cursor < last_entry; pending_index++) {
+    PendingWrite& pending = session_state().pending_writes[pending_index];
+    if(!pending_visible(pending)) continue;
+    const u8 entries = dir_entries_for_name(pending.name, pending.type);
+    for(u8 offset = 0; offset < entries; offset++) {
+      const int dir_index = cursor + offset;
+      if(dir_index < first_entry || dir_index >= last_entry) continue;
+      render_pending_dir_entry(out + (dir_index - first_entry) * 32, pending, committed_files + pending_index, offset);
+    }
+    cursor += entries;
   }
 }
 

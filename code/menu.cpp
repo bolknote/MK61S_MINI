@@ -626,19 +626,12 @@ static void draw_usb_disk_status(const char* ru0, const char* en0, const char* r
 }
 
 bool UsbDiskMode(void) {
-  // Startup is split into visible checkpoints: if the device ever freezes
-  // here again, the last label on screen tells which stage is responsible.
-  draw_usb_disk_status("USB-диск", "USB Disk", "1 настройки", "1 settings");
+  draw_usb_disk_status("USB-диск", "USB Disk", "запуск...", "starting...");
   library_mk61::flush_settings_state();
-
-  draw_usb_disk_status("USB-диск", "USB Disk", "2 каталог", "2 catalog");
   (void) program_store::refresh();
   (void) program_store::purge_empty();
-
-  draw_usb_disk_status("USB-диск", "USB Disk", "3 сессия", "3 session");
   virtual_fat::reset_session();
 
-  draw_usb_disk_status("USB-диск", "USB Disk", "4 запуск USB", "4 USB start");
   if(!usb_start_mass_storage_mode()) {
     usb_start_terminal_mode();
     draw_usb_disk_status("Ошибка USB", "USB error", "ESC", "ESC");
