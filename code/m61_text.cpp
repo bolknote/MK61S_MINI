@@ -37,7 +37,6 @@ struct ScriptFrame {
   char name[program_store::NAME_SIZE];
   u16 len;
   u16 pos;
-  bool code_loaded_since_run;
 };
 
 static constexpr u8 SCRIPT_STACK_DEPTH = 8;
@@ -47,7 +46,6 @@ static ScriptSource script_source = ScriptSource::NONE;
 static char script_name[program_store::NAME_SIZE] = {};
 static u16 script_len = 0;
 static u16 script_pos = 0;
-static bool script_code_loaded_since_run = false;
 static bool script_error = false;
 static class_terminal script_terminal;
 static ScriptFrame script_stack[SCRIPT_STACK_DEPTH];
@@ -95,7 +93,6 @@ static void clear_current_script(void) {
   script_name[0] = 0;
   script_len = 0;
   script_pos = 0;
-  script_code_loaded_since_run = false;
 }
 
 static bool stack_uses_script_buffer(void) {
@@ -130,7 +127,6 @@ static void store_current_frame(ScriptFrame& frame) {
   copy_script_name(frame.name, script_name);
   frame.len = script_len;
   frame.pos = script_pos;
-  frame.code_loaded_since_run = script_code_loaded_since_run;
 }
 
 static void restore_frame(const ScriptFrame& frame) {
@@ -138,7 +134,6 @@ static void restore_frame(const ScriptFrame& frame) {
   copy_script_name(script_name, frame.name);
   script_len = frame.len;
   script_pos = frame.pos;
-  script_code_loaded_since_run = frame.code_loaded_since_run;
 }
 
 static bool make_store_frame(const char* name, ScriptFrame& frame) {
@@ -148,7 +143,6 @@ static bool make_store_frame(const char* name, ScriptFrame& frame) {
   copy_script_name(frame.name, entry.name);
   frame.len = entry.data_len;
   frame.pos = 0;
-  frame.code_loaded_since_run = false;
   return true;
 }
 
@@ -271,14 +265,6 @@ static bool run_named_program(const char* args) {
   return false;
 }
 
-// Terminal commands that rewrite the MK61 code page ("set$" is followed by the
-// address directly, without a separating space).
-static bool command_loads_code_page(const char* line) {
-  return (starts_with(line, "hin") && is_space(line[3])) ||
-         starts_with(line, "set$") ||
-         (starts_with(line, "asm") && is_space(line[3]));
-}
-
 static bool open_store_script(const char* name) {
   ScriptFrame child;
   if(!make_store_frame(name, child)) return false;
@@ -317,7 +303,6 @@ static bool open_entry(const program_store::Entry& entry) {
 // Press F АВТ, В/О, С/П directly on the core: keys queued through the keyboard
 // buffer would be flushed when the menu/explorer exits (leave_menu_mode).
 static void start_current_program(void) {
-  script_code_loaded_since_run = false;
   hidden_return_to_program_start();
   hidden_press_key(sw::RUN);
   runner_state = RunnerState::WAIT_RUN_STOP;
@@ -383,9 +368,7 @@ static bool execute_script_line(const char* raw_line) {
 
   const i32 result = script_terminal.execute_script_line(line);
   if(result >= 0) return press_scan_code(result);
-  if(result != -1) return false;
-  if(command_loads_code_page(line)) script_code_loaded_since_run = true;
-  return true;
+  return result == -1;
 }
 
 void service(void) {
@@ -398,11 +381,6 @@ void service(void) {
 
   while(runner_state == RunnerState::EXECUTING) {
     if(script_pos >= script_len) {
-      if(script_code_loaded_since_run) {
-        // The file ends without "run": start the loaded program automatically.
-        start_current_program();
-        return;
-      }
       finish_script();
       return;
     }
@@ -432,7 +410,6 @@ bool start(const u8* text, u16 len) {
   script_name[0] = 0;
   script_len = len;
   script_pos = 0;
-  script_code_loaded_since_run = false;
   script_stack_depth = 0;
   script_error = false;
   script_terminal.init_script();
@@ -451,7 +428,6 @@ bool load_program(const char* name) {
 
   restore_frame(frame);
   script_stack_depth = 0;
-  script_code_loaded_since_run = false;
   script_error = false;
   script_terminal.init_script();
   MK61Emu_ClearCodePage();
