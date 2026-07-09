@@ -439,6 +439,18 @@ static bool persistent_settings_loaded = false;
 static bool persistent_settings_sector_dirty = false;
 static u32 persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
 
+static void reset_persistent_settings_cache(void) {
+  persistent_settings.grade = 0xFF;
+  persistent_settings.counter = 0;
+  persistent_settings.flags = 0xFF;
+  persistent_settings.sound = 0xFF;
+  persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+  persistent_settings.text_profile_stored = false;
+  persistent_settings_loaded = true;
+  persistent_settings_sector_dirty = false;
+  persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+}
+
 static u8 settings_record_crc(const u8* record, u8 crc_index) {
   u8 crc = 0xA5;
   for(u8 i = 0; i < crc_index; i++) {
@@ -462,6 +474,14 @@ static bool settings_record_is_valid(const u8* record) {
   return false;
 }
 
+static bool settings_record_has_text_profile(const u8* record) {
+  if(record[SETTINGS_IDX_VERSION] != SETTINGS_RECORD_VERSION) return false;
+  return record[SETTINGS_IDX_TEXT_ROWS] != 0xFF &&
+    record[SETTINGS_IDX_TEXT_WIDTH] != 0xFF &&
+    record[SETTINGS_IDX_TEXT_HEIGHT] != 0xFF &&
+    record[SETTINGS_IDX_TEXT_GAP] != 0xFF;
+}
+
 static void apply_settings_record(const u8* record) {
   persistent_settings.grade = record[SETTINGS_IDX_GRADE];
   persistent_settings.counter = record[SETTINGS_IDX_COUNTER];
@@ -469,7 +489,7 @@ static void apply_settings_record(const u8* record) {
   persistent_settings.sound = record[SETTINGS_IDX_SOUND];
   persistent_settings.text_profile_stored = false;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  if(record[SETTINGS_IDX_VERSION] == SETTINGS_RECORD_VERSION) {
+  if(settings_record_has_text_profile(record)) {
     persistent_settings.text_profile = lcd_display::normalizeTextProfile({
       record[SETTINGS_IDX_TEXT_ROWS],
       record[SETTINGS_IDX_TEXT_WIDTH],
@@ -477,6 +497,8 @@ static void apply_settings_record(const u8* record) {
       record[SETTINGS_IDX_TEXT_GAP]
     });
     persistent_settings.text_profile_stored = true;
+  } else {
+    persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
   }
 #else
   persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
@@ -998,6 +1020,16 @@ bool  EraseFlash(void) {
      }
   }
   program_store::init();
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase settings", "CTEP SETUP"));
+  }
+  bool settings_reset_ok = true;
+  if(flash_is_ok) settings_reset_ok = flash.eraseSector(SETTINGS_FLASH_SECTOR);
+  reset_persistent_settings_cache();
+  if(settings_reset_ok) write_persistent_settings();
+  library_mk61::load_settings_state();
+  lcd.setTextProfile(library_mk61::display_text_profile());
   sound(PIN_BUZZER, 1000, 300, library_mk61::sound_volume());
   message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
   return action::MENU_EXIT;

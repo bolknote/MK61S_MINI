@@ -812,14 +812,13 @@ static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8
 #else
   switch(field) {
     case 0: {
-      const u8 next_rows = library_mk61::step_display_rows_value(profile.rows, delta);
-      profile = lcd_display::defaultTextProfileForRows(next_rows);
+      profile.rows = library_mk61::step_display_rows_value(profile.rows, delta);
       break;
     }
     case 1: {
       const u8 max_height = lcd_display::PIXEL_HEIGHT / profile.rows;
       if(delta > 0 && profile.glyph_height < max_height) profile.glyph_height++;
-      if(delta < 0 && profile.glyph_height > 8) profile.glyph_height--;
+      if(delta < 0 && profile.glyph_height > 5) profile.glyph_height--;
       break;
     }
     case 2: {
@@ -830,7 +829,7 @@ static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8
     }
     case 3:
       if(delta > 0 && profile.glyph_width < 10) profile.glyph_width++;
-      if(delta < 0 && profile.glyph_width > 5) profile.glyph_width--;
+      if(delta < 0 && profile.glyph_width > 3) profile.glyph_width--;
       break;
   }
   profile = lcd_display::normalizeTextProfile(profile);
