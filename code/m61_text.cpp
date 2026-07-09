@@ -12,6 +12,7 @@
 #include "terminal.hpp"
 #include "tinybasic.hpp"
 
+#include <stdio.h>
 #include <string.h>
 
 namespace m61_text {
@@ -360,6 +361,24 @@ static bool execute_script_line(const char* raw_line) {
     program_store::Entry entry;
     if(!ResolveStoredFile(skip_spaces(line + 4), entry)) return false;
     return open_entry(entry);
+  }
+
+  // "load N" must not reach the terminal: Load() would cancel and restart the
+  // running script recursively (the terminal matches any "load" prefix, so
+  // intercept all of them). Run the slot as a nested script instead.
+  if(starts_with(line, "load")) {
+    const char* args = skip_spaces(line + 4);
+    usize slot = 0;
+    usize digits = 0;
+    while(args[digits] >= '0' && args[digits] <= '9') {
+      slot = slot * 10 + (usize) (args[digits] - '0');
+      digits++;
+    }
+    if(digits == 0 || slot > 99 || !token_ends(args + digits)) return false;
+
+    char name[8];
+    snprintf(name, sizeof(name), "%u", (unsigned) slot);
+    return open_store_script(name);
   }
 
   const i32 result = script_terminal.execute_script_line(line);
