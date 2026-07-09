@@ -96,6 +96,16 @@ extern  void  DFU_enable(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume);
 extern  void  sound_scaled(usize pin, isize freq_Hz, usize duration_ms, usize volume, usize volume_percent);
 extern  void  sound_stop(void);
+
+// Асинхронный звуковой паттерн (команда beep): частота 0 - пауза.
+struct SoundNote {
+  isize frequency_Hz;
+  usize duration_ms;
+  usize gap_ms;
+  usize volume_percent;
+};
+static constexpr usize SOUND_PATTERN_MAX = 16;
+extern  bool  sound_pattern_start(const SoundNote* notes, usize count);
 extern  void  sound_poll(void);
 extern  void  sound_startup(void);
 extern  void  delay_with_sound_poll(t_time_ms duration_ms);

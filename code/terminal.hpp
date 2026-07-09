@@ -15,6 +15,8 @@
 #include "disasm.hpp"
 #include "tools.hpp"
 #include "library_pmk.hpp"
+#include "ledcontrol.h"
+#include "mk_math.hpp"
 
 extern  const char terminal_symbols[16];
 
@@ -55,6 +57,154 @@ extern  void DFU_enable(void);
 
 static u8    input_buffer[MAX_INPUT_CHAR];
 
+
+// ====== Диспетчер команд: имя -> id через CRC-8 индекс ======
+// Первое слово строки хешируется CRC-8 (полином 0x31) и служит входом в
+// 256-байтный индекс, построенный на этапе компиляции. Совпадение хеша
+// обязательно подтверждается сравнением полного имени: иначе опечатка с тем же
+// CRC молча выполнила бы чужую команду (среди команд есть dfu и sera).
+// Коллизии хешей разрешаются линейным пробированием при построении индекса,
+// поэтому переименовывать команды при совпадении CRC не требуется.
+
+enum : u8 {
+  CMD_UNKNOWN = 0,
+  CMD_VERSION, CMD_LIST, CMD_ISA, CMD_ASM, CMD_LASM, CMD_RESET, CMD_REG_DUMP,
+  CMD_REG_SET, CMD_SAVE, CMD_LOAD, CMD_1302, CMD_DISASM, CMD_HIN, CMD_HOUT,
+  CMD_SET_CODE, CMD_POKE, CMD_DFU, CMD_DUMP, CMD_PUB, CMD_SMAP, CMD_STACK,
+  CMD_KBD, CMD_CMD, CMD_CLEAR, CMD_RING, CMD_RENAME, CMD_DIR, CMD_DEL_SLOT,
+  CMD_RUN, CMD_OPEN, CMD_ERASE_STORAGE, CMD_INS, CMD_HELP, CMD_HISTORY,
+  CMD_LED, CMD_BEEP, CMD_IF
+};
+
+struct TerminalCommand {
+  const char* name;
+  u8          id;
+  const char* desc;
+};
+
+// Единственный источник истины: имя <-> id <-> описание для help.
+// Добавление команды: строка здесь + case в execute().
+static constexpr TerminalCommand terminal_commands[] = {
+  { "ver",     CMD_VERSION,       "firmware version" },
+  { "help",    CMD_HELP,          "this list" },
+  { "history", CMD_HISTORY,       "recent command lines" },
+  { "list",    CMD_LIST,          "program memory in hex, vertical" },
+  { "dump",    CMD_DUMP,          "program memory in hex, horizontal" },
+  { "pub",     CMD_PUB,           "program listing in publication format" },
+  { "lasm",    CMD_LASM,          "disassemble program memory" },
+  { "isa",     CMD_ISA,           "list of assembler mnemonics" },
+  { "asm",     CMD_ASM,           "asm [TA] <mnemonics> - assemble line" },
+  { "ins",     CMD_INS,           "ins <step> <opcode> - insert into program" },
+  { "hin",     CMD_HIN,           "hin <addr> <hex> - write program memory" },
+  { "hout",    CMD_HOUT,          "program memory as hin lines" },
+  { "reg",     CMD_REG_DUMP,      "dump R0..RE registers" },
+  { "stk",     CMD_STACK,         "dump stack X,Y,Z,T,X1" },
+  { "poke",    CMD_POKE,          "poke <X|Y|Z|T> <1.25e02> - write stack" },
+  { "1302",    CMD_1302,          "dump K145IK1302 R register" },
+  { "ring",    CMD_RING,          "dump ring M memory" },
+  { "kbd",     CMD_KBD,           "kbd <hex scancode> - press key" },
+  { "led",     CMD_LED,           "led <0|1>[,ms,0|1,...] - LED pattern" },
+  { "beep",    CMD_BEEP,          "beep <Hz>,<ms>[,...] - sound pattern" },
+  { "if",      CMD_IF,            "if <reg><op><val> <cmd> - conditional" },
+  { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
+  { "run",     CMD_RUN,           "run [name] - run program / stored file" },
+  { "open",    CMD_OPEN,          "open <name> - run stored file" },
+  { "save",    CMD_SAVE,          "save <slot> - store program (Y/y)" },
+  { "load",    CMD_LOAD,          "load <slot> - load program" },
+  { "smap",    CMD_SMAP,          "slot occupancy map" },
+  { "sdir",    CMD_DIR,           "list of occupied slots" },
+  { "snm",     CMD_RENAME,        "snm <slot> <name> - rename slot" },
+  { "sdel",    CMD_DEL_SLOT,      "sdel <slot> - erase slot (Y/y)" },
+  { "sera",    CMD_ERASE_STORAGE, "erase all slots (Y/y)" },
+  { "clr",     CMD_CLEAR,         "clear program memory (Y/y)" },
+  { "disa",    CMD_DISASM,        "toggle disassembler on display" },
+  { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
+  { "dfu",     CMD_DFU,           "enter DFU bootloader" },
+};
+static constexpr usize TERMINAL_COMMAND_COUNT = sizeof(terminal_commands) / sizeof(terminal_commands[0]);
+
+constexpr u8 terminal_crc8(const char* str, usize len) {
+  u8 crc = 0;
+  for(usize i = 0; i < len; i++) {
+    crc ^= (u8) str[i];
+    for(u8 bit = 0; bit < 8; bit++) crc = (crc & 0x80) ? (u8) ((crc << 1) ^ 0x31) : (u8) (crc << 1);
+  }
+  return crc;
+}
+
+constexpr usize terminal_name_len(const char* s) {
+  usize len = 0;
+  while(s[len] != 0) len++;
+  return len;
+}
+
+struct TerminalCommandIndex {
+  u8 slot[256];  // 1 + номер в terminal_commands; 0 - пусто
+};
+
+constexpr TerminalCommandIndex make_terminal_command_index(void) {
+  TerminalCommandIndex index = {};
+  for(usize n = 0; n < TERMINAL_COMMAND_COUNT; n++) {
+    const char* name = terminal_commands[n].name;
+    usize probe = terminal_crc8(name, terminal_name_len(name));
+    while(index.slot[probe] != 0) probe = (probe + 1) & 0xFF;
+    index.slot[probe] = (u8) (n + 1);
+  }
+  return index;
+}
+static constexpr TerminalCommandIndex terminal_command_index = make_terminal_command_index();
+
+// Доказательство на этапе компиляции: каждая команда таблицы достижима через
+// индекс и разрешается именно в свой id. Ловит и переполнение кластера
+// пробирования, и случайный дубль имени - прошивка с недостижимой командой
+// просто не соберётся.
+constexpr bool terminal_index_resolves_all(void) {
+  for(usize n = 0; n < TERMINAL_COMMAND_COUNT; n++) {
+    const char* name = terminal_commands[n].name;
+    const usize len = terminal_name_len(name);
+    usize probe = terminal_crc8(name, len);
+    bool resolved = false;
+    while(true) {
+      const u8 slot = terminal_command_index.slot[probe];
+      if(slot == 0) break; // пустая ячейка - имя в индексе не найдено
+      const TerminalCommand& cmd = terminal_commands[slot - 1];
+      bool equal = true;
+      for(usize i = 0; i <= len; i++) {
+        if(cmd.name[i] != name[i]) { equal = false; break; }
+      }
+      if(equal) {
+        resolved = (cmd.id == terminal_commands[n].id);
+        break;
+      }
+      probe = (probe + 1) & 0xFF;
+    }
+    if(!resolved) return false;
+  }
+  return true;
+}
+static_assert(terminal_index_resolves_all(), "terminal command index: a command is unreachable (CRC cluster or duplicate name)");
+
+// Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
+static u8 terminal_command_lookup(const u8* line) {
+  usize len = 0;
+  while(line[len] != 0 && line[len] != ' ') len++;
+  if(len == 0) return CMD_UNKNOWN;
+
+  // Спец-формы, не разбираемые по первому слову (длина ограждает от чтения
+  // остатков предыдущей команды за нулём-терминатором):
+  if(len == 3 && line[0] == 'R' && line[2] == '=' && line[3] == ' ') return CMD_REG_SET;               // R0= <значение>
+  if(len >= 4 && line[0] == 's' && line[1] == 'e' && line[2] == 't' && line[3] == '$') return CMD_SET_CODE;  // set$<hex>
+
+  usize probe = terminal_crc8((const char*) line, len);
+  while(true) {
+    const u8 slot = terminal_command_index.slot[probe];
+    if(slot == 0) return CMD_UNKNOWN;
+    const TerminalCommand& cmd = terminal_commands[slot - 1];
+    if(strncmp((const char*) line, cmd.name, len) == 0 && cmd.name[len] == 0) return cmd.id;
+    probe = (probe + 1) & 0xFF;
+  }
+}
+
 const char ISA_61[] = 
 "0,1,2,3,4,5,6,7,8,9,dot,neg,pow10,clr,push,preX,\
 add,sub,mul,div,swap,e10,exp,lg,ln,asin,acos,atg,sin,cos,tg,?,\
@@ -93,10 +243,137 @@ K\317->X0,K\317->X1,K\317->X2,K\317->X3,K\317->X4,K\317->X5,K\317->X6,K\317->X7,
 Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=0 B,Kx=0 C,Kx=0 \304,Kx=0 E,?";
 
     isize   AT;
-    u32     terminal_last_cmd;
+    u8      terminal_last_cmd;
     isize   nSlot;
     bool    input_overflow;
     const char* script_args_ptr;
+
+    // ====== История команд: байтовое кольцо + каталог записей ======
+    // Каталог хранит позицию и длину каждой записи, поэтому доступ по номеру
+    // (стрелки вверх/вниз) O(1) и нет сдвигов памяти при вытеснении старых.
+    static constexpr u16 HISTORY_TEXT_SIZE = 256;
+    static constexpr u8  HISTORY_DEPTH     = 8;
+
+    char  hist_text[HISTORY_TEXT_SIZE];
+    u16   hist_start[HISTORY_DEPTH];
+    u8    hist_length[HISTORY_DEPTH];
+    u8    hist_head;                    // номер самой старой записи в каталоге
+    u8    hist_count;
+    u16   hist_used;                    // занято байт в текстовом кольце
+    u16   hist_write;                   // позиция записи в текстовом кольце
+    i8    hist_nav;                     // -1 - не в истории, 0 - самая новая
+    u8    esc_state;                    // разбор escape-последовательностей
+    u8    prev_terminator;              // съедание второго символа пары CRLF
+    u8    saved_line[MAX_INPUT_CHAR];   // строка, редактируемая до входа в историю
+    usize saved_len;
+
+    void history_drop_oldest(void) {
+      hist_used -= hist_length[hist_head];
+      hist_head = (u8) ((hist_head + 1) % HISTORY_DEPTH);
+      hist_count--;
+    }
+
+    void history_entry_read(u8 slot, u8* out) {
+      const u16 start = hist_start[slot];
+      for(u8 i = 0; i < hist_length[slot]; i++) out[i] = (u8) hist_text[(u16) ((start + i) % HISTORY_TEXT_SIZE)];
+    }
+
+    bool history_entry_equals(u8 slot, const u8* line, usize len) {
+      if(hist_length[slot] != len) return false;
+      const u16 start = hist_start[slot];
+      for(usize i = 0; i < len; i++) {
+        if((u8) hist_text[(u16) ((start + i) % HISTORY_TEXT_SIZE)] != line[i]) return false;
+      }
+      return true;
+    }
+
+    void history_add(const u8* line, usize len) {
+      if(len == 0 || len >= HISTORY_TEXT_SIZE) return;
+      // подряд идущие одинаковые команды не дублируем
+      if(hist_count > 0 && history_entry_equals((u8) ((hist_head + hist_count - 1) % HISTORY_DEPTH), line, len)) return;
+
+      while(hist_count > 0 && (hist_used + len > HISTORY_TEXT_SIZE || hist_count >= HISTORY_DEPTH)) history_drop_oldest();
+
+      const u8 slot = (u8) ((hist_head + hist_count) % HISTORY_DEPTH);
+      hist_start[slot] = hist_write;
+      hist_length[slot] = (u8) len;
+      for(usize i = 0; i < len; i++) {
+        hist_text[hist_write] = (char) line[i];
+        hist_write = (u16) ((hist_write + 1) % HISTORY_TEXT_SIZE);
+      }
+      hist_used += len;
+      hist_count++;
+    }
+
+    void history_print(void) {
+      if(hist_count == 0) {
+        Serial.println("History is empty.");
+        return;
+      }
+      u8 line[MAX_INPUT_CHAR];
+      for(u8 i = 0; i < hist_count; i++) {
+        const u8 slot = (u8) ((hist_head + i) % HISTORY_DEPTH);
+        history_entry_read(slot, line);
+        Serial.print("  ");
+        Serial.print(i + 1);
+        Serial.print(": ");
+        Serial.write(line, hist_length[slot]);
+        Serial.println();
+      }
+    }
+
+    void print_prompt(void) {
+      Serial.print("> ");
+    }
+
+    void redraw_input_line(usize old_len) {
+      Serial.write('\r');
+      print_prompt();
+      Serial.write(input_buffer, recive_pos);
+      for(usize i = recive_pos; i < old_len; i++) Serial.write(' ');   // затереть остаток
+      for(usize i = recive_pos; i < old_len; i++) Serial.write('\b');
+    }
+
+    void history_recall(i8 nav) {
+      const usize old_len = recive_pos;
+      if(nav < 0) {  // выход из истории: вернуть редактируемую строку
+        memcpy(input_buffer, saved_line, saved_len);
+        recive_pos = saved_len;
+      } else {
+        const u8 slot = (u8) ((hist_head + hist_count - 1 - nav) % HISTORY_DEPTH);
+        history_entry_read(slot, input_buffer);
+        recive_pos = hist_length[slot];
+      }
+      hist_nav = nav;
+      redraw_input_line(old_len);
+    }
+
+    void history_key_up(void) {
+      if(hist_nav + 1 >= (i8) hist_count) return;
+      if(hist_nav < 0) {  // запомнить строку, набранную до входа в историю
+        memcpy(saved_line, input_buffer, recive_pos);
+        saved_len = recive_pos;
+      }
+      history_recall((i8) (hist_nav + 1));
+    }
+
+    void history_key_down(void) {
+      if(hist_nav < 0) return;
+      history_recall((i8) (hist_nav - 1));
+    }
+
+    void print_help(void) {
+      Serial.println("Available commands:");
+      for(usize i = 0; i < TERMINAL_COMMAND_COUNT; i++) {
+        if(terminal_commands[i].desc == NULL) continue;
+        Serial.print("  ");
+        Serial.print(terminal_commands[i].name);
+        for(usize pad = strlen(terminal_commands[i].name); pad < 8; pad++) Serial.write(' ');
+        Serial.println(terminal_commands[i].desc);
+      }
+      Serial.println("  R<r>=   R<r>= <value> - write register, e.g. R0= 3.14");
+      Serial.println("  set$    set$<hex> - load full code page");
+    }
 
     // Скриптовое действие для m61: аргументы остаются доступны через script_args().
     isize script_action(i32 action, const char* args) {
@@ -104,41 +381,6 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       recive_pos = 0;
       return action;
     }
-
-    static constexpr u32 T_VERSION      = 0x00726576; // ver
-    static constexpr u32 T_LIST         = 0x7473696C; // list
-    static constexpr u32 T_ISA_61       = 0x00617369; // isa
-    static constexpr u32 T_ASSEMBLED    = 0x206D7361; // asm_
-    static constexpr u32 T_RESET        = 0x00747372; // rst
-    static constexpr u32 T_REG_DUMP     = 0x00676572; // reg
-    static constexpr u32 T_REG_SET      = 0x203D3052; // R0=
-    static constexpr u32 T_SAVE         = 0x65766173; // save
-    static constexpr u32 T_LOAD         = 0x64616F6C; // load
-    static constexpr u32 T_1302         = 0x32303331; // 1302
-    static constexpr u32 T_EXECUTE      = 0x63657865; // exec
-    static constexpr u32 T_DISASM       = 0x61736964; // disa
-    static constexpr u32 T_HEX_INPUT    = 0x206E6968; // hin_
-    static constexpr u32 T_HEX_OUTPUT   = 0x74756F68; // hout
-    static constexpr u32 T_SET_CODE     = 0x24746573; // set$
-    static constexpr u32 T_POKE_CODE    = 0x656B6F70; // poke
-    static constexpr u32 T_DFU_FLASH    = 0x00756664; // dfu
-    static constexpr u32 T_DUMP         = 0x706D7564; // dump
-    static constexpr u32 T_LASM         = 0x6D73616C; // lasm
-    static constexpr u32 T_PUB_LIST     = 0x00627570; // pub
-    static constexpr u32 T_MAP_FLASH    = 0x70616D73; // smap
-    static constexpr u32 T_STACK_OUTPUT = 0x006B7473; // stk
-    static constexpr u32 T_KBD_EMULATED = 0x2064626B; // kbd_
-    static constexpr u32 T_CMD_EMULATED = 0x20646D63; // cmd_
-    static constexpr u32 T_CLEAR_PRG61  = 0x00726C63; // clr
-    static constexpr u32 T_RING_DUMP    = 0x676E6972; // ring
-    static constexpr u32 T_RENAME       = 0x206D6E73; // snm_ (rename slot name[16])
-    static constexpr u32 T_DIR          = 0x72696473; // sdir
-    static constexpr u32 T_DEL_SLOT     = 0x6C656473; // sdel
-    static constexpr u32 T_RUN          = 0x006E7572; // run (F АВТ, В/О, С/П)
-    static constexpr u32 T_RUN_ARGS     = 0x206E7572; // run <имя> — синоним open
-    static constexpr u32 T_OPEN         = 0x6E65706F; // open
-    static constexpr u32 T_ERASE_STORAGE= 0x61726573; // sera
-    static constexpr u32 T_INSERT_CMD   = 0x20736E69; // ins <шаг> <opcode>
 
     bool  not_EOF(void) {
       return recive_pos < MAX_INPUT_CHAR;
@@ -303,6 +545,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       nSlot                 = -1;
       input_overflow        = false;
       script_args_ptr       = "";
+      esc_state             = 0;
+      prev_terminator       = 0;
+      hist_nav              = -1;
+      saved_len             = 0;
+      hist_head             = 0;
+      hist_count            = 0;
+      hist_used             = 0;
+      hist_write            = 0;
     }
 
     void  init(void) {
@@ -310,6 +560,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.begin(115200);
       delay(1800);
       output_version();
+      print_prompt();
     }
 
     void init_script(void) {
@@ -323,6 +574,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     static constexpr i32 SCRIPT_RUN_PROGRAM   = -3; // запустить загруженную программу
     static constexpr i32 SCRIPT_OPEN_FILE     = -4; // открыть файл script_args()
     static constexpr i32 SCRIPT_LOAD_SLOT     = -5; // выполнить слот script_args()
+    static constexpr i32 SCRIPT_GOTO_LABEL    = -6; // переход на метку script_args()
 
     i32 execute_script_line(const char* line);
 
@@ -752,24 +1004,202 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
     }
 
+    // Аргументы команды: всё после первого слова строки ввода.
+    const char* command_args(void) {
+      const char* p = (const char*) input_buffer;
+      while(*p != 0 && *p != ' ') p++;
+      while(*p == ' ') p++;
+      return p;
+    }
+
+    // Список неотрицательных чисел через запятую и/или пробелы.
+    isize parse_u32_list(const char* p, u32* out, usize max_count) {
+      usize count = 0;
+      while(true) {
+        while(*p == ' ' || *p == ',') p++;
+        if(*p == 0) break;
+        if(*p < '0' || *p > '9') return -1;
+        u32 value = 0;
+        while(*p >= '0' && *p <= '9') value = value * 10 + (u32) (*p++ - '0');
+        if(count >= max_count) return -1;
+        out[count++] = value;
+      }
+      return (isize) count;
+    }
+
+    // led 1 | led 0 | led 1,500,0,500,1 - состояния и паузы (ms), асинхронно.
+    bool exec_led(void) {
+      u32 values[2 * led::PATTERN_MAX - 1];
+      const isize n = parse_u32_list(command_args(), values, 2 * led::PATTERN_MAX - 1);
+      if(n <= 0 || (n % 2) == 0) return false; // нечётный список: state,ms,...,state
+
+      led::PatternStep steps[led::PATTERN_MAX];
+      usize count = 0;
+      for(isize i = 0; i < n; i += 2) {
+        if(values[i] > 1) return false;
+        steps[count].on = (u8) values[i];
+        steps[count].hold_ms = (i + 1 < n) ? values[i + 1] : 0;
+        count++;
+      }
+      return led::pattern_start(steps, count);
+    }
+
+    // beep 4000,100 | beep 4000,100,0,50,2000,200 - пары частота(Hz),длительность(ms);
+    // частота 0 - пауза. Воспроизведение асинхронное.
+    bool exec_beep(void) {
+      u32 values[2 * SOUND_PATTERN_MAX];
+      const isize n = parse_u32_list(command_args(), values, 2 * SOUND_PATTERN_MAX);
+      if(n <= 0 || (n % 2) != 0) return false;
+
+      SoundNote notes[SOUND_PATTERN_MAX];
+      const usize count = (usize) n / 2;
+      for(usize i = 0; i < count; i++) {
+        notes[i].frequency_Hz = (isize) values[2 * i];
+        notes[i].duration_ms = values[2 * i + 1];
+        notes[i].gap_ms = 0;
+        notes[i].volume_percent = 100;
+      }
+      return sound_pattern_start(notes, count);
+    }
+
+    // Значение индикаторного формата "-1.2345678 -99" -> double.
+    // Нечисловые сегменты (ERROR, L/C/E на индикаторе) - отказ.
+    static bool parse_mk_display_value(const char* v, double& out) {
+      char buffer[20];
+      char* w = buffer;
+      if(v[0] == '-') *w++ = '-';
+      for(int i = 1; i <= 9; i++) {
+        const char c = v[i];
+        if(c == '.') { *w++ = c; continue; }
+        if(c == ' ') continue;
+        if(c < '0' || c > '9') return false;
+        *w++ = c;
+      }
+      if(v[12] < '0' || v[12] > '9' || v[13] < '0' || v[13] > '9') return false;
+      *w++ = 'e';
+      *w++ = (v[11] == '-') ? '-' : '+';
+      *w++ = v[12];
+      *w++ = v[13];
+      *w = 0;
+      out = mk_math::atof(buffer);
+      return true;
+    }
+
+    static bool operand_delimiter(char c) {
+      return c == 0 || c == ' ' || c == '<' || c == '>' || c == '=' || c == '!';
+    }
+
+    // Операнд условия if: x,y,z,t,x1 (стек), r0..re (rf в расширенном режиме)
+    // или числовой литерал (1.25e-2, -5, ...).
+    static bool parse_if_operand(const char*& p, double& out) {
+      while(*p == ' ') p++;
+      const char c = (*p >= 'A' && *p <= 'Z') ? (char) (*p - 'A' + 'a') : *p;
+
+      if(c == 'r') {
+        const isize reg = HexdecimalDigit(p[1]);
+        if(reg >= 0 && operand_delimiter(p[2])) {
+          if(reg == 15 && !core_61::expanded_program_is_on()) return false;
+          char value[15];
+          value[14] = 0;
+          MK61Emu_ReadRegister((int) reg, value, terminal_symbols);
+          p += 2;
+          return parse_mk_display_value(value, out);
+        }
+        return false;
+      }
+
+      if(c == 'x' || c == 'y' || c == 'z' || c == 't') {
+        stack reg = stack::X;
+        usize advance = 1;
+        if(c == 'x' && p[1] == '1') { reg = stack::X1; advance = 2; }
+        else if(c == 'x') reg = stack::X;
+        else if(c == 'y') reg = stack::Y;
+        else if(c == 'z') reg = stack::Z;
+        else reg = stack::T;
+        if(!operand_delimiter(p[advance])) return false;
+
+        char value[15];
+        value[14] = 0;
+        read_stack_register(reg, value, terminal_symbols);
+        p += advance;
+        return parse_mk_display_value(value, out);
+      }
+
+      const char* end = p;
+      const double value = mk_math::strtod(p, &end);
+      if(end == p) return false;
+      p = end;
+      out = value;
+      return true;
+    }
+
+    // if <операнд><op><операнд> <команда> - команда выполняется при истинном
+    // условии. В m61-скриптах вместе с "run :метка" даёт условные переходы.
+    isize exec_if(bool script_mode) {
+      const char* p = command_args();
+      double lhs = 0.0;
+      double rhs = 0.0;
+      bool parsed = parse_if_operand(p, lhs);
+
+      char op0 = 0;
+      char op1 = 0;
+      if(parsed) {
+        while(*p == ' ') p++;
+        op0 = p[0];
+        if(op0 == '>' || op0 == '<' || op0 == '=' || op0 == '!') {
+          p++;
+          if(*p == '=') { op1 = '='; p++; }
+        }
+        parsed = (op0 == '>' || op0 == '<') || ((op0 == '=' || op0 == '!') && op1 == '=');
+      }
+      if(parsed) parsed = parse_if_operand(p, rhs);
+
+      const char* tail = p;
+      while(*tail == ' ') tail++;
+      if(!parsed || *tail == 0) {
+        recive_pos = 0;
+        if(script_mode) return SCRIPT_COMMAND_ERROR;
+        Serial.println("Usage: if <x|y|z|t|x1|r0..re> <op> <value> <command>");
+        return -1;
+      }
+
+      bool condition = false;
+      if(op0 == '>') condition = op1 ? (lhs >= rhs) : (lhs > rhs);
+      if(op0 == '<') condition = op1 ? (lhs <= rhs) : (lhs < rhs);
+      if(op0 == '=') condition = (lhs == rhs);
+      if(op0 == '!') condition = (lhs != rhs);
+
+      if(!condition) {
+        recive_pos = 0;
+        return script_mode ? SCRIPT_RESULT_OK : -1;
+      }
+
+      // Условие истинно: остаток строки выполняется как обычная команда.
+      const usize tail_len = strlen(tail);
+      memmove(input_buffer, tail, tail_len);
+      input_buffer[tail_len] = CR; // контракт execute(): последний символ CR
+      recive_pos = tail_len + 1;
+      return execute(script_mode);
+    }
+
     isize execute(bool script_mode = false) {
         bool confirmed = false;
         if(input_buffer[0] == 'y' || input_buffer[0] == 'Y') {
           switch(terminal_last_cmd) {
-            case  T_CLEAR_PRG61:
+            case  CMD_CLEAR:
                 MK61Emu_ClearCodePage();
                 Serial.println("Code page cleared!");
                 confirmed = true;
               break;
-            case  T_DEL_SLOT:
+            case  CMD_DEL_SLOT:
                 if(!erase_slot(nSlot)) Serial.println("Error: address out of range!");
                 confirmed = true;
               break;
-            case  T_SAVE:
+            case  CMD_SAVE:
                 if(!Store(nSlot)) Serial.println("Failed save attempt!");
                 confirmed = true;
               break;
-            case  T_ERASE_STORAGE:
+            case  CMD_ERASE_STORAGE:
                 clear_storage();
                 confirmed = true;
               break;
@@ -786,43 +1216,42 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         dbgln(MINI,"[", recive_pos, "] '", (char*) input_buffer);
 
         const int nReg = (input_buffer[1] - '0');
-        const u32 token0 = *(u32*) (&input_buffer[0]);
-        const u32 token = (input_buffer[2] == '=')? token0 & 0xFFFF00FF : token0;
-        terminal_last_cmd = token;
-        dbghexln(MINI, token);
-        switch (token) {
-          case  T_VERSION:
+        const u8 command_id = terminal_command_lookup(&input_buffer[0]);
+        terminal_last_cmd = command_id;
+        dbgln(MINI, "command id ", (int) command_id);
+        switch (command_id) {
+          case  CMD_VERSION:
               output_version();
             break;
-          case  T_ISA_61:
+          case  CMD_ISA:
               echo_ISA_61();
             break;
-          case  T_LIST:
+          case  CMD_LIST:
               list_mk61_code_page();
             break;
-          case  T_RESET:
+          case  CMD_RESET:
               if(Confirmation()) NVIC_SystemReset();
             break;
-          case  T_DFU_FLASH:
+          case  CMD_DFU:
               DFU_enable();
             break;
-          case  T_REG_DUMP:
+          case  CMD_REG_DUMP:
               DumpRegisters();
             break;
-          case  T_REG_SET:
+          case  CMD_REG_SET:
               MK61Emu_WriteRegister(nReg, (char*) &input_buffer[4]);
             break;
-          case  T_1302:
+          case  CMD_1302:
               Dump1302();
             break;
-          case  T_CLEAR_PRG61:
-          case  T_ERASE_STORAGE:
+          case  CMD_CLEAR:
+          case  CMD_ERASE_STORAGE:
               Serial.println("Enter Y/y to confirm the operation!");
             break;
-          case  T_CMD_EMULATED: 
+          case  CMD_CMD: 
               recive_pos = 0;
             return command_to_kbd(script_mode);
-          case  T_KBD_EMULATED: {
+          case  CMD_KBD: {
               recive_pos = 0;
               const i32 scancode = scancode_to_kbd();
               if(scancode < 0) break;
@@ -831,27 +1260,27 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               if(script_mode) return hidden_press_scan_code(scancode) ? SCRIPT_RESULT_OK : SCRIPT_COMMAND_ERROR;
               return scancode;
             }
-          case  T_DISASM:  // включить/выключить режим верхней строки с дизассемблером МК61
+          case  CMD_DISASM:  // включить/выключить режим верхней строки с дизассемблером МК61
               config.disassm = disassembler.turn_on_off();
             break;
-          case  T_SAVE: 
+          case  CMD_SAVE: 
               nSlot = parse_dec_numeric((char*) &input_buffer[5]);
               Serial.println("Enter Y/y to confirm the operation!");
             break;
-          case  T_LOAD: {
+          case  CMD_LOAD: {
               // В скрипте слот выполняется вложенно (Load() отменил бы сценарий).
               if(script_mode) return script_action(SCRIPT_LOAD_SLOT, (const char*) &input_buffer[4]);
               const isize nSlot = parse_dec_numeric((char*) &input_buffer[5]);
               if(!Load(nSlot)) Serial.println("Failed load attempt!");
             }
             break;
-          case  T_PUB_LIST:
+          case  CMD_PUB:
               pub_mk61_code_page();
             break;
-          case  T_DUMP:
+          case  CMD_DUMP:
               dump_mk61_code_page();
             break;
-          case  T_RING_DUMP: {
+          case  CMD_RING: {
               usize i = 0;
               usize n_chip = 0;
               usize count = 0;
@@ -877,10 +1306,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             }
             Serial.println();
             break;
-          case  T_LASM:
+          case  CMD_LASM:
               lasm_mk61_code_page(mnemo_type::ISA_61);
             break;
-          case  T_INSERT_CMD: { 
+          case  CMD_INS: { 
             // 01234
             // ins 10 20
               char *args = (char*) &input_buffer[3];
@@ -917,20 +1346,24 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               core_61::set_code_page(code_page);*/
             break;
           }
-          case  T_STACK_OUTPUT:
+          case  CMD_STACK:
               echo_mk61_stack();
             break;
-          case  T_HEX_OUTPUT:
+          case  CMD_HOUT:
               PutHexString();
             break;
-          case  T_MAP_FLASH:
+          case  CMD_SMAP:
               flash_map_list();
             break;
-          case  T_RUN:
-          case  T_RUN_ARGS: {
+          case  CMD_RUN: {
               // "run <имя>" — синоним open; без имени — запуск программы МК61.
               const char* args = (const char*) &input_buffer[3];
               while(*args == ' ') args++;
+              if(*args == ':') { // run :метка - переход внутри m61-скрипта
+                if(script_mode) return script_action(SCRIPT_GOTO_LABEL, args + 1);
+                Serial.println("Labels work in m61 scripts only!");
+                break;
+              }
               if(*args != 0) {
                 if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
                 if(!OpenStoredFile(args)) Serial.println("Open failed!");
@@ -943,16 +1376,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               kbd::push((i8) sw::RUN); // C/П
             }
             break;
-          case T_OPEN: {
+          case CMD_OPEN: {
               const char* args = (input_buffer[4] == ' ') ? (const char*) &input_buffer[5] : "";
               if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
               if(!OpenStoredFile(args)) Serial.println("Open failed!");
             }
             break;
-          case  T_POKE_CODE:
+          case  CMD_POKE:
               input_R_stack();
             break;
-          case  T_DIR: {
+          case  CMD_DIR: {
               char slot_name[SIZEOF_SLOT_NAME];
               for(usize i=0; i < 100; i++) {
                 if(IsOccupied(i)) {
@@ -961,7 +1394,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
             }
             break;
-          case  T_DEL_SLOT: {
+          case  CMD_DEL_SLOT: {
               if(!flash_is_ok) {
                 Serial.println("Error: spiflash chip is not installed!");
                 break;
@@ -979,7 +1412,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               Serial.println("Enter Y/y to confirm the operation!");
             }
             break;
-          case  T_RENAME: {
+          case  CMD_RENAME: {
               usize nSlot = 0;
               usize pos = 4;
               while(pos < 6) {
@@ -1008,12 +1441,32 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
             }
             break;
-          case  T_HEX_INPUT:
-          case  T_SET_CODE:
+          case  CMD_HIN:
+          case  CMD_SET_CODE:
               GetHexString();
             break;
-          case  T_ASSEMBLED:
+          case  CMD_ASM:
               Assembler();
+            break;
+          case  CMD_HELP:
+              print_help();
+            break;
+          case  CMD_LED:
+              if(!exec_led()) {
+                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
+                Serial.println("Usage: led <0|1>[,<ms>,<0|1>,...]");
+              }
+            break;
+          case  CMD_BEEP:
+              if(!exec_beep()) {
+                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
+                Serial.println("Usage: beep <Hz>,<ms>[,<Hz>,<ms>,...]");
+              }
+            break;
+          case  CMD_IF:
+              return exec_if(script_mode);
+          case  CMD_HISTORY:
+              history_print();
             break;
           default:
               if(script_mode) {
@@ -1021,7 +1474,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 return SCRIPT_COMMAND_ERROR;
               }
               // Иначе -1 неотличим от успешно выполненной команды.
-              if(!confirmed && input_buffer[0] != 0) Serial.println("Unknown command!");
+              if(!confirmed && input_buffer[0] != 0) {
+                Serial.print("Unknown command: ");
+                Serial.println((const char*) input_buffer);
+              }
         }
 
       recive_pos = 0;
@@ -1031,33 +1487,83 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     i32 serial_input_handler() {
       while(Serial.peek() >= 0) { // получен символ
         const u8 rx_char = Serial.read(); // уберем с буфера
-        Serial.write(rx_char); // эхо
 
-        if(rx_char == CR) {
-          // Переполненная строка отбрасывается целиком: выполнять обрезанную
-          // команду нельзя (поток может идти и с другого устройства, без
-          // реакции на звуковой сигнал занятости).
-          if(input_overflow || !not_EOF()) {
+        // --- escape-последовательности: стрелки листают историю ---
+        if(esc_state == 1) {
+          esc_state = (rx_char == '[') ? 2 : 0;
+          continue;
+        }
+        if(esc_state == 2) {
+          esc_state = 0;
+          if(!input_overflow) {
+            if(rx_char == 'A') history_key_up();
+            if(rx_char == 'B') history_key_down();
+          }
+          continue;
+        }
+        if(rx_char == 0x1B) {
+          esc_state = 1;
+          continue;
+        }
+
+        if(rx_char == CR || rx_char == NL) {
+          if(prev_terminator != 0 && rx_char != prev_terminator) {
+            prev_terminator = 0; // второй символ пары CRLF/LFCR
+            continue;
+          }
+          prev_terminator = rx_char;
+
+          if(input_overflow) {
+            // Переполненная строка отбрасывается целиком: выполнять обрезанную
+            // команду нельзя (поток может идти и с другого устройства, без
+            // реакции на звуковой сигнал занятости).
             input_overflow = false;
             recive_pos = 0;
             Serial.println();
             Serial.println("Error: input line too long, command ignored!");
+            print_prompt();
             return -1;
           }
-          input_buffer[recive_pos++] = rx_char;
-          return execute();
+
+          if(recive_pos == 0) { // пустая строка - только новое приглашение
+            Serial.println();
+            print_prompt();
+            continue;
+          }
+
+          history_add(input_buffer, recive_pos);
+          hist_nav = -1;
+
+          input_buffer[recive_pos++] = CR; // контракт execute(): последний символ CR
+          const i32 result = execute();
+          print_prompt();
+          // Остаток потока обработается в следующем вызове: каждая строка
+          // выполняется до чтения следующей, пакетный ввод не склеивается.
+          return result;
         }
+        prev_terminator = 0;
+
+        if(rx_char == 0x08 || rx_char == 0x7F) { // backspace
+          if(!input_overflow && recive_pos > 0) {
+            recive_pos--;
+            Serial.print("\b \b");
+          }
+          continue;
+        }
+
+        if(rx_char < 0x20 && rx_char != '\t') continue; // управляющие символы не буферизуем
 
         if(not_EOF()) {
           input_buffer[recive_pos++] = rx_char;
+          Serial.write(rx_char); // эхо
         } else if(!input_overflow) {
-          input_overflow = true; // сигнал занятости — один раз на строку
+          input_overflow = true; // сигнал занятости - один раз на строку
           sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
         }
       }
       return -1;
     }
-    
+
 };
 
 inline i32 class_terminal::execute_script_line(const char* line) {

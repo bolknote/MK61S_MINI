@@ -38,13 +38,6 @@ static constexpr u8 MK61_STORE_REGISTER_F = 0x4F;
 static constexpr u8 MK61_LOAD_REGISTER_F  = 0x6F;
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for MK61 scripts");
 
-struct SoundNote {
-  isize frequency_Hz;
-  usize duration_ms;
-  usize gap_ms;
-  usize volume_percent;
-};
-
 static const SoundNote STARTUP_JINGLE[] = {
   {392, 120, 25, 25},
   {523, 120, 25, 25},
@@ -340,6 +333,18 @@ void  sound_stop(void) {
 
 void sound_startup(void) {
   sound_sequence_start(STARTUP_JINGLE, sizeof(STARTUP_JINGLE) / sizeof(STARTUP_JINGLE[0]), PIN_BUZZER);
+}
+
+// Паттерн из терминала копируется в свой буфер: строка ввода не переживает
+// асинхронное воспроизведение.
+static SoundNote user_pattern[SOUND_PATTERN_MAX];
+
+bool sound_pattern_start(const SoundNote* notes, usize count) {
+  if(notes == NULL || count == 0 || count > SOUND_PATTERN_MAX) return false;
+  sound_stop();
+  for(usize i = 0; i < count; i++) user_pattern[i] = notes[i];
+  sound_sequence_start(user_pattern, count, PIN_BUZZER);
+  return true;
 }
 
 void message_and_waitkey(const char* lcd_message) {

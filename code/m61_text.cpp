@@ -259,12 +259,42 @@ static bool open_slot(const char* args) {
   return open_store_script(name);
 }
 
+// "run :метка" - переход на строку ":метка" текущего скрипта. Поиск ведётся
+// с начала, поэтому переходы возможны и назад (циклы), и вперёд.
+static bool goto_label(const char* args) {
+  args = skip_spaces(args);
+  char label[32];
+  usize label_len = 0;
+  while(args[label_len] != 0 && !is_space(args[label_len]) && label_len + 1 < sizeof(label)) {
+    label[label_len] = args[label_len];
+    label_len++;
+  }
+  label[label_len] = 0;
+  if(label_len == 0) return false;
+
+  const u16 saved_pos = script_pos;
+  script_pos = 0;
+  char line[MAX_LINE_SIZE + 1];
+  while(script_pos < script_len) {
+    if(!read_next_line(line, sizeof(line))) break;
+    const char* p = skip_spaces(line);
+    if(*p != ':') continue;
+    p = skip_spaces(p + 1);
+    if(strncmp(p, label, label_len) == 0 && token_ends(p + label_len)) {
+      return true; // script_pos уже указывает на строку после метки
+    }
+  }
+  script_pos = saved_pos;
+  return false;
+}
+
 // Вся грамматика команд разбирается терминалом (единый диспетчер интерактивного
 // и скриптового режимов). Сценарию терминал возвращает только действия,
-// влияющие на поток выполнения: run, open, load.
+// влияющие на поток выполнения: run, open, load, переходы по меткам.
 static bool execute_script_line(const char* raw_line) {
   const char* line = skip_spaces(raw_line);
   if(is_line_end(*line)) return true;
+  if(*line == ':') return true; // метка - точка перехода, сама по себе no-op
 
   switch(script_terminal.execute_script_line(line)) {
     case class_terminal::SCRIPT_RESULT_OK:
@@ -276,6 +306,8 @@ static bool execute_script_line(const char* raw_line) {
       return OpenStoredFile(script_terminal.script_args());
     case class_terminal::SCRIPT_LOAD_SLOT:
       return open_slot(script_terminal.script_args());
+    case class_terminal::SCRIPT_GOTO_LABEL:
+      return goto_label(script_terminal.script_args());
   }
   return false;
 }
@@ -288,7 +320,11 @@ void service(void) {
     runner_state = RunnerState::EXECUTING;
   }
 
+  // Бюджет строк на вызов: бесконечный цикл по меткам (run :метка) не должен
+  // блокировать основной loop() - продолжение в следующей итерации.
+  usize budget = 64;
   while(runner_state == RunnerState::EXECUTING) {
+    if(budget-- == 0) return;
     if(script_pos >= script_len) {
       finish_script();
       return;
