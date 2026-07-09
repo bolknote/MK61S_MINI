@@ -94,6 +94,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     isize   AT;
     u32     terminal_last_cmd;
     isize   nSlot;
+    bool    input_overflow;
 
     static constexpr i32 SCRIPT_COMMAND_ERROR = -2;
 
@@ -292,6 +293,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       recive_pos            = 0;
       terminal_last_cmd     = 0;
       nSlot                 = -1;
+      input_overflow        = false;
     }
 
     void  init(void) {
@@ -728,8 +730,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     isize execute(bool script_mode = false) {
+        bool confirmed = false;
         if(input_buffer[0] == 'y' || input_buffer[0] == 'Y') {
-          bool confirmed = false;
           switch(terminal_last_cmd) {
             case  T_CLEAR_PRG61:
                 MK61Emu_ClearCodePage();
@@ -978,6 +980,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 recive_pos = 0;
                 return SCRIPT_COMMAND_ERROR;
               }
+              // Иначе -1 неотличим от успешно выполненной команды.
+              if(!confirmed && input_buffer[0] != 0) Serial.println("Unknown command!");
         }
 
       recive_pos = 0;
@@ -985,21 +989,32 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     i32 serial_input_handler() {
-      //t_time_ms wait = millis();
-      //do {
       while(Serial.peek() >= 0) { // получен символ
         const u8 rx_char = Serial.read(); // уберем с буфера
         Serial.write(rx_char); // эхо
 
-        if(not_EOF()) 
+        if(rx_char == CR) {
+          // Переполненная строка отбрасывается целиком: выполнять обрезанную
+          // команду нельзя (поток может идти и с другого устройства, без
+          // реакции на звуковой сигнал занятости).
+          if(input_overflow || !not_EOF()) {
+            input_overflow = false;
+            recive_pos = 0;
+            Serial.println();
+            Serial.println("Error: input line too long, command ignored!");
+            return -1;
+          }
           input_buffer[recive_pos++] = rx_char;
-        else
-          sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
+          return execute();
+        }
 
-        if(rx_char == CR) return execute();
-        //wait += 2000;
+        if(not_EOF()) {
+          input_buffer[recive_pos++] = rx_char;
+        } else if(!input_overflow) {
+          input_overflow = true; // сигнал занятости — один раз на строку
+          sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
+        }
       }
-      //} while(wait > millis());
       return -1;
     }
     
