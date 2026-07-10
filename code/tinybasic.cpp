@@ -38,6 +38,15 @@ typedef enum {
   T  = 4
 } stack;
 
+typedef enum {
+  RADIAN = 10,
+  DEGREE = 11,
+  GRADE = 12
+} AngleUnit;
+
+static AngleUnit tinybasic_host_angle_unit = RADIAN;
+AngleUnit read_grade_switch(void) { return tinybasic_host_angle_unit; }
+
 namespace mk61_ref {
   double host_stack_value[5];
   double host_register_value[16];
@@ -137,6 +146,8 @@ namespace library_mk61 {
 #include <string.h>
 #endif
 
+#if MK61_ENABLE_TINYBASIC
+
 #include "mk_math.hpp"
 #ifdef TINYBASIC_HOST_TEST
 #define MK61_REF_HOST_TEST
@@ -150,8 +161,6 @@ namespace library_mk61 {
 #ifndef TINYBASIC_HOST_TEST
 #include "language_workspace.hpp"
 #endif
-
-#if MK61_ENABLE_TINYBASIC
 
 using namespace kbd;
 
@@ -171,6 +180,8 @@ static constexpr int TB_NAME_SIZE = 16;
 static constexpr int TB_PRINT_BUFFER_SIZE = 96;
 static constexpr int TB_CALL_DEPTH = 8;
 static constexpr int TB_FOR_DEPTH = 8;
+static constexpr int TB_EXPR_DEPTH = 64;
+static constexpr int TB_COMMAND_DEPTH = 16;
 
 enum class TbFlowKind : u8 {
   NEXT,
@@ -219,6 +230,7 @@ struct TbProgram {
 struct TbFlow {
   TbFlowKind kind;
   i16 pc;
+  u16 offset;
 };
 
 struct TbForFrame {
@@ -300,9 +312,10 @@ static TinyBasicRuntime& tinybasic_runtime(void) {
 #define tb_pending_print (tinybasic_runtime().tb_pending_print)
 #define tb_print_row     (tinybasic_runtime().tb_print_row)
 
-static u32 tb_random_state = 0x3B6B120EUL;
 #ifdef TINYBASIC_HOST_TEST
+static u32 tb_random_state = 0x3B6B120EUL;
 static double tb_host_input_value = 0.0;
+static int tb_host_wait_count = 0;
 #endif
 
 static const char* const TB_key_text[40] = {
@@ -371,12 +384,10 @@ static void tb_copy_text(char* dst, usize dst_size, const char* src) {
   dst[dst_size - 1] = 0;
 }
 
-static void tb_copy_trim(char* dst, usize dst_size, const char* begin, const char* end) {
-  while(begin < end && tb_is_space(*begin)) begin++;
-  while(end > begin && tb_is_space(*(end - 1))) end--;
+static void tb_copy_range(char* dst, usize dst_size, const char* begin, const char* end) {
+  if(dst_size == 0) return;
   const usize len = (usize) (end - begin);
   const usize copy_len = (len < dst_size - 1) ? len : dst_size - 1;
-  if(dst_size == 0) return;
   memcpy(dst, begin, copy_len);
   dst[copy_len] = 0;
 }
@@ -414,6 +425,7 @@ static const char* tb_error_ru_text(const char* error) {
 static bool tb_error(const char* error) {
   tb_copy_text(tb_last_error, sizeof(tb_last_error), error);
   tb_copy_text(tb_ast.error, sizeof(tb_ast.error), error);
+  tb_ast.ok = false;
   tb_message_i18n(error, tb_error_ru_text(error), "TinyBASIC", "TinyBASIC");
   return false;
 }
@@ -497,7 +509,11 @@ static void tb_format_number(double value, char* out, usize size) {
   int exp10 = mk_math::log10_floor(abs_value);
   if(exp10 >= 10 || exp10 < -4) { // %g switches to scientific outside [-4, precision)
     char mantissa[24];
-    double scaled = abs_value / mk_math::pow10_int(exp10);
+    double scaled = abs_value;
+    if(exp10 >= 0) scaled /= mk_math::pow10_int(exp10);
+    else {
+      for(int i = 0; i < -exp10; i++) scaled *= 10.0;
+    }
     tb_format_fixed(scaled, 9, mantissa, sizeof(mantissa));
     if(mantissa[0] == '1' && mantissa[1] == '0') { // rounding overflowed to 10.0
       exp10++;
@@ -531,10 +547,11 @@ static void tb_ast_reset(TbAst& ast) {
   ast.ok = true;
 }
 
-static TbFlow tb_flow(TbFlowKind kind, i16 pc) {
+static TbFlow tb_flow(TbFlowKind kind, i16 pc, u16 offset = 0) {
   TbFlow flow;
   flow.kind = kind;
   flow.pc = pc;
+  flow.offset = offset;
   return flow;
 }
 
@@ -562,7 +579,7 @@ static bool tb_word_matches(const TbWord& word, const char* full, u8 min_abbrev)
   return true;
 }
 
-static bool tb_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref& ref) {
+static bool tb_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref& ref, bool require_available = true) {
   p = tb_skip_spaces(p);
   if(p >= end || *p != '.') return false;
   const char* cursor = p + 1;
@@ -577,18 +594,18 @@ static bool tb_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref
   name[len] = 0;
 
   if(!mk61_ref::parse_name(name, ref)) return false;
-  if(ref.kind == mk61_ref::Kind::R && !mk61_ref::register_available(ref.reg)) return false;
+  if(require_available && ref.kind == mk61_ref::Kind::R && !mk61_ref::register_available(ref.reg)) return false;
   p = cursor;
   return true;
 }
 
-static bool tb_parse_target_token(const char*& p, const char* end, TbTarget& target) {
+static bool tb_parse_target_token(const char*& p, const char* end, TbTarget& target, bool require_available = true) {
   p = tb_skip_spaces(p);
   if(p >= end) return false;
 
   mk61_ref::Ref ref;
   if(*p == '.') {
-    if(!tb_parse_mk_ref_token(p, end, ref)) return false;
+    if(!tb_parse_mk_ref_token(p, end, ref, require_available)) return false;
     target.kind = TbTargetKind::MK_REF;
     target.var_index = -1;
     target.mk_ref = ref;
@@ -659,13 +676,42 @@ static const char* tb_find_top_level(const char* begin, const char* end, char ta
   return NULL;
 }
 
+static double tb_trig_to_radians(double value) {
+  const AngleUnit unit = read_grade_switch();
+  if(unit == DEGREE) return value * 3.14159265358979323846 / 180.0;
+  if(unit == GRADE) return value * 3.14159265358979323846 / 200.0;
+  return value;
+}
+
+static double tb_trig_from_radians(double value) {
+  const AngleUnit unit = read_grade_switch();
+  if(unit == DEGREE) return value * 180.0 / 3.14159265358979323846;
+  if(unit == GRADE) return value * 200.0 / 3.14159265358979323846;
+  return value;
+}
+
+static double tb_next_random(void) {
+#ifdef TINYBASIC_HOST_TEST
+  tb_random_state = tb_random_state * 25173UL + 13849UL;
+  return (double) (tb_random_state & 0xFFFFUL) / 65536.0;
+#else
+  hidden_press_key(sw::K);
+  hidden_press_key(sw::Bx);
+  double value = 0.0;
+  const mk61_ref::Ref ref = {mk61_ref::Kind::X, 0};
+  return mk61_ref::read(ref, value) ? value : 0.0;
+#endif
+}
+
 class TbExprParser {
   public:
-    TbExprParser(const char* begin, const char* end) : p(begin), end(end), ok(true) {}
+    TbExprParser(const char* begin, const char* end, bool evaluate = true)
+      : p(begin), end(end), ok(true), evaluate(evaluate), depth(0) {}
 
     bool eval(double& out) {
       out = parse_compare();
       if(!ok) return false;
+      if(evaluate && !mk_math::is_finite(out)) return false;
       return true;
     }
 
@@ -675,6 +721,21 @@ class TbExprParser {
     const char* p;
     const char* end;
     bool ok;
+    bool evaluate;
+    u8 depth;
+
+    bool enter(void) {
+      if(depth >= TB_EXPR_DEPTH) {
+        ok = false;
+        return false;
+      }
+      depth++;
+      return true;
+    }
+
+    void leave(void) {
+      if(depth > 0) depth--;
+    }
 
     void skip(void) {
       while(p < end && tb_is_space(*p)) p++;
@@ -708,22 +769,28 @@ class TbExprParser {
         if(p >= end) break;
         if(p + 1 < end && p[0] == '<' && p[1] == '>') {
           p += 2;
-          left = (left != parse_add()) ? 1.0 : 0.0;
+          const double right = parse_add();
+          left = evaluate ? ((left != right) ? 1.0 : 0.0) : 0.0;
         } else if(p + 1 < end && p[0] == '<' && p[1] == '=') {
           p += 2;
-          left = (left <= parse_add()) ? 1.0 : 0.0;
+          const double right = parse_add();
+          left = evaluate ? ((left <= right) ? 1.0 : 0.0) : 0.0;
         } else if(p + 1 < end && p[0] == '>' && p[1] == '=') {
           p += 2;
-          left = (left >= parse_add()) ? 1.0 : 0.0;
+          const double right = parse_add();
+          left = evaluate ? ((left >= right) ? 1.0 : 0.0) : 0.0;
         } else if(*p == '<') {
           p++;
-          left = (left < parse_add()) ? 1.0 : 0.0;
+          const double right = parse_add();
+          left = evaluate ? ((left < right) ? 1.0 : 0.0) : 0.0;
         } else if(*p == '>') {
           p++;
-          left = (left > parse_add()) ? 1.0 : 0.0;
+          const double right = parse_add();
+          left = evaluate ? ((left > right) ? 1.0 : 0.0) : 0.0;
         } else if(*p == '=') {
           p++;
-          left = (left == parse_add()) ? 1.0 : 0.0;
+          const double right = parse_add();
+          left = evaluate ? ((left == right) ? 1.0 : 0.0) : 0.0;
         } else {
           break;
         }
@@ -734,51 +801,108 @@ class TbExprParser {
     double parse_add(void) {
       double left = parse_mul();
       while(ok) {
-        if(match_char('+')) left += parse_mul();
-        else if(match_char('-')) left -= parse_mul();
-        else if(match_word("OR")) left = (left != 0.0 || parse_mul() != 0.0) ? 1.0 : 0.0;
-        else if(match_word("XOR")) {
+        if(match_char('+')) {
+          const double right = parse_mul();
+          if(evaluate) left += right;
+        } else if(match_char('-')) {
+          const double right = parse_mul();
+          if(evaluate) left -= right;
+        } else if(match_word("OR")) {
+          const double right = parse_mul();
+          left = evaluate ? ((left != 0.0 || right != 0.0) ? 1.0 : 0.0) : 0.0;
+        } else if(match_word("XOR")) {
+          const double right = parse_mul();
           const bool a = left != 0.0;
-          const bool b = parse_mul() != 0.0;
-          left = (a != b) ? 1.0 : 0.0;
+          const bool b = right != 0.0;
+          left = evaluate ? ((a != b) ? 1.0 : 0.0) : 0.0;
         } else break;
       }
       return left;
     }
 
     double parse_mul(void) {
-      double left = parse_power();
+      double left = parse_unary();
       while(ok) {
-        if(match_char('*')) left *= parse_power();
-        else if(match_char('/')) {
-          const double right = parse_power();
-          if(right == 0.0) ok = false;
-          else left /= right;
+        if(match_char('*')) {
+          const double right = parse_unary();
+          if(evaluate) left *= right;
+        } else if(match_char('/')) {
+          const double right = parse_unary();
+          if(evaluate) {
+            if(right == 0.0) ok = false;
+            else left /= right;
+          }
         } else if(match_word("MOD")) {
-          const double right = parse_power();
-          if(right == 0.0) ok = false;
-          else left = left - mk_math::floor(left / right) * right;
+          const double right = parse_unary();
+          if(evaluate) {
+            if(right == 0.0) ok = false;
+            else left = left - mk_math::floor(left / right) * right;
+          }
         } else if(match_word("AND")) {
-          left = (left != 0.0 && parse_power() != 0.0) ? 1.0 : 0.0;
+          const double right = parse_unary();
+          left = evaluate ? ((left != 0.0 && right != 0.0) ? 1.0 : 0.0) : 0.0;
         } else break;
       }
       return left;
     }
 
-    double parse_power(void) {
-      double left = parse_unary();
-      while(ok && match_char('^')) left = mk_math::pow(left, parse_unary());
-      return left;
+    double parse_unary(void) {
+      if(!enter()) return 0.0;
+      const double value = parse_unary_inner();
+      leave();
+      return value;
     }
 
-    double parse_unary(void) {
+    double parse_unary_inner(void) {
       if(match_char('+')) return parse_unary();
-      if(match_char('-')) return -parse_unary();
-      if(match_word("NOT")) return parse_unary() == 0.0 ? 1.0 : 0.0;
+      if(match_char('-')) {
+        const double value = parse_unary();
+        return evaluate ? -value : 0.0;
+      }
+      if(match_word("NOT")) {
+        const double value = parse_unary();
+        return evaluate ? ((value == 0.0) ? 1.0 : 0.0) : 0.0;
+      }
+      return parse_power();
+    }
+
+    double parse_power_operand(void) {
+      if(!enter()) return 0.0;
+      const double value = parse_power_operand_inner();
+      leave();
+      return value;
+    }
+
+    double parse_power_operand_inner(void) {
+      if(match_char('+')) return parse_power_operand();
+      if(match_char('-')) {
+        const double value = parse_power_operand();
+        return evaluate ? -value : 0.0;
+      }
+      if(match_word("NOT")) {
+        const double value = parse_power_operand();
+        return evaluate ? ((value == 0.0) ? 1.0 : 0.0) : 0.0;
+      }
       return parse_primary();
     }
 
+    double parse_power(void) {
+      double left = parse_primary();
+      while(ok && match_char('^')) {
+        const double right = parse_power_operand();
+        if(evaluate) left = mk_math::pow(left, right);
+      }
+      return left;
+    }
+
     double parse_primary(void) {
+      if(!enter()) return 0.0;
+      const double value = parse_primary_inner();
+      leave();
+      return value;
+    }
+
+    double parse_primary_inner(void) {
       skip();
       if(p >= end) {
         ok = false;
@@ -793,10 +917,11 @@ class TbExprParser {
 
       if(*p == '.' && p + 1 < end && tb_is_alpha(*(p + 1))) {
         mk61_ref::Ref ref;
-        if(!tb_parse_mk_ref_token(p, end, ref)) {
+        if(!tb_parse_mk_ref_token(p, end, ref, evaluate)) {
           ok = false;
           return 0.0;
         }
+        if(!evaluate) return 0.0;
         double value = 0.0;
         if(!mk61_ref::read(ref, value)) {
           ok = false;
@@ -813,7 +938,8 @@ class TbExprParser {
           return 0.0;
         }
         p = after;
-        return value;
+        if(evaluate && !mk_math::is_finite(value)) ok = false;
+        return evaluate ? value : 0.0;
       }
 
       if(tb_is_alpha(*p)) {
@@ -823,8 +949,8 @@ class TbExprParser {
         while(p < end && tb_is_alpha(*p)) p++;
         word[len] = 0;
 
-        if(len == 1 && word[0] >= 'A' && word[0] <= 'Z') return tb_vars[word[0] - 'A'];
-        if(tb_streq(word, "PI")) return 3.14159265358979323846;
+        if(len == 1 && word[0] >= 'A' && word[0] <= 'Z') return evaluate ? tb_vars[word[0] - 'A'] : 0.0;
+        if(tb_streq(word, "PI")) return evaluate ? 3.14159265358979323846 : 0.0;
 
         if(!match_char('(')) {
           ok = false;
@@ -833,11 +959,16 @@ class TbExprParser {
 
         if(tb_streq(word, "RND")) {
           skip();
-          if(match_char(')')) return tb_next_random();
+          if(match_char(')')) return evaluate ? tb_next_random() : 0.0;
           const double max_value = parse_compare();
           if(!match_char(')')) ok = false;
-          const int limit = (int) mk_math::floor(max_value);
-          if(limit < 1) {
+          if(!evaluate) return 0.0;
+          if(!mk_math::is_finite(max_value)) {
+            ok = false;
+            return 0.0;
+          }
+          const double limit = mk_math::floor(max_value);
+          if(limit < 1.0) {
             ok = false;
             return 0.0;
           }
@@ -856,40 +987,243 @@ class TbExprParser {
           return 0.0;
         }
 
-        if(tb_streq(word, "SIN")) return mk_math::sin(a);
-        if(tb_streq(word, "COS")) return mk_math::cos(a);
-        if(tb_streq(word, "TG")) return mk_math::tan(a);
-        if(tb_streq(word, "ASIN")) return mk_math::asin(a);
-        if(tb_streq(word, "ACOS")) return mk_math::acos(a);
-        if(tb_streq(word, "ATG")) return mk_math::atan(a);
+        const bool is_max = tb_streq(word, "MAX");
+        if(is_max != has_b) {
+          ok = false;
+          return 0.0;
+        }
+        if(!evaluate) {
+          if(is_max || tb_streq(word, "SIN") || tb_streq(word, "COS") || tb_streq(word, "TG") ||
+             tb_streq(word, "ASIN") || tb_streq(word, "ACOS") || tb_streq(word, "ATG") ||
+             tb_streq(word, "LN") || tb_streq(word, "LG") || tb_streq(word, "EXP") ||
+             tb_streq(word, "SQRT") || tb_streq(word, "ABS") || tb_streq(word, "INT") ||
+             tb_streq(word, "FRAC") || tb_streq(word, "ROUND") || tb_streq(word, "SGN")) return 0.0;
+          ok = false;
+          return 0.0;
+        }
+
+        if(tb_streq(word, "SIN")) return mk_math::sin(tb_trig_to_radians(a));
+        if(tb_streq(word, "COS")) return mk_math::cos(tb_trig_to_radians(a));
+        if(tb_streq(word, "TG")) return mk_math::tan(tb_trig_to_radians(a));
+        if(tb_streq(word, "ASIN")) return tb_trig_from_radians(mk_math::asin(a));
+        if(tb_streq(word, "ACOS")) return tb_trig_from_radians(mk_math::acos(a));
+        if(tb_streq(word, "ATG")) return tb_trig_from_radians(mk_math::atan(a));
         if(tb_streq(word, "LN")) return mk_math::ln(a);
         if(tb_streq(word, "LG")) return mk_math::log10(a);
         if(tb_streq(word, "EXP")) return mk_math::exp(a);
         if(tb_streq(word, "SQRT")) return mk_math::sqrt(a);
         if(tb_streq(word, "ABS")) return mk_math::fabs(a);
         if(tb_streq(word, "INT")) return mk_math::floor(a);
-        if(tb_streq(word, "FRAC")) return a - mk_math::floor(a);
-        if(tb_streq(word, "ROUND")) return mk_math::floor(a + 0.5);
+        if(tb_streq(word, "FRAC")) return mk_math::frac(a);
+        if(tb_streq(word, "ROUND")) return mk_math::round_half(a);
         if(tb_streq(word, "SGN")) return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
-        if(tb_streq(word, "MAX") && has_b) return (a > b) ? a : b;
+        if(is_max) return (a > b) ? a : b;
       }
 
       ok = false;
       return 0.0;
     }
-
-    static double tb_next_random(void) {
-      tb_random_state = tb_random_state * 25173UL + 13849UL;
-      return (double) (tb_random_state & 0xFFFFUL) / 65536.0;
-    }
 };
 
-static bool tb_eval_expr_range(const char* begin, const char* end, double& value, const char** out_pos = NULL) {
-  TbExprParser parser(begin, end);
+static bool tb_eval_expr_range(const char* begin, const char* end, double& value, const char** out_pos = NULL, bool evaluate = true) {
+  TbExprParser parser(begin, end, evaluate);
   if(!parser.eval(value)) return false;
   const char* pos = parser.position();
   if(out_pos != NULL) *out_pos = pos;
   else if(tb_skip_spaces(pos) < end) return false;
+  return true;
+}
+
+static bool tb_validate_expr_range(const char* begin, const char* end, const char** out_pos = NULL) {
+  double ignored = 0.0;
+  return tb_eval_expr_range(begin, end, ignored, out_pos, false);
+}
+
+static bool tb_validate_assignment(const char* begin, const char* end) {
+  const char* p = tb_skip_spaces(begin);
+  TbTarget target;
+  if(!tb_parse_target_token(p, end, target, false)) return false;
+  p = tb_skip_spaces(p);
+  if(p >= end || *p != '=') return false;
+  p++;
+
+  if(target.kind == TbTargetKind::MK_REF) return tb_validate_expr_range(p, end);
+
+  int var = target.var_index;
+  while(true) {
+    const char* item_end = tb_find_top_level(p, end, ',');
+    if(item_end == NULL) item_end = end;
+    if(var < 0 || var >= 26 || !tb_validate_expr_range(p, item_end)) return false;
+    var++;
+    if(item_end >= end) return true;
+    p = item_end + 1;
+  }
+}
+
+static bool tb_validate_print(const char* begin, const char* end) {
+  const char* p = tb_skip_spaces(begin);
+  if(p >= end) return true;
+
+  while(p < end) {
+    p = tb_skip_spaces(p);
+    if(p >= end) return false;
+    if(*p == '"' || *p == '\'') {
+      const char quote = *p++;
+      while(p < end && *p != quote) p++;
+      if(p >= end) return false;
+      p++;
+    } else {
+      const char* comma = tb_find_top_level(p, end, ',');
+      const char* semi = tb_find_top_level(p, end, ';');
+      const char* item_end = end;
+      if(comma != NULL && comma < item_end) item_end = comma;
+      if(semi != NULL && semi < item_end) item_end = semi;
+      if(!tb_validate_expr_range(p, item_end)) return false;
+      p = item_end;
+    }
+
+    p = tb_skip_spaces(p);
+    if(p >= end) return true;
+    if(*p != ',' && *p != ';') return false;
+    p++;
+    if(tb_skip_spaces(p) >= end) return true;
+  }
+  return true;
+}
+
+static bool tb_validate_input(const char* begin, const char* end) {
+  const char* p = tb_skip_spaces(begin);
+  bool has_target = false;
+  bool need_item = true;
+  while(p < end) {
+    p = tb_skip_spaces(p);
+    if(p >= end) break;
+    need_item = false;
+    if(*p == '"' || *p == '\'') {
+      const char quote = *p++;
+      while(p < end && *p != quote) p++;
+      if(p >= end) return false;
+      p++;
+    } else {
+      TbTarget target;
+      if(!tb_parse_target_token(p, end, target, false)) return false;
+      has_target = true;
+    }
+
+    p = tb_skip_spaces(p);
+    if(p >= end) break;
+    if(*p != ',' && *p != ';') return false;
+    p++;
+    need_item = true;
+  }
+  return has_target && !need_item;
+}
+
+static bool tb_validate_for(const char* begin, const char* end) {
+  const char* p = tb_skip_spaces(begin);
+  if(p >= end || !tb_is_alpha(*p)) return false;
+  p++;
+  p = tb_skip_spaces(p);
+  if(p >= end || *p != '=') return false;
+  p++;
+  const char* after_start = NULL;
+  if(!tb_validate_expr_range(p, end, &after_start)) return false;
+  p = after_start;
+  if(!tb_consume_word(p, "TO", 1)) return false;
+  return tb_validate_expr_range(p, end);
+}
+
+static bool tb_validate_next(const char* begin, const char* end) {
+  const char* p = tb_skip_spaces(begin);
+  if(p >= end || !tb_is_alpha(*p)) return false;
+  p++;
+  return tb_skip_spaces(p) >= end;
+}
+
+static bool tb_validate_command_list(const char* begin, const char* end, u8 depth = 0);
+
+static bool tb_validate_one(const char*& cursor, const char* end, u8 depth) {
+  cursor = tb_skip_spaces(cursor);
+  if(cursor >= end) return false;
+
+  const char* command_start = cursor;
+  TbCommand command = TbCommand::CMD_NONE;
+  const bool has_command = tb_parse_command_word(cursor, command);
+  if(!has_command) {
+    cursor = command_start;
+    const char* segment_end = tb_find_top_level(cursor, end, ':');
+    if(segment_end == NULL) segment_end = end;
+    if(!tb_validate_assignment(cursor, segment_end)) return false;
+    if(segment_end < end && segment_end + 1 >= end) return false;
+    cursor = (segment_end < end) ? segment_end + 1 : segment_end;
+    return true;
+  }
+
+  if(command == TbCommand::CMD_REM) {
+    cursor = end;
+    return true;
+  }
+
+  if(command == TbCommand::CMD_IF) {
+    if(depth >= TB_COMMAND_DEPTH) return false;
+    const char* after_expr = NULL;
+    if(!tb_validate_expr_range(cursor, end, &after_expr)) return false;
+    cursor = after_expr;
+    (void) tb_consume_word(cursor, "THEN", 1);
+    cursor = tb_skip_spaces(cursor);
+    if(cursor >= end || !tb_validate_command_list(cursor, end, (u8) (depth + 1))) return false;
+    cursor = end;
+    return true;
+  }
+
+  const char* segment_end = tb_find_top_level(cursor, end, ':');
+  if(segment_end == NULL) segment_end = end;
+  bool terminal = false;
+  switch(command) {
+    case TbCommand::CMD_LET:
+      if(!tb_validate_assignment(cursor, segment_end)) return false;
+      break;
+    case TbCommand::CMD_PRINT:
+      if(!tb_validate_print(cursor, segment_end)) return false;
+      break;
+    case TbCommand::CMD_INPUT:
+      if(!tb_validate_input(cursor, segment_end)) return false;
+      break;
+    case TbCommand::CMD_GOTO:
+    case TbCommand::CMD_GOSUB:
+      if(!tb_validate_expr_range(cursor, segment_end)) return false;
+      terminal = true;
+      break;
+    case TbCommand::CMD_RETURN:
+    case TbCommand::CMD_END:
+    case TbCommand::CMD_STOP:
+      if(tb_skip_spaces(cursor) < segment_end) return false;
+      terminal = true;
+      break;
+    case TbCommand::CMD_FOR:
+      if(!tb_validate_for(cursor, segment_end)) return false;
+      terminal = true;
+      break;
+    case TbCommand::CMD_NEXT:
+      if(!tb_validate_next(cursor, segment_end)) return false;
+      break;
+    case TbCommand::CMD_REM:
+    case TbCommand::CMD_IF:
+    case TbCommand::CMD_NONE:
+      return false;
+  }
+
+  if(terminal && segment_end < end) return false;
+  if(segment_end < end && segment_end + 1 >= end) return false;
+  cursor = (segment_end < end) ? segment_end + 1 : segment_end;
+  return true;
+}
+
+static bool tb_validate_command_list(const char* begin, const char* end, u8 depth) {
+  const char* cursor = begin;
+  while(cursor < end) {
+    if(!tb_validate_one(cursor, end, depth)) return false;
+  }
   return true;
 }
 
@@ -909,6 +1243,9 @@ static bool tb_parse_line_number(const char*& p, i16& number) {
 static bool tb_compile_source(const char* source, TbAst& ast) {
   tb_ast_reset(ast);
   if(source == NULL) return tb_error("WHAT?");
+  usize source_len = 0;
+  while(source_len < TB_SOURCE_SIZE && source[source_len] != 0) source_len++;
+  if(source_len >= TB_SOURCE_SIZE) return tb_error("SORRY");
   ast.source = source;
 
   const char* cursor = source;
@@ -928,8 +1265,10 @@ static bool tb_compile_source(const char* source, TbAst& ast) {
     const char* p = line_begin;
     i16 number = 0;
     if(!tb_parse_line_number(p, number)) return tb_error("WHAT?");
+    if(p >= line_end || !tb_is_space(*p)) return tb_error("WHAT?");
     p = tb_skip_spaces(p);
     if(p >= line_end) return tb_error("WHAT?");
+    if(!tb_validate_command_list(p, line_end)) return tb_error("WHAT?");
 
     TbLine& line = ast.lines[ast.line_count++];
     line.number = number;
@@ -972,9 +1311,10 @@ static int tb_find_line_number(int number) {
 }
 
 static int tb_line_number_from_value(double value) {
-  const int number = (int) mk_math::floor(value + 0.5);
-  if(mk_math::fabs(value - number) > 0.0000001 || number < 1 || number > 32767) return -1;
-  return number;
+  if(!mk_math::is_finite(value) || value < 1.0 || value > 32767.0) return -1;
+  const double rounded = mk_math::floor(value + 0.5);
+  if(mk_math::fabs(value - rounded) > 0.0000001) return -1;
+  return (int) rounded;
 }
 
 static void tb_flush_print(void) {
@@ -983,18 +1323,36 @@ static void tb_flush_print(void) {
   if(tb_print_row + 1 < lcd.rows()) tb_print_row++;
 }
 
-static void tb_append_print(const char* text) {
-  strncat(tb_pending_print, text, sizeof(tb_pending_print) - strlen(tb_pending_print) - 1);
+static bool tb_append_print_range(const char* begin, const char* end) {
+  const usize used = strlen(tb_pending_print);
+  const usize added = (usize) (end - begin);
+  if(used + added >= sizeof(tb_pending_print)) return false;
+  memcpy(tb_pending_print + used, begin, added);
+  tb_pending_print[used + added] = 0;
+  return true;
 }
 
-static void tb_append_print_separator(char sep) {
-  if(sep == ',') tb_append_print(" ");
+static bool tb_append_print(const char* text) {
+  return tb_append_print_range(text, text + strlen(text));
 }
 
-static double tb_read_number_from_keyboard(const char* prompt) {
+static bool tb_append_print_separator(char sep) {
+  if(sep != ',') return true;
+  static constexpr usize TAB_WIDTH = 8;
+  const usize used = strlen(tb_pending_print);
+  usize spaces = TAB_WIDTH - (used % TAB_WIDTH);
+  if(spaces == 0) spaces = TAB_WIDTH;
+  while(spaces-- > 0) {
+    if(!tb_append_print(" ")) return false;
+  }
+  return true;
+}
+
+static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
 #ifdef TINYBASIC_HOST_TEST
   (void) prompt;
-  return tb_host_input_value;
+  value = tb_host_input_value;
+  return true;
 #else
   char buffer[17];
   memset(buffer, 0, sizeof(buffer));
@@ -1002,7 +1360,18 @@ static double tb_read_number_from_keyboard(const char* prompt) {
   while(true) {
     tb_message_i18n(prompt, prompt, buffer, buffer);
     const i32 key = kbd::get_key_wait();
-    if(key == KEY_OK || key == KEY_OK_PRESS || key == KEY_ESC || key == KEY_ESC_PRESS) break;
+    if(key == KEY_ESC || key == KEY_ESC_PRESS) return false;
+    if(key == KEY_OK || key == KEY_OK_PRESS) {
+      const char* endptr = NULL;
+      const double parsed = mk_math::strtod(buffer, &endptr);
+      if(endptr != buffer && *tb_skip_spaces(endptr) == 0 && mk_math::is_finite(parsed)) {
+        value = parsed;
+        return true;
+      }
+      tb_message_i18n("WHAT?", "ЧТО?", "number", "число");
+      delay(500);
+      continue;
+    }
     if(key == 0) {
       len = 0;
       buffer[0] = 0;
@@ -1024,11 +1393,10 @@ static double tb_read_number_from_keyboard(const char* prompt) {
       }
     }
   }
-  return mk_math::atof(buffer);
 #endif
 }
 
-static bool tb_execute_command_list(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow);
+static bool tb_execute_command_list(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow, u8 depth = 0);
 
 static bool tb_execute_assignment(const char* begin, const char* end) {
   const char* p = tb_skip_spaces(begin);
@@ -1075,9 +1443,7 @@ static bool tb_execute_print(const char* begin, const char* end) {
       const char* text_begin = p;
       while(p < end && *p != quote) p++;
       if(p >= end) return tb_error("WHAT?");
-      char text[TB_PRINT_BUFFER_SIZE];
-      tb_copy_trim(text, sizeof(text), text_begin, p);
-      tb_append_print(text);
+      if(!tb_append_print_range(text_begin, p)) return tb_error("SORRY");
       p++;
     } else {
       const char* comma = tb_find_top_level(p, end, ',');
@@ -1089,16 +1455,17 @@ static bool tb_execute_print(const char* begin, const char* end) {
       if(!tb_eval_expr_range(p, item_end, value)) return tb_error("HOW?");
       char number[24];
       tb_format_number(value, number, sizeof(number));
-      tb_append_print(number);
+      if(!tb_append_print(number)) return tb_error("SORRY");
       p = item_end;
     }
 
     p = tb_skip_spaces(p);
     if(p < end && (*p == ',' || *p == ';')) {
       trailing_sep = *p++;
-      tb_append_print_separator(trailing_sep);
+      if(!tb_append_print_separator(trailing_sep)) return tb_error("SORRY");
       continue;
     }
+    if(p < end) return tb_error("WHAT?");
     trailing_sep = 0;
     break;
   }
@@ -1107,7 +1474,7 @@ static bool tb_execute_print(const char* begin, const char* end) {
   return true;
 }
 
-static bool tb_execute_input(const char* begin, const char* end) {
+static bool tb_execute_input(const char* begin, const char* end, i16 current_pc, TbFlow& flow) {
   const char* p = begin;
   char prompt[17] = ":";
   while(p < end) {
@@ -1118,18 +1485,28 @@ static bool tb_execute_input(const char* begin, const char* end) {
       const char* text_begin = p;
       while(p < end && *p != quote) p++;
       if(p >= end) return tb_error("WHAT?");
-      tb_copy_trim(prompt, sizeof(prompt), text_begin, p);
+      tb_copy_range(prompt, sizeof(prompt), text_begin, p);
       p++;
     } else {
       TbTarget target;
       if(!tb_parse_target_token(p, end, target)) return tb_error("WHAT?");
-      if(!tb_write_target(target, tb_read_number_from_keyboard(prompt))) return tb_error("HOW?");
+      double value = 0.0;
+      if(!tb_read_number_from_keyboard(prompt, value)) {
+        tb_pending_print[0] = 0;
+        tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
+        flow = tb_flow(TbFlowKind::STOP, current_pc);
+        return true;
+      }
+      if(!tb_write_target(target, value)) return tb_error("HOW?");
       prompt[0] = ':';
       prompt[1] = 0;
     }
 
     p = tb_skip_spaces(p);
-    if(p < end && (*p == ',' || *p == ';')) p++;
+    if(p < end) {
+      if(*p != ',' && *p != ';') return tb_error("WHAT?");
+      p++;
+    }
   }
   return true;
 }
@@ -1148,7 +1525,84 @@ static bool tb_execute_goto_like(const char* begin, const char* end, TbFlow& flo
   return true;
 }
 
-static bool tb_execute_for(const char* begin, const char* end, i16 current_pc, TbRunState& state) {
+struct TbLoopSearch {
+  int target_var;
+  int nested_vars[TB_FOR_DEPTH];
+  int depth;
+  bool found;
+  const char* after;
+};
+
+static bool tb_scan_loop_events(const char* begin, const char* end, TbLoopSearch& search, u8 command_depth = 0) {
+  const char* cursor = begin;
+  while(cursor < end && !search.found) {
+    cursor = tb_skip_spaces(cursor);
+    if(cursor >= end) return true;
+    const char* command_start = cursor;
+    TbCommand command = TbCommand::CMD_NONE;
+    if(!tb_parse_command_word(cursor, command)) {
+      cursor = command_start;
+      const char* segment_end = tb_find_top_level(cursor, end, ':');
+      cursor = (segment_end == NULL) ? end : segment_end + 1;
+      continue;
+    }
+    if(command == TbCommand::CMD_REM) return true;
+    if(command == TbCommand::CMD_IF) {
+      if(command_depth >= TB_COMMAND_DEPTH) return false;
+      const char* after_expr = NULL;
+      if(!tb_validate_expr_range(cursor, end, &after_expr)) return false;
+      cursor = after_expr;
+      (void) tb_consume_word(cursor, "THEN", 1);
+      return tb_scan_loop_events(cursor, end, search, (u8) (command_depth + 1));
+    }
+
+    const char* segment_end = tb_find_top_level(cursor, end, ':');
+    if(segment_end == NULL) segment_end = end;
+    if(command == TbCommand::CMD_FOR || command == TbCommand::CMD_NEXT) {
+      const char* var = tb_skip_spaces(cursor);
+      if(var >= segment_end || !tb_is_alpha(*var)) return false;
+      const int var_index = tb_upper(*var) - 'A';
+      if(command == TbCommand::CMD_FOR) {
+        if(search.depth >= TB_FOR_DEPTH) return false;
+        search.nested_vars[search.depth++] = var_index;
+      } else if(search.depth > 0) {
+        if(search.nested_vars[search.depth - 1] != var_index) return false;
+        search.depth--;
+      } else {
+        if(search.target_var != var_index) return false;
+        search.found = true;
+        search.after = (segment_end < end) ? segment_end + 1 : segment_end;
+      }
+    }
+    cursor = (segment_end < end) ? segment_end + 1 : segment_end;
+  }
+  return true;
+}
+
+static bool tb_find_after_matching_next(i16 current_pc, int var_index, i16& target_pc, u16& target_offset) {
+  TbLoopSearch search;
+  memset(&search, 0, sizeof(search));
+  search.target_var = var_index;
+  for(i16 pc = (i16) (current_pc + 1); pc < tb_ast.line_count; pc++) {
+    const TbLine& line = tb_ast.lines[pc];
+    const char* line_begin = tb_ast.source + line.offset;
+    const char* line_end = line_begin + line.len;
+    if(!tb_scan_loop_events(line_begin, line_end, search)) return false;
+    if(search.found) {
+      if(search.after < line_end) {
+        target_pc = pc;
+        target_offset = (u16) (search.after - line_begin);
+      } else {
+        target_pc = (i16) (pc + 1);
+        target_offset = 0;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool tb_execute_for(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow) {
   const char* p = tb_skip_spaces(begin);
   if(!tb_is_alpha(*p)) return tb_error("WHAT?");
   const int var = tb_upper(*p++) - 'A';
@@ -1162,8 +1616,15 @@ static bool tb_execute_for(const char* begin, const char* end, i16 current_pc, T
   if(!tb_consume_word(p, "TO", 1)) return tb_error("WHAT?");
   double limit = 0.0;
   if(!tb_eval_expr_range(p, end, limit)) return tb_error("HOW?");
-  if(state.for_sp + 1 >= TB_FOR_DEPTH) return tb_error("HOW?");
   tb_vars[var] = start_value;
+  if(start_value > limit) {
+    i16 target_pc = -1;
+    u16 target_offset = 0;
+    if(!tb_find_after_matching_next(current_pc, var, target_pc, target_offset)) return tb_error("HOW?");
+    flow = tb_flow(TbFlowKind::JUMP, target_pc, target_offset);
+    return true;
+  }
+  if(state.for_sp + 1 >= TB_FOR_DEPTH) return tb_error("HOW?");
   TbForFrame& frame = state.for_stack[++state.for_sp];
   frame.var_index = var;
   frame.limit = limit;
@@ -1189,7 +1650,7 @@ static bool tb_execute_next(const char* begin, const char* end, TbRunState& stat
   return true;
 }
 
-static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow) {
+static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow, u8 depth) {
   cursor = tb_skip_spaces(cursor);
   if(cursor >= end) return true;
 
@@ -1212,13 +1673,14 @@ static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc,
   }
 
   if(command == TbCommand::CMD_IF) {
+    if(depth >= TB_COMMAND_DEPTH) return tb_error("HOW?");
     double condition = 0.0;
     const char* after_expr = NULL;
     if(!tb_eval_expr_range(cursor, end, condition, &after_expr)) return tb_error("HOW?");
     cursor = after_expr;
     (void) tb_consume_word(cursor, "THEN", 1);
     if(condition != 0.0) {
-      if(!tb_execute_command_list(cursor, end, current_pc, state, flow)) return false;
+      if(!tb_execute_command_list(cursor, end, current_pc, state, flow, (u8) (depth + 1))) return false;
     }
     cursor = end;
     return true;
@@ -1235,7 +1697,7 @@ static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc,
       if(!tb_execute_print(cursor, segment_end)) return false;
       break;
     case TbCommand::CMD_INPUT:
-      if(!tb_execute_input(cursor, segment_end)) return false;
+      if(!tb_execute_input(cursor, segment_end, current_pc, flow)) return false;
       break;
     case TbCommand::CMD_GOTO:
       if(!tb_execute_goto_like(cursor, segment_end, flow, false, current_pc, state)) return false;
@@ -1251,7 +1713,7 @@ static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc,
       cursor = end;
       return true;
     case TbCommand::CMD_FOR:
-      if(!tb_execute_for(cursor, segment_end, current_pc, state)) return false;
+      if(!tb_execute_for(cursor, segment_end, current_pc, state, flow)) return false;
       cursor = end;
       return true;
     case TbCommand::CMD_NEXT:
@@ -1272,10 +1734,10 @@ static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc,
   return true;
 }
 
-static bool tb_execute_command_list(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow) {
+static bool tb_execute_command_list(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow, u8 depth) {
   const char* cursor = begin;
   while(cursor < end && flow.kind == TbFlowKind::NEXT) {
-    if(!tb_execute_one(cursor, end, current_pc, state, flow)) {
+    if(!tb_execute_one(cursor, end, current_pc, state, flow, depth)) {
       flow = tb_flow(TbFlowKind::ERROR, current_pc);
       return false;
     }
@@ -1298,19 +1760,46 @@ static bool tb_runtime_interrupted(void) {
   return false;
 }
 
-void RunTinyBasic(int program_index) {
+#ifndef TINYBASIC_HOST_TEST
+static void tinybasic_wait_keys_released(void) {
+  kbd::clear_hold_key();
+  while(kbd::get_key() >= 0) {
+  }
+  while(kbd::any_key_pressed()) {
+    kbd::scan_and_debounced();
+    delay(10);
+  }
+  kbd::debounce_init();
+}
+
+static void tinybasic_wait_after_run(void) {
+  tinybasic_wait_keys_released();
+  while(true) {
+    const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      kbd::exclude_before(scan_code);
+      kbd::clear_hold_key();
+      return;
+    }
+    delay(10);
+  }
+}
+#else
+static void tinybasic_wait_after_run(void) { tb_host_wait_count++; }
+#endif
+
+static bool tb_run_program(int program_index) {
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
-  if(!workspace_scope.ok()) return;
+  if(!workspace_scope.ok()) return false;
 #endif
   if(program_index < 0 || program_index >= TB_PROGRAM_COUNT || !programs[program_index].used) {
     tb_error("HOW?");
-    return;
+    return false;
   }
-  if(!tb_compile_source(programs[program_index].source, tb_ast)) return;
+  if(!tb_compile_source(programs[program_index].source, tb_ast)) return false;
 
   lcd.clear();
-  memset(tb_vars, 0, sizeof(tb_vars));
   tb_pending_print[0] = 0;
   tb_print_row = 0;
 
@@ -1320,18 +1809,42 @@ void RunTinyBasic(int program_index) {
   state.for_sp = -1;
 
   i16 pc = 0;
+  u16 entry_offset = 0;
+  bool succeeded = true;
+  bool interrupted = false;
   while(pc >= 0 && pc < tb_ast.line_count) {
-    if(tb_runtime_interrupted()) break;
+    if(tb_runtime_interrupted()) {
+      interrupted = true;
+      break;
+    }
     TbFlow flow = tb_flow(TbFlowKind::NEXT, (i16) (pc + 1));
     const TbLine& line = tb_ast.lines[pc];
-    const char* begin = tb_ast.source + line.offset;
-    const char* end = begin + line.len;
-    if(!tb_execute_command_list(begin, end, pc, state, flow)) break;
+    if(entry_offset > line.len) {
+      succeeded = tb_error("HOW?");
+      break;
+    }
+    const char* line_begin = tb_ast.source + line.offset;
+    const char* begin = line_begin + entry_offset;
+    const char* end = line_begin + line.len;
+    entry_offset = 0;
+    if(!tb_execute_command_list(begin, end, pc, state, flow)) {
+      succeeded = false;
+      break;
+    }
     if(flow.kind == TbFlowKind::NEXT) pc = (i16) (pc + 1);
-    else if(flow.kind == TbFlowKind::JUMP) pc = flow.pc;
+    else if(flow.kind == TbFlowKind::JUMP) {
+      pc = flow.pc;
+      entry_offset = flow.offset;
+    }
     else break;
   }
-  if(tb_pending_print[0] != 0) tb_flush_print();
+  if(succeeded && !interrupted && tb_pending_print[0] != 0) tb_flush_print();
+  else if(!succeeded || interrupted) tb_pending_print[0] = 0;
+  return succeeded;
+}
+
+void RunTinyBasic(int program_index) {
+  (void) tb_run_program(program_index);
 }
 
 static int find_free_program(void) {
@@ -1353,18 +1866,12 @@ static void tb_program_default_name(int slot, char* out, usize size) {
 }
 
 #ifndef TINYBASIC_HOST_TEST
-static void tb_release_program_slot(int slot) {
-  if(slot < 0 || slot >= TB_PROGRAM_COUNT) return;
-  memset(&programs[slot], 0, sizeof(programs[slot]));
-}
-
 static int tb_alloc_program_slot(const char* name) {
   const int existing = find_program_by_name(name);
   if(existing >= 0) return existing;
   const int free_slot = find_free_program();
   if(free_slot >= 0) return free_slot;
   const int slot = (NextTinyBasic >= 0 && NextTinyBasic < TB_PROGRAM_COUNT) ? NextTinyBasic : 0;
-  tb_release_program_slot(slot);
   return slot;
 }
 
@@ -1372,21 +1879,19 @@ static bool tb_store_name_is_valid(const char* name) {
   return name != NULL && name[0] != 0 && strlen(name) < program_store::NAME_SIZE;
 }
 
-static int load_tinybasic_program_from_store(const char* name, bool compile = true) {
+static int load_tinybasic_program_from_store(const char* name) {
   if(!tb_store_name_is_valid(name)) return -1;
   char source[TB_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
   u16 len = 0;
   if(!program_store::read(program_store::ProgramType::TINYBASIC, name, (u8*) source, TB_SOURCE_SIZE - 1, &len)) return -1;
   source[len] = 0;
-  if(compile && !tb_compile_source(source, tb_ast)) return -1;
   const int slot = tb_alloc_program_slot(name);
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
   tb_copy_text(programs[slot].name, sizeof(programs[slot].name), name);
   programs[slot].used = true;
   NextTinyBasic = (i8) slot;
-  if(compile && !tb_compile_source(programs[slot].source, tb_ast)) return -1;
   return slot;
 }
 #endif
@@ -1419,7 +1924,11 @@ void InitTinyBasic(void) {
   tb_pending_print[0] = 0;
   tb_print_row = 0;
   NextTinyBasic = -1;
+#ifdef TINYBASIC_HOST_TEST
   tb_random_state = 0x3B6B120EUL;
+  tinybasic_host_angle_unit = RADIAN;
+  tb_host_wait_count = 0;
+#endif
 }
 
 static void draw_program_select(int active, bool allow_new) {
@@ -1494,7 +2003,9 @@ static int select_tinybasic_program(bool allow_new) {
         {
           program_store::Entry entry;
           if(!program_store::entry(program_store::ProgramType::TINYBASIC, active, entry)) return -1;
-          return load_tinybasic_program_from_store(entry.name, !allow_new);
+          const int slot = load_tinybasic_program_from_store(entry.name);
+          tinybasic_wait_keys_released();
+          return slot;
         }
       case KEY_ESC:
         return -1;
@@ -1529,7 +2040,10 @@ bool TinyBASIC_library_select(void) {
   if(!workspace_scope.ok()) return false;
 #endif
   const int program = select_tinybasic_program(false);
-  if(program >= 0) RunTinyBasic(program);
+  if(program >= 0) {
+    (void) tb_run_program(program);
+    tinybasic_wait_after_run();
+  }
   return true;
 }
 
@@ -1717,6 +2231,9 @@ static bool tb_input_program_name(char* name, usize size) {
 
 static bool store_edited_program(int slot, char* source, const char* store_name) {
   if(slot < 0 || slot > TB_PROGRAM_COUNT) return tb_error("SORRY");
+  TbAst validation_ast;
+  if(!tb_compile_source(source, validation_ast)) return false;
+
   char old_name[TB_NAME_SIZE] = "";
   if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) {
     tb_copy_text(old_name, sizeof(old_name), programs[slot].name);
@@ -1731,22 +2248,26 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
 #endif
   }
   if(slot < 0 || slot >= TB_PROGRAM_COUNT) return tb_error("SORRY");
-  if(!tb_compile_source(source, tb_ast)) return false;
-  tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
-  programs[slot].source_len = (u16) strlen(programs[slot].source);
-  if(!tb_compile_source(programs[slot].source, tb_ast)) return false;
-  if(store_name != NULL && store_name[0] != 0) tb_copy_text(programs[slot].name, sizeof(programs[slot].name), store_name);
-  else tb_program_default_name(slot, programs[slot].name, sizeof(programs[slot].name));
-  programs[slot].used = true;
-  NextTinyBasic = (i8) slot;
+  char final_name[TB_NAME_SIZE];
+  if(store_name != NULL && store_name[0] != 0) tb_copy_text(final_name, sizeof(final_name), store_name);
+  else tb_program_default_name(slot, final_name, sizeof(final_name));
+  const u16 source_len = (u16) strlen(source);
 #ifndef TINYBASIC_HOST_TEST
-  if(!program_store::write(program_store::ProgramType::TINYBASIC, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len)) {
+  // Persist first. The editor's RAM state is not committed until flash accepts
+  // the full source, so a failed write leaves the previous program intact.
+  if(!program_store::write(program_store::ProgramType::TINYBASIC, final_name, (const u8*) source, source_len)) {
     return tb_error("SORRY");
   }
-  if(old_name[0] != 0 && !tb_streq(old_name, programs[slot].name)) {
+  if(old_name[0] != 0 && !tb_streq(old_name, final_name)) {
     program_store::remove(program_store::ProgramType::TINYBASIC, old_name);
   }
 #endif
+  tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
+  programs[slot].source_len = source_len;
+  tb_copy_text(programs[slot].name, sizeof(programs[slot].name), final_name);
+  programs[slot].used = true;
+  NextTinyBasic = (i8) slot;
+  if(!tb_compile_source(programs[slot].source, tb_ast)) return false;
   tb_message_i18n("TinyBASIC ready", "TinyBASIC готов", programs[slot].name, programs[slot].name);
   delay(700);
   return true;
@@ -1788,9 +2309,15 @@ static void EditTinyBasicSlot(int slot) {
       memset(name, 0, sizeof(name));
       if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(name, sizeof(name), programs[slot].name);
       else tb_program_default_name(find_free_program() < 0 ? 0 : find_free_program(), name, sizeof(name));
-      if(tb_input_program_name(name, sizeof(name)) && store_edited_program(slot, source, name)) return;
+      if(!tb_input_program_name(name, sizeof(name))) {
+        kbd::debounce_init();
+        dirty = true;
+        continue;
+      }
+      if(store_edited_program(slot, source, name)) return;
+      delay(700);
       kbd::debounce_init();
-      return;
+      dirty = true;
     }
   }
 }
@@ -1811,7 +2338,7 @@ bool EditTinyBasicProgram(const char* name) {
   if(!workspace_scope.ok()) return false;
 #endif
 #ifndef TINYBASIC_HOST_TEST
-  const int slot = load_tinybasic_program_from_store(name, false);
+  const int slot = load_tinybasic_program_from_store(name);
   if(slot < 0) return false;
   EditTinyBasicSlot(slot);
   return true;
@@ -1832,8 +2359,9 @@ bool RunTinyBasicProgram(const char* name) {
   const int slot = find_program_by_name(name);
 #endif
   if(slot < 0) return false;
-  RunTinyBasic(slot);
-  return true;
+  const bool ok = tb_run_program(slot);
+  tinybasic_wait_after_run();
+  return ok;
 }
 
 static bool TinyBASIC_run_menu(void) {
@@ -1922,6 +2450,27 @@ extern "C" void TinyBasicTestRun(int slot) {
   RunTinyBasic(slot);
 }
 
+extern "C" bool TinyBasicTestRunResult(int slot) {
+  lcd.clear();
+  return tb_run_program(slot);
+}
+
+extern "C" void TinyBasicTestClearData(void) {
+  memset(tb_vars, 0, sizeof(tb_vars));
+}
+
+extern "C" int TinyBasicTestWaitCount(void) {
+#ifdef TINYBASIC_HOST_TEST
+  return tb_host_wait_count;
+#else
+  return 0;
+#endif
+}
+
+extern "C" bool TinyBasicTestStoreEdited(int slot, char* source, const char* name) {
+  return store_edited_program(slot, source, name);
+}
+
 extern "C" double TinyBasicTestNumber(const char* name) {
   if(name == NULL || name[0] == 0) return 0.0;
   const int idx = tb_upper(name[0]) - 'A';
@@ -1938,6 +2487,14 @@ extern "C" double TinyBasicTestMkRegister(int reg) {
 
 extern "C" void TinyBasicTestSetRfEnabled(bool enabled) {
   mk61_ref::host_set_rf_enabled(enabled);
+}
+
+extern "C" void TinyBasicTestSetAngleMode(int mode) {
+#ifdef TINYBASIC_HOST_TEST
+  if(mode == DEGREE || mode == GRADE || mode == RADIAN) tinybasic_host_angle_unit = (AngleUnit) mode;
+#else
+  (void) mode;
+#endif
 }
 
 extern "C" const char* TinyBasicTestLcdLine(int row) {

@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #include "mk_math.hpp"       // MK61_MATH_BACKEND == CORE (set via -D)
 #include "mk61emu_core.h"
@@ -110,8 +111,8 @@ static void test_pure_helpers(void) {
   double v = mk_math::strtod("42.5abc", &endp);
   check_near("strtod value", v, 42.5, 1e-9);
   check_true("strtod endptr", endp != nullptr && *endp == 'a');
-  check_true("pow10 huge", std::isinf(mk_math::pow10_int(INT_MAX)));
-  check_true("pow10 tiny", mk_math::pow10_int(INT_MIN) == 0.0);
+  check_true("trunc NaN", mk_math::is_nan(mk_math::trunc(__builtin_nan(""))));
+  check_true("floor +Inf", mk_math::is_inf(mk_math::floor(__builtin_huge_val())));
   check_true("pow10 subnormal", mk_math::pow10_int(-309) > 0.0);
   check_true("log10 invalid", mk_math::log10_floor(0.0) == 0);
 
@@ -119,8 +120,11 @@ static void test_pure_helpers(void) {
   const double huge = mk_math::strtod("1e999999999999999999999", &huge_end);
   check_true("strtod huge", std::isinf(huge));
   check_true("strtod huge end", huge_end != nullptr && *huge_end == 0);
-  check_true("strtod tiny", mk_math::strtod("1e-999999999999999999999", nullptr) == 0.0);
+  check_true("strtod zero huge", mk_math::atof("0e999999999999999999999") == 0.0);
+  check_true("strtod denormal", mk_math::atof("4.940656458e-324") == std::numeric_limits<double>::denorm_min());
   check_near("strtod 20 digits", mk_math::strtod("12345678901234567890", nullptr), 1.2345678901234567e19, 1e-15);
+  check_near("strtod long fraction", mk_math::atof("0.1234567890123456789012345"),
+             0.12345678901234568, 1e-15);
 }
 
 static void test_transcendental(void) {

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 
 extern "C" void TinyBasicTestReset(void);
 extern "C" bool TinyBasicTestCompile(const char* source);
@@ -13,9 +14,15 @@ extern "C" double TinyBasicTestNumber(const char* name);
 extern "C" double TinyBasicTestMkX(void);
 extern "C" double TinyBasicTestMkRegister(int reg);
 extern "C" void TinyBasicTestSetRfEnabled(bool enabled);
+extern "C" void TinyBasicTestSetAngleMode(int mode);
 extern "C" const char* TinyBasicTestLcdLine(int row);
 extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out, int size);
 extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size);
+extern "C" bool TinyBasicTestRunResult(int slot);
+extern "C" void TinyBasicTestClearData(void);
+extern "C" int TinyBasicTestWaitCount(void);
+extern "C" bool TinyBasicTestStoreEdited(int slot, char* source, const char* name);
+bool RunTinyBasicProgram(const char* name);
 
 static constexpr int KEY_K = 37;
 static constexpr int KEY_OK = 29;
@@ -93,13 +100,210 @@ static void test_input(void) {
 
 static void test_bad_expression_tail(void) {
   TinyBasicTestReset();
-  const int slot = TinyBasicTestAddProgram(
+  assert(!TinyBasicTestCompile(
     "10 A=1 BAD\n"
-    "20 PRINT A\n",
-    "BAD");
+    "20 PRINT A\n"));
+  assert(std::strcmp(TinyBasicTestError(), "WHAT?") == 0);
+}
+
+static void test_compile_rejects_invalid_statements(void) {
+  TinyBasicTestReset();
+  assert(!TinyBasicTestCompile("10 A=\n"));
+  assert(std::strcmp(TinyBasicTestError(), "WHAT?") == 0);
+
+  TinyBasicTestReset();
+  assert(!TinyBasicTestCompile("10 THIS IS NOT BASIC\n"));
+  assert(!TinyBasicTestCompile("10PRINT \"NO SEPARATOR\"\n"));
+  assert(!TinyBasicTestCompile("10 IF 0 GARBAGE\n20 END\n"));
+  assert(!TinyBasicTestCompile("10 PRINT \"OK\" GARBAGE\n"));
+  assert(!TinyBasicTestCompile("10 SIN=1\n"));
+  assert(!TinyBasicTestCompile("10 GOTO 20:PRINT \"BAD\"\n20 END\n"));
+  assert(!TinyBasicTestCompile("10 INPUT \"PROMPT ONLY\"\n"));
+  assert(!TinyBasicTestCompile(
+    "10 A=------------------------------------------------------------------------"
+    "--------1\n"));
+  assert(!TinyBasicTestCompile(
+    "10 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 "
+    "IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 A=1\n"));
+
+  char oversized[1100];
+  std::memset(oversized, 'X', sizeof(oversized));
+  std::memcpy(oversized, "10 REM ", 7);
+  oversized[sizeof(oversized) - 1] = 0;
+  assert(!TinyBasicTestCompile(oversized));
+  assert(std::strcmp(TinyBasicTestError(), "SORRY") == 0);
+}
+
+static void test_keyword_abbreviations(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "10 A=0\n"
+    "20 F. I=1 TO 2\n"
+    "30 A=A+I\n"
+    "40 N. I\n"
+    "50 I. A=3 GOS. 100\n"
+    "60 P. A\n"
+    "70 E.\n"
+    "100 A=A+1\n"
+    "110 R.\n",
+    "ABBREV");
   assert(slot >= 0);
-  TinyBasicTestRun(slot);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 4.0) < 0.000001);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "4", 1) == 0);
+}
+
+static void test_boolean_truth_table(void) {
+  struct Case {
+    const char* expression;
+    double expected;
+  };
+  const Case cases[] = {
+    {"0 AND 0", 0.0}, {"0 AND 1", 0.0}, {"1 AND 0", 0.0}, {"1 AND 1", 1.0},
+    {"0 OR 0", 0.0},  {"0 OR 1", 1.0},  {"1 OR 0", 1.0},  {"1 OR 1", 1.0},
+    {"0 XOR 0", 0.0}, {"0 XOR 1", 1.0}, {"1 XOR 0", 1.0}, {"1 XOR 1", 0.0}
+  };
+  for(const Case& item : cases) {
+    TinyBasicTestReset();
+    char source[64];
+    std::snprintf(source, sizeof(source), "10 A=%s\n", item.expression);
+    const int slot = TinyBasicTestAddProgram(source, "BOOL");
+    assert(slot >= 0);
+    assert(TinyBasicTestRunResult(slot));
+    assert(std::fabs(TinyBasicTestNumber("A") - item.expected) < 0.000001);
+  }
+}
+
+static void test_expression_semantics(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "10 A=-2^2\n"
+    "20 B=2^3^2\n"
+    "30 C=ROUND(-1.5)\n"
+    "40 D=ROUND(1.5)\n",
+    "EXPR");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") + 4.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("B") - 64.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("C") + 2.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("D") - 2.0) < 0.000001);
+
+  TinyBasicTestReset();
+  assert(!TinyBasicTestCompile("10 A=SIN(0,123)\n"));
+  assert(!TinyBasicTestCompile("10 A=MAX(1)\n"));
+  assert(!TinyBasicTestCompile("10 A=MAX(1,2,3)\n"));
+}
+
+static void test_zero_trip_for(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "10 S=0\n"
+    "20 FOR I=2 TO 1\n"
+    "30 S=S+1\n"
+    "40 NEXT I: S=S+10\n"
+    "50 END\n",
+    "ZEROFOR");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("S") - 10.0) < 0.000001);
+
+  TinyBasicTestReset();
+  const int nested = TinyBasicTestAddProgram(
+    "10 S=0\n"
+    "20 FOR I=3 TO 1\n"
+    "30 FOR J=1 TO 2\n"
+    "40 S=S+1\n"
+    "50 NEXT J\n"
+    "60 NEXT I:S=9\n",
+    "NESTZERO");
+  assert(nested >= 0);
+  assert(TinyBasicTestRunResult(nested));
+  assert(std::fabs(TinyBasicTestNumber("S") - 9.0) < 0.000001);
+}
+
+static void test_print_syntax_and_spacing(void) {
+  TinyBasicTestReset();
+  int slot = TinyBasicTestAddProgram("10 PRINT \"  X  \"\n", "SPACES");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "  X  ", 5) == 0);
+
+  TinyBasicTestReset();
+  slot = TinyBasicTestAddProgram("10 PRINT \"A\",\"B\"\n", "TABS");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "A       B", 9) == 0);
+
+  TinyBasicTestReset();
+  char source[160];
+  std::strcpy(source, "10 PRINT \"");
+  const int prefix = (int) std::strlen(source);
+  std::memset(source + prefix, 'X', 96);
+  std::strcpy(source + prefix + 96, "\"\n");
+  slot = TinyBasicTestAddProgram(source, "LONGPRINT");
+  assert(slot >= 0);
+  assert(!TinyBasicTestRunResult(slot));
+  assert(std::strcmp(TinyBasicTestError(), "SORRY") == 0);
+}
+
+static void test_runtime_math_errors_are_safe(void) {
+  TinyBasicTestReset();
+  int slot = TinyBasicTestAddProgram("10 A=RND(1E100)\n", "BIGRND");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(TinyBasicTestNumber("A") >= 1.0);
+  assert(TinyBasicTestNumber("A") <= 1E100);
+
+  TinyBasicTestReset();
+  slot = TinyBasicTestAddProgram("10 GOTO SQRT(-1)\n", "NANGOTO");
+  assert(slot >= 0);
+  assert(!TinyBasicTestRunResult(slot));
   assert(std::strcmp(TinyBasicTestError(), "HOW?") == 0);
+
+  TinyBasicTestReset();
+  slot = TinyBasicTestAddProgram("10 PRINT \"X\";:A=1/0\n", "ERRLCD");
+  assert(slot >= 0);
+  assert(!TinyBasicTestRunResult(slot));
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "HOW?", 4) == 0);
+
+  TinyBasicTestReset();
+  slot = TinyBasicTestAddProgram("10 .X=1E100\n", "MKOVER");
+  assert(slot >= 0);
+  assert(!TinyBasicTestRunResult(slot));
+  assert(std::strcmp(TinyBasicTestError(), "HOW?") == 0);
+}
+
+static void test_variables_persist_until_clear(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram("10 A=A+1\n", "PERSIST");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 1.0) < 0.000001);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 2.0) < 0.000001);
+  TinyBasicTestClearData();
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 1.0) < 0.000001);
+}
+
+static void test_run_api_reports_runtime_failure(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram("10 A=1/0\n", "FAILAPI");
+  assert(slot >= 0);
+  assert(!RunTinyBasicProgram("FAILAPI"));
+  assert(std::strcmp(TinyBasicTestError(), "HOW?") == 0);
+  assert(TinyBasicTestWaitCount() == 1);
+}
+
+static void test_failed_edit_keeps_previous_program(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram("10 A=5\n", "EDITSAFE");
+  assert(slot >= 0);
+  char invalid[] = "10 A=\n";
+  assert(!TinyBasicTestStoreEdited(slot, invalid, "EDITSAFE"));
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 5.0) < 0.000001);
 }
 
 static void test_editor_has_no_operator_macros(void) {
@@ -143,6 +347,7 @@ static void test_format_number(void) {
   expect_format(0.00001, "1E-5");
   expect_format(-0.0000123, "-1.23E-5");
   expect_format(9.99999999999e9, "10000000000");
+  expect_format(std::numeric_limits<double>::denorm_min(), "4.940656458E-324");
 }
 
 // Transcendental functions now dispatch through mk_math:: (LIBM backend here);
@@ -157,6 +362,26 @@ static void test_mk_math_dispatch(void) {
   TinyBasicTestRun(slot);
   assert(std::fabs(TinyBasicTestNumber("A") - 6.0) < 0.000001);
   assert(std::strncmp(TinyBasicTestLcdLine(0), "6", 1) == 0);
+}
+
+static void test_trig_angle_modes(void) {
+  TinyBasicTestReset();
+  TinyBasicTestSetAngleMode(11); // DEGREE
+  int slot = TinyBasicTestAddProgram(
+    "10 A=SIN(30)\n"
+    "20 B=ASIN(.5)\n",
+    "DEGREES");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 0.5) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("B") - 30.0) < 0.000001);
+
+  TinyBasicTestReset();
+  TinyBasicTestSetAngleMode(12); // GRADE
+  slot = TinyBasicTestAddProgram("10 A=SIN(100)\n", "GRADES");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 1.0) < 0.000001);
 }
 
 static void test_mk_register_references(void) {
@@ -226,6 +451,7 @@ int main(void) {
   test_compile_and_print();
   test_format_number();
   test_mk_math_dispatch();
+  test_trig_angle_modes();
   test_mk_register_references();
   test_mk_reference_rejects_unrepresentable_values();
   test_input_mk_stack_reference();
@@ -235,6 +461,16 @@ int main(void) {
   test_for_next();
   test_input();
   test_bad_expression_tail();
+  test_compile_rejects_invalid_statements();
+  test_keyword_abbreviations();
+  test_boolean_truth_table();
+  test_expression_semantics();
+  test_zero_trip_for();
+  test_print_syntax_and_spacing();
+  test_runtime_math_errors_are_safe();
+  test_variables_persist_until_clear();
+  test_run_api_reports_runtime_failure();
+  test_failed_edit_keeps_previous_program();
   test_editor_has_no_operator_macros();
   std::printf("tinybasic_self_test: ok\n");
   return 0;

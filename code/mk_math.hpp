@@ -164,7 +164,18 @@ inline double strtod(const char* s, const char** endptr) {
   long long total_exp = (long long) exp10 + dropped_integer_digits - fractional_scale;
   if(total_exp > 100000) total_exp = 100000;
   if(total_exp < -100000) total_exp = -100000;
-  double value = mant == 0 ? 0.0 : (double) mant * pow10_int((int) total_exp);
+  int effective_exp = (int) total_exp;
+  double value = (double) mant;
+  while(effective_exp > 0 && value != 0.0 && is_finite(value)) {
+    const int step = effective_exp > 308 ? 308 : effective_exp;
+    value *= pow10_int(step);
+    effective_exp -= step;
+  }
+  while(effective_exp < 0 && value != 0.0) {
+    const int step = effective_exp < -308 ? -308 : effective_exp;
+    value *= pow10_int(step);
+    effective_exp -= step;
+  }
   if(neg) value = -value;
   if(endptr) *endptr = p;
   return value;

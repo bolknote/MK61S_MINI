@@ -111,6 +111,11 @@ double read_x(void) {
 // any pending error latch. A domain error during the borrow (e.g. √ of a
 // negative) therefore cannot leak out - restore_context() wipes it.
 double eval_unary(double x, const MatrixKey& op) {
+  if(!mk_math::is_finite(x)) return __builtin_nan("");
+  if(x != 0.0) {
+    const int exponent = mk_math::log10_floor(mk_math::fabs(x));
+    if(exponent < -99 || exponent > 99) return __builtin_nan("");
+  }
   core_61::save_context();
 
   core_61::enable();          // clean calculator: no leftover prefix/error

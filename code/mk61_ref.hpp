@@ -223,7 +223,7 @@ inline void write_register(u8 reg, char sign, const char mantissa[8], isize pow1
 
 inline bool write(const Ref& ref, double value) {
   if(ref.kind == Kind::R && !register_available(ref.reg)) return false;
-  if(mk_math::is_nan(value) || mk_math::is_inf(value)) return false;
+  if(!mk_math::is_finite(value)) return false;
 
   char sign;
   char mantissa[8];

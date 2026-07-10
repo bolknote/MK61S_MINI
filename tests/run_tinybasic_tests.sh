@@ -18,7 +18,13 @@ if [[ -z "$tinybasic_enabled" ]]; then
 fi
 
 if [[ "$tinybasic_enabled" == "0" ]]; then
-  echo "tinybasic_self_test: skipped (MK61_ENABLE_TINYBASIC=0)"
+  clang++ -std=c++17 -Wall -Wextra -Werror \
+    -DTINYBASIC_HOST_TEST \
+    -DMK61_ENABLE_TINYBASIC=0 \
+    -I"$root/code" \
+    -c "$root/code/tinybasic.cpp" \
+    -o "${TMPDIR:-/tmp}/mk61_tinybasic_disabled.o"
+  echo "tinybasic_self_test: disabled build ok"
   exit 0
 fi
 
