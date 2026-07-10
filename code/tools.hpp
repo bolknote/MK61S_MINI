@@ -227,6 +227,11 @@ SoundSettings read_sound_settings(void);
 void store_sound_settings(SoundSettings settings);
 bool read_display_text_profile(lcd_display::TextProfile& out);
 void store_display_text_profile(lcd_display::TextProfile profile);
+bool store_settings_snapshot(
+  SettingsFlags flags,
+  SoundSettings sound,
+  const lcd_display::TextProfile* text_profile
+);
 
 inline AngleUnit load_grade_switch(void) {
   static const AngleUnit rom_angle = read_stored_grade_switch();

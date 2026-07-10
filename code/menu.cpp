@@ -451,7 +451,7 @@ void refresh_menu_text(void) {
 #endif
 }
 
-void  store_settings_state(void) {
+bool  store_settings_state(void) {
   SettingsFlags flags;
   flags.bits.language_ru = russian_language;
   flags.bits.program_memory_mode = (u8) memory_mode;
@@ -463,17 +463,18 @@ void  store_settings_state(void) {
 #else
   flags.bits.display_rows_8 = 0;
 #endif
-  store_settings_flags(flags);
-
   SoundSettings sound_settings;
   sound_settings.bits.volume = sound_volume_state;
 #if defined(MK61_DISPLAY_UC1609)
   sound_settings.bits.display_rows_mode = display_rows_mode(display_text_profile_state);
 #endif
-  store_sound_settings(sound_settings);
+
 #if defined(MK61_DISPLAY_UC1609) && MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  store_display_text_profile(display_text_profile_state);
+  const lcd_display::TextProfile* stored_profile = &display_text_profile_state;
+#else
+  const lcd_display::TextProfile* stored_profile = NULL;
 #endif
+  return store_settings_snapshot(flags, sound_settings, stored_profile);
 }
 
 static void mark_settings_dirty(void) {
@@ -486,8 +487,11 @@ void defer_settings_state_save(void) {
 
 void flush_settings_state(void) {
   if(!settings_save.pending()) return;
-  store_settings_state();
-  settings_save.clear();
+  if(store_settings_state()) {
+    settings_save.clear();
+  } else {
+    settings_save.schedule(millis(), SETTINGS_SAVE_IDLE_MS);
+  }
 }
 
 void poll_settings_state_save(void) {

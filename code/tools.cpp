@@ -10,6 +10,7 @@
 #include "program_store.hpp"
 #include "m61_text.hpp"
 #include "shared_scratch.hpp"
+#include "settings_journal.hpp"
 #include "mk61emu_core.h"
 #include "keyboard.h"
 #include "cross_hal.h"
@@ -390,29 +391,6 @@ SPIFlash  flash(PIN_SPIFLASH_CS);
 bool      flash_is_ok;
 
 static constexpr u32 SETTINGS_FLASH_SECTOR = (MAX_SLOT_FOR_PROGRAM + 2) * FLASH_SECTOR_SIZE;
-static constexpr usize SETTINGS_RECORD_SIZE = 16;
-static constexpr u8 SETTINGS_RECORD_VERSION_1 = 1;
-static constexpr u8 SETTINGS_RECORD_VERSION = 2;
-static constexpr u8 SETTINGS_MAGIC_0 = 'M';
-static constexpr u8 SETTINGS_MAGIC_1 = '6';
-static constexpr u8 SETTINGS_MAGIC_2 = '1';
-static constexpr u8 SETTINGS_MAGIC_3 = 'S';
-static constexpr u8 SETTINGS_IDX_MAGIC_0 = 0;
-static constexpr u8 SETTINGS_IDX_MAGIC_1 = 1;
-static constexpr u8 SETTINGS_IDX_MAGIC_2 = 2;
-static constexpr u8 SETTINGS_IDX_MAGIC_3 = 3;
-static constexpr u8 SETTINGS_IDX_VERSION = 4;
-static constexpr u8 SETTINGS_IDX_GRADE = 5;
-static constexpr u8 SETTINGS_IDX_COUNTER = 6;
-static constexpr u8 SETTINGS_IDX_FLAGS = 7;
-static constexpr u8 SETTINGS_IDX_SOUND = 8;
-static constexpr u8 SETTINGS_IDX_V1_CRC = 9;
-static constexpr u8 SETTINGS_IDX_TEXT_ROWS = 9;
-static constexpr u8 SETTINGS_IDX_TEXT_WIDTH = 10;
-static constexpr u8 SETTINGS_IDX_TEXT_HEIGHT = 11;
-static constexpr u8 SETTINGS_IDX_TEXT_GAP = 12;
-static constexpr u8 SETTINGS_IDX_TEXT_RESERVED = 13;
-static constexpr u8 SETTINGS_IDX_CRC = 14;
 static constexpr u32 LEGACY_EEPROM_PAGE_SIZE = 8 * 1024;
 
 struct PersistentSettings {
@@ -434,6 +412,8 @@ static PersistentSettings persistent_settings = {
 };
 static bool persistent_settings_loaded = false;
 static bool persistent_settings_sector_dirty = false;
+static bool persistent_settings_needs_save = false;
+static bool persistent_settings_write_blocked = false;
 static u32 persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
 
 static void reset_persistent_settings_cache(void) {
@@ -445,53 +425,24 @@ static void reset_persistent_settings_cache(void) {
   persistent_settings.text_profile_stored = false;
   persistent_settings_loaded = true;
   persistent_settings_sector_dirty = false;
+  persistent_settings_needs_save = true;
+  persistent_settings_write_blocked = false;
   persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
 }
 
-static u8 settings_record_crc(const u8* record, u8 crc_index) {
-  u8 crc = 0xA5;
-  for(u8 i = 0; i < crc_index; i++) {
-    crc = (u8) ((crc << 1) | (crc >> 7));
-    crc ^= record[i];
-  }
-  return crc;
-}
-
-static bool settings_record_is_valid(const u8* record) {
-  if(record[SETTINGS_IDX_MAGIC_0] != SETTINGS_MAGIC_0) return false;
-  if(record[SETTINGS_IDX_MAGIC_1] != SETTINGS_MAGIC_1) return false;
-  if(record[SETTINGS_IDX_MAGIC_2] != SETTINGS_MAGIC_2) return false;
-  if(record[SETTINGS_IDX_MAGIC_3] != SETTINGS_MAGIC_3) return false;
-  if(record[SETTINGS_IDX_VERSION] == SETTINGS_RECORD_VERSION_1) {
-    return record[SETTINGS_IDX_V1_CRC] == settings_record_crc(record, SETTINGS_IDX_V1_CRC);
-  }
-  if(record[SETTINGS_IDX_VERSION] == SETTINGS_RECORD_VERSION) {
-    return record[SETTINGS_IDX_CRC] == settings_record_crc(record, SETTINGS_IDX_CRC);
-  }
-  return false;
-}
-
-static bool settings_record_has_text_profile(const u8* record) {
-  if(record[SETTINGS_IDX_VERSION] != SETTINGS_RECORD_VERSION) return false;
-  return record[SETTINGS_IDX_TEXT_ROWS] != 0xFF &&
-    record[SETTINGS_IDX_TEXT_WIDTH] != 0xFF &&
-    record[SETTINGS_IDX_TEXT_HEIGHT] != 0xFF &&
-    record[SETTINGS_IDX_TEXT_GAP] != 0xFF;
-}
-
-static void apply_settings_record(const u8* record) {
-  persistent_settings.grade = record[SETTINGS_IDX_GRADE];
-  persistent_settings.counter = record[SETTINGS_IDX_COUNTER];
-  persistent_settings.flags = record[SETTINGS_IDX_FLAGS];
-  persistent_settings.sound = record[SETTINGS_IDX_SOUND];
+static void apply_settings_record(const settings_journal::RecordData& record) {
+  persistent_settings.grade = record.grade;
+  persistent_settings.counter = record.counter;
+  persistent_settings.flags = record.flags;
+  persistent_settings.sound = record.sound;
   persistent_settings.text_profile_stored = false;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  if(settings_record_has_text_profile(record)) {
+  if(record.text_profile_stored) {
     persistent_settings.text_profile = lcd_display::normalizeTextProfile({
-      record[SETTINGS_IDX_TEXT_ROWS],
-      record[SETTINGS_IDX_TEXT_WIDTH],
-      record[SETTINGS_IDX_TEXT_HEIGHT],
-      record[SETTINGS_IDX_TEXT_GAP]
+      record.text_rows,
+      record.text_width,
+      record.text_height,
+      record.text_gap
     });
     persistent_settings.text_profile_stored = true;
   } else {
@@ -540,6 +491,7 @@ static void import_legacy_settings(void) {
   persistent_settings.sound = sound;
   persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
   persistent_settings.text_profile_stored = false;
+  persistent_settings_needs_save = true;
 }
 
 static void load_persistent_settings(void) {
@@ -547,80 +499,88 @@ static void load_persistent_settings(void) {
   persistent_settings_loaded = true;
   persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
   persistent_settings_sector_dirty = false;
+  persistent_settings_needs_save = false;
+  persistent_settings_write_blocked = false;
 
   if(!flash_is_ok) {
     import_legacy_settings();
     return;
   }
 
-  const u32 end_address = SETTINGS_FLASH_SECTOR + FLASH_SECTOR_SIZE;
-  for(u32 address = SETTINGS_FLASH_SECTOR; address + SETTINGS_RECORD_SIZE <= end_address; address += SETTINGS_RECORD_SIZE) {
-    const u8 first = flash.readByte(address);
-    if(first == 0xFF) {
-      if(address == SETTINGS_FLASH_SECTOR) import_legacy_settings();
-      persistent_settings_next_address = address;
+  settings_journal::Scanner scanner(FLASH_SECTOR_SIZE);
+  while(scanner.active()) {
+    u8 record[settings_journal::RECORD_SIZE];
+    const u32 address = SETTINGS_FLASH_SECTOR + (u32) scanner.next_offset();
+    if(!flash.readByteArray(address, record, sizeof(record))) {
+      // A transient read error must never trigger an erase of potentially
+      // valid settings. Keep using defaults and block writes for this boot.
+      persistent_settings_write_blocked = true;
+      persistent_settings_needs_save = true;
       return;
     }
-
-    u8 record[SETTINGS_RECORD_SIZE];
-    record[0] = first;
-    for(u8 i = 1; i < sizeof(record); i++) record[i] = flash.readByte(address + i);
-
-    if(!settings_record_is_valid(record)) {
-      persistent_settings_next_address = end_address;
-      persistent_settings_sector_dirty = true;
-      return;
-    }
-
-    apply_settings_record(record);
-    persistent_settings_next_address = address + SETTINGS_RECORD_SIZE;
+    scanner.consume(record);
   }
 
-  persistent_settings_sector_dirty = true;
+  if(scanner.has_value()) {
+    apply_settings_record(scanner.latest());
+    persistent_settings_needs_save = scanner.migration_needed();
+  } else if(scanner.ended_at_erased()) {
+    import_legacy_settings();
+  } else {
+    persistent_settings_needs_save = true;
+  }
+
+  persistent_settings_sector_dirty = scanner.needs_reclaim();
+  persistent_settings_next_address = SETTINGS_FLASH_SECTOR + (u32) scanner.next_offset();
+  if(persistent_settings_sector_dirty) persistent_settings_needs_save = true;
 }
 
-static void write_persistent_settings(void) {
+static bool write_persistent_settings(void) {
   load_persistent_settings();
-  if(!flash_is_ok) return;
+  // There is no useful retry path during this boot when flash is absent or a
+  // settings read failed. Preserve the dirty RAM state for diagnostics, but
+  // do not keep the UI retry timer spinning forever.
+  if(!flash_is_ok || persistent_settings_write_blocked) return true;
+  if(!persistent_settings_needs_save) return true;
 
   const u32 end_address = SETTINGS_FLASH_SECTOR + FLASH_SECTOR_SIZE;
-  if(persistent_settings_sector_dirty || persistent_settings_next_address + SETTINGS_RECORD_SIZE > end_address) {
-    if(!flash.eraseSector(SETTINGS_FLASH_SECTOR)) return;
+  if(persistent_settings_sector_dirty ||
+     persistent_settings_next_address > end_address - settings_journal::RECORD_SIZE) {
+    if(!flash.eraseSector(SETTINGS_FLASH_SECTOR)) return false;
     persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
     persistent_settings_sector_dirty = false;
   }
 
-  u8 record[SETTINGS_RECORD_SIZE] = {
-    SETTINGS_MAGIC_0,
-    SETTINGS_MAGIC_1,
-    SETTINGS_MAGIC_2,
-    SETTINGS_MAGIC_3,
-    SETTINGS_RECORD_VERSION,
-    persistent_settings.grade,
-    persistent_settings.counter,
-    persistent_settings.flags,
-    persistent_settings.sound,
+  settings_journal::RecordData data = {};
+  data.grade = persistent_settings.grade;
+  data.counter = persistent_settings.counter;
+  data.flags = persistent_settings.flags;
+  data.sound = persistent_settings.sound;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-    persistent_settings.text_profile.rows,
-    persistent_settings.text_profile.glyph_width,
-    persistent_settings.text_profile.glyph_height,
-    persistent_settings.text_profile.line_gap,
-#else
-    0xFF,
-    0xFF,
-    0xFF,
-    0xFF,
+  data.text_profile_stored = persistent_settings.text_profile_stored;
+  data.text_rows = persistent_settings.text_profile.rows;
+  data.text_width = persistent_settings.text_profile.glyph_width;
+  data.text_height = persistent_settings.text_profile.glyph_height;
+  data.text_gap = persistent_settings.text_profile.line_gap;
 #endif
-    0xFF,
-    0xFF,
-    0xFF
-  };
-  record[SETTINGS_IDX_TEXT_RESERVED] = 0xFF;
-  record[SETTINGS_IDX_CRC] = settings_record_crc(record, SETTINGS_IDX_CRC);
 
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(data, record);
   const u32 address = persistent_settings_next_address;
-  for(u8 i = 0; i < sizeof(record); i++) flash.writeByte(address + i, record[i]);
-  persistent_settings_next_address += SETTINGS_RECORD_SIZE;
+  if(!flash.writeByteArray(address, record, settings_journal::COMMIT_INDEX)) {
+    persistent_settings_sector_dirty = true;
+    persistent_settings_next_address = end_address;
+    return false;
+  }
+  if(!flash.writeByte(address + settings_journal::COMMIT_INDEX, settings_journal::COMMIT_MARKER)) {
+    persistent_settings_sector_dirty = true;
+    persistent_settings_next_address = end_address;
+    return false;
+  }
+
+  persistent_settings_next_address += settings_journal::RECORD_SIZE;
+  persistent_settings_needs_save = false;
+  return true;
 }
 
 AngleUnit read_stored_grade_switch(void) {
@@ -641,9 +601,11 @@ SettingsFlags read_settings_flags(void) {
 void store_settings_flags(SettingsFlags flags) {
   load_persistent_settings();
   flags = normalize_settings_flags(flags.raw);
-  if(persistent_settings.flags == flags.raw) return;
+  if(persistent_settings.flags != flags.raw) {
+    persistent_settings.flags = flags.raw;
+    persistent_settings_needs_save = true;
+  }
 
-  persistent_settings.flags = flags.raw;
   write_persistent_settings();
 }
 
@@ -655,9 +617,11 @@ SoundSettings read_sound_settings(void) {
 void store_sound_settings(SoundSettings settings) {
   load_persistent_settings();
   settings = normalize_sound_settings(settings.raw);
-  if(persistent_settings.sound == settings.raw) return;
+  if(persistent_settings.sound != settings.raw) {
+    persistent_settings.sound = settings.raw;
+    persistent_settings_needs_save = true;
+  }
 
-  persistent_settings.sound = settings.raw;
   write_persistent_settings();
 }
 
@@ -684,23 +648,67 @@ void store_display_text_profile(lcd_display::TextProfile profile) {
     persistent_settings.text_profile.glyph_width == profile.glyph_width &&
     persistent_settings.text_profile.glyph_height == profile.glyph_height &&
     persistent_settings.text_profile.line_gap == profile.line_gap;
-  if(unchanged) return;
-
-  persistent_settings.text_profile = profile;
-  persistent_settings.text_profile_stored = true;
+  if(!unchanged) {
+    persistent_settings.text_profile = profile;
+    persistent_settings.text_profile_stored = true;
+    persistent_settings_needs_save = true;
+  }
   write_persistent_settings();
 #else
   (void) profile;
 #endif
 }
 
+bool store_settings_snapshot(
+  SettingsFlags flags,
+  SoundSettings sound,
+  const lcd_display::TextProfile* text_profile
+) {
+  load_persistent_settings();
+  flags = normalize_settings_flags(flags.raw);
+  sound = normalize_sound_settings(sound.raw);
+
+  if(persistent_settings.flags != flags.raw) {
+    persistent_settings.flags = flags.raw;
+    persistent_settings_needs_save = true;
+  }
+  if(persistent_settings.sound != sound.raw) {
+    persistent_settings.sound = sound.raw;
+    persistent_settings_needs_save = true;
+  }
+
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  if(text_profile != NULL) {
+    const lcd_display::TextProfile profile = lcd_display::normalizeTextProfile(*text_profile);
+    const bool unchanged = persistent_settings.text_profile_stored &&
+      persistent_settings.text_profile.rows == profile.rows &&
+      persistent_settings.text_profile.glyph_width == profile.glyph_width &&
+      persistent_settings.text_profile.glyph_height == profile.glyph_height &&
+      persistent_settings.text_profile.line_gap == profile.line_gap;
+    if(!unchanged) {
+      persistent_settings.text_profile = profile;
+      persistent_settings.text_profile_stored = true;
+      persistent_settings_needs_save = true;
+    }
+  }
+#else
+  (void) text_profile;
+#endif
+
+  return write_persistent_settings();
+}
+
 void store_grade_switch(AngleUnit angle_unit) {
   load_persistent_settings();
-  const u8 next_counter = read_counter_switch() + 1;
-  if(persistent_settings.grade == (u8) angle_unit && persistent_settings.counter == next_counter) return;
+  if(angle_unit != RADIAN && angle_unit != GRADE && angle_unit != DEGREE) return;
+  if(persistent_settings.grade == (u8) angle_unit) {
+    write_persistent_settings();
+    return;
+  }
 
   persistent_settings.grade = (u8) angle_unit;
-  persistent_settings.counter = next_counter;
+  persistent_settings.counter++;
+  persistent_settings_needs_save = true;
   write_persistent_settings();
 }
 
