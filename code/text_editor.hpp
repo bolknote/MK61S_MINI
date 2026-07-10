@@ -92,15 +92,53 @@ inline void sms_reset(SmsState& sms) {
   sms.deadline_ms = 0;
 }
 
+inline bool time_reached(u32 now, u32 target) {
+  return (i32) (now - target) >= 0;
+}
+
+inline bool sms_expired(const SmsState& sms, u32 now) {
+  return sms.active && time_reached(now, sms.deadline_ms);
+}
+
+inline usize bounded_length(const char* text, usize capacity) {
+  if(text == NULL) return 0;
+  usize len = 0;
+  while(len < capacity && text[len] != 0) len++;
+  return len;
+}
+
+inline bool valid_buffer(const char* source, u16 len, u16 cursor, u16 capacity) {
+  return source != NULL && capacity != 0 && len < capacity && cursor <= len && source[len] == 0;
+}
+
+inline void sanitize(Buffer& editor) {
+  if(editor.source == NULL || editor.capacity == 0) {
+    editor.len = 0;
+    editor.cursor = 0;
+    editor.view_top = 0;
+    sms_reset(editor.sms);
+    return;
+  }
+
+  usize len = bounded_length(editor.source, editor.capacity);
+  if(len == editor.capacity) {
+    editor.source[editor.capacity - 1] = 0;
+    len = editor.capacity - 1;
+  }
+  editor.len = (u16) len;
+  if(editor.cursor > editor.len) editor.cursor = editor.len;
+  if(editor.view_top > editor.len) editor.view_top = editor.len;
+}
+
 inline void init(Buffer& editor, char* source, u16 capacity) {
   editor.source = source;
   editor.capacity = capacity;
-  editor.len = (source == NULL) ? 0 : (u16) strlen(source);
-  if(editor.len >= capacity) editor.len = (capacity == 0) ? 0 : (u16) (capacity - 1);
+  editor.len = 0;
   editor.cursor = 0;
   editor.view_top = 0;
   editor.shift = Shift::NONE;
   sms_reset(editor.sms);
+  sanitize(editor);
 }
 
 inline int digit_from_key(i32 key_code) {
@@ -161,18 +199,23 @@ inline const char* symbol_for_digit_key(i32 key_code) {
 }
 
 inline u16 line_start_for_cursor(const char* source, u16 cursor) {
+  if(source == NULL) return 0;
   u16 start = cursor;
   while(start > 0 && source[start - 1] != '\n' && source[start - 1] != '\r') start--;
   return start;
 }
 
 inline u16 line_end_for_start(const char* source, u16 start, u16 len) {
+  if(source == NULL) return 0;
+  if(start > len) start = len;
   u16 end = start;
   while(end < len && source[end] != '\n' && source[end] != '\r') end++;
   return end;
 }
 
 inline u16 next_line_start(const char* source, u16 start, u16 len) {
+  if(source == NULL) return 0;
+  if(start > len) start = len;
   u16 pos = start;
   while(pos < len && source[pos] != '\n' && source[pos] != '\r') pos++;
   while(pos < len && (source[pos] == '\n' || source[pos] == '\r')) pos++;
@@ -180,7 +223,7 @@ inline u16 next_line_start(const char* source, u16 start, u16 len) {
 }
 
 inline u16 previous_line_start(const char* source, u16 start) {
-  if(start == 0) return 0;
+  if(source == NULL || start == 0) return 0;
   u16 pos = start;
   while(pos > 0 && (source[pos - 1] == '\n' || source[pos - 1] == '\r')) pos--;
   while(pos > 0 && source[pos - 1] != '\n' && source[pos - 1] != '\r') pos--;
@@ -188,6 +231,7 @@ inline u16 previous_line_start(const char* source, u16 start) {
 }
 
 inline bool move_cursor_left(const char* source, u16& cursor) {
+  if(source == NULL) return false;
   const u16 line_start = line_start_for_cursor(source, cursor);
   if(cursor <= line_start) return false;
   cursor--;
@@ -195,6 +239,8 @@ inline bool move_cursor_left(const char* source, u16& cursor) {
 }
 
 inline bool move_cursor_right(const char* source, u16 len, u16& cursor) {
+  if(source == NULL) return false;
+  if(cursor > len) cursor = len;
   const u16 line_start = line_start_for_cursor(source, cursor);
   const u16 line_end = line_end_for_start(source, line_start, len);
   if(cursor >= line_end) return false;
@@ -203,6 +249,8 @@ inline bool move_cursor_right(const char* source, u16 len, u16& cursor) {
 }
 
 inline bool move_cursor_line(const char* source, u16 len, u16& cursor, int delta) {
+  if(source == NULL) return false;
+  if(cursor > len) cursor = len;
   const u16 line_start = line_start_for_cursor(source, cursor);
   const u16 line_end = line_end_for_start(source, line_start, len);
   const u16 column = cursor - line_start;
@@ -230,6 +278,11 @@ inline u8 visible_rows(MK61Display& display) {
 }
 
 inline void ensure_cursor_visible(MK61Display& display, const char* source, u16 len, u16 cursor, u16& view_top) {
+  if(source == NULL) {
+    view_top = 0;
+    return;
+  }
+  if(cursor > len) cursor = len;
   if(view_top > len) view_top = len;
   view_top = line_start_for_cursor(source, view_top);
 
@@ -256,6 +309,9 @@ inline void ensure_cursor_visible(MK61Display& display, const char* source, u16 
 }
 
 inline u8 cursor_screen_row(MK61Display& display, const char* source, u16 len, u16 cursor, u16 view_top) {
+  if(source == NULL) return 0;
+  if(cursor > len) cursor = len;
+  if(view_top > len) view_top = len;
   const u16 cursor_line_start = line_start_for_cursor(source, cursor);
   u16 line_start = view_top;
   const u8 rows = visible_rows(display);
@@ -270,6 +326,15 @@ inline u8 cursor_screen_row(MK61Display& display, const char* source, u16 len, u
 }
 
 inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
+  static const char EMPTY[] = "";
+  if(source == NULL) {
+    source = EMPTY;
+    len = 0;
+  }
+  const usize actual_len = bounded_length(source, len);
+  if(actual_len < len) len = (u16) actual_len;
+  if(cursor > len) cursor = len;
+  if(view_top > len) view_top = len;
   MK61DisplayUpdate update(display);
   display.clear();
   const u8 rows = visible_rows(display);
@@ -303,9 +368,10 @@ inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, 
 }
 
 inline bool insert_text(char* source, u16& len, u16& cursor, u16 capacity, const char* text) {
-  if(source == NULL || capacity == 0 || text == NULL || text[0] == 0) return false;
-  const usize text_len = strlen(text);
-  if((usize) len + text_len >= capacity) return false;
+  if(!valid_buffer(source, len, cursor, capacity) || text == NULL || text[0] == 0) return false;
+  const usize remaining = (usize) capacity - len;
+  const usize text_len = bounded_length(text, remaining);
+  if(text_len == 0 || text_len >= remaining) return false;
   memmove(&source[cursor + text_len], &source[cursor], len - cursor + 1);
   memcpy(&source[cursor], text, text_len);
   cursor = (u16) (cursor + text_len);
@@ -314,7 +380,7 @@ inline bool insert_text(char* source, u16& len, u16& cursor, u16 capacity, const
 }
 
 inline bool backspace(char* source, u16& len, u16& cursor) {
-  if(source == NULL || cursor == 0) return false;
+  if(source == NULL || cursor == 0 || cursor > len || source[len] != 0) return false;
   memmove(&source[cursor - 1], &source[cursor], len - cursor + 1);
   cursor--;
   len--;
@@ -322,10 +388,12 @@ inline bool backspace(char* source, u16& len, u16& cursor) {
 }
 
 inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity, u16 start, u16 end, const char* replacement) {
-  if(source == NULL || replacement == NULL || start > end || end > len) return false;
-  const usize replacement_len = strlen(replacement);
+  if(!valid_buffer(source, len, cursor, capacity) || replacement == NULL || start > end || end > len) return false;
   const usize old_len = (usize) (end - start);
-  if((usize) len - old_len + replacement_len >= capacity) return false;
+  const usize base_len = (usize) len - old_len;
+  const usize remaining = (usize) capacity - base_len;
+  const usize replacement_len = bounded_length(replacement, remaining);
+  if(replacement_len >= remaining) return false;
   memmove(&source[start + replacement_len], &source[end], len - end + 1);
   memcpy(&source[start], replacement, replacement_len);
   len = (u16) ((usize) len - old_len + replacement_len);
@@ -340,33 +408,43 @@ inline bool sms_tap(char* source, u16& len, u16& cursor, u16 capacity, SmsState&
     return false;
   }
 
-  if(sms.active && sms.key_code == key_code && cursor > 0) {
-    const usize count = strlen(letters);
+  if(!valid_buffer(source, len, cursor, capacity)) {
+    sms_reset(sms);
+    return false;
+  }
+
+  if(sms.active && sms.key_code == key_code && cursor > 0 && strchr(letters, source[cursor - 1]) != NULL) {
+    const usize count = bounded_length(letters, 8);
     sms.index = (u8) ((sms.index + 1) % count);
     source[cursor - 1] = letters[sms.index];
     sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
     return true;
   }
 
+  char text[2] = {letters[0], 0};
+  if(!insert_text(source, len, cursor, capacity, text)) {
+    sms_reset(sms);
+    return false;
+  }
   sms.active = true;
   sms.key_code = key_code;
   sms.index = 0;
   sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
-  char text[2] = {letters[0], 0};
-  return insert_text(source, len, cursor, capacity, text);
+  return true;
 }
 
 inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hooks, const Options& options, i32 key_code, u32 now) {
+  sanitize(editor);
   const bool shifted_key = editor.shift != Shift::NONE;
   if(options.sms_enabled && !shifted_key && editor.sms.active) {
     if(sms_key_is_letters(key_code)) {
-      sms_tap(editor.source, editor.len, editor.cursor, editor.capacity, editor.sms, key_code, now);
-      return KeyResult::DIRTY;
+      return sms_tap(editor.source, editor.len, editor.cursor, editor.capacity, editor.sms, key_code, now)
+        ? KeyResult::DIRTY : KeyResult::NONE;
     }
     if(sms_key_is_space(key_code)) {
       sms_reset(editor.sms);
-      insert_text(editor.source, editor.len, editor.cursor, editor.capacity, " ");
-      return KeyResult::DIRTY;
+      return insert_text(editor.source, editor.len, editor.cursor, editor.capacity, " ")
+        ? KeyResult::DIRTY : KeyResult::NONE;
     }
     const int sms_digit = digit_from_key(key_code);
     if(sms_digit == 0) {
@@ -375,8 +453,8 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     }
     if(key_code == keys.pp) {
       sms_reset(editor.sms);
-      insert_text(editor.source, editor.len, editor.cursor, editor.capacity, " ");
-      return KeyResult::DIRTY;
+      return insert_text(editor.source, editor.len, editor.cursor, editor.capacity, " ")
+        ? KeyResult::DIRTY : KeyResult::NONE;
     }
     sms_reset(editor.sms);
   }
@@ -387,21 +465,21 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   }
 
   if(options.sms_enabled && editor.shift == Shift::K && sms_key_is_letters(key_code)) {
-    sms_tap(editor.source, editor.len, editor.cursor, editor.capacity, editor.sms, key_code, now);
+    const bool changed = sms_tap(editor.source, editor.len, editor.cursor, editor.capacity, editor.sms, key_code, now);
     editor.shift = Shift::NONE;
-    return KeyResult::DIRTY;
+    return changed ? KeyResult::DIRTY : KeyResult::NONE;
   }
   if(options.sms_enabled && editor.shift == Shift::K && sms_key_is_space(key_code)) {
     sms_reset(editor.sms);
-    insert_text(editor.source, editor.len, editor.cursor, editor.capacity, " ");
+    const bool changed = insert_text(editor.source, editor.len, editor.cursor, editor.capacity, " ");
     editor.shift = Shift::NONE;
-    return KeyResult::DIRTY;
+    return changed ? KeyResult::DIRTY : KeyResult::NONE;
   }
 
   if(options.alpha_digit_symbols && editor.shift == Shift::ALPHA && digit_from_key(key_code) >= 0) {
-    insert_text(editor.source, editor.len, editor.cursor, editor.capacity, symbol_for_digit_key(key_code));
+    const bool changed = insert_text(editor.source, editor.len, editor.cursor, editor.capacity, symbol_for_digit_key(key_code));
     editor.shift = Shift::NONE;
-    return KeyResult::DIRTY;
+    return changed ? KeyResult::DIRTY : KeyResult::NONE;
   }
 
   if(options.alpha_left_backspace && editor.shift == Shift::ALPHA && (key_code == keys.left || key_code == keys.left_press)) {
@@ -412,6 +490,7 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
 
   if(editor.shift == Shift::ALPHA && hooks.apply_alpha_macro != NULL &&
       hooks.apply_alpha_macro(editor.source, editor.len, editor.cursor, editor.capacity, key_code, hooks.context)) {
+    sanitize(editor);
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
   }
@@ -446,6 +525,7 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     insert_text(editor.source, editor.len, editor.cursor, editor.capacity, text);
   }
   editor.shift = Shift::NONE;
+  sanitize(editor);
   return KeyResult::DIRTY;
 }
 

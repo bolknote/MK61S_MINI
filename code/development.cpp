@@ -14,6 +14,7 @@
 #include "shared_scratch.hpp"
 #include "text_editor.hpp"
 #include "tools.hpp"
+#include "utf8_view.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -278,13 +279,15 @@ static bool text_contains_case_insensitive(const char* text, const char* needle)
   if(!search_active(needle)) return true;
   if(text == NULL) return false;
 
-  for(u8 start = 0; text[start] != 0; start++) {
-    u8 pos = 0;
-    while(needle[pos] != 0 && text[start + pos] != 0 &&
+  const usize text_len = text_editor::bounded_length(text, program_store::NAME_SIZE);
+  const usize needle_len = text_editor::bounded_length(needle, program_store::NAME_SIZE);
+  for(usize start = 0; start < text_len; start++) {
+    usize pos = 0;
+    while(pos < needle_len && start + pos < text_len &&
           ascii_upper(text[start + pos]) == ascii_upper(needle[pos])) {
       pos++;
     }
-    if(needle[pos] == 0) return true;
+    if(pos == needle_len) return true;
   }
   return false;
 }
@@ -360,7 +363,7 @@ static void draw_search_header(const char* search_text) {
 }
 
 static void draw_search_cursor(const char* search_text) {
-  const usize len = strlen(search_text);
+  const usize len = text_editor::bounded_length(search_text, program_store::NAME_SIZE);
   const u8 cursor_col = (len + 1 < lcd_display::COLS) ? (u8) (len + 1) : (u8) (lcd_display::COLS - 1);
   lcd.setCursor(cursor_col, 0);
   lcd.cursorOn();
@@ -380,7 +383,7 @@ static u8 explorer_name_width(void) {
 }
 
 static u8 explorer_name_len(const char* name) {
-  const usize len = strlen(name);
+  const usize len = text_editor::bounded_length(name, program_store::NAME_SIZE);
   return len > 255 ? 255 : (u8) len;
 }
 
@@ -554,9 +557,19 @@ static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_
 }
 
 static bool read_entry_data(const program_store::Entry& entry, u8* data, usize capacity, u16& out_len) {
+  if(data == NULL || capacity == 0 || capacity > 0xFFFF || entry.data_len > capacity) {
+    out_len = 0;
+    return false;
+  }
   memset(data, 0, capacity);
   out_len = 0;
-  return program_store::read(entry.type, entry.name, data, capacity, &out_len);
+  if(!program_store::read(entry.type, entry.name, data, (u16) capacity, &out_len) ||
+     out_len > capacity || out_len != entry.data_len) {
+    memset(data, 0, capacity);
+    out_len = 0;
+    return false;
+  }
+  return true;
 }
 
 static char hex_digit(u8 value) {
@@ -591,38 +604,8 @@ static u16 consume_line_break(const u8* data, u16 len, u16 offset) {
   return offset;
 }
 
-static bool utf8_continuation(u8 value) {
-  return (value & 0xC0) == 0x80;
-}
-
 static u16 next_text_char_offset(const u8* data, u16 len, u16 offset) {
-  if(offset >= len) return len;
-
-  const u8 first = data[offset];
-  if(first < 0x80) return (u16) (offset + 1);
-
-  if((first & 0xE0) == 0xC0 &&
-     offset + 1 < len &&
-     utf8_continuation(data[offset + 1])) {
-    return (u16) (offset + 2);
-  }
-
-  if((first & 0xF0) == 0xE0 &&
-     offset + 2 < len &&
-     utf8_continuation(data[offset + 1]) &&
-     utf8_continuation(data[offset + 2])) {
-    return (u16) (offset + 3);
-  }
-
-  if((first & 0xF8) == 0xF0 &&
-     offset + 3 < len &&
-     utf8_continuation(data[offset + 1]) &&
-     utf8_continuation(data[offset + 2]) &&
-     utf8_continuation(data[offset + 3])) {
-    return (u16) (offset + 4);
-  }
-
-  return (u16) (offset + 1);
+  return utf8_view::next_offset(data, len, offset);
 }
 
 static u16 next_visual_line_offset(const u8* data, u16 len, u16 offset) {
@@ -925,7 +908,7 @@ static bool name_insert_char(char* name, u16& len, u16& cursor, char ch) {
 }
 
 static bool input_entry_name(char* name) {
-  u16 len = (u16) strlen(name);
+  u16 len = (u16) text_editor::bounded_length(name, program_store::NAME_SIZE);
   if(len >= program_store::NAME_SIZE) len = (u16) (program_store::NAME_SIZE - 1);
   name[len] = 0;
   u16 cursor = len;
@@ -935,12 +918,12 @@ static bool input_entry_name(char* name) {
 
   while(true) {
     const u32 draw_now = millis();
-    if(sms.active && draw_now >= sms.deadline_ms) text_editor::sms_reset(sms);
+    if(text_editor::sms_expired(sms, draw_now)) text_editor::sms_reset(sms);
     draw_rename_editor(name, cursor);
 
     const i32 key = kbd::get_key_wait();
     const u32 key_now = millis();
-    if(sms.active && key_now >= sms.deadline_ms) text_editor::sms_reset(sms);
+    if(text_editor::sms_expired(sms, key_now)) text_editor::sms_reset(sms);
     const bool shifted_key = shift != text_editor::Shift::NONE;
 
     if(!shifted_key && (key == KEY_K || key == KEY_ALPHA)) {
@@ -1047,7 +1030,7 @@ static void explorer_search_reset(ExplorerSearch& search) {
 }
 
 static void explorer_search_expire_sms(ExplorerSearch& search, u32 now) {
-  if(search.sms.active && now >= search.sms.deadline_ms) text_editor::sms_reset(search.sms);
+  if(text_editor::sms_expired(search.sms, now)) text_editor::sms_reset(search.sms);
 }
 
 static bool explorer_search_insert_char(ExplorerSearch& search, char ch) {
