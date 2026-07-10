@@ -2,6 +2,20 @@
 
 namespace text_screen {
 
+FontGeometry sanitizeFontGeometry(FontGeometry geometry) {
+  geometry.rows = geometry.rows < 4 ? 4 : (geometry.rows > MAX_ROWS ? MAX_ROWS : geometry.rows);
+  geometry.width = geometry.width < 1 ? 1 : (geometry.width > 10 ? 10 : geometry.width);
+  const u8 max_height_for_rows = (u8) (64 / geometry.rows);
+  const u8 max_height = max_height_for_rows < 16 ? max_height_for_rows : 16;
+  geometry.height = geometry.height < 1 ? 1 : (geometry.height > max_height ? max_height : geometry.height);
+  const u16 glyph_pixels = (u16) geometry.rows * geometry.height;
+  const u8 max_gap = geometry.rows <= 1 || glyph_pixels >= 64
+    ? 0
+    : (u8) ((64 - glyph_pixels) / (geometry.rows - 1));
+  if(geometry.line_gap > max_gap) geometry.line_gap = max_gap;
+  return geometry;
+}
+
 FontGeometry fitFontToDisplay(u8 width, u8 height, u8 line_gap) {
   FontGeometry result;
   result.width = width < 1 ? 1 : (width > 10 ? 10 : width);
@@ -10,12 +24,7 @@ FontGeometry fitFontToDisplay(u8 width, u8 height, u8 line_gap) {
   const u8 pitch = result.height + result.line_gap;
   result.rows = pitch == 0 ? 4 : (u8) ((64 + result.line_gap) / pitch);
   result.rows = result.rows < 4 ? 4 : (result.rows > MAX_ROWS ? MAX_ROWS : result.rows);
-  const u16 glyph_pixels = (u16) result.rows * result.height;
-  const u8 max_gap = result.rows <= 1 || glyph_pixels >= 64
-    ? 0
-    : (u8) ((64 - glyph_pixels) / (result.rows - 1));
-  if(result.line_gap > max_gap) result.line_gap = max_gap;
-  return result;
+  return sanitizeFontGeometry(result);
 }
 
 Grid::Grid(void) : cells{{0}}, custom_cols{0}, dirty_cols{0}, row_count(1), cursor_x(0), cursor_y(0) {

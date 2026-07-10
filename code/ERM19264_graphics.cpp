@@ -49,7 +49,8 @@ ERM19264_graphics::ERM19264_graphics(int16_t w, int16_t h):
 	@param color The color of the circle
 */
 void ERM19264_graphics::drawCircle(int16_t x0, int16_t y0, int16_t r,
-		uint8_t color) {
+			uint8_t color) {
+	if (r < 0 || r > (_width > _height ? _width : _height)) return;
 	int16_t f = 1 - r;
 	int16_t ddF_x = 1;
 	int16_t ddF_y = -2 * r;
@@ -86,7 +87,8 @@ void ERM19264_graphics::drawCircle(int16_t x0, int16_t y0, int16_t r,
 	@brief Used internally by drawRoundRect
 */
 void ERM19264_graphics::drawCircleHelper( int16_t x0, int16_t y0,
-							 int16_t r, uint8_t cornername, uint8_t color) {
+								 int16_t r, uint8_t cornername, uint8_t color) {
+	if (r < 0 || r > (_width > _height ? _width : _height)) return;
 	int16_t f     = 1 - r;
 	int16_t ddF_x = 1;
 	int16_t ddF_y = -2 * r;
@@ -130,6 +132,7 @@ void ERM19264_graphics::drawCircleHelper( int16_t x0, int16_t y0,
 */
 void ERM19264_graphics::fillCircle(int16_t x0, int16_t y0, int16_t r,
 						uint8_t color) {
+	if (r < 0 || r > (_width > _height ? _width : _height)) return;
 	drawFastVLine(x0, y0-r, 2*r+1, color);
 	fillCircleHelper(x0, y0, r, 3, 0, color);
 }
@@ -138,7 +141,8 @@ void ERM19264_graphics::fillCircle(int16_t x0, int16_t y0, int16_t r,
 	@brief Used internally by fill circle fillRoundRect and fillcircle
 */
 void ERM19264_graphics::fillCircleHelper(int16_t x0, int16_t y0, int16_t r,
-		uint8_t cornername, int16_t delta, uint8_t color) {
+			uint8_t cornername, int16_t delta, uint8_t color) {
+	if (r < 0 || r > (_width > _height ? _width : _height)) return;
 
 	int16_t f     = 1 - r;
 	int16_t ddF_x = 1;
@@ -225,8 +229,9 @@ void ERM19264_graphics::drawLine(int16_t x0, int16_t y0,
 	@param color color to draw  rect
 */
 void ERM19264_graphics::drawRect(int16_t x, int16_t y,
-					int16_t w, int16_t h,
-					uint8_t color) {
+						int16_t w, int16_t h,
+						uint8_t color) {
+	if (w <= 0 || h <= 0) return;
 	drawFastHLine(x, y, w, color);
 	drawFastHLine(x, y+h-1, w, color);
 	drawFastVLine(x, y, h, color);
@@ -241,7 +246,8 @@ void ERM19264_graphics::drawRect(int16_t x, int16_t y,
 	@param color The color of the line
 */
 void ERM19264_graphics::drawFastVLine(int16_t x, int16_t y,
-				 int16_t h, uint8_t color) {
+					 int16_t h, uint8_t color) {
+	if (h <= 0) return;
 	drawLine(x, y, x, y+h-1, color);
 }
 
@@ -253,7 +259,8 @@ void ERM19264_graphics::drawFastVLine(int16_t x, int16_t y,
 	@param color The color of the line 
 */
 void ERM19264_graphics::drawFastHLine(int16_t x, int16_t y,
-				 int16_t w, uint8_t color) {
+					 int16_t w, uint8_t color) {
+	if (w <= 0) return;
 	drawLine(x, y, x+w-1, y, color);
 }
 
@@ -266,7 +273,8 @@ void ERM19264_graphics::drawFastHLine(int16_t x, int16_t y,
 	@param color color to fill  rectangle 
 */
 void ERM19264_graphics::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-					uint8_t color) {
+						uint8_t color) {
+	if (w <= 0 || h <= 0) return;
 	for (int16_t i=x; i<x+w; i++) {
 		drawFastVLine(i, y, h, color);
 	}
@@ -290,7 +298,8 @@ void ERM19264_graphics::fillScreen(uint8_t color) {
 	@param color color to draw rounded rectangle 
 */
 void ERM19264_graphics::drawRoundRect(int16_t x, int16_t y, int16_t w,
-	int16_t h, int16_t r, uint8_t color) {
+		int16_t h, int16_t r, uint8_t color) {
+	if (w <= 0 || h <= 0 || r < 0 || (i32) r * 2 > w || (i32) r * 2 > h) return;
 	drawFastHLine(x+r  , y    , w-2*r, color); // Top
 	drawFastHLine(x+r  , y+h-1, w-2*r, color); // Bottom
 	drawFastVLine(x    , y+r  , h-2*r, color); // Left
@@ -312,7 +321,8 @@ void ERM19264_graphics::drawRoundRect(int16_t x, int16_t y, int16_t w,
 	@param color color to fill round  rectangle 
 */
 void ERM19264_graphics::fillRoundRect(int16_t x, int16_t y, int16_t w,
-				 int16_t h, int16_t r, uint8_t color) {
+					 int16_t h, int16_t r, uint8_t color) {
+	if (w <= 0 || h <= 0 || r < 0 || (i32) r * 2 > w || (i32) r * 2 > h) return;
 	fillRect(x+r, y, w-2*r, h, color);
 	fillCircleHelper(x+w-r-1, y+r, r, 1, h-2*r-1, color);
 	fillCircleHelper(x+r    , y+r, r, 2, h-2*r-1, color);
@@ -433,10 +443,8 @@ LCD_Return_Codes_e ERM19264_graphics::drawBitmap(int16_t x, int16_t y,
 // User error checks
 // 1. bitmap is null
 if (bitmap == nullptr){return LCD_BitmapNullptr ;}
-// 2. Completely out of bounds
-if (x > _width || y > _height){return LCD_BitmapScreenBounds;}
-// 3. bitmap weight and height
-if (w > _width || h > _height){return LCD_BitmapLargerThanScreen ;}
+if (w <= 0 || h <= 0 || w > _width || h > _height){return LCD_BitmapLargerThanScreen ;}
+if (x >= _width || y >= _height || (i32) x + w <= 0 || (i32) y + h <= 0){return LCD_BitmapScreenBounds;}
 
 if (drawBitmapAddr== true)
 {
@@ -964,6 +972,9 @@ LCD_rotate_e ERM19264_graphics::getRotation(void){return LCD_rotate;}
 */
 void ERM19264_graphics::setRotation(LCD_rotate_e CurrentRotation)
 {
+	if (CurrentRotation < LCD_Degrees_0 || CurrentRotation > LCD_Degrees_270) {
+		CurrentRotation = LCD_Degrees_0;
+	}
 	switch (CurrentRotation)
 	{
 	case 0:

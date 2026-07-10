@@ -16,6 +16,7 @@ struct FontGeometry {
 };
 
 FontGeometry fitFontToDisplay(u8 width, u8 height, u8 line_gap);
+FontGeometry sanitizeFontGeometry(FontGeometry geometry);
 
 class Grid {
   public:

@@ -10,6 +10,7 @@
 #ifdef MK61_DISPLAY_UC1609
 
 #include "ERM19264_UC1609.h"
+#include "uc1609_safety.hpp"
 
 /*!
 	@brief init the screen/sharedBuffer object
@@ -22,8 +23,8 @@
 ERM19264_UC1609_Screen::ERM19264_UC1609_Screen(uint8_t* mybuffer, uint8_t w,  uint8_t h, int16_t  x, int16_t y)
 {
 	screenBuffer = mybuffer; // pointer to buffer
-	width = w;   // bitmap x size
-	height = h; // bitmap y size
+	width = (mybuffer != nullptr && w != 0 && h != 0 && (h % 8) == 0) ? w : 0;
+	height = (width != 0) ? h : 0;
 	xoffset = x; // x offset
 	yoffset = y; // y offset
 }
@@ -47,8 +48,8 @@ ERM19264_UC1609::ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight ,int8_t cd
 	_LCD_DIN = -1;   // -1 for din and sclk specify using hardware SPI
 	_LCD_SCLK = -1;
 	
-	_widthScreen = lcdwidth ; 
-	_heightScreen = lcdheight ;
+	_widthScreen = (lcdwidth > 0 && lcdwidth <= 255) ? (uint8_t) lcdwidth : 0;
+	_heightScreen = (lcdheight > 0 && lcdheight <= 255) ? (uint8_t) lcdheight : 0;
 }
 
 /*!
@@ -71,8 +72,8 @@ ERM19264_UC1609::ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight ,int8_t cd
 	_LCD_DIN = din;
 	_LCD_SCLK = sclk;
 	
-	_widthScreen = lcdwidth ; 
-	_heightScreen = lcdheight ;
+	_widthScreen = (lcdwidth > 0 && lcdwidth <= 255) ? (uint8_t) lcdwidth : 0;
+	_heightScreen = (lcdheight > 0 && lcdheight <= 255) ? (uint8_t) lcdheight : 0;
 }
 
 // === Methods ===
@@ -321,12 +322,11 @@ LCD_Return_Codes_e ERM19264_UC1609::LCDBitmap(int16_t x, int16_t y, uint8_t w, u
 // User error checks
 // 1. bitmap is null
 if (data == nullptr){return LCD_BitmapNullptr ;}
-// 2. Start point Completely out of bounds
-if (x > _width || y > _height){return LCD_BitmapScreenBounds;}
-// 3. bitmap weight and height
-if (w > _width || h > _height){return LCD_BitmapLargerThanScreen ;}
-// 4A.check vertical bitmap h must be divisible
+if (w == 0 || h == 0 || w > _widthScreen || h > _heightScreen){return LCD_BitmapLargerThanScreen ;}
 if((h % 8 != 0)){return LCD_BitmapVerticalSize;}
+if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
+	return LCD_BitmapScreenBounds;
+}
 
 #if defined(ESP8266)
 	// ESP8266 needs a periodic yield() call to avoid watchdog reset.
@@ -415,6 +415,7 @@ void ERM19264_UC1609::send_data(uint8_t byte)
 */
 void ERM19264_UC1609::LCDupdate()
 {
+	if (this->ActiveBuffer == nullptr || this->ActiveBuffer->screenBuffer == nullptr) {return;}
 	LCDBuffer( this->ActiveBuffer->xoffset, this->ActiveBuffer->yoffset, this->ActiveBuffer->width, this->ActiveBuffer->height,  this->ActiveBuffer->screenBuffer);
 }
 
@@ -424,7 +425,11 @@ void ERM19264_UC1609::LCDupdate()
 */
 void ERM19264_UC1609::LCDclearBuffer()
 {
-	 memset( this->ActiveBuffer->screenBuffer, 0x00, (this->ActiveBuffer->width * (this->ActiveBuffer->height/ 8))  );
+	if (this->ActiveBuffer == nullptr || this->ActiveBuffer->screenBuffer == nullptr) {return;}
+	if (!uc1609_safety::valid_dimensions(this->ActiveBuffer->width, this->ActiveBuffer->height,
+		_widthScreen, _heightScreen)) {return;}
+	memset(this->ActiveBuffer->screenBuffer, 0x00,
+		uc1609_safety::byte_count(this->ActiveBuffer->width, this->ActiveBuffer->height));
 }
 
 /*!
@@ -438,6 +443,7 @@ void ERM19264_UC1609::LCDclearBuffer()
 */
 void ERM19264_UC1609::LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t* data)
 {
+	if (data == nullptr || !uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)) {return;}
  #if defined(ESP8266)
 	yield();
 #endif
@@ -480,12 +486,12 @@ UC1609_CS_SetHigh;
 */
 void ERM19264_UC1609::drawPixel(int16_t x, int16_t y, uint8_t colour)
 {
-	if (this->ActiveBuffer == nullptr) {return;}
+		if (this->ActiveBuffer == nullptr || this->ActiveBuffer->screenBuffer == nullptr) {return;}
 	// Drawing is relative to ActiveBuffer, which can be narrower than the panel.
 	if ((x < 0) || (x >= this->ActiveBuffer->width) || (y < 0) || (y >= this->ActiveBuffer->height))
 		{return;}
-	// Check Boundary entire screen
-	if ((x < 0) || (x >= _width) || (y < 0) || (y >= _height)) 
+		// Check Boundary entire screen
+		if ((x < 0) || (x >= _width) || (y < 0) || (y >= _height))
 		{return ;}
 	// Check rotation 
 	int16_t temp;
@@ -507,8 +513,10 @@ void ERM19264_UC1609::drawPixel(int16_t x, int16_t y, uint8_t colour)
 	break;
 	}
 	
-	// Draw the pixel
-	uint16_t offset = (this->ActiveBuffer->width * (y/8)) + x;
+		// Rotation changes coordinates, so validate again before calculating the
+		// offset into a possibly narrow shared buffer.
+		usize offset = 0;
+		if (!uc1609_safety::pixel_offset(this->ActiveBuffer->width, this->ActiveBuffer->height, x, y, offset)) {return;}
 	switch (colour)
 	{
 		case FOREGROUND: this->ActiveBuffer->screenBuffer[offset] |= (1 << (y & 7)); break;

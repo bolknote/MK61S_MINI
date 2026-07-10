@@ -9,7 +9,9 @@ MK61Display::MK61Display(void)
   : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7) {}
 
 void MK61Display::begin(u8 cols, u8 rows) {
-  lcd.begin(cols, rows);
+  (void) cols;
+  (void) rows;
+  lcd.begin(lcd_display::COLS, lcd_display::ROWS);
   lcd.noCursor();
   lcd.noBlink();
 }
@@ -30,7 +32,10 @@ lcd_display::TextProfile MK61Display::textProfile(void) const {
   return lcd_display::defaultTextProfileForRows(lcd_display::ROWS);
 }
 
-void MK61Display::setCursor(u8 x, u8 y) { lcd.setCursor(x, y); }
+void MK61Display::setCursor(u8 x, u8 y) {
+  lcd.setCursor(x < lcd_display::COLS ? x : (u8) (lcd_display::COLS - 1),
+                y < lcd_display::ROWS ? y : (u8) (lcd_display::ROWS - 1));
+}
 void MK61Display::cursorOn(void) { lcd.cursor(); }
 
 void MK61Display::cursorOff(void) {
@@ -44,6 +49,7 @@ bool MK61Display::supportsCursor(void) const { return true; }
 bool MK61Display::hasHardwareCursor(void) const { return true; }
 
 void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
+  if(nChar >= 8 || glyph == NULL) return;
   lcd.createChar(nChar, glyph);
 }
 
@@ -189,7 +195,15 @@ void MK61Display::setRows(u8 rows) {
 }
 
 void MK61Display::applyTextProfile(lcd_display::TextProfile profile, bool exact_geometry) {
-  const lcd_display::TextProfile next = exact_geometry ? profile : lcd_display::normalizeTextProfile(profile);
+  lcd_display::TextProfile next;
+  if(exact_geometry) {
+    const text_screen::FontGeometry geometry = text_screen::sanitizeFontGeometry({
+      profile.rows, profile.glyph_width, profile.glyph_height, profile.line_gap
+    });
+    next = {geometry.rows, geometry.width, geometry.height, geometry.line_gap};
+  } else {
+    next = lcd_display::normalizeTextProfile(profile);
+  }
   if(next.rows == active_profile.rows &&
      next.glyph_width == active_profile.glyph_width &&
      next.glyph_height == active_profile.glyph_height &&
@@ -279,8 +293,9 @@ lcd_display::TextProfile MK61Display::recommendedProfile(const fmk::Metrics& met
 }
 
 bool MK61Display::installFont(const u8* data, u16 size) {
+  if(data == NULL || size == 0 || size > sizeof(active_font_data)) return false;
   fmk::Face source;
-  if(!source.open(data, size) || size > sizeof(active_font_data)) return false;
+  if(!source.open(data, size)) return false;
   memcpy(active_font_data, data, size);
   if(!active_font.open(active_font_data, size)) return false;
 
@@ -294,7 +309,7 @@ bool MK61Display::installFont(const u8* data, u16 size) {
 }
 
 bool MK61Display::setFontPreview(const u8* data, u16 size) {
-  if(size > sizeof(preview_font_data)) return false;
+  if(data == NULL || size == 0 || size > sizeof(preview_font_data)) return false;
   fmk::Face candidate;
   if(!candidate.open(data, size)) return false;
   memcpy(preview_font_data, data, size);
@@ -323,13 +338,15 @@ void MK61Display::clearFontPreview(void) {
 void MK61Display::useBuiltinFont(void) {
   const bool restore_profile = preview_profile_active;
   const lcd_display::TextProfile saved_profile = preview_saved_profile;
+  const bool had_active_font = active_font_enabled;
   const bool changed = active_font_enabled || preview_font_enabled || preview_profile_active;
   active_font_enabled = false;
   preview_font_enabled = false;
   preview_profile_active = false;
   active_font.reset();
   preview_font.reset();
-  if(restore_profile) applyTextProfile(saved_profile, true);
+  if(had_active_font) applyTextProfile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS));
+  else if(restore_profile) applyTextProfile(saved_profile, true);
   if(changed) markAllDirty();
 }
 
@@ -489,7 +506,7 @@ void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* bitmap,
   const u8 glyph_x = x + (u8) ((lcd_display::CELL_WIDTH - width) / 2);
   const u8 glyph_y = row_y + glyphTop(row);
   lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
-  if(bitmap == NULL || source_width == 0 || source_height == 0) return;
+  if(bitmap == NULL || source_width == 0 || source_height == 0 || width == 0 || height == 0) return;
 
   for(u8 dest_y = 0; dest_y < height; dest_y++) {
     const u8 source_y = (u8) (((u16) dest_y * source_height) / height);
@@ -512,6 +529,7 @@ void MK61Display::drawCursor(u8 x, u8 row_y, u8 row, bool block) {
   const u8 cursor_width = glyphWidth();
   const u8 cursor_x = x + glyphLeft();
   const u8 height = glyphHeight(row);
+  if(cursor_width == 0 || height == 0) return;
   const u8 glyph_y = row_y + glyphTop(row);
   const u8 underline_height = (height >= 16) ? 2 : 1;
   if(block) lcd.fillRect(cursor_x, glyph_y, cursor_width, height, FOREGROUND);
@@ -531,7 +549,7 @@ void MK61Display::updateCursorBlink(void) {
 }
 
 void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
-  if(count == 0) return;
+  if(count == 0 || first_col >= lcd_display::COLS || count > lcd_display::COLS - first_col) return;
   (void) row;
 
   const u8 run_width = count * lcd_display::CELL_WIDTH;

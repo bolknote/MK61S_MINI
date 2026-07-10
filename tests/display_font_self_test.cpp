@@ -2,6 +2,7 @@
 #include "display_symbols.hpp"
 #include "fmk_font.hpp"
 #include "text_screen.hpp"
+#include "uc1609_safety.hpp"
 
 #include <assert.h>
 #include <fstream>
@@ -191,6 +192,11 @@ static void test_text_grid(void) {
   assert(geometry8x12.rows == 5 && geometry8x12.width == 8);
   const text_screen::FontGeometry oversized = text_screen::fitFontToDisplay(16, 32, 4);
   assert(oversized.rows == 4 && oversized.width == 10 && oversized.height == 16 && oversized.line_gap == 0);
+  const text_screen::FontGeometry invalid = text_screen::sanitizeFontGeometry({255, 255, 255, 255});
+  assert(invalid.rows == text_screen::MAX_ROWS);
+  assert(invalid.width == 10);
+  assert(invalid.height == 6);
+  assert(invalid.line_gap == 0);
 
   text_screen::Grid grid;
   grid.reset(2);
@@ -220,6 +226,23 @@ static void test_text_grid(void) {
   assert(!grid.cellIsCustom(2, 1));
 }
 
+static void test_uc1609_buffer_geometry(void) {
+  assert(uc1609_safety::valid_dimensions(192, 64, 192, 64));
+  assert(uc1609_safety::valid_dimensions(12, 64, 192, 64));
+  assert(!uc1609_safety::valid_dimensions(0, 64, 192, 64));
+  assert(!uc1609_safety::valid_dimensions(192, 63, 192, 64));
+  assert(!uc1609_safety::valid_dimensions(193, 64, 192, 64));
+  assert(uc1609_safety::intersects_panel(-11, 0, 12, 64, 192, 64));
+  assert(!uc1609_safety::intersects_panel(-12, 0, 12, 64, 192, 64));
+  assert(!uc1609_safety::intersects_panel(192, 0, 12, 64, 192, 64));
+
+  usize offset = 9999;
+  assert(uc1609_safety::pixel_offset(12, 64, 11, 63, offset));
+  assert(offset == 95);
+  assert(!uc1609_safety::pixel_offset(12, 64, 12, 63, offset));
+  assert(!uc1609_safety::pixel_offset(12, 64, 0, 64, offset));
+}
+
 } // namespace
 
 static void validate_external_font(const char* path) {
@@ -243,6 +266,7 @@ int main(int argc, char** argv) {
   test_lcd_scaling();
   test_uc1609_display_symbol_tokens();
   test_text_grid();
+  test_uc1609_buffer_geometry();
   if(argc > 1) validate_external_font(argv[1]);
   printf("display_font_self_test: ok\n");
   return 0;
