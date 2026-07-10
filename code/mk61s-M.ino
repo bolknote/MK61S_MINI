@@ -18,6 +18,7 @@ using namespace kbd;
 #include "cross_hal.h"
 #include "disasm.hpp"
 #include "tools.hpp"
+#include "runtime_safety.hpp"
 #include "sound_driver.hpp"
 #include "menu.hpp"
 #include "development.hpp"
@@ -45,13 +46,11 @@ class_disassm_mk61 disassembler;
 static  isize               mk61_quants;
 isize                       mk61_quants_reload;
 
-static constexpr t_time_ms  CALC_WAIT_MS           =     10;
 static constexpr t_time_ms  ANGLE_SAVE_UPDATE_MS   =   3000;  // Время (мс) для запуска процесса сохранения переключателя угловых единиц Р-ГРД-Г
 static constexpr t_time_ms  IDLE_SIGNAL_DELAY_MS   = 300000;  // 5 минут до сигнала бездействия
 
 t_time_ms   runtime_ms; // время работы программы в ms
 
-static  u32         wait_calc_time;
 static  t_time_ms   idle_signal_at;
 static  DeferredSave angle_save;
 
@@ -81,7 +80,7 @@ char        display_text[15];          //-12345678.-12
   static bool first_key_clean_upline;
 #endif
 
-time_t auto_start_time;
+static runtime_safety::Deadline auto_start;
 
 void key_press_handler(i32 keycode);
 void idle_signal_reset(void);
@@ -112,7 +111,7 @@ struct {
   t_time_ms   time;
 } ext_command;
 
-enum  ext_run_stop {ENOP=0, WAIT_02, WAIT_05, WAIT_1, WAIT_2, WR_R10, RD_R10, WR_R11, RD_R11};
+enum  ext_run_stop {ENOP=0, WAIT_02, WAIT_05, WAIT_1, WAIT_2, WR_R10, RD_R10};
 
 static  u8  ext61_program[core_61::CODE_PAGE_BUFFER_SIZE];
 //static  u8  ext61_reg[16][8+1+2+1];
@@ -127,7 +126,7 @@ const   char* mnemo[COUNT_EXT_COMMAND] = {"empty ", "0.2 sec", "0.5 sec", "1.0 s
 void reset_ext_program_state(void) {
   memset(&ext61_program, 0, sizeof(ext61_program));
   ext_command.code = 0;
-  auto_start_time = 0;
+  auto_start.clear();
 }
 
 #include  "automate.hpp"
@@ -272,7 +271,6 @@ void setup() {
   GRDLabel.print(load_grade_switch()); // считаем состояние переключателя ГРД отобразим градусную меру
 
   YZ_ZT = true;
-  wait_calc_time = millis() + CALC_WAIT_MS;
   angle_save.schedule(millis(), ANGLE_SAVE_UPDATE_MS);
 
  // Настройки режима MAXIMAL  
@@ -301,6 +299,7 @@ void  edit_extend_program(void) {
   if(core_61::get_code(core_61::get_ring_address(back_step)) != 0x50) return;
 
   i32 ext_code = ext61_program[back_step];
+  if(!runtime_safety::valid_index(ext_code, COUNT_EXT_COMMAND)) ext_code = ENOP;
   while(true) {
     {
       MK61DisplayUpdate update(lcd);
@@ -339,6 +338,7 @@ void exit_auto_mode(void) { // Выход из режима ПРГ - событ�
 }
 
 void key_press_handler(i32 keycode) {
+  if(!runtime_safety::valid_index(keycode, keyboard_core::KEY_COUNT)) return;
   if(keycode == KEY_USER_PRESS && !core_61::edit_program) return;
 
   const TMK61_cross_key cross_key = KeyPairs[keycode];  // трансляция кода клавиши в координаты клавиши mk61
@@ -370,7 +370,7 @@ void key_press_handler(i32 keycode) {
       angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
       break;
     default:
-      if(keycode >= 0) {
+      if(cross_key.as_u16() != NON.as_u16()) {
         MK61Emu_SetKeyPress(cross_key.x, cross_key.y); // передача нажатия в MK61s
       }
   }
@@ -399,7 +399,7 @@ inline void mk61_process(void) {
   if(!turbo_display_dirty) return;
   if(core_61::is_RUN() && library_mk61::speed_is_turbo()) {
       const t_time_ms now = millis();
-      if(now < turbo_next_lcd_update) return;
+      if(!runtime_safety::time_reached(now, turbo_next_lcd_update)) return;
       turbo_next_lcd_update = now + cfg::TURBO_LCD_UPDATE_MS;
   }
 
@@ -425,7 +425,7 @@ void idle_signal_poll(void) {
     idle_signal_at = now + IDLE_SIGNAL_DELAY_MS;
     return;
   }
-  if((i32) (now - idle_signal_at) < 0) return;
+  if(!runtime_safety::time_reached(now, idle_signal_at)) return;
 
   idle_signal_at = now + IDLE_SIGNAL_DELAY_MS;
   // в режиме счета по программе выдачи звукового оповещения не производится
@@ -524,9 +524,9 @@ void   mk61_baseloop_hook(i32 key) {
         lcd_std_display_redraw(); 
       break;
     case  KEY_RUN_PRESS:
-        if(auto_start_time != 0) { // Прерываем автостарт с расширенным кодом команды
+        if(auto_start.pending()) { // Прерываем автостарт с расширенным кодом команды
           kbd::get_key(); // очистим буфер клавиатуры от этого кода
-          auto_start_time = 0;
+          auto_start.clear();
           return_auto_mode();
         }
       /*!!!без брейка так задумано!!!!*/
@@ -536,48 +536,47 @@ void   mk61_baseloop_hook(i32 key) {
         monitor_switch_angle_unit(now); // слежение за положением b сохранением в flash переключателя градусной меры (только в АВТ режиме)
 
         if(ext_command.code != 0) { // Запуск расширенной программы МК-61s, после выполненого С/П
-          dbgln(EXT_RUN, "AUTO START ENABLE! Extended code = ", ext_command.code);
-          auto_start_time = ext_command.time;
-          switch(ext_command.code) {
+          const u8 command_code = ext_command.code;
+          ext_command.code = 0;
+          t_time_ms delay_ms = 0;
+
+          if(!runtime_safety::valid_extended_command(command_code, COUNT_EXT_COMMAND) ||
+             !runtime_safety::extended_command_delay(command_code, delay_ms)) {
+            dbgln(EXT_RUN, "Rejected extended code = ", command_code);
+            return_auto_mode();
+          } else {
+            dbgln(EXT_RUN, "AUTO START ENABLE! Extended code = ", command_code);
+            switch(command_code) {
             case  ext_run_stop::WAIT_02:
-                auto_start_time += 200;
-              break;
             case  ext_run_stop::WAIT_05:
-                auto_start_time += 500;
-              break;
             case  ext_run_stop::WAIT_1:
-                auto_start_time += 1000;
-              break;
             case  ext_run_stop::WAIT_2:
-                auto_start_time += 2000;
               break;
             case  ext_run_stop::WR_R10: // write X to R10
-                auto_start_time += 100;
                 core_61::get_stack_register(stack::X, ext61_reg[0]);
               break;
             case  ext_run_stop::RD_R10: // read R10 to X
-                auto_start_time += 100;
                 core_61::set_stack_register(stack::X, &ext61_reg[0]);
               break;
+            default:
+              break;
+            }
+            auto_start.schedule(ext_command.time, delay_ms);
           }
-
-          //while(millis() < start_time);
-          //kbd::push((i8) 30); // Повторный пуск С/П
-
-          ext_command.code = 0;
         }
 
-        if(auto_start_time != 0 && now > auto_start_time) { // Автостарт если он включен по времени auto_start_time
-           kbd::push((i8) KEY_RUN_PRESS); // Повторный пуск С/П
-           auto_start_time = 0;
+        if(auto_start.due(now) && kbd::push((i8) KEY_RUN_PRESS)) { // Повторный пуск С/П
+           auto_start.clear();
            dbgln(EXT_RUN, "START program by time (auto start)...");
         }
 
         mk61_process();
       } else {        // Режим работы по программе (СЧЕТ) задержка устанавливается в меню Speed CLASSIC/MAXIMAL
-        if(--mk61_quants == 0) {
+        if(mk61_quants <= 1) {
           mk61_process();
-          mk61_quants = mk61_quants_reload;
+          mk61_quants = runtime_safety::positive_quantum(mk61_quants_reload);
+        } else {
+          mk61_quants--;
         }
       }
   }

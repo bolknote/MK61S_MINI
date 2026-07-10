@@ -35,10 +35,12 @@ inline  void  event_stop_in_prg_mk61(void) {
       return;
   }
   const i32 code = core_61::get_code(core_61::get_ring_address(back_step));
+  const u8 extended_code = ext61_program[back_step];
+  ext_command.code = 0;
   dbgln(EXT_RUN, "IP = ", back_step, ". MK61 code = ", code);
-  if(code == 0x50 && ext61_program[back_step] != 0) {
+  if(code == 0x50 && runtime_safety::valid_extended_command(extended_code, COUNT_EXT_COMMAND)) {
     // Есть код расширения режима старт/стоп!
-      ext_command.code  = ext61_program[back_step];
+      ext_command.code  = extended_code;
       ext_command.time  = millis();
       dbgln(EXT_RUN, "Extended code = ", ext_command.code);
   } else { 
@@ -52,7 +54,7 @@ inline void  event_start_prg_mk61(void) {
   dbgln(MINI, "PRG: first step dt = ", runtime_ms, " mk61_reload_quant = ", mk61_quants_reload);
   MnemoLabel.disable();
   disassembler.disable("RUN");
-  mk61_quants =   mk61_quants_reload;
+  mk61_quants = runtime_safety::positive_quantum(mk61_quants_reload);
   runtime_ms  =   millis();
 }
 

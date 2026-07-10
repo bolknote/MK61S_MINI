@@ -1,6 +1,7 @@
 #include "rust_types.h"
 #include "config.h"
 #include "ledcontrol.h"
+#include "runtime_safety.hpp"
 
 struct t_blink_state {
   bool active;
@@ -21,10 +22,6 @@ static usize pattern_count = 0;
 static usize pattern_index = 0;
 static t_time_ms pattern_next_ms = 0;
 
-static inline bool time_reached(t_time_ms now, t_time_ms target) {
-  return (i32) (now - target) >= 0;
-}
-
 namespace led {
 
 static inline u8 active_level(void) {
@@ -39,10 +36,17 @@ void init(void) {
   pinMode(PIN_LED, OUTPUT);
   digitalWrite(PIN_LED, inactive_level());
   blink_state = {};
+  pattern_count = 0;
+  pattern_index = 0;
+  pattern_next_ms = 0;
 }
 
 bool pattern_start(const PatternStep* steps, usize count) {
   if(steps == NULL || count == 0 || count > PATTERN_MAX) return false;
+  for(usize i = 0; i < count; i++) {
+    if(steps[i].on > 1) return false;
+  }
+
   blink_state = {};
   for(usize i = 0; i < count; i++) pattern_steps[i] = steps[i];
   pattern_count = count;
@@ -52,7 +56,12 @@ bool pattern_start(const PatternStep* steps, usize count) {
 }
 
 static void pattern_control(t_time_ms now) {
-  if(!time_reached(now, pattern_next_ms)) return;
+  if(pattern_index >= pattern_count) {
+    pattern_count = 0;
+    pattern_index = 0;
+    return;
+  }
+  if(!runtime_safety::time_reached(now, pattern_next_ms)) return;
   const PatternStep step = pattern_steps[pattern_index++];
   if(step.on) on(); else off();
   if(pattern_index >= pattern_count) {
@@ -71,12 +80,16 @@ void control(t_time_ms now) {
     pattern_control(now);
     return;
   }
-  if(!blink_state.active || !time_reached(now, blink_state.next_ms)) return;
+  if(!blink_state.active || !runtime_safety::time_reached(now, blink_state.next_ms)) return;
 
   if(blink_state.led_on) {
     off();
     blink_state.led_on = false;
     if(!blink_state.continuous) {
+      if(blink_state.transitions_left == 0) {
+        blink_state.active = false;
+        return;
+      }
       blink_state.transitions_left--;
       if(blink_state.transitions_left == 0) {
         blink_state.active = false;
@@ -87,7 +100,14 @@ void control(t_time_ms now) {
   } else {
     on();
     blink_state.led_on = true;
-    if(!blink_state.continuous) blink_state.transitions_left--;
+    if(!blink_state.continuous) {
+      if(blink_state.transitions_left == 0) {
+        blink_state.active = false;
+        off();
+        return;
+      }
+      blink_state.transitions_left--;
+    }
     blink_state.next_ms = now + blink_state.on_ms;
   }
 }
@@ -111,7 +131,7 @@ void blink(usize count, t_time_ms on_ms, t_time_ms off_ms) {
   blink_state.active = true;
   blink_state.continuous = false;
   blink_state.led_on = true;
-  blink_state.transitions_left = count * 2 - 1;
+  blink_state.transitions_left = runtime_safety::blink_transition_count(count);
   blink_state.next_ms = millis() + on_ms;
   blink_state.on_ms = on_ms;
   blink_state.off_ms = off_ms;

@@ -11,6 +11,7 @@
 #include "m61_text.hpp"
 #include "shared_scratch.hpp"
 #include "settings_journal.hpp"
+#include "runtime_safety.hpp"
 #include "mk61emu_core.h"
 #include "keyboard.h"
 #include "cross_hal.h"
@@ -199,6 +200,10 @@ static void sound_sequence_cancel(void) {
 }
 
 static void sound_sequence_start(const SoundNote* sequence, usize len, usize pin) {
+  if(sequence == NULL || len == 0) {
+    sound_sequence_cancel();
+    return;
+  }
   sound_sequence = sequence;
   sound_sequence_len = len;
   sound_sequence_index = 0;
@@ -219,10 +224,11 @@ static void sound_sequence_poll(void) {
 
   const SoundNote note = sound_sequence[sound_sequence_index++];
   const usize volume = library_mk61::sound_volume();
-  if(note.frequency_Hz > 0 && note.duration_ms > 0 && volume > 0) {
+  if(runtime_safety::valid_sound_note(note.frequency_Hz, note.duration_ms, note.volume_percent) &&
+     note.frequency_Hz > 0 && volume > 0) {
     sound_driver_play_scaled(sound_sequence_pin, note.frequency_Hz, note.duration_ms, volume, note.volume_percent);
   }
-  sound_sequence_next_at = now + note.duration_ms + note.gap_ms;
+  sound_sequence_next_at = now + (t_time_ms) note.duration_ms + (t_time_ms) note.gap_ms;
 }
 
 static bool opcode_needs_expanded_memory(u8 opcode) {
@@ -339,6 +345,11 @@ static SoundNote user_pattern[SOUND_PATTERN_MAX];
 
 bool sound_pattern_start(const SoundNote* notes, usize count) {
   if(notes == NULL || count == 0 || count > SOUND_PATTERN_MAX) return false;
+  for(usize i = 0; i < count; i++) {
+    if(!runtime_safety::valid_sound_note(notes[i].frequency_Hz, notes[i].duration_ms,
+                                         notes[i].volume_percent)) return false;
+  }
+
   sound_stop();
   for(usize i = 0; i < count; i++) user_pattern[i] = notes[i];
   sound_sequence_start(user_pattern, count, PIN_BUZZER);

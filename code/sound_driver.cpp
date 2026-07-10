@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "config.h"
+#include "runtime_safety.hpp"
 #include "sound_driver.hpp"
 
 #if defined(ARDUINO_ARCH_STM32) && defined(HAL_TIM_MODULE_ENABLED) && !defined(HAL_TIM_MODULE_ONLY)
@@ -158,7 +159,7 @@ void sound_driver_init(usize pin) {
 
 void sound_driver_play_scaled(usize pin, isize frequency_Hz, usize duration_ms, usize volume, usize volume_percent) {
   const u32 duty = scale_duty(volume_to_duty(volume), volume_percent);
-  if(frequency_Hz <= 0 || duration_ms == 0 || duty == 0) {
+  if(!runtime_safety::valid_sound_frequency(frequency_Hz) || duration_ms == 0 || duty == 0) {
     sound_driver_stop();
     return;
   }
@@ -257,8 +258,8 @@ void sound_driver_init(usize pin) {
 }
 
 void sound_driver_play_scaled(usize pin, isize frequency_Hz, usize duration_ms, usize volume, usize volume_percent) {
-  (void) volume_percent;
-  if(frequency_Hz <= 0 || duration_ms == 0 || volume == 0) {
+  if(!runtime_safety::valid_sound_frequency(frequency_Hz) || duration_ms == 0 ||
+     volume == 0 || volume_percent == 0) {
     sound_driver_stop();
     return;
   }
