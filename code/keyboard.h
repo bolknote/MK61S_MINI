@@ -2,9 +2,10 @@
 #define CLASS_KEYBOARD
 
 #include "config.h"
+#include "keyboard_core.hpp"
 #include "rust_types.h"
 
-enum class key_state {PRESSED=0, RELEASED=0x40};
+enum class key_state {PRESSED=0, RELEASED=keyboard_core::RELEASE_MASK};
 
 static constexpr key_state PRESS             =   key_state::PRESSED;
 static constexpr key_state RELEASE           =   key_state::RELEASED;
@@ -14,7 +15,7 @@ extern  i8    cir_buff_get(usize index);
 extern  i32   cir_buff_read(void);
 
 namespace kbd {
-  inline  void    push(i8 key_code) { cir_buff_write(key_code); }
+  inline  bool    push(i8 key_code) { return cir_buff_write(key_code); }
   inline  i32     last_key(void)    { return  cir_buff_get(0); }
   inline  i32     get_key(void)     { return  cir_buff_read(); }
 
