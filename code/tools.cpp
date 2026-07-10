@@ -134,6 +134,9 @@ bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
   } else if(stored_file_strip_suffix_ci(name, ".m2")) {
     preferred_type = program_store::ProgramType::MK61_STATE;
     has_preferred_type = true;
+  } else if(stored_file_strip_suffix_ci(name, ".fmk")) {
+    preferred_type = program_store::ProgramType::FONT;
+    has_preferred_type = true;
   }
 
   if(name[0] == 0 || strlen(name) >= program_store::NAME_SIZE) return false;
@@ -144,7 +147,8 @@ bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
     program_store::ProgramType::MK61_STATE,
     program_store::ProgramType::MK61,
     program_store::ProgramType::BASIC,
-    program_store::ProgramType::FOCAL
+    program_store::ProgramType::FOCAL,
+    program_store::ProgramType::FONT
 #if MK61_ENABLE_TINYBASIC
     ,
     program_store::ProgramType::TINYBASIC
@@ -178,6 +182,8 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
     case program_store::ProgramType::TEXT:
     case program_store::ProgramType::MK61_STATE:
       return program_store_view_entry(entry.type, entry.name);
+    case program_store::ProgramType::FONT:
+      return program_store_apply_font(entry.name);
   }
   return false;
 }

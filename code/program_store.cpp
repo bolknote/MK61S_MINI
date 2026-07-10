@@ -248,6 +248,7 @@ static ProgramType type_from_tag(u8 tag0, u8 tag1, bool& ok) {
   if(tag0 == 'B' && tag1 == '2') return ProgramType::TINYBASIC;
   if(tag0 == 'T' && tag1 == '1') return ProgramType::TEXT;
   if(tag0 == 'M' && tag1 == '2') return ProgramType::MK61_STATE;
+  if(tag0 == 'F' && tag1 == '3') return ProgramType::FONT;
   ok = false;
   return ProgramType::MK61;
 }
@@ -260,6 +261,7 @@ static u8 tag0_for_type(ProgramType type) {
     case ProgramType::TINYBASIC: return 'B';
     case ProgramType::TEXT: return 'T';
     case ProgramType::MK61_STATE: return 'M';
+    case ProgramType::FONT: return 'F';
   }
   return 'M';
 }
@@ -276,6 +278,8 @@ static u8 tag1_for_type(ProgramType type) {
       return '1';
     case ProgramType::MK61_STATE:
       return '2';
+    case ProgramType::FONT:
+      return '3';
   }
   return '1';
 }
@@ -830,7 +834,7 @@ static bool load_catalog_from(usize catalog_sector) {
   for(u8 i = 0; i < entry_count; i++) {
     IndexEntry& entry = index_entries[index_count];
     const u8 type = read_byte(pos++);
-    if(type > (u8) ProgramType::MK61_STATE) return false;
+    if(type > (u8) ProgramType::FONT) return false;
     entry.type = (ProgramType) type;
     entry.name_len = read_byte(pos++);
     const u8 sector = read_byte(pos++);
@@ -1146,10 +1150,11 @@ static u8 name_len_of(const char* name) {
 }
 
 static bool valid_write(ProgramType type, const char* name, u16 data_len) {
-  (void) type;
+  if(type > ProgramType::FONT) return false;
   const u8 nlen = name_len_of(name);
   if(nlen == 0 || nlen >= NAME_SIZE) return false;
-  if(data_len == 0 || data_len > MAX_MK61_TEXT_SIZE) return false;
+  const u16 max_size = type == ProgramType::FONT ? MAX_FONT_SIZE : MAX_MK61_TEXT_SIZE;
+  if(data_len == 0 || data_len > max_size) return false;
   return true;
 }
 

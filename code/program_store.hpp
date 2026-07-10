@@ -9,6 +9,7 @@ namespace program_store {
 static constexpr usize NAME_SIZE = 16;
 static constexpr usize MAX_ENTRIES = 64;
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
+static constexpr u16 MAX_FONT_SIZE = 1536;
 
 enum class ProgramType : u8 {
   MK61,
@@ -16,7 +17,8 @@ enum class ProgramType : u8 {
   FOCAL,
   TINYBASIC,
   TEXT,
-  MK61_STATE
+  MK61_STATE,
+  FONT
 };
 
 struct Entry {

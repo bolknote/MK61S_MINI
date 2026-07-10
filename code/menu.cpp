@@ -321,7 +321,7 @@ lcd_display::TextProfile display_text_profile(void) {
 
 void set_display_text_profile(lcd_display::TextProfile profile) {
 #if defined(MK61_DISPLAY_UC1609)
-  display_text_profile_state = lcd_display::normalizeTextProfile(profile);
+  display_text_profile_state = lcd.externalFontActive() ? profile : lcd_display::normalizeTextProfile(profile);
 #else
   (void) profile;
   display_text_profile_state = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
@@ -797,8 +797,9 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
 static void applyFontSetupProfile(lcd_display::TextProfile profile) {
 #if defined(MK61_DISPLAY_UC1609)
   profile = lcd_display::normalizeTextProfile(profile);
-  if(sameTextProfile(profile, library_mk61::display_text_profile())) return;
+  if(sameTextProfile(profile, library_mk61::display_text_profile()) && !lcd.externalFontActive()) return;
 
+  lcd.useBuiltinFont();
   library_mk61::set_display_text_profile(profile);
   lcd.setTextProfile(library_mk61::display_text_profile());
   library_mk61::refresh_menu_text();

@@ -6,5 +6,6 @@
 bool development_select(void);
 bool program_store_explorer_select(void);
 bool program_store_view_entry(program_store::ProgramType type, const char* name);
+bool program_store_apply_font(const char* name);
 
 #endif

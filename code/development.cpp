@@ -5,6 +5,7 @@
 #include "config.h"
 #include "cross_hal.h"
 #include "focal.hpp"
+#include "fmk_font.hpp"
 #include "tinybasic.hpp"
 #include "keyboard.h"
 #include "lcd_gui.hpp"
@@ -38,6 +39,7 @@ static constexpr u8 EXPLORER_ELLIPSIS_SLOT = 7;
 static constexpr u8 EXPLORER_NO_CURSOR_ROW = 0xFF;
 
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for explorer view");
+static_assert(fmk::MAX_FILE_SIZE == program_store::MAX_FONT_SIZE, "font parser and storage limits must match");
 
 enum class ItemMenuAction : u8 {
   RUN,
@@ -70,6 +72,7 @@ static const char* type_label(program_store::ProgramType type) {
     case program_store::ProgramType::TINYBASIC: return "B2";
     case program_store::ProgramType::TEXT: return "T1";
     case program_store::ProgramType::MK61_STATE: return "M2";
+    case program_store::ProgramType::FONT: return "f1";
   }
   return "??";
 }
@@ -91,15 +94,9 @@ static const u8 ELLIPSIS_GLYPH[8] = {
 };
 
 static void write_custom_glyph_at(u8 slot, const u8* glyph, u8 col, u8 row) {
-#if defined(MK61_DISPLAY_UC1609)
-  (void) slot;
-  lcd.setCursor(col, row);
-  lcd.writeGlyph(glyph);
-#else
   lcd.createChar(slot, (uint8_t*) glyph);
   lcd.setCursor(col, row);
   lcd.write(slot);
-#endif
 }
 
 static void print_line(u8 row, const char* text) {
@@ -231,6 +228,7 @@ static int total_file_count(void) {
 #endif
          + program_store::count(program_store::ProgramType::TEXT)
          + program_store::count(program_store::ProgramType::MK61_STATE)
+         + program_store::count(program_store::ProgramType::FONT)
          ;
 }
 
@@ -246,7 +244,8 @@ static bool explorer_entry(int index, program_store::Entry& out) {
 #endif
     ,
     program_store::ProgramType::TEXT,
-    program_store::ProgramType::MK61_STATE
+    program_store::ProgramType::MK61_STATE,
+    program_store::ProgramType::FONT
   };
 
   for(usize i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
@@ -748,6 +747,96 @@ static void show_message(const char* en0, const char* ru0, const char* en1 = "",
   print_localized_line(1, en1, ru1);
 }
 
+static void draw_font_preview_header(const program_store::Entry& entry, const fmk::Face& face) {
+  char header[24];
+  snprintf(header, sizeof(header), "f1 %s %ux%u", entry.name,
+    (u32) face.metrics().max_width, (u32) face.metrics().height);
+  print_line(0, header);
+}
+
+static void view_font_entry(const program_store::Entry& entry, const u8* data, u16 len) {
+  fmk::Face face;
+  if(!face.open(data, len)) {
+    show_message("Bad font", "Ошибка шрифта", entry.name, entry.name);
+    wait_explorer_key(false);
+    return;
+  }
+  if(!face.metrics().monospaced) {
+    show_message("Proportional", "Пропорциональный", "Not supported", "Не поддержан");
+    wait_explorer_key(false);
+    return;
+  }
+
+#if defined(MK61_DISPLAY_UC1609)
+  if(!lcd.setFontPreview(data, len)) {
+    show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
+    wait_explorer_key(false);
+    return;
+  }
+
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    draw_font_preview_header(entry, face);
+    if(lcd.rows() > 1) print_line(1, "0123456789+-*/");
+    if(lcd.rows() > 2) print_line(2, "ABCDEFGHIJKLMNO");
+    if(lcd.rows() > 3) print_line(3, "abcdefghijklmno");
+    if(lcd.rows() > 4) lcd_ru::print_at(0, 4, "АБВГДЕЖЗИЙКЛМНО", lcd_display::COLS);
+    if(lcd.rows() > 5) lcd_ru::print_at(0, 5, "абвгдежзийклмно", lcd_display::COLS);
+    for(u8 row = 6; row < lcd.rows(); row++) print_line(row, "");
+  }
+  wait_explorer_key(false);
+  lcd.clearFontPreview();
+  lcd.clear();
+#else
+  fmk::Glyph glyphs[8];
+  if(fmk::selectPreviewGlyphs(face, glyphs) != 8) {
+    show_message("No glyphs", "Нет символов", entry.name, entry.name);
+    wait_explorer_key(false);
+    return;
+  }
+
+  u8 rows[8][8];
+  for(u8 slot = 0; slot < 8; slot++) {
+    if(!fmk::scaleToLcd5x8(face, glyphs[slot], rows[slot])) {
+      show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
+      wait_explorer_key(false);
+      return;
+    }
+    lcd.createChar(slot, rows[slot]);
+  }
+
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    draw_font_preview_header(entry, face);
+    lcd.setCursor(0, 1);
+    for(u8 slot = 0; slot < 8; slot++) lcd.write(slot);
+    for(u8 col = 8; col < lcd_display::COLS; col++) lcd.write((u8) ' ');
+  }
+  wait_explorer_key(false);
+  lcd_ru::restore_default_font();
+  lcd.clear();
+#endif
+}
+
+static bool apply_font_entry(const program_store::Entry& entry) {
+#if !defined(MK61_DISPLAY_UC1609)
+  (void) entry;
+  return false;
+#else
+  shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_FONT_SIZE);
+  if(!scratch.ok()) return false;
+  u16 len = 0;
+  if(!read_entry_data(entry, scratch.data(), scratch.size(), len)) return false;
+  if(!lcd.installFont(scratch.data(), len)) return false;
+  library_mk61::set_display_text_profile(lcd.textProfile());
+  library_mk61::refresh_menu_text();
+  library_mk61::defer_settings_state_save();
+  return true;
+#endif
+}
+
 static void view_entry(const program_store::Entry& entry) {
   shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_MK61_TEXT_SIZE);
   if(!scratch.ok()) {
@@ -761,6 +850,11 @@ static void view_entry(const program_store::Entry& entry) {
   if(!read_entry_data(entry, data, scratch.size(), len)) {
     show_message("Read error", "Ошибка чтения", entry.name, entry.name);
     kbd::get_key_wait();
+    return;
+  }
+
+  if(entry.type == program_store::ProgramType::FONT) {
+    view_font_entry(entry, data, len);
     return;
   }
 
@@ -1072,6 +1166,10 @@ static bool entry_can_run(const program_store::Entry& entry) {
     case program_store::ProgramType::TINYBASIC:
       return true;
 #endif
+#if defined(MK61_DISPLAY_UC1609)
+    case program_store::ProgramType::FONT:
+      return true;
+#endif
     default:
       return false;
   }
@@ -1142,10 +1240,15 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
 }
 
 static bool run_entry(const program_store::Entry& entry) {
-  const bool ok = OpenStoredEntry(entry);
+  const bool ok = entry.type == program_store::ProgramType::FONT
+    ? apply_font_entry(entry)
+    : OpenStoredEntry(entry);
   if(!ok) {
     show_message("Run error", "Ошибка запуска", entry.name, entry.name);
     delay(900);
+  } else if(entry.type == program_store::ProgramType::FONT) {
+    show_message("Font applied", "Шрифт применен", entry.name, entry.name);
+    delay(700);
   }
   return ok;
 }
@@ -1335,6 +1438,12 @@ bool program_store_view_entry(program_store::ProgramType type, const char* name)
   if(!entry_by_type_name(type, name, entry)) return false;
   view_entry(entry);
   return true;
+}
+
+bool program_store_apply_font(const char* name) {
+  program_store::Entry entry;
+  if(!entry_by_type_name(program_store::ProgramType::FONT, name, entry)) return false;
+  return apply_font_entry(entry);
 }
 
 bool development_select(void) {

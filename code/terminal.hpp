@@ -204,6 +204,7 @@ static constexpr TerminalFsType terminal_fs_types[] = {
   { program_store::ProgramType::TINYBASIC,  "TBI" },
   { program_store::ProgramType::TEXT,       "T1"  },
   { program_store::ProgramType::MK61_STATE, "M2"  },
+  { program_store::ProgramType::FONT,       "FMK" },
 };
 static constexpr u8 TERMINAL_FS_TYPE_COUNT = sizeof(terminal_fs_types) / sizeof(terminal_fs_types[0]);
 
