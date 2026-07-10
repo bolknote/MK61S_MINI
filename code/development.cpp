@@ -1,7 +1,6 @@
 #include "development.hpp"
 
 #include "Arduino.h"
-#include "basic.hpp"
 #include "config.h"
 #include "cross_hal.h"
 #include "focal.hpp"
@@ -67,7 +66,6 @@ struct ExplorerScroll {
 static const char* type_label(program_store::ProgramType type) {
   switch(type) {
     case program_store::ProgramType::MK61: return "M1";
-    case program_store::ProgramType::BASIC: return "B1";
     case program_store::ProgramType::FOCAL: return "F1";
     case program_store::ProgramType::TINYBASIC: return "B2";
     case program_store::ProgramType::TEXT: return "T1";
@@ -221,7 +219,6 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
 
 static int total_file_count(void) {
   return program_store::count(program_store::ProgramType::MK61) +
-         program_store::count(program_store::ProgramType::BASIC) +
          program_store::count(program_store::ProgramType::FOCAL)
 #if MK61_ENABLE_TINYBASIC
          + program_store::count(program_store::ProgramType::TINYBASIC)
@@ -236,7 +233,6 @@ static bool explorer_entry(int index, program_store::Entry& out) {
   if(index < 0) return false;
   const program_store::ProgramType types[] = {
     program_store::ProgramType::MK61,
-    program_store::ProgramType::BASIC,
     program_store::ProgramType::FOCAL
 #if MK61_ENABLE_TINYBASIC
     ,
@@ -1133,10 +1129,6 @@ static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
 
 static bool entry_can_edit(const program_store::Entry& entry) {
   switch(entry.type) {
-#if MK61_ENABLE_BASIC
-    case program_store::ProgramType::BASIC:
-      return true;
-#endif
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
       return true;
@@ -1154,10 +1146,6 @@ static bool entry_can_run(const program_store::Entry& entry) {
   switch(entry.type) {
     case program_store::ProgramType::MK61:
       return true;
-#if MK61_ENABLE_BASIC
-    case program_store::ProgramType::BASIC:
-      return true;
-#endif
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
       return true;
@@ -1256,11 +1244,6 @@ static bool run_entry(const program_store::Entry& entry) {
 static void edit_entry(const program_store::Entry& entry) {
   bool ok = false;
   switch(entry.type) {
-#if MK61_ENABLE_BASIC
-    case program_store::ProgramType::BASIC:
-      ok = EditBasicProgram(entry.name);
-      break;
-#endif
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
       ok = EditFocalProgram(entry.name);
@@ -1322,11 +1305,6 @@ static bool explorer_action(void) {
   return program_store_explorer_select();
 }
 
-static bool basic_action(void) {
-  BASIC_menu_select();
-  return action::MENU_BACK;
-}
-
 static bool focal_action(void) {
   FOCAL_menu_select();
   return action::MENU_BACK;
@@ -1334,11 +1312,6 @@ static bool focal_action(void) {
 
 static constexpr t_punct EXPLORER_PUNCT = {.size = 8, .action = &explorer_action, .text = "Explorer"};
 static constexpr t_punct RU_EXPLORER_PUNCT = {.size = 15, .action = &explorer_action, .text = "Проводник"};
-
-#if MK61_ENABLE_BASIC
-static constexpr t_punct BASIC_DEV_PUNCT = {.size = 11, .action = &basic_action, .text = "BASIC tools"};
-static constexpr t_punct RU_BASIC_DEV_PUNCT = {.size = 15, .action = &basic_action, .text = "БЕЙСИК"};
-#endif
 
 #if MK61_ENABLE_FOCAL
 static constexpr t_punct FOCAL_DEV_PUNCT = {.size = 11, .action = &focal_action, .text = "FOCAL tools"};
@@ -1449,9 +1422,6 @@ bool program_store_apply_font(const char* name) {
 bool development_select(void) {
   t_punct* items[] = {
     (t_punct*) (library_mk61::language_is_ru() ? &RU_EXPLORER_PUNCT : &EXPLORER_PUNCT),
-#if MK61_ENABLE_BASIC
-    (t_punct*) (library_mk61::language_is_ru() ? &RU_BASIC_DEV_PUNCT : &BASIC_DEV_PUNCT),
-#endif
 #if MK61_ENABLE_FOCAL
     (t_punct*) (library_mk61::language_is_ru() ? &RU_FOCAL_DEV_PUNCT : &FOCAL_DEV_PUNCT),
 #endif

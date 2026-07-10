@@ -4,7 +4,6 @@
 #include "menu.hpp"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
-#include "basic.hpp"
 #include "development.hpp"
 #include "focal.hpp"
 #include "tinybasic.hpp"

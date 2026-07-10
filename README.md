@@ -42,9 +42,6 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Programming.pdf
 **Инструкция по работе с Терминалом:**  
 https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 
-**Инструкция по работе с БЕЙСИКом:**<br>
-https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-BASIC.pdf
-
 **Формат пиксельных шрифтов FMK1 и C++-конвертер:**<br>
 [doc/MK61s-mini-FMK.md](doc/MK61s-mini-FMK.md)
 
@@ -68,7 +65,7 @@ tests/run_all_tests.sh
 MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 ```
 
-Тестовый набор проверяет BASIC, FOCAL, TinyBASIC, математический CORE-бэкенд,
+Тестовый набор проверяет FOCAL, TinyBASIC, математический CORE-бэкенд,
 эксклюзивное владение общими runtime/scratch-буферами, Virtual FAT и реальное
 устройство `program_store` через модель SPI flash с инъекцией ошибок записи и
 повреждения каталога, а также FMK1, bit-RLE, графическую текстовую модель и

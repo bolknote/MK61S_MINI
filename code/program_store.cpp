@@ -78,6 +78,7 @@ struct IndexEntry {
 
 struct RecordMeta {
   ProgramType type;
+  bool supported;
   u8 state;
   u8 name_len;
   u16 data_len;
@@ -240,23 +241,38 @@ static u16 crc16_update(u16 crc, u8 value) {
   return crc;
 }
 
-static ProgramType type_from_tag(u8 tag0, u8 tag1, bool& ok) {
-  ok = true;
+static bool supported_type(ProgramType type) {
+  switch(type) {
+    case ProgramType::MK61:
+    case ProgramType::FOCAL:
+    case ProgramType::TINYBASIC:
+    case ProgramType::TEXT:
+    case ProgramType::MK61_STATE:
+    case ProgramType::FONT:
+      return true;
+  }
+  return false;
+}
+
+static bool supported_type_id(u8 type) {
+  return supported_type((ProgramType) type);
+}
+
+static ProgramType type_from_tag(u8 tag0, u8 tag1, bool& supported) {
+  supported = true;
   if(tag0 == 'M' && tag1 == '1') return ProgramType::MK61;
-  if(tag0 == 'B' && tag1 == '1') return ProgramType::BASIC;
   if(tag0 == 'F' && tag1 == '1') return ProgramType::FOCAL;
   if(tag0 == 'B' && tag1 == '2') return ProgramType::TINYBASIC;
   if(tag0 == 'T' && tag1 == '1') return ProgramType::TEXT;
   if(tag0 == 'M' && tag1 == '2') return ProgramType::MK61_STATE;
   if(tag0 == 'F' && tag1 == '3') return ProgramType::FONT;
-  ok = false;
+  supported = false;
   return ProgramType::MK61;
 }
 
 static u8 tag0_for_type(ProgramType type) {
   switch(type) {
     case ProgramType::MK61:  return 'M';
-    case ProgramType::BASIC: return 'B';
     case ProgramType::FOCAL: return 'F';
     case ProgramType::TINYBASIC: return 'B';
     case ProgramType::TEXT: return 'T';
@@ -269,7 +285,6 @@ static u8 tag0_for_type(ProgramType type) {
 static u8 tag1_for_type(ProgramType type) {
   switch(type) {
     case ProgramType::MK61:
-    case ProgramType::BASIC:
     case ProgramType::FOCAL:
       return '1';
     case ProgramType::TINYBASIC:
@@ -295,9 +310,7 @@ static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& 
   }
 
   const u8 tag1 = header[1];
-  bool tag_ok = false;
-  out.type = type_from_tag(tag0, tag1, tag_ok);
-  if(!tag_ok) return false;
+  out.type = type_from_tag(tag0, tag1, out.supported);
 
   out.state = header[2];
   out.name_len = header[3];
@@ -834,7 +847,6 @@ static bool load_catalog_from(usize catalog_sector) {
   for(u8 i = 0; i < entry_count; i++) {
     IndexEntry& entry = index_entries[index_count];
     const u8 type = read_byte(pos++);
-    if(type > (u8) ProgramType::FONT) return false;
     entry.type = (ProgramType) type;
     entry.name_len = read_byte(pos++);
     const u8 sector = read_byte(pos++);
@@ -842,12 +854,16 @@ static bool load_catalog_from(usize catalog_sector) {
     entry.data_len = read_le16(pos); pos += 2;
     entry.total_len = read_le16(pos); pos += 2;
     const u16 header_len = 8;
+    for(u8 n = 0; n < NAME_SIZE; n++) entry.name[n] = (char) read_byte(pos++);
     if(entry.name_len == 0 || entry.name_len >= NAME_SIZE) return false;
     if(entry.total_len != header_len + entry.name_len + entry.data_len) return false;
     if(entry.data_len > MAX_MK61_TEXT_SIZE) return false;
     if(sector >= STORE_SECTOR_COUNT || !sectors[sector].active || offset < SECTOR_HEADER_SIZE) return false;
     if((usize) offset + entry.total_len > FLASH_SECTOR_SIZE) return false;
-    for(u8 n = 0; n < NAME_SIZE; n++) entry.name[n] = (char) read_byte(pos++);
+    if(!supported_type_id(type)) {
+      move_live_to_dead(sector_base(sector) + offset, entry.total_len);
+      continue;
+    }
     entry.name[NAME_SIZE - 1] = 0;
     if(entry.name[entry.name_len] != 0) return false;
     entry.address = sector_base(sector) + offset;
@@ -1025,7 +1041,7 @@ static bool copy_live_records(usize victim, usize destination, u16& dest_used) {
     if(!parse_record(src, offset, meta, empty)) return true;
 
     bool copy = false;
-    if(meta.state == STATE_ACTIVE && record_crc(src, meta) == meta.crc) {
+    if(meta.supported && meta.state == STATE_ACTIVE && record_crc(src, meta) == meta.crc) {
       char name[NAME_SIZE];
       copy = read_name(src, meta, name) && record_is_latest(src, meta, name);
     }
@@ -1150,7 +1166,7 @@ static u8 name_len_of(const char* name) {
 }
 
 static bool valid_write(ProgramType type, const char* name, u16 data_len) {
-  if(type > ProgramType::FONT) return false;
+  if(!supported_type(type)) return false;
   const u8 nlen = name_len_of(name);
   if(nlen == 0 || nlen >= NAME_SIZE) return false;
   const u16 max_size = type == ProgramType::FONT ? MAX_FONT_SIZE : MAX_MK61_TEXT_SIZE;

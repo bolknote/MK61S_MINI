@@ -3,7 +3,6 @@
 #if MK61_USE_ARDUINO_EEPROM_FALLBACK
   #include "EEPROM.h"
 #endif
-#include "basic.hpp"
 #include "lcd_gui.hpp"
 #include "tools.hpp"
 #include "development.hpp"
@@ -117,9 +116,6 @@ bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
   } else if(stored_file_strip_suffix_ci(name, ".m61")) {
     preferred_type = program_store::ProgramType::MK61;
     has_preferred_type = true;
-  } else if(stored_file_strip_suffix_ci(name, ".bas")) {
-    preferred_type = program_store::ProgramType::BASIC;
-    has_preferred_type = true;
   } else if(stored_file_strip_suffix_ci(name, ".foc")) {
     preferred_type = program_store::ProgramType::FOCAL;
     has_preferred_type = true;
@@ -146,7 +142,6 @@ bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
     program_store::ProgramType::TEXT,
     program_store::ProgramType::MK61_STATE,
     program_store::ProgramType::MK61,
-    program_store::ProgramType::BASIC,
     program_store::ProgramType::FOCAL,
     program_store::ProgramType::FONT
 #if MK61_ENABLE_TINYBASIC
@@ -167,10 +162,6 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
   switch(entry.type) {
     case program_store::ProgramType::MK61:
       return m61_text::open_program(entry.name);
-#if MK61_ENABLE_BASIC
-    case program_store::ProgramType::BASIC:
-      return RunBasicProgram(entry.name);
-#endif
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
       return RunFocalProgram(entry.name);

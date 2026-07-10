@@ -12,13 +12,12 @@ static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
 static constexpr u16 MAX_FONT_SIZE = 1536;
 
 enum class ProgramType : u8 {
-  MK61,
-  BASIC,
-  FOCAL,
-  TINYBASIC,
-  TEXT,
-  MK61_STATE,
-  FONT
+  MK61 = 0,
+  FOCAL = 2,
+  TINYBASIC = 3,
+  TEXT = 4,
+  MK61_STATE = 5,
+  FONT = 6
 };
 
 struct Entry {

@@ -21,7 +21,6 @@ using namespace kbd;
 #include "sound_driver.hpp"
 #include "menu.hpp"
 #include "development.hpp"
-#include "basic.hpp"
 #include "focal.hpp"
 #include "tinybasic.hpp"
 #include "usb_mass_storage.hpp"
@@ -262,9 +261,6 @@ void setup() {
 
  // Система ззагрузки программ
   init_library();
-#if MK61_ENABLE_BASIC
-  InitBasic();
-#endif
 #if MK61_ENABLE_FOCAL
   InitFocal();
 #endif

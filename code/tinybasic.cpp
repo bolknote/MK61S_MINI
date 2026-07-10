@@ -477,7 +477,7 @@ static void tb_format_fixed(double value, int decimals, char* out, usize size) {
 // TinyBASIC prints numbers with 10 significant digits, like the "%.10g" it
 // used before. The firmware links newlib-nano without float printf support
 // (no "-u _printf_float"), where snprintf silently drops %g values, so the
-// number is formatted by hand the same way BASIC and FOCAL do.
+// number is formatted by hand the same way FOCAL does.
 static void tb_format_number(double value, char* out, usize size) {
   if(size == 0) return;
   if(mk_math::is_nan(value)) {

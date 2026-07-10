@@ -44,7 +44,6 @@ static constexpr u8 FAT_ATTR_LFN = 0x0F;
 
 static const program_store::ProgramType FILE_TYPES[] = {
   program_store::ProgramType::MK61,
-  program_store::ProgramType::BASIC,
   program_store::ProgramType::FOCAL
 #if MK61_ENABLE_TINYBASIC
   ,
@@ -611,7 +610,6 @@ static void put_le32(u8* out, u16 offset, u32 value) {
 static const char* extension_for_type(program_store::ProgramType type) {
   switch(type) {
     case program_store::ProgramType::MK61:  return "M61";
-    case program_store::ProgramType::BASIC: return "BAS";
     case program_store::ProgramType::FOCAL: return "FOC";
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC: return "TBI";
@@ -1094,7 +1092,6 @@ static bool write_committed_data_sector(const program_store::Entry& entry, u8 po
 static u16 max_len_for_type(program_store::ProgramType type) {
   switch(type) {
     case program_store::ProgramType::MK61:  return program_store::MAX_MK61_TEXT_SIZE;
-    case program_store::ProgramType::BASIC: return 511;
     case program_store::ProgramType::FOCAL: return 639;
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC: return 1023;
@@ -1123,10 +1120,6 @@ static bool parse_extension(const u8* ext, program_store::ProgramType& type) {
 
   if(memcmp(normalized, "M61", 3) == 0) {
     type = program_store::ProgramType::MK61;
-    return true;
-  }
-  if(memcmp(normalized, "BAS", 3) == 0) {
-    type = program_store::ProgramType::BASIC;
     return true;
   }
   if(memcmp(normalized, "FOC", 3) == 0) {

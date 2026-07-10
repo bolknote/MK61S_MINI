@@ -1,7 +1,7 @@
 #ifndef MK_MATH_HPP
 #define MK_MATH_HPP
 
-// Math facade for the FOCAL/BASIC/TinyBASIC interpreters.
+// Math facade for the FOCAL/TinyBASIC interpreters.
 //
 // Two selectable backends provide the transcendental functions:
 //   MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM  -> thin wrappers over <math.h>

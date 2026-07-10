@@ -199,7 +199,6 @@ struct TerminalFsType {
 
 static constexpr TerminalFsType terminal_fs_types[] = {
   { program_store::ProgramType::MK61,       "M61" },
-  { program_store::ProgramType::BASIC,      "BAS" },
   { program_store::ProgramType::FOCAL,      "FOC" },
   { program_store::ProgramType::TINYBASIC,  "TBI" },
   { program_store::ProgramType::TEXT,       "T1"  },
@@ -1582,7 +1581,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               program_store::ProgramType type;
               char fs_name[program_store::NAME_SIZE];
               if(!terminal_split_fs_name_or_mk61(args, fs_name, type)) {
-                Serial.println("Usage: del <name[.m61]|name.ext> (ext: M61 BAS FOC TBI T1 M2)");
+                Serial.println("Usage: del <name[.m61]|name.ext> (ext: M61 FOC TBI T1 M2)");
                 break;
               }
               if(!program_store::remove(type, fs_name)) Serial.println("Delete failed (no such file?)");
