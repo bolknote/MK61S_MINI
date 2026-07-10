@@ -213,19 +213,28 @@ inline u16 line_end_for_start(const char* source, u16 start, u16 len) {
   return end;
 }
 
+inline u16 line_separator_end(const char* source, u16 start, u16 len) {
+  if(source == NULL || start >= len || (source[start] != '\n' && source[start] != '\r')) return start;
+  const char first = source[start++];
+  if(start < len && (source[start] == '\n' || source[start] == '\r') && source[start] != first) start++;
+  return start;
+}
+
 inline u16 next_line_start(const char* source, u16 start, u16 len) {
   if(source == NULL) return 0;
   if(start > len) start = len;
   u16 pos = start;
   while(pos < len && source[pos] != '\n' && source[pos] != '\r') pos++;
-  while(pos < len && (source[pos] == '\n' || source[pos] == '\r')) pos++;
-  return pos;
+  return line_separator_end(source, pos, len);
 }
 
 inline u16 previous_line_start(const char* source, u16 start) {
   if(source == NULL || start == 0) return 0;
   u16 pos = start;
-  while(pos > 0 && (source[pos - 1] == '\n' || source[pos - 1] == '\r')) pos--;
+  if(source[pos - 1] == '\n' || source[pos - 1] == '\r') {
+    const char last = source[--pos];
+    if(pos > 0 && (source[pos - 1] == '\n' || source[pos - 1] == '\r') && source[pos - 1] != last) pos--;
+  }
   while(pos > 0 && source[pos - 1] != '\n' && source[pos - 1] != '\r') pos--;
   return pos;
 }
@@ -401,6 +410,29 @@ inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity, u16
   return true;
 }
 
+inline bool clear_current_line(char* source, u16& len, u16& cursor, u16 capacity) {
+  if(!valid_buffer(source, len, cursor, capacity)) return false;
+
+  const u16 start = line_start_for_cursor(source, cursor);
+  const u16 end = line_end_for_start(source, start, len);
+  if(start < end) return replace_range(source, len, cursor, capacity, start, end, "");
+
+  // An already empty line is removed together with its following separator.
+  // For the empty line at EOF, remove the preceding separator instead.
+  if(end < len) {
+    return replace_range(source, len, cursor, capacity, start, line_separator_end(source, end, len), "");
+  }
+  if(start == 0) return false;
+
+  u16 separator_start = start - 1;
+  const char last = source[separator_start];
+  if(separator_start > 0 && (source[separator_start - 1] == '\n' || source[separator_start - 1] == '\r') &&
+      source[separator_start - 1] != last) {
+    separator_start--;
+  }
+  return replace_range(source, len, cursor, capacity, separator_start, start, "");
+}
+
 inline bool sms_tap(char* source, u16& len, u16& cursor, u16 capacity, SmsState& sms, i32 key_code, u32 now) {
   const char* letters = sms_letters_for_key(key_code);
   if(letters == NULL || letters[0] == 0) {
@@ -510,10 +542,7 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   } else if(!shifted_key && key_code == options.backspace_key) {
     backspace(editor.source, editor.len, editor.cursor);
   } else if(!shifted_key && key_code == 0) {
-    if(editor.source != NULL && editor.capacity > 0) editor.source[0] = 0;
-    editor.len = 0;
-    editor.cursor = 0;
-    editor.view_top = 0;
+    clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
     sms_reset(editor.sms);
   } else if(!shifted_key && (key_code == keys.ok || key_code == keys.ok_press)) {
     insert_text(editor.source, editor.len, editor.cursor, editor.capacity, options.ok_insert_text);

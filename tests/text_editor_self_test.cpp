@@ -98,6 +98,40 @@ void test_sms_deadline_wraparound(void) {
   assert(text_editor::sms_expired(sms, 0x00000010u));
 }
 
+void test_cx_clears_only_current_line_then_removes_it(void) {
+  char source[32] = "ONE\nTWO\nTHREE";
+  text_editor::Buffer editor;
+  text_editor::init(editor, source, sizeof(source));
+  editor.cursor = 6;
+
+  const text_editor::KeyMap keys = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+  const text_editor::Hooks hooks = {NULL, NULL, NULL};
+  assert(text_editor::handle_key(editor, keys, hooks, 0, 0) == text_editor::KeyResult::DIRTY);
+  assert(strcmp(source, "ONE\n\nTHREE") == 0);
+  assert(editor.cursor == 4);
+  assert(text_editor::next_line_start(source, 0, editor.len) == 4);
+  assert(text_editor::next_line_start(source, 4, editor.len) == 5);
+  assert(text_editor::previous_line_start(source, 5) == 4);
+
+  assert(text_editor::handle_key(editor, keys, hooks, 0, 0) == text_editor::KeyResult::DIRTY);
+  assert(strcmp(source, "ONE\nTHREE") == 0);
+  assert(editor.cursor == 4);
+}
+
+void test_cx_removes_empty_edge_lines_and_crlf(void) {
+  char first[16] = "\nSECOND";
+  u16 len = (u16) strlen(first);
+  u16 cursor = 0;
+  assert(text_editor::clear_current_line(first, len, cursor, sizeof(first)));
+  assert(strcmp(first, "SECOND") == 0 && cursor == 0);
+
+  char last[16] = "FIRST\r\n";
+  len = (u16) strlen(last);
+  cursor = len;
+  assert(text_editor::clear_current_line(last, len, cursor, sizeof(last)));
+  assert(strcmp(last, "FIRST") == 0 && cursor == 5);
+}
+
 void test_utf8_validation(void) {
   const u8 valid[] = {
     'A', 0xD0, 0x90, 0xE2, 0x82, 0xAC, 0xF0, 0x9F, 0x98, 0x80
@@ -127,6 +161,8 @@ int main(void) {
   test_sms_failure_does_not_arm_stale_state();
   test_hook_output_is_sanitized();
   test_sms_deadline_wraparound();
+  test_cx_clears_only_current_line_then_removes_it();
+  test_cx_removes_empty_edge_lines_and_crlf();
   test_utf8_validation();
   printf("text_editor_self_test: ok\n");
   return 0;
