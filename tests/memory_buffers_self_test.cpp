@@ -1,4 +1,5 @@
 #include "../code/language_workspace.hpp"
+#include "../code/exclusive_buffer.hpp"
 #include "../code/shared_scratch.hpp"
 
 #include <assert.h>
@@ -76,6 +77,20 @@ int main(void) {
   assert(!scratch_oversized.ok());
   shared_scratch::Lease empty_scratch(shared_scratch::Owner::VFAT_COMMIT, 0);
   assert(!empty_scratch.ok());
+
+  assert(exclusive_buffer::current_owner() == exclusive_buffer::Owner::NONE);
+  assert(exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT, 1536));
+  assert(exclusive_buffer::data(exclusive_buffer::Owner::DISPLAY_FONT) != NULL);
+  assert(!exclusive_buffer::acquire(exclusive_buffer::Owner::USB_WRITE, 512));
+  assert(exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT, 1024));
+  assert(!exclusive_buffer::acquire(
+    exclusive_buffer::Owner::DISPLAY_FONT,
+    exclusive_buffer::SIZE + 1
+  ));
+  exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
+  assert(exclusive_buffer::current_owner() == exclusive_buffer::Owner::NONE);
+  assert(exclusive_buffer::acquire(exclusive_buffer::Owner::USB_WRITE, exclusive_buffer::SIZE));
+  exclusive_buffer::release(exclusive_buffer::Owner::USB_WRITE);
 
   printf("memory_buffers_self_test: ok\n");
   return 0;

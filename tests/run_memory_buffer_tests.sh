@@ -10,8 +10,10 @@ fi
 clang++ -std=c++17 -Wall -Wextra -Werror \
   -DMK61_ENABLE_FOCAL=0 \
   -DMK61_ENABLE_TINYBASIC=0 \
+  -DMK61_DISPLAY_UC1609 \
   "${sanitizer_flags[@]}" \
   "$root/tests/memory_buffers_self_test.cpp" \
+  "$root/code/exclusive_buffer.cpp" \
   "$root/code/language_workspace.cpp" \
   "$root/code/shared_scratch.cpp" \
   -o /tmp/memory_buffers_self_test

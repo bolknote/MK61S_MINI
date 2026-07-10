@@ -152,6 +152,7 @@ class MK61Display : public Print {
     void clearFontPreview(void);
     void useBuiltinFont(void);
     bool externalFontActive(void) const;
+    bool suspendExternalFontForUsb(void);
     u8 cols(void) const { return lcd_display::COLS; }
 #if defined(MK61_DISPLAY_LCD1602)
     u8 rows(void) const { return lcd_display::ROWS; }
@@ -174,18 +175,17 @@ class MK61Display : public Print {
     LiquidCrystal lcd;
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
-    static constexpr u8 MAX_RENDER_PAGES = lcd_display::PIXEL_HEIGHT / 8;
-    uint8_t render_buffer[lcd_display::PIXEL_WIDTH * MAX_RENDER_PAGES];
+    static constexpr u8 RENDER_PAGE_HEIGHT = 8;
+    uint8_t render_buffer[lcd_display::PIXEL_WIDTH];
     ERM19264_UC1609 lcd;
     ERM19264_UC1609_Screen render_screen;
     text_screen::Grid grid;
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
-    uint8_t active_font_data[fmk::MAX_FILE_SIZE];
-    uint8_t preview_font_data[fmk::MAX_FILE_SIZE];
     fmk::Face active_font;
     fmk::Face preview_font;
     bool active_font_enabled;
+    bool external_font_suspended;
     bool preview_font_enabled;
     bool initialized;
     bool screen_dirty;
@@ -208,9 +208,9 @@ class MK61Display : public Print {
     u8 glyphTop(u8 row) const;
     u8 glyphWidth(void) const;
     u8 glyphLeft(void) const;
-    void drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* bitmap, u8 source_width, u8 source_height);
-    void drawToken(u8 x, u8 row_y, u8 row, u16 value, bool custom);
-    void drawCursor(u8 x, u8 row_y, u8 row, bool block);
+    void drawGlyph(u8 x, i16 row_y, u8 row, const uint8_t* bitmap, u8 source_width, u8 source_height);
+    void drawToken(u8 x, i16 row_y, u8 row, u16 value, bool custom);
+    void drawCursor(u8 x, i16 row_y, u8 row, bool block);
     void moveCursorTo(u8 x, u8 y);
     bool cursorOverlayVisible(void) const;
     void markCellDirtyDeferred(u8 x, u8 y);

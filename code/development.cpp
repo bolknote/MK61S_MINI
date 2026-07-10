@@ -38,6 +38,11 @@ static constexpr u8 EXPLORER_NAME_COL = 0;
 static constexpr u8 EXPLORER_ELLIPSIS_SLOT = 7;
 static constexpr u8 EXPLORER_NO_CURSOR_ROW = 0xFF;
 
+#if defined(MK61_DISPLAY_UC1609)
+static char applied_font_name[program_store::NAME_SIZE] = {0};
+static bool applied_font_suspended = false;
+#endif
+
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for explorer view");
 static_assert(fmk::MAX_FILE_SIZE == program_store::MAX_FONT_SIZE, "font parser and storage limits must match");
 
@@ -811,6 +816,11 @@ static bool apply_font_entry(const program_store::Entry& entry) {
   u16 len = 0;
   if(!read_entry_data(entry, scratch.data(), scratch.size(), len)) return false;
   if(!lcd.installFont(scratch.data(), len)) return false;
+#if defined(MK61_DISPLAY_UC1609)
+  strncpy(applied_font_name, entry.name, sizeof(applied_font_name) - 1);
+  applied_font_name[sizeof(applied_font_name) - 1] = 0;
+  applied_font_suspended = false;
+#endif
   library_mk61::set_display_text_profile(lcd.textProfile());
   library_mk61::refresh_menu_text();
   library_mk61::defer_settings_state_save();
@@ -1017,6 +1027,13 @@ static bool rename_entry(const program_store::Entry& entry) {
   }
 
   const bool ok = program_store::rename(entry.type, entry.name, name);
+#if defined(MK61_DISPLAY_UC1609)
+  if(ok && entry.type == program_store::ProgramType::FONT && lcd.externalFontActive() &&
+     strncmp(applied_font_name, entry.name, sizeof(applied_font_name)) == 0) {
+    strncpy(applied_font_name, name, sizeof(applied_font_name) - 1);
+    applied_font_name[sizeof(applied_font_name) - 1] = 0;
+  }
+#endif
   show_message(ok ? "Renamed" : "Rename error", ok ? "Переимен." : "Ошибка", name, name);
   delay(700);
   return ok;
@@ -1402,6 +1419,31 @@ bool program_store_apply_font(const char* name) {
   program_store::Entry entry;
   if(!entry_by_type_name(program_store::ProgramType::FONT, name, entry)) return false;
   return apply_font_entry(entry);
+}
+
+bool program_store_suspend_font_for_usb(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(!lcd.externalFontActive()) {
+    return true;
+  }
+  if(applied_font_name[0] == 0 || !lcd.suspendExternalFontForUsb()) return false;
+  applied_font_suspended = true;
+#endif
+  return true;
+}
+
+void program_store_restore_font_after_usb(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(!applied_font_suspended) return;
+  applied_font_suspended = false;
+  program_store::Entry entry;
+  if(!entry_by_type_name(program_store::ProgramType::FONT, applied_font_name, entry) ||
+     !apply_font_entry(entry)) {
+    applied_font_name[0] = 0;
+    lcd.useBuiltinFont();
+    library_mk61::set_display_text_profile(lcd.textProfile());
+  }
+#endif
 }
 
 bool development_select(void) {

@@ -92,11 +92,13 @@ bool usb_start_mass_storage_mode(void) {
     delay(50);
   #endif
 
+  if(!program_store_suspend_font_for_usb()) return false;
   return usb_mass_storage::init();
 }
 
 void usb_start_terminal_mode(void) {
   if(!usb_mass_storage::deinit()) return;
+  program_store_restore_font_after_usb();
   delay(50);
 
   #ifdef SERIAL_OUTPUT
