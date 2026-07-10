@@ -3,7 +3,6 @@
 #include "library_pmk.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
-#include "shared_scratch.hpp"
 #include "terminal.hpp"
 #include "tools.hpp"
 
@@ -23,7 +22,6 @@ enum class RunnerState : u8 {
 
 enum class ScriptSource : u8 {
   NONE,
-  BUFFER,
   STORE
 };
 
@@ -64,10 +62,6 @@ static bool token_ends(const char* p) {
   return is_line_end(*p);
 }
 
-static u8* script_buffer(void) {
-  return shared_scratch::data(shared_scratch::Owner::M61_SCRIPT);
-}
-
 static void copy_script_name(char* out, const char* name) {
   if(out == NULL) return;
   out[0] = 0;
@@ -81,19 +75,6 @@ static void clear_current_script(void) {
   script_name[0] = 0;
   script_len = 0;
   script_pos = 0;
-}
-
-static bool stack_uses_script_buffer(void) {
-  for(u8 i = 0; i < script_stack_depth; i++) {
-    if(script_stack[i].source == ScriptSource::BUFFER) return true;
-  }
-  return false;
-}
-
-static void release_script_buffer_if_owned(void) {
-  if(script_source == ScriptSource::BUFFER || stack_uses_script_buffer()) {
-    shared_scratch::release(shared_scratch::Owner::M61_SCRIPT);
-  }
 }
 
 static bool find_entry_by_type_name(program_store::ProgramType type, const char* name, program_store::Entry& out) {
@@ -145,7 +126,6 @@ bool active(void) {
 }
 
 void cancel(void) {
-  release_script_buffer_if_owned();
   runner_state = RunnerState::IDLE;
   clear_current_script();
   script_stack_depth = 0;
@@ -153,8 +133,6 @@ void cancel(void) {
 }
 
 static void finish_script(void) {
-  if(script_source == ScriptSource::BUFFER) shared_scratch::release(shared_scratch::Owner::M61_SCRIPT);
-
   if(script_stack_depth > 0) {
     restore_frame(script_stack[--script_stack_depth]);
     script_terminal.init_script();
@@ -176,13 +154,6 @@ static bool read_script_byte(u8& value, bool& eof) {
   eof = false;
   if(script_pos >= script_len) {
     eof = true;
-    return true;
-  }
-
-  if(script_source == ScriptSource::BUFFER) {
-    u8* buffer = script_buffer();
-    if(buffer == NULL) return false;
-    value = buffer[script_pos++];
     return true;
   }
 
@@ -342,28 +313,6 @@ void service(void) {
   }
 }
 
-bool start(const u8* text, u16 len) {
-  if(text == NULL && len != 0) return false;
-  if(len > program_store::MAX_MK61_TEXT_SIZE) return false;
-  if(active()) cancel();
-
-  u8* buffer = shared_scratch::acquire(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
-  if(buffer == NULL) return false;
-  if(len != 0) memcpy(buffer, text, len);
-
-  script_source = ScriptSource::BUFFER;
-  script_name[0] = 0;
-  script_len = len;
-  script_pos = 0;
-  script_stack_depth = 0;
-  script_error = false;
-  script_terminal.init_script();
-  MK61Emu_ClearCodePage();
-  runner_state = RunnerState::EXECUTING;
-  service();
-  return !script_error;
-}
-
 bool load_program(const char* name) {
   if(name == NULL || name[0] == 0) return false;
   if(active()) cancel();
@@ -387,10 +336,6 @@ bool load_program(const char* name) {
 bool open_program(const char* name) {
   if(runner_state == RunnerState::EXECUTING) return open_store_script(name);
   return load_program(name);
-}
-
-bool execute(const u8* text, u16 len) {
-  return start(text, len);
 }
 
 static bool append_char(u8* out, u16 capacity, u16& pos, char c) {

@@ -663,8 +663,6 @@ bool UsbDiskMode(void) {
   library_mk61::flush_settings_state();
   (void) program_store::refresh();
   (void) program_store::purge_empty();
-  virtual_fat::reset_session();
-
   if(!usb_start_mass_storage_mode()) {
     usb_start_terminal_mode();
     draw_usb_disk_status("Ошибка USB", "USB error", "ESC", "ESC");

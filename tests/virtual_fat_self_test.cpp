@@ -213,33 +213,13 @@ void vfat_stage_clear(void) {
 
 } // namespace program_store
 
-namespace language_workspace {
-
-alignas(8) static u8 workspace[SIZE];
-static Owner owner = Owner::NONE;
-
-void* acquire(Owner next_owner, usize required) {
-  if(required > sizeof(workspace)) return NULL;
-  if(owner != next_owner) {
-    memset(workspace, 0, sizeof(workspace));
-    owner = next_owner;
-  }
-  return workspace;
-}
-
-Owner current_owner(void) {
-  return owner;
-}
-
-} // namespace language_workspace
-
 #include "../code/virtual_fat.cpp"
 
 namespace {
 
 static void reset_virtual_fat_state(void) {
   program_store::format();
-  virtual_fat::reset_session();
+  assert(virtual_fat::reset_session());
 }
 
 static u32 root_lba(void) {
@@ -947,7 +927,7 @@ static void test_delete_does_not_shift_other_files_clusters(void) {
   memset(data_b, 0xBB, sizeof(data_b));
   assert(program_store::write(program_store::ProgramType::MK61, "AAA", data_a, sizeof(data_a)));
   assert(program_store::write(program_store::ProgramType::MK61, "BBB", data_b, sizeof(data_b)));
-  virtual_fat::reset_session();
+  assert(virtual_fat::reset_session());
 
   u8 root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), root));
@@ -1047,7 +1027,7 @@ static void test_stale_echo_after_flush_does_not_create_ghosts(void) {
   memset(data_b, 0xB1, sizeof(data_b));
   assert(program_store::write(program_store::ProgramType::MK61, "AAA", data_a, sizeof(data_a)));
   assert(program_store::write(program_store::ProgramType::MK61, "BBB", data_b, sizeof(data_b)));
-  virtual_fat::reset_session();
+  assert(virtual_fat::reset_session());
 
   u8 root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), root));
@@ -1082,7 +1062,7 @@ static void test_tombstone_identity_check_protects_other_files(void) {
   memset(data_b, 0xB2, sizeof(data_b));
   assert(program_store::write(program_store::ProgramType::MK61, "AAA", data_a, sizeof(data_a)));
   assert(program_store::write(program_store::ProgramType::MK61, "BBB", data_b, sizeof(data_b)));
-  virtual_fat::reset_session();
+  assert(virtual_fat::reset_session());
 
   u8 root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), root));
@@ -1109,7 +1089,7 @@ static void test_empty_entry_neither_renames_nor_commits(void) {
 
   const u8 payload = 0xEE;
   assert(program_store::write(program_store::ProgramType::MK61, "EMPTY1", &payload, 1));
-  virtual_fat::reset_session();
+  assert(virtual_fat::reset_session());
 
   u8 root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), root));
@@ -1130,6 +1110,14 @@ static void test_empty_entry_neither_renames_nor_commits(void) {
 } // namespace
 
 int main(void) {
+  virtual_fat::end_session();
+  {
+    language_workspace::Lease focal(language_workspace::Owner::FOCAL, 128);
+    assert(focal.ok());
+    assert(!virtual_fat::reset_session());
+  }
+  assert(virtual_fat::reset_session());
+
   test_lfn_aliases_are_unique();
   test_incomplete_pending_flush_keeps_waiting_for_data();
   test_short_txt_import_stores_text_type();

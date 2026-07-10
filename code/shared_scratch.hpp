@@ -8,7 +8,7 @@ namespace shared_scratch {
 enum class Owner : u8 {
   NONE,
   EXPLORER_VIEW,
-  M61_SCRIPT,
+  M61_FORMAT,
   PROGRAM_STORE_RENAME,
   VFAT_COMMIT,
   STORED_M61_MENU
@@ -16,7 +16,7 @@ enum class Owner : u8 {
 
 static constexpr usize SIZE = 1792;
 
-class Lease {
+class [[nodiscard]] Lease {
   public:
     Lease(Owner owner, usize required);
     ~Lease(void);
@@ -26,16 +26,15 @@ class Lease {
 
     bool ok(void) const { return buffer != 0; }
     u8* data(void) const { return buffer; }
-    usize size(void) const { return SIZE; }
+    usize size(void) const { return requested; }
 
   private:
     Owner owner;
     u8* buffer;
+    usize requested;
+    u32 token;
 };
 
-u8* acquire(Owner owner, usize required);
-void release(Owner owner);
-u8* data(Owner owner);
 Owner current_owner(void);
 
 } // namespace shared_scratch

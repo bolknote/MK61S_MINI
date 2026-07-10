@@ -910,7 +910,7 @@ bool StoreProgram(const char* name) {
   if(check_empty_program()) return false; // error
   if(name == NULL || name[0] == 0) return false;
 
-  shared_scratch::Lease scratch(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
+  shared_scratch::Lease scratch(shared_scratch::Owner::M61_FORMAT, program_store::MAX_MK61_TEXT_SIZE);
   if(!scratch.ok()) return false;
   u8* script_buffer = scratch.data();
   u16 script_len = 0;
@@ -970,7 +970,7 @@ bool Store(void) {
   core_61::get_code_page(&code_page[0]);
   const usize code_len = seek_program_END(&code_page[0]);
 
-  shared_scratch::Lease scratch(shared_scratch::Owner::M61_SCRIPT, program_store::MAX_MK61_TEXT_SIZE);
+  shared_scratch::Lease scratch(shared_scratch::Owner::M61_FORMAT, program_store::MAX_MK61_TEXT_SIZE);
   if(!scratch.ok()) return false;
   u8* script_buffer = scratch.data();
   u16 script_len = 0;

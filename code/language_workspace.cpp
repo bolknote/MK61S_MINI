@@ -1,29 +1,76 @@
 #include "language_workspace.hpp"
 
-#include "config.h"
-
 #include <string.h>
 
 namespace language_workspace {
 
-#if MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC
+// Virtual FAT is also a consumer, including in builds where both languages
+// are disabled. Keep the physical capacity identical to the advertised one.
 alignas(8) static u8 workspace[SIZE];
-#else
-alignas(8) static u8 workspace[1];
-#endif
-static Owner owner = Owner::NONE;
+static Owner resident = Owner::NONE;
+static Owner active = Owner::NONE;
+static u16 active_depth = 0;
 
-void* acquire(Owner next_owner, usize required) {
-  if(required > sizeof(workspace)) return NULL;
-  if(owner != next_owner) {
-    memset(workspace, 0, sizeof(workspace));
-    owner = next_owner;
-  }
-  return workspace;
+Lease::Lease(void)
+  : owner(Owner::NONE), memory(NULL), requested(0), was_fresh(false) {}
+
+Lease::Lease(Owner next_owner, usize required) : Lease() {
+  (void) acquire(next_owner, required);
 }
 
-Owner current_owner(void) {
-  return owner;
+bool Lease::acquire(Owner next_owner, usize required_size) {
+  if(memory != NULL) return owner == next_owner && required_size <= requested;
+  owner = next_owner;
+  requested = required_size;
+  was_fresh = false;
+  if(next_owner == Owner::NONE || required_size == 0 || required_size > sizeof(workspace)) return false;
+  if(active != Owner::NONE && active != next_owner) return false;
+
+  if(active == next_owner) {
+    active_depth++;
+    memory = workspace;
+    return true;
+  }
+
+  if(resident != next_owner) {
+    memset(workspace, 0, sizeof(workspace));
+    resident = next_owner;
+    was_fresh = true;
+  }
+  active = next_owner;
+  active_depth = 1;
+  memory = workspace;
+  return true;
+}
+
+Lease::~Lease(void) {
+  reset();
+}
+
+void Lease::reset(void) {
+  if(memory == NULL) return;
+  if(active != owner || active_depth == 0) {
+    __builtin_trap();
+  }
+  active_depth--;
+  if(active_depth == 0) active = Owner::NONE;
+  memory = NULL;
+  owner = Owner::NONE;
+  requested = 0;
+  was_fresh = false;
+}
+
+Owner resident_owner(void) {
+  return resident;
+}
+
+Owner active_owner(void) {
+  return active;
+}
+
+void* data(Owner owner) {
+  if(owner == Owner::NONE || active != owner || active_depth == 0) return NULL;
+  return workspace;
 }
 
 } // namespace language_workspace

@@ -13,7 +13,8 @@ bool read_sectors(u32 lba, u8* out, u16 count);
 bool write_sector(u32 lba, const u8* data);
 bool write_sectors(u32 lba, const u8* data, u16 count);
 bool flush_pending(void);
-void reset_session(void);
+bool reset_session(void);
+void end_session(void);
 
 // Diagnostic trace access (non-NULL lines only with MK61_VFAT_TRACE builds).
 const char* trace_line_at(u16 index);

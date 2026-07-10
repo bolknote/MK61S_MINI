@@ -135,18 +135,21 @@ struct SessionState {
 
 static_assert(language_workspace::SIZE >= sizeof(SessionState), "language workspace must fit virtual FAT session");
 
+static language_workspace::Lease session_lease;
 static SessionState* session_state_ptr = NULL;
 
 static bool ensure_session_state(void) {
-  if(session_state_ptr != NULL && language_workspace::current_owner() == language_workspace::Owner::USB_DISK) return true;
-  void* storage = language_workspace::acquire(language_workspace::Owner::USB_DISK, sizeof(SessionState));
-  if(storage == NULL) return false;
-  session_state_ptr = (SessionState*) storage;
+  if(session_lease.ok() && session_state_ptr != NULL) return true;
+  if(!session_lease.acquire(language_workspace::Owner::USB_DISK, sizeof(SessionState))) return false;
+  session_state_ptr = (SessionState*) session_lease.data();
   return true;
 }
 
 static SessionState& session_state(void) {
-  (void) ensure_session_state();
+  // All public virtual FAT entry points run inside the module-owned USB
+  // session. Failure means another runtime violated the exclusive-session
+  // contract; trap deterministically instead of dereferencing NULL.
+  if(!ensure_session_state()) __builtin_trap();
   return *session_state_ptr;
 }
 
@@ -1723,7 +1726,8 @@ static void pin_committed_files(void) {
   }
 }
 
-void reset_session(void) {
+bool reset_session(void) {
+  if(!ensure_session_state()) return false;
   memset(session_state().pending_writes, 0, sizeof(session_state().pending_writes));
   memset(session_state().pending_deletes, 0, sizeof(session_state().pending_deletes));
   memset(session_state().ignored_ranges, 0, sizeof(session_state().ignored_ranges));
@@ -1737,6 +1741,12 @@ void reset_session(void) {
   session_state().committed_count = 0;
   program_store::vfat_stage_clear();
   ensure_cluster_index();
+  return true;
+}
+
+void end_session(void) {
+  session_state_ptr = NULL;
+  session_lease.reset();
 }
 
 static bool rename_committed_entry(const ParsedDirEntry& parsed, const char* old_name) {

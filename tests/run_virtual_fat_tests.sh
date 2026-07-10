@@ -10,6 +10,7 @@ fi
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   tests/virtual_fat_self_test.cpp \
+  code/language_workspace.cpp \
   code/shared_scratch.cpp \
   -o /tmp/virtual_fat_self_test
 

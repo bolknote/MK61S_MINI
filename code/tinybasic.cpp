@@ -268,8 +268,26 @@ static TinyBasicRuntime& tinybasic_runtime(void) {
 }
 #else
 static_assert(sizeof(TinyBasicRuntime) <= language_workspace::SIZE, "TinyBASIC runtime does not fit language workspace");
+
+class TinyBasicWorkspaceScope {
+  public:
+    TinyBasicWorkspaceScope(void)
+      : lease(language_workspace::Owner::TINYBASIC, sizeof(TinyBasicRuntime)) {
+      if(!lease.ok() || !lease.fresh()) return;
+      TinyBasicRuntime* runtime = (TinyBasicRuntime*) lease.data();
+      memset(runtime, 0, sizeof(*runtime));
+      runtime->tb_ast.ok = true;
+      runtime->NextTinyBasic = -1;
+    }
+
+    bool ok(void) const { return lease.ok(); }
+
+  private:
+    language_workspace::Lease lease;
+};
+
 static TinyBasicRuntime& tinybasic_runtime(void) {
-  void* memory = language_workspace::acquire(language_workspace::Owner::TINYBASIC, sizeof(TinyBasicRuntime));
+  void* memory = language_workspace::data(language_workspace::Owner::TINYBASIC);
   return *((TinyBasicRuntime*) memory);
 }
 #endif
@@ -939,6 +957,10 @@ static bool tb_compile_source(const char* source, TbAst& ast) {
 }
 
 bool CompileTinyBasic(char* program) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
   return tb_compile_source(program, tb_ast);
 }
 
@@ -1277,6 +1299,10 @@ static bool tb_runtime_interrupted(void) {
 }
 
 void RunTinyBasic(int program_index) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return;
+#endif
   if(program_index < 0 || program_index >= TB_PROGRAM_COUNT || !programs[program_index].used) {
     tb_error("HOW?");
     return;
@@ -1382,6 +1408,10 @@ bool TinyBasicIsReady(void) {
 }
 
 void InitTinyBasic(void) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return;
+#endif
   memset(programs, 0, sizeof(programs));
   tb_ast_reset(tb_ast);
   memset(tb_vars, 0, sizeof(tb_vars));
@@ -1494,6 +1524,10 @@ static int select_tinybasic_program(bool allow_new) {
 }
 
 bool TinyBASIC_library_select(void) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
   const int program = select_tinybasic_program(false);
   if(program >= 0) RunTinyBasic(program);
   return true;
@@ -1762,12 +1796,20 @@ static void EditTinyBasicSlot(int slot) {
 }
 
 void EditTinyBasic(void) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return;
+#endif
   const int slot = select_tinybasic_program(true);
   if(slot < 0) return;
   EditTinyBasicSlot(slot);
 }
 
 bool EditTinyBasicProgram(const char* name) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
 #ifndef TINYBASIC_HOST_TEST
   const int slot = load_tinybasic_program_from_store(name, false);
   if(slot < 0) return false;
@@ -1780,6 +1822,10 @@ bool EditTinyBasicProgram(const char* name) {
 }
 
 bool RunTinyBasicProgram(const char* name) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
 #ifndef TINYBASIC_HOST_TEST
   const int slot = load_tinybasic_program_from_store(name);
 #else
@@ -1817,6 +1863,10 @@ static constexpr t_punct RU_TB_CLEAR_PUNCT = {.size = 15, .action = &TinyBASIC_c
 #endif
 
 bool TinyBASIC_menu_select(void) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
   t_punct* items[] = {
 #ifndef TINYBASIC_HOST_TEST
     (t_punct*) (tinybasic_language_is_ru() ? &RU_TB_EDIT_PUNCT : &TB_EDIT_PUNCT),

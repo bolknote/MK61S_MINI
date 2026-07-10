@@ -25,6 +25,14 @@ namespace usb_mass_storage {
 static USBD_HandleTypeDef usb_device;
 static bool initialized = false;
 
+static bool is_initialized(void) {
+  return __atomic_load_n(&initialized, __ATOMIC_ACQUIRE);
+}
+
+static void set_initialized(bool value) {
+  __atomic_store_n(&initialized, value, __ATOMIC_RELEASE);
+}
+
 enum class DeferredWriteState : u8 {
   EMPTY,
   PENDING,
@@ -34,7 +42,7 @@ enum class DeferredWriteState : u8 {
 };
 
 struct DeferredWrite {
-  volatile DeferredWriteState state;
+  DeferredWriteState state;
   u32 block_addr;
   u16 block_len;
   u8 data[MSC_MEDIA_PACKET];
@@ -42,10 +50,18 @@ struct DeferredWrite {
 
 static DeferredWrite deferred_write = {DeferredWriteState::EMPTY, 0, 0, {0}};
 
+static DeferredWriteState deferred_state(void) {
+  return __atomic_load_n(&deferred_write.state, __ATOMIC_ACQUIRE);
+}
+
+static void set_deferred_state(DeferredWriteState state) {
+  __atomic_store_n(&deferred_write.state, state, __ATOMIC_RELEASE);
+}
+
 static void reset_deferred_write(void) {
-  deferred_write.state = DeferredWriteState::EMPTY;
   deferred_write.block_addr = 0;
   deferred_write.block_len = 0;
+  set_deferred_state(DeferredWriteState::EMPTY);
 }
 
 static u8 string_desc[USBD_MAX_STR_DESC_SIZ];
@@ -163,7 +179,7 @@ static int8_t storage_capacity(uint8_t lun, uint32_t* block_num, uint16_t* block
 
 static int8_t storage_ready(uint8_t lun) {
   (void) lun;
-  return initialized ? 0 : -1;
+  return is_initialized() ? 0 : -1;
 }
 
 static int8_t storage_write_protected(uint8_t lun) {
@@ -181,7 +197,7 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
   const u32 data_len = (u32) block_len * virtual_fat::SECTOR_SIZE;
   if(buf == NULL || block_len == 0 || data_len > sizeof(deferred_write.data)) return USBD_MSC_STORAGE_ERROR;
 
-  const DeferredWriteState state = deferred_write.state;
+  const DeferredWriteState state = deferred_state();
   if(state == DeferredWriteState::COMPLETE_OK || state == DeferredWriteState::COMPLETE_ERROR) {
     if(deferred_write.block_addr != block_addr || deferred_write.block_len != block_len) {
       reset_deferred_write();
@@ -199,7 +215,7 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
   deferred_write.block_addr = block_addr;
   deferred_write.block_len = block_len;
   // Publish the state last: service() must never observe a half-copied block.
-  deferred_write.state = DeferredWriteState::PENDING;
+  set_deferred_state(DeferredWriteState::PENDING);
   return USBD_MSC_STORAGE_BUSY;
 }
 
@@ -234,28 +250,34 @@ static USBD_StorageTypeDef storage = {
 };
 
 bool init(void) {
-  if(initialized) return true;
+  if(is_initialized()) return true;
 
   reset_deferred_write();
-  virtual_fat::reset_session();
+  if(!virtual_fat::reset_session()) return false;
 
-  if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) return false;
+  if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) {
+    virtual_fat::end_session();
+    return false;
+  }
   if(USBD_RegisterClass(&usb_device, USBD_MSC_CLASS) != USBD_OK) {
     (void) USBD_DeInit(&usb_device);
     memset(&usb_device, 0, sizeof(usb_device));
+    virtual_fat::end_session();
     return false;
   }
   if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) {
     (void) USBD_DeInit(&usb_device);
     memset(&usb_device, 0, sizeof(usb_device));
+    virtual_fat::end_session();
     return false;
   }
 
-  initialized = true;
+  set_initialized(true);
   if(USBD_Start(&usb_device) != USBD_OK) {
-    initialized = false;
+    set_initialized(false);
     (void) USBD_DeInit(&usb_device);
     memset(&usb_device, 0, sizeof(usb_device));
+    virtual_fat::end_session();
     return false;
   }
 
@@ -263,13 +285,16 @@ bool init(void) {
 }
 
 void deinit(void) {
-  if(!initialized) return;
+  if(!is_initialized()) {
+    virtual_fat::end_session();
+    return;
+  }
   // Stop USB first: its interrupt drives the same SPI flash, and a storage
   // callback racing this flush would corrupt both transfers.
-  initialized = false;
+  set_initialized(false);
   (void) USBD_Stop(&usb_device);
-  if(deferred_write.state == DeferredWriteState::PENDING) {
-    deferred_write.state = DeferredWriteState::PROCESSING;
+  if(deferred_state() == DeferredWriteState::PENDING) {
+    set_deferred_state(DeferredWriteState::PROCESSING);
     (void) virtual_fat::write_sectors(deferred_write.block_addr, deferred_write.data, deferred_write.block_len);
   }
   reset_deferred_write();
@@ -277,22 +302,23 @@ void deinit(void) {
   (void) virtual_fat::flush_pending();
   (void) USBD_DeInit(&usb_device);
   memset(&usb_device, 0, sizeof(usb_device));
+  virtual_fat::end_session();
 }
 
 bool active(void) {
-  return initialized;
+  return is_initialized();
 }
 
 void service(void) {
-  if(!initialized || deferred_write.state != DeferredWriteState::PENDING) return;
+  if(!is_initialized() || deferred_state() != DeferredWriteState::PENDING) return;
 
-  deferred_write.state = DeferredWriteState::PROCESSING;
+  set_deferred_state(DeferredWriteState::PROCESSING);
   const bool ok = virtual_fat::write_sectors(
     deferred_write.block_addr,
     deferred_write.data,
     deferred_write.block_len
   );
-  deferred_write.state = ok ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR;
+  set_deferred_state(ok ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR);
 
   // This re-enters storage_write(), which consumes COMPLETE_* and lets the BOT
   // state machine acknowledge the block or return WRITE_FAULT to the host.

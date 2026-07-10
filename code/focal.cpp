@@ -277,8 +277,26 @@ static FocalRuntime& focal_runtime(void) {
 }
 #else
 static_assert(sizeof(FocalRuntime) <= language_workspace::SIZE, "FOCAL runtime does not fit language workspace");
+
+class FocalWorkspaceScope {
+  public:
+    FocalWorkspaceScope(void)
+      : lease(language_workspace::Owner::FOCAL, sizeof(FocalRuntime)) {
+      if(!lease.ok() || !lease.fresh()) return;
+      FocalRuntime* runtime = (FocalRuntime*) lease.data();
+      memset(runtime, 0, sizeof(*runtime));
+      runtime->focal_ast.ok = true;
+      runtime->NextFocal = -1;
+    }
+
+    bool ok(void) const { return lease.ok(); }
+
+  private:
+    language_workspace::Lease lease;
+};
+
 static FocalRuntime& focal_runtime(void) {
-  void* memory = language_workspace::acquire(language_workspace::Owner::FOCAL, sizeof(FocalRuntime));
+  void* memory = language_workspace::data(language_workspace::Owner::FOCAL);
   return *((FocalRuntime*) memory);
 }
 #endif
@@ -1853,6 +1871,10 @@ static void display_focal_saved(const FocalProgram& program) {
 }
 
 bool CompileFocal(char* program) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
   const int slot = find_free_program();
   if(slot < 0) return focal_error("FULL?");
 #ifndef FOCAL_HOST_TEST
@@ -1890,6 +1912,10 @@ static bool compile_program_slot(int slot) {
 }
 
 void RunFocal(int FocalN) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return;
+#endif
   if(!compile_program_slot(FocalN)) return;
   focal_trace_int("RUN slot=", FocalN);
   focal_trace_int("RUN lines=", focal_ast.line_count);
@@ -1917,6 +1943,10 @@ void RunFocal(int FocalN) {
 
 bool RunFocalProgram(const char* name) {
 #ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
+#ifndef FOCAL_HOST_TEST
   const int slot = load_focal_program_from_store(name);
 #else
   const int slot = find_program_by_name(name);
@@ -1932,6 +1962,10 @@ bool FocalIsReady(void) {
 }
 
 void InitFocal(void) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return;
+#endif
   memset(programs, 0, sizeof(programs));
   focal_ast_reset(focal_ast);
   focal_clear_vars();
@@ -2077,6 +2111,10 @@ static int select_focal_program(bool allow_new) {
 }
 
 bool FOCAL_library_select(void) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
   const int program = select_focal_program(false);
   if(program >= 0) {
     RunFocal(program);
@@ -2562,12 +2600,20 @@ static void EditFocalSlot(int slot) {
 }
 
 void EditFocal(void) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return;
+#endif
   const int slot = select_focal_program(true);
   if(slot < 0) return;
   EditFocalSlot(slot);
 }
 
 bool EditFocalProgram(const char* name) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
 #ifndef FOCAL_HOST_TEST
   const int slot = load_focal_program_from_store(name, false);
   if(slot < 0) return false;
@@ -2606,6 +2652,10 @@ static constexpr t_punct RU_FOCAL_CLEAR_PUNCT = {.size = 15, .action = &FOCAL_cl
 #endif
 
 bool FOCAL_menu_select(void) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+#endif
   t_punct* items[] = {
 #ifndef FOCAL_HOST_TEST
     (t_punct*) (focal_language_is_ru() ? &RU_FOCAL_EDIT_PUNCT : &FOCAL_EDIT_PUNCT),

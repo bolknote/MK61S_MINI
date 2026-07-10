@@ -66,8 +66,9 @@ MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 ```
 
 Тестовый набор проверяет BASIC, FOCAL, TinyBASIC, математический CORE-бэкенд,
-Virtual FAT и реальное устройство `program_store` через модель SPI flash с
-инъекцией ошибок записи и повреждения каталога.
+эксклюзивное владение общими runtime/scratch-буферами, Virtual FAT и реальное
+устройство `program_store` через модель SPI flash с инъекцией ошибок записи и
+повреждения каталога.
 
 Референсная сборка прошивки использует STM32 Arduino Core `2.12.0`,
 `LiquidCrystal 1.0.7` и `SPIMemory 3.4.0`. Точная матрица плат и дисплеев
