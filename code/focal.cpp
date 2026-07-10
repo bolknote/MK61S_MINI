@@ -324,8 +324,10 @@ static FocalRuntime& focal_runtime(void) {
 static u32 focal_random_state = 0x3B6B120EUL;
 static double focal_host_ask_value = 0.0;
 static bool focal_host_ask_cancelled = false;
+static int focal_host_ask_wait_count = 0;
 static bool focal_host_store_write_ok = true;
 static bool focal_host_store_remove_ok = true;
+static char focal_host_stored_source[FOCAL_SOURCE_SIZE];
 #endif
 
 static const char* focal_ast_operand(const FocalAst& ast, const FocalLine& line) {
@@ -498,6 +500,56 @@ static bool focal_streq(const char* a, const char* b) {
 static const char* focal_skip_spaces(const char* text) {
   while(focal_is_space(*text)) text++;
   return text;
+}
+
+struct FocalOperatorName {
+  FocalOp op;
+  char short_name;
+  const char* full_name;
+};
+
+static const FocalOperatorName FOCAL_OPERATOR_NAMES[] = {
+  {FocalOp::ASK,     'A', "ASK"},
+  {FocalOp::BRANCH,  'B', "BRANCH"},
+  {FocalOp::COMMENT, 'C', "COMMENT"},
+  {FocalOp::DO,      'D', "DO"},
+  {FocalOp::EXIT,    'E', "EXIT"},
+  {FocalOp::FOR,     'F', "FOR"},
+  {FocalOp::GOTO,    'G', "GOTO"},
+  {FocalOp::PRINT,   'P', "PRINT"},
+  {FocalOp::RETURN,  'R', "RETURN"},
+  {FocalOp::SET,     'S', "SET"}
+};
+
+static const FocalOperatorName* focal_operator_name(FocalOp op) {
+  for(usize i = 0; i < sizeof(FOCAL_OPERATOR_NAMES) / sizeof(FOCAL_OPERATOR_NAMES[0]); i++) {
+    if(FOCAL_OPERATOR_NAMES[i].op == op) return &FOCAL_OPERATOR_NAMES[i];
+  }
+  return NULL;
+}
+
+static bool focal_operator_from_range(const char* begin, const char* end, FocalOp& op) {
+  if(begin == NULL || end <= begin) return false;
+  const usize length = (usize) (end - begin);
+  for(usize i = 0; i < sizeof(FOCAL_OPERATOR_NAMES) / sizeof(FOCAL_OPERATOR_NAMES[0]); i++) {
+    const FocalOperatorName& name = FOCAL_OPERATOR_NAMES[i];
+    bool matches = length == 1 && focal_upper(*begin) == name.short_name;
+    const usize full_length = strlen(name.full_name);
+    if(length == full_length) {
+      matches = true;
+      for(usize j = 0; j < length; j++) {
+        if(focal_upper(begin[j]) != name.full_name[j]) {
+          matches = false;
+          break;
+        }
+      }
+    }
+    if(matches) {
+      op = name.op;
+      return true;
+    }
+  }
+  return false;
 }
 
 static void focal_copy_text(char* dst, usize dst_size, const char* src) {
@@ -759,25 +811,9 @@ static int focal_find_group_start(i16 major) {
 
 static bool focal_parse_operator(const char*& p, FocalOp& op) {
   p = focal_skip_spaces(p);
-  char word[12];
-  u8 len = 0;
-  while(focal_is_alpha(*p) && len < sizeof(word) - 1) word[len++] = focal_upper(*p++);
+  const char* begin = p;
   while(focal_is_alpha(*p)) p++;
-  word[len] = 0;
-  if(len == 0) return false;
-
-  if(focal_streq(word, "A") || focal_streq(word, "ASK")) op = FocalOp::ASK;
-  else if(focal_streq(word, "B") || focal_streq(word, "BRANCH")) op = FocalOp::BRANCH;
-  else if(focal_streq(word, "C") || focal_streq(word, "COMMENT")) op = FocalOp::COMMENT;
-  else if(focal_streq(word, "D") || focal_streq(word, "DO")) op = FocalOp::DO;
-  else if(focal_streq(word, "E") || focal_streq(word, "EXIT")) op = FocalOp::EXIT;
-  else if(focal_streq(word, "F") || focal_streq(word, "FOR")) op = FocalOp::FOR;
-  else if(focal_streq(word, "G") || focal_streq(word, "GOTO")) op = FocalOp::GOTO;
-  else if(focal_streq(word, "P") || focal_streq(word, "PRINT")) op = FocalOp::PRINT;
-  else if(focal_streq(word, "R") || focal_streq(word, "RETURN")) op = FocalOp::RETURN;
-  else if(focal_streq(word, "S") || focal_streq(word, "SET")) op = FocalOp::SET;
-  else return false;
-  return true;
+  return focal_operator_from_range(begin, p, op);
 }
 
 static FocalParseResult focal_parse_statement_text(const char* text, FocalStatement& statement) {
@@ -1232,6 +1268,91 @@ static const char* focal_find_top_level(const char* begin, const char* end, char
   return NULL;
 }
 
+struct FocalOperatorRange {
+  u16 start;
+  u16 end;
+  FocalOp op;
+};
+
+static const char* focal_skip_spaces_to(const char* p, const char* end) {
+  while(p < end && focal_is_space(*p)) p++;
+  return p;
+}
+
+static bool focal_statement_operator_range(const char* source, const char* statement_begin,
+                                           const char* line_end, FocalOperatorRange& range) {
+  const char* word_begin = focal_skip_spaces_to(statement_begin, line_end);
+  const char* word_end = word_begin;
+  while(word_end < line_end && focal_is_alpha(*word_end)) word_end++;
+  FocalOp op = FocalOp::NOP;
+  if(!focal_operator_from_range(word_begin, word_end, op)) return false;
+  range.start = (u16) (word_begin - source);
+  range.end = (u16) (word_end - source);
+  range.op = op;
+  return true;
+}
+
+static bool focal_find_next_operator_range(const char* source, u16 len, u16 from,
+                                           FocalOperatorRange& range) {
+  if(source == NULL || from > len) return false;
+  u16 line_start = 0;
+  while(line_start <= len) {
+    const u16 line_end_offset = text_editor::line_end_for_start(source, line_start, len);
+    const char* line_end = source + line_end_offset;
+    const char* p = focal_skip_spaces_to(source + line_start, line_end);
+    FocalAddress address = {};
+    if(p < line_end && focal_parse_address(p, address) && p <= line_end) {
+      FocalOperatorRange current = {};
+      if(focal_statement_operator_range(source, p, line_end, current)) {
+        while(true) {
+          if(current.start >= from) {
+            range = current;
+            return true;
+          }
+          if(current.op != FocalOp::FOR) break;
+          const char* operand_begin = source + current.end;
+          const char* semi = focal_find_top_level(operand_begin, line_end, ';');
+          if(semi == NULL || !focal_statement_operator_range(source, semi + 1, line_end, current)) break;
+        }
+      }
+    }
+    if(line_end_offset >= len) break;
+    const u16 next = text_editor::next_line_start(source, line_start, len);
+    if(next <= line_start) break;
+    line_start = next;
+  }
+  return false;
+}
+
+static bool focal_transform_operator_names(char* source, u16 capacity, bool expand) {
+  if(source == NULL || capacity == 0) return false;
+  const usize bounded_len = text_editor::bounded_length(source, capacity);
+  if(bounded_len >= capacity || bounded_len > 0xFFFFu) return false;
+  u16 len = (u16) bounded_len;
+  u16 search = 0;
+  FocalOperatorRange range = {};
+  while(focal_find_next_operator_range(source, len, search, range)) {
+    const FocalOperatorName* name = focal_operator_name(range.op);
+    if(name == NULL) return false;
+    char short_text[2] = {name->short_name, 0};
+    const char* replacement = expand ? name->full_name : short_text;
+    u16 cursor = range.end;
+    if(!text_editor::replace_range(source, len, cursor, capacity, range.start, range.end, replacement)) {
+      return false;
+    }
+    search = cursor;
+  }
+  return true;
+}
+
+static bool focal_expand_operator_names(char* source, u16 capacity) {
+  return focal_transform_operator_names(source, capacity, true);
+}
+
+static bool focal_compact_operator_names(char* source, u16 capacity) {
+  return focal_transform_operator_names(source, capacity, false);
+}
+
 static bool focal_parse_var_assignment(const char* text, int& var_index, const char*& expr_begin) {
   const char* p = focal_skip_spaces(text);
   if(!focal_is_alpha(*p)) return false;
@@ -1357,6 +1478,7 @@ static bool focal_validate_statement(FocalOp op, const char* operand) {
   const char* p = focal_skip_spaces(operand);
   switch(op) {
     case FocalOp::ASK: {
+      if(*p == 0) return true;
       FocalTarget target;
       return focal_target_only(p, target) || focal_error("VAR?");
     }
@@ -1456,6 +1578,17 @@ static FocalInputResult focal_read_number_from_keyboard(const char* target_name,
       }
     }
   }
+#endif
+}
+
+static bool focal_wait_for_key(void) {
+#ifdef FOCAL_HOST_TEST
+  focal_host_ask_wait_count++;
+  return !focal_host_ask_cancelled;
+#else
+  focal_message_i18n("ASK", "ВВОД", "Press any key", "Любая клавиша");
+  const i32 key = kbd::get_key_wait();
+  return key != KEY_ESC && key != KEY_ESC_PRESS;
 #endif
 }
 
@@ -1604,8 +1737,13 @@ static bool focal_execute_set(const char* operand) {
 
 static bool focal_execute_ask(const char* operand, bool& cancelled) {
   cancelled = false;
+  const char* p = focal_skip_spaces(operand);
+  if(*p == 0) {
+    cancelled = !focal_wait_for_key();
+    return true;
+  }
   FocalTarget target;
-  if(!focal_target_only(operand, target)) return focal_error("VAR?");
+  if(!focal_target_only(p, target)) return focal_error("VAR?");
   char name[5];
   focal_target_name(target, name, sizeof(name));
   double value = 0.0;
@@ -2056,8 +2194,9 @@ static bool focal_store_name_is_valid(const char* name) {
 
 static bool focal_persist_write(const FocalProgram& program) {
 #ifdef FOCAL_HOST_TEST
-  (void) program;
-  return focal_host_store_write_ok;
+  if(!focal_host_store_write_ok) return false;
+  focal_copy_text(focal_host_stored_source, sizeof(focal_host_stored_source), program.source);
+  return true;
 #else
   return program_store::write(program_store::ProgramType::FOCAL, program.name,
                               (const u8*) program.source, program.source_len);
@@ -2093,6 +2232,10 @@ static int load_focal_program_from_store(const char* name) {
   source[len] = 0;
   focal_trace_int("LOAD len=", len);
   focal_trace_string("LOAD source=", source);
+  if(!focal_expand_operator_names(source, sizeof(source))) {
+    focal_error("FULL?");
+    return -1;
+  }
 
   const int slot = focal_choose_program_slot(name);
   focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
@@ -2169,10 +2312,18 @@ bool CompileFocal(const char* program) {
 
   FocalProgram candidate = {};
   focal_copy_text(candidate.source, sizeof(candidate.source), program);
+  if(!focal_expand_operator_names(candidate.source, sizeof(candidate.source))) return focal_error("FULL?");
   candidate.source_len = (u16) strlen(candidate.source);
   focal_program_default_name(slot, candidate.name, sizeof(candidate.name));
   candidate.used = true;
+  if(!focal_compact_operator_names(candidate.source, sizeof(candidate.source))) return focal_error("FULL?");
+  candidate.source_len = (u16) strlen(candidate.source);
   if(!focal_persist_write(candidate)) return focal_error("FULL?");
+  if(!focal_expand_operator_names(candidate.source, sizeof(candidate.source))) {
+    (void) focal_persist_remove(candidate.name);
+    return focal_error("FULL?");
+  }
+  candidate.source_len = (u16) strlen(candidate.source);
 
   programs[slot] = candidate;
   NextFocal = (i8) slot;
@@ -2256,8 +2407,10 @@ void InitFocal(void) {
 #ifdef FOCAL_HOST_TEST
   focal_random_state = 0x3B6B120EUL;
   focal_host_ask_cancelled = false;
+  focal_host_ask_wait_count = 0;
   focal_host_store_write_ok = true;
   focal_host_store_remove_ok = true;
+  focal_host_stored_source[0] = 0;
 #endif
 }
 
@@ -2412,12 +2565,56 @@ static u16 focal_line_start_for_cursor(const char* source, u16 cursor) {
   return text_editor::line_start_for_cursor(source, cursor);
 }
 
+static bool focal_operator_range_for_cursor(const char* source, u16 len, u16 cursor,
+                                            FocalOperatorRange& atomic_range) {
+  u16 search = 0;
+  FocalOperatorRange range = {};
+  while(focal_find_next_operator_range(source, len, search, range)) {
+    u16 end = range.end;
+    while(end < len && focal_is_space(source[end])) end++;
+    if(cursor > range.start && cursor <= end) {
+      atomic_range = range;
+      atomic_range.end = end;
+      return true;
+    }
+    if(range.start >= cursor) break;
+    search = range.end;
+  }
+  return false;
+}
+
 static bool focal_editor_move_cursor_left(const char* source, u16& cursor) {
+  const u16 len = source == NULL ? 0 : (u16) strlen(source);
+  FocalOperatorRange range = {};
+  if(focal_operator_range_for_cursor(source, len, cursor, range)) {
+    cursor = range.start;
+    return true;
+  }
   return text_editor::move_cursor_left(source, cursor);
 }
 
 static bool focal_editor_move_cursor_right(const char* source, u16 len, u16& cursor) {
+  FocalOperatorRange range = {};
+  u16 search = 0;
+  while(focal_find_next_operator_range(source, len, search, range)) {
+    u16 end = range.end;
+    while(end < len && focal_is_space(source[end])) end++;
+    if(cursor >= range.start && cursor < end) {
+      cursor = end;
+      return true;
+    }
+    if(range.start > cursor) break;
+    search = range.end;
+  }
   return text_editor::move_cursor_right(source, len, cursor);
+}
+
+static bool focal_editor_backspace(char* source, u16& len, u16& cursor, u16 capacity) {
+  FocalOperatorRange range = {};
+  if(focal_operator_range_for_cursor(source, len, cursor, range)) {
+    return text_editor::replace_range(source, len, cursor, capacity, range.start, range.end, "");
+  }
+  return text_editor::backspace(source, len, cursor);
 }
 
 static bool focal_editor_move_cursor_line(const char* source, u16 len, u16& cursor, int delta) {
@@ -2630,6 +2827,16 @@ static bool focal_editor_apply_alpha_macro_hook(char* source, u16& len, u16& cur
   return focal_editor_apply_expr_macro(source, len, cursor, capacity, key_code);
 }
 
+static bool focal_editor_move_cursor_horizontal_hook(const char* source, u16 len, u16& cursor, int delta, void*) {
+  if(delta < 0) return focal_editor_move_cursor_left(source, cursor);
+  if(delta > 0) return focal_editor_move_cursor_right(source, len, cursor);
+  return false;
+}
+
+static bool focal_editor_backspace_hook(char* source, u16& len, u16& cursor, u16 capacity, void*) {
+  return focal_editor_backspace(source, len, cursor, capacity);
+}
+
 static const text_editor::KeyMap FOCAL_EDITOR_KEYS = {
   (i32) KEY_LEFT,
   KEY_LEFT_PRESS,
@@ -2649,6 +2856,8 @@ static const text_editor::KeyMap FOCAL_EDITOR_KEYS = {
 static const text_editor::Hooks FOCAL_EDITOR_HOOKS = {
   &focal_editor_insert_text_hook,
   &focal_editor_apply_alpha_macro_hook,
+  &focal_editor_move_cursor_horizontal_hook,
+  &focal_editor_backspace_hook,
   NULL
 };
 
@@ -2820,11 +3029,19 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
 
   FocalProgram candidate = {};
   focal_copy_text(candidate.source, sizeof(candidate.source), source);
+  if(!focal_expand_operator_names(candidate.source, sizeof(candidate.source))) return focal_error("FULL?");
   candidate.source_len = (u16) strlen(candidate.source);
   focal_copy_text(candidate.name, sizeof(candidate.name), store_name);
   candidate.used = true;
 
+  if(!focal_compact_operator_names(candidate.source, sizeof(candidate.source))) return focal_error("FULL?");
+  candidate.source_len = (u16) strlen(candidate.source);
   if(!focal_persist_write(candidate)) return focal_error("FULL?");
+  if(!focal_expand_operator_names(candidate.source, sizeof(candidate.source))) {
+    (void) focal_persist_remove(candidate.name);
+    return focal_error("FULL?");
+  }
+  candidate.source_len = (u16) strlen(candidate.source);
   if(old_name[0] != 0 && !focal_streq(old_name, candidate.name) && !focal_persist_remove(old_name)) {
     (void) focal_persist_remove(candidate.name);
     return focal_error("FULL?");
@@ -2868,7 +3085,7 @@ static void EditFocalSlot(int slot) {
     if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
         (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(editor.sms);
-      text_editor::backspace(editor.source, editor.len, editor.cursor);
+      focal_editor_backspace(editor.source, editor.len, editor.cursor, editor.capacity);
       editor.shift = text_editor::Shift::NONE;
       dirty = true;
       continue;
@@ -3044,6 +3261,20 @@ extern "C" const char* FocalTestProgramSource(int slot) {
   return (slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) ? programs[slot].source : "";
 }
 
+extern "C" const char* FocalTestStoredProgramSource(void) {
+#ifdef FOCAL_HOST_TEST
+  return focal_host_stored_source;
+#else
+  return "";
+#endif
+}
+
+extern "C" bool FocalTestExpandOperators(const char* input, char* out, int size) {
+  if(input == NULL || out == NULL || size <= 0 || size > 0xFFFF || strlen(input) >= (usize) size) return false;
+  focal_copy_text(out, (usize) size, input);
+  return focal_expand_operator_names(out, (u16) size);
+}
+
 extern "C" void FocalTestSetAskValue(double value) {
 #ifdef FOCAL_HOST_TEST
   focal_host_ask_value = value;
@@ -3057,6 +3288,14 @@ extern "C" void FocalTestSetAskCancelled(bool cancelled) {
   focal_host_ask_cancelled = cancelled;
 #else
   (void) cancelled;
+#endif
+}
+
+extern "C" int FocalTestAskWaitCount(void) {
+#ifdef FOCAL_HOST_TEST
+  return focal_host_ask_wait_count;
+#else
+  return 0;
 #endif
 }
 
@@ -3191,7 +3430,7 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
     if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
         (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(editor.sms);
-      text_editor::backspace(editor.source, editor.len, editor.cursor);
+      focal_editor_backspace(editor.source, editor.len, editor.cursor, editor.capacity);
       editor.shift = text_editor::Shift::NONE;
       continue;
     }

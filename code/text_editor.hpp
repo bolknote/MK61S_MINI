@@ -57,6 +57,8 @@ struct KeyMap {
 struct Hooks {
   const char* (*insert_text_for_key)(Shift shift, i32 key_code, const char* source, u16 cursor, void* context);
   bool (*apply_alpha_macro)(char* source, u16& len, u16& cursor, u16 capacity, i32 key_code, void* context);
+  bool (*move_cursor_horizontal)(const char* source, u16 len, u16& cursor, int delta, void* context);
+  bool (*backspace)(char* source, u16& len, u16& cursor, u16 capacity, void* context);
   void* context;
 };
 
@@ -515,7 +517,11 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   }
 
   if(options.alpha_left_backspace && editor.shift == Shift::ALPHA && (key_code == keys.left || key_code == keys.left_press)) {
-    backspace(editor.source, editor.len, editor.cursor);
+    if(hooks.backspace != NULL) {
+      hooks.backspace(editor.source, editor.len, editor.cursor, editor.capacity, hooks.context);
+    } else {
+      backspace(editor.source, editor.len, editor.cursor);
+    }
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
   }
@@ -532,15 +538,27 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   }
 
   if(!shifted_key && (key_code == keys.left || key_code == keys.left_press)) {
-    move_cursor_left(editor.source, editor.cursor);
+    if(hooks.move_cursor_horizontal != NULL) {
+      hooks.move_cursor_horizontal(editor.source, editor.len, editor.cursor, -1, hooks.context);
+    } else {
+      move_cursor_left(editor.source, editor.cursor);
+    }
   } else if(!shifted_key && (key_code == keys.right || key_code == keys.right_press)) {
-    move_cursor_right(editor.source, editor.len, editor.cursor);
+    if(hooks.move_cursor_horizontal != NULL) {
+      hooks.move_cursor_horizontal(editor.source, editor.len, editor.cursor, 1, hooks.context);
+    } else {
+      move_cursor_right(editor.source, editor.len, editor.cursor);
+    }
   } else if(!shifted_key && key_code == keys.shg_left_press) {
     move_cursor_line(editor.source, editor.len, editor.cursor, -1);
   } else if(!shifted_key && key_code == keys.shg_right_press) {
     move_cursor_line(editor.source, editor.len, editor.cursor, 1);
   } else if(!shifted_key && key_code == options.backspace_key) {
-    backspace(editor.source, editor.len, editor.cursor);
+    if(hooks.backspace != NULL) {
+      hooks.backspace(editor.source, editor.len, editor.cursor, editor.capacity, hooks.context);
+    } else {
+      backspace(editor.source, editor.len, editor.cursor);
+    }
   } else if(!shifted_key && key_code == 0) {
     clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
     sms_reset(editor.sms);

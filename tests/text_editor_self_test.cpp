@@ -86,7 +86,7 @@ void test_hook_output_is_sanitized(void) {
   editor.shift = text_editor::Shift::ALPHA;
 
   const text_editor::KeyMap keys = {};
-  const text_editor::Hooks hooks = {NULL, &corrupting_macro, NULL};
+  const text_editor::Hooks hooks = {NULL, &corrupting_macro, NULL, NULL, NULL};
   assert(text_editor::handle_key(editor, keys, hooks, 99, 0) == text_editor::KeyResult::DIRTY);
   assert(editor.len == 3);
   assert(editor.cursor == 3);
@@ -105,7 +105,7 @@ void test_cx_clears_only_current_line_then_removes_it(void) {
   editor.cursor = 6;
 
   const text_editor::KeyMap keys = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
-  const text_editor::Hooks hooks = {NULL, NULL, NULL};
+  const text_editor::Hooks hooks = {NULL, NULL, NULL, NULL, NULL};
   assert(text_editor::handle_key(editor, keys, hooks, 0, 0) == text_editor::KeyResult::DIRTY);
   assert(strcmp(source, "ONE\n\nTHREE") == 0);
   assert(editor.cursor == 4);

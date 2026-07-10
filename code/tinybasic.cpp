@@ -2083,6 +2083,8 @@ static const char* tinybasic_editor_insert_text_hook(text_editor::Shift shift, i
 static const text_editor::Hooks TB_EDITOR_HOOKS = {
   &tinybasic_editor_insert_text_hook,
   NULL,
+  NULL,
+  NULL,
   NULL
 };
 
