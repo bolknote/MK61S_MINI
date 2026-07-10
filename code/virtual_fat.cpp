@@ -1200,7 +1200,7 @@ static bool queue_committed_data_sector(const program_store::Entry& entry,
 static u16 max_len_for_type(program_store::ProgramType type) {
   switch(type) {
     case program_store::ProgramType::MK61:  return program_store::MAX_MK61_TEXT_SIZE;
-    case program_store::ProgramType::FOCAL: return 639;
+    case program_store::ProgramType::FOCAL: return 1023;
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC: return 1023;
 #endif

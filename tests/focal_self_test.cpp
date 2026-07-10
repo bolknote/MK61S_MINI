@@ -85,6 +85,18 @@ static void test_compile_rejects_basic_aliases(void) {
 
 static void test_compile_rejects_truncation_and_malformed_statements(void) {
   FocalTestReset();
+  std::string expanded;
+  for(int i = 1; i <= 45; i++) {
+    char line[32];
+    std::snprintf(line, sizeof(line), "%d.10 C PADDING\n", i);
+    expanded += line;
+  }
+  expanded += "46.10 E";
+  CHECK(expanded.size() > 639);
+  CHECK(expanded.size() < 1024);
+  CHECK(FocalTestCompile(expanded.c_str()));
+
+  FocalTestReset();
   std::string long_line = "1.10 S A=1";
   for(int i = 0; i < 60; i++) long_line += "+0";
   long_line += "+2\n1.20 E";
@@ -524,7 +536,7 @@ static void test_run_status_ask_input_and_transactional_save(void) {
 static void test_compact_ast_one_slot_and_literal_whitespace(void) {
   FocalTestReset();
   CHECK(FocalTestAstSize() < 2048);
-  CHECK(FocalTestRuntimeSize() < 3072);
+  CHECK(FocalTestRuntimeSize() < 4096);
 
   const int slot = add_program("1.10 P \"  A  \"\n1.20 E");
   CHECK(FocalTestAddProgram("2.10 E") < 0);
@@ -534,7 +546,7 @@ static void test_compact_ast_one_slot_and_literal_whitespace(void) {
   CHECK(FocalTestLcdLine(0)[2] == 'A');
 
   FocalTestReset();
-  std::string oversized(640, 'X');
+  std::string oversized(1024, 'X');
   CHECK(!FocalTestStoreDraft(oversized.c_str(), "TOO_BIG"));
   CHECK(FocalTestProgramSource(0)[0] == 0);
 }
