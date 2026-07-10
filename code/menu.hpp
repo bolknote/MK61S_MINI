@@ -64,7 +64,7 @@ namespace library_mk61 {
   extern  void  set_display_rows(u8 rows);
   extern  void  set_display_text_profile(lcd_display::TextProfile profile);
   extern  void  refresh_menu_text(void);
-  extern  void  store_settings_state(void);
+  extern  bool  store_settings_state(void);
   extern  void  defer_settings_state_save(void);
   extern  void  flush_settings_state(void);
   extern  void  poll_settings_state_save(void);
