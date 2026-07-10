@@ -15,7 +15,9 @@ enum class Owner : u8 {
   STORED_M61_MENU
 };
 
-static constexpr usize SIZE = 1792;
+// Largest transient file payload. Menu-only records use a compact view so
+// they do not force this pool above the storage format's maximum file size.
+static constexpr usize SIZE = 1536;
 
 class [[nodiscard]] Lease {
   public:

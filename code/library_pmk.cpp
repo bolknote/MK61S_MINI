@@ -234,11 +234,11 @@ void  init_library(void) {
   selGame = 0;
 }
 
-int   select_from(usize COUNT, TPunct* list, i8& selector) {
+static int select_texts(usize count, const char* text, usize stride, i8& selector) {
   do {
     const int display_rows = lcd.rows();
-    const int visible_count = ((int) COUNT < display_rows) ? (int) COUNT : display_rows;
-    const int max_up = (int) COUNT - visible_count;
+    const int visible_count = ((int) count < display_rows) ? (int) count : display_rows;
+    const int max_up = (int) count - visible_count;
     const int delta = (selector + 1) - visible_count;
     int up = (delta <= 0)? 0 : delta;
     if(up > max_up) up = max_up;
@@ -253,7 +253,7 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
         } else {
           lcd.print(' ');
         }
-        lcd.print(list[real_index].text);
+        lcd.print(text + (usize) real_index * stride);
       }
       for(int i=visible_count; i < display_rows; i++) {
         lcd.setCursor(0, i);
@@ -264,7 +264,7 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
     const i32 last_key_code = kbd::get_key_wait();
     switch(last_key_code) {
       case KEY_RIGHT_PRESS:
-          if((isize) selector < (isize) (COUNT-1)) selector++;
+          if((isize) selector < (isize) (count-1)) selector++;
         break;
       case KEY_LEFT_PRESS:
           if(selector > 0) selector--;
@@ -276,6 +276,10 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
     }
 
   } while(true);
+}
+
+int   select_from(usize COUNT, TPunct* list, i8& selector) {
+  return select_texts(COUNT, list[0].text, sizeof(list[0]), selector);
 }
 
 void memory_mode_error(void) {
@@ -343,18 +347,22 @@ int   select_program(void) {
   return select_from(COUNT_PROGRAMS, programs, selProgram);
 }
 
-static_assert(
-  shared_scratch::SIZE >= sizeof(TPunct) * program_store::MAX_ENTRIES,
-  "shared scratch must fit stored M61 menu items"
-);
+struct StoredM61Item {
+  // select_texts() only reads the label. Keeping the built-in program offsets
+  // here would waste 12 bytes per stored-file entry and enlarge shared scratch.
+  char text[program_store::NAME_SIZE];
+};
 
-static usize fill_stored_m61_items(TPunct* stored_m61_items, usize capacity) {
+static_assert(shared_scratch::SIZE >= sizeof(StoredM61Item) * program_store::MAX_ENTRIES,
+              "shared scratch must fit stored M61 menu items");
+
+static usize fill_stored_m61_items(StoredM61Item* stored_m61_items, usize capacity) {
   const int count = program_store::count(program_store::ProgramType::MK61);
   const usize limit = (count > (int) program_store::MAX_ENTRIES) ? program_store::MAX_ENTRIES : (usize) count;
   const usize item_count = (limit > capacity) ? capacity : limit;
   for(usize i = 0; i < item_count; i++) {
     program_store::Entry entry;
-    memset(&stored_m61_items[i], 0, sizeof(stored_m61_items[i]));
+    memset(stored_m61_items[i].text, 0, sizeof(stored_m61_items[i].text));
     if(!program_store::entry(program_store::ProgramType::MK61, (int) i, entry)) continue;
     memset(stored_m61_items[i].text, ' ', sizeof(stored_m61_items[i].text) - 1);
     stored_m61_items[i].text[sizeof(stored_m61_items[i].text) - 1] = 0;
@@ -368,12 +376,12 @@ static usize fill_stored_m61_items(TPunct* stored_m61_items, usize capacity) {
 int   select_game(void) {
   shared_scratch::Lease scratch(
     shared_scratch::Owner::STORED_M61_MENU,
-    sizeof(TPunct) * program_store::MAX_ENTRIES
+    sizeof(StoredM61Item) * program_store::MAX_ENTRIES
   );
   if(!scratch.ok()) return -1;
 
-  TPunct* stored_m61_items = (TPunct*) scratch.data();
-  const usize count = fill_stored_m61_items(stored_m61_items, scratch.size() / sizeof(TPunct));
+  StoredM61Item* stored_m61_items = (StoredM61Item*) scratch.data();
+  const usize count = fill_stored_m61_items(stored_m61_items, scratch.size() / sizeof(StoredM61Item));
   if(count == 0) {
     {
       MK61DisplayUpdate update(lcd);
@@ -385,7 +393,7 @@ int   select_game(void) {
     return -1;
   }
   if(selGame >= (i8) count) selGame = (i8) (count - 1);
-  return select_from(count, stored_m61_items, selGame);
+  return select_texts(count, stored_m61_items[0].text, sizeof(stored_m61_items[0]), selGame);
 }
 
 bool  load_program(usize nProg_for_load) {
