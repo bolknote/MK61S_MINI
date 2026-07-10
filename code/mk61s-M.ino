@@ -343,7 +343,7 @@ void key_press_handler(i32 keycode) {
 
   const TMK61_cross_key cross_key = KeyPairs[keycode];  // трансляция кода клавиши в координаты клавиши mk61
 
-  dbg(KBD, "x,y = ", cross_key.x, ",", cross_key.y); dbghex(KBD, " scancode $", keycode); dbgln(KBD, " -> mk61")
+  dbg(KBD, "x,y = ", cross_key.x, ",", cross_key.y); dbghex(KBD, " scancode $", keycode); dbgln(KBD, " -> mk61");
 
   //keyboard.reset_scan_line();  // Для ускорения опроса клавиатуры - переход к первой линии сканирования
   

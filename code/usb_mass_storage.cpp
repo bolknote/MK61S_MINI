@@ -1,6 +1,7 @@
 #include "usb_mass_storage.hpp"
 
 #include "rust_types.h"
+#include "msc_scsi_safety.h"
 #include "virtual_fat.hpp"
 
 #include <Arduino.h>
@@ -25,6 +26,7 @@ namespace usb_mass_storage {
 static USBD_HandleTypeDef usb_device;
 static bool initialized = false;
 static bool session_open = false;
+static bool device_configured = false;
 
 static bool is_initialized(void) {
   return __atomic_load_n(&initialized, __ATOMIC_ACQUIRE);
@@ -32,6 +34,13 @@ static bool is_initialized(void) {
 
 static void set_initialized(bool value) {
   __atomic_store_n(&initialized, value, __ATOMIC_RELEASE);
+}
+
+static void release_usb_device(void) {
+  if(!device_configured) return;
+  (void) USBD_DeInit(&usb_device);
+  memset(&usb_device, 0, sizeof(usb_device));
+  device_configured = false;
 }
 
 enum class DeferredWriteState : u8 {
@@ -235,13 +244,13 @@ static USBD_DescriptorsTypeDef descriptors = {
 };
 
 static int8_t storage_init(uint8_t lun) {
-  (void) lun;
+  if(lun != 0) return USBD_MSC_STORAGE_ERROR;
   reset_deferred_io();
   return USBD_MSC_STORAGE_OK;
 }
 
 static int8_t storage_capacity(uint8_t lun, uint32_t* block_num, uint16_t* block_size) {
-  (void) lun;
+  if(lun != 0 || block_num == NULL || block_size == NULL) return USBD_MSC_STORAGE_ERROR;
   const u32 sectors = virtual_fat::sector_count();
   *block_num = sectors;
   *block_size = virtual_fat::SECTOR_SIZE;
@@ -249,19 +258,23 @@ static int8_t storage_capacity(uint8_t lun, uint32_t* block_num, uint16_t* block
 }
 
 static int8_t storage_ready(uint8_t lun) {
-  (void) lun;
+  if(lun != 0) return USBD_MSC_STORAGE_ERROR;
   return is_initialized() ? 0 : -1;
 }
 
 static int8_t storage_write_protected(uint8_t lun) {
-  (void) lun;
+  if(lun != 0) return 1;
   return 0;
 }
 
 static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
-  (void) lun;
-  const u32 data_len = (u32) block_len * virtual_fat::SECTOR_SIZE;
-  if(buf == NULL || block_len == 0 || data_len > MSC_MEDIA_PACKET) return USBD_MSC_STORAGE_ERROR;
+  u32 data_len = 0;
+  if(lun != 0 || buf == NULL || block_len == 0 ||
+     !msc_scsi_transfer_bytes(block_len, virtual_fat::SECTOR_SIZE, &data_len) ||
+     data_len > MSC_MEDIA_PACKET ||
+     !msc_scsi_range_is_valid(virtual_fat::sector_count(), block_addr, block_len)) {
+    return USBD_MSC_STORAGE_ERROR;
+  }
 
   const DeferredReadState state = deferred_read_state();
   if(state == DeferredReadState::COMPLETE_OK || state == DeferredReadState::COMPLETE_ERROR) {
@@ -286,9 +299,13 @@ static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint1
 }
 
 static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
-  (void) lun;
-  const u32 data_len = (u32) block_len * virtual_fat::SECTOR_SIZE;
-  if(buf == NULL || block_len == 0 || data_len > sizeof(deferred_write.data)) return USBD_MSC_STORAGE_ERROR;
+  u32 data_len = 0;
+  if(lun != 0 || buf == NULL || block_len == 0 ||
+     !msc_scsi_transfer_bytes(block_len, virtual_fat::SECTOR_SIZE, &data_len) ||
+     data_len > sizeof(deferred_write.data) ||
+     !msc_scsi_range_is_valid(virtual_fat::sector_count(), block_addr, block_len)) {
+    return USBD_MSC_STORAGE_ERROR;
+  }
 
   const DeferredWriteState state = deferred_state();
   if(state == DeferredWriteState::COMPLETE_OK || state == DeferredWriteState::COMPLETE_ERROR) {
@@ -345,10 +362,14 @@ static USBD_StorageTypeDef storage = {
 bool init(void) {
   if(is_initialized()) return true;
   if(session_open) {
-    set_initialized(true);
-    if(USBD_Start(&usb_device) == USBD_OK) return true;
-    set_initialized(false);
-    return false;
+    if(device_configured) {
+      set_initialized(true);
+      if(USBD_Start(&usb_device) == USBD_OK) return true;
+      set_initialized(false);
+      return false;
+    }
+    virtual_fat::end_session();
+    session_open = false;
   }
 
   reset_deferred_io();
@@ -360,16 +381,15 @@ bool init(void) {
     session_open = false;
     return false;
   }
+  device_configured = true;
   if(USBD_RegisterClass(&usb_device, USBD_MSC_CLASS) != USBD_OK) {
-    (void) USBD_DeInit(&usb_device);
-    memset(&usb_device, 0, sizeof(usb_device));
+    release_usb_device();
     virtual_fat::end_session();
     session_open = false;
     return false;
   }
   if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) {
-    (void) USBD_DeInit(&usb_device);
-    memset(&usb_device, 0, sizeof(usb_device));
+    release_usb_device();
     virtual_fat::end_session();
     session_open = false;
     return false;
@@ -378,8 +398,7 @@ bool init(void) {
   set_initialized(true);
   if(USBD_Start(&usb_device) != USBD_OK) {
     set_initialized(false);
-    (void) USBD_DeInit(&usb_device);
-    memset(&usb_device, 0, sizeof(usb_device));
+    release_usb_device();
     virtual_fat::end_session();
     session_open = false;
     return false;
@@ -392,6 +411,7 @@ bool deinit(void) {
   if(!is_initialized()) {
     if(!session_open) return true;
     if(!virtual_fat::flush_pending()) return false;
+    release_usb_device();
     virtual_fat::end_session();
     session_open = false;
     return true;
@@ -410,12 +430,13 @@ bool deinit(void) {
   if(!virtual_fat::flush_pending()) {
     // Keep the session and reconnect the device. Discarding the language
     // workspace here would lose writes that the host has already submitted.
-    set_initialized(true);
-    if(USBD_Start(&usb_device) != USBD_OK) set_initialized(false);
+    if(device_configured) {
+      set_initialized(true);
+      if(USBD_Start(&usb_device) != USBD_OK) set_initialized(false);
+    }
     return false;
   }
-  (void) USBD_DeInit(&usb_device);
-  memset(&usb_device, 0, sizeof(usb_device));
+  release_usb_device();
   virtual_fat::end_session();
   session_open = false;
   return true;

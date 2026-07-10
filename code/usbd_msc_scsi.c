@@ -112,7 +112,7 @@ static int8_t SCSI_ProcessRead(USBD_HandleTypeDef *pdev, uint8_t lun);
 static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun);
 
 static int8_t SCSI_UpdateBotData(USBD_MSC_BOT_HandleTypeDef *hmsc,
-                                 uint8_t *pBuff, uint16_t length);
+                                 const uint8_t *pBuff, uint16_t length);
 /**
   * @}
   */
@@ -134,9 +134,16 @@ static int8_t SCSI_UpdateBotData(USBD_MSC_BOT_HandleTypeDef *hmsc,
 int8_t SCSI_ProcessCmd(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *cmd)
 {
   int8_t ret;
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc;
 
-  if (hmsc == NULL)
+  if ((pdev == NULL) || (cmd == NULL) || (pdev->classId >= USBD_MAX_SUPPORTED_CLASS))
+  {
+    return -1;
+  }
+  hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+
+  if ((hmsc == NULL) || (lun > hmsc->max_lun) ||
+      (pdev->pUserData[pdev->classId] == NULL))
   {
     return -1;
   }
@@ -312,6 +319,10 @@ static int8_t SCSI_Inquiry(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *param
     pPage = (uint8_t *) & ((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId]) \
             ->pInquiry[lun * STANDARD_INQUIRY_DATA_LEN];
     len = (uint16_t)pPage[4] + 5U;
+    if (len > STANDARD_INQUIRY_DATA_LEN)
+    {
+      len = STANDARD_INQUIRY_DATA_LEN;
+    }
 
     if (params[4] <= len)
     {
@@ -499,6 +510,7 @@ static int8_t SCSI_ModeSense6(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *pa
   }
 
   /* Check If media is write-protected */
+  MSC_Mode_Sense6_data[2] &= 0x7FU;
   if (((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->IsWriteProtected(lun) != 0)
   {
     MSC_Mode_Sense6_data[2] |= 0x80U;
@@ -527,6 +539,7 @@ static int8_t SCSI_ModeSense10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *p
   UNUSED(lun);
   USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
   uint16_t len = MODE_SENSE10_LEN;
+  const uint16_t allocation_length = ((uint16_t)params[7] << 8) | params[8];
 
   if (hmsc == NULL)
   {
@@ -534,14 +547,15 @@ static int8_t SCSI_ModeSense10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *p
   }
 
   /* Check If media is write-protected */
+  MSC_Mode_Sense10_data[3] &= 0x7FU;
   if (((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->IsWriteProtected(lun) != 0)
   {
     MSC_Mode_Sense10_data[3] |= 0x80U;
   }
 
-  if (params[8] <= len)
+  if (allocation_length <= len)
   {
-    len = params[8];
+    len = allocation_length;
   }
 
   (void)SCSI_UpdateBotData(hmsc, MSC_Mode_Sense10_data, len);
@@ -618,7 +632,14 @@ static int8_t SCSI_RequestSense(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *
 void SCSI_SenseCode(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t sKey, uint8_t ASC)
 {
   UNUSED(lun);
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc;
+  uint8_t next_tail;
+
+  if ((pdev == NULL) || (pdev->classId >= USBD_MAX_SUPPORTED_CLASS))
+  {
+    return;
+  }
+  hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
 
   if (hmsc == NULL)
   {
@@ -628,12 +649,13 @@ void SCSI_SenseCode(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t sKey, uint8_t
   hmsc->scsi_sense[hmsc->scsi_sense_tail].Skey = sKey;
   hmsc->scsi_sense[hmsc->scsi_sense_tail].w.b.ASC = ASC;
   hmsc->scsi_sense[hmsc->scsi_sense_tail].w.b.ASCQ = 0U;
-  hmsc->scsi_sense_tail++;
-
-  if (hmsc->scsi_sense_tail == SENSE_LIST_DEEPTH)
+  next_tail = msc_scsi_ring_next(hmsc->scsi_sense_tail, SENSE_LIST_DEEPTH);
+  if (next_tail == hmsc->scsi_sense_head)
   {
-    hmsc->scsi_sense_tail = 0U;
+    hmsc->scsi_sense_head = msc_scsi_ring_next(hmsc->scsi_sense_head,
+                                                SENSE_LIST_DEEPTH);
   }
+  hmsc->scsi_sense_tail = next_tail;
 }
 
 
@@ -1209,7 +1231,7 @@ static int8_t SCSI_ProcessRead(USBD_HandleTypeDef *pdev, uint8_t lun)
   hmsc->scsi_blk_len -= (len / hmsc->scsi_blk_size);
 
   /* case 6 : Hi = Di */
-  hmsc->csw.dDataResidue -= len;
+  hmsc->csw.dDataResidue = msc_bot_residue_after_transfer(hmsc->csw.dDataResidue, len);
 
   if (hmsc->scsi_blk_len == 0U)
   {
@@ -1222,7 +1244,7 @@ static int8_t SCSI_ProcessRead(USBD_HandleTypeDef *pdev, uint8_t lun)
 int8_t SCSI_ContinueRead(USBD_HandleTypeDef *pdev)
 {
   USBD_MSC_BOT_HandleTypeDef *hmsc;
-  if (pdev == NULL)
+  if ((pdev == NULL) || (pdev->classId >= USBD_MAX_SUPPORTED_CLASS))
   {
     return -1;
   }
@@ -1279,7 +1301,7 @@ static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun)
   hmsc->scsi_blk_len -= (len / hmsc->scsi_blk_size);
 
   /* case 12 : Ho = Do */
-  hmsc->csw.dDataResidue -= len;
+  hmsc->csw.dDataResidue = msc_bot_residue_after_transfer(hmsc->csw.dDataResidue, len);
 
   if (hmsc->scsi_blk_len == 0U)
   {
@@ -1299,7 +1321,7 @@ static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun)
 int8_t SCSI_ContinueWrite(USBD_HandleTypeDef *pdev)
 {
   USBD_MSC_BOT_HandleTypeDef *hmsc;
-  if (pdev == NULL)
+  if ((pdev == NULL) || (pdev->classId >= USBD_MAX_SUPPORTED_CLASS))
   {
     return -1;
   }
@@ -1314,7 +1336,7 @@ int8_t SCSI_ContinueWrite(USBD_HandleTypeDef *pdev)
 int8_t SCSI_CompleteSync(USBD_HandleTypeDef *pdev, uint8_t success)
 {
   USBD_MSC_BOT_HandleTypeDef *hmsc;
-  if (pdev == NULL)
+  if ((pdev == NULL) || (pdev->classId >= USBD_MAX_SUPPORTED_CLASS))
   {
     return -1;
   }
@@ -1350,14 +1372,16 @@ int8_t SCSI_CompleteSync(USBD_HandleTypeDef *pdev, uint8_t success)
   * @retval status
   */
 static int8_t SCSI_UpdateBotData(USBD_MSC_BOT_HandleTypeDef *hmsc,
-                                 uint8_t *pBuff, uint16_t length)
+                                 const uint8_t *pBuff, uint16_t length)
 {
-  uint16_t len = length;
+  uint16_t len;
 
-  if (hmsc == NULL)
+  if ((hmsc == NULL) || ((pBuff == NULL) && (length != 0U)))
   {
     return -1;
   }
+
+  len = (uint16_t)msc_scsi_copy_length(length, (uint32_t)sizeof(hmsc->bot_data));
 
   hmsc->bot_data_length = len;
 

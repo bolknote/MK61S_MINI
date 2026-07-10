@@ -40,6 +40,7 @@ EndBSPDependencies */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_msc.h"
+#include "msc_scsi_safety.h"
 
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
@@ -195,6 +196,45 @@ __ALIGN_BEGIN static uint8_t USBD_MSC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_
 uint8_t MSCInEpAdd  = MSC_EPIN_ADDR;
 uint8_t MSCOutEpAdd = MSC_EPOUT_ADDR;
 
+static uint8_t USBD_MSC_ValidContext(const USBD_HandleTypeDef *pdev)
+{
+  return (uint8_t)((pdev != NULL) && (pdev->classId < USBD_MAX_SUPPORTED_CLASS));
+}
+
+static uint8_t USBD_MSC_ValidEndpoint(uint8_t address)
+{
+  const uint8_t index = address & 0x0FU;
+  return (uint8_t)((index != 0U) && ((address & 0x70U) == 0U));
+}
+
+static uint8_t USBD_MSC_ValidInterface(uint16_t interface_index)
+{
+  return (uint8_t)(interface_index < USBD_MAX_NUM_INTERFACES);
+}
+
+static uint8_t USBD_MSC_ValidStorage(const USBD_StorageTypeDef *storage)
+{
+  return (uint8_t)((storage != NULL) && (storage->Init != NULL) &&
+                   (storage->GetCapacity != NULL) && (storage->IsReady != NULL) &&
+                   (storage->IsWriteProtected != NULL) && (storage->Read != NULL) &&
+                   (storage->Write != NULL) && (storage->GetMaxLun != NULL) &&
+                   (storage->pInquiry != NULL));
+}
+
+static void USBD_MSC_ReleaseHandle(USBD_HandleTypeDef *pdev)
+{
+  if (!USBD_MSC_ValidContext(pdev))
+  {
+    return;
+  }
+  if (pdev->pClassDataCmsit[pdev->classId] != NULL)
+  {
+    (void)USBD_free(pdev->pClassDataCmsit[pdev->classId]);
+    pdev->pClassDataCmsit[pdev->classId] = NULL;
+  }
+  pdev->pClassData = NULL;
+}
+
 /**
   * @}
   */
@@ -215,14 +255,41 @@ uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 {
   UNUSED(cfgidx);
   USBD_MSC_BOT_HandleTypeDef *hmsc;
+  USBD_StorageTypeDef *storage;
+  int8_t max_lun;
+  uint16_t packet_size;
+
+  if (!USBD_MSC_ValidContext(pdev))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
+
+  storage = (USBD_StorageTypeDef *)pdev->pUserData[pdev->classId];
+  if (!USBD_MSC_ValidStorage(storage))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
+  max_lun = storage->GetMaxLun();
+  if (!msc_bot_max_lun_is_valid((int32_t)max_lun))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
+  if (pdev->pClassDataCmsit[pdev->classId] != NULL)
+  {
+    return (uint8_t)USBD_FAIL;
+  }
 
   hmsc = (USBD_MSC_BOT_HandleTypeDef *)USBD_malloc(sizeof(USBD_MSC_BOT_HandleTypeDef));
 
   if (hmsc == NULL)
   {
     pdev->pClassDataCmsit[pdev->classId] = NULL;
+    pdev->pClassData = NULL;
     return (uint8_t)USBD_EMEM;
   }
+
+  (void)USBD_memset(hmsc, 0, sizeof(USBD_MSC_BOT_HandleTypeDef));
+  hmsc->max_lun = (uint32_t)max_lun;
 
   pdev->pClassDataCmsit[pdev->classId] = (void *)hmsc;
   pdev->pClassData = pdev->pClassDataCmsit[pdev->classId];
@@ -233,29 +300,39 @@ uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
   MSCOutEpAdd = USBD_CoreGetEPAdd(pdev, USBD_EP_OUT, USBD_EP_TYPE_BULK, (uint8_t)pdev->classId);
 #endif /* USE_USBD_COMPOSITE */
 
-  if (pdev->dev_speed == USBD_SPEED_HIGH)
+  if (!USBD_MSC_ValidEndpoint(MSCOutEpAdd) || !USBD_MSC_ValidEndpoint(MSCInEpAdd))
   {
-    /* Open EP OUT */
-    (void)USBD_LL_OpenEP(pdev, MSCOutEpAdd, USBD_EP_TYPE_BULK, MSC_MAX_HS_PACKET);
-    pdev->ep_out[MSCOutEpAdd & 0xFU].is_used = 1U;
-
-    /* Open EP IN */
-    (void)USBD_LL_OpenEP(pdev, MSCInEpAdd, USBD_EP_TYPE_BULK, MSC_MAX_HS_PACKET);
-    pdev->ep_in[MSCInEpAdd & 0xFU].is_used = 1U;
+    USBD_MSC_ReleaseHandle(pdev);
+    return (uint8_t)USBD_FAIL;
   }
-  else
+
+  packet_size = (pdev->dev_speed == USBD_SPEED_HIGH) ? MSC_MAX_HS_PACKET : MSC_MAX_FS_PACKET;
+  if (USBD_LL_OpenEP(pdev, MSCOutEpAdd, USBD_EP_TYPE_BULK, packet_size) != USBD_OK)
   {
-    /* Open EP OUT */
-    (void)USBD_LL_OpenEP(pdev, MSCOutEpAdd, USBD_EP_TYPE_BULK, MSC_MAX_FS_PACKET);
-    pdev->ep_out[MSCOutEpAdd & 0xFU].is_used = 1U;
-
-    /* Open EP IN */
-    (void)USBD_LL_OpenEP(pdev, MSCInEpAdd, USBD_EP_TYPE_BULK, MSC_MAX_FS_PACKET);
-    pdev->ep_in[MSCInEpAdd & 0xFU].is_used = 1U;
+    USBD_MSC_ReleaseHandle(pdev);
+    return (uint8_t)USBD_FAIL;
   }
+  pdev->ep_out[MSCOutEpAdd & 0xFU].is_used = 1U;
+
+  if (USBD_LL_OpenEP(pdev, MSCInEpAdd, USBD_EP_TYPE_BULK, packet_size) != USBD_OK)
+  {
+    (void)USBD_LL_CloseEP(pdev, MSCOutEpAdd);
+    pdev->ep_out[MSCOutEpAdd & 0xFU].is_used = 0U;
+    USBD_MSC_ReleaseHandle(pdev);
+    return (uint8_t)USBD_FAIL;
+  }
+  pdev->ep_in[MSCInEpAdd & 0xFU].is_used = 1U;
 
   /* Init the BOT  layer */
-  MSC_BOT_Init(pdev);
+  if (MSC_BOT_Init(pdev) != USBD_OK)
+  {
+    (void)USBD_LL_CloseEP(pdev, MSCOutEpAdd);
+    (void)USBD_LL_CloseEP(pdev, MSCInEpAdd);
+    pdev->ep_out[MSCOutEpAdd & 0xFU].is_used = 0U;
+    pdev->ep_in[MSCInEpAdd & 0xFU].is_used = 0U;
+    USBD_MSC_ReleaseHandle(pdev);
+    return (uint8_t)USBD_FAIL;
+  }
 
   return (uint8_t)USBD_OK;
 }
@@ -271,6 +348,11 @@ uint8_t USBD_MSC_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 {
   UNUSED(cfgidx);
 
+  if (!USBD_MSC_ValidContext(pdev))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
+
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */
   MSCInEpAdd  = USBD_CoreGetEPAdd(pdev, USBD_EP_IN, USBD_EP_TYPE_BULK, (uint8_t)pdev->classId);
@@ -278,12 +360,18 @@ uint8_t USBD_MSC_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 #endif /* USE_USBD_COMPOSITE */
 
   /* Close MSC EPs */
-  (void)USBD_LL_CloseEP(pdev, MSCOutEpAdd);
-  pdev->ep_out[MSCOutEpAdd & 0xFU].is_used = 0U;
+  if (USBD_MSC_ValidEndpoint(MSCOutEpAdd))
+  {
+    (void)USBD_LL_CloseEP(pdev, MSCOutEpAdd);
+    pdev->ep_out[MSCOutEpAdd & 0xFU].is_used = 0U;
+  }
 
   /* Close EP IN */
-  (void)USBD_LL_CloseEP(pdev, MSCInEpAdd);
-  pdev->ep_in[MSCInEpAdd & 0xFU].is_used = 0U;
+  if (USBD_MSC_ValidEndpoint(MSCInEpAdd))
+  {
+    (void)USBD_LL_CloseEP(pdev, MSCInEpAdd);
+    pdev->ep_in[MSCInEpAdd & 0xFU].is_used = 0U;
+  }
 
   /* Free MSC Class Resources */
   if (pdev->pClassDataCmsit[pdev->classId] != NULL)
@@ -291,10 +379,8 @@ uint8_t USBD_MSC_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
     /* De-Init the BOT layer */
     MSC_BOT_DeInit(pdev);
 
-    (void)USBD_free(pdev->pClassDataCmsit[pdev->classId]);
-    pdev->pClassDataCmsit[pdev->classId]  = NULL;
-    pdev->pClassData = NULL;
   }
+  USBD_MSC_ReleaseHandle(pdev);
 
   return (uint8_t)USBD_OK;
 }
@@ -307,9 +393,15 @@ uint8_t USBD_MSC_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
   */
 uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc;
   USBD_StatusTypeDef ret = USBD_OK;
   uint16_t status_info = 0U;
+
+  if (!USBD_MSC_ValidContext(pdev) || (req == NULL))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
+  hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
 
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */
@@ -330,9 +422,8 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
       {
         case BOT_GET_MAX_LUN:
           if ((req->wValue  == 0U) && (req->wLength == 1U) &&
-              ((req->bmRequest & 0x80U) == 0x80U))
+              USBD_MSC_ValidInterface(req->wIndex) && (req->bmRequest == 0xA1U))
           {
-            hmsc->max_lun = (uint32_t)((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->GetMaxLun();
             (void)USBD_CtlSendData(pdev, (uint8_t *)&hmsc->max_lun, 1U);
           }
           else
@@ -344,7 +435,7 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
 
         case BOT_RESET :
           if ((req->wValue  == 0U) && (req->wLength == 0U) &&
-              ((req->bmRequest & 0x80U) != 0x80U))
+              USBD_MSC_ValidInterface(req->wIndex) && (req->bmRequest == 0x21U))
           {
             MSC_BOT_Reset(pdev);
           }
@@ -366,7 +457,9 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
       switch (req->bRequest)
       {
         case USB_REQ_GET_STATUS:
-          if (pdev->dev_state == USBD_STATE_CONFIGURED)
+          if ((pdev->dev_state == USBD_STATE_CONFIGURED) &&
+              (req->wValue == 0U) && USBD_MSC_ValidInterface(req->wIndex) &&
+              (req->wLength == 2U) && (req->bmRequest == 0x81U))
           {
             (void)USBD_CtlSendData(pdev, (uint8_t *)&status_info, 2U);
           }
@@ -378,7 +471,9 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
           break;
 
         case USB_REQ_GET_INTERFACE:
-          if (pdev->dev_state == USBD_STATE_CONFIGURED)
+          if ((pdev->dev_state == USBD_STATE_CONFIGURED) &&
+              (req->wValue == 0U) && USBD_MSC_ValidInterface(req->wIndex) &&
+              (req->wLength == 1U) && (req->bmRequest == 0x81U))
           {
             (void)USBD_CtlSendData(pdev, (uint8_t *)&hmsc->interface, 1U);
           }
@@ -390,7 +485,9 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
           break;
 
         case USB_REQ_SET_INTERFACE:
-          if (pdev->dev_state == USBD_STATE_CONFIGURED)
+          if ((pdev->dev_state == USBD_STATE_CONFIGURED) &&
+              (req->wValue == 0U) && USBD_MSC_ValidInterface(req->wIndex) &&
+              (req->wLength == 0U) && (req->bmRequest == 0x01U))
           {
             hmsc->interface = (uint8_t)(req->wValue);
           }
@@ -402,9 +499,13 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
           break;
 
         case USB_REQ_CLEAR_FEATURE:
-          if (pdev->dev_state == USBD_STATE_CONFIGURED)
+          if ((pdev->dev_state == USBD_STATE_CONFIGURED) &&
+              (req->wLength == 0U) && (req->bmRequest == 0x02U))
           {
-            if (req->wValue == USB_FEATURE_EP_HALT)
+            const uint8_t endpoint = (uint8_t)req->wIndex;
+            if ((req->wValue == USB_FEATURE_EP_HALT) &&
+                ((req->wIndex & 0xFF00U) == 0U) &&
+                ((endpoint == MSCInEpAdd) || (endpoint == MSCOutEpAdd)))
             {
               /* Flush the FIFO */
               (void)USBD_LL_FlushEP(pdev, (uint8_t)req->wIndex);
@@ -412,6 +513,16 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
               /* Handle BOT error */
               MSC_BOT_CplClrFeature(pdev, (uint8_t)req->wIndex);
             }
+            else
+            {
+              USBD_CtlError(pdev, req);
+              ret = USBD_FAIL;
+            }
+          }
+          else
+          {
+            USBD_CtlError(pdev, req);
+            ret = USBD_FAIL;
           }
           break;
 
@@ -440,6 +551,10 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
   */
 uint8_t USBD_MSC_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
+  if (!USBD_MSC_ValidContext(pdev) || (epnum != (MSCInEpAdd & 0x7FU)))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
   MSC_BOT_DataIn(pdev, epnum);
 
   return (uint8_t)USBD_OK;
@@ -454,6 +569,10 @@ uint8_t USBD_MSC_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
   */
 uint8_t USBD_MSC_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
+  if (!USBD_MSC_ValidContext(pdev) || (epnum != (MSCOutEpAdd & 0x7FU)))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
   MSC_BOT_DataOut(pdev, epnum);
 
   return (uint8_t)USBD_OK;
@@ -553,7 +672,8 @@ uint8_t *USBD_MSC_GetDeviceQualifierDescriptor(uint16_t *length)
   */
 uint8_t USBD_MSC_RegisterStorage(USBD_HandleTypeDef *pdev, USBD_StorageTypeDef *fops)
 {
-  if (fops == NULL)
+  if (!USBD_MSC_ValidContext(pdev) || !USBD_MSC_ValidStorage(fops) ||
+      (pdev->pClassDataCmsit[pdev->classId] != NULL))
   {
     return (uint8_t)USBD_FAIL;
   }
@@ -576,4 +696,3 @@ uint8_t USBD_MSC_RegisterStorage(USBD_HandleTypeDef *pdev, USBD_StorageTypeDef *
 /**
   * @}
   */
-

@@ -3,6 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 
+"$root/tests/run_debug_tests.sh"
 "$root/tests/run_display_font_tests.sh"
 "$root/tests/run_fmk_converter_tests.sh"
 "$root/tests/run_focal_tests.sh"

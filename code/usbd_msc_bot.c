@@ -27,6 +27,7 @@ EndBSPDependencies */
 #include "usbd_msc.h"
 #include "usbd_msc_scsi.h"
 #include "usbd_ioreq.h"
+#include "msc_scsi_safety.h"
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
   * @{
@@ -79,6 +80,24 @@ extern uint8_t MSCOutEpAdd;
 static void MSC_BOT_SendData(USBD_HandleTypeDef *pdev, uint8_t *pbuf, uint32_t len);
 static void MSC_BOT_CBW_Decode(USBD_HandleTypeDef *pdev);
 static void MSC_BOT_Abort(USBD_HandleTypeDef *pdev);
+
+static USBD_MSC_BOT_HandleTypeDef *MSC_BOT_GetHandle(USBD_HandleTypeDef *pdev)
+{
+  if ((pdev == NULL) || (pdev->classId >= USBD_MAX_SUPPORTED_CLASS))
+  {
+    return NULL;
+  }
+  return (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+}
+
+static USBD_StorageTypeDef *MSC_BOT_GetStorage(USBD_HandleTypeDef *pdev)
+{
+  if ((pdev == NULL) || (pdev->classId >= USBD_MAX_SUPPORTED_CLASS))
+  {
+    return NULL;
+  }
+  return (USBD_StorageTypeDef *)pdev->pUserData[pdev->classId];
+}
 /**
   * @}
   */
@@ -95,20 +114,21 @@ static void MSC_BOT_Abort(USBD_HandleTypeDef *pdev);
   * @param  pdev: device instance
   * @retval None
   */
-void MSC_BOT_Init(USBD_HandleTypeDef *pdev)
+uint8_t MSC_BOT_Init(USBD_HandleTypeDef *pdev)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
+  USBD_StorageTypeDef *storage = MSC_BOT_GetStorage(pdev);
+
+  if ((hmsc == NULL) || (storage == NULL) || (storage->Init == NULL))
+  {
+    return (uint8_t)USBD_FAIL;
+  }
 
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */
   MSCInEpAdd  = USBD_CoreGetEPAdd(pdev, USBD_EP_IN, USBD_EP_TYPE_BULK, (uint8_t)pdev->classId);
   MSCOutEpAdd = USBD_CoreGetEPAdd(pdev, USBD_EP_OUT, USBD_EP_TYPE_BULK, (uint8_t)pdev->classId);
 #endif /* USE_USBD_COMPOSITE */
-
-  if (hmsc == NULL)
-  {
-    return;
-  }
 
   hmsc->bot_state = USBD_BOT_IDLE;
   hmsc->bot_status = USBD_BOT_STATUS_NORMAL;
@@ -117,14 +137,18 @@ void MSC_BOT_Init(USBD_HandleTypeDef *pdev)
   hmsc->scsi_sense_head = 0U;
   hmsc->scsi_medium_state = SCSI_MEDIUM_UNLOCKED;
 
-  ((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->Init(0U);
+  if (storage->Init(0U) != USBD_MSC_STORAGE_OK)
+  {
+    hmsc->bot_status = USBD_BOT_STATUS_ERROR;
+    return (uint8_t)USBD_FAIL;
+  }
 
   (void)USBD_LL_FlushEP(pdev, MSCOutEpAdd);
   (void)USBD_LL_FlushEP(pdev, MSCInEpAdd);
 
   /* Prepare EP to Receive First BOT Cmd */
-  (void)USBD_LL_PrepareReceive(pdev, MSCOutEpAdd, (uint8_t *)&hmsc->cbw,
-                               USBD_BOT_CBW_LENGTH);
+  return (uint8_t)USBD_LL_PrepareReceive(pdev, MSCOutEpAdd, (uint8_t *)&hmsc->cbw,
+                                         USBD_BOT_CBW_LENGTH);
 }
 
 /**
@@ -135,7 +159,13 @@ void MSC_BOT_Init(USBD_HandleTypeDef *pdev)
   */
 void MSC_BOT_Reset(USBD_HandleTypeDef *pdev)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
+  USBD_StorageTypeDef *storage = MSC_BOT_GetStorage(pdev);
+
+  if ((hmsc == NULL) || (storage == NULL) || (storage->Init == NULL))
+  {
+    return;
+  }
 
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */
@@ -143,16 +173,16 @@ void MSC_BOT_Reset(USBD_HandleTypeDef *pdev)
   MSCOutEpAdd = USBD_CoreGetEPAdd(pdev, USBD_EP_OUT, USBD_EP_TYPE_BULK, (uint8_t)pdev->classId);
 #endif /* USE_USBD_COMPOSITE */
 
-  if (hmsc == NULL)
-  {
-    return;
-  }
-
   hmsc->bot_state  = USBD_BOT_IDLE;
   hmsc->bot_status = USBD_BOT_STATUS_RECOVERY;
 
   /* Cancel any deferred storage callback owned by the aborted BOT command. */
-  ((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->Init(0U);
+  if (storage->Init(0U) != USBD_MSC_STORAGE_OK)
+  {
+    hmsc->bot_status = USBD_BOT_STATUS_ERROR;
+    MSC_BOT_Abort(pdev);
+    return;
+  }
 
   (void)USBD_LL_ClearStallEP(pdev, MSCInEpAdd);
   (void)USBD_LL_ClearStallEP(pdev, MSCOutEpAdd);
@@ -170,7 +200,7 @@ void MSC_BOT_Reset(USBD_HandleTypeDef *pdev)
   */
 void MSC_BOT_DeInit(USBD_HandleTypeDef  *pdev)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
   if (hmsc != NULL)
   {
@@ -189,7 +219,7 @@ void MSC_BOT_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
   UNUSED(epnum);
 
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
   if (hmsc == NULL)
   {
@@ -225,7 +255,7 @@ void MSC_BOT_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
   UNUSED(epnum);
 
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
   if (hmsc == NULL)
   {
@@ -258,7 +288,7 @@ void MSC_BOT_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
   */
 static void  MSC_BOT_CBW_Decode(USBD_HandleTypeDef *pdev)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */
@@ -274,10 +304,11 @@ static void  MSC_BOT_CBW_Decode(USBD_HandleTypeDef *pdev)
   hmsc->csw.dTag = hmsc->cbw.dTag;
   hmsc->csw.dDataResidue = hmsc->cbw.dDataLength;
 
-  if ((USBD_LL_GetRxDataSize(pdev, MSCOutEpAdd) != USBD_BOT_CBW_LENGTH) ||
-      (hmsc->cbw.dSignature != USBD_BOT_CBW_SIGNATURE) ||
-      (hmsc->cbw.bLUN > 1U) || (hmsc->cbw.bCBLength < 1U) ||
-      (hmsc->cbw.bCBLength > 16U))
+  if (!msc_bot_cbw_is_valid(USBD_LL_GetRxDataSize(pdev, MSCOutEpAdd),
+                            USBD_BOT_CBW_LENGTH, hmsc->cbw.dSignature,
+                            USBD_BOT_CBW_SIGNATURE, hmsc->cbw.bmFlags,
+                            hmsc->cbw.bLUN, (uint8_t)hmsc->max_lun,
+                            hmsc->cbw.bCBLength))
   {
     SCSI_SenseCode(pdev, hmsc->cbw.bLUN, ILLEGAL_REQUEST, INVALID_CDB);
 
@@ -333,7 +364,7 @@ static void  MSC_BOT_CBW_Decode(USBD_HandleTypeDef *pdev)
   */
 static void  MSC_BOT_SendData(USBD_HandleTypeDef *pdev, uint8_t *pbuf, uint32_t len)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
   uint32_t length;
 
@@ -343,14 +374,15 @@ static void  MSC_BOT_SendData(USBD_HandleTypeDef *pdev, uint8_t *pbuf, uint32_t 
   MSCOutEpAdd = USBD_CoreGetEPAdd(pdev, USBD_EP_OUT, USBD_EP_TYPE_BULK, (uint8_t)pdev->classId);
 #endif /* USE_USBD_COMPOSITE */
 
-  if (hmsc == NULL)
+  if ((hmsc == NULL) || ((pbuf == NULL) && (len != 0U)))
   {
     return;
   }
 
-  length = MIN(hmsc->cbw.dDataLength, len);
+  length = msc_bot_transfer_length(hmsc->cbw.dDataLength, len);
 
-  hmsc->csw.dDataResidue -= len;
+  hmsc->csw.dDataResidue = msc_bot_residue_after_transfer(hmsc->csw.dDataResidue,
+                                                          length);
   hmsc->csw.bStatus = USBD_CSW_CMD_PASSED;
   hmsc->bot_state = USBD_BOT_SEND_DATA;
 
@@ -366,7 +398,7 @@ static void  MSC_BOT_SendData(USBD_HandleTypeDef *pdev, uint8_t *pbuf, uint32_t 
   */
 void  MSC_BOT_SendCSW(USBD_HandleTypeDef *pdev, uint8_t CSW_Status)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */
@@ -400,7 +432,7 @@ void  MSC_BOT_SendCSW(USBD_HandleTypeDef *pdev, uint8_t CSW_Status)
 
 static void  MSC_BOT_Abort(USBD_HandleTypeDef *pdev)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */
@@ -439,7 +471,7 @@ static void  MSC_BOT_Abort(USBD_HandleTypeDef *pdev)
 
 void  MSC_BOT_CplClrFeature(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  USBD_MSC_BOT_HandleTypeDef *hmsc = MSC_BOT_GetHandle(pdev);
 
 #ifdef USE_USBD_COMPOSITE
   /* Get the Endpoints addresses allocated for this class instance */

@@ -114,7 +114,7 @@ typedef struct
 /** @defgroup USBD_CORE_Exported_FunctionsPrototypes
   * @{
   */
-void MSC_BOT_Init(USBD_HandleTypeDef  *pdev);
+uint8_t MSC_BOT_Init(USBD_HandleTypeDef  *pdev);
 void MSC_BOT_Reset(USBD_HandleTypeDef  *pdev);
 void MSC_BOT_DeInit(USBD_HandleTypeDef  *pdev);
 void MSC_BOT_DataIn(USBD_HandleTypeDef  *pdev,

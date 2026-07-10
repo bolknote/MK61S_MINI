@@ -38,6 +38,39 @@ static void test_big_endian_decode(void)
   assert(msc_scsi_read_be32(bytes) == 0xDEADBEEFU);
 }
 
+static void test_bot_contract(void)
+{
+  assert(msc_bot_max_lun_is_valid(0));
+  assert(msc_bot_max_lun_is_valid(15));
+  assert(!msc_bot_max_lun_is_valid(-1));
+  assert(!msc_bot_max_lun_is_valid(16));
+
+  assert(msc_bot_cbw_is_valid(31U, 31U, 0x43425355U, 0x43425355U,
+                              0x80U, 0U, 0U, 10U));
+  assert(!msc_bot_cbw_is_valid(30U, 31U, 0x43425355U, 0x43425355U,
+                               0x80U, 0U, 0U, 10U));
+  assert(!msc_bot_cbw_is_valid(31U, 31U, 0U, 0x43425355U,
+                               0x80U, 0U, 0U, 10U));
+  assert(!msc_bot_cbw_is_valid(31U, 31U, 0x43425355U, 0x43425355U,
+                               0x81U, 0U, 0U, 10U));
+  assert(!msc_bot_cbw_is_valid(31U, 31U, 0x43425355U, 0x43425355U,
+                               0x80U, 1U, 0U, 10U));
+  assert(!msc_bot_cbw_is_valid(31U, 31U, 0x43425355U, 0x43425355U,
+                               0x80U, 0U, 0U, 0U));
+  assert(!msc_bot_cbw_is_valid(31U, 31U, 0x43425355U, 0x43425355U,
+                               0x80U, 0U, 0U, 17U));
+
+  assert(msc_bot_transfer_length(8U, 32U) == 8U);
+  assert(msc_bot_transfer_length(64U, 32U) == 32U);
+  assert(msc_bot_residue_after_transfer(64U, 32U) == 32U);
+  assert(msc_bot_residue_after_transfer(8U, 32U) == 0U);
+  assert(msc_scsi_copy_length(1024U, 512U) == 512U);
+  assert(msc_scsi_ring_next(0U, 4U) == 1U);
+  assert(msc_scsi_ring_next(3U, 4U) == 0U);
+  assert(msc_scsi_ring_next(4U, 4U) == 0U);
+  assert(msc_scsi_ring_next(0U, 0U) == 0U);
+}
+
 static uint32_t random_state = 0x61F4A7C3U;
 
 static uint32_t next_random(void)
@@ -73,6 +106,7 @@ int main(void)
   test_address_range_rejects_wraparound();
   test_transfer_size_rejects_overflow();
   test_big_endian_decode();
+  test_bot_contract();
   test_arithmetic_matches_64_bit_reference();
   puts("msc_scsi_safety_self_test: ok");
   return 0;

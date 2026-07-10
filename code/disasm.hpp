@@ -214,21 +214,21 @@ class class_disassm_mk61 {
     }
 
     void  enable(void) {
-      dbgln(DISASM, "disassembler ON!")
+      dbgln(DISASM, "disassembler ON!");
       lcd_enable = true;
       cache_IP_mk61 = core_61::get_IP() + 1;
       print();
     }
 
     void  disable(void) {
-      dbgln(DISASM, "disassembler OFF!")
+      dbgln(DISASM, "disassembler OFF!");
       lcd_enable = false;
       MK61DisplayUpdate update(lcd);
       lcd.setCursor(X, Y); lcd.print("      ");
     }
 
     void  disable(const char* text) {
-      dbgln(DISASM, "disassembler OFF!")
+      dbgln(DISASM, "disassembler OFF!");
       lcd_enable = false;
       MK61DisplayUpdate update(lcd);
       lcd.setCursor(X, Y); lcd.print(text);

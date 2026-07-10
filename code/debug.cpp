@@ -1,18 +1,17 @@
-#include "rust_types.h"
-#include "tools.hpp"
-#include "config.h"
+#include "debug.h"
 
 namespace dbg {
 
 void  core_trace(const char* text, isize value) {
-  static  isize back_value = -1;
+  static  isize back_value = 0;
   static  isize repeat_counter = 0;
+  static  bool has_back_value = false;
 
-  if(back_value == value) {
-    repeat_counter++;
+  if(has_back_value && back_value == value) {
+    if(repeat_counter < 0x7FFFFFFE) repeat_counter++;
   } else {
     if(repeat_counter == 0) {
-      if(back_value >= 0) dbg::print("\n\r");
+      if(has_back_value) dbg::print("\n\r");
       dbg::printhex(text, value);
     } else {
       dbg::println(" (",  repeat_counter + 1, ")");
@@ -21,6 +20,7 @@ void  core_trace(const char* text, isize value) {
     }
   }
   back_value = value;
+  has_back_value = true;
 }
 
 void print(const char* text) {
