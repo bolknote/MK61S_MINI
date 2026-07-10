@@ -1,3 +1,4 @@
 # Local firmware build outputs
 /*.bin
 /binary/
+/tools/fmk_font

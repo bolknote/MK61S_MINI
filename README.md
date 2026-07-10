@@ -45,6 +45,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 **Инструкция по работе с БЕЙСИКом:**<br>
 https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-BASIC.pdf
 
+**Формат пиксельных шрифтов FMK1 и C++-конвертер:**<br>
+[doc/MK61s-mini-FMK.md](doc/MK61s-mini-FMK.md)
+
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 
 **Видеоинструкция по сборке от Виталия (FANJET)** - https://www.youtube.com/watch?v=JBStgbfmuOs
@@ -68,7 +71,8 @@ MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 Тестовый набор проверяет BASIC, FOCAL, TinyBASIC, математический CORE-бэкенд,
 эксклюзивное владение общими runtime/scratch-буферами, Virtual FAT и реальное
 устройство `program_store` через модель SPI flash с инъекцией ошибок записи и
-повреждения каталога.
+повреждения каталога, а также FMK1, bit-RLE, графическую текстовую модель и
+конвертацию FreeType-шрифтов, когда FreeType доступен в системе.
 
 Референсная сборка прошивки использует STM32 Arduino Core `2.12.0`,
 `LiquidCrystal 1.0.7` и `SPIMemory 3.4.0`. Точная матрица плат и дисплеев

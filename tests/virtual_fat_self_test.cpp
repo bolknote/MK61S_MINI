@@ -410,6 +410,35 @@ static void test_short_txt_import_stores_text_type(void) {
   assert(memcmp(stored, payload, stored_len) == 0);
 }
 
+static void test_fmk_import_and_export_use_font_type(void) {
+  reset_virtual_fat_state();
+
+  const u8 payload[] = {'F', 'M', 'K', '1', 0x01, 0x02, 0x03};
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0, sizeof(data));
+  memcpy(data, payload, sizeof(payload));
+  assert(virtual_fat::write_sector(data_lba(), data));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 32, "PIXEL   FMK", 2, sizeof(payload));
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[16];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::FONT, "PIXEL", stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(payload));
+  assert(memcmp(stored, payload, stored_len) == 0);
+
+  assert(virtual_fat::reset_session());
+  u8 generated_root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), generated_root));
+  const u8* item = first_archive_entry(generated_root);
+  assert(item != NULL);
+  assert(memcmp(item + 8, "FMK", 3) == 0);
+}
+
 static void test_m61_lfn_import_normalizes_cyrillic_name(void) {
   reset_virtual_fat_state();
 
@@ -1121,6 +1150,7 @@ int main(void) {
   test_lfn_aliases_are_unique();
   test_incomplete_pending_flush_keeps_waiting_for_data();
   test_short_txt_import_stores_text_type();
+  test_fmk_import_and_export_use_font_type();
   test_m61_lfn_import_normalizes_cyrillic_name();
   test_lfn_import_keeps_short_names_verbatim();
   test_state_txt_lfn_import_normalizes_cyrillic();

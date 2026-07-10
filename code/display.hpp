@@ -26,6 +26,9 @@
   #include <LiquidCrystal.h>
 #else
   #include "ERM19264_UC1609.h"
+  #include "builtin_font.hpp"
+  #include "fmk_font.hpp"
+  #include "text_screen.hpp"
 #endif
 
 namespace lcd_display {
@@ -142,14 +145,18 @@ class MK61Display : public Print {
     bool supportsCursor(void) const;
     bool hasHardwareCursor(void) const;
     void createChar(u8 nChar, uint8_t* glyph);
-    void writeGlyph(const uint8_t* glyph);
-    void writeGlyph3x5(const uint8_t* glyph);
     void clearCustomChars(void);
+    void writeCodepoint(u16 codepoint);
+    bool installFont(const u8* data, u16 size);
+    bool setFontPreview(const u8* data, u16 size);
+    void clearFontPreview(void);
+    void useBuiltinFont(void);
+    bool externalFontActive(void) const;
     u8 cols(void) const { return lcd_display::COLS; }
 #if defined(MK61_DISPLAY_LCD1602)
     u8 rows(void) const { return lcd_display::ROWS; }
 #else
-    u8 rows(void) const { return active_rows; }
+    u8 rows(void) const { return grid.rows(); }
 #endif
 
     using Print::print;
@@ -171,21 +178,19 @@ class MK61Display : public Print {
     uint8_t render_buffer[lcd_display::PIXEL_WIDTH * MAX_RENDER_PAGES];
     ERM19264_UC1609 lcd;
     ERM19264_UC1609_Screen render_screen;
-    uint8_t cells[lcd_display::MAX_ROWS][lcd_display::COLS];
-    uint8_t cell_glyphs[lcd_display::MAX_ROWS][lcd_display::COLS][8];
-    uint16_t cell_glyph_3x5_rows[lcd_display::MAX_ROWS];
-    bool cell_glyph_valid[lcd_display::MAX_ROWS][lcd_display::COLS];
-    uint16_t dirty_cols[lcd_display::MAX_ROWS];
+    text_screen::Grid grid;
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
+    uint8_t active_font_data[fmk::MAX_FILE_SIZE];
+    fmk::Face active_font;
+    fmk::Face preview_font;
+    bool active_font_enabled;
+    bool preview_font_enabled;
     bool initialized;
     bool screen_dirty;
     bool dirty;
     usize update_depth;
     lcd_display::TextProfile active_profile;
-    u8 active_rows;
-    u8 cursor_x;
-    u8 cursor_y;
     bool cursor_underline;
     bool cursor_blink;
     bool cursor_blink_phase;
@@ -200,18 +205,23 @@ class MK61Display : public Print {
     u8 glyphTop(u8 row) const;
     u8 glyphWidth(void) const;
     u8 glyphLeft(void) const;
-    void drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* glyph, bool source_3x5);
-    void drawDefaultChar(u8 x, u8 row_y, u8 row, u8 value);
+    void drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* bitmap, u8 source_width, u8 source_height);
+    void drawToken(u8 x, u8 row_y, u8 row, u16 value, bool custom);
     void drawCursor(u8 x, u8 row_y, u8 row, bool block);
-    void advanceCursor(void);
     void moveCursorTo(u8 x, u8 y);
     bool cursorOverlayVisible(void) const;
     void markCellDirtyDeferred(u8 x, u8 y);
     void markCursorCellDirty(void);
     void markCellDirty(u8 x, u8 y);
     void markScreenDirty(void);
+    void markAllDirty(void);
     void updateCursorBlink(void);
     void renderRun(u8 row, u8 first_col, u8 count);
+    void applyTextProfile(lcd_display::TextProfile profile, bool exact_geometry = false);
+    lcd_display::TextProfile recommendedProfile(const fmk::Metrics& metrics) const;
+    const fmk::Face* selectedFont(void) const;
+    builtin_font::FaceId fallbackFont(void) const;
+    bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
 #endif
 };
 

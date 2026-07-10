@@ -150,12 +150,28 @@ static void test_legacy_catalog_is_migratable(void) {
   expect_data("BETA", "two");
 }
 
+static void test_font_type_survives_catalog_reload(void) {
+  SPIFlash::reset();
+  assert(program_store::format());
+  const u8 font[] = {'F', 'M', 'K', '1', 0x42};
+  assert(program_store::write(program_store::ProgramType::FONT, "PIXEL", font, sizeof(font)));
+
+  program_store::init();
+  assert(program_store::count(program_store::ProgramType::FONT) == 1);
+  u8 stored[16];
+  u16 len = 0;
+  assert(program_store::read(program_store::ProgramType::FONT, "PIXEL", stored, sizeof(stored), &len));
+  assert(len == sizeof(font));
+  assert(memcmp(stored, font, len) == 0);
+}
+
 int main(void) {
   test_catalog_generations_survive_reinit();
   test_failed_catalog_keeps_previous_snapshot();
   test_failed_payload_is_reported();
   test_corrupt_newest_catalog_falls_back();
   test_legacy_catalog_is_migratable();
+  test_font_type_survives_catalog_reload();
   printf("program_store_self_test: ok\n");
   return 0;
 }

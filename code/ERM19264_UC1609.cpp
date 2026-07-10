@@ -480,9 +480,10 @@ UC1609_CS_SetHigh;
 */
 void ERM19264_UC1609::drawPixel(int16_t x, int16_t y, uint8_t colour)
 {
-	// Check Boundary multi-screen mode
-	//if ((x < 0) || (x >= this->ActiveBuffer->width) || (y < 0) || (y >= this->ActiveBuffer->height)) 
-	//	{return ;}
+	if (this->ActiveBuffer == nullptr) {return;}
+	// Drawing is relative to ActiveBuffer, which can be narrower than the panel.
+	if ((x < 0) || (x >= this->ActiveBuffer->width) || (y < 0) || (y >= this->ActiveBuffer->height))
+		{return;}
 	// Check Boundary entire screen
 	if ((x < 0) || (x >= _width) || (y < 0) || (y >= _height)) 
 		{return ;}

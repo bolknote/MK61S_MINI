@@ -28,6 +28,7 @@ static constexpr u16 CLUSTER_EOF = 0xFFF;
 static constexpr u16 FIRST_DATA_CLUSTER = 2;
 static constexpr u16 CLUSTER_LIMIT = FIRST_DATA_CLUSTER + DATA_CLUSTER_CAPACITY;
 static constexpr u16 MAX_IMPORTED_LEN = program_store::MAX_MK61_TEXT_SIZE;
+static_assert(program_store::MAX_FONT_SIZE <= MAX_IMPORTED_LEN, "font files must fit the VFAT import buffer");
 static constexpr u8 MAX_FILE_CLUSTERS = (MAX_IMPORTED_LEN + SECTOR_SIZE - 1) / SECTOR_SIZE;
 static constexpr u16 MAX_LFN_CHARS = 64;
 static constexpr u16 MAX_LFN_CODE_UNITS = 104;
@@ -51,7 +52,8 @@ static const program_store::ProgramType FILE_TYPES[] = {
 #endif
   ,
   program_store::ProgramType::TEXT,
-  program_store::ProgramType::MK61_STATE
+  program_store::ProgramType::MK61_STATE,
+  program_store::ProgramType::FONT
 };
 
 struct PendingWrite {
@@ -616,6 +618,7 @@ static const char* extension_for_type(program_store::ProgramType type) {
 #endif
     case program_store::ProgramType::TEXT: return "T1 ";
     case program_store::ProgramType::MK61_STATE: return "M2 ";
+    case program_store::ProgramType::FONT: return "FMK";
   }
   return "M61";
 }
@@ -624,6 +627,7 @@ static const char* visible_extension_for_type(program_store::ProgramType type) {
   switch(type) {
     case program_store::ProgramType::TEXT: return "txt";
     case program_store::ProgramType::MK61_STATE: return "state.txt";
+    case program_store::ProgramType::FONT: return "fmk";
     default: return extension_for_type(type);
   }
 }
@@ -1097,6 +1101,7 @@ static u16 max_len_for_type(program_store::ProgramType type) {
 #endif
     case program_store::ProgramType::TEXT: return program_store::MAX_MK61_TEXT_SIZE;
     case program_store::ProgramType::MK61_STATE: return program_store::MAX_MK61_TEXT_SIZE;
+    case program_store::ProgramType::FONT: return program_store::MAX_FONT_SIZE;
   }
   return 0;
 }
@@ -1144,6 +1149,10 @@ static bool parse_extension(const u8* ext, program_store::ProgramType& type) {
   }
   if(memcmp(normalized, "M2 ", 3) == 0) {
     type = program_store::ProgramType::MK61_STATE;
+    return true;
+  }
+  if(memcmp(normalized, "FMK", 3) == 0) {
+    type = program_store::ProgramType::FONT;
     return true;
   }
   return false;
