@@ -33,12 +33,14 @@ namespace mk_math {
 
 inline bool is_nan(double x) { return x != x; }
 inline bool is_inf(double x) { return x > DBL_MAX || x < -DBL_MAX; }
+inline bool is_finite(double x) { return !is_nan(x) && !is_inf(x); }
 
 // ---- libm-free rounding helpers -------------------------------------------
 
 inline double fabs(double x) { return x < 0.0 ? -x : x; }
 
 inline double trunc(double x) {
+  if(!is_finite(x)) return x;
   // Doubles with magnitude >= 2^53 are already integral.
   if(x >= 9007199254740992.0 || x <= -9007199254740992.0) return x;
   return (double) (long long) x;
@@ -66,19 +68,23 @@ inline double round_half(double x) {
 
 inline double pow10_int(int e) {
   const bool negative = e < 0;
-  unsigned long long n = negative ? (unsigned long long) (-(long long) e) : (unsigned long long) e;
-  double base = 10.0;
-  double r = 1.0;
-  while(n > 0) {
-    if((n & 1ULL) != 0) r *= base;
+  unsigned int n = negative ? 0u - (unsigned int) e : (unsigned int) e;
+  if((!negative && n > 308u) || (negative && n > 324u))
+    return negative ? 0.0 : __builtin_huge_val();
+
+  double result = 1.0;
+  double factor = negative ? 0.1 : 10.0;
+  while(n != 0) {
+    if((n & 1u) != 0) result *= factor;
     n >>= 1;
-    if(n > 0) base *= base;
+    if(n != 0) factor *= factor;
   }
-  return negative ? 1.0 / r : r;
+  return result;
 }
 
 // floor(log10(x)) for x > 0, exact over the calculator's exponent range.
 inline int log10_floor(double x) {
+  if(!(x > 0.0) || !is_finite(x)) return 0;
   int e = 0;
   if(x >= 1.0) {
     while(x >= 10.0) { x /= 10.0; e++; }
@@ -88,7 +94,7 @@ inline int log10_floor(double x) {
   return e;
 }
 
-// ---- libm-free number parser (drop-in for strtod) --------------------------
+// ---- bounded libm-free decimal parser --------------------------------------
 
 inline double strtod(const char* s, const char** endptr) {
   const char* p = s;

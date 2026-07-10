@@ -64,6 +64,22 @@ static double read_live_reg(stack reg) {
 
 static double read_live_x(void) { return read_live_reg(stack::X); }
 
+struct MatrixKey { int x, y; };
+
+static void press_matrix(MatrixKey key) {
+  core_61::clear_displayed();
+  for(int i = 0; i < 4; i++) {
+    MK61Emu_SetKeyPress(key.x, key.y);
+    core_61::step();
+    if(core_61::is_RUN()) break;
+  }
+  MK61Emu_SetKeyPress(0, 0);
+  for(int i = 0; i < 512; i++) {
+    core_61::step();
+    if(core_61::is_RUN() || core_61::is_displayed()) break;
+  }
+}
+
 static void test_pure_helpers(void) {
   std::printf("pure helpers vs <math.h>:\n");
   const double xs[] = {3.14, -3.14, 2.5, -2.5, 0.0, 7.0, -7.0, 123.456, -0.001};
@@ -94,6 +110,17 @@ static void test_pure_helpers(void) {
   double v = mk_math::strtod("42.5abc", &endp);
   check_near("strtod value", v, 42.5, 1e-9);
   check_true("strtod endptr", endp != nullptr && *endp == 'a');
+  check_true("pow10 huge", std::isinf(mk_math::pow10_int(INT_MAX)));
+  check_true("pow10 tiny", mk_math::pow10_int(INT_MIN) == 0.0);
+  check_true("pow10 subnormal", mk_math::pow10_int(-309) > 0.0);
+  check_true("log10 invalid", mk_math::log10_floor(0.0) == 0);
+
+  const char* huge_end = nullptr;
+  const double huge = mk_math::strtod("1e999999999999999999999", &huge_end);
+  check_true("strtod huge", std::isinf(huge));
+  check_true("strtod huge end", huge_end != nullptr && *huge_end == 0);
+  check_true("strtod tiny", mk_math::strtod("1e-999999999999999999999", nullptr) == 0.0);
+  check_near("strtod 20 digits", mk_math::strtod("12345678901234567890", nullptr), 1.2345678901234567e19, 1e-15);
 }
 
 static void test_transcendental(void) {
@@ -121,12 +148,92 @@ static void test_transcendental(void) {
   check_near("pow(4,0.5)",mk_math::pow(4.0, 0.5),  2.0,         tol);
   check_near("pow(x,0)",  mk_math::pow(7.0, 0.0),  1.0,         tol);
   check_near("pow(-2,3)", mk_math::pow(-2.0, 3.0), -8.0,        tol);
+
+  check_true("sqrt domain", mk_math::is_nan(mk_math::sqrt(-4.0)));
+  check_true("ln domain", mk_math::is_nan(mk_math::ln(-1.0)));
+  check_true("asin domain", mk_math::is_nan(mk_math::asin(2.0)));
+  check_true("input overflow", mk_math::is_nan(mk_math::sin(1e100)));
+  check_true("non-finite input", mk_math::is_nan(mk_math::cos(__builtin_huge_val())));
+}
+
+static void test_authentic_core_smoke(void) {
+  std::printf("authentic ROM/core arithmetic smoke:\n");
+  core_61::set_expanded_program_mode(false);
+  core_61::enable();
+  MK61Emu_SetAngleUnit(DEGREE);
+
+  const MatrixKey key_2 = {4, 1};
+  const MatrixKey key_3 = {5, 1};
+  const MatrixKey key_enter = {11, 8};
+  const MatrixKey key_add = {2, 8};
+  press_matrix(key_2);
+  press_matrix(key_enter);
+  press_matrix(key_3);
+  press_matrix(key_add);
+  check_near("2 ENTER 3 +", read_live_x(), 5.0, 1e-8);
+}
+
+static void test_core_boundaries(void) {
+  std::printf("core boundary regressions:\n");
+  core_61::set_expanded_program_mode(false);
+  core_61::enable();
+
+  m_IK1302.comma = core_61::COMMA_RUN_POSITION;
+  const char* run_indicator = MK61Emu_GetIndicatorStr(SYMBOLS);
+  check_true("RUN indicator bounded", std::strlen(run_indicator) < INDICATOR_STRING_LENGTH);
+  check_true("GetComma exported", MK61Emu_GetComma() == core_61::COMMA_RUN_POSITION);
+
+  char update_buffer[INDICATOR_STRING_LENGTH + 2];
+  std::memset(update_buffer, 0, sizeof(update_buffer));
+  update_buffer[INDICATOR_STRING_LENGTH] = 'A';
+  update_buffer[INDICATOR_STRING_LENGTH + 1] = 'B';
+  core_61::update_indicator(update_buffer, SYMBOLS);
+  check_true("update indicator bounded",
+    update_buffer[INDICATOR_STRING_LENGTH] == 'A' &&
+    update_buffer[INDICATOR_STRING_LENGTH + 1] == 'B');
+
+  m_IK1302.comma = 10;
+  check_true("left comma bounded", std::strlen(MK61Emu_GetIndicatorStr(SYMBOLS)) < INDICATOR_STRING_LENGTH);
+
+  char valid_mantissa[8] = {'1','2','3','4','5','6','7','8'};
+  char invalid_mantissa[8] = {'1','2','3','x','5','6','7','8'};
+  u8 ring_before[SIZE_RING_M];
+  std::memcpy(ring_before, ringM, sizeof(ringM));
+  check_true("reject exponent +100", !write_stack_register(stack::X, ' ', valid_mantissa, 100));
+  check_true("reject exponent -100", !write_stack_register(stack::X, ' ', valid_mantissa, -100));
+  check_true("reject bad BCD digit", !write_stack_register(stack::X, ' ', invalid_mantissa, 0));
+  check_true("rejection is atomic", std::memcmp(ring_before, ringM, sizeof(ringM)) == 0);
+
+  char terminated[15];
+  std::memset(terminated, 'X', sizeof(terminated));
+  read_stack_register(stack::X, terminated, SYMBOLS);
+  check_true("stack text terminated", terminated[14] == 0);
+
+  for(int expanded = 0; expanded <= 1; expanded++) {
+    core_61::set_expanded_program_mode(expanded != 0);
+    core_61::enable();
+    u8 input[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+    u8 output[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+    for(usize i = 0; i < core_61::program_steps(); i++) input[i] = (u8) ((i * 37u + 11u) & 0xFFu);
+    core_61::set_code_page(input);
+    core_61::get_code_page(output);
+    check_true(expanded ? "expanded code page" : "classic code page",
+      std::memcmp(input, output, core_61::program_steps()) == 0);
+  }
+
+  core_61::set_expanded_program_mode(true);
+  core_61::enable();
+  ringM[15 * 42 + 21] = 7;
+  check_true("R_F seeded", MK61Emu_Read_R_mantissa(15) != 0);
+  core_61::clear_memory_registers();
+  check_true("R_F cleared", MK61Emu_Read_R_mantissa(15) == 0);
 }
 
 static void test_save_restore(void) {
   std::printf("core context save/restore isolation:\n");
   core_61::enable();
   MK61Emu_SetAngleUnit(DEGREE);
+  core_61::edit_program = true;
 
   // Load the whole stack with distinct values.
   char mX[8] = {'1','2','3','4','5','0','0','0'}; write_stack_register(stack::X, ' ', mX, 2); // 123.45
@@ -151,6 +258,7 @@ static void test_save_restore(void) {
   x2_after[sizeof(x2_after) - 1] = 0;
 
   check_true("angle preserved (DEGREE)", MK61Emu_GetAngleUnit() == DEGREE);
+  check_true("edit mode preserved", core_61::edit_program);
   check_near("X preserved", read_live_reg(stack::X), bX, 1e-6);
   check_near("Y preserved", read_live_reg(stack::Y), bY, 1e-6);
   check_near("Z preserved", read_live_reg(stack::Z), bZ, 1e-6);
@@ -161,6 +269,8 @@ static void test_save_restore(void) {
 int main(void) {
   test_pure_helpers();
   test_transcendental();
+  test_authentic_core_smoke();
+  test_core_boundaries();
   test_save_restore();
 
   if(g_failures == 0) {

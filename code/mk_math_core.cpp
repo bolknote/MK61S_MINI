@@ -54,7 +54,8 @@ void press(const MatrixKey& key) {
   }
 }
 
-void set_x(double value) {
+bool set_x(double value) {
+  if(!mk_math::is_finite(value)) return false;
   char sign = (value < 0.0) ? '-' : ' ';
   double a = mk_math::fabs(value);
   char mantissa[8];
@@ -64,14 +65,19 @@ void set_x(double value) {
     memset(mantissa, '0', 8);
   } else {
     pow10 = (isize) mk_math::log10_floor(a);
+    if(pow10 < -99 || pow10 > 99) return false;
     double normalized = a / mk_math::pow10_int((int) pow10);
     if(normalized >= 10.0) { normalized /= 10.0; pow10++; }
     if(normalized < 1.0)   { normalized *= 10.0; pow10--; }
     long scaled = (long) mk_math::floor(normalized * 10000000.0 + 0.5);
-    if(scaled >= 100000000L) { scaled /= 10; pow10++; }
+    if(scaled >= 100000000L) {
+      scaled /= 10;
+      pow10++;
+      if(pow10 > 99) return false;
+    }
     for(int i = 7; i >= 0; i--) { mantissa[i] = (char) ('0' + (scaled % 10)); scaled /= 10; }
   }
-  write_stack_register(stack::X, sign, mantissa, pow10);
+  return write_stack_register(stack::X, sign, mantissa, pow10);
 }
 
 double read_x(void) {
@@ -109,10 +115,16 @@ double eval_unary(double x, const MatrixKey& op) {
 
   core_61::enable();          // clean calculator: no leftover prefix/error
   MK61Emu_SetAngleUnit(RADIAN);
-  set_x(x);
-  press(KEY_F);
-  press(op);
-  const double result = read_x();
+  double result = __builtin_nan("");
+  if(set_x(x)) {
+    press(KEY_F);
+    press(op);
+    // An error indication takes a few additional engine steps to propagate
+    // from the microcode state into the display ring. Normal results are
+    // already stable at this point and remain unchanged during these steps.
+    for(int i = 0; i < 4 && !core_61::is_RUN(); i++) core_61::step();
+    if(!core_61::has_error()) result = read_x();
+  }
 
   core_61::restore_context(); // hand the calculator back exactly as it was
   return result;
@@ -136,17 +148,19 @@ double sqrt(double x)  { return eval_unary(x, KEY_SUB); }
 // pow(base, exponent) as exp(exponent * ln(base)); the 2-key xʸ protocol is
 // fragile, so this composition is used instead (see plan).
 double pow(double base, double exponent) {
+  if(is_nan(base) || is_nan(exponent)) return __builtin_nan("");
   if(exponent == 0.0) return 1.0;
   if(base == 0.0) return (exponent > 0.0) ? 0.0 : __builtin_huge_val();
   if(base > 0.0) return mk_math::exp(exponent * mk_math::ln(base));
 
   // base < 0: real only for integer exponents.
   const double rounded = mk_math::round_half(exponent);
+  if(!is_finite(rounded) || exponent != rounded) return __builtin_nan("");
+
   const double magnitude = mk_math::exp(exponent * mk_math::ln(-base));
-  if(mk_math::fabs(exponent - rounded) < 1e-9) {
-    return (((long long) rounded) & 1LL) ? -magnitude : magnitude;
-  }
-  return __builtin_nan("");
+  if(mk_math::is_nan(magnitude)) return magnitude;
+  const bool odd = mk_math::fabs(rounded) < 9007199254740992.0 && ((((long long) rounded) & 1LL) != 0);
+  return odd ? -magnitude : magnitude;
 }
 
 } // namespace mk_math

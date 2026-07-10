@@ -8,7 +8,7 @@ class __attribute__((__packed__)) TMK61_cross_key {
   public:
     u8 x, y;
     u16 as_u16(void) const {
-      return *(u16*) this;
+      return (u16) x | ((u16) y << 8);
     }
 };
 
@@ -154,37 +154,37 @@ constexpr u32 seq(sw KEY0, sw KEY1, sw KEY2) {return i32 (0xFF000000 | ( ((u32) 
 constexpr u32 seq(sw KEY0, sw KEY1) {return i32 (0xFFFF0000 | ( ((u32) KEY1 << 8) | (u32) KEY0 ));}
 constexpr u32 seq(sw KEY) {return (i32) i32 (0xFFFFFF00 | (u32) KEY);}
 
-static const TMK61_cross_key   NON     =   {.x=0, .y=0};
-static const TMK61_cross_key   F       =   {.x=11, .y=9};  // F
-static const TMK61_cross_key   K       =   {.x=10, .y=9};  // K
-static const TMK61_cross_key   SB      =   {.x=7, .y=9};   // ШГ->
-static const TMK61_cross_key   SF      =   {.x=9, .y=9};   // ШГ<-
-static const TMK61_cross_key   Px      =   {.x=8, .y=9};   // П->X
-static const TMK61_cross_key   xP      =   {.x=6, .y=9};   // X->П
-static const TMK61_cross_key   _0_     =   {.x=2, .y=1};   // 0
-static const TMK61_cross_key   _1_     =   {.x=3, .y=1};   // 1
-static const TMK61_cross_key   _2_     =   {.x=4, .y=1};   // 2
-static const TMK61_cross_key   _3_     =   {.x=5, .y=1};   // 3
-static const TMK61_cross_key   _4_     =   {.x=6, .y=1};   // 4
-static const TMK61_cross_key   _5_     =   {.x=7, .y=1};   // 5
-static const TMK61_cross_key   _6_     =   {.x=8, .y=1};   // 6
-static const TMK61_cross_key   _7_     =   {.x=9, .y=1};   // 7
-static const TMK61_cross_key   _8_     =   {.x=10, .y=1};  // 8
-static const TMK61_cross_key   _9_     =   {.x=11, .y=1};  // 9
-static const TMK61_cross_key   SUB     =   {.x=3, .y=8};   // -
-static const TMK61_cross_key   ADD     =   {.x=2, .y=8};   // +
-static const TMK61_cross_key   DIV     =   {.x=5, .y=8};   // /
-static const TMK61_cross_key   MUL     =   {.x=4, .y=8};   // *
-static const TMK61_cross_key   DOT     =   {.x=7, .y=8};   // .
-static const TMK61_cross_key   POW     =   {.x=9, .y=8};   // ВП
-static const TMK61_cross_key   NEG     =   {.x=8, .y=8};   // /-/
-static const TMK61_cross_key   Cx      =   {.x=10, .y=8};  // Cx
-static const TMK61_cross_key   Bx      =   {.x=11, .y=8};  // Bx
-static const TMK61_cross_key   XY      =   {.x=6, .y=8};   // X<->Y
-static const TMK61_cross_key   RET     =   {.x=4, .y=9};   // В/О
-static const TMK61_cross_key   JMP     =   {.x=3, .y=9};   // БП
-static const TMK61_cross_key   JSR     =   {.x=5, .y=9};   // ПП
-static const TMK61_cross_key   RUN     =   {.x=2, .y=9};   // С/П
+static const TMK61_cross_key   NON     =   {0, 0};
+static const TMK61_cross_key   F       =   {11, 9};  // F
+static const TMK61_cross_key   K       =   {10, 9};  // K
+static const TMK61_cross_key   SB      =   {7, 9};   // ШГ->
+static const TMK61_cross_key   SF      =   {9, 9};   // ШГ<-
+static const TMK61_cross_key   Px      =   {8, 9};   // П->X
+static const TMK61_cross_key   xP      =   {6, 9};   // X->П
+static const TMK61_cross_key   _0_     =   {2, 1};   // 0
+static const TMK61_cross_key   _1_     =   {3, 1};   // 1
+static const TMK61_cross_key   _2_     =   {4, 1};   // 2
+static const TMK61_cross_key   _3_     =   {5, 1};   // 3
+static const TMK61_cross_key   _4_     =   {6, 1};   // 4
+static const TMK61_cross_key   _5_     =   {7, 1};   // 5
+static const TMK61_cross_key   _6_     =   {8, 1};   // 6
+static const TMK61_cross_key   _7_     =   {9, 1};   // 7
+static const TMK61_cross_key   _8_     =   {10, 1};  // 8
+static const TMK61_cross_key   _9_     =   {11, 1};  // 9
+static const TMK61_cross_key   SUB     =   {3, 8};   // -
+static const TMK61_cross_key   ADD     =   {2, 8};   // +
+static const TMK61_cross_key   DIV     =   {5, 8};   // /
+static const TMK61_cross_key   MUL     =   {4, 8};   // *
+static const TMK61_cross_key   DOT     =   {7, 8};   // .
+static const TMK61_cross_key   POW     =   {9, 8};   // ВП
+static const TMK61_cross_key   NEG     =   {8, 8};   // /-/
+static const TMK61_cross_key   Cx      =   {10, 8};  // Cx
+static const TMK61_cross_key   Bx      =   {11, 8};  // Bx
+static const TMK61_cross_key   XY      =   {6, 8};   // X<->Y
+static const TMK61_cross_key   RET     =   {4, 9};   // В/О
+static const TMK61_cross_key   JMP     =   {3, 9};   // БП
+static const TMK61_cross_key   JSR     =   {5, 9};   // ПП
+static const TMK61_cross_key   RUN     =   {2, 9};   // С/П
 
 extern const TMK61_cross_key KeyPairs[40];
 

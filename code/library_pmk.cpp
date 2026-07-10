@@ -107,15 +107,12 @@ static  u8          mk61_lib[] = {
   0xFF
 };
 
-// registers = 0.0 {sign_num(8-bit)|sign_pow(7-bit)|len(bytes for mantisa), abs(pow), mantissa... }
-const u8 pack_clear_register[3] = {0x01, 0x00, 0x00};  // 0.0
-
 static constexpr usize SETUP_KEY_HOLD_STEPS = 4;
 static constexpr usize SETUP_KEY_SETTLE_STEPS = 64;
 static constexpr usize SETUP_RUN_STEPS = 50000;
 
 void clear_registers(void) {
-  for(u8 nReg=0; nReg < 0x0F; nReg++) MK61Emu_UnpackRegster(nReg, (u8*) &pack_clear_register);
+  core_61::clear_memory_registers();
 }
 
 bool code_needs_expanded(usize offs, const u8* data_stream) {
@@ -137,11 +134,12 @@ usize load_code_only(usize offs, const u8* data_stream, bool force_expanded = fa
 }
 
 void load_registers(usize offs, u8* data_stream) {
-  u8* pPack_number = &data_stream[offs];
+  const u8* pPack_number = &data_stream[offs];
   while(*pPack_number != 0xFF) {
     const u8 RegisterN = *pPack_number++;
     dbghexln(LIB61, "unpack reg: ", RegisterN);
     pPack_number = MK61Emu_UnpackRegster(RegisterN, pPack_number);
+    if(pPack_number == NULL) return;
   }
 }
 

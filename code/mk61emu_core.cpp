@@ -80,6 +80,11 @@ static const char default_symbols[16] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', 'r', 'E', ' '
 };
 
+static inline char display_symbol(const char* symbols, u8 value) {
+  const char* active_symbols = symbols == NULL ? default_symbols : symbols;
+  return active_symbols[value < 16 ? value : 15];
+}
+
 #include "array"
 #if IS_CORTEX_M4() //__ARM_ARCH == 7
   #warning("Hardware mul/div present!")
@@ -129,8 +134,8 @@ static  u8  __attribute__((aligned (16))) mod42_table[MOD42_TABLE_SIZE];
 //#define MOD42(v)  ( ((v) %42) &0xff )
 
 static const mk61ROM_t ROM = {
-        IK1302: {
-                microinstructions: {
+        {
+                {
                         0x0000000, 0x0800001, 0x0A00820, 0x0040020, // 1
                         0x0A03120, 0x0203081, 0x0A00181, 0x0803800,
                         0x0818001, 0x0800400, 0x0A00089, 0x0A03C20,
@@ -149,7 +154,7 @@ static const mk61ROM_t ROM = {
                         0x0840801, 0x0840020, 0x0013081, 0x0010801,
                         0x0818180, 0x0800180, 0x0A00081, 0x0800001  //17
                 },
-                instructions: {
+                {
                         0x00204E4E, 0x00117360, 0x00114840, 0x01040240, // 1
                         0x00164040, 0x001B3240, 0x00064640, 0x015B4013,
                         0x00D93130, 0x00001040, 0x01A52014, 0x00000000,
@@ -216,8 +221,8 @@ static const mk61ROM_t ROM = {
                         0x00144740, 0x01176806, 0x000A5A5A, 0x01D3200D  // 64
                 }
         },
-        IK1303: {
-                microinstructions: {
+        {
+                {
                     0x0000000, 0x0800001, 0x0040020, 0x1440090, // 1
                         0x0A00081, 0x1000000, 0x1400020, 0x0800008,
                         0x0A03180, 0x1002200, 0x0800400, 0x1418001,
@@ -236,7 +241,7 @@ static const mk61ROM_t ROM = {
                         0x0858001, 0x0040020, 0x3200209, 0x08000C0,
                         0x4000020, 0x0600081, 0x1000000, 0x1000180  // 17
                 },
-                instructions: {
+                {
                         0x00386050, 0x005B3F3E, 0x000F5970, 0x00152470, // 1
                         0x000C3D50, 0x0011312F, 0x005B4544, 0x00165050,
                         0x000C3404, 0x005B3F3E, 0x00D40450, 0x00162424,
@@ -303,8 +308,8 @@ static const mk61ROM_t ROM = {
                         0x0017506A, 0x00FB5020, 0x000A3C47, 0x00174D50  // 64
                 }
         },
-        IK1306: {
-                microinstructions: {
+        {
+                {
                         0x0000000, 0x0800008, 0x0040020, 0x0800001, // 1
                         0x0800021, 0x0080020, 0x0A00028, 0x0040100,
                         0x4000100, 0x0010100, 0x0A00101, 0x0201089,
@@ -323,7 +328,7 @@ static const mk61ROM_t ROM = {
                         0x0210801, 0x0210081, 0x0010000, 0x0200090,
                         0x0210081, 0x0212801, 0x0A01020, 0x0A01020  // 17
                 },
-                instructions: {
+                {
                         0x0070000, 0x0060040, 0x0076A2F, 0x00B4C00, // 1
                         0x0090000, 0x00B4D00, 0x0090000, 0x0055300,
                         0x0090000, 0x00B5400, 0x0090000, 0x0054600,
@@ -1504,8 +1509,13 @@ void MK61Emu_Cleanup() {
 }
 
 void MK61Emu_SetKeyPress(const int key1, const int key2) {
-    m_IK1302.key_x = key1;
-    m_IK1302.key_y = key2;
+    if(key1 < 0 || key1 > 11 || key2 < 0 || key2 > 9) {
+      m_IK1302.key_x = 0;
+      m_IK1302.key_y = 0;
+      return;
+    }
+    m_IK1302.key_x = (uint32_t) key1;
+    m_IK1302.key_y = (uint32_t) key2;
 }
 
 void MK61Emu_SetDisplayed(uint32_t value) {
@@ -1516,7 +1526,7 @@ uint32_t MK61Emu_GetDisplayed(void) {
     return m_IK1302.displayed;
 }
 
-inline uint32_t MK61Emu_GetComma(void) {
+uint32_t MK61Emu_GetComma(void) {
     return m_IK1302.comma;
 }
 
@@ -1535,7 +1545,13 @@ AngleUnit MK61Emu_GetAngleUnit(void) {
     return m_emu.m_angle_unit;
 }
 
-void write_stack_register(stack reg, char sign, char cmantissa[8], isize pow) {
+bool write_stack_register(stack reg, char sign, const char cmantissa[8], isize pow) {
+  if((int) reg < (int) stack::X1 || (int) reg > (int) stack::T) return false;
+  if(cmantissa == NULL || pow < -99 || pow > 99) return false;
+  for(usize i = 0; i < 8; i++) {
+    if(cmantissa[i] < '0' || cmantissa[i] > '9') return false;
+  }
+
   isize addr = (isize) core_61::stack_address(reg) + 1;
   // mantissa convert
   for(isize i=7; i >= 0; i--) {
@@ -1552,6 +1568,7 @@ void write_stack_register(stack reg, char sign, char cmantissa[8], isize pow) {
   }
   ringM[addr + 6] = pow / 10;
   ringM[addr + 3] = pow % 10;
+  return true;
 }
 
 /*
@@ -1559,12 +1576,16 @@ void write_stack_register(stack reg, char sign, char cmantissa[8], isize pow) {
         -1.2345678 -99
 */
 const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_set) {
+  if(cvalue == NULL) return NULL;
+  cvalue[0] = 0;
+  if((int) reg < (int) stack::X1 || (int) reg > (int) stack::T) return cvalue;
+
   // mantissa convert
   usize i = core_61::stack_address(reg) + 1;
   isize pos = 9;
   do {
     if(pos == 2) cvalue[pos--] = '.';
-    cvalue[pos--] = symbols_set[ringM[i]];
+    cvalue[pos--] = display_symbol(symbols_set, ringM[i]);
     i += 3;
   } while(pos > 0);
   cvalue[0] = (ringM[i] == 9)? '-' : ' ';
@@ -1575,13 +1596,14 @@ const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_
   if(ringM[i + 9] == 9) {
     cvalue[11] = '-';
     const usize pow = 100 - (powh*10 + powl);
-    cvalue[12] = symbols_set[pow / 10];
-    cvalue[13] = symbols_set[pow % 10];
+    cvalue[12] = display_symbol(symbols_set, (u8) (pow / 10));
+    cvalue[13] = display_symbol(symbols_set, (u8) (pow % 10));
   } else {
     cvalue[11] = ' ';
-    cvalue[12] = symbols_set[powh];
-    cvalue[13] = symbols_set[powl];
+    cvalue[12] = display_symbol(symbols_set, (u8) powh);
+    cvalue[13] = display_symbol(symbols_set, (u8) powl);
   }
+  cvalue[14] = 0;
 
   return &cvalue[0];
 }
@@ -1628,7 +1650,15 @@ usize stack_address(stack reg) {
   return base + ((usize) reg * 42);
 }
 
-void  set_stack_register(stack reg, bcd_value *value) {
+bool has_error(void) {
+  for(usize pos : indicator_pos) {
+    if((m_IK1302.R[pos] & 0x0F) == 0x0E) return true;
+  }
+  return false;
+}
+
+void  set_stack_register(stack reg, const bcd_value *value) {
+  if(value == NULL || (int) reg < (int) stack::X1 || (int) reg > (int) stack::T) return;
   //                         +3   +3   +3   +3   +3   +3   +3   +3   +3    +3    +3
   // Конвертируем мантиссу 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> S -> ph -> pl -> s
   usize addr = stack_address(reg) + 1 + (3 * 7) + (3 * 4);
@@ -1655,6 +1685,9 @@ void  set_stack_register(stack reg, bcd_value *value) {
 }
 
 void  get_stack_register(stack reg, bcd_value &value) {
+  value.mantissa = 0;
+  value.signs_and_pow = 0;
+  if((int) reg < (int) stack::X1 || (int) reg > (int) stack::T) return;
   // Конвертируем мантиссу
   usize addr = stack_address(reg) + 1;
 
@@ -1702,24 +1735,42 @@ void step(void) {
 // The scratch buffer is sized exactly to those structs and is compiled only in
 // the CORE math backend, so the default LIBM build carries no extra RAM.
 #if MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
-static u8 context_snapshot[sizeof(ringM) + sizeof(m_IK1302) + sizeof(m_IK1303) + sizeof(m_IK1306) + sizeof(m_emu)];
+struct CoreContextSnapshot {
+  u8 ring[sizeof(ringM)];
+  IK1302 ik1302;
+  IK1303 ik1303;
+  IK1306 ik1306;
+  MK61Emu emu;
+  usize backstep_comma;
+  bool edit;
+  bool expanded;
+  bool valid;
+};
+
+static CoreContextSnapshot context_snapshot = {};
 
 void save_context(void) {
-  usize offset = 0;
-  memcpy(context_snapshot + offset, ringM, sizeof(ringM));        offset += sizeof(ringM);
-  memcpy(context_snapshot + offset, &m_IK1302, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
-  memcpy(context_snapshot + offset, &m_IK1303, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
-  memcpy(context_snapshot + offset, &m_IK1306, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
-  memcpy(context_snapshot + offset, &m_emu, sizeof(m_emu));
+  memcpy(context_snapshot.ring, ringM, sizeof(ringM));
+  context_snapshot.ik1302 = m_IK1302;
+  context_snapshot.ik1303 = m_IK1303;
+  context_snapshot.ik1306 = m_IK1306;
+  context_snapshot.emu = m_emu;
+  context_snapshot.backstep_comma = backstep_comma_position;
+  context_snapshot.edit = edit_program;
+  context_snapshot.expanded = expanded_program_mode;
+  context_snapshot.valid = true;
 }
 
 void restore_context(void) {
-  usize offset = 0;
-  memcpy(ringM, context_snapshot + offset, sizeof(ringM));        offset += sizeof(ringM);
-  memcpy(&m_IK1302, context_snapshot + offset, sizeof(m_IK1302)); offset += sizeof(m_IK1302);
-  memcpy(&m_IK1303, context_snapshot + offset, sizeof(m_IK1303)); offset += sizeof(m_IK1303);
-  memcpy(&m_IK1306, context_snapshot + offset, sizeof(m_IK1306)); offset += sizeof(m_IK1306);
-  memcpy(&m_emu, context_snapshot + offset, sizeof(m_emu));
+  if(!context_snapshot.valid) return;
+  memcpy(ringM, context_snapshot.ring, sizeof(ringM));
+  m_IK1302 = context_snapshot.ik1302;
+  m_IK1303 = context_snapshot.ik1303;
+  m_IK1306 = context_snapshot.ik1306;
+  m_emu = context_snapshot.emu;
+  backstep_comma_position = context_snapshot.backstep_comma;
+  edit_program = context_snapshot.edit;
+  expanded_program_mode = context_snapshot.expanded;
 }
 #endif // MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
 
@@ -1734,51 +1785,25 @@ void enable(void) {
 }
 
 bool  update_indicator(char* buffer, const char* display_symbols) { // возращает false - есть изменения в дисплейной строке/ true - нет изменений
-  const isize  comma_pos = 9 - m_IK1302.comma + 1;
+  if(buffer == NULL) return true;
+
+  char next[INDICATOR_STRING_LENGTH] = {};
+  usize out = 0;
+  const int comma_pos = 10 - (int) m_IK1302.comma;
+  for(usize i = 0; i < 12; i++) {
+    if((int) i == comma_pos && comma_pos < 10) next[out++] = '.';
+    next[out++] = display_symbol(display_symbols, m_IK1302.R[indicator_pos[i]]);
+  }
+  next[out] = 0;
+
   bool match = true;
-
-  isize i = 0;
-  while(i < comma_pos) {
-    const char read_char = display_symbols[ m_IK1302.R[ indicator_pos[i++] ] ];
-
-    match = (*buffer == read_char);
-    if(match) {
-      buffer++;
-    } else {
-      *buffer++ = read_char;
-      while(i < comma_pos) {
-        const char read_char = display_symbols[ m_IK1302.R[ indicator_pos[i++] ] ];
-        *buffer++ = read_char; 
-      }
-      break;
-    }
-  }
-
-  if(i == comma_pos) { // Так как индикатор ЖК не имеет позицию точки, то для нее отводится символ
-    if(i < (11 - 1)) *buffer++ = '.'; // ставим в текстовом буфере точку, если ее позиция < 11
-  }
-
-  while(i < 12) {
-    const char read_char = display_symbols[ m_IK1302.R[ indicator_pos[i++] ] ];
-
-    match &= (*buffer == read_char);
-    if(match) {
-      buffer++;
-    } else {
-      *buffer++ = read_char;
-      while(i < 12) {
-        const char read_char = display_symbols[ m_IK1302.R[ indicator_pos[i++] ] ];
-        *buffer++ = read_char; 
-      }
-      break;
-    }
-  }
-  *buffer = 0;
-
+  for(usize i = 0; i <= out; i++) match &= buffer[i] == next[i];
+  if(!match) memcpy(buffer, next, out + 1);
   return match;
 }
 
-void  set_code_page(uint8_t* page) {
+void  set_code_page(const uint8_t* page) {
+  if(page == NULL) return;
   const usize active_ring_size = core_61::ring_size();
   for(usize i = 41; i < active_ring_size; i+=42) {
     MK61Emu_SetCode(i, *page++);
@@ -1805,7 +1830,8 @@ void  get_code_page(uint8_t* page) {
 }
 
 u8    get_code(i32 addr){
-    return (ringM[addr]<<4)|(ringM[addr-3]);
+    if(addr < 3 || addr >= (i32) core_61::ring_size()) return 0;
+    return (u8) ((ringM[addr]<<4)|(ringM[addr-3]));
 }
 
 }
@@ -1815,17 +1841,24 @@ u8    get_code(i32 addr){
 //     ----7--6--5--4--3--2--1--0--S--1--0--s
 //   { sign_num|sign_pow|len, abs(pow), mantissa... }
 
-u8* MK61Emu_UnpackRegster(u8 nReg, u8 *pack_number) {
-  //const u8 nReg = *pack_number++;
-  const i8 sign = *pack_number & 0b11000000;
-  const u8 len  = *pack_number++ & 0b00111111;
-  const u8 pow  = *pack_number++;
+const u8* MK61Emu_UnpackRegster(u8 nReg, const u8 *pack_number) {
+  if(pack_number == NULL) return NULL;
+  const u8 register_count = core_61::expanded_program_is_on() ? 16 : 15;
+  if(nReg >= register_count) return NULL;
+  const u8 flags = pack_number[0];
+  const u8 len = flags & 0b00111111;
+  const u8 pow = pack_number[1];
+  if(len > 4 || (pow & 0x0F) > 9 || (pow >> 4) > 9) return NULL;
+  for(u8 i = 0; i < len; i++) {
+    if((pack_number[2 + i] & 0x0F) > 9 || (pack_number[2 + i] >> 4) > 9) return NULL;
+  }
+  const u8* packed_digits = pack_number + 2;
   const int cnt_zero = len * 2;
   int   addr = nReg*42 + 21;
   u8    two_digits = 0;
 
-      ringM[addr + 3] = (sign < 0)? 9 : 0;
-      if((sign & 0b01000000) != 0) {
+      ringM[addr + 3] = (flags & 0b10000000) != 0 ? 9 : 0;
+      if((flags & 0b01000000) != 0) {
         ringM[addr + 3*4] = 9;
       } else {
         ringM[addr + 3*4] = 0;
@@ -1836,7 +1869,7 @@ u8* MK61Emu_UnpackRegster(u8 nReg, u8 *pack_number) {
           ringM[addr] = 0; 
         } else {
           if ((j & 1) == 0) { // четные цифры
-            two_digits = *pack_number++;
+            two_digits = packed_digits[j / 2];
             ringM[addr] = two_digits >> 4;
           } else { // нечетные цифры
             ringM[addr] = two_digits & 0xF; 
@@ -1848,12 +1881,25 @@ u8* MK61Emu_UnpackRegster(u8 nReg, u8 *pack_number) {
     ringM[addr + 27 + 3] = pow & 0xF; 
     ringM[addr + 30 + 3] = pow >> 4;
     
-  return pack_number;
+  return packed_digits + len;
+}
+
+void core_61::clear_memory_registers(void) {
+  static const u8 packed_zero[3] = {0x01, 0x00, 0x00};
+  const u8 register_count = expanded_program_is_on() ? 16 : 15;
+  for(u8 reg = 0; reg < register_count; reg++) {
+    (void) MK61Emu_UnpackRegster(reg, packed_zero);
+  }
 }
 
 //      0       1      2     3
 // 24, 21, 18, 15, 12, 9, 6, 3, 0 ::: 33, 30, 27
 void    MK61Emu_ReadRegister(int nReg, char* buffer, const char* display_symbols) {
+  if(buffer == NULL) return;
+  buffer[0] = 0;
+  const int register_count = core_61::expanded_program_is_on() ? 16 : 15;
+  if(nReg < 0 || nReg >= register_count) return;
+
   int addr = nReg*42 + 21;
   const u8 sign_pow_tetra = ringM[addr + 3*4];
   const bool sign_pow = ringM[addr + 3*4];
@@ -1864,7 +1910,7 @@ void    MK61Emu_ReadRegister(int nReg, char* buffer, const char* display_symbols
   dbghex(MK61E, (isize) ringM[addr+3], ','); 
 
   for(int j = 3; j < 11; j++){
-    *buffer++ = display_symbols[ringM[addr]]; 
+    *buffer++ = display_symbol(display_symbols, ringM[addr]);
     dbghex(MK61E, (isize) ringM[addr], ',');
     if(j == 3) *buffer++ = '.';
     addr -= 3;
@@ -1878,17 +1924,19 @@ void    MK61Emu_ReadRegister(int nReg, char* buffer, const char* display_symbols
   if(sign_pow != 0) {
     *buffer++ = '-';
     const usize pow = 100 - ringM[addr+30+3]*10 - ringM[addr+27+3];
-    *buffer++ = display_symbols[pow / 10]; 
-    *buffer++ = display_symbols[pow % 10]; 
+    *buffer++ = display_symbol(display_symbols, (u8) (pow / 10));
+    *buffer++ = display_symbol(display_symbols, (u8) (pow % 10));
   } else {
     *buffer++ = ' ';
-    *buffer++ = display_symbols[ringM[addr+30+3]]; 
-    *buffer++ = display_symbols[ringM[addr+27+3]]; 
+    *buffer++ = display_symbol(display_symbols, ringM[addr+30+3]);
+    *buffer++ = display_symbol(display_symbols, ringM[addr+27+3]);
   }
   *buffer = 0x00;
 }
 
 usize   MK61Emu_Read_R_mantissa(usize nReg) {
+  const usize register_count = core_61::expanded_program_is_on() ? 16 : 15;
+  if(nReg >= register_count) return 0;
   usize addr = nReg*42 + 21;
   usize value = 0;
   for(usize j = 3; j < 11; j++){
@@ -1911,6 +1959,7 @@ usize MK61Emu_Read_X_as_byte(void) {
 }
 
 void MK61Emu_SetCode(int addr, uint8_t data) {
+    if(addr < 3 || addr >= (int) core_61::ring_size()) return;
     ringM[addr] = data >> 4;
     ringM[addr-3] = data & 0x0F;
 }
@@ -1950,23 +1999,22 @@ int MK61Emu_GetDisplayReg(void) {
 }
 
 const char* MK61Emu_GetIndicatorStr(const char* display_symbols) {
-    uint16_t i = 0;
-
-    memset(m_emu.m_indicator_str, 0, 15);
+    memset(m_emu.m_indicator_str, 0, sizeof(m_emu.m_indicator_str));
     memset(m_emu.m_indicator_str, ' ', 12);
 
-    for (i = 0; i < 9; i++) {
-        m_emu.m_indicator_str[i] = display_symbols[m_IK1302.R[(8 - i) * 3]];
+    for (int i = 0; i < 9; i++) {
+        m_emu.m_indicator_str[i] = display_symbol(display_symbols, m_IK1302.R[(8 - i) * 3]);
     }
-    for (i = 0; i < 3; i++) {
-        m_emu.m_indicator_str[i + 10] = display_symbols[m_IK1302.R[(11 - i) * 3]];
-    }
-
-    int comma_pos = 9 - m_IK1302.comma + 1;
-    for (i = 13; i >= comma_pos; i--) {
-        m_emu.m_indicator_str[i] = m_emu.m_indicator_str[i - 1];
+    for (int i = 0; i < 3; i++) {
+        m_emu.m_indicator_str[i + 10] = display_symbol(display_symbols, m_IK1302.R[(11 - i) * 3]);
     }
 
-    m_emu.m_indicator_str[comma_pos] = ',';
+    const int comma_pos = 10 - (int) m_IK1302.comma;
+    if(comma_pos >= 0 && comma_pos <= 13) {
+      for (int i = 13; i > comma_pos; i--) {
+          m_emu.m_indicator_str[i] = m_emu.m_indicator_str[i - 1];
+      }
+      m_emu.m_indicator_str[comma_pos] = ',';
+    }
     return m_emu.m_indicator_str;
 }

@@ -177,6 +177,17 @@ static void test_mk_register_references(void) {
   assert(std::strncmp(TinyBasicTestLcdLine(0), "45", 2) == 0);
 }
 
+static void test_mk_reference_rejects_unrepresentable_values(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "10 .X=1E100\n"
+    "20 END\n",
+    "MKRANGE");
+  assert(slot >= 0);
+  TinyBasicTestRun(slot);
+  assert(std::strcmp(TinyBasicTestError(), "HOW?") == 0);
+}
+
 static void test_input_mk_stack_reference(void) {
   TinyBasicTestReset();
   TinyBasicTestSetInput(7.0);
@@ -216,6 +227,7 @@ int main(void) {
   test_format_number();
   test_mk_math_dispatch();
   test_mk_register_references();
+  test_mk_reference_rejects_unrepresentable_values();
   test_input_mk_stack_reference();
   test_mk_rf_requires_expanded_mode();
   test_if_and_goto();

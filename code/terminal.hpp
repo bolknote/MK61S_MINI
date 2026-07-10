@@ -950,8 +950,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       char sign = ' ';
       char mantissa[8];
       isize pow10 = 0;
-      mk61_ref::double_to_parts(value, sign, mantissa, pow10);
-      return pow10 >= -99 && pow10 <= 99;
+      return mk61_ref::double_to_parts(value, sign, mantissa, pow10);
     }
 
     bool write_register_value(u8 reg, const char* args) {

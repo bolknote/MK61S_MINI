@@ -49,18 +49,18 @@ namespace ring_M {
     const char  *NAME;
     const usize OFFSET;
   };
-  static constexpr K745 IR2_1_0 = {.NAME = "IR2.1_0", .OFFSET = 0};
-  static constexpr K745 IR2_2   = {.NAME = "IR2.2",   .OFFSET = 42};
-  static constexpr K745 IK130X  = {.NAME = "IK130X",  .OFFSET = 42 + 42};
+  static constexpr K745 IR2_1_0 = {"IR2.1_0", 0};
+  static constexpr K745 IR2_2   = {"IR2.2",   42};
+  static constexpr K745 IK130X  = {"IK130X",  42 + 42};
 
-  static constexpr K745 IK1302_CLASSIC  = {.NAME = "IK1302",  .OFFSET = OFFSET_IK1302_CLASSIC};
-  static constexpr K745 IK1303_CLASSIC  = {.NAME = "IK1303",  .OFFSET = OFFSET_IK1303_CLASSIC};
-  static constexpr K745 IK1306_CLASSIC  = {.NAME = "IK1306",  .OFFSET = OFFSET_IK1306_CLASSIC};
-  static constexpr K745 IR2_1_1_CLASSIC = {.NAME = "IR2.1_1", .OFFSET = OFFSET_IR2_1_1_CLASSIC};
-  static constexpr K745 IK1302_EXPANDED  = {.NAME = "IK1302",  .OFFSET = OFFSET_IK1302_EXPANDED};
-  static constexpr K745 IK1303_EXPANDED  = {.NAME = "IK1303",  .OFFSET = OFFSET_IK1303_EXPANDED};
-  static constexpr K745 IK1306_EXPANDED  = {.NAME = "IK1306",  .OFFSET = OFFSET_IK1306_EXPANDED};
-  static constexpr K745 IR2_1_1_EXPANDED = {.NAME = "IR2.1_1", .OFFSET = OFFSET_IR2_1_1_EXPANDED};
+  static constexpr K745 IK1302_CLASSIC  = {"IK1302",  OFFSET_IK1302_CLASSIC};
+  static constexpr K745 IK1303_CLASSIC  = {"IK1303",  OFFSET_IK1303_CLASSIC};
+  static constexpr K745 IK1306_CLASSIC  = {"IK1306",  OFFSET_IK1306_CLASSIC};
+  static constexpr K745 IR2_1_1_CLASSIC = {"IR2.1_1", OFFSET_IR2_1_1_CLASSIC};
+  static constexpr K745 IK1302_EXPANDED  = {"IK1302",  OFFSET_IK1302_EXPANDED};
+  static constexpr K745 IK1303_EXPANDED  = {"IK1303",  OFFSET_IK1303_EXPANDED};
+  static constexpr K745 IK1306_EXPANDED  = {"IK1306",  OFFSET_IK1306_EXPANDED};
+  static constexpr K745 IR2_1_1_EXPANDED = {"IR2.1_1", OFFSET_IR2_1_1_EXPANDED};
   static const K745 CLASSIC_CHIP[] = {IR2_1_0, IR2_2, IK1302_CLASSIC, IK1303_CLASSIC, IK1306_CLASSIC, IR2_1_1_CLASSIC};
   static const K745 EXPANDED_CHIP[] = {IR2_1_0, IR2_2, IK130X, IK1302_EXPANDED, IK1303_EXPANDED, IK1306_EXPANDED, IR2_1_1_EXPANDED};
   static constexpr usize CLASSIC_CHIP_COUNT = sizeof(CLASSIC_CHIP) / sizeof(CLASSIC_CHIP[0]);
@@ -187,13 +187,15 @@ namespace core_61 {
   inline    bool  is_CALC(void)         { return (comma_position() != COMMA_RUN_POSITION); }
 
   extern    usize len_code_command(u8 cod);
-  extern    void  set_code_page(uint8_t* page);
+  extern    void  set_code_page(const uint8_t* page);
   extern    void  get_code_page(uint8_t* page);
   extern    void  get_stack_register(stack reg, bcd_value &value);
-  extern    void  set_stack_register(stack reg, bcd_value *value);
+  extern    void  set_stack_register(stack reg, const bcd_value *value);
+  extern    void  clear_memory_registers(void);
+  extern    bool  has_error(void);
 
   // Snapshot / restore the whole live calculator state (stack ring, the three
-  // chip structs and the angle unit) into an internal, exactly-sized buffer.
+  // chip structs, UI mode flags and the angle unit) into an internal buffer.
   // Defined only in the CORE math backend; used to borrow the engine for a
   // transcendental evaluation and hand it back byte-for-byte, including the
   // screen register X2 and any error latch. The default LIBM build never
@@ -215,42 +217,29 @@ namespace core_61 {
  extern "C" {
 #endif
 */
-void    MK61Emu_ON(void);
 void    MK61Emu_SetDisplayed(uint32_t value);
 uint32_t MK61Emu_GetDisplayed(void);
 int     MK61Emu_GetDisplayReg(void);
 uint32_t MK61Emu_GetComma(void);
 void    MK61Emu_SetKeyPress(const int key1, const int key2);
-void    MK61Emu_DoKeyPress(const int key1, const int key2);
 void    MK61Emu_Cleanup(void);
-//void MK61Emu_Cycle(void);
-u8*     MK61Emu_UnpackRegster(u8 nReg, u8 *pack_number);
-//void    MK61Emu_ReadRegister(int nReg, char* buffer);
+const u8* MK61Emu_UnpackRegster(u8 nReg, const u8 *pack_number);
 void    MK61Emu_ReadRegister(int nReg, char* buffer, const char* display_symbols);
 
-extern const char* read_stack_register(stack reg, char cvalue[14], const char* symbols_set);
-extern void write_stack_register(stack reg, char sign, char cmantissa[8], isize pow);
+extern const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_set);
+extern bool write_stack_register(stack reg, char sign, const char cmantissa[8], isize pow);
 
 usize   MK61Emu_Read_R_mantissa(usize nReg);
 usize   MK61Emu_Read_X_as_byte(void);
 bool    MK61Emu_IsRunning(void);
 
 void    MK61Emu_SetCode(int addr, uint8_t data);
-//uint8_t MK61Emu_GetCode(int addr);
-//void    MK61Emu_GetCodePage(uint8_t* page);
 void    MK61Emu_ClearCodePage(void);
 
 const char* MK61Emu_GetIndicatorStr(const char* display_symbols);
-//const char* MK61Emu_GetStackStr(StackRegister stack_reg);
-//const char* MK61Emu_GetStackStr(StackRegister stack_reg, const char* symbols_set);
-//void        MK61Emu_SetStackStr(StackRegister stack_reg, char sign, char mantissa[8], isize pow);
 void MK61Emu_SetAngleUnit(AngleUnit angle);
 AngleUnit MK61Emu_GetAngleUnit(void);
 
-/* Функции с новой парадигмой использования реализующие доступ к внутренним ресурсам МК61 */
-bool  MK61Emu_ReadIndicator(char* buffer, const char* display_symbols);
-//int   MK61Emu_get_ring_address(int address);
-//int   MK61Emu_get_IP(void);
 void  MK61Emu_get_1302_R(char* buff); // experement
 /*
 #ifdef __cplusplus

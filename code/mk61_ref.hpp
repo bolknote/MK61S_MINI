@@ -113,7 +113,8 @@ inline double parse_display_number(const char* value) {
   return mk_math::atof(buffer);
 }
 
-inline void double_to_parts(double value, char& sign, char mantissa[8], isize& pow10) {
+inline bool double_to_parts(double value, char& sign, char mantissa[8], isize& pow10) {
+  if(!mk_math::is_finite(value)) return false;
   if(value < 0) {
     sign = '-';
     value = -value;
@@ -124,10 +125,11 @@ inline void double_to_parts(double value, char& sign, char mantissa[8], isize& p
   if(value == 0.0) {
     memset(mantissa, '0', 8);
     pow10 = 0;
-    return;
+    return true;
   }
 
   pow10 = (isize) mk_math::log10_floor(value);
+  if(pow10 < -99 || pow10 > 99) return false;
   double normalized = value / mk_math::pow10_int((int) pow10);
   if(normalized >= 10.0) {
     normalized /= 10.0;
@@ -142,12 +144,14 @@ inline void double_to_parts(double value, char& sign, char mantissa[8], isize& p
   if(scaled >= 100000000L) {
     scaled /= 10;
     pow10++;
+    if(pow10 > 99) return false;
   }
 
   for(int i = 7; i >= 0; i--) {
     mantissa[i] = (char) ('0' + (scaled % 10));
     scaled /= 10;
   }
+  return true;
 }
 
 #ifdef MK61_REF_HOST_TEST
@@ -224,7 +228,7 @@ inline bool write(const Ref& ref, double value) {
   char sign;
   char mantissa[8];
   isize pow10;
-  double_to_parts(value, sign, mantissa, pow10);
+  if(!double_to_parts(value, sign, mantissa, pow10)) return false;
 
 #ifdef MK61_REF_HOST_TEST
   if(ref.kind == Kind::R) host_register_value[ref.reg] = value;
@@ -235,8 +239,7 @@ inline bool write(const Ref& ref, double value) {
     write_register(ref.reg, sign, mantissa, pow10);
     return true;
   }
-  write_stack_register(stack_from_ref(ref.kind), sign, mantissa, pow10);
-  return true;
+  return write_stack_register(stack_from_ref(ref.kind), sign, mantissa, pow10);
 #endif
 }
 

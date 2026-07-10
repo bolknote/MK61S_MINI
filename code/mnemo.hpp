@@ -3,6 +3,7 @@
 
 #include "tools.hpp"
 #include "cross_hal.h"
+#include <string.h>
 
 extern void entry_programm_mode(void);
 extern void exit_auto_mode(void);
@@ -24,31 +25,39 @@ class key_mnenonic {
 
     void    clear_mnemo(void) {
       mnemo_pos = 0;
-      *(u32*) &mnemo_buffer[0] = 0x00000000;
-      *(u32*) &mnemo_buffer[4] = 0x00000000;
+      memset(mnemo_buffer, 0, sizeof(mnemo_buffer));
     }
 
     int    next_mnemo_pos(const char* descriptor) {
-      const i8 control = (i8) descriptor[0]; 
+      if(descriptor == NULL || mnemo_pos >= sizeof(mnemo_buffer) - 1) return 0;
+      const i8 control = (i8) descriptor[0];
+      usize len = (control < 0) ? ((u8) control & ~STORE_KEY) : (u8) control;
+      const usize capacity = sizeof(mnemo_buffer) - 1 - mnemo_pos;
+      if(len > capacity) len = capacity;
       if(control < 0) {
-        const usize len = ((u8) control & ~STORE_KEY);
         for(usize i=0; i < len; i++) mnemo_buffer[mnemo_pos + i] = descriptor[i+1];
         return mnemo_pos + len;
       } else {
-        for(usize i=0; i < (u8) control; i++) mnemo_buffer[mnemo_pos + i] = descriptor[i+1];
+        for(usize i=0; i < len; i++) mnemo_buffer[mnemo_pos + i] = descriptor[i+1];
         return 0;
       }
     }
 
     void  build_mnemo(i32 keycode) {
-      static  constexpr u32 MK61_EXT_CMD_CAPTION = ('T' << 16) | ('X' << 8) | 'E';
       extern  void      edit_extend_program(void);
+
+      if(keycode < 0 || keycode >= 40) {
+        clear_mnemo();
+        return;
+      }
 
       if(mnemo_pos == 0 || keycode == KEY_K || keycode == KEY_F) { // Первый вход в построение мнемокода нажатой набираемой функции
         clear_mnemo();
         if(keycode == KEY_USER_PRESS && core_61::edit_program) {
           mnemo_pos = 0;
-          *((u32*) &mnemo_buffer[mnemo_pos]) = MK61_EXT_CMD_CAPTION;
+          mnemo_buffer[0] = 'E';
+          mnemo_buffer[1] = 'X';
+          mnemo_buffer[2] = 'T';
           edit_extend_program();
         } else {
           mnemo_pos = next_mnemo_pos(mnemo_code[keycode]);
@@ -70,7 +79,7 @@ class key_mnenonic {
           // П->x, x->П (#N)
           case  KEY_Px:
           case  KEY_xP:
-              mnemo_buffer[mnemo_pos] = mnemo_code_register[keycode];
+              if(mnemo_pos < sizeof(mnemo_buffer) - 1) mnemo_buffer[mnemo_pos] = mnemo_code_register[keycode];
               mnemo_pos = 0; // stop build
             break;
           // ПП, БП, С/П, В/О, ШГ->, ШГ<- (#NN)
@@ -80,7 +89,7 @@ class key_mnenonic {
           case  KEY_RET:
           case  KEY_FRW:
           case  KEY_BKW:
-              mnemo_buffer[mnemo_pos] = mnemo_code_register[keycode];
+              if(mnemo_pos < sizeof(mnemo_buffer) - 1) mnemo_buffer[mnemo_pos] = mnemo_code_register[keycode];
               if(mnemo_pos > 2) { 
                 mnemo_pos = 0; // stop build
               } else {
@@ -103,7 +112,7 @@ class key_mnenonic {
       if(on) {
         build_mnemo(keycode);
         MK61DisplayUpdate update(lcd);
-        *(u64*) &mnemo = pad_left_8_char(mnemo_buffer);
+        pad_left_8_char(mnemo, mnemo_buffer);
         lcd.setCursor(X, Y); lcd.print(mnemo);
       }
     }

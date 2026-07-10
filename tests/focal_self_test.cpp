@@ -297,6 +297,15 @@ static void test_mk_register_references(void) {
   CHECK_STARTS(FocalTestLcdLine(0), "45");
 }
 
+static void test_mk_reference_rejects_unrepresentable_values(void) {
+  FocalTestReset();
+  const int slot = add_program(
+      "01.10 S .X=1E100\n"
+      "01.20 E");
+  FocalTestRun(slot);
+  CHECK(std::strcmp(FocalTestError(), "MK?") == 0);
+}
+
 static void test_ask_mk_stack_reference(void) {
   FocalTestReset();
   FocalTestSetAskValue(7.0);
@@ -612,6 +621,7 @@ int main(void) {
   test_mk_math_dispatch_and_format();
   test_math_errors_tiny_values_and_for_progress();
   test_mk_register_references();
+  test_mk_reference_rejects_unrepresentable_values();
   test_ask_mk_stack_reference();
   test_mk_rf_requires_expanded_mode();
   test_editor_shift_parentheses();

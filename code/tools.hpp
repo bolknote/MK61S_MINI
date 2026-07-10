@@ -183,12 +183,17 @@ inline void Serial_writeln_hex(u8 code) {
 }
 #endif
 
-inline u64 pad_left_8_char(char* string_8_char) {
-  u64 result = *(uint64_t*) string_8_char;
-  while((result & 0x0000FF0000000000) == 0) {
-    result = (result << 8) | 0x0000000000000020;
+inline void pad_left_8_char(char output[8], const char input[8]) {
+  if(output == NULL) return;
+  usize len = 0;
+  if(input != NULL) {
+    while(len < 6 && input[len] != 0) len++;
   }
-  return result;
+  const usize padding = 6 - len;
+  for(usize i = 0; i < padding; i++) output[i] = ' ';
+  for(usize i = 0; i < len; i++) output[padding + i] = input[i];
+  output[6] = 0;
+  output[7] = 0;
 }
 
 AngleUnit read_stored_grade_switch(void);

@@ -12,7 +12,7 @@ fi
 # Shim headers (Arduino.h/debug.h) come first on the include path so the
 # firmware-only dependencies resolve to host stubs.
 clang++ -std=c++17 -Wall -Wextra -Wno-unused -Wno-unused-parameter \
-  -Wno-array-parameter -Wno-cpp -Wno-gnu-designator \
+  -Wno-cpp \
   "${sanitizer_flags[@]}" \
   -DMK61_MATH_BACKEND=1 \
   -include "$root/tests/mk_math_shim/debug.h" \
