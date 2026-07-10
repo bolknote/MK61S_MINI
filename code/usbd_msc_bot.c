@@ -300,7 +300,8 @@ static void  MSC_BOT_CBW_Decode(USBD_HandleTypeDef *pdev)
     /* Burst xfer handled internally */
     else if ((hmsc->bot_state != USBD_BOT_DATA_IN) &&
              (hmsc->bot_state != USBD_BOT_DATA_OUT) &&
-             (hmsc->bot_state != USBD_BOT_LAST_DATA_IN))
+             (hmsc->bot_state != USBD_BOT_LAST_DATA_IN) &&
+             (hmsc->bot_state != USBD_BOT_DEFERRED))
     {
       if (hmsc->bot_data_length > 0U)
       {

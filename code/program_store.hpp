@@ -31,6 +31,8 @@ bool refresh(void);
 
 int count(ProgramType type);
 bool entry(ProgramType type, int index, Entry& out);
+int total_count(void);
+bool entry_at(int index, Entry& out);
 bool exists(ProgramType type, const char* name);
 
 bool write(ProgramType type, const char* name, const u8* data, u16 data_len);

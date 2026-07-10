@@ -37,17 +37,26 @@ static constexpr u16 VFAT_STAGE_FIRST_CLUSTER = 2;
 static constexpr u16 VFAT_STAGE_CLUSTER_COUNT = 800;
 static constexpr u16 VFAT_STAGE_DATA_SIZE = 512;
 static constexpr u16 VFAT_STAGE_HEADER_SIZE = 8;
-static constexpr u16 VFAT_STAGE_RECORD_SIZE = VFAT_STAGE_HEADER_SIZE + VFAT_STAGE_DATA_SIZE;
-static constexpr u8 VFAT_STAGE_RECORDS_PER_SECTOR = FLASH_SECTOR_SIZE / VFAT_STAGE_RECORD_SIZE;
-static constexpr u8 VFAT_STAGE_TAG0 = 'V';
+static constexpr u16 VFAT_STAGE_PAYLOAD_OFFSET = 512;
+static constexpr u8 VFAT_STAGE_RECORDS_PER_SECTOR =
+    (FLASH_SECTOR_SIZE - VFAT_STAGE_PAYLOAD_OFFSET) / VFAT_STAGE_DATA_SIZE;
+static constexpr u8 VFAT_STAGE_TAG0 = 'W';
 static constexpr u8 VFAT_STAGE_TAG1 = 'S';
+static constexpr u8 VFAT_STAGE_DELETED = 'C';
 static constexpr u8 CATALOG_TAG0 = 'C';
 static constexpr u8 CATALOG_LEGACY_TAG1 = '1';
-static constexpr u8 CATALOG_TAG1 = '2';
+static constexpr u8 CATALOG_SNAPSHOT_TAG1 = '2';
+static constexpr u8 CATALOG_TAG1 = '3';
 static constexpr usize CATALOG_LEGACY_HEADER_SIZE = 9;
 static constexpr usize CATALOG_HEADER_SIZE = 13;
 static constexpr usize CATALOG_SECTOR_INFO_SIZE = 9;
 static constexpr usize CATALOG_ENTRY_SIZE = 25;
+static constexpr u8 CATALOG_DELTA_TAG0 = 'D';
+static constexpr u8 CATALOG_DELTA_TAG1 = '3';
+static constexpr u8 CATALOG_DELTA_SIZE = 64;
+static constexpr u8 CATALOG_DELTA_SECTOR_SLOTS = 2;
+static constexpr u8 CATALOG_DELTA_INDEX_UPSERT = 1;
+static constexpr u8 CATALOG_DELTA_INDEX_DELETE = 2;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
 static constexpr t_time_ms DISK_LED_OFF_MS = 35;
@@ -90,16 +99,21 @@ static SectorInfo sectors[STORE_SECTOR_COUNT];
 static IndexEntry index_entries[MAX_ENTRIES];
 static u16 vfat_stage_refs[VFAT_STAGE_CLUSTER_COUNT];
 static bool vfat_stage_sector_prepared[VFAT_STAGE_SECTOR_COUNT];
+static bool vfat_stage_sector_sealed[VFAT_STAGE_SECTOR_COUNT];
 static u8 index_count;
 static bool index_valid;
 static u32 next_generation = 1;
 static u32 catalog_generation;
 static usize active_catalog_sector = CATALOG_MIRROR_SECTOR;
+static u16 catalog_delta_offset = FLASH_SECTOR_SIZE;
+static u16 catalog_delta_sequence;
 static u8 disk_activity_depth;
 static u8 disk_led_poll_divider;
 static u16 vfat_stage_active_count;
 static u16 vfat_stage_offset;
 static u8 vfat_stage_sector;
+static u8 vfat_stage_reserve_sector;
+static u16 vfat_stage_generation;
 
 static void disk_led_poll(void) {
   if(disk_activity_depth == 0) return;
@@ -365,12 +379,23 @@ static u32 vfat_stage_ref_address(u16 ref) {
   const u16 record = (u16) (ref % VFAT_STAGE_RECORDS_PER_SECTOR);
   return vfat_stage_base() +
          (u32) sector * FLASH_SECTOR_SIZE +
-         (u32) record * VFAT_STAGE_RECORD_SIZE;
+         (u32) record * VFAT_STAGE_HEADER_SIZE;
+}
+
+static u32 vfat_stage_payload_address(u16 ref) {
+  if(ref == 0) return 0;
+  ref--;
+  const u16 sector = (u16) (ref / VFAT_STAGE_RECORDS_PER_SECTOR);
+  const u16 record = (u16) (ref % VFAT_STAGE_RECORDS_PER_SECTOR);
+  return vfat_stage_base() +
+         (u32) sector * FLASH_SECTOR_SIZE +
+         VFAT_STAGE_PAYLOAD_OFFSET +
+         (u32) record * VFAT_STAGE_DATA_SIZE;
 }
 
 static u16 vfat_stage_current_ref(void) {
-  const u16 record = (u16) (vfat_stage_offset / VFAT_STAGE_RECORD_SIZE);
-  return (u16) (vfat_stage_sector * VFAT_STAGE_RECORDS_PER_SECTOR + record + 1);
+  return (u16) (vfat_stage_sector * VFAT_STAGE_RECORDS_PER_SECTOR +
+                vfat_stage_offset + 1);
 }
 
 static u32 vfat_stage_capacity_bytes(void) {
@@ -397,20 +422,111 @@ static bool vfat_stage_available(void) {
   return vfat_stage_sector_limit() != 0;
 }
 
-static u16 vfat_stage_crc(u16 cluster, const u8* data) {
+static u16 vfat_stage_crc(u16 cluster, u16 generation, const u8* data) {
   u16 crc = 0xFFFF;
   crc = crc16_update(crc, (u8) (cluster & 0xFF));
   crc = crc16_update(crc, (u8) (cluster >> 8));
+  crc = crc16_update(crc, (u8) (generation & 0xFF));
+  crc = crc16_update(crc, (u8) (generation >> 8));
   for(u16 i = 0; i < VFAT_STAGE_DATA_SIZE; i++) crc = crc16_update(crc, data[i]);
   return crc;
 }
 
-void vfat_stage_clear(void) {
+static void vfat_stage_reset_index(void) {
   memset(vfat_stage_refs, 0, sizeof(vfat_stage_refs));
   memset(vfat_stage_sector_prepared, 0, sizeof(vfat_stage_sector_prepared));
+  memset(vfat_stage_sector_sealed, 0, sizeof(vfat_stage_sector_sealed));
   vfat_stage_active_count = 0;
   vfat_stage_sector = 0;
+  vfat_stage_reserve_sector = 0xFF;
   vfat_stage_offset = 0;
+  vfat_stage_generation = 0;
+}
+
+static bool vfat_stage_generation_is_newer(u16 left, u16 right) {
+  return (i16) (left - right) > 0;
+}
+
+static u16 vfat_stage_ref_generation(u16 ref) {
+  const u32 address = vfat_stage_ref_address(ref);
+  if(address == 0) return 0;
+  u8 bytes[2];
+  read_bytes(address + 6, bytes, sizeof(bytes));
+  return (u16) (bytes[0] | ((u16) bytes[1] << 8));
+}
+
+static bool vfat_stage_sector_has_live_refs(u8 sector);
+
+// Rebuild only the latest committed cluster references by scanning compact
+// headers. Payload CRC is checked lazily on first read, keeping mount latency
+// bounded to roughly 7 KiB even when the journal is full.
+void vfat_stage_clear(void) {
+  vfat_stage_reset_index();
+  const u8 sector_limit = vfat_stage_sector_limit();
+  if(sector_limit == 0) return;
+
+  bool have_newest = false;
+  u16 newest_generation = 0;
+  u16 newest_ref = 0;
+
+  for(u8 sector = 0; sector < sector_limit; sector++) {
+    for(u8 record = 0; record < VFAT_STAGE_RECORDS_PER_SECTOR; record++) {
+      const u16 ref = (u16) (sector * VFAT_STAGE_RECORDS_PER_SECTOR + record + 1);
+      const u32 address = vfat_stage_ref_address(ref);
+      u8 header[VFAT_STAGE_HEADER_SIZE];
+      read_bytes(address, header, sizeof(header));
+
+      bool erased = true;
+      for(u8 i = 0; i < sizeof(header); i++) {
+        if(header[i] != 0xFF) erased = false;
+      }
+      if(erased) break;
+      vfat_stage_sector_prepared[sector] = true;
+
+      if(header[0] != VFAT_STAGE_TAG0) {
+        vfat_stage_sector_sealed[sector] = true;
+        continue;
+      }
+      const u16 generation = (u16) (header[6] | ((u16) header[7] << 8));
+      if(!have_newest || vfat_stage_generation_is_newer(generation, newest_generation) ||
+         (generation == newest_generation && ref > newest_ref)) {
+        have_newest = true;
+        newest_generation = generation;
+        newest_ref = ref;
+      }
+
+      if(header[1] != VFAT_STAGE_TAG1) {
+        vfat_stage_sector_sealed[sector] = true;
+        continue;
+      }
+      const u16 cluster = (u16) (header[2] | ((u16) header[3] << 8));
+      u16 index = 0;
+      if(!vfat_stage_cluster_index(cluster, index)) continue;
+      const u16 old_ref = vfat_stage_refs[index];
+      const u16 old_generation = vfat_stage_ref_generation(old_ref);
+      if(old_ref == 0 || vfat_stage_generation_is_newer(generation, old_generation) ||
+         (generation == old_generation && ref > old_ref)) {
+        vfat_stage_refs[index] = ref;
+      }
+    }
+  }
+
+  for(u16 i = 0; i < VFAT_STAGE_CLUSTER_COUNT; i++) {
+    if(vfat_stage_refs[i] != 0) vfat_stage_active_count++;
+  }
+  if(have_newest) {
+    const u16 zero_based = (u16) (newest_ref - 1);
+    vfat_stage_sector = (u8) (zero_based / VFAT_STAGE_RECORDS_PER_SECTOR);
+    const u16 record = (u16) (zero_based % VFAT_STAGE_RECORDS_PER_SECTOR);
+    vfat_stage_offset = (u16) (record + 1);
+    vfat_stage_generation = newest_generation;
+  }
+  for(u8 sector = sector_limit; sector != 0; sector--) {
+    const u8 candidate = (u8) (sector - 1);
+    if(candidate == vfat_stage_sector || vfat_stage_sector_has_live_refs(candidate)) continue;
+    vfat_stage_reserve_sector = candidate;
+    break;
+  }
 }
 
 static bool vfat_stage_prepare_sector(u8 sector) {
@@ -418,32 +534,90 @@ static bool vfat_stage_prepare_sector(u8 sector) {
   if(vfat_stage_sector_prepared[sector]) return true;
   if(!erase_sector(VFAT_STAGE_FIRST_SECTOR + sector)) return false;
   vfat_stage_sector_prepared[sector] = true;
+  vfat_stage_sector_sealed[sector] = false;
   return true;
 }
 
-static void vfat_stage_discard_sector(u8 sector) {
+static bool vfat_stage_sector_has_live_refs(u8 sector) {
   for(u16 i = 0; i < VFAT_STAGE_CLUSTER_COUNT; i++) {
     const u16 ref = vfat_stage_refs[i];
     if(ref == 0) continue;
-    const u16 ref_sector = (u16) ((ref - 1) / VFAT_STAGE_RECORDS_PER_SECTOR);
-    if(ref_sector != sector) continue;
-    vfat_stage_refs[i] = 0;
-    if(vfat_stage_active_count != 0) vfat_stage_active_count--;
+    if((u8) ((ref - 1) / VFAT_STAGE_RECORDS_PER_SECTOR) == sector) return true;
   }
-  vfat_stage_sector_prepared[sector] = false;
-  if(vfat_stage_sector == sector) vfat_stage_offset = 0;
+  return false;
+}
+
+static u8 vfat_stage_sector_live_count(u8 sector) {
+  u8 count = 0;
+  for(u16 i = 0; i < VFAT_STAGE_CLUSTER_COUNT; i++) {
+    const u16 ref = vfat_stage_refs[i];
+    if(ref != 0 && (u8) ((ref - 1) / VFAT_STAGE_RECORDS_PER_SECTOR) == sector) count++;
+  }
+  return count;
+}
+
+static bool vfat_stage_compact_into_reserve(void) {
+  const u8 sector_limit = vfat_stage_sector_limit();
+  const u8 reserve = vfat_stage_reserve_sector;
+  if(reserve >= sector_limit || vfat_stage_sector_has_live_refs(reserve)) return false;
+
+  u8 victim = 0xFF;
+  u8 victim_live = 0xFF;
+  for(u8 sector = 0; sector < sector_limit; sector++) {
+    if(sector == reserve) continue;
+    const u8 live = vfat_stage_sector_live_count(sector);
+    if(live == 0 || live >= VFAT_STAGE_RECORDS_PER_SECTOR) continue;
+    if(victim == 0xFF || live < victim_live) {
+      victim = sector;
+      victim_live = live;
+    }
+  }
+  if(victim == 0xFF) return false;
+
+  shared_scratch::Lease scratch(shared_scratch::Owner::PROGRAM_STORE_GC,
+                                VFAT_STAGE_DATA_SIZE);
+  if(!scratch.ok()) return false;
+
+  vfat_stage_sector = reserve;
+  vfat_stage_offset = 0;
+  vfat_stage_sector_prepared[reserve] = false;
+  vfat_stage_sector_sealed[reserve] = false;
+  for(u16 index = 0; index < VFAT_STAGE_CLUSTER_COUNT; index++) {
+    const u16 ref = vfat_stage_refs[index];
+    if(ref == 0 || (u8) ((ref - 1) / VFAT_STAGE_RECORDS_PER_SECTOR) != victim) continue;
+    const u16 cluster = (u16) (VFAT_STAGE_FIRST_CLUSTER + index);
+    if(!vfat_stage_read(cluster, scratch.data()) ||
+       !vfat_stage_write(cluster, scratch.data())) {
+      vfat_stage_reserve_sector = 0xFF;
+      return false;
+    }
+  }
+  if(vfat_stage_sector_has_live_refs(victim)) return false;
+  vfat_stage_reserve_sector = victim;
+  vfat_stage_sector_prepared[victim] = false;
+  vfat_stage_sector_sealed[victim] = false;
+  return vfat_stage_offset < VFAT_STAGE_RECORDS_PER_SECTOR;
 }
 
 static bool vfat_stage_advance_record(void) {
-  if(vfat_stage_offset + VFAT_STAGE_RECORD_SIZE <= FLASH_SECTOR_SIZE) return true;
-  vfat_stage_sector++;
-  vfat_stage_offset = 0;
+  if(!vfat_stage_sector_sealed[vfat_stage_sector] &&
+     vfat_stage_offset < VFAT_STAGE_RECORDS_PER_SECTOR) return true;
+  const u8 sector_limit = vfat_stage_sector_limit();
+  if(sector_limit == 0) return false;
 
-  if(vfat_stage_sector < vfat_stage_sector_limit()) return true;
-  if(vfat_stage_active_count != 0) return false;
-
-  vfat_stage_clear();
-  return vfat_stage_available();
+  // Segment cleaning: any sector without current references is entirely dead
+  // and can be erased in O(1) flash operations regardless of global activity.
+  for(u8 step = 1; step <= sector_limit; step++) {
+    const u8 candidate = (u8) ((vfat_stage_sector + step) % sector_limit);
+    if(candidate == vfat_stage_reserve_sector) continue;
+    if(vfat_stage_sector_has_live_refs(candidate)) continue;
+    vfat_stage_sector = candidate;
+    vfat_stage_offset = 0;
+    vfat_stage_sector_prepared[candidate] = false;
+    vfat_stage_sector_sealed[candidate] = false;
+    return true;
+  }
+  return vfat_stage_compact_into_reserve();
 }
 
 bool vfat_stage_write(u16 cluster, const u8* data) {
@@ -455,28 +629,35 @@ bool vfat_stage_write(u16 cluster, const u8* data) {
   if(!vfat_stage_advance_record()) return false;
   if(!vfat_stage_prepare_sector(vfat_stage_sector)) return false;
 
-  const u32 address = vfat_stage_base() +
-                      (u32) vfat_stage_sector * FLASH_SECTOR_SIZE +
-                      vfat_stage_offset;
-  const u16 crc = vfat_stage_crc(cluster, data);
+  const u16 new_ref = vfat_stage_current_ref();
+  const u32 address = vfat_stage_ref_address(new_ref);
+  const u32 payload_address = vfat_stage_payload_address(new_ref);
+
+  vfat_stage_generation++;
+  if(vfat_stage_generation == 0) vfat_stage_generation = 1;
+  const u16 crc = vfat_stage_crc(cluster, vfat_stage_generation, data);
 
   const u8 header[VFAT_STAGE_HEADER_SIZE] = {
-    VFAT_STAGE_TAG0, VFAT_STAGE_TAG1,
+    VFAT_STAGE_TAG0, 0xFF,
     (u8) (cluster & 0xFF), (u8) (cluster >> 8),
     (u8) (crc & 0xFF), (u8) (crc >> 8),
-    0, 0
+    (u8) (vfat_stage_generation & 0xFF), (u8) (vfat_stage_generation >> 8)
   };
   if(!write_bytes(address, header, sizeof(header)) ||
-     !write_bytes(address + VFAT_STAGE_HEADER_SIZE, data, VFAT_STAGE_DATA_SIZE)) {
-    // A partially programmed record cannot be overwritten without an erase.
-    // Drop all references into this sector so the retry starts from a clean one.
-    vfat_stage_discard_sector(vfat_stage_sector);
+     !write_bytes(payload_address, data, VFAT_STAGE_DATA_SIZE) ||
+     !write_byte(address + 1, VFAT_STAGE_TAG1)) {
+    // Seal the partial tail but preserve earlier committed records in this
+    // sector; segment cleaning will reclaim it once those records move.
+    vfat_stage_sector_sealed[vfat_stage_sector] = true;
+    vfat_stage_offset = VFAT_STAGE_RECORDS_PER_SECTOR;
     return false;
   }
 
-  if(vfat_stage_refs[index] == 0) vfat_stage_active_count++;
-  vfat_stage_refs[index] = vfat_stage_current_ref();
-  vfat_stage_offset = (u16) (vfat_stage_offset + VFAT_STAGE_RECORD_SIZE);
+  const u16 old_ref = vfat_stage_refs[index];
+  if(old_ref == 0) vfat_stage_active_count++;
+  vfat_stage_refs[index] = new_ref;
+  if(old_ref != 0) (void) write_byte(vfat_stage_ref_address(old_ref) + 1, VFAT_STAGE_DELETED);
+  vfat_stage_offset++;
   return true;
 }
 
@@ -495,8 +676,14 @@ bool vfat_stage_read(u16 cluster, u8* data) {
   if(header[0] != VFAT_STAGE_TAG0 || header[1] != VFAT_STAGE_TAG1) return false;
   if((u16) (header[2] | (header[3] << 8)) != cluster) return false;
   const u16 expected_crc = (u16) (header[4] | (header[5] << 8));
-  read_bytes(address + VFAT_STAGE_HEADER_SIZE, data, VFAT_STAGE_DATA_SIZE);
-  return vfat_stage_crc(cluster, data) == expected_crc;
+  const u16 generation = (u16) (header[6] | ((u16) header[7] << 8));
+  read_bytes(vfat_stage_payload_address(vfat_stage_refs[index]), data,
+             VFAT_STAGE_DATA_SIZE);
+  if(vfat_stage_crc(cluster, generation, data) == expected_crc) return true;
+  (void) write_byte(address + 1, VFAT_STAGE_DELETED);
+  vfat_stage_refs[index] = 0;
+  if(vfat_stage_active_count != 0) vfat_stage_active_count--;
+  return false;
 }
 
 bool vfat_stage_exists(u16 cluster) {
@@ -511,6 +698,13 @@ void vfat_stage_forget(u16 start_cluster, u16 clusters) {
     u16 index = 0;
     if(!vfat_stage_cluster_index((u16) (start_cluster + i), index)) continue;
     if(vfat_stage_refs[index] == 0) continue;
+    const u32 address = vfat_stage_ref_address(vfat_stage_refs[index]);
+    u8 header[4];
+    read_bytes(address, header, sizeof(header));
+    const u16 stored_cluster = (u16) (header[2] | ((u16) header[3] << 8));
+    if(header[0] == VFAT_STAGE_TAG0 && header[1] == VFAT_STAGE_TAG1 &&
+       stored_cluster == (u16) (start_cluster + i) &&
+       !write_byte(address + 1, VFAT_STAGE_DELETED)) continue;
     vfat_stage_refs[index] = 0;
     if(vfat_stage_active_count != 0) vfat_stage_active_count--;
   }
@@ -585,6 +779,8 @@ static void reset_state(void) {
   memset(index_entries, 0, sizeof(index_entries));
   index_count = 0;
   next_generation = 1;
+  catalog_delta_offset = FLASH_SECTOR_SIZE;
+  catalog_delta_sequence = 0;
 }
 
 static void reset_to_ignored_store(void) {
@@ -614,6 +810,11 @@ static u16 catalog_snapshot_len(u8 entry_count, usize header_size) {
   return (u16) (header_size +
                 STORE_SECTOR_COUNT * CATALOG_SECTOR_INFO_SIZE +
                 (usize) entry_count * CATALOG_ENTRY_SIZE);
+}
+
+static u16 catalog_delta_start(u16 snapshot_len) {
+  return (u16) (((snapshot_len + CATALOG_DELTA_SIZE - 1) / CATALOG_DELTA_SIZE) *
+                CATALOG_DELTA_SIZE);
 }
 
 static bool catalog_sector_available(usize sector) {
@@ -756,7 +957,228 @@ static bool save_catalog(void) {
   if(!save_catalog_to(target, next)) return false;
   active_catalog_sector = target;
   catalog_generation = next;
+  catalog_delta_offset = catalog_delta_start(
+      catalog_snapshot_len(index_count, CATALOG_HEADER_SIZE));
+  catalog_delta_sequence = 0;
   return true;
+}
+
+static u16 catalog_delta_crc(const u8* record) {
+  u16 crc = 0xFFFF;
+  crc = crc16_update(crc, record[0]);
+  crc = crc16_update(crc, record[1]);
+  for(u8 i = 3; i < CATALOG_DELTA_SIZE; i++) {
+    if(i == 8 || i == 9) continue;
+    crc = crc16_update(crc, record[i]);
+  }
+  return crc;
+}
+
+static void catalog_delta_store_sector(u8* out, u8 slot, int sector) {
+  const u8 pos = (u8) (10 + slot * 10);
+  const SectorInfo& info = sectors[sector];
+  out[pos] = (u8) sector;
+  out[pos + 1] = flags_for_sector(info);
+  out[pos + 2] = (u8) (info.generation & 0xFF);
+  out[pos + 3] = (u8) ((info.generation >> 8) & 0xFF);
+  out[pos + 4] = (u8) ((info.generation >> 16) & 0xFF);
+  out[pos + 5] = (u8) ((info.generation >> 24) & 0xFF);
+  out[pos + 6] = (u8) (info.used & 0xFF);
+  out[pos + 7] = (u8) (info.used >> 8);
+  out[pos + 8] = (u8) (info.live & 0xFF);
+  out[pos + 9] = (u8) (info.live >> 8);
+}
+
+static bool append_catalog_delta(u8 index_op, ProgramType type, const char* name,
+                                 int sector_a, int sector_b) {
+  if(name == NULL || name[0] == 0) return false;
+  if(catalog_delta_offset + CATALOG_DELTA_SIZE > FLASH_SECTOR_SIZE) {
+    return save_catalog();
+  }
+
+  const u32 address = sector_base(active_catalog_sector) + catalog_delta_offset;
+  if(read_byte(address) != 0xFF) return save_catalog();
+
+  u8 record[CATALOG_DELTA_SIZE];
+  memset(record, 0xFF, sizeof(record));
+  record[0] = CATALOG_DELTA_TAG0;
+  record[1] = CATALOG_DELTA_TAG1;
+  record[2] = STATE_WRITING;
+  record[3] = CATALOG_DELTA_SIZE;
+  u16 sequence = (u16) (catalog_delta_sequence + 1);
+  if(sequence == 0) sequence = 1;
+  record[4] = (u8) (sequence & 0xFF);
+  record[5] = (u8) (sequence >> 8);
+  record[7] = index_op;
+
+  u8 sector_count = 0;
+  if(sector_a >= 0 && sector_a < (int) STORE_SECTOR_COUNT) {
+    catalog_delta_store_sector(record, sector_count++, sector_a);
+  }
+  if(sector_b >= 0 && sector_b < (int) STORE_SECTOR_COUNT && sector_b != sector_a &&
+     sector_count < CATALOG_DELTA_SECTOR_SLOTS) {
+    catalog_delta_store_sector(record, sector_count++, sector_b);
+  }
+  record[6] = sector_count;
+
+  IndexEntry entry;
+  memset(&entry, 0, sizeof(entry));
+  if(index_op == CATALOG_DELTA_INDEX_UPSERT) {
+    const int idx = find_index(type, name);
+    if(idx < 0) return false;
+    entry = index_entries[idx];
+    const int sector = sector_from_address(entry.address);
+    if(sector < 0) return false;
+    const u16 offset = offset_in_sector(entry.address);
+    record[30] = (u8) entry.type;
+    record[31] = entry.name_len;
+    record[32] = (u8) sector;
+    record[33] = (u8) (offset & 0xFF);
+    record[34] = (u8) (offset >> 8);
+    record[35] = (u8) (entry.data_len & 0xFF);
+    record[36] = (u8) (entry.data_len >> 8);
+    record[37] = (u8) (entry.total_len & 0xFF);
+    record[38] = (u8) (entry.total_len >> 8);
+  } else if(index_op == CATALOG_DELTA_INDEX_DELETE) {
+    record[30] = (u8) type;
+  } else {
+    return false;
+  }
+  const char* stored_name = index_op == CATALOG_DELTA_INDEX_UPSERT ? entry.name : name;
+  bool name_done = false;
+  for(u8 i = 0; i < NAME_SIZE; i++) {
+    const char value = name_done ? 0 : stored_name[i];
+    record[39 + i] = (u8) value;
+    if(value == 0) name_done = true;
+  }
+
+  const u16 crc = catalog_delta_crc(record);
+  record[8] = (u8) (crc & 0xFF);
+  record[9] = (u8) (crc >> 8);
+  if(!write_bytes(address, record, sizeof(record)) ||
+     !write_byte(address + 2, STATE_ACTIVE)) return false;
+
+  catalog_delta_offset = (u16) (catalog_delta_offset + CATALOG_DELTA_SIZE);
+  catalog_delta_sequence = sequence;
+  return true;
+}
+
+static bool apply_catalog_delta_sector(const u8* record, u8 slot) {
+  const u8 pos = (u8) (10 + slot * 10);
+  const u8 sector = record[pos];
+  if(sector >= STORE_SECTOR_COUNT) return false;
+  const u8 flags = (u8) (record[pos + 1] &
+      (SECTOR_FLAG_EMPTY | SECTOR_FLAG_ACTIVE | SECTOR_FLAG_FOREIGN));
+  if(flags == 0 || (flags & (flags - 1)) != 0) return false;
+
+  SectorInfo& info = sectors[sector];
+  memset(&info, 0, sizeof(info));
+  info.empty = flags == SECTOR_FLAG_EMPTY;
+  info.active = flags == SECTOR_FLAG_ACTIVE;
+  info.foreign = flags == SECTOR_FLAG_FOREIGN;
+  info.generation = (u32) record[pos + 2] | ((u32) record[pos + 3] << 8) |
+                    ((u32) record[pos + 4] << 16) | ((u32) record[pos + 5] << 24);
+  info.used = (u16) (record[pos + 6] | ((u16) record[pos + 7] << 8));
+  info.live = (u16) (record[pos + 8] | ((u16) record[pos + 9] << 8));
+  if(info.empty) {
+    if(info.generation != 0 || info.used != 0 || info.live != 0) return false;
+  } else if(info.active) {
+    if(info.generation == 0 || info.used < SECTOR_HEADER_SIZE ||
+       info.used > FLASH_SECTOR_SIZE || info.live > info.used - SECTOR_HEADER_SIZE) return false;
+    info.dead = (u16) (info.used - SECTOR_HEADER_SIZE - info.live);
+    if(info.generation >= next_generation) {
+      next_generation = info.generation + 1;
+      if(next_generation == 0) next_generation = 1;
+    }
+  } else {
+    if(info.used != FLASH_SECTOR_SIZE || info.live != 0) return false;
+    info.dead = FLASH_SECTOR_SIZE;
+  }
+  return true;
+}
+
+static bool apply_catalog_delta(const u8* record) {
+  const u8 sector_count = record[6];
+  if(sector_count > CATALOG_DELTA_SECTOR_SLOTS) return false;
+  for(u8 i = 0; i < sector_count; i++) {
+    if(!apply_catalog_delta_sector(record, i)) return false;
+  }
+
+  const u8 type_value = record[30];
+  if(type_value > (u8) ProgramType::MK61_STATE) return false;
+  char name[NAME_SIZE];
+  for(u8 i = 0; i < NAME_SIZE; i++) name[i] = (char) record[39 + i];
+  name[NAME_SIZE - 1] = 0;
+  if(name[0] == 0) return false;
+  const ProgramType type = (ProgramType) type_value;
+
+  if(record[7] == CATALOG_DELTA_INDEX_DELETE) {
+    const int idx = find_index(type, name);
+    if(idx >= 0) remove_index_at((u8) idx);
+    return true;
+  }
+  if(record[7] != CATALOG_DELTA_INDEX_UPSERT) return false;
+
+  RecordMeta meta;
+  meta.type = type;
+  meta.state = STATE_ACTIVE;
+  meta.name_len = record[31];
+  const u8 sector = record[32];
+  const u16 offset = (u16) (record[33] | ((u16) record[34] << 8));
+  meta.data_len = (u16) (record[35] | ((u16) record[36] << 8));
+  meta.total_len = (u16) (record[37] | ((u16) record[38] << 8));
+  meta.header_len = 8;
+  meta.crc = 0;
+  if(meta.name_len == 0 || meta.name_len >= NAME_SIZE ||
+     meta.total_len != meta.header_len + meta.name_len + meta.data_len ||
+     meta.data_len > MAX_MK61_TEXT_SIZE || sector >= STORE_SECTOR_COUNT ||
+     !sectors[sector].active || offset < SECTOR_HEADER_SIZE ||
+     (usize) offset + meta.total_len > FLASH_SECTOR_SIZE) return false;
+  update_index(meta, name, sector_base(sector) + offset);
+  return true;
+}
+
+static bool replay_catalog_deltas(u32 base, u16 snapshot_len) {
+  u16 offset = catalog_delta_start(snapshot_len);
+  u16 sequence = 0;
+  while(offset + CATALOG_DELTA_SIZE <= FLASH_SECTOR_SIZE) {
+    u8 record[CATALOG_DELTA_SIZE];
+    read_bytes(base + offset, record, sizeof(record));
+    if(record[0] == 0xFF) break;
+    u16 expected_sequence = (u16) (sequence + 1);
+    if(expected_sequence == 0) expected_sequence = 1;
+    const u16 record_sequence = (u16) (record[4] | ((u16) record[5] << 8));
+    const u16 expected_crc = (u16) (record[8] | ((u16) record[9] << 8));
+    if(record[0] != CATALOG_DELTA_TAG0 || record[1] != CATALOG_DELTA_TAG1 ||
+       record[2] != STATE_ACTIVE || record[3] != CATALOG_DELTA_SIZE ||
+       record_sequence != expected_sequence || catalog_delta_crc(record) != expected_crc ||
+       !apply_catalog_delta(record)) {
+      catalog_delta_offset = FLASH_SECTOR_SIZE;
+      catalog_delta_sequence = sequence;
+      return true;
+    }
+    sequence = record_sequence;
+    offset = (u16) (offset + CATALOG_DELTA_SIZE);
+  }
+  catalog_delta_offset = offset;
+  catalog_delta_sequence = sequence;
+  return true;
+}
+
+static void quarantine_untracked_record_tails(void) {
+  for(usize sector = 0; sector < STORE_SECTOR_COUNT; sector++) {
+    SectorInfo& info = sectors[sector];
+    if(!info.active || info.used >= FLASH_SECTOR_SIZE) continue;
+    if(read_byte(sector_base(sector) + info.used) == 0xFF) continue;
+
+    // A power cut may leave a programmed data record whose catalog delta did
+    // not commit. Preserve the previous snapshot and seal the physical tail so
+    // the next write moves to a clean sector instead of failing on 0->1 bits.
+    info.used = FLASH_SECTOR_SIZE;
+    info.dead = info.live <= FLASH_SECTOR_SIZE - SECTOR_HEADER_SIZE
+      ? (u16) (FLASH_SECTOR_SIZE - SECTOR_HEADER_SIZE - info.live)
+      : 0;
+  }
 }
 
 static bool catalog_header_valid(usize catalog_sector, u32& generation, u8& tag1, u8& entry_count, u16& total_len) {
@@ -764,7 +1186,8 @@ static bool catalog_header_valid(usize catalog_sector, u32& generation, u8& tag1
   const u32 base = sector_base(catalog_sector);
   if(read_byte(base) != CATALOG_TAG0) return false;
   tag1 = read_byte(base + 1);
-  if(tag1 != CATALOG_LEGACY_TAG1 && tag1 != CATALOG_TAG1) return false;
+  if(tag1 != CATALOG_LEGACY_TAG1 && tag1 != CATALOG_SNAPSHOT_TAG1 &&
+     tag1 != CATALOG_TAG1) return false;
   if(read_byte(base + 2) != STATE_ACTIVE) return false;
   if(read_byte(base + 3) != (u8) STORE_SECTOR_COUNT) return false;
 
@@ -773,7 +1196,8 @@ static bool catalog_header_valid(usize catalog_sector, u32& generation, u8& tag1
   total_len = read_le16(base + 5);
   const usize header_size = catalog_header_size(tag1);
   if(total_len != catalog_snapshot_len(entry_count, header_size) || total_len > FLASH_SECTOR_SIZE) return false;
-  if(total_len < FLASH_SECTOR_SIZE && read_byte(base + total_len) != 0xFF) return false;
+  if(tag1 != CATALOG_TAG1 && total_len < FLASH_SECTOR_SIZE &&
+     read_byte(base + total_len) != 0xFF) return false;
   if(catalog_crc_from_flash(base, total_len, tag1) != read_le16(base + 7)) return false;
 
   generation = tag1 == CATALOG_LEGACY_TAG1 ? 0 : read_le32(base + 9);
@@ -851,6 +1275,14 @@ static bool load_catalog_from(usize catalog_sector) {
     index_count++;
   }
 
+  if(tag1 == CATALOG_TAG1) {
+    if(!replay_catalog_deltas(base, total_len)) return false;
+  } else {
+    catalog_delta_offset = FLASH_SECTOR_SIZE;
+    catalog_delta_sequence = 0;
+  }
+  quarantine_untracked_record_tails();
+
   index_valid = true;
   active_catalog_sector = catalog_sector;
   catalog_generation = generation;
@@ -908,7 +1340,8 @@ bool format(void) {
   }
   if(!erase_sector(CATALOG_PRIMARY_SECTOR)) return false;
   if(catalog_sector_available(CATALOG_MIRROR_SECTOR) && !erase_sector(CATALOG_MIRROR_SECTOR)) return false;
-  vfat_stage_clear();
+  vfat_stage_forget(VFAT_STAGE_FIRST_CLUSTER, VFAT_STAGE_CLUSTER_COUNT);
+  vfat_stage_reset_index();
   reset_state();
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) sectors[i].empty = true;
   catalog_generation = 0;
@@ -1010,6 +1443,21 @@ static bool prepare_empty_sector(void) {
   int sector = empty_sector();
   if(sector >= 0) return true;
   return reclaim_foreign_sector();
+}
+
+static bool entry_payload_equals(const IndexEntry& entry, const u8* data, u16 data_len) {
+  if(entry.data_len != data_len) return false;
+  u8 chunk[64];
+  u16 offset = 0;
+  const u32 payload = entry.address + 8 + entry.name_len;
+  while(offset < data_len) {
+    const u16 remaining = (u16) (data_len - offset);
+    const u16 count = remaining > sizeof(chunk) ? (u16) sizeof(chunk) : remaining;
+    read_bytes(payload + offset, chunk, count);
+    if(memcmp(chunk, data + offset, count) != 0) return false;
+    offset = (u16) (offset + count);
+  }
+  return true;
 }
 
 static bool copy_live_records(usize victim, usize destination, u16& dest_used) {
@@ -1165,6 +1613,7 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
 
   const int old_idx = find_index(type, name);
   if(old_idx < 0 && index_count >= MAX_ENTRIES) return false;
+  if(old_idx >= 0 && entry_payload_equals(index_entries[old_idx], data, data_len)) return true;
 
   const u8 nlen = name_len_of(name);
   const u16 header_len = 8;
@@ -1209,7 +1658,9 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   meta.header_len = header_len;
   meta.total_len = record_len;
   update_index(meta, name, address);
-  return save_catalog();
+  return append_catalog_delta(CATALOG_DELTA_INDEX_UPSERT, type, name,
+                              sector_from_address(address),
+                              sector_from_address(old_address));
 }
 
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len) {
@@ -1257,7 +1708,8 @@ bool remove(ProgramType type, const char* name) {
   (void) mark_deleted_at(address);
   move_live_to_dead(address, total_len);
   remove_index_at((u8) idx);
-  return save_catalog();
+  return append_catalog_delta(CATALOG_DELTA_INDEX_DELETE, type, name,
+                              sector_from_address(address), -1);
 }
 
 u16 purge_empty(void) {
@@ -1306,6 +1758,20 @@ int count(ProgramType type) {
     if(index_entries[i].used && index_entries[i].type == type) result++;
   }
   return result;
+}
+
+int total_count(void) {
+  return ensure_index() ? index_count : 0;
+}
+
+bool entry_at(int index, Entry& out) {
+  if(!ensure_index() || index < 0 || index >= index_count ||
+     !index_entries[index].used) return false;
+  out.type = index_entries[index].type;
+  strncpy(out.name, index_entries[index].name, NAME_SIZE - 1);
+  out.name[NAME_SIZE - 1] = 0;
+  out.data_len = index_entries[index].data_len;
+  return true;
 }
 
 bool entry(ProgramType type, int index, Entry& out) {

@@ -98,7 +98,7 @@ bool usb_start_mass_storage_mode(void) {
 }
 
 void usb_start_terminal_mode(void) {
-  usb_mass_storage::deinit();
+  if(!usb_mass_storage::deinit()) return;
   delay(50);
 
   #ifdef SERIAL_OUTPUT
