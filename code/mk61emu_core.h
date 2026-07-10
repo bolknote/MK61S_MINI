@@ -225,7 +225,6 @@ void    MK61Emu_DoKeyPress(const int key1, const int key2);
 void    MK61Emu_Cleanup(void);
 //void MK61Emu_Cycle(void);
 u8*     MK61Emu_UnpackRegster(u8 nReg, u8 *pack_number);
-void    MK61Emu_WriteRegister(int nReg, char* buffer);
 //void    MK61Emu_ReadRegister(int nReg, char* buffer);
 void    MK61Emu_ReadRegister(int nReg, char* buffer, const char* display_symbols);
 

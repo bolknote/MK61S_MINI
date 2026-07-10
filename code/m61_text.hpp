@@ -5,11 +5,18 @@
 
 namespace m61_text {
 
+struct Error {
+  char script[16];
+  u16 line;
+  char message[64];
+};
+
 bool load_program(const char* name);
 bool open_program(const char* name);
 bool active(void);
 void service(void);
 void cancel(void);
+bool last_error(Error& out);
 bool format_current_program(u8* out, u16 capacity, u16* out_len);
 
 } // namespace m61_text
