@@ -408,7 +408,7 @@ static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как част�
       static const u8   PIN_KBD_ROW0    =   PB4;
       static const u8   PIN_BUZZER      =   PA0;
       static const u8   PIN_LED         =   PC13;
-      static constexpr u8 PIN_LED_ACTIVE_LOW = 1;
+      static constexpr u8 PIN_LED_ACTIVE_LOW = 0;
       static const u8   PIN_OUT_PWR     =   PB9;
       static const u8   PIN_SPIFLASH_CS =   PA4;
     #else 

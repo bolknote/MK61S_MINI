@@ -281,6 +281,10 @@ void setup() {
   sound_poll();
   idle_signal_reset();
 
+  // Boot-time storage initialization may use the disk activity indicator after
+  // the splash.  End that ownership here, once every startup subsystem is ready.
+  led::blink_stop();
+
   dbgln(MINI, "ON");
 }
 
