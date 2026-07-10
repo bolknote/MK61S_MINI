@@ -43,8 +43,10 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Programming.pdf
 **Инструкция по работе с Терминалом:**  
 https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 
-**Формат пиксельных шрифтов FMK1 и C++-конвертер:**<br>
-[doc/MK61s-mini-FMK.md](doc/MK61s-mini-FMK.md)
+**Технические форматы:**<br>
+[Формат внутреннего хранилища и USB FAT12](doc/src/MK61s-mini-Storage.md)
+
+[Формат растровых шрифтов FMK1](doc/src/MK61s-mini-FMK.md)
 
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 

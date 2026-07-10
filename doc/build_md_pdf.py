@@ -43,16 +43,28 @@ FONT_CANDIDATES = [
     ),
 ]
 
+MONO_FONT_CANDIDATES = [
+    "/System/Library/Fonts/Supplemental/Courier New.ttf",
+    "/System/Library/Fonts/Supplemental/Andale Mono.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+]
+
 
 def register_fonts() -> None:
+    regular_font = None
     for regular, bold in FONT_CANDIDATES:
         regular_path = Path(regular)
         bold_path = Path(bold)
         if regular_path.exists() and bold_path.exists():
             pdfmetrics.registerFont(TTFont("DocSans", str(regular_path)))
             pdfmetrics.registerFont(TTFont("DocSans-Bold", str(bold_path)))
-            return
-    raise SystemExit("No Cyrillic TrueType font found for PDF generation")
+            regular_font = regular_path
+            break
+    if regular_font is None:
+        raise SystemExit("No Cyrillic TrueType font found for PDF generation")
+
+    mono_font = next((Path(path) for path in MONO_FONT_CANDIDATES if Path(path).exists()), regular_font)
+    pdfmetrics.registerFont(TTFont("DocMono", str(mono_font)))
 
 
 def build_styles():
@@ -70,7 +82,7 @@ def build_styles():
     styles.add(ParagraphStyle("DocH1", parent=base, fontName="DocSans-Bold", fontSize=15, leading=18, spaceBefore=8, spaceAfter=7))
     styles.add(ParagraphStyle("DocH2", parent=base, fontName="DocSans-Bold", fontSize=12, leading=15, spaceBefore=8, spaceAfter=5))
     styles.add(ParagraphStyle("DocH3", parent=base, fontName="DocSans-Bold", fontSize=10.5, leading=13, spaceBefore=6, spaceAfter=4))
-    styles.add(ParagraphStyle("DocCode", parent=base, fontName="Courier", fontSize=7.5, leading=9, leftIndent=4, rightIndent=4, backColor=colors.HexColor("#f2f2f2")))
+    styles.add(ParagraphStyle("DocCode", parent=base, fontName="DocMono", fontSize=7.5, leading=9, leftIndent=4, rightIndent=4, backColor=colors.HexColor("#f2f2f2")))
     styles.add(ParagraphStyle("DocList", parent=base, leftIndent=8, firstLineIndent=0))
     styles.add(ParagraphStyle("DocCaption", parent=base, fontSize=8.4, leading=10.5, textColor=colors.HexColor("#666666"), alignment=1))
     return styles
@@ -281,18 +293,44 @@ def build_pdf(source: Path, output: Path, title: str) -> None:
     doc.build(build_story(markdown, source.parent, styles), onFirstPage=footer(title), onLaterPages=footer(title))
 
 
+def discover_sources(source_dir: Path) -> list[Path]:
+    sources = sorted(path for path in source_dir.glob("*.md") if path.is_file())
+    if not sources:
+        raise SystemExit(f"No Markdown documents found in {source_dir}")
+    return sources
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build a project PDF from a Markdown document.")
-    parser.add_argument("source", type=Path)
-    parser.add_argument("-o", "--output", type=Path)
-    parser.add_argument("--title")
+    script_dir = Path(__file__).resolve().parent
+    parser = argparse.ArgumentParser(
+        description="Build one PDF per Markdown document; without arguments, build every doc/src/*.md."
+    )
+    parser.add_argument("sources", nargs="*", type=Path)
+    parser.add_argument("--source-dir", type=Path, default=script_dir / "src")
+    parser.add_argument("--output-dir", type=Path, default=script_dir)
+    parser.add_argument("-o", "--output", type=Path,
+                        help="Exact output path; valid only with one explicit source")
+    parser.add_argument("--title", help="PDF title; valid only with one explicit source")
     args = parser.parse_args()
 
-    source = args.source.resolve()
-    output = args.output.resolve() if args.output else source.with_suffix(".pdf")
-    title = args.title if args.title else default_title(source)
-    build_pdf(source, output, title)
-    print(output)
+    if (args.output or args.title) and len(args.sources) != 1:
+        parser.error("--output and --title require exactly one explicit source")
+
+    sources = [source.resolve() for source in args.sources]
+    if not sources:
+        sources = discover_sources(args.source_dir.resolve())
+
+    output_dir = args.output_dir.resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for source in sources:
+        if not source.is_file():
+            raise SystemExit(f"Markdown source does not exist: {source}")
+        output = args.output.resolve() if args.output else output_dir / f"{source.stem}.pdf"
+        title = args.title if args.title else default_title(source)
+        temporary = output.with_name(f".{output.name}.tmp")
+        build_pdf(source, temporary, title)
+        temporary.replace(output)
+        print(output)
 
 
 if __name__ == "__main__":

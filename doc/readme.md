@@ -1,11 +1,22 @@
-Documentations of project/
+Документация проекта
 
-- MK61s-mini-Documentation.pdf - общее описание проекта.
-- MK61s-mini-Assembly.pdf - инструкция по сборке.
-- MK61s-mini-Programming.pdf - инструкция по прошивке микроконтроллера.
-- MK61s-mini-Terminal.pdf - инструкция по работе с терминалом.
-- MK61s-mini-M61.pdf - инструкция по файлам M61.
-- MK61s-mini-FOCAL.pdf - черновик инструкции по FOCAL.
-- MK61s-mini-TinyBASIC.pdf - черновик инструкции по TinyBASIC.
-- MK61s-mini-TinyBASIC.md - черновик инструкции по TinyBASIC.
-- build_md_pdf.py - сборка PDF из Markdown-документации.
+- `src/` - редактируемые исходники документации в Markdown.
+- Каждый `src/NAME.md` собирается в отдельный `NAME.pdf` в этом каталоге.
+- `MK61s-mini-Documentation.pdf` - общее описание проекта.
+- `MK61s-mini-Assembly.pdf` - инструкция по сборке.
+- `MK61s-mini-Programming.pdf` - инструкция по прошивке микроконтроллера.
+- `MK61s-mini-Terminal.pdf` - инструкция по работе с терминалом.
+- `MK61s-mini-M61.pdf` - инструкция по файлам M61.
+- `MK61s-mini-FOCAL.pdf` - черновик инструкции по FOCAL.
+- `MK61s-mini-TinyBASIC.pdf` - черновик инструкции по TinyBASIC.
+- `build_md_pdf.py` - воспроизводимая пакетная сборка PDF.
+
+Сборка из корня репозитория:
+
+```bash
+python3 doc/build_md_pdf.py
+```
+
+Скрипт автоматически находит все файлы `doc/src/*.md`, поэтому при добавлении
+нового документа список источников вручную менять не нужно. Требуется Python 3
+и пакет `reportlab`; для визуальной проверки PDF рекомендуется Poppler.
