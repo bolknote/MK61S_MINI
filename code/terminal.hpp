@@ -2,10 +2,7 @@
 #define TERMINAL_CLASS
 /*
  terminal - модуль работы из терминала с ядром МК61s и калькулятором.
-  to do 
-    - контроль приемного буфера input_from_serial на переполнение (выход за 64 символа - не контролируется)
-    - при декодировании инструкции mk61s (asm) последняя в транслируемой строке должна иметь обязательный пробел в конце
-    - заменить таблицу адресов в кольце, функцией вычисления адреса по алгоритму, что позволит снизить объем требуемого ROM
+  Terminal command transport and execution for the MK61 core.
 */
 #include "Arduino.h"
 #include "config.h"
@@ -17,8 +14,12 @@
 #include "library_pmk.hpp"
 #include "ledcontrol.h"
 #include "mk_math.hpp"
+#include "mk61_ref.hpp"
 #include "virtual_fat.hpp"
 #include "program_store.hpp"
+#include "terminal_command_ids.hpp"
+#include "terminal_core.hpp"
+#include "terminal_protocol.hpp"
 
 extern  const char terminal_symbols[16];
 
@@ -51,7 +52,7 @@ static  const u32 key_sequence_on_cmd[15*16] = {
 
 const   u8                  CR = 0x0D;
 const   u8                  NL = 0x0A;
-static  constexpr usize     MAX_INPUT_CHAR = 240;
+static  constexpr usize     MAX_INPUT_CHAR = terminal_core::INPUT_CAPACITY;
 
 extern  class_disassm_mk61  disassembler;
 extern  MK61Display         lcd;
@@ -66,16 +67,6 @@ extern  void DFU_enable(void);
 // CRC молча выполнила бы чужую команду (среди команд есть dfu и sera).
 // Коллизии хешей разрешаются линейным пробированием при построении индекса,
 // поэтому переименовывать команды при совпадении CRC не требуется.
-
-enum : u8 {
-  CMD_UNKNOWN = 0,
-  CMD_VERSION, CMD_LIST, CMD_ISA, CMD_ASM, CMD_LASM, CMD_RESET, CMD_REG_DUMP,
-  CMD_REG_SET, CMD_SAVE, CMD_LOAD, CMD_1302, CMD_DISASM, CMD_HIN, CMD_HOUT,
-  CMD_SET_CODE, CMD_POKE, CMD_DFU, CMD_DUMP, CMD_PUB, CMD_SMAP, CMD_STACK,
-  CMD_KBD, CMD_CMD, CMD_CLEAR, CMD_RING, CMD_RENAME, CMD_DIR, CMD_DEL_SLOT,
-  CMD_RUN, CMD_OPEN, CMD_ERASE_STORAGE, CMD_INS, CMD_HELP, CMD_HISTORY,
-  CMD_LED, CMD_BEEP, CMD_IF, CMD_VFAT_LOG, CMD_FS_LIST, CMD_FS_REMOVE, CMD_FS_CLEAN
-};
 
 struct TerminalCommand {
   const char* name;
@@ -313,12 +304,12 @@ static bool terminal_split_fs_name_or_mk61(const char* args, char* name_out, pro
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 static u8 terminal_command_lookup(const u8* line) {
   usize len = 0;
-  while(line[len] != 0 && line[len] != ' ') len++;
+  while(line[len] != 0 && !terminal_core::is_space((char) line[len])) len++;
   if(len == 0) return CMD_UNKNOWN;
 
   // Спец-формы, не разбираемые по первому слову (длина ограждает от чтения
   // остатков предыдущей команды за нулём-терминатором):
-  if(len == 3 && line[0] == 'R' && line[2] == '=' && line[3] == ' ') return CMD_REG_SET;               // R0= <значение>
+  if(len == 3 && line[0] == 'R' && line[2] == '=' && terminal_core::is_space((char) line[3])) return CMD_REG_SET; // R0= <значение>
   if(len >= 4 && line[0] == 's' && line[1] == 'e' && line[2] == 't' && line[3] == '$') return CMD_SET_CODE;  // set$<hex>
 
   usize probe = terminal_crc8((const char*) line, len);
@@ -369,10 +360,9 @@ K\317->X0,K\317->X1,K\317->X2,K\317->X3,K\317->X4,K\317->X5,K\317->X6,K\317->X7,
 Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=0 B,Kx=0 C,Kx=0 \304,Kx=0 E,?";
 
     isize   AT;
-    u8      terminal_last_cmd;
+    u8      pending_confirmation_cmd;
     isize   nSlot;
     bool    input_overflow;
-    const char* script_args_ptr;
     char    pending_save_name[program_store::NAME_SIZE];
 
     // Аргументы скриптового действия переживают восстановление input_buffer:
@@ -512,30 +502,25 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.println(terminal_commands[i].desc);
       }
       Serial.println("  R<r>=   R<r>= <value> - write register, e.g. R0= 3.14");
-      Serial.println("  set$    set$<hex> - load full code page");
+      Serial.println("  set$    set$<addr> <hex> - write program memory");
     }
 
-    // Скриптовое действие для m61: аргументы остаются доступны через script_args().
     // args обычно указывает внутрь input_buffer, который execute_script_line()
-    // восстановит перед возвратом, поэтому копируем в собственное хранилище.
-    isize script_action(i32 action, const char* args) {
+    // восстановит перед возвратом, поэтому результат ссылается на отдельное
+    // хранилище.
+    terminal_protocol::Result script_action(terminal_protocol::ResultKind action, const char* args) {
       usize len = 0;
       while(args[len] != 0 && len < sizeof(script_args_storage) - 1) {
         script_args_storage[len] = args[len];
         len++;
       }
       script_args_storage[len] = 0;
-      script_args_ptr = script_args_storage;
       recive_pos = 0;
-      return action;
+      return terminal_protocol::Result::action(action, script_args_storage);
     }
 
-    bool  not_EOF(void) {
-      return recive_pos < MAX_INPUT_CHAR;
-    }
-
-    bool  not_CR(void) { 
-      return input_buffer[recive_pos] != CR;
+    bool input_can_append(void) const {
+      return terminal_core::input_can_append(recive_pos);
     }
 
     void list_mk61_code_page(void) {
@@ -608,39 +593,6 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return text;
     }
 
-    i32 get_ISA_61(char* &text) {
-      char* compare = text;
-      u8 match = 0;
-      u8 opcode = 0;
-      dbgln(PARSE, (char*) compare);
-
-      for(char ISA_token_char : ISA_61) {
-
-        if(ISA_token_char == ',') { // токен из списка команд выбран до завершения ','
-          if(match != 0) { // сравнение было прервано ранее
-            dbgln(PARSE, "Partial compare, next...! opcode = ", opcode);
-            compare = text; match = 0; // начальные установкии для нового поиска
-            opcode++; // начнем сравнениие с следующим токеном из списка команд
-          } else { // сравнение было удачным 
-            if(*compare == ' ' || *compare == 0) { // при этом поисковый токен выбран до ' ' или 0
-              dbgln(PARSE, "Success compare! opcode = ", opcode);
-              text = compare;
-              return opcode;
-            } else { // поисковый токен не завершен, а командный завершен
-              dbgln(PARSE, "Partial compare, next...! opcode = ", opcode);
-              compare = text; match = 0; // начальные установкии для нового поиска
-              opcode++; // начнем сравнениие с следующим токеном из списка команд
-            }
-          }
-        } else {
-          match |= (ISA_token_char ^ *compare++);  // проверяем символ очередного токена из списка команд и очередного символа искомого токена
-        }
-      }
-
-      dbgln(PARSE, "Fail compare!", opcode);
-      return -1;
-    }
-
     void /* __attribute__((optimize("O0"))) */ output_version(void) {
       Serial.print("sizeof Serial "); Serial.println(sizeof(HardwareSerial));
       Serial.print(MODEL);
@@ -686,13 +638,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
   public:
     usize recive_pos;
 
+    class_terminal(void)
+      : AT(0), pending_confirmation_cmd(CMD_UNKNOWN), nSlot(-1), input_overflow(false), recive_pos(0) {
+      pending_save_name[0] = 0;
+    }
+
     void reset_command_state(void) {
       AT                    = 0;
       recive_pos            = 0;
-      terminal_last_cmd     = 0;
+      pending_confirmation_cmd = CMD_UNKNOWN;
       nSlot                 = -1;
       input_overflow        = false;
-      script_args_ptr       = "";
       pending_save_name[0]  = 0;
     }
 
@@ -722,20 +678,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       reset_command_state();
     }
 
-    // Протокол скриптового режима: отрицательный код — результат или действие,
-    // которое должен выполнить движок сценариев (он владеет стеком скриптов).
-    static constexpr i32 SCRIPT_RESULT_OK     = -1;
-    static constexpr i32 SCRIPT_COMMAND_ERROR = -2;
-    static constexpr i32 SCRIPT_RUN_PROGRAM   = -3; // запустить загруженную программу
-    static constexpr i32 SCRIPT_OPEN_FILE     = -4; // открыть файл script_args()
-    static constexpr i32 SCRIPT_LOAD_SLOT     = -5; // выполнить слот script_args()
-    static constexpr i32 SCRIPT_GOTO_LABEL    = -6; // переход на метку script_args()
-
-    i32 execute_script_line(const char* line);
-
-    const char* script_args(void) const {
-      return script_args_ptr;
-    }
+    terminal_protocol::Result execute_script_line(const char* line);
 
     void  echo_mk61_stack(void) {
       char cvalue[15];
@@ -846,66 +789,55 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
     }
 
-    isize parse_addr(u8* stream) {
-      isize addr = 0;
-      for(usize i=0; i < 4; i++) {
-        const u8 digit = stream[i] - '0';
-        if(digit > 9) return -1;
-        addr = addr*10 + digit;
-      }
-      Serial.print("parsing address "); Serial.println(addr);
-      return addr;
-    }
+    bool GetHexString(const char* args) {
+      args = terminal_core::skip_spaces(args);
+      if(args == NULL) return false;
 
-    void  GetHexString(void) {
-        usize i = 4 + 4 + 1;
-        isize linear_addr = parse_addr(&input_buffer[4]);
-        if(linear_addr < 0 || linear_addr >= (isize) core_61::MAX_PROGRAM_STEP) {
-          ErrorReaction();
-          Serial.println(); Serial.println("BAD address!");
-          return;
+      usize address = 0;
+      for(usize i = 0; i < 4; i++) {
+        if(args[i] < '0' || args[i] > '9') {
+          Serial.println("Address must contain exactly four decimal digits.");
+          return false;
         }
+        address = address * 10 + (usize) (args[i] - '0');
+      }
+      if(!terminal_core::is_space(args[4]) || address >= core_61::MAX_PROGRAM_STEP) {
+        Serial.println("BAD address!");
+        return false;
+      }
 
-        u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-        core_61::get_code_page(&code_page[0]);
+      const char* hex = terminal_core::skip_spaces(args + 4);
+      if(hex == NULL || terminal_core::is_end(*hex)) {
+        Serial.println("Hex byte string is empty.");
+        return false;
+      }
 
-        Serial.println();
-          while(i < MAX_INPUT_CHAR) {
-            if(linear_addr < 0 || linear_addr >= (isize) core_61::MAX_PROGRAM_STEP) {
-              ErrorReaction();
-              Serial.println(); Serial.println("BAD address!");
-              return;
-            }
+      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+      core_61::get_code_page(&code_page[0]);
+      usize write_at = address;
+      while(!terminal_core::is_end(*hex) && !terminal_core::is_space(*hex)) {
+        const int high = terminal_core::digit_value(hex[0], 16);
+        const int low = terminal_core::digit_value(hex[1], 16);
+        if(high < 0 || low < 0) {
+          Serial.println("Hex byte string must contain complete byte pairs.");
+          return false;
+        }
+        if(write_at >= core_61::MAX_PROGRAM_STEP) {
+          Serial.println("Program memory overflow!");
+          return false;
+        }
+        code_page[write_at++] = (u8) ((high << 4) | low);
+        hex += 2;
+      }
+      if(!terminal_core::at_end(hex)) {
+        Serial.println("Unexpected text after hex byte string.");
+        return false;
+      }
 
-            const u8 hi_char = input_buffer[i++];
-            if(hi_char == 0 || hi_char == CR) {
-              Serial.println("\n\rStream recived!");
-              break;
-            }
-            const isize hi_digit = HexdecimalDigit(hi_char);
-
-            if(hi_digit < 0) {
-              Serial.print("Input from "); Serial.print(i); Serial.print(" recive non hexdecimal hi digit '"); Serial.write(hi_char); Serial.print("'$"); Serial.print(hi_char, HEX); Serial.println(") process halted!");
-              return;
-            }
-
-            const u8 lo_char = input_buffer[i++];
-            const isize lo_digit = HexdecimalDigit(lo_char);
-
-            if( lo_digit < 0 ) {
-              Serial.print("Input from "); Serial.print(i); Serial.print(" recive non hexdecimal lo digit '"); Serial.write(hi_char); Serial.print("'$"); Serial.print(hi_char, HEX); Serial.println(") process halted!");
-              return;
-            }
-
-            const u8 byte_code = (hi_digit << 4) | lo_digit;
-            Serial.print(byte_code, HEX); Serial.print(',');
-            code_page[linear_addr++] = byte_code;
-          }
-
-        const usize code_len = (linear_addr < 0) ? 0 : (usize) linear_addr;
-        const bool force_expanded = code_len > core_61::CLASSIC_PROGRAM_STEP;
-        apply_program_memory_auto(&code_page[0], code_len, false, force_expanded);
-        core_61::set_code_page(&code_page[0]);
+      const bool force_expanded = write_at > core_61::CLASSIC_PROGRAM_STEP;
+      apply_program_memory_auto(&code_page[0], core_61::MAX_PROGRAM_STEP, false, force_expanded);
+      core_61::set_code_page(&code_page[0]);
+      return true;
     }
 
     void  PutHexString(void) {
@@ -926,47 +858,37 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
     }
 
-    void  Assembler(void) {
-              char* ptr_input = (char*) &input_buffer[4];
-              const u32 newTA = *((u32*) &input_buffer[4]);
-              const u32 word  = newTA - 0x30303030;
-              
-              dbghexln(PARSE, "newTA as u32 ", newTA);
-              dbghexln(PARSE, "digit0 ", word & 0x000000FF, " digit1 ", word & 0x0000FF00, " digit2 ", word & 0x00FF0000, " digit3 ", word & 0xFF000000);
+    bool Assembler(void) {
+      const terminal_core::Assembly assembly = terminal_core::parse_assembly(
+        command_args(), AT, ISA_61, core_61::MAX_PROGRAM_STEP);
+      if(assembly.error != terminal_core::AssemblyError::NONE) {
+        ErrorReaction();
+        switch(assembly.error) {
+          case terminal_core::AssemblyError::EMPTY: Serial.println("Usage: asm [addr] <mnemonics>"); break;
+          case terminal_core::AssemblyError::BAD_ADDRESS: Serial.println("BAD address!"); break;
+          case terminal_core::AssemblyError::TOO_LONG: Serial.println("Program memory overflow!"); break;
+          case terminal_core::AssemblyError::UNKNOWN_MNEMONIC:
+            Serial.print("Unexpected token: ");
+            Serial.println(assembly.error_at == NULL ? "" : assembly.error_at);
+            break;
+          case terminal_core::AssemblyError::NONE: break;
+        }
+        return false;
+      }
 
-              Serial.print("Assembled to mk61 ");
+      // Parse first and commit once: a bad token must leave the program intact.
+      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+      core_61::get_code_page(&code_page[0]);
+      for(usize i = 0; i < assembly.count; i++) code_page[assembly.address + i] = assembly.opcodes[i];
+      apply_program_memory_auto(&code_page[0], core_61::MAX_PROGRAM_STEP, false);
+      core_61::set_code_page(&code_page[0]);
+      AT = (isize) (assembly.address + assembly.count);
 
-              if((word & 0x000000FF) <= 0x09 && (word & 0x0000FF00) <= 0x00000900 && (word & 0x00FF0000) <= 0x00090000 && (word & 0xFF000000) <= 0x09000000) {
-                AT = parse_addr((u8*) ptr_input);
-                //0 1 2 3 4 5 6 7 8 9
-                //a s m _ 0 0 0 0 _ ?
-                ptr_input += 5;
-                Serial.print(" from new TA ("); Serial.print(AT); Serial.println(") ");
-              }
-
-              do {
-                Serial.print("Parsing: "); Serial.println(ptr_input);
-                const isize code = get_ISA_61(ptr_input);
-
-                if(code == -1) {
-                  Serial.print("Unexpected token: "); Serial.println(ptr_input);
-                  return;
-                }
-
-                if(AT < 0 || AT >= (isize) core_61::MAX_PROGRAM_STEP) {
-                  ErrorReaction();
-                  Serial.println("BAD address!");
-                  return;
-                }
-
-                Serial.print("TA = "); Serial.print(AT); Serial.print(" : "); Serial_writeln_hex((u8) code);
-                ensure_program_memory_for_write(AT, (u8) code);
-                MK61Emu_SetCode(core_61::get_ring_address(AT++), (u8) code);
-              } while (*ptr_input++ == ' ');
-
-              u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-              core_61::get_code_page(&code_page[0]);
-              apply_program_memory_auto(&code_page[0], seek_program_END(&code_page[0]), true);
+      Serial.print("Assembled ");
+      Serial.print(assembly.count);
+      Serial.print(" opcode(s) at ");
+      Serial.println(assembly.address);
+      return true;
     }
 
     void  flash_map_list(void) {
@@ -989,65 +911,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println();
     }
 
-    isize parse_token_as_dec(char* &buff) {
-      usize dec = 0;
-      while(*buff != 0 && *buff != ' ' && *buff != CR) {
-        const isize digit = DecimalDigit(*buff++);
-        if(digit < 0) {
-          Serial.print((char) buff[-1]); Serial.println(" - non decimal digit!");
-          return -1;
-        }
-        dec = dec*10 + digit;
-      }
-      return dec;
-    }
-
-    isize parse_dec_numeric(char *buff) {
-      usize dec = 0;
-      while(*buff != 0 && *buff != ' ' && *buff != CR) {
-        const isize digit = DecimalDigit(*buff++);
-        if(digit < 0) {
-          Serial.print((char) buff[-1]); Serial.println(" - non decimal digit!");
-          return -1;
-        }
-        dec = dec*10 + digit;
-      }
-      return dec;
-    }
-
-    isize parse_token_as_hex(char* &buff) {
-      usize hex = 0;
-
-      while(*buff != 0 && *buff != ' ' && *buff != CR) {
-        const isize digit = HexdecimalDigit(*buff++);
-        if(digit < 0) {
-          Serial.print((char) buff[-1]); Serial.println(" - non hexdecimal digit!");
-          return -1;
-        }
-        hex = hex*16 + digit;
+    terminal_protocol::Result command_to_kbd(bool script_mode) {
+      usize code_61 = 0;
+      const usize command_count = sizeof(key_sequence_on_cmd) / sizeof(key_sequence_on_cmd[0]);
+      if(!terminal_core::parse_single_unsigned(command_args(), 16, command_count - 1, code_61)) {
+        Serial.println("Usage: cmd <00..EF>");
+        return terminal_protocol::Result::error();
       }
 
-      return hex;
-    }
-
-    isize parse_hex_numeric(char* buff) {
-      usize hex = 0;
-
-      while(*buff != 0 && *buff != ' ' && *buff != CR) {
-        const isize digit = HexdecimalDigit(*buff++);
-        if(digit < 0) {
-          Serial.print((char) buff[-1]); Serial.println(" - non hexdecimal digit!");
-          return -1;
-        }
-        hex = hex*16 + digit;
-      }
-
-      return hex;
-    }
-
-    i32  command_to_kbd(bool script_mode) {
-      const usize code_61 = parse_hex_numeric((char*) &input_buffer[4]);
-      usize sequence = key_sequence_on_cmd[code_61];
+      u32 sequence = key_sequence_on_cmd[code_61];
       dbgln(MK61E, "mk61 <- ", (u8) code_61);
       dbghexln(MK61E, "mk61 <- $", (i32) sequence);
 
@@ -1060,111 +932,53 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         else kbd::push(scan_code);
         sequence >>= 8;
       }
-      return -1;//key_sequence_on_cmd[code_61];
+      return terminal_protocol::Result::ok();
     }
 
-    i32  scancode_to_kbd(void) { // simulate mk61 scancode from keyboard buffer
-      const usize key_code = parse_hex_numeric((char*) &input_buffer[4]);//high * 16 + low;//(input_buffer[4] - '0')*10 + (input_buffer[5] - '0');
+    bool scancode_to_kbd(i32& out) {
+      usize key_code = 0;
+      if(!terminal_core::parse_single_unsigned(command_args(), 16, 0x27, key_code)) {
+        Serial.println("Usage: kbd <00..27>");
+        return false;
+      }
       dbghexln(MK61E, "mk61 <- ", key_code, "H");
-      if(key_code > 40) {
-        Serial.println("Unsuccessful scan code! < 28H");
-        return -1;
-      }
-      return key_code;
+      out = (i32) key_code;
+      return true;
     }
 
-    void  input_R_stack(void) { // value format poke X 1.25e02
-      char buffer[14]; // -12345678-12
-      memset(&buffer[0], 0, sizeof(buffer));
+    static bool value_fits_mk61(double value) {
+      char sign = ' ';
+      char mantissa[8];
+      isize pow10 = 0;
+      mk61_ref::double_to_parts(value, sign, mantissa, pow10);
+      return pow10 >= -99 && pow10 <= 99;
+    }
 
-      const char R_name = input_buffer[5];
-      const char sign   = input_buffer[7];
-      u8* p_mantissa = (sign == '-')? &input_buffer[8] : &input_buffer[7];
+    bool write_register_value(u8 reg, const char* args) {
+      double value = 0.0;
+      if(!terminal_core::parse_single_decimal(args, value) || !value_fits_mk61(value)) return false;
+      const mk61_ref::Ref ref = {mk61_ref::Kind::R, reg};
+      return mk61_ref::write(ref, value);
+    }
 
-      isize mpow = 0;
-      isize pos = 0;
-      char* p_buff = &buffer[0];
-      for(pos=0; pos < 9; pos++) {
-        const char digit = p_mantissa[pos];
-        if(digit == 'e') break;
-        if(digit == '.') {
-          mpow = pos;
-          continue;
-        }
+    bool write_stack_value(const char* args) {
+      args = terminal_core::skip_spaces(args);
+      if(args == NULL || args[0] == 0 || !terminal_core::is_space(args[1])) return false;
 
-        if(!IsDecimalDigit(digit)) {
-          ErrorReaction();
-          Serial.print("\n\rNon decimal digit _"); Serial.write(digit); Serial.println("_ !'");
-          return;
-        }
+      char name[2] = {args[0], 0};
+      mk61_ref::Ref ref;
+      if(!mk61_ref::parse_name(name, ref) || ref.kind == mk61_ref::Kind::R) return false;
 
-        *p_buff++ = digit;
-        Serial_write_hex(digit); Serial.print("h "); Serial.write(digit); Serial.write(',');
-      }
-      if(pos < 1 || pos > 9 /*1.2345678e*/) {
-        ErrorReaction();
-        Serial.println("Abnormal mantissa size!");
-        return;
-      }
-      p_mantissa += (pos + 1);
-      while(pos++ <= 8) *p_buff++ = '0';
-
-      Serial.print("\n\rvalue '"); Serial.print(buffer); Serial.print("' mpow "); Serial.println(mpow);
-
-      const char sign_pow = *p_mantissa;
-      if(sign_pow == '-') p_mantissa++;
-
-      isize pow = 0;
-      while(*p_mantissa != 0) {
-        const usize decimal_digit = *p_mantissa - '0';
-
-        if(decimal_digit > 10) {
-          ErrorReaction();
-          Serial.print("\n\rNon decimal digit _"); Serial_write_hex(decimal_digit); Serial.println("_ !'");
-          return;
-        }
-
-        pow = pow*10 + decimal_digit;
-        Serial_write_hex(*p_mantissa); Serial.print("h "); Serial.write((usize) *p_mantissa); Serial.write(',');
-        p_mantissa++;
-      }
-      if(sign_pow == '-') pow = -pow;
-      pow += (mpow - 1);
-      if(pow > 99) {
-        ErrorReaction();
-        Serial.print("\n\rPower of vale is big > 99!");
-      }
-      Serial.print("\n\rvalue "); Serial.print(buffer); Serial.print(" pow "); Serial.println(pow);
-
-      switch(R_name) {
-        case 'x':
-        case 'X':
-            write_stack_register(stack::X, sign, buffer, pow);
-          break;
-        case 'y':
-        case 'Y':
-            write_stack_register(stack::Y, sign, buffer, pow);
-          break;
-        case 'z':
-        case 'Z':
-            write_stack_register(stack::Z, sign, buffer, pow);
-          break;
-        case 't':
-        case 'T':
-            write_stack_register(stack::T, sign, buffer, pow);
-          break;
-        default:
-          ErrorReaction();
-          Serial.print("Illegal stack register name '"); Serial.print(R_name); Serial.println("' available X,x,Y,y,Z,z,T,t.");
-      }
+      double value = 0.0;
+      if(!terminal_core::parse_single_decimal(args + 1, value) || !value_fits_mk61(value)) return false;
+      return mk61_ref::write(ref, value);
     }
 
     // Аргументы команды: всё после первого слова строки ввода.
     const char* command_args(void) {
       const char* p = (const char*) input_buffer;
-      while(*p != 0 && *p != ' ') p++;
-      while(*p == ' ') p++;
-      return p;
+      while(!terminal_core::is_end(*p) && !terminal_core::is_space(*p)) p++;
+      return terminal_core::skip_spaces(p);
     }
 
     // Список неотрицательных чисел через запятую и/или пробелы.
@@ -1175,7 +989,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         if(*p == 0) break;
         if(*p < '0' || *p > '9') return -1;
         u32 value = 0;
-        while(*p >= '0' && *p <= '9') value = value * 10 + (u32) (*p++ - '0');
+        while(*p >= '0' && *p <= '9') {
+          const u32 digit = (u32) (*p++ - '0');
+          if(value > (0xFFFFFFFFUL - digit) / 10) return -1;
+          value = value * 10 + digit;
+        }
         if(count >= max_count) return -1;
         out[count++] = value;
       }
@@ -1243,13 +1061,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     static bool operand_delimiter(char c) {
-      return c == 0 || c == ' ' || c == '<' || c == '>' || c == '=' || c == '!';
+      return terminal_core::is_end(c) || terminal_core::is_space(c) || c == '<' || c == '>' || c == '=' || c == '!';
     }
 
     // Операнд условия if: x,y,z,t,x1 (стек), r0..re (rf в расширенном режиме)
     // или числовой литерал (1.25e-2, -5, ...).
     static bool parse_if_operand(const char*& p, double& out) {
-      while(*p == ' ') p++;
+      p = terminal_core::skip_spaces(p);
       const char c = (*p >= 'A' && *p <= 'Z') ? (char) (*p - 'A' + 'a') : *p;
 
       if(c == 'r') {
@@ -1282,17 +1100,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return parse_mk_display_value(value, out);
       }
 
-      const char* end = p;
-      const double value = mk_math::strtod(p, &end);
-      if(end == p) return false;
-      p = end;
-      out = value;
-      return true;
+      return terminal_core::parse_decimal(p, out);
     }
 
     // if <операнд><op><операнд> <команда> - команда выполняется при истинном
     // условии. В m61-скриптах вместе с "run :метка" даёт условные переходы.
-    isize exec_if(bool script_mode) {
+    terminal_protocol::Result exec_if(bool script_mode) {
       const char* p = command_args();
       double lhs = 0.0;
       double rhs = 0.0;
@@ -1301,7 +1114,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       char op0 = 0;
       char op1 = 0;
       if(parsed) {
-        while(*p == ' ') p++;
+        p = terminal_core::skip_spaces(p);
         op0 = p[0];
         if(op0 == '>' || op0 == '<' || op0 == '=' || op0 == '!') {
           p++;
@@ -1311,13 +1124,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
       if(parsed) parsed = parse_if_operand(p, rhs);
 
-      const char* tail = p;
-      while(*tail == ' ') tail++;
+      const char* tail = terminal_core::skip_spaces(p);
       if(!parsed || *tail == 0) {
         recive_pos = 0;
-        if(script_mode) return SCRIPT_COMMAND_ERROR;
         Serial.println("Usage: if <x|y|z|t|x1|r0..re> <op> <value> <command>");
-        return -1;
+        return terminal_protocol::Result::error();
       }
 
       bool condition = false;
@@ -1328,7 +1139,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
       if(!condition) {
         recive_pos = 0;
-        return script_mode ? SCRIPT_RESULT_OK : -1;
+        return terminal_protocol::Result::ok();
       }
 
       // Условие истинно: остаток строки выполняется как обычная команда.
@@ -1339,47 +1150,62 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return execute(script_mode);
     }
 
-    isize execute(bool script_mode = false) {
-        bool confirmed = false;
-        if(input_buffer[0] == 'y' || input_buffer[0] == 'Y') {
-          switch(terminal_last_cmd) {
-            case  CMD_CLEAR:
-                MK61Emu_ClearCodePage();
-                Serial.println("Code page cleared!");
-                confirmed = true;
-              break;
-            case  CMD_DEL_SLOT:
-                if(!DeleteSlot(nSlot)) Serial.println("Delete failed (no such file?)");
-                confirmed = true;
-              break;
-            case  CMD_SAVE:
-                if(pending_save_name[0] != 0) {
-                  if(!StoreProgram(pending_save_name)) Serial.println("Failed save attempt!");
-                } else {
-                  if(!Store(nSlot)) Serial.println("Failed save attempt!");
-                }
-                confirmed = true;
-              break;
-            case  CMD_ERASE_STORAGE:
-                clear_storage();
-                confirmed = true;
-              break;
-          }
-          if(script_mode && confirmed) {
-            terminal_last_cmd = 0;
-            recive_pos = 0;
-            pending_save_name[0] = 0;
-            return -1;
-          }
-        }
-
+    terminal_protocol::Result execute(bool script_mode = false) {
+        if(recive_pos == 0 || recive_pos > MAX_INPUT_CHAR) return terminal_protocol::Result::error();
         input_buffer[--recive_pos] = 0;
         Serial.println();
         dbgln(MINI,"[", recive_pos, "] '", (char*) input_buffer);
 
+        if(!script_mode && pending_confirmation_cmd != CMD_UNKNOWN) {
+          const u8 pending = pending_confirmation_cmd;
+          pending_confirmation_cmd = CMD_UNKNOWN;
+          if(terminal_core::exact_confirmation((const char*) input_buffer, 'y')) {
+            bool ok = true;
+            switch(pending) {
+              case CMD_CLEAR:
+                MK61Emu_ClearCodePage();
+                Serial.println("Code page cleared!");
+                break;
+              case CMD_DEL_SLOT:
+                ok = DeleteSlot(nSlot);
+                if(!ok) Serial.println("Delete failed (no such file?)");
+                break;
+              case CMD_SAVE:
+                ok = pending_save_name[0] != 0 ? StoreProgram(pending_save_name) : Store(nSlot);
+                if(!ok) Serial.println("Failed save attempt!");
+                break;
+              case CMD_ERASE_STORAGE:
+                ok = clear_storage();
+                break;
+              default:
+                ok = false;
+                break;
+            }
+            pending_save_name[0] = 0;
+            nSlot = -1;
+            recive_pos = 0;
+            return ok ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
+          }
+          if(terminal_core::exact_confirmation((const char*) input_buffer, 'n')) {
+            pending_save_name[0] = 0;
+            nSlot = -1;
+            recive_pos = 0;
+            Serial.println("Cancelled.");
+            return terminal_protocol::Result::ok();
+          }
+          // Any command other than a standalone Y/N cancels the stale request.
+          pending_save_name[0] = 0;
+          nSlot = -1;
+        }
+
         const u8 command_id = terminal_command_lookup(&input_buffer[0]);
-        terminal_last_cmd = command_id;
         dbgln(MINI, "command id ", (int) command_id);
+        if(script_mode && !terminal_command_allowed_in_script(command_id)) {
+          Serial.print("Command is not allowed in M61 scripts: ");
+          Serial.println((const char*) input_buffer);
+          recive_pos = 0;
+          return terminal_protocol::Result::error();
+        }
         switch (command_id) {
           case  CMD_VERSION:
               output_version();
@@ -1405,11 +1231,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               const isize reg = HexdecimalDigit((char) input_buffer[1]);
               const isize reg_limit = core_61::expanded_program_is_on() ? 15 : 14;
               if(reg < 0 || reg > reg_limit) {
-                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
                 Serial.println("Illegal register, R0..RE (RF in expanded mode)!");
-                break;
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
-              MK61Emu_WriteRegister((int) reg, (char*) &input_buffer[4]);
+              if(!write_register_value((u8) reg, command_args())) {
+                Serial.println("Usage: R<0..F>= <finite number with exponent -99..99>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
             }
             break;
           case  CMD_1302:
@@ -1417,19 +1247,28 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             break;
           case  CMD_CLEAR:
           case  CMD_ERASE_STORAGE:
+              pending_confirmation_cmd = command_id;
               Serial.println("Enter Y/y to confirm the operation!");
             break;
-          case  CMD_CMD: 
+          case  CMD_CMD: {
+              const terminal_protocol::Result result = command_to_kbd(script_mode);
               recive_pos = 0;
-            return command_to_kbd(script_mode);
+              return result;
+            }
           case  CMD_KBD: {
-              recive_pos = 0;
-              const i32 scancode = scancode_to_kbd();
-              if(scancode < 0) break;
+              i32 scancode = -1;
+              if(!scancode_to_kbd(scancode)) {
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
               // В скрипте клавиша нажимается сразу на ядре, интерактивно —
               // скан-код уходит в буфер клавиатуры через loop().
-              if(script_mode) return hidden_press_scan_code(scancode) ? SCRIPT_RESULT_OK : SCRIPT_COMMAND_ERROR;
-              return scancode;
+              if(script_mode) {
+                recive_pos = 0;
+                return hidden_press_scan_code(scancode) ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
+              }
+              recive_pos = 0;
+              return terminal_protocol::Result::keyboard(scancode);
             }
           case  CMD_DISASM:  // включить/выключить режим верхней строки с дизассемблером МК61
               config.disassm = disassembler.turn_on_off();
@@ -1443,10 +1282,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               } else if(terminal_copy_mk61_name(args, pending_save_name)) {
                 nSlot = -1;
               } else {
-                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
                 Serial.println("Usage: save <slot|name[.m61]>");
-                break;
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
+              pending_confirmation_cmd = CMD_SAVE;
               Serial.println("Enter Y/y to confirm the operation!");
             }
             break;
@@ -1455,17 +1295,25 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               usize slot = 0;
               if(terminal_parse_slot_arg(args, slot)) {
                 // В скрипте слот выполняется вложенно (Load() отменил бы сценарий).
-                if(script_mode) return script_action(SCRIPT_LOAD_SLOT, args);
-                if(!Load(slot)) Serial.println("Failed load attempt!");
+                if(script_mode) return script_action(terminal_protocol::ResultKind::LOAD_SLOT, args);
+                if(!Load(slot)) {
+                  Serial.println("Failed load attempt!");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
               } else {
                 char name[program_store::NAME_SIZE];
                 if(!terminal_copy_mk61_name(args, name)) {
-                  if(script_mode) return SCRIPT_COMMAND_ERROR;
                   Serial.println("Usage: load <slot|name[.m61]>");
-                  break;
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
                 }
-                if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
-                if(!LoadProgram(name)) Serial.println("Failed load attempt!");
+                if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
+                if(!LoadProgram(name)) {
+                  Serial.println("Failed load attempt!");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
               }
             }
             break;
@@ -1505,40 +1353,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               lasm_mk61_code_page(mnemo_type::ISA_61);
             break;
           case  CMD_INS: { 
-            // 01234
-            // ins 10 20
-              char *args = (char*) &input_buffer[3];
-              while(*args == ' ') args++;
-              const usize into_step = parse_token_as_dec(args);
-              while(*args == ' ') args++;
-              const usize opcode = parse_token_as_hex(args);
-              insert_cmd_in_program(into_step,  opcode);
-              /*
-              dbgln(MINI, "Insert comand <", opcode, "> in program step ", into_step);
-              
-              u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-              core_61::get_code_page(&code_page[0]);
-              
-              u8 move_code, copy_code = opcode;
-              bool inc_operand = false;
-              for(usize i = into_step; i < core_61::program_steps(); i++) {
-                move_code = code_page[i];
-
-                if(inc_operand) {
-                  // необходима коррекция операнда предыдущей команды
-                  if(copy_code >= into_step) copy_code++;
-                  inc_operand = false;
-                } else { // рассматриваемое данное это команда, не операнд!
-                  if(core_61::len_code_command(copy_code) == 2) { 
-                    // установить необходимость коррекция второго операнда команды (адреса перехода)
-                      dbgln(MINI, "Step ", i, " 2 operand opcode: ", copy_code);
-                      inc_operand = true;
-                  }
-                }
-                code_page[i] = copy_code;
-                copy_code = move_code;
+              const char* args = command_args();
+              usize into_step = 0;
+              usize opcode = 0;
+              if(!terminal_core::parse_unsigned(args, 10, core_61::program_steps() - 1, into_step) ||
+                 !terminal_core::parse_unsigned(args, 16, 0xFF, opcode) ||
+                 !terminal_core::at_end(args)) {
+                Serial.println("Usage: ins <step> <00..FF>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
-              core_61::set_code_page(code_page);*/
+              insert_cmd_in_program(into_step, opcode);
             break;
           }
           case  CMD_STACK:
@@ -1582,10 +1407,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               char fs_name[program_store::NAME_SIZE];
               if(!terminal_split_fs_name_or_mk61(args, fs_name, type)) {
                 Serial.println("Usage: del <name[.m61]|name.ext> (ext: M61 FOC TBI T1 M2)");
-                break;
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
-              if(!program_store::remove(type, fs_name)) Serial.println("Delete failed (no such file?)");
-              else Serial.println("Deleted.");
+              if(!program_store::remove(type, fs_name)) {
+                Serial.println("Delete failed (no such file?)");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              Serial.println("Deleted.");
             }
             break;
           case  CMD_FS_CLEAN: {
@@ -1597,19 +1427,23 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             break;
           case  CMD_RUN: {
               // "run <имя>" — синоним open; без имени — запуск программы МК61.
-              const char* args = (const char*) &input_buffer[3];
-              while(*args == ' ') args++;
+              const char* args = command_args();
               if(*args == ':') { // run :метка - переход внутри m61-скрипта
-                if(script_mode) return script_action(SCRIPT_GOTO_LABEL, args + 1);
+                if(script_mode) return script_action(terminal_protocol::ResultKind::GOTO_LABEL, args + 1);
                 Serial.println("Labels work in m61 scripts only!");
-                break;
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
               if(*args != 0) {
-                if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
-                if(!OpenStoredFile(args)) Serial.println("Open failed!");
+                if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
+                if(!OpenStoredFile(args)) {
+                  Serial.println("Open failed!");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
                 break;
               }
-              if(script_mode) return script_action(SCRIPT_RUN_PROGRAM, "");
+              if(script_mode) return script_action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
               kbd::push((i8) sw::F);   // F
               kbd::push((i8) sw::NEG); // /-/
               kbd::push((i8) sw::RET); // В/О
@@ -1617,13 +1451,26 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             }
             break;
           case CMD_OPEN: {
-              const char* args = (input_buffer[4] == ' ') ? (const char*) &input_buffer[5] : "";
-              if(script_mode) return script_action(SCRIPT_OPEN_FILE, args);
-              if(!OpenStoredFile(args)) Serial.println("Open failed!");
+              const char* args = command_args();
+              if(terminal_core::at_end(args)) {
+                Serial.println("Usage: open <name>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
+              if(!OpenStoredFile(args)) {
+                Serial.println("Open failed!");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
             }
             break;
           case  CMD_POKE:
-              input_R_stack();
+              if(!write_stack_value(command_args())) {
+                Serial.println("Usage: poke <X|Y|Z|T> <finite number with exponent -99..99>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
             break;
           case  CMD_DIR: {
               char slot_name[SIZEOF_SLOT_NAME];
@@ -1637,70 +1484,77 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_DEL_SLOT: {
               if(!flash_is_ok) {
                 Serial.println("Error: spiflash chip is not installed!");
-                break;
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
-              nSlot = parse_dec_numeric((char*) &input_buffer[5]);
+              usize slot = 0;
+              if(!terminal_core::parse_single_unsigned(command_args(), 10, 99, slot)) {
+                Serial.println("Usage: sdel <0..99>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              nSlot = (isize) slot;
               Serial.print("\n\rDelete slot #"); Serial.println(nSlot);
-              if(nSlot < 0 || nSlot > 99) {
-                 Serial.println("Error: is out of range 0..99 !");
-                break;
-              }
               if(!IsOccupied(nSlot)) {
                 Serial.println("Warning: slot is already empty.");
-                break;
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
+              pending_confirmation_cmd = CMD_DEL_SLOT;
               Serial.println("Enter Y/y to confirm the operation!");
             }
             break;
           case  CMD_RENAME: {
-              usize nSlot = 0;
-              usize pos = 4;
-              while(pos < 6) {
-                const char symbol = input_buffer[pos];
-                if(symbol == ' ') break;
-
-                const usize dec_digit = symbol - '0';
-                if(dec_digit >= 10) {
-                  Serial.print("Invalid digit in slot number => '"); Serial.print(dec_digit); Serial.println("'"); 
-                  ErrorReaction();
-                  break;
-                }
-                nSlot = nSlot*10 + dec_digit;
-                pos++;
+              const char* args = command_args();
+              usize slot = 0;
+              if(!terminal_core::parse_unsigned(args, 10, 99, slot)) {
+                Serial.println("Usage: snm <0..99> <name>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
-              if(input_buffer[pos++] != ' ') {
-                Serial.println("Slot number > 99"); 
+              char slot_name[SIZEOF_SLOT_NAME];
+              if(!terminal_copy_arg(slot_name, sizeof(slot_name), args)) {
+                Serial.println("Name must contain 1..15 characters.");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              Serial.print("Rename slot N"); Serial.print(slot); Serial.print(" to "); Serial.println(slot_name);
+              if(!Rename(slot, slot_name)) {
+                Serial.println("Rename failed (missing slot or duplicate name).");
                 ErrorReaction();
-                break;
-              }
-              
-              Serial.print("Rename slot N"); Serial.print(nSlot); Serial.print(" to "); Serial.println((char*) &input_buffer[pos]);
-              if(!Rename(nSlot,(char*) &input_buffer[pos])) {
-                  Serial.println("Check slot number (<100) or name of slot (16 char)!");
-                  ErrorReaction();
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
             }
             break;
           case  CMD_HIN:
           case  CMD_SET_CODE:
-              GetHexString();
+              if(!GetHexString(command_id == CMD_SET_CODE ? (const char*) &input_buffer[4] : command_args())) {
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
             break;
           case  CMD_ASM:
-              Assembler();
+              if(!Assembler()) {
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
             break;
           case  CMD_HELP:
               print_help();
             break;
           case  CMD_LED:
               if(!exec_led()) {
-                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
                 Serial.println("Usage: led <0|1>[,<ms>,<0|1>,...]");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
             break;
           case  CMD_BEEP:
               if(!exec_beep()) {
-                if(script_mode) { recive_pos = 0; return SCRIPT_COMMAND_ERROR; }
                 Serial.println("Usage: beep <Hz>,<ms>[,<Hz>,<ms>,...]");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
               }
             break;
           case  CMD_IF:
@@ -1709,19 +1563,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               history_print();
             break;
           default:
-              if(script_mode) {
-                recive_pos = 0;
-                return SCRIPT_COMMAND_ERROR;
-              }
-              // Иначе -1 неотличим от успешно выполненной команды.
-              if(!confirmed && input_buffer[0] != 0) {
+              if(input_buffer[0] != 0) {
                 Serial.print("Unknown command: ");
                 Serial.println((const char*) input_buffer);
               }
+              recive_pos = 0;
+              return terminal_protocol::Result::error();
         }
 
       recive_pos = 0;
-      return -1;
+      return terminal_protocol::Result::ok();
     }
 
     i32 serial_input_handler() {
@@ -1775,11 +1626,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           hist_nav = -1;
 
           input_buffer[recive_pos++] = CR; // контракт execute(): последний символ CR
-          const i32 result = execute();
+          const terminal_protocol::Result result = execute();
           print_prompt();
           // Остаток потока обработается в следующем вызове: каждая строка
           // выполняется до чтения следующей, пакетный ввод не склеивается.
-          return result;
+          return result.kind == terminal_protocol::ResultKind::KEY ? result.key : -1;
         }
         prev_terminator = 0;
 
@@ -1793,7 +1644,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
         if(rx_char < 0x20 && rx_char != '\t') continue; // управляющие символы не буферизуем
 
-        if(not_EOF()) {
+        if(input_can_append()) {
           input_buffer[recive_pos++] = rx_char;
           Serial.write(rx_char); // эхо
         } else if(!input_overflow) {
@@ -1806,8 +1657,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
 };
 
-inline i32 class_terminal::execute_script_line(const char* line) {
-  if(line == NULL) return SCRIPT_COMMAND_ERROR;
+inline terminal_protocol::Result class_terminal::execute_script_line(const char* line) {
+  if(line == NULL) return terminal_protocol::Result::error();
 
   // input_buffer один на прошивку: пока скрипт исполняется между итерациями
   // loop(), в буфере может лежать недонабранная строка интерактивного
@@ -1815,11 +1666,11 @@ inline i32 class_terminal::execute_script_line(const char* line) {
   u8 interactive_line[MAX_INPUT_CHAR];
   memcpy(interactive_line, input_buffer, MAX_INPUT_CHAR);
 
-  i32 result = SCRIPT_COMMAND_ERROR;
+  terminal_protocol::Result result = terminal_protocol::Result::error();
   usize len = 0;
   bool too_long = false;
   while(line[len] != 0) {
-    if(len + 1 >= MAX_INPUT_CHAR) {
+    if(!terminal_core::input_can_append(len)) {
       too_long = true;
       break;
     }

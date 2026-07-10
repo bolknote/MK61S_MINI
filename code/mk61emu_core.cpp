@@ -1851,19 +1851,6 @@ u8* MK61Emu_UnpackRegster(u8 nReg, u8 *pack_number) {
   return pack_number;
 }
 
-void    MK61Emu_WriteRegister(int nReg, char* buffer) {
-  int addr = nReg*42 + 21;
-
-    for(int j = 3; j < 11; j++){
-      ringM[addr] = *buffer++ - '0'; 
-      addr -= 3;
-    }  
-
-    buffer++;
-    ringM[addr+30+3] = *buffer++ - '0'; 
-    ringM[addr+27+3] = *buffer++ - '0'; 
-}
-
 //      0       1      2     3
 // 24, 21, 18, 15, 12, 9, 6, 3, 0 ::: 33, 30, 27
 void    MK61Emu_ReadRegister(int nReg, char* buffer, const char* display_symbols) {
