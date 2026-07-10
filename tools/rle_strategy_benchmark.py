@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare RLE parsing strategies on binary files.
+"""Compare RLE parsing strategies and optional LZO1X on binary files.
 
 The two base formats are described at:
 https://bolknote.ru/all/kakoy-rle-luchshe/
@@ -8,11 +8,15 @@ https://bolknote.ru/all/kakoy-rle-luchshe/
 "packbits" uses one control byte to select a literal block or a run.
 The optimal PackBits parser uses dynamic programming, so it considers every
 legal sequence of literal and run blocks instead of committing greedily.
+Pass --lzo to add LZO1X-1 and its lower-memory 1-11 compressor through the
+system liblzo2. Every encoded stream is decoded and checked before reporting.
 """
 
 from __future__ import annotations
 
 import argparse
+import ctypes
+import ctypes.util
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -22,6 +26,66 @@ from typing import Iterable
 class Encoded:
     name: str
     data: bytes
+
+
+class Lzo1x:
+    """Small ctypes adapter for the system liblzo2 benchmark dependency."""
+
+    def __init__(self, library: str | None = None) -> None:
+        library = library or ctypes.util.find_library("lzo2")
+        if library is None:
+            raise RuntimeError("liblzo2 was not found")
+        self.library_name = library
+        self.lib = ctypes.CDLL(library)
+        self.decompress = self.lib.lzo1x_decompress_safe
+        self.decompress.argtypes = (
+            ctypes.c_void_p,
+            ctypes.c_size_t,
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_size_t),
+            ctypes.c_void_p,
+        )
+        self.decompress.restype = ctypes.c_int
+
+    def compress(self, data: bytes, symbol: str, work_slots: int) -> bytes:
+        function = getattr(self.lib, symbol)
+        function.argtypes = (
+            ctypes.c_void_p,
+            ctypes.c_size_t,
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_size_t),
+            ctypes.c_void_p,
+        )
+        function.restype = ctypes.c_int
+
+        source = ctypes.create_string_buffer(data)
+        output_capacity = len(data) + len(data) // 16 + 64 + 3
+        output = ctypes.create_string_buffer(output_capacity)
+        output_len = ctypes.c_size_t(output_capacity)
+        # lzo_sizeof_dict_t is pointer-sized. On a 32-bit target these slot
+        # counts correspond to 64 KiB for LZO1X-1 and 8 KiB for 1-11.
+        work = ctypes.create_string_buffer(work_slots * ctypes.sizeof(ctypes.c_void_p))
+        status = function(source, len(data), output, ctypes.byref(output_len), work)
+        if status != 0:
+            raise RuntimeError(f"{symbol} failed with LZO status {status}")
+        encoded = output.raw[: output_len.value]
+        self._check_round_trip(data, encoded)
+        return encoded
+
+    def _check_round_trip(self, expected: bytes, encoded: bytes) -> None:
+        output = ctypes.create_string_buffer(len(expected))
+        output_len = ctypes.c_size_t(len(expected))
+        status = self.decompress(
+            encoded,
+            len(encoded),
+            output,
+            ctypes.byref(output_len),
+            None,
+        )
+        if status != 0 or output_len.value != len(expected):
+            raise RuntimeError(f"LZO round-trip failed with status {status}")
+        if output.raw[: output_len.value] != expected:
+            raise RuntimeError("LZO round-trip produced different bytes")
 
 
 def runs(data: bytes) -> Iterable[tuple[int, int]]:
@@ -230,7 +294,11 @@ def packbits_decode(
     return bytes(out)
 
 
-def benchmark(data: bytes, scan_splits: bool) -> list[Encoded]:
+def benchmark(
+    data: bytes,
+    scan_splits: bool,
+    lzo: Lzo1x | None = None,
+) -> list[Encoded]:
     results = [
         Encoded("Bolk", bolk_encode(data)),
         Encoded(
@@ -262,7 +330,23 @@ def benchmark(data: bytes, scan_splits: bool) -> list[Encoded]:
             )
         )
 
+    if lzo is not None:
+        results.extend(
+            (
+                Encoded(
+                    "LZO1X-1 (64 KiB work RAM on 32-bit)",
+                    lzo.compress(data, "lzo1x_1_compress", 16384),
+                ),
+                Encoded(
+                    "LZO1X-1-11 (8 KiB work RAM on 32-bit)",
+                    lzo.compress(data, "lzo1x_1_11_compress", 2048),
+                ),
+            )
+        )
+
     for result in results:
+        if result.name.startswith("LZO"):
+            continue
         if result.name == "Bolk":
             decoded = bolk_decode(result.data)
         else:
@@ -284,9 +368,14 @@ def benchmark(data: bytes, scan_splits: bool) -> list[Encoded]:
     return results
 
 
-def print_results(name: str, data: bytes, scan_splits: bool) -> None:
+def print_results(
+    name: str,
+    data: bytes,
+    scan_splits: bool,
+    lzo: Lzo1x | None,
+) -> None:
     print(f"\n{name}: {len(data)} bytes")
-    for result in benchmark(data, scan_splits):
+    for result in benchmark(data, scan_splits, lzo):
         delta = len(result.data) - len(data)
         ratio = 100.0 * len(result.data) / len(data) if data else 0.0
         print(
@@ -308,19 +397,35 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="try every one-byte control split between literals and runs",
     )
+    parser.add_argument(
+        "--lzo",
+        action="store_true",
+        help="also benchmark LZO1X-1 and LZO1X-1-11 through liblzo2",
+    )
+    parser.add_argument(
+        "--lzo-library",
+        help="path or loader name for liblzo2 (implies --lzo)",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    try:
+        lzo = Lzo1x(args.lzo_library) if args.lzo or args.lzo_library else None
+    except (AttributeError, OSError, RuntimeError) as error:
+        raise SystemExit(f"LZO unavailable: {error}") from error
+    if lzo is not None:
+        print(f"LZO library: {lzo.library_name}")
     inputs = [(path.name, path.read_bytes()) for path in args.files]
     for name, data in inputs:
-        print_results(name, data, args.scan_splits)
+        print_results(name, data, args.scan_splits, lzo)
     if args.combine and len(inputs) > 1:
         print_results(
             " + ".join(name for name, _ in inputs),
             b"".join(data for _, data in inputs),
             args.scan_splits,
+            lzo,
         )
 
 

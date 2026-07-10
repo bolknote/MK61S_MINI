@@ -2,3 +2,7 @@
 /*.bin
 /binary/
 /tools/fmk_font
+
+# Python tooling caches
+__pycache__/
+*.py[cod]
