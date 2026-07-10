@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "display_symbols.hpp"
 
 #include <string.h>
 
@@ -86,6 +87,7 @@ MK61Display::MK61Display(void)
     custom_glyphs{{0}},
     custom_valid{false},
     active_font_data{0},
+    preview_font_data{0},
     active_font(),
     preview_font(),
     active_font_enabled(false),
@@ -95,10 +97,12 @@ MK61Display::MK61Display(void)
     dirty(false),
     update_depth(0),
     active_profile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS)),
+    preview_saved_profile(active_profile),
     cursor_underline(false),
     cursor_blink(false),
     cursor_blink_phase(false),
-    cursor_next_blink_ms(0) {
+    cursor_next_blink_ms(0),
+    preview_profile_active(false) {
   grid.reset(active_profile.rows);
 }
 
@@ -276,12 +280,13 @@ lcd_display::TextProfile MK61Display::recommendedProfile(const fmk::Metrics& met
 
 bool MK61Display::installFont(const u8* data, u16 size) {
   fmk::Face source;
-  if(!source.open(data, size) || !source.metrics().monospaced) return false;
+  if(!source.open(data, size) || size > sizeof(active_font_data)) return false;
   memcpy(active_font_data, data, size);
   if(!active_font.open(active_font_data, size)) return false;
 
   active_font_enabled = true;
   preview_font_enabled = false;
+  preview_profile_active = false;
   preview_font.reset();
   applyTextProfile(recommendedProfile(active_font.metrics()), true);
   markAllDirty();
@@ -289,27 +294,42 @@ bool MK61Display::installFont(const u8* data, u16 size) {
 }
 
 bool MK61Display::setFontPreview(const u8* data, u16 size) {
+  if(size > sizeof(preview_font_data)) return false;
   fmk::Face candidate;
-  if(!candidate.open(data, size) || !candidate.metrics().monospaced) return false;
-  preview_font = candidate;
+  if(!candidate.open(data, size)) return false;
+  memcpy(preview_font_data, data, size);
+  if(!preview_font.open(preview_font_data, size)) return false;
+  if(!preview_profile_active) {
+    preview_saved_profile = active_profile;
+    preview_profile_active = true;
+  }
   preview_font_enabled = true;
+  applyTextProfile(recommendedProfile(preview_font.metrics()), true);
   markAllDirty();
   return true;
 }
 
 void MK61Display::clearFontPreview(void) {
-  if(!preview_font_enabled) return;
+  if(!preview_font_enabled && !preview_profile_active) return;
+  const bool restore_profile = preview_profile_active;
+  const lcd_display::TextProfile saved_profile = preview_saved_profile;
   preview_font_enabled = false;
+  preview_profile_active = false;
   preview_font.reset();
+  if(restore_profile) applyTextProfile(saved_profile, true);
   markAllDirty();
 }
 
 void MK61Display::useBuiltinFont(void) {
-  const bool changed = active_font_enabled || preview_font_enabled;
+  const bool restore_profile = preview_profile_active;
+  const lcd_display::TextProfile saved_profile = preview_saved_profile;
+  const bool changed = active_font_enabled || preview_font_enabled || preview_profile_active;
   active_font_enabled = false;
   preview_font_enabled = false;
+  preview_profile_active = false;
   active_font.reset();
   preview_font.reset();
+  if(restore_profile) applyTextProfile(saved_profile, true);
   if(changed) markAllDirty();
 }
 
@@ -352,7 +372,11 @@ bool MK61Display::resolveToken(u16 value, bool custom, builtin_font::Raster& ras
 
   if(const fmk::Face* font = selectedFont()) {
     fmk::Glyph glyph;
-    if(font->glyph(value, glyph)) {
+    u16 font_value = value;
+#if defined(MK61_DISPLAY_UC1609)
+    font_value = display_symbol::uc1609::unicodeCodepoint(value);
+#endif
+    if(font->glyph(font_value, glyph) || (font_value != value && font->glyph(value, glyph))) {
       raster.width = glyph.width;
       raster.height = glyph.height;
       if(font->decode(glyph, raster.data, sizeof(raster.data))) return true;
@@ -460,8 +484,9 @@ void MK61Display::drawGlyph(u8 x, u8 row_y, u8 row, const uint8_t* bitmap,
                             u8 source_width, u8 source_height) {
   const u8 pitch = rowPitch(row);
   const u8 height = glyphHeight(row);
-  const u8 width = glyphWidth();
-  const u8 glyph_x = x + glyphLeft();
+  const u8 max_width = glyphWidth();
+  const u8 width = source_width < max_width ? source_width : max_width;
+  const u8 glyph_x = x + (u8) ((lcd_display::CELL_WIDTH - width) / 2);
   const u8 glyph_y = row_y + glyphTop(row);
   lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
   if(bitmap == NULL || source_width == 0 || source_height == 0) return;
@@ -510,6 +535,8 @@ void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
   (void) row;
 
   const u8 run_width = count * lcd_display::CELL_WIDTH;
+  const u8 saved_width = render_screen.width;
+  const u8 saved_height = render_screen.height;
   render_screen.width = run_width;
   render_screen.height = lcd_display::PIXEL_HEIGHT;
   memset(render_buffer, 0x00, run_width * MAX_RENDER_PAGES);
@@ -529,6 +556,8 @@ void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
 
   lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, 0,
                 run_width, lcd_display::PIXEL_HEIGHT, render_buffer);
+  render_screen.width = saved_width;
+  render_screen.height = saved_height;
 }
 
 #if ARDUINO >= 100
@@ -546,7 +575,8 @@ void MK61Display::write(uint8_t value) {
 
   if(cursorOverlayVisible()) markCursorCellDirty();
   if(value == '\n') grid.newline();
-  else grid.writeByte(value);
+  else if(value < CUSTOM_GLYPHS && custom_valid[value]) grid.writeByte(value);
+  else grid.writeCodepoint(value);
   if(cursorOverlayVisible()) markCursorCellDirty();
   dirty = true;
   if(update_depth == 0) flush();
