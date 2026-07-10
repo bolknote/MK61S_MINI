@@ -30,11 +30,14 @@ static constexpr u16 CLUSTER_LIMIT = FIRST_DATA_CLUSTER + DATA_CLUSTER_CAPACITY;
 static constexpr u16 MAX_IMPORTED_LEN = program_store::MAX_MK61_TEXT_SIZE;
 static_assert(program_store::MAX_FONT_SIZE <= MAX_IMPORTED_LEN, "font files must fit the VFAT import buffer");
 static constexpr u8 MAX_FILE_CLUSTERS = (MAX_IMPORTED_LEN + SECTOR_SIZE - 1) / SECTOR_SIZE;
+static_assert(MAX_FILE_CLUSTERS <= 8, "pending dirty mask supports at most eight clusters per file");
 static constexpr u16 MAX_LFN_CHARS = 64;
 static constexpr u16 MAX_LFN_CODE_UNITS = 104;
-static constexpr u8 MAX_PENDING_WRITES = program_store::MAX_ENTRIES;
+// A directory sector holds sixteen short entries. Two sectors of placeholders
+// can wait for late data without scaling transient RAM with the file quota.
+static constexpr u8 MAX_PENDING_WRITES = 32;
 static constexpr u8 MAX_PENDING_DELETES = program_store::MAX_ENTRIES;
-static constexpr u8 IGNORED_WRITE_RANGES = program_store::MAX_ENTRIES;
+static constexpr u8 IGNORED_WRITE_RANGES = 32;
 // Enough raw FAT12 bytes for CLUSTER_LIMIT entries: (802 * 3 + 1) / 2 = 1203.
 static constexpr u8 HOST_FAT_SECTORS = 3;
 static constexpr u8 FAT_ATTR_VOLUME = 0x08;
@@ -73,11 +76,12 @@ static constexpr u8 PENDING_EXISTING_UPDATE = 0x01;
 
 struct PendingDelete {
   bool used;
-  program_store::ProgramType type;
-  char name[program_store::NAME_SIZE];
+  u8 store_index;
   u16 start_cluster;
   u16 data_len;
 };
+
+static_assert(sizeof(PendingDelete) == 6, "compact delete queue must fit every stored file");
 
 struct IgnoredWriteRange {
   u16 start_cluster;
@@ -1584,11 +1588,35 @@ static bool committed_short_entry_at_dir_index(int dir_index, program_store::Ent
   return false;
 }
 
+static bool pending_delete_entry(const PendingDelete& pending, program_store::Entry& entry) {
+  return pending.used && program_store::entry_at(pending.store_index, entry);
+}
+
+static int store_index_for(program_store::ProgramType type, const char* name) {
+  const int total = program_store::total_count();
+  for(int i = 0; i < total; i++) {
+    program_store::Entry entry;
+    if(program_store::entry_at(i, entry) && entry.type == type &&
+       strncmp(entry.name, name, program_store::NAME_SIZE) == 0) return i;
+  }
+  return -1;
+}
+
+static void note_store_index_removed(u8 removed_index) {
+  // rename() appends the replacement and then removes the old slot. Keep all
+  // other queued tombstones attached to the same files after that compaction.
+  for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
+    PendingDelete& pending = session_state().pending_deletes[i];
+    if(pending.used && pending.store_index > removed_index) pending.store_index--;
+  }
+}
+
 static PendingDelete* find_pending_delete(program_store::ProgramType type, const char* name) {
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
     PendingDelete& pending = session_state().pending_deletes[i];
-    if(!pending.used || pending.type != type) continue;
-    if(strncmp(pending.name, name, program_store::NAME_SIZE) == 0) return &pending;
+    program_store::Entry entry;
+    if(!pending_delete_entry(pending, entry) || entry.type != type) continue;
+    if(strncmp(entry.name, name, program_store::NAME_SIZE) == 0) return &pending;
   }
   return NULL;
 }
@@ -1600,7 +1628,8 @@ static PendingDelete* find_pending_delete_for_cluster(program_store::ProgramType
   if(data_len == 0) return NULL;
   for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
     PendingDelete& pending = session_state().pending_deletes[i];
-    if(!pending.used || pending.type != type) continue;
+    program_store::Entry entry;
+    if(!pending_delete_entry(pending, entry) || entry.type != type) continue;
     if(pending.start_cluster == start_cluster && pending.data_len == data_len) return &pending;
   }
   return NULL;
@@ -1628,17 +1657,17 @@ static bool mark_pending_delete(const program_store::Entry& entry, int flat_inde
   PendingDelete* pending = find_pending_delete(entry.type, entry.name);
   if(pending == NULL) pending = allocate_pending_delete();
   if(pending == NULL) return false;
+  const int store_index = store_index_for(entry.type, entry.name);
+  if(store_index < 0 || store_index > 0xFF) return false;
 
   const u16 start_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index);
   memset(pending, 0, sizeof(*pending));
   pending->used = true;
-  pending->type = entry.type;
-  strncpy(pending->name, entry.name, program_store::NAME_SIZE - 1);
-  pending->name[program_store::NAME_SIZE - 1] = 0;
+  pending->store_index = (u8) store_index;
   pending->start_cluster = start_cluster;
   pending->data_len = entry.data_len;
   session_state().cluster_index_valid = false;
-  tracef("DELETE? %s.%s c=%u len=%u", pending->name, extension_for_type(pending->type), pending->start_cluster, pending->data_len);
+  tracef("DELETE? %s.%s c=%u len=%u", entry.name, extension_for_type(entry.type), pending->start_cluster, pending->data_len);
   return true;
 }
 
@@ -1885,8 +1914,11 @@ void end_session(void) {
 
 static bool rename_committed_entry(const ParsedDirEntry& parsed, const char* old_name) {
   if(strncmp(old_name, parsed.name, program_store::NAME_SIZE) == 0) return true;
+  const int removed_index = store_index_for(parsed.type, old_name);
+  if(removed_index < 0 || removed_index > 0xFF) return false;
   tracef("RENAME %s.%s -> %s.%s", old_name, extension_for_type(parsed.type), parsed.name, extension_for_type(parsed.type));
   if(!program_store::rename(parsed.type, old_name, parsed.name)) return false;
+  note_store_index_removed((u8) removed_index);
   rename_cluster_map(parsed.type, old_name, parsed.name, parsed.start_cluster, parsed.data_len);
   return true;
 }
@@ -1895,8 +1927,10 @@ static bool try_rename_pending_delete(const ParsedDirEntry& parsed) {
   PendingDelete* pending_delete = find_pending_delete_for_cluster(parsed.type, parsed.start_cluster, parsed.data_len);
   if(pending_delete == NULL) return false;
 
+  program_store::Entry deleted_entry;
+  if(!pending_delete_entry(*pending_delete, deleted_entry)) return false;
   char old_name[program_store::NAME_SIZE];
-  strncpy(old_name, pending_delete->name, sizeof(old_name) - 1);
+  strncpy(old_name, deleted_entry.name, sizeof(old_name) - 1);
   old_name[sizeof(old_name) - 1] = 0;
 
   if(!rename_committed_entry(parsed, old_name)) return false;
@@ -1947,15 +1981,29 @@ bool flush_pending(void) {
     if(!try_commit_pending(pending)) ok = false;
   }
   reconcile_pending_renames();
-  for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
-    PendingDelete& pending = session_state().pending_deletes[i];
-    if(!pending.used) continue;
-    if(program_store::exists(pending.type, pending.name) && !program_store::remove(pending.type, pending.name)) {
+  // Program-store deletion compacts its index. Remove queued entries from the
+  // highest slot down so every remaining stored index stays valid.
+  while(true) {
+    PendingDelete* selected = NULL;
+    for(u8 i = 0; i < MAX_PENDING_DELETES; i++) {
+      PendingDelete& candidate = session_state().pending_deletes[i];
+      if(!candidate.used) continue;
+      if(selected == NULL || candidate.store_index > selected->store_index) selected = &candidate;
+    }
+    if(selected == NULL) break;
+
+    program_store::Entry entry;
+    if(!pending_delete_entry(*selected, entry)) {
       ok = false;
+      clear_pending_delete(selected);
       continue;
     }
-    forget_cluster_map(pending.type, pending.name);
-    memset(&pending, 0, sizeof(pending));
+    if(program_store::exists(entry.type, entry.name) && !program_store::remove(entry.type, entry.name)) {
+      ok = false;
+      break;
+    }
+    forget_cluster_map(entry.type, entry.name);
+    clear_pending_delete(selected);
   }
   purge_stale_cluster_maps();
   clear_ignored_ranges();

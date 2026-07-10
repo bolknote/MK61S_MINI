@@ -33,6 +33,16 @@ static u16 crc16_update(u16 crc, u8 value) {
   return crc;
 }
 
+static u16 catalog_delta_crc(const u8* record) {
+  u16 crc = 0xFFFF;
+  crc = crc16_update(crc, record[0]);
+  crc = crc16_update(crc, record[1]);
+  for(u8 i = 3; i < 64; i++) {
+    if(i != 8 && i != 9) crc = crc16_update(crc, record[i]);
+  }
+  return crc;
+}
+
 static void expect_data(const char* name, const char* expected) {
   uint8_t out[64] = {};
   u16 len = 0;
@@ -114,22 +124,25 @@ static void test_legacy_catalog_is_migratable(void) {
   assert(program_store::write(program_store::ProgramType::TEXT, "ALPHA", (const u8*) "one", 3));
 
   // Fill the delta area so the current state is compacted into the mirror as
-  // a regular C3 checkpoint, which can then be converted to C1.
+  // a regular compact C4 checkpoint, then expand its references into C1.
   for(u8 i = 0; i < 49; i++) {
     char name[16];
     snprintf(name, sizeof(name), "AUX%02u", (unsigned) i);
     assert(program_store::write(program_store::ProgramType::TEXT, name, (const u8*) "x", 1));
   }
 
-  // Convert the newest C3 mirror checkpoint to the former C1/9-byte header.
+  // Convert the newest C4 mirror checkpoint to the former C1/9-byte header
+  // and legacy 25-byte entries. Names are recovered from the data records,
+  // exactly as the C4 loader does.
   static u8 current[SECTOR_SIZE];
   static u8 legacy[SECTOR_SIZE];
   assert(flash.readByteArray(MIRROR_CATALOG, current, sizeof(current)));
   memset(legacy, 0xFF, sizeof(legacy));
   const u8 entry_count = current[4];
-  const u16 current_len = (u16) (current[5] | ((u16) current[6] << 8));
-  const u16 payload_len = (u16) (current_len - 13);
-  const u16 legacy_len = (u16) (9 + payload_len);
+  static constexpr u16 sector_info_len = 100 * 9;
+  static constexpr u16 compact_entry_len = 9;
+  static constexpr u16 legacy_entry_len = 25;
+  const u16 legacy_len = (u16) (9 + sector_info_len + entry_count * legacy_entry_len);
   legacy[0] = 'C';
   legacy[1] = '1';
   legacy[2] = 0x7F;
@@ -137,7 +150,19 @@ static void test_legacy_catalog_is_migratable(void) {
   legacy[4] = entry_count;
   legacy[5] = (u8) (legacy_len & 0xFF);
   legacy[6] = (u8) (legacy_len >> 8);
-  memcpy(legacy + 9, current + 13, payload_len);
+  memcpy(legacy + 9, current + 13, sector_info_len);
+  for(u8 i = 0; i < entry_count; i++) {
+    const u8* compact = current + 13 + sector_info_len + (u16) i * compact_entry_len;
+    u8* expanded = legacy + 9 + sector_info_len + (u16) i * legacy_entry_len;
+    memcpy(expanded, compact, compact_entry_len);
+    memset(expanded + compact_entry_len, 0, 16);
+    const u8 name_len = compact[1];
+    const u8 sector = compact[2];
+    const u16 offset = (u16) (compact[3] | ((u16) compact[4] << 8));
+    assert(name_len > 0 && name_len < 16);
+    assert(flash.readByteArray((u32) sector * SECTOR_SIZE + offset + 8,
+                               expanded + compact_entry_len, name_len));
+  }
 
   u16 crc = 0xFFFF;
   crc = crc16_update(crc, legacy[0]);
@@ -158,6 +183,91 @@ static void test_legacy_catalog_is_migratable(void) {
   expect_data("BETA", "two");
 }
 
+static void test_c3_catalog_and_wal_are_migratable(void) {
+  SPIFlash::reset();
+  assert(program_store::format());
+  assert(program_store::write(program_store::ProgramType::TEXT, "ALPHA",
+                              (const u8*) "one", 3));
+  for(u8 i = 0; i < 49; i++) {
+    char name[16];
+    snprintf(name, sizeof(name), "OLD%02u", (unsigned) i);
+    assert(program_store::write(program_store::ProgramType::TEXT, name,
+                                (const u8*) "x", 1));
+  }
+  // The 50-entry C4 checkpoint is now in the mirror. BETA is represented by
+  // its first WAL record, matching a normally used pre-upgrade C3 catalog.
+  assert(program_store::write(program_store::ProgramType::TEXT, "BETA",
+                              (const u8*) "two", 3));
+
+  static u8 current[SECTOR_SIZE];
+  static u8 c3[SECTOR_SIZE];
+  assert(flash.readByteArray(MIRROR_CATALOG, current, sizeof(current)));
+  memset(c3, 0xFF, sizeof(c3));
+
+  static constexpr u16 sector_info_len = 100 * 9;
+  static constexpr u16 compact_entry_len = 9;
+  static constexpr u16 legacy_entry_len = 25;
+  static constexpr u16 delta_len = 64;
+  const u8 entry_count = current[4];
+  assert(entry_count == 50);
+  const u16 compact_snapshot_len =
+      (u16) (13 + sector_info_len + entry_count * compact_entry_len);
+  const u16 compact_delta =
+      (u16) ((compact_snapshot_len + delta_len - 1) / delta_len * delta_len);
+  const u16 c3_snapshot_len =
+      (u16) (13 + sector_info_len + entry_count * legacy_entry_len);
+  const u16 c3_delta =
+      (u16) ((c3_snapshot_len + delta_len - 1) / delta_len * delta_len);
+
+  memcpy(c3, current, 13 + sector_info_len);
+  c3[1] = '3';
+  c3[5] = (u8) (c3_snapshot_len & 0xFF);
+  c3[6] = (u8) (c3_snapshot_len >> 8);
+  for(u8 i = 0; i < entry_count; i++) {
+    const u8* compact = current + 13 + sector_info_len +
+                        (u16) i * compact_entry_len;
+    u8* expanded = c3 + 13 + sector_info_len + (u16) i * legacy_entry_len;
+    memcpy(expanded, compact, compact_entry_len);
+    memset(expanded + compact_entry_len, 0, 16);
+    const u8 name_len = compact[1];
+    const u8 sector = compact[2];
+    const u16 offset = (u16) (compact[3] | ((u16) compact[4] << 8));
+    assert(flash.readByteArray((u32) sector * SECTOR_SIZE + offset + 8,
+                               expanded + compact_entry_len, name_len));
+  }
+
+  u16 snapshot_crc = 0xFFFF;
+  snapshot_crc = crc16_update(snapshot_crc, c3[0]);
+  snapshot_crc = crc16_update(snapshot_crc, c3[1]);
+  for(u8 i = 3; i < 13; i++) {
+    if(i != 7 && i != 8) snapshot_crc = crc16_update(snapshot_crc, c3[i]);
+  }
+  for(u16 i = 13; i < c3_snapshot_len; i++) {
+    snapshot_crc = crc16_update(snapshot_crc, c3[i]);
+  }
+  c3[7] = (u8) (snapshot_crc & 0xFF);
+  c3[8] = (u8) (snapshot_crc >> 8);
+
+  memcpy(c3 + c3_delta, current + compact_delta, delta_len);
+  c3[c3_delta + 1] = '3';
+  const u16 delta_crc = catalog_delta_crc(c3 + c3_delta);
+  c3[c3_delta + 8] = (u8) (delta_crc & 0xFF);
+  c3[c3_delta + 9] = (u8) (delta_crc >> 8);
+
+  assert(flash.eraseSector(PRIMARY_CATALOG));
+  assert(flash.eraseSector(MIRROR_CATALOG));
+  assert(flash.writeByteArray(PRIMARY_CATALOG, c3, c3_delta + delta_len));
+
+  program_store::init();
+  expect_data("ALPHA", "one");
+  expect_data("BETA", "two");
+  // The first post-upgrade mutation checkpoints directly to C4.
+  assert(program_store::write(program_store::ProgramType::TEXT, "GAMMA",
+                              (const u8*) "three", 5));
+  program_store::init();
+  expect_data("GAMMA", "three");
+}
+
 static void test_font_type_survives_catalog_reload(void) {
   SPIFlash::reset();
   assert(program_store::format());
@@ -171,6 +281,36 @@ static void test_font_type_survives_catalog_reload(void) {
   assert(program_store::read(program_store::ProgramType::FONT, "PIXEL", stored, sizeof(stored), &len));
   assert(len == sizeof(font));
   assert(memcmp(stored, font, len) == 0);
+}
+
+static void test_expanded_entry_quota_survives_catalog_reload(void) {
+  SPIFlash::reset();
+  assert(program_store::format());
+
+  for(usize i = 0; i < program_store::MAX_ENTRIES; i++) {
+    char name[16];
+    snprintf(name, sizeof(name), "Q%03u", (unsigned) i);
+    const u8 payload = (u8) i;
+    assert(program_store::write(program_store::ProgramType::TEXT, name,
+                                &payload, sizeof(payload)));
+  }
+  assert(program_store::total_count() == (int) program_store::MAX_ENTRIES);
+  const u8 extra = 0xEE;
+  assert(!program_store::write(program_store::ProgramType::TEXT, "OVERFLOW",
+                               &extra, sizeof(extra)));
+
+  program_store::init();
+  assert(program_store::total_count() == (int) program_store::MAX_ENTRIES);
+  u8 first = 0xFF;
+  u16 first_len = 0;
+  assert(program_store::read(program_store::ProgramType::TEXT, "Q000",
+                             &first, sizeof(first), &first_len));
+  assert(first_len == 1 && first == 0);
+  u8 last = 0;
+  u16 last_len = 0;
+  assert(program_store::read(program_store::ProgramType::TEXT, "Q127",
+                             &last, sizeof(last), &last_len));
+  assert(last_len == 1 && last == 127);
 }
 
 static void test_lzss_is_transparent_and_usb_stays_raw(void) {
@@ -235,7 +375,7 @@ static void test_lzss_is_transparent_and_usb_stays_raw(void) {
   assert(program_store::format());
   memset(source, 0x55, sizeof(source));
   assert(program_store::write(program_store::ProgramType::FONT, "RAWFONT",
-                              source, sizeof(source)));
+                              source, program_store::MAX_FONT_SIZE));
   assert(flash.readByte(8) == '3');
 }
 
@@ -449,7 +589,9 @@ int main(void) {
   test_failed_payload_is_reported();
   test_corrupt_newest_catalog_delta_rolls_back();
   test_legacy_catalog_is_migratable();
+  test_c3_catalog_and_wal_are_migratable();
   test_font_type_survives_catalog_reload();
+  test_expanded_entry_quota_survives_catalog_reload();
   test_lzss_is_transparent_and_usb_stays_raw();
   test_gc_copies_compressed_records_without_expanding_them();
   test_vfat_stage_recovers_latest_committed_sector();

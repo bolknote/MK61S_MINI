@@ -12,12 +12,11 @@ enum class Owner : u8 {
   PROGRAM_STORE_RENAME,
   PROGRAM_STORE_GC,
   PROGRAM_STORE_READ_RANGE,
-  VFAT_COMMIT,
-  STORED_M61_MENU
+  VFAT_COMMIT
 };
 
-// Largest transient file payload. Menu-only records use a compact view so
-// they do not force this pool above the storage format's maximum file size.
+// Largest transient file payload. File menus stream visible names directly
+// from the compact index and do not consume this pool.
 static constexpr usize SIZE = 1536;
 
 class [[nodiscard]] Lease {

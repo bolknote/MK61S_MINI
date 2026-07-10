@@ -7,7 +7,9 @@
 namespace program_store {
 
 static constexpr usize NAME_SIZE = 16;
-static constexpr usize MAX_ENTRIES = 64;
+// C4 stores compact catalog references and keeps the hot index bounded while
+// doubling the former 64-file quota.
+static constexpr usize MAX_ENTRIES = 128;
 // Logical file size exposed by the store and virtual FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
 static constexpr u16 MAX_FONT_SIZE = 1536;

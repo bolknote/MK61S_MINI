@@ -46,13 +46,15 @@ static constexpr u8 VFAT_STAGE_DELETED = 'C';
 static constexpr u8 CATALOG_TAG0 = 'C';
 static constexpr u8 CATALOG_LEGACY_TAG1 = '1';
 static constexpr u8 CATALOG_SNAPSHOT_TAG1 = '2';
-static constexpr u8 CATALOG_TAG1 = '3';
+static constexpr u8 CATALOG_WAL_TAG1 = '3';
+static constexpr u8 CATALOG_TAG1 = '4';
 static constexpr usize CATALOG_LEGACY_HEADER_SIZE = 9;
 static constexpr usize CATALOG_HEADER_SIZE = 13;
 static constexpr usize CATALOG_SECTOR_INFO_SIZE = 9;
-static constexpr usize CATALOG_ENTRY_SIZE = 25;
+static constexpr usize CATALOG_LEGACY_ENTRY_SIZE = 25;
+static constexpr usize CATALOG_ENTRY_SIZE = 9;
 static constexpr u8 CATALOG_DELTA_TAG0 = 'D';
-static constexpr u8 CATALOG_DELTA_TAG1 = '3';
+static constexpr u8 CATALOG_DELTA_TAG1 = '4';
 static constexpr u8 CATALOG_DELTA_SIZE = 64;
 static constexpr u8 CATALOG_DELTA_SECTOR_SLOTS = 2;
 static constexpr u8 CATALOG_DELTA_INDEX_UPSERT = 1;
@@ -70,6 +72,20 @@ static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
 static constexpr t_time_ms DISK_LED_OFF_MS = 35;
 
+static constexpr usize MAX_CATALOG_SNAPSHOT_SIZE =
+    CATALOG_HEADER_SIZE + STORE_SECTOR_COUNT * CATALOG_SECTOR_INFO_SIZE +
+    MAX_ENTRIES * CATALOG_ENTRY_SIZE;
+static constexpr usize MAX_CATALOG_DELTA_START =
+    ((MAX_CATALOG_SNAPSHOT_SIZE + CATALOG_DELTA_SIZE - 1) / CATALOG_DELTA_SIZE) *
+    CATALOG_DELTA_SIZE;
+static_assert(MAX_CATALOG_SNAPSHOT_SIZE <= FLASH_SECTOR_SIZE,
+              "program store catalog must fit one flash sector");
+static_assert((FLASH_SECTOR_SIZE - MAX_CATALOG_DELTA_START) / CATALOG_DELTA_SIZE >= 12,
+              "expanded catalog must retain enough WAL records");
+static_assert((usize) MAX_MK61_TEXT_SIZE + 8 + (NAME_SIZE - 1) <=
+                  FLASH_SECTOR_SIZE - SECTOR_HEADER_SIZE,
+              "maximum raw file record must fit one flash sector");
+
 static constexpr u8 SECTOR_FLAG_EMPTY = 0x01;
 static constexpr u8 SECTOR_FLAG_ACTIVE = 0x02;
 static constexpr u8 SECTOR_FLAG_FOREIGN = 0x04;
@@ -85,15 +101,15 @@ struct SectorInfo {
 };
 
 struct IndexEntry {
-  bool used;
-  bool compressed;
-  ProgramType type;
   char name[NAME_SIZE];
-  u32 address;
+  u16 offset;
   u16 data_len;
   u16 total_len;
-  u8 name_len;
+  u8 sector;
+  u8 type_flags;
 };
+
+static_assert(sizeof(IndexEntry) == 24, "compact index keeps 128 files within the RAM budget");
 
 struct RecordMeta {
   ProgramType type;
@@ -257,6 +273,32 @@ static int sector_from_address(u32 address) {
 
 static u16 offset_in_sector(u32 address) {
   return (u16) (address % FLASH_SECTOR_SIZE);
+}
+
+static u32 index_address(const IndexEntry& entry) {
+  return sector_base(entry.sector) + entry.offset;
+}
+
+static ProgramType index_type(const IndexEntry& entry) {
+  return (ProgramType) (entry.type_flags & ~COMPRESSED_FLAG);
+}
+
+static bool index_compressed(const IndexEntry& entry) {
+  return (entry.type_flags & COMPRESSED_FLAG) != 0;
+}
+
+static u8 index_name_len(const IndexEntry& entry) {
+  u8 len = 0;
+  while(len < NAME_SIZE - 1 && entry.name[len] != 0) len++;
+  return len;
+}
+
+static bool set_index_location(IndexEntry& entry, u32 address) {
+  const int sector = sector_from_address(address);
+  if(sector < 0) return false;
+  entry.sector = (u8) sector;
+  entry.offset = offset_in_sector(address);
+  return true;
 }
 
 static u16 crc16_update(u16 crc, u8 value) {
@@ -1021,7 +1063,7 @@ static bool same_key(ProgramType type, const char* a, ProgramType other_type, co
 
 static int find_index(ProgramType type, const char* name) {
   for(u8 i = 0; i < index_count; i++) {
-    if(index_entries[i].used && same_key(type, name, index_entries[i].type, index_entries[i].name)) return i;
+    if(same_key(type, name, index_type(index_entries[i]), index_entries[i].name)) return i;
   }
   return -1;
 }
@@ -1034,15 +1076,12 @@ static void update_index(const RecordMeta& meta, const char* name, u32 address) 
   }
 
   IndexEntry& entry = index_entries[idx];
-  entry.used = true;
-  entry.compressed = meta.compressed;
-  entry.type = meta.type;
   strncpy(entry.name, name, NAME_SIZE - 1);
   entry.name[NAME_SIZE - 1] = 0;
-  entry.address = address;
+  if(!set_index_location(entry, address)) return;
   entry.data_len = meta.data_len;
   entry.total_len = meta.total_len;
-  entry.name_len = meta.name_len;
+  entry.type_flags = stored_type_id(meta.type, meta.compressed);
 }
 
 static void remove_index_at(u8 idx) {
@@ -1069,7 +1108,7 @@ static void move_live_to_dead(u32 address, u16 total_len) {
 
 static bool record_is_latest(u32 address, const RecordMeta& meta, const char* name) {
   const int idx = find_index(meta.type, name);
-  return idx >= 0 && index_entries[idx].address == address;
+  return idx >= 0 && index_address(index_entries[idx]) == address;
 }
 
 static void reset_state(void) {
@@ -1104,10 +1143,14 @@ static usize catalog_header_size(u8 tag1) {
   return tag1 == CATALOG_LEGACY_TAG1 ? CATALOG_LEGACY_HEADER_SIZE : CATALOG_HEADER_SIZE;
 }
 
-static u16 catalog_snapshot_len(u8 entry_count, usize header_size) {
+static usize catalog_entry_size(u8 tag1) {
+  return tag1 == CATALOG_TAG1 ? CATALOG_ENTRY_SIZE : CATALOG_LEGACY_ENTRY_SIZE;
+}
+
+static u16 catalog_snapshot_len(u8 entry_count, usize header_size, u8 tag1) {
   return (u16) (header_size +
                 STORE_SECTOR_COUNT * CATALOG_SECTOR_INFO_SIZE +
-                (usize) entry_count * CATALOG_ENTRY_SIZE);
+                (usize) entry_count * catalog_entry_size(tag1));
 }
 
 static u16 catalog_delta_start(u16 snapshot_len) {
@@ -1166,20 +1209,15 @@ static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len, u32 generation) {
 
   for(u8 i = 0; i < index_count; i++) {
     const IndexEntry& entry = index_entries[i];
-    if(!entry.used) continue;
-    const int sector = sector_from_address(entry.address);
-    if(sector < 0) continue;
-    const u16 offset = offset_in_sector(entry.address);
-    crc = crc16_update(crc, stored_type_id(entry.type, entry.compressed));
-    crc = crc16_update(crc, entry.name_len);
-    crc = crc16_update(crc, (u8) sector);
-    crc = crc16_update(crc, (u8) (offset & 0xFF));
-    crc = crc16_update(crc, (u8) (offset >> 8));
+    crc = crc16_update(crc, entry.type_flags);
+    crc = crc16_update(crc, index_name_len(entry));
+    crc = crc16_update(crc, entry.sector);
+    crc = crc16_update(crc, (u8) (entry.offset & 0xFF));
+    crc = crc16_update(crc, (u8) (entry.offset >> 8));
     crc = crc16_update(crc, (u8) (entry.data_len & 0xFF));
     crc = crc16_update(crc, (u8) (entry.data_len >> 8));
     crc = crc16_update(crc, (u8) (entry.total_len & 0xFF));
     crc = crc16_update(crc, (u8) (entry.total_len >> 8));
-    for(u8 n = 0; n < NAME_SIZE; n++) crc = crc16_update(crc, (u8) entry.name[n]);
   }
 
   return crc;
@@ -1188,7 +1226,7 @@ static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len, u32 generation) {
 static bool save_catalog_to(usize catalog_sector, u32 generation) {
   if(!catalog_sector_available(catalog_sector)) return false;
   const u8 entry_count = index_count;
-  const u16 total_len = catalog_snapshot_len(entry_count, CATALOG_HEADER_SIZE);
+  const u16 total_len = catalog_snapshot_len(entry_count, CATALOG_HEADER_SIZE, CATALOG_TAG1);
   if(total_len > FLASH_SECTOR_SIZE) return false;
 
   if(!erase_sector(catalog_sector)) return false;
@@ -1220,21 +1258,16 @@ static bool save_catalog_to(usize catalog_sector, u32 generation) {
 
   for(u8 i = 0; i < index_count; i++) {
     const IndexEntry& entry = index_entries[i];
-    if(!entry.used) continue;
-    const int sector = sector_from_address(entry.address);
-    if(sector < 0) return false;
-    const u16 offset = offset_in_sector(entry.address);
     u8 record[CATALOG_ENTRY_SIZE];
-    record[0] = stored_type_id(entry.type, entry.compressed);
-    record[1] = entry.name_len;
-    record[2] = (u8) sector;
-    record[3] = (u8) (offset & 0xFF);
-    record[4] = (u8) (offset >> 8);
+    record[0] = entry.type_flags;
+    record[1] = index_name_len(entry);
+    record[2] = entry.sector;
+    record[3] = (u8) (entry.offset & 0xFF);
+    record[4] = (u8) (entry.offset >> 8);
     record[5] = (u8) (entry.data_len & 0xFF);
     record[6] = (u8) (entry.data_len >> 8);
     record[7] = (u8) (entry.total_len & 0xFF);
     record[8] = (u8) (entry.total_len >> 8);
-    for(u8 n = 0; n < NAME_SIZE; n++) record[9 + n] = (u8) entry.name[n];
     if(!write_bytes(pos, record, sizeof(record))) return false;
     pos += sizeof(record);
   }
@@ -1256,7 +1289,7 @@ static bool save_catalog(void) {
   active_catalog_sector = target;
   catalog_generation = next;
   catalog_delta_offset = catalog_delta_start(
-      catalog_snapshot_len(index_count, CATALOG_HEADER_SIZE));
+      catalog_snapshot_len(index_count, CATALOG_HEADER_SIZE, CATALOG_TAG1));
   catalog_delta_sequence = 0;
   return true;
 }
@@ -1325,14 +1358,11 @@ static bool append_catalog_delta(u8 index_op, ProgramType type, const char* name
     const int idx = find_index(type, name);
     if(idx < 0) return false;
     entry = index_entries[idx];
-    const int sector = sector_from_address(entry.address);
-    if(sector < 0) return false;
-    const u16 offset = offset_in_sector(entry.address);
-    record[30] = stored_type_id(entry.type, entry.compressed);
-    record[31] = entry.name_len;
-    record[32] = (u8) sector;
-    record[33] = (u8) (offset & 0xFF);
-    record[34] = (u8) (offset >> 8);
+    record[30] = entry.type_flags;
+    record[31] = index_name_len(entry);
+    record[32] = entry.sector;
+    record[33] = (u8) (entry.offset & 0xFF);
+    record[34] = (u8) (entry.offset >> 8);
     record[35] = (u8) (entry.data_len & 0xFF);
     record[36] = (u8) (entry.data_len >> 8);
     record[37] = (u8) (entry.total_len & 0xFF);
@@ -1441,7 +1471,7 @@ static bool apply_catalog_delta(const u8* record) {
   return true;
 }
 
-static bool replay_catalog_deltas(u32 base, u16 snapshot_len) {
+static bool replay_catalog_deltas(u32 base, u16 snapshot_len, u8 delta_tag1) {
   u16 offset = catalog_delta_start(snapshot_len);
   u16 sequence = 0;
   while(offset + CATALOG_DELTA_SIZE <= FLASH_SECTOR_SIZE) {
@@ -1452,7 +1482,7 @@ static bool replay_catalog_deltas(u32 base, u16 snapshot_len) {
     if(expected_sequence == 0) expected_sequence = 1;
     const u16 record_sequence = (u16) (record[4] | ((u16) record[5] << 8));
     const u16 expected_crc = (u16) (record[8] | ((u16) record[9] << 8));
-    if(record[0] != CATALOG_DELTA_TAG0 || record[1] != CATALOG_DELTA_TAG1 ||
+    if(record[0] != CATALOG_DELTA_TAG0 || record[1] != delta_tag1 ||
        record[2] != STATE_ACTIVE || record[3] != CATALOG_DELTA_SIZE ||
        record_sequence != expected_sequence || catalog_delta_crc(record) != expected_crc ||
        !apply_catalog_delta(record)) {
@@ -1490,7 +1520,7 @@ static bool catalog_header_valid(usize catalog_sector, u32& generation, u8& tag1
   if(read_byte(base) != CATALOG_TAG0) return false;
   tag1 = read_byte(base + 1);
   if(tag1 != CATALOG_LEGACY_TAG1 && tag1 != CATALOG_SNAPSHOT_TAG1 &&
-     tag1 != CATALOG_TAG1) return false;
+     tag1 != CATALOG_WAL_TAG1 && tag1 != CATALOG_TAG1) return false;
   if(read_byte(base + 2) != STATE_ACTIVE) return false;
   if(read_byte(base + 3) != (u8) STORE_SECTOR_COUNT) return false;
 
@@ -1498,8 +1528,8 @@ static bool catalog_header_valid(usize catalog_sector, u32& generation, u8& tag1
   if(entry_count > MAX_ENTRIES) return false;
   total_len = read_le16(base + 5);
   const usize header_size = catalog_header_size(tag1);
-  if(total_len != catalog_snapshot_len(entry_count, header_size) || total_len > FLASH_SECTOR_SIZE) return false;
-  if(tag1 != CATALOG_TAG1 && total_len < FLASH_SECTOR_SIZE &&
+  if(total_len != catalog_snapshot_len(entry_count, header_size, tag1) || total_len > FLASH_SECTOR_SIZE) return false;
+  if(tag1 != CATALOG_WAL_TAG1 && tag1 != CATALOG_TAG1 && total_len < FLASH_SECTOR_SIZE &&
      read_byte(base + total_len) != 0xFF) return false;
   if(catalog_crc_from_flash(base, total_len, tag1) != read_le16(base + 7)) return false;
 
@@ -1555,37 +1585,76 @@ static bool load_catalog_from(usize catalog_sector) {
   }
 
   for(u8 i = 0; i < entry_count; i++) {
-    IndexEntry& entry = index_entries[index_count];
     const u8 type_value = read_byte(pos++);
-    const bool supported_entry = decode_type_id(type_value, entry.type, entry.compressed);
-    entry.name_len = read_byte(pos++);
+    ProgramType type;
+    bool compressed = false;
+    const bool supported_entry = decode_type_id(type_value, type, compressed);
+    const u8 name_len = read_byte(pos++);
     const u8 sector = read_byte(pos++);
     const u16 offset = read_le16(pos); pos += 2;
-    entry.data_len = read_le16(pos); pos += 2;
-    entry.total_len = read_le16(pos); pos += 2;
+    const u16 data_len = read_le16(pos); pos += 2;
+    const u16 total_entry_len = read_le16(pos); pos += 2;
     const u16 header_len = 8;
-    for(u8 n = 0; n < NAME_SIZE; n++) entry.name[n] = (char) read_byte(pos++);
-    if(entry.name_len == 0 || entry.name_len >= NAME_SIZE) return false;
-    if(entry.total_len < header_len + entry.name_len) return false;
-    const u16 stored_len = (u16) (entry.total_len - header_len - entry.name_len);
-    if((!entry.compressed && stored_len != entry.data_len) ||
-       (entry.compressed && (stored_len == 0 || stored_len >= entry.data_len))) return false;
-    if(entry.data_len > MAX_MK61_TEXT_SIZE) return false;
-    if(sector >= STORE_SECTOR_COUNT || !sectors[sector].active || offset < SECTOR_HEADER_SIZE) return false;
-    if((usize) offset + entry.total_len > FLASH_SECTOR_SIZE) return false;
+    if(name_len == 0 || name_len >= NAME_SIZE ||
+       total_entry_len < header_len + name_len ||
+       data_len > MAX_MK61_TEXT_SIZE || sector >= STORE_SECTOR_COUNT ||
+       !sectors[sector].active || offset < SECTOR_HEADER_SIZE ||
+       (usize) offset + total_entry_len > FLASH_SECTOR_SIZE) return false;
+    const u16 stored_len = (u16) (total_entry_len - header_len - name_len);
+    if((!compressed && stored_len != data_len) ||
+       (compressed && (stored_len == 0 || stored_len >= data_len))) return false;
+    char name[NAME_SIZE] = {};
+    if(tag1 == CATALOG_TAG1) {
+      if(!supported_entry) return false;
+      const u32 address = sector_base(sector) + offset;
+      u8 header[8];
+      read_bytes(address, header, sizeof(header));
+      bool record_supported = false;
+      bool record_compressed = false;
+      const ProgramType record_type =
+          type_from_tag(header[0], header[1], record_supported, record_compressed);
+      const u8 record_state = header[2];
+      const u8 record_name_len = header[3];
+      const u16 record_data_len = (u16) (header[4] | ((u16) header[5] << 8));
+      // A later WAL upsert may have tombstoned this checkpoint record. Its
+      // name remains readable until the next compact snapshot makes the newer
+      // location authoritative. Reading only this identity header avoids
+      // decoding every compressed payload during boot.
+      if(!record_supported ||
+         (record_state != STATE_ACTIVE && record_state != STATE_DELETED) ||
+         record_type != type || record_compressed != compressed ||
+         record_name_len != name_len || record_data_len != data_len) return false;
+      read_bytes(address + header_len, (u8*) name, name_len);
+      name[name_len] = 0;
+    } else {
+      for(u8 n = 0; n < NAME_SIZE; n++) name[n] = (char) read_byte(pos++);
+    }
     if(!supported_entry) {
-      move_live_to_dead(sector_base(sector) + offset, entry.total_len);
+      move_live_to_dead(sector_base(sector) + offset, total_entry_len);
       continue;
     }
-    entry.name[NAME_SIZE - 1] = 0;
-    if(entry.name[entry.name_len] != 0) return false;
-    entry.address = sector_base(sector) + offset;
-    entry.used = true;
-    index_count++;
+    name[NAME_SIZE - 1] = 0;
+    if(name[name_len] != 0) return false;
+    RecordMeta meta;
+    meta.type = type;
+    meta.supported = true;
+    meta.compressed = compressed;
+    meta.state = STATE_ACTIVE;
+    meta.name_len = name_len;
+    meta.data_len = data_len;
+    meta.stored_len = stored_len;
+    meta.crc = 0;
+    meta.header_len = header_len;
+    meta.total_len = total_entry_len;
+    const u8 before = index_count;
+    update_index(meta, name, sector_base(sector) + offset);
+    if(index_count != (u8) (before + 1)) return false;
   }
 
-  if(tag1 == CATALOG_TAG1) {
-    if(!replay_catalog_deltas(base, total_len)) return false;
+  if(tag1 == CATALOG_WAL_TAG1 || tag1 == CATALOG_TAG1) {
+    if(!replay_catalog_deltas(base, total_len, tag1)) return false;
+    // A legacy C3 checkpoint is migrated atomically on the next mutation.
+    if(tag1 != CATALOG_TAG1) catalog_delta_offset = FLASH_SECTOR_SIZE;
   } else {
     catalog_delta_offset = FLASH_SECTOR_SIZE;
     catalog_delta_sequence = 0;
@@ -1756,9 +1825,10 @@ static bool prepare_empty_sector(void) {
 
 static bool entry_payload_equals(const IndexEntry& entry, const u8* data, u16 data_len) {
   if(entry.data_len != data_len) return false;
-  const u32 payload = entry.address + 8 + entry.name_len;
-  const u16 stored_len = (u16) (entry.total_len - 8 - entry.name_len);
-  if(entry.compressed) {
+  const u8 name_len = index_name_len(entry);
+  const u32 payload = index_address(entry) + 8 + name_len;
+  const u16 stored_len = (u16) (entry.total_len - 8 - name_len);
+  if(index_compressed(entry)) {
     LzssCompareTarget target(data);
     u16 consumed = 0;
     return lzss_decode(payload, stored_len, data_len, target, consumed) &&
@@ -1812,7 +1882,8 @@ static bool copy_live_records(usize victim, usize destination, u16& dest_used) {
       char name[NAME_SIZE];
       if(read_name(src, meta, name)) {
         const int idx = find_index(meta.type, name);
-        if(idx >= 0 && index_entries[idx].address == src) index_entries[idx].address = dst;
+        if(idx >= 0 && index_address(index_entries[idx]) == src &&
+           !set_index_location(index_entries[idx], dst)) return false;
       }
       dest_used = (u16) (dest_used + meta.total_len);
     }
@@ -1957,7 +2028,7 @@ static bool write_with_policy(ProgramType type, const char* name, const u8* data
   const u16 record_len = (u16) (header_len + nlen + stored_len);
   if(!ensure_space(record_len)) return false;
 
-  const u32 old_address = (old_idx >= 0) ? index_entries[old_idx].address : 0xFFFFFFFFUL;
+  const u32 old_address = (old_idx >= 0) ? index_address(index_entries[old_idx]) : 0xFFFFFFFFUL;
   const u16 old_total_len = (old_idx >= 0) ? index_entries[old_idx].total_len : 0;
 
   const int sector = current_sector();
@@ -2025,9 +2096,10 @@ bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_l
   const IndexEntry& entry = index_entries[idx];
   if(entry.data_len > capacity) return false;
 
-  const u32 payload = entry.address + 8 + entry.name_len;
-  if(entry.compressed) {
-    const u16 stored_len = (u16) (entry.total_len - 8 - entry.name_len);
+  const u8 name_len = index_name_len(entry);
+  const u32 payload = index_address(entry) + 8 + name_len;
+  if(index_compressed(entry)) {
+    const u16 stored_len = (u16) (entry.total_len - 8 - name_len);
     LzssBufferTarget target(data);
     u16 consumed = 0;
     if(!lzss_decode(payload, stored_len, entry.data_len, target, consumed) ||
@@ -2052,12 +2124,13 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
   u16 available = (u16) (entry.data_len - offset);
   if(available > len) available = len;
 
-  const u32 payload = entry.address + 8 + entry.name_len;
-  if(entry.compressed) {
+  const u8 name_len = index_name_len(entry);
+  const u32 payload = index_address(entry) + 8 + name_len;
+  if(index_compressed(entry)) {
     shared_scratch::Lease scratch(shared_scratch::Owner::PROGRAM_STORE_READ_RANGE,
                                   LZSS_WINDOW_SIZE);
     if(!scratch.ok()) return false;
-    const u16 stored_len = (u16) (entry.total_len - 8 - entry.name_len);
+    const u16 stored_len = (u16) (entry.total_len - 8 - name_len);
     LzssRangeTarget target(scratch.data(), offset, data, available);
     u16 consumed = 0;
     if(!lzss_decode(payload, stored_len, entry.data_len, target, consumed) ||
@@ -2074,7 +2147,7 @@ bool remove(ProgramType type, const char* name) {
   if(!ensure_index()) return false;
   const int idx = find_index(type, name);
   if(idx < 0) return false;
-  const u32 address = index_entries[idx].address;
+  const u32 address = index_address(index_entries[idx]);
   const u16 total_len = index_entries[idx].total_len;
   (void) mark_deleted_at(address);
   move_live_to_dead(address, total_len);
@@ -2089,11 +2162,11 @@ u16 purge_empty(void) {
 
   u16 purged = 0;
   for(u8 i = 0; i < index_count; ) {
-    if(!index_entries[i].used || index_entries[i].data_len != 0) {
+    if(index_entries[i].data_len != 0) {
       i++;
       continue;
     }
-    const u32 address = index_entries[i].address;
+    const u32 address = index_address(index_entries[i]);
     const u16 total_len = index_entries[i].total_len;
     (void) mark_deleted_at(address);
     move_live_to_dead(address, total_len);
@@ -2126,7 +2199,7 @@ int count(ProgramType type) {
   if(!ensure_index()) return 0;
   int result = 0;
   for(u8 i = 0; i < index_count; i++) {
-    if(index_entries[i].used && index_entries[i].type == type) result++;
+    if(index_type(index_entries[i]) == type) result++;
   }
   return result;
 }
@@ -2136,9 +2209,8 @@ int total_count(void) {
 }
 
 bool entry_at(int index, Entry& out) {
-  if(!ensure_index() || index < 0 || index >= index_count ||
-     !index_entries[index].used) return false;
-  out.type = index_entries[index].type;
+  if(!ensure_index() || index < 0 || index >= index_count) return false;
+  out.type = index_type(index_entries[index]);
   strncpy(out.name, index_entries[index].name, NAME_SIZE - 1);
   out.name[NAME_SIZE - 1] = 0;
   out.data_len = index_entries[index].data_len;
@@ -2149,9 +2221,9 @@ bool entry(ProgramType type, int index, Entry& out) {
   if(!ensure_index() || index < 0) return false;
   int seen = 0;
   for(u8 i = 0; i < index_count; i++) {
-    if(!index_entries[i].used || index_entries[i].type != type) continue;
+    if(index_type(index_entries[i]) != type) continue;
     if(seen++ != index) continue;
-    out.type = index_entries[i].type;
+    out.type = index_type(index_entries[i]);
     strncpy(out.name, index_entries[i].name, NAME_SIZE - 1);
     out.name[NAME_SIZE - 1] = 0;
     out.data_len = index_entries[i].data_len;

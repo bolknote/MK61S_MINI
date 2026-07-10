@@ -11,7 +11,7 @@ struct StoredProgram {
   bool used;
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
-  u8 data[1536];
+  u8 data[program_store::MAX_MK61_TEXT_SIZE];
   u16 data_len;
 };
 
@@ -1249,10 +1249,26 @@ static void test_empty_placeholders_do_not_exhaust_pending_queue(void) {
   assert(virtual_fat::upsert_pending(extra, 100));
 }
 
+static void test_pending_delete_indices_follow_rename_compaction(void) {
+  reset_virtual_fat_state();
+  virtual_fat::PendingDelete& renamed =
+      virtual_fat::session_state().pending_deletes[0];
+  virtual_fat::PendingDelete& later =
+      virtual_fat::session_state().pending_deletes[1];
+  renamed.used = true;
+  renamed.store_index = 2;
+  later.used = true;
+  later.store_index = 7;
+
+  virtual_fat::note_store_index_removed(2);
+  assert(renamed.store_index == 2);
+  assert(later.store_index == 6);
+}
+
 static void test_existing_file_sectors_coalesce_until_sync(void) {
   reset_virtual_fat_state();
 
-  u8 original[1536];
+  u8 original[program_store::MAX_MK61_TEXT_SIZE];
   memset(original, 0x11, sizeof(original));
   assert(program_store::write(program_store::ProgramType::MK61, "THREE", original, sizeof(original)));
   assert(virtual_fat::reset_session());
@@ -1267,7 +1283,7 @@ static void test_existing_file_sectors_coalesce_until_sync(void) {
   assert(virtual_fat::flush_pending());
   assert(program_write_calls == writes_before + 1);
 
-  u8 stored[1536];
+  u8 stored[program_store::MAX_MK61_TEXT_SIZE];
   u16 stored_len = 0;
   assert(program_store::read(program_store::ProgramType::MK61, "THREE", stored,
                              sizeof(stored), &stored_len));
@@ -1393,6 +1409,7 @@ int main(void) {
   test_empty_entry_neither_renames_nor_commits();
   test_zero_cluster_tombstone_cannot_delete_by_slot_and_size();
   test_empty_placeholders_do_not_exhaust_pending_queue();
+  test_pending_delete_indices_follow_rename_compaction();
   test_existing_file_sectors_coalesce_until_sync();
   test_explicitly_broken_fat_chain_is_rejected();
   test_conflicting_fat_copies_block_commit();

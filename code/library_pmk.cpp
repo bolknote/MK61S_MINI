@@ -8,7 +8,6 @@
 #include  "tools.hpp"
 #include  "menu.hpp"
 #include  "ledcontrol.h"
-#include  "shared_scratch.hpp"
 #include "debug.h"
 #include <string.h>
 
@@ -234,7 +233,10 @@ void  init_library(void) {
   selGame = 0;
 }
 
-static int select_texts(usize count, const char* text, usize stride, i8& selector) {
+typedef bool (*SelectTextProvider)(usize index, char* text, usize capacity);
+
+static int select_texts(usize count, const char* text, usize stride, i8& selector,
+                        SelectTextProvider provider = NULL) {
   do {
     const int display_rows = lcd.rows();
     const int visible_count = ((int) count < display_rows) ? (int) count : display_rows;
@@ -253,7 +255,15 @@ static int select_texts(usize count, const char* text, usize stride, i8& selecto
         } else {
           lcd.print(' ');
         }
-        lcd.print(text + (usize) real_index * stride);
+        if(provider != NULL) {
+          char generated_text[program_store::NAME_SIZE];
+          generated_text[0] = 0;
+          if(provider((usize) real_index, generated_text, sizeof(generated_text))) {
+            lcd.print(generated_text);
+          }
+        } else {
+          lcd.print(text + (usize) real_index * stride);
+        }
       }
       for(int i=visible_count; i < display_rows; i++) {
         lcd.setCursor(0, i);
@@ -347,41 +357,21 @@ int   select_program(void) {
   return select_from(COUNT_PROGRAMS, programs, selProgram);
 }
 
-struct StoredM61Item {
-  // select_texts() only reads the label. Keeping the built-in program offsets
-  // here would waste 12 bytes per stored-file entry and enlarge shared scratch.
-  char text[program_store::NAME_SIZE];
-};
+static bool stored_m61_text(usize index, char* text, usize capacity) {
+  if(capacity == 0) return false;
+  program_store::Entry entry;
+  if(!program_store::entry(program_store::ProgramType::MK61, (int) index, entry)) return false;
 
-static_assert(shared_scratch::SIZE >= sizeof(StoredM61Item) * program_store::MAX_ENTRIES,
-              "shared scratch must fit stored M61 menu items");
-
-static usize fill_stored_m61_items(StoredM61Item* stored_m61_items, usize capacity) {
-  const int count = program_store::count(program_store::ProgramType::MK61);
-  const usize limit = (count > (int) program_store::MAX_ENTRIES) ? program_store::MAX_ENTRIES : (usize) count;
-  const usize item_count = (limit > capacity) ? capacity : limit;
-  for(usize i = 0; i < item_count; i++) {
-    program_store::Entry entry;
-    memset(stored_m61_items[i].text, 0, sizeof(stored_m61_items[i].text));
-    if(!program_store::entry(program_store::ProgramType::MK61, (int) i, entry)) continue;
-    memset(stored_m61_items[i].text, ' ', sizeof(stored_m61_items[i].text) - 1);
-    stored_m61_items[i].text[sizeof(stored_m61_items[i].text) - 1] = 0;
-    usize name_len = 0;
-    while(name_len < sizeof(stored_m61_items[i].text) - 1 && entry.name[name_len] != 0) name_len++;
-    memcpy(stored_m61_items[i].text, entry.name, name_len);
-  }
-  return item_count;
+  memset(text, ' ', capacity - 1);
+  text[capacity - 1] = 0;
+  usize name_len = 0;
+  while(name_len < capacity - 1 && entry.name[name_len] != 0) name_len++;
+  memcpy(text, entry.name, name_len);
+  return true;
 }
 
 int   select_game(void) {
-  shared_scratch::Lease scratch(
-    shared_scratch::Owner::STORED_M61_MENU,
-    sizeof(StoredM61Item) * program_store::MAX_ENTRIES
-  );
-  if(!scratch.ok()) return -1;
-
-  StoredM61Item* stored_m61_items = (StoredM61Item*) scratch.data();
-  const usize count = fill_stored_m61_items(stored_m61_items, scratch.size() / sizeof(StoredM61Item));
+  const usize count = (usize) program_store::count(program_store::ProgramType::MK61);
   if(count == 0) {
     {
       MK61DisplayUpdate update(lcd);
@@ -392,8 +382,8 @@ int   select_game(void) {
     delay(900);
     return -1;
   }
-  if(selGame >= (i8) count) selGame = (i8) (count - 1);
-  return select_texts(count, stored_m61_items[0].text, sizeof(stored_m61_items[0]), selGame);
+  if((int) selGame >= (int) count) selGame = (i8) (count - 1);
+  return select_texts(count, NULL, 0, selGame, stored_m61_text);
 }
 
 bool  load_program(usize nProg_for_load) {
