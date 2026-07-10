@@ -9,24 +9,37 @@
   #define MK61_ENABLE_FOCAL 1
 #endif
 
+enum class FocalRunStatus {
+  COMPLETED,
+  STOPPED,
+  COMPILE_ERROR,
+  RUNTIME_ERROR,
+  NOT_FOUND,
+  UNAVAILABLE
+};
+
+inline bool FocalRunSucceeded(FocalRunStatus status) {
+  return status == FocalRunStatus::COMPLETED;
+}
+
 #if MK61_ENABLE_FOCAL
 extern bool FOCAL_library_select(void);
 extern bool FOCAL_menu_select(void);
-extern bool CompileFocal(char* program);
+extern bool CompileFocal(const char* program);
 extern void InitFocal(void);
 extern bool FocalIsReady(void);
-extern void RunFocal(int FocalN);
-extern bool RunFocalProgram(const char* name);
+extern FocalRunStatus RunFocal(int FocalN);
+extern FocalRunStatus RunFocalProgram(const char* name);
 extern void EditFocal(void);
 extern bool EditFocalProgram(const char* name);
 #else
 inline bool FOCAL_library_select(void) { return false; }
 inline bool FOCAL_menu_select(void) { return false; }
-inline bool CompileFocal(char*) { return false; }
+inline bool CompileFocal(const char*) { return false; }
 inline void InitFocal(void) {}
 inline bool FocalIsReady(void) { return false; }
-inline void RunFocal(int) {}
-inline bool RunFocalProgram(const char*) { return false; }
+inline FocalRunStatus RunFocal(int) { return FocalRunStatus::UNAVAILABLE; }
+inline FocalRunStatus RunFocalProgram(const char*) { return FocalRunStatus::UNAVAILABLE; }
 inline void EditFocal(void) {}
 inline bool EditFocalProgram(const char*) { return false; }
 #endif

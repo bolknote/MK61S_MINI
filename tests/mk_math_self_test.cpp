@@ -7,6 +7,7 @@
 // live user state untouched.
 
 #include <cmath>
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -74,6 +75,8 @@ static void test_pure_helpers(void) {
   }
   check_near("pow10_int+3", mk_math::pow10_int(3), 1000.0, 1e-12);
   check_near("pow10_int-2", mk_math::pow10_int(-2), 0.01, 1e-12);
+  check_true("pow10_int max", mk_math::is_inf(mk_math::pow10_int(INT_MAX)));
+  check_true("pow10_int min", mk_math::pow10_int(INT_MIN) == 0.0);
   check_true("log10_floor 100", mk_math::log10_floor(100.0) == 2);
   check_true("log10_floor 0.01", mk_math::log10_floor(0.01) == -2);
   check_true("log10_floor 5", mk_math::log10_floor(5.0) == 0);
@@ -83,6 +86,11 @@ static void test_pure_helpers(void) {
   check_near("atof int", mk_math::atof("123"), 123.0, 1e-9);
   check_near("atof frac", mk_math::atof("3.14159"), 3.14159, 1e-9);
   check_near("atof sci", mk_math::atof("-1.5e3"), -1500.0, 1e-9);
+  check_near("atof huge int", mk_math::atof("123456789012345678901"), 1.2345678901234568e20, 1e-15);
+  check_near("atof leading 0", mk_math::atof("0.00000000000000000000125"), 1.25e-21, 1e-15);
+  check_true("atof overflow", mk_math::is_inf(mk_math::atof("1e999999")));
+  check_true("atof underflow", mk_math::atof("1e-999999") == 0.0);
+  check_true("atof zero huge", mk_math::atof("0e999999") == 0.0);
   double v = mk_math::strtod("42.5abc", &endp);
   check_near("strtod value", v, 42.5, 1e-9);
   check_true("strtod endptr", endp != nullptr && *endp == 'a');

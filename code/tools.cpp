@@ -164,7 +164,7 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
       return m61_text::open_program(entry.name);
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
-      return RunFocalProgram(entry.name);
+      return FocalRunSucceeded(RunFocalProgram(entry.name));
 #endif
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC:

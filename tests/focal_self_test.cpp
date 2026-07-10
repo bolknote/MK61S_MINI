@@ -1,10 +1,14 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <limits>
+#include <string>
 
 #ifndef MK61_ENABLE_FOCAL
 #define MK61_ENABLE_FOCAL 1
 #endif
+
+#include "../code/focal.hpp"
 
 #if MK61_ENABLE_FOCAL
 
@@ -12,15 +16,23 @@ extern "C" void FocalTestReset(void);
 extern "C" bool FocalTestCompile(const char* source);
 extern "C" int FocalTestAddProgram(const char* source);
 extern "C" void FocalTestSetAskValue(double value);
+extern "C" void FocalTestSetAskCancelled(bool cancelled);
 extern "C" void FocalTestRun(int slot);
+extern "C" int FocalTestRunStatus(int slot);
 extern "C" double FocalTestNumber(const char* name);
 extern "C" double FocalTestMkX(void);
+extern "C" bool FocalTestWriteMkX(double value);
 extern "C" double FocalTestMkRegister(int reg);
 extern "C" void FocalTestSetRfEnabled(bool enabled);
 extern "C" const char* FocalTestLcdLine(int row);
 extern "C" const char* FocalTestError(void);
 extern "C" void FocalTestSetAlphaHeld(bool held);
 extern "C" bool FocalTestStoreDraft(const char* source, const char* name);
+extern "C" bool FocalTestStoreSlot(int slot, const char* source, const char* name);
+extern "C" void FocalTestSetStoreResults(bool write_ok, bool remove_ok);
+extern "C" bool FocalTestParseInputNumber(const char* text, double* value);
+extern "C" int FocalTestAstSize(void);
+extern "C" int FocalTestRuntimeSize(void);
 extern "C" const char* FocalTestProgramName(int slot);
 extern "C" const char* FocalTestProgramSource(int slot);
 extern "C" void FocalTestDrawNewEditor(const char* source, int cursor);
@@ -32,6 +44,7 @@ extern "C" int FocalTestMoveCursorLine(const char* source, int cursor, int delta
 extern "C" int FocalTestMoveCursorHorizontal(const char* source, int cursor, int delta);
 extern "C" int FocalTestMoveCursorLineKey(const char* source, int cursor, int key_code);
 extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int size);
+extern "C" bool FocalTestApplyExprMacro(const char* input, int key_code, char* out, int size);
 
 static int failures;
 
@@ -68,6 +81,41 @@ static void test_compile_rejects_basic_aliases(void) {
   FocalTestReset();
   CHECK(FocalTestCompile("01.10 S A=1+2*3\n01.20 P A\n01.30 E"));
   CHECK(!FocalTestCompile("01.10 TYPE A\n01.20 E"));
+}
+
+static void test_compile_rejects_truncation_and_malformed_statements(void) {
+  FocalTestReset();
+  std::string long_line = "1.10 S A=1";
+  for(int i = 0; i < 60; i++) long_line += "+0";
+  long_line += "+2\n1.20 E";
+  CHECK(long_line.size() > 128);
+  CHECK(!FocalTestCompile(long_line.c_str()));
+  CHECK(std::strcmp(FocalTestError(), "FULL?") == 0);
+
+  FocalTestReset();
+  std::string oversized;
+  for(int i = 1; i <= 70; i++) {
+    char line[32];
+    std::snprintf(line, sizeof(line), "%d.10 C PADDING\n", i);
+    oversized += line;
+  }
+  oversized += "71.10 S A=9\n72.10 E";
+  CHECK(oversized.size() >= 640);
+  CHECK(!CompileFocal(oversized.c_str()));
+  CHECK(std::strcmp(FocalTestError(), "FULL?") == 0);
+  CHECK(FocalTestProgramSource(0)[0] == 0);
+
+  FocalTestReset();
+  CHECK(!FocalTestCompile("1.10 S A=\n1.20 E"));
+  CHECK(!FocalTestCompile("1.10 S A=BOGUS(1)\n1.20 E"));
+  CHECK(!FocalTestCompile("1.10 G 2.10TRASH\n2.10 E"));
+  CHECK(!FocalTestCompile("1.10 G 2\n2.10 E"));
+  CHECK(!FocalTestCompile("1 E"));
+  CHECK(!FocalTestCompile("1.10 B (A 1.20,1.30,1.40\n1.20 E\n1.30 E\n1.40 E"));
+  CHECK(!FocalTestCompile("1.10 E NOW"));
+  CHECK(!FocalTestCompile("1.10 P \"A\"TRASH\n1.20 E"));
+  CHECK(!FocalTestCompile("1.10 F I=1,2,3,4; P I\n1.20 E"));
+  CHECK(!FocalTestCompile("1.10 F I=1,2;\n1.20 E"));
 }
 
 static void test_arithmetic_and_print(void) {
@@ -202,6 +250,36 @@ static void test_mk_math_dispatch_and_format(void) {
   CHECK_STARTS(FocalTestLcdLine(0), "1E+8");
 }
 
+static void test_math_errors_tiny_values_and_for_progress(void) {
+  FocalTestReset();
+  int slot = add_program("1.10 S A=1/1E-15\n1.20 E");
+  CHECK(FocalTestRunStatus(slot) == (int) FocalRunStatus::COMPLETED);
+  CHECK(std::fabs((FocalTestNumber("A") - 1.0e15) / 1.0e15) < 1.0e-12);
+
+  FocalTestReset();
+  slot = add_program("1.10 S A=SQRT(-1)\n1.20 E");
+  CHECK(FocalTestRunStatus(slot) == (int) FocalRunStatus::RUNTIME_ERROR);
+  CHECK(std::strcmp(FocalTestError(), "MATH?") == 0);
+  CHECK(!FocalTestWriteMkX(std::numeric_limits<double>::infinity()));
+  CHECK(!FocalTestWriteMkX(std::numeric_limits<double>::quiet_NaN()));
+  CHECK_NEAR(FocalTestNumber("A"), 0.0);
+
+  FocalTestReset();
+  slot = add_program("1.10 S .X=EXP(1000)\n1.20 E");
+  CHECK(FocalTestRunStatus(slot) == (int) FocalRunStatus::RUNTIME_ERROR);
+  CHECK(std::strcmp(FocalTestError(), "MATH?") == 0);
+
+  FocalTestReset();
+  slot = add_program("1.10 S S=0\n1.20 F I=0,1E-15,2E-15; S S=S+1\n1.30 E");
+  CHECK(FocalTestRunStatus(slot) == (int) FocalRunStatus::COMPLETED);
+  CHECK_NEAR(FocalTestNumber("S"), 3.0);
+
+  FocalTestReset();
+  slot = add_program("1.10 F I=1E20,1,2E20; S A=1\n1.20 E");
+  CHECK(FocalTestRunStatus(slot) == (int) FocalRunStatus::RUNTIME_ERROR);
+  CHECK(std::strcmp(FocalTestError(), "FOR?") == 0);
+}
+
 static void test_mk_register_references(void) {
   FocalTestReset();
   const int slot = add_program(
@@ -268,6 +346,11 @@ static void test_editor_expression_macros(void) {
   const int pow10[] = {37, 11, 11, 38, 5};
   FocalTestEditSequence(pow10, (int) (sizeof(pow10) / sizeof(pow10[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "10^X") == 0);
+
+  std::string long_expr(120, 'A');
+  char long_out[160];
+  CHECK(!FocalTestApplyExprMacro(long_expr.c_str(), 2, long_out, sizeof(long_out)));
+  CHECK(long_expr == long_out);
 }
 
 static void test_editor_digit_symbol_and_sms_input(void) {
@@ -387,6 +470,66 @@ static void test_editor_save_keeps_invalid_draft(void) {
   CHECK(std::strcmp(FocalTestProgramSource(0), "BROKEN") == 0);
 }
 
+static void test_run_status_ask_input_and_transactional_save(void) {
+  FocalTestReset();
+  int slot = add_program("1.10 S A=1/0\n1.20 E");
+  CHECK(FocalTestRunStatus(slot) == (int) FocalRunStatus::RUNTIME_ERROR);
+
+  FocalTestReset();
+  FocalTestSetAskCancelled(true);
+  slot = add_program("1.10 A A\n1.20 S B=1\n1.30 E");
+  CHECK(FocalTestRunStatus(slot) == (int) FocalRunStatus::STOPPED);
+  CHECK_NEAR(FocalTestNumber("A"), 0.0);
+  CHECK_NEAR(FocalTestNumber("B"), 0.0);
+
+  FocalTestReset();
+  CHECK(FocalTestStoreDraft("BROKEN", "BAD"));
+  CHECK(FocalTestRunStatus(0) == (int) FocalRunStatus::COMPILE_ERROR);
+  CHECK(RunFocalProgram("MISSING") == FocalRunStatus::NOT_FOUND);
+
+  double value = 0.0;
+  CHECK(FocalTestParseInputNumber("-0.5", &value));
+  CHECK_NEAR(value, -0.5);
+  CHECK(FocalTestParseInputNumber(".5", &value));
+  CHECK_NEAR(value, 0.5);
+  CHECK(!FocalTestParseInputNumber("", &value));
+  CHECK(!FocalTestParseInputNumber("--1", &value));
+  CHECK(!FocalTestParseInputNumber("1-2", &value));
+  CHECK(!FocalTestParseInputNumber("1.2.3", &value));
+  CHECK(!FocalTestParseInputNumber("1E999999", &value));
+
+  FocalTestReset();
+  CHECK(FocalTestStoreDraft("1.10 S A=1", "OLD"));
+  CHECK(std::strcmp(FocalTestProgramName(0), "OLD") == 0);
+  FocalTestSetStoreResults(false, true);
+  CHECK(!FocalTestStoreSlot(0, "1.10 S A=2", "NEW"));
+  CHECK(std::strcmp(FocalTestProgramName(0), "OLD") == 0);
+  CHECK(std::strcmp(FocalTestProgramSource(0), "1.10 S A=1") == 0);
+
+  FocalTestSetStoreResults(true, false);
+  CHECK(!FocalTestStoreSlot(0, "1.10 S A=3", "NEW"));
+  CHECK(std::strcmp(FocalTestProgramName(0), "OLD") == 0);
+  CHECK(std::strcmp(FocalTestProgramSource(0), "1.10 S A=1") == 0);
+}
+
+static void test_compact_ast_one_slot_and_literal_whitespace(void) {
+  FocalTestReset();
+  CHECK(FocalTestAstSize() < 2048);
+  CHECK(FocalTestRuntimeSize() < 3072);
+
+  const int slot = add_program("1.10 P \"  A  \"\n1.20 E");
+  CHECK(FocalTestAddProgram("2.10 E") < 0);
+  FocalTestRun(slot);
+  CHECK(FocalTestLcdLine(0)[0] == ' ');
+  CHECK(FocalTestLcdLine(0)[1] == ' ');
+  CHECK(FocalTestLcdLine(0)[2] == 'A');
+
+  FocalTestReset();
+  std::string oversized(640, 'X');
+  CHECK(!FocalTestStoreDraft(oversized.c_str(), "TOO_BIG"));
+  CHECK(FocalTestProgramSource(0)[0] == 0);
+}
+
 static void test_editor_draws_cursor(void) {
   FocalTestReset();
   FocalTestDrawNewEditor("", 0);
@@ -454,6 +597,7 @@ static void test_editor_line_navigation(void) {
 
 int main(void) {
   test_compile_rejects_basic_aliases();
+  test_compile_rejects_truncation_and_malformed_statements();
   test_arithmetic_and_print();
   test_print_newline();
   test_ask_leibniz_pi_program();
@@ -466,6 +610,7 @@ int main(void) {
   test_goto_and_branch();
   test_functions();
   test_mk_math_dispatch_and_format();
+  test_math_errors_tiny_values_and_for_progress();
   test_mk_register_references();
   test_ask_mk_stack_reference();
   test_mk_rf_requires_expanded_mode();
@@ -475,6 +620,8 @@ int main(void) {
   test_editor_operator_keys_insert_full_names();
   test_editor_backspace_is_f_left();
   test_editor_save_keeps_invalid_draft();
+  test_run_status_ask_input_and_transactional_save();
+  test_compact_ast_one_slot_and_literal_whitespace();
   test_editor_draws_cursor();
   test_editor_draws_visible_program_lines();
   test_editor_two_line_viewport_scrolls_like_a00();

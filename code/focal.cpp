@@ -177,11 +177,7 @@ extern MK61Display lcd;
 extern void idle_main_process(void);
 #endif
 
-#ifdef FOCAL_HOST_TEST
-static constexpr int FOCAL_PROGRAM_COUNT       = 8;
-#else
 static constexpr int FOCAL_PROGRAM_COUNT       = 1;
-#endif
 static constexpr int FOCAL_SOURCE_SIZE         = 640;
 static constexpr int FOCAL_LINE_TEXT_SIZE      = 80;
 static constexpr int FOCAL_LINE_BUFFER_SIZE    = 128;
@@ -212,8 +208,16 @@ enum class FocalFlowKind : u8 {
   NEXT,
   JUMP,
   STOP,
+  INTERRUPTED,
   RETURNED,
   ERROR
+};
+
+enum class FocalParseResult : u8 {
+  OK,
+  LINE,
+  SYNTAX,
+  FULL
 };
 
 using FocalEditShift = text_editor::Shift;
@@ -227,6 +231,11 @@ struct FocalAddress {
 
 struct FocalLine {
   FocalAddress number;
+  FocalOp op;
+  u16 operand_offset;
+};
+
+struct FocalStatement {
   FocalOp op;
   char operand[FOCAL_LINE_TEXT_SIZE];
 };
@@ -243,10 +252,10 @@ struct FocalTarget {
 };
 
 struct FocalAst {
-  bool ok;
-  char error[17];
   FocalLine lines[FOCAL_MAX_LINES];
   i16 line_count;
+  char operand_pool[FOCAL_SOURCE_SIZE];
+  u16 operand_used;
 };
 
 struct FocalProgram {
@@ -265,10 +274,12 @@ struct FocalRuntime {
   FocalProgram programs[FOCAL_PROGRAM_COUNT];
   FocalAst focal_ast;
   double focal_vars[26];
-  bool focal_var_set[26];
   i8 NextFocal;
   char focal_last_error[17];
 };
+
+static_assert(sizeof(FocalAst) < 2048, "FOCAL parsed representation must remain compact");
+static_assert(sizeof(FocalRuntime) < 3072, "FOCAL runtime must leave workspace headroom");
 
 #ifdef FOCAL_HOST_TEST
 static FocalRuntime focal_runtime_storage;
@@ -285,7 +296,6 @@ class FocalWorkspaceScope {
       if(!lease.ok() || !lease.fresh()) return;
       FocalRuntime* runtime = (FocalRuntime*) lease.data();
       memset(runtime, 0, sizeof(*runtime));
-      runtime->focal_ast.ok = true;
       runtime->NextFocal = -1;
     }
 
@@ -304,13 +314,19 @@ static FocalRuntime& focal_runtime(void) {
 #define programs         (focal_runtime().programs)
 #define focal_ast        (focal_runtime().focal_ast)
 #define focal_vars       (focal_runtime().focal_vars)
-#define focal_var_set    (focal_runtime().focal_var_set)
 #define NextFocal        (focal_runtime().NextFocal)
 #define focal_last_error (focal_runtime().focal_last_error)
 #ifdef FOCAL_HOST_TEST
 static u32 focal_random_state = 0x3B6B120EUL;
 static double focal_host_ask_value = 0.0;
+static bool focal_host_ask_cancelled = false;
+static bool focal_host_store_write_ok = true;
+static bool focal_host_store_remove_ok = true;
 #endif
+
+static const char* focal_ast_operand(const FocalAst& ast, const FocalLine& line) {
+  return line.operand_offset < ast.operand_used ? ast.operand_pool + line.operand_offset : "";
+}
 
 #if defined(MK61_FOCAL_TRACE) && !defined(FOCAL_HOST_TEST)
 static const char* focal_trace_op_name(FocalOp op) {
@@ -335,6 +351,7 @@ static const char* focal_trace_flow_name(FocalFlowKind kind) {
     case FocalFlowKind::NEXT:     return "NEXT";
     case FocalFlowKind::JUMP:     return "JUMP";
     case FocalFlowKind::STOP:     return "STOP";
+    case FocalFlowKind::INTERRUPTED: return "INTERRUPTED";
     case FocalFlowKind::RETURNED: return "RETURNED";
     case FocalFlowKind::ERROR:    return "ERROR";
   }
@@ -382,7 +399,7 @@ static void focal_trace_line(const char* prefix, i16 pc, const FocalLine& line) 
   Serial.print(" op=");
   Serial.print(focal_trace_op_name(line.op));
   Serial.print(" operand='");
-  Serial.print(line.operand);
+  Serial.print(focal_ast_operand(focal_ast, line));
   Serial.println("'");
   Serial.flush();
 }
@@ -582,11 +599,11 @@ static void focal_format_number(double value, char* out, usize size) {
 }
 
 static void focal_copy_trim(char* dst, usize dst_size, const char* begin, const char* end) {
+  if(dst_size == 0) return;
   while(begin < end && focal_is_space(*begin)) begin++;
   while(end > begin && focal_is_space(*(end - 1))) end--;
   const usize len = (usize) (end - begin);
   const usize copy_len = (len < dst_size - 1) ? len : dst_size - 1;
-  if(dst_size == 0) return;
   memcpy(dst, begin, copy_len);
   dst[copy_len] = 0;
 }
@@ -607,6 +624,9 @@ static const char* focal_error_ru_text(const char* error) {
   if(focal_streq(error, "RETURN?")) return "ВОЗВРАТ?";
   if(focal_streq(error, "STACK?")) return "СТЕК?";
   if(focal_streq(error, "MATH?")) return "МАТ?";
+  if(focal_streq(error, "MK?")) return "МК?";
+  if(focal_streq(error, "NAME?")) return "ИМЯ?";
+  if(focal_streq(error, "SLOT?")) return "СЛОТ?";
   return "ОШИБКА?";
 }
 
@@ -640,9 +660,12 @@ static void focal_message_i18n(const char* en0, const char* ru0, const char* en1
 static bool focal_error(const char* error) {
   focal_trace_string("ERROR ", error);
   focal_copy_text(focal_last_error, sizeof(focal_last_error), error);
-  focal_copy_text(focal_ast.error, sizeof(focal_ast.error), error);
   focal_message_i18n(error, focal_error_ru_text(error), "FOCAL", "ФОКАЛ");
   return false;
+}
+
+static void focal_show_stopped(void) {
+  focal_message_i18n("FOCAL stopped", "ФОКАЛ стоп", "ESC", "ESC");
 }
 
 static bool focal_runtime_interrupted(void) {
@@ -653,7 +676,7 @@ static bool focal_runtime_interrupted(void) {
   if(key == KEY_ESC || key == KEY_ESC_PRESS) {
     (void) kbd::get_key();
     kbd::clear_hold_key();
-    focal_message_i18n("FOCAL stopped", "ФОКАЛ стоп", "ESC", "ESC");
+    focal_show_stopped();
     return true;
   }
 #endif
@@ -662,12 +685,10 @@ static bool focal_runtime_interrupted(void) {
 
 static void focal_clear_vars(void) {
   memset(focal_vars, 0, sizeof(focal_vars));
-  memset(focal_var_set, 0, sizeof(focal_var_set));
 }
 
 static void focal_ast_reset(FocalAst& ast) {
   memset(&ast, 0, sizeof(ast));
-  ast.ok = true;
 }
 
 static int focal_address_compare(const FocalAddress& a, const FocalAddress& b) {
@@ -755,12 +776,13 @@ static bool focal_parse_operator(const char*& p, FocalOp& op) {
   return true;
 }
 
-static bool focal_parse_statement_text(const char* text, FocalLine& line) {
+static FocalParseResult focal_parse_statement_text(const char* text, FocalStatement& statement) {
   const char* p = text;
-  if(!focal_parse_operator(p, line.op)) return false;
+  if(!focal_parse_operator(p, statement.op)) return FocalParseResult::SYNTAX;
   p = focal_skip_spaces(p);
-  focal_copy_text(line.operand, sizeof(line.operand), p);
-  return true;
+  if(strlen(p) >= sizeof(statement.operand)) return FocalParseResult::FULL;
+  focal_copy_text(statement.operand, sizeof(statement.operand), p);
+  return FocalParseResult::OK;
 }
 
 static bool focal_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref& ref) {
@@ -825,48 +847,20 @@ static bool focal_target_only(const char* text, FocalTarget& target) {
   return p == end;
 }
 
-static bool focal_parse_line_text(const char* text, FocalLine& line) {
+static FocalParseResult focal_parse_line_text(const char* text, FocalAddress& number, FocalStatement& statement) {
   const char* p = text;
-  if(!focal_parse_address(p, line.number)) return false;
+  if(!focal_parse_address(p, number)) return FocalParseResult::LINE;
+  if(!number.has_minor) return FocalParseResult::LINE;
   p = focal_skip_spaces(p);
-  return focal_parse_statement_text(p, line);
+  return focal_parse_statement_text(p, statement);
 }
 
-static bool focal_validate_statement(const FocalLine& line) {
-  const char* p = focal_skip_spaces(line.operand);
-  switch(line.op) {
-    case FocalOp::ASK: {
-      FocalTarget target;
-      return focal_target_only(p, target);
-    }
-    case FocalOp::SET: {
-      FocalTarget target;
-      const char* expr_begin = NULL;
-      return focal_target_assignment(p, target, expr_begin);
-    }
-    case FocalOp::FOR:
-      if(!focal_is_alpha(*p)) return false;
-      return strchr(line.operand, '=') != NULL && strchr(line.operand, ';') != NULL;
-    case FocalOp::DO:
-    case FocalOp::GOTO: {
-      FocalAddress address;
-      return focal_parse_address(p, address);
-    }
-    case FocalOp::BRANCH:
-      return *p == '(';
-    case FocalOp::COMMENT:
-    case FocalOp::EXIT:
-    case FocalOp::PRINT:
-    case FocalOp::RETURN:
-    case FocalOp::NOP:
-      return true;
-  }
-  return false;
-}
+static bool focal_validate_statement(FocalOp op, const char* operand);
 
 static bool focal_compile_source(const char* source, FocalAst& ast) {
   focal_ast_reset(ast);
   if(source == NULL) return focal_error("SYNTAX?");
+  if(strlen(source) >= FOCAL_SOURCE_SIZE) return focal_error("FULL?");
 
   const char* cursor = source;
   while(*cursor != 0) {
@@ -877,16 +871,36 @@ static bool focal_compile_source(const char* source, FocalAst& ast) {
     while(*cursor != 0 && *cursor != '\n' && *cursor != '\r') cursor++;
     const char* line_end = cursor;
 
+    while(line_begin < line_end && focal_is_space(*line_begin)) line_begin++;
+    while(line_end > line_begin && focal_is_space(*(line_end - 1))) line_end--;
+    const usize line_len = (usize) (line_end - line_begin);
+    if(line_len >= FOCAL_LINE_BUFFER_SIZE) return focal_error("FULL?");
+
     char line_text[FOCAL_LINE_BUFFER_SIZE];
-    focal_copy_trim(line_text, sizeof(line_text), line_begin, line_end);
+    memcpy(line_text, line_begin, line_len);
+    line_text[line_len] = 0;
     if(line_text[0] == 0) continue;
 
     if(ast.line_count >= FOCAL_MAX_LINES) return focal_error("FULL?");
 
+    FocalAddress number = {};
+    FocalStatement statement = {};
+    const FocalParseResult parse_result = focal_parse_line_text(line_text, number, statement);
+    if(parse_result == FocalParseResult::LINE) return focal_error("LINE?");
+    if(parse_result == FocalParseResult::SYNTAX) return focal_error("SYNTAX?");
+    if(parse_result == FocalParseResult::FULL) return focal_error("FULL?");
+    if(!focal_validate_statement(statement.op, statement.operand)) return false;
+
+    const usize operand_size = strlen(statement.operand) + 1;
+    if((usize) ast.operand_used + operand_size > sizeof(ast.operand_pool)) return focal_error("FULL?");
+
     FocalLine& line = ast.lines[ast.line_count];
     memset(&line, 0, sizeof(line));
-    if(!focal_parse_line_text(line_text, line)) return focal_error("LINE?");
-    if(!focal_validate_statement(line)) return focal_error("SYNTAX?");
+    line.number = number;
+    line.op = statement.op;
+    line.operand_offset = ast.operand_used;
+    memcpy(ast.operand_pool + ast.operand_used, statement.operand, operand_size);
+    ast.operand_used = (u16) (ast.operand_used + operand_size);
     ast.line_count++;
   }
 
@@ -908,8 +922,6 @@ static bool focal_compile_source(const char* source, FocalAst& ast) {
     }
   }
 
-  ast.ok = true;
-  ast.error[0] = 0;
   focal_last_error[0] = 0;
   return true;
 }
@@ -918,6 +930,7 @@ struct ExprParser {
   const char* p;
   const char* end;
   bool ok;
+  bool evaluate;
   char error[17];
 };
 
@@ -938,6 +951,14 @@ static bool expr_match(ExprParser& parser, char ch) {
   return true;
 }
 
+static double expr_checked(ExprParser& parser, double value) {
+  if(parser.evaluate && (mk_math::is_nan(value) || mk_math::is_inf(value))) {
+    expr_set_error(parser, "MATH?");
+    return 0.0;
+  }
+  return parser.evaluate ? value : 0.0;
+}
+
 static double expr_parse_mk_ref(ExprParser& parser) {
   mk61_ref::Ref ref;
   if(!focal_parse_mk_ref_token(parser.p, parser.end, ref)) {
@@ -945,12 +966,14 @@ static double expr_parse_mk_ref(ExprParser& parser) {
     return 0.0;
   }
 
+  if(!parser.evaluate) return 0.0;
+
   double value = 0.0;
   if(!mk61_ref::read(ref, value)) {
     expr_set_error(parser, "MK?");
     return 0.0;
   }
-  return value;
+  return expr_checked(parser, value);
 }
 
 static double expr_parse_additive(ExprParser& parser);
@@ -978,14 +1001,14 @@ static double expr_parse_identifier(ExprParser& parser) {
   }
   name[len] = 0;
 
-  if(focal_streq(name, "PI")) return 3.14159265358979323846;
+  if(focal_streq(name, "PI")) return parser.evaluate ? 3.14159265358979323846 : 0.0;
   if(len == 1) {
     const int idx = name[0] - 'A';
     if(idx < 0 || idx >= 26) {
       expr_set_error(parser, "VAR?");
       return 0.0;
     }
-    return focal_vars[idx];
+    return expr_checked(parser, parser.evaluate ? focal_vars[idx] : 0.0);
   }
 
   if(!expr_match(parser, '(')) {
@@ -998,7 +1021,7 @@ static double expr_parse_identifier(ExprParser& parser) {
       expr_set_error(parser, "FUNC?");
       return 0.0;
     }
-    return focal_rnd();
+    return parser.evaluate ? expr_checked(parser, focal_rnd()) : 0.0;
   }
 
   const double a = expr_parse_additive(parser);
@@ -1015,24 +1038,42 @@ static double expr_parse_identifier(ExprParser& parser) {
     return 0.0;
   }
 
-  if(focal_streq(name, "SIN")) return mk_math::sin(a);
-  if(focal_streq(name, "COS")) return mk_math::cos(a);
-  if(focal_streq(name, "TG")) return mk_math::tan(a);
-  if(focal_streq(name, "ASIN")) return mk_math::asin(a);
-  if(focal_streq(name, "ACOS")) return mk_math::acos(a);
-  if(focal_streq(name, "ATG")) return mk_math::atan(a);
-  if(focal_streq(name, "LN")) return mk_math::ln(a);
-  if(focal_streq(name, "LG")) return mk_math::log10(a);
-  if(focal_streq(name, "EXP")) return mk_math::exp(a);
-  if(focal_streq(name, "SQRT")) return mk_math::sqrt(a);
-  if(focal_streq(name, "ABS")) return mk_math::fabs(a);
-  if(focal_streq(name, "INT")) return mk_math::floor(a);
-  if(focal_streq(name, "FRAC")) return mk_math::frac(a);
-  if(focal_streq(name, "ROUND")) return mk_math::round_half(a);
+  const bool known = focal_streq(name, "SIN") || focal_streq(name, "COS") ||
+                     focal_streq(name, "TG") || focal_streq(name, "ASIN") ||
+                     focal_streq(name, "ACOS") || focal_streq(name, "ATG") ||
+                     focal_streq(name, "LN") || focal_streq(name, "LG") ||
+                     focal_streq(name, "EXP") || focal_streq(name, "SQRT") ||
+                     focal_streq(name, "ABS") || focal_streq(name, "INT") ||
+                     focal_streq(name, "FRAC") || focal_streq(name, "ROUND") ||
+                     focal_streq(name, "SGN") || focal_streq(name, "MAX");
+  if(!known) {
+    expr_set_error(parser, "FUNC?");
+    return 0.0;
+  }
+  if(!parser.evaluate) return 0.0;
+  if(mk_math::is_nan(a) || mk_math::is_inf(a) ||
+     (focal_streq(name, "MAX") && (mk_math::is_nan(b) || mk_math::is_inf(b)))) {
+    expr_set_error(parser, "MATH?");
+    return 0.0;
+  }
+
+  if(focal_streq(name, "SIN")) return expr_checked(parser, mk_math::sin(a));
+  if(focal_streq(name, "COS")) return expr_checked(parser, mk_math::cos(a));
+  if(focal_streq(name, "TG")) return expr_checked(parser, mk_math::tan(a));
+  if(focal_streq(name, "ASIN")) return expr_checked(parser, mk_math::asin(a));
+  if(focal_streq(name, "ACOS")) return expr_checked(parser, mk_math::acos(a));
+  if(focal_streq(name, "ATG")) return expr_checked(parser, mk_math::atan(a));
+  if(focal_streq(name, "LN")) return expr_checked(parser, mk_math::ln(a));
+  if(focal_streq(name, "LG")) return expr_checked(parser, mk_math::log10(a));
+  if(focal_streq(name, "EXP")) return expr_checked(parser, mk_math::exp(a));
+  if(focal_streq(name, "SQRT")) return expr_checked(parser, mk_math::sqrt(a));
+  if(focal_streq(name, "ABS")) return expr_checked(parser, mk_math::fabs(a));
+  if(focal_streq(name, "INT")) return expr_checked(parser, mk_math::floor(a));
+  if(focal_streq(name, "FRAC")) return expr_checked(parser, mk_math::frac(a));
+  if(focal_streq(name, "ROUND")) return expr_checked(parser, mk_math::round_half(a));
   if(focal_streq(name, "SGN")) return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
   if(focal_streq(name, "MAX")) return (a > b) ? a : b;
 
-  expr_set_error(parser, "FUNC?");
   return 0.0;
 }
 
@@ -1058,7 +1099,7 @@ static double expr_parse_primary(ExprParser& parser) {
   const double value = mk_math::strtod(parser.p, &after);
   if(after != NULL && after > parser.p && after <= parser.end) {
     parser.p = after;
-    return value;
+    return expr_checked(parser, value);
   }
 
   expr_set_error(parser, "SYNTAX?");
@@ -1068,7 +1109,7 @@ static double expr_parse_primary(ExprParser& parser) {
 static double expr_parse_unary(ExprParser& parser) {
   expr_skip_spaces(parser);
   if(expr_match(parser, '+')) return expr_parse_unary(parser);
-  if(expr_match(parser, '-')) return -expr_parse_unary(parser);
+  if(expr_match(parser, '-')) return expr_checked(parser, -expr_parse_unary(parser));
   return expr_parse_primary(parser);
 }
 
@@ -1077,7 +1118,7 @@ static double expr_parse_power(ExprParser& parser) {
   expr_skip_spaces(parser);
   if(expr_match(parser, '^')) {
     const double right = expr_parse_power(parser);
-    left = mk_math::pow(left, right);
+    if(parser.evaluate) left = expr_checked(parser, mk_math::pow(left, right));
   }
   return left;
 }
@@ -1086,14 +1127,15 @@ static double expr_parse_multiplicative(ExprParser& parser) {
   double left = expr_parse_power(parser);
   while(parser.ok) {
     if(expr_match(parser, '*')) {
-      left *= expr_parse_power(parser);
+      const double right = expr_parse_power(parser);
+      if(parser.evaluate) left = expr_checked(parser, left * right);
     } else if(expr_match(parser, '/')) {
       const double right = expr_parse_power(parser);
-      if(mk_math::fabs(right) < 1e-14) {
+      if(parser.evaluate && right == 0.0) {
         expr_set_error(parser, "MATH?");
         return 0.0;
       }
-      left /= right;
+      if(parser.evaluate) left = expr_checked(parser, left / right);
     } else {
       break;
     }
@@ -1104,29 +1146,65 @@ static double expr_parse_multiplicative(ExprParser& parser) {
 static double expr_parse_additive(ExprParser& parser) {
   double left = expr_parse_multiplicative(parser);
   while(parser.ok) {
-    if(expr_match(parser, '+')) left += expr_parse_multiplicative(parser);
-    else if(expr_match(parser, '-')) left -= expr_parse_multiplicative(parser);
+    if(expr_match(parser, '+')) {
+      const double right = expr_parse_multiplicative(parser);
+      if(parser.evaluate) left = expr_checked(parser, left + right);
+    } else if(expr_match(parser, '-')) {
+      const double right = expr_parse_multiplicative(parser);
+      if(parser.evaluate) left = expr_checked(parser, left - right);
+    }
     else break;
   }
   return left;
 }
 
-static bool focal_eval_expr_range(const char* begin, const char* end, double& value) {
+static bool focal_parse_expr_range(const char* begin, const char* end, bool evaluate,
+                                   double& value, char* error, usize error_size) {
   char buffer[FOCAL_EXPR_BUFFER_SIZE];
-  focal_copy_trim(buffer, sizeof(buffer), begin, end);
-  if(buffer[0] == 0) return focal_error("SYNTAX?");
+  while(begin < end && focal_is_space(*begin)) begin++;
+  while(end > begin && focal_is_space(*(end - 1))) end--;
+  const usize len = (usize) (end - begin);
+  if(len == 0) {
+    focal_copy_text(error, error_size, "SYNTAX?");
+    return false;
+  }
+  if(len >= sizeof(buffer)) {
+    focal_copy_text(error, error_size, "FULL?");
+    return false;
+  }
+  memcpy(buffer, begin, len);
+  buffer[len] = 0;
 
   ExprParser parser;
   parser.p = buffer;
   parser.end = buffer + strlen(buffer);
   parser.ok = true;
+  parser.evaluate = evaluate;
   parser.error[0] = 0;
 
   value = expr_parse_additive(parser);
   expr_skip_spaces(parser);
   if(parser.ok && parser.p != parser.end) expr_set_error(parser, "SYNTAX?");
-  if(!parser.ok) return focal_error(parser.error[0] != 0 ? parser.error : "SYNTAX?");
+  if(parser.ok && evaluate && (mk_math::is_nan(value) || mk_math::is_inf(value))) expr_set_error(parser, "MATH?");
+  if(!parser.ok) {
+    focal_copy_text(error, error_size, parser.error[0] != 0 ? parser.error : "SYNTAX?");
+    return false;
+  }
+  if(error_size > 0) error[0] = 0;
   return true;
+}
+
+static bool focal_validate_expr_range(const char* begin, const char* end) {
+  double ignored = 0.0;
+  char error[17];
+  if(focal_parse_expr_range(begin, end, false, ignored, error, sizeof(error))) return true;
+  return focal_error(error);
+}
+
+static bool focal_eval_expr_range(const char* begin, const char* end, double& value) {
+  char error[17];
+  if(focal_parse_expr_range(begin, end, true, value, error, sizeof(error))) return true;
+  return focal_error(error);
 }
 
 static bool focal_eval_expr_text(const char* text, double& value) {
@@ -1160,10 +1238,173 @@ static bool focal_parse_var_assignment(const char* text, int& var_index, const c
   return var_index >= 0 && var_index < 26;
 }
 
-static double focal_read_number_from_keyboard(const char* target_name) {
+static bool focal_parse_address_complete(const char* text, bool allow_group, FocalAddress& address) {
+  const char* p = focal_skip_spaces(text);
+  if(!focal_parse_address(p, address)) return false;
+  p = focal_skip_spaces(p);
+  return *p == 0 && (allow_group || address.has_minor);
+}
+
+static bool focal_validate_print(const char* operand) {
+  const char* begin = operand;
+  const char* end = operand + strlen(operand);
+  if(focal_skip_spaces(begin) == end) return focal_error("SYNTAX?");
+
+  while(begin < end) {
+    const char* comma = focal_find_top_level(begin, end, ',');
+    const char* item_end = comma == NULL ? end : comma;
+    while(begin < item_end && focal_is_space(*begin)) begin++;
+    while(item_end > begin && focal_is_space(*(item_end - 1))) item_end--;
+    if(begin == item_end) return focal_error("SYNTAX?");
+
+    if((item_end - begin) == 1 && *begin == '!') {
+      // Valid newline item.
+    } else if(*begin == '"') {
+      const char* quote = begin + 1;
+      while(quote < item_end && *quote != '"') quote++;
+      if(quote != item_end - 1) return focal_error("SYNTAX?");
+    } else if(!focal_validate_expr_range(begin, item_end)) {
+      return false;
+    }
+
+    if(comma == NULL) break;
+    begin = comma + 1;
+  }
+  return true;
+}
+
+static bool focal_validate_branch(const char* operand) {
+  const char* begin = focal_skip_spaces(operand);
+  if(*begin != '(') return focal_error("SYNTAX?");
+
+  const char* expr_begin = begin + 1;
+  int depth = 1;
+  const char* expr_end = expr_begin;
+  while(*expr_end != 0 && depth > 0) {
+    if(*expr_end == '(') depth++;
+    else if(*expr_end == ')') depth--;
+    if(depth > 0) expr_end++;
+  }
+  if(depth != 0) return focal_error("SYNTAX?");
+  if(!focal_validate_expr_range(expr_begin, expr_end)) return false;
+
+  const char* list_begin = expr_end + 1;
+  const char* list_end = operand + strlen(operand);
+  for(int i = 0; i < 3; i++) {
+    const char* comma = i < 2 ? focal_find_top_level(list_begin, list_end, ',') : NULL;
+    const char* item_end = comma == NULL ? list_end : comma;
+    while(list_begin < item_end && focal_is_space(*list_begin)) list_begin++;
+    while(item_end > list_begin && focal_is_space(*(item_end - 1))) item_end--;
+    const usize len = (usize) (item_end - list_begin);
+    if(len == 0 || len >= 24) return focal_error("SYNTAX?");
+    char item[24];
+    memcpy(item, list_begin, len);
+    item[len] = 0;
+    FocalAddress address;
+    if(!focal_parse_address_complete(item, false, address)) return focal_error("LINE?");
+    if(i < 2) {
+      if(comma == NULL) return focal_error("SYNTAX?");
+      list_begin = comma + 1;
+    }
+  }
+  return true;
+}
+
+static bool focal_validate_for(const char* operand) {
+  const char* operand_end = operand + strlen(operand);
+  const char* semi = focal_find_top_level(operand, operand_end, ';');
+  if(semi == NULL) return focal_error("FOR?");
+
+  const usize head_len = (usize) (semi - operand);
+  if(head_len >= FOCAL_EXPR_BUFFER_SIZE) return focal_error("FULL?");
+  char head[FOCAL_EXPR_BUFFER_SIZE];
+  memcpy(head, operand, head_len);
+  head[head_len] = 0;
+
+  const char* expr_begin = NULL;
+  int var_index = -1;
+  if(!focal_parse_var_assignment(head, var_index, expr_begin)) return focal_error("FOR?");
+
+  const char* head_end = head + strlen(head);
+  const char* comma1 = focal_find_top_level(expr_begin, head_end, ',');
+  if(comma1 == NULL) return focal_error("FOR?");
+  const char* comma2 = focal_find_top_level(comma1 + 1, head_end, ',');
+  const char* comma3 = comma2 == NULL ? NULL : focal_find_top_level(comma2 + 1, head_end, ',');
+  if(comma3 != NULL) return focal_error("FOR?");
+
+  if(!focal_validate_expr_range(expr_begin, comma1)) return false;
+  if(comma2 == NULL) {
+    if(!focal_validate_expr_range(comma1 + 1, head_end)) return false;
+  } else {
+    if(!focal_validate_expr_range(comma1 + 1, comma2) ||
+       !focal_validate_expr_range(comma2 + 1, head_end)) return false;
+  }
+
+  const char* body = focal_skip_spaces(semi + 1);
+  if(*body == 0) return focal_error("FOR?");
+  FocalStatement statement = {};
+  const FocalParseResult parse_result = focal_parse_statement_text(body, statement);
+  if(parse_result == FocalParseResult::FULL) return focal_error("FULL?");
+  if(parse_result != FocalParseResult::OK) return focal_error("SYNTAX?");
+  return focal_validate_statement(statement.op, statement.operand);
+}
+
+static bool focal_validate_statement(FocalOp op, const char* operand) {
+  const char* p = focal_skip_spaces(operand);
+  switch(op) {
+    case FocalOp::ASK: {
+      FocalTarget target;
+      return focal_target_only(p, target) || focal_error("VAR?");
+    }
+    case FocalOp::SET: {
+      FocalTarget target;
+      const char* expr_begin = NULL;
+      if(!focal_target_assignment(p, target, expr_begin)) return focal_error("SYNTAX?");
+      return focal_validate_expr_range(expr_begin, expr_begin + strlen(expr_begin));
+    }
+    case FocalOp::FOR:
+      return focal_validate_for(p);
+    case FocalOp::DO: {
+      FocalAddress address;
+      return focal_parse_address_complete(p, true, address) || focal_error("LINE?");
+    }
+    case FocalOp::GOTO: {
+      FocalAddress address;
+      return focal_parse_address_complete(p, false, address) || focal_error("LINE?");
+    }
+    case FocalOp::BRANCH:
+      return focal_validate_branch(p);
+    case FocalOp::PRINT:
+      return focal_validate_print(p);
+    case FocalOp::EXIT:
+    case FocalOp::RETURN:
+    case FocalOp::NOP:
+      return *p == 0 || focal_error("SYNTAX?");
+    case FocalOp::COMMENT:
+      return true;
+  }
+  return focal_error("SYNTAX?");
+}
+
+enum class FocalInputResult : u8 {
+  VALUE,
+  CANCELLED,
+  ERROR
+};
+
+static bool focal_parse_input_number(const char* text, double& value) {
+  if(text == NULL || text[0] == 0) return false;
+  const char* end = NULL;
+  value = mk_math::strtod(text, &end);
+  return end != NULL && end > text && *end == 0 && !mk_math::is_nan(value) && !mk_math::is_inf(value);
+}
+
+static FocalInputResult focal_read_number_from_keyboard(const char* target_name, double& value) {
 #ifdef FOCAL_HOST_TEST
   (void) target_name;
-  return focal_host_ask_value;
+  if(focal_host_ask_cancelled) return FocalInputResult::CANCELLED;
+  value = focal_host_ask_value;
+  return (mk_math::is_nan(value) || mk_math::is_inf(value)) ? FocalInputResult::ERROR : FocalInputResult::VALUE;
 #else
   char buffer[17];
   char prompt[17];
@@ -1182,7 +1423,13 @@ static double focal_read_number_from_keyboard(const char* target_name) {
       Serial.println("'");
       Serial.flush();
     #endif
-    if(key == KEY_OK || key == KEY_OK_PRESS || key == KEY_ESC || key == KEY_ESC_PRESS) break;
+    if(key == KEY_ESC || key == KEY_ESC_PRESS) return FocalInputResult::CANCELLED;
+    if(key == KEY_OK || key == KEY_OK_PRESS) {
+      if(focal_parse_input_number(buffer, value)) return FocalInputResult::VALUE;
+      focal_message_i18n("Invalid number", "Неверное число", "Try again", "Повторите");
+      delay(600);
+      continue;
+    }
     if(key == 0) {
       len = 0;
       buffer[0] = 0;
@@ -1196,24 +1443,15 @@ static double focal_read_number_from_keyboard(const char* target_name) {
       const char* text = FOCAL_key_text[key];
       if(text == NULL || text[1] != 0) continue;
       const char ch = text[0];
-      if((ch >= '0' && ch <= '9') || ch == '.' || ch == '-' || ch == '+') {
-        if(len < sizeof(buffer) - 1) {
-          buffer[len++] = ch;
-          buffer[len] = 0;
-        }
+      const bool digit = ch >= '0' && ch <= '9';
+      const bool sign = (ch == '-' || ch == '+') && len == 0;
+      const bool dot = ch == '.' && strchr(buffer, '.') == NULL;
+      if((digit || sign || dot) && len < sizeof(buffer) - 1) {
+        buffer[len++] = ch;
+        buffer[len] = 0;
       }
     }
   }
-  const double value = mk_math::atof(buffer);
-  #if defined(MK61_FOCAL_TRACE) && !defined(FOCAL_HOST_TEST)
-    focal_trace_header();
-    Serial.print("ASK ");
-    Serial.print(target_name);
-    Serial.print("=");
-    Serial.println(value, 10);
-    Serial.flush();
-  #endif
-  return value;
 #endif
 }
 
@@ -1233,19 +1471,18 @@ static double focal_read_mk_x(void) {
 }
 #endif
 
+static bool focal_execute_statement(FocalOp op, const char* operand, i16 current_pc, int depth, FocalFlow& flow);
 static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, FocalFlow& flow);
 
 static bool focal_execute_inline_statement(const char* text, i16 current_pc, int depth, FocalFlow& flow) {
-  FocalLine line;
-  memset(&line, 0, sizeof(line));
-  line.number.major = 0;
-  line.number.minor = 0;
-  line.number.has_minor = true;
-  if(!focal_parse_statement_text(text, line) || !focal_validate_statement(line)) {
+  FocalStatement statement = {};
+  const FocalParseResult parse_result = focal_parse_statement_text(text, statement);
+  if(parse_result != FocalParseResult::OK || !focal_validate_statement(statement.op, statement.operand)) {
     flow = focal_flow(FocalFlowKind::ERROR, current_pc);
-    return focal_error("SYNTAX?");
+    if(focal_last_error[0] != 0) return false;
+    return focal_error(parse_result == FocalParseResult::FULL ? "FULL?" : "SYNTAX?");
   }
-  return focal_execute_statement(line, current_pc, depth, flow);
+  return focal_execute_statement(statement.op, statement.operand, current_pc, depth, flow);
 }
 
 static bool focal_execute_group(i16 major, int depth, FocalFlow& flow) {
@@ -1332,9 +1569,9 @@ static void focal_target_name(const FocalTarget& target, char* out, usize size) 
 }
 
 static bool focal_write_target(const FocalTarget& target, double value) {
+  if(mk_math::is_nan(value) || mk_math::is_inf(value)) return focal_error("MATH?");
   if(target.kind == FocalTargetKind::VAR) {
     focal_vars[target.var_index] = value;
-    focal_var_set[target.var_index] = true;
     return true;
   }
   if(!mk61_ref::write(target.mk_ref, value)) return focal_error("MK?");
@@ -1361,12 +1598,20 @@ static bool focal_execute_set(const char* operand) {
   return true;
 }
 
-static bool focal_execute_ask(const char* operand) {
+static bool focal_execute_ask(const char* operand, bool& cancelled) {
+  cancelled = false;
   FocalTarget target;
   if(!focal_target_only(operand, target)) return focal_error("VAR?");
   char name[5];
   focal_target_name(target, name, sizeof(name));
-  return focal_write_target(target, focal_read_number_from_keyboard(name));
+  double value = 0.0;
+  const FocalInputResult result = focal_read_number_from_keyboard(name, value);
+  if(result == FocalInputResult::CANCELLED) {
+    cancelled = true;
+    return true;
+  }
+  if(result == FocalInputResult::ERROR) return focal_error("MATH?");
+  return focal_write_target(target, value);
 }
 
 static void focal_append_print(char* out, usize size, const char* text) {
@@ -1407,12 +1652,15 @@ static bool focal_execute_print(const char* operand) {
         focal_flush_print_line(output, output_row);
         if(output_row + 1 < lcd.rows()) output_row++;
       } else if(*begin == '"') {
-        begin++;
-        const char* quote = begin;
+        const char* text_begin = begin + 1;
+        const char* quote = text_begin;
         while(quote < item_end && *quote != '"') quote++;
-        if(quote >= item_end) return focal_error("SYNTAX?");
+        if(quote != item_end - 1) return focal_error("SYNTAX?");
         char text[FOCAL_PRINT_BUFFER_SIZE];
-        focal_copy_trim(text, sizeof(text), begin, quote);
+        const usize text_len = (usize) (quote - text_begin);
+        if(text_len >= sizeof(text)) return focal_error("FULL?");
+        memcpy(text, text_begin, text_len);
+        text[text_len] = 0;
         focal_append_print(output, sizeof(output), text);
       } else {
         double value = 0.0;
@@ -1574,7 +1822,8 @@ static bool focal_execute_do(const char* operand, i16 current_pc, int depth, Foc
       flow = local_flow;
       return false;
     }
-    if(local_flow.kind == FocalFlowKind::STOP || local_flow.kind == FocalFlowKind::ERROR) {
+    if(local_flow.kind == FocalFlowKind::STOP || local_flow.kind == FocalFlowKind::INTERRUPTED ||
+       local_flow.kind == FocalFlowKind::ERROR) {
       flow = local_flow;
       return local_flow.kind != FocalFlowKind::ERROR;
     }
@@ -1639,7 +1888,7 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, Fo
     }
   }
 
-  if(mk_math::fabs(step_value) < 1e-14) {
+  if(step_value == 0.0) {
     flow = focal_flow(FocalFlowKind::ERROR, -1);
     return focal_error("FOR?");
   }
@@ -1658,9 +1907,8 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, Fo
   #endif
 
   const char* body = focal_skip_spaces(semi + 1);
-  for(double value = start_value; (step_value > 0.0) ? (value <= end_value) : (value >= end_value); value += step_value) {
+  for(double value = start_value; (step_value > 0.0) ? (value <= end_value) : (value >= end_value);) {
     focal_vars[var_index] = value;
-    focal_var_set[var_index] = true;
     #if defined(MK61_FOCAL_TRACE) && !defined(FOCAL_HOST_TEST)
       focal_trace_header();
       Serial.print("FOR iter ");
@@ -1681,6 +1929,13 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, Fo
       flow = body_flow;
       return body_flow.kind != FocalFlowKind::ERROR;
     }
+    if(value == end_value) break;
+    const double next = value + step_value;
+    if(mk_math::is_nan(next) || mk_math::is_inf(next) || next == value) {
+      flow = focal_flow(FocalFlowKind::ERROR, current_pc);
+      return focal_error("FOR?");
+    }
+    value = next;
   }
 
   flow = focal_flow(FocalFlowKind::NEXT, (i16) (current_pc + 1));
@@ -1689,8 +1944,12 @@ static bool focal_execute_for(const char* operand, i16 current_pc, int depth, Fo
 
 static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, FocalFlow& flow) {
   focal_trace_line("EXEC", current_pc, line);
+  return focal_execute_statement(line.op, focal_ast_operand(focal_ast, line), current_pc, depth, flow);
+}
+
+static bool focal_execute_statement(FocalOp op, const char* operand, i16 current_pc, int depth, FocalFlow& flow) {
   if(focal_runtime_interrupted()) {
-    flow = focal_flow(FocalFlowKind::STOP, current_pc);
+    flow = focal_flow(FocalFlowKind::INTERRUPTED, current_pc);
     return true;
   }
   if(depth >= FOCAL_CALL_DEPTH) {
@@ -1698,27 +1957,34 @@ static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int d
     return focal_error("STACK?");
   }
 
-  switch(line.op) {
+  switch(op) {
     case FocalOp::NOP:
     case FocalOp::COMMENT:
       flow = focal_flow(FocalFlowKind::NEXT, (i16) (current_pc + 1));
       return true;
-    case FocalOp::ASK:
-      if(!focal_execute_ask(line.operand)) {
+    case FocalOp::ASK: {
+      bool cancelled = false;
+      if(!focal_execute_ask(operand, cancelled)) {
         flow = focal_flow(FocalFlowKind::ERROR, current_pc);
         return false;
       }
+      if(cancelled) {
+        focal_show_stopped();
+        flow = focal_flow(FocalFlowKind::INTERRUPTED, current_pc);
+        return true;
+      }
       flow = focal_flow(FocalFlowKind::NEXT, (i16) (current_pc + 1));
       return true;
+    }
     case FocalOp::SET:
-      if(!focal_execute_set(line.operand)) {
+      if(!focal_execute_set(operand)) {
         flow = focal_flow(FocalFlowKind::ERROR, current_pc);
         return false;
       }
       flow = focal_flow(FocalFlowKind::NEXT, (i16) (current_pc + 1));
       return true;
     case FocalOp::PRINT:
-      if(!focal_execute_print(line.operand)) {
+      if(!focal_execute_print(operand)) {
         flow = focal_flow(FocalFlowKind::ERROR, current_pc);
         return false;
       }
@@ -1731,13 +1997,13 @@ static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int d
       flow = focal_flow(FocalFlowKind::RETURNED, current_pc);
       return true;
     case FocalOp::GOTO:
-      return focal_execute_goto(line.operand, flow);
+      return focal_execute_goto(operand, flow);
     case FocalOp::BRANCH:
-      return focal_execute_branch(line.operand, flow);
+      return focal_execute_branch(operand, flow);
     case FocalOp::DO:
-      return focal_execute_do(line.operand, current_pc, depth, flow);
+      return focal_execute_do(operand, current_pc, depth, flow);
     case FocalOp::FOR:
-      return focal_execute_for(line.operand, current_pc, depth, flow);
+      return focal_execute_for(operand, current_pc, depth, flow);
   }
 
   flow = focal_flow(FocalFlowKind::ERROR, current_pc);
@@ -1770,29 +2036,49 @@ static int find_program_by_name(const char* name) {
   return -1;
 }
 
-#ifndef FOCAL_HOST_TEST
-static void focal_release_program_slot(int slot) {
-  if(slot < 0 || slot >= FOCAL_PROGRAM_COUNT) return;
-  memset(&programs[slot], 0, sizeof(programs[slot]));
-}
-
-static int focal_alloc_program_slot(const char* name) {
+static int focal_choose_program_slot(const char* name) {
   const int existing = find_program_by_name(name);
   if(existing >= 0) return existing;
 
   const int free_slot = find_free_program();
   if(free_slot >= 0) return free_slot;
 
-  const int slot = (NextFocal >= 0 && NextFocal < FOCAL_PROGRAM_COUNT) ? NextFocal : 0;
-  focal_release_program_slot(slot);
-  return slot;
+  return (NextFocal >= 0 && NextFocal < FOCAL_PROGRAM_COUNT) ? NextFocal : 0;
 }
 
 static bool focal_store_name_is_valid(const char* name) {
-  return name != NULL && name[0] != 0 && strlen(name) < program_store::NAME_SIZE;
+  return name != NULL && name[0] != 0 && strlen(name) < FOCAL_NAME_SIZE;
 }
 
-static int load_focal_program_from_store(const char* name, bool compile = true) {
+static bool focal_persist_write(const FocalProgram& program) {
+#ifdef FOCAL_HOST_TEST
+  (void) program;
+  return focal_host_store_write_ok;
+#else
+  return program_store::write(program_store::ProgramType::FOCAL, program.name,
+                              (const u8*) program.source, program.source_len);
+#endif
+}
+
+static bool focal_persist_remove(const char* name) {
+#ifdef FOCAL_HOST_TEST
+  (void) name;
+  return focal_host_store_remove_ok;
+#else
+  return program_store::remove(program_store::ProgramType::FOCAL, name);
+#endif
+}
+
+static bool focal_persist_exists(const char* name) {
+#ifdef FOCAL_HOST_TEST
+  return find_program_by_name(name) >= 0;
+#else
+  return program_store::exists(program_store::ProgramType::FOCAL, name);
+#endif
+}
+
+#ifndef FOCAL_HOST_TEST
+static int load_focal_program_from_store(const char* name) {
   if(!focal_store_name_is_valid(name)) return -1;
 
   focal_trace_string("LOAD name=", name);
@@ -1804,10 +2090,7 @@ static int load_focal_program_from_store(const char* name, bool compile = true) 
   focal_trace_int("LOAD len=", len);
   focal_trace_string("LOAD source=", source);
 
-  if(compile && !focal_compile_source(source, focal_ast)) return -1;
-  if(compile) focal_trace_int("LOAD compiled lines=", focal_ast.line_count);
-
-  const int slot = focal_alloc_program_slot(name);
+  const int slot = focal_choose_program_slot(name);
   focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
   focal_copy_text(programs[slot].name, sizeof(programs[slot].name), name);
@@ -1870,34 +2153,25 @@ static void display_focal_saved(const FocalProgram& program) {
   delay(700);
 }
 
-bool CompileFocal(char* program) {
+bool CompileFocal(const char* program) {
 #ifndef FOCAL_HOST_TEST
   FocalWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return false;
 #endif
   const int slot = find_free_program();
   if(slot < 0) return focal_error("FULL?");
-#ifndef FOCAL_HOST_TEST
-  const i8 previous_next = NextFocal;
-#endif
 
-  if(!focal_compile_source(program, focal_ast)) {
-    memset(&programs[slot], 0, sizeof(programs[slot]));
-    return false;
-  }
+  if(!focal_compile_source(program, focal_ast)) return false;
 
-  focal_copy_text(programs[slot].source, sizeof(programs[slot].source), program);
-  programs[slot].source_len = (u16) strlen(programs[slot].source);
-  focal_program_default_name(slot, programs[slot].name, sizeof(programs[slot].name));
-  programs[slot].used = true;
+  FocalProgram candidate = {};
+  focal_copy_text(candidate.source, sizeof(candidate.source), program);
+  candidate.source_len = (u16) strlen(candidate.source);
+  focal_program_default_name(slot, candidate.name, sizeof(candidate.name));
+  candidate.used = true;
+  if(!focal_persist_write(candidate)) return focal_error("FULL?");
+
+  programs[slot] = candidate;
   NextFocal = (i8) slot;
-#ifndef FOCAL_HOST_TEST
-  if(!program_store::write(program_store::ProgramType::FOCAL, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len)) {
-    memset(&programs[slot], 0, sizeof(programs[slot]));
-    NextFocal = previous_next;
-    return focal_error("FULL?");
-  }
-#endif
   display_focal_ok(programs[slot]);
   return true;
 }
@@ -1911,12 +2185,12 @@ static bool compile_program_slot(int slot) {
   return focal_compile_source(programs[slot].source, focal_ast);
 }
 
-void RunFocal(int FocalN) {
+FocalRunStatus RunFocal(int FocalN) {
 #ifndef FOCAL_HOST_TEST
   FocalWorkspaceScope workspace_scope;
-  if(!workspace_scope.ok()) return;
+  if(!workspace_scope.ok()) return FocalRunStatus::UNAVAILABLE;
 #endif
-  if(!compile_program_slot(FocalN)) return;
+  if(!compile_program_slot(FocalN)) return FocalRunStatus::COMPILE_ERROR;
   focal_trace_int("RUN slot=", FocalN);
   focal_trace_int("RUN lines=", focal_ast.line_count);
   for(i16 i = 0; i < focal_ast.line_count; i++) {
@@ -1926,7 +2200,7 @@ void RunFocal(int FocalN) {
   i16 pc = 0;
   while(pc >= 0 && pc < focal_ast.line_count) {
     FocalFlow flow = focal_flow(FocalFlowKind::NEXT, (i16) (pc + 1));
-    if(!focal_execute_statement(focal_ast.lines[pc], pc, 0, flow)) break;
+    if(!focal_execute_statement(focal_ast.lines[pc], pc, 0, flow)) return FocalRunStatus::RUNTIME_ERROR;
     focal_trace_flow(flow);
     if(flow.kind == FocalFlowKind::NEXT || flow.kind == FocalFlowKind::JUMP) {
       pc = flow.pc;
@@ -1934,27 +2208,31 @@ void RunFocal(int FocalN) {
     }
     if(flow.kind == FocalFlowKind::RETURNED) {
       focal_error("RETURN?");
-      break;
+      return FocalRunStatus::RUNTIME_ERROR;
     }
-    break;
+    if(flow.kind == FocalFlowKind::INTERRUPTED) return FocalRunStatus::STOPPED;
+    if(flow.kind == FocalFlowKind::ERROR) return FocalRunStatus::RUNTIME_ERROR;
+    if(flow.kind == FocalFlowKind::STOP) return FocalRunStatus::COMPLETED;
+    return FocalRunStatus::RUNTIME_ERROR;
   }
   focal_trace_text("RUN end");
+  return FocalRunStatus::COMPLETED;
 }
 
-bool RunFocalProgram(const char* name) {
+FocalRunStatus RunFocalProgram(const char* name) {
 #ifndef FOCAL_HOST_TEST
   FocalWorkspaceScope workspace_scope;
-  if(!workspace_scope.ok()) return false;
+  if(!workspace_scope.ok()) return FocalRunStatus::UNAVAILABLE;
 #endif
 #ifndef FOCAL_HOST_TEST
   const int slot = load_focal_program_from_store(name);
 #else
   const int slot = find_program_by_name(name);
 #endif
-  if(slot < 0) return false;
-  RunFocal(slot);
+  if(slot < 0) return FocalRunStatus::NOT_FOUND;
+  const FocalRunStatus status = RunFocal(slot);
   focal_wait_after_menu_run();
-  return true;
+  return status;
 }
 
 bool FocalIsReady(void) {
@@ -1973,6 +2251,9 @@ void InitFocal(void) {
   focal_last_error[0] = 0;
 #ifdef FOCAL_HOST_TEST
   focal_random_state = 0x3B6B120EUL;
+  focal_host_ask_cancelled = false;
+  focal_host_store_write_ok = true;
+  focal_host_store_remove_ok = true;
 #endif
 }
 
@@ -2068,7 +2349,7 @@ static int select_focal_program(bool allow_new) {
         {
           program_store::Entry entry;
           if(!program_store::entry(program_store::ProgramType::FOCAL, active, entry)) return -1;
-          const int slot = load_focal_program_from_store(entry.name, !allow_new);
+          const int slot = load_focal_program_from_store(entry.name);
           focal_wait_keys_released();
           return slot;
         }
@@ -2223,19 +2504,23 @@ static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, u
   u16 start = 0;
   u16 end = 0;
   if(!focal_find_expression_before_cursor(source, cursor, start, end)) return false;
+  const usize expr_len = (usize) (end - start);
+  if(expr_len >= FOCAL_EXPR_BUFFER_SIZE) return false;
 
   const bool simple = focal_segment_is_simple(&source[start], &source[end]);
   char expr[FOCAL_EXPR_BUFFER_SIZE];
   focal_copy_trim(expr, sizeof(expr), &source[start], &source[end]);
 
   char replacement[FOCAL_EXPR_BUFFER_SIZE + 8];
+  int written = -1;
   if(key_code == 2) {
-    snprintf(replacement, sizeof(replacement), simple ? "%s^2" : "(%s)^2", expr);
+    written = snprintf(replacement, sizeof(replacement), simple ? "%s^2" : "(%s)^2", expr);
   } else if(key_code == 3) {
-    snprintf(replacement, sizeof(replacement), simple ? "1/%s" : "1/(%s)", expr);
+    written = snprintf(replacement, sizeof(replacement), simple ? "1/%s" : "1/(%s)", expr);
   } else {
-    snprintf(replacement, sizeof(replacement), simple ? "10^%s" : "10^(%s)", expr);
+    written = snprintf(replacement, sizeof(replacement), simple ? "10^%s" : "10^(%s)", expr);
   }
+  if(written < 0 || (usize) written >= sizeof(replacement)) return false;
   return text_editor::replace_range(source, len, cursor, capacity, start, end, replacement);
 }
 
@@ -2512,35 +2797,37 @@ static bool focal_input_program_name(char* name, usize size) {
 
 static bool store_edited_program(int slot, char* source, const char* store_name) {
   if(slot < 0 || slot > FOCAL_PROGRAM_COUNT) return focal_error("SLOT?");
+  if(source == NULL || strlen(source) >= FOCAL_SOURCE_SIZE) return focal_error("FULL?");
+  if(!focal_store_name_is_valid(store_name)) return focal_error("NAME?");
+
   char old_name[FOCAL_NAME_SIZE] = "";
   if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) {
     focal_copy_text(old_name, sizeof(old_name), programs[slot].name);
   }
 
   if(slot == FOCAL_PROGRAM_COUNT) {
-#ifdef FOCAL_HOST_TEST
-    slot = find_free_program();
-    if(slot < 0) return focal_error("FULL?");
-#else
-    slot = focal_alloc_program_slot(store_name);
-#endif
+    slot = focal_choose_program_slot(store_name);
   }
   if(slot < 0 || slot >= FOCAL_PROGRAM_COUNT) return focal_error("SLOT?");
 
-  focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
-  programs[slot].source_len = (u16) strlen(programs[slot].source);
-  if(store_name != NULL && store_name[0] != 0) focal_copy_text(programs[slot].name, sizeof(programs[slot].name), store_name);
-  else focal_program_default_name(slot, programs[slot].name, sizeof(programs[slot].name));
-  programs[slot].used = true;
-  NextFocal = (i8) slot;
-#ifndef FOCAL_HOST_TEST
-  if(!program_store::write(program_store::ProgramType::FOCAL, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len)) {
+  if(old_name[0] != 0 && !focal_streq(old_name, store_name) && focal_persist_exists(store_name)) {
+    return focal_error("NAME?");
+  }
+
+  FocalProgram candidate = {};
+  focal_copy_text(candidate.source, sizeof(candidate.source), source);
+  candidate.source_len = (u16) strlen(candidate.source);
+  focal_copy_text(candidate.name, sizeof(candidate.name), store_name);
+  candidate.used = true;
+
+  if(!focal_persist_write(candidate)) return focal_error("FULL?");
+  if(old_name[0] != 0 && !focal_streq(old_name, candidate.name) && !focal_persist_remove(old_name)) {
+    (void) focal_persist_remove(candidate.name);
     return focal_error("FULL?");
   }
-  if(old_name[0] != 0 && !focal_streq(old_name, programs[slot].name)) {
-    program_store::remove(program_store::ProgramType::FOCAL, old_name);
-  }
-#endif
+
+  programs[slot] = candidate;
+  NextFocal = (i8) slot;
   display_focal_saved(programs[slot]);
   return true;
 }
@@ -2592,9 +2879,12 @@ static void EditFocalSlot(int slot) {
       memset(name, 0, sizeof(name));
       if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(name, sizeof(name), programs[slot].name);
       else focal_program_default_name(find_free_program() < 0 ? 0 : find_free_program(), name, sizeof(name));
-      if(focal_input_program_name(name, sizeof(name)) && store_edited_program(slot, source, name)) return;
+      if(!focal_input_program_name(name, sizeof(name))) return;
+      if(store_edited_program(slot, source, name)) return;
+      delay(700);
       kbd::debounce_init();
-      return;
+      dirty = true;
+      continue;
     }
   }
 }
@@ -2615,7 +2905,7 @@ bool EditFocalProgram(const char* name) {
   if(!workspace_scope.ok()) return false;
 #endif
 #ifndef FOCAL_HOST_TEST
-  const int slot = load_focal_program_from_store(name, false);
+  const int slot = load_focal_program_from_store(name);
   if(slot < 0) return false;
   EditFocalSlot(slot);
   return true;
@@ -2711,9 +3001,35 @@ extern "C" int FocalTestAddProgram(const char* source) {
 }
 
 extern "C" bool FocalTestStoreDraft(const char* source, const char* name) {
+  if(source == NULL || strlen(source) >= FOCAL_SOURCE_SIZE) return focal_error("FULL?");
   char buffer[FOCAL_SOURCE_SIZE];
-  focal_copy_text(buffer, sizeof(buffer), source == NULL ? "" : source);
+  focal_copy_text(buffer, sizeof(buffer), source);
   return store_edited_program(FOCAL_PROGRAM_COUNT, buffer, name == NULL ? "DRAFT" : name);
+}
+
+extern "C" bool FocalTestStoreSlot(int slot, const char* source, const char* name) {
+  if(source == NULL || strlen(source) >= FOCAL_SOURCE_SIZE) return focal_error("FULL?");
+  char buffer[FOCAL_SOURCE_SIZE];
+  focal_copy_text(buffer, sizeof(buffer), source);
+  return store_edited_program(slot, buffer, name == NULL ? "DRAFT" : name);
+}
+
+extern "C" void FocalTestSetStoreResults(bool write_ok, bool remove_ok) {
+#ifdef FOCAL_HOST_TEST
+  focal_host_store_write_ok = write_ok;
+  focal_host_store_remove_ok = remove_ok;
+#else
+  (void) write_ok;
+  (void) remove_ok;
+#endif
+}
+
+extern "C" int FocalTestAstSize(void) {
+  return (int) sizeof(FocalAst);
+}
+
+extern "C" int FocalTestRuntimeSize(void) {
+  return (int) sizeof(FocalRuntime);
 }
 
 extern "C" const char* FocalTestProgramName(int slot) {
@@ -2732,9 +3048,29 @@ extern "C" void FocalTestSetAskValue(double value) {
 #endif
 }
 
+extern "C" void FocalTestSetAskCancelled(bool cancelled) {
+#ifdef FOCAL_HOST_TEST
+  focal_host_ask_cancelled = cancelled;
+#else
+  (void) cancelled;
+#endif
+}
+
+extern "C" bool FocalTestParseInputNumber(const char* text, double* value) {
+  double parsed = 0.0;
+  const bool ok = focal_parse_input_number(text, parsed);
+  if(ok && value != NULL) *value = parsed;
+  return ok;
+}
+
 extern "C" void FocalTestRun(int slot) {
   lcd.clear();
-  RunFocal(slot);
+  (void) RunFocal(slot);
+}
+
+extern "C" int FocalTestRunStatus(int slot) {
+  lcd.clear();
+  return (int) RunFocal(slot);
 }
 
 extern "C" double FocalTestNumber(const char* name) {
@@ -2745,6 +3081,11 @@ extern "C" double FocalTestNumber(const char* name) {
 
 extern "C" double FocalTestMkX(void) {
   return mk61_ref::host_get_stack(mk61_ref::Kind::X);
+}
+
+extern "C" bool FocalTestWriteMkX(double value) {
+  const mk61_ref::Ref ref = {mk61_ref::Kind::X, 0};
+  return mk61_ref::write(ref, value);
 }
 
 extern "C" double FocalTestMkRegister(int reg) {
@@ -2855,6 +3196,17 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
 
   strncpy(out, source, (usize) size - 1);
   out[size - 1] = 0;
+}
+
+extern "C" bool FocalTestApplyExprMacro(const char* input, int key_code, char* out, int size) {
+  if(input == NULL || out == NULL || size <= 0 || strlen(input) >= FOCAL_SOURCE_SIZE) return false;
+  char source[FOCAL_SOURCE_SIZE];
+  focal_copy_text(source, sizeof(source), input);
+  u16 len = (u16) strlen(source);
+  u16 cursor = len;
+  const bool applied = focal_editor_apply_expr_macro(source, len, cursor, FOCAL_SOURCE_SIZE, key_code);
+  focal_copy_text(out, (usize) size, source);
+  return applied;
 }
 #endif
 

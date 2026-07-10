@@ -65,10 +65,16 @@ inline double round_half(double x) {
 // ---- libm-free base-10 helpers used by the number formatters ---------------
 
 inline double pow10_int(int e) {
+  const bool negative = e < 0;
+  unsigned long long n = negative ? (unsigned long long) (-(long long) e) : (unsigned long long) e;
+  double base = 10.0;
   double r = 1.0;
-  int n = e < 0 ? -e : e;
-  while(n-- > 0) r *= 10.0;
-  return e < 0 ? 1.0 / r : r;
+  while(n > 0) {
+    if((n & 1ULL) != 0) r *= base;
+    n >>= 1;
+    if(n > 0) base *= base;
+  }
+  return negative ? 1.0 / r : r;
 }
 
 // floor(log10(x)) for x > 0, exact over the calculator's exponent range.
@@ -92,19 +98,39 @@ inline double strtod(const char* s, const char** endptr) {
   if(*p == '+' || *p == '-') { neg = (*p == '-'); p++; }
 
   bool any = false;
+  bool significant = false;
   unsigned long long mant = 0;
-  int frac_digits = 0;
-  const unsigned long long MANT_LIMIT = 1000000000000000000ULL;
+  int significant_digits = 0;
+  int dropped_integer_digits = 0;
+  static constexpr int MAX_SIGNIFICANT_DIGITS = 18;
   while(*p >= '0' && *p <= '9') {
     any = true;
-    if(mant < MANT_LIMIT) mant = mant * 10 + (unsigned) (*p - '0');
+    const unsigned digit = (unsigned) (*p - '0');
+    if(!significant && digit != 0) significant = true;
+    if(significant) {
+      if(significant_digits < MAX_SIGNIFICANT_DIGITS) {
+        mant = mant * 10ULL + digit;
+        significant_digits++;
+      } else {
+        dropped_integer_digits++;
+      }
+    }
     p++;
   }
+  int fractional_position = 0;
+  int fractional_scale = 0;
   if(*p == '.') {
     p++;
     while(*p >= '0' && *p <= '9') {
       any = true;
-      if(mant < MANT_LIMIT) { mant = mant * 10 + (unsigned) (*p - '0'); frac_digits++; }
+      fractional_position++;
+      const unsigned digit = (unsigned) (*p - '0');
+      if(!significant && digit != 0) significant = true;
+      if(significant && significant_digits < MAX_SIGNIFICANT_DIGITS) {
+        mant = mant * 10ULL + digit;
+        significant_digits++;
+        fractional_scale = fractional_position;
+      }
       p++;
     }
   }
@@ -118,14 +144,21 @@ inline double strtod(const char* s, const char** endptr) {
     if(*p == '+' || *p == '-') { eneg = (*p == '-'); p++; }
     if(*p >= '0' && *p <= '9') {
       int e = 0;
-      while(*p >= '0' && *p <= '9') { e = e * 10 + (*p - '0'); p++; }
+      while(*p >= '0' && *p <= '9') {
+        const int digit = *p - '0';
+        if(e < 100000) e = e > 9999 ? 100000 : e * 10 + digit;
+        p++;
+      }
       exp10 = eneg ? -e : e;
     } else {
       p = save; // lone 'e' is not part of the number
     }
   }
 
-  double value = (double) mant * pow10_int(exp10 - frac_digits);
+  long long total_exp = (long long) exp10 + dropped_integer_digits - fractional_scale;
+  if(total_exp > 100000) total_exp = 100000;
+  if(total_exp < -100000) total_exp = -100000;
+  double value = mant == 0 ? 0.0 : (double) mant * pow10_int((int) total_exp);
   if(neg) value = -value;
   if(endptr) *endptr = p;
   return value;
