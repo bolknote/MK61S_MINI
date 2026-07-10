@@ -87,13 +87,13 @@ static void test_compile_rejects_truncation_and_malformed_statements(void) {
   FocalTestReset();
   std::string expanded;
   for(int i = 1; i <= 45; i++) {
-    char line[32];
-    std::snprintf(line, sizeof(line), "%d.10 C PADDING\n", i);
+    char line[48];
+    std::snprintf(line, sizeof(line), "%d.10 C PADDING PADDING PADDING\n", i);
     expanded += line;
   }
   expanded += "46.10 E";
-  CHECK(expanded.size() > 639);
-  CHECK(expanded.size() < 1024);
+  CHECK(expanded.size() > 1023);
+  CHECK(expanded.size() < 1537);
   CHECK(FocalTestCompile(expanded.c_str()));
 
   FocalTestReset();
@@ -107,12 +107,12 @@ static void test_compile_rejects_truncation_and_malformed_statements(void) {
   FocalTestReset();
   std::string oversized;
   for(int i = 1; i <= 70; i++) {
-    char line[32];
-    std::snprintf(line, sizeof(line), "%d.10 C PADDING\n", i);
+    char line[48];
+    std::snprintf(line, sizeof(line), "%d.10 C PADDING PADDING PADDING\n", i);
     oversized += line;
   }
   oversized += "71.10 S A=9\n72.10 E";
-  CHECK(oversized.size() >= 640);
+  CHECK(oversized.size() >= 1537);
   CHECK(!CompileFocal(oversized.c_str()));
   CHECK(std::strcmp(FocalTestError(), "FULL?") == 0);
   CHECK(FocalTestProgramSource(0)[0] == 0);
@@ -535,8 +535,8 @@ static void test_run_status_ask_input_and_transactional_save(void) {
 
 static void test_compact_ast_one_slot_and_literal_whitespace(void) {
   FocalTestReset();
-  CHECK(FocalTestAstSize() < 2048);
-  CHECK(FocalTestRuntimeSize() < 4096);
+  CHECK(FocalTestAstSize() < 3072);
+  CHECK(FocalTestRuntimeSize() < 5120);
 
   const int slot = add_program("1.10 P \"  A  \"\n1.20 E");
   CHECK(FocalTestAddProgram("2.10 E") < 0);
@@ -546,7 +546,7 @@ static void test_compact_ast_one_slot_and_literal_whitespace(void) {
   CHECK(FocalTestLcdLine(0)[2] == 'A');
 
   FocalTestReset();
-  std::string oversized(1024, 'X');
+  std::string oversized(1537, 'X');
   CHECK(!FocalTestStoreDraft(oversized.c_str(), "TOO_BIG"));
   CHECK(FocalTestProgramSource(0)[0] == 0);
 }

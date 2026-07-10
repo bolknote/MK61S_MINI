@@ -57,6 +57,15 @@ static constexpr u8 CATALOG_DELTA_SIZE = 64;
 static constexpr u8 CATALOG_DELTA_SECTOR_SLOTS = 2;
 static constexpr u8 CATALOG_DELTA_INDEX_UPSERT = 1;
 static constexpr u8 CATALOG_DELTA_INDEX_DELETE = 2;
+// The high bit of record tag 1 and the catalog type byte marks this payload.
+// Bits are MSB-first: 1 + byte is a literal; 0 + 9-bit distance + 3-bit
+// length is a 2..8-byte match. The existing header length stays logical.
+static constexpr u8 COMPRESSED_FLAG = 0x80;
+static constexpr u16 LZSS_WINDOW_SIZE = 512;
+static constexpr u8 LZSS_DISTANCE_BITS = 9;
+static constexpr u8 LZSS_LENGTH_BITS = 3;
+static constexpr u8 LZSS_MAX_LENGTH = 1U << LZSS_LENGTH_BITS;
+static constexpr u8 LZSS_MIN_LENGTH = 2;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
 static constexpr t_time_ms DISK_LED_OFF_MS = 35;
@@ -77,6 +86,7 @@ struct SectorInfo {
 
 struct IndexEntry {
   bool used;
+  bool compressed;
   ProgramType type;
   char name[NAME_SIZE];
   u32 address;
@@ -88,9 +98,11 @@ struct IndexEntry {
 struct RecordMeta {
   ProgramType type;
   bool supported;
+  bool compressed;
   u8 state;
   u8 name_len;
   u16 data_len;
+  u16 stored_len;
   u16 crc;
   u16 header_len;
   u16 total_len;
@@ -255,6 +267,249 @@ static u16 crc16_update(u16 crc, u8 value) {
   return crc;
 }
 
+class LzssCountSink {
+  public:
+    explicit LzssCountSink(u16 initial_crc) : length(0), crc(initial_crc) {}
+
+    bool put(u8 value) {
+      if(length == 0xFFFF) return false;
+      length++;
+      crc = crc16_update(crc, value);
+      return true;
+    }
+
+    bool finish(void) { return true; }
+    u16 size(void) const { return length; }
+    u16 checksum(void) const { return crc; }
+
+  private:
+    u16 length;
+    u16 crc;
+};
+
+class LzssFlashSink {
+  public:
+    explicit LzssFlashSink(u32 address)
+      : address(address), buffered(0), length(0), failed(false) {}
+
+    bool put(u8 value) {
+      if(failed) return false;
+      buffer[buffered++] = value;
+      length++;
+      if(buffered == sizeof(buffer)) return flush();
+      return true;
+    }
+
+    bool finish(void) { return !failed && flush(); }
+    u16 size(void) const { return length; }
+
+  private:
+    bool flush(void) {
+      if(buffered == 0) return true;
+      if(!write_bytes(address, buffer, buffered)) {
+        failed = true;
+        return false;
+      }
+      address += buffered;
+      buffered = 0;
+      return true;
+    }
+
+    u32 address;
+    u8 buffer[64];
+    u8 buffered;
+    u16 length;
+    bool failed;
+};
+
+template<typename Sink>
+class LzssBitWriter {
+  public:
+    explicit LzssBitWriter(Sink& sink) : sink(sink), value(0), bits(0) {}
+
+    bool write(u16 input, u8 count) {
+      for(u8 i = 0; i < count; i++) {
+        value = (u8) ((value << 1) | ((input >> (count - i - 1)) & 1));
+        if(++bits == 8) {
+          if(!sink.put(value)) return false;
+          value = 0;
+          bits = 0;
+        }
+      }
+      return true;
+    }
+
+    bool finish(void) {
+      if(bits != 0 && !sink.put((u8) (value << (8 - bits)))) return false;
+      return sink.finish();
+    }
+
+  private:
+    Sink& sink;
+    u8 value;
+    u8 bits;
+};
+
+template<typename Sink>
+static bool lzss_encode(const u8* data, u16 data_len, Sink& sink) {
+  LzssBitWriter<Sink> bits(sink);
+  u16 pos = 0;
+  while(pos < data_len) {
+    const u16 max_distance = pos < LZSS_WINDOW_SIZE ? pos : LZSS_WINDOW_SIZE;
+    u16 best_distance = 0;
+    u8 best_length = 0;
+    for(u16 distance = 1; distance <= max_distance; distance++) {
+      u8 length = 0;
+      while(length < LZSS_MAX_LENGTH && pos + length < data_len &&
+            data[pos + length] == data[pos + length - distance]) length++;
+      if(length > best_length) {
+        best_length = length;
+        best_distance = distance;
+        if(best_length == LZSS_MAX_LENGTH) break;
+      }
+    }
+
+    if(best_length >= LZSS_MIN_LENGTH) {
+      if(!bits.write(0, 1) ||
+         !bits.write((u16) (best_distance - 1), LZSS_DISTANCE_BITS) ||
+         !bits.write((u16) (best_length - 1), LZSS_LENGTH_BITS)) return false;
+      pos = (u16) (pos + best_length);
+    } else {
+      if(!bits.write(1, 1) || !bits.write(data[pos], 8)) return false;
+      pos++;
+    }
+  }
+  return bits.finish();
+}
+
+class LzssFlashBitReader {
+  public:
+    LzssFlashBitReader(u32 address, u16 max_len)
+      : address(address), max_len(max_len), next(0), cache_pos(0), cache_len(0),
+        value(0), bits(0) {}
+
+    bool read(u8 count, u16& out) {
+      out = 0;
+      for(u8 i = 0; i < count; i++) {
+        if(bits == 0) {
+          if(!next_byte(value)) return false;
+          bits = 8;
+        }
+        out = (u16) ((out << 1) | ((value & 0x80) != 0));
+        value <<= 1;
+        bits--;
+      }
+      return true;
+    }
+
+    bool padding_is_zero(void) const { return bits == 0 || value == 0; }
+    u16 consumed(void) const { return next; }
+
+  private:
+    bool next_byte(u8& out) {
+      if(next >= max_len) return false;
+      if(cache_pos >= cache_len) {
+        const u16 remaining = (u16) (max_len - next);
+        cache_len = remaining > sizeof(cache) ? (u8) sizeof(cache) : (u8) remaining;
+        read_bytes(address + next, cache, cache_len);
+        cache_pos = 0;
+      }
+      out = cache[cache_pos++];
+      next++;
+      return true;
+    }
+
+    u32 address;
+    u16 max_len;
+    u16 next;
+    u8 cache[64];
+    u8 cache_pos;
+    u8 cache_len;
+    u8 value;
+    u8 bits;
+};
+
+struct LzssMeasureTarget {
+  bool literal(u16, u8) { return true; }
+  bool match(u16, u16, u8) { return true; }
+};
+
+struct LzssBufferTarget {
+  explicit LzssBufferTarget(u8* output) : output(output) {}
+  bool literal(u16 pos, u8 value) { output[pos] = value; return true; }
+  bool match(u16 pos, u16 distance, u8 length) {
+    for(u8 i = 0; i < length; i++) output[pos + i] = output[pos + i - distance];
+    return true;
+  }
+  u8* output;
+};
+
+struct LzssCompareTarget {
+  explicit LzssCompareTarget(const u8* expected) : expected(expected) {}
+  bool literal(u16 pos, u8 value) { return expected[pos] == value; }
+  bool match(u16 pos, u16 distance, u8 length) {
+    for(u8 i = 0; i < length; i++) {
+      if(expected[pos + i] != expected[pos + i - distance]) return false;
+    }
+    return true;
+  }
+  const u8* expected;
+};
+
+struct LzssRangeTarget {
+  LzssRangeTarget(u8* history, u16 offset, u8* output, u16 length)
+    : history(history), offset(offset), output(output), length(length) {}
+
+  bool emit(u16 pos, u8 value) {
+    history[pos % LZSS_WINDOW_SIZE] = value;
+    if(pos >= offset && pos - offset < length) output[pos - offset] = value;
+    return true;
+  }
+  bool literal(u16 pos, u8 value) { return emit(pos, value); }
+  bool match(u16 pos, u16 distance, u8 match_len) {
+    for(u8 i = 0; i < match_len; i++) {
+      const u8 value = history[(pos + i - distance) % LZSS_WINDOW_SIZE];
+      emit((u16) (pos + i), value);
+    }
+    return true;
+  }
+
+  u8* history;
+  u16 offset;
+  u8* output;
+  u16 length;
+};
+
+template<typename Target>
+static bool lzss_decode(u32 address, u16 max_stored_len, u16 output_len,
+                        Target& target, u16& stored_len) {
+  LzssFlashBitReader bits(address, max_stored_len);
+  u16 pos = 0;
+  while(pos < output_len) {
+    u16 tag = 0;
+    if(!bits.read(1, tag)) return false;
+    if(tag != 0) {
+      u16 value = 0;
+      if(!bits.read(8, value) || !target.literal(pos, (u8) value)) return false;
+      pos++;
+      continue;
+    }
+
+    u16 distance_code = 0;
+    u16 length_code = 0;
+    if(!bits.read(LZSS_DISTANCE_BITS, distance_code) ||
+       !bits.read(LZSS_LENGTH_BITS, length_code)) return false;
+    const u16 distance = (u16) (distance_code + 1);
+    const u8 length = (u8) (length_code + 1);
+    if(length < LZSS_MIN_LENGTH || distance > pos || pos + length > output_len ||
+       !target.match(pos, distance, length)) return false;
+    pos = (u16) (pos + length);
+  }
+  if(!bits.padding_is_zero()) return false;
+  stored_len = bits.consumed();
+  return stored_len != 0;
+}
+
 static bool supported_type(ProgramType type) {
   switch(type) {
     case ProgramType::MK61:
@@ -268,18 +523,22 @@ static bool supported_type(ProgramType type) {
   return false;
 }
 
-static bool supported_type_id(u8 type) {
-  return supported_type((ProgramType) type);
+static bool decode_type_id(u8 value, ProgramType& type, bool& compressed) {
+  compressed = (value & COMPRESSED_FLAG) != 0;
+  type = (ProgramType) (value & ~COMPRESSED_FLAG);
+  return supported_type(type) && !(compressed && type == ProgramType::FONT);
 }
 
-static ProgramType type_from_tag(u8 tag0, u8 tag1, bool& supported) {
+static ProgramType type_from_tag(u8 tag0, u8 tag1, bool& supported, bool& compressed) {
+  compressed = (tag1 & COMPRESSED_FLAG) != 0;
+  tag1 &= ~COMPRESSED_FLAG;
   supported = true;
   if(tag0 == 'M' && tag1 == '1') return ProgramType::MK61;
   if(tag0 == 'F' && tag1 == '1') return ProgramType::FOCAL;
   if(tag0 == 'B' && tag1 == '2') return ProgramType::TINYBASIC;
   if(tag0 == 'T' && tag1 == '1') return ProgramType::TEXT;
   if(tag0 == 'M' && tag1 == '2') return ProgramType::MK61_STATE;
-  if(tag0 == 'F' && tag1 == '3') return ProgramType::FONT;
+  if(tag0 == 'F' && tag1 == '3' && !compressed) return ProgramType::FONT;
   supported = false;
   return ProgramType::MK61;
 }
@@ -296,21 +555,26 @@ static u8 tag0_for_type(ProgramType type) {
   return 'M';
 }
 
-static u8 tag1_for_type(ProgramType type) {
+static u8 tag1_for_type(ProgramType type, bool compressed = false) {
+  u8 tag = '1';
   switch(type) {
     case ProgramType::MK61:
     case ProgramType::FOCAL:
-      return '1';
+      tag = '1'; break;
     case ProgramType::TINYBASIC:
-      return '2';
+      tag = '2'; break;
     case ProgramType::TEXT:
-      return '1';
+      tag = '1'; break;
     case ProgramType::MK61_STATE:
-      return '2';
+      tag = '2'; break;
     case ProgramType::FONT:
-      return '3';
+      tag = '3'; break;
   }
-  return '1';
+  return compressed ? (u8) (tag | COMPRESSED_FLAG) : tag;
+}
+
+static u8 stored_type_id(ProgramType type, bool compressed) {
+  return (u8) ((u8) type | (compressed ? COMPRESSED_FLAG : 0));
 }
 
 static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& empty) {
@@ -324,7 +588,7 @@ static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& 
   }
 
   const u8 tag1 = header[1];
-  out.type = type_from_tag(tag0, tag1, out.supported);
+  out.type = type_from_tag(tag0, tag1, out.supported, out.compressed);
 
   out.state = header[2];
   out.name_len = header[3];
@@ -335,7 +599,16 @@ static bool parse_record(u32 address, u16 sector_offset, RecordMeta& out, bool& 
   out.header_len = 8;
   if(out.data_len > MAX_MK61_TEXT_SIZE) return false;
 
-  out.total_len = (u16) (out.header_len + out.name_len + out.data_len);
+  out.stored_len = out.data_len;
+  if(out.compressed) {
+    const u16 payload_offset = (u16) (sector_offset + out.header_len + out.name_len);
+    if(payload_offset >= FLASH_SECTOR_SIZE) return false;
+    LzssMeasureTarget target;
+    if(!lzss_decode(address + out.header_len + out.name_len,
+                    (u16) (FLASH_SECTOR_SIZE - payload_offset), out.data_len,
+                    target, out.stored_len) || out.stored_len >= out.data_len) return false;
+  }
+  out.total_len = (u16) (out.header_len + out.name_len + out.stored_len);
   if(out.total_len < out.header_len) return false;
   if((usize) sector_offset + out.total_len > FLASH_SECTOR_SIZE) return false;
   return true;
@@ -362,17 +635,24 @@ static u16 record_crc(u32 address, const RecordMeta& meta) {
   crc = crc16_update(crc, meta.name_len);
   crc = crc16_update(crc, (u8) (meta.data_len & 0xFF));
   crc = crc16_update(crc, (u8) (meta.data_len >> 8));
-  return crc16_over_flash(crc, address + meta.header_len, (u16) (meta.name_len + meta.data_len));
+  return crc16_over_flash(crc, address + meta.header_len, (u16) (meta.name_len + meta.stored_len));
 }
 
-static u16 make_crc(ProgramType type, const char* name, u8 name_len, const u8* data, u16 data_len) {
+static u16 make_crc_seed(ProgramType type, bool compressed, const char* name,
+                         u8 name_len, u16 data_len) {
   u16 crc = 0xFFFF;
   crc = crc16_update(crc, tag0_for_type(type));
-  crc = crc16_update(crc, tag1_for_type(type));
+  crc = crc16_update(crc, tag1_for_type(type, compressed));
   crc = crc16_update(crc, name_len);
   crc = crc16_update(crc, (u8) (data_len & 0xFF));
   crc = crc16_update(crc, (u8) (data_len >> 8));
   for(u8 i = 0; i < name_len; i++) crc = crc16_update(crc, (u8) name[i]);
+  return crc;
+}
+
+static u16 make_raw_crc(ProgramType type, const char* name, u8 name_len,
+                        const u8* data, u16 data_len) {
+  u16 crc = make_crc_seed(type, false, name, name_len, data_len);
   for(u16 i = 0; i < data_len; i++) crc = crc16_update(crc, data[i]);
   return crc;
 }
@@ -755,6 +1035,7 @@ static void update_index(const RecordMeta& meta, const char* name, u32 address) 
 
   IndexEntry& entry = index_entries[idx];
   entry.used = true;
+  entry.compressed = meta.compressed;
   entry.type = meta.type;
   strncpy(entry.name, name, NAME_SIZE - 1);
   entry.name[NAME_SIZE - 1] = 0;
@@ -889,7 +1170,7 @@ static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len, u32 generation) {
     const int sector = sector_from_address(entry.address);
     if(sector < 0) continue;
     const u16 offset = offset_in_sector(entry.address);
-    crc = crc16_update(crc, (u8) entry.type);
+    crc = crc16_update(crc, stored_type_id(entry.type, entry.compressed));
     crc = crc16_update(crc, entry.name_len);
     crc = crc16_update(crc, (u8) sector);
     crc = crc16_update(crc, (u8) (offset & 0xFF));
@@ -944,7 +1225,7 @@ static bool save_catalog_to(usize catalog_sector, u32 generation) {
     if(sector < 0) return false;
     const u16 offset = offset_in_sector(entry.address);
     u8 record[CATALOG_ENTRY_SIZE];
-    record[0] = (u8) entry.type;
+    record[0] = stored_type_id(entry.type, entry.compressed);
     record[1] = entry.name_len;
     record[2] = (u8) sector;
     record[3] = (u8) (offset & 0xFF);
@@ -1047,7 +1328,7 @@ static bool append_catalog_delta(u8 index_op, ProgramType type, const char* name
     const int sector = sector_from_address(entry.address);
     if(sector < 0) return false;
     const u16 offset = offset_in_sector(entry.address);
-    record[30] = (u8) entry.type;
+    record[30] = stored_type_id(entry.type, entry.compressed);
     record[31] = entry.name_len;
     record[32] = (u8) sector;
     record[33] = (u8) (offset & 0xFF);
@@ -1122,13 +1403,13 @@ static bool apply_catalog_delta(const u8* record) {
   }
 
   const u8 type_value = record[30];
-  if(!supported_type_id(type_value)) return false;
+  ProgramType type;
+  bool compressed = false;
+  if(!decode_type_id(type_value, type, compressed)) return false;
   char name[NAME_SIZE];
   for(u8 i = 0; i < NAME_SIZE; i++) name[i] = (char) record[39 + i];
   name[NAME_SIZE - 1] = 0;
   if(name[0] == 0) return false;
-  const ProgramType type = (ProgramType) type_value;
-
   if(record[7] == CATALOG_DELTA_INDEX_DELETE) {
     const int idx = find_index(type, name);
     if(idx >= 0) remove_index_at((u8) idx);
@@ -1138,6 +1419,8 @@ static bool apply_catalog_delta(const u8* record) {
 
   RecordMeta meta;
   meta.type = type;
+  meta.supported = true;
+  meta.compressed = compressed;
   meta.state = STATE_ACTIVE;
   meta.name_len = record[31];
   const u8 sector = record[32];
@@ -1146,8 +1429,11 @@ static bool apply_catalog_delta(const u8* record) {
   meta.total_len = (u16) (record[37] | ((u16) record[38] << 8));
   meta.header_len = 8;
   meta.crc = 0;
+  if(meta.total_len < meta.header_len + meta.name_len) return false;
+  meta.stored_len = (u16) (meta.total_len - meta.header_len - meta.name_len);
   if(meta.name_len == 0 || meta.name_len >= NAME_SIZE ||
-     meta.total_len != meta.header_len + meta.name_len + meta.data_len ||
+     (!meta.compressed && meta.stored_len != meta.data_len) ||
+     (meta.compressed && (meta.stored_len == 0 || meta.stored_len >= meta.data_len)) ||
      meta.data_len > MAX_MK61_TEXT_SIZE || sector >= STORE_SECTOR_COUNT ||
      !sectors[sector].active || offset < SECTOR_HEADER_SIZE ||
      (usize) offset + meta.total_len > FLASH_SECTOR_SIZE) return false;
@@ -1270,8 +1556,8 @@ static bool load_catalog_from(usize catalog_sector) {
 
   for(u8 i = 0; i < entry_count; i++) {
     IndexEntry& entry = index_entries[index_count];
-    const u8 type = read_byte(pos++);
-    entry.type = (ProgramType) type;
+    const u8 type_value = read_byte(pos++);
+    const bool supported_entry = decode_type_id(type_value, entry.type, entry.compressed);
     entry.name_len = read_byte(pos++);
     const u8 sector = read_byte(pos++);
     const u16 offset = read_le16(pos); pos += 2;
@@ -1280,11 +1566,14 @@ static bool load_catalog_from(usize catalog_sector) {
     const u16 header_len = 8;
     for(u8 n = 0; n < NAME_SIZE; n++) entry.name[n] = (char) read_byte(pos++);
     if(entry.name_len == 0 || entry.name_len >= NAME_SIZE) return false;
-    if(entry.total_len != header_len + entry.name_len + entry.data_len) return false;
+    if(entry.total_len < header_len + entry.name_len) return false;
+    const u16 stored_len = (u16) (entry.total_len - header_len - entry.name_len);
+    if((!entry.compressed && stored_len != entry.data_len) ||
+       (entry.compressed && (stored_len == 0 || stored_len >= entry.data_len))) return false;
     if(entry.data_len > MAX_MK61_TEXT_SIZE) return false;
     if(sector >= STORE_SECTOR_COUNT || !sectors[sector].active || offset < SECTOR_HEADER_SIZE) return false;
     if((usize) offset + entry.total_len > FLASH_SECTOR_SIZE) return false;
-    if(!supported_type_id(type)) {
+    if(!supported_entry) {
       move_live_to_dead(sector_base(sector) + offset, entry.total_len);
       continue;
     }
@@ -1467,9 +1756,16 @@ static bool prepare_empty_sector(void) {
 
 static bool entry_payload_equals(const IndexEntry& entry, const u8* data, u16 data_len) {
   if(entry.data_len != data_len) return false;
+  const u32 payload = entry.address + 8 + entry.name_len;
+  const u16 stored_len = (u16) (entry.total_len - 8 - entry.name_len);
+  if(entry.compressed) {
+    LzssCompareTarget target(data);
+    u16 consumed = 0;
+    return lzss_decode(payload, stored_len, data_len, target, consumed) &&
+           consumed == stored_len;
+  }
   u8 chunk[64];
   u16 offset = 0;
-  const u32 payload = entry.address + 8 + entry.name_len;
   while(offset < data_len) {
     const u16 remaining = (u16) (data_len - offset);
     const u16 count = remaining > sizeof(chunk) ? (u16) sizeof(chunk) : remaining;
@@ -1626,7 +1922,8 @@ static bool mark_deleted_at(u32 address) {
   return write_byte(address + 2, STATE_DELETED);
 }
 
-bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
+static bool write_with_policy(ProgramType type, const char* name, const u8* data,
+                              u16 data_len, bool from_usb) {
   DiskActivity disk_activity;
   if(data == NULL && data_len != 0) return false;
   if(!valid_write(type, name, data_len)) return false;
@@ -1638,7 +1935,26 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
 
   const u8 nlen = name_len_of(name);
   const u16 header_len = 8;
-  const u16 record_len = (u16) (header_len + nlen + data_len);
+  bool compressed = false;
+  u16 stored_len = data_len;
+  u16 crc = 0;
+
+  // USB writes already within the public filesystem quota stay raw to keep
+  // host sync latency predictable. Internal saves always try the compact form.
+  const bool try_compression = type != ProgramType::FONT &&
+      (!from_usb || data_len > MAX_MK61_TEXT_SIZE);
+  if(try_compression) {
+    LzssCountSink compressed_pass(make_crc_seed(type, true, name, nlen, data_len));
+    if(!lzss_encode(data, data_len, compressed_pass)) return false;
+    if(compressed_pass.size() < data_len) {
+      compressed = true;
+      stored_len = compressed_pass.size();
+      crc = compressed_pass.checksum();
+    }
+  }
+  if(!compressed) crc = make_raw_crc(type, name, nlen, data, data_len);
+
+  const u16 record_len = (u16) (header_len + nlen + stored_len);
   if(!ensure_space(record_len)) return false;
 
   const u32 old_address = (old_idx >= 0) ? index_entries[old_idx].address : 0xFFFFFFFFUL;
@@ -1647,17 +1963,21 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   const int sector = current_sector();
   if(sector < 0) return false;
   const u32 address = sector_base((usize) sector) + sectors[sector].used;
-  const u16 crc = make_crc(type, name, nlen, data, data_len);
 
   const u8 header[8] = {
-    tag0_for_type(type), tag1_for_type(type), STATE_WRITING, nlen,
+    tag0_for_type(type), tag1_for_type(type, compressed), STATE_WRITING, nlen,
     (u8) (data_len & 0xFF), (u8) (data_len >> 8),
     (u8) (crc & 0xFF), (u8) (crc >> 8)
   };
-  if(!write_bytes(address, header, sizeof(header)) ||
-     !write_bytes(address + header_len, (const u8*) name, nlen) ||
-     !write_bytes(address + header_len + nlen, data, data_len) ||
-     !write_byte(address + 2, STATE_ACTIVE)) {
+  bool payload_ok = write_bytes(address, header, sizeof(header)) &&
+                    write_bytes(address + header_len, (const u8*) name, nlen);
+  if(payload_ok && compressed) {
+    LzssFlashSink sink(address + header_len + nlen);
+    payload_ok = lzss_encode(data, data_len, sink) && sink.size() == stored_len;
+  } else if(payload_ok) {
+    payload_ok = write_bytes(address + header_len + nlen, data, data_len);
+  }
+  if(!payload_ok || !write_byte(address + 2, STATE_ACTIVE)) {
     seal_sector_after_write_failure((usize) sector);
     (void) save_catalog();
     return false;
@@ -1672,9 +1992,12 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
 
   RecordMeta meta;
   meta.type = type;
+  meta.supported = true;
+  meta.compressed = compressed;
   meta.state = STATE_ACTIVE;
   meta.name_len = nlen;
   meta.data_len = data_len;
+  meta.stored_len = stored_len;
   meta.crc = crc;
   meta.header_len = header_len;
   meta.total_len = record_len;
@@ -1682,6 +2005,14 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   return append_catalog_delta(CATALOG_DELTA_INDEX_UPSERT, type, name,
                               sector_from_address(address),
                               sector_from_address(old_address));
+}
+
+bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
+  return write_with_policy(type, name, data, data_len, false);
+}
+
+bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data_len) {
+  return write_with_policy(type, name, data, data_len, true);
 }
 
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len) {
@@ -1695,7 +2026,15 @@ bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_l
   if(entry.data_len > capacity) return false;
 
   const u32 payload = entry.address + 8 + entry.name_len;
-  read_bytes(payload, data, entry.data_len);
+  if(entry.compressed) {
+    const u16 stored_len = (u16) (entry.total_len - 8 - entry.name_len);
+    LzssBufferTarget target(data);
+    u16 consumed = 0;
+    if(!lzss_decode(payload, stored_len, entry.data_len, target, consumed) ||
+       consumed != stored_len) return false;
+  } else {
+    read_bytes(payload, data, entry.data_len);
+  }
   if(out_len != NULL) *out_len = entry.data_len;
   return true;
 }
@@ -1713,8 +2052,19 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
   u16 available = (u16) (entry.data_len - offset);
   if(available > len) available = len;
 
-  const u32 payload = entry.address + 8 + entry.name_len + offset;
-  read_bytes(payload, data, available);
+  const u32 payload = entry.address + 8 + entry.name_len;
+  if(entry.compressed) {
+    shared_scratch::Lease scratch(shared_scratch::Owner::PROGRAM_STORE_READ_RANGE,
+                                  LZSS_WINDOW_SIZE);
+    if(!scratch.ok()) return false;
+    const u16 stored_len = (u16) (entry.total_len - 8 - entry.name_len);
+    LzssRangeTarget target(scratch.data(), offset, data, available);
+    u16 consumed = 0;
+    if(!lzss_decode(payload, stored_len, entry.data_len, target, consumed) ||
+       consumed != stored_len) return false;
+  } else {
+    read_bytes(payload + offset, data, available);
+  }
   if(out_len != NULL) *out_len = available;
   return true;
 }

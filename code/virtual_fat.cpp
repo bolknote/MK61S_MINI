@@ -1200,9 +1200,9 @@ static bool queue_committed_data_sector(const program_store::Entry& entry,
 static u16 max_len_for_type(program_store::ProgramType type) {
   switch(type) {
     case program_store::ProgramType::MK61:  return program_store::MAX_MK61_TEXT_SIZE;
-    case program_store::ProgramType::FOCAL: return 1023;
+    case program_store::ProgramType::FOCAL: return program_store::MAX_MK61_TEXT_SIZE;
 #if MK61_ENABLE_TINYBASIC
-    case program_store::ProgramType::TINYBASIC: return 1023;
+    case program_store::ProgramType::TINYBASIC: return program_store::MAX_MK61_TEXT_SIZE;
 #endif
     case program_store::ProgramType::TEXT: return program_store::MAX_MK61_TEXT_SIZE;
     case program_store::ProgramType::MK61_STATE: return program_store::MAX_MK61_TEXT_SIZE;
@@ -1755,7 +1755,8 @@ static bool try_commit_pending(PendingWrite& pending) {
   }
 
   tracef("COMMIT-DATA %s.%s len=%u b0=%02X", pending.name, extension_for_type(pending.type), pending.data_len, pending.data_len == 0 ? 0 : commit_file_data[0]);
-  if(!program_store::write(pending.type, pending.name, commit_file_data, pending.data_len)) {
+  if(!program_store::write_from_usb(pending.type, pending.name,
+                                    commit_file_data, pending.data_len)) {
     tracef("COMMIT fail %s.%s", pending.name, extension_for_type(pending.type));
     // Keep the frozen transaction and its staged sectors. A failed SYNC must
     // never discard data that the host was previously allowed to write.

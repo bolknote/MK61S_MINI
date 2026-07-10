@@ -178,7 +178,11 @@ extern void idle_main_process(void);
 #endif
 
 static constexpr int FOCAL_PROGRAM_COUNT       = 1;
-static constexpr int FOCAL_SOURCE_SIZE         = 1024;
+static constexpr int FOCAL_SOURCE_SIZE         = 1537;
+#ifndef FOCAL_HOST_TEST
+static_assert(FOCAL_SOURCE_SIZE == program_store::MAX_MK61_TEXT_SIZE + 1,
+              "FOCAL editor quota must match the filesystem quota");
+#endif
 static constexpr int FOCAL_LINE_TEXT_SIZE      = 80;
 static constexpr int FOCAL_LINE_BUFFER_SIZE    = 128;
 static constexpr int FOCAL_MAX_LINES           = 80;
@@ -278,8 +282,8 @@ struct FocalRuntime {
   char focal_last_error[17];
 };
 
-static_assert(sizeof(FocalAst) < 2048, "FOCAL parsed representation must remain compact");
-static_assert(sizeof(FocalRuntime) < 4096, "FOCAL runtime must leave workspace headroom");
+static_assert(sizeof(FocalAst) < 3072, "FOCAL parsed representation must remain compact");
+static_assert(sizeof(FocalRuntime) < 5120, "FOCAL runtime must leave workspace headroom");
 
 #ifdef FOCAL_HOST_TEST
 static FocalRuntime focal_runtime_storage;

@@ -174,7 +174,11 @@ static constexpr int TB_PROGRAM_COUNT = 8;
 #else
 static constexpr int TB_PROGRAM_COUNT = 1;
 #endif
-static constexpr int TB_SOURCE_SIZE = 1024;
+static constexpr int TB_SOURCE_SIZE = 1537;
+#ifndef TINYBASIC_HOST_TEST
+static_assert(TB_SOURCE_SIZE == program_store::MAX_MK61_TEXT_SIZE + 1,
+              "Tiny BASIC editor quota must match the filesystem quota");
+#endif
 static constexpr int TB_MAX_LINES = 96;
 static constexpr int TB_NAME_SIZE = 16;
 static constexpr int TB_PRINT_BUFFER_SIZE = 96;

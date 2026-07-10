@@ -8,6 +8,7 @@ namespace program_store {
 
 static constexpr usize NAME_SIZE = 16;
 static constexpr usize MAX_ENTRIES = 64;
+// Logical file size exposed by the store and virtual FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
 static constexpr u16 MAX_FONT_SIZE = 1536;
 
@@ -37,6 +38,8 @@ bool entry_at(int index, Entry& out);
 bool exists(ProgramType type, const char* name);
 
 bool write(ProgramType type, const char* name, const u8* data, u16 data_len);
+// USB imports avoid compression latency while the raw payload fits the store.
+bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data_len);
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len);
 bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 len, u16* out_len);
 bool remove(ProgramType type, const char* name);

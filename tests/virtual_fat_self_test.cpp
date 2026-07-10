@@ -146,6 +146,10 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   return true;
 }
 
+bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data_len) {
+  return write(type, name, data, data_len);
+}
+
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len) {
   StoredProgram* program = find_program(type, name);
   if(program == NULL || data == NULL || capacity < program->data_len) return false;

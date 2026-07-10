@@ -126,7 +126,7 @@ static void test_compile_rejects_invalid_statements(void) {
     "10 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 "
     "IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 A=1\n"));
 
-  char oversized[1100];
+  char oversized[1600];
   std::memset(oversized, 'X', sizeof(oversized));
   std::memcpy(oversized, "10 REM ", 7);
   oversized[sizeof(oversized) - 1] = 0;

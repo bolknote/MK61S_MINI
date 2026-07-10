@@ -173,6 +173,98 @@ static void test_font_type_survives_catalog_reload(void) {
   assert(memcmp(stored, font, len) == 0);
 }
 
+static void test_lzss_is_transparent_and_usb_stays_raw(void) {
+  static u8 source[program_store::MAX_MK61_TEXT_SIZE];
+  static u8 recovered[program_store::MAX_MK61_TEXT_SIZE];
+  for(u16 i = 0; i < sizeof(source); i++) {
+    static const char line[] = "10 PRINT \"HELLO\"\n";
+    source[i] = (u8) line[i % (sizeof(line) - 1)];
+  }
+
+  SPIFlash::reset();
+  assert(program_store::format());
+  assert(program_store::write(program_store::ProgramType::FOCAL, "LARGE",
+                              source, sizeof(source)));
+  // First record begins immediately after the seven-byte sector header.
+  assert(flash.readByte(8) == (u8) ('1' | 0x80));
+
+  u16 len = 0;
+  assert(program_store::read(program_store::ProgramType::FOCAL, "LARGE",
+                             recovered, sizeof(recovered), &len));
+  assert(len == sizeof(source));
+  assert(memcmp(recovered, source, sizeof(source)) == 0);
+
+  memset(recovered, 0, sizeof(recovered));
+  assert(program_store::read_range(program_store::ProgramType::FOCAL, "LARGE",
+                                   437, recovered, 733, &len));
+  assert(len == 733);
+  assert(memcmp(recovered, source + 437, len) == 0);
+
+  program_store::init();
+  memset(recovered, 0, sizeof(recovered));
+  assert(program_store::read(program_store::ProgramType::FOCAL, "LARGE",
+                             recovered, sizeof(recovered), &len));
+  assert(len == sizeof(source));
+  assert(memcmp(recovered, source, sizeof(source)) == 0);
+
+  SPIFlash::reset();
+  assert(program_store::format());
+  assert(program_store::write_from_usb(program_store::ProgramType::FOCAL, "USBRAW",
+                                       source, sizeof(source)));
+  assert(flash.readByte(8) == '1');
+  assert(program_store::read(program_store::ProgramType::FOCAL, "USBRAW",
+                             recovered, sizeof(recovered), &len));
+  assert(len == sizeof(source));
+  assert(memcmp(recovered, source, sizeof(source)) == 0);
+
+  SPIFlash::reset();
+  assert(program_store::format());
+  u32 random = 0x91E10DA5;
+  for(u16 i = 0; i < sizeof(source); i++) {
+    random ^= random << 13;
+    random ^= random >> 17;
+    random ^= random << 5;
+    source[i] = (u8) random;
+  }
+  // An incompressible file at the full filesystem quota remains valid and raw.
+  assert(program_store::write(program_store::ProgramType::TINYBASIC, "FULLRAW",
+                              source, sizeof(source)));
+  assert(flash.readByte(8) == '2');
+
+  SPIFlash::reset();
+  assert(program_store::format());
+  memset(source, 0x55, sizeof(source));
+  assert(program_store::write(program_store::ProgramType::FONT, "RAWFONT",
+                              source, sizeof(source)));
+  assert(flash.readByte(8) == '3');
+}
+
+static void test_gc_copies_compressed_records_without_expanding_them(void) {
+  static u8 compressed[program_store::MAX_MK61_TEXT_SIZE];
+  static u8 churn[program_store::MAX_MK61_TEXT_SIZE];
+  static u8 recovered[program_store::MAX_MK61_TEXT_SIZE];
+  memset(compressed, 'A', sizeof(compressed));
+  memset(churn, 0xC3, sizeof(churn));
+
+  SPIFlash::reset();
+  assert(program_store::format());
+  assert(program_store::write(program_store::ProgramType::FOCAL, "KEEP",
+                              compressed, sizeof(compressed)));
+  for(u16 generation = 0; generation < 210; generation++) {
+    churn[0] = (u8) generation;
+    churn[1] = (u8) (generation >> 8);
+    assert(program_store::write_from_usb(program_store::ProgramType::TEXT, "CHURN",
+                                         churn, sizeof(churn)));
+  }
+
+  program_store::init();
+  u16 len = 0;
+  assert(program_store::read(program_store::ProgramType::FOCAL, "KEEP",
+                             recovered, sizeof(recovered), &len));
+  assert(len == sizeof(compressed));
+  assert(memcmp(recovered, compressed, sizeof(compressed)) == 0);
+}
+
 static void test_vfat_stage_recovers_latest_committed_sector(void) {
   SPIFlash::reset();
   assert(program_store::format());
@@ -358,6 +450,8 @@ int main(void) {
   test_corrupt_newest_catalog_delta_rolls_back();
   test_legacy_catalog_is_migratable();
   test_font_type_survives_catalog_reload();
+  test_lzss_is_transparent_and_usb_stays_raw();
+  test_gc_copies_compressed_records_without_expanding_them();
   test_vfat_stage_recovers_latest_committed_sector();
   test_vfat_stage_reclaims_dead_segments();
   test_catalog_wal_amortizes_flash_erases();
