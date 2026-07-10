@@ -12,6 +12,7 @@ extern "C" {
 #include "usbd_core.h"
 #include "usbd_ctlreq.h"
 #include "usbd_msc.h"
+#include "usbd_msc_scsi.h"
 }
 
 #if !defined(USBD_VID) || USBD_VID == 0
@@ -23,6 +24,29 @@ namespace usb_mass_storage {
 
 static USBD_HandleTypeDef usb_device;
 static bool initialized = false;
+
+enum class DeferredWriteState : u8 {
+  EMPTY,
+  PENDING,
+  PROCESSING,
+  COMPLETE_OK,
+  COMPLETE_ERROR
+};
+
+struct DeferredWrite {
+  volatile DeferredWriteState state;
+  u32 block_addr;
+  u16 block_len;
+  u8 data[MSC_MEDIA_PACKET];
+};
+
+static DeferredWrite deferred_write = {DeferredWriteState::EMPTY, 0, 0, {0}};
+
+static void reset_deferred_write(void) {
+  deferred_write.state = DeferredWriteState::EMPTY;
+  deferred_write.block_addr = 0;
+  deferred_write.block_len = 0;
+}
 
 static u8 string_desc[USBD_MAX_STR_DESC_SIZ];
 
@@ -125,7 +149,8 @@ static USBD_DescriptorsTypeDef descriptors = {
 
 static int8_t storage_init(uint8_t lun) {
   (void) lun;
-  return 0;
+  reset_deferred_write();
+  return USBD_MSC_STORAGE_OK;
 }
 
 static int8_t storage_capacity(uint8_t lun, uint32_t* block_num, uint16_t* block_size) {
@@ -153,7 +178,29 @@ static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint1
 
 static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
   (void) lun;
-  return virtual_fat::write_sectors(block_addr, buf, block_len) ? 0 : -1;
+  const u32 data_len = (u32) block_len * virtual_fat::SECTOR_SIZE;
+  if(buf == NULL || block_len == 0 || data_len > sizeof(deferred_write.data)) return USBD_MSC_STORAGE_ERROR;
+
+  const DeferredWriteState state = deferred_write.state;
+  if(state == DeferredWriteState::COMPLETE_OK || state == DeferredWriteState::COMPLETE_ERROR) {
+    if(deferred_write.block_addr != block_addr || deferred_write.block_len != block_len) {
+      reset_deferred_write();
+      return USBD_MSC_STORAGE_ERROR;
+    }
+    const int8_t result = state == DeferredWriteState::COMPLETE_OK
+      ? USBD_MSC_STORAGE_OK
+      : USBD_MSC_STORAGE_ERROR;
+    reset_deferred_write();
+    return result;
+  }
+  if(state != DeferredWriteState::EMPTY) return USBD_MSC_STORAGE_BUSY;
+
+  memcpy(deferred_write.data, buf, data_len);
+  deferred_write.block_addr = block_addr;
+  deferred_write.block_len = block_len;
+  // Publish the state last: service() must never observe a half-copied block.
+  deferred_write.state = DeferredWriteState::PENDING;
+  return USBD_MSC_STORAGE_BUSY;
 }
 
 static int8_t storage_max_lun(void) {
@@ -189,6 +236,7 @@ static USBD_StorageTypeDef storage = {
 bool init(void) {
   if(initialized) return true;
 
+  reset_deferred_write();
   virtual_fat::reset_session();
 
   if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) return false;
@@ -220,6 +268,11 @@ void deinit(void) {
   // callback racing this flush would corrupt both transfers.
   initialized = false;
   (void) USBD_Stop(&usb_device);
+  if(deferred_write.state == DeferredWriteState::PENDING) {
+    deferred_write.state = DeferredWriteState::PROCESSING;
+    (void) virtual_fat::write_sectors(deferred_write.block_addr, deferred_write.data, deferred_write.block_len);
+  }
+  reset_deferred_write();
   // Persist queued writes/deletes even when the host never ejected cleanly.
   (void) virtual_fat::flush_pending();
   (void) USBD_DeInit(&usb_device);
@@ -230,6 +283,22 @@ bool active(void) {
   return initialized;
 }
 
+void service(void) {
+  if(!initialized || deferred_write.state != DeferredWriteState::PENDING) return;
+
+  deferred_write.state = DeferredWriteState::PROCESSING;
+  const bool ok = virtual_fat::write_sectors(
+    deferred_write.block_addr,
+    deferred_write.data,
+    deferred_write.block_len
+  );
+  deferred_write.state = ok ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR;
+
+  // This re-enters storage_write(), which consumes COMPLETE_* and lets the BOT
+  // state machine acknowledge the block or return WRITE_FAULT to the host.
+  if(SCSI_ContinueWrite(&usb_device) < 0) reset_deferred_write();
+}
+
 } // namespace usb_mass_storage
 
 #else
@@ -238,6 +307,7 @@ namespace usb_mass_storage {
 bool init(void) { return false; }
 void deinit(void) {}
 bool active(void) { return false; }
+void service(void) {}
 }
 
 #endif

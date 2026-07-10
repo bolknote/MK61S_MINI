@@ -5,6 +5,7 @@ namespace usb_mass_storage {
 bool init(void);
 void deinit(void);
 bool active(void);
+void service(void);
 }
 
 #endif

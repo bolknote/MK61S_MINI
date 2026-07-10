@@ -3,11 +3,17 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_mk_math_self_test"
+sanitizer_flags=()
+if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
+  sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+fi
 
 # Build the CORE backend together with the real MK-61 engine on the host.
 # Shim headers (Arduino.h/debug.h) come first on the include path so the
 # firmware-only dependencies resolve to host stubs.
-clang++ -std=c++17 -Wall -Wextra -Wno-unused -Wno-array-parameter \
+clang++ -std=c++17 -Wall -Wextra -Wno-unused -Wno-unused-parameter \
+  -Wno-array-parameter -Wno-cpp -Wno-gnu-designator \
+  "${sanitizer_flags[@]}" \
   -DMK61_MATH_BACKEND=1 \
   -include "$root/tests/mk_math_shim/debug.h" \
   -I"$root/tests/mk_math_shim" \

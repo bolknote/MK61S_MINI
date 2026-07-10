@@ -15,8 +15,8 @@
 //#define DEBUG_MK61E         // Отладочная информация расширяющая представление вывода терминала по МК61
 //#define DEBUG_PARSE         // Отладочная информация по парсеру ассемблера
 // Расширение памяти программы 105/112 теперь переключается из меню.
-#define DEBUG_MEASURE       // Вывод времени исполнения от С/П до С/П для вычисления производительности ядра
-#define DEBUG_RUN_STOP      // Отладочный вывод по расширению команды С/П
+//#define DEBUG_MEASURE       // Вывод времени исполнения от С/П до С/П для вычисления производительности ядра
+//#define DEBUG_RUN_STOP      // Отладочный вывод по расширению команды С/П
 //#define MK61_EXTENDED
 //#define B3_34
 #define TERMINAL
@@ -141,8 +141,15 @@
 //defined(__ARM_ARCH_7EM__)
 //defined(__ARM_FEATURE_SIMD32)
 
-#if defined(TERMINAL) || defined(DEBUG) 
+#if defined(TERMINAL) || defined(DEBUG)
  //#warning Serial module included!
+#endif
+
+// Терминал использует Serial независимо от включенных отладочных категорий.
+// Раньше SERIAL_OUTPUT появлялся только как побочный эффект DEBUG_* и сборка
+// ломалась при отключении отладки с оставленным TERMINAL.
+#if defined(TERMINAL) && !defined(SERIAL_OUTPUT)
+  #define SERIAL_OUTPUT
 #endif
 
 #ifdef DEBUG_TRACE

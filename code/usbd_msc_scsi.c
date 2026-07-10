@@ -1176,6 +1176,7 @@ static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun)
 {
   USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
   uint32_t len;
+  int8_t write_status;
 
   if (hmsc == NULL)
   {
@@ -1191,9 +1192,16 @@ static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun)
 
   len = MIN(len, MSC_MEDIA_PACKET);
 
-  if (((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->Write(lun, hmsc->bot_data,
-                                                                     hmsc->scsi_blk_addr,
-                                                                     (len / hmsc->scsi_blk_size)) < 0)
+  write_status = ((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->Write(lun, hmsc->bot_data,
+                                                                                hmsc->scsi_blk_addr,
+                                                                                (len / hmsc->scsi_blk_size));
+  if (write_status == USBD_MSC_STORAGE_BUSY)
+  {
+    /* Keep DATA_OUT and do not arm another packet. The main loop will persist
+       this block and call SCSI_ContinueWrite() to finish the command. */
+    return USBD_MSC_STORAGE_BUSY;
+  }
+  if (write_status < 0)
   {
     SCSI_SenseCode(pdev, lun, HARDWARE_ERROR, WRITE_FAULT);
     return -1;
@@ -1218,6 +1226,21 @@ static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun)
   }
 
   return 0;
+}
+
+int8_t SCSI_ContinueWrite(USBD_HandleTypeDef *pdev)
+{
+  USBD_MSC_BOT_HandleTypeDef *hmsc;
+  if (pdev == NULL)
+  {
+    return -1;
+  }
+  hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
+  if ((hmsc == NULL) || (hmsc->bot_state != USBD_BOT_DATA_OUT))
+  {
+    return -1;
+  }
+  return SCSI_ProcessWrite(pdev, hmsc->cbw.bLUN);
 }
 
 

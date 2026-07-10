@@ -1682,6 +1682,7 @@ static bool tb_input_program_name(char* name, usize size) {
 }
 
 static bool store_edited_program(int slot, char* source, const char* store_name) {
+  if(slot < 0 || slot > TB_PROGRAM_COUNT) return tb_error("SORRY");
   char old_name[TB_NAME_SIZE] = "";
   if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) {
     tb_copy_text(old_name, sizeof(old_name), programs[slot].name);
@@ -1695,6 +1696,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
     slot = tb_alloc_program_slot(store_name);
 #endif
   }
+  if(slot < 0 || slot >= TB_PROGRAM_COUNT) return tb_error("SORRY");
   if(!tb_compile_source(source, tb_ast)) return false;
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
@@ -1719,7 +1721,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
 static void EditTinyBasicSlot(int slot) {
   char source[TB_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
-  if(slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(source, sizeof(source), programs[slot].source);
+  if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(source, sizeof(source), programs[slot].source);
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, TB_SOURCE_SIZE);
@@ -1750,7 +1752,7 @@ static void EditTinyBasicSlot(int slot) {
       if(!tb_confirm_save()) return;
       char name[TB_NAME_SIZE];
       memset(name, 0, sizeof(name));
-      if(slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(name, sizeof(name), programs[slot].name);
+      if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(name, sizeof(name), programs[slot].name);
       else tb_program_default_name(find_free_program() < 0 ? 0 : find_free_program(), name, sizeof(name));
       if(tb_input_program_name(name, sizeof(name)) && store_edited_program(slot, source, name)) return;
       kbd::debounce_init();

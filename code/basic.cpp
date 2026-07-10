@@ -444,7 +444,9 @@ struct Token {
   TokenKind kind;
   BasicOp op;
   char symbol;
-  char text[BASIC_NAME_SIZE];
+  // Identifiers are limited to BASIC_NAME_SIZE, while string literals may use
+  // the larger BASIC_STRING_SIZE. One token buffer must safely hold both.
+  char text[BASIC_STRING_SIZE + 1];
   double number;
 };
 
@@ -1905,6 +1907,9 @@ static void display_ast_ok(const BasicProgram& program) {
 bool CompileBasic(char* program) {
   const int slot = find_free_program();
   if(slot < 0) return basic_error("program full");
+#ifndef BASIC_HOST_TEST
+  const int previous_next = NextBasic;
+#endif
 
   strncpy(programs[slot].source, program, BASIC_SOURCE_SIZE - 1);
   programs[slot].source[BASIC_SOURCE_SIZE - 1] = 0;
@@ -1920,7 +1925,11 @@ bool CompileBasic(char* program) {
   programs[slot].used = true;
   NextBasic = slot;
 #ifndef BASIC_HOST_TEST
-  program_store::write(program_store::ProgramType::BASIC, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len);
+  if(!program_store::write(program_store::ProgramType::BASIC, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len)) {
+    memset(&programs[slot], 0, sizeof(programs[slot]));
+    NextBasic = previous_next;
+    return basic_error("program full");
+  }
 #endif
   display_ast_ok(programs[slot]);
   return true;
@@ -2434,6 +2443,7 @@ static void draw_basic_editor(const char* source, u16 len, u16 cursor, u16 view_
 }
 
 static bool store_edited_program(int slot, char* source, const char* store_name) {
+  if(slot < 0 || slot > BASIC_PROGRAM_COUNT) return basic_error("program slot");
   char old_name[BASIC_NAME_SIZE] = "";
   if(slot >= 0 && slot < BASIC_PROGRAM_COUNT && programs[slot].used) {
     strncpy(old_name, programs[slot].name, sizeof(old_name) - 1);
@@ -2448,6 +2458,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
     slot = basic_alloc_program_slot(store_name);
 #endif
   }
+  if(slot < 0 || slot >= BASIC_PROGRAM_COUNT) return basic_error("program slot");
 
   if(!compile_source(source, ast)) {
     return false;
@@ -2653,7 +2664,7 @@ static bool basic_input_program_name(char* name, usize size) {
 static void EditBasicSlot(int slot) {
   char source[BASIC_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
-  if(slot < BASIC_PROGRAM_COUNT && programs[slot].used) strncpy(source, programs[slot].source, sizeof(source) - 1);
+  if(slot >= 0 && slot < BASIC_PROGRAM_COUNT && programs[slot].used) strncpy(source, programs[slot].source, sizeof(source) - 1);
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, BASIC_SOURCE_SIZE);
@@ -2683,7 +2694,7 @@ static void EditBasicSlot(int slot) {
       if(!basic_confirm_save()) return;
       char name[BASIC_NAME_SIZE];
       memset(name, 0, sizeof(name));
-      if(slot < BASIC_PROGRAM_COUNT && programs[slot].used) strncpy(name, programs[slot].name, sizeof(name) - 1);
+      if(slot >= 0 && slot < BASIC_PROGRAM_COUNT && programs[slot].used) strncpy(name, programs[slot].name, sizeof(name) - 1);
       else snprintf(name, sizeof(name), "BASIC%d", find_free_program() < 0 ? 0 : find_free_program());
       if(basic_input_program_name(name, sizeof(name)) && store_edited_program(slot, source, name)) return;
       kbd::debounce_init();

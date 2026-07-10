@@ -122,6 +122,14 @@ static void test_string_variables(void) {
   CHECK_STARTS(BasicTestLcdLine(0), "HI");
 }
 
+static void test_max_length_string_literal(void) {
+  BasicTestReset();
+  const char* value = "ABCDEFGHIJKLMNOPQRSTUVWX";
+  const int slot = add_program("$A=\"ABCDEFGHIJKLMNOPQRSTUVWX\":HLT LONGSTR");
+  BasicTestRun(slot);
+  CHECK(std::strcmp(BasicTestString("$A"), value) == 0);
+}
+
 static void test_mk_stack_reference(void) {
   BasicTestReset();
   const int slot = add_program(".X=42:A=.X:HLT MKREF");
@@ -211,6 +219,7 @@ int main(void) {
   test_do_while_loop();
   test_labels_and_go_from_if();
   test_string_variables();
+  test_max_length_string_literal();
   test_mk_stack_reference();
   test_mk_register_references();
   test_mk_rf_requires_expanded_mode();

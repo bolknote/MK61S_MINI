@@ -3,15 +3,12 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_basic_self_test"
-
-basic_enabled="${MK61_ENABLE_BASIC:-}"
-if [[ -z "$basic_enabled" ]]; then
-  if grep -Eq '^[[:space:]]*#[[:space:]]*define[[:space:]]+MK61_ENABLE_BASIC[[:space:]]+0([[:space:]]|$)' "$root/code/config.h"; then
-    basic_enabled=0
-  else
-    basic_enabled=1
-  fi
+sanitizer_flags=()
+if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
+  sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
+
+basic_enabled="${MK61_ENABLE_BASIC:-1}"
 
 if [[ "$basic_enabled" == "0" ]]; then
   echo "basic_self_test: skipped (MK61_ENABLE_BASIC=0)"
@@ -19,6 +16,7 @@ if [[ "$basic_enabled" == "0" ]]; then
 fi
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" \
   -DBASIC_HOST_TEST \
   -DBASIC_SELF_TEST \
   -DMK61_ENABLE_BASIC="$basic_enabled" \

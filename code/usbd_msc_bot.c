@@ -151,6 +151,9 @@ void MSC_BOT_Reset(USBD_HandleTypeDef *pdev)
   hmsc->bot_state  = USBD_BOT_IDLE;
   hmsc->bot_status = USBD_BOT_STATUS_RECOVERY;
 
+  /* Cancel any deferred storage callback owned by the aborted BOT command. */
+  ((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->Init(0U);
+
   (void)USBD_LL_ClearStallEP(pdev, MSCInEpAdd);
   (void)USBD_LL_ClearStallEP(pdev, MSCOutEpAdd);
 
@@ -475,4 +478,3 @@ void  MSC_BOT_CplClrFeature(USBD_HandleTypeDef *pdev, uint8_t epnum)
 /**
   * @}
   */
-

@@ -1,18 +1,36 @@
 name: Firmware release
 
 on:
+  pull_request:
   push:
     branches:
       - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  host-tests:
+    name: Host tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run host test suite
+        env:
+          MK61_TEST_SANITIZERS: "1"
+        run: tests/run_all_tests.sh
+
   build-release:
     name: Build and publish firmware
+    if: github.event_name != 'pull_request'
+    needs: host-tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     env:
       STM32_CORE_VERSION: 2.12.0
@@ -36,8 +54,8 @@ jobs:
       - name: Install Arduino libraries
         run: |
           arduino-cli lib update-index
-          arduino-cli lib install "LiquidCrystal"
-          arduino-cli lib install "SPIMemory"
+          arduino-cli lib install "LiquidCrystal@1.0.7"
+          arduino-cli lib install "SPIMemory@3.4.0"
 
       - name: Prepare sketch
         run: |

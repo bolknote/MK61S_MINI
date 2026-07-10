@@ -26,10 +26,13 @@ static constexpr u8 SECTOR_TAG0 = 'S';
 static constexpr u8 SECTOR_TAG1 = '1';
 static constexpr usize SECTOR_HEADER_SIZE = 7;
 static constexpr usize STORE_SECTOR_COUNT = (usize) MAX_SLOT_FOR_PROGRAM + 1;
-static constexpr usize CATALOG_SECTOR = STORE_SECTOR_COUNT;
+static constexpr usize CATALOG_PRIMARY_SECTOR = STORE_SECTOR_COUNT;
 static constexpr usize SETTINGS_SECTOR = STORE_SECTOR_COUNT + 1;
 static constexpr usize VFAT_STAGE_FIRST_SECTOR = SETTINGS_SECTOR + 1;
 static constexpr usize VFAT_STAGE_SECTOR_COUNT = 128;
+// The mirror lives immediately after the bounded VFAT staging area, so the
+// existing program/settings/staging layout remains compatible.
+static constexpr usize CATALOG_MIRROR_SECTOR = VFAT_STAGE_FIRST_SECTOR + VFAT_STAGE_SECTOR_COUNT;
 static constexpr u16 VFAT_STAGE_FIRST_CLUSTER = 2;
 static constexpr u16 VFAT_STAGE_CLUSTER_COUNT = 800;
 static constexpr u16 VFAT_STAGE_DATA_SIZE = 512;
@@ -39,8 +42,10 @@ static constexpr u8 VFAT_STAGE_RECORDS_PER_SECTOR = FLASH_SECTOR_SIZE / VFAT_STA
 static constexpr u8 VFAT_STAGE_TAG0 = 'V';
 static constexpr u8 VFAT_STAGE_TAG1 = 'S';
 static constexpr u8 CATALOG_TAG0 = 'C';
-static constexpr u8 CATALOG_TAG1 = '1';
-static constexpr usize CATALOG_HEADER_SIZE = 9;
+static constexpr u8 CATALOG_LEGACY_TAG1 = '1';
+static constexpr u8 CATALOG_TAG1 = '2';
+static constexpr usize CATALOG_LEGACY_HEADER_SIZE = 9;
+static constexpr usize CATALOG_HEADER_SIZE = 13;
 static constexpr usize CATALOG_SECTOR_INFO_SIZE = 9;
 static constexpr usize CATALOG_ENTRY_SIZE = 25;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
@@ -88,6 +93,8 @@ static bool vfat_stage_sector_prepared[VFAT_STAGE_SECTOR_COUNT];
 static u8 index_count;
 static bool index_valid;
 static u32 next_generation = 1;
+static u32 catalog_generation;
+static usize active_catalog_sector = CATALOG_MIRROR_SECTOR;
 static u8 disk_activity_depth;
 static u8 disk_led_poll_divider;
 static u16 vfat_stage_active_count;
@@ -132,16 +139,18 @@ static u8 read_byte(u32 address) {
   return 0xFF;
 }
 
-static void write_byte(u32 address, u8 value) {
+static bool write_byte(u32 address, u8 value) {
 #ifdef SPI_FLASH
   if(flash_is_ok) {
-    flash.writeByte(address, value);
+    const bool ok = flash.writeByte(address, value);
     disk_led_poll();
+    return ok;
   }
 #else
   (void) address;
   (void) value;
 #endif
+  return false;
 }
 
 // Byte-at-a-time flash access costs a full SPI transaction (busy poll, command,
@@ -161,17 +170,19 @@ static void read_bytes(u32 address, u8* out, usize len) {
   memset(out, 0xFF, len);
 }
 
-static void write_bytes(u32 address, const u8* data, usize len) {
-  if(len == 0) return;
+static bool write_bytes(u32 address, const u8* data, usize len) {
+  if(len == 0) return true;
 #ifdef SPI_FLASH
   if(flash_is_ok) {
-    flash.writeByteArray(address, (uint8_t*) data, len);
+    const bool ok = flash.writeByteArray(address, (uint8_t*) data, len);
     disk_led_poll();
+    return ok;
   }
 #else
   (void) address;
   (void) data;
 #endif
+  return false;
 }
 
 static bool erase_sector(usize sector) {
@@ -205,16 +216,11 @@ static u32 read_le32(u32 address) {
   return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
 }
 
-static void write_le16(u32 address, u16 value) {
-  write_byte(address, (u8) (value & 0xFF));
-  write_byte(address + 1, (u8) (value >> 8));
-}
-
-static void write_le32(u32 address, u32 value) {
-  write_byte(address, (u8) (value & 0xFF));
-  write_byte(address + 1, (u8) ((value >> 8) & 0xFF));
-  write_byte(address + 2, (u8) ((value >> 16) & 0xFF));
-  write_byte(address + 3, (u8) ((value >> 24) & 0xFF));
+static bool write_le32(u32 address, u32 value) {
+  return write_byte(address, (u8) (value & 0xFF)) &&
+         write_byte(address + 1, (u8) ((value >> 8) & 0xFF)) &&
+         write_byte(address + 2, (u8) ((value >> 16) & 0xFF)) &&
+         write_byte(address + 3, (u8) ((value >> 24) & 0xFF));
 }
 
 static int sector_from_address(u32 address) {
@@ -415,6 +421,19 @@ static bool vfat_stage_prepare_sector(u8 sector) {
   return true;
 }
 
+static void vfat_stage_discard_sector(u8 sector) {
+  for(u16 i = 0; i < VFAT_STAGE_CLUSTER_COUNT; i++) {
+    const u16 ref = vfat_stage_refs[i];
+    if(ref == 0) continue;
+    const u16 ref_sector = (u16) ((ref - 1) / VFAT_STAGE_RECORDS_PER_SECTOR);
+    if(ref_sector != sector) continue;
+    vfat_stage_refs[i] = 0;
+    if(vfat_stage_active_count != 0) vfat_stage_active_count--;
+  }
+  vfat_stage_sector_prepared[sector] = false;
+  if(vfat_stage_sector == sector) vfat_stage_offset = 0;
+}
+
 static bool vfat_stage_advance_record(void) {
   if(vfat_stage_offset + VFAT_STAGE_RECORD_SIZE <= FLASH_SECTOR_SIZE) return true;
   vfat_stage_sector++;
@@ -447,8 +466,13 @@ bool vfat_stage_write(u16 cluster, const u8* data) {
     (u8) (crc & 0xFF), (u8) (crc >> 8),
     0, 0
   };
-  write_bytes(address, header, sizeof(header));
-  write_bytes(address + VFAT_STAGE_HEADER_SIZE, data, VFAT_STAGE_DATA_SIZE);
+  if(!write_bytes(address, header, sizeof(header)) ||
+     !write_bytes(address + VFAT_STAGE_HEADER_SIZE, data, VFAT_STAGE_DATA_SIZE)) {
+    // A partially programmed record cannot be overwritten without an erase.
+    // Drop all references into this sector so the retry starts from a clean one.
+    vfat_stage_discard_sector(vfat_stage_sector);
+    return false;
+  }
 
   if(vfat_stage_refs[index] == 0) vfat_stage_active_count++;
   vfat_stage_refs[index] = vfat_stage_current_ref();
@@ -570,6 +594,8 @@ static void reset_to_ignored_store(void) {
     sectors[i].used = FLASH_SECTOR_SIZE;
     sectors[i].dead = FLASH_SECTOR_SIZE;
   }
+  catalog_generation = 0;
+  active_catalog_sector = CATALOG_MIRROR_SECTOR;
   index_valid = true;
 }
 
@@ -580,26 +606,40 @@ static u8 flags_for_sector(const SectorInfo& info) {
   return 0;
 }
 
-static u16 catalog_snapshot_len(u8 entry_count) {
-  return (u16) (CATALOG_HEADER_SIZE +
+static usize catalog_header_size(u8 tag1) {
+  return tag1 == CATALOG_LEGACY_TAG1 ? CATALOG_LEGACY_HEADER_SIZE : CATALOG_HEADER_SIZE;
+}
+
+static u16 catalog_snapshot_len(u8 entry_count, usize header_size) {
+  return (u16) (header_size +
                 STORE_SECTOR_COUNT * CATALOG_SECTOR_INFO_SIZE +
                 (usize) entry_count * CATALOG_ENTRY_SIZE);
 }
 
-static u16 catalog_crc_from_flash(u32 base, u16 total_len) {
+static bool catalog_sector_available(usize sector) {
+#ifdef SPI_FLASH
+  return flash_is_ok && (flash.getCapacity() / FLASH_SECTOR_SIZE) > sector;
+#else
+  (void) sector;
+  return false;
+#endif
+}
+
+static u16 catalog_crc_from_flash(u32 base, u16 total_len, u8 tag1) {
+  const usize header_size = catalog_header_size(tag1);
   u16 crc = 0xFFFF;
   u8 header[CATALOG_HEADER_SIZE];
-  read_bytes(base, header, sizeof(header));
+  read_bytes(base, header, header_size);
   crc = crc16_update(crc, header[0]);
   crc = crc16_update(crc, header[1]);
-  for(u8 i = 3; i < CATALOG_HEADER_SIZE; i++) {
+  for(u8 i = 3; i < header_size; i++) {
     if(i == 7 || i == 8) continue;
     crc = crc16_update(crc, header[i]);
   }
-  return crc16_over_flash(crc, base + CATALOG_HEADER_SIZE, (u16) (total_len - CATALOG_HEADER_SIZE));
+  return crc16_over_flash(crc, base + header_size, (u16) (total_len - header_size));
 }
 
-static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len) {
+static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len, u32 generation) {
   u16 crc = 0xFFFF;
   crc = crc16_update(crc, CATALOG_TAG0);
   crc = crc16_update(crc, CATALOG_TAG1);
@@ -607,6 +647,10 @@ static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len) {
   crc = crc16_update(crc, entry_count);
   crc = crc16_update(crc, (u8) (total_len & 0xFF));
   crc = crc16_update(crc, (u8) (total_len >> 8));
+  crc = crc16_update(crc, (u8) (generation & 0xFF));
+  crc = crc16_update(crc, (u8) ((generation >> 8) & 0xFF));
+  crc = crc16_update(crc, (u8) ((generation >> 16) & 0xFF));
+  crc = crc16_update(crc, (u8) ((generation >> 24) & 0xFF));
 
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
     const SectorInfo& info = sectors[i];
@@ -642,27 +686,24 @@ static u16 catalog_crc_from_ram(u8 entry_count, u16 total_len) {
   return crc;
 }
 
-static bool save_catalog(void) {
-#ifdef SPI_FLASH
-  if(!flash_is_ok) return false;
-#else
-  return false;
-#endif
-
+static bool save_catalog_to(usize catalog_sector, u32 generation) {
+  if(!catalog_sector_available(catalog_sector)) return false;
   const u8 entry_count = index_count;
-  const u16 total_len = catalog_snapshot_len(entry_count);
+  const u16 total_len = catalog_snapshot_len(entry_count, CATALOG_HEADER_SIZE);
   if(total_len > FLASH_SECTOR_SIZE) return false;
 
-  if(!erase_sector(CATALOG_SECTOR)) return false;
+  if(!erase_sector(catalog_sector)) return false;
 
-  const u32 base = sector_base(CATALOG_SECTOR);
-  const u16 crc = catalog_crc_from_ram(entry_count, total_len);
+  const u32 base = sector_base(catalog_sector);
+  const u16 crc = catalog_crc_from_ram(entry_count, total_len, generation);
   const u8 header[CATALOG_HEADER_SIZE] = {
     CATALOG_TAG0, CATALOG_TAG1, STATE_WRITING, (u8) STORE_SECTOR_COUNT, entry_count,
     (u8) (total_len & 0xFF), (u8) (total_len >> 8),
-    (u8) (crc & 0xFF), (u8) (crc >> 8)
+    (u8) (crc & 0xFF), (u8) (crc >> 8),
+    (u8) (generation & 0xFF), (u8) ((generation >> 8) & 0xFF),
+    (u8) ((generation >> 16) & 0xFF), (u8) ((generation >> 24) & 0xFF)
   };
-  write_bytes(base, header, sizeof(header));
+  if(!write_bytes(base, header, sizeof(header))) return false;
 
   u32 pos = base + CATALOG_HEADER_SIZE;
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
@@ -674,7 +715,7 @@ static bool save_catalog(void) {
       (u8) (info.used & 0xFF), (u8) (info.used >> 8),
       (u8) (info.live & 0xFF), (u8) (info.live >> 8)
     };
-    write_bytes(pos, record, sizeof(record));
+    if(!write_bytes(pos, record, sizeof(record))) return false;
     pos += sizeof(record);
   }
 
@@ -695,37 +736,61 @@ static bool save_catalog(void) {
     record[7] = (u8) (entry.total_len & 0xFF);
     record[8] = (u8) (entry.total_len >> 8);
     for(u8 n = 0; n < NAME_SIZE; n++) record[9 + n] = (u8) entry.name[n];
-    write_bytes(pos, record, sizeof(record));
+    if(!write_bytes(pos, record, sizeof(record))) return false;
     pos += sizeof(record);
   }
 
-  write_byte(base + 2, STATE_ACTIVE);
+  return write_byte(base + 2, STATE_ACTIVE);
+}
+
+static bool save_catalog(void) {
+  u32 next = catalog_generation + 1;
+  if(next == 0) next = 1;
+
+  usize target = CATALOG_PRIMARY_SECTOR;
+  if(catalog_sector_available(CATALOG_MIRROR_SECTOR)) {
+    target = active_catalog_sector == CATALOG_PRIMARY_SECTOR
+      ? CATALOG_MIRROR_SECTOR
+      : CATALOG_PRIMARY_SECTOR;
+  }
+  if(!save_catalog_to(target, next)) return false;
+  active_catalog_sector = target;
+  catalog_generation = next;
   return true;
 }
 
-static bool load_catalog(void) {
-#ifdef SPI_FLASH
-  if(!flash_is_ok) return false;
-#else
-  return false;
-#endif
-
-  const u32 base = sector_base(CATALOG_SECTOR);
-  if(read_byte(base) != CATALOG_TAG0 || read_byte(base + 1) != CATALOG_TAG1) return false;
+static bool catalog_header_valid(usize catalog_sector, u32& generation, u8& tag1, u8& entry_count, u16& total_len) {
+  if(!catalog_sector_available(catalog_sector)) return false;
+  const u32 base = sector_base(catalog_sector);
+  if(read_byte(base) != CATALOG_TAG0) return false;
+  tag1 = read_byte(base + 1);
+  if(tag1 != CATALOG_LEGACY_TAG1 && tag1 != CATALOG_TAG1) return false;
   if(read_byte(base + 2) != STATE_ACTIVE) return false;
   if(read_byte(base + 3) != (u8) STORE_SECTOR_COUNT) return false;
 
-  const u8 entry_count = read_byte(base + 4);
+  entry_count = read_byte(base + 4);
   if(entry_count > MAX_ENTRIES) return false;
-  const u16 total_len = read_le16(base + 5);
-  if(total_len != catalog_snapshot_len(entry_count) || total_len > FLASH_SECTOR_SIZE) return false;
+  total_len = read_le16(base + 5);
+  const usize header_size = catalog_header_size(tag1);
+  if(total_len != catalog_snapshot_len(entry_count, header_size) || total_len > FLASH_SECTOR_SIZE) return false;
   if(total_len < FLASH_SECTOR_SIZE && read_byte(base + total_len) != 0xFF) return false;
+  if(catalog_crc_from_flash(base, total_len, tag1) != read_le16(base + 7)) return false;
 
-  const u16 stored_crc = read_le16(base + 7);
-  if(catalog_crc_from_flash(base, total_len) != stored_crc) return false;
+  generation = tag1 == CATALOG_LEGACY_TAG1 ? 0 : read_le32(base + 9);
+  return true;
+}
 
+static bool load_catalog_from(usize catalog_sector) {
+  u32 generation = 0;
+  u8 tag1 = 0;
+  u8 entry_count = 0;
+  u16 total_len = 0;
+  if(!catalog_header_valid(catalog_sector, generation, tag1, entry_count, total_len)) return false;
+
+  const u32 base = sector_base(catalog_sector);
+  const usize header_size = catalog_header_size(tag1);
   reset_state();
-  u32 pos = base + CATALOG_HEADER_SIZE;
+  u32 pos = base + header_size;
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
     u8 record[CATALOG_SECTOR_INFO_SIZE];
     read_bytes(pos, record, sizeof(record));
@@ -787,7 +852,32 @@ static bool load_catalog(void) {
   }
 
   index_valid = true;
+  active_catalog_sector = catalog_sector;
+  catalog_generation = generation;
   return true;
+}
+
+static bool catalog_generation_is_newer(u32 left, u32 right) {
+  return (i32) (left - right) > 0;
+}
+
+static bool load_catalog(void) {
+  u32 primary_generation = 0;
+  u32 mirror_generation = 0;
+  u8 primary_tag = 0, mirror_tag = 0;
+  u8 primary_entries = 0, mirror_entries = 0;
+  u16 primary_len = 0, mirror_len = 0;
+  const bool primary_ok = catalog_header_valid(CATALOG_PRIMARY_SECTOR, primary_generation, primary_tag, primary_entries, primary_len);
+  const bool mirror_ok = catalog_header_valid(CATALOG_MIRROR_SECTOR, mirror_generation, mirror_tag, mirror_entries, mirror_len);
+
+  if(!primary_ok && !mirror_ok) return false;
+  const bool mirror_first = mirror_ok && (!primary_ok || catalog_generation_is_newer(mirror_generation, primary_generation));
+  if(mirror_first) {
+    if(load_catalog_from(CATALOG_MIRROR_SECTOR)) return true;
+    return primary_ok && load_catalog_from(CATALOG_PRIMARY_SECTOR);
+  }
+  if(load_catalog_from(CATALOG_PRIMARY_SECTOR)) return true;
+  return mirror_ok && load_catalog_from(CATALOG_MIRROR_SECTOR);
 }
 
 bool refresh(void) {
@@ -816,13 +906,15 @@ bool format(void) {
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) {
     if(!erase_sector(i)) return false;
   }
-  (void) erase_sector(CATALOG_SECTOR);
+  if(!erase_sector(CATALOG_PRIMARY_SECTOR)) return false;
+  if(catalog_sector_available(CATALOG_MIRROR_SECTOR) && !erase_sector(CATALOG_MIRROR_SECTOR)) return false;
   vfat_stage_clear();
   reset_state();
   for(usize i = 0; i < STORE_SECTOR_COUNT; i++) sectors[i].empty = true;
+  catalog_generation = 0;
+  active_catalog_sector = CATALOG_MIRROR_SECTOR;
   index_valid = true;
-  (void) save_catalog();
-  return true;
+  return save_catalog();
 #else
   return false;
 #endif
@@ -875,15 +967,36 @@ static int current_sector(void) {
   return best;
 }
 
+static void seal_sector_after_write_failure(usize sector) {
+  if(sector >= STORE_SECTOR_COUNT) return;
+  SectorInfo& info = sectors[sector];
+  if(!info.active) {
+    memset(&info, 0, sizeof(info));
+    info.foreign = true;
+    info.used = FLASH_SECTOR_SIZE;
+    info.dead = FLASH_SECTOR_SIZE;
+    return;
+  }
+  info.used = FLASH_SECTOR_SIZE;
+  info.dead = info.live <= FLASH_SECTOR_SIZE - SECTOR_HEADER_SIZE
+    ? (u16) (FLASH_SECTOR_SIZE - SECTOR_HEADER_SIZE - info.live)
+    : 0;
+}
+
 static bool open_sector(usize sector) {
   const u32 base = sector_base(sector);
-  write_byte(base, SECTOR_TAG0);
-  write_byte(base + 1, SECTOR_TAG1);
-  write_byte(base + 2, STATE_WRITING);
-  const u32 generation = next_generation++;
+  const u32 generation = next_generation;
+  if(!write_byte(base, SECTOR_TAG0) ||
+     !write_byte(base + 1, SECTOR_TAG1) ||
+     !write_byte(base + 2, STATE_WRITING) ||
+     !write_le32(base + 3, generation) ||
+     !write_byte(base + 2, STATE_ACTIVE)) {
+    seal_sector_after_write_failure(sector);
+    (void) save_catalog();
+    return false;
+  }
+  next_generation++;
   if(next_generation == 0) next_generation = 1;
-  write_le32(base + 3, generation);
-  write_byte(base + 2, STATE_ACTIVE);
 
   SectorInfo& info = sectors[sector];
   memset(&info, 0, sizeof(info));
@@ -916,11 +1029,22 @@ static bool copy_live_records(usize victim, usize destination, u16& dest_used) {
     if(copy) {
       if((usize) dest_used + meta.total_len > FLASH_SECTOR_SIZE) return false;
       const u32 dst = sector_base(destination) + dest_used;
-      write_byte(dst, read_byte(src));
-      write_byte(dst + 1, read_byte(src + 1));
-      write_byte(dst + 2, STATE_WRITING);
-      for(u16 i = 3; i < meta.total_len; i++) write_byte(dst + i, read_byte(src + i));
-      write_byte(dst + 2, STATE_ACTIVE);
+      if(!write_byte(dst, read_byte(src)) ||
+         !write_byte(dst + 1, read_byte(src + 1)) ||
+         !write_byte(dst + 2, STATE_WRITING)) {
+        seal_sector_after_write_failure(destination);
+        return false;
+      }
+      for(u16 i = 3; i < meta.total_len; i++) {
+        if(!write_byte(dst + i, read_byte(src + i))) {
+          seal_sector_after_write_failure(destination);
+          return false;
+        }
+      }
+      if(!write_byte(dst + 2, STATE_ACTIVE)) {
+        seal_sector_after_write_failure(destination);
+        return false;
+      }
       char name[NAME_SIZE];
       if(read_name(src, meta, name)) {
         const int idx = find_index(meta.type, name);
@@ -954,15 +1078,34 @@ static bool garbage_collect(u16 min_free) {
 
   if(!open_sector((usize) empty)) return false;
   u16 dest_used = SECTOR_HEADER_SIZE;
-  if(!copy_live_records((usize) victim, (usize) empty, dest_used)) return false;
+  if(!copy_live_records((usize) victim, (usize) empty, dest_used)) {
+    (void) load_catalog();
+    return false;
+  }
   sectors[empty].used = dest_used;
   sectors[empty].live = sectors[victim].live;
   sectors[empty].dead = 0;
+
+  // Publish the relocated records before erasing their old copies. If power is
+  // lost after this catalog commit, the destination is authoritative and the
+  // still-present victim is merely quarantined as foreign.
+  const SectorInfo victim_before = sectors[victim];
+  memset(&sectors[victim], 0, sizeof(sectors[victim]));
+  sectors[victim].foreign = true;
+  sectors[victim].used = FLASH_SECTOR_SIZE;
+  sectors[victim].dead = FLASH_SECTOR_SIZE;
+  if(!save_catalog()) {
+    sectors[victim] = victim_before;
+    (void) load_catalog();
+    return false;
+  }
+
   if(!erase_sector((usize) victim)) return false;
   memset(&sectors[victim], 0, sizeof(sectors[victim]));
   sectors[victim].empty = true;
-  (void) save_catalog();
-  return true;
+  // Failure here only leaks one reusable sector: the previous valid catalog
+  // still marks it foreign, while all live data already points at destination.
+  return save_catalog();
 }
 
 static bool ensure_space(u16 record_len) {
@@ -1010,31 +1153,8 @@ static bool valid_write(ProgramType type, const char* name, u16 data_len) {
   return true;
 }
 
-static void mark_deleted_at(u32 address) {
-  write_byte(address + 2, STATE_DELETED);
-}
-
-static void mark_all_deleted(ProgramType type, const char* name, u32 keep_address = 0xFFFFFFFFUL) {
-  for(usize sector = 0; sector < STORE_SECTOR_COUNT; sector++) {
-    if(!sectors[sector].active) continue;
-    u16 offset = SECTOR_HEADER_SIZE;
-    while(offset < sectors[sector].used) {
-      RecordMeta meta;
-      bool empty = false;
-      const u32 address = sector_base(sector) + offset;
-      if(!parse_record(address, offset, meta, empty)) break;
-      if(address == keep_address) {
-        offset = (u16) (offset + meta.total_len);
-        continue;
-      }
-      if(meta.state == STATE_ACTIVE && meta.type == type && record_crc(address, meta) == meta.crc) {
-        char record_name[NAME_SIZE];
-        if(read_name(address, meta, record_name) && strncmp(record_name, name, NAME_SIZE) == 0) mark_deleted_at(address);
-      }
-      offset = (u16) (offset + meta.total_len);
-    }
-  }
-  index_valid = false;
+static bool mark_deleted_at(u32 address) {
+  return write_byte(address + 2, STATE_DELETED);
 }
 
 bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
@@ -1064,15 +1184,19 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
     (u8) (data_len & 0xFF), (u8) (data_len >> 8),
     (u8) (crc & 0xFF), (u8) (crc >> 8)
   };
-  write_bytes(address, header, sizeof(header));
-  write_bytes(address + header_len, (const u8*) name, nlen);
-  write_bytes(address + header_len + nlen, data, data_len);
-  write_byte(address + 2, STATE_ACTIVE);
+  if(!write_bytes(address, header, sizeof(header)) ||
+     !write_bytes(address + header_len, (const u8*) name, nlen) ||
+     !write_bytes(address + header_len + nlen, data, data_len) ||
+     !write_byte(address + 2, STATE_ACTIVE)) {
+    seal_sector_after_write_failure((usize) sector);
+    (void) save_catalog();
+    return false;
+  }
 
   sectors[sector].used = (u16) (sectors[sector].used + record_len);
   add_live_to_sector(address, record_len);
   if(old_idx >= 0) {
-    mark_deleted_at(old_address);
+    (void) mark_deleted_at(old_address);
     move_live_to_dead(old_address, old_total_len);
   }
 
@@ -1085,8 +1209,7 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   meta.header_len = header_len;
   meta.total_len = record_len;
   update_index(meta, name, address);
-  (void) save_catalog();
-  return true;
+  return save_catalog();
 }
 
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len) {
@@ -1131,11 +1254,10 @@ bool remove(ProgramType type, const char* name) {
   if(idx < 0) return false;
   const u32 address = index_entries[idx].address;
   const u16 total_len = index_entries[idx].total_len;
-  mark_deleted_at(address);
+  (void) mark_deleted_at(address);
   move_live_to_dead(address, total_len);
   remove_index_at((u8) idx);
-  (void) save_catalog();
-  return true;
+  return save_catalog();
 }
 
 u16 purge_empty(void) {
@@ -1150,7 +1272,7 @@ u16 purge_empty(void) {
     }
     const u32 address = index_entries[i].address;
     const u16 total_len = index_entries[i].total_len;
-    mark_deleted_at(address);
+    (void) mark_deleted_at(address);
     move_live_to_dead(address, total_len);
     remove_index_at(i);
     purged++;

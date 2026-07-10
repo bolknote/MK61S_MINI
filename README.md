@@ -51,6 +51,28 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-BASIC.pdf
 
 Желающие поправить проект "под себя", могут это сделать на Open Source Hardware Lab - <a href="https://oshwlab.com/un7fgo/mk61s_v1_copy_copy_copy_copy"> ЗДЕСЬ </a>
 
+## Проверка исходного кода
+
+Host-тесты требуют `clang++` с поддержкой C++17 и запускаются одной командой:
+
+```bash
+tests/run_all_tests.sh
+```
+
+Для дополнительной проверки границ памяти и неопределённого поведения:
+
+```bash
+MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
+```
+
+Тестовый набор проверяет BASIC, FOCAL, TinyBASIC, математический CORE-бэкенд,
+Virtual FAT и реальное устройство `program_store` через модель SPI flash с
+инъекцией ошибок записи и повреждения каталога.
+
+Референсная сборка прошивки использует STM32 Arduino Core `2.12.0`,
+`LiquidCrystal 1.0.7` и `SPIMemory 3.4.0`. Точная матрица плат и дисплеев
+зафиксирована в [release workflow](.github/workflows/firmware-release.yml).
+
 73!
 
 ![](https://komarev.com/ghpvc/?username=MK61s-mini)

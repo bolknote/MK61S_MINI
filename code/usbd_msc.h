@@ -47,6 +47,12 @@ extern "C" {
 #define MSC_MEDIA_PACKET             512U
 #endif /* MSC_MEDIA_PACKET */
 
+/* Storage callbacks may defer a write until the firmware main loop can run it
+ * outside the USB interrupt. Negative remains failure; zero is completed. */
+#define USBD_MSC_STORAGE_ERROR       (-1)
+#define USBD_MSC_STORAGE_OK          0
+#define USBD_MSC_STORAGE_BUSY        1
+
 #define MSC_MAX_FS_PACKET            0x40U
 #define MSC_MAX_HS_PACKET            0x200U
 

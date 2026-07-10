@@ -3,6 +3,10 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_tinybasic_self_test"
+sanitizer_flags=()
+if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
+  sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+fi
 
 tinybasic_enabled="${MK61_ENABLE_TINYBASIC:-}"
 if [[ -z "$tinybasic_enabled" ]]; then
@@ -19,6 +23,7 @@ if [[ "$tinybasic_enabled" == "0" ]]; then
 fi
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" \
   -DTINYBASIC_HOST_TEST \
   -DTINYBASIC_SELF_TEST \
   -DMK61_ENABLE_TINYBASIC="$tinybasic_enabled" \

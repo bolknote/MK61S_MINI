@@ -1012,14 +1012,10 @@ bool  EraseFlash(void) {
     MK61DisplayUpdate update(lcd);
     lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase slot ", "CTEP SLOT "));
   }
-  for(usize i=0; i <= MAX_SLOT_FOR_PROGRAM; i++){
-     erase_slot(i);
-     {
-       MK61DisplayUpdate update(lcd);
-       lcd.setCursor(11, 0); lcd.print(i);
-     }
+  if(!program_store::format()) {
+    message_and_waitkey(library_mk61::text("Flash error", "FLASH ERROR"));
+    return action::MENU_BACK;
   }
-  program_store::init();
   {
     MK61DisplayUpdate update(lcd);
     lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase settings", "CTEP SETUP"));

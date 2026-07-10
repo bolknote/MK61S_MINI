@@ -24,7 +24,6 @@
 #include "mk61emu_core.h"
 #include "debug.h"
 #include "config.h"
-#include "tools.hpp"
 #include "rust_types.h"
 
 typedef struct {  // Структору ПЗУ для одной микросхемы комплекта К145ИК(02,03,06)

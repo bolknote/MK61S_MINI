@@ -637,6 +637,7 @@ void  loop() {
 }
 
 void idle_main_process(void) {
+  usb_mass_storage::service();
   sound_poll();
   led::control();
   lcd.flush();

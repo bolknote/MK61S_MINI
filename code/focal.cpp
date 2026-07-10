@@ -1855,6 +1855,9 @@ static void display_focal_saved(const FocalProgram& program) {
 bool CompileFocal(char* program) {
   const int slot = find_free_program();
   if(slot < 0) return focal_error("FULL?");
+#ifndef FOCAL_HOST_TEST
+  const i8 previous_next = NextFocal;
+#endif
 
   if(!focal_compile_source(program, focal_ast)) {
     memset(&programs[slot], 0, sizeof(programs[slot]));
@@ -1867,7 +1870,11 @@ bool CompileFocal(char* program) {
   programs[slot].used = true;
   NextFocal = (i8) slot;
 #ifndef FOCAL_HOST_TEST
-  program_store::write(program_store::ProgramType::FOCAL, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len);
+  if(!program_store::write(program_store::ProgramType::FOCAL, programs[slot].name, (const u8*) programs[slot].source, programs[slot].source_len)) {
+    memset(&programs[slot], 0, sizeof(programs[slot]));
+    NextFocal = previous_next;
+    return focal_error("FULL?");
+  }
 #endif
   display_focal_ok(programs[slot]);
   return true;
@@ -2466,6 +2473,7 @@ static bool focal_input_program_name(char* name, usize size) {
 }
 
 static bool store_edited_program(int slot, char* source, const char* store_name) {
+  if(slot < 0 || slot > FOCAL_PROGRAM_COUNT) return focal_error("SLOT?");
   char old_name[FOCAL_NAME_SIZE] = "";
   if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) {
     focal_copy_text(old_name, sizeof(old_name), programs[slot].name);
@@ -2479,6 +2487,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
     slot = focal_alloc_program_slot(store_name);
 #endif
   }
+  if(slot < 0 || slot >= FOCAL_PROGRAM_COUNT) return focal_error("SLOT?");
 
   focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
@@ -2501,7 +2510,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
 static void EditFocalSlot(int slot) {
   char source[FOCAL_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
-  if(slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(source, sizeof(source), programs[slot].source);
+  if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(source, sizeof(source), programs[slot].source);
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, FOCAL_SOURCE_SIZE);
@@ -2543,7 +2552,7 @@ static void EditFocalSlot(int slot) {
       if(!focal_confirm_save()) return;
       char name[FOCAL_NAME_SIZE];
       memset(name, 0, sizeof(name));
-      if(slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(name, sizeof(name), programs[slot].name);
+      if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(name, sizeof(name), programs[slot].name);
       else focal_program_default_name(find_free_program() < 0 ? 0 : find_free_program(), name, sizeof(name));
       if(focal_input_program_name(name, sizeof(name)) && store_edited_program(slot, source, name)) return;
       kbd::debounce_init();

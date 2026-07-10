@@ -157,6 +157,7 @@ typedef struct _SENSE_ITEM
   * @{
   */
 int8_t SCSI_ProcessCmd(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *cmd);
+int8_t SCSI_ContinueWrite(USBD_HandleTypeDef *pdev);
 
 void SCSI_SenseCode(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t sKey,
                     uint8_t ASC);
