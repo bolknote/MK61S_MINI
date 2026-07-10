@@ -10,8 +10,13 @@ fi
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
+  -DARDUINO=100 \
+  -DMK61_DISPLAY_UC1609 \
   -I"$root/code" \
+  -I"$root/tests/mk_math_shim" \
   "$root/tests/display_font_self_test.cpp" \
+  "$root/code/builtin_font.cpp" \
+  "$root/code/ERM19264_graphics_font.cpp" \
   "$root/code/fmk_font.cpp" \
   "$root/code/text_screen.cpp" \
   -o "$out"

@@ -154,7 +154,7 @@ class class_disassm_mk61 {
                   disasm_store_u32_le(buffer, (u32) (get_register_symbol(code - 0x30) << 24 | 'x' << 16 | LCD_RT_ARROW_CHAR << 8 | P_RUS)); //  MK61 мнемоника П->x
                 #endif
               } else if(code >= 0x70 && code < 0x80) { // Кx#0n
-                disasm_store_u32_le(buffer, (u32) '0' << 24 | 0x00B70000 | (u32)  'x' << 8 | 'K');
+                disasm_store_u32_le(buffer, (u32) '0' << 24 | (u32) LCD_NOT_EQU_CHAR << 16 | (u32) 'x' << 8 | 'K');
               } else if(code >= 0x80 && code < 0x90) { // КБПn
                 disasm_store_u32_le(buffer, (u32) get_register_symbol(code - 0x50) << 24 | (u32)  P_RUS << 16 | (u32)  B_RUS << 8 | 'K');
               } else if(code >= 0x90 && code < 0xA0) { // Kx>=0n
@@ -194,7 +194,6 @@ class class_disassm_mk61 {
 
   public:
     class_disassm_mk61(void) : lcd_enable(false), cache_IP_mk61(-1) {};
-
     inline void  print(void) {
       char disasm[LEN_DISASM_LINE+1];
 

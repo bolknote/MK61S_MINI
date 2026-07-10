@@ -757,11 +757,13 @@ static void view_font_entry(const program_store::Entry& entry, const u8* data, u
     wait_explorer_key(false);
     return;
   }
+#if !defined(MK61_DISPLAY_UC1609)
   if(!face.metrics().monospaced) {
     show_message("Proportional", "Пропорциональный", "Not supported", "Не поддержан");
     wait_explorer_key(false);
     return;
   }
+#endif
 
 #if defined(MK61_DISPLAY_UC1609)
   if(!lcd.setFontPreview(data, len)) {

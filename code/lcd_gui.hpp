@@ -3,38 +3,40 @@
 #include  "config.h"
 #include  "rust_types.h"
 #include  "display.hpp"
+#include  "display_symbols.hpp"
 #include  "lcd_charset.hpp"
 #include  "mk61emu_core.h"
 
 extern MK61Display lcd;
 
-static const u8 GE                = 0x00;
 #if defined(MK61_DISPLAY_UC1609)
-static const u8 P_RUS             = 0x10;
-static const u8 B_RUS             = 0x13;
-static const u8 D_RUS             = 0x12;
-static const u8 I_RUS             = 0x14;
-static const u8 G_RUS             = 0x11;
-static const u8 LCD_CHAR_POW2     = 0x15;
-static const u8 LCD_CHAR_POWY     = 0x16;
-static const u8 LCD_CHAR_XOR      = 0x17;
+static const u8 GE                = display_symbol::uc1609::GE;
+static const u8 P_RUS             = display_symbol::uc1609::CYR_PE;
+static const u8 B_RUS             = display_symbol::uc1609::CYR_BE;
+static const u8 D_RUS             = display_symbol::uc1609::CYR_DE;
+static const u8 I_RUS             = display_symbol::uc1609::CYR_I;
+static const u8 G_RUS             = display_symbol::uc1609::CYR_GHE;
+static const u8 LCD_CHAR_POW2     = display_symbol::uc1609::POW2;
+static const u8 LCD_CHAR_POWY     = display_symbol::uc1609::POWY;
+static const u8 LCD_CHAR_XOR      = display_symbol::uc1609::XOR;
 
 /* Набор символов авторского UC1609-шрифта */
-static const u8 LCD_CYC_ARROW     = 0x05;
-static const u8 LCD_DIVIDE_CHAR   = 0x08;
-static const u8 LCD_NOT_EQU_CHAR  = 0x07;
-static const u8 LCD_POW_X_CHAR    = 0x06;
-static const u8 LCD_UP_ARROW_CHAR = 0x0B;
-static const u8 LCD_LT_ARROW_CHAR = 0x0D;
-static const u8 LCD_RT_ARROW_CHAR = 0x0C;
-static const u8 LCD_PI_CHAR       = 0x0A;
-static const u8 LCD_SQRT_CHAR     = 0x09;
-static const u8 LCD_Em1_CHAR      = 0x18;
-static const u8 LCD_GRAD_CHAR     = 0x0F;
+static const u8 LCD_CYC_ARROW     = display_symbol::uc1609::CYC_ARROW;
+static const u8 LCD_DIVIDE_CHAR   = display_symbol::uc1609::DIVIDE;
+static const u8 LCD_NOT_EQU_CHAR  = display_symbol::uc1609::NOT_EQUAL;
+static const u8 LCD_POW_X_CHAR    = display_symbol::uc1609::POW_X;
+static const u8 LCD_UP_ARROW_CHAR = display_symbol::uc1609::UP_ARROW;
+static const u8 LCD_LT_ARROW_CHAR = display_symbol::uc1609::LT_ARROW;
+static const u8 LCD_RT_ARROW_CHAR = display_symbol::uc1609::RT_ARROW;
+static const u8 LCD_PI_CHAR       = display_symbol::uc1609::PI_SYMBOL;
+static const u8 LCD_SQRT_CHAR     = display_symbol::uc1609::SQRT;
+static const u8 LCD_Em1_CHAR      = display_symbol::uc1609::EM1;
+static const u8 LCD_GRAD_CHAR     = display_symbol::uc1609::GRAD;
 static const u8 LCD_QUOTE_CHAR    = 0x60;
 static const u8 LCD_DOUBLE_QUOTE_CHAR    = 0x22;
-static const u8 CH_RUS            = 0x04;
+static const u8 CH_RUS            = display_symbol::uc1609::CYR_CHE;
 #elif defined(MK61_LCD1602_A02)
+static const u8 GE                = 0x00;
 static const u8 P_RUS             = lcd_charset::CYR_PE;
 static const u8 B_RUS             = lcd_charset::CYR_BE;
 static const u8 D_RUS             = lcd_charset::CYR_DE;
@@ -60,6 +62,7 @@ static const u8 LCD_QUOTE_CHAR    = 0x60;
 static const u8 LCD_DOUBLE_QUOTE_CHAR    = 0x22;
 static const u8 CH_RUS            = lcd_charset::CYR_CHE;
 #else
+static const u8 GE                = 0x00;
 static const u8 P_RUS             = 0x01;
 static const u8 B_RUS             = 0x02;
 static const u8 D_RUS             = 0x03;
