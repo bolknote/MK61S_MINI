@@ -271,22 +271,28 @@
 
 #ifdef MK61s
     #ifdef MK61_BOARD_40TH
-      const char MODEL[] = "MK61s-40th";
+      constexpr char MODEL[] = "MK61s-40th";
       //                       0123456789ABCDEF
-      const char FULL_MODEL_NAME[] = "MK61s-40thUC1609";
+      constexpr char FULL_MODEL_NAME[] = "MK61s-40thUC1609";
     #else
-      const char MODEL[] = "MK61s";
+      constexpr char MODEL[] = "MK61s";
       //                       0123456789ABCDEF
-      const char FULL_MODEL_NAME[] = "MK61s *firmware*";
+      constexpr char FULL_MODEL_NAME[] = "MK61s *firmware*";
     #endif
   #else 
     #ifdef MK52s
-      const char MODEL[] = "MK52s";
-      const char FULL_MODEL_NAME[] = "MK52s *firmware*";
+      constexpr char MODEL[] = "MK52s";
+      constexpr char FULL_MODEL_NAME[] = "MK52s *firmware*";
     #endif
 #endif
 
-#define FIRMWARE_VER (char const[]) {__TIME__[0], __TIME__[1],__TIME__[3],__TIME__[4],__TIME__[6],__TIME__[7],' ',__DATE__[0], __DATE__[1], __DATE__[2], __DATE__[3], (__DATE__[4] == ' ' ?  '0' : __DATE__[4]), __DATE__[5], __DATE__[6], __DATE__[9], __DATE__[10], __DATE__[11]}
+// Displayed as "HHMMSS Mmm DD YY" (16 characters plus the terminator).
+constexpr char FIRMWARE_VER[] = {
+  __TIME__[0], __TIME__[1], __TIME__[3], __TIME__[4], __TIME__[6], __TIME__[7], ' ',
+  __DATE__[0], __DATE__[1], __DATE__[2], __DATE__[3],
+  (__DATE__[4] == ' ' ? '0' : __DATE__[4]), __DATE__[5], __DATE__[6],
+  __DATE__[9], __DATE__[10], '\0'
+};
 class class_calc_config {
   public:
     bool disassm;

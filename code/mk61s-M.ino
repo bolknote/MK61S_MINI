@@ -12,6 +12,7 @@ using namespace kbd;
 #include "display.hpp"
 #include "lcd_gui.hpp"
 #include "mnemo.hpp"
+#include "startup_splash.hpp"
 
 #include "mk61emu_core.h"
 
@@ -35,7 +36,6 @@ MK61Display lcd;
 
 static class_menu           mk61_menu = class_menu((t_punct**) library_mk61::MENU, library_mk61::COUNT_PUNCTS);
 
-const  class_glyph          glyph; //(lcd);
 const  class_LCD_Label      MarkLabel(0, 0);
 const  class_LCD_Label      XLabel(0, 1);
 
@@ -228,23 +228,17 @@ void setup() {
   lcd.begin(lcd_display::COLS, library_mk61::display_rows());
   lcd.setTextProfile(library_mk61::display_text_profile());
 
-  glyph.draw(0);
-  delay(1000);
-  for(int i=1; i < 17; i++) {
-    {
-      MK61DisplayUpdate update(lcd);
-      // смещение глифа на 1 колонку вправо
-      glyph.draw(i);
-      // вывод версии ПО как "бегущей строки" вслед за смещением вправо глифа
-      lcd.setCursor(0,0); lcd.print((char*) &FULL_MODEL_NAME[16-i]);
-      lcd.setCursor(0,1); lcd.print((char*) &FIRMWARE_VER[16-i]);
-    }
-    delay(2000/16);
-  }
-
   if(dfu_requested) {
     DFU_enable();
   }
+
+  #if defined(MK61_DISPLAY_LCD1602)
+    static_assert(lcd_display::COLS == startup_splash::COLS, "Splash width must match LCD width");
+    static_assert(lcd_display::ROWS == startup_splash::ROWS, "Splash height must match LCD height");
+    static_assert(sizeof(FULL_MODEL_NAME) == startup_splash::COLS + 1, "Model name must fill one LCD row");
+    static_assert(sizeof(FIRMWARE_VER) == startup_splash::COLS + 1, "Firmware version must fill one LCD row");
+    startup_splash::show(lcd, FULL_MODEL_NAME, FIRMWARE_VER);
+  #endif
 
  //---  Настройка отрисовки экрана
   lcd_hooked = false;               // экран не перeхвачен
