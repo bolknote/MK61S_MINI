@@ -292,7 +292,7 @@ bool  Confirmation(void) {
 
   {
     MK61DisplayUpdate update(lcd);
-    lcd.setCursor(0,0); lcd.print(library_mk61::text("press OK confirm", "OK \001O\003TBEP\003"));
+    library_mk61::print_localized_at(0, 0, "OK подтверд", "press OK confirm");
   }
   i32 key = kbd::get_key_wait();
   lcd_std_display_redraw();
@@ -841,7 +841,7 @@ bool Load(void) {
   {
     MK61DisplayUpdate update(lcd);
     lcd.clear();
-    lcd.setCursor(0, 0); lcd.print(library_mk61::text("Load ", "\321T "));
+    library_mk61::print_localized_at(0, 0, "ЧТ ", "Load ", 5);
     address = calc_address();
   }
   if(address < 0) return false; // error
@@ -869,7 +869,7 @@ inline bool check_empty_program(void) {
   const usize program_steps = core_61::program_steps();
   for(usize i=0; i < program_steps; i++) all_to_or |= (usize) core_61::get_code(/*mk61s.*/core_61::get_ring_address(i));
   if(all_to_or == 0) {
-    lcd.print(library_mk61::text("No program...", "HET \001PO\005PAMM"));
+    library_mk61::print_localized_at(0, 0, "Нет программ", "No program...");
     sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
     delay_with_sound_poll(1500);
     return true;
@@ -935,7 +935,7 @@ bool Store(void) {
   isize address;
   {
     MK61DisplayUpdate update(lcd);
-    lcd.print(library_mk61::text("Save ", "\001\004C ")); //lcd.setCursor(7, 0);
+    library_mk61::print_localized_at(0, 0, "ПИС ", "Save ", 5); //lcd.setCursor(7, 0);
     address = calc_address();
   }
   if(address < 0) return false; // error

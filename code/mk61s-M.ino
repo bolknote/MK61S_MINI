@@ -355,19 +355,19 @@ void key_press_handler(i32 keycode) {
   #endif
   switch(keycode) {
     case KEY_DEGREE:
-        MK61Emu_SetAngleUnit(DEGREE);
-        GRDLabel.print("  \x05");
-        angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
+      MK61Emu_SetAngleUnit(DEGREE);
+      GRDLabel.print(DEGREE);
+      angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
       break;
-    case KEY_GRADE: 
-        MK61Emu_SetAngleUnit(GRADE);
-        GRDLabel.print("\x05P\x03");
-        angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
+    case KEY_GRADE:
+      MK61Emu_SetAngleUnit(GRADE);
+      GRDLabel.print(GRADE);
+      angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
       break;
     case KEY_RADIAN:
-        MK61Emu_SetAngleUnit(RADIAN);
-        GRDLabel.print("P  ");
-        angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
+      MK61Emu_SetAngleUnit(RADIAN);
+      GRDLabel.print(RADIAN);
+      angle_save.schedule(now, ANGLE_SAVE_UPDATE_MS);
       break;
     default:
       if(keycode >= 0) {

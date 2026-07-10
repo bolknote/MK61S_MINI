@@ -1,6 +1,7 @@
 #include "builtin_font.hpp"
 
 #include "config.h"
+#include "display_symbols.hpp"
 #if defined(MK61_DISPLAY_UC1609)
   #include "ERM19264_graphics_font.h"
 #endif
@@ -87,14 +88,49 @@ static const Glyph5x8 CYRILLIC[] = {
 #endif
 };
 
+static const Glyph5x8 SPECIAL_5X8[] = {
+  {display_symbol::uc1609::GE, {0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01001, 0b00010, 0b00100}}
+};
+
+static u16 aliasedCodepoint(u16 codepoint) {
+#if defined(MK61_DISPLAY_UC1609)
+  return display_symbol::uc1609::builtinCodepoint(codepoint);
+#else
+  (void) codepoint;
+#endif
+  return codepoint;
+}
+
+static const u8* specialRows5x8(u16 codepoint) {
+  for(usize i = 0; i < sizeof(SPECIAL_5X8) / sizeof(SPECIAL_5X8[0]); i++) {
+    if(SPECIAL_5X8[i].codepoint == codepoint) return SPECIAL_5X8[i].rows;
+  }
+  return NULL;
+}
+
 static void setPixel(Raster& raster, u8 x, u8 y) {
   const usize stride = (raster.width + 7) / 8;
   raster.data[(usize) y * stride + x / 8] |= (u8) (0x80 >> (x & 7));
 }
 
+static bool decodeRows5x8(const u8* rows, Raster& out) {
+  if(rows == NULL) return false;
+  out.width = 5;
+  out.height = 8;
+  memset(out.data, 0, sizeof(out.data));
+  for(u8 y = 0; y < out.height; y++) {
+    for(u8 x = 0; x < out.width; x++) {
+      if((rows[y] & ((u8) 1 << (4 - x))) != 0) setPixel(out, x, y);
+    }
+  }
+  return true;
+}
+
 } // namespace
 
 const u8* rows5x8(u16 codepoint) {
+  if(const u8* rows = specialRows5x8(codepoint)) return rows;
+  codepoint = aliasedCodepoint(codepoint);
   for(usize i = 0; i < sizeof(CYRILLIC) / sizeof(CYRILLIC[0]); i++) {
     if(CYRILLIC[i].codepoint == codepoint) return CYRILLIC[i].rows;
   }
@@ -119,6 +155,9 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   return false;
 #else
   memset(out.data, 0, sizeof(out.data));
+  if(decodeRows5x8(specialRows5x8(codepoint), out)) return true;
+  codepoint = aliasedCodepoint(codepoint);
+
   if(face == FaceId::FONT_3X5) {
     const unsigned char* rows = font3x5Glyph(codepoint);
     if(rows == NULL) return false;
@@ -135,12 +174,7 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   out.width = 5;
   out.height = 8;
   if(const u8* rows = rows5x8(codepoint)) {
-    for(u8 y = 0; y < out.height; y++) {
-      for(u8 x = 0; x < out.width; x++) {
-        if((rows[y] & ((u8) 1 << (4 - x))) != 0) setPixel(out, x, y);
-      }
-    }
-    return true;
+    return decodeRows5x8(rows, out);
   }
 
   if(codepoint > 0x7E) return false;

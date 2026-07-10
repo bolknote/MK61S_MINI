@@ -182,6 +182,7 @@ class MK61Display : public Print {
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
     uint8_t active_font_data[fmk::MAX_FILE_SIZE];
+    uint8_t preview_font_data[fmk::MAX_FILE_SIZE];
     fmk::Face active_font;
     fmk::Face preview_font;
     bool active_font_enabled;
@@ -191,10 +192,12 @@ class MK61Display : public Print {
     bool dirty;
     usize update_depth;
     lcd_display::TextProfile active_profile;
+    lcd_display::TextProfile preview_saved_profile;
     bool cursor_underline;
     bool cursor_blink;
     bool cursor_blink_phase;
     t_time_ms cursor_next_blink_ms;
+    bool preview_profile_active;
 
     void clearShadow(void);
     void clearPhysicalScreen(void);

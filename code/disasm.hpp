@@ -141,7 +141,7 @@ class class_disassm_mk61 {
                   *(u32*) &buffer[0] = (u32) (get_register_symbol(code - 0x30) << 24 | 'x' << 16 | LCD_RT_ARROW_CHAR << 8 | P_RUS); //  MK61 мнемоника П->x
                 #endif
               } else if(code >= 0x70 && code < 0x80) { // Кx#0n
-                *(u32*) &buffer[0] = (u32) '0' << 24 | 0x00B70000 | (u32)  'x' << 8 | 'K';
+                *(u32*) &buffer[0] = (u32) '0' << 24 | (u32) LCD_NOT_EQU_CHAR << 16 | (u32)  'x' << 8 | 'K';
               } else if(code >= 0x80 && code < 0x90) { // КБПn
                 *(u32*) &buffer[0] = (u32) get_register_symbol(code - 0x50) << 24 | (u32)  P_RUS << 16 | (u32)  B_RUS << 8 | 'K';
               } else if(code >= 0x90 && code < 0xA0) { // Kx>=0n

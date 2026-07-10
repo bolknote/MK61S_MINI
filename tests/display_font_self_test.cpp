@@ -1,3 +1,5 @@
+#include "builtin_font.hpp"
+#include "display_symbols.hpp"
 #include "fmk_font.hpp"
 #include "text_screen.hpp"
 
@@ -159,6 +161,25 @@ static void test_lcd_scaling(void) {
   for(u8 i = 2; i < 8; i++) assert(preview[i].index == preview[i % 2].index);
 }
 
+static void test_uc1609_display_symbol_tokens(void) {
+  assert(display_symbol::uc1609::GE != 0);
+  assert(display_symbol::uc1609::CYC_ARROW >= 0x80);
+  assert(display_symbol::uc1609::NOT_EQUAL >= 0x80);
+  assert(display_symbol::uc1609::CYR_PE >= 0x80);
+  assert(display_symbol::uc1609::unicodeCodepoint(display_symbol::uc1609::GE) == 0x2265);
+  assert(display_symbol::uc1609::unicodeCodepoint(display_symbol::uc1609::NOT_EQUAL) == 0x2260);
+  assert(display_symbol::uc1609::unicodeCodepoint(display_symbol::uc1609::CYR_PE) == 0x041F);
+  assert(display_symbol::uc1609::builtinCodepoint(display_symbol::uc1609::NOT_EQUAL) == 0x07);
+
+  builtin_font::Raster raster;
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, display_symbol::uc1609::GE, raster));
+  assert(raster.width == 5 && raster.height == 8);
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, display_symbol::uc1609::NOT_EQUAL, raster));
+  assert(raster.width == 5 && raster.height == 8);
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_3X5, display_symbol::uc1609::CYR_PE, raster));
+  assert(raster.width == 3 && raster.height == 5);
+}
+
 static void test_text_grid(void) {
   const text_screen::FontGeometry geometry3x5 = text_screen::fitFontToDisplay(3, 5, 1);
   assert(geometry3x5.rows == 10 && geometry3x5.width == 3 && geometry3x5.height == 5 && geometry3x5.line_gap == 1);
@@ -220,6 +241,7 @@ int main(int argc, char** argv) {
   test_proportional_metadata_is_read();
   test_crc_and_padding_are_validated();
   test_lcd_scaling();
+  test_uc1609_display_symbol_tokens();
   test_text_grid();
   if(argc > 1) validate_external_font(argv[1]);
   printf("display_font_self_test: ok\n");
