@@ -24,6 +24,7 @@ namespace usb_mass_storage {
 
 static USBD_HandleTypeDef usb_device;
 static bool initialized = false;
+static bool session_open = false;
 
 static bool is_initialized(void) {
   return __atomic_load_n(&initialized, __ATOMIC_ACQUIRE);
@@ -37,6 +38,7 @@ enum class DeferredWriteState : u8 {
   EMPTY,
   PENDING,
   PROCESSING,
+  CANCELLED,
   COMPLETE_OK,
   COMPLETE_ERROR
 };
@@ -50,6 +52,33 @@ struct DeferredWrite {
 
 static DeferredWrite deferred_write = {DeferredWriteState::EMPTY, 0, 0, {0}};
 
+enum class DeferredReadState : u8 {
+  EMPTY,
+  PENDING,
+  PROCESSING,
+  CANCELLED,
+  COMPLETE_OK,
+  COMPLETE_ERROR
+};
+
+struct DeferredRead {
+  DeferredReadState state;
+  u32 block_addr;
+  u16 block_len;
+  u8* buffer;
+};
+
+static DeferredRead deferred_read = {DeferredReadState::EMPTY, 0, 0, NULL};
+
+enum class DeferredSyncState : u8 {
+  EMPTY,
+  PENDING,
+  PROCESSING,
+  CANCELLED
+};
+
+static DeferredSyncState deferred_sync_state = DeferredSyncState::EMPTY;
+
 static DeferredWriteState deferred_state(void) {
   return __atomic_load_n(&deferred_write.state, __ATOMIC_ACQUIRE);
 }
@@ -59,9 +88,51 @@ static void set_deferred_state(DeferredWriteState state) {
 }
 
 static void reset_deferred_write(void) {
+  DeferredWriteState expected = DeferredWriteState::PROCESSING;
+  if(__atomic_compare_exchange_n(&deferred_write.state, &expected,
+                                 DeferredWriteState::CANCELLED, false,
+                                 __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
   deferred_write.block_addr = 0;
   deferred_write.block_len = 0;
   set_deferred_state(DeferredWriteState::EMPTY);
+}
+
+static DeferredReadState deferred_read_state(void) {
+  return __atomic_load_n(&deferred_read.state, __ATOMIC_ACQUIRE);
+}
+
+static void set_deferred_read_state(DeferredReadState state) {
+  __atomic_store_n(&deferred_read.state, state, __ATOMIC_RELEASE);
+}
+
+static void reset_deferred_read(void) {
+  DeferredReadState expected = DeferredReadState::PROCESSING;
+  if(__atomic_compare_exchange_n(&deferred_read.state, &expected,
+                                 DeferredReadState::CANCELLED, false,
+                                 __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+  deferred_read.block_addr = 0;
+  deferred_read.block_len = 0;
+  deferred_read.buffer = NULL;
+  set_deferred_read_state(DeferredReadState::EMPTY);
+}
+
+static DeferredSyncState deferred_sync(void) {
+  return __atomic_load_n(&deferred_sync_state, __ATOMIC_ACQUIRE);
+}
+
+static void set_deferred_sync(DeferredSyncState state) {
+  __atomic_store_n(&deferred_sync_state, state, __ATOMIC_RELEASE);
+}
+
+static void reset_deferred_io(void) {
+  reset_deferred_write();
+  reset_deferred_read();
+  DeferredSyncState expected = DeferredSyncState::PROCESSING;
+  if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
+                                  DeferredSyncState::CANCELLED, false,
+                                  __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+    set_deferred_sync(DeferredSyncState::EMPTY);
+  }
 }
 
 static u8 string_desc[USBD_MAX_STR_DESC_SIZ];
@@ -165,7 +236,7 @@ static USBD_DescriptorsTypeDef descriptors = {
 
 static int8_t storage_init(uint8_t lun) {
   (void) lun;
-  reset_deferred_write();
+  reset_deferred_io();
   return USBD_MSC_STORAGE_OK;
 }
 
@@ -189,7 +260,29 @@ static int8_t storage_write_protected(uint8_t lun) {
 
 static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
   (void) lun;
-  return virtual_fat::read_sectors(block_addr, buf, block_len) ? 0 : -1;
+  const u32 data_len = (u32) block_len * virtual_fat::SECTOR_SIZE;
+  if(buf == NULL || block_len == 0 || data_len > MSC_MEDIA_PACKET) return USBD_MSC_STORAGE_ERROR;
+
+  const DeferredReadState state = deferred_read_state();
+  if(state == DeferredReadState::COMPLETE_OK || state == DeferredReadState::COMPLETE_ERROR) {
+    if(deferred_read.block_addr != block_addr || deferred_read.block_len != block_len ||
+       deferred_read.buffer != buf) {
+      reset_deferred_read();
+      return USBD_MSC_STORAGE_ERROR;
+    }
+    const int8_t result = state == DeferredReadState::COMPLETE_OK
+      ? USBD_MSC_STORAGE_OK
+      : USBD_MSC_STORAGE_ERROR;
+    reset_deferred_read();
+    return result;
+  }
+  if(state != DeferredReadState::EMPTY) return USBD_MSC_STORAGE_BUSY;
+
+  deferred_read.block_addr = block_addr;
+  deferred_read.block_len = block_len;
+  deferred_read.buffer = buf;
+  set_deferred_read_state(DeferredReadState::PENDING);
+  return USBD_MSC_STORAGE_BUSY;
 }
 
 static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
@@ -251,24 +344,34 @@ static USBD_StorageTypeDef storage = {
 
 bool init(void) {
   if(is_initialized()) return true;
+  if(session_open) {
+    set_initialized(true);
+    if(USBD_Start(&usb_device) == USBD_OK) return true;
+    set_initialized(false);
+    return false;
+  }
 
-  reset_deferred_write();
+  reset_deferred_io();
   if(!virtual_fat::reset_session()) return false;
+  session_open = true;
 
   if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) {
     virtual_fat::end_session();
+    session_open = false;
     return false;
   }
   if(USBD_RegisterClass(&usb_device, USBD_MSC_CLASS) != USBD_OK) {
     (void) USBD_DeInit(&usb_device);
     memset(&usb_device, 0, sizeof(usb_device));
     virtual_fat::end_session();
+    session_open = false;
     return false;
   }
   if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) {
     (void) USBD_DeInit(&usb_device);
     memset(&usb_device, 0, sizeof(usb_device));
     virtual_fat::end_session();
+    session_open = false;
     return false;
   }
 
@@ -278,16 +381,20 @@ bool init(void) {
     (void) USBD_DeInit(&usb_device);
     memset(&usb_device, 0, sizeof(usb_device));
     virtual_fat::end_session();
+    session_open = false;
     return false;
   }
 
   return true;
 }
 
-void deinit(void) {
+bool deinit(void) {
   if(!is_initialized()) {
+    if(!session_open) return true;
+    if(!virtual_fat::flush_pending()) return false;
     virtual_fat::end_session();
-    return;
+    session_open = false;
+    return true;
   }
   // Stop USB first: its interrupt drives the same SPI flash, and a storage
   // callback racing this flush would corrupt both transfers.
@@ -296,13 +403,22 @@ void deinit(void) {
   if(deferred_state() == DeferredWriteState::PENDING) {
     set_deferred_state(DeferredWriteState::PROCESSING);
     (void) virtual_fat::write_sectors(deferred_write.block_addr, deferred_write.data, deferred_write.block_len);
+    set_deferred_state(DeferredWriteState::EMPTY);
   }
-  reset_deferred_write();
+  reset_deferred_io();
   // Persist queued writes/deletes even when the host never ejected cleanly.
-  (void) virtual_fat::flush_pending();
+  if(!virtual_fat::flush_pending()) {
+    // Keep the session and reconnect the device. Discarding the language
+    // workspace here would lose writes that the host has already submitted.
+    set_initialized(true);
+    if(USBD_Start(&usb_device) != USBD_OK) set_initialized(false);
+    return false;
+  }
   (void) USBD_DeInit(&usb_device);
   memset(&usb_device, 0, sizeof(usb_device));
   virtual_fat::end_session();
+  session_open = false;
+  return true;
 }
 
 bool active(void) {
@@ -310,19 +426,80 @@ bool active(void) {
 }
 
 void service(void) {
-  if(!is_initialized() || deferred_state() != DeferredWriteState::PENDING) return;
+  if(!is_initialized()) return;
 
-  set_deferred_state(DeferredWriteState::PROCESSING);
-  const bool ok = virtual_fat::write_sectors(
-    deferred_write.block_addr,
-    deferred_write.data,
-    deferred_write.block_len
-  );
-  set_deferred_state(ok ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR);
+  if(deferred_state() == DeferredWriteState::PENDING) {
+    DeferredWriteState expected = DeferredWriteState::PENDING;
+    if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
+                                    DeferredWriteState::PROCESSING, false,
+                                    __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+    const bool ok = virtual_fat::write_sectors(
+      deferred_write.block_addr,
+      deferred_write.data,
+      deferred_write.block_len
+    );
+    expected = DeferredWriteState::PROCESSING;
+    if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
+                                    ok ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR,
+                                    false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+      set_deferred_state(DeferredWriteState::EMPTY);
+      return;
+    }
 
-  // This re-enters storage_write(), which consumes COMPLETE_* and lets the BOT
-  // state machine acknowledge the block or return WRITE_FAULT to the host.
-  if(SCSI_ContinueWrite(&usb_device) < 0) reset_deferred_write();
+    // This re-enters storage_write(), which consumes COMPLETE_* and lets the BOT
+    // state machine acknowledge the block or return WRITE_FAULT to the host.
+    if(SCSI_ContinueWrite(&usb_device) < 0) reset_deferred_write();
+    return;
+  }
+
+  if(deferred_read_state() == DeferredReadState::PENDING) {
+    DeferredReadState expected = DeferredReadState::PENDING;
+    if(!__atomic_compare_exchange_n(&deferred_read.state, &expected,
+                                    DeferredReadState::PROCESSING, false,
+                                    __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+    u8* const buffer = deferred_read.buffer;
+    const u32 block_addr = deferred_read.block_addr;
+    const u16 block_len = deferred_read.block_len;
+    const bool ok = virtual_fat::read_sectors(
+      block_addr,
+      buffer,
+      block_len
+    );
+    expected = DeferredReadState::PROCESSING;
+    if(!__atomic_compare_exchange_n(&deferred_read.state, &expected,
+                                    ok ? DeferredReadState::COMPLETE_OK : DeferredReadState::COMPLETE_ERROR,
+                                    false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+      set_deferred_read_state(DeferredReadState::EMPTY);
+      return;
+    }
+    if(SCSI_ContinueRead(&usb_device) < 0) reset_deferred_read();
+    return;
+  }
+
+  if(deferred_sync() == DeferredSyncState::PENDING) {
+    DeferredSyncState expected = DeferredSyncState::PENDING;
+    if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
+                                    DeferredSyncState::PROCESSING, false,
+                                    __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+    const bool ok = virtual_fat::flush_pending();
+    expected = DeferredSyncState::PROCESSING;
+    if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
+                                    DeferredSyncState::EMPTY, false,
+                                    __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+      set_deferred_sync(DeferredSyncState::EMPTY);
+      return;
+    }
+    (void) SCSI_CompleteSync(&usb_device, ok ? 1U : 0U);
+  }
+}
+
+extern "C" u8 MK61_VirtualFatSync(void) {
+  if(!is_initialized()) return 1U;
+  DeferredSyncState expected = DeferredSyncState::EMPTY;
+  if(__atomic_compare_exchange_n(&deferred_sync_state, &expected,
+                                 DeferredSyncState::PENDING, false,
+                                 __ATOMIC_RELEASE, __ATOMIC_ACQUIRE)) return 2U;
+  return deferred_sync() == DeferredSyncState::PENDING ? 2U : 1U;
 }
 
 } // namespace usb_mass_storage
@@ -331,9 +508,11 @@ void service(void) {
 
 namespace usb_mass_storage {
 bool init(void) { return false; }
-void deinit(void) {}
+bool deinit(void) { return true; }
 bool active(void) { return false; }
 void service(void) {}
 }
+
+extern "C" u8 MK61_VirtualFatSync(void) { return 1U; }
 
 #endif

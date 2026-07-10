@@ -41,6 +41,8 @@ static constexpr u8 FAT_ATTR_VOLUME = 0x08;
 static constexpr u8 FAT_ATTR_DIRECTORY = 0x10;
 static constexpr u8 FAT_ATTR_ARCHIVE = 0x20;
 static constexpr u8 FAT_ATTR_LFN = 0x0F;
+static constexpr u16 ALIAS_SUFFIX_COUNT = 36U * 36U;
+static constexpr u16 ALIAS_SUFFIX_AUTO = 0xFFFF;
 
 static const program_store::ProgramType FILE_TYPES[] = {
   program_store::ProgramType::MK61,
@@ -59,9 +61,15 @@ struct PendingWrite {
   bool used;
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
-  u16 start_cluster;
+  u16 alias_suffix;
   u16 data_len;
+  u16 chain[MAX_FILE_CLUSTERS];
+  u8 chain_count;
+  u8 dirty_mask;
+  u8 flags;
 };
+
+static constexpr u8 PENDING_EXISTING_UPDATE = 0x01;
 
 struct PendingDelete {
   bool used;
@@ -72,7 +80,6 @@ struct PendingDelete {
 };
 
 struct IgnoredWriteRange {
-  bool used;
   u16 start_cluster;
   u16 clusters;
 };
@@ -86,6 +93,7 @@ struct ClusterMap {
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
   u16 chain[MAX_FILE_CLUSTERS];
+  u16 alias_suffix;
   u8 count;
 };
 
@@ -105,6 +113,7 @@ struct LfnState {
   bool active;
   bool valid;
   u8 expected;
+  u8 next_sequence;
   u16 seen_mask;
   u8 checksum;
   u16 name[MAX_LFN_CODE_UNITS + 1];
@@ -118,12 +127,16 @@ struct SessionState {
   LfnState root_lfn_state;
   u32 root_lfn_next_sector;
   u8 next_ignored_slot;
+  u16 next_alias_suffix;
 
   // Raw copy of the FAT sectors the host has written this session. This is the
   // only way to learn the real (possibly fragmented) cluster chains the host
   // allocated for new files.
   u8 host_fat[HOST_FAT_SECTORS * SECTOR_SIZE];
   u8 host_fat_written;
+  u16 host_fat_crc[FAT_COUNT][HOST_FAT_SECTORS];
+  u8 host_fat_crc_valid[FAT_COUNT];
+  u8 host_fat_conflict;
 
   // Cluster -> cluster_maps slot lookup (0xFF = unowned). FAT and data sector
   // handlers run inside the USB interrupt, so they must not rescan every file
@@ -161,6 +174,9 @@ static void clear_pending_delete(PendingDelete* pending);
 static bool entry_is_pending_delete(const program_store::Entry& entry);
 static bool ignored_cluster(u16 cluster);
 static void pin_committed_files(void);
+static PendingWrite* find_pending(program_store::ProgramType type, const char* name);
+static PendingWrite* allocate_pending(void);
+static bool stage_write_with_recovery(u16 cluster, const u8* data);
 
 static bool sector_is_zero(const u8* data) {
   for(u16 i = 0; i < SECTOR_SIZE; i++) {
@@ -231,12 +247,10 @@ static bool entry_visible(const program_store::Entry& entry) {
 
 static int file_count(void) {
   int count = 0;
-  for(program_store::ProgramType type : FILE_TYPES) {
-    const int type_count = program_store::count(type);
-    for(int i = 0; i < type_count; i++) {
-      program_store::Entry entry;
-      if(program_store::entry(type, i, entry) && entry_visible(entry)) count++;
-    }
+  const int total = program_store::total_count();
+  for(int i = 0; i < total; i++) {
+    program_store::Entry entry;
+    if(program_store::entry_at(i, entry) && entry_visible(entry)) count++;
   }
   const int max_files = ROOT_ENTRIES - 1;
   return (count > max_files) ? max_files : count;
@@ -246,15 +260,13 @@ static bool file_entry(int flat_index, program_store::Entry& out) {
   if(flat_index < 0) return false;
 
   int visible = 0;
-  for(program_store::ProgramType type : FILE_TYPES) {
-    const int count = program_store::count(type);
-    for(int i = 0; i < count; i++) {
-      program_store::Entry entry;
-      if(!program_store::entry(type, i, entry) || !entry_visible(entry)) continue;
-      if(visible++ == flat_index) {
-        out = entry;
-        return true;
-      }
+  const int total = program_store::total_count();
+  for(int i = 0; i < total; i++) {
+    program_store::Entry entry;
+    if(!program_store::entry_at(i, entry) || !entry_visible(entry)) continue;
+    if(visible++ == flat_index) {
+      out = entry;
+      return true;
     }
   }
 
@@ -263,10 +275,33 @@ static bool file_entry(int flat_index, program_store::Entry& out) {
 
 /* ============================ host FAT shadow ============================ */
 
-static void record_host_fat_sector(u32 fat_index, const u8* data) {
-  if(fat_index >= HOST_FAT_SECTORS) return;
+static u16 fat_sector_crc(const u8* data) {
+  u16 crc = 0xFFFF;
+  for(u16 i = 0; i < SECTOR_SIZE; i++) {
+    crc ^= (u16) data[i] << 8;
+    for(u8 bit = 0; bit < 8; bit++) {
+      crc = (crc & 0x8000) ? (u16) ((crc << 1) ^ 0x1021) : (u16) (crc << 1);
+    }
+  }
+  return crc;
+}
+
+static void record_host_fat_sector(u8 fat_copy, u32 fat_index, const u8* data) {
+  if(fat_copy >= FAT_COUNT || fat_index >= HOST_FAT_SECTORS) return;
   memcpy(session_state().host_fat + fat_index * SECTOR_SIZE, data, SECTOR_SIZE);
   session_state().host_fat_written = (u8) (session_state().host_fat_written | (1U << fat_index));
+  session_state().host_fat_crc[fat_copy][fat_index] = fat_sector_crc(data);
+  session_state().host_fat_crc_valid[fat_copy] =
+      (u8) (session_state().host_fat_crc_valid[fat_copy] | (1U << fat_index));
+  const u8 bit = (u8) (1U << fat_index);
+  const bool both = (session_state().host_fat_crc_valid[0] & bit) != 0 &&
+                    (session_state().host_fat_crc_valid[1] & bit) != 0;
+  if(both && session_state().host_fat_crc[0][fat_index] !=
+                 session_state().host_fat_crc[1][fat_index]) {
+    session_state().host_fat_conflict = (u8) (session_state().host_fat_conflict | bit);
+  } else {
+    session_state().host_fat_conflict = (u8) (session_state().host_fat_conflict & ~bit);
+  }
 }
 
 static bool host_fat_byte(u32 offset, u8& out) {
@@ -280,6 +315,11 @@ static bool host_fat_byte(u32 offset, u8& out) {
 // FAT12 value the host wrote for a cluster, or 0xFFFF when unknown.
 static u16 host_fat_next(u16 cluster) {
   const u32 offset = (u32) cluster + cluster / 2;
+  const u32 first_sector = offset / SECTOR_SIZE;
+  const u32 last_sector = (offset + 1) / SECTOR_SIZE;
+  if(first_sector >= HOST_FAT_SECTORS || last_sector >= HOST_FAT_SECTORS) return 0xFFFF;
+  if((session_state().host_fat_conflict & (1U << first_sector)) != 0 ||
+     (session_state().host_fat_conflict & (1U << last_sector)) != 0) return 0xFFFE;
   u8 lo = 0;
   u8 hi = 0;
   if(!host_fat_byte(offset, lo) || !host_fat_byte(offset + 1, hi)) return 0xFFFF;
@@ -287,39 +327,50 @@ static u16 host_fat_next(u16 cluster) {
   return ((cluster & 1) == 0) ? (u16) (raw & 0x0FFF) : (u16) (raw >> 4);
 }
 
-// Cluster chain of a file starting at start_cluster. Follows the host FAT
-// when the host wrote it, otherwise assumes contiguous allocation.
-static u8 build_chain(u16 start_cluster, u16 data_len, u16* out) {
+// Freeze a cluster chain at directory-entry acceptance. Missing FAT sectors
+// retain compatibility with hosts that omit unchanged FAT writes by using a
+// contiguous chain, but an explicitly malformed link is never fabricated.
+static bool build_chain(u16 start_cluster, u16 data_len, u16* out, u8& out_count) {
+  out_count = 0;
   const u16 needed = clusters_for_len(data_len);
-  const u8 count = (needed > MAX_FILE_CLUSTERS) ? MAX_FILE_CLUSTERS : (u8) needed;
+  if(needed == 0) return true;
+  if(needed > MAX_FILE_CLUSTERS || start_cluster < FIRST_DATA_CLUSTER || start_cluster >= CLUSTER_LIMIT) return false;
+
+  const u8 count = (u8) needed;
   u16 cluster = start_cluster;
   for(u8 i = 0; i < count; i++) {
-    out[i] = cluster;
-    u16 next = host_fat_next(cluster);
-    if(next < FIRST_DATA_CLUSTER || next >= CLUSTER_LIMIT) next = (u16) (cluster + 1);
-    for(u8 j = 0; j <= i; j++) {
-      if(out[j] == next) {
-        next = (u16) (cluster + 1);
-        break;
-      }
+    if(cluster < FIRST_DATA_CLUSTER || cluster >= CLUSTER_LIMIT) return false;
+    for(u8 j = 0; j < i; j++) {
+      if(out[j] == cluster) return false;
     }
+    out[i] = cluster;
+    out_count++;
+    if(i + 1 == count) break;
+
+    u16 next = host_fat_next(cluster);
+    if(next == 0xFFFE) return false;
+    if(next == 0xFFFF) next = (u16) (cluster + 1);
+    else if(next < FIRST_DATA_CLUSTER || next >= CLUSTER_LIMIT) return false;
     cluster = next;
   }
-  return count;
+  return true;
 }
 
 /* ============================ pending writes ============================= */
 
 static void pending_clusters(const PendingWrite& pending, FileClusters& out) {
-  out.count = 0;
-  if(pending.data_len == 0 || pending.start_cluster < FIRST_DATA_CLUSTER) return;
-  out.count = build_chain(pending.start_cluster, pending.data_len, out.clusters);
+  out.count = pending.chain_count;
+  for(u8 i = 0; i < pending.chain_count; i++) out.clusters[i] = pending.chain[i];
+}
+
+static u16 pending_start_cluster(const PendingWrite& pending) {
+  return pending.chain_count == 0 ? 0 : pending.chain[0];
 }
 
 static PendingWrite* pending_for_cluster(u16 cluster, int* out_index = NULL) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
     PendingWrite& pending = session_state().pending_writes[i];
-    if(!pending.used || pending.start_cluster < FIRST_DATA_CLUSTER) continue;
+    if(!pending.used || pending.chain_count == 0) continue;
     FileClusters chain;
     pending_clusters(pending, chain);
     for(u8 j = 0; j < chain.count; j++) {
@@ -352,6 +403,29 @@ static ClusterMap* allocate_cluster_map(void) {
     if(!session_state().cluster_maps[i].used) return &session_state().cluster_maps[i];
   }
   return NULL;
+}
+
+static bool alias_suffix_in_use(u16 suffix) {
+  for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
+    const ClusterMap& map = session_state().cluster_maps[i];
+    if(map.used && map.alias_suffix == suffix) return true;
+  }
+  for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
+    const PendingWrite& pending = session_state().pending_writes[i];
+    if(pending.used && pending.alias_suffix == suffix) return true;
+  }
+  return false;
+}
+
+static u16 allocate_alias_suffix(void) {
+  for(u16 attempt = 0; attempt < ALIAS_SUFFIX_COUNT; attempt++) {
+    const u16 suffix = (u16) ((session_state().next_alias_suffix + attempt) %
+                              ALIAS_SUFFIX_COUNT);
+    if(alias_suffix_in_use(suffix)) continue;
+    session_state().next_alias_suffix = (u16) ((suffix + 1) % ALIAS_SUFFIX_COUNT);
+    return suffix;
+  }
+  return 0;
 }
 
 static void forget_cluster_map(program_store::ProgramType type, const char* name) {
@@ -403,7 +477,7 @@ static void ensure_cluster_index(void) {
   if(state.cluster_index_valid && state.committed_count == committed) return;
   pin_committed_files();
   rebuild_cluster_index();
-  state.committed_count = (u16) file_count();
+  state.committed_count = committed;
 }
 
 // Map slot owning a cluster, or NULL. Position within the chain is returned
@@ -454,7 +528,9 @@ static u16 allocate_contiguous_clusters(u16 count) {
   return 0;
 }
 
-static void store_cluster_map(program_store::ProgramType type, const char* name, const u16* chain, u8 count) {
+static void store_cluster_map(program_store::ProgramType type, const char* name,
+                              const u16* chain, u8 count,
+                              u16 alias_suffix = ALIAS_SUFFIX_AUTO) {
   if(name == NULL || name[0] == 0 || count == 0) {
     forget_cluster_map(type, name);
     return;
@@ -468,12 +544,17 @@ static void store_cluster_map(program_store::ProgramType type, const char* name,
   }
   if(map == NULL) return;
 
+  if(alias_suffix == ALIAS_SUFFIX_AUTO) {
+    alias_suffix = map->used ? map->alias_suffix : allocate_alias_suffix();
+  }
+
   memset(map, 0, sizeof(*map));
   map->used = true;
   map->type = type;
   strncpy(map->name, name, program_store::NAME_SIZE - 1);
   map->name[program_store::NAME_SIZE - 1] = 0;
   for(u8 i = 0; i < count && i < MAX_FILE_CLUSTERS; i++) map->chain[i] = chain[i];
+  map->alias_suffix = alias_suffix;
   map->count = (count > MAX_FILE_CLUSTERS) ? MAX_FILE_CLUSTERS : count;
   session_state().cluster_index_valid = false;
 }
@@ -482,8 +563,8 @@ static void rename_cluster_map(program_store::ProgramType type, const char* old_
   ClusterMap* map = find_cluster_map(type, old_name);
   if(map == NULL) {
     u16 chain[MAX_FILE_CLUSTERS];
-    const u8 count = build_chain(start_cluster, data_len, chain);
-    store_cluster_map(type, new_name, chain, count);
+    u8 count = 0;
+    if(build_chain(start_cluster, data_len, chain, count)) store_cluster_map(type, new_name, chain, count);
     return;
   }
 
@@ -522,7 +603,7 @@ static void file_clusters(int flat_index, const program_store::Entry& entry, Fil
 
   if(map == NULL) {
     u16 start = allocate_contiguous_clusters(needed);
-    if(start == 0) start = FIRST_DATA_CLUSTER;
+    if(start == 0) return;
     u16 chain[MAX_FILE_CLUSTERS];
     for(u8 i = 0; i < needed; i++) chain[i] = (u16) (start + i);
     store_cluster_map(entry.type, entry.name, chain, needed);
@@ -759,16 +840,6 @@ static char short_alias_digit(u16 value) {
   return (value < 10) ? (char) ('0' + value) : (char) ('A' + value - 10);
 }
 
-// Stable alias suffix: derived from the name itself so the short alias does
-// not change when files are added/removed or a pending write commits.
-static u16 short_alias_hash(const char* name) {
-  u32 hash = 5381;
-  for(u8 i = 0; i < program_store::NAME_SIZE && name[i] != 0; i++) {
-    hash = hash * 33u + (u8) name[i];
-  }
-  return (u16) (hash % (36u * 36u));
-}
-
 static bool name_is_83_compatible(const char* name) {
   if(name == NULL || name[0] == 0) return false;
 
@@ -782,9 +853,19 @@ static bool name_is_83_compatible(const char* name) {
   return len != 0 && len < program_store::NAME_SIZE;
 }
 
+static bool name_uses_generated_alias_shape(const char* name) {
+  if(name == NULL || strlen(name) != 8 || name[5] != '~') return false;
+  const char a = safe_name_char(name[6]);
+  const char b = safe_name_char(name[7]);
+  const bool a36 = (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z');
+  const bool b36 = (b >= '0' && b <= '9') || (b >= 'A' && b <= 'Z');
+  return a36 && b36;
+}
+
 static bool needs_lfn(program_store::ProgramType type, const char* name) {
   if(type == program_store::ProgramType::TEXT || type == program_store::ProgramType::MK61_STATE) return true;
-  return name != NULL && name[0] != 0 && !name_is_83_compatible(name);
+  return name != NULL && name[0] != 0 &&
+         (!name_is_83_compatible(name) || name_uses_generated_alias_shape(name));
 }
 
 static void fill_short_name(const char* name, program_store::ProgramType type, int unique_index, u8* out) {
@@ -800,7 +881,9 @@ static void fill_short_name(const char* name, program_store::ProgramType type, i
     if(pos == 0) out[pos++] = 'P';
     while(pos < 5) out[pos++] = '_';
 
-    const u16 suffix = short_alias_hash(name);
+    // The session assigns and retains a unique two-digit base36 discriminator.
+    // Names already shaped like generated aliases are forced through this path.
+    const u16 suffix = (unique_index < 0) ? 0 : (u16) unique_index;
     out[5] = '~';
     out[6] = (u8) short_alias_digit((u16) (suffix / 36));
     out[7] = (u8) short_alias_digit((u16) (suffix % 36));
@@ -823,7 +906,9 @@ static void fill_short_name(const char* name, program_store::ProgramType type, i
 }
 
 static void fill_83_name(const program_store::Entry& entry, int flat_index, u8* out) {
-  fill_short_name(entry.name, entry.type, flat_index, out);
+  const ClusterMap* map = find_cluster_map(entry.type, entry.name);
+  const int suffix = map == NULL ? flat_index : map->alias_suffix;
+  fill_short_name(entry.name, entry.type, suffix, out);
 }
 
 static void format_full_name(program_store::ProgramType type, const char* name, char* out) {
@@ -921,7 +1006,8 @@ static bool read_trace_data_sector(u16, u8*) { return false; }
 #endif
 
 static void fill_pending_name(const PendingWrite& pending, int unique_index, u8* out) {
-  fill_short_name(pending.name, pending.type, unique_index, out);
+  (void) unique_index;
+  fill_short_name(pending.name, pending.type, pending.alias_suffix, out);
 }
 
 static bool pending_visible(const PendingWrite& pending) {
@@ -933,7 +1019,7 @@ static void fill_pending_dir_entry(u8* out, const PendingWrite& pending, int uni
   out[11] = FAT_ATTR_ARCHIVE;
   put_le16(out, 22, 0);
   put_le16(out, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 6));
-  put_le16(out, 26, pending.data_len == 0 ? 0 : pending.start_cluster);
+  put_le16(out, 26, pending.data_len == 0 ? 0 : pending_start_cluster(pending));
   put_le32(out, 28, pending.data_len);
 }
 
@@ -992,13 +1078,14 @@ static void read_root_sector(u32 root_sector, u8* out) {
 #endif
 
   // Single pass over the files with a running cursor: rescanning the whole
-  // store for each of the 16 slots made every sector read O(files * slots).
+  // store for every flat index made a root-sector read cubic in file count.
   const int committed_files = file_count();
   int cursor = first_program_dir_index();
-
-  for(int file_index = 0; file_index < committed_files && cursor < last_entry; file_index++) {
+  int file_index = 0;
+  const int total_entries = program_store::total_count();
+  for(int raw_index = 0; raw_index < total_entries && cursor < last_entry; raw_index++) {
     program_store::Entry entry;
-    if(!file_entry(file_index, entry)) continue;
+    if(!program_store::entry_at(raw_index, entry) || !entry_visible(entry)) continue;
     const u8 entries = dir_entries_for_name(entry.name, entry.type);
     for(u8 offset = 0; offset < entries; offset++) {
       const int dir_index = cursor + offset;
@@ -1010,6 +1097,7 @@ static void read_root_sector(u32 root_sector, u8* out) {
       if(entry_is_pending_delete(entry)) item[0] = 0xE5;
     }
     cursor += entries;
+    file_index++;
   }
 
   for(u8 pending_index = 0; pending_index < MAX_PENDING_WRITES && cursor < last_entry; pending_index++) {
@@ -1033,7 +1121,11 @@ static bool read_staged_sector(u16 cluster, u8* out) {
 }
 
 static bool read_pending_data_sector(u16 cluster, u8* out) {
-  if(pending_for_cluster(cluster) == NULL) return false;
+  int pos = 0;
+  PendingWrite* pending = pending_for_cluster(cluster, &pos);
+  if(pending == NULL) return false;
+  if((pending->dirty_mask & (1U << pos)) == 0 &&
+     (pending->flags & PENDING_EXISTING_UPDATE) != 0) return false;
   memset(out, 0, SECTOR_SIZE);
   (void) read_staged_sector(cluster, out);
   return true;
@@ -1063,7 +1155,9 @@ static bool read_data_sector(u32 data_sector, u8* out) {
   return true;
 }
 
-static bool write_committed_data_sector(const program_store::Entry& entry, u8 pos, const u8* data) {
+static bool queue_committed_data_sector(const program_store::Entry& entry,
+                                        const FileClusters& chain, u8 pos,
+                                        const u8* data) {
   if(entry.data_len > MAX_IMPORTED_LEN) {
     tracef("UPDATE reject %s.%s len=%u", entry.name, extension_for_type(entry.type), entry.data_len);
     return false;
@@ -1072,21 +1166,35 @@ static bool write_committed_data_sector(const program_store::Entry& entry, u8 po
   const u16 file_offset = (u16) (pos * SECTOR_SIZE);
   if(file_offset >= entry.data_len) return true;
 
-  shared_scratch::Lease scratch(shared_scratch::Owner::VFAT_COMMIT, MAX_IMPORTED_LEN);
-  if(!scratch.ok()) return false;
-  u8* commit_file_data = scratch.data();
-  u16 stored_len = 0;
-  if(!program_store::read(entry.type, entry.name, commit_file_data, scratch.size(), &stored_len)) return false;
-  if(stored_len < entry.data_len) memset(commit_file_data + stored_len, 0, (u16) (entry.data_len - stored_len));
+  PendingWrite* pending = find_pending(entry.type, entry.name);
+  if(pending == NULL) pending = allocate_pending();
+  if(pending == NULL) return false;
 
-  const u16 remaining = (u16) (entry.data_len - file_offset);
-  const u16 copy_len = (remaining > SECTOR_SIZE) ? SECTOR_SIZE : remaining;
-  memcpy(commit_file_data + file_offset, data, copy_len);
+  if(!pending->used) {
+    memset(pending, 0, sizeof(*pending));
+    pending->used = true;
+    pending->type = entry.type;
+    strncpy(pending->name, entry.name, program_store::NAME_SIZE - 1);
+    pending->name[program_store::NAME_SIZE - 1] = 0;
+    const ClusterMap* map = find_cluster_map(entry.type, entry.name);
+    pending->alias_suffix = map == NULL ? allocate_alias_suffix() : map->alias_suffix;
+    pending->data_len = entry.data_len;
+    pending->chain_count = chain.count;
+    for(u8 i = 0; i < chain.count; i++) pending->chain[i] = chain.clusters[i];
+    pending->flags = PENDING_EXISTING_UPDATE;
+  }
 
-  tracef("UPDATE %s.%s off=%u len=%u b0=%02X %s", entry.name, extension_for_type(entry.type), file_offset, copy_len, data[0], trace_sector_is_zero(data) ? "zero" : "data");
-  const bool ok = program_store::write(entry.type, entry.name, commit_file_data, entry.data_len);
-  tracef("UPDATE %s.%s %s", entry.name, extension_for_type(entry.type), ok ? "ok" : "fail");
-  return ok;
+  if((pending->flags & PENDING_EXISTING_UPDATE) == 0 ||
+     pending->data_len != entry.data_len || pending->chain_count != chain.count ||
+     pos >= pending->chain_count || pending->chain[pos] != chain.clusters[pos]) return false;
+
+  if(!stage_write_with_recovery(chain.clusters[pos], data) &&
+     !program_store::vfat_stage_exists(chain.clusters[pos])) return false;
+  pending->dirty_mask = (u8) (pending->dirty_mask | (1U << pos));
+  tracef("UPDATE queue %s.%s off=%u b0=%02X %s", entry.name,
+         extension_for_type(entry.type), file_offset, data[0],
+         trace_sector_is_zero(data) ? "zero" : "data");
+  return true;
 }
 
 static u16 max_len_for_type(program_store::ProgramType type) {
@@ -1441,6 +1549,7 @@ static bool parse_short_filename(const u8* item, ParsedDirEntry& parsed) {
 }
 
 static bool parse_dir_entry(const u8* item, const u16* lfn_name, ParsedDirEntry& parsed) {
+  if(get_le16(item, 20) != 0) return false;
   if(lfn_name != NULL) {
     if(!parse_lfn_filename(lfn_name, parsed)) return false;
   } else if(!parse_short_filename(item, parsed)) {
@@ -1458,17 +1567,19 @@ static bool parse_dir_entry(const u8* item, const u16* lfn_name, ParsedDirEntry&
 
 static bool committed_short_entry_at_dir_index(int dir_index, program_store::Entry& entry, int& flat_index) {
   int cursor = first_program_dir_index();
-  const int committed_files = file_count();
-  for(int i = 0; i < committed_files; i++) {
+  int visible_index = 0;
+  const int total = program_store::total_count();
+  for(int i = 0; i < total; i++) {
     program_store::Entry current;
-    if(!file_entry(i, current)) continue;
+    if(!program_store::entry_at(i, current) || !entry_visible(current)) continue;
     const u8 entries = dir_entries_for_name(current.name, current.type);
     if(dir_index == cursor + entries - 1) {
       entry = current;
-      flat_index = i;
+      flat_index = visible_index;
       return true;
     }
     cursor += entries;
+    visible_index++;
   }
   return false;
 }
@@ -1539,6 +1650,7 @@ static bool committed_entry_matches_dir(const program_store::Entry& entry, int f
 }
 
 static bool parse_generated_dir_entry(int dir_index, const u8* item, ParsedDirEntry& parsed) {
+  if(get_le16(item, 20) != 0) return false;
   program_store::Entry entry;
   int file_index = 0;
   if(!committed_short_entry_at_dir_index(dir_index, entry, file_index)) return false;
@@ -1584,11 +1696,12 @@ static PendingWrite* allocate_pending(void) {
 }
 
 static bool pending_has_all_data(const PendingWrite& pending) {
-  if(pending.data_len == 0) return true;
-  if(pending.start_cluster < FIRST_DATA_CLUSTER) return false;
+  if(pending.data_len == 0) return false;
+  if((pending.flags & PENDING_EXISTING_UPDATE) != 0) return pending.dirty_mask != 0;
+  if(pending.chain_count == 0) return false;
   FileClusters chain;
   pending_clusters(pending, chain);
-  if(chain.count == 0) return false;
+  if(chain.count != clusters_for_len(pending.data_len)) return false;
   for(u8 i = 0; i < chain.count; i++) {
     if(!program_store::vfat_stage_exists(chain.clusters[i])) return false;
   }
@@ -1609,7 +1722,7 @@ static bool try_commit_pending(PendingWrite& pending) {
   // The host creates the directory entry with length 0 first and fills in the
   // real length after the data sectors. Committing at this point would litter
   // the store with empty files (and burn flash erase cycles) on every copy.
-  if(pending.data_len == 0) return true;
+  if(pending.data_len == 0) return false;
   if(!pending_has_all_data(pending)) return true;
   if(pending.data_len > MAX_IMPORTED_LEN) return false;
 
@@ -1619,9 +1732,23 @@ static bool try_commit_pending(PendingWrite& pending) {
 
   FileClusters chain;
   pending_clusters(pending, chain);
-  tracef("COMMIT %s.%s c=%u len=%u n=%u", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len, chain.count);
+  tracef("COMMIT %s.%s c=%u len=%u n=%u", pending.name,
+         extension_for_type(pending.type), pending_start_cluster(pending),
+         pending.data_len, chain.count);
+
+  if((pending.flags & PENDING_EXISTING_UPDATE) != 0) {
+    u16 stored_len = 0;
+    if(!program_store::read(pending.type, pending.name, commit_file_data,
+                            scratch.size(), &stored_len)) return false;
+    if(stored_len > pending.data_len) return false;
+    if(stored_len < pending.data_len) {
+      memset(commit_file_data + stored_len, 0, (u16) (pending.data_len - stored_len));
+    }
+  }
 
   for(u8 i = 0; i < chain.count; i++) {
+    if((pending.flags & PENDING_EXISTING_UPDATE) != 0 &&
+       (pending.dirty_mask & (1U << i)) == 0) continue;
     const u16 offset = (u16) (i * SECTOR_SIZE);
     if((usize) offset + SECTOR_SIZE > scratch.size()) return false;
     if(!read_staged_sector(chain.clusters[i], commit_file_data + offset)) return false;
@@ -1630,15 +1757,14 @@ static bool try_commit_pending(PendingWrite& pending) {
   tracef("COMMIT-DATA %s.%s len=%u b0=%02X", pending.name, extension_for_type(pending.type), pending.data_len, pending.data_len == 0 ? 0 : commit_file_data[0]);
   if(!program_store::write(pending.type, pending.name, commit_file_data, pending.data_len)) {
     tracef("COMMIT fail %s.%s", pending.name, extension_for_type(pending.type));
-    // A failed store write (catalog full, no space) will not succeed on the
-    // next directory echo either; dropping the record avoids retrying the
-    // same doomed commit on every subsequent write and SYNC.
-    memset(&pending, 0, sizeof(pending));
+    // Keep the frozen transaction and its staged sectors. A failed SYNC must
+    // never discard data that the host was previously allowed to write.
     return false;
   }
   tracef("COMMIT ok %s.%s", pending.name, extension_for_type(pending.type));
   clear_pending_delete(find_pending_delete(pending.type, pending.name));
-  store_cluster_map(pending.type, pending.name, chain.clusters, chain.count);
+  store_cluster_map(pending.type, pending.name, chain.clusters, chain.count,
+                    pending.alias_suffix);
   for(u8 i = 0; i < chain.count; i++) program_store::vfat_stage_forget(chain.clusters[i], 1);
   memset(&pending, 0, sizeof(pending));
   return true;
@@ -1648,7 +1774,8 @@ static bool stage_has_all_data(u16 start_cluster, u16 data_len) {
   if(data_len == 0) return true;
   if(start_cluster < FIRST_DATA_CLUSTER) return false;
   u16 chain[MAX_FILE_CLUSTERS];
-  const u8 count = build_chain(start_cluster, data_len, chain);
+  u8 count = 0;
+  if(!build_chain(start_cluster, data_len, chain, count)) return false;
   for(u8 i = 0; i < count; i++) {
     if(!program_store::vfat_stage_exists(chain[i])) return false;
   }
@@ -1665,7 +1792,7 @@ static bool ranges_overlap(u16 start_a, u16 clusters_a, u16 start_b, u16 cluster
 static bool ignored_cluster(u16 cluster) {
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
     const IgnoredWriteRange& range = session_state().ignored_ranges[i];
-    if(!range.used) continue;
+    if(range.clusters == 0) continue;
     if(cluster >= range.start_cluster && cluster < (u16) (range.start_cluster + range.clusters)) return true;
   }
   return false;
@@ -1676,8 +1803,8 @@ static void clear_ignored_range(u16 start_cluster, u16 data_len) {
   const u16 clusters = clusters_for_len(data_len);
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
     IgnoredWriteRange& range = session_state().ignored_ranges[i];
-    if(!range.used) continue;
-    if(ranges_overlap(start_cluster, clusters, range.start_cluster, range.clusters)) range.used = false;
+    if(range.clusters == 0) continue;
+    if(ranges_overlap(start_cluster, clusters, range.start_cluster, range.clusters)) range.clusters = 0;
   }
 }
 
@@ -1690,7 +1817,7 @@ static void ignore_write_range(u16 start_cluster, u32 data_len) {
 
   IgnoredWriteRange* range = NULL;
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
-    if(!session_state().ignored_ranges[i].used) {
+    if(session_state().ignored_ranges[i].clusters == 0) {
       range = &session_state().ignored_ranges[i];
       break;
     }
@@ -1700,7 +1827,6 @@ static void ignore_write_range(u16 start_cluster, u32 data_len) {
     session_state().next_ignored_slot = (u8) ((session_state().next_ignored_slot + 1) % IGNORED_WRITE_RANGES);
   }
 
-  range->used = true;
   range->start_cluster = start_cluster;
   range->clusters = clusters;
   tracef("IGNORE c=%u len=%lu n=%u", start_cluster, (unsigned long) data_len, clusters);
@@ -1719,12 +1845,13 @@ static void clear_ignored_ranges(void) {
 // Assign every committed file its cluster range up front so the layout the
 // host reads at mount time never changes underneath it.
 static void pin_committed_files(void) {
-  const int count = file_count();
-  for(int i = 0; i < count; i++) {
+  int flat_index = 0;
+  const int total = program_store::total_count();
+  for(int i = 0; i < total; i++) {
     program_store::Entry entry;
-    if(!file_entry(i, entry)) continue;
+    if(!program_store::entry_at(i, entry) || !entry_visible(entry)) continue;
     FileClusters chain;
-    file_clusters(i, entry, chain);
+    file_clusters(flat_index++, entry, chain);
   }
 }
 
@@ -1737,10 +1864,14 @@ bool reset_session(void) {
   memset(&session_state().root_lfn_state, 0, sizeof(session_state().root_lfn_state));
   memset(session_state().host_fat, 0, sizeof(session_state().host_fat));
   session_state().host_fat_written = 0;
+  memset(session_state().host_fat_crc, 0, sizeof(session_state().host_fat_crc));
+  memset(session_state().host_fat_crc_valid, 0, sizeof(session_state().host_fat_crc_valid));
+  session_state().host_fat_conflict = 0;
   session_state().root_lfn_next_sector = 0;
   session_state().next_ignored_slot = 0;
-  session_state().cluster_index_valid = false;
+  session_state().next_alias_suffix = 0;
   session_state().committed_count = 0;
+  session_state().cluster_index_valid = false;
   program_store::vfat_stage_clear();
   ensure_cluster_index();
   return true;
@@ -1786,7 +1917,7 @@ static void reconcile_pending_renames(void) {
     parsed.type = pending.type;
     strncpy(parsed.name, pending.name, program_store::NAME_SIZE - 1);
     parsed.name[program_store::NAME_SIZE - 1] = 0;
-    parsed.start_cluster = pending.start_cluster;
+    parsed.start_cluster = pending_start_cluster(pending);
     parsed.data_len = pending.data_len;
     if(try_rename_pending_delete(parsed)) memset(&pending, 0, sizeof(pending));
   }
@@ -1798,8 +1929,18 @@ bool flush_pending(void) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
     PendingWrite& pending = session_state().pending_writes[i];
     if(!pending.used) continue;
+    if(pending.data_len == 0) {
+      // Zero-length directory entries are transient host placeholders. The
+      // program store intentionally has no empty-file objects, so retaining
+      // these entries would only leak all pending slots.
+      memset(&pending, 0, sizeof(pending));
+      continue;
+    }
     if(!pending_has_all_data(pending)) {
-      tracef("SYNC incomplete %s.%s c=%u len=%u", pending.name, extension_for_type(pending.type), pending.start_cluster, pending.data_len);
+      tracef("SYNC incomplete %s.%s c=%u len=%u", pending.name,
+             extension_for_type(pending.type), pending_start_cluster(pending),
+             pending.data_len);
+      ok = false;
       continue;
     }
     if(!try_commit_pending(pending)) ok = false;
@@ -1836,17 +1977,13 @@ static bool try_rename_existing_entry(int dir_index, const ParsedDirEntry& parse
 // generated; recognize those echoes so they do not spawn ghost writes or
 // cancel queued deletions.
 static bool committed_entry_echo(const ParsedDirEntry& parsed) {
-  const int count = file_count();
-  for(int i = 0; i < count; i++) {
-    program_store::Entry entry;
-    if(!file_entry(i, entry)) continue;
-    if(entry.type != parsed.type) continue;
-    if(strncmp(entry.name, parsed.name, program_store::NAME_SIZE) != 0) continue;
-    if(entry.data_len != parsed.data_len) return false;
-    const u16 expected_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(i);
-    return expected_cluster == parsed.start_cluster;
-  }
-  return false;
+  program_store::Entry entry;
+  if(!entry_by_key(parsed.type, parsed.name, entry) ||
+     entry.data_len != parsed.data_len) return false;
+  const ClusterMap* map = find_cluster_map(parsed.type, parsed.name);
+  const u16 expected_cluster = entry.data_len == 0 || map == NULL || map->count == 0
+    ? 0 : map->chain[0];
+  return expected_cluster == parsed.start_cluster;
 }
 
 static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
@@ -1862,18 +1999,81 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
     if(try_rename_pending_delete(parsed)) return true;
   }
 
+  u16 frozen_chain[MAX_FILE_CLUSTERS] = {0};
+  u8 frozen_count = 0;
+  if(!build_chain(parsed.start_cluster, parsed.data_len, frozen_chain, frozen_count)) {
+    tracef("DIR reject-chain %s.%s c=%u len=%u", parsed.name,
+           extension_for_type(parsed.type), parsed.start_cluster, parsed.data_len);
+    return false;
+  }
+
   PendingWrite* pending = find_pending(parsed.type, parsed.name);
+  if(pending != NULL && pending_start_cluster(*pending) == parsed.start_cluster &&
+     pending->data_len == parsed.data_len && pending->chain_count == frozen_count) {
+    bool same_chain = true;
+    for(u8 i = 0; i < frozen_count; i++) {
+      if(pending->chain[i] != frozen_chain[i]) same_chain = false;
+    }
+    if(same_chain) {
+      if((pending->flags & PENDING_EXISTING_UPDATE) != 0) return true;
+      return parsed.data_len == 0 ? true : try_commit_pending(*pending);
+    }
+  }
+  if(pending != NULL && pending->data_len != 0 && pending_has_any_data(*pending)) {
+    tracef("DIR reject-mutate %s.%s", parsed.name, extension_for_type(parsed.type));
+    return false;
+  }
+
+  for(u8 chain_pos = 0; chain_pos < frozen_count; chain_pos++) {
+    const u16 cluster = frozen_chain[chain_pos];
+    for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
+      const ClusterMap& map = session_state().cluster_maps[i];
+      if(!map.used) continue;
+      bool owns = false;
+      for(u8 j = 0; j < map.count; j++) {
+        if(map.chain[j] == cluster) owns = true;
+      }
+      if(!owns) continue;
+      const bool same_file = map.type == parsed.type &&
+          strncmp(map.name, parsed.name, program_store::NAME_SIZE) == 0;
+      if(!same_file && find_pending_delete(map.type, map.name) == NULL) {
+        tracef("DIR reject-overlap %s.%s c=%u", parsed.name,
+               extension_for_type(parsed.type), cluster);
+        return false;
+      }
+    }
+    for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
+      const PendingWrite& other = session_state().pending_writes[i];
+      if(!other.used || &other == pending) continue;
+      for(u8 j = 0; j < other.chain_count; j++) {
+        if(other.chain[j] == cluster) {
+          tracef("DIR reject-pending-overlap %s.%s c=%u", parsed.name,
+                 extension_for_type(parsed.type), cluster);
+          return false;
+        }
+      }
+    }
+  }
   if(pending == NULL) pending = allocate_pending();
   if(pending == NULL) return false;
 
+  const u16 alias_suffix = pending->used
+    ? pending->alias_suffix : allocate_alias_suffix();
   memset(pending, 0, sizeof(*pending));
   pending->used = true;
   pending->type = parsed.type;
   strncpy(pending->name, parsed.name, program_store::NAME_SIZE - 1);
   pending->name[program_store::NAME_SIZE - 1] = 0;
-  pending->start_cluster = parsed.start_cluster;
+  pending->alias_suffix = alias_suffix;
   pending->data_len = parsed.data_len;
-  return try_commit_pending(*pending);
+  pending->chain_count = frozen_count;
+  for(u8 i = 0; i < frozen_count; i++) {
+    pending->chain[i] = frozen_chain[i];
+    if(program_store::vfat_stage_exists(frozen_chain[i])) {
+      pending->dirty_mask = (u8) (pending->dirty_mask | (1U << i));
+    }
+  }
+  return parsed.data_len == 0 ? true : try_commit_pending(*pending);
 }
 
 // Verifies that a 0xE5 tombstone written by the host really refers to this
@@ -1881,8 +2081,8 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
 static bool deleted_entry_matches(const program_store::Entry& entry, int flat_index, const u8* item) {
   if(get_le32(item, 28) != entry.data_len) return false;
   const u16 item_cluster = get_le16(item, 26);
-  if(entry.data_len != 0 && item_cluster != 0 && item_cluster != start_cluster_for_file(flat_index)) return false;
-  return true;
+  const u16 expected_cluster = entry.data_len == 0 ? 0 : start_cluster_for_file(flat_index);
+  return item_cluster == expected_cluster;
 }
 
 static bool deleted_entry_matches_strict(const program_store::Entry& entry, int flat_index, const u8* item) {
@@ -1900,7 +2100,7 @@ static bool remove_existing_dir_slot(int dir_index, const u8* item) {
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
     PendingWrite& pending = session_state().pending_writes[i];
     if(!pending.used) continue;
-    if(pending.start_cluster != item_cluster || pending.data_len != item_len) continue;
+    if(pending_start_cluster(pending) != item_cluster || pending.data_len != item_len) continue;
     FileClusters chain;
     pending_clusters(pending, chain);
     for(u8 j = 0; j < chain.count; j++) program_store::vfat_stage_forget(chain.clusters[j], 1);
@@ -1912,18 +2112,21 @@ static bool remove_existing_dir_slot(int dir_index, const u8* item) {
   program_store::Entry entry;
   int file_index = 0;
   if(committed_short_entry_at_dir_index(dir_index, entry, file_index) &&
-     deleted_entry_matches(entry, file_index, item)) {
+     deleted_entry_matches_strict(entry, file_index, item)) {
     return mark_pending_delete(entry, file_index);
   }
 
   // The host may address the entry through a stale directory index; find the
   // file by the tombstone's own identity instead.
-  const int count = file_count();
-  for(int i = 0; i < count; i++) {
+  int flat_index = 0;
+  const int total = program_store::total_count();
+  for(int i = 0; i < total; i++) {
     program_store::Entry candidate;
-    if(!file_entry(i, candidate)) continue;
-    if(!deleted_entry_matches_strict(candidate, i, item)) continue;
-    return mark_pending_delete(candidate, i);
+    if(!program_store::entry_at(i, candidate) || !entry_visible(candidate)) continue;
+    if(deleted_entry_matches_strict(candidate, flat_index, item)) {
+      return mark_pending_delete(candidate, flat_index);
+    }
+    flat_index++;
   }
 
   return true;
@@ -1936,25 +2139,30 @@ static void reset_lfn_state(LfnState& lfn) {
 static void parse_lfn_entry(const u8* item, LfnState& lfn) {
   static const u8 offsets[13] = {1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30};
   const u8 sequence = (u8) (item[0] & 0x1F);
-  if(sequence == 0) {
+  const bool last = (item[0] & 0x40) != 0;
+  if(sequence == 0 || sequence > 8 || item[11] != FAT_ATTR_LFN ||
+     item[12] != 0 || get_le16(item, 26) != 0) {
     reset_lfn_state(lfn);
     return;
   }
 
-  if((item[0] & 0x40) != 0) {
+  if(last) {
     reset_lfn_state(lfn);
     lfn.active = true;
     lfn.valid = true;
     lfn.expected = sequence;
+    lfn.next_sequence = sequence;
     lfn.checksum = item[13];
   } else if(!lfn.active) {
     lfn.active = true;
     lfn.valid = false;
     lfn.expected = sequence;
+    lfn.next_sequence = sequence;
     lfn.checksum = item[13];
   }
 
-  if(sequence > lfn.expected || item[13] != lfn.checksum) lfn.valid = false;
+  if(sequence != lfn.next_sequence || item[13] != lfn.checksum ||
+     (!last && sequence == lfn.expected)) lfn.valid = false;
 
   for(u8 i = 0; i < 13; i++) {
     const u8 offset = offsets[i];
@@ -1970,10 +2178,12 @@ static void parse_lfn_entry(const u8* item, LfnState& lfn) {
   }
 
   lfn.seen_mask = (u16) (lfn.seen_mask | (1U << (sequence - 1)));
+  if(lfn.next_sequence != 0) lfn.next_sequence--;
 }
 
 static const u16* accepted_lfn_name(const LfnState& lfn, const u8* short_entry) {
-  if(!lfn.active || !lfn.valid || lfn.expected == 0 || lfn.expected > 8) return NULL;
+  if(!lfn.active || !lfn.valid || lfn.expected == 0 || lfn.expected > 8 ||
+     lfn.next_sequence != 0) return NULL;
   const u16 expected_mask = (u16) ((1U << lfn.expected) - 1U);
   if((lfn.seen_mask & expected_mask) != expected_mask) return NULL;
   if(lfn.checksum != short_name_checksum(short_entry)) return NULL;
@@ -1994,10 +2204,10 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
 
     if(first == 0x00) {
       reset_lfn_state(lfn);
-      continue;
+      break;
     }
 
-    if((attr & 0x3F) == FAT_ATTR_LFN) {
+    if(attr == FAT_ATTR_LFN) {
       if(first == 0xE5) reset_lfn_state(lfn);
       else parse_lfn_entry(item, lfn);
       continue;
@@ -2019,6 +2229,12 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
     if((attr & FAT_ATTR_DIRECTORY) != 0) {
       tracef("DIR ignore-dir %d c=%u", dir_index, get_le16(item, 26));
       ignore_write_range(get_le16(item, 26), SECTOR_SIZE);
+      reset_lfn_state(lfn);
+      continue;
+    }
+    if((attr & 0x06) != 0) {
+      tracef("DIR ignore-hidden %d attr=%02X", dir_index, attr);
+      ignore_dir_entry_range(item);
       reset_lfn_state(lfn);
       continue;
     }
@@ -2051,16 +2267,15 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
   return true;
 }
 
-// The staging log in flash is append-only; once it fills mid-session the
-// write would fail and the host would unmount the disk. Recycle records held
-// by dropped metadata and finished writes, then retry once.
+// Segment cleaning is normally automatic. On a failed append, release ranges
+// that metadata explicitly discarded, flush complete transactions, and retry.
 static bool stage_write_with_recovery(u16 cluster, const u8* data) {
   if(program_store::vfat_stage_write(cluster, data)) return true;
 
   tracef("STAGE full c=%u", cluster);
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
     const IgnoredWriteRange& range = session_state().ignored_ranges[i];
-    if(range.used) program_store::vfat_stage_forget(range.start_cluster, range.clusters);
+    if(range.clusters != 0) program_store::vfat_stage_forget(range.start_cluster, range.clusters);
   }
   (void) flush_pending();
   return program_store::vfat_stage_write(cluster, data);
@@ -2070,14 +2285,16 @@ static bool write_data_sector(u32 data_sector, const u8* data) {
   const u16 cluster = (u16) (data_sector + FIRST_DATA_CLUSTER);
   if(trace_cluster(cluster)) return true;
 
-  PendingWrite* pending = pending_for_cluster(cluster);
+  int pending_pos = 0;
+  PendingWrite* pending = pending_for_cluster(cluster, &pending_pos);
   if(pending != NULL) {
     if(!stage_write_with_recovery(cluster, data) && !program_store::vfat_stage_exists(cluster)) {
       tracef("DATA pending fail c=%u", cluster);
       return false;
     }
+    pending->dirty_mask = (u8) (pending->dirty_mask | (1U << pending_pos));
     tracef("DATA pending c=%u b0=%02X", cluster, data[0]);
-    return try_commit_pending(*pending);
+    return true;
   }
 
   program_store::Entry entry;
@@ -2085,7 +2302,7 @@ static bool write_data_sector(u32 data_sector, const u8* data) {
   u8 pos = 0;
   if(find_cluster_owner(cluster, entry, chain, pos)) {
     tracef("DATA update c=%u b0=%02X", cluster, data[0]);
-    return write_committed_data_sector(entry, pos, data);
+    return queue_committed_data_sector(entry, chain, pos, data);
   }
 
   if(ignored_cluster(cluster)) {
@@ -2142,8 +2359,11 @@ bool write_sector(u32 lba, const u8* data) {
   if(lba < root_start) {
     // Remember the FAT the host writes: it describes the real cluster
     // chains (including fragmentation) of the files being copied.
-    const u32 fat_index = (lba - RESERVED_SECTORS) % fat_sector_count();
-    record_host_fat_sector(fat_index, data);
+    const u32 fat_offset = lba - RESERVED_SECTORS;
+    const u16 sectors_per_fat = fat_sector_count();
+    const u8 fat_copy = (u8) (fat_offset / sectors_per_fat);
+    const u32 fat_index = fat_offset % sectors_per_fat;
+    record_host_fat_sector(fat_copy, fat_index, data);
     return true;
   }
   if(lba < data_start) return write_root_sector(lba - root_start, data);
@@ -2177,7 +2397,3 @@ const char* trace_line_at(u16 index) {
 }
 
 } // namespace virtual_fat
-
-extern "C" u8 MK61_VirtualFatSync(void) {
-  return virtual_fat::flush_pending() ? 0 : 1;
-}

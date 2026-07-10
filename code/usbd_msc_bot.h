@@ -46,6 +46,7 @@ extern "C" {
 #define USBD_BOT_LAST_DATA_IN              3U       /* Last Data In Last */
 #define USBD_BOT_SEND_DATA                 4U       /* Send Immediate data */
 #define USBD_BOT_NO_DATA                   5U       /* No data Stage */
+#define USBD_BOT_DEFERRED                  6U       /* Waiting for main-loop storage */
 
 #define USBD_BOT_CBW_SIGNATURE             0x43425355U
 #define USBD_BOT_CSW_SIGNATURE             0x53425355U
@@ -143,4 +144,3 @@ void  MSC_BOT_CplClrFeature(USBD_HandleTypeDef  *pdev,
 /**
   * @}
   */
-

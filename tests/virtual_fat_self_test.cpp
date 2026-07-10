@@ -16,6 +16,7 @@ struct StoredProgram {
 };
 
 static StoredProgram programs[16];
+static u32 program_write_calls;
 
 struct StagedSector {
   bool used;
@@ -71,6 +72,7 @@ void init(void) {}
 
 bool format(void) {
   memset(programs, 0, sizeof(programs));
+  program_write_calls = 0;
   return true;
 }
 
@@ -84,6 +86,29 @@ int count(ProgramType type) {
     if(program.used && program.type == type) result++;
   }
   return result;
+}
+
+int total_count(void) {
+  int result = 0;
+  for(const StoredProgram& program : programs) {
+    if(program.used) result++;
+  }
+  return result;
+}
+
+bool entry_at(int index, Entry& out) {
+  if(index < 0) return false;
+  int seen = 0;
+  for(const StoredProgram& program : programs) {
+    if(!program.used) continue;
+    if(seen++ != index) continue;
+    out.type = program.type;
+    strncpy(out.name, program.name, NAME_SIZE - 1);
+    out.name[NAME_SIZE - 1] = 0;
+    out.data_len = program.data_len;
+    return true;
+  }
+  return false;
 }
 
 bool entry(ProgramType type, int index, Entry& out) {
@@ -117,6 +142,7 @@ bool write(ProgramType type, const char* name, const u8* data, u16 data_len) {
   program->name[NAME_SIZE - 1] = 0;
   if(data_len != 0) memcpy(program->data, data, data_len);
   program->data_len = data_len;
+  program_write_calls++;
   return true;
 }
 
@@ -251,6 +277,17 @@ static u16 fat12_entry(u16 cluster) {
   return (u16) (value & 0x0FFF);
 }
 
+static void set_fat12_entry(u8* fat, u16 cluster, u16 value) {
+  const u16 offset = (u16) (cluster + cluster / 2);
+  if((cluster & 1) == 0) {
+    fat[offset] = (u8) (value & 0xFF);
+    fat[offset + 1] = (u8) ((fat[offset + 1] & 0xF0) | ((value >> 8) & 0x0F));
+  } else {
+    fat[offset] = (u8) ((fat[offset] & 0x0F) | ((value << 4) & 0xF0));
+    fat[offset + 1] = (u8) (value >> 4);
+  }
+}
+
 static void fill_short_dir_entry(u8* entry, const char* short_name, u16 cluster, u32 len) {
   memset(entry, 0, 32);
   memcpy(entry, short_name, 11);
@@ -343,8 +380,9 @@ static void test_lfn_aliases_are_unique(void) {
   reset_virtual_fat_state();
 
   const u8 byte = 0x42;
-  assert(program_store::write(program_store::ProgramType::MK61, "ALPHA-BETA", &byte, 1));
-  assert(program_store::write(program_store::ProgramType::MK61, "ALPHA_BETA", &byte, 1));
+  // These names collided under the former two-character DJB2 suffix.
+  assert(program_store::write(program_store::ProgramType::MK61, "ABCDE00000", &byte, 1));
+  assert(program_store::write(program_store::ProgramType::MK61, "ABCDE00169", &byte, 1));
 
   u8 root[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(root_lba(), root));
@@ -364,7 +402,36 @@ static void test_lfn_aliases_are_unique(void) {
   assert(short_names[1][5] == '~');
 }
 
-static void test_incomplete_pending_flush_keeps_waiting_for_data(void) {
+static void test_lfn_alias_stays_stable_after_earlier_delete(void) {
+  reset_virtual_fat_state();
+
+  const u8 byte = 0x37;
+  assert(program_store::write(program_store::ProgramType::MK61, "ALPHA-LONG", &byte, 1));
+  assert(program_store::write(program_store::ProgramType::MK61, "BRAVO-LONG", &byte, 1));
+  assert(virtual_fat::reset_session());
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  u8 archive_offsets[2] = {};
+  u8 archive_count = 0;
+  for(u8 i = 0; i < 16; i++) {
+    if(root[(u16) i * 32 + 11] == 0x20) archive_offsets[archive_count++] = i;
+  }
+  assert(archive_count == 2);
+  u8 bravo_alias[11];
+  memcpy(bravo_alias, root + (u16) archive_offsets[1] * 32, sizeof(bravo_alias));
+
+  root[(u16) archive_offsets[0] * 32] = 0xE5;
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  assert(virtual_fat::read_sector(root_lba(), root));
+  const u8* remaining = first_archive_entry(root);
+  assert(remaining != NULL);
+  assert(memcmp(remaining, bravo_alias, sizeof(bravo_alias)) == 0);
+}
+
+static void test_incomplete_pending_flush_reports_not_durable(void) {
   reset_virtual_fat_state();
 
   u8 root[virtual_fat::SECTOR_SIZE];
@@ -372,7 +439,7 @@ static void test_incomplete_pending_flush_keeps_waiting_for_data(void) {
   fill_short_dir_entry(root + 32, "NEW     M61", 2, 100);
 
   assert(virtual_fat::write_sector(root_lba(), root));
-  assert(virtual_fat::flush_pending());
+  assert(!virtual_fat::flush_pending());
   assert(!program_store::exists(program_store::ProgramType::MK61, "NEW"));
 
   u8 data[virtual_fat::SECTOR_SIZE];
@@ -614,7 +681,7 @@ static void test_many_pending_directory_entries_wait_for_late_data(void) {
   }
 
   assert(virtual_fat::write_sector(root_lba(), root));
-  assert(virtual_fat::flush_pending());
+  assert(!virtual_fat::flush_pending());
   for(u8 i = 0; i < FILES; i++) {
     char name[program_store::NAME_SIZE];
     snprintf(name, sizeof(name), "L%02u", (unsigned) i);
@@ -1136,6 +1203,153 @@ static void test_empty_entry_neither_renames_nor_commits(void) {
   assert(!program_store::exists(program_store::ProgramType::MK61, "NEWFILE"));
 }
 
+static void test_zero_cluster_tombstone_cannot_delete_by_slot_and_size(void) {
+  reset_virtual_fat_state();
+
+  u8 payload[100];
+  memset(payload, 0xA5, sizeof(payload));
+  assert(program_store::write(program_store::ProgramType::MK61, "VICTIM", payload, sizeof(payload)));
+  assert(virtual_fat::reset_session());
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  u8* tombstone = root + 32;
+  tombstone[0] = 0xE5;
+  memset(tombstone + 1, 'X', 10);
+  write_le16(tombstone, 26, 0);
+  write_le32(tombstone, 28, sizeof(payload));
+
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+  assert(program_store::exists(program_store::ProgramType::MK61, "VICTIM"));
+}
+
+static void test_empty_placeholders_do_not_exhaust_pending_queue(void) {
+  reset_virtual_fat_state();
+
+  for(u8 i = 0; i < virtual_fat::MAX_PENDING_WRITES; i++) {
+    virtual_fat::ParsedDirEntry parsed;
+    parsed.type = program_store::ProgramType::MK61;
+    snprintf(parsed.name, sizeof(parsed.name), "E%02u", (unsigned) i);
+    parsed.start_cluster = 0;
+    parsed.data_len = 0;
+    assert(virtual_fat::upsert_pending(parsed, i + 1));
+  }
+  assert(virtual_fat::flush_pending());
+
+  virtual_fat::ParsedDirEntry extra;
+  extra.type = program_store::ProgramType::MK61;
+  strcpy(extra.name, "EXTRA");
+  extra.start_cluster = 0;
+  extra.data_len = 0;
+  assert(virtual_fat::upsert_pending(extra, 100));
+}
+
+static void test_existing_file_sectors_coalesce_until_sync(void) {
+  reset_virtual_fat_state();
+
+  u8 original[1536];
+  memset(original, 0x11, sizeof(original));
+  assert(program_store::write(program_store::ProgramType::MK61, "THREE", original, sizeof(original)));
+  assert(virtual_fat::reset_session());
+  const u32 writes_before = program_write_calls;
+
+  u8 sector[virtual_fat::SECTOR_SIZE];
+  for(u8 i = 0; i < 3; i++) {
+    memset(sector, (int) (0x40 + i), sizeof(sector));
+    assert(virtual_fat::write_sector(data_lba() + i, sector));
+  }
+  assert(program_write_calls == writes_before);
+  assert(virtual_fat::flush_pending());
+  assert(program_write_calls == writes_before + 1);
+
+  u8 stored[1536];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::MK61, "THREE", stored,
+                             sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(stored[0] == 0x40);
+  assert(stored[512] == 0x41);
+  assert(stored[1024] == 0x42);
+}
+
+static void test_explicitly_broken_fat_chain_is_rejected(void) {
+  reset_virtual_fat_state();
+
+  u8 fat[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(fat_lba(), fat));
+  set_fat12_entry(fat, 2, 0x0FFF);
+  assert(virtual_fat::write_sector(fat_lba(), fat));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 32, "BROKEN  M61", 2, 600);
+  assert(!virtual_fat::write_sector(root_lba(), root));
+  assert(!program_store::exists(program_store::ProgramType::MK61, "BROKEN"));
+}
+
+static void test_conflicting_fat_copies_block_commit(void) {
+  reset_virtual_fat_state();
+
+  u8 boot[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(0, boot));
+  const u16 sectors_per_fat = read_le16(boot, 22);
+  u8 fat1[virtual_fat::SECTOR_SIZE];
+  u8 fat2[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(fat_lba(), fat1));
+  memcpy(fat2, fat1, sizeof(fat2));
+  set_fat12_entry(fat1, 2, 3);
+  set_fat12_entry(fat2, 2, 4);
+  assert(virtual_fat::write_sector(fat_lba(), fat1));
+  assert(virtual_fat::write_sector(fat_lba() + sectors_per_fat, fat2));
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 32, "CONFLICTM61", 2, 600);
+  assert(!virtual_fat::write_sector(root_lba(), root));
+
+  // Once both mirrors converge, the same chain becomes admissible again.
+  assert(virtual_fat::write_sector(fat_lba() + sectors_per_fat, fat1));
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(!virtual_fat::flush_pending());
+}
+
+static void test_new_file_cannot_crosslink_committed_cluster(void) {
+  reset_virtual_fat_state();
+
+  u8 victim[100];
+  memset(victim, 0x51, sizeof(victim));
+  assert(program_store::write(program_store::ProgramType::MK61, "VICTIM", victim, sizeof(victim)));
+  assert(virtual_fat::reset_session());
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_short_dir_entry(root + 64, "ATTACK  M61", 2, sizeof(victim));
+  assert(!virtual_fat::write_sector(root_lba(), root));
+  assert(!program_store::exists(program_store::ProgramType::MK61, "ATTACK"));
+}
+
+static void test_lfn_parser_rejects_out_of_order_and_oversized_sequences(void) {
+  virtual_fat::LfnState lfn;
+  memset(&lfn, 0, sizeof(lfn));
+  u8 entry[32];
+  virtual_fat::fill_lfn_entry(entry, "OUT-OF-ORDER.M61", 3, 3, 0x22);
+  virtual_fat::parse_lfn_entry(entry, lfn);
+  virtual_fat::fill_lfn_entry(entry, "OUT-OF-ORDER.M61", 1, 3, 0x22);
+  virtual_fat::parse_lfn_entry(entry, lfn);
+  u8 short_entry[32] = {};
+  assert(virtual_fat::accepted_lfn_name(lfn, short_entry) == NULL);
+
+  memset(entry, 0xFF, sizeof(entry));
+  entry[0] = 0x5F;
+  entry[11] = 0x0F;
+  entry[12] = 0;
+  entry[26] = 0;
+  entry[27] = 0;
+  virtual_fat::parse_lfn_entry(entry, lfn);
+  assert(!lfn.active);
+}
+
 } // namespace
 
 int main(void) {
@@ -1148,7 +1362,8 @@ int main(void) {
   assert(virtual_fat::reset_session());
 
   test_lfn_aliases_are_unique();
-  test_incomplete_pending_flush_keeps_waiting_for_data();
+  test_lfn_alias_stays_stable_after_earlier_delete();
+  test_incomplete_pending_flush_reports_not_durable();
   test_short_txt_import_stores_text_type();
   test_fmk_import_and_export_use_font_type();
   test_m61_lfn_import_normalizes_cyrillic_name();
@@ -1172,6 +1387,13 @@ int main(void) {
   test_stale_echo_after_flush_does_not_create_ghosts();
   test_tombstone_identity_check_protects_other_files();
   test_empty_entry_neither_renames_nor_commits();
+  test_zero_cluster_tombstone_cannot_delete_by_slot_and_size();
+  test_empty_placeholders_do_not_exhaust_pending_queue();
+  test_existing_file_sectors_coalesce_until_sync();
+  test_explicitly_broken_fat_chain_is_rejected();
+  test_conflicting_fat_copies_block_commit();
+  test_new_file_cannot_crosslink_committed_cluster();
+  test_lfn_parser_rejects_out_of_order_and_oversized_sequences();
   printf("virtual_fat_self_test: ok\n");
   return 0;
 }
