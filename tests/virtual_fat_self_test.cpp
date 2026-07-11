@@ -72,6 +72,7 @@ void init(void) {}
 
 bool format(void) {
   memset(programs, 0, sizeof(programs));
+  memset(staged_sectors, 0, sizeof(staged_sectors));
   program_write_calls = 0;
   return true;
 }
@@ -238,7 +239,9 @@ void vfat_stage_forget(u16 start_cluster, u16 clusters) {
 }
 
 void vfat_stage_clear(void) {
-  memset(staged_sectors, 0, sizeof(staged_sectors));
+  // Production rebuilds valid persistent stage references here; it does not
+  // discard them.  virtual_fat::reset_session() must explicitly forget any
+  // payload whose volatile directory transaction no longer exists.
 }
 
 } // namespace program_store
@@ -572,6 +575,105 @@ static void test_lfn_import_keeps_short_names_verbatim(void) {
   assert(memcmp(stored, payload, stored_len) == 0);
 }
 
+// macOS creates a zero-length LFN placeholder, writes the data, publishes the
+// final size, and may then echo the same cached directory sector again.  A
+// long source name that is shortened for the internal store must keep one
+// identity throughout that sequence instead of becoming Name1/Name2 or
+// failing the repeated directory write with a cross-linked cluster.
+static void test_long_lfn_placeholder_and_echo_keep_one_identity(void) {
+  reset_virtual_fat_state();
+
+  const u16 full_name[] = {
+    'D', 'S', 'E', 'G', '7', 'M', 'o', 'd', 'e', 'r', 'n', 'M', 'i', 'n', 'i',
+    '-', 'I', 't', 'a', 'l', 'i', 'c', '.', 'f', 'm', 'k', 0
+  };
+  const u8 short_name[11] = {'D', 'S', 'E', 'G', '7', 'M', '~', '1', 'F', 'M', 'K'};
+  static constexpr u16 PAYLOAD_SIZE = 73;
+  const u8 lfn_entries = (u8) ((utf16_len(full_name) + 12) / 13);
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  fill_lfn_entries_utf16(root + 32, full_name, short_name);
+  u8* const short_entry = root + (u16) (1 + lfn_entries) * 32;
+  fill_short_dir_entry(short_entry, (const char*) short_name, 0, 0);
+  assert(virtual_fat::write_sector(root_lba(), root));
+
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0, sizeof(data));
+  memcpy(data, "FMK1", 4);
+  assert(virtual_fat::write_sector(data_lba(), data));
+
+  write_le16(short_entry, 26, 2);
+  write_le32(short_entry, 28, PAYLOAD_SIZE);
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+  assert(program_store::total_count() == 1);
+  program_store::Entry imported;
+  assert(program_store::entry_at(0, imported));
+  char stable_name[program_store::NAME_SIZE];
+  strncpy(stable_name, imported.name, sizeof(stable_name));
+  stable_name[sizeof(stable_name) - 1] = 0;
+
+  // Finder can send stale echoes after the commit has changed the generated
+  // on-disk spelling/layout of the shortened internal name.
+  for(u8 echo = 0; echo < 8; echo++) {
+    assert(virtual_fat::write_sector(root_lba(), root));
+    assert(virtual_fat::flush_pending());
+    assert(program_store::total_count() == 1);
+    assert(program_store::entry_at(0, imported));
+    assert(strcmp(imported.name, stable_name) == 0);
+  }
+}
+
+static void test_lfn_crc_collision_requires_same_cluster_identity(void) {
+  reset_virtual_fat_state();
+
+  // These distinct LFNs have the same CRC16.  The fingerprint may narrow a
+  // lookup, but a file on another cluster must still receive its own name.
+  const u16 first_lfn[] = {
+    'L', 'o', 'n', 'g', 'F', 'o', 'n', 't', '-',
+    'A', 'i', 'F', '9', 'x', 'h', 'B', 'A', 'E', 'M', 'w', 'X',
+    '.', 'f', 'm', 'k', 0
+  };
+  const u16 second_lfn[] = {
+    'L', 'o', 'n', 'g', 'F', 'o', 'n', 't', '-',
+    'W', 'J', 'X', 'Z', 'K', '1', 'P', 'w', 'o', 't', '3', '5',
+    '.', 'f', 'm', 'k', 0
+  };
+  assert(virtual_fat::source_lfn_fingerprint(first_lfn) == 0x3FC4);
+  assert(virtual_fat::source_lfn_fingerprint(second_lfn) == 0x3FC4);
+
+  u8 item[32];
+  fill_short_dir_entry(item, "LONGFO~1FMK", 2, 73);
+  virtual_fat::ParsedDirEntry first;
+  assert(virtual_fat::parse_dir_entry(item, first_lfn, first));
+
+  u8 payload[73] = {0};
+  assert(program_store::write(first.type, first.name, payload, sizeof(payload)));
+  const u16 first_chain[] = {2};
+  virtual_fat::store_cluster_map(first.type, first.name, first_chain, 1,
+                                 virtual_fat::ALIAS_SUFFIX_AUTO,
+                                 first.source_fingerprint);
+
+  fill_short_dir_entry(item, "LONGFO~2FMK", 3, 73);
+  virtual_fat::ParsedDirEntry second;
+  assert(virtual_fat::parse_dir_entry(item, second_lfn, second));
+  assert(second.source_fingerprint == first.source_fingerprint);
+  assert(strcmp(second.name, first.name) != 0);
+}
+
+static void test_new_session_discards_payload_only_stage_records(void) {
+  reset_virtual_fat_state();
+  u8 data[virtual_fat::SECTOR_SIZE];
+  memset(data, 0xA7, sizeof(data));
+  assert(program_store::vfat_stage_write(37, data));
+  assert(program_store::vfat_stage_exists(37));
+
+  virtual_fat::end_session();
+  assert(virtual_fat::reset_session());
+  assert(!program_store::vfat_stage_exists(37));
+}
+
 static void test_state_txt_lfn_import_normalizes_cyrillic(void) {
   reset_virtual_fat_state();
 
@@ -627,12 +729,22 @@ static void test_staging_does_not_shadow_committed_file_data(void) {
   assert(readback[100] == 0);
 }
 
-static void test_staged_cluster_is_not_advertised_as_free(void) {
+static void test_unowned_persistent_stage_is_advertised_as_free(void) {
   reset_virtual_fat_state();
 
   u8 staged[virtual_fat::SECTOR_SIZE];
   memset(staged, 0x72, sizeof(staged));
   assert(program_store::vfat_stage_write(2, staged));
+
+  assert(fat12_entry(2) == 0x000);
+}
+
+static void test_current_session_stage_is_not_advertised_as_free(void) {
+  reset_virtual_fat_state();
+
+  u8 staged[virtual_fat::SECTOR_SIZE];
+  memset(staged, 0x73, sizeof(staged));
+  assert(virtual_fat::write_sector(data_lba(), staged));
 
   assert(fat12_entry(2) == 0x0FFF);
 }
@@ -1388,9 +1500,13 @@ int main(void) {
   test_fmk_import_and_export_use_font_type();
   test_m61_lfn_import_normalizes_cyrillic_name();
   test_lfn_import_keeps_short_names_verbatim();
+  test_long_lfn_placeholder_and_echo_keep_one_identity();
+  test_lfn_crc_collision_requires_same_cluster_identity();
+  test_new_session_discards_payload_only_stage_records();
   test_state_txt_lfn_import_normalizes_cyrillic();
   test_staging_does_not_shadow_committed_file_data();
-  test_staged_cluster_is_not_advertised_as_free();
+  test_unowned_persistent_stage_is_advertised_as_free();
+  test_current_session_stage_is_not_advertised_as_free();
   test_staging_survives_mass_copy_before_directory_update();
   test_many_pending_directory_entries_wait_for_late_data();
   test_hidden_stored_entries_do_not_shift_visible_files();

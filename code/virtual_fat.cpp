@@ -44,8 +44,13 @@ static constexpr u8 FAT_ATTR_VOLUME = 0x08;
 static constexpr u8 FAT_ATTR_DIRECTORY = 0x10;
 static constexpr u8 FAT_ATTR_ARCHIVE = 0x20;
 static constexpr u8 FAT_ATTR_LFN = 0x0F;
-static constexpr u16 ALIAS_SUFFIX_COUNT = 36U * 36U;
+// Only 128 committed files plus at most 32 pending imports can exist.  One
+// byte is therefore enough for a stable generated 8.3 suffix; the reclaimed
+// byte in each hot entry stores an LFN source fingerprint without growing the
+// 8 KiB USB session workspace.
+static constexpr u16 ALIAS_SUFFIX_COUNT = 256;
 static constexpr u16 ALIAS_SUFFIX_AUTO = 0xFFFF;
+static constexpr u16 SOURCE_FINGERPRINT_NONE = 0;
 
 static const program_store::ProgramType FILE_TYPES[] = {
   program_store::ProgramType::MK61,
@@ -64,9 +69,10 @@ struct PendingWrite {
   bool used;
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
-  u16 alias_suffix;
   u16 data_len;
   u16 chain[MAX_FILE_CLUSTERS];
+  u16 source_fingerprint;
+  u8 alias_suffix;
   u8 chain_count;
   u8 dirty_mask;
   u8 flags;
@@ -97,7 +103,8 @@ struct ClusterMap {
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
   u16 chain[MAX_FILE_CLUSTERS];
-  u16 alias_suffix;
+  u16 source_fingerprint;
+  u8 alias_suffix;
   u8 count;
 };
 
@@ -111,6 +118,7 @@ struct ParsedDirEntry {
   char name[program_store::NAME_SIZE];
   u16 start_cluster;
   u16 data_len;
+  u16 source_fingerprint = SOURCE_FINGERPRINT_NONE;
 };
 
 struct LfnState {
@@ -142,6 +150,12 @@ struct SessionState {
   u8 host_fat_crc_valid[FAT_COUNT];
   u8 host_fat_conflict;
 
+  // Persistent stage records survive resets, but only records written by the
+  // current USB session have matching volatile directory metadata.  Track
+  // those 800 clusters in exactly 100 bytes so recovered payload-only records
+  // never appear as FAT orphans or get committed under an unrelated name.
+  u8 staged_this_session[(DATA_CLUSTER_CAPACITY + 7) / 8];
+
   // Cluster -> cluster_maps slot lookup (0xFF = unowned). FAT and data sector
   // handlers run inside the USB interrupt, so they must not rescan every file
   // for every cluster; that starved the main loop for seconds per FAT sector.
@@ -152,6 +166,8 @@ struct SessionState {
 };
 
 static_assert(language_workspace::SIZE >= sizeof(SessionState), "language workspace must fit virtual FAT session");
+static_assert(program_store::MAX_ENTRIES + MAX_PENDING_WRITES <= ALIAS_SUFFIX_COUNT,
+              "generated aliases must cover committed and pending files");
 
 static language_workspace::Lease session_lease;
 static SessionState* session_state_ptr = NULL;
@@ -169,6 +185,29 @@ static SessionState& session_state(void) {
   // contract; trap deterministically instead of dereferencing NULL.
   if(!ensure_session_state()) __builtin_trap();
   return *session_state_ptr;
+}
+
+static bool staged_in_this_session(u16 cluster) {
+  if(cluster < FIRST_DATA_CLUSTER || cluster >= CLUSTER_LIMIT) return false;
+  const u16 index = (u16) (cluster - FIRST_DATA_CLUSTER);
+  return (session_state().staged_this_session[index / 8] & (1U << (index & 7))) != 0;
+}
+
+static void mark_staged_in_this_session(u16 cluster) {
+  if(cluster < FIRST_DATA_CLUSTER || cluster >= CLUSTER_LIMIT) return;
+  const u16 index = (u16) (cluster - FIRST_DATA_CLUSTER);
+  session_state().staged_this_session[index / 8] =
+      (u8) (session_state().staged_this_session[index / 8] | (1U << (index & 7)));
+}
+
+static void forget_staged_in_this_session(u16 start_cluster, u16 clusters) {
+  for(u16 i = 0; i < clusters; i++) {
+    const u16 cluster = (u16) (start_cluster + i);
+    if(cluster < FIRST_DATA_CLUSTER || cluster >= CLUSTER_LIMIT) continue;
+    const u16 index = (u16) (cluster - FIRST_DATA_CLUSTER);
+    session_state().staged_this_session[index / 8] =
+        (u8) (session_state().staged_this_session[index / 8] & ~(1U << (index & 7)));
+  }
 }
 
 static_assert(shared_scratch::SIZE >= MAX_IMPORTED_LEN, "shared scratch too small for virtual FAT commits");
@@ -412,22 +451,22 @@ static ClusterMap* allocate_cluster_map(void) {
 static bool alias_suffix_in_use(u16 suffix) {
   for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
     const ClusterMap& map = session_state().cluster_maps[i];
-    if(map.used && map.alias_suffix == suffix) return true;
+    if(map.used && map.alias_suffix == (u8) suffix) return true;
   }
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
     const PendingWrite& pending = session_state().pending_writes[i];
-    if(pending.used && pending.alias_suffix == suffix) return true;
+    if(pending.used && pending.alias_suffix == (u8) suffix) return true;
   }
   return false;
 }
 
-static u16 allocate_alias_suffix(void) {
+static u8 allocate_alias_suffix(void) {
   for(u16 attempt = 0; attempt < ALIAS_SUFFIX_COUNT; attempt++) {
     const u16 suffix = (u16) ((session_state().next_alias_suffix + attempt) %
                               ALIAS_SUFFIX_COUNT);
     if(alias_suffix_in_use(suffix)) continue;
     session_state().next_alias_suffix = (u16) ((suffix + 1) % ALIAS_SUFFIX_COUNT);
-    return suffix;
+    return (u8) suffix;
   }
   return 0;
 }
@@ -534,7 +573,8 @@ static u16 allocate_contiguous_clusters(u16 count) {
 
 static void store_cluster_map(program_store::ProgramType type, const char* name,
                               const u16* chain, u8 count,
-                              u16 alias_suffix = ALIAS_SUFFIX_AUTO) {
+                              u16 alias_suffix = ALIAS_SUFFIX_AUTO,
+                              u16 source_fingerprint = SOURCE_FINGERPRINT_NONE) {
   if(name == NULL || name[0] == 0 || count == 0) {
     forget_cluster_map(type, name);
     return;
@@ -558,22 +598,29 @@ static void store_cluster_map(program_store::ProgramType type, const char* name,
   strncpy(map->name, name, program_store::NAME_SIZE - 1);
   map->name[program_store::NAME_SIZE - 1] = 0;
   for(u8 i = 0; i < count && i < MAX_FILE_CLUSTERS; i++) map->chain[i] = chain[i];
-  map->alias_suffix = alias_suffix;
+  map->source_fingerprint = source_fingerprint;
+  map->alias_suffix = (u8) alias_suffix;
   map->count = (count > MAX_FILE_CLUSTERS) ? MAX_FILE_CLUSTERS : count;
   session_state().cluster_index_valid = false;
 }
 
-static void rename_cluster_map(program_store::ProgramType type, const char* old_name, const char* new_name, u16 start_cluster, u16 data_len) {
+static void rename_cluster_map(program_store::ProgramType type, const char* old_name,
+                               const char* new_name, u16 start_cluster, u16 data_len,
+                               u16 source_fingerprint) {
   ClusterMap* map = find_cluster_map(type, old_name);
   if(map == NULL) {
     u16 chain[MAX_FILE_CLUSTERS];
     u8 count = 0;
-    if(build_chain(start_cluster, data_len, chain, count)) store_cluster_map(type, new_name, chain, count);
+    if(build_chain(start_cluster, data_len, chain, count)) {
+      store_cluster_map(type, new_name, chain, count,
+                        ALIAS_SUFFIX_AUTO, source_fingerprint);
+    }
     return;
   }
 
   strncpy(map->name, new_name, program_store::NAME_SIZE - 1);
   map->name[program_store::NAME_SIZE - 1] = 0;
+  map->source_fingerprint = source_fingerprint;
   session_state().cluster_index_valid = false;
 }
 
@@ -793,7 +840,8 @@ static u16 fat_value(u16 cluster) {
   }
 
   if(ignored_cluster(cluster)) return CLUSTER_FREE;
-  return program_store::vfat_stage_exists(cluster) ? CLUSTER_EOF : CLUSTER_FREE;
+  return staged_in_this_session(cluster) && program_store::vfat_stage_exists(cluster)
+    ? CLUSTER_EOF : CLUSTER_FREE;
 }
 
 static void set_fat_byte(u8* out, u32 fat_sector, u32 byte_offset, u8 value, u8 mask) {
@@ -1147,7 +1195,7 @@ static bool read_data_sector(u32 data_sector, u8* out) {
   FileClusters chain;
   u8 pos = 0;
   if(!find_cluster_owner(cluster, entry, chain, pos)) {
-    (void) read_staged_sector(cluster, out);
+    if(staged_in_this_session(cluster)) (void) read_staged_sector(cluster, out);
     return true;
   }
 
@@ -1182,6 +1230,8 @@ static bool queue_committed_data_sector(const program_store::Entry& entry,
     pending->name[program_store::NAME_SIZE - 1] = 0;
     const ClusterMap* map = find_cluster_map(entry.type, entry.name);
     pending->alias_suffix = map == NULL ? allocate_alias_suffix() : map->alias_suffix;
+    pending->source_fingerprint = map == NULL
+      ? SOURCE_FINGERPRINT_NONE : map->source_fingerprint;
     pending->data_len = entry.data_len;
     pending->chain_count = chain.count;
     for(u8 i = 0; i < chain.count; i++) pending->chain[i] = chain.clusters[i];
@@ -1193,7 +1243,8 @@ static bool queue_committed_data_sector(const program_store::Entry& entry,
      pos >= pending->chain_count || pending->chain[pos] != chain.clusters[pos]) return false;
 
   if(!stage_write_with_recovery(chain.clusters[pos], data) &&
-     !program_store::vfat_stage_exists(chain.clusters[pos])) return false;
+     !(staged_in_this_session(chain.clusters[pos]) &&
+       program_store::vfat_stage_exists(chain.clusters[pos]))) return false;
   pending->dirty_mask = (u8) (pending->dirty_mask | (1U << pos));
   tracef("UPDATE queue %s.%s off=%u b0=%02X %s", entry.name,
          extension_for_type(entry.type), file_offset, data[0],
@@ -1393,6 +1444,83 @@ static bool source_is_direct_internal_name(const u16* full_name, u16 base_len, c
   return i == base_len && candidate[i] == 0;
 }
 
+static u16 source_lfn_fingerprint(const u16* full_name) {
+  u16 crc = 0xFFFF;
+  for(u16 i = 0; full_name[i] != 0; i++) {
+    const u8 bytes[2] = {(u8) (full_name[i] & 0xFF), (u8) (full_name[i] >> 8)};
+    for(u8 n = 0; n < 2; n++) {
+      crc ^= (u16) bytes[n] << 8;
+      for(u8 bit = 0; bit < 8; bit++) {
+        crc = (crc & 0x8000) ? (u16) ((crc << 1) ^ 0x1021) : (u16) (crc << 1);
+      }
+    }
+  }
+  return crc == SOURCE_FINGERPRINT_NONE ? 1 : crc;
+}
+
+static u8 bounded_name_len(const char* name) {
+  u8 len = 0;
+  while(len < program_store::NAME_SIZE - 1 && name[len] != 0) len++;
+  return len;
+}
+
+// A collision-resolved import name is the normalized base, possibly
+// truncated to make room for a decimal suffix in the range 1..999.
+// Checking that family as well as the fingerprint prevents an unrelated LFN
+// with the same CRC16 from inheriting another file's internal name.
+static bool import_name_matches_base(const char* stored, const char* base) {
+  if(strncmp(stored, base, program_store::NAME_SIZE) == 0) return true;
+
+  const u8 stored_len = bounded_name_len(stored);
+  const u8 base_len = bounded_name_len(base);
+  const u8 capacity = program_store::NAME_SIZE - 1;
+  for(u8 digits = 1; digits <= 3; digits++) {
+    const u8 prefix_len = base_len < (u8) (capacity - digits)
+      ? base_len : (u8) (capacity - digits);
+    if(stored_len != (u8) (prefix_len + digits) ||
+       memcmp(stored, base, prefix_len) != 0) continue;
+
+    u16 suffix = 0;
+    bool valid = stored[prefix_len] != '0';
+    for(u8 i = 0; i < digits; i++) {
+      const char c = stored[prefix_len + i];
+      if(c < '0' || c > '9') valid = false;
+      else suffix = (u16) (suffix * 10 + (u16) (c - '0'));
+    }
+    if(valid && suffix >= 1 && suffix <= 999) return true;
+  }
+  return false;
+}
+
+static bool reuse_import_name(program_store::ProgramType type, u16 source_fingerprint,
+                              u16 start_cluster, char* name) {
+  // CRC16 narrows the lookup but is not identity by itself.  A non-zero start
+  // cluster uniquely identifies the live FAT object during this USB session.
+  if(source_fingerprint == SOURCE_FINGERPRINT_NONE ||
+     start_cluster < FIRST_DATA_CLUSTER || start_cluster >= CLUSTER_LIMIT) return false;
+  for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
+    const PendingWrite& pending = session_state().pending_writes[i];
+    if(!pending.used || pending.type != type ||
+       pending.source_fingerprint != source_fingerprint ||
+       pending_start_cluster(pending) != start_cluster ||
+       !import_name_matches_base(pending.name, name)) continue;
+    strncpy(name, pending.name, program_store::NAME_SIZE - 1);
+    name[program_store::NAME_SIZE - 1] = 0;
+    return true;
+  }
+  for(u8 i = 0; i < program_store::MAX_ENTRIES; i++) {
+    const ClusterMap& map = session_state().cluster_maps[i];
+    if(!map.used || map.type != type || map.source_fingerprint != source_fingerprint ||
+       map.count == 0 || map.chain[0] != start_cluster ||
+       find_pending_delete(map.type, map.name) != NULL ||
+       !import_name_matches_base(map.name, name)) continue;
+    strncpy(name, map.name, program_store::NAME_SIZE - 1);
+    name[program_store::NAME_SIZE - 1] = 0;
+    return true;
+  }
+  return false;
+}
+
 static bool name_exists_or_pending(program_store::ProgramType type, const char* name) {
   if(program_store::exists(type, name)) return true;
   for(u8 i = 0; i < MAX_PENDING_WRITES; i++) {
@@ -1472,8 +1600,11 @@ static bool build_normalized_name(const u16* full_name, u16 base_len, char* out)
   return pos != 0;
 }
 
-static void make_import_name_unique(program_store::ProgramType type, const u16* full_name, u16 base_len, char* name) {
-  if(source_is_direct_internal_name(full_name, base_len, name)) return;
+static void make_import_name_unique(program_store::ProgramType type,
+                                    u16 source_fingerprint,
+                                    u16 start_cluster, char* name) {
+  if(source_fingerprint == SOURCE_FINGERPRINT_NONE) return;
+  if(reuse_import_name(type, source_fingerprint, start_cluster, name)) return;
   if(!name_exists_or_pending(type, name)) return;
 
   char base[program_store::NAME_SIZE];
@@ -1527,7 +1658,9 @@ static bool parse_lfn_filename(const u16* full_name, ParsedDirEntry& parsed) {
 
   if(base_len == 0) return false;
   if(!build_normalized_name(full_name, base_len, parsed.name)) return false;
-  make_import_name_unique(parsed.type, full_name, base_len, parsed.name);
+  parsed.source_fingerprint = source_is_direct_internal_name(
+      full_name, base_len, parsed.name)
+    ? SOURCE_FINGERPRINT_NONE : source_lfn_fingerprint(full_name);
   return true;
 }
 
@@ -1549,6 +1682,7 @@ static bool parse_short_filename(const u8* item, ParsedDirEntry& parsed) {
   }
   if(name_len == 0) return false;
   parsed.name[name_len] = 0;
+  parsed.source_fingerprint = SOURCE_FINGERPRINT_NONE;
   return true;
 }
 
@@ -1566,6 +1700,10 @@ static bool parse_dir_entry(const u8* item, const u16* lfn_name, ParsedDirEntry&
   parsed.start_cluster = get_le16(item, 26);
   if(parsed.data_len == 0) parsed.start_cluster = 0;
   else if(parsed.start_cluster < FIRST_DATA_CLUSTER || parsed.start_cluster >= CLUSTER_LIMIT) return false;
+  if(lfn_name != NULL) {
+    make_import_name_unique(parsed.type, parsed.source_fingerprint,
+                            parsed.start_cluster, parsed.name);
+  }
   return true;
 }
 
@@ -1696,6 +1834,7 @@ static bool parse_generated_dir_entry(int dir_index, const u8* item, ParsedDirEn
   parsed.name[program_store::NAME_SIZE - 1] = 0;
   parsed.data_len = (u16) len;
   parsed.start_cluster = get_le16(item, 26);
+  parsed.source_fingerprint = SOURCE_FINGERPRINT_NONE;
   if(parsed.data_len == 0) parsed.start_cluster = 0;
   else if(parsed.start_cluster < FIRST_DATA_CLUSTER || parsed.start_cluster >= CLUSTER_LIMIT) return false;
   return true;
@@ -1732,7 +1871,8 @@ static bool pending_has_all_data(const PendingWrite& pending) {
   pending_clusters(pending, chain);
   if(chain.count != clusters_for_len(pending.data_len)) return false;
   for(u8 i = 0; i < chain.count; i++) {
-    if(!program_store::vfat_stage_exists(chain.clusters[i])) return false;
+    if(!staged_in_this_session(chain.clusters[i]) ||
+       !program_store::vfat_stage_exists(chain.clusters[i])) return false;
   }
   return true;
 }
@@ -1741,7 +1881,8 @@ static bool pending_has_any_data(const PendingWrite& pending) {
   FileClusters chain;
   pending_clusters(pending, chain);
   for(u8 i = 0; i < chain.count; i++) {
-    if(program_store::vfat_stage_exists(chain.clusters[i])) return true;
+    if(staged_in_this_session(chain.clusters[i]) &&
+       program_store::vfat_stage_exists(chain.clusters[i])) return true;
   }
   return false;
 }
@@ -1794,8 +1935,11 @@ static bool try_commit_pending(PendingWrite& pending) {
   tracef("COMMIT ok %s.%s", pending.name, extension_for_type(pending.type));
   clear_pending_delete(find_pending_delete(pending.type, pending.name));
   store_cluster_map(pending.type, pending.name, chain.clusters, chain.count,
-                    pending.alias_suffix);
-  for(u8 i = 0; i < chain.count; i++) program_store::vfat_stage_forget(chain.clusters[i], 1);
+                    pending.alias_suffix, pending.source_fingerprint);
+  for(u8 i = 0; i < chain.count; i++) {
+    program_store::vfat_stage_forget(chain.clusters[i], 1);
+    forget_staged_in_this_session(chain.clusters[i], 1);
+  }
   memset(&pending, 0, sizeof(pending));
   return true;
 }
@@ -1807,7 +1951,8 @@ static bool stage_has_all_data(u16 start_cluster, u16 data_len) {
   u8 count = 0;
   if(!build_chain(start_cluster, data_len, chain, count)) return false;
   for(u8 i = 0; i < count; i++) {
-    if(!program_store::vfat_stage_exists(chain[i])) return false;
+    if(!staged_in_this_session(chain[i]) ||
+       !program_store::vfat_stage_exists(chain[i])) return false;
   }
   return true;
 }
@@ -1861,6 +2006,7 @@ static void ignore_write_range(u16 start_cluster, u32 data_len) {
   range->clusters = clusters;
   tracef("IGNORE c=%u len=%lu n=%u", start_cluster, (unsigned long) data_len, clusters);
   program_store::vfat_stage_forget(start_cluster, clusters);
+  forget_staged_in_this_session(start_cluster, clusters);
 }
 
 static void ignore_dir_entry_range(const u8* item) {
@@ -1897,12 +2043,18 @@ bool reset_session(void) {
   memset(session_state().host_fat_crc, 0, sizeof(session_state().host_fat_crc));
   memset(session_state().host_fat_crc_valid, 0, sizeof(session_state().host_fat_crc_valid));
   session_state().host_fat_conflict = 0;
+  memset(session_state().staged_this_session, 0, sizeof(session_state().staged_this_session));
   session_state().root_lfn_next_sector = 0;
   session_state().next_ignored_slot = 0;
   session_state().next_alias_suffix = 0;
   session_state().committed_count = 0;
   session_state().cluster_index_valid = false;
+  // Rebuild the persistent staging index first, then discard transactions
+  // whose volatile directory metadata was lost with the previous USB session.
+  // Advertising those payload-only clusters in FAT makes fsck report orphans
+  // and macOS refuses to mount the volume, so they cannot be resumed safely.
   program_store::vfat_stage_clear();
+  program_store::vfat_stage_forget(FIRST_DATA_CLUSTER, DATA_CLUSTER_CAPACITY);
   ensure_cluster_index();
   return true;
 }
@@ -1919,7 +2071,8 @@ static bool rename_committed_entry(const ParsedDirEntry& parsed, const char* old
   tracef("RENAME %s.%s -> %s.%s", old_name, extension_for_type(parsed.type), parsed.name, extension_for_type(parsed.type));
   if(!program_store::rename(parsed.type, old_name, parsed.name)) return false;
   note_store_index_removed((u8) removed_index);
-  rename_cluster_map(parsed.type, old_name, parsed.name, parsed.start_cluster, parsed.data_len);
+  rename_cluster_map(parsed.type, old_name, parsed.name, parsed.start_cluster,
+                     parsed.data_len, parsed.source_fingerprint);
   return true;
 }
 
@@ -1954,6 +2107,7 @@ static void reconcile_pending_renames(void) {
     parsed.name[program_store::NAME_SIZE - 1] = 0;
     parsed.start_cluster = pending_start_cluster(pending);
     parsed.data_len = pending.data_len;
+    parsed.source_fingerprint = pending.source_fingerprint;
     if(try_rename_pending_delete(parsed)) memset(&pending, 0, sizeof(pending));
   }
 }
@@ -2040,6 +2194,10 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
     tracef("DIR reject %s.%s len=%u", parsed.name, extension_for_type(parsed.type), parsed.data_len);
     return false;
   }
+  // Zero-length entries are transient host placeholders.  They have no FAT
+  // identity and must not occupy a pending slot; data sectors written next
+  // remain staged until the final non-zero directory entry supplies one.
+  if(parsed.data_len == 0) return true;
 
   const bool has_new_data = parsed.data_len != 0 && stage_has_all_data(parsed.start_cluster, parsed.data_len);
   if(!has_new_data) {
@@ -2106,23 +2264,27 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
   if(pending == NULL) pending = allocate_pending();
   if(pending == NULL) return false;
 
-  const u16 alias_suffix = pending->used
-    ? pending->alias_suffix : allocate_alias_suffix();
+  const ClusterMap* existing_map = find_cluster_map(parsed.type, parsed.name);
+  const u8 alias_suffix = pending->used
+    ? pending->alias_suffix
+    : (existing_map == NULL ? allocate_alias_suffix() : existing_map->alias_suffix);
   memset(pending, 0, sizeof(*pending));
   pending->used = true;
   pending->type = parsed.type;
   strncpy(pending->name, parsed.name, program_store::NAME_SIZE - 1);
   pending->name[program_store::NAME_SIZE - 1] = 0;
   pending->alias_suffix = alias_suffix;
+  pending->source_fingerprint = parsed.source_fingerprint;
   pending->data_len = parsed.data_len;
   pending->chain_count = frozen_count;
   for(u8 i = 0; i < frozen_count; i++) {
     pending->chain[i] = frozen_chain[i];
-    if(program_store::vfat_stage_exists(frozen_chain[i])) {
+    if(staged_in_this_session(frozen_chain[i]) &&
+       program_store::vfat_stage_exists(frozen_chain[i])) {
       pending->dirty_mask = (u8) (pending->dirty_mask | (1U << i));
     }
   }
-  return parsed.data_len == 0 ? true : try_commit_pending(*pending);
+  return try_commit_pending(*pending);
 }
 
 // Verifies that a 0xE5 tombstone written by the host really refers to this
@@ -2152,7 +2314,10 @@ static bool remove_existing_dir_slot(int dir_index, const u8* item) {
     if(pending_start_cluster(pending) != item_cluster || pending.data_len != item_len) continue;
     FileClusters chain;
     pending_clusters(pending, chain);
-    for(u8 j = 0; j < chain.count; j++) program_store::vfat_stage_forget(chain.clusters[j], 1);
+    for(u8 j = 0; j < chain.count; j++) {
+      program_store::vfat_stage_forget(chain.clusters[j], 1);
+      forget_staged_in_this_session(chain.clusters[j], 1);
+    }
     tracef("DELETE pending %s.%s", pending.name, extension_for_type(pending.type));
     memset(&pending, 0, sizeof(pending));
     return true;
@@ -2319,15 +2484,22 @@ static bool write_root_sector(u32 root_sector, const u8* data) {
 // Segment cleaning is normally automatic. On a failed append, release ranges
 // that metadata explicitly discarded, flush complete transactions, and retry.
 static bool stage_write_with_recovery(u16 cluster, const u8* data) {
-  if(program_store::vfat_stage_write(cluster, data)) return true;
+  if(program_store::vfat_stage_write(cluster, data)) {
+    mark_staged_in_this_session(cluster);
+    return true;
+  }
 
   tracef("STAGE full c=%u", cluster);
   for(u8 i = 0; i < IGNORED_WRITE_RANGES; i++) {
     const IgnoredWriteRange& range = session_state().ignored_ranges[i];
-    if(range.clusters != 0) program_store::vfat_stage_forget(range.start_cluster, range.clusters);
+    if(range.clusters == 0) continue;
+    program_store::vfat_stage_forget(range.start_cluster, range.clusters);
+    forget_staged_in_this_session(range.start_cluster, range.clusters);
   }
   (void) flush_pending();
-  return program_store::vfat_stage_write(cluster, data);
+  if(!program_store::vfat_stage_write(cluster, data)) return false;
+  mark_staged_in_this_session(cluster);
+  return true;
 }
 
 static bool write_data_sector(u32 data_sector, const u8* data) {
@@ -2337,7 +2509,8 @@ static bool write_data_sector(u32 data_sector, const u8* data) {
   int pending_pos = 0;
   PendingWrite* pending = pending_for_cluster(cluster, &pending_pos);
   if(pending != NULL) {
-    if(!stage_write_with_recovery(cluster, data) && !program_store::vfat_stage_exists(cluster)) {
+    if(!stage_write_with_recovery(cluster, data) &&
+       !(staged_in_this_session(cluster) && program_store::vfat_stage_exists(cluster))) {
       tracef("DATA pending fail c=%u", cluster);
       return false;
     }
@@ -2356,7 +2529,7 @@ static bool write_data_sector(u32 data_sector, const u8* data) {
 
   if(ignored_cluster(cluster)) {
     tracef("DATA ignored c=%u b0=%02X", cluster, data[0]);
-    if(!sector_is_zero(data)) (void) program_store::vfat_stage_write(cluster, data);
+    if(!sector_is_zero(data)) (void) stage_write_with_recovery(cluster, data);
     return true;
   }
 

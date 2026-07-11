@@ -15,7 +15,7 @@ extern t_time_ms runtime_ms;
 extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
 extern bool usb_start_mass_storage_mode(void);
-extern void usb_start_terminal_mode(void);
+extern bool usb_start_terminal_mode(void);
 extern isize mk61_quants_reload;
 
 namespace library_mk61 {
@@ -683,7 +683,11 @@ bool UsbDiskMode(void) {
     }
   }
 
-  usb_start_terminal_mode();
+  const bool clean_exit = usb_start_terminal_mode();
+  if(!clean_exit) {
+    draw_usb_disk_status("Ошибка записи", "Write error", "данные отброш.", "data discarded");
+    delay(900);
+  }
   lcd_ru::restore_default_font();
   return action::MENU_EXIT;
 }

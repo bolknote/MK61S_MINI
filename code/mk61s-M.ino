@@ -96,8 +96,8 @@ bool usb_start_mass_storage_mode(void) {
   return usb_mass_storage::init();
 }
 
-void usb_start_terminal_mode(void) {
-  if(!usb_mass_storage::deinit()) return;
+bool usb_start_terminal_mode(void) {
+  const bool clean_exit = usb_mass_storage::deinit();
   program_store_restore_font_after_usb();
   delay(50);
 
@@ -105,6 +105,7 @@ void usb_start_terminal_mode(void) {
     terminal.init();
     dbgln(MINI, FIRMWARE_VER);
   #endif
+  return clean_exit;
 }
 
 /* ===================================    Extended ISA variables    ============================================ */

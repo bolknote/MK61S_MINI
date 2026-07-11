@@ -395,6 +395,13 @@ static USBD_StorageTypeDef storage = {
   inquiry_data
 };
 
+static void close_session(void) {
+  release_usb_device();
+  if(session_open) virtual_fat::end_session();
+  session_open = false;
+  release_write_buffer();
+}
+
 bool init(void) {
   if(is_initialized()) return true;
   if(!acquire_write_buffer()) return false;
@@ -403,6 +410,7 @@ bool init(void) {
       set_initialized(true);
       if(USBD_Start(&usb_device) == USBD_OK) return true;
       set_initialized(false);
+      close_session();
       return false;
     }
     virtual_fat::end_session();
@@ -441,9 +449,7 @@ bool init(void) {
   set_initialized(true);
   if(USBD_Start(&usb_device) != USBD_OK) {
     set_initialized(false);
-    release_usb_device();
-    virtual_fat::end_session();
-    session_open = false;
+    close_session();
     return false;
   }
 
@@ -456,12 +462,9 @@ bool deinit(void) {
       release_write_buffer();
       return true;
     }
-    if(!virtual_fat::flush_pending()) return false;
-    release_usb_device();
-    virtual_fat::end_session();
-    session_open = false;
-    release_write_buffer();
-    return true;
+    const bool flushed = virtual_fat::flush_pending();
+    close_session();
+    return flushed;
   }
   // Stop USB first: its interrupt drives the same SPI flash, and a storage
   // callback racing this flush would corrupt both transfers.
@@ -473,21 +476,14 @@ bool deinit(void) {
     set_deferred_state(DeferredWriteState::EMPTY);
   }
   reset_deferred_io();
-  // Persist queued writes/deletes even when the host never ejected cleanly.
-  if(!virtual_fat::flush_pending()) {
-    // Keep the session and reconnect the device. Discarding the language
-    // workspace here would lose writes that the host has already submitted.
-    if(device_configured) {
-      set_initialized(true);
-      if(USBD_Start(&usb_device) != USBD_OK) set_initialized(false);
-    }
-    return false;
-  }
-  release_usb_device();
-  virtual_fat::end_session();
-  session_open = false;
-  release_write_buffer();
-  return true;
+  // Persist complete host transactions.  If an incomplete transaction cannot
+  // be flushed, explicit ESC still has to tear MSC down; restarting the same
+  // failed BOT/session leaves macOS with a zero-byte ghost disk and makes the
+  // next mount impossible.  Committed files are already durable; only the
+  // incomplete transaction is discarded when close_session() releases VFAT.
+  const bool flushed = virtual_fat::flush_pending();
+  close_session();
+  return flushed;
 }
 
 bool active(void) {
