@@ -346,16 +346,25 @@ static int first_matching_index(const char* search_text) {
 
 static int next_matching_index(int active, const char* search_text) {
   const int count = total_file_count();
-  if(!search_active(search_text)) return (active + 1 < count) ? active + 1 : active;
+  if(count <= 0) return active;
+  if(!search_active(search_text)) return (active + 1 < count) ? active + 1 : 0;
   for(int index = active + 1; index < count; index++) {
+    if(entry_matches_search(index, search_text)) return index;
+  }
+  for(int index = 0; index < active; index++) {
     if(entry_matches_search(index, search_text)) return index;
   }
   return active;
 }
 
 static int previous_matching_index(int active, const char* search_text) {
-  if(!search_active(search_text)) return (active > 0) ? active - 1 : active;
+  const int count = total_file_count();
+  if(count <= 0) return active;
+  if(!search_active(search_text)) return (active > 0) ? active - 1 : count - 1;
   for(int index = active - 1; index >= 0; index--) {
+    if(entry_matches_search(index, search_text)) return index;
+  }
+  for(int index = count - 1; index > active; index--) {
     if(entry_matches_search(index, search_text)) return index;
   }
   return active;
