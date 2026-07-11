@@ -245,18 +245,23 @@ static void test_uc1609_buffer_geometry(void) {
 
 } // namespace
 
-static void validate_external_font(const char* path) {
+static void validate_external_font(const char* path, bool require_ink) {
   std::ifstream input(path, std::ios::binary);
   assert(input);
   const std::vector<u8> bytes((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
   fmk::Face face;
   assert(face.open(bytes.data(), bytes.size()));
+  bool has_ink = false;
   for(u16 index = 0; index < face.metrics().glyph_count; index++) {
     fmk::Glyph glyph;
     u8 bitmap[fmk::MAX_BITMAP_SIZE];
     assert(face.glyphAt(index, glyph));
     assert(face.decode(glyph, bitmap, sizeof(bitmap)));
+    for(u8 y = 0; y < glyph.height; y++) {
+      for(u8 x = 0; x < glyph.width; x++) has_ink = has_ink || fmk::bitmapPixel(bitmap, glyph.width, x, y);
+    }
   }
+  assert(!require_ink || has_ink);
 }
 
 int main(int argc, char** argv) {
@@ -267,7 +272,7 @@ int main(int argc, char** argv) {
   test_uc1609_display_symbol_tokens();
   test_text_grid();
   test_uc1609_buffer_geometry();
-  if(argc > 1) validate_external_font(argv[1]);
+  if(argc > 1) validate_external_font(argv[1], argc > 2 && strcmp(argv[2], "--require-ink") == 0);
   printf("display_font_self_test: ok\n");
   return 0;
 }

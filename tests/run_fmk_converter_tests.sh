@@ -9,11 +9,16 @@ fi
 
 mono="${TMPDIR:-/tmp}/mk61_fmk_mono.fmk"
 proportional="${TMPDIR:-/tmp}/mk61_fmk_proportional.fmk"
+thin="${TMPDIR:-/tmp}/mk61_fmk_thin.fmk"
+thin_warnings="${TMPDIR:-/tmp}/mk61_fmk_thin_warnings.txt"
 help="${TMPDIR:-/tmp}/mk61_fmk_help.txt"
 "$root/tools/build_fmk_font.sh" >"$help" 2>&1
 grep -q '^usage: fmk_font INPUT OUTPUT' "$help"
 "$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$mono" --cell 5x8 --size 8 --chars AB --compression auto
 "$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$proportional" --cell 8x12 --size 8 --chars AB --proportional --compression auto
+"$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_thin_test.bdf" "$thin" --cell 5x8 --size 32 --chars '1+' --compression auto 2>"$thin_warnings"
+grep -q 'font is missing.*U+002B' "$thin_warnings"
 "$root/tests/run_display_font_tests.sh" "$mono" >/dev/null
 "$root/tests/run_display_font_tests.sh" "$proportional" >/dev/null
+"$root/tests/run_display_font_tests.sh" "$thin" --require-ink >/dev/null
 echo "fmk_converter_test: ok"

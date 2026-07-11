@@ -1910,7 +1910,6 @@ static bool try_commit_pending(PendingWrite& pending) {
     u16 stored_len = 0;
     if(!program_store::read(pending.type, pending.name, commit_file_data,
                             scratch.size(), &stored_len)) return false;
-    if(stored_len > pending.data_len) return false;
     if(stored_len < pending.data_len) {
       memset(commit_file_data + stored_len, 0, (u16) (pending.data_len - stored_len));
     }
@@ -2226,7 +2225,12 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
       return parsed.data_len == 0 ? true : try_commit_pending(*pending);
     }
   }
-  if(pending != NULL && pending->data_len != 0 && pending_has_any_data(*pending)) {
+  const bool resize_existing = pending != NULL &&
+      (pending->flags & PENDING_EXISTING_UPDATE) != 0 &&
+      pending_start_cluster(*pending) == parsed.start_cluster &&
+      pending_has_any_data(*pending);
+  if(pending != NULL && pending->data_len != 0 && pending_has_any_data(*pending) &&
+     !resize_existing) {
     tracef("DIR reject-mutate %s.%s", parsed.name, extension_for_type(parsed.type));
     return false;
   }
@@ -2268,15 +2272,34 @@ static bool upsert_pending(const ParsedDirEntry& parsed, int dir_index) {
   const u8 alias_suffix = pending->used
     ? pending->alias_suffix
     : (existing_map == NULL ? allocate_alias_suffix() : existing_map->alias_suffix);
+  const u16 source_fingerprint = parsed.source_fingerprint != SOURCE_FINGERPRINT_NONE
+    ? parsed.source_fingerprint
+    : (pending->used
+        ? pending->source_fingerprint
+        : (existing_map == NULL ? SOURCE_FINGERPRINT_NONE : existing_map->source_fingerprint));
+  if(resize_existing) {
+    for(u8 old_pos = 0; old_pos < pending->chain_count; old_pos++) {
+      const u16 old_cluster = pending->chain[old_pos];
+      bool retained = false;
+      for(u8 new_pos = 0; new_pos < frozen_count; new_pos++) {
+        if(frozen_chain[new_pos] == old_cluster) retained = true;
+      }
+      if(!retained) {
+        program_store::vfat_stage_forget(old_cluster, 1);
+        forget_staged_in_this_session(old_cluster, 1);
+      }
+    }
+  }
   memset(pending, 0, sizeof(*pending));
   pending->used = true;
   pending->type = parsed.type;
   strncpy(pending->name, parsed.name, program_store::NAME_SIZE - 1);
   pending->name[program_store::NAME_SIZE - 1] = 0;
   pending->alias_suffix = alias_suffix;
-  pending->source_fingerprint = parsed.source_fingerprint;
+  pending->source_fingerprint = source_fingerprint;
   pending->data_len = parsed.data_len;
   pending->chain_count = frozen_count;
+  if(resize_existing) pending->flags = PENDING_EXISTING_UPDATE;
   for(u8 i = 0; i < frozen_count; i++) {
     pending->chain[i] = frozen_chain[i];
     if(staged_in_this_session(frozen_chain[i]) &&

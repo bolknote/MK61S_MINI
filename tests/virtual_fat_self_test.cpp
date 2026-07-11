@@ -1405,6 +1405,80 @@ static void test_existing_file_sectors_coalesce_until_sync(void) {
   assert(stored[1024] == 0x42);
 }
 
+static void test_existing_file_can_grow_after_data_arrives_before_directory_size(void) {
+  reset_virtual_fat_state();
+
+  u8 original[73];
+  memset(original, 0x11, sizeof(original));
+  assert(program_store::write(program_store::ProgramType::FONT, "DSEG", original, sizeof(original)));
+  assert(virtual_fat::reset_session());
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  const u8* generated = first_archive_entry(root);
+  assert(generated != NULL);
+  u8* item = root + (generated - root);
+  const u16 cluster = read_le16(item, 26);
+  assert(cluster >= 2);
+
+  // macOS truncates the directory entry, writes the replacement sector, and
+  // publishes the new length last. The data callback therefore initially
+  // sees the committed file's old length.
+  write_le32(item, 28, 0);
+  assert(virtual_fat::write_sector(root_lba(), root));
+
+  u8 replacement_sector[virtual_fat::SECTOR_SIZE];
+  memset(replacement_sector, 0, sizeof(replacement_sector));
+  for(u16 i = 0; i < 84; i++) replacement_sector[i] = (u8) (0x80 + i);
+  assert(virtual_fat::write_sector(data_lba() + cluster - 2, replacement_sector));
+
+  write_le32(item, 28, 84);
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[84];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::FONT, "DSEG",
+                             stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(memcmp(stored, replacement_sector, sizeof(stored)) == 0);
+}
+
+static void test_existing_file_can_shrink_after_data_arrives_before_directory_size(void) {
+  reset_virtual_fat_state();
+
+  u8 original[84];
+  memset(original, 0x22, sizeof(original));
+  assert(program_store::write(program_store::ProgramType::FONT, "DSEG", original, sizeof(original)));
+  assert(virtual_fat::reset_session());
+
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(root_lba(), root));
+  const u8* generated = first_archive_entry(root);
+  assert(generated != NULL);
+  u8* item = root + (generated - root);
+  const u16 cluster = read_le16(item, 26);
+
+  write_le32(item, 28, 0);
+  assert(virtual_fat::write_sector(root_lba(), root));
+
+  u8 replacement_sector[virtual_fat::SECTOR_SIZE];
+  memset(replacement_sector, 0, sizeof(replacement_sector));
+  for(u16 i = 0; i < 73; i++) replacement_sector[i] = (u8) (0x40 + i);
+  assert(virtual_fat::write_sector(data_lba() + cluster - 2, replacement_sector));
+
+  write_le32(item, 28, 73);
+  assert(virtual_fat::write_sector(root_lba(), root));
+  assert(virtual_fat::flush_pending());
+
+  u8 stored[73];
+  u16 stored_len = 0;
+  assert(program_store::read(program_store::ProgramType::FONT, "DSEG",
+                             stored, sizeof(stored), &stored_len));
+  assert(stored_len == sizeof(stored));
+  assert(memcmp(stored, replacement_sector, sizeof(stored)) == 0);
+}
+
 static void test_explicitly_broken_fat_chain_is_rejected(void) {
   reset_virtual_fat_state();
 
@@ -1527,6 +1601,8 @@ int main(void) {
   test_empty_placeholders_do_not_exhaust_pending_queue();
   test_pending_delete_indices_follow_rename_compaction();
   test_existing_file_sectors_coalesce_until_sync();
+  test_existing_file_can_grow_after_data_arrives_before_directory_size();
+  test_existing_file_can_shrink_after_data_arrives_before_directory_size();
   test_explicitly_broken_fat_chain_is_rejected();
   test_conflicting_fat_copies_block_commit();
   test_new_file_cannot_crosslink_committed_cluster();

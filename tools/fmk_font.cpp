@@ -29,6 +29,7 @@ struct Options {
   int height = 8;
   int point_size = 0;
   int threshold = 128;
+  bool threshold_explicit = false;
   int line_gap = -1;
   bool proportional = false;
   Compression compression = Compression::AUTO;
@@ -102,7 +103,7 @@ class BitWriter {
       "  --cell WxH              output cell, default 5x8\n"
       "  --size N                FreeType pixel size, default 4x cell height\n"
       "  --chars SPEC            ascii,cyrillic,latin1,U+XXXX ranges, or UTF-8 text\n"
-      "  --threshold N           coverage cutoff 0..255, default 128\n"
+      "  --threshold N           explicit coverage cutoff 0..255; omitted adapts 128 to downscale\n"
       "  --line-gap N            suggested line gap 0..15; default follows cell height\n"
       "  --proportional          write per-glyph 4-bit width and advance\n"
       "  --compression MODE      auto, none, or rle\n");
@@ -142,7 +143,10 @@ Options parse_options(int argc, char** argv) {
     if (option == "--cell") parse_cell(value(), options.width, options.height);
     else if (option == "--size") options.point_size = parse_int(value(), "point size");
     else if (option == "--chars") options.characters = value();
-    else if (option == "--threshold") options.threshold = parse_int(value(), "threshold");
+    else if (option == "--threshold") {
+      options.threshold = parse_int(value(), "threshold");
+      options.threshold_explicit = true;
+    }
     else if (option == "--line-gap") options.line_gap = parse_int(value(), "line gap");
     else if (option == "--proportional") options.proportional = true;
     else if (option == "--compression") {
@@ -273,13 +277,21 @@ std::vector<GlyphBitmap> render_glyphs(FT_Face face, const Options& options,
   }
 
   std::vector<std::uint16_t> available;
+  std::vector<std::uint16_t> missing;
+  std::vector<std::uint16_t> unloadable;
   int left = std::numeric_limits<int>::max();
   int right = std::numeric_limits<int>::min();
   int top = 0;
   int bottom = 0;
   for (const std::uint16_t codepoint : requested) {
-    if (FT_Get_Char_Index(face, codepoint) == 0) continue;
-    if (FT_Load_Char(face, codepoint, FT_LOAD_RENDER) != 0) continue;
+    if (FT_Get_Char_Index(face, codepoint) == 0) {
+      missing.push_back(codepoint);
+      continue;
+    }
+    if (FT_Load_Char(face, codepoint, FT_LOAD_RENDER) != 0) {
+      unloadable.push_back(codepoint);
+      continue;
+    }
     available.push_back(codepoint);
     const FT_GlyphSlot glyph = face->glyph;
     left = std::min(left, glyph->bitmap_left);
@@ -287,12 +299,38 @@ std::vector<GlyphBitmap> render_glyphs(FT_Face face, const Options& options,
     top = std::max(top, glyph->bitmap_top);
     bottom = std::max(bottom, static_cast<int>(glyph->bitmap.rows) - glyph->bitmap_top);
   }
+  auto warn_skipped = [](const char* reason, const std::vector<std::uint16_t>& codepoints) {
+    if (codepoints.empty()) return;
+    std::fprintf(stderr, "warning: %s %zu requested character%s:", reason, codepoints.size(),
+                 codepoints.size() == 1 ? "" : "s");
+    const std::size_t shown = std::min<std::size_t>(codepoints.size(), 12);
+    for (std::size_t i = 0; i < shown; ++i) std::fprintf(stderr, " U+%04X", codepoints[i]);
+    if (shown < codepoints.size()) std::fprintf(stderr, " ...");
+    std::fputc('\n', stderr);
+  };
+  warn_skipped("font is missing", missing);
+  warn_skipped("FreeType could not rasterize", unloadable);
   if (available.empty()) throw std::runtime_error("the font contains none of the requested characters");
   if (left == std::numeric_limits<int>::max()) left = 0;
   if (right <= left) right = left + 1;
   if (top + bottom <= 0) bottom = 1;
   const int source_width = right - left;
   const int source_height = top + bottom;
+  double output_threshold = options.threshold;
+  if (!options.threshold_explicit) {
+    // The default FreeType raster is deliberately supersampled (normally 4x
+    // cell height). A fixed 50% area cutoff erases strokes thinner than half
+    // an output pixel. Compensate by the largest linear downscale so a
+    // one-source-pixel stroke survives, while an explicit --threshold keeps
+    // its exact legacy meaning.
+    const double downscale_x = static_cast<double>(source_width) / options.width;
+    const double downscale_y = static_cast<double>(source_height) / options.height;
+    // The normal default raster is 4x the target height. Cap compensation at
+    // that factor so an unusually large --size or one outlier glyph cannot
+    // make every other glyph progressively bolder.
+    const double linear_downscale = std::min(4.0, std::max({1.0, downscale_x, downscale_y}));
+    output_threshold = std::max(1.0, output_threshold / linear_downscale);
+  }
 
   std::vector<GlyphBitmap> result;
   for (const std::uint16_t codepoint : available) {
@@ -315,8 +353,14 @@ std::vector<GlyphBitmap> render_glyphs(FT_Face face, const Options& options,
     for (int y = 0; y < options.height; ++y) {
       for (int x = 0; x < options.width; ++x) {
         pixels[static_cast<std::size_t>(y) * options.width + x] =
-            resized_coverage(source, source_width, source_height, options.width, options.height, x, y) >= options.threshold;
+            resized_coverage(source, source_width, source_height, options.width, options.height, x, y) >= output_threshold;
       }
+    }
+    if (codepoint != 0x20 && codepoint != 0xA0 &&
+        std::none_of(pixels.begin(), pixels.end(), [](std::uint8_t pixel) { return pixel != 0; })) {
+      std::fprintf(stderr,
+                   "warning: U+%04X rasterized empty; try a lower --threshold or a larger --cell\n",
+                   codepoint);
     }
 
     int glyph_width = options.width;
