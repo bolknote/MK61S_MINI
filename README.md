@@ -48,6 +48,8 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 
 [Формат растровых шрифтов FMK1](doc/src/MK61s-mini-FMK.md)
 
+[Генератор случайных чисел MK61/MK61s](doc/src/MK61s-mini-Random.md)
+
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 
 **Видеоинструкция по сборке от Виталия (FANJET)** - https://www.youtube.com/watch?v=JBStgbfmuOs
