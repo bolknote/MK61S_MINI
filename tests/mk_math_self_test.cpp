@@ -76,6 +76,23 @@ struct RomHookProbe {
   bool arrays_present;
 };
 
+struct CommandHookProbe {
+  int calls;
+  core_61::Mk61CommandHookPhase last_phase;
+  core_61::Mk61CommandSource last_source;
+  u8 last_opcode;
+  u8 last_replacement;
+  u32 last_sequence;
+  bool replace;
+  u8 replacement;
+  bool override_x;
+  bool try_nested_registration;
+  core_61::Mk61CommandHookHandle nested_registration;
+  int order_tag;
+  int* order_log;
+  int* order_count;
+};
+
 static void rom_hook_probe(core_61::RomCommandHookContext& context, void* user_data) {
   RomHookProbe* const probe = (RomHookProbe*) user_data;
   probe->calls++;
@@ -83,6 +100,34 @@ static void rom_hook_probe(core_61::RomCommandHookContext& context, void* user_d
   probe->last_replacement = context.replacement_address;
   probe->arrays_present = context.r != nullptr && context.st != nullptr;
   if(probe->replace) context.replacement_address = probe->replacement;
+}
+
+static void command_hook_probe(
+    core_61::Mk61CommandHookContext& context, void* user_data) {
+  CommandHookProbe* const probe = (CommandHookProbe*) user_data;
+  probe->calls++;
+  probe->last_phase = context.phase;
+  probe->last_source = context.source;
+  probe->last_opcode = context.opcode;
+  probe->last_replacement = context.replacement_opcode;
+  probe->last_sequence = context.sequence;
+  if(probe->order_log != nullptr && probe->order_count != nullptr) {
+    probe->order_log[(*probe->order_count)++] = probe->order_tag;
+  }
+  if(probe->try_nested_registration) {
+    probe->nested_registration = core_61::register_mk61_command_hook(
+        0x00, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+        &command_hook_probe, probe);
+  }
+  if(context.phase == core_61::Mk61CommandHookPhase::BEFORE_EXECUTE && probe->replace) {
+    context.replacement_opcode = probe->replacement;
+  }
+  if(context.phase == core_61::Mk61CommandHookPhase::AFTER_EXECUTE && probe->override_x) {
+    // bcd_value follows the serial-ring digit order (least significant display
+    // digit first), hence 4.2424242 is encoded as 0x24242424.
+    const core_61::bcd_value replacement_x = {0x24242424U, 0};
+    core_61::set_stack_register(stack::X, &replacement_x);
+  }
 }
 
 static void press_matrix(MatrixKey key) {
@@ -97,6 +142,259 @@ static void press_matrix(MatrixKey key) {
     core_61::step();
     if(core_61::is_RUN() || core_61::is_displayed()) break;
   }
+}
+
+// Mirrors library_pmk::hidden_press_key(), which relies on core_61::step()
+// clearing the emulated matrix rather than calling SetKeyPress(0, 0).
+static void press_matrix_without_explicit_release(MatrixKey key) {
+  core_61::clear_displayed();
+  for(int i = 0; i < 4; i++) {
+    MK61Emu_SetKeyPress(key.x, key.y);
+    core_61::step();
+    if(core_61::is_RUN()) break;
+  }
+  for(int i = 0; i < 64; i++) {
+    core_61::step();
+    if(core_61::is_RUN() || core_61::is_displayed()) break;
+  }
+  core_61::clear_displayed();
+}
+
+static MatrixKey digit_key(u8 digit) {
+  return {(int) digit + 2, 1};
+}
+
+static void set_x_bcd(u32 mantissa, u16 signs_and_pow = 0) {
+  const core_61::bcd_value value = {mantissa, signs_and_pow};
+  core_61::set_stack_register(stack::X, &value);
+}
+
+static void store_direct(u8 reg, u32 mantissa) {
+  set_x_bcd(mantissa);
+  press_matrix({6, 9}); // X->P
+  press_matrix(digit_key(reg));
+}
+
+static void prepare_indirect_registers(void) {
+  core_61::enable();
+  store_direct(5, 0x11111111U);
+  store_direct(6, 0x22222222U);
+  store_direct(7, 0x00000005U);
+  store_direct(8, 0x00000006U);
+}
+
+static void press_kip7(void) {
+  press_matrix({10, 9}); // K
+  press_matrix({8, 9});  // P->X
+  press_matrix(digit_key(7));
+}
+
+static void run_program(const u8* code, usize length) {
+  u8 page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
+  for(usize i = 0; i < length && i < core_61::program_steps(); i++) page[i] = code[i];
+  core_61::set_code_page(page);
+  core_61::set_IP(0);
+  press_matrix({2, 9}); // C/P
+  for(int i = 0; i < 256 && core_61::is_RUN(); i++) core_61::step();
+}
+
+static void test_mk61_command_hooks(void) {
+  std::printf("MK-61 user command hook registry:\n");
+  core_61::configure_random_seed(false, 1);
+  check_true("command registry empty",
+      core_61::registered_mk61_command_hook_count() == 0);
+
+  prepare_indirect_registers();
+  int order[4] = {};
+  int order_count = 0;
+  CommandHookProbe replacer = {};
+  replacer.replace = true;
+  replacer.replacement = 0xD8;
+  replacer.try_nested_registration = true;
+  replacer.order_tag = 1;
+  replacer.order_log = order;
+  replacer.order_count = &order_count;
+  CommandHookProbe observer = {};
+  observer.order_tag = 2;
+  observer.order_log = order;
+  observer.order_count = &order_count;
+  CommandHookProbe after = {};
+  CommandHookProbe replacement_target = {};
+
+  const core_61::Mk61CommandHookHandle replace_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+          &command_hook_probe, &replacer);
+  const core_61::Mk61CommandHookHandle observe_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+          &command_hook_probe, &observer);
+  const core_61::Mk61CommandHookHandle after_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &after);
+  const core_61::Mk61CommandHookHandle replacement_target_handle =
+      core_61::register_mk61_command_hook(
+          0xD8, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+          &command_hook_probe, &replacement_target);
+  check_true("four command hooks registered",
+      replace_handle != core_61::INVALID_MK61_COMMAND_HOOK &&
+      observe_handle != core_61::INVALID_MK61_COMMAND_HOOK &&
+      after_handle != core_61::INVALID_MK61_COMMAND_HOOK &&
+      replacement_target_handle != core_61::INVALID_MK61_COMMAND_HOOK &&
+      core_61::registered_mk61_command_hook_count() == 4);
+
+  const u8 indirect_program[] = {0xD7, 0x50};
+  run_program(indirect_program, sizeof(indirect_program));
+  check_near("program D7->D8", read_live_x(), 2.2222222, 1e-8);
+  check_true("program BEFORE source/opcode",
+      replacer.calls == 1 &&
+      replacer.last_phase == core_61::Mk61CommandHookPhase::BEFORE_EXECUTE &&
+      replacer.last_source == core_61::Mk61CommandSource::PROGRAM &&
+      replacer.last_opcode == 0xD7);
+  check_true("same-opcode registration order",
+      order_count == 2 && order[0] == 1 && order[1] == 2 &&
+      observer.last_replacement == 0xD8);
+  check_true("replacement not redispatched",
+      replacement_target.calls == 0);
+  check_true("program AFTER result point",
+      after.calls == 1 &&
+      after.last_phase == core_61::Mk61CommandHookPhase::AFTER_EXECUTE &&
+      after.last_source == core_61::Mk61CommandSource::PROGRAM &&
+      after.last_opcode == 0xD7 && after.last_replacement == 0xD8 &&
+      after.last_sequence == replacer.last_sequence);
+  check_true("nested registration rejected",
+      replacer.nested_registration == core_61::INVALID_MK61_COMMAND_HOOK);
+
+  check_true("remove program replacer",
+      core_61::unregister_mk61_command_hook(replace_handle));
+  check_true("reject stale command handle",
+      !core_61::unregister_mk61_command_hook(replace_handle));
+  check_true("remove program observer",
+      core_61::unregister_mk61_command_hook(observe_handle));
+  check_true("remove program after",
+      core_61::unregister_mk61_command_hook(after_handle));
+  check_true("remove replacement target",
+      core_61::unregister_mk61_command_hook(replacement_target_handle));
+
+  prepare_indirect_registers();
+  CommandHookProbe keyboard_before = {};
+  keyboard_before.replace = true;
+  keyboard_before.replacement = 0xD8;
+  CommandHookProbe keyboard_after = {};
+  const core_61::Mk61CommandHookHandle keyboard_before_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+          &command_hook_probe, &keyboard_before);
+  const core_61::Mk61CommandHookHandle keyboard_after_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &keyboard_after);
+  press_kip7();
+  check_near("keyboard D7->D8", read_live_x(), 2.2222222, 1e-8);
+  check_true("keyboard BEFORE source",
+      keyboard_before.calls == 1 &&
+      keyboard_before.last_source == core_61::Mk61CommandSource::KEYBOARD);
+  check_true("keyboard AFTER source/result",
+      keyboard_after.calls == 1 &&
+      keyboard_after.last_source == core_61::Mk61CommandSource::KEYBOARD &&
+      keyboard_after.last_replacement == 0xD8 &&
+      keyboard_after.last_sequence == keyboard_before.last_sequence);
+  check_true("remove keyboard BEFORE",
+      core_61::unregister_mk61_command_hook(keyboard_before_handle));
+  check_true("remove keyboard AFTER",
+      core_61::unregister_mk61_command_hook(keyboard_after_handle));
+
+  prepare_indirect_registers();
+  CommandHookProbe override = {};
+  override.override_x = true;
+  const core_61::Mk61CommandHookHandle override_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &override);
+  press_kip7();
+  check_near("AFTER KIP7 overrides X", read_live_x(), 4.2424242, 1e-8);
+  check_true("KIP7 AFTER called once", override.calls == 1);
+  prepare_indirect_registers();
+  run_program(indirect_program, sizeof(indirect_program));
+  check_near("program AFTER KIP7 overrides X", read_live_x(), 4.2424242, 1e-8);
+  check_true("program KIP7 AFTER called once", override.calls == 2);
+  check_true("remove KIP7 override",
+      core_61::unregister_mk61_command_hook(override_handle));
+  press_matrix({8, 9});
+  press_matrix(digit_key(5));
+  check_near("KIP7 override keeps R5", read_live_x(), 1.1111111, 1e-8);
+  press_matrix({8, 9});
+  press_matrix(digit_key(7));
+  check_near("KIP7 override keeps R7", read_live_x(), 5.0, 1e-8);
+
+  prepare_indirect_registers();
+  CommandHookProbe no_release = {};
+  const core_61::Mk61CommandHookHandle no_release_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &no_release);
+  press_matrix_without_explicit_release({10, 9});
+  press_matrix_without_explicit_release({8, 9});
+  press_matrix_without_explicit_release(digit_key(7));
+  check_true("keyboard AFTER without explicit release", no_release.calls == 1);
+  check_true("remove no-release hook",
+      core_61::unregister_mk61_command_hook(no_release_handle));
+
+  CommandHookProbe one = {};
+  CommandHookProbe two = {};
+  CommandHookProbe stop = {};
+  const core_61::Mk61CommandHookHandle one_handle =
+      core_61::register_mk61_command_hook(
+          0x01, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &one);
+  const core_61::Mk61CommandHookHandle two_handle =
+      core_61::register_mk61_command_hook(
+          0x02, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &two);
+  const core_61::Mk61CommandHookHandle stop_handle =
+      core_61::register_mk61_command_hook(
+          0x50, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &stop);
+  const u8 consecutive_program[] = {0x01, 0x02, 0x50};
+  run_program(consecutive_program, sizeof(consecutive_program));
+  check_true("several opcodes intercepted",
+      one.calls == 1 && two.calls == 1 && stop.calls == 1);
+  check_true("consecutive command sequences",
+      one.last_sequence < two.last_sequence && two.last_sequence < stop.last_sequence);
+  check_true("remove opcode 01", core_61::unregister_mk61_command_hook(one_handle));
+  check_true("remove opcode 02", core_61::unregister_mk61_command_hook(two_handle));
+  check_true("remove opcode 50", core_61::unregister_mk61_command_hook(stop_handle));
+
+  core_61::configure_random_seed(true, 1234567);
+  CommandHookProbe capacity_probes[core_61::MK61_COMMAND_HOOK_CAPACITY] = {};
+  core_61::Mk61CommandHookHandle capacity_hooks[core_61::MK61_COMMAND_HOOK_CAPACITY] = {};
+  bool capacity_ok = true;
+  for(usize i = 0; i < core_61::MK61_COMMAND_HOOK_CAPACITY; i++) {
+    capacity_hooks[i] = core_61::register_mk61_command_hook(
+        (u8) i, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+        &command_hook_probe, &capacity_probes[i]);
+    capacity_ok &= capacity_hooks[i] != core_61::INVALID_MK61_COMMAND_HOOK;
+  }
+  check_true("public command-hook capacity", capacity_ok);
+  const core_61::Mk61CommandHookHandle overflow =
+      core_61::register_mk61_command_hook(
+          0xFF, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+          &command_hook_probe, &capacity_probes[0]);
+  check_true("command-hook capacity enforced",
+      overflow == core_61::INVALID_MK61_COMMAND_HOOK);
+  check_true("RNG command hook has reserved slot",
+      core_61::random_seed_enabled() &&
+      core_61::registered_mk61_command_hook_count() ==
+          core_61::MK61_COMMAND_HOOK_CAPACITY);
+  core_61::configure_random_seed(false, 1);
+  for(core_61::Mk61CommandHookHandle handle : capacity_hooks) {
+    check_true("command capacity unregister",
+        core_61::unregister_mk61_command_hook(handle));
+  }
+  check_true("command registry cleanup",
+      core_61::registered_mk61_command_hook_count() == 0);
 }
 
 static void test_rom_command_hooks(void) {
@@ -346,6 +644,49 @@ static void test_random_seed_hook(void) {
   }
   check_true("no native short cycle", unique > 240);
 
+  // The built-in RNG recognizer runs after public BEFORE callbacks and follows
+  // the final replacement opcode. Replacing 3B with NOP must neither inject nor
+  // advance the stream.
+  static constexpr u32 REPLACEMENT_SEED = 3141592;
+  core_61::configure_random_seed(true, REPLACEMENT_SEED);
+  core_61::enable();
+  set_x_bcd(0x00000007U);
+  CommandHookProbe suppress_rng = {};
+  suppress_rng.replace = true;
+  suppress_rng.replacement = (u8) MK61_NOP;
+  const core_61::Mk61CommandHookHandle suppress_rng_handle =
+      core_61::register_mk61_command_hook(
+          0x3B, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+          &command_hook_probe, &suppress_rng);
+  (void) next_random();
+  check_near("3B->NOP keeps X", read_live_x(), 7.0, 1e-8);
+  check_true("remove RNG suppression",
+      core_61::unregister_mk61_command_hook(suppress_rng_handle));
+  const double after_suppressed = next_random();
+  const double unsuppressed_reference = first_random(true, REPLACEMENT_SEED);
+  check_near("3B->NOP keeps RNG stream", after_suppressed, unsuppressed_reference, 0.0);
+
+  // Conversely, replacing another command with 3B must arm the same one-shot
+  // A7 injection used by a native K RNG command.
+  static constexpr u32 REDIRECTED_SEED = 2718281;
+  core_61::configure_random_seed(true, REDIRECTED_SEED);
+  core_61::enable();
+  CommandHookProbe redirect_to_rng = {};
+  redirect_to_rng.replace = true;
+  redirect_to_rng.replacement = 0x3B;
+  const core_61::Mk61CommandHookHandle redirect_handle =
+      core_61::register_mk61_command_hook(
+          0xD7, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+          &command_hook_probe, &redirect_to_rng);
+  press_kip7();
+  const double redirected_random = read_live_x();
+  check_true("D7->3B produces RNG value",
+      redirected_random >= 0.0 && redirected_random < 1.0);
+  check_true("remove D7->3B redirect",
+      core_61::unregister_mk61_command_hook(redirect_handle));
+  const double redirected_reference = first_random(true, REDIRECTED_SEED);
+  check_near("D7->3B uses enhanced seed", redirected_random, redirected_reference, 0.0);
+
   core_61::configure_random_seed(false, 1);
   check_true("enhanced mode disabled", !core_61::random_seed_enabled());
 }
@@ -448,6 +789,7 @@ int main(void) {
   test_transcendental();
   test_authentic_core_smoke();
   test_rom_command_hooks();
+  test_mk61_command_hooks();
   test_random_seed_hook();
   test_core_boundaries();
   test_save_restore();

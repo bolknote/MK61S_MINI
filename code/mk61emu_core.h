@@ -173,6 +173,36 @@ namespace core_61 {
   static constexpr usize ROM_COMMAND_HOOK_CAPACITY = 8;
   static constexpr RomCommandHookHandle INVALID_ROM_COMMAND_HOOK = 0;
 
+  // User-level MK-61 command hooks. Unlike RomCommandHook, these hooks are
+  // keyed by the opcode seen by the calculator (for example 0xD7 = KIP7), not
+  // by an internal K145IK ROM address. BEFORE_EXECUTE callbacks may replace
+  // the opcode for this execution. AFTER_EXECUTE callbacks run after the
+  // command has committed its calculator-visible state and may safely adjust
+  // it through the public register APIs.
+  enum class Mk61CommandHookPhase : u8 {
+    BEFORE_EXECUTE = 0,
+    AFTER_EXECUTE = 1
+  };
+
+  enum class Mk61CommandSource : u8 {
+    KEYBOARD = 0,
+    PROGRAM = 1
+  };
+
+  struct Mk61CommandHookContext {
+    Mk61CommandHookPhase phase;
+    Mk61CommandSource source;
+    u8 opcode;             // Original opcode issued by keyboard/program.
+    u8 replacement_opcode; // Writable only in BEFORE; executed opcode in AFTER.
+    u32 sequence;          // Same execution identifier in BEFORE and AFTER.
+  };
+
+  using Mk61CommandHook = void (*)(Mk61CommandHookContext& context, void* user_data);
+  using Mk61CommandHookHandle = u32;
+
+  static constexpr usize MK61_COMMAND_HOOK_CAPACITY = 8;
+  static constexpr Mk61CommandHookHandle INVALID_MK61_COMMAND_HOOK = 0;
+
   #pragma pack(push, 4)
   struct bcd_value { // тип хранимое значение mk61 8 десятичных знаков мантисса, 2 знака порядок, два знака
       u32   mantissa;
@@ -229,6 +259,18 @@ namespace core_61 {
   extern    usize registered_rom_command_hook_count(void);
   extern    u32 rom_command_instruction(RomChip chip, u8 address);
 
+  // Register independent hooks for user-visible MK-61 opcodes. Several hooks
+  // may target the same opcode and phase; they run in registration order and
+  // share replacement_opcode. Replacement is applied only during
+  // BEFORE_EXECUTE and does not redispatch public hooks for the new opcode.
+  extern    Mk61CommandHookHandle register_mk61_command_hook(
+      u8 opcode,
+      Mk61CommandHookPhase phase,
+      Mk61CommandHook callback,
+      void* user_data = nullptr);
+  extern    bool unregister_mk61_command_hook(Mk61CommandHookHandle handle);
+  extern    usize registered_mk61_command_hook_count(void);
+
   // Snapshot / restore the whole live calculator state (stack ring, the three
   // chip structs, UI mode flags and the angle unit) into an internal buffer.
   // Defined only in the CORE math backend; used to borrow the engine for a
@@ -238,10 +280,10 @@ namespace core_61 {
   extern    void  save_context(void);
   extern    void  restore_context(void);
 
-  // In enhanced mode a registered IK1306:A7 ROM-command hook writes a fresh
-  // seven-digit value from a seeded SplitMix stream into the hidden xi word
-  // immediately before every K RNG command reads it. No visible calculator
-  // register is changed beforehand.
+  // In enhanced mode a built-in user-command hook recognizes opcode 3B (K RNG)
+  // and arms a one-shot IK1306:A7 ROM hook. A fresh seven-digit value from the
+  // seeded SplitMix stream is then written into the transient xi word exactly
+  // when the authentic command reads it. No visible register changes early.
   extern    void  configure_random_seed(bool enable, u64 seed_material);
   extern    void  update_random_seed(u64 seed_material);
   extern    bool  random_seed_enabled(void);

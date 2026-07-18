@@ -72,12 +72,14 @@ u8 ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
 const u8* END_ring_M = &ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
 static bool expanded_program_mode = false;
 
-// Optional MK61s random-mode hook.  The authentic ROM remains untouched; a
-// fresh value is injected into the IK1306 hidden xi word at state A7, just
-// before opcode 3B (K RNG) consumes it.  Supplying every value is intentional:
-// in measurement the native ROM produced only 179 distinct values before
-// repeating (a 26-value prefix followed by a 153-value cycle).
+// Optional MK61s random mode. A user-command hook recognizes opcode 3B (K RNG)
+// and arms a one-shot injection; a low-level IK1306:A7 hook then writes a fresh
+// value into the transient xi word immediately before the authentic ROM reads
+// it. Supplying every value is intentional: in measurement the native ROM
+// produced only 179 distinct values before repeating (a 26-value prefix
+// followed by a 153-value cycle).
 static bool external_random_enabled = false;
+static bool external_random_pending = false;
 static u64 external_random_state = 0xA0761D6478BD642FULL;
 
 const bool sergey_anvarov_hack_enable = true;
@@ -422,6 +424,8 @@ static constexpr u8 INVALID_HOOK_SLOT = 0xFF;
 // always use the full capacity advertised in mk61emu_core.h.
 static constexpr usize ROM_COMMAND_HOOK_SLOT_COUNT =
     core_61::ROM_COMMAND_HOOK_CAPACITY + 1;
+static constexpr usize MK61_COMMAND_HOOK_SLOT_COUNT =
+    core_61::MK61_COMMAND_HOOK_CAPACITY + 1;
 
 struct RomCommandHookSlot {
   core_61::RomCommandHook callback;
@@ -433,9 +437,29 @@ struct RomCommandHookSlot {
   u8 flags;
 };
 
+struct Mk61CommandHookSlot {
+  core_61::Mk61CommandHook callback;
+  void* user_data;
+  u32 generation;
+  u8 opcode;
+  u8 phase;
+  u8 next;
+  u8 flags;
+};
+
+struct ActiveMk61Command {
+  bool active;
+  core_61::Mk61CommandSource source;
+  u8 opcode;
+  u8 executed_opcode;
+  u32 sequence;
+};
+
 static constexpr u8 HOOK_INTERNAL = 0x01;
 static_assert(ROM_COMMAND_HOOK_SLOT_COUNT < INVALID_HOOK_SLOT,
               "ROM command hook slots must fit in their linked-list index");
+static_assert(MK61_COMMAND_HOOK_SLOT_COUNT < INVALID_HOOK_SLOT,
+              "MK-61 command hook slots must fit in their linked-list index");
 static RomCommandHookSlot rom_command_hooks[ROM_COMMAND_HOOK_SLOT_COUNT] = {};
 static u8 rom_command_hook_head = INVALID_HOOK_SLOT;
 static u8 rom_command_hook_tail = INVALID_HOOK_SLOT;
@@ -444,6 +468,19 @@ static u8 rom_command_hook_dispatch_depth;
 static usize public_rom_command_hook_count;
 static core_61::RomCommandHookHandle random_rom_command_hook =
     core_61::INVALID_ROM_COMMAND_HOOK;
+
+static Mk61CommandHookSlot mk61_command_hooks[MK61_COMMAND_HOOK_SLOT_COUNT] = {};
+static u8 mk61_command_hook_head = INVALID_HOOK_SLOT;
+static u8 mk61_command_hook_tail = INVALID_HOOK_SLOT;
+static u8 mk61_command_hook_targets[2][32] = {};
+static u8 mk61_command_hook_dispatch_depth;
+static usize public_mk61_command_hook_count;
+static core_61::Mk61CommandHookHandle random_mk61_command_hook =
+    core_61::INVALID_MK61_COMMAND_HOOK;
+
+static ActiveMk61Command active_mk61_command = {};
+static bool keyboard_command_complete_pending;
+static u32 mk61_command_sequence;
 
 static bool valid_rom_chip(core_61::RomChip chip) {
   return (u8) chip < ROM_CHIP_COUNT;
@@ -580,6 +617,267 @@ static inline u8 __attribute__((always_inline)) apply_rom_command_hooks(
   return dispatch_rom_command_hooks(chip, address, r, st);
 }
 
+static bool valid_mk61_command_phase(core_61::Mk61CommandHookPhase phase) {
+  return phase == core_61::Mk61CommandHookPhase::BEFORE_EXECUTE ||
+         phase == core_61::Mk61CommandHookPhase::AFTER_EXECUTE;
+}
+
+static void mark_mk61_command_target(
+    u8 opcode, core_61::Mk61CommandHookPhase phase) {
+  mk61_command_hook_targets[(u8) phase][opcode >> 3] |=
+      (u8) (1U << (opcode & 7U));
+}
+
+static inline bool __attribute__((always_inline)) has_mk61_command_target(
+    u8 opcode) {
+  const u8 mask = (u8) (1U << (opcode & 7U));
+  return ((mk61_command_hook_targets[0][opcode >> 3] |
+           mk61_command_hook_targets[1][opcode >> 3]) & mask) != 0;
+}
+
+static void clear_mk61_command_target_if_unused(u8 opcode, u8 phase) {
+  for(const Mk61CommandHookSlot& slot : mk61_command_hooks) {
+    if(slot.callback != nullptr && slot.opcode == opcode && slot.phase == phase) {
+      return;
+    }
+  }
+  mk61_command_hook_targets[phase][opcode >> 3] &=
+      (u8) ~(1U << (opcode & 7U));
+}
+
+static core_61::Mk61CommandHookHandle make_mk61_command_hook_handle(
+    usize slot_index, u32 generation) {
+  return (generation << 8) | (u32) (slot_index + 1U);
+}
+
+static core_61::Mk61CommandHookHandle add_mk61_command_hook(
+    u8 opcode,
+    core_61::Mk61CommandHookPhase phase,
+    core_61::Mk61CommandHook callback,
+    void* user_data,
+    bool internal) {
+  if(callback == nullptr || !valid_mk61_command_phase(phase) ||
+     mk61_command_hook_dispatch_depth != 0) {
+    return core_61::INVALID_MK61_COMMAND_HOOK;
+  }
+  if(!internal && public_mk61_command_hook_count >= core_61::MK61_COMMAND_HOOK_CAPACITY) {
+    return core_61::INVALID_MK61_COMMAND_HOOK;
+  }
+
+  for(usize i = 0; i < MK61_COMMAND_HOOK_SLOT_COUNT; i++) {
+    Mk61CommandHookSlot& slot = mk61_command_hooks[i];
+    if(slot.callback != nullptr) continue;
+
+    slot.generation = (slot.generation + 1U) & 0x00FFFFFFUL;
+    if(slot.generation == 0) slot.generation = 1;
+    slot.callback = callback;
+    slot.user_data = user_data;
+    slot.opcode = opcode;
+    slot.phase = (u8) phase;
+    slot.next = INVALID_HOOK_SLOT;
+    slot.flags = internal ? HOOK_INTERNAL : 0;
+
+    if(mk61_command_hook_tail == INVALID_HOOK_SLOT) {
+      mk61_command_hook_head = (u8) i;
+    } else {
+      mk61_command_hooks[mk61_command_hook_tail].next = (u8) i;
+    }
+    mk61_command_hook_tail = (u8) i;
+    if(!internal) public_mk61_command_hook_count++;
+    mark_mk61_command_target(opcode, phase);
+    return make_mk61_command_hook_handle(i, slot.generation);
+  }
+  return core_61::INVALID_MK61_COMMAND_HOOK;
+}
+
+static bool remove_mk61_command_hook(
+    core_61::Mk61CommandHookHandle handle, bool internal) {
+  if(handle == core_61::INVALID_MK61_COMMAND_HOOK ||
+     mk61_command_hook_dispatch_depth != 0) {
+    return false;
+  }
+
+  const u8 encoded_slot = (u8) handle;
+  if(encoded_slot == 0) return false;
+  const usize slot_index = (usize) encoded_slot - 1U;
+  if(slot_index >= MK61_COMMAND_HOOK_SLOT_COUNT) return false;
+
+  Mk61CommandHookSlot& slot = mk61_command_hooks[slot_index];
+  const u32 generation = handle >> 8;
+  if(slot.callback == nullptr || slot.generation != generation) return false;
+  if(((slot.flags & HOOK_INTERNAL) != 0) != internal) return false;
+
+  u8 previous = INVALID_HOOK_SLOT;
+  u8 current = mk61_command_hook_head;
+  while(current != INVALID_HOOK_SLOT && current != slot_index) {
+    previous = current;
+    current = mk61_command_hooks[current].next;
+  }
+  if(current == INVALID_HOOK_SLOT) return false;
+
+  if(previous == INVALID_HOOK_SLOT) mk61_command_hook_head = slot.next;
+  else mk61_command_hooks[previous].next = slot.next;
+  if(mk61_command_hook_tail == slot_index) mk61_command_hook_tail = previous;
+
+  const u8 opcode = slot.opcode;
+  const u8 phase = slot.phase;
+  if(!internal) public_mk61_command_hook_count--;
+  slot.callback = nullptr;
+  slot.user_data = nullptr;
+  slot.opcode = 0;
+  slot.phase = 0;
+  slot.next = INVALID_HOOK_SLOT;
+  slot.flags = 0;
+  clear_mk61_command_target_if_unused(opcode, phase);
+  return true;
+}
+
+static u8 dispatch_mk61_command_before(
+    u8 opcode, core_61::Mk61CommandSource source, u32 sequence) {
+  core_61::Mk61CommandHookContext context = {
+      core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+      source,
+      opcode,
+      opcode,
+      sequence
+  };
+
+  mk61_command_hook_dispatch_depth++;
+  // Public callbacks match the command that was actually issued. Built-in
+  // callbacks run afterwards and match the final replacement, so replacing
+  // any opcode with 3B also engages the enhanced RNG and replacing 3B away
+  // does not.
+  for(u8 pass = 0; pass < 2; pass++) {
+    const bool internal = pass != 0;
+    for(u8 slot_index = mk61_command_hook_head;
+        slot_index != INVALID_HOOK_SLOT;
+        slot_index = mk61_command_hooks[slot_index].next) {
+      Mk61CommandHookSlot& slot = mk61_command_hooks[slot_index];
+      if(slot.callback == nullptr ||
+         ((slot.flags & HOOK_INTERNAL) != 0) != internal ||
+         slot.phase != (u8) core_61::Mk61CommandHookPhase::BEFORE_EXECUTE) {
+        continue;
+      }
+      const u8 target = internal ? context.replacement_opcode : opcode;
+      if(slot.opcode != target) continue;
+      slot.callback(context, slot.user_data);
+      // Only replacement_opcode is writable in the BEFORE phase.
+      context.phase = core_61::Mk61CommandHookPhase::BEFORE_EXECUTE;
+      context.source = source;
+      context.opcode = opcode;
+      context.sequence = sequence;
+    }
+  }
+  mk61_command_hook_dispatch_depth--;
+  return context.replacement_opcode;
+}
+
+static void dispatch_mk61_command_after(const ActiveMk61Command& command) {
+  core_61::Mk61CommandHookContext context = {
+      core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+      command.source,
+      command.opcode,
+      command.executed_opcode,
+      command.sequence
+  };
+
+  mk61_command_hook_dispatch_depth++;
+  for(u8 pass = 0; pass < 2; pass++) {
+    const bool internal = pass != 0;
+    for(u8 slot_index = mk61_command_hook_head;
+        slot_index != INVALID_HOOK_SLOT;
+        slot_index = mk61_command_hooks[slot_index].next) {
+      Mk61CommandHookSlot& slot = mk61_command_hooks[slot_index];
+      if(slot.callback == nullptr ||
+         ((slot.flags & HOOK_INTERNAL) != 0) != internal ||
+         slot.phase != (u8) core_61::Mk61CommandHookPhase::AFTER_EXECUTE) {
+        continue;
+      }
+      const u8 target = internal ? command.executed_opcode : command.opcode;
+      if(slot.opcode != target) continue;
+      slot.callback(context, slot.user_data);
+      // AFTER is observational at the dispatch layer. A callback may still
+      // alter calculator-visible state through the normal register API.
+      context.phase = core_61::Mk61CommandHookPhase::AFTER_EXECUTE;
+      context.source = command.source;
+      context.opcode = command.opcode;
+      context.replacement_opcode = command.executed_opcode;
+      context.sequence = command.sequence;
+    }
+  }
+  mk61_command_hook_dispatch_depth--;
+}
+
+static void finish_active_mk61_command(void) {
+  if(!active_mk61_command.active) return;
+  const ActiveMk61Command completed = active_mk61_command;
+  active_mk61_command = {};
+  keyboard_command_complete_pending = false;
+  external_random_pending = false;
+  dispatch_mk61_command_after(completed);
+}
+
+static u8 begin_mk61_command(u8 opcode, core_61::Mk61CommandSource source) {
+  mk61_command_sequence++;
+  if(mk61_command_sequence == 0) mk61_command_sequence = 1;
+  const u8 executed_opcode =
+      dispatch_mk61_command_before(opcode, source, mk61_command_sequence);
+  active_mk61_command = {
+      true, source, opcode, executed_opcode, mk61_command_sequence
+  };
+  return executed_opcode;
+}
+
+static void reset_mk61_command_runtime(void) {
+  active_mk61_command = {};
+  keyboard_command_complete_pending = false;
+  external_random_pending = false;
+}
+
+static inline u8 __attribute__((always_inline)) decode_mk61_opcode(void) {
+  return (u8) ((m_IK1302.R[30] & 0x0FU) |
+               ((m_IK1302.R[33] & 0x0FU) << 4));
+}
+
+static inline void __attribute__((always_inline)) encode_mk61_opcode(u8 opcode) {
+  m_IK1302.R[30] = opcode & 0x0FU;
+  m_IK1302.R[33] = opcode >> 4;
+}
+
+static inline void __attribute__((always_inline)) handle_mk61_command_prefetch(
+    u8 address) {
+  if(address == 0x06U) {
+    // The next program opcode is already present in R30/R33. Reaching this
+    // point also proves that the previous program command has committed.
+    if(active_mk61_command.active) finish_active_mk61_command();
+    const u8 opcode = decode_mk61_opcode();
+    if(!has_mk61_command_target(opcode)) return;
+    const u8 replacement = begin_mk61_command(
+        opcode, core_61::Mk61CommandSource::PROGRAM);
+    encode_mk61_opcode(replacement);
+    return;
+  }
+
+  if(address == 0x97U && m_IK1302.key_y != 0 &&
+     !active_mk61_command.active) {
+    const u8 opcode = decode_mk61_opcode();
+    if(!has_mk61_command_target(opcode)) return;
+    const u8 replacement = begin_mk61_command(
+        opcode, core_61::Mk61CommandSource::KEYBOARD);
+    encode_mk61_opcode(replacement);
+    return;
+  }
+
+  // Keyboard commands return to the normal display-idle loop at address 33
+  // only after their calculator-visible result has committed. Defer AFTER to
+  // the end of core_61::step(), where the serial ring is at its public-API
+  // boundary and set_stack_register()/write_stack_register() are safe.
+  if(address == 0x33U && active_mk61_command.active &&
+     active_mk61_command.source == core_61::Mk61CommandSource::KEYBOARD) {
+    keyboard_command_complete_pending = true;
+  }
+}
+
 } // namespace
 
 namespace core_61 {
@@ -595,6 +893,22 @@ bool unregister_rom_command_hook(RomCommandHookHandle handle) {
 
 usize registered_rom_command_hook_count(void) {
   return public_rom_command_hook_count;
+}
+
+Mk61CommandHookHandle register_mk61_command_hook(
+    u8 opcode,
+    Mk61CommandHookPhase phase,
+    Mk61CommandHook callback,
+    void* user_data) {
+  return add_mk61_command_hook(opcode, phase, callback, user_data, false);
+}
+
+bool unregister_mk61_command_hook(Mk61CommandHookHandle handle) {
+  return remove_mk61_command_hook(handle, false);
+}
+
+usize registered_mk61_command_hook_count(void) {
+  return public_mk61_command_hook_count;
 }
 
 u32 rom_command_instruction(RomChip chip, u8 address) {
@@ -1120,6 +1434,7 @@ void dumpm(uint16_t sig, uint16_t cyc) {
 
 inline  usize __attribute__((always_inline))  IK1302_GoZero(void) { 
     const u8 address = (u8) ((uint16_t) m_IK1302.R[36] + 16U * (uint16_t) m_IK1302.R[39]);
+    handle_mk61_command_prefetch(address);
     const u8 command = apply_rom_command_hooks(
         core_61::RomChip::IK1302, address, m_IK1302.R, m_IK1302.ST);
     uint32_t uI = ROM.IK1302.instructions[command]; // читаем команду
@@ -1187,7 +1502,8 @@ inline u32 __attribute__((always_inline)) next_external_random_seed(void) {
 
 static void inject_external_random_seed(
     core_61::RomCommandHookContext& context, void*) {
-  if(!external_random_enabled) return;
+  if(!external_random_enabled || !external_random_pending) return;
+  external_random_pending = false;
   // These ST indices represent xi only at the pre-A7 fetch hook. The following
   // ROM command consumes them immediately; ST is not a persistent xi register.
   // The 999 exponent/service nibbles are part of the valid serial BCD format.
@@ -1206,6 +1522,15 @@ static void inject_external_random_seed(
   context.st[34] = 9;
   context.st[37] = 0;
   context.st[40] = 0;
+}
+
+static void arm_external_random_seed(
+    core_61::Mk61CommandHookContext& context, void*) {
+  if(external_random_enabled &&
+     context.phase == core_61::Mk61CommandHookPhase::BEFORE_EXECUTE &&
+     context.replacement_opcode == 0x3BU) {
+    external_random_pending = true;
+  }
 }
 
 void  cycle(void) {
@@ -1748,6 +2073,7 @@ inline  void  __attribute__((always_inline))  mod42_table_init(void) {
 }
 
 void MK61Emu_Cleanup() {
+    reset_mk61_command_runtime();
     mod42_table_init(); // инициализация в ОЗУ таблицы остатка от деления на 42 (42+42 элемента)
     memset(&ringM,0,sizeof(ringM));
     IK1302_Clear();
@@ -1971,6 +2297,14 @@ void step(void) {
     ::cycle();
     m_IK1302.key_x = 0;
     m_IK1302.key_y = 0;
+    if(keyboard_command_complete_pending && active_mk61_command.active &&
+       active_mk61_command.source == Mk61CommandSource::KEYBOARD) {
+      finish_active_mk61_command();
+    }
+    if(active_mk61_command.active &&
+       active_mk61_command.source == Mk61CommandSource::PROGRAM && !is_RUN()) {
+      finish_active_mk61_command();
+    }
 }
 
 // Full core state = the DOZU ring plus the three chip structs plus the angle
@@ -1992,7 +2326,10 @@ struct CoreContextSnapshot {
   bool edit;
   bool expanded;
   bool random_enabled;
+  bool random_pending;
   u64 random_state;
+  ActiveMk61Command active_command;
+  bool keyboard_complete_pending;
   bool valid;
 };
 
@@ -2008,7 +2345,10 @@ void save_context(void) {
   context_snapshot.edit = edit_program;
   context_snapshot.expanded = expanded_program_mode;
   context_snapshot.random_enabled = external_random_enabled;
+  context_snapshot.random_pending = external_random_pending;
   context_snapshot.random_state = external_random_state;
+  context_snapshot.active_command = active_mk61_command;
+  context_snapshot.keyboard_complete_pending = keyboard_command_complete_pending;
   context_snapshot.valid = true;
 }
 
@@ -2023,13 +2363,21 @@ void restore_context(void) {
   edit_program = context_snapshot.edit;
   expanded_program_mode = context_snapshot.expanded;
   external_random_enabled = context_snapshot.random_enabled;
+  external_random_pending = context_snapshot.random_pending;
   external_random_state = context_snapshot.random_state;
+  active_mk61_command = context_snapshot.active_command;
+  keyboard_command_complete_pending = context_snapshot.keyboard_complete_pending;
 }
 #endif // MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
 
 void configure_random_seed(bool enable, u64 seed_material) {
   if(!enable) {
     external_random_enabled = false;
+    external_random_pending = false;
+    if(random_mk61_command_hook != INVALID_MK61_COMMAND_HOOK &&
+       remove_mk61_command_hook(random_mk61_command_hook, true)) {
+      random_mk61_command_hook = INVALID_MK61_COMMAND_HOOK;
+    }
     if(random_rom_command_hook != INVALID_ROM_COMMAND_HOOK &&
        remove_rom_command_hook(random_rom_command_hook, true)) {
       random_rom_command_hook = INVALID_ROM_COMMAND_HOOK;
@@ -2037,16 +2385,35 @@ void configure_random_seed(bool enable, u64 seed_material) {
     return;
   }
 
+  bool command_hook_added = false;
+  bool rom_hook_added = false;
+  if(random_mk61_command_hook == INVALID_MK61_COMMAND_HOOK) {
+    random_mk61_command_hook = add_mk61_command_hook(
+        0x3BU, Mk61CommandHookPhase::BEFORE_EXECUTE,
+        &arm_external_random_seed, nullptr, true);
+    command_hook_added = random_mk61_command_hook != INVALID_MK61_COMMAND_HOOK;
+  }
   if(random_rom_command_hook == INVALID_ROM_COMMAND_HOOK) {
     random_rom_command_hook = add_rom_command_hook(
         RomChip::IK1306, 0xA7U, &inject_external_random_seed, nullptr, true);
+    rom_hook_added = random_rom_command_hook != INVALID_ROM_COMMAND_HOOK;
   }
-  if(random_rom_command_hook == INVALID_ROM_COMMAND_HOOK) {
+  if(random_mk61_command_hook == INVALID_MK61_COMMAND_HOOK ||
+     random_rom_command_hook == INVALID_ROM_COMMAND_HOOK) {
+    if(command_hook_added &&
+       remove_mk61_command_hook(random_mk61_command_hook, true)) {
+      random_mk61_command_hook = INVALID_MK61_COMMAND_HOOK;
+    }
+    if(rom_hook_added && remove_rom_command_hook(random_rom_command_hook, true)) {
+      random_rom_command_hook = INVALID_ROM_COMMAND_HOOK;
+    }
     external_random_enabled = false;
+    external_random_pending = false;
     return;
   }
 
   external_random_state = random_avalanche(seed_material ^ 0xE7037ED1A0B428DBULL);
+  external_random_pending = false;
   external_random_enabled = true;
 }
 
