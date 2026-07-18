@@ -25,6 +25,11 @@ enum class SpeedMode : u8 {
   TURBO
 };
 
+enum class RandomMode : u8 {
+  MK61,
+  MK61S
+};
+
 struct  t_punct {
     u8            size;
     menu_action   action;
@@ -38,6 +43,7 @@ extern bool TurnSoundVolume(void);
 extern bool TurnSpeed(void);
 extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
+extern bool TurnRandomMode(void);
 extern bool UsbDiskMode(void);
 extern bool TurnIdleSignal(void);
 extern bool TurnDisplayRows(void);
@@ -57,9 +63,12 @@ namespace library_mk61 {
   extern  u8    display_rows(void);
   extern  lcd_display::TextProfile display_text_profile(void);
   extern  ProgramMemoryMode program_memory_mode(void);
+  extern  RandomMode random_mode(void);
+  extern  bool  random_mode_is_mk61s(void);
   extern  bool  program_memory_mode_accepts(bool needs_expanded);
   extern  void  set_program_memory_state(bool enable);
   extern  void  set_program_memory_mode(ProgramMemoryMode mode);
+  extern  void  set_random_mode_state(RandomMode mode);
   extern  void  set_idle_signal_state(bool enable);
   extern  void  set_display_rows(u8 rows);
   extern  void  set_display_text_profile(lcd_display::TextProfile profile);

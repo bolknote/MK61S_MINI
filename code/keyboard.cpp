@@ -1,5 +1,6 @@
 #include <wiring_constants.h>
 #include "keyboard.h"
+#include "entropy_pool.hpp"
 #include "tools.hpp"
 #include "debug.h"
 
@@ -250,7 +251,10 @@ isize scan(void) {
 
   dbgln(KBD, "changed ", bit_changed, ",column ", column, ",row ", row,", scan_code ", scan_code);
 
-  if(state == 0) sound_scaled(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS, library_mk61::sound_volume(), KEY_CLICK_VOLUME_PERCENT);
+  if(state == 0) {
+    entropy_pool::note_key(code, micros());
+    sound_scaled(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS, library_mk61::sound_volume(), KEY_CLICK_VOLUME_PERCENT);
+  }
   cir_buff_write(scan_code);
 
   if(state == 0) {

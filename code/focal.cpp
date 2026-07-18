@@ -147,6 +147,7 @@ namespace library_mk61 {
 #include "keyboard.h"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
+#include "entropy_pool.hpp"
 
 #include <math.h>
 #include <stdio.h>
@@ -1026,9 +1027,7 @@ static double focal_rnd(void) {
   focal_random_state = focal_random_state * 1103515245UL + 12345UL;
   return (double) ((focal_random_state >> 8) & 0x00FFFFFFUL) / 16777216.0;
 #else
-  hidden_press_key(sw::K);
-  hidden_press_key(sw::Bx);
-  return focal_read_mk_x();
+  return (double) (entropy_pool::next_u32(entropy_pool::Domain::FOCAL) >> 8) / 16777216.0;
 #endif
 }
 

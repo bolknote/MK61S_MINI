@@ -139,6 +139,7 @@ namespace library_mk61 {
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
 #include "program_store.hpp"
+#include "entropy_pool.hpp"
 
 #include <math.h>
 #include <stdio.h>
@@ -699,11 +700,7 @@ static double tb_next_random(void) {
   tb_random_state = tb_random_state * 25173UL + 13849UL;
   return (double) (tb_random_state & 0xFFFFUL) / 65536.0;
 #else
-  hidden_press_key(sw::K);
-  hidden_press_key(sw::Bx);
-  double value = 0.0;
-  const mk61_ref::Ref ref = {mk61_ref::Kind::X, 0};
-  return mk61_ref::read(ref, value) ? value : 0.0;
+  return (double) (entropy_pool::next_u32(entropy_pool::Domain::TINYBASIC) >> 8) / 16777216.0;
 #endif
 }
 

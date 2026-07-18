@@ -177,6 +177,76 @@ static void test_authentic_core_smoke(void) {
   check_near("2 ENTER 3 +", read_live_x(), 5.0, 1e-8);
 }
 
+static double first_random(bool enhanced, u32 seed) {
+  const MatrixKey key_k = {10, 9};
+  const MatrixKey key_bx = {11, 8};
+  core_61::configure_random_seed(enhanced, seed);
+  core_61::enable();
+  press_matrix(key_k);
+  press_matrix(key_bx);
+  return read_live_x();
+}
+
+static double next_random(void) {
+  press_matrix({10, 9});
+  press_matrix({11, 8});
+  return read_live_x();
+}
+
+static void test_random_seed_hook(void) {
+  std::printf("calculator random seed hook:\n");
+
+  const double authentic_a = first_random(false, 1234567);
+  const double authentic_b = first_random(false, 7654321);
+  check_near("MK61 repeat", authentic_a, authentic_b, 0.0);
+
+  const double enhanced_a = first_random(true, 1234567);
+  const double enhanced_b = first_random(true, 7654321);
+  check_true("seed changes RNG", std::fabs(enhanced_a - enhanced_b) > 1e-8);
+  check_true("RNG in [0,1)", enhanced_a >= 0.0 && enhanced_a < 1.0 &&
+                                  enhanced_b >= 0.0 && enhanced_b < 1.0);
+
+  core_61::configure_random_seed(true, 2468135);
+  core_61::enable();
+  check_true("enhanced mode enabled", core_61::random_seed_enabled());
+  press_matrix({4, 1}); // ordinary key 2 must not expose the hidden stream
+  check_near("ordinary key unchanged", read_live_x(), 2.0, 1e-8);
+
+  // A CORE math call borrows and resets the emulator internally. Its snapshot
+  // must also preserve the external stream position.
+  core_61::configure_random_seed(true, 11223344);
+  core_61::enable();
+  const double before_math = next_random();
+  (void) mk_math::sin(1.0);
+  const double after_math = next_random();
+
+  core_61::configure_random_seed(true, 11223344);
+  core_61::enable();
+  const double reference_first = next_random();
+  const double reference_second = next_random();
+  check_near("math keeps RNG first", before_math, reference_first, 0.0);
+  check_near("math keeps RNG stream", after_math, reference_second, 0.0);
+
+  // The native ROM produced only 179 distinct values (26-value prefix plus a
+  // 153-value cycle). Enhanced mode must not inherit that short repetition;
+  // tolerate a few birthday collisions in the 7-digit space.
+  core_61::configure_random_seed(true, 99887766);
+  core_61::enable();
+  static constexpr int SAMPLE_COUNT = 256;
+  u32 values[SAMPLE_COUNT] = {};
+  int unique = 0;
+  for(int i = 0; i < SAMPLE_COUNT; i++) {
+    const u32 value = (u32) std::llround(next_random() * 10000000.0);
+    bool seen = false;
+    for(int j = 0; j < unique; j++) seen |= values[j] == value;
+    if(!seen) values[unique++] = value;
+  }
+  check_true("no native short cycle", unique > 240);
+
+  core_61::configure_random_seed(false, 1);
+  check_true("enhanced mode disabled", !core_61::random_seed_enabled());
+}
+
 static void test_core_boundaries(void) {
   std::printf("core boundary regressions:\n");
   core_61::set_expanded_program_mode(false);
@@ -274,6 +344,7 @@ int main(void) {
   test_pure_helpers();
   test_transcendental();
   test_authentic_core_smoke();
+  test_random_seed_hook();
   test_core_boundaries();
   test_save_restore();
 

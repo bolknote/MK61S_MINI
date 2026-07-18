@@ -203,6 +203,13 @@ namespace core_61 {
   extern    void  save_context(void);
   extern    void  restore_context(void);
 
+  // In enhanced mode a fresh seven-digit value from a seeded SplitMix stream
+  // is written into the hidden IK1306 xi word immediately before every K RNG
+  // command reads it. No visible calculator register is changed beforehand.
+  extern    void  configure_random_seed(bool enable, u64 seed_material);
+  extern    void  update_random_seed(u64 seed_material);
+  extern    bool  random_seed_enabled(void);
+
   extern    void  enable(void);
   extern    void  step(void);
 

@@ -72,6 +72,14 @@ u8 ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
 const u8* END_ring_M = &ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
 static bool expanded_program_mode = false;
 
+// Optional MK61s random-mode hook.  The authentic ROM remains untouched; a
+// fresh value is injected into the IK1306 hidden xi word at state A7, just
+// before opcode 3B (K RNG) consumes it.  Supplying every value is intentional:
+// in measurement the native ROM produced only 179 distinct values before
+// repeating (a 26-value prefix followed by a 153-value cycle).
+static bool external_random_enabled = false;
+static u64 external_random_state = 0xA0761D6478BD642FULL;
+
 const bool sergey_anvarov_hack_enable = true;
 
 MK61Emu m_emu;
@@ -961,12 +969,50 @@ inline  usize __attribute__((always_inline))  IK1306_GoZero(void) {
   return uI_hi & 0xFF;
 }
 
+inline u64 __attribute__((always_inline)) random_avalanche(u64 value) {
+  value ^= value >> 30;
+  value *= 0xBF58476D1CE4E5B9ULL;
+  value ^= value >> 27;
+  value *= 0x94D049BB133111EBULL;
+  return value ^ (value >> 31);
+}
+
+inline u32 __attribute__((always_inline)) next_external_random_seed(void) {
+  external_random_state += 0x9E3779B97F4A7C15ULL;
+  return 1U + (u32) (random_avalanche(external_random_state) % 9999999ULL);
+}
+
+inline void __attribute__((always_inline)) inject_external_random_seed(void) {
+  if(!external_random_enabled) return;
+  if((m_IK1306.R[36] + 16U * m_IK1306.R[39]) != 0xA7U) return;
+
+  // Logical IK1306 ST word for 0.d1d2d3d4d5d6d7, in the chip's serial BCD
+  // layout.  The 999 exponent/service nibbles are part of the valid xi format.
+  u32 seed = next_external_random_seed();
+  m_IK1306.ST[1] = 0;
+  m_IK1306.ST[4] = seed % 10U; seed /= 10U;  // d7
+  m_IK1306.ST[7] = seed % 10U; seed /= 10U;  // d6
+  m_IK1306.ST[10] = seed % 10U; seed /= 10U; // d5
+  m_IK1306.ST[13] = seed % 10U; seed /= 10U; // d4
+  m_IK1306.ST[16] = seed % 10U; seed /= 10U; // d3
+  m_IK1306.ST[19] = seed % 10U; seed /= 10U; // d2
+  m_IK1306.ST[22] = seed % 10U;               // d1
+  m_IK1306.ST[25] = 0;
+  m_IK1306.ST[28] = 9;
+  m_IK1306.ST[31] = 9;
+  m_IK1306.ST[34] = 9;
+  m_IK1306.ST[37] = 0;
+  m_IK1306.ST[40] = 0;
+}
+
 void  cycle(void) {
   mtick_t signal_I;
   const int MAX_CYCLE = (sergey_anvarov_hack_enable)? 280 : 560;
   const u8* active_end_ring_m = &ringM[core_61::ring_size()];
   for (int count = 1; count <= MAX_CYCLE; count++){
       signal_I = 0;
+
+      inject_external_random_seed();
 
       const usize IK1302_uI_hi = IK1302_GoZero();
 
@@ -1744,6 +1790,8 @@ struct CoreContextSnapshot {
   usize backstep_comma;
   bool edit;
   bool expanded;
+  bool random_enabled;
+  u64 random_state;
   bool valid;
 };
 
@@ -1758,6 +1806,8 @@ void save_context(void) {
   context_snapshot.backstep_comma = backstep_comma_position;
   context_snapshot.edit = edit_program;
   context_snapshot.expanded = expanded_program_mode;
+  context_snapshot.random_enabled = external_random_enabled;
+  context_snapshot.random_state = external_random_state;
   context_snapshot.valid = true;
 }
 
@@ -1771,8 +1821,24 @@ void restore_context(void) {
   backstep_comma_position = context_snapshot.backstep_comma;
   edit_program = context_snapshot.edit;
   expanded_program_mode = context_snapshot.expanded;
+  external_random_enabled = context_snapshot.random_enabled;
+  external_random_state = context_snapshot.random_state;
 }
 #endif // MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
+
+void configure_random_seed(bool enable, u64 seed_material) {
+  external_random_enabled = enable;
+  if(enable) external_random_state = random_avalanche(seed_material ^ 0xE7037ED1A0B428DBULL);
+}
+
+void update_random_seed(u64 seed_material) {
+  if(!external_random_enabled) return;
+  external_random_state ^= random_avalanche(seed_material + 0x8EBC6AF09C88C6E3ULL);
+}
+
+bool random_seed_enabled(void) {
+  return external_random_enabled;
+}
 
 void enable(void) {
     MK61Emu_Cleanup();

@@ -13,6 +13,7 @@ using namespace kbd;
 #include "lcd_gui.hpp"
 #include "mnemo.hpp"
 #include "startup_splash.hpp"
+#include "entropy_pool.hpp"
 
 #include "mk61emu_core.h"
 
@@ -231,6 +232,8 @@ void setup() {
   lcd.begin(lcd_display::COLS, library_mk61::display_rows());
   lcd.setTextProfile(library_mk61::display_text_profile());
 
+  entropy_pool::begin();
+
   if(dfu_requested) {
     DFU_enable();
   }
@@ -242,6 +245,7 @@ void setup() {
     static_assert(sizeof(FIRMWARE_VER) == startup_splash::COLS + 1, "Firmware version must fill one LCD row");
     startup_splash::show(lcd, FULL_MODEL_NAME, FIRMWARE_VER);
   #endif
+  entropy_pool::finish_startup();
 
  //---  Настройка отрисовки экрана
   lcd_hooked = false;               // экран не перeхвачен
@@ -280,6 +284,7 @@ void setup() {
   dbgln(EXT_RUN, "Extended register sizeof = ", sizeof(ext61_reg));
 
   core_61::enable();
+  entropy_pool::configure_calculator(library_mk61::random_mode_is_mk61s());
   sound_startup();
   sound_poll();
   idle_signal_reset();

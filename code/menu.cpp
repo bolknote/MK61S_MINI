@@ -7,6 +7,7 @@
 #include "development.hpp"
 #include "focal.hpp"
 #include "tinybasic.hpp"
+#include "entropy_pool.hpp"
 #include "program_store.hpp"
 #include "virtual_fat.hpp"
 
@@ -36,8 +37,9 @@ static constexpr int SETTINGS_VOLUME  = 0;
 static constexpr int SETTINGS_IDLE_SIGNAL = 1;
 static constexpr int SETTINGS_SPEED   = 2;
 static constexpr int SETTINGS_MEMORY  = 3;
-static constexpr int SETTINGS_LANGUAGE = 4;
-static constexpr int SETTINGS_DISPLAY_ROWS = 5;
+static constexpr int SETTINGS_RANDOM  = 4;
+static constexpr int SETTINGS_LANGUAGE = 5;
+static constexpr int SETTINGS_DISPLAY_ROWS = 6;
 
 static u8 sound_volume_state = 10;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
@@ -47,6 +49,7 @@ static bool idle_signal_state = true;
 static u8 display_rows_state = lcd_display::DEFAULT_ROWS;
 static lcd_display::TextProfile display_text_profile_state = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
+static RandomMode random_mode_state = RandomMode::MK61;
 static DeferredSave settings_save;
 static constexpr t_time_ms SETTINGS_SAVE_IDLE_MS = 1000;
 
@@ -228,6 +231,8 @@ const t_punct SPEED_TURBO_punct   = {.size = 15, .action = (menu_action) &TurnSp
 const t_punct MEMORY_105_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 105     "};
 const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 112+F   "};
 const t_punct MEMORY_AUTO_punct   = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory Auto    "};
+const t_punct RANDOM_MK61_punct   = {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "Random MK61    "};
+const t_punct RANDOM_MK61S_punct  = {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "Random MK61s   "};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
 const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Язык рус"};
 const t_punct IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep OFF "};
@@ -249,6 +254,8 @@ const t_punct RU_SPEED_TURBO_punct= {.size = 15, .action = (menu_action) &TurnSp
 const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 105ШГ"};
 const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 112ШГ+ПF"};
 const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память АВТО"};
+const t_punct RU_RANDOM_MK61_punct= {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "К СЧ MK61"};
+const t_punct RU_RANDOM_MK61S_punct={.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "К СЧ MK61s"};
 const t_punct RU_IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук выкл"};
 const t_punct RU_IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук вкл"};
 const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "Информация"};
@@ -274,6 +281,7 @@ t_punct* SETTINGS_MENU[] = {
       (t_punct*) &IDLE_SIGNAL_ON_punct,
       (t_punct*) &SPEED_HIGH_punct,
       (t_punct*) &MEMORY_AUTO_punct,
+      (t_punct*) &RANDOM_MK61_punct,
       (t_punct*) &LANGUAGE_EN_punct,
 #if defined(MK61_DISPLAY_UC1609)
       (t_punct*) &ROWS_punct,
@@ -363,6 +371,18 @@ void set_program_memory_mode(ProgramMemoryMode mode) {
   }
 }
 
+RandomMode random_mode(void) {
+  return random_mode_state;
+}
+
+bool random_mode_is_mk61s(void) {
+  return random_mode_state == RandomMode::MK61S;
+}
+
+void set_random_mode_state(RandomMode mode) {
+  random_mode_state = mode;
+}
+
 static t_punct* memory_punct(void) {
   if(memory_mode == ProgramMemoryMode::AUTO) {
     return (t_punct*) (russian_language ? &RU_MEMORY_AUTO_punct : &MEMORY_AUTO_punct);
@@ -383,6 +403,13 @@ static t_punct* speed_punct(void) {
     default:
       return (t_punct*) (russian_language ? &RU_SPEED_HIGH_punct : &SPEED_HIGH_punct);
   }
+}
+
+static t_punct* random_punct(void) {
+  if(random_mode_is_mk61s()) {
+    return (t_punct*) (russian_language ? &RU_RANDOM_MK61S_punct : &RANDOM_MK61S_punct);
+  }
+  return (t_punct*) (russian_language ? &RU_RANDOM_MK61_punct : &RANDOM_MK61_punct);
 }
 
 static t_punct* idle_signal_punct(void) {
@@ -445,6 +472,7 @@ void refresh_menu_text(void) {
   SETTINGS_MENU[SETTINGS_IDLE_SIGNAL] = idle_signal_punct();
   SETTINGS_MENU[SETTINGS_SPEED]    = speed_punct();
   SETTINGS_MENU[SETTINGS_MEMORY]   = memory_punct();
+  SETTINGS_MENU[SETTINGS_RANDOM]   = random_punct();
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
 #if defined(MK61_DISPLAY_UC1609)
   SETTINGS_MENU[SETTINGS_DISPLAY_ROWS] = display_rows_punct();
@@ -456,7 +484,7 @@ bool  store_settings_state(void) {
   flags.bits.language_ru = russian_language;
   flags.bits.program_memory_mode = (u8) memory_mode;
   flags.bits.speed_mode = (u8) speed_mode_state;
-  flags.bits.reserved = 0;
+  flags.bits.random_mode_mk61s = random_mode_is_mk61s() ? 1 : 0;
   flags.bits.idle_signal_off = idle_signal_state ? 0 : 1;
 #if defined(MK61_DISPLAY_UC1609)
   flags.bits.display_rows_8 = (display_text_profile_state.rows == lcd_display::COMPACT_ROWS) ? 1 : 0;
@@ -507,6 +535,7 @@ void  load_settings_state(void) {
   set_program_memory_state(memory_mode == ProgramMemoryMode::EXPANDED_112);
   const u8 stored_speed = flags.bits.speed_mode;
   set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
+  set_random_mode_state(flags.bits.random_mode_mk61s ? RandomMode::MK61S : RandomMode::MK61);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
 #if defined(MK61_DISPLAY_UC1609)
   lcd_display::TextProfile stored_profile;
@@ -971,6 +1000,23 @@ static void StepProgramMemoryMode(i8 delta) {
   }
 }
 
+static void ApplyRandomMode(RandomMode mode) {
+  library_mk61::set_random_mode_state(mode);
+  entropy_pool::configure_calculator(mode == RandomMode::MK61S);
+  library_mk61::refresh_menu_text();
+  library_mk61::mark_settings_dirty();
+}
+
+bool TurnRandomMode(void) {
+  ApplyRandomMode(library_mk61::random_mode_is_mk61s() ? RandomMode::MK61 : RandomMode::MK61S);
+  return action::MENU_BACK;
+}
+
+static void StepRandomMode(i8 delta) {
+  (void) delta;
+  ApplyRandomMode(library_mk61::random_mode_is_mk61s() ? RandomMode::MK61 : RandomMode::MK61S);
+}
+
 bool  mk61_library_select(void) {
   const int n = select_program();
   if(n < 0) return action::MENU_BACK;
@@ -1038,6 +1084,23 @@ bool class_menu::handle_settings_adjustment(i32 key) {
 
       if(key == KEY_SHG_LEFT_PRESS) {
         StepProgramMemoryMode(-1);
+        return true;
+      }
+      break;
+
+    case library_mk61::SETTINGS_RANDOM:
+      if(key == KEY_OK_PRESS) {
+        TurnRandomMode();
+        return true;
+      }
+
+      if(key == KEY_SHG_RIGHT_PRESS) {
+        StepRandomMode(1);
+        return true;
+      }
+
+      if(key == KEY_SHG_LEFT_PRESS) {
+        StepRandomMode(-1);
         return true;
       }
       break;

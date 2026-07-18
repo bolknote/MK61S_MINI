@@ -5,6 +5,7 @@
 #include "config.h"
 #include "cross_hal.h"
 #include "display.hpp"
+#include "entropy_pool.hpp"
 #include "keyboard.h"
 #include "runtime_safety.hpp"
 
@@ -79,6 +80,7 @@ bool pollEscape(void) {
 bool waitOrEscape(t_time_ms duration_ms) {
   const t_time_ms deadline = millis() + duration_ms;
   do {
+    entropy_pool::poll_startup();
     if(pollEscape()) return true;
     delay(1);
   } while(!runtime_safety::time_reached(millis(), deadline));
