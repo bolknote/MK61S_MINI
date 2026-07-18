@@ -8,6 +8,7 @@
 - `MK61s-mini-Terminal.pdf` - инструкция по работе с терминалом.
 - `MK61s-mini-M61.pdf` - инструкция по файлам M61.
 - `MK61s-mini-Random.pdf` - устройство генератора случайных чисел MK61/MK61s.
+- `MK61s-mini-ROM-Hooks.pdf` - API наблюдения и подмены ROM-команд эмулятора.
 - `MK61s-mini-FOCAL.pdf` - черновик инструкции по FOCAL.
 - `MK61s-mini-TinyBASIC.pdf` - черновик инструкции по TinyBASIC.
 - `build_md_pdf.py` - воспроизводимая пакетная сборка PDF.

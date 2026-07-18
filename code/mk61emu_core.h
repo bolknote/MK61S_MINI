@@ -149,6 +149,30 @@ extern  u8      ringM[SIZE_RING_M];
 
 namespace core_61 {
 
+  // The K145IK ROM contains 256 command words per chip. A hook runs immediately
+  // before the selected command word is decoded. It may inspect or alter the
+  // chip's live R/ST arrays and may substitute another command word for this
+  // fetch by changing replacement_address. The original ROM is never modified.
+  enum class RomChip : u8 {
+    IK1302 = 0,
+    IK1303 = 1,
+    IK1306 = 2
+  };
+
+  struct RomCommandHookContext {
+    RomChip chip;
+    u8 address;
+    u8 replacement_address;
+    u8* r;
+    u8* st;
+  };
+
+  using RomCommandHook = void (*)(RomCommandHookContext& context, void* user_data);
+  using RomCommandHookHandle = u32;
+
+  static constexpr usize ROM_COMMAND_HOOK_CAPACITY = 8;
+  static constexpr RomCommandHookHandle INVALID_ROM_COMMAND_HOOK = 0;
+
   #pragma pack(push, 4)
   struct bcd_value { // тип хранимое значение mk61 8 десятичных знаков мантисса, 2 знака порядок, два знака
       u32   mantissa;
@@ -194,6 +218,17 @@ namespace core_61 {
   extern    void  clear_memory_registers(void);
   extern    bool  has_error(void);
 
+  // Register independent hooks for any combination of chip and ROM command
+  // address. Several public hooks may target the same command; they run in
+  // registration order and share replacement_address. Registration changes
+  // from inside a callback are rejected. A handle removes only its own
+  // registration. The count reports public hooks only.
+  extern    RomCommandHookHandle register_rom_command_hook(
+      RomChip chip, u8 address, RomCommandHook callback, void* user_data = nullptr);
+  extern    bool unregister_rom_command_hook(RomCommandHookHandle handle);
+  extern    usize registered_rom_command_hook_count(void);
+  extern    u32 rom_command_instruction(RomChip chip, u8 address);
+
   // Snapshot / restore the whole live calculator state (stack ring, the three
   // chip structs, UI mode flags and the angle unit) into an internal buffer.
   // Defined only in the CORE math backend; used to borrow the engine for a
@@ -203,9 +238,10 @@ namespace core_61 {
   extern    void  save_context(void);
   extern    void  restore_context(void);
 
-  // In enhanced mode a fresh seven-digit value from a seeded SplitMix stream
-  // is written into the hidden IK1306 xi word immediately before every K RNG
-  // command reads it. No visible calculator register is changed beforehand.
+  // In enhanced mode a registered IK1306:A7 ROM-command hook writes a fresh
+  // seven-digit value from a seeded SplitMix stream into the hidden xi word
+  // immediately before every K RNG command reads it. No visible calculator
+  // register is changed beforehand.
   extern    void  configure_random_seed(bool enable, u64 seed_material);
   extern    void  update_random_seed(u64 seed_material);
   extern    bool  random_seed_enabled(void);

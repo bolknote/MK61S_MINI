@@ -67,6 +67,24 @@ static double read_live_x(void) { return read_live_reg(stack::X); }
 
 struct MatrixKey { int x, y; };
 
+struct RomHookProbe {
+  int calls;
+  u8 last_address;
+  u8 last_replacement;
+  u8 replacement;
+  bool replace;
+  bool arrays_present;
+};
+
+static void rom_hook_probe(core_61::RomCommandHookContext& context, void* user_data) {
+  RomHookProbe* const probe = (RomHookProbe*) user_data;
+  probe->calls++;
+  probe->last_address = context.address;
+  probe->last_replacement = context.replacement_address;
+  probe->arrays_present = context.r != nullptr && context.st != nullptr;
+  if(probe->replace) context.replacement_address = probe->replacement;
+}
+
 static void press_matrix(MatrixKey key) {
   core_61::clear_displayed();
   for(int i = 0; i < 4; i++) {
@@ -79,6 +97,91 @@ static void press_matrix(MatrixKey key) {
     core_61::step();
     if(core_61::is_RUN() || core_61::is_displayed()) break;
   }
+}
+
+static void test_rom_command_hooks(void) {
+  std::printf("ROM command hook registry:\n");
+  core_61::configure_random_seed(false, 1);
+  check_true("hook registry empty", core_61::registered_rom_command_hook_count() == 0);
+
+  // Use an IK1306 command address with the same ROM word as address 00. This
+  // lets the test exercise a real substitution without changing reset behavior.
+  u8 ik1306_alias = 0;
+  const u32 command_00 = core_61::rom_command_instruction(core_61::RomChip::IK1306, 0);
+  for(u16 address = 1; address <= 0xFF; address++) {
+    if(core_61::rom_command_instruction(core_61::RomChip::IK1306, (u8) address) == command_00) {
+      ik1306_alias = (u8) address;
+      break;
+    }
+  }
+  check_true("ROM alias found", ik1306_alias != 0);
+
+  RomHookProbe ik1302 = {};
+  RomHookProbe ik1303 = {};
+  RomHookProbe replacer = {};
+  replacer.replace = true;
+  replacer.replacement = ik1306_alias;
+  RomHookProbe observer = {};
+
+  const core_61::RomCommandHookHandle hook_1302 = core_61::register_rom_command_hook(
+      core_61::RomChip::IK1302, 0, &rom_hook_probe, &ik1302);
+  const core_61::RomCommandHookHandle hook_1303 = core_61::register_rom_command_hook(
+      core_61::RomChip::IK1303, 0, &rom_hook_probe, &ik1303);
+  const core_61::RomCommandHookHandle hook_replace = core_61::register_rom_command_hook(
+      core_61::RomChip::IK1306, 0, &rom_hook_probe, &replacer);
+  const core_61::RomCommandHookHandle hook_observe = core_61::register_rom_command_hook(
+      core_61::RomChip::IK1306, 0, &rom_hook_probe, &observer);
+
+  check_true("four hooks registered",
+      hook_1302 != core_61::INVALID_ROM_COMMAND_HOOK &&
+      hook_1303 != core_61::INVALID_ROM_COMMAND_HOOK &&
+      hook_replace != core_61::INVALID_ROM_COMMAND_HOOK &&
+      hook_observe != core_61::INVALID_ROM_COMMAND_HOOK &&
+      core_61::registered_rom_command_hook_count() == 4);
+
+  core_61::enable();
+  check_true("different commands fire", ik1302.calls > 0 && ik1303.calls > 0);
+  check_true("same command chains", replacer.calls > 0 && observer.calls > 0);
+  check_true("registration order", observer.last_replacement == ik1306_alias);
+  check_true("hook context arrays",
+      ik1302.arrays_present && ik1303.arrays_present &&
+      replacer.arrays_present && observer.arrays_present);
+  check_true("original address stable",
+      replacer.last_address == 0 && observer.last_address == 0);
+
+  check_true("unregister one", core_61::unregister_rom_command_hook(hook_1302));
+  check_true("reject stale handle", !core_61::unregister_rom_command_hook(hook_1302));
+  ik1302.calls = 0;
+  ik1303.calls = 0;
+  core_61::enable();
+  check_true("removed hook stays off", ik1302.calls == 0);
+  check_true("other hook stays on", ik1303.calls > 0);
+
+  check_true("remove IK1303", core_61::unregister_rom_command_hook(hook_1303));
+  check_true("remove replacer", core_61::unregister_rom_command_hook(hook_replace));
+  check_true("remove observer", core_61::unregister_rom_command_hook(hook_observe));
+  check_true("registry empty again", core_61::registered_rom_command_hook_count() == 0);
+
+  RomHookProbe capacity_probes[core_61::ROM_COMMAND_HOOK_CAPACITY] = {};
+  core_61::RomCommandHookHandle capacity_hooks[core_61::ROM_COMMAND_HOOK_CAPACITY] = {};
+  bool capacity_ok = true;
+  for(usize i = 0; i < core_61::ROM_COMMAND_HOOK_CAPACITY; i++) {
+    capacity_hooks[i] = core_61::register_rom_command_hook(
+        core_61::RomChip::IK1302, (u8) i, &rom_hook_probe, &capacity_probes[i]);
+    capacity_ok &= capacity_hooks[i] != core_61::INVALID_ROM_COMMAND_HOOK;
+  }
+  check_true("public hook capacity", capacity_ok);
+  const core_61::RomCommandHookHandle overflow = core_61::register_rom_command_hook(
+      core_61::RomChip::IK1303, 0, &rom_hook_probe, &ik1303);
+  check_true("capacity enforced", overflow == core_61::INVALID_ROM_COMMAND_HOOK);
+  core_61::configure_random_seed(true, 1234567);
+  check_true("RNG reserved slot", core_61::random_seed_enabled() &&
+      core_61::registered_rom_command_hook_count() == core_61::ROM_COMMAND_HOOK_CAPACITY);
+  core_61::configure_random_seed(false, 1);
+  for(core_61::RomCommandHookHandle handle : capacity_hooks) {
+    check_true("capacity unregister", core_61::unregister_rom_command_hook(handle));
+  }
+  check_true("capacity cleanup", core_61::registered_rom_command_hook_count() == 0);
 }
 
 static void test_pure_helpers(void) {
@@ -344,6 +447,7 @@ int main(void) {
   test_pure_helpers();
   test_transcendental();
   test_authentic_core_smoke();
+  test_rom_command_hooks();
   test_random_seed_hook();
   test_core_boundaries();
   test_save_restore();

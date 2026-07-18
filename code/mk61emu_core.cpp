@@ -414,6 +414,200 @@ IK1302  m_IK1302;
 static  IK1303  m_IK1303;
 static  IK1306  m_IK1306;
 
+namespace {
+
+static constexpr u8 ROM_CHIP_COUNT = 3;
+static constexpr u8 INVALID_HOOK_SLOT = 0xFF;
+// One slot is reserved for the built-in MK61s random hook. Public callers can
+// always use the full capacity advertised in mk61emu_core.h.
+static constexpr usize ROM_COMMAND_HOOK_SLOT_COUNT =
+    core_61::ROM_COMMAND_HOOK_CAPACITY + 1;
+
+struct RomCommandHookSlot {
+  core_61::RomCommandHook callback;
+  void* user_data;
+  u32 generation;
+  u8 address;
+  u8 chip;
+  u8 next;
+  u8 flags;
+};
+
+static constexpr u8 HOOK_INTERNAL = 0x01;
+static_assert(ROM_COMMAND_HOOK_SLOT_COUNT < INVALID_HOOK_SLOT,
+              "ROM command hook slots must fit in their linked-list index");
+static RomCommandHookSlot rom_command_hooks[ROM_COMMAND_HOOK_SLOT_COUNT] = {};
+static u8 rom_command_hook_head = INVALID_HOOK_SLOT;
+static u8 rom_command_hook_tail = INVALID_HOOK_SLOT;
+static u8 rom_command_hook_targets[ROM_CHIP_COUNT][32] = {};
+static u8 rom_command_hook_dispatch_depth;
+static usize public_rom_command_hook_count;
+static core_61::RomCommandHookHandle random_rom_command_hook =
+    core_61::INVALID_ROM_COMMAND_HOOK;
+
+static bool valid_rom_chip(core_61::RomChip chip) {
+  return (u8) chip < ROM_CHIP_COUNT;
+}
+
+static void mark_hook_target(core_61::RomChip chip, u8 address) {
+  rom_command_hook_targets[(u8) chip][address >> 3] |= (u8) (1U << (address & 7U));
+}
+
+static inline bool __attribute__((always_inline)) has_hook_target(
+    core_61::RomChip chip, u8 address) {
+  return (rom_command_hook_targets[(u8) chip][address >> 3] &
+          (u8) (1U << (address & 7U))) != 0;
+}
+
+static void clear_hook_target_if_unused(core_61::RomChip chip, u8 address) {
+  for(const RomCommandHookSlot& slot : rom_command_hooks) {
+    if(slot.callback != nullptr && slot.chip == (u8) chip && slot.address == address) return;
+  }
+  rom_command_hook_targets[(u8) chip][address >> 3] &=
+      (u8) ~(1U << (address & 7U));
+}
+
+static core_61::RomCommandHookHandle make_hook_handle(usize slot_index, u32 generation) {
+  return (generation << 8) | (u32) (slot_index + 1U);
+}
+
+static core_61::RomCommandHookHandle add_rom_command_hook(
+    core_61::RomChip chip,
+    u8 address,
+    core_61::RomCommandHook callback,
+    void* user_data,
+    bool internal) {
+  if(callback == nullptr || !valid_rom_chip(chip) || rom_command_hook_dispatch_depth != 0) {
+    return core_61::INVALID_ROM_COMMAND_HOOK;
+  }
+  if(!internal && public_rom_command_hook_count >= core_61::ROM_COMMAND_HOOK_CAPACITY) {
+    return core_61::INVALID_ROM_COMMAND_HOOK;
+  }
+
+  for(usize i = 0; i < ROM_COMMAND_HOOK_SLOT_COUNT; i++) {
+    RomCommandHookSlot& slot = rom_command_hooks[i];
+    if(slot.callback != nullptr) continue;
+
+    slot.generation = (slot.generation + 1U) & 0x00FFFFFFUL;
+    if(slot.generation == 0) slot.generation = 1;
+    slot.callback = callback;
+    slot.user_data = user_data;
+    slot.address = address;
+    slot.chip = (u8) chip;
+    slot.next = INVALID_HOOK_SLOT;
+    slot.flags = internal ? HOOK_INTERNAL : 0;
+
+    // Internal hooks run first. Public hooks retain their registration order.
+    if(internal) {
+      slot.next = rom_command_hook_head;
+      rom_command_hook_head = (u8) i;
+      if(rom_command_hook_tail == INVALID_HOOK_SLOT) rom_command_hook_tail = (u8) i;
+    } else {
+      if(rom_command_hook_tail == INVALID_HOOK_SLOT) {
+        rom_command_hook_head = (u8) i;
+      } else {
+        rom_command_hooks[rom_command_hook_tail].next = (u8) i;
+      }
+      rom_command_hook_tail = (u8) i;
+      public_rom_command_hook_count++;
+    }
+
+    mark_hook_target(chip, address);
+    return make_hook_handle(i, slot.generation);
+  }
+  return core_61::INVALID_ROM_COMMAND_HOOK;
+}
+
+static bool remove_rom_command_hook(core_61::RomCommandHookHandle handle, bool internal) {
+  if(handle == core_61::INVALID_ROM_COMMAND_HOOK || rom_command_hook_dispatch_depth != 0) {
+    return false;
+  }
+
+  const u8 encoded_slot = (u8) handle;
+  if(encoded_slot == 0) return false;
+  const usize slot_index = (usize) encoded_slot - 1U;
+  if(slot_index >= ROM_COMMAND_HOOK_SLOT_COUNT) return false;
+
+  RomCommandHookSlot& slot = rom_command_hooks[slot_index];
+  const u32 generation = handle >> 8;
+  if(slot.callback == nullptr || slot.generation != generation) return false;
+  if(((slot.flags & HOOK_INTERNAL) != 0) != internal) return false;
+
+  u8 previous = INVALID_HOOK_SLOT;
+  u8 current = rom_command_hook_head;
+  while(current != INVALID_HOOK_SLOT && current != slot_index) {
+    previous = current;
+    current = rom_command_hooks[current].next;
+  }
+  if(current == INVALID_HOOK_SLOT) return false;
+
+  if(previous == INVALID_HOOK_SLOT) rom_command_hook_head = slot.next;
+  else rom_command_hooks[previous].next = slot.next;
+  if(rom_command_hook_tail == slot_index) rom_command_hook_tail = previous;
+
+  const core_61::RomChip chip = (core_61::RomChip) slot.chip;
+  const u8 address = slot.address;
+  if(!internal) public_rom_command_hook_count--;
+  slot.callback = nullptr;
+  slot.user_data = nullptr;
+  slot.address = 0;
+  slot.chip = 0;
+  slot.next = INVALID_HOOK_SLOT;
+  slot.flags = 0;
+  clear_hook_target_if_unused(chip, address);
+  return true;
+}
+
+static u8 dispatch_rom_command_hooks(
+    core_61::RomChip chip, u8 address, u8* r, u8* st) {
+  core_61::RomCommandHookContext context = {chip, address, address, r, st};
+  rom_command_hook_dispatch_depth++;
+  for(u8 slot_index = rom_command_hook_head;
+      slot_index != INVALID_HOOK_SLOT;
+      slot_index = rom_command_hooks[slot_index].next) {
+    RomCommandHookSlot& slot = rom_command_hooks[slot_index];
+    if(slot.callback != nullptr && slot.chip == (u8) chip && slot.address == address) {
+      slot.callback(context, slot.user_data);
+    }
+  }
+  rom_command_hook_dispatch_depth--;
+  return context.replacement_address;
+}
+
+static inline u8 __attribute__((always_inline)) apply_rom_command_hooks(
+    core_61::RomChip chip, u8 address, u8* r, u8* st) {
+  if(!has_hook_target(chip, address)) return address;
+  return dispatch_rom_command_hooks(chip, address, r, st);
+}
+
+} // namespace
+
+namespace core_61 {
+
+RomCommandHookHandle register_rom_command_hook(
+    RomChip chip, u8 address, RomCommandHook callback, void* user_data) {
+  return add_rom_command_hook(chip, address, callback, user_data, false);
+}
+
+bool unregister_rom_command_hook(RomCommandHookHandle handle) {
+  return remove_rom_command_hook(handle, false);
+}
+
+usize registered_rom_command_hook_count(void) {
+  return public_rom_command_hook_count;
+}
+
+u32 rom_command_instruction(RomChip chip, u8 address) {
+  switch(chip) {
+    case RomChip::IK1302: return ROM.IK1302.instructions[address];
+    case RomChip::IK1303: return ROM.IK1303.instructions[address];
+    case RomChip::IK1306: return ROM.IK1306.instructions[address];
+  }
+  return 0;
+}
+
+} // namespace core_61
+
 inline u8* IK1302_M_START(void) {
   return &ringM[expanded_program_mode ? OFFSET_IK1302_EXPANDED : OFFSET_IK1302_CLASSIC];
 }
@@ -925,7 +1119,10 @@ void dumpm(uint16_t sig, uint16_t cyc) {
 #endif
 
 inline  usize __attribute__((always_inline))  IK1302_GoZero(void) { 
-    uint32_t uI = ROM.IK1302.instructions[(uint16_t)m_IK1302.R[36] + 16 * (uint16_t)m_IK1302.R[39]]; // читаем команду
+    const u8 address = (u8) ((uint16_t) m_IK1302.R[36] + 16U * (uint16_t) m_IK1302.R[39]);
+    const u8 command = apply_rom_command_hooks(
+        core_61::RomChip::IK1302, address, m_IK1302.R, m_IK1302.ST);
+    uint32_t uI = ROM.IK1302.instructions[command]; // читаем команду
     const usize uI_hi = uI >> 16;
 
 
@@ -942,7 +1139,10 @@ inline  usize __attribute__((always_inline))  IK1302_GoZero(void) {
 }
 
 inline  usize __attribute__((always_inline))  IK1303_GoZero(void) {
-    uint32_t uI = ROM.IK1303.instructions[(uint16_t)m_IK1303.R[36] + 16 * (uint16_t)m_IK1303.R[39]];
+    const u8 address = (u8) ((uint16_t) m_IK1303.R[36] + 16U * (uint16_t) m_IK1303.R[39]);
+    const u8 command = apply_rom_command_hooks(
+        core_61::RomChip::IK1303, address, m_IK1303.R, m_IK1303.ST);
+    uint32_t uI = ROM.IK1303.instructions[command];
     const usize uI_hi = uI >> 16;
 
     m_IK1303.pAND_AMK = &IK1303_AND_AMK[(uI & 0xFF) * 16 /* MUL9((uint8_t) uI) */];
@@ -958,7 +1158,10 @@ inline  usize __attribute__((always_inline))  IK1303_GoZero(void) {
 }
 
 inline  usize __attribute__((always_inline))  IK1306_GoZero(void) {
-    uint32_t uI = ROM.IK1306.instructions[m_IK1306.R[36] + 16 * m_IK1306.R[39]];
+    const u8 address = (u8) (m_IK1306.R[36] + 16U * m_IK1306.R[39]);
+    const u8 command = apply_rom_command_hooks(
+        core_61::RomChip::IK1306, address, m_IK1306.R, m_IK1306.ST);
+    uint32_t uI = ROM.IK1306.instructions[command];
     const usize uI_hi = uI >> 16;
 
     m_IK1306.pAND_AMK = &IK1306_AND_AMK[(uI & 0xFF) * 16/*MUL9((uint8_t) uI)*/];
@@ -982,27 +1185,27 @@ inline u32 __attribute__((always_inline)) next_external_random_seed(void) {
   return 1U + (u32) (random_avalanche(external_random_state) % 9999999ULL);
 }
 
-inline void __attribute__((always_inline)) inject_external_random_seed(void) {
+static void inject_external_random_seed(
+    core_61::RomCommandHookContext& context, void*) {
   if(!external_random_enabled) return;
-  if((m_IK1306.R[36] + 16U * m_IK1306.R[39]) != 0xA7U) return;
-
-  // Logical IK1306 ST word for 0.d1d2d3d4d5d6d7, in the chip's serial BCD
-  // layout.  The 999 exponent/service nibbles are part of the valid xi format.
+  // These ST indices represent xi only at the pre-A7 fetch hook. The following
+  // ROM command consumes them immediately; ST is not a persistent xi register.
+  // The 999 exponent/service nibbles are part of the valid serial BCD format.
   u32 seed = next_external_random_seed();
-  m_IK1306.ST[1] = 0;
-  m_IK1306.ST[4] = seed % 10U; seed /= 10U;  // d7
-  m_IK1306.ST[7] = seed % 10U; seed /= 10U;  // d6
-  m_IK1306.ST[10] = seed % 10U; seed /= 10U; // d5
-  m_IK1306.ST[13] = seed % 10U; seed /= 10U; // d4
-  m_IK1306.ST[16] = seed % 10U; seed /= 10U; // d3
-  m_IK1306.ST[19] = seed % 10U; seed /= 10U; // d2
-  m_IK1306.ST[22] = seed % 10U;               // d1
-  m_IK1306.ST[25] = 0;
-  m_IK1306.ST[28] = 9;
-  m_IK1306.ST[31] = 9;
-  m_IK1306.ST[34] = 9;
-  m_IK1306.ST[37] = 0;
-  m_IK1306.ST[40] = 0;
+  context.st[1] = 0;
+  context.st[4] = seed % 10U; seed /= 10U;  // d7
+  context.st[7] = seed % 10U; seed /= 10U;  // d6
+  context.st[10] = seed % 10U; seed /= 10U; // d5
+  context.st[13] = seed % 10U; seed /= 10U; // d4
+  context.st[16] = seed % 10U; seed /= 10U; // d3
+  context.st[19] = seed % 10U; seed /= 10U; // d2
+  context.st[22] = seed % 10U;               // d1
+  context.st[25] = 0;
+  context.st[28] = 9;
+  context.st[31] = 9;
+  context.st[34] = 9;
+  context.st[37] = 0;
+  context.st[40] = 0;
 }
 
 void  cycle(void) {
@@ -1011,8 +1214,6 @@ void  cycle(void) {
   const u8* active_end_ring_m = &ringM[core_61::ring_size()];
   for (int count = 1; count <= MAX_CYCLE; count++){
       signal_I = 0;
-
-      inject_external_random_seed();
 
       const usize IK1302_uI_hi = IK1302_GoZero();
 
@@ -1827,8 +2028,26 @@ void restore_context(void) {
 #endif // MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
 
 void configure_random_seed(bool enable, u64 seed_material) {
-  external_random_enabled = enable;
-  if(enable) external_random_state = random_avalanche(seed_material ^ 0xE7037ED1A0B428DBULL);
+  if(!enable) {
+    external_random_enabled = false;
+    if(random_rom_command_hook != INVALID_ROM_COMMAND_HOOK &&
+       remove_rom_command_hook(random_rom_command_hook, true)) {
+      random_rom_command_hook = INVALID_ROM_COMMAND_HOOK;
+    }
+    return;
+  }
+
+  if(random_rom_command_hook == INVALID_ROM_COMMAND_HOOK) {
+    random_rom_command_hook = add_rom_command_hook(
+        RomChip::IK1306, 0xA7U, &inject_external_random_seed, nullptr, true);
+  }
+  if(random_rom_command_hook == INVALID_ROM_COMMAND_HOOK) {
+    external_random_enabled = false;
+    return;
+  }
+
+  external_random_state = random_avalanche(seed_material ^ 0xE7037ED1A0B428DBULL);
+  external_random_enabled = true;
 }
 
 void update_random_seed(u64 seed_material) {
