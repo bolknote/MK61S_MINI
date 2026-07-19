@@ -43,12 +43,19 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Programming.pdf
 **Инструкция по работе с Терминалом:**  
 https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 
+**Часы RTC, настройка и синхронизация с компьютером:**
+https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
+
 **Технические форматы:**<br>
 [Формат внутреннего хранилища и USB FAT12](doc/src/MK61s-mini-Storage.md)
 
 [Формат растровых шрифтов FMK1](doc/src/MK61s-mini-FMK.md)
 
 [Генератор случайных чисел MK61/MK61s](doc/src/MK61s-mini-Random.md)
+
+[Команды USB-терминала](doc/src/MK61s-mini-Terminal.md)
+
+[Часы RTC](doc/src/MK61s-mini-RTC.md)
 
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 
