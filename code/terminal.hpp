@@ -1397,7 +1397,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                   total++;
                 }
               }
-              Serial.print(total); Serial.print(" of "); Serial.print(program_store::MAX_ENTRIES); Serial.println(" entries used.");
+              Serial.print(total); Serial.print(" files, ");
+              Serial.print(program_store::used_nodes()); Serial.print(" of ");
+              Serial.print(program_store::max_nodes());
+              Serial.println(" filesystem nodes used.");
           }
             break;
           case  CMD_FS_REMOVE: {

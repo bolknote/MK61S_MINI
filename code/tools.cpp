@@ -19,7 +19,7 @@
 #include "tinybasic.hpp"
 #ifdef SPI_FLASH
   #include <SPI.h>
-  #include <SPIFlash.h>
+  #include "spi_nor_flash.hpp"
 #endif
 #include "menu.hpp"
 #include "debug.h"
@@ -32,8 +32,6 @@ extern void reset_ext_program_state(void);
 
 const  class_LCD_Label  STORE_message(0, 0);
 const  class_LCD_Label  STORE_progress_message(0, 1);
-
-const u32 ERASE_SECTOR_TIMEOUT = 5000; // таймаут операции стирания сектора ППЗУ в ms
 
 static constexpr u8 MK61_STORE_REGISTER_F = 0x4F;
 static constexpr u8 MK61_LOAD_REGISTER_F  = 0x6F;
@@ -163,20 +161,20 @@ bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
 bool OpenStoredEntry(const program_store::Entry& entry) {
   switch(entry.type) {
     case program_store::ProgramType::MK61:
-      return m61_text::open_program(entry.name);
+      return m61_text::open_program(entry.id);
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
-      return FocalRunSucceeded(RunFocalProgram(entry.name));
+      return FocalRunSucceeded(RunFocalProgram(entry.id));
 #endif
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC:
-      return RunTinyBasicProgram(entry.name);
+      return RunTinyBasicProgram(entry.id);
 #endif
     case program_store::ProgramType::TEXT:
     case program_store::ProgramType::MK61_STATE:
-      return program_store_view_entry(entry.type, entry.name);
+      return program_store_view_entry(entry);
     case program_store::ProgramType::FONT:
-      return program_store_apply_font(entry.name);
+      return program_store_apply_font(entry);
   }
   return false;
 }
@@ -398,11 +396,18 @@ void  insert_cmd_in_program(usize into_step, usize opcode) {
   core_61::set_code_page(code_page);
 }
 
-SPIFlash  flash(PIN_SPIFLASH_CS);
+SpiNorFlash flash(PIN_SPIFLASH_CS);
 bool      flash_is_ok;
 
-static constexpr u32 SETTINGS_FLASH_SECTOR = (MAX_SLOT_FOR_PROGRAM + 2) * FLASH_SECTOR_SIZE;
 static constexpr u32 LEGACY_EEPROM_PAGE_SIZE = 8 * 1024;
+
+static u32 settings_flash_address(void) {
+  return program_store::settings_address();
+}
+
+static u16 settings_flash_size(void) {
+  return program_store::settings_size();
+}
 
 struct PersistentSettings {
   u8 grade;
@@ -425,7 +430,7 @@ static bool persistent_settings_loaded = false;
 static bool persistent_settings_sector_dirty = false;
 static bool persistent_settings_needs_save = false;
 static bool persistent_settings_write_blocked = false;
-static u32 persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+static u32 persistent_settings_next_address;
 
 static void reset_persistent_settings_cache(void) {
   persistent_settings.grade = 0xFF;
@@ -438,7 +443,7 @@ static void reset_persistent_settings_cache(void) {
   persistent_settings_sector_dirty = false;
   persistent_settings_needs_save = true;
   persistent_settings_write_blocked = false;
-  persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+  persistent_settings_next_address = settings_flash_address();
 }
 
 static void apply_settings_record(const settings_journal::RecordData& record) {
@@ -508,20 +513,22 @@ static void import_legacy_settings(void) {
 static void load_persistent_settings(void) {
   if(persistent_settings_loaded) return;
   persistent_settings_loaded = true;
-  persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+  const u32 settings_address = settings_flash_address();
+  const u16 settings_size = settings_flash_size();
+  persistent_settings_next_address = settings_address;
   persistent_settings_sector_dirty = false;
   persistent_settings_needs_save = false;
   persistent_settings_write_blocked = false;
 
-  if(!flash_is_ok) {
+  if(!flash_is_ok || !program_store::ready() || settings_size == 0) {
     import_legacy_settings();
     return;
   }
 
-  settings_journal::Scanner scanner(FLASH_SECTOR_SIZE);
+  settings_journal::Scanner scanner(settings_size);
   while(scanner.active()) {
     u8 record[settings_journal::RECORD_SIZE];
-    const u32 address = SETTINGS_FLASH_SECTOR + (u32) scanner.next_offset();
+    const u32 address = settings_address + (u32) scanner.next_offset();
     if(!flash.readByteArray(address, record, sizeof(record))) {
       // A transient read error must never trigger an erase of potentially
       // valid settings. Keep using defaults and block writes for this boot.
@@ -542,7 +549,7 @@ static void load_persistent_settings(void) {
   }
 
   persistent_settings_sector_dirty = scanner.needs_reclaim();
-  persistent_settings_next_address = SETTINGS_FLASH_SECTOR + (u32) scanner.next_offset();
+  persistent_settings_next_address = settings_address + (u32) scanner.next_offset();
   if(persistent_settings_sector_dirty) persistent_settings_needs_save = true;
 }
 
@@ -554,11 +561,14 @@ static bool write_persistent_settings(void) {
   if(!flash_is_ok || persistent_settings_write_blocked) return true;
   if(!persistent_settings_needs_save) return true;
 
-  const u32 end_address = SETTINGS_FLASH_SECTOR + FLASH_SECTOR_SIZE;
+  const u32 settings_address = settings_flash_address();
+  const u16 settings_size = settings_flash_size();
+  if(settings_address == 0 || settings_size == 0) return true;
+  const u32 end_address = settings_address + settings_size;
   if(persistent_settings_sector_dirty ||
      persistent_settings_next_address > end_address - settings_journal::RECORD_SIZE) {
-    if(!flash.eraseSector(SETTINGS_FLASH_SECTOR)) return false;
-    persistent_settings_next_address = SETTINGS_FLASH_SECTOR;
+    if(!program_store::erase_settings()) return false;
+    persistent_settings_next_address = settings_address;
     persistent_settings_sector_dirty = false;
   }
 
@@ -724,30 +734,15 @@ void store_grade_switch(AngleUnit angle_unit) {
 }
 
 bool erase_slot_old(usize nSlot) {
-  const isize segment_address = calc_address(nSlot);
-  if(segment_address < 0) return false;
-  
-  dbgln(SPIROM, "SPIFLASH: erase sector #", segment_address);
-  while (!flash.eraseSector(segment_address));
-  return true;
+  if(nSlot > MAX_SLOT_FOR_PROGRAM) return false;
+  char name[8];
+  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
+  return !program_store::exists(program_store::ProgramType::MK61, name) ||
+         program_store::remove(program_store::ProgramType::MK61, name);
 }
 
 bool erase_slot(usize nSlot) {
-  const isize segment_address = calc_address(nSlot);
-  if(segment_address < 0) return false;
-  
-  dbgln(SPIROM, "SPIFLASH: erase sector #", segment_address);
-  
-  const u32 TimeIsOut = millis() + ERASE_SECTOR_TIMEOUT; // Запоминаем время начала
-  while (!flash.eraseSector(segment_address)) {
-    if (millis() >= TimeIsOut) { // Проверяем превышение таймаута
-      dbgln(SPIROM, "SPIFLASH: erase sector timeout!");
-      return false;
-    }
-    // Возможна короткая пауза для снижения нагрузки на процессор
-    // HAL_Delay(1); // Раскомментировать при необходимости
-  }
-  return true;
+  return erase_slot_old(nSlot);
 }
 
 usize seek_program_END(u8* code_page) {
@@ -797,20 +792,30 @@ void init_external_flash(void) {
   // Инициализация SPI
   SPI.begin();
  
-  // Инициализация W25Q128
+  // JEDEC/SFDP discovery; unknown parts fall back to C5's boundary probe.
   flash_is_ok = flash.begin();
+  if(flash_is_ok) program_store::init();
   #ifdef DEBUG_SPIFLASH
     if(flash_is_ok) {
-      Serial.print("OK! size = "); Serial.print(flash.getCapacity()); Serial.println(" K");
+      Serial.print("JEDEC ID: 0x"); Serial.println(flash.getJEDECID(), HEX);
+      Serial.print("SFDP: "); Serial.println(flash.sfdpPresent() ? "yes" : "no");
+      Serial.print("declared upper bound: ");
+      Serial.print(flash.capacityProbeUpper()); Serial.println(" bytes");
+      if(program_store::ready()) {
+        Serial.print("measured C5 capacity: ");
+        Serial.print(flash.getCapacity()); Serial.println(" bytes");
+      } else {
+        Serial.println("C5 capacity detection failed");
+      }
     } else {
       Serial.println("ERROR!");
     }
   #endif
-  if(flash_is_ok) program_store::init();
 }
 
 u8 load_word(isize segment_address, isize offset) {
-  if(flash_is_ok) return flash.readByte(offset + segment_address);
+  (void) segment_address;
+  (void) offset;
 #if MK61_USE_ARDUINO_EEPROM_FALLBACK
   return EEPROM.read(offset);
 #else
@@ -819,30 +824,11 @@ u8 load_word(isize segment_address, isize offset) {
 }
 
 bool load_from(isize address) {
-  if(load_word(address, OFFSET_FLAG_OCCUPIED) != SLOT_OCCUPIED) {
-    dbgln(SPIROM, "SPIFLASH: SLOT IS EMPTY ", address, "Nothing to load! canceled!");
-    lcd.print(library_mk61::text(" is empty", " HET"));
-    sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
-    delay_with_sound_poll(1500);
-    return false; // error
-  }
-
-  dbgln(SPIROM, "SPIFLASH: read from address ", address);
-
-  u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-  for(usize i=0; i < core_61::MAX_PROGRAM_STEP; i++) {
-    u8 code = load_word(address, OFFSET_MK61_PROGRAMM + i);
-    if(i >= core_61::CLASSIC_PROGRAM_STEP && code == 0xFF) code = 0;
-    code_page[i] = code;
-  }
-
-  apply_program_memory_auto(&code_page[0], core_61::MAX_PROGRAM_STEP, false);
-
-  const usize program_steps = core_61::program_steps();
-  for(usize i=0; i < program_steps; i++){
-    MK61Emu_SetCode(core_61::get_ring_address(i), code_page[i]);
-  }
-  return true;
+  if(address < 0 || address % FLASH_SECTOR_SIZE != 0) return false;
+  char name[8];
+  snprintf(name, sizeof(name), "%u",
+           (unsigned) (address / FLASH_SECTOR_SIZE));
+  return m61_text::load_program(name);
 }
 
 bool Load(usize nSlot) {
@@ -866,21 +852,7 @@ bool Load(void) {
   if(address < 0) return false; // error
 
   const usize slot = (usize) (address / FLASH_SECTOR_SIZE);
-  if(Load(slot)) return true;
-
-  // Fallback for raw sectors written by older firmware revisions.
-  return load_from(address);
-}
-
-inline void store_word(isize segment_address, isize offset, u8 data) {
-    if(flash_is_ok) {
-      flash.writeByte(offset + segment_address, data);
-    }
-#if MK61_USE_ARDUINO_EEPROM_FALLBACK
-    else {
-      EEPROM.update(offset, data);
-    }
-#endif
+  return Load(slot);
 }
 
 inline bool check_empty_program(void) {
@@ -1037,7 +1009,7 @@ bool  EraseFlash(void) {
     lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase settings", "CTEP SETUP"));
   }
   bool settings_reset_ok = true;
-  if(flash_is_ok) settings_reset_ok = flash.eraseSector(SETTINGS_FLASH_SECTOR);
+  if(flash_is_ok) settings_reset_ok = program_store::erase_settings();
   reset_persistent_settings_cache();
   if(settings_reset_ok) write_persistent_settings();
   library_mk61::load_settings_state();

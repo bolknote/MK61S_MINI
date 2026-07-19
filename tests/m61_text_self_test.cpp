@@ -16,6 +16,7 @@ u8 ringM[SIZE_RING_M] = {};
 struct StoredScript {
   std::string name;
   std::string source;
+  u16 parent_id;
 };
 
 static std::vector<StoredScript> scripts;
@@ -35,7 +36,30 @@ bool entry(ProgramType type, int index, Entry& out) {
   std::strncpy(out.name, scripts[(usize) index].name.c_str(), NAME_SIZE - 1);
   out.name[NAME_SIZE - 1] = 0;
   out.data_len = (u16) scripts[(usize) index].source.size();
+  out.id = (u16) index;
+  out.parent_id = scripts[(usize) index].parent_id;
+  out.kind = NodeKind::FILE;
   return true;
+}
+
+bool entry_by_id(u16 id, Entry& out) {
+  return entry(ProgramType::MK61, id, out);
+}
+
+int child_count(u16 parent_id) {
+  int result = 0;
+  for(const StoredScript& script : scripts) {
+    if(script.parent_id == parent_id) result++;
+  }
+  return result;
+}
+
+bool child(u16 parent_id, int index, Entry& out) {
+  for(usize i = 0; i < scripts.size(); i++) {
+    if(scripts[i].parent_id != parent_id) continue;
+    if(index-- == 0) return entry(ProgramType::MK61, (int) i, out);
+  }
+  return false;
 }
 
 bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 len, u16* out_len) {
@@ -52,6 +76,19 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
     return true;
   }
   return false;
+}
+
+bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
+  range_reads++;
+  if(out_len != nullptr) *out_len = 0;
+  if(id >= scripts.size()) return false;
+  const StoredScript& script = scripts[id];
+  if(offset >= script.source.size()) return true;
+  usize available = script.source.size() - offset;
+  if(available > len) available = len;
+  std::memcpy(data, script.source.data() + offset, available);
+  if(out_len != nullptr) *out_len = (u16) available;
+  return true;
 }
 
 } // namespace program_store
@@ -106,8 +143,9 @@ static void reset_host(void) {
   m_IK1302.comma = 0;
 }
 
-static void add_script(const char* name, const std::string& source) {
-  scripts.push_back({name, source});
+static void add_script(const char* name, const std::string& source,
+                       u16 parent_id = program_store::ROOT_ID) {
+  scripts.push_back({name, source, parent_id});
 }
 
 static m61_text::Error require_error(void) {
@@ -219,6 +257,17 @@ static void test_nested_script_returns_to_parent_and_depth_is_bounded(void) {
   assert(!m61_text::active());
 }
 
+static void test_explicit_id_disambiguates_directory_names(void) {
+  reset_host();
+  add_script("SAME", "bad\n", 10);
+  add_script("SAME", "ok\n", 20);
+  assert(m61_text::load_program((u16) 1));
+  assert(executed_commands == 1);
+  assert(!m61_text::active());
+  m61_text::Error error = {};
+  assert(!m61_text::last_error(error));
+}
+
 int main(void) {
   test_command_failure_reports_script_and_line();
   test_duplicate_and_oversized_labels_fail_before_execution();
@@ -227,6 +276,7 @@ int main(void) {
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
   test_nested_script_returns_to_parent_and_depth_is_bounded();
+  test_explicit_id_disambiguates_directory_names();
   std::printf("m61_text_self_test: ok\n");
   return 0;
 }

@@ -3,6 +3,8 @@
 
 #include "rust_types.h"
 
+#define PROGRAM_STORE_HOST_TEST 1
+
 // Suppress the firmware-wide tools.hpp dependency. program_store only needs
 // these layout constants and the flash health flag from that header.
 #ifndef TOOLS

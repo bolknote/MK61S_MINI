@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "SPIFlash.h"
-#include "program_store.hpp"
 #include "ledcontrol.h"
+#include "program_store.hpp"
 
 SPIFlash flash;
 bool flash_is_ok = true;
@@ -19,589 +19,548 @@ void blink_stop(void) {}
 bool pattern_start(const PatternStep*, usize) { return true; }
 void control(void) {}
 void control(t_time_ms) {}
+} // namespace led
+
+namespace {
+
+using program_store::Entry;
+using program_store::NodeKind;
+using program_store::ProgramType;
+
+static void fresh(u32 capacity = SPIFlash::DEFAULT_CAPACITY) {
+  SPIFlash::reset(capacity);
+  program_store::init();
+  assert(program_store::ready());
 }
 
-static constexpr uint32_t SECTOR_SIZE = 4096;
-static constexpr uint32_t STORE_END = 100 * SECTOR_SIZE;
-static constexpr uint32_t PRIMARY_CATALOG = 100 * SECTOR_SIZE;
-static constexpr uint32_t MIRROR_CATALOG = 230 * SECTOR_SIZE;
-static constexpr uint32_t VFAT_STAGE_BASE = 102 * SECTOR_SIZE;
-
-static u16 crc16_update(u16 crc, u8 value) {
-  crc ^= (u16) value << 8;
-  for(u8 i = 0; i < 8; i++) crc = (crc & 0x8000) ? (u16) ((crc << 1) ^ 0x1021) : (u16) (crc << 1);
-  return crc;
+static void expect_text(u16 id, const u8* expected, u16 expected_len) {
+  u8 actual[program_store::MAX_MK61_TEXT_SIZE] = {};
+  u16 actual_len = 0;
+  assert(program_store::read_id(id, actual, sizeof(actual), &actual_len));
+  assert(actual_len == expected_len);
+  assert(memcmp(actual, expected, expected_len) == 0);
 }
 
-static u16 catalog_delta_crc(const u8* record) {
-  u16 crc = 0xFFFF;
-  crc = crc16_update(crc, record[0]);
-  crc = crc16_update(crc, record[1]);
-  for(u8 i = 3; i < 64; i++) {
-    if(i != 8 && i != 9) crc = crc16_update(crc, record[i]);
+static void expect_text(const char* name, const char* expected) {
+  u8 actual[128] = {};
+  u16 actual_len = 0;
+  assert(program_store::read(ProgramType::TEXT, name, actual, sizeof(actual),
+                             &actual_len));
+  assert(actual_len == strlen(expected));
+  assert(memcmp(actual, expected, actual_len) == 0);
+}
+
+static Entry by_id(u16 id) {
+  Entry result = {};
+  assert(program_store::entry_by_id(id, result));
+  return result;
+}
+
+static void test_dynamic_geometry_and_lazy_format(void) {
+  const u32 capacities[] = {
+    128U * 1024U, 256U * 1024U, 512U * 1024U,
+    1024U * 1024U,
+    2U * 1024U * 1024U, 8U * 1024U * 1024U,
+    16U * 1024U * 1024U
+  };
+  u16 previous_nodes = 0;
+  for(u32 capacity : capacities) {
+    fresh(capacity);
+    const storage_geometry::Geometry& geometry = program_store::geometry();
+    assert(geometry.capacity_bytes == capacity);
+    assert(geometry.physical_sectors == capacity / SPIFlash::SECTOR_SIZE);
+    assert(geometry.settings_sector + 1 == geometry.physical_sectors);
+    assert(program_store::settings_address() ==
+           geometry.settings_sector * SPIFlash::SECTOR_SIZE);
+    assert(program_store::max_nodes() == geometry.max_nodes);
+    assert(geometry.max_nodes >= previous_nodes);
+    assert(geometry.max_nodes <= storage_geometry::FAT12_MAX_DATA_CLUSTERS);
+    assert(SPIFlash::sectorEraseCount(geometry.data_first_sector) == 0);
+    previous_nodes = geometry.max_nodes;
   }
-  return crc;
+  assert(previous_nodes > 3000);
 }
 
-static void expect_data(const char* name, const char* expected) {
-  uint8_t out[64] = {};
-  u16 len = 0;
-  assert(program_store::read(program_store::ProgramType::TEXT, name, out, sizeof(out), &len));
-  assert(len == strlen(expected));
-  assert(memcmp(out, expected, len) == 0);
-}
+static void test_roundtrip_ranges_and_noop(void) {
+  fresh();
+  u8 source[program_store::MAX_MK61_TEXT_SIZE];
+  for(u16 i = 0; i < sizeof(source); i++) source[i] = (u8) (i * 37U + 11U);
 
-static void test_catalog_generations_survive_reinit(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(program_store::ROOT_ID, 71,
+                                   ProgramType::TEXT, "payload", source,
+                                   sizeof(source), &id));
+  assert(id == 71);
+  expect_text(id, source, sizeof(source));
 
-  assert(program_store::write(program_store::ProgramType::TEXT, "ALPHA", (const u8*) "one", 3));
-  program_store::init();
-  expect_data("ALPHA", "one");
+  u8 range[337] = {};
+  u16 range_len = 0;
+  assert(program_store::read_range_id(id, 419, range, sizeof(range),
+                                      &range_len));
+  assert(range_len == sizeof(range));
+  assert(memcmp(range, source + 419, sizeof(range)) == 0);
 
-  assert(program_store::write(program_store::ProgramType::TEXT, "BETA", (const u8*) "two", 3));
-  program_store::init();
-  expect_data("ALPHA", "one");
-  expect_data("BETA", "two");
-
-  assert(program_store::write(program_store::ProgramType::TEXT, "GAMMA", (const u8*) "three", 5));
-  program_store::init();
-  expect_data("GAMMA", "three");
-}
-
-static void test_failed_catalog_keeps_previous_snapshot(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  assert(program_store::write(program_store::ProgramType::TEXT, "ALPHA", (const u8*) "one", 3));
-
-  // Fail whichever alternating catalog copy BETA targets. The last valid
-  // ALPHA snapshot must remain bootable.
-  SPIFlash::failRange(PRIMARY_CATALOG, MIRROR_CATALOG + SECTOR_SIZE);
-  assert(!program_store::write(program_store::ProgramType::TEXT, "BETA", (const u8*) "two", 3));
-  SPIFlash::clearFailure();
-
-  program_store::init();
-  expect_data("ALPHA", "one");
-  assert(!program_store::exists(program_store::ProgramType::TEXT, "BETA"));
-}
-
-static void test_failed_payload_is_reported(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-
-  SPIFlash::failRange(0, STORE_END);
-  assert(!program_store::write(program_store::ProgramType::TEXT, "BROKEN", (const u8*) "data", 4));
-  SPIFlash::clearFailure();
-
-  program_store::init();
-  assert(!program_store::exists(program_store::ProgramType::TEXT, "BROKEN"));
-}
-
-static void test_corrupt_newest_catalog_delta_rolls_back(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  assert(program_store::write(program_store::ProgramType::TEXT, "ALPHA", (const u8*) "one", 3));
-  assert(program_store::write(program_store::ProgramType::TEXT, "BETA", (const u8*) "two", 3));
-
-  // Corrupt only BETA's committed metadata delta. Replay must stop at the
-  // previous valid boundary, preserving ALPHA as the durable state.
-  static constexpr uint32_t FIRST_DELTA = PRIMARY_CATALOG + 960;
-  SPIFlash::corrupt(FIRST_DELTA + 64 + 8, 0x00);
-  program_store::init();
-  expect_data("ALPHA", "one");
-  assert(!program_store::exists(program_store::ProgramType::TEXT, "BETA"));
-
-  // The rolled-back snapshot points before BETA's orphaned data record. Load
-  // quarantines that physical tail, so the first retry uses a clean sector.
-  assert(program_store::write(program_store::ProgramType::TEXT, "DELTA", (const u8*) "four", 4));
-  program_store::init();
-  expect_data("DELTA", "four");
-}
-
-static void test_legacy_catalog_is_migratable(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  assert(program_store::write(program_store::ProgramType::TEXT, "ALPHA", (const u8*) "one", 3));
-
-  // Fill the delta area so the current state is compacted into the mirror as
-  // a regular compact C4 checkpoint, then expand its references into C1.
-  for(u8 i = 0; i < 49; i++) {
-    char name[16];
-    snprintf(name, sizeof(name), "AUX%02u", (unsigned) i);
-    assert(program_store::write(program_store::ProgramType::TEXT, name, (const u8*) "x", 1));
-  }
-
-  // Convert the newest C4 mirror checkpoint to the former C1/9-byte header
-  // and legacy 25-byte entries. Names are recovered from the data records,
-  // exactly as the C4 loader does.
-  static u8 current[SECTOR_SIZE];
-  static u8 legacy[SECTOR_SIZE];
-  assert(flash.readByteArray(MIRROR_CATALOG, current, sizeof(current)));
-  memset(legacy, 0xFF, sizeof(legacy));
-  const u8 entry_count = current[4];
-  static constexpr u16 sector_info_len = 100 * 9;
-  static constexpr u16 compact_entry_len = 9;
-  static constexpr u16 legacy_entry_len = 25;
-  const u16 legacy_len = (u16) (9 + sector_info_len + entry_count * legacy_entry_len);
-  legacy[0] = 'C';
-  legacy[1] = '1';
-  legacy[2] = 0x7F;
-  legacy[3] = 100;
-  legacy[4] = entry_count;
-  legacy[5] = (u8) (legacy_len & 0xFF);
-  legacy[6] = (u8) (legacy_len >> 8);
-  memcpy(legacy + 9, current + 13, sector_info_len);
-  for(u8 i = 0; i < entry_count; i++) {
-    const u8* compact = current + 13 + sector_info_len + (u16) i * compact_entry_len;
-    u8* expanded = legacy + 9 + sector_info_len + (u16) i * legacy_entry_len;
-    memcpy(expanded, compact, compact_entry_len);
-    memset(expanded + compact_entry_len, 0, 16);
-    const u8 name_len = compact[1];
-    const u8 sector = compact[2];
-    const u16 offset = (u16) (compact[3] | ((u16) compact[4] << 8));
-    assert(name_len > 0 && name_len < 16);
-    assert(flash.readByteArray((u32) sector * SECTOR_SIZE + offset + 8,
-                               expanded + compact_entry_len, name_len));
-  }
-
-  u16 crc = 0xFFFF;
-  crc = crc16_update(crc, legacy[0]);
-  crc = crc16_update(crc, legacy[1]);
-  for(u8 i = 3; i <= 6; i++) crc = crc16_update(crc, legacy[i]);
-  for(u16 i = 9; i < legacy_len; i++) crc = crc16_update(crc, legacy[i]);
-  legacy[7] = (u8) (crc & 0xFF);
-  legacy[8] = (u8) (crc >> 8);
-
-  assert(flash.eraseSector(PRIMARY_CATALOG));
-  assert(flash.eraseSector(MIRROR_CATALOG));
-  assert(flash.writeByteArray(PRIMARY_CATALOG, legacy, legacy_len));
-
-  program_store::init();
-  expect_data("ALPHA", "one");
-  assert(program_store::write(program_store::ProgramType::TEXT, "BETA", (const u8*) "two", 3));
-  program_store::init();
-  expect_data("BETA", "two");
-}
-
-static void test_c3_catalog_and_wal_are_migratable(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  assert(program_store::write(program_store::ProgramType::TEXT, "ALPHA",
-                              (const u8*) "one", 3));
-  for(u8 i = 0; i < 49; i++) {
-    char name[16];
-    snprintf(name, sizeof(name), "OLD%02u", (unsigned) i);
-    assert(program_store::write(program_store::ProgramType::TEXT, name,
-                                (const u8*) "x", 1));
-  }
-  // The 50-entry C4 checkpoint is now in the mirror. BETA is represented by
-  // its first WAL record, matching a normally used pre-upgrade C3 catalog.
-  assert(program_store::write(program_store::ProgramType::TEXT, "BETA",
-                              (const u8*) "two", 3));
-
-  static u8 current[SECTOR_SIZE];
-  static u8 c3[SECTOR_SIZE];
-  assert(flash.readByteArray(MIRROR_CATALOG, current, sizeof(current)));
-  memset(c3, 0xFF, sizeof(c3));
-
-  static constexpr u16 sector_info_len = 100 * 9;
-  static constexpr u16 compact_entry_len = 9;
-  static constexpr u16 legacy_entry_len = 25;
-  static constexpr u16 delta_len = 64;
-  const u8 entry_count = current[4];
-  assert(entry_count == 50);
-  const u16 compact_snapshot_len =
-      (u16) (13 + sector_info_len + entry_count * compact_entry_len);
-  const u16 compact_delta =
-      (u16) ((compact_snapshot_len + delta_len - 1) / delta_len * delta_len);
-  const u16 c3_snapshot_len =
-      (u16) (13 + sector_info_len + entry_count * legacy_entry_len);
-  const u16 c3_delta =
-      (u16) ((c3_snapshot_len + delta_len - 1) / delta_len * delta_len);
-
-  memcpy(c3, current, 13 + sector_info_len);
-  c3[1] = '3';
-  c3[5] = (u8) (c3_snapshot_len & 0xFF);
-  c3[6] = (u8) (c3_snapshot_len >> 8);
-  for(u8 i = 0; i < entry_count; i++) {
-    const u8* compact = current + 13 + sector_info_len +
-                        (u16) i * compact_entry_len;
-    u8* expanded = c3 + 13 + sector_info_len + (u16) i * legacy_entry_len;
-    memcpy(expanded, compact, compact_entry_len);
-    memset(expanded + compact_entry_len, 0, 16);
-    const u8 name_len = compact[1];
-    const u8 sector = compact[2];
-    const u16 offset = (u16) (compact[3] | ((u16) compact[4] << 8));
-    assert(flash.readByteArray((u32) sector * SECTOR_SIZE + offset + 8,
-                               expanded + compact_entry_len, name_len));
-  }
-
-  u16 snapshot_crc = 0xFFFF;
-  snapshot_crc = crc16_update(snapshot_crc, c3[0]);
-  snapshot_crc = crc16_update(snapshot_crc, c3[1]);
-  for(u8 i = 3; i < 13; i++) {
-    if(i != 7 && i != 8) snapshot_crc = crc16_update(snapshot_crc, c3[i]);
-  }
-  for(u16 i = 13; i < c3_snapshot_len; i++) {
-    snapshot_crc = crc16_update(snapshot_crc, c3[i]);
-  }
-  c3[7] = (u8) (snapshot_crc & 0xFF);
-  c3[8] = (u8) (snapshot_crc >> 8);
-
-  memcpy(c3 + c3_delta, current + compact_delta, delta_len);
-  c3[c3_delta + 1] = '3';
-  const u16 delta_crc = catalog_delta_crc(c3 + c3_delta);
-  c3[c3_delta + 8] = (u8) (delta_crc & 0xFF);
-  c3[c3_delta + 9] = (u8) (delta_crc >> 8);
-
-  assert(flash.eraseSector(PRIMARY_CATALOG));
-  assert(flash.eraseSector(MIRROR_CATALOG));
-  assert(flash.writeByteArray(PRIMARY_CATALOG, c3, c3_delta + delta_len));
-
-  program_store::init();
-  expect_data("ALPHA", "one");
-  expect_data("BETA", "two");
-  // The first post-upgrade mutation checkpoints directly to C4.
-  assert(program_store::write(program_store::ProgramType::TEXT, "GAMMA",
-                              (const u8*) "three", 5));
-  program_store::init();
-  expect_data("GAMMA", "three");
-}
-
-static void test_font_type_survives_catalog_reload(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  const u8 font[] = {'F', 'M', 'K', '1', 0x42};
-  assert(program_store::write(program_store::ProgramType::FONT, "PIXEL", font, sizeof(font)));
-
-  program_store::init();
-  assert(program_store::count(program_store::ProgramType::FONT) == 1);
-  u8 stored[16];
-  u16 len = 0;
-  assert(program_store::read(program_store::ProgramType::FONT, "PIXEL", stored, sizeof(stored), &len));
-  assert(len == sizeof(font));
-  assert(memcmp(stored, font, len) == 0);
-}
-
-static void test_expanded_entry_quota_survives_catalog_reload(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-
-  for(usize i = 0; i < program_store::MAX_ENTRIES; i++) {
-    char name[16];
-    snprintf(name, sizeof(name), "Q%03u", (unsigned) i);
-    const u8 payload = (u8) i;
-    assert(program_store::write(program_store::ProgramType::TEXT, name,
-                                &payload, sizeof(payload)));
-  }
-  assert(program_store::total_count() == (int) program_store::MAX_ENTRIES);
-  const u8 extra = 0xEE;
-  assert(!program_store::write(program_store::ProgramType::TEXT, "OVERFLOW",
-                               &extra, sizeof(extra)));
-
-  program_store::init();
-  assert(program_store::total_count() == (int) program_store::MAX_ENTRIES);
-  u8 first = 0xFF;
-  u16 first_len = 0;
-  assert(program_store::read(program_store::ProgramType::TEXT, "Q000",
-                             &first, sizeof(first), &first_len));
-  assert(first_len == 1 && first == 0);
-  u8 last = 0;
-  u16 last_len = 0;
-  assert(program_store::read(program_store::ProgramType::TEXT, "Q127",
-                             &last, sizeof(last), &last_len));
-  assert(last_len == 1 && last == 127);
-}
-
-static void test_lzss_is_transparent_and_usb_stays_raw(void) {
-  static u8 source[program_store::MAX_MK61_TEXT_SIZE];
-  static u8 recovered[program_store::MAX_MK61_TEXT_SIZE];
-  for(u16 i = 0; i < sizeof(source); i++) {
-    static const char line[] = "10 PRINT \"HELLO\"\n";
-    source[i] = (u8) line[i % (sizeof(line) - 1)];
-  }
-
-  SPIFlash::reset();
-  assert(program_store::format());
-  assert(program_store::write(program_store::ProgramType::FOCAL, "LARGE",
-                              source, sizeof(source)));
-  // First record begins immediately after the seven-byte sector header.
-  assert(flash.readByte(8) == (u8) ('1' | 0x80));
-
-  u16 len = 0;
-  assert(program_store::read(program_store::ProgramType::FOCAL, "LARGE",
-                             recovered, sizeof(recovered), &len));
-  assert(len == sizeof(source));
-  assert(memcmp(recovered, source, sizeof(source)) == 0);
-
-  memset(recovered, 0, sizeof(recovered));
-  assert(program_store::read_range(program_store::ProgramType::FOCAL, "LARGE",
-                                   437, recovered, 733, &len));
-  assert(len == 733);
-  assert(memcmp(recovered, source + 437, len) == 0);
-
-  program_store::init();
-  memset(recovered, 0, sizeof(recovered));
-  assert(program_store::read(program_store::ProgramType::FOCAL, "LARGE",
-                             recovered, sizeof(recovered), &len));
-  assert(len == sizeof(source));
-  assert(memcmp(recovered, source, sizeof(source)) == 0);
-
-  SPIFlash::reset();
-  assert(program_store::format());
-  assert(program_store::write_from_usb(program_store::ProgramType::FOCAL, "USBRAW",
-                                       source, sizeof(source)));
-  assert(flash.readByte(8) == '1');
-  assert(program_store::read(program_store::ProgramType::FOCAL, "USBRAW",
-                             recovered, sizeof(recovered), &len));
-  assert(len == sizeof(source));
-  assert(memcmp(recovered, source, sizeof(source)) == 0);
-
-  SPIFlash::reset();
-  assert(program_store::format());
-  u32 random = 0x91E10DA5;
-  for(u16 i = 0; i < sizeof(source); i++) {
-    random ^= random << 13;
-    random ^= random >> 17;
-    random ^= random << 5;
-    source[i] = (u8) random;
-  }
-  // An incompressible file at the full filesystem quota remains valid and raw.
-  assert(program_store::write(program_store::ProgramType::TINYBASIC, "FULLRAW",
-                              source, sizeof(source)));
-  assert(flash.readByte(8) == '2');
-
-  SPIFlash::reset();
-  assert(program_store::format());
-  memset(source, 0x55, sizeof(source));
-  assert(program_store::write(program_store::ProgramType::FONT, "RAWFONT",
-                              source, program_store::MAX_FONT_SIZE));
-  assert(flash.readByte(8) == '3');
-}
-
-static void test_gc_copies_compressed_records_without_expanding_them(void) {
-  static u8 compressed[program_store::MAX_MK61_TEXT_SIZE];
-  static u8 churn[program_store::MAX_MK61_TEXT_SIZE];
-  static u8 recovered[program_store::MAX_MK61_TEXT_SIZE];
-  memset(compressed, 'A', sizeof(compressed));
-  memset(churn, 0xC3, sizeof(churn));
-
-  SPIFlash::reset();
-  assert(program_store::format());
-  assert(program_store::write(program_store::ProgramType::FOCAL, "KEEP",
-                              compressed, sizeof(compressed)));
-  for(u16 generation = 0; generation < 210; generation++) {
-    churn[0] = (u8) generation;
-    churn[1] = (u8) (generation >> 8);
-    assert(program_store::write_from_usb(program_store::ProgramType::TEXT, "CHURN",
-                                         churn, sizeof(churn)));
-  }
-
-  program_store::init();
-  u16 len = 0;
-  assert(program_store::read(program_store::ProgramType::FOCAL, "KEEP",
-                             recovered, sizeof(recovered), &len));
-  assert(len == sizeof(compressed));
-  assert(memcmp(recovered, compressed, sizeof(compressed)) == 0);
-}
-
-static void test_vfat_stage_recovers_latest_committed_sector(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-
-  u8 first[512];
-  memset(first, 0x31, sizeof(first));
-  u8 latest[512];
-  memset(latest, 0x72, sizeof(latest));
-  assert(program_store::vfat_stage_write(2, first));
-  assert(program_store::vfat_stage_write(2, latest));
-
-  program_store::init();
-  assert(program_store::vfat_stage_exists(2));
-  u8 recovered[512];
-  assert(program_store::vfat_stage_read(2, recovered));
-  assert(memcmp(recovered, latest, sizeof(latest)) == 0);
-
-  program_store::vfat_stage_forget(2, 1);
-  program_store::init();
-  assert(!program_store::vfat_stage_exists(2));
-}
-
-static void test_vfat_stage_reclaims_dead_segments(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-
-  u8 pinned[512];
-  memset(pinned, 0xA5, sizeof(pinned));
-  assert(program_store::vfat_stage_write(2, pinned));
-
-  u8 changing[512];
-  for(u16 generation = 0; generation < 1200; generation++) {
-    memset(changing, (u8) generation, sizeof(changing));
-    assert(program_store::vfat_stage_write(3, changing));
-  }
-
-  program_store::init();
-  u8 recovered[512];
-  assert(program_store::vfat_stage_read(2, recovered));
-  assert(memcmp(recovered, pinned, sizeof(pinned)) == 0);
-  assert(program_store::vfat_stage_read(3, recovered));
-  assert(recovered[0] == (u8) 1199);
-}
-
-static void test_catalog_wal_amortizes_flash_erases(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  const uint32_t erases_after_format = SPIFlash::eraseCount();
-  const uint64_t bytes_after_format = SPIFlash::programmedBytes();
-
-  for(u8 i = 0; i < 10; i++) {
-    char name[16];
-    snprintf(name, sizeof(name), "FAST%02u", (unsigned) i);
-    const u8 payload = (u8) (0x80 + i);
-    assert(program_store::write(program_store::ProgramType::TEXT, name, &payload, 1));
-  }
-
-  // Ten mutations fit in aligned 64-byte WAL records: no catalog sector is
-  // erased and metadata traffic remains far below ten full snapshots.
-  assert(SPIFlash::eraseCount() == erases_after_format);
-  assert(SPIFlash::programmedBytes() - bytes_after_format < 2048);
-  program_store::init();
-  assert(program_store::exists(program_store::ProgramType::TEXT, "FAST00"));
-  assert(program_store::exists(program_store::ProgramType::TEXT, "FAST09"));
-}
-
-static void test_identical_write_is_flash_noop(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  const u8 payload[] = {1, 2, 3, 4, 5};
-  assert(program_store::write(program_store::ProgramType::TEXT, "SAME", payload, sizeof(payload)));
-  const uint32_t erases = SPIFlash::eraseCount();
-  const uint64_t programmed = SPIFlash::programmedBytes();
-  assert(program_store::write(program_store::ProgramType::TEXT, "SAME", payload, sizeof(payload)));
+  const u32 erases = SPIFlash::eraseCount();
+  const u64 programmed = SPIFlash::programmedBytes();
+  assert(program_store::write_file(program_store::ROOT_ID, id,
+                                   ProgramType::TEXT, "payload", source,
+                                   sizeof(source), &id));
   assert(SPIFlash::eraseCount() == erases);
   assert(SPIFlash::programmedBytes() == programmed);
-}
 
-static void test_format_invalidates_recoverable_stage_data(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  u8 staged[512];
-  memset(staged, 0xCC, sizeof(staged));
-  assert(program_store::vfat_stage_write(2, staged));
-  assert(program_store::format());
   program_store::init();
-  assert(!program_store::vfat_stage_exists(2));
+  assert(program_store::ready());
+  expect_text(id, source, sizeof(source));
 }
 
-static void test_partial_stage_tail_preserves_prior_records(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-  u8 first[512];
-  memset(first, 0x41, sizeof(first));
-  u8 second[512];
-  memset(second, 0x52, sizeof(second));
-  assert(program_store::vfat_stage_write(2, first));
+static void test_arbitrary_nested_directories(void) {
+  fresh();
+  u16 projects = 0;
+  u16 archive = 0;
+  u16 nested = 0;
+  assert(program_store::create_directory(program_store::ROOT_ID, "Projects",
+                                         40, &projects));
+  assert(program_store::create_directory(program_store::ROOT_ID, "_Archive",
+                                         41, &archive));
+  assert(program_store::create_directory(projects, "2026.07", 42, &nested));
+  assert(projects == 40 && archive == 41 && nested == 42);
 
-  // Record 1 payload is page-aligned at stage_base + 2 * 512.
-  SPIFlash::failRange(VFAT_STAGE_BASE + 1024, VFAT_STAGE_BASE + 1536);
-  assert(!program_store::vfat_stage_write(3, second));
-  SPIFlash::clearFailure();
+  const u8 first[] = {1, 2, 3};
+  const u8 second[] = {9, 8, 7, 6};
+  u16 first_id = 0;
+  u16 second_id = 0;
+  assert(program_store::write_file(nested, 43, ProgramType::MK61, "demo",
+                                   first, sizeof(first), &first_id));
+  assert(program_store::write_file(archive, 44, ProgramType::MK61, "demo",
+                                   second, sizeof(second), &second_id));
+  assert(first_id == 43 && second_id == 44);
+  expect_text(first_id, first, sizeof(first));
+  expect_text(second_id, second, sizeof(second));
 
-  u8 out[512];
-  assert(program_store::vfat_stage_read(2, out));
-  assert(memcmp(out, first, sizeof(first)) == 0);
-  assert(program_store::vfat_stage_write(3, second));
+  Entry directory = by_id(nested);
+  assert(directory.kind == NodeKind::DIRECTORY);
+  assert(directory.parent_id == projects);
+  assert(strcmp(directory.name, "2026.07") == 0);
+  assert(program_store::child_count(program_store::ROOT_ID) == 2);
+  assert(program_store::child_count(projects) == 1);
+  assert(program_store::child_count(nested) == 1);
+
+  assert(!program_store::move_rename(projects, nested, "cycle"));
+  assert(program_store::move_rename(first_id, archive, "moved demo"));
+  Entry moved = by_id(first_id);
+  assert(moved.id == first_id && moved.parent_id == archive);
+  assert(strcmp(moved.name, "moved demo") == 0);
+  expect_text(first_id, first, sizeof(first));
+
+  assert(!program_store::remove_id(archive));
+  assert(program_store::remove_id(nested));
+  assert(program_store::remove_id(projects));
+  assert(program_store::remove_id(first_id));
+  assert(program_store::remove_id(second_id));
+  assert(program_store::remove_id(archive));
+  assert(program_store::total_count() == 0);
+
   program_store::init();
-  assert(program_store::vfat_stage_read(2, out));
-  assert(memcmp(out, first, sizeof(first)) == 0);
-  assert(program_store::vfat_stage_read(3, out));
-  assert(memcmp(out, second, sizeof(second)) == 0);
+  assert(program_store::total_count() == 0);
 }
 
-static void test_power_cut_during_wal_update_is_atomic(void) {
+static void test_directory_depth_limit_includes_moved_subtrees(void) {
+  fresh();
+  u16 subtree = program_store::INVALID_ID;
+  u16 leaf = program_store::INVALID_ID;
+  assert(program_store::create_directory(program_store::ROOT_ID, "subtree",
+                                         program_store::INVALID_ID, &subtree));
+  assert(program_store::create_directory(subtree, "leaf",
+                                         program_store::INVALID_ID, &leaf));
+
+  u16 parent = program_store::ROOT_ID;
+  u16 chain[program_store::MAX_DIRECTORY_DEPTH - 1] = {};
+  for(u8 depth = 0; depth < sizeof(chain) / sizeof(chain[0]); depth++) {
+    char name[8];
+    snprintf(name, sizeof(name), "d%02u", (unsigned) depth + 1);
+    assert(program_store::create_directory(parent, name,
+                                           program_store::INVALID_ID,
+                                           &chain[depth]));
+    parent = chain[depth];
+  }
+
+  // The subtree has height one.  Placing its root at depth 32 would put its
+  // leaf at depth 33 and must therefore fail atomically.
+  assert(!program_store::move_rename(subtree, chain[30], "too deep"));
+  assert(by_id(subtree).parent_id == program_store::ROOT_ID);
+  assert(by_id(leaf).parent_id == subtree);
+
+  // Depths 31 and 32 are representable by the FAT walker.
+  assert(program_store::move_rename(subtree, chain[29], "fits"));
+  assert(by_id(subtree).parent_id == chain[29]);
+  assert(by_id(leaf).parent_id == subtree);
+  assert(program_store::move_rename(leaf, subtree, "renamed leaf"));
+
+  u16 rejected = program_store::INVALID_ID;
+  assert(!program_store::create_directory(leaf, "level 33",
+                                          program_store::INVALID_ID,
+                                          &rejected));
+  assert(rejected == program_store::INVALID_ID);
+}
+
+static void test_names_and_exact_preferred_ids(void) {
+  fresh();
+  const char max_name[] = "1234567890123456789012345678901";
+  static_assert(sizeof(max_name) == program_store::NAME_SIZE,
+                "fixture must exercise the 31-byte C5 name limit");
+  u16 id = 0;
+  assert(program_store::create_directory(program_store::ROOT_ID, max_name,
+                                         123, &id));
+  assert(id == 123);
+  assert(strcmp(by_id(id).name, max_name) == 0);
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+      "12345678901234567890123456789012", 124, NULL));
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                          "bad:name", 124, NULL));
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                          "trailing.", 124, NULL));
+  const char invalid_utf8[] = {(char) 0xC0, (char) 0xAF, 0};
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                          invalid_utf8, 124, NULL));
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                          "CON", 124, NULL));
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                          "lpt9.log", 124, NULL));
+
+  u16 case_id = 0;
+  assert(program_store::create_directory(program_store::ROOT_ID, "Case",
+                                         125, &case_id));
+  assert(!program_store::create_directory(program_store::ROOT_ID, "case",
+                                          126, NULL));
+  assert(program_store::move_rename(case_id, program_store::ROOT_ID, "case"));
+  assert(strcmp(by_id(case_id).name, "case") == 0);
+  assert(program_store::create_directory(program_store::ROOT_ID,
+                                          "Каталог", 126, NULL));
+
+  u16 suffix_directory = 0;
+  assert(program_store::create_directory(program_store::ROOT_ID, "demo.m61",
+                                         127, &suffix_directory));
+
+  const u8 value = 0x5A;
+  assert(!program_store::write_file(program_store::ROOT_ID, 128,
+                                    ProgramType::MK61, "demo", &value,
+                                    1, NULL));
+  assert(!program_store::write_file(program_store::ROOT_ID, 123,
+                                    ProgramType::TEXT, "collision", &value,
+                                    1, NULL));
+  assert(program_store::write_file(program_store::ROOT_ID, 128,
+                                   ProgramType::TEXT, "Report", &value,
+                                   1, NULL));
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                           "report.txt", 129, NULL));
+  assert(program_store::write_file(program_store::ROOT_ID, 129,
+                                   ProgramType::TEXT, ".hidden", &value,
+                                   1, &id));
+  assert(id == 129);
+  assert(program_store::used_nodes() ==
+         (u16) program_store::total_count());
+}
+
+static void test_directory_extents_are_persistent(void) {
+  fresh();
+  u16 directory = 0;
+  assert(program_store::create_directory(program_store::ROOT_ID, "Many files",
+                                         10, &directory));
+  assert(program_store::allocate_directory_extent(directory, 11));
+  assert(program_store::allocate_directory_extent(directory, 12));
+  assert(!program_store::allocate_directory_extent(directory, 11));
+  u16 extent = 0;
+  assert(program_store::first_extent(directory, extent) && extent == 11);
+  assert(program_store::next_extent(extent, extent) && extent == 12);
+  assert(!program_store::next_extent(extent, extent));
+  assert(program_store::total_count() == 1);
+  assert(program_store::used_nodes() == 3);
+
+  program_store::init();
+  assert(program_store::first_extent(directory, extent) && extent == 11);
+  assert(program_store::next_extent(extent, extent) && extent == 12);
+  assert(!program_store::release_directory_extent(11));
+  assert(program_store::release_directory_extent(12));
+  assert(program_store::release_directory_extent(11));
+  assert(program_store::used_nodes() == 1);
+  assert(program_store::remove_id(directory));
+}
+
+static void test_quota_grows_beyond_legacy_128(void) {
+  fresh();
+  assert(program_store::max_nodes() > 160);
+  for(u16 i = 0; i < 160; i++) {
+    char name[16];
+    snprintf(name, sizeof(name), "F%03u", (unsigned) i);
+    const u8 data = (u8) i;
+    assert(program_store::write(ProgramType::TEXT, name, &data, 1));
+  }
+  assert(program_store::total_count() == 160);
+  program_store::init();
+  assert(program_store::total_count() == 160);
+  u8 value = 0;
+  u16 len = 0;
+  assert(program_store::read(ProgramType::TEXT, "F159", &value, 1, &len));
+  assert(len == 1 && value == (u8) 159);
+}
+
+static void test_corrupt_wal_tail_rolls_back_and_recovers(void) {
+  fresh();
+  assert(program_store::write(ProgramType::TEXT, "ALPHA",
+                              (const u8*) "one", 3));
+  assert(program_store::write(ProgramType::TEXT, "BETA",
+                              (const u8*) "two", 3));
+  const storage_geometry::Geometry geometry = program_store::geometry();
+  const u32 wal = (geometry.catalog_a_sector +
+                   storage_geometry::CATALOG_HEADER_SECTORS +
+                   geometry.catalog_table_sectors) * SPIFlash::SECTOR_SIZE;
+  SPIFlash::corrupt(wal + 256, 'X');
+
+  program_store::init();
+  expect_text("ALPHA", "one");
+  assert(!program_store::exists(ProgramType::TEXT, "BETA"));
+  assert(program_store::write(ProgramType::TEXT, "GAMMA",
+                              (const u8*) "three", 5));
+  program_store::init();
+  expect_text("ALPHA", "one");
+  expect_text("GAMMA", "three");
+}
+
+static void test_power_cuts_are_atomic_and_retryable(void) {
   static const u8 old_data[] = {'o', 'l', 'd'};
   static const u8 new_data[] = {'n', 'e', 'w'};
-
-  for(int cut = 0; cut < 12; cut++) {
-    SPIFlash::reset();
-    assert(program_store::format());
-    assert(program_store::write(program_store::ProgramType::TEXT, "ATOMIC",
-                                old_data, sizeof(old_data)));
+  for(i32 cut = 0; cut < 12; cut++) {
+    fresh();
+    assert(program_store::write(ProgramType::TEXT, "ATOMIC", old_data,
+                                sizeof(old_data)));
     SPIFlash::failAfterOperations(cut);
-    const bool committed = program_store::write(program_store::ProgramType::TEXT,
-                                                "ATOMIC", new_data,
-                                                sizeof(new_data));
+    const bool committed = program_store::write(ProgramType::TEXT, "ATOMIC",
+                                                new_data, sizeof(new_data));
     SPIFlash::clearFailure();
-    program_store::init();
 
+    // A failed transaction must not poison the current WAL slot.
+    assert(program_store::write(ProgramType::TEXT, "AFTER",
+                                (const u8*) "ok", 2));
+    program_store::init();
     u8 recovered[sizeof(old_data)] = {};
-    u16 recovered_len = 0;
-    assert(program_store::read(program_store::ProgramType::TEXT, "ATOMIC",
-                               recovered, sizeof(recovered), &recovered_len));
-    assert(recovered_len == sizeof(recovered));
+    u16 len = 0;
+    assert(program_store::read(ProgramType::TEXT, "ATOMIC", recovered,
+                               sizeof(recovered), &len));
+    assert(len == sizeof(recovered));
     const bool is_old = memcmp(recovered, old_data, sizeof(recovered)) == 0;
     const bool is_new = memcmp(recovered, new_data, sizeof(recovered)) == 0;
     assert(is_old || is_new);
     if(committed) assert(is_new);
+    expect_text("AFTER", "ok");
   }
 }
 
-static void test_vfat_stage_compacts_when_every_normal_segment_is_live(void) {
-  SPIFlash::reset();
-  assert(program_store::format());
-
-  u8 data[512];
-  memset(data, 0x11, sizeof(data));
-  assert(program_store::vfat_stage_write(2, data));
-  for(u8 i = 0; i < 6; i++) {
-    memset(data, (u8) (0x20 + i), sizeof(data));
-    assert(program_store::vfat_stage_write(129, data));
+static void test_gc_preserves_live_records(void) {
+  fresh(256U * 1024U);
+  u8 keep[program_store::MAX_MK61_TEXT_SIZE];
+  u8 churn[program_store::MAX_MK61_TEXT_SIZE];
+  memset(keep, 0xA5, sizeof(keep));
+  memset(churn, 0x3C, sizeof(churn));
+  assert(program_store::write(ProgramType::FOCAL, "KEEP", keep,
+                              sizeof(keep)));
+  for(u16 generation = 0; generation < 180; generation++) {
+    churn[0] = (u8) generation;
+    churn[1] = (u8) (generation >> 8);
+    assert(program_store::write_from_usb(ProgramType::TEXT, "CHURN", churn,
+                                         sizeof(churn)));
   }
+  program_store::init();
+  u8 recovered[program_store::MAX_MK61_TEXT_SIZE] = {};
+  u16 len = 0;
+  assert(program_store::read(ProgramType::FOCAL, "KEEP", recovered,
+                             sizeof(recovered), &len));
+  assert(len == sizeof(keep) && memcmp(recovered, keep, sizeof(keep)) == 0);
+  assert(program_store::read(ProgramType::TEXT, "CHURN", recovered,
+                             sizeof(recovered), &len));
+  assert(len == sizeof(churn) && memcmp(recovered, churn, sizeof(churn)) == 0);
+}
 
-  for(u16 segment = 1; segment < 127; segment++) {
-    memset(data, (u8) segment, sizeof(data));
-    assert(program_store::vfat_stage_write(129, data));
-    memset(data, (u8) (0x40 + segment), sizeof(data));
-    assert(program_store::vfat_stage_write((u16) (2 + segment), data));
-    for(u8 i = 0; i < 5; i++) {
-      memset(data, (u8) (segment + i), sizeof(data));
-      assert(program_store::vfat_stage_write(129, data));
+static void test_stage_journal_survives_reboot_and_churn(void) {
+  fresh();
+  u8 pinned[512];
+  u8 changing[512];
+  memset(pinned, 0xA5, sizeof(pinned));
+  assert(program_store::vfat_stage_write(0x12345, pinned));
+  for(u16 generation = 0; generation < 1200; generation++) {
+    memset(changing, (u8) generation, sizeof(changing));
+    assert(program_store::vfat_stage_write(77, changing));
+  }
+  program_store::init();
+  u8 recovered[512] = {};
+  assert(program_store::vfat_stage_read(0x12345, recovered));
+  assert(memcmp(recovered, pinned, sizeof(pinned)) == 0);
+  assert(program_store::vfat_stage_read(77, recovered));
+  assert(recovered[0] == (u8) 1199);
+  program_store::vfat_stage_forget(77, 1);
+  program_store::init();
+  assert(!program_store::vfat_stage_exists(77));
+}
+
+static void test_stage_power_cut_keeps_previous_value(void) {
+  u8 old_data[512];
+  u8 new_data[512];
+  memset(old_data, 0x11, sizeof(old_data));
+  memset(new_data, 0xEE, sizeof(new_data));
+  for(i32 cut = 0; cut < 7; cut++) {
+    fresh();
+    assert(program_store::vfat_stage_write(19, old_data));
+    SPIFlash::failAfterOperations(cut);
+    const bool committed = program_store::vfat_stage_write(19, new_data);
+    SPIFlash::clearFailure();
+    program_store::init();
+    u8 recovered[512] = {};
+    assert(program_store::vfat_stage_read(19, recovered));
+    const bool old_value = memcmp(recovered, old_data, sizeof(recovered)) == 0;
+    const bool new_value = memcmp(recovered, new_data, sizeof(recovered)) == 0;
+    assert(old_value || new_value);
+    if(committed) assert(new_value);
+  }
+}
+
+static void test_stage_compacts_when_every_normal_sector_is_live(void) {
+  fresh();
+  assert(program_store::geometry().stage_sector_count ==
+         storage_geometry::STAGE_TARGET_SECTORS);
+  u8 data[512];
+  memset(data, 0, sizeof(data));
+  data[0] = 0;
+  assert(program_store::vfat_stage_write(1000, data));
+  for(u8 fill = 0; fill < 6; fill++) {
+    data[0] = fill;
+    assert(program_store::vfat_stage_write(1, data));
+  }
+  for(u8 sector = 1; sector < 16; sector++) {
+    data[0] = sector;
+    assert(program_store::vfat_stage_write(1, data));
+    assert(program_store::vfat_stage_write(1000U + sector, data));
+    for(u8 fill = 0; fill < 5; fill++) {
+      data[0] = (u8) (sector + fill);
+      assert(program_store::vfat_stage_write(1, data));
     }
   }
 
-  // All 127 normal segments retain one anchor. This write can succeed only by
-  // compacting the sparsest segment through the reserved erase sector.
   memset(data, 0xEE, sizeof(data));
-  assert(program_store::vfat_stage_write(130, data));
-
+  assert(program_store::vfat_stage_write(9999, data));
+  program_store::init();
   u8 recovered[512];
-  for(u16 cluster = 2; cluster < 129; cluster++) {
-    assert(program_store::vfat_stage_read(cluster, recovered));
+  for(u8 sector = 0; sector < 16; sector++) {
+    assert(program_store::vfat_stage_read(1000U + sector, recovered));
+    assert(recovered[0] == sector);
   }
-  assert(program_store::vfat_stage_read(130, recovered));
+  assert(program_store::vfat_stage_read(9999, recovered));
   assert(recovered[0] == 0xEE);
 }
 
+static void test_settings_reservation_and_capacity_mismatch(void) {
+  fresh();
+  const u32 settings = program_store::settings_address();
+  assert(program_store::settings_size() == 4080);
+  assert(flash.writeByte(settings, 0x5A));
+  assert(program_store::format());
+  assert(flash.readByte(settings) == 0x5A);
+  assert(program_store::erase_settings());
+  assert(flash.readByte(settings) == 0xFF);
+  u8 guard[4] = {};
+  assert(flash.readByteArray(settings + program_store::settings_size(),
+                             guard, sizeof(guard)));
+  assert(memcmp(guard, "C5SG", 4) == 0);
+  program_store::init();
+  assert(program_store::ready());
+
+  assert(program_store::write(ProgramType::TEXT, "OLD", (const u8*) "x", 1));
+  SPIFlash::setReportedCapacity(1024U * 1024U);
+  program_store::init();
+  assert(program_store::ready());
+  // A changed report invalidates the old locator, but it must not truncate
+  // the same two-megabyte physical device.
+  assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
+  assert(!program_store::exists(ProgramType::TEXT, "OLD"));
+}
+
+static void test_counterfeit_capacity_is_measured_not_trusted(void) {
+  SPIFlash::reset(2U * 1024U * 1024U);
+  SPIFlash::setReportedCapacity(16U * 1024U * 1024U);
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
+  assert(flash.getCapacity() == 2U * 1024U * 1024U);
+  assert(program_store::write(ProgramType::TEXT, "KEEP",
+                              (const u8*) "ok", 2));
+  // The same forged JEDEC/SFDP upper bound must not force a reformat on every
+  // boot after C5 has measured and recorded the real boundary once.
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
+  assert(program_store::exists(ProgramType::TEXT, "KEEP"));
+}
+
+static void test_underreported_capacity_uses_the_whole_device(void) {
+  SPIFlash::reset(2U * 1024U * 1024U);
+  SPIFlash::setReportedCapacity(512U * 1024U);
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
+  assert(program_store::write(ProgramType::TEXT, "KEEP",
+                              (const u8*) "ok", 2));
+  // The measured size can legitimately exceed the JEDEC/SFDP report and must
+  // remain loadable without another destructive probe.
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
+  assert(program_store::exists(ProgramType::TEXT, "KEEP"));
+}
+
+static void test_declared_geometry_change_forces_a_fresh_probe(void) {
+  fresh(2U * 1024U * 1024U);
+  assert(program_store::write(ProgramType::TEXT, "OLD",
+                              (const u8*) "x", 1));
+  // A changed JEDEC/SFDP upper bound is treated as chip replacement even if
+  // the newly measured physical boundary happens to be the same.
+  SPIFlash::setReportedCapacity(4U * 1024U * 1024U);
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
+  assert(!program_store::exists(ProgramType::TEXT, "OLD"));
+}
+
+static void test_legacy_layout_is_not_migrated(void) {
+  SPIFlash::reset();
+  const u8 legacy[] = {'C', '4', 0x7F, 100, 1, 0, 0, 0, 0};
+  assert(flash.writeByteArray(0, (u8*) legacy, sizeof(legacy)));
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::total_count() == 0);
+  u8 locator[4] = {};
+  assert(flash.readByteArray(0, locator, sizeof(locator)));
+  assert(memcmp(locator, "C5FS", 4) == 0);
+}
+
+} // namespace
+
 int main(void) {
-  test_catalog_generations_survive_reinit();
-  test_failed_catalog_keeps_previous_snapshot();
-  test_failed_payload_is_reported();
-  test_corrupt_newest_catalog_delta_rolls_back();
-  test_legacy_catalog_is_migratable();
-  test_c3_catalog_and_wal_are_migratable();
-  test_font_type_survives_catalog_reload();
-  test_expanded_entry_quota_survives_catalog_reload();
-  test_lzss_is_transparent_and_usb_stays_raw();
-  test_gc_copies_compressed_records_without_expanding_them();
-  test_vfat_stage_recovers_latest_committed_sector();
-  test_vfat_stage_reclaims_dead_segments();
-  test_catalog_wal_amortizes_flash_erases();
-  test_identical_write_is_flash_noop();
-  test_format_invalidates_recoverable_stage_data();
-  test_partial_stage_tail_preserves_prior_records();
-  test_power_cut_during_wal_update_is_atomic();
-  test_vfat_stage_compacts_when_every_normal_segment_is_live();
+  test_dynamic_geometry_and_lazy_format();
+  test_roundtrip_ranges_and_noop();
+  test_arbitrary_nested_directories();
+  test_directory_depth_limit_includes_moved_subtrees();
+  test_names_and_exact_preferred_ids();
+  test_directory_extents_are_persistent();
+  test_quota_grows_beyond_legacy_128();
+  test_corrupt_wal_tail_rolls_back_and_recovers();
+  test_power_cuts_are_atomic_and_retryable();
+  test_gc_preserves_live_records();
+  test_stage_journal_survives_reboot_and_churn();
+  test_stage_power_cut_keeps_previous_value();
+  test_stage_compacts_when_every_normal_sector_is_live();
+  test_settings_reservation_and_capacity_mismatch();
+  test_counterfeit_capacity_is_measured_not_trusted();
+  test_underreported_capacity_uses_the_whole_device();
+  test_declared_geometry_change_forces_a_fresh_probe();
+  test_legacy_layout_is_not_migrated();
   printf("program_store_self_test: ok\n");
   return 0;
 }

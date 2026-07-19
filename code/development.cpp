@@ -39,7 +39,7 @@ static constexpr u8 EXPLORER_ELLIPSIS_SLOT = 7;
 static constexpr u8 EXPLORER_NO_CURSOR_ROW = 0xFF;
 
 #if defined(MK61_DISPLAY_UC1609)
-static char applied_font_name[program_store::NAME_SIZE] = {0};
+static u16 applied_font_id = program_store::INVALID_ID;
 static bool applied_font_suspended = false;
 #endif
 
@@ -50,6 +50,7 @@ enum class ItemMenuAction : u8 {
   RUN,
   VIEW,
   EDIT,
+  NEW_DIRECTORY,
   RENAME,
   DELETE
 };
@@ -223,39 +224,13 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
   }
 }
 
-static int total_file_count(void) {
-  return program_store::count(program_store::ProgramType::MK61) +
-         program_store::count(program_store::ProgramType::FOCAL)
-#if MK61_ENABLE_TINYBASIC
-         + program_store::count(program_store::ProgramType::TINYBASIC)
-#endif
-         + program_store::count(program_store::ProgramType::TEXT)
-         + program_store::count(program_store::ProgramType::MK61_STATE)
-         + program_store::count(program_store::ProgramType::FONT)
-         ;
+static int explorer_count(u16 directory_id) {
+  return program_store::child_count(directory_id);
 }
 
-static bool explorer_entry(int index, program_store::Entry& out) {
-  if(index < 0) return false;
-  const program_store::ProgramType types[] = {
-    program_store::ProgramType::MK61,
-    program_store::ProgramType::FOCAL
-#if MK61_ENABLE_TINYBASIC
-    ,
-    program_store::ProgramType::TINYBASIC
-#endif
-    ,
-    program_store::ProgramType::TEXT,
-    program_store::ProgramType::MK61_STATE,
-    program_store::ProgramType::FONT
-  };
-
-  for(usize i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
-    const int count = program_store::count(types[i]);
-    if(index < count) return program_store::entry(types[i], index, out);
-    index -= count;
-  }
-  return false;
+static bool explorer_entry(u16 directory_id, int index,
+                           program_store::Entry& out) {
+  return index >= 0 && program_store::child(directory_id, index, out);
 }
 
 static bool entry_by_type_name(program_store::ProgramType type, const char* name, program_store::Entry& out) {
@@ -297,75 +272,80 @@ static bool text_contains_case_insensitive(const char* text, const char* needle)
   return false;
 }
 
-static bool entry_matches_search(int index, const char* search_text) {
+static bool entry_matches_search(u16 directory_id, int index,
+                                 const char* search_text) {
   if(!search_active(search_text)) return true;
   program_store::Entry entry;
-  if(!explorer_entry(index, entry)) return false;
+  if(!explorer_entry(directory_id, index, entry)) return false;
   return text_contains_case_insensitive(entry.name, search_text);
 }
 
-static int matching_file_count(const char* search_text) {
-  const int count = total_file_count();
+static int matching_entry_count(u16 directory_id, const char* search_text) {
+  const int count = explorer_count(directory_id);
   if(!search_active(search_text)) return count;
 
   int matches = 0;
   for(int index = 0; index < count; index++) {
-    if(entry_matches_search(index, search_text)) matches++;
+    if(entry_matches_search(directory_id, index, search_text)) matches++;
   }
   return matches;
 }
 
-static int matching_index_at(int match_index, const char* search_text) {
-  const int count = total_file_count();
+static int matching_index_at(u16 directory_id, int match_index,
+                             const char* search_text) {
+  const int count = explorer_count(directory_id);
   if(!search_active(search_text)) return (match_index >= 0 && match_index < count) ? match_index : -1;
 
   int current = 0;
   for(int index = 0; index < count; index++) {
-    if(!entry_matches_search(index, search_text)) continue;
+    if(!entry_matches_search(directory_id, index, search_text)) continue;
     if(current == match_index) return index;
     current++;
   }
   return -1;
 }
 
-static int matching_position(int active, const char* search_text) {
+static int matching_position(u16 directory_id, int active,
+                             const char* search_text) {
   if(!search_active(search_text)) return active;
-  const int count = total_file_count();
+  const int count = explorer_count(directory_id);
   int position = 0;
   for(int index = 0; index < count; index++) {
-    if(!entry_matches_search(index, search_text)) continue;
+    if(!entry_matches_search(directory_id, index, search_text)) continue;
     if(index == active) return position;
     position++;
   }
   return -1;
 }
 
-static int first_matching_index(const char* search_text) {
-  return matching_index_at(0, search_text);
+static int first_matching_index(u16 directory_id, const char* search_text) {
+  return matching_index_at(directory_id, 0, search_text);
 }
 
-static int next_matching_index(int active, const char* search_text) {
-  const int count = total_file_count();
+static int next_matching_index(u16 directory_id, int active,
+                               const char* search_text) {
+  const int count = explorer_count(directory_id);
   if(count <= 0) return active;
   if(!search_active(search_text)) return (active + 1 < count) ? active + 1 : 0;
   for(int index = active + 1; index < count; index++) {
-    if(entry_matches_search(index, search_text)) return index;
+    if(entry_matches_search(directory_id, index, search_text)) return index;
   }
   for(int index = 0; index < active; index++) {
-    if(entry_matches_search(index, search_text)) return index;
+    if(entry_matches_search(directory_id, index, search_text)) return index;
   }
   return active;
 }
 
-static int previous_matching_index(int active, const char* search_text) {
-  const int count = total_file_count();
+static int previous_matching_index(u16 directory_id, int active,
+                                   const char* search_text) {
+  const int count = explorer_count(directory_id);
   if(count <= 0) return active;
   if(!search_active(search_text)) return (active > 0) ? active - 1 : count - 1;
   for(int index = active - 1; index >= 0; index--) {
-    if(entry_matches_search(index, search_text)) return index;
+    if(entry_matches_search(directory_id, index, search_text)) return index;
   }
   for(int index = count - 1; index > active; index--) {
-    if(entry_matches_search(index, search_text)) return index;
+    if(entry_matches_search(directory_id, index, search_text)) return index;
   }
   return active;
 }
@@ -490,10 +470,13 @@ static void draw_explorer_name(const char* name, u8 row, u8 offset, bool active)
 static void draw_explorer_row(u8 row, bool active, const program_store::Entry& entry, u8 scroll_offset) {
   draw_explorer_name(entry.name, row, scroll_offset, active);
   lcd.setCursor(explorer_type_col(), row);
-  lcd.write((u8) type_marker(entry.type));
+  lcd.write((u8) (entry.kind == program_store::NodeKind::DIRECTORY
+                    ? '/'
+                    : type_marker(entry.type)));
 }
 
-static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_text = NULL,
+static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
+                         const char* search_text = NULL,
                          u8* cursor_row_out = NULL) {
   if(cursor_row_out != NULL) *cursor_row_out = EXPLORER_NO_CURSOR_ROW;
   explorer_cursor_off();
@@ -501,11 +484,13 @@ static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_
   MK61DisplayUpdate update(lcd);
   lcd.clear();
 
-  const int count = total_file_count();
+  const int count = explorer_count(directory_id);
   if(count <= 0) {
     explorer_scroll_reset(scroll);
-    print_localized_line(0, "FS is empty", "ФС пуста");
-    print_localized_line(1, "ESC", "ESC");
+    print_localized_line(0,
+                         directory_id == program_store::ROOT_ID ? "FS is empty" : "Folder empty",
+                         directory_id == program_store::ROOT_ID ? "ФС пуста" : "Папка пуста");
+    print_localized_line(1, "OK: new folder", "OK: нов. папка");
     return 0;
   }
 
@@ -520,7 +505,9 @@ static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_
     return 0;
   }
 
-  const int visible_count = filtered ? matching_file_count(search_text) : count;
+  const int visible_count = filtered
+    ? matching_entry_count(directory_id, search_text)
+    : count;
   if(visible_count <= 0) {
     explorer_scroll_reset(scroll);
     print_localized_line((u8) first_row, "No match", "Нет совпад.");
@@ -529,7 +516,9 @@ static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_
     return 0;
   }
 
-  int active_pos = filtered ? matching_position(active, search_text) : active;
+  int active_pos = filtered
+    ? matching_position(directory_id, active, search_text)
+    : active;
   if(active_pos < 0) active_pos = 0;
 
   const int visible = (visible_count < list_rows) ? visible_count : list_rows;
@@ -541,7 +530,7 @@ static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_
   u16 scroll_timeout = 0;
   const u32 now = millis();
   program_store::Entry active_entry;
-  if(explorer_entry(active, active_entry)) {
+  if(explorer_entry(directory_id, active, active_entry)) {
     const u8 width = explorer_name_width();
     explorer_scroll_track(scroll, active, active_entry.name, width, now);
     scroll_timeout = explorer_scroll_timeout(scroll, active_entry.name, width, now);
@@ -550,9 +539,11 @@ static u16 draw_explorer(int active, ExplorerScroll& scroll, const char* search_
   }
 
   for(int row = 0; row < visible; row++) {
-    const int index = filtered ? matching_index_at(top + row, search_text) : top + row;
+    const int index = filtered
+      ? matching_index_at(directory_id, top + row, search_text)
+      : top + row;
     program_store::Entry entry;
-    if(explorer_entry(index, entry)) {
+    if(explorer_entry(directory_id, index, entry)) {
       const u8 scroll_offset = (active == index) ? scroll.offset : 0;
       const u8 screen_row = (u8) (first_row + row);
       const bool selected = active == index;
@@ -577,7 +568,8 @@ static bool read_entry_data(const program_store::Entry& entry, u8* data, usize c
   }
   memset(data, 0, capacity);
   out_len = 0;
-  if(!program_store::read(entry.type, entry.name, data, (u16) capacity, &out_len) ||
+  if(entry.kind != program_store::NodeKind::FILE ||
+     !program_store::read_id(entry.id, data, (u16) capacity, &out_len) ||
      out_len > capacity || out_len != entry.data_len) {
     memset(data, 0, capacity);
     out_len = 0;
@@ -825,11 +817,8 @@ static bool apply_font_entry(const program_store::Entry& entry) {
   u16 len = 0;
   if(!read_entry_data(entry, scratch.data(), scratch.size(), len)) return false;
   if(!lcd.installFont(scratch.data(), len)) return false;
-#if defined(MK61_DISPLAY_UC1609)
-  strncpy(applied_font_name, entry.name, sizeof(applied_font_name) - 1);
-  applied_font_name[sizeof(applied_font_name) - 1] = 0;
+  applied_font_id = entry.id;
   applied_font_suspended = false;
-#endif
   library_mk61::set_display_text_profile(lcd.textProfile());
   library_mk61::refresh_menu_text();
   library_mk61::defer_settings_state_save();
@@ -890,15 +879,17 @@ static bool confirm_delete(const program_store::Entry& entry) {
 static void delete_entry(const program_store::Entry& entry) {
   if(!confirm_delete(entry)) return;
 
-  const bool ok = program_store::remove(entry.type, entry.name);
+  const bool ok = program_store::remove_id(entry.id);
   show_message(ok ? "Deleted" : "Delete error", ok ? "Удалено" : "Ошибка", entry.name, entry.name);
   delay(700);
 }
 
-static void draw_rename_editor(const char* name, u16 cursor) {
+static void draw_name_editor(const char* name, u16 cursor, bool creating) {
   MK61DisplayUpdate update(lcd);
   lcd.clear();
-  print_localized_line(0, "Rename", "Имя файла");
+  print_localized_line(0,
+                       creating ? "New folder" : "Rename",
+                       creating ? "Новая папка" : "Новое имя");
 
   const usize len = strlen(name);
   if(cursor > len) cursor = (u16) len;
@@ -926,7 +917,7 @@ static bool name_insert_char(char* name, u16& len, u16& cursor, char ch) {
   return text_editor::insert_text(name, len, cursor, program_store::NAME_SIZE, text);
 }
 
-static bool input_entry_name(char* name) {
+static bool input_entry_name(char* name, bool creating = false) {
   u16 len = (u16) text_editor::bounded_length(name, program_store::NAME_SIZE);
   if(len >= program_store::NAME_SIZE) len = (u16) (program_store::NAME_SIZE - 1);
   name[len] = 0;
@@ -938,7 +929,7 @@ static bool input_entry_name(char* name) {
   while(true) {
     const u32 draw_now = millis();
     if(text_editor::sms_expired(sms, draw_now)) text_editor::sms_reset(sms);
-    draw_rename_editor(name, cursor);
+    draw_name_editor(name, cursor, creating);
 
     const i32 key = kbd::get_key_wait();
     const u32 key_now = millis();
@@ -1029,21 +1020,35 @@ static bool rename_entry(const program_store::Entry& entry) {
   if(!input_entry_name(name)) return false;
   if(strncmp(name, entry.name, program_store::NAME_SIZE) == 0) return true;
 
-  if(program_store::exists(entry.type, name)) {
-    show_message("Name exists", "Уже есть", name, name);
-    delay(900);
-    return false;
+  const bool ok = program_store::move_rename(entry.id, entry.parent_id, name);
+  show_message(ok ? "Renamed" : "Rename error", ok ? "Переимен." : "Ошибка", name, name);
+  delay(700);
+  return ok;
+}
+
+static bool create_directory(u16 parent_id) {
+  char name[program_store::NAME_SIZE] = "Folder";
+  if(!input_entry_name(name, true)) return false;
+
+  const int count = program_store::child_count(parent_id);
+  for(int i = 0; i < count; i++) {
+    program_store::Entry child;
+    if(program_store::child(parent_id, i, child) &&
+       child.kind == program_store::NodeKind::DIRECTORY &&
+       strncmp(child.name, name, program_store::NAME_SIZE) == 0) {
+      show_message("Name exists", "Уже есть", name, name);
+      delay(900);
+      return false;
+    }
   }
 
-  const bool ok = program_store::rename(entry.type, entry.name, name);
-#if defined(MK61_DISPLAY_UC1609)
-  if(ok && entry.type == program_store::ProgramType::FONT && lcd.externalFontActive() &&
-     strncmp(applied_font_name, entry.name, sizeof(applied_font_name)) == 0) {
-    strncpy(applied_font_name, name, sizeof(applied_font_name) - 1);
-    applied_font_name[sizeof(applied_font_name) - 1] = 0;
-  }
-#endif
-  show_message(ok ? "Renamed" : "Rename error", ok ? "Переимен." : "Ошибка", name, name);
+  u16 id = program_store::INVALID_ID;
+  const bool ok = program_store::create_directory(parent_id, name,
+                                                    program_store::INVALID_ID,
+                                                    &id);
+  show_message(ok ? "Folder created" : "Create error",
+               ok ? "Папка создана" : "Ошибка",
+               name, name);
   delay(700);
   return ok;
 }
@@ -1139,6 +1144,7 @@ static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
 }
 
 static bool entry_can_edit(const program_store::Entry& entry) {
+  if(entry.kind != program_store::NodeKind::FILE) return false;
   switch(entry.type) {
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
@@ -1154,6 +1160,7 @@ static bool entry_can_edit(const program_store::Entry& entry) {
 }
 
 static bool entry_can_run(const program_store::Entry& entry) {
+  if(entry.kind != program_store::NodeKind::FILE) return false;
   switch(entry.type) {
     case program_store::ProgramType::MK61:
       return true;
@@ -1176,9 +1183,12 @@ static bool entry_can_run(const program_store::Entry& entry) {
 
 static int item_menu_actions(const program_store::Entry& entry, ItemMenuAction* actions, int capacity) {
   int count = 0;
-  if(entry_can_run(entry) && count < capacity) actions[count++] = ItemMenuAction::RUN;
-  if(count < capacity) actions[count++] = ItemMenuAction::VIEW;
-  if(entry_can_edit(entry) && count < capacity) actions[count++] = ItemMenuAction::EDIT;
+  if(entry.kind == program_store::NodeKind::FILE) {
+    if(entry_can_run(entry) && count < capacity) actions[count++] = ItemMenuAction::RUN;
+    if(count < capacity) actions[count++] = ItemMenuAction::VIEW;
+    if(entry_can_edit(entry) && count < capacity) actions[count++] = ItemMenuAction::EDIT;
+  }
+  if(count < capacity) actions[count++] = ItemMenuAction::NEW_DIRECTORY;
   if(count < capacity) actions[count++] = ItemMenuAction::RENAME;
   if(count < capacity) actions[count++] = ItemMenuAction::DELETE;
   return count;
@@ -1192,6 +1202,8 @@ static const char* item_menu_text(ItemMenuAction action, bool ru) {
       return ru ? "Просмотр" : "View";
     case ItemMenuAction::EDIT:
       return ru ? "Редактировать" : "Edit";
+    case ItemMenuAction::NEW_DIRECTORY:
+      return ru ? "Новая папка" : "New folder";
     case ItemMenuAction::RENAME:
       return ru ? "Переименовать" : "Rename";
     case ItemMenuAction::DELETE:
@@ -1201,8 +1213,8 @@ static const char* item_menu_text(ItemMenuAction action, bool ru) {
 }
 
 static void draw_item_menu(const program_store::Entry& entry, int active) {
-  ItemMenuAction actions[5];
-  const int count = item_menu_actions(entry, actions, 5);
+  ItemMenuAction actions[6];
+  const int count = item_menu_actions(entry, actions, 6);
   const int display_rows = lcd.rows();
   const int visible = (count < display_rows) ? count : display_rows;
   int top = active - visible + 1;
@@ -1257,12 +1269,12 @@ static void edit_entry(const program_store::Entry& entry) {
   switch(entry.type) {
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
-      ok = EditFocalProgram(entry.name);
+      ok = EditFocalProgram(entry.id);
       break;
 #endif
 #if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC:
-      ok = EditTinyBasicProgram(entry.name);
+      ok = EditTinyBasicProgram(entry.id);
       break;
 #endif
     default:
@@ -1274,9 +1286,10 @@ static void edit_entry(const program_store::Entry& entry) {
   }
 }
 
-static bool explorer_item_menu(const program_store::Entry& entry) {
-  ItemMenuAction actions[5];
-  const int count = item_menu_actions(entry, actions, 5);
+static bool explorer_item_menu(u16 directory_id,
+                               const program_store::Entry& entry) {
+  ItemMenuAction actions[6];
+  const int count = item_menu_actions(entry, actions, 6);
   int active = 0;
   bool wait_initial_ok_release = true;
   while(true) {
@@ -1299,6 +1312,9 @@ static bool explorer_item_menu(const program_store::Entry& entry) {
           break;
         case ItemMenuAction::EDIT:
           edit_entry(entry);
+          break;
+        case ItemMenuAction::NEW_DIRECTORY:
+          create_directory(directory_id);
           break;
         case ItemMenuAction::RENAME:
           rename_entry(entry);
@@ -1342,6 +1358,7 @@ static constexpr t_punct RU_TINYBASIC_DEV_PUNCT = {.size = 15, .action = &tinyba
 } // namespace
 
 bool program_store_explorer_select(void) {
+  u16 directory_id = program_store::ROOT_ID;
   int active = 0;
   ExplorerSearch search;
   ExplorerScroll scroll;
@@ -1351,26 +1368,44 @@ bool program_store_explorer_select(void) {
 
   while(true) {
     explorer_search_expire_sms(search, millis());
-    const int count = total_file_count();
+    const int count = explorer_count(directory_id);
     if(count <= 0) {
-      draw_explorer(0, scroll);
+      draw_explorer(directory_id, 0, scroll);
       const i32 key = wait_explorer_key(false);
-      if(key == EXPLORER_KEY_ESC || key == EXPLORER_KEY_OK) {
+      if(key == EXPLORER_KEY_ESC) {
+        if(directory_id != program_store::ROOT_ID) {
+          program_store::Entry directory;
+          if(program_store::entry_by_id(directory_id, directory)) {
+            directory_id = directory.parent_id;
+            active = 0;
+            explorer_search_reset(search);
+            explorer_scroll_reset(scroll);
+            continue;
+          }
+        }
         explorer_cursor_off();
         return action::MENU_BACK;
+      }
+      if(key == EXPLORER_KEY_OK || key == EXPLORER_KEY_LONG_OK) {
+        create_directory(directory_id);
+        explorer_search_reset(search);
+        explorer_scroll_reset(scroll);
+        continue;
       }
       explorer_search_handle_key(search, key);
       continue;
     }
     if(active >= count) active = count - 1;
     if(active < 0) active = 0;
-    if(search_active(search.text) && !entry_matches_search(active, search.text)) {
-      const int first = first_matching_index(search.text);
+    if(search_active(search.text) &&
+       !entry_matches_search(directory_id, active, search.text)) {
+      const int first = first_matching_index(directory_id, search.text);
       if(first >= 0) active = first;
     }
 
     u8 cursor_row = EXPLORER_NO_CURSOR_ROW;
-    const u16 scroll_timeout = draw_explorer(active, scroll, search.text, &cursor_row);
+    const u16 scroll_timeout = draw_explorer(directory_id, active, scroll,
+                                              search.text, &cursor_row);
     const i32 key = wait_explorer_key(true, scroll_timeout, cursor_row);
     if(key == EXPLORER_KEY_TICK) continue;
     if(key == EXPLORER_KEY_ESC) {
@@ -1379,29 +1414,44 @@ bool program_store_explorer_select(void) {
         explorer_scroll_reset(scroll);
         continue;
       }
+      if(directory_id != program_store::ROOT_ID) {
+        program_store::Entry directory;
+        if(program_store::entry_by_id(directory_id, directory)) {
+          directory_id = directory.parent_id;
+          active = 0;
+          explorer_search_reset(search);
+          explorer_scroll_reset(scroll);
+          continue;
+        }
+      }
       explorer_cursor_off();
       return action::MENU_BACK;
     }
     if(explorer_search_handle_key(search, key)) {
-      const int first = first_matching_index(search.text);
+      const int first = first_matching_index(directory_id, search.text);
       if(first >= 0) active = first;
       explorer_scroll_reset(scroll);
       continue;
     }
 
-    const int visible_count = matching_file_count(search.text);
+    const int visible_count = matching_entry_count(directory_id, search.text);
     if(key == EXPLORER_KEY_DOWN && visible_count > 0) {
-      active = next_matching_index(active, search.text);
+      active = next_matching_index(directory_id, active, search.text);
       explorer_scroll_reset(scroll);
     } else if(key == EXPLORER_KEY_UP && visible_count > 0) {
-      active = previous_matching_index(active, search.text);
+      active = previous_matching_index(directory_id, active, search.text);
       explorer_scroll_reset(scroll);
     }
     else if(key == EXPLORER_KEY_OK) {
       program_store::Entry entry;
-      if(visible_count > 0 && explorer_entry(active, entry)) {
+      if(visible_count > 0 && explorer_entry(directory_id, active, entry)) {
         explorer_cursor_off();
-        if(entry_can_run(entry)) {
+        if(entry.kind == program_store::NodeKind::DIRECTORY) {
+          directory_id = entry.id;
+          active = 0;
+          explorer_search_reset(search);
+          explorer_scroll_reset(scroll);
+        } else if(entry_can_run(entry)) {
           if(run_entry(entry)) return action::MENU_EXIT;
         } else {
           view_entry(entry);
@@ -1409,25 +1459,38 @@ bool program_store_explorer_select(void) {
       }
     } else if(key == EXPLORER_KEY_LONG_OK) {
       program_store::Entry entry;
-      if(visible_count > 0 && explorer_entry(active, entry)) {
+      if(visible_count > 0 && explorer_entry(directory_id, active, entry)) {
         explorer_cursor_off();
-        if(explorer_item_menu(entry) == action::MENU_EXIT) return action::MENU_EXIT;
+        if(explorer_item_menu(directory_id, entry) == action::MENU_EXIT) {
+          return action::MENU_EXIT;
+        }
       }
     }
   }
 }
 
+bool program_store_view_entry(const program_store::Entry& entry) {
+  if(entry.kind != program_store::NodeKind::FILE) return false;
+  view_entry(entry);
+  return true;
+}
+
 bool program_store_view_entry(program_store::ProgramType type, const char* name) {
   program_store::Entry entry;
   if(!entry_by_type_name(type, name, entry)) return false;
-  view_entry(entry);
-  return true;
+  return program_store_view_entry(entry);
+}
+
+bool program_store_apply_font(const program_store::Entry& entry) {
+  return entry.kind == program_store::NodeKind::FILE &&
+         entry.type == program_store::ProgramType::FONT &&
+         apply_font_entry(entry);
 }
 
 bool program_store_apply_font(const char* name) {
   program_store::Entry entry;
   if(!entry_by_type_name(program_store::ProgramType::FONT, name, entry)) return false;
-  return apply_font_entry(entry);
+  return program_store_apply_font(entry);
 }
 
 bool program_store_suspend_font_for_usb(void) {
@@ -1435,7 +1498,8 @@ bool program_store_suspend_font_for_usb(void) {
   if(!lcd.externalFontActive()) {
     return true;
   }
-  if(applied_font_name[0] == 0 || !lcd.suspendExternalFontForUsb()) return false;
+  if(applied_font_id == program_store::INVALID_ID ||
+     !lcd.suspendExternalFontForUsb()) return false;
   applied_font_suspended = true;
 #endif
   return true;
@@ -1446,9 +1510,10 @@ void program_store_restore_font_after_usb(void) {
   if(!applied_font_suspended) return;
   applied_font_suspended = false;
   program_store::Entry entry;
-  if(!entry_by_type_name(program_store::ProgramType::FONT, applied_font_name, entry) ||
+  if(!program_store::entry_by_id(applied_font_id, entry) ||
+     entry.type != program_store::ProgramType::FONT ||
      !apply_font_entry(entry)) {
-    applied_font_name[0] = 0;
+    applied_font_id = program_store::INVALID_ID;
     lcd.useBuiltinFont();
     library_mk61::set_display_text_profile(lcd.textProfile());
   }

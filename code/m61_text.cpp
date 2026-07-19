@@ -42,6 +42,7 @@ enum class ScriptSource : u8 {
 struct ScriptFrame {
   ScriptSource source;
   char name[program_store::NAME_SIZE];
+  u16 id;
   u16 len;
   u16 pos;
   u16 line;
@@ -58,6 +59,7 @@ struct LabelEntry {
 static RunnerState runner_state = RunnerState::IDLE;
 static ScriptSource script_source = ScriptSource::NONE;
 static char script_name[program_store::NAME_SIZE] = {};
+static u16 script_id = program_store::INVALID_ID;
 static u16 script_len = 0;
 static u16 script_pos = 0;
 static u16 script_line = 1;
@@ -111,6 +113,7 @@ static void copy_script_name(char* out, const char* name) {
 static void clear_current_script(void) {
   script_source = ScriptSource::NONE;
   script_name[0] = 0;
+  script_id = program_store::INVALID_ID;
   script_len = 0;
   script_pos = 0;
   script_line = 1;
@@ -135,6 +138,7 @@ static bool find_entry_by_type_name(program_store::ProgramType type, const char*
 static void store_current_frame(ScriptFrame& frame) {
   frame.source = script_source;
   copy_script_name(frame.name, script_name);
+  frame.id = script_id;
   frame.len = script_len;
   frame.pos = script_pos;
   frame.line = script_line;
@@ -143,21 +147,51 @@ static void store_current_frame(ScriptFrame& frame) {
 static void restore_frame(const ScriptFrame& frame) {
   script_source = frame.source;
   copy_script_name(script_name, frame.name);
+  script_id = frame.id;
   script_len = frame.len;
   script_pos = frame.pos;
   script_line = frame.line;
   invalidate_read_cache();
 }
 
-static bool make_store_frame(const char* name, ScriptFrame& frame) {
+static bool make_store_frame(u16 id, ScriptFrame& frame) {
   program_store::Entry entry;
-  if(!find_entry_by_type_name(program_store::ProgramType::MK61, name, entry)) return false;
+  if(!program_store::entry_by_id(id, entry) ||
+     entry.kind != program_store::NodeKind::FILE ||
+     entry.type != program_store::ProgramType::MK61) return false;
   frame.source = ScriptSource::STORE;
   copy_script_name(frame.name, entry.name);
+  frame.id = entry.id;
   frame.len = entry.data_len;
   frame.pos = 0;
   frame.line = 1;
   return true;
+}
+
+static bool make_store_frame(const char* name, ScriptFrame& frame) {
+  if(name == NULL || name[0] == 0) return false;
+
+  // Nested script names are resolved in the caller's directory first. This
+  // keeps identically named scripts in independent directory trees isolated.
+  if(script_id != program_store::INVALID_ID) {
+    program_store::Entry current;
+    if(program_store::entry_by_id(script_id, current)) {
+      const int count = program_store::child_count(current.parent_id);
+      for(int i = 0; i < count; i++) {
+        program_store::Entry candidate;
+        if(program_store::child(current.parent_id, i, candidate) &&
+           candidate.kind == program_store::NodeKind::FILE &&
+           candidate.type == program_store::ProgramType::MK61 &&
+           strncmp(candidate.name, name, program_store::NAME_SIZE) == 0) {
+          return make_store_frame(candidate.id, frame);
+        }
+      }
+    }
+  }
+
+  program_store::Entry entry;
+  return find_entry_by_type_name(program_store::ProgramType::MK61, name, entry) &&
+         make_store_frame(entry.id, frame);
 }
 
 static bool push_current_script(void) {
@@ -218,8 +252,8 @@ static bool read_script_byte(u8& value, bool& eof) {
       const u16 remaining = (u16) (script_len - script_pos);
       const u16 wanted = remaining < READ_CACHE_SIZE ? remaining : READ_CACHE_SIZE;
       u16 got = 0;
-      if(!program_store::read_range(program_store::ProgramType::MK61, script_name,
-                                    read_cache_start, read_cache, wanted, &got) || got == 0) {
+      if(!program_store::read_range_id(script_id, read_cache_start, read_cache,
+                                       wanted, &got) || got == 0) {
         read_cache_len = 0;
         return false;
       }
@@ -296,8 +330,8 @@ static bool stored_label_equals(const LabelEntry& entry, const char* name, usize
   if(entry.len != len || entry.hash != label_hash(name, len)) return false;
   char stored[MAX_LABEL_SIZE + 1];
   u16 got = 0;
-  if(!program_store::read_range(program_store::ProgramType::MK61, script_name,
-                                entry.name_pos, (u8*) stored, entry.len, &got) || got != entry.len) return false;
+  if(!program_store::read_range_id(script_id, entry.name_pos, (u8*) stored,
+                                   entry.len, &got) || got != entry.len) return false;
   return memcmp(stored, name, len) == 0;
 }
 
@@ -380,6 +414,23 @@ static void finish_script(void) {
 static bool open_store_script(const char* name) {
   ScriptFrame child;
   if(!make_store_frame(name, child)) return false;
+  if(!push_current_script()) return false;
+
+  const char* error_message = NULL;
+  u16 error_line = 0;
+  if(!activate_frame(child, error_message, error_line)) {
+    restore_frame(script_stack[--script_stack_depth]);
+    return false;
+  }
+  terminal_script::reset();
+  MK61Emu_ClearCodePage();
+  runner_state = RunnerState::EXECUTING;
+  return true;
+}
+
+static bool open_store_script(u16 id) {
+  ScriptFrame child;
+  if(!make_store_frame(id, child)) return false;
   if(!push_current_script()) return false;
 
   const char* error_message = NULL;
@@ -506,17 +557,9 @@ void service(void) {
   }
 }
 
-bool load_program(const char* name) {
-  if(name == NULL || name[0] == 0) return false;
+static bool load_frame(const ScriptFrame& frame) {
   if(active()) stop_runner();
   clear_error();
-
-  ScriptFrame frame;
-  if(!make_store_frame(name, frame)) {
-    copy_script_name(script_name, name);
-    fail_script("script not found", 0);
-    return false;
-  }
 
   const char* error_message = NULL;
   u16 error_line = 0;
@@ -532,12 +575,34 @@ bool load_program(const char* name) {
   return !has_error;
 }
 
+bool load_program(const char* name) {
+  if(name == NULL || name[0] == 0) return false;
+  ScriptFrame frame;
+  if(!make_store_frame(name, frame)) {
+    copy_script_name(script_name, name);
+    fail_script("script not found", 0);
+    return false;
+  }
+  return load_frame(frame);
+}
+
+bool load_program(u16 id) {
+  ScriptFrame frame;
+  if(!make_store_frame(id, frame)) return false;
+  return load_frame(frame);
+}
+
 // Единственная точка открытия МК61-скрипта по имени (через OpenStoredEntry):
 // изнутри выполняющегося сценария — вложенный вызов с возвратом на следующую
 // строку, извне (терминал, проводник, меню) — свежая загрузка.
 bool open_program(const char* name) {
   if(runner_state == RunnerState::EXECUTING) return open_store_script(name);
   return load_program(name);
+}
+
+bool open_program(u16 id) {
+  if(runner_state == RunnerState::EXECUTING) return open_store_script(id);
+  return load_program(id);
 }
 
 static bool append_char(u8* out, u16 capacity, u16& pos, char c) {

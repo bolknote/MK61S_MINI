@@ -12,7 +12,9 @@ struct Error {
 };
 
 bool load_program(const char* name);
+bool load_program(u16 id);
 bool open_program(const char* name);
+bool open_program(u16 id);
 bool active(void);
 void service(void);
 void cancel(void);

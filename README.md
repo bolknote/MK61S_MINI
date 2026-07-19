@@ -73,12 +73,15 @@ MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 Тестовый набор проверяет FOCAL, TinyBASIC, математический CORE-бэкенд,
 эксклюзивное владение общими runtime/scratch-буферами, Virtual FAT и реальное
 устройство `program_store` через модель SPI flash с инъекцией ошибок записи и
-повреждения каталога, а также FMK1, bit-RLE, графическую текстовую модель и
-конвертацию FreeType-шрифтов, когда FreeType доступен в системе.
+повреждения каталога, определение физической ёмкости с aliasing и ложным
+4-байтным режимом, разбор SFDP/4BAIT, а также FMK1, bit-RLE, графическую
+текстовую модель и конвертацию FreeType-шрифтов, когда FreeType доступен в
+системе.
 
-Референсная сборка прошивки использует STM32 Arduino Core `2.12.0`,
-`LiquidCrystal 1.0.7` и `SPIMemory 3.4.0`. Точная матрица плат и дисплеев
-зафиксирована в [release workflow](.github/workflows/firmware-release.yml).
+Референсная сборка прошивки использует STM32 Arduino Core `2.12.0` и
+`LiquidCrystal 1.0.7`. Драйвер SPI NOR входит в проект и не зависит от таблицы
+моделей `SPIMemory`. Точная матрица плат и дисплеев зафиксирована в
+[release workflow](.github/workflows/firmware-release.yml).
 
 73!
 

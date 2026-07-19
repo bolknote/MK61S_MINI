@@ -149,6 +149,9 @@ namespace library_mk61 {
 
 #if MK61_ENABLE_TINYBASIC
 
+static constexpr u16 TB_INVALID_STORE_ID = 0xFFFF;
+static constexpr u16 TB_ROOT_STORE_ID = 0xFFFF;
+
 #include "mk_math.hpp"
 #ifdef TINYBASIC_HOST_TEST
 #define MK61_REF_HOST_TEST
@@ -227,6 +230,8 @@ struct TbAst {
 
 struct TbProgram {
   bool used;
+  u16 store_id;
+  u16 parent_id;
   char name[TB_NAME_SIZE];
   char source[TB_SOURCE_SIZE];
   u16 source_len;
@@ -1880,20 +1885,45 @@ static bool tb_store_name_is_valid(const char* name) {
   return name != NULL && name[0] != 0 && strlen(name) < program_store::NAME_SIZE;
 }
 
-static int load_tinybasic_program_from_store(const char* name) {
-  if(!tb_store_name_is_valid(name)) return -1;
+static int load_tinybasic_program_from_store(const program_store::Entry& entry) {
+  if(entry.kind != program_store::NodeKind::FILE ||
+     entry.type != program_store::ProgramType::TINYBASIC ||
+     !tb_store_name_is_valid(entry.name)) return -1;
   char source[TB_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
   u16 len = 0;
-  if(!program_store::read(program_store::ProgramType::TINYBASIC, name, (u8*) source, TB_SOURCE_SIZE - 1, &len)) return -1;
+  if(!program_store::read_id(entry.id, (u8*) source,
+                             TB_SOURCE_SIZE - 1, &len)) return -1;
   source[len] = 0;
-  const int slot = tb_alloc_program_slot(name);
+  const int slot = tb_alloc_program_slot(entry.name);
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
-  tb_copy_text(programs[slot].name, sizeof(programs[slot].name), name);
+  tb_copy_text(programs[slot].name, sizeof(programs[slot].name), entry.name);
+  programs[slot].store_id = entry.id;
+  programs[slot].parent_id = entry.parent_id;
   programs[slot].used = true;
   NextTinyBasic = (i8) slot;
   return slot;
+}
+
+static int load_tinybasic_program_from_store(u16 id) {
+  program_store::Entry entry;
+  return program_store::entry_by_id(id, entry)
+    ? load_tinybasic_program_from_store(entry)
+    : -1;
+}
+
+static int load_tinybasic_program_from_store(const char* name) {
+  if(!tb_store_name_is_valid(name)) return -1;
+  const int count = program_store::count(program_store::ProgramType::TINYBASIC);
+  for(int i = 0; i < count; i++) {
+    program_store::Entry entry;
+    if(program_store::entry(program_store::ProgramType::TINYBASIC, i, entry) &&
+       strncmp(entry.name, name, program_store::NAME_SIZE) == 0) {
+      return load_tinybasic_program_from_store(entry);
+    }
+  }
+  return -1;
 }
 #endif
 
@@ -1919,6 +1949,10 @@ void InitTinyBasic(void) {
   if(!workspace_scope.ok()) return;
 #endif
   memset(programs, 0, sizeof(programs));
+  for(int i = 0; i < TB_PROGRAM_COUNT; i++) {
+    programs[i].store_id = TB_INVALID_STORE_ID;
+    programs[i].parent_id = TB_ROOT_STORE_ID;
+  }
   tb_ast_reset(tb_ast);
   memset(tb_vars, 0, sizeof(tb_vars));
   tb_last_error[0] = 0;
@@ -2004,7 +2038,7 @@ static int select_tinybasic_program(bool allow_new) {
         {
           program_store::Entry entry;
           if(!program_store::entry(program_store::ProgramType::TINYBASIC, active, entry)) return -1;
-          const int slot = load_tinybasic_program_from_store(entry.name);
+          const int slot = load_tinybasic_program_from_store(entry);
           tinybasic_wait_keys_released();
           return slot;
         }
@@ -2238,8 +2272,12 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
   if(!tb_compile_source(source, validation_ast)) return false;
 
   char old_name[TB_NAME_SIZE] = "";
+  u16 store_id = TB_INVALID_STORE_ID;
+  u16 parent_id = TB_ROOT_STORE_ID;
   if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) {
     tb_copy_text(old_name, sizeof(old_name), programs[slot].name);
+    store_id = programs[slot].store_id;
+    parent_id = programs[slot].parent_id;
   }
 
   if(slot == TB_PROGRAM_COUNT) {
@@ -2258,16 +2296,24 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
 #ifndef TINYBASIC_HOST_TEST
   // Persist first. The editor's RAM state is not committed until flash accepts
   // the full source, so a failed write leaves the previous program intact.
-  if(!program_store::write(program_store::ProgramType::TINYBASIC, final_name, (const u8*) source, source_len)) {
+  u16 saved_id = store_id;
+  if(!program_store::write_file(parent_id, store_id,
+                                program_store::ProgramType::TINYBASIC,
+                                final_name, (const u8*) source, source_len,
+                                &saved_id)) {
     return tb_error("SORRY");
   }
-  if(old_name[0] != 0 && !tb_streq(old_name, final_name)) {
+  if(store_id == TB_INVALID_STORE_ID && old_name[0] != 0 &&
+     !tb_streq(old_name, final_name)) {
     program_store::remove(program_store::ProgramType::TINYBASIC, old_name);
   }
+  store_id = saved_id;
 #endif
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = source_len;
   tb_copy_text(programs[slot].name, sizeof(programs[slot].name), final_name);
+  programs[slot].store_id = store_id;
+  programs[slot].parent_id = parent_id;
   programs[slot].used = true;
   NextTinyBasic = (i8) slot;
   if(!tb_compile_source(programs[slot].source, tb_ast)) return false;
@@ -2351,6 +2397,20 @@ bool EditTinyBasicProgram(const char* name) {
 #endif
 }
 
+bool EditTinyBasicProgram(u16 id) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+  const int slot = load_tinybasic_program_from_store(id);
+  if(slot < 0) return false;
+  EditTinyBasicSlot(slot);
+  return true;
+#else
+  (void) id;
+  return false;
+#endif
+}
+
 bool RunTinyBasicProgram(const char* name) {
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
@@ -2360,6 +2420,20 @@ bool RunTinyBasicProgram(const char* name) {
   const int slot = load_tinybasic_program_from_store(name);
 #else
   const int slot = find_program_by_name(name);
+#endif
+  if(slot < 0) return false;
+  const bool ok = tb_run_program(slot);
+  tinybasic_wait_after_run();
+  return ok;
+}
+
+bool RunTinyBasicProgram(u16 id) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return false;
+  const int slot = load_tinybasic_program_from_store(id);
+#else
+  const int slot = id < TB_PROGRAM_COUNT ? (int) id : -1;
 #endif
   if(slot < 0) return false;
   const bool ok = tb_run_program(slot);

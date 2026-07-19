@@ -54,7 +54,6 @@ jobs:
         run: |
           arduino-cli lib update-index
           arduino-cli lib install "LiquidCrystal@1.0.7"
-          arduino-cli lib install "SPIMemory@3.4.0"
 
       - name: Prepare sketch
         run: |

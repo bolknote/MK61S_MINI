@@ -8,6 +8,7 @@
 #include  "tools.hpp"
 #include  "menu.hpp"
 #include  "ledcontrol.h"
+#include  "m61_text.hpp"
 #include "debug.h"
 #include <string.h>
 
@@ -393,5 +394,5 @@ bool  load_program(usize nProg_for_load) {
 bool  load_game(usize nGame_for_load) {
   program_store::Entry entry;
   if(!program_store::entry(program_store::ProgramType::MK61, (int) nGame_for_load, entry)) return false;
-  return LoadProgram(entry.name);
+  return m61_text::load_program(entry.id);
 }
