@@ -93,6 +93,7 @@ extern "C" {
 
 #define INVALID_CDB                                 0x20U
 #define INVALID_FIELED_IN_COMMAND                   0x24U
+#define SAVING_PARAMETERS_NOT_SUPPORTED             0x39U
 #define PARAMETER_LIST_LENGTH_ERROR                 0x1AU
 #define INVALID_FIELD_IN_PARAMETER_LIST             0x26U
 #define ADDRESS_OUT_OF_RANGE                        0x21U

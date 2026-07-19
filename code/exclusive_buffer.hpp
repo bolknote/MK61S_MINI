@@ -8,11 +8,11 @@ namespace exclusive_buffer {
 enum class Owner : u8 {
   NONE,
   DISPLAY_FONT,
-  USB_WRITE
+  USB_CACHE
 };
 
-// STM32duino configures MSC_MEDIA_PACKET as 8192 bytes. The same storage is
-// reused for a persistent external font while USB mass-storage mode is idle.
+// Persistent external-font storage while the UI is running; all of it becomes
+// 16 additional 512-byte write-back slots while USB mass-storage owns the UI.
 static constexpr usize SIZE = 8192;
 
 bool acquire(Owner owner, usize required);

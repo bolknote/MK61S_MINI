@@ -70,6 +70,18 @@ int main(void) {
     assert(full.ok());
     assert(full.size() == shared_scratch::SIZE);
   }
+  {
+    shared_scratch::Lease cache;
+    assert(cache.acquire(shared_scratch::Owner::USB_CACHE,
+                         shared_scratch::SIZE));
+    assert(cache.acquire(shared_scratch::Owner::USB_CACHE, 512));
+    assert(!cache.acquire(shared_scratch::Owner::USB_CACHE,
+                          shared_scratch::SIZE + 1));
+    cache.reset();
+    assert(!cache.ok());
+    assert(shared_scratch::current_owner() == shared_scratch::Owner::NONE);
+    assert(cache.acquire(shared_scratch::Owner::VFAT_COMMIT, 512));
+  }
   shared_scratch::Lease scratch_oversized(
     shared_scratch::Owner::VFAT_COMMIT,
     shared_scratch::SIZE + 1
@@ -81,7 +93,7 @@ int main(void) {
   assert(exclusive_buffer::current_owner() == exclusive_buffer::Owner::NONE);
   assert(exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT, 1536));
   assert(exclusive_buffer::data(exclusive_buffer::Owner::DISPLAY_FONT) != NULL);
-  assert(!exclusive_buffer::acquire(exclusive_buffer::Owner::USB_WRITE, 512));
+  assert(!exclusive_buffer::acquire(exclusive_buffer::Owner::USB_CACHE, 512));
   assert(exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT, 1024));
   assert(!exclusive_buffer::acquire(
     exclusive_buffer::Owner::DISPLAY_FONT,
@@ -89,8 +101,8 @@ int main(void) {
   ));
   exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
   assert(exclusive_buffer::current_owner() == exclusive_buffer::Owner::NONE);
-  assert(exclusive_buffer::acquire(exclusive_buffer::Owner::USB_WRITE, exclusive_buffer::SIZE));
-  exclusive_buffer::release(exclusive_buffer::Owner::USB_WRITE);
+  assert(exclusive_buffer::acquire(exclusive_buffer::Owner::USB_CACHE, exclusive_buffer::SIZE));
+  exclusive_buffer::release(exclusive_buffer::Owner::USB_CACHE);
 
   printf("memory_buffers_self_test: ok\n");
   return 0;

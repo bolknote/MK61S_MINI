@@ -12,7 +12,8 @@ enum class Owner : u8 {
   PROGRAM_STORE_RENAME,
   PROGRAM_STORE_GC,
   PROGRAM_STORE_READ_RANGE,
-  VFAT_COMMIT
+  VFAT_COMMIT,
+  USB_CACHE
 };
 
 // Largest transient file payload. File menus stream visible names directly
@@ -21,6 +22,7 @@ static constexpr usize SIZE = 1536;
 
 class [[nodiscard]] Lease {
   public:
+    Lease(void);
     Lease(Owner owner, usize required);
     ~Lease(void);
 
@@ -30,6 +32,8 @@ class [[nodiscard]] Lease {
     bool ok(void) const { return buffer != 0; }
     u8* data(void) const { return buffer; }
     usize size(void) const { return requested; }
+    bool acquire(Owner owner, usize required);
+    void reset(void);
 
   private:
     Owner owner;

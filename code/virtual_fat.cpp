@@ -30,7 +30,12 @@ static constexpr u8 MAX_LFN_ENTRIES = 8;
 static constexpr u16 MAX_LFN_UNITS = MAX_LFN_ENTRIES * 13;
 static constexpr u16 KIND_MAP_BYTES =
     (storage_geometry::FAT12_MAX_DATA_CLUSTERS * 2 + 7) / 8;
-static constexpr u32 INVALID_LBA = 0xFFFFFFFFUL;
+static constexpr u8 PRIMARY_CACHE_SLOTS = 13;
+static constexpr u8 SCRATCH_CACHE_SLOTS = shared_scratch::SIZE / SECTOR_SIZE;
+static constexpr u8 EXTERNAL_CACHE_SLOTS = 16;
+static constexpr u8 MAX_CACHE_SLOTS = PRIMARY_CACHE_SLOTS +
+                                      SCRATCH_CACHE_SLOTS +
+                                      EXTERNAL_CACHE_SLOTS;
 
 enum DesiredKind : u8 {
   DESIRED_NONE = 0,
@@ -58,23 +63,44 @@ struct ParsedNode {
   u8 attributes;
 };
 
-struct SessionState {
-  u8 desired_kinds[KIND_MAP_BYTES];
-  u8 sector_cache[SECTOR_SIZE];
-  u8 fat_cache[SECTOR_SIZE];
-  u32 sector_cache_lba;
-  u32 fat_cache_lba;
-  bool sector_cache_valid;
-  bool fat_cache_valid;
+enum CacheState : u8 {
+  CACHE_EMPTY = 0,
+  CACHE_CLEAN = 1,
+  CACHE_DIRTY = 2,
+  // Accepted directly by USB without an SPI read. The persistent comparison
+  // is deliberately postponed until eviction/sync.
+  CACHE_UNCHECKED = 3
 };
 
-static_assert(sizeof(SessionState) < 2304,
-              "C5 FAT session state must stay well below the shared 8 KiB workspace");
+struct CacheEntry {
+  u32 lba;
+  u32 age;
+  CacheState state;
+};
+
+struct SessionState {
+  u8 desired_kinds[KIND_MAP_BYTES];
+  u32 cache_clock;
+  CacheEntry cache[MAX_CACHE_SLOTS];
+  u8 cache_data[PRIMARY_CACHE_SLOTS][SECTOR_SIZE];
+};
+
+static_assert(sizeof(SessionState) <= language_workspace::SIZE,
+              "C5 FAT session and write-back cache must fit the shared 8 KiB workspace");
+static_assert(sizeof(SessionState) >= PRIMARY_CACHE_SLOTS * SECTOR_SIZE,
+              "C5 FAT cache geometry unexpectedly changed");
+static_assert(SCRATCH_CACHE_SLOTS == 3,
+              "shared scratch should lend exactly three USB sectors");
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE,
               "USB import payload must fit the shared scratch buffer");
 
 static language_workspace::Lease g_session_lease;
+static shared_scratch::Lease g_cache_scratch;
 static SessionState* g_session;
+static u8* g_extra_cache;
+static u8 g_scratch_cache_slots;
+static u8 g_extra_cache_slots;
+static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
 static const char* g_last_error;
 static char g_error_detail[48];
 
@@ -84,14 +110,17 @@ static bool ensure_session(void) {
                               sizeof(SessionState))) return false;
   g_session = (SessionState*) g_session_lease.data();
   memset(g_session, 0, sizeof(*g_session));
-  g_session->sector_cache_lba = INVALID_LBA;
-  g_session->fat_cache_lba = INVALID_LBA;
   return true;
 }
 
 static SessionState& session(void) {
   if(!ensure_session()) __builtin_trap();
   return *g_session;
+}
+
+static void update_cache_slot_count(void) {
+  g_cache_slots = (u8) (PRIMARY_CACHE_SLOTS + g_scratch_cache_slots +
+                        g_extra_cache_slots);
 }
 
 static const storage_geometry::Geometry& geometry(void) {
@@ -636,7 +665,42 @@ static u32 canonical_lba(u32 lba) {
   return lba;
 }
 
-static bool read_effective_sector(u32 lba, u8* output) {
+static u8* cache_bytes(u8 slot) {
+  if(slot < PRIMARY_CACHE_SLOTS) return session().cache_data[slot];
+  slot = (u8) (slot - PRIMARY_CACHE_SLOTS);
+  if(slot < g_scratch_cache_slots) {
+    return g_cache_scratch.data() + (u32) slot * SECTOR_SIZE;
+  }
+  slot = (u8) (slot - g_scratch_cache_slots);
+  return g_extra_cache + (u32) slot * SECTOR_SIZE;
+}
+
+static int cache_index(u32 lba) {
+  const u32 key = canonical_lba(lba);
+  SessionState& state = session();
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    if(state.cache[slot].state != CACHE_EMPTY && state.cache[slot].lba == key) {
+      return slot;
+    }
+  }
+  return -1;
+}
+
+static void touch_cache(u8 slot) {
+  SessionState& state = session();
+  state.cache_clock++;
+  if(state.cache_clock == 0) {
+    // Losing exact LRU order once per four billion accesses is harmless, but
+    // wrapping ages must never make a hot entry look permanently oldest.
+    state.cache_clock = 1;
+    for(u8 i = 0; i < g_cache_slots; i++) {
+      if(state.cache[i].state != CACHE_EMPTY) state.cache[i].age = 1;
+    }
+  }
+  state.cache[slot].age = state.cache_clock;
+}
+
+static bool read_persistent_sector(u32 lba, u8* output) {
   const u32 key = canonical_lba(lba);
   if(key != 0 && program_store::vfat_stage_exists(key)) {
     return program_store::vfat_stage_read(key, output);
@@ -644,29 +708,111 @@ static bool read_effective_sector(u32 lba, u8* output) {
   return read_base_sector(lba, output);
 }
 
-static bool cached_effective_sector(u32 lba, const u8*& output) {
+static bool persist_cache_slot(u8 slot) {
   SessionState& state = session();
-  const u32 key = canonical_lba(lba);
-  if(!state.sector_cache_valid || state.sector_cache_lba != key) {
-    if(!read_effective_sector(lba, state.sector_cache)) return false;
-    state.sector_cache_lba = key;
-    state.sector_cache_valid = true;
+  CacheEntry& entry = state.cache[slot];
+  if(entry.state != CACHE_DIRTY && entry.state != CACHE_UNCHECKED) return true;
+  if(entry.state == CACHE_UNCHECKED) {
+    u8 persistent[SECTOR_SIZE];
+    if(!read_persistent_sector(entry.lba, persistent)) return false;
+    if(memcmp(persistent, cache_bytes(slot), SECTOR_SIZE) == 0) {
+      entry.state = CACHE_CLEAN;
+      touch_cache(slot);
+      return true;
+    }
   }
-  output = state.sector_cache;
+  if(!program_store::vfat_stage_write(entry.lba, cache_bytes(slot))) return false;
+  entry.state = CACHE_CLEAN;
+  touch_cache(slot);
+  return true;
+}
+
+static int oldest_cache(CacheState wanted) {
+  SessionState& state = session();
+  int oldest = -1;
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    if(state.cache[slot].state != wanted) continue;
+    if(oldest < 0 || state.cache[slot].age < state.cache[(u8) oldest].age) {
+      oldest = slot;
+    }
+  }
+  return oldest;
+}
+
+static int oldest_dirty_cache(void) {
+  SessionState& state = session();
+  int oldest = -1;
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    const CacheState cache_state = state.cache[slot].state;
+    if(cache_state != CACHE_DIRTY && cache_state != CACHE_UNCHECKED) continue;
+    if(oldest < 0 || state.cache[slot].age < state.cache[(u8) oldest].age) {
+      oldest = slot;
+    }
+  }
+  return oldest;
+}
+
+static bool prepare_cache_slot(u8& output) {
+  SessionState& state = session();
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    if(state.cache[slot].state == CACHE_EMPTY) {
+      output = slot;
+      return true;
+    }
+  }
+
+  // Prefer dropping a read-only entry. Only when every slot is dirty do we
+  // append the least-recently-used one to the NOR journal.
+  int victim = oldest_cache(CACHE_CLEAN);
+  if(victim < 0) victim = oldest_dirty_cache();
+  if(victim < 0 || !persist_cache_slot((u8) victim)) return false;
+  state.cache[(u8) victim].state = CACHE_EMPTY;
+  output = (u8) victim;
+  return true;
+}
+
+static bool load_cached_sector(u32 lba, u8& slot) {
+  const int found = cache_index(lba);
+  if(found >= 0) {
+    slot = (u8) found;
+    touch_cache(slot);
+    return true;
+  }
+  if(!prepare_cache_slot(slot)) return false;
+  SessionState& state = session();
+  CacheEntry& entry = state.cache[slot];
+  if(!read_persistent_sector(lba, cache_bytes(slot))) {
+    entry.state = CACHE_EMPTY;
+    return false;
+  }
+  entry.lba = canonical_lba(lba);
+  entry.state = CACHE_CLEAN;
+  touch_cache(slot);
+  return true;
+}
+
+static bool read_effective_sector(u32 lba, u8* output) {
+  const int found = cache_index(lba);
+  if(found >= 0) {
+    const u8 slot = (u8) found;
+    memcpy(output, cache_bytes(slot), SECTOR_SIZE);
+    touch_cache(slot);
+    return true;
+  }
+  return read_persistent_sector(lba, output);
+}
+
+static bool cached_effective_sector(u32 lba, const u8*& output) {
+  u8 slot = 0;
+  if(!load_cached_sector(lba, slot)) return false;
+  output = cache_bytes(slot);
   return true;
 }
 
 static bool effective_fat_sector(u32 index, const u8*& output) {
   if(index >= geometry().fat_sectors) return false;
-  SessionState& state = session();
   const u32 lba = fat_start() + index;
-  if(!state.fat_cache_valid || state.fat_cache_lba != lba) {
-    if(!read_effective_sector(lba, state.fat_cache)) return false;
-    state.fat_cache_lba = lba;
-    state.fat_cache_valid = true;
-  }
-  output = state.fat_cache;
-  return true;
+  return cached_effective_sector(lba, output);
 }
 
 static bool effective_fat_value(u16 cluster, u16& value) {
@@ -1058,12 +1204,17 @@ static bool reconcile_directory_chain(u16 directory_id) {
   return false;
 }
 
-static bool release_mismatched_extent_chains(void) {
-  for(u16 id = 0; id < geometry().max_nodes; id++) {
+static bool release_mismatched_extent_chains(u16 parent_id, u8 depth = 0) {
+  if(depth > MAX_DEPTH) return false;
+  const int count = program_store::child_count(parent_id);
+  for(int index = 0; index < count; index++) {
     program_store::Entry entry;
-    if(!program_store::entry_by_id(id, entry) ||
-       entry.kind != program_store::NodeKind::DIRECTORY) continue;
-    if(!directory_chain_matches(id) && !release_all_extents(id)) return false;
+    if(!program_store::child(parent_id, index, entry)) return false;
+    if(entry.kind != program_store::NodeKind::DIRECTORY) continue;
+    if((!directory_chain_matches(entry.id) && !release_all_extents(entry.id)) ||
+       !release_mismatched_extent_chains(entry.id, (u8) (depth + 1))) {
+      return false;
+    }
   }
   return true;
 }
@@ -1137,22 +1288,200 @@ static bool ensure_directory_extents(u16 directory_id) {
   return true;
 }
 
-static bool ensure_all_directory_extents(void) {
-  for(u16 id = 0; id < geometry().max_nodes; id++) {
+static bool ensure_all_directory_extents(u16 parent_id = program_store::ROOT_ID,
+                                         u8 depth = 0) {
+  if(depth > MAX_DEPTH) return false;
+  const int count = program_store::child_count(parent_id);
+  for(int index = 0; index < count; index++) {
     program_store::Entry entry;
-    if(program_store::entry_by_id(id, entry) &&
-       entry.kind == program_store::NodeKind::DIRECTORY &&
-       !ensure_directory_extents(id)) return false;
+    if(!program_store::child(parent_id, index, entry)) return false;
+    if(entry.kind != program_store::NodeKind::DIRECTORY) continue;
+    if(!ensure_directory_extents(entry.id) ||
+       !ensure_all_directory_extents(entry.id, (u8) (depth + 1))) return false;
   }
   return true;
 }
 
-static void invalidate_caches(void) {
+static void invalidate_clean_cache(void) {
   if(g_session == NULL) return;
-  g_session->sector_cache_valid = false;
-  g_session->fat_cache_valid = false;
-  g_session->sector_cache_lba = INVALID_LBA;
-  g_session->fat_cache_lba = INVALID_LBA;
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    if(g_session->cache[slot].state == CACHE_CLEAN) {
+      g_session->cache[slot].state = CACHE_EMPTY;
+    }
+  }
+}
+
+class ScopedCommitScratch {
+  public:
+    ScopedCommitScratch(void) {
+      // Every dirty byte is already in the power-fail-safe stage journal when
+      // this guard is constructed. Clean cache entries may be discarded so
+      // VFAT_COMMIT and program-store GC can borrow shared_scratch.
+      memset(session().cache, 0, sizeof(session().cache));
+      g_cache_scratch.reset();
+      g_scratch_cache_slots = 0;
+      update_cache_slot_count();
+    }
+
+    ~ScopedCommitScratch(void) {
+      // Commit may have populated clean read-cache entries while the scratch
+      // span was absent. Clear their metadata before restoring slot mapping.
+      memset(session().cache, 0, sizeof(session().cache));
+      g_scratch_cache_slots = g_cache_scratch.acquire(
+        shared_scratch::Owner::USB_CACHE, shared_scratch::SIZE
+      ) ? SCRATCH_CACHE_SLOTS : 0;
+      update_cache_slot_count();
+    }
+
+    ScopedCommitScratch(const ScopedCommitScratch&) = delete;
+    ScopedCommitScratch& operator=(const ScopedCommitScratch&) = delete;
+};
+
+static bool cache_write_sector(u32 lba, const u8* data) {
+  const u32 key = canonical_lba(lba);
+  int found = cache_index(key);
+  u8 slot = 0;
+  if(found >= 0) {
+    slot = (u8) found;
+  } else {
+    if(!prepare_cache_slot(slot)) return false;
+    CacheEntry& entry = session().cache[slot];
+    if(!read_persistent_sector(lba, cache_bytes(slot))) {
+      entry.state = CACHE_EMPTY;
+      return false;
+    }
+    entry.lba = key;
+    entry.state = CACHE_CLEAN;
+  }
+
+  SessionState& state = session();
+  CacheEntry& entry = state.cache[slot];
+  u8* const bytes = cache_bytes(slot);
+  if(memcmp(bytes, data, SECTOR_SIZE) == 0) {
+    touch_cache(slot);
+    return true;
+  }
+
+  if(entry.state == CACHE_UNCHECKED) {
+    // A fast USB write has not read the persistent sector yet. Preserve that
+    // fact across rewrites: sync/eviction will compare only the final bytes.
+    memcpy(bytes, data, SECTOR_SIZE);
+    touch_cache(slot);
+    return true;
+  }
+
+  if(entry.state == CACHE_DIRTY) {
+    // The host may rewrite a dirty block back to its persistent value. Reload
+    // that value before deciding whether this slot still needs a NOR append.
+    if(!read_persistent_sector(lba, bytes)) {
+      // Keep the latest host bytes dirty so a retry or later sync can recover.
+      memcpy(bytes, data, SECTOR_SIZE);
+      touch_cache(slot);
+      return false;
+    }
+    if(memcmp(bytes, data, SECTOR_SIZE) == 0) {
+      entry.state = CACHE_CLEAN;
+      touch_cache(slot);
+      return true;
+    }
+  }
+
+  memcpy(bytes, data, SECTOR_SIZE);
+  entry.state = CACHE_DIRTY;
+  touch_cache(slot);
+  return true;
+}
+
+static bool flush_write_cache_internal(void) {
+  while(true) {
+    const int slot = oldest_dirty_cache();
+    if(slot < 0) return true;
+    if(!persist_cache_slot((u8) slot)) return false;
+  }
+}
+
+static bool packet_contains_key(u32 lba, u16 count, u32 key) {
+  for(u16 index = 0; index < count; index++) {
+    const u32 current_lba = lba + index;
+    if(current_lba != 0 && canonical_lba(current_lba) == key) return true;
+  }
+  return false;
+}
+
+static int fast_reusable_cache_slot(u32 lba, u16 count) {
+  SessionState& state = session();
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    if(state.cache[slot].state == CACHE_EMPTY) return slot;
+  }
+  int oldest = -1;
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    const CacheEntry& entry = state.cache[slot];
+    // Keep clean sectors addressed by this packet reserved until all of its
+    // sectors are installed. Their bytes may become dirty later in the packet.
+    if(entry.state != CACHE_CLEAN ||
+       packet_contains_key(lba, count, entry.lba)) continue;
+    if(oldest < 0 || entry.age < state.cache[(u8) oldest].age) oldest = slot;
+  }
+  return oldest;
+}
+
+static bool fast_packet_fits(u32 lba, u16 count) {
+  SessionState& state = session();
+  u8 reusable = 0;
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    const CacheEntry& entry = state.cache[slot];
+    if(entry.state == CACHE_EMPTY ||
+       (entry.state == CACHE_CLEAN &&
+        !packet_contains_key(lba, count, entry.lba))) reusable++;
+  }
+
+  u8 needed = 0;
+  for(u16 index = 0; index < count; index++) {
+    const u32 current_lba = lba + index;
+    if(current_lba == 0 || cache_index(current_lba) >= 0) continue;
+
+    const u32 key = canonical_lba(current_lba);
+    bool already_needed = false;
+    for(u16 previous = 0; previous < index; previous++) {
+      const u32 previous_lba = lba + previous;
+      if(previous_lba != 0 && canonical_lba(previous_lba) == key) {
+        already_needed = true;
+        break;
+      }
+    }
+    if(!already_needed && ++needed > reusable) return false;
+  }
+  return true;
+}
+
+static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
+                                    u32 lba, const u8* data) {
+  const u32 key = canonical_lba(lba);
+  int found = cache_index(key);
+  u8 slot = 0;
+  if(found >= 0) {
+    slot = (u8) found;
+    u8* const bytes = cache_bytes(slot);
+    if(memcmp(bytes, data, SECTOR_SIZE) != 0) {
+      memcpy(bytes, data, SECTOR_SIZE);
+      session().cache[slot].state = CACHE_UNCHECKED;
+    }
+    touch_cache(slot);
+    return;
+  }
+
+  found = fast_reusable_cache_slot(packet_lba, packet_count);
+  // fast_packet_fits() reserves every required slot before any mutation.
+  if(found < 0) __builtin_trap();
+  slot = (u8) found;
+  CacheEntry& entry = session().cache[slot];
+  // Do not publish a new key until all its bytes are present. This path never
+  // touches SPI and is therefore safe in the USB callback.
+  entry.state = CACHE_EMPTY;
+  entry.lba = key;
+  memcpy(cache_bytes(slot), data, SECTOR_SIZE);
+  touch_cache(slot);
+  entry.state = CACHE_UNCHECKED;
 }
 
 } // namespace
@@ -1174,46 +1503,102 @@ bool read_sectors(u32 lba, u8* output, u16 count) {
   return true;
 }
 
-bool write_sector(u32 lba, const u8* data) {
-  if(data == NULL || !program_store::ready() || lba >= sector_count()) return false;
-  if(lba == 0) return true;
-  if(!ensure_session()) return false;
-  const u32 key = canonical_lba(lba);
-  if(lba < data_start()) {
-    u8 current[SECTOR_SIZE];
-    if(!read_effective_sector(lba, current)) return false;
-    if(memcmp(current, data, sizeof(current)) == 0) return true;
+bool set_external_cache(u8* data, usize size) {
+  if(g_session != NULL) return false;
+  if(data == NULL || size < SECTOR_SIZE) {
+    g_extra_cache = NULL;
+    g_extra_cache_slots = 0;
+    update_cache_slot_count();
+    return data == NULL;
   }
-  if(!program_store::vfat_stage_write(key, data)) return false;
-  invalidate_caches();
+  usize slots = size / SECTOR_SIZE;
+  if(slots > EXTERNAL_CACHE_SLOTS) slots = EXTERNAL_CACHE_SLOTS;
+  g_extra_cache = data;
+  g_extra_cache_slots = (u8) slots;
+  update_cache_slot_count();
   return true;
 }
 
-bool write_sectors(u32 lba, const u8* data, u16 count) {
-  if(data == NULL && count != 0) return false;
-  for(u16 i = 0; i < count; i++) {
-    if(!write_sector(lba + i, data + (u32) i * SECTOR_SIZE)) return false;
+u8 write_cache_capacity(void) {
+  return g_cache_slots;
+}
+
+u8 dirty_cache_sectors(void) {
+  if(g_session == NULL) return 0;
+  u8 count = 0;
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    const CacheState state = g_session->cache[slot].state;
+    if(state == CACHE_DIRTY || state == CACHE_UNCHECKED) count++;
+  }
+  return count;
+}
+
+bool try_write_cached_sectors(u32 lba, const u8* data, u16 count) {
+  // Unlike write_cached_sectors(), this function is called by the USB stack.
+  // It must not acquire memory, read/program SPI NOR, evict dirty data, or
+  // partially accept a packet that later needs the deferred main-loop path.
+  if((data == NULL && count != 0) || !program_store::ready() ||
+     g_session == NULL || count > MAX_CACHE_SLOTS || lba > sector_count() ||
+     (u32) count > sector_count() - lba || !fast_packet_fits(lba, count)) {
+    return false;
+  }
+  for(u16 index = 0; index < count; index++) {
+    const u32 current_lba = lba + index;
+    if(current_lba != 0) {
+      fast_cache_write_sector(lba, count, current_lba,
+                              data + (u32) index * SECTOR_SIZE);
+    }
   }
   return true;
+}
+
+bool write_cached_sectors(u32 lba, const u8* data, u16 count) {
+  if((data == NULL && count != 0) || !program_store::ready() ||
+     !ensure_session() || lba > sector_count() ||
+     (u32) count > sector_count() - lba) return false;
+  for(u16 i = 0; i < count; i++) {
+    const u32 current_lba = lba + i;
+    if(current_lba == 0) continue;
+    if(!cache_write_sector(current_lba,
+                           data + (u32) i * SECTOR_SIZE)) return false;
+  }
+  return true;
+}
+
+bool flush_write_cache(void) {
+  return program_store::ready() && ensure_session() &&
+         flush_write_cache_internal();
+}
+
+bool write_sector(u32 lba, const u8* data) {
+  if(!write_cached_sectors(lba, data, 1)) return false;
+  const int slot = lba == 0 ? -1 : cache_index(lba);
+  return slot < 0 || persist_cache_slot((u8) slot);
+}
+
+bool write_sectors(u32 lba, const u8* data, u16 count) {
+  return write_cached_sectors(lba, data, count) && flush_write_cache();
 }
 
 bool flush_pending(void) {
   if(!program_store::ready() || !ensure_session()) return false;
+  if(!flush_write_cache_internal()) return false;
   if(program_store::vfat_stage_count() == 0) return true;
+  ScopedCommitScratch commit_scratch;
   g_last_error = NULL;
   memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
-  invalidate_caches();
+  invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::VALIDATE)) {
     if(g_last_error == NULL) g_last_error = "validate";
     return false;
   }
-  if(!release_mismatched_extent_chains() || !prune_tree(program_store::ROOT_ID,
-                                                        false)) {
+  if(!release_mismatched_extent_chains(program_store::ROOT_ID) ||
+     !prune_tree(program_store::ROOT_ID, false)) {
     g_last_error = "prepare";
     return false;
   }
-  invalidate_caches();
+  invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::APPLY)) {
     g_last_error = "apply";
@@ -1224,26 +1609,35 @@ bool flush_pending(void) {
     g_last_error = "commit";
     return false;
   }
-  invalidate_caches();
+  invalidate_clean_cache();
   return ensure_all_directory_extents();
 }
 
 bool reset_session(void) {
   if(!program_store::ready() || !ensure_session()) return false;
+  if(!g_cache_scratch.ok()) {
+    g_scratch_cache_slots = g_cache_scratch.acquire(
+      shared_scratch::Owner::USB_CACHE, shared_scratch::SIZE
+    ) ? SCRATCH_CACHE_SLOTS : 0;
+    update_cache_slot_count();
+  }
   memset(g_session, 0, sizeof(*g_session));
-  g_session->sector_cache_lba = INVALID_LBA;
-  g_session->fat_cache_lba = INVALID_LBA;
   program_store::vfat_stage_clear();
   if(program_store::vfat_stage_count() == 0 && !ensure_all_directory_extents()) {
     return false;
   }
-  invalidate_caches();
+  invalidate_clean_cache();
   return true;
 }
 
 void end_session(void) {
+  g_cache_scratch.reset();
   g_session = NULL;
   g_session_lease.reset();
+  g_extra_cache = NULL;
+  g_scratch_cache_slots = 0;
+  g_extra_cache_slots = 0;
+  update_cache_slot_count();
 }
 
 const char* trace_line_at(u16 index) {

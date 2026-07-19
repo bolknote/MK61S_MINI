@@ -343,11 +343,16 @@ static void stage_host_tree(void) {
 
   u8 file_data[512] = {};
   memcpy(file_data, payload, sizeof(payload) - 1);
-  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), file_data));
-  assert(virtual_fat::write_sector(cluster_lba(fs, inner_cluster), inner));
-  assert(virtual_fat::write_sector(cluster_lba(fs, outer_cluster), outer));
-  assert(virtual_fat::write_sector(fs.root_start, root));
-  assert(virtual_fat::write_sector(1, fat));
+  assert(virtual_fat::write_cached_sectors(cluster_lba(fs, file_cluster),
+                                           file_data, 1));
+  assert(virtual_fat::write_cached_sectors(cluster_lba(fs, inner_cluster),
+                                           inner, 1));
+  assert(virtual_fat::write_cached_sectors(cluster_lba(fs, outer_cluster),
+                                           outer, 1));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::dirty_cache_sectors() == 5);
   assert(fat12_value(outer_cluster) == 0xFFF);
   assert(fat12_value(inner_cluster) == 0xFFF);
   assert(fat12_value(file_cluster) == 0xFFF);
@@ -357,6 +362,7 @@ static void test_host_creates_arbitrary_nested_tree(void) {
   fresh();
   stage_host_tree();
   expect_flush();
+  assert(virtual_fat::write_cache_capacity() == 16);
   assert(program_store::vfat_stage_count() == 0);
 
   program_store::Entry outer;
@@ -401,6 +407,176 @@ static void test_staged_update_survives_session_reset(void) {
   assert(program_store::vfat_stage_count() == 1);
   expect_flush();
   expect_file(id, (const u8*) "new", 3);
+}
+
+static void test_identical_data_writes_do_not_restage(void) {
+  fresh();
+  const Layout fs = layout();
+  const u32 lba = cluster_lba(fs, 200);
+  u8 data[512] = {};
+
+  // An unallocated data cluster renders as zero and needs no physical log
+  // record when the host redundantly zero-fills it.
+  assert(virtual_fat::write_sector(lba, data));
+  assert(program_store::vfat_stage_count() == 0);
+
+  data[17] = 0x5A;
+  assert(virtual_fat::write_sector(lba, data));
+  assert(program_store::vfat_stage_count() == 1);
+  const u64 programmed = SPIFlash::programmedBytes();
+  assert(virtual_fat::write_sector(lba, data));
+  assert(program_store::vfat_stage_count() == 1);
+  assert(SPIFlash::programmedBytes() == programmed);
+}
+
+static void test_write_cache_coalesces_and_evicts_lru(void) {
+  fresh();
+  const Layout fs = layout();
+  assert(virtual_fat::write_cache_capacity() == 16);
+  const u32 first_lba = cluster_lba(fs, 300);
+  u8 data[512] = {};
+  u8 readback[512] = {};
+
+  data[9] = 1;
+  assert(virtual_fat::write_cached_sectors(first_lba, data, 1));
+  data[9] = 2;
+  assert(virtual_fat::write_cached_sectors(first_lba, data, 1));
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::dirty_cache_sectors() == 1);
+  assert(virtual_fat::read_sector(first_lba, readback));
+  assert(memcmp(readback, data, sizeof(data)) == 0);
+
+  // Returning to the persistent zero block cancels the dirty write entirely.
+  memset(data, 0, sizeof(data));
+  assert(virtual_fat::write_cached_sectors(first_lba, data, 1));
+  assert(virtual_fat::dirty_cache_sectors() == 0);
+  assert(program_store::vfat_stage_count() == 0);
+
+  // Fill every slot with a distinct dirty sector. The next miss persists only
+  // the LRU sector; the other writes stay coalescible in RAM until sync.
+  const u8 capacity = virtual_fat::write_cache_capacity();
+  for(u8 i = 0; i < capacity; i++) {
+    memset(data, 0, sizeof(data));
+    data[0] = (u8) (i + 1);
+    assert(virtual_fat::write_cached_sectors(first_lba + i, data, 1));
+  }
+  assert(virtual_fat::dirty_cache_sectors() == capacity);
+  assert(program_store::vfat_stage_count() == 0);
+
+  memset(data, 0, sizeof(data));
+  data[0] = 0xA5;
+  assert(virtual_fat::write_cached_sectors(first_lba + capacity, data, 1));
+  assert(virtual_fat::dirty_cache_sectors() == capacity);
+  assert(program_store::vfat_stage_count() == 1);
+  assert(virtual_fat::flush_write_cache());
+  assert(virtual_fat::dirty_cache_sectors() == 0);
+  assert(program_store::vfat_stage_count() == (u16) capacity + 1);
+}
+
+static void test_fast_usb_cache_is_atomic_and_defers_spi(void) {
+  fresh();
+  const Layout fs = layout();
+  const u32 first_lba = cluster_lba(fs, 600);
+  u8 zero[512] = {};
+  u8 readback[512] = {};
+
+  // The interrupt-safe path does not read even a zero-filled base sector.
+  // Sync performs the postponed comparison and avoids a staging write.
+  assert(virtual_fat::try_write_cached_sectors(first_lba, zero, 1));
+  assert(virtual_fat::dirty_cache_sectors() == 1);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::read_sector(first_lba, readback));
+  assert(memcmp(readback, zero, sizeof(zero)) == 0);
+  assert(virtual_fat::flush_write_cache());
+  assert(virtual_fat::dirty_cache_sectors() == 0);
+  assert(program_store::vfat_stage_count() == 0);
+
+  fresh();
+  const Layout fresh_fs = layout();
+  const u32 packet_lba = cluster_lba(fresh_fs, 600);
+  const u8 capacity = virtual_fat::write_cache_capacity();
+  assert(capacity == 16);
+  u8 packet[16 * 512] = {};
+  for(u8 index = 0; index < capacity; index++) {
+    packet[(u32) index * 512] = (u8) (index + 1);
+  }
+  assert(virtual_fat::try_write_cached_sectors(packet_lba, packet, capacity));
+  assert(virtual_fat::dirty_cache_sectors() == capacity);
+  assert(program_store::vfat_stage_count() == 0);
+
+  // A full cache cannot accept another key synchronously. Failure leaves the
+  // entire packet untouched, after which the normal path may persist one LRU
+  // victim and continue without losing the BOT packet.
+  u8 extra[512] = {0xA5};
+  assert(!virtual_fat::try_write_cached_sectors(packet_lba + capacity,
+                                                extra, 1));
+  assert(virtual_fat::dirty_cache_sectors() == capacity);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::read_sector(packet_lba + capacity - 1, readback));
+  assert(readback[0] == capacity);
+
+  // Rewriting a resident key never needs SPI and remains on the fast path.
+  u8 replacement[512] = {0x5A};
+  assert(virtual_fat::try_write_cached_sectors(packet_lba + capacity - 1,
+                                               replacement, 1));
+  assert(virtual_fat::read_sector(packet_lba + capacity - 1, readback));
+  assert(memcmp(readback, replacement, sizeof(replacement)) == 0);
+  assert(program_store::vfat_stage_count() == 0);
+
+  assert(virtual_fat::write_cached_sectors(packet_lba + capacity, extra, 1));
+  assert(virtual_fat::dirty_cache_sectors() == capacity);
+  assert(program_store::vfat_stage_count() == 1);
+  assert(virtual_fat::flush_write_cache());
+  assert(virtual_fat::dirty_cache_sectors() == 0);
+  assert(program_store::vfat_stage_count() == (u16) capacity + 1);
+
+  // Preflight also reserves a clean key addressed later in the same packet;
+  // it must not mutate that sector before deciding to defer the whole packet.
+  fresh();
+  const Layout reserved_fs = layout();
+  const u32 reserved_lba = cluster_lba(reserved_fs, 700);
+  assert(virtual_fat::write_cached_sectors(reserved_lba + 15, zero, 1));
+  assert(virtual_fat::dirty_cache_sectors() == 0);
+  for(u8 index = 0; index < 15; index++) {
+    extra[0] = (u8) (index + 1);
+    assert(virtual_fat::try_write_cached_sectors(reserved_lba + index,
+                                                 extra, 1));
+  }
+  u8 two_sectors[2 * 512] = {};
+  two_sectors[0] = 0xC1;
+  two_sectors[512] = 0xC2;
+  assert(!virtual_fat::try_write_cached_sectors(reserved_lba + 15,
+                                                two_sectors, 2));
+  assert(virtual_fat::dirty_cache_sectors() == 15);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::read_sector(reserved_lba + 15, readback));
+  assert(readback[0] == 0);
+  assert(virtual_fat::read_sector(reserved_lba + 16, readback));
+  assert(readback[0] == 0);
+}
+
+static void test_optional_display_cache_span(void) {
+  fresh();
+  virtual_fat::end_session();
+  alignas(4) static u8 display_cache[8192];
+  assert(virtual_fat::set_external_cache(display_cache,
+                                         sizeof(display_cache)));
+  assert(virtual_fat::reset_session());
+  assert(virtual_fat::write_cache_capacity() == 32);
+
+  const Layout fs = layout();
+  const u32 first_lba = cluster_lba(fs, 500);
+  u8 data[512] = {};
+  for(u8 i = 0; i < virtual_fat::write_cache_capacity(); i++) {
+    data[0] = (u8) (i + 1);
+    assert(virtual_fat::write_cached_sectors(first_lba + i, data, 1));
+  }
+  assert(virtual_fat::dirty_cache_sectors() == 32);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::flush_pending());
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::dirty_cache_sectors() == 0);
+  assert(virtual_fat::write_cache_capacity() == 32);
 }
 
 static void test_host_deletes_file_via_directory(void) {
@@ -497,6 +673,10 @@ int main(void) {
   test_directory_extents_grow_without_flat_catalog_scan();
   test_host_creates_arbitrary_nested_tree();
   test_staged_update_survives_session_reset();
+  test_identical_data_writes_do_not_restage();
+  test_write_cache_coalesces_and_evicts_lru();
+  test_fast_usb_cache_is_atomic_and_defers_spi();
+  test_optional_display_cache_span();
   test_host_deletes_file_via_directory();
   test_finder_appledouble_does_not_abort_batch();
   test_malformed_fat_chain_is_rejected_atomically();

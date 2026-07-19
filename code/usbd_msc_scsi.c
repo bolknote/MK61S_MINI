@@ -33,6 +33,10 @@ EndBSPDependencies */
 #error "MSC BOT data buffer must hold a READ CAPACITY(16) response"
 #endif
 
+#if MSC_MEDIA_PACKET < (MSC_SCSI_MODE_SENSE10_HEADER_LENGTH + MSC_SCSI_CACHING_PAGE_LENGTH + MSC_SCSI_REMOVABLE_PAGE_LENGTH)
+#error "MSC BOT data buffer must hold every advertised MODE SENSE page"
+#endif
+
 extern uint8_t MK61_VirtualFatSync(void);
 
 #define MK61_VFAT_SYNC_OK    0U
@@ -97,6 +101,8 @@ static int8_t SCSI_StartStopUnit(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t 
 static int8_t SCSI_AllowPreventRemovable(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
 static int8_t SCSI_ModeSense6(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
 static int8_t SCSI_ModeSense10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
+static int8_t SCSI_ModeSense(USBD_HandleTypeDef *pdev, uint8_t lun,
+                             uint8_t *params, uint8_t ten_byte_command);
 static int8_t SCSI_Write10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
 static int8_t SCSI_Write12(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
 static int8_t SCSI_Read10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params);
@@ -500,30 +506,7 @@ static int8_t SCSI_ReadFormatCapacity(USBD_HandleTypeDef *pdev, uint8_t lun, uin
   */
 static int8_t SCSI_ModeSense6(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params)
 {
-  UNUSED(lun);
-  USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
-  uint16_t len = MODE_SENSE6_LEN;
-
-  if (hmsc == NULL)
-  {
-    return -1;
-  }
-
-  /* Check If media is write-protected */
-  MSC_Mode_Sense6_data[2] &= 0x7FU;
-  if (((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->IsWriteProtected(lun) != 0)
-  {
-    MSC_Mode_Sense6_data[2] |= 0x80U;
-  }
-
-  if (params[4] <= len)
-  {
-    len = params[4];
-  }
-
-  (void)SCSI_UpdateBotData(hmsc, MSC_Mode_Sense6_data, len);
-
-  return 0;
+  return SCSI_ModeSense(pdev, lun, params, 0U);
 }
 
 
@@ -536,29 +519,58 @@ static int8_t SCSI_ModeSense6(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *pa
   */
 static int8_t SCSI_ModeSense10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *params)
 {
-  UNUSED(lun);
+  return SCSI_ModeSense(pdev, lun, params, 1U);
+}
+
+/**
+  * @brief  SCSI_ModeSense
+  *         Build a MODE SENSE(6/10) response directly in the existing BOT
+  *         packet buffer. This avoids permanent RAM copies of every supported
+  *         page and permits precise single-page and all-page responses.
+  */
+static int8_t SCSI_ModeSense(USBD_HandleTypeDef *pdev, uint8_t lun,
+                             uint8_t *params, uint8_t ten_byte_command)
+{
   USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[pdev->classId];
-  uint16_t len = MODE_SENSE10_LEN;
-  const uint16_t allocation_length = ((uint16_t)params[7] << 8) | params[8];
+  uint16_t response_length;
+  uint16_t allocation_length;
 
   if (hmsc == NULL)
   {
     return -1;
   }
 
-  /* Check If media is write-protected */
-  MSC_Mode_Sense10_data[3] &= 0x7FU;
-  if (((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->IsWriteProtected(lun) != 0)
+  /* Neither advertised page is parameters-savable (PS=0). SPC requires a
+     Saved Values request to fail rather than silently returning defaults. */
+  if ((params[2] & 0xC0U) == 0xC0U)
   {
-    MSC_Mode_Sense10_data[3] |= 0x80U;
+    SCSI_SenseCode(pdev, lun, ILLEGAL_REQUEST,
+                   SAVING_PARAMETERS_NOT_SUPPORTED);
+    return -1;
   }
 
-  if (allocation_length <= len)
+  response_length = msc_scsi_build_mode_sense(
+      hmsc->bot_data, (uint16_t)sizeof(hmsc->bot_data),
+      params[2], params[3], ten_byte_command,
+      (uint8_t)(((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])
+                    ->IsWriteProtected(lun) != 0));
+  if (response_length == 0U)
   {
-    len = allocation_length;
+    SCSI_SenseCode(pdev, lun, ILLEGAL_REQUEST, INVALID_FIELED_IN_COMMAND);
+    return -1;
   }
 
-  (void)SCSI_UpdateBotData(hmsc, MSC_Mode_Sense10_data, len);
+  if (ten_byte_command != 0U)
+  {
+    allocation_length = ((uint16_t)params[7] << 8) | params[8];
+  }
+  else
+  {
+    allocation_length = params[4];
+  }
+
+  hmsc->bot_data_length = allocation_length < response_length
+      ? allocation_length : response_length;
 
   return 0;
 }
@@ -1365,8 +1377,7 @@ int8_t SCSI_CompleteSync(USBD_HandleTypeDef *pdev, uint8_t success)
 
   if (success != 0U)
   {
-    if ((hmsc->cbw.CB[0] == SCSI_START_STOP_UNIT) &&
-        ((hmsc->cbw.CB[4] & 0x3U) == 0x2U))
+    if (msc_scsi_is_eject(hmsc->cbw.CB[0], hmsc->cbw.CB[4]) != 0U)
     {
       hmsc->scsi_medium_state = SCSI_MEDIUM_EJECTED;
     }

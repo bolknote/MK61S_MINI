@@ -17,25 +17,45 @@ static bool interrupt_context(void) {
 #endif
 }
 
-Lease::Lease(Owner next_owner, usize required)
-  : owner(next_owner), buffer(0), requested(0), token(0) {
-  if(next_owner == Owner::NONE || required == 0 || required > SIZE || active_owner != Owner::NONE || interrupt_context()) return;
+Lease::Lease(void)
+  : owner(Owner::NONE), buffer(0), requested(0), token(0) {}
+
+Lease::Lease(Owner next_owner, usize required) : Lease() {
+  (void) acquire(next_owner, required);
+}
+
+bool Lease::acquire(Owner next_owner, usize required_size) {
+  if(buffer != 0) return owner == next_owner && required_size <= requested;
+  owner = next_owner;
+  requested = 0;
+  token = 0;
+  if(next_owner == Owner::NONE || required_size == 0 || required_size > SIZE ||
+     active_owner != Owner::NONE || interrupt_context()) return false;
   active_owner = next_owner;
   next_token++;
   if(next_token == 0) next_token++;
   active_token = next_token;
   token = active_token;
-  requested = required;
+  requested = required_size;
   buffer = scratch;
+  return true;
 }
 
 Lease::~Lease(void) {
+  reset();
+}
+
+void Lease::reset(void) {
   if(buffer == 0) return;
   // Only this lease can release its reservation. With the raw release API
   // removed, a mismatch indicates memory corruption or a lifetime bug.
   if(active_owner != owner || active_token != token) __builtin_trap();
   active_owner = Owner::NONE;
   active_token = 0;
+  owner = Owner::NONE;
+  buffer = 0;
+  requested = 0;
+  token = 0;
 }
 
 Owner current_owner(void) {

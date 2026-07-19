@@ -1046,8 +1046,8 @@ static bool select_reclaimable_sector(u32& out) {
       ? g_meta.gc_cursor : first;
 
   // Mark liveness for 32 candidates per inode-table pass. The former
-  // sector-first loop could scan the complete 3939-entry catalog once for
-  // every one of ~4000 sectors near full capacity (quadratic worst case).
+  // sector-first loop could scan the complete node table once for every data
+  // sector near full capacity (quadratic worst case).
   for(u32 base = 0; base < count; base += GC_SCAN_WINDOW) {
     const u8 window = (u8) ((count - base < GC_SCAN_WINDOW)
         ? count - base : GC_SCAN_WINDOW);
@@ -2348,17 +2348,19 @@ static bool append_stage_value(u16 sector, u32 key, const u8* data) {
   if(g_stage_generation == 0) g_stage_generation = 1;
   const u16 ref = (u16) (sector * STAGE_RECORDS_PER_SECTOR + slot + 1);
   const u32 address = stage_record_address(ref);
-  u8 header[STAGE_RECORD_HEADER_SIZE];
-  memset(header, 0xFF, sizeof(header));
-  header[0] = 'S';
-  header[1] = '5';
-  header[2] = STATE_WRITING;
-  put_le32(header, 4, key);
-  put_le16(header, 8, g_stage_generation);
-  put_le32(header, 12, stage_crc(key, g_stage_generation, data));
-  if(!write_bytes(address, header, sizeof(header)) ||
-     !write_bytes(address + STAGE_RECORD_HEADER_SIZE, data, STAGE_DATA_SIZE) ||
-     !write_byte(address + 2, STATE_ACTIVE)) {
+  u8 record[STAGE_RECORD_SIZE];
+  memset(record, 0xFF, STAGE_RECORD_HEADER_SIZE);
+  record[0] = 'S';
+  record[1] = '5';
+  // The complete record is programmed as one verified stream. Recovery only
+  // accepts ACTIVE records whose payload CRC matches, so a power cut during
+  // any constituent NOR page program cannot supersede the previous version.
+  record[2] = STATE_ACTIVE;
+  put_le32(record, 4, key);
+  put_le16(record, 8, g_stage_generation);
+  put_le32(record, 12, stage_crc(key, g_stage_generation, data));
+  memcpy(record + STAGE_RECORD_HEADER_SIZE, data, STAGE_DATA_SIZE);
+  if(!write_bytes(address, record, sizeof(record))) {
     g_stage_sealed[sector] = 1;
     return false;
   }
@@ -2526,6 +2528,7 @@ void vfat_stage_clear(void) {
   memset(g_stage_sealed, 0, sizeof(g_stage_sealed));
   if(!g_ready) return;
 
+  u8 payload[STAGE_DATA_SIZE];
   for(u16 sector = 0; sector < g_geometry.stage_sector_count; sector++) {
     if(!stage_sector_header_valid(sector)) continue;
     for(u8 slot = 0; slot < STAGE_RECORDS_PER_SECTOR; slot++) {
@@ -2545,6 +2548,15 @@ void vfat_stage_clear(void) {
       const u16 generation = get_le16(raw, 8);
       if(stage_generation_newer(generation, g_stage_generation)) g_stage_generation = generation;
       if(state != STATE_ACTIVE) continue;
+      const u32 crc = get_le32(raw, 12);
+      if(!read_bytes(stage_record_address(ref) + STAGE_RECORD_HEADER_SIZE,
+                     payload, sizeof(payload)) ||
+         stage_crc(key, generation, payload) != crc) {
+        // Never append after a torn record: retaining the previous valid
+        // generation is more important than the unused tail of this sector.
+        g_stage_sealed[sector] = 1;
+        continue;
+      }
       const int old = stage_ref_index(key);
       if(old >= 0) {
         u32 old_key = 0;

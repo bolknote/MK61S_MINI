@@ -57,42 +57,38 @@ struct DeferredWrite {
   u32 block_addr;
   u16 block_len;
   DeferredWriteState state;
-#if !defined(MK61_DISPLAY_UC1609)
-  u8 data[MSC_MEDIA_PACKET];
-#endif
+  u8* buffer;
 };
 
-#if defined(MK61_DISPLAY_UC1609)
-static_assert(sizeof(DeferredWrite) == 8, "deferred write metadata must stay compact");
-static_assert(MSC_MEDIA_PACKET <= exclusive_buffer::SIZE,
-              "exclusive USB/font buffer is smaller than MSC packet");
-#else
-static_assert(sizeof(DeferredWrite) == MSC_MEDIA_PACKET + 8,
-              "LCD deferred write buffer must stay compact");
-#endif
+static_assert(sizeof(DeferredWrite) <= 16,
+              "deferred write metadata must not contain a packet copy");
 
 static DeferredWrite deferred_write = {};
 
-static bool acquire_write_buffer(void) {
+static bool acquire_cache_buffer(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  return exclusive_buffer::acquire(exclusive_buffer::Owner::USB_WRITE, MSC_MEDIA_PACKET);
+  return exclusive_buffer::acquire(exclusive_buffer::Owner::USB_CACHE,
+                                   exclusive_buffer::SIZE);
 #else
   return true;
 #endif
 }
 
-static void release_write_buffer(void) {
+static bool configure_cache_buffer(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  if(exclusive_buffer::current_owner() != exclusive_buffer::Owner::USB_WRITE) return;
-  exclusive_buffer::release(exclusive_buffer::Owner::USB_WRITE);
+  return virtual_fat::set_external_cache(
+    exclusive_buffer::data(exclusive_buffer::Owner::USB_CACHE),
+    exclusive_buffer::SIZE
+  );
+#else
+  return virtual_fat::set_external_cache(NULL, 0);
 #endif
 }
 
-static u8* write_buffer(void) {
+static void release_cache_buffer(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  return exclusive_buffer::data(exclusive_buffer::Owner::USB_WRITE);
-#else
-  return deferred_write.data;
+  if(exclusive_buffer::current_owner() != exclusive_buffer::Owner::USB_CACHE) return;
+  exclusive_buffer::release(exclusive_buffer::Owner::USB_CACHE);
 #endif
 }
 
@@ -138,6 +134,7 @@ static void reset_deferred_write(void) {
                                  __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
   deferred_write.block_addr = 0;
   deferred_write.block_len = 0;
+  deferred_write.buffer = NULL;
   set_deferred_state(DeferredWriteState::EMPTY);
 }
 
@@ -335,17 +332,17 @@ static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint1
 
 static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
   u32 data_len = 0;
-  u8* const deferred_data = write_buffer();
   if(lun != 0 || buf == NULL || block_len == 0 ||
      !msc_scsi_transfer_bytes(block_len, virtual_fat::SECTOR_SIZE, &data_len) ||
-     deferred_data == NULL || data_len > MSC_MEDIA_PACKET ||
+     data_len > MSC_MEDIA_PACKET ||
      !msc_scsi_range_is_valid(virtual_fat::sector_count(), block_addr, block_len)) {
     return USBD_MSC_STORAGE_ERROR;
   }
 
   const DeferredWriteState state = deferred_state();
   if(state == DeferredWriteState::COMPLETE_OK || state == DeferredWriteState::COMPLETE_ERROR) {
-    if(deferred_write.block_addr != block_addr || deferred_write.block_len != block_len) {
+    if(deferred_write.block_addr != block_addr || deferred_write.block_len != block_len ||
+       deferred_write.buffer != buf) {
       reset_deferred_write();
       return USBD_MSC_STORAGE_ERROR;
     }
@@ -357,10 +354,20 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
   }
   if(state != DeferredWriteState::EMPTY) return USBD_MSC_STORAGE_BUSY;
 
-  memcpy(deferred_data, buf, data_len);
+  // The common case is a pure RAM copy: one full 8 KiB BOT packet fits in the
+  // A00 cache (two packets on UC1609) and can be acknowledged immediately.
+  // Only cache pressure requiring dirty eviction falls back to the main loop,
+  // where SPI access is safe.
+  if(virtual_fat::try_write_cached_sectors(block_addr, buf, block_len)) {
+    return USBD_MSC_STORAGE_OK;
+  }
+
   deferred_write.block_addr = block_addr;
   deferred_write.block_len = block_len;
-  // Publish the state last: service() must never observe a half-copied block.
+  // SCSI_ProcessWrite deliberately leaves the OUT endpoint unarmed while the
+  // callback is BUSY, so STM32's BOT packet remains immutable until
+  // SCSI_ContinueWrite(). Publish its pointer last and avoid an 8 KiB copy.
+  deferred_write.buffer = buf;
   set_deferred_state(DeferredWriteState::PENDING);
   return USBD_MSC_STORAGE_BUSY;
 }
@@ -399,12 +406,12 @@ static void close_session(void) {
   release_usb_device();
   if(session_open) virtual_fat::end_session();
   session_open = false;
-  release_write_buffer();
+  release_cache_buffer();
 }
 
 bool init(void) {
   if(is_initialized()) return true;
-  if(!acquire_write_buffer()) return false;
+  if(!acquire_cache_buffer()) return false;
   if(session_open) {
     if(device_configured) {
       set_initialized(true);
@@ -418,8 +425,9 @@ bool init(void) {
   }
 
   reset_deferred_io();
-  if(!virtual_fat::reset_session()) {
-    release_write_buffer();
+  if(!configure_cache_buffer() || !virtual_fat::reset_session()) {
+    virtual_fat::end_session();
+    release_cache_buffer();
     return false;
   }
   session_open = true;
@@ -427,7 +435,7 @@ bool init(void) {
   if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) {
     virtual_fat::end_session();
     session_open = false;
-    release_write_buffer();
+    release_cache_buffer();
     return false;
   }
   device_configured = true;
@@ -435,14 +443,14 @@ bool init(void) {
     release_usb_device();
     virtual_fat::end_session();
     session_open = false;
-    release_write_buffer();
+    release_cache_buffer();
     return false;
   }
   if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) {
     release_usb_device();
     virtual_fat::end_session();
     session_open = false;
-    release_write_buffer();
+    release_cache_buffer();
     return false;
   }
 
@@ -459,7 +467,7 @@ bool init(void) {
 bool deinit(void) {
   if(!is_initialized()) {
     if(!session_open) {
-      release_write_buffer();
+      release_cache_buffer();
       return true;
     }
     const bool flushed = virtual_fat::flush_pending();
@@ -470,9 +478,14 @@ bool deinit(void) {
   // callback racing this flush would corrupt both transfers.
   set_initialized(false);
   (void) USBD_Stop(&usb_device);
+  bool pending_ok = true;
   if(deferred_state() == DeferredWriteState::PENDING) {
     set_deferred_state(DeferredWriteState::PROCESSING);
-    (void) virtual_fat::write_sectors(deferred_write.block_addr, write_buffer(), deferred_write.block_len);
+    pending_ok = virtual_fat::write_cached_sectors(
+      deferred_write.block_addr,
+      deferred_write.buffer,
+      deferred_write.block_len
+    );
     set_deferred_state(DeferredWriteState::EMPTY);
   }
   reset_deferred_io();
@@ -483,7 +496,7 @@ bool deinit(void) {
   // incomplete transaction is discarded when close_session() releases VFAT.
   const bool flushed = virtual_fat::flush_pending();
   close_session();
-  return flushed;
+  return pending_ok && flushed;
 }
 
 bool active(void) {
@@ -498,9 +511,9 @@ void service(void) {
     if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
                                     DeferredWriteState::PROCESSING, false,
                                     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
-    const bool ok = virtual_fat::write_sectors(
+    const bool ok = virtual_fat::write_cached_sectors(
       deferred_write.block_addr,
-      write_buffer(),
+      deferred_write.buffer,
       deferred_write.block_len
     );
     expected = DeferredWriteState::PROCESSING;
