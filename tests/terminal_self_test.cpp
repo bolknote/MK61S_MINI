@@ -94,7 +94,7 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_FS_RMDIR));
   assert(!terminal_command_allowed_in_script(CMD_FS_STAT));
   assert(!terminal_command_allowed_in_script(CMD_ERASE_STORAGE));
-  assert(!terminal_command_allowed_in_script(CMD_RTC));
+  assert(!terminal_command_allowed_in_script(CMD_DATE));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
 }
 
@@ -151,22 +151,20 @@ static void test_rtc_startup_material(void) {
   assert(!rtc_clock::is_valid(changed));
 }
 
-static void test_rtc_terminal_request(void) {
-  rtc_clock::TerminalRequest request = rtc_clock::parse_terminal_request("");
+static void test_date_terminal_request(void) {
+  rtc_clock::TerminalRequest request = rtc_clock::parse_date_request("");
   assert(request.action == rtc_clock::TerminalAction::SHOW);
-  request = rtc_clock::parse_terminal_request("  \t");
+  request = rtc_clock::parse_date_request("  \t");
   assert(request.action == rtc_clock::TerminalAction::SHOW);
 
-  request = rtc_clock::parse_terminal_request("set 2024-02-29 23:59:59");
+  request = rtc_clock::parse_date_request("2024-02-29 23:59:59");
   assert(request.action == rtc_clock::TerminalAction::SET);
   assert(request.date_time.year == 2024 && request.date_time.second == 59);
 
-  assert(rtc_clock::parse_terminal_request("set").action == rtc_clock::TerminalAction::INVALID);
-  assert(rtc_clock::parse_terminal_request("s").action == rtc_clock::TerminalAction::INVALID);
-  assert(rtc_clock::parse_terminal_request("se").action == rtc_clock::TerminalAction::INVALID);
-  assert(rtc_clock::parse_terminal_request("set-now").action == rtc_clock::TerminalAction::INVALID);
-  assert(rtc_clock::parse_terminal_request("set 2023-02-29 00:00:00").action == rtc_clock::TerminalAction::INVALID);
-  assert(rtc_clock::parse_terminal_request("status").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_date_request("set 2024-02-29 23:59:59").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_date_request("2026-2-3 9:5:7").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_date_request("2023-02-29 00:00:00").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_date_request("status").action == rtc_clock::TerminalAction::INVALID);
 }
 
 static void test_rtc_build_datetime_parser(void) {
@@ -227,7 +225,7 @@ int main(void) {
   test_script_allowlist_is_explicit();
   test_rtc_datetime_parser_and_formatter();
   test_rtc_startup_material();
-  test_rtc_terminal_request();
+  test_date_terminal_request();
   test_rtc_build_datetime_parser();
   test_rtc_settings_editor();
   std::printf("terminal_self_test: ok\n");

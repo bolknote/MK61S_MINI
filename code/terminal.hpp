@@ -81,7 +81,7 @@ struct TerminalCommand {
 // Добавление команды: строка здесь + case в execute().
 static constexpr TerminalCommand terminal_commands[] = {
   { "ver",     CMD_VERSION,       "firmware version" },
-  { "rtc",     CMD_RTC,           "rtc [set YYYY-MM-DD HH:MM:SS] - read/set clock" },
+  { "date",    CMD_DATE,          "date [YYYY-MM-DD HH:MM:SS] - read/set clock" },
   { "help",    CMD_HELP,          "this list" },
   { "history", CMD_HISTORY,       "recent command lines" },
   { "list",    CMD_LIST,          "program memory in hex, vertical" },
@@ -577,34 +577,30 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println(')');
     }
 
-    terminal_protocol::Result exec_rtc(void) {
-      const rtc_clock::TerminalRequest request = rtc_clock::parse_terminal_request(command_args());
+    terminal_protocol::Result exec_date(void) {
+      const rtc_clock::TerminalRequest request = rtc_clock::parse_date_request(command_args());
       if(request.action == rtc_clock::TerminalAction::INVALID) {
-        Serial.println("RTC ERROR: expected YYYY-MM-DD HH:MM:SS");
+        Serial.println("DATE ERROR: expected YYYY-MM-DD HH:MM:SS");
         return terminal_protocol::Result::error();
       }
 
       if(request.action == rtc_clock::TerminalAction::SET) {
         if(!rtc_clock::set(request.date_time)) {
-          Serial.println("RTC ERROR");
+          Serial.println("DATE ERROR");
           return terminal_protocol::Result::error();
         }
-        Serial.println("RTC OK");
+        Serial.println("DATE OK");
         return terminal_protocol::Result::ok();
       }
 
-      if(!rtc_clock::is_set()) {
-        Serial.println("RTC UNSET");
-        return terminal_protocol::Result::ok();
-      }
+      if(!rtc_clock::is_set()) return terminal_protocol::Result::ok();
 
       rtc_clock::DateTime current = {};
       char text[rtc_clock::DATETIME_TEXT_SIZE];
       if(!rtc_clock::read(current) || !rtc_clock::format_datetime(current, text)) {
-        Serial.println("RTC ERROR");
+        Serial.println("DATE ERROR");
         return terminal_protocol::Result::error();
       }
-      Serial.print("RTC ");
       Serial.println(text);
       return terminal_protocol::Result::ok();
     }
@@ -1232,8 +1228,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_VERSION:
               output_version();
             break;
-          case  CMD_RTC: {
-              const terminal_protocol::Result result = exec_rtc();
+          case  CMD_DATE: {
+              const terminal_protocol::Result result = exec_date();
               recive_pos = 0;
               return result;
             }

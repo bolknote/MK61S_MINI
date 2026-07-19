@@ -216,7 +216,7 @@ inline u8 weekday(const DateTime& value) {
   return sunday_zero == 0 ? 7 : sunday_zero;
 }
 
-inline TerminalRequest parse_terminal_request(const char* args) {
+inline TerminalRequest parse_date_request(const char* args) {
   TerminalRequest result = {TerminalAction::INVALID, {0, 0, 0, 0, 0, 0}};
   const char* text = skip_horizontal_spaces(args);
   if(text == 0 || is_text_end(*text)) {
@@ -224,10 +224,7 @@ inline TerminalRequest parse_terminal_request(const char* args) {
     return result;
   }
 
-  if(text[0] == 's' && text[1] == 'e' && text[2] == 't' && is_horizontal_space(text[3])) {
-    text = skip_horizontal_spaces(text + 3);
-    if(parse_datetime(text, result.date_time)) result.action = TerminalAction::SET;
-  }
+  if(parse_datetime(text, result.date_time)) result.action = TerminalAction::SET;
   return result;
 }
 
