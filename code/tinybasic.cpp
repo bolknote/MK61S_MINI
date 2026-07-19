@@ -1,6 +1,7 @@
 #ifdef TINYBASIC_HOST_TEST
 #include "rust_types.h"
 #include "tinybasic.hpp"
+#include "keyboard_layout.hpp"
 
 #include <math.h>
 #include <stdio.h>
@@ -8,19 +9,16 @@
 #include <string.h>
 
 #if MK61_ENABLE_TINYBASIC
-static const int KEY_LEFT = 34;
-static const int KEY_RIGHT = 24;
-static const int KEY_OK = 29;
-static const int KEY_ESC = 39;
-static const int KEY_K = 37;
-static const int KEY_ALPHA = KEY_K + 1;
-static const int KEY_DEGREE = 4;
-static const int KEY_PP = 25;
-static const int KEY_RET = 31;
-static const int KEY_FRW = 32;
-static const int KEY_BKW = 33;
-static const int KEY_SHG_RIGHT_PRESS = KEY_BKW;
-static const int KEY_SHG_LEFT_PRESS = KEY_FRW;
+static const int KEY_LEFT = keyboard_layout::ACTIVE.left;
+static const int KEY_RIGHT = keyboard_layout::ACTIVE.right;
+static const int KEY_OK = keyboard_layout::ACTIVE.ok;
+static const int KEY_ESC = keyboard_layout::ACTIVE.esc;
+static const int KEY_K = keyboard_layout::ACTIVE.k;
+static const int KEY_ALPHA = keyboard_layout::ACTIVE.alpha;
+static const int KEY_CX = keyboard_layout::ACTIVE.cx;
+static const int KEY_PP = keyboard_layout::ACTIVE.pp;
+static const int KEY_SHG_RIGHT_PRESS = keyboard_layout::ACTIVE.shg_right;
+static const int KEY_SHG_LEFT_PRESS = keyboard_layout::ACTIVE.shg_left;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -99,11 +97,12 @@ MK61Display lcd;
 enum class key_state {PRESSED=0, RELEASED=0x40};
 
 namespace kbd {
+  static bool host_alpha_pressed;
   void debounce_init(void) {}
   isize scan_and_debounced(void) { return 0; }
   i32 get_key(key_state) { return -1; }
   i32 get_key_wait(void) { return KEY_OK; }
-  bool is_key_pressed(i32) { return false; }
+  bool is_key_pressed(i32 key_code) { return key_code == KEY_ALPHA && host_alpha_pressed; }
 }
 
 static u32 tinybasic_host_millis;
@@ -331,32 +330,23 @@ static double tb_host_input_value = 0.0;
 static int tb_host_wait_count = 0;
 #endif
 
-static const char* const TB_key_text[40] = {
-  NULL, NULL, "*", "/", NULL,
-  "^", NULL, "+", "-", NULL,
-  NULL, "3", "6", "9", NULL,
-  ".", "2", "5", "8", NULL,
-  "0", "1", "4", "7", NULL,
-  " ", NULL, NULL, NULL, NULL,
-  NULL, NULL, NULL, NULL, NULL,
-  NULL, NULL, NULL, NULL, NULL
-};
+static const char* tinybasic_plain_key_text(i32 key_code) {
+  return text_editor::plain_text_for_key(key_code);
+}
 
 static const char* tinybasic_kshift_text(i32 key_code) {
-  switch(key_code) {
-    case KEY_OK:     return ":";
-    case KEY_RET:    return ";";
-    case KEY_PP:     return ",";
-    case KEY_LEFT:   return "(";
-    case KEY_RIGHT:  return ")";
-    case 6:          return "\"";
-    case 7:          return "=";
-    case 15:         return "'";
-    case 30:         return "!";
-    case 32:         return "<";
-    case 8:          return ">";
-    default: break;
-  }
+  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
+  if(key_code == keys.ok) return ":";
+  if(key_code == keys.ret) return ";";
+  if(key_code == keys.pp) return ",";
+  if(key_code == keys.left) return "(";
+  if(key_code == keys.right) return ")";
+  if(key_code == keys.xy) return "\"";
+  if(key_code == keys.add) return "=";
+  if(key_code == keys.dot) return "'";
+  if(key_code == keys.run) return "!";
+  if(key_code == keys.shg_left) return "<";
+  if(key_code == keys.sub) return ">";
   return NULL;
 }
 
@@ -1391,7 +1381,7 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
       continue;
     }
     if(key >= 0 && key < 40) {
-      const char* text = TB_key_text[key];
+      const char* text = tinybasic_plain_key_text(key);
       if(text == NULL || text[1] != 0) continue;
       const char ch = text[0];
       if((ch >= '0' && ch <= '9') || ch == '.' || ch == '-' || ch == '+') {
@@ -2078,7 +2068,7 @@ static const char* tinybasic_editor_insert_text_hook(text_editor::Shift shift, i
   if(key_code < 0 || key_code >= 40) return NULL;
   switch(shift) {
     case text_editor::Shift::NONE:
-      return TB_key_text[key_code];
+      return tinybasic_plain_key_text(key_code);
     case text_editor::Shift::ALPHA:
       return NULL;
     case text_editor::Shift::K:
@@ -2100,7 +2090,7 @@ static const text_editor::Options TB_EDITOR_OPTIONS = {
   true,
   true,
   true,
-  -1
+  KEY_CX
 };
 
 static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
@@ -2165,16 +2155,19 @@ static bool tb_input_program_name(char* name, usize size) {
     }
     if(!shifted && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
     if(!shifted && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
-    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+    if(key == KEY_CX &&
         (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(sms);
-      text_editor::backspace(name, len, cursor);
+      len = 0;
+      cursor = 0;
+      name[0] = 0;
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(!shifted && key == KEY_DEGREE) {
+    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+        (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(sms);
-      text_editor::backspace(name, len, cursor);
+      shift = text_editor::Shift::NONE;
       continue;
     }
     if(!shifted && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
@@ -2187,11 +2180,9 @@ static bool tb_input_program_name(char* name, usize size) {
       text_editor::move_cursor_right(name, len, cursor);
       continue;
     }
-    if(!shifted && key == 0) {
+    if(!shifted && key == KEY_CX) {
       text_editor::sms_reset(sms);
-      len = 0;
-      cursor = 0;
-      name[0] = 0;
+      text_editor::backspace(name, len, cursor);
       continue;
     }
 
@@ -2325,6 +2316,21 @@ static void EditTinyBasicSlot(int slot,
     if(key_code < 0) {
       lcd.flush();
       delay(1);
+      continue;
+    }
+    if(key_code == KEY_CX &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      text_editor::clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
+      editor.shift = text_editor::Shift::NONE;
+      dirty = true;
+      continue;
+    }
+    if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      editor.shift = text_editor::Shift::NONE;
+      dirty = true;
       continue;
     }
     const text_editor::KeyResult result = text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, key_code, now);
@@ -2486,6 +2492,15 @@ extern "C" void TinyBasicTestReset(void) {
   lcd.clear();
 #ifdef TINYBASIC_HOST_TEST
   mk61_ref::host_reset();
+  kbd::host_alpha_pressed = false;
+#endif
+}
+
+extern "C" void TinyBasicTestSetAlphaHeld(bool held) {
+#ifdef TINYBASIC_HOST_TEST
+  kbd::host_alpha_pressed = held;
+#else
+  (void) held;
 #endif
 }
 
@@ -2582,7 +2597,21 @@ extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out,
   text_editor::init(editor, source, TB_SOURCE_SIZE);
   for(int i = 0; i < count; i++) {
     const u32 now = millis();
-    text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, keys[i], now);
+    const i32 key_code = keys[i];
+    if(key_code == KEY_CX &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      text_editor::clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
+      editor.shift = text_editor::Shift::NONE;
+      continue;
+    }
+    if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      editor.shift = text_editor::Shift::NONE;
+      continue;
+    }
+    text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, key_code, now);
   }
   strncpy(out, source, (usize) size - 1);
   out[size - 1] = 0;

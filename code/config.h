@@ -85,8 +85,10 @@
   #define MK61_DISPLAY_LCD1602
 #endif
 
-// MK61s 40th profile: UC1609 display with the keyboard wiring/layout used by
-// the older 40-key firmware snapshot.
+// MK61s 40TH: включайте профиль платы целиком, а не только дисплей UC1609.
+// Один MK61_DISPLAY_UC1609 без явной раскладки выбирает Classic-V2.
+//#define MK61_BOARD_40TH
+// Профиль включает UC1609 и раскладку клавиатуры старой 40-клавишной версии.
 #if defined(MK61_BOARD_40TH)
   #if !defined(MK61_DISPLAY_UC1609)
     #define MK61_DISPLAY_UC1609

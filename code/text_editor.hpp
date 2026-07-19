@@ -1,6 +1,7 @@
 #ifndef TEXT_EDITOR_HPP
 #define TEXT_EDITOR_HPP
 
+#include "keyboard_layout.hpp"
 #include "rust_types.h"
 
 #ifndef TEXT_EDITOR_HOST_TEST
@@ -66,7 +67,7 @@ struct Options {
   const char* ok_insert_text;
   bool sms_enabled;
   bool alpha_digit_symbols;
-  bool alpha_left_backspace;
+  bool alpha_cx_clear_line;
   i32 backspace_key;
 };
 
@@ -82,7 +83,7 @@ inline const Options& default_options(void) {
     true,
     true,
     true,
-    -1
+    keyboard_layout::ACTIVE.cx
   };
   return options;
 }
@@ -143,25 +144,16 @@ inline void init(Buffer& editor, char* source, u16 capacity) {
   sanitize(editor);
 }
 
-inline int digit_from_key(i32 key_code) {
-  switch(key_code) {
-    case 20: return 0;
-    case 21: return 1;
-    case 16: return 2;
-    case 11: return 3;
-    case 22: return 4;
-    case 17: return 5;
-    case 12: return 6;
-    case 23: return 7;
-    case 18: return 8;
-    case 13: return 9;
-    default: break;
-  }
-  return -1;
+inline int digit_from_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
+  return keyboard_layout::digit_from_key(mapping, key_code);
 }
 
-inline const char* sms_letters_for_key(i32 key_code) {
-  switch(digit_from_key(key_code)) {
+inline int digit_from_key(i32 key_code) {
+  return digit_from_key(key_code, keyboard_layout::ACTIVE);
+}
+
+inline const char* sms_letters_for_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
+  switch(digit_from_key(key_code, mapping)) {
     case 1: return "PQRS";
     case 2: return "TUV";
     case 3: return "WXYZ";
@@ -175,16 +167,28 @@ inline const char* sms_letters_for_key(i32 key_code) {
   return NULL;
 }
 
+inline const char* sms_letters_for_key(i32 key_code) {
+  return sms_letters_for_key(key_code, keyboard_layout::ACTIVE);
+}
+
 inline bool sms_key_is_letters(i32 key_code) {
   return sms_letters_for_key(key_code) != NULL;
+}
+
+inline bool sms_key_is_letters(i32 key_code, const keyboard_layout::Mapping& mapping) {
+  return sms_letters_for_key(key_code, mapping) != NULL;
 }
 
 inline bool sms_key_is_space(i32 key_code) {
   return digit_from_key(key_code) == 7;
 }
 
-inline const char* symbol_for_digit_key(i32 key_code) {
-  switch(digit_from_key(key_code)) {
+inline bool sms_key_is_space(i32 key_code, const keyboard_layout::Mapping& mapping) {
+  return digit_from_key(key_code, mapping) == 7;
+}
+
+inline const char* symbol_for_digit_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
+  switch(digit_from_key(key_code, mapping)) {
     case 0: return "!";
     case 1: return "@";
     case 2: return "#";
@@ -198,6 +202,39 @@ inline const char* symbol_for_digit_key(i32 key_code) {
     default: break;
   }
   return NULL;
+}
+
+inline const char* symbol_for_digit_key(i32 key_code) {
+  return symbol_for_digit_key(key_code, keyboard_layout::ACTIVE);
+}
+
+inline const char* plain_text_for_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
+  if(key_code == mapping.mul) return "*";
+  if(key_code == mapping.div) return "/";
+  if(key_code == mapping.power) return "^";
+  if(key_code == mapping.add) return "+";
+  if(key_code == mapping.sub) return "-";
+  if(key_code == mapping.dot) return ".";
+  if(key_code == mapping.pp) return " ";
+
+  switch(digit_from_key(key_code, mapping)) {
+    case 0: return "0";
+    case 1: return "1";
+    case 2: return "2";
+    case 3: return "3";
+    case 4: return "4";
+    case 5: return "5";
+    case 6: return "6";
+    case 7: return "7";
+    case 8: return "8";
+    case 9: return "9";
+    default: break;
+  }
+  return NULL;
+}
+
+inline const char* plain_text_for_key(i32 key_code) {
+  return plain_text_for_key(key_code, keyboard_layout::ACTIVE);
 }
 
 inline u16 line_start_for_cursor(const char* source, u16 cursor) {
@@ -516,12 +553,10 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     return changed ? KeyResult::DIRTY : KeyResult::NONE;
   }
 
-  if(options.alpha_left_backspace && editor.shift == Shift::ALPHA && (key_code == keys.left || key_code == keys.left_press)) {
-    if(hooks.backspace != NULL) {
-      hooks.backspace(editor.source, editor.len, editor.cursor, editor.capacity, hooks.context);
-    } else {
-      backspace(editor.source, editor.len, editor.cursor);
-    }
+  if(options.alpha_cx_clear_line && editor.shift == Shift::ALPHA &&
+      key_code == keyboard_layout::ACTIVE.cx) {
+    clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
+    sms_reset(editor.sms);
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
   }
@@ -559,9 +594,6 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     } else {
       backspace(editor.source, editor.len, editor.cursor);
     }
-  } else if(!shifted_key && key_code == 0) {
-    clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
-    sms_reset(editor.sms);
   } else if(!shifted_key && (key_code == keys.ok || key_code == keys.ok_press)) {
     insert_text(editor.source, editor.len, editor.cursor, editor.capacity, options.ok_insert_text);
   } else {

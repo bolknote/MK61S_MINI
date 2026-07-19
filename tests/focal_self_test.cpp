@@ -428,6 +428,10 @@ static void test_editor_digit_symbol_and_sms_input(void) {
   FocalTestEditSequence(sms_space_exits, (int) (sizeof(sms_space_exits) / sizeof(sms_space_exits[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "A 2") == 0);
 
+  const int pp_is_space[] = {25};
+  FocalTestEditSequence(pp_is_space, 1, out, sizeof(out));
+  CHECK(std::strcmp(out, " ") == 0);
+
   const int k_zero_does_not_start_sms[] = {37, 20};
   FocalTestEditSequence(k_zero_does_not_start_sms, (int) (sizeof(k_zero_does_not_start_sms) / sizeof(k_zero_does_not_start_sms[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "") == 0);
@@ -480,31 +484,47 @@ static void test_editor_operator_keys_insert_full_names(void) {
   const int return_op[] = {21, 15, 17, 20, 25, 31};
   FocalTestEditSequence(return_op, (int) (sizeof(return_op) / sizeof(return_op[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.50 RETURN") == 0);
+
+  const int k_do[] = {21, 15, 12, 20, 37, 0};
+  FocalTestEditSequence(k_do, (int) (sizeof(k_do) / sizeof(k_do[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.60 DO ") == 0);
 }
 
-static void test_editor_backspace_is_f_left(void) {
+static void test_editor_cx_backspace_and_f_cx_clear_line(void) {
   FocalTestReset();
   char out[32];
 
-  const int f_left[] = {21, 20, 38, 34};
-  FocalTestEditSequence(f_left, (int) (sizeof(f_left) / sizeof(f_left[0])), out, sizeof(out));
+  const int cx[] = {21, 20, 0};
+  FocalTestEditSequence(cx, (int) (sizeof(cx) / sizeof(cx[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1") == 0);
 
+  const int f_left_is_not_backspace[] = {21, 20, 38, 34};
+  FocalTestEditSequence(f_left_is_not_backspace,
+                        (int) (sizeof(f_left_is_not_backspace) / sizeof(f_left_is_not_backspace[0])),
+                        out, sizeof(out));
+  CHECK(std::strcmp(out, "10") == 0);
+
   FocalTestSetAlphaHeld(true);
-  const int held_f_left[] = {21, 20, 16, 34, 34};
-  FocalTestEditSequence(held_f_left, (int) (sizeof(held_f_left) / sizeof(held_f_left[0])), out, sizeof(out));
+  const int held_f_cx[] = {21, 20, 16, 0};
+  FocalTestEditSequence(held_f_cx, (int) (sizeof(held_f_cx) / sizeof(held_f_cx[0])), out, sizeof(out));
   FocalTestSetAlphaHeld(false);
-  CHECK(std::strcmp(out, "1") == 0);
+  CHECK(std::strcmp(out, "") == 0);
+
+  const int clear_then_remove_line[] = {21, 20, 29, 16, 20, 38, 0, 38, 0};
+  FocalTestEditSequence(clear_then_remove_line,
+                        (int) (sizeof(clear_then_remove_line) / sizeof(clear_then_remove_line[0])),
+                        out, sizeof(out));
+  CHECK(std::strcmp(out, "10") == 0);
 
   const int degree_is_not_backspace[] = {21, 20, 4};
   FocalTestEditSequence(degree_is_not_backspace, (int) (sizeof(degree_is_not_backspace) / sizeof(degree_is_not_backspace[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "10 GOTO ") == 0);
 
-  const int delete_ask[] = {21, 15, 21, 20, 25, 15, 38, 34};
+  const int delete_ask[] = {21, 15, 21, 20, 25, 15, 0};
   FocalTestEditSequence(delete_ask, (int) (sizeof(delete_ask) / sizeof(delete_ask[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.10 ") == 0);
 
-  const int delete_return[] = {21, 15, 17, 20, 25, 31, 38, 34};
+  const int delete_return[] = {21, 15, 17, 20, 25, 31, 0};
   FocalTestEditSequence(delete_return, (int) (sizeof(delete_return) / sizeof(delete_return[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.50 ") == 0);
 }
@@ -699,7 +719,7 @@ int main(void) {
   test_editor_expression_macros();
   test_editor_digit_symbol_and_sms_input();
   test_editor_operator_keys_insert_full_names();
-  test_editor_backspace_is_f_left();
+  test_editor_cx_backspace_and_f_cx_clear_line();
   test_saved_operators_are_short_and_expanded_for_editing();
   test_editor_save_keeps_invalid_draft();
   test_run_status_ask_input_and_transactional_save();

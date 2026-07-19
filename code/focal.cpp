@@ -5,6 +5,7 @@
 #ifdef FOCAL_HOST_TEST
 #include "rust_types.h"
 #include "focal.hpp"
+#include "keyboard_layout.hpp"
 
 #include <math.h>
 #include <stdio.h>
@@ -12,21 +13,16 @@
 #include <string.h>
 
 #if MK61_ENABLE_FOCAL
-static const int KEY_LEFT = 34;
-static const int KEY_RIGHT = 24;
-static const int KEY_OK = 29;
-static const int KEY_ESC = 39;
-static const int KEY_K = 37;
-static const int KEY_ALPHA = KEY_K + 1;
-static const int KEY_DEGREE = 4;
-static const int KEY_RADIAN = 14;
-static const int KEY_PP = 25;
-static const int KEY_xP = 27;
-static const int KEY_RET = 31;
-static const int KEY_FRW = 32;
-static const int KEY_BKW = 33;
-static const int KEY_SHG_RIGHT_PRESS = KEY_BKW;
-static const int KEY_SHG_LEFT_PRESS = KEY_FRW;
+static const int KEY_LEFT = keyboard_layout::ACTIVE.left;
+static const int KEY_RIGHT = keyboard_layout::ACTIVE.right;
+static const int KEY_OK = keyboard_layout::ACTIVE.ok;
+static const int KEY_ESC = keyboard_layout::ACTIVE.esc;
+static const int KEY_K = keyboard_layout::ACTIVE.k;
+static const int KEY_ALPHA = keyboard_layout::ACTIVE.alpha;
+static const int KEY_CX = keyboard_layout::ACTIVE.cx;
+static const int KEY_PP = keyboard_layout::ACTIVE.pp;
+static const int KEY_SHG_RIGHT_PRESS = keyboard_layout::ACTIVE.shg_right;
+static const int KEY_SHG_LEFT_PRESS = keyboard_layout::ACTIVE.shg_left;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -439,27 +435,20 @@ static inline void focal_trace_line(const char*, i16, const FocalLine&) {}
 static inline void focal_trace_flow(const FocalFlow&) {}
 #endif
 
-static const char* const FOCAL_key_text[40] = {
-  NULL, NULL, "*", "/", NULL,
-  "^", NULL, "+", "-", NULL,
-  NULL, "3", "6", "9", NULL,
-  ".", "2", "5", "8", NULL,
-  "0", "1", "4", "7", NULL,
-  " ", NULL, NULL, NULL, NULL,
-  NULL, NULL, NULL, NULL, NULL,
-  NULL, NULL, NULL, NULL, NULL
-};
+static const char* focal_plain_key_text(i32 key_code) {
+  return text_editor::plain_text_for_key(key_code);
+}
 
-static const char* const FOCAL_Kshift_key_text[40] = {
-  NULL, NULL, NULL, NULL, NULL,
-  NULL, "\"", "=", NULL, NULL,
-  NULL, NULL, NULL, NULL, NULL,
-  NULL, NULL, NULL, NULL, NULL,
-  NULL, NULL, NULL, NULL, ")",
-  ",", NULL, NULL, NULL, NULL,
-  "!", NULL, NULL, NULL, "(",
-  NULL, NULL, NULL, NULL, NULL
-};
+static const char* focal_kshift_key_text(i32 key_code) {
+  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
+  if(key_code == keys.xy) return "\"";
+  if(key_code == keys.add) return "=";
+  if(key_code == keys.right) return ")";
+  if(key_code == keys.pp) return ",";
+  if(key_code == keys.run) return "!";
+  if(key_code == keys.left) return "(";
+  return NULL;
+}
 
 static int focal_digit_from_key(i32 key_code) {
   return text_editor::digit_from_key(key_code);
@@ -1577,7 +1566,7 @@ static FocalInputResult focal_read_number_from_keyboard(const char* target_name,
       continue;
     }
     if(key >= 0 && key < 40) {
-      const char* text = FOCAL_key_text[key];
+      const char* text = focal_plain_key_text(key);
       if(text == NULL || text[1] != 0) continue;
       const char ch = text[0];
       const bool digit = ch >= '0' && ch <= '9';
@@ -2733,7 +2722,8 @@ static bool focal_segment_is_simple(const char* begin, const char* end) {
 }
 
 static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, u16 capacity, i32 key_code) {
-  if(key_code != 2 && key_code != 3 && key_code != 5) return false;
+  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
+  if(key_code != keys.mul && key_code != keys.div && key_code != keys.power) return false;
 
   u16 start = 0;
   u16 end = 0;
@@ -2747,9 +2737,9 @@ static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, u
 
   char replacement[FOCAL_EXPR_BUFFER_SIZE + 8];
   int written = -1;
-  if(key_code == 2) {
+  if(key_code == keys.mul) {
     written = snprintf(replacement, sizeof(replacement), simple ? "%s^2" : "(%s)^2", expr);
-  } else if(key_code == 3) {
+  } else if(key_code == keys.div) {
     written = snprintf(replacement, sizeof(replacement), simple ? "1/%s" : "1/(%s)", expr);
   } else {
     written = snprintf(replacement, sizeof(replacement), simple ? "10^%s" : "10^(%s)", expr);
@@ -2804,19 +2794,17 @@ static bool focal_cursor_after_line_address(const char* source, u16 cursor, Foca
 }
 
 static const char* focal_statement_insert_text(i32 key_code, bool leading_space = false) {
-  switch(key_code) {
-    case 15:         return leading_space ? " ASK " : "ASK ";
-    case 10:         return leading_space ? " BRANCH " : "BRANCH ";
-    case 5:          return leading_space ? " COMMENT " : "COMMENT ";
-    case 0:          return leading_space ? " DO " : "DO ";
-    case 1:          return leading_space ? " EXIT" : "EXIT";
-    case 2:          return leading_space ? " FOR " : "FOR ";
-    case KEY_DEGREE: return leading_space ? " GOTO " : "GOTO ";
-    case KEY_RADIAN: return leading_space ? " PRINT " : "PRINT ";
-    case KEY_xP:     return leading_space ? " SET " : "SET ";
-    case KEY_RET:    return leading_space ? " RETURN" : "RETURN";
-    default: break;
-  }
+  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
+  if(key_code == keys.dot) return leading_space ? " ASK " : "ASK ";
+  if(key_code == keys.neg) return leading_space ? " BRANCH " : "BRANCH ";
+  if(key_code == keys.power) return leading_space ? " COMMENT " : "COMMENT ";
+  if(key_code == keys.cx) return leading_space ? " DO " : "DO ";
+  if(key_code == keys.bx) return leading_space ? " EXIT" : "EXIT";
+  if(key_code == keys.mul) return leading_space ? " FOR " : "FOR ";
+  if(key_code == keys.degree) return leading_space ? " GOTO " : "GOTO ";
+  if(key_code == keys.radian) return leading_space ? " PRINT " : "PRINT ";
+  if(key_code == keys.x_to_p) return leading_space ? " SET " : "SET ";
+  if(key_code == keys.ret) return leading_space ? " RETURN" : "RETURN";
   return NULL;
 }
 
@@ -2830,11 +2818,11 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
       }
       FocalAddress address;
       if(focal_cursor_after_line_address(source, cursor, &address)) {
-        if(key_code == 15 && !address.has_minor) return FOCAL_key_text[key_code];
+        if(key_code == keyboard_layout::ACTIVE.dot && !address.has_minor) return focal_plain_key_text(key_code);
         const char* statement = focal_statement_insert_text(key_code, true);
         if(statement != NULL) return statement;
       }
-      return FOCAL_key_text[key_code];
+      return focal_plain_key_text(key_code);
     case FocalEditShift::ALPHA:
       return NULL;
     case FocalEditShift::K: {
@@ -2846,7 +2834,7 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
         const char* statement = focal_statement_insert_text(key_code);
         if(statement != NULL) return statement;
       }
-      return FOCAL_Kshift_key_text[key_code];
+      return focal_kshift_key_text(key_code);
     }
   }
   return NULL;
@@ -2975,16 +2963,19 @@ static bool focal_input_program_name(char* name, usize size) {
     }
     if(!shifted_key && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
     if(!shifted_key && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
-    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+    if(key == KEY_CX &&
         (shift == FocalEditShift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       focal_sms_reset(sms);
-      text_editor::backspace(name, len, cursor);
+      len = 0;
+      cursor = 0;
+      name[0] = 0;
       shift = FocalEditShift::NONE;
       continue;
     }
-    if(!shifted_key && key == KEY_DEGREE) {
+    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+        (shift == FocalEditShift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       focal_sms_reset(sms);
-      text_editor::backspace(name, len, cursor);
+      shift = FocalEditShift::NONE;
       continue;
     }
     if(!shifted_key && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
@@ -2997,11 +2988,9 @@ static bool focal_input_program_name(char* name, usize size) {
       text_editor::move_cursor_right(name, len, cursor);
       continue;
     }
-    if(!shifted_key && key == 0) {
+    if(!shifted_key && key == KEY_CX) {
       focal_sms_reset(sms);
-      len = 0;
-      cursor = 0;
-      name[0] = 0;
+      text_editor::backspace(name, len, cursor);
       continue;
     }
 
@@ -3127,10 +3116,17 @@ static void EditFocalSlot(int slot,
       delay(1);
       continue;
     }
+    if(key_code == KEY_CX &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      text_editor::clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
+      editor.shift = text_editor::Shift::NONE;
+      dirty = true;
+      continue;
+    }
     if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
         (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(editor.sms);
-      focal_editor_backspace(editor.source, editor.len, editor.cursor, editor.capacity);
       editor.shift = text_editor::Shift::NONE;
       dirty = true;
       continue;
@@ -3500,10 +3496,16 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
   for(int i = 0; i < count; i++) {
     const u32 now = millis();
     const i32 key_code = keys[i];
+    if(key_code == KEY_CX &&
+        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+      text_editor::sms_reset(editor.sms);
+      text_editor::clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
+      editor.shift = text_editor::Shift::NONE;
+      continue;
+    }
     if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
         (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(editor.sms);
-      focal_editor_backspace(editor.source, editor.len, editor.cursor, editor.capacity);
       editor.shift = text_editor::Shift::NONE;
       continue;
     }

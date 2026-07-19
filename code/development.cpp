@@ -1016,16 +1016,19 @@ static bool input_entry_name(char* name, usize capacity,
     }
     if(!shifted_key && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
     if(!shifted_key && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
-    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+    if(key == KEY_CX &&
         (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(sms);
-      name_backspace(name, len, cursor);
+      len = 0;
+      cursor = 0;
+      name[0] = 0;
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(!shifted_key && key == KEY_DEGREE) {
+    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+        (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(sms);
-      name_backspace(name, len, cursor);
+      shift = text_editor::Shift::NONE;
       continue;
     }
     if(!shifted_key && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
@@ -1038,11 +1041,9 @@ static bool input_entry_name(char* name, usize capacity,
       name_move_right(name, len, cursor);
       continue;
     }
-    if(!shifted_key && key == 0) {
+    if(!shifted_key && key == KEY_CX) {
       text_editor::sms_reset(sms);
-      len = 0;
-      cursor = 0;
-      name[0] = 0;
+      name_backspace(name, len, cursor);
       continue;
     }
 
@@ -1434,10 +1435,16 @@ static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
   }
 
   u16 cursor = search.len;
-  if(search.shift == text_editor::Shift::ALPHA &&
-      (key == EXPLORER_KEY_UP || key == (i32) KEY_LEFT || key == (i32) KEY_LEFT_PRESS)) {
+  if(key == KEY_CX &&
+      (search.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
     text_editor::sms_reset(search.sms);
-    explorer_search_backspace(search);
+    explorer_search_reset(search);
+    search.shift = text_editor::Shift::NONE;
+    return true;
+  }
+  if((key == EXPLORER_KEY_UP || key == (i32) KEY_LEFT || key == (i32) KEY_LEFT_PRESS) &&
+      (search.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+    text_editor::sms_reset(search.sms);
     search.shift = text_editor::Shift::NONE;
     return true;
   }
@@ -1462,14 +1469,9 @@ static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
     search.shift = text_editor::Shift::NONE;
     return true;
   }
-  if(!shifted_key && key == KEY_DEGREE) {
+  if(!shifted_key && key == KEY_CX) {
     text_editor::sms_reset(search.sms);
-    const bool had_text = search.len > 0;
     explorer_search_backspace(search);
-    return had_text;
-  }
-  if(!shifted_key && key == 0 && search.len > 0) {
-    explorer_search_reset(search);
     return true;
   }
 
