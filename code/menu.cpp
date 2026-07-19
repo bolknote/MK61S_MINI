@@ -798,7 +798,17 @@ static void draw_usb_disk_status(const char* ru0, const char* en0, const char* r
 bool UsbDiskMode(void) {
   draw_usb_disk_status("USB-диск", "USB Disk", "запуск...", "starting...");
   library_mk61::flush_settings_state();
-  (void) program_store::refresh();
+  if(!program_store::refresh()) {
+    if(program_store::mount_status() ==
+       program_store::MountStatus::REPAIR_REQUIRED) {
+      draw_usb_disk_status("ФС повреждена", "FS damaged",
+                           "нужен формат", "format needed");
+    } else {
+      draw_usb_disk_status("Ошибка ФС", "FS error", "ESC", "ESC");
+    }
+    kbd::get_key_wait();
+    return action::MENU_BACK;
+  }
   (void) program_store::purge_empty();
   if(!usb_start_mass_storage_mode()) {
     usb_start_terminal_mode();

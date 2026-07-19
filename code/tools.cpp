@@ -424,7 +424,9 @@ static void load_persistent_settings(void) {
   persistent_settings_needs_save = false;
   persistent_settings_write_blocked = false;
 
-  if(!flash_is_ok || !program_store::ready() || settings_size == 0) {
+  // The settings sector has its own guard and remains usable when a valid C5
+  // locator was mounted but both file-catalog banks require repair.
+  if(!flash_is_ok || settings_size == 0) {
     import_legacy_settings();
     return;
   }
@@ -708,6 +710,9 @@ void init_external_flash(void) {
       if(program_store::ready()) {
         Serial.print("measured C5 capacity: ");
         Serial.print(flash.getCapacity()); Serial.println(" bytes");
+      } else if(program_store::mount_status() ==
+                program_store::MountStatus::REPAIR_REQUIRED) {
+        Serial.println("C5 catalogs damaged; explicit format required");
       } else {
         Serial.println("C5 capacity detection failed");
       }

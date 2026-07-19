@@ -446,6 +446,35 @@ static void test_quota_grows_beyond_legacy_128(void) {
   assert(len == 1 && value == (u8) 159);
 }
 
+static void test_sequential_directory_walk_is_linear(void) {
+  fresh(512U * 1024U);
+  const u16 nodes = program_store::max_nodes();
+  assert(nodes == 192U);
+  for(u16 index = 0; index < nodes; index++) {
+    char name[8];
+    snprintf(name, sizeof(name), "D%03u", (unsigned) index);
+    assert(program_store::create_directory(program_store::ROOT_ID, name,
+                                           program_store::INVALID_ID, NULL));
+  }
+
+  program_store::init();
+  assert(program_store::ready());
+  SPIFlash::resetOperationCounts();
+  assert(program_store::child_count(program_store::ROOT_ID) == nodes);
+  for(u16 index = 0; index < nodes; index++) {
+    Entry entry = {};
+    assert(program_store::child(program_store::ROOT_ID, index, entry));
+    assert(entry.kind == NodeKind::DIRECTORY);
+  }
+
+  // child() retains the next sibling between monotonically increasing
+  // indices.  This budget catches an accidental return to rescanning the
+  // directory head for every entry (quadratic I/O) while leaving headroom for
+  // catalog-cache boundaries and record/name validation reads.
+  assert(SPIFlash::readOperations() <= (u32) nodes * 3U + 64U);
+  assert(SPIFlash::readBytes() <= (u64) nodes * 128U + 8192U);
+}
+
 static void test_root_dirent_quota_is_exact_and_atomic(void) {
   fresh();
   u16 first = program_store::INVALID_ID;
@@ -511,6 +540,111 @@ static void test_corrupt_wal_tail_rolls_back_and_recovers(void) {
   expect_text("GAMMA", "three");
 }
 
+static void test_corrupt_catalog_requires_explicit_format(void) {
+  fresh();
+  assert(program_store::mount_status() ==
+         program_store::MountStatus::READY);
+  assert(program_store::write(ProgramType::TEXT, "KEEP",
+                              (const u8*) "valuable", 8));
+  const storage_geometry::Geometry geometry = program_store::geometry();
+  const u32 settings = program_store::settings_address();
+  u8 marker[] = {0x52, 0x45, 0x50, 0x41, 0x49, 0x52};
+  assert(flash.writeByteArray(settings + 64, marker, sizeof(marker)));
+
+  SPIFlash::corrupt(geometry.catalog_a_sector * SPIFlash::SECTOR_SIZE + 5,
+                    0x00);
+  SPIFlash::corrupt(geometry.catalog_b_sector * SPIFlash::SECTOR_SIZE + 5,
+                    0x00);
+  const u32 erases_before = SPIFlash::eraseCount();
+  const u64 programmed_before = SPIFlash::programmedBytes();
+  SPIFlash::resetOperationCounts();
+
+  program_store::init();
+  assert(!program_store::ready());
+  assert(program_store::mount_status() ==
+         program_store::MountStatus::REPAIR_REQUIRED);
+  assert(SPIFlash::mutationOperations() == 0);
+  assert(SPIFlash::eraseCount() == erases_before);
+  assert(SPIFlash::programmedBytes() == programmed_before);
+  assert(program_store::settings_address() == settings);
+  assert(program_store::settings_size() != 0);
+  u8 recovered[sizeof(marker)] = {};
+  assert(flash.readByteArray(settings + 64, recovered, sizeof(recovered)));
+  assert(memcmp(recovered, marker, sizeof(marker)) == 0);
+
+  // Formatting is still available, but only as an explicit destructive
+  // operation.  It repairs the volume while preserving the settings sector.
+  assert(program_store::format());
+  assert(program_store::ready());
+  assert(program_store::mount_status() ==
+         program_store::MountStatus::READY);
+  assert(!program_store::exists(ProgramType::TEXT, "KEEP"));
+  memset(recovered, 0, sizeof(recovered));
+  assert(flash.readByteArray(settings + 64, recovered, sizeof(recovered)));
+  assert(memcmp(recovered, marker, sizeof(marker)) == 0);
+}
+
+static void prepare_checkpoint_boundary(void) {
+  fresh(256U * 1024U);
+  for(u8 index = 0; index < 32; index++) {
+    char name[8];
+    snprintf(name, sizeof(name), "CP%02u", index);
+    const u8 value = index;
+    assert(program_store::write(ProgramType::TEXT, name, &value, 1));
+  }
+}
+
+static void verify_checkpoint_prefix(void) {
+  for(u8 index = 0; index < 32; index++) {
+    char name[8];
+    snprintf(name, sizeof(name), "CP%02u", index);
+    u8 value = 0xFF;
+    u16 len = 0;
+    assert(program_store::read(ProgramType::TEXT, name, &value, 1, &len));
+    assert(len == 1 && value == index);
+  }
+}
+
+static void test_checkpoint_power_cuts_are_atomic(void) {
+  static const u8 value = 32;
+  prepare_checkpoint_boundary();
+  SPIFlash::resetOperationCounts();
+  assert(program_store::write(ProgramType::TEXT, "CP32", &value, 1));
+  const u32 operation_count = SPIFlash::mutationOperations();
+  // One data append, one bounded catalog-bank rewrite and one WAL append.
+  assert(operation_count >= 8 && operation_count <= 32);
+
+  for(u32 cut = 0; cut <= operation_count; cut++) {
+    prepare_checkpoint_boundary();
+    SPIFlash::resetOperationCounts();
+    SPIFlash::failAfterOperations((i32) cut);
+    const bool committed =
+        program_store::write(ProgramType::TEXT, "CP32", &value, 1);
+    SPIFlash::clearFailure();
+
+    program_store::init();
+    assert(program_store::ready());
+    verify_checkpoint_prefix();
+    const bool visible = program_store::exists(ProgramType::TEXT, "CP32");
+    if(committed) assert(visible);
+
+    // Any interrupted destination bank must be reusable immediately; an
+    // orphaned data record must not poison the old current-sector tail.
+    assert(program_store::write(ProgramType::TEXT, "CP32", &value, 1));
+    assert(program_store::write(ProgramType::TEXT, "AFTER-CP",
+                                (const u8*) "ok", 2));
+    program_store::init();
+    assert(program_store::ready());
+    verify_checkpoint_prefix();
+    u8 recovered = 0;
+    u16 len = 0;
+    assert(program_store::read(ProgramType::TEXT, "CP32", &recovered,
+                               1, &len));
+    assert(len == 1 && recovered == value);
+    expect_text("AFTER-CP", "ok");
+  }
+}
+
 static void test_power_cuts_are_atomic_and_retryable(void) {
   static const u8 old_data[] = {'o', 'l', 'd'};
   static const u8 new_data[] = {'n', 'e', 'w'};
@@ -563,6 +697,105 @@ static void test_gc_preserves_live_records(void) {
   assert(program_store::read(ProgramType::TEXT, "CHURN", recovered,
                              sizeof(recovered), &len));
   assert(len == sizeof(churn) && memcmp(recovered, churn, sizeof(churn)) == 0);
+}
+
+static void gc_name(u8 index, char* out, usize capacity) {
+  snprintf(out, capacity, "GC%02u", index);
+}
+
+static void fill_bytes(u8* data, u8 value) {
+  memset(data, value, program_store::MAX_MK61_TEXT_SIZE);
+}
+
+static void prepare_gc_boundary(void) {
+  fresh(128U * 1024U);
+  assert(program_store::max_nodes() == 30U);
+  u8 data[program_store::MAX_MK61_TEXT_SIZE];
+  for(u8 index = 0; index < 30; index++) {
+    char name[8];
+    gc_name(index, name, sizeof(name));
+    fill_bytes(data, index);
+    assert(program_store::write(ProgramType::TEXT, name, data,
+                                sizeof(data)));
+  }
+
+  // Two updates consume the only ordinary spare sector. Their obsolete
+  // versions remain in different sectors, each beside another live file, so
+  // the next maximum-size update cannot reclaim an entirely dead sector and
+  // must move a live record through the dedicated GC reserve.
+  fill_bytes(data, 0xA0U);
+  assert(program_store::write(ProgramType::TEXT, "GC00", data,
+                              sizeof(data)));
+  fill_bytes(data, 0xA2U);
+  assert(program_store::write(ProgramType::TEXT, "GC02", data,
+                              sizeof(data)));
+}
+
+static void verify_gc_files(bool gc04_may_be_new) {
+  u8 data[program_store::MAX_MK61_TEXT_SIZE];
+  for(u8 index = 0; index < 30; index++) {
+    char name[8];
+    gc_name(index, name, sizeof(name));
+    memset(data, 0, sizeof(data));
+    u16 len = 0;
+    assert(program_store::read(ProgramType::TEXT, name, data,
+                               sizeof(data), &len));
+    assert(len == sizeof(data));
+    u8 expected = index;
+    if(index == 0) expected = 0xA0U;
+    if(index == 2) expected = 0xA2U;
+    if(index == 4 && gc04_may_be_new && data[0] == 0xA4U) expected = 0xA4U;
+    for(u16 byte = 0; byte < sizeof(data); byte++) {
+      assert(data[byte] == expected);
+    }
+  }
+}
+
+static void test_gc_power_cuts_are_atomic_and_recoverable(void) {
+  u8 replacement[program_store::MAX_MK61_TEXT_SIZE];
+  fill_bytes(replacement, 0xA4U);
+
+  prepare_gc_boundary();
+  const storage_geometry::Geometry geometry = program_store::geometry();
+  SPIFlash::resetOperationCounts();
+  const u32 erases_before = SPIFlash::eraseCount();
+  assert(program_store::write(ProgramType::TEXT, "GC04", replacement,
+                              sizeof(replacement)));
+  const u32 operation_count = SPIFlash::mutationOperations();
+  assert(operation_count >= 24U && operation_count <= 128U);
+  assert(SPIFlash::eraseCount() - erases_before <=
+         geometry.catalog_bank_sectors + 3U);
+
+  for(u32 cut = 0; cut <= operation_count; cut++) {
+    prepare_gc_boundary();
+    SPIFlash::resetOperationCounts();
+    SPIFlash::failAfterOperations((i32) cut);
+    const bool committed = program_store::write(
+        ProgramType::TEXT, "GC04", replacement, sizeof(replacement));
+    SPIFlash::clearFailure();
+
+    program_store::init();
+    assert(program_store::ready());
+    verify_gc_files(true);
+    if(committed) {
+      u8 first = 0;
+      u16 len = 0;
+      assert(program_store::read_range(ProgramType::TEXT, "GC04", 0,
+                                       &first, 1, &len));
+      assert(len == 1 && first == 0xA4U);
+    }
+
+    assert(program_store::write(ProgramType::TEXT, "GC04", replacement,
+                                sizeof(replacement)));
+    program_store::init();
+    assert(program_store::ready());
+    verify_gc_files(true);
+    u8 first = 0;
+    u16 len = 0;
+    assert(program_store::read_range(ProgramType::TEXT, "GC04", 0,
+                                     &first, 1, &len));
+    assert(len == 1 && first == 0xA4U);
+  }
 }
 
 static void test_stage_journal_survives_reboot_and_churn(void) {
@@ -671,6 +904,83 @@ static void test_stage_compacts_when_every_normal_sector_is_live(void) {
   }
   assert(program_store::vfat_stage_read(9999, recovered));
   assert(recovered[0] == 0xEE);
+}
+
+static u16 prepare_stage_compaction_boundary(void) {
+  fresh(512U * 1024U);
+  const u16 normal_sectors =
+      (u16) (program_store::geometry().stage_sector_count - 1U);
+  assert(normal_sectors == 16U);
+  u8 data[512] = {};
+
+  data[0] = 0;
+  assert(program_store::vfat_stage_write(1000, data));
+  for(u8 fill = 0; fill < 6; fill++) {
+    data[0] = fill;
+    assert(program_store::vfat_stage_write(1, data));
+  }
+  for(u16 sector = 1; sector < normal_sectors; sector++) {
+    data[0] = (u8) sector;
+    assert(program_store::vfat_stage_write(1, data));
+    assert(program_store::vfat_stage_write(1000U + sector, data));
+    for(u8 fill = 0; fill < 5; fill++) {
+      data[0] = (u8) (sector + fill);
+      assert(program_store::vfat_stage_write(1, data));
+    }
+  }
+  assert(program_store::vfat_stage_count() == normal_sectors + 1U);
+  return normal_sectors;
+}
+
+static void verify_stage_pins(u16 normal_sectors) {
+  u8 recovered[512];
+  for(u16 sector = 0; sector < normal_sectors; sector++) {
+    memset(recovered, 0, sizeof(recovered));
+    assert(program_store::vfat_stage_read(1000U + sector, recovered));
+    assert(recovered[0] == (u8) sector);
+  }
+}
+
+static void test_stage_compaction_power_cuts_are_recoverable(void) {
+  u8 final_data[512];
+  memset(final_data, 0xEE, sizeof(final_data));
+
+  const u16 normal_sectors = prepare_stage_compaction_boundary();
+  SPIFlash::resetOperationCounts();
+  const u32 erases_before = SPIFlash::eraseCount();
+  assert(program_store::vfat_stage_write(9999, final_data));
+  const u32 operation_count = SPIFlash::mutationOperations();
+  assert(operation_count >= 8 && operation_count <= 20);
+  assert(SPIFlash::eraseCount() - erases_before == 3U);
+
+  for(u32 cut = 0; cut <= operation_count; cut++) {
+    const u16 pins = prepare_stage_compaction_boundary();
+    assert(pins == normal_sectors);
+    SPIFlash::resetOperationCounts();
+    SPIFlash::failAfterOperations((i32) cut);
+    const bool committed = program_store::vfat_stage_write(9999, final_data);
+    SPIFlash::clearFailure();
+
+    program_store::init();
+    assert(program_store::ready());
+    verify_stage_pins(normal_sectors);
+    u8 recovered[512] = {};
+    const bool visible = program_store::vfat_stage_read(9999, recovered);
+    if(committed) {
+      assert(visible);
+      assert(memcmp(recovered, final_data, sizeof(recovered)) == 0);
+    }
+
+    // The first write after reboot completes either direction of an
+    // interrupted reserve-sector compaction before appending the new value.
+    assert(program_store::vfat_stage_write(9999, final_data));
+    program_store::init();
+    assert(program_store::ready());
+    verify_stage_pins(normal_sectors);
+    memset(recovered, 0, sizeof(recovered));
+    assert(program_store::vfat_stage_read(9999, recovered));
+    assert(memcmp(recovered, final_data, sizeof(recovered)) == 0);
+  }
 }
 
 static void test_settings_reservation_and_capacity_mismatch(void) {
@@ -793,14 +1103,19 @@ int main(void) {
   test_names_and_exact_preferred_ids();
   test_directory_extents_are_persistent();
   test_quota_grows_beyond_legacy_128();
+  test_sequential_directory_walk_is_linear();
   test_root_dirent_quota_is_exact_and_atomic();
   test_corrupt_wal_tail_rolls_back_and_recovers();
+  test_corrupt_catalog_requires_explicit_format();
+  test_checkpoint_power_cuts_are_atomic();
   test_power_cuts_are_atomic_and_retryable();
   test_gc_preserves_live_records();
+  test_gc_power_cuts_are_atomic_and_recoverable();
   test_stage_journal_survives_reboot_and_churn();
   test_stage_indexes_large_unique_write_burst();
   test_stage_power_cut_keeps_previous_value();
   test_stage_compacts_when_every_normal_sector_is_live();
+  test_stage_compaction_power_cuts_are_recoverable();
   test_settings_reservation_and_capacity_mismatch();
   test_geometry_migration_preserves_settings();
   test_counterfeit_capacity_is_measured_not_trusted();

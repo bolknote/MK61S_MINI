@@ -19,11 +19,14 @@ class SPIFlash {
     bool sfdpPresent(void) const { return true; }
 
     uint8_t readByte(uint32_t address) const {
+      read_operations++;
       return address < actual_capacity ? storage[address] : 0xFF;
     }
 
     bool readByteArray(uint32_t address, uint8_t* out, size_t len) const {
       if(out == NULL || address > actual_capacity || len > actual_capacity - address) return false;
+      read_operations++;
+      read_bytes += len;
       memcpy(out, storage + address, len);
       return true;
     }
@@ -39,6 +42,7 @@ class SPIFlash {
       }
       for(size_t i = 0; i < len; i++) storage[address + i] &= data[i];
       programmed_bytes += len;
+      mutation_operations++;
       return true;
     }
 
@@ -48,6 +52,7 @@ class SPIFlash {
       memset(storage + base, 0xFF, SECTOR_SIZE);
       erase_count++;
       sector_erases[base / SECTOR_SIZE]++;
+      mutation_operations++;
       return true;
     }
 
@@ -60,6 +65,9 @@ class SPIFlash {
       memset(sector_erases, 0, sizeof(sector_erases));
       erase_count = 0;
       programmed_bytes = 0;
+      mutation_operations = 0;
+      read_operations = 0;
+      read_bytes = 0;
       fail_after_operations = -1;
       clearFailure();
     }
@@ -69,6 +77,14 @@ class SPIFlash {
       return sector < MAX_CAPACITY / SECTOR_SIZE ? sector_erases[sector] : 0;
     }
     static uint64_t programmedBytes(void) { return programmed_bytes; }
+    static uint32_t mutationOperations(void) { return mutation_operations; }
+    static uint32_t readOperations(void) { return read_operations; }
+    static uint64_t readBytes(void) { return read_bytes; }
+    static void resetOperationCounts(void) {
+      mutation_operations = 0;
+      read_operations = 0;
+      read_bytes = 0;
+    }
 
     static void setReportedCapacity(uint32_t capacity) {
       selected_capacity = capacity;
@@ -88,6 +104,8 @@ class SPIFlash {
 
     bool rawRead(uint32_t address, uint8_t* out, size_t len) const {
       if(out == NULL || actual_capacity == 0) return false;
+      read_operations++;
+      read_bytes += len;
       for(size_t i = 0; i < len; i++) out[i] = storage[(address + (uint32_t) i) % actual_capacity];
       return true;
     }
@@ -102,6 +120,7 @@ class SPIFlash {
         storage[(address + (uint32_t) i) % actual_capacity] &= data[i];
       }
       programmed_bytes += len;
+      mutation_operations++;
       return true;
     }
 
@@ -111,6 +130,7 @@ class SPIFlash {
       memset(storage + base, 0xFF, SECTOR_SIZE);
       erase_count++;
       sector_erases[base / SECTOR_SIZE]++;
+      mutation_operations++;
       return true;
     }
 
@@ -152,6 +172,9 @@ class SPIFlash {
     static inline uint32_t fail_end = MAX_CAPACITY;
     static inline uint32_t erase_count;
     static inline uint64_t programmed_bytes;
+    static inline uint32_t mutation_operations;
+    static inline uint32_t read_operations;
+    static inline uint64_t read_bytes;
     static inline int32_t fail_after_operations = -1;
 };
 

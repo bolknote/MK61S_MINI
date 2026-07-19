@@ -42,10 +42,17 @@ struct Entry {
   NodeKind kind;
 };
 
+enum class MountStatus : u8 {
+  UNAVAILABLE = 0,
+  READY,
+  REPAIR_REQUIRED
+};
+
 void init(void);
 bool format(void);
 bool refresh(void);
 bool ready(void);
+MountStatus mount_status(void);
 const storage_geometry::Geometry& geometry(void);
 u16 max_nodes(void);
 u16 used_nodes(void);

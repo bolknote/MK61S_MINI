@@ -97,6 +97,7 @@ struct Transaction {
 
 static storage_geometry::Geometry g_geometry;
 static bool g_ready;
+static MountStatus g_mount_status;
 static u32 g_format_epoch;
 static u8 g_active_bank;
 static u32 g_catalog_generation;
@@ -1567,6 +1568,7 @@ static bool format_internal(bool erase_settings) {
   g_format_epoch = 0xC5F50001UL ^ capacity ^ millis();
   if(g_format_epoch == 0 || g_format_epoch == 0xFFFFFFFFUL) g_format_epoch ^= 0x13579BDFUL;
   g_ready = false;
+  g_mount_status = MountStatus::UNAVAILABLE;
   g_active_bank = 1;
   g_catalog_generation = 0;
   g_wal_sequence = 0;
@@ -1599,6 +1601,7 @@ static bool format_internal(bool erase_settings) {
   }
   if(!write_locators()) return false;
   g_ready = true;
+  g_mount_status = MountStatus::READY;
   return true;
 }
 
@@ -1607,6 +1610,7 @@ static bool format_internal(bool erase_settings) {
 void init(void) {
   DiskActivity activity;
   g_ready = false;
+  g_mount_status = MountStatus::UNAVAILABLE;
   g_free_hint = 0;
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
@@ -1620,9 +1624,13 @@ void init(void) {
 #endif
     (void) format_internal(!preserve_settings);
   } else if(!load_catalog()) {
-    (void) format_internal(false);
+    // A valid locator proves this is an existing C5 volume.  Losing both
+    // catalog banks must never look like first use: leave every byte intact
+    // until the user explicitly requests a format.
+    g_mount_status = MountStatus::REPAIR_REQUIRED;
   } else {
     g_ready = true;
+    g_mount_status = MountStatus::READY;
   }
   if(g_ready) vfat_stage_clear();
 }
@@ -1638,6 +1646,8 @@ bool refresh(void) {
 }
 
 bool ready(void) { return g_ready; }
+
+MountStatus mount_status(void) { return g_mount_status; }
 
 const storage_geometry::Geometry& geometry(void) { return g_geometry; }
 
@@ -1656,16 +1666,19 @@ u16 used_nodes(void) {
 bool basename_valid(const char* name) { return valid_name(name); }
 
 u32 settings_address(void) {
-  return g_ready ? sector_address(g_geometry.settings_sector) : 0;
+  return (g_ready || g_mount_status == MountStatus::REPAIR_REQUIRED)
+      ? sector_address(g_geometry.settings_sector) : 0;
 }
 
 u16 settings_size(void) {
-  return g_ready ? SETTINGS_JOURNAL_SIZE : 0;
+  return (g_ready || g_mount_status == MountStatus::REPAIR_REQUIRED)
+      ? SETTINGS_JOURNAL_SIZE : 0;
 }
 
 bool erase_settings(void) {
   DiskActivity activity;
-  return g_ready && erase_sector(g_geometry.settings_sector) &&
+  return (g_ready || g_mount_status == MountStatus::REPAIR_REQUIRED) &&
+         erase_sector(g_geometry.settings_sector) &&
          write_settings_guard();
 }
 

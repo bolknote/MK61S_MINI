@@ -1637,6 +1637,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
+              if(!program_store::ready()) {
+                if(program_store::mount_status() ==
+                   program_store::MountStatus::REPAIR_REQUIRED) {
+                  Serial.println("C5: catalog damaged; run sera to format");
+                  Serial.println("Files were not modified");
+                } else {
+                  Serial.println("C5: unavailable");
+                }
+                break;
+              }
               u16 directories = 0;
               const int visible = program_store::total_count();
               for(int index = 0; index < visible; index++) {
