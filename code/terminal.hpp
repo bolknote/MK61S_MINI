@@ -17,9 +17,11 @@
 #include "mk61_ref.hpp"
 #include "virtual_fat.hpp"
 #include "program_store.hpp"
+#include "storage_path.hpp"
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_protocol.hpp"
+#include "utf8_view.hpp"
 
 extern  const char terminal_symbols[16];
 
@@ -101,10 +103,18 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
   { "run",     CMD_RUN,           "run [name] - run program / stored file" },
   { "open",    CMD_OPEN,          "open <name> - run stored file" },
-  { "save",    CMD_SAVE,          "save <slot|name.m61> - store program (Y/y)" },
-  { "load",    CMD_LOAD,          "load <slot|name.m61> - load program" },
-  { "dir",     CMD_FS_LIST,       "list files in program store" },
-  { "del",     CMD_FS_REMOVE,     "del <name[.m61]|name.ext> - delete stored file" },
+  { "save",    CMD_SAVE,          "save <slot|path.m61> - store program (Y/y)" },
+  { "load",    CMD_LOAD,          "load <slot|path.m61> - load program" },
+  { "pwd",     CMD_FS_PWD,        "print current storage directory" },
+  { "cd",      CMD_FS_CD,         "cd [path] - change storage directory" },
+  { "ls",      CMD_FS_LIST,       "ls [path] - list one storage directory" },
+  { "dir",     CMD_FS_LIST,       "alias for ls" },
+  { "mkdir",   CMD_FS_MKDIR,      "mkdir [-p] <path> - create directories" },
+  { "mv",      CMD_FS_MOVE,       "mv <source> <destination>" },
+  { "rm",      CMD_FS_REMOVE,     "rm [-r] <path> - remove file or tree" },
+  { "del",     CMD_FS_REMOVE,     "alias for rm" },
+  { "rmdir",   CMD_FS_RMDIR,      "rmdir <path> - remove empty directory" },
+  { "df",      CMD_FS_STAT,       "show C5 capacity and node quota" },
   { "smap",    CMD_SMAP,          "numeric M1 slot occupancy map" },
   { "sdir",    CMD_DIR,           "list numeric M1 slots" },
   { "snm",     CMD_RENAME,        "snm <slot> <name> - rename slot" },
@@ -112,8 +122,9 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "sera",    CMD_ERASE_STORAGE, "erase all slots (Y/y)" },
   { "clr",     CMD_CLEAR,         "clear program memory (Y/y)" },
   { "vlog",    CMD_VFAT_LOG,      "dump virtual FAT trace log" },
-  { "fsls",    CMD_FS_LIST,       "alias for dir" },
-  { "fsrm",    CMD_FS_REMOVE,     "alias for del" },
+  { "fsls",    CMD_FS_LIST,       "alias for ls" },
+  { "fsrm",    CMD_FS_REMOVE,     "alias for rm" },
+  { "fsstat",  CMD_FS_STAT,       "alias for df" },
   { "fsclean", CMD_FS_CLEAN,      "remove all zero-length store entries" },
   { "disa",    CMD_DISASM,        "toggle disassembler on display" },
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
@@ -182,52 +193,6 @@ constexpr bool terminal_index_resolves_all(void) {
 }
 static_assert(terminal_index_resolves_all(), "terminal command index: a command is unreachable (CRC cluster or duplicate name)");
 
-// ====== Файлы хранилища программ (fsls/fsrm) ======
-struct TerminalFsType {
-  program_store::ProgramType type;
-  const char* ext;
-};
-
-static constexpr TerminalFsType terminal_fs_types[] = {
-  { program_store::ProgramType::MK61,       "M61" },
-  { program_store::ProgramType::FOCAL,      "FOC" },
-  { program_store::ProgramType::TINYBASIC,  "TBI" },
-  { program_store::ProgramType::TEXT,       "T1"  },
-  { program_store::ProgramType::MK61_STATE, "M2"  },
-  { program_store::ProgramType::FONT,       "FMK" },
-};
-static constexpr u8 TERMINAL_FS_TYPE_COUNT = sizeof(terminal_fs_types) / sizeof(terminal_fs_types[0]);
-
-// Разбирает "имя.расширение" (расширение без учета регистра) в имя и тип
-// хранилища. Точка берется последняя: имена файлов могут содержать точки.
-static bool terminal_split_fs_name(const char* args, char* name_out, program_store::ProgramType& type_out) {
-  isize dot = -1;
-  isize len = 0;
-  while(args[len] != 0) {
-    if(args[len] == '.') dot = len;
-    len++;
-  }
-  if(dot <= 0 || dot >= (isize) program_store::NAME_SIZE) return false;
-
-  for(u8 t = 0; t < TERMINAL_FS_TYPE_COUNT; t++) {
-    const char* ext = terminal_fs_types[t].ext;
-    isize i = 0;
-    bool match = true;
-    while(ext[i] != 0 || args[dot + 1 + i] != 0) {
-      char a = args[dot + 1 + i];
-      if(a >= 'a' && a <= 'z') a = (char) (a - 'a' + 'A');
-      if(a != ext[i]) { match = false; break; }
-      i++;
-    }
-    if(!match) continue;
-    memcpy(name_out, args, (usize) dot);
-    name_out[dot] = 0;
-    type_out = terminal_fs_types[t].type;
-    return true;
-  }
-  return false;
-}
-
 static const char* terminal_skip_spaces(const char* p) {
   while(p != NULL && (*p == ' ' || *p == '\t')) p++;
   return p;
@@ -266,39 +231,36 @@ static bool terminal_copy_arg(char* out, usize capacity, const char* args) {
   return true;
 }
 
-static bool terminal_strip_suffix_ci(char* text, const char* suffix) {
-  const usize text_len = strlen(text);
-  const usize suffix_len = strlen(suffix);
-  if(suffix_len > text_len) return false;
-  char* tail = text + text_len - suffix_len;
-  for(usize i = 0; i < suffix_len; i++) {
-    char a = tail[i];
-    char b = suffix[i];
-    if(a >= 'A' && a <= 'Z') a = (char) (a - 'A' + 'a');
-    if(b >= 'A' && b <= 'Z') b = (char) (b - 'A' + 'a');
-    if(a != b) return false;
+static bool terminal_single_token(const char* args, char* out,
+                                  usize capacity) {
+  const char* cursor = args;
+  return terminal_core::parse_token(cursor, out, capacity) &&
+         terminal_core::at_end(cursor);
+}
+
+static void terminal_path_error(const char* operation,
+                                storage_path::Status status) {
+  Serial.print(operation);
+  Serial.print(": ");
+  Serial.println(storage_path::status_text(status));
+}
+
+static void terminal_print_fs_entry(const program_store::Entry& entry) {
+  char name[storage_path::VISIBLE_NAME_SIZE];
+  if(!storage_path::visible_name(entry, name, sizeof(name))) {
+    Serial.println("?\t<invalid entry>");
+    return;
   }
-  *tail = 0;
-  return true;
-}
-
-static bool terminal_copy_mk61_name(const char* args, char* name_out) {
-  char name[program_store::NAME_SIZE + 5];
-  if(!terminal_copy_arg(name, sizeof(name), args)) return false;
-  (void) terminal_strip_suffix_ci(name, ".m61");
-  if(name[0] == 0 || strlen(name) >= program_store::NAME_SIZE) return false;
-  strncpy(name_out, name, program_store::NAME_SIZE - 1);
-  name_out[program_store::NAME_SIZE - 1] = 0;
-  return true;
-}
-
-static bool terminal_split_fs_name_or_mk61(const char* args, char* name_out, program_store::ProgramType& type_out) {
-  char trimmed[program_store::NAME_SIZE + 16];
-  if(!terminal_copy_arg(trimmed, sizeof(trimmed), args)) return false;
-  if(terminal_split_fs_name(trimmed, name_out, type_out)) return true;
-  if(!terminal_copy_mk61_name(trimmed, name_out)) return false;
-  type_out = program_store::ProgramType::MK61;
-  return true;
+  if(entry.kind == program_store::NodeKind::DIRECTORY) {
+    Serial.print("d\t");
+    Serial.print(name);
+    Serial.println('/');
+  } else {
+    Serial.print("f\t");
+    Serial.print(entry.data_len);
+    Serial.print(" B\t");
+    Serial.println(name);
+  }
 }
 
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
@@ -364,6 +326,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     isize   nSlot;
     bool    input_overflow;
     char    pending_save_name[program_store::NAME_SIZE];
+    u16     pending_save_parent_id;
+    u16     current_directory;
 
     // Аргументы скриптового действия переживают восстановление input_buffer:
     // script_args_ptr указывает внутрь буфера строки, поэтому перед возвратом
@@ -453,19 +417,27 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     void print_prompt(void) {
+      char path[64];
+      if(storage_path::format_directory(current_directory, path,
+                                        sizeof(path)) ==
+         storage_path::Status::OK) Serial.print(path);
+      else Serial.print("...");
       Serial.print("> ");
     }
 
-    void redraw_input_line(usize old_len) {
+    void redraw_input_line(usize old_columns) {
       Serial.write('\r');
       print_prompt();
       Serial.write(input_buffer, recive_pos);
-      for(usize i = recive_pos; i < old_len; i++) Serial.write(' ');   // затереть остаток
-      for(usize i = recive_pos; i < old_len; i++) Serial.write('\b');
+      const usize columns = utf8_view::codepoint_count(
+          (const char*) input_buffer, (u16) recive_pos);
+      for(usize i = columns; i < old_columns; i++) Serial.write(' ');
+      for(usize i = columns; i < old_columns; i++) Serial.write('\b');
     }
 
     void history_recall(i8 nav) {
-      const usize old_len = recive_pos;
+      const usize old_columns = utf8_view::codepoint_count(
+          (const char*) input_buffer, (u16) recive_pos);
       if(nav < 0) {  // выход из истории: вернуть редактируемую строку
         memcpy(input_buffer, saved_line, saved_len);
         recive_pos = saved_len;
@@ -475,7 +447,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         recive_pos = hist_length[slot];
       }
       hist_nav = nav;
-      redraw_input_line(old_len);
+      redraw_input_line(old_columns);
     }
 
     void history_key_up(void) {
@@ -639,7 +611,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     usize recive_pos;
 
     class_terminal(void)
-      : AT(0), pending_confirmation_cmd(CMD_UNKNOWN), nSlot(-1), input_overflow(false), recive_pos(0) {
+      : AT(0), pending_confirmation_cmd(CMD_UNKNOWN), nSlot(-1),
+        input_overflow(false), pending_save_parent_id(program_store::ROOT_ID),
+        current_directory(program_store::ROOT_ID), recive_pos(0) {
       pending_save_name[0] = 0;
     }
 
@@ -650,6 +624,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       nSlot                 = -1;
       input_overflow        = false;
       pending_save_name[0]  = 0;
+      pending_save_parent_id = program_store::ROOT_ID;
     }
 
     // История и редактор строки общие (static): сбрасываются только при
@@ -666,6 +641,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     void  init(void) {
+      current_directory = program_store::ROOT_ID;
       reset_command_state();
       reset_line_editor();
       Serial.begin(115200);
@@ -675,6 +651,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     void init_script(void) {
+      current_directory = program_store::ROOT_ID;
       reset_command_state();
     }
 
@@ -1152,6 +1129,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     terminal_protocol::Result execute(bool script_mode = false) {
         if(recive_pos == 0 || recive_pos > MAX_INPUT_CHAR) return terminal_protocol::Result::error();
         input_buffer[--recive_pos] = 0;
+        if(!script_mode && current_directory != program_store::ROOT_ID) {
+          program_store::Entry cwd_entry;
+          if(!program_store::entry_by_id(current_directory, cwd_entry) ||
+             cwd_entry.kind != program_store::NodeKind::DIRECTORY) {
+            current_directory = program_store::ROOT_ID;
+          }
+        }
         Serial.println();
         dbgln(MINI,"[", recive_pos, "] '", (char*) input_buffer);
 
@@ -1170,7 +1154,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 if(!ok) Serial.println("Delete failed (no such file?)");
                 break;
               case CMD_SAVE:
-                ok = pending_save_name[0] != 0 ? StoreProgram(pending_save_name) : Store(nSlot);
+                ok = pending_save_name[0] != 0
+                    ? StoreProgram(pending_save_parent_id, pending_save_name)
+                    : Store(nSlot);
                 if(!ok) Serial.println("Failed save attempt!");
                 break;
               case CMD_ERASE_STORAGE:
@@ -1181,12 +1167,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 break;
             }
             pending_save_name[0] = 0;
+            pending_save_parent_id = program_store::ROOT_ID;
             nSlot = -1;
             recive_pos = 0;
             return ok ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
           }
           if(terminal_core::exact_confirmation((const char*) input_buffer, 'n')) {
             pending_save_name[0] = 0;
+            pending_save_parent_id = program_store::ROOT_ID;
             nSlot = -1;
             recive_pos = 0;
             Serial.println("Cancelled.");
@@ -1194,6 +1182,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           }
           // Any command other than a standalone Y/N cancels the stale request.
           pending_save_name[0] = 0;
+          pending_save_parent_id = program_store::ROOT_ID;
           nSlot = -1;
         }
 
@@ -1276,14 +1265,25 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               const char* args = command_args();
               usize slot = 0;
               pending_save_name[0] = 0;
+              pending_save_parent_id = program_store::ROOT_ID;
               if(terminal_parse_slot_arg(args, slot)) {
                 nSlot = (isize) slot;
-              } else if(terminal_copy_mk61_name(args, pending_save_name)) {
-                nSlot = -1;
               } else {
-                Serial.println("Usage: save <slot|name[.m61]>");
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
+                storage_path::FileTarget target = {};
+                const storage_path::Status status = storage_path::file_target(
+                    current_directory, args, program_store::ProgramType::MK61,
+                    target);
+                if(status != storage_path::Status::OK) {
+                  terminal_path_error("save", status);
+                  Serial.println("Usage: save <slot|path[.m61]>");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+                nSlot = -1;
+                pending_save_parent_id = target.parent_id;
+                strncpy(pending_save_name, target.name,
+                        sizeof(pending_save_name) - 1);
+                pending_save_name[sizeof(pending_save_name) - 1] = 0;
               }
               pending_confirmation_cmd = CMD_SAVE;
               Serial.println("Enter Y/y to confirm the operation!");
@@ -1301,14 +1301,18 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                   return terminal_protocol::Result::error();
                 }
               } else {
-                char name[program_store::NAME_SIZE];
-                if(!terminal_copy_mk61_name(args, name)) {
-                  Serial.println("Usage: load <slot|name[.m61]>");
+                if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
+                program_store::Entry entry;
+                const storage_path::Status status = storage_path::resolve_file(
+                    current_directory, args, program_store::ProgramType::MK61,
+                    entry);
+                if(status != storage_path::Status::OK) {
+                  terminal_path_error("load", status);
+                  Serial.println("Usage: load <slot|path[.m61]>");
                   recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
-                if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
-                if(!LoadProgram(name)) {
+                if(!LoadProgram(entry.id)) {
                   Serial.println("Failed load attempt!");
                   recive_pos = 0;
                   return terminal_protocol::Result::error();
@@ -1380,44 +1384,246 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               for(u16 i = 0; (line = virtual_fat::trace_line_at(i)) != NULL; i++) Serial.println(line);
             }
             break;
-          case  CMD_FS_LIST: {
-              usize total = 0;
-              for(u8 t = 0; t < TERMINAL_FS_TYPE_COUNT; t++) {
-                const program_store::ProgramType type = terminal_fs_types[t].type;
-                const int count = program_store::count(type);
-                for(int i = 0; i < count; i++) {
-                  program_store::Entry file;
-                  if(!program_store::entry(type, i, file)) continue;
-                  Serial.print(file.name);
-                  Serial.print('.');
-                  Serial.print(terminal_fs_types[t].ext);
-                  Serial.print('\t');
-                  Serial.print(file.data_len);
-                  Serial.println(" B");
-                  total++;
+          case CMD_FS_PWD: {
+              if(!terminal_core::at_end(command_args())) {
+                Serial.println("Usage: pwd");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              char path[MAX_INPUT_CHAR];
+              const storage_path::Status status = storage_path::format_directory(
+                  current_directory, path, sizeof(path));
+              if(status != storage_path::Status::OK) {
+                terminal_path_error("pwd", status);
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              Serial.println(path);
+            }
+            break;
+          case CMD_FS_CD: {
+              const char* args = command_args();
+              u16 directory = program_store::ROOT_ID;
+              storage_path::Status status = storage_path::Status::OK;
+              if(!terminal_core::at_end(args)) {
+                status = storage_path::resolve_directory(current_directory,
+                                                         args, directory);
+              }
+              if(status != storage_path::Status::OK) {
+                terminal_path_error("cd", status);
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              current_directory = directory;
+            }
+            break;
+          case CMD_FS_LIST: {
+              const char* args = command_args();
+              u16 directory = current_directory;
+              if(!terminal_core::at_end(args)) {
+                storage_path::Status status = storage_path::resolve_directory(
+                    current_directory, args, directory);
+                if(status != storage_path::Status::OK) {
+                  program_store::Entry single;
+                  status = storage_path::resolve_entry(current_directory,
+                                                       args, single);
+                  if(status == storage_path::Status::OK) {
+                    terminal_print_fs_entry(single);
+                    break;
+                  }
+                  terminal_path_error("ls", status);
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
                 }
               }
-              Serial.print(total); Serial.print(" files, ");
-              Serial.print(program_store::used_nodes()); Serial.print(" of ");
-              Serial.print(program_store::max_nodes());
-              Serial.println(" filesystem nodes used.");
-          }
+              const int count = program_store::child_count(directory);
+              for(int index = 0; index < count; index++) {
+                program_store::Entry entry;
+                if(!program_store::child(directory, index, entry)) {
+                  Serial.println("ls: storage error");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+                terminal_print_fs_entry(entry);
+              }
+              Serial.print(count);
+              Serial.println(count == 1 ? " entry." : " entries.");
+            }
             break;
-          case  CMD_FS_REMOVE: {
-              const char* args = command_args();
-              program_store::ProgramType type;
-              char fs_name[program_store::NAME_SIZE];
-              if(!terminal_split_fs_name_or_mk61(args, fs_name, type)) {
-                Serial.println("Usage: del <name[.m61]|name.ext> (ext: M61 FOC TBI T1 M2)");
+          case CMD_FS_MKDIR: {
+              const char* cursor = command_args();
+              char path[MAX_INPUT_CHAR];
+              if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
+                Serial.println("Usage: mkdir [-p] <path>");
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              if(!program_store::remove(type, fs_name)) {
-                Serial.println("Delete failed (no such file?)");
+              bool parents = false;
+              if(strcmp(path, "-p") == 0) {
+                parents = true;
+                if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
+                  Serial.println("Usage: mkdir [-p] <path>");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+              }
+              if(!terminal_core::at_end(cursor)) {
+                Serial.println("Usage: mkdir [-p] <path>");
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              Serial.println("Deleted.");
+              u16 created = program_store::INVALID_ID;
+              const storage_path::Status status = storage_path::create_directory(
+                  current_directory, path, parents, created);
+              if(status != storage_path::Status::OK) {
+                terminal_path_error("mkdir", status);
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+            }
+            break;
+          case CMD_FS_MOVE: {
+              const char* cursor = command_args();
+              char path[MAX_INPUT_CHAR];
+              if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
+                Serial.println("Usage: mv <source> <destination>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              program_store::Entry source;
+              storage_path::Status status = storage_path::resolve_entry(
+                  current_directory, path, source);
+              if(status != storage_path::Status::OK ||
+                 !terminal_core::parse_token(cursor, path, sizeof(path)) ||
+                 !terminal_core::at_end(cursor)) {
+                if(status != storage_path::Status::OK) {
+                  terminal_path_error("mv", status);
+                } else {
+                  Serial.println("Usage: mv <source> <destination>");
+                }
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              u16 parent = program_store::INVALID_ID;
+              char name[program_store::NAME_SIZE];
+              status = storage_path::move_target(current_directory, source,
+                                                 path, parent, name,
+                                                 sizeof(name));
+              if(status != storage_path::Status::OK ||
+                 !program_store::move_rename(source.id, parent, name)) {
+                terminal_path_error("mv", status == storage_path::Status::OK
+                    ? storage_path::Status::IO_ERROR : status);
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+            }
+            break;
+          case CMD_FS_REMOVE: {
+              const char* cursor = command_args();
+              char path[MAX_INPUT_CHAR];
+              if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
+                Serial.println("Usage: rm [-r] <path>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              bool recursive = false;
+              if(strcmp(path, "-r") == 0 || strcmp(path, "-R") == 0) {
+                recursive = true;
+                if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
+                  Serial.println("Usage: rm [-r] <path>");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+              }
+              if(!terminal_core::at_end(cursor)) {
+                Serial.println("Usage: rm [-r] <path>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              program_store::Entry entry;
+              const storage_path::Status status = storage_path::resolve_entry(
+                  current_directory, path, entry);
+              if(status != storage_path::Status::OK) {
+                terminal_path_error("rm", status);
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              if(entry.kind == program_store::NodeKind::DIRECTORY &&
+                 !recursive) {
+                Serial.println("rm: is a directory; use rm -r or rmdir");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              u16 removed = 0;
+              if(!program_store::remove_tree(entry.id, &removed)) {
+                Serial.println("rm: storage error");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              Serial.print("Removed ");
+              Serial.print(removed);
+              Serial.println(removed == 1 ? " entry." : " entries.");
+            }
+            break;
+          case CMD_FS_RMDIR: {
+              char path[MAX_INPUT_CHAR];
+              if(!terminal_single_token(command_args(), path, sizeof(path))) {
+                Serial.println("Usage: rmdir <path>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              u16 directory = program_store::ROOT_ID;
+              storage_path::Status status = storage_path::resolve_directory(
+                  current_directory, path, directory);
+              if(status != storage_path::Status::OK ||
+                 directory == program_store::ROOT_ID) {
+                terminal_path_error("rmdir",
+                    directory == program_store::ROOT_ID &&
+                    status == storage_path::Status::OK
+                        ? storage_path::Status::ROOT : status);
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              if(program_store::child_count(directory) != 0 ||
+                 !program_store::remove_id(directory)) {
+                Serial.println("rmdir: directory not empty or storage error");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+            }
+            break;
+          case CMD_FS_STAT: {
+              if(!terminal_core::at_end(command_args())) {
+                Serial.println("Usage: df");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              u16 directories = 0;
+              const int visible = program_store::total_count();
+              for(int index = 0; index < visible; index++) {
+                program_store::Entry entry;
+                if(program_store::entry_at(index, entry) &&
+                   entry.kind == program_store::NodeKind::DIRECTORY) {
+                  directories++;
+                }
+              }
+              const u16 used = program_store::used_nodes();
+              const u16 maximum = program_store::max_nodes();
+              Serial.print("Flash: ");
+              Serial.print(program_store::geometry().capacity_bytes);
+              Serial.println(" bytes");
+              Serial.print("Nodes: "); Serial.print(used); Serial.print(" used, ");
+              Serial.print(maximum - used); Serial.print(" free, ");
+              Serial.print(maximum); Serial.println(" total");
+              Serial.print("Visible: "); Serial.print(visible - directories);
+              Serial.print(" files, "); Serial.print(directories);
+              Serial.print(" directories, "); Serial.print(used - visible);
+              Serial.println(" directory extents");
+              Serial.print("FAT12 cluster: ");
+              Serial.print((u32) program_store::geometry().sectors_per_cluster * 512U);
+              Serial.println(" bytes (virtual)");
+              Serial.print("Settings: "); Serial.print(program_store::settings_size());
+              Serial.println(" bytes reserved");
             }
             break;
           case  CMD_FS_CLEAN: {
@@ -1438,7 +1644,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
               if(*args != 0) {
                 if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
-                if(!OpenStoredFile(args)) {
+                if(!OpenStoredFile(current_directory, args)) {
                   Serial.println("Open failed!");
                   recive_pos = 0;
                   return terminal_protocol::Result::error();
@@ -1455,12 +1661,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case CMD_OPEN: {
               const char* args = command_args();
               if(terminal_core::at_end(args)) {
-                Serial.println("Usage: open <name>");
+                Serial.println("Usage: open <path>");
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
-              if(!OpenStoredFile(args)) {
+              if(!OpenStoredFile(current_directory, args)) {
                 Serial.println("Open failed!");
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
@@ -1638,7 +1844,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
         if(rx_char == 0x08 || rx_char == 0x7F) { // backspace
           if(!input_overflow && recive_pos > 0) {
-            recive_pos--;
+            recive_pos = utf8_view::previous_offset(input_buffer,
+                                                    (u16) recive_pos,
+                                                    (u16) recive_pos);
             Serial.print("\b \b");
           }
           continue;

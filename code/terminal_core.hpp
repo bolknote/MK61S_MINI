@@ -33,6 +33,28 @@ inline bool at_end(const char* p) {
   return p == 0 || is_end(*p);
 }
 
+// Shell-like token reader used by filesystem commands. A token may be
+// enclosed in matching single or double quotes; backslash remains a normal
+// character because it is also accepted as a path separator.
+inline bool parse_token(const char*& p, char* out, usize capacity) {
+  p = skip_spaces(p);
+  if(p == 0 || is_end(*p) || out == 0 || capacity < 2) return false;
+  usize length = 0;
+  const char quote = (*p == '"' || *p == '\'') ? *p++ : 0;
+  while(!is_end(*p) && (quote == 0 ? !is_space(*p) : *p != quote)) {
+    if(length + 1 >= capacity) return false;
+    out[length++] = *p++;
+  }
+  if(quote != 0) {
+    if(*p != quote) return false;
+    p++;
+    if(!is_space(*p) && !is_end(*p)) return false;
+  }
+  if(length == 0) return false;
+  out[length] = 0;
+  return true;
+}
+
 inline int digit_value(char c, usize base) {
   int digit = -1;
   if(c >= '0' && c <= '9') digit = c - '0';

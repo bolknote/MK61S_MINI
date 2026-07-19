@@ -11,6 +11,7 @@
 #include "m61_text.hpp"
 #include "shared_scratch.hpp"
 #include "settings_journal.hpp"
+#include "storage_path.hpp"
 #include "runtime_safety.hpp"
 #include "mk61emu_core.h"
 #include "keyboard.h"
@@ -44,115 +45,14 @@ static const SoundNote STARTUP_JINGLE[] = {
   {659, 240, 0, 25},
 };
 
-static bool stored_file_is_line_end(char c) {
-  return c == 0 || c == '\r' || c == '\n';
-}
-
-static bool stored_file_is_space(char c) {
-  return c == ' ' || c == '\t';
-}
-
-static const char* stored_file_skip_spaces(const char* p) {
-  while(p != NULL && stored_file_is_space(*p)) p++;
-  return p;
-}
-
-static char stored_file_ascii_lower(char ch) {
-  return (ch >= 'A' && ch <= 'Z') ? (char) (ch - 'A' + 'a') : ch;
-}
-
-static bool stored_file_ends_with_ci(const char* text, const char* suffix) {
-  const usize text_len = strlen(text);
-  const usize suffix_len = strlen(suffix);
-  if(suffix_len > text_len) return false;
-  const char* tail = text + text_len - suffix_len;
-  for(usize i = 0; i < suffix_len; i++) {
-    if(stored_file_ascii_lower(tail[i]) != stored_file_ascii_lower(suffix[i])) return false;
-  }
-  return true;
-}
-
-static bool stored_file_strip_suffix_ci(char* text, const char* suffix) {
-  if(!stored_file_ends_with_ci(text, suffix)) return false;
-  text[strlen(text) - strlen(suffix)] = 0;
-  return true;
-}
-
-static bool stored_file_copy_name(const char* args, char* name, usize capacity) {
-  args = stored_file_skip_spaces(args);
-  if(args == NULL || name == NULL || capacity == 0) return false;
-  usize len = 0;
-  while(!stored_file_is_line_end(args[len])) len++;
-  while(len > 0 && stored_file_is_space(args[len - 1])) len--;
-  if(len == 0 || len >= capacity) return false;
-  for(usize i = 0; i < len; i++) name[i] = args[i];
-  name[len] = 0;
-  return true;
-}
-
-static bool stored_file_entry_by_name(program_store::ProgramType type, const char* name, program_store::Entry& out) {
-  if(name == NULL || name[0] == 0) return false;
-  const int count = program_store::count(type);
-  for(int i = 0; i < count; i++) {
-    program_store::Entry entry;
-    if(!program_store::entry(type, i, entry)) continue;
-    if(strncmp(entry.name, name, program_store::NAME_SIZE) == 0) {
-      out = entry;
-      return true;
-    }
-  }
-  return false;
+bool ResolveStoredFile(u16 cwd, const char* args,
+                       program_store::Entry& entry) {
+  return storage_path::resolve_file(cwd, args, entry) ==
+         storage_path::Status::OK;
 }
 
 bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
-  char name[program_store::NAME_SIZE + 16];
-  if(!stored_file_copy_name(args, name, sizeof(name))) return false;
-
-  program_store::ProgramType preferred_type = program_store::ProgramType::MK61;
-  bool has_preferred_type = false;
-  if(stored_file_strip_suffix_ci(name, ".state.txt")) {
-    preferred_type = program_store::ProgramType::MK61_STATE;
-    has_preferred_type = true;
-  } else if(stored_file_strip_suffix_ci(name, ".m61")) {
-    preferred_type = program_store::ProgramType::MK61;
-    has_preferred_type = true;
-  } else if(stored_file_strip_suffix_ci(name, ".foc")) {
-    preferred_type = program_store::ProgramType::FOCAL;
-    has_preferred_type = true;
-#if MK61_ENABLE_TINYBASIC
-  } else if(stored_file_strip_suffix_ci(name, ".tbi")) {
-    preferred_type = program_store::ProgramType::TINYBASIC;
-    has_preferred_type = true;
-#endif
-  } else if(stored_file_strip_suffix_ci(name, ".txt") || stored_file_strip_suffix_ci(name, ".t1")) {
-    preferred_type = program_store::ProgramType::TEXT;
-    has_preferred_type = true;
-  } else if(stored_file_strip_suffix_ci(name, ".m2")) {
-    preferred_type = program_store::ProgramType::MK61_STATE;
-    has_preferred_type = true;
-  } else if(stored_file_strip_suffix_ci(name, ".fmk")) {
-    preferred_type = program_store::ProgramType::FONT;
-    has_preferred_type = true;
-  }
-
-  if(name[0] == 0 || strlen(name) >= program_store::NAME_SIZE) return false;
-  if(has_preferred_type) return stored_file_entry_by_name(preferred_type, name, entry);
-
-  const program_store::ProgramType types[] = {
-    program_store::ProgramType::TEXT,
-    program_store::ProgramType::MK61_STATE,
-    program_store::ProgramType::MK61,
-    program_store::ProgramType::FOCAL,
-    program_store::ProgramType::FONT
-#if MK61_ENABLE_TINYBASIC
-    ,
-    program_store::ProgramType::TINYBASIC
-#endif
-  };
-  for(usize i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
-    if(stored_file_entry_by_name(types[i], name, entry)) return true;
-  }
-  return false;
+  return ResolveStoredFile(program_store::ROOT_ID, args, entry);
 }
 
 // Единая точка запуска сохранённого файла: используется терминалом,
@@ -180,8 +80,12 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
 }
 
 bool OpenStoredFile(const char* args) {
+  return OpenStoredFile(program_store::ROOT_ID, args);
+}
+
+bool OpenStoredFile(u16 cwd, const char* args) {
   program_store::Entry entry;
-  if(!ResolveStoredFile(args, entry)) return false;
+  if(!ResolveStoredFile(cwd, args, entry)) return false;
   return OpenStoredEntry(entry);
 }
 
@@ -841,6 +745,10 @@ bool LoadProgram(const char* name) {
   return m61_text::load_program(name);
 }
 
+bool LoadProgram(u16 id) {
+  return m61_text::load_program(id);
+}
+
 bool Load(void) {
   isize address;
   {
@@ -895,6 +803,10 @@ bool DeleteSlot(usize nSlot) {
 }
 
 bool StoreProgram(const char* name) {
+  return StoreProgram(program_store::ROOT_ID, name);
+}
+
+bool StoreProgram(u16 parent_id, const char* name) {
   if(check_empty_program()) return false; // error
   if(name == NULL || name[0] == 0) return false;
 
@@ -903,7 +815,9 @@ bool StoreProgram(const char* name) {
   u8* script_buffer = scratch.data();
   u16 script_len = 0;
   if(!m61_text::format_current_program(script_buffer, scratch.size(), &script_len)) return false;
-  if(!program_store::write_mk61(name, script_buffer, script_len)) return false;
+  if(!program_store::write_file(parent_id, program_store::INVALID_ID,
+                                program_store::ProgramType::MK61, name,
+                                script_buffer, script_len, NULL)) return false;
 
   dbg(MINI, "\nProgramm saved!");
   return true;

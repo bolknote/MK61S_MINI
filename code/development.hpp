@@ -5,6 +5,26 @@
 
 bool development_select(void);
 bool program_store_explorer_select(void);
+
+enum class ProgramStoreFileDialogResult : u8 {
+  CANCELLED = 0,
+  EXISTING,
+  NEW_FILE
+};
+
+// Shared on-device file dialogs. Language editors use the same tree walker,
+// controls and name validation as Explorer instead of maintaining flat,
+// independent program lists.
+ProgramStoreFileDialogResult program_store_choose_file(
+    program_store::ProgramType type, u16 start_directory, bool allow_new,
+    program_store::Entry& out_entry, u16& out_directory);
+bool program_store_choose_directory(u16 start_directory, u16 forbidden_tree,
+                                    u16& out_directory);
+bool program_store_choose_save_target(program_store::ProgramType type,
+                                      u16 start_directory, char* name,
+                                      usize name_capacity,
+                                      u16& out_directory);
+
 bool program_store_view_entry(const program_store::Entry& entry);
 bool program_store_view_entry(program_store::ProgramType type, const char* name);
 bool program_store_apply_font(const program_store::Entry& entry);

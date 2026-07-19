@@ -8,6 +8,7 @@
 #include "Arduino.h"
 #include "library_pmk.hpp"
 #include "mk61emu_core.h"
+#include "storage_path.hpp"
 #include "tools.hpp"
 #else
 bool OpenStoredFile(const char* args);
@@ -171,8 +172,33 @@ static bool make_store_frame(u16 id, ScriptFrame& frame) {
 static bool make_store_frame(const char* name, ScriptFrame& frame) {
   if(name == NULL || name[0] == 0) return false;
 
+#ifndef M61_TEXT_HOST_TEST
   // Nested script names are resolved in the caller's directory first. This
-  // keeps identically named scripts in independent directory trees isolated.
+  // keeps identically named scripts in independent directory trees isolated
+  // and also gives scripts normal relative paths (../lib/tool.m61).
+  u16 cwd = program_store::ROOT_ID;
+  if(script_id != program_store::INVALID_ID) {
+    program_store::Entry current;
+    if(program_store::entry_by_id(script_id, current)) cwd = current.parent_id;
+  }
+
+  program_store::Entry entry;
+  if(storage_path::resolve_file(cwd, name,
+      program_store::ProgramType::MK61, entry) == storage_path::Status::OK) {
+    return make_store_frame(entry.id, frame);
+  }
+
+  // Bare legacy names used to be global. Preserve that fallback without
+  // turning an explicitly relative path into an unrelated root lookup.
+  if(cwd != program_store::ROOT_ID && strchr(name, '/') == NULL &&
+     strchr(name, '\\') == NULL &&
+     storage_path::resolve_file(program_store::ROOT_ID, name,
+       program_store::ProgramType::MK61, entry) == storage_path::Status::OK) {
+    return make_store_frame(entry.id, frame);
+  }
+  return false;
+#else
+  program_store::Entry entry;
   if(script_id != program_store::INVALID_ID) {
     program_store::Entry current;
     if(program_store::entry_by_id(script_id, current)) {
@@ -189,9 +215,9 @@ static bool make_store_frame(const char* name, ScriptFrame& frame) {
     }
   }
 
-  program_store::Entry entry;
   return find_entry_by_type_name(program_store::ProgramType::MK61, name, entry) &&
          make_store_frame(entry.id, frame);
+#endif
 }
 
 static bool push_current_script(void) {
@@ -490,6 +516,32 @@ static bool goto_label(const char* args) {
   return false;
 }
 
+static bool open_referenced_file(const char* path) {
+#ifndef M61_TEXT_HOST_TEST
+  u16 cwd = program_store::ROOT_ID;
+  if(script_id != program_store::INVALID_ID) {
+    program_store::Entry current;
+    if(program_store::entry_by_id(script_id, current)) cwd = current.parent_id;
+  }
+
+  program_store::Entry entry;
+  if(storage_path::resolve_file(cwd, path, entry) ==
+     storage_path::Status::OK) {
+    return OpenStoredEntry(entry);
+  }
+  // Compatibility for old flat scripts: a bare name not present beside the
+  // caller may still refer to a root file. Explicit relative paths never fall
+  // through to an unrelated object.
+  return cwd != program_store::ROOT_ID && strchr(path, '/') == NULL &&
+         strchr(path, '\\') == NULL &&
+         storage_path::resolve_file(program_store::ROOT_ID, path, entry) ==
+             storage_path::Status::OK &&
+         OpenStoredEntry(entry);
+#else
+  return OpenStoredFile(path);
+#endif
+}
+
 // Вся грамматика команд разбирается терминалом (единый диспетчер интерактивного
 // и скриптового режимов). Сценарию терминал возвращает только действия,
 // влияющие на поток выполнения: run, open, load, переходы по меткам.
@@ -507,7 +559,7 @@ static bool execute_script_line(const char* raw_line) {
       start_current_program();
       return true;
     case terminal_protocol::ResultKind::OPEN_FILE:
-      if(OpenStoredFile(result.args)) return true;
+      if(open_referenced_file(result.args)) return true;
       line_error_message = "cannot open referenced file";
       return false;
     case terminal_protocol::ResultKind::LOAD_SLOT:

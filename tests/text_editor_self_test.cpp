@@ -151,6 +151,17 @@ void test_utf8_validation(void) {
   assert(utf8_view::sequence_length(surrogate, sizeof(surrogate), 0) == 1);
   assert(utf8_view::sequence_length(too_high, sizeof(too_high), 0) == 1);
   assert(utf8_view::sequence_length(truncated, sizeof(truncated), 0) == 1);
+
+  const char mixed[] = "AКат";
+  const u16 mixed_bytes = (u16) strlen(mixed);
+  assert(utf8_view::codepoint_count(mixed) == 4);
+  assert(utf8_view::byte_offset(mixed, 0) == 0);
+  assert(utf8_view::byte_offset(mixed, 1) == 1);
+  assert(utf8_view::byte_offset(mixed, 3) == 5);
+  assert(utf8_view::byte_offset(mixed, 9) == mixed_bytes);
+  assert(utf8_view::previous_offset((const u8*) mixed, mixed_bytes,
+                                    mixed_bytes) == 5);
+  assert(utf8_view::previous_offset((const u8*) mixed, mixed_bytes, 5) == 3);
 }
 
 } // namespace

@@ -5,6 +5,7 @@
 #include "SPIFlash.h"
 #include "ledcontrol.h"
 #include "program_store.hpp"
+#include "storage_path.hpp"
 
 SPIFlash flash;
 bool flash_is_ok = true;
@@ -164,6 +165,106 @@ static void test_arbitrary_nested_directories(void) {
   assert(program_store::total_count() == 0);
 }
 
+static void test_paths_and_recursive_tree_operations(void) {
+  fresh();
+  u16 projects = program_store::INVALID_ID;
+  u16 year = program_store::INVALID_ID;
+  u16 archive = program_store::INVALID_ID;
+  assert(program_store::create_directory(program_store::ROOT_ID, "Projects",
+                                         20, &projects));
+  assert(program_store::create_directory(projects, "2026 Work", 21, &year));
+  assert(program_store::create_directory(program_store::ROOT_ID, "Archive",
+                                         22, &archive));
+  const u8 data[] = {1, 2, 3};
+  u16 m61 = program_store::INVALID_ID;
+  u16 focal = program_store::INVALID_ID;
+  assert(program_store::write_file(year, 23, ProgramType::MK61, "Demo",
+                                   data, sizeof(data), &m61));
+  assert(program_store::write_file(year, 24, ProgramType::FOCAL, "Demo",
+                                   data, sizeof(data), &focal));
+
+  u16 directory = program_store::INVALID_ID;
+  assert(storage_path::resolve_directory(program_store::ROOT_ID,
+      "'/projects/2026 Work'", directory) == storage_path::Status::OK);
+  assert(directory == year);
+  assert(storage_path::resolve_directory(year, ".././2026 Work/", directory) ==
+         storage_path::Status::OK);
+  assert(directory == year);
+
+  Entry entry = {};
+  assert(storage_path::resolve_file(program_store::ROOT_ID,
+      "/PROJECTS/2026 Work/demo.m61", entry) == storage_path::Status::OK);
+  assert(entry.id == m61);
+  assert(storage_path::resolve_file(year, "Demo", entry) ==
+         storage_path::Status::AMBIGUOUS);
+  assert(storage_path::resolve_file(year, "demo",
+      ProgramType::FOCAL, entry) == storage_path::Status::OK);
+  assert(entry.id == focal);
+  assert(storage_path::resolve_file(year, "demo.m61",
+      ProgramType::FOCAL, entry) == storage_path::Status::WRONG_TYPE);
+
+  storage_path::FileTarget target = {};
+  assert(storage_path::file_target(year, "../new program.m61",
+      ProgramType::MK61, target) == storage_path::Status::OK);
+  assert(target.parent_id == projects);
+  assert(target.type == ProgramType::MK61);
+  assert(strcmp(target.name, "new program") == 0);
+  assert(storage_path::file_target(year, "bad.foc", ProgramType::MK61,
+      target) == storage_path::Status::WRONG_TYPE);
+
+  char path[128];
+  assert(storage_path::format_directory(year, path, sizeof(path)) ==
+         storage_path::Status::OK);
+  assert(strcmp(path, "/Projects/2026 Work") == 0);
+  entry = by_id(m61);
+  assert(storage_path::format_entry(entry, path, sizeof(path)) ==
+         storage_path::Status::OK);
+  assert(strcmp(path, "/Projects/2026 Work/Demo.m61") == 0);
+
+  u16 parent = program_store::INVALID_ID;
+  char name[program_store::NAME_SIZE];
+  assert(storage_path::move_target(year, entry, "/Archive", parent, name,
+                                   sizeof(name)) == storage_path::Status::OK);
+  assert(parent == archive && strcmp(name, "Demo") == 0);
+  assert(storage_path::move_target(year, entry, "../Renamed.m61", parent,
+                                   name, sizeof(name)) ==
+         storage_path::Status::OK);
+  assert(parent == projects && strcmp(name, "Renamed") == 0);
+  assert(storage_path::directory_within(year, projects));
+  assert(!storage_path::directory_within(archive, projects));
+
+  u16 created = program_store::INVALID_ID;
+  assert(storage_path::create_directory(program_store::ROOT_ID,
+      "/Generated/Deep/Leaf", true, created) == storage_path::Status::OK);
+  assert(storage_path::resolve_directory(program_store::ROOT_ID,
+      "/generated/deep/leaf", directory) == storage_path::Status::OK);
+  assert(directory == created);
+  assert(storage_path::create_directory(program_store::ROOT_ID,
+      "/Generated/Missing/Nope", false, directory) ==
+      storage_path::Status::NOT_FOUND);
+  assert(storage_path::create_directory(program_store::ROOT_ID,
+      "/", true, directory) == storage_path::Status::OK);
+  assert(directory == program_store::ROOT_ID);
+
+  assert(storage_path::move_target(year, entry,
+      "/Projects/2026 Work/Demo.foc", parent, name, sizeof(name)) ==
+      storage_path::Status::EXISTS);
+
+  u16 generated = program_store::INVALID_ID;
+  assert(storage_path::resolve_directory(program_store::ROOT_ID,
+      "/Generated", generated) == storage_path::Status::OK);
+  u16 removed = 0;
+  assert(program_store::remove_tree(generated, &removed));
+  assert(removed == 3);
+  assert(program_store::remove_tree(projects, &removed));
+  assert(removed == 4); // two directories and two files
+  assert(!program_store::entry_by_id(projects, entry));
+  assert(program_store::child_count(program_store::ROOT_ID) == 1);
+  program_store::init();
+  assert(program_store::child_count(program_store::ROOT_ID) == 1);
+  assert(by_id(archive).kind == NodeKind::DIRECTORY);
+}
+
 static void test_directory_depth_limit_includes_moved_subtrees(void) {
   fresh();
   u16 subtree = program_store::INVALID_ID;
@@ -236,6 +337,17 @@ static void test_names_and_exact_preferred_ids(void) {
   assert(strcmp(by_id(case_id).name, "case") == 0);
   assert(program_store::create_directory(program_store::ROOT_ID,
                                           "Каталог", 126, NULL));
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                           "каталог", 130, NULL));
+  Entry unicode = {};
+  assert(storage_path::resolve_entry(program_store::ROOT_ID,
+                                     "/каталог", unicode) ==
+         storage_path::Status::OK);
+  assert(unicode.id == 126);
+  assert(program_store::create_directory(program_store::ROOT_ID,
+                                          "Ёлка", 130, NULL));
+  assert(!program_store::create_directory(program_store::ROOT_ID,
+                                           "ёлка", 131, NULL));
 
   u16 suffix_directory = 0;
   assert(program_store::create_directory(program_store::ROOT_ID, "demo.m61",
@@ -546,6 +658,7 @@ int main(void) {
   test_dynamic_geometry_and_lazy_format();
   test_roundtrip_ranges_and_noop();
   test_arbitrary_nested_directories();
+  test_paths_and_recursive_tree_operations();
   test_directory_depth_limit_includes_moved_subtrees();
   test_names_and_exact_preferred_ids();
   test_directory_extents_are_persistent();

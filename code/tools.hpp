@@ -122,11 +122,16 @@ extern  bool  Rename(usize nSlot, char* slot_name);
 extern  bool  Store(void);
 extern  bool  Store(usize nSlot);
 extern  bool  StoreProgram(const char* name);
+extern  bool  StoreProgram(u16 parent_id, const char* name);
 extern  bool  Load(void);
 extern  bool  Load(usize nSlot);
 extern  bool  LoadProgram(const char* name);
+extern  bool  LoadProgram(u16 id);
+extern  bool  ResolveStoredFile(u16 cwd, const char* args,
+                               program_store::Entry& entry);
 extern  bool  ResolveStoredFile(const char* args, program_store::Entry& entry);
 extern  bool  OpenStoredEntry(const program_store::Entry& entry);
+extern  bool  OpenStoredFile(u16 cwd, const char* args);
 extern  bool  OpenStoredFile(const char* args);
 extern  u8    load_word(isize segment_address, isize offset);
 extern  bool  EraseFlash(void);

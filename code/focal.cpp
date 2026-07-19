@@ -152,6 +152,7 @@ namespace library_mk61 {
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
 #include "entropy_pool.hpp"
+#include "development.hpp"
 
 #include <math.h>
 #include <stdio.h>
@@ -187,14 +188,16 @@ extern void idle_main_process(void);
 
 static constexpr int FOCAL_PROGRAM_COUNT       = 1;
 static constexpr int FOCAL_SOURCE_SIZE         = 1537;
+static constexpr int FOCAL_NAME_SIZE           = 32;
 #ifndef FOCAL_HOST_TEST
 static_assert(FOCAL_SOURCE_SIZE == program_store::MAX_MK61_TEXT_SIZE + 1,
               "FOCAL editor quota must match the filesystem quota");
+static_assert(FOCAL_NAME_SIZE == program_store::NAME_SIZE,
+              "FOCAL names must match the filesystem quota");
 #endif
 static constexpr int FOCAL_LINE_TEXT_SIZE      = 80;
 static constexpr int FOCAL_LINE_BUFFER_SIZE    = 128;
 static constexpr int FOCAL_MAX_LINES           = 80;
-static constexpr int FOCAL_NAME_SIZE           = 16;
 static constexpr int FOCAL_EXPR_BUFFER_SIZE    = 112;
 static constexpr int FOCAL_PRINT_BUFFER_SIZE   = 96;
 static constexpr int FOCAL_CALL_DEPTH          = 8;
@@ -2530,53 +2533,21 @@ static void draw_program_select(int active, bool allow_new) {
 #endif
 }
 
-static int select_focal_program(bool allow_new) {
+static int select_focal_program(bool allow_new, u16* new_parent = NULL) {
 #ifndef FOCAL_HOST_TEST
-  const int stored_count = program_store::count(program_store::ProgramType::FOCAL);
-  if(stored_count <= 0 && !allow_new) {
-    focal_message_i18n("FOCAL is empty", "ФОКАЛ пуст", "Press any key", "Любая клавиша");
-    kbd::get_key_wait();
-    return -1;
+  program_store::Entry entry = {};
+  u16 directory = FOCAL_ROOT_STORE_ID;
+  const ProgramStoreFileDialogResult result = program_store_choose_file(
+      program_store::ProgramType::FOCAL, FOCAL_ROOT_STORE_ID, allow_new,
+      entry, directory);
+  if(result == ProgramStoreFileDialogResult::CANCELLED) return -1;
+  if(result == ProgramStoreFileDialogResult::NEW_FILE) {
+    if(new_parent != NULL) *new_parent = directory;
+    return FOCAL_PROGRAM_COUNT;
   }
-
-  int active = (stored_count > 0) ? 0 : stored_count;
-  while(true) {
-    draw_program_select(active, allow_new);
-    const i32 key = kbd::get_key_wait();
-    switch(key) {
-      case KEY_LEFT:
-        if(allow_new) {
-          active--;
-          if(active < 0) active = stored_count;
-        } else if(stored_count > 0) {
-          active = (active <= 0) ? stored_count - 1 : active - 1;
-        }
-        break;
-      case KEY_RIGHT:
-        if(allow_new) {
-          active++;
-          if(active > stored_count) active = 0;
-        } else if(stored_count > 0) {
-          active = (active + 1) % stored_count;
-        }
-        break;
-      case KEY_OK:
-        if(allow_new && active == stored_count) {
-          focal_wait_keys_released();
-          return FOCAL_PROGRAM_COUNT;
-        }
-        {
-          program_store::Entry entry;
-          if(!program_store::entry(program_store::ProgramType::FOCAL, active, entry)) return -1;
-          const int slot = load_focal_program_from_store(entry);
-          focal_wait_keys_released();
-          return slot;
-        }
-      case KEY_ESC:
-        return -1;
-    }
-  }
+  return load_focal_program_from_store(entry);
 #else
+  if(new_parent != NULL) *new_parent = FOCAL_ROOT_STORE_ID;
   int active = -1;
   for(int i = 0; i < FOCAL_PROGRAM_COUNT; i++) {
     if(programs[i].used) {
@@ -3070,7 +3041,8 @@ static bool focal_input_program_name(char* name, usize size) {
   }
 }
 
-static bool store_edited_program(int slot, char* source, const char* store_name) {
+static bool store_edited_program(int slot, char* source, const char* store_name,
+                                 u16 target_parent = FOCAL_ROOT_STORE_ID) {
   if(slot < 0 || slot > FOCAL_PROGRAM_COUNT) return focal_error("SLOT?");
   if(source == NULL || strlen(source) >= FOCAL_SOURCE_SIZE) return focal_error("FULL?");
   if(!focal_store_name_is_valid(store_name)) return focal_error("NAME?");
@@ -3078,7 +3050,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
   char old_name[FOCAL_NAME_SIZE] = "";
   FocalProgram previous = {};
   previous.store_id = FOCAL_INVALID_STORE_ID;
-  previous.parent_id = FOCAL_ROOT_STORE_ID;
+  previous.parent_id = target_parent;
   if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) {
     focal_copy_text(old_name, sizeof(old_name), programs[slot].name);
     previous = programs[slot];
@@ -3096,7 +3068,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
 
   FocalProgram candidate = {};
   candidate.store_id = previous.store_id;
-  candidate.parent_id = previous.parent_id;
+  candidate.parent_id = target_parent;
   focal_copy_text(candidate.source, sizeof(candidate.source), source);
   if(!focal_expand_operator_names(candidate.source, sizeof(candidate.source))) return focal_error("FULL?");
   candidate.source_len = (u16) strlen(candidate.source);
@@ -3125,7 +3097,8 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
   return true;
 }
 
-static void EditFocalSlot(int slot) {
+static void EditFocalSlot(int slot,
+                          u16 new_parent = FOCAL_ROOT_STORE_ID) {
   char source[FOCAL_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
   if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(source, sizeof(source), programs[slot].source);
@@ -3172,8 +3145,21 @@ static void EditFocalSlot(int slot) {
       memset(name, 0, sizeof(name));
       if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) focal_copy_text(name, sizeof(name), programs[slot].name);
       else focal_program_default_name(find_free_program() < 0 ? 0 : find_free_program(), name, sizeof(name));
+      u16 parent = (slot >= 0 && slot < FOCAL_PROGRAM_COUNT &&
+                    programs[slot].used)
+          ? programs[slot].parent_id : new_parent;
+#ifndef FOCAL_HOST_TEST
+      if(!program_store_choose_save_target(program_store::ProgramType::FOCAL,
+                                           parent, name, sizeof(name),
+                                           parent)) {
+        kbd::debounce_init();
+        dirty = true;
+        continue;
+      }
+#else
       if(!focal_input_program_name(name, sizeof(name))) return;
-      if(store_edited_program(slot, source, name)) return;
+#endif
+      if(store_edited_program(slot, source, name, parent)) return;
       delay(700);
       kbd::debounce_init();
       dirty = true;
@@ -3187,9 +3173,10 @@ void EditFocal(void) {
   FocalWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return;
 #endif
-  const int slot = select_focal_program(true);
+  u16 new_parent = FOCAL_ROOT_STORE_ID;
+  const int slot = select_focal_program(true, &new_parent);
   if(slot < 0) return;
-  EditFocalSlot(slot);
+  EditFocalSlot(slot, new_parent);
 }
 
 bool EditFocalProgram(const char* name) {

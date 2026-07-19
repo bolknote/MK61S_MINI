@@ -140,6 +140,7 @@ namespace library_mk61 {
 #include "lcd_ru.hpp"
 #include "program_store.hpp"
 #include "entropy_pool.hpp"
+#include "development.hpp"
 
 #include <math.h>
 #include <stdio.h>
@@ -179,12 +180,14 @@ static constexpr int TB_PROGRAM_COUNT = 8;
 static constexpr int TB_PROGRAM_COUNT = 1;
 #endif
 static constexpr int TB_SOURCE_SIZE = 1537;
+static constexpr int TB_NAME_SIZE = 32;
 #ifndef TINYBASIC_HOST_TEST
 static_assert(TB_SOURCE_SIZE == program_store::MAX_MK61_TEXT_SIZE + 1,
               "Tiny BASIC editor quota must match the filesystem quota");
+static_assert(TB_NAME_SIZE == program_store::NAME_SIZE,
+              "Tiny BASIC names must match the filesystem quota");
 #endif
 static constexpr int TB_MAX_LINES = 96;
-static constexpr int TB_NAME_SIZE = 16;
 static constexpr int TB_PRINT_BUFFER_SIZE = 96;
 static constexpr int TB_CALL_DEPTH = 8;
 static constexpr int TB_FOR_DEPTH = 8;
@@ -2004,49 +2007,22 @@ static int next_used_program(int active, int delta, bool allow_new) {
   return active;
 }
 
-static int select_tinybasic_program(bool allow_new) {
+static int select_tinybasic_program(bool allow_new,
+                                    u16* new_parent = NULL) {
 #ifndef TINYBASIC_HOST_TEST
-  const int stored_count = program_store::count(program_store::ProgramType::TINYBASIC);
-  if(stored_count <= 0 && !allow_new) {
-    tb_message_i18n("TinyBASIC empty", "TinyBASIC пуст", "Press any key", "Любая клавиша");
-    kbd::get_key_wait();
-    return -1;
+  program_store::Entry entry = {};
+  u16 directory = TB_ROOT_STORE_ID;
+  const ProgramStoreFileDialogResult result = program_store_choose_file(
+      program_store::ProgramType::TINYBASIC, TB_ROOT_STORE_ID, allow_new,
+      entry, directory);
+  if(result == ProgramStoreFileDialogResult::CANCELLED) return -1;
+  if(result == ProgramStoreFileDialogResult::NEW_FILE) {
+    if(new_parent != NULL) *new_parent = directory;
+    return TB_PROGRAM_COUNT;
   }
-  int active = (stored_count > 0) ? 0 : stored_count;
-  while(true) {
-    draw_program_select(active, allow_new);
-    const i32 key = kbd::get_key_wait();
-    switch(key) {
-      case KEY_LEFT:
-        if(allow_new) {
-          active--;
-          if(active < 0) active = stored_count;
-        } else if(stored_count > 0) {
-          active = (active <= 0) ? stored_count - 1 : active - 1;
-        }
-        break;
-      case KEY_RIGHT:
-        if(allow_new) {
-          active++;
-          if(active > stored_count) active = 0;
-        } else if(stored_count > 0) {
-          active = (active + 1) % stored_count;
-        }
-        break;
-      case KEY_OK:
-        if(allow_new && active == stored_count) return TB_PROGRAM_COUNT;
-        {
-          program_store::Entry entry;
-          if(!program_store::entry(program_store::ProgramType::TINYBASIC, active, entry)) return -1;
-          const int slot = load_tinybasic_program_from_store(entry);
-          tinybasic_wait_keys_released();
-          return slot;
-        }
-      case KEY_ESC:
-        return -1;
-    }
-  }
+  return load_tinybasic_program_from_store(entry);
 #else
+  if(new_parent != NULL) *new_parent = TB_ROOT_STORE_ID;
   int active = -1;
   for(int i = 0; i < TB_PROGRAM_COUNT; i++) {
     if(programs[i].used) {
@@ -2266,18 +2242,19 @@ static bool tb_input_program_name(char* name, usize size) {
   }
 }
 
-static bool store_edited_program(int slot, char* source, const char* store_name) {
+static bool store_edited_program(int slot, char* source, const char* store_name,
+                                 u16 target_parent = TB_ROOT_STORE_ID) {
   if(slot < 0 || slot > TB_PROGRAM_COUNT) return tb_error("SORRY");
   TbAst validation_ast;
   if(!tb_compile_source(source, validation_ast)) return false;
 
   char old_name[TB_NAME_SIZE] = "";
   u16 store_id = TB_INVALID_STORE_ID;
-  u16 parent_id = TB_ROOT_STORE_ID;
+  u16 parent_id = target_parent;
   if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) {
     tb_copy_text(old_name, sizeof(old_name), programs[slot].name);
     store_id = programs[slot].store_id;
-    parent_id = programs[slot].parent_id;
+    parent_id = target_parent;
   }
 
   if(slot == TB_PROGRAM_COUNT) {
@@ -2322,7 +2299,8 @@ static bool store_edited_program(int slot, char* source, const char* store_name)
   return true;
 }
 
-static void EditTinyBasicSlot(int slot) {
+static void EditTinyBasicSlot(int slot,
+                              u16 new_parent = TB_ROOT_STORE_ID) {
   char source[TB_SOURCE_SIZE];
   memset(source, 0, sizeof(source));
   if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(source, sizeof(source), programs[slot].source);
@@ -2358,12 +2336,25 @@ static void EditTinyBasicSlot(int slot) {
       memset(name, 0, sizeof(name));
       if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(name, sizeof(name), programs[slot].name);
       else tb_program_default_name(find_free_program() < 0 ? 0 : find_free_program(), name, sizeof(name));
+      u16 parent = (slot >= 0 && slot < TB_PROGRAM_COUNT &&
+                    programs[slot].used)
+          ? programs[slot].parent_id : new_parent;
+#ifndef TINYBASIC_HOST_TEST
+      if(!program_store_choose_save_target(
+          program_store::ProgramType::TINYBASIC, parent, name,
+          sizeof(name), parent)) {
+        kbd::debounce_init();
+        dirty = true;
+        continue;
+      }
+#else
       if(!tb_input_program_name(name, sizeof(name))) {
         kbd::debounce_init();
         dirty = true;
         continue;
       }
-      if(store_edited_program(slot, source, name)) return;
+#endif
+      if(store_edited_program(slot, source, name, parent)) return;
       delay(700);
       kbd::debounce_init();
       dirty = true;
@@ -2376,9 +2367,10 @@ void EditTinyBasic(void) {
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return;
 #endif
-  const int slot = select_tinybasic_program(true);
+  u16 new_parent = TB_ROOT_STORE_ID;
+  const int slot = select_tinybasic_program(true, &new_parent);
   if(slot < 0) return;
-  EditTinyBasicSlot(slot);
+  EditTinyBasicSlot(slot, new_parent);
 }
 
 bool EditTinyBasicProgram(const char* name) {

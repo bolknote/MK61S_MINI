@@ -49,6 +49,7 @@ bool ready(void);
 const storage_geometry::Geometry& geometry(void);
 u16 max_nodes(void);
 u16 used_nodes(void);
+bool basename_valid(const char* name);
 u32 settings_address(void);
 u16 settings_size(void);
 bool erase_settings(void);
@@ -80,6 +81,7 @@ bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
 bool remove_id(u16 id);
+bool remove_tree(u16 id, u16* removed = nullptr);
 bool move_rename(u16 id, u16 new_parent_id, const char* new_name);
 bool allocate_directory_extent(u16 directory_id, u16 preferred_id);
 bool release_directory_extent(u16 extent_id);

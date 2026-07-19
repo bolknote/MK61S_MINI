@@ -12,6 +12,7 @@
 #include "menu.hpp"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
+#include "storage_path.hpp"
 #include "text_editor.hpp"
 #include "tools.hpp"
 #include "utf8_view.hpp"
@@ -35,8 +36,11 @@ static constexpr u16 EXPLORER_SCROLL_START_MS = 900;
 static constexpr u16 EXPLORER_SCROLL_STEP_MS = 450;
 static constexpr u16 EXPLORER_SCROLL_EDGE_MS = 900;
 static constexpr u8 EXPLORER_NAME_COL = 0;
-static constexpr u8 EXPLORER_ELLIPSIS_SLOT = 7;
 static constexpr u8 EXPLORER_NO_CURSOR_ROW = 0xFF;
+static constexpr int ITEM_MENU_ACTION_CAPACITY = 7;
+
+static u16 current_mk61_entry_id = program_store::INVALID_ID;
+static u16 current_mk61_directory_id = program_store::ROOT_ID;
 
 #if defined(MK61_DISPLAY_UC1609)
 static u16 applied_font_id = program_store::INVALID_ID;
@@ -47,12 +51,25 @@ static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared
 static_assert(fmk::MAX_FILE_SIZE == program_store::MAX_FONT_SIZE, "font parser and storage limits must match");
 
 enum class ItemMenuAction : u8 {
+  LOAD,
   RUN,
   VIEW,
   EDIT,
   NEW_DIRECTORY,
   RENAME,
+  MOVE,
   DELETE
+};
+
+enum class NamePrompt : u8 {
+  RENAME,
+  NEW_DIRECTORY,
+  SAVE
+};
+
+enum class DialogMode : u8 {
+  FILE,
+  DIRECTORY
 };
 
 struct ExplorerSearch {
@@ -85,23 +102,6 @@ static const char* type_label(program_store::ProgramType type) {
 static char type_marker(program_store::ProgramType type) {
   const char* label = type_label(type);
   return (label != NULL && label[0] != 0) ? label[0] : '?';
-}
-
-static const u8 ELLIPSIS_GLYPH[8] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b10101,
-  0b00000
-};
-
-static void write_custom_glyph_at(u8 slot, const u8* glyph, u8 col, u8 row) {
-  lcd.createChar(slot, (uint8_t*) glyph);
-  lcd.setCursor(col, row);
-  lcd.write(slot);
 }
 
 static void print_line(u8 row, const char* text) {
@@ -377,7 +377,8 @@ static u8 explorer_name_width(void) {
 }
 
 static u8 explorer_name_len(const char* name) {
-  const usize len = text_editor::bounded_length(name, program_store::NAME_SIZE);
+  const usize len = utf8_view::codepoint_count(name,
+                                               program_store::NAME_SIZE - 1);
   return len > 255 ? 255 : (u8) len;
 }
 
@@ -439,36 +440,47 @@ static u16 explorer_scroll_timeout(const ExplorerScroll& scroll, const char* nam
   return delta > 1000 ? 1000 : (u16) delta;
 }
 
-static void draw_explorer_name(const char* name, u8 row, u8 offset, bool active) {
-  const u8 width = explorer_name_width();
-  if(width == 0) return;
-
-  const u8 len = explorer_name_len(name);
-  const bool overflow = len > width;
-  if(offset > len) offset = len;
-
-  lcd.setCursor(EXPLORER_NAME_COL, row);
-  if(overflow && offset == 0) {
-    const u8 text_width = width > 1 ? (u8) (width - 1) : 0;
-    for(u8 i = 0; i < text_width; i++) lcd.write((u8) name[i]);
-    write_custom_glyph_at(EXPLORER_ELLIPSIS_SLOT, ELLIPSIS_GLYPH, (u8) (EXPLORER_NAME_COL + text_width), row);
-    return;
+static void explorer_name_window(const char* name, u8 offset, u8 width,
+                                 bool mark_overflow, char* out,
+                                 usize capacity) {
+  if(out == NULL || capacity == 0) return;
+  out[0] = 0;
+  if(name == NULL || width == 0) return;
+  const u16 byte_len = (u16) text_editor::bounded_length(
+      name, program_store::NAME_SIZE);
+  const u8 codepoints = explorer_name_len(name);
+  if(offset > codepoints) offset = codepoints;
+  const bool marker = mark_overflow && offset == 0 && codepoints > width;
+  const u8 text_width = marker && width > 0 ? (u8) (width - 1) : width;
+  u16 source = utf8_view::byte_offset(name, offset, byte_len);
+  usize target = 0;
+  for(u8 used = 0; used < text_width && source < byte_len; used++) {
+    const u16 next = utf8_view::next_offset((const u8*) name, byte_len,
+                                            source);
+    const u16 bytes = next > source ? (u16) (next - source) : 1;
+    if(target + bytes >= capacity) break;
+    memcpy(out + target, name + source, bytes);
+    target += bytes;
+    source = (u16) (source + bytes);
   }
-
-  u8 used = 0;
-  while(used < width && offset + used < len) {
-    lcd.write((u8) name[offset + used]);
-    used++;
-  }
-  if(overflow && active && used < width) {
-    write_custom_glyph_at(EXPLORER_ELLIPSIS_SLOT, ELLIPSIS_GLYPH, (u8) (EXPLORER_NAME_COL + used), row);
-    used++;
-  }
-  while(used++ < width) lcd.write((u8) ' ');
+  if(marker && target + 1 < capacity) out[target++] = '>';
+  out[target] = 0;
 }
 
-static void draw_explorer_row(u8 row, bool active, const program_store::Entry& entry, u8 scroll_offset) {
-  draw_explorer_name(entry.name, row, scroll_offset, active);
+static void draw_explorer_name(const lcd_ru::font_map_t& map,
+                               const char* name, u8 row, u8 offset) {
+  const u8 width = explorer_name_width();
+  if(width == 0) return;
+  char window[program_store::NAME_SIZE];
+  explorer_name_window(name, offset, width, true, window, sizeof(window));
+  lcd.setCursor(EXPLORER_NAME_COL, row);
+  lcd_ru::write_text(map, window, width);
+}
+
+static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
+                              const program_store::Entry& entry,
+                              u8 scroll_offset) {
+  draw_explorer_name(map, entry.name, row, scroll_offset);
   lcd.setCursor(explorer_type_col(), row);
   lcd.write((u8) (entry.kind == program_store::NodeKind::DIRECTORY
                     ? '/'
@@ -538,6 +550,21 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
     explorer_scroll_reset(scroll);
   }
 
+  lcd_ru::font_map_t name_map = {{0}, 0, false};
+  for(int row = 0; row < visible; row++) {
+    const int index = filtered
+      ? matching_index_at(directory_id, top + row, search_text)
+      : top + row;
+    program_store::Entry entry;
+    if(!explorer_entry(directory_id, index, entry)) continue;
+    char window[program_store::NAME_SIZE];
+    explorer_name_window(entry.name, active == index ? scroll.offset : 0,
+                         explorer_name_width(), true, window,
+                         sizeof(window));
+    lcd_ru::scan_text(name_map, window, explorer_name_width());
+  }
+  lcd_ru::load_custom_font(name_map);
+
   for(int row = 0; row < visible; row++) {
     const int index = filtered
       ? matching_index_at(directory_id, top + row, search_text)
@@ -547,7 +574,7 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
       const u8 scroll_offset = (active == index) ? scroll.offset : 0;
       const u8 screen_row = (u8) (first_row + row);
       const bool selected = active == index;
-      draw_explorer_row(screen_row, selected, entry, scroll_offset);
+      draw_explorer_row(name_map, screen_row, entry, scroll_offset);
       if(selected && cursor_row_out != NULL) *cursor_row_out = screen_row;
     } else {
       print_line((u8) (first_row + row), "?");
@@ -868,7 +895,10 @@ static void view_entry(const program_store::Entry& entry) {
 }
 
 static bool confirm_delete(const program_store::Entry& entry) {
-  show_message("Delete?", "Удалить?", entry.name, entry.name);
+  const bool tree = entry.kind == program_store::NodeKind::DIRECTORY &&
+                    program_store::child_count(entry.id) != 0;
+  show_message(tree ? "Delete tree?" : "Delete?",
+               tree ? "Удалить всё?" : "Удалить?", entry.name, entry.name);
   while(true) {
     const i32 key = wait_explorer_key(false);
     if(key == EXPLORER_KEY_OK) return true;
@@ -879,47 +909,90 @@ static bool confirm_delete(const program_store::Entry& entry) {
 static void delete_entry(const program_store::Entry& entry) {
   if(!confirm_delete(entry)) return;
 
-  const bool ok = program_store::remove_id(entry.id);
+  u16 removed = 0;
+  const bool ok = program_store::remove_tree(entry.id, &removed);
   show_message(ok ? "Deleted" : "Delete error", ok ? "Удалено" : "Ошибка", entry.name, entry.name);
   delay(700);
 }
 
-static void draw_name_editor(const char* name, u16 cursor, bool creating) {
+static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
   MK61DisplayUpdate update(lcd);
   lcd.clear();
-  print_localized_line(0,
-                       creating ? "New folder" : "Rename",
-                       creating ? "Новая папка" : "Новое имя");
-
-  const usize len = strlen(name);
-  if(cursor > len) cursor = (u16) len;
-  const u16 window = (cursor > lcd_display::COLS - 2) ? (u16) (cursor - (lcd_display::COLS - 2)) : 0;
-  char line[18];
-  line[0] = '>';
-  u8 pos = 1;
-  while(pos < lcd_display::COLS && name[window + pos - 1] != 0) {
-    line[pos] = name[window + pos - 1];
-    pos++;
+  const char* en = "Rename";
+  const char* ru = "Новое имя";
+  if(prompt == NamePrompt::NEW_DIRECTORY) {
+    en = "New folder";
+    ru = "Новая папка";
+  } else if(prompt == NamePrompt::SAVE) {
+    en = "File name";
+    ru = "Имя файла";
   }
-  while(pos < lcd_display::COLS) line[pos++] = ' ';
-  line[lcd_display::COLS] = 0;
-  print_line(1, line);
+  const char* title = library_mk61::language_is_ru() ? ru : en;
+  const u16 byte_len = (u16) strlen(name);
+  if(cursor > byte_len) cursor = byte_len;
+  const u16 cursor_chars = utf8_view::codepoint_count(name, cursor);
+  const u16 window = cursor_chars > lcd_display::COLS - 2
+      ? (u16) (cursor_chars - (lcd_display::COLS - 2)) : 0;
+  char line[program_store::NAME_SIZE + 2];
+  line[0] = '>';
+  explorer_name_window(name, (u8) window,
+                       (u8) (lcd_display::COLS - 1), false,
+                       line + 1, sizeof(line) - 1);
 
-  const u8 cursor_col = (u8) (1 + cursor - window);
+  lcd_ru::font_map_t map = {{0}, 0, false};
+  lcd_ru::scan_text(map, title, lcd_display::COLS);
+  lcd_ru::scan_text(map, line, lcd_display::COLS);
+  lcd_ru::load_custom_font(map);
+  lcd.setCursor(0, 0);
+  lcd_ru::write_text(map, title, lcd_display::COLS);
+  lcd.setCursor(0, 1);
+  lcd_ru::write_text(map, line, lcd_display::COLS);
+
+  const u8 cursor_col = (u8) (1 + cursor_chars - window);
   lcd.setCursor(cursor_col, 1);
   lcd.cursorOn();
 }
 
-static bool name_insert_char(char* name, u16& len, u16& cursor, char ch) {
+static bool name_move_left(const char* name, u16 len, u16& cursor) {
+  if(name == NULL || cursor == 0 || cursor > len) return false;
+  cursor = utf8_view::previous_offset((const u8*) name, len, cursor);
+  return true;
+}
+
+static bool name_move_right(const char* name, u16 len, u16& cursor) {
+  if(name == NULL || cursor >= len) return false;
+  const u16 next = utf8_view::next_offset((const u8*) name, len, cursor);
+  cursor = next > cursor ? next : (u16) (cursor + 1);
+  return true;
+}
+
+static bool name_backspace(char* name, u16& len, u16& cursor) {
+  if(name == NULL || cursor == 0 || cursor > len || name[len] != 0) {
+    return false;
+  }
+  const u16 previous = utf8_view::previous_offset((const u8*) name, len,
+                                                  cursor);
+  memmove(name + previous, name + cursor, len - cursor + 1);
+  len = (u16) (len - (cursor - previous));
+  cursor = previous;
+  return true;
+}
+
+static bool name_insert_char(char* name, u16& len, u16& cursor, char ch,
+                             usize capacity = program_store::NAME_SIZE) {
   if(ch == 0) return false;
   if(ch == ' ' && len == 0) return false;
   char text[2] = {ch, 0};
-  return text_editor::insert_text(name, len, cursor, program_store::NAME_SIZE, text);
+  return text_editor::insert_text(name, len, cursor, capacity, text);
 }
 
-static bool input_entry_name(char* name, bool creating = false) {
-  u16 len = (u16) text_editor::bounded_length(name, program_store::NAME_SIZE);
-  if(len >= program_store::NAME_SIZE) len = (u16) (program_store::NAME_SIZE - 1);
+static bool input_entry_name(char* name, usize capacity,
+                             NamePrompt prompt = NamePrompt::RENAME) {
+  if(name == NULL || capacity < 2 || capacity > program_store::NAME_SIZE) {
+    return false;
+  }
+  u16 len = (u16) text_editor::bounded_length(name, capacity);
+  if(len >= capacity) len = (u16) (capacity - 1);
   name[len] = 0;
   u16 cursor = len;
   text_editor::SmsState sms = {};
@@ -929,7 +1002,7 @@ static bool input_entry_name(char* name, bool creating = false) {
   while(true) {
     const u32 draw_now = millis();
     if(text_editor::sms_expired(sms, draw_now)) text_editor::sms_reset(sms);
-    draw_name_editor(name, cursor, creating);
+    draw_name_editor(name, cursor, prompt);
 
     const i32 key = kbd::get_key_wait();
     const u32 key_now = millis();
@@ -946,23 +1019,23 @@ static bool input_entry_name(char* name, bool creating = false) {
     if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
         (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(sms);
-      text_editor::backspace(name, len, cursor);
+      name_backspace(name, len, cursor);
       shift = text_editor::Shift::NONE;
       continue;
     }
     if(!shifted_key && key == KEY_DEGREE) {
       text_editor::sms_reset(sms);
-      text_editor::backspace(name, len, cursor);
+      name_backspace(name, len, cursor);
       continue;
     }
     if(!shifted_key && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
       text_editor::sms_reset(sms);
-      text_editor::move_cursor_left(name, cursor);
+      name_move_left(name, len, cursor);
       continue;
     }
     if(!shifted_key && (key == KEY_RIGHT || key == KEY_RIGHT_PRESS)) {
       text_editor::sms_reset(sms);
-      text_editor::move_cursor_right(name, len, cursor);
+      name_move_right(name, len, cursor);
       continue;
     }
     if(!shifted_key && key == 0) {
@@ -976,33 +1049,35 @@ static bool input_entry_name(char* name, bool creating = false) {
     const int digit = text_editor::digit_from_key(key);
     if(shift == text_editor::Shift::ALPHA && digit >= 0) {
       const char* symbol = text_editor::symbol_for_digit_key(key);
-      if(symbol != NULL && symbol[0] != 0) name_insert_char(name, len, cursor, symbol[0]);
+      if(symbol != NULL && symbol[0] != 0) {
+        name_insert_char(name, len, cursor, symbol[0], capacity);
+      }
       shift = text_editor::Shift::NONE;
       text_editor::sms_reset(sms);
       continue;
     }
 
     if(text_editor::sms_key_is_letters(key)) {
-      text_editor::sms_tap(name, len, cursor, program_store::NAME_SIZE, sms, key, key_now);
+      text_editor::sms_tap(name, len, cursor, capacity, sms, key, key_now);
       shift = text_editor::Shift::NONE;
       continue;
     }
     if(text_editor::sms_key_is_space(key)) {
       text_editor::sms_reset(sms);
-      name_insert_char(name, len, cursor, ' ');
+      name_insert_char(name, len, cursor, ' ', capacity);
       shift = text_editor::Shift::NONE;
       continue;
     }
 
     if(digit == 0 || key == KEY_PP) {
       text_editor::sms_reset(sms);
-      name_insert_char(name, len, cursor, '0');
+      name_insert_char(name, len, cursor, '0', capacity);
       shift = text_editor::Shift::NONE;
       continue;
     }
     if(digit == 1) {
       text_editor::sms_reset(sms);
-      name_insert_char(name, len, cursor, '1');
+      name_insert_char(name, len, cursor, '1', capacity);
       shift = text_editor::Shift::NONE;
       continue;
     }
@@ -1017,7 +1092,7 @@ static bool rename_entry(const program_store::Entry& entry) {
   strncpy(name, entry.name, sizeof(name) - 1);
   name[sizeof(name) - 1] = 0;
 
-  if(!input_entry_name(name)) return false;
+  if(!input_entry_name(name, sizeof(name), NamePrompt::RENAME)) return false;
   if(strncmp(name, entry.name, program_store::NAME_SIZE) == 0) return true;
 
   const bool ok = program_store::move_rename(entry.id, entry.parent_id, name);
@@ -1028,7 +1103,7 @@ static bool rename_entry(const program_store::Entry& entry) {
 
 static bool create_directory(u16 parent_id) {
   char name[program_store::NAME_SIZE] = "Folder";
-  if(!input_entry_name(name, true)) return false;
+  if(!input_entry_name(name, sizeof(name), NamePrompt::NEW_DIRECTORY)) return false;
 
   const int count = program_store::child_count(parent_id);
   for(int i = 0; i < count; i++) {
@@ -1051,6 +1126,278 @@ static bool create_directory(u16 parent_id) {
                name, name);
   delay(700);
   return ok;
+}
+
+static bool move_entry(const program_store::Entry& entry) {
+  const u16 forbidden = entry.kind == program_store::NodeKind::DIRECTORY
+      ? entry.id : program_store::INVALID_ID;
+  u16 destination = entry.parent_id;
+  if(!program_store_choose_directory(entry.parent_id, forbidden,
+                                     destination)) return false;
+  if(destination == entry.parent_id) return true;
+  const bool ok = program_store::move_rename(entry.id, destination,
+                                             entry.name);
+  show_message(ok ? "Moved" : "Move error",
+               ok ? "Перемещено" : "Ошибка", entry.name, entry.name);
+  delay(700);
+  return ok;
+}
+
+enum class DialogItemKind : u8 {
+  THIS_DIRECTORY,
+  NEW_FILE,
+  NEW_DIRECTORY,
+  ENTRY
+};
+
+struct DialogItem {
+  DialogItemKind kind;
+  program_store::Entry entry;
+};
+
+static int dialog_pseudo_count(DialogMode mode, bool allow_new) {
+  if(mode == DialogMode::DIRECTORY) return 2; // this directory, new folder
+  return allow_new ? 2 : 0;                  // new file, new folder
+}
+
+static bool dialog_entry_visible(const program_store::Entry& entry,
+                                 DialogMode mode,
+                                 program_store::ProgramType type,
+                                 u16 forbidden_tree) {
+  if(entry.kind == program_store::NodeKind::DIRECTORY) {
+    return forbidden_tree == program_store::INVALID_ID ||
+           !storage_path::directory_within(entry.id, forbidden_tree);
+  }
+  return mode == DialogMode::FILE &&
+         entry.kind == program_store::NodeKind::FILE && entry.type == type;
+}
+
+static int dialog_count(u16 directory_id, DialogMode mode,
+                        program_store::ProgramType type, bool allow_new,
+                        u16 forbidden_tree) {
+  int result = dialog_pseudo_count(mode, allow_new);
+  const int children = program_store::child_count(directory_id);
+  for(int index = 0; index < children; index++) {
+    program_store::Entry entry;
+    if(program_store::child(directory_id, index, entry) &&
+       dialog_entry_visible(entry, mode, type, forbidden_tree)) result++;
+  }
+  return result;
+}
+
+static bool dialog_item_at(u16 directory_id, DialogMode mode,
+                           program_store::ProgramType type, bool allow_new,
+                           u16 forbidden_tree, int wanted,
+                           DialogItem& out) {
+  const int pseudo = dialog_pseudo_count(mode, allow_new);
+  if(wanted < 0) return false;
+  if(wanted < pseudo) {
+    memset(&out.entry, 0, sizeof(out.entry));
+    if(mode == DialogMode::DIRECTORY) {
+      out.kind = wanted == 0 ? DialogItemKind::THIS_DIRECTORY
+                             : DialogItemKind::NEW_DIRECTORY;
+    } else {
+      out.kind = wanted == 0 ? DialogItemKind::NEW_FILE
+                             : DialogItemKind::NEW_DIRECTORY;
+    }
+    return true;
+  }
+
+  int visible = pseudo;
+  const int children = program_store::child_count(directory_id);
+  for(int index = 0; index < children; index++) {
+    program_store::Entry entry;
+    if(!program_store::child(directory_id, index, entry)) return false;
+    if(!dialog_entry_visible(entry, mode, type, forbidden_tree)) continue;
+    if(visible++ != wanted) continue;
+    out.kind = DialogItemKind::ENTRY;
+    out.entry = entry;
+    return true;
+  }
+  return false;
+}
+
+static const char* dialog_item_name(const DialogItem& item) {
+  switch(item.kind) {
+    case DialogItemKind::THIS_DIRECTORY: return "[HERE]";
+    case DialogItemKind::NEW_FILE: return "+NEW";
+    case DialogItemKind::NEW_DIRECTORY: return "+FOLDER";
+    case DialogItemKind::ENTRY: return item.entry.name;
+  }
+  return "?";
+}
+
+static char dialog_item_marker(const DialogItem& item) {
+  switch(item.kind) {
+    case DialogItemKind::THIS_DIRECTORY: return '*';
+    case DialogItemKind::NEW_FILE:
+    case DialogItemKind::NEW_DIRECTORY: return '+';
+    case DialogItemKind::ENTRY:
+      return item.entry.kind == program_store::NodeKind::DIRECTORY
+          ? '/' : type_marker(item.entry.type);
+  }
+  return '?';
+}
+
+static void draw_dialog_row(const lcd_ru::font_map_t& map, u8 row,
+                            const DialogItem& item, u8 scroll_offset) {
+  draw_explorer_name(map, dialog_item_name(item), row, scroll_offset);
+  lcd.setCursor(explorer_type_col(), row);
+  lcd.write((u8) dialog_item_marker(item));
+}
+
+static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
+                               program_store::ProgramType type,
+                               bool allow_new, u16 forbidden_tree,
+                               int active, int count, ExplorerScroll& scroll,
+                               u8& cursor_row) {
+  cursor_row = EXPLORER_NO_CURSOR_ROW;
+  explorer_cursor_off();
+  MK61DisplayUpdate update(lcd);
+  lcd.clear();
+  if(count <= 0) {
+    explorer_scroll_reset(scroll);
+    print_localized_line(0, "Folder empty", "Папка пуста");
+    print_localized_line(1, "ESC: parent", "ESC: наверх");
+    return 0;
+  }
+
+  const int rows = lcd.rows();
+  const int visible = count < rows ? count : rows;
+  int top = active - visible + 1;
+  if(top < 0) top = 0;
+  if(top > count - visible) top = count - visible;
+
+  DialogItem active_item;
+  const u32 now = millis();
+  u16 timeout = 0;
+  if(dialog_item_at(directory_id, mode, type, allow_new, forbidden_tree,
+                    active, active_item)) {
+    const char* name = dialog_item_name(active_item);
+    const u8 width = explorer_name_width();
+    explorer_scroll_track(scroll, active, name, width, now);
+    timeout = explorer_scroll_timeout(scroll, name, width, now);
+  } else {
+    explorer_scroll_reset(scroll);
+  }
+
+  lcd_ru::font_map_t name_map = {{0}, 0, false};
+  for(int row = 0; row < visible; row++) {
+    DialogItem item;
+    const int index = top + row;
+    if(!dialog_item_at(directory_id, mode, type, allow_new, forbidden_tree,
+                       index, item)) continue;
+    char window[program_store::NAME_SIZE];
+    explorer_name_window(dialog_item_name(item),
+                         index == active ? scroll.offset : 0,
+                         explorer_name_width(), true, window,
+                         sizeof(window));
+    lcd_ru::scan_text(name_map, window, explorer_name_width());
+  }
+  lcd_ru::load_custom_font(name_map);
+
+  for(int row = 0; row < visible; row++) {
+    DialogItem item;
+    const int index = top + row;
+    if(!dialog_item_at(directory_id, mode, type, allow_new, forbidden_tree,
+                       index, item)) {
+      print_line((u8) row, "?");
+      continue;
+    }
+    const bool selected = index == active;
+    draw_dialog_row(name_map, (u8) row, item,
+                    selected ? scroll.offset : 0);
+    if(selected) cursor_row = (u8) row;
+  }
+  for(int row = visible; row < rows; row++) print_line((u8) row, "");
+  return timeout;
+}
+
+static ProgramStoreFileDialogResult run_storage_dialog(
+    DialogMode mode, program_store::ProgramType type, u16 start_directory,
+    bool allow_new, u16 forbidden_tree, program_store::Entry& out_entry,
+    u16& out_directory) {
+  u16 directory_id = start_directory;
+  if(directory_id != program_store::ROOT_ID) {
+    program_store::Entry directory;
+    if(!program_store::entry_by_id(directory_id, directory) ||
+       directory.kind != program_store::NodeKind::DIRECTORY) {
+      directory_id = program_store::ROOT_ID;
+    }
+  }
+
+  int active = 0;
+  ExplorerScroll scroll;
+  explorer_scroll_reset(scroll);
+  wait_all_keys_released();
+  while(true) {
+    int count = dialog_count(directory_id, mode, type, allow_new,
+                             forbidden_tree);
+    if(active >= count) active = count > 0 ? count - 1 : 0;
+    u8 cursor_row = EXPLORER_NO_CURSOR_ROW;
+    const u16 timeout = draw_storage_dialog(directory_id, mode, type,
+        allow_new, forbidden_tree, active, count, scroll, cursor_row);
+    const i32 key = wait_explorer_key(true, timeout, cursor_row);
+    if(key == EXPLORER_KEY_TICK) continue;
+    if(key == EXPLORER_KEY_DOWN && count > 0) {
+      active = (active + 1) % count;
+      explorer_scroll_reset(scroll);
+      continue;
+    }
+    if(key == EXPLORER_KEY_UP && count > 0) {
+      active = active > 0 ? active - 1 : count - 1;
+      explorer_scroll_reset(scroll);
+      continue;
+    }
+    if(key == EXPLORER_KEY_ESC) {
+      if(directory_id == program_store::ROOT_ID) {
+        explorer_cursor_off();
+        return ProgramStoreFileDialogResult::CANCELLED;
+      }
+      program_store::Entry directory;
+      if(!program_store::entry_by_id(directory_id, directory)) {
+        directory_id = program_store::ROOT_ID;
+      } else {
+        directory_id = directory.parent_id;
+      }
+      active = 0;
+      explorer_scroll_reset(scroll);
+      continue;
+    }
+    if((key != EXPLORER_KEY_OK && key != EXPLORER_KEY_LONG_OK) ||
+       count <= 0) continue;
+
+    DialogItem item;
+    if(!dialog_item_at(directory_id, mode, type, allow_new, forbidden_tree,
+                       active, item)) continue;
+    if(item.kind == DialogItemKind::THIS_DIRECTORY) {
+      out_directory = directory_id;
+      explorer_cursor_off();
+      return ProgramStoreFileDialogResult::EXISTING;
+    }
+    if(item.kind == DialogItemKind::NEW_FILE) {
+      out_directory = directory_id;
+      explorer_cursor_off();
+      return ProgramStoreFileDialogResult::NEW_FILE;
+    }
+    if(item.kind == DialogItemKind::NEW_DIRECTORY) {
+      explorer_cursor_off();
+      (void) create_directory(directory_id);
+      active = 0;
+      explorer_scroll_reset(scroll);
+      continue;
+    }
+    if(item.entry.kind == program_store::NodeKind::DIRECTORY) {
+      directory_id = item.entry.id;
+      active = 0;
+      explorer_scroll_reset(scroll);
+      continue;
+    }
+    out_entry = item.entry;
+    out_directory = directory_id;
+    explorer_cursor_off();
+    return ProgramStoreFileDialogResult::EXISTING;
+  }
 }
 
 static void explorer_search_reset(ExplorerSearch& search) {
@@ -1159,11 +1506,14 @@ static bool entry_can_edit(const program_store::Entry& entry) {
   }
 }
 
+static bool entry_can_load(const program_store::Entry& entry) {
+  return entry.kind == program_store::NodeKind::FILE &&
+         entry.type == program_store::ProgramType::MK61;
+}
+
 static bool entry_can_run(const program_store::Entry& entry) {
   if(entry.kind != program_store::NodeKind::FILE) return false;
   switch(entry.type) {
-    case program_store::ProgramType::MK61:
-      return true;
 #if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
       return true;
@@ -1184,18 +1534,22 @@ static bool entry_can_run(const program_store::Entry& entry) {
 static int item_menu_actions(const program_store::Entry& entry, ItemMenuAction* actions, int capacity) {
   int count = 0;
   if(entry.kind == program_store::NodeKind::FILE) {
+    if(entry_can_load(entry) && count < capacity) actions[count++] = ItemMenuAction::LOAD;
     if(entry_can_run(entry) && count < capacity) actions[count++] = ItemMenuAction::RUN;
     if(count < capacity) actions[count++] = ItemMenuAction::VIEW;
     if(entry_can_edit(entry) && count < capacity) actions[count++] = ItemMenuAction::EDIT;
   }
   if(count < capacity) actions[count++] = ItemMenuAction::NEW_DIRECTORY;
   if(count < capacity) actions[count++] = ItemMenuAction::RENAME;
+  if(count < capacity) actions[count++] = ItemMenuAction::MOVE;
   if(count < capacity) actions[count++] = ItemMenuAction::DELETE;
   return count;
 }
 
 static const char* item_menu_text(ItemMenuAction action, bool ru) {
   switch(action) {
+    case ItemMenuAction::LOAD:
+      return ru ? "Загрузить" : "Load";
     case ItemMenuAction::RUN:
       return ru ? "Запуск" : "Run";
     case ItemMenuAction::VIEW:
@@ -1206,6 +1560,8 @@ static const char* item_menu_text(ItemMenuAction action, bool ru) {
       return ru ? "Новая папка" : "New folder";
     case ItemMenuAction::RENAME:
       return ru ? "Переименовать" : "Rename";
+    case ItemMenuAction::MOVE:
+      return ru ? "Переместить" : "Move";
     case ItemMenuAction::DELETE:
       return ru ? "Удалить" : "Delete";
   }
@@ -1213,8 +1569,9 @@ static const char* item_menu_text(ItemMenuAction action, bool ru) {
 }
 
 static void draw_item_menu(const program_store::Entry& entry, int active) {
-  ItemMenuAction actions[6];
-  const int count = item_menu_actions(entry, actions, 6);
+  ItemMenuAction actions[ITEM_MENU_ACTION_CAPACITY];
+  const int count = item_menu_actions(entry, actions,
+                                      ITEM_MENU_ACTION_CAPACITY);
   const int display_rows = lcd.rows();
   const int visible = (count < display_rows) ? count : display_rows;
   int top = active - visible + 1;
@@ -1264,6 +1621,17 @@ static bool run_entry(const program_store::Entry& entry) {
   return ok;
 }
 
+static bool load_mk61_entry(const program_store::Entry& entry) {
+  if(!entry_can_load(entry) || !LoadProgram(entry.id)) {
+    show_message("Load error", "Ошибка чтения", entry.name, entry.name);
+    delay(900);
+    return false;
+  }
+  current_mk61_entry_id = entry.id;
+  current_mk61_directory_id = entry.parent_id;
+  return true;
+}
+
 static void edit_entry(const program_store::Entry& entry) {
   bool ok = false;
   switch(entry.type) {
@@ -1288,8 +1656,9 @@ static void edit_entry(const program_store::Entry& entry) {
 
 static bool explorer_item_menu(u16 directory_id,
                                const program_store::Entry& entry) {
-  ItemMenuAction actions[6];
-  const int count = item_menu_actions(entry, actions, 6);
+  ItemMenuAction actions[ITEM_MENU_ACTION_CAPACITY];
+  const int count = item_menu_actions(entry, actions,
+                                      ITEM_MENU_ACTION_CAPACITY);
   int active = 0;
   bool wait_initial_ok_release = true;
   while(true) {
@@ -1304,6 +1673,9 @@ static bool explorer_item_menu(u16 directory_id,
     if(key == EXPLORER_KEY_DOWN) active = (active + 1) % count;
     if(key == EXPLORER_KEY_OK) {
       switch(actions[active]) {
+        case ItemMenuAction::LOAD:
+          if(load_mk61_entry(entry)) return action::MENU_EXIT;
+          return action::MENU_BACK;
         case ItemMenuAction::RUN:
           if(run_entry(entry)) return action::MENU_EXIT;
           return action::MENU_BACK;
@@ -1318,6 +1690,9 @@ static bool explorer_item_menu(u16 directory_id,
           break;
         case ItemMenuAction::RENAME:
           rename_entry(entry);
+          break;
+        case ItemMenuAction::MOVE:
+          move_entry(entry);
           break;
         case ItemMenuAction::DELETE:
           delete_entry(entry);
@@ -1337,8 +1712,79 @@ static bool focal_action(void) {
   return action::MENU_BACK;
 }
 
+static bool m61_load_action(void) {
+  program_store::Entry entry = {};
+  u16 directory = current_mk61_directory_id;
+  const ProgramStoreFileDialogResult result = program_store_choose_file(
+      program_store::ProgramType::MK61, directory, false, entry, directory);
+  if(result != ProgramStoreFileDialogResult::EXISTING) {
+    return action::MENU_BACK;
+  }
+  return load_mk61_entry(entry) ? action::MENU_EXIT : action::MENU_BACK;
+}
+
+static bool m61_save_action(void) {
+  char name[program_store::NAME_SIZE] = "Program";
+  u16 directory = current_mk61_directory_id;
+  program_store::Entry current = {};
+  if(current_mk61_entry_id != program_store::INVALID_ID &&
+     program_store::entry_by_id(current_mk61_entry_id, current) &&
+     current.kind == program_store::NodeKind::FILE &&
+     current.type == program_store::ProgramType::MK61) {
+    strncpy(name, current.name, sizeof(name) - 1);
+    name[sizeof(name) - 1] = 0;
+    directory = current.parent_id;
+  }
+
+  if(!program_store_choose_save_target(program_store::ProgramType::MK61,
+                                       directory, name, sizeof(name),
+                                       directory)) {
+    return action::MENU_BACK;
+  }
+  if(!StoreProgram(directory, name)) {
+    show_message("Save error", "Ошибка записи", name, name);
+    delay(900);
+    return action::MENU_BACK;
+  }
+
+  program_store::Entry saved = {};
+  if(storage_path::resolve_file(directory, name,
+                               program_store::ProgramType::MK61, saved) ==
+     storage_path::Status::OK) {
+    current_mk61_entry_id = saved.id;
+  } else {
+    current_mk61_entry_id = program_store::INVALID_ID;
+  }
+  current_mk61_directory_id = directory;
+  show_message("Program saved", "Программа сохр.", name, name);
+  delay(700);
+  return action::MENU_EXIT;
+}
+
+static constexpr t_punct M61_LOAD_PUNCT = {
+    .size = 13, .action = &m61_load_action, .text = "Open M61 file"};
+static constexpr t_punct M61_SAVE_PUNCT = {
+    .size = 13, .action = &m61_save_action, .text = "Save M61 file"};
+static constexpr t_punct RU_M61_LOAD_PUNCT = {
+    .size = 15, .action = &m61_load_action, .text = "Открыть МК-61"};
+static constexpr t_punct RU_M61_SAVE_PUNCT = {
+    .size = 15, .action = &m61_save_action, .text = "Сохранить МК-61"};
+
+static bool m61_storage_action(void) {
+  t_punct* items[] = {
+    (t_punct*) (library_mk61::language_is_ru()
+        ? &RU_M61_LOAD_PUNCT : &M61_LOAD_PUNCT),
+    (t_punct*) (library_mk61::language_is_ru()
+        ? &RU_M61_SAVE_PUNCT : &M61_SAVE_PUNCT),
+  };
+  class_menu menu(items, sizeof(items) / sizeof(items[0]));
+  return menu.select();
+}
+
 static constexpr t_punct EXPLORER_PUNCT = {.size = 8, .action = &explorer_action, .text = "Explorer"};
 static constexpr t_punct RU_EXPLORER_PUNCT = {.size = 15, .action = &explorer_action, .text = "Проводник"};
+static constexpr t_punct M61_STORAGE_PUNCT = {.size = 9, .action = &m61_storage_action, .text = "M61 files"};
+static constexpr t_punct RU_M61_STORAGE_PUNCT = {.size = 15, .action = &m61_storage_action, .text = "Файлы МК-61"};
 
 #if MK61_ENABLE_FOCAL
 static constexpr t_punct FOCAL_DEV_PUNCT = {.size = 11, .action = &focal_action, .text = "FOCAL tools"};
@@ -1356,6 +1802,52 @@ static constexpr t_punct RU_TINYBASIC_DEV_PUNCT = {.size = 15, .action = &tinyba
 #endif
 
 } // namespace
+
+ProgramStoreFileDialogResult program_store_choose_file(
+    program_store::ProgramType type, u16 start_directory, bool allow_new,
+    program_store::Entry& out_entry, u16& out_directory) {
+  return run_storage_dialog(DialogMode::FILE, type, start_directory,
+                            allow_new, program_store::INVALID_ID, out_entry,
+                            out_directory);
+}
+
+bool program_store_choose_directory(u16 start_directory, u16 forbidden_tree,
+                                    u16& out_directory) {
+  program_store::Entry unused = {};
+  return run_storage_dialog(DialogMode::DIRECTORY,
+      program_store::ProgramType::MK61, start_directory, false,
+      forbidden_tree, unused, out_directory) ==
+      ProgramStoreFileDialogResult::EXISTING;
+}
+
+bool program_store_choose_save_target(program_store::ProgramType type,
+                                      u16 start_directory, char* name,
+                                      usize name_capacity,
+                                      u16& out_directory) {
+  (void) type;
+  if(name == NULL || name_capacity < 2 ||
+     name_capacity > program_store::NAME_SIZE) return false;
+  u16 directory = start_directory;
+  if(!program_store_choose_directory(start_directory,
+                                     program_store::INVALID_ID,
+                                     directory)) return false;
+
+  char candidate[program_store::NAME_SIZE];
+  const usize length = text_editor::bounded_length(name, name_capacity);
+  if(length >= name_capacity) return false;
+  memcpy(candidate, name, length + 1);
+  while(true) {
+    if(!input_entry_name(candidate, name_capacity, NamePrompt::SAVE)) {
+      return false;
+    }
+    if(program_store::basename_valid(candidate)) break;
+    show_message("Invalid name", "Ошибка имени", candidate, candidate);
+    delay(900);
+  }
+  memcpy(name, candidate, strlen(candidate) + 1);
+  out_directory = directory;
+  return true;
+}
 
 bool program_store_explorer_select(void) {
   u16 directory_id = program_store::ROOT_ID;
@@ -1451,6 +1943,8 @@ bool program_store_explorer_select(void) {
           active = 0;
           explorer_search_reset(search);
           explorer_scroll_reset(scroll);
+        } else if(entry_can_load(entry)) {
+          if(load_mk61_entry(entry)) return action::MENU_EXIT;
         } else if(entry_can_run(entry)) {
           if(run_entry(entry)) return action::MENU_EXIT;
         } else {
@@ -1523,6 +2017,7 @@ void program_store_restore_font_after_usb(void) {
 bool development_select(void) {
   t_punct* items[] = {
     (t_punct*) (library_mk61::language_is_ru() ? &RU_EXPLORER_PUNCT : &EXPLORER_PUNCT),
+    (t_punct*) (library_mk61::language_is_ru() ? &RU_M61_STORAGE_PUNCT : &M61_STORAGE_PUNCT),
 #if MK61_ENABLE_FOCAL
     (t_punct*) (library_mk61::language_is_ru() ? &RU_FOCAL_DEV_PUNCT : &FOCAL_DEV_PUNCT),
 #endif

@@ -16,6 +16,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/tests/program_store_self_test.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \
+  "$root/code/storage_path.cpp" \
   "$root/code/shared_scratch.cpp" \
   -o "$out"
 

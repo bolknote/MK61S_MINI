@@ -31,6 +31,22 @@ static void test_confirmation_is_a_complete_token(void) {
   assert(!terminal_core::exact_confirmation("n", 'y'));
 }
 
+static void test_quoted_path_tokens(void) {
+  const char* input = "  \"/My Files/a.m61\"  '../Other Folder'  ";
+  char first[64];
+  char second[64];
+  assert(terminal_core::parse_token(input, first, sizeof(first)));
+  assert(std::strcmp(first, "/My Files/a.m61") == 0);
+  assert(terminal_core::parse_token(input, second, sizeof(second)));
+  assert(std::strcmp(second, "../Other Folder") == 0);
+  assert(terminal_core::at_end(input));
+
+  input = "\"unterminated";
+  assert(!terminal_core::parse_token(input, first, sizeof(first)));
+  input = "\"ok\"junk";
+  assert(!terminal_core::parse_token(input, first, sizeof(first)));
+}
+
 static void test_decimal_parser_is_finite_and_bounded(void) {
   double value = 0.0;
   assert(terminal_core::parse_single_decimal("-1.25e+02", value));
@@ -69,6 +85,12 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_RESET));
   assert(!terminal_command_allowed_in_script(CMD_FS_REMOVE));
   assert(!terminal_command_allowed_in_script(CMD_FS_CLEAN));
+  assert(!terminal_command_allowed_in_script(CMD_FS_PWD));
+  assert(!terminal_command_allowed_in_script(CMD_FS_CD));
+  assert(!terminal_command_allowed_in_script(CMD_FS_MKDIR));
+  assert(!terminal_command_allowed_in_script(CMD_FS_MOVE));
+  assert(!terminal_command_allowed_in_script(CMD_FS_RMDIR));
+  assert(!terminal_command_allowed_in_script(CMD_FS_STAT));
   assert(!terminal_command_allowed_in_script(CMD_ERASE_STORAGE));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
 }
@@ -77,6 +99,7 @@ int main(void) {
   test_input_capacity_reserves_terminator();
   test_bounded_unsigned_parser();
   test_confirmation_is_a_complete_token();
+  test_quoted_path_tokens();
   test_decimal_parser_is_finite_and_bounded();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_script_allowlist_is_explicit();
