@@ -440,14 +440,7 @@ static const char* focal_plain_key_text(i32 key_code) {
 }
 
 static const char* focal_kshift_key_text(i32 key_code) {
-  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
-  if(key_code == keys.xy) return "\"";
-  if(key_code == keys.add) return "=";
-  if(key_code == keys.right) return ")";
-  if(key_code == keys.pp) return ",";
-  if(key_code == keys.run) return "!";
-  if(key_code == keys.left) return "(";
-  return NULL;
+  return text_editor::kshift_text_for_key(key_code);
 }
 
 static int focal_digit_from_key(i32 key_code) {
@@ -1535,7 +1528,8 @@ static FocalInputResult focal_read_number_from_keyboard(const char* target_name,
   char buffer[17];
   char prompt[17];
   memset(buffer, 0, sizeof(buffer));
-  u8 len = 0;
+  u16 len = 0;
+  bool alpha_shift = false;
   snprintf(prompt, sizeof(prompt), focal_language_is_ru() ? "ВВОД %s" : "ASK %s", target_name);
   while(true) {
     focal_message_i18n(prompt, prompt, buffer, buffer);
@@ -1549,6 +1543,12 @@ static FocalInputResult focal_read_number_from_keyboard(const char* target_name,
       Serial.println("'");
       Serial.flush();
     #endif
+    if(key == KEY_ALPHA) {
+      alpha_shift = true;
+      continue;
+    }
+    const bool alpha_key = alpha_shift || kbd::is_key_pressed(KEY_ALPHA);
+    alpha_shift = false;
     if(key == KEY_ESC || key == KEY_ESC_PRESS) return FocalInputResult::CANCELLED;
     if(key == KEY_OK || key == KEY_OK_PRESS) {
       if(focal_parse_input_number(buffer, value)) return FocalInputResult::VALUE;
@@ -1556,13 +1556,8 @@ static FocalInputResult focal_read_number_from_keyboard(const char* target_name,
       delay(600);
       continue;
     }
-    if(key == 0) {
-      len = 0;
-      buffer[0] = 0;
-      continue;
-    }
-    if(key == KEY_DEGREE && len > 0) {
-      buffer[--len] = 0;
+    if(key == KEY_CX) {
+      text_editor::apply_single_line_cx(buffer, len, sizeof(buffer), alpha_key);
       continue;
     }
     if(key >= 0 && key < 40) {
@@ -2684,7 +2679,39 @@ static bool focal_find_expression_before_cursor(const char* source, u16 cursor, 
     if(depth == 0 && (ch == '\n' || ch == '\r' || ch == '=' || ch == ';' || ch == ',')) break;
     start--;
   }
+
+  const bool at_line_start = start == 0 || source[start - 1] == '\n' || source[start - 1] == '\r';
+  const bool after_statement = start > 0 && source[start - 1] == ';';
   while(start < end && focal_is_space(source[start])) start++;
+
+  // At the beginning of a line (or after a FOR separator), skip the address
+  // and statement name.  The macro must wrap PRINT's operand, not the whole
+  // source fragment "1.10 PRINT X".
+  if(at_line_start || after_statement) {
+    const char* p = source + start;
+    const char* const segment_end = source + end;
+    bool has_address = false;
+    if(at_line_start) {
+      FocalAddress address = {};
+      const char* after_address = p;
+      if(focal_parse_address(after_address, address)) {
+        p = after_address;
+        has_address = true;
+      }
+    }
+    while(p < segment_end && focal_is_space(*p)) p++;
+    const char* const operator_begin = p;
+    while(p < segment_end && focal_is_alpha(*p)) p++;
+    FocalOp op;
+    const bool explicit_operator = has_address || after_statement || p - operator_begin > 1;
+    if(explicit_operator && p > operator_begin && focal_operator_from_range(operator_begin, p, op)) {
+      while(p < segment_end && focal_is_space(*p)) p++;
+      start = (u16) (p - source);
+    } else if(has_address) {
+      // A bare line address is editor structure, not a numeric operand.
+      return false;
+    }
+  }
   return start < end;
 }
 
@@ -2723,7 +2750,22 @@ static bool focal_segment_is_simple(const char* begin, const char* end) {
 
 static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, u16 capacity, i32 key_code) {
   const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
-  if(key_code != keys.mul && key_code != keys.div && key_code != keys.power) return false;
+  const bool square = key_code == keys.mul;
+  const bool inverse = key_code == keys.div;
+  const bool power10 = key_code == keys.digit[0];
+  const char* function = NULL;
+  if(key_code == keys.sub) function = "SQRT";
+  else if(key_code == keys.neg) function = "ABS";
+  else if(key_code == keys.digit[1]) function = "EXP";
+  else if(key_code == keys.digit[2]) function = "LG";
+  else if(key_code == keys.digit[3]) function = "LN";
+  else if(key_code == keys.digit[4]) function = "ASIN";
+  else if(key_code == keys.digit[5]) function = "ACOS";
+  else if(key_code == keys.digit[6]) function = "ATG";
+  else if(key_code == keys.digit[7]) function = "SIN";
+  else if(key_code == keys.digit[8]) function = "COS";
+  else if(key_code == keys.digit[9]) function = "TG";
+  if(!square && !inverse && !power10 && function == NULL) return false;
 
   u16 start = 0;
   u16 end = 0;
@@ -2731,18 +2773,24 @@ static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, u
   const usize expr_len = (usize) (end - start);
   if(expr_len >= FOCAL_EXPR_BUFFER_SIZE) return false;
 
+  double ignored = 0.0;
+  char error[17];
+  if(!focal_parse_expr_range(&source[start], &source[end], false, ignored, error, sizeof(error))) return false;
+
   const bool simple = focal_segment_is_simple(&source[start], &source[end]);
   char expr[FOCAL_EXPR_BUFFER_SIZE];
   focal_copy_trim(expr, sizeof(expr), &source[start], &source[end]);
 
   char replacement[FOCAL_EXPR_BUFFER_SIZE + 8];
   int written = -1;
-  if(key_code == keys.mul) {
+  if(square) {
     written = snprintf(replacement, sizeof(replacement), simple ? "%s^2" : "(%s)^2", expr);
-  } else if(key_code == keys.div) {
+  } else if(inverse) {
     written = snprintf(replacement, sizeof(replacement), simple ? "1/%s" : "1/(%s)", expr);
-  } else {
+  } else if(power10) {
     written = snprintf(replacement, sizeof(replacement), simple ? "10^%s" : "10^(%s)", expr);
+  } else {
+    written = snprintf(replacement, sizeof(replacement), "%s(%s)", function, expr);
   }
   if(written < 0 || (usize) written >= sizeof(replacement)) return false;
   return text_editor::replace_range(source, len, cursor, capacity, start, end, replacement);
@@ -2826,6 +2874,8 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
     case FocalEditShift::ALPHA:
       return NULL;
     case FocalEditShift::K: {
+      const char* punctuation = focal_kshift_key_text(key_code);
+      if(punctuation != NULL) return punctuation;
       FocalAddress address;
       if(focal_cursor_after_line_address(source, cursor, &address)) {
         const char* statement = focal_statement_insert_text(key_code, true);
@@ -2834,7 +2884,7 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
         const char* statement = focal_statement_insert_text(key_code);
         if(statement != NULL) return statement;
       }
-      return focal_kshift_key_text(key_code);
+      return NULL;
     }
   }
   return NULL;
@@ -2913,7 +2963,7 @@ static void draw_focal_name_editor(const char* name, u16 cursor, bool sms_cursor
 }
 
 static bool focal_name_insert_char(char* name, u16& len, u16& cursor, char ch) {
-  if(ch == ' ') return false;
+  if(ch == ' ' && len == 0) return false;
   char text[2] = {focal_upper(ch), 0};
   return text_editor::insert_text(name, len, cursor, FOCAL_NAME_SIZE, text);
 }
@@ -2955,6 +3005,29 @@ static bool focal_input_program_name(char* name, usize size) {
     draw_focal_name_editor(name, cursor, sms.active);
     const i32 key = kbd::get_key_wait();
     const bool shifted_key = shift != FocalEditShift::NONE;
+    const int digit = focal_digit_from_key(key);
+
+    if(!shifted_key && sms.active) {
+      if(focal_sms_key_is_letters(key)) {
+        focal_name_sms_tap(name, len, cursor, sms, key, now);
+        continue;
+      }
+      if(focal_sms_key_is_space(key)) {
+        focal_sms_reset(sms);
+        focal_name_insert_char(name, len, cursor, ' ');
+        continue;
+      }
+      if(digit == 0) {
+        focal_sms_reset(sms);
+        continue;
+      }
+      if(key == KEY_PP) {
+        focal_sms_reset(sms);
+        focal_name_insert_char(name, len, cursor, ' ');
+        continue;
+      }
+      focal_sms_reset(sms);
+    }
 
     if(!shifted_key && (key == KEY_K || key == KEY_ALPHA)) {
       shift = (key == KEY_K) ? FocalEditShift::K : FocalEditShift::ALPHA;
@@ -2994,7 +3067,6 @@ static bool focal_input_program_name(char* name, usize size) {
       continue;
     }
 
-    const int digit = focal_digit_from_key(key);
     if(shift == FocalEditShift::ALPHA && digit >= 0) {
       const char* symbol = focal_symbol_for_digit_key(key);
       if(symbol != NULL && symbol[0] != 0) focal_name_insert_char(name, len, cursor, symbol[0]);
@@ -3002,26 +3074,40 @@ static bool focal_input_program_name(char* name, usize size) {
       focal_sms_reset(sms);
       continue;
     }
-    if(focal_sms_key_is_letters(key)) {
+    if(shift == FocalEditShift::ALPHA) {
+      shift = FocalEditShift::NONE;
+      focal_sms_reset(sms);
+      continue;
+    }
+    if(shift == FocalEditShift::K && focal_sms_key_is_letters(key)) {
       focal_name_sms_tap(name, len, cursor, sms, key, now);
       shift = FocalEditShift::NONE;
       continue;
     }
-    if(focal_sms_key_is_space(key)) {
+    if(shift == FocalEditShift::K && focal_sms_key_is_space(key)) {
       focal_sms_reset(sms);
       focal_name_insert_char(name, len, cursor, ' ');
       shift = FocalEditShift::NONE;
       continue;
     }
-    if(digit == 0 || key == KEY_PP) {
+    if(shift == FocalEditShift::K) {
+      const char* punctuation = focal_kshift_key_text(key);
       focal_sms_reset(sms);
-      focal_name_insert_char(name, len, cursor, '0');
+      if(punctuation != NULL && punctuation[0] != 0 && punctuation[1] == 0) {
+        focal_name_insert_char(name, len, cursor, punctuation[0]);
+      }
       shift = FocalEditShift::NONE;
       continue;
     }
-    if(digit == 1) {
+    if(key == KEY_PP) {
       focal_sms_reset(sms);
-      focal_name_insert_char(name, len, cursor, '1');
+      focal_name_insert_char(name, len, cursor, ' ');
+      shift = FocalEditShift::NONE;
+      continue;
+    }
+    if(digit >= 0) {
+      focal_sms_reset(sms);
+      focal_name_insert_char(name, len, cursor, (char) ('0' + digit));
       shift = FocalEditShift::NONE;
       continue;
     }

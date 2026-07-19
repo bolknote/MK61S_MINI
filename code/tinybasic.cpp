@@ -335,19 +335,7 @@ static const char* tinybasic_plain_key_text(i32 key_code) {
 }
 
 static const char* tinybasic_kshift_text(i32 key_code) {
-  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
-  if(key_code == keys.ok) return ":";
-  if(key_code == keys.ret) return ";";
-  if(key_code == keys.pp) return ",";
-  if(key_code == keys.left) return "(";
-  if(key_code == keys.right) return ")";
-  if(key_code == keys.xy) return "\"";
-  if(key_code == keys.add) return "=";
-  if(key_code == keys.dot) return "'";
-  if(key_code == keys.run) return "!";
-  if(key_code == keys.shg_left) return "<";
-  if(key_code == keys.sub) return ">";
-  return NULL;
+  return text_editor::kshift_text_for_key(key_code);
 }
 
 static char tb_upper(char ch) {
@@ -1355,10 +1343,17 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
 #else
   char buffer[17];
   memset(buffer, 0, sizeof(buffer));
-  u8 len = 0;
+  u16 len = 0;
+  bool alpha_shift = false;
   while(true) {
     tb_message_i18n(prompt, prompt, buffer, buffer);
     const i32 key = kbd::get_key_wait();
+    if(key == KEY_ALPHA) {
+      alpha_shift = true;
+      continue;
+    }
+    const bool alpha_key = alpha_shift || kbd::is_key_pressed(KEY_ALPHA);
+    alpha_shift = false;
     if(key == KEY_ESC || key == KEY_ESC_PRESS) return false;
     if(key == KEY_OK || key == KEY_OK_PRESS) {
       const char* endptr = NULL;
@@ -1371,13 +1366,8 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
       delay(500);
       continue;
     }
-    if(key == 0) {
-      len = 0;
-      buffer[0] = 0;
-      continue;
-    }
-    if(key == KEY_DEGREE && len > 0) {
-      buffer[--len] = 0;
+    if(key == KEY_CX) {
+      text_editor::apply_single_line_cx(buffer, len, sizeof(buffer), alpha_key);
       continue;
     }
     if(key >= 0 && key < 40) {
@@ -2107,7 +2097,7 @@ static bool tb_confirm_save(void) {
 }
 
 static bool tb_name_insert_char(char* name, u16& len, u16& cursor, char ch) {
-  if(ch == ' ') return false;
+  if(ch == ' ' && len == 0) return false;
   char text[2] = {tb_upper(ch), 0};
   return text_editor::insert_text(name, len, cursor, TB_NAME_SIZE, text);
 }
@@ -2148,6 +2138,30 @@ static bool tb_input_program_name(char* name, usize size) {
     tb_draw_name_editor(name, cursor, sms.active);
     const i32 key = kbd::get_key_wait();
     const bool shifted = shift != text_editor::Shift::NONE;
+    const int digit = text_editor::digit_from_key(key);
+
+    if(!shifted && sms.active) {
+      if(text_editor::sms_key_is_letters(key)) {
+        text_editor::sms_tap(name, len, cursor, TB_NAME_SIZE, sms, key, now);
+        continue;
+      }
+      if(text_editor::sms_key_is_space(key)) {
+        text_editor::sms_reset(sms);
+        tb_name_insert_char(name, len, cursor, ' ');
+        continue;
+      }
+      if(digit == 0) {
+        text_editor::sms_reset(sms);
+        continue;
+      }
+      if(key == KEY_PP) {
+        text_editor::sms_reset(sms);
+        tb_name_insert_char(name, len, cursor, ' ');
+        continue;
+      }
+      text_editor::sms_reset(sms);
+    }
+
     if(!shifted && (key == KEY_K || key == KEY_ALPHA)) {
       shift = (key == KEY_K) ? text_editor::Shift::K : text_editor::Shift::ALPHA;
       text_editor::sms_reset(sms);
@@ -2186,7 +2200,6 @@ static bool tb_input_program_name(char* name, usize size) {
       continue;
     }
 
-    const int digit = text_editor::digit_from_key(key);
     if(shift == text_editor::Shift::ALPHA && digit >= 0) {
       const char* symbol = text_editor::symbol_for_digit_key(key);
       if(symbol != NULL && symbol[0] != 0) tb_name_insert_char(name, len, cursor, symbol[0]);
@@ -2194,38 +2207,40 @@ static bool tb_input_program_name(char* name, usize size) {
       text_editor::sms_reset(sms);
       continue;
     }
-    const char* letters = text_editor::sms_letters_for_key(key);
-    if(letters != NULL) {
-      if(sms.active && sms.key_code == key && cursor > 0) {
-        const usize count = strlen(letters);
-        sms.index = (u8) ((sms.index + 1) % count);
-        name[cursor - 1] = letters[sms.index];
-        sms.deadline_ms = now + text_editor::SMS_INPUT_TIMEOUT_MS;
-      } else {
-        sms.active = true;
-        sms.key_code = key;
-        sms.index = 0;
-        sms.deadline_ms = now + text_editor::SMS_INPUT_TIMEOUT_MS;
-        tb_name_insert_char(name, len, cursor, letters[0]);
-      }
+    if(shift == text_editor::Shift::ALPHA) {
+      shift = text_editor::Shift::NONE;
+      text_editor::sms_reset(sms);
+      continue;
+    }
+    if(shift == text_editor::Shift::K && text_editor::sms_key_is_letters(key)) {
+      text_editor::sms_tap(name, len, cursor, TB_NAME_SIZE, sms, key, now);
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(text_editor::sms_key_is_space(key)) {
+    if(shift == text_editor::Shift::K && text_editor::sms_key_is_space(key)) {
       text_editor::sms_reset(sms);
       tb_name_insert_char(name, len, cursor, ' ');
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(digit == 0 || key == KEY_PP) {
+    if(shift == text_editor::Shift::K) {
+      const char* punctuation = tinybasic_kshift_text(key);
       text_editor::sms_reset(sms);
-      tb_name_insert_char(name, len, cursor, '0');
+      if(punctuation != NULL && punctuation[0] != 0 && punctuation[1] == 0) {
+        tb_name_insert_char(name, len, cursor, punctuation[0]);
+      }
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(digit == 1) {
+    if(key == KEY_PP) {
       text_editor::sms_reset(sms);
-      tb_name_insert_char(name, len, cursor, '1');
+      tb_name_insert_char(name, len, cursor, ' ');
+      shift = text_editor::Shift::NONE;
+      continue;
+    }
+    if(digit >= 0) {
+      text_editor::sms_reset(sms);
+      tb_name_insert_char(name, len, cursor, (char) ('0' + digit));
       shift = text_editor::Shift::NONE;
       continue;
     }

@@ -53,6 +53,20 @@ void test_editor_controls_are_unambiguous(void) {
   assert(KEY_ALPHA != KEY_OK);
 }
 
+void test_k_punctuation_layout(void) {
+  assert(strcmp(text_editor::kshift_text_for_key(KEY_OK), ":") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(KEY_RET), ";") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(KEY_PP), ",") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(KEY_LEFT), "(") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(KEY_RIGHT), ")") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(keyboard_layout::ACTIVE.xy), "\"") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(keyboard_layout::ACTIVE.add), "=") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(keyboard_layout::ACTIVE.dot), "'") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(KEY_RUN), "!") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(KEY_SHG_LEFT_PRESS), "<") == 0);
+  assert(strcmp(text_editor::kshift_text_for_key(keyboard_layout::ACTIVE.sub), ">") == 0);
+}
+
 text_editor::KeyMap editor_keys(void) {
   const text_editor::KeyMap keys = {
     KEY_LEFT, KEY_LEFT_PRESS, KEY_RIGHT, KEY_RIGHT_PRESS,
@@ -123,6 +137,7 @@ int main(void) {
   test_program_key_constants_match_matrix_layout();
   test_digit_and_sms_layout();
   test_editor_controls_are_unambiguous();
+  test_k_punctuation_layout();
   test_editor_shortcuts_follow_active_profile();
   printf("keyboard_layout_profile_self_test: ok\n");
   return 0;

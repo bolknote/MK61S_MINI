@@ -155,6 +155,17 @@ void test_clear_current_line_removes_empty_edge_lines_and_crlf(void) {
   assert(strcmp(last, "FIRST") == 0 && cursor == 5);
 }
 
+void test_single_line_cx_backspaces_and_clears(void) {
+  char source[8] = "123";
+  u16 len = 3;
+  assert(text_editor::apply_single_line_cx(source, len, sizeof(source), false));
+  assert(strcmp(source, "12") == 0 && len == 2);
+  assert(text_editor::apply_single_line_cx(source, len, sizeof(source), true));
+  assert(strcmp(source, "") == 0 && len == 0);
+  assert(text_editor::apply_single_line_cx(source, len, sizeof(source), false));
+  assert(strcmp(source, "") == 0 && len == 0);
+}
+
 void test_utf8_validation(void) {
   const u8 valid[] = {
     'A', 0xD0, 0x90, 0xE2, 0x82, 0xAC, 0xF0, 0x9F, 0x98, 0x80
@@ -198,6 +209,7 @@ int main(void) {
   test_cx_backspaces_and_f_left_is_not_backspace();
   test_f_cx_clears_only_current_line_then_removes_it();
   test_clear_current_line_removes_empty_edge_lines_and_crlf();
+  test_single_line_cx_backspaces_and_clears();
   test_utf8_validation();
   printf("text_editor_self_test: ok\n");
   return 0;

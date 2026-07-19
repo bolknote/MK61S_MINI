@@ -208,6 +208,25 @@ inline const char* symbol_for_digit_key(i32 key_code) {
   return symbol_for_digit_key(key_code, keyboard_layout::ACTIVE);
 }
 
+inline const char* kshift_text_for_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
+  if(key_code == mapping.ok) return ":";
+  if(key_code == mapping.ret) return ";";
+  if(key_code == mapping.pp) return ",";
+  if(key_code == mapping.left) return "(";
+  if(key_code == mapping.right) return ")";
+  if(key_code == mapping.xy) return "\"";
+  if(key_code == mapping.add) return "=";
+  if(key_code == mapping.dot) return "'";
+  if(key_code == mapping.run) return "!";
+  if(key_code == mapping.shg_left) return "<";
+  if(key_code == mapping.sub) return ">";
+  return NULL;
+}
+
+inline const char* kshift_text_for_key(i32 key_code) {
+  return kshift_text_for_key(key_code, keyboard_layout::ACTIVE);
+}
+
 inline const char* plain_text_for_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
   if(key_code == mapping.mul) return "*";
   if(key_code == mapping.div) return "/";
@@ -435,6 +454,17 @@ inline bool backspace(char* source, u16& len, u16& cursor) {
   return true;
 }
 
+inline bool apply_single_line_cx(char* source, u16& len, u16 capacity, bool clear_all) {
+  if(source == NULL || capacity == 0 || len >= capacity || source[len] != 0) return false;
+  if(clear_all) {
+    len = 0;
+    source[0] = 0;
+    return true;
+  }
+  if(len > 0) source[--len] = 0;
+  return true;
+}
+
 inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity, u16 start, u16 end, const char* replacement) {
   if(!valid_buffer(source, len, cursor, capacity) || replacement == NULL || start > end || end > len) return false;
   const usize old_len = (usize) (end - start);
@@ -547,12 +577,6 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     return changed ? KeyResult::DIRTY : KeyResult::NONE;
   }
 
-  if(options.alpha_digit_symbols && editor.shift == Shift::ALPHA && digit_from_key(key_code) >= 0) {
-    const bool changed = insert_text(editor.source, editor.len, editor.cursor, editor.capacity, symbol_for_digit_key(key_code));
-    editor.shift = Shift::NONE;
-    return changed ? KeyResult::DIRTY : KeyResult::NONE;
-  }
-
   if(options.alpha_cx_clear_line && editor.shift == Shift::ALPHA &&
       key_code == keyboard_layout::ACTIVE.cx) {
     clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
@@ -566,6 +590,12 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     sanitize(editor);
     editor.shift = Shift::NONE;
     return KeyResult::DIRTY;
+  }
+
+  if(options.alpha_digit_symbols && editor.shift == Shift::ALPHA && digit_from_key(key_code) >= 0) {
+    const bool changed = insert_text(editor.source, editor.len, editor.cursor, editor.capacity, symbol_for_digit_key(key_code));
+    editor.shift = Shift::NONE;
+    return changed ? KeyResult::DIRTY : KeyResult::NONE;
   }
 
   if(!shifted_key && (key_code == keys.esc || key_code == keys.esc_press)) {

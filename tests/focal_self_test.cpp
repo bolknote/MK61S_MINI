@@ -9,6 +9,7 @@
 #endif
 
 #include "../code/focal.hpp"
+#include "../code/keyboard_layout.hpp"
 
 #if MK61_ENABLE_FOCAL
 
@@ -373,22 +374,60 @@ static void test_editor_shift_parentheses(void) {
 static void test_editor_expression_macros(void) {
   FocalTestReset();
   char out[64];
+  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
 
-  const int square[] = {37, 11, 11, 38, 2};
+  const int square[] = {keys.k, keys.digit[3], keys.digit[3], keys.alpha, keys.mul};
   FocalTestEditSequence(square, (int) (sizeof(square) / sizeof(square[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "X^2") == 0);
 
-  const int inverse[] = {37, 18, 7, 37, 18, 18, 38, 3};
+  const int inverse[] = {keys.k, keys.digit[8], keys.add, keys.k, keys.digit[8], keys.digit[8], keys.alpha, keys.div};
   FocalTestEditSequence(inverse, (int) (sizeof(inverse) / sizeof(inverse[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1/(A+B)") == 0);
 
-  const int pow10[] = {37, 11, 11, 38, 5};
+  const int pow10[] = {keys.k, keys.digit[3], keys.digit[3], keys.alpha, keys.digit[0]};
   FocalTestEditSequence(pow10, (int) (sizeof(pow10) / sizeof(pow10[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "10^X") == 0);
 
+  const int sine[] = {keys.k, keys.digit[3], keys.digit[3], keys.alpha, keys.digit[7]};
+  FocalTestEditSequence(sine, (int) (sizeof(sine) / sizeof(sine[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "SIN(X)") == 0);
+
+  struct MacroCase {
+    int key;
+    const char* input;
+    const char* expected;
+  };
+  const MacroCase functions[] = {
+    {keys.sub,      "A+B", "SQRT(A+B)"},
+    {keys.neg,      "A-B", "ABS(A-B)"},
+    {keys.digit[1], "X",   "EXP(X)"},
+    {keys.digit[2], "X",   "LG(X)"},
+    {keys.digit[3], "X",   "LN(X)"},
+    {keys.digit[4], "X",   "ASIN(X)"},
+    {keys.digit[5], "X",   "ACOS(X)"},
+    {keys.digit[6], "X",   "ATG(X)"},
+    {keys.digit[7], "X",   "SIN(X)"},
+    {keys.digit[8], "X",   "COS(X)"},
+    {keys.digit[9], "X",   "TG(X)"}
+  };
+  for(const MacroCase& item : functions) {
+    CHECK(FocalTestApplyExprMacro(item.input, item.key, out, sizeof(out)));
+    CHECK(std::strcmp(out, item.expected) == 0);
+  }
+
+  CHECK(FocalTestApplyExprMacro("1.10 PRINT A+B", keys.digit[7], out, sizeof(out)));
+  CHECK(std::strcmp(out, "1.10 PRINT SIN(A+B)") == 0);
+  CHECK(FocalTestApplyExprMacro("1.10 FOR I=1,2; PRINT I", keys.sub, out, sizeof(out)));
+  CHECK(std::strcmp(out, "1.10 FOR I=1,2; PRINT SQRT(I)") == 0);
+
+  CHECK(!FocalTestApplyExprMacro("!", keys.digit[1], out, sizeof(out)));
+  CHECK(std::strcmp(out, "!") == 0);
+  CHECK(!FocalTestApplyExprMacro("1.10", keys.digit[0], out, sizeof(out)));
+  CHECK(std::strcmp(out, "1.10") == 0);
+
   std::string long_expr(120, 'A');
   char long_out[160];
-  CHECK(!FocalTestApplyExprMacro(long_expr.c_str(), 2, long_out, sizeof(long_out)));
+  CHECK(!FocalTestApplyExprMacro(long_expr.c_str(), keys.mul, long_out, sizeof(long_out)));
   CHECK(long_expr == long_out);
 }
 
@@ -453,9 +492,9 @@ static void test_editor_operator_keys_insert_full_names(void) {
   FocalTestEditSequence(ask, (int) (sizeof(ask) / sizeof(ask[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.10 ASK ") == 0);
 
-  const int k_ask[] = {21, 15, 21, 20, 37, 15};
-  FocalTestEditSequence(k_ask, (int) (sizeof(k_ask) / sizeof(k_ask[0])), out, sizeof(out));
-  CHECK(std::strcmp(out, "1.10 ASK ") == 0);
+  const int k_apostrophe[] = {21, 15, 21, 20, 37, 15};
+  FocalTestEditSequence(k_apostrophe, (int) (sizeof(k_apostrophe) / sizeof(k_apostrophe[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, "1.10'") == 0);
 
   const int print[] = {21, 15, 16, 20, 25, 14};
   FocalTestEditSequence(print, (int) (sizeof(print) / sizeof(print[0])), out, sizeof(out));
@@ -488,6 +527,18 @@ static void test_editor_operator_keys_insert_full_names(void) {
   const int k_do[] = {21, 15, 12, 20, 37, 0};
   FocalTestEditSequence(k_do, (int) (sizeof(k_do) / sizeof(k_do[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "1.60 DO ") == 0);
+
+  const int k_semicolon[] = {37, 31};
+  FocalTestEditSequence(k_semicolon, (int) (sizeof(k_semicolon) / sizeof(k_semicolon[0])), out, sizeof(out));
+  CHECK(std::strcmp(out, ";") == 0);
+
+  const int for_with_semicolon[] = {
+    21, 15, 21, 20, 2, 37, 22, 22, 22, 37, 7, 21, 37, 25, 21, 20, 37, 31, 25, 14
+  };
+  FocalTestEditSequence(for_with_semicolon,
+                        (int) (sizeof(for_with_semicolon) / sizeof(for_with_semicolon[0])),
+                        out, sizeof(out));
+  CHECK(std::strcmp(out, "1.10 FOR I=1,10; PRINT ") == 0);
 }
 
 static void test_editor_cx_backspace_and_f_cx_clear_line(void) {
