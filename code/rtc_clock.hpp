@@ -7,6 +7,7 @@ namespace rtc_clock {
 
 void init(void);
 bool is_set(void);
+bool startup_snapshot(StartupSnapshot& out);
 bool read(DateTime& out);
 bool set(const DateTime& value);
 

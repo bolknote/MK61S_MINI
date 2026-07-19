@@ -44,8 +44,8 @@ bool is_set(void) {
   return initialized && marker_is_set();
 }
 
-bool read(DateTime& out) {
-  if(!is_set()) return false;
+bool startup_snapshot(StartupSnapshot& out) {
+  if(!initialized) return false;
 
   RTC_TimeTypeDef time = {};
   RTC_DateTypeDef date = {};
@@ -57,16 +57,28 @@ bool read(DateTime& out) {
   const HAL_StatusTypeDef date_status = HAL_RTC_GetDate(handle, &date, RTC_FORMAT_BIN);
   if(time_status != HAL_OK || date_status != HAL_OK) return false;
 
-  const DateTime current = {
-    (u16) (2000 + date.Year),
-    date.Month,
-    date.Date,
-    time.Hours,
-    time.Minutes,
-    time.Seconds
+  const StartupSnapshot current = {
+    {
+      (u16) (2000 + date.Year),
+      date.Month,
+      date.Date,
+      time.Hours,
+      time.Minutes,
+      time.Seconds
+    },
+    time.SubSeconds,
+    time.SecondFraction,
+    marker_is_set()
   };
   if(!is_valid(current)) return false;
   out = current;
+  return true;
+}
+
+bool read(DateTime& out) {
+  StartupSnapshot snapshot = {};
+  if(!startup_snapshot(snapshot) || !snapshot.time_set) return false;
+  out = snapshot.date_time;
   return true;
 }
 

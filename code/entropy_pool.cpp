@@ -126,6 +126,13 @@ void finish_startup(void) {
   initialize_streams();
 }
 
+void note_rtc_snapshot(u8 snapshot_index, u64 calendar_material, u64 phase_material) {
+  if(!collection_started) begin();
+  const u64 index = snapshot_index;
+  absorb(calendar_material ^ 0x5254432D43414C00ULL ^ index); // "RTC-CAL"
+  absorb(phase_material ^ 0x5254432D50485300ULL ^ index);    // "RTC-PHS"
+}
+
 void note_key(u8 keycode, u32 timestamp_us) {
   if(!collection_started) begin();
   absorb(((u64) timestamp_us << 32) ^ ((u64) keycode << 16) ^ micros());

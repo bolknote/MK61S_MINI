@@ -17,6 +17,17 @@ struct DateTime {
   u8 second;
 };
 
+// Coherent RTC state used only to diversify startup seeding.  The STM32
+// subsecond register is a down-counter: subsecond ranges from
+// second_fraction to zero.  Neither this structure nor its packing helpers
+// make an entropy claim about the clock.
+struct StartupSnapshot {
+  DateTime date_time;
+  u32 subsecond;
+  u32 second_fraction;
+  bool time_set;
+};
+
 enum class TerminalAction : u8 {
   SHOW,
   SET,
@@ -58,6 +69,27 @@ inline bool is_valid(const DateTime& value) {
   if(value.day < 1 || value.day > days_in_month(value.year, value.month)) return false;
   if(value.hour > 23 || value.minute > 59 || value.second > 59) return false;
   return true;
+}
+
+inline bool is_valid(const StartupSnapshot& value) {
+  return is_valid(value.date_time) && value.subsecond <= value.second_fraction;
+}
+
+// Keep calendar and phase in separate words so the entropy pool can tag and
+// absorb them independently.  time_set distinguishes a user-set calendar
+// from the valid default calendar maintained by the hardware RTC.
+inline u64 startup_calendar_material(const StartupSnapshot& value) {
+  return (value.time_set ? (1ULL << 63) : 0ULL)
+      | ((u64) value.date_time.year << 40)
+      | ((u64) value.date_time.month << 32)
+      | ((u64) value.date_time.day << 24)
+      | ((u64) value.date_time.hour << 16)
+      | ((u64) value.date_time.minute << 8)
+      | (u64) value.date_time.second;
+}
+
+inline u64 startup_phase_material(const StartupSnapshot& value) {
+  return ((u64) value.second_fraction << 32) | value.subsecond;
 }
 
 inline u16 parse_fixed_decimal(const char* text, usize count) {

@@ -88,6 +88,15 @@ void key_press_handler(i32 keycode);
 void idle_signal_reset(void);
 void idle_signal_poll(void);
 
+static void mix_rtc_startup_snapshot(u8 snapshot_index) {
+  rtc_clock::StartupSnapshot snapshot = {};
+  if(!rtc_clock::startup_snapshot(snapshot)) return;
+  entropy_pool::note_rtc_snapshot(
+    snapshot_index,
+    rtc_clock::startup_calendar_material(snapshot),
+    rtc_clock::startup_phase_material(snapshot));
+}
+
 bool usb_start_mass_storage_mode(void) {
   #if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
     Serial.end();
@@ -237,6 +246,7 @@ void setup() {
   lcd.setTextProfile(library_mk61::display_text_profile());
 
   entropy_pool::begin();
+  mix_rtc_startup_snapshot(0);
 
   if(dfu_requested) {
     DFU_enable();
@@ -250,6 +260,7 @@ void setup() {
     startup_splash::show(lcd, FULL_MODEL_NAME, FIRMWARE_VER);
   #endif
   entropy_pool::finish_startup();
+  mix_rtc_startup_snapshot(1);
 
  //---  Настройка отрисовки экрана
   lcd_hooked = false;               // экран не перeхвачен
