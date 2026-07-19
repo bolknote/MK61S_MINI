@@ -73,6 +73,7 @@ class SpiNorFlash {
     bool setAddressWidth(bool four_byte);
     bool readJedec(void);
     bool readSfdp(u32 address, u8* output, usize len);
+    bool verifyBytes(u32 address, const u8* expected, usize len);
     bool discoverSfdp(u32& capacity);
     static u32 jedecCapacity(u8 capacity_code);
     static bool validCapacity(u32 capacity);

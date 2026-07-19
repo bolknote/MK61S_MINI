@@ -273,7 +273,11 @@ bool SpiNorFlash::rawRead(u32 address, u8* output, usize len) {
   select();
   transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);
   sendAddress(address);
-  for(usize i = 0; i < len; i++) output[i] = transfer(0xFF);
+  // SPIClass::transfer(byte) enters the STM32 HAL once per byte.  A virtual
+  // FAT sector would therefore cross that relatively expensive boundary 512
+  // times.  The buffer overload performs the same clocking in one HAL call
+  // and supplies the standard 0xFF dummy transmit bytes when tx_buf is NULL.
+  if(len != 0) spi_->transfer((const void*) NULL, output, len);
   deselect();
   return true;
 }
@@ -303,7 +307,10 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
     transfer(four_byte_address_ && four_byte_opcodes_
         ? CMD_PAGE_PROGRAM_4B : CMD_PAGE_PROGRAM);
     sendAddress(address);
-    for(u16 i = 0; i < count; i++) transfer(data[i]);
+    // Program one complete NOR page fragment per HAL transaction.  Besides
+    // being much faster than byte-at-a-time transfer, this preserves the page
+    // boundary required by every SPI NOR page-program command.
+    spi_->transfer((const void*) data, (void*) NULL, count);
     deselect();
     if(!waitReady(5000)) return false;
     address += count;
@@ -313,21 +320,36 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
   return true;
 }
 
-bool SpiNorFlash::writeByteArray(u32 address, u8* data, usize len,
-                                 bool verify) {
-  if(data == NULL || address > capacity_ || len > capacity_ - address ||
-     !rawWrite(address, data, len)) return false;
-  if(!verify) return true;
-  u8 recovered[32];
+bool SpiNorFlash::verifyBytes(u32 address, const u8* expected, usize len) {
+  if(expected == NULL || !waitReady(5000)) return false;
+
+  // Keep chip select asserted for the entire comparison.  A sector-sized
+  // stack buffer verifies the common 512-byte write with one HAL transfer;
+  // larger writes remain bounded and are compared sector by sector.
+  u8 recovered[512];
+  select();
+  transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);
+  sendAddress(address);
   usize offset = 0;
   while(offset < len) {
     const u16 count = (u16) (len - offset < sizeof(recovered)
         ? len - offset : sizeof(recovered));
-    if(!rawRead(address + offset, recovered, count) ||
-       memcmp(recovered, data + offset, count) != 0) return false;
+    spi_->transfer((const void*) NULL, recovered, count);
+    if(memcmp(recovered, expected + offset, count) != 0) {
+      deselect();
+      return false;
+    }
     offset += count;
   }
+  deselect();
   return true;
+}
+
+bool SpiNorFlash::writeByteArray(u32 address, u8* data, usize len,
+                                 bool verify) {
+  if(data == NULL || address > capacity_ || len > capacity_ - address ||
+     !rawWrite(address, data, len)) return false;
+  return !verify || verifyBytes(address, data, len);
 }
 
 bool SpiNorFlash::writeByte(u32 address, u8 value, bool verify) {

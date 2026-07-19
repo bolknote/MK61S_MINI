@@ -1,5 +1,6 @@
 #include "virtual_fat.hpp"
 
+#include "fat_name.hpp"
 #include "language_workspace.hpp"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
@@ -17,6 +18,7 @@ static constexpr u16 FIRST_DATA_CLUSTER = 2;
 static constexpr u16 FAT12_FREE = 0x000;
 static constexpr u16 FAT12_BAD = 0xFF7;
 static constexpr u16 FAT12_EOF = 0xFFF;
+static constexpr u8 ATTR_READ_ONLY = 0x01;
 static constexpr u8 ATTR_HIDDEN = 0x02;
 static constexpr u8 ATTR_SYSTEM = 0x04;
 static constexpr u8 ATTR_VOLUME = 0x08;
@@ -336,11 +338,9 @@ static void short_alias(const program_store::Entry& entry, u8* output) {
 
 static u8 node_dirent_count(const program_store::Entry& entry) {
   char name[program_store::NAME_SIZE + 16];
-  u16 units[MAX_LFN_UNITS];
-  u16 unit_count = 0;
   full_name(entry, name, sizeof(name));
-  if(!utf8_to_utf16(name, units, MAX_LFN_UNITS, unit_count)) return 0;
-  return (u8) ((unit_count + 12) / 13 + 1);
+  const u16 count = fat_name::dirent_count(name);
+  return count <= 0xFF ? (u8) count : 0;
 }
 
 static void put_lfn_unit(u8* item, u8 index, u16 value) {
@@ -388,6 +388,40 @@ static bool render_node_dirent(const program_store::Entry& entry, u8 offset,
   put_le16(item, 26, cluster_for_id(entry.id));
   put_le32(item, 28, entry.kind == program_store::NodeKind::FILE
                           ? entry.data_len : 0);
+  return true;
+}
+
+static bool render_no_index_dirent(u8 offset, u8* item) {
+  static const char name[] = ".metadata_never_index";
+  static const u8 alias[11] = {
+    'M', 'E', 'T', 'A', 'D', 'A', 'T', 'A', 'N', 'I', 'X'
+  };
+  u16 units[MAX_LFN_UNITS];
+  u16 unit_count = 0;
+  if(!utf8_to_utf16(name, units, MAX_LFN_UNITS, unit_count)) return false;
+  const u8 lfn_count = (u8) ((unit_count + 12) / 13);
+  if(offset < lfn_count) {
+    const u8 sequence = (u8) (lfn_count - offset);
+    memset(item, 0xFF, 32);
+    item[0] = sequence;
+    if(sequence == lfn_count) item[0] |= 0x40;
+    item[11] = ATTR_LFN;
+    item[12] = 0;
+    item[13] = short_checksum(alias);
+    put_le16(item, 26, 0);
+    const u16 base = (u16) (sequence - 1) * 13;
+    for(u8 i = 0; i < 13; i++) {
+      const u16 index = (u16) (base + i);
+      const u16 value = index < unit_count ? units[index] :
+                        index == unit_count ? 0 : 0xFFFF;
+      put_lfn_unit(item, i, value);
+    }
+    return true;
+  }
+  if(offset != lfn_count) return false;
+  memset(item, 0, 32);
+  memcpy(item, alias, sizeof(alias));
+  item[11] = ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM;
   return true;
 }
 
@@ -483,8 +517,15 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
     if(first_slot == 0) {
       memcpy(output, "MK61S C5   ", 11);
       output[11] = ATTR_VOLUME;
+      for(u8 offset = 0;
+          offset + 1 < storage_geometry::ROOT_SYSTEM_DIRENTS;
+          offset++) {
+        if(!render_no_index_dirent(offset, output + (u16) (offset + 1) * 32)) {
+          return false;
+        }
+      }
     }
-    cursor = 1;
+    cursor = storage_geometry::ROOT_SYSTEM_DIRENTS;
   } else {
     if(first_slot == 0) {
       memcpy(output, ".          ", 11);
@@ -740,6 +781,14 @@ static bool system_directory(const char* name, u8 attributes) {
          strcmp(name, "System Volume Information") == 0;
 }
 
+static bool host_sidecar_file(const char* name) {
+  // Finder stores extended attributes/resource forks in AppleDouble files.
+  // Their suffix intentionally mirrors the real file (for example
+  // "._game.m61"), so extension-based C5 import must reject them before it
+  // mistakes a multi-kilobyte metadata blob for calculator source.
+  return name[0] == '.' && name[1] == '_';
+}
+
 static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
                                     ParsedNode& parsed) {
   if((item[11] & ATTR_VOLUME) != 0 || item[0] == 0xE5) return ParseStatus::SKIP;
@@ -762,11 +811,15 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
     return ParseStatus::VALID;
   }
   const u32 size = get_le32(item, 28);
-  if(size > program_store::MAX_MK61_TEXT_SIZE) return ParseStatus::INVALID;
   if(size == 0 && cluster == 0) return ParseStatus::SKIP;
-  if(!valid_cluster(cluster) || !parse_file_name(name, parsed.type)) {
+  if(host_sidecar_file(name) || !parse_file_name(name, parsed.type)) {
     return ParseStatus::SKIP;
   }
+  // Unsupported host files are intentionally ignored regardless of size.
+  // Apply the C5 payload quota only after a recognized calculator extension
+  // has been selected.
+  if(size > program_store::MAX_MK61_TEXT_SIZE) return ParseStatus::INVALID;
+  if(!valid_cluster(cluster)) return ParseStatus::INVALID;
   strcpy(parsed.name, name);
   parsed.id = id_for_cluster(cluster);
   parsed.data_len = (u16) size;

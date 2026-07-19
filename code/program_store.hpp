@@ -92,7 +92,7 @@ bool extent_info(u16 extent_id, u16& directory_id, u16& next_id);
 bool vfat_stage_write(u32 block, const u8* data);
 bool vfat_stage_read(u32 block, u8* data);
 bool vfat_stage_exists(u32 block);
-u8 vfat_stage_count(void);
+u16 vfat_stage_count(void);
 void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all(void);
 void vfat_stage_clear(void);

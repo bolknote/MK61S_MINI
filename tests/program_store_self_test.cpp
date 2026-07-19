@@ -34,6 +34,36 @@ static void fresh(u32 capacity = SPIFlash::DEFAULT_CAPACITY) {
   assert(program_store::ready());
 }
 
+static void put_le32(u8* data, u16 offset, u32 value) {
+  data[offset] = (u8) value;
+  data[offset + 1] = (u8) (value >> 8);
+  data[offset + 2] = (u8) (value >> 16);
+  data[offset + 3] = (u8) (value >> 24);
+}
+
+static u32 crc32_bytes(const u8* data, usize len) {
+  u32 crc = 0xFFFFFFFFUL;
+  for(usize index = 0; index < len; index++) {
+    crc ^= data[index];
+    for(u8 bit = 0; bit < 8; bit++) {
+      crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320UL : crc >> 1;
+    }
+  }
+  return crc;
+}
+
+static u32 locator_crc(u8* locator) {
+  const u8 state = locator[5];
+  u8 stored_crc[4];
+  memcpy(stored_crc, locator + 68, sizeof(stored_crc));
+  locator[5] = 0xFF;
+  memset(locator + 68, 0, sizeof(stored_crc));
+  const u32 crc = ~crc32_bytes(locator, 72);
+  locator[5] = state;
+  memcpy(locator + 68, stored_crc, sizeof(stored_crc));
+  return crc;
+}
+
 static void expect_text(u16 id, const u8* expected, u16 expected_len) {
   u8 actual[program_store::MAX_MK61_TEXT_SIZE] = {};
   u16 actual_len = 0;
@@ -416,6 +446,49 @@ static void test_quota_grows_beyond_legacy_128(void) {
   assert(len == 1 && value == (u8) 159);
 }
 
+static void test_root_dirent_quota_is_exact_and_atomic(void) {
+  fresh();
+  u16 first = program_store::INVALID_ID;
+  for(u16 i = 0; i < 254; i++) {
+    char name[8];
+    snprintf(name, sizeof(name), "D%03u", (unsigned) i);
+    u16 id = program_store::INVALID_ID;
+    assert(program_store::create_directory(program_store::ROOT_ID, name,
+                                           program_store::INVALID_ID, &id));
+    if(i == 0) first = id;
+  }
+  assert(program_store::child_count(program_store::ROOT_ID) == 254);
+  assert(!program_store::create_directory(program_store::ROOT_ID, "overflow",
+                                          program_store::INVALID_ID, NULL));
+
+  u16 nested = program_store::INVALID_ID;
+  assert(program_store::create_directory(first, "nested",
+                                         program_store::INVALID_ID, &nested));
+  assert(!program_store::move_rename(nested, program_store::ROOT_ID,
+                                     "nested"));
+  assert(by_id(nested).parent_id == first);
+
+  const Entry original = by_id(first);
+  assert(!program_store::move_rename(first, program_store::ROOT_ID,
+      "1234567890123456789012345678901"));
+  assert(strcmp(by_id(first).name, original.name) == 0);
+
+  Entry removable = {};
+  assert(program_store::child(program_store::ROOT_ID, 0, removable));
+  if(removable.id == first) {
+    assert(program_store::child(program_store::ROOT_ID, 1, removable));
+  }
+  assert(program_store::remove_id(removable.id));
+  assert(program_store::move_rename(nested, program_store::ROOT_ID,
+                                    "nested"));
+  assert(by_id(nested).parent_id == program_store::ROOT_ID);
+  assert(program_store::child_count(program_store::ROOT_ID) == 254);
+
+  program_store::init();
+  assert(program_store::child_count(program_store::ROOT_ID) == 254);
+  assert(by_id(nested).parent_id == program_store::ROOT_ID);
+}
+
 static void test_corrupt_wal_tail_rolls_back_and_recovers(void) {
   fresh();
   assert(program_store::write(ProgramType::TEXT, "ALPHA",
@@ -513,6 +586,36 @@ static void test_stage_journal_survives_reboot_and_churn(void) {
   assert(!program_store::vfat_stage_exists(77));
 }
 
+static void test_stage_indexes_large_unique_write_burst(void) {
+  fresh();
+  static constexpr u16 BLOCKS = 384;
+  u8 data[512];
+  u8 recovered[512];
+
+  // macOS may issue hundreds of distinct metadata/data writes before its first
+  // SYNCHRONIZE CACHE.  Every live block, including erase-sector boundaries,
+  // must survive reconstruction of the flash-resident staging journal.
+  for(u16 block = 0; block < BLOCKS; block++) {
+    for(u16 byte = 0; byte < sizeof(data); byte++) {
+      data[byte] = (u8) (block * 37U + byte);
+    }
+    assert(program_store::vfat_stage_write(0x20000UL + block, data));
+  }
+  assert(program_store::vfat_stage_count() == BLOCKS);
+  memset(data, 0xA5, sizeof(data));
+  assert(!program_store::vfat_stage_write(0x30000UL, data));
+
+  program_store::init();
+  assert(program_store::vfat_stage_count() == BLOCKS);
+  for(u16 block = 0; block < BLOCKS; block++) {
+    memset(recovered, 0, sizeof(recovered));
+    assert(program_store::vfat_stage_read(0x20000UL + block, recovered));
+    for(u16 byte = 0; byte < sizeof(recovered); byte++) {
+      assert(recovered[byte] == (u8) (block * 37U + byte));
+    }
+  }
+}
+
 static void test_stage_power_cut_keeps_previous_value(void) {
   u8 old_data[512];
   u8 new_data[512];
@@ -538,6 +641,8 @@ static void test_stage_compacts_when_every_normal_sector_is_live(void) {
   fresh();
   assert(program_store::geometry().stage_sector_count ==
          storage_geometry::STAGE_TARGET_SECTORS);
+  const u8 normal_sectors =
+      (u8) (program_store::geometry().stage_sector_count - 1);
   u8 data[512];
   memset(data, 0, sizeof(data));
   data[0] = 0;
@@ -546,7 +651,7 @@ static void test_stage_compacts_when_every_normal_sector_is_live(void) {
     data[0] = fill;
     assert(program_store::vfat_stage_write(1, data));
   }
-  for(u8 sector = 1; sector < 16; sector++) {
+  for(u8 sector = 1; sector < normal_sectors; sector++) {
     data[0] = sector;
     assert(program_store::vfat_stage_write(1, data));
     assert(program_store::vfat_stage_write(1000U + sector, data));
@@ -560,7 +665,7 @@ static void test_stage_compacts_when_every_normal_sector_is_live(void) {
   assert(program_store::vfat_stage_write(9999, data));
   program_store::init();
   u8 recovered[512];
-  for(u8 sector = 0; sector < 16; sector++) {
+  for(u8 sector = 0; sector < normal_sectors; sector++) {
     assert(program_store::vfat_stage_read(1000U + sector, recovered));
     assert(recovered[0] == sector);
   }
@@ -592,6 +697,31 @@ static void test_settings_reservation_and_capacity_mismatch(void) {
   // the same two-megabyte physical device.
   assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
   assert(!program_store::exists(ProgramType::TEXT, "OLD"));
+}
+
+static void test_geometry_migration_preserves_settings(void) {
+  fresh();
+  const u32 settings = program_store::settings_address();
+  assert(flash.writeByte(settings, 0x5A));
+  assert(program_store::write(ProgramType::TEXT, "OLD", (const u8*) "x", 1));
+
+  // Simulate a locator written by an older geometry algorithm while retaining
+  // its committed state, physical capacity, chip identity and valid CRC.
+  for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
+    u8 locator[72];
+    const u32 address = (u32) copy * SPIFlash::SECTOR_SIZE;
+    assert(flash.readByteArray(address, locator, sizeof(locator)));
+    put_le32(locator, 56, 1); // deliberately differs from current geometry
+    put_le32(locator, 68, locator_crc(locator));
+    assert(flash.eraseSector(address));
+    assert(flash.writeByteArray(address, locator, sizeof(locator)));
+  }
+
+  program_store::init();
+  assert(program_store::ready());
+  assert(flash.readByte(settings) == 0x5A);
+  assert(!program_store::exists(ProgramType::TEXT, "OLD"));
+  assert(program_store::geometry().logical_sectors != 1);
 }
 
 static void test_counterfeit_capacity_is_measured_not_trusted(void) {
@@ -663,13 +793,16 @@ int main(void) {
   test_names_and_exact_preferred_ids();
   test_directory_extents_are_persistent();
   test_quota_grows_beyond_legacy_128();
+  test_root_dirent_quota_is_exact_and_atomic();
   test_corrupt_wal_tail_rolls_back_and_recovers();
   test_power_cuts_are_atomic_and_retryable();
   test_gc_preserves_live_records();
   test_stage_journal_survives_reboot_and_churn();
+  test_stage_indexes_large_unique_write_burst();
   test_stage_power_cut_keeps_previous_value();
   test_stage_compacts_when_every_normal_sector_is_live();
   test_settings_reservation_and_capacity_mismatch();
+  test_geometry_migration_preserves_settings();
   test_counterfeit_capacity_is_measured_not_trusted();
   test_underreported_capacity_uses_the_whole_device();
   test_declared_geometry_change_forces_a_fresh_probe();

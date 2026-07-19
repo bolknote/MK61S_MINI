@@ -1253,7 +1253,15 @@ int8_t SCSI_ContinueRead(USBD_HandleTypeDef *pdev)
   {
     return -1;
   }
-  return SCSI_ProcessRead(pdev, hmsc->cbw.bLUN);
+  const int8_t status = SCSI_ProcessRead(pdev, hmsc->cbw.bLUN);
+  /* The ordinary DataIn callback sends a failed CSW when ProcessCmd fails.
+     Deferred completion runs from the firmware main loop instead, so it must
+     close the BOT command here or the host waits until its transport timeout. */
+  if (status < 0)
+  {
+    MSC_BOT_SendCSW(pdev, USBD_CSW_CMD_FAILED);
+  }
+  return status;
 }
 
 /**
@@ -1330,7 +1338,16 @@ int8_t SCSI_ContinueWrite(USBD_HandleTypeDef *pdev)
   {
     return -1;
   }
-  return SCSI_ProcessWrite(pdev, hmsc->cbw.bLUN);
+  const int8_t status = SCSI_ProcessWrite(pdev, hmsc->cbw.bLUN);
+  /* See SCSI_ContinueRead(): there is no DataOut callback on this deferred
+     path to turn a storage failure into a CSW.  Always terminate the command
+     explicitly so ENOSPC/write faults fail promptly instead of looping in
+     30-second host resets. */
+  if (status < 0)
+  {
+    MSC_BOT_SendCSW(pdev, USBD_CSW_CMD_FAILED);
+  }
+  return status;
 }
 
 int8_t SCSI_CompleteSync(USBD_HandleTypeDef *pdev, uint8_t success)

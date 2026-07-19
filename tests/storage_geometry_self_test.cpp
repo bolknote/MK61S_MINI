@@ -22,6 +22,7 @@ static void check(u32 capacity, u8 expected_cluster_sectors) {
   assert(geometry.stage_first_sector + geometry.stage_sector_count ==
          geometry.settings_sector);
   assert(geometry.root_entries % 16 == 0);
+  assert(geometry.root_entries <= storage_geometry::ROOT_ENTRY_CAPACITY);
 }
 
 int main(void) {
@@ -43,9 +44,11 @@ int main(void) {
 
   Geometry small;
   assert(storage_geometry::compute(512U * 1024U, small));
+  assert(small.stage_sector_count == storage_geometry::STAGE_SMALL_SECTORS);
   assert(storage_geometry::compute(16U * 1024U * 1024U, geometry));
-  assert(geometry.max_nodes >= 3800);
-  assert(geometry.max_nodes < 4085);
+  assert(geometry.stage_sector_count == storage_geometry::STAGE_TARGET_SECTORS);
+  assert(geometry.root_entries == storage_geometry::ROOT_ENTRY_CAPACITY);
+  assert(geometry.max_nodes == storage_geometry::FAT12_MAX_DATA_CLUSTERS);
   printf("storage geometry tests: OK (%u nodes on 512 KiB, %u on 16 MiB)\n",
          (unsigned) small.max_nodes, (unsigned) geometry.max_nodes);
   return 0;

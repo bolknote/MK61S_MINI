@@ -135,6 +135,13 @@ static void write_lfn_char(u8* item, u8 index, u16 value) {
   write_le16(item, offsets[index], value);
 }
 
+static u16 read_lfn_char(const u8* item, u8 index) {
+  static const u8 offsets[13] = {
+    1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30
+  };
+  return read_le16(item, offsets[index]);
+}
+
 static u8 append_ascii_entry(u8* directory, u8 slot, const char* name,
                              const char short_name[11], bool is_directory,
                              u16 cluster, u32 size) {
@@ -214,6 +221,35 @@ static void test_dynamic_fat12_bpb(void) {
   }
 }
 
+static void test_macos_no_index_marker(void) {
+  fresh();
+  const Layout fs = layout();
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  assert((root[11] & 0x08) != 0);
+  assert(root[32] == 0x42 && root[32 + 11] == 0x0F);
+  assert(root[64] == 0x01 && root[64 + 11] == 0x0F);
+  assert(memcmp(root + 96, "METADATANIX", 11) == 0);
+  assert((root[96 + 11] & 0x07) == 0x07);
+  assert(read_le16(root + 96, 26) == 0);
+  assert(read_le32(root + 96, 28) == 0);
+
+  char name[27] = {};
+  for(u8 slot = 1; slot <= 2; slot++) {
+    const u8* item = root + (u16) slot * 32;
+    const u8 sequence = (u8) (item[0] & 0x1F);
+    assert(sequence >= 1 && sequence <= 2);
+    for(u8 index = 0; index < 13; index++) {
+      const u16 value = read_lfn_char(item, index);
+      if(value == 0 || value == 0xFFFF) continue;
+      assert(value < 0x80);
+      name[(u16) (sequence - 1) * 13 + index] = (char) value;
+    }
+  }
+  assert(strcmp(name, ".metadata_never_index") == 0);
+  assert(first_free_slot(root) == storage_geometry::ROOT_SYSTEM_DIRENTS);
+}
+
 static void test_stable_clusters_and_nested_reads(void) {
   fresh();
   u16 first_dir = 0;
@@ -284,7 +320,7 @@ static void stage_host_tree(void) {
   u8 root[512];
   assert(virtual_fat::read_sector(fs.root_start, root));
   int slot = first_free_slot(root);
-  assert(slot == 1);
+  assert(slot == storage_geometry::ROOT_SYSTEM_DIRENTS);
   static const char outer_short[11] = {'M','Y','S','T','U','F','~','1',' ',' ',' '};
   slot = append_ascii_entry(root, (u8) slot, "My Stuff", outer_short, true,
                             outer_cluster, 0);
@@ -378,12 +414,53 @@ static void test_host_deletes_file_via_directory(void) {
   const Layout fs = layout();
   u8 root[512];
   assert(virtual_fat::read_sector(fs.root_start, root));
-  memset(root + 32, 0, 512 - 32);
+  const u16 user_offset = storage_geometry::ROOT_SYSTEM_DIRENTS * 32U;
+  memset(root + user_offset, 0, 512 - user_offset);
   assert(virtual_fat::write_sector(fs.root_start, root));
   expect_flush();
   program_store::Entry removed;
   assert(!program_store::entry_by_id(id, removed));
   assert(program_store::total_count() == 0);
+}
+
+static void test_finder_appledouble_does_not_abort_batch(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 sidecar_cluster = 202;
+  const u16 file_cluster = 203;
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, sidecar_cluster, 0xFFF);
+  set_fat12_value(fat, file_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  u8 slot = (u8) first_free_slot(root);
+  static const char sidecar_short[11] =
+      {'_','G','A','M','E','~','1',' ','M','6','1'};
+  slot = append_ascii_entry(root, slot, "._game.m61", sidecar_short,
+                            false, sidecar_cluster, 4096);
+  static const char file_short[11] =
+      {'G','A','M','E',' ',' ',' ',' ','M','6','1'};
+  static const u8 payload[] = {0x11, 0x22, 0x33};
+  slot = append_ascii_entry(root, slot, "game.m61", file_short,
+                            false, file_cluster, sizeof(payload));
+  root[slot * 32] = 0;
+
+  u8 data[512] = {};
+  memcpy(data, payload, sizeof(payload));
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), data));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  expect_flush();
+
+  program_store::Entry file;
+  assert(program_store::entry_by_id((u16) (file_cluster - 2), file));
+  assert(strcmp(file.name, "game") == 0);
+  expect_file(file.id, payload, sizeof(payload));
+  program_store::Entry ignored;
+  assert(!program_store::entry_by_id((u16) (sidecar_cluster - 2), ignored));
 }
 
 static void test_malformed_fat_chain_is_rejected_atomically(void) {
@@ -395,7 +472,10 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
   u8 root[512];
   assert(virtual_fat::read_sector(fs.root_start, root));
   static const char short_name[11] = {'B','R','O','K','E','N','~','1','T','X','T'};
-  const u8 slot = append_ascii_entry(root, 1, "broken.txt", short_name,
+  const int free_slot = first_free_slot(root);
+  assert(free_slot == storage_geometry::ROOT_SYSTEM_DIRENTS);
+  const u8 slot = append_ascii_entry(root, (u8) free_slot,
+                                     "broken.txt", short_name,
                                      false, 202, 1);
   root[slot * 32] = 0;
   u8 data[512] = {0xAA};
@@ -412,11 +492,13 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
 
 int main(void) {
   test_dynamic_fat12_bpb();
+  test_macos_no_index_marker();
   test_stable_clusters_and_nested_reads();
   test_directory_extents_grow_without_flat_catalog_scan();
   test_host_creates_arbitrary_nested_tree();
   test_staged_update_survives_session_reset();
   test_host_deletes_file_via_directory();
+  test_finder_appledouble_does_not_abort_batch();
   test_malformed_fat_chain_is_rejected_atomically();
   virtual_fat::end_session();
   printf("virtual_fat_self_test: ok\n");

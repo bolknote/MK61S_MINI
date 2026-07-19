@@ -18,15 +18,29 @@ static constexpr u8 SETTINGS_SECTORS = 1;
 static constexpr u8 CATALOG_HEADER_SECTORS = 1;
 static constexpr u8 CATALOG_WAL_SECTORS = 2;
 static constexpr u8 CATALOG_BANKS = 2;
-// Sixteen normal log segments hold 112 physical records for at most 96 live
-// dirty blocks. The seventeenth segment is an atomic compaction reserve.
-static constexpr u8 STAGE_TARGET_SECTORS = 17;
+// Sixty-four normal log segments hold 448 physical records for at most 384
+// live dirty blocks. The final segment is an atomic compaction reserve.  The
+// extra 192 KiB is negligible on the common 16 MiB part and prevents modern
+// desktop filesystems from exhausting staging before issuing cache sync.
+static constexpr u8 STAGE_TARGET_SECTORS = 65;
+static constexpr u8 STAGE_SMALL_SECTORS = 17;
 static constexpr u8 STAGE_MIN_SECTORS = 4;
+static constexpr u16 STAGE_TARGET_MIN_PHYSICAL_SECTORS = 512; // 2 MiB
 
 // A C5 inode is 20 bytes on flash. A 31-byte basename plus the longest
 // generated extension needs at most four LFN entries and one short entry.
 static constexpr u8 INODE_BYTES = 20;
 static constexpr u8 MAX_DIRENTS_PER_NODE = 5;
+// Volume label plus the three entries (two LFN and one short entry) required
+// for macOS' zero-length .metadata_never_index marker.
+static constexpr u8 ROOT_SYSTEM_DIRENTS = 4;
+// FAT12/FAT16 roots are fixed-size arrays rather than ordinary cluster
+// chains.  Sizing that array for every possible C5 node made a 16 MiB root
+// 630 KiB large; desktop FAT drivers may rewrite much of it for every created
+// entry.  512 entries is the conventional portable geometry and still leaves
+// 508 entries for user objects.  Arbitrary subdirectories use cluster chains
+// and provide the full volume-wide node quota.
+static constexpr u16 ROOT_ENTRY_CAPACITY = 512;
 
 struct Geometry {
   u32 capacity_bytes;

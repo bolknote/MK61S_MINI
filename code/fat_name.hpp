@@ -61,15 +61,19 @@ inline u32 next(const char*& text) {
 
   u8 continuation = 0;
   u32 codepoint = 0;
+  u32 minimum = 0;
   if(first >= 0xC2 && first <= 0xDF) {
     continuation = 1;
     codepoint = first & 0x1F;
+    minimum = 0x80;
   } else if(first >= 0xE0 && first <= 0xEF) {
     continuation = 2;
     codepoint = first & 0x0F;
+    minimum = 0x800;
   } else if(first >= 0xF0 && first <= 0xF4) {
     continuation = 3;
     codepoint = first & 0x07;
+    minimum = 0x10000;
   } else {
     return 0x110000UL + first;
   }
@@ -79,6 +83,10 @@ inline u32 next(const char*& text) {
     const u8 byte = (u8) *cursor++;
     if((byte & 0xC0) != 0x80) return 0x110000UL + first;
     codepoint = (codepoint << 6) | (byte & 0x3F);
+  }
+  if(codepoint < minimum || codepoint > 0x10FFFFUL ||
+     (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
+    return 0x110000UL + first;
   }
   text = cursor;
   return codepoint;
@@ -93,6 +101,22 @@ inline bool equal(const char* left, const char* right) {
        detail::fold(detail::next(right))) return false;
   }
   return *left == *right;
+}
+
+// Every C5 object is exposed with an LFN plus a stable ID-based short alias.
+// Count the exact number of 32-byte FAT directory entries required by a
+// UTF-8 visible name without allocating a UTF-16 conversion buffer.
+inline u16 dirent_count(const char* text) {
+  if(text == nullptr || *text == 0) return 0;
+  u16 units = 0;
+  while(*text != 0) {
+    const u32 codepoint = detail::next(text);
+    if(codepoint > 0x10FFFFUL) return 0;
+    const u8 added = codepoint > 0xFFFF ? 2 : 1;
+    if(units > (u16) (0xFFFFU - added)) return 0;
+    units = (u16) (units + added);
+  }
+  return (u16) ((units + 12U) / 13U + 1U);
 }
 
 } // namespace fat_name

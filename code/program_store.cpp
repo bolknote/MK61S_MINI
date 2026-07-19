@@ -43,7 +43,10 @@ static constexpr u16 STAGE_RECORD_SIZE = STAGE_RECORD_HEADER_SIZE + STAGE_DATA_S
 static constexpr u8 STAGE_RECORDS_PER_SECTOR =
     (storage_geometry::PHYSICAL_SECTOR_SIZE - STAGE_SECTOR_HEADER_SIZE) /
     STAGE_RECORD_SIZE;
-static constexpr u8 STAGE_REF_CAPACITY = 96;
+static constexpr u16 STAGE_REF_CAPACITY = 384;
+static constexpr u8 STAGE_REF_BITS = 9;
+static constexpr u16 STAGE_REF_MASK = (1U << STAGE_REF_BITS) - 1U;
+static constexpr u32 STAGE_KEY_MAX = 0xFFFFFFFFUL >> STAGE_REF_BITS;
 static constexpr u8 GC_SCAN_WINDOW = 32;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
@@ -111,20 +114,19 @@ static u32 g_table_cache_address = EMPTY_ADDRESS;
 static u8 g_disk_activity_depth;
 static u8 g_disk_led_poll_divider;
 
-// A physical stage reference is 1..119, so it needs one byte. Separate arrays
-// avoid alignment padding while keeping 32-bit LBA keys aligned.
-static u32 g_stage_keys[STAGE_REF_CAPACITY];
-static u16 g_stage_generations[STAGE_REF_CAPACITY];
-static u8 g_stage_refs[STAGE_REF_CAPACITY];
-static u8 g_stage_ref_count;
+// Pack an 18-bit virtual LBA and a 9-bit physical record reference into one
+// word.  This grows the live staging set fourfold while adding less than one
+// KiB over the former parallel key/generation/reference arrays.
+static u32 g_stage_index[STAGE_REF_CAPACITY];
+static u16 g_stage_ref_count;
 static u8 g_stage_used[storage_geometry::STAGE_TARGET_SECTORS];
 static u8 g_stage_sealed[storage_geometry::STAGE_TARGET_SECTORS];
 static u16 g_stage_generation;
 static u16 g_free_hint;
 
 static_assert((u16) storage_geometry::STAGE_TARGET_SECTORS *
-                  STAGE_RECORDS_PER_SECTOR < 256,
-              "C5 stage references must fit in one byte");
+                  STAGE_RECORDS_PER_SECTOR <= STAGE_REF_MASK,
+              "C5 stage references must fit in the packed index");
 
 static int g_flat_cache_index = -1;
 static u16 g_flat_cache_id;
@@ -914,6 +916,42 @@ static bool locator_matches(const u8* locator, storage_geometry::Geometry& geome
   return epoch != 0;
 }
 
+// A firmware update may deliberately change the derived C5/FAT geometry while
+// the physical chip and its settings sector remain unchanged.  In that case
+// the old catalog cannot be mounted, but rerunning the destructive capacity
+// probe and erasing settings would be both unnecessary and surprising.  This
+// narrower decoder trusts only a fully committed, CRC-protected locator plus
+// the independently CRC-protected guard at the unchanged physical end.
+static bool load_capacity_for_reformat(void) {
+#ifndef SPI_FLASH
+  return false;
+#else
+  u8 locator[LOCATOR_SIZE];
+  const u32 probe_upper = flash.capacityProbeUpper();
+  const u32 jedec_id = flash.getJEDECID();
+  for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
+    if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
+       memcmp(locator, "C5FS", 4) != 0 || locator[4] != FORMAT_VERSION ||
+       locator[5] != STATE_ACTIVE || locator[6] != LOCATOR_SIZE ||
+       normalized_record_crc(locator, LOCATOR_SIZE, 68, 5) !=
+           get_le32(locator, 68) ||
+       get_le32(locator, 60) != probe_upper ||
+       get_le32(locator, 64) != jedec_id) continue;
+
+    storage_geometry::Geometry geometry;
+    const u32 capacity = get_le32(locator, 8);
+    if(!storage_geometry::compute(capacity, geometry) ||
+       get_le32(locator, 20) != geometry.physical_sectors ||
+       get_le32(locator, 52) != geometry.settings_sector ||
+       !flash.setCapacity(capacity) || !settings_guard_valid(geometry)) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+#endif
+}
+
 static bool load_locator(void) {
   u8 locator[LOCATOR_SIZE];
   storage_geometry::Geometry geometry;
@@ -1467,6 +1505,7 @@ static bool fat_name_available(u16 parent_id, NodeKind kind,
                                u16 ignore_id) {
   char wanted[NAME_SIZE + 16];
   fat_visible_name(kind, type, name, wanted);
+  u16 root_slots = storage_geometry::ROOT_SYSTEM_DIRENTS;
   u16 id = parent_id == ROOT_ID ? g_meta.root_head : NONE;
   if(parent_id != ROOT_ID) {
     Inode parent;
@@ -1484,11 +1523,23 @@ static bool fat_name_available(u16 parent_id, NodeKind kind,
       char visible[NAME_SIZE + 16];
       if(!read_inode_name(id, inode, stored)) return false;
       fat_visible_name(inode_kind(inode), inode_type(inode), stored, visible);
+      if(parent_id == ROOT_ID) {
+        const u16 slots = fat_name::dirent_count(visible);
+        if(slots == 0 || slots > g_geometry.root_entries ||
+           root_slots > g_geometry.root_entries - slots) {
+          return false;
+        }
+        root_slots = (u16) (root_slots + slots);
+      }
       if(fat_name::equal(wanted, visible)) return false;
     }
     id = inode.next_sibling;
   }
-  return id == NONE;
+  if(id != NONE) return false;
+  if(parent_id != ROOT_ID) return true;
+  const u16 wanted_slots = fat_name::dirent_count(wanted);
+  return wanted_slots != 0 && wanted_slots <= g_geometry.root_entries &&
+         root_slots <= g_geometry.root_entries - wanted_slots;
 }
 
 static bool find_global_file(ProgramType type, const char* name, u16& out) {
@@ -1560,12 +1611,14 @@ void init(void) {
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
   if(!load_locator()) {
+    const bool preserve_settings = load_capacity_for_reformat();
     u32 capacity = 0;
 #ifdef SPI_FLASH
-    if(!flash_capacity_probe::detect(flash, flash.capacityProbeUpper(), capacity) ||
-       !flash.setCapacity(capacity)) return;
+    if(!preserve_settings &&
+       (!flash_capacity_probe::detect(flash, flash.capacityProbeUpper(), capacity) ||
+        !flash.setCapacity(capacity))) return;
 #endif
-    (void) format_internal(true);
+    (void) format_internal(!preserve_settings);
   } else if(!load_catalog()) {
     (void) format_internal(false);
   } else {
@@ -2182,9 +2235,21 @@ static u32 stage_record_address(u16 ref) {
          (u32) slot * STAGE_RECORD_SIZE;
 }
 
+static u32 pack_stage_index(u32 key, u16 ref) {
+  return (key << STAGE_REF_BITS) | ref;
+}
+
+static u32 stage_index_key(u16 index) {
+  return g_stage_index[index] >> STAGE_REF_BITS;
+}
+
+static u16 stage_index_ref(u16 index) {
+  return (u16) (g_stage_index[index] & STAGE_REF_MASK);
+}
+
 static int stage_ref_index(u32 key) {
-  for(u8 i = 0; i < g_stage_ref_count; i++) {
-    if(g_stage_keys[i] == key) return i;
+  for(u16 i = 0; i < g_stage_ref_count; i++) {
+    if(stage_index_key(i) == key) return i;
   }
   return -1;
 }
@@ -2234,16 +2299,18 @@ static bool stage_generation_newer(u16 left, u16 right) {
 }
 
 static bool stage_sector_has_live(u16 sector) {
-  for(u8 i = 0; i < g_stage_ref_count; i++) {
-    if((u16) ((g_stage_refs[i] - 1) / STAGE_RECORDS_PER_SECTOR) == sector) return true;
+  for(u16 i = 0; i < g_stage_ref_count; i++) {
+    if((u16) ((stage_index_ref(i) - 1) / STAGE_RECORDS_PER_SECTOR) == sector) {
+      return true;
+    }
   }
   return false;
 }
 
 static u8 stage_sector_live_count(u16 sector) {
   u8 count = 0;
-  for(u8 i = 0; i < g_stage_ref_count; i++) {
-    if((u16) ((g_stage_refs[i] - 1) / STAGE_RECORDS_PER_SECTOR) == sector) {
+  for(u16 i = 0; i < g_stage_ref_count; i++) {
+    if((u16) ((stage_index_ref(i) - 1) / STAGE_RECORDS_PER_SECTOR) == sector) {
       count++;
     }
   }
@@ -2298,14 +2365,12 @@ static bool append_stage_value(u16 sector, u32 key, const u8* data) {
 
   g_stage_used[sector] = (u8) (slot + 1);
   int index = stage_ref_index(key);
-  const u16 old_ref = index < 0 ? 0 : g_stage_refs[index];
+  const u16 old_ref = index < 0 ? 0 : stage_index_ref((u16) index);
   if(index < 0) {
     if(g_stage_ref_count >= STAGE_REF_CAPACITY) return false;
     index = g_stage_ref_count++;
   }
-  g_stage_keys[index] = key;
-  g_stage_refs[index] = (u8) ref;
-  g_stage_generations[index] = g_stage_generation;
+  g_stage_index[index] = pack_stage_index(key, ref);
   if(old_ref != 0) (void) write_byte(stage_record_address(old_ref) + 2,
                                       STATE_DELETED);
   return true;
@@ -2327,17 +2392,17 @@ static bool copy_live_stage_records(u16 source, u16 destination) {
   u8 data[STAGE_DATA_SIZE];
   for(;;) {
     int index = -1;
-    for(u8 i = 0; i < g_stage_ref_count; i++) {
-      const u16 sector = (u16) ((g_stage_refs[i] - 1) /
+    for(u16 i = 0; i < g_stage_ref_count; i++) {
+      const u16 sector = (u16) ((stage_index_ref(i) - 1) /
                                 STAGE_RECORDS_PER_SECTOR);
       if(sector == source) {
-        index = i;
+        index = (int) i;
         break;
       }
     }
     if(index < 0) return true;
-    const u32 key = g_stage_keys[index];
-    const u16 ref = g_stage_refs[index];
+    const u32 key = stage_index_key((u16) index);
+    const u16 ref = stage_index_ref((u16) index);
     if(!read_stage_ref_payload(ref, data) ||
        !append_stage_value(destination, key, data)) return false;
   }
@@ -2482,14 +2547,19 @@ void vfat_stage_clear(void) {
       if(state != STATE_ACTIVE) continue;
       const int old = stage_ref_index(key);
       if(old >= 0) {
-        if(stage_generation_newer(generation, g_stage_generations[old])) {
-          g_stage_refs[old] = (u8) ref;
-          g_stage_generations[old] = generation;
+        u32 old_key = 0;
+        u16 old_generation = 0;
+        u32 old_crc = 0;
+        u8 old_state = 0;
+        if((!read_stage_record(stage_index_ref((u16) old), old_key,
+                               old_generation, old_crc, old_state) ||
+            stage_generation_newer(generation, old_generation)) &&
+           key <= STAGE_KEY_MAX) {
+          g_stage_index[old] = pack_stage_index(key, ref);
         }
-      } else if(g_stage_ref_count < STAGE_REF_CAPACITY) {
-        g_stage_keys[g_stage_ref_count] = key;
-        g_stage_refs[g_stage_ref_count] = (u8) ref;
-        g_stage_generations[g_stage_ref_count] = generation;
+      } else if(key <= STAGE_KEY_MAX &&
+                g_stage_ref_count < STAGE_REF_CAPACITY) {
+        g_stage_index[g_stage_ref_count] = pack_stage_index(key, ref);
         g_stage_ref_count++;
       }
     }
@@ -2498,7 +2568,7 @@ void vfat_stage_clear(void) {
 
 bool vfat_stage_write(u32 block, const u8* data) {
   DiskActivity activity;
-  if(!g_ready || data == NULL) return false;
+  if(!g_ready || data == NULL || block > STAGE_KEY_MAX) return false;
   if(stage_ref_index(block) < 0 && g_stage_ref_count >= STAGE_REF_CAPACITY) return false;
   u16 sector = 0;
   u8 slot = 0;
@@ -2515,9 +2585,10 @@ bool vfat_stage_read(u32 block, u8* data) {
   u16 generation = 0;
   u32 crc = 0;
   u8 state = 0;
-  if(!read_stage_record(g_stage_refs[index], key, generation, crc, state) ||
+  const u16 ref = stage_index_ref((u16) index);
+  if(!read_stage_record(ref, key, generation, crc, state) ||
      state != STATE_ACTIVE || key != block ||
-     !read_bytes(stage_record_address(g_stage_refs[index]) + STAGE_RECORD_HEADER_SIZE,
+     !read_bytes(stage_record_address(ref) + STAGE_RECORD_HEADER_SIZE,
                  data, STAGE_DATA_SIZE) || stage_crc(key, generation, data) != crc) return false;
   return true;
 }
@@ -2526,7 +2597,7 @@ bool vfat_stage_exists(u32 block) {
   return g_ready && stage_ref_index(block) >= 0;
 }
 
-u8 vfat_stage_count(void) {
+u16 vfat_stage_count(void) {
   return g_ready ? g_stage_ref_count : 0;
 }
 
@@ -2534,19 +2605,18 @@ void vfat_stage_forget(u32 start_block, u16 blocks) {
   for(u16 offset = 0; offset < blocks; offset++) {
     const int index = stage_ref_index(start_block + offset);
     if(index < 0) continue;
-    if(!write_byte(stage_record_address(g_stage_refs[index]) + 2, STATE_DELETED)) continue;
-    const u8 last = (u8) (g_stage_ref_count - 1);
-    g_stage_keys[index] = g_stage_keys[last];
-    g_stage_generations[index] = g_stage_generations[last];
-    g_stage_refs[index] = g_stage_refs[last];
+    if(!write_byte(stage_record_address(stage_index_ref((u16) index)) + 2,
+                   STATE_DELETED)) continue;
+    const u16 last = (u16) (g_stage_ref_count - 1);
+    g_stage_index[index] = g_stage_index[last];
     g_stage_ref_count--;
   }
 }
 
 bool vfat_stage_discard_all(void) {
   while(g_stage_ref_count != 0) {
-    const u8 index = (u8) (g_stage_ref_count - 1);
-    if(!write_byte(stage_record_address(g_stage_refs[index]) + 2,
+    const u16 index = (u16) (g_stage_ref_count - 1);
+    if(!write_byte(stage_record_address(stage_index_ref(index)) + 2,
                    STATE_DELETED)) return false;
     g_stage_ref_count--;
   }

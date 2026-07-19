@@ -25,9 +25,10 @@ static u16 fat_sectors_for(u16 nodes) {
 }
 
 static u16 root_entries_for(u16 nodes) {
-  u32 entries = (u32) nodes * MAX_DIRENTS_PER_NODE + 1;
+  u32 entries = (u32) nodes * MAX_DIRENTS_PER_NODE + ROOT_SYSTEM_DIRENTS;
+  if(entries > ROOT_ENTRY_CAPACITY) entries = ROOT_ENTRY_CAPACITY;
   entries = (entries + 15) & ~15UL;
-  return entries > 0xFFF0UL ? 0xFFF0U : (u16) entries;
+  return (u16) entries;
 }
 
 static u32 virtual_sectors_for(u16 nodes, u8 sectors_per_cluster,
@@ -62,7 +63,10 @@ static u16 virtual_node_limit(u32 logical_capacity, u8 sectors_per_cluster) {
 }
 
 static u16 stage_sectors_for(u32 physical_sectors) {
-  if(physical_sectors >= 128) return STAGE_TARGET_SECTORS;
+  if(physical_sectors >= STAGE_TARGET_MIN_PHYSICAL_SECTORS) {
+    return STAGE_TARGET_SECTORS;
+  }
+  if(physical_sectors >= 128) return STAGE_SMALL_SECTORS;
   const u16 proportional = (u16) (physical_sectors / 8);
   return proportional < STAGE_MIN_SECTORS ? STAGE_MIN_SECTORS : proportional;
 }
