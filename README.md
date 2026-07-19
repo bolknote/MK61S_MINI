@@ -111,6 +111,11 @@ MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 зафиксирована в
 [release workflow](.github/workflows/firmware-release.yml).
 
+Профиль клавиатуры должен соответствовать плате. Для Classic-V2 используются
+флаги `-DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC`, а для юбилейной 40TH —
+единый флаг `-DMK61_BOARD_40TH`. Включение только `MK61_DISPLAY_UC1609` без
+явного профиля клавиатуры означает Classic-V2 и для 40TH недостаточно.
+
 73!
 
 ![](https://komarev.com/ghpvc/?username=MK61s-mini)

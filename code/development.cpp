@@ -1008,6 +1008,29 @@ static bool input_entry_name(char* name, usize capacity,
     const u32 key_now = millis();
     if(text_editor::sms_expired(sms, key_now)) text_editor::sms_reset(sms);
     const bool shifted_key = shift != text_editor::Shift::NONE;
+    const int digit = text_editor::digit_from_key(key);
+
+    if(!shifted_key && sms.active) {
+      if(text_editor::sms_key_is_letters(key)) {
+        text_editor::sms_tap(name, len, cursor, capacity, sms, key, key_now);
+        continue;
+      }
+      if(text_editor::sms_key_is_space(key)) {
+        text_editor::sms_reset(sms);
+        name_insert_char(name, len, cursor, ' ', capacity);
+        continue;
+      }
+      if(digit == 0) {
+        text_editor::sms_reset(sms);
+        continue;
+      }
+      if(key == KEY_PP) {
+        text_editor::sms_reset(sms);
+        name_insert_char(name, len, cursor, ' ', capacity);
+        continue;
+      }
+      text_editor::sms_reset(sms);
+    }
 
     if(!shifted_key && (key == KEY_K || key == KEY_ALPHA)) {
       shift = (key == KEY_K) ? text_editor::Shift::K : text_editor::Shift::ALPHA;
@@ -1016,16 +1039,19 @@ static bool input_entry_name(char* name, usize capacity,
     }
     if(!shifted_key && (key == KEY_OK || key == KEY_OK_PRESS)) return len > 0;
     if(!shifted_key && (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
-    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+    if(key == KEY_CX &&
         (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(sms);
-      name_backspace(name, len, cursor);
+      len = 0;
+      cursor = 0;
+      name[0] = 0;
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(!shifted_key && key == KEY_DEGREE) {
+    if((key == KEY_LEFT || key == KEY_LEFT_PRESS) &&
+        (shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
       text_editor::sms_reset(sms);
-      name_backspace(name, len, cursor);
+      shift = text_editor::Shift::NONE;
       continue;
     }
     if(!shifted_key && (key == KEY_LEFT || key == KEY_LEFT_PRESS)) {
@@ -1038,15 +1064,12 @@ static bool input_entry_name(char* name, usize capacity,
       name_move_right(name, len, cursor);
       continue;
     }
-    if(!shifted_key && key == 0) {
+    if(!shifted_key && key == KEY_CX) {
       text_editor::sms_reset(sms);
-      len = 0;
-      cursor = 0;
-      name[0] = 0;
+      name_backspace(name, len, cursor);
       continue;
     }
 
-    const int digit = text_editor::digit_from_key(key);
     if(shift == text_editor::Shift::ALPHA && digit >= 0) {
       const char* symbol = text_editor::symbol_for_digit_key(key);
       if(symbol != NULL && symbol[0] != 0) {
@@ -1056,28 +1079,40 @@ static bool input_entry_name(char* name, usize capacity,
       text_editor::sms_reset(sms);
       continue;
     }
-
-    if(text_editor::sms_key_is_letters(key)) {
+    if(shift == text_editor::Shift::ALPHA) {
+      shift = text_editor::Shift::NONE;
+      text_editor::sms_reset(sms);
+      continue;
+    }
+    if(shift == text_editor::Shift::K && text_editor::sms_key_is_letters(key)) {
       text_editor::sms_tap(name, len, cursor, capacity, sms, key, key_now);
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(text_editor::sms_key_is_space(key)) {
+    if(shift == text_editor::Shift::K && text_editor::sms_key_is_space(key)) {
       text_editor::sms_reset(sms);
       name_insert_char(name, len, cursor, ' ', capacity);
       shift = text_editor::Shift::NONE;
       continue;
     }
-
-    if(digit == 0 || key == KEY_PP) {
+    if(shift == text_editor::Shift::K) {
+      const char* punctuation = text_editor::kshift_text_for_key(key);
       text_editor::sms_reset(sms);
-      name_insert_char(name, len, cursor, '0', capacity);
+      if(punctuation != NULL && punctuation[0] != 0 && punctuation[1] == 0) {
+        name_insert_char(name, len, cursor, punctuation[0], capacity);
+      }
       shift = text_editor::Shift::NONE;
       continue;
     }
-    if(digit == 1) {
+    if(key == KEY_PP) {
       text_editor::sms_reset(sms);
-      name_insert_char(name, len, cursor, '1', capacity);
+      name_insert_char(name, len, cursor, ' ', capacity);
+      shift = text_editor::Shift::NONE;
+      continue;
+    }
+    if(digit >= 0) {
+      text_editor::sms_reset(sms);
+      name_insert_char(name, len, cursor, (char) ('0' + digit), capacity);
       shift = text_editor::Shift::NONE;
       continue;
     }
@@ -1427,6 +1462,31 @@ static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
   explorer_search_expire_sms(search, now);
 
   const bool shifted_key = search.shift != text_editor::Shift::NONE;
+  const int digit = text_editor::digit_from_key(key);
+
+  if(!shifted_key && search.sms.active) {
+    u16 cursor = search.len;
+    if(text_editor::sms_key_is_letters(key)) {
+      text_editor::sms_tap(search.text, search.len, cursor, program_store::NAME_SIZE, search.sms, key, now);
+      return true;
+    }
+    if(text_editor::sms_key_is_space(key)) {
+      text_editor::sms_reset(search.sms);
+      explorer_search_insert_char(search, ' ');
+      return true;
+    }
+    if(digit == 0) {
+      text_editor::sms_reset(search.sms);
+      return true;
+    }
+    if(key == KEY_PP) {
+      text_editor::sms_reset(search.sms);
+      explorer_search_insert_char(search, ' ');
+      return true;
+    }
+    text_editor::sms_reset(search.sms);
+  }
+
   if(!shifted_key && (key == KEY_K || key == KEY_ALPHA)) {
     search.shift = (key == KEY_K) ? text_editor::Shift::K : text_editor::Shift::ALPHA;
     text_editor::sms_reset(search.sms);
@@ -1434,15 +1494,20 @@ static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
   }
 
   u16 cursor = search.len;
-  if(search.shift == text_editor::Shift::ALPHA &&
-      (key == EXPLORER_KEY_UP || key == (i32) KEY_LEFT || key == (i32) KEY_LEFT_PRESS)) {
+  if(key == KEY_CX &&
+      (search.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
     text_editor::sms_reset(search.sms);
-    explorer_search_backspace(search);
+    explorer_search_reset(search);
+    search.shift = text_editor::Shift::NONE;
+    return true;
+  }
+  if((key == EXPLORER_KEY_UP || key == (i32) KEY_LEFT || key == (i32) KEY_LEFT_PRESS) &&
+      (search.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
+    text_editor::sms_reset(search.sms);
     search.shift = text_editor::Shift::NONE;
     return true;
   }
 
-  const int digit = text_editor::digit_from_key(key);
   if(search.shift == text_editor::Shift::ALPHA && digit >= 0) {
     const char* symbol = text_editor::symbol_for_digit_key(key);
     if(symbol != NULL && symbol[0] != 0) explorer_search_insert_char(search, symbol[0]);
@@ -1450,38 +1515,46 @@ static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
     text_editor::sms_reset(search.sms);
     return true;
   }
-
-  if(text_editor::sms_key_is_letters(key)) {
+  if(search.shift == text_editor::Shift::ALPHA) {
+    search.shift = text_editor::Shift::NONE;
+    text_editor::sms_reset(search.sms);
+    return true;
+  }
+  if(search.shift == text_editor::Shift::K && text_editor::sms_key_is_letters(key)) {
     text_editor::sms_tap(search.text, search.len, cursor, program_store::NAME_SIZE, search.sms, key, now);
     search.shift = text_editor::Shift::NONE;
     return true;
   }
-  if(text_editor::sms_key_is_space(key)) {
+  if(search.shift == text_editor::Shift::K && text_editor::sms_key_is_space(key)) {
     text_editor::sms_reset(search.sms);
     explorer_search_insert_char(search, ' ');
     search.shift = text_editor::Shift::NONE;
     return true;
   }
-  if(!shifted_key && key == KEY_DEGREE) {
+  if(search.shift == text_editor::Shift::K) {
+    const char* punctuation = text_editor::kshift_text_for_key(key);
     text_editor::sms_reset(search.sms);
-    const bool had_text = search.len > 0;
-    explorer_search_backspace(search);
-    return had_text;
-  }
-  if(!shifted_key && key == 0 && search.len > 0) {
-    explorer_search_reset(search);
-    return true;
-  }
-
-  if(digit == 0 || key == KEY_PP) {
-    text_editor::sms_reset(search.sms);
-    explorer_search_insert_char(search, '0');
+    if(punctuation != NULL && punctuation[0] != 0 && punctuation[1] == 0) {
+      explorer_search_insert_char(search, punctuation[0]);
+    }
     search.shift = text_editor::Shift::NONE;
     return true;
   }
-  if(digit == 1) {
+  if(!shifted_key && key == KEY_CX) {
     text_editor::sms_reset(search.sms);
-    explorer_search_insert_char(search, '1');
+    explorer_search_backspace(search);
+    return true;
+  }
+
+  if(key == KEY_PP) {
+    text_editor::sms_reset(search.sms);
+    explorer_search_insert_char(search, ' ');
+    search.shift = text_editor::Shift::NONE;
+    return true;
+  }
+  if(digit >= 0) {
+    text_editor::sms_reset(search.sms);
+    explorer_search_insert_char(search, (char) ('0' + digit));
     search.shift = text_editor::Shift::NONE;
     return true;
   }

@@ -17,6 +17,7 @@ extern "C" void TinyBasicTestSetRfEnabled(bool enabled);
 extern "C" void TinyBasicTestSetAngleMode(int mode);
 extern "C" const char* TinyBasicTestLcdLine(int row);
 extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out, int size);
+extern "C" void TinyBasicTestSetAlphaHeld(bool held);
 extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size);
 extern "C" bool TinyBasicTestRunResult(int slot);
 extern "C" void TinyBasicTestClearData(void);
@@ -26,6 +27,10 @@ bool RunTinyBasicProgram(const char* name);
 
 static constexpr int KEY_K = 37;
 static constexpr int KEY_OK = 29;
+static constexpr int KEY_CX = 0;
+static constexpr int KEY_PP = 25;
+static constexpr int KEY_LEFT = 34;
+static constexpr int KEY_ALPHA = 38;
 static constexpr int KEY_RADIAN = 14;
 static constexpr int KEY_RET = 31;
 
@@ -319,6 +324,39 @@ static void test_editor_has_no_operator_macros(void) {
   assert(std::strcmp(out, ":;") == 0);
 }
 
+static void test_editor_cx_backspace_and_f_cx_clear_line(void) {
+  TinyBasicTestReset();
+  char out[32];
+
+  const int cx[] = {21, 20, KEY_CX};
+  TinyBasicTestEditSequence(cx, 3, out, sizeof(out));
+  assert(std::strcmp(out, "1") == 0);
+
+  const int f_left_is_not_backspace[] = {21, 20, KEY_ALPHA, KEY_LEFT};
+  TinyBasicTestEditSequence(f_left_is_not_backspace, 4, out, sizeof(out));
+  assert(std::strcmp(out, "10") == 0);
+
+  const int clear_then_remove_line[] = {
+    21, 20, KEY_OK, 16, 20, KEY_ALPHA, KEY_CX, KEY_ALPHA, KEY_CX
+  };
+  TinyBasicTestEditSequence(clear_then_remove_line, 9, out, sizeof(out));
+  assert(std::strcmp(out, "10") == 0);
+
+  TinyBasicTestSetAlphaHeld(true);
+  const int held_f_cx[] = {21, 20, 16, KEY_CX};
+  TinyBasicTestEditSequence(held_f_cx, 4, out, sizeof(out));
+  TinyBasicTestSetAlphaHeld(false);
+  assert(std::strcmp(out, "") == 0);
+}
+
+static void test_editor_pp_is_space(void) {
+  TinyBasicTestReset();
+  char out[8];
+  const int pp[] = {KEY_PP};
+  TinyBasicTestEditSequence(pp, 1, out, sizeof(out));
+  assert(std::strcmp(out, " ") == 0);
+}
+
 static void expect_format(double value, const char* expected) {
   char out[32];
   TinyBasicTestFormatNumber(value, out, sizeof(out));
@@ -472,6 +510,8 @@ int main(void) {
   test_run_api_reports_runtime_failure();
   test_failed_edit_keeps_previous_program();
   test_editor_has_no_operator_macros();
+  test_editor_cx_backspace_and_f_cx_clear_line();
+  test_editor_pp_is_space();
   std::printf("tinybasic_self_test: ok\n");
   return 0;
 }
