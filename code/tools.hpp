@@ -16,7 +16,7 @@ static constexpr usize OFFSET_FLAG_OCCUPIED = 0;
 static constexpr usize OFFSET_MK61_PROGRAMM = 1;
 static constexpr usize OFFSET_AFTER_PROGRAM = OFFSET_MK61_PROGRAMM + core_61::MAX_PROGRAM_STEP;
 static constexpr usize OFFSET_SLOT_NAME     = 384;
-static constexpr usize SIZEOF_SLOT_NAME     = 16;
+static constexpr usize SIZEOF_SLOT_NAME     = program_store::NAME_SIZE;
 static constexpr isize MAX_SLOT_FOR_PROGRAM = 99;
 static constexpr isize BLOCK_SIZE           = (core_61::MAX_PROGRAM_STEP + 1) / 13;
 

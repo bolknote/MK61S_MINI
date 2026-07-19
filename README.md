@@ -43,6 +43,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Programming.pdf
 **Инструкция по работе с Терминалом:**  
 https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 
+**Часы RTC, настройка и синхронизация с компьютером:**
+https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
+
 **Технические форматы:**<br>
 [Формат внутреннего хранилища и USB FAT12](doc/src/MK61s-mini-Storage.md)
 
@@ -50,11 +53,35 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 
 [Генератор случайных чисел MK61/MK61s](doc/src/MK61s-mini-Random.md)
 
+[Команды USB-терминала](doc/src/MK61s-mini-Terminal.md)
+
+[Часы RTC](doc/src/MK61s-mini-RTC.md)
+
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 
 **Видеоинструкция по сборке от Виталия (FANJET)** - https://www.youtube.com/watch?v=JBStgbfmuOs
 
 Желающие поправить проект "под себя", могут это сделать на Open Source Hardware Lab - <a href="https://oshwlab.com/un7fgo/mk61s_v1_copy_copy_copy_copy"> ЗДЕСЬ </a>
+
+## Часы RTC
+
+Встроенный RTC STM32 работает от часового кварца LSE и сохраняет ход часов от
+батарейки на входе VBAT. Управление доступно в USB-терминале:
+
+```text
+rtc
+rtc set YYYY-MM-DD HH:MM:SS
+```
+
+До первой установки времени или после потери резервного питания команда `rtc`
+выводит `RTC UNSET`. После установки она выводит дату и время в том же формате.
+Часовой пояс прошивка не пересчитывает: вводится нужное местное время.
+
+То же значение можно задать на самом устройстве через
+`Настройки` → `Дата и время`. Цифровые клавиши заменяют выбранную цифру,
+стрелки перемещают курсор, `OK` проверяет и сохраняет всё значение, `ESC`
+выходит без сохранения. Пока RTC не установлен, начальным значением редактора
+служит дата и время сборки прошивки; автоматически в RTC оно не записывается.
 
 ## Проверка исходного кода
 
@@ -78,9 +105,10 @@ MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 текстовую модель и конвертацию FreeType-шрифтов, когда FreeType доступен в
 системе.
 
-Референсная сборка прошивки использует STM32 Arduino Core `2.12.0` и
-`LiquidCrystal 1.0.7`. Драйвер SPI NOR входит в проект и не зависит от таблицы
-моделей `SPIMemory`. Точная матрица плат и дисплеев зафиксирована в
+Референсная сборка прошивки использует STM32 Arduino Core `2.12.0`,
+`LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`. Драйвер SPI NOR входит в проект
+и не зависит от таблицы моделей `SPIMemory`. Точная матрица плат и дисплеев
+зафиксирована в
 [release workflow](.github/workflows/firmware-release.yml).
 
 73!

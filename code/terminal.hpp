@@ -22,6 +22,7 @@
 #include "terminal_core.hpp"
 #include "terminal_protocol.hpp"
 #include "utf8_view.hpp"
+#include "rtc_clock.hpp"
 
 extern  const char terminal_symbols[16];
 
@@ -80,6 +81,7 @@ struct TerminalCommand {
 // Добавление команды: строка здесь + case в execute().
 static constexpr TerminalCommand terminal_commands[] = {
   { "ver",     CMD_VERSION,       "firmware version" },
+  { "rtc",     CMD_RTC,           "rtc [set YYYY-MM-DD HH:MM:SS] - read/set clock" },
   { "help",    CMD_HELP,          "this list" },
   { "history", CMD_HISTORY,       "recent command lines" },
   { "list",    CMD_LIST,          "program memory in hex, vertical" },
@@ -573,6 +575,38 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.write('(');
       Serial.print(__TIME__);
       Serial.println(')');
+    }
+
+    terminal_protocol::Result exec_rtc(void) {
+      const rtc_clock::TerminalRequest request = rtc_clock::parse_terminal_request(command_args());
+      if(request.action == rtc_clock::TerminalAction::INVALID) {
+        Serial.println("RTC ERROR: expected YYYY-MM-DD HH:MM:SS");
+        return terminal_protocol::Result::error();
+      }
+
+      if(request.action == rtc_clock::TerminalAction::SET) {
+        if(!rtc_clock::set(request.date_time)) {
+          Serial.println("RTC ERROR");
+          return terminal_protocol::Result::error();
+        }
+        Serial.println("RTC OK");
+        return terminal_protocol::Result::ok();
+      }
+
+      if(!rtc_clock::is_set()) {
+        Serial.println("RTC UNSET");
+        return terminal_protocol::Result::ok();
+      }
+
+      rtc_clock::DateTime current = {};
+      char text[rtc_clock::DATETIME_TEXT_SIZE];
+      if(!rtc_clock::read(current) || !rtc_clock::format_datetime(current, text)) {
+        Serial.println("RTC ERROR");
+        return terminal_protocol::Result::error();
+      }
+      Serial.print("RTC ");
+      Serial.println(text);
+      return terminal_protocol::Result::ok();
     }
 
     void DumpRegisters(void) {
@@ -1198,6 +1232,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_VERSION:
               output_version();
             break;
+          case  CMD_RTC: {
+              const terminal_protocol::Result result = exec_rtc();
+              recive_pos = 0;
+              return result;
+            }
           case  CMD_ISA:
               echo_ISA_61();
             break;
@@ -1722,7 +1761,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
               char slot_name[SIZEOF_SLOT_NAME];
               if(!terminal_copy_arg(slot_name, sizeof(slot_name), args)) {
-                Serial.println("Name must contain 1..15 characters.");
+                Serial.println("Name must contain 1..31 UTF-8 bytes.");
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }

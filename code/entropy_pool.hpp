@@ -18,6 +18,11 @@ void begin(void);
 void poll_startup(void);
 void finish_startup(void);
 
+// Mix a coherent RTC calendar/phase sample into the startup state.  RTC adds
+// boot-to-boot diversity, but it is deliberately not counted by
+// startup_entropy_bits(), which remains an AVBAT Von Neumann output count.
+void note_rtc_snapshot(u8 snapshot_index, u64 calendar_material, u64 phase_material);
+
 // Mix every physical key transition time into the pool and rekey the enhanced
 // calculator stream when that mode is active.
 void note_key(u8 keycode, u32 timestamp_us);

@@ -21,6 +21,7 @@ using namespace kbd;
 #include "disasm.hpp"
 #include "tools.hpp"
 #include "runtime_safety.hpp"
+#include "rtc_clock.hpp"
 #include "sound_driver.hpp"
 #include "menu.hpp"
 #include "development.hpp"
@@ -86,6 +87,15 @@ static runtime_safety::Deadline auto_start;
 void key_press_handler(i32 keycode);
 void idle_signal_reset(void);
 void idle_signal_poll(void);
+
+static void mix_rtc_startup_snapshot(u8 snapshot_index) {
+  rtc_clock::StartupSnapshot snapshot = {};
+  if(!rtc_clock::startup_snapshot(snapshot)) return;
+  entropy_pool::note_rtc_snapshot(
+    snapshot_index,
+    rtc_clock::startup_calendar_material(snapshot),
+    rtc_clock::startup_phase_material(snapshot));
+}
 
 bool usb_start_mass_storage_mode(void) {
   #if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
@@ -220,7 +230,10 @@ void setup() {
 
   library_mk61::load_settings_state();
 
-  if(!dfu_requested) usb_start_terminal_mode();
+  if(!dfu_requested) {
+    rtc_clock::init();
+    usb_start_terminal_mode();
+  }
 
   //  kbd::test();
   kbd::init();
@@ -233,6 +246,7 @@ void setup() {
   lcd.setTextProfile(library_mk61::display_text_profile());
 
   entropy_pool::begin();
+  mix_rtc_startup_snapshot(0);
 
   if(dfu_requested) {
     DFU_enable();
@@ -246,6 +260,7 @@ void setup() {
     startup_splash::show(lcd, FULL_MODEL_NAME, FIRMWARE_VER);
   #endif
   entropy_pool::finish_startup();
+  mix_rtc_startup_snapshot(1);
 
  //---  Настройка отрисовки экрана
   lcd_hooked = false;               // экран не перeхвачен

@@ -1,5 +1,7 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
+#include "rtc_clock_core.hpp"
+#include "rtc_settings_core.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -92,7 +94,127 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_FS_RMDIR));
   assert(!terminal_command_allowed_in_script(CMD_FS_STAT));
   assert(!terminal_command_allowed_in_script(CMD_ERASE_STORAGE));
+  assert(!terminal_command_allowed_in_script(CMD_RTC));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
+}
+
+static void test_rtc_datetime_parser_and_formatter(void) {
+  rtc_clock::DateTime value = {};
+  assert(rtc_clock::parse_datetime("2026-07-19 14:35:00", value));
+  assert(value.year == 2026 && value.month == 7 && value.day == 19);
+  assert(value.hour == 14 && value.minute == 35 && value.second == 0);
+  assert(rtc_clock::weekday(value) == 7); // Sunday
+
+  char text[rtc_clock::DATETIME_TEXT_SIZE];
+  assert(rtc_clock::format_datetime(value, text));
+  assert(std::strcmp(text, "2026-07-19 14:35:00") == 0);
+
+  assert(rtc_clock::parse_datetime("  2000-02-29 00:00:00  ", value));
+  assert(rtc_clock::weekday(value) == 2); // Tuesday
+  assert(!rtc_clock::parse_datetime("2023-02-29 00:00:00", value));
+  assert(!rtc_clock::parse_datetime("2100-01-01 00:00:00", value));
+  assert(!rtc_clock::parse_datetime("2026-04-31 00:00:00", value));
+  assert(!rtc_clock::parse_datetime("2026-07-19T14:35:00", value));
+  assert(!rtc_clock::parse_datetime("2026-07-19 24:00:00", value));
+  assert(!rtc_clock::parse_datetime("2026-07-19 14:35:60", value));
+  assert(!rtc_clock::parse_datetime("2026-07-19 14:35:00 junk", value));
+}
+
+static void test_rtc_startup_material(void) {
+  const rtc_clock::StartupSnapshot base = {
+    {2026, 7, 19, 14, 35, 0},
+    255,
+    255,
+    true
+  };
+  assert(rtc_clock::is_valid(base));
+
+  rtc_clock::StartupSnapshot changed = base;
+  changed.subsecond = 254;
+  assert(rtc_clock::startup_phase_material(changed)
+      != rtc_clock::startup_phase_material(base));
+  assert(rtc_clock::startup_calendar_material(changed)
+      == rtc_clock::startup_calendar_material(base));
+
+  changed = base;
+  changed.date_time.second = 1;
+  assert(rtc_clock::startup_calendar_material(changed)
+      != rtc_clock::startup_calendar_material(base));
+
+  changed = base;
+  changed.time_set = false;
+  assert(rtc_clock::startup_calendar_material(changed)
+      != rtc_clock::startup_calendar_material(base));
+
+  changed = base;
+  changed.subsecond = 256;
+  assert(!rtc_clock::is_valid(changed));
+}
+
+static void test_rtc_terminal_request(void) {
+  rtc_clock::TerminalRequest request = rtc_clock::parse_terminal_request("");
+  assert(request.action == rtc_clock::TerminalAction::SHOW);
+  request = rtc_clock::parse_terminal_request("  \t");
+  assert(request.action == rtc_clock::TerminalAction::SHOW);
+
+  request = rtc_clock::parse_terminal_request("set 2024-02-29 23:59:59");
+  assert(request.action == rtc_clock::TerminalAction::SET);
+  assert(request.date_time.year == 2024 && request.date_time.second == 59);
+
+  assert(rtc_clock::parse_terminal_request("set").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_terminal_request("s").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_terminal_request("se").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_terminal_request("set-now").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_terminal_request("set 2023-02-29 00:00:00").action == rtc_clock::TerminalAction::INVALID);
+  assert(rtc_clock::parse_terminal_request("status").action == rtc_clock::TerminalAction::INVALID);
+}
+
+static void test_rtc_build_datetime_parser(void) {
+  rtc_clock::DateTime value = {};
+  assert(rtc_clock::parse_build_datetime("Jul 19 2026", "14:35:00", value));
+  assert(value.year == 2026 && value.month == 7 && value.day == 19);
+  assert(value.hour == 14 && value.minute == 35 && value.second == 0);
+
+  assert(rtc_clock::parse_build_datetime("Feb  9 2024", "01:02:03", value));
+  assert(value.year == 2024 && value.month == 2 && value.day == 9);
+  assert(!rtc_clock::parse_build_datetime("Feb 29 2023", "01:02:03", value));
+  assert(!rtc_clock::parse_build_datetime("Foo 19 2026", "01:02:03", value));
+  assert(!rtc_clock::parse_build_datetime("Jul 19 2026", "24:00:00", value));
+  assert(!rtc_clock::parse_build_datetime("Jul 19 2100", "00:00:00", value));
+  assert(!rtc_clock::parse_build_datetime("short", "00:00:00", value));
+}
+
+static void test_rtc_settings_editor(void) {
+  rtc_settings::Editor editor = {};
+  const rtc_clock::DateTime initial = {2026, 7, 19, 14, 35, 0};
+  assert(rtc_settings::begin(editor, initial));
+  assert(std::strcmp(editor.text, "2026-07-19 14:35:00") == 0);
+  assert(rtc_settings::active_text_position(editor) == 0);
+
+  const char digits[] = "20240229235958";
+  for(u8 i = 0; i < rtc_settings::EDITABLE_DIGIT_COUNT; i++) {
+    assert(rtc_settings::enter_digit(editor, digits[i] - '0'));
+  }
+  assert(std::strcmp(editor.text, "2024-02-29 23:59:58") == 0);
+  assert(rtc_settings::active_text_position(editor) == 18);
+  rtc_settings::move_right(editor);
+  assert(rtc_settings::active_text_position(editor) == 18);
+  rtc_settings::move_left(editor);
+  assert(rtc_settings::active_text_position(editor) == 17);
+
+  rtc_clock::DateTime value = {};
+  assert(rtc_settings::value(editor, value));
+  assert(value.year == 2024 && value.month == 2 && value.day == 29);
+  assert(value.hour == 23 && value.minute == 59 && value.second == 58);
+  assert(!rtc_settings::enter_digit(editor, -1));
+  assert(!rtc_settings::enter_digit(editor, 10));
+
+  assert(rtc_settings::begin(editor, initial));
+  const char invalid_digits[] = "20230229235958";
+  for(u8 i = 0; i < rtc_settings::EDITABLE_DIGIT_COUNT; i++) {
+    assert(rtc_settings::enter_digit(editor, invalid_digits[i] - '0'));
+  }
+  assert(!rtc_settings::value(editor, value));
 }
 
 int main(void) {
@@ -103,6 +225,11 @@ int main(void) {
   test_decimal_parser_is_finite_and_bounded();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_script_allowlist_is_explicit();
+  test_rtc_datetime_parser_and_formatter();
+  test_rtc_startup_material();
+  test_rtc_terminal_request();
+  test_rtc_build_datetime_parser();
+  test_rtc_settings_editor();
   std::printf("terminal_self_test: ok\n");
   return 0;
 }

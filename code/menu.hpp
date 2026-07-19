@@ -47,6 +47,7 @@ extern bool TurnRandomMode(void);
 extern bool UsbDiskMode(void);
 extern bool TurnIdleSignal(void);
 extern bool TurnDisplayRows(void);
+extern bool SetDateTime(void);
 extern bool FontSetup(void);
 extern bool ResetDevice(void);
 

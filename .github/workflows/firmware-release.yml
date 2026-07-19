@@ -54,6 +54,7 @@ jobs:
         run: |
           arduino-cli lib update-index
           arduino-cli lib install "LiquidCrystal@1.0.7"
+          arduino-cli lib install "STM32duino RTC@1.9.0"
 
       - name: Prepare sketch
         run: |
