@@ -21,6 +21,7 @@ using namespace kbd;
 #include "disasm.hpp"
 #include "tools.hpp"
 #include "runtime_safety.hpp"
+#include "rtc_clock.hpp"
 #include "sound_driver.hpp"
 #include "menu.hpp"
 #include "development.hpp"
@@ -220,7 +221,10 @@ void setup() {
 
   library_mk61::load_settings_state();
 
-  if(!dfu_requested) usb_start_terminal_mode();
+  if(!dfu_requested) {
+    rtc_clock::init();
+    usb_start_terminal_mode();
+  }
 
   //  kbd::test();
   kbd::init();

@@ -9,6 +9,8 @@
 #include "tinybasic.hpp"
 #include "entropy_pool.hpp"
 #include "program_store.hpp"
+#include "rtc_clock.hpp"
+#include "rtc_settings_core.hpp"
 #include "virtual_fat.hpp"
 
 extern MK61Display lcd;
@@ -38,8 +40,9 @@ static constexpr int SETTINGS_IDLE_SIGNAL = 1;
 static constexpr int SETTINGS_SPEED   = 2;
 static constexpr int SETTINGS_MEMORY  = 3;
 static constexpr int SETTINGS_RANDOM  = 4;
-static constexpr int SETTINGS_LANGUAGE = 5;
-static constexpr int SETTINGS_DISPLAY_ROWS = 6;
+static constexpr int SETTINGS_DATE_TIME = 5;
+static constexpr int SETTINGS_LANGUAGE = 6;
+static constexpr int SETTINGS_DISPLAY_ROWS = 7;
 
 static u8 sound_volume_state = 10;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
@@ -233,6 +236,7 @@ const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnPr
 const t_punct MEMORY_AUTO_punct   = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory Auto    "};
 const t_punct RANDOM_MK61_punct   = {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "Random MK61    "};
 const t_punct RANDOM_MK61S_punct  = {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "Random MK61s   "};
+const t_punct DATE_TIME_punct      = {.size = 11, .action = (menu_action) &SetDateTime,          .text = "Date & time"};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
 const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Язык рус"};
 const t_punct IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep OFF "};
@@ -256,6 +260,7 @@ const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnPr
 const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память АВТО"};
 const t_punct RU_RANDOM_MK61_punct= {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "К СЧ MK61"};
 const t_punct RU_RANDOM_MK61S_punct={.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "К СЧ MK61s"};
+const t_punct RU_DATE_TIME_punct   = {.size = 15, .action = (menu_action) &SetDateTime,          .text = "Дата и время"};
 const t_punct RU_IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук выкл"};
 const t_punct RU_IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук вкл"};
 const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "Информация"};
@@ -282,6 +287,7 @@ t_punct* SETTINGS_MENU[] = {
       (t_punct*) &SPEED_HIGH_punct,
       (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &RANDOM_MK61_punct,
+      (t_punct*) &DATE_TIME_punct,
       (t_punct*) &LANGUAGE_EN_punct,
 #if defined(MK61_DISPLAY_UC1609)
       (t_punct*) &ROWS_punct,
@@ -473,6 +479,7 @@ void refresh_menu_text(void) {
   SETTINGS_MENU[SETTINGS_SPEED]    = speed_punct();
   SETTINGS_MENU[SETTINGS_MEMORY]   = memory_punct();
   SETTINGS_MENU[SETTINGS_RANDOM]   = random_punct();
+  SETTINGS_MENU[SETTINGS_DATE_TIME] = (t_punct*) (russian_language ? &RU_DATE_TIME_punct : &DATE_TIME_punct);
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
 #if defined(MK61_DISPLAY_UC1609)
   SETTINGS_MENU[SETTINGS_DISPLAY_ROWS] = display_rows_punct();
@@ -653,6 +660,104 @@ static void StepSoundVolume(i8 delta) {
 static void CycleSoundVolumeUp(void) {
   const u8 volume = library_mk61::sound_volume();
   ApplySoundVolume((volume >= 10) ? 0 : (volume + 1));
+}
+
+static int dateTimeDigitFromKey(i32 key) {
+  switch(key) {
+    case (i32) sw::_0: return 0;
+    case (i32) sw::_1: return 1;
+    case (i32) sw::_2: return 2;
+    case (i32) sw::_3: return 3;
+    case (i32) sw::_4: return 4;
+    case (i32) sw::_5: return 5;
+    case (i32) sw::_6: return 6;
+    case (i32) sw::_7: return 7;
+    case (i32) sw::_8: return 8;
+    case (i32) sw::_9: return 9;
+    default: return -1;
+  }
+}
+
+static void drawDateTimeEditor(const rtc_settings::Editor& editor) {
+  const bool russian = library_mk61::language_is_ru();
+  char date_line[32];
+  char time_line[32];
+  snprintf(date_line, sizeof(date_line), russian ? "Дата %.10s" : "Date %.10s", editor.text);
+  snprintf(time_line, sizeof(time_line), russian ? "Время %.8s" : "Time %.8s", editor.text + 11);
+
+  MK61DisplayUpdate update(lcd);
+  lcd.clear();
+  lcd_ru::print_lines(date_line, time_line);
+
+  const usize position = rtc_settings::active_text_position(editor);
+  if(position < 10) {
+    lcd.setCursor((u8) (5 + position), 0);
+  } else {
+    const u8 time_start = russian ? 6 : 5;
+    lcd.setCursor((u8) (time_start + position - 11), 1);
+  }
+  if(lcd.supportsCursor()) lcd.cursorOn();
+}
+
+static void showDateTimeMessage(const char* ru0, const char* en0, const char* ru1, const char* en1,
+                                t_time_ms duration_ms) {
+  {
+    MK61DisplayUpdate update(lcd);
+    lcd.clear();
+    lcd_ru::print_lines(
+      library_mk61::language_is_ru() ? ru0 : en0,
+      library_mk61::language_is_ru() ? ru1 : en1);
+  }
+  delay(duration_ms);
+}
+
+bool SetDateTime(void) {
+  rtc_clock::DateTime initial = {};
+  if(!rtc_clock::read(initial) && !rtc_clock::parse_build_datetime(__DATE__, __TIME__, initial)) {
+    initial = {2001, 1, 1, 0, 0, 0};
+  }
+
+  rtc_settings::Editor editor = {};
+  if(!rtc_settings::begin(editor, initial)) return action::MENU_BACK;
+
+  while(true) {
+    drawDateTimeEditor(editor);
+    const i32 key = kbd::get_key_wait();
+    const int digit = dateTimeDigitFromKey(key);
+    if(digit >= 0) {
+      rtc_settings::enter_digit(editor, digit);
+      continue;
+    }
+
+    if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+      rtc_settings::move_left(editor);
+      continue;
+    }
+    if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
+      rtc_settings::move_right(editor);
+      continue;
+    }
+    if(key == KEY_ESC_PRESS) {
+      lcd.cursorOff();
+      lcd_ru::restore_default_font();
+      return action::MENU_BACK;
+    }
+    if(key != KEY_OK_PRESS) continue;
+
+    rtc_clock::DateTime value = {};
+    if(!rtc_settings::value(editor, value)) {
+      showDateTimeMessage("Неверная дата", "Invalid date", "или время", "or time", 900);
+      continue;
+    }
+    if(!rtc_clock::set(value)) {
+      showDateTimeMessage("Ошибка RTC", "RTC error", "Не сохранено", "Not saved", 900);
+      continue;
+    }
+
+    showDateTimeMessage("Дата и время", "Date and time", "сохранены", "saved", 650);
+    lcd_ru::restore_default_font();
+    return action::MENU_BACK;
+  }
 }
 
 bool settings_select(void) {
