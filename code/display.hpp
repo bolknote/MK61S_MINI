@@ -158,9 +158,9 @@ class MK61Display : public Print {
     bool readCell(u8 x, u8 y, u8& value) const;
     bool copyCustomChar(u8 nChar, u8 glyph[8]) const;
     void clearCustomChar(u8 nChar);
-    void renderTextEditorViewport(
+    void renderShiftedViewport(
       const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
-    void endTextEditorViewport(void);
+    void endShiftedViewport(void);
 #endif
     void writeCodepoint(u16 codepoint);
     bool installFont(const u8* data, u16 size);
@@ -200,8 +200,8 @@ class MK61Display : public Print {
     u8 display_control;
     bool busy_flag_active;
     u32 busy_flag_timeouts;
-    bool text_editor_viewport_active;
-    u8 text_editor_shift;
+    bool shifted_viewport_active;
+    u8 shifted_viewport_shift;
 
     void probeBusyFlag(void);
     void sendByte(u8 value, bool data, u32 fallback_delay_us = 0);

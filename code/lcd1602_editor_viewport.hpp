@@ -1,14 +1,14 @@
 #ifndef MK61_LCD1602_EDITOR_VIEWPORT_HPP
 #define MK61_LCD1602_EDITOR_VIEWPORT_HPP
 
-#include "rust_types.h"
+#include "lcd1602_shifted_viewport.hpp"
 
 namespace lcd1602_editor_viewport {
 
-static constexpr u8 ROWS = 2;
-static constexpr u8 VISIBLE_COLS = 16;
+static constexpr u8 ROWS = lcd1602_shifted_viewport::ROWS;
+static constexpr u8 VISIBLE_COLS = lcd1602_shifted_viewport::VISIBLE_COLS;
 static constexpr u8 TEXT_COLS = VISIBLE_COLS - 1;
-static constexpr u8 DDRAM_COLS = 40;
+static constexpr u8 DDRAM_COLS = lcd1602_shifted_viewport::DDRAM_COLS;
 
 struct RowSpan {
   const char* text;
@@ -21,18 +21,10 @@ struct Layout {
   u8 cursor_col;
 };
 
-struct ShiftPlan {
-  u8 steps;
-  bool left;
-};
+using ShiftPlan = lcd1602_shifted_viewport::ShiftPlan;
 
 inline ShiftPlan shortest_shift(u8 current, u8 target) {
-  current = (u8) (current % DDRAM_COLS);
-  target = (u8) (target % DDRAM_COLS);
-  const u8 left_steps = (u8) ((target + DDRAM_COLS - current) % DDRAM_COLS);
-  const u8 right_steps = (u8) ((current + DDRAM_COLS - target) % DDRAM_COLS);
-  return left_steps <= right_steps ? ShiftPlan{left_steps, true}
-                                   : ShiftPlan{right_steps, false};
+  return lcd1602_shifted_viewport::shortest_shift(current, target);
 }
 
 inline u16 first_visible_column(u16 active_column) {

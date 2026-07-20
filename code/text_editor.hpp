@@ -95,7 +95,7 @@ class DisplaySession {
   public:
     explicit DisplaySession(MK61Display& display) : display(display) {}
     ~DisplaySession(void) {
-      display.endTextEditorViewport();
+      display.endShiftedViewport();
     }
 
   private:
@@ -451,7 +451,7 @@ inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, 
     lcd1602_editor_viewport::Layout layout = {};
     lcd1602_editor_viewport::build(row_spans, cursor_row,
                                    active_line_column, layout);
-    display.renderTextEditorViewport(layout.cells, layout.shift);
+    display.renderShiftedViewport(layout.cells, layout.shift);
     display.setCursor(layout.cursor_col, cursor_row);
     if(display.supportsCursor()) display.cursorOn();
     else display.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
