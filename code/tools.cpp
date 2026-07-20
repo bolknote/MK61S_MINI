@@ -25,6 +25,7 @@
 #endif
 #include "menu.hpp"
 #include "debug.h"
+#include "dfu_splash.hpp"
 
 #include "ledcontrol.h"
 #include <string.h>
@@ -176,11 +177,23 @@ void ensure_program_memory_for_write(usize linear_addr, u8 opcode) {
   if(force_expanded) apply_program_memory_auto(NULL, 0, true, true);
 }
 
-void DFU_enable(void) {
-    void (*SysMemBootJump)(void);
+static void Show_DFU_splash(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  static_assert(dfu_splash::WIDTH == lcd_display::PIXEL_WIDTH,
+                "DFU bitmap width must match UC1609 panel");
+  static_assert(dfu_splash::HEIGHT == lcd_display::PIXEL_HEIGHT,
+                "DFU bitmap height must match UC1609 panel");
+  if(lcd.showFullscreenBitmap(dfu_splash::BITMAP, dfu_splash::BYTE_COUNT)) return;
+#endif
 
   lcd.clear();
   library_mk61::print_localized_at(0, 0, "Прошивка DFU", " DFU flash mode!");
+}
+
+void DFU_enable(void) {
+    void (*SysMemBootJump)(void);
+
+    Show_DFU_splash();
     __enable_irq();
     HAL_RCC_DeInit();
     HAL_DeInit();

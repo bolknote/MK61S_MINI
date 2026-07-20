@@ -66,6 +66,7 @@ void MK61Display::clearFontPreview(void) {}
 void MK61Display::useBuiltinFont(void) {}
 bool MK61Display::externalFontActive(void) const { return false; }
 bool MK61Display::suspendExternalFontForUsb(void) { return true; }
+bool MK61Display::showFullscreenBitmap(const u8*, usize) { return false; }
 
 #if ARDUINO >= 100
 size_t MK61Display::write(uint8_t value) {
@@ -446,6 +447,14 @@ void MK61Display::clearPhysicalScreen(void) {
   for(u8 y = 0; y < lcd_display::PIXEL_HEIGHT; y += RENDER_PAGE_HEIGHT) {
     lcd.LCDBuffer(0, y, lcd_display::PIXEL_WIDTH, RENDER_PAGE_HEIGHT, render_buffer);
   }
+}
+
+bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
+  static constexpr usize FULLSCREEN_BYTES =
+    (usize) lcd_display::PIXEL_WIDTH * lcd_display::PIXEL_HEIGHT / 8;
+  if(!initialized || bitmap == NULL || size != FULLSCREEN_BYTES) return false;
+  return lcd.LCDBitmap(0, 0, lcd_display::PIXEL_WIDTH,
+                       lcd_display::PIXEL_HEIGHT, bitmap) == LCD_Success;
 }
 
 u8 MK61Display::sanitizeRows(u8 rows) {

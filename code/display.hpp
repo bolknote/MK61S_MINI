@@ -154,6 +154,7 @@ class MK61Display : public Print {
     void useBuiltinFont(void);
     bool externalFontActive(void) const;
     bool suspendExternalFontForUsb(void);
+    bool showFullscreenBitmap(const u8* bitmap, usize size);
     u8 cols(void) const { return lcd_display::COLS; }
 #if defined(MK61_DISPLAY_LCD1602)
     u8 rows(void) const { return lcd_display::ROWS; }
