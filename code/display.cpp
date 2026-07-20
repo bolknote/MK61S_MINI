@@ -6,7 +6,18 @@
 
 #if defined(MK61_DISPLAY_LCD1602)
 
-#include "lcd1602_editor_viewport.hpp"
+#include "lcd1602_editor_driver.hpp"
+
+static_assert(lcd1602_editor_driver::COMMAND_RETURN_HOME == LCD_RETURNHOME,
+              "HD44780 Return Home command mismatch");
+static_assert(lcd1602_editor_driver::COMMAND_SET_DDRAM == LCD_SETDDRAMADDR,
+              "HD44780 Set DDRAM command mismatch");
+static_assert(lcd1602_editor_driver::COMMAND_SHIFT_LEFT ==
+              (LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT),
+              "HD44780 display-left command mismatch");
+static_assert(lcd1602_editor_driver::COMMAND_SHIFT_RIGHT ==
+              (LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT),
+              "HD44780 display-right command mismatch");
 
 #if MK61_LCD1602_BUSY_FLAG
 namespace {
@@ -183,8 +194,8 @@ void MK61Display::setCursor(u8 x, u8 y) {
   shadow_cursor_y = y < lcd_display::ROWS ? y : (u8) (lcd_display::ROWS - 1);
   const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
   const u8 physical_x = text_editor_viewport_active
-                      ? (u8) ((text_editor_shift + shadow_cursor_x) %
-                              lcd_display::DDRAM_COLS)
+                      ? lcd1602_editor_driver::physical_address(
+                          text_editor_shift, shadow_cursor_x)
                       : shadow_cursor_x;
   sendCommand((u8) (LCD_SETDDRAMADDR | (row_address + physical_x)));
 }
@@ -224,8 +235,8 @@ void MK61Display::clearCustomChars(void) {}
 bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
   if(x >= lcd_display::COLS || y >= lcd_display::ROWS) return false;
   const u8 physical_x = text_editor_viewport_active
-                      ? (u8) ((text_editor_shift + x) %
-                              lcd_display::DDRAM_COLS) : x;
+                      ? lcd1602_editor_driver::physical_address(
+                          text_editor_shift, x) : x;
   value = ddram_shadow[y][physical_x];
   return true;
 }
@@ -247,61 +258,36 @@ void MK61Display::clearCustomChar(u8 nChar) {
 
 void MK61Display::renderTextEditorViewport(
     const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift) {
-  static constexpr u8 MAX_SHIFT = lcd_display::DDRAM_COLS - 1;
-  if(cells == NULL || shift > MAX_SHIFT) return;
+  if(cells == NULL || shift >= lcd_display::DDRAM_COLS) return;
 
   if((display_control & (LCD_CURSORON | LCD_BLINKON)) != 0) {
     display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
     sendDisplayControl();
   }
 
-  if(!text_editor_viewport_active) {
-    // Return Home обнуляет только аппаратный сдвиг, содержимое DDRAM остаётся.
-    sendCommand(LCD_RETURNHOME, 2000);
-    text_editor_viewport_active = true;
-    text_editor_shift = 0;
-  }
-
-  // Обновляются только отличающиеся непрерывные участки физических 2x40 DDRAM.
-  // Скрытые знакоместа становятся готовым буфером для следующего shift.
-  for(u8 row = 0; row < lcd_display::ROWS; row++) {
-    u8 col = 0;
-    while(col < lcd_display::DDRAM_COLS) {
-      while(col < lcd_display::DDRAM_COLS &&
-            ddram_shadow[row][col] == cells[row][col]) col++;
-      if(col >= lcd_display::DDRAM_COLS) break;
-
-      const u8 run_start = col;
-      while(col < lcd_display::DDRAM_COLS &&
-            ddram_shadow[row][col] != cells[row][col]) col++;
-
-      const u8 row_address = row == 0 ? 0x00u : 0x40u;
-      sendCommand((u8) (LCD_SETDDRAMADDR | (row_address + run_start)));
-      for(u8 physical_x = run_start; physical_x < col; physical_x++) {
-        sendData(cells[row][physical_x]);
-        ddram_shadow[row][physical_x] = cells[row][physical_x];
-      }
-    }
-  }
-
-  const lcd1602_editor_viewport::ShiftPlan plan =
-      lcd1602_editor_viewport::shortest_shift(text_editor_shift, shift);
-  for(u8 step = 0; step < plan.steps; step++) {
-    if(plan.left) {
-      sendCommand((u8) (LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT));
+  const auto emit = [this](lcd1602_editor_driver::BusWrite write) {
+    if(write.data) {
+      sendData(write.value);
     } else {
-      sendCommand((u8) (LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT));
+      const u32 delay_us = write.value ==
+          lcd1602_editor_driver::COMMAND_RETURN_HOME ? 2000 : 0;
+      sendCommand(write.value, delay_us);
     }
-  }
-  text_editor_shift = shift;
+  };
+  (void) lcd1602_editor_driver::render(
+      ddram_shadow, text_editor_viewport_active, text_editor_shift,
+      cells, shift, emit);
 }
 
 void MK61Display::endTextEditorViewport(void) {
   if(!text_editor_viewport_active) return;
   cursorOff();
-  sendCommand(LCD_RETURNHOME, 2000);
-  text_editor_viewport_active = false;
-  text_editor_shift = 0;
+  const auto emit = [this](lcd1602_editor_driver::BusWrite write) {
+    sendCommand(write.value, write.value ==
+                lcd1602_editor_driver::COMMAND_RETURN_HOME ? 2000 : 0);
+  };
+  lcd1602_editor_driver::end(text_editor_viewport_active,
+                             text_editor_shift, emit);
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
 }
@@ -396,8 +382,8 @@ void MK61Display::sendDisplayControl(void) {
 size_t MK61Display::write(uint8_t value) {
   sendData(value);
   const u8 physical_x = text_editor_viewport_active
-                      ? (u8) ((text_editor_shift + shadow_cursor_x) %
-                              lcd_display::DDRAM_COLS)
+                      ? lcd1602_editor_driver::physical_address(
+                          text_editor_shift, shadow_cursor_x)
                       : shadow_cursor_x;
   ddram_shadow[shadow_cursor_y][physical_x] = value;
   shadow_cursor_x++;
@@ -411,8 +397,8 @@ size_t MK61Display::write(uint8_t value) {
 void MK61Display::write(uint8_t value) {
   sendData(value);
   const u8 physical_x = text_editor_viewport_active
-                      ? (u8) ((text_editor_shift + shadow_cursor_x) %
-                              lcd_display::DDRAM_COLS)
+                      ? lcd1602_editor_driver::physical_address(
+                          text_editor_shift, shadow_cursor_x)
                       : shadow_cursor_x;
   ddram_shadow[shadow_cursor_y][physical_x] = value;
   shadow_cursor_x++;

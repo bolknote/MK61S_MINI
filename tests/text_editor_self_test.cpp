@@ -17,6 +17,7 @@ class MK61DisplayUpdate {
 
 #define TEXT_EDITOR_HOST_TEST
 #include "text_editor.hpp"
+#include "lcd1602_editor_driver.hpp"
 #include "lcd1602_editor_viewport.hpp"
 #include "utf8_view.hpp"
 
@@ -339,6 +340,260 @@ void test_lcd1602_editor_viewport_pages_long_lines(void) {
   }
 }
 
+struct Hd44780Model {
+  u8 ddram[lcd1602_editor_viewport::ROWS]
+          [lcd1602_editor_viewport::DDRAM_COLS];
+  u8 shift;
+  u8 address_row;
+  u8 address_column;
+  bool address_valid;
+  u32 commands;
+  u32 data_writes;
+  u32 homes;
+  u32 shifts_left;
+  u32 shifts_right;
+
+  Hd44780Model(void)
+      : ddram{{0}}, shift(0), address_row(0), address_column(0),
+        address_valid(false), commands(0), data_writes(0), homes(0),
+        shifts_left(0), shifts_right(0) {
+    memset(ddram, ' ', sizeof(ddram));
+  }
+
+  void reset_counters(void) {
+    commands = 0;
+    data_writes = 0;
+    homes = 0;
+    shifts_left = 0;
+    shifts_right = 0;
+  }
+
+  void apply(lcd1602_editor_driver::BusWrite write) {
+    if(write.data) {
+      assert(address_valid);
+      assert(address_row < lcd1602_editor_viewport::ROWS);
+      assert(address_column < lcd1602_editor_viewport::DDRAM_COLS);
+      ddram[address_row][address_column] = write.value;
+      data_writes++;
+      if(address_column + 1 < lcd1602_editor_viewport::DDRAM_COLS) {
+        address_column++;
+      } else {
+        // Планировщик обязан начинать следующий физический участок новой
+        // командой адреса, а не полагаться на переход AC между строками.
+        address_valid = false;
+      }
+      return;
+    }
+
+    commands++;
+    if(write.value == lcd1602_editor_driver::COMMAND_RETURN_HOME) {
+      shift = 0;
+      address_row = 0;
+      address_column = 0;
+      address_valid = true;
+      homes++;
+      return;
+    }
+    if(write.value == lcd1602_editor_driver::COMMAND_SHIFT_LEFT) {
+      shift = (u8) ((shift + 1) % lcd1602_editor_viewport::DDRAM_COLS);
+      shifts_left++;
+      return;
+    }
+    if(write.value == lcd1602_editor_driver::COMMAND_SHIFT_RIGHT) {
+      shift = shift == 0 ? (u8) (lcd1602_editor_viewport::DDRAM_COLS - 1)
+                         : (u8) (shift - 1);
+      shifts_right++;
+      return;
+    }
+
+    assert((write.value & lcd1602_editor_driver::COMMAND_SET_DDRAM) != 0);
+    const u8 address = (u8) (write.value & 0x7Fu);
+    if(address < lcd1602_editor_viewport::DDRAM_COLS) {
+      address_row = 0;
+      address_column = address;
+    } else {
+      assert(address >= 0x40u &&
+             address < 0x40u + lcd1602_editor_viewport::DDRAM_COLS);
+      address_row = 1;
+      address_column = (u8) (address - 0x40u);
+    }
+    address_valid = true;
+  }
+};
+
+static void assert_model_matches_layout(
+    const Hd44780Model& model,
+    const lcd1602_editor_viewport::Layout& layout) {
+  assert(model.shift == layout.shift);
+  for(u8 row = 0; row < lcd1602_editor_viewport::ROWS; row++) {
+    for(u8 address = 0;
+        address < lcd1602_editor_viewport::DDRAM_COLS; address++) {
+      assert(model.ddram[row][address] == layout.cells[row][address]);
+    }
+  }
+}
+
+static void test_lcd1602_editor_driver_all_shift_transitions(void) {
+  u8 shadow[lcd1602_editor_viewport::ROWS]
+           [lcd1602_editor_viewport::DDRAM_COLS];
+  u8 desired[lcd1602_editor_viewport::ROWS]
+            [lcd1602_editor_viewport::DDRAM_COLS];
+  memset(shadow, ' ', sizeof(shadow));
+  memset(desired, ' ', sizeof(desired));
+
+  for(u8 current = 0; current < lcd1602_editor_viewport::DDRAM_COLS;
+      current++) {
+    for(u8 target = 0; target < lcd1602_editor_viewport::DDRAM_COLS;
+        target++) {
+      bool active = true;
+      u8 current_shift = current;
+      Hd44780Model model;
+      model.shift = current;
+      const auto emit = [&model](lcd1602_editor_driver::BusWrite write) {
+        model.apply(write);
+      };
+
+      assert(lcd1602_editor_driver::render(
+          shadow, active, current_shift, desired, target, emit));
+      const lcd1602_editor_viewport::ShiftPlan expected =
+          lcd1602_editor_viewport::shortest_shift(current, target);
+      assert(active && current_shift == target && model.shift == target);
+      assert(model.homes == 0 && model.data_writes == 0);
+      assert(model.commands == expected.steps);
+      assert(model.shifts_left == (expected.left ? expected.steps : 0));
+      assert(model.shifts_right == (expected.left ? 0 : expected.steps));
+    }
+  }
+}
+
+void test_lcd1602_editor_driver_command_stream(void) {
+  static_assert(lcd1602_editor_driver::COMMAND_RETURN_HOME == 0x02,
+                "Unexpected Return Home command");
+  static_assert(lcd1602_editor_driver::COMMAND_SHIFT_LEFT == 0x18,
+                "Unexpected display-left command");
+  static_assert(lcd1602_editor_driver::COMMAND_SHIFT_RIGHT == 0x1C,
+                "Unexpected display-right command");
+  assert(lcd1602_editor_driver::set_ddram_address_command(0, 39) == 0xA7);
+  assert(lcd1602_editor_driver::set_ddram_address_command(1, 39) == 0xE7);
+
+  for(u8 shift = 0; shift < lcd1602_editor_viewport::DDRAM_COLS; shift++) {
+    for(u8 visible = 0; visible < lcd1602_editor_viewport::VISIBLE_COLS;
+        visible++) {
+      assert(lcd1602_editor_driver::physical_address(shift, visible) ==
+             (shift + visible) % lcd1602_editor_viewport::DDRAM_COLS);
+    }
+  }
+
+  char first_line[1536];
+  char second_line[1536];
+  for(u16 index = 0; index < 1535; index++) {
+    first_line[index] = (char) ('A' + index % 26);
+    second_line[index] = (char) ('a' + index % 26);
+  }
+  first_line[1535] = 0;
+  second_line[1535] = 0;
+  const lcd1602_editor_viewport::RowSpan rows[] = {
+    {first_line, 1535},
+    {second_line, 1535},
+  };
+
+  u8 shadow[lcd1602_editor_viewport::ROWS]
+           [lcd1602_editor_viewport::DDRAM_COLS];
+  memset(shadow, ' ', sizeof(shadow));
+  bool active = false;
+  u8 current_shift = 37; // при первом входе обязан быть сброшен Return Home
+  Hd44780Model model;
+  model.shift = 23;
+  const auto emit = [&model](lcd1602_editor_driver::BusWrite write) {
+    model.apply(write);
+  };
+
+  lcd1602_editor_viewport::Layout layout = {};
+  for(u16 active_column = 0; active_column <= 1535; active_column++) {
+    lcd1602_editor_viewport::build(rows, 0, active_column, layout);
+    model.reset_counters();
+    assert(lcd1602_editor_driver::render(shadow, active, current_shift,
+                                         layout.cells, layout.shift, emit));
+    assert(active && current_shift == layout.shift);
+    assert_model_matches_layout(model, layout);
+    if(active_column == 0) {
+      assert(model.homes == 1);
+    } else {
+      assert(model.homes == 0);
+    }
+    if(active_column <= lcd1602_editor_viewport::TEXT_COLS - 1) {
+      assert(model.shifts_left == 0 && model.shifts_right == 0);
+    } else {
+      assert(model.shifts_left == 1 && model.shifts_right == 0);
+      assert(model.data_writes <= 4);
+    }
+  }
+
+  // Тот же диапазон в обратную сторону обязан давать одну команду вправо,
+  // включая аппаратный переход адреса 0 -> 39.
+  for(i32 active_column = 1535; active_column >= 0; active_column--) {
+    lcd1602_editor_viewport::build(rows, 0, (u16) active_column, layout);
+    model.reset_counters();
+    assert(lcd1602_editor_driver::render(shadow, active, current_shift,
+                                         layout.cells, layout.shift, emit));
+    assert_model_matches_layout(model, layout);
+    if(active_column < 1535 &&
+       active_column < (i32) lcd1602_editor_viewport::TEXT_COLS - 1) {
+      assert(model.shifts_left == 0 && model.shifts_right == 0);
+    } else if(active_column < 1535) {
+      assert(model.shifts_left == 0 && model.shifts_right == 1);
+      assert(model.data_writes <= 4);
+    }
+  }
+
+  // Смена активной строки при том же горизонтальном окне меняет только два
+  // маркера и не должна двигать дисплей.
+  lcd1602_editor_viewport::build(rows, 0, 137, layout);
+  assert(lcd1602_editor_driver::render(shadow, active, current_shift,
+                                       layout.cells, layout.shift, emit));
+  lcd1602_editor_viewport::build(rows, 1, 137, layout);
+  model.reset_counters();
+  assert(lcd1602_editor_driver::render(shadow, active, current_shift,
+                                       layout.cells, layout.shift, emit));
+  assert(model.data_writes == 2);
+  assert(model.shifts_left == 0 && model.shifts_right == 0);
+  assert_model_matches_layout(model, layout);
+
+  // Изменение одного видимого символа не должно перерисовывать всю DDRAM.
+  second_line[130] = '#';
+  lcd1602_editor_viewport::build(rows, 1, 137, layout);
+  model.reset_counters();
+  assert(lcd1602_editor_driver::render(shadow, active, current_shift,
+                                       layout.cells, layout.shift, emit));
+  assert(model.data_writes == 1 && model.commands == 1);
+  assert_model_matches_layout(model, layout);
+
+  model.reset_counters();
+  lcd1602_editor_driver::end(active, current_shift, emit);
+  assert(!active && current_shift == 0 && model.shift == 0);
+  assert(model.homes == 1 && model.commands == 1 && model.data_writes == 0);
+  lcd1602_editor_driver::end(active, current_shift, emit);
+  assert(model.commands == 1); // повторный выход ничего не отправляет
+
+  // Повторный вход использует сохранённое зеркало DDRAM: Home + кратчайший
+  // shift без повторной передачи 80 байт.
+  model.reset_counters();
+  assert(lcd1602_editor_driver::render(shadow, active, current_shift,
+                                       layout.cells, layout.shift, emit));
+  assert(model.homes == 1 && model.data_writes == 0);
+  assert(model.shifts_left == layout.shift && model.shifts_right == 0);
+  assert_model_matches_layout(model, layout);
+
+  model.reset_counters();
+  const bool was_active = active;
+  const u8 old_shift = current_shift;
+  assert(!lcd1602_editor_driver::render(
+      shadow, active, current_shift, layout.cells,
+      lcd1602_editor_viewport::DDRAM_COLS, emit));
+  assert(active == was_active && current_shift == old_shift);
+  assert(model.commands == 0 && model.data_writes == 0);
+}
+
 } // namespace
 
 int main(void) {
@@ -354,6 +609,8 @@ int main(void) {
   test_utf8_validation();
   test_lcd1602_editor_viewport_uses_hidden_ddram();
   test_lcd1602_editor_viewport_pages_long_lines();
+  test_lcd1602_editor_driver_all_shift_transitions();
+  test_lcd1602_editor_driver_command_stream();
   printf("text_editor_self_test: ok\n");
   return 0;
 }
