@@ -46,6 +46,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-Terminal.pdf
 **Часы RTC, настройка и синхронизация с компьютером:**
 https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 
+**Поддерживаемые платы, дисплеи и аппаратные профили:**
+[Markdown](doc/src/MK61s-mini-Hardware.md) / [PDF](doc/MK61s-mini-Hardware.pdf)
+
 **Технические форматы:**<br>
 [Формат внутреннего хранилища и USB FAT12](doc/src/MK61s-mini-Storage.md)
 
@@ -115,15 +118,19 @@ MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 
 Референсная сборка прошивки использует STM32 Arduino Core `2.12.0`,
 `LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`. Драйвер SPI NOR входит в проект
-и не зависит от таблицы моделей `SPIMemory`. Точная матрица плат и дисплеев
-зафиксирована в
-[release workflow](.github/workflows/firmware-release.yml).
+и не зависит от таблицы моделей `SPIMemory`. Точная матрица плат, дисплеев,
+распиновки и аппаратных особенностей приведена в
+[описании аппаратной платформы](doc/src/MK61s-mini-Hardware.md) и зафиксирована
+в [release workflow](.github/workflows/firmware-release.yml).
 
 LCD1602-сборки без флага ревизии предназначены для платы mini V3. Для
 `MK61s-mini_v2` обязательно добавляется `-DREVISION_V2`: у V2 отличаются линии
-данных LCD, вывод буззера и полярность светодиода PC13. Прошивка V3 на V2 может
+данных LCD и вывод буззера. Прошивка V3 на V2 может
 выглядеть как зависшая: экран не инициализируется, а светодиод остаётся включён.
 Release workflow отдельно выпускает V2-варианты A00 и A02.
+
+Светодиод PC13 гасится уровнем `LOW` на mini V2/V3 и уровнем `HIGH` на
+Classic/40th. Полярность задаётся профилем платы и проверяется host-тестами.
 
 Профиль клавиатуры должен соответствовать плате. Для Classic-V2 используются
 флаги `-DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC`, а для юбилейной 40TH —

@@ -7,6 +7,7 @@
 - `MK61s-mini-Programming.pdf` - инструкция по прошивке микроконтроллера.
 - `MK61s-mini-Terminal.pdf` - инструкция по работе с терминалом.
 - `MK61s-mini-RTC.pdf` - устройство RTC, настройка и синхронизация с компьютером.
+- `MK61s-mini-Hardware.pdf` - поддерживаемые платы, дисплеи, распиновка и аппаратные профили.
 - `MK61s-mini-M61.pdf` - инструкция по файлам M61.
 - `MK61s-mini-Random.pdf` - устройство генератора случайных чисел MK61/MK61s.
 - `MK61s-mini-Command-Hooks.pdf` - API перехвата внешних команд МК-61 по opcode.
@@ -28,4 +29,5 @@ python3 doc/build_md_pdf.py
 Исходник руководства по терминалу находится в `src/MK61s-mini-Terminal.md`, а
 извлеченные из первоначального Word-документа иллюстрации — в
 `src/assets/terminal/`. Исходник отдельного руководства по часам находится в
-`src/MK61s-mini-RTC.md`.
+`src/MK61s-mini-RTC.md`, аппаратная матрица - в
+`src/MK61s-mini-Hardware.md`.
