@@ -126,7 +126,7 @@ static bool decodeRows5x8(const u8* rows, Raster& out) {
   return true;
 }
 
-} // namespace
+} // анонимное пространство имён
 
 const u8* rows5x8(u16 codepoint) {
   if(const u8* rows = specialRows5x8(codepoint)) return rows;
@@ -188,4 +188,4 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
 #endif
 }
 
-} // namespace builtin_font
+} // пространство имён builtin_font

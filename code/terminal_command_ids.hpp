@@ -15,9 +15,9 @@ enum : u8 {
   CMD_FS_RMDIR, CMD_FS_STAT, CMD_DATE
 };
 
-// M61 files are data, not a privileged terminal session. Keep this list
-// deliberately explicit so adding a terminal command does not grant scripts
-// access by accident.
+// Файлы M61 — это данные, а не привилегированный сеанс терминала. Список
+// намеренно задан явно, чтобы добавление команды терминала случайно не дало
+// сценариям доступ к ней.
 constexpr bool terminal_command_allowed_in_script(u8 id) {
   switch(id) {
     case CMD_VERSION:

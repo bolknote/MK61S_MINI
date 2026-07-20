@@ -69,7 +69,7 @@ static void sample_adc(void) {
   have_first_pair_bit = false;
   if(first_pair_bit == bit) return;
 
-  // Von Neumann debiasing: 01 -> 0, 10 -> 1.
+  // Устранение смещения по фон Нейману: 01 -> 0, 10 -> 1.
   const u8 extracted = first_pair_bit == 1U ? 1U : 0U;
   if(extracted_bit_count < TARGET_ENTROPY_BITS) extracted_bit_count++;
   absorb(0x564E000000000000ULL ^ ((u64) extracted_bit_count << 8) ^ extracted);
@@ -80,7 +80,7 @@ static u64 calculator_seed_material(void) {
   return (high << 32) | next_u32(Domain::CALCULATOR);
 }
 
-} // namespace
+} // анонимное пространство имён
 
 void begin(void) {
   if(collection_started) return;
@@ -103,7 +103,7 @@ void begin(void) {
 
   analogReadResolution(12);
   adc_resolution_owned = true;
-  (void) analogRead(AVBAT); // discard the first internal-mux settling sample
+  (void) analogRead(AVBAT); // отбрасываем первый отсчёт во время установления внутреннего мультиплексора
 }
 
 void poll_startup(void) {
@@ -170,4 +170,4 @@ u8 startup_entropy_bits(void) {
   return extracted_bit_count;
 }
 
-} // namespace entropy_pool
+} // пространство имён entropy_pool

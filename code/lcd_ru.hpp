@@ -81,7 +81,7 @@ inline bool a02_rom_char(u16 codepoint, u8& out) {
     case 0x0429: out = lcd_charset::CYR_SHCHA; return true; // Щ
     case 0x042A: out = lcd_charset::CYR_HARD; return true; // Ъ
     case 0x042B: out = lcd_charset::CYR_YERU; return true; // Ы
-    case 0x042C: out = 'b'; return true; // Ь: closest built-in fallback
+    case 0x042C: out = 'b'; return true; // Ь: ближайшая встроенная замена
     case 0x042D: out = lcd_charset::CYR_E; return true; // Э
     case 0x042E: out = lcd_charset::CYR_YU; return true; // Ю
     case 0x042F: out = lcd_charset::CYR_YA; return true; // Я
@@ -105,7 +105,7 @@ inline bool a00_rom_char(u16 codepoint, u8& out) {
     case 0x0410: out = 'A'; return true; // А
     case 0x0412: out = 'B'; return true; // В
     case 0x0415: out = 'E'; return true; // Е
-    case 0x0401: out = 'E'; return true; // Ё -> Е for Japanese A00
+    case 0x0401: out = 'E'; return true; // Ё -> Е для японской A00
     case 0x0417: out = '3'; return true; // З
     case 0x041A: out = 'K'; return true; // К
     case 0x041C: out = 'M'; return true; // М
@@ -137,11 +137,11 @@ inline bool rom_char(u16 codepoint, u8& out) {
 inline bool fallback_char(u16 codepoint, u8& out) {
   codepoint = uppercase(codepoint);
   if(codepoint == 0x0427) {
-    out = '4'; // Ч: acceptable only when all 8 custom glyphs are already used.
+    out = '4'; // Ч: допустимо, только когда уже используются все 8 пользовательских символов.
     return true;
   }
   if(codepoint == 0x0423) {
-    out = 'Y'; // У: only when the current screen needs more than 8 custom glyphs.
+    out = 'Y'; // У: только когда текущему экрану нужно более 8 пользовательских символов.
     return true;
   }
   return false;
@@ -284,6 +284,6 @@ inline void print_menu_line(u8 y, char mark, const char* text) {
   write_text(map, text, LCD_WIDTH - 1);
 }
 
-} // namespace lcd_ru
+} // пространство имён lcd_ru
 
 #endif

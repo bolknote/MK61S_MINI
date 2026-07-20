@@ -1,18 +1,20 @@
 #ifndef MK_MATH_HPP
 #define MK_MATH_HPP
 
-// Math facade for the FOCAL/TinyBASIC interpreters.
+// Единый математический интерфейс для интерпретаторов FOCAL/TinyBASIC.
 //
-// Two selectable backends provide the transcendental functions:
-//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM  -> thin wrappers over <math.h>
-//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE  -> evaluated on the MK-61 core
+// Трансцендентные функции предоставляют две выбираемые реализации:
+//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM  -> тонкие обёртки над <math.h>
+//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE  -> вычисление на ядре МК-61
 //
-// The CORE backend reuses the calculator engine that is already linked into the
-// firmware, so dropping <math.h> from this facade removes libm from the image.
+// Реализация CORE повторно использует уже скомпонованный с прошивкой движок
+// калькулятора, поэтому удаление <math.h> из этого интерфейса исключает libm
+// из образа.
 //
-// The "pure helpers" below (fabs/floor/ceil/frac/round/pow10_int/log10_floor and
-// the number parser) never call libm: the number formatters rely on them so the
-// image links without libm regardless of the chosen backend.
+// Приведённые ниже «чистые вспомогательные функции»
+// (fabs/floor/ceil/frac/round/pow10_int/log10_floor и разбор числа) никогда
+// не вызывают libm: на них опираются функции форматирования чисел, поэтому
+// образ компонуется без libm независимо от выбранной реализации.
 
 #include <stdint.h>
 #include <float.h>
@@ -29,19 +31,19 @@
 
 namespace mk_math {
 
-// ---- libm-free predicates -------------------------------------------------
+// ---- Предикаты без libm ----------------------------------------------------
 
 inline bool is_nan(double x) { return x != x; }
 inline bool is_inf(double x) { return x > DBL_MAX || x < -DBL_MAX; }
 inline bool is_finite(double x) { return !is_nan(x) && !is_inf(x); }
 
-// ---- libm-free rounding helpers -------------------------------------------
+// ---- Вспомогательные функции округления без libm --------------------------
 
 inline double fabs(double x) { return x < 0.0 ? -x : x; }
 
 inline double trunc(double x) {
   if(!is_finite(x)) return x;
-  // Doubles with magnitude >= 2^53 are already integral.
+  // Значения double с модулем >= 2^53 уже являются целыми.
   if(x >= 9007199254740992.0 || x <= -9007199254740992.0) return x;
   return (double) (long long) x;
 }
@@ -56,15 +58,16 @@ inline double ceil(double x) {
   return (t < x) ? t + 1.0 : t;
 }
 
-// Fractional part in [0, 1), matching the interpreters' historical `a-floor(a)`.
+// Дробная часть в диапазоне [0, 1), соответствующая историческому поведению
+// интерпретаторов `a-floor(a)`.
 inline double frac(double x) { return x - floor(x); }
 
-// Symmetric round-half-away-from-zero (FOCAL ROUND semantics).
+// Симметричное округление половины от нуля (семантика ROUND в FOCAL).
 inline double round_half(double x) {
   return (x >= 0.0) ? floor(x + 0.5) : ceil(x - 0.5);
 }
 
-// ---- libm-free base-10 helpers used by the number formatters ---------------
+// ---- Функции для основания 10 без libm, используемые форматированием чисел -
 
 inline double pow10_int(int e) {
   const bool negative = e < 0;
@@ -82,7 +85,7 @@ inline double pow10_int(int e) {
   return result;
 }
 
-// floor(log10(x)) for x > 0, exact over the calculator's exponent range.
+// floor(log10(x)) для x > 0, точно во всём диапазоне порядков калькулятора.
 inline int log10_floor(double x) {
   if(!(x > 0.0) || !is_finite(x)) return 0;
   int e = 0;
@@ -94,7 +97,7 @@ inline int log10_floor(double x) {
   return e;
 }
 
-// ---- bounded libm-free decimal parser --------------------------------------
+// ---- Ограниченный разбор десятичного числа без libm ------------------------
 
 inline double strtod(const char* s, const char** endptr) {
   const char* p = s;
@@ -157,7 +160,7 @@ inline double strtod(const char* s, const char** endptr) {
       }
       exp10 = eneg ? -e : e;
     } else {
-      p = save; // lone 'e' is not part of the number
+      p = save; // Одиночная 'e' не является частью числа
     }
   }
 
@@ -183,11 +186,11 @@ inline double strtod(const char* s, const char** endptr) {
 
 inline double atof(const char* s) { return strtod(s, nullptr); }
 
-// ---- transcendental backend ------------------------------------------------
+// ---- Реализация трансцендентных функций ------------------------------------
 
 #if MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
 
-// Implemented in mk_math_core.cpp, driving the MK-61 core (8-digit precision).
+// Реализовано в mk_math_core.cpp через ядро МК-61 (точность 8 цифр).
 double sin(double x);
 double cos(double x);
 double tan(double x);
@@ -202,7 +205,7 @@ double pow(double base, double exponent);
 
 #else // MK61_MATH_BACKEND_LIBM
 
-} // namespace mk_math
+} // пространство имён mk_math
 #include <math.h>
 namespace mk_math {
 
@@ -220,6 +223,6 @@ inline double pow(double base, double exponent) { return ::pow(base, exponent); 
 
 #endif
 
-} // namespace mk_math
+} // пространство имён mk_math
 
 #endif

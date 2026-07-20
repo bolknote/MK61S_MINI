@@ -446,7 +446,7 @@ static void tb_append_uint(char*& out, char* end, unsigned long long value) {
 static void tb_format_fixed(double value, int decimals, char* out, usize size) {
   if(size == 0) return;
   if(decimals < 0) decimals = 0;
-  if(decimals > 13) decimals = 13; // 10 significant digits at exp10 = -4 need 13 decimals
+  if(decimals > 13) decimals = 13; // Для 10 значащих цифр при exp10 = -4 нужны 13 знаков после запятой
 
   const bool negative = value < 0.0;
   double abs_value = negative ? -value : value;
@@ -477,10 +477,10 @@ static void tb_format_fixed(double value, int decimals, char* out, usize size) {
   tb_copy_text(out, size, temp);
 }
 
-// TinyBASIC prints numbers with 10 significant digits, like the "%.10g" it
-// used before. The firmware links newlib-nano without float printf support
-// (no "-u _printf_float"), where snprintf silently drops %g values, so the
-// number is formatted by hand the same way FOCAL does.
+// TinyBASIC выводит числа с 10 значащими цифрами, как применявшийся ранее
+// формат "%.10g". Прошивка компонуется с newlib-nano без поддержки чисел
+// с плавающей точкой в printf (без "-u _printf_float"), из-за чего snprintf
+// молча пропускает значения %g. Поэтому число форматируется вручную, как в FOCAL.
 static void tb_format_number(double value, char* out, usize size) {
   if(size == 0) return;
   if(mk_math::is_nan(value)) {
@@ -498,7 +498,7 @@ static void tb_format_number(double value, char* out, usize size) {
 
   const double abs_value = mk_math::fabs(value);
   int exp10 = mk_math::log10_floor(abs_value);
-  if(exp10 >= 10 || exp10 < -4) { // %g switches to scientific outside [-4, precision)
+  if(exp10 >= 10 || exp10 < -4) { // Вне диапазона [-4, точность) формат %g переходит к экспоненциальной записи
     char mantissa[24];
     double scaled = abs_value;
     if(exp10 >= 0) scaled /= mk_math::pow10_int(exp10);
@@ -506,7 +506,7 @@ static void tb_format_number(double value, char* out, usize size) {
       for(int i = 0; i < -exp10; i++) scaled *= 10.0;
     }
     tb_format_fixed(scaled, 9, mantissa, sizeof(mantissa));
-    if(mantissa[0] == '1' && mantissa[1] == '0') { // rounding overflowed to 10.0
+    if(mantissa[0] == '1' && mantissa[1] == '0') { // После округления мантисса переполнилась до 10.0
       exp10++;
       tb_format_fixed(1.0, 9, mantissa, sizeof(mantissa));
     }
@@ -2277,8 +2277,9 @@ static bool store_edited_program(int slot, char* source, const char* store_name,
   else tb_program_default_name(slot, final_name, sizeof(final_name));
   const u16 source_len = (u16) strlen(source);
 #ifndef TINYBASIC_HOST_TEST
-  // Persist first. The editor's RAM state is not committed until flash accepts
-  // the full source, so a failed write leaves the previous program intact.
+  // Сначала сохраняем во флеш-память. Состояние редактора в ОЗУ фиксируется
+  // только после успешной записи всего исходного текста, поэтому при ошибке
+  // предыдущая программа остаётся целой.
   u16 saved_id = store_id;
   if(!program_store::write_file(parent_id, store_id,
                                 program_store::ProgramType::TINYBASIC,

@@ -67,7 +67,7 @@ class key_mnenonic {
           case  KEY_F:
               mnemo_pos = next_mnemo_pos(mnemo_code_F[keycode]);
 
-              // call back for change mode
+              // Обратный вызов для смены режима
               if(keycode == KEY_EPOWER) 
                 entry_programm_mode();
               else if (keycode == KEY_NEG)
@@ -80,7 +80,7 @@ class key_mnenonic {
           case  KEY_Px:
           case  KEY_xP:
               if(mnemo_pos < sizeof(mnemo_buffer) - 1) mnemo_buffer[mnemo_pos] = mnemo_code_register[keycode];
-              mnemo_pos = 0; // stop build
+              mnemo_pos = 0; // Завершить построение
             break;
           // ПП, БП, С/П, В/О, ШГ->, ШГ<- (#NN)
           case  KEY_PP:
@@ -91,7 +91,7 @@ class key_mnenonic {
           case  KEY_BKW:
               if(mnemo_pos < sizeof(mnemo_buffer) - 1) mnemo_buffer[mnemo_pos] = mnemo_code_register[keycode];
               if(mnemo_pos > 2) { 
-                mnemo_pos = 0; // stop build
+                mnemo_pos = 0; // Завершить построение
               } else {
                 mnemo_pos++;
                 return;
@@ -119,7 +119,7 @@ class key_mnenonic {
 
     void  disable(void) {
       MK61DisplayUpdate update(lcd);
-      lcd.setCursor(X, Y); lcd.print("      "); // blank
+      lcd.setCursor(X, Y); lcd.print("      "); // Очистить поле
       on = false;
     }
 

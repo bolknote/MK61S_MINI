@@ -320,8 +320,8 @@ bool MK61Display::setFontPreview(const u8* data, u16 size) {
   if(data == NULL || size == 0 || size > fmk::MAX_FILE_SIZE) return false;
   fmk::Face candidate;
   if(!candidate.open(data, size)) return false;
-  // The explorer holds its shared-scratch lease until clearFontPreview().
-  // Keep a view of those bytes instead of paying for a second 1536-byte copy.
+  // Проводник удерживает аренду shared-scratch до clearFontPreview().
+  // Сохраняем представление этих байтов, чтобы не делать вторую копию на 1536 байт.
   if(!preview_font.open(data, size)) return false;
   if(!preview_profile_active) {
     preview_saved_profile = active_profile;

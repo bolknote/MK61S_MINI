@@ -33,6 +33,6 @@ inline void composeRow(const char* text, const u8* logo, u8 frame, u8 out[COLS])
 
 Result show(MK61Display& display, const char* model, const char* version);
 
-} // namespace startup_splash
+} // пространство имён startup_splash
 
 #endif

@@ -13,9 +13,10 @@ using SpiNorFlash = SPIFlash;
 #include <Arduino.h>
 #include <SPI.h>
 
-// Small SFDP-driven SPI NOR driver used by C5. It deliberately avoids trusting
-// a part-number table and exposes raw aliasing access only for the one-time
-// destructive capacity probe on an unformatted chip.
+// Компактный драйвер SPI NOR на основе SFDP, используемый C5. Он намеренно
+// не доверяет таблице моделей и открывает низкоуровневый доступ с возможными
+// адресами-псевдонимами только для однократной разрушающей проверки ёмкости
+// неформатированной микросхемы.
 class SpiNorFlash {
   public:
     static constexpr u32 MIN_CAPACITY = 128U * 1024U;

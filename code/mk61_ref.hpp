@@ -243,6 +243,6 @@ inline bool write(const Ref& ref, double value) {
 #endif
 }
 
-} // namespace mk61_ref
+} // пространство имён mk61_ref
 
 #endif

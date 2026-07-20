@@ -71,8 +71,9 @@ class DebouncedRow {
       for(usize column = 0; column < COLUMN_COUNT; column++) changed_at_[column] = now;
     }
 
-    // Returns at most one stabilized column bit. Remaining simultaneous
-    // transitions are returned by subsequent calls so no event is lost.
+  // Возвращает не более одного стабилизированного бита столбца. Остальные
+  // одновременные переходы возвращаются последующими вызовами, поэтому ни одно
+  // событие не теряется.
     u8 update(u8 sample, t_time_ms now) {
       for(usize column = 0; column < COLUMN_COUNT; column++) {
         const u8 bit = (u8) (1u << column);
@@ -119,6 +120,6 @@ inline isize first_set_bit(u8 value) {
   return -1;
 }
 
-} // namespace keyboard_core
+} // пространство имён keyboard_core
 
 #endif

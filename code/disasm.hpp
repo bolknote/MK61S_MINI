@@ -29,7 +29,7 @@ class class_disassm_mk61 {
     static constexpr u8 X = 0;
     static constexpr u8 Y = 0;
 
-    bool  lcd_enable;        // up line lCD disassembler of MK61 enable=1/disable=0
+    bool  lcd_enable;        // Дизассемблер МК-61 в верхней строке ЖКИ: 1 — включён, 0 — выключен
     u8    cache_IP_mk61;
 
     const u32 mk61_disassm_50_60[15] = {

@@ -486,8 +486,8 @@ inline bool clear_current_line(char* source, u16& len, u16& cursor, u16 capacity
   const u16 end = line_end_for_start(source, start, len);
   if(start < end) return replace_range(source, len, cursor, capacity, start, end, "");
 
-  // An already empty line is removed together with its following separator.
-  // For the empty line at EOF, remove the preceding separator instead.
+  // Уже пустая строка удаляется вместе со следующим за ней разделителем.
+  // Для пустой строки в конце файла вместо него удаляется предыдущий разделитель.
   if(end < len) {
     return replace_range(source, len, cursor, capacity, start, line_separator_end(source, end, len), "");
   }
@@ -642,6 +642,6 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   return handle_key(editor, keys, hooks, default_options(), key_code, now);
 }
 
-} // namespace text_editor
+} // пространство имён text_editor
 
 #endif

@@ -119,7 +119,7 @@ bool usb_start_terminal_mode(void) {
   return clean_exit;
 }
 
-/* ===================================    Extended ISA variables    ============================================ */
+/* =============================    Переменные расширенного набора команд    ================================== */
 struct {
   u8          code;
   t_time_ms   time;
@@ -209,7 +209,7 @@ void inline lcd_stack_output(void) {
 }
 
 void setup() {
-  // При входе с зажатой кнопко ESC вызывается DFU-loader
+  // При входе с зажатой кнопкой ESC вызывается DFU-загрузчик
   pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
   pinMode(PIN_KBD_ROW0, OUTPUT);
   digitalWrite(PIN_KBD_ROW0, HIGH);
@@ -224,10 +224,10 @@ void setup() {
   led::init();
   sound_driver_init(PIN_BUZZER);
 
-  // Bring CDC up before external-flash discovery.  DEBUG_SPIFLASH used to
-  // print only after program_store::init(), so a slow/failing capacity probe
-  // was indistinguishable from a dead board and none of its diagnostics ever
-  // reached the host.
+  // Запускаем CDC до обнаружения внешней флеш-памяти. Раньше DEBUG_SPIFLASH
+  // начинал вывод только после program_store::init(), поэтому медленная или
+  // неудачная проверка ёмкости выглядела как зависшая плата, а её диагностика
+  // так и не доходила до хоста.
   if(!dfu_requested) usb_start_terminal_mode();
 
   #ifdef SPI_FLASH
@@ -248,9 +248,9 @@ void setup() {
     digitalWrite(PIN_LCD_RW, LOW);
   #endif
   #if defined(MK61_DISPLAY_LCD1602) && defined(REVISION_V2)
-    // PC15 is both LCD DB7 and OSC32_OUT on mini V2. RTC initialization has
-    // disabled the retained LSE above; explicitly restore the GPIO direction
-    // here as a second line of defence before LiquidCrystal starts signalling.
+    // На mini V2 вывод PC15 одновременно служит DB7 ЖКИ и OSC32_OUT.
+    // Инициализация RTC выше отключила сохранённый LSE; здесь явно возвращаем
+    // направление GPIO как дополнительную защиту до начала обмена LiquidCrystal.
     pinMode(PIN_LCD_DB7, OUTPUT);
     digitalWrite(PIN_LCD_DB7, LOW);
     dbgln(SPIROM, "LCD init: PC15 restored as GPIO output");
@@ -318,8 +318,9 @@ void setup() {
   sound_poll();
   idle_signal_reset();
 
-  // Boot-time storage initialization may use the disk activity indicator after
-  // the splash.  End that ownership here, once every startup subsystem is ready.
+  // При загрузке инициализация хранилища может использовать индикатор дисковой
+  // активности после заставки. Освобождаем индикатор здесь, когда готовы все
+  // подсистемы запуска.
   led::blink_stop();
 
   dbgln(MINI, "ON");
@@ -568,7 +569,7 @@ void   mk61_baseloop_hook(i32 key) {
     default:
       if(core_61::is_CALC()) { // Режим автоматической работы CALC без задержки!
         const u32 now = millis();
-        monitor_switch_angle_unit(now); // слежение за положением b сохранением в flash переключателя градусной меры (только в АВТ режиме)
+        monitor_switch_angle_unit(now); // Слежение за положением и сохранение во флеш-памяти переключателя градусной меры (только в режиме АВТ)
 
         if(ext_command.code != 0) { // Запуск расширенной программы МК-61s, после выполненого С/П
           const u8 command_code = ext_command.code;
@@ -587,10 +588,10 @@ void   mk61_baseloop_hook(i32 key) {
             case  ext_run_stop::WAIT_1:
             case  ext_run_stop::WAIT_2:
               break;
-            case  ext_run_stop::WR_R10: // write X to R10
+            case  ext_run_stop::WR_R10: // Записать X в R10
                 core_61::get_stack_register(stack::X, ext61_reg[0]);
               break;
-            case  ext_run_stop::RD_R10: // read R10 to X
+            case  ext_run_stop::RD_R10: // Прочитать R10 в X
                 core_61::set_stack_register(stack::X, &ext61_reg[0]);
               break;
             default:
@@ -676,7 +677,7 @@ void idle_main_process(void) {
 
 void event_hold_key(i32 holded_key, i32 hold_quant) {
   switch(holded_key) {
-      case KEY_USER_PRESS: // Удержание USER KEY, вывод стека XYZT на экран
+      case KEY_USER_PRESS: // Удержание клавиши USER, вывод стека XYZT на экран
           #if MK61_USER_EXPLORER_SHORTCUT
           user_short_press_pending = false;
           #endif

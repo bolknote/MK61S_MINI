@@ -26,7 +26,7 @@ static bool power_of_two(u32 value) {
   return value != 0 && (value & (value - 1)) == 0;
 }
 
-} // namespace
+} // анонимное пространство имён
 
 SpiNorFlash::SpiNorFlash(u8 chip_select, SPIClass* interface)
     : chip_select_(chip_select), spi_(interface),
@@ -101,8 +101,9 @@ bool SpiNorFlash::setAddressWidth(bool four_byte) {
     if(!sendAddressModeCommand(four_byte)) return false;
   } else if(!four_byte &&
             address_mode_method_ != spi_nor_sfdp::UNSUPPORTED) {
-    // Dedicated 4-byte opcodes are stateless. Still leave a chip inherited
-    // from older firmware in ordinary 3-byte mode before using legacy opcodes.
+    // Специализированные 4-байтовые коды операций не имеют состояния. Однако
+    // перед использованием старых кодов переводим микросхему, оставшуюся после
+    // прежней прошивки, в обычный 3-байтовый режим.
     if(!sendAddressModeCommand(false)) return false;
   }
   four_byte_address_ = four_byte;
@@ -216,7 +217,8 @@ bool SpiNorFlash::begin(u32 fallback_capacity) {
   select();
   transfer(CMD_RELEASE_POWER_DOWN);
   deselect();
-  // Covers the longer tRES1 values found in low-power serial NOR families.
+  // Учитывает более длительные значения tRES1 у семейств малопотребляющих
+  // последовательных NOR.
   delayMicroseconds(50);
   if(!readJedec()) return false;
 
@@ -238,25 +240,28 @@ bool SpiNorFlash::begin(u32 fallback_capacity) {
   } else {
     probe_upper_ = MAX_CAPACITY;
   }
-  // Force a known three-byte baseline after SFDP has told us whether EX4B
-  // needs WREN. RDSFDP itself always uses three address bytes.
+  // После того как SFDP сообщил, нужен ли WREN для EX4B, принудительно задаём
+  // известное исходное 3-байтовое состояние. Сама RDSFDP всегда использует
+  // три байта адреса.
   four_byte_address_ = true;
   if(address_mode_method_ == spi_nor_sfdp::UNSUPPORTED) {
-    // A device with only dedicated 4-byte opcodes has no state to exit. For an
-    // unknown strategy, stay conservatively below the 3-byte boundary.
+    // Устройство только со специализированными 4-байтовыми кодами не имеет
+    // режима, из которого нужно выходить. При неизвестной стратегии из
+    // предосторожности остаёмся ниже границы 3-байтовой адресации.
     four_byte_address_ = false;
   } else if(!setAddressWidth(false)) {
     return false;
   }
-  // Locator reads need only sector zero. The physical probe or a valid C5
-  // locator will select the authoritative capacity afterwards.
+  // Для чтения указателя нужен только нулевой сектор. Затем достоверную ёмкость
+  // выберет физическая проверка или действительный указатель C5.
   capacity_ = MIN_CAPACITY;
   return rawPrepare(MIN_CAPACITY);
 }
 
 bool SpiNorFlash::setCapacity(u32 capacity) {
-  // JEDEC/SFDP may be counterfeit or simply mangled. The destructive probe,
-  // not the reported density, is authoritative for an unformatted device.
+  // JEDEC/SFDP могут быть поддельными или просто повреждёнными. Для
+  // неформатированного устройства достоверна разрушающая проверка, а не
+  // заявленная плотность.
   if(!validCapacity(capacity) || !rawPrepare(capacity)) return false;
   capacity_ = capacity;
   return true;
@@ -273,10 +278,10 @@ bool SpiNorFlash::rawRead(u32 address, u8* output, usize len) {
   select();
   transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);
   sendAddress(address);
-  // SPIClass::transfer(byte) enters the STM32 HAL once per byte.  A virtual
-  // FAT sector would therefore cross that relatively expensive boundary 512
-  // times.  The buffer overload performs the same clocking in one HAL call
-  // and supplies the standard 0xFF dummy transmit bytes when tx_buf is NULL.
+  // SPIClass::transfer(byte) входит в HAL STM32 для каждого байта. Поэтому
+  // виртуальный сектор FAT пересекал бы эту сравнительно дорогую границу 512
+  // раз. Перегрузка с буфером выполняет тот же обмен за один вызов HAL и
+  // подставляет стандартные фиктивные байты передачи 0xFF, если tx_buf равен NULL.
   if(len != 0) spi_->transfer((const void*) NULL, output, len);
   deselect();
   return true;
@@ -307,9 +312,9 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
     transfer(four_byte_address_ && four_byte_opcodes_
         ? CMD_PAGE_PROGRAM_4B : CMD_PAGE_PROGRAM);
     sendAddress(address);
-    // Program one complete NOR page fragment per HAL transaction.  Besides
-    // being much faster than byte-at-a-time transfer, this preserves the page
-    // boundary required by every SPI NOR page-program command.
+    // За одну транзакцию HAL программируем один полный фрагмент страницы NOR.
+    // Это не только намного быстрее побайтовой передачи, но и сохраняет границу
+    // страницы, обязательную для каждой команды программирования страницы SPI NOR.
     spi_->transfer((const void*) data, (void*) NULL, count);
     deselect();
     if(!waitReady(5000)) return false;
@@ -323,9 +328,9 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
 bool SpiNorFlash::verifyBytes(u32 address, const u8* expected, usize len) {
   if(expected == NULL || !waitReady(5000)) return false;
 
-  // Keep chip select asserted for the entire comparison.  A sector-sized
-  // stack buffer verifies the common 512-byte write with one HAL transfer;
-  // larger writes remain bounded and are compared sector by sector.
+  // Удерживаем выбор микросхемы активным на протяжении всего сравнения. Стековый
+  // буфер размером с сектор проверяет обычную 512-байтовую запись одной передачей
+  // HAL; более крупные записи остаются ограниченными и сравниваются посекторно.
   u8 recovered[512];
   select();
   transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);

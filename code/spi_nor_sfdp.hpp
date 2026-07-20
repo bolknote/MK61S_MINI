@@ -67,8 +67,9 @@ inline bool parse_basic(const u8* table, u8 dwords,
 
   if(dwords >= 11) {
     const u8 page_exponent = (u8) ((read_le32(table + 40) >> 4) & 0x0F);
-    // Chunks smaller than the physical page are always safe. C5 intentionally
-    // caps the chunk at 256 bytes even when a device advertises a larger page.
+    // Фрагменты меньше физической страницы всегда безопасны. C5 намеренно
+    // ограничивает фрагмент 256 байтами, даже если устройство сообщает
+    // о странице большего размера.
     if(page_exponent < 8) output.page_size = (u16) 1U << page_exponent;
   }
 
@@ -100,6 +101,6 @@ inline bool parse_4bait(const u8* table, u8 erase_type_4k,
   return true;
 }
 
-} // namespace spi_nor_sfdp
+} // пространство имён spi_nor_sfdp
 
 #endif

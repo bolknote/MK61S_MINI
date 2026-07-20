@@ -199,6 +199,6 @@ class Scanner {
     RecordData latest_;
 };
 
-} // namespace settings_journal
+} // пространство имён settings_journal
 
 #endif

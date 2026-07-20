@@ -12,9 +12,9 @@ enum class ProgramStoreFileDialogResult : u8 {
   NEW_FILE
 };
 
-// Shared on-device file dialogs. Language editors use the same tree walker,
-// controls and name validation as Explorer instead of maintaining flat,
-// independent program lists.
+// Общие файловые диалоги на устройстве. Редакторы языков используют тот же
+// обход дерева, управление и проверку имён, что и Проводник, вместо собственных
+// независимых плоских списков программ.
 ProgramStoreFileDialogResult program_store_choose_file(
     program_store::ProgramType type, u16 start_directory, bool allow_new,
     program_store::Entry& out_entry, u16& out_directory);

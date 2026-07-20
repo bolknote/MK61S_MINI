@@ -77,6 +77,6 @@ inline usize blink_transition_count(usize blink_count) {
   return (blink_count - 1) * 2 + 1;
 }
 
-} // namespace runtime_safety
+} // пространство имён runtime_safety
 
 #endif

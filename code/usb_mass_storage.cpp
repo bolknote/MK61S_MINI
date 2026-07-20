@@ -354,19 +354,20 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
   }
   if(state != DeferredWriteState::EMPTY) return USBD_MSC_STORAGE_BUSY;
 
-  // The common case is a pure RAM copy: one full 8 KiB BOT packet fits in the
-  // A00 cache (two packets on UC1609) and can be acknowledged immediately.
-  // Only cache pressure requiring dirty eviction falls back to the main loop,
-  // where SPI access is safe.
+  // Обычный случай — простое копирование в ОЗУ: один полный пакет BOT размером
+  // 8 КиБ помещается в кэш A00 (два пакета на UC1609), и его можно подтвердить
+  // немедленно. В основной цикл, где доступ к SPI безопасен, передаётся только
+  // нехватка кэша, требующая вытеснения изменённых данных.
   if(virtual_fat::try_write_cached_sectors(block_addr, buf, block_len)) {
     return USBD_MSC_STORAGE_OK;
   }
 
   deferred_write.block_addr = block_addr;
   deferred_write.block_len = block_len;
-  // SCSI_ProcessWrite deliberately leaves the OUT endpoint unarmed while the
-  // callback is BUSY, so STM32's BOT packet remains immutable until
-  // SCSI_ContinueWrite(). Publish its pointer last and avoid an 8 KiB copy.
+  // SCSI_ProcessWrite намеренно не подготавливает конечную точку OUT, пока
+  // обратный вызов возвращает BUSY, поэтому пакет BOT STM32 остаётся неизменным
+  // до SCSI_ContinueWrite(). Публикуем указатель последним и избегаем копирования
+  // 8 КиБ.
   deferred_write.buffer = buf;
   set_deferred_state(DeferredWriteState::PENDING);
   return USBD_MSC_STORAGE_BUSY;
@@ -474,8 +475,9 @@ bool deinit(void) {
     close_session();
     return flushed;
   }
-  // Stop USB first: its interrupt drives the same SPI flash, and a storage
-  // callback racing this flush would corrupt both transfers.
+  // Сначала останавливаем USB: его прерывание работает с той же SPI-флеш-памятью,
+  // а одновременный с этим сбросом обратный вызов хранилища повредил бы обе
+  // передачи.
   set_initialized(false);
   (void) USBD_Stop(&usb_device);
   bool pending_ok = true;
@@ -489,11 +491,12 @@ bool deinit(void) {
     set_deferred_state(DeferredWriteState::EMPTY);
   }
   reset_deferred_io();
-  // Persist complete host transactions.  If an incomplete transaction cannot
-  // be flushed, explicit ESC still has to tear MSC down; restarting the same
-  // failed BOT/session leaves macOS with a zero-byte ghost disk and makes the
-  // next mount impossible.  Committed files are already durable; only the
-  // incomplete transaction is discarded when close_session() releases VFAT.
+  // Сохраняем завершённые транзакции хоста. Если незавершённую транзакцию
+  // невозможно сбросить, явное нажатие ESC всё равно должно остановить MSC:
+  // перезапуск того же сбойного BOT-сеанса оставляет в macOS фантомный диск
+  // нулевого размера и делает следующее подключение невозможным. Зафиксированные
+  // файлы уже сохранены; при освобождении VFAT в close_session() отбрасывается
+  // только незавершённая транзакция.
   const bool flushed = virtual_fat::flush_pending();
   close_session();
   return pending_ok && flushed;
@@ -524,8 +527,8 @@ void service(void) {
       return;
     }
 
-    // This re-enters storage_write(), which consumes COMPLETE_* and lets the BOT
-    // state machine acknowledge the block or return WRITE_FAULT to the host.
+    // Этот вызов повторно входит в storage_write(), где обрабатывается COMPLETE_*,
+    // после чего автомат BOT подтверждает блок или возвращает хосту WRITE_FAULT.
     if(SCSI_ContinueWrite(&usb_device) < 0) reset_deferred_write();
     return;
   }
@@ -580,7 +583,7 @@ extern "C" u8 MK61_VirtualFatSync(void) {
   return deferred_sync() == DeferredSyncState::PENDING ? 2U : 1U;
 }
 
-} // namespace usb_mass_storage
+} // пространство имён usb_mass_storage
 
 #else
 

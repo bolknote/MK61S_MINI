@@ -26,6 +26,6 @@ struct Result {
   static Result action(ResultKind kind, const char* args) { return {kind, -1, args == 0 ? "" : args}; }
 };
 
-} // namespace terminal_protocol
+} // пространство имён terminal_protocol
 
 #endif

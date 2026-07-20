@@ -47,6 +47,6 @@ inline bool value(const Editor& editor, rtc_clock::DateTime& out) {
   return rtc_clock::parse_datetime(editor.text, out);
 }
 
-} // namespace rtc_settings
+} // пространство имён rtc_settings
 
 #endif

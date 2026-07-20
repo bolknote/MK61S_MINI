@@ -53,15 +53,16 @@ static inline TextProfile normalizeTextProfile(TextProfile) {
   return defaultTextProfileForRows(ROWS);
 }
 #else
-// ROWS is the default text grid. Graphical displays keep the same 16-column UI
-// and switch between a few fixed font presets at runtime.
+// ROWS задаёт текстовую сетку по умолчанию. Графические дисплеи сохраняют
+// 16-столбцовый интерфейс и во время работы переключаются между несколькими
+// фиксированными наборами шрифтов.
 static constexpr u8 FONT_5X8_ROWS = 6;
 static constexpr u8 FONT_5X9_ROWS = 7;
 static constexpr u8 FONT_3X5_ROWS = 10;
-static constexpr u8 MIN_ROWS = 4; // lower bound for extended custom profiles
+static constexpr u8 MIN_ROWS = 4; // нижняя граница для расширенных пользовательских профилей
 static constexpr u8 ROWS = FONT_5X8_ROWS;
 static constexpr u8 DEFAULT_ROWS = FONT_5X8_ROWS;
-static constexpr u8 COMPACT_ROWS = 8; // legacy persisted "8 rows" mode
+static constexpr u8 COMPACT_ROWS = 8; // прежний сохраняемый режим «8 строк»
 static constexpr u8 MAX_ROWS = FONT_3X5_ROWS;
 static constexpr u8 PIXEL_WIDTH = 192;
 static constexpr u8 PIXEL_HEIGHT = 64;
@@ -123,7 +124,7 @@ static inline TextProfile normalizeTextProfile(TextProfile profile) {
 }
 #endif
 
-} // namespace lcd_display
+} // пространство имён lcd_display
 
 class MK61Display : public Print {
   public:

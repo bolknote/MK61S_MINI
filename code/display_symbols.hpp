@@ -5,9 +5,10 @@
 
 namespace display_symbol {
 
-// UC1609 text still uses byte strings in old UI paths. Keep these legacy
-// display tokens out of NUL/control slots so they are safe in C strings and do
-// not collide with runtime custom glyph slots 0..7.
+// В старых ветках интерфейса текст UC1609 всё ещё использует байтовые строки.
+// Не помещаем эти прежние токены дисплея в позиции NUL и управляющих символов,
+// чтобы они были безопасны в строках C и не пересекались с позициями 0..7
+// пользовательских глифов времени выполнения.
 namespace uc1609 {
 static constexpr u8 GE            = 0x80;
 static constexpr u8 CYR_PE        = 0x81;
@@ -82,8 +83,8 @@ static inline u16 unicodeCodepoint(u16 token) {
     default:        return token;
   }
 }
-} // namespace uc1609
+} // пространство имён uc1609
 
-} // namespace display_symbol
+} // пространство имён display_symbol
 
 #endif

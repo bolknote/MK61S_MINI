@@ -140,7 +140,7 @@ static bool decodeBitmap(BitReader& reader, u16 pixels, u8 width, u8* bitmap, us
   return true;
 }
 
-} // namespace
+} // анонимное пространство имён
 
 Face::Face(void) {
   reset();
@@ -353,4 +353,4 @@ u8 selectPreviewGlyphs(const Face& face, Glyph out[8]) {
   return count;
 }
 
-} // namespace fmk
+} // пространство имён fmk

@@ -14,10 +14,10 @@ enum class Owner : u8 {
 
 static constexpr usize SIZE = 8192;
 
-// Exclusive lease for one of the large, mutually exclusive runtimes. Leases
-// may be nested by the same owner, but a different owner cannot evict live
-// state. The previous resident is cleared only when the outermost lease for a
-// new owner is acquired.
+// Исключительная аренда для одной из крупных взаимоисключающих сред выполнения.
+// Один владелец может вкладывать аренды, но другой не может вытеснить активное
+// состояние. Предыдущий пользователь очищается только при получении самой
+// внешней аренды новым владельцем.
 class [[nodiscard]] Lease {
   public:
     Lease(void);
@@ -46,6 +46,6 @@ Owner resident_owner(void);
 Owner active_owner(void);
 void* data(Owner owner);
 
-} // namespace language_workspace
+} // пространство имён language_workspace
 
 #endif
