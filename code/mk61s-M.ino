@@ -262,17 +262,24 @@ void setup() {
   entropy_pool::begin();
   mix_rtc_startup_snapshot(0);
 
+  // Сплеш общий для LCD1602 и UC1609 и обязан предшествовать DFU_enable():
+  // системный загрузчик не возвращает управление прошивке. При уже зажатом
+  // ESC не разрешаем тому же нажатию мгновенно пропустить сплеш.
+  static_assert(lcd_display::COLS == startup_splash::COLS, "Splash width must match display width");
+  #if defined(MK61_DISPLAY_LCD1602)
+    static_assert(lcd_display::ROWS == startup_splash::ROWS, "Splash height must match LCD height");
+  #else
+    static_assert(startup_splash::ROWS <= lcd_display::MIN_ROWS, "Splash must fit every graphics text profile");
+  #endif
+  static_assert(sizeof(FULL_MODEL_NAME) == startup_splash::COLS + 1, "Model name must fill one display row");
+  static_assert(sizeof(FIRMWARE_VER) == startup_splash::COLS + 1, "Firmware version must fill one display row");
+  startup_splash::show(lcd, FULL_MODEL_NAME, FIRMWARE_VER,
+                       startup_splash::escapePolicyForBoot(dfu_requested));
+
   if(dfu_requested) {
     DFU_enable();
   }
 
-  #if defined(MK61_DISPLAY_LCD1602)
-    static_assert(lcd_display::COLS == startup_splash::COLS, "Splash width must match LCD width");
-    static_assert(lcd_display::ROWS == startup_splash::ROWS, "Splash height must match LCD height");
-    static_assert(sizeof(FULL_MODEL_NAME) == startup_splash::COLS + 1, "Model name must fill one LCD row");
-    static_assert(sizeof(FIRMWARE_VER) == startup_splash::COLS + 1, "Firmware version must fill one LCD row");
-    startup_splash::show(lcd, FULL_MODEL_NAME, FIRMWARE_VER);
-  #endif
   entropy_pool::finish_startup();
   mix_rtc_startup_snapshot(1);
 

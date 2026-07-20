@@ -42,6 +42,13 @@ void test_final_and_clamped_frames(void) {
   assert(memcmp(row, TEXT, startup_splash::COLS) == 0);
 }
 
+void test_boot_escape_policy(void) {
+  assert(startup_splash::escapeMaySkip(
+      startup_splash::escapePolicyForBoot(false)));
+  assert(!startup_splash::escapeMaySkip(
+      startup_splash::escapePolicyForBoot(true)));
+}
+
 } // namespace
 
 int main(void) {
@@ -53,6 +60,7 @@ int main(void) {
   test_first_animation_frame();
   test_halfway_frame();
   test_final_and_clamped_frames();
+  test_boot_escape_policy();
   printf("startup_splash_self_test: ok\n");
   return 0;
 }

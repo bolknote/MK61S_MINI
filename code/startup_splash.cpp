@@ -77,11 +77,11 @@ bool pollEscape(void) {
   return scan_code == KEY_ESC_PRESS;
 }
 
-bool waitOrEscape(t_time_ms duration_ms) {
+bool waitOrEscape(t_time_ms duration_ms, EscapePolicy escape_policy) {
   const t_time_ms deadline = millis() + duration_ms;
   do {
     entropy_pool::poll_startup();
-    if(pollEscape()) return true;
+    if(escapeMaySkip(escape_policy) && pollEscape()) return true;
     delay(1);
   } while(!runtime_safety::time_reached(millis(), deadline));
   return false;
@@ -89,14 +89,15 @@ bool waitOrEscape(t_time_ms duration_ms) {
 
 } // анонимное пространство имён
 
-Result show(MK61Display& display, const char* model, const char* version) {
+Result show(MK61Display& display, const char* model, const char* version,
+            EscapePolicy escape_policy) {
   loadCustomChars(display);
   drawFrame(display, model, version, 0);
-  if(waitOrEscape(LOGO_HOLD_MS)) return Result::SKIPPED;
+  if(waitOrEscape(LOGO_HOLD_MS, escape_policy)) return Result::SKIPPED;
 
   for(u8 frame = 1; frame <= FINAL_FRAME; frame++) {
     drawFrame(display, model, version, frame);
-    if(waitOrEscape(FRAME_MS)) return Result::SKIPPED;
+    if(waitOrEscape(FRAME_MS, escape_policy)) return Result::SKIPPED;
   }
 
   return Result::COMPLETED;

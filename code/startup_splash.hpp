@@ -19,6 +19,19 @@ enum class Result : u8 {
   SKIPPED
 };
 
+enum class EscapePolicy : u8 {
+  ALLOW_SKIP,
+  IGNORE
+};
+
+inline EscapePolicy escapePolicyForBoot(bool dfu_requested) {
+  return dfu_requested ? EscapePolicy::IGNORE : EscapePolicy::ALLOW_SKIP;
+}
+
+inline bool escapeMaySkip(EscapePolicy policy) {
+  return policy == EscapePolicy::ALLOW_SKIP;
+}
+
 inline u8 visibleTextColumns(u8 frame) {
   return frame < FINAL_FRAME ? frame : FINAL_FRAME;
 }
@@ -31,7 +44,8 @@ inline void composeRow(const char* text, const u8* logo, u8 frame, u8 out[COLS])
   for(u8 col = text_columns; col < COLS; col++) out[col] = logo[col - text_columns];
 }
 
-Result show(MK61Display& display, const char* model, const char* version);
+Result show(MK61Display& display, const char* model, const char* version,
+            EscapePolicy escape_policy = EscapePolicy::ALLOW_SKIP);
 
 } // пространство имён startup_splash
 
