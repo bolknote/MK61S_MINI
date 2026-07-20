@@ -18,8 +18,6 @@ int main(void) {
                 PIN_LCD_DB6 == PA1 && PIN_LCD_DB7 == PC15,
                 "mini V2 LCD data pin regression");
   static_assert(PIN_BUZZER == PB10, "mini V2 buzzer pin regression");
-  static_assert(PIN_LED_ACTIVE_LOW == 1,
-                "mini V2 BlackPill LED must be active-low");
   static_assert(!MK61_RTC_LSE_AVAILABLE,
                 "mini V2 must not enable LSE while LCD DB7 owns PC15");
 #else
@@ -30,10 +28,18 @@ int main(void) {
                 PIN_LCD_DB6 == PA2 && PIN_LCD_DB7 == PA1,
                 "mini V3 LCD data pin regression");
   static_assert(PIN_BUZZER == PA0, "mini V3 buzzer pin regression");
-  static_assert(PIN_LED_ACTIVE_LOW == 0,
-                "mini V3 board LED must be active-high");
   static_assert(MK61_RTC_LSE_AVAILABLE,
                 "mini V3 leaves the LSE pins available for RTC");
+#endif
+
+#if defined(MK61_CONFIG_EXPECT_V2) || defined(MK61_CONFIG_EXPECT_V3)
+  static_assert(PIN_LED_ACTIVE_LOW == 0,
+                "mini V2/V3 LED must turn off at LOW");
+#elif defined(MK61_CONFIG_EXPECT_CLASSIC) || defined(MK61_CONFIG_EXPECT_40TH)
+  static_assert(PIN_LED_ACTIVE_LOW == 1,
+                "Classic/40th LED must turn off at HIGH");
+#else
+  #error "Select the expected board profile for this test"
 #endif
 
   std::cout << "board_profile_self_test: ok\n";

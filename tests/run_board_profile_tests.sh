@@ -16,11 +16,19 @@ common=(
   "$root/tests/board_profile_self_test.cpp"
 )
 
-clang++ "${common[@]}" -o "$out-v3"
+clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 -o "$out-v3"
 "$out-v3"
 
 clang++ "${common[@]}" -DREVISION_V2 -DMK61_CONFIG_EXPECT_V2 -o "$out-v2"
 "$out-v2"
+
+clang++ "${common[@]}" -DREVISION_V3 -DMK61_DISPLAY_UC1609 \
+  -DMK61_KEYBOARD_CLASSIC -DMK61_CONFIG_EXPECT_CLASSIC -o "$out-classic"
+"$out-classic"
+
+clang++ "${common[@]}" -DREVISION_V3 -DMK61_BOARD_40TH \
+  -DMK61_CONFIG_EXPECT_40TH -o "$out-40th"
+"$out-40th"
 
 if clang++ "${common[@]}" -DREVISION_V2 -DREVISION_V3 -o "$out-invalid" \
     >/dev/null 2>&1; then
