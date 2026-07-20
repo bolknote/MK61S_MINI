@@ -156,6 +156,7 @@ namespace library_mk61 {
 #include <string.h>
 #endif
 
+#include "bounded_string.hpp"
 #include "mk_math.hpp"
 #ifdef FOCAL_HOST_TEST
 #define MK61_REF_HOST_TEST
@@ -320,6 +321,7 @@ class FocalWorkspaceScope {
 
 static FocalRuntime& focal_runtime(void) {
   void* memory = language_workspace::data(language_workspace::Owner::FOCAL);
+  if(memory == NULL) __builtin_trap();
   return *((FocalRuntime*) memory);
 }
 #endif
@@ -548,10 +550,7 @@ static bool focal_operator_from_range(const char* begin, const char* end, FocalO
 }
 
 static void focal_copy_text(char* dst, usize dst_size, const char* src) {
-  if(dst_size == 0) return;
-  if(src == NULL) src = "";
-  strncpy(dst, src, dst_size - 1);
-  dst[dst_size - 1] = 0;
+  bounded_string::copy(dst, dst_size, src);
 }
 
 static void focal_append_char(char*& out, char* end, char ch) {
@@ -1012,9 +1011,6 @@ static double expr_parse_mk_ref(ExprParser& parser) {
 }
 
 static double expr_parse_additive(ExprParser& parser);
-#ifndef FOCAL_HOST_TEST
-static double focal_read_mk_x(void);
-#endif
 
 static double focal_rnd(void) {
 #ifdef FOCAL_HOST_TEST
@@ -1593,15 +1589,6 @@ static FocalFlow focal_flow(FocalFlowKind kind, i16 pc) {
   flow.pc = pc;
   return flow;
 }
-
-#ifndef FOCAL_HOST_TEST
-static double focal_read_mk_x(void) {
-  double value = 0.0;
-  const mk61_ref::Ref ref = {mk61_ref::Kind::X, 0};
-  if(!mk61_ref::read(ref, value)) return 0.0;
-  return value;
-}
-#endif
 
 static bool focal_execute_statement(FocalOp op, const char* operand, i16 current_pc, int depth, FocalFlow& flow);
 static bool focal_execute_statement(const FocalLine& line, i16 current_pc, int depth, FocalFlow& flow);
@@ -2314,7 +2301,8 @@ static void display_focal_ok(const FocalProgram& program) {
   // будто программу переименовали в "NAME <цифра>".
   char top_en[17];
   char top_ru[32];
-  snprintf(top_en, sizeof(top_en), "FOCAL: %d lines", (int) focal_ast.line_count);
+  snprintf(top_en, sizeof(top_en), "FOCAL: %u lines",
+           (unsigned) (u8) focal_ast.line_count);
   snprintf(top_ru, sizeof(top_ru), "ФОКАЛ готов: %d", (int) focal_ast.line_count);
   char display_name[24];
   focal_display_program_name(program.name, display_name, sizeof(display_name));
@@ -2463,7 +2451,7 @@ void InitFocal(void) {
 #endif
 }
 
-static int next_used_program(int active, int delta, bool allow_new) {
+[[maybe_unused]] static int next_used_program(int active, int delta, bool allow_new) {
   const int max_index = allow_new ? FOCAL_PROGRAM_COUNT : FOCAL_PROGRAM_COUNT - 1;
   int current = active;
   for(int i = 0; i <= max_index; i++) {
@@ -2476,7 +2464,7 @@ static int next_used_program(int active, int delta, bool allow_new) {
   return active;
 }
 
-static void draw_program_select(int active, bool allow_new) {
+[[maybe_unused]] static void draw_program_select(int active, bool allow_new) {
 #ifndef FOCAL_HOST_TEST
   const int stored_count = program_store::count(program_store::ProgramType::FOCAL);
   if(allow_new && active == stored_count) {
@@ -2634,7 +2622,7 @@ static bool focal_editor_backspace(char* source, u16& len, u16& cursor, u16 capa
   return text_editor::backspace(source, len, cursor);
 }
 
-static bool focal_editor_move_cursor_line(const char* source, u16 len, u16& cursor, int delta) {
+[[maybe_unused]] static bool focal_editor_move_cursor_line(const char* source, u16 len, u16& cursor, int delta) {
   return text_editor::move_cursor_line(source, len, cursor, delta);
 }
 
@@ -2990,7 +2978,7 @@ static bool focal_name_sms_tap(char* name, u16& len, u16& cursor, FocalSmsState&
   return focal_name_insert_char(name, len, cursor, letters[0]);
 }
 
-static bool focal_input_program_name(char* name, usize size) {
+[[maybe_unused]] static bool focal_input_program_name(char* name, usize size) {
   if(size == 0) return false;
   name[size - 1] = 0;
   u16 len = (u16) strlen(name);
@@ -3598,8 +3586,7 @@ extern "C" void FocalTestEditSequence(const int* keys, int count, char* out, int
     text_editor::handle_key(editor, FOCAL_EDITOR_KEYS, FOCAL_EDITOR_HOOKS, key_code, now);
   }
 
-  strncpy(out, source, (usize) size - 1);
-  out[size - 1] = 0;
+  bounded_string::copy(out, (usize) size, source);
 }
 
 extern "C" bool FocalTestApplyExprMacro(const char* input, int key_code, char* out, int size) {

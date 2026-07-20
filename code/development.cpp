@@ -1,6 +1,7 @@
 #include "development.hpp"
 
 #include "Arduino.h"
+#include "bounded_string.hpp"
 #include "config.h"
 #include "cross_hal.h"
 #include "focal.hpp"
@@ -107,7 +108,7 @@ static char type_marker(program_store::ProgramType type) {
 static void print_line(u8 row, const char* text) {
   lcd.setCursor(0, row);
   u8 used = 0;
-  while(text != NULL && text[used] != 0 && used < lcd_display::COLS) {
+  while(text != NULL && used < lcd_display::COLS && text[used] != 0) {
     lcd.write((u8) text[used++]);
   }
   while(used++ < lcd_display::COLS) lcd.write((u8) ' ');
@@ -395,8 +396,7 @@ static void explorer_scroll_track(ExplorerScroll& scroll, int active, const char
   const bool same = scroll.active == active && strncmp(scroll.name, name, program_store::NAME_SIZE) == 0;
   if(!same) {
     scroll.active = active;
-    strncpy(scroll.name, name, program_store::NAME_SIZE - 1);
-    scroll.name[program_store::NAME_SIZE - 1] = 0;
+    bounded_string::copy(scroll.name, name);
     scroll.offset = 0;
     scroll.direction = 1;
     scroll.next_ms = now + EXPLORER_SCROLL_START_MS;
@@ -605,23 +605,6 @@ static bool read_entry_data(const program_store::Entry& entry, u8* data, usize c
   return true;
 }
 
-static char hex_digit(u8 value) {
-  value &= 0x0F;
-  return (value < 10) ? (char) ('0' + value) : (char) ('A' + value - 10);
-}
-
-static void draw_hex_payload_row(u8 row, const u8* data, u16 len, u16 offset) {
-  char line[17];
-  u8 pos = 0;
-  for(u8 i = 0; i < 8 && offset + i < len && pos + 1 < sizeof(line); i++) {
-    const u8 value = data[offset + i];
-    line[pos++] = hex_digit((u8) (value >> 4));
-    line[pos++] = hex_digit(value);
-  }
-  line[pos] = 0;
-  print_line(row, line);
-}
-
 static bool is_line_break(u8 value) {
   return value == '\n' || value == '\r';
 }
@@ -728,7 +711,8 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
   lcd.clear();
 
   char header[24];
-  snprintf(header, sizeof(header), "%s %s %u", type_label(entry.type), entry.name, (u32) len);
+  snprintf(header, sizeof(header), "%s %u %.14s", type_label(entry.type),
+           (unsigned) len, entry.name);
   print_line(0, header);
 
   const u8 display_rows = lcd.rows();
@@ -761,8 +745,9 @@ static void show_message(const char* en0, const char* ru0, const char* en1 = "",
 
 static void draw_font_preview_header(const program_store::Entry& entry, const fmk::Face& face) {
   char header[24];
-  snprintf(header, sizeof(header), "f1 %s %ux%u", entry.name,
-    (u32) face.metrics().max_width, (u32) face.metrics().height);
+  snprintf(header, sizeof(header), "f1 %ux%u %.12s",
+    (unsigned) face.metrics().max_width, (unsigned) face.metrics().height,
+    entry.name);
   print_line(0, header);
 }
 
@@ -1124,8 +1109,7 @@ static bool input_entry_name(char* name, usize capacity,
 
 static bool rename_entry(const program_store::Entry& entry) {
   char name[program_store::NAME_SIZE];
-  strncpy(name, entry.name, sizeof(name) - 1);
-  name[sizeof(name) - 1] = 0;
+  bounded_string::copy(name, entry.name);
 
   if(!input_entry_name(name, sizeof(name), NamePrompt::RENAME)) return false;
   if(strncmp(name, entry.name, program_store::NAME_SIZE) == 0) return true;
@@ -1804,8 +1788,7 @@ static bool m61_save_action(void) {
      program_store::entry_by_id(current_mk61_entry_id, current) &&
      current.kind == program_store::NodeKind::FILE &&
      current.type == program_store::ProgramType::MK61) {
-    strncpy(name, current.name, sizeof(name) - 1);
-    name[sizeof(name) - 1] = 0;
+    bounded_string::copy(name, current.name);
     directory = current.parent_id;
   }
 

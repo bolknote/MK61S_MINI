@@ -108,6 +108,7 @@ static const u8* specialRows5x8(u16 codepoint) {
   return NULL;
 }
 
+#if defined(MK61_DISPLAY_UC1609)
 static void setPixel(Raster& raster, u8 x, u8 y) {
   const usize stride = (raster.width + 7) / 8;
   raster.data[(usize) y * stride + x / 8] |= (u8) (0x80 >> (x & 7));
@@ -125,6 +126,7 @@ static bool decodeRows5x8(const u8* rows, Raster& out) {
   }
   return true;
 }
+#endif
 
 } // анонимное пространство имён
 

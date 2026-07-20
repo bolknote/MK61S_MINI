@@ -128,6 +128,7 @@ static lcd_display::TextProfile nextFontPreset(lcd_display::TextProfile profile,
   }
 }
 
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
 static u8 step_display_rows_value(u8 rows, i8 delta) {
   rows = normalize_display_rows(rows);
   if(delta > 0 && rows < lcd_display::MAX_ROWS) {
@@ -138,6 +139,7 @@ static u8 step_display_rows_value(u8 rows, i8 delta) {
   }
   return rows;
 }
+#endif
 #endif
 
 static void set_speed_mode_state(SpeedMode mode) {
@@ -201,8 +203,8 @@ bool  InfoData(void) {
     char line0[24];
     char line1[24];
     snprintf(line0, sizeof(line0), "СЧ:%u УГ:%u%s",
-      (u32) read_counter_switch(),
-      (u32) ((u8) read_grade_switch()),
+      (unsigned) read_counter_switch(),
+      (unsigned) ((u8) read_grade_switch()),
       flash_is_ok ? " ФЛ" : "");
     snprintf(line1, sizeof(line1), "ВР:%lu МС", (unsigned long) runtime_ms);
     lcd_ru::print_lines(line0, line1);
@@ -430,14 +432,14 @@ static t_punct* display_rows_punct(void) {
 #endif
 
 static void format_volume_text(void) {
-  int used = snprintf(VOLUME_punct.text, sizeof(VOLUME_punct.text), "Volume %u", (u32) sound_volume_state);
+  int used = snprintf(VOLUME_punct.text, sizeof(VOLUME_punct.text), "Volume %u", (unsigned) sound_volume_state);
   if(used < 0) used = 0;
   if(used > 15) used = 15;
   while(used < 15) VOLUME_punct.text[used++] = ' ';
   VOLUME_punct.text[used] = 0;
   VOLUME_punct.size = 15;
 
-  snprintf(RU_VOLUME_punct.text, sizeof(RU_VOLUME_punct.text), "Громкость %u", (u32) sound_volume_state);
+  snprintf(RU_VOLUME_punct.text, sizeof(RU_VOLUME_punct.text), "Громкость %u", (unsigned) sound_volume_state);
   RU_VOLUME_punct.size = 15;
 }
 
@@ -545,9 +547,9 @@ void  load_settings_state(void) {
   set_random_mode_state(flags.bits.random_mode_mk61s ? RandomMode::MK61S : RandomMode::MK61);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
 #if defined(MK61_DISPLAY_UC1609)
-  lcd_display::TextProfile stored_profile;
   const u8 stored_rows_mode = sound_settings.bits.display_rows_mode;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  lcd_display::TextProfile stored_profile;
   if(read_display_text_profile(stored_profile)) {
     set_display_text_profile(stored_profile);
   } else {
@@ -844,6 +846,7 @@ bool TurnIdleSignal(void) {
   return action::MENU_BACK;
 }
 
+#if defined(MK61_DISPLAY_UC1609)
 static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProfile right) {
   left = lcd_display::normalizeTextProfile(left);
   right = lcd_display::normalizeTextProfile(right);
@@ -868,17 +871,17 @@ static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::Te
   if(library_mk61::language_is_ru()) {
     switch(field) {
       case 0:
-        snprintf(out, size, "Строки:%u", (u32) profile.rows);
+        snprintf(out, size, "Строки:%u", (unsigned) profile.rows);
         break;
       case 1:
-        snprintf(out, size, "Шрифт:%ux%u", (u32) profile.glyph_width, (u32) profile.glyph_height);
+        snprintf(out, size, "Шрифт:%ux%u", (unsigned) profile.glyph_width, (unsigned) profile.glyph_height);
         break;
       case 2:
-        snprintf(out, size, "Интервал:%u", (u32) profile.line_gap);
+        snprintf(out, size, "Интервал:%u", (unsigned) profile.line_gap);
         break;
       case 3:
       default:
-        snprintf(out, size, "Ширина:%u", (u32) profile.glyph_width);
+        snprintf(out, size, "Ширина:%u", (unsigned) profile.glyph_width);
         break;
     }
     return;
@@ -886,17 +889,17 @@ static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::Te
 
   switch(field) {
     case 0:
-      snprintf(out, size, "Rows:%u", (u32) profile.rows);
+      snprintf(out, size, "Rows:%u", (unsigned) profile.rows);
       break;
     case 1:
-      snprintf(out, size, "Font:%ux%u", (u32) profile.glyph_width, (u32) profile.glyph_height);
+      snprintf(out, size, "Font:%ux%u", (unsigned) profile.glyph_width, (unsigned) profile.glyph_height);
       break;
     case 2:
-      snprintf(out, size, "Gap:%u", (u32) profile.line_gap);
+      snprintf(out, size, "Gap:%u", (unsigned) profile.line_gap);
       break;
     case 3:
     default:
-      snprintf(out, size, "Width:%u", (u32) profile.glyph_width);
+      snprintf(out, size, "Width:%u", (unsigned) profile.glyph_width);
       break;
   }
 #endif
@@ -1008,13 +1011,12 @@ static i32 waitFontSetupKey(void) {
     }
   } while(true);
 }
+#endif
 
 bool FontSetup(void) {
 #if defined(MK61_DISPLAY_UC1609)
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   static constexpr u8 FIELD_COUNT = 4;
-#else
-  static constexpr u8 FIELD_COUNT = 1;
 #endif
   lcd_display::TextProfile profile = library_mk61::display_text_profile();
   u8 active = 0;

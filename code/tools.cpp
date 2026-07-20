@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "bounded_string.hpp"
 #include "config.h"
 #if MK61_USE_ARDUINO_EEPROM_FALLBACK
   #include "EEPROM.h"
@@ -795,8 +796,7 @@ char* ReadSlotName(usize nSlot, char* slot_name) {
   char name[8];
   snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
   if(!program_store::exists(program_store::ProgramType::MK61, name)) return NULL;
-  strncpy(slot_name, name, SIZEOF_SLOT_NAME - 1);
-  slot_name[SIZEOF_SLOT_NAME - 1] = 0;
+  bounded_string::copy(slot_name, SIZEOF_SLOT_NAME, name);
   return slot_name;
 }
 

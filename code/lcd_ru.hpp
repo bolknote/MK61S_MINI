@@ -207,6 +207,9 @@ inline void restore_default_font(void) {
 }
 
 inline void write_text(const font_map_t& map, const char* text, u8 width) {
+#if defined(MK61_DISPLAY_UC1609)
+  (void) map;
+#endif
   u8 used = 0;
   while(*text != 0 && used < width) {
     const u16 raw_codepoint = read_utf8(text);

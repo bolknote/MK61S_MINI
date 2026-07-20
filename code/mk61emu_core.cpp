@@ -97,9 +97,8 @@ static inline char display_symbol(const char* symbols, u8 value) {
 
 #include "array"
 #if IS_CORTEX_M4() //__ARM_ARCH == 7
-  #warning("Hardware mul/div present!")
 #else
-  #warning("Hardware mul/div unavaliable! Instantiate multiply by 9 and divide by 3 as constant table!")
+  // На ядрах без аппаратного деления используем таблицы констант.
   constexpr static const std::array<uint8_t, 256> div3_table = []() {
     std::array<uint8_t, 256> _{};
     for (auto i=0; i<256; i++) _[i]=i/3;

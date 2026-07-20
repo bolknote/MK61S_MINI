@@ -5,6 +5,7 @@
  Транспорт и выполнение команд терминала для ядра МК61.
 */
 #include "Arduino.h"
+#include "bounded_string.hpp"
 #include "config.h"
 #include "rust_types.h"
 #include "cross_hal.h"
@@ -1317,9 +1318,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 }
                 nSlot = -1;
                 pending_save_parent_id = target.parent_id;
-                strncpy(pending_save_name, target.name,
-                        sizeof(pending_save_name) - 1);
-                pending_save_name[sizeof(pending_save_name) - 1] = 0;
+                bounded_string::copy(pending_save_name, target.name);
               }
               pending_confirmation_cmd = CMD_SAVE;
               Serial.println("Enter Y/y to confirm the operation!");

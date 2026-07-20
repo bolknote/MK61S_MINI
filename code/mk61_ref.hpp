@@ -65,7 +65,7 @@ inline bool parse_name(const char* name, Ref& out) {
     out.reg = 0;
     return true;
   }
-  if((name[0] == 'R' || name[0] == 'r') && name[2] == 0) {
+  if((name[0] == 'R' || name[0] == 'r') && name[1] != 0 && name[2] == 0) {
     const int reg = hex_digit(name[1]);
     if(reg >= 0 && reg <= 0x0F) {
       out.kind = Kind::R;

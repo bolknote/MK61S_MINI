@@ -1,5 +1,6 @@
 #include "virtual_fat.hpp"
 
+#include "bounded_string.hpp"
 #include "fat_name.hpp"
 #include "language_workspace.hpp"
 #include "program_store.hpp"
@@ -333,8 +334,7 @@ static bool utf16_to_utf8(const u16* input, u16 input_len, char* output,
 static void full_name(const program_store::Entry& entry, char* output,
                       usize capacity) {
   if(entry.kind == program_store::NodeKind::DIRECTORY) {
-    strncpy(output, entry.name, capacity - 1);
-    output[capacity - 1] = 0;
+    bounded_string::copy(output, capacity, entry.name);
     return;
   }
   snprintf(output, capacity, "%s.%s", entry.name,
@@ -950,7 +950,7 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
     if(!valid_cluster(cluster) || strlen(name) >= program_store::NAME_SIZE) {
       return ParseStatus::INVALID;
     }
-    strcpy(parsed.name, name);
+    bounded_string::copy(parsed.name, name);
     parsed.id = id_for_cluster(cluster);
     parsed.data_len = 0;
     parsed.type = program_store::ProgramType::MK61;
@@ -965,7 +965,7 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   // Квоту данных C5 применяем лишь после выбора известного расширения калькулятора.
   if(size > program_store::MAX_MK61_TEXT_SIZE) return ParseStatus::INVALID;
   if(!valid_cluster(cluster)) return ParseStatus::INVALID;
-  strcpy(parsed.name, name);
+  bounded_string::copy(parsed.name, name);
   parsed.id = id_for_cluster(cluster);
   parsed.data_len = (u16) size;
   return ParseStatus::VALID;
@@ -1028,7 +1028,7 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
   if(pass == WalkPass::VALIDATE) {
     const DesiredKind kind = parsed.directory ? DESIRED_DIRECTORY : DESIRED_FILE;
     if(!set_desired_kind(parsed.id, kind)) {
-      snprintf(g_error_detail, sizeof(g_error_detail), "duplicate-cluster:%u:%s",
+      snprintf(g_error_detail, sizeof(g_error_detail), "duplicate-cluster:%u:%.22s",
                (unsigned) parsed.id, parsed.name);
       g_last_error = g_error_detail;
       return false;

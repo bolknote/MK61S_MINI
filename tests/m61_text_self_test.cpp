@@ -166,6 +166,17 @@ static void test_command_failure_reports_script_and_line(void) {
   assert(executed_commands == 2);
 }
 
+static void test_long_missing_name_is_truncated_to_error_capacity(void) {
+  reset_host();
+  const char* name = "1234567890123456789012345678901";
+  assert(std::strlen(name) == program_store::NAME_SIZE - 1);
+  assert(!m61_text::load_program(name));
+  const m61_text::Error error = require_error();
+  assert(std::strcmp(error.script, "123456789012345") == 0);
+  assert(error.line == 0);
+  assert(std::strcmp(error.message, "script not found") == 0);
+}
+
 static void test_duplicate_and_oversized_labels_fail_before_execution(void) {
   reset_host();
   add_script("DUP", ":same\n:same\nok\n");
@@ -270,6 +281,7 @@ static void test_explicit_id_disambiguates_directory_names(void) {
 
 int main(void) {
   test_command_failure_reports_script_and_line();
+  test_long_missing_name_is_truncated_to_error_capacity();
   test_duplicate_and_oversized_labels_fail_before_execution();
   test_line_limit_is_enforced_during_indexing();
   test_indexed_loop_is_budgeted_and_uses_block_reads();

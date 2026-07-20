@@ -566,6 +566,7 @@ void   mk61_baseloop_hook(i32 key) {
           return_auto_mode();
         }
       /*!!!без брейка так задумано!!!!*/
+      [[fallthrough]];
     default:
       if(core_61::is_CALC()) { // Режим автоматической работы CALC без задержки!
         const u32 now = millis();

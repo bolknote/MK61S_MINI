@@ -1,5 +1,6 @@
 #include "program_store.hpp"
 
+#include "bounded_string.hpp"
 #include "fat_name.hpp"
 #include "Arduino.h"
 #include "config.h"
@@ -1328,8 +1329,9 @@ static bool payload_equals(u16 id, const Inode& inode, const char* name,
   const u32 address = inode.address + RECORD_HEADER_SIZE + header[10];
   u16 offset = 0;
   while(offset < data_len) {
-    const u16 count = (u16) ((data_len - offset < sizeof(actual))
-        ? data_len - offset : sizeof(actual));
+    const u16 remaining = (u16) (data_len - offset);
+    const u16 count = remaining < (u16) sizeof(actual)
+      ? remaining : (u16) sizeof(actual);
     if(!read_bytes(address + offset, actual, count) ||
        memcmp(actual, data + offset, count) != 0) return false;
     offset = (u16) (offset + count);
@@ -1507,20 +1509,26 @@ static bool find_child_id(u16 parent_id, NodeKind kind, ProgramType type,
   return false;
 }
 
-static void fat_visible_name(NodeKind kind, ProgramType type,
-                             const char* name, char* out) {
-  strcpy(out, name);
-  if(kind != NodeKind::FILE) return;
-  const usize length = strlen(out);
+template<usize N>
+static bool fat_visible_name(NodeKind kind, ProgramType type,
+                             const char* name, char (&out)[N]) {
+  if(name == NULL) return false;
+  const usize length = bounded_string::copy(out, name);
+  if(name[length] != 0) return false;
+  if(kind != NodeKind::FILE) return true;
+  if(length + 1 >= N) return false;
   out[length] = '.';
-  strcpy(out + length + 1, extension_for_type(type));
+  const char* extension = extension_for_type(type);
+  const usize extension_length = bounded_string::copy(
+      out + length + 1, N - length - 1, extension);
+  return extension[extension_length] == 0;
 }
 
 static bool fat_name_available(u16 parent_id, NodeKind kind,
                                ProgramType type, const char* name,
                                u16 ignore_id) {
   char wanted[NAME_SIZE + 16];
-  fat_visible_name(kind, type, name, wanted);
+  if(!fat_visible_name(kind, type, name, wanted)) return false;
   u16 root_slots = storage_geometry::ROOT_SYSTEM_DIRENTS;
   u16 id = parent_id == ROOT_ID ? g_meta.root_head : NONE;
   if(parent_id != ROOT_ID) {
@@ -1538,7 +1546,8 @@ static bool fat_name_available(u16 parent_id, NodeKind kind,
       char stored[NAME_SIZE];
       char visible[NAME_SIZE + 16];
       if(!read_inode_name(id, inode, stored)) return false;
-      fat_visible_name(inode_kind(inode), inode_type(inode), stored, visible);
+      if(!fat_visible_name(inode_kind(inode), inode_type(inode), stored,
+                           visible)) return false;
       if(parent_id == ROOT_ID) {
         const u16 slots = fat_name::dirent_count(visible);
         if(slots == 0 || slots > g_geometry.root_entries ||

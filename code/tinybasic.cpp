@@ -147,6 +147,8 @@ namespace library_mk61 {
 #include <string.h>
 #endif
 
+#include "bounded_string.hpp"
+
 #if MK61_ENABLE_TINYBASIC
 
 static constexpr u16 TB_INVALID_STORE_ID = 0xFFFF;
@@ -312,6 +314,7 @@ class TinyBasicWorkspaceScope {
 
 static TinyBasicRuntime& tinybasic_runtime(void) {
   void* memory = language_workspace::data(language_workspace::Owner::TINYBASIC);
+  if(memory == NULL) __builtin_trap();
   return *((TinyBasicRuntime*) memory);
 }
 #endif
@@ -369,10 +372,7 @@ static const char* tb_skip_spaces(const char* text) {
 }
 
 static void tb_copy_text(char* dst, usize dst_size, const char* src) {
-  if(dst_size == 0) return;
-  if(src == NULL) src = "";
-  strncpy(dst, src, dst_size - 1);
-  dst[dst_size - 1] = 0;
+  bounded_string::copy(dst, dst_size, src);
 }
 
 static void tb_copy_range(char* dst, usize dst_size, const char* begin, const char* end) {
@@ -1949,7 +1949,7 @@ void InitTinyBasic(void) {
 #endif
 }
 
-static void draw_program_select(int active, bool allow_new) {
+[[maybe_unused]] static void draw_program_select(int active, bool allow_new) {
 #ifndef TINYBASIC_HOST_TEST
   const int stored_count = program_store::count(program_store::ProgramType::TINYBASIC);
   if(allow_new && active == stored_count) {
@@ -1974,7 +1974,7 @@ static void draw_program_select(int active, bool allow_new) {
 #endif
 }
 
-static int next_used_program(int active, int delta, bool allow_new) {
+[[maybe_unused]] static int next_used_program(int active, int delta, bool allow_new) {
   const int max_index = allow_new ? TB_PROGRAM_COUNT : TB_PROGRAM_COUNT - 1;
   int current = active;
   for(int i = 0; i <= max_index; i++) {
@@ -2124,7 +2124,7 @@ static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
   else lcd.write(sms_cursor ? text_editor::SMS_CURSOR_ASCII : text_editor::CURSOR_ASCII);
 }
 
-static bool tb_input_program_name(char* name, usize size) {
+[[maybe_unused]] static bool tb_input_program_name(char* name, usize size) {
   if(size == 0) return false;
   name[size - 1] = 0;
   u16 len = (u16) strlen(name);
@@ -2629,8 +2629,7 @@ extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out,
     }
     text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, key_code, now);
   }
-  strncpy(out, source, (usize) size - 1);
-  out[size - 1] = 0;
+  bounded_string::copy(out, (usize) size, source);
 }
 #endif
 

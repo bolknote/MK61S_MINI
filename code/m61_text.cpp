@@ -1,5 +1,6 @@
 #include "m61_text.hpp"
 
+#include "bounded_string.hpp"
 #include "program_store.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
@@ -103,12 +104,9 @@ static void invalidate_read_cache(void) {
   read_cache_len = 0;
 }
 
-static void copy_script_name(char* out, const char* name) {
-  if(out == NULL) return;
-  out[0] = 0;
-  if(name == NULL) return;
-  strncpy(out, name, program_store::NAME_SIZE - 1);
-  out[program_store::NAME_SIZE - 1] = 0;
+template<usize N>
+static void copy_script_name(char (&out)[N], const char* name) {
+  bounded_string::copy(out, name);
 }
 
 static void clear_current_script(void) {
@@ -122,6 +120,7 @@ static void clear_current_script(void) {
   label_count = 0;
 }
 
+#ifdef M61_TEXT_HOST_TEST
 static bool find_entry_by_type_name(program_store::ProgramType type, const char* name, program_store::Entry& out) {
   if(name == NULL || name[0] == 0) return false;
   const int count = program_store::count(type);
@@ -135,6 +134,7 @@ static bool find_entry_by_type_name(program_store::ProgramType type, const char*
   }
   return false;
 }
+#endif
 
 static void store_current_frame(ScriptFrame& frame) {
   frame.source = script_source;
@@ -251,8 +251,8 @@ bool last_error(Error& out) {
 static void fail_script(const char* message, u16 line) {
   copy_script_name(last_error_info.script, script_name);
   last_error_info.line = line;
-  strncpy(last_error_info.message, message == NULL ? "unknown error" : message, sizeof(last_error_info.message) - 1);
-  last_error_info.message[sizeof(last_error_info.message) - 1] = 0;
+  bounded_string::copy(last_error_info.message,
+                       message == NULL ? "unknown error" : message);
   stop_runner();
   has_error = true;
 #ifndef M61_TEXT_HOST_TEST
