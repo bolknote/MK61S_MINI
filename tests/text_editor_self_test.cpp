@@ -17,6 +17,7 @@ class MK61DisplayUpdate {
 
 #define TEXT_EDITOR_HOST_TEST
 #include "text_editor.hpp"
+#include "lcd1602_editor_viewport.hpp"
 #include "utf8_view.hpp"
 
 #include <assert.h>
@@ -198,6 +199,146 @@ void test_utf8_validation(void) {
   assert(utf8_view::previous_offset((const u8*) mixed, mixed_bytes, 5) == 3);
 }
 
+void test_lcd1602_editor_viewport_uses_hidden_ddram(void) {
+  static const char first[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcd";
+  static const char second[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCD";
+  const lcd1602_editor_viewport::RowSpan rows[] = {
+    {first, (u16) strlen(first)},
+    {second, (u16) strlen(second)},
+  };
+
+  lcd1602_editor_viewport::Layout layout = {};
+  lcd1602_editor_viewport::build(rows, 0, 14, layout);
+  assert(lcd1602_editor_viewport::first_visible_column(14) == 0);
+  assert(layout.shift == 0);
+  assert(layout.cursor_col == 15);
+  assert(layout.cells[0][0] == '>' && layout.cells[0][1] == 'A');
+  assert(layout.cells[1][0] == ' ' && layout.cells[1][1] == 'a');
+
+  lcd1602_editor_viewport::build(rows, 0, 15, layout);
+  assert(lcd1602_editor_viewport::first_visible_column(15) == 1);
+  assert(layout.shift == 1);
+  assert(layout.cursor_col == 15);
+  assert(layout.cells[0][0] == 'd'); // следующий символ заранее ждёт за краем кольца
+  assert(layout.cells[0][1] == '>');
+  assert(layout.cells[0][2] == 'B');
+  assert(layout.cells[1][1] == ' ' && layout.cells[1][2] == 'b');
+
+  lcd1602_editor_viewport::build(rows, 1, 38, layout);
+  assert(lcd1602_editor_viewport::first_visible_column(38) == 24);
+  assert(layout.shift == 24);
+  assert(layout.cells[0][24] == ' ' && layout.cells[0][25] == 'Y');
+  assert(layout.cells[1][24] == '>' && layout.cells[1][25] == 'y');
+
+  // Вторая половина 40-символьной DDRAM тоже используется: видимое окно
+  // переходит через адрес 39 и продолжает чтение с адреса 0.
+  lcd1602_editor_viewport::build(rows, 1, 39, layout);
+  assert(lcd1602_editor_viewport::first_visible_column(39) == 25);
+  assert(layout.shift == 25);
+  assert(layout.cursor_col == 15);
+  assert(layout.cells[0][25] == ' ' && layout.cells[0][26] == 'Z');
+  assert(layout.cells[1][25] == '>' && layout.cells[1][26] == 'z');
+
+  lcd1602_editor_viewport::build(rows, 1, 54, layout);
+  assert(lcd1602_editor_viewport::first_visible_column(54) == 40);
+  assert(layout.shift == 0);
+  assert(layout.cells[0][0] == ' ' && layout.cells[1][0] == '>');
+
+  const lcd1602_editor_viewport::ShiftPlan one_left =
+      lcd1602_editor_viewport::shortest_shift(0, 1);
+  assert(one_left.left && one_left.steps == 1);
+  const lcd1602_editor_viewport::ShiftPlan one_right =
+      lcd1602_editor_viewport::shortest_shift(1, 0);
+  assert(!one_right.left && one_right.steps == 1);
+  const lcd1602_editor_viewport::ShiftPlan wrap_left =
+      lcd1602_editor_viewport::shortest_shift(24, 0);
+  assert(wrap_left.left && wrap_left.steps == 16);
+  const lcd1602_editor_viewport::ShiftPlan wrap_right =
+      lcd1602_editor_viewport::shortest_shift(0, 24);
+  assert(!wrap_right.left && wrap_right.steps == 16);
+  const lcd1602_editor_viewport::ShiftPlan ring_left =
+      lcd1602_editor_viewport::shortest_shift(39, 0);
+  assert(ring_left.left && ring_left.steps == 1);
+  const lcd1602_editor_viewport::ShiftPlan ring_right =
+      lcd1602_editor_viewport::shortest_shift(0, 39);
+  assert(!ring_right.left && ring_right.steps == 1);
+}
+
+void test_lcd1602_editor_viewport_pages_long_lines(void) {
+  char long_line[1536];
+  char second_line[1536];
+  for(u16 index = 0; index < 1535; index++) {
+    long_line[index] = (char) ('A' + index % 26);
+    second_line[index] = (char) ('a' + index % 26);
+  }
+  long_line[1535] = 0;
+  second_line[1535] = 0;
+  const lcd1602_editor_viewport::RowSpan rows[] = {
+    {long_line, 1535},
+    {second_line, 1535},
+  };
+
+  lcd1602_editor_viewport::Layout layout = {};
+  lcd1602_editor_viewport::build(rows, 0, 137, layout);
+  assert(lcd1602_editor_viewport::first_visible_column(137) == 123);
+  assert(layout.shift == 3 && layout.cursor_col == 15);
+  assert(layout.cells[0][3] == '>');
+  assert(layout.cells[0][4] == (u8) long_line[123]);
+  assert(layout.cells[1][4] == (u8) second_line[123]);
+
+  // Позиция курсора после последнего байта строки также должна помещаться:
+  // в видимых знакоместах остаются последние 14 символов и сам курсор.
+  lcd1602_editor_viewport::build(rows, 0, 1535, layout);
+  assert(lcd1602_editor_viewport::first_visible_column(1535) == 1521);
+  assert(layout.shift == 1 && layout.cursor_col == 15);
+  assert(layout.cells[0][1] == '>');
+  assert(layout.cells[0][2] == (u8) long_line[1521]);
+  assert(layout.cells[0][15] == (u8) long_line[1534]);
+
+  // Проверяется каждый допустимый столбец редактора, а не только первые
+  // 40 адресов HD44780: видимое окно должно оставаться непрерывным при всех
+  // оборотах кольцевой DDRAM.
+  for(u16 active_column = 0; active_column <= 1535; active_column++) {
+    lcd1602_editor_viewport::build(rows, 0, active_column, layout);
+    const u16 view_left =
+        lcd1602_editor_viewport::first_visible_column(active_column);
+    assert(layout.shift == view_left %
+                           lcd1602_editor_viewport::DDRAM_COLS);
+    assert(layout.cells[0][layout.shift] == '>');
+    assert(layout.cells[1][layout.shift] == ' ');
+    for(u8 visible = 1; visible < lcd1602_editor_viewport::VISIBLE_COLS;
+        visible++) {
+      const u8 address = (u8) ((layout.shift + visible) %
+                               lcd1602_editor_viewport::DDRAM_COLS);
+      const u32 column = (u32) view_left + visible - 1;
+      const u8 expected_first = column < 1535 ? (u8) long_line[column]
+                                              : (u8) ' ';
+      const u8 expected_second = column < 1535 ? (u8) second_line[column]
+                                               : (u8) ' ';
+      assert(layout.cells[0][address] == expected_first);
+      assert(layout.cells[1][address] == expected_second);
+    }
+
+    if(active_column > lcd1602_editor_viewport::TEXT_COLS - 1) {
+      lcd1602_editor_viewport::Layout previous = {};
+      lcd1602_editor_viewport::build(rows, 0, (u16) (active_column - 1),
+                                     previous);
+      u8 changed_cells = 0;
+      for(u8 row = 0; row < lcd1602_editor_viewport::ROWS; row++) {
+        for(u8 address = 0; address < lcd1602_editor_viewport::DDRAM_COLS;
+            address++) {
+          if(previous.cells[row][address] != layout.cells[row][address]) {
+            changed_cells++;
+          }
+        }
+      }
+      // Независимо от длины строки один шаг меняет не более двух физических
+      // знакомест на строку: старый и новый адрес служебного маркера.
+      assert(changed_cells <= 4);
+    }
+  }
+}
+
 } // namespace
 
 int main(void) {
@@ -211,6 +352,8 @@ int main(void) {
   test_clear_current_line_removes_empty_edge_lines_and_crlf();
   test_single_line_cx_backspaces_and_clears();
   test_utf8_validation();
+  test_lcd1602_editor_viewport_uses_hidden_ddram();
+  test_lcd1602_editor_viewport_pages_long_lines();
   printf("text_editor_self_test: ok\n");
   return 0;
 }

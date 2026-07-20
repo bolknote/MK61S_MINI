@@ -8,6 +8,16 @@
 #include "lcd_gui.hpp"
 #endif
 
+#if defined(MK61_DISPLAY_LCD1602) && !defined(TEXT_EDITOR_HOST_TEST)
+#include "lcd1602_editor_viewport.hpp"
+static_assert(lcd1602_editor_viewport::ROWS == lcd_display::ROWS,
+              "Editor viewport must match the LCD row count");
+static_assert(lcd1602_editor_viewport::VISIBLE_COLS == lcd_display::COLS,
+              "Editor viewport must match the visible LCD width");
+static_assert(lcd1602_editor_viewport::DDRAM_COLS == lcd_display::DDRAM_COLS,
+              "Editor viewport must match the HD44780 DDRAM width");
+#endif
+
 #include <string.h>
 
 namespace text_editor {
@@ -76,6 +86,25 @@ enum class KeyResult : u8 {
   DIRTY,
   SAVE
 };
+
+#if defined(MK61_DISPLAY_LCD1602) && !defined(TEXT_EDITOR_HOST_TEST)
+// Аппаратный shift HD44780 относится сразу к обеим строкам и переживает
+// обычные записи в DDRAM. Сессия гарантирует возврат дисплея к стандартному
+// положению при любом выходе из редактора, в том числе через ранний return.
+class DisplaySession {
+  public:
+    explicit DisplaySession(MK61Display& display) : display(display) {}
+    ~DisplaySession(void) {
+      display.endTextEditorViewport();
+    }
+
+  private:
+    MK61Display& display;
+
+    DisplaySession(const DisplaySession&) = delete;
+    DisplaySession& operator=(const DisplaySession&) = delete;
+};
+#endif
 
 inline const Options& default_options(void) {
   static const Options options = {
@@ -402,6 +431,34 @@ inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, 
   if(actual_len < len) len = (u16) actual_len;
   if(cursor > len) cursor = len;
   if(view_top > len) view_top = len;
+
+#if defined(MK61_DISPLAY_LCD1602) && !defined(TEXT_EDITOR_HOST_TEST)
+  {
+    lcd1602_editor_viewport::RowSpan row_spans[lcd1602_editor_viewport::ROWS] = {};
+    u16 line_start = view_top;
+    for(u8 row = 0; row < lcd1602_editor_viewport::ROWS; row++) {
+      if(line_start > len) break;
+      const u16 line_end = line_end_for_start(source, line_start, len);
+      row_spans[row].text = source + line_start;
+      row_spans[row].length = (u16) (line_end - line_start);
+      if(line_start == len) break;
+      line_start = next_line_start(source, line_start, len);
+    }
+
+    const u16 active_line_start = line_start_for_cursor(source, cursor);
+    const u16 active_line_column = (u16) (cursor - active_line_start);
+    const u8 cursor_row = cursor_screen_row(display, source, len, cursor, view_top);
+    lcd1602_editor_viewport::Layout layout = {};
+    lcd1602_editor_viewport::build(row_spans, cursor_row,
+                                   active_line_column, layout);
+    display.renderTextEditorViewport(layout.cells, layout.shift);
+    display.setCursor(layout.cursor_col, cursor_row);
+    if(display.supportsCursor()) display.cursorOn();
+    else display.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
+    return;
+  }
+#endif
+
   MK61DisplayUpdate update(display);
   display.clear();
   const u8 rows = visible_rows(display);

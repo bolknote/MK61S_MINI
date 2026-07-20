@@ -3168,6 +3168,9 @@ static void EditFocalSlot(int slot,
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, FOCAL_SOURCE_SIZE);
+#if defined(MK61_DISPLAY_LCD1602) && !defined(FOCAL_HOST_TEST)
+  text_editor::DisplaySession display_session(lcd);
+#endif
   bool dirty = true;
 
   kbd::debounce_init();

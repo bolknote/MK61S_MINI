@@ -50,6 +50,7 @@ struct TextProfile {
 
 #if defined(MK61_DISPLAY_LCD1602)
 static constexpr u8 ROWS = 2;
+static constexpr u8 DDRAM_COLS = 40;
 static constexpr u8 DEFAULT_ROWS = ROWS;
 static constexpr u8 MAX_ROWS = ROWS;
 static inline TextProfile defaultTextProfileForRows(u8) {
@@ -157,6 +158,9 @@ class MK61Display : public Print {
     bool readCell(u8 x, u8 y, u8& value) const;
     bool copyCustomChar(u8 nChar, u8 glyph[8]) const;
     void clearCustomChar(u8 nChar);
+    void renderTextEditorViewport(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+    void endTextEditorViewport(void);
 #endif
     void writeCodepoint(u16 codepoint);
     bool installFont(const u8* data, u16 size);
@@ -188,7 +192,7 @@ class MK61Display : public Print {
   private:
 #if defined(MK61_DISPLAY_LCD1602)
     LiquidCrystal lcd;
-    u8 shadow_cells[lcd_display::ROWS][lcd_display::COLS];
+    u8 ddram_shadow[lcd_display::ROWS][lcd_display::DDRAM_COLS];
     u8 shadow_cursor_x;
     u8 shadow_cursor_y;
     u8 custom_glyphs[8][8];
@@ -196,6 +200,8 @@ class MK61Display : public Print {
     u8 display_control;
     bool busy_flag_active;
     u32 busy_flag_timeouts;
+    bool text_editor_viewport_active;
+    u8 text_editor_shift;
 
     void probeBusyFlag(void);
     void sendByte(u8 value, bool data, u32 fallback_delay_us = 0);

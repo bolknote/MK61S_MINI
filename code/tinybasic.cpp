@@ -2314,6 +2314,9 @@ static void EditTinyBasicSlot(int slot,
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, TB_SOURCE_SIZE);
+#if defined(MK61_DISPLAY_LCD1602) && !defined(TINYBASIC_HOST_TEST)
+  text_editor::DisplaySession display_session(lcd);
+#endif
   bool dirty = true;
   kbd::debounce_init();
   while(true) {
