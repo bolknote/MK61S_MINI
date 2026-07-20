@@ -67,8 +67,8 @@ enum CacheState : u8 {
   CACHE_EMPTY = 0,
   CACHE_CLEAN = 1,
   CACHE_DIRTY = 2,
-  // Accepted directly by USB without an SPI read. The persistent comparison
-  // is deliberately postponed until eviction/sync.
+  // Принято напрямую из USB без чтения SPI. Сравнение с постоянными данными
+  // намеренно отложено до вытеснения или синхронизации.
   CACHE_UNCHECKED = 3
 };
 
@@ -584,7 +584,7 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
     }
     cursor += count;
     if(cursor >= last_slot && cursor > first_slot) {
-      // Entries after this point cannot affect the requested sector.
+      // Записи после этой точки не могут влиять на запрошенный сектор.
       if(cursor >= last_slot) break;
     }
   }
@@ -690,8 +690,8 @@ static void touch_cache(u8 slot) {
   SessionState& state = session();
   state.cache_clock++;
   if(state.cache_clock == 0) {
-    // Losing exact LRU order once per four billion accesses is harmless, but
-    // wrapping ages must never make a hot entry look permanently oldest.
+    // Потеря точного порядка LRU раз в четыре миллиарда обращений безвредна,
+    // но переполнение возраста не должно навсегда делать активную запись самой старой.
     state.cache_clock = 1;
     for(u8 i = 0; i < g_cache_slots; i++) {
       if(state.cache[i].state != CACHE_EMPTY) state.cache[i].age = 1;
@@ -761,8 +761,8 @@ static bool prepare_cache_slot(u8& output) {
     }
   }
 
-  // Prefer dropping a read-only entry. Only when every slot is dirty do we
-  // append the least-recently-used one to the NOR journal.
+  // Предпочитаем удалить запись только для чтения. Лишь когда все слоты грязные,
+  // добавляем в журнал NOR использовавшийся раньше всех.
   int victim = oldest_cache(CACHE_CLEAN);
   if(victim < 0) victim = oldest_dirty_cache();
   if(victim < 0 || !persist_cache_slot((u8) victim)) return false;
@@ -928,10 +928,10 @@ static bool system_directory(const char* name, u8 attributes) {
 }
 
 static bool host_sidecar_file(const char* name) {
-  // Finder stores extended attributes/resource forks in AppleDouble files.
-  // Their suffix intentionally mirrors the real file (for example
-  // "._game.m61"), so extension-based C5 import must reject them before it
-  // mistakes a multi-kilobyte metadata blob for calculator source.
+  // Finder хранит расширенные атрибуты и ветви ресурсов в файлах AppleDouble.
+  // Их суффикс намеренно повторяет настоящий файл (например, "._game.m61"),
+  // поэтому импорт C5 по расширению должен отклонить их до того, как примет
+  // многокилобайтный блок метаданных за исходник калькулятора.
   return name[0] == '.' && name[1] == '_';
 }
 
@@ -961,9 +961,8 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   if(host_sidecar_file(name) || !parse_file_name(name, parsed.type)) {
     return ParseStatus::SKIP;
   }
-  // Unsupported host files are intentionally ignored regardless of size.
-  // Apply the C5 payload quota only after a recognized calculator extension
-  // has been selected.
+  // Неподдерживаемые файлы хоста намеренно игнорируются независимо от размера.
+  // Квоту данных C5 применяем лишь после выбора известного расширения калькулятора.
   if(size > program_store::MAX_MK61_TEXT_SIZE) return ParseStatus::INVALID;
   if(!valid_cluster(cluster)) return ParseStatus::INVALID;
   strcpy(parsed.name, name);
@@ -1037,8 +1036,8 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
     program_store::Entry current;
     if(program_store::entry_by_id(parsed.id, current)) {
       if(parsed.directory != (current.kind == program_store::NodeKind::DIRECTORY)) {
-        // Reuse across file/directory kinds is safe only after the old tree is
-        // fully removed; rejecting it keeps recovery deterministic.
+        // Повторное использование между типами файла и каталога безопасно лишь
+        // после полного удаления старого дерева; отказ сохраняет детерминизм восстановления.
         g_last_error = "kind-change";
         return false;
       }
@@ -1314,9 +1313,9 @@ static void invalidate_clean_cache(void) {
 class ScopedCommitScratch {
   public:
     ScopedCommitScratch(void) {
-      // Every dirty byte is already in the power-fail-safe stage journal when
-      // this guard is constructed. Clean cache entries may be discarded so
-      // VFAT_COMMIT and program-store GC can borrow shared_scratch.
+      // К моменту создания этой защиты каждый грязный байт уже находится в
+      // устойчивом к сбою питания журнале staging. Чистые записи кеша можно
+      // удалить, чтобы VFAT_COMMIT и GC хранилища заняли shared_scratch.
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_scratch.reset();
       g_scratch_cache_slots = 0;
@@ -1324,8 +1323,8 @@ class ScopedCommitScratch {
     }
 
     ~ScopedCommitScratch(void) {
-      // Commit may have populated clean read-cache entries while the scratch
-      // span was absent. Clear their metadata before restoring slot mapping.
+      // Пока область scratch отсутствовала, фиксация могла заполнить чистые
+      // записи кеша чтения. Очищаем их метаданные перед восстановлением слотов.
       memset(session().cache, 0, sizeof(session().cache));
       g_scratch_cache_slots = g_cache_scratch.acquire(
         shared_scratch::Owner::USB_CACHE, shared_scratch::SIZE
@@ -1363,18 +1362,18 @@ static bool cache_write_sector(u32 lba, const u8* data) {
   }
 
   if(entry.state == CACHE_UNCHECKED) {
-    // A fast USB write has not read the persistent sector yet. Preserve that
-    // fact across rewrites: sync/eviction will compare only the final bytes.
+    // Быстрая запись USB ещё не читала постоянный сектор. Сохраняем этот факт
+    // при перезаписях: синхронизация или вытеснение сравнит только итоговые байты.
     memcpy(bytes, data, SECTOR_SIZE);
     touch_cache(slot);
     return true;
   }
 
   if(entry.state == CACHE_DIRTY) {
-    // The host may rewrite a dirty block back to its persistent value. Reload
-    // that value before deciding whether this slot still needs a NOR append.
+    // Хост может вернуть грязный блок к постоянному значению. Перечитываем его,
+    // прежде чем решать, нужно ли этому слоту добавление записи в NOR.
     if(!read_persistent_sector(lba, bytes)) {
-      // Keep the latest host bytes dirty so a retry or later sync can recover.
+      // Оставляем последние байты хоста грязными для восстановления повтором или синхронизацией.
       memcpy(bytes, data, SECTOR_SIZE);
       touch_cache(slot);
       return false;
@@ -1416,8 +1415,8 @@ static int fast_reusable_cache_slot(u32 lba, u16 count) {
   int oldest = -1;
   for(u8 slot = 0; slot < g_cache_slots; slot++) {
     const CacheEntry& entry = state.cache[slot];
-    // Keep clean sectors addressed by this packet reserved until all of its
-    // sectors are installed. Their bytes may become dirty later in the packet.
+    // Удерживаем чистые секторы этого пакета зарезервированными до установки
+    // всех его секторов: их байты могут стать грязными позднее в том же пакете.
     if(entry.state != CACHE_CLEAN ||
        packet_contains_key(lba, count, entry.lba)) continue;
     if(oldest < 0 || entry.age < state.cache[(u8) oldest].age) oldest = slot;
@@ -1471,12 +1470,12 @@ static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
   }
 
   found = fast_reusable_cache_slot(packet_lba, packet_count);
-  // fast_packet_fits() reserves every required slot before any mutation.
+  // fast_packet_fits() резервирует все нужные слоты до любого изменения.
   if(found < 0) __builtin_trap();
   slot = (u8) found;
   CacheEntry& entry = session().cache[slot];
-  // Do not publish a new key until all its bytes are present. This path never
-  // touches SPI and is therefore safe in the USB callback.
+  // Не публикуем новый ключ, пока не получены все его байты. Этот путь не
+  // обращается к SPI и потому безопасен внутри обратного вызова USB.
   entry.state = CACHE_EMPTY;
   entry.lba = key;
   memcpy(cache_bytes(slot), data, SECTOR_SIZE);
@@ -1484,7 +1483,7 @@ static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
   entry.state = CACHE_UNCHECKED;
 }
 
-} // namespace
+} // пространство имён
 
 u32 sector_count(void) {
   return program_store::ready() ? geometry().logical_sectors : 0;
@@ -1534,9 +1533,9 @@ u8 dirty_cache_sectors(void) {
 }
 
 bool try_write_cached_sectors(u32 lba, const u8* data, u16 count) {
-  // Unlike write_cached_sectors(), this function is called by the USB stack.
-  // It must not acquire memory, read/program SPI NOR, evict dirty data, or
-  // partially accept a packet that later needs the deferred main-loop path.
+  // В отличие от write_cached_sectors(), эту функцию вызывает стек USB. Она не
+  // должна занимать память, читать или программировать SPI NOR, вытеснять грязные
+  // данные либо частично принимать пакет, которому затем нужен отложенный путь цикла.
   if((data == NULL && count != 0) || !program_store::ready() ||
      g_session == NULL || count > MAX_CACHE_SLOTS || lba > sector_count() ||
      (u32) count > sector_count() - lba || !fast_packet_fits(lba, count)) {
@@ -1644,4 +1643,4 @@ const char* trace_line_at(u16 index) {
   return index == 0 ? g_last_error : NULL;
 }
 
-} // namespace virtual_fat
+} // пространство имён virtual_fat

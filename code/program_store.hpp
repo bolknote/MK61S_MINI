@@ -8,7 +8,7 @@
 namespace program_store {
 
 static constexpr usize NAME_SIZE = 32;
-// Logical file size exposed by the store and virtual FAT.
+// Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
 static constexpr u16 MAX_FONT_SIZE = 1536;
 
@@ -29,8 +29,8 @@ enum class NodeKind : u8 {
 
 static constexpr u16 ROOT_ID = 0xFFFF;
 static constexpr u16 INVALID_ID = 0xFFFF;
-// Kept in lockstep with the virtual FAT walker.  This bounds stack-free
-// ancestor walks and prevents a tree that cannot be represented over USB.
+// Синхронизировано с обходчиком виртуальной FAT. Это ограничивает обход
+// предков без стека и не позволяет создать дерево, непредставимое через USB.
 static constexpr u8 MAX_DIRECTORY_DEPTH = 32;
 
 struct Entry {
@@ -72,7 +72,7 @@ bool child(u16 parent_id, int index, Entry& out);
 bool exists(ProgramType type, const char* name);
 
 bool write(ProgramType type, const char* name, const u8* data, u16 data_len);
-// USB imports avoid compression latency while the raw payload fits the store.
+// Импорт через USB не тратит время на сжатие, пока исходные данные помещаются в хранилище.
 bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data_len);
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len);
 bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 len, u16* out_len);
@@ -107,6 +107,6 @@ void vfat_stage_clear(void);
 bool write_mk61(const char* name, const u8* code, u16 code_len);
 bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len);
 
-} // namespace program_store
+} // пространство имён program_store
 
 #endif

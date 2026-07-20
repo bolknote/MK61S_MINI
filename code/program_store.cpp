@@ -106,8 +106,8 @@ static u32 g_wal_sequence;
 static u8 g_wal_records;
 static bool g_wal_sealed;
 static CatalogMeta g_meta;
-// Structure-of-arrays keeps Inode naturally aligned without the two bytes of
-// tail padding that an {u16, Inode} array would pay for every overlay slot.
+// Структура из массивов сохраняет естественное выравнивание Inode без двух
+// байтов хвостового заполнения на каждый слот таблицы {u16, Inode}.
 static u16 g_overlay_ids[OVERLAY_CAPACITY];
 static Inode g_overlay_inodes[OVERLAY_CAPACITY];
 static u8 g_overlay_count;
@@ -116,9 +116,10 @@ static u32 g_table_cache_address = EMPTY_ADDRESS;
 static u8 g_disk_activity_depth;
 static u8 g_disk_led_poll_divider;
 
-// Pack an 18-bit virtual LBA and a 9-bit physical record reference into one
-// word.  This grows the live staging set fourfold while adding less than one
-// KiB over the former parallel key/generation/reference arrays.
+// Упаковываем 18-битный виртуальный LBA и 9-битную ссылку на физическую запись
+// в одно слово. Это вчетверо увеличивает активный набор staging, добавляя менее
+// одного КиБ по сравнению с прежними параллельными массивами ключей, поколений
+// и ссылок.
 static u32 g_stage_index[STAGE_REF_CAPACITY];
 static u16 g_stage_ref_count;
 static u8 g_stage_used[storage_geometry::STAGE_TARGET_SECTORS];
@@ -931,12 +932,12 @@ static bool locator_matches(const u8* locator, storage_geometry::Geometry& geome
   return epoch != 0;
 }
 
-// A firmware update may deliberately change the derived C5/FAT geometry while
-// the physical chip and its settings sector remain unchanged.  In that case
-// the old catalog cannot be mounted, but rerunning the destructive capacity
-// probe and erasing settings would be both unnecessary and surprising.  This
-// narrower decoder trusts only a fully committed, CRC-protected locator plus
-// the independently CRC-protected guard at the unchanged physical end.
+// Обновление прошивки может намеренно изменить вычисляемую геометрию C5/FAT,
+// хотя физическая микросхема и сектор настроек не меняются. Старый каталог при
+// этом смонтировать нельзя, но повторять разрушающую проверку ёмкости и стирать
+// настройки было бы излишне и неожиданно. Этот ограниченный декодер доверяет
+// только полностью зафиксированному локатору с CRC и независимо защищённой CRC
+// метке на неизменившемся физическом конце.
 static bool load_capacity_for_reformat(void) {
 #ifndef SPI_FLASH
   return false;
@@ -1060,9 +1061,9 @@ static bool select_reclaimable_sector(u32& out) {
   const u32 start = data_sector_in_range(g_meta.gc_cursor)
       ? g_meta.gc_cursor : first;
 
-  // Mark liveness for 32 candidates per inode-table pass. The former
-  // sector-first loop could scan the complete node table once for every data
-  // sector near full capacity (quadratic worst case).
+  // За один проход таблицы inode отмечаем активность 32 кандидатов. Прежний
+  // цикл с секторами снаружи мог при почти заполненном накопителе просматривать
+  // всю таблицу узлов для каждого сектора данных (квадратичный худший случай).
   for(u32 base = 0; base < count; base += GC_SCAN_WINDOW) {
     const u8 window = (u8) ((count - base < GC_SCAN_WINDOW)
         ? count - base : GC_SCAN_WINDOW);
@@ -1599,13 +1600,13 @@ static bool format_internal(bool erase_settings) {
   g_meta.gc_cursor = g_geometry.data_first_sector;
   g_meta.data_sequence = 0;
 
-  // checkpoint() erases and publishes the new active bank itself.  The other
-  // bank is epoch-qualified and will be erased when it next becomes the COW
-  // destination, so eagerly erasing both banks here only tripled first-boot
-  // catalog work on a 16 MiB W25Q128.
+  // checkpoint() сама стирает и публикует новый активный банк. Другой банк
+  // привязан к эпохе и будет стёрт, когда снова станет приёмником COW, поэтому
+  // предварительное стирание обоих банков здесь лишь утраивало работу с
+  // каталогом при первом запуске на W25Q128 ёмкостью 16 МиБ.
   if(!checkpoint()) return false;
-  // Staging headers also carry the format epoch.  Old/foreign sectors are
-  // ignored after this format and erased lazily before their first append.
+  // Заголовки staging также содержат эпоху форматирования. Старые или чужие
+  // секторы после форматирования игнорируются и стираются лениво перед первой записью.
   if(erase_settings) {
     if(!erase_sector(g_geometry.settings_sector) || !write_settings_guard()) return false;
   } else if(!settings_guard_valid(g_geometry)) {
@@ -1617,7 +1618,7 @@ static bool format_internal(bool erase_settings) {
   return true;
 }
 
-} // namespace
+} // пространство имён
 
 void init(void) {
   DiskActivity activity;
@@ -1661,9 +1662,9 @@ void init(void) {
     dbgln(SPIROM, "C5 format: complete");
   } else if(!load_catalog()) {
     dbgln(SPIROM, "C5 catalog: both banks invalid");
-    // A valid locator proves this is an existing C5 volume.  Losing both
-    // catalog banks must never look like first use: leave every byte intact
-    // until the user explicitly requests a format.
+    // Действительный локатор доказывает, что это существующий том C5. Потеря
+    // обоих банков каталога не должна выглядеть как первое использование:
+    // сохраняем каждый байт до явного запроса пользователя на форматирование.
     g_mount_status = MountStatus::REPAIR_REQUIRED;
   } else {
     dbgln(SPIROM, "C5 catalog: ready");
@@ -1858,7 +1859,7 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
                     name, NULL, 0, address, record_len)) return false;
   Inode inode = empty_inode();
   inode.address = address;
-  inode.data_len = NONE; // first directory extent
+  inode.data_len = NONE; // первый экстент каталога
   inode.record_len = record_len;
   inode.parent_id = parent_id;
   inode.first_child = NONE;
@@ -2025,7 +2026,7 @@ bool remove_id(u16 id) {
   if(!get_inode(id, inode) || !visible_inode(inode)) return false;
   if(inode_kind(inode) == NodeKind::DIRECTORY && inode.first_child != NONE) return false;
 
-  // Directory extents are released from the tail before the inode itself.
+  // Экстенты каталога освобождаются с конца до освобождения самого inode.
   if(inode_kind(inode) == NodeKind::DIRECTORY) {
     while(inode.data_len != NONE) {
       u16 extent = inode.data_len;
@@ -2058,9 +2059,10 @@ bool remove_tree(u16 id, u16* removed) {
   Inode root;
   if(!get_inode(id, root) || !visible_inode(root)) return false;
 
-  // Stack-free post-order deletion. MAX_DIRECTORY_DEPTH bounds corruption
-  // checks, while following first_child after each committed removal means a
-  // power cut can leave only a smaller, still-consistent subtree.
+  // Обходное удаление в обратном порядке без стека. MAX_DIRECTORY_DEPTH
+  // ограничивает проверку повреждений, а переход к first_child после каждого
+  // зафиксированного удаления гарантирует, что сбой питания оставит лишь
+  // уменьшенное, но согласованное поддерево.
   u16 current = id;
   u16 count = 0;
   while(true) {
@@ -2269,7 +2271,7 @@ bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len) {
   return read(ProgramType::MK61, name, code, capacity, out_len);
 }
 
-// Persistent USB staging journal is implemented below.
+// Ниже реализован постоянный журнал staging для USB.
 
 namespace {
 
@@ -2403,9 +2405,9 @@ static bool append_stage_value(u16 sector, u32 key, const u8* data) {
   memset(record, 0xFF, STAGE_RECORD_HEADER_SIZE);
   record[0] = 'S';
   record[1] = '5';
-  // The complete record is programmed as one verified stream. Recovery only
-  // accepts ACTIVE records whose payload CRC matches, so a power cut during
-  // any constituent NOR page program cannot supersede the previous version.
+  // Полная запись программируется одним проверяемым потоком. Восстановление
+  // принимает только записи ACTIVE с совпадающей CRC данных, поэтому отключение
+  // питания во время программирования любой страницы NOR не заменит старую версию.
   record[2] = STATE_ACTIVE;
   put_le32(record, 4, key);
   put_le16(record, 8, g_stage_generation);
@@ -2468,9 +2470,9 @@ static bool erase_stage_sector(u16 sector) {
   return true;
 }
 
-// Completes any interrupted compaction. Copies always receive a newer
-// generation before the old sector is erased, so every power cut leaves at
-// least one valid version of every staged block.
+// Завершает любое прерванное уплотнение. До стирания старого сектора копии всегда
+// получают более новое поколение, поэтому при любом сбое питания остаётся хотя
+// бы одна действительная версия каждого промежуточного блока.
 static bool recover_stage_reserve(void) {
   const u16 normal_count = normal_stage_sector_count();
   if(normal_count == 0) return false;
@@ -2478,8 +2480,8 @@ static bool recover_stage_reserve(void) {
   u8 reserve_live = stage_sector_live_count(reserve);
   if(reserve_live == 0) return true;
 
-  // The normal destination may already contain the first records copied back
-  // before a reset. Finish that direction whenever its erased tail fits.
+  // Обычный приёмник уже может содержать первые записи, скопированные обратно
+  // до сброса. Завершаем это направление, если свободного хвоста достаточно.
   for(u16 sector = 0; sector < normal_count; sector++) {
     if(stage_sector_has_live(sector) && !stage_sector_header_valid(sector)) continue;
     if(!stage_sector_header_valid(sector)) {
@@ -2493,8 +2495,8 @@ static bool recover_stage_reserve(void) {
     return erase_stage_sector(reserve);
   }
 
-  // Otherwise the reset happened while the sparse victim was being copied
-  // into the reserve. Finish that copy, erase the victim, then copy back.
+  // Иначе сброс произошёл при копировании разреженного сектора в резерв.
+  // Завершаем копирование, стираем исходный сектор и копируем данные обратно.
   if(!stage_sector_header_valid(reserve) || g_stage_sealed[reserve]) return false;
   for(u16 victim = 0; victim < normal_count; victim++) {
     const u8 victim_live = stage_sector_live_count(victim);
@@ -2570,7 +2572,7 @@ static bool find_stage_slot(u16& out_sector, u8& out_slot) {
   return compact_stage(out_sector, out_slot);
 }
 
-} // namespace
+} // пространство имён
 
 void vfat_stage_clear(void) {
   g_stage_ref_count = 0;
@@ -2603,8 +2605,8 @@ void vfat_stage_clear(void) {
       if(!read_bytes(stage_record_address(ref) + STAGE_RECORD_HEADER_SIZE,
                      payload, sizeof(payload)) ||
          stage_crc(key, generation, payload) != crc) {
-        // Never append after a torn record: retaining the previous valid
-        // generation is more important than the unused tail of this sector.
+        // Никогда не дописываем после оборванной записи: сохранение предыдущего
+        // действительного поколения важнее неиспользованного хвоста сектора.
         g_stage_sealed[sector] = 1;
         continue;
       }
@@ -2686,4 +2688,4 @@ bool vfat_stage_discard_all(void) {
   return true;
 }
 
-} // namespace program_store
+} // пространство имён program_store
