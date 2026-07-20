@@ -50,6 +50,11 @@ bool wait_for_lse_flag(bool ready, u32 timeout_ms) {
   return true;
 }
 
+bool lse_gpio_is_released(void) {
+  return (RCC->BDCR & RCC_BDCR_LSEON) == 0 &&
+         __HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) == RESET;
+}
+
 bool disable_retained_lse_for_gpio(void) {
   if(MK61_RTC_LSE_AVAILABLE) return true;
 
@@ -117,7 +122,15 @@ void init(void) {
       ? STM32RTC::LSE_CLOCK
       : STM32RTC::LSI_CLOCK);
   rtc.begin(); // Preserve an already configured calendar and backup registers.
+  if(!MK61_RTC_LSE_AVAILABLE && !lse_gpio_is_released() &&
+     !disable_retained_lse_for_gpio()) {
+    dbgln(SPIROM, "RTC init: WARNING, LSE returned after selecting LSI");
+  }
   initialized = true;
+#ifdef DEBUG_SPIFLASH
+  Serial.print("RTC init: BDCR=0x");
+  Serial.println(RCC->BDCR, HEX);
+#endif
   dbgln(SPIROM, "RTC init: ready, clock ",
         source == ClockSource::LSE ? "LSE" : "LSI");
 }
