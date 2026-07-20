@@ -20,6 +20,11 @@ constexpr ClockSource select_clock_source(bool lse_available, bool lse_ready) {
   return (lse_available && lse_ready) ? ClockSource::LSE : ClockSource::LSI;
 }
 
+constexpr bool retained_lse_must_be_disabled(bool lse_available,
+                                             bool lse_enabled) {
+  return !lse_available && lse_enabled;
+}
+
 struct DateTime {
   u16 year;
   u8 month;

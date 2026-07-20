@@ -107,6 +107,10 @@ static void test_rtc_datetime_parser_and_formatter(void) {
          rtc_clock::ClockSource::LSI);
   assert(rtc_clock::select_clock_source(true, true) ==
          rtc_clock::ClockSource::LSE);
+  assert(!rtc_clock::retained_lse_must_be_disabled(false, false));
+  assert(rtc_clock::retained_lse_must_be_disabled(false, true));
+  assert(!rtc_clock::retained_lse_must_be_disabled(true, false));
+  assert(!rtc_clock::retained_lse_must_be_disabled(true, true));
 
   rtc_clock::DateTime value = {};
   assert(rtc_clock::parse_datetime("2026-07-19 14:35:00", value));

@@ -19,6 +19,7 @@ static constexpr u32 LSE_TIMEOUT_MS = LSE_STARTUP_TIMEOUT;
 #else
 static constexpr u32 LSE_TIMEOUT_MS = 5000;
 #endif
+static constexpr u32 LSE_STOP_TIMEOUT_MS = 100;
 
 STM32RTC& hardware_rtc(void) {
   return STM32RTC::getInstance();
@@ -40,6 +41,44 @@ void write_marker(u32 value) {
   HAL_RTCEx_BKUPWrite(rtc_handle(), RTC_BKP_DR2, value);
 }
 
+bool wait_for_lse_flag(bool ready, u32 timeout_ms) {
+  const u32 started_ms = millis();
+  while((__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) != ready) {
+    if((u32) (millis() - started_ms) >= timeout_ms) return false;
+    yield();
+  }
+  return true;
+}
+
+bool disable_retained_lse_for_gpio(void) {
+  if(MK61_RTC_LSE_AVAILABLE) return true;
+
+  enableBackupDomain();
+  const bool was_enabled = (RCC->BDCR & RCC_BDCR_LSEON) != 0;
+  if(retained_lse_must_be_disabled(MK61_RTC_LSE_AVAILABLE, was_enabled)) {
+    dbgln(SPIROM, "RTC init: disabling retained LSE to release PC15");
+  }
+
+  // LSEON is in the backup domain and survives an ordinary MCU reset and
+  // reflashing. STM32F4 HAL even preserves it while changing RTCSEL to LSI,
+  // which leaves OSC32_OUT unavailable as LCD DB7 unless we clear it first.
+  __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
+  if(wait_for_lse_flag(false, LSE_STOP_TIMEOUT_MS)) {
+    dbgln(SPIROM, "RTC init: LSE off, PC15 released");
+    return true;
+  }
+
+  // A stuck backup-domain configuration must not permanently sacrifice the
+  // display. This recovery is reached only when a normal LSE stop failed; the
+  // RTC calendar is necessarily unusable while its clock cannot be stopped.
+  dbgln(SPIROM, "RTC init: LSE stop timed out, resetting backup domain");
+  __HAL_RCC_BACKUPRESET_FORCE();
+  __HAL_RCC_BACKUPRESET_RELEASE();
+  const bool stopped = wait_for_lse_flag(false, LSE_STOP_TIMEOUT_MS);
+  if(stopped) dbgln(SPIROM, "RTC init: LSE off after backup reset");
+  return stopped;
+}
+
 bool start_lse_without_fatal_handler(void) {
   if(!MK61_RTC_LSE_AVAILABLE) return false;
 
@@ -53,13 +92,9 @@ bool start_lse_without_fatal_handler(void) {
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 #endif
   __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);
-  const u32 started_ms = millis();
-  while(__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) == RESET) {
-    if((u32) (millis() - started_ms) >= LSE_TIMEOUT_MS) {
-      __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
-      return false;
-    }
-    yield();
+  if(!wait_for_lse_flag(true, LSE_TIMEOUT_MS)) {
+    __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
+    return false;
   }
   return true;
 }
@@ -70,6 +105,10 @@ void init(void) {
   if(initialized) return;
   dbgln(SPIROM, "RTC init: start");
 
+  const bool lse_released = disable_retained_lse_for_gpio();
+  if(!lse_released) {
+    dbgln(SPIROM, "RTC init: WARNING, PC15 may remain owned by LSE");
+  }
   const bool lse_ready = start_lse_without_fatal_handler();
   const ClockSource source =
       select_clock_source(MK61_RTC_LSE_AVAILABLE, lse_ready);

@@ -247,7 +247,16 @@ void setup() {
     pinMode(PIN_LCD_RW, OUTPUT);
     digitalWrite(PIN_LCD_RW, LOW);
   #endif
+  #if defined(MK61_DISPLAY_LCD1602) && defined(REVISION_V2)
+    // PC15 is both LCD DB7 and OSC32_OUT on mini V2. RTC initialization has
+    // disabled the retained LSE above; explicitly restore the GPIO direction
+    // here as a second line of defence before LiquidCrystal starts signalling.
+    pinMode(PIN_LCD_DB7, OUTPUT);
+    digitalWrite(PIN_LCD_DB7, LOW);
+    dbgln(SPIROM, "LCD init: PC15 restored as GPIO output");
+  #endif
   lcd.begin(lcd_display::COLS, library_mk61::display_rows());
+  dbgln(SPIROM, "LCD init: ready");
   lcd.setTextProfile(library_mk61::display_text_profile());
 
   entropy_pool::begin();
