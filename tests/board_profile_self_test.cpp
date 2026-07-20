@@ -20,6 +20,8 @@ int main(void) {
   static_assert(PIN_BUZZER == PB10, "mini V2 buzzer pin regression");
   static_assert(PIN_LED_ACTIVE_LOW == 1,
                 "mini V2 BlackPill LED must be active-low");
+  static_assert(!MK61_RTC_LSE_AVAILABLE,
+                "mini V2 must not enable LSE while LCD DB7 owns PC15");
 #else
   #if defined(REVISION_V2) || !defined(REVISION_V3)
     #error "the default build must select V3 only"
@@ -30,6 +32,8 @@ int main(void) {
   static_assert(PIN_BUZZER == PA0, "mini V3 buzzer pin regression");
   static_assert(PIN_LED_ACTIVE_LOW == 0,
                 "mini V3 board LED must be active-high");
+  static_assert(MK61_RTC_LSE_AVAILABLE,
+                "mini V3 leaves the LSE pins available for RTC");
 #endif
 
   std::cout << "board_profile_self_test: ok\n";

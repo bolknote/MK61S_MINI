@@ -99,6 +99,15 @@ static void test_script_allowlist_is_explicit(void) {
 }
 
 static void test_rtc_datetime_parser_and_formatter(void) {
+  assert(rtc_clock::select_clock_source(false, false) ==
+         rtc_clock::ClockSource::LSI);
+  assert(rtc_clock::select_clock_source(false, true) ==
+         rtc_clock::ClockSource::LSI);
+  assert(rtc_clock::select_clock_source(true, false) ==
+         rtc_clock::ClockSource::LSI);
+  assert(rtc_clock::select_clock_source(true, true) ==
+         rtc_clock::ClockSource::LSE);
+
   rtc_clock::DateTime value = {};
   assert(rtc_clock::parse_datetime("2026-07-19 14:35:00", value));
   assert(value.year == 2026 && value.month == 7 && value.day == 19);

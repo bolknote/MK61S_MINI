@@ -47,6 +47,16 @@
 #if !defined(REVISION_V2) && !defined(REVISION_V3)
   #define REVISION_V3
 #endif
+
+// Mini V2 routes LCD DB7 to PC15/OSC32_OUT, so enabling LSE steals an LCD
+// signal and STM32duino can enter Error_Handler forever while waiting for a
+// crystal that this profile cannot use. CDU likewise owns both LSE pins.
+// Other supported boards may try LSE and fall back to LSI if it does not start.
+#if defined(REVISION_V2) || defined(CDU)
+  static constexpr bool MK61_RTC_LSE_AVAILABLE = false;
+#else
+  static constexpr bool MK61_RTC_LSE_AVAILABLE = true;
+#endif
 #define MK61s
 //#define MK52s
 

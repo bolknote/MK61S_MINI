@@ -1,6 +1,10 @@
 #include "rtc_clock.hpp"
 
 #include <STM32RTC.h>
+#include <backup.h>
+
+#include "config.h"
+#include "debug.h"
 
 namespace rtc_clock {
 namespace {
@@ -9,6 +13,12 @@ namespace {
 // bootloader. DR2 is free on STM32F401/F411 and survives on VBAT.
 static constexpr u32 TIME_SET_MARKER = 0x4D4B5254UL; // "MKRT"
 static bool initialized = false;
+
+#if defined(LSE_STARTUP_TIMEOUT)
+static constexpr u32 LSE_TIMEOUT_MS = LSE_STARTUP_TIMEOUT;
+#else
+static constexpr u32 LSE_TIMEOUT_MS = 5000;
+#endif
 
 STM32RTC& hardware_rtc(void) {
   return STM32RTC::getInstance();
@@ -30,14 +40,47 @@ void write_marker(u32 value) {
   HAL_RTCEx_BKUPWrite(rtc_handle(), RTC_BKP_DR2, value);
 }
 
+bool start_lse_without_fatal_handler(void) {
+  if(!MK61_RTC_LSE_AVAILABLE) return false;
+
+  // STM32duino's enableClock(LSE_CLOCK) calls Error_Handler() when the crystal
+  // does not start. Preflight the oscillator ourselves, with a wrap-safe
+  // deadline, and call STM32RTC only after LSERDY is known to be asserted.
+  enableBackupDomain();
+  if(__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) return true;
+
+#if defined(__HAL_RCC_LSEDRIVE_CONFIG) && defined(RCC_LSEDRIVE_LOW)
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+#endif
+  __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);
+  const u32 started_ms = millis();
+  while(__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) == RESET) {
+    if((u32) (millis() - started_ms) >= LSE_TIMEOUT_MS) {
+      __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
+      return false;
+    }
+    yield();
+  }
+  return true;
+}
+
 } // namespace
 
 void init(void) {
   if(initialized) return;
+  dbgln(SPIROM, "RTC init: start");
+
+  const bool lse_ready = start_lse_without_fatal_handler();
+  const ClockSource source =
+      select_clock_source(MK61_RTC_LSE_AVAILABLE, lse_ready);
   STM32RTC& rtc = hardware_rtc();
-  rtc.setClockSource(STM32RTC::LSE_CLOCK);
+  rtc.setClockSource(source == ClockSource::LSE
+      ? STM32RTC::LSE_CLOCK
+      : STM32RTC::LSI_CLOCK);
   rtc.begin(); // Preserve an already configured calendar and backup registers.
   initialized = true;
+  dbgln(SPIROM, "RTC init: ready, clock ",
+        source == ClockSource::LSE ? "LSE" : "LSI");
 }
 
 bool is_set(void) {

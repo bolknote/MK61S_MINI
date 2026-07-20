@@ -8,6 +8,18 @@ namespace rtc_clock {
 static constexpr usize DATETIME_TEXT_LENGTH = 19;
 static constexpr usize DATETIME_TEXT_SIZE = DATETIME_TEXT_LENGTH + 1;
 
+enum class ClockSource : u8 {
+  LSI,
+  LSE
+};
+
+// Board routing decides whether touching OSC32_IN/OUT is safe. A permitted
+// LSE still has to prove that it actually started; otherwise boot continues
+// from the internal LSI instead of entering the STM32 core Error_Handler.
+constexpr ClockSource select_clock_source(bool lse_available, bool lse_ready) {
+  return (lse_available && lse_ready) ? ClockSource::LSE : ClockSource::LSI;
+}
+
 struct DateTime {
   u16 year;
   u8 month;
