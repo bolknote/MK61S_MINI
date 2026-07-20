@@ -593,15 +593,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::ok();
       }
 
-      if(!rtc_clock::is_set()) return terminal_protocol::Result::ok();
-
-      rtc_clock::DateTime current = {};
+      rtc_clock::StartupSnapshot snapshot = {};
       char text[rtc_clock::DATETIME_TEXT_SIZE];
-      if(!rtc_clock::read(current) || !rtc_clock::format_datetime(current, text)) {
+      if(!rtc_clock::startup_snapshot(snapshot) ||
+         !rtc_clock::format_datetime(snapshot.date_time, text)) {
         Serial.println("DATE ERROR");
         return terminal_protocol::Result::error();
       }
       Serial.println(text);
+      if(!snapshot.time_set) Serial.println("установите дату");
       return terminal_protocol::Result::ok();
     }
 
