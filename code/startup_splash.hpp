@@ -13,6 +13,7 @@ static constexpr u8 FINAL_FRAME = COLS;
 static constexpr t_time_ms LOGO_HOLD_MS = 1000;
 static constexpr t_time_ms ANIMATION_MS = 2000;
 static constexpr t_time_ms FRAME_MS = ANIMATION_MS / FINAL_FRAME;
+static constexpr t_time_ms FINAL_HOLD_MS = 500;
 
 enum class Result : u8 {
   COMPLETED,

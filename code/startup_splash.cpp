@@ -97,7 +97,8 @@ Result show(MK61Display& display, const char* model, const char* version,
 
   for(u8 frame = 1; frame <= FINAL_FRAME; frame++) {
     drawFrame(display, model, version, frame);
-    if(waitOrEscape(FRAME_MS, escape_policy)) return Result::SKIPPED;
+    const t_time_ms hold_ms = frame == FINAL_FRAME ? FINAL_HOLD_MS : FRAME_MS;
+    if(waitOrEscape(hold_ms, escape_policy)) return Result::SKIPPED;
   }
 
   return Result::COMPLETED;

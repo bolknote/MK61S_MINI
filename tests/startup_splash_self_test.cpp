@@ -55,6 +55,8 @@ int main(void) {
   static_assert(sizeof(TEXT) == startup_splash::COLS + 1, "Test text must fill one row");
   static_assert(startup_splash::FRAME_MS * startup_splash::FINAL_FRAME == startup_splash::ANIMATION_MS,
     "Animation duration must contain whole frames");
+  static_assert(startup_splash::FINAL_HOLD_MS > startup_splash::FRAME_MS,
+    "Completed splash must remain visible longer than an animation frame");
 
   test_logo_frame();
   test_first_animation_frame();
