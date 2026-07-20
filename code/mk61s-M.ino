@@ -22,6 +22,7 @@ using namespace kbd;
 #include "tools.hpp"
 #include "runtime_safety.hpp"
 #include "rtc_clock.hpp"
+#include "rtc_idle_clock.hpp"
 #include "sound_driver.hpp"
 #include "menu.hpp"
 #include "development.hpp"
@@ -664,6 +665,7 @@ void  loop() {
 
   if(used_key >= 0) { 
   //== кнопка нажата - перепланировка выдачи сообщения о бездействии на следующие 5 минут
+    rtc_idle_clock::hide(lcd);
     idle_signal_reset();
     library_mk61::defer_settings_state_save();
   } else { 
@@ -673,6 +675,21 @@ void  loop() {
   // Перехват клавиатуры программным модулем
   input_focus(used_key);
   kbd::scan();
+
+  const bool calculator_context =
+      input_focus == &mk61_baseloop_hook &&
+      core_61::is_CALC() &&
+      !core_61::edit_program &&
+      !lcd_hooked &&
+      !m61_text::active() &&
+      !user_short_press_pending &&
+      !drop_menu_exit_key_events;
+  const bool calculator_idle =
+      calculator_context &&
+      mk61_calculator_is_idle() &&
+      kbd::last_key() < 0 &&
+      !kbd::any_key_pressed();
+  rtc_idle_clock::poll(lcd, calculator_context, calculator_idle);
 }
 
 void idle_main_process(void) {

@@ -147,6 +147,11 @@ class MK61Display : public Print {
     bool hasHardwareCursor(void) const;
     void createChar(u8 nChar, uint8_t* glyph);
     void clearCustomChars(void);
+#if defined(MK61_DISPLAY_LCD1602)
+    bool readCell(u8 x, u8 y, u8& value) const;
+    bool copyCustomChar(u8 nChar, u8 glyph[8]) const;
+    void clearCustomChar(u8 nChar);
+#endif
     void writeCodepoint(u16 codepoint);
     bool installFont(const u8* data, u16 size);
     bool setFontPreview(const u8* data, u16 size);
@@ -175,6 +180,11 @@ class MK61Display : public Print {
   private:
 #if defined(MK61_DISPLAY_LCD1602)
     LiquidCrystal lcd;
+    u8 shadow_cells[lcd_display::ROWS][lcd_display::COLS];
+    u8 shadow_cursor_x;
+    u8 shadow_cursor_y;
+    u8 custom_glyphs[8][8];
+    bool custom_valid[8];
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
     static constexpr u8 RENDER_PAGE_HEIGHT = 8;

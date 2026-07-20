@@ -1,6 +1,7 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "rtc_clock_core.hpp"
+#include "rtc_idle_clock_core.hpp"
 #include "rtc_settings_core.hpp"
 
 #include <cassert>
@@ -228,6 +229,54 @@ static void test_rtc_settings_editor(void) {
   assert(!rtc_settings::value(editor, value));
 }
 
+static void test_rtc_idle_clock_glyphs_and_slots(void) {
+  u8 glyph[rtc_idle_clock::GLYPH_ROWS] = {};
+  assert(rtc_idle_clock::build_hour_tens_glyph(12, glyph));
+  assert(glyph[0] == 0b00000);
+  assert(glyph[1] == 0b00001);
+  assert(glyph[2] == 0b00001);
+  assert(glyph[3] == 0b00001);
+  assert(glyph[4] == 0b00001);
+  assert(glyph[5] == 0b00001);
+  assert(glyph[6] == 0b00000);
+  assert(glyph[7] == 0b00000);
+  assert(!rtc_idle_clock::build_hour_tens_glyph(24, glyph));
+
+  assert(rtc_idle_clock::build_hour_units_colon_glyph(12, glyph));
+  assert(glyph[0] == 0b00000);
+  assert(glyph[1] == 0b11000);
+  assert(glyph[2] == 0b01001);
+  assert(glyph[3] == 0b01000);
+  assert(glyph[4] == 0b10001);
+  assert(glyph[5] == 0b11000);
+  assert(glyph[6] == 0b00000);
+  assert(glyph[7] == 0b00000);
+  assert(!rtc_idle_clock::build_hour_units_colon_glyph(24, glyph));
+
+  assert(rtc_idle_clock::build_pair_glyph(12, glyph));
+  assert(glyph[0] == 0b00000);
+  assert(glyph[1] == 0b01011);
+  assert(glyph[2] == 0b01001);
+  assert(glyph[3] == 0b01001);
+  assert(glyph[4] == 0b01010);
+  assert(glyph[5] == 0b01011);
+  assert(glyph[6] == 0b00000);
+  assert(glyph[7] == 0b00000);
+  assert(!rtc_idle_clock::build_pair_glyph(100, glyph));
+
+  assert(rtc_idle_clock::slot_for_character(0) == 0);
+  assert(rtc_idle_clock::slot_for_character(8) == 0);
+  assert(rtc_idle_clock::slot_for_character(15) == 7);
+  assert(rtc_idle_clock::slot_for_character(' ') == rtc_idle_clock::INVALID_SLOT);
+
+  rtc_idle_clock::Slots slots = {};
+  assert(rtc_idle_clock::select_slots(0b00011111, slots));
+  assert(slots.count == rtc_idle_clock::CLOCK_GLYPH_COUNT);
+  assert(slots.hour_tens == 7 && slots.hour_units_colon == 6 && slots.minute == 5);
+  assert(!rtc_idle_clock::select_slots(0b00111111, slots));
+  assert(!rtc_idle_clock::select_slots(0xFF, slots));
+}
+
 int main(void) {
   test_input_capacity_reserves_terminator();
   test_bounded_unsigned_parser();
@@ -241,6 +290,7 @@ int main(void) {
   test_date_terminal_request();
   test_rtc_build_datetime_parser();
   test_rtc_settings_editor();
+  test_rtc_idle_clock_glyphs_and_slots();
   std::printf("terminal_self_test: ok\n");
   return 0;
 }

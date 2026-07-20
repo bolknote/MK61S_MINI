@@ -7,7 +7,14 @@
 #if defined(MK61_DISPLAY_LCD1602)
 
 MK61Display::MK61Display(void)
-  : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7) {}
+  : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7),
+    shadow_cells{{0}},
+    shadow_cursor_x(0),
+    shadow_cursor_y(0),
+    custom_glyphs{{0}},
+    custom_valid{false} {
+  memset(shadow_cells, ' ', sizeof(shadow_cells));
+}
 
 void MK61Display::begin(u8 cols, u8 rows) {
   (void) cols;
@@ -15,12 +22,18 @@ void MK61Display::begin(u8 cols, u8 rows) {
   lcd.begin(lcd_display::COLS, lcd_display::ROWS);
   lcd.noCursor();
   lcd.noBlink();
+  memset(shadow_cells, ' ', sizeof(shadow_cells));
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
 }
 
 void MK61Display::clear(void) {
   lcd.noCursor();
   lcd.noBlink();
   lcd.clear();
+  memset(shadow_cells, ' ', sizeof(shadow_cells));
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
 }
 
 void MK61Display::flush(void) {}
@@ -34,8 +47,9 @@ lcd_display::TextProfile MK61Display::textProfile(void) const {
 }
 
 void MK61Display::setCursor(u8 x, u8 y) {
-  lcd.setCursor(x < lcd_display::COLS ? x : (u8) (lcd_display::COLS - 1),
-                y < lcd_display::ROWS ? y : (u8) (lcd_display::ROWS - 1));
+  shadow_cursor_x = x < lcd_display::COLS ? x : (u8) (lcd_display::COLS - 1);
+  shadow_cursor_y = y < lcd_display::ROWS ? y : (u8) (lcd_display::ROWS - 1);
+  lcd.setCursor(shadow_cursor_x, shadow_cursor_y);
 }
 void MK61Display::cursorOn(void) { lcd.cursor(); }
 
@@ -51,10 +65,32 @@ bool MK61Display::hasHardwareCursor(void) const { return true; }
 
 void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   if(nChar >= 8 || glyph == NULL) return;
+  memcpy(custom_glyphs[nChar], glyph, sizeof(custom_glyphs[nChar]));
+  custom_valid[nChar] = true;
   lcd.createChar(nChar, glyph);
 }
 
 void MK61Display::clearCustomChars(void) {}
+
+bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
+  if(x >= lcd_display::COLS || y >= lcd_display::ROWS) return false;
+  value = shadow_cells[y][x];
+  return true;
+}
+
+bool MK61Display::copyCustomChar(u8 nChar, u8 glyph[8]) const {
+  if(nChar >= 8 || glyph == NULL || !custom_valid[nChar]) return false;
+  memcpy(glyph, custom_glyphs[nChar], sizeof(custom_glyphs[nChar]));
+  return true;
+}
+
+void MK61Display::clearCustomChar(u8 nChar) {
+  if(nChar >= 8) return;
+  static uint8_t blank[8] = {};
+  memset(custom_glyphs[nChar], 0, sizeof(custom_glyphs[nChar]));
+  custom_valid[nChar] = false;
+  lcd.createChar(nChar, blank);
+}
 
 void MK61Display::writeCodepoint(u16 codepoint) {
   write(codepoint <= 0xFF ? (u8) codepoint : (u8) '?');
@@ -70,11 +106,26 @@ bool MK61Display::showFullscreenBitmap(const u8*, usize) { return false; }
 
 #if ARDUINO >= 100
 size_t MK61Display::write(uint8_t value) {
-  return lcd.write(value);
+  const size_t written = lcd.write(value);
+  if(written != 0) {
+    shadow_cells[shadow_cursor_y][shadow_cursor_x] = value;
+    shadow_cursor_x++;
+    if(shadow_cursor_x >= lcd_display::COLS) {
+      shadow_cursor_x = 0;
+      shadow_cursor_y = (u8) ((shadow_cursor_y + 1) % lcd_display::ROWS);
+    }
+  }
+  return written;
 }
 #else
 void MK61Display::write(uint8_t value) {
   lcd.write(value);
+  shadow_cells[shadow_cursor_y][shadow_cursor_x] = value;
+  shadow_cursor_x++;
+  if(shadow_cursor_x >= lcd_display::COLS) {
+    shadow_cursor_x = 0;
+    shadow_cursor_y = (u8) ((shadow_cursor_y + 1) % lcd_display::ROWS);
+  }
 }
 #endif
 
