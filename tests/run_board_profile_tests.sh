@@ -22,16 +22,37 @@ clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 -o "$out-v3"
 clang++ "${common[@]}" -DREVISION_V2 -DMK61_CONFIG_EXPECT_V2 -o "$out-v2"
 "$out-v2"
 
-clang++ "${common[@]}" -DREVISION_V3 -DMK61_DISPLAY_UC1609 \
-  -DMK61_KEYBOARD_CLASSIC -DMK61_CONFIG_EXPECT_CLASSIC -o "$out-classic"
-"$out-classic"
+clang++ "${common[@]}" -DMK61_BOARD_CLASSIC_V2 \
+  -DMK61_CONFIG_EXPECT_CLASSIC_V2 -o "$out-classic-v2"
+"$out-classic-v2"
 
-clang++ "${common[@]}" -DREVISION_V3 -DMK61_BOARD_40TH \
+clang++ "${common[@]}" -DMK61_BOARD_CLASSIC_V3 \
+  -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-classic-v3"
+"$out-classic-v3"
+
+# Прежняя комбинация флагов остаётся алиасом Classic V2.
+clang++ "${common[@]}" -DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC \
+  -DMK61_CONFIG_EXPECT_CLASSIC_V2 -o "$out-classic-legacy"
+"$out-classic-legacy"
+
+clang++ "${common[@]}" -DMK61_BOARD_40TH \
   -DMK61_CONFIG_EXPECT_40TH -o "$out-40th"
 "$out-40th"
 
 if clang++ "${common[@]}" -DREVISION_V2 -DREVISION_V3 -o "$out-invalid" \
     >/dev/null 2>&1; then
   echo "conflicting board revisions unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DMK61_BOARD_CLASSIC_V2 -DMK61_BOARD_CLASSIC_V3 \
+    -o "$out-invalid-classic" >/dev/null 2>&1; then
+  echo "conflicting Classic profiles unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V2 -DMK61_BOARD_CLASSIC_V3 \
+    -o "$out-invalid-revision" >/dev/null 2>&1; then
+  echo "Classic profile with mini REVISION_V2 unexpectedly compiled" >&2
   exit 1
 fi

@@ -98,14 +98,23 @@ jobs:
             "$RUNNER_TEMP/mk61s-M"
           cp "$RUNNER_TEMP/build-mini-v2-lcd1602-a02/mk61s-M.ino.bin" "firmware/mk61s-M-mini-v2-lcd1602-a02-f411-${GITHUB_SHA::7}.bin"
 
-      - name: Build UC1609 firmware
+      - name: Build Classic V2 UC1609 firmware
         run: |
           arduino-cli compile \
             --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-uc1609" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC" \
+            --build-path "$RUNNER_TEMP/build-classic-v2" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_CLASSIC_V2" \
             "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-uc1609/mk61s-M.ino.bin" "firmware/mk61s-M-uc1609-f411-${GITHUB_SHA::7}.bin"
+          cp "$RUNNER_TEMP/build-classic-v2/mk61s-M.ino.bin" "firmware/mk61s-M-classic-v2-uc1609-f411-${GITHUB_SHA::7}.bin"
+
+      - name: Build Classic V3 UC1609 firmware
+        run: |
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --build-path "$RUNNER_TEMP/build-classic-v3" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_CLASSIC_V3" \
+            "$RUNNER_TEMP/mk61s-M"
+          cp "$RUNNER_TEMP/build-classic-v3/mk61s-M.ino.bin" "firmware/mk61s-M-classic-v3-uc1609-f411-${GITHUB_SHA::7}.bin"
 
       - name: Build MK61s 40th firmware
         run: |

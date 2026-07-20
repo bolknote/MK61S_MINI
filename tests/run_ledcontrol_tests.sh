@@ -26,5 +26,6 @@ build_and_run() {
 
 build_and_run mini-v2 0 -DREVISION_V2
 build_and_run mini-v3 0 -DREVISION_V3
-build_and_run classic 1 -DREVISION_V3 -DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC
-build_and_run 40th 1 -DREVISION_V3 -DMK61_BOARD_40TH
+build_and_run classic-v2 1 -DMK61_BOARD_CLASSIC_V2
+build_and_run classic-v3 0 -DMK61_BOARD_CLASSIC_V3
+build_and_run 40th 1 -DMK61_BOARD_40TH
