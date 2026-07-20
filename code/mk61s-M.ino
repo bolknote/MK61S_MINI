@@ -258,22 +258,6 @@ void setup() {
   lcd.begin(lcd_display::COLS, library_mk61::display_rows());
   dbgln(SPIROM, "LCD init: ready");
   lcd.setTextProfile(library_mk61::display_text_profile());
-#if defined(DEBUG_SPIFLASH) && defined(MK61_DISPLAY_LCD1602) && defined(REVISION_V2)
-  Serial.print("LCD diag: GPIOC.MODER=0x"); Serial.print(GPIOC->MODER, HEX);
-  Serial.print(" PC15 mode="); Serial.print((GPIOC->MODER >> 30) & 0x3U);
-  Serial.print(" AFR="); Serial.print((GPIOC->AFR[1] >> 28) & 0xFU);
-  Serial.print(" ODR="); Serial.println((GPIOC->ODR >> 15) & 0x1U);
-  Serial.print("LCD modes: PA1="); Serial.print((GPIOA->MODER >> 2) & 0x3U);
-  Serial.print(" PA2="); Serial.print((GPIOA->MODER >> 4) & 0x3U);
-  Serial.print(" PA3="); Serial.print((GPIOA->MODER >> 6) & 0x3U);
-  Serial.print(" PB0="); Serial.print(GPIOB->MODER & 0x3U);
-  Serial.print(" PB1="); Serial.print((GPIOB->MODER >> 2) & 0x3U);
-  Serial.print(" PB2="); Serial.println((GPIOB->MODER >> 4) & 0x3U);
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("LCD V2 TEST");
-  delay(2000);
-#endif
 
   entropy_pool::begin();
   mix_rtc_startup_snapshot(0);

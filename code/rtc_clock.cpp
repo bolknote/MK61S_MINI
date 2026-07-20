@@ -127,10 +127,6 @@ void init(void) {
     dbgln(SPIROM, "RTC init: WARNING, LSE returned after selecting LSI");
   }
   initialized = true;
-#ifdef DEBUG_SPIFLASH
-  Serial.print("RTC init: BDCR=0x");
-  Serial.println(RCC->BDCR, HEX);
-#endif
   dbgln(SPIROM, "RTC init: ready, clock ",
         source == ClockSource::LSE ? "LSE" : "LSI");
 }
