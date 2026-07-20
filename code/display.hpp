@@ -35,6 +35,12 @@ namespace lcd_display {
 
 static constexpr u8 COLS = 16;
 
+enum class BusyFlagStatus : u8 {
+  NOT_AVAILABLE,
+  ACTIVE,
+  FIXED_DELAYS,
+};
+
 struct TextProfile {
   u8 rows;
   u8 glyph_width;
@@ -160,6 +166,8 @@ class MK61Display : public Print {
     bool externalFontActive(void) const;
     bool suspendExternalFontForUsb(void);
     bool showFullscreenBitmap(const u8* bitmap, usize size);
+    lcd_display::BusyFlagStatus busyFlagStatus(void) const;
+    u32 busyFlagTimeouts(void) const;
     u8 cols(void) const { return lcd_display::COLS; }
 #if defined(MK61_DISPLAY_LCD1602)
     u8 rows(void) const { return lcd_display::ROWS; }
@@ -185,6 +193,15 @@ class MK61Display : public Print {
     u8 shadow_cursor_y;
     u8 custom_glyphs[8][8];
     bool custom_valid[8];
+    u8 display_control;
+    bool busy_flag_active;
+    u32 busy_flag_timeouts;
+
+    void probeBusyFlag(void);
+    void sendByte(u8 value, bool data, u32 fallback_delay_us = 0);
+    void sendCommand(u8 value, u32 fallback_delay_us = 0);
+    void sendData(u8 value);
+    void sendDisplayControl(void);
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
     static constexpr u8 RENDER_PAGE_HEIGHT = 8;
