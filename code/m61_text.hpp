@@ -21,6 +21,6 @@ void cancel(void);
 bool last_error(Error& out);
 bool format_current_program(u8* out, u16 capacity, u16* out_len);
 
-} // namespace m61_text
+} // пространство имён m61_text
 
 #endif

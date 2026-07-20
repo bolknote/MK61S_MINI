@@ -1191,8 +1191,8 @@ struct DialogItem {
 };
 
 static int dialog_pseudo_count(DialogMode mode, bool allow_new) {
-  if(mode == DialogMode::DIRECTORY) return 2; // this directory, new folder
-  return allow_new ? 2 : 0;                  // new file, new folder
+  if(mode == DialogMode::DIRECTORY) return 2; // Этот каталог, новый каталог
+  return allow_new ? 2 : 0;                  // Новый файл, новый каталог
 }
 
 static bool dialog_entry_visible(const program_store::Entry& entry,
@@ -1874,7 +1874,7 @@ static constexpr t_punct TINYBASIC_DEV_PUNCT = {.size = 11, .action = &tinybasic
 static constexpr t_punct RU_TINYBASIC_DEV_PUNCT = {.size = 15, .action = &tinybasic_action, .text = "TinyBASIC"};
 #endif
 
-} // namespace
+} // анонимное пространство имён
 
 ProgramStoreFileDialogResult program_store_choose_file(
     program_store::ProgramType type, u16 start_directory, bool allow_new,

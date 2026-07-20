@@ -33,9 +33,9 @@ inline bool at_end(const char* p) {
   return p == 0 || is_end(*p);
 }
 
-// Shell-like token reader used by filesystem commands. A token may be
-// enclosed in matching single or double quotes; backslash remains a normal
-// character because it is also accepted as a path separator.
+// Похожий на командную оболочку разбор токенов для команд файловой системы.
+// Токен можно заключить в согласованные одинарные или двойные кавычки; обратная
+// косая черта остаётся обычным символом, поскольку допустима как разделитель пути.
 inline bool parse_token(const char*& p, char* out, usize capacity) {
   p = skip_spaces(p);
   if(p == 0 || is_end(*p) || out == 0 || capacity < 2) return false;
@@ -92,9 +92,9 @@ inline bool exact_confirmation(const char* line, char answer) {
   return at_end(line + 1);
 }
 
-// Parse the calculator's finite decimal input. Limiting significant source
-// digits and exponent magnitude also prevents the libm-free parser from doing
-// unbounded work on hostile input.
+// Разбор конечного десятичного значения калькулятора. Ограничение числа значащих
+// цифр во входных данных и величины порядка также не позволяет разбору без libm
+// выполнять неограниченную работу на злонамеренных данных.
 inline bool parse_decimal(const char*& p, double& out) {
   p = skip_spaces(p);
   if(p == 0) return false;
@@ -230,6 +230,6 @@ inline Assembly parse_assembly(const char* args, isize current_address, const ch
   return result;
 }
 
-} // namespace terminal_core
+} // пространство имён terminal_core
 
 #endif

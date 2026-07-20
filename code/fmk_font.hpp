@@ -63,6 +63,6 @@ bool bitmapPixel(const u8* bitmap, u8 width, u8 x, u8 y);
 bool scaleToLcd5x8(const Face& face, const Glyph& glyph, u8 rows[8]);
 u8 selectPreviewGlyphs(const Face& face, Glyph out[8]);
 
-} // namespace fmk
+} // пространство имён fmk
 
 #endif

@@ -205,8 +205,9 @@ static inline uint16_t msc_scsi_build_mode_sense(uint8_t *buffer,
   {
     buffer[offset] = MSC_SCSI_CACHING_PAGE;
     buffer[offset + 1U] = MSC_SCSI_CACHING_PAGE_LENGTH - 2U;
-    /* WCE is enabled but read-only. A changeable-values response therefore
-       reports zero even though current/default values report WCE=1. */
+    /* WCE включён, но доступен только для чтения. Поэтому ответ с изменяемыми
+       значениями сообщает ноль, хотя текущие значения и значения по умолчанию
+       сообщают WCE=1. */
     buffer[offset + 2U] = changeable_values != 0U ? 0U : 0x04U;
     offset += MSC_SCSI_CACHING_PAGE_LENGTH;
   }
@@ -214,8 +215,9 @@ static inline uint16_t msc_scsi_build_mode_sense(uint8_t *buffer,
   {
     buffer[offset] = MSC_SCSI_REMOVABLE_BLOCK_ACCESS_PAGE;
     buffer[offset + 1U] = MSC_SCSI_REMOVABLE_PAGE_LENGTH - 2U;
-    /* SFLP=SRFP=NCD=SML=0. TLUN is a count, so current/default values report
-       one LUN; no fields are MODE SELECT-changeable. */
+    /* SFLP=SRFP=NCD=SML=0. TLUN является количеством, поэтому текущие значения
+       и значения по умолчанию сообщают один LUN; командой MODE SELECT ни одно
+       поле не изменяется. */
     buffer[offset + 3U] = changeable_values != 0U ? 0U : 1U;
   }
 

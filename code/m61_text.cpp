@@ -173,9 +173,10 @@ static bool make_store_frame(const char* name, ScriptFrame& frame) {
   if(name == NULL || name[0] == 0) return false;
 
 #ifndef M61_TEXT_HOST_TEST
-  // Nested script names are resolved in the caller's directory first. This
-  // keeps identically named scripts in independent directory trees isolated
-  // and also gives scripts normal relative paths (../lib/tool.m61).
+  // Имена вложенных сценариев сначала разрешаются в каталоге вызывающего
+  // сценария. Это изолирует одноимённые сценарии в независимых деревьях
+  // каталогов и позволяет использовать обычные относительные пути
+  // (../lib/tool.m61).
   u16 cwd = program_store::ROOT_ID;
   if(script_id != program_store::INVALID_ID) {
     program_store::Entry current;
@@ -188,8 +189,9 @@ static bool make_store_frame(const char* name, ScriptFrame& frame) {
     return make_store_frame(entry.id, frame);
   }
 
-  // Bare legacy names used to be global. Preserve that fallback without
-  // turning an explicitly relative path into an unrelated root lookup.
+  // Раньше простые имена без пути считались глобальными. Сохраняем этот
+  // запасной вариант, но не превращаем явно относительный путь в поиск
+  // несвязанного файла в корневом каталоге.
   if(cwd != program_store::ROOT_ID && strchr(name, '/') == NULL &&
      strchr(name, '\\') == NULL &&
      storage_path::resolve_file(program_store::ROOT_ID, name,
@@ -308,7 +310,7 @@ static bool read_next_line(char* line, u16 capacity) {
 
     const char c = (char) value;
     if(c == '\r') {
-      // Accept CR and CRLF without leaking the paired LF as an empty line.
+      // Принимаем CR и CRLF, не выдавая парный LF за пустую строку.
       if(script_pos < script_len) {
         u8 next = 0;
         bool next_eof = false;
@@ -529,9 +531,9 @@ static bool open_referenced_file(const char* path) {
      storage_path::Status::OK) {
     return OpenStoredEntry(entry);
   }
-  // Compatibility for old flat scripts: a bare name not present beside the
-  // caller may still refer to a root file. Explicit relative paths never fall
-  // through to an unrelated object.
+  // Совместимость со старыми сценариями без каталогов: простое имя, которого
+  // нет рядом с вызывающим сценарием, всё ещё может обозначать файл в корне.
+  // Для явно относительных путей переход к несвязанному объекту запрещён.
   return cwd != program_store::ROOT_ID && strchr(path, '/') == NULL &&
          strchr(path, '\\') == NULL &&
          storage_path::resolve_file(program_store::ROOT_ID, path, entry) ==
@@ -549,7 +551,7 @@ static bool execute_script_line(const char* raw_line) {
   line_error_message = NULL;
   const char* line = skip_spaces(raw_line);
   if(is_line_end(*line)) return true;
-  if(*line == ':') return true; // метка - точка перехода, сама по себе no-op
+  if(*line == ':') return true; // Метка — точка перехода, сама по себе ничего не делает
 
   const terminal_protocol::Result result = terminal_script::execute(line);
   switch(result.kind) {
@@ -581,7 +583,7 @@ static bool execute_script_line(const char* raw_line) {
 void service(void) {
   if(runner_state == RunnerState::WAIT_RUN_STOP) {
     if(!core_61::is_CALC()) return;
-    // The MK program has stopped: control returns to the next script line.
+    // Программа МК остановилась: управление возвращается к следующей строке сценария.
     core_61::clear_displayed();
     runner_state = RunnerState::EXECUTING;
   }
@@ -713,4 +715,4 @@ bool format_current_program(u8* out, u16 capacity, u16* out_len) {
   return true;
 }
 
-} // namespace m61_text
+} // пространство имён m61_text

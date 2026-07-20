@@ -185,7 +185,7 @@ void  debounce_init(void) {
 
 void  init(void) {
   debounce_init();
-  // HAL init
+  // Инициализация HAL
   for(usize i=0; i < KEY_IN_ROW; i++) {
     digitalWrite(scan_pins[i], HIGH);
     pinMode(scan_pins[i], INPUT);

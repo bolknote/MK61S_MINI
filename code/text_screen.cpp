@@ -126,4 +126,4 @@ bool Grid::anyDirty(void) const {
   return false;
 }
 
-} // namespace text_screen
+} // пространство имён text_screen

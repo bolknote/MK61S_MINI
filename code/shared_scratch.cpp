@@ -47,8 +47,9 @@ Lease::~Lease(void) {
 
 void Lease::reset(void) {
   if(buffer == 0) return;
-  // Only this lease can release its reservation. With the raw release API
-  // removed, a mismatch indicates memory corruption or a lifetime bug.
+  // Только этот объект аренды может снять своё резервирование. После удаления
+  // низкоуровневого API освобождения несовпадение означает повреждение памяти
+  // или ошибку времени жизни объекта.
   if(active_owner != owner || active_token != token) __builtin_trap();
   active_owner = Owner::NONE;
   active_token = 0;
@@ -62,4 +63,4 @@ Owner current_owner(void) {
   return active_owner;
 }
 
-} // namespace shared_scratch
+} // пространство имён shared_scratch

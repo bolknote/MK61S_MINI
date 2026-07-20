@@ -11,6 +11,6 @@ bool startup_snapshot(StartupSnapshot& out);
 bool read(DateTime& out);
 bool set(const DateTime& value);
 
-} // namespace rtc_clock
+} // пространство имён rtc_clock
 
 #endif

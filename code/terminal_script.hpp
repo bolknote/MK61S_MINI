@@ -8,6 +8,6 @@ namespace terminal_script {
 void reset(void);
 terminal_protocol::Result execute(const char* line);
 
-} // namespace terminal_script
+} // пространство имён terminal_script
 
 #endif

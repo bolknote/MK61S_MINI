@@ -87,7 +87,7 @@ bool waitOrEscape(t_time_ms duration_ms) {
   return false;
 }
 
-} // namespace
+} // анонимное пространство имён
 
 Result show(MK61Display& display, const char* model, const char* version) {
   loadCustomChars(display);
@@ -102,4 +102,4 @@ Result show(MK61Display& display, const char* model, const char* version) {
   return Result::COMPLETED;
 }
 
-} // namespace startup_splash
+} // пространство имён startup_splash

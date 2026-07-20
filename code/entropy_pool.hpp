@@ -11,31 +11,33 @@ enum class Domain : u8 {
   TINYBASIC = 2
 };
 
-// Start collecting the internal AVBAT ADC noise.  poll_startup() is cheap
-// enough to call once per splash wait loop; finish_startup() fills any missing
-// Von Neumann bits when a splash is skipped and restores the normal ADC width.
+// Начинает сбор внутреннего шума АЦП AVBAT. poll_startup() достаточно дёшев,
+// чтобы вызывать его один раз за цикл ожидания заставки; finish_startup()
+// добирает недостающие биты фон Неймана, если заставка пропущена, и восстанавливает
+// обычную разрядность АЦП.
 void begin(void);
 void poll_startup(void);
 void finish_startup(void);
 
-// Mix a coherent RTC calendar/phase sample into the startup state.  RTC adds
-// boot-to-boot diversity, but it is deliberately not counted by
-// startup_entropy_bits(), which remains an AVBAT Von Neumann output count.
+// Подмешивает согласованный отсчёт календаря и фазы RTC в начальное состояние.
+// RTC добавляет различия между запусками, но намеренно не учитывается в
+// startup_entropy_bits(): эта функция по-прежнему возвращает число выходных
+// битов фон Неймана от AVBAT.
 void note_rtc_snapshot(u8 snapshot_index, u64 calendar_material, u64 phase_material);
 
-// Mix every physical key transition time into the pool and rekey the enhanced
-// calculator stream when that mode is active.
+// Подмешивает в пул время каждого физического перехода клавиши и при активном
+// расширенном режиме меняет ключ потока калькулятора.
 void note_key(u8 keycode, u32 timestamp_us);
 
-// Independent, domain-separated random streams for calculator, FOCAL and
-// TinyBASIC.  Language streams never depend on the calculator compatibility
-// setting.
+// Независимые, разделённые по доменам случайные потоки для калькулятора, FOCAL
+// и TinyBASIC. Потоки языков никогда не зависят от настройки совместимости
+// калькулятора.
 u32 next_u32(Domain domain);
 void configure_calculator(bool enhanced);
 
 u16 startup_raw_samples(void);
 u8 startup_entropy_bits(void);
 
-} // namespace entropy_pool
+} // пространство имён entropy_pool
 
 #endif

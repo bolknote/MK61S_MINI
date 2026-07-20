@@ -71,7 +71,7 @@ static u16 stage_sectors_for(u32 physical_sectors) {
   return proportional < STAGE_MIN_SECTORS ? STAGE_MIN_SECTORS : proportional;
 }
 
-} // namespace
+} // анонимное пространство имён
 
 bool compute(u32 capacity_bytes, Geometry& out) {
   memset(&out, 0, sizeof(out));
@@ -89,9 +89,10 @@ bool compute(u32 capacity_bytes, Geometry& out) {
   u16 bank_sectors = 0;
   u32 data_sectors = 0;
 
-  // The inode count controls catalog size, while catalog size controls the
-  // physical worst-case inode count. This converges monotonically in a few
-  // iterations for every supported power-of-two NOR capacity.
+  // Число inode определяет размер каталога, а размер каталога — физически
+  // возможное число inode в худшем случае. Для каждой поддерживаемой ёмкости
+  // NOR, являющейся степенью двойки, расчёт монотонно сходится за несколько
+  // итераций.
   for(u8 iteration = 0; iteration < 8; iteration++) {
     table_sectors = (u16) ceil_div((u32) nodes * INODE_BYTES,
                                    PHYSICAL_SECTOR_SIZE);
@@ -102,9 +103,10 @@ bool compute(u32 capacity_bytes, Geometry& out) {
     if(overhead + 4 >= physical_sectors) return false;
     data_sectors = physical_sectors - overhead;
 
-    // A maximum-size raw C5 record is slightly over 1.5 KiB, so exactly two
-    // fit in an erase sector. Keep two sectors outside the quota for append
-    // and GC progress even when every file has the worst possible size.
+    // Несжатая запись C5 максимального размера немного превышает 1,5 КиБ,
+    // поэтому в сектор стирания помещаются ровно две записи. Оставляем два
+    // сектора вне квоты для добавления и работы GC, даже если каждый файл имеет
+    // наихудший возможный размер.
     const u32 physical_limit = (data_sectors - 2) * 2;
     const u16 next = physical_limit < nodes ? (u16) physical_limit : nodes;
     if(next == nodes) break;
@@ -145,4 +147,4 @@ bool compute(u32 capacity_bytes, Geometry& out) {
   return true;
 }
 
-} // namespace storage_geometry
+} // пространство имён storage_geometry

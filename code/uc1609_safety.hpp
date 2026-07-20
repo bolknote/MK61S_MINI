@@ -31,6 +31,6 @@ inline bool pixel_offset(u16 width, u16 height, i16 x, i16 y, usize& out) {
   return true;
 }
 
-} // namespace uc1609_safety
+} // пространство имён uc1609_safety
 
 #endif

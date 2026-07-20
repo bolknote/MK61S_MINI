@@ -175,8 +175,8 @@ static const Extension EXTENSIONS[] = {
   { ".tbi",       program_store::ProgramType::TINYBASIC },
   { ".txt",       program_store::ProgramType::TEXT },
   { ".fmk",       program_store::ProgramType::FONT },
-  // Existing terminal aliases remain accepted, but canonical formatting uses
-  // the extensions returned by program_store::file_extension().
+  // Существующие псевдонимы терминала по-прежнему принимаются, но каноническая
+  // запись использует расширения из program_store::file_extension().
   { ".t1",        program_store::ProgramType::TEXT },
   { ".m2",        program_store::ProgramType::MK61_STATE }
 };
@@ -269,7 +269,7 @@ static Status append_text(char* out, usize capacity, usize& length,
   return Status::OK;
 }
 
-} // namespace
+} // анонимное пространство имён
 
 const char* status_text(Status status) {
   switch(status) {
@@ -540,4 +540,4 @@ bool directory_within(u16 directory_id, u16 ancestor_id) {
   return false;
 }
 
-} // namespace storage_path
+} // пространство имён storage_path

@@ -5,41 +5,45 @@
 
 namespace storage_geometry {
 
-// Physical SPI NOR geometry used by C5. The virtual FAT sector remains 512
-// bytes; physical erase sectors are never exposed to the USB host.
+// Физическая геометрия SPI NOR, используемая C5. Виртуальный сектор FAT
+// остаётся 512-байтовым; физические секторы стирания никогда не показываются
+// хосту USB.
 static constexpr u32 PHYSICAL_SECTOR_SIZE = 4096;
 static constexpr u16 LOGICAL_SECTOR_SIZE = 512;
 static constexpr u16 FAT12_MAX_DATA_CLUSTERS = 4084;
-static constexpr u8 MIN_SECTORS_PER_CLUSTER = 4;   // 2 KiB, one 1536-byte file
-static constexpr u8 MAX_SECTORS_PER_CLUSTER = 64;  // 32 KiB, broadly portable
+static constexpr u8 MIN_SECTORS_PER_CLUSTER = 4;   // 2 КиБ, один файл размером 1536 байт
+static constexpr u8 MAX_SECTORS_PER_CLUSTER = 64;  // 32 КиБ, широкая совместимость
 
 static constexpr u8 LOCATOR_SECTORS = 2;
 static constexpr u8 SETTINGS_SECTORS = 1;
 static constexpr u8 CATALOG_HEADER_SECTORS = 1;
 static constexpr u8 CATALOG_WAL_SECTORS = 2;
 static constexpr u8 CATALOG_BANKS = 2;
-// Sixty-four normal log segments hold 448 physical records for at most 384
-// live dirty blocks. The final segment is an atomic compaction reserve.  The
-// extra 192 KiB is negligible on the common 16 MiB part and prevents modern
-// desktop filesystems from exhausting staging before issuing cache sync.
+// Шестьдесят четыре обычных сегмента журнала содержат 448 физических записей
+// не более чем для 384 актуальных изменённых блоков. Последний сегмент служит
+// резервом атомарного уплотнения. Дополнительные 192 КиБ несущественны на
+// распространённой микросхеме 16 МиБ и не позволяют современным настольным
+// файловым системам исчерпать промежуточное хранилище до синхронизации кэша.
 static constexpr u8 STAGE_TARGET_SECTORS = 65;
 static constexpr u8 STAGE_SMALL_SECTORS = 17;
 static constexpr u8 STAGE_MIN_SECTORS = 4;
 static constexpr u16 STAGE_TARGET_MIN_PHYSICAL_SECTORS = 512; // 2 MiB
 
-// A C5 inode is 20 bytes on flash. A 31-byte basename plus the longest
-// generated extension needs at most four LFN entries and one short entry.
+// inode C5 занимает во флеш-памяти 20 байт. Для 31-байтового базового имени
+// с самым длинным создаваемым расширением нужно не более четырёх записей LFN
+// и одной короткой записи.
 static constexpr u8 INODE_BYTES = 20;
 static constexpr u8 MAX_DIRENTS_PER_NODE = 5;
-// Volume label plus the three entries (two LFN and one short entry) required
-// for macOS' zero-length .metadata_never_index marker.
+// Метка тома и три записи (две LFN и одна короткая), необходимые для маркера
+// macOS .metadata_never_index нулевой длины.
 static constexpr u8 ROOT_SYSTEM_DIRENTS = 4;
-// FAT12/FAT16 roots are fixed-size arrays rather than ordinary cluster
-// chains.  Sizing that array for every possible C5 node made a 16 MiB root
-// 630 KiB large; desktop FAT drivers may rewrite much of it for every created
-// entry.  512 entries is the conventional portable geometry and still leaves
-// 508 entries for user objects.  Arbitrary subdirectories use cluster chains
-// and provide the full volume-wide node quota.
+// Корневые каталоги FAT12/FAT16 — это массивы фиксированного размера, а не
+// обычные цепочки кластеров. Размер массива для всех возможных узлов C5 давал
+// корневой каталог объёмом 630 КиБ на носителе 16 МиБ; настольные драйверы FAT
+// могут перезаписывать значительную его часть при создании каждой записи.
+// 512 записей — общепринятая переносимая геометрия, оставляющая 508 записей
+// для пользовательских объектов. Произвольные подкаталоги используют цепочки
+// кластеров и предоставляют полную квоту узлов всего тома.
 static constexpr u16 ROOT_ENTRY_CAPACITY = 512;
 
 struct Geometry {
@@ -66,10 +70,11 @@ struct Geometry {
   u32 logical_sectors;
 };
 
-// Computes a self-consistent layout. Returns false for chips too small for
-// two atomic catalog banks, a staging journal, settings, and a GC reserve.
+// Вычисляет самосогласованную разметку. Возвращает false для микросхем, слишком
+// малых для двух атомарных банков каталога, журнала промежуточных данных,
+// настроек и резерва GC.
 bool compute(u32 capacity_bytes, Geometry& out);
 
-} // namespace storage_geometry
+} // пространство имён storage_geometry
 
 #endif

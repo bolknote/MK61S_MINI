@@ -4,8 +4,8 @@
 
 namespace language_workspace {
 
-// Virtual FAT is also a consumer, including in builds where both languages
-// are disabled. Keep the physical capacity identical to the advertised one.
+// Виртуальная FAT также использует этот буфер, в том числе в сборках, где оба языка
+// отключены. Физическая ёмкость должна совпадать с объявленной.
 alignas(8) static u8 workspace[SIZE];
 static Owner resident = Owner::NONE;
 static Owner active = Owner::NONE;
@@ -73,4 +73,4 @@ void* data(Owner owner) {
   return workspace;
 }
 
-} // namespace language_workspace
+} // пространство имён language_workspace

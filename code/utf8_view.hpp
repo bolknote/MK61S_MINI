@@ -9,9 +9,9 @@ inline bool continuation(u8 value) {
   return (value & 0xC0) == 0x80;
 }
 
-// Returns one for invalid input so callers always make progress. Valid four
-// byte sequences are recognized even though the LCD viewer renders them as a
-// replacement character.
+// Для недопустимых данных возвращается единица, чтобы вызывающий код всегда
+// продвигался вперёд. Допустимые четырёхбайтовые последовательности распознаются,
+// хотя средство просмотра на ЖКИ отображает их символом замены.
 inline u8 sequence_length(const u8* data, u16 len, u16 offset) {
   if(data == NULL || offset >= len) return 0;
   const u8 first = data[offset];
@@ -24,16 +24,16 @@ inline u8 sequence_length(const u8* data, u16 len, u16 offset) {
   if(first >= 0xE0 && first <= 0xEF && offset + 2 < len &&
      continuation(data[offset + 1]) && continuation(data[offset + 2])) {
     const u8 second = data[offset + 1];
-    if(first == 0xE0 && second < 0xA0) return 1; // overlong
-    if(first == 0xED && second >= 0xA0) return 1; // UTF-16 surrogate
+    if(first == 0xE0 && second < 0xA0) return 1; // Избыточное кодирование
+    if(first == 0xED && second >= 0xA0) return 1; // Суррогат UTF-16
     return 3;
   }
 
   if(first >= 0xF0 && first <= 0xF4 && offset + 3 < len &&
      continuation(data[offset + 1]) && continuation(data[offset + 2]) && continuation(data[offset + 3])) {
     const u8 second = data[offset + 1];
-    if(first == 0xF0 && second < 0x90) return 1; // overlong
-    if(first == 0xF4 && second > 0x8F) return 1; // beyond U+10FFFF
+    if(first == 0xF0 && second < 0x90) return 1; // Избыточное кодирование
+    if(first == 0xF4 && second > 0x8F) return 1; // За пределами U+10FFFF
     return 4;
   }
 
@@ -80,6 +80,6 @@ inline u16 byte_offset(const char* text, u16 codepoint_index,
   return offset;
 }
 
-} // namespace utf8_view
+} // пространство имён utf8_view
 
 #endif

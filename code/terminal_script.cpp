@@ -14,4 +14,4 @@ terminal_protocol::Result execute(const char* line) {
   return terminal.execute_script_line(line);
 }
 
-} // namespace terminal_script
+} // пространство имён terminal_script

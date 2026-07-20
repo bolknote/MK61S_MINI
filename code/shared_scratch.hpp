@@ -16,8 +16,8 @@ enum class Owner : u8 {
   USB_CACHE
 };
 
-// Largest transient file payload. File menus stream visible names directly
-// from the compact index and do not consume this pool.
+// Наибольший временный буфер содержимого файла. Меню файлов считывает видимые
+// имена непосредственно из компактного индекса и не использует этот пул.
 static constexpr usize SIZE = 1536;
 
 class [[nodiscard]] Lease {
@@ -44,6 +44,6 @@ class [[nodiscard]] Lease {
 
 Owner current_owner(void);
 
-} // namespace shared_scratch
+} // пространство имён shared_scratch
 
 #endif

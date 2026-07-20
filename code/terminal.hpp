@@ -1,8 +1,8 @@
 #ifndef TERMINAL_CLASS
 #define TERMINAL_CLASS
 /*
- terminal - модуль работы из терминала с ядром МК61s и калькулятором.
-  Terminal command transport and execution for the MK61 core.
+ terminal — модуль работы из терминала с ядром МК61s и калькулятором.
+ Транспорт и выполнение команд терминала для ядра МК61.
 */
 #include "Arduino.h"
 #include "config.h"
@@ -883,7 +883,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return false;
       }
 
-      // Parse first and commit once: a bad token must leave the program intact.
+      // Сначала полностью разбираем, затем применяем один раз: ошибочный токен
+      // должен оставить программу без изменений.
       u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
       core_61::get_code_page(&code_page[0]);
       for(usize i = 0; i < assembly.count; i++) code_page[assembly.address + i] = assembly.opcodes[i];
@@ -1210,7 +1211,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             Serial.println("Cancelled.");
             return terminal_protocol::Result::ok();
           }
-          // Any command other than a standalone Y/N cancels the stale request.
+          // Любая команда, кроме отдельного Y/N, отменяет устаревший запрос.
           pending_save_name[0] = 0;
           pending_save_parent_id = program_store::ROOT_ID;
           nSlot = -1;
@@ -1887,7 +1888,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         prev_terminator = 0;
 
-        if(rx_char == 0x08 || rx_char == 0x7F) { // backspace
+        if(rx_char == 0x08 || rx_char == 0x7F) { // Удаление предыдущего символа
           if(!input_overflow && recive_pos > 0) {
             recive_pos = utf8_view::previous_offset(input_buffer,
                                                     (u16) recive_pos,

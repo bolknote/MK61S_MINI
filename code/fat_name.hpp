@@ -6,9 +6,10 @@
 namespace fat_name {
 namespace detail {
 
-// Unicode simple case folding for the scripts normally used in FAT long
-// names. Scripts without case (for example CJK) naturally compare unchanged.
-// This deliberately avoids locale-sensitive rules and allocation.
+// Простое приведение регистра Unicode для письменностей, обычно встречающихся
+// в длинных именах FAT. Письменности без регистра (например, CJK) естественным
+// образом сравниваются без изменений. Здесь намеренно нет зависимых от локали
+// правил и выделения памяти.
 inline u32 fold(u32 codepoint) {
   if(codepoint >= 'A' && codepoint <= 'Z') return codepoint + 0x20;
   if((codepoint >= 0x00C0 && codepoint <= 0x00D6) ||
@@ -32,7 +33,7 @@ inline u32 fold(u32 codepoint) {
     case 0x038C: return 0x03CC;
     case 0x038E: return 0x03CD;
     case 0x038F: return 0x03CE;
-    case 0x03C2: return 0x03C3; // final sigma
+    case 0x03C2: return 0x03C3; // конечная сигма
     case 0x04C0: return 0x04CF;
     default: break;
   }
@@ -92,7 +93,7 @@ inline u32 next(const char*& text) {
   return codepoint;
 }
 
-} // namespace detail
+} // пространство имён detail
 
 inline bool equal(const char* left, const char* right) {
   if(left == nullptr || right == nullptr) return left == right;
@@ -103,9 +104,9 @@ inline bool equal(const char* left, const char* right) {
   return *left == *right;
 }
 
-// Every C5 object is exposed with an LFN plus a stable ID-based short alias.
-// Count the exact number of 32-byte FAT directory entries required by a
-// UTF-8 visible name without allocating a UTF-16 conversion buffer.
+// Каждый объект C5 представлен длинным именем LFN и стабильным коротким
+// псевдонимом на основе ID. Подсчитываем точное число 32-байтовых записей
+// каталога FAT для видимого имени UTF-8, не выделяя буфер преобразования UTF-16.
 inline u16 dirent_count(const char* text) {
   if(text == nullptr || *text == 0) return 0;
   u16 units = 0;
@@ -119,6 +120,6 @@ inline u16 dirent_count(const char* text) {
   return (u16) ((units + 12U) / 13U + 1U);
 }
 
-} // namespace fat_name
+} // пространство имён fat_name
 
 #endif

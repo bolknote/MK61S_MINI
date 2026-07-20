@@ -34,4 +34,4 @@ u8* data(Owner) { return 0; }
 Owner current_owner(void) { return Owner::NONE; }
 #endif
 
-} // namespace exclusive_buffer
+} // пространство имён exclusive_buffer

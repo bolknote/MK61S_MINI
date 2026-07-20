@@ -10,18 +10,18 @@ static constexpr u32 MIN_CAPACITY = 128U * 1024U;
 static constexpr u32 MAX_CAPACITY = 128U * 1024U * 1024U;
 static constexpr u32 THREE_BYTE_LIMIT = 16U * 1024U * 1024U;
 
-// complete=false announces a candidate before any destructive access;
-// complete=true reports whether that boundary proved physically distinct.
+// complete=false сообщает о кандидате до любого разрушающего доступа;
+// complete=true сообщает, оказалась ли эта граница физически независимой.
 using ProbeProgress = void (*)(u32 candidate, bool complete, bool distinct);
 
 static bool power_of_two(u32 value) {
   return value != 0 && (value & (value - 1)) == 0;
 }
 
-// Most serial NOR devices encode the byte-capacity as 2^N. Winbond's
-// W25Q512/W25Q01 family uses the continuation values 0x20/0x21 instead of
-// 0x1A/0x1B; accepting both forms is harmless because detect() still verifies
-// the physical boundary before C5 trusts the result.
+// Большинство последовательных NOR-микросхем кодируют ёмкость в байтах как 2^N.
+// Семейство Winbond W25Q512/W25Q01 использует продолжающие значения 0x20/0x21
+// вместо 0x1A/0x1B; принимать обе формы безопасно, поскольку detect() всё равно
+// проверяет физическую границу, прежде чем C5 доверится результату.
 inline u32 jedec_capacity_bytes(u8 capacity_code) {
   if(capacity_code >= 0x10 && capacity_code <= 0x1B) {
     return (u32) 1UL << capacity_code;
@@ -32,9 +32,9 @@ inline u32 jedec_capacity_bytes(u8 capacity_code) {
 }
 
 static void make_marker(u8* out, u32 candidate, u8 role) {
-  // Complementary payloads make an aliased second program require forbidden
-  // 0->1 transitions. Even a driver without read-back verification is caught
-  // by the final comparison of both locations.
+  // Взаимодополняющие данные заставляют вторую запись по адресу-псевдониму
+  // потребовать запрещённых переходов 0->1. Даже драйвер без проверки чтением
+  // обнаруживается при итоговом сравнении обоих участков.
   const u8 salt = role == 0 ? 0xA5 : 0x5A;
   for(u8 i = 0; i < 32; i++) {
     const u8 size_byte = (u8) (candidate >> ((i & 3) * 8));
@@ -67,10 +67,11 @@ static bool prepare_address_width_guards(RawFlash& flash, u32 candidate,
                                          u8* upper_guard) {
   if(candidate <= THREE_BYTE_LIMIT) return flash.rawPrepare(candidate);
 
-  // A 3-byte-only counterfeit may ignore EN4B. It then consumes A31..A8 as
-  // the address and mistakes A7..A0 for the first data byte. Protect those
-  // two low "shadow" sectors before issuing any 4-byte command. A genuine
-  // 4-byte access leaves the guards intact; an ignored EN4B erases them.
+  // Подделка, поддерживающая только 3-байтовые адреса, может игнорировать EN4B.
+  // Тогда она воспринимает A31..A8 как адрес, а A7..A0 — как первый байт данных.
+  // Перед любой 4-байтовой командой защищаем два нижних «теневых» сектора.
+  // Настоящий 4-байтовый доступ оставляет маркеры целыми, а игнорирование EN4B
+  // стирает их.
   if(!flash.rawPrepare(MIN_CAPACITY)) return false;
   const u32 lower_shadow = (lower_address >> 8) & ~(SECTOR_SIZE - 1U);
   const u32 upper_shadow = (upper_address >> 8) & ~(SECTOR_SIZE - 1U);
@@ -107,8 +108,9 @@ static bool boundary_is_distinct(RawFlash& flash, u32 candidate) {
                                    upper_guard_address, lower_guard,
                                    upper_guard)) return false;
 
-  // Erase the possible alias first and the known lower location second. If
-  // both addresses alias, the following two distinct programs expose it.
+  // Сначала стираем возможный адрес-псевдоним, затем известный нижний участок.
+  // Если оба адреса являются псевдонимами, две последующие разные записи это
+  // обнаружат.
   if(!flash.rawEraseSector(upper_address) ||
      !flash.rawEraseSector(lower_address) ||
      !flash.rawWrite(lower_address, lower_marker, sizeof(lower_marker)) ||
@@ -127,18 +129,19 @@ static bool boundary_is_distinct(RawFlash& flash, u32 candidate) {
   return true;
 }
 
-// Destructive only in the two probe sectors of each candidate. Call solely
-// when neither C5 locator is valid. Standard SPI NOR capacities are powers of
-// two, so binary-searching their exponents minimizes erase cycles while still
-// finding the largest physically distinct address range.
+// Разрушает данные только в двух проверочных секторах каждого кандидата.
+// Вызывать исключительно тогда, когда ни один указатель C5 не действителен.
+// Стандартные ёмкости SPI NOR являются степенями двойки, поэтому двоичный поиск
+// по показателям минимизирует число стираний и при этом находит наибольший
+// физически независимый диапазон адресов.
 template<typename RawFlash>
 bool detect(RawFlash& flash, u32 reported_capacity, u32& capacity,
             ProbeProgress progress = nullptr) {
-  // The report is deliberately not a search bound. Counterfeit or mangled
-  // identification data can be wrong in either direction, and C5 promises to
-  // use the whole physically addressable device. There are only eleven
-  // supported power-of-two sizes, so a full-range binary search still needs
-  // at most four boundary checks.
+  // Заявленная ёмкость намеренно не ограничивает поиск. У поддельных или
+  // повреждённых идентификационных данных ошибка возможна в любую сторону,
+  // а C5 должна использовать всё физически адресуемое устройство. Поддерживается
+  // лишь одиннадцать размеров — степеней двойки, поэтому двоичному поиску по
+  // всему диапазону всё равно требуется не более четырёх проверок границы.
   (void) reported_capacity;
   u8 low_exponent = 17; // 128 KiB
   u8 high_exponent = 27; // 128 MiB
@@ -161,6 +164,6 @@ bool detect(RawFlash& flash, u32 reported_capacity, u32& capacity,
   return best != 0;
 }
 
-} // namespace flash_capacity_probe
+} // пространство имён flash_capacity_probe
 
 #endif

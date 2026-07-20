@@ -13,9 +13,9 @@ enum class ClockSource : u8 {
   LSE
 };
 
-// Board routing decides whether touching OSC32_IN/OUT is safe. A permitted
-// LSE still has to prove that it actually started; otherwise boot continues
-// from the internal LSI instead of entering the STM32 core Error_Handler.
+// Разводка платы определяет, безопасно ли использовать OSC32_IN/OUT. Даже если
+// LSE разрешён, нужно убедиться, что он действительно запустился; иначе загрузка
+// продолжается от внутреннего LSI вместо перехода в Error_Handler ядра STM32.
 constexpr ClockSource select_clock_source(bool lse_available, bool lse_ready) {
   return (lse_available && lse_ready) ? ClockSource::LSE : ClockSource::LSI;
 }
@@ -34,10 +34,10 @@ struct DateTime {
   u8 second;
 };
 
-// Coherent RTC state used only to diversify startup seeding.  The STM32
-// subsecond register is a down-counter: subsecond ranges from
-// second_fraction to zero.  Neither this structure nor its packing helpers
-// make an entropy claim about the clock.
+// Согласованное состояние RTC, используемое только для разнообразия начального
+// заполнения. Субсекундный регистр STM32 — обратный счётчик: subsecond изменяется
+// от second_fraction до нуля. Ни эта структура, ни функции её упаковки не
+// предполагают, что часы являются источником энтропии.
 struct StartupSnapshot {
   DateTime date_time;
   u32 subsecond;
@@ -92,9 +92,9 @@ inline bool is_valid(const StartupSnapshot& value) {
   return is_valid(value.date_time) && value.subsecond <= value.second_fraction;
 }
 
-// Keep calendar and phase in separate words so the entropy pool can tag and
-// absorb them independently.  time_set distinguishes a user-set calendar
-// from the valid default calendar maintained by the hardware RTC.
+// Храним календарь и фазу в отдельных словах, чтобы пул энтропии мог помечать
+// и поглощать их независимо. time_set отличает календарь, установленный
+// пользователем, от корректного календаря по умолчанию, который ведёт RTC.
 inline u64 startup_calendar_material(const StartupSnapshot& value) {
   return (value.time_set ? (1ULL << 63) : 0ULL)
       | ((u64) value.date_time.year << 40)
@@ -115,7 +115,7 @@ inline u16 parse_fixed_decimal(const char* text, usize count) {
   return value;
 }
 
-// Strict human-readable terminal format: YYYY-MM-DD HH:MM:SS.
+// Строгий человекочитаемый формат терминала: YYYY-MM-DD HH:MM:SS.
 inline bool parse_datetime(const char* text, DateTime& out) {
   text = skip_horizontal_spaces(text);
   if(text == 0) return false;
@@ -190,8 +190,9 @@ inline u8 build_month(const char* text) {
   return 0;
 }
 
-// Converts the standard compiler strings ("Mmm dd yyyy", "HH:MM:SS") into
-// an editable initial value. This does not mark or set the hardware RTC.
+// Преобразует стандартные строки компилятора ("Mmm dd yyyy", "HH:MM:SS")
+// в редактируемое начальное значение. Аппаратные часы при этом не помечаются
+// как установленные и не настраиваются.
 inline bool parse_build_datetime(const char* date, const char* time, DateTime& out) {
   if(bounded_text_length(date, 11) != 11 || bounded_text_length(time, 8) != 8) return false;
   if(date[3] != ' ' || date[6] != ' ' || time[2] != ':' || time[5] != ':') return false;
@@ -223,7 +224,7 @@ inline bool parse_build_datetime(const char* date, const char* time, DateTime& o
   return true;
 }
 
-// STM32 calendar weekday: Monday=1 ... Sunday=7.
+// День недели календаря STM32: понедельник=1 ... воскресенье=7.
 inline u8 weekday(const DateTime& value) {
   static constexpr u8 MONTH_OFFSETS[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
   u32 year = value.year;
@@ -245,6 +246,6 @@ inline TerminalRequest parse_date_request(const char* args) {
   return result;
 }
 
-} // namespace rtc_clock
+} // пространство имён rtc_clock
 
 #endif

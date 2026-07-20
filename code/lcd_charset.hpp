@@ -7,8 +7,8 @@
 namespace lcd_charset {
 
 #if defined(MK61_LCD1602_A02)
-// HD44780UA02 / Wokwi A02 CGROM codes for Cyrillic glyphs that do not
-// have an identical ASCII glyph in the base ROM.
+// Коды CGROM HD44780UA02 / Wokwi A02 для кириллических глифов, у которых нет
+// идентичного глифа ASCII в базовом ПЗУ.
 static constexpr u8 CYR_BE       = 0x80; // Б
 static constexpr u8 CYR_DE       = 0x81; // Д
 static constexpr u8 CYR_ZHE      = 0x82; // Ж
@@ -32,6 +32,6 @@ static constexpr u8 CYR_IO       = 0xCB; // Ё
 static constexpr u8 CYR_EF       = 0xD8; // Ф
 #endif
 
-} // namespace lcd_charset
+} // пространство имён lcd_charset
 
 #endif

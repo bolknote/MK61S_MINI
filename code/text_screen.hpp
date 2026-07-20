@@ -54,6 +54,6 @@ class Grid {
     void advance(void);
 };
 
-} // namespace text_screen
+} // пространство имён text_screen
 
 #endif

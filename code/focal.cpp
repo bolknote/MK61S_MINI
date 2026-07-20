@@ -1376,7 +1376,7 @@ static bool focal_validate_print(const char* operand) {
     if(begin == item_end) return focal_error("SYNTAX?");
 
     if((item_end - begin) == 1 && *begin == '!') {
-      // Valid newline item.
+      // Допустимый элемент перевода строки.
     } else if(*begin == '"') {
       const char* quote = begin + 1;
       while(quote < item_end && *quote != '"') quote++;
@@ -2310,8 +2310,8 @@ static void focal_display_program_name(const char* name, char* out, usize size) 
 }
 
 static void display_focal_ok(const FocalProgram& program) {
-  // The line count goes to the top line: appended to the name it looked like
-  // the program had been renamed to "NAME <digit>".
+  // Число строк выводится в верхней строке: рядом с именем оно выглядело так,
+  // будто программу переименовали в "NAME <цифра>".
   char top_en[17];
   char top_ru[32];
   snprintf(top_en, sizeof(top_en), "FOCAL: %d lines", (int) focal_ast.line_count);
@@ -2684,9 +2684,9 @@ static bool focal_find_expression_before_cursor(const char* source, u16 cursor, 
   const bool after_statement = start > 0 && source[start - 1] == ';';
   while(start < end && focal_is_space(source[start])) start++;
 
-  // At the beginning of a line (or after a FOR separator), skip the address
-  // and statement name.  The macro must wrap PRINT's operand, not the whole
-  // source fragment "1.10 PRINT X".
+  // В начале строки (или после разделителя FOR) пропускаем адрес и имя
+  // оператора. Макрос должен охватывать операнд PRINT, а не весь фрагмент
+  // исходного текста "1.10 PRINT X".
   if(at_line_start || after_statement) {
     const char* p = source + start;
     const char* const segment_end = source + end;
@@ -2708,7 +2708,7 @@ static bool focal_find_expression_before_cursor(const char* source, u16 cursor, 
       while(p < segment_end && focal_is_space(*p)) p++;
       start = (u16) (p - source);
     } else if(has_address) {
-      // A bare line address is editor structure, not a numeric operand.
+      // Отдельный адрес строки относится к структуре редактора, а не является числовым операндом.
       return false;
     }
   }

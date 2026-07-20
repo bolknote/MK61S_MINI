@@ -55,8 +55,9 @@ static constexpr Mapping CLASSIC = {
   30, 31, 32, 35, 34, 33, 38, 36, 37, 39, 27, 28
 };
 
-// The 40TH board uses the same physical 5x8 matrix as mk61s-mini. Its
-// calculator key translation is also the mini table in cross_hal.cpp.
+// Плата 40TH использует ту же физическую матрицу 5x8, что и mk61s-mini.
+// Для преобразования клавиш калькулятора также применяется таблица mini
+// из cross_hal.cpp.
 static constexpr Mapping FORTIETH = MINI;
 
 #if defined(MK61_KEYBOARD_CLASSIC)
@@ -81,6 +82,6 @@ inline int digit_from_key(const Mapping& mapping, i32 key_code) {
   return -1;
 }
 
-} // namespace keyboard_layout
+} // пространство имён keyboard_layout
 
 #endif

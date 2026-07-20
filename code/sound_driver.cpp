@@ -22,7 +22,7 @@
 namespace {
 
 static constexpr usize SOUND_VOLUME_MAX = 10;
-static constexpr u32   SOUND_DUTY_MAX   = 128; // 50% in 8-bit PWM terms, same loudness range as the old analogWrite code.
+static constexpr u32   SOUND_DUTY_MAX   = 128; // 50% в 8-битном ШИМ, тот же диапазон громкости, что у прежнего кода analogWrite.
 
 static HardwareTimer pwm_timer;
 static HardwareTimer cutoff_timer(MK61_SOUND_CUTOFF_TIMER);
@@ -128,11 +128,12 @@ static bool configure_pwm_mapping(usize pin) {
   pwm_pin_name = pin_name;
   pwm_channel = channel;
 
-  // The mapping is resolved here once, explicitly: PIN_BUZZER -> PinName ->
-  // TIMx_CHy from the active STM32duino variant's PinMap_TIM table.
-  // pwm_ll_channel is NOT resolved here: HardwareTimer::getLLChannel() returns
-  // a valid mask only after setMode() marks the channel as used, so it is
-  // resolved in sound_driver_play() right after setMode().
+  // Здесь однократно и явно определяется соответствие: PIN_BUZZER -> PinName ->
+  // TIMx_CHy из таблицы PinMap_TIM активного варианта STM32duino.
+  // pwm_ll_channel здесь НЕ определяется: HardwareTimer::getLLChannel()
+  // возвращает корректную маску лишь после того, как setMode() пометит канал
+  // используемым, поэтому значение определяется в sound_driver_play() сразу
+  // после setMode().
   pwm_timer.setup(timer_instance);
   pwm_timer_instance = timer_instance;
   pwm_timer.pause();
@@ -142,7 +143,7 @@ static bool configure_pwm_mapping(usize pin) {
   return true;
 }
 
-} // namespace
+} // анонимное пространство имён
 
 void sound_driver_init(usize pin) {
   sound_driver_stop();
@@ -180,11 +181,13 @@ void sound_driver_play_scaled(usize pin, isize frequency_Hz, usize duration_ms, 
   pwm_timer.pauseChannel(pwm_channel);
   pwm_timer.pause();
 
-  // Configure PWM output every time before starting: stop() returns the pin to
-  // GPIO LOW, so setMode() restores the alternate-function PWM routing.
+  // Настраиваем выход ШИМ перед каждым запуском: stop() возвращает вывод в
+  // состояние GPIO LOW, поэтому setMode() восстанавливает альтернативную
+  // функцию ШИМ.
   pwm_timer.setMode(pwm_channel, TIMER_OUTPUT_COMPARE_PWM1, pwm_pin_name);
-  // getLLChannel() returns 0 until setMode() marks the channel as used, so the
-  // LL mask for mute_pwm_from_interrupt() must be resolved after setMode().
+  // getLLChannel() возвращает 0, пока setMode() не пометит канал используемым,
+  // поэтому LL-маску для mute_pwm_from_interrupt() нужно определять после
+  // setMode().
   pwm_ll_channel = pwm_timer.getLLChannel(pwm_channel);
   pwm_timer.setOverflow((u32) frequency_Hz, HERTZ_FORMAT);
   pwm_timer.setCaptureCompare(pwm_channel, duty, RESOLUTION_8B_COMPARE_FORMAT);
@@ -192,9 +195,9 @@ void sound_driver_play_scaled(usize pin, isize frequency_Hz, usize duration_ms, 
 
   sound_active = true;
 
-  // HardwareTimer has no one-shot mode in this API. The cutoff timer therefore
-  // runs as a normal base timer and its first update interrupt stops both
-  // itself and the PWM timer.
+  // В этом API у HardwareTimer нет однократного режима. Поэтому таймер отсечки
+  // работает как обычный базовый таймер, а первое прерывание обновления
+  // останавливает и его самого, и таймер ШИМ.
   cutoff_timer.setOverflow(duration_ms_to_us(duration_ms), MICROSEC_FORMAT);
   cutoff_timer.setCount(0);
   clear_cutoff_interrupt();
@@ -249,7 +252,7 @@ namespace {
 
 static usize fallback_pin = PIN_BUZZER;
 
-} // namespace
+} // анонимное пространство имён
 
 void sound_driver_init(usize pin) {
   fallback_pin = pin;

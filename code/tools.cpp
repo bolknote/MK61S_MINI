@@ -268,7 +268,8 @@ void message_and_waitkey(const char* lcd_message) {
   led::off();
 }
 
-// Вставка команды opcode, в программу mk61s с шага step, с коррекцией команд с переходом по адресу перехода
+// Вставка кода операции в программу mk61s с указанного шага с коррекцией команд,
+// содержащих адрес перехода
 void  insert_cmd_in_program(usize into_step, usize opcode) {
   u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
 
@@ -424,8 +425,9 @@ static void load_persistent_settings(void) {
   persistent_settings_needs_save = false;
   persistent_settings_write_blocked = false;
 
-  // The settings sector has its own guard and remains usable when a valid C5
-  // locator was mounted but both file-catalog banks require repair.
+  // Сектор настроек имеет собственный защитный маркер и остаётся пригодным,
+  // когда действительный указатель C5 подключён, но оба банка файлового каталога
+  // требуют восстановления.
   if(!flash_is_ok || settings_size == 0) {
     import_legacy_settings();
     return;
@@ -436,8 +438,9 @@ static void load_persistent_settings(void) {
     u8 record[settings_journal::RECORD_SIZE];
     const u32 address = settings_address + (u32) scanner.next_offset();
     if(!flash.readByteArray(address, record, sizeof(record))) {
-      // A transient read error must never trigger an erase of potentially
-      // valid settings. Keep using defaults and block writes for this boot.
+      // Временная ошибка чтения ни при каких условиях не должна приводить
+      // к стиранию потенциально действительных настроек. В течение этой загрузки
+      // продолжаем использовать значения по умолчанию и блокируем запись.
       persistent_settings_write_blocked = true;
       persistent_settings_needs_save = true;
       return;
@@ -461,9 +464,10 @@ static void load_persistent_settings(void) {
 
 static bool write_persistent_settings(void) {
   load_persistent_settings();
-  // There is no useful retry path during this boot when flash is absent or a
-  // settings read failed. Preserve the dirty RAM state for diagnostics, but
-  // do not keep the UI retry timer spinning forever.
+  // Если флеш-память отсутствует или чтение настроек завершилось ошибкой,
+  // повторная попытка в течение этой загрузки бесполезна. Сохраняем изменённое
+  // состояние ОЗУ для диагностики, но не заставляем таймер интерфейса повторять
+  // попытки бесконечно.
   if(!flash_is_ok || persistent_settings_write_blocked) return true;
   if(!persistent_settings_needs_save) return true;
 
@@ -698,7 +702,7 @@ void init_external_flash(void) {
   // Инициализация SPI
   SPI.begin();
  
-  // JEDEC/SFDP discovery; unknown parts fall back to C5's boundary probe.
+  // Обнаружение через JEDEC/SFDP; для неизвестных микросхем C5 проверяет границы.
   flash_is_ok = flash.begin();
   #ifdef DEBUG_SPIFLASH
     if(flash_is_ok) {
@@ -768,7 +772,7 @@ bool Load(void) {
     library_mk61::print_localized_at(0, 0, "ЧТ ", "Load ", 5);
     address = calc_address();
   }
-  if(address < 0) return false; // error
+  if(address < 0) return false; // Ошибка
 
   const usize slot = (usize) (address / FLASH_SECTOR_SIZE);
   return Load(slot);
@@ -818,7 +822,7 @@ bool StoreProgram(const char* name) {
 }
 
 bool StoreProgram(u16 parent_id, const char* name) {
-  if(check_empty_program()) return false; // error
+  if(check_empty_program()) return false; // Ошибка
   if(name == NULL || name[0] == 0) return false;
 
   shared_scratch::Lease scratch(shared_scratch::Owner::M61_FORMAT, program_store::MAX_MK61_TEXT_SIZE);
@@ -846,7 +850,7 @@ bool Store(void) {
     lcd.clear(); lcd.setCursor(0, 0);
   }
 
-  if(check_empty_program()) return false; // error
+  if(check_empty_program()) return false; // Ошибка
 
   isize address;
   {
@@ -854,7 +858,7 @@ bool Store(void) {
     library_mk61::print_localized_at(0, 0, "ПИС ", "Save ", 5); //lcd.setCursor(7, 0);
     address = calc_address();
   }
-  if(address < 0) return false; // error
+  if(address < 0) return false; // Ошибка
 
   char name[8];
   snprintf(name, sizeof(name), "%u", (unsigned) (address / FLASH_SECTOR_SIZE));
@@ -868,7 +872,7 @@ bool Store(void) {
       MK61DisplayUpdate update(lcd);
       lcd.setCursor(0, 0); lcd.print(library_mk61::text("OVER", "OVER")); lcd.setCursor(8, 0); lcd.print(library_mk61::text("press OK", "OK?"));
     }
-    if(kbd::get_key_wait() != KEY_OK) return false; // error
+    if(kbd::get_key_wait() != KEY_OK) return false; // Ошибка
   }
 
   #ifdef DEBUG_SPIFLASH

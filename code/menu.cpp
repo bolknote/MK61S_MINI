@@ -577,7 +577,7 @@ bool  speed_is_turbo(void) {
   return speed_mode_state == SpeedMode::TURBO;
 }
 
-} // namespace library_mk61
+} // пространство имён library_mk61
 
 bool ResetDevice(void) {
   library_mk61::store_settings_state();
