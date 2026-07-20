@@ -33,6 +33,13 @@ bool marker_is_set(void) {
   return HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR2) == TIME_SET_MARKER;
 }
 
+bool marker_is_set_before_rtc_begin(void) {
+  // Обычная переменная RAM переживёт сброс только резервного домена, который
+  // STM32RTC выполняет внутри begin() при смене источника LSE/LSI.
+  enableBackupDomain();
+  return getBackupRegister(LL_RTC_BKP_DR2) == TIME_SET_MARKER;
+}
+
 void write_marker(u32 value) {
   // Повторный вызов соответствует вспомогательной функции домена резервного
   // питания ядра STM32 и гарантирует, что запись DBP прошла через мост APB/AHB
@@ -125,7 +132,14 @@ void init(void) {
   rtc.setClockSource(source == ClockSource::LSE
       ? STM32RTC::LSE_CLOCK
       : STM32RTC::LSI_CLOCK);
-  rtc.begin(); // Сохраняем уже настроенный календарь и резервные регистры.
+  const bool marker_was_set = marker_is_set_before_rtc_begin();
+  rtc.begin(); // При смене источника библиотека сама переносит календарь.
+  if(marker_was_set && !marker_is_set()) {
+    // При смене RTCSEL библиотека возвращает календарь после сброса резервного
+    // домена, но пользовательские backup-регистры не восстанавливает.
+    write_marker(TIME_SET_MARKER);
+    dbgln(SPIROM, "RTC init: restored time-set marker after source change");
+  }
   if(!MK61_RTC_LSE_AVAILABLE && !lse_gpio_is_released() &&
      !disable_retained_lse_for_gpio()) {
     dbgln(SPIROM, "RTC init: WARNING, LSE returned after selecting LSI");
