@@ -3,6 +3,7 @@
 #include "fat_name.hpp"
 #include "Arduino.h"
 #include "config.h"
+#include "debug.h"
 #include "flash_capacity_probe.hpp"
 #include "ledcontrol.h"
 #include "shared_scratch.hpp"
@@ -134,6 +135,19 @@ static u16 g_flat_cache_id;
 static u16 g_child_cache_parent = NONE;
 static int g_child_cache_index = -1;
 static u16 g_child_cache_id = NONE;
+
+#ifdef DEBUG_SPIFLASH
+static void capacity_probe_debug(u32 candidate, bool complete,
+                                 bool distinct) {
+  Serial.print("C5 probe candidate: ");
+  Serial.print(candidate);
+  if(!complete) {
+    Serial.println(" bytes, testing...");
+  } else {
+    Serial.println(distinct ? " bytes, distinct" : " bytes, aliased/failed");
+  }
+}
+#endif
 
 static void disk_led_poll(void) {
   if(g_disk_activity_depth == 0) return;
@@ -1585,15 +1599,13 @@ static bool format_internal(bool erase_settings) {
   g_meta.gc_cursor = g_geometry.data_first_sector;
   g_meta.data_sequence = 0;
 
-  for(u8 bank = 0; bank < storage_geometry::CATALOG_BANKS; bank++) {
-    for(u16 sector = 0; sector < g_geometry.catalog_bank_sectors; sector++) {
-      if(!erase_sector(bank_sector(bank) + sector)) return false;
-    }
-  }
+  // checkpoint() erases and publishes the new active bank itself.  The other
+  // bank is epoch-qualified and will be erased when it next becomes the COW
+  // destination, so eagerly erasing both banks here only tripled first-boot
+  // catalog work on a 16 MiB W25Q128.
   if(!checkpoint()) return false;
-  for(u16 sector = 0; sector < g_geometry.stage_sector_count; sector++) {
-    if(!erase_sector(g_geometry.stage_first_sector + sector)) return false;
-  }
+  // Staging headers also carry the format epoch.  Old/foreign sectors are
+  // ignored after this format and erased lazily before their first append.
   if(erase_settings) {
     if(!erase_sector(g_geometry.settings_sector) || !write_settings_guard()) return false;
   } else if(!settings_guard_valid(g_geometry)) {
@@ -1614,21 +1626,47 @@ void init(void) {
   g_free_hint = 0;
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
+  dbgln(SPIROM, "C5 locator: scan");
   if(!load_locator()) {
+    dbgln(SPIROM, "C5 locator: absent or incompatible");
     const bool preserve_settings = load_capacity_for_reformat();
     u32 capacity = 0;
 #ifdef SPI_FLASH
-    if(!preserve_settings &&
-       (!flash_capacity_probe::detect(flash, flash.capacityProbeUpper(), capacity) ||
-        !flash.setCapacity(capacity))) return;
+    if(!preserve_settings) {
+      dbgln(SPIROM, "C5 capacity probe: start");
+#ifdef DEBUG_SPIFLASH
+      const flash_capacity_probe::ProbeProgress progress =
+          capacity_probe_debug;
+#else
+      const flash_capacity_probe::ProbeProgress progress = nullptr;
 #endif
-    (void) format_internal(!preserve_settings);
+      if(!flash_capacity_probe::detect(
+             flash, flash.capacityProbeUpper(), capacity, progress) ||
+         !flash.setCapacity(capacity)) {
+        dbgln(SPIROM, "C5 capacity probe: failed");
+        return;
+      }
+    }
+#endif
+    if(!preserve_settings) {
+      dbgln(SPIROM, "C5 capacity probe: ", (isize) capacity, " bytes");
+    } else {
+      dbgln(SPIROM, "C5 geometry migration: preserve settings");
+    }
+    dbgln(SPIROM, "C5 format: start");
+    if(!format_internal(!preserve_settings)) {
+      dbgln(SPIROM, "C5 format: failed");
+      return;
+    }
+    dbgln(SPIROM, "C5 format: complete");
   } else if(!load_catalog()) {
+    dbgln(SPIROM, "C5 catalog: both banks invalid");
     // A valid locator proves this is an existing C5 volume.  Losing both
     // catalog banks must never look like first use: leave every byte intact
     // until the user explicitly requests a format.
     g_mount_status = MountStatus::REPAIR_REQUIRED;
   } else {
+    dbgln(SPIROM, "C5 catalog: ready");
     g_ready = true;
     g_mount_status = MountStatus::READY;
   }

@@ -38,8 +38,15 @@
 //#define CDU
 //#define LK432
 //#define SERIAL_OUTPUT
-#define REVISION_V3
-//#define REVISION_V2
+// Board revision may be selected by the build (`-DREVISION_V2`).  Release
+// builds default to V3, but must not silently define V3 on top of an explicit
+// V2 profile: the LCD data pins, buzzer and LED polarity differ.
+#if defined(REVISION_V2) && defined(REVISION_V3)
+  #error "Select only one MK61s-mini board revision"
+#endif
+#if !defined(REVISION_V2) && !defined(REVISION_V3)
+  #define REVISION_V3
+#endif
 #define MK61s
 //#define MK52s
 

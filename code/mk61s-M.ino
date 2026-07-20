@@ -224,6 +224,12 @@ void setup() {
   led::init();
   sound_driver_init(PIN_BUZZER);
 
+  // Bring CDC up before external-flash discovery.  DEBUG_SPIFLASH used to
+  // print only after program_store::init(), so a slow/failing capacity probe
+  // was indistinguishable from a dead board and none of its diagnostics ever
+  // reached the host.
+  if(!dfu_requested) usb_start_terminal_mode();
+
   #ifdef SPI_FLASH
       init_external_flash();
   #endif
@@ -232,7 +238,6 @@ void setup() {
 
   if(!dfu_requested) {
     rtc_clock::init();
-    usb_start_terminal_mode();
   }
 
   //  kbd::test();

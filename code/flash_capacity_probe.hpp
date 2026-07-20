@@ -10,6 +10,10 @@ static constexpr u32 MIN_CAPACITY = 128U * 1024U;
 static constexpr u32 MAX_CAPACITY = 128U * 1024U * 1024U;
 static constexpr u32 THREE_BYTE_LIMIT = 16U * 1024U * 1024U;
 
+// complete=false announces a candidate before any destructive access;
+// complete=true reports whether that boundary proved physically distinct.
+using ProbeProgress = void (*)(u32 candidate, bool complete, bool distinct);
+
 static bool power_of_two(u32 value) {
   return value != 0 && (value & (value - 1)) == 0;
 }
@@ -128,7 +132,8 @@ static bool boundary_is_distinct(RawFlash& flash, u32 candidate) {
 // two, so binary-searching their exponents minimizes erase cycles while still
 // finding the largest physically distinct address range.
 template<typename RawFlash>
-bool detect(RawFlash& flash, u32 reported_capacity, u32& capacity) {
+bool detect(RawFlash& flash, u32 reported_capacity, u32& capacity,
+            ProbeProgress progress = nullptr) {
   // The report is deliberately not a search bound. Counterfeit or mangled
   // identification data can be wrong in either direction, and C5 promises to
   // use the whole physically addressable device. There are only eleven
@@ -142,7 +147,10 @@ bool detect(RawFlash& flash, u32 reported_capacity, u32& capacity) {
     const u8 exponent = (u8) (low_exponent +
         (high_exponent - low_exponent) / 2);
     const u32 candidate = (u32) 1UL << exponent;
-    if(boundary_is_distinct(flash, candidate)) {
+    if(progress != nullptr) progress(candidate, false, false);
+    const bool distinct = boundary_is_distinct(flash, candidate);
+    if(progress != nullptr) progress(candidate, true, distinct);
+    if(distinct) {
       best = candidate;
       low_exponent = (u8) (exponent + 1);
     } else {

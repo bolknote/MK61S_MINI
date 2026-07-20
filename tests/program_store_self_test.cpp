@@ -983,6 +983,32 @@ static void test_stage_compaction_power_cuts_are_recoverable(void) {
   }
 }
 
+static void test_reformat_invalidates_stage_and_erases_it_lazily(void) {
+  fresh();
+  const storage_geometry::Geometry before = program_store::geometry();
+  u8 old_data[512];
+  memset(old_data, 0x5A, sizeof(old_data));
+  assert(program_store::vfat_stage_write(77, old_data));
+  const u32 stage_sector = before.stage_first_sector;
+  const u32 erases_with_old_epoch = SPIFlash::sectorEraseCount(stage_sector);
+  assert(erases_with_old_epoch != 0);
+
+  assert(program_store::format());
+  assert(program_store::vfat_stage_count() == 0);
+  assert(!program_store::vfat_stage_exists(77));
+  assert(SPIFlash::sectorEraseCount(stage_sector) == erases_with_old_epoch);
+
+  u8 new_data[512];
+  memset(new_data, 0xA5, sizeof(new_data));
+  assert(program_store::vfat_stage_write(88, new_data));
+  assert(SPIFlash::sectorEraseCount(stage_sector) ==
+         erases_with_old_epoch + 1U);
+  program_store::init();
+  u8 recovered[512] = {};
+  assert(program_store::vfat_stage_read(88, recovered));
+  assert(memcmp(recovered, new_data, sizeof(recovered)) == 0);
+}
+
 static void test_settings_reservation_and_capacity_mismatch(void) {
   fresh();
   const u32 settings = program_store::settings_address();
@@ -1080,16 +1106,43 @@ static void test_declared_geometry_change_forces_a_fresh_probe(void) {
   assert(!program_store::exists(ProgramType::TEXT, "OLD"));
 }
 
-static void test_legacy_layout_is_not_migrated(void) {
-  SPIFlash::reset();
-  const u8 legacy[] = {'C', '4', 0x7F, 100, 1, 0, 0, 0, 0};
-  assert(flash.writeByteArray(0, (u8*) legacy, sizeof(legacy)));
-  program_store::init();
-  assert(program_store::ready());
-  assert(program_store::total_count() == 0);
-  u8 locator[4] = {};
-  assert(flash.readByteArray(0, locator, sizeof(locator)));
-  assert(memcmp(locator, "C5FS", 4) == 0);
+static void test_c1_to_c4_layouts_format_once_with_bounded_erases(void) {
+  static constexpr u32 CAPACITY = 16U * 1024U * 1024U;
+  static constexpr u32 LEGACY_CATALOG_SECTOR = 100U;
+  for(u8 version = 1; version <= 4; version++) {
+    SPIFlash::reset(CAPACITY);
+    u8 sector_header[] = {'S', '1', 0x7F, 0, 0, 0, 1};
+    assert(flash.writeByteArray(0, sector_header, sizeof(sector_header)));
+    u8 catalog_header[] = {
+      'C', (u8) ('0' + version), 0x7F, 100, 0, 0, 0, 0, 0
+    };
+    assert(flash.writeByteArray(
+        LEGACY_CATALOG_SECTOR * SPIFlash::SECTOR_SIZE,
+        catalog_header, sizeof(catalog_header)));
+    const u32 erases_before = SPIFlash::eraseCount();
+
+    program_store::init();
+    assert(program_store::ready());
+    assert(program_store::geometry().capacity_bytes == CAPACITY);
+    assert(program_store::total_count() == 0);
+    u8 locator[4] = {};
+    assert(flash.readByteArray(0, locator, sizeof(locator)));
+    assert(memcmp(locator, "C5FS", 4) == 0);
+
+    // Physical capacity probing plus one new catalog bank, settings and two
+    // locators is bounded.  Data, the second COW bank and USB staging are
+    // epoch-qualified and therefore need no eager erase.
+    const u32 format_erases = SPIFlash::eraseCount() - erases_before;
+    assert(format_erases <=
+           (u32) program_store::geometry().catalog_bank_sectors + 16U);
+
+    const u32 stable_erases = SPIFlash::eraseCount();
+    const u64 stable_programmed = SPIFlash::programmedBytes();
+    program_store::init();
+    assert(program_store::ready());
+    assert(SPIFlash::eraseCount() == stable_erases);
+    assert(SPIFlash::programmedBytes() == stable_programmed);
+  }
 }
 
 } // namespace
@@ -1116,12 +1169,13 @@ int main(void) {
   test_stage_power_cut_keeps_previous_value();
   test_stage_compacts_when_every_normal_sector_is_live();
   test_stage_compaction_power_cuts_are_recoverable();
+  test_reformat_invalidates_stage_and_erases_it_lazily();
   test_settings_reservation_and_capacity_mismatch();
   test_geometry_migration_preserves_settings();
   test_counterfeit_capacity_is_measured_not_trusted();
   test_underreported_capacity_uses_the_whole_device();
   test_declared_geometry_change_forces_a_fresh_probe();
-  test_legacy_layout_is_not_migrated();
+  test_c1_to_c4_layouts_format_once_with_bounded_erases();
   printf("program_store_self_test: ok\n");
   return 0;
 }

@@ -63,6 +63,18 @@ class AliasingNor {
     bool four_byte;
 };
 
+struct ProbeEvent {
+  u32 candidate;
+  bool complete;
+  bool distinct;
+};
+
+static std::vector<ProbeEvent> probe_events;
+
+static void record_probe_event(u32 candidate, bool complete, bool distinct) {
+  probe_events.push_back({candidate, complete, distinct});
+}
+
 static void check(u32 actual, u32 reported) {
   AliasingNor flash(actual);
   u32 detected = 0;
@@ -94,6 +106,33 @@ int main(void) {
   check(32U * 1024U * 1024U, 64U * 1024U * 1024U);
   check(64U * 1024U * 1024U, 512U * 1024U);
   check(128U * 1024U * 1024U, 128U * 1024U * 1024U);
+
+  // A W25Q128-class device produces an observable start/result pair for
+  // every binary-search candidate.  This is the boot trace used to diagnose
+  // a slow or stuck physical erase over the CDC terminal.
+  AliasingNor traced(16U * 1024U * 1024U);
+  u32 traced_size = 0;
+  probe_events.clear();
+  assert(flash_capacity_probe::detect(traced, 16U * 1024U * 1024U,
+                                      traced_size, record_probe_event));
+  assert(traced_size == 16U * 1024U * 1024U);
+  const u32 candidates[] = {
+    4U * 1024U * 1024U,
+    32U * 1024U * 1024U,
+    8U * 1024U * 1024U,
+    16U * 1024U * 1024U
+  };
+  assert(probe_events.size() == 8U);
+  for(usize index = 0; index < 4; index++) {
+    const ProbeEvent& start = probe_events[index * 2];
+    const ProbeEvent& finish = probe_events[index * 2 + 1];
+    assert(start.candidate == candidates[index] && !start.complete);
+    assert(finish.candidate == candidates[index] && finish.complete);
+  }
+  assert(probe_events[1].distinct);
+  assert(!probe_events[3].distinct);
+  assert(probe_events[5].distinct);
+  assert(probe_events[7].distinct);
 
   // A 3-byte chip that ignores EN4B shifts a four-byte transaction instead
   // of wrapping the intended address. The protocol guards must prevent that

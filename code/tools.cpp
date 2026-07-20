@@ -700,24 +700,30 @@ void init_external_flash(void) {
  
   // JEDEC/SFDP discovery; unknown parts fall back to C5's boundary probe.
   flash_is_ok = flash.begin();
-  if(flash_is_ok) program_store::init();
   #ifdef DEBUG_SPIFLASH
     if(flash_is_ok) {
+      Serial.println("SPI NOR link: OK");
       Serial.print("JEDEC ID: 0x"); Serial.println(flash.getJEDECID(), HEX);
       Serial.print("SFDP: "); Serial.println(flash.sfdpPresent() ? "yes" : "no");
       Serial.print("declared upper bound: ");
       Serial.print(flash.capacityProbeUpper()); Serial.println(" bytes");
-      if(program_store::ready()) {
-        Serial.print("measured C5 capacity: ");
-        Serial.print(flash.getCapacity()); Serial.println(" bytes");
-      } else if(program_store::mount_status() ==
-                program_store::MountStatus::REPAIR_REQUIRED) {
-        Serial.println("C5 catalogs damaged; explicit format required");
-      } else {
-        Serial.println("C5 capacity detection failed");
-      }
     } else {
-      Serial.println("ERROR!");
+      Serial.println("SPI NOR link: ERROR");
+    }
+  #endif
+  if(!flash_is_ok) return;
+
+  dbgln(SPIROM, "C5 init: start");
+  program_store::init();
+  #ifdef DEBUG_SPIFLASH
+    if(program_store::ready()) {
+      Serial.print("C5 init: ready, measured capacity: ");
+      Serial.print(flash.getCapacity()); Serial.println(" bytes");
+    } else if(program_store::mount_status() ==
+              program_store::MountStatus::REPAIR_REQUIRED) {
+      Serial.println("C5 init: catalogs damaged; explicit format required");
+    } else {
+      Serial.println("C5 init: failed");
     }
   #endif
 }
