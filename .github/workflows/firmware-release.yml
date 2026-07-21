@@ -35,6 +35,7 @@ jobs:
       STM32_CORE_VERSION: 2.12.0
       STM32_PACKAGE_URL: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
       FQBN: STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd
+      FQBN_LTO: STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=o3lto
 
     steps:
       - name: Checkout
@@ -70,6 +71,17 @@ jobs:
             --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00" \
             "$RUNNER_TEMP/mk61s-M"
           cp "$RUNNER_TEMP/build-lcd1602-a00/mk61s-M.ino.bin" "firmware/mk61s-M-lcd1602-a00-f411-${GITHUB_SHA::7}.bin"
+
+      # LiquidCrystal 1.0.7 определяет command() как inline только в .cpp.
+      # Отдельная LTO-сборка не даёт случайно вернуть внешний вызов этого
+      # отсутствующего символа из нашего LCD-транспорта.
+      - name: Link-check LCD1602 A00 with LTO
+        run: |
+          arduino-cli compile \
+            --fqbn "$FQBN_LTO" \
+            --build-path "$RUNNER_TEMP/build-lcd1602-a00-lto" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00" \
+            "$RUNNER_TEMP/mk61s-M"
 
       - name: Build LCD1602 A02 firmware
         run: |

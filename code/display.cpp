@@ -131,6 +131,37 @@ static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
 } // анонимное пространство имён
 #endif
 
+namespace {
+
+// В LiquidCrystal 1.0.7 command() объявлен в заголовке, но ошибочно определён
+// как inline только в .cpp библиотеки. При некоторых сочетаниях оптимизации и
+// LTO внешний символ не создаётся, поэтому прямой вызов из прошивки не
+// линкуется. Командный fallback отправляем самостоятельно по тому же 4-битному
+// протоколу и с теми же консервативными задержками, что LiquidCrystal.
+static inline void lcdFallbackWriteNibble(u8 nibble) {
+  digitalWrite(PIN_LCD_E, LOW);
+  digitalWrite(PIN_LCD_DB4, (nibble & 0x01u) != 0 ? HIGH : LOW);
+  digitalWrite(PIN_LCD_DB5, (nibble & 0x02u) != 0 ? HIGH : LOW);
+  digitalWrite(PIN_LCD_DB6, (nibble & 0x04u) != 0 ? HIGH : LOW);
+  digitalWrite(PIN_LCD_DB7, (nibble & 0x08u) != 0 ? HIGH : LOW);
+  delayMicroseconds(1);
+  digitalWrite(PIN_LCD_E, HIGH);
+  delayMicroseconds(1);
+  digitalWrite(PIN_LCD_E, LOW);
+  delayMicroseconds(100);
+}
+
+static void lcdFallbackCommand(u8 value) {
+#if MK61_LCD1602_BUSY_FLAG
+  digitalWrite(PIN_LCD_RW, LOW);
+#endif
+  digitalWrite(PIN_LCD_RS, LOW);
+  lcdFallbackWriteNibble(value >> 4);
+  lcdFallbackWriteNibble(value & 0x0Fu);
+}
+
+} // анонимное пространство имён
+
 MK61Display::MK61Display(void)
   : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7),
     ddram_shadow{{0}},
@@ -362,7 +393,7 @@ void MK61Display::sendByte(u8 value, bool data, u32 fallback_delay_us) {
 #endif
 
   if(data) lcd.write(value);
-  else lcd.command(value);
+  else lcdFallbackCommand(value);
   if(fallback_delay_us != 0) delayMicroseconds(fallback_delay_us);
 }
 
