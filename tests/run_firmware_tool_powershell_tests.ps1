@@ -106,6 +106,7 @@ try {
     $script:IsWindowsHost = $true
     Initialize-TuiGlyphs
     Assert-True ($script:State.EnableUsbScreen -eq 0) 'USB Screen must be disabled by default'
+    Assert-True ($script:TextWidth -ge 74) 'default TUI is too narrow for the compile-option summary'
     Assert-True ($script:Glyphs.Selector -eq '>') 'Windows selector is not conhost-safe'
     Assert-True ($script:Glyphs.CheckOff -eq '[ ]' -and $script:Glyphs.CheckOn -eq '[x]') 'Windows checkbox glyphs are ambiguous'
     Assert-True ($script:Glyphs.RadioOff -eq '( )' -and $script:Glyphs.RadioOn -eq '(*)') 'Windows radio glyphs are ambiguous'

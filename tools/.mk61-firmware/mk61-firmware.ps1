@@ -100,9 +100,9 @@ $script:OriginalBackground = [ConsoleColor]::Black
 $script:OriginalCursorVisible = $true
 $script:ConsoleColumns = 80
 $script:ConsoleRows = 24
-$script:WindowWidth = 76
-$script:TextWidth = 72
-$script:MarginWidth = 2
+$script:WindowWidth = 78
+$script:TextWidth = 74
+$script:MarginWidth = 1
 $script:UseColor = (Get-EnvironmentOrDefault 'MK61_COLOR' 'always') -ne 'never'
 
 $script:Styles = @{
@@ -389,7 +389,7 @@ function Update-Layout {
         $script:ConsoleRows = 24
     }
     if ($script:ConsoleColumns -ge 42) {
-        $script:WindowWidth = [Math]::Min(84, $script:ConsoleColumns - 4)
+        $script:WindowWidth = [Math]::Min(92, $script:ConsoleColumns - 2)
         $script:WindowWidth = [Math]::Max(38, $script:WindowWidth)
     } else {
         $script:WindowWidth = [Math]::Max(20, $script:ConsoleColumns - 1)
