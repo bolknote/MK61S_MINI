@@ -19,6 +19,11 @@ common=(
 clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 -o "$out-v3"
 "$out-v3"
 
+clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+  -DMK61_ENABLE_WBMP_VIEWER=0 -DMK61_CONFIG_EXPECT_WBMP_DISABLED \
+  -o "$out-v3-no-wbmp"
+"$out-v3-no-wbmp"
+
 clang++ "${common[@]}" -DREVISION_V2 -DMK61_CONFIG_EXPECT_V2 -o "$out-v2"
 "$out-v2"
 
@@ -54,5 +59,12 @@ fi
 if clang++ "${common[@]}" -DREVISION_V2 -DMK61_BOARD_CLASSIC_V3 \
     -o "$out-invalid-revision" >/dev/null 2>&1; then
   echo "Classic profile with mini REVISION_V2 unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_WBMP_VIEWER=2 -o "$out-invalid-wbmp" \
+    >/dev/null 2>&1; then
+  echo "invalid WBMP viewer flag unexpectedly compiled" >&2
   exit 1
 fi

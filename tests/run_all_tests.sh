@@ -5,6 +5,8 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_board_profile_tests.sh"
+"$root/tests/run_a00_image_multiplex_tests.sh"
+"$root/tests/run_wbmp_tests.sh"
 "$root/tests/run_bounded_string_tests.sh"
 "$root/tests/run_dfu_splash_tests.sh"
 "$root/tests/run_display_font_tests.sh"

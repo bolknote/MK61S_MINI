@@ -92,7 +92,7 @@ static_assert(sizeof(SessionState) >= PRIMARY_CACHE_SLOTS * SECTOR_SIZE,
               "C5 FAT cache geometry unexpectedly changed");
 static_assert(SCRATCH_CACHE_SLOTS == 3,
               "shared scratch should lend exactly three USB sectors");
-static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE,
+static_assert(shared_scratch::SIZE >= program_store::MAX_IMAGE1_SIZE,
               "USB import payload must fit the shared scratch buffer");
 
 static language_workspace::Lease g_session_lease;
@@ -209,6 +209,7 @@ static const char* short_extension(program_store::ProgramType type) {
     case program_store::ProgramType::TEXT: return "T1 ";
     case program_store::ProgramType::MK61_STATE: return "M2 ";
     case program_store::ProgramType::FONT: return "FMK";
+    case program_store::ProgramType::IMAGE1: return "WBM";
   }
   return "BIN";
 }
@@ -226,7 +227,10 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     {".txt", program_store::ProgramType::TEXT},
     {".t1", program_store::ProgramType::TEXT},
     {".m2", program_store::ProgramType::MK61_STATE},
-    {".fmk", program_store::ProgramType::FONT}
+    {".fmk", program_store::ProgramType::FONT},
+    {".wbmp", program_store::ProgramType::IMAGE1},
+    // Псевдоним нужен при чтении записи без LFN: 8.3-проекция WBMP — WBM.
+    {".wbm", program_store::ProgramType::IMAGE1}
   };
   for(const Suffix& suffix : suffixes) {
     if(!ends_with_ci(full_name, suffix.text)) continue;
@@ -237,6 +241,16 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     return true;
   }
   return false;
+}
+
+static u16 maximum_file_size(program_store::ProgramType type) {
+  if(type == program_store::ProgramType::FONT) {
+    return program_store::MAX_FONT_SIZE;
+  }
+  if(type == program_store::ProgramType::IMAGE1) {
+    return program_store::MAX_IMAGE1_SIZE;
+  }
+  return program_store::MAX_MK61_TEXT_SIZE;
 }
 
 static bool utf8_to_utf16(const char* input, u16* output, u16 capacity,
@@ -963,7 +977,7 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   }
   // Неподдерживаемые файлы хоста намеренно игнорируются независимо от размера.
   // Квоту данных C5 применяем лишь после выбора известного расширения калькулятора.
-  if(size > program_store::MAX_MK61_TEXT_SIZE) return ParseStatus::INVALID;
+  if(size > maximum_file_size(parsed.type)) return ParseStatus::INVALID;
   if(!valid_cluster(cluster)) return ParseStatus::INVALID;
   bounded_string::copy(parsed.name, name);
   parsed.id = id_for_cluster(cluster);

@@ -4,6 +4,13 @@
 #include "config.h"
 
 int main(void) {
+#if defined(MK61_CONFIG_EXPECT_WBMP_DISABLED)
+  static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
+                "the WBMP-disabled build must keep the viewer disabled");
+#else
+  static_assert(MK61_ENABLE_WBMP_VIEWER == 1,
+                "the WBMP viewer must be enabled by default");
+#endif
   static_assert(PIN_SPIFLASH_CS == PA4,
                 "all supported mini revisions use SPI1 NSS on PA4");
   static_assert(PIN_LCD_RS == PB2 && PIN_LCD_RW == PB1 && PIN_LCD_E == PB0,

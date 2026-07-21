@@ -76,6 +76,17 @@
   #define MK61_ENABLE_TINYBASIC 1
 #endif
 
+// Просмотр стандартных монохромных WBMP Type 0 включён по умолчанию.
+// Укажите -DMK61_ENABLE_WBMP_VIEWER=0 либо замените 1 на 0 здесь, чтобы
+// исключить декодер и экранные алгоритмы из прошивки. Поддержка файлов
+// .wbmp в C5/USB остаётся, поэтому отключение не делает данные недоступными.
+#ifndef MK61_ENABLE_WBMP_VIEWER
+  #define MK61_ENABLE_WBMP_VIEWER 1
+#endif
+#if MK61_ENABLE_WBMP_VIEWER != 0 && MK61_ENABLE_WBMP_VIEWER != 1
+  #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
+#endif
+
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
 // графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.
 #ifndef MK61_ENABLE_EXTENDED_FONT_SETTINGS
@@ -96,6 +107,18 @@
 // [USER] только для удержания стека и функций режима ПРГ.
 #ifndef MK61_USER_EXPLORER_SHORTCUT
   #define MK61_USER_EXPLORER_SHORTCUT 1
+#endif
+
+// Делитель максимально возможной частоты CGRAM-мультиплекса. Время реальной
+// перезаписи измеряется после ожидания busy flag; оставшееся время фазы
+// используется для опроса клавиатуры и фоновых задач.
+#if MK61_ENABLE_WBMP_VIEWER
+  #ifndef MK61_IMAGE1_RATE_DIVISOR
+    #define MK61_IMAGE1_RATE_DIVISOR 4
+  #endif
+  #if MK61_IMAGE1_RATE_DIVISOR < 1 || MK61_IMAGE1_RATE_DIVISOR > 16
+    #error "MK61_IMAGE1_RATE_DIVISOR must be in range 1..16"
+  #endif
 #endif
 
 #if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)

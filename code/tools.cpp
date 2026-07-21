@@ -77,6 +77,12 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
       return program_store_view_entry(entry);
     case program_store::ProgramType::FONT:
       return program_store_apply_font(entry);
+    case program_store::ProgramType::IMAGE1:
+#if MK61_ENABLE_WBMP_VIEWER
+      return program_store_view_entry(entry);
+#else
+      return false;
+#endif
   }
   return false;
 }

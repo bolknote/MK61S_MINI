@@ -9,6 +9,7 @@ enum class Owner : u8 {
   NONE,
   FOCAL,
   TINYBASIC,
+  IMAGE_VIEWER,
   USB_DISK
 };
 

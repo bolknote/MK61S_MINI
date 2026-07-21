@@ -175,10 +175,12 @@ static const Extension EXTENSIONS[] = {
   { ".tbi",       program_store::ProgramType::TINYBASIC },
   { ".txt",       program_store::ProgramType::TEXT },
   { ".fmk",       program_store::ProgramType::FONT },
+  { ".wbmp",      program_store::ProgramType::IMAGE1 },
   // Старые терминальные псевдонимы по-прежнему принимаются, но каноническая
   // запись использует расширения из program_store::file_extension().
   { ".t1",        program_store::ProgramType::TEXT },
-  { ".m2",        program_store::ProgramType::MK61_STATE }
+  { ".m2",        program_store::ProgramType::MK61_STATE },
+  { ".wbm",       program_store::ProgramType::IMAGE1 }
 };
 
 static bool ends_with_ci(const char* text, const char* suffix) {

@@ -6,6 +6,9 @@
 #include "cross_hal.h"
 #include "focal.hpp"
 #include "fmk_font.hpp"
+#if MK61_ENABLE_WBMP_VIEWER
+  #include "image1_viewer.hpp"
+#endif
 #include "tinybasic.hpp"
 #include "keyboard.h"
 #include "lcd_gui.hpp"
@@ -48,7 +51,8 @@ static u16 applied_font_id = program_store::INVALID_ID;
 static bool applied_font_suspended = false;
 #endif
 
-static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for explorer view");
+static_assert(shared_scratch::SIZE >= program_store::MAX_IMAGE1_SIZE,
+              "shared scratch too small for explorer view");
 static_assert(fmk::MAX_FILE_SIZE == program_store::MAX_FONT_SIZE, "font parser and storage limits must match");
 
 enum class ItemMenuAction : u8 {
@@ -96,6 +100,7 @@ static const char* type_label(program_store::ProgramType type) {
     case program_store::ProgramType::TEXT: return "T1";
     case program_store::ProgramType::MK61_STATE: return "M2";
     case program_store::ProgramType::FONT: return "f1";
+    case program_store::ProgramType::IMAGE1: return "I1";
   }
   return "??";
 }
@@ -838,12 +843,44 @@ static bool apply_font_entry(const program_store::Entry& entry) {
 #endif
 }
 
-static void view_entry(const program_store::Entry& entry) {
+static bool view_entry(const program_store::Entry& entry) {
+  if(entry.type == program_store::ProgramType::IMAGE1) {
+#if MK61_ENABLE_WBMP_VIEWER
+    const image1_viewer::Result result =
+      image1_viewer::view_entry(lcd, entry);
+    if(result == image1_viewer::Result::OK) return true;
+
+    const char* en = "Image error";
+    const char* ru = "Ошибка картинки";
+    if(result == image1_viewer::Result::BUSY) {
+      en = "Busy";
+      ru = "Занято";
+    } else if(result == image1_viewer::Result::READ_ERROR) {
+      en = "Read error";
+      ru = "Ошибка чтения";
+    } else if(result == image1_viewer::Result::INVALID_IMAGE) {
+      en = "Invalid WBMP";
+      ru = "Неверный WBMP";
+    } else if(result == image1_viewer::Result::DISPLAY_ERROR) {
+      en = "Display error";
+      ru = "Ошибка экрана";
+    }
+    show_message(en, ru, entry.name, entry.name);
+    (void) wait_explorer_key(false);
+    return false;
+#else
+    show_message("Viewer disabled", "Просмотр выключен",
+                 entry.name, entry.name);
+    (void) wait_explorer_key(false);
+    return false;
+#endif
+  }
+
   shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_MK61_TEXT_SIZE);
   if(!scratch.ok()) {
     show_message("Busy", "Занято", entry.name, entry.name);
     kbd::get_key_wait();
-    return;
+    return false;
   }
 
   u8* data = scratch.data();
@@ -851,12 +888,12 @@ static void view_entry(const program_store::Entry& entry) {
   if(!read_entry_data(entry, data, scratch.size(), len)) {
     show_message("Read error", "Ошибка чтения", entry.name, entry.name);
     kbd::get_key_wait();
-    return;
+    return false;
   }
 
   if(entry.type == program_store::ProgramType::FONT) {
     view_font_entry(entry, data, len);
-    return;
+    return true;
   }
 
   const u8 display_rows = lcd.rows();
@@ -870,7 +907,7 @@ static void view_entry(const program_store::Entry& entry) {
 
     draw_file_view(entry, data, len, top_line);
     const i32 key = wait_explorer_key(false);
-    if(key == EXPLORER_KEY_ESC || key == EXPLORER_KEY_OK) return;
+    if(key == EXPLORER_KEY_ESC || key == EXPLORER_KEY_OK) return true;
     if(key == EXPLORER_KEY_DOWN && top_line < max_top) {
       top_line = (u16) (top_line + page);
       if(top_line > max_top) top_line = max_top;
@@ -2021,8 +2058,7 @@ bool program_store_explorer_select(void) {
 
 bool program_store_view_entry(const program_store::Entry& entry) {
   if(entry.kind != program_store::NodeKind::FILE) return false;
-  view_entry(entry);
-  return true;
+  return view_entry(entry);
 }
 
 bool program_store_view_entry(program_store::ProgramType type, const char* name) {

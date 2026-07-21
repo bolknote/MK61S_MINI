@@ -11,6 +11,9 @@ static constexpr usize NAME_SIZE = 32;
 // Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
 static constexpr u16 MAX_FONT_SIZE = 1536;
+// 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
+// гарантированно помещаются в минимальный 2-КиБ FAT-кластер C5.
+static constexpr u16 MAX_IMAGE1_SIZE = 1600;
 
 enum class ProgramType : u8 {
   MK61 = 0,
@@ -18,7 +21,8 @@ enum class ProgramType : u8 {
   TINYBASIC = 3,
   TEXT = 4,
   MK61_STATE = 5,
-  FONT = 6
+  FONT = 6,
+  IMAGE1 = 7
 };
 
 enum class NodeKind : u8 {

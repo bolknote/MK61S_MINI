@@ -159,7 +159,15 @@ class MK61Display : public Print {
     void useBuiltinFont(void);
     bool externalFontActive(void) const;
     bool suspendExternalFontForUsb(void);
+    // Modal-пара подавляет фоновые flush во время просмотра WBMP.
+    // Сам showFullscreenBitmap остаётся пригоден для одноразового DFU-сплеша.
+    bool beginFullscreenBitmap(void);
     bool showFullscreenBitmap(const u8* bitmap, usize size);
+    void endFullscreenBitmap(void);
+    bool beginCellAnimation(void);
+    bool writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
+                                        const u8* cells, usize count);
+    void endCellAnimation(void);
     u8 cols(void) const { return lcd_display::COLS; }
 #if defined(MK61_DISPLAY_LCD1602)
     u8 rows(void) const { return lcd_display::ROWS; }
@@ -178,6 +186,7 @@ class MK61Display : public Print {
 #endif
 
   private:
+    bool writeCellAnimationFrame(const u8* cells, usize count);
 #if defined(MK61_DISPLAY_LCD1602)
     LiquidCrystal lcd;
     u8 shadow_cells[lcd_display::ROWS][lcd_display::COLS];
@@ -200,6 +209,9 @@ class MK61Display : public Print {
     bool external_font_suspended;
     bool preview_font_enabled;
     bool initialized;
+#if MK61_ENABLE_WBMP_VIEWER
+    bool fullscreen_bitmap_active;
+#endif
     bool screen_dirty;
     bool dirty;
     usize update_depth;

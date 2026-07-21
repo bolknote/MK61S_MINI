@@ -10,7 +10,7 @@ namespace storage_geometry {
 static constexpr u32 PHYSICAL_SECTOR_SIZE = 4096;
 static constexpr u16 LOGICAL_SECTOR_SIZE = 512;
 static constexpr u16 FAT12_MAX_DATA_CLUSTERS = 4084;
-static constexpr u8 MIN_SECTORS_PER_CLUSTER = 4;   // 2 КиБ, один файл на 1536 байт
+static constexpr u8 MIN_SECTORS_PER_CLUSTER = 4;   // 2 КиБ, любой допустимый файл
 static constexpr u8 MAX_SECTORS_PER_CLUSTER = 64;  // 32 КиБ, широкая совместимость
 
 static constexpr u8 LOCATOR_SECTORS = 2;

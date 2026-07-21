@@ -8,6 +8,7 @@ namespace shared_scratch {
 enum class Owner : u8 {
   NONE,
   EXPLORER_VIEW,
+  IMAGE_VIEWER,
   M61_FORMAT,
   PROGRAM_STORE_RENAME,
   PROGRAM_STORE_GC,
@@ -18,7 +19,7 @@ enum class Owner : u8 {
 
 // Наибольший временный буфер содержимого файла. Меню файлов считывает видимые
 // имена непосредственно из компактного индекса и не использует этот пул.
-static constexpr usize SIZE = 1536;
+static constexpr usize SIZE = 1600;
 
 class [[nodiscard]] Lease {
   public:

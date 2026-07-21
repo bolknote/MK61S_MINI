@@ -35,6 +35,10 @@ static constexpr u16 SETTINGS_JOURNAL_SIZE =
     storage_geometry::PHYSICAL_SECTOR_SIZE - SETTINGS_GUARD_SIZE;
 static constexpr u16 CATALOG_HEADER_SIZE = 80;
 static constexpr u16 CATALOG_HEADER_CRC_OFFSET = 72;
+static constexpr u8 LEGACY_TYPE_COUNT = 6;
+static constexpr u8 TYPE_COUNT = 7;
+static constexpr u16 IMAGE1_WAL_COUNT_OFFSET = 242;
+static constexpr u16 IMAGE1_HEADER_COUNT_OFFSET = 64;
 static constexpr u16 WAL_RECORD_SIZE = 256;
 static constexpr u8 WAL_MAX_UPDATES = 9;
 static constexpr u8 OVERLAY_CAPACITY = 96;
@@ -55,9 +59,20 @@ static constexpr t_time_ms DISK_LED_ON_MS = 35;
 static constexpr t_time_ms DISK_LED_OFF_MS = 35;
 
 static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C5 stage must pack seven sectors");
+static_assert(IMAGE1_WAL_COUNT_OFFSET ==
+                  44 + WAL_MAX_UPDATES * (2 + storage_geometry::INODE_BYTES),
+              "image counter must occupy only the unused WAL tail");
+static_assert(IMAGE1_WAL_COUNT_OFFSET + sizeof(u16) <= 244,
+              "image counter overlaps the WAL CRC");
+static_assert(IMAGE1_HEADER_COUNT_OFFSET + sizeof(u16) <=
+                  CATALOG_HEADER_CRC_OFFSET,
+              "image counter overlaps the catalog-header CRC");
 static_assert((usize) MAX_MK61_TEXT_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
               "two maximum C5 records must fit one erase sector");
+static_assert((usize) MAX_IMAGE1_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
+                  storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
+              "two maximum C5 image records must fit one erase sector");
 
 struct Inode {
   u32 address;
@@ -78,7 +93,7 @@ static_assert(sizeof(Inode) == storage_geometry::INODE_BYTES,
 struct CatalogMeta {
   u16 root_head;
   u16 total_count;
-  u16 type_count[6];
+  u16 type_count[TYPE_COUNT];
   u32 current_sector;
   u16 current_offset;
   u32 reserve_sector;
@@ -402,6 +417,7 @@ static int type_index(ProgramType type) {
     case ProgramType::TEXT: return 3;
     case ProgramType::MK61_STATE: return 4;
     case ProgramType::FONT: return 5;
+    case ProgramType::IMAGE1: return 6;
   }
   return -1;
 }
@@ -418,6 +434,7 @@ static const char* extension_for_type(ProgramType type) {
     case ProgramType::TEXT: return "txt";
     case ProgramType::MK61_STATE: return "state.txt";
     case ProgramType::FONT: return "fmk";
+    case ProgramType::IMAGE1: return "wbmp";
   }
   return "bin";
 }
@@ -622,7 +639,15 @@ static void encode_meta(u8* record, const CatalogMeta& meta) {
   put_le32(record, 20, meta.reserve_sector);
   put_le32(record, 24, meta.gc_cursor);
   put_le32(record, 28, meta.data_sequence);
-  for(u8 i = 0; i < 6; i++) put_le16(record, (u16) (32 + i * 2), meta.type_count[i]);
+  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
+    put_le16(record, (u16) (32 + i * 2), meta.type_count[i]);
+  }
+  put_le16(record, IMAGE1_WAL_COUNT_OFFSET, meta.type_count[6]);
+}
+
+static u16 decode_optional_count(const u8* data, u16 offset) {
+  const u16 count = get_le16(data, offset);
+  return count == 0xFFFF ? 0 : count;
 }
 
 static CatalogMeta decode_meta(const u8* record) {
@@ -634,7 +659,10 @@ static CatalogMeta decode_meta(const u8* record) {
   meta.reserve_sector = get_le32(record, 20);
   meta.gc_cursor = get_le32(record, 24);
   meta.data_sequence = get_le32(record, 28);
-  for(u8 i = 0; i < 6; i++) meta.type_count[i] = get_le16(record, (u16) (32 + i * 2));
+  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
+    meta.type_count[i] = get_le16(record, (u16) (32 + i * 2));
+  }
+  meta.type_count[6] = decode_optional_count(record, IMAGE1_WAL_COUNT_OFFSET);
   return meta;
 }
 
@@ -720,7 +748,10 @@ static void encode_catalog_header(u8* header, u32 generation, u32 table_crc) {
   put_le32(header, 40, g_meta.reserve_sector);
   put_le32(header, 44, g_meta.gc_cursor);
   put_le32(header, 48, g_meta.data_sequence);
-  for(u8 i = 0; i < 6; i++) put_le16(header, (u16) (52 + i * 2), g_meta.type_count[i]);
+  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
+    put_le16(header, (u16) (52 + i * 2), g_meta.type_count[i]);
+  }
+  put_le16(header, IMAGE1_HEADER_COUNT_OFFSET, g_meta.type_count[6]);
   put_le32(header, CATALOG_HEADER_CRC_OFFSET,
            normalized_record_crc(header, CATALOG_HEADER_SIZE,
                                  CATALOG_HEADER_CRC_OFFSET, 5));
@@ -802,7 +833,10 @@ static bool decode_catalog_header(u8 bank, u8* header, u32& generation,
   meta.reserve_sector = get_le32(header, 40);
   meta.gc_cursor = get_le32(header, 44);
   meta.data_sequence = get_le32(header, 48);
-  for(u8 i = 0; i < 6; i++) meta.type_count[i] = get_le16(header, (u16) (52 + i * 2));
+  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
+    meta.type_count[i] = get_le16(header, (u16) (52 + i * 2));
+  }
+  meta.type_count[6] = decode_optional_count(header, IMAGE1_HEADER_COUNT_OFFSET);
   return generation != 0;
 }
 
@@ -1890,8 +1924,11 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
 bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
                 const char* name, const u8* data, u16 data_len, u16* out_id) {
   DiskActivity activity;
+  const u16 max_data_len = type == ProgramType::FONT ? MAX_FONT_SIZE
+                         : type == ProgramType::IMAGE1 ? MAX_IMAGE1_SIZE
+                         : MAX_MK61_TEXT_SIZE;
   if(!g_ready || !supported_type(type) || !valid_name(name) || !parent_valid(parent_id) ||
-     data_len > (type == ProgramType::FONT ? MAX_FONT_SIZE : MAX_MK61_TEXT_SIZE) ||
+     data_len > max_data_len ||
      (data_len != 0 && data == NULL)) return false;
   u16 named_id = NONE;
   const bool named = find_child_id(parent_id, NodeKind::FILE, type, name,

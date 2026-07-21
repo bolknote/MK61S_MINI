@@ -6,6 +6,165 @@
 
 #if defined(MK61_DISPLAY_LCD1602)
 
+namespace {
+
+struct LcdAnimationState {
+  bool active;
+  bool fast_bus;
+  bool use_busy_flag;
+  bool busy_flag_confirmed;
+};
+
+static LcdAnimationState animation_state = {};
+
+} // namespace
+
+#if !defined(CDU) && !defined(LK432)
+namespace {
+
+struct LcdFastBus {
+  PinName rs;
+  PinName rw;
+  PinName enable;
+  PinName data[4];
+
+  bool valid(void) const {
+    return rs != NC && rw != NC && enable != NC &&
+           data[0] != NC && data[1] != NC && data[2] != NC && data[3] != NC;
+  }
+};
+
+static LcdFastBus lcdFastBus(void) {
+  return {
+    digitalPinToPinName(PIN_LCD_RS),
+    digitalPinToPinName(PIN_LCD_RW),
+    digitalPinToPinName(PIN_LCD_E),
+    {
+      digitalPinToPinName(PIN_LCD_DB4),
+      digitalPinToPinName(PIN_LCD_DB5),
+      digitalPinToPinName(PIN_LCD_DB6),
+      digitalPinToPinName(PIN_LCD_DB7),
+    },
+  };
+}
+
+static inline void lcdFastWritePin(PinName pin, bool high) {
+  digitalWriteFast(pin, high ? HIGH : LOW);
+}
+
+static inline void lcdFastSetPinOutput(PinName pin, bool output) {
+  GPIO_TypeDef* const port = get_GPIO_Port(STM_PORT(pin));
+  const u32 shift = (u32) STM_PIN(pin) * 2u;
+  const u32 mask = 0x3u << shift;
+  const u32 mode = output ? (0x1u << shift) : 0u;
+  port->MODER = (port->MODER & ~mask) | mode;
+}
+
+static inline void lcdFastSetDataOutput(const LcdFastBus& bus, bool output) {
+  for(u8 index = 0; index < 4; index++) lcdFastSetPinOutput(bus.data[index], output);
+}
+
+static inline void lcdFastWriteNibble(const LcdFastBus& bus, u8 nibble) {
+  lcdFastWritePin(bus.enable, false);
+  for(u8 bit = 0; bit < 4; bit++) {
+    lcdFastWritePin(bus.data[bit], (nibble & ((u8) 1 << bit)) != 0);
+  }
+  delayMicroseconds(1);
+  lcdFastWritePin(bus.enable, true);
+  delayMicroseconds(1);
+  lcdFastWritePin(bus.enable, false);
+}
+
+static inline void lcdFastSendRaw(const LcdFastBus& bus, u8 value, bool data) {
+  lcdFastWritePin(bus.rs, data);
+  lcdFastWriteNibble(bus, value >> 4);
+  lcdFastWriteNibble(bus, value & 0x0F);
+}
+
+enum class LcdReadyResult : u8 {
+  READY_AFTER_BUSY,
+  READY_WITHOUT_BUSY,
+  TIMEOUT,
+};
+
+static LcdReadyResult lcdFastWaitReady(const LcdFastBus& bus) {
+  static constexpr usize MAX_POLLS = 2048;
+  bool saw_busy = false;
+
+  lcdFastWritePin(bus.enable, false);
+  lcdFastSetDataOutput(bus, false);
+  lcdFastWritePin(bus.rs, false);
+  lcdFastWritePin(bus.rw, true);
+  delayMicroseconds(1);
+
+  LcdReadyResult result = LcdReadyResult::TIMEOUT;
+  for(usize poll = 0; poll < MAX_POLLS; poll++) {
+    lcdFastWritePin(bus.enable, true);
+    delayMicroseconds(1);
+    const bool busy = digitalReadFast(bus.data[3]) != LOW;
+    lcdFastWritePin(bus.enable, false);
+    delayMicroseconds(1);
+
+    // В четырёхбитном режиме чтение всегда завершается вторым полубайтом.
+    lcdFastWritePin(bus.enable, true);
+    delayMicroseconds(1);
+    lcdFastWritePin(bus.enable, false);
+    delayMicroseconds(1);
+
+    if(!busy) {
+      result = saw_busy ? LcdReadyResult::READY_AFTER_BUSY
+                        : LcdReadyResult::READY_WITHOUT_BUSY;
+      break;
+    }
+    saw_busy = true;
+  }
+
+  lcdFastWritePin(bus.rw, false);
+  lcdFastSetDataOutput(bus, true);
+  return result;
+}
+
+static bool lcdFastFinishByte(const LcdFastBus& bus,
+                              bool& use_busy_flag,
+                              bool& busy_flag_confirmed,
+                              u32 fallback_delay_us = 40) {
+  if(!use_busy_flag) {
+    delayMicroseconds(fallback_delay_us);
+    return true;
+  }
+
+  const LcdReadyResult result = lcdFastWaitReady(bus);
+  if(result == LcdReadyResult::TIMEOUT) {
+    // Залипшая или неподключённая DB7 не должна делать просмотрщик
+    // неработоспособным: после ограниченного пробного ожидания используем
+    // гарантированную задержку и больше не читаем BF в этой сессии.
+    use_busy_flag = false;
+    delayMicroseconds(fallback_delay_us);
+    return true;
+  }
+  if(result == LcdReadyResult::READY_AFTER_BUSY) {
+    busy_flag_confirmed = true;
+    return true;
+  }
+  if(busy_flag_confirmed) return true;
+
+  // Неподключённый RW не должен превращать анимацию в запись без пауз.
+  use_busy_flag = false;
+  delayMicroseconds(fallback_delay_us);
+  return true;
+}
+
+static bool lcdFastWriteByte(const LcdFastBus& bus, u8 value, bool data,
+                             u32 fallback_delay_us = 40) {
+  lcdFastSendRaw(bus, value, data);
+  return lcdFastFinishByte(bus, animation_state.use_busy_flag,
+                           animation_state.busy_flag_confirmed,
+                           fallback_delay_us);
+}
+
+} // namespace
+#endif
+
 MK61Display::MK61Display(void)
   : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7),
     shadow_cells{{0}},
@@ -102,7 +261,204 @@ void MK61Display::clearFontPreview(void) {}
 void MK61Display::useBuiltinFont(void) {}
 bool MK61Display::externalFontActive(void) const { return false; }
 bool MK61Display::suspendExternalFontForUsb(void) { return true; }
+bool MK61Display::beginFullscreenBitmap(void) { return false; }
 bool MK61Display::showFullscreenBitmap(const u8*, usize) { return false; }
+void MK61Display::endFullscreenBitmap(void) {}
+
+bool MK61Display::beginCellAnimation(void) {
+  if(animation_state.active) return true;
+  cursorOff();
+  blinkOff();
+  animation_state = {true, false, true, false};
+
+#if !defined(CDU) && !defined(LK432)
+  const LcdFastBus bus = lcdFastBus();
+  if(bus.valid()) {
+    animation_state.fast_bus = true;
+    lcdFastWritePin(bus.rw, false);
+    lcdFastSetDataOutput(bus, true);
+    // Долгая команда Clear позволяет один раз надёжно проверить линию BF.
+    if(!lcdFastWriteByte(bus, 0x01, false, 1600)) {
+      animation_state = {};
+      return false;
+    }
+    memset(shadow_cells, ' ', sizeof(shadow_cells));
+    shadow_cursor_x = 0;
+    shadow_cursor_y = 0;
+  }
+#endif
+  return true;
+}
+
+bool MK61Display::writeCellAnimationFrame(const u8* cells, usize count) {
+  if(!animation_state.active || cells == NULL ||
+     count != (usize) lcd_display::ROWS * lcd_display::COLS) return false;
+
+#if !defined(CDU) && !defined(LK432)
+  if(animation_state.fast_bus) {
+    const LcdFastBus bus = lcdFastBus();
+    for(u8 row = 0; row < lcd_display::ROWS; row++) {
+      if(!lcdFastWriteByte(bus, row == 0 ? 0x80 : 0xC0, false)) return false;
+      for(u8 col = 0; col < lcd_display::COLS; col++) {
+        if(!lcdFastWriteByte(bus, cells[row * lcd_display::COLS + col], true)) return false;
+      }
+    }
+    memcpy(shadow_cells, cells, sizeof(shadow_cells));
+    shadow_cursor_x = 0;
+    shadow_cursor_y = 0;
+    return true;
+  }
+#endif
+
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    lcd.setCursor(0, row);
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      lcd.write(cells[row * lcd_display::COLS + col]);
+    }
+  }
+  memcpy(shadow_cells, cells, sizeof(shadow_cells));
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
+  return true;
+}
+
+bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
+                                                  const u8* cells,
+                                                  usize count) {
+  static constexpr usize GLYPH_COUNT = 8;
+  static constexpr usize GLYPH_ROWS = 8;
+  if(!animation_state.active || glyphs == NULL || cells == NULL ||
+     count != (usize) lcd_display::ROWS * lcd_display::COLS) return false;
+
+  u8 used_slots = 0;
+  for(usize cell = 0; cell < count; cell++) {
+    if(cells[cell] < GLYPH_COUNT) used_slots |= (u8) (1U << cells[cell]);
+  }
+  u64 changed_rows = 0;
+  for(u8 slot = 0; slot < GLYPH_COUNT; slot++) {
+    if((used_slots & ((u8) 1U << slot)) == 0) continue;
+    for(u8 row = 0; row < GLYPH_ROWS; row++) {
+      if(!custom_valid[slot] || custom_glyphs[slot][row] !=
+          (u8) (glyphs[slot][row] & 0x1FU)) {
+        changed_rows |= (u64) 1U << (slot * GLYPH_ROWS + row);
+      }
+    }
+  }
+  bool cells_changed = false;
+  for(u8 row = 0; row < lcd_display::ROWS && !cells_changed; row++) {
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      if(shadow_cells[row][col] != cells[row * lcd_display::COLS + col]) {
+        cells_changed = true;
+        break;
+      }
+    }
+  }
+  if(changed_rows == 0 && !cells_changed) return true;
+
+#if !defined(CDU) && !defined(LK432)
+  if(animation_state.fast_bus) {
+    const LcdFastBus bus = lcdFastBus();
+    // Гасим экран только при изменении видимого CGRAM. Неиспользуемые и уже
+    // совпадающие строки не передаются, а соседние адреса идут одной пачкой.
+    const bool display_off = changed_rows != 0;
+    bool ok = !display_off || lcdFastWriteByte(bus, 0x08, false);
+    for(u8 address = 0; ok && address < 64;) {
+      while(address < 64 &&
+            (changed_rows & ((u64) 1U << address)) == 0) address++;
+      if(address >= 64) break;
+      const u8 first = address;
+      u8 last = address;
+      // Команда и байт данных имеют одинаковое ожидание BF. Поэтому один
+      // неизменившийся адрес между изменениями выгоднее передать, чем начать
+      // новый диапазон отдельной командой установки адреса.
+      while(last < 63) {
+        u8 next = (u8) (last + 1U);
+        while(next < 64 &&
+              (changed_rows & ((u64) 1U << next)) == 0) next++;
+        if(next >= 64 || next > (u8) (last + 2U)) break;
+        last = next;
+      }
+      ok = lcdFastWriteByte(bus, (u8) (0x40U | first), false);
+      for(u8 changed = first; ok && changed <= last; changed++) {
+        const u8 slot = (u8) (changed / GLYPH_ROWS);
+        const u8 row = (u8) (changed % GLYPH_ROWS);
+        ok = lcdFastWriteByte(bus,
+                              (u8) (glyphs[slot][row] & 0x1FU), true);
+      }
+      address = (u8) (last + 1U);
+    }
+
+    // DDRAM также обновляется только непрерывными изменившимися диапазонами.
+    for(u8 row = 0; ok && row < lcd_display::ROWS; row++) {
+      for(u8 col = 0; ok && col < lcd_display::COLS;) {
+        if(shadow_cells[row][col] ==
+           cells[row * lcd_display::COLS + col]) {
+          col++;
+          continue;
+        }
+        const u8 first = col;
+        while(col < lcd_display::COLS &&
+              shadow_cells[row][col] !=
+                cells[row * lcd_display::COLS + col]) col++;
+        ok = lcdFastWriteByte(bus,
+          (u8) ((row == 0 ? 0x80U : 0xC0U) + first), false);
+        for(u8 changed = first; ok && changed < col; changed++) {
+          ok = lcdFastWriteByte(bus,
+            cells[row * lcd_display::COLS + changed], true);
+        }
+      }
+    }
+    // Даже после ошибки пытаемся вернуть экран из no-display.
+    const bool display_on = !display_off || lcdFastWriteByte(bus, 0x0C, false);
+    if(!ok || !display_on) return false;
+
+    for(usize slot = 0; slot < GLYPH_COUNT; slot++) {
+      if((used_slots & ((u8) 1U << slot)) == 0) continue;
+      for(usize row = 0; row < GLYPH_ROWS; row++) {
+        custom_glyphs[slot][row] = (u8) (glyphs[slot][row] & 0x1FU);
+      }
+      custom_valid[slot] = true;
+    }
+    memcpy(shadow_cells, cells, sizeof(shadow_cells));
+    shadow_cursor_x = 0;
+    shadow_cursor_y = 0;
+    return true;
+  }
+#endif
+
+  if(changed_rows != 0) lcd.noDisplay();
+  for(u8 slot = 0; slot < GLYPH_COUNT; slot++) {
+    if((used_slots & ((u8) 1U << slot)) == 0) continue;
+    bool changed = !custom_valid[slot];
+    for(u8 row = 0; row < GLYPH_ROWS && !changed; row++) {
+      changed = custom_glyphs[slot][row] !=
+                (u8) (glyphs[slot][row] & 0x1FU);
+    }
+    if(!changed) continue;
+    lcd.createChar(slot, const_cast<u8*>(glyphs[slot]));
+    for(u8 row = 0; row < GLYPH_ROWS; row++) {
+      custom_glyphs[slot][row] = (u8) (glyphs[slot][row] & 0x1FU);
+    }
+    custom_valid[slot] = true;
+  }
+  const bool written = writeCellAnimationFrame(cells, count);
+  if(changed_rows != 0) lcd.display();
+  return written;
+}
+
+void MK61Display::endCellAnimation(void) {
+  if(!animation_state.active) return;
+#if !defined(CDU) && !defined(LK432)
+  if(animation_state.fast_bus) {
+    const LcdFastBus bus = lcdFastBus();
+    lcdFastWritePin(bus.enable, false);
+    lcdFastWritePin(bus.rw, false);
+    lcdFastSetDataOutput(bus, true);
+  }
+#endif
+  animation_state = {};
+  clear();
+}
 
 #if ARDUINO >= 100
 size_t MK61Display::write(uint8_t value) {
@@ -152,6 +508,9 @@ MK61Display::MK61Display(void)
     external_font_suspended(false),
     preview_font_enabled(false),
     initialized(false),
+#if MK61_ENABLE_WBMP_VIEWER
+    fullscreen_bitmap_active(false),
+#endif
     screen_dirty(false),
     dirty(false),
     update_depth(0),
@@ -190,6 +549,9 @@ void MK61Display::clear(void) {
 
 void MK61Display::flush(void) {
   if(!initialized) return;
+#if MK61_ENABLE_WBMP_VIEWER
+  if(fullscreen_bitmap_active) return;
+#endif
   updateCursorBlink();
   if(!dirty && !screen_dirty && !grid.anyDirty()) return;
 
@@ -507,6 +869,37 @@ bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
   return lcd.LCDBitmap(0, 0, lcd_display::PIXEL_WIDTH,
                        lcd_display::PIXEL_HEIGHT, bitmap) == LCD_Success;
 }
+
+bool MK61Display::beginFullscreenBitmap(void) {
+#if MK61_ENABLE_WBMP_VIEWER
+  if(!initialized) return false;
+  cursor_underline = false;
+  cursor_blink = false;
+  cursor_blink_phase = false;
+  cursor_next_blink_ms = 0;
+  fullscreen_bitmap_active = true;
+  return true;
+#else
+  return false;
+#endif
+}
+
+void MK61Display::endFullscreenBitmap(void) {
+#if MK61_ENABLE_WBMP_VIEWER
+  if(!fullscreen_bitmap_active) return;
+  fullscreen_bitmap_active = false;
+  clearShadow();
+  markScreenDirty();
+#endif
+}
+
+bool MK61Display::beginCellAnimation(void) { return false; }
+bool MK61Display::writeCellAnimationFrame(const u8*, usize) { return false; }
+bool MK61Display::writeCellAnimationPaletteFrame(const u8 (*)[8],
+                                                  const u8*, usize) {
+  return false;
+}
+void MK61Display::endCellAnimation(void) {}
 
 u8 MK61Display::sanitizeRows(u8 rows) {
   return lcd_display::clamp_u8(rows, lcd_display::MIN_ROWS, lcd_display::MAX_ROWS);

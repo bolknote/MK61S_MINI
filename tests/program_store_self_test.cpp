@@ -65,11 +65,44 @@ static u32 locator_crc(u8* locator) {
 }
 
 static void expect_text(u16 id, const u8* expected, u16 expected_len) {
-  u8 actual[program_store::MAX_MK61_TEXT_SIZE] = {};
+  u8 actual[program_store::MAX_IMAGE1_SIZE] = {};
   u16 actual_len = 0;
   assert(program_store::read_id(id, actual, sizeof(actual), &actual_len));
   assert(actual_len == expected_len);
   assert(memcmp(actual, expected, expected_len) == 0);
+}
+
+static void test_image_type_roundtrip_and_quota(void) {
+  fresh();
+  u8 source[program_store::MAX_IMAGE1_SIZE + 1U];
+  for(u16 i = 0; i < sizeof(source); i++) {
+    source[i] = (u8) (i * 29U + 7U);
+  }
+
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(program_store::ROOT_ID,
+      program_store::INVALID_ID, ProgramType::IMAGE1, "screen", source,
+      program_store::MAX_IMAGE1_SIZE, &id));
+  assert(id != program_store::INVALID_ID);
+  assert(!program_store::write_file(program_store::ROOT_ID,
+      program_store::INVALID_ID, ProgramType::IMAGE1, "too large", source,
+      (u16) sizeof(source), NULL));
+  assert(!program_store::write_file(program_store::ROOT_ID,
+      program_store::INVALID_ID, ProgramType::TEXT, "text too large", source,
+      program_store::MAX_IMAGE1_SIZE, NULL));
+  assert(program_store::count(ProgramType::IMAGE1) == 1);
+  assert(strcmp(program_store::file_extension(ProgramType::IMAGE1),
+                "wbmp") == 0);
+  expect_text(id, source, program_store::MAX_IMAGE1_SIZE);
+
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::count(ProgramType::IMAGE1) == 1);
+  Entry image = {};
+  assert(program_store::entry_by_id(id, image));
+  assert(image.type == ProgramType::IMAGE1);
+  assert(image.data_len == program_store::MAX_IMAGE1_SIZE);
+  expect_text(id, source, program_store::MAX_IMAGE1_SIZE);
 }
 
 static void expect_text(const char* name, const char* expected) {
@@ -212,6 +245,9 @@ static void test_paths_and_recursive_tree_operations(void) {
                                    data, sizeof(data), &m61));
   assert(program_store::write_file(year, 24, ProgramType::FOCAL, "Demo",
                                    data, sizeof(data), &focal));
+  u16 image = program_store::INVALID_ID;
+  assert(program_store::write_file(year, 25, ProgramType::IMAGE1, "Map",
+                                   data, sizeof(data), &image));
 
   u16 directory = program_store::INVALID_ID;
   assert(storage_path::resolve_directory(program_store::ROOT_ID,
@@ -232,6 +268,12 @@ static void test_paths_and_recursive_tree_operations(void) {
   assert(entry.id == focal);
   assert(storage_path::resolve_file(year, "demo.m61",
       ProgramType::FOCAL, entry) == storage_path::Status::WRONG_TYPE);
+  assert(storage_path::resolve_file(year, "map.wbmp", entry) ==
+         storage_path::Status::OK);
+  assert(entry.id == image && entry.type == ProgramType::IMAGE1);
+  assert(storage_path::resolve_file(year, "map.wbm", entry) ==
+         storage_path::Status::OK);
+  assert(entry.id == image);
 
   storage_path::FileTarget target = {};
   assert(storage_path::file_target(year, "../new program.m61",
@@ -287,7 +329,7 @@ static void test_paths_and_recursive_tree_operations(void) {
   assert(program_store::remove_tree(generated, &removed));
   assert(removed == 3);
   assert(program_store::remove_tree(projects, &removed));
-  assert(removed == 4); // two directories and two files
+  assert(removed == 5); // two directories and three files
   assert(!program_store::entry_by_id(projects, entry));
   assert(program_store::child_count(program_store::ROOT_ID) == 1);
   program_store::init();
@@ -1150,6 +1192,7 @@ static void test_c1_to_c4_layouts_format_once_with_bounded_erases(void) {
 int main(void) {
   test_dynamic_geometry_and_lazy_format();
   test_roundtrip_ranges_and_noop();
+  test_image_type_roundtrip_and_quota();
   test_arbitrary_nested_directories();
   test_paths_and_recursive_tree_operations();
   test_directory_depth_limit_includes_moved_subtrees();

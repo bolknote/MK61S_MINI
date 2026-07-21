@@ -47,6 +47,15 @@ int main(void) {
     assert(((u8*) tiny.data())[0] == 0);
   }
 
+  {
+    language_workspace::Lease image(Owner::IMAGE_VIEWER, 1536);
+    assert(image.ok());
+    assert(image.fresh());
+    assert(language_workspace::active_owner() == Owner::IMAGE_VIEWER);
+    language_workspace::Lease usb(Owner::USB_DISK, 512);
+    assert(!usb.ok());
+  }
+
   language_workspace::Lease oversized(Owner::USB_DISK, language_workspace::SIZE + 1);
   assert(!oversized.ok());
   language_workspace::Lease empty_runtime(Owner::USB_DISK, 0);

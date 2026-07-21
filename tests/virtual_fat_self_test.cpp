@@ -185,7 +185,7 @@ static int first_free_slot(const u8* directory) {
 }
 
 static void expect_file(u16 id, const u8* expected, u16 expected_len) {
-  u8 actual[program_store::MAX_MK61_TEXT_SIZE] = {};
+  u8 actual[program_store::MAX_IMAGE1_SIZE] = {};
   u16 actual_len = 0;
   assert(program_store::read_id(id, actual, sizeof(actual), &actual_len));
   assert(actual_len == expected_len);
@@ -639,6 +639,94 @@ static void test_finder_appledouble_does_not_abort_batch(void) {
   assert(!program_store::entry_by_id((u16) (sidecar_cluster - 2), ignored));
 }
 
+static void test_wbmp_import_uses_its_full_quota(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 220;
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const int free_slot = first_free_slot(root);
+  assert(free_slot == storage_geometry::ROOT_SYSTEM_DIRENTS);
+  static const char short_name[11] =
+      {'S','C','R','E','E','N',' ',' ','W','B','M'};
+  const u8 slot = append_ascii_entry(root, (u8) free_slot,
+                                     "screen.wbmp", short_name, false,
+                                     file_cluster,
+                                     program_store::MAX_IMAGE1_SIZE);
+  root[slot * 32] = 0;
+
+  u8 clusters[4 * 512] = {};
+  for(u16 i = 0; i < program_store::MAX_IMAGE1_SIZE; i++) {
+    clusters[i] = (u8) (i * 37U + 11U);
+  }
+  assert(virtual_fat::write_cached_sectors(cluster_lba(fs, file_cluster),
+                                           clusters, 4));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  expect_flush();
+
+  program_store::Entry image;
+  assert(program_store::entry_by_id((u16) (file_cluster - 2), image));
+  assert(image.type == program_store::ProgramType::IMAGE1);
+  assert(strcmp(image.name, "screen") == 0);
+  assert(image.data_len == program_store::MAX_IMAGE1_SIZE);
+  expect_file(image.id, clusters, program_store::MAX_IMAGE1_SIZE);
+}
+
+static void test_wbmp_over_quota_is_rejected(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 220;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'T','O','O','L','A','R','G','E','W','B','M'};
+  const u8 slot = append_ascii_entry(
+    root, (u8) first_free_slot(root), "large.wbmp", short_name, false,
+    file_cluster, (u32) program_store::MAX_IMAGE1_SIZE + 1U);
+  root[slot * 32] = 0;
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  assert(!virtual_fat::flush_pending());
+  assert(program_store::total_count() == 0);
+  assert(program_store::vfat_stage_discard_all());
+}
+
+static void test_wbmp_short_name_alias(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 220;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  u8* const item = root + first_free_slot(root) * 32;
+  memset(item, 0, 32);
+  memcpy(item, "SCREEN  WBM", 11);
+  item[11] = 0x20;
+  write_le16(item, 26, file_cluster);
+  write_le32(item, 28, 4);
+  item[32] = 0;
+  const u8 payload[512] = {0x00, 0x00, 0x08, 0x00};
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), payload));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  expect_flush();
+  program_store::Entry image;
+  assert(program_store::entry_by_id((u16) (file_cluster - 2), image));
+  assert(image.type == program_store::ProgramType::IMAGE1);
+  assert(strcmp(image.name, "SCREEN") == 0);
+}
+
 static void test_malformed_fat_chain_is_rejected_atomically(void) {
   fresh();
   const Layout fs = layout();
@@ -679,6 +767,9 @@ int main(void) {
   test_optional_display_cache_span();
   test_host_deletes_file_via_directory();
   test_finder_appledouble_does_not_abort_batch();
+  test_wbmp_import_uses_its_full_quota();
+  test_wbmp_over_quota_is_rejected();
+  test_wbmp_short_name_alias();
   test_malformed_fat_chain_is_rejected_atomically();
   virtual_fat::end_session();
   printf("virtual_fat_self_test: ok\n");
