@@ -214,14 +214,6 @@ void inline lcd_stack_output(void) {
 }
 
 void setup() {
-  // Эти конструкторы обращаются к Arduino/STM32 объектам или периферийным
-  // описателям. Запускаем их только после завершения premain Arduino Core.
-  main_lcd_pointer = &mk61_lcd_storage.construct();
-  sound_driver_construct();
-  #ifdef SPI_FLASH
-    construct_external_flash();
-  #endif
-
   // При входе с зажатой кнопкой ESC вызывается DFU-загрузчик
   pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
   pinMode(PIN_KBD_ROW0, OUTPUT);
@@ -229,18 +221,46 @@ void setup() {
 
   const bool dfu_requested = digitalRead(PIN_KBD_COL0) != LOW;
 
+  // В mini V2 линия PC15 используется как DB7 ЖКИ. Сохранённый после сброса
+  // LSE необходимо отключить до конструктора LiquidCrystal: он начинает
+  // обращаться к выводам и посылать команды уже внутри конструктора.
+  rtc_clock::prepare_display_gpio();
+  #if defined(MK61_DISPLAY_LCD1602) && (defined(REVISION_V2) || defined(REVISION_V3))
+    pinMode(PIN_LCD_RW, OUTPUT);
+    digitalWrite(PIN_LCD_RW, LOW);
+  #endif
+  #if defined(MK61_DISPLAY_LCD1602) && defined(REVISION_V2)
+    pinMode(PIN_LCD_DB7, OUTPUT);
+    digitalWrite(PIN_LCD_DB7, LOW);
+  #endif
+
+  // Дисплей нужен и для короткого сообщения DFU, но создаётся только после
+  // проверки ESC. Остальная периферия в DFU-ветке вообще не конструируется.
+  main_lcd_pointer = &mk61_lcd_storage.construct();
+  main_lcd().begin(lcd_display::COLS, lcd_display::DEFAULT_ROWS);
+
+  if(dfu_requested) {
+    DFU_enable();
+    return;
+  }
+
+  // Эти конструкторы обращаются к Arduino/STM32 объектам или периферийным
+  // описателям. Запускаем их только для обычной загрузки и после premain.
+  sound_driver_construct();
+  #ifdef SPI_FLASH
+    construct_external_flash();
+  #endif
+
   led::init();
   sound_driver_init(PIN_BUZZER);
 
   // Запускаем CDC до обнаружения внешней флеш-памяти. Раньше DEBUG_SPIFLASH
   // начинал вывод только после program_store::init(), поэтому медленная или
   // неудачная проверка ёмкости выглядела как зависшая плата, а её диагностика
-  // так и не доходила до хоста. В DFU-ветке CDC приложения намеренно не
-  // запускаем: USB вскоре перейдёт под управление системного загрузчика.
-  if(!dfu_requested) {
-    usb_start_terminal_mode();
-    dbgln(MINI, "ESC unpressed!");
-  }
+  // так и не доходила до хоста. В DFU-ветке CDC приложения не запускается:
+  // она уже завершилась переходом в системный загрузчик выше.
+  usb_start_terminal_mode();
+  dbgln(MINI, "ESC unpressed!");
 
   #ifdef SPI_FLASH
       init_external_flash();
@@ -248,35 +268,20 @@ void setup() {
 
   library_mk61::load_settings_state();
 
-  if(!dfu_requested) {
-    rtc_clock::init();
-  }
+  rtc_clock::init();
 
   //  kbd::test();
   kbd::init();
-  
-  #if defined(MK61_DISPLAY_LCD1602) && (defined(REVISION_V2) || defined(REVISION_V3))
-    pinMode(PIN_LCD_RW, OUTPUT);
-    digitalWrite(PIN_LCD_RW, LOW);
-  #endif
-  #if defined(MK61_DISPLAY_LCD1602) && defined(REVISION_V2)
-    // На mini V2 вывод PC15 одновременно служит DB7 ЖКИ и OSC32_OUT.
-    // Инициализация RTC выше отключила сохранённый LSE; здесь явно возвращаем
-    // направление GPIO как дополнительную защиту до начала обмена LiquidCrystal.
-    pinMode(PIN_LCD_DB7, OUTPUT);
-    digitalWrite(PIN_LCD_DB7, LOW);
-    dbgln(SPIROM, "LCD init: PC15 restored as GPIO output");
-  #endif
-  main_lcd().begin(lcd_display::COLS, library_mk61::display_rows());
+
   dbgln(SPIROM, "LCD init: ready");
   main_lcd().setTextProfile(library_mk61::display_text_profile());
 
   entropy_pool::begin();
   mix_rtc_startup_snapshot(0);
 
-  // Сплеш общий для LCD1602 и UC1609 и обязан предшествовать DFU_enable():
-  // системный загрузчик не возвращает управление прошивке. При уже зажатом
-  // ESC не разрешаем тому же нажатию мгновенно пропустить сплеш.
+  // Обычная заставка показывается только при штатной загрузке. DFU-ветка выше
+  // выводит собственное короткое сообщение и сразу передаёт управление
+  // системному загрузчику.
   static_assert(lcd_display::COLS == startup_splash::COLS, "Splash width must match display width");
   #if defined(MK61_DISPLAY_LCD1602)
     static_assert(lcd_display::ROWS == startup_splash::ROWS, "Splash height must match LCD height");
@@ -286,11 +291,7 @@ void setup() {
   static_assert(sizeof(FULL_MODEL_NAME) == startup_splash::COLS + 1, "Model name must fill one display row");
   static_assert(sizeof(FIRMWARE_VER) == startup_splash::COLS + 1, "Firmware version must fill one display row");
   startup_splash::show(main_lcd(), FULL_MODEL_NAME, FIRMWARE_VER,
-                       startup_splash::escapePolicyForBoot(dfu_requested));
-
-  if(dfu_requested) {
-    DFU_enable();
-  }
+                       startup_splash::EscapePolicy::ALLOW_SKIP);
 
   entropy_pool::finish_startup();
   mix_rtc_startup_snapshot(1);

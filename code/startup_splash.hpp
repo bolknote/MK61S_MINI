@@ -33,10 +33,6 @@ enum class EscapePolicy : u8 {
   IGNORE
 };
 
-inline EscapePolicy escapePolicyForBoot(bool dfu_requested) {
-  return dfu_requested ? EscapePolicy::IGNORE : EscapePolicy::ALLOW_SKIP;
-}
-
 inline bool escapeMaySkip(EscapePolicy policy) {
   return policy == EscapePolicy::ALLOW_SKIP;
 }

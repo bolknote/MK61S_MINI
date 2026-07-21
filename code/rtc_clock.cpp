@@ -117,14 +117,19 @@ bool start_lse_without_fatal_handler(void) {
 
 } // анонимное пространство имён
 
+bool prepare_display_gpio(void) {
+  const bool released = disable_retained_lse_for_gpio();
+  if(!released) {
+    dbgln(SPIROM, "RTC init: WARNING, PC15 may remain owned by LSE");
+  }
+  return released;
+}
+
 void init(void) {
   if(initialized) return;
   dbgln(SPIROM, "RTC init: start");
 
-  const bool lse_released = disable_retained_lse_for_gpio();
-  if(!lse_released) {
-    dbgln(SPIROM, "RTC init: WARNING, PC15 may remain owned by LSE");
-  }
+  prepare_display_gpio();
   const bool lse_ready = start_lse_without_fatal_handler();
   const ClockSource source =
       select_clock_source(MK61_RTC_LSE_AVAILABLE, lse_ready);

@@ -5,6 +5,7 @@
 
 namespace rtc_clock {
 
+bool prepare_display_gpio(void);
 void init(void);
 bool is_set(void);
 bool startup_snapshot(StartupSnapshot& out);

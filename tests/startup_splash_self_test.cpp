@@ -180,11 +180,9 @@ void test_lcd1602_cleanup_after_every_possible_escape_frame(void) {
   }
 }
 
-void test_boot_escape_policy(void) {
-  assert(startup_splash::escapeMaySkip(
-      startup_splash::escapePolicyForBoot(false)));
-  assert(!startup_splash::escapeMaySkip(
-      startup_splash::escapePolicyForBoot(true)));
+void test_escape_policy(void) {
+  assert(startup_splash::escapeMaySkip(startup_splash::EscapePolicy::ALLOW_SKIP));
+  assert(!startup_splash::escapeMaySkip(startup_splash::EscapePolicy::IGNORE));
 }
 
 } // namespace
@@ -203,7 +201,7 @@ int main(void) {
   test_lcd1602_hidden_ddram_matches_every_frame();
   test_lcd1602_home_is_restored_without_changing_final_frame();
   test_lcd1602_cleanup_after_every_possible_escape_frame();
-  test_boot_escape_policy();
+  test_escape_policy();
   printf("startup_splash_self_test: ok\n");
   return 0;
 }
