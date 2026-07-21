@@ -10,6 +10,25 @@ static constexpr u8 GLYPH_ROWS = 8;
 static constexpr u8 CUSTOM_SLOT_COUNT = 8;
 static constexpr u8 CLOCK_GLYPH_COUNT = 3;
 static constexpr u8 INVALID_SLOT = 0xFF;
+static constexpr u8 GRAPHIC_CLOCK_SCALE = 2;
+static constexpr u8 GRAPHIC_CLOCK_DIGIT_WIDTH = 2 * GRAPHIC_CLOCK_SCALE;
+static constexpr u8 GRAPHIC_CLOCK_HEIGHT = DIGIT_ROWS * GRAPHIC_CLOCK_SCALE;
+static constexpr u8 GRAPHIC_CLOCK_GAP = GRAPHIC_CLOCK_SCALE;
+static constexpr u8 GRAPHIC_CLOCK_HOUR_TENS_X = 0;
+static constexpr u8 GRAPHIC_CLOCK_HOUR_UNITS_X =
+  GRAPHIC_CLOCK_HOUR_TENS_X + GRAPHIC_CLOCK_DIGIT_WIDTH + GRAPHIC_CLOCK_GAP;
+static constexpr u8 GRAPHIC_CLOCK_COLON_X =
+  GRAPHIC_CLOCK_HOUR_UNITS_X + GRAPHIC_CLOCK_DIGIT_WIDTH + GRAPHIC_CLOCK_GAP;
+static constexpr u8 GRAPHIC_CLOCK_MINUTE_TENS_X =
+  GRAPHIC_CLOCK_COLON_X + GRAPHIC_CLOCK_SCALE + GRAPHIC_CLOCK_GAP;
+static constexpr u8 GRAPHIC_CLOCK_MINUTE_UNITS_X =
+  GRAPHIC_CLOCK_MINUTE_TENS_X + GRAPHIC_CLOCK_DIGIT_WIDTH + GRAPHIC_CLOCK_GAP;
+static constexpr u8 GRAPHIC_CLOCK_WIDTH =
+  GRAPHIC_CLOCK_MINUTE_UNITS_X + GRAPHIC_CLOCK_DIGIT_WIDTH;
+static constexpr u8 GRAPHIC_CLOCK_CLEAR_BORDER = 2;
+
+static_assert(GRAPHIC_CLOCK_WIDTH <= 32,
+              "Graphic clock rows must fit a 32-bit bitmap");
 
 // Маски перенесены без изменений из нарисованного для проекта макета digits.png.
 static constexpr u8 DIGITS[10][DIGIT_ROWS] = {
@@ -70,6 +89,44 @@ inline bool build_pair_glyph(u8 value, u8 out[GLYPH_ROWS]) {
   }
   out[6] = 0;
   out[7] = 0;
+  return true;
+}
+
+inline void draw_graphic_digit(u8 digit, u8 left,
+                               u32 out[GRAPHIC_CLOCK_HEIGHT]) {
+  for(u8 source_y = 0; source_y < DIGIT_ROWS; source_y++) {
+    for(u8 source_x = 0; source_x < 2; source_x++) {
+      const u8 source_mask = (u8) 1U << (1U - source_x);
+      if((DIGITS[digit][source_y] & source_mask) == 0) continue;
+      for(u8 scale_y = 0; scale_y < GRAPHIC_CLOCK_SCALE; scale_y++) {
+        const u8 y = source_y * GRAPHIC_CLOCK_SCALE + scale_y;
+        for(u8 scale_x = 0; scale_x < GRAPHIC_CLOCK_SCALE; scale_x++) {
+          const u8 x = left + source_x * GRAPHIC_CLOCK_SCALE + scale_x;
+          out[y] |= (u32) 1U << x;
+        }
+      }
+    }
+  }
+}
+
+inline bool build_graphic_clock(u8 hour, u8 minute,
+                                u32 out[GRAPHIC_CLOCK_HEIGHT]) {
+  if(out == 0 || hour > 23 || minute > 59) return false;
+  for(u8 y = 0; y < GRAPHIC_CLOCK_HEIGHT; y++) out[y] = 0;
+
+  draw_graphic_digit(hour / 10, GRAPHIC_CLOCK_HOUR_TENS_X, out);
+  draw_graphic_digit(hour % 10, GRAPHIC_CLOCK_HOUR_UNITS_X, out);
+  draw_graphic_digit(minute / 10, GRAPHIC_CLOCK_MINUTE_TENS_X, out);
+  draw_graphic_digit(minute % 10, GRAPHIC_CLOCK_MINUTE_UNITS_X, out);
+
+  for(u8 dot = 0; dot < 2; dot++) {
+    const u8 top = (u8) ((dot == 0 ? 1 : 3) * GRAPHIC_CLOCK_SCALE);
+    for(u8 y = 0; y < GRAPHIC_CLOCK_SCALE; y++) {
+      for(u8 x = 0; x < GRAPHIC_CLOCK_SCALE; x++) {
+        out[top + y] |= (u32) 1U << (GRAPHIC_CLOCK_COLON_X + x);
+      }
+    }
+  }
   return true;
 }
 

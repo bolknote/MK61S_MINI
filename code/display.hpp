@@ -161,6 +161,10 @@ class MK61Display : public Print {
     void renderShiftedViewport(
       const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
     void endShiftedViewport(void);
+#else
+    bool showTopRightOverlay(const u32* rows, u8 width, u8 height,
+                             u8 clear_border);
+    void hideTopRightOverlay(void);
 #endif
     void writeCodepoint(u16 codepoint);
     bool installFont(const u8* data, u16 size);
@@ -220,6 +224,8 @@ class MK61Display : public Print {
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
     static constexpr u8 RENDER_PAGE_HEIGHT = 8;
+    static constexpr u8 TOP_RIGHT_OVERLAY_MAX_WIDTH = 32;
+    static constexpr u8 TOP_RIGHT_OVERLAY_MAX_HEIGHT = 16;
     uint8_t render_buffer[lcd_display::PIXEL_WIDTH];
     ERM19264_UC1609 lcd;
     ERM19264_UC1609_Screen render_screen;
@@ -245,6 +251,11 @@ class MK61Display : public Print {
     bool cursor_blink_phase;
     t_time_ms cursor_next_blink_ms;
     bool preview_profile_active;
+    u32 top_right_overlay_rows[TOP_RIGHT_OVERLAY_MAX_HEIGHT];
+    u8 top_right_overlay_width;
+    u8 top_right_overlay_height;
+    u8 top_right_overlay_clear_border;
+    bool top_right_overlay_visible;
 
     void clearShadow(void);
     void clearPhysicalScreen(void);
@@ -265,6 +276,8 @@ class MK61Display : public Print {
     void markCellDirty(u8 x, u8 y);
     void markScreenDirty(void);
     void markAllDirty(void);
+    void markTopRightOverlayDirty(u8 width, u8 clear_border);
+    void drawTopRightOverlay(u8 first_col, u8 count, u8 page_y);
     void updateCursorBlink(void);
     void renderRun(u8 row, u8 first_col, u8 count);
     void applyTextProfile(lcd_display::TextProfile profile, bool exact_geometry = false);

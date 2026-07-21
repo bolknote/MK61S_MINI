@@ -291,6 +291,70 @@ void poll(MK61Display& display, bool calculator_context, bool calculator_idle) {
   show_time(display, value);
 }
 
+#elif defined(MK61_DISPLAY_UC1609)
+
+namespace {
+
+static constexpr t_time_ms RTC_POLL_INTERVAL_MS = 500;
+
+struct GraphicOverlayState {
+  bool visible;
+  u8 hour;
+  u8 minute;
+};
+
+static GraphicOverlayState state = {};
+static t_time_ms next_rtc_poll_ms = 0;
+
+void hide_overlay(MK61Display& display) {
+  if(!state.visible) return;
+  display.hideTopRightOverlay();
+  state.visible = false;
+}
+
+} // анонимное пространство имён
+
+void hide(MK61Display& display) {
+  hide_overlay(display);
+}
+
+void poll(MK61Display& display, bool calculator_context, bool calculator_idle) {
+  if(!calculator_context) {
+    hide_overlay(display);
+    next_rtc_poll_ms = 0;
+    return;
+  }
+
+  if(!calculator_idle) {
+    hide_overlay(display);
+    return;
+  }
+
+  const t_time_ms now = millis();
+  if(next_rtc_poll_ms != 0 &&
+     !runtime_safety::time_reached(now, next_rtc_poll_ms)) return;
+  next_rtc_poll_ms = now + RTC_POLL_INTERVAL_MS;
+
+  rtc_clock::DateTime value = {};
+  if(!rtc_clock::read(value)) {
+    hide_overlay(display);
+    return;
+  }
+  if(state.visible && state.hour == value.hour && state.minute == value.minute) return;
+
+  u32 rows[GRAPHIC_CLOCK_HEIGHT];
+  if(!build_graphic_clock(value.hour, value.minute, rows) ||
+     !display.showTopRightOverlay(rows, GRAPHIC_CLOCK_WIDTH,
+                                  GRAPHIC_CLOCK_HEIGHT,
+                                  GRAPHIC_CLOCK_CLEAR_BORDER)) {
+    hide_overlay(display);
+    return;
+  }
+  state.visible = true;
+  state.hour = value.hour;
+  state.minute = value.minute;
+}
+
 #else
 
 void hide(MK61Display&) {}

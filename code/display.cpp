@@ -616,7 +616,12 @@ MK61Display::MK61Display(void)
     cursor_blink(false),
     cursor_blink_phase(false),
     cursor_next_blink_ms(0),
-    preview_profile_active(false) {
+    preview_profile_active(false),
+    top_right_overlay_rows{0},
+    top_right_overlay_width(0),
+    top_right_overlay_height(0),
+    top_right_overlay_clear_border(0),
+    top_right_overlay_visible(false) {
   grid.reset(active_profile.rows);
 }
 
@@ -794,6 +799,59 @@ void MK61Display::clearCustomChars(void) {
     custom_valid[i] = false;
   }
   dirty = dirty || grid.anyDirty();
+  if(update_depth == 0) flush();
+}
+
+bool MK61Display::showTopRightOverlay(const u32* rows, u8 width, u8 height,
+                                      u8 clear_border) {
+  const u16 total_width = (u16) width + (u16) clear_border * 2U;
+  const u16 total_height = (u16) height + (u16) clear_border * 2U;
+  if(!initialized || rows == NULL || width == 0 ||
+     width > TOP_RIGHT_OVERLAY_MAX_WIDTH || height == 0 ||
+     height > TOP_RIGHT_OVERLAY_MAX_HEIGHT ||
+     total_width > lcd_display::PIXEL_WIDTH ||
+     total_height > lcd_display::PIXEL_HEIGHT) return false;
+
+  const u32 row_mask = width == 32 ? 0xFFFFFFFFUL : (((u32) 1U << width) - 1U);
+  bool unchanged = top_right_overlay_visible &&
+                   top_right_overlay_width == width &&
+                   top_right_overlay_height == height &&
+                   top_right_overlay_clear_border == clear_border;
+  if(unchanged) {
+    for(u8 y = 0; y < height; y++) {
+      if(top_right_overlay_rows[y] != (rows[y] & row_mask)) {
+        unchanged = false;
+        break;
+      }
+    }
+  }
+  if(unchanged) return true;
+
+  if(top_right_overlay_visible) {
+    markTopRightOverlayDirty(top_right_overlay_width,
+                             top_right_overlay_clear_border);
+  }
+  memset(top_right_overlay_rows, 0, sizeof(top_right_overlay_rows));
+  for(u8 y = 0; y < height; y++) top_right_overlay_rows[y] = rows[y] & row_mask;
+  top_right_overlay_width = width;
+  top_right_overlay_height = height;
+  top_right_overlay_clear_border = clear_border;
+  top_right_overlay_visible = true;
+  markTopRightOverlayDirty(width, clear_border);
+  if(update_depth == 0) flush();
+  return true;
+}
+
+void MK61Display::hideTopRightOverlay(void) {
+  if(!top_right_overlay_visible) return;
+  const u8 old_width = top_right_overlay_width;
+  const u8 old_border = top_right_overlay_clear_border;
+  top_right_overlay_visible = false;
+  top_right_overlay_width = 0;
+  top_right_overlay_height = 0;
+  top_right_overlay_clear_border = 0;
+  memset(top_right_overlay_rows, 0, sizeof(top_right_overlay_rows));
+  markTopRightOverlayDirty(old_width, old_border);
   if(update_depth == 0) flush();
 }
 
@@ -1039,6 +1097,10 @@ u8 MK61Display::glyphLeft(void) const {
 void MK61Display::markScreenDirty(void) {
   screen_dirty = true;
   dirty = true;
+  if(top_right_overlay_visible) {
+    markTopRightOverlayDirty(top_right_overlay_width,
+                             top_right_overlay_clear_border);
+  }
   if(update_depth == 0 && initialized) flush();
 }
 
@@ -1046,6 +1108,54 @@ void MK61Display::markAllDirty(void) {
   grid.markAll();
   dirty = true;
   if(update_depth == 0 && initialized) flush();
+}
+
+void MK61Display::markTopRightOverlayDirty(u8 width, u8 clear_border) {
+  const u16 total_width = (u16) width + (u16) clear_border * 2U;
+  if(total_width == 0 || total_width > lcd_display::PIXEL_WIDTH) return;
+  const u8 left = (u8) (lcd_display::PIXEL_WIDTH - total_width);
+  const u8 first_col = left / lcd_display::CELL_WIDTH;
+  for(u8 col = first_col; col < lcd_display::COLS; col++) {
+    markCellDirtyDeferred(col, 0);
+  }
+}
+
+void MK61Display::drawTopRightOverlay(u8 first_col, u8 count, u8 page_y) {
+  if(!top_right_overlay_visible || count == 0) return;
+
+  const i16 run_left = (i16) first_col * lcd_display::CELL_WIDTH;
+  const i16 run_right = run_left + (i16) count * lcd_display::CELL_WIDTH;
+  const i16 page_bottom = (i16) page_y + RENDER_PAGE_HEIGHT;
+  const i16 total_width = (i16) top_right_overlay_width +
+                          (i16) top_right_overlay_clear_border * 2;
+  const i16 total_height = (i16) top_right_overlay_height +
+                           (i16) top_right_overlay_clear_border * 2;
+  const i16 background_left = lcd_display::PIXEL_WIDTH - total_width;
+  if(run_right <= background_left || run_left >= lcd_display::PIXEL_WIDTH ||
+     page_y >= total_height) return;
+  const i16 clear_left = background_left > run_left ? background_left : run_left;
+  const i16 clear_right = lcd_display::PIXEL_WIDTH < run_right
+                        ? lcd_display::PIXEL_WIDTH : run_right;
+  const i16 clear_top = page_y;
+  const i16 clear_bottom = total_height < page_bottom ? total_height : page_bottom;
+  if(clear_left < clear_right && clear_top < clear_bottom) {
+    lcd.fillRect(clear_left - run_left, clear_top - page_y,
+                 clear_right - clear_left, clear_bottom - clear_top, BACKGROUND);
+  }
+
+  const i16 content_left = background_left + top_right_overlay_clear_border;
+  const i16 content_top = top_right_overlay_clear_border;
+  for(u8 y = 0; y < top_right_overlay_height; y++) {
+    const i16 absolute_y = content_top + y;
+    if(absolute_y < page_y || absolute_y >= page_bottom) continue;
+    const u32 bits = top_right_overlay_rows[y];
+    for(u8 x = 0; x < top_right_overlay_width; x++) {
+      if((bits & ((u32) 1U << x)) == 0) continue;
+      const i16 absolute_x = content_left + x;
+      if(absolute_x < run_left || absolute_x >= run_right) continue;
+      lcd.drawPixel(absolute_x - run_left, absolute_y - page_y, FOREGROUND);
+    }
+  }
 }
 
 void MK61Display::markCellDirtyDeferred(u8 x, u8 y) {
@@ -1154,6 +1264,7 @@ void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
         }
       }
     }
+    drawTopRightOverlay(first_col, count, page_y);
     lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, page_y,
                   run_width, RENDER_PAGE_HEIGHT, render_buffer);
   }

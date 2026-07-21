@@ -275,6 +275,22 @@ static void test_rtc_idle_clock_glyphs_and_slots(void) {
   assert(slots.hour_tens == 7 && slots.hour_units_colon == 6 && slots.minute == 5);
   assert(!rtc_idle_clock::select_slots(0b00111111, slots));
   assert(!rtc_idle_clock::select_slots(0xFF, slots));
+
+  u32 graphic[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT] = {};
+  assert(rtc_idle_clock::build_graphic_clock(0, 0, graphic));
+  const u32 digits =
+    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_HOUR_TENS_X) |
+    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_HOUR_UNITS_X) |
+    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_MINUTE_TENS_X) |
+    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_MINUTE_UNITS_X);
+  const u32 colon = (u32) 0x03 << rtc_idle_clock::GRAPHIC_CLOCK_COLON_X;
+  for(u8 y = 0; y < rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT; y++) {
+    const bool colon_row = y == 2 || y == 3 || y == 6 || y == 7;
+    assert(graphic[y] == (digits | (colon_row ? colon : 0)));
+    assert((graphic[y] >> rtc_idle_clock::GRAPHIC_CLOCK_WIDTH) == 0);
+  }
+  assert(!rtc_idle_clock::build_graphic_clock(24, 0, graphic));
+  assert(!rtc_idle_clock::build_graphic_clock(0, 60, graphic));
 }
 
 int main(void) {
