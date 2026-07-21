@@ -10,7 +10,8 @@ enum class Owner : u8 {
   FOCAL,
   TINYBASIC,
   IMAGE_VIEWER,
-  USB_DISK
+  USB_DISK,
+  TERMINAL_TRANSFER
 };
 
 static constexpr usize SIZE = 8192;

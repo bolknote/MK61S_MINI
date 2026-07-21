@@ -18,9 +18,12 @@
 #include "mk61_ref.hpp"
 #include "virtual_fat.hpp"
 #include "program_store.hpp"
+#include "language_workspace.hpp"
+#include "shared_scratch.hpp"
 #include "storage_path.hpp"
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
+#include "terminal_file_transfer.hpp"
 #include "terminal_protocol.hpp"
 #include "utf8_view.hpp"
 #include "rtc_clock.hpp"
@@ -117,6 +120,8 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "del",     CMD_FS_REMOVE,     "alias for rm" },
   { "rmdir",   CMD_FS_RMDIR,      "rmdir <path> - remove empty directory" },
   { "df",      CMD_FS_STAT,       "show C5 capacity and node quota" },
+  { "fsget",   CMD_FS_GET,        "fsget <path> - machine file download" },
+  { "fsput",   CMD_FS_PUT,        "fsput begin|data|end|cancel - machine upload" },
   { "smap",    CMD_SMAP,          "numeric M1 slot occupancy map" },
   { "sdir",    CMD_DIR,           "list numeric M1 slots" },
   { "snm",     CMD_RENAME,        "snm <slot> <name> - rename slot" },
@@ -330,6 +335,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     char    pending_save_name[program_store::NAME_SIZE];
     u16     pending_save_parent_id;
     u16     current_directory;
+    bool    file_upload_active;
+    u16     file_upload_size;
+    u16     file_upload_received;
+    u32     file_upload_checksum;
+    storage_path::FileTarget file_upload_target;
 
     // Аргументы скриптового действия переживают восстановление input_buffer:
     // script_args_ptr указывает внутрь буфера строки, поэтому перед возвратом
@@ -605,6 +615,189 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return terminal_protocol::Result::ok();
     }
 
+    static u16 file_capacity(program_store::ProgramType type) {
+      if(type == program_store::ProgramType::IMAGE1) {
+        return program_store::MAX_IMAGE1_SIZE;
+      }
+      if(type == program_store::ProgramType::FONT) {
+        return program_store::MAX_FONT_SIZE;
+      }
+      return program_store::MAX_MK61_TEXT_SIZE;
+    }
+
+    terminal_protocol::Result file_transfer_error(const char* code) {
+      file_upload_active = false;
+      Serial.print("@MKC:ERROR ");
+      Serial.println(code);
+      return terminal_protocol::Result::error();
+    }
+
+    terminal_protocol::Result exec_fs_get(void) {
+      char path[MAX_INPUT_CHAR];
+      if(!terminal_single_token(command_args(), path, sizeof(path))) {
+        return file_transfer_error("GET_USAGE");
+      }
+      program_store::Entry entry;
+      if(storage_path::resolve_file(current_directory, path, entry) !=
+         storage_path::Status::OK) {
+        return file_transfer_error("GET_NOT_FOUND");
+      }
+
+      const usize required = entry.data_len == 0 ? 1 : entry.data_len;
+      shared_scratch::Lease scratch(shared_scratch::Owner::TERMINAL_TRANSFER,
+                                    required);
+      if(!scratch.ok()) return file_transfer_error("GET_BUSY");
+      u16 length = 0;
+      if(!program_store::read_id(entry.id, scratch.data(), scratch.size(),
+                                 &length) || length != entry.data_len) {
+        return file_transfer_error("GET_IO");
+      }
+
+      const u32 crc = terminal_file_transfer::checksum(scratch.data(), length);
+      Serial.print("@MKC:GET ");
+      Serial.print(length);
+      Serial.write(' ');
+      Serial.println(crc);
+      for(u16 offset = 0; offset < length;) {
+        const u16 remaining = (u16) (length - offset);
+        const u16 count = remaining < terminal_file_transfer::CHUNK_SIZE
+            ? remaining : (u16) terminal_file_transfer::CHUNK_SIZE;
+        Serial.print("@MKC:DATA ");
+        Serial.print(offset);
+        Serial.write(' ');
+        for(u16 index = 0; index < count; index++) {
+          const u8 value = scratch.data()[offset + index];
+          Serial.write(terminal_file_transfer::hex_char((u8) (value >> 4)));
+          Serial.write(terminal_file_transfer::hex_char((u8) (value & 0x0F)));
+        }
+        Serial.println();
+        offset = (u16) (offset + count);
+      }
+      Serial.print("@MKC:END ");
+      Serial.print(length);
+      Serial.write(' ');
+      Serial.println(crc);
+      return terminal_protocol::Result::ok();
+    }
+
+    terminal_protocol::Result exec_fs_put(void) {
+      const char* cursor = command_args();
+      char action[16];
+      if(!terminal_core::parse_token(cursor, action, sizeof(action))) {
+        return file_transfer_error("PUT_USAGE");
+      }
+
+      if(strcmp(action, "cancel") == 0) {
+        if(!terminal_core::at_end(cursor)) {
+          return file_transfer_error("PUT_USAGE");
+        }
+        file_upload_active = false;
+        Serial.println("@MKC:CANCELLED");
+        return terminal_protocol::Result::ok();
+      }
+
+      if(strcmp(action, "begin") == 0) {
+        char path[MAX_INPUT_CHAR];
+        usize length = 0;
+        usize crc = 0;
+        if(!terminal_core::parse_token(cursor, path, sizeof(path)) ||
+           !terminal_core::parse_unsigned(cursor, 10,
+               program_store::MAX_IMAGE1_SIZE, length) ||
+           !terminal_core::parse_unsigned(cursor, 10, 0xFFFFFFFFu, crc) ||
+           !terminal_core::at_end(cursor)) {
+          return file_transfer_error("PUT_USAGE");
+        }
+        storage_path::FileTarget target = {};
+        if(storage_path::file_target(current_directory, path, target) !=
+           storage_path::Status::OK) {
+          return file_transfer_error("PUT_NAME");
+        }
+        if(length > file_capacity(target.type)) {
+          return file_transfer_error("PUT_TOO_LARGE");
+        }
+        const usize required = length == 0 ? 1 : length;
+        language_workspace::Lease workspace(
+            language_workspace::Owner::TERMINAL_TRANSFER, required);
+        if(!workspace.ok()) return file_transfer_error("PUT_BUSY");
+        memset(workspace.data(), 0, required);
+        file_upload_target = target;
+        file_upload_size = (u16) length;
+        file_upload_received = 0;
+        file_upload_checksum = (u32) crc;
+        file_upload_active = true;
+        Serial.print("@MKC:READY ");
+        Serial.println(file_upload_size);
+        return terminal_protocol::Result::ok();
+      }
+
+      if(strcmp(action, "data") == 0) {
+        usize offset = 0;
+        char hex[terminal_file_transfer::CHUNK_SIZE * 2 + 1];
+        if(!file_upload_active ||
+           !terminal_core::parse_unsigned(cursor, 10,
+               program_store::MAX_IMAGE1_SIZE, offset) ||
+           !terminal_core::parse_token(cursor, hex, sizeof(hex)) ||
+           !terminal_core::at_end(cursor)) {
+          return file_transfer_error("PUT_SEQUENCE");
+        }
+        u8 decoded[terminal_file_transfer::CHUNK_SIZE];
+        usize decoded_length = 0;
+        if(!terminal_file_transfer::decode_hex(hex, decoded,
+                                               sizeof(decoded),
+                                               decoded_length) ||
+           decoded_length == 0 || offset != file_upload_received ||
+           offset + decoded_length > file_upload_size) {
+          return file_transfer_error("PUT_DATA");
+        }
+        const usize required = file_upload_size == 0 ? 1 : file_upload_size;
+        language_workspace::Lease workspace(
+            language_workspace::Owner::TERMINAL_TRANSFER, required);
+        if(!workspace.ok() || workspace.fresh()) {
+          return file_transfer_error("PUT_INTERRUPTED");
+        }
+        memcpy((u8*) workspace.data() + offset, decoded, decoded_length);
+        file_upload_received = (u16) (offset + decoded_length);
+        Serial.print("@MKC:ACK ");
+        Serial.println(file_upload_received);
+        return terminal_protocol::Result::ok();
+      }
+
+      if(strcmp(action, "end") == 0) {
+        if(!file_upload_active || !terminal_core::at_end(cursor) ||
+           file_upload_received != file_upload_size) {
+          return file_transfer_error("PUT_INCOMPLETE");
+        }
+        const usize required = file_upload_size == 0 ? 1 : file_upload_size;
+        language_workspace::Lease workspace(
+            language_workspace::Owner::TERMINAL_TRANSFER, required);
+        if(!workspace.ok() || workspace.fresh()) {
+          return file_transfer_error("PUT_INTERRUPTED");
+        }
+        const u8* const data = (const u8*) workspace.data();
+        const u32 crc = terminal_file_transfer::checksum(data,
+                                                         file_upload_size);
+        if(crc != file_upload_checksum) {
+          return file_transfer_error("PUT_CHECKSUM");
+        }
+        if(!program_store::write_file(file_upload_target.parent_id,
+             program_store::INVALID_ID, file_upload_target.type,
+             file_upload_target.name,
+             file_upload_size == 0 ? nullptr : data,
+             file_upload_size)) {
+          return file_transfer_error("PUT_IO");
+        }
+        const u16 completed = file_upload_size;
+        file_upload_active = false;
+        Serial.print("@MKC:DONE ");
+        Serial.print(completed);
+        Serial.write(' ');
+        Serial.println(crc);
+        return terminal_protocol::Result::ok();
+      }
+
+      return file_transfer_error("PUT_USAGE");
+    }
+
     void DumpRegisters(void) {
      // -0.12345678 -9A (14)
       char buffer[15];
@@ -649,7 +842,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       : AT(0), pending_confirmation_cmd(CMD_UNKNOWN), nSlot(-1),
         input_overflow(false), pending_save_name{},
         pending_save_parent_id(program_store::ROOT_ID),
-        current_directory(program_store::ROOT_ID), recive_pos(0) {}
+        current_directory(program_store::ROOT_ID), file_upload_active(false),
+        file_upload_size(0), file_upload_received(0),
+        file_upload_checksum(0), file_upload_target{}, recive_pos(0) {}
 
     void reset_command_state(void) {
       AT                    = 0;
@@ -659,6 +854,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       input_overflow        = false;
       pending_save_name[0]  = 0;
       pending_save_parent_id = program_store::ROOT_ID;
+      file_upload_active    = false;
+      file_upload_size      = 0;
+      file_upload_received  = 0;
+      file_upload_checksum  = 0;
     }
 
     // История и редактор строки общие (static): сбрасываются только при
@@ -1229,6 +1428,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           recive_pos = 0;
           return terminal_protocol::Result::error();
         }
+        // Незавершённая загрузка не должна переживать переход к другой
+        // команде. Рабочая область между пакетами всё равно не удерживается.
+        if(command_id != CMD_FS_PUT) file_upload_active = false;
         switch (command_id) {
           case  CMD_VERSION:
               output_version();
@@ -1674,6 +1876,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               Serial.println(" bytes reserved");
             }
             break;
+          case CMD_FS_GET: {
+              const terminal_protocol::Result result = exec_fs_get();
+              recive_pos = 0;
+              return result;
+            }
+          case CMD_FS_PUT: {
+              const terminal_protocol::Result result = exec_fs_put();
+              recive_pos = 0;
+              return result;
+            }
           case  CMD_FS_CLEAN: {
               const u16 purged = program_store::purge_empty();
               Serial.print("Removed ");

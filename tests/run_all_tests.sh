@@ -24,6 +24,7 @@ fi
 "$root/tests/run_m61_text_tests.sh"
 "$root/tests/run_mk_math_tests.sh"
 "$root/tests/run_mk61_ref_tests.sh"
+"$root/tests/run_mkc_tests.sh"
 "$root/tests/run_memory_buffer_tests.sh"
 "$root/tests/run_storage_geometry_tests.sh"
 "$root/tests/run_msc_scsi_safety_tests.sh"

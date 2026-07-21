@@ -14,7 +14,8 @@ enum class Owner : u8 {
   PROGRAM_STORE_GC,
   PROGRAM_STORE_READ_RANGE,
   VFAT_COMMIT,
-  USB_CACHE
+  USB_CACHE,
+  TERMINAL_TRANSFER
 };
 
 // Наибольший временный буфер содержимого файла. Меню файлов считывает видимые

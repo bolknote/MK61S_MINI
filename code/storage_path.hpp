@@ -54,6 +54,10 @@ Status file_target(u16 cwd, const char* path,
                    program_store::ProgramType default_type,
                    FileTarget& out);
 
+// В отличие от перегрузки выше, расширение обязательно и само определяет тип.
+// Используется универсальной передачей файлов терминала.
+Status file_target(u16 cwd, const char* path, FileTarget& out);
+
 // Создаёт конечный каталог. При parents=true отсутствующие промежуточные
 // компоненты создаются аналогично `mkdir -p`.
 Status create_directory(u16 cwd, const char* path, bool parents,

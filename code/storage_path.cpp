@@ -379,6 +379,20 @@ Status file_target(u16 cwd, const char* path,
   return program_store::basename_valid(out.name) ? Status::OK : Status::INVALID;
 }
 
+Status file_target(u16 cwd, const char* path, FileTarget& out) {
+  View view;
+  Status status = make_view(path, view);
+  if(status != Status::OK) return status;
+  char leaf[VISIBLE_NAME_SIZE];
+  status = split_parent(cwd, view, out.parent_id, leaf, sizeof(leaf));
+  if(status != Status::OK) return status;
+  program_store::ProgramType ignored_default = program_store::ProgramType::MK61;
+  if(!parse_file_leaf(leaf, ignored_default, false, out.type, out.name)) {
+    return Status::INVALID;
+  }
+  return program_store::basename_valid(out.name) ? Status::OK : Status::INVALID;
+}
+
 Status create_directory(u16 cwd, const char* path, bool parents,
                         u16& out_directory) {
   View view;

@@ -283,6 +283,15 @@ static void test_paths_and_recursive_tree_operations(void) {
   assert(strcmp(target.name, "new program") == 0);
   assert(storage_path::file_target(year, "bad.foc", ProgramType::MK61,
       target) == storage_path::Status::WRONG_TYPE);
+  assert(storage_path::file_target(year, "uploaded.foc", target) ==
+         storage_path::Status::OK);
+  assert(target.parent_id == year && target.type == ProgramType::FOCAL);
+  assert(strcmp(target.name, "uploaded") == 0);
+  assert(storage_path::file_target(year, "uploaded.wbm", target) ==
+         storage_path::Status::OK);
+  assert(target.type == ProgramType::IMAGE1);
+  assert(storage_path::file_target(year, "missing-extension", target) ==
+         storage_path::Status::INVALID);
 
   char path[128];
   assert(storage_path::format_directory(year, path, sizeof(path)) ==

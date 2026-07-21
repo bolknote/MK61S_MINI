@@ -1,5 +1,6 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
+#include "terminal_file_transfer.hpp"
 #include "rtc_clock_core.hpp"
 #include "rtc_idle_clock_core.hpp"
 #include "rtc_settings_core.hpp"
@@ -94,9 +95,32 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_FS_MOVE));
   assert(!terminal_command_allowed_in_script(CMD_FS_RMDIR));
   assert(!terminal_command_allowed_in_script(CMD_FS_STAT));
+  assert(!terminal_command_allowed_in_script(CMD_FS_GET));
+  assert(!terminal_command_allowed_in_script(CMD_FS_PUT));
   assert(!terminal_command_allowed_in_script(CMD_ERASE_STORAGE));
   assert(!terminal_command_allowed_in_script(CMD_DATE));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
+}
+
+static void test_file_transfer_checksum_matches_posix_cksum(void) {
+  const u8 digits[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  const u8 abc[] = {'a', 'b', 'c'};
+  assert(terminal_file_transfer::checksum(nullptr, 0) == 4294967295u);
+  assert(terminal_file_transfer::checksum(digits, sizeof(digits)) == 930766865u);
+  assert(terminal_file_transfer::checksum(abc, sizeof(abc)) == 1219131554u);
+}
+
+static void test_file_transfer_hex_codec(void) {
+  u8 bytes[terminal_file_transfer::CHUNK_SIZE];
+  usize length = 0;
+  assert(terminal_file_transfer::decode_hex("00aF7e", bytes,
+                                             sizeof(bytes), length));
+  assert(length == 3 && bytes[0] == 0 && bytes[1] == 0xAF && bytes[2] == 0x7E);
+  assert(!terminal_file_transfer::decode_hex("0", bytes, sizeof(bytes), length));
+  assert(!terminal_file_transfer::decode_hex("GG", bytes, sizeof(bytes), length));
+  assert(!terminal_file_transfer::decode_hex(nullptr, bytes, sizeof(bytes), length));
+  assert(terminal_file_transfer::hex_char(0) == '0');
+  assert(terminal_file_transfer::hex_char(15) == 'F');
 }
 
 static void test_rtc_datetime_parser_and_formatter(void) {
@@ -301,6 +325,8 @@ int main(void) {
   test_decimal_parser_is_finite_and_bounded();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_script_allowlist_is_explicit();
+  test_file_transfer_checksum_matches_posix_cksum();
+  test_file_transfer_hex_codec();
   test_rtc_datetime_parser_and_formatter();
   test_rtc_startup_material();
   test_date_terminal_request();

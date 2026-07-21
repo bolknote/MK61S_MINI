@@ -3,6 +3,7 @@
 /binary/
 /.build/
 /.mk61-firmware.conf
+/.mkc.conf
 /tools/fmk_font
 
 # Python tooling caches
