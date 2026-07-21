@@ -90,6 +90,25 @@ expect {
 
 spawn $env(MK61_TEST_LAUNCHER)
 after 900
+expect "Esc назад"
+send -- "\033OB\033OB"
+expect -re {\x1b\[30;46m[^\r\n]*Платформа}
+send -- "\r"
+expect "Выберите ревизию платы"
+send -- "\033"
+expect -re {\x1b\[30;46m[^\r\n]*Платформа}
+send -- q
+set timeout 2
+expect {
+  eof {}
+  timeout {
+    send_user "main menu did not retain the selected row\n"
+    exit 1
+  }
+}
+
+spawn $env(MK61_TEST_LAUNCHER)
+after 900
 send -- "\033"
 set timeout 2
 expect {

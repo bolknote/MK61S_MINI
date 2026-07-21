@@ -557,9 +557,17 @@ function Draw-MenuPage {
     Write-BottomBorder ($script:ListFirstRow + $Items.Count + 1) '↑↓ выбрать · Enter подтвердить · Esc назад'
 }
 
+function Get-MenuInitialIndex {
+    param([object[]]$Items, [string]$InitialTag)
+    for ($index = 0; $index -lt $Items.Count; $index++) {
+        if ($Items[$index].Tag -eq $InitialTag) { return $index }
+    }
+    return 0
+}
+
 function Show-Menu {
-    param([string]$Title, [string]$Text, [object[]]$Items)
-    $selected = 0
+    param([string]$Title, [string]$Text, [object[]]$Items, [string]$InitialTag = '')
+    $selected = Get-MenuInitialIndex $Items $InitialTag
     Draw-MenuPage $Title $Text $selected $Items
     while ($true) {
         $key = [Console]::ReadKey($true)
@@ -1794,6 +1802,7 @@ function Invoke-InteractiveMain {
         [pscustomobject]@{ Tag = 'log'; Label = "$($script:Glyphs.MenuLog) Последний журнал" }
         [pscustomobject]@{ Tag = 'quit'; Label = "$($script:Glyphs.MenuQuit) Выход" }
     )
+    $mainSelection = 'upload'
     while ($true) {
         $platformText = Get-PlatformLabel $script:State.Platform
         $screenText = Get-ScreenLabel $script:State.Screen
@@ -1802,8 +1811,9 @@ function Invoke-InteractiveMain {
             $screenText += ' · несовместим'
         }
         $text = "Платформа: $platformText`nЭкран: $screenText`nКлючи: $(Get-CompileOptionsSummary)`nЦель: STM32F411CE BlackPill · USB DFU`nDFU: $($script:State.DfuStatus)`nУстройство: $($script:State.DeviceStatus)"
-        $selection = Show-Menu 'MK61s · прошивка' $text $items
+        $selection = Show-Menu 'MK61s · прошивка' $text $items $mainSelection
         if ([string]::IsNullOrEmpty($selection)) { break }
+        $mainSelection = $selection
         switch ($selection) {
             'upload' { [void](Upload-Selected) }
             'build' { [void](Build-Selected) }

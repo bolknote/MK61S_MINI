@@ -108,6 +108,13 @@ try {
     Assert-True ($script:Glyphs.RadioOff -eq '( )' -and $script:Glyphs.RadioOn -eq '(*)') 'Windows radio glyphs are ambiguous'
     Assert-True ((Get-Checkbox 0) -eq '[ ]' -and (Get-Checkbox 1) -eq '[x]') 'Windows option summary still uses unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -notmatch '[☐☑]') 'Windows option details still contain unsupported checkbox glyphs'
+    $menuItems = @(
+        [pscustomobject]@{ Tag = 'upload' }
+        [pscustomobject]@{ Tag = 'platform' }
+        [pscustomobject]@{ Tag = 'options' }
+    )
+    Assert-True ((Get-MenuInitialIndex $menuItems 'options') -eq 2) 'Main menu does not restore the selected row'
+    Assert-True ((Get-MenuInitialIndex $menuItems 'missing') -eq 0) 'Unknown main-menu selection does not fall back to the first row'
     $space = [ConsoleKeyInfo]::new(' ', [ConsoleKey]::Spacebar, $false, $false, $false)
     Assert-True ((Get-TuiKeyName $space) -eq 'Spacebar') 'Space key fallback failed'
     Assert-True (Test-DfuHardwareId 'USB\VID_0483&PID_DF11\3688388E3233') 'Windows DFU VID/PID was not recognized'

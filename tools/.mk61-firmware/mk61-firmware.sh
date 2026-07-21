@@ -525,10 +525,12 @@ native_draw_menu() {
 ui_menu() {
   local title=$1
   local prompt=$2
-  shift 2
+  local initial_tag=$3
+  shift 3
   if [ "$UI_KIND" = dialog ]; then
     local answer
-    answer=$("$UI_CMD" --title "$title" --menu "$prompt" 22 78 12 "$@" 3>&1 1>&2 2>&3)
+    answer=$("$UI_CMD" --title "$title" --default-item "$initial_tag" \
+      --menu "$prompt" 22 78 12 "$@" 3>&1 1>&2 2>&3)
     local status=$?
     [ "$status" -eq 0 ] || return 1
     printf '%s\n' "$answer"
@@ -545,6 +547,14 @@ ui_menu() {
     shift 2
   done
   local selected=0
+  local index=0
+  while [ "$index" -lt "$count" ]; do
+    if [ "${tags[$index]}" = "$initial_tag" ]; then
+      selected=$index
+      break
+    fi
+    index=$((index + 1))
+  done
   local key previous
   native_draw_menu "$title" "$prompt" "$selected" "${labels[@]}"
   while true; do
@@ -1861,6 +1871,7 @@ interactive_main() {
   load_config
   configure_dfu_util || true
   DEVICE_STATUS='не проверялось · пункт «Найти устройство»'
+  local main_selection=upload
   while true; do
     local selection platform_text screen_text
     platform_text=$(platform_label "$HARDWARE_PLATFORM")
@@ -1874,7 +1885,7 @@ interactive_main() {
 Ключи: $(compile_options_summary)
 Цель: STM32F411CE BlackPill · USB DFU
 DFU: $DFU_STATUS
-Устройство: $DEVICE_STATUS" \
+Устройство: $DEVICE_STATUS" "$main_selection" \
       upload  '▲ Собрать и прошить' \
       build   '⚒ Только собрать .bin' \
       platform '◉ Платформа' \
@@ -1885,6 +1896,7 @@ DFU: $DFU_STATUS
       setup   '↓ Установить Arduino-зависимости' \
       log     '≡ Последний журнал' \
       quit    '× Выход') || break
+    main_selection=$selection
     case "$selection" in
       upload) upload_selected || true ;;
       build) build_selected || true ;;
