@@ -1,6 +1,8 @@
 # Local firmware build outputs
 /*.bin
 /binary/
+/.build/
+/.mk61-firmware.conf
 /tools/fmk_font
 
 # Python tooling caches

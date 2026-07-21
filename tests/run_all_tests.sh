@@ -3,6 +3,10 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 
+"$root/tests/run_firmware_tool_tests.sh"
+if command -v pwsh >/dev/null 2>&1; then
+  pwsh -NoLogo -NoProfile -File "$root/tests/run_firmware_tool_powershell_tests.ps1"
+fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_board_profile_tests.sh"
 "$root/tests/run_a00_image_multiplex_tests.sh"
