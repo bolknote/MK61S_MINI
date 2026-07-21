@@ -26,6 +26,7 @@ abstract final class MkCapability {
   static const keyEvents = 1 << 2;
   static const heartbeat = 1 << 3;
   static const atomicFrames = 1 << 4;
+  static const terminalMux = 1 << 5;
 }
 
 abstract final class MkGeometry {
@@ -51,14 +52,14 @@ class MkPacket {
 }
 
 class MkProtocol {
-  static const version = 1;
+  static const version = 2;
   static const magic0 = 0x4d;
   static const magic1 = 0x53;
   static const headerSize = 9;
   static const crcSize = 2;
   static const maxPayload = 224;
   static const maxRawPacket = headerSize + maxPayload + crcSize;
-  static const maxFramedPacket = maxRawPacket + maxRawPacket ~/ 254 + 2;
+  static const maxFramedPacket = maxRawPacket + maxRawPacket ~/ 254 + 3;
 
   static int readU16(List<int> bytes, int offset) =>
       bytes[offset] | (bytes[offset + 1] << 8);
@@ -149,7 +150,7 @@ class MkProtocol {
       crc16(raw, headerSize + payload.length),
     );
     final encoded = cobsEncode(raw);
-    return Uint8List.fromList([...encoded, 0]);
+    return Uint8List.fromList([0, ...encoded, 0]);
   }
 
   static MkPacket decodePacket(List<int> encoded) {
@@ -218,12 +219,25 @@ class MkProtocol {
 
 class MkStreamParser {
   final List<int> _encoded = [];
+  final BytesBuilder _terminal = BytesBuilder(copy: false);
+  bool _insidePacket = false;
   bool _overflowed = false;
   int discardedPackets = 0;
 
   List<MkPacket> add(List<int> bytes) {
     final packets = <MkPacket>[];
     for (final byte in bytes) {
+      if (!_insidePacket) {
+        if (byte == 0) {
+          _insidePacket = true;
+          _encoded.clear();
+          _overflowed = false;
+        } else {
+          _terminal.addByte(byte);
+        }
+        continue;
+      }
+
       if (byte != 0) {
         if (_overflowed) continue;
         if (_encoded.length < MkProtocol.maxFramedPacket) {
@@ -238,8 +252,11 @@ class MkStreamParser {
       if (_overflowed) {
         _overflowed = false;
         _encoded.clear();
+        _insidePacket = false;
         continue;
       }
+      // Repeated zeroes keep the parser armed. This is both a clean
+      // resynchronisation point and the boundary between adjacent packets.
       if (_encoded.isEmpty) continue;
       try {
         packets.add(MkProtocol.decodePacket(_encoded));
@@ -247,12 +264,20 @@ class MkStreamParser {
         discardedPackets++;
       }
       _encoded.clear();
+      _insidePacket = false;
     }
     return packets;
   }
 
+  Uint8List takeTerminalBytes() {
+    if (_terminal.length == 0) return Uint8List(0);
+    return _terminal.takeBytes();
+  }
+
   void reset() {
     _encoded.clear();
+    _terminal.takeBytes();
+    _insidePacket = false;
     _overflowed = false;
   }
 }

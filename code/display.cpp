@@ -235,7 +235,8 @@ MK61Display::MK61Display(void)
     shifted_viewport_active(false),
     shifted_viewport_shift(0)
 #if MK61_ENABLE_USB_SCREEN
-    , usb_surface(),
+    , usb_framebuffer{0},
+    usb_surface(usb_framebuffer),
     usb_screen_active(false),
     physical_screen_enabled(true),
     usb_preview_font(),
@@ -999,7 +1000,7 @@ MK61Display::MK61Display(void)
     top_right_overlay_clear_border(0),
     top_right_overlay_visible(false)
 #if MK61_ENABLE_USB_SCREEN
-    , usb_surface(),
+    , usb_surface(render_buffer),
     usb_screen_active(false),
     physical_screen_enabled(true)
 #endif

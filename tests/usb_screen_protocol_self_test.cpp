@@ -76,10 +76,11 @@ static void test_packet_roundtrip_and_resync(void) {
   assert(encoder.encode(MessageType::CAPS, 0xA5, 0x1234,
                         payload, sizeof(payload)) == Status::OK);
   assert(encoder.size() > sizeof(payload));
+  assert(encoder.data()[0] == 0);
   assert(encoder.data()[encoder.size() - 1] == 0);
 
   StreamParser parser;
-  for(usize i = 0; i + 1 < encoder.size(); i++) {
+  for(usize i = 1; i + 1 < encoder.size(); i++) {
     assert(parser.push(encoder.data()[i]) == PushResult::NONE);
   }
   assert(parser.push(0) == PushResult::PACKET);
@@ -90,14 +91,8 @@ static void test_packet_roundtrip_and_resync(void) {
   assert(packet.payload_size == sizeof(payload));
   assert(memcmp(packet.payload, payload, sizeof(payload)) == 0);
 
-  // Ordinary terminal text before a delimiter is rejected, then the next COBS
-  // frame must still parse normally.
-  const char noise[] = "MK61> help\r\n";
-  for(usize i = 0; i < sizeof(noise) - 1; i++) {
-    (void) parser.push((u8) noise[i]);
-  }
-  assert(parser.push(0) == PushResult::ERROR);
-  for(usize i = 0; i < encoder.size(); i++) {
+  parser.reset();
+  for(usize i = 1; i < encoder.size(); i++) {
     const PushResult result = parser.push(encoder.data()[i]);
     if(i + 1 == encoder.size()) assert(result == PushResult::PACKET);
     else assert(result == PushResult::NONE);
@@ -113,7 +108,7 @@ static void test_packet_crc_rejection(void) {
   u8 damaged[MAX_FRAMED_PACKET] = {};
   usize raw_size = 0;
   usize damaged_size = 0;
-  assert(cobs_decode(encoder.data(), encoder.size() - 1, raw, sizeof(raw),
+  assert(cobs_decode(encoder.data() + 1, encoder.size() - 2, raw, sizeof(raw),
                      raw_size) == Status::OK);
   raw[HEADER_SIZE] ^= 0x40; // payload changes, stored CRC deliberately does not
   assert(cobs_encode(raw, raw_size, damaged, sizeof(damaged) - 1,
@@ -127,6 +122,34 @@ static void test_packet_crc_rejection(void) {
   }
   assert(final_result == PushResult::ERROR);
   assert(parser.status() == Status::BAD_CRC);
+}
+
+static void test_terminal_multiplex(void) {
+  const u8 payload[] = {7, 0};
+  PacketEncoder encoder;
+  assert(encoder.encode(MessageType::PONG, 0, 99, payload,
+                        sizeof(payload)) == Status::OK);
+
+  MultiplexParser parser;
+  const char prefix[] = "MK61> ver\r\n";
+  usize terminal_index = 0;
+  for(usize i = 0; i < sizeof(prefix) - 1; i++) {
+    assert(parser.push((u8) prefix[i]) ==
+           MultiplexPushResult::TERMINAL_BYTE);
+    assert(parser.terminalByte() == (u8) prefix[terminal_index++]);
+  }
+
+  MultiplexPushResult result = MultiplexPushResult::NONE;
+  for(usize i = 0; i < encoder.size(); i++) result = parser.push(encoder.data()[i]);
+  assert(result == MultiplexPushResult::PACKET);
+  assert(parser.packet().type == MessageType::PONG);
+  assert(parser.packet().sequence == 99);
+  assert(memcmp(parser.packet().payload, payload, sizeof(payload)) == 0);
+
+  // Two boundary zeroes are legal between adjacent framed packets.
+  assert(parser.push(0) == MultiplexPushResult::NONE);
+  for(usize i = 1; i < encoder.size(); i++) result = parser.push(encoder.data()[i]);
+  assert(result == MultiplexPushResult::PACKET);
 }
 
 static void test_diff_plan(void) {
@@ -199,6 +222,7 @@ int main(void) {
   test_packbits();
   test_packet_roundtrip_and_resync();
   test_packet_crc_rejection();
+  test_terminal_multiplex();
   test_diff_plan();
   test_rect_payload();
   assert(strcmp(status_text(Status::OK), "ok") == 0);

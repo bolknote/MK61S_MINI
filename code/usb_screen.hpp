@@ -26,6 +26,8 @@ void service(void);
 State state(void);
 bool active(void);
 bool attached(void);
+bool wireBusy(void);
+bool takeTerminalByte(u8& value);
 Event takeEvent(void);
 #else
 inline bool start(void) { return false; }
@@ -34,6 +36,8 @@ inline void service(void) {}
 inline State state(void) { return State::IDLE; }
 inline bool active(void) { return false; }
 inline bool attached(void) { return false; }
+inline bool wireBusy(void) { return false; }
+inline bool takeTerminalByte(u8&) { return false; }
 inline Event takeEvent(void) { return Event::NONE; }
 #endif
 

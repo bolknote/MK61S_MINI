@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
@@ -26,10 +27,13 @@ class DeviceController extends ChangeNotifier {
   static const _attachTimeout = Duration(milliseconds: 1800);
   static const _heartbeatInterval = Duration(milliseconds: 750);
   static const _fallbackHeartbeatTimeout = Duration(milliseconds: 3500);
+  static const _terminalLogLimit = 64 * 1024;
+  static const _terminalCommandByteLimit = 238;
 
   final MkStreamParser _parser = MkStreamParser();
   final FrameAssembler _frames = FrameAssembler();
   final Set<int> _pressedKeys = <int>{};
+  final List<int> _terminalBytes = <int>[];
   final DeviceSerialTransport _serialTransport;
 
   Timer? _scanTimer;
@@ -59,6 +63,7 @@ class DeviceController extends ChangeNotifier {
   int _sequenceGaps = 0;
   double _framesPerSecond = 0;
   int _displayRevision = 0;
+  int _terminalRevision = 0;
 
   List<String> get ports => _ports;
   String? get selectedPort => _selectedPort;
@@ -77,8 +82,13 @@ class DeviceController extends ChangeNotifier {
   int get rejectedFrames => _frames.rejectedFrames;
   double get framesPerSecond => _framesPerSecond;
   int get displayRevision => _displayRevision;
+  int get terminalRevision => _terminalRevision;
   Uint8List get framebuffer => _frames.framebuffer;
   Set<int> get pressedKeys => Set.unmodifiable(_pressedKeys);
+  String get terminalText =>
+      _renderTerminalText(utf8.decode(_terminalBytes, allowMalformed: true));
+  bool get terminalAvailable =>
+      attached && ((_capabilities?.flags ?? 0) & MkCapability.terminalMux) != 0;
 
   KeyboardDefinition get keyboard => KeyboardDefinition.forLayout(
     _capabilities?.keyboardLayout ?? MkKeyboardLayout.mini,
@@ -199,6 +209,8 @@ class DeviceController extends ChangeNotifier {
         cancelOnError: false,
       );
       _parser.reset();
+      _terminalBytes.clear();
+      _terminalRevision++;
       _frames.reset();
       _lastDeviceSequence = null;
       _lastPacketAt = DateTime.now();
@@ -244,6 +256,8 @@ class DeviceController extends ChangeNotifier {
     _rxBytes += bytes.length;
     final discardedBefore = _parser.discardedPackets;
     final packets = _parser.add(bytes);
+    final terminalBytes = _parser.takeTerminalBytes();
+    if (terminalBytes.isNotEmpty) _appendTerminal(terminalBytes);
     if (_parser.discardedPackets != discardedBefore && attached) {
       _send(MkMessage.requestKeyframe);
     }
@@ -407,6 +421,33 @@ class DeviceController extends ChangeNotifier {
     _notify();
   }
 
+  bool sendTerminalLine(String line) {
+    if (!terminalAvailable) return false;
+    final sanitized = line.replaceAll(RegExp(r'[\x00\r\n]'), '');
+    final encoded = utf8.encode(sanitized);
+    if (encoded.length > _terminalCommandByteLimit) {
+      _lastError = 'Команда терминала длиннее $_terminalCommandByteLimit байт';
+      _notify();
+      return false;
+    }
+    return _writeBytes(Uint8List.fromList([...encoded, 0x0d]));
+  }
+
+  void clearTerminal() {
+    if (_terminalBytes.isEmpty) return;
+    _terminalBytes.clear();
+    _terminalRevision++;
+    _notify();
+  }
+
+  void _appendTerminal(List<int> bytes) {
+    _terminalBytes.addAll(bytes);
+    final overflow = _terminalBytes.length - _terminalLogLimit;
+    if (overflow > 0) _terminalBytes.removeRange(0, overflow);
+    _terminalRevision++;
+    _notify();
+  }
+
   bool _send(int type, [List<int> payload = const []]) {
     final connection = _connection;
     if (connection == null) return false;
@@ -416,10 +457,21 @@ class DeviceController extends ChangeNotifier {
         sequence: _hostSequence++ & 0xffff,
         payload: payload,
       );
-      final written = connection.write(packet, timeoutMs: 100);
+      return _writeBytes(packet);
+    } catch (error) {
+      if (!_closing) unawaited(_connectionFailed('Ошибка записи: $error'));
+      return false;
+    }
+  }
+
+  bool _writeBytes(Uint8List bytes) {
+    final connection = _connection;
+    if (connection == null) return false;
+    try {
+      final written = connection.write(bytes, timeoutMs: 100);
       _txBytes += written;
-      if (written != packet.length) {
-        throw StateError('записано $written из ${packet.length} байт');
+      if (written != bytes.length) {
+        throw StateError('записано $written из ${bytes.length} байт');
       }
       return true;
     } catch (error) {
@@ -513,4 +565,51 @@ class DeviceController extends ChangeNotifier {
     connection?.close();
     super.dispose();
   }
+}
+
+String _renderTerminalText(String source) {
+  final lines = <List<int>>[<int>[]];
+  var row = 0;
+  var column = 0;
+
+  for (final rune in source.runes) {
+    switch (rune) {
+      case 0x0d: // carriage return
+        column = 0;
+        continue;
+      case 0x0a: // line feed
+        row++;
+        column = 0;
+        if (row == lines.length) lines.add(<int>[]);
+        continue;
+      case 0x08: // backspace
+        if (column > 0) column--;
+        continue;
+      case 0x09: // tab
+        final spaces = 4 - (column & 3);
+        for (var i = 0; i < spaces; i++) {
+          final line = lines[row];
+          if (column < line.length) {
+            line[column] = 0x20;
+          } else {
+            line.add(0x20);
+          }
+          column++;
+        }
+        continue;
+    }
+    if (rune < 0x20 || rune == 0x7f) continue;
+    final line = lines[row];
+    while (line.length < column) {
+      line.add(0x20);
+    }
+    if (column < line.length) {
+      line[column] = rune;
+    } else {
+      line.add(rune);
+    }
+    column++;
+  }
+
+  return lines.map(String.fromCharCodes).join('\n');
 }

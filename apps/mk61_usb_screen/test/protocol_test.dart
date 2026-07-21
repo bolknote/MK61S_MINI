@@ -24,9 +24,10 @@ void main() {
         sequence: 0xbeef,
         payload: const [0, 17, 255],
       );
+      expect(framed.first, 0);
       expect(framed.last, 0);
       final packet = MkProtocol.decodePacket(
-        framed.sublist(0, framed.length - 1),
+        framed.sublist(1, framed.length - 1),
       );
       expect(packet.type, MkMessage.ping);
       expect(packet.flags, 0x5a);
@@ -61,7 +62,7 @@ void main() {
 
     test('stream parser discards an entire overflowing frame then resyncs', () {
       final parser = MkStreamParser();
-      parser.add(List<int>.filled(MkProtocol.maxFramedPacket + 20, 1));
+      parser.add([0, ...List<int>.filled(MkProtocol.maxFramedPacket + 20, 1)]);
       expect(parser.add(const [0]), isEmpty);
       expect(parser.discardedPackets, 1);
 
@@ -73,6 +74,34 @@ void main() {
       final packets = parser.add(valid);
       expect(packets, hasLength(1));
       expect(packets.single.sequence, 9);
+    });
+
+    test('stream parser multiplexes terminal text and framed packets', () {
+      final parser = MkStreamParser();
+      final packet = MkProtocol.encodePacket(
+        type: MkMessage.pong,
+        sequence: 12,
+        payload: const [3, 0],
+      );
+      final stream = <int>[
+        ...utf8.encode('MK61> ver\r\n'),
+        ...packet,
+        ...utf8.encode('ok\r\n'),
+      ];
+
+      final packets = <MkPacket>[];
+      for (var offset = 0; offset < stream.length; offset += 2) {
+        packets.addAll(
+          parser.add(
+            stream.sublist(offset, (offset + 2).clamp(0, stream.length)),
+          ),
+        );
+      }
+
+      expect(packets, hasLength(1));
+      expect(packets.single.sequence, 12);
+      expect(utf8.decode(parser.takeTerminalBytes()), 'MK61> ver\r\nok\r\n');
+      expect(parser.discardedPackets, 0);
     });
 
     test('PackBits decoder handles literals and runs', () {

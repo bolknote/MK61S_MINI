@@ -644,6 +644,11 @@ void   mk61_baseloop_hook(i32 key) {
 void  loop() {
   idle_main_process();
 
+  // A binary USB Screen packet may span several CDC writes. Serial-producing
+  // services pause between its chunks, while calculator/key processing keeps
+  // running. Terminal text is emitted only between complete framed packets.
+  const bool usb_screen_wire_busy = usb_screen::wireBusy();
+
   const bool turbo_run = core_61::is_RUN() && library_mk61::speed_is_turbo();
 
   #ifdef TERMINAL // Подмена полученной с терминала клавиши через буфер клавиатуры
@@ -658,13 +663,23 @@ void  loop() {
     }
 
     if(terminal_poll_enabled && !usb_mass_storage::active() &&
-       !usb_screen::active()) {
-      const i32 key_from_terminal = terminal.serial_input_handler();
-      if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
+       !usb_screen_wire_busy) {
+      if(usb_screen::active()) {
+        u8 terminal_byte = 0;
+        while(usb_screen::takeTerminalByte(terminal_byte)) {
+          const class_terminal::InputResult result =
+            terminal.input_handler(terminal_byte);
+          if(result.key >= 0) kbd::push((i8) result.key);
+          if(result.line_complete) break;
+        }
+      } else {
+        const i32 key_from_terminal = terminal.serial_input_handler();
+        if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
+      }
     }
   #endif
 
-  m61_text::service();
+  if(!usb_screen_wire_busy) m61_text::service();
 
   const i32 used_key = kbd::last_key();
   if(drop_menu_exit_key_events) {

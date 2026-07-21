@@ -19,6 +19,7 @@ extern "C" int FocalTestAddProgram(const char* source);
 extern "C" void FocalTestSetAskValue(double value);
 extern "C" void FocalTestSetAskCancelled(bool cancelled);
 extern "C" int FocalTestAskWaitCount(void);
+extern "C" int FocalTestBackgroundServiceCount(void);
 extern "C" void FocalTestRun(int slot);
 extern "C" int FocalTestRunStatus(int slot);
 extern "C" double FocalTestNumber(const char* name);
@@ -184,6 +185,9 @@ static void test_ask_long_for_loop(void) {
   CHECK_NEAR(FocalTestNumber("N"), 9000.0);
   CHECK_NEAR(FocalTestNumber("S"), 9000.0);
   CHECK_STARTS(FocalTestLcdLine(0), "9000");
+  // A long FOR is one source line but must still service USB Screen on every
+  // inline body iteration, otherwise its three-second heartbeat can expire.
+  CHECK(FocalTestBackgroundServiceCount() >= 9000);
 }
 
 static void test_ask_without_target_waits_for_key(void) {

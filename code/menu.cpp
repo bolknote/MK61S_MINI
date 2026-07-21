@@ -25,12 +25,10 @@ namespace library_mk61 {
 
 static constexpr int MENU_DFU      = 0;
 static constexpr int MENU_USB_DISK = 1;
-static constexpr int MENU_USB_SCREEN = 2;
-static constexpr int MENU_SETTINGS = 3;
-static constexpr int MENU_EXPLORER = 4;
-static constexpr int MENU_LIBRARY  = 5;
-static constexpr int MENU_AFTER_LIBRARY = MENU_LIBRARY + 1;
-static constexpr int MENU_DEVELOP  = MENU_AFTER_LIBRARY;
+static constexpr int MENU_SETTINGS = 2;
+static constexpr int MENU_EXPLORER = 3;
+static constexpr int MENU_LIBRARY  = 4;
+static constexpr int MENU_DEVELOP  = 5;
 static constexpr int MENU_RESET    = MENU_DEVELOP + 1;
 static constexpr int MENU_ERASE    = MENU_RESET + 1;
 static constexpr int MENU_INFO     = MENU_ERASE + 1;
@@ -225,7 +223,6 @@ bool  InfoData(void) {
 
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
 const t_punct USB_DISK_punct      = {.size = 8,  .action = (menu_action) &UsbDiskMode,          .text = "USB Disk"};
-const t_punct USB_SCREEN_punct    = {.size = 10, .action = (menu_action) &UsbScreenMode,        .text = "USB Screen"};
 const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
 const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct EXPLORER_punct      = {.size = 8,  .action = &program_store_explorer_select,      .text = "Explorer"};
@@ -250,7 +247,6 @@ const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &Hardwa
 
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
 const t_punct RU_USB_DISK_punct   = {.size = 15, .action = (menu_action) &UsbDiskMode,          .text = "USB-диск"};
-const t_punct RU_USB_SCREEN_punct = {.size = 15, .action = (menu_action) &UsbScreenMode,        .text = "USB-экран"};
 const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
 const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
 const t_punct RU_EXPLORER_punct   = {.size = 15, .action = &program_store_explorer_select,      .text = "Проводник"};
@@ -274,7 +270,6 @@ const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &Hardwa
 t_punct* MENU[] = {
       (t_punct*) &DFU_mode_punct,
       (t_punct*) &USB_DISK_punct,
-      (t_punct*) &USB_SCREEN_punct,
       (t_punct*) &SETTINGS_punct,
       (t_punct*) &EXPLORER_punct,
       (t_punct*) &LIB_61_punct,
@@ -474,7 +469,6 @@ void refresh_menu_text(void) {
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SETTINGS] = (t_punct*) (russian_language ? &RU_SETTINGS_punct : &SETTINGS_punct);
   MENU[MENU_USB_DISK] = (t_punct*) (russian_language ? &RU_USB_DISK_punct : &USB_DISK_punct);
-  MENU[MENU_USB_SCREEN] = (t_punct*) (russian_language ? &RU_USB_SCREEN_punct : &USB_SCREEN_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_EXPLORER] = (t_punct*) (russian_language ? &RU_EXPLORER_punct : &EXPLORER_punct);
   MENU[MENU_DEVELOP]  = (t_punct*) (russian_language ? &RU_DEVELOPMENT_punct : &DEVELOPMENT_punct);

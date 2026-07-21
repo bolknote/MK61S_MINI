@@ -31,7 +31,8 @@ static void test_profiles(void) {
   assert(huge.glyph_height == 6);
   assert(huge.line_gap == 0);
 
-  usb_screen::Surface surface;
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
   surface.begin(usb_screen::profile5x8());
   surface.flush(0);
   assert(surface.active());
@@ -45,7 +46,8 @@ static void test_profiles(void) {
 }
 
 static void test_text_unicode_and_cursor(void) {
-  usb_screen::Surface surface;
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
   surface.begin();
   surface.setCursor(0, 0);
   surface.writeByte('A');
@@ -72,7 +74,8 @@ static void test_text_unicode_and_cursor(void) {
 }
 
 static void test_custom_glyph(void) {
-  usb_screen::Surface surface;
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
   surface.begin();
   const u8 checker[8] = {
     0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A,
@@ -91,7 +94,8 @@ static void test_custom_glyph(void) {
 }
 
 static void test_fullscreen_and_overlay(void) {
-  usb_screen::Surface surface;
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
   surface.begin();
   u8 bitmap[usb_screen::FRAME_BYTES] = {};
   bitmap[0] = 0x81;
@@ -118,7 +122,8 @@ static void test_fullscreen_and_overlay(void) {
 }
 
 static void test_update_batching(void) {
-  usb_screen::Surface surface;
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
   surface.begin();
   surface.flush(0);
   const u32 before = surface.revision();

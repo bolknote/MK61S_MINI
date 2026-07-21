@@ -265,7 +265,13 @@ class MK61Display : public Print {
     static constexpr u8 RENDER_PAGE_HEIGHT = 8;
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_WIDTH = 32;
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_HEIGHT = 16;
+#if MK61_ENABLE_USB_SCREEN
+    // In normal UC1609 mode the renderer needs only the first 192-byte page.
+    // USB Screen reuses the same allocation as its complete 192x64 framebuffer.
+    uint8_t render_buffer[usb_screen::FRAME_BYTES];
+#else
     uint8_t render_buffer[lcd_display::PIXEL_WIDTH];
+#endif
     ERM19264_UC1609 lcd;
     ERM19264_UC1609_Screen render_screen;
     text_screen::Grid grid;
@@ -326,6 +332,10 @@ class MK61Display : public Print {
     bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
 #endif
 #if MK61_ENABLE_USB_SCREEN
+#if defined(MK61_DISPLAY_LCD1602)
+    // LCD1602 has no readable graphics RAM, so it needs dedicated backing.
+    u8 usb_framebuffer[usb_screen::FRAME_BYTES];
+#endif
     usb_screen::Surface usb_surface;
     bool usb_screen_active;
     bool physical_screen_enabled;

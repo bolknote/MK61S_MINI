@@ -117,6 +117,7 @@ namespace kbd {
 }
 
 static u32 focal_host_millis;
+static int focal_host_background_service_count;
 u32 millis(void) { return focal_host_millis += 17; }
 void delay(usize ms) { focal_host_millis += (u32) ms; }
 
@@ -182,6 +183,14 @@ using namespace kbd;
 #ifndef FOCAL_HOST_TEST
 extern void idle_main_process(void);
 #endif
+
+static void focal_service_background(void) {
+#ifndef FOCAL_HOST_TEST
+  idle_main_process();
+#else
+  focal_host_background_service_count++;
+#endif
+}
 
 static constexpr int FOCAL_PROGRAM_COUNT       = 1;
 static constexpr int FOCAL_SOURCE_SIZE         = 1537;
@@ -719,8 +728,8 @@ static void focal_show_stopped(void) {
 }
 
 static bool focal_runtime_interrupted(void) {
+  focal_service_background();
 #ifndef FOCAL_HOST_TEST
-  idle_main_process();
   kbd::scan_and_debounced();
   const i32 key = kbd::last_key();
   if(key == KEY_ESC || key == KEY_ESC_PRESS) {
@@ -1820,6 +1829,7 @@ static void focal_wait_keys_released(void) {
   while(kbd::get_key() >= 0) {
   }
   while(kbd::any_key_pressed()) {
+    focal_service_background();
     kbd::scan_and_debounced();
     delay(10);
   }
@@ -1829,6 +1839,7 @@ static void focal_wait_keys_released(void) {
 static i32 focal_wait_for_fresh_key(void) {
   focal_wait_keys_released();
   while(true) {
+    focal_service_background();
     const i32 scan_code = kbd::scan_and_debounced();
     if(scan_code >= 0) {
       kbd::exclude_before(scan_code);
@@ -3177,6 +3188,11 @@ static void EditFocalSlot(int slot,
 
   kbd::debounce_init();
   while(true) {
+#ifndef FOCAL_HOST_TEST
+    // The editor owns the foreground loop, so it must keep USB Screen
+    // heartbeats, virtual keys and frame transmission alive itself.
+    focal_service_background();
+#endif
     const u32 now = millis();
     if(editor.sms.active && now >= editor.sms.deadline_ms) {
       text_editor::sms_reset(editor.sms);
@@ -3338,6 +3354,15 @@ extern "C" void FocalTestReset(void) {
 #ifdef FOCAL_HOST_TEST
   mk61_ref::host_reset();
   kbd::host_alpha_pressed = false;
+  focal_host_background_service_count = 0;
+#endif
+}
+
+extern "C" int FocalTestBackgroundServiceCount(void) {
+#ifdef FOCAL_HOST_TEST
+  return focal_host_background_service_count;
+#else
+  return 0;
 #endif
 }
 

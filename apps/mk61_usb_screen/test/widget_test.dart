@@ -19,6 +19,7 @@ void main() {
     expect(find.text('MK61 USB Screen'), findsOneWidget);
     expect(find.text('Виртуальный дисплей'), findsOneWidget);
     expect(find.text('Как подключить'), findsOneWidget);
+    expect(find.text('Терминал'), findsOneWidget);
   });
 
   for (final size in const [Size(500, 800), Size(720, 640), Size(1280, 900)]) {

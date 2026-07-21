@@ -1278,9 +1278,12 @@ static bool dialog_item_at(u16 directory_id, DialogMode mode,
 
 static const char* dialog_item_name(const DialogItem& item) {
   switch(item.kind) {
-    case DialogItemKind::THIS_DIRECTORY: return "[HERE]";
-    case DialogItemKind::NEW_FILE: return "+NEW";
-    case DialogItemKind::NEW_DIRECTORY: return "+FOLDER";
+    case DialogItemKind::THIS_DIRECTORY:
+      return library_mk61::text("This folder", "Эта папка");
+    case DialogItemKind::NEW_FILE:
+      return library_mk61::text("New file", "Новый файл");
+    case DialogItemKind::NEW_DIRECTORY:
+      return library_mk61::text("New folder", "Новая папка");
     case DialogItemKind::ENTRY: return item.entry.name;
   }
   return "?";
@@ -1882,6 +1885,13 @@ static constexpr t_punct RU_EXPLORER_PUNCT = {.size = 15, .action = &explorer_ac
 static constexpr t_punct M61_STORAGE_PUNCT = {.size = 9, .action = &m61_storage_action, .text = "M61 files"};
 static constexpr t_punct RU_M61_STORAGE_PUNCT = {.size = 15, .action = &m61_storage_action, .text = "Файлы МК-61"};
 
+#if MK61_ENABLE_USB_SCREEN
+static constexpr t_punct USB_SCREEN_DEV_PUNCT = {
+    .size = 10, .action = &UsbScreenMode, .text = "USB Screen"};
+static constexpr t_punct RU_USB_SCREEN_DEV_PUNCT = {
+    .size = 15, .action = &UsbScreenMode, .text = "USB-экран"};
+#endif
+
 #if MK61_ENABLE_FOCAL
 static constexpr t_punct FOCAL_DEV_PUNCT = {.size = 11, .action = &focal_action, .text = "FOCAL tools"};
 static constexpr t_punct RU_FOCAL_DEV_PUNCT = {.size = 15, .action = &focal_action, .text = "ФОКАЛ"};
@@ -2118,6 +2128,10 @@ bool development_select(void) {
 #endif
 #if MK61_ENABLE_TINYBASIC
     (t_punct*) (library_mk61::language_is_ru() ? &RU_TINYBASIC_DEV_PUNCT : &TINYBASIC_DEV_PUNCT),
+#endif
+#if MK61_ENABLE_USB_SCREEN
+    (t_punct*) (library_mk61::language_is_ru()
+        ? &RU_USB_SCREEN_DEV_PUNCT : &USB_SCREEN_DEV_PUNCT),
 #endif
   };
 

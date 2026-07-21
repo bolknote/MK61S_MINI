@@ -56,6 +56,7 @@ printf '%s\n' \
   'MK61_ENABLE_FOCAL=0' \
   'MK61_ENABLE_TINYBASIC=1' \
   'MK61_ENABLE_WBMP_VIEWER=0' \
+  'MK61_ENABLE_USB_SCREEN=0' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1' \
   'MK61_USER_EXPLORER_SHORTCUT=0' \
   'MK61_MATH_BACKEND=1' > "$config_file"
@@ -128,9 +129,10 @@ grep -q '^PROFILE=classic-v3$' <<< "$config"
 grep -q '^DFU_UTIL_PATH=/bin/sh$' <<< "$config"
 grep -q '^MK61_ENABLE_FOCAL=0$' <<< "$config"
 grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$config"
+grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
 grep -q '^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$' <<< "$config"
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$config"
-grep -q -- 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_FOCAL=0 .*MK61_MATH_BACKEND=1$' <<< "$config"
+grep -q -- 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_FOCAL=0 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1$' <<< "$config"
 grep -q '^PLATFORM=classic-v3$' "$config_file"
 grep -q '^SCREEN=uc1609$' "$config_file"
 grep -q '^DFU_UTIL_PATH=/bin/sh$' "$config_file"
@@ -153,5 +155,6 @@ grep -q '^PROFILE=mini-v2-a02$' <<< "$legacy"
 grep -q '^PLATFORM=mini-v2$' "$legacy_config"
 grep -q '^SCREEN=lcd1602-a02$' "$legacy_config"
 grep -q '^MK61_ENABLE_FOCAL=1$' "$legacy_config"
+grep -q '^MK61_ENABLE_USB_SCREEN=0$' "$legacy_config"
 
 printf 'firmware_tool_tests: ok\n'

@@ -53,7 +53,7 @@ extern bool FontSetup(void);
 extern bool ResetDevice(void);
 
 namespace library_mk61 {
-  static constexpr int MAIN_MENU_COUNT = 11;
+  static constexpr int MAIN_MENU_COUNT = 10;
   extern  const int       COUNT_PUNCTS;
   extern  t_punct*        MENU[MAIN_MENU_COUNT];
 

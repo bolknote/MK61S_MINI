@@ -388,13 +388,14 @@ Status PacketEncoder::encode(MessageType type, u8 flags, u16 sequence,
   const usize checked_size = HEADER_SIZE + payload_size;
   write_u16_le(raw + checked_size, crc16_ccitt(raw, checked_size));
 
+  framed[0] = 0;
   usize cobs_size = 0;
   const Status status = cobs_encode(raw, checked_size + CRC_SIZE,
-                                    framed, MAX_FRAMED_PACKET - 1,
+                                    framed + 1, MAX_FRAMED_PACKET - 2,
                                     cobs_size);
   if(status != Status::OK) return status;
-  framed[cobs_size] = 0;
-  framed_size = cobs_size + 1;
+  framed[cobs_size + 1] = 0;
+  framed_size = cobs_size + 2;
   return Status::OK;
 }
 
@@ -456,6 +457,48 @@ PushResult StreamParser::push(u8 value) {
   if(last_status != Status::OK) return PushResult::ERROR;
   last_status = parse_decoded(decoded_size);
   return last_status == Status::OK ? PushResult::PACKET : PushResult::ERROR;
+}
+
+void MultiplexParser::reset(void) {
+  parser.reset();
+  inside_packet = false;
+  packet_nonempty = false;
+  terminal_value = 0;
+}
+
+MultiplexPushResult MultiplexParser::push(u8 value) {
+  if(!inside_packet) {
+    if(value == 0) {
+      parser.reset();
+      inside_packet = true;
+      packet_nonempty = false;
+      return MultiplexPushResult::NONE;
+    }
+    terminal_value = value;
+    return MultiplexPushResult::TERMINAL_BYTE;
+  }
+
+  if(value != 0) {
+    packet_nonempty = true;
+    const PushResult result = parser.push(value);
+    return result == PushResult::ERROR
+         ? MultiplexPushResult::ERROR
+         : MultiplexPushResult::NONE;
+  }
+
+  // Repeated zeroes keep the parser armed. This realigns a connection that
+  // started in the middle of a packet and handles adjacent framed packets.
+  if(!packet_nonempty) {
+    parser.reset();
+    return MultiplexPushResult::NONE;
+  }
+
+  const PushResult result = parser.push(0);
+  inside_packet = false;
+  packet_nonempty = false;
+  if(result == PushResult::PACKET) return MultiplexPushResult::PACKET;
+  if(result == PushResult::ERROR) return MultiplexPushResult::ERROR;
+  return MultiplexPushResult::NONE;
 }
 
 const char* status_text(Status status) {

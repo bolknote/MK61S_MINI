@@ -88,11 +88,11 @@
 #endif
 
 // USB Screen keeps a native 192x64 monochrome framebuffer behind the regular
-// display API.  It is deliberately enabled for every board profile: LCD1602
-// builds switch to the same multi-line graphics surface as UC1609 builds once
-// the desktop client completes the handshake.
+// display API. It is disabled by default because its static buffers cost RAM.
+// Set MK61_ENABLE_USB_SCREEN=1 in the firmware builder (or pass the same -D
+// flag) to add the mode and its Development menu entry.
 #ifndef MK61_ENABLE_USB_SCREEN
-  #define MK61_ENABLE_USB_SCREEN 1
+  #define MK61_ENABLE_USB_SCREEN 0
 #endif
 #if MK61_ENABLE_USB_SCREEN != 0 && MK61_ENABLE_USB_SCREEN != 1
   #error "MK61_ENABLE_USB_SCREEN must be 0 or 1"

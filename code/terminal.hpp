@@ -638,6 +638,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
   public:
+    struct InputResult {
+      i32 key;
+      bool line_complete;
+    };
+
     usize recive_pos;
 
     constexpr class_terminal(void)
@@ -1826,84 +1831,92 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return terminal_protocol::Result::ok();
     }
 
+    InputResult input_handler(u8 rx_char) {
+      // --- escape-последовательности: стрелки листают историю ---
+      if(esc_state == 1) {
+        esc_state = (rx_char == '[') ? 2 : 0;
+        return {-1, false};
+      }
+      if(esc_state == 2) {
+        esc_state = 0;
+        if(!input_overflow) {
+          if(rx_char == 'A') history_key_up();
+          if(rx_char == 'B') history_key_down();
+        }
+        return {-1, false};
+      }
+      if(rx_char == 0x1B) {
+        esc_state = 1;
+        return {-1, false};
+      }
+
+      if(rx_char == CR || rx_char == NL) {
+        if(prev_terminator != 0 && rx_char != prev_terminator) {
+          prev_terminator = 0; // второй символ пары CRLF/LFCR
+          return {-1, false};
+        }
+        prev_terminator = rx_char;
+
+        if(input_overflow) {
+          // Переполненная строка отбрасывается целиком: выполнять обрезанную
+          // команду нельзя (поток может идти и с другого устройства, без
+          // реакции на звуковой сигнал занятости).
+          input_overflow = false;
+          recive_pos = 0;
+          Serial.println();
+          Serial.println("Error: input line too long, command ignored!");
+          print_prompt();
+          return {-1, true};
+        }
+
+        if(recive_pos == 0) { // пустая строка - только новое приглашение
+          Serial.println();
+          print_prompt();
+          return {-1, false};
+        }
+
+        history_add(input_buffer, recive_pos);
+        hist_nav = -1;
+
+        input_buffer[recive_pos++] = CR; // контракт execute(): последний символ CR
+        const terminal_protocol::Result result = execute();
+        print_prompt();
+        return {
+          result.kind == terminal_protocol::ResultKind::KEY ? result.key : -1,
+          true,
+        };
+      }
+      prev_terminator = 0;
+
+      if(rx_char == 0x08 || rx_char == 0x7F) { // Удаление предыдущего символа
+        if(!input_overflow && recive_pos > 0) {
+          recive_pos = utf8_view::previous_offset(input_buffer,
+                                                  (u16) recive_pos,
+                                                  (u16) recive_pos);
+          Serial.print("\b \b");
+        }
+        return {-1, false};
+      }
+
+      // Управляющие символы, кроме табуляции, не буферизуем.
+      if(rx_char < 0x20 && rx_char != '\t') return {-1, false};
+
+      if(input_can_append()) {
+        input_buffer[recive_pos++] = rx_char;
+        Serial.write(rx_char); // эхо
+      } else if(!input_overflow) {
+        input_overflow = true; // сигнал занятости - один раз на строку
+        sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
+      }
+      return {-1, false};
+    }
+
     i32 serial_input_handler() {
       while(Serial.peek() >= 0) { // получен символ
-        const u8 rx_char = Serial.read(); // уберем с буфера
-
-        // --- escape-последовательности: стрелки листают историю ---
-        if(esc_state == 1) {
-          esc_state = (rx_char == '[') ? 2 : 0;
-          continue;
-        }
-        if(esc_state == 2) {
-          esc_state = 0;
-          if(!input_overflow) {
-            if(rx_char == 'A') history_key_up();
-            if(rx_char == 'B') history_key_down();
-          }
-          continue;
-        }
-        if(rx_char == 0x1B) {
-          esc_state = 1;
-          continue;
-        }
-
-        if(rx_char == CR || rx_char == NL) {
-          if(prev_terminator != 0 && rx_char != prev_terminator) {
-            prev_terminator = 0; // второй символ пары CRLF/LFCR
-            continue;
-          }
-          prev_terminator = rx_char;
-
-          if(input_overflow) {
-            // Переполненная строка отбрасывается целиком: выполнять обрезанную
-            // команду нельзя (поток может идти и с другого устройства, без
-            // реакции на звуковой сигнал занятости).
-            input_overflow = false;
-            recive_pos = 0;
-            Serial.println();
-            Serial.println("Error: input line too long, command ignored!");
-            print_prompt();
-            return -1;
-          }
-
-          if(recive_pos == 0) { // пустая строка - только новое приглашение
-            Serial.println();
-            print_prompt();
-            continue;
-          }
-
-          history_add(input_buffer, recive_pos);
-          hist_nav = -1;
-
-          input_buffer[recive_pos++] = CR; // контракт execute(): последний символ CR
-          const terminal_protocol::Result result = execute();
-          print_prompt();
-          // Остаток потока обработается в следующем вызове: каждая строка
-          // выполняется до чтения следующей, пакетный ввод не склеивается.
-          return result.kind == terminal_protocol::ResultKind::KEY ? result.key : -1;
-        }
-        prev_terminator = 0;
-
-        if(rx_char == 0x08 || rx_char == 0x7F) { // Удаление предыдущего символа
-          if(!input_overflow && recive_pos > 0) {
-            recive_pos = utf8_view::previous_offset(input_buffer,
-                                                    (u16) recive_pos,
-                                                    (u16) recive_pos);
-            Serial.print("\b \b");
-          }
-          continue;
-        }
-
-        if(rx_char < 0x20 && rx_char != '\t') continue; // управляющие символы не буферизуем
-
-        if(input_can_append()) {
-          input_buffer[recive_pos++] = rx_char;
-          Serial.write(rx_char); // эхо
-        } else if(!input_overflow) {
-          input_overflow = true; // сигнал занятости - один раз на строку
-          sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
-        }
+        const InputResult result = input_handler((u8) Serial.read());
+        // Остаток потока обработается в следующем вызове: каждая строка
+        // выполняется до чтения следующей, пакетный ввод не склеивается.
+        if(result.line_complete) return result.key;
       }
       return -1;
     }

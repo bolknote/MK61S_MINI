@@ -20,6 +20,7 @@ static constexpr t_time_ms OFFER_INTERVAL_MS = 500;
 static constexpr t_time_ms HEARTBEAT_TIMEOUT_MS = 3000;
 static constexpr t_time_ms ESCAPE_HOLD_MS = 1500;
 static constexpr usize RX_BUDGET_PER_SERVICE = 96;
+static constexpr u16 TERMINAL_RX_CAPACITY = 256;
 
 enum class FrameStage : u8 {
   IDLE,
@@ -35,24 +36,50 @@ struct PendingResponse {
   u8 size;
 };
 
+struct TerminalRxFifo {
+  u8 bytes[TERMINAL_RX_CAPACITY];
+  u16 head;
+  u16 size;
+
+  void clear(void) {
+    head = 0;
+    size = 0;
+  }
+
+  bool push(u8 value) {
+    if(size >= TERMINAL_RX_CAPACITY) return false;
+    const u16 tail = (u16) ((head + size) & (TERMINAL_RX_CAPACITY - 1));
+    bytes[tail] = value;
+    size++;
+    return true;
+  }
+
+  bool pop(u8& value) {
+    if(size == 0) return false;
+    value = bytes[head];
+    head = (u16) ((head + 1) & (TERMINAL_RX_CAPACITY - 1));
+    size--;
+    return true;
+  }
+};
+
+static_assert((TERMINAL_RX_CAPACITY & (TERMINAL_RX_CAPACITY - 1)) == 0,
+              "terminal FIFO capacity must be a power of two");
+
 struct Session {
   State state;
   Event event;
-  usb_screen_protocol::StreamParser parser;
+  usb_screen_protocol::MultiplexParser parser;
   usb_screen_protocol::PacketEncoder encoder;
   usize tx_offset;
   u16 tx_sequence;
   u16 frame_id;
   u16 frame_crc;
   FrameStage frame_stage;
-  usb_screen_protocol::DiffPlan frame_plan;
   u8 frame_run;
-  bool frame_keyframe;
   u32 frame_revision;
   u32 sent_revision;
-  bool previous_valid;
-  bool force_keyframe;
-  u8 previous[usb_screen_protocol::FRAME_BYTES];
+  bool resend_requested;
   u8 snapshot[usb_screen_protocol::FRAME_BYTES];
   u8 rect_payload[usb_screen_protocol::MAX_PAYLOAD_SIZE];
   PendingResponse response;
@@ -62,6 +89,7 @@ struct Session {
   u64 virtual_pressed;
   bool release_all_pending;
   keyboard_core::FixedFifo<keyboard_core::KEY_COUNT * 2> virtual_events;
+  TerminalRxFifo terminal_rx;
 };
 
 static Session session = {};
@@ -129,6 +157,12 @@ static void pumpTx(void) {
   const usize written = Serial.write(session.encoder.data() +
                                      session.tx_offset, chunk);
   if(written <= remaining) session.tx_offset += written;
+  // With no host DTR, USBSerial::write() returns zero although its software
+  // queue reports free space. Do not let an unsent OFFER stall background
+  // work forever; a fresh offer will be generated after reconnection.
+  if(written == 0 && session.state == State::WAITING_FOR_HOST) {
+    session.tx_offset = session.encoder.size();
+  }
 }
 
 static void scheduleReleaseAll(void) {
@@ -157,17 +191,15 @@ static void setEvent(Event event) {
 
 static void resetFrameTransfer(void) {
   session.frame_stage = FrameStage::IDLE;
-  session.frame_plan = {};
   session.frame_run = 0;
-  session.frame_keyframe = false;
 }
 
 static void restorePhysicalAndWait(Event event) {
   if(main_lcd().usbScreenActive()) main_lcd().leaveUsbScreen();
   scheduleReleaseAll();
   resetFrameTransfer();
-  session.previous_valid = false;
-  session.force_keyframe = true;
+  session.resend_requested = true;
+  session.tx_offset = session.encoder.size();
   session.response = {};
   session.state = State::WAITING_FOR_HOST;
   session.next_offer_ms = 0;
@@ -179,8 +211,7 @@ static void attach(t_time_ms now) {
   if(!main_lcd().enterUsbScreen()) return;
   session.state = State::ATTACHED;
   session.last_host_packet_ms = now;
-  session.previous_valid = false;
-  session.force_keyframe = true;
+  session.resend_requested = true;
   resetFrameTransfer();
   u8 caps[usb_screen_protocol::CAPS_PAYLOAD_SIZE] = {};
   fillCapabilities(caps, true);
@@ -236,7 +267,7 @@ static void handlePacket(const usb_screen_protocol::PacketView& packet,
     case MessageType::PONG:
       break;
     case MessageType::REQUEST_KEYFRAME:
-      session.force_keyframe = true;
+      session.resend_requested = true;
       break;
     case MessageType::KEY_EVENT:
       handleKeyEvent(packet);
@@ -254,10 +285,13 @@ static void readRx(t_time_ms now) {
   while(budget-- != 0 && Serial.available() > 0) {
     const int value = Serial.read();
     if(value < 0) break;
-    const usb_screen_protocol::PushResult result =
+    const usb_screen_protocol::MultiplexPushResult result =
       session.parser.push((u8) value);
-    if(result == usb_screen_protocol::PushResult::PACKET) {
+    if(result == usb_screen_protocol::MultiplexPushResult::PACKET) {
       handlePacket(session.parser.packet(), now);
+    } else if(result ==
+              usb_screen_protocol::MultiplexPushResult::TERMINAL_BYTE) {
+      (void) session.terminal_rx.push(session.parser.terminalByte());
     }
   }
 }
@@ -268,21 +302,13 @@ static bool beginFrame(void) {
   if(current == NULL) return false;
   memcpy(session.snapshot, current, sizeof(session.snapshot));
   session.frame_revision = main_lcd().usbScreenRevision();
-  const bool keyframe = session.force_keyframe || !session.previous_valid;
-  const usb_screen_protocol::Status status = usb_screen_protocol::plan_diff(
-    session.previous_valid ? session.previous : session.snapshot,
-    session.snapshot, session.frame_plan, keyframe);
-  if(status != usb_screen_protocol::Status::OK) return false;
-  if(session.frame_plan.count == 0) {
-    session.sent_revision = session.frame_revision;
-    session.force_keyframe = false;
-    return false;
-  }
+  // Clear only the request captured by this snapshot. A new request arriving
+  // while the frame is in flight remains set for the following transfer.
+  session.resend_requested = false;
   session.frame_id++;
   session.frame_crc = usb_screen_protocol::crc16_ccitt(
     session.snapshot, sizeof(session.snapshot));
   session.frame_run = 0;
-  session.frame_keyframe = session.frame_plan.keyframe;
   session.frame_stage = FrameStage::BEGIN;
   return true;
 }
@@ -295,8 +321,8 @@ static bool queueFramePacket(void) {
     case FrameStage::BEGIN: {
       u8 payload[usb_screen_protocol::FRAME_BEGIN_PAYLOAD_SIZE] = {};
       writeU16(payload, session.frame_id);
-      payload[2] = session.frame_keyframe ? 1 : 0;
-      payload[3] = session.frame_plan.count;
+      payload[2] = 1;
+      payload[3] = usb_screen_protocol::PAGE_COUNT;
       if(!queuePacket(MessageType::FRAME_BEGIN, payload, sizeof(payload))) {
         return false;
       }
@@ -305,12 +331,13 @@ static bool queueFramePacket(void) {
     }
 
     case FrameStage::RECTS: {
-      if(session.frame_run >= session.frame_plan.count) {
+      if(session.frame_run >= usb_screen_protocol::PAGE_COUNT) {
         session.frame_stage = FrameStage::END;
         return queueFramePacket();
       }
-      const usb_screen_protocol::PageRun area =
-        session.frame_plan.runs[session.frame_run];
+      const usb_screen_protocol::PageRun area = {
+        0, session.frame_run, (u8) usb_screen_protocol::SCREEN_WIDTH,
+      };
       const u8* pixels = session.snapshot +
         (usize) area.page * usb_screen_protocol::SCREEN_WIDTH + area.x;
       usize payload_size = 0;
@@ -319,7 +346,7 @@ static bool queueFramePacket(void) {
            session.frame_id, area, pixels, session.rect_payload,
            sizeof(session.rect_payload), payload_size, codec) !=
          usb_screen_protocol::Status::OK) {
-        session.force_keyframe = true;
+        session.resend_requested = true;
         resetFrameTransfer();
         return false;
       }
@@ -338,9 +365,6 @@ static bool queueFramePacket(void) {
       if(!queuePacket(MessageType::FRAME_END, payload, sizeof(payload))) {
         return false;
       }
-      memcpy(session.previous, session.snapshot, sizeof(session.previous));
-      session.previous_valid = true;
-      session.force_keyframe = false;
       session.sent_revision = session.frame_revision;
       resetFrameTransfer();
       return true;
@@ -376,7 +400,7 @@ static void scheduleTx(t_time_ms now) {
     (void) queueFramePacket();
     return;
   }
-  if(session.force_keyframe || !session.previous_valid ||
+  if(session.resend_requested ||
      main_lcd().usbScreenRevision() != session.sent_revision) {
     if(beginFrame()) (void) queueFramePacket();
   }
@@ -409,12 +433,12 @@ bool start(void) {
   session.tx_sequence = 0;
   session.frame_id = 0;
   session.sent_revision = 0;
-  session.previous_valid = false;
-  session.force_keyframe = true;
+  session.resend_requested = true;
   session.response = {};
   session.next_offer_ms = 0;
   session.last_host_packet_ms = millis();
   session.escape_pressed_ms = 0;
+  session.terminal_rx.clear();
   resetFrameTransfer();
   return true;
 }
@@ -424,9 +448,11 @@ void cancel(void) {
   if(main_lcd().usbScreenActive()) main_lcd().leaveUsbScreen();
   scheduleReleaseAll();
   resetFrameTransfer();
+  session.tx_offset = session.encoder.size();
   session.response = {};
   session.state = State::IDLE;
   session.escape_pressed_ms = 0;
+  session.terminal_rx.clear();
   setEvent(Event::EXITED);
 }
 
@@ -449,6 +475,11 @@ void service(void) {
 State state(void) { return session.state; }
 bool active(void) { return session.state != State::IDLE; }
 bool attached(void) { return session.state == State::ATTACHED; }
+bool wireBusy(void) { return txPending(); }
+
+bool takeTerminalByte(u8& value) {
+  return session.terminal_rx.pop(value);
+}
 
 Event takeEvent(void) {
   const Event event = session.event;

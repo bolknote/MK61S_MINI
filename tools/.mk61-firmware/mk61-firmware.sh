@@ -47,6 +47,7 @@ CLI_PROFILE=0
 ENABLE_FOCAL=1
 ENABLE_TINYBASIC=1
 ENABLE_WBMP_VIEWER=1
+ENABLE_USB_SCREEN=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
 ENABLE_USER_EXPLORER=1
 ENABLE_CORE_MATH=0
@@ -1207,6 +1208,9 @@ load_config() {
       MK61_ENABLE_WBMP_VIEWER)
         boolean_valid "$value" && ENABLE_WBMP_VIEWER=$value
         ;;
+      MK61_ENABLE_USB_SCREEN)
+        boolean_valid "$value" && ENABLE_USB_SCREEN=$value
+        ;;
       MK61_ENABLE_EXTENDED_FONT_SETTINGS)
         boolean_valid "$value" && ENABLE_EXTENDED_FONT_SETTINGS=$value
         ;;
@@ -1247,6 +1251,7 @@ save_config() {
     printf 'MK61_ENABLE_FOCAL=%s\n' "$ENABLE_FOCAL"
     printf 'MK61_ENABLE_TINYBASIC=%s\n' "$ENABLE_TINYBASIC"
     printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
+    printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
     printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
     printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
     printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
@@ -1282,6 +1287,7 @@ compile_option_flags() {
   printf '%s' "-DMK61_ENABLE_FOCAL=$ENABLE_FOCAL" \
     " -DMK61_ENABLE_TINYBASIC=$ENABLE_TINYBASIC" \
     " -DMK61_ENABLE_WBMP_VIEWER=$ENABLE_WBMP_VIEWER" \
+    " -DMK61_ENABLE_USB_SCREEN=$ENABLE_USB_SCREEN" \
     " -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ENABLE_EXTENDED_FONT_SETTINGS" \
     " -DMK61_USER_EXPLORER_SHORTCUT=$ENABLE_USER_EXPLORER" \
     " -DMK61_MATH_BACKEND=$ENABLE_CORE_MATH"
@@ -1294,10 +1300,11 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL  %s TinyBASIC  %s WBMP  %s шрифты  %s USER  %s CORE math' \
+  printf '%s FOCAL  %s TinyBASIC  %s WBMP  %s USB  %s шрифты  %s USER  %s CORE math' \
     "$(checkbox_marker "$ENABLE_FOCAL")" \
     "$(checkbox_marker "$ENABLE_TINYBASIC")" \
     "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
+    "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")" \
     "$(checkbox_marker "$ENABLE_CORE_MATH")"
@@ -1307,6 +1314,7 @@ compile_options_details() {
   printf '%s FOCAL (MK61_ENABLE_FOCAL)\n' "$(checkbox_marker "$ENABLE_FOCAL")"
   printf '%s TinyBASIC (MK61_ENABLE_TINYBASIC)\n' "$(checkbox_marker "$ENABLE_TINYBASIC")"
   printf '%s WBMP viewer (MK61_ENABLE_WBMP_VIEWER)\n' "$(checkbox_marker "$ENABLE_WBMP_VIEWER")"
+  printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
   printf '%s расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)\n' \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
   printf '%s USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)\n' \
@@ -1328,6 +1336,7 @@ show_config() {
   printf 'MK61_ENABLE_FOCAL=%s\n' "$ENABLE_FOCAL"
   printf 'MK61_ENABLE_TINYBASIC=%s\n' "$ENABLE_TINYBASIC"
   printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
+  printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
   printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
   printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
   printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
@@ -1405,6 +1414,7 @@ choose_compile_options() {
     focal      'FOCAL · MK61_ENABLE_FOCAL' "$(option_state "$ENABLE_FOCAL")" \
     tinybasic  'TinyBASIC · MK61_ENABLE_TINYBASIC' "$(option_state "$ENABLE_TINYBASIC")" \
     wbmp       'WBMP viewer · MK61_ENABLE_WBMP_VIEWER' "$(option_state "$ENABLE_WBMP_VIEWER")" \
+    usb_screen 'USB-экран · MK61_ENABLE_USB_SCREEN' "$(option_state "$ENABLE_USB_SCREEN")" \
     fonts      'Расширенные настройки шрифта' "$(option_state "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     explorer   'Клавиша USER открывает Explorer' "$(option_state "$ENABLE_USER_EXPLORER")" \
     core_math  'Математика CORE вместо libm' "$(option_state "$ENABLE_CORE_MATH")") || return 1
@@ -1412,6 +1422,7 @@ choose_compile_options() {
   ENABLE_FOCAL=0
   ENABLE_TINYBASIC=0
   ENABLE_WBMP_VIEWER=0
+  ENABLE_USB_SCREEN=0
   ENABLE_EXTENDED_FONT_SETTINGS=0
   ENABLE_USER_EXPLORER=0
   ENABLE_CORE_MATH=0
@@ -1420,6 +1431,7 @@ choose_compile_options() {
       focal) ENABLE_FOCAL=1 ;;
       tinybasic) ENABLE_TINYBASIC=1 ;;
       wbmp) ENABLE_WBMP_VIEWER=1 ;;
+      usb_screen) ENABLE_USB_SCREEN=1 ;;
       fonts) ENABLE_EXTENDED_FONT_SETTINGS=1 ;;
       explorer) ENABLE_USER_EXPLORER=1 ;;
       core_math) ENABLE_CORE_MATH=1 ;;

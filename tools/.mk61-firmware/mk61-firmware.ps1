@@ -77,6 +77,7 @@ $script:State = [ordered]@{
     EnableFocal = 1
     EnableTinyBasic = 1
     EnableWbmp = 1
+    EnableUsbScreen = 0
     EnableFonts = 0
     EnableExplorer = 1
     EnableCoreMath = 0
@@ -234,6 +235,7 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_FOCAL=$($script:State.EnableFocal)"
         "-DMK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)"
         "-DMK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
+        "-DMK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "-DMK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "-DMK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
@@ -253,10 +255,11 @@ function Get-Checkbox {
 }
 
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP  {3} шрифты  {4} USER  {5} CORE math' -f
+    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP  {3} USB  {4} шрифты  {5} USER  {6} CORE math' -f
         (Get-Checkbox $script:State.EnableFocal),
         (Get-Checkbox $script:State.EnableTinyBasic),
         (Get-Checkbox $script:State.EnableWbmp),
+        (Get-Checkbox $script:State.EnableUsbScreen),
         (Get-Checkbox $script:State.EnableFonts),
         (Get-Checkbox $script:State.EnableExplorer),
         (Get-Checkbox $script:State.EnableCoreMath))
@@ -272,6 +275,7 @@ function Get-CompileOptionsDetails {
         "$(Get-Checkbox $script:State.EnableFocal) FOCAL (MK61_ENABLE_FOCAL)"
         "$(Get-Checkbox $script:State.EnableTinyBasic) TinyBASIC (MK61_ENABLE_TINYBASIC)"
         "$(Get-Checkbox $script:State.EnableWbmp) WBMP viewer (MK61_ENABLE_WBMP_VIEWER)"
+        "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
         "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
         "$(Get-Checkbox $script:State.EnableExplorer) USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)"
         $mathText
@@ -294,6 +298,7 @@ function Save-Config {
         "MK61_ENABLE_FOCAL=$($script:State.EnableFocal)"
         "MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)"
         "MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
+        "MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
         "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "MK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
@@ -336,6 +341,7 @@ function Load-Config {
             'MK61_ENABLE_FOCAL' { if (Test-BooleanValue $value) { $script:State.EnableFocal = [int]$value } }
             'MK61_ENABLE_TINYBASIC' { if (Test-BooleanValue $value) { $script:State.EnableTinyBasic = [int]$value } }
             'MK61_ENABLE_WBMP_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableWbmp = [int]$value } }
+            'MK61_ENABLE_USB_SCREEN' { if (Test-BooleanValue $value) { $script:State.EnableUsbScreen = [int]$value } }
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
             'MK61_USER_EXPLORER_SHORTCUT' { if (Test-BooleanValue $value) { $script:State.EnableExplorer = [int]$value } }
             'MK61_MATH_BACKEND' { if (Test-BooleanValue $value) { $script:State.EnableCoreMath = [int]$value } }
@@ -1520,6 +1526,7 @@ function Choose-CompileOptions {
         [pscustomobject]@{ Tag = 'focal'; Label = 'FOCAL · MK61_ENABLE_FOCAL'; State = if ($script:State.EnableFocal) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'tinybasic'; Label = 'TinyBASIC · MK61_ENABLE_TINYBASIC'; State = if ($script:State.EnableTinyBasic) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'wbmp'; Label = 'WBMP viewer · MK61_ENABLE_WBMP_VIEWER'; State = if ($script:State.EnableWbmp) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'usb_screen'; Label = 'USB-экран · MK61_ENABLE_USB_SCREEN'; State = if ($script:State.EnableUsbScreen) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'fonts'; Label = 'Расширенные настройки шрифта'; State = if ($script:State.EnableFonts) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'explorer'; Label = 'Клавиша USER открывает Explorer'; State = if ($script:State.EnableExplorer) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'core_math'; Label = 'Математика CORE вместо libm'; State = if ($script:State.EnableCoreMath) { 'on' } else { 'off' } }
@@ -1530,6 +1537,7 @@ function Choose-CompileOptions {
     $script:State.EnableFocal = [int]($result.Values -contains 'focal')
     $script:State.EnableTinyBasic = [int]($result.Values -contains 'tinybasic')
     $script:State.EnableWbmp = [int]($result.Values -contains 'wbmp')
+    $script:State.EnableUsbScreen = [int]($result.Values -contains 'usb_screen')
     $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
     $script:State.EnableExplorer = [int]($result.Values -contains 'explorer')
     $script:State.EnableCoreMath = [int]($result.Values -contains 'core_math')
@@ -1770,6 +1778,7 @@ function Show-Config {
     [Console]::WriteLine("MK61_ENABLE_FOCAL=$($script:State.EnableFocal)")
     [Console]::WriteLine("MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)")
     [Console]::WriteLine("MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)")
+    [Console]::WriteLine("MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)")
     [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")
     [Console]::WriteLine("MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)")
     [Console]::WriteLine("MK61_MATH_BACKEND=$($script:State.EnableCoreMath)")

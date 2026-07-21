@@ -35,12 +35,17 @@ class LibSerialTransport implements DeviceSerialTransport {
         ..bits = 8
         ..parity = SerialPortParity.none
         ..stopBits = 1;
-      config.setFlowControl(SerialPortFlowControl.none);
       try {
-        port.config = config;
-      } finally {
+        config.setFlowControl(SerialPortFlowControl.none);
+      } catch (_) {
+        // The port does not own the config until it is assigned below.
         config.dispose();
+        rethrow;
       }
+      // libserialport retains the assigned config and releases it from
+      // SerialPort.dispose(). Disposing it here would make closing the port
+      // free the same native pointer twice.
+      port.config = config;
       return _LibSerialConnection(port);
     } catch (_) {
       try {

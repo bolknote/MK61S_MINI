@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +32,7 @@ class _FakeSerialConnection implements DeviceSerialConnection {
   );
   final MkStreamParser _hostParser = MkStreamParser();
   final List<MkPacket> hostPackets = [];
+  final List<int> hostTerminalBytes = [];
   void Function(MkPacket packet)? onHostPacket;
 
   int _deviceSequence = 0;
@@ -44,11 +46,16 @@ class _FakeSerialConnection implements DeviceSerialConnection {
     if (closed) throw StateError('connection is closed');
     expect(timeoutMs, 100);
     final packets = _hostParser.add(bytes);
+    hostTerminalBytes.addAll(_hostParser.takeTerminalBytes());
     hostPackets.addAll(packets);
     for (final packet in packets) {
       onHostPacket?.call(packet);
     }
     return bytes.length;
+  }
+
+  void sendDeviceTerminal(String text) {
+    _input.add(Uint8List.fromList(utf8.encode(text)));
   }
 
   void sendDevicePacket(
@@ -94,11 +101,11 @@ List<int> _capabilities({required bool includeProfile}) => [
   0,
   64,
   8,
-  MkCapability.diff |
-      MkCapability.packBits |
+  MkCapability.packBits |
       MkCapability.keyEvents |
       MkCapability.heartbeat |
-      MkCapability.atomicFrames,
+      MkCapability.atomicFrames |
+      MkCapability.terminalMux,
   0,
   0xb8,
   0x0b,
@@ -157,6 +164,16 @@ void main() {
       final connection = transport.connection;
 
       _attach(controller, connection);
+
+      expect(controller.terminalAvailable, isTrue);
+      expect(controller.sendTerminalLine('ver'), isTrue);
+      expect(utf8.decode(connection.hostTerminalBytes), 'ver\r');
+      connection.sendDeviceTerminal('ver\r\nMK61> ');
+      expect(controller.terminalText, contains('ver'));
+      expect(controller.terminalText, contains('MK61> '));
+      controller.clearTerminal();
+      connection.sendDeviceTerminal('abc\b \bD\rXY\r\n');
+      expect(controller.terminalText, 'XYD\n');
 
       final framebuffer = Uint8List(MkGeometry.frameBytes);
       for (var x = 0; x < MkGeometry.width; x++) {

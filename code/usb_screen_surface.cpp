@@ -30,8 +30,8 @@ TextProfile normalizeProfile(TextProfile profile) {
   return {geometry.rows, geometry.width, geometry.height, geometry.line_gap};
 }
 
-Surface::Surface(void)
-  : framebuffer_{0},
+Surface::Surface(u8* framebuffer)
+  : framebuffer_(framebuffer),
     grid_(),
     custom_glyphs_{{0}},
     custom_valid_{false},
@@ -309,7 +309,7 @@ void Surface::flush(t_time_ms now) {
 }
 
 void Surface::clearPixels(void) {
-  memset(framebuffer_, 0, sizeof(framebuffer_));
+  memset(framebuffer_, 0, FRAME_BYTES);
 }
 
 void Surface::setPixel(i16 x, i16 y, bool foreground) {

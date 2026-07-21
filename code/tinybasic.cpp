@@ -1755,6 +1755,7 @@ static void tinybasic_wait_keys_released(void) {
   while(kbd::get_key() >= 0) {
   }
   while(kbd::any_key_pressed()) {
+    idle_main_process();
     kbd::scan_and_debounced();
     delay(10);
   }
@@ -1764,6 +1765,7 @@ static void tinybasic_wait_keys_released(void) {
 static void tinybasic_wait_after_run(void) {
   tinybasic_wait_keys_released();
   while(true) {
+    idle_main_process();
     const i32 scan_code = kbd::scan_and_debounced();
     if(scan_code >= 0) {
       kbd::exclude_before(scan_code);
@@ -2322,6 +2324,11 @@ static void EditTinyBasicSlot(int slot,
   bool dirty = true;
   kbd::debounce_init();
   while(true) {
+#ifndef TINYBASIC_HOST_TEST
+    // The editor owns the foreground loop, so it must keep USB Screen
+    // heartbeats, virtual keys and frame transmission alive itself.
+    idle_main_process();
+#endif
     const u32 now = millis();
     if(editor.sms.active && now >= editor.sms.deadline_ms) {
       text_editor::sms_reset(editor.sms);

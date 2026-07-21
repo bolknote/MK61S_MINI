@@ -12,7 +12,7 @@ static constexpr u8 PAGE_COUNT = SCREEN_HEIGHT / PAGE_HEIGHT;
 static constexpr usize FRAME_BYTES =
   (usize) SCREEN_WIDTH * SCREEN_HEIGHT / 8;
 
-static constexpr u8 PROTOCOL_VERSION = 1;
+static constexpr u8 PROTOCOL_VERSION = 2;
 static constexpr u8 MAGIC_0 = 'M';
 static constexpr u8 MAGIC_1 = 'S';
 static constexpr usize HEADER_SIZE = 9;
@@ -20,10 +20,11 @@ static constexpr usize CRC_SIZE = 2;
 static constexpr usize MAX_PAYLOAD_SIZE = 224;
 static constexpr usize MAX_RAW_PACKET =
   HEADER_SIZE + MAX_PAYLOAD_SIZE + CRC_SIZE;
-// COBS adds at most one code byte per 254 input bytes. One extra byte is the
-// zero delimiter used on the CDC byte stream.
+// COBS adds at most one code byte per 254 input bytes. USB Screen v2 wraps
+// every packet in leading and trailing zeroes, leaving all non-framed bytes
+// available to the interactive terminal on the same CDC byte stream.
 static constexpr usize MAX_FRAMED_PACKET =
-  MAX_RAW_PACKET + (MAX_RAW_PACKET / 254) + 2;
+  MAX_RAW_PACKET + (MAX_RAW_PACKET / 254) + 3;
 
 static constexpr usize RECT_HEADER_SIZE = 6;
 static constexpr u8 MAX_DIFF_RUNS = 32;
@@ -57,11 +58,12 @@ enum Capability : u16 {
   CAP_KEY_EVENTS = 1U << 2,
   CAP_HEARTBEAT = 1U << 3,
   CAP_ATOMIC_FRAMES = 1U << 4,
+  CAP_TERMINAL_MUX = 1U << 5,
 };
 
 static constexpr u16 CAPABILITIES =
-  CAP_DIFF | CAP_PACKBITS | CAP_KEY_EVENTS | CAP_HEARTBEAT |
-  CAP_ATOMIC_FRAMES;
+  CAP_PACKBITS | CAP_KEY_EVENTS | CAP_HEARTBEAT | CAP_ATOMIC_FRAMES |
+  CAP_TERMINAL_MUX;
 static constexpr usize OFFER_PAYLOAD_SIZE = 10;
 static constexpr usize CAPS_PAYLOAD_SIZE = 14;
 static constexpr usize FRAME_BEGIN_PAYLOAD_SIZE = 4;
@@ -93,6 +95,13 @@ enum class Status : u8 {
 enum class PushResult : u8 {
   NONE,
   PACKET,
+  ERROR,
+};
+
+enum class MultiplexPushResult : u8 {
+  NONE,
+  PACKET,
+  TERMINAL_BYTE,
   ERROR,
 };
 
@@ -197,6 +206,28 @@ class StreamParser {
     Status last_status;
 
     Status parse_decoded(usize decoded_size);
+};
+
+// Splits a v2 CDC stream into 0/COBS/0 packets and raw terminal bytes. The
+// contained StreamParser owns all packet storage, so this wrapper adds only
+// framing state and one returned terminal byte.
+class MultiplexParser {
+  public:
+    constexpr MultiplexParser(void)
+      : parser(), inside_packet(false), packet_nonempty(false),
+        terminal_value(0) {}
+
+    void reset(void);
+    MultiplexPushResult push(u8 value);
+    const PacketView& packet(void) const { return parser.packet(); }
+    u8 terminalByte(void) const { return terminal_value; }
+    Status status(void) const { return parser.status(); }
+
+  private:
+    StreamParser parser;
+    bool inside_packet;
+    bool packet_nonempty;
+    u8 terminal_value;
 };
 
 const char* status_text(Status status);

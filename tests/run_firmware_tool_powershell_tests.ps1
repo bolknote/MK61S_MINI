@@ -65,6 +65,7 @@ try {
         'MK61_ENABLE_FOCAL=0'
         'MK61_ENABLE_TINYBASIC=1'
         'MK61_ENABLE_WBMP_VIEWER=0'
+        'MK61_ENABLE_USB_SCREEN=0'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1'
         'MK61_USER_EXPLORER_SHORTCUT=0'
         'MK61_MATH_BACKEND=1'
@@ -79,8 +80,9 @@ try {
     Assert-True ($configText -match '(?m)^DFU_UTIL_PATH=C:\\Tools\\dfu-util\.exe$') 'DFU path was not preserved'
     Assert-True ($configText -match '(?m)^STM32_CUBE_PROGRAMMER_PATH=C:\\ST\\STM32_Programmer_CLI\.exe$') 'STM32CubeProgrammer path was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_FOCAL=0$') 'FOCAL flag was not preserved'
+    Assert-True ($configText -match '(?m)^MK61_ENABLE_USB_SCREEN=0$') 'USB Screen flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$') 'font flag was not preserved'
-    Assert-True ($configText -match 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_MATH_BACKEND=1') 'compile flags differ'
+    Assert-True ($configText -match 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1') 'compile flags differ'
 
     $override = Invoke-Tool @('--profile','mini-v3-a00','--show-config')
     Assert-True (($override.Output -join "`n") -match '(?m)^PROFILE=mini-v3-a00$') 'CLI profile override failed'
@@ -103,11 +105,13 @@ try {
     . $tool
     $script:IsWindowsHost = $true
     Initialize-TuiGlyphs
+    Assert-True ($script:State.EnableUsbScreen -eq 0) 'USB Screen must be disabled by default'
     Assert-True ($script:Glyphs.Selector -eq '>') 'Windows selector is not conhost-safe'
     Assert-True ($script:Glyphs.CheckOff -eq '[ ]' -and $script:Glyphs.CheckOn -eq '[x]') 'Windows checkbox glyphs are ambiguous'
     Assert-True ($script:Glyphs.RadioOff -eq '( )' -and $script:Glyphs.RadioOn -eq '(*)') 'Windows radio glyphs are ambiguous'
     Assert-True ((Get-Checkbox 0) -eq '[ ]' -and (Get-Checkbox 1) -eq '[x]') 'Windows option summary still uses unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -notmatch '[☐☑]') 'Windows option details still contain unsupported checkbox glyphs'
+    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
     $menuItems = @(
         [pscustomobject]@{ Tag = 'upload' }
         [pscustomobject]@{ Tag = 'platform' }

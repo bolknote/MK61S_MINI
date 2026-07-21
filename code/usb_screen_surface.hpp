@@ -38,7 +38,7 @@ class Surface {
     static constexpr u8 OVERLAY_MAX_WIDTH = 32;
     static constexpr u8 OVERLAY_MAX_HEIGHT = 16;
 
-    Surface(void);
+    explicit Surface(u8* framebuffer);
 
     void begin(TextProfile profile = profile5x8());
     void end(void);
@@ -82,7 +82,7 @@ class Surface {
   private:
     static constexpr t_time_ms CURSOR_BLINK_MS = 500;
 
-    u8 framebuffer_[FRAME_BYTES];
+    u8* framebuffer_;
     text_screen::Grid grid_;
     u8 custom_glyphs_[CUSTOM_GLYPHS][8];
     bool custom_valid_[CUSTOM_GLYPHS];
