@@ -29,7 +29,6 @@ static LcdAnimationState animation_state = {};
 
 } // анонимное пространство имён
 
-#if MK61_LCD1602_BUSY_FLAG
 namespace {
 
 struct LcdParallelBus {
@@ -38,22 +37,34 @@ struct LcdParallelBus {
   PinName enable;
   PinName data[4];
 
-  bool valid(void) const {
-    return rs != NC && rw != NC && enable != NC &&
+  bool validForWrite(void) const {
+    return rs != NC && enable != NC &&
            data[0] != NC && data[1] != NC && data[2] != NC && data[3] != NC;
   }
+
+#if MK61_LCD1602_BUSY_FLAG
+  bool validForRead(void) const {
+    return rw != NC && validForWrite();
+  }
+#endif
 };
 
+#if MK61_LCD1602_BUSY_FLAG
 enum class LcdReadyResult : u8 {
   READY_AFTER_BUSY,
   READY_WITHOUT_BUSY,
   TIMEOUT,
 };
+#endif
 
 static LcdParallelBus lcdParallelBus(void) {
   return {
     digitalPinToPinName(PIN_LCD_RS),
+#if MK61_LCD1602_BUSY_FLAG
     digitalPinToPinName(PIN_LCD_RW),
+#else
+    NC,
+#endif
     digitalPinToPinName(PIN_LCD_E),
     {
       digitalPinToPinName(PIN_LCD_DB4),
@@ -94,12 +105,13 @@ static inline void lcdWriteNibble(const LcdParallelBus& bus, u8 nibble) {
 }
 
 static inline void lcdWriteByte(const LcdParallelBus& bus, u8 value, bool data) {
-  lcdWritePin(bus.rw, false);
+  if(bus.rw != NC) lcdWritePin(bus.rw, false);
   lcdWritePin(bus.rs, data);
   lcdWriteNibble(bus, value >> 4);
   lcdWriteNibble(bus, value & 0x0Fu);
 }
 
+#if MK61_LCD1602_BUSY_FLAG
 static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
   bool saw_busy = false;
   const u32 started_at = micros();
@@ -137,9 +149,9 @@ static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
   lcdSetDataOutput(bus, true);
   return result;
 }
+#endif
 
 } // анонимное пространство имён
-#endif
 
 MK61Display::MK61Display(void)
   : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7),
@@ -479,7 +491,7 @@ void MK61Display::probeBusyFlag(void) {
   digitalWrite(PIN_LCD_RW, LOW);
 
   const LcdParallelBus bus = lcdParallelBus();
-  if(!bus.valid()) return;
+  if(!bus.validForRead()) return;
 
   // Clear выполняется достаточно долго, чтобы надёжно увидеть переход BF 1 -> 0.
   lcdWriteByte(bus, LCD_CLEARDISPLAY, false);
@@ -503,7 +515,7 @@ void MK61Display::sendByte(u8 value, bool data, u32 fallback_delay_us) {
 #if MK61_LCD1602_BUSY_FLAG
   if(busy_flag_active) {
     const LcdParallelBus bus = lcdParallelBus();
-    if(bus.valid()) {
+    if(bus.validForRead()) {
       lcdWriteByte(bus, value, data);
       if(lcdWaitReady(bus, 3000) != LcdReadyResult::TIMEOUT) return;
       busy_flag_active = false;
@@ -515,9 +527,15 @@ void MK61Display::sendByte(u8 value, bool data, u32 fallback_delay_us) {
   }
 #endif
 
-  if(data) lcd.write(value);
-  else lcd.command(value);
-  if(fallback_delay_us != 0) delayMicroseconds(fallback_delay_us);
+  // Не вызываем LiquidCrystal::command/write: в Arduino LiquidCrystal 1.0.7
+  // эти методы ошибочно определены как inline только в .cpp. При -O2 их
+  // внешние символы исчезают, и прошивка не линкуется. Стандартная
+  // инициализация остаётся за библиотекой, последующий обмен идёт через тот же
+  // четырёхбитный интерфейс напрямую.
+  const LcdParallelBus bus = lcdParallelBus();
+  if(!bus.validForWrite()) return;
+  lcdWriteByte(bus, value, data);
+  delayMicroseconds(fallback_delay_us != 0 ? fallback_delay_us : 50);
 }
 
 void MK61Display::sendCommand(u8 value, u32 fallback_delay_us) {
