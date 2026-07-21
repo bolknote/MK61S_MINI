@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <string.h>
 
-extern MK61Display lcd;
 extern void idle_main_process(void);
 
 namespace {
@@ -111,12 +110,12 @@ static char type_marker(program_store::ProgramType type) {
 }
 
 static void print_line(u8 row, const char* text) {
-  lcd.setCursor(0, row);
+  main_lcd().setCursor(0, row);
   u8 used = 0;
   while(text != NULL && used < lcd_display::COLS && text[used] != 0) {
-    lcd.write((u8) text[used++]);
+    main_lcd().write((u8) text[used++]);
   }
-  while(used++ < lcd_display::COLS) lcd.write((u8) ' ');
+  while(used++ < lcd_display::COLS) main_lcd().write((u8) ' ');
 }
 
 static void print_localized_line(u8 row, const char* en, const char* ru) {
@@ -171,19 +170,19 @@ static bool explorer_time_reached(u32 now, u32 target) {
 }
 
 static u8 explorer_type_col(void) {
-  const u8 cols = lcd.cols();
+  const u8 cols = main_lcd().cols();
   return cols > 0 ? (u8) (cols - 1) : 0;
 }
 
 static void explorer_cursor_off(void) {
-  if(lcd.supportsCursor()) lcd.cursorOff();
+  if(main_lcd().supportsCursor()) main_lcd().cursorOff();
 }
 
 static void explorer_cursor_on(u8 cursor_row) {
-  if(cursor_row == EXPLORER_NO_CURSOR_ROW || cursor_row >= lcd.rows() || !lcd.supportsCursor()) return;
-  lcd.cursorOff();
-  lcd.setCursor(explorer_type_col(), cursor_row);
-  lcd.blinkOn();
+  if(cursor_row == EXPLORER_NO_CURSOR_ROW || cursor_row >= main_lcd().rows() || !main_lcd().supportsCursor()) return;
+  main_lcd().cursorOff();
+  main_lcd().setCursor(explorer_type_col(), cursor_row);
+  main_lcd().blinkOn();
 }
 
 static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row = EXPLORER_NO_CURSOR_ROW) {
@@ -365,8 +364,8 @@ static void draw_search_header(const char* search_text) {
 static void draw_search_cursor(const char* search_text) {
   const usize len = text_editor::bounded_length(search_text, program_store::NAME_SIZE);
   const u8 cursor_col = (len + 1 < lcd_display::COLS) ? (u8) (len + 1) : (u8) (lcd_display::COLS - 1);
-  lcd.setCursor(cursor_col, 0);
-  lcd.cursorOn();
+  main_lcd().setCursor(cursor_col, 0);
+  main_lcd().cursorOn();
 }
 
 static void explorer_scroll_reset(ExplorerScroll& scroll) {
@@ -478,7 +477,7 @@ static void draw_explorer_name(const lcd_ru::font_map_t& map,
   if(width == 0) return;
   char window[program_store::NAME_SIZE];
   explorer_name_window(name, offset, width, true, window, sizeof(window));
-  lcd.setCursor(EXPLORER_NAME_COL, row);
+  main_lcd().setCursor(EXPLORER_NAME_COL, row);
   lcd_ru::write_text(map, window, width);
 }
 
@@ -486,8 +485,8 @@ static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
                               const program_store::Entry& entry,
                               u8 scroll_offset) {
   draw_explorer_name(map, entry.name, row, scroll_offset);
-  lcd.setCursor(explorer_type_col(), row);
-  lcd.write((u8) (entry.kind == program_store::NodeKind::DIRECTORY
+  main_lcd().setCursor(explorer_type_col(), row);
+  main_lcd().write((u8) (entry.kind == program_store::NodeKind::DIRECTORY
                     ? '/'
                     : type_marker(entry.type)));
 }
@@ -498,8 +497,8 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
   if(cursor_row_out != NULL) *cursor_row_out = EXPLORER_NO_CURSOR_ROW;
   explorer_cursor_off();
 
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
 
   const int count = explorer_count(directory_id);
   if(count <= 0) {
@@ -512,7 +511,7 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
   }
 
   const bool filtered = search_active(search_text);
-  const int display_rows = lcd.rows();
+  const int display_rows = main_lcd().rows();
   const int first_row = filtered ? 1 : 0;
   const int list_rows = display_rows - first_row;
   if(filtered) draw_search_header(search_text);
@@ -712,15 +711,15 @@ static void build_text_payload_line(const u8* data, u16 len, u16 line_index, cha
 }
 
 static void draw_file_view(const program_store::Entry& entry, const u8* data, u16 len, u16 top_line) {
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
 
   char header[24];
   snprintf(header, sizeof(header), "%s %u %.14s", type_label(entry.type),
            (unsigned) len, entry.name);
   print_line(0, header);
 
-  const u8 display_rows = lcd.rows();
+  const u8 display_rows = main_lcd().rows();
   const u8 payload_rows = display_rows > 1 ? (u8) (display_rows - 1) : 1;
   const u16 total_lines = visual_line_count(data, len);
 
@@ -736,14 +735,14 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
   for(u8 row = 0; row < payload_rows; row++) lcd_ru::scan_text(map, rows[row], lcd_display::COLS);
   lcd_ru::load_custom_font(map);
   for(u8 row = 0; row < payload_rows; row++) {
-    lcd.setCursor(0, (u8) (row + 1));
+    main_lcd().setCursor(0, (u8) (row + 1));
     lcd_ru::write_text(map, rows[row], lcd_display::COLS);
   }
 }
 
 static void show_message(const char* en0, const char* ru0, const char* en1 = "", const char* ru1 = "") {
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
   print_localized_line(0, en0, ru0);
   print_localized_line(1, en1, ru1);
 }
@@ -772,26 +771,26 @@ static void view_font_entry(const program_store::Entry& entry, const u8* data, u
 #endif
 
 #if defined(MK61_DISPLAY_UC1609)
-  if(!lcd.setFontPreview(data, len)) {
+  if(!main_lcd().setFontPreview(data, len)) {
     show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
     wait_explorer_key(false);
     return;
   }
 
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     draw_font_preview_header(entry, face);
-    if(lcd.rows() > 1) print_line(1, "0123456789+-*/");
-    if(lcd.rows() > 2) print_line(2, "ABCDEFGHIJKLMNO");
-    if(lcd.rows() > 3) print_line(3, "abcdefghijklmno");
-    if(lcd.rows() > 4) lcd_ru::print_at(0, 4, "АБВГДЕЖЗИЙКЛМНО", lcd_display::COLS);
-    if(lcd.rows() > 5) lcd_ru::print_at(0, 5, "абвгдежзийклмно", lcd_display::COLS);
-    for(u8 row = 6; row < lcd.rows(); row++) print_line(row, "");
+    if(main_lcd().rows() > 1) print_line(1, "0123456789+-*/");
+    if(main_lcd().rows() > 2) print_line(2, "ABCDEFGHIJKLMNO");
+    if(main_lcd().rows() > 3) print_line(3, "abcdefghijklmno");
+    if(main_lcd().rows() > 4) lcd_ru::print_at(0, 4, "АБВГДЕЖЗИЙКЛМНО", lcd_display::COLS);
+    if(main_lcd().rows() > 5) lcd_ru::print_at(0, 5, "абвгдежзийклмно", lcd_display::COLS);
+    for(u8 row = 6; row < main_lcd().rows(); row++) print_line(row, "");
   }
   wait_explorer_key(false);
-  lcd.clearFontPreview();
-  lcd.clear();
+  main_lcd().clearFontPreview();
+  main_lcd().clear();
 #else
   fmk::Glyph glyphs[8];
   if(fmk::selectPreviewGlyphs(face, glyphs) != 8) {
@@ -807,20 +806,20 @@ static void view_font_entry(const program_store::Entry& entry, const u8* data, u
       wait_explorer_key(false);
       return;
     }
-    lcd.createChar(slot, rows[slot]);
+    main_lcd().createChar(slot, rows[slot]);
   }
 
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     draw_font_preview_header(entry, face);
-    lcd.setCursor(0, 1);
-    for(u8 slot = 0; slot < 8; slot++) lcd.write(slot);
-    for(u8 col = 8; col < lcd_display::COLS; col++) lcd.write((u8) ' ');
+    main_lcd().setCursor(0, 1);
+    for(u8 slot = 0; slot < 8; slot++) main_lcd().write(slot);
+    for(u8 col = 8; col < lcd_display::COLS; col++) main_lcd().write((u8) ' ');
   }
   wait_explorer_key(false);
   lcd_ru::restore_default_font();
-  lcd.clear();
+  main_lcd().clear();
 #endif
 }
 
@@ -833,10 +832,10 @@ static bool apply_font_entry(const program_store::Entry& entry) {
   if(!scratch.ok()) return false;
   u16 len = 0;
   if(!read_entry_data(entry, scratch.data(), scratch.size(), len)) return false;
-  if(!lcd.installFont(scratch.data(), len)) return false;
+  if(!main_lcd().installFont(scratch.data(), len)) return false;
   applied_font_id = entry.id;
   applied_font_suspended = false;
-  library_mk61::set_display_text_profile(lcd.textProfile());
+  library_mk61::set_display_text_profile(main_lcd().textProfile());
   library_mk61::refresh_menu_text();
   library_mk61::defer_settings_state_save();
   return true;
@@ -847,7 +846,7 @@ static bool view_entry(const program_store::Entry& entry) {
   if(entry.type == program_store::ProgramType::IMAGE1) {
 #if MK61_ENABLE_WBMP_VIEWER
     const image1_viewer::Result result =
-      image1_viewer::view_entry(lcd, entry);
+      image1_viewer::view_entry(main_lcd(), entry);
     if(result == image1_viewer::Result::OK) return true;
 
     const char* en = "Image error";
@@ -896,7 +895,7 @@ static bool view_entry(const program_store::Entry& entry) {
     return true;
   }
 
-  const u8 display_rows = lcd.rows();
+  const u8 display_rows = main_lcd().rows();
   const u8 rows = display_rows > 1 ? (u8) (display_rows - 1) : 1;
   const u16 page = rows;
   u16 top_line = 0;
@@ -938,8 +937,8 @@ static void delete_entry(const program_store::Entry& entry) {
 }
 
 static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
   const char* en = "Rename";
   const char* ru = "Новое имя";
   if(prompt == NamePrompt::NEW_DIRECTORY) {
@@ -965,14 +964,14 @@ static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
   lcd_ru::scan_text(map, title, lcd_display::COLS);
   lcd_ru::scan_text(map, line, lcd_display::COLS);
   lcd_ru::load_custom_font(map);
-  lcd.setCursor(0, 0);
+  main_lcd().setCursor(0, 0);
   lcd_ru::write_text(map, title, lcd_display::COLS);
-  lcd.setCursor(0, 1);
+  main_lcd().setCursor(0, 1);
   lcd_ru::write_text(map, line, lcd_display::COLS);
 
   const u8 cursor_col = (u8) (1 + cursor_chars - window);
-  lcd.setCursor(cursor_col, 1);
-  lcd.cursorOn();
+  main_lcd().setCursor(cursor_col, 1);
+  main_lcd().cursorOn();
 }
 
 static bool name_move_left(const char* name, u16 len, u16& cursor) {
@@ -1298,8 +1297,8 @@ static char dialog_item_marker(const DialogItem& item) {
 static void draw_dialog_row(const lcd_ru::font_map_t& map, u8 row,
                             const DialogItem& item, u8 scroll_offset) {
   draw_explorer_name(map, dialog_item_name(item), row, scroll_offset);
-  lcd.setCursor(explorer_type_col(), row);
-  lcd.write((u8) dialog_item_marker(item));
+  main_lcd().setCursor(explorer_type_col(), row);
+  main_lcd().write((u8) dialog_item_marker(item));
 }
 
 static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
@@ -1309,8 +1308,8 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
                                u8& cursor_row) {
   cursor_row = EXPLORER_NO_CURSOR_ROW;
   explorer_cursor_off();
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
   if(count <= 0) {
     explorer_scroll_reset(scroll);
     print_localized_line(0, "Folder empty", "Папка пуста");
@@ -1318,7 +1317,7 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
     return 0;
   }
 
-  const int rows = lcd.rows();
+  const int rows = main_lcd().rows();
   const int visible = count < rows ? count : rows;
   int top = active - visible + 1;
   if(top < 0) top = 0;
@@ -1666,14 +1665,14 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
   ItemMenuAction actions[ITEM_MENU_ACTION_CAPACITY];
   const int count = item_menu_actions(entry, actions,
                                       ITEM_MENU_ACTION_CAPACITY);
-  const int display_rows = lcd.rows();
+  const int display_rows = main_lcd().rows();
   const int visible = (count < display_rows) ? count : display_rows;
   int top = active - visible + 1;
   if(top < 0) top = 0;
   if(top > count - visible) top = count - visible;
 
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
 
   if(library_mk61::language_is_ru()) {
     const int index0 = top;
@@ -2081,11 +2080,11 @@ bool program_store_apply_font(const char* name) {
 
 bool program_store_suspend_font_for_usb(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  if(!lcd.externalFontActive()) {
+  if(!main_lcd().externalFontActive()) {
     return true;
   }
   if(applied_font_id == program_store::INVALID_ID ||
-     !lcd.suspendExternalFontForUsb()) return false;
+     !main_lcd().suspendExternalFontForUsb()) return false;
   applied_font_suspended = true;
 #endif
   return true;
@@ -2100,8 +2099,8 @@ void program_store_restore_font_after_usb(void) {
      entry.type != program_store::ProgramType::FONT ||
      !apply_font_entry(entry)) {
     applied_font_id = program_store::INVALID_ID;
-    lcd.useBuiltinFont();
-    library_mk61::set_display_text_profile(lcd.textProfile());
+    main_lcd().useBuiltinFont();
+    library_mk61::set_display_text_profile(main_lcd().textProfile());
   }
 #endif
 }

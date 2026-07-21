@@ -137,6 +137,12 @@ jobs:
             "$RUNNER_TEMP/mk61s-M"
           cp "$RUNNER_TEMP/build-40th/mk61s-M.ino.bin" "firmware/mk61s-M-40th-f411-${GITHUB_SHA::7}.bin"
 
+      - name: Check pre-setup constructors
+        run: |
+          for elf in "$RUNNER_TEMP"/build-*/mk61s-M.ino.elf; do
+            tests/check_global_constructors.sh "$elf"
+          done
+
       - name: Write checksums
         run: |
           cd firmware

@@ -53,7 +53,7 @@ static constexpr u8 ROWS = 2;
 static constexpr u8 DDRAM_COLS = 40;
 static constexpr u8 DEFAULT_ROWS = ROWS;
 static constexpr u8 MAX_ROWS = ROWS;
-static inline TextProfile defaultTextProfileForRows(u8) {
+static constexpr TextProfile defaultTextProfileForRows(u8) {
   return {ROWS, 5, 8, 0};
 }
 static inline TextProfile normalizeTextProfile(TextProfile) {
@@ -88,15 +88,15 @@ static inline u8 maxLineGap(u8 rows, u8 glyph_height) {
   return (u8) ((PIXEL_HEIGHT - (u16) rows * glyph_height) / (rows - 1));
 }
 
-static inline TextProfile textProfile5x8(void) {
+static constexpr TextProfile textProfile5x8(void) {
   return {FONT_5X8_ROWS, 5, 8, 2};
 }
 
-static inline TextProfile textProfile5x9(void) {
+static constexpr TextProfile textProfile5x9(void) {
   return {FONT_5X9_ROWS, 5, 9, 0};
 }
 
-static inline TextProfile textProfile3x5(void) {
+static constexpr TextProfile textProfile3x5(void) {
   return {FONT_3X5_ROWS, 3, 5, 1};
 }
 
@@ -104,7 +104,7 @@ static inline bool isTextProfile3x5(TextProfile profile) {
   return profile.glyph_width == 3 && profile.glyph_height == 5;
 }
 
-static inline TextProfile defaultTextProfileForRows(u8 rows) {
+static constexpr TextProfile defaultTextProfileForRows(u8 rows) {
   if(rows <= FONT_5X8_ROWS) return textProfile5x8();
   if(rows == FONT_5X9_ROWS) return textProfile5x9();
   return textProfile3x5();
@@ -292,6 +292,7 @@ class MK61DisplayUpdate {
     MK61Display& display;
 };
 
-extern MK61Display lcd;
+extern MK61Display* main_lcd_pointer;
+static inline MK61Display& main_lcd(void) { return *main_lcd_pointer; }
 
 #endif

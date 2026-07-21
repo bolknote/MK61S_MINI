@@ -80,6 +80,11 @@ class SpiNorFlash {
     static bool validCapacity(u32 capacity);
 };
 
+extern SpiNorFlash* external_flash_pointer;
+static inline SpiNorFlash& external_flash(void) {
+  return *external_flash_pointer;
+}
+
 #endif // PROGRAM_STORE_HOST_TEST
 
 #endif

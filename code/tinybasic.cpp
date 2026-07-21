@@ -92,7 +92,8 @@ class MK61DisplayUpdate {
     explicit MK61DisplayUpdate(MK61Display&) {}
 };
 
-MK61Display lcd;
+static MK61Display host_lcd;
+MK61Display& main_lcd(void) { return host_lcd; }
 
 enum class key_state {PRESSED=0, RELEASED=0x40};
 
@@ -170,7 +171,6 @@ static constexpr u16 TB_ROOT_STORE_ID = 0xFFFF;
 
 using namespace kbd;
 
-extern MK61Display lcd;
 #ifndef TINYBASIC_HOST_TEST
 extern void idle_main_process(void);
 #endif
@@ -390,18 +390,18 @@ static bool tinybasic_language_is_ru(void) {
 #endif
 
 static void tb_message_i18n(const char* en0, const char* ru0, const char* en1, const char* ru1) {
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
 #ifndef TINYBASIC_HOST_TEST
   if(tinybasic_language_is_ru()) {
     lcd_ru::print_lines(ru0, ru1);
     return;
   }
 #endif
-  lcd.setCursor(0, 0);
-  lcd.print(en0);
-  lcd.setCursor(0, 1);
-  lcd.print(en1);
+  main_lcd().setCursor(0, 0);
+  main_lcd().print(en0);
+  main_lcd().setCursor(0, 1);
+  main_lcd().print(en1);
   (void) ru0;
   (void) ru1;
 }
@@ -422,11 +422,11 @@ static bool tb_error(const char* error) {
 }
 
 static void tb_display_line(u8 row, const char* text) {
-  MK61DisplayUpdate update(lcd);
-  lcd.setCursor(0, row);
-  for(u8 i = 0; i < 16; i++) lcd.write((u8) ' ');
-  lcd.setCursor(0, row);
-  if(text != NULL) lcd.print(text);
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().setCursor(0, row);
+  for(u8 i = 0; i < 16; i++) main_lcd().write((u8) ' ');
+  main_lcd().setCursor(0, row);
+  if(text != NULL) main_lcd().print(text);
 }
 
 static void tb_append_char(char*& out, char* end, char ch) {
@@ -1307,7 +1307,7 @@ static int tb_line_number_from_value(double value) {
 static void tb_flush_print(void) {
   tb_display_line(tb_print_row, tb_pending_print);
   tb_pending_print[0] = 0;
-  if(tb_print_row + 1 < lcd.rows()) tb_print_row++;
+  if(tb_print_row + 1 < main_lcd().rows()) tb_print_row++;
 }
 
 static bool tb_append_print_range(const char* begin, const char* end) {
@@ -1788,7 +1788,7 @@ static bool tb_run_program(int program_index) {
   }
   if(!tb_compile_source(programs[program_index].source, tb_ast)) return false;
 
-  lcd.clear();
+  main_lcd().clear();
   tb_pending_print[0] = 0;
   tb_print_row = 0;
 
@@ -2084,7 +2084,7 @@ static const text_editor::Options TB_EDITOR_OPTIONS = {
 };
 
 static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
-  text_editor::draw(lcd, source, len, cursor, view_top, sms_cursor);
+  text_editor::draw(main_lcd(), source, len, cursor, view_top, sms_cursor);
 }
 
 static bool tb_confirm_save(void) {
@@ -2117,11 +2117,11 @@ static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
   line[lcd_display::COLS] = 0;
   tb_message_i18n("TinyBASIC name", "Имя", line, line);
 
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   const u8 cursor_col = (u8) (1 + cursor - window);
-  lcd.setCursor(cursor_col, 1);
-  if(lcd.supportsCursor()) lcd.cursorOn();
-  else lcd.write(sms_cursor ? text_editor::SMS_CURSOR_ASCII : text_editor::CURSOR_ASCII);
+  main_lcd().setCursor(cursor_col, 1);
+  if(main_lcd().supportsCursor()) main_lcd().cursorOn();
+  else main_lcd().write(sms_cursor ? text_editor::SMS_CURSOR_ASCII : text_editor::CURSOR_ASCII);
 }
 
 [[maybe_unused]] static bool tb_input_program_name(char* name, usize size) {
@@ -2315,7 +2315,7 @@ static void EditTinyBasicSlot(int slot,
   text_editor::Buffer editor;
   text_editor::init(editor, source, TB_SOURCE_SIZE);
 #if defined(MK61_DISPLAY_LCD1602) && !defined(TINYBASIC_HOST_TEST)
-  text_editor::DisplaySession display_session(lcd);
+  text_editor::DisplaySession display_session(main_lcd());
 #endif
   bool dirty = true;
   kbd::debounce_init();
@@ -2326,14 +2326,14 @@ static void EditTinyBasicSlot(int slot,
       dirty = true;
     }
     if(dirty) {
-      text_editor::ensure_cursor_visible(lcd, source, editor.len, editor.cursor, editor.view_top);
+      text_editor::ensure_cursor_visible(main_lcd(), source, editor.len, editor.cursor, editor.view_top);
       draw_tinybasic_editor(source, editor.len, editor.cursor, editor.view_top, editor.sms.active);
       dirty = false;
     }
     kbd::scan_and_debounced();
     i32 key_code = kbd::get_key(key_state::PRESSED);
     if(key_code < 0) {
-      lcd.flush();
+      main_lcd().flush();
       delay(1);
       continue;
     }
@@ -2355,7 +2355,7 @@ static void EditTinyBasicSlot(int slot,
     const text_editor::KeyResult result = text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, key_code, now);
     dirty = result != text_editor::KeyResult::NONE;
     if(result == text_editor::KeyResult::SAVE) {
-      lcd.cursorOff();
+      main_lcd().cursorOff();
       if(!tb_confirm_save()) return;
       char name[TB_NAME_SIZE];
       memset(name, 0, sizeof(name));
@@ -2508,7 +2508,7 @@ bool TinyBASIC_menu_select(void) {
 #ifdef TINYBASIC_SELF_TEST
 extern "C" void TinyBasicTestReset(void) {
   InitTinyBasic();
-  lcd.clear();
+  main_lcd().clear();
 #ifdef TINYBASIC_HOST_TEST
   mk61_ref::host_reset();
   kbd::host_alpha_pressed = false;
@@ -2549,12 +2549,12 @@ extern "C" void TinyBasicTestSetInput(double value) {
 }
 
 extern "C" void TinyBasicTestRun(int slot) {
-  lcd.clear();
+  main_lcd().clear();
   RunTinyBasic(slot);
 }
 
 extern "C" bool TinyBasicTestRunResult(int slot) {
-  lcd.clear();
+  main_lcd().clear();
   return tb_run_program(slot);
 }
 
@@ -2601,7 +2601,7 @@ extern "C" void TinyBasicTestSetAngleMode(int mode) {
 }
 
 extern "C" const char* TinyBasicTestLcdLine(int row) {
-  return lcd.line((u8) row);
+  return main_lcd().line((u8) row);
 }
 
 extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size) {

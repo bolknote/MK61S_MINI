@@ -17,9 +17,6 @@ static bool interrupt_context(void) {
 #endif
 }
 
-Lease::Lease(void)
-  : owner(Owner::NONE), buffer(0), requested(0), token(0) {}
-
 Lease::Lease(Owner next_owner, usize required) : Lease() {
   (void) acquire(next_owner, required);
 }

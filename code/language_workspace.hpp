@@ -21,7 +21,8 @@ static constexpr usize SIZE = 8192;
 // внешней аренды новым владельцем.
 class [[nodiscard]] Lease {
   public:
-    Lease(void);
+    constexpr Lease(void)
+      : owner(Owner::NONE), memory(nullptr), requested(0), was_fresh(false) {}
     Lease(Owner owner, usize required);
     ~Lease(void);
 

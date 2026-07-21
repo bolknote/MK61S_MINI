@@ -102,7 +102,8 @@ class MK61DisplayUpdate {
     explicit MK61DisplayUpdate(MK61Display&) {}
 };
 
-MK61Display lcd;
+static MK61Display host_lcd;
+MK61Display& main_lcd(void) { return host_lcd; }
 
 enum class key_state {PRESSED=0, RELEASED=0x40};
 
@@ -178,7 +179,6 @@ static constexpr u16 FOCAL_ROOT_STORE_ID = 0xFFFF;
 
 using namespace kbd;
 
-extern MK61Display lcd;
 #ifndef FOCAL_HOST_TEST
 extern void idle_main_process(void);
 #endif
@@ -681,11 +681,11 @@ static const char* focal_error_ru_text(const char* error) {
 }
 
 static void focal_display_line(u8 row, const char* text) {
-  MK61DisplayUpdate update(lcd);
-  lcd.setCursor(0, row);
-  for(u8 i = 0; i < 16; i++) lcd.write((u8) ' ');
-  lcd.setCursor(0, row);
-  if(text != NULL) lcd.print(text);
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().setCursor(0, row);
+  for(u8 i = 0; i < 16; i++) main_lcd().write((u8) ' ');
+  main_lcd().setCursor(0, row);
+  if(text != NULL) main_lcd().print(text);
 }
 
 static void focal_message_i18n(const char* en0, const char* ru0, const char* en1, const char* ru1) {
@@ -693,18 +693,18 @@ static void focal_message_i18n(const char* en0, const char* ru0, const char* en1
   (void) ru0;
   (void) ru1;
 #endif
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
 #ifndef FOCAL_HOST_TEST
   if(focal_language_is_ru()) {
     lcd_ru::print_lines(ru0, ru1);
     return;
   }
 #endif
-  lcd.setCursor(0, 0);
-  lcd.print(en0);
-  lcd.setCursor(0, 1);
-  lcd.print(en1);
+  main_lcd().setCursor(0, 0);
+  main_lcd().print(en0);
+  main_lcd().setCursor(0, 1);
+  main_lcd().print(en1);
 }
 
 static bool focal_error(const char* error) {
@@ -1774,7 +1774,7 @@ static bool focal_execute_print(const char* operand) {
     if(begin < item_end) {
       if((item_end - begin) == 1 && *begin == '!') {
         focal_flush_print_line(output, output_row);
-        if(output_row + 1 < lcd.rows()) output_row++;
+        if(output_row + 1 < main_lcd().rows()) output_row++;
       } else if(*begin == '"') {
         const char* text_begin = begin + 1;
         const char* quote = text_begin;
@@ -2627,11 +2627,11 @@ static bool focal_editor_backspace(char* source, u16& len, u16& cursor, u16 capa
 }
 
 static void focal_editor_ensure_cursor_visible(const char* source, u16 len, u16 cursor, u16& view_top) {
-  text_editor::ensure_cursor_visible(lcd, source, len, cursor, view_top);
+  text_editor::ensure_cursor_visible(main_lcd(), source, len, cursor, view_top);
 }
 
 static void draw_focal_editor(const char* source, u16 len, u16 cursor, u16 view_top, int slot, bool sms_cursor = false) {
-  text_editor::draw(lcd, source, len, cursor, view_top, sms_cursor);
+  text_editor::draw(main_lcd(), source, len, cursor, view_top, sms_cursor);
   (void) slot;
 }
 
@@ -2943,11 +2943,11 @@ static void draw_focal_name_editor(const char* name, u16 cursor, bool sms_cursor
   while(pos < lcd_display::COLS) line[pos++] = ' ';
   line[lcd_display::COLS] = 0;
   focal_message_i18n("FOCAL name", "Имя ФОКАЛ", line, line);
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   const u8 cursor_col = (u8) (1 + cursor - window);
-  lcd.setCursor(cursor_col, 1);
-  if(lcd.supportsCursor()) lcd.cursorOn();
-  else lcd.write(sms_cursor ? SMS_CURSOR_ASCII : text_editor::CURSOR_ASCII);
+  main_lcd().setCursor(cursor_col, 1);
+  if(main_lcd().supportsCursor()) main_lcd().cursorOn();
+  else main_lcd().write(sms_cursor ? SMS_CURSOR_ASCII : text_editor::CURSOR_ASCII);
 }
 
 static bool focal_name_insert_char(char* name, u16& len, u16& cursor, char ch) {
@@ -3169,7 +3169,7 @@ static void EditFocalSlot(int slot,
   text_editor::Buffer editor;
   text_editor::init(editor, source, FOCAL_SOURCE_SIZE);
 #if defined(MK61_DISPLAY_LCD1602) && !defined(FOCAL_HOST_TEST)
-  text_editor::DisplaySession display_session(lcd);
+  text_editor::DisplaySession display_session(main_lcd());
 #endif
   bool dirty = true;
 
@@ -3189,7 +3189,7 @@ static void EditFocalSlot(int slot,
     kbd::scan_and_debounced();
     i32 key_code = kbd::get_key(key_state::PRESSED);
     if(key_code < 0) {
-      lcd.flush();
+      main_lcd().flush();
       delay(1);
       continue;
     }
@@ -3212,7 +3212,7 @@ static void EditFocalSlot(int slot,
     dirty = result != text_editor::KeyResult::NONE;
 
     if(result == text_editor::KeyResult::SAVE) {
-      lcd.cursorOff();
+      main_lcd().cursorOff();
       if(!focal_confirm_save()) return;
       char name[FOCAL_NAME_SIZE];
       memset(name, 0, sizeof(name));
@@ -3332,7 +3332,7 @@ bool FOCAL_menu_select(void) {
 #ifdef FOCAL_SELF_TEST
 extern "C" void FocalTestReset(void) {
   InitFocal();
-  lcd.clear();
+  main_lcd().clear();
 #ifdef FOCAL_HOST_TEST
   mk61_ref::host_reset();
   kbd::host_alpha_pressed = false;
@@ -3453,12 +3453,12 @@ extern "C" bool FocalTestParseInputNumber(const char* text, double* value) {
 }
 
 extern "C" void FocalTestRun(int slot) {
-  lcd.clear();
+  main_lcd().clear();
   (void) RunFocal(slot);
 }
 
 extern "C" int FocalTestRunStatus(int slot) {
-  lcd.clear();
+  main_lcd().clear();
   return (int) RunFocal(slot);
 }
 
@@ -3486,7 +3486,7 @@ extern "C" void FocalTestSetRfEnabled(bool enabled) {
 }
 
 extern "C" const char* FocalTestLcdLine(int row) {
-  return lcd.line((u8) row);
+  return main_lcd().line((u8) row);
 }
 
 extern "C" void FocalTestDrawNewEditor(const char* source, int cursor) {
@@ -3510,7 +3510,7 @@ extern "C" void FocalTestDrawNewEditorSms(const char* source, int cursor) {
 }
 
 extern "C" void FocalTestSetLcdRows(int rows) {
-  lcd.setRows((u8) rows);
+  main_lcd().setRows((u8) rows);
 }
 
 extern "C" int FocalTestEnsureViewTop(const char* source, int cursor, int view_top) {

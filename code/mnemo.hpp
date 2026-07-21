@@ -21,7 +21,8 @@ class key_mnenonic {
 
   public:
 
-    key_mnenonic(void) : on(true), mnemo_pos(0) {};
+    constexpr key_mnenonic(void)
+      : mnemo_buffer{}, on(true), mnemo_pos(0), last_key(0) {}
 
     void    clear_mnemo(void) {
       mnemo_pos = 0;
@@ -111,15 +112,15 @@ class key_mnenonic {
       char mnemo[8];
       if(on) {
         build_mnemo(keycode);
-        MK61DisplayUpdate update(lcd);
+        MK61DisplayUpdate update(main_lcd());
         pad_left_8_char(mnemo, mnemo_buffer);
-        lcd.setCursor(X, Y); lcd.print(mnemo);
+        main_lcd().setCursor(X, Y); main_lcd().print(mnemo);
       }
     }
 
     void  disable(void) {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(X, Y); lcd.print("      "); // Очистить поле
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(X, Y); main_lcd().print("      "); // Очистить поле
       on = false;
     }
 

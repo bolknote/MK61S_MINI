@@ -13,7 +13,6 @@
 #include "rtc_settings_core.hpp"
 #include "virtual_fat.hpp"
 
-extern MK61Display lcd;
 extern t_time_ms runtime_ms;
 extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
@@ -176,8 +175,8 @@ static void build_ru_memory_text(char* out, usize size) {
 
 bool  HardwareInfo(void) {
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     if(language_is_ru()) {
       char chip_line[24] = "ЧИП:";
       char memory_line[32];
@@ -187,11 +186,11 @@ bool  HardwareInfo(void) {
       build_ru_memory_text(memory_line, sizeof(memory_line));
       lcd_ru::print_lines(chip_line, memory_line);
     } else {
-      lcd.setCursor(0, 0);
-      lcd.print("Chip:");
-      lcd.print(chip_name);
-      lcd.setCursor(0,1);
-      lcd.print(mem_text);
+      main_lcd().setCursor(0, 0);
+      main_lcd().print("Chip:");
+      main_lcd().print(chip_name);
+      main_lcd().setCursor(0,1);
+      main_lcd().print(mem_text);
     }
   }
   kbd::get_key_wait();
@@ -209,14 +208,14 @@ bool  InfoData(void) {
     snprintf(line1, sizeof(line1), "ВР:%lu МС", (unsigned long) runtime_ms);
     lcd_ru::print_lines(line0, line1);
   } else {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("cnt:"); lcd.print(read_counter_switch());
-    lcd.print(" sw:"); lcd.print((u8) read_grade_switch());
-    if(flash_is_ok) lcd.print(" W25");
-    lcd.setCursor(0,1);
-    lcd.print("run "); lcd.print(runtime_ms); lcd.print(" ms");
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
+    main_lcd().setCursor(0,0);
+    main_lcd().print("cnt:"); main_lcd().print(read_counter_switch());
+    main_lcd().print(" sw:"); main_lcd().print((u8) read_grade_switch());
+    if(flash_is_ok) main_lcd().print(" W25");
+    main_lcd().setCursor(0,1);
+    main_lcd().print("run "); main_lcd().print(runtime_ms); main_lcd().print(" ms");
   }
   kbd::get_key_wait();
   return false;
@@ -281,6 +280,8 @@ t_punct* MENU[] = {
       (t_punct*) &HARDWARE_punct
 };
 
+static_assert(sizeof(MENU) / sizeof(MENU[0]) == MAIN_MENU_COUNT,
+              "Main menu count mismatch");
 extern const int COUNT_PUNCTS = sizeof(MENU) / sizeof(MENU[0]);
 
 t_punct* SETTINGS_MENU[] = {
@@ -336,7 +337,7 @@ lcd_display::TextProfile display_text_profile(void) {
 
 void set_display_text_profile(lcd_display::TextProfile profile) {
 #if defined(MK61_DISPLAY_UC1609)
-  display_text_profile_state = lcd.externalFontActive() ? profile : lcd_display::normalizeTextProfile(profile);
+  display_text_profile_state = main_lcd().externalFontActive() ? profile : lcd_display::normalizeTextProfile(profile);
 #else
   (void) profile;
   display_text_profile_state = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
@@ -687,25 +688,25 @@ static void drawDateTimeEditor(const rtc_settings::Editor& editor) {
   snprintf(date_line, sizeof(date_line), russian ? "Дата %.10s" : "Date %.10s", editor.text);
   snprintf(time_line, sizeof(time_line), russian ? "Время %.8s" : "Time %.8s", editor.text + 11);
 
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
   lcd_ru::print_lines(date_line, time_line);
 
   const usize position = rtc_settings::active_text_position(editor);
   if(position < 10) {
-    lcd.setCursor((u8) (5 + position), 0);
+    main_lcd().setCursor((u8) (5 + position), 0);
   } else {
     const u8 time_start = russian ? 6 : 5;
-    lcd.setCursor((u8) (time_start + position - 11), 1);
+    main_lcd().setCursor((u8) (time_start + position - 11), 1);
   }
-  if(lcd.supportsCursor()) lcd.cursorOn();
+  if(main_lcd().supportsCursor()) main_lcd().cursorOn();
 }
 
 static void showDateTimeMessage(const char* ru0, const char* en0, const char* ru1, const char* en1,
                                 t_time_ms duration_ms) {
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     lcd_ru::print_lines(
       library_mk61::language_is_ru() ? ru0 : en0,
       library_mk61::language_is_ru() ? ru1 : en1);
@@ -740,7 +741,7 @@ bool SetDateTime(void) {
       continue;
     }
     if(key == KEY_ESC_PRESS) {
-      lcd.cursorOff();
+      main_lcd().cursorOff();
       lcd_ru::restore_default_font();
       return action::MENU_BACK;
     }
@@ -782,19 +783,19 @@ bool   TurnLanguage(void) {
 static void draw_usb_disk_status(const char* ru0, const char* en0, const char* ru1, const char* en1) {
   if(library_mk61::language_is_ru()) {
     {
-      MK61DisplayUpdate update(lcd);
-      lcd.clear();
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().clear();
     }
     lcd_ru::print_lines(ru0, ru1);
     return;
   }
 
-  MK61DisplayUpdate update(lcd);
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(en0);
-  lcd.setCursor(0, 1);
-  lcd.print(en1);
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
+  main_lcd().setCursor(0, 0);
+  main_lcd().print(en0);
+  main_lcd().setCursor(0, 1);
+  main_lcd().print(en1);
 }
 
 bool UsbDiskMode(void) {
@@ -911,13 +912,13 @@ static void printFontSetupLine(u8 row, char mark, const char* text) {
     return;
   }
 
-  lcd.setCursor(0, row);
-  lcd.write((u8) mark);
+  main_lcd().setCursor(0, row);
+  main_lcd().write((u8) mark);
   u8 used = 0;
   while(text[used] != 0 && used < lcd_display::COLS - 1) {
-    lcd.write((u8) text[used++]);
+    main_lcd().write((u8) text[used++]);
   }
-  while(used++ < lcd_display::COLS - 1) lcd.write((u8) ' ');
+  while(used++ < lcd_display::COLS - 1) main_lcd().write((u8) ' ');
 }
 
 static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
@@ -926,8 +927,8 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
 #else
   static constexpr u8 FIELD_COUNT = 1;
 #endif
-  MK61DisplayUpdate update(lcd);
-  const u8 rows = lcd.rows();
+  MK61DisplayUpdate update(main_lcd());
+  const u8 rows = main_lcd().rows();
   const u8 visible_fields = (rows < FIELD_COUNT) ? rows : FIELD_COUNT;
   u8 top = (active + 1 > visible_fields) ? (u8) (active + 1 - visible_fields) : 0;
   if(top + visible_fields > FIELD_COUNT) top = FIELD_COUNT - visible_fields;
@@ -951,11 +952,11 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
 static void applyFontSetupProfile(lcd_display::TextProfile profile) {
 #if defined(MK61_DISPLAY_UC1609)
   profile = lcd_display::normalizeTextProfile(profile);
-  if(sameTextProfile(profile, library_mk61::display_text_profile()) && !lcd.externalFontActive()) return;
+  if(sameTextProfile(profile, library_mk61::display_text_profile()) && !main_lcd().externalFontActive()) return;
 
-  lcd.useBuiltinFont();
+  main_lcd().useBuiltinFont();
   library_mk61::set_display_text_profile(profile);
-  lcd.setTextProfile(library_mk61::display_text_profile());
+  main_lcd().setTextProfile(library_mk61::display_text_profile());
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
 #else
@@ -1267,8 +1268,8 @@ bool class_menu::handle_settings_adjustment(i32 key) {
 }
 
 void class_menu::draw(void) {
-  MK61DisplayUpdate update(lcd);
-  const int size_menu_window = lcd.rows();
+  MK61DisplayUpdate update(main_lcd());
+  const int size_menu_window = main_lcd().rows();
   const int visible_count = (MENU_PUNCT_COUNT < size_menu_window) ? MENU_PUNCT_COUNT : size_menu_window;
   const int max_up = MENU_PUNCT_COUNT - visible_count;
   const int delta = (active_punct + 1) - visible_count;
@@ -1290,32 +1291,32 @@ void class_menu::draw(void) {
       }
     }
     for(int i=visible_count; i < size_menu_window; i++) {
-      lcd.setCursor(0, i);
-      for(int x=0; x < lcd_display::COLS; x++) lcd.write((u8) ' ');
+      main_lcd().setCursor(0, i);
+      for(int x=0; x < lcd_display::COLS; x++) main_lcd().write((u8) ' ');
     }
     previous_up = up;
     return;
   }
 
   for(int i=0; i < visible_count; i++) {
-    lcd.setCursor(0,  i);
+    main_lcd().setCursor(0,  i);
     const int real_index = i + up;
     const int previous_real_index = i + previous_up;
 
     // формируем постоянную часть пункта меню
-    lcd.print( (active_punct == real_index)?  '>'  :  ' ' );
-    lcd.print(puncts[real_index]->text);
+    main_lcd().print( (active_punct == real_index)?  '>'  :  ' ' );
+    main_lcd().print(puncts[real_index]->text);
 
     int previous_punct_size = puncts[previous_real_index]->size;
     const int size = puncts[real_index]->size;
     // формируем переменную часть пункта меню
     while(previous_punct_size-- > size) {
-      lcd.print(' ');
+      main_lcd().print(' ');
     }
   }
   for(int i=visible_count; i < size_menu_window; i++) {
-    lcd.setCursor(0, i);
-    for(int x=0; x < lcd_display::COLS; x++) lcd.write((u8) ' ');
+    main_lcd().setCursor(0, i);
+    for(int x=0; x < lcd_display::COLS; x++) main_lcd().write((u8) ' ');
   }
   previous_up = up;
 }
@@ -1333,7 +1334,7 @@ i32 class_menu::wait_key(void) {
 }
 
 bool class_menu::select(void) {
-  lcd.clear();
+  main_lcd().clear();
   do{
     draw();
     const i32 last_key_code = wait_key();
@@ -1347,12 +1348,12 @@ bool class_menu::select(void) {
         break;
       case KEY_OK_PRESS:
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
-            lcd.clear();
+            main_lcd().clear();
             lcd_ru::restore_default_font();
             if(puncts[active_punct]->action() == action::MENU_EXIT) {
               return action::MENU_EXIT;
             } else {
-              lcd.clear();
+              main_lcd().clear();
               break;
             }
       case KEY_ESC_PRESS:
@@ -1363,7 +1364,7 @@ bool class_menu::select(void) {
 }
 
 i32 class_menu::select(i32 key) {
-  lcd.clear();
+  main_lcd().clear();
   dbgln(MENU, "select entry");
 
   if(handle_settings_adjustment(key)) {
@@ -1381,12 +1382,12 @@ i32 class_menu::select(i32 key) {
         break;
       case KEY_OK_PRESS:
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
-            lcd.clear();
+            main_lcd().clear();
             lcd_ru::restore_default_font();
             if(puncts[active_punct]->action() == action::MENU_EXIT) {
               return -1;
             } else {
-              lcd.clear();
+              main_lcd().clear();
               break;
             }
       case KEY_ESC_PRESS:

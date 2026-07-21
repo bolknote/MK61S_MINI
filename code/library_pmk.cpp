@@ -239,7 +239,7 @@ typedef bool (*SelectTextProvider)(usize index, char* text, usize capacity);
 static int select_texts(usize count, const char* text, usize stride, i8& selector,
                         SelectTextProvider provider = NULL) {
   do {
-    const int display_rows = lcd.rows();
+    const int display_rows = main_lcd().rows();
     const int visible_count = ((int) count < display_rows) ? (int) count : display_rows;
     const int max_up = (int) count - visible_count;
     const int delta = (selector + 1) - visible_count;
@@ -247,28 +247,28 @@ static int select_texts(usize count, const char* text, usize stride, i8& selecto
     if(up > max_up) up = max_up;
 
     {
-      MK61DisplayUpdate update(lcd);
+      MK61DisplayUpdate update(main_lcd());
       for(int i=0; i < visible_count; i++) {
-        lcd.setCursor(0,i);
+        main_lcd().setCursor(0,i);
         const int real_index = i + up;
         if(selector == real_index) {
-          lcd.print('>');
+          main_lcd().print('>');
         } else {
-          lcd.print(' ');
+          main_lcd().print(' ');
         }
         if(provider != NULL) {
           char generated_text[program_store::NAME_SIZE];
           generated_text[0] = 0;
           if(provider((usize) real_index, generated_text, sizeof(generated_text))) {
-            lcd.print(generated_text);
+            main_lcd().print(generated_text);
           }
         } else {
-          lcd.print(text + (usize) real_index * stride);
+          main_lcd().print(text + (usize) real_index * stride);
         }
       }
       for(int i=visible_count; i < display_rows; i++) {
-        lcd.setCursor(0, i);
-        for(int x=0; x < (int) lcd_display::COLS; x++) lcd.write((u8) ' ');
+        main_lcd().setCursor(0, i);
+        for(int x=0; x < (int) lcd_display::COLS; x++) main_lcd().write((u8) ' ');
       }
     }
 
@@ -295,8 +295,8 @@ int   select_from(usize COUNT, TPunct* list, i8& selector) {
 
 void memory_mode_error(void) {
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     library_mk61::print_localized_at(0, 0, "Неверно выбран", "Wrong memory");
     library_mk61::print_localized_at(0, 1, "Режим памяти", "mode selected");
   }
@@ -311,10 +311,10 @@ void loaded_message(const TPunct& item) {
   }
 
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(item.text);
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
+    main_lcd().setCursor(0, 0);
+    main_lcd().print(item.text);
     library_mk61::print_localized_at(0, 1, "Загружено", "is loaded.");
   }
   delay(1500);
@@ -375,8 +375,8 @@ int   select_game(void) {
   const usize count = (usize) program_store::count(program_store::ProgramType::MK61);
   if(count == 0) {
     {
-      MK61DisplayUpdate update(lcd);
-      lcd.clear();
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().clear();
       library_mk61::print_localized_at(0, 0, "Нет M61 файлов", "No M61 files");
     }
     ErrorReaction();

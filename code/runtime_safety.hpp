@@ -13,7 +13,7 @@ inline bool time_reached(t_time_ms now, t_time_ms target) {
 
 class Deadline {
   public:
-    Deadline(void) : pending_(false), target_(0) {}
+    constexpr Deadline(void) : pending_(false), target_(0) {}
 
     bool pending(void) const { return pending_; }
     t_time_ms target(void) const { return target_; }

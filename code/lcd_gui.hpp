@@ -7,8 +7,6 @@
 #include  "lcd_charset.hpp"
 #include  "mk61emu_core.h"
 
-extern MK61Display lcd;
-
 #if defined(MK61_DISPLAY_UC1609)
 static const u8 GE                = display_symbol::uc1609::GE;
 static const u8 P_RUS             = display_symbol::uc1609::CYR_PE;
@@ -95,27 +93,27 @@ class class_LCD_Label {
 
   public:
 
-    class_LCD_Label(u8 to_x, u8 to_y) : x(to_x), y(to_y) {}
+    constexpr class_LCD_Label(u8 to_x, u8 to_y) : x(to_x), y(to_y) {}
     void print(const char* text) const {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(x, y);
-      lcd.print(text);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(x, y);
+      main_lcd().print(text);
     }
     void print(char symbol) const {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(x, y);
-      lcd.print(symbol);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(x, y);
+      main_lcd().print(symbol);
     }
     void print(int num) const {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(x, y);
-      lcd.print(num);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(x, y);
+      main_lcd().print(num);
     }
     void print_hex(int num) const {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(x, y);
-      if(num < 10) lcd.print(' ');
-      lcd.print(num, HEX);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(x, y);
+      if(num < 10) main_lcd().print(' ');
+      main_lcd().print(num, HEX);
     }
 };
 
@@ -135,12 +133,12 @@ class LCD_GRD_Label {
 
   public:
 
-    LCD_GRD_Label(void) : on(true) {};
+    constexpr LCD_GRD_Label(void) : on(true) {}
 
     void  disable(void) {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(X, Y);
-      lcd.print("  ");
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(X, Y);
+      main_lcd().print("  ");
       on = false;
     };
 
@@ -148,38 +146,38 @@ class LCD_GRD_Label {
 
     void  print(AngleUnit angle) {
       if(on) {
-        MK61DisplayUpdate update(lcd);
-        lcd.setCursor(X, Y); lcd.print((const char*) &ANGLE_UNIT_TEXT[angle - RADIAN]);
+        MK61DisplayUpdate update(main_lcd());
+        main_lcd().setCursor(X, Y); main_lcd().print((const char*) &ANGLE_UNIT_TEXT[angle - RADIAN]);
       }
     }
 
     void  print(const char* text) const {
       if(on) {
-        MK61DisplayUpdate update(lcd);
-        lcd.setCursor(X, Y); lcd.print(text);
+        MK61DisplayUpdate update(main_lcd());
+        main_lcd().setCursor(X, Y); main_lcd().print(text);
       }
     }
 
     void  print(char symbol) const {
       if(on) {
-        MK61DisplayUpdate update(lcd);
-        lcd.setCursor(X, Y); lcd.print(symbol);
+        MK61DisplayUpdate update(main_lcd());
+        main_lcd().setCursor(X, Y); main_lcd().print(symbol);
       }
     }
 
     void  print(int num) const {
       if(on) {
-        MK61DisplayUpdate update(lcd);
-        lcd.setCursor(X, Y); lcd.print(num);
+        MK61DisplayUpdate update(main_lcd());
+        main_lcd().setCursor(X, Y); main_lcd().print(num);
       }
     }
 
     void  print_hex(int num) const {
       if(on) {
-        MK61DisplayUpdate update(lcd);
-        lcd.setCursor(X, Y);
-        if(num < 10) lcd.print(' ');
-        lcd.print(num, HEX);
+        MK61DisplayUpdate update(main_lcd());
+        main_lcd().setCursor(X, Y);
+        if(num < 10) main_lcd().print(' ');
+        main_lcd().print(num, HEX);
       }
     }
 };
@@ -336,31 +334,31 @@ class class_LCD_fonts {
   public:
     void load(void) const {
       #if defined(MK61_DISPLAY_UC1609)
-        lcd.clearCustomChars();
+        main_lcd().clearCustomChars();
         return;
       #endif
       u32 ascii=0;
       #if defined(MK61_LCD1602_A02)
-        lcd.createChar(GE, (uint8_t*) &fonts[0]);
-        lcd.createChar(LCD_CHAR_POWY, (uint8_t*) &fonts[7 * 8]);
-        lcd.createChar(LCD_CHAR_XOR, (uint8_t*) &fonts[8 * 8]);
-        lcd.createChar(LCD_NOT_EQU_CHAR, (uint8_t*) &not_equal_bit[0]);
-        lcd.createChar(LCD_SQRT_CHAR, (uint8_t*) &sqrt_bit[0]);
-        lcd.createChar(LCD_CYC_ARROW, (uint8_t*) &ROUND_ARROW_bit[0]);
-        lcd.createChar(LCD_POW_X_CHAR, (uint8_t*) &pow_x_bit[0]);
+        main_lcd().createChar(GE, (uint8_t*) &fonts[0]);
+        main_lcd().createChar(LCD_CHAR_POWY, (uint8_t*) &fonts[7 * 8]);
+        main_lcd().createChar(LCD_CHAR_XOR, (uint8_t*) &fonts[8 * 8]);
+        main_lcd().createChar(LCD_NOT_EQU_CHAR, (uint8_t*) &not_equal_bit[0]);
+        main_lcd().createChar(LCD_SQRT_CHAR, (uint8_t*) &sqrt_bit[0]);
+        main_lcd().createChar(LCD_CYC_ARROW, (uint8_t*) &ROUND_ARROW_bit[0]);
+        main_lcd().createChar(LCD_POW_X_CHAR, (uint8_t*) &pow_x_bit[0]);
         return;
       #endif
       for(int i=0; i < 9 * 8; i += 8) {
-        lcd.createChar(ascii++, (uint8_t*) &fonts[i]);
+        main_lcd().createChar(ascii++, (uint8_t*) &fonts[i]);
       }
     }
 
     void load(int offset, int nChar) const {
       #if defined(MK61_DISPLAY_UC1609)
-        lcd.clearCustomChars();
+        main_lcd().clearCustomChars();
         return;
       #endif
-      lcd.createChar(nChar, (uint8_t*) &fonts[offset]);
+      main_lcd().createChar(nChar, (uint8_t*) &fonts[offset]);
     }
 };
 

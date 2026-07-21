@@ -192,14 +192,14 @@ inline void load_custom_font(const font_map_t& map) {
   (void) map;
 #else
   for(u8 i = 0; i < map.count; i++) {
-    lcd.createChar(i, (uint8_t*) glyph_for(map.codepoints[i]));
+    main_lcd().createChar(i, (uint8_t*) glyph_for(map.codepoints[i]));
   }
 #endif
 }
 
 inline void restore_default_font(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  lcd.clearCustomChars();
+  main_lcd().clearCustomChars();
 #else
   const class_LCD_fonts lcd_fonts;
   lcd_fonts.load();
@@ -214,76 +214,76 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
   while(*text != 0 && used < width) {
     const u16 raw_codepoint = read_utf8(text);
 #if defined(MK61_DISPLAY_UC1609)
-    lcd.writeCodepoint(raw_codepoint);
+    main_lcd().writeCodepoint(raw_codepoint);
 #else
     const u16 codepoint = uppercase(raw_codepoint);
     u8 out;
     if(rom_char(codepoint, out)) {
-      lcd.write(out);
+      main_lcd().write(out);
     } else {
       const i8 slot = slot_for(map, codepoint);
       if(slot >= 0) {
-        lcd.write((u8) slot);
+        main_lcd().write((u8) slot);
       } else if(fallback_char(codepoint, out)) {
-        lcd.write(out);
+        main_lcd().write(out);
       } else {
-        lcd.write((u8) '?');
+        main_lcd().write((u8) '?');
       }
     }
 #endif
     used++;
   }
 
-  while(used++ < width) lcd.write((u8) ' ');
+  while(used++ < width) main_lcd().write((u8) ' ');
 }
 
 inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   font_map_t map = {{0}, 0, false};
   scan_text(map, text, width);
   load_custom_font(map);
-  lcd.setCursor(x, y);
+  main_lcd().setCursor(x, y);
   write_text(map, text, width);
 }
 
 inline void print_lines(const char* text0, const char* text1) {
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   font_map_t map = {{0}, 0, false};
   scan_text(map, text0, LCD_WIDTH);
   scan_text(map, text1, LCD_WIDTH);
   load_custom_font(map);
 
-  lcd.setCursor(0, 0);
+  main_lcd().setCursor(0, 0);
   write_text(map, text0, LCD_WIDTH);
 
-  lcd.setCursor(0, 1);
+  main_lcd().setCursor(0, 1);
   write_text(map, text1, LCD_WIDTH);
 }
 
 inline void print_menu_window(char mark0, const char* text0, char mark1, const char* text1) {
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   font_map_t map = {{0}, 0, false};
   scan_text(map, text0, LCD_WIDTH - 1);
   scan_text(map, text1, LCD_WIDTH - 1);
   load_custom_font(map);
 
-  lcd.setCursor(0, 0);
-  lcd.write((u8) mark0);
+  main_lcd().setCursor(0, 0);
+  main_lcd().write((u8) mark0);
   write_text(map, text0, LCD_WIDTH - 1);
 
-  lcd.setCursor(0, 1);
-  lcd.write((u8) mark1);
+  main_lcd().setCursor(0, 1);
+  main_lcd().write((u8) mark1);
   write_text(map, text1, LCD_WIDTH - 1);
 }
 
 inline void print_menu_line(u8 y, char mark, const char* text) {
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   font_map_t map = {{0}, 0, false};
   scan_text(map, text, LCD_WIDTH - 1);
   load_custom_font(map);
 
-  lcd.setCursor(0, y);
-  lcd.write((u8) mark);
+  main_lcd().setCursor(0, y);
+  main_lcd().write((u8) mark);
   write_text(map, text, LCD_WIDTH - 1);
 }
 

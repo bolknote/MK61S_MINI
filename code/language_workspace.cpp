@@ -11,9 +11,6 @@ static Owner resident = Owner::NONE;
 static Owner active = Owner::NONE;
 static u16 active_depth = 0;
 
-Lease::Lease(void)
-  : owner(Owner::NONE), memory(NULL), requested(0), was_fresh(false) {}
-
 Lease::Lease(Owner next_owner, usize required) : Lease() {
   (void) acquire(next_owner, required);
 }

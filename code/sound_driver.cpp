@@ -2,6 +2,7 @@
 #include "config.h"
 #include "runtime_safety.hpp"
 #include "sound_driver.hpp"
+#include "manual_lifetime.hpp"
 
 #if defined(ARDUINO_ARCH_STM32) && defined(HAL_TIM_MODULE_ENABLED) && !defined(HAL_TIM_MODULE_ONLY)
 
@@ -24,8 +25,11 @@ namespace {
 static constexpr usize SOUND_VOLUME_MAX = 10;
 static constexpr u32   SOUND_DUTY_MAX   = 128; // 50% в 8-битном ШИМ, тот же диапазон громкости, что у прежнего кода analogWrite.
 
-static HardwareTimer pwm_timer;
-static HardwareTimer cutoff_timer(MK61_SOUND_CUTOFF_TIMER);
+static manual_lifetime::Storage<HardwareTimer> pwm_timer_storage;
+static manual_lifetime::Storage<HardwareTimer> cutoff_timer_storage;
+
+static HardwareTimer& pwmTimer(void) { return pwm_timer_storage.get(); }
+static HardwareTimer& cutoffTimer(void) { return cutoff_timer_storage.get(); }
 
 static volatile bool pwm_ready = false;
 static usize pwm_pin = PIN_BUZZER;
@@ -75,19 +79,19 @@ static void force_buzzer_low(void) {
 }
 
 static void clear_cutoff_interrupt(void) {
-  TIM_HandleTypeDef* handle = cutoff_timer.getHandle();
+  TIM_HandleTypeDef* handle = cutoffTimer().getHandle();
   if(handle != NULL) {
     __HAL_TIM_CLEAR_FLAG(handle, TIM_FLAG_UPDATE);
   }
 }
 
 static void pause_cutoff_timer(void) {
-  cutoff_timer.pause();
+  cutoffTimer().pause();
   clear_cutoff_interrupt();
 }
 
 static void stop_cutoff_from_interrupt(void) {
-  TIM_HandleTypeDef* handle = cutoff_timer.getHandle();
+  TIM_HandleTypeDef* handle = cutoffTimer().getHandle();
   if(handle != NULL) {
     __HAL_TIM_DISABLE_IT(handle, TIM_IT_UPDATE);
     LL_TIM_DisableCounter(handle->Instance);
@@ -134,9 +138,9 @@ static bool configure_pwm_mapping(usize pin) {
   // возвращает корректную маску лишь после того, как setMode() пометит канал
   // используемым, поэтому значение определяется в sound_driver_play() сразу
   // после setMode().
-  pwm_timer.setup(timer_instance);
+  pwmTimer().setup(timer_instance);
   pwm_timer_instance = timer_instance;
-  pwm_timer.pause();
+  pwmTimer().pause();
   pwm_ready = true;
 
   force_buzzer_low();
@@ -145,6 +149,11 @@ static bool configure_pwm_mapping(usize pin) {
 
 } // анонимное пространство имён
 
+void sound_driver_construct(void) {
+  pwm_timer_storage.construct();
+  cutoff_timer_storage.construct(MK61_SOUND_CUTOFF_TIMER);
+}
+
 void sound_driver_init(usize pin) {
   sound_driver_stop();
 
@@ -152,7 +161,7 @@ void sound_driver_init(usize pin) {
 
   const InterruptState irq = disable_interrupts();
   pause_cutoff_timer();
-  cutoff_timer.detachInterrupt();
+  cutoffTimer().detachInterrupt();
   stop_cleanup_pending = false;
   sound_active = false;
   restore_interrupts(irq);
@@ -177,33 +186,33 @@ void sound_driver_play_scaled(usize pin, isize frequency_Hz, usize duration_ms, 
   const InterruptState irq = disable_interrupts();
   stop_cleanup_pending = false;
   pause_cutoff_timer();
-  cutoff_timer.detachInterrupt();
-  pwm_timer.pauseChannel(pwm_channel);
-  pwm_timer.pause();
+  cutoffTimer().detachInterrupt();
+  pwmTimer().pauseChannel(pwm_channel);
+  pwmTimer().pause();
 
   // Настраиваем выход ШИМ перед каждым запуском: stop() возвращает вывод в
   // состояние GPIO LOW, поэтому setMode() восстанавливает альтернативную
   // функцию ШИМ.
-  pwm_timer.setMode(pwm_channel, TIMER_OUTPUT_COMPARE_PWM1, pwm_pin_name);
+  pwmTimer().setMode(pwm_channel, TIMER_OUTPUT_COMPARE_PWM1, pwm_pin_name);
   // getLLChannel() возвращает 0, пока setMode() не пометит канал используемым,
   // поэтому LL-маску для mute_pwm_from_interrupt() нужно определять после
   // setMode().
-  pwm_ll_channel = pwm_timer.getLLChannel(pwm_channel);
-  pwm_timer.setOverflow((u32) frequency_Hz, HERTZ_FORMAT);
-  pwm_timer.setCaptureCompare(pwm_channel, duty, RESOLUTION_8B_COMPARE_FORMAT);
-  pwm_timer.resume();
+  pwm_ll_channel = pwmTimer().getLLChannel(pwm_channel);
+  pwmTimer().setOverflow((u32) frequency_Hz, HERTZ_FORMAT);
+  pwmTimer().setCaptureCompare(pwm_channel, duty, RESOLUTION_8B_COMPARE_FORMAT);
+  pwmTimer().resume();
 
   sound_active = true;
 
   // В этом API у HardwareTimer нет однократного режима. Поэтому таймер отсечки
   // работает как обычный базовый таймер, а первое прерывание обновления
   // останавливает и его самого, и таймер ШИМ.
-  cutoff_timer.setOverflow(duration_ms_to_us(duration_ms), MICROSEC_FORMAT);
-  cutoff_timer.setCount(0);
+  cutoffTimer().setOverflow(duration_ms_to_us(duration_ms), MICROSEC_FORMAT);
+  cutoffTimer().setCount(0);
   clear_cutoff_interrupt();
-  cutoff_timer.attachInterrupt(stop_from_timer);
+  cutoffTimer().attachInterrupt(stop_from_timer);
   clear_cutoff_interrupt();
-  cutoff_timer.resume();
+  cutoffTimer().resume();
   restore_interrupts(irq);
 }
 
@@ -214,12 +223,12 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms, usize v
 void sound_driver_stop(void) {
   const InterruptState irq = disable_interrupts();
   pause_cutoff_timer();
-  cutoff_timer.detachInterrupt();
+  cutoffTimer().detachInterrupt();
   clear_cutoff_interrupt();
 
   if(pwm_ready) {
-    pwm_timer.pauseChannel(pwm_channel);
-    pwm_timer.pause();
+    pwmTimer().pauseChannel(pwm_channel);
+    pwmTimer().pause();
   }
 
   sound_active = false;
@@ -253,6 +262,8 @@ namespace {
 static usize fallback_pin = PIN_BUZZER;
 
 } // анонимное пространство имён
+
+void sound_driver_construct(void) {}
 
 void sound_driver_init(usize pin) {
   fallback_pin = pin;

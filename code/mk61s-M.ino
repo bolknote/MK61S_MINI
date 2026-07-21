@@ -10,6 +10,7 @@ class_calc_config config;
 using namespace kbd;
 
 #include "display.hpp"
+#include "manual_lifetime.hpp"
 #include "lcd_gui.hpp"
 #include "mnemo.hpp"
 #include "startup_splash.hpp"
@@ -35,9 +36,12 @@ using namespace led;
 
 #include "debug.h"
 
-MK61Display lcd;
+// Аппаратно-зависимый конструктор запускается ниже, после входа в setup().
+static manual_lifetime::Storage<MK61Display> mk61_lcd_storage;
+MK61Display* main_lcd_pointer;
 
-static class_menu           mk61_menu = class_menu((t_punct**) library_mk61::MENU, library_mk61::COUNT_PUNCTS);
+static class_menu mk61_menu((t_punct**) library_mk61::MENU,
+                            library_mk61::MAIN_MENU_COUNT);
 
 const  class_LCD_Label      MarkLabel(0, 0);
 const  class_LCD_Label      XLabel(0, 1);
@@ -147,18 +151,18 @@ void reset_ext_program_state(void) {
 #include  "automate.hpp"
 
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     GRDLabel.print(MK61Emu_GetAngleUnit());
     display_text[0] = (char) -1;
     if(core_61::is_RUN()) {
-      lcd.setCursor(0, 0); lcd.print("RUN");
+      main_lcd().setCursor(0, 0); main_lcd().print("RUN");
     }
     mk61_display_refresh();
 }
 
 void mk61_display_refresh(void) {
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   // Обновление дисплея МК61, если изменилась информация на экране
     if(!core_61::update_indicator(&display_text[0], display_symbols)) {
       if(core_61::edit_program) { // калькулятор в режиме редактирования программы МК61 (ПРГ)
@@ -172,7 +176,7 @@ void mk61_display_refresh(void) {
           }
         }
       }
-      XLabel.print(display_text); lcd.write(' ');
+      XLabel.print(display_text); main_lcd().write(' ');
       dbgln(MINI, "[mk61_display_refresh] ", display_text);
     }
 
@@ -183,33 +187,41 @@ void mk61_display_refresh(void) {
 }
 
 void inline lcd_stack_output(void) {
-  MK61DisplayUpdate update(lcd);
+  MK61DisplayUpdate update(main_lcd());
   char cvalue[15];
   cvalue[14] = 0;
 
-  lcd.clear();
-  if(lcd.rows() >= 4) {
-      lcd.setCursor(0,0); lcd.print("T "); lcd.print(read_stack_register(stack::T, cvalue, display_symbols));
-      lcd.setCursor(0,1); lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, display_symbols));
-      lcd.setCursor(0,2); lcd.print("Y "); lcd.print(read_stack_register(stack::Y, cvalue, display_symbols));
-      lcd.setCursor(0,3); lcd.print("X "); lcd.print(read_stack_register(stack::X, cvalue, display_symbols));
+  main_lcd().clear();
+  if(main_lcd().rows() >= 4) {
+      main_lcd().setCursor(0,0); main_lcd().print("T "); main_lcd().print(read_stack_register(stack::T, cvalue, display_symbols));
+      main_lcd().setCursor(0,1); main_lcd().print("Z "); main_lcd().print(read_stack_register(stack::Z, cvalue, display_symbols));
+      main_lcd().setCursor(0,2); main_lcd().print("Y "); main_lcd().print(read_stack_register(stack::Y, cvalue, display_symbols));
+      main_lcd().setCursor(0,3); main_lcd().print("X "); main_lcd().print(read_stack_register(stack::X, cvalue, display_symbols));
   } else if(YZ_ZT) {
-      lcd.setCursor(0,1); lcd.print("Y "); lcd.print(read_stack_register(stack::Y, cvalue, display_symbols));
+      main_lcd().setCursor(0,1); main_lcd().print("Y "); main_lcd().print(read_stack_register(stack::Y, cvalue, display_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_Y, display_symbols));
-      lcd.setCursor(0,0); lcd.print("X1"); lcd.print(read_stack_register(stack::X1, cvalue, terminal_symbols));
+      main_lcd().setCursor(0,0); main_lcd().print("X1"); main_lcd().print(read_stack_register(stack::X1, cvalue, terminal_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_Z, display_symbols));
       YZ_ZT = false;  // флаг чередования вывода пар регистров YZ или ZT -> ZT
   } else {
-      lcd.setCursor(0,0); lcd.print("T "); lcd.print(read_stack_register(stack::T, cvalue, display_symbols));
+      main_lcd().setCursor(0,0); main_lcd().print("T "); main_lcd().print(read_stack_register(stack::T, cvalue, display_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_T, display_symbols));
-      lcd.setCursor(0,1); lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, display_symbols));
+      main_lcd().setCursor(0,1); main_lcd().print("Z "); main_lcd().print(read_stack_register(stack::Z, cvalue, display_symbols));
         //MK61Emu_GetStackStr(StackRegister::REG_Z, display_symbols));
       YZ_ZT = true;   // флаг чередования вывода пар регистров YZ или ZT -> YZ
   }
-  //lcd.print("Z "); lcd.print(read_stack_register(stack::Z, cvalue, display_symbols));
+  //main_lcd().print("Z "); main_lcd().print(read_stack_register(stack::Z, cvalue, display_symbols));
 }
 
 void setup() {
+  // Эти конструкторы обращаются к Arduino/STM32 объектам или периферийным
+  // описателям. Запускаем их только после завершения premain Arduino Core.
+  main_lcd_pointer = &mk61_lcd_storage.construct();
+  sound_driver_construct();
+  #ifdef SPI_FLASH
+    construct_external_flash();
+  #endif
+
   // При входе с зажатой кнопкой ESC вызывается DFU-загрузчик
   pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
   pinMode(PIN_KBD_ROW0, OUTPUT);
@@ -256,9 +268,9 @@ void setup() {
     digitalWrite(PIN_LCD_DB7, LOW);
     dbgln(SPIROM, "LCD init: PC15 restored as GPIO output");
   #endif
-  lcd.begin(lcd_display::COLS, library_mk61::display_rows());
+  main_lcd().begin(lcd_display::COLS, library_mk61::display_rows());
   dbgln(SPIROM, "LCD init: ready");
-  lcd.setTextProfile(library_mk61::display_text_profile());
+  main_lcd().setTextProfile(library_mk61::display_text_profile());
 
   entropy_pool::begin();
   mix_rtc_startup_snapshot(0);
@@ -274,7 +286,7 @@ void setup() {
   #endif
   static_assert(sizeof(FULL_MODEL_NAME) == startup_splash::COLS + 1, "Model name must fill one display row");
   static_assert(sizeof(FIRMWARE_VER) == startup_splash::COLS + 1, "Firmware version must fill one display row");
-  startup_splash::show(lcd, FULL_MODEL_NAME, FIRMWARE_VER,
+  startup_splash::show(main_lcd(), FULL_MODEL_NAME, FIRMWARE_VER,
                        startup_splash::escapePolicyForBoot(dfu_requested));
 
   if(dfu_requested) {
@@ -294,7 +306,7 @@ void setup() {
 
   const class_LCD_fonts lcd_fonts;
   lcd_fonts.load();
-  lcd.clear();
+  main_lcd().clear();
 
  // Система ззагрузки программ
   init_library();
@@ -346,8 +358,8 @@ void  edit_extend_program(void) {
   if(!runtime_safety::valid_index(ext_code, COUNT_EXT_COMMAND)) ext_code = ENOP;
   while(true) {
     {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(0, 0); lcd.print(">          "); lcd.print(mnemo[ext_code]);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(0, 0); main_lcd().print(">          "); main_lcd().print(mnemo[ext_code]);
     }
 
     const i32 last_key_code = kbd::get_key_wait();
@@ -665,7 +677,7 @@ void  loop() {
 
   if(used_key >= 0) { 
   //== кнопка нажата - перепланировка выдачи сообщения о бездействии на следующие 5 минут
-    rtc_idle_clock::hide(lcd);
+    rtc_idle_clock::hide(main_lcd());
     idle_signal_reset();
     library_mk61::defer_settings_state_save();
   } else { 
@@ -689,14 +701,14 @@ void  loop() {
       mk61_calculator_is_idle() &&
       kbd::last_key() < 0 &&
       !kbd::any_key_pressed();
-  rtc_idle_clock::poll(lcd, calculator_context, calculator_idle);
+  rtc_idle_clock::poll(main_lcd(), calculator_context, calculator_idle);
 }
 
 void idle_main_process(void) {
   usb_mass_storage::service();
   sound_poll();
   led::control();
-  lcd.flush();
+  main_lcd().flush();
   idle_signal_poll();
 }
 

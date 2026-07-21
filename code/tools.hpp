@@ -33,7 +33,7 @@ class DeferredSave {
     t_time_ms save_at;
 
   public:
-    DeferredSave(void) : pending_save(false), save_at(0) {}
+    constexpr DeferredSave(void) : pending_save(false), save_at(0) {}
 
     bool pending(void) const {
       return pending_save;
@@ -66,8 +66,8 @@ struct SettingsFlags {
     } bits;
   };
 
-  SettingsFlags(void) : raw(0) {}
-  explicit SettingsFlags(u8 value) : raw(value) {}
+  constexpr SettingsFlags(void) : raw(0) {}
+  constexpr explicit SettingsFlags(u8 value) : raw(value) {}
 };
 
 static_assert(sizeof(SettingsFlags) == 1, "SettingsFlags must fit one EEPROM byte");
@@ -82,8 +82,8 @@ struct SoundSettings {
     } bits;
   };
 
-  SoundSettings(void) : raw(0) {}
-  explicit SoundSettings(u8 value) : raw(value) {}
+  constexpr SoundSettings(void) : raw(0) {}
+  constexpr explicit SoundSettings(u8 value) : raw(value) {}
 };
 
 static_assert(sizeof(SoundSettings) == 1, "SoundSettings must fit one EEPROM byte");
@@ -139,6 +139,7 @@ extern  bool  clear_storage(void);
 extern  bool  erase_slot(usize nSlot);
 extern  bool  DeleteSlot(usize nSlot);
 extern  void  init_external_flash(void);
+extern  void  construct_external_flash(void);
 
 extern usize  seek_program_END(u8* code_page);
 extern  void  insert_cmd_in_program(usize into_step, usize opcode);

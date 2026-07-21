@@ -24,7 +24,7 @@ class Fifo {
   public:
     static constexpr usize CAPACITY = 8;
 
-    Fifo(void) : head_(0), size_(0), data_{} {}
+    constexpr Fifo(void) : head_(0), size_(0), data_{} {}
 
     void clear(void) {
       head_ = 0;
@@ -63,7 +63,7 @@ class Fifo {
 
 class DebouncedRow {
   public:
-    DebouncedRow(void) : stable_(0), candidate_(0), changed_at_{} {}
+    constexpr DebouncedRow(void) : stable_(0), candidate_(0), changed_at_{} {}
 
     void reset(t_time_ms now) {
       stable_ = 0;

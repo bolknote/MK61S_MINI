@@ -22,6 +22,7 @@
 #ifdef SPI_FLASH
   #include <SPI.h>
   #include "spi_nor_flash.hpp"
+  #include "manual_lifetime.hpp"
 #endif
 #include "menu.hpp"
 #include "debug.h"
@@ -189,10 +190,10 @@ static void Show_DFU_splash(void) {
                 "DFU bitmap width must match UC1609 panel");
   static_assert(dfu_splash::HEIGHT == lcd_display::PIXEL_HEIGHT,
                 "DFU bitmap height must match UC1609 panel");
-  if(lcd.showFullscreenBitmap(dfu_splash::BITMAP, dfu_splash::BYTE_COUNT)) return;
+  if(main_lcd().showFullscreenBitmap(dfu_splash::BITMAP, dfu_splash::BYTE_COUNT)) return;
 #endif
 
-  lcd.clear();
+  main_lcd().clear();
   library_mk61::print_localized_at(0, 0, "Прошивка DFU", " DFU flash mode!");
 }
 
@@ -220,7 +221,7 @@ bool  Confirmation(void) {
   extern void lcd_std_display_redraw(void);
 
   {
-    MK61DisplayUpdate update(lcd);
+    MK61DisplayUpdate update(main_lcd());
     library_mk61::print_localized_at(0, 0, "OK подтверд", "press OK confirm");
   }
   i32 key = kbd::get_key_wait();
@@ -281,8 +282,8 @@ bool sound_pattern_start(const SoundNote* notes, usize count) {
 void message_and_waitkey(const char* lcd_message) {
   led::on();
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.setCursor(0, 1); lcd.print(lcd_message);
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().setCursor(0, 1); main_lcd().print(lcd_message);
   }
   kbd::get_key_wait();
   led::off();
@@ -321,7 +322,19 @@ void  insert_cmd_in_program(usize into_step, usize opcode) {
   core_61::set_code_page(code_page);
 }
 
+#if defined(ARDUINO_ARCH_STM32) && !defined(PROGRAM_STORE_HOST_TEST)
+static manual_lifetime::Storage<SpiNorFlash> mk61_flash_storage;
+SpiNorFlash* external_flash_pointer;
+
+void construct_external_flash(void) {
+  external_flash_pointer =
+    &mk61_flash_storage.construct(PIN_SPIFLASH_CS, &SPI);
+}
+#else
 SpiNorFlash flash(PIN_SPIFLASH_CS);
+SpiNorFlash& external_flash(void) { return flash; }
+void construct_external_flash(void) {}
+#endif
 bool      flash_is_ok;
 
 static constexpr u32 LEGACY_EEPROM_PAGE_SIZE = 8 * 1024;
@@ -457,7 +470,7 @@ static void load_persistent_settings(void) {
   while(scanner.active()) {
     u8 record[settings_journal::RECORD_SIZE];
     const u32 address = settings_address + (u32) scanner.next_offset();
-    if(!flash.readByteArray(address, record, sizeof(record))) {
+    if(!external_flash().readByteArray(address, record, sizeof(record))) {
       // Временная ошибка чтения ни при каких условиях не должна приводить
       // к стиранию потенциально действительных настроек. В течение этой загрузки
       // продолжаем использовать значения по умолчанию и блокируем запись.
@@ -518,12 +531,12 @@ static bool write_persistent_settings(void) {
   u8 record[settings_journal::RECORD_SIZE];
   settings_journal::encode_uncommitted(data, record);
   const u32 address = persistent_settings_next_address;
-  if(!flash.writeByteArray(address, record, settings_journal::COMMIT_INDEX)) {
+  if(!external_flash().writeByteArray(address, record, settings_journal::COMMIT_INDEX)) {
     persistent_settings_sector_dirty = true;
     persistent_settings_next_address = end_address;
     return false;
   }
-  if(!flash.writeByte(address + settings_journal::COMMIT_INDEX, settings_journal::COMMIT_MARKER)) {
+  if(!external_flash().writeByte(address + settings_journal::COMMIT_INDEX, settings_journal::COMMIT_MARKER)) {
     persistent_settings_sector_dirty = true;
     persistent_settings_next_address = end_address;
     return false;
@@ -702,10 +715,10 @@ isize  calc_address(void) {
   const isize n_cell = MK61Emu_GetDisplayReg();
 
   if(n_cell > MAX_SLOT_FOR_PROGRAM) {
-    lcd.setCursor(0, 0); lcd.print(library_mk61::text("Error! slot > ", "SLOT > ")); lcd.print(MAX_SLOT_FOR_PROGRAM);
+    main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("Error! slot > ", "SLOT > ")); main_lcd().print(MAX_SLOT_FOR_PROGRAM);
     return -1;
   } else {
-    /*lcd.print("slot ");*/ lcd.print(n_cell);
+    /*main_lcd().print("slot ");*/ main_lcd().print(n_cell);
   }
 
   const int address = n_cell * FLASH_SECTOR_SIZE;
@@ -723,14 +736,14 @@ void init_external_flash(void) {
   SPI.begin();
  
   // Обнаружение через JEDEC/SFDP; для неизвестных микросхем C5 проверяет границы.
-  flash_is_ok = flash.begin();
+  flash_is_ok = external_flash().begin();
   #ifdef DEBUG_SPIFLASH
     if(flash_is_ok) {
       Serial.println("SPI NOR link: OK");
-      Serial.print("JEDEC ID: 0x"); Serial.println(flash.getJEDECID(), HEX);
-      Serial.print("SFDP: "); Serial.println(flash.sfdpPresent() ? "yes" : "no");
+      Serial.print("JEDEC ID: 0x"); Serial.println(external_flash().getJEDECID(), HEX);
+      Serial.print("SFDP: "); Serial.println(external_flash().sfdpPresent() ? "yes" : "no");
       Serial.print("declared upper bound: ");
-      Serial.print(flash.capacityProbeUpper()); Serial.println(" bytes");
+      Serial.print(external_flash().capacityProbeUpper()); Serial.println(" bytes");
     } else {
       Serial.println("SPI NOR link: ERROR");
     }
@@ -742,7 +755,7 @@ void init_external_flash(void) {
   #ifdef DEBUG_SPIFLASH
     if(program_store::ready()) {
       Serial.print("C5 init: ready, measured capacity: ");
-      Serial.print(flash.getCapacity()); Serial.println(" bytes");
+      Serial.print(external_flash().getCapacity()); Serial.println(" bytes");
     } else if(program_store::mount_status() ==
               program_store::MountStatus::REPAIR_REQUIRED) {
       Serial.println("C5 init: catalogs damaged; explicit format required");
@@ -787,8 +800,8 @@ bool LoadProgram(u16 id) {
 bool Load(void) {
   isize address;
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear();
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     library_mk61::print_localized_at(0, 0, "ЧТ ", "Load ", 5);
     address = calc_address();
   }
@@ -865,16 +878,16 @@ bool Store(usize nSlot) {
 
 bool Store(void) {
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear(); lcd.setCursor(0, 0);
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear(); main_lcd().setCursor(0, 0);
   }
 
   if(check_empty_program()) return false; // Ошибка
 
   isize address;
   {
-    MK61DisplayUpdate update(lcd);
-    library_mk61::print_localized_at(0, 0, "ПИС ", "Save ", 5); //lcd.setCursor(7, 0);
+    MK61DisplayUpdate update(main_lcd());
+    library_mk61::print_localized_at(0, 0, "ПИС ", "Save ", 5); //main_lcd().setCursor(7, 0);
     address = calc_address();
   }
   if(address < 0) return false; // Ошибка
@@ -888,8 +901,8 @@ bool Store(void) {
     #endif
     sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
     {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(0, 0); lcd.print(library_mk61::text("OVER", "OVER")); lcd.setCursor(8, 0); lcd.print(library_mk61::text("press OK", "OK?"));
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("OVER", "OVER")); main_lcd().setCursor(8, 0); main_lcd().print(library_mk61::text("press OK", "OK?"));
     }
     if(kbd::get_key_wait() != KEY_OK) return false; // Ошибка
   }
@@ -922,8 +935,8 @@ bool Store(void) {
     #endif
     const u8 x = i / BLOCK_SIZE;
     {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(x, 1); lcd.print((char) 0xFF); lcd.print(i);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(x, 1); main_lcd().print((char) 0xFF); main_lcd().print(i);
     }
   }
   if(!program_store::write_mk61(name, script_buffer, script_len)) return false;
@@ -939,29 +952,29 @@ using namespace action;
 bool  EraseFlash(void) {
   sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.setCursor(0, 0); lcd.print(library_mk61::text("press OK ERASED!", "OK CTEP FLASH"));
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("press OK ERASED!", "OK CTEP FLASH"));
   }
   if(kbd::get_key_wait() != KEY_OK) return action::MENU_BACK;
  // стираем внешний флеш
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase slot ", "CTEP SLOT "));
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear(); main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("Erase slot ", "CTEP SLOT "));
   }
   if(!program_store::format()) {
     message_and_waitkey(library_mk61::text("Flash error", "FLASH ERROR"));
     return action::MENU_BACK;
   }
   {
-    MK61DisplayUpdate update(lcd);
-    lcd.clear(); lcd.setCursor(0, 0); lcd.print(library_mk61::text("Erase settings", "CTEP SETUP"));
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear(); main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("Erase settings", "CTEP SETUP"));
   }
   bool settings_reset_ok = true;
   if(flash_is_ok) settings_reset_ok = program_store::erase_settings();
   reset_persistent_settings_cache();
   if(settings_reset_ok) write_persistent_settings();
   library_mk61::load_settings_state();
-  lcd.setTextProfile(library_mk61::display_text_profile());
+  main_lcd().setTextProfile(library_mk61::display_text_profile());
   sound(PIN_BUZZER, 1000, 300, library_mk61::sound_volume());
   message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
   return action::MENU_EXIT;

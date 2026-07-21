@@ -2,8 +2,47 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <type_traits>
 
+#include "manual_lifetime.hpp"
 #include "runtime_safety.hpp"
+
+namespace {
+
+struct ConstructionProbe {
+  static int constructed;
+  static int destroyed;
+
+  explicit ConstructionProbe(int initial) : value(initial) { constructed++; }
+  ~ConstructionProbe(void) { destroyed++; }
+
+  int value;
+};
+
+int ConstructionProbe::constructed = 0;
+int ConstructionProbe::destroyed = 0;
+
+static_assert(std::is_trivially_default_constructible<
+                manual_lifetime::Storage<ConstructionProbe>>::value,
+              "Manual storage must not add a pre-main constructor");
+static_assert(std::is_trivially_destructible<
+                manual_lifetime::Storage<ConstructionProbe>>::value,
+              "Manual storage must not add a shutdown destructor");
+
+static void test_manual_lifetime(void) {
+  manual_lifetime::Storage<ConstructionProbe> storage;
+  assert(ConstructionProbe::constructed == 0);
+  assert(ConstructionProbe::destroyed == 0);
+
+  ConstructionProbe& probe = storage.construct(42);
+  assert(ConstructionProbe::constructed == 1);
+  assert(probe.value == 42);
+
+  storage.destroy();
+  assert(ConstructionProbe::destroyed == 1);
+}
+
+} // анонимное пространство имён
 
 static void test_deadline(void) {
   runtime_safety::Deadline deadline;
@@ -77,6 +116,7 @@ static void test_peripheral_bounds(void) {
 }
 
 int main(void) {
+  test_manual_lifetime();
   test_deadline();
   test_runtime_bounds();
   test_peripheral_bounds();

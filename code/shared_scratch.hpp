@@ -23,7 +23,8 @@ static constexpr usize SIZE = 1600;
 
 class [[nodiscard]] Lease {
   public:
-    Lease(void);
+    constexpr Lease(void)
+      : owner(Owner::NONE), buffer(0), requested(0), token(0) {}
     Lease(Owner owner, usize required);
     ~Lease(void);
 

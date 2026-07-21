@@ -14,7 +14,12 @@
 #include <string.h>
 
 #ifdef SPI_FLASH
+#if defined(PROGRAM_STORE_HOST_TEST)
 extern SpiNorFlash flash;
+static SpiNorFlash& flash_device(void) { return flash; }
+#else
+static SpiNorFlash& flash_device(void) { return external_flash(); }
+#endif
 #endif
 
 namespace program_store {
@@ -195,7 +200,7 @@ static u32 sector_address(u32 sector) {
 static bool read_bytes(u32 address, u8* out, usize len) {
   if(len == 0) return true;
 #ifdef SPI_FLASH
-  if(flash_is_ok && flash.readByteArray(address, out, len)) {
+  if(flash_is_ok && flash_device().readByteArray(address, out, len)) {
     disk_led_poll();
     return true;
   }
@@ -210,7 +215,7 @@ static bool write_bytes(u32 address, const u8* data, usize len) {
   if(len == 0) return true;
 #ifdef SPI_FLASH
   if(flash_is_ok && data != NULL) {
-    const bool ok = flash.writeByteArray(address, (u8*) data, len);
+    const bool ok = flash_device().writeByteArray(address, (u8*) data, len);
     disk_led_poll();
     return ok;
   }
@@ -224,7 +229,7 @@ static bool write_bytes(u32 address, const u8* data, usize len) {
 static bool write_byte(u32 address, u8 value) {
 #ifdef SPI_FLASH
   if(flash_is_ok) {
-    const bool ok = flash.writeByte(address, value);
+    const bool ok = flash_device().writeByte(address, value);
     disk_led_poll();
     return ok;
   }
@@ -239,7 +244,7 @@ static bool erase_sector(u32 sector) {
 #ifdef SPI_FLASH
   if(!flash_is_ok || sector >= g_geometry.physical_sectors) return false;
   const u32 stop_at = millis() + ERASE_TIMEOUT_MS;
-  while(!flash.eraseSector(sector_address(sector))) {
+  while(!flash_device().eraseSector(sector_address(sector))) {
     led::control();
     if((i32) (millis() - stop_at) >= 0) return false;
   }
@@ -313,8 +318,8 @@ static bool settings_guard_valid(const storage_geometry::Geometry& geometry) {
 #ifdef SPI_FLASH
   const u32 address = sector_address(geometry.settings_sector) +
                       SETTINGS_JOURNAL_SIZE;
-  if(!flash.rawPrepare(geometry.capacity_bytes) ||
-     !flash.rawRead(address, guard, sizeof(guard))) return false;
+  if(!flash_device().rawPrepare(geometry.capacity_bytes) ||
+     !flash_device().rawRead(address, guard, sizeof(guard))) return false;
 #else
   (void) geometry;
   return false;
@@ -933,8 +938,8 @@ static void encode_locator(u8* locator) {
   put_le32(locator, 52, g_geometry.settings_sector);
   put_le32(locator, 56, g_geometry.logical_sectors);
 #ifdef SPI_FLASH
-  put_le32(locator, 60, flash.capacityProbeUpper());
-  put_le32(locator, 64, flash.getJEDECID());
+  put_le32(locator, 60, flash_device().capacityProbeUpper());
+  put_le32(locator, 64, flash_device().getJEDECID());
 #else
   put_le32(locator, 60, g_geometry.capacity_bytes);
   put_le32(locator, 64, 0);
@@ -978,8 +983,8 @@ static bool load_capacity_for_reformat(void) {
   return false;
 #else
   u8 locator[LOCATOR_SIZE];
-  const u32 probe_upper = flash.capacityProbeUpper();
-  const u32 jedec_id = flash.getJEDECID();
+  const u32 probe_upper = flash_device().capacityProbeUpper();
+  const u32 jedec_id = flash_device().getJEDECID();
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
        memcmp(locator, "C5FS", 4) != 0 || locator[4] != FORMAT_VERSION ||
@@ -994,7 +999,7 @@ static bool load_capacity_for_reformat(void) {
     if(!storage_geometry::compute(capacity, geometry) ||
        get_le32(locator, 20) != geometry.physical_sectors ||
        get_le32(locator, 52) != geometry.settings_sector ||
-       !flash.setCapacity(capacity) || !settings_guard_valid(geometry)) {
+       !flash_device().setCapacity(capacity) || !settings_guard_valid(geometry)) {
       continue;
     }
     return true;
@@ -1010,8 +1015,8 @@ static bool load_locator(void) {
   u32 stored_probe_upper = 0;
   u32 stored_jedec_id = 0;
 #ifdef SPI_FLASH
-  const u32 probe_upper = flash.capacityProbeUpper();
-  const u32 jedec_id = flash.getJEDECID();
+  const u32 probe_upper = flash_device().capacityProbeUpper();
+  const u32 jedec_id = flash_device().getJEDECID();
 #else
   const u32 probe_upper = 0;
   const u32 jedec_id = 0;
@@ -1021,7 +1026,7 @@ static bool load_locator(void) {
     if(!locator_matches(locator, geometry, epoch, stored_probe_upper,
                         stored_jedec_id)) continue;
     if(stored_jedec_id != jedec_id || stored_probe_upper != probe_upper ||
-       !flash.setCapacity(geometry.capacity_bytes) ||
+       !flash_device().setCapacity(geometry.capacity_bytes) ||
        !settings_guard_valid(geometry)) continue;
     g_geometry = geometry;
     g_format_epoch = epoch;
@@ -1618,7 +1623,7 @@ static bool find_global_file(ProgramType type, const char* name, u16& out) {
 
 static bool format_internal(bool erase_settings) {
 #ifdef SPI_FLASH
-  const u32 capacity = flash.getCapacity();
+  const u32 capacity = flash_device().getCapacity();
 #else
   const u32 capacity = 0;
 #endif
@@ -1685,8 +1690,8 @@ void init(void) {
       const flash_capacity_probe::ProbeProgress progress = nullptr;
 #endif
       if(!flash_capacity_probe::detect(
-             flash, flash.capacityProbeUpper(), capacity, progress) ||
-         !flash.setCapacity(capacity)) {
+             flash_device(), flash_device().capacityProbeUpper(), capacity, progress) ||
+         !flash_device().setCapacity(capacity)) {
         dbgln(SPIROM, "C5 capacity probe: failed");
         return;
       }

@@ -113,7 +113,7 @@ class class_disassm_mk61 {
 
         if(IP_mk61 != cache_IP_mk61) { // счетчик команд изменился
           if(config.output_IP) {
-            lcd.setCursor(14, 1); print_hex(IP_mk61);
+            main_lcd().setCursor(14, 1); print_hex(IP_mk61);
           }
 
           cache_IP_mk61 = IP_mk61;
@@ -193,24 +193,25 @@ class class_disassm_mk61 {
     }
 
   public:
-    class_disassm_mk61(void) : lcd_enable(false), cache_IP_mk61(-1) {};
+    constexpr class_disassm_mk61(void)
+      : lcd_enable(false), cache_IP_mk61((u8) -1) {}
     inline void  print(void) {
       char disasm[LEN_DISASM_LINE+1];
 
-      MK61DisplayUpdate update(lcd);
+      MK61DisplayUpdate update(main_lcd());
       if(is_update(&disasm[0])) { // Включен режим отображения дизассемблера МК61
-        lcd.setCursor(X, Y); lcd.print(disasm);
+        main_lcd().setCursor(X, Y); main_lcd().print(disasm);
       }
     }
 
     void  print(const char* text) {
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(X, Y); lcd.print(text);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(X, Y); main_lcd().print(text);
     }
 
     void  print_hex(int num) const {
-      if(num < 10) lcd.print(' ');
-      lcd.print(num, HEX);
+      if(num < 10) main_lcd().print(' ');
+      main_lcd().print(num, HEX);
     }
 
     void  enable(void) {
@@ -223,15 +224,15 @@ class class_disassm_mk61 {
     void  disable(void) {
       dbgln(DISASM, "disassembler OFF!");
       lcd_enable = false;
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(X, Y); lcd.print("      ");
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(X, Y); main_lcd().print("      ");
     }
 
     void  disable(const char* text) {
       dbgln(DISASM, "disassembler OFF!");
       lcd_enable = false;
-      MK61DisplayUpdate update(lcd);
-      lcd.setCursor(X, Y); lcd.print(text);
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().setCursor(X, Y); main_lcd().print(text);
     }
 
     bool  turn_on_off(void) {

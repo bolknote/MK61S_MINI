@@ -52,8 +52,9 @@ extern bool FontSetup(void);
 extern bool ResetDevice(void);
 
 namespace library_mk61 {
+  static constexpr int MAIN_MENU_COUNT = 10;
   extern  const int       COUNT_PUNCTS;
-  extern  t_punct*        MENU[];
+  extern  t_punct*        MENU[MAIN_MENU_COUNT];
 
   extern  bool  sound_is_on(void);
   extern  u8    sound_volume(void);
@@ -93,10 +94,10 @@ namespace library_mk61 {
       return;
     }
 
-    lcd.setCursor(x, y);
+    main_lcd().setCursor(x, y);
     u8 used = 0;
-    while(en[used] != 0 && used < width) lcd.write((u8) en[used++]);
-    while(used++ < width) lcd.write((u8) ' ');
+    while(en[used] != 0 && used < width) main_lcd().write((u8) en[used++]);
+    while(used++ < width) main_lcd().write((u8) ' ');
   }
 
   inline void restore_localized_font(void) {
@@ -116,7 +117,9 @@ class class_menu {
     bool handle_settings_adjustment(i32 key);
 
   public:
-    class_menu(t_punct** punts_of_menu, int count_of_puncts) : MENU_PUNCT_COUNT(count_of_puncts), active_punct(0), previous_up(0), puncts(punts_of_menu) {};
+    constexpr class_menu(t_punct** punts_of_menu, int count_of_puncts)
+      : MENU_PUNCT_COUNT(count_of_puncts), active_punct(0), previous_up(0),
+        puncts(punts_of_menu) {}
     bool select(void);
     i32  select(i32 key);
 };

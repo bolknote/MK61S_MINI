@@ -405,7 +405,7 @@ class class_calc_config {
   public:
     bool disassm;
     bool output_IP;
-    class_calc_config(void) : disassm(false), output_IP(false) {}
+    constexpr class_calc_config(void) : disassm(false), output_IP(false) {}
 };
 
 namespace cfg {

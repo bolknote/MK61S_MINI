@@ -59,7 +59,6 @@ const   u8                  NL = 0x0A;
 static  constexpr usize     MAX_INPUT_CHAR = terminal_core::INPUT_CAPACITY;
 
 extern  class_disassm_mk61  disassembler;
-extern  MK61Display         lcd;
 extern  void DFU_enable(void);
 
 
@@ -641,12 +640,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
   public:
     usize recive_pos;
 
-    class_terminal(void)
+    constexpr class_terminal(void)
       : AT(0), pending_confirmation_cmd(CMD_UNKNOWN), nSlot(-1),
-        input_overflow(false), pending_save_parent_id(program_store::ROOT_ID),
-        current_directory(program_store::ROOT_ID), recive_pos(0) {
-      pending_save_name[0] = 0;
-    }
+        input_overflow(false), pending_save_name{},
+        pending_save_parent_id(program_store::ROOT_ID),
+        current_directory(program_store::ROOT_ID), recive_pos(0) {}
 
     void reset_command_state(void) {
       AT                    = 0;
