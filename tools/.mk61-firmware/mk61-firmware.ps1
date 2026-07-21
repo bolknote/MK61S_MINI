@@ -46,6 +46,29 @@ try {
     $script:IsMacHost = -not $script:IsWindowsHost -and (uname -s 2>$null) -eq 'Darwin'
 }
 
+function Initialize-TuiGlyphs {
+    if ($script:IsWindowsHost) {
+        # Windows 10 conhost with Consolas replaces several ballot/radio glyphs
+        # with the same question-box.  Keep the Norton-style UI unambiguous in
+        # both Windows PowerShell 5.1 and PowerShell 7.
+        $script:Glyphs = @{
+            Selector = '>'; RadioOff = '( )'; RadioOn = '(*)'; RadioDisabled = '(-)'
+            CheckOff = '[ ]'; CheckOn = '[x]'
+            MenuUpload = '^'; MenuBuild = '#'; MenuChoice = 'o'; MenuOptions = '[x]'
+            MenuDetect = '?'; MenuCheck = '+'; MenuInstall = 'v'; MenuLog = '='; MenuQuit = 'x'
+        }
+    } else {
+        $script:Glyphs = @{
+            Selector = '▶'; RadioOff = '○'; RadioOn = '◉'; RadioDisabled = '⊘'
+            CheckOff = '☐'; CheckOn = '☑'
+            MenuUpload = '▲'; MenuBuild = '⚒'; MenuChoice = '◉'; MenuOptions = '☑'
+            MenuDetect = '⌕'; MenuCheck = '✓'; MenuInstall = '↓'; MenuLog = '≡'; MenuQuit = '×'
+        }
+    }
+}
+
+Initialize-TuiGlyphs
+
 $script:State = [ordered]@{
     Profile = ''
     Platform = ''
@@ -59,6 +82,7 @@ $script:State = [ordered]@{
     EnableCoreMath = 0
     DeviceStatus = 'не проверялось'
     DfuPath = ''
+    CubeProgrammerPath = ''
     DfuStatus = 'не найден'
     DetectedPort = ''
     DetectedVersion = ''
@@ -222,7 +246,11 @@ function Get-AllCompileFlags {
     return "$($script:Profiles[$Profile].Flags) $(Get-CompileOptionFlags)"
 }
 
-function Get-Checkbox { param([int]$Value) if ($Value -eq 1) { return '☑' } return '☐' }
+function Get-Checkbox {
+    param([int]$Value)
+    if ($Value -eq 1) { return $script:Glyphs.CheckOn }
+    return $script:Glyphs.CheckOff
+}
 
 function Get-CompileOptionsSummary {
     return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP  {3} шрифты  {4} USER  {5} CORE math' -f
@@ -236,9 +264,9 @@ function Get-CompileOptionsSummary {
 
 function Get-CompileOptionsDetails {
     $mathText = if ($script:State.EnableCoreMath -eq 1) {
-        '☑ CORE math (MK61_MATH_BACKEND=1)'
+        "$($script:Glyphs.CheckOn) CORE math (MK61_MATH_BACKEND=1)"
     } else {
-        '☐ CORE math (MK61_MATH_BACKEND=0, libm)'
+        "$($script:Glyphs.CheckOff) CORE math (MK61_MATH_BACKEND=0, libm)"
     }
     return @(
         "$(Get-Checkbox $script:State.EnableFocal) FOCAL (MK61_ENABLE_FOCAL)"
@@ -262,6 +290,7 @@ function Save-Config {
         "PLATFORM=$($script:State.Platform)"
         "SCREEN=$($script:State.Screen)"
         "DFU_UTIL_PATH=$($script:State.DfuPath)"
+        "STM32_CUBE_PROGRAMMER_PATH=$($script:State.CubeProgrammerPath)"
         "MK61_ENABLE_FOCAL=$($script:State.EnableFocal)"
         "MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)"
         "MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
@@ -303,6 +332,7 @@ function Load-Config {
             'PLATFORM' { if (Test-Platform $value) { $savedPlatform = $value } }
             'SCREEN' { if (Test-Screen $value) { $savedScreen = $value } }
             'DFU_UTIL_PATH' { $script:State.DfuPath = $value }
+            'STM32_CUBE_PROGRAMMER_PATH' { $script:State.CubeProgrammerPath = $value }
             'MK61_ENABLE_FOCAL' { if (Test-BooleanValue $value) { $script:State.EnableFocal = [int]$value } }
             'MK61_ENABLE_TINYBASIC' { if (Test-BooleanValue $value) { $script:State.EnableTinyBasic = [int]$value } }
             'MK61_ENABLE_WBMP_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableWbmp = [int]$value } }
@@ -494,9 +524,11 @@ function Write-BoxText {
 
 function Get-MenuStyle {
     param([string]$Label)
-    if ($Label -match '^(◉|☑|⌕) ') { return 'Cyan' }
-    if ($Label -match '^↓ ') { return 'Yellow' }
-    if ($Label -match '^× ') { return 'Red' }
+    foreach ($prefix in @($script:Glyphs.MenuChoice, $script:Glyphs.MenuOptions, $script:Glyphs.MenuDetect)) {
+        if ($Label.StartsWith("$prefix ")) { return 'Cyan' }
+    }
+    if ($Label.StartsWith("$($script:Glyphs.MenuInstall) ")) { return 'Yellow' }
+    if ($Label.StartsWith("$($script:Glyphs.MenuQuit) ")) { return 'Red' }
     return 'White'
 }
 
@@ -504,7 +536,7 @@ function Draw-MenuItem {
     param([int]$Index, [int]$Selected, [object[]]$Items)
     $item = $Items[$Index]
     if ($Index -eq $Selected) {
-        Write-BoxLine ($script:ListFirstRow + $Index) ("▶ " + $item.Label) 'Selected'
+        Write-BoxLine ($script:ListFirstRow + $Index) ("$($script:Glyphs.Selector) " + $item.Label) 'Selected'
     } else {
         Write-BoxLine ($script:ListFirstRow + $Index) ("  " + $item.Label) (Get-MenuStyle $item.Label)
     }
@@ -556,12 +588,12 @@ function Show-Menu {
 function Draw-RadioItem {
     param([int]$Index, [int]$Selected, [int]$Current, [object[]]$Items)
     $item = $Items[$Index]
-    $marker = '○'
+    $marker = $script:Glyphs.RadioOff
     $style = 'Yellow'
-    if ($item.State -eq 'disabled') { $marker = '⊘'; $style = 'Red' }
-    elseif ($Index -eq $Current) { $marker = '◉'; $style = 'Yellow' }
+    if ($item.State -eq 'disabled') { $marker = $script:Glyphs.RadioDisabled; $style = 'Red' }
+    elseif ($Index -eq $Current) { $marker = $script:Glyphs.RadioOn; $style = 'Yellow' }
     $text = "$marker  $($item.Label)"
-    if ($Index -eq $Selected) { Write-BoxLine ($script:ListFirstRow + $Index) ("▶ " + $text) 'Selected' }
+    if ($Index -eq $Selected) { Write-BoxLine ($script:ListFirstRow + $Index) ("$($script:Glyphs.Selector) " + $text) 'Selected' }
     else { Write-BoxLine ($script:ListFirstRow + $Index) ("  " + $text) $style }
 }
 
@@ -621,11 +653,17 @@ function Show-RadioList {
 
 function Draw-CheckItem {
     param([int]$Index, [int]$Selected, [object[]]$Items, [bool[]]$Checked)
-    $marker = if ($Checked[$Index]) { '☑' } else { '☐' }
+    $marker = if ($Checked[$Index]) { $script:Glyphs.CheckOn } else { $script:Glyphs.CheckOff }
     $style = 'Yellow'
     $text = "$marker  $($Items[$Index].Label)"
-    if ($Index -eq $Selected) { Write-BoxLine ($script:ListFirstRow + $Index) ("▶ " + $text) 'Selected' }
+    if ($Index -eq $Selected) { Write-BoxLine ($script:ListFirstRow + $Index) ("$($script:Glyphs.Selector) " + $text) 'Selected' }
     else { Write-BoxLine ($script:ListFirstRow + $Index) ("  " + $text) $style }
+}
+
+function Get-TuiKeyName {
+    param([ConsoleKeyInfo]$Key)
+    if ($Key.KeyChar -eq ' ') { return 'Spacebar' }
+    return [string]$Key.Key
 }
 
 function Show-Checklist {
@@ -644,8 +682,9 @@ function Show-Checklist {
 
     while ($true) {
         $key = [Console]::ReadKey($true)
+        $keyName = Get-TuiKeyName $key
         $previous = $selected
-        switch ($key.Key) {
+        switch ($keyName) {
             'UpArrow' { $selected--; if ($selected -lt 0) { $selected = $Items.Count - 1 } }
             'DownArrow' { $selected++; if ($selected -ge $Items.Count) { $selected = 0 } }
             'Home' { $selected = 0 }
@@ -677,7 +716,7 @@ function Show-YesNo {
     Write-BoxLine (2 + $count)
     $first = 3 + $count
     Write-BoxLine $first '  Да, продолжить' 'White'
-    Write-BoxLine ($first + 1) '▶ Отмена' 'Selected'
+    Write-BoxLine ($first + 1) "$($script:Glyphs.Selector) Отмена" 'Selected'
     Write-BoxLine ($first + 2)
     Write-BottomBorder ($first + 3) '←→ выбрать · Enter подтвердить · Esc отменить'
     while ($true) {
@@ -694,11 +733,11 @@ function Show-YesNo {
         }
         if ($selected -ne $previous) {
             if ($selected -eq 0) {
-                Write-BoxLine $first '▶ Да, продолжить' 'Selected'
+                Write-BoxLine $first "$($script:Glyphs.Selector) Да, продолжить" 'Selected'
                 Write-BoxLine ($first + 1) '  Отмена' 'White'
             } else {
                 Write-BoxLine $first '  Да, продолжить' 'White'
-                Write-BoxLine ($first + 1) '▶ Отмена' 'Selected'
+                Write-BoxLine ($first + 1) "$($script:Glyphs.Selector) Отмена" 'Selected'
             }
         }
     }
@@ -962,8 +1001,17 @@ function Get-DependencyReport {
     } else {
         $lines.Add('Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
     }
-    if (Find-DfuUtil) { $lines.Add("DFU uploader: $script:DfuExecutable") }
-    else { $lines.Add('DFU uploader: не найден (появится вместе с STM32 Core)') }
+    if ($script:IsWindowsHost) {
+        if (Find-Stm32CubeProgrammer) {
+            $lines.Add("DFU uploader: arduino-cli → $script:CubeProgrammerExecutable")
+        } else {
+            $lines.Add('DFU uploader: нужен STM32CubeProgrammer')
+        }
+    } elseif (Find-DfuUtil) {
+        $lines.Add("DFU uploader: $script:DfuExecutable")
+    } else {
+        $lines.Add('DFU uploader: dfu-util не найден (появится вместе с STM32 Core)')
+    }
     return $lines -join [Environment]::NewLine
 }
 
@@ -1000,6 +1048,73 @@ function Install-ArduinoDependencies {
 }
 
 $script:DfuExecutable = ''
+$script:CubeProgrammerExecutable = ''
+
+function Set-Stm32CubeProgrammer {
+    param([string]$Candidate)
+    $resolved = Resolve-Executable $Candidate
+    if ([string]::IsNullOrEmpty($resolved) -or
+        [IO.Path]::GetFileName($resolved) -notmatch '^(?i:STM32_Programmer_CLI\.exe)$') { return $false }
+    $script:CubeProgrammerExecutable = $resolved
+
+    # The STM32 Core upload recipe starts its helper in a child process and
+    # resolves STM32_Programmer_CLI.exe through PATH.  This also makes a path
+    # selected by the user available to that helper.
+    $directory = Split-Path -Parent $resolved
+    $processPath = [Environment]::GetEnvironmentVariable('Path', 'Process')
+    $entries = if ([string]::IsNullOrEmpty($processPath)) { @() } else { @($processPath -split [regex]::Escape([string][IO.Path]::PathSeparator)) }
+    if (-not @($entries | Where-Object { $_.TrimEnd('\','/') -ieq $directory.TrimEnd('\','/') }).Count) {
+        [Environment]::SetEnvironmentVariable('Path', "$directory$([IO.Path]::PathSeparator)$processPath", 'Process')
+    }
+    return $true
+}
+
+function Find-Stm32CubeProgrammer {
+    if (-not [string]::IsNullOrEmpty($script:CubeProgrammerExecutable) -and
+        (Test-Path -LiteralPath $script:CubeProgrammerExecutable -PathType Leaf)) { return $true }
+    $script:CubeProgrammerExecutable = ''
+    $override = [Environment]::GetEnvironmentVariable('MK61_STM32_PROGRAMMER')
+    if (-not [string]::IsNullOrWhiteSpace($override) -and (Set-Stm32CubeProgrammer $override)) { return $true }
+    if (-not [string]::IsNullOrWhiteSpace($script:State.CubeProgrammerPath) -and
+        (Set-Stm32CubeProgrammer $script:State.CubeProgrammerPath)) { return $true }
+    $candidates = New-Object 'System.Collections.Generic.List[string]'
+    $candidates.Add('STM32_Programmer_CLI.exe')
+    foreach ($rootName in @('ProgramW6432', 'ProgramFiles', 'ProgramFiles(x86)')) {
+        $root = [Environment]::GetEnvironmentVariable($rootName)
+        if (-not [string]::IsNullOrWhiteSpace($root)) {
+            $candidates.Add((Join-Path $root 'STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI.exe'))
+        }
+    }
+    foreach ($candidate in $candidates) {
+        if (Set-Stm32CubeProgrammer $candidate) { return $true }
+    }
+    return $false
+}
+
+function Configure-Stm32CubeProgrammer {
+    if (Find-Stm32CubeProgrammer) {
+        if ([string]::IsNullOrEmpty([Environment]::GetEnvironmentVariable('MK61_STM32_PROGRAMMER')) -and
+            $script:State.CubeProgrammerPath -ne $script:CubeProgrammerExecutable) {
+            $script:State.CubeProgrammerPath = $script:CubeProgrammerExecutable
+            Save-Config
+        }
+        return $true
+    }
+
+    $help = "STM32CubeProgrammer не найден. Укажите полный путь к STM32_Programmer_CLI.exe.`n`nОбычно: C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin\STM32_Programmer_CLI.exe."
+    while ($true) {
+        $answer = Show-InputDialog 'DFU uploader' $help
+        if ($answer.Cancelled -or [string]::IsNullOrWhiteSpace($answer.Value)) { return $false }
+        $expanded = Expand-EnteredPath $answer.Value
+        if (Set-Stm32CubeProgrammer $expanded) {
+            $script:State.CubeProgrammerPath = $script:CubeProgrammerExecutable
+            Save-Config
+            Show-Message 'DFU uploader' "STM32CubeProgrammer найден и сохранён:`n`n$($script:State.CubeProgrammerPath)"
+            return $true
+        }
+        Show-Message 'DFU uploader' "Ожидался файл STM32_Programmer_CLI.exe:`n`n$expanded"
+    }
+}
 
 function Get-DfuLocationLabel {
     param([string]$Executable)
@@ -1141,15 +1256,26 @@ function Configure-DfuUtil {
     }
 }
 
+function Configure-DfuUploader {
+    if ($script:IsWindowsHost) {
+        $hasCli = Test-CommandAvailable $script:ArduinoCli
+        $hasProgrammer = Configure-Stm32CubeProgrammer
+        if ($hasCli -and $hasProgrammer) {
+            $script:State.DfuStatus = 'Arduino CLI · STM32CubeProgrammer'
+            return $true
+        }
+        if (-not $hasCli -and -not $hasProgrammer) { $script:State.DfuStatus = 'нужны arduino-cli и STM32CubeProgrammer' }
+        elseif (-not $hasCli) { $script:State.DfuStatus = 'arduino-cli не найден' }
+        else { $script:State.DfuStatus = 'STM32CubeProgrammer не найден' }
+        return $false
+    }
+    return Configure-DfuUtil
+}
+
 function Get-DfuListing {
     if (-not (Find-DfuUtil)) { return '' }
     $result = Invoke-NativeCapture $script:DfuExecutable @('-l')
     return $result.Output
-}
-
-function Test-DfuPresent {
-    $listing = Get-DfuListing
-    return $listing -match '(?i)(\[0483:df11\]|0483:df11)'
 }
 
 function Get-ObjectPropertyValue {
@@ -1158,6 +1284,71 @@ function Get-ObjectPropertyValue {
     $property = $Object.PSObject.Properties[$Name]
     if ($null -eq $property) { return $null }
     return $property.Value
+}
+
+function Test-DfuHardwareId {
+    param([string]$InstanceId)
+    return -not [string]::IsNullOrWhiteSpace($InstanceId) -and
+        $InstanceId -match '(?i)VID_0483&PID_DF11'
+}
+
+function Get-WindowsDfuDevices {
+    if (-not $script:IsWindowsHost) { return @() }
+    $candidates = @()
+    $enumerated = $false
+
+    if ($null -ne (Get-Command Get-PnpDevice -CommandType Cmdlet -ErrorAction SilentlyContinue)) {
+        try {
+            $candidates = @(Get-PnpDevice -PresentOnly -ErrorAction Stop)
+            $enumerated = $true
+        } catch {}
+    }
+    if (-not $enumerated -and
+        $null -ne (Get-Command Get-CimInstance -CommandType Cmdlet -ErrorAction SilentlyContinue)) {
+        try {
+            $candidates = @(Get-CimInstance -ClassName Win32_PnPEntity -ErrorAction Stop)
+            $enumerated = $true
+        } catch {}
+    }
+    if (-not $enumerated -and
+        $null -ne (Get-Command Get-WmiObject -CommandType Cmdlet -ErrorAction SilentlyContinue)) {
+        try {
+            $candidates = @(Get-WmiObject -Class Win32_PnPEntity -ErrorAction Stop)
+            $enumerated = $true
+        } catch {}
+    }
+
+    $found = New-Object 'System.Collections.Generic.List[object]'
+    $seen = @{}
+    foreach ($device in $candidates) {
+        $instanceId = [string](Get-ObjectPropertyValue $device 'InstanceId')
+        if ([string]::IsNullOrEmpty($instanceId)) {
+            $instanceId = [string](Get-ObjectPropertyValue $device 'PNPDeviceID')
+        }
+        if (-not (Test-DfuHardwareId $instanceId) -or $seen.ContainsKey($instanceId)) { continue }
+        $present = Get-ObjectPropertyValue $device 'Present'
+        if ($null -ne $present -and -not [bool]$present) { continue }
+        $errorCode = Get-ObjectPropertyValue $device 'ConfigManagerErrorCode'
+        if ($null -ne $errorCode -and [int]$errorCode -eq 45) { continue }
+        $name = [string](Get-ObjectPropertyValue $device 'FriendlyName')
+        if ([string]::IsNullOrWhiteSpace($name)) { $name = [string](Get-ObjectPropertyValue $device 'Name') }
+        if ([string]::IsNullOrWhiteSpace($name)) { $name = 'STM32 BOOTLOADER' }
+        $seen[$instanceId] = $true
+        $found.Add([pscustomobject]@{
+            InstanceId = $instanceId
+            Name = $name
+            Status = [string](Get-ObjectPropertyValue $device 'Status')
+        })
+    }
+    return $found.ToArray()
+}
+
+function Test-DfuPresent {
+    if ($script:IsWindowsHost) {
+        return @(Get-WindowsDfuDevices).Count -gt 0
+    }
+    $listing = Get-DfuListing
+    return $listing -match '(?i)(\[0483:df11\]|0483:df11)'
 }
 
 function Get-CdcPorts {
@@ -1247,7 +1438,13 @@ function Get-RecognizedProfile {
 function Detect-Device {
     $script:State.DetectedPort = ''
     $script:State.DetectedVersion = ''
-    if (Test-DfuPresent) {
+    if ($script:IsWindowsHost) {
+        $dfuDevices = @(Get-WindowsDfuDevices)
+        if ($dfuDevices.Count -gt 0) {
+            $script:State.DeviceStatus = "STM32 DFU 0483:df11 · Windows · $($dfuDevices[0].Name)"
+            return $true
+        }
+    } elseif (Test-DfuPresent) {
         $script:State.DeviceStatus = 'STM32 DFU 0483:df11 · готов к загрузке'
         return $true
     }
@@ -1297,7 +1494,7 @@ function Choose-Screen {
         elseif ($script:State.Screen -eq $id) { $state = 'on' }
         [pscustomobject]@{ Tag = $id; Label = $script:ScreenLabels[$id]; State = $state }
     }
-    $chosen = Show-RadioList 'Экран' 'Выберите дисплей. Символ ⊘ означает, что экран не совместим с выбранной платформой:' @($items)
+    $chosen = Show-RadioList 'Экран' "Выберите дисплей. Символ $($script:Glyphs.RadioDisabled) означает, что экран не совместим с выбранной платформой:" @($items)
     if ([string]::IsNullOrEmpty($chosen)) { return $false }
     if ((Test-Platform $script:State.Platform) -and
         -not (Test-HardwareCompatible $script:State.Platform $chosen)) {
@@ -1463,8 +1660,22 @@ function Wait-ForDfu {
 }
 
 function Ensure-DfuReady {
-    if (-not (Find-DfuUtil)) {
-        $message = "DFU uploader не найден. Укажите путь при запуске меню или установите STM32 Arduino Core $($script:Stm32CoreVersion)."
+    if ($script:IsWindowsHost -and -not (Test-CommandAvailable $script:ArduinoCli)) {
+        $message = 'На Windows для сборки и DFU-загрузки нужен arduino-cli.exe.'
+        Write-LastLog $message
+        if ($script:State.Interactive) { Show-Message 'Arduino CLI' $message }
+        else { [Console]::Error.WriteLine($message) }
+        return $false
+    }
+    if ($script:IsWindowsHost -and -not (Find-Stm32CubeProgrammer)) {
+        $message = "STM32CubeProgrammer не найден. Установите его с сайта ST; Arduino CLI использует официальный DFU recipe STM32 Core.`nhttps://www.st.com/en/development-tools/stm32cubeprog.html"
+        Write-LastLog $message
+        if ($script:State.Interactive) { Show-Message 'DFU uploader' $message }
+        else { [Console]::Error.WriteLine($message) }
+        return $false
+    }
+    if (-not $script:IsWindowsHost -and -not (Find-DfuUtil)) {
+        $message = "dfu-util не найден. Укажите путь при запуске меню или установите STM32 Arduino Core $($script:Stm32CoreVersion)."
         Write-LastLog $message
         if ($script:State.Interactive) { Show-Message 'DFU uploader' $message }
         else { [Console]::Error.WriteLine($message) }
@@ -1499,6 +1710,20 @@ function Ensure-DfuReady {
     return $false
 }
 
+function Get-UploadInvocation {
+    param([string]$Artifact)
+    if ($script:IsWindowsHost) {
+        return [pscustomobject]@{
+            Executable = $script:ArduinoCli
+            Arguments = [string[]]@('upload', '--fqbn', $script:Fqbn, '--input-file', $Artifact)
+        }
+    }
+    return [pscustomobject]@{
+        Executable = $script:DfuExecutable
+        Arguments = [string[]]@('-d', '0483:df11', '-a', '0', '-s', '0x08000000:leave', '-D', $Artifact)
+    }
+}
+
 function Upload-Selected {
     if (-not (Ensure-HardwareProfile)) { return $false }
     if ($script:State.Interactive) {
@@ -1508,9 +1733,9 @@ function Upload-Selected {
     if (-not (Build-Selected)) { return $false }
     if (-not (Ensure-DfuReady)) { return $false }
     $artifact = Join-Path $script:OutputDir $script:Profiles[$script:State.Profile].Artifact
-    $arguments = @('-d','0483:df11','-a','0','-s','0x08000000:leave','-D',$artifact)
+    $upload = Get-UploadInvocation $artifact
     if (Invoke-ExternalWithProgress 'Загрузка прошивки' 'Записываю и перезапускаю STM32' `
-        $script:LastLog 'measured' $script:DfuExecutable $arguments) {
+        $script:LastLog 'measured' $upload.Executable $upload.Arguments) {
         $script:State.DeviceStatus = 'прошивка загружена; устройство перезапущено'
         if ($script:State.Interactive) {
             Show-Message 'Готово' "Прошивка загружена.`n`n$(Get-ProfileLabel $script:State.Profile)"
@@ -1533,6 +1758,7 @@ function Show-Config {
     [Console]::WriteLine("SCREEN=$($script:State.Screen)")
     [Console]::WriteLine("PROFILE=$($script:State.Profile)")
     [Console]::WriteLine("DFU_UTIL_PATH=$($script:State.DfuPath)")
+    [Console]::WriteLine("STM32_CUBE_PROGRAMMER_PATH=$($script:State.CubeProgrammerPath)")
     [Console]::WriteLine("MK61_ENABLE_FOCAL=$($script:State.EnableFocal)")
     [Console]::WriteLine("MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)")
     [Console]::WriteLine("MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)")
@@ -1554,19 +1780,19 @@ function Invoke-InteractiveMain {
     $script:State.Interactive = $true
     Enter-Tui
     Load-Config
-    [void](Configure-DfuUtil)
+    [void](Configure-DfuUploader)
     $script:State.DeviceStatus = 'не проверялось · пункт «Найти устройство»'
     $items = @(
-        [pscustomobject]@{ Tag = 'upload'; Label = '▲ Собрать и прошить' }
-        [pscustomobject]@{ Tag = 'build'; Label = '⚒ Только собрать .bin' }
-        [pscustomobject]@{ Tag = 'platform'; Label = '◉ Платформа' }
-        [pscustomobject]@{ Tag = 'screen'; Label = '◉ Экран' }
-        [pscustomobject]@{ Tag = 'options'; Label = '☑ Ключи компиляции' }
-        [pscustomobject]@{ Tag = 'detect'; Label = '⌕ Найти устройство' }
-        [pscustomobject]@{ Tag = 'deps'; Label = '✓ Проверить зависимости' }
-        [pscustomobject]@{ Tag = 'setup'; Label = '↓ Установить Arduino-зависимости' }
-        [pscustomobject]@{ Tag = 'log'; Label = '≡ Последний журнал' }
-        [pscustomobject]@{ Tag = 'quit'; Label = '× Выход' }
+        [pscustomobject]@{ Tag = 'upload'; Label = "$($script:Glyphs.MenuUpload) Собрать и прошить" }
+        [pscustomobject]@{ Tag = 'build'; Label = "$($script:Glyphs.MenuBuild) Только собрать .bin" }
+        [pscustomobject]@{ Tag = 'platform'; Label = "$($script:Glyphs.MenuChoice) Платформа" }
+        [pscustomobject]@{ Tag = 'screen'; Label = "$($script:Glyphs.MenuChoice) Экран" }
+        [pscustomobject]@{ Tag = 'options'; Label = "$($script:Glyphs.MenuOptions) Ключи компиляции" }
+        [pscustomobject]@{ Tag = 'detect'; Label = "$($script:Glyphs.MenuDetect) Найти устройство" }
+        [pscustomobject]@{ Tag = 'deps'; Label = "$($script:Glyphs.MenuCheck) Проверить зависимости" }
+        [pscustomobject]@{ Tag = 'setup'; Label = "$($script:Glyphs.MenuInstall) Установить Arduino-зависимости" }
+        [pscustomobject]@{ Tag = 'log'; Label = "$($script:Glyphs.MenuLog) Последний журнал" }
+        [pscustomobject]@{ Tag = 'quit'; Label = "$($script:Glyphs.MenuQuit) Выход" }
     )
     while ($true) {
         $platformText = Get-PlatformLabel $script:State.Platform
@@ -1615,7 +1841,7 @@ Profiles:
   classic-v2, classic-v3, 40th
 
 Environment overrides:
-  MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_BUILD_ROOT,
+  MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,
   MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_COLOR
 
 The Bash and PowerShell tools share .mk61-firmware.conf.
@@ -1702,6 +1928,8 @@ function Invoke-Application {
     }
     return 2
 }
+
+if ([Environment]::GetEnvironmentVariable('MK61_POWERSHELL_IMPORT_ONLY') -eq '1') { return }
 
 $script:ExitCode = 1
 try {
