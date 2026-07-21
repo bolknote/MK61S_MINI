@@ -57,7 +57,9 @@ void loadCustomChars(MK61Display& display) {
   }
 }
 
-void drawFrame(MK61Display& display, const char* model, const char* version, u8 frame) {
+#if !defined(MK61_DISPLAY_LCD1602)
+void drawFrame(MK61Display& display, const char* model, const char* version,
+               u8 frame) {
   const char* const text[ROWS] = {model, version};
   u8 row_buffer[COLS];
 
@@ -68,6 +70,7 @@ void drawFrame(MK61Display& display, const char* model, const char* version, u8 
     for(u8 col = 0; col < COLS; col++) display.write(row_buffer[col]);
   }
 }
+#endif
 
 bool pollEscape(void) {
   const isize scan_code = kbd::scan();
@@ -92,15 +95,45 @@ bool waitOrEscape(t_time_ms duration_ms, EscapePolicy escape_policy) {
 Result show(MK61Display& display, const char* model, const char* version,
             EscapePolicy escape_policy) {
   loadCustomChars(display);
+
+#if defined(MK61_DISPLAY_LCD1602)
+  const char* const text[ROWS] = {model, version};
+  u8 ddram[ROWS][lcd1602_shifted_viewport::DDRAM_COLS];
+  for(u8 row = 0; row < ROWS; row++) {
+    composeLcd1602DdramRow(text[row], LOGO[row], ddram[row]);
+  }
+
+  u8 current_frame = 0;
+  display.renderShiftedViewport(ddram, lcd1602ShiftForFrame(current_frame));
+  bool skipped = waitOrEscape(LOGO_HOLD_MS, escape_policy);
+
+  for(u8 frame = 1; frame <= FINAL_FRAME && !skipped; frame++) {
+    current_frame = frame;
+    display.renderShiftedViewport(ddram, lcd1602ShiftForFrame(frame));
+    const t_time_ms hold_ms = frame == FINAL_FRAME ? FINAL_HOLD_MS : FRAME_MS;
+    skipped = waitOrEscape(hold_ms, escape_policy);
+  }
+
+  // Нормализуем DDRAM и аппаратный shift на всех путях, включая ESC. На
+  // завершённой анимации текст остаётся неизменным и переход не виден.
+  for(u8 row = 0; row < ROWS; row++) {
+    stabilizeLcd1602DdramRow(text[row], ddram[row]);
+  }
+  display.renderShiftedViewport(ddram, lcd1602ShiftForFrame(current_frame));
+  display.endShiftedViewport();
+  return skipped ? Result::SKIPPED : Result::COMPLETED;
+#else
   drawFrame(display, model, version, 0);
   if(waitOrEscape(LOGO_HOLD_MS, escape_policy)) return Result::SKIPPED;
 
   for(u8 frame = 1; frame <= FINAL_FRAME; frame++) {
     drawFrame(display, model, version, frame);
-    if(waitOrEscape(FRAME_MS, escape_policy)) return Result::SKIPPED;
+    const t_time_ms hold_ms = frame == FINAL_FRAME ? FINAL_HOLD_MS : FRAME_MS;
+    if(waitOrEscape(hold_ms, escape_policy)) return Result::SKIPPED;
   }
 
   return Result::COMPLETED;
+#endif
 }
 
 } // пространство имён startup_splash

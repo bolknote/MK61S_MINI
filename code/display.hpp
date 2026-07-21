@@ -35,6 +35,12 @@ namespace lcd_display {
 
 static constexpr u8 COLS = 16;
 
+enum class BusyFlagStatus : u8 {
+  NOT_AVAILABLE,
+  ACTIVE,
+  FIXED_DELAYS,
+};
+
 struct TextProfile {
   u8 rows;
   u8 glyph_width;
@@ -44,6 +50,7 @@ struct TextProfile {
 
 #if defined(MK61_DISPLAY_LCD1602)
 static constexpr u8 ROWS = 2;
+static constexpr u8 DDRAM_COLS = 40;
 static constexpr u8 DEFAULT_ROWS = ROWS;
 static constexpr u8 MAX_ROWS = ROWS;
 static inline TextProfile defaultTextProfileForRows(u8) {
@@ -151,6 +158,9 @@ class MK61Display : public Print {
     bool readCell(u8 x, u8 y, u8& value) const;
     bool copyCustomChar(u8 nChar, u8 glyph[8]) const;
     void clearCustomChar(u8 nChar);
+    void renderShiftedViewport(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+    void endShiftedViewport(void);
 #endif
     void writeCodepoint(u16 codepoint);
     bool installFont(const u8* data, u16 size);
@@ -168,6 +178,8 @@ class MK61Display : public Print {
     bool writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
                                         const u8* cells, usize count);
     void endCellAnimation(void);
+    lcd_display::BusyFlagStatus busyFlagStatus(void) const;
+    u32 busyFlagTimeouts(void) const;
     u8 cols(void) const { return lcd_display::COLS; }
 #if defined(MK61_DISPLAY_LCD1602)
     u8 rows(void) const { return lcd_display::ROWS; }
@@ -189,11 +201,22 @@ class MK61Display : public Print {
     bool writeCellAnimationFrame(const u8* cells, usize count);
 #if defined(MK61_DISPLAY_LCD1602)
     LiquidCrystal lcd;
-    u8 shadow_cells[lcd_display::ROWS][lcd_display::COLS];
+    u8 ddram_shadow[lcd_display::ROWS][lcd_display::DDRAM_COLS];
     u8 shadow_cursor_x;
     u8 shadow_cursor_y;
     u8 custom_glyphs[8][8];
     bool custom_valid[8];
+    u8 display_control;
+    bool busy_flag_active;
+    u32 busy_flag_timeouts;
+    bool shifted_viewport_active;
+    u8 shifted_viewport_shift;
+
+    void probeBusyFlag(void);
+    void sendByte(u8 value, bool data, u32 fallback_delay_us = 0);
+    void sendCommand(u8 value, u32 fallback_delay_us = 0);
+    void sendData(u8 value);
+    void sendDisplayControl(void);
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
     static constexpr u8 RENDER_PAGE_HEIGHT = 8;

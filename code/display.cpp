@@ -6,23 +6,33 @@
 
 #if defined(MK61_DISPLAY_LCD1602)
 
+#include "lcd1602_shifted_viewport.hpp"
+
+static_assert(lcd1602_shifted_viewport::COMMAND_RETURN_HOME == LCD_RETURNHOME,
+              "HD44780 Return Home command mismatch");
+static_assert(lcd1602_shifted_viewport::COMMAND_SET_DDRAM == LCD_SETDDRAMADDR,
+              "HD44780 Set DDRAM command mismatch");
+static_assert(lcd1602_shifted_viewport::COMMAND_SHIFT_LEFT ==
+              (LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT),
+              "HD44780 display-left command mismatch");
+static_assert(lcd1602_shifted_viewport::COMMAND_SHIFT_RIGHT ==
+              (LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT),
+              "HD44780 display-right command mismatch");
+
 namespace {
 
 struct LcdAnimationState {
   bool active;
-  bool fast_bus;
-  bool use_busy_flag;
-  bool busy_flag_confirmed;
 };
 
 static LcdAnimationState animation_state = {};
 
-} // namespace
+} // анонимное пространство имён
 
-#if !defined(CDU) && !defined(LK432)
+#if MK61_LCD1602_BUSY_FLAG
 namespace {
 
-struct LcdFastBus {
+struct LcdParallelBus {
   PinName rs;
   PinName rw;
   PinName enable;
@@ -34,7 +44,13 @@ struct LcdFastBus {
   }
 };
 
-static LcdFastBus lcdFastBus(void) {
+enum class LcdReadyResult : u8 {
+  READY_AFTER_BUSY,
+  READY_WITHOUT_BUSY,
+  TIMEOUT,
+};
+
+static LcdParallelBus lcdParallelBus(void) {
   return {
     digitalPinToPinName(PIN_LCD_RS),
     digitalPinToPinName(PIN_LCD_RW),
@@ -48,11 +64,11 @@ static LcdFastBus lcdFastBus(void) {
   };
 }
 
-static inline void lcdFastWritePin(PinName pin, bool high) {
+static inline void lcdWritePin(PinName pin, bool high) {
   digitalWriteFast(pin, high ? HIGH : LOW);
 }
 
-static inline void lcdFastSetPinOutput(PinName pin, bool output) {
+static inline void lcdSetPinOutput(PinName pin, bool output) {
   GPIO_TypeDef* const port = get_GPIO_Port(STM_PORT(pin));
   const u32 shift = (u32) STM_PIN(pin) * 2u;
   const u32 mask = 0x3u << shift;
@@ -60,55 +76,52 @@ static inline void lcdFastSetPinOutput(PinName pin, bool output) {
   port->MODER = (port->MODER & ~mask) | mode;
 }
 
-static inline void lcdFastSetDataOutput(const LcdFastBus& bus, bool output) {
-  for(u8 index = 0; index < 4; index++) lcdFastSetPinOutput(bus.data[index], output);
+static inline void lcdSetDataOutput(const LcdParallelBus& bus, bool output) {
+  for(u8 i = 0; i < 4; i++) lcdSetPinOutput(bus.data[i], output);
 }
 
-static inline void lcdFastWriteNibble(const LcdFastBus& bus, u8 nibble) {
-  lcdFastWritePin(bus.enable, false);
-  for(u8 bit = 0; bit < 4; bit++) {
-    lcdFastWritePin(bus.data[bit], (nibble & ((u8) 1 << bit)) != 0);
-  }
+static inline void lcdWriteNibble(const LcdParallelBus& bus, u8 nibble) {
+  lcdWritePin(bus.enable, false);
+  lcdWritePin(bus.data[0], (nibble & 0x01u) != 0);
+  lcdWritePin(bus.data[1], (nibble & 0x02u) != 0);
+  lcdWritePin(bus.data[2], (nibble & 0x04u) != 0);
+  lcdWritePin(bus.data[3], (nibble & 0x08u) != 0);
   delayMicroseconds(1);
-  lcdFastWritePin(bus.enable, true);
+  lcdWritePin(bus.enable, true);
   delayMicroseconds(1);
-  lcdFastWritePin(bus.enable, false);
+  lcdWritePin(bus.enable, false);
+  delayMicroseconds(1);
 }
 
-static inline void lcdFastSendRaw(const LcdFastBus& bus, u8 value, bool data) {
-  lcdFastWritePin(bus.rs, data);
-  lcdFastWriteNibble(bus, value >> 4);
-  lcdFastWriteNibble(bus, value & 0x0F);
+static inline void lcdWriteByte(const LcdParallelBus& bus, u8 value, bool data) {
+  lcdWritePin(bus.rw, false);
+  lcdWritePin(bus.rs, data);
+  lcdWriteNibble(bus, value >> 4);
+  lcdWriteNibble(bus, value & 0x0Fu);
 }
 
-enum class LcdReadyResult : u8 {
-  READY_AFTER_BUSY,
-  READY_WITHOUT_BUSY,
-  TIMEOUT,
-};
-
-static LcdReadyResult lcdFastWaitReady(const LcdFastBus& bus) {
-  static constexpr usize MAX_POLLS = 2048;
+static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
   bool saw_busy = false;
+  const u32 started_at = micros();
 
-  lcdFastWritePin(bus.enable, false);
-  lcdFastSetDataOutput(bus, false);
-  lcdFastWritePin(bus.rs, false);
-  lcdFastWritePin(bus.rw, true);
+  lcdWritePin(bus.enable, false);
+  lcdSetDataOutput(bus, false);
+  lcdWritePin(bus.rs, false);
+  lcdWritePin(bus.rw, true);
   delayMicroseconds(1);
 
   LcdReadyResult result = LcdReadyResult::TIMEOUT;
-  for(usize poll = 0; poll < MAX_POLLS; poll++) {
-    lcdFastWritePin(bus.enable, true);
+  do {
+    lcdWritePin(bus.enable, true);
     delayMicroseconds(1);
     const bool busy = digitalReadFast(bus.data[3]) != LOW;
-    lcdFastWritePin(bus.enable, false);
+    lcdWritePin(bus.enable, false);
     delayMicroseconds(1);
 
     // В четырёхбитном режиме чтение всегда завершается вторым полубайтом.
-    lcdFastWritePin(bus.enable, true);
+    lcdWritePin(bus.enable, true);
     delayMicroseconds(1);
-    lcdFastWritePin(bus.enable, false);
+    lcdWritePin(bus.enable, false);
     delayMicroseconds(1);
 
     if(!busy) {
@@ -117,82 +130,63 @@ static LcdReadyResult lcdFastWaitReady(const LcdFastBus& bus) {
       break;
     }
     saw_busy = true;
-  }
+  } while((u32) (micros() - started_at) < timeout_us);
 
-  lcdFastWritePin(bus.rw, false);
-  lcdFastSetDataOutput(bus, true);
+  lcdWritePin(bus.rw, false);
+  delayMicroseconds(1);
+  lcdSetDataOutput(bus, true);
   return result;
 }
 
-static bool lcdFastFinishByte(const LcdFastBus& bus,
-                              bool& use_busy_flag,
-                              bool& busy_flag_confirmed,
-                              u32 fallback_delay_us = 40) {
-  if(!use_busy_flag) {
-    delayMicroseconds(fallback_delay_us);
-    return true;
-  }
-
-  const LcdReadyResult result = lcdFastWaitReady(bus);
-  if(result == LcdReadyResult::TIMEOUT) {
-    // Залипшая или неподключённая DB7 не должна делать просмотрщик
-    // неработоспособным: после ограниченного пробного ожидания используем
-    // гарантированную задержку и больше не читаем BF в этой сессии.
-    use_busy_flag = false;
-    delayMicroseconds(fallback_delay_us);
-    return true;
-  }
-  if(result == LcdReadyResult::READY_AFTER_BUSY) {
-    busy_flag_confirmed = true;
-    return true;
-  }
-  if(busy_flag_confirmed) return true;
-
-  // Неподключённый RW не должен превращать анимацию в запись без пауз.
-  use_busy_flag = false;
-  delayMicroseconds(fallback_delay_us);
-  return true;
-}
-
-static bool lcdFastWriteByte(const LcdFastBus& bus, u8 value, bool data,
-                             u32 fallback_delay_us = 40) {
-  lcdFastSendRaw(bus, value, data);
-  return lcdFastFinishByte(bus, animation_state.use_busy_flag,
-                           animation_state.busy_flag_confirmed,
-                           fallback_delay_us);
-}
-
-} // namespace
+} // анонимное пространство имён
 #endif
 
 MK61Display::MK61Display(void)
   : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7),
-    shadow_cells{{0}},
+    ddram_shadow{{0}},
     shadow_cursor_x(0),
     shadow_cursor_y(0),
     custom_glyphs{{0}},
-    custom_valid{false} {
-  memset(shadow_cells, ' ', sizeof(shadow_cells));
+    custom_valid{false},
+    display_control(LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF),
+    busy_flag_active(false),
+    busy_flag_timeouts(0),
+    shifted_viewport_active(false),
+    shifted_viewport_shift(0) {
+  memset(ddram_shadow, ' ', sizeof(ddram_shadow));
 }
 
 void MK61Display::begin(u8 cols, u8 rows) {
   (void) cols;
   (void) rows;
+#if MK61_LCD1602_BUSY_FLAG
+  // RW должен быть прижат к записи ещё до стандартной последовательности
+  // инициализации LiquidCrystal.
+  pinMode(PIN_LCD_RW, OUTPUT);
+  digitalWrite(PIN_LCD_RW, LOW);
+#endif
   lcd.begin(lcd_display::COLS, lcd_display::ROWS);
   lcd.noCursor();
   lcd.noBlink();
-  memset(shadow_cells, ' ', sizeof(shadow_cells));
+  display_control = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
+  busy_flag_timeouts = 0;
+  probeBusyFlag();
+  memset(ddram_shadow, ' ', sizeof(ddram_shadow));
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
+  shifted_viewport_active = false;
+  shifted_viewport_shift = 0;
 }
 
 void MK61Display::clear(void) {
-  lcd.noCursor();
-  lcd.noBlink();
-  lcd.clear();
-  memset(shadow_cells, ' ', sizeof(shadow_cells));
+  display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
+  sendDisplayControl();
+  sendCommand(LCD_CLEARDISPLAY, 2000);
+  memset(ddram_shadow, ' ', sizeof(ddram_shadow));
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
+  shifted_viewport_active = false;
+  shifted_viewport_shift = 0;
 }
 
 void MK61Display::flush(void) {}
@@ -208,17 +202,33 @@ lcd_display::TextProfile MK61Display::textProfile(void) const {
 void MK61Display::setCursor(u8 x, u8 y) {
   shadow_cursor_x = x < lcd_display::COLS ? x : (u8) (lcd_display::COLS - 1);
   shadow_cursor_y = y < lcd_display::ROWS ? y : (u8) (lcd_display::ROWS - 1);
-  lcd.setCursor(shadow_cursor_x, shadow_cursor_y);
+  const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
+  const u8 physical_x = shifted_viewport_active
+                      ? lcd1602_shifted_viewport::physical_address(
+                          shifted_viewport_shift, shadow_cursor_x)
+                      : shadow_cursor_x;
+  sendCommand((u8) (LCD_SETDDRAMADDR | (row_address + physical_x)));
 }
-void MK61Display::cursorOn(void) { lcd.cursor(); }
+
+void MK61Display::cursorOn(void) {
+  display_control |= LCD_CURSORON;
+  sendDisplayControl();
+}
 
 void MK61Display::cursorOff(void) {
-  lcd.noCursor();
-  lcd.noBlink();
+  display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
+  sendDisplayControl();
 }
 
-void MK61Display::blinkOn(void) { lcd.blink(); }
-void MK61Display::blinkOff(void) { lcd.noBlink(); }
+void MK61Display::blinkOn(void) {
+  display_control |= LCD_BLINKON;
+  sendDisplayControl();
+}
+
+void MK61Display::blinkOff(void) {
+  display_control &= (u8) ~LCD_BLINKON;
+  sendDisplayControl();
+}
 bool MK61Display::supportsCursor(void) const { return true; }
 bool MK61Display::hasHardwareCursor(void) const { return true; }
 
@@ -226,14 +236,18 @@ void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   if(nChar >= 8 || glyph == NULL) return;
   memcpy(custom_glyphs[nChar], glyph, sizeof(custom_glyphs[nChar]));
   custom_valid[nChar] = true;
-  lcd.createChar(nChar, glyph);
+  sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
+  for(u8 row = 0; row < 8; row++) sendData(glyph[row]);
 }
 
 void MK61Display::clearCustomChars(void) {}
 
 bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
   if(x >= lcd_display::COLS || y >= lcd_display::ROWS) return false;
-  value = shadow_cells[y][x];
+  const u8 physical_x = shifted_viewport_active
+                      ? lcd1602_shifted_viewport::physical_address(
+                          shifted_viewport_shift, x) : x;
+  value = ddram_shadow[y][physical_x];
   return true;
 }
 
@@ -248,7 +262,44 @@ void MK61Display::clearCustomChar(u8 nChar) {
   static uint8_t blank[8] = {};
   memset(custom_glyphs[nChar], 0, sizeof(custom_glyphs[nChar]));
   custom_valid[nChar] = false;
-  lcd.createChar(nChar, blank);
+  sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
+  for(u8 row = 0; row < 8; row++) sendData(blank[row]);
+}
+
+void MK61Display::renderShiftedViewport(
+    const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift) {
+  if(cells == NULL || shift >= lcd_display::DDRAM_COLS) return;
+
+  if((display_control & (LCD_CURSORON | LCD_BLINKON)) != 0) {
+    display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
+    sendDisplayControl();
+  }
+
+  const auto emit = [this](lcd1602_shifted_viewport::BusWrite write) {
+    if(write.data) {
+      sendData(write.value);
+    } else {
+      const u32 delay_us = write.value ==
+          lcd1602_shifted_viewport::COMMAND_RETURN_HOME ? 2000 : 0;
+      sendCommand(write.value, delay_us);
+    }
+  };
+  (void) lcd1602_shifted_viewport::render(
+      ddram_shadow, shifted_viewport_active, shifted_viewport_shift,
+      cells, shift, emit);
+}
+
+void MK61Display::endShiftedViewport(void) {
+  if(!shifted_viewport_active) return;
+  cursorOff();
+  const auto emit = [this](lcd1602_shifted_viewport::BusWrite write) {
+    sendCommand(write.value, write.value ==
+                lcd1602_shifted_viewport::COMMAND_RETURN_HOME ? 2000 : 0);
+  };
+  lcd1602_shifted_viewport::end(shifted_viewport_active,
+                                shifted_viewport_shift, emit);
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
 }
 
 void MK61Display::writeCodepoint(u16 codepoint) {
@@ -267,26 +318,16 @@ void MK61Display::endFullscreenBitmap(void) {}
 
 bool MK61Display::beginCellAnimation(void) {
   if(animation_state.active) return true;
+  endShiftedViewport();
   cursorOff();
   blinkOff();
-  animation_state = {true, false, true, false};
-
-#if !defined(CDU) && !defined(LK432)
-  const LcdFastBus bus = lcdFastBus();
-  if(bus.valid()) {
-    animation_state.fast_bus = true;
-    lcdFastWritePin(bus.rw, false);
-    lcdFastSetDataOutput(bus, true);
-    // Долгая команда Clear позволяет один раз надёжно проверить линию BF.
-    if(!lcdFastWriteByte(bus, 0x01, false, 1600)) {
-      animation_state = {};
-      return false;
-    }
-    memset(shadow_cells, ' ', sizeof(shadow_cells));
-    shadow_cursor_x = 0;
-    shadow_cursor_y = 0;
-  }
-#endif
+  sendCommand(LCD_CLEARDISPLAY, 2000);
+  memset(ddram_shadow, ' ', sizeof(ddram_shadow));
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
+  shifted_viewport_active = false;
+  shifted_viewport_shift = 0;
+  animation_state.active = true;
   return true;
 }
 
@@ -294,29 +335,14 @@ bool MK61Display::writeCellAnimationFrame(const u8* cells, usize count) {
   if(!animation_state.active || cells == NULL ||
      count != (usize) lcd_display::ROWS * lcd_display::COLS) return false;
 
-#if !defined(CDU) && !defined(LK432)
-  if(animation_state.fast_bus) {
-    const LcdFastBus bus = lcdFastBus();
-    for(u8 row = 0; row < lcd_display::ROWS; row++) {
-      if(!lcdFastWriteByte(bus, row == 0 ? 0x80 : 0xC0, false)) return false;
-      for(u8 col = 0; col < lcd_display::COLS; col++) {
-        if(!lcdFastWriteByte(bus, cells[row * lcd_display::COLS + col], true)) return false;
-      }
-    }
-    memcpy(shadow_cells, cells, sizeof(shadow_cells));
-    shadow_cursor_x = 0;
-    shadow_cursor_y = 0;
-    return true;
-  }
-#endif
-
   for(u8 row = 0; row < lcd_display::ROWS; row++) {
-    lcd.setCursor(0, row);
+    sendCommand((u8) (LCD_SETDDRAMADDR | (row == 0 ? 0x00u : 0x40u)));
     for(u8 col = 0; col < lcd_display::COLS; col++) {
-      lcd.write(cells[row * lcd_display::COLS + col]);
+      sendData(cells[row * lcd_display::COLS + col]);
     }
+    memcpy(ddram_shadow[row], cells + row * lcd_display::COLS,
+           lcd_display::COLS);
   }
-  memcpy(shadow_cells, cells, sizeof(shadow_cells));
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
   return true;
@@ -347,7 +373,7 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
   bool cells_changed = false;
   for(u8 row = 0; row < lcd_display::ROWS && !cells_changed; row++) {
     for(u8 col = 0; col < lcd_display::COLS; col++) {
-      if(shadow_cells[row][col] != cells[row * lcd_display::COLS + col]) {
+      if(ddram_shadow[row][col] != cells[row * lcd_display::COLS + col]) {
         cells_changed = true;
         break;
       }
@@ -355,128 +381,180 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
   }
   if(changed_rows == 0 && !cells_changed) return true;
 
-#if !defined(CDU) && !defined(LK432)
-  if(animation_state.fast_bus) {
-    const LcdFastBus bus = lcdFastBus();
-    // Гасим экран только при изменении видимого CGRAM. Неиспользуемые и уже
-    // совпадающие строки не передаются, а соседние адреса идут одной пачкой.
-    const bool display_off = changed_rows != 0;
-    bool ok = !display_off || lcdFastWriteByte(bus, 0x08, false);
-    for(u8 address = 0; ok && address < 64;) {
-      while(address < 64 &&
-            (changed_rows & ((u64) 1U << address)) == 0) address++;
-      if(address >= 64) break;
-      const u8 first = address;
-      u8 last = address;
-      // Команда и байт данных имеют одинаковое ожидание BF. Поэтому один
-      // неизменившийся адрес между изменениями выгоднее передать, чем начать
-      // новый диапазон отдельной командой установки адреса.
-      while(last < 63) {
-        u8 next = (u8) (last + 1U);
-        while(next < 64 &&
-              (changed_rows & ((u64) 1U << next)) == 0) next++;
-        if(next >= 64 || next > (u8) (last + 2U)) break;
-        last = next;
-      }
-      ok = lcdFastWriteByte(bus, (u8) (0x40U | first), false);
-      for(u8 changed = first; ok && changed <= last; changed++) {
-        const u8 slot = (u8) (changed / GLYPH_ROWS);
-        const u8 row = (u8) (changed % GLYPH_ROWS);
-        ok = lcdFastWriteByte(bus,
-                              (u8) (glyphs[slot][row] & 0x1FU), true);
-      }
-      address = (u8) (last + 1U);
-    }
-
-    // DDRAM также обновляется только непрерывными изменившимися диапазонами.
-    for(u8 row = 0; ok && row < lcd_display::ROWS; row++) {
-      for(u8 col = 0; ok && col < lcd_display::COLS;) {
-        if(shadow_cells[row][col] ==
-           cells[row * lcd_display::COLS + col]) {
-          col++;
-          continue;
-        }
-        const u8 first = col;
-        while(col < lcd_display::COLS &&
-              shadow_cells[row][col] !=
-                cells[row * lcd_display::COLS + col]) col++;
-        ok = lcdFastWriteByte(bus,
-          (u8) ((row == 0 ? 0x80U : 0xC0U) + first), false);
-        for(u8 changed = first; ok && changed < col; changed++) {
-          ok = lcdFastWriteByte(bus,
-            cells[row * lcd_display::COLS + changed], true);
-        }
-      }
-    }
-    // Даже после ошибки пытаемся вернуть экран из no-display.
-    const bool display_on = !display_off || lcdFastWriteByte(bus, 0x0C, false);
-    if(!ok || !display_on) return false;
-
-    for(usize slot = 0; slot < GLYPH_COUNT; slot++) {
-      if((used_slots & ((u8) 1U << slot)) == 0) continue;
-      for(usize row = 0; row < GLYPH_ROWS; row++) {
-        custom_glyphs[slot][row] = (u8) (glyphs[slot][row] & 0x1FU);
-      }
-      custom_valid[slot] = true;
-    }
-    memcpy(shadow_cells, cells, sizeof(shadow_cells));
-    shadow_cursor_x = 0;
-    shadow_cursor_y = 0;
-    return true;
+  // Гасим экран только на время изменения видимой CGRAM. Основной драйвер
+  // сам использует busy flag, а при аппаратной ошибке безопасно возвращается
+  // к фиксированным задержкам.
+  const bool display_off = changed_rows != 0;
+  if(display_off) {
+    sendCommand((u8) (LCD_DISPLAYCONTROL |
+                       (display_control & (u8) ~LCD_DISPLAYON)));
   }
-#endif
 
-  if(changed_rows != 0) lcd.noDisplay();
-  for(u8 slot = 0; slot < GLYPH_COUNT; slot++) {
-    if((used_slots & ((u8) 1U << slot)) == 0) continue;
-    bool changed = !custom_valid[slot];
-    for(u8 row = 0; row < GLYPH_ROWS && !changed; row++) {
-      changed = custom_glyphs[slot][row] !=
-                (u8) (glyphs[slot][row] & 0x1FU);
+  for(u8 address = 0; address < 64;) {
+    while(address < 64 &&
+          (changed_rows & ((u64) 1U << address)) == 0) address++;
+    if(address >= 64) break;
+    const u8 first = address;
+    u8 last = address;
+    // Один неизменившийся адрес между изменениями дешевле передать, чем
+    // открывать новый диапазон отдельной командой установки адреса.
+    while(last < 63) {
+      u8 next = (u8) (last + 1U);
+      while(next < 64 &&
+            (changed_rows & ((u64) 1U << next)) == 0) next++;
+      if(next >= 64 || next > (u8) (last + 2U)) break;
+      last = next;
     }
-    if(!changed) continue;
-    lcd.createChar(slot, const_cast<u8*>(glyphs[slot]));
-    for(u8 row = 0; row < GLYPH_ROWS; row++) {
+    sendCommand((u8) (LCD_SETCGRAMADDR | first));
+    for(u8 changed = first; changed <= last; changed++) {
+      const u8 slot = (u8) (changed / GLYPH_ROWS);
+      const u8 row = (u8) (changed % GLYPH_ROWS);
+      sendData((u8) (glyphs[slot][row] & 0x1FU));
+    }
+    address = (u8) (last + 1U);
+  }
+
+  // DDRAM также обновляется только непрерывными изменившимися диапазонами.
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    for(u8 col = 0; col < lcd_display::COLS;) {
+      if(ddram_shadow[row][col] ==
+         cells[row * lcd_display::COLS + col]) {
+        col++;
+        continue;
+      }
+      const u8 first = col;
+      while(col < lcd_display::COLS &&
+            ddram_shadow[row][col] !=
+              cells[row * lcd_display::COLS + col]) col++;
+      sendCommand((u8) (LCD_SETDDRAMADDR |
+                        (row == 0 ? first : (u8) (0x40u + first))));
+      for(u8 changed = first; changed < col; changed++) {
+        sendData(cells[row * lcd_display::COLS + changed]);
+      }
+    }
+  }
+
+  if(display_off) sendDisplayControl();
+
+  for(usize slot = 0; slot < GLYPH_COUNT; slot++) {
+    if((used_slots & ((u8) 1U << slot)) == 0) continue;
+    for(usize row = 0; row < GLYPH_ROWS; row++) {
       custom_glyphs[slot][row] = (u8) (glyphs[slot][row] & 0x1FU);
     }
     custom_valid[slot] = true;
   }
-  const bool written = writeCellAnimationFrame(cells, count);
-  if(changed_rows != 0) lcd.display();
-  return written;
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    memcpy(ddram_shadow[row], cells + row * lcd_display::COLS,
+           lcd_display::COLS);
+  }
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
+  return true;
 }
 
 void MK61Display::endCellAnimation(void) {
   if(!animation_state.active) return;
-#if !defined(CDU) && !defined(LK432)
-  if(animation_state.fast_bus) {
-    const LcdFastBus bus = lcdFastBus();
-    lcdFastWritePin(bus.enable, false);
-    lcdFastWritePin(bus.rw, false);
-    lcdFastSetDataOutput(bus, true);
+  animation_state.active = false;
+  clear();
+}
+
+lcd_display::BusyFlagStatus MK61Display::busyFlagStatus(void) const {
+#if MK61_LCD1602_BUSY_FLAG
+  return busy_flag_active ? lcd_display::BusyFlagStatus::ACTIVE
+                          : lcd_display::BusyFlagStatus::FIXED_DELAYS;
+#else
+  return lcd_display::BusyFlagStatus::NOT_AVAILABLE;
+#endif
+}
+
+u32 MK61Display::busyFlagTimeouts(void) const {
+  return busy_flag_timeouts;
+}
+
+void MK61Display::probeBusyFlag(void) {
+  busy_flag_active = false;
+
+#if MK61_LCD1602_BUSY_FLAG
+  pinMode(PIN_LCD_RW, OUTPUT);
+  digitalWrite(PIN_LCD_RW, LOW);
+
+  const LcdParallelBus bus = lcdParallelBus();
+  if(!bus.valid()) return;
+
+  // Clear выполняется достаточно долго, чтобы надёжно увидеть переход BF 1 -> 0.
+  lcdWriteByte(bus, LCD_CLEARDISPLAY, false);
+  const LcdReadyResult result = lcdWaitReady(bus, 3000);
+  if(result == LcdReadyResult::READY_AFTER_BUSY) {
+    busy_flag_active = true;
+    return;
+  }
+
+  if(result == LcdReadyResult::TIMEOUT) {
+    busy_flag_timeouts++;
+  } else {
+    // При неподключённом или прижатом к нулю DB7 чтение завершится сразу,
+    // хотя только что отправленный Clear ещё может выполняться.
+    delayMicroseconds(2000);
   }
 #endif
-  animation_state = {};
-  clear();
+}
+
+void MK61Display::sendByte(u8 value, bool data, u32 fallback_delay_us) {
+#if MK61_LCD1602_BUSY_FLAG
+  if(busy_flag_active) {
+    const LcdParallelBus bus = lcdParallelBus();
+    if(bus.valid()) {
+      lcdWriteByte(bus, value, data);
+      if(lcdWaitReady(bus, 3000) != LcdReadyResult::TIMEOUT) return;
+      busy_flag_active = false;
+      busy_flag_timeouts++;
+      // После трёх миллисекунд ожидания повторять уже принятый байт нельзя.
+      return;
+    }
+    busy_flag_active = false;
+  }
+#endif
+
+  if(data) lcd.write(value);
+  else lcd.command(value);
+  if(fallback_delay_us != 0) delayMicroseconds(fallback_delay_us);
+}
+
+void MK61Display::sendCommand(u8 value, u32 fallback_delay_us) {
+  sendByte(value, false, fallback_delay_us);
+}
+
+void MK61Display::sendData(u8 value) {
+  sendByte(value, true);
+}
+
+void MK61Display::sendDisplayControl(void) {
+  sendCommand((u8) (LCD_DISPLAYCONTROL | display_control));
 }
 
 #if ARDUINO >= 100
 size_t MK61Display::write(uint8_t value) {
-  const size_t written = lcd.write(value);
-  if(written != 0) {
-    shadow_cells[shadow_cursor_y][shadow_cursor_x] = value;
-    shadow_cursor_x++;
-    if(shadow_cursor_x >= lcd_display::COLS) {
-      shadow_cursor_x = 0;
-      shadow_cursor_y = (u8) ((shadow_cursor_y + 1) % lcd_display::ROWS);
-    }
+  sendData(value);
+  const u8 physical_x = shifted_viewport_active
+                      ? lcd1602_shifted_viewport::physical_address(
+                          shifted_viewport_shift, shadow_cursor_x)
+                      : shadow_cursor_x;
+  ddram_shadow[shadow_cursor_y][physical_x] = value;
+  shadow_cursor_x++;
+  if(shadow_cursor_x >= lcd_display::COLS) {
+    shadow_cursor_x = 0;
+    shadow_cursor_y = (u8) ((shadow_cursor_y + 1) % lcd_display::ROWS);
   }
-  return written;
+  return 1;
 }
 #else
 void MK61Display::write(uint8_t value) {
-  lcd.write(value);
-  shadow_cells[shadow_cursor_y][shadow_cursor_x] = value;
+  sendData(value);
+  const u8 physical_x = shifted_viewport_active
+                      ? lcd1602_shifted_viewport::physical_address(
+                          shifted_viewport_shift, shadow_cursor_x)
+                      : shadow_cursor_x;
+  ddram_shadow[shadow_cursor_y][physical_x] = value;
   shadow_cursor_x++;
   if(shadow_cursor_x >= lcd_display::COLS) {
     shadow_cursor_x = 0;
@@ -900,6 +978,14 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 (*)[8],
   return false;
 }
 void MK61Display::endCellAnimation(void) {}
+
+lcd_display::BusyFlagStatus MK61Display::busyFlagStatus(void) const {
+  return lcd_display::BusyFlagStatus::NOT_AVAILABLE;
+}
+
+u32 MK61Display::busyFlagTimeouts(void) const {
+  return 0;
+}
 
 u8 MK61Display::sanitizeRows(u8 rows) {
   return lcd_display::clamp_u8(rows, lcd_display::MIN_ROWS, lcd_display::MAX_ROWS);

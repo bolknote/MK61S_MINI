@@ -178,6 +178,21 @@
   #define MK61_LCD1602_A00
 #endif
 
+// На mini V2/V3 линия RW подключена к PB1, поэтому после инициализации ЖКИ
+// можно ждать готовность контроллера по DB7 вместо консервативных задержек.
+// Остальные профили сохраняют прежний режим обмена только на запись.
+#ifndef MK61_LCD1602_BUSY_FLAG
+  #if defined(MK61_DISPLAY_LCD1602) && !defined(CDU) && !defined(LK432)
+    #define MK61_LCD1602_BUSY_FLAG 1
+  #else
+    #define MK61_LCD1602_BUSY_FLAG 0
+  #endif
+#endif
+
+#if MK61_LCD1602_BUSY_FLAG && (!defined(MK61_DISPLAY_LCD1602) || defined(CDU) || defined(LK432))
+  #error "MK61_LCD1602_BUSY_FLAG requires a mini V2/V3 LCD1602 profile with RW"
+#endif
+
 // Клавиатура: у classic-платформы с UC1609 другая физическая матрица и коды.
 // Если вариант не задан явно, LCD1602 остается mk61s-mini, UC1609 выбирает classic.
 #if defined(MK61_DISPLAY_UC1609) && !defined(MK61_KEYBOARD_MINI) && !defined(MK61_KEYBOARD_CLASSIC) && !defined(MK61_KEYBOARD_40TH)

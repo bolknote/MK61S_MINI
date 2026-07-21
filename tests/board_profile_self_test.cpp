@@ -41,6 +41,8 @@ int main(void) {
 #endif
 
 #if defined(MK61_CONFIG_EXPECT_CLASSIC_V2)
+  static_assert(MK61_LCD1602_BUSY_FLAG == 0,
+                "UC1609 profiles must not enable the LCD1602 busy flag");
   #if !defined(MK61_BOARD_CLASSIC_V2) || !defined(MK61_DISPLAY_UC1609) || \
       !defined(MK61_KEYBOARD_CLASSIC)
     #error "the Classic V2 build must select its complete board profile"
@@ -49,6 +51,8 @@ int main(void) {
   static_assert(PIN_LED_ACTIVE_LOW == 1,
                 "Classic V2 LED must turn off at HIGH");
 #elif defined(MK61_CONFIG_EXPECT_CLASSIC_V3)
+  static_assert(MK61_LCD1602_BUSY_FLAG == 0,
+                "UC1609 profiles must not enable the LCD1602 busy flag");
   #if !defined(MK61_BOARD_CLASSIC_V3) || !defined(MK61_DISPLAY_UC1609) || \
       !defined(MK61_KEYBOARD_CLASSIC)
     #error "the Classic V3 build must select its complete board profile"
@@ -57,12 +61,16 @@ int main(void) {
   static_assert(PIN_LED_ACTIVE_LOW == 0,
                 "Classic V3 LED must turn off at LOW");
 #elif defined(MK61_CONFIG_EXPECT_V2) || defined(MK61_CONFIG_EXPECT_V3)
+  static_assert(MK61_LCD1602_BUSY_FLAG == 1,
+                "mini V2/V3 must use the connected LCD busy flag");
   #if defined(MK61_CONFIG_EXPECT_V3)
     static_assert(PIN_BUZZER == PA0, "mini V3 buzzer pin regression");
   #endif
   static_assert(PIN_LED_ACTIVE_LOW == 0,
                 "mini V2/V3 LED must turn off at LOW");
 #elif defined(MK61_CONFIG_EXPECT_40TH)
+  static_assert(MK61_LCD1602_BUSY_FLAG == 0,
+                "UC1609 profiles must not enable the LCD1602 busy flag");
   #if !defined(MK61_BOARD_40TH) || !defined(MK61_DISPLAY_UC1609) || \
       !defined(MK61_KEYBOARD_40TH)
     #error "the 40th build must select its complete board profile"
