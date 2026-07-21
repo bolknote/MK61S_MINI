@@ -228,11 +228,6 @@ void setup() {
   digitalWrite(PIN_KBD_ROW0, HIGH);
 
   const bool dfu_requested = digitalRead(PIN_KBD_COL0) != LOW;
-  if(dfu_requested) {
-    dbgln(MINI, "BOOT pressed! Need load program from DFU!");
-  } else {
-    dbgln(MINI, "ESC unpressed!");
-  }
 
   led::init();
   sound_driver_init(PIN_BUZZER);
@@ -240,8 +235,12 @@ void setup() {
   // Запускаем CDC до обнаружения внешней флеш-памяти. Раньше DEBUG_SPIFLASH
   // начинал вывод только после program_store::init(), поэтому медленная или
   // неудачная проверка ёмкости выглядела как зависшая плата, а её диагностика
-  // так и не доходила до хоста.
-  if(!dfu_requested) usb_start_terminal_mode();
+  // так и не доходила до хоста. В DFU-ветке CDC приложения намеренно не
+  // запускаем: USB вскоре перейдёт под управление системного загрузчика.
+  if(!dfu_requested) {
+    usb_start_terminal_mode();
+    dbgln(MINI, "ESC unpressed!");
+  }
 
   #ifdef SPI_FLASH
       init_external_flash();
