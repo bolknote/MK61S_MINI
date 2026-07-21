@@ -1,0 +1,86 @@
+# MK61 USB Screen
+
+Настольное приложение для особого режима прошивки MK61S Mini. Оно принимает
+по USB графический framebuffer 192×64, атомарно применяет сжатые diff-кадры и
+передаёт на устройство нажатия виртуальной клавиатуры.
+
+Это не зеркало LCD1602. После handshake прошивка гасит физический дисплей и
+переключает весь интерфейс на графический UC1609-совместимый вид. Поэтому даже
+у варианта с LCD1602 приложение показывает многострочный экран 192×64 без
+ограничения в восемь CGRAM-символов.
+
+## Быстрый запуск
+
+1. Установить Flutter 3.41 или новее.
+2. В каталоге приложения получить зависимости и запустить нужную desktop-цель:
+
+```sh
+cd apps/mk61_usb_screen
+flutter pub get
+flutter run -d macos
+```
+
+На Windows используется `flutter run -d windows`, на Linux —
+`flutter run -d linux`.
+
+После запуска:
+
+1. подключить калькулятор по USB;
+2. выбрать на калькуляторе пункт **USB Screen**;
+3. оставить включённым автоподключение или выбрать CDC-порт вручную;
+4. дождаться статуса «USB Screen подключён» — только тогда физический экран
+   погаснет.
+
+Если связь пропадёт, firmware через heartbeat timeout снова включает физический
+экран. Удержание физической клавиши `ESC` 1,5 секунды также аварийно завершает
+режим.
+
+## Управление
+
+Экранная клавиатура повторяет активную матрицу Mini, Classic или 40th, которую
+прошивка сообщает при подключении. Доступны mouse/touch и клавиши компьютера:
+
+- цифры и цифровой блок — `0`…`9`;
+- `+`, `-`, `*`, `/`, точка — арифметические клавиши;
+- стрелки — `←`/`→`, Enter — `OK`, Escape — `ESC`;
+- Backspace/Delete — `Cx`, Space — `С/П`;
+- F1 — `K`, F2 — `F`.
+
+При потере фокуса и закрытии приложение посылает `RELEASE_ALL_KEYS`, чтобы на
+устройстве не оставалась логически зажатая клавиша.
+
+## Release-сборка
+
+```sh
+flutter build macos --release
+flutter build windows --release
+flutter build linux --release
+```
+
+Результаты находятся соответственно в:
+
+- `build/macos/Build/Products/Release/mk61_usb_screen.app`;
+- `build/windows/x64/runner/Release/mk61_usb_screen.exe`;
+- `build/linux/x64/release/bundle/mk61_usb_screen`.
+
+macOS-приложение намеренно собирается без App Sandbox: прямой доступ к
+`/dev/cu.usbmodem*` нужен `libserialport`. На Linux пользователь должен иметь
+доступ к последовательному порту (обычно группа `dialout`; после добавления в
+группу требуется новый вход в систему). На Windows отдельный драйвер обычно не
+нужен для стандартного USB CDC ACM.
+
+## Проверка
+
+```sh
+flutter analyze
+flutter test
+```
+
+В набор входит сквозной fake-device тест настоящего `DeviceController`: serial
+fragmentation, handshake, атомарный кадр, клавиши, heartbeat, CRC/sequence recovery
+и повторное подключение после сброса сессии. GitHub Actions workflow
+`.github/workflows/usb-screen-desktop.yml` собирает готовые архивы отдельно на
+macOS, Windows и Linux.
+
+Описание wire protocol и состояний firmware находится в
+[`../../doc/src/MK61s-mini-USB-Screen.md`](../../doc/src/MK61s-mini-USB-Screen.md).

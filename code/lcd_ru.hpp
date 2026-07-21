@@ -191,6 +191,7 @@ inline void load_custom_font(const font_map_t& map) {
 #if defined(MK61_DISPLAY_UC1609)
   (void) map;
 #else
+  if(main_lcd().graphicsMode()) return;
   for(u8 i = 0; i < map.count; i++) {
     main_lcd().createChar(i, (uint8_t*) glyph_for(map.codepoints[i]));
   }
@@ -201,6 +202,10 @@ inline void restore_default_font(void) {
 #if defined(MK61_DISPLAY_UC1609)
   main_lcd().clearCustomChars();
 #else
+  if(main_lcd().graphicsMode()) {
+    main_lcd().clearCustomChars();
+    return;
+  }
   const class_LCD_fonts lcd_fonts;
   lcd_fonts.load();
 #endif
@@ -216,18 +221,22 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
 #if defined(MK61_DISPLAY_UC1609)
     main_lcd().writeCodepoint(raw_codepoint);
 #else
-    const u16 codepoint = uppercase(raw_codepoint);
-    u8 out;
-    if(rom_char(codepoint, out)) {
-      main_lcd().write(out);
+    if(main_lcd().graphicsMode()) {
+      main_lcd().writeCodepoint(raw_codepoint);
     } else {
-      const i8 slot = slot_for(map, codepoint);
-      if(slot >= 0) {
-        main_lcd().write((u8) slot);
-      } else if(fallback_char(codepoint, out)) {
+      const u16 codepoint = uppercase(raw_codepoint);
+      u8 out;
+      if(rom_char(codepoint, out)) {
         main_lcd().write(out);
       } else {
-        main_lcd().write((u8) '?');
+        const i8 slot = slot_for(map, codepoint);
+        if(slot >= 0) {
+          main_lcd().write((u8) slot);
+        } else if(fallback_char(codepoint, out)) {
+          main_lcd().write(out);
+        } else {
+          main_lcd().write((u8) '?');
+        }
       }
     }
 #endif

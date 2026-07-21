@@ -263,8 +263,11 @@ Result view(MK61Display& display, const u8* data, u16 size,
   ViewerWorkspace& workspace = *(ViewerWorkspace*) lease.data();
 
 #if defined(MK61_DISPLAY_LCD1602)
-  const Result result = view_cell_display(display, data, size, info,
-                                          workspace.cell, status);
+  const Result result = display.graphicsMode()
+    ? view_graphics_display(display, data, size, info,
+                            workspace.graphics, status)
+    : view_cell_display(display, data, size, info,
+                        workspace.cell, status);
 #else
   const Result result = view_graphics_display(display, data, size, info,
                                               workspace.graphics, status);

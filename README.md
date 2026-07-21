@@ -60,6 +60,8 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 
 [Часы RTC](doc/src/MK61s-mini-RTC.md)
 
+[USB-экран 192×64 и desktop-приложение](doc/src/MK61s-mini-USB-Screen.md)
+
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 
 **Видеоинструкция по сборке от Виталия (FANJET)** - https://www.youtube.com/watch?v=JBStgbfmuOs

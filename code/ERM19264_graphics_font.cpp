@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#ifdef MK61_DISPLAY_UC1609
+#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
 
 #include "ERM19264_graphics_font.h"
 

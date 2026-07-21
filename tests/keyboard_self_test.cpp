@@ -44,6 +44,77 @@ void test_fifo_bounds_and_wrap(void) {
   assert(fifo.empty());
 }
 
+void test_sized_fifo_handles_a_full_virtual_keyboard_cycle(void) {
+  keyboard_core::FixedFifo<keyboard_core::KEY_COUNT * 2> fifo;
+  for(i32 key = 0; key < (i32) keyboard_core::KEY_COUNT; key++) {
+    assert(fifo.push(key));
+  }
+  for(i32 key = 0; key < (i32) keyboard_core::KEY_COUNT; key++) {
+    assert(fifo.push(key | keyboard_core::RELEASE_MASK));
+  }
+  assert(fifo.full());
+  for(i32 key = 0; key < (i32) keyboard_core::KEY_COUNT; key++) {
+    assert(fifo.pop() == key);
+  }
+  for(i32 key = 0; key < (i32) keyboard_core::KEY_COUNT; key++) {
+    assert(fifo.pop() == (key | keyboard_core::RELEASE_MASK));
+  }
+  assert(fifo.empty());
+}
+
+void test_external_keys_press_hold_release_and_clear(void) {
+  keyboard_core::ExternalKeyState state;
+  state.reset();
+  assert(!state.anyPressed());
+  assert(!state.pressed(39));
+  assert(!state.press(-1, 0, 1500));
+  assert(!state.press(40, 0, 1500));
+
+  assert(state.press(39, 100, 1500));
+  assert(!state.press(39, 200, 1500));
+  assert(state.anyPressed());
+  assert(state.pressed(39));
+
+  i32 held_key = -1;
+  i32 hold_quant = -1;
+  assert(!state.pollHold(1599, 1500, held_key, hold_quant));
+  assert(state.pollHold(1600, 1500, held_key, hold_quant));
+  assert(held_key == 39);
+  assert(hold_quant == 0);
+  assert(state.pollHold(3100, 1500, held_key, hold_quant));
+  assert(hold_quant == 1);
+
+  i32 unhold_quant = -1;
+  assert(state.release(39, unhold_quant));
+  assert(unhold_quant == 1);
+  assert(!state.anyPressed());
+  assert(!state.release(39, unhold_quant));
+}
+
+void test_external_keys_multiple_keys_and_hold_wraparound(void) {
+  keyboard_core::ExternalKeyState state;
+  state.reset();
+  assert(state.press(1, 0xFFFFFF00u, 0x200u));
+  assert(state.press(2, 0xFFFFFF10u, 0x200u));
+  assert(state.pressed(1));
+  assert(state.pressed(2));
+
+  i32 held_key = -1;
+  i32 hold_quant = -1;
+  assert(!state.pollHold(0x0000010Fu, 0x200u, held_key, hold_quant));
+  assert(state.pollHold(0x00000110u, 0x200u, held_key, hold_quant));
+  assert(held_key == 2);
+  assert(hold_quant == 0);
+
+  i32 unhold_quant = -1;
+  assert(state.release(1, unhold_quant));
+  assert(unhold_quant == -1);
+  state.clearHold();
+  assert(state.release(2, unhold_quant));
+  assert(unhold_quant == -1);
+  assert(!state.anyPressed());
+}
+
 void test_debounce_and_simultaneous_edges(void) {
   keyboard_core::DebouncedRow row;
   row.reset(0);
@@ -87,6 +158,9 @@ void test_time_wraparound(void) {
 int main(void) {
   test_scan_code_validation();
   test_fifo_bounds_and_wrap();
+  test_sized_fifo_handles_a_full_virtual_keyboard_cycle();
+  test_external_keys_press_hold_release_and_clear();
+  test_external_keys_multiple_keys_and_hold_wraparound();
   test_debounce_and_simultaneous_edges();
   test_time_wraparound();
   printf("keyboard_self_test: ok\n");

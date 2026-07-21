@@ -87,6 +87,17 @@
   #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
 #endif
 
+// USB Screen keeps a native 192x64 monochrome framebuffer behind the regular
+// display API.  It is deliberately enabled for every board profile: LCD1602
+// builds switch to the same multi-line graphics surface as UC1609 builds once
+// the desktop client completes the handshake.
+#ifndef MK61_ENABLE_USB_SCREEN
+  #define MK61_ENABLE_USB_SCREEN 1
+#endif
+#if MK61_ENABLE_USB_SCREEN != 0 && MK61_ENABLE_USB_SCREEN != 1
+  #error "MK61_ENABLE_USB_SCREEN must be 0 or 1"
+#endif
+
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
 // графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.
 #ifndef MK61_ENABLE_EXTENDED_FONT_SETTINGS

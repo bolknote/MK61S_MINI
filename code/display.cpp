@@ -7,6 +7,7 @@
 #if defined(MK61_DISPLAY_LCD1602)
 
 #include "lcd1602_shifted_viewport.hpp"
+#include "lcd_charset.hpp"
 
 static_assert(lcd1602_shifted_viewport::COMMAND_RETURN_HOME == LCD_RETURNHOME,
               "HD44780 Return Home command mismatch");
@@ -26,6 +27,73 @@ struct LcdAnimationState {
 };
 
 static LcdAnimationState animation_state = {};
+
+static u16 canonicalLcdToken(u8 value) {
+#if defined(MK61_LCD1602_A02)
+  switch(value) {
+    case 0x00: return display_symbol::uc1609::GE;
+    case 0x01: return display_symbol::uc1609::POWY;
+    case 0x02: return display_symbol::uc1609::XOR;
+    case 0x03: return display_symbol::uc1609::NOT_EQUAL;
+    case 0x04: return display_symbol::uc1609::SQRT;
+    case 0x05: return display_symbol::uc1609::CYC_ARROW;
+    case 0x06: return display_symbol::uc1609::POW_X;
+    case 0x7E: return display_symbol::uc1609::RT_ARROW;
+    case 0x7F: return display_symbol::uc1609::LT_ARROW;
+    case 0x80: return 0x0411; // Б
+    case 0x81: return 0x0414; // Д
+    case 0x82: return 0x0416; // Ж
+    case 0x83: return 0x0417; // З
+    case 0x84: return 0x0418; // И
+    case 0x85: return 0x0419; // Й
+    case 0x86: return 0x041B; // Л
+    case 0x87: return 0x041F; // П
+    case 0x88: return 0x0423; // У
+    case 0x89: return 0x0426; // Ц
+    case 0x8A: return 0x0427; // Ч
+    case 0x8B: return 0x0428; // Ш
+    case 0x8C: return 0x0429; // Щ
+    case 0x8D: return 0x042A; // Ъ
+    case 0x8E: return 0x042B; // Ы
+    case 0x8F: return 0x042D; // Э
+    case 0x92: return 0x0413; // Г
+    case 0x93: return display_symbol::uc1609::PI_SYMBOL;
+    case 0xAC: return 0x042E; // Ю
+    case 0xAD: return 0x042F; // Я
+    case 0xB2: return display_symbol::uc1609::POW2;
+    case 0xB7: return display_symbol::uc1609::GRAD;
+    case 0xB9: return display_symbol::uc1609::EM1;
+    case 0xCB: return 0x0401; // Ё
+    case 0xD8: return 0x0424; // Ф
+    case 0xF7: return display_symbol::uc1609::DIVIDE;
+    default: return value;
+  }
+#else
+  switch(value) {
+    case 0x00: return display_symbol::uc1609::GE;
+    case 0x01: return display_symbol::uc1609::CYR_PE;
+    case 0x02: return display_symbol::uc1609::CYR_BE;
+    case 0x03: return display_symbol::uc1609::CYR_DE;
+    case 0x04: return display_symbol::uc1609::CYR_I;
+    case 0x05: return display_symbol::uc1609::CYR_GHE;
+    case 0x06: return display_symbol::uc1609::POW2;
+    case 0x07: return display_symbol::uc1609::POWY;
+    case 0x08: return display_symbol::uc1609::XOR;
+    case 0x7E: return display_symbol::uc1609::RT_ARROW;
+    case 0x7F: return display_symbol::uc1609::LT_ARROW;
+    case 0xB7: return display_symbol::uc1609::NOT_EQUAL;
+    case 0xD1: return display_symbol::uc1609::CYR_CHE;
+    case 0xDB: return display_symbol::uc1609::CYC_ARROW;
+    case 0xDF: return display_symbol::uc1609::GRAD;
+    case 0xE8: return display_symbol::uc1609::SQRT;
+    case 0xE9: return display_symbol::uc1609::EM1;
+    case 0xEB: return display_symbol::uc1609::POW_X;
+    case 0xF7: return display_symbol::uc1609::PI_SYMBOL;
+    case 0xFD: return display_symbol::uc1609::DIVIDE;
+    default: return value;
+  }
+#endif
+}
 
 } // анонимное пространство имён
 
@@ -47,6 +115,7 @@ struct LcdParallelBus {
     return rw != NC && validForWrite();
   }
 #endif
+
 };
 
 #if MK61_LCD1602_BUSY_FLAG
@@ -164,7 +233,16 @@ MK61Display::MK61Display(void)
     busy_flag_active(false),
     busy_flag_timeouts(0),
     shifted_viewport_active(false),
-    shifted_viewport_shift(0) {
+    shifted_viewport_shift(0)
+#if MK61_ENABLE_USB_SCREEN
+    , usb_surface(),
+    usb_screen_active(false),
+    physical_screen_enabled(true),
+    usb_preview_font(),
+    usb_preview_saved_profile(usb_screen::profile5x8()),
+    usb_preview_font_active(false)
+#endif
+    {
   memset(ddram_shadow, ' ', sizeof(ddram_shadow));
 }
 
@@ -191,6 +269,13 @@ void MK61Display::begin(u8 cols, u8 rows) {
 }
 
 void MK61Display::clear(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.clear();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
   sendDisplayControl();
   sendCommand(LCD_CLEARDISPLAY, 2000);
@@ -201,17 +286,68 @@ void MK61Display::clear(void) {
   shifted_viewport_shift = 0;
 }
 
-void MK61Display::flush(void) {}
-void MK61Display::beginUpdate(void) {}
-void MK61Display::endUpdate(void) {}
-void MK61Display::setRows(u8) {}
-void MK61Display::setTextProfile(lcd_display::TextProfile) {}
+void MK61Display::flush(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) usb_surface.flush(millis());
+#endif
+}
+void MK61Display::beginUpdate(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) usb_surface.beginUpdate();
+#endif
+}
+void MK61Display::endUpdate(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.endUpdate();
+    usb_surface.flush(millis());
+  }
+#endif
+}
+void MK61Display::setRows(u8 rows) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_screen::TextProfile profile = usb_surface.textProfile();
+    if(rows >= 10) profile = usb_screen::profile3x5();
+    else if(rows == 7) profile = usb_screen::profile5x9();
+    else profile = usb_screen::profile5x8();
+    usb_surface.setTextProfile(profile);
+    usb_surface.flush(millis());
+  }
+#else
+  (void) rows;
+#endif
+}
+void MK61Display::setTextProfile(lcd_display::TextProfile profile) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.setTextProfile(usbTextProfile(profile));
+    usb_surface.flush(millis());
+  }
+#else
+  (void) profile;
+#endif
+}
 
 lcd_display::TextProfile MK61Display::textProfile(void) const {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    const usb_screen::TextProfile profile = usb_surface.textProfile();
+    return {profile.rows, profile.glyph_width, profile.glyph_height,
+            profile.line_gap};
+  }
+#endif
   return lcd_display::defaultTextProfileForRows(lcd_display::ROWS);
 }
 
 void MK61Display::setCursor(u8 x, u8 y) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.setCursor(x, y);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   shadow_cursor_x = x < lcd_display::COLS ? x : (u8) (lcd_display::COLS - 1);
   shadow_cursor_y = y < lcd_display::ROWS ? y : (u8) (lcd_display::ROWS - 1);
   const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
@@ -223,38 +359,94 @@ void MK61Display::setCursor(u8 x, u8 y) {
 }
 
 void MK61Display::cursorOn(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.cursorOn();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   display_control |= LCD_CURSORON;
   sendDisplayControl();
 }
 
 void MK61Display::cursorOff(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.cursorOff();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
   sendDisplayControl();
 }
 
 void MK61Display::blinkOn(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.blinkOn(millis());
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   display_control |= LCD_BLINKON;
   sendDisplayControl();
 }
 
 void MK61Display::blinkOff(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.blinkOff();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   display_control &= (u8) ~LCD_BLINKON;
   sendDisplayControl();
 }
 bool MK61Display::supportsCursor(void) const { return true; }
-bool MK61Display::hasHardwareCursor(void) const { return true; }
+bool MK61Display::hasHardwareCursor(void) const {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return false;
+#endif
+  return true;
+}
 
 void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   if(nChar >= 8 || glyph == NULL) return;
   memcpy(custom_glyphs[nChar], glyph, sizeof(custom_glyphs[nChar]));
   custom_valid[nChar] = true;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.createChar(nChar, glyph);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
   for(u8 row = 0; row < 8; row++) sendData(glyph[row]);
 }
 
-void MK61Display::clearCustomChars(void) {}
+void MK61Display::clearCustomChars(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.clearCustomChars();
+    usb_surface.flush(millis());
+  }
+#endif
+}
 
 bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    u16 token = 0;
+    bool custom = false;
+    if(!usb_surface.readCell(x, y, token, custom) || token > 0xFF) return false;
+    value = (u8) token;
+    return true;
+  }
+#endif
   if(x >= lcd_display::COLS || y >= lcd_display::ROWS) return false;
   const u8 physical_x = shifted_viewport_active
                       ? lcd1602_shifted_viewport::physical_address(
@@ -264,6 +456,9 @@ bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
 }
 
 bool MK61Display::copyCustomChar(u8 nChar, u8 glyph[8]) const {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return usb_surface.copyCustomChar(nChar, glyph);
+#endif
   if(nChar >= 8 || glyph == NULL || !custom_valid[nChar]) return false;
   memcpy(glyph, custom_glyphs[nChar], sizeof(custom_glyphs[nChar]));
   return true;
@@ -274,6 +469,13 @@ void MK61Display::clearCustomChar(u8 nChar) {
   static uint8_t blank[8] = {};
   memset(custom_glyphs[nChar], 0, sizeof(custom_glyphs[nChar]));
   custom_valid[nChar] = false;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.clearCustomChar(nChar);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
   for(u8 row = 0; row < 8; row++) sendData(blank[row]);
 }
@@ -281,6 +483,22 @@ void MK61Display::clearCustomChar(u8 nChar) {
 void MK61Display::renderShiftedViewport(
     const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift) {
   if(cells == NULL || shift >= lcd_display::DDRAM_COLS) return;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.beginUpdate();
+    usb_surface.clear();
+    for(u8 row = 0; row < lcd_display::ROWS; row++) {
+      usb_surface.setCursor(0, row);
+      for(u8 col = 0; col < lcd_display::COLS; col++) {
+        usb_surface.writeCodepoint(canonicalLcdToken(
+          cells[row][(u8) ((shift + col) % lcd_display::DDRAM_COLS)]));
+      }
+    }
+    usb_surface.endUpdate();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
 
   if((display_control & (LCD_CURSORON | LCD_BLINKON)) != 0) {
     display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
@@ -302,6 +520,9 @@ void MK61Display::renderShiftedViewport(
 }
 
 void MK61Display::endShiftedViewport(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return;
+#endif
   if(!shifted_viewport_active) return;
   cursorOff();
   const auto emit = [this](lcd1602_shifted_viewport::BusWrite write) {
@@ -315,20 +536,114 @@ void MK61Display::endShiftedViewport(void) {
 }
 
 void MK61Display::writeCodepoint(u16 codepoint) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.writeCodepoint(codepoint);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   write(codepoint <= 0xFF ? (u8) codepoint : (u8) '?');
 }
 
 bool MK61Display::installFont(const u8*, u16) { return false; }
-bool MK61Display::setFontPreview(const u8*, u16) { return false; }
-void MK61Display::clearFontPreview(void) {}
-void MK61Display::useBuiltinFont(void) {}
+bool MK61Display::setFontPreview(const u8* data, u16 size) {
+#if MK61_ENABLE_USB_SCREEN
+  if(!usb_screen_active || data == NULL || size == 0 ||
+     size > fmk::MAX_FILE_SIZE) return false;
+  fmk::Face candidate;
+  if(!candidate.open(data, size) || !usb_preview_font.open(data, size)) {
+    return false;
+  }
+  if(!usb_preview_font_active) {
+    usb_preview_saved_profile = usb_surface.textProfile();
+  }
+  const fmk::Metrics& metrics = usb_preview_font.metrics();
+  const text_screen::FontGeometry geometry = text_screen::fitFontToDisplay(
+    metrics.max_width, metrics.height, metrics.line_gap);
+  usb_surface.setTextProfile({geometry.rows, geometry.width,
+                              geometry.height, geometry.line_gap});
+  usb_surface.setFont(&usb_preview_font);
+  usb_preview_font_active = true;
+  usb_surface.flush(millis());
+  return true;
+#else
+  (void) data;
+  (void) size;
+  return false;
+#endif
+}
+void MK61Display::clearFontPreview(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(!usb_preview_font_active) return;
+  usb_surface.setFont(NULL);
+  usb_surface.setTextProfile(usb_preview_saved_profile);
+  usb_preview_font.reset();
+  usb_preview_font_active = false;
+  usb_surface.flush(millis());
+#endif
+}
+void MK61Display::useBuiltinFont(void) { clearFontPreview(); }
 bool MK61Display::externalFontActive(void) const { return false; }
 bool MK61Display::suspendExternalFontForUsb(void) { return true; }
-bool MK61Display::beginFullscreenBitmap(void) { return false; }
-bool MK61Display::showFullscreenBitmap(const u8*, usize) { return false; }
-void MK61Display::endFullscreenBitmap(void) {}
+bool MK61Display::beginFullscreenBitmap(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return usb_surface.beginFullscreenBitmap();
+#endif
+  return false;
+}
+bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return usb_surface.showFullscreenBitmap(bitmap, size);
+#endif
+  (void) bitmap;
+  (void) size;
+  return false;
+}
+void MK61Display::endFullscreenBitmap(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.endFullscreenBitmap();
+    usb_surface.flush(millis());
+  }
+#endif
+}
+
+bool MK61Display::showTopRightOverlay(const u32* rows, u8 width, u8 height,
+                                      u8 clear_border) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    const bool shown = usb_surface.showTopRightOverlay(rows, width, height,
+                                                       clear_border);
+    usb_surface.flush(millis());
+    return shown;
+  }
+#endif
+  (void) rows;
+  (void) width;
+  (void) height;
+  (void) clear_border;
+  return false;
+}
+
+void MK61Display::hideTopRightOverlay(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.hideTopRightOverlay();
+    usb_surface.flush(millis());
+  }
+#endif
+}
 
 bool MK61Display::beginCellAnimation(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.clear();
+    usb_surface.flush(millis());
+    animation_state.active = true;
+    return true;
+  }
+#endif
   if(animation_state.active) return true;
   endShiftedViewport();
   cursorOff();
@@ -344,6 +659,23 @@ bool MK61Display::beginCellAnimation(void) {
 }
 
 bool MK61Display::writeCellAnimationFrame(const u8* cells, usize count) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    if(!animation_state.active || cells == NULL ||
+       count != (usize) lcd_display::ROWS * lcd_display::COLS) return false;
+    usb_surface.beginUpdate();
+    usb_surface.clear();
+    for(u8 row = 0; row < lcd_display::ROWS; row++) {
+      usb_surface.setCursor(0, row);
+      for(u8 col = 0; col < lcd_display::COLS; col++) {
+        usb_surface.writeByte(cells[(usize) row * lcd_display::COLS + col]);
+      }
+    }
+    usb_surface.endUpdate();
+    usb_surface.flush(millis());
+    return true;
+  }
+#endif
   if(!animation_state.active || cells == NULL ||
      count != (usize) lcd_display::ROWS * lcd_display::COLS) return false;
 
@@ -363,6 +695,24 @@ bool MK61Display::writeCellAnimationFrame(const u8* cells, usize count) {
 bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
                                                   const u8* cells,
                                                   usize count) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    if(!animation_state.active || glyphs == NULL || cells == NULL ||
+       count != (usize) lcd_display::ROWS * lcd_display::COLS) return false;
+    usb_surface.beginUpdate();
+    for(u8 slot = 0; slot < 8; slot++) usb_surface.createChar(slot, glyphs[slot]);
+    usb_surface.clear();
+    for(u8 row = 0; row < lcd_display::ROWS; row++) {
+      usb_surface.setCursor(0, row);
+      for(u8 col = 0; col < lcd_display::COLS; col++) {
+        usb_surface.writeByte(cells[(usize) row * lcd_display::COLS + col]);
+      }
+    }
+    usb_surface.endUpdate();
+    usb_surface.flush(millis());
+    return true;
+  }
+#endif
   static constexpr usize GLYPH_COUNT = 8;
   static constexpr usize GLYPH_ROWS = 8;
   if(!animation_state.active || glyphs == NULL || cells == NULL ||
@@ -552,6 +902,19 @@ void MK61Display::sendDisplayControl(void) {
 
 #if ARDUINO >= 100
 size_t MK61Display::write(uint8_t value) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    u8 custom[8];
+    if(value < usb_screen::Surface::CUSTOM_GLYPHS &&
+       usb_surface.copyCustomChar(value, custom)) {
+      usb_surface.writeByte(value);
+    } else {
+      usb_surface.writeCodepoint(canonicalLcdToken(value));
+    }
+    usb_surface.flush(millis());
+    return 1;
+  }
+#endif
   sendData(value);
   const u8 physical_x = shifted_viewport_active
                       ? lcd1602_shifted_viewport::physical_address(
@@ -567,6 +930,19 @@ size_t MK61Display::write(uint8_t value) {
 }
 #else
 void MK61Display::write(uint8_t value) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    u8 custom[8];
+    if(value < usb_screen::Surface::CUSTOM_GLYPHS &&
+       usb_surface.copyCustomChar(value, custom)) {
+      usb_surface.writeByte(value);
+    } else {
+      usb_surface.writeCodepoint(canonicalLcdToken(value));
+    }
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   sendData(value);
   const u8 physical_x = shifted_viewport_active
                       ? lcd1602_shifted_viewport::physical_address(
@@ -621,7 +997,13 @@ MK61Display::MK61Display(void)
     top_right_overlay_width(0),
     top_right_overlay_height(0),
     top_right_overlay_clear_border(0),
-    top_right_overlay_visible(false) {
+    top_right_overlay_visible(false)
+#if MK61_ENABLE_USB_SCREEN
+    , usb_surface(),
+    usb_screen_active(false),
+    physical_screen_enabled(true)
+#endif
+    {
   grid.reset(active_profile.rows);
 }
 
@@ -640,6 +1022,13 @@ void MK61Display::begin(u8, u8 rows) {
 }
 
 void MK61Display::clear(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.clear();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   clearShadow();
   cursor_underline = false;
   cursor_blink = false;
@@ -649,6 +1038,12 @@ void MK61Display::clear(void) {
 }
 
 void MK61Display::flush(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(!initialized) return;
 #if MK61_ENABLE_WBMP_VIEWER
   if(fullscreen_bitmap_active) return;
@@ -687,15 +1082,39 @@ void MK61Display::flush(void) {
 }
 
 void MK61Display::beginUpdate(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.beginUpdate();
+    return;
+  }
+#endif
   update_depth++;
 }
 
 void MK61Display::endUpdate(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.endUpdate();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(update_depth > 0) update_depth--;
   if(update_depth == 0 && initialized) flush();
 }
 
 void MK61Display::setRows(u8 rows) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_screen::TextProfile profile = usb_surface.textProfile();
+    if(rows >= 10) profile = usb_screen::profile3x5();
+    else if(rows == 7) profile = usb_screen::profile5x9();
+    else profile = usb_screen::profile5x8();
+    usb_surface.setTextProfile(profile);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   const u8 safe_rows = sanitizeRows(rows);
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   lcd_display::TextProfile profile = active_profile;
@@ -735,18 +1154,46 @@ void MK61Display::applyTextProfile(lcd_display::TextProfile profile, bool exact_
 }
 
 void MK61Display::setTextProfile(lcd_display::TextProfile profile) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.setTextProfile(usbTextProfile(profile));
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   applyTextProfile(profile);
 }
 
 lcd_display::TextProfile MK61Display::textProfile(void) const {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    const usb_screen::TextProfile profile = usb_surface.textProfile();
+    return {profile.rows, profile.glyph_width, profile.glyph_height,
+            profile.line_gap};
+  }
+#endif
   return active_profile;
 }
 
 void MK61Display::setCursor(u8 x, u8 y) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.setCursor(x, y);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   moveCursorTo(x, y);
 }
 
 void MK61Display::cursorOn(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.cursorOn();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(cursor_underline) return;
   cursor_underline = true;
   markCursorCellDirty();
@@ -754,6 +1201,13 @@ void MK61Display::cursorOn(void) {
 }
 
 void MK61Display::cursorOff(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.cursorOff();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(!cursor_underline && !cursor_blink && !cursor_blink_phase) return;
   cursor_underline = false;
   cursor_blink = false;
@@ -764,6 +1218,13 @@ void MK61Display::cursorOff(void) {
 }
 
 void MK61Display::blinkOn(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.blinkOn(millis());
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(cursor_blink) return;
   cursor_blink = true;
   cursor_blink_phase = true;
@@ -773,6 +1234,13 @@ void MK61Display::blinkOn(void) {
 }
 
 void MK61Display::blinkOff(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.blinkOff();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(!cursor_blink && !cursor_blink_phase) return;
   cursor_blink = false;
   cursor_blink_phase = false;
@@ -788,22 +1256,46 @@ void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   if(nChar >= CUSTOM_GLYPHS || glyph == NULL) return;
   memcpy(custom_glyphs[nChar], glyph, sizeof(custom_glyphs[nChar]));
   custom_valid[nChar] = true;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.createChar(nChar, glyph);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   grid.markCustomSlot(nChar);
   dirty = dirty || grid.anyDirty();
   if(update_depth == 0) flush();
 }
 
 void MK61Display::clearCustomChars(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) usb_surface.clearCustomChars();
+#endif
   for(u8 i = 0; i < CUSTOM_GLYPHS; i++) {
     if(custom_valid[i]) grid.markCustomSlot(i);
     custom_valid[i] = false;
   }
   dirty = dirty || grid.anyDirty();
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(update_depth == 0) flush();
 }
 
 bool MK61Display::showTopRightOverlay(const u32* rows, u8 width, u8 height,
                                       u8 clear_border) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    const bool shown = usb_surface.showTopRightOverlay(rows, width, height,
+                                                       clear_border);
+    usb_surface.flush(millis());
+    return shown;
+  }
+#endif
   const u16 total_width = (u16) width + (u16) clear_border * 2U;
   const u16 total_height = (u16) height + (u16) clear_border * 2U;
   if(!initialized || rows == NULL || width == 0 ||
@@ -843,6 +1335,13 @@ bool MK61Display::showTopRightOverlay(const u32* rows, u8 width, u8 height,
 }
 
 void MK61Display::hideTopRightOverlay(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.hideTopRightOverlay();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(!top_right_overlay_visible) return;
   const u8 old_width = top_right_overlay_width;
   const u8 old_border = top_right_overlay_clear_border;
@@ -880,6 +1379,9 @@ bool MK61Display::installFont(const u8* data, u16 size) {
   preview_profile_active = false;
   preview_font.reset();
   applyTextProfile(recommendedProfile(active_font.metrics()), true);
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) usb_surface.setFont(&active_font);
+#endif
   markAllDirty();
   return true;
 }
@@ -897,6 +1399,9 @@ bool MK61Display::setFontPreview(const u8* data, u16 size) {
   }
   preview_font_enabled = true;
   applyTextProfile(recommendedProfile(preview_font.metrics()), true);
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) usb_surface.setFont(&preview_font);
+#endif
   markAllDirty();
   return true;
 }
@@ -909,6 +1414,9 @@ void MK61Display::clearFontPreview(void) {
   preview_profile_active = false;
   preview_font.reset();
   if(restore_profile) applyTextProfile(saved_profile, true);
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) usb_surface.setFont(selectedFont());
+#endif
   markAllDirty();
 }
 
@@ -924,6 +1432,9 @@ void MK61Display::useBuiltinFont(void) {
   preview_profile_active = false;
   active_font.reset();
   preview_font.reset();
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) usb_surface.setFont(NULL);
+#endif
   if(had_active_font) applyTextProfile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS));
   else if(restore_profile) applyTextProfile(saved_profile, true);
   if(changed) markAllDirty();
@@ -996,6 +1507,13 @@ bool MK61Display::resolveToken(u16 value, bool custom, builtin_font::Raster& ras
 }
 
 void MK61Display::writeCodepoint(u16 codepoint) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.writeCodepoint(codepoint);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   if(codepoint == '\r') return;
   if(cursorOverlayVisible()) markCursorCellDirty();
   if(codepoint == '\n') grid.newline();
@@ -1017,6 +1535,9 @@ void MK61Display::clearPhysicalScreen(void) {
 }
 
 bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return usb_surface.showFullscreenBitmap(bitmap, size);
+#endif
   static constexpr usize FULLSCREEN_BYTES =
     (usize) lcd_display::PIXEL_WIDTH * lcd_display::PIXEL_HEIGHT / 8;
   if(!initialized || bitmap == NULL || size != FULLSCREEN_BYTES) return false;
@@ -1025,6 +1546,9 @@ bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
 }
 
 bool MK61Display::beginFullscreenBitmap(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return usb_surface.beginFullscreenBitmap();
+#endif
 #if MK61_ENABLE_WBMP_VIEWER
   if(!initialized) return false;
   cursor_underline = false;
@@ -1039,6 +1563,13 @@ bool MK61Display::beginFullscreenBitmap(void) {
 }
 
 void MK61Display::endFullscreenBitmap(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.endFullscreenBitmap();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
 #if MK61_ENABLE_WBMP_VIEWER
   if(!fullscreen_bitmap_active) return;
   fullscreen_bitmap_active = false;
@@ -1277,6 +1808,17 @@ size_t MK61Display::write(uint8_t value) {
 #else
 void MK61Display::write(uint8_t value) {
 #endif
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.writeByte(value);
+    usb_surface.flush(millis());
+#if ARDUINO >= 100
+    return 1;
+#else
+    return;
+#endif
+  }
+#endif
   if(value == '\r') {
 #if ARDUINO >= 100
     return 1;
@@ -1299,3 +1841,66 @@ void MK61Display::write(uint8_t value) {
 }
 
 #endif
+
+#if MK61_ENABLE_USB_SCREEN
+
+usb_screen::TextProfile MK61Display::usbTextProfile(
+    lcd_display::TextProfile profile) {
+#if defined(MK61_DISPLAY_LCD1602)
+  // The physical LCD profile has only two rows; USB Screen deliberately uses
+  // the normal 192x64 5x8 preset instead of preserving that limitation.
+  if(profile.rows <= lcd_display::ROWS) return usb_screen::profile5x8();
+#endif
+  return usb_screen::normalizeProfile({
+    profile.rows,
+    profile.glyph_width,
+    profile.glyph_height,
+    profile.line_gap,
+  });
+}
+
+bool MK61Display::enterUsbScreen(void) {
+  if(usb_screen_active) return true;
+
+#if defined(MK61_DISPLAY_LCD1602)
+  const usb_screen::TextProfile profile = usb_screen::profile5x8();
+#else
+  const usb_screen::TextProfile profile = usbTextProfile(active_profile);
+#endif
+  usb_surface.begin(profile);
+#if defined(MK61_DISPLAY_UC1609)
+  usb_surface.setFont(selectedFont());
+#else
+  usb_preview_font.reset();
+  usb_preview_font_active = false;
+#endif
+  usb_screen_active = true;
+  setPhysicalScreenEnabled(false);
+  usb_surface.flush(millis());
+  return true;
+}
+
+void MK61Display::leaveUsbScreen(void) {
+  if(!usb_screen_active) return;
+#if defined(MK61_DISPLAY_LCD1602)
+  usb_preview_font.reset();
+  usb_preview_font_active = false;
+#endif
+  usb_surface.end();
+  usb_screen_active = false;
+  setPhysicalScreenEnabled(true);
+}
+
+void MK61Display::setPhysicalScreenEnabled(bool enabled) {
+  if(physical_screen_enabled == enabled) return;
+  physical_screen_enabled = enabled;
+#if defined(MK61_DISPLAY_LCD1602)
+  if(enabled) display_control |= LCD_DISPLAYON;
+  else display_control &= (u8) ~LCD_DISPLAYON;
+  sendDisplayControl();
+#else
+  if(initialized) lcd.LCDEnable(enabled ? 1 : 0);
+#endif
+}
+
+#endif // MK61_ENABLE_USB_SCREEN

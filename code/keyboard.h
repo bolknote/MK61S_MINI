@@ -28,6 +28,8 @@ namespace kbd {
   extern  void    clear_hold_key(void);
   extern  bool    any_key_pressed(void);
   extern  bool    is_key_pressed(i32 key_code);
+  extern  bool    is_physical_key_pressed(i32 key_code);
+  extern  void    set_external_key_pressed(i32 key_code, bool pressed);
   extern  isize   scan(void);
   extern  isize   scan_and_debounced(void);
 }

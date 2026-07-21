@@ -1765,8 +1765,10 @@ static void tinybasic_wait_after_run(void) {
   tinybasic_wait_keys_released();
   while(true) {
     const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+    if(scan_code >= 0) {
       kbd::exclude_before(scan_code);
+    }
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
       kbd::clear_hold_key();
       return;
     }

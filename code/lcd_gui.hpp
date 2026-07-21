@@ -337,6 +337,10 @@ class class_LCD_fonts {
         main_lcd().clearCustomChars();
         return;
       #endif
+      if(main_lcd().graphicsMode()) {
+        main_lcd().clearCustomChars();
+        return;
+      }
       u32 ascii=0;
       #if defined(MK61_LCD1602_A02)
         main_lcd().createChar(GE, (uint8_t*) &fonts[0]);
@@ -358,6 +362,10 @@ class class_LCD_fonts {
         main_lcd().clearCustomChars();
         return;
       #endif
+      if(main_lcd().graphicsMode()) {
+        main_lcd().clearCustomChars();
+        return;
+      }
       main_lcd().createChar(nChar, (uint8_t*) &fonts[offset]);
     }
 };

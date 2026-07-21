@@ -91,6 +91,7 @@ static  i32            holded_scan_code;      // скан код клавишы 
 static  isize          hold_quant_counter;    // счетчик квантов удержания
 static  t_time_ms      press_time;            // время в ms последнего нажатия (без отжатия)
 static  u32            scan_line_started_us;
+static  keyboard_core::ExternalKeyState external_keys;
 
 inline void activate_scan_line(void) {
   digitalWrite(scan_pins[scan_line], HIGH);
@@ -105,16 +106,21 @@ inline void advance_scan_line(void) {
 }
 
 void 	check_hold_key(void) {
-  if(holded_scan_code < 0) return;
-
   const t_time_ms now = millis();
-  if(!keyboard_core::time_reached(now, press_time)) return;
-
-  hold_quant_counter++;
-  dbgln(KBD, "hold time ", now, " hold count ", hold_quant_counter, " scan #", holded_scan_code);
-
-  press_time = now + KEY_HOLD_MS;   // продолжаем опрашивать удержание до сброса удерживаемого скан-кода
-  event_hold_key(holded_scan_code, hold_quant_counter); // генерация события удержания кнопки
+  if(holded_scan_code >= 0 &&
+     keyboard_core::time_reached(now, press_time)) {
+    hold_quant_counter++;
+    dbgln(KBD, "hold time ", now, " hold count ", hold_quant_counter,
+          " scan #", holded_scan_code);
+    press_time = now + KEY_HOLD_MS;
+    event_hold_key(holded_scan_code, hold_quant_counter);
+  }
+  i32 external_key = -1;
+  i32 external_quant = -1;
+  if(external_keys.pollHold(now, KEY_HOLD_MS,
+                            external_key, external_quant)) {
+    event_hold_key(external_key, external_quant);
+  }
 }
 
 namespace kbd {
@@ -141,21 +147,45 @@ void  reset_scan_line(void) {
 void  clear_hold_key(void) {
   holded_scan_code = -1;
   hold_quant_counter = -1;
+  external_keys.clearHold();
 }
 
 bool any_key_pressed(void) {
+  if(external_keys.anyPressed()) return true;
   for(usize i = 0; i < KEY_IN_ROW; i++) {
     if(RowArray[i].pressed_or_pending()) return true;
   }
   return false;
 }
 
-bool is_key_pressed(i32 key_code) {
+bool is_physical_key_pressed(i32 key_code) {
   if(key_code < 0 || key_code >= (i32) KEY_IN_KEYBOARD) return false;
   const usize code = (usize) key_code;
   const usize row = code % KEY_IN_ROW;
   const usize column = code / KEY_IN_ROW;
   return RowArray[row].pressed(column);
+}
+
+bool is_key_pressed(i32 key_code) {
+  if(is_physical_key_pressed(key_code)) return true;
+  return external_keys.pressed(key_code);
+}
+
+void set_external_key_pressed(i32 key_code, bool pressed) {
+  if(key_code < 0 || key_code >= (i32) KEY_IN_KEYBOARD) return;
+
+  if(pressed) {
+    if(!external_keys.press(key_code, millis(), KEY_HOLD_MS)) return;
+    entropy_pool::note_key((u8) key_code, micros());
+    sound_scaled(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS,
+                 library_mk61::sound_volume(), KEY_CLICK_VOLUME_PERCENT);
+    idle_signal_reset();
+    return;
+  }
+
+  i32 unhold_quant = -1;
+  if(!external_keys.release(key_code, unhold_quant)) return;
+  if(unhold_quant >= 0) event_unhold_key(key_code, unhold_quant);
 }
 
 void  exclude_before(i32 before_key) { // убрать все коды клавиш в том числе before_key, из очереди клавиатуры
@@ -170,10 +200,9 @@ i32   get_key_wait(void) {
   do {
     idle_main_process();  // отдаем безделье в основной поток бездействия
     const i32 scan_code = scan_and_debounced();
-    if(scan_code >= 0 && scan_code < KEY_RELEASE_MASK) {
-      kbd::exclude_before(scan_code);
-      return scan_code;
-    } 
+    if(scan_code < 0) continue;
+    kbd::exclude_before(scan_code);
+    if(scan_code < KEY_RELEASE_MASK) return scan_code;
   } while (true);
 }
 
@@ -194,6 +223,7 @@ void  init(void) {
   //
   scan_line = 0;
   activate_scan_line();
+  external_keys.reset();
   clear_hold_key();
   cir_buff::Init();
 
@@ -282,7 +312,8 @@ isize scan(void) {
 }
 
 isize  scan_and_debounced(void) {
-  return kbd::scan();
+  (void) kbd::scan();
+  return kbd::last_key();
 }
 
 }

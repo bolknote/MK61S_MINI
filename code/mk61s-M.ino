@@ -30,6 +30,7 @@ using namespace kbd;
 #include "focal.hpp"
 #include "tinybasic.hpp"
 #include "usb_mass_storage.hpp"
+#include "usb_screen.hpp"
 
 #include "ledcontrol.h"
 using namespace led;
@@ -103,6 +104,7 @@ static void mix_rtc_startup_snapshot(u8 snapshot_index) {
 }
 
 bool usb_start_mass_storage_mode(void) {
+  usb_screen::cancel();
   #if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
     Serial.end();
     delay(50);
@@ -655,7 +657,8 @@ void  loop() {
       turbo_serial_poll_divider = 0;
     }
 
-    if(terminal_poll_enabled && !usb_mass_storage::active()) {
+    if(terminal_poll_enabled && !usb_mass_storage::active() &&
+       !usb_screen::active()) {
       const i32 key_from_terminal = terminal.serial_input_handler();
       if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
     }
@@ -706,6 +709,16 @@ void  loop() {
 
 void idle_main_process(void) {
   usb_mass_storage::service();
+  usb_screen::service();
+  switch(usb_screen::takeEvent()) {
+    case usb_screen::Event::ATTACHED:
+    case usb_screen::Event::CONNECTION_LOST:
+    case usb_screen::Event::EXITED:
+      lcd_std_display_redraw();
+      break;
+    case usb_screen::Event::NONE:
+      break;
+  }
   sound_poll();
   led::control();
   main_lcd().flush();

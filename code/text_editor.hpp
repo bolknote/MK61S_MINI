@@ -433,7 +433,7 @@ inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, 
   if(view_top > len) view_top = len;
 
 #if defined(MK61_DISPLAY_LCD1602) && !defined(TEXT_EDITOR_HOST_TEST)
-  {
+  if(!display.graphicsMode()) {
     lcd1602_editor_viewport::RowSpan row_spans[lcd1602_editor_viewport::ROWS] = {};
     u16 line_start = view_top;
     for(u8 row = 0; row < lcd1602_editor_viewport::ROWS; row++) {

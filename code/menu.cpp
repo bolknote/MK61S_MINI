@@ -12,6 +12,7 @@
 #include "rtc_clock.hpp"
 #include "rtc_settings_core.hpp"
 #include "virtual_fat.hpp"
+#include "usb_screen.hpp"
 
 extern t_time_ms runtime_ms;
 extern void idle_main_process(void);
@@ -24,9 +25,10 @@ namespace library_mk61 {
 
 static constexpr int MENU_DFU      = 0;
 static constexpr int MENU_USB_DISK = 1;
-static constexpr int MENU_SETTINGS = 2;
-static constexpr int MENU_EXPLORER = 3;
-static constexpr int MENU_LIBRARY  = 4;
+static constexpr int MENU_USB_SCREEN = 2;
+static constexpr int MENU_SETTINGS = 3;
+static constexpr int MENU_EXPLORER = 4;
+static constexpr int MENU_LIBRARY  = 5;
 static constexpr int MENU_AFTER_LIBRARY = MENU_LIBRARY + 1;
 static constexpr int MENU_DEVELOP  = MENU_AFTER_LIBRARY;
 static constexpr int MENU_RESET    = MENU_DEVELOP + 1;
@@ -223,6 +225,7 @@ bool  InfoData(void) {
 
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
 const t_punct USB_DISK_punct      = {.size = 8,  .action = (menu_action) &UsbDiskMode,          .text = "USB Disk"};
+const t_punct USB_SCREEN_punct    = {.size = 10, .action = (menu_action) &UsbScreenMode,        .text = "USB Screen"};
 const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
 const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct EXPLORER_punct      = {.size = 8,  .action = &program_store_explorer_select,      .text = "Explorer"};
@@ -247,6 +250,7 @@ const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &Hardwa
 
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
 const t_punct RU_USB_DISK_punct   = {.size = 15, .action = (menu_action) &UsbDiskMode,          .text = "USB-диск"};
+const t_punct RU_USB_SCREEN_punct = {.size = 15, .action = (menu_action) &UsbScreenMode,        .text = "USB-экран"};
 const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
 const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
 const t_punct RU_EXPLORER_punct   = {.size = 15, .action = &program_store_explorer_select,      .text = "Проводник"};
@@ -270,6 +274,7 @@ const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &Hardwa
 t_punct* MENU[] = {
       (t_punct*) &DFU_mode_punct,
       (t_punct*) &USB_DISK_punct,
+      (t_punct*) &USB_SCREEN_punct,
       (t_punct*) &SETTINGS_punct,
       (t_punct*) &EXPLORER_punct,
       (t_punct*) &LIB_61_punct,
@@ -469,6 +474,7 @@ void refresh_menu_text(void) {
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SETTINGS] = (t_punct*) (russian_language ? &RU_SETTINGS_punct : &SETTINGS_punct);
   MENU[MENU_USB_DISK] = (t_punct*) (russian_language ? &RU_USB_DISK_punct : &USB_DISK_punct);
+  MENU[MENU_USB_SCREEN] = (t_punct*) (russian_language ? &RU_USB_SCREEN_punct : &USB_SCREEN_punct);
   MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_EXPLORER] = (t_punct*) (russian_language ? &RU_EXPLORER_punct : &EXPLORER_punct);
   MENU[MENU_DEVELOP]  = (t_punct*) (russian_language ? &RU_DEVELOPMENT_punct : &DEVELOPMENT_punct);
@@ -824,8 +830,8 @@ bool UsbDiskMode(void) {
   while(true) {
     idle_main_process();
     const i32 key = kbd::scan_and_debounced();
+    if(key >= 0) kbd::exclude_before(key);
     if(key == KEY_ESC_PRESS) {
-      kbd::exclude_before(key);
       break;
     }
   }
@@ -836,6 +842,35 @@ bool UsbDiskMode(void) {
     delay(900);
   }
   lcd_ru::restore_default_font();
+  return action::MENU_EXIT;
+}
+
+bool UsbScreenMode(void) {
+  draw_usb_disk_status("USB-экран", "USB Screen",
+                       "ждём приложение", "start desktop app");
+  if(!usb_screen::start()) {
+    draw_usb_disk_status("Ошибка USB", "USB error", "ESC", "ESC");
+    kbd::get_key_wait();
+    return action::MENU_BACK;
+  }
+
+  // До handshake физический дисплей остаётся включён и показывает эту
+  // подсказку. После ATTACH display backend сам гасит его до выхода из режима.
+  while(usb_screen::state() == usb_screen::State::WAITING_FOR_HOST) {
+    idle_main_process();
+    const i32 key = kbd::scan_and_debounced();
+    if(key >= 0) kbd::exclude_before(key);
+    if(key == KEY_ESC_PRESS) {
+      usb_screen::cancel();
+      lcd_ru::restore_default_font();
+      return action::MENU_BACK;
+    }
+  }
+
+  if(!usb_screen::attached()) {
+    lcd_ru::restore_default_font();
+    return action::MENU_BACK;
+  }
   return action::MENU_EXIT;
 }
 
@@ -1006,8 +1041,8 @@ static i32 waitFontSetupKey(void) {
   do {
     idle_main_process();
     const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0) kbd::exclude_before(scan_code);
     if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
-      kbd::exclude_before(scan_code);
       return scan_code;
     }
   } while(true);
@@ -1326,8 +1361,8 @@ i32 class_menu::wait_key(void) {
     idle_main_process();
 
     const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0) kbd::exclude_before(scan_code);
     if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
-      kbd::exclude_before(scan_code);
       return scan_code;
     }
   } while(true);

@@ -20,11 +20,13 @@ inline bool valid_scan_code(i32 scan_code) {
   return (scan_code & ~((i32) RELEASE_MASK)) < (i32) KEY_COUNT;
 }
 
-class Fifo {
+template<usize CapacityValue>
+class FixedFifo {
   public:
-    static constexpr usize CAPACITY = 8;
+    static constexpr usize CAPACITY = CapacityValue;
+    static_assert(CAPACITY > 0, "keyboard FIFO must not be empty");
 
-    constexpr Fifo(void) : head_(0), size_(0), data_{} {}
+    constexpr FixedFifo(void) : head_(0), size_(0), data_{} {}
 
     void clear(void) {
       head_ = 0;
@@ -59,6 +61,81 @@ class Fifo {
     usize head_;
     usize size_;
     u8 data_[CAPACITY];
+};
+
+using Fifo = FixedFifo<8>;
+
+class ExternalKeyState {
+  public:
+    constexpr ExternalKeyState(void)
+      : pressed_(0), held_key_(-1), hold_quant_(-1), next_hold_ms_(0) {
+      static_assert(KEY_COUNT <= 64, "external key mask exceeds u64");
+    }
+
+    void reset(void) {
+      pressed_ = 0;
+      clearHold();
+      next_hold_ms_ = 0;
+    }
+
+    bool press(i32 key_code, t_time_ms now, t_time_ms hold_period_ms) {
+      if(!validKey(key_code)) return false;
+      const u64 bit = bitFor(key_code);
+      if((pressed_ & bit) != 0) return false;
+      pressed_ |= bit;
+      held_key_ = key_code;
+      hold_quant_ = -1;
+      next_hold_ms_ = now + hold_period_ms;
+      return true;
+    }
+
+    bool release(i32 key_code, i32& unhold_quant) {
+      unhold_quant = -1;
+      if(!validKey(key_code)) return false;
+      const u64 bit = bitFor(key_code);
+      if((pressed_ & bit) == 0) return false;
+      pressed_ &= ~bit;
+      if(held_key_ == key_code) {
+        unhold_quant = hold_quant_;
+        clearHold();
+      }
+      return true;
+    }
+
+    bool pollHold(t_time_ms now, t_time_ms hold_period_ms,
+                  i32& held_key, i32& hold_quant) {
+      if(held_key_ < 0 || !time_reached(now, next_hold_ms_)) return false;
+      hold_quant_++;
+      next_hold_ms_ = now + hold_period_ms;
+      held_key = held_key_;
+      hold_quant = hold_quant_;
+      return true;
+    }
+
+    void clearHold(void) {
+      held_key_ = -1;
+      hold_quant_ = -1;
+    }
+
+    bool anyPressed(void) const { return pressed_ != 0; }
+
+    bool pressed(i32 key_code) const {
+      return validKey(key_code) && (pressed_ & bitFor(key_code)) != 0;
+    }
+
+  private:
+    static bool validKey(i32 key_code) {
+      return key_code >= 0 && key_code < (i32) KEY_COUNT;
+    }
+
+    static u64 bitFor(i32 key_code) {
+      return (u64) 1U << (u8) key_code;
+    }
+
+    u64 pressed_;
+    i32 held_key_;
+    i32 hold_quant_;
+    t_time_ms next_hold_ms_;
 };
 
 class DebouncedRow {

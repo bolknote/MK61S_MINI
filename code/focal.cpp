@@ -1830,8 +1830,10 @@ static i32 focal_wait_for_fresh_key(void) {
   focal_wait_keys_released();
   while(true) {
     const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+    if(scan_code >= 0) {
       kbd::exclude_before(scan_code);
+    }
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
       kbd::clear_hold_key();
       return scan_code;
     }

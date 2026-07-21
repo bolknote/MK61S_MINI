@@ -724,7 +724,7 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
   const u16 total_lines = visual_line_count(data, len);
 
   static constexpr u8 TEXT_VIEW_LINE_BYTES = lcd_display::COLS * 3 + 1;
-  char rows[lcd_display::MAX_ROWS][TEXT_VIEW_LINE_BYTES];
+  char rows[lcd_display::RUNTIME_MAX_ROWS][TEXT_VIEW_LINE_BYTES];
   for(u8 row = 0; row < payload_rows; row++) {
     const u16 line_index = (u16) (top_line + row);
     if(line_index < total_lines) build_text_payload_line(data, len, line_index, rows[row], TEXT_VIEW_LINE_BYTES);
@@ -762,36 +762,37 @@ static void view_font_entry(const program_store::Entry& entry, const u8* data, u
     wait_explorer_key(false);
     return;
   }
-#if !defined(MK61_DISPLAY_UC1609)
-  if(!face.metrics().monospaced) {
+  if(!main_lcd().graphicsMode() && !face.metrics().monospaced) {
     show_message("Proportional", "Пропорциональный", "Not supported", "Не поддержан");
     wait_explorer_key(false);
     return;
   }
-#endif
 
-#if defined(MK61_DISPLAY_UC1609)
-  if(!main_lcd().setFontPreview(data, len)) {
-    show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
+  if(main_lcd().graphicsMode()) {
+    if(!main_lcd().setFontPreview(data, len)) {
+      show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
+      wait_explorer_key(false);
+      return;
+    }
+
+    {
+      MK61DisplayUpdate update(main_lcd());
+      main_lcd().clear();
+      draw_font_preview_header(entry, face);
+      if(main_lcd().rows() > 1) print_line(1, "0123456789+-*/");
+      if(main_lcd().rows() > 2) print_line(2, "ABCDEFGHIJKLMNO");
+      if(main_lcd().rows() > 3) print_line(3, "abcdefghijklmno");
+      if(main_lcd().rows() > 4) lcd_ru::print_at(0, 4, "АБВГДЕЖЗИЙКЛМНО", lcd_display::COLS);
+      if(main_lcd().rows() > 5) lcd_ru::print_at(0, 5, "абвгдежзийклмно", lcd_display::COLS);
+      for(u8 row = 6; row < main_lcd().rows(); row++) print_line(row, "");
+    }
     wait_explorer_key(false);
+    main_lcd().clearFontPreview();
+    main_lcd().clear();
     return;
   }
 
-  {
-    MK61DisplayUpdate update(main_lcd());
-    main_lcd().clear();
-    draw_font_preview_header(entry, face);
-    if(main_lcd().rows() > 1) print_line(1, "0123456789+-*/");
-    if(main_lcd().rows() > 2) print_line(2, "ABCDEFGHIJKLMNO");
-    if(main_lcd().rows() > 3) print_line(3, "abcdefghijklmno");
-    if(main_lcd().rows() > 4) lcd_ru::print_at(0, 4, "АБВГДЕЖЗИЙКЛМНО", lcd_display::COLS);
-    if(main_lcd().rows() > 5) lcd_ru::print_at(0, 5, "абвгдежзийклмно", lcd_display::COLS);
-    for(u8 row = 6; row < main_lcd().rows(); row++) print_line(row, "");
-  }
-  wait_explorer_key(false);
-  main_lcd().clearFontPreview();
-  main_lcd().clear();
-#else
+#if defined(MK61_DISPLAY_LCD1602)
   fmk::Glyph glyphs[8];
   if(fmk::selectPreviewGlyphs(face, glyphs) != 8) {
     show_message("No glyphs", "Нет символов", entry.name, entry.name);
@@ -820,6 +821,9 @@ static void view_font_entry(const program_store::Entry& entry, const u8* data, u
   wait_explorer_key(false);
   lcd_ru::restore_default_font();
   main_lcd().clear();
+#else
+  show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
+  wait_explorer_key(false);
 #endif
 }
 

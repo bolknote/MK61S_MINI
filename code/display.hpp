@@ -31,6 +31,10 @@
   #include "text_screen.hpp"
 #endif
 
+#if MK61_ENABLE_USB_SCREEN
+  #include "usb_screen_surface.hpp"
+#endif
+
 namespace lcd_display {
 
 static constexpr u8 COLS = 16;
@@ -131,6 +135,12 @@ static inline TextProfile normalizeTextProfile(TextProfile profile) {
 }
 #endif
 
+#if MK61_ENABLE_USB_SCREEN
+static constexpr u8 RUNTIME_MAX_ROWS = 10;
+#else
+static constexpr u8 RUNTIME_MAX_ROWS = MAX_ROWS;
+#endif
+
 } // пространство имён lcd_display
 
 class MK61Display : public Print {
@@ -161,11 +171,10 @@ class MK61Display : public Print {
     void renderShiftedViewport(
       const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
     void endShiftedViewport(void);
-#else
+#endif
     bool showTopRightOverlay(const u32* rows, u8 width, u8 height,
                              u8 clear_border);
     void hideTopRightOverlay(void);
-#endif
     void writeCodepoint(u16 codepoint);
     bool installFont(const u8* data, u16 size);
     bool setFontPreview(const u8* data, u16 size);
@@ -185,10 +194,40 @@ class MK61Display : public Print {
     lcd_display::BusyFlagStatus busyFlagStatus(void) const;
     u32 busyFlagTimeouts(void) const;
     u8 cols(void) const { return lcd_display::COLS; }
+    u8 rows(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_surface.rows();
+#endif
 #if defined(MK61_DISPLAY_LCD1602)
-    u8 rows(void) const { return lcd_display::ROWS; }
+      return lcd_display::ROWS;
 #else
-    u8 rows(void) const { return grid.rows(); }
+      return grid.rows();
+#endif
+    }
+    bool graphicsMode(void) const {
+#if defined(MK61_DISPLAY_UC1609)
+      return true;
+#elif MK61_ENABLE_USB_SCREEN
+      return usb_screen_active;
+#else
+      return false;
+#endif
+    }
+
+#if MK61_ENABLE_USB_SCREEN
+    bool enterUsbScreen(void);
+    void leaveUsbScreen(void);
+    bool usbScreenActive(void) const { return usb_screen_active; }
+    const u8* usbScreenFramebuffer(void) const {
+      return usb_surface.framebuffer();
+    }
+    u32 usbScreenRevision(void) const { return usb_surface.revision(); }
+#else
+    bool enterUsbScreen(void) { return false; }
+    void leaveUsbScreen(void) {}
+    bool usbScreenActive(void) const { return false; }
+    const u8* usbScreenFramebuffer(void) const { return NULL; }
+    u32 usbScreenRevision(void) const { return 0; }
 #endif
 
     using Print::print;
@@ -285,6 +324,20 @@ class MK61Display : public Print {
     const fmk::Face* selectedFont(void) const;
     builtin_font::FaceId fallbackFont(void) const;
     bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
+#endif
+#if MK61_ENABLE_USB_SCREEN
+    usb_screen::Surface usb_surface;
+    bool usb_screen_active;
+    bool physical_screen_enabled;
+#if defined(MK61_DISPLAY_LCD1602)
+    fmk::Face usb_preview_font;
+    usb_screen::TextProfile usb_preview_saved_profile;
+    bool usb_preview_font_active;
+#endif
+
+    void setPhysicalScreenEnabled(bool enabled);
+    static usb_screen::TextProfile usbTextProfile(
+      lcd_display::TextProfile profile);
 #endif
 };
 

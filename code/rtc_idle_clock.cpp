@@ -33,7 +33,14 @@ struct OverlayState {
   SlotLease leases[CLOCK_GLYPH_COUNT];
 };
 
+struct GraphicOverlayState {
+  bool visible;
+  u8 hour;
+  u8 minute;
+};
+
 static OverlayState state = {};
+static GraphicOverlayState graphic_state = {};
 static bool reconcile_pending = false;
 static t_time_ms next_rtc_poll_ms = 0;
 
@@ -243,15 +250,78 @@ bool update_time(MK61Display& display, const rtc_clock::DateTime& value) {
   return true;
 }
 
+void discard_lcd_overlay_state(void) {
+  // Once USB Screen is attached all display calls target the 192x64 surface,
+  // so an old HD44780 lease must not be restored through that interface.  The
+  // physical LCD is dark and receives a complete redraw after USB Screen exits.
+  state = {};
+  reconcile_pending = false;
+}
+
+void hide_graphic_overlay(MK61Display& display) {
+  if(!graphic_state.visible) return;
+  if(display.graphicsMode()) display.hideTopRightOverlay();
+  graphic_state = {};
+}
+
+void poll_graphic_overlay(MK61Display& display, bool calculator_context,
+                          bool calculator_idle) {
+  if(state.leased) discard_lcd_overlay_state();
+
+  if(!calculator_context || !calculator_idle) {
+    hide_graphic_overlay(display);
+    if(!calculator_context) next_rtc_poll_ms = 0;
+    return;
+  }
+
+  const t_time_ms now = millis();
+  if(next_rtc_poll_ms != 0 &&
+     !runtime_safety::time_reached(now, next_rtc_poll_ms)) return;
+  next_rtc_poll_ms = now + RTC_POLL_INTERVAL_MS;
+
+  rtc_clock::DateTime value = {};
+  if(!rtc_clock::read(value)) {
+    hide_graphic_overlay(display);
+    return;
+  }
+  if(graphic_state.visible && graphic_state.hour == value.hour &&
+     graphic_state.minute == value.minute) return;
+
+  u32 rows[GRAPHIC_CLOCK_HEIGHT];
+  if(!build_graphic_clock(value.hour, value.minute, rows) ||
+     !display.showTopRightOverlay(rows, GRAPHIC_CLOCK_WIDTH,
+                                  GRAPHIC_CLOCK_HEIGHT,
+                                  GRAPHIC_CLOCK_CLEAR_BORDER)) {
+    hide_graphic_overlay(display);
+    return;
+  }
+  graphic_state.visible = true;
+  graphic_state.hour = value.hour;
+  graphic_state.minute = value.minute;
+}
+
 } // анонимное пространство имён
 
 void hide(MK61Display& display) {
+  if(display.graphicsMode()) {
+    discard_lcd_overlay_state();
+    hide_graphic_overlay(display);
+    return;
+  }
+  // The USB surface no longer exists after detaching; only its bookkeeping
+  // remains and can be discarded without touching the physical LCD.
+  graphic_state = {};
   // На обычном нажатии освобождать CGRAM не нужно: достаточно временно
   // убрать часы с экрана. Слоты проверяются перед повторным показом.
   hide_cells(display);
 }
 
 void poll(MK61Display& display, bool calculator_context, bool calculator_idle) {
+  if(display.graphicsMode()) {
+    poll_graphic_overlay(display, calculator_context, calculator_idle);
+    return;
+  }
+  graphic_state = {};
   if(!calculator_context) {
     release_overlay(display);
     next_rtc_poll_ms = 0;

@@ -2,7 +2,7 @@
 
 #include "config.h"
 #include "display_symbols.hpp"
-#if defined(MK61_DISPLAY_UC1609)
+#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
   #include "ERM19264_graphics_font.h"
 #endif
 
@@ -51,7 +51,7 @@ static const Glyph5x8 CYRILLIC[] = {
   {0x042D, {0b11110, 0b00001, 0b00001, 0b01111, 0b00001, 0b00001, 0b11110, 0b00000}},
   {0x042E, {0b10010, 0b10101, 0b10101, 0b11101, 0b10101, 0b10101, 0b10010, 0b00000}},
   {0x042F, {0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b10001, 0b00000}},
-#if defined(MK61_DISPLAY_UC1609)
+#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
   {0x0430, {0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000}},
   {0x0431, {0b00111, 0b01000, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110, 0b00000}},
   {0x0432, {0b00000, 0b11110, 0b10001, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}},
@@ -93,7 +93,7 @@ static const Glyph5x8 SPECIAL_5X8[] = {
 };
 
 static u16 aliasedCodepoint(u16 codepoint) {
-#if defined(MK61_DISPLAY_UC1609)
+#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
   return display_symbol::uc1609::builtinCodepoint(codepoint);
 #else
   (void) codepoint;
@@ -108,7 +108,7 @@ static const u8* specialRows5x8(u16 codepoint) {
   return NULL;
 }
 
-#if defined(MK61_DISPLAY_UC1609)
+#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
 static void setPixel(Raster& raster, u8 x, u8 y) {
   const usize stride = (raster.width + 7) / 8;
   raster.data[(usize) y * stride + x / 8] |= (u8) (0x80 >> (x & 7));
@@ -150,7 +150,7 @@ FaceId closest(u8 width, u8 height) {
 }
 
 bool decode(FaceId face, u16 codepoint, Raster& out) {
-#if !defined(MK61_DISPLAY_UC1609)
+#if !defined(MK61_DISPLAY_UC1609) && !MK61_ENABLE_USB_SCREEN
   (void) face;
   (void) codepoint;
   (void) out;

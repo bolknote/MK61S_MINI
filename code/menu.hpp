@@ -45,6 +45,7 @@ extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
 extern bool TurnRandomMode(void);
 extern bool UsbDiskMode(void);
+extern bool UsbScreenMode(void);
 extern bool TurnIdleSignal(void);
 extern bool TurnDisplayRows(void);
 extern bool SetDateTime(void);
@@ -52,7 +53,7 @@ extern bool FontSetup(void);
 extern bool ResetDevice(void);
 
 namespace library_mk61 {
-  static constexpr int MAIN_MENU_COUNT = 10;
+  static constexpr int MAIN_MENU_COUNT = 11;
   extern  const int       COUNT_PUNCTS;
   extern  t_punct*        MENU[MAIN_MENU_COUNT];
 
