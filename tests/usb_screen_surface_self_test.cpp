@@ -97,6 +97,47 @@ static void test_custom_glyph(void) {
   assert(ink(surface) == 20);
 }
 
+static void test_backend_switch_seed_and_session_reset(void) {
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
+  const u8 checker[8] = {
+    0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A,
+  };
+
+  surface.begin();
+  surface.createChar(5, checker);
+  surface.end();
+  surface.begin();
+  u8 copied[8] = {};
+  assert(!surface.copyCustomChar(5, copied));
+
+  text_screen::Grid source;
+  source.reset(6);
+  source.setCursor(0, 0);
+  source.writeCodepoint('A');
+  source.writeByte(3);
+  source.setCursor(4, 2);
+  u8 custom_glyphs[usb_screen::Surface::CUSTOM_GLYPHS][8] = {};
+  bool custom_valid[usb_screen::Surface::CUSTOM_GLYPHS] = {};
+  memcpy(custom_glyphs[3], checker, sizeof(checker));
+  custom_valid[3] = true;
+
+  surface.seedText(source, custom_glyphs, custom_valid, true, true, 100);
+  surface.flush(100);
+  u16 value = 0;
+  bool custom = false;
+  assert(surface.readCell(0, 0, value, custom));
+  assert(value == 'A' && !custom);
+  assert(surface.readCell(1, 0, value, custom));
+  assert(value == 3 && custom);
+  assert(surface.copyCustomChar(3, copied));
+  assert(memcmp(copied, checker, sizeof(copied)) == 0);
+  assert(surface.cursorX() == 4 && surface.cursorY() == 2);
+  assert(surface.cursorUnderline());
+  assert(surface.cursorBlink());
+  assert(ink(surface) > 20);
+}
+
 static void test_fullscreen_and_overlay(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
   usb_screen::Surface surface(framebuffer);
@@ -120,7 +161,19 @@ static void test_fullscreen_and_overlay(void) {
   assert(!pixel(surface, 189, 1));
   assert(pixel(surface, 190, 1));
   assert(pixel(surface, 189, 2));
+  u32 copied_overlay[usb_screen::Surface::OVERLAY_MAX_HEIGHT] = {};
+  u8 copied_width = 0;
+  u8 copied_height = 0;
+  u8 copied_border = 0;
+  assert(surface.copyTopRightOverlay(copied_overlay, copied_width,
+                                     copied_height, copied_border));
+  assert(copied_width == 3 && copied_height == 2 && copied_border == 1);
+  assert(copied_overlay[0] == overlay[0] &&
+         copied_overlay[1] == overlay[1]);
   surface.hideTopRightOverlay();
+  assert(!surface.copyTopRightOverlay(copied_overlay, copied_width,
+                                      copied_height, copied_border));
+  assert(copied_width == 0 && copied_height == 0 && copied_border == 0);
   surface.flush(3);
   assert(!pixel(surface, 188, 1));
 }
@@ -147,6 +200,7 @@ int main(void) {
   test_profiles();
   test_text_unicode_and_cursor();
   test_custom_glyph();
+  test_backend_switch_seed_and_session_reset();
   test_fullscreen_and_overlay();
   test_update_batching();
   printf("usb_screen_surface_self_test: ok\n");

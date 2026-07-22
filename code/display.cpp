@@ -1894,6 +1894,14 @@ bool MK61Display::enterUsbScreen(void) {
   usb_surface.begin(profile);
 #if defined(MK61_DISPLAY_UC1609)
   usb_surface.setFont(selectedFont());
+  usb_surface.seedText(grid, custom_glyphs, custom_valid,
+                       cursor_underline, cursor_blink, millis());
+  if(top_right_overlay_visible) {
+    usb_surface.showTopRightOverlay(top_right_overlay_rows,
+                                    top_right_overlay_width,
+                                    top_right_overlay_height,
+                                    top_right_overlay_clear_border);
+  }
 #else
   usb_preview_font.reset();
   usb_preview_font_active = false;
@@ -1951,6 +1959,41 @@ void MK61Display::leaveUsbScreen(void) {
   const bool restore_cursor_blink = usb_surface.cursorBlink();
   usb_preview_font.reset();
   usb_preview_font_active = false;
+#else
+  // Keep the logical UC1609 backing store in sync with everything the modal
+  // UI drew while USB Screen owned the backend. Without this transfer a host
+  // detach would re-enable the stale pre-attach physical screen.
+  const usb_screen::TextProfile restore_profile = usb_surface.textProfile();
+  const u8 restore_cursor_x = usb_surface.cursorX();
+  const u8 restore_cursor_y = usb_surface.cursorY();
+  const bool restore_cursor_underline = usb_surface.cursorUnderline();
+  const bool restore_cursor_blink = usb_surface.cursorBlink();
+  active_profile = {restore_profile.rows, restore_profile.glyph_width,
+                    restore_profile.glyph_height, restore_profile.line_gap};
+  grid.reset(active_profile.rows);
+  for(u8 slot = 0; slot < CUSTOM_GLYPHS; slot++) {
+    custom_valid[slot] = usb_surface.copyCustomChar(slot,
+                                                    custom_glyphs[slot]);
+    if(!custom_valid[slot]) memset(custom_glyphs[slot], 0,
+                                   sizeof(custom_glyphs[slot]));
+  }
+  for(u8 row = 0; row < grid.rows(); row++) {
+    grid.setCursor(0, row);
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      u16 token = ' ';
+      bool custom = false;
+      (void) usb_surface.readCell(col, row, token, custom);
+      if(custom && token < CUSTOM_GLYPHS && custom_valid[token]) {
+        grid.writeByte((u8) token);
+      } else {
+        grid.writeCodepoint(token);
+      }
+    }
+  }
+  grid.setCursor(restore_cursor_x, restore_cursor_y);
+  top_right_overlay_visible = usb_surface.copyTopRightOverlay(
+    top_right_overlay_rows, top_right_overlay_width,
+    top_right_overlay_height, top_right_overlay_clear_border);
 #endif
   usb_surface.end();
   usb_screen_active = false;
@@ -1980,6 +2023,13 @@ void MK61Display::leaveUsbScreen(void) {
   setCursor(restore_cursor_x, restore_cursor_y);
   if(restore_cursor_underline) cursorOn();
   if(restore_cursor_blink) blinkOn();
+#else
+  cursor_underline = restore_cursor_underline;
+  cursor_blink = restore_cursor_blink;
+  cursor_blink_phase = restore_cursor_blink;
+  cursor_next_blink_ms = restore_cursor_blink
+                       ? millis() + CURSOR_BLINK_MS : 0;
+  markScreenDirty();
 #endif
   setPhysicalScreenEnabled(true);
 }

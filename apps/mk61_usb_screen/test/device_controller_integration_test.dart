@@ -10,16 +10,32 @@ import 'package:mk61_usb_screen/protocol/mk61_protocol.dart';
 
 class _FakeSerialTransport implements DeviceSerialTransport {
   static const portName = '/dev/cu.usbmodem-MK61';
+  _FakeSerialTransport({List<DeviceSerialPort>? ports})
+    : _ports =
+          ports ??
+          const [
+            DeviceSerialPort(
+              name: portName,
+              vendorId: 0x0483,
+              productId: 0x5740,
+              manufacturer: 'STMicroelectronics',
+              productName: 'BLACKPILL_F411CE CDC in FS Mode',
+            ),
+          ];
+
+  final List<DeviceSerialPort> _ports;
   final _FakeSerialConnection connection = _FakeSerialConnection();
   int openCount = 0;
   int? openedBaudRate;
 
   @override
-  List<String> get availablePorts => [portName];
+  List<DeviceSerialPort> get availablePorts => _ports;
 
   @override
   DeviceSerialConnection open(String name, {required int baudRate}) {
-    if (name != portName) throw StateError('unexpected port $name');
+    if (!_ports.any((port) => port.name == name)) {
+      throw StateError('unexpected port $name');
+    }
     openCount++;
     openedBaudRate = baudRate;
     return connection;
@@ -37,6 +53,7 @@ class _FakeSerialConnection implements DeviceSerialConnection {
 
   int _deviceSequence = 0;
   bool closed = false;
+  bool drained = false;
 
   @override
   Stream<Uint8List> get input => _input.stream;
@@ -89,6 +106,12 @@ class _FakeSerialConnection implements DeviceSerialConnection {
   }
 
   @override
+  void drain() {
+    if (closed) throw StateError('connection is closed');
+    drained = true;
+  }
+
+  @override
   void close() {
     if (closed) return;
     closed = true;
@@ -98,6 +121,9 @@ class _FakeSerialConnection implements DeviceSerialConnection {
 
 List<int> _capabilities({
   required bool includeProfile,
+  bool keyEvents = true,
+  bool heartbeat = true,
+  bool terminalMux = true,
   bool terminalKeyboard = true,
 }) => [
   192,
@@ -105,11 +131,11 @@ List<int> _capabilities({
   64,
   8,
   MkCapability.packBits |
-      MkCapability.keyEvents |
-      MkCapability.heartbeat |
+      (keyEvents ? MkCapability.keyEvents : 0) |
+      (heartbeat ? MkCapability.heartbeat : 0) |
       MkCapability.atomicFrames |
-      MkCapability.terminalMux |
-      (terminalKeyboard ? MkCapability.terminalKeyboard : 0),
+      (terminalMux ? MkCapability.terminalMux : 0) |
+      (terminalMux && terminalKeyboard ? MkCapability.terminalKeyboard : 0),
   0,
   0xb8,
   0x0b,
@@ -144,11 +170,20 @@ Future<DeviceController> _openController(_FakeSerialTransport transport) async {
 void _attach(
   DeviceController controller,
   _FakeSerialConnection connection, {
+  bool keyEvents = true,
+  bool heartbeat = true,
+  bool terminalMux = true,
   bool terminalKeyboard = true,
 }) {
   connection.sendDevicePacket(
     MkMessage.offer,
-    _capabilities(includeProfile: false, terminalKeyboard: terminalKeyboard),
+    _capabilities(
+      includeProfile: false,
+      keyEvents: keyEvents,
+      heartbeat: heartbeat,
+      terminalMux: terminalMux,
+      terminalKeyboard: terminalKeyboard,
+    ),
     const [1, 2, 5, 3],
   );
   expect(controller.state, DeviceConnectionState.attaching);
@@ -156,7 +191,13 @@ void _attach(
 
   connection.sendDevicePacket(
     MkMessage.caps,
-    _capabilities(includeProfile: true, terminalKeyboard: terminalKeyboard),
+    _capabilities(
+      includeProfile: true,
+      keyEvents: keyEvents,
+      heartbeat: heartbeat,
+      terminalMux: terminalMux,
+      terminalKeyboard: terminalKeyboard,
+    ),
     const [2, 1, 7],
   );
   expect(controller.state, DeviceConnectionState.attached);
@@ -247,6 +288,7 @@ void main() {
 
       await controller.disconnect();
       expect(connection.hostPackets.last.type, MkMessage.detach);
+      expect(connection.drained, isTrue);
       expect(controller.state, DeviceConnectionState.disconnected);
       expect(connection.closed, isTrue);
     },
@@ -388,6 +430,144 @@ void main() {
       [18, 1],
       [18, 0],
     ]);
+  });
+
+  test('key events work without terminal multiplexing', () async {
+    final transport = _FakeSerialTransport();
+    final controller = await _openController(transport);
+    addTearDown(controller.dispose);
+    final connection = transport.connection;
+    _attach(controller, connection, terminalMux: false);
+
+    expect(controller.terminalAvailable, isFalse);
+    expect(controller.keyEventsAvailable, isTrue);
+    final packetCount = connection.hostPackets.length;
+    expect(controller.tapActions(['left']), isTrue);
+    controller.keyDown(19);
+    controller.keyUp(19);
+
+    final packets = connection.hostPackets.sublist(packetCount);
+    expect(packets.map((packet) => packet.type), [
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+    ]);
+  });
+
+  test('unsupported key and heartbeat capabilities are never used', () async {
+    final transport = _FakeSerialTransport();
+    final controller = DeviceController(serialTransport: transport);
+    addTearDown(controller.dispose);
+    controller.start();
+    for (
+      var attempt = 0;
+      attempt < 50 && controller.state != DeviceConnectionState.waitingForOffer;
+      attempt++
+    ) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    final connection = transport.connection;
+    _attach(
+      controller,
+      connection,
+      keyEvents: false,
+      heartbeat: false,
+      terminalMux: false,
+    );
+    final packetCount = connection.hostPackets.length;
+
+    controller.keyDown(19);
+    controller.keyUp(19);
+    expect(controller.tapActions(['left']), isFalse);
+    await Future<void>.delayed(const Duration(milliseconds: 850));
+
+    expect(controller.pressedKeys, isEmpty);
+    expect(
+      connection.hostPackets
+          .sublist(packetCount)
+          .where((packet) => packet.type == MkMessage.ping),
+      isEmpty,
+    );
+  });
+
+  test(
+    'automatic discovery never writes to an unidentified serial port',
+    () async {
+      const unrelatedName = 'COM7';
+      final transport = _FakeSerialTransport(
+        ports: const [DeviceSerialPort(name: unrelatedName)],
+      );
+      final controller = DeviceController(serialTransport: transport);
+      addTearDown(controller.dispose);
+
+      await controller.refreshPorts();
+      expect(controller.ports, [unrelatedName]);
+      expect(controller.selectedPort, unrelatedName);
+      expect(controller.state, DeviceConnectionState.scanning);
+      expect(transport.openCount, 0);
+      expect(transport.connection.hostTerminalBytes, isEmpty);
+
+      // An explicit selection is the user's authorization to probe a custom
+      // board whose descriptors are not on the automatic allowlist.
+      await controller.connectSelected();
+      expect(transport.openCount, 1);
+      expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');
+    },
+  );
+
+  test('USB identity, not a tempting port name, controls auto-probing', () {
+    const disguised = DeviceSerialPort(
+      name: '/dev/cu.usbmodem-MK61',
+      vendorId: 0x1234,
+      productId: 0x5740,
+      productName: 'BLACKPILL_F411CE CDC in FS Mode',
+    );
+    const known = DeviceSerialPort(
+      name: 'COM42',
+      vendorId: 0x0483,
+      productId: 0x5740,
+      productName: 'BLACKPILL_F411CE CDC in FS Mode',
+    );
+    expect(disguised.isAutomaticCandidate, isFalse);
+    expect(known.isAutomaticCandidate, isTrue);
+  });
+
+  test('frame and terminal traffic use isolated update channels', () async {
+    final transport = _FakeSerialTransport();
+    final controller = await _openController(transport);
+    addTearDown(controller.dispose);
+    final connection = transport.connection;
+    _attach(controller, connection);
+
+    var generalChanges = 0;
+    var displayChanges = 0;
+    var terminalChanges = 0;
+    controller.addListener(() => generalChanges++);
+    controller.displayChanges.addListener(() => displayChanges++);
+    controller.terminalChanges.addListener(() => terminalChanges++);
+
+    final framebuffer = Uint8List(MkGeometry.frameBytes);
+    connection.sendDevicePacket(
+      MkMessage.frameBegin,
+      _frameBegin(7, keyframe: true, rects: 0),
+    );
+    connection.sendDevicePacket(MkMessage.frameEnd, _frameEnd(7, framebuffer));
+    expect(displayChanges, 1);
+    expect(generalChanges, 0);
+
+    connection.sendDeviceTerminal('terminal-only');
+    expect(terminalChanges, 1);
+    expect(generalChanges, 0);
+    expect(controller.terminalText, 'terminal-only');
+
+    final longChunk = String.fromCharCodes(List<int>.filled(70 * 1024, 0x78));
+    connection.sendDeviceTerminal(longChunk);
+    expect(controller.terminalText.length, 64 * 1024);
+    expect(
+      controller.terminalText.endsWith('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'),
+      isTrue,
+    );
   });
 
   test('heartbeat PING/PONG keeps the real controller session alive', () async {

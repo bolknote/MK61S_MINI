@@ -64,6 +64,15 @@ class Surface {
     void writeByte(u8 value);
     void writeCodepoint(u16 codepoint);
 
+    // Rehydrates a freshly started USB surface from the logical state of a
+    // graphical display. This makes a backend switch lossless even when the
+    // foreground owner is blocked in a generic key wait and cannot redraw.
+    void seedText(const text_screen::Grid& source,
+                  const u8 custom_glyphs[CUSTOM_GLYPHS][8],
+                  const bool custom_valid[CUSTOM_GLYPHS],
+                  bool cursor_underline, bool cursor_blink,
+                  t_time_ms now);
+
     void createChar(u8 slot, const u8 glyph[8]);
     void clearCustomChar(u8 slot);
     void clearCustomChars(void);
@@ -79,6 +88,8 @@ class Surface {
     bool showTopRightOverlay(const u32* rows, u8 width, u8 height,
                              u8 clear_border);
     void hideTopRightOverlay(void);
+    bool copyTopRightOverlay(u32 rows[OVERLAY_MAX_HEIGHT], u8& width,
+                             u8& height, u8& clear_border) const;
 
     const u8* framebuffer(void) const { return framebuffer_; }
     u32 revision(void) const { return revision_; }

@@ -882,7 +882,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       reset_command_state();
       reset_line_editor();
       Serial.begin(115200);
+#if defined(USBCON) && defined(USBD_USE_CDC)
+      // Preserve the startup-banner grace period without blindly sleeping
+      // through a desktop activation request. Opening the CDC port raises DTR,
+      // so an attached host lets initialization continue immediately and any
+      // already received `uscreen` command remains buffered for the parser.
+      const t_time_ms host_wait_started = millis();
+      while(!Serial &&
+            (t_time_ms) (millis() - host_wait_started) < 1800) {}
+#else
       delay(1800);
+#endif
       output_version();
       print_prompt();
     }

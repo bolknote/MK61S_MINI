@@ -136,6 +136,14 @@ jobs:
             "$RUNNER_TEMP/mk61s-M"
           cp "$RUNNER_TEMP/build-classic-v3/mk61s-M.ino.bin" "firmware/mk61s-M-classic-v3-uc1609-f411-${GITHUB_SHA::7}.bin"
 
+      - name: Compile-check Classic V3 UC1609 with USB Screen
+        run: |
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --build-path "$RUNNER_TEMP/build-classic-v3-usb-screen" \
+            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_CLASSIC_V3 -DMK61_ENABLE_USB_SCREEN=1" \
+            "$RUNNER_TEMP/mk61s-M"
+
       - name: Build MK61s 40th firmware
         run: |
           arduino-cli compile \

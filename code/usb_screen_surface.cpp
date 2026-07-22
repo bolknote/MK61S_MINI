@@ -68,6 +68,9 @@ void Surface::begin(TextProfile profile) {
   overlay_height_ = 0;
   overlay_clear_border_ = 0;
   memset(overlay_rows_, 0, sizeof(overlay_rows_));
+  memset(custom_glyphs_, 0, sizeof(custom_glyphs_));
+  memset(custom_valid_, 0, sizeof(custom_valid_));
+  font_ = NULL;
   grid_.reset(profile_.rows);
   grid_.markAll();
   clearPixels();
@@ -182,6 +185,47 @@ void Surface::writeCodepoint(u16 codepoint) {
   markDirty();
 }
 
+void Surface::seedText(const text_screen::Grid& source,
+                       const u8 custom_glyphs[CUSTOM_GLYPHS][8],
+                       const bool custom_valid[CUSTOM_GLYPHS],
+                       bool cursor_underline, bool cursor_blink,
+                       t_time_ms now) {
+  if(!active_ || custom_glyphs == NULL || custom_valid == NULL) return;
+
+  grid_.reset(profile_.rows);
+  memset(custom_glyphs_, 0, sizeof(custom_glyphs_));
+  memset(custom_valid_, 0, sizeof(custom_valid_));
+  for(u8 slot = 0; slot < CUSTOM_GLYPHS; slot++) {
+    if(!custom_valid[slot]) continue;
+    memcpy(custom_glyphs_[slot], custom_glyphs[slot],
+           sizeof(custom_glyphs_[slot]));
+    custom_valid_[slot] = true;
+  }
+
+  const u8 rows = source.rows() < grid_.rows()
+                ? source.rows() : grid_.rows();
+  for(u8 row = 0; row < rows; row++) {
+    grid_.setCursor(0, row);
+    for(u8 col = 0; col < COLS; col++) {
+      const u16 value = source.cell(col, row);
+      if(source.cellIsCustom(col, row) && value < CUSTOM_GLYPHS &&
+         custom_valid_[value]) {
+        grid_.writeByte((u8) value);
+      } else {
+        grid_.writeCodepoint(value);
+      }
+    }
+  }
+
+  grid_.setCursor(source.cursorX(), source.cursorY());
+  cursor_underline_ = cursor_underline;
+  cursor_blink_ = cursor_blink;
+  cursor_blink_phase_ = cursor_blink;
+  cursor_next_blink_ms_ = cursor_blink ? now + CURSOR_BLINK_MS : 0;
+  grid_.markAll();
+  dirty_ = true;
+}
+
 void Surface::createChar(u8 slot, const u8 glyph[8]) {
   if(slot >= CUSTOM_GLYPHS || glyph == NULL) return;
   memcpy(custom_glyphs_[slot], glyph, sizeof(custom_glyphs_[slot]));
@@ -281,6 +325,21 @@ void Surface::hideTopRightOverlay(void) {
   overlay_clear_border_ = 0;
   memset(overlay_rows_, 0, sizeof(overlay_rows_));
   markDirty();
+}
+
+bool Surface::copyTopRightOverlay(u32 rows[OVERLAY_MAX_HEIGHT], u8& width,
+                                  u8& height, u8& clear_border) const {
+  if(rows == NULL) return false;
+  memset(rows, 0, sizeof(overlay_rows_));
+  width = 0;
+  height = 0;
+  clear_border = 0;
+  if(!active_ || !overlay_visible_) return false;
+  memcpy(rows, overlay_rows_, sizeof(overlay_rows_));
+  width = overlay_width_;
+  height = overlay_height_;
+  clear_border = overlay_clear_border_;
+  return true;
 }
 
 bool Surface::cursorVisible(void) const {

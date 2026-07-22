@@ -7,6 +7,7 @@
 #include "keyboard_layout.hpp"
 #include "runtime_safety.hpp"
 #include "usb_screen_protocol.hpp"
+#include "usb_screen_virtual_keys.hpp"
 
 #include <Arduino.h>
 #include <string.h>
@@ -87,9 +88,7 @@ struct Session {
   t_time_ms next_offer_ms;
   t_time_ms last_host_packet_ms;
   t_time_ms escape_pressed_ms;
-  u64 virtual_pressed;
-  bool release_all_pending;
-  keyboard_core::FixedFifo<keyboard_core::KEY_COUNT * 2> virtual_events;
+  VirtualKeyQueue virtual_keys;
   TerminalRxFifo terminal_rx;
 };
 
@@ -196,23 +195,28 @@ static void notifyHostDetach(void) {
 }
 
 static void scheduleReleaseAll(void) {
-  session.release_all_pending = session.virtual_pressed != 0;
+  session.virtual_keys.scheduleReleaseAll();
 }
 
 static void serviceVirtualKeys(void) {
-  if(session.release_all_pending) {
-    for(u8 key = 0; key < keyboard_core::KEY_COUNT; key++) {
-      const u64 bit = (u64) 1U << key;
-      if((session.virtual_pressed & bit) == 0) continue;
-      if(!session.virtual_events.push(key | keyboard_core::RELEASE_MASK)) break;
-      session.virtual_pressed &= ~bit;
-      kbd::set_external_key_pressed(key, false);
-    }
-    session.release_all_pending = session.virtual_pressed != 0;
+  u8 released_key = 0;
+  while(session.virtual_keys.stageNextRelease(released_key)) {
+    kbd::set_external_key_pressed(released_key, false);
   }
 
-  const i32 event = session.virtual_events.peek();
-  if(event >= 0 && kbd::push((i8) event)) session.virtual_events.pop();
+  const i32 event = session.virtual_keys.front();
+  if(event >= 0 && kbd::push((i8) event)) {
+    (void) session.virtual_keys.markFrontDelivered();
+  }
+}
+
+static void abortVirtualKeys(void) {
+  const u64 external_pressed = session.virtual_keys.abortPending();
+  for(u8 key = 0; key < keyboard_core::KEY_COUNT; key++) {
+    if((external_pressed & ((u64) 1 << key)) != 0) {
+      kbd::set_external_key_pressed(key, false);
+    }
+  }
 }
 
 static void setEvent(Event event) {
@@ -226,7 +230,7 @@ static void resetFrameTransfer(void) {
 
 static void restorePhysicalAndWait(Event event) {
   if(main_lcd().usbScreenActive()) main_lcd().leaveUsbScreen();
-  scheduleReleaseAll();
+  abortVirtualKeys();
   resetFrameTransfer();
   session.resend_requested = true;
   session.tx_offset = session.encoder.size();
@@ -254,23 +258,12 @@ static void handleKeyEvent(const usb_screen_protocol::PacketView& packet) {
   const u8 key = packet.payload[0];
   const bool down = packet.payload[1] != 0;
   if(key >= keyboard_core::KEY_COUNT || packet.payload[1] > 1) return;
-  const u64 bit = (u64) 1U << key;
-  if(down) {
-    if((session.virtual_pressed & bit) != 0) return;
-    if(session.virtual_events.push(key)) {
-      session.virtual_pressed |= bit;
-      kbd::set_external_key_pressed(key, true);
-    } else {
-      scheduleReleaseAll();
-    }
-  } else {
-    if((session.virtual_pressed & bit) == 0) return;
-    if(session.virtual_events.push(key | keyboard_core::RELEASE_MASK)) {
-      session.virtual_pressed &= ~bit;
-      kbd::set_external_key_pressed(key, false);
-    } else {
-      scheduleReleaseAll();
-    }
+  const VirtualKeyQueue::EnqueueResult result =
+    session.virtual_keys.enqueue(key, down);
+  if(result == VirtualKeyQueue::EnqueueResult::QUEUED) {
+    kbd::set_external_key_pressed(key, down);
+  } else if(result == VirtualKeyQueue::EnqueueResult::FULL) {
+    scheduleReleaseAll();
   }
 }
 
@@ -477,7 +470,7 @@ void cancel(void) {
   if(session.state == State::IDLE) return;
   notifyHostDetach();
   if(main_lcd().usbScreenActive()) main_lcd().leaveUsbScreen();
-  scheduleReleaseAll();
+  abortVirtualKeys();
   resetFrameTransfer();
   session.tx_offset = session.encoder.size();
   session.response = {};

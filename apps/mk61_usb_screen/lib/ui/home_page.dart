@@ -30,7 +30,6 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
   DisplayPaletteChoice _palette = DisplayPaletteChoice.green;
   bool _showGrid = false;
   bool _terminalExpanded = false;
-  int _seenTerminalRevision = -1;
 
   DeviceController get controller => widget.controller;
 
@@ -39,6 +38,7 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     controller.addListener(_controllerChanged);
+    controller.terminalChanges.addListener(_terminalChanged);
     if (widget.autoStart) controller.start();
   }
 
@@ -49,13 +49,12 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
 
   void _controllerChanged() {
     if (!mounted) return;
-    final terminalChanged =
-        _seenTerminalRevision != controller.terminalRevision;
-    _seenTerminalRevision = controller.terminalRevision;
     setState(() {});
-    if (terminalChanged) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollTerminal());
-    }
+  }
+
+  void _terminalChanged() {
+    if (!mounted || !_terminalExpanded) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollTerminal());
   }
 
   @override
@@ -63,6 +62,7 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     WidgetsBinding.instance.removeObserver(this);
     _releasePhysicalKeys();
     controller.removeListener(_controllerChanged);
+    controller.terminalChanges.removeListener(_terminalChanged);
     controller.dispose();
     _keyboardFocus.dispose();
     _terminalFocus.dispose();
@@ -219,7 +219,6 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
   @override
   Widget build(BuildContext context) {
     final caps = controller.capabilities;
-    final framebuffer = controller.framebuffer;
     return Scaffold(
       bottomNavigationBar: _buildTerminalDrawer(context),
       body: SafeArea(
@@ -253,13 +252,18 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
                             const SizedBox(height: 18),
                             _buildDisplayHeader(context, caps),
                             const SizedBox(height: 10),
-                            VirtualDisplay(
-                              framebuffer: framebuffer,
-                              revision: controller.displayRevision,
-                              palette: _palette,
-                              showGrid: _showGrid,
-                              attached: controller.attached,
-                              statusText: controller.stateLabel,
+                            ValueListenableBuilder<int>(
+                              valueListenable: controller.displayChanges,
+                              builder: (context, revision, child) {
+                                return VirtualDisplay(
+                                  framebuffer: controller.framebuffer,
+                                  revision: revision,
+                                  palette: _palette,
+                                  showGrid: _showGrid,
+                                  attached: controller.attached,
+                                  statusText: controller.stateLabel,
+                                );
+                              },
                             ),
                             if (!controller.attached) ...[
                               const SizedBox(height: 16),
@@ -268,7 +272,11 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
                             const SizedBox(height: 22),
                             _buildKeyboardPanel(context),
                             const SizedBox(height: 18),
-                            _buildDiagnostics(context),
+                            ValueListenableBuilder<int>(
+                              valueListenable: controller.displayChanges,
+                              builder: (context, revision, child) =>
+                                  _buildDiagnostics(context),
+                            ),
                           ],
                         ),
                       ),
@@ -548,7 +556,6 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
 
   Widget _buildTerminalDrawer(BuildContext context) {
     final available = controller.terminalAvailable;
-    final terminalText = controller.terminalText;
     final terminalHeight = MediaQuery.sizeOf(context).height < 700
         ? 155.0
         : 230.0;
@@ -635,12 +642,15 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
                             ),
                           ),
                           if (_terminalExpanded)
-                            IconButton(
-                              tooltip: 'Очистить терминал',
-                              onPressed: terminalText.isEmpty
-                                  ? null
-                                  : controller.clearTerminal,
-                              icon: const Icon(Icons.delete_sweep_outlined),
+                            ValueListenableBuilder<int>(
+                              valueListenable: controller.terminalChanges,
+                              builder: (context, revision, child) => IconButton(
+                                tooltip: 'Очистить терминал',
+                                onPressed: controller.terminalLogEmpty
+                                    ? null
+                                    : controller.clearTerminal,
+                                icon: const Icon(Icons.delete_sweep_outlined),
+                              ),
                             ),
                           Icon(
                             _terminalExpanded
@@ -677,18 +687,26 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
                                     thumbVisibility: true,
                                     child: SingleChildScrollView(
                                       controller: _terminalScroll,
-                                      child: SelectableText(
-                                        terminalText.isEmpty
-                                            ? available
-                                                  ? 'Терминал готов. Введите команду ниже.'
-                                                  : 'Подключите USB Screen для доступа к терминалу.'
-                                            : terminalText,
-                                        style: const TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontSize: 13,
-                                          height: 1.35,
-                                          color: Color(0xffb8e7d7),
-                                        ),
+                                      child: ValueListenableBuilder<int>(
+                                        valueListenable:
+                                            controller.terminalChanges,
+                                        builder: (context, revision, child) {
+                                          final terminalText =
+                                              controller.terminalText;
+                                          return SelectableText(
+                                            terminalText.isEmpty
+                                                ? available
+                                                      ? 'Терминал готов. Введите команду ниже.'
+                                                      : 'Подключите USB Screen для доступа к терминалу.'
+                                                : terminalText,
+                                            style: const TextStyle(
+                                              fontFamily: 'monospace',
+                                              fontSize: 13,
+                                              height: 1.35,
+                                              color: Color(0xffb8e7d7),
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ),
                                   ),
