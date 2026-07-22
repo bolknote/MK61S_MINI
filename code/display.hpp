@@ -245,6 +245,26 @@ class MK61Display : public Print {
     lcd_display::BusyFlagStatus busyFlagStatus(void) const;
     u32 busyFlagTimeouts(void) const;
     u8 cols(void) const { return lcd_display::COLS; }
+    u8 cursorX(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_surface.cursorX();
+#endif
+#if defined(MK61_DISPLAY_LCD1602)
+      return shadow_cursor_x;
+#else
+      return grid.cursorX();
+#endif
+    }
+    u8 cursorY(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_surface.cursorY();
+#endif
+#if defined(MK61_DISPLAY_LCD1602)
+      return shadow_cursor_y;
+#else
+      return grid.cursorY();
+#endif
+    }
     u8 rows(void) const {
 #if MK61_ENABLE_USB_SCREEN
       if(usb_screen_active) return usb_surface.rows();

@@ -13,10 +13,48 @@ hin 0072 3523076E115959666E151368106B37342368446D4A89650E
 hin 0096 0E0E0E0E0E691D3252
 hin 0031 52
 hin 0044 52
-trap 31 run :wall
-trap 44 run :wall
+trap 9 run :bee
+print "\x1B[3;1H\x1B[s"
 run
 ret
-:wall
-print "\x1B[2K\rRECE55 X={X} X2={X2}\r\n"
+:bee
+if RA>=1e-2 run :bee-e2
+if RA>=1e-3 run :bee-e3
+if RA>=1e-4 run :bee-e4
+if RA>=1e-5 run :bee-e5
+if RA>=1e-6 run :bee-e6
+if RA>=1e-7 run :bee-e7
+run :bee-e8
+:bee-e2
+print "\x1B[u \x1B[3;{RA:m}H\x1B[s*"
+ret
+:bee-e3
+if RA>=8e-3 run :bee-e3b
+print "\x1B[u \x1B[3;{RA:m}H\x1B[9C\x1B[s*"
+ret
+:bee-e3b
+print "\x1B[u \x1B[4;{RA:m}H\x1B[7D\x1B[s*"
+ret
+:bee-e4
+print "\x1B[u \x1B[4;{RA:m}H\x1B[2C\x1B[s*"
+ret
+:bee-e5
+if RA>=6e-5 run :bee-e5b
+print "\x1B[u \x1B[4;{RA:m}H\x1B[11C\x1B[s*"
+ret
+:bee-e5b
+print "\x1B[u \x1B[5;{RA:m}H\x1B[5D\x1B[s*"
+ret
+:bee-e6
+print "\x1B[u \x1B[5;{RA:m}H\x1B[4C\x1B[s*"
+ret
+:bee-e7
+if RA>=4e-7 run :bee-e7b
+print "\x1B[u \x1B[5;{RA:m}H\x1B[13C\x1B[s*"
+ret
+:bee-e7b
+print "\x1B[u \x1B[6;{RA:m}H\x1B[3D\x1B[s*"
+ret
+:bee-e8
+print "\x1B[u \x1B[6;{RA:m}H\x1B[6C\x1B[s*"
 ret

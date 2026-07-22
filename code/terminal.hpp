@@ -17,6 +17,7 @@
 #include "mk_math.hpp"
 #include "mk61_ref.hpp"
 #include "m61_print.hpp"
+#include "m61_ansi.hpp"
 #include "m61_text.hpp"
 #include "virtual_fat.hpp"
 #include "program_store.hpp"
@@ -32,6 +33,7 @@
 #include "rtc_clock.hpp"
 
 extern  const char terminal_symbols[16];
+extern  const char display_symbols[16];
 
 static  constexpr u32 seqNOP = seq(sw::K,sw::_0);
 static  const u32 key_sequence_on_cmd[15*16] = {
@@ -354,6 +356,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     // из execute_script_line() они переносятся сюда. Скрипт один в момент
     // времени - хранилище общее (static).
     static inline char script_args_storage[MAX_INPUT_CHAR];
+    static inline m61_ansi::SavedCursor print_saved_cursor = {};
 
     // Буфер строки один на прошивку (C++17 inline): экземпляров терминала два
     // (интерактивный и скриптовый m61), но раньше из-за слияния weak-методов
@@ -1334,24 +1337,67 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     // if <операнд><op><операнд> <команда> - команда выполняется при истинном
     // условии. В m61-скриптах вместе с "run :метка" даёт условные переходы.
-    static bool print_byte(u8 value, void*) {
-      return Serial.write(value) == 1;
+    struct PrintRenderContext {
+      m61_ansi::Writer* writer;
+    };
+
+    static bool screen_put_byte(u8 x, u8 y, u8 value, void* user_data) {
+      MK61Display& display = *(MK61Display*) user_data;
+      display.setCursor(x, y);
+      return display.write(value) == 1;
     }
 
-    static bool print_value(const m61_print::ValueRef& value, void*) {
+    static bool screen_clear(void* user_data) {
+      ((MK61Display*) user_data)->clear();
+      return true;
+    }
+
+    static bool print_byte(u8 value, void* user_data) {
+      PrintRenderContext& context = *(PrintRenderContext*) user_data;
+      return context.writer->write(value);
+    }
+
+    static bool print_text(const char* text, PrintRenderContext& context) {
+      if(text == nullptr) return false;
+      while(*text != 0) {
+        if(!context.writer->write((u8) *text++)) return false;
+      }
+      return true;
+    }
+
+    static bool print_number_text(const char text[15],
+                                  m61_print::ValueFormat format,
+                                  PrintRenderContext& context) {
+      const auto ascii_digit = [](u8 value) {
+        return value == (u8) display_symbols[0] ? (u8) '0' : value;
+      };
+      switch(format) {
+        case m61_print::ValueFormat::INDICATOR:
+          return print_text(text, context);
+        case m61_print::ValueFormat::MANTISSA_HEAD:
+          return context.writer->write(ascii_digit((u8) text[1]));
+        case m61_print::ValueFormat::ABS_EXPONENT: {
+          const u8 tens = ascii_digit((u8) text[12]);
+          if(tens != '0' && !context.writer->write(tens)) return false;
+          return context.writer->write(ascii_digit((u8) text[13]));
+        }
+      }
+      return false;
+    }
+
+    static bool print_value(const m61_print::ValueRef& value, void* user_data) {
+      PrintRenderContext& context = *(PrintRenderContext*) user_data;
       char text[15];
       text[14] = 0;
       if(value.kind == m61_print::ValueKind::REGISTER) {
-        MK61Emu_ReadRegister((int) value.index, text, terminal_symbols);
-        Serial.print(text);
-        return true;
+        MK61Emu_ReadRegister((int) value.index, text, display_symbols);
+        return print_number_text(text, value.format, context);
       }
 
       const m61_print::StackValue stack_value =
           (m61_print::StackValue) value.index;
       if(stack_value == m61_print::StackValue::X2) {
-        Serial.print(MK61Emu_GetIndicatorStr(terminal_symbols));
-        return true;
+        return print_text(MK61Emu_GetIndicatorStr(display_symbols), context);
       }
 
       stack reg = stack::X;
@@ -1363,14 +1409,24 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         case m61_print::StackValue::X1: reg = stack::X1; break;
         case m61_print::StackValue::X2: break;
       }
-      Serial.print(read_stack_register(reg, text, terminal_symbols));
-      return true;
+      read_stack_register(reg, text, display_symbols);
+      return print_number_text(text, value.format, context);
     }
 
     bool exec_print(void) {
+      MK61Display& display = main_lcd();
+      const m61_ansi::Sink sink = {
+        screen_put_byte, screen_clear, &display
+      };
+      m61_ansi::Writer writer(
+          display.cols(), display.rows(), display.cursorX(), display.cursorY(),
+          print_saved_cursor, sink);
+      PrintRenderContext context = {&writer};
+      MK61DisplayUpdate update(display);
       const m61_print::Result result = m61_print::render(
           command_args(), core_61::expanded_program_is_on(),
-          print_byte, print_value, nullptr);
+          print_byte, print_value, &context);
+      display.setCursor(writer.cursorX(), writer.cursorY());
       if(result.ok()) return true;
       Serial.print("Print error: ");
       Serial.println(m61_print::error_message(result.error));

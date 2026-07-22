@@ -73,7 +73,7 @@ extern const char terminal_symbols[16] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', '\303', 'E', ' '
 };
 
-const char display_symbols[16] = {
+extern const char display_symbols[16] = {
     'O', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', G_RUS, 'E', ' '
 };
                                        //0123456789ABCD

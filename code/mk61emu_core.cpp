@@ -484,6 +484,10 @@ static core_61::Mk61ProgramBoundaryHook mk61_program_boundary_hook;
 static void* mk61_program_boundary_user_data;
 static bool mk61_program_boundary_dispatching;
 static bool mk61_program_boundary_yielded;
+static constexpr u8 MK61_CALL_OPERAND_DEPTH = 5;
+static u8 mk61_call_operand_addresses[MK61_CALL_OPERAND_DEPTH];
+static u8 mk61_call_operand_visits[MK61_CALL_OPERAND_DEPTH];
+static u8 mk61_call_operand_depth;
 
 static bool valid_rom_chip(core_61::RomChip chip) {
   return (u8) chip < ROM_CHIP_COUNT;
@@ -836,6 +840,11 @@ static void reset_mk61_command_runtime(void) {
   keyboard_command_complete_pending = false;
   external_random_pending = false;
   mk61_program_boundary_yielded = false;
+  memset(mk61_call_operand_addresses, 0,
+         sizeof(mk61_call_operand_addresses));
+  memset(mk61_call_operand_visits, 0,
+         sizeof(mk61_call_operand_visits));
+  mk61_call_operand_depth = 0;
 }
 
 static inline u8 __attribute__((always_inline)) decode_mk61_opcode(void) {
@@ -856,10 +865,10 @@ static inline u8 __attribute__((always_inline)) prefetched_program_address(void)
   return (u8) ((usize) core_61::get_IP() % steps);
 }
 
-static bool dispatch_mk61_program_boundary(u8 opcode) {
+static bool dispatch_mk61_program_boundary(u8 program_address, u8 opcode) {
   if(mk61_program_boundary_hook == nullptr) return false;
   const core_61::Mk61ProgramBoundaryContext context = {
-      prefetched_program_address(), opcode
+      program_address, opcode
   };
   mk61_program_boundary_dispatching = true;
   const bool should_yield =
@@ -871,21 +880,51 @@ static bool dispatch_mk61_program_boundary(u8 opcode) {
 static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     u8 address) {
   if(address == 0x06U) {
+    const u8 program_address = prefetched_program_address();
+
     // The next program opcode is already present in R30/R33. Reaching this
     // point also proves that the previous program command has committed.
     if(active_mk61_command.active) finish_active_mk61_command();
+
+    // The authentic ПП/CALL ROM exposes its operand at this microaddress twice:
+    // while fetching the target and again while returning past that cell.
+    // Neither visit is a command boundary. A small LIFO mirrors nested calls.
+    if(mk61_call_operand_depth > 0 &&
+       program_address ==
+           mk61_call_operand_addresses[mk61_call_operand_depth - 1]) {
+      u8& visits = mk61_call_operand_visits[mk61_call_operand_depth - 1];
+      if(visits > 0) visits--;
+      if(visits == 0) mk61_call_operand_depth--;
+      return false;
+    }
+
     const u8 opcode = decode_mk61_opcode();
-    if(dispatch_mk61_program_boundary(opcode)) return true;
-    if(!has_mk61_command_target(opcode)) return false;
-    const u8 replacement = begin_mk61_command(
-        opcode, core_61::Mk61CommandSource::PROGRAM);
-    encode_mk61_opcode(replacement);
+    if(dispatch_mk61_program_boundary(program_address, opcode)) return true;
+
+    u8 executed_opcode = opcode;
+    if(has_mk61_command_target(opcode)) {
+      executed_opcode = begin_mk61_command(
+          opcode, core_61::Mk61CommandSource::PROGRAM);
+      encode_mk61_opcode(executed_opcode);
+    }
+    if(executed_opcode == 0x53U &&
+       mk61_call_operand_depth < MK61_CALL_OPERAND_DEPTH) {
+      const usize steps = core_61::program_steps();
+      if(steps != 0) {
+        mk61_call_operand_addresses[mk61_call_operand_depth++] =
+            (u8) (((usize) program_address + 1U) % steps);
+        mk61_call_operand_visits[mk61_call_operand_depth - 1] = 2;
+      }
+    }
     return false;
   }
 
   if(address == 0x97U && m_IK1302.key_y != 0 &&
      !active_mk61_command.active) {
     const u8 opcode = decode_mk61_opcode();
+    // Keyboard В/О starts a fresh calculator call chain. A plain C/П resume
+    // intentionally keeps pending operands for a subroutine paused by C/П.
+    if(opcode == 0x52U) mk61_call_operand_depth = 0;
     if(!has_mk61_command_target(opcode)) return false;
     const u8 replacement = begin_mk61_command(
         opcode, core_61::Mk61CommandSource::KEYBOARD);
@@ -2386,6 +2425,9 @@ struct CoreContextSnapshot {
   ActiveMk61Command active_command;
   u32 command_sequence;
   bool keyboard_complete_pending;
+  u8 call_operand_addresses[MK61_CALL_OPERAND_DEPTH];
+  u8 call_operand_visits[MK61_CALL_OPERAND_DEPTH];
+  u8 call_operand_depth;
 };
 
 static_assert(sizeof(CoreContextSnapshot) <= core_61::CONTEXT_BUFFER_SIZE,
@@ -2408,6 +2450,11 @@ bool save_context(ContextBuffer& out) {
   snapshot.active_command = active_mk61_command;
   snapshot.command_sequence = mk61_command_sequence;
   snapshot.keyboard_complete_pending = keyboard_command_complete_pending;
+  memcpy(snapshot.call_operand_addresses, mk61_call_operand_addresses,
+         sizeof(snapshot.call_operand_addresses));
+  memcpy(snapshot.call_operand_visits, mk61_call_operand_visits,
+         sizeof(snapshot.call_operand_visits));
+  snapshot.call_operand_depth = mk61_call_operand_depth;
   memset(out.bytes, 0, sizeof(out.bytes));
   memcpy(out.bytes, &snapshot, sizeof(snapshot));
   return true;
@@ -2431,6 +2478,13 @@ bool restore_context(const ContextBuffer& saved) {
   active_mk61_command = snapshot.active_command;
   mk61_command_sequence = snapshot.command_sequence;
   keyboard_command_complete_pending = snapshot.keyboard_complete_pending;
+  memcpy(mk61_call_operand_addresses, snapshot.call_operand_addresses,
+         sizeof(mk61_call_operand_addresses));
+  memcpy(mk61_call_operand_visits, snapshot.call_operand_visits,
+         sizeof(mk61_call_operand_visits));
+  mk61_call_operand_depth = snapshot.call_operand_depth <= MK61_CALL_OPERAND_DEPTH
+      ? snapshot.call_operand_depth
+      : 0;
   return true;
 }
 

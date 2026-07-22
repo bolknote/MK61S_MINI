@@ -2,6 +2,7 @@
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
 #include "m61_print.hpp"
+#include "m61_ansi.hpp"
 #include "rtc_clock_core.hpp"
 #include "rtc_idle_clock_core.hpp"
 #include "rtc_settings_core.hpp"
@@ -136,13 +137,17 @@ static bool capture_print_value(const m61_print::ValueRef& value,
     capture.bytes.push_back('<');
     capture.bytes.push_back('R');
     capture.bytes.push_back((u8) hex[value.index]);
-    capture.bytes.push_back('>');
-    return true;
+  } else {
+    static const char* stack_names[] = {"X", "Y", "Z", "T", "X1", "X2"};
+    name = stack_names[value.index];
+    capture.bytes.push_back('<');
+    while(*name != 0) capture.bytes.push_back((u8) *name++);
   }
-  static const char* stack_names[] = {"X", "Y", "Z", "T", "X1", "X2"};
-  name = stack_names[value.index];
-  capture.bytes.push_back('<');
-  while(*name != 0) capture.bytes.push_back((u8) *name++);
+  if(value.format != m61_print::ValueFormat::INDICATOR) {
+    capture.bytes.push_back(':');
+    capture.bytes.push_back(value.format == m61_print::ValueFormat::MANTISSA_HEAD
+                                ? 'm' : 'e');
+  }
   capture.bytes.push_back('>');
   return true;
 }
@@ -161,6 +166,12 @@ static void test_m61_print_escapes_and_interpolation(void) {
   assert(capture.bytes == std::vector<u8>(expected, expected + sizeof(expected)));
 
   capture.bytes.clear();
+  result = m61_print::render("\"\\x00\"", false,
+                             capture_print_byte, capture_print_value, &capture);
+  assert(result.ok());
+  assert(capture.bytes == std::vector<u8>{0});
+
+  capture.bytes.clear();
   result = m61_print::render(
       " \"{{{X}}} {Y}/{Z}/{T}/{X1}/{X2} {0}/{RE}\"  ", false,
       capture_print_byte, capture_print_value, &capture);
@@ -172,6 +183,14 @@ static void test_m61_print_escapes_and_interpolation(void) {
   result = m61_print::render("\"{RF}\"", true,
                              capture_print_byte, capture_print_value, &capture);
   assert(result.ok() && captured_text(capture) == "<RF>");
+
+  capture.bytes.clear();
+  result = m61_print::render(
+      "\"row={RA:m} col={A:E} x={x:M} x1={X1:e}\"", false,
+      capture_print_byte, capture_print_value, &capture);
+  assert(result.ok());
+  assert(captured_text(capture) ==
+         "row=<RA:m> col=<RA:e> x=<X:m> x1=<X1:e>");
 }
 
 static void test_m61_print_rejects_malformed_input_atomically(void) {
@@ -181,8 +200,11 @@ static void test_m61_print_rejects_malformed_input_atomically(void) {
     "\"unterminated",
     "\"bad \\q\"",
     "\"bad \\x0\"",
-    "\"bad \\x00\"",
     "\"bad {Q}\"",
+    "\"bad {RA:q}\"",
+    "\"bad {RA:mm}\"",
+    "\"bad {RA:m:e}\"",
+    "\"bad {X2:m}\"",
     "\"bad }\""
   };
   for(const char* text : invalid) {
@@ -199,6 +221,72 @@ static void test_m61_print_rejects_malformed_input_atomically(void) {
       capture_print_byte, capture_print_value, &capture);
   assert(unavailable.error == m61_print::Error::REGISTER_UNAVAILABLE);
   assert(capture.bytes.empty());
+}
+
+struct FakeM61Screen {
+  static constexpr u8 COLS = 16;
+  static constexpr u8 ROWS = 6;
+  u8 cells[ROWS][COLS];
+  int clear_count;
+
+  FakeM61Screen() : cells{{0}}, clear_count(0) {
+    for(u8 y = 0; y < ROWS; y++) {
+      for(u8 x = 0; x < COLS; x++) cells[y][x] = '#';
+    }
+  }
+};
+
+static bool fake_screen_put(u8 x, u8 y, u8 value, void* user_data) {
+  FakeM61Screen& screen = *(FakeM61Screen*) user_data;
+  if(x >= FakeM61Screen::COLS || y >= FakeM61Screen::ROWS) return false;
+  screen.cells[y][x] = value;
+  return true;
+}
+
+static bool fake_screen_clear(void* user_data) {
+  FakeM61Screen& screen = *(FakeM61Screen*) user_data;
+  screen.clear_count++;
+  for(u8 y = 0; y < FakeM61Screen::ROWS; y++) {
+    for(u8 x = 0; x < FakeM61Screen::COLS; x++) screen.cells[y][x] = ' ';
+  }
+  return true;
+}
+
+static void write_ansi(m61_ansi::Writer& writer, const char* text) {
+  while(*text != 0) assert(writer.write((u8) *text++));
+}
+
+static void test_m61_ansi_writes_only_requested_cells(void) {
+  FakeM61Screen screen;
+  m61_ansi::SavedCursor saved = {};
+  const m61_ansi::Sink sink = {
+    fake_screen_put, fake_screen_clear, &screen
+  };
+  m61_ansi::Writer writer(
+      FakeM61Screen::COLS, FakeM61Screen::ROWS, 4, 2, saved, sink);
+
+  assert(writer.write('A'));
+  assert(screen.cells[2][4] == 'A');
+  assert(screen.cells[0][0] == '#');
+  assert(screen.clear_count == 0);
+
+  write_ansi(writer, "\x1B[2;3H@\x1B[s\x1B[6;16H");
+  assert(writer.write(0xFF));
+  write_ansi(writer, "\x1B[u!");
+  assert(screen.cells[1][2] == '@');
+  assert(screen.cells[1][3] == '!');
+  assert(screen.cells[5][15] == 0xFF);
+
+  write_ansi(writer, "\x1B[3;5H\x1B[K");
+  assert(screen.cells[2][3] == '#');
+  for(u8 x = 4; x < FakeM61Screen::COLS; x++) {
+    assert(screen.cells[2][x] == ' ');
+  }
+  assert(screen.clear_count == 0);
+
+  write_ansi(writer, "\x1B[2J");
+  assert(screen.clear_count == 1);
+  assert(writer.cursorX() == 4 && writer.cursorY() == 2);
 }
 
 static void test_file_transfer_checksum_matches_posix_cksum(void) {
@@ -426,6 +514,7 @@ int main(void) {
   test_script_allowlist_is_explicit();
   test_m61_print_escapes_and_interpolation();
   test_m61_print_rejects_malformed_input_atomically();
+  test_m61_ansi_writes_only_requested_cells();
   test_file_transfer_checksum_matches_posix_cksum();
   test_file_transfer_hex_codec();
   test_rtc_datetime_parser_and_formatter();

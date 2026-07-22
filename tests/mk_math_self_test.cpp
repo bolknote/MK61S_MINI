@@ -99,11 +99,17 @@ struct ProgramBoundaryProbe {
   u8 last_address;
   u8 last_opcode;
   bool yield;
+  u8 addresses[16];
+  u8 opcodes[16];
 };
 
 static bool program_boundary_probe(
     const core_61::Mk61ProgramBoundaryContext& context, void* user_data) {
   ProgramBoundaryProbe* const probe = (ProgramBoundaryProbe*) user_data;
+  if(probe->calls < (int) (sizeof(probe->addresses) / sizeof(probe->addresses[0]))) {
+    probe->addresses[probe->calls] = context.address;
+    probe->opcodes[probe->calls] = context.opcode;
+  }
   probe->calls++;
   probe->last_address = context.address;
   probe->last_opcode = context.opcode;
@@ -845,6 +851,60 @@ static void test_program_boundary_yield(void) {
   check_true("two-byte operand is not a boundary",
       probe.last_address == 2 && probe.last_opcode == 0x50 &&
       core_61::program_boundary_yielded());
+  core_61::clear_mk61_program_boundary_hook();
+
+  // CALL uses a different ROM path and does expose its sequential operand at
+  // the common prefetch microaddress. It must still produce only real opcode
+  // boundaries: CALL 95, RET at 95, then HLT at 2.
+  core_61::enable();
+  for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
+  page[0] = 0x53; // ПП / CALL
+  page[1] = 0x95; // destination operand as entered on the calculator
+  page[2] = 0x50;
+  page[95] = 0x52;
+  core_61::set_code_page(page);
+  core_61::set_IP(0);
+  probe = {};
+  check_true("CALL boundary hook installed",
+      core_61::set_mk61_program_boundary_hook(
+          &program_boundary_probe, &probe));
+  press_matrix({2, 9});
+  for(int i = 0; i < 256 && core_61::is_RUN(); i++) core_61::step();
+  check_true("CALL operand is not a boundary",
+      probe.calls == 3 &&
+      probe.addresses[0] == 0 && probe.opcodes[0] == 0x53 &&
+      probe.addresses[1] == 95 && probe.opcodes[1] == 0x52 &&
+      probe.addresses[2] == 2 && probe.opcodes[2] == 0x50);
+  check_true("CALL program finishes", core_61::is_CALC());
+  core_61::clear_mk61_program_boundary_hook();
+
+  // Nested calls expose both operands twice as well; suppression must follow
+  // the calculator return stack rather than remembering only the latest CALL.
+  core_61::enable();
+  for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
+  page[0] = 0x53;
+  page[1] = 0x90;
+  page[2] = 0x50;
+  page[90] = 0x53;
+  page[91] = 0x95;
+  page[92] = 0x52;
+  page[95] = 0x52;
+  core_61::set_code_page(page);
+  core_61::set_IP(0);
+  probe = {};
+  check_true("nested CALL boundary hook installed",
+      core_61::set_mk61_program_boundary_hook(
+          &program_boundary_probe, &probe));
+  press_matrix({2, 9});
+  for(int i = 0; i < 512 && core_61::is_RUN(); i++) core_61::step();
+  check_true("nested CALL operands are not boundaries",
+      probe.calls == 5 &&
+      probe.addresses[0] == 0 && probe.opcodes[0] == 0x53 &&
+      probe.addresses[1] == 90 && probe.opcodes[1] == 0x53 &&
+      probe.addresses[2] == 95 && probe.opcodes[2] == 0x52 &&
+      probe.addresses[3] == 92 && probe.opcodes[3] == 0x52 &&
+      probe.addresses[4] == 2 && probe.opcodes[4] == 0x50);
+  check_true("nested CALL program finishes", core_61::is_CALC());
   core_61::clear_mk61_program_boundary_hook();
 }
 

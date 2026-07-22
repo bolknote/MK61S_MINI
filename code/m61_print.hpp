@@ -19,9 +19,16 @@ enum class StackValue : u8 {
   X2
 };
 
+enum class ValueFormat : u8 {
+  INDICATOR,
+  MANTISSA_HEAD,
+  ABS_EXPONENT
+};
+
 struct ValueRef {
   ValueKind kind;
   u8 index;
+  ValueFormat format = ValueFormat::INDICATOR;
 };
 
 enum class Error : u8 {
@@ -30,8 +37,8 @@ enum class Error : u8 {
   TRAILING_TEXT,
   UNTERMINATED_STRING,
   INVALID_ESCAPE,
-  NUL_BYTE,
   INVALID_PLACEHOLDER,
+  INVALID_FORMAT,
   REGISTER_UNAVAILABLE,
   OUTPUT_FAILED
 };
@@ -45,7 +52,8 @@ using WriteByte = bool (*)(u8 value, void* user_data);
 using WriteValue = bool (*)(const ValueRef& value, void* user_data);
 
 // Parses one quoted print argument and writes it without an implicit newline.
-// Register placeholders accept both {R0}..{RF} and {0}..{F}.
+// Register placeholders accept both {R0}..{RF} and {0}..{F}. The optional
+// :m and :e formats select the leading mantissa digit or absolute exponent.
 Result render(const char* args, bool expanded,
               WriteByte write_byte, WriteValue write_value,
               void* user_data = nullptr);

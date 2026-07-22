@@ -22,39 +22,55 @@ static char upper(char c) {
 
 static Result parse_value(const char* begin, usize len, bool expanded,
                           ValueRef& value) {
-  if(len == 1) {
+  usize name_len = len;
+  ValueFormat format = ValueFormat::INDICATOR;
+  for(usize i = 0; i < len; i++) {
+    if(begin[i] != ':') continue;
+    if(name_len != len || i == 0 || i + 2 != len) {
+      return {Error::INVALID_FORMAT};
+    }
+    name_len = i;
+    switch(upper(begin[i + 1])) {
+      case 'M': format = ValueFormat::MANTISSA_HEAD; break;
+      case 'E': format = ValueFormat::ABS_EXPONENT; break;
+      default: return {Error::INVALID_FORMAT};
+    }
+  }
+
+  if(name_len == 1) {
     const char name = upper(begin[0]);
     switch(name) {
-      case 'X': value = {ValueKind::STACK, (u8) StackValue::X}; return {Error::NONE};
-      case 'Y': value = {ValueKind::STACK, (u8) StackValue::Y}; return {Error::NONE};
-      case 'Z': value = {ValueKind::STACK, (u8) StackValue::Z}; return {Error::NONE};
-      case 'T': value = {ValueKind::STACK, (u8) StackValue::T}; return {Error::NONE};
+      case 'X': value = {ValueKind::STACK, (u8) StackValue::X, format}; return {Error::NONE};
+      case 'Y': value = {ValueKind::STACK, (u8) StackValue::Y, format}; return {Error::NONE};
+      case 'Z': value = {ValueKind::STACK, (u8) StackValue::Z, format}; return {Error::NONE};
+      case 'T': value = {ValueKind::STACK, (u8) StackValue::T, format}; return {Error::NONE};
       default: break;
     }
     const i8 reg = hex_digit(name);
     if(reg >= 0) {
       if(reg == 15 && !expanded) return {Error::REGISTER_UNAVAILABLE};
-      value = {ValueKind::REGISTER, (u8) reg};
+      value = {ValueKind::REGISTER, (u8) reg, format};
       return {Error::NONE};
     }
   }
 
-  if(len == 2) {
+  if(name_len == 2) {
     const char first = upper(begin[0]);
     const char second = upper(begin[1]);
     if(first == 'X' && second == '1') {
-      value = {ValueKind::STACK, (u8) StackValue::X1};
+      value = {ValueKind::STACK, (u8) StackValue::X1, format};
       return {Error::NONE};
     }
     if(first == 'X' && second == '2') {
-      value = {ValueKind::STACK, (u8) StackValue::X2};
+      if(format != ValueFormat::INDICATOR) return {Error::INVALID_FORMAT};
+      value = {ValueKind::STACK, (u8) StackValue::X2, format};
       return {Error::NONE};
     }
     if(first == 'R') {
       const i8 reg = hex_digit(second);
       if(reg < 0) return {Error::INVALID_PLACEHOLDER};
       if(reg == 15 && !expanded) return {Error::REGISTER_UNAVAILABLE};
-      value = {ValueKind::REGISTER, (u8) reg};
+      value = {ValueKind::REGISTER, (u8) reg, format};
       return {Error::NONE};
     }
   }
@@ -92,7 +108,6 @@ static Result parse(const char* args, bool expanded, bool emit,
           if(high < 0 || low < 0) return {Error::INVALID_ESCAPE};
           byte = (u8) (((u8) high << 4) | (u8) low);
           p += 3;
-          if(byte == 0) return {Error::NUL_BYTE};
           break;
         }
         default:
@@ -159,10 +174,10 @@ const char* error_message(Error error) {
     case Error::TRAILING_TEXT: return "unexpected text after quoted string";
     case Error::UNTERMINATED_STRING: return "unterminated quoted string";
     case Error::INVALID_ESCAPE: return "invalid escape sequence";
-    case Error::NUL_BYTE: return "\\x00 is reserved by USB Screen framing";
     case Error::INVALID_PLACEHOLDER: return "invalid register placeholder";
+    case Error::INVALID_FORMAT: return "invalid register format (use :m or :e)";
     case Error::REGISTER_UNAVAILABLE: return "RF requires expanded mode";
-    case Error::OUTPUT_FAILED: return "terminal output failed";
+    case Error::OUTPUT_FAILED: return "screen output failed";
   }
   return "print failed";
 }
