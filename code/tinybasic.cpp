@@ -1,3 +1,15 @@
+#if defined(MK61_BUILD_TINYBASIC_MODULE)
+  #define TinyBASIC_library_select mk61_module_tinybasic_library_select
+  #define TinyBASIC_menu_select mk61_module_tinybasic_menu_select
+  #define CompileTinyBasic mk61_module_compile_tinybasic
+  #define InitTinyBasic mk61_module_init_tinybasic
+  #define TinyBasicIsReady mk61_module_tinybasic_is_ready
+  #define RunTinyBasic mk61_module_run_tinybasic
+  #define RunTinyBasicProgram mk61_module_run_tinybasic_program
+  #define EditTinyBasic mk61_module_edit_tinybasic
+  #define EditTinyBasicProgram mk61_module_edit_tinybasic_program
+#endif
+
 #ifdef TINYBASIC_HOST_TEST
 #include "rust_types.h"
 #include "tinybasic.hpp"
@@ -8,7 +20,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if MK61_ENABLE_TINYBASIC
+#ifndef MK61_TINYBASIC_IS_LOADABLE
+  #define MK61_TINYBASIC_IS_LOADABLE 0
+#endif
+
+#if MK61_ENABLE_TINYBASIC && \
+    (!MK61_TINYBASIC_IS_LOADABLE || defined(MK61_BUILD_TINYBASIC_MODULE) || \
+     defined(TINYBASIC_HOST_TEST))
 static const int KEY_LEFT = keyboard_layout::ACTIVE.left;
 static const int KEY_RIGHT = keyboard_layout::ACTIVE.right;
 static const int KEY_OK = keyboard_layout::ACTIVE.ok;
@@ -150,7 +168,9 @@ namespace library_mk61 {
 
 #include "bounded_string.hpp"
 
-#if MK61_ENABLE_TINYBASIC
+#if MK61_ENABLE_TINYBASIC && \
+    (!MK61_TINYBASIC_IS_LOADABLE || defined(MK61_BUILD_TINYBASIC_MODULE) || \
+     defined(TINYBASIC_HOST_TEST))
 
 static constexpr u16 TB_INVALID_STORE_ID = 0xFFFF;
 static constexpr u16 TB_ROOT_STORE_ID = 0xFFFF;

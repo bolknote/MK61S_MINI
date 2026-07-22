@@ -1,3 +1,10 @@
+#if defined(ARDUINO)
+  #include "config.h"
+#endif
+
+#if !defined(ARDUINO) || MK61_WBMP_VIEWER_IS_BUILTIN || \
+    defined(MK61_BUILD_WBMP_MODULE)
+
 #include "wbmp.hpp"
 
 #include <string.h>
@@ -172,3 +179,5 @@ const char* status_text(Status status) {
 }
 
 } // namespace wbmp
+
+#endif

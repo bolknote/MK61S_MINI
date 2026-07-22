@@ -108,6 +108,18 @@ void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all(void);
 void vfat_stage_clear(void);
 
+// При первом запуске прошивки со слотами модулей старый C5 мог оставить
+// действительные USB-записи в хвосте staging, который теперь резервируется под
+// модули. Пока такой хвост не зафиксирован или явно отброшен, старая геометрия
+// staging остаётся активной, а слоты модулей намеренно недоступны.
+bool stage_layout_migration_pending(void);
+bool finish_stage_layout_migration(void);
+
+#if defined(PROGRAM_STORE_HOST_TEST)
+// Только для воспроизведения тома, записанного прошивкой до появления модулей.
+void test_use_legacy_stage_layout(void);
+#endif
+
 bool write_mk61(const char* name, const u8* code, u16 code_len);
 bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len);
 

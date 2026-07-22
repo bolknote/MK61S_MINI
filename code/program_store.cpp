@@ -62,6 +62,11 @@ static constexpr u8 GC_SCAN_WINDOW = 32;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
 static constexpr t_time_ms DISK_LED_OFF_MS = 35;
+static constexpr u8 CONFIG_MODULE_MASK =
+    (MK61_FOCAL_IS_LOADABLE ? storage_geometry::MODULE_FOCAL : 0) |
+    (MK61_TINYBASIC_IS_LOADABLE ? storage_geometry::MODULE_TINYBASIC : 0) |
+    (MK61_WBMP_VIEWER_IS_LOADABLE
+        ? storage_geometry::MODULE_WBMP_VIEWER : 0);
 
 static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C5 stage must pack seven sectors");
 static_assert(IMAGE1_WAL_COUNT_OFFSET ==
@@ -78,6 +83,11 @@ static_assert((usize) MAX_MK61_TEXT_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
 static_assert((usize) MAX_IMAGE1_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
               "two maximum C5 image records must fit one erase sector");
+
+static bool compute_geometry(u32 capacity,
+                             storage_geometry::Geometry& geometry) {
+  return storage_geometry::compute(capacity, geometry, CONFIG_MODULE_MASK);
+}
 
 struct Inode {
   u32 address;
@@ -146,6 +156,11 @@ static u16 g_stage_ref_count;
 static u8 g_stage_used[storage_geometry::STAGE_TARGET_SECTORS];
 static u8 g_stage_sealed[storage_geometry::STAGE_TARGET_SECTORS];
 static u16 g_stage_generation;
+// Желаемая геометрия хранится отдельно, пока читается старый 65-секторный
+// staging. Это не новый формат C5: локатор и каталоги остаются прежними.
+static u16 g_module_stage_data_sector_count;
+static u32 g_module_first_sector;
+static bool g_stage_layout_migration_pending;
 static u16 g_free_hint;
 
 static_assert((u16) storage_geometry::STAGE_TARGET_SECTORS *
@@ -952,7 +967,7 @@ static bool locator_matches(const u8* locator, storage_geometry::Geometry& geome
   if(memcmp(locator, "C5FS", 4) != 0 || locator[4] != FORMAT_VERSION ||
      locator[5] != STATE_ACTIVE || locator[6] != LOCATOR_SIZE ||
      normalized_record_crc((u8*) locator, LOCATOR_SIZE, 68, 5) != get_le32(locator, 68)) return false;
-  if(!storage_geometry::compute(get_le32(locator, 8), geometry)) return false;
+  if(!compute_geometry(get_le32(locator, 8), geometry)) return false;
   if(geometry.max_nodes != get_le16(locator, 16) ||
      geometry.sectors_per_cluster != locator[18] ||
      geometry.physical_sectors != get_le32(locator, 20) ||
@@ -996,7 +1011,7 @@ static bool load_capacity_for_reformat(void) {
 
     storage_geometry::Geometry geometry;
     const u32 capacity = get_le32(locator, 8);
-    if(!storage_geometry::compute(capacity, geometry) ||
+    if(!compute_geometry(capacity, geometry) ||
        get_le32(locator, 20) != geometry.physical_sectors ||
        get_le32(locator, 52) != geometry.settings_sector ||
        !flash_device().setCapacity(capacity) || !settings_guard_valid(geometry)) {
@@ -1569,6 +1584,13 @@ static bool fat_name_available(u16 parent_id, NodeKind kind,
   char wanted[NAME_SIZE + 16];
   if(!fat_visible_name(kind, type, name, wanted)) return false;
   u16 root_slots = storage_geometry::ROOT_SYSTEM_DIRENTS;
+  // Файлы модулей синтезирует virtual_fat, поэтому в каталоге C5 их нет.
+  // Резервируем по одной обычной 8.3-записи для каждого включённого модуля:
+  // даже полностью заполненный пользователем корень после установки модуля
+  // должен по-прежнему помещаться в фиксированный корневой каталог FAT12.
+  for(u8 bits = g_geometry.module_mask; bits != 0; bits >>= 1) {
+    root_slots = (u16) (root_slots + (bits & 1U));
+  }
   u16 id = parent_id == ROOT_ID ? g_meta.root_head : NONE;
   if(parent_id != ROOT_ID) {
     Inode parent;
@@ -1627,7 +1649,7 @@ static bool format_internal(bool erase_settings) {
 #else
   const u32 capacity = 0;
 #endif
-  if(!storage_geometry::compute(capacity, g_geometry)) return false;
+  if(!compute_geometry(capacity, g_geometry)) return false;
   g_format_epoch = 0xC5F50001UL ^ capacity ^ millis();
   if(g_format_epoch == 0 || g_format_epoch == 0xFFFFFFFFUL) g_format_epoch ^= 0x13579BDFUL;
   g_ready = false;
@@ -1673,6 +1695,9 @@ void init(void) {
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
   g_free_hint = 0;
+  g_module_stage_data_sector_count = 0;
+  g_module_first_sector = 0;
+  g_stage_layout_migration_pending = false;
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
   dbgln(SPIROM, "C5 locator: scan");
@@ -2422,8 +2447,8 @@ static u8 stage_sector_live_count(u16 sector) {
 }
 
 static u16 normal_stage_sector_count(void) {
-  return g_geometry.stage_sector_count > 1
-      ? (u16) (g_geometry.stage_sector_count - 1) : 0;
+  return g_geometry.stage_data_sector_count > 1
+      ? (u16) (g_geometry.stage_data_sector_count - 1) : 0;
 }
 
 static bool stage_slot_erased(u16 sector, u8 slot) {
@@ -2435,7 +2460,7 @@ static bool stage_slot_erased(u16 sector, u8 slot) {
 }
 
 static bool append_stage_value(u16 sector, u32 key, const u8* data) {
-  if(sector >= g_geometry.stage_sector_count || data == NULL ||
+  if(sector >= g_geometry.stage_data_sector_count || data == NULL ||
      g_stage_sealed[sector] || g_stage_used[sector] >= STAGE_RECORDS_PER_SECTOR) return false;
   if(!stage_sector_header_valid(sector)) {
     if(stage_sector_has_live(sector) || !initialize_stage_sector(sector)) return false;
@@ -2632,6 +2657,21 @@ void vfat_stage_clear(void) {
   memset(g_stage_sealed, 0, sizeof(g_stage_sealed));
   if(!g_ready) return;
 
+  // Поля новой разметки не входят в локатор C5. На первом сканировании
+  // запоминаем их и временно возвращаем полную старую геометрию staging, чтобы
+  // ни одна незавершённая USB-транзакция не исчезла из поля зрения.
+  if(g_module_stage_data_sector_count == 0 &&
+     g_geometry.module_first_sector != 0) {
+    g_module_stage_data_sector_count = g_geometry.stage_data_sector_count;
+    g_module_first_sector = g_geometry.module_first_sector;
+  }
+  const bool has_module_layout = g_module_stage_data_sector_count != 0 &&
+                                 g_module_first_sector != 0;
+  if(has_module_layout) {
+    g_geometry.stage_data_sector_count = g_geometry.stage_sector_count;
+    g_geometry.module_first_sector = 0;
+  }
+
   u8 payload[STAGE_DATA_SIZE];
   for(u16 sector = 0; sector < g_geometry.stage_sector_count; sector++) {
     if(!stage_sector_header_valid(sector)) continue;
@@ -2680,7 +2720,56 @@ void vfat_stage_clear(void) {
       }
     }
   }
+
+  bool live_in_trimmed_tail = false;
+  if(has_module_layout) {
+    // Последний сектор новой области staging является резервом атомарного
+    // уплотнения и тоже должен быть свободен от обычных старых записей.
+    const u16 first_trimmed_sector =
+        (u16) (g_module_stage_data_sector_count - 1U);
+    for(u16 index = 0; index < g_stage_ref_count; index++) {
+      const u16 sector = (u16) ((stage_index_ref(index) - 1U) /
+                                STAGE_RECORDS_PER_SECTOR);
+      if(sector >= first_trimmed_sector) {
+        live_in_trimmed_tail = true;
+        break;
+      }
+    }
+  }
+
+  g_stage_layout_migration_pending = has_module_layout &&
+                                     live_in_trimmed_tail;
+  if(has_module_layout && !g_stage_layout_migration_pending) {
+    g_geometry.stage_data_sector_count = g_module_stage_data_sector_count;
+    g_geometry.module_first_sector = g_module_first_sector;
+  }
 }
+
+bool stage_layout_migration_pending(void) {
+  return g_ready && g_stage_layout_migration_pending;
+}
+
+bool finish_stage_layout_migration(void) {
+  if(!g_ready) return false;
+  if(!g_stage_layout_migration_pending) return true;
+  if(g_stage_ref_count != 0 || g_module_stage_data_sector_count == 0 ||
+     g_module_first_sector == 0) return false;
+  g_geometry.stage_data_sector_count = g_module_stage_data_sector_count;
+  g_geometry.module_first_sector = g_module_first_sector;
+  g_stage_layout_migration_pending = false;
+  return true;
+}
+
+#if defined(PROGRAM_STORE_HOST_TEST)
+void test_use_legacy_stage_layout(void) {
+  if(!g_ready || g_geometry.module_first_sector == 0) return;
+  g_module_stage_data_sector_count = g_geometry.stage_data_sector_count;
+  g_module_first_sector = g_geometry.module_first_sector;
+  g_geometry.stage_data_sector_count = g_geometry.stage_sector_count;
+  g_geometry.module_first_sector = 0;
+  g_stage_layout_migration_pending = false;
+}
+#endif
 
 bool vfat_stage_write(u32 block, const u8* data) {
   DiskActivity activity;

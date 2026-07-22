@@ -153,6 +153,13 @@ jobs:
             "$RUNNER_TEMP/mk61s-M"
           cp "$RUNNER_TEMP/build-40th/mk61s-M.ino.bin" "firmware/mk61s-M-40th-f411-${GITHUB_SHA::7}.bin"
 
+      - name: Build STM32F401CC firmware and loadable modules
+        run: |
+          tools/build_f401_bundle.sh \
+            --profile mini-v3-a00 \
+            --build-root "$RUNNER_TEMP/build-f401-bundle" \
+            --output-dir firmware
+
       - name: Check pre-setup constructors
         run: |
           for elf in "$RUNNER_TEMP"/build-*/mk61s-M.ino.elf; do
@@ -162,7 +169,10 @@ jobs:
       - name: Write checksums
         run: |
           cd firmware
-          sha256sum *.bin > SHA256SUMS.txt
+          find . -type f \( -name '*.bin' -o -name '*.MOD' \) -print \
+            | sort | xargs sha256sum > SHA256SUMS.txt
+          zip -qr mk61s-M-mini-v3-lcd1602-a00-f401.zip \
+            mk61s-M-mini-v3-lcd1602-a00-f401
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
@@ -177,7 +187,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: firmware-${{ github.run_number }}-${{ github.sha }}
         run: |
-          gh release create "$RELEASE_TAG" firmware/* \
+          gh release create "$RELEASE_TAG" \
+            firmware/*.bin firmware/*.zip firmware/SHA256SUMS.txt \
             --target "$GITHUB_SHA" \
             --title "Firmware ${GITHUB_SHA::7}" \
             --notes "Automated firmware build for ${GITHUB_SHA}."

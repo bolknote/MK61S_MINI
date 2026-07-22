@@ -11,6 +11,32 @@ int main(void) {
   static_assert(MK61_ENABLE_WBMP_VIEWER == 1,
                 "the WBMP viewer must be enabled by default");
 #endif
+
+#if defined(MK61_CONFIG_EXPECT_LOADABLE_MODULES)
+  static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
+                "the F401CC profile must enable loadable modules");
+  static_assert(MK61_FOCAL_IS_LOADABLE && MK61_TINYBASIC_IS_LOADABLE &&
+                MK61_WBMP_VIEWER_IS_LOADABLE,
+                "enabled optional runtimes must become modules");
+  static_assert(MK61_ANY_LOADABLE_MODULE,
+                "the loader must remain present while a module is enabled");
+#elif defined(MK61_CONFIG_EXPECT_NO_MODULE_ARTIFACTS)
+  static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
+                "this case tests an enabled module framework");
+  static_assert(!MK61_FOCAL_IS_LOADABLE && !MK61_TINYBASIC_IS_LOADABLE &&
+                !MK61_WBMP_VIEWER_IS_LOADABLE &&
+                !MK61_ANY_LOADABLE_MODULE,
+                "disabled features must not leave module artifacts");
+#elif defined(MK61_CONFIG_EXPECT_MODULES_DISABLED)
+  static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
+                "the explicit module override must win");
+  static_assert(MK61_FOCAL_IS_BUILTIN && MK61_TINYBASIC_IS_BUILTIN &&
+                MK61_WBMP_VIEWER_IS_BUILTIN,
+                "enabled features must stay built in when modules are off");
+#else
+  static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
+                "non-F401 profiles must keep modules disabled by default");
+#endif
   static_assert(PIN_SPIFLASH_CS == PA4,
                 "all supported mini revisions use SPI1 NSS on PA4");
   static_assert(PIN_LCD_RS == PB2 && PIN_LCD_RW == PB1 && PIN_LCD_E == PB0,

@@ -5,6 +5,7 @@
 /.mk61-firmware.conf
 /.mkc.conf
 /tools/fmk_font
+/tools/mk61_module_pack
 
 # Python tooling caches
 __pycache__/

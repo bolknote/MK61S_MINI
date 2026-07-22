@@ -1,3 +1,10 @@
+#if defined(ARDUINO)
+  #include "config.h"
+#endif
+
+#if !defined(ARDUINO) || MK61_WBMP_VIEWER_IS_BUILTIN || \
+    defined(MK61_BUILD_WBMP_MODULE)
+
 #include "a00_image_multiplex.hpp"
 
 #include <string.h>
@@ -212,3 +219,5 @@ u32 phase_hold_us(u32 transfer_us, u8 divisor) {
 }
 
 } // namespace a00_image_mux
+
+#endif

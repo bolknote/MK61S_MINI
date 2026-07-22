@@ -69,11 +69,17 @@
 #ifndef MK61_ENABLE_FOCAL
   #define MK61_ENABLE_FOCAL 1
 #endif
+#if MK61_ENABLE_FOCAL != 0 && MK61_ENABLE_FOCAL != 1
+  #error "MK61_ENABLE_FOCAL must be 0 or 1"
+#endif
 
 // TinyBASIC включен по умолчанию. Поставьте 0, чтобы убрать его
 // редактор, рантайм и меню из прошивки.
 #ifndef MK61_ENABLE_TINYBASIC
   #define MK61_ENABLE_TINYBASIC 1
+#endif
+#if MK61_ENABLE_TINYBASIC != 0 && MK61_ENABLE_TINYBASIC != 1
+  #error "MK61_ENABLE_TINYBASIC must be 0 or 1"
 #endif
 
 // Просмотр стандартных монохромных WBMP Type 0 включён по умолчанию.
@@ -87,10 +93,46 @@
   #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
 #endif
 
-// USB Screen keeps a native 192x64 monochrome framebuffer behind the regular
-// display API. It is disabled by default because its static buffers cost RAM.
-// Set MK61_ENABLE_USB_SCREEN=1 in the firmware builder (or pass the same -D
-// flag) to add the mode and its Development menu entry.
+// F401CC вмещает основную прошивку, но почти не оставляет запаса во внутренней
+// Flash для всех необязательных рантаймов. Поэтому его штатный профиль хранит
+// включённые FOCAL, TinyBASIC и просмотрщик WBMP как загружаемые модули.
+// Остальные контроллеры сохраняют прежнюю встроенную компоновку. Явный ключ
+// -DMK61_ENABLE_LOADABLE_MODULES=0/1 всегда имеет приоритет над профилем платы.
+#ifndef MK61_ENABLE_LOADABLE_MODULES
+  #if defined(ARDUINO_BLACKPILL_F401CC)
+    #define MK61_ENABLE_LOADABLE_MODULES 1
+  #else
+    #define MK61_ENABLE_LOADABLE_MODULES 0
+  #endif
+#endif
+#if MK61_ENABLE_LOADABLE_MODULES != 0 && MK61_ENABLE_LOADABLE_MODULES != 1
+  #error "MK61_ENABLE_LOADABLE_MODULES must be 0 or 1"
+#endif
+
+// Ключ каждого компонента остаётся главным: выключенный компонент не получает
+// ни встроенной реализации, ни файла, ни адресуемого слота, ни записи на USB.
+// Если включён хотя бы один модуль, вся общая область резервируется целиком,
+// чтобы смещения остальных слотов не зависели от набора ключей.
+#define MK61_FOCAL_IS_LOADABLE \
+  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_FOCAL)
+#define MK61_TINYBASIC_IS_LOADABLE \
+  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_TINYBASIC)
+#define MK61_WBMP_VIEWER_IS_LOADABLE \
+  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_WBMP_VIEWER)
+#define MK61_ANY_LOADABLE_MODULE \
+  (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE || \
+   MK61_WBMP_VIEWER_IS_LOADABLE)
+
+#define MK61_FOCAL_IS_BUILTIN \
+  (MK61_ENABLE_FOCAL && !MK61_ENABLE_LOADABLE_MODULES)
+#define MK61_TINYBASIC_IS_BUILTIN \
+  (MK61_ENABLE_TINYBASIC && !MK61_ENABLE_LOADABLE_MODULES)
+#define MK61_WBMP_VIEWER_IS_BUILTIN \
+  (MK61_ENABLE_WBMP_VIEWER && !MK61_ENABLE_LOADABLE_MODULES)
+
+// USB-экран хранит нативный монохромный framebuffer 192x64 за обычным API
+// дисплея. По умолчанию он выключен, поскольку его статические буферы занимают
+// ОЗУ. MK61_ENABLE_USB_SCREEN=1 добавляет режим и его пункт в меню разработки.
 #ifndef MK61_ENABLE_USB_SCREEN
   #define MK61_ENABLE_USB_SCREEN 0
 #endif

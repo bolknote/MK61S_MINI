@@ -1,3 +1,15 @@
+#if defined(MK61_BUILD_FOCAL_MODULE)
+  #define FOCAL_library_select mk61_module_focal_library_select
+  #define FOCAL_menu_select mk61_module_focal_menu_select
+  #define CompileFocal mk61_module_compile_focal
+  #define InitFocal mk61_module_init_focal
+  #define FocalIsReady mk61_module_focal_is_ready
+  #define RunFocal mk61_module_run_focal
+  #define RunFocalProgram mk61_module_run_focal_program
+  #define EditFocal mk61_module_edit_focal
+  #define EditFocalProgram mk61_module_edit_focal_program
+#endif
+
 #ifndef FOCAL_HOST_TEST
 #include "program_store.hpp"
 #endif
@@ -12,7 +24,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if MK61_ENABLE_FOCAL
+#ifndef MK61_FOCAL_IS_LOADABLE
+  #define MK61_FOCAL_IS_LOADABLE 0
+#endif
+
+#if MK61_ENABLE_FOCAL && \
+    (!MK61_FOCAL_IS_LOADABLE || defined(MK61_BUILD_FOCAL_MODULE) || \
+     defined(FOCAL_HOST_TEST))
 static const int KEY_LEFT = keyboard_layout::ACTIVE.left;
 static const int KEY_RIGHT = keyboard_layout::ACTIVE.right;
 static const int KEY_OK = keyboard_layout::ACTIVE.ok;
@@ -173,7 +191,9 @@ namespace library_mk61 {
 #include "language_workspace.hpp"
 #endif
 
-#if MK61_ENABLE_FOCAL
+#if MK61_ENABLE_FOCAL && \
+    (!MK61_FOCAL_IS_LOADABLE || defined(MK61_BUILD_FOCAL_MODULE) || \
+     defined(FOCAL_HOST_TEST))
 
 static constexpr u16 FOCAL_INVALID_STORE_ID = 0xFFFF;
 static constexpr u16 FOCAL_ROOT_STORE_ID = 0xFFFF;

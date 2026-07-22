@@ -4,6 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 
 "$root/tests/run_firmware_tool_tests.sh"
+"$root/tests/run_f401_bundle_tool_tests.sh"
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoLogo -NoProfile -File "$root/tests/run_firmware_tool_powershell_tests.ps1"
 fi
@@ -21,6 +22,9 @@ fi
 "$root/tests/run_keyboard_tests.sh"
 "$root/tests/run_keyboard_layout_profile_tests.sh"
 "$root/tests/run_ledcontrol_tests.sh"
+"$root/tests/run_loadable_module_format_tests.sh"
+"$root/tests/run_loadable_module_pack_tests.sh"
+"$root/tests/run_loadable_module_store_tests.sh"
 "$root/tests/run_m61_text_tests.sh"
 "$root/tests/run_mk_math_tests.sh"
 "$root/tests/run_mk61_ref_tests.sh"

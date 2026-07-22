@@ -19,6 +19,9 @@
 #include "cross_hal.h"
 #include "sound_driver.hpp"
 #include "tinybasic.hpp"
+#if MK61_ANY_LOADABLE_MODULE
+  #include "virtual_fat.hpp"
+#endif
 #ifdef SPI_FLASH
   #include <SPI.h>
   #include "spi_nor_flash.hpp"
@@ -752,6 +755,19 @@ void init_external_flash(void) {
 
   dbgln(SPIROM, "C5 init: start");
   program_store::init();
+#if MK61_ANY_LOADABLE_MODULE
+  if(program_store::stage_layout_migration_pending()) {
+    dbgln(SPIROM, "C5 module layout migration: recover USB staging");
+    const bool session_ready = virtual_fat::reset_session();
+    const bool committed = session_ready && virtual_fat::flush_pending();
+    virtual_fat::end_session();
+    const bool activated = committed &&
+        program_store::finish_stage_layout_migration();
+    dbgln(SPIROM, activated
+        ? "C5 module layout migration: complete"
+        : "C5 module layout migration: deferred");
+  }
+#endif
   #ifdef DEBUG_SPIFLASH
     if(program_store::ready()) {
       Serial.print("C5 init: ready, measured capacity: ");

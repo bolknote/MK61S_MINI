@@ -19,6 +19,25 @@ common=(
 clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 -o "$out-v3"
 "$out-v3"
 
+clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_LOADABLE_MODULES \
+  -o "$out-f401-modules"
+"$out-f401-modules"
+
+clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
+  -DMK61_ENABLE_LOADABLE_MODULES=0 \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_MODULES_DISABLED \
+  -o "$out-f401-builtins"
+"$out-f401-builtins"
+
+clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
+  -DMK61_ENABLE_FOCAL=0 -DMK61_ENABLE_TINYBASIC=0 \
+  -DMK61_ENABLE_WBMP_VIEWER=0 \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_WBMP_DISABLED \
+  -DMK61_CONFIG_EXPECT_NO_MODULE_ARTIFACTS \
+  -o "$out-f401-no-modules"
+"$out-f401-no-modules"
+
 clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
   -DMK61_ENABLE_WBMP_VIEWER=0 -DMK61_CONFIG_EXPECT_WBMP_DISABLED \
   -o "$out-v3-no-wbmp"
@@ -66,5 +85,26 @@ if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
     -DMK61_ENABLE_WBMP_VIEWER=2 -o "$out-invalid-wbmp" \
     >/dev/null 2>&1; then
   echo "invalid WBMP viewer flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_LOADABLE_MODULES=2 -o "$out-invalid-modules" \
+    >/dev/null 2>&1; then
+  echo "invalid loadable module flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_FOCAL=2 -o "$out-invalid-focal" \
+    >/dev/null 2>&1; then
+  echo "invalid FOCAL flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_TINYBASIC=2 -o "$out-invalid-tinybasic" \
+    >/dev/null 2>&1; then
+  echo "invalid TinyBASIC flag unexpectedly compiled" >&2
   exit 1
 fi

@@ -1,6 +1,6 @@
 #include "config.h"
 
-#if MK61_ENABLE_WBMP_VIEWER
+#if MK61_WBMP_VIEWER_IS_BUILTIN || defined(MK61_BUILD_WBMP_MODULE)
 
 #include "image1_viewer.hpp"
 
@@ -341,4 +341,4 @@ const char* result_text(Result result) {
 
 } // namespace image1_viewer
 
-#endif // MK61_ENABLE_WBMP_VIEWER
+#endif // built-in or separately linked WBMP module

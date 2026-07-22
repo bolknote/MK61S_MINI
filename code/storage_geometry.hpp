@@ -27,6 +27,24 @@ static constexpr u8 STAGE_SMALL_SECTORS = 17;
 static constexpr u8 STAGE_MIN_SECTORS = 4;
 static constexpr u16 STAGE_TARGET_MIN_PHYSICAL_SECTORS = 512; // 2 МиБ
 
+// Сжатые модули лежат в выровненных по стиранию слотах в конце временного
+// журнала USB. Поля старого локатора C5 не меняются; если прежняя прошивка
+// оставила там живые staged-записи, они сначала восстанавливаются штатным
+// commit-путём. Девять занятых секторов оставляют 55 обычных секторов: 385
+// физических записей для прежнего лимита 384 грязных блоков и ещё один сектор
+// атомарного уплотнения.
+static constexpr u8 FOCAL_MODULE_SECTORS = 4;      // 16 КиБ ZX0
+static constexpr u8 TINYBASIC_MODULE_SECTORS = 4;  // 16 КиБ ZX0
+static constexpr u8 WBMP_MODULE_SECTORS = 1;       // 4 КиБ
+static constexpr u8 MODULE_SECTORS = FOCAL_MODULE_SECTORS +
+                                     TINYBASIC_MODULE_SECTORS +
+                                     WBMP_MODULE_SECTORS;
+static constexpr u8 MODULE_FOCAL = 1U << 0;
+static constexpr u8 MODULE_TINYBASIC = 1U << 1;
+static constexpr u8 MODULE_WBMP_VIEWER = 1U << 2;
+static constexpr u8 MODULE_ALL = MODULE_FOCAL | MODULE_TINYBASIC |
+                                 MODULE_WBMP_VIEWER;
+
 // Inode C5 занимает во flash 20 байт. Для 31-байтового базового имени с самым
 // длинным создаваемым расширением нужно не более четырёх LFN и одной короткой записи.
 static constexpr u8 INODE_BYTES = 20;
@@ -56,6 +74,9 @@ struct Geometry {
   u32 data_sector_count;
   u32 stage_first_sector;
   u16 stage_sector_count;
+  u16 stage_data_sector_count;
+  u32 module_first_sector;
+  u8 module_mask;
   u32 settings_sector;
 
   u16 max_nodes;
@@ -68,7 +89,7 @@ struct Geometry {
 
 // Вычисляет самосогласованную разметку. Возвращает false для микросхем, где не
 // помещаются два атомарных банка каталога, журнал staging, настройки и резерв GC.
-bool compute(u32 capacity_bytes, Geometry& out);
+bool compute(u32 capacity_bytes, Geometry& out, u8 module_mask = 0);
 
 } // пространство имён storage_geometry
 

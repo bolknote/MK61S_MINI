@@ -528,8 +528,16 @@ static void test_sequential_directory_walk_is_linear(void) {
 
 static void test_root_dirent_quota_is_exact_and_atomic(void) {
   fresh();
+  u16 module_slots = 0;
+  for(u8 bits = program_store::geometry().module_mask; bits != 0; bits >>= 1) {
+    module_slots = (u16) (module_slots + (bits & 1U));
+  }
+  // Короткое имя Dnnn всё равно получает одну LFN и одну short-запись.
+  const u16 directory_count = (u16) (
+      (program_store::geometry().root_entries -
+       storage_geometry::ROOT_SYSTEM_DIRENTS - module_slots) / 2U);
   u16 first = program_store::INVALID_ID;
-  for(u16 i = 0; i < 254; i++) {
+  for(u16 i = 0; i < directory_count; i++) {
     char name[8];
     snprintf(name, sizeof(name), "D%03u", (unsigned) i);
     u16 id = program_store::INVALID_ID;
@@ -537,7 +545,8 @@ static void test_root_dirent_quota_is_exact_and_atomic(void) {
                                            program_store::INVALID_ID, &id));
     if(i == 0) first = id;
   }
-  assert(program_store::child_count(program_store::ROOT_ID) == 254);
+  assert(program_store::child_count(program_store::ROOT_ID) ==
+         directory_count);
   assert(!program_store::create_directory(program_store::ROOT_ID, "overflow",
                                           program_store::INVALID_ID, NULL));
 
@@ -562,10 +571,12 @@ static void test_root_dirent_quota_is_exact_and_atomic(void) {
   assert(program_store::move_rename(nested, program_store::ROOT_ID,
                                     "nested"));
   assert(by_id(nested).parent_id == program_store::ROOT_ID);
-  assert(program_store::child_count(program_store::ROOT_ID) == 254);
+  assert(program_store::child_count(program_store::ROOT_ID) ==
+         directory_count);
 
   program_store::init();
-  assert(program_store::child_count(program_store::ROOT_ID) == 254);
+  assert(program_store::child_count(program_store::ROOT_ID) ==
+         directory_count);
   assert(by_id(nested).parent_id == program_store::ROOT_ID);
 }
 
@@ -870,6 +881,66 @@ static void test_stage_journal_survives_reboot_and_churn(void) {
   assert(!program_store::vfat_stage_exists(77));
 }
 
+static void test_module_layout_migrates_legacy_stage_tail(void) {
+  fresh();
+  const u16 module_stage_sectors =
+      program_store::geometry().stage_data_sector_count;
+  const u32 module_first_sector =
+      program_store::geometry().module_first_sector;
+  assert(module_first_sector != 0);
+  assert(!program_store::stage_layout_migration_pending());
+
+  // Имитируем предыдущую прошивку: все 64 обычных сектора и 65-й резерв снова
+  // принадлежат staging. 380 уникальных записей занимают начало сектора 54,
+  // а шестое обновление ниже уже попадает в сектор 55 — новый резерв.
+  program_store::test_use_legacy_stage_layout();
+  assert(program_store::geometry().module_first_sector == 0);
+  assert(program_store::geometry().stage_data_sector_count ==
+         program_store::geometry().stage_sector_count);
+  u8 data[512];
+  for(u16 block = 0; block < 380; block++) {
+    memset(data, (u8) block, sizeof(data));
+    assert(program_store::vfat_stage_write(0x10000UL + block, data));
+  }
+  for(u8 update = 0; update < 6; update++) {
+    memset(data, (u8) (0xE0U + update), sizeof(data));
+    assert(program_store::vfat_stage_write(0x10000UL + update, data));
+  }
+
+  // Новая прошивка обязана увидеть хвост старой разметки и не публиковать
+  // адрес модулей, пока все staged-блоки ещё нужны для восстановления USB.
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::stage_layout_migration_pending());
+  assert(program_store::geometry().module_first_sector == 0);
+  assert(program_store::geometry().stage_data_sector_count ==
+         program_store::geometry().stage_sector_count);
+  assert(program_store::vfat_stage_count() == 380);
+  memset(data, 0, sizeof(data));
+  assert(program_store::vfat_stage_read(0x10005UL, data));
+  assert(data[0] == 0xE5U);
+  assert(!program_store::finish_stage_layout_migration());
+
+  // В рабочей прошивке staged-состояние сначала фиксирует virtual_fat. Здесь
+  // проверяем нижний атомарный шаг: после подтверждённого удаления всех ссылок
+  // новая разметка может быть опубликована без изменения локатора C5.
+  assert(program_store::vfat_stage_discard_all());
+  assert(program_store::finish_stage_layout_migration());
+  assert(!program_store::stage_layout_migration_pending());
+  assert(program_store::geometry().stage_data_sector_count ==
+         module_stage_sectors);
+  assert(program_store::geometry().module_first_sector ==
+         module_first_sector);
+
+  program_store::init();
+  assert(program_store::ready());
+  assert(!program_store::stage_layout_migration_pending());
+  assert(program_store::geometry().stage_data_sector_count ==
+         module_stage_sectors);
+  assert(program_store::geometry().module_first_sector ==
+         module_first_sector);
+}
+
 static void test_stage_indexes_large_unique_write_burst(void) {
   fresh();
   static constexpr u16 BLOCKS = 384;
@@ -926,7 +997,7 @@ static void test_stage_compacts_when_every_normal_sector_is_live(void) {
   assert(program_store::geometry().stage_sector_count ==
          storage_geometry::STAGE_TARGET_SECTORS);
   const u8 normal_sectors =
-      (u8) (program_store::geometry().stage_sector_count - 1);
+      (u8) (program_store::geometry().stage_data_sector_count - 1);
   u8 data[512];
   memset(data, 0, sizeof(data));
   data[0] = 0;
@@ -1217,6 +1288,7 @@ int main(void) {
   test_gc_preserves_live_records();
   test_gc_power_cuts_are_atomic_and_recoverable();
   test_stage_journal_survives_reboot_and_churn();
+  test_module_layout_migrates_legacy_stage_tail();
   test_stage_indexes_large_unique_write_burst();
   test_stage_power_cut_keeps_previous_value();
   test_stage_compacts_when_every_normal_sector_is_live();
