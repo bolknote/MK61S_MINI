@@ -17,16 +17,21 @@ printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 dd if=/dev/zero of="$work/local/large.tbi" bs=1 count=1537 2>/dev/null
 dd if=/dev/zero of="$work/local/chunked.m61" bs=1 count=100 2>/dev/null
 
-test "$("$root/tools/mkc.sh" --classify "$work/local/demo.foc")" = supported
-test "$("$root/tools/mkc.sh" --classify "$work/local/Good")" = supported
-test "$("$root/tools/mkc.sh" --classify "$work/local/blocked.bin" || true)" = \
+test -x "$root/tools/mkc.cmd"
+test -x "$root/tools/.mkc/mkc.sh"
+test -f "$root/tools/.mkc/mkc.ps1"
+test ! -e "$root/tools/mkc.sh"
+test ! -e "$root/tools/mkc.ps1"
+test "$("$root/tools/mkc.cmd" --classify "$work/local/demo.foc")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/Good")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/blocked.bin" || true)" = \
   'unsupported: формат не поддерживается'
-case "$("$root/tools/mkc.sh" --classify "$work/local/large.tbi" || true)" in
+case "$("$root/tools/mkc.cmd" --classify "$work/local/large.tbi" || true)" in
   'unsupported: слишком большой:'*) ;;
   *) echo 'mkc: oversized file was accepted' >&2; exit 1 ;;
 esac
 
-MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/mkc.sh"
+MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/.mkc/mkc.sh"
 SESSION_DIR="$work/session"
 MOCK_ROOT="$work/device"
 shopt -s nullglob dotglob
@@ -164,7 +169,7 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1; 
       }
     }
     spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
-      "'"$root"'/tools/mkc.sh" --mock $env(MKC_TEST_DEVICE) \
+      "'"$root"'/tools/mkc.cmd" --mock $env(MKC_TEST_DEVICE) \
       --local $env(MKC_TEST_LOCAL)
     after 400
 
@@ -213,6 +218,49 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1; 
     must_see "program.m61"
     send "\033\[21~"
     expect { eof {} timeout { exit 1 } }
+    catch wait result
+    exit [lindex $result 3]
+  '
+fi
+
+if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1 &&
+   command -v pwsh >/dev/null 2>&1; then
+  export MKC_TEST_LOCAL="$work/local/Good"
+  export MKC_TEST_DEVICE="$work/device"
+  expect -c '
+    set timeout 10
+    log_user 0
+    proc must_see {text} {
+      expect {
+        -exact $text { return }
+        timeout { puts stderr "mkc PowerShell expect timeout: $text"; exit 1 }
+        eof { puts stderr "mkc PowerShell exited before: $text"; exit 1 }
+      }
+    }
+    spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
+      pwsh -NoLogo -NoProfile -File "'"$root"'/tools/.mkc/mkc.ps1" \
+      --mock $env(MKC_TEST_DEVICE) --local $env(MKC_TEST_LOCAL)
+    after 500
+
+    send "\033OP"
+    must_see "MKC — файловый менеджер MK61s"
+    send "\033"
+    must_see "Good> "
+
+    send "\033\[B"
+    send "\033OR"
+    must_see "001"
+    must_see "Esc/F3 — close"
+    send "\033"
+    must_see "Good> "
+
+    send "\033\[15~"
+    must_see "Copy 1 item(s) to MK61s:"
+    send "\033"
+    must_see "Good> "
+
+    send "\033\[21~"
+    expect { eof {} timeout { puts stderr "mkc PowerShell F10 timeout"; exit 1 } }
     catch wait result
     exit [lindex $result 3]
   '
