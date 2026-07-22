@@ -63,6 +63,15 @@ void main() {
     ]);
   });
 
+  test('desktop vertical arrows use the two Mini step keys', () {
+    final definition = KeyboardDefinition.forLayout(MkKeyboardLayout.mini);
+
+    expect(definition.scanCodeFor('up'), definition.scanCodeFor('frw'));
+    expect(definition.keyForAction('up').label, '←ШГ');
+    expect(definition.scanCodeFor('down'), definition.scanCodeFor('bkw'));
+    expect(definition.keyForAction('down').label, 'ШГ→');
+  });
+
   test('A00 key faces include the printed shifted and alphabet legends', () {
     final definition = KeyboardDefinition.forLayout(MkKeyboardLayout.mini);
 

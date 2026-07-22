@@ -19,6 +19,7 @@ using usb_screen_protocol::MessageType;
 static constexpr t_time_ms OFFER_INTERVAL_MS = 500;
 static constexpr t_time_ms HEARTBEAT_TIMEOUT_MS = 3000;
 static constexpr t_time_ms ESCAPE_HOLD_MS = 1500;
+static constexpr t_time_ms DETACH_TX_BUDGET_MS = 20;
 static constexpr usize RX_BUDGET_PER_SERVICE = 96;
 static constexpr u16 TERMINAL_RX_CAPACITY = 256;
 
@@ -163,6 +164,35 @@ static void pumpTx(void) {
   if(written == 0 && session.state == State::WAITING_FOR_HOST) {
     session.tx_offset = session.encoder.size();
   }
+}
+
+// Device-initiated exits must not make the desktop client wait for the
+// heartbeat timeout.  An update packet may already be partially queued, so
+// emit an extra zero first: it terminates a partial COBS frame, while the
+// leading zero of DETACH arms the parser for the new complete packet.
+static void notifyHostDetach(void) {
+  if(session.state == State::IDLE) return;
+
+  session.tx_offset = session.encoder.size();
+  session.response = {};
+  const t_time_ms deadline = millis() + DETACH_TX_BUDGET_MS;
+  while(Serial.availableForWrite() <= 0 &&
+        !runtime_safety::time_reached(millis(), deadline)) {
+    delay(1);
+  }
+  const u8 resync = 0;
+  if(Serial.write(&resync, 1) == 1 &&
+     queuePacket(MessageType::DETACH, NULL, 0)) {
+    do {
+      pumpTx();
+      if(txPending()) delay(1);
+    } while(txPending() &&
+            !runtime_safety::time_reached(millis(), deadline));
+  }
+  // Never let a disconnected or stalled host block the physical escape path.
+  // The heartbeat remains the fallback when this best-effort packet cannot be
+  // queued completely within the bounded budget.
+  session.tx_offset = session.encoder.size();
 }
 
 static void scheduleReleaseAll(void) {
@@ -445,6 +475,7 @@ bool start(void) {
 
 void cancel(void) {
   if(session.state == State::IDLE) return;
+  notifyHostDetach();
   if(main_lcd().usbScreenActive()) main_lcd().leaveUsbScreen();
   scheduleReleaseAll();
   resetFrameTransfer();

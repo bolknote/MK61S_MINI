@@ -90,16 +90,34 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     });
   }
 
-  void _onKeyEvent(KeyEvent event) {
-    if (_terminalExpanded || _terminalFocus.hasFocus) return;
-    if (!controller.attached) return;
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return;
+  KeyEventResult _onKeyEvent(FocusNode _, KeyEvent event) {
+    if (_terminalExpanded || _terminalFocus.hasFocus) {
+      return KeyEventResult.ignored;
+    }
+
+    final action = _actionForLogicalKey(event.logicalKey);
+    final isArrow =
+        event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+        event.logicalKey == LogicalKeyboardKey.arrowRight ||
+        event.logicalKey == LogicalKeyboardKey.arrowUp ||
+        event.logicalKey == LogicalKeyboardKey.arrowDown;
+
+    // An event handled here must not continue into Flutter's focus traversal
+    // or ScrollView shortcuts.  Consume arrow key-up as well as key-down even
+    // while offline, so arrows never become application navigation while the
+    // terminal drawer is hidden.
+    if (event is KeyUpEvent) {
+      return isArrow ? KeyEventResult.handled : KeyEventResult.ignored;
+    }
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
 
     final hardwareKeyboard = HardwareKeyboard.instance;
     if (hardwareKeyboard.isMetaPressed ||
         hardwareKeyboard.isControlPressed ||
         hardwareKeyboard.isAltPressed) {
-      return;
+      return isArrow ? KeyEventResult.handled : KeyEventResult.ignored;
     }
     final englishCharacter = HostKeyboardMapping.englishCharacterForPhysicalKey(
       event.physicalKey,
@@ -107,11 +125,16 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     );
     if (englishCharacter != null) {
       final actions = HostKeyboardMapping.actionsForCharacter(englishCharacter);
-      if (actions != null) controller.tapActions(actions);
-      return;
+      if (actions != null && controller.attached) {
+        controller.tapActions(actions);
+      }
+      return KeyEventResult.handled;
     }
-    final action = _actionForLogicalKey(event.logicalKey);
-    if (action != null) controller.tapActions([action]);
+    if (action != null) {
+      if (controller.attached) controller.tapActions([action]);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   void _scrollTerminal() {
@@ -200,7 +223,7 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     return Scaffold(
       bottomNavigationBar: _buildTerminalDrawer(context),
       body: SafeArea(
-        child: KeyboardListener(
+        child: Focus(
           focusNode: _keyboardFocus,
           autofocus: true,
           onKeyEvent: _onKeyEvent,

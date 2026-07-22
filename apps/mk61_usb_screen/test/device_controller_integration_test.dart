@@ -289,6 +289,26 @@ void main() {
   );
 
   test(
+    'device DETACH closes cleanly and leaves auto-connect scanning',
+    () async {
+      final transport = _FakeSerialTransport();
+      final controller = await _openController(transport);
+      addTearDown(controller.dispose);
+      final connection = transport.connection;
+      _attach(controller, connection);
+
+      connection.sendDevicePacket(MkMessage.detach);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state, DeviceConnectionState.scanning);
+      expect(controller.attached, isFalse);
+      expect(controller.hasOpenPort, isFalse);
+      expect(controller.lastError, isNull);
+      expect(connection.closed, isTrue);
+    },
+  );
+
+  test(
     'sequence loss and bad framebuffer CRC both request a keyframe',
     () async {
       final transport = _FakeSerialTransport();

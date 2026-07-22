@@ -119,9 +119,17 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
     expect(controller.tappedActions.last, ['alpha', 'digit0']);
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowLeft);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowLeft);
+    expect(await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowLeft), isTrue);
+    expect(await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowLeft), isTrue);
     expect(controller.tappedActions.last, ['left']);
+
+    expect(await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowUp), isTrue);
+    expect(await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowUp), isTrue);
+    expect(controller.tappedActions.last, ['up']);
+
+    expect(await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowDown), isTrue);
+    expect(await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowDown), isTrue);
+    expect(controller.tappedActions.last, ['down']);
 
     await tester.tap(find.byKey(const ValueKey('terminal-toggle')));
     await _finishDrawerAnimation(tester);
@@ -134,7 +142,7 @@ void main() {
     );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.keyB, character: 'b');
-    expect(controller.tappedActions, hasLength(4));
+    expect(controller.tappedActions, hasLength(6));
 
     await tester.enterText(
       find.byKey(const ValueKey('terminal-input')),

@@ -301,7 +301,7 @@ class DeviceController extends ChangeNotifier {
         // Receipt itself refreshes _lastPacketAt.
         return;
       case MkMessage.detach:
-        unawaited(_connectionFailed('Устройство завершило USB Screen'));
+        unawaited(_deviceDetached());
         return;
     }
   }
@@ -533,6 +533,16 @@ class DeviceController extends ChangeNotifier {
     _state = _autoConnect
         ? DeviceConnectionState.scanning
         : DeviceConnectionState.error;
+    _notify();
+  }
+
+  Future<void> _deviceDetached() async {
+    if (_connection == null || _disposed || _closing) return;
+    await _closePort(sendDetach: false);
+    _lastError = null;
+    _state = _autoConnect
+        ? DeviceConnectionState.scanning
+        : DeviceConnectionState.disconnected;
     _notify();
   }
 
