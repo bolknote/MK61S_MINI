@@ -37,6 +37,18 @@ file_to_hex "$work/local/binary.wbmp" > "$work/session/binary.hex"
 hex_file_to_binary "$work/session/binary.hex" "$work/binary.roundtrip"
 cmp "$work/local/binary.wbmp" "$work/binary.roundtrip"
 
+printf 'Unknown command: fsput begin /demo.foc 4 0\n' > "$work/old-firmware.txt"
+exec 8< "$work/old-firmware.txt"
+if wait_for_marker '@MKC:READY '; then
+  echo 'mkc: old firmware was accepted as transfer-capable' >&2
+  exit 1
+fi
+case "$STATUS_TEXT" in
+  *'прошивка не поддерживает F3/F5'*) ;;
+  *) echo "mkc: unclear old-firmware error: $STATUS_TEXT" >&2; exit 1 ;;
+esac
+exec 8<&-
+
 plan_reset
 if plan_local_tree "$work/local" /Imported; then
   echo 'mkc: a directory containing an unsupported file was accepted' >&2
@@ -78,9 +90,16 @@ if command -v expect >/dev/null 2>&1; then
 
     send "\033\[B"
     must_see "program.m61"
-    send "\033OR"
+    # A duplicated F3 sequence must not open and immediately close View.
+    send "\033OR\033OR"
     must_see "001"
-    send "\033OR"
+    must_see "Esc/F3 — close"
+    after 150
+    send "\033\[B"
+    must_see "001"
+    must_see "Esc/F3 — close"
+    after 150
+    send "\033"
     must_see "MKC>"
 
     # F5 must open a modal copy dialog and a lone Esc must cancel it.
