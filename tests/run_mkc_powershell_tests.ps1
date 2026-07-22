@@ -62,6 +62,11 @@ try {
     Assert-True ((Normalize-RemotePath '/Programs' '../Games/./demo.m61') -eq '/Games/demo.m61') 'remote path normalization differs'
     Assert-True (Test-CdcHardwareId 'USB\VID_0483&PID_5740\3688388E3233') 'Windows CDC VID/PID was not recognized'
     Assert-True (-not (Test-CdcHardwareId 'USB\VID_0483&PID_DF11\3688388E3233')) 'DFU was mistaken for CDC'
+    $pnpDevice = [pscustomobject]@{
+        InstanceId = 'USB\VID_0483&PID_5740\3688388E3233'
+        FriendlyName = 'USB Serial Device (COM16)'
+    }
+    Assert-True ((Get-CdcPortFromPnpDevice $pnpDevice) -eq 'COM16') 'Windows PnP COM-port extraction failed'
     $json = '{"detected_ports":[{"port":{"address":"COM7","properties":{"vid":"0x0483","pid":"5740"}}},{"port":{"address":"COM8","properties":{"vid":"2341","pid":"0043"}}}]}'
     Assert-True ((@(Get-CdcPortsFromJson $json) -join ',') -eq 'COM7') 'arduino-cli JSON port detection failed'
     $crc = Get-PosixChecksumBytes ([Text.Encoding]::ASCII.GetBytes('123456789'))
@@ -94,6 +99,36 @@ try {
     $f5 = [ConsoleKeyInfo]::new([char]0, [ConsoleKey]::F5, $false, $false, $false)
     Assert-True ((Get-UiKeyName $space) -eq 'space') 'Space is not mapped to marking'
     Assert-True ((Get-UiKeyName $f5) -eq 'f5') 'F5 is not mapped to the copy dialog'
+    $oldWindowsHost = $script:IsWindowsHost
+    try {
+        $script:IsWindowsHost = $true
+        Assert-True (Test-UseDirectSerialTransport) 'Windows still selects arduino-cli transport'
+        $serial = New-ConfiguredSerialPort 'COM16'
+        Assert-True ($serial.PortName -eq 'COM16' -and $serial.BaudRate -eq 115200) 'direct COM settings differ'
+        Assert-True ($serial.DataBits -eq 8 -and $serial.Parity -eq 'None' -and $serial.StopBits -eq 'One') 'direct COM framing differs'
+        Assert-True ($serial.DtrEnable -and -not $serial.RtsEnable) 'direct COM control lines differ'
+        $serial.Dispose()
+        $fakeSerial = [pscustomobject]@{
+            IsOpen = $true; ReadTimeout = 0; LastWrite = ''; NextLine = "f`t4 B`tdemo.foc`r"
+        }
+        $fakeSerial | Add-Member -MemberType ScriptMethod -Name Write -Value {
+            param([string]$Text)
+            $this.LastWrite = $Text
+        }
+        $fakeSerial | Add-Member -MemberType ScriptMethod -Name ReadLine -Value { return $this.NextLine }
+        $oldDirectSerial = $script:DirectSerial
+        try {
+            $script:DirectSerial = $fakeSerial
+            Assert-True (Send-RemoteLine 'ls "/"') 'direct COM write failed'
+            Assert-True ($fakeSerial.LastWrite -eq "ls `"/`"`r") 'direct COM write does not use terminal CR'
+            Assert-True (Read-SerialLine 250) 'direct COM read failed'
+            Assert-True ($script:SerialLine -eq "f`t4 B`tdemo.foc") 'direct COM read did not trim CR'
+        } finally {
+            $script:DirectSerial = $oldDirectSerial
+        }
+    } finally {
+        $script:IsWindowsHost = $oldWindowsHost
+    }
     $script:RemotePath = '/'
     $mockCommand = Invoke-RemoteCaptureCommand 'help'
     Assert-True ($mockCommand.Success -and ($mockCommand.Lines -join "`n") -match 'Mock MK61s terminal') 'right-panel command capture failed'

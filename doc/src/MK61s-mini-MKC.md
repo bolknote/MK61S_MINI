@@ -21,13 +21,13 @@ tools\mkc.cmd
 tools\mkc.cmd --port COM7 --local .\programs
 ```
 
-На macOS/Linux нужен Bash 3.2 или новее, в Windows — встроенный Windows
-PowerShell 5.1 либо PowerShell 7. Обоим портам нужен `arduino-cli`; отдельные
-`dialog`, `whiptail`, ncurses и модули PowerShell не используются.
-`arduino-cli` находит CDC-устройство STM32 с VID:PID `0483:5740` и держит один
-сеанс monitor на всё время работы. Windows-порт дополнительно проверяет PnP
-Hardware ID `VID_0483&PID_5740`. Если автоопределение не удалось, MKC
-спрашивает имя последовательного порта.
+На macOS/Linux нужен Bash 3.2 или новее и `arduino-cli`. В Windows достаточно
+встроенного Windows PowerShell 5.1 либо PowerShell 7: Windows-порт открывает
+COM-порт напрямую через `System.IO.Ports.SerialPort`, без Arduino CLI и без
+установки модулей. Отдельные `dialog`, `whiptail` и ncurses также не
+используются. CDC-устройство STM32 определяется по VID:PID `0483:5740`; в
+Windows проверяется PnP Hardware ID `VID_0483&PID_5740`. Если автоопределение
+не удалось, MKC спрашивает имя последовательного порта.
 
 Последний локальный каталог и порт сохраняются в git-игнорируемом файле
 `.mkc.conf`. Правая панель всегда начинает с корня C5.

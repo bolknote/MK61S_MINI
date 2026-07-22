@@ -2,7 +2,8 @@
 
 <#
   MKC — two-panel Norton Commander-style file manager for MK61s.
-  Windows port. Uses only System.Console and arduino-cli; no modules required.
+  Windows port. Uses System.Console and System.IO.Ports; no modules or
+  arduino-cli are required on Windows.
 #>
 
 Set-StrictMode -Version 2.0
@@ -45,6 +46,7 @@ $script:SessionDir = ''
 $script:Monitor = $null
 $script:MonitorReadTask = $null
 $script:MonitorErrorTask = $null
+$script:DirectSerial = $null
 $script:MarkerLine = ''
 $script:SerialLine = ''
 $script:FsPutChunkBytes = 48
@@ -215,11 +217,28 @@ function Test-CdcHardwareId {
     return $HardwareId -match '(?i)VID_0483&PID_5740'
 }
 
+function Get-CdcPortFromPnpDevice {
+    param([object]$Device)
+    $hardwareId = [string](Get-ObjectPropertyValue $Device 'InstanceId')
+    if ([string]::IsNullOrEmpty($hardwareId)) {
+        $hardwareId = [string](Get-ObjectPropertyValue $Device 'PNPDeviceID')
+    }
+    if (-not (Test-CdcHardwareId $hardwareId)) { return '' }
+    $name = [string](Get-ObjectPropertyValue $Device 'FriendlyName')
+    if ([string]::IsNullOrEmpty($name)) { $name = [string](Get-ObjectPropertyValue $Device 'Name') }
+    $match = [regex]::Match($name, '\((COM\d+)\)')
+    if ($match.Success) { return $match.Groups[1].Value }
+    return ''
+}
+
 function Get-CdcPorts {
     $ports = New-Object 'System.Collections.Generic.List[string]'
-    $cli = Invoke-NativeCapture $script:ArduinoCli @('board','list','--format','json')
-    if ($cli.ExitCode -eq 0) {
-        foreach ($port in @(Get-CdcPortsFromJson $cli.Output)) { $ports.Add($port) }
+    $cliPath = Resolve-Executable $script:ArduinoCli
+    if (-not [string]::IsNullOrEmpty($cliPath)) {
+        $cli = Invoke-NativeCapture $cliPath @('board','list','--format','json')
+        if ($cli.ExitCode -eq 0) {
+            foreach ($port in @(Get-CdcPortsFromJson $cli.Output)) { $ports.Add($port) }
+        }
     }
     if ($script:IsWindowsHost) {
         $devices = @()
@@ -235,15 +254,8 @@ function Get-CdcPorts {
             try { $devices = @(Get-WmiObject -Class Win32_PnPEntity -ErrorAction Stop) } catch {}
         }
         foreach ($item in $devices) {
-            $hardwareId = [string](Get-ObjectPropertyValue $item 'InstanceId')
-            if ([string]::IsNullOrEmpty($hardwareId)) {
-                $hardwareId = [string](Get-ObjectPropertyValue $item 'PNPDeviceID')
-            }
-            if (-not (Test-CdcHardwareId $hardwareId)) { continue }
-            $name = [string](Get-ObjectPropertyValue $item 'FriendlyName')
-            if ([string]::IsNullOrEmpty($name)) { $name = [string](Get-ObjectPropertyValue $item 'Name') }
-            $match = [regex]::Match($name, '\((COM\d+)\)')
-            if ($match.Success) { $ports.Add($match.Groups[1].Value) }
+            $port = Get-CdcPortFromPnpDevice $item
+            if (-not [string]::IsNullOrEmpty($port)) { $ports.Add($port) }
         }
     }
     return @($ports.ToArray() | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
@@ -256,8 +268,52 @@ function Quote-NativeArgument {
     return '"' + ($Value -replace '(\\*)"', '$1$1\"' -replace '(\\+)$', '$1$1') + '"'
 }
 
+function Test-UseDirectSerialTransport {
+    return $script:IsWindowsHost
+}
+
+function New-ConfiguredSerialPort {
+    param([string]$PortName)
+    $serial = New-Object System.IO.Ports.SerialPort
+    $serial.PortName = $PortName
+    $serial.BaudRate = 115200
+    $serial.DataBits = 8
+    $serial.Parity = [IO.Ports.Parity]::None
+    $serial.StopBits = [IO.Ports.StopBits]::One
+    $serial.Handshake = [IO.Ports.Handshake]::None
+    $serial.DtrEnable = $true
+    $serial.RtsEnable = $false
+    $serial.NewLine = "`n"
+    $serial.Encoding = $script:Utf8NoBom
+    $serial.ReadTimeout = 8000
+    $serial.WriteTimeout = 2000
+    return $serial
+}
+
+function Start-DirectSerial {
+    try {
+        $script:DirectSerial = New-ConfiguredSerialPort $script:Port
+        $script:DirectSerial.Open()
+        Start-Sleep -Milliseconds 300
+        try { $script:DirectSerial.DiscardInBuffer() } catch {}
+        return $true
+    } catch {
+        $message = $_.Exception.Message
+        if ($_.Exception -is [UnauthorizedAccessException]) {
+            $message = "порт $($script:Port) занят — закройте TeraTerm или Serial Monitor"
+        }
+        $script:StatusText = "не удалось открыть $($script:Port): $message"
+        if ($null -ne $script:DirectSerial) {
+            try { $script:DirectSerial.Dispose() } catch {}
+            $script:DirectSerial = $null
+        }
+        return $false
+    }
+}
+
 function Start-Monitor {
     if (-not [string]::IsNullOrEmpty($script:MockRoot)) { return $true }
+    if (Test-UseDirectSerialTransport) { return Start-DirectSerial }
     $executable = Resolve-Executable $script:ArduinoCli
     if ([string]::IsNullOrEmpty($executable)) {
         $script:StatusText = 'arduino-cli не найден (задайте MKC_ARDUINO_CLI)'
@@ -301,6 +357,11 @@ function Start-Monitor {
 }
 
 function Stop-Monitor {
+    if ($null -ne $script:DirectSerial) {
+        try { if ($script:DirectSerial.IsOpen) { $script:DirectSerial.Close() } } catch {}
+        try { $script:DirectSerial.Dispose() } catch {}
+        $script:DirectSerial = $null
+    }
     if ($null -eq $script:Monitor) { return }
     try { $script:Monitor.StandardInput.Close() } catch {}
     try {
@@ -314,6 +375,16 @@ function Stop-Monitor {
 
 function Send-RemoteLine {
     param([string]$Command)
+    if ($null -ne $script:DirectSerial) {
+        if (-not $script:DirectSerial.IsOpen) { return $false }
+        try {
+            $script:DirectSerial.Write($Command + "`r")
+            return $true
+        } catch {
+            $script:StatusText = 'Не удалось отправить команду калькулятору: ' + $_.Exception.Message
+            return $false
+        }
+    }
     if ($null -eq $script:Monitor -or $script:Monitor.HasExited) { return $false }
     try {
         $script:Monitor.StandardInput.Write($Command + "`r")
@@ -328,6 +399,20 @@ function Send-RemoteLine {
 function Read-SerialLine {
     param([int]$TimeoutMilliseconds = 5000)
     $script:SerialLine = ''
+    if ($null -ne $script:DirectSerial) {
+        if (-not $script:DirectSerial.IsOpen) { return $false }
+        try {
+            $script:DirectSerial.ReadTimeout = $TimeoutMilliseconds
+            $line = $script:DirectSerial.ReadLine()
+            $script:SerialLine = ([string]$line).TrimEnd("`r")
+            return $true
+        } catch [TimeoutException] {
+            return $false
+        } catch {
+            $script:StatusText = 'Ошибка чтения порта: ' + $_.Exception.Message
+            return $false
+        }
+    }
     if ($null -eq $script:Monitor -or $script:Monitor.HasExited) { return $false }
     try {
         if ($null -eq $script:MonitorReadTask) {
@@ -2204,14 +2289,16 @@ function Invoke-MkcApplication {
         }
         $script:MockRoot = (Resolve-Path -LiteralPath $script:MockRoot).Path
     } else {
-        $foundCli = Find-ArduinoCli
-        if ([string]::IsNullOrEmpty($foundCli)) {
-            [Console]::WriteLine('MKC: arduino-cli не найден.')
-            $entered = Read-Host 'Укажите полный путь к arduino-cli.exe'
-            $foundCli = Resolve-Executable $entered
-            if ([string]::IsNullOrEmpty($foundCli)) { throw 'arduino-cli не найден' }
+        if (-not (Test-UseDirectSerialTransport)) {
+            $foundCli = Find-ArduinoCli
+            if ([string]::IsNullOrEmpty($foundCli)) {
+                [Console]::WriteLine('MKC: arduino-cli не найден.')
+                $entered = Read-Host 'Укажите полный путь к arduino-cli'
+                $foundCli = Resolve-Executable $entered
+                if ([string]::IsNullOrEmpty($foundCli)) { throw 'arduino-cli не найден' }
+            }
+            $script:ArduinoCli = $foundCli
         }
-        $script:ArduinoCli = $foundCli
         if ([string]::IsNullOrEmpty($script:Port)) {
             $ports = @(Get-CdcPorts)
             if ($ports.Count -gt 0) { $script:Port = $ports[0] }
@@ -2223,7 +2310,10 @@ function Invoke-MkcApplication {
     }
     $script:SessionDir = Join-Path ([IO.Path]::GetTempPath()) ('mkc.' + [guid]::NewGuid().ToString('N'))
     [void](New-Item -ItemType Directory -Path $script:SessionDir)
-    if (-not (Start-Monitor)) { throw "не удалось открыть $($script:Port) $($script:StatusText)" }
+    if (-not (Start-Monitor)) {
+        if ([string]::IsNullOrWhiteSpace($script:StatusText)) { throw "не удалось открыть $($script:Port)" }
+        throw $script:StatusText
+    }
     Enter-MkcTui
     Refresh-Panels
     Save-Config
