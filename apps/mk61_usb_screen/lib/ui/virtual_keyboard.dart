@@ -73,12 +73,17 @@ class _CalculatorKeyButton extends StatelessWidget {
   final VoidCallback onDown;
   final VoidCallback onUp;
 
-  Color _baseColor() => switch (calculatorKey.kind) {
-    CalculatorKeyKind.digit => const Color(0xff30383c),
-    CalculatorKeyKind.operation => const Color(0xff3d4347),
-    CalculatorKeyKind.shift => const Color(0xff9a6727),
-    CalculatorKeyKind.navigation => const Color(0xff245b55),
-    CalculatorKeyKind.system => const Color(0xff34313e),
+  Color _baseColor() => switch (calculatorKey.colorRole) {
+    CalculatorKeyColorRole.fShift => const Color(0xff9a6727),
+    CalculatorKeyColorRole.kShift => const Color(0xff087fa4),
+    CalculatorKeyColorRole.clear => const Color(0xffb83b40),
+    CalculatorKeyColorRole.standard => switch (calculatorKey.kind) {
+      CalculatorKeyKind.digit => const Color(0xff30383c),
+      CalculatorKeyKind.operation => const Color(0xff3d4347),
+      CalculatorKeyKind.shift => const Color(0xff9a6727),
+      CalculatorKeyKind.navigation => const Color(0xff245b55),
+      CalculatorKeyKind.system => const Color(0xff34313e),
+    },
   };
 
   @override

@@ -5,6 +5,7 @@ import 'package:mk61_usb_screen/device/device_controller.dart';
 import 'package:mk61_usb_screen/device/keyboard_definition.dart';
 import 'package:mk61_usb_screen/main.dart';
 import 'package:mk61_usb_screen/ui/home_page.dart';
+import 'package:mk61_usb_screen/ui/virtual_keyboard.dart';
 
 class _RecordingController extends DeviceController {
   final List<List<String>> tappedActions = [];
@@ -56,7 +57,37 @@ Future<void> _finishDrawerAnimation(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 200));
 }
 
+Color _keyFaceColor(WidgetTester tester, String action) {
+  final container = find.descendant(
+    of: find.byKey(ValueKey('calculator-key-$action')),
+    matching: find.byType(AnimatedContainer),
+  );
+  expect(container, findsOneWidget);
+  final decoration = tester.widget<AnimatedContainer>(container).decoration;
+  return (decoration! as BoxDecoration).color!;
+}
+
 void main() {
+  testWidgets('uses the authentic F, K, and Cx key colors', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VirtualKeyboard(
+            definition: KeyboardDefinition.forLayout(MkKeyboardLayout.mini),
+            enabled: true,
+            pressedKeys: const <int>{},
+            onKeyDown: (_) {},
+            onKeyUp: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    expect(_keyFaceColor(tester, 'alpha'), const Color(0xff9a6727));
+    expect(_keyFaceColor(tester, 'k'), const Color(0xff087fa4));
+    expect(_keyFaceColor(tester, 'cx'), const Color(0xffb83b40));
+  });
+
   testWidgets('shows the display and connection guide while offline', (
     tester,
   ) async {

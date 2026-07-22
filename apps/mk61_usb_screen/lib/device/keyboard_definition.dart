@@ -1,5 +1,7 @@
 enum CalculatorKeyKind { digit, operation, shift, navigation, system }
 
+enum CalculatorKeyColorRole { standard, fShift, kShift, clear }
+
 class CalculatorKey {
   const CalculatorKey({
     required this.scanCode,
@@ -11,6 +13,7 @@ class CalculatorKey {
     this.kLegend,
     this.alphaLegend,
     this.neutralLegend,
+    this.colorRole = CalculatorKeyColorRole.standard,
   });
 
   final int scanCode;
@@ -22,6 +25,7 @@ class CalculatorKey {
   final String? kLegend;
   final String? alphaLegend;
   final String? neutralLegend;
+  final CalculatorKeyColorRole colorRole;
 }
 
 class KeyboardDefinition {
@@ -90,6 +94,7 @@ class KeyboardDefinition {
         kLegend: spec.kLegend,
         alphaLegend: spec.alphaLegend,
         neutralLegend: spec.neutralLegend,
+        colorRole: spec.colorRole,
       );
     }
     for (var scanCode = 0; scanCode < result.length; scanCode++) {
@@ -247,6 +252,7 @@ class KeyboardDefinition {
       fLegend: 'CF',
       kLegend: 'ИНВ',
       alphaLegend: 'd',
+      colorRole: CalculatorKeyColorRole.clear,
     ),
     _KeySpec(
       'bx',
@@ -376,8 +382,18 @@ class KeyboardDefinition {
     ),
     _KeySpec('frw', '←ШГ', CalculatorKeyKind.navigation, fLegend: 'X=0'),
     _KeySpec('bkw', 'ШГ→', CalculatorKeyKind.navigation, fLegend: 'X<0'),
-    _KeySpec('k', 'K', CalculatorKeyKind.shift),
-    _KeySpec('alpha', 'F', CalculatorKeyKind.shift),
+    _KeySpec(
+      'k',
+      'K',
+      CalculatorKeyKind.shift,
+      colorRole: CalculatorKeyColorRole.kShift,
+    ),
+    _KeySpec(
+      'alpha',
+      'F',
+      CalculatorKeyKind.shift,
+      colorRole: CalculatorKeyColorRole.fShift,
+    ),
     _KeySpec('degree', 'Г', CalculatorKeyKind.operation),
     _KeySpec('grade', 'ГРД', CalculatorKeyKind.operation),
     _KeySpec('radian', 'Р', CalculatorKeyKind.operation),
@@ -407,6 +423,7 @@ class _KeySpec {
     this.kLegend,
     this.alphaLegend,
     this.neutralLegend,
+    this.colorRole = CalculatorKeyColorRole.standard,
   });
 
   final String action;
@@ -417,4 +434,5 @@ class _KeySpec {
   final String? kLegend;
   final String? alphaLegend;
   final String? neutralLegend;
+  final CalculatorKeyColorRole colorRole;
 }

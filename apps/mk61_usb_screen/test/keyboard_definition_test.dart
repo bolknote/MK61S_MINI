@@ -89,4 +89,26 @@ void main() {
     expect(definition.keyForAction('frw').label, '←ШГ');
     expect(definition.keyForAction('esc').neutralLegend, 'MENU');
   });
+
+  test('prefix and clear keys expose their authentic color roles', () {
+    for (final layout in [
+      MkKeyboardLayout.mini,
+      MkKeyboardLayout.classic,
+      MkKeyboardLayout.fortieth,
+    ]) {
+      final definition = KeyboardDefinition.forLayout(layout);
+      expect(
+        definition.keyForAction('alpha').colorRole,
+        CalculatorKeyColorRole.fShift,
+      );
+      expect(
+        definition.keyForAction('k').colorRole,
+        CalculatorKeyColorRole.kShift,
+      );
+      expect(
+        definition.keyForAction('cx').colorRole,
+        CalculatorKeyColorRole.clear,
+      );
+    }
+  });
 }
