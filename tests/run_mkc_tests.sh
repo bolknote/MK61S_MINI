@@ -85,6 +85,8 @@ if command -v expect >/dev/null 2>&1; then
     # prevent the parser from mistaking the `O` prefix for the final byte.
     send "\033OP"
     must_see "MKC — файловый менеджер MK61s"
+    must_see "Esc/F3 — close"
+    must_see "Quit"
     send "\033"
     must_see "MKC>"
 
@@ -94,11 +96,11 @@ if command -v expect >/dev/null 2>&1; then
     send "\033OR\033OR"
     must_see "001"
     must_see "Esc/F3 — close"
-    after 150
+    must_see "Quit"
     send "\033\[B"
     must_see "001"
     must_see "Esc/F3 — close"
-    after 150
+    must_see "Quit"
     send "\033"
     must_see "MKC>"
 

@@ -1220,7 +1220,8 @@ drain_pending_input() {
   local char count=0
   stty -echo -icanon min 0 time 0 <&9 2>/dev/null || true
   while [ "$count" -lt 64 ]; do
-    IFS= read -rsn1 char <&9 || break
+    char=$(dd bs=1 count=1 <&9 2>/dev/null) || true
+    [ -n "$char" ] || break
     count=$((count + 1))
   done
   stty -echo -icanon min 1 time 0 <&9 2>/dev/null || true
@@ -1490,8 +1491,10 @@ ui_alert() {
 show_lines() {
   local title=$1 file=$2 top=0 key row index line available viewer_bottom shown_end max_top
   local content_start content_end status_row inner label rest left right
-  local first_frame=1
   local lines=()
+  # Один физический F3 в некоторых терминалах оставляет второй код в очереди.
+  # Удаляем его до отрисовки, когда следующего осмысленного нажатия ещё нет.
+  drain_pending_input
   while IFS= read -r line || [ -n "$line" ]; do lines[${#lines[@]}]=$line; done < "$file"
   [ "${#lines[@]}" -gt 0 ] || lines[0]='(пусто)'
   inner=$((UI_WIDTH - 2))
@@ -1528,13 +1531,6 @@ show_lines() {
     printf '%s╚%s╝' "$C_BORDER" "$(repeat_char '═' "$inner")" >&9
     draw_function_bar
     printf '\033[?2026l' >&9
-    if [ "$first_frame" -eq 1 ]; then
-      # Некоторые терминалы присылают при одном физическом F3 два одинаковых
-      # кода. Повтор, уже накопившийся во время отрисовки, не должен мгновенно
-      # закрывать только что открытый просмотрщик.
-      drain_pending_input
-      first_frame=0
-    fi
     key=$(read_key) || break
     case "$key" in
       up) [ "$top" -gt 0 ] && top=$((top - 1)) ;;
