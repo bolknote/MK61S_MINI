@@ -43,16 +43,29 @@ $device = Join-Path $tempRoot 'device'
 $session = Join-Path $tempRoot 'session'
 [void](New-Item -ItemType Directory -Path $local, $device, $session)
 [void](New-Item -ItemType Directory -Path (Join-Path $local 'Good'))
+[void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'module-limits'))
 [IO.File]::WriteAllText((Join-Path $local 'demo.foc'), "2+2`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'blocked.bin'), 'raw', [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'Good/program.m61'), "001`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $local 'preview.wbmp'), [byte[]](0,0,8,2,15,240))
+[IO.File]::WriteAllBytes((Join-Path $local 'FOCAL.MOD'), [byte[]]::new(64))
+[IO.File]::WriteAllBytes((Join-Path $local 'OTHER.MOD'), [byte[]]::new(64))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'module-limits/WBMP.MOD'), [byte[]]::new(4097))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'module-limits/BASIC.MOD'), [byte[]]::new(63))
 
 try {
     $supported = Invoke-MkcTool @('--classify', (Join-Path $local 'demo.foc'))
     Assert-True ($supported.ExitCode -eq 0 -and ($supported.Output -join '') -eq 'supported') 'PowerShell classifier rejected .foc'
+    $module = Invoke-MkcTool @('--classify', (Join-Path $local 'FOCAL.MOD'))
+    Assert-True ($module.ExitCode -eq 0 -and ($module.Output -join '') -eq 'supported') 'PowerShell classifier rejected FOCAL.MOD'
     $unsupported = Invoke-MkcTool @('--classify', (Join-Path $local 'blocked.bin'))
     Assert-True ($unsupported.ExitCode -eq 1 -and ($unsupported.Output -join '') -eq 'unsupported: формат не поддерживается') 'PowerShell classifier accepted .bin'
+    $unknownModule = Invoke-MkcTool @('--classify', (Join-Path $local 'OTHER.MOD'))
+    Assert-True ($unknownModule.ExitCode -eq 1 -and ($unknownModule.Output -join '') -eq 'unsupported: допустимы только FOCAL.MOD, BASIC.MOD и WBMP.MOD') 'PowerShell classifier accepted an unknown module name'
+    $largeModule = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'module-limits/WBMP.MOD'))
+    Assert-True ($largeModule.ExitCode -eq 1 -and ($largeModule.Output -join '') -match '^unsupported: слишком большой:') 'PowerShell classifier accepted oversized WBMP.MOD'
+    $smallModule = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'module-limits/BASIC.MOD'))
+    Assert-True ($smallModule.ExitCode -eq 1 -and ($smallModule.Output -join '') -match '^unsupported: слишком маленький:') 'PowerShell classifier accepted undersized BASIC.MOD'
 
     $oldImportOnly = $env:MKC_POWERSHELL_IMPORT_ONLY
     $env:MKC_POWERSHELL_IMPORT_ONLY = '1'
@@ -78,6 +91,9 @@ try {
     Assert-True (Send-RemoteFile (Join-Path $local 'demo.foc') '/demo.foc') 'mock upload failed'
     Assert-True (Receive-RemoteFile '/demo.foc' (Join-Path $tempRoot 'download.foc')) 'mock download failed'
     Assert-True ([IO.File]::ReadAllText((Join-Path $tempRoot 'download.foc')) -eq "2+2`n") 'mock transfer changed bytes'
+    Assert-True (Send-RemoteFile (Join-Path $local 'FOCAL.MOD') '/FOCAL.MOD') 'mock module upload failed'
+    Assert-True (Receive-RemoteFile '/FOCAL.MOD' (Join-Path $tempRoot 'download.mod')) 'mock module download failed'
+    Assert-True ([IO.File]::ReadAllBytes((Join-Path $tempRoot 'download.mod')).Length -eq 64) 'mock module transfer changed bytes'
     Assert-True (New-RemoteDirectory '/Programs') 'mock mkdir failed'
     Assert-True (Move-RemoteItem '/demo.foc' '/Programs/moved.foc') 'mock move failed'
     $remoteEntries = @(Get-RemoteEntries '/Programs')
@@ -94,6 +110,11 @@ try {
     Reset-CopyPlan
     Assert-True (-not (Add-LocalTreeToPlan $local '/Imported')) 'unsupported subtree passed preflight'
     Assert-True (-not [string]::IsNullOrEmpty($script:PlanError)) 'preflight did not report the bad file'
+    Reset-CopyPlan
+    Assert-True (Add-LocalTreeToPlan (Join-Path $local 'FOCAL.MOD') '/FOCAL.MOD') 'root module upload was rejected'
+    Reset-CopyPlan
+    Assert-True (-not (Add-LocalTreeToPlan (Join-Path $local 'FOCAL.MOD') '/Modules/FOCAL.MOD')) 'module upload outside root passed preflight'
+    Assert-True ($script:PlanError -match 'только в корне под своим фиксированным именем') 'module destination error is unclear'
 
     $space = [ConsoleKeyInfo]::new(' ', [ConsoleKey]::Spacebar, $false, $false, $false)
     $f5 = [ConsoleKeyInfo]::new([char]0, [ConsoleKey]::F5, $false, $false, $false)

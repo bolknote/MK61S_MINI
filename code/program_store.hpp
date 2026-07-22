@@ -100,6 +100,9 @@ bool first_extent(u16 directory_id, u16& out_id);
 bool next_extent(u16 id, u16& out_id);
 bool extent_info(u16 extent_id, u16& directory_id, u16& next_id);
 
+static constexpr u16 VFAT_STAGE_BLOCK_SIZE = 512;
+static constexpr u32 VFAT_STAGE_KEY_MAX = 0x007FFFFFUL;
+
 bool vfat_stage_write(u32 block, const u8* data);
 bool vfat_stage_read(u32 block, u8* data);
 bool vfat_stage_exists(u32 block);

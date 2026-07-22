@@ -259,15 +259,6 @@ static const loadable_module::Kind MODULE_KINDS[MAX_MODULE_FILES] = {
   loadable_module::Kind::WBMP_VIEWER
 };
 
-static const char* module_file_name(loadable_module::Kind kind) {
-  switch(kind) {
-    case loadable_module::Kind::FOCAL: return "FOCAL.MOD";
-    case loadable_module::Kind::TINYBASIC: return "BASIC.MOD";
-    case loadable_module::Kind::WBMP_VIEWER: return "WBMP.MOD";
-  }
-  return "";
-}
-
 static const u8* module_short_name(loadable_module::Kind kind) {
   static const u8 focal[11] = {
     'F','O','C','A','L',' ',' ',' ','M','O','D'
@@ -297,15 +288,8 @@ static u32 module_slot_size(loadable_module::Kind kind) {
 
 static bool module_name_kind(const char* name,
                              loadable_module::Kind& kind) {
-  for(loadable_module::Kind candidate : MODULE_KINDS) {
-    const char* expected = module_file_name(candidate);
-    if(loadable_module::enabled(candidate) &&
-       strlen(name) == strlen(expected) && ends_with_ci(name, expected)) {
-      kind = candidate;
-      return true;
-    }
-  }
-  return false;
+  return loadable_module::kind_from_file_name(name, kind) &&
+         loadable_module::enabled(kind);
 }
 
 static u8 module_bit(loadable_module::Kind kind) {

@@ -111,8 +111,8 @@ static Status walk_directory(u16 cwd, const View& view, u16& out) {
   return Status::OK;
 }
 
-static Status split_parent(u16 cwd, const View& view, u16& out_parent,
-                           char* leaf, usize leaf_capacity) {
+static Status split_parent_view(u16 cwd, const View& view, u16& out_parent,
+                                char* leaf, usize leaf_capacity) {
   if(view.end > view.begin && is_separator(view.end[-1])) return Status::INVALID;
   u16 current = is_separator(*view.begin) ? program_store::ROOT_ID : cwd;
   if(current != program_store::ROOT_ID) {
@@ -323,7 +323,7 @@ Status resolve_entry(u16 cwd, const char* path, program_store::Entry& out) {
   if(status != Status::OK) return status;
   u16 parent = program_store::ROOT_ID;
   char leaf[VISIBLE_NAME_SIZE];
-  status = split_parent(cwd, view, parent, leaf, sizeof(leaf));
+  status = split_parent_view(cwd, view, parent, leaf, sizeof(leaf));
   if(status != Status::OK) return status;
   status = exact_visible_entry(parent, leaf, out);
   if(status == Status::OK) return status;
@@ -351,7 +351,7 @@ Status resolve_file(u16 cwd, const char* path,
   if(status != Status::OK) return status;
   u16 parent = program_store::ROOT_ID;
   char leaf[VISIBLE_NAME_SIZE];
-  status = split_parent(cwd, view, parent, leaf, sizeof(leaf));
+  status = split_parent_view(cwd, view, parent, leaf, sizeof(leaf));
   if(status != Status::OK) return status;
 
   program_store::ProgramType type = required_type;
@@ -363,6 +363,15 @@ Status resolve_file(u16 cwd, const char* path,
   return find_typed_file(parent, type, basename, out);
 }
 
+Status split_parent(u16 cwd, const char* path, u16& out_parent,
+                    char* leaf, usize leaf_capacity) {
+  View view;
+  const Status status = make_view(path, view);
+  return status == Status::OK
+      ? split_parent_view(cwd, view, out_parent, leaf, leaf_capacity)
+      : status;
+}
+
 Status file_target(u16 cwd, const char* path,
                    program_store::ProgramType default_type,
                    FileTarget& out) {
@@ -370,7 +379,7 @@ Status file_target(u16 cwd, const char* path,
   Status status = make_view(path, view);
   if(status != Status::OK) return status;
   char leaf[VISIBLE_NAME_SIZE];
-  status = split_parent(cwd, view, out.parent_id, leaf, sizeof(leaf));
+  status = split_parent_view(cwd, view, out.parent_id, leaf, sizeof(leaf));
   if(status != Status::OK) return status;
   if(!parse_file_leaf(leaf, default_type, true, out.type, out.name)) {
     return Status::INVALID;
@@ -384,7 +393,7 @@ Status file_target(u16 cwd, const char* path, FileTarget& out) {
   Status status = make_view(path, view);
   if(status != Status::OK) return status;
   char leaf[VISIBLE_NAME_SIZE];
-  status = split_parent(cwd, view, out.parent_id, leaf, sizeof(leaf));
+  status = split_parent_view(cwd, view, out.parent_id, leaf, sizeof(leaf));
   if(status != Status::OK) return status;
   program_store::ProgramType ignored_default = program_store::ProgramType::MK61;
   if(!parse_file_leaf(leaf, ignored_default, false, out.type, out.name)) {
@@ -481,7 +490,7 @@ Status move_target(u16 cwd, const program_store::Entry& source,
   status = make_view(destination, view);
   if(status != Status::OK) return status;
   char leaf[VISIBLE_NAME_SIZE];
-  status = split_parent(cwd, view, out_parent, leaf, sizeof(leaf));
+  status = split_parent_view(cwd, view, out_parent, leaf, sizeof(leaf));
   if(status != Status::OK) return status;
   if(source.kind == program_store::NodeKind::DIRECTORY) {
     const usize len = strlen(leaf);

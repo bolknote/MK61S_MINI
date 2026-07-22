@@ -257,6 +257,19 @@ static void test_paths_and_recursive_tree_operations(void) {
          storage_path::Status::OK);
   assert(directory == year);
 
+  u16 split_parent = program_store::INVALID_ID;
+  char split_leaf[storage_path::VISIBLE_NAME_SIZE];
+  assert(storage_path::split_parent(year, "../../FOCAL.MOD", split_parent,
+      split_leaf, sizeof(split_leaf)) == storage_path::Status::OK);
+  assert(split_parent == program_store::ROOT_ID);
+  assert(strcmp(split_leaf, "FOCAL.MOD") == 0);
+  assert(storage_path::split_parent(year, "../BASIC.MOD", split_parent,
+      split_leaf, sizeof(split_leaf)) == storage_path::Status::OK);
+  assert(split_parent == projects);
+  assert(strcmp(split_leaf, "BASIC.MOD") == 0);
+  assert(storage_path::split_parent(year, "/WBMP.MOD/", split_parent,
+      split_leaf, sizeof(split_leaf)) == storage_path::Status::INVALID);
+
   Entry entry = {};
   assert(storage_path::resolve_file(program_store::ROOT_ID,
       "/PROJECTS/2026 Work/demo.m61", entry) == storage_path::Status::OK);

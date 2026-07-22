@@ -19,18 +19,22 @@ inline u32 checksum_update(u32 crc, u8 value) {
   return crc;
 }
 
-// Алгоритм утилиты POSIX `cksum`: CRC-32 дополняется байтами длины файла
-// от младшего к старшему, затем инвертируется. Поэтому хосту не нужна своя
-// нестандартная реализация ни в shell, ни в будущем PowerShell-порте.
-inline u32 checksum(const u8* data, usize length) {
-  u32 crc = 0;
-  for(usize i = 0; i < length; i++) crc = checksum_update(crc, data[i]);
+inline u32 checksum_finish(u32 crc, usize length) {
   usize remaining = length;
   while(remaining != 0) {
     crc = checksum_update(crc, (u8) (remaining & 0xFF));
     remaining >>= 8;
   }
   return ~crc;
+}
+
+// Алгоритм утилиты POSIX `cksum`: CRC-32 дополняется байтами длины файла
+// от младшего к старшему, затем инвертируется. Поэтому хосту не нужна своя
+// нестандартная реализация ни в shell, ни в будущем PowerShell-порте.
+inline u32 checksum(const u8* data, usize length) {
+  u32 crc = 0;
+  for(usize i = 0; i < length; i++) crc = checksum_update(crc, data[i]);
+  return checksum_finish(crc, length);
 }
 
 inline int hex_digit(char c) {

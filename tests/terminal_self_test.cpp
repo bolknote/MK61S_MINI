@@ -109,6 +109,12 @@ static void test_file_transfer_checksum_matches_posix_cksum(void) {
   assert(terminal_file_transfer::checksum(nullptr, 0) == 4294967295u);
   assert(terminal_file_transfer::checksum(digits, sizeof(digits)) == 930766865u);
   assert(terminal_file_transfer::checksum(abc, sizeof(abc)) == 1219131554u);
+  u32 streamed = 0;
+  for(u8 value : digits) {
+    streamed = terminal_file_transfer::checksum_update(streamed, value);
+  }
+  assert(terminal_file_transfer::checksum_finish(streamed, sizeof(digits)) ==
+         930766865u);
 }
 
 static void test_file_transfer_hex_codec(void) {

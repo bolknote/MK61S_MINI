@@ -20,6 +20,7 @@
 #include "sound_driver.hpp"
 #include "tinybasic.hpp"
 #if MK61_ANY_LOADABLE_MODULE
+  #include "loadable_module_runtime.hpp"
   #include "virtual_fat.hpp"
 #endif
 #ifdef SPI_FLASH
@@ -767,6 +768,7 @@ void init_external_flash(void) {
         ? "C5 module layout migration: complete"
         : "C5 module layout migration: deferred");
   }
+  loadable_module::discard_transfer_staging();
 #endif
   #ifdef DEBUG_SPIFLASH
     if(program_store::ready()) {

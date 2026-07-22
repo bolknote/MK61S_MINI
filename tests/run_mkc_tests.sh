@@ -8,7 +8,8 @@ cleanup_test() {
 }
 trap cleanup_test EXIT
 
-mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session"
+mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
+  "$work/module-limits"
 printf '2+2\n' > "$work/local/demo.foc"
 printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
@@ -16,6 +17,10 @@ printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 dd if=/dev/zero of="$work/local/large.tbi" bs=1 count=1537 2>/dev/null
 dd if=/dev/zero of="$work/local/chunked.m61" bs=1 count=100 2>/dev/null
+dd if=/dev/zero of="$work/local/FOCAL.MOD" bs=1 count=64 2>/dev/null
+dd if=/dev/zero of="$work/local/OTHER.MOD" bs=1 count=64 2>/dev/null
+dd if=/dev/zero of="$work/module-limits/WBMP.MOD" bs=1 count=4097 2>/dev/null
+dd if=/dev/zero of="$work/module-limits/BASIC.MOD" bs=1 count=63 2>/dev/null
 
 test -x "$root/tools/mkc.cmd"
 test -x "$root/tools/.mkc/mkc.sh"
@@ -24,8 +29,19 @@ test ! -e "$root/tools/mkc.sh"
 test ! -e "$root/tools/mkc.ps1"
 test "$("$root/tools/mkc.cmd" --classify "$work/local/demo.foc")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/Good")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/FOCAL.MOD")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/blocked.bin" || true)" = \
   'unsupported: формат не поддерживается'
+test "$("$root/tools/mkc.cmd" --classify "$work/local/OTHER.MOD" || true)" = \
+  'unsupported: допустимы только FOCAL.MOD, BASIC.MOD и WBMP.MOD'
+case "$("$root/tools/mkc.cmd" --classify "$work/module-limits/WBMP.MOD" || true)" in
+  'unsupported: слишком большой:'*) ;;
+  *) echo 'mkc: oversized WBMP.MOD was accepted' >&2; exit 1 ;;
+esac
+case "$("$root/tools/mkc.cmd" --classify "$work/module-limits/BASIC.MOD" || true)" in
+  'unsupported: слишком маленький:'*) ;;
+  *) echo 'mkc: undersized BASIC.MOD was accepted' >&2; exit 1 ;;
+esac
 case "$("$root/tools/mkc.cmd" --classify "$work/local/large.tbi" || true)" in
   'unsupported: слишком большой:'*) ;;
   *) echo 'mkc: oversized file was accepted' >&2; exit 1 ;;
@@ -40,6 +56,9 @@ remote_put_file "$work/local/demo.foc" /demo.foc
 cmp "$work/local/demo.foc" "$work/device/demo.foc"
 remote_get_file /demo.foc "$work/download.foc"
 cmp "$work/local/demo.foc" "$work/download.foc"
+remote_put_file "$work/local/FOCAL.MOD" /FOCAL.MOD
+remote_get_file /FOCAL.MOD "$work/download.mod"
+cmp "$work/local/FOCAL.MOD" "$work/download.mod"
 file_to_hex "$work/local/binary.wbmp" > "$work/session/binary.hex"
 hex_file_to_binary "$work/session/binary.hex" "$work/binary.roundtrip"
 cmp "$work/local/binary.wbmp" "$work/binary.roundtrip"
@@ -143,6 +162,20 @@ plan_reset
 plan_local_tree "$work/local/Good" /Good
 test "${#PLAN_KINDS[@]}" -eq 2
 test "$PLAN_TOTAL" -eq 4
+
+plan_reset
+plan_local_tree "$work/local/FOCAL.MOD" /FOCAL.MOD
+test "${#PLAN_KINDS[@]}" -eq 1
+test "$PLAN_TOTAL" -eq 64
+plan_reset
+if plan_local_tree "$work/local/FOCAL.MOD" /Modules/FOCAL.MOD; then
+  echo 'mkc: loadable module was accepted outside the device root' >&2
+  exit 1
+fi
+case "$PLAN_ERROR" in
+  *'только в корне под своим фиксированным именем'*) ;;
+  *) echo "mkc: unclear module destination error: $PLAN_ERROR" >&2; exit 1 ;;
+esac
 
 # iTerm2-viewer действительно посылает картинку внутрь заданной области окна.
 exec 9> "$work/iterm.protocol"

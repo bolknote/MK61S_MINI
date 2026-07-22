@@ -122,6 +122,20 @@ static bool next_zx0_byte(void* context, u8& value) {
   return ((BufferedInput*) context)->next(value);
 }
 
+static char ascii_upper(char value) {
+  return value >= 'a' && value <= 'z' ? (char) (value - 'a' + 'A') : value;
+}
+
+static bool ascii_equal_ci(const char* left, const char* right) {
+  if(left == nullptr || right == nullptr) return false;
+  while(*left != 0 && *right != 0) {
+    if(ascii_upper(*left) != ascii_upper(*right)) return false;
+    left++;
+    right++;
+  }
+  return *left == *right;
+}
+
 } // namespace
 
 bool valid_kind(Kind kind) {
@@ -132,6 +146,36 @@ bool valid_kind(Kind kind) {
 bool valid_compression(Compression compression) {
   return compression == Compression::NONE ||
          compression == Compression::ZX0;
+}
+
+Kind kind_at(u8 index) {
+  switch(index) {
+    case 0: return Kind::FOCAL;
+    case 1: return Kind::TINYBASIC;
+    case 2: return Kind::WBMP_VIEWER;
+  }
+  return (Kind) 0;
+}
+
+const char* file_name(Kind kind) {
+  switch(kind) {
+    case Kind::FOCAL: return "FOCAL.MOD";
+    case Kind::TINYBASIC: return "BASIC.MOD";
+    case Kind::WBMP_VIEWER: return "WBMP.MOD";
+  }
+  return nullptr;
+}
+
+bool kind_from_file_name(const char* name, Kind& kind) {
+  for(u8 index = 0; index < KIND_COUNT; index++) {
+    const Kind candidate = kind_at(index);
+    if(ascii_equal_ci(name, file_name(candidate))) {
+      kind = candidate;
+      return true;
+    }
+  }
+  kind = (Kind) 0;
+  return false;
 }
 
 u32 crc32_begin(void) {

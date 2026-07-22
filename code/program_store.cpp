@@ -47,7 +47,7 @@ static constexpr u16 IMAGE1_HEADER_COUNT_OFFSET = 64;
 static constexpr u16 WAL_RECORD_SIZE = 256;
 static constexpr u8 WAL_MAX_UPDATES = 9;
 static constexpr u8 OVERLAY_CAPACITY = 96;
-static constexpr u16 STAGE_DATA_SIZE = 512;
+static constexpr u16 STAGE_DATA_SIZE = VFAT_STAGE_BLOCK_SIZE;
 static constexpr u16 STAGE_SECTOR_HEADER_SIZE = 16;
 static constexpr u16 STAGE_RECORD_HEADER_SIZE = 16;
 static constexpr u16 STAGE_RECORD_SIZE = STAGE_RECORD_HEADER_SIZE + STAGE_DATA_SIZE;
@@ -57,7 +57,7 @@ static constexpr u8 STAGE_RECORDS_PER_SECTOR =
 static constexpr u16 STAGE_REF_CAPACITY = 384;
 static constexpr u8 STAGE_REF_BITS = 9;
 static constexpr u16 STAGE_REF_MASK = (1U << STAGE_REF_BITS) - 1U;
-static constexpr u32 STAGE_KEY_MAX = 0xFFFFFFFFUL >> STAGE_REF_BITS;
+static constexpr u32 STAGE_KEY_MAX = VFAT_STAGE_KEY_MAX;
 static constexpr u8 GC_SCAN_WINDOW = 32;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
@@ -69,6 +69,8 @@ static constexpr u8 CONFIG_MODULE_MASK =
         ? storage_geometry::MODULE_WBMP_VIEWER : 0);
 
 static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C5 stage must pack seven sectors");
+static_assert(STAGE_KEY_MAX == (0xFFFFFFFFUL >> STAGE_REF_BITS),
+              "public C5 stage key range must match packed references");
 static_assert(IMAGE1_WAL_COUNT_OFFSET ==
                   44 + WAL_MAX_UPDATES * (2 + storage_geometry::INODE_BYTES),
               "image counter must occupy only the unused WAL tail");

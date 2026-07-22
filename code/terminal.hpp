@@ -19,6 +19,9 @@
 #include "virtual_fat.hpp"
 #include "program_store.hpp"
 #include "language_workspace.hpp"
+#if MK61_ANY_LOADABLE_MODULE
+  #include "loadable_module_runtime.hpp"
+#endif
 #include "shared_scratch.hpp"
 #include "storage_path.hpp"
 #include "terminal_command_ids.hpp"
@@ -274,6 +277,53 @@ static void terminal_print_fs_entry(const program_store::Entry& entry) {
   }
 }
 
+#if MK61_ANY_LOADABLE_MODULE
+static bool terminal_module_path(u16 cwd, const char* path,
+                                 loadable_module::Kind& kind) {
+  u16 parent = program_store::INVALID_ID;
+  char leaf[storage_path::VISIBLE_NAME_SIZE];
+  return storage_path::split_parent(cwd, path, parent, leaf, sizeof(leaf)) ==
+             storage_path::Status::OK &&
+         parent == program_store::ROOT_ID &&
+         loadable_module::kind_from_file_name(leaf, kind) &&
+         loadable_module::enabled(kind);
+}
+
+static bool terminal_module_size(loadable_module::Kind kind, u32& size) {
+  return loadable_module::enabled(kind) &&
+         loadable_module::container_size(kind, size);
+}
+
+static void terminal_print_module_entry(loadable_module::Kind kind,
+                                        u32 size) {
+  Serial.print("f\t");
+  Serial.print(size);
+  Serial.print(" B\t");
+  Serial.println(loadable_module::file_name(kind));
+}
+
+static u8 terminal_print_installed_modules(void) {
+  u8 count = 0;
+  for(u8 index = 0; index < loadable_module::KIND_COUNT; index++) {
+    const loadable_module::Kind kind = loadable_module::kind_at(index);
+    u32 size = 0;
+    if(!terminal_module_size(kind, size)) continue;
+    terminal_print_module_entry(kind, size);
+    count++;
+  }
+  return count;
+}
+
+static u8 terminal_installed_module_count(void) {
+  u8 count = 0;
+  for(u8 index = 0; index < loadable_module::KIND_COUNT; index++) {
+    u32 size = 0;
+    if(terminal_module_size(loadable_module::kind_at(index), size)) count++;
+  }
+  return count;
+}
+#endif
+
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 static u8 terminal_command_lookup(const u8* line) {
   usize len = 0;
@@ -344,6 +394,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     u16     file_upload_received;
     u32     file_upload_checksum;
     storage_path::FileTarget file_upload_target;
+#if MK61_ANY_LOADABLE_MODULE
+    bool    file_upload_module;
+    loadable_module::Kind file_upload_module_kind;
+    u32     file_upload_module_token;
+#endif
 
     // Аргументы скриптового действия переживают восстановление input_buffer:
     // script_args_ptr указывает внутрь буфера строки, поэтому перед возвратом
@@ -629,18 +684,93 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return program_store::MAX_MK61_TEXT_SIZE;
     }
 
-    terminal_protocol::Result file_transfer_error(const char* code) {
+    void cancel_file_upload(void) {
+#if MK61_ANY_LOADABLE_MODULE
+      if(file_upload_module_token != 0) {
+        loadable_module::cancel_transfer(file_upload_module_token);
+      }
+      file_upload_module = false;
+      file_upload_module_kind = (loadable_module::Kind) 0;
+      file_upload_module_token = 0;
+#endif
       file_upload_active = false;
+      file_upload_size = 0;
+      file_upload_received = 0;
+      file_upload_checksum = 0;
+    }
+
+    terminal_protocol::Result file_transfer_error(const char* code) {
+      cancel_file_upload();
       Serial.print("@MKC:ERROR ");
       Serial.println(code);
       return terminal_protocol::Result::error();
     }
+
+#if MK61_ANY_LOADABLE_MODULE
+    terminal_protocol::Result exec_module_get(loadable_module::Kind kind,
+                                              u32 length) {
+      u8 bytes[terminal_file_transfer::CHUNK_SIZE];
+      u32 crc_state = 0;
+      for(u32 offset = 0; offset < length;) {
+        const u32 remaining = length - offset;
+        const usize count = remaining < sizeof(bytes)
+            ? (usize) remaining : sizeof(bytes);
+        if(!loadable_module::read_container(kind, offset, bytes, count)) {
+          return file_transfer_error("GET_IO");
+        }
+        for(usize index = 0; index < count; index++) {
+          crc_state = terminal_file_transfer::checksum_update(crc_state,
+                                                               bytes[index]);
+        }
+        offset += (u32) count;
+      }
+      const u32 crc = terminal_file_transfer::checksum_finish(crc_state,
+                                                               length);
+      Serial.print("@MKC:GET ");
+      Serial.print(length);
+      Serial.write(' ');
+      Serial.println(crc);
+      for(u32 offset = 0; offset < length;) {
+        const u32 remaining = length - offset;
+        const usize count = remaining < sizeof(bytes)
+            ? (usize) remaining : sizeof(bytes);
+        if(!loadable_module::read_container(kind, offset, bytes, count)) {
+          return file_transfer_error("GET_IO");
+        }
+        Serial.print("@MKC:DATA ");
+        Serial.print(offset);
+        Serial.write(' ');
+        for(usize index = 0; index < count; index++) {
+          const u8 value = bytes[index];
+          Serial.write(terminal_file_transfer::hex_char((u8) (value >> 4)));
+          Serial.write(terminal_file_transfer::hex_char((u8) (value & 0x0F)));
+        }
+        Serial.println();
+        offset += (u32) count;
+      }
+      Serial.print("@MKC:END ");
+      Serial.print(length);
+      Serial.write(' ');
+      Serial.println(crc);
+      return terminal_protocol::Result::ok();
+    }
+#endif
 
     terminal_protocol::Result exec_fs_get(void) {
       char path[MAX_INPUT_CHAR];
       if(!terminal_single_token(command_args(), path, sizeof(path))) {
         return file_transfer_error("GET_USAGE");
       }
+#if MK61_ANY_LOADABLE_MODULE
+      loadable_module::Kind module_kind = (loadable_module::Kind) 0;
+      if(terminal_module_path(current_directory, path, module_kind)) {
+        u32 module_size = 0;
+        if(!terminal_module_size(module_kind, module_size)) {
+          return file_transfer_error("GET_NOT_FOUND");
+        }
+        return exec_module_get(module_kind, module_size);
+      }
+#endif
       program_store::Entry entry;
       if(storage_path::resolve_file(current_directory, path, entry) !=
          storage_path::Status::OK) {
@@ -695,7 +825,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         if(!terminal_core::at_end(cursor)) {
           return file_transfer_error("PUT_USAGE");
         }
-        file_upload_active = false;
+        cancel_file_upload();
         Serial.println("@MKC:CANCELLED");
         return terminal_protocol::Result::ok();
       }
@@ -706,11 +836,37 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         usize crc = 0;
         if(!terminal_core::parse_token(cursor, path, sizeof(path)) ||
            !terminal_core::parse_unsigned(cursor, 10,
-               program_store::MAX_IMAGE1_SIZE, length) ||
+               0xFFFFU, length) ||
            !terminal_core::parse_unsigned(cursor, 10, 0xFFFFFFFFu, crc) ||
            !terminal_core::at_end(cursor)) {
           return file_transfer_error("PUT_USAGE");
         }
+        cancel_file_upload();
+#if MK61_ANY_LOADABLE_MODULE
+        loadable_module::Kind module_kind = (loadable_module::Kind) 0;
+        if(terminal_module_path(current_directory, path, module_kind)) {
+          loadable_module::Slot slot = {};
+          if(!loadable_module::find_slot(program_store::geometry(),
+                                         module_kind, slot) ||
+             length < loadable_module::HEADER_SIZE || length > slot.size) {
+            return file_transfer_error("PUT_TOO_LARGE");
+          }
+          loadable_module::TransferBuffer transfer = {};
+          if(!loadable_module::begin_transfer((u32) length, transfer)) {
+            return file_transfer_error("PUT_BUSY");
+          }
+          file_upload_module = true;
+          file_upload_module_kind = module_kind;
+          file_upload_module_token = transfer.token;
+          file_upload_size = (u16) length;
+          file_upload_received = 0;
+          file_upload_checksum = (u32) crc;
+          file_upload_active = true;
+          Serial.print("@MKC:READY ");
+          Serial.println(file_upload_size);
+          return terminal_protocol::Result::ok();
+        }
+#endif
         storage_path::FileTarget target = {};
         if(storage_path::file_target(current_directory, path, target) !=
            storage_path::Status::OK) {
@@ -739,7 +895,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         char hex[terminal_file_transfer::CHUNK_SIZE * 2 + 1];
         if(!file_upload_active ||
            !terminal_core::parse_unsigned(cursor, 10,
-               program_store::MAX_IMAGE1_SIZE, offset) ||
+               0xFFFFU, offset) ||
            !terminal_core::parse_token(cursor, hex, sizeof(hex)) ||
            !terminal_core::at_end(cursor)) {
           return file_transfer_error("PUT_SEQUENCE");
@@ -753,13 +909,23 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
            offset + decoded_length > file_upload_size) {
           return file_transfer_error("PUT_DATA");
         }
-        const usize required = file_upload_size == 0 ? 1 : file_upload_size;
-        language_workspace::Lease workspace(
-            language_workspace::Owner::TERMINAL_TRANSFER, required);
-        if(!workspace.ok() || workspace.fresh()) {
-          return file_transfer_error("PUT_INTERRUPTED");
+#if MK61_ANY_LOADABLE_MODULE
+        if(file_upload_module) {
+          u8* data = loadable_module::transfer_data(
+              file_upload_module_token, file_upload_size);
+          if(data == nullptr) return file_transfer_error("PUT_INTERRUPTED");
+          memcpy(data + offset, decoded, decoded_length);
+        } else
+#endif
+        {
+          const usize required = file_upload_size == 0 ? 1 : file_upload_size;
+          language_workspace::Lease workspace(
+              language_workspace::Owner::TERMINAL_TRANSFER, required);
+          if(!workspace.ok() || workspace.fresh()) {
+            return file_transfer_error("PUT_INTERRUPTED");
+          }
+          memcpy((u8*) workspace.data() + offset, decoded, decoded_length);
         }
-        memcpy((u8*) workspace.data() + offset, decoded, decoded_length);
         file_upload_received = (u16) (offset + decoded_length);
         Serial.print("@MKC:ACK ");
         Serial.println(file_upload_received);
@@ -771,6 +937,35 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
            file_upload_received != file_upload_size) {
           return file_transfer_error("PUT_INCOMPLETE");
         }
+#if MK61_ANY_LOADABLE_MODULE
+        if(file_upload_module) {
+          u8* data = loadable_module::transfer_data(
+              file_upload_module_token, file_upload_size);
+          if(data == nullptr) return file_transfer_error("PUT_INTERRUPTED");
+          const u32 crc = terminal_file_transfer::checksum(data,
+                                                            file_upload_size);
+          if(crc != file_upload_checksum) {
+            return file_transfer_error("PUT_CHECKSUM");
+          }
+          const u16 completed = file_upload_size;
+          const loadable_module::StoreStatus status =
+              loadable_module::finish_transfer(file_upload_module_kind,
+                                                file_upload_module_token,
+                                                file_upload_size);
+          if(status == loadable_module::StoreStatus::INCOMPATIBLE_FIRMWARE) {
+            return file_transfer_error("PUT_FIRMWARE");
+          }
+          if(status != loadable_module::StoreStatus::OK) {
+            return file_transfer_error("PUT_MODULE");
+          }
+          cancel_file_upload();
+          Serial.print("@MKC:DONE ");
+          Serial.print(completed);
+          Serial.write(' ');
+          Serial.println(crc);
+          return terminal_protocol::Result::ok();
+        }
+#endif
         const usize required = file_upload_size == 0 ? 1 : file_upload_size;
         language_workspace::Lease workspace(
             language_workspace::Owner::TERMINAL_TRANSFER, required);
@@ -791,7 +986,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           return file_transfer_error("PUT_IO");
         }
         const u16 completed = file_upload_size;
-        file_upload_active = false;
+        cancel_file_upload();
         Serial.print("@MKC:DONE ");
         Serial.print(completed);
         Serial.write(' ');
@@ -848,7 +1043,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         pending_save_parent_id(program_store::ROOT_ID),
         current_directory(program_store::ROOT_ID), file_upload_active(false),
         file_upload_size(0), file_upload_received(0),
-        file_upload_checksum(0), file_upload_target{}, recive_pos(0) {}
+        file_upload_checksum(0), file_upload_target{}
+#if MK61_ANY_LOADABLE_MODULE
+        , file_upload_module(false),
+        file_upload_module_kind((loadable_module::Kind) 0),
+        file_upload_module_token(0)
+#endif
+        , recive_pos(0) {}
 
     void reset_command_state(void) {
       AT                    = 0;
@@ -862,6 +1063,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       file_upload_size      = 0;
       file_upload_received  = 0;
       file_upload_checksum  = 0;
+#if MK61_ANY_LOADABLE_MODULE
+      if(file_upload_module_token != 0) {
+        loadable_module::cancel_transfer(file_upload_module_token);
+      }
+      file_upload_module = false;
+      file_upload_module_kind = (loadable_module::Kind) 0;
+      file_upload_module_token = 0;
+#endif
     }
 
     // История и редактор строки общие (static): сбрасываются только при
@@ -1444,7 +1653,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         // Незавершённая загрузка не должна переживать переход к другой
         // команде. Рабочая область между пакетами всё равно не удерживается.
-        if(command_id != CMD_FS_PUT) file_upload_active = false;
+        if(command_id != CMD_FS_PUT) cancel_file_upload();
         switch (command_id) {
           case  CMD_VERSION:
               output_version();
@@ -1690,6 +1899,20 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               const char* args = command_args();
               u16 directory = current_directory;
               if(!terminal_core::at_end(args)) {
+#if MK61_ANY_LOADABLE_MODULE
+                loadable_module::Kind module_kind = (loadable_module::Kind) 0;
+                if(terminal_module_path(current_directory, args, module_kind)) {
+                  u32 module_size = 0;
+                  if(!terminal_module_size(module_kind, module_size)) {
+                    Serial.println("ls: not found");
+                    recive_pos = 0;
+                    return terminal_protocol::Result::error();
+                  }
+                  terminal_print_module_entry(module_kind, module_size);
+                  Serial.println("1 entry.");
+                  break;
+                }
+#endif
                 storage_path::Status status = storage_path::resolve_directory(
                     current_directory, args, directory);
                 if(status != storage_path::Status::OK) {
@@ -1705,8 +1928,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                   return terminal_protocol::Result::error();
                 }
               }
-              const int count = program_store::child_count(directory);
-              for(int index = 0; index < count; index++) {
+              const int stored_count = program_store::child_count(directory);
+              for(int index = 0; index < stored_count; index++) {
                 program_store::Entry entry;
                 if(!program_store::child(directory, index, entry)) {
                   Serial.println("ls: storage error");
@@ -1715,6 +1938,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 }
                 terminal_print_fs_entry(entry);
               }
+#if MK61_ANY_LOADABLE_MODULE
+              const int module_count = directory == program_store::ROOT_ID
+                  ? terminal_print_installed_modules() : 0;
+#else
+              const int module_count = 0;
+#endif
+              const int count = stored_count + module_count;
               Serial.print(count);
               Serial.println(count == 1 ? " entry." : " entries.");
             }
@@ -1759,6 +1989,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
+#if MK61_ANY_LOADABLE_MODULE
+              loadable_module::Kind module_kind = (loadable_module::Kind) 0;
+              if(terminal_module_path(current_directory, path, module_kind)) {
+                Serial.println("mv: module files have fixed names");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+#endif
               program_store::Entry source;
               storage_path::Status status = storage_path::resolve_entry(
                   current_directory, path, source);
@@ -1809,6 +2047,25 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
+#if MK61_ANY_LOADABLE_MODULE
+              loadable_module::Kind module_kind = (loadable_module::Kind) 0;
+              if(terminal_module_path(current_directory, path, module_kind)) {
+                u32 module_size = 0;
+                if(!terminal_module_size(module_kind, module_size)) {
+                  Serial.println("rm: not found");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+                if(loadable_module::remove(module_kind) !=
+                   loadable_module::StoreStatus::OK) {
+                  Serial.println("rm: storage error");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+                Serial.println("Removed 1 entry.");
+                break;
+              }
+#endif
               program_store::Entry entry;
               const storage_path::Status status = storage_path::resolve_entry(
                   current_directory, path, entry);
@@ -1878,8 +2135,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 break;
               }
               u16 directories = 0;
-              const int visible = program_store::total_count();
-              for(int index = 0; index < visible; index++) {
+              const int stored_visible = program_store::total_count();
+              for(int index = 0; index < stored_visible; index++) {
                 program_store::Entry entry;
                 if(program_store::entry_at(index, entry) &&
                    entry.kind == program_store::NodeKind::DIRECTORY) {
@@ -1888,15 +2145,22 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
               const u16 used = program_store::used_nodes();
               const u16 maximum = program_store::max_nodes();
+#if MK61_ANY_LOADABLE_MODULE
+              const int module_count = terminal_installed_module_count();
+#else
+              const int module_count = 0;
+#endif
               Serial.print("Flash: ");
               Serial.print(program_store::geometry().capacity_bytes);
               Serial.println(" bytes");
               Serial.print("Nodes: "); Serial.print(used); Serial.print(" used, ");
               Serial.print(maximum - used); Serial.print(" free, ");
               Serial.print(maximum); Serial.println(" total");
-              Serial.print("Visible: "); Serial.print(visible - directories);
+              Serial.print("Visible: ");
+              Serial.print(stored_visible - directories + module_count);
               Serial.print(" files, "); Serial.print(directories);
-              Serial.print(" directories, "); Serial.print(used - visible);
+              Serial.print(" directories, ");
+              Serial.print(used - stored_visible);
               Serial.println(" directory extents");
               Serial.print("FAT12 cluster: ");
               Serial.print((u32) program_store::geometry().sectors_per_cluster * 512U);

@@ -38,6 +38,26 @@ static Header valid_header(void) {
   return header;
 }
 
+static void test_kind_file_names(void) {
+  Kind kind = (Kind) 0;
+  assert(KIND_COUNT == 3);
+  assert(kind_at(0) == Kind::FOCAL);
+  assert(kind_at(1) == Kind::TINYBASIC);
+  assert(kind_at(2) == Kind::WBMP_VIEWER);
+  assert(!valid_kind(kind_at(KIND_COUNT)));
+  assert(strcmp(file_name(Kind::FOCAL), "FOCAL.MOD") == 0);
+  assert(strcmp(file_name(Kind::TINYBASIC), "BASIC.MOD") == 0);
+  assert(strcmp(file_name(Kind::WBMP_VIEWER), "WBMP.MOD") == 0);
+  assert(file_name((Kind) 0) == nullptr);
+  assert(kind_from_file_name("focal.mod", kind) && kind == Kind::FOCAL);
+  assert(kind_from_file_name("Basic.Mod", kind) &&
+         kind == Kind::TINYBASIC);
+  assert(kind_from_file_name("WBMP.MOD", kind) &&
+         kind == Kind::WBMP_VIEWER);
+  assert(!kind_from_file_name("OTHER.MOD", kind));
+  assert(!valid_kind(kind));
+}
+
 static void rewrite_crc(u8 header[HEADER_SIZE]) {
   const u32 checksum = crc32(header, 60);
   header[60] = (u8) checksum;
@@ -219,6 +239,7 @@ static void test_zx0_corruption_is_bounded(void) {
 } // namespace
 
 int main(void) {
+  test_kind_file_names();
   test_header_round_trip();
   test_header_rejects_incompatible_images();
   test_uncompressed_payload();

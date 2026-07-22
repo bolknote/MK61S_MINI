@@ -15,6 +15,11 @@ namespace {
 
 static constexpr u32 INTERNAL_FLASH_ADDRESS = 0x08000000UL;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
+static constexpr u16 TRANSFER_STAGE_BLOCKS =
+    (OVERLAY_SIZE + program_store::VFAT_STAGE_BLOCK_SIZE - 1U) /
+    program_store::VFAT_STAGE_BLOCK_SIZE;
+static constexpr u32 TRANSFER_STAGE_FIRST_KEY =
+    program_store::VFAT_STAGE_KEY_MAX - TRANSFER_STAGE_BLOCKS + 1U;
 
 // Секция .bss.* подхватывается штатным скриптом STM32 Core и поэтому занимает
 // только SRAM, а не внутреннюю Flash. Глобальное имя извлекается упаковщиком из
@@ -37,6 +42,8 @@ static Entry g_active_entry;
 static u8 g_call_depth;
 static u32 g_cached_resident_size;
 static u32 g_cached_resident_crc;
+static u32 g_transfer_sequence;
+static u32 g_transfer_token;
 
 extern "C" void mk61_module_keep_imports(void);
 
@@ -105,6 +112,10 @@ struct InstallPayloadSource {
   const ModuleSource* source;
 };
 
+struct StagedModuleSource {
+  u32 size;
+};
+
 static bool read_buffered_module(void* context, u32 offset,
                                  u8* output, usize size) {
   const BufferedModuleSource& source = *(BufferedModuleSource*) context;
@@ -120,6 +131,58 @@ static bool read_install_payload(void* context, u32 offset,
   return payload.source != nullptr && payload.source->read != nullptr &&
          payload.source->read(payload.source->context,
                               HEADER_SIZE + offset, output, size);
+}
+
+static void forget_transfer_staging(void) {
+  if(program_store::ready()) {
+    program_store::vfat_stage_forget(TRANSFER_STAGE_FIRST_KEY,
+                                     TRANSFER_STAGE_BLOCKS);
+  }
+}
+
+static bool stage_transfer_container(u32 size) {
+  forget_transfer_staging();
+  u8 block[program_store::VFAT_STAGE_BLOCK_SIZE];
+  u32 offset = 0;
+  u16 index = 0;
+  while(offset < size) {
+    const u32 remaining = size - offset;
+    const usize count = remaining < sizeof(block)
+        ? (usize) remaining : sizeof(block);
+    memset(block, 0, sizeof(block));
+    memcpy(block, mk61_module_overlay + offset, count);
+    if(!program_store::vfat_stage_write(TRANSFER_STAGE_FIRST_KEY + index,
+                                        block)) {
+      forget_transfer_staging();
+      return false;
+    }
+    offset += (u32) count;
+    index++;
+  }
+  return true;
+}
+
+static bool read_staged_module(void* context, u32 offset,
+                               u8* output, usize size) {
+  const StagedModuleSource& source = *(StagedModuleSource*) context;
+  if(output == nullptr || offset > source.size || size > source.size - offset) {
+    return false;
+  }
+  u8 block[program_store::VFAT_STAGE_BLOCK_SIZE];
+  while(size != 0) {
+    const u32 block_index = offset / sizeof(block);
+    const usize block_offset = (usize) (offset % sizeof(block));
+    const usize available = sizeof(block) - block_offset;
+    const usize count = size < available ? size : available;
+    if(block_index >= TRANSFER_STAGE_BLOCKS ||
+       !program_store::vfat_stage_read(
+           TRANSFER_STAGE_FIRST_KEY + block_index, block)) return false;
+    memcpy(output, block + block_offset, count);
+    output += count;
+    offset += (u32) count;
+    size -= count;
+  }
+  return true;
 }
 
 static bool read_payload_callback(void* context, u32 offset,
@@ -161,6 +224,7 @@ static RuntimeStatus load(Kind kind) {
   if(same_active_image(kind, header)) return RuntimeStatus::OK;
   if(g_call_depth != 0) return RuntimeStatus::BUSY;
 
+  g_transfer_token = 0;
   invalidate_active();
   PayloadContext context = {storage, &geometry(), kind};
   const Reader reader = {&context, read_payload_callback};
@@ -239,16 +303,23 @@ RuntimeStatus invoke(Kind kind, Command command,
 StoreStatus validate_install(Kind kind, const ModuleSource& source,
                              Header& header) {
   if(!enabled(kind) || !program_store::ready()) return StoreStatus::UNAVAILABLE;
-  return validate_source(geometry(), kind, source, header);
+  const StoreStatus status = validate_source(geometry(), kind, source, header);
+  if(status != StoreStatus::OK) return status;
+  return resident_matches(header) ? StoreStatus::OK
+                                  : StoreStatus::INCOMPATIBLE_FIRMWARE;
 }
 
 StoreStatus install(Kind kind, const ModuleSource& source, Header* installed) {
   if(!enabled(kind) || !program_store::ready()) return StoreStatus::UNAVAILABLE;
   if(g_call_depth != 0) return StoreStatus::IO_ERROR;
+  g_transfer_token = 0;
   Header validated = {};
   const StoreStatus validation =
       validate_source(geometry(), kind, source, validated);
   if(validation != StoreStatus::OK) return validation;
+  if(!resident_matches(validated)) {
+    return StoreStatus::INCOMPATIBLE_FIRMWARE;
+  }
   if(source.size > sizeof(mk61_module_overlay)) {
     return StoreStatus::WRONG_FILE_SIZE;
   }
@@ -272,7 +343,7 @@ StoreStatus install(Kind kind, const ModuleSource& source, Header* installed) {
   // FAT-хост вправе переиспользовать прежнюю цепочку файла и не присылать
   // неизменившиеся 512-байтовые блоки. Поэтому весь уже проверенный контейнер
   // сначала собирается в SRAM, и лишь затем стирается его старый SPI-слот.
-  // Это также не позволяет неудачному обновлению повредить рабочий модуль.
+  // Ошибка повторного чтения источника тем самым обнаруживается до стирания.
   invalidate_active();
   u32 position = 0;
   while(position < source.size) {
@@ -318,6 +389,52 @@ bool read_container(Kind kind, u32 offset, u8* output, usize size) {
                                          offset, output, size);
 }
 
+bool begin_transfer(u32 size, TransferBuffer& transfer) {
+  memset(&transfer, 0, sizeof(transfer));
+  if(!program_store::ready() || g_call_depth != 0 ||
+     size < HEADER_SIZE || size > sizeof(mk61_module_overlay)) return false;
+  forget_transfer_staging();
+  invalidate_active();
+  g_transfer_sequence++;
+  if(g_transfer_sequence == 0) g_transfer_sequence++;
+  g_transfer_token = g_transfer_sequence;
+  memset(mk61_module_overlay, 0, size);
+  transfer.data = mk61_module_overlay;
+  transfer.capacity = sizeof(mk61_module_overlay);
+  transfer.token = g_transfer_token;
+  return true;
+}
+
+u8* transfer_data(u32 token, u32 size) {
+  return token != 0 && token == g_transfer_token &&
+         size <= sizeof(mk61_module_overlay)
+      ? mk61_module_overlay : nullptr;
+}
+
+StoreStatus finish_transfer(Kind kind, u32 token, u32 size,
+                            Header* installed) {
+  if(transfer_data(token, size) == nullptr) return StoreStatus::IO_ERROR;
+  if(!stage_transfer_container(size)) {
+    g_transfer_token = 0;
+    return StoreStatus::IO_ERROR;
+  }
+  g_transfer_token = 0;
+  StagedModuleSource context = {size};
+  const ModuleSource source = {&context, size, read_staged_module};
+  const StoreStatus result = install(kind, source, installed);
+  forget_transfer_staging();
+  return result;
+}
+
+void cancel_transfer(u32 token) {
+  if(token != 0 && token == g_transfer_token) g_transfer_token = 0;
+}
+
+void discard_transfer_staging(void) {
+  g_transfer_token = 0;
+  forget_transfer_staging();
+}
+
 } // namespace loadable_module
 
 #else
@@ -340,6 +457,16 @@ StoreStatus install(Kind, const ModuleSource&, Header*) {
 StoreStatus remove(Kind) { return StoreStatus::UNAVAILABLE; }
 bool container_size(Kind, u32& size) { size = 0; return false; }
 bool read_container(Kind, u32, u8*, usize) { return false; }
+bool begin_transfer(u32, TransferBuffer& transfer) {
+  transfer = {nullptr, 0, 0};
+  return false;
+}
+u8* transfer_data(u32, u32) { return nullptr; }
+StoreStatus finish_transfer(Kind, u32, u32, Header*) {
+  return StoreStatus::UNAVAILABLE;
+}
+void cancel_transfer(u32) {}
+void discard_transfer_staging(void) {}
 
 } // namespace loadable_module
 

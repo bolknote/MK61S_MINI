@@ -23,6 +23,8 @@ enum class Kind : u8 {
   WBMP_VIEWER = 3
 };
 
+static constexpr u8 KIND_COUNT = 3;
+
 enum class Compression : u8 {
   NONE = 0,
   ZX0 = 1
@@ -68,6 +70,9 @@ struct DecodeResult {
 
 bool valid_kind(Kind kind);
 bool valid_compression(Compression compression);
+Kind kind_at(u8 index);
+const char* file_name(Kind kind);
+bool kind_from_file_name(const char* name, Kind& kind);
 
 // Заголовок всегда кодируется явно в little-endian: формат не зависит от
 // выравнивания структур и версии компилятора.

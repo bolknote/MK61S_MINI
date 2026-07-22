@@ -48,6 +48,11 @@ Status resolve_file(u16 cwd, const char* path,
                     program_store::ProgramType required_type,
                     program_store::Entry& out);
 
+// Разбирает путь до последнего компонента, не предъявляя требований к его
+// расширению. Нужен для корневых псевдофайлов, которые не являются inode C5.
+Status split_parent(u16 cwd, const char* path, u16& out_parent,
+                    char* leaf, usize leaf_capacity);
+
 // Разрешает каталожную часть и проверяет конечное имя файла для создания или
 // перезаписи. Если суффикс не указан, используется default_type.
 Status file_target(u16 cwd, const char* path,

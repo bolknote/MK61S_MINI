@@ -166,6 +166,7 @@ Type a command and press Enter: the left panel runs it locally, while the
 right panel sends it to the MK61s terminal and captures its output.
 
 Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp
+Loadable modules in the device root: FOCAL.MOD, BASIC.MOD, WBMP.MOD
 Legacy aliases accepted on upload: .t1, .m2, .wbm
 EOF
 }
@@ -199,7 +200,7 @@ uppercase() {
 # Печатает причину несовместимости; пустой вывод означает, что объект можно
 # копировать на калькулятор. Второй аргумент: f, d либо l.
 unsupported_reason() {
-  local path=$1 kind=$2 name base lower upper bytes size limit
+  local path=$1 kind=$2 name base lower upper bytes size limit minimum=0
   name=${path##*/}
 
   if [ "$kind" = l ]; then
@@ -219,6 +220,17 @@ unsupported_reason() {
   if [ "$kind" = f ]; then
     lower=$(lowercase "$name")
     case "$lower" in
+      focal.mod|basic.mod)
+        base=${name:0:$(( ${#name} - 4 ))}
+        limit=16384
+        minimum=64
+        ;;
+      wbmp.mod)
+        base=${name:0:$(( ${#name} - 4 ))}
+        limit=4096
+        minimum=64
+        ;;
+      *.mod) printf '%s' 'допустимы только FOCAL.MOD, BASIC.MOD и WBMP.MOD'; return ;;
       *.state.txt) base=${name:0:$(( ${#name} - 10 ))} ;;
       *.m61|*.foc|*.tbi|*.txt|*.fmk)
         base=${name:0:$(( ${#name} - 4 ))}
@@ -256,6 +268,10 @@ unsupported_reason() {
   if [ "$kind" = f ]; then
     size=$(wc -c < "$path" 2>/dev/null | tr -d '[:space:]') || size=
     case "$size" in ''|*[!0-9]*) printf '%s' 'не удалось прочитать размер'; return ;; esac
+    if [ "$size" -lt "$minimum" ]; then
+      printf '%s' "слишком маленький: $size байт, минимум $minimum"
+      return
+    fi
     if [ "$size" -gt "$limit" ]; then
       printf '%s' "слишком большой: $size байт, максимум $limit"
       return
@@ -846,7 +862,7 @@ plan_add() {
 }
 
 plan_local_tree() {
-  local source=$1 destination=$2 kind reason child name size
+  local source=$1 destination=$2 kind reason child name size source_lower destination_leaf destination_lower
   if [ -L "$source" ]; then kind=l
   elif [ -d "$source" ]; then kind=d
   elif [ -f "$source" ]; then kind=f
@@ -855,6 +871,18 @@ plan_local_tree() {
   reason=$(unsupported_reason "$source" "$kind")
   if [ -n "$reason" ]; then PLAN_ERROR="${source##*/}: $reason"; return 1; fi
   if [ "$kind" = f ]; then
+    source_lower=$(lowercase "${source##*/}")
+    case "$source_lower" in
+      focal.mod|basic.mod|wbmp.mod)
+        destination_leaf=${destination#/}
+        destination_lower=$(lowercase "$destination_leaf")
+        if [ "$destination_leaf" != "${destination_leaf#*/}" ] ||
+           [ "$destination_lower" != "$source_lower" ]; then
+          PLAN_ERROR="${source##*/}: модуль сохраняется только в корне под своим фиксированным именем"
+          return 1
+        fi
+        ;;
+    esac
     size=$(wc -c < "$source" | tr -d '[:space:]')
     plan_add f "$source" "$destination" "$size"
     return 0
@@ -1631,7 +1659,9 @@ Ctrl-O       повторно показать последний вывод MK6
 
 Серые файлы имеют неподдерживаемый формат, имя или размер. Их можно
 переименовать через F6, просмотреть через F3 и удалить через F8, но F5
-на калькулятор для них заблокирован.'
+на калькулятор для них заблокирован.
+
+FOCAL.MOD, BASIC.MOD и WBMP.MOD загружаются только в корень под этими именами.'
 }
 
 command_set_text() {
@@ -2118,7 +2148,7 @@ show_file() {
   extension=$(lowercase "$name")
   case "$extension" in
     *.wbmp|*.wbm) show_wbmp "$name" "$source"; return ;;
-    *.fmk) binary=1 ;;
+    *.fmk|*.mod) binary=1 ;;
   esac
   if [ "$binary" -eq 0 ] && { [ ! -s "$source" ] || LC_ALL=C grep -Iq . "$source" 2>/dev/null; }; then
     sed -n '1,400p' "$source" > "$view"
