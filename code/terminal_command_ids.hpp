@@ -13,7 +13,7 @@ enum : u8 {
   CMD_LED, CMD_BEEP, CMD_IF, CMD_VFAT_LOG, CMD_FS_LIST, CMD_FS_REMOVE,
   CMD_FS_CLEAN, CMD_FS_PWD, CMD_FS_CD, CMD_FS_MKDIR, CMD_FS_MOVE,
   CMD_FS_RMDIR, CMD_FS_STAT, CMD_DATE, CMD_FS_GET, CMD_FS_PUT,
-  CMD_USB_SCREEN
+  CMD_USB_SCREEN, CMD_PRINT, CMD_WAIT, CMD_RET
 };
 
 // Файлы M61 — это данные, а не привилегированный сеанс терминала. Список
@@ -46,6 +46,40 @@ constexpr bool terminal_command_allowed_in_script(u8 id) {
     case CMD_LED:
     case CMD_BEEP:
     case CMD_IF:
+    case CMD_PRINT:
+    case CMD_WAIT:
+    case CMD_RET:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// Пока обработчик ловушки владеет сохранённым контекстом калькулятора, команды,
+// продвигающие или изменяющие калькулятор, небезопасны. Диагностика только для
+// чтения, вывод и управление скриптом остаются доступны. CMD_RUN разрешена лишь
+// ради `run :label`; диспетчер отклоняет её формы для калькулятора и файлов
+// в режиме ловушки.
+constexpr bool terminal_command_allowed_in_trap(u8 id) {
+  switch(id) {
+    case CMD_VERSION:
+    case CMD_LIST:
+    case CMD_DUMP:
+    case CMD_PUB:
+    case CMD_LASM:
+    case CMD_ISA:
+    case CMD_HOUT:
+    case CMD_REG_DUMP:
+    case CMD_1302:
+    case CMD_RING:
+    case CMD_STACK:
+    case CMD_LED:
+    case CMD_BEEP:
+    case CMD_IF:
+    case CMD_RUN:
+    case CMD_PRINT:
+    case CMD_WAIT:
+    case CMD_RET:
       return true;
     default:
       return false;

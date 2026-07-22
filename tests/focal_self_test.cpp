@@ -185,8 +185,8 @@ static void test_ask_long_for_loop(void) {
   CHECK_NEAR(FocalTestNumber("N"), 9000.0);
   CHECK_NEAR(FocalTestNumber("S"), 9000.0);
   CHECK_STARTS(FocalTestLcdLine(0), "9000");
-  // A long FOR is one source line but must still service USB Screen on every
-  // inline body iteration, otherwise its three-second heartbeat can expire.
+  // Длинный FOR занимает одну строку исходника, но должен обслуживать USB-экран
+  // на каждой встроенной итерации тела, иначе истечёт трёхсекундный пульс.
   CHECK(FocalTestBackgroundServiceCount() >= 9000);
 }
 
@@ -272,8 +272,8 @@ static void test_functions(void) {
 }
 
 static void test_mk_math_dispatch_and_format(void) {
-  // Transcendental dispatch now routes through mk_math:: (LIBM backend here);
-  // this checks the wiring and the libm-free scientific formatter path.
+  // Трансцендентные функции теперь направляются через mk_math:: (здесь подсистема
+  // LIBM); так проверяются подключение и путь научного форматирования без libm.
   FocalTestReset();
   const int slot = add_program(
       "01.10 S A=SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))\n"

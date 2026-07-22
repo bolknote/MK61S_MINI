@@ -17,7 +17,7 @@ static inline u8 clamp(u8 value, u8 low, u8 high) {
   return value > high ? high : value;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 TextProfile normalizeProfile(TextProfile profile) {
   const text_screen::FontGeometry geometry =
@@ -515,4 +515,4 @@ void Surface::render(void) {
   drawOverlay();
 }
 
-} // namespace usb_screen
+} // пространство имён usb_screen

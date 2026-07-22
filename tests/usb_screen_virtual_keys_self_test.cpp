@@ -74,7 +74,7 @@ static void test_duplicate_and_invalid_events_are_ignored(void) {
   assert(keys.pendingEvents() == 1);
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_abort_discards_undelivered_press();

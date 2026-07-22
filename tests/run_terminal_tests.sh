@@ -12,6 +12,8 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -I"$root/code" \
   "$root/tests/terminal_self_test.cpp" \
+  "$root/code/m61_ansi.cpp" \
+  "$root/code/m61_print.cpp" \
   -o "$out"
 
 "$out"

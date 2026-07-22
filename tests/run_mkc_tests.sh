@@ -206,8 +206,8 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1; 
       --local $env(MKC_TEST_LOCAL)
     after 400
 
-    # macOS Terminal sends F1..F4 as SS3 (Esc O P..S). These assertions
-    # prevent the parser from mistaking the `O` prefix for the final byte.
+    # Терминал macOS передаёт F1..F4 как SS3 (Esc O P..S). Эти проверки не дают
+    # анализатору ошибочно принять префикс `O` за конечный байт.
     send "\033OP"
     must_see "MKC — файловый менеджер MK61s"
     must_see "Esc/F3 — close"
@@ -217,7 +217,7 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1; 
 
     send "\033\[B"
     must_see "program.m61"
-    # A duplicated F3 sequence must not open and immediately close View.
+    # Повторная последовательность F3 не должна открыть и сразу закрыть просмотр.
     send "\033OR\033OR"
     must_see "001"
     must_see "Esc/F3 — close"
@@ -229,7 +229,7 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1; 
     send "\033"
     must_see "Good> "
 
-    # F5 must open a modal copy dialog and a lone Esc must cancel it.
+    # F5 должна открыть модальный диалог копирования, а одиночный Esc — отменить его.
     send "\033\[15~"
     must_see "Copy 1 item(s) to MK61s:"
     send "\033"

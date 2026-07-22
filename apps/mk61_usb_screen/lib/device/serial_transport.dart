@@ -21,9 +21,9 @@ class DeviceSerialPort {
   final String? productName;
   final String? serialNumber;
 
-  /// Automatic activation is deliberately limited to the USB identity used by
-  /// MK61 firmware. Port names such as COM3 or ttyUSB0 are not evidence: they
-  /// may belong to modems, UPSes, debug consoles, or unrelated controllers.
+  /// Автоматическая активация намеренно ограничена USB-идентификатором прошивки
+  /// МК-61. Имена портов вроде COM3 или ttyUSB0 ничего не доказывают: они могут
+  /// принадлежать модемам, ИБП, отладочным консолям или посторонним контроллерам.
   bool get isAutomaticCandidate {
     if (vendorId != 0x0483 || productId != 0x5740) return false;
     final identity = [
@@ -74,8 +74,8 @@ class LibSerialTransport implements DeviceSerialTransport {
         serialNumber: port.serialNumber,
       );
     } catch (_) {
-      // Keep the port available for an explicit user-selected connection, but
-      // never auto-probe it when its USB identity cannot be read safely.
+      // Оставляем порт доступным для явного пользовательского подключения,
+      // но не проверяем автоматически, если USB-идентификатор нельзя безопасно прочитать.
       return DeviceSerialPort(name: name);
     } finally {
       port.dispose();
@@ -98,20 +98,20 @@ class LibSerialTransport implements DeviceSerialTransport {
       try {
         config.setFlowControl(SerialPortFlowControl.none);
       } catch (_) {
-        // The port does not own the config until it is assigned below.
+        // Порт не владеет конфигурацией до её назначения ниже.
         config.dispose();
         rethrow;
       }
-      // libserialport retains the assigned config and releases it from
-      // SerialPort.dispose(). Disposing it here would make closing the port
-      // free the same native pointer twice.
+      // libserialport сохраняет назначенную конфигурацию и освобождает её из
+      // SerialPort.dispose(). Освобождение здесь привело бы к повторному
+      // освобождению того же нативного указателя при закрытии порта.
       port.config = config;
       return _LibSerialConnection(port);
     } catch (_) {
       try {
         if (port.isOpen) port.close();
       } catch (_) {
-        // Best effort while abandoning a failed candidate.
+        // Необязательная попытка при отказе от неудачного кандидата.
       }
       port.dispose();
       rethrow;
@@ -145,7 +145,7 @@ class _LibSerialConnection implements DeviceSerialConnection {
     try {
       if (_port.isOpen) _port.close();
     } catch (_) {
-      // The OS may already have removed the port.
+      // ОС уже могла удалить порт.
     }
     _port.dispose();
   }

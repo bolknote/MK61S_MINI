@@ -79,6 +79,10 @@ class _FakeSerialConnection implements DeviceSerialConnection {
     _input.add(Uint8List.fromList(utf8.encode(text)));
   }
 
+  void sendDeviceTerminalBytes(List<int> bytes) {
+    _input.add(Uint8List.fromList(bytes));
+  }
+
   void sendDevicePacket(
     int type, [
     List<int> payload = const [],
@@ -259,7 +263,7 @@ void main() {
       controller.keyDown(39);
       controller.keyDown(
         39,
-      ); // Desktop auto-repeat must not duplicate key-down.
+      ); // Автоповтор desktop-системы не должен дублировать нажатие.
       controller.keyUp(39);
       controller.keyDown(37);
       controller.keyDown(38);
@@ -297,6 +301,63 @@ void main() {
       expect(connection.closed, isTrue);
     },
   );
+
+  test('renders the supported ANSI terminal subset', () async {
+    final transport = _FakeSerialTransport();
+    final controller = await _openController(transport);
+    addTearDown(controller.dispose);
+    final connection = transport.connection;
+    _attach(controller, connection);
+
+    connection.sendDeviceTerminal('ABCDE\x1b[2Dxy');
+    expect(controller.terminalText, 'ABCxy');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('abc\n123\x1b[1;2HZ');
+    expect(controller.terminalText, 'aZc\n123');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('A\nB\x1b[1A\x1b[1CX\x1b[1B\x1b[1CY');
+    expect(controller.terminalText, 'A X\nB   Y');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('abc\n123\x1b[1;3fZ');
+    expect(controller.terminalText, 'abZ\n123');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('abcdef\x1b[3D\x1b[K');
+    expect(controller.terminalText, 'abc');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('abcdef\r\x1b[3C\x1b[1K');
+    expect(controller.terminalText, '    ef');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('abc\x1b[sXY\x1b[uZ');
+    expect(controller.terminalText, 'abcZY');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('abc\x1b7XY\x1b8Z');
+    expect(controller.terminalText, 'abcZY');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('old\ntext\x1b[2J\x1b[Hnew');
+    expect(controller.terminalText, 'new');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('old\x1b[');
+    expect(controller.terminalText, 'old');
+    connection.sendDeviceTerminal('2J\x1b[Hnew');
+    expect(controller.terminalText, 'new');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminal('A\x1b[31mB\x1b[0mC');
+    expect(controller.terminalText, 'ABC');
+
+    controller.clearTerminal();
+    connection.sendDeviceTerminalBytes([0x41, 0xff, 0x42]);
+    expect(controller.terminalText, 'A\uFFFDB');
+  });
 
   test(
     'fresh OFFER resets a stale attached session and re-handshakes',
@@ -543,8 +604,8 @@ void main() {
       expect(transport.openCount, 0);
       expect(transport.connection.hostTerminalBytes, isEmpty);
 
-      // An explicit selection is the user's authorization to probe a custom
-      // board whose descriptors are not on the automatic allowlist.
+      // Явный выбор — разрешение пользователя проверить нестандартную плату,
+      // дескрипторов которой нет в автоматическом списке разрешённых.
       await controller.connectSelected();
       expect(transport.openCount, 1);
       expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');

@@ -44,7 +44,7 @@ static usize repeated_count(const u8* input, usize size, usize at) {
   return count;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 u16 crc16_ccitt(const u8* data, usize size) {
   u16 crc = 0xFFFF;
@@ -201,8 +201,8 @@ Status packbits_decode(const u8* input, usize input_size,
       memset(output + target, input[source++], count);
       target += count;
     } else {
-      // The PackBits 0x80 no-op is deliberately rejected. A unique canonical
-      // representation makes malformed packets and trailing garbage visible.
+      // Пустая операция PackBits 0x80 намеренно отклоняется. Единственное
+      // каноническое представление выявляет повреждённые пакеты и мусор в конце.
       return Status::MALFORMED_PACKBITS;
     }
     if(target > expected_size) return Status::MALFORMED_PACKBITS;
@@ -486,8 +486,8 @@ MultiplexPushResult MultiplexParser::push(u8 value) {
          : MultiplexPushResult::NONE;
   }
 
-  // Repeated zeroes keep the parser armed. This realigns a connection that
-  // started in the middle of a packet and handles adjacent framed packets.
+  // Повторные нули сохраняют анализатор взведённым. Это синхронизирует соединение,
+  // начавшееся посреди пакета, и обрабатывает соседние пакеты в кадрах.
   if(!packet_nonempty) {
     parser.reset();
     return MultiplexPushResult::NONE;
@@ -519,4 +519,4 @@ const char* status_text(Status status) {
   return "unknown";
 }
 
-} // namespace usb_screen_protocol
+} // пространство имён usb_screen_protocol

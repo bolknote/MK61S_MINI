@@ -124,7 +124,7 @@ void test_debounce_and_simultaneous_edges(void) {
   assert(row.pressed(1));
   assert(row.state_mask(1) == 0);
 
-  // A bounce restarts the release debounce window.
+  // Дребезг заново запускает окно подавления при отпускании.
   assert(row.update(0x00, 40) == 0);
   assert(row.update(0x02, 50) == 0);
   assert(row.update(0x00, 60) == 0);
@@ -153,7 +153,7 @@ void test_time_wraparound(void) {
   assert(row.update(0x80, 0x0000000Eu) == 0x80);
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_scan_code_validation();

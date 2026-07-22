@@ -157,18 +157,18 @@ static void pumpTx(void) {
   const usize written = Serial.write(session.encoder.data() +
                                      session.tx_offset, chunk);
   if(written <= remaining) session.tx_offset += written;
-  // With no host DTR, USBSerial::write() returns zero although its software
-  // queue reports free space. Do not let an unsent OFFER stall background
-  // work forever; a fresh offer will be generated after reconnection.
+  // Без DTR хоста USBSerial::write() возвращает ноль, хотя программная очередь
+  // сообщает о свободном месте. Неотправленный OFFER не должен навсегда
+  // останавливать фоновую работу: после подключения будет создан новый.
   if(written == 0 && session.state == State::WAITING_FOR_HOST) {
     session.tx_offset = session.encoder.size();
   }
 }
 
-// Device-initiated exits must not make the desktop client wait for the
-// heartbeat timeout.  An update packet may already be partially queued, so
-// emit an extra zero first: it terminates a partial COBS frame, while the
-// leading zero of DETACH arms the parser for the new complete packet.
+// При выходе по инициативе устройства desktop-клиент не должен ждать тайм-аута
+// пульса. Пакет обновления уже может частично находиться в очереди, поэтому
+// сначала выводится дополнительный ноль: он завершает неполный кадр COBS,
+// а начальный ноль DETACH взводит анализатор для нового полного пакета.
 static void notifyHostDetach(void) {
   if(session.state == State::IDLE) return;
 
@@ -188,9 +188,9 @@ static void notifyHostDetach(void) {
     } while(txPending() &&
             !runtime_safety::time_reached(millis(), deadline));
   }
-  // Never let a disconnected or stalled host block the physical escape path.
-  // The heartbeat remains the fallback when this best-effort packet cannot be
-  // queued completely within the bounded budget.
+  // Отключённый или зависший хост не должен блокировать физический путь выхода.
+  // Пульс остаётся запасным вариантом, если этот необязательный пакет не удаётся
+  // полностью поставить в очередь за ограниченное время.
   session.tx_offset = session.encoder.size();
 }
 
@@ -325,8 +325,8 @@ static bool beginFrame(void) {
   if(current == NULL) return false;
   memcpy(session.snapshot, current, sizeof(session.snapshot));
   session.frame_revision = main_lcd().usbScreenRevision();
-  // Clear only the request captured by this snapshot. A new request arriving
-  // while the frame is in flight remains set for the following transfer.
+  // Очищаем только запрос, захваченный этим снимком. Новый запрос, поступивший
+  // во время передачи кадра, останется установленным для следующей передачи.
   session.resend_requested = false;
   session.frame_id++;
   session.frame_crc = usb_screen_protocol::crc16_ccitt(
@@ -445,7 +445,7 @@ static void serviceEscapeHold(t_time_ms now) {
   }
 }
 
-} // namespace
+} // безымянное пространство имён
 
 bool start(void) {
   if(session.state != State::IDLE) return true;
@@ -511,6 +511,6 @@ Event takeEvent(void) {
   return event;
 }
 
-} // namespace usb_screen
+} // пространство имён usb_screen
 
 #endif // MK61_ENABLE_USB_SCREEN

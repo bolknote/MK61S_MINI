@@ -28,6 +28,6 @@ Result view_entry(MK61Display& display, const program_store::Entry& entry,
 
 const char* result_text(Result result);
 
-} // namespace image1_viewer
+} // пространство имён image1_viewer
 
 #endif

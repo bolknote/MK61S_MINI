@@ -5,10 +5,10 @@
 
 namespace usb_screen {
 
-// Tracks the host's requested key state separately from events that have
-// actually reached the calculator queue. This distinction is essential on a
-// session abort: pending presses must be discarded, while delivered presses
-// still need matching release events.
+// Отслеживает запрошенное хостом состояние клавиш отдельно от событий,
+// фактически достигших очереди калькулятора. Это различие важно при прерывании
+// сеанса: ожидающие нажатия нужно отбросить, а доставленным всё ещё требуются
+// соответствующие события отпускания.
 class VirtualKeyQueue {
   public:
     enum class EnqueueResult : u8 {
@@ -39,8 +39,9 @@ class VirtualKeyQueue {
       release_all_pending_ = requested_pressed_ != 0;
     }
 
-    // Stages one release behind any already queued key events. The caller uses
-    // the returned key to update the keyboard's external held-key state.
+    // Ставит одно отпускание после уже находящихся в очереди событий клавиш.
+    // Вызывающий код использует возвращённую клавишу для обновления внешнего
+    // состояния удерживаемых клавиш.
     bool stageNextRelease(u8& key) {
       if(!release_all_pending_) return false;
       for(u8 candidate = 0; candidate < keyboard_core::KEY_COUNT;
@@ -61,7 +62,7 @@ class VirtualKeyQueue {
 
     i32 front(void) const { return events_.peek(); }
 
-    // Call only after the front event was accepted by the calculator queue.
+    // Вызывать только после принятия первого события очередью калькулятора.
     bool markFrontDelivered(void) {
       const i32 event = events_.peek();
       if(event < 0) return false;
@@ -76,9 +77,9 @@ class VirtualKeyQueue {
       return true;
     }
 
-    // Drops every undelivered event and queues releases only for presses that
-    // were already observed by the calculator. Returns the external-state mask
-    // that the caller must clear immediately.
+    // Отбрасывает все недоставленные события и ставит в очередь отпускания лишь
+    // для нажатий, уже увиденных калькулятором. Возвращает маску внешнего
+    // состояния, которую вызывающий код должен немедленно очистить.
     u64 abortPending(void) {
       const u64 external_pressed = requested_pressed_;
       requested_pressed_ = 0;
@@ -104,6 +105,6 @@ class VirtualKeyQueue {
     keyboard_core::FixedFifo<keyboard_core::KEY_COUNT * 2> events_;
 };
 
-} // namespace usb_screen
+} // пространство имён usb_screen
 
 #endif

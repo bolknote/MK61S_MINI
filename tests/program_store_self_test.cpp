@@ -20,7 +20,7 @@ void blink_stop(void) {}
 bool pattern_start(const PatternStep*, usize) { return true; }
 void control(void) {}
 void control(t_time_ms) {}
-} // namespace led
+} // пространство имён led
 
 namespace {
 
@@ -351,7 +351,7 @@ static void test_paths_and_recursive_tree_operations(void) {
   assert(program_store::remove_tree(generated, &removed));
   assert(removed == 3);
   assert(program_store::remove_tree(projects, &removed));
-  assert(removed == 5); // two directories and three files
+  assert(removed == 5); // два каталога и три файла
   assert(!program_store::entry_by_id(projects, entry));
   assert(program_store::child_count(program_store::ROOT_ID) == 1);
   program_store::init();
@@ -379,13 +379,13 @@ static void test_directory_depth_limit_includes_moved_subtrees(void) {
     parent = chain[depth];
   }
 
-  // The subtree has height one.  Placing its root at depth 32 would put its
-  // leaf at depth 33 and must therefore fail atomically.
+  // Высота поддерева равна единице. Если поместить его корень на глубину 32,
+  // лист окажется на глубине 33, поэтому операция должна атомарно завершиться ошибкой.
   assert(!program_store::move_rename(subtree, chain[30], "too deep"));
   assert(by_id(subtree).parent_id == program_store::ROOT_ID);
   assert(by_id(leaf).parent_id == subtree);
 
-  // Depths 31 and 32 are representable by the FAT walker.
+  // Обходчик FAT может представить глубины 31 и 32.
   assert(program_store::move_rename(subtree, chain[29], "fits"));
   assert(by_id(subtree).parent_id == chain[29]);
   assert(by_id(leaf).parent_id == subtree);
@@ -531,10 +531,10 @@ static void test_sequential_directory_walk_is_linear(void) {
     assert(entry.kind == NodeKind::DIRECTORY);
   }
 
-  // child() retains the next sibling between monotonically increasing
-  // indices.  This budget catches an accidental return to rescanning the
-  // directory head for every entry (quadratic I/O) while leaving headroom for
-  // catalog-cache boundaries and record/name validation reads.
+  // child() сохраняет следующего соседа между монотонно возрастающими индексами.
+  // Этот бюджет выявляет случайный возврат к повторному сканированию начала
+  // каталога для каждой записи (квадратичный ввод-вывод), оставляя запас на
+  // границы кэша каталога и чтения для проверки записей и имён.
   assert(SPIFlash::readOperations() <= (u32) nodes * 3U + 64U);
   assert(SPIFlash::readBytes() <= (u64) nodes * 128U + 8192U);
 }
@@ -647,8 +647,8 @@ static void test_corrupt_catalog_requires_explicit_format(void) {
   assert(flash.readByteArray(settings + 64, recovered, sizeof(recovered)));
   assert(memcmp(recovered, marker, sizeof(marker)) == 0);
 
-  // Formatting is still available, but only as an explicit destructive
-  // operation.  It repairs the volume while preserving the settings sector.
+  // Форматирование по-прежнему доступно, но только как явная разрушающая
+  // операция. Она восстанавливает том, сохраняя сектор настроек.
   assert(program_store::format());
   assert(program_store::ready());
   assert(program_store::mount_status() ==
@@ -686,7 +686,7 @@ static void test_checkpoint_power_cuts_are_atomic(void) {
   SPIFlash::resetOperationCounts();
   assert(program_store::write(ProgramType::TEXT, "CP32", &value, 1));
   const u32 operation_count = SPIFlash::mutationOperations();
-  // One data append, one bounded catalog-bank rewrite and one WAL append.
+  // Одно добавление данных, одна ограниченная перезапись банка каталога и одно добавление WAL.
   assert(operation_count >= 8 && operation_count <= 32);
 
   for(u32 cut = 0; cut <= operation_count; cut++) {
@@ -703,8 +703,8 @@ static void test_checkpoint_power_cuts_are_atomic(void) {
     const bool visible = program_store::exists(ProgramType::TEXT, "CP32");
     if(committed) assert(visible);
 
-    // Any interrupted destination bank must be reusable immediately; an
-    // orphaned data record must not poison the old current-sector tail.
+    // Любой прерванный целевой банк должен сразу допускать повторное использование;
+    // осиротевшая запись данных не должна портить старый хвост текущего сектора.
     assert(program_store::write(ProgramType::TEXT, "CP32", &value, 1));
     assert(program_store::write(ProgramType::TEXT, "AFTER-CP",
                                 (const u8*) "ok", 2));
@@ -732,7 +732,7 @@ static void test_power_cuts_are_atomic_and_retryable(void) {
                                                 new_data, sizeof(new_data));
     SPIFlash::clearFailure();
 
-    // A failed transaction must not poison the current WAL slot.
+    // Неудачная транзакция не должна портить текущую ячейку WAL.
     assert(program_store::write(ProgramType::TEXT, "AFTER",
                                 (const u8*) "ok", 2));
     program_store::init();
@@ -794,10 +794,10 @@ static void prepare_gc_boundary(void) {
                                 sizeof(data)));
   }
 
-  // Two updates consume the only ordinary spare sector. Their obsolete
-  // versions remain in different sectors, each beside another live file, so
-  // the next maximum-size update cannot reclaim an entirely dead sector and
-  // must move a live record through the dedicated GC reserve.
+  // Два обновления занимают единственный обычный запасной сектор. Их устаревшие
+  // версии остаются в разных секторах рядом с другими живыми файлами, поэтому
+  // следующее обновление максимального размера не может освободить полностью
+  // мёртвый сектор и должно перенести живую запись через отдельный резерв GC.
   fill_bytes(data, 0xA0U);
   assert(program_store::write(ProgramType::TEXT, "GC00", data,
                               sizeof(data)));
@@ -960,9 +960,9 @@ static void test_stage_indexes_large_unique_write_burst(void) {
   u8 data[512];
   u8 recovered[512];
 
-  // macOS may issue hundreds of distinct metadata/data writes before its first
-  // SYNCHRONIZE CACHE.  Every live block, including erase-sector boundaries,
-  // must survive reconstruction of the flash-resident staging journal.
+  // macOS может выполнить сотни отдельных записей метаданных и данных до первого
+  // SYNCHRONIZE CACHE. Каждый живой блок, включая границы секторов стирания,
+  // должен пережить восстановление промежуточного журнала во flash.
   for(u16 block = 0; block < BLOCKS; block++) {
     for(u16 byte = 0; byte < sizeof(data); byte++) {
       data[byte] = (u8) (block * 37U + byte);
@@ -1106,8 +1106,8 @@ static void test_stage_compaction_power_cuts_are_recoverable(void) {
       assert(memcmp(recovered, final_data, sizeof(recovered)) == 0);
     }
 
-    // The first write after reboot completes either direction of an
-    // interrupted reserve-sector compaction before appending the new value.
+    // Первая запись после перезагрузки завершает любое направление прерванного
+    // уплотнения резервного сектора до добавления нового значения.
     assert(program_store::vfat_stage_write(9999, final_data));
     program_store::init();
     assert(program_store::ready());
@@ -1164,8 +1164,8 @@ static void test_settings_reservation_and_capacity_mismatch(void) {
   SPIFlash::setReportedCapacity(1024U * 1024U);
   program_store::init();
   assert(program_store::ready());
-  // A changed report invalidates the old locator, but it must not truncate
-  // the same two-megabyte physical device.
+  // Изменившийся отчёт делает старый локатор недействительным, но не должен
+  // обрезать то же физическое устройство объёмом два мегабайта.
   assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
   assert(!program_store::exists(ProgramType::TEXT, "OLD"));
 }
@@ -1176,13 +1176,14 @@ static void test_geometry_migration_preserves_settings(void) {
   assert(flash.writeByte(settings, 0x5A));
   assert(program_store::write(ProgramType::TEXT, "OLD", (const u8*) "x", 1));
 
-  // Simulate a locator written by an older geometry algorithm while retaining
-  // its committed state, physical capacity, chip identity and valid CRC.
+  // Имитируем локатор, записанный старым алгоритмом геометрии, сохраняя его
+  // зафиксированное состояние, физическую ёмкость, идентификатор микросхемы
+  // и допустимую CRC.
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     u8 locator[72];
     const u32 address = (u32) copy * SPIFlash::SECTOR_SIZE;
     assert(flash.readByteArray(address, locator, sizeof(locator)));
-    put_le32(locator, 56, 1); // deliberately differs from current geometry
+    put_le32(locator, 56, 1); // намеренно отличается от текущей геометрии
     put_le32(locator, 68, locator_crc(locator));
     assert(flash.eraseSector(address));
     assert(flash.writeByteArray(address, locator, sizeof(locator)));
@@ -1204,8 +1205,8 @@ static void test_counterfeit_capacity_is_measured_not_trusted(void) {
   assert(flash.getCapacity() == 2U * 1024U * 1024U);
   assert(program_store::write(ProgramType::TEXT, "KEEP",
                               (const u8*) "ok", 2));
-  // The same forged JEDEC/SFDP upper bound must not force a reformat on every
-  // boot after C5 has measured and recorded the real boundary once.
+  // Та же поддельная верхняя граница JEDEC/SFDP не должна вынуждать форматировать
+  // при каждой загрузке после однократного измерения и записи реальной границы C5.
   program_store::init();
   assert(program_store::ready());
   assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
@@ -1220,8 +1221,8 @@ static void test_underreported_capacity_uses_the_whole_device(void) {
   assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
   assert(program_store::write(ProgramType::TEXT, "KEEP",
                               (const u8*) "ok", 2));
-  // The measured size can legitimately exceed the JEDEC/SFDP report and must
-  // remain loadable without another destructive probe.
+  // Измеренный размер может правомерно превышать отчёт JEDEC/SFDP и должен
+  // загружаться без ещё одной разрушающей проверки.
   program_store::init();
   assert(program_store::ready());
   assert(program_store::geometry().capacity_bytes == 2U * 1024U * 1024U);
@@ -1232,8 +1233,8 @@ static void test_declared_geometry_change_forces_a_fresh_probe(void) {
   fresh(2U * 1024U * 1024U);
   assert(program_store::write(ProgramType::TEXT, "OLD",
                               (const u8*) "x", 1));
-  // A changed JEDEC/SFDP upper bound is treated as chip replacement even if
-  // the newly measured physical boundary happens to be the same.
+  // Изменившаяся верхняя граница JEDEC/SFDP считается заменой микросхемы,
+  // даже если новая измеренная физическая граница случайно совпала.
   SPIFlash::setReportedCapacity(4U * 1024U * 1024U);
   program_store::init();
   assert(program_store::ready());
@@ -1264,9 +1265,9 @@ static void test_c1_to_c4_layouts_format_once_with_bounded_erases(void) {
     assert(flash.readByteArray(0, locator, sizeof(locator)));
     assert(memcmp(locator, "C5FS", 4) == 0);
 
-    // Physical capacity probing plus one new catalog bank, settings and two
-    // locators is bounded.  Data, the second COW bank and USB staging are
-    // epoch-qualified and therefore need no eager erase.
+    // Проверка физической ёмкости вместе с одним новым банком каталога, настройками
+    // и двумя локаторами ограничена. Данные, второй банк COW и промежуточное USB-
+    // хранилище привязаны к эпохе, поэтому не требуют упреждающего стирания.
     const u32 format_erases = SPIFlash::eraseCount() - erases_before;
     assert(format_erases <=
            (u32) program_store::geometry().catalog_bank_sectors + 16U);
@@ -1280,7 +1281,7 @@ static void test_c1_to_c4_layouts_format_once_with_bounded_erases(void) {
   }
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_dynamic_geometry_and_lazy_format();

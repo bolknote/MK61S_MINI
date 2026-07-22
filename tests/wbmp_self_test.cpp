@@ -146,7 +146,7 @@ static void test_decode_guards(void) {
   assert(wbmp::viewport_bytes(192, 64, wbmp::Layout::PAGE_MAJOR_LSB) == 1536);
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_type0_and_polarity();

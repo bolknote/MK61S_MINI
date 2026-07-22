@@ -256,8 +256,8 @@ class MkStreamParser {
         _insidePacket = false;
         continue;
       }
-      // Repeated zeroes keep the parser armed. This is both a clean
-      // resynchronisation point and the boundary between adjacent packets.
+      // Повторные нули сохраняют анализатор взведённым. Это одновременно чистая
+      // точка повторной синхронизации и граница между соседними пакетами.
       if (_encoded.isEmpty) continue;
       try {
         packets.add(MkProtocol.decodePacket(_encoded));

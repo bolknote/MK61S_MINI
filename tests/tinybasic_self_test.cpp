@@ -366,8 +366,9 @@ static void expect_format(double value, const char* expected) {
   }
 }
 
-// The firmware formatter must not depend on printf float support (newlib-nano
-// links without it), so it is compared against the old "%.10g" behaviour here.
+// Форматировщик прошивки не должен зависеть от поддержки float в printf
+// (newlib-nano компонуется без неё), поэтому здесь он сравнивается со старым
+// поведением "%.10g".
 static void test_format_number(void) {
   expect_format(0.0, "0");
   expect_format(1.0, "1");
@@ -388,8 +389,8 @@ static void test_format_number(void) {
   expect_format(std::numeric_limits<double>::denorm_min(), "4.940656458E-324");
 }
 
-// Transcendental functions now dispatch through mk_math:: (LIBM backend here);
-// this confirms the wiring produces the expected values.
+// Трансцендентные функции теперь направляются через mk_math:: (здесь подсистема
+// LIBM); это подтверждает, что подключение даёт ожидаемые значения.
 static void test_mk_math_dispatch(void) {
   TinyBasicTestReset();
   const int slot = TinyBasicTestAddProgram(
@@ -404,7 +405,7 @@ static void test_mk_math_dispatch(void) {
 
 static void test_trig_angle_modes(void) {
   TinyBasicTestReset();
-  TinyBasicTestSetAngleMode(11); // DEGREE
+  TinyBasicTestSetAngleMode(11); // градусы
   int slot = TinyBasicTestAddProgram(
     "10 A=SIN(30)\n"
     "20 B=ASIN(.5)\n",
@@ -415,7 +416,7 @@ static void test_trig_angle_modes(void) {
   assert(std::fabs(TinyBasicTestNumber("B") - 30.0) < 0.000001);
 
   TinyBasicTestReset();
-  TinyBasicTestSetAngleMode(12); // GRADE
+  TinyBasicTestSetAngleMode(12); // грады
   slot = TinyBasicTestAddProgram("10 A=SIN(100)\n", "GRADES");
   assert(slot >= 0);
   assert(TinyBasicTestRunResult(slot));

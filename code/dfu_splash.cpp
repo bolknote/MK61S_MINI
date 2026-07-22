@@ -103,4 +103,4 @@ const u8 BITMAP[BYTE_COUNT] = {
 
 static_assert(sizeof(BITMAP) == BYTE_COUNT, "DFU bitmap byte count must match its geometry");
 
-} // namespace dfu_splash
+} // пространство имён dfu_splash

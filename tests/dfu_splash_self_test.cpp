@@ -14,7 +14,7 @@ u32 fnv1a32(const u8* data, usize size) {
   return hash;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   static_assert(dfu_splash::WIDTH == 192, "DFU splash width changed");

@@ -1,4 +1,4 @@
-# Local firmware build outputs
+# Локальные результаты сборки прошивки
 /*.bin
 /binary/
 /.build/
@@ -7,6 +7,6 @@
 /tools/fmk_font
 /tools/mk61_module_pack
 
-# Python tooling caches
+# Кэши инструментов Python
 __pycache__/
 *.py[cod]

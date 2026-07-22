@@ -131,7 +131,7 @@ void test_editor_shortcuts_follow_active_profile(void) {
   assert(strcmp(line_source, "ONE") == 0);
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_program_key_constants_match_matrix_layout();

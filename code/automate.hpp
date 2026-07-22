@@ -77,6 +77,10 @@ inline void run_program_steps(void) {
   for(usize i = 0; i < step_count; i++) {
       core_61::step();
 
+      // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
+      // делать следующий турбо-шаг или передавать клавишу до сохранения контекста скриптом.
+      if(core_61::program_boundary_yielded()) return;
+
       if(core_61::is_CALC()) {
           event_stop_in_prg_mk61();     // обработка события "ОСТАНОВ ПРОГРАММЫ"
           break;

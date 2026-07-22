@@ -20,9 +20,9 @@ static constexpr usize CRC_SIZE = 2;
 static constexpr usize MAX_PAYLOAD_SIZE = 224;
 static constexpr usize MAX_RAW_PACKET =
   HEADER_SIZE + MAX_PAYLOAD_SIZE + CRC_SIZE;
-// COBS adds at most one code byte per 254 input bytes. USB Screen v2 wraps
-// every packet in leading and trailing zeroes, leaving all non-framed bytes
-// available to the interactive terminal on the same CDC byte stream.
+// COBS добавляет не более одного кодового байта на 254 входных байта. USB-экран
+// v2 обрамляет каждый пакет начальным и конечным нулями, оставляя все байты вне
+// кадров доступными интерактивному терминалу в том же потоке CDC.
 static constexpr usize MAX_FRAMED_PACKET =
   MAX_RAW_PACKET + (MAX_RAW_PACKET / 254) + 3;
 
@@ -209,9 +209,9 @@ class StreamParser {
     Status parse_decoded(usize decoded_size);
 };
 
-// Splits a v2 CDC stream into 0/COBS/0 packets and raw terminal bytes. The
-// contained StreamParser owns all packet storage, so this wrapper adds only
-// framing state and one returned terminal byte.
+// Разделяет поток CDC v2 на пакеты 0/COBS/0 и необработанные байты терминала.
+// Вложенный StreamParser владеет всем хранилищем пакетов, поэтому оболочка
+// добавляет только состояние кадрирования и один возвращаемый байт терминала.
 class MultiplexParser {
   public:
     constexpr MultiplexParser(void)
@@ -233,6 +233,6 @@ class MultiplexParser {
 
 const char* status_text(Status status);
 
-} // namespace usb_screen_protocol
+} // пространство имён usb_screen_protocol
 
 #endif

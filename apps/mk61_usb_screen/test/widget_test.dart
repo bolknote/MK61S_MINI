@@ -133,8 +133,8 @@ void main() {
       ['k', 'digit8'],
     ]);
 
-    // A Russian input source reports "ф" for the physical A key. Device
-    // input must still use the English QWERTY position.
+    // Русская раскладка сообщает «ф» для физической клавиши A. Ввод устройства
+    // всё равно должен использовать позицию английской QWERTY.
     await tester.sendKeyEvent(
       LogicalKeyboardKey.keyF,
       character: 'ф',

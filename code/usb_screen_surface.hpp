@@ -29,9 +29,10 @@ constexpr TextProfile profile3x5(void) { return {10, 3, 5, 1}; }
 
 TextProfile normalizeProfile(TextProfile profile);
 
-// Software implementation of the graphical display used by USB Screen.  The
-// framebuffer is page-major, one byte per x coordinate and eight vertical
-// pixels per page.  A set bit means foreground; this is also the wire format.
+// Программная реализация графического дисплея для USB-экрана. Кадровый буфер
+// организован по страницам: один байт на координату x и восемь пикселей по
+// вертикали на страницу. Установленный бит означает передний план; таков же
+// формат передачи.
 class Surface {
   public:
     static constexpr u8 CUSTOM_GLYPHS = 8;
@@ -64,9 +65,10 @@ class Surface {
     void writeByte(u8 value);
     void writeCodepoint(u16 codepoint);
 
-    // Rehydrates a freshly started USB surface from the logical state of a
-    // graphical display. This makes a backend switch lossless even when the
-    // foreground owner is blocked in a generic key wait and cannot redraw.
+    // Восстанавливает только что запущенную USB-поверхность из логического
+    // состояния графического дисплея. Благодаря этому смена подсистемы проходит
+    // без потерь, даже если владелец переднего плана заблокирован ожиданием
+    // клавиши общего вида и не может перерисоваться.
     void seedText(const text_screen::Grid& source,
                   const u8 custom_glyphs[CUSTOM_GLYPHS][8],
                   const bool custom_valid[CUSTOM_GLYPHS],
@@ -135,6 +137,6 @@ class Surface {
     void drawOverlay(void);
 };
 
-} // namespace usb_screen
+} // пространство имён usb_screen
 
 #endif

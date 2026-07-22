@@ -267,7 +267,7 @@ static Result view_graphics_display(MK61Display& display,
   return result;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 Result view(MK61Display& display, const u8* data, u16 size,
             wbmp::Status* image_status) {
@@ -339,6 +339,6 @@ const char* result_text(Result result) {
   return "unknown image viewer error";
 }
 
-} // namespace image1_viewer
+} // пространство имён image1_viewer
 
 #endif // built-in or separately linked WBMP module

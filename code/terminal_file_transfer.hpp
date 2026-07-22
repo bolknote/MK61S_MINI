@@ -63,6 +63,6 @@ inline bool decode_hex(const char* text, u8* out, usize capacity,
   return true;
 }
 
-} // namespace terminal_file_transfer
+} // пространство имён terminal_file_transfer
 
 #endif

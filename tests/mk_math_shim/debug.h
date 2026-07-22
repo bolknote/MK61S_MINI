@@ -1,7 +1,7 @@
-// Host shim of debug.h. Force-included (clang -include) so it runs before the
-// real code/debug.h; by claiming that header's include guard it suppresses the
-// firmware macros entirely. Those macros perform pointer-to-usize casts that are
-// lossy (and thus hard errors) on a 64-bit host, so we replace them with no-ops.
+// Хостовая заглушка debug.h. Принудительно подключается (clang -include) до
+// настоящего code/debug.h и, занимая его защитный макрос, полностью подавляет
+// макросы прошивки. Они приводят указатели к usize с потерями, что является
+// безусловной ошибкой на 64-разрядном хосте, поэтому заменяются пустыми операциями.
 #ifndef DEBUG_OUTPUT_TO_SERIAL
 #define DEBUG_OUTPUT_TO_SERIAL
 

@@ -110,7 +110,7 @@ static void test_packet_crc_rejection(void) {
   usize damaged_size = 0;
   assert(cobs_decode(encoder.data() + 1, encoder.size() - 2, raw, sizeof(raw),
                      raw_size) == Status::OK);
-  raw[HEADER_SIZE] ^= 0x40; // payload changes, stored CRC deliberately does not
+  raw[HEADER_SIZE] ^= 0x40; // полезная нагрузка меняется, сохранённая CRC намеренно нет
   assert(cobs_encode(raw, raw_size, damaged, sizeof(damaged) - 1,
                      damaged_size) == Status::OK);
   damaged[damaged_size++] = 0;
@@ -146,7 +146,7 @@ static void test_terminal_multiplex(void) {
   assert(parser.packet().sequence == 99);
   assert(memcmp(parser.packet().payload, payload, sizeof(payload)) == 0);
 
-  // Two boundary zeroes are legal between adjacent framed packets.
+  // Между соседними пакетами в кадрах допустимы два граничных нуля.
   assert(parser.push(0) == MultiplexPushResult::NONE);
   for(usize i = 1; i < encoder.size(); i++) result = parser.push(encoder.data()[i]);
   assert(result == MultiplexPushResult::PACKET);
@@ -162,7 +162,7 @@ static void test_diff_plan(void) {
   assert(!plan.keyframe);
 
   current[2 * SCREEN_WIDTH + 10] = 1;
-  current[2 * SCREEN_WIDTH + 13] = 2; // gap 2 is merged
+  current[2 * SCREEN_WIDTH + 13] = 2; // промежуток 2 объединяется
   assert(plan_diff(previous, current, plan) == Status::OK);
   assert(plan.count == 1);
   assert(plan.runs[0].page == 2);
@@ -181,7 +181,7 @@ static void test_diff_plan(void) {
   memset(current, 0, sizeof(current));
   for(u16 x = 0; x < SCREEN_WIDTH; x += 4) current[x] = 0x55;
   assert(plan_diff(previous, current, plan) == Status::OK);
-  // Too many tiny rectangles on one page are cheaper as one full page.
+  // Множество маленьких прямоугольников на одной странице дешевле передать всей страницей.
   assert(plan.count == 1);
   assert(plan.runs[0].x == 0);
   assert(plan.runs[0].width == SCREEN_WIDTH);
@@ -214,7 +214,7 @@ static void test_rect_payload(void) {
          Status::INVALID_RECT);
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   static_assert(FRAME_BYTES == 1536, "unexpected framebuffer size");

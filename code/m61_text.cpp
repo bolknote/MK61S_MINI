@@ -1,6 +1,7 @@
 #include "m61_text.hpp"
 
 #include "bounded_string.hpp"
+#include "mk61emu_core.h"
 #include "program_store.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
@@ -8,13 +9,13 @@
 #ifndef M61_TEXT_HOST_TEST
 #include "Arduino.h"
 #include "library_pmk.hpp"
-#include "mk61emu_core.h"
 #include "storage_path.hpp"
 #include "tools.hpp"
 #else
 bool OpenStoredFile(const char* args);
 void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
+u32 m61_text_host_millis(void);
 #endif
 
 #include <stdio.h>
@@ -29,11 +30,17 @@ static constexpr u8 SCRIPT_LINE_BUDGET = 8;
 static constexpr u8 READ_CACHE_SIZE = 64;
 static constexpr u8 MAX_LABELS = 64;
 static constexpr u8 MAX_LABEL_SIZE = 31;
+static constexpr u8 TRAP_ADDRESS_COUNT = (u8) core_61::MAX_PROGRAM_STEP;
+static constexpr u8 TRAP_BITMAP_SIZE =
+    (u8) ((core_61::MAX_PROGRAM_STEP + 7U) / 8U);
+static constexpr u8 INVALID_TRAP_TARGET = 0xFF;
+static constexpr u8 RETURN_STACK_DEPTH = SCRIPT_STACK_DEPTH + 1;
 
 enum class RunnerState : u8 {
   IDLE,
   EXECUTING,
-  WAIT_RUN_STOP
+  WAIT_RUN_STOP,
+  WAIT_TIME
 };
 
 enum class ScriptSource : u8 {
@@ -48,6 +55,17 @@ struct ScriptFrame {
   u16 len;
   u16 pos;
   u16 line;
+  u8 active_traps[TRAP_BITMAP_SIZE];
+};
+
+enum class ReturnKind : u8 {
+  SCRIPT,
+  TRAP
+};
+
+struct ReturnFrame {
+  ReturnKind kind;
+  ScriptFrame script;
 };
 
 struct LabelEntry {
@@ -65,13 +83,27 @@ static u16 script_id = program_store::INVALID_ID;
 static u16 script_len = 0;
 static u16 script_pos = 0;
 static u16 script_line = 1;
-static ScriptFrame script_stack[SCRIPT_STACK_DEPTH];
+static u8 active_traps[TRAP_BITMAP_SIZE] = {};
+static ReturnFrame return_stack[RETURN_STACK_DEPTH];
+static u8 return_stack_depth = 0;
 static u8 script_stack_depth = 0;
 static u8 read_cache[READ_CACHE_SIZE];
 static u16 read_cache_start = 0;
 static u8 read_cache_len = 0;
 static LabelEntry labels[MAX_LABELS];
 static u8 label_count = 0;
+static u8 trap_targets[TRAP_ADDRESS_COUNT];
+static bool trap_pending = false;
+static u8 pending_trap_address = 0;
+static u8 pending_trap_target = INVALID_TRAP_TARGET;
+static bool trap_context_valid = false;
+static core_61::ContextBuffer trap_context = {};
+static u8 suspended_trap_address = 0;
+static bool bypass_trap_once = false;
+static u8 bypass_trap_address = 0;
+static bool boundary_hook_installed = false;
+static bool display_claimed = false;
+static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
@@ -92,6 +124,18 @@ static const char* skip_spaces(const char* p) {
 static bool token_ends(const char* p) {
   p = skip_spaces(p);
   return is_line_end(*p);
+}
+
+static u32 runner_millis(void) {
+#ifndef M61_TEXT_HOST_TEST
+  return millis();
+#else
+  return m61_text_host_millis();
+#endif
+}
+
+static bool time_reached(u32 now, u32 deadline) {
+  return (i32) (now - deadline) >= 0;
 }
 
 static void clear_error(void) {
@@ -118,6 +162,8 @@ static void clear_current_script(void) {
   script_line = 1;
   invalidate_read_cache();
   label_count = 0;
+  memset(active_traps, 0, sizeof(active_traps));
+  memset(trap_targets, INVALID_TRAP_TARGET, sizeof(trap_targets));
 }
 
 #ifdef M61_TEXT_HOST_TEST
@@ -143,6 +189,7 @@ static void store_current_frame(ScriptFrame& frame) {
   frame.len = script_len;
   frame.pos = script_pos;
   frame.line = script_line;
+  memcpy(frame.active_traps, active_traps, sizeof(active_traps));
 }
 
 static void restore_frame(const ScriptFrame& frame) {
@@ -152,6 +199,7 @@ static void restore_frame(const ScriptFrame& frame) {
   script_len = frame.len;
   script_pos = frame.pos;
   script_line = frame.line;
+  memcpy(active_traps, frame.active_traps, sizeof(active_traps));
   invalidate_read_cache();
 }
 
@@ -166,6 +214,7 @@ static bool make_store_frame(u16 id, ScriptFrame& frame) {
   frame.len = entry.data_len;
   frame.pos = 0;
   frame.line = 1;
+  memset(frame.active_traps, 0, sizeof(frame.active_traps));
   return true;
 }
 
@@ -222,9 +271,16 @@ static bool make_store_frame(const char* name, ScriptFrame& frame) {
 #endif
 }
 
-static bool push_current_script(void) {
-  if(script_stack_depth >= SCRIPT_STACK_DEPTH || script_source == ScriptSource::NONE) return false;
-  store_current_frame(script_stack[script_stack_depth++]);
+static bool push_current_frame(ReturnKind kind) {
+  if(return_stack_depth >= RETURN_STACK_DEPTH ||
+     script_source == ScriptSource::NONE) return false;
+  if(kind == ReturnKind::SCRIPT && script_stack_depth >= SCRIPT_STACK_DEPTH) {
+    return false;
+  }
+  ReturnFrame& frame = return_stack[return_stack_depth++];
+  frame.kind = kind;
+  store_current_frame(frame.script);
+  if(kind == ReturnKind::SCRIPT) script_stack_depth++;
   return true;
 }
 
@@ -232,9 +288,42 @@ bool active(void) {
   return runner_state != RunnerState::IDLE;
 }
 
+bool calculator_suspended(void) {
+  return trap_pending || trap_context_valid;
+}
+
+bool display_owned(void) {
+  return active() && display_claimed;
+}
+
+void claim_display(void) {
+  if(active()) display_claimed = true;
+}
+
+static void clear_trap_runtime(bool restore_calculator) {
+  if(restore_calculator && trap_context_valid) {
+    (void) core_61::restore_context(trap_context);
+  }
+  trap_pending = false;
+  pending_trap_address = 0;
+  pending_trap_target = INVALID_TRAP_TARGET;
+  trap_context_valid = false;
+  suspended_trap_address = 0;
+  bypass_trap_once = false;
+  bypass_trap_address = 0;
+}
+
 static void stop_runner(void) {
+  clear_trap_runtime(true);
+  if(boundary_hook_installed) {
+    core_61::clear_mk61_program_boundary_hook();
+    boundary_hook_installed = false;
+  }
   runner_state = RunnerState::IDLE;
+  display_claimed = false;
+  wait_until_ms = 0;
   clear_current_script();
+  return_stack_depth = 0;
   script_stack_depth = 0;
 }
 
@@ -363,6 +452,83 @@ static bool stored_label_equals(const LabelEntry& entry, const char* name, usize
   return memcmp(stored, name, len) == 0;
 }
 
+static i16 find_label_index(const char* name, usize len) {
+  const u32 hash = label_hash(name, len);
+  for(u8 i = 0; i < label_count; i++) {
+    if(labels[i].hash == hash && stored_label_equals(labels[i], name, len)) {
+      return (i16) i;
+    }
+  }
+  return -1;
+}
+
+enum class TrapParse : u8 { NONE, VALID, INVALID };
+
+struct ParsedTrap {
+  u8 address;
+  const char* label;
+  usize label_len;
+};
+
+static TrapParse parse_trap(const char* line, ParsedTrap& out) {
+  const char* p = skip_spaces(line);
+  static const char keyword[] = "trap";
+  if(strncmp(p, keyword, sizeof(keyword) - 1) != 0 ||
+     (!is_space(p[sizeof(keyword) - 1]) &&
+      !is_line_end(p[sizeof(keyword) - 1]))) {
+    return TrapParse::NONE;
+  }
+  p += sizeof(keyword) - 1;
+  if(!is_space(*p)) return TrapParse::INVALID;
+  p = skip_spaces(p);
+
+  usize address = 0;
+  usize digits = 0;
+  while(p[digits] >= '0' && p[digits] <= '9') {
+    const usize digit = (usize) (p[digits] - '0');
+    if(address > (core_61::MAX_PROGRAM_STEP - 1U - digit) / 10U) {
+      return TrapParse::INVALID;
+    }
+    address = address * 10U + digit;
+    digits++;
+  }
+  if(digits == 0 || !is_space(p[digits])) return TrapParse::INVALID;
+  p = skip_spaces(p + digits);
+
+  static const char run_keyword[] = "run";
+  if(strncmp(p, run_keyword, sizeof(run_keyword) - 1) != 0 ||
+     !is_space(p[sizeof(run_keyword) - 1])) {
+    return TrapParse::INVALID;
+  }
+  p = skip_spaces(p + sizeof(run_keyword) - 1);
+  if(*p != ':') return TrapParse::INVALID;
+  p = skip_spaces(p + 1);
+
+  usize label_len = 0;
+  while(!is_space(p[label_len]) && !is_line_end(p[label_len])) label_len++;
+  if(label_len == 0 || label_len > MAX_LABEL_SIZE ||
+     !token_ends(p + label_len)) {
+    return TrapParse::INVALID;
+  }
+
+  out.address = (u8) address;
+  out.label = p;
+  out.label_len = label_len;
+  return TrapParse::VALID;
+}
+
+static void set_trap_active(u8 address, bool active) {
+  const u8 mask = (u8) (1U << (address & 7U));
+  if(active) active_traps[address >> 3] |= mask;
+  else active_traps[address >> 3] &= (u8) ~mask;
+}
+
+static bool trap_is_active(u8 address) {
+  return address < TRAP_ADDRESS_COUNT &&
+         (active_traps[address >> 3] &
+          (u8) (1U << (address & 7U))) != 0;
+}
+
 static bool build_label_index(const char*& error_message, u16& error_line) {
   const u16 resume_pos = script_pos;
   const u16 resume_line = script_line;
@@ -416,38 +582,115 @@ static bool build_label_index(const char*& error_message, u16& error_line) {
   return true;
 }
 
+static bool build_trap_index(const char*& error_message, u16& error_line) {
+  const u16 resume_pos = script_pos;
+  const u16 resume_line = script_line;
+  script_pos = 0;
+  script_line = 1;
+  memset(trap_targets, INVALID_TRAP_TARGET, sizeof(trap_targets));
+  invalidate_read_cache();
+
+  char line[MAX_LINE_SIZE + 1];
+  while(script_pos < script_len) {
+    const u16 line_number = script_line;
+    if(!read_next_line(line, sizeof(line))) {
+      error_message = "cannot read script or line is too long";
+      error_line = line_number;
+      return false;
+    }
+
+    ParsedTrap parsed = {};
+    const TrapParse result = parse_trap(line, parsed);
+    if(result == TrapParse::NONE) continue;
+    if(result == TrapParse::INVALID) {
+      error_message = "invalid trap (use: trap <0..111> run :label)";
+      error_line = line_number;
+      return false;
+    }
+    if(trap_targets[parsed.address] != INVALID_TRAP_TARGET) {
+      error_message = "duplicate trap address";
+      error_line = line_number;
+      return false;
+    }
+    const i16 target = find_label_index(parsed.label, parsed.label_len);
+    if(target < 0) {
+      error_message = "trap label not found";
+      error_line = line_number;
+      return false;
+    }
+    trap_targets[parsed.address] = (u8) target;
+  }
+
+  script_pos = resume_pos;
+  script_line = resume_line;
+  invalidate_read_cache();
+  return true;
+}
+
 static bool activate_frame(const ScriptFrame& frame, const char*& error_message, u16& error_line) {
   restore_frame(frame);
-  return build_label_index(error_message, error_line);
+  return build_label_index(error_message, error_line) &&
+         build_trap_index(error_message, error_line);
+}
+
+static bool restore_return_frame(const ReturnFrame& returned) {
+  const char* error_message = NULL;
+  u16 error_line = 0;
+  if(!activate_frame(returned.script, error_message, error_line)) {
+    fail_script(error_message, error_line);
+    return false;
+  }
+  terminal_script::reset();
+  return true;
+}
+
+static bool return_from_script(void) {
+  if(return_stack_depth == 0) {
+    stop_runner();
+    return true;
+  }
+
+  const ReturnFrame returned = return_stack[--return_stack_depth];
+  if(returned.kind == ReturnKind::SCRIPT) {
+    if(script_stack_depth > 0) script_stack_depth--;
+    if(!restore_return_frame(returned)) return false;
+    runner_state = RunnerState::EXECUTING;
+    return true;
+  }
+
+  if(!trap_context_valid || !core_61::restore_context(trap_context)) {
+    fail_script("cannot restore calculator trap context", script_line);
+    return false;
+  }
+  trap_context_valid = false;
+  bypass_trap_once = true;
+  bypass_trap_address = suspended_trap_address;
+  suspended_trap_address = 0;
+  if(!restore_return_frame(returned)) return false;
+  runner_state = RunnerState::WAIT_RUN_STOP;
+  return true;
 }
 
 static void finish_script(void) {
-  if(script_stack_depth > 0) {
-    const ScriptFrame parent = script_stack[--script_stack_depth];
-    const char* error_message = NULL;
-    u16 error_line = 0;
-    if(!activate_frame(parent, error_message, error_line)) {
-      fail_script(error_message, error_line);
-      return;
-    }
-    terminal_script::reset();
-    runner_state = RunnerState::EXECUTING;
+  if(return_stack_depth > 0 &&
+     return_stack[return_stack_depth - 1].kind == ReturnKind::TRAP) {
+    fail_script("trap handler reached end of script without ret", script_line);
     return;
   }
-
-  runner_state = RunnerState::IDLE;
-  clear_current_script();
+  (void) return_from_script();
 }
 
 static bool open_store_script(const char* name) {
   ScriptFrame child;
   if(!make_store_frame(name, child)) return false;
-  if(!push_current_script()) return false;
+  if(!push_current_frame(ReturnKind::SCRIPT)) return false;
 
   const char* error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(child, error_message, error_line)) {
-    restore_frame(script_stack[--script_stack_depth]);
+    const ReturnFrame parent = return_stack[--return_stack_depth];
+    if(script_stack_depth > 0) script_stack_depth--;
+    restore_frame(parent.script);
     return false;
   }
   terminal_script::reset();
@@ -459,12 +702,14 @@ static bool open_store_script(const char* name) {
 static bool open_store_script(u16 id) {
   ScriptFrame child;
   if(!make_store_frame(id, child)) return false;
-  if(!push_current_script()) return false;
+  if(!push_current_frame(ReturnKind::SCRIPT)) return false;
 
   const char* error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(child, error_message, error_line)) {
-    restore_frame(script_stack[--script_stack_depth]);
+    const ReturnFrame parent = return_stack[--return_stack_depth];
+    if(script_stack_depth > 0) script_stack_depth--;
+    restore_frame(parent.script);
     return false;
   }
   terminal_script::reset();
@@ -475,9 +720,17 @@ static bool open_store_script(u16 id) {
 
 // Запуск загруженной программы прямо на ядре, ожидание останова — асинхронно
 // из service(). Клавиши через буфер клавиатуры терялись бы при выходе из меню.
-static void start_current_program(void) {
-  hidden_start_loaded_program();
+static bool start_current_program(void) {
+  if(trap_context_valid) return false;
+  const usize steps = core_61::program_steps();
+  for(u8 address = 0; address < TRAP_ADDRESS_COUNT; address++) {
+    if(trap_is_active(address) && address >= steps) return false;
+  }
   runner_state = RunnerState::WAIT_RUN_STOP;
+  // Взводим исполнитель до последнего скрытого шага С/П: один шаг ядра может
+  // дойти до первого кода программы, особенно в турбо-сборках.
+  hidden_start_loaded_program();
+  return true;
 }
 
 // "load N" внутри сценария: слот выполняется как вложенный скрипт с возвратом
@@ -505,17 +758,63 @@ static bool goto_label(const char* args) {
   while(!is_line_end(args[label_len]) && !is_space(args[label_len])) label_len++;
   if(label_len == 0 || label_len > MAX_LABEL_SIZE || !token_ends(args + label_len)) return false;
 
-  const u32 hash = label_hash(args, label_len);
-  for(u8 i = 0; i < label_count; i++) {
-    const LabelEntry& entry = labels[i];
-    if(entry.hash == hash && stored_label_equals(entry, args, label_len)) {
-      script_pos = entry.target_pos;
-      script_line = entry.target_line;
-      invalidate_read_cache();
-      return true;
-    }
+  const i16 target = find_label_index(args, label_len);
+  if(target < 0) return false;
+  const LabelEntry& entry = labels[target];
+  script_pos = entry.target_pos;
+  script_line = entry.target_line;
+  invalidate_read_cache();
+  return true;
+}
+
+static bool program_boundary_hook(
+    const core_61::Mk61ProgramBoundaryContext& context, void*) {
+  if(runner_state != RunnerState::WAIT_RUN_STOP || !core_61::is_RUN()) {
+    return false;
   }
-  return false;
+
+  if(bypass_trap_once) {
+    const bool bypass = context.address == bypass_trap_address;
+    bypass_trap_once = false;
+    if(bypass) return false;
+  }
+
+  if(!trap_is_active(context.address)) return false;
+  const u8 target = trap_targets[context.address];
+  if(target == INVALID_TRAP_TARGET || target >= label_count) return false;
+  trap_pending = true;
+  pending_trap_address = context.address;
+  pending_trap_target = target;
+  return true;
+}
+
+static bool enter_pending_trap(void) {
+  if(!trap_pending || pending_trap_target >= label_count) return false;
+  const u8 address = pending_trap_address;
+  const u8 target = pending_trap_target;
+
+  if(!push_current_frame(ReturnKind::TRAP)) {
+    line_error_message = "trap return stack is full";
+    return false;
+  }
+  if(!core_61::save_context(trap_context)) {
+    return_stack_depth--;
+    line_error_message = "cannot save calculator trap context";
+    return false;
+  }
+
+  trap_pending = false;
+  pending_trap_address = 0;
+  pending_trap_target = INVALID_TRAP_TARGET;
+  trap_context_valid = true;
+  suspended_trap_address = address;
+
+  const LabelEntry& entry = labels[target];
+  script_pos = entry.target_pos;
+  script_line = entry.target_line;
+  invalidate_read_cache();
+  runner_state = RunnerState::EXECUTING;
+  return true;
 }
 
 static bool open_referenced_file(const char* path) {
@@ -553,13 +852,28 @@ static bool execute_script_line(const char* raw_line) {
   if(is_line_end(*line)) return true;
   if(*line == ':') return true; // Метка — точка перехода, сама по себе ничего не делает
 
-  const terminal_protocol::Result result = terminal_script::execute(line);
+  ParsedTrap parsed_trap = {};
+  const TrapParse trap_result = parse_trap(line, parsed_trap);
+  if(trap_result == TrapParse::VALID) {
+    set_trap_active(parsed_trap.address, true);
+    return true;
+  }
+  if(trap_result == TrapParse::INVALID) {
+    line_error_message = "invalid trap (use: trap <0..111> run :label)";
+    return false;
+  }
+
+  const terminal_protocol::Result result =
+      terminal_script::execute(line, trap_context_valid);
   switch(result.kind) {
     case terminal_protocol::ResultKind::OK:
       return true;
     case terminal_protocol::ResultKind::RUN_PROGRAM:
-      start_current_program();
-      return true;
+      if(start_current_program()) return true;
+      line_error_message = trap_context_valid
+          ? "cannot run calculator from a trap handler"
+          : "active trap address is outside current program memory";
+      return false;
     case terminal_protocol::ResultKind::OPEN_FILE:
       if(open_referenced_file(result.args)) return true;
       line_error_message = "cannot open referenced file";
@@ -572,6 +886,16 @@ static bool execute_script_line(const char* raw_line) {
       if(goto_label(result.args)) return true;
       line_error_message = "label not found or invalid";
       return false;
+    case terminal_protocol::ResultKind::WAIT:
+      if(result.key <= 0 || result.key > 60000) {
+        line_error_message = "invalid wait duration";
+        return false;
+      }
+      wait_until_ms = runner_millis() + (u32) result.key;
+      runner_state = RunnerState::WAIT_TIME;
+      return true;
+    case terminal_protocol::ResultKind::RETURN_SCRIPT:
+      return return_from_script();
     case terminal_protocol::ResultKind::ERROR:
     case terminal_protocol::ResultKind::KEY:
       line_error_message = "terminal command failed";
@@ -581,6 +905,21 @@ static bool execute_script_line(const char* raw_line) {
 }
 
 void service(void) {
+  if(runner_state == RunnerState::WAIT_TIME) {
+    if(!time_reached(runner_millis(), wait_until_ms)) return;
+    wait_until_ms = 0;
+    runner_state = RunnerState::EXECUTING;
+  }
+
+  if(trap_pending) {
+    const u16 trap_line = script_line;
+    if(!enter_pending_trap()) {
+      fail_script(line_error_message == NULL ? "cannot enter trap handler" : line_error_message,
+                  trap_line);
+      return;
+    }
+  }
+
   if(runner_state == RunnerState::WAIT_RUN_STOP) {
     if(!core_61::is_CALC()) return;
     // Программа МК остановилась: управление возвращается к следующей строке сценария.
@@ -621,7 +960,16 @@ static bool load_frame(const ScriptFrame& frame) {
     fail_script(error_message, error_line);
     return false;
   }
+  return_stack_depth = 0;
   script_stack_depth = 0;
+  display_claimed = false;
+  wait_until_ms = 0;
+  clear_trap_runtime(false);
+  if(!core_61::set_mk61_program_boundary_hook(program_boundary_hook, NULL)) {
+    fail_script("calculator boundary hook is unavailable", 0);
+    return false;
+  }
+  boundary_hook_installed = true;
   terminal_script::reset();
   MK61Emu_ClearCodePage();
   runner_state = RunnerState::EXECUTING;

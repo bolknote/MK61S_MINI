@@ -47,6 +47,6 @@ Status decode_viewport(const u8* data, usize size, const Info& info,
 usize viewport_bytes(u16 width, u16 height, Layout layout);
 const char* status_text(Status status);
 
-} // namespace wbmp
+} // пространство имён wbmp
 
 #endif

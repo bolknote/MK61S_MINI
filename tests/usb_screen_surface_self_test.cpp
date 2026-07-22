@@ -51,7 +51,7 @@ static void test_text_unicode_and_cursor(void) {
   surface.begin();
   surface.setCursor(0, 0);
   surface.writeByte('A');
-  surface.writeCodepoint(0x0411); // Cyrillic Be.
+  surface.writeCodepoint(0x0411); // Кириллическая «Б».
   surface.flush(0);
   assert(ink(surface) > 10);
   assert(pixel(surface, 5, 0) || pixel(surface, 6, 0) ||
@@ -194,7 +194,7 @@ static void test_update_batching(void) {
   assert(surface.revision() == before + 1);
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_profiles();

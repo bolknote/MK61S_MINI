@@ -22,7 +22,7 @@ void blink_stop(void) {}
 bool pattern_start(const PatternStep*, usize) { return true; }
 void control(void) {}
 void control(t_time_ms) {}
-} // namespace led
+} // пространство имён led
 
 #if MK61_ANY_LOADABLE_MODULE
 namespace module_test_backend {
@@ -728,8 +728,8 @@ static void test_identical_data_writes_do_not_restage(void) {
   const u32 lba = cluster_lba(fs, 200);
   u8 data[512] = {};
 
-  // An unallocated data cluster renders as zero and needs no physical log
-  // record when the host redundantly zero-fills it.
+  // Нераспределённый кластер данных читается как ноль и не требует физической
+  // записи в журнале, когда хост избыточно заполняет его нулями.
   assert(virtual_fat::write_sector(lba, data));
   assert(program_store::vfat_stage_count() == 0);
 
@@ -759,14 +759,14 @@ static void test_write_cache_coalesces_and_evicts_lru(void) {
   assert(virtual_fat::read_sector(first_lba, readback));
   assert(memcmp(readback, data, sizeof(data)) == 0);
 
-  // Returning to the persistent zero block cancels the dirty write entirely.
+  // Возврат к постоянному нулевому блоку полностью отменяет грязную запись.
   memset(data, 0, sizeof(data));
   assert(virtual_fat::write_cached_sectors(first_lba, data, 1));
   assert(virtual_fat::dirty_cache_sectors() == 0);
   assert(program_store::vfat_stage_count() == 0);
 
-  // Fill every slot with a distinct dirty sector. The next miss persists only
-  // the LRU sector; the other writes stay coalescible in RAM until sync.
+  // Заполняем каждую ячейку отдельным грязным сектором. Следующий промах сохраняет
+  // только сектор LRU; остальные записи до синхронизации можно объединять в ОЗУ.
   const u8 capacity = virtual_fat::write_cache_capacity();
   for(u8 i = 0; i < capacity; i++) {
     memset(data, 0, sizeof(data));
@@ -793,8 +793,8 @@ static void test_fast_usb_cache_is_atomic_and_defers_spi(void) {
   u8 zero[512] = {};
   u8 readback[512] = {};
 
-  // The interrupt-safe path does not read even a zero-filled base sector.
-  // Sync performs the postponed comparison and avoids a staging write.
+  // Безопасный для прерываний путь не читает даже заполненный нулями базовый сектор.
+  // Синхронизация выполняет отложенное сравнение и избегает промежуточной записи.
   assert(virtual_fat::try_write_cached_sectors(first_lba, zero, 1));
   assert(virtual_fat::dirty_cache_sectors() == 1);
   assert(program_store::vfat_stage_count() == 0);
@@ -817,9 +817,9 @@ static void test_fast_usb_cache_is_atomic_and_defers_spi(void) {
   assert(virtual_fat::dirty_cache_sectors() == capacity);
   assert(program_store::vfat_stage_count() == 0);
 
-  // A full cache cannot accept another key synchronously. Failure leaves the
-  // entire packet untouched, after which the normal path may persist one LRU
-  // victim and continue without losing the BOT packet.
+  // Полный кэш не может синхронно принять ещё один ключ. При отказе весь пакет
+  // остаётся нетронутым, после чего обычный путь может сохранить одну жертву LRU
+  // и продолжить без потери пакета BOT.
   u8 extra[512] = {0xA5};
   assert(!virtual_fat::try_write_cached_sectors(packet_lba + capacity,
                                                 extra, 1));
@@ -828,7 +828,7 @@ static void test_fast_usb_cache_is_atomic_and_defers_spi(void) {
   assert(virtual_fat::read_sector(packet_lba + capacity - 1, readback));
   assert(readback[0] == capacity);
 
-  // Rewriting a resident key never needs SPI and remains on the fast path.
+  // Перезапись находящегося в кэше ключа не требует SPI и остаётся на быстром пути.
   u8 replacement[512] = {0x5A};
   assert(virtual_fat::try_write_cached_sectors(packet_lba + capacity - 1,
                                                replacement, 1));
@@ -843,8 +843,8 @@ static void test_fast_usb_cache_is_atomic_and_defers_spi(void) {
   assert(virtual_fat::dirty_cache_sectors() == 0);
   assert(program_store::vfat_stage_count() == (u16) capacity + 1);
 
-  // Preflight also reserves a clean key addressed later in the same packet;
-  // it must not mutate that sector before deciding to defer the whole packet.
+  // Предварительная проверка также резервирует чистый ключ, адресованный позднее
+  // в том же пакете; она не должна менять этот сектор до решения отложить весь пакет.
   fresh();
   const Layout reserved_fs = layout();
   const u32 reserved_lba = cluster_lba(reserved_fs, 700);
@@ -1065,7 +1065,7 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
   assert(program_store::vfat_stage_discard_all());
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
 #if MK61_ANY_LOADABLE_MODULE

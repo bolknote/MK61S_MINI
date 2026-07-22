@@ -55,7 +55,7 @@ static bool source_dark(const u8* pixels, const Info& info, u32 x, u32 y) {
   return (value & (u8) (0x80U >> (x & 7U))) == 0;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 usize viewport_bytes(u16 width, u16 height, Layout layout) {
   if(width == 0 || height == 0) return 0;
