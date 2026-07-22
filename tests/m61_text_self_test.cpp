@@ -157,6 +157,10 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
   executed_commands++;
   executed_lines.emplace_back(line);
   executed_in_trap.push_back(trap_mode);
+  if(std::strncmp(line, "print ", 6) == 0) {
+    m61_text::claim_display();
+    return terminal_protocol::Result::ok();
+  }
   if(std::strcmp(line, "bad") == 0) return terminal_protocol::Result::error();
   if(std::strcmp(line, "run") == 0) return terminal_protocol::Result::action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
   if(std::strncmp(line, "run :", 5) == 0) {
@@ -297,6 +301,19 @@ static void test_run_waits_and_reports_later_failure(void) {
   const m61_text::Error error = require_error();
   assert(std::strcmp(error.script, "WAIT") == 0);
   assert(error.line == 2);
+}
+
+static void test_print_owns_display_until_root_script_finishes(void) {
+  reset_host();
+  add_script("DISPLAY", "print \"frame\"\nrun\nret\n");
+  assert(m61_text::load_program("DISPLAY"));
+  assert(m61_text::active());
+  assert(m61_text::display_owned());
+
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(!m61_text::active());
+  assert(!m61_text::display_owned());
 }
 
 static void test_nested_script_returns_to_parent_and_depth_is_bounded(void) {
@@ -491,6 +508,7 @@ int main(void) {
   test_indexed_loop_is_budgeted_and_uses_block_reads();
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
+  test_print_owns_display_until_root_script_finishes();
   test_nested_script_returns_to_parent_and_depth_is_bounded();
   test_explicit_id_disambiguates_directory_names();
   test_trap_saves_runs_and_restores_at_exact_address();

@@ -100,6 +100,7 @@ static u8 suspended_trap_address = 0;
 static bool bypass_trap_once = false;
 static u8 bypass_trap_address = 0;
 static bool boundary_hook_installed = false;
+static bool display_claimed = false;
 static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
@@ -276,6 +277,14 @@ bool calculator_suspended(void) {
   return trap_pending || trap_context_valid;
 }
 
+bool display_owned(void) {
+  return active() && display_claimed;
+}
+
+void claim_display(void) {
+  if(active()) display_claimed = true;
+}
+
 static void clear_trap_runtime(bool restore_calculator) {
   if(restore_calculator && trap_context_valid) {
     (void) core_61::restore_context(trap_context);
@@ -296,6 +305,7 @@ static void stop_runner(void) {
     boundary_hook_installed = false;
   }
   runner_state = RunnerState::IDLE;
+  display_claimed = false;
   clear_current_script();
   return_stack_depth = 0;
   script_stack_depth = 0;
@@ -922,6 +932,7 @@ static bool load_frame(const ScriptFrame& frame) {
   }
   return_stack_depth = 0;
   script_stack_depth = 0;
+  display_claimed = false;
   clear_trap_runtime(false);
   if(!core_61::set_mk61_program_boundary_hook(program_boundary_hook, NULL)) {
     fail_script("calculator boundary hook is unavailable", 0);

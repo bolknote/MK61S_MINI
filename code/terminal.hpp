@@ -1413,7 +1413,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return print_number_text(text, value.format, context);
     }
 
-    bool exec_print(void) {
+    bool exec_print(bool script_mode) {
       MK61Display& display = main_lcd();
       const m61_ansi::Sink sink = {
         screen_put_byte, screen_clear, &display
@@ -1427,7 +1427,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           command_args(), core_61::expanded_program_is_on(),
           print_byte, print_value, &context);
       display.setCursor(writer.cursorX(), writer.cursorY());
-      if(result.ok()) return true;
+      if(result.ok()) {
+        if(script_mode) m61_text::claim_display();
+        return true;
+      }
       Serial.print("Print error: ");
       Serial.println(m61_print::error_message(result.error));
       return false;
@@ -2176,7 +2179,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_IF:
               return exec_if(script_mode, trap_mode);
           case CMD_PRINT:
-              if(!exec_print()) {
+              if(!exec_print(script_mode)) {
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }

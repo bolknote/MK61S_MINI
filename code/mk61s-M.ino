@@ -448,9 +448,24 @@ inline void monitor_switch_angle_unit(t_time_ms now) {
 }
 
 inline void mk61_process(void) {
+  static bool m61_display_was_owned = false;
   mk61_automate();
   if(core_61::is_displayed()) {
       core_61::clear_displayed();
+      turbo_display_dirty = true;
+  }
+
+  if(m61_text::display_owned()) {
+      // A script that printed its own GUI owns the framebuffer until it
+      // finishes.  Keep running the calculator, but discard its transient
+      // indicator refreshes; trap handlers publish selected frames via print.
+      m61_display_was_owned = true;
+      turbo_display_dirty = false;
+      return;
+  }
+  if(m61_display_was_owned) {
+      m61_display_was_owned = false;
+      display_text[0] = (char) -1;
       turbo_display_dirty = true;
   }
 
