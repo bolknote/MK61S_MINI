@@ -60,7 +60,7 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 
 [Часы RTC](doc/src/MK61s-mini-RTC.md)
 
-[USB-экран 192×64 и desktop-приложение](doc/src/MK61s-mini-USB-Screen.md)
+[USB-экран 192×64 и desktop-приложение: Markdown](doc/src/MK61s-mini-USB-Screen.md) / [PDF](doc/MK61s-mini-USB-Screen.pdf)
 
 **Литературное творчество о Проекте:** - https://habr.com/ru/articles/860226/
 

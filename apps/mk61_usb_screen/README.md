@@ -10,10 +10,33 @@
 у варианта с LCD1602 приложение показывает многострочный экран 192×64 без
 ограничения в восемь CGRAM-символов.
 
+## Требования к сборке
+
+Воспроизводимая версия из CI - Flutter 3.41.9 stable с Dart 3.11.5. Перед
+сборкой проверьте toolchain:
+
+```sh
+flutter --version
+flutter doctor -v
+flutter devices
+```
+
+Дополнительные требования платформ:
+
+- macOS: Xcode, Command Line Tools и CocoaPods; deployment target 10.15;
+- Windows: Visual Studio 2022 с workload **Desktop development with C++** и
+  Windows SDK;
+- Ubuntu/Debian: `clang cmake ninja-build pkg-config libgtk-3-dev
+  libstdc++-12-dev`.
+
+Если desktop-цель отсутствует, включите её командой
+`flutter config --enable-macos-desktop`, `--enable-windows-desktop` или
+`--enable-linux-desktop`, затем снова выполните `flutter doctor -v`.
+
 ## Быстрый запуск
 
-1. Установить Flutter 3.41 или новее.
-2. В каталоге приложения получить зависимости и запустить нужную desktop-цель:
+В каталоге приложения получите закреплённые в `pubspec.lock` зависимости и
+запустите нужную desktop-цель:
 
 ```sh
 cd apps/mk61_usb_screen
@@ -45,8 +68,8 @@ flutter run -d macos
 
 Когда нижняя шторка терминала скрыта, клавиатура ПК направлена в MK61 и
 интерпретируется как физическая US-QWERTY независимо от выбранного источника
-ввода macOS. Приложение не переключает системный язык и не затрагивает другие
-программы:
+ввода macOS, Windows или Linux. Приложение не переключает системный язык и не
+затрагивает другие программы:
 
 - цифры и цифровой блок — `0`…`9`;
 - латинские `A`…`Z`; строчные буквы вводятся как прописные через штатный
@@ -57,8 +80,8 @@ flutter run -d macos
 - F1 → `K`, F2 → `F`, F3 → `USER`, F5 → `С/П`, F6 → `SAVE`, F7 → `LOAD`.
 
 `Shift` выбирает символы американской раскладки; `Command`, `Control` и
-`Option` не отправляются в устройство, чтобы системные сочетания не превращались
-в нажатия MK61.
+`Option/Alt` не отправляются в устройство, чтобы системные сочетания не
+превращались в нажатия MK61.
 
 Неподдерживаемые печатные символы игнорируются. В меню и редакторах все события
 остаются обычными клавишами матрицы, поэтому одинаково работают во всех трёх
@@ -91,6 +114,9 @@ line coding: у STM32 native USB оно не ограничивает throughput
 
 ## Release-сборка
 
+Собирать каждую desktop-цель нужно на соответствующей ОС. Из каталога
+`apps/mk61_usb_screen` выполните одну команду:
+
 ```sh
 flutter build macos --release
 flutter build windows --release
@@ -100,14 +126,68 @@ flutter build linux --release
 Результаты находятся соответственно в:
 
 - `build/macos/Build/Products/Release/mk61_usb_screen.app`;
-- `build/windows/x64/runner/Release/mk61_usb_screen.exe`;
-- `build/linux/x64/release/bundle/mk61_usb_screen`.
+- `build/windows/x64/runner/Release/`;
+- `build/linux/x64/release/bundle/`.
 
-macOS-приложение намеренно собирается без App Sandbox: прямой доступ к
-`/dev/cu.usbmodem*` нужен `libserialport`. На Linux пользователь должен иметь
-доступ к последовательному порту (обычно группа `dialout`; после добавления в
-группу требуется новый вход в систему). На Windows отдельный драйвер обычно не
-нужен для стандартного USB CDC ACM.
+На Windows и Linux распространяйте весь каталог, не только исполняемый файл:
+рядом находятся Flutter runtime, data и native-библиотека `libserialport`.
+
+### macOS
+
+```sh
+flutter build macos --release
+ditto -c -k --sequesterRsrc --keepParent \
+  build/macos/Build/Products/Release/mk61_usb_screen.app \
+  MK61-USB-Screen-macOS.zip
+```
+
+Приложение намеренно собирается без App Sandbox: прямой доступ к
+`/dev/cu.usbmodem*` нужен `libserialport`. Workflow не подписывает и не
+notarize-ит bundle; для публичного распространения эти шаги добавляются
+отдельно.
+
+### Windows
+
+```powershell
+flutter build windows --release
+Compress-Archive `
+  -Path build\windows\x64\runner\Release\* `
+  -DestinationPath MK61-USB-Screen-Windows-x64.zip
+```
+
+Для стандартного USB CDC ACM отдельный драйвер обычно не нужен.
+
+### Linux
+
+```sh
+sudo apt-get update
+sudo apt-get install -y clang cmake ninja-build pkg-config \
+  libgtk-3-dev libstdc++-12-dev
+flutter build linux --release
+tar -C build/linux/x64/release \
+  -czf MK61-USB-Screen-Linux-x64.tar.gz bundle
+```
+
+Пользователь должен иметь доступ к последовательному порту, обычно через
+группу `dialout`:
+
+```sh
+sudo usermod -aG dialout "$USER"
+```
+
+После добавления в группу требуется новый вход в систему.
+
+### Чистая пересборка
+
+После смены Flutter или при повреждённом native cache:
+
+```sh
+flutter clean
+flutter pub get
+flutter build macos --release
+```
+
+Последнюю строку замените на нужную платформу.
 
 ## Проверка
 
@@ -118,9 +198,10 @@ flutter test
 
 В набор входит сквозной fake-device тест настоящего `DeviceController`: serial
 fragmentation, handshake, terminal/video multiplex, атомарный кадр, клавиши,
-heartbeat, CRC/sequence recovery и повторное подключение после сброса сессии. GitHub Actions workflow
-`.github/workflows/usb-screen-desktop.yml` собирает готовые архивы отдельно на
-macOS, Windows и Linux.
+heartbeat, CRC/sequence recovery и повторное подключение после сброса сессии.
+GitHub Actions workflow `.github/workflows/usb-screen-desktop.yml` сначала
+выполняет анализ и тесты, затем нативно собирает готовые архивы на macOS,
+Windows x64 и Linux x64. Artifacts хранятся 14 дней.
 
 Описание wire protocol и состояний firmware находится в
 [`../../doc/src/MK61s-mini-USB-Screen.md`](../../doc/src/MK61s-mini-USB-Screen.md).

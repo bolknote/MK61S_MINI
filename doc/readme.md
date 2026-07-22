@@ -15,6 +15,7 @@
 - `MK61s-mini-FOCAL.pdf` - черновик инструкции по FOCAL.
 - `MK61s-mini-TinyBASIC.pdf` - черновик инструкции по TinyBASIC.
 - `MK61s-mini-WBMP.pdf` - формат и просмотр монохромных изображений WBMP.
+- `MK61s-mini-USB-Screen.pdf` - полное руководство по USB-экрану, desktop-клиенту и wire protocol.
 - `build_md_pdf.py` - воспроизводимая пакетная сборка PDF.
 
 Сборка из корня репозитория:
