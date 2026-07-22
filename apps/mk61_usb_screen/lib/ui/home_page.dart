@@ -534,7 +534,7 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
           ),
           const SizedBox(height: 8),
           Text(
-            'ПК: фиксированная EN/QWERTY независимо от раскладки macOS · '
+            'ПК: фиксированная EN/QWERTY независимо от системной раскладки · '
             'A–Z, 0–9, знаки, пробел, ←↑↓→, Backspace, Enter, Esc · '
             'F1=K, F2=F, F3=USER, F5=С/П, F6=SAVE, F7=LOAD',
             style: Theme.of(

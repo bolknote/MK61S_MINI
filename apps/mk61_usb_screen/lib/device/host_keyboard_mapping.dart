@@ -170,7 +170,7 @@ abstract final class HostKeyboardMapping {
       actionsForCharacter(character) != null;
 
   /// Returns the US-QWERTY character printed on a physical key. This bypasses
-  /// the active macOS input source while the PC keyboard controls the device.
+  /// the active OS input source while the PC keyboard controls the device.
   /// Unsupported English punctuation is still returned so callers can consume
   /// it instead of accidentally falling back to an IME-produced character.
   static String? englishCharacterForPhysicalKey(
