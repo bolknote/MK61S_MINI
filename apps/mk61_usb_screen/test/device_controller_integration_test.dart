@@ -136,6 +136,8 @@ Future<DeviceController> _openController(_FakeSerialTransport transport) async {
   expect(transport.openCount, 1);
   expect(transport.openedBaudRate, 115200);
   expect(controller.state, DeviceConnectionState.waitingForOffer);
+  expect(controller.stateLabel, 'Включение USB Screen');
+  expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');
   return controller;
 }
 
@@ -175,7 +177,7 @@ void main() {
 
       expect(controller.terminalAvailable, isTrue);
       expect(controller.sendTerminalLine('ver'), isTrue);
-      expect(utf8.decode(connection.hostTerminalBytes), 'ver\r');
+      expect(utf8.decode(connection.hostTerminalBytes), 'uscreen\rver\r');
       connection.sendDeviceTerminal('ver\r\nMK61> ');
       expect(controller.terminalText, contains('ver'));
       expect(controller.terminalText, contains('MK61> '));
@@ -289,22 +291,40 @@ void main() {
   );
 
   test(
-    'device DETACH closes cleanly and leaves auto-connect scanning',
+    'device DETACH stops auto-activation and allows an explicit restart',
     () async {
       final transport = _FakeSerialTransport();
       final controller = await _openController(transport);
       addTearDown(controller.dispose);
       final connection = transport.connection;
       _attach(controller, connection);
+      final terminalBytesBeforeDetach = connection.hostTerminalBytes.length;
 
       connection.sendDevicePacket(MkMessage.detach);
-      await Future<void>.delayed(Duration.zero);
 
-      expect(controller.state, DeviceConnectionState.scanning);
+      expect(controller.state, DeviceConnectionState.waitingForOffer);
       expect(controller.attached, isFalse);
-      expect(controller.hasOpenPort, isFalse);
+      expect(controller.hasOpenPort, isTrue);
       expect(controller.lastError, isNull);
-      expect(connection.closed, isTrue);
+      expect(connection.closed, isFalse);
+      expect(controller.canRequestUsbScreen, isTrue);
+      expect(
+        connection.hostTerminalBytes,
+        hasLength(terminalBytesBeforeDetach),
+      );
+
+      expect(controller.requestUsbScreen(), isTrue);
+      expect(controller.stateLabel, 'Включение USB Screen');
+      expect(controller.canRequestUsbScreen, isFalse);
+      expect(
+        utf8.decode(
+          connection.hostTerminalBytes.sublist(terminalBytesBeforeDetach),
+        ),
+        'uscreen\r',
+      );
+
+      _attach(controller, connection);
+      expect(controller.state, DeviceConnectionState.attached);
     },
   );
 

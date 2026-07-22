@@ -29,6 +29,9 @@ class DeviceController extends ChangeNotifier {
   static const _fallbackHeartbeatTimeout = Duration(milliseconds: 3500);
   static const _terminalLogLimit = 64 * 1024;
   static const _terminalCommandByteLimit = 238;
+  static final Uint8List _activateUsbScreenCommand = Uint8List.fromList(
+    utf8.encode('uscreen\r'),
+  );
 
   final MkStreamParser _parser = MkStreamParser();
   final FrameAssembler _frames = FrameAssembler();
@@ -50,6 +53,8 @@ class DeviceController extends ChangeNotifier {
   bool _opening = false;
   bool _closing = false;
   bool _disposed = false;
+  bool _allowAutomaticActivation = true;
+  bool _activationRequested = false;
 
   List<String> _ports = const [];
   String? _selectedPort;
@@ -74,6 +79,10 @@ class DeviceController extends ChangeNotifier {
   bool get autoConnect => _autoConnect;
   bool get attached => _state == DeviceConnectionState.attached;
   bool get hasOpenPort => _connection != null;
+  bool get canRequestUsbScreen =>
+      _connection != null &&
+      _state == DeviceConnectionState.waitingForOffer &&
+      !_activationRequested;
   int get rxBytes => _rxBytes;
   int get txBytes => _txBytes;
   int get sequenceGaps => _sequenceGaps;
@@ -101,7 +110,8 @@ class DeviceController extends ChangeNotifier {
     DeviceConnectionState.disconnected => 'Отключено',
     DeviceConnectionState.scanning => 'Поиск устройства',
     DeviceConnectionState.opening => 'Открытие порта',
-    DeviceConnectionState.waitingForOffer => 'Ожидание USB Screen',
+    DeviceConnectionState.waitingForOffer =>
+      _activationRequested ? 'Включение USB Screen' : 'Ожидание USB Screen',
     DeviceConnectionState.attaching => 'Переключение экрана',
     DeviceConnectionState.attached => 'USB Screen подключён',
     DeviceConnectionState.error => 'Ошибка подключения',
@@ -155,12 +165,14 @@ class DeviceController extends ChangeNotifier {
       return;
     }
     _selectedPort = value;
+    _allowAutomaticActivation = true;
     _notify();
   }
 
   void setAutoConnect(bool value) {
     if (_autoConnect == value) return;
     _autoConnect = value;
+    if (value) _allowAutomaticActivation = true;
     if (value && _connection == null) {
       _state = DeviceConnectionState.scanning;
       unawaited(refreshPorts());
@@ -171,8 +183,35 @@ class DeviceController extends ChangeNotifier {
   Future<void> connectSelected() async {
     final name = _selectedPort;
     if (name == null || _opening) return;
+    _allowAutomaticActivation = true;
     await _closePort(sendDetach: attached);
     await _open(name, automatic: false);
+  }
+
+  /// Starts USB Screen on an already-open device after an explicit device-side
+  /// exit. Initial connections call the same command automatically.
+  bool requestUsbScreen() {
+    if (!canRequestUsbScreen) return false;
+    _allowAutomaticActivation = true;
+    _activationRequested = true;
+    _lastError = null;
+    _probeTimer?.cancel();
+    _probeTimer = Timer(_probeTimeout, () {
+      if (_state == DeviceConnectionState.waitingForOffer &&
+          _activationRequested) {
+        _activationRequested = false;
+        _lastError = 'Устройство не подтвердило запуск USB Screen';
+        _notify();
+      }
+    });
+    if (!_writeBytes(_activateUsbScreenCommand)) {
+      _probeTimer?.cancel();
+      _probeTimer = null;
+      _activationRequested = false;
+      return false;
+    }
+    _notify();
+    return true;
   }
 
   Future<void> disconnect({bool userInitiated = true}) async {
@@ -220,13 +259,20 @@ class DeviceController extends ChangeNotifier {
       _hostSequence = 0;
       _capabilities = null;
       _pressedKeys.clear();
+      _activationRequested = false;
       _state = DeviceConnectionState.waitingForOffer;
-      _notify();
       _probeTimer = Timer(_probeTimeout, () {
         if (_state == DeviceConnectionState.waitingForOffer) {
           unawaited(_probeExpired(automatic));
         }
       });
+      if (_allowAutomaticActivation) {
+        _activationRequested = true;
+        if (!_writeBytes(_activateUsbScreenCommand)) {
+          _activationRequested = false;
+        }
+      }
+      _notify();
     } catch (error) {
       if (candidate != null) {
         if (identical(candidate, _connection)) _connection = null;
@@ -301,7 +347,7 @@ class DeviceController extends ChangeNotifier {
         // Receipt itself refreshes _lastPacketAt.
         return;
       case MkMessage.detach:
-        unawaited(_deviceDetached());
+        _deviceDetached();
         return;
     }
   }
@@ -332,6 +378,7 @@ class DeviceController extends ChangeNotifier {
         _displayRevision++;
       }
       _capabilities = offer;
+      _activationRequested = false;
       _state = DeviceConnectionState.attaching;
       _probeTimer?.cancel();
       _send(MkMessage.attach);
@@ -529,6 +576,9 @@ class DeviceController extends ChangeNotifier {
   Future<void> _connectionFailed(String message) async {
     if (_connection == null || _disposed || _closing) return;
     _lastError = message;
+    // A physical reconnect is a new user-visible connection and may activate
+    // USB Screen again even if the previous live session was exited manually.
+    _allowAutomaticActivation = true;
     await _closePort(sendDetach: false);
     _state = _autoConnect
         ? DeviceConnectionState.scanning
@@ -536,13 +586,22 @@ class DeviceController extends ChangeNotifier {
     _notify();
   }
 
-  Future<void> _deviceDetached() async {
+  void _deviceDetached() {
     if (_connection == null || _disposed || _closing) return;
-    await _closePort(sendDetach: false);
+    _probeTimer?.cancel();
+    _probeTimer = null;
+    _allowAutomaticActivation = false;
+    _activationRequested = false;
+    _pressedKeys.clear();
+    _capabilities = null;
+    _lastDeviceSequence = null;
+    _lastPacketAt = DateTime.now();
+    _lastFrameAt = null;
+    _framesPerSecond = 0;
+    _frames.reset();
+    _displayRevision++;
     _lastError = null;
-    _state = _autoConnect
-        ? DeviceConnectionState.scanning
-        : DeviceConnectionState.disconnected;
+    _state = DeviceConnectionState.waitingForOffer;
     _notify();
   }
 
@@ -572,6 +631,7 @@ class DeviceController extends ChangeNotifier {
       connection?.close();
       _connectedPort = null;
       _capabilities = null;
+      _activationRequested = false;
       _lastDeviceSequence = null;
       _lastPacketAt = null;
       _lastFrameAt = null;

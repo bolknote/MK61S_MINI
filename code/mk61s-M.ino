@@ -657,21 +657,31 @@ static bool terminal_poll_due(void) {
   return due;
 }
 
-// USB Screen must keep accepting terminal-backed `kbd` commands inside
-// blocking foreground editors too.  One complete command is handled per idle
-// iteration, so every scan-code reaches the editor before the following one.
-static void service_usb_screen_terminal(void) {
+// Terminal input is serviced from idle_main_process(), not only from the
+// top-level loop.  This lets the desktop client start USB Screen while a
+// blocking foreground editor owns the display, and keeps terminal-backed
+// `kbd` commands working after attachment.  One complete command is handled
+// per idle iteration.
+static void service_terminal(void) {
   static bool in_progress;
-  if(in_progress || !usb_screen::active() || usb_mass_storage::active() ||
-     usb_screen::wireBusy() || !terminal_poll_due()) return;
+  if(in_progress || usb_mass_storage::active() || usb_screen::wireBusy() ||
+     !terminal_poll_due()) return;
 
   in_progress = true;
-  u8 terminal_byte = 0;
-  while(usb_screen::takeTerminalByte(terminal_byte)) {
-    const class_terminal::InputResult result =
-      terminal.input_handler(terminal_byte);
-    if(result.key >= 0) kbd::push((i8) result.key);
-    if(result.line_complete) break;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen::active()) {
+    u8 terminal_byte = 0;
+    while(usb_screen::takeTerminalByte(terminal_byte)) {
+      const class_terminal::InputResult result =
+        terminal.input_handler(terminal_byte);
+      if(result.key >= 0) kbd::push((i8) result.key);
+      if(result.line_complete) break;
+    }
+  } else
+#endif
+  {
+    const i32 key_from_terminal = terminal.serial_input_handler();
+    if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
   }
   in_progress = false;
 }
@@ -696,14 +706,6 @@ void  loop() {
   // services pause between its chunks, while calculator/key processing keeps
   // running. Terminal text is emitted only between complete framed packets.
   const bool usb_screen_wire_busy = usb_screen::wireBusy();
-
-  #ifdef TERMINAL // Обычный serial-терминал вне USB Screen.
-    if(!usb_screen::active() && terminal_poll_due() &&
-       !usb_mass_storage::active() && !usb_screen_wire_busy) {
-      const i32 key_from_terminal = terminal.serial_input_handler();
-      if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
-    }
-  #endif
 
   if(!usb_screen_wire_busy) m61_text::service();
 
@@ -756,7 +758,7 @@ void idle_main_process(void) {
   // the outer loop handles the calculator after a nested UI has returned.
   (void) usb_screen::takeEvent();
   #ifdef TERMINAL
-  service_usb_screen_terminal();
+  service_terminal();
   #endif
   sound_poll();
   led::control();

@@ -25,6 +25,7 @@
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
 #include "terminal_protocol.hpp"
+#include "usb_screen.hpp"
 #include "utf8_view.hpp"
 #include "rtc_clock.hpp"
 
@@ -134,6 +135,9 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "fsstat",  CMD_FS_STAT,       "alias for df" },
   { "fsclean", CMD_FS_CLEAN,      "remove all zero-length store entries" },
   { "disa",    CMD_DISASM,        "toggle disassembler on display" },
+#if MK61_ENABLE_USB_SCREEN
+  { "uscreen", CMD_USB_SCREEN,    "start USB Screen mode" },
+#endif
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
   { "dfu",     CMD_DFU,           "enter DFU bootloader" },
 };
@@ -1452,6 +1456,21 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_DFU:
               DFU_enable();
             break;
+#if MK61_ENABLE_USB_SCREEN
+          case  CMD_USB_SCREEN:
+              if(!terminal_core::at_end(command_args())) {
+                Serial.println("Usage: uscreen");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              if(!usb_screen::start()) {
+                Serial.println("USB Screen is unavailable.");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              Serial.println("USB Screen starting.");
+            break;
+#endif
           case  CMD_REG_DUMP:
               DumpRegisters();
             break;

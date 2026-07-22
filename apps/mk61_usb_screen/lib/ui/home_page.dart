@@ -371,6 +371,12 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
             icon: const Icon(Icons.refresh_rounded),
             label: const Text('Обновить'),
           ),
+          if (controller.canRequestUsbScreen)
+            FilledButton.icon(
+              onPressed: controller.requestUsbScreen,
+              icon: const Icon(Icons.monitor_rounded),
+              label: const Text('Включить USB Screen'),
+            ),
           if (controller.hasOpenPort)
             FilledButton.tonalIcon(
               onPressed: () => controller.disconnect(),
@@ -466,14 +472,17 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
             runSpacing: 10,
             children: [
               _GuideStep(number: '1', text: 'Подключите MK61 по USB'),
-              _GuideStep(number: '2', text: 'В меню выберите «USB Screen»'),
-              _GuideStep(number: '3', text: 'Дождитесь подключения здесь'),
+              _GuideStep(number: '2', text: 'Запустите приложение'),
+              _GuideStep(
+                number: '3',
+                text: 'USB Screen включится автоматически',
+              ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             'Физический экран погаснет только после успешного handshake. '
-            'LCD1602 при этом заменяется полноценным графическим видом 192×64.',
+            'Пункт «Разработка → USB-экран» остаётся ручным способом входа.',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: const Color(0xffa7b2b5)),

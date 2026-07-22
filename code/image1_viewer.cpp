@@ -24,6 +24,7 @@ static constexpr u16 GRAPHICS_WIDTH = 192;
 static constexpr u16 GRAPHICS_HEIGHT = 64;
 static constexpr usize GRAPHICS_BYTES =
   (usize) GRAPHICS_WIDTH * GRAPHICS_HEIGHT / 8U;
+static constexpr i32 VIEWER_DISPLAY_CHANGED = -2;
 
 struct CellWorkspace {
   u8 viewport[a00_image_mux::VIEW_BYTES];
@@ -48,11 +49,16 @@ static i32 scan_key(void) {
   return scan_code & ~(i32) key_state::RELEASED;
 }
 
-static i32 wait_phase_and_scan(u32 hold_us) {
+static i32 wait_phase_and_scan(MK61Display& display,
+                               u32 display_mode_revision,
+                               u32 hold_us) {
   static constexpr u32 POLL_SLICE_US = 1000;
   const u32 started = micros();
   while(true) {
     idle_main_process();
+    if(display.displayModeRevision() != display_mode_revision) {
+      return VIEWER_DISPLAY_CHANGED;
+    }
     const i32 key = scan_key();
     if(key >= 0) return key;
 
@@ -63,9 +69,12 @@ static i32 wait_phase_and_scan(u32 hold_us) {
   }
 }
 
-static i32 wait_key(void) {
+static i32 wait_key(MK61Display& display, u32 display_mode_revision) {
   while(true) {
     idle_main_process();
+    if(display.displayModeRevision() != display_mode_revision) {
+      return VIEWER_DISPLAY_CHANGED;
+    }
     const i32 key = scan_key();
     if(key >= 0) return key;
     delay(10);
@@ -130,7 +139,9 @@ static Result view_cell_display(MK61Display& display,
                                 const u8* data, u16 size,
                                 const wbmp::Info& info,
                                 CellWorkspace& workspace,
-                                wbmp::Status& status) {
+                                wbmp::Status& status,
+                                u32 display_mode_revision,
+                                bool& display_changed) {
   u32 view_x = 0;
   u32 view_y = 0;
   if(!prepare_cell_view(data, size, info, view_x, view_y,
@@ -162,7 +173,12 @@ static Result view_cell_display(MK61Display& display,
   while(true) {
     const u32 hold_us = a00_image_mux::phase_hold_us(transfer_budget_us,
                                                      rate_divisor);
-    const i32 key = wait_phase_and_scan(hold_us);
+    const i32 key = wait_phase_and_scan(display, display_mode_revision,
+                                        hold_us);
+    if(key == VIEWER_DISPLAY_CHANGED) {
+      display_changed = true;
+      break;
+    }
     if(key == KEY_ESC || key == KEY_OK) break;
     if(key == KEY_DEGREE) {
       rate_divisor = a00_image_mux::faster_rate(rate_divisor);
@@ -213,7 +229,9 @@ static Result view_graphics_display(MK61Display& display,
                                     const u8* data, u16 size,
                                     const wbmp::Info& info,
                                     u8 bitmap[GRAPHICS_BYTES],
-                                    wbmp::Status& status) {
+                                    wbmp::Status& status,
+                                    u32 display_mode_revision,
+                                    bool& display_changed) {
   u32 view_x = 0;
   u32 view_y = 0;
   if(!display.beginFullscreenBitmap()) return Result::DISPLAY_ERROR;
@@ -231,7 +249,11 @@ static Result view_graphics_display(MK61Display& display,
   kbd::debounce_init();
   Result result = Result::OK;
   while(true) {
-    const i32 key = wait_key();
+    const i32 key = wait_key(display, display_mode_revision);
+    if(key == VIEWER_DISPLAY_CHANGED) {
+      display_changed = true;
+      break;
+    }
     if(key == KEY_ESC || key == KEY_OK) break;
     if(!navigation(key, max_x, max_y, view_x, view_y)) continue;
     if(!render_graphics_view(display, data, size, info, view_x, view_y,
@@ -262,16 +284,25 @@ Result view(MK61Display& display, const u8* data, u16 size,
   if(!lease.ok()) return Result::BUSY;
   ViewerWorkspace& workspace = *(ViewerWorkspace*) lease.data();
 
+  Result result = Result::OK;
+  bool display_changed = false;
+  do {
+    display_changed = false;
+    const u32 display_mode_revision = display.displayModeRevision();
 #if defined(MK61_DISPLAY_LCD1602)
-  const Result result = display.graphicsMode()
-    ? view_graphics_display(display, data, size, info,
-                            workspace.graphics, status)
-    : view_cell_display(display, data, size, info,
-                        workspace.cell, status);
+    result = display.graphicsMode()
+      ? view_graphics_display(display, data, size, info,
+                              workspace.graphics, status,
+                              display_mode_revision, display_changed)
+      : view_cell_display(display, data, size, info,
+                          workspace.cell, status,
+                          display_mode_revision, display_changed);
 #else
-  const Result result = view_graphics_display(display, data, size, info,
-                                              workspace.graphics, status);
+    result = view_graphics_display(display, data, size, info,
+                                   workspace.graphics, status,
+                                   display_mode_revision, display_changed);
 #endif
+  } while(display_changed);
   if(image_status != NULL) *image_status = status;
   return result;
 }

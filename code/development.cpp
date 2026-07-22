@@ -35,6 +35,7 @@ static constexpr i32 EXPLORER_KEY_OK = -4;
 static constexpr i32 EXPLORER_KEY_LONG_OK = -5;
 static constexpr i32 EXPLORER_KEY_ESC = -6;
 static constexpr i32 EXPLORER_KEY_TICK = -7;
+static constexpr i32 EXPLORER_KEY_REDRAW = -8;
 static constexpr u16 EXPLORER_SCROLL_START_MS = 900;
 static constexpr u16 EXPLORER_SCROLL_STEP_MS = 450;
 static constexpr u16 EXPLORER_SCROLL_EDGE_MS = 900;
@@ -133,17 +134,30 @@ static i32 scan_direct_key(void) {
   return scan_code;
 }
 
-static void wait_ok_release(void) {
+// Returns false when the display backend changed while OK was held.  The
+// caller can redraw and continue waiting without exposing the Unicode USB
+// surface as '?' on a physical LCD1602.
+static bool wait_ok_release(void) {
+  const u32 display_mode_revision = main_lcd().displayModeRevision();
   while(true) {
     idle_main_process();
+    if(main_lcd().displayModeRevision() != display_mode_revision) return false;
+
     const i32 scan_code = scan_direct_key();
     if(scan_code >= 0) {
       const bool released = (scan_code & (i32) key_state::RELEASED) != 0;
       const i32 code = scan_code & ~(i32) key_state::RELEASED;
       if(released && code == (i32) KEY_OK) {
         kbd::clear_hold_key();
-        return;
+        return true;
       }
+    }
+
+    // Terminal `kbd` commands are complete taps: unlike physical and binary
+    // USB keys, they deliberately have no separate release event.
+    if(!kbd::is_key_pressed(KEY_OK)) {
+      kbd::clear_hold_key();
+      return true;
     }
     delay(10);
   }
@@ -189,11 +203,17 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
   bool ok_down = false;
   u32 long_ok_at = 0;
   const u32 tick_at = tick_ms == 0 ? 0 : millis() + tick_ms;
+  const u32 display_mode_revision = main_lcd().displayModeRevision();
   kbd::debounce_init();
   explorer_cursor_on(cursor_row);
 
   while(true) {
     idle_main_process();
+    if(main_lcd().displayModeRevision() != display_mode_revision) {
+      explorer_cursor_off();
+      return EXPLORER_KEY_REDRAW;
+    }
+
     const u32 now = millis();
     if(tick_ms != 0 && !ok_down && explorer_time_reached(now, tick_at)) return EXPLORER_KEY_TICK;
     if(allow_long_ok && ok_down && explorer_time_reached(now, long_ok_at)) {
@@ -218,6 +238,9 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
     }
 
     if(code == (i32) KEY_OK) {
+      // A terminal `kbd` command represents an already completed tap.  Only
+      // physical keys and binary USB KEY_EVENT presses can be held long.
+      if(!kbd::is_key_pressed(KEY_OK)) return EXPLORER_KEY_OK;
       ok_down = true;
       long_ok_at = millis() + EXPLORER_LONG_OK_MS;
       continue;
@@ -226,6 +249,26 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
     if(code == (i32) KEY_RIGHT || code == (i32) KEY_SHG_RIGHT_PRESS) return EXPLORER_KEY_DOWN;
     if(code == (i32) KEY_LEFT || code == (i32) KEY_SHG_LEFT_PRESS) return EXPLORER_KEY_UP;
     return code;
+  }
+}
+
+static i32 wait_explorer_raw_key(void) {
+  const u32 display_mode_revision = main_lcd().displayModeRevision();
+  kbd::debounce_init();
+  while(true) {
+    idle_main_process();
+    if(main_lcd().displayModeRevision() != display_mode_revision) {
+      explorer_cursor_off();
+      return EXPLORER_KEY_REDRAW;
+    }
+
+    const i32 scan_code = scan_direct_key();
+    if(scan_code < 0) {
+      delay(10);
+      continue;
+    }
+    if((scan_code & (i32) key_state::RELEASED) != 0) continue;
+    return scan_code & ~(i32) key_state::RELEASED;
   }
 }
 
@@ -882,7 +925,7 @@ static bool view_entry(const program_store::Entry& entry) {
   shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_MK61_TEXT_SIZE);
   if(!scratch.ok()) {
     show_message("Busy", "Занято", entry.name, entry.name);
-    kbd::get_key_wait();
+    (void) wait_explorer_key(false);
     return false;
   }
 
@@ -890,7 +933,7 @@ static bool view_entry(const program_store::Entry& entry) {
   u16 len = 0;
   if(!read_entry_data(entry, data, scratch.size(), len)) {
     show_message("Read error", "Ошибка чтения", entry.name, entry.name);
-    kbd::get_key_wait();
+    (void) wait_explorer_key(false);
     return false;
   }
 
@@ -899,17 +942,18 @@ static bool view_entry(const program_store::Entry& entry) {
     return true;
   }
 
-  const u8 display_rows = main_lcd().rows();
-  const u8 rows = display_rows > 1 ? (u8) (display_rows - 1) : 1;
-  const u16 page = rows;
   u16 top_line = 0;
   while(true) {
+    const u8 display_rows = main_lcd().rows();
+    const u8 rows = display_rows > 1 ? (u8) (display_rows - 1) : 1;
+    const u16 page = rows;
     const u16 total_lines = visual_line_count(data, len);
     const u16 max_top = (total_lines > rows) ? (u16) (total_lines - rows) : 0;
     if(top_line > max_top) top_line = max_top;
 
     draw_file_view(entry, data, len, top_line);
     const i32 key = wait_explorer_key(false);
+    if(key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_ESC || key == EXPLORER_KEY_OK) return true;
     if(key == EXPLORER_KEY_DOWN && top_line < max_top) {
       top_line = (u16) (top_line + page);
@@ -922,10 +966,11 @@ static bool view_entry(const program_store::Entry& entry) {
 static bool confirm_delete(const program_store::Entry& entry) {
   const bool tree = entry.kind == program_store::NodeKind::DIRECTORY &&
                     program_store::child_count(entry.id) != 0;
-  show_message(tree ? "Delete tree?" : "Delete?",
-               tree ? "Удалить всё?" : "Удалить?", entry.name, entry.name);
   while(true) {
+    show_message(tree ? "Delete tree?" : "Delete?",
+                 tree ? "Удалить всё?" : "Удалить?", entry.name, entry.name);
     const i32 key = wait_explorer_key(false);
+    if(key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_OK) return true;
     if(key == EXPLORER_KEY_ESC) return false;
   }
@@ -1029,7 +1074,8 @@ static bool input_entry_name(char* name, usize capacity,
     if(text_editor::sms_expired(sms, draw_now)) text_editor::sms_reset(sms);
     draw_name_editor(name, cursor, prompt);
 
-    const i32 key = kbd::get_key_wait();
+    const i32 key = wait_explorer_raw_key();
+    if(key == EXPLORER_KEY_REDRAW) continue;
     const u32 key_now = millis();
     if(text_editor::sms_expired(sms, key_now)) text_editor::sms_reset(sms);
     const bool shifted_key = shift != text_editor::Shift::NONE;
@@ -1400,7 +1446,7 @@ static ProgramStoreFileDialogResult run_storage_dialog(
     const u16 timeout = draw_storage_dialog(directory_id, mode, type,
         allow_new, forbidden_tree, active, count, scroll, cursor_row);
     const i32 key = wait_explorer_key(true, timeout, cursor_row);
-    if(key == EXPLORER_KEY_TICK) continue;
+    if(key == EXPLORER_KEY_TICK || key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_DOWN && count > 0) {
       active = (active + 1) % count;
       explorer_scroll_reset(scroll);
@@ -1764,10 +1810,15 @@ static bool explorer_item_menu(u16 directory_id,
   while(true) {
     draw_item_menu(entry, active);
     if(wait_initial_ok_release) {
-      wait_ok_release();
+      if(!wait_ok_release()) continue;
       wait_initial_ok_release = false;
+      // The first draw can happen before a terminal tap is classified or a
+      // held binary key is released. Repaint once so a just-restored physical
+      // LCD never keeps the USB surface's unmappable Unicode cells.
+      draw_item_menu(entry, active);
     }
     const i32 key = wait_explorer_key(false);
+    if(key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_ESC) return action::MENU_BACK;
     if(key == EXPLORER_KEY_UP) active = (active <= 0) ? count - 1 : active - 1;
     if(key == EXPLORER_KEY_DOWN) active = (active + 1) % count;
@@ -1970,6 +2021,7 @@ bool program_store_explorer_select(void) {
     if(count <= 0) {
       draw_explorer(directory_id, 0, scroll);
       const i32 key = wait_explorer_key(false);
+      if(key == EXPLORER_KEY_REDRAW) continue;
       if(key == EXPLORER_KEY_ESC) {
         if(directory_id != program_store::ROOT_ID) {
           program_store::Entry directory;
@@ -2005,7 +2057,7 @@ bool program_store_explorer_select(void) {
     const u16 scroll_timeout = draw_explorer(directory_id, active, scroll,
                                               search.text, &cursor_row);
     const i32 key = wait_explorer_key(true, scroll_timeout, cursor_row);
-    if(key == EXPLORER_KEY_TICK) continue;
+    if(key == EXPLORER_KEY_TICK || key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_ESC) {
       if(search_active(search.text)) {
         explorer_search_reset(search);
