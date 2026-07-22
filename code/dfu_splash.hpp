@@ -14,6 +14,6 @@ static_assert(BYTE_COUNT == 1536, "DFU bitmap geometry changed unexpectedly");
 
 extern const u8 BITMAP[BYTE_COUNT];
 
-} // namespace dfu_splash
+} // пространство имён dfu_splash
 
 #endif

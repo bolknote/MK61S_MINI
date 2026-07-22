@@ -54,6 +54,6 @@ u8 faster_rate(u8 divisor);
 u8 slower_rate(u8 divisor);
 u32 phase_hold_us(u32 transfer_us, u8 divisor);
 
-} // namespace a00_image_mux
+} // пространство имён a00_image_mux
 
 #endif

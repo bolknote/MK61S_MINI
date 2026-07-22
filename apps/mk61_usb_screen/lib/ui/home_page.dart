@@ -102,10 +102,9 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
         event.logicalKey == LogicalKeyboardKey.arrowUp ||
         event.logicalKey == LogicalKeyboardKey.arrowDown;
 
-    // An event handled here must not continue into Flutter's focus traversal
-    // or ScrollView shortcuts.  Consume arrow key-up as well as key-down even
-    // while offline, so arrows never become application navigation while the
-    // terminal drawer is hidden.
+    // Обработанное здесь событие не должно попадать в обход фокуса Flutter или
+    // сочетания ScrollView. Даже без подключения поглощаем и нажатие, и отпускание
+    // стрелок, чтобы при скрытой панели терминала они не становились навигацией приложения.
     if (event is KeyUpEvent) {
       return isArrow ? KeyEventResult.handled : KeyEventResult.ignored;
     }

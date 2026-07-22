@@ -87,12 +87,12 @@ class Mk61UsbScreenApp extends StatelessWidget {
   }
 }
 
-/// Flutter's Material controls are deliberately touch-sized.  The MK61
-/// client is a dense desktop instrument, so render its whole logical surface
-/// more compactly while giving the child proportionally more layout space.
-/// Text is compensated separately to remain readable on desktop displays.
-/// Keeping the scaling at this single boundary also scales overlays, pointer
-/// hit testing and text-field caret geometry consistently.
+/// Элементы Material во Flutter намеренно рассчитаны на касание. Клиент МК-61 —
+/// плотный desktop-инструмент, поэтому вся его логическая поверхность выводится
+/// компактнее, а дочернему элементу пропорционально даётся больше места разметки.
+/// Текст компенсируется отдельно, чтобы оставаться читаемым на desktop-дисплеях.
+/// Масштабирование на единственной границе также согласованно масштабирует
+/// наложения, проверку попадания указателя и геометрию каретки текстового поля.
 class _ScaledDesktopUi extends StatelessWidget {
   const _ScaledDesktopUi({
     required this.scale,

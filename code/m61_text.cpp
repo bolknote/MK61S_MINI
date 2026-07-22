@@ -711,8 +711,8 @@ static bool start_current_program(void) {
     if(trap_is_active(address) && address >= steps) return false;
   }
   runner_state = RunnerState::WAIT_RUN_STOP;
-  // Arm the runner before the final hidden C/P step: one core step can reach
-  // the first program opcode, especially in turbo builds.
+  // Взводим исполнитель до последнего скрытого шага С/П: один шаг ядра может
+  // дойти до первого кода программы, особенно в турбо-сборках.
   hidden_start_loaded_program();
   return true;
 }

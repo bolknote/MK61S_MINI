@@ -20,10 +20,10 @@ struct SavedCursor {
   bool valid;
 };
 
-// A bounded, monochrome terminal writer for the calculator display. Cursor
-// coordinates are ANSI 1-based in the input and 0-based in Sink callbacks.
-// Unsupported CSI commands (including SGR colour/attributes) are consumed and
-// ignored. No operation clears the display unless J/K explicitly requests it.
+// Ограниченный монохромный терминальный вывод на дисплей калькулятора. Входные
+// координаты курсора ANSI начинаются с 1, а в обратных вызовах Sink — с 0.
+// Неподдерживаемые команды CSI (включая цвет и атрибуты SGR) считываются и
+// игнорируются. Дисплей очищается только по явному запросу J/K.
 class Writer {
   public:
     Writer(u8 cols, u8 rows, u8 cursor_x, u8 cursor_y,
@@ -61,6 +61,6 @@ class Writer {
     void setPosition(u16 row, u16 col);
   };
 
-} // namespace m61_ansi
+} // пространство имён m61_ansi
 
 #endif

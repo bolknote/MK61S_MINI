@@ -177,11 +177,11 @@ class DeviceController extends ChangeNotifier {
         }
         _notify();
       }
-      // USB DFU removes the CDC device and normally recreates it under the
-      // same path. libserialport does not consistently complete the old read
-      // stream on macOS, so the port list is the authoritative disconnect
-      // signal. Close the stale descriptor and allow the next scan to reopen
-      // the freshly enumerated device.
+      // USB DFU удаляет устройство CDC и обычно создаёт его заново по тому же
+      // пути. В macOS libserialport не всегда завершает старый поток чтения,
+      // поэтому достоверным сигналом отключения служит список портов. Закрываем
+      // устаревший дескриптор, чтобы следующее сканирование открыло заново
+      // только что обнаруженное устройство.
       if (connectedPortMissing && _connection != null) {
         _allowAutomaticActivation = true;
         await _closePort(sendDetach: false);
@@ -240,8 +240,8 @@ class DeviceController extends ChangeNotifier {
     await _open(name, automatic: false);
   }
 
-  /// Starts USB Screen on an already-open device after an explicit device-side
-  /// exit. Initial connections call the same command automatically.
+  /// Запускает USB-экран на уже открытом устройстве после явного выхода на
+  /// стороне устройства. При первом подключении та же команда вызывается автоматически.
   bool requestUsbScreen() {
     if (!canRequestUsbScreen) return false;
     _allowAutomaticActivation = true;
@@ -309,8 +309,8 @@ class DeviceController extends ChangeNotifier {
           unawaited(_probeExpired(automatic));
         }
       });
-      // Reset all session state before subscribing: a synchronous/fresh CDC
-      // stream is allowed to deliver an OFFER immediately from listen().
+      // Сбрасываем всё состояние сеанса до подписки: синхронный или новый поток
+      // CDC может передать OFFER непосредственно из listen().
       _readerSubscription = candidate.input.listen(
         (bytes) {
           if (identical(_connection, candidate)) _onBytes(bytes);
@@ -405,7 +405,7 @@ class DeviceController extends ChangeNotifier {
         if (complete) _frameCompleted();
         return;
       case MkMessage.pong:
-        // Receipt itself refreshes the monotonic packet timestamp.
+        // Само получение обновляет монотонную отметку времени пакета.
         return;
       case MkMessage.detach:
         _deviceDetached();
@@ -427,10 +427,10 @@ class DeviceController extends ChangeNotifier {
         );
       }
 
-      // The device deliberately returns to WAITING_FOR_HOST after its
-      // heartbeat expires.  The serial port may still be open (for example
-      // after a suspended laptop resumes), so a fresh OFFER is the session
-      // reset signal even when the client still believed it was attached.
+      // После истечения пульса устройство намеренно возвращается в WAITING_FOR_HOST.
+      // Последовательный порт при этом может оставаться открытым (например,
+      // после выхода ноутбука из сна), поэтому новый OFFER служит сигналом
+      // сброса сеанса, даже если клиент всё ещё считал себя подключённым.
       final wasAttached = attached;
       if (wasAttached) {
         _pressedKeys.clear();
@@ -536,9 +536,10 @@ class DeviceController extends ChangeNotifier {
     _notify();
   }
 
-  /// Sends a short sequence through the firmware's `kbd <scan-code>` terminal
-  /// command. Unlike synthetic down/up pairs, `kbd` inserts one press directly
-  /// into the calculator keyboard queue, which preserves repeated SMS taps.
+  /// Передаёт короткую последовательность через терминальную команду прошивки
+  /// `kbd <scan-code>`. В отличие от искусственных пар нажатия и отпускания,
+  /// `kbd` помещает одно нажатие прямо в очередь клавиатуры калькулятора,
+  /// сохраняя повторные нажатия SMS-ввода.
   bool tapActions(Iterable<String> actions) {
     if (!attached) return false;
     final scanCodes = <int>[];
@@ -605,8 +606,9 @@ class DeviceController extends ChangeNotifier {
     _terminalBytes.addAll(bytes);
     final overflow = _terminalBytes.length - _terminalStart - _terminalLogLimit;
     if (overflow > 0) _terminalStart += overflow;
-    // Compact only after a complete extra log window has accumulated. This
-    // turns per-chunk front deletion into amortized O(1) appends.
+    // Уплотняем только после накопления полного дополнительного окна журнала.
+    // Так удаление начала для каждой части превращается в добавление с
+    // амортизированной сложностью O(1).
     if (_terminalStart >= _terminalLogLimit &&
         _terminalStart * 2 >= _terminalBytes.length) {
       _terminalBytes.removeRange(0, _terminalStart);
@@ -650,8 +652,8 @@ class DeviceController extends ChangeNotifier {
   Future<void> _connectionFailed(String message) async {
     if (_connection == null || _disposed || _closing) return;
     _lastError = message;
-    // A physical reconnect is a new user-visible connection and may activate
-    // USB Screen again even if the previous live session was exited manually.
+    // Физическое переподключение — новое видимое пользователю соединение; оно
+    // может снова включить USB-экран, даже если прошлый сеанс завершили вручную.
     _allowAutomaticActivation = true;
     await _closePort(sendDetach: false);
     _state = _autoConnect
@@ -694,8 +696,8 @@ class DeviceController extends ChangeNotifier {
         try {
           _connection?.drain();
         } catch (_) {
-          // A removed USB device cannot be drained; heartbeat/firmware escape
-          // remains the bounded fallback for that physical failure.
+          // С удалённого USB-устройства нельзя дочитать данные; ограниченным
+          // запасным выходом при таком физическом сбое остаётся пульс или прошивка.
         }
       }
       _pressedKeys.clear();
@@ -708,7 +710,7 @@ class DeviceController extends ChangeNotifier {
         try {
           await subscription.cancel();
         } catch (_) {
-          // The OS may already have removed the port.
+          // ОС уже могла удалить порт.
         }
       }
       connection?.close();
@@ -791,7 +793,7 @@ class DeviceController extends ChangeNotifier {
       try {
         _connection?.drain();
       } catch (_) {
-        // Best effort during synchronous widget teardown.
+        // Необязательная попытка при синхронном уничтожении виджета.
       }
     }
     _readerSubscription?.cancel();
@@ -937,8 +939,8 @@ List<int> _parseAnsiParameters(List<int> runes, int begin, int end) {
       value = -1;
       continue;
     }
-    // Private/intermediate CSI parameters are accepted for commands such as
-    // SGR, but are not interpreted by the monochrome terminal model.
+    // Частные и промежуточные параметры CSI принимаются для команд вроде SGR,
+    // но не интерпретируются монохромной моделью терминала.
   }
   parameters.add(value);
   return parameters;
@@ -946,29 +948,29 @@ List<int> _parseAnsiParameters(List<int> runes, int begin, int end) {
 
 void _applyCsi(_TerminalCanvas canvas, int command, List<int> parameters) {
   switch (command) {
-    case 0x41: // A: cursor up
+    case 0x41: // A: курсор вверх
       canvas.moveUp(_ansiParameter(parameters, 0, 1));
-    case 0x42: // B: cursor down
+    case 0x42: // B: курсор вниз
       canvas.moveDown(_ansiParameter(parameters, 0, 1));
-    case 0x43: // C: cursor forward
+    case 0x43: // C: курсор вперёд
       canvas.moveForward(_ansiParameter(parameters, 0, 1));
-    case 0x44: // D: cursor back
+    case 0x44: // D: курсор назад
       canvas.moveBack(_ansiParameter(parameters, 0, 1));
-    case 0x48: // H: cursor position
-    case 0x66: // f: horizontal/vertical position
+    case 0x48: // H: позиция курсора
+    case 0x66: // f: позиция по горизонтали и вертикали
       canvas.position(
         _ansiParameter(parameters, 0, 1),
         _ansiParameter(parameters, 1, 1),
       );
-    case 0x4a: // J: erase display
+    case 0x4a: // J: очистить дисплей
       canvas.eraseDisplay(_ansiParameter(parameters, 0, 0));
-    case 0x4b: // K: erase line
+    case 0x4b: // K: очистить строку
       canvas.eraseLine(_ansiParameter(parameters, 0, 0));
-    case 0x73: // s: save cursor
+    case 0x73: // s: сохранить курсор
       canvas.saveCursor();
-    case 0x75: // u: restore cursor
+    case 0x75: // u: восстановить курсор
       canvas.restoreCursor();
-    case 0x6d: // m: SGR (accepted; monochrome UI has no attributes)
+    case 0x6d: // m: SGR (принимается; у монохромного интерфейса нет атрибутов)
       return;
   }
 }
@@ -981,35 +983,35 @@ String _renderTerminalText(List<int> sourceBytes) {
   for (var index = 0; index < runes.length; index++) {
     final rune = runes[index];
     switch (rune) {
-      case 0x0d: // carriage return
+      case 0x0d: // возврат каретки
         canvas.carriageReturn();
         continue;
-      case 0x0a: // line feed
+      case 0x0a: // перевод строки
         canvas.lineFeed();
         continue;
-      case 0x08: // backspace
+      case 0x08: // удаление назад
         canvas.backspace();
         continue;
-      case 0x09: // tab
+      case 0x09: // табуляция
         canvas.tab();
         continue;
       case 0x1b: // ESC
         if (index + 1 >= runes.length) continue;
         final next = runes[index + 1];
         if (next == 0x37) {
-          // ESC 7: save cursor
+          // ESC 7: сохранить курсор
           canvas.saveCursor();
           index++;
           continue;
         }
         if (next == 0x38) {
-          // ESC 8: restore cursor
+          // ESC 8: восстановить курсор
           canvas.restoreCursor();
           index++;
           continue;
         }
         if (next != 0x5b) {
-          index++; // Swallow an unsupported two-byte ESC command.
+          index++; // Пропускаем неподдерживаемую двухбайтовую команду ESC.
           continue;
         }
 

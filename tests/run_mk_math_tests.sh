@@ -8,9 +8,9 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
-# Build the CORE backend together with the real MK-61 engine on the host.
-# Shim headers (Arduino.h/debug.h) come first on the include path so the
-# firmware-only dependencies resolve to host stubs.
+# Собираем подсистему CORE вместе с настоящим ядром МК-61 на хосте.
+# Заголовки-заглушки (Arduino.h/debug.h) идут первыми в пути включения, чтобы
+# зависимости только для прошивки разрешались в хостовые заглушки.
 clang++ -std=c++17 -Wall -Wextra -Wno-unused -Wno-unused-parameter \
   -Wno-cpp \
   "${sanitizer_flags[@]}" \

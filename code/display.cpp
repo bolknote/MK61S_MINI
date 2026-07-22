@@ -1853,8 +1853,8 @@ void MK61Display::write(uint8_t value) {
 usb_screen::TextProfile MK61Display::usbTextProfile(
     lcd_display::TextProfile profile) {
 #if defined(MK61_DISPLAY_LCD1602)
-  // The physical LCD profile has only two rows; USB Screen deliberately uses
-  // the normal 192x64 5x8 preset instead of preserving that limitation.
+  // У профиля физического LCD всего две строки; USB-экран намеренно использует
+  // обычный профиль 192x64 5x8, не сохраняя это ограничение.
   if(profile.rows <= lcd_display::ROWS) return usb_screen::profile5x8();
 #endif
   return usb_screen::normalizeProfile({
@@ -1960,9 +1960,9 @@ void MK61Display::leaveUsbScreen(void) {
   usb_preview_font.reset();
   usb_preview_font_active = false;
 #else
-  // Keep the logical UC1609 backing store in sync with everything the modal
-  // UI drew while USB Screen owned the backend. Without this transfer a host
-  // detach would re-enable the stale pre-attach physical screen.
+  // Синхронизируем логический буфер UC1609 со всем, что модальный интерфейс
+  // нарисовал, пока подсистемой владел USB-экран. Без этого при отключении хоста
+  // снова появился бы устаревший физический экран из состояния до подключения.
   const usb_screen::TextProfile restore_profile = usb_surface.textProfile();
   const u8 restore_cursor_x = usb_surface.cursorX();
   const u8 restore_cursor_y = usb_surface.cursorY();
@@ -1999,9 +1999,9 @@ void MK61Display::leaveUsbScreen(void) {
   usb_screen_active = false;
   display_mode_revision++;
 #if defined(MK61_DISPLAY_LCD1602)
-  // Rehydrate the physical text display before enabling it. This preserves
-  // whichever foreground UI owns the screen instead of exposing a calculator
-  // frame while a modal FOCAL/TinyBASIC screen is still active.
+  // Восстанавливаем физический текстовый дисплей перед включением. Так на экране
+  // остаётся владеющий им интерфейс переднего плана, а не кадр калькулятора при
+  // всё ещё активном модальном экране FOCAL/TinyBASIC.
   clear();
   for(u8 slot = 0; slot < usb_screen::Surface::CUSTOM_GLYPHS; slot++) {
     if(restore_glyph_valid[slot]) createChar(slot, restore_glyphs[slot]);

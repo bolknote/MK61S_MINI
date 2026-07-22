@@ -185,7 +185,7 @@ void test_escape_policy(void) {
   assert(!startup_splash::escapeMaySkip(startup_splash::EscapePolicy::IGNORE));
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   static_assert(sizeof(TEXT) == startup_splash::COLS + 1, "Test text must fill one row");

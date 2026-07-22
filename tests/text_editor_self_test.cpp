@@ -594,7 +594,7 @@ void test_lcd1602_shifted_viewport_command_stream(void) {
   assert(model.commands == 0 && model.data_writes == 0);
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_init_terminates_untrusted_buffer();

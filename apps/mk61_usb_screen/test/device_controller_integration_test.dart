@@ -263,7 +263,7 @@ void main() {
       controller.keyDown(39);
       controller.keyDown(
         39,
-      ); // Desktop auto-repeat must not duplicate key-down.
+      ); // Автоповтор desktop-системы не должен дублировать нажатие.
       controller.keyUp(39);
       controller.keyDown(37);
       controller.keyDown(38);
@@ -604,8 +604,8 @@ void main() {
       expect(transport.openCount, 0);
       expect(transport.connection.hostTerminalBytes, isEmpty);
 
-      // An explicit selection is the user's authorization to probe a custom
-      // board whose descriptors are not on the automatic allowlist.
+      // Явный выбор — разрешение пользователя проверить нестандартную плату,
+      // дескрипторов которой нет в автоматическом списке разрешённых.
       await controller.connectSelected();
       expect(transport.openCount, 1);
       expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');

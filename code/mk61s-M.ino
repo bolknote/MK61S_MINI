@@ -456,9 +456,10 @@ inline void mk61_process(void) {
   }
 
   if(m61_text::display_owned()) {
-      // A script that printed its own GUI owns the framebuffer until it
-      // finishes.  Keep running the calculator, but discard its transient
-      // indicator refreshes; trap handlers publish selected frames via print.
+      // Скрипт, напечатавший собственный интерфейс, владеет кадровым буфером до
+      // завершения. Калькулятор продолжает работать, но его временные обновления
+      // индикатора отбрасываются; обработчики ловушек публикуют выбранные кадры
+      // через print.
       m61_display_was_owned = true;
       turbo_display_dirty = false;
       return;
@@ -556,8 +557,8 @@ void   mk61_menu_hook(i32 key) {
 }
 
 void   mk61_baseloop_hook(i32 key) {
-  // A trap handler owns an exact snapshot of the calculator. Keep both
-  // stepping and calculator key delivery paused until its `ret` restores it.
+  // Обработчик ловушки владеет точным снимком калькулятора. Шаги и передачу
+  // клавиш калькулятору нужно приостановить, пока `ret` не восстановит снимок.
   if(m61_text::calculator_suspended()) return;
 
   #if MK61_USER_EXPLORER_SHORTCUT
@@ -676,11 +677,11 @@ static bool terminal_poll_due(void) {
   return due;
 }
 
-// Terminal input is serviced from idle_main_process(), not only from the
-// top-level loop.  This lets the desktop client start USB Screen while a
-// blocking foreground editor owns the display, and keeps terminal-backed
-// `kbd` commands working after attachment.  One complete command is handled
-// per idle iteration.
+// Терминальный ввод обслуживается из idle_main_process(), а не только из
+// внешнего цикла. Это позволяет desktop-клиенту запустить USB-экран, пока
+// дисплеем владеет блокирующий редактор переднего плана, и сохраняет работу
+// терминальных команд `kbd` после подключения. За один холостой цикл
+// обрабатывается одна полная команда.
 static void service_terminal(void) {
   static bool in_progress;
   if(in_progress || usb_mass_storage::active() || usb_screen::wireBusy() ||
@@ -713,17 +714,19 @@ void  loop() {
   const u32 next_display_mode_revision = main_lcd().displayModeRevision();
   if(next_display_mode_revision != top_level_display_mode_revision) {
     top_level_display_mode_revision = next_display_mode_revision;
-    // A stateful menu can also span top-level loop calls, so redraw the
-    // calculator only when its base hook truly owns the foreground.
+    // Меню с состоянием тоже может работать между вызовами внешнего цикла,
+    // поэтому калькулятор перерисовывается лишь тогда, когда его базовый
+    // обработчик действительно владеет передним планом.
     if(input_focus == &mk61_baseloop_hook && !lcd_hooked &&
        !m61_text::active() && !user_short_press_pending) {
       lcd_std_display_redraw();
     }
   }
 
-  // A binary USB Screen packet may span several CDC writes. Serial-producing
-  // services pause between its chunks, while calculator/key processing keeps
-  // running. Terminal text is emitted only between complete framed packets.
+  // Двоичный пакет USB-экрана может занимать несколько записей CDC. Службы с
+  // последовательным выводом приостанавливаются между его частями, а обработка
+  // калькулятора и клавиш продолжается. Текст терминала выводится только между
+  // полными пакетами в кадрах.
   const bool usb_screen_wire_busy = usb_screen::wireBusy();
 
   if(!usb_screen_wire_busy) m61_text::service();
@@ -772,9 +775,10 @@ void  loop() {
 void idle_main_process(void) {
   usb_mass_storage::service();
   usb_screen::service();
-  // Consume the notification here, but never assume that the calculator owns
-  // the foreground. The active editor/menu redraws on display-mode revision;
-  // the outer loop handles the calculator after a nested UI has returned.
+  // Уведомление принимается здесь, но нельзя считать, что передним планом
+  // владеет калькулятор. Активный редактор или меню перерисуется при смене
+  // ревизии режима дисплея, а внешний цикл обработает калькулятор после выхода
+  // из вложенного интерфейса.
   (void) usb_screen::takeEvent();
   #ifdef TERMINAL
   service_terminal();

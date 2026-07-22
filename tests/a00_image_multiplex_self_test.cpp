@@ -161,7 +161,7 @@ static void test_blank_sequence(void) {
   }
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_exact_cgram_extraction();

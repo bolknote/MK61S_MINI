@@ -126,7 +126,7 @@ void test_erased_detection_checks_entire_record(void) {
   assert(scanner.needs_reclaim());
 }
 
-} // namespace
+} // безымянное пространство имён
 
 int main(void) {
   test_v3_commit_and_corruption();

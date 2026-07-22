@@ -120,8 +120,8 @@ static void test_mode_sense_response_encoding(void)
   length = msc_scsi_build_mode_sense(data, sizeof(data),
                                       0x7FU, 0x00U, 1U, 0U);
   assert(length == 40U);
-  assert(data[10] == 0U); /* WCE is not MODE SELECT-changeable. */
-  assert(data[31] == 0U); /* TLUN is not changeable either. */
+  assert(data[10] == 0U); /* WCE нельзя изменить через MODE SELECT. */
+  assert(data[31] == 0U); /* TLUN также нельзя изменить. */
 
   data[0] = 0xA5U;
   assert(msc_scsi_build_mode_sense(data, 15U,

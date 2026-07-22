@@ -1,4 +1,4 @@
-# Local firmware build outputs
+# Локальные результаты сборки прошивки
 /*.bin
 /binary/
 /.build/
@@ -6,6 +6,6 @@
 /.mkc.conf
 /tools/fmk_font
 
-# Python tooling caches
+# Кэши инструментов Python
 __pycache__/
 *.py[cod]

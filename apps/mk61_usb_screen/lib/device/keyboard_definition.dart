@@ -45,8 +45,8 @@ class KeyboardDefinition {
   final Map<String, int> _scanCodes;
   final List<CalculatorKey> keys;
 
-  /// Keys in the order in which they are printed on the physical keyboard.
-  /// Matrix scan codes are deliberately kept independent from presentation.
+  /// Клавиши в порядке их расположения на физической клавиатуре.
+  /// Матричные скан-коды намеренно не зависят от представления.
   List<CalculatorKey> get displayKeys {
     if (layout == MkKeyboardLayout.classic) return keys;
     return List.unmodifiable(
@@ -198,8 +198,8 @@ class KeyboardDefinition {
     'esc': 39,
   };
 
-  // mk61s-mini/A00 front-panel order, left-to-right and top-to-bottom.
-  // It must not be replaced with the numeric matrix scan-code order.
+  // Порядок передней панели mk61s-mini/A00: слева направо и сверху вниз.
+  // Его нельзя заменять числовым порядком матричных скан-кодов.
   static const List<String> _miniPhysicalOrder = [
     'esc',
     'left',

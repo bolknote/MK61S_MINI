@@ -41,6 +41,6 @@ inline bool takeTerminalByte(u8&) { return false; }
 inline Event takeEvent(void) { return Event::NONE; }
 #endif
 
-} // namespace usb_screen
+} // пространство имён usb_screen
 
 #endif

@@ -134,9 +134,9 @@ static i32 scan_direct_key(void) {
   return scan_code;
 }
 
-// Returns false when the display backend changed while OK was held.  The
-// caller can redraw and continue waiting without exposing the Unicode USB
-// surface as '?' on a physical LCD1602.
+// Возвращает false, если подсистема дисплея сменилась при удержании OK.
+// Вызывающий код может перерисовать экран и продолжить ожидание, не показывая
+// символы Unicode с USB-поверхности как '?' на физическом LCD1602.
 static bool wait_ok_release(void) {
   const u32 display_mode_revision = main_lcd().displayModeRevision();
   while(true) {
@@ -153,8 +153,8 @@ static bool wait_ok_release(void) {
       }
     }
 
-    // Terminal `kbd` commands are complete taps: unlike physical and binary
-    // USB keys, they deliberately have no separate release event.
+    // Терминальные команды `kbd` — это завершённые нажатия: в отличие от
+    // физических и двоичных USB-клавиш, у них намеренно нет отдельного отпускания.
     if(!kbd::is_key_pressed(KEY_OK)) {
       kbd::clear_hold_key();
       return true;
@@ -238,8 +238,8 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
     }
 
     if(code == (i32) KEY_OK) {
-      // A terminal `kbd` command represents an already completed tap.  Only
-      // physical keys and binary USB KEY_EVENT presses can be held long.
+      // Терминальная команда `kbd` обозначает уже завершённое нажатие. Долго
+      // удерживаться могут только физические клавиши и двоичные нажатия KEY_EVENT.
       if(!kbd::is_key_pressed(KEY_OK)) return EXPLORER_KEY_OK;
       ok_down = true;
       long_ok_at = millis() + EXPLORER_LONG_OK_MS;
@@ -1812,9 +1812,9 @@ static bool explorer_item_menu(u16 directory_id,
     if(wait_initial_ok_release) {
       if(!wait_ok_release()) continue;
       wait_initial_ok_release = false;
-      // The first draw can happen before a terminal tap is classified or a
-      // held binary key is released. Repaint once so a just-restored physical
-      // LCD never keeps the USB surface's unmappable Unicode cells.
+      // Первая отрисовка может произойти до классификации терминального нажатия
+      // или отпускания удерживаемой двоичной клавиши. Повторная отрисовка не даст
+      // восстановленному физическому LCD сохранить непредставимые символы Unicode.
       draw_item_menu(entry, active);
     }
     const i32 key = wait_explorer_key(false);

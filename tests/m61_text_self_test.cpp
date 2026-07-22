@@ -98,7 +98,7 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
   return true;
 }
 
-} // namespace program_store
+} // пространство имён program_store
 
 namespace core_61 {
 
@@ -135,7 +135,7 @@ bool restore_context(const ContextBuffer& saved) {
   return true;
 }
 
-} // namespace core_61
+} // пространство имён core_61
 
 void hidden_start_loaded_program(void) {
   m_IK1302.comma = core_61::COMMA_RUN_POSITION;
@@ -176,7 +176,7 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
   return terminal_protocol::Result::ok();
 }
 
-} // namespace terminal_script
+} // пространство имён terminal_script
 
 static void reset_host(void) {
   m61_text::cancel();
@@ -275,7 +275,7 @@ static void test_indexed_loop_is_budgeted_and_uses_block_reads(void) {
     assert(executed_commands - before <= 8);
   }
   assert(executed_commands > 8);
-  assert(range_reads < 200); // old runner needed thousands of one-byte reads here
+  assert(range_reads < 200); // старому исполнителю здесь требовались тысячи однобайтовых чтений
   m61_text::cancel();
 }
 
@@ -295,7 +295,7 @@ static void test_run_waits_and_reports_later_failure(void) {
   assert(executed_commands == 1);
 
   m61_text::service();
-  assert(executed_commands == 1); // calculator is still running
+  assert(executed_commands == 1); // калькулятор всё ещё работает
   m_IK1302.comma = 0;
   m61_text::service();
   const m61_text::Error error = require_error();
@@ -378,8 +378,9 @@ static void test_trap_saves_runs_and_restores_at_exact_address(void) {
   assert(!executed_in_trap[0]);
   assert(executed_in_trap[1] && executed_in_trap[2]);
 
-  // Restoring the exact pre-command context encounters address 10 again.
-  // The first encounter is the one-shot resume; a later loop can trap again.
+  // Восстановление точного контекста до команды снова встречает адрес 10.
+  // Первая встреча — однократное продолжение; последующий цикл может снова
+  // попасть в ловушку.
   assert(!fire_program_boundary(10, 0x02));
   assert(fire_program_boundary(10, 0x02));
   m61_text::service();

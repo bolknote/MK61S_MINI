@@ -160,8 +160,8 @@ static Result parse(const char* args, bool expanded, bool emit,
 Result render(const char* args, bool expanded,
               WriteByte write_byte, WriteValue write_value,
               void* user_data) {
-  // Validate the complete expression first so a malformed suffix cannot leave
-  // a half-printed terminal message behind.
+  // Сначала проверяем всё выражение, чтобы ошибочный суффикс не оставил
+  // в терминале частично напечатанное сообщение.
   const Result validated = parse(args, expanded, false, nullptr, nullptr, nullptr);
   if(!validated.ok()) return validated;
   return parse(args, expanded, true, write_byte, write_value, user_data);
@@ -182,4 +182,4 @@ const char* error_message(Error error) {
   return "print failed";
 }
 
-} // namespace m61_print
+} // пространство имён m61_print

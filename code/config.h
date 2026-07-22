@@ -87,10 +87,10 @@
   #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
 #endif
 
-// USB Screen keeps a native 192x64 monochrome framebuffer behind the regular
-// display API. It is disabled by default because its static buffers cost RAM.
-// Set MK61_ENABLE_USB_SCREEN=1 in the firmware builder (or pass the same -D
-// flag) to add the mode and its Development menu entry.
+// USB-экран хранит собственный монохромный кадровый буфер 192x64 за обычным
+// API дисплея. По умолчанию он выключен, поскольку статические буферы расходуют ОЗУ.
+// Чтобы добавить режим и его пункт меню «Разработка», задайте
+// MK61_ENABLE_USB_SCREEN=1 в сборщике прошивки (или передайте такой же флаг -D).
 #ifndef MK61_ENABLE_USB_SCREEN
   #define MK61_ENABLE_USB_SCREEN 0
 #endif

@@ -1,5 +1,5 @@
-// Minimal host shim of Arduino.h so config.h / tools.hpp / mk61emu_core.cpp
-// compile on the host for the mk_math CORE-backend self test.
+// Минимальная хостовая заглушка Arduino.h для сборки config.h, tools.hpp и
+// mk61emu_core.cpp на хосте в самотесте CORE-подсистемы mk_math.
 #ifndef MK_MATH_HOST_ARDUINO_H
 #define MK_MATH_HOST_ARDUINO_H
 
@@ -8,7 +8,7 @@
 
 enum { HEX = 16, DEC = 10 };
 
-// STM32 pin-name constants referenced by config.h (values are irrelevant here).
+// Константы имён выводов STM32 из config.h (здесь их значения несущественны).
 enum {
   PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7, PA8, PA9, PA10, PA11, PA12, PA13, PA14, PA15,
   PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7, PB8, PB9, PB10, PB11, PB12, PB13, PB14, PB15,

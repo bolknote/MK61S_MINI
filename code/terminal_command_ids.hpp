@@ -54,10 +54,11 @@ constexpr bool terminal_command_allowed_in_script(u8 id) {
   }
 }
 
-// While a trap handler owns a saved calculator context, commands that advance
-// or mutate the calculator are unsafe. Read-only diagnostics, output and
-// script control remain available. CMD_RUN is admitted only so `run :label`
-// works; the dispatcher rejects its calculator/file forms in trap mode.
+// Пока обработчик ловушки владеет сохранённым контекстом калькулятора, команды,
+// продвигающие или изменяющие калькулятор, небезопасны. Диагностика только для
+// чтения, вывод и управление скриптом остаются доступны. CMD_RUN разрешена лишь
+// ради `run :label`; диспетчер отклоняет её формы для калькулятора и файлов
+// в режиме ловушки.
 constexpr bool terminal_command_allowed_in_trap(u8 id) {
   switch(id) {
     case CMD_VERSION:

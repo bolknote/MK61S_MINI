@@ -67,7 +67,7 @@ namespace ring_M {
   static constexpr usize EXPANDED_CHIP_COUNT = sizeof(EXPANDED_CHIP) / sizeof(EXPANDED_CHIP[0]);
   const K745* active_chips(void);
   usize active_chip_count(void);
-} // namespace ring_M
+} // пространство имён ring_M
 
 typedef enum { 
   X1 = 0,
@@ -96,7 +96,7 @@ typedef enum
 
 typedef enum
 {
-    // Offsets in RingM buffer
+    // Смещения в буфере RingM
     REG_X1  =   580 - 42 - 42,
     REG_X   =   580 - 42,
     REG_Y   =   580,
@@ -128,13 +128,13 @@ typedef struct { // Структура микросхемы К145IИК302
     uint8_t   R[IK13_MTICK_COUNT];
     uint8_t   ST[IK13_MTICK_COUNT];
 
-    const uint8_t*  pAND_AMK1;                      // Precalc offset from microprograms for signal_I 27..35
+    const uint8_t*  pAND_AMK1;                      // Заранее вычисленное смещение от микропрограмм для signal_I 27..35
     const uint8_t*  pAND_AMK;
     uint8_t*  pM;
 }  IK1302;
 
 /**
- * @brief The MK61 emulator object
+ * @brief Объект эмулятора МК-61
  */
 #define INDICATOR_STRING_LENGTH				15
 typedef struct {
@@ -149,10 +149,11 @@ extern  u8      ringM[SIZE_RING_M];
 
 namespace core_61 {
 
-  // The K145IK ROM contains 256 command words per chip. A hook runs immediately
-  // before the selected command word is decoded. It may inspect or alter the
-  // chip's live R/ST arrays and may substitute another command word for this
-  // fetch by changing replacement_address. The original ROM is never modified.
+  // ПЗУ К145ИК содержит 256 командных слов на микросхему. Обработчик вызывается
+  // непосредственно перед декодированием выбранного командного слова. Он может
+  // просматривать или менять рабочие массивы R/ST микросхемы и подставить при
+  // этой выборке другое командное слово, изменив replacement_address. Исходное
+  // ПЗУ никогда не изменяется.
   enum class RomChip : u8 {
     IK1302 = 0,
     IK1303 = 1,
@@ -173,12 +174,12 @@ namespace core_61 {
   static constexpr usize ROM_COMMAND_HOOK_CAPACITY = 8;
   static constexpr RomCommandHookHandle INVALID_ROM_COMMAND_HOOK = 0;
 
-  // User-level MK-61 command hooks. Unlike RomCommandHook, these hooks are
-  // keyed by the opcode seen by the calculator (for example 0xD7 = KIP7), not
-  // by an internal K145IK ROM address. BEFORE_EXECUTE callbacks may replace
-  // the opcode for this execution. AFTER_EXECUTE callbacks run after the
-  // command has committed its calculator-visible state and may safely adjust
-  // it through the public register APIs.
+  // Обработчики команд МК-61 пользовательского уровня. В отличие от RomCommandHook,
+  // они привязаны к коду, видимому калькулятору (например, 0xD7 = KIP7), а не
+  // к внутреннему адресу ПЗУ К145ИК. Обратные вызовы BEFORE_EXECUTE могут заменить
+  // код для этого выполнения. Обратные вызовы AFTER_EXECUTE работают после фиксации
+  // видимого калькулятору состояния команды и могут безопасно менять его через
+  // внешний API регистров.
   enum class Mk61CommandHookPhase : u8 {
     BEFORE_EXECUTE = 0,
     AFTER_EXECUTE = 1
@@ -192,9 +193,9 @@ namespace core_61 {
   struct Mk61CommandHookContext {
     Mk61CommandHookPhase phase;
     Mk61CommandSource source;
-    u8 opcode;             // Original opcode issued by keyboard/program.
-    u8 replacement_opcode; // Writable only in BEFORE; executed opcode in AFTER.
-    u32 sequence;          // Same execution identifier in BEFORE and AFTER.
+    u8 opcode;             // Исходный код, выданный клавиатурой или программой.
+    u8 replacement_opcode; // Изменяется только в BEFORE; в AFTER содержит выполненный код.
+    u32 sequence;          // Один идентификатор выполнения в BEFORE и AFTER.
   };
 
   using Mk61CommandHook = void (*)(Mk61CommandHookContext& context, void* user_data);
@@ -206,7 +207,7 @@ namespace core_61 {
   #pragma pack(push, 4)
   struct bcd_value { // тип хранимое значение mk61 8 десятичных знаков мантисса, 2 знака порядок, два знака
       u32   mantissa;
-      u16   signs_and_pow; // sign mantissa, pow low, pow high, sign pow 
+      u16   signs_and_pow; // знак мантиссы, младшая и старшая цифры порядка, знак порядка
   };
   #pragma pack(pop)
 
@@ -248,21 +249,22 @@ namespace core_61 {
   extern    void  clear_memory_registers(void);
   extern    bool  has_error(void);
 
-  // Register independent hooks for any combination of chip and ROM command
-  // address. Several public hooks may target the same command; they run in
-  // registration order and share replacement_address. Registration changes
-  // from inside a callback are rejected. A handle removes only its own
-  // registration. The count reports public hooks only.
+  // Регистрирует независимые обработчики для любого сочетания микросхемы и адреса
+  // команды ПЗУ. Несколько внешних обработчиков могут относиться к одной команде;
+  // они выполняются в порядке регистрации и совместно используют replacement_address.
+  // Изменение регистраций из обратного вызова отклоняется. Дескриптор удаляет
+  // только собственную регистрацию. Счётчик учитывает лишь внешние обработчики.
   extern    RomCommandHookHandle register_rom_command_hook(
       RomChip chip, u8 address, RomCommandHook callback, void* user_data = nullptr);
   extern    bool unregister_rom_command_hook(RomCommandHookHandle handle);
   extern    usize registered_rom_command_hook_count(void);
   extern    u32 rom_command_instruction(RomChip chip, u8 address);
 
-  // Register independent hooks for user-visible MK-61 opcodes. Several hooks
-  // may target the same opcode and phase; they run in registration order and
-  // share replacement_opcode. Replacement is applied only during
-  // BEFORE_EXECUTE and does not redispatch public hooks for the new opcode.
+  // Регистрирует независимые обработчики видимых пользователю кодов МК-61.
+  // Несколько обработчиков могут относиться к одному коду и фазе; они выполняются
+  // в порядке регистрации и совместно используют replacement_opcode. Замена
+  // применяется только в BEFORE_EXECUTE и не запускает внешние обработчики
+  // заново для нового кода.
   extern    Mk61CommandHookHandle register_mk61_command_hook(
       u8 opcode,
       Mk61CommandHookPhase phase,
@@ -271,11 +273,10 @@ namespace core_61 {
   extern    bool unregister_mk61_command_hook(Mk61CommandHookHandle handle);
   extern    usize registered_mk61_command_hook_count(void);
 
-  // One lightweight observer for boundaries between commands fetched from
-  // program memory. Returning true asks the current core_61::step() to yield
-  // before the opcode at context.address is executed. The next step sees the
-  // same boundary again; the owner is responsible for a one-shot bypass when
-  // it wants to resume that command.
+  // Один лёгкий наблюдатель границ между командами, выбранными из памяти программы.
+  // Возврат true просит текущий core_61::step() уступить управление до выполнения
+  // кода по context.address. Следующий шаг снова видит ту же границу; владелец
+  // отвечает за однократный обход, когда хочет продолжить эту команду.
   struct Mk61ProgramBoundaryContext {
     u8 address;
     u8 opcode;
@@ -289,11 +290,12 @@ namespace core_61 {
   extern    void clear_mk61_program_boundary_hook(void);
   extern    bool program_boundary_yielded(void);
 
-  // Snapshot / restore the whole live calculator state (stack ring, the three
-  // chip structs, UI mode flags, hooks' command state and angle unit). A
-  // caller-owned buffer lets a suspended M61 trap coexist with the private
-  // buffer used by the optional CORE math backend. The representation is
-  // intentionally opaque and is valid only in the same firmware run.
+  // Создаёт снимок или восстанавливает всё рабочее состояние калькулятора
+  // (кольцо стека, структуры трёх микросхем, флаги режима интерфейса, состояние
+  // команд обработчиков и единицу угла). Буфер во владении вызывающей стороны
+  // позволяет приостановленной ловушке M61 сосуществовать с частным буфером
+  // необязательной математической подсистемы CORE. Представление намеренно
+  // непрозрачно и допустимо только в том же запуске прошивки.
   static constexpr usize CONTEXT_BUFFER_SIZE = 1280;
   struct alignas(8) ContextBuffer {
     u8 bytes[CONTEXT_BUFFER_SIZE];
@@ -304,10 +306,10 @@ namespace core_61 {
   extern    void  save_context(void);
   extern    void  restore_context(void);
 
-  // In enhanced mode a built-in user-command hook recognizes opcode 3B (K RNG)
-  // and arms a one-shot IK1306:A7 ROM hook. A fresh seven-digit value from the
-  // seeded SplitMix stream is then written into the transient xi word exactly
-  // when the authentic command reads it. No visible register changes early.
+  // В улучшенном режиме встроенный обработчик пользовательской команды распознаёт
+  // код 3B (K RNG) и взводит однократный обработчик ПЗУ IK1306:A7. Новое семизначное
+  // значение из инициализированного потока SplitMix записывается во временное слово
+  // xi точно в момент чтения штатной командой. Видимые регистры заранее не меняются.
   extern    void  configure_random_seed(bool enable, u64 seed_material);
   extern    void  update_random_seed(u64 seed_material);
   extern    bool  random_seed_enabled(void);
@@ -349,7 +351,7 @@ const char* MK61Emu_GetIndicatorStr(const char* display_symbols);
 void MK61Emu_SetAngleUnit(AngleUnit angle);
 AngleUnit MK61Emu_GetAngleUnit(void);
 
-void  MK61Emu_get_1302_R(char* buff); // experement
+void  MK61Emu_get_1302_R(char* buff); // эксперимент
 /*
 #ifdef __cplusplus
 }

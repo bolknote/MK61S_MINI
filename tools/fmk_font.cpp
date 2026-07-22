@@ -318,16 +318,16 @@ std::vector<GlyphBitmap> render_glyphs(FT_Face face, const Options& options,
   const int source_height = top + bottom;
   double output_threshold = options.threshold;
   if (!options.threshold_explicit) {
-    // The default FreeType raster is deliberately supersampled (normally 4x
-    // cell height). A fixed 50% area cutoff erases strokes thinner than half
-    // an output pixel. Compensate by the largest linear downscale so a
-    // one-source-pixel stroke survives, while an explicit --threshold keeps
-    // its exact legacy meaning.
+    // Растр FreeType по умолчанию намеренно строится с избыточной выборкой
+    // (обычно с высотой в 4 раза больше ячейки). Фиксированный порог площади 50%
+    // стирает штрихи тоньше половины выходного пикселя. Компенсируем наибольшим
+    // линейным уменьшением, чтобы штрих в один исходный пиксель сохранился,
+    // а явный --threshold по-прежнему имел точный прежний смысл.
     const double downscale_x = static_cast<double>(source_width) / options.width;
     const double downscale_y = static_cast<double>(source_height) / options.height;
-    // The normal default raster is 4x the target height. Cap compensation at
-    // that factor so an unusually large --size or one outlier glyph cannot
-    // make every other glyph progressively bolder.
+    // Обычный растр по умолчанию в 4 раза выше целевого. Ограничиваем компенсацию
+    // этим коэффициентом, чтобы необычно большой --size или один выбивающийся
+    // глиф не делал все остальные глифы всё жирнее.
     const double linear_downscale = std::min(4.0, std::max({1.0, downscale_x, downscale_y}));
     output_threshold = std::max(1.0, output_threshold / linear_downscale);
   }
@@ -515,7 +515,7 @@ void write_file(const std::string& path, const std::vector<std::uint8_t>& data) 
   if (!output) throw std::runtime_error("cannot write output file");
 }
 
-}  // namespace
+}  // безымянное пространство имён
 
 int main(int argc, char** argv) {
   try {

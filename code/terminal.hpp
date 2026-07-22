@@ -890,10 +890,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       reset_line_editor();
       Serial.begin(115200);
 #if defined(USBCON) && defined(USBD_USE_CDC)
-      // Preserve the startup-banner grace period without blindly sleeping
-      // through a desktop activation request. Opening the CDC port raises DTR,
-      // so an attached host lets initialization continue immediately and any
-      // already received `uscreen` command remains buffered for the parser.
+      // Сохраняем паузу для стартового баннера, не пропуская вслепую запрос
+      // активации desktop-клиента. Открытие порта CDC поднимает DTR, поэтому при
+      // подключённом хосте инициализация сразу продолжается, а уже полученная
+      // команда `uscreen` остаётся в буфере для анализатора.
       const t_time_ms host_wait_started = millis();
       while(!Serial &&
             (t_time_ms) (millis() - host_wait_started) < 1800) {}
@@ -1485,8 +1485,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                                       bool trap_mode = false) {
         if(recive_pos == 0 || recive_pos > MAX_INPUT_CHAR) return terminal_protocol::Result::error();
         input_buffer[--recive_pos] = 0;
-        // The interactive terminal shares the same core as M61. It must not
-        // bypass a suspended trap with a direct kbd/cmd/run mutation.
+        // Интерактивный терминал использует общее с M61 ядро. Он не должен
+        // обходить приостановленную ловушку прямым изменением через kbd/cmd/run.
         if(m61_text::calculator_suspended()) trap_mode = true;
         if(!script_mode && current_directory != program_store::ROOT_ID) {
           program_store::Entry cwd_entry;

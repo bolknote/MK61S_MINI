@@ -1,6 +1,6 @@
 platform :osx, '10.15'
 
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+# Аналитика CocoaPods синхронно отправляет сетевую статистику, замедляя сборку Flutter.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
@@ -41,8 +41,8 @@ post_install do |installer|
     target.build_configurations.each do |config|
       config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.15'
       if target.name == 'libserialport'
-        # libserialport's C API intentionally returns byte counts as int.
-        # Keep these upstream conversion warnings out of application builds.
+        # API C библиотеки libserialport намеренно возвращает число байтов как int.
+        # Не допускаем эти предупреждения преобразования из upstream в сборки приложения.
         config.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-shorten-64-to-32 -Wno-implicit-enum-enum-cast'
       end
     end

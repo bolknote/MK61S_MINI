@@ -2328,8 +2328,8 @@ static void EditTinyBasicSlot(int slot,
   kbd::debounce_init();
   while(true) {
 #ifndef TINYBASIC_HOST_TEST
-    // The editor owns the foreground loop, so it must keep USB Screen
-    // heartbeats, virtual keys and frame transmission alive itself.
+    // Редактор владеет циклом переднего плана, поэтому сам должен поддерживать
+    // пульс USB-экрана, виртуальные клавиши и передачу кадров.
     idle_main_process();
     const u32 next_display_mode_revision =
       main_lcd().displayModeRevision();

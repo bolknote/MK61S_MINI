@@ -141,7 +141,7 @@ bool Writer::applyCsi(u8 command) {
     case 'K': return eraseLine(parameter(0, 0, false));
     case 's': saveCursor(); return true;
     case 'u': restoreCursor(); return true;
-    case 'm': return true; // SGR has no meaningful monochrome attribute.
+    case 'm': return true; // У SGR нет значимых монохромных атрибутов.
     default: return true;
   }
 }
@@ -176,7 +176,7 @@ bool Writer::write(u8 value) {
         parse_state = ParseState::TEXT;
         return applyCsi(value);
       }
-      // Private and intermediate CSI bytes are accepted but ignored.
+      // Частные и промежуточные байты CSI принимаются, но игнорируются.
       if(value >= 0x20U && value <= 0x3FU) return true;
       parse_state = ParseState::TEXT;
       return true;
@@ -209,4 +209,4 @@ bool Writer::write(u8 value) {
   }
 }
 
-} // namespace m61_ansi
+} // пространство имён m61_ansi

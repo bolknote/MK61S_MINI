@@ -251,9 +251,9 @@ bool update_time(MK61Display& display, const rtc_clock::DateTime& value) {
 }
 
 void discard_lcd_overlay_state(void) {
-  // Once USB Screen is attached all display calls target the 192x64 surface,
-  // so an old HD44780 lease must not be restored through that interface.  The
-  // physical LCD is dark and receives a complete redraw after USB Screen exits.
+  // После подключения USB-экрана все вызовы дисплея направляются на поверхность
+  // 192x64, поэтому старую аренду HD44780 нельзя восстанавливать через этот
+  // интерфейс. Физический LCD погашен и полностью перерисуется после выхода.
   state = {};
   reconcile_pending = false;
 }
@@ -308,8 +308,8 @@ void hide(MK61Display& display) {
     hide_graphic_overlay(display);
     return;
   }
-  // The USB surface no longer exists after detaching; only its bookkeeping
-  // remains and can be discarded without touching the physical LCD.
+  // После отключения USB-поверхности уже нет; остаются только её служебные
+  // данные, которые можно отбросить, не затрагивая физический LCD.
   graphic_state = {};
   // На обычном нажатии освобождать CGRAM не нужно: достаточно временно
   // убрать часы с экрана. Слоты проверяются перед повторным показом.

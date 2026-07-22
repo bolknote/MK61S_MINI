@@ -45,8 +45,8 @@ typedef struct { // Структура микросхемы К145IИК303
     io_t      AMK, MOD;
     io_t      S, S1, L, T, P, flag_FC;
 
-    const uint8_t   *pAND_AMK;  // Precalc offset from microprograms for signal_I 0..26
-    const uint8_t   *pAND_AMK1; // Precalc offset from microprograms for signal_I 27..35
+    const uint8_t   *pAND_AMK;  // Заранее вычисленное смещение от микропрограмм для signal_I 0..26
+    const uint8_t   *pAND_AMK1; // Заранее вычисленное смещение от микропрограмм для signal_I 27..35
     uint16_t  key_x, key_xm, key_y, comma;
 }  IK1303;
 
@@ -58,7 +58,7 @@ typedef struct { // Структура микросхемы К145IИК306
     uint8_t   R[IK13_MTICK_COUNT];
     uint8_t   ST[IK13_MTICK_COUNT];
 
-    const uint8_t*  pAND_AMK1; // Precalc offset from microprograms for signal_I 27..35
+    const uint8_t*  pAND_AMK1; // Заранее вычисленное смещение от микропрограмм для signal_I 27..35
     const uint8_t*  pAND_AMK;
     uint8_t*  pM;
 }  IK1306;
@@ -72,12 +72,12 @@ u8 ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
 const u8* END_ring_M = &ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
 static bool expanded_program_mode = false;
 
-// Optional MK61s random mode. A user-command hook recognizes opcode 3B (K RNG)
-// and arms a one-shot injection; a low-level IK1306:A7 hook then writes a fresh
-// value into the transient xi word immediately before the authentic ROM reads
-// it. Supplying every value is intentional: in measurement the native ROM
-// produced only 179 distinct values before repeating (a 26-value prefix
-// followed by a 153-value cycle).
+// Необязательный режим случайных чисел MK61s. Обработчик пользовательской
+// команды распознаёт код 3B (K RNG) и взводит однократную подстановку; затем
+// низкоуровневый обработчик IK1306:A7 записывает новое значение во временное
+// слово xi непосредственно перед чтением штатным ПЗУ. Каждое значение задаётся
+// намеренно: при измерении штатное ПЗУ выдало до повтора лишь 179 разных значений
+// (префикс из 26 значений и последующий цикл из 153 значений).
 static bool external_random_enabled = false;
 static bool external_random_pending = false;
 static u64 external_random_state = 0xA0761D6478BD642FULL;
@@ -419,8 +419,8 @@ namespace {
 
 static constexpr u8 ROM_CHIP_COUNT = 3;
 static constexpr u8 INVALID_HOOK_SLOT = 0xFF;
-// One slot is reserved for the built-in MK61s random hook. Public callers can
-// always use the full capacity advertised in mk61emu_core.h.
+// Одно место зарезервировано встроенным обработчиком случайных чисел MK61s.
+// Внешним вызывающим сторонам всегда доступна вся ёмкость из mk61emu_core.h.
 static constexpr usize ROM_COMMAND_HOOK_SLOT_COUNT =
     core_61::ROM_COMMAND_HOOK_CAPACITY + 1;
 static constexpr usize MK61_COMMAND_HOOK_SLOT_COUNT =
@@ -541,7 +541,7 @@ static core_61::RomCommandHookHandle add_rom_command_hook(
     slot.next = INVALID_HOOK_SLOT;
     slot.flags = internal ? HOOK_INTERNAL : 0;
 
-    // Internal hooks run first. Public hooks retain their registration order.
+    // Сначала вызываются внутренние обработчики. Внешние сохраняют порядок регистрации.
     if(internal) {
       slot.next = rom_command_hook_head;
       rom_command_hook_head = (u8) i;
@@ -750,10 +750,9 @@ static u8 dispatch_mk61_command_before(
   };
 
   mk61_command_hook_dispatch_depth++;
-  // Public callbacks match the command that was actually issued. Built-in
-  // callbacks run afterwards and match the final replacement, so replacing
-  // any opcode with 3B also engages the enhanced RNG and replacing 3B away
-  // does not.
+  // Внешние обратные вызовы сопоставляются с фактически выданной командой.
+  // Встроенные вызываются затем и сопоставляются с итоговой заменой, поэтому
+  // замена любого кода на 3B включает улучшенный ГСЧ, а замена 3B — нет.
   for(u8 pass = 0; pass < 2; pass++) {
     const bool internal = pass != 0;
     for(u8 slot_index = mk61_command_hook_head;
@@ -768,7 +767,7 @@ static u8 dispatch_mk61_command_before(
       const u8 target = internal ? context.replacement_opcode : opcode;
       if(slot.opcode != target) continue;
       slot.callback(context, slot.user_data);
-      // Only replacement_opcode is writable in the BEFORE phase.
+      // В фазе BEFORE разрешено изменять только replacement_opcode.
       context.phase = core_61::Mk61CommandHookPhase::BEFORE_EXECUTE;
       context.source = source;
       context.opcode = opcode;
@@ -803,8 +802,9 @@ static void dispatch_mk61_command_after(const ActiveMk61Command& command) {
       const u8 target = internal ? command.executed_opcode : command.opcode;
       if(slot.opcode != target) continue;
       slot.callback(context, slot.user_data);
-      // AFTER is observational at the dispatch layer. A callback may still
-      // alter calculator-visible state through the normal register API.
+      // На уровне диспетчеризации фаза AFTER предназначена только для наблюдения.
+      // Обратный вызов всё ещё может менять видимое калькулятору состояние через
+      // обычный API регистров.
       context.phase = core_61::Mk61CommandHookPhase::AFTER_EXECUTE;
       context.source = command.source;
       context.opcode = command.opcode;
@@ -860,8 +860,8 @@ static inline void __attribute__((always_inline)) encode_mk61_opcode(u8 opcode) 
 static inline u8 __attribute__((always_inline)) prefetched_program_address(void) {
   const usize steps = core_61::program_steps();
   if(steps == 0) return 0;
-  // At ROM address 06 the opcode has reached R30/R33, while the emulated IP
-  // still names that opcode. Operand fetching advances IP later.
+  // По адресу ПЗУ 06 код уже достиг R30/R33, а эмулируемый IP всё ещё указывает
+  // на него. Выборка операнда продвинет IP позднее.
   return (u8) ((usize) core_61::get_IP() % steps);
 }
 
@@ -882,13 +882,13 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
   if(address == 0x06U) {
     const u8 program_address = prefetched_program_address();
 
-    // The next program opcode is already present in R30/R33. Reaching this
-    // point also proves that the previous program command has committed.
+    // Следующий код программы уже находится в R30/R33. Достижение этой точки
+    // также подтверждает завершение предыдущей программной команды.
     if(active_mk61_command.active) finish_active_mk61_command();
 
-    // The authentic ПП/CALL ROM exposes its operand at this microaddress twice:
-    // while fetching the target and again while returning past that cell.
-    // Neither visit is a command boundary. A small LIFO mirrors nested calls.
+    // Штатное ПЗУ ПП/CALL дважды показывает операнд по этому микроадресу:
+    // при выборке цели и снова при возврате за эту ячейку. Ни одно посещение
+    // не является границей команды. Небольшой LIFO отражает вложенные вызовы.
     if(mk61_call_operand_depth > 0 &&
        program_address ==
            mk61_call_operand_addresses[mk61_call_operand_depth - 1]) {
@@ -922,8 +922,9 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
   if(address == 0x97U && m_IK1302.key_y != 0 &&
      !active_mk61_command.active) {
     const u8 opcode = decode_mk61_opcode();
-    // Keyboard В/О starts a fresh calculator call chain. A plain C/П resume
-    // intentionally keeps pending operands for a subroutine paused by C/П.
+    // Клавиатурная В/О начинает новую цепочку вызовов калькулятора. Обычное
+    // продолжение С/П намеренно сохраняет ожидающие операнды подпрограммы,
+    // приостановленной клавишей С/П.
     if(opcode == 0x52U) mk61_call_operand_depth = 0;
     if(!has_mk61_command_target(opcode)) return false;
     const u8 replacement = begin_mk61_command(
@@ -932,10 +933,10 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     return false;
   }
 
-  // Keyboard commands return to the normal display-idle loop at address 33
-  // only after their calculator-visible result has committed. Defer AFTER to
-  // the end of core_61::step(), where the serial ring is at its public-API
-  // boundary and set_stack_register()/write_stack_register() are safe.
+  // Клавиатурные команды возвращаются к обычному циклу ожидания дисплея по
+  // адресу 33 лишь после фиксации видимого калькулятору результата. Откладываем
+  // AFTER до конца core_61::step(), где последовательное кольцо находится на
+  // границе внешнего API и set_stack_register()/write_stack_register() безопасны.
   if(address == 0x33U && active_mk61_command.active &&
      active_mk61_command.source == core_61::Mk61CommandSource::KEYBOARD) {
     keyboard_command_complete_pending = true;
@@ -943,7 +944,7 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
   return false;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 namespace core_61 {
 
@@ -1005,7 +1006,7 @@ u32 rom_command_instruction(RomChip chip, u8 address) {
   return 0;
 }
 
-} // namespace core_61
+} // пространство имён core_61
 
 inline u8* IK1302_M_START(void) {
   return &ringM[expanded_program_mode ? OFFSET_IK1302_EXPANDED : OFFSET_IK1302_CLASSIC];
@@ -1449,7 +1450,7 @@ static const u8  IK1306_AND_AMK[((3 * 3) + 7) * 128] = {
   0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 
 };
 
-//TODO: remove me static
+// TODO: удалить static
 inline void __attribute__((always_inline)) _CycleE(int J_signal_I, mtick_t &signal_I) {
     IK1302_Tick(signal_I, J_signal_I);
     IK1303_Tick(signal_I, J_signal_I);
@@ -1457,7 +1458,7 @@ inline void __attribute__((always_inline)) _CycleE(int J_signal_I, mtick_t &sign
 }
 
 
-//TODO: remove me
+// TODO: удалить
 inline void __attribute__((always_inline)) _CycleB(int J_signal_I, mtick_t &signal_I) {
     _CycleE(J_signal_I, signal_I);
     signal_I++;
@@ -1591,9 +1592,10 @@ static void inject_external_random_seed(
     core_61::RomCommandHookContext& context, void*) {
   if(!external_random_enabled || !external_random_pending) return;
   external_random_pending = false;
-  // These ST indices represent xi only at the pre-A7 fetch hook. The following
-  // ROM command consumes them immediately; ST is not a persistent xi register.
-  // The 999 exponent/service nibbles are part of the valid serial BCD format.
+  // Эти индексы ST представляют xi только в обработчике выборки перед A7.
+  // Следующая команда ПЗУ сразу их использует; ST не является постоянным
+  // регистром xi. Нибблы порядка и служебные нибблы 999 входят в допустимый
+  // последовательный формат BCD.
   u32 seed = next_external_random_seed();
   context.st[1] = 0;
   context.st[4] = seed % 10U; seed /= 10U;  // d7
@@ -1643,14 +1645,14 @@ void  cycle(void) {
       dumpm(signal_I, count);
       #endif
 
-          #pragma GCC unroll 99 //TODO: remove me
+          #pragma GCC unroll 99 // TODO: удалить
           for (auto _ : {0,1,2,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5, 6,7,8}) { CycleB(_); } //0..26
 
           m_IK1302.pAND_AMK = m_IK1302.pAND_AMK1;
           m_IK1303.pAND_AMK = m_IK1303.pAND_AMK1;
           m_IK1306.pAND_AMK = m_IK1306.pAND_AMK1;
 
-          #pragma GCC unroll 99 //TODO: remove me
+          #pragma GCC unroll 99 // TODO: удалить
           for (auto _ : {0,1,2, 3,4,5,6,7,8}) { CycleB(_); }    //27..35
 
       // signal == 36
@@ -1879,7 +1881,7 @@ void IK1303_Tick(mtick_t signal_I, usize J_signal_I) {
   //---------------------------------------------------------
  if((((microinstruction >> 24) & 0x03) == 0x2) || (((microinstruction >> 24) & 0x03) == 0x3)) {
      if (DIV3(signal_I) != m_IK1303.key_xm) {
-         // TODO remove if (m_IK1303.key_y > 0)
+         // TODO: удалить if (m_IK1303.key_y > 0)
          m_IK1303.S1 |= m_IK1303.key_y;
      }
  }
@@ -2217,12 +2219,12 @@ bool write_stack_register(stack reg, char sign, const char cmantissa[8], isize p
   }
 
   isize addr = (isize) core_61::stack_address(reg) + 1;
-  // mantissa convert
+  // преобразование мантиссы
   for(isize i=7; i >= 0; i--) {
     ringM[addr] = cmantissa[i] - '0';
     addr += 3;
   }
-  // pow convert
+  // преобразование порядка
   ringM[addr] = (sign == '-')? 9 : 0;
   if(pow < 0) {
     pow += 100;
@@ -2244,7 +2246,7 @@ const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_
   cvalue[0] = 0;
   if((int) reg < (int) stack::X1 || (int) reg > (int) stack::T) return cvalue;
 
-  // mantissa convert
+  // преобразование мантиссы
   usize i = core_61::stack_address(reg) + 1;
   isize pos = 9;
   do {
@@ -2253,7 +2255,7 @@ const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_
     i += 3;
   } while(pos > 0);
   cvalue[0] = (ringM[i] == 9)? '-' : ' ';
-  // pow convert
+  // преобразование порядка
   cvalue[10] = ' ';
   const usize powl = ringM[i + 3];
   const usize powh = ringM[i + 6];
@@ -2272,7 +2274,7 @@ const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_
   return &cvalue[0];
 }
 
-//                                           mantisa                   |    pow
+//                                           мантисса                  |  порядок
 //                                       0   1   2   3   4  5  6  7  8   9  10  11
 static const usize indicator_pos[12] = {24, 21, 18, 15, 12, 9, 6, 3, 0, 33, 30, 27};
 
@@ -2286,7 +2288,7 @@ usize active_chip_count(void) {
   return expanded_program_mode ? EXPANDED_CHIP_COUNT : CLASSIC_CHIP_COUNT;
 }
 
-} // namespace ring_M
+} // пространство имён ring_M
 
 namespace   core_61   {
 
@@ -2399,14 +2401,14 @@ void step(void) {
     }
 }
 
-// Full core state = the DOZU ring plus the three chip structs plus the angle
-// unit. Pointers inside the chip structs point into this process, so copying
-// them verbatim is safe as long as save/restore happen in the same run. This
-// captures everything the user can observe, including the screen register X2
-// (the IK1302 display latch, kept separately from stack X) and the error latch.
+// Полное состояние ядра: кольцо ДОЗУ, структуры трёх микросхем и единица угла.
+// Указатели внутри структур микросхем относятся к этому процессу, поэтому их
+// побайтовое копирование безопасно, пока сохранение и восстановление происходят
+// в одном запуске. Так захватывается всё наблюдаемое пользователем, включая
+// экранный регистр X2 (защёлку дисплея IK1302, отдельную от стека X) и защёлку ошибки.
 //
-// Caller-owned ContextBuffer storage keeps the default LIBM build free of an
-// additional hidden snapshot while still allowing M61 to suspend the engine.
+// Хранилище ContextBuffer во владении вызывающей стороны избавляет обычную
+// LIBM-сборку от дополнительного скрытого снимка, но позволяет M61 приостановить ядро.
 static constexpr u32 CORE_CONTEXT_MAGIC = 0x4D4B3631UL; // "MK61"
 
 struct CoreContextSnapshot {
@@ -2621,7 +2623,7 @@ u8    get_code(i32 addr){
 //          123456789012345678901234567890123
 //   nReg*42
 //     ----7--6--5--4--3--2--1--0--S--1--0--s
-//   { sign_num|sign_pow|len, abs(pow), mantissa... }
+//   { знак_числа|знак_порядка|длина, модуль(порядка), мантисса... }
 
 const u8* MK61Emu_UnpackRegster(u8 nReg, const u8 *pack_number) {
   if(pack_number == NULL) return NULL;

@@ -100,16 +100,16 @@ int main(void) {
   check(4U * 1024U * 1024U, 16U * 1024U * 1024U);
   check(8U * 1024U * 1024U, 16U * 1024U * 1024U);
   check(16U * 1024U * 1024U, 16U * 1024U * 1024U);
-  // Identification can be false in either direction. A low reported value
-  // must not truncate a larger physical device.
+  // Идентификация может ошибаться в обе стороны. Заниженное объявленное
+  // значение не должно обрезать физическое устройство большего размера.
   check(16U * 1024U * 1024U, 512U * 1024U);
   check(32U * 1024U * 1024U, 64U * 1024U * 1024U);
   check(64U * 1024U * 1024U, 512U * 1024U);
   check(128U * 1024U * 1024U, 128U * 1024U * 1024U);
 
-  // A W25Q128-class device produces an observable start/result pair for
-  // every binary-search candidate.  This is the boot trace used to diagnose
-  // a slow or stuck physical erase over the CDC terminal.
+  // Устройство класса W25Q128 выдаёт наблюдаемую пару начала и результата для
+  // каждого кандидата двоичного поиска. Этот загрузочный журнал используется
+  // для диагностики медленного или зависшего физического стирания через CDC-терминал.
   AliasingNor traced(16U * 1024U * 1024U);
   u32 traced_size = 0;
   probe_events.clear();
@@ -134,9 +134,9 @@ int main(void) {
   assert(probe_events[5].distinct);
   assert(probe_events[7].distinct);
 
-  // A 3-byte chip that ignores EN4B shifts a four-byte transaction instead
-  // of wrapping the intended address. The protocol guards must prevent that
-  // from looking like a valid 32/64 MiB boundary.
+  // Трёхбайтовая микросхема, игнорирующая EN4B, сдвигает четырёхбайтовую
+  // транзакцию вместо зацикливания нужного адреса. Защита протокола не должна
+  // принять это за допустимую границу 32/64 МиБ.
   AliasingNor ignored_en4b(16U * 1024U * 1024U, false);
   u32 ignored_en4b_size = 0;
   assert(flash_capacity_probe::detect(ignored_en4b,

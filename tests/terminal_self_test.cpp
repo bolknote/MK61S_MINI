@@ -78,7 +78,7 @@ static void test_assembler_accepts_final_mnemonic_and_is_atomic_input(void) {
 
   assembly = terminal_core::parse_assembly("0007 1 broken", 0, isa, 112);
   assert(assembly.error == terminal_core::AssemblyError::UNKNOWN_MNEMONIC);
-  assert(assembly.count == 1); // caller commits only when error == NONE
+  assert(assembly.count == 1); // вызывающий код фиксирует только при error == NONE
 
   assembly = terminal_core::parse_assembly("0111 1 1", 0, isa, 112);
   assert(assembly.error == terminal_core::AssemblyError::TOO_LONG);
@@ -328,14 +328,14 @@ static void test_rtc_datetime_parser_and_formatter(void) {
   assert(rtc_clock::parse_datetime("2026-07-19 14:35:00", value));
   assert(value.year == 2026 && value.month == 7 && value.day == 19);
   assert(value.hour == 14 && value.minute == 35 && value.second == 0);
-  assert(rtc_clock::weekday(value) == 7); // Sunday
+  assert(rtc_clock::weekday(value) == 7); // воскресенье
 
   char text[rtc_clock::DATETIME_TEXT_SIZE];
   assert(rtc_clock::format_datetime(value, text));
   assert(std::strcmp(text, "2026-07-19 14:35:00") == 0);
 
   assert(rtc_clock::parse_datetime("  2000-02-29 00:00:00  ", value));
-  assert(rtc_clock::weekday(value) == 2); // Tuesday
+  assert(rtc_clock::weekday(value) == 2); // вторник
   assert(!rtc_clock::parse_datetime("2023-02-29 00:00:00", value));
   assert(!rtc_clock::parse_datetime("2100-01-01 00:00:00", value));
   assert(!rtc_clock::parse_datetime("2026-04-31 00:00:00", value));

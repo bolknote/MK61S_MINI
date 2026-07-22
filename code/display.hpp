@@ -59,9 +59,9 @@ struct TextProfile {
 };
 
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
-// The virtual USB display and UC1609 share the same 192x64 text geometry.
-// Keep these presets independent from the physical LCD1602 geometry so an
-// LCD build can retain the selected USB-screen font between sessions.
+// Виртуальный USB-дисплей и UC1609 используют общую текстовую геометрию 192x64.
+// Эти профили не зависят от геометрии физического LCD1602, чтобы LCD-сборка
+// сохраняла выбранный шрифт USB-экрана между сеансами.
 static constexpr u8 FONT_5X8_ROWS = 6;
 static constexpr u8 FONT_5X9_ROWS = 7;
 static constexpr u8 FONT_3X5_ROWS = 10;
@@ -339,8 +339,8 @@ class MK61Display : public Print {
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_WIDTH = 32;
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_HEIGHT = 16;
 #if MK61_ENABLE_USB_SCREEN
-    // In normal UC1609 mode the renderer needs only the first 192-byte page.
-    // USB Screen reuses the same allocation as its complete 192x64 framebuffer.
+    // В обычном режиме UC1609 отрисовщику нужна только первая страница на 192 байта.
+    // USB-экран повторно использует этот блок как полный кадровый буфер 192x64.
     uint8_t render_buffer[usb_screen::FRAME_BYTES];
 #else
     uint8_t render_buffer[lcd_display::PIXEL_WIDTH];
@@ -406,7 +406,7 @@ class MK61Display : public Print {
 #endif
 #if MK61_ENABLE_USB_SCREEN
 #if defined(MK61_DISPLAY_LCD1602)
-    // LCD1602 has no readable graphics RAM, so it needs dedicated backing.
+    // Графическую ОЗУ LCD1602 нельзя прочитать, поэтому нужен отдельный буфер.
     u8 usb_framebuffer[usb_screen::FRAME_BYTES];
     lcd_display::TextProfile usb_text_profile;
 #endif

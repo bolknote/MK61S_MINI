@@ -30,7 +30,7 @@ static u8 bit_count(u64 mask) {
   return count;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 bool glyph_for_cell(const u8 viewport[VIEW_BYTES], u8 cell,
                     u8 rows[GLYPH_ROWS]) {
@@ -184,7 +184,7 @@ static bool append_diffusion(const u8 viewport[VIEW_BYTES],
   return true;
 }
 
-} // namespace
+} // безымянное пространство имён
 
 bool build_diffusion_sequence(const u8 viewport[VIEW_BYTES],
                               FrameSequence& sequence) {
@@ -211,4 +211,4 @@ u32 phase_hold_us(u32 transfer_us, u8 divisor) {
   return transfer_us * multiplier;
 }
 
-} // namespace a00_image_mux
+} // пространство имён a00_image_mux

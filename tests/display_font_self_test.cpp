@@ -54,10 +54,10 @@ static std::vector<u8> mono_fixture(void) {
   bytes[fmk::HEADER_SIZE + 2] = 1;
 
   BitWriter bits(bytes);
-  // A: raw 010 101 111 101 101.
+  // A: исходные данные 010 101 111 101 101.
   bits.write(0, 1);
   bits.write(0b010101111101101, 15);
-  // B: compressed as one 15-pixel run.
+  // B: сжато в одну серию из 15 пикселей.
   bits.write(1, 1);
   bits.write(1, 1);
   bits.write(13, 5);
@@ -78,8 +78,8 @@ static std::vector<u8> proportional_fixture(void) {
   bytes[fmk::HEADER_SIZE + 2] = 0;
 
   BitWriter bits(bytes);
-  bits.write(1, 4); // width 2
-  bits.write(2, 4); // advance 3
+  bits.write(1, 4); // ширина 2
+  bits.write(2, 4); // шаг 3
   bits.write(0, 1);
   bits.write(0b100111, 6);
   finish_font(bytes);
@@ -243,7 +243,7 @@ static void test_uc1609_buffer_geometry(void) {
   assert(!uc1609_safety::pixel_offset(12, 64, 0, 64, offset));
 }
 
-} // namespace
+} // безымянное пространство имён
 
 static void validate_external_font(const char* path, bool require_ink) {
   std::ifstream input(path, std::ios::binary);

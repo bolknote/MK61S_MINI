@@ -62,8 +62,8 @@ class Lzo1x:
         output_capacity = len(data) + len(data) // 16 + 64 + 3
         output = ctypes.create_string_buffer(output_capacity)
         output_len = ctypes.c_size_t(output_capacity)
-        # lzo_sizeof_dict_t is pointer-sized. On a 32-bit target these slot
-        # counts correspond to 64 KiB for LZO1X-1 and 8 KiB for 1-11.
+        # Размер lzo_sizeof_dict_t равен размеру указателя. На 32-разрядной цели
+        # такое число ячеек соответствует 64 КиБ для LZO1X-1 и 8 КиБ для 1-11.
         work = ctypes.create_string_buffer(work_slots * ctypes.sizeof(ctypes.c_void_p))
         status = function(source, len(data), output, ctypes.byref(output_len), work)
         if status != 0:

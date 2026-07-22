@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 
-/// Maps printable desktop-keyboard characters to short sequences of MK61
-/// matrix-key actions.  Text editors already understand these combinations,
-/// including the K+digit multi-tap alphabet, so the wire protocol remains the
-/// same as for the on-screen keyboard.
+/// Сопоставляет печатные символы desktop-клавиатуры с короткими последовательностями
+/// действий матричных клавиш МК-61. Текстовые редакторы уже понимают эти сочетания,
+/// включая алфавит многократных нажатий K+цифра, поэтому протокол передачи
+/// остаётся тем же, что и для экранной клавиатуры.
 abstract final class HostKeyboardMapping {
   static final Map<PhysicalKeyboardKey, ({String plain, String shifted})>
   _englishQwerty = {
@@ -151,9 +151,9 @@ abstract final class HostKeyboardMapping {
     'Z': 4,
   };
 
-  /// Returns matrix actions for one supported printable character.
-  /// Latin lower-case input deliberately becomes upper-case because that is
-  /// the alphabet exposed by the firmware text editors.
+  /// Возвращает матричные действия для одного поддерживаемого печатного символа.
+  /// Строчные латинские буквы намеренно превращаются в прописные, поскольку
+  /// именно такой алфавит предоставляют текстовые редакторы прошивки.
   static List<String>? actionsForCharacter(String? character) {
     if (character == null || character.runes.length != 1) return null;
     final direct = _direct[character];
@@ -169,10 +169,10 @@ abstract final class HostKeyboardMapping {
   static bool isSupported(String? character) =>
       actionsForCharacter(character) != null;
 
-  /// Returns the US-QWERTY character printed on a physical key. This bypasses
-  /// the active OS input source while the PC keyboard controls the device.
-  /// Unsupported English punctuation is still returned so callers can consume
-  /// it instead of accidentally falling back to an IME-produced character.
+  /// Возвращает символ US-QWERTY, напечатанный на физической клавише. Пока
+  /// клавиатура ПК управляет устройством, активная раскладка ОС обходится.
+  /// Неподдерживаемая английская пунктуация всё равно возвращается, чтобы
+  /// вызывающий код поглотил её и случайно не перешёл к символу от IME.
   static String? englishCharacterForPhysicalKey(
     PhysicalKeyboardKey key, {
     required bool shift,

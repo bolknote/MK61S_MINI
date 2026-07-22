@@ -1,10 +1,10 @@
-// Host self test for the mk_math CORE backend.
+// Хостовый самотест подсистемы CORE в mk_math.
 //
-// Compiles the real MK-61 engine (mk61emu_core.cpp) together with the CORE math
-// backend (mk_math_core.cpp) and checks that every transcendental matches libm
-// within the calculator's 8-digit precision, that pow() behaves, that the pure
-// libm-free helpers agree with <math.h>, and that borrowing the core leaves the
-// live user state untouched.
+// Собирает настоящее ядро МК-61 (mk61emu_core.cpp) вместе с математической
+// подсистемой CORE (mk_math_core.cpp) и проверяет совпадение всех трансцендентных
+// функций с libm в пределах 8-разрядной точности калькулятора, работу pow(),
+// согласованность чистых вспомогательных функций без libm с <math.h> и
+// неизменность рабочего пользовательского состояния при аренде ядра.
 
 #include <cmath>
 #include <climits>
@@ -13,7 +13,7 @@
 #include <cstring>
 #include <limits>
 
-#include "mk_math.hpp"       // MK61_MATH_BACKEND == CORE (set via -D)
+#include "mk_math.hpp"       // MK61_MATH_BACKEND == CORE (задаётся через -D)
 #include "mk61emu_core.h"
 
 static int g_failures = 0;
@@ -42,7 +42,7 @@ static const char SYMBOLS[16] = {
     '0','1','2','3','4','5','6','7','8','9','-',' ',' ',' ',' ',' '
 };
 
-// Read any live stack register the same way the interpreters read X.
+// Читает любой рабочий регистр стека так же, как интерпретаторы читают X.
 static double read_live_reg(stack reg) {
   char value[15];
   value[14] = 0;
@@ -146,8 +146,8 @@ static void command_hook_probe(
     context.replacement_opcode = probe->replacement;
   }
   if(context.phase == core_61::Mk61CommandHookPhase::AFTER_EXECUTE && probe->override_x) {
-    // bcd_value follows the serial-ring digit order (least significant display
-    // digit first), hence 4.2424242 is encoded as 0x24242424.
+    // bcd_value следует порядку цифр в последовательном кольце (сначала младшая
+    // цифра дисплея), поэтому 4.2424242 кодируется как 0x24242424.
     const core_61::bcd_value replacement_x = {0x24242424U, 0};
     core_61::set_stack_register(stack::X, &replacement_x);
   }
@@ -167,8 +167,8 @@ static void press_matrix(MatrixKey key) {
   }
 }
 
-// Mirrors library_pmk::hidden_press_key(), which relies on core_61::step()
-// clearing the emulated matrix rather than calling SetKeyPress(0, 0).
+// Повторяет library_pmk::hidden_press_key(), которая рассчитывает на очистку
+// эмулируемой матрицы в core_61::step(), а не на вызов SetKeyPress(0, 0).
 static void press_matrix_without_explicit_release(MatrixKey key) {
   core_61::clear_displayed();
   for(int i = 0; i < 4; i++) {
@@ -425,8 +425,8 @@ static void test_rom_command_hooks(void) {
   core_61::configure_random_seed(false, 1);
   check_true("hook registry empty", core_61::registered_rom_command_hook_count() == 0);
 
-  // Use an IK1306 command address with the same ROM word as address 00. This
-  // lets the test exercise a real substitution without changing reset behavior.
+  // Используем адрес команды IK1306 с тем же словом ПЗУ, что и по адресу 00.
+  // Так тест проверяет настоящую подстановку, не меняя поведение сброса.
   u8 ik1306_alias = 0;
   const u32 command_00 = core_61::rom_command_instruction(core_61::RomChip::IK1306, 0);
   for(u16 address = 1; address <= 0xFF; address++) {
@@ -633,11 +633,11 @@ static void test_random_seed_hook(void) {
   core_61::configure_random_seed(true, 2468135);
   core_61::enable();
   check_true("enhanced mode enabled", core_61::random_seed_enabled());
-  press_matrix({4, 1}); // ordinary key 2 must not expose the hidden stream
+  press_matrix({4, 1}); // обычная клавиша 2 не должна раскрывать скрытый поток
   check_near("ordinary key unchanged", read_live_x(), 2.0, 1e-8);
 
-  // A CORE math call borrows and resets the emulator internally. Its snapshot
-  // must also preserve the external stream position.
+  // Математический вызов CORE арендует и внутренне сбрасывает эмулятор. Его
+  // снимок должен также сохранять позицию внешнего потока.
   core_61::configure_random_seed(true, 11223344);
   core_61::enable();
   const double before_math = next_random();
@@ -651,9 +651,9 @@ static void test_random_seed_hook(void) {
   check_near("math keeps RNG first", before_math, reference_first, 0.0);
   check_near("math keeps RNG stream", after_math, reference_second, 0.0);
 
-  // The native ROM produced only 179 distinct values (26-value prefix plus a
-  // 153-value cycle). Enhanced mode must not inherit that short repetition;
-  // tolerate a few birthday collisions in the 7-digit space.
+  // Штатное ПЗУ выдавало лишь 179 разных значений (префикс из 26 значений и
+  // цикл из 153). Улучшенный режим не должен наследовать этот короткий повтор;
+  // допускаем несколько коллизий дней рождения в 7-разрядном пространстве.
   core_61::configure_random_seed(true, 99887766);
   core_61::enable();
   static constexpr int SAMPLE_COUNT = 256;
@@ -667,9 +667,9 @@ static void test_random_seed_hook(void) {
   }
   check_true("no native short cycle", unique > 240);
 
-  // The built-in RNG recognizer runs after public BEFORE callbacks and follows
-  // the final replacement opcode. Replacing 3B with NOP must neither inject nor
-  // advance the stream.
+  // Встроенный распознаватель ГСЧ работает после внешних обратных вызовов BEFORE
+  // и следует итоговому коду замены. Замена 3B на NOP не должна ни подставлять
+  // значение, ни продвигать поток.
   static constexpr u32 REPLACEMENT_SEED = 3141592;
   core_61::configure_random_seed(true, REPLACEMENT_SEED);
   core_61::enable();
@@ -689,8 +689,8 @@ static void test_random_seed_hook(void) {
   const double unsuppressed_reference = first_random(true, REPLACEMENT_SEED);
   check_near("3B->NOP keeps RNG stream", after_suppressed, unsuppressed_reference, 0.0);
 
-  // Conversely, replacing another command with 3B must arm the same one-shot
-  // A7 injection used by a native K RNG command.
+  // И наоборот, замена другой команды на 3B должна взвести ту же однократную
+  // подстановку A7, которая используется штатной командой K RNG.
   static constexpr u32 REDIRECTED_SEED = 2718281;
   core_61::configure_random_seed(true, REDIRECTED_SEED);
   core_61::enable();
@@ -827,12 +827,12 @@ static void test_program_boundary_yield(void) {
   for(int i = 0; i < 64 && core_61::is_RUN(); i++) core_61::step();
   check_true("program finishes after hook removal", core_61::is_CALC());
 
-  // A trap address names the opcode byte. The operand of a two-byte jump is
-  // consumed internally and must never surface as its own command boundary.
+  // Адрес ловушки указывает на байт кода. Операнд двухбайтового перехода
+  // используется внутри и не должен появляться как отдельная граница команды.
   core_61::enable();
   for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
   page[0] = 0x51; // БП / JMP
-  page[1] = 0x02; // destination operand
+  page[1] = 0x02; // операнд назначения
   page[2] = 0x50;
   core_61::set_code_page(page);
   core_61::set_IP(0);
@@ -853,13 +853,13 @@ static void test_program_boundary_yield(void) {
       core_61::program_boundary_yielded());
   core_61::clear_mk61_program_boundary_hook();
 
-  // CALL uses a different ROM path and does expose its sequential operand at
-  // the common prefetch microaddress. It must still produce only real opcode
-  // boundaries: CALL 95, RET at 95, then HLT at 2.
+  // CALL использует другой путь ПЗУ и действительно показывает последовательный
+  // операнд по общему микроадресу предварительной выборки. Но результатом должны
+  // быть только настоящие границы кодов: CALL 95, RET по 95, затем HLT по 2.
   core_61::enable();
   for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
   page[0] = 0x53; // ПП / CALL
-  page[1] = 0x95; // destination operand as entered on the calculator
+  page[1] = 0x95; // операнд назначения в том виде, как он введён на калькуляторе
   page[2] = 0x50;
   page[95] = 0x52;
   core_61::set_code_page(page);
@@ -878,8 +878,8 @@ static void test_program_boundary_yield(void) {
   check_true("CALL program finishes", core_61::is_CALC());
   core_61::clear_mk61_program_boundary_hook();
 
-  // Nested calls expose both operands twice as well; suppression must follow
-  // the calculator return stack rather than remembering only the latest CALL.
+  // Вложенные вызовы тоже дважды показывают оба операнда; подавление должно
+  // следовать стеку возвратов калькулятора, а не помнить лишь последний CALL.
   core_61::enable();
   for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
   page[0] = 0x53;
@@ -914,7 +914,7 @@ static void test_save_restore(void) {
   MK61Emu_SetAngleUnit(DEGREE);
   core_61::edit_program = true;
 
-  // Load the whole stack with distinct values.
+  // Заполняем весь стек различающимися значениями.
   char mX[8] = {'1','2','3','4','5','0','0','0'}; write_stack_register(stack::X, ' ', mX, 2); // 123.45
   char mY[8] = {'6','7','8','9','0','0','0','0'}; write_stack_register(stack::Y, '-', mY, 0); // -6.789
   char mZ[8] = {'1','1','1','1','1','1','1','1'}; write_stack_register(stack::Z, ' ', mZ, 1); // 11.111111
@@ -924,12 +924,13 @@ static void test_save_restore(void) {
   const double bY = read_live_reg(stack::Y);
   const double bZ = read_live_reg(stack::Z);
   const double bT = read_live_reg(stack::T);
-  // X2 == the screen/display latch, kept separately from stack X.
+  // X2 — защёлка экрана/дисплея, хранящаяся отдельно от стека X.
   char x2_before[24]; std::strncpy(x2_before, MK61Emu_GetIndicatorStr(SYMBOLS), sizeof(x2_before) - 1);
   x2_before[sizeof(x2_before) - 1] = 0;
 
-  // Borrow the core for a normal op and for a domain error (√ of a negative,
-  // which latches ЕГГОГ inside the borrow); neither may leak into live state.
+  // Арендуем ядро для обычной операции и ошибки области определения (корня из
+  // отрицательного числа, который фиксирует ЕГГОГ внутри аренды); ни одна из них
+  // не должна проникнуть в рабочее состояние.
   (void) mk_math::sin(1.0);
   (void) mk_math::sqrt(-4.0);
 
