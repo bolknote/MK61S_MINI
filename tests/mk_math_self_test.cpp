@@ -93,6 +93,23 @@ struct CommandHookProbe {
   int* order_count;
 };
 
+struct ProgramBoundaryProbe {
+  int calls;
+  u8 target;
+  u8 last_address;
+  u8 last_opcode;
+  bool yield;
+};
+
+static bool program_boundary_probe(
+    const core_61::Mk61ProgramBoundaryContext& context, void* user_data) {
+  ProgramBoundaryProbe* const probe = (ProgramBoundaryProbe*) user_data;
+  probe->calls++;
+  probe->last_address = context.address;
+  probe->last_opcode = context.opcode;
+  return probe->yield && context.address == probe->target;
+}
+
 static void rom_hook_probe(core_61::RomCommandHookContext& context, void* user_data) {
   RomHookProbe* const probe = (RomHookProbe*) user_data;
   probe->calls++;
@@ -747,6 +764,90 @@ static void test_core_boundaries(void) {
   check_true("R_F cleared", MK61Emu_Read_R_mantissa(15) == 0);
 }
 
+static void test_program_boundary_yield(void) {
+  std::printf("program command boundary yield:\n");
+  core_61::clear_mk61_program_boundary_hook();
+  core_61::set_expanded_program_mode(false);
+  core_61::enable();
+
+  u8 page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
+  page[0] = 0x01;
+  page[1] = 0x02;
+  page[2] = 0x50;
+  core_61::set_code_page(page);
+  core_61::set_IP(0);
+
+  ProgramBoundaryProbe probe = {};
+  probe.target = 0;
+  probe.yield = true;
+  check_true("boundary hook installed",
+      core_61::set_mk61_program_boundary_hook(
+          &program_boundary_probe, &probe));
+  check_true("second boundary hook rejected",
+      !core_61::set_mk61_program_boundary_hook(
+          &program_boundary_probe, &probe));
+
+  press_matrix({2, 9}); // C/P
+  for(int i = 0; i < 32 && probe.calls == 0; i++) core_61::step();
+  check_true("yielded before address 0",
+      probe.calls > 0 && probe.last_address == 0 &&
+      probe.last_opcode == 0x01 && core_61::program_boundary_yielded());
+
+  const int repeated_before = probe.calls;
+  core_61::step();
+  check_true("same boundary repeats until resumed",
+      probe.calls == repeated_before + 1 && probe.last_address == 0 &&
+      probe.last_opcode == 0x01 && core_61::program_boundary_yielded());
+
+  probe.target = 1;
+  const int next_before = probe.calls;
+  core_61::step();
+  check_true("resume reaches following command",
+      probe.calls > next_before && probe.last_address == 1 &&
+      probe.last_opcode == 0x02 && core_61::program_boundary_yielded());
+
+  core_61::ContextBuffer saved = {};
+  check_true("caller context saved", core_61::save_context(saved));
+  const i32 saved_ip = core_61::get_IP();
+  set_x_bcd(0x12345678U);
+  core_61::set_IP(17);
+  check_true("caller context restored", core_61::restore_context(saved));
+  check_true("boundary IP restored", core_61::get_IP() == saved_ip);
+
+  core_61::clear_mk61_program_boundary_hook();
+  check_true("boundary yield flag cleared",
+      !core_61::program_boundary_yielded());
+  for(int i = 0; i < 64 && core_61::is_RUN(); i++) core_61::step();
+  check_true("program finishes after hook removal", core_61::is_CALC());
+
+  // A trap address names the opcode byte. The operand of a two-byte jump is
+  // consumed internally and must never surface as its own command boundary.
+  core_61::enable();
+  for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
+  page[0] = 0x51; // БП / JMP
+  page[1] = 0x02; // destination operand
+  page[2] = 0x50;
+  core_61::set_code_page(page);
+  core_61::set_IP(0);
+  probe = {};
+  probe.target = 0;
+  probe.yield = true;
+  check_true("two-byte boundary hook installed",
+      core_61::set_mk61_program_boundary_hook(
+          &program_boundary_probe, &probe));
+  press_matrix({2, 9});
+  check_true("two-byte opcode boundary",
+      probe.calls > 0 && probe.last_address == 0 &&
+      probe.last_opcode == 0x51 && core_61::program_boundary_yielded());
+  probe.target = 2;
+  core_61::step();
+  check_true("two-byte operand is not a boundary",
+      probe.last_address == 2 && probe.last_opcode == 0x50 &&
+      core_61::program_boundary_yielded());
+  core_61::clear_mk61_program_boundary_hook();
+}
+
 static void test_save_restore(void) {
   std::printf("core context save/restore isolation:\n");
   core_61::enable();
@@ -791,6 +892,7 @@ int main(void) {
   test_rom_command_hooks();
   test_mk61_command_hooks();
   test_random_seed_hook();
+  test_program_boundary_yield();
   test_core_boundaries();
   test_save_restore();
 

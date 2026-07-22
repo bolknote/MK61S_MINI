@@ -13,7 +13,7 @@ enum : u8 {
   CMD_LED, CMD_BEEP, CMD_IF, CMD_VFAT_LOG, CMD_FS_LIST, CMD_FS_REMOVE,
   CMD_FS_CLEAN, CMD_FS_PWD, CMD_FS_CD, CMD_FS_MKDIR, CMD_FS_MOVE,
   CMD_FS_RMDIR, CMD_FS_STAT, CMD_DATE, CMD_FS_GET, CMD_FS_PUT,
-  CMD_USB_SCREEN
+  CMD_USB_SCREEN, CMD_PRINT, CMD_RET
 };
 
 // Файлы M61 — это данные, а не привилегированный сеанс терминала. Список
@@ -46,6 +46,37 @@ constexpr bool terminal_command_allowed_in_script(u8 id) {
     case CMD_LED:
     case CMD_BEEP:
     case CMD_IF:
+    case CMD_PRINT:
+    case CMD_RET:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// While a trap handler owns a saved calculator context, commands that advance
+// or mutate the calculator are unsafe. Read-only diagnostics, output and
+// script control remain available. CMD_RUN is admitted only so `run :label`
+// works; the dispatcher rejects its calculator/file forms in trap mode.
+constexpr bool terminal_command_allowed_in_trap(u8 id) {
+  switch(id) {
+    case CMD_VERSION:
+    case CMD_LIST:
+    case CMD_DUMP:
+    case CMD_PUB:
+    case CMD_LASM:
+    case CMD_ISA:
+    case CMD_HOUT:
+    case CMD_REG_DUMP:
+    case CMD_1302:
+    case CMD_RING:
+    case CMD_STACK:
+    case CMD_LED:
+    case CMD_BEEP:
+    case CMD_IF:
+    case CMD_RUN:
+    case CMD_PRINT:
+    case CMD_RET:
       return true;
     default:
       return false;

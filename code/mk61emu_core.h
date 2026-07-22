@@ -271,12 +271,36 @@ namespace core_61 {
   extern    bool unregister_mk61_command_hook(Mk61CommandHookHandle handle);
   extern    usize registered_mk61_command_hook_count(void);
 
+  // One lightweight observer for boundaries between commands fetched from
+  // program memory. Returning true asks the current core_61::step() to yield
+  // before the opcode at context.address is executed. The next step sees the
+  // same boundary again; the owner is responsible for a one-shot bypass when
+  // it wants to resume that command.
+  struct Mk61ProgramBoundaryContext {
+    u8 address;
+    u8 opcode;
+  };
+
+  using Mk61ProgramBoundaryHook =
+      bool (*)(const Mk61ProgramBoundaryContext& context, void* user_data);
+
+  extern    bool set_mk61_program_boundary_hook(
+      Mk61ProgramBoundaryHook callback, void* user_data = nullptr);
+  extern    void clear_mk61_program_boundary_hook(void);
+  extern    bool program_boundary_yielded(void);
+
   // Snapshot / restore the whole live calculator state (stack ring, the three
-  // chip structs, UI mode flags and the angle unit) into an internal buffer.
-  // Defined only in the CORE math backend; used to borrow the engine for a
-  // transcendental evaluation and hand it back byte-for-byte, including the
-  // screen register X2 and any error latch. The default LIBM build never
-  // references them, so it pays no RAM for the snapshot buffer.
+  // chip structs, UI mode flags, hooks' command state and angle unit). A
+  // caller-owned buffer lets a suspended M61 trap coexist with the private
+  // buffer used by the optional CORE math backend. The representation is
+  // intentionally opaque and is valid only in the same firmware run.
+  static constexpr usize CONTEXT_BUFFER_SIZE = 1280;
+  struct alignas(8) ContextBuffer {
+    u8 bytes[CONTEXT_BUFFER_SIZE];
+  };
+
+  extern    bool  save_context(ContextBuffer& out);
+  extern    bool  restore_context(const ContextBuffer& saved);
   extern    void  save_context(void);
   extern    void  restore_context(void);
 

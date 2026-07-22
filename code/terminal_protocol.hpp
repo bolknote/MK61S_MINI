@@ -12,7 +12,8 @@ enum class ResultKind : u8 {
   RUN_PROGRAM,
   OPEN_FILE,
   LOAD_SLOT,
-  GOTO_LABEL
+  GOTO_LABEL,
+  RETURN_SCRIPT
 };
 
 struct Result {

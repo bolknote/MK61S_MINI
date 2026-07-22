@@ -77,6 +77,10 @@ inline void run_program_steps(void) {
   for(usize i = 0; i < step_count; i++) {
       core_61::step();
 
+      // M61 trap: the core stopped at a stable command boundary. Do not run
+      // another turbo step or deliver a key before the script saves context.
+      if(core_61::program_boundary_yielded()) return;
+
       if(core_61::is_CALC()) {
           event_stop_in_prg_mk61();     // обработка события "ОСТАНОВ ПРОГРАММЫ"
           break;

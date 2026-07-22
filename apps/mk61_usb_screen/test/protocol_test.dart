@@ -104,6 +104,13 @@ void main() {
       expect(parser.discardedPackets, 0);
     });
 
+    test('terminal multiplexing preserves raw ESC and FF bytes', () {
+      final parser = MkStreamParser();
+      expect(parser.add(const [0x1b, 0x5b, 0x32, 0x4a, 0xff]), isEmpty);
+      expect(parser.takeTerminalBytes(), [0x1b, 0x5b, 0x32, 0x4a, 0xff]);
+      expect(parser.discardedPackets, 0);
+    });
+
     test('PackBits decoder handles literals and runs', () {
       final decoded = MkProtocol.decodePackBits(const [2, 1, 2, 3, 253, 9], 7);
       expect(decoded, [1, 2, 3, 9, 9, 9, 9]);

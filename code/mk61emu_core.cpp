@@ -480,6 +480,10 @@ static core_61::Mk61CommandHookHandle random_mk61_command_hook =
 static ActiveMk61Command active_mk61_command = {};
 static bool keyboard_command_complete_pending;
 static u32 mk61_command_sequence;
+static core_61::Mk61ProgramBoundaryHook mk61_program_boundary_hook;
+static void* mk61_program_boundary_user_data;
+static bool mk61_program_boundary_dispatching;
+static bool mk61_program_boundary_yielded;
 
 static bool valid_rom_chip(core_61::RomChip chip) {
   return (u8) chip < ROM_CHIP_COUNT;
@@ -831,6 +835,7 @@ static void reset_mk61_command_runtime(void) {
   active_mk61_command = {};
   keyboard_command_complete_pending = false;
   external_random_pending = false;
+  mk61_program_boundary_yielded = false;
 }
 
 static inline u8 __attribute__((always_inline)) decode_mk61_opcode(void) {
@@ -843,28 +848,49 @@ static inline void __attribute__((always_inline)) encode_mk61_opcode(u8 opcode) 
   m_IK1302.R[33] = opcode >> 4;
 }
 
-static inline void __attribute__((always_inline)) handle_mk61_command_prefetch(
+static inline u8 __attribute__((always_inline)) prefetched_program_address(void) {
+  const usize steps = core_61::program_steps();
+  if(steps == 0) return 0;
+  // At ROM address 06 the opcode has reached R30/R33, while the emulated IP
+  // still names that opcode. Operand fetching advances IP later.
+  return (u8) ((usize) core_61::get_IP() % steps);
+}
+
+static bool dispatch_mk61_program_boundary(u8 opcode) {
+  if(mk61_program_boundary_hook == nullptr) return false;
+  const core_61::Mk61ProgramBoundaryContext context = {
+      prefetched_program_address(), opcode
+  };
+  mk61_program_boundary_dispatching = true;
+  const bool should_yield =
+      mk61_program_boundary_hook(context, mk61_program_boundary_user_data);
+  mk61_program_boundary_dispatching = false;
+  return should_yield;
+}
+
+static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     u8 address) {
   if(address == 0x06U) {
     // The next program opcode is already present in R30/R33. Reaching this
     // point also proves that the previous program command has committed.
     if(active_mk61_command.active) finish_active_mk61_command();
     const u8 opcode = decode_mk61_opcode();
-    if(!has_mk61_command_target(opcode)) return;
+    if(dispatch_mk61_program_boundary(opcode)) return true;
+    if(!has_mk61_command_target(opcode)) return false;
     const u8 replacement = begin_mk61_command(
         opcode, core_61::Mk61CommandSource::PROGRAM);
     encode_mk61_opcode(replacement);
-    return;
+    return false;
   }
 
   if(address == 0x97U && m_IK1302.key_y != 0 &&
      !active_mk61_command.active) {
     const u8 opcode = decode_mk61_opcode();
-    if(!has_mk61_command_target(opcode)) return;
+    if(!has_mk61_command_target(opcode)) return false;
     const u8 replacement = begin_mk61_command(
         opcode, core_61::Mk61CommandSource::KEYBOARD);
     encode_mk61_opcode(replacement);
-    return;
+    return false;
   }
 
   // Keyboard commands return to the normal display-idle loop at address 33
@@ -875,6 +901,7 @@ static inline void __attribute__((always_inline)) handle_mk61_command_prefetch(
      active_mk61_command.source == core_61::Mk61CommandSource::KEYBOARD) {
     keyboard_command_complete_pending = true;
   }
+  return false;
 }
 
 } // namespace
@@ -908,6 +935,26 @@ bool unregister_mk61_command_hook(Mk61CommandHookHandle handle) {
 
 usize registered_mk61_command_hook_count(void) {
   return public_mk61_command_hook_count;
+}
+
+bool set_mk61_program_boundary_hook(
+    Mk61ProgramBoundaryHook callback, void* user_data) {
+  if(callback == nullptr || mk61_program_boundary_dispatching ||
+     mk61_program_boundary_hook != nullptr) return false;
+  mk61_program_boundary_hook = callback;
+  mk61_program_boundary_user_data = user_data;
+  return true;
+}
+
+void clear_mk61_program_boundary_hook(void) {
+  if(mk61_program_boundary_dispatching) return;
+  mk61_program_boundary_hook = nullptr;
+  mk61_program_boundary_user_data = nullptr;
+  mk61_program_boundary_yielded = false;
+}
+
+bool program_boundary_yielded(void) {
+  return mk61_program_boundary_yielded;
 }
 
 u32 rom_command_instruction(RomChip chip, u8 address) {
@@ -1431,9 +1478,10 @@ void dumpm(uint16_t sig, uint16_t cyc) {
 }
 #endif
 
-inline  usize __attribute__((always_inline))  IK1302_GoZero(void) { 
+inline bool __attribute__((always_inline)) IK1302_GoZero(
+    usize& instruction_hi) {
     const u8 address = (u8) ((uint16_t) m_IK1302.R[36] + 16U * (uint16_t) m_IK1302.R[39]);
-    handle_mk61_command_prefetch(address);
+    if(handle_mk61_command_prefetch(address)) return false;
     const u8 command = apply_rom_command_hooks(
         core_61::RomChip::IK1302, address, m_IK1302.R, m_IK1302.ST);
     uint32_t uI = ROM.IK1302.instructions[command]; // читаем команду
@@ -1449,7 +1497,8 @@ inline  usize __attribute__((always_inline))  IK1302_GoZero(void) {
 
     m_IK1302.key_xm = m_IK1302.key_x - 1;
   
-  return uI_hi & 0xFF; // от команды остался нужен только 3-ий байт из которого будет получен адрес микропрограммы-3
+  instruction_hi = uI_hi & 0xFF;
+  return true; // от команды остался нужен только 3-ий байт из которого будет получен адрес микропрограммы-3
 }
 
 inline  usize __attribute__((always_inline))  IK1303_GoZero(void) {
@@ -1539,7 +1588,11 @@ void  cycle(void) {
   for (int count = 1; count <= MAX_CYCLE; count++){
       signal_I = 0;
 
-      const usize IK1302_uI_hi = IK1302_GoZero();
+      usize IK1302_uI_hi = 0;
+      if(!IK1302_GoZero(IK1302_uI_hi)) {
+        mk61_program_boundary_yielded = true;
+        return;
+      }
 
       dbgtrace(CORE61, "IK1302.IP = 0x", m_IK1302.R[39]*16 + m_IK1302.R[36]);
 
@@ -2291,6 +2344,7 @@ usize len_code_command(u8 cod) {
 }
 
 void step(void) {
+    mk61_program_boundary_yielded = false;
     m_IK1303.key_y = 1;
     m_IK1303.key_x = m_emu.m_angle_unit;
     ::cycle();
@@ -2312,10 +2366,12 @@ void step(void) {
 // captures everything the user can observe, including the screen register X2
 // (the IK1302 display latch, kept separately from stack X) and the error latch.
 //
-// The scratch buffer is sized exactly to those structs and is compiled only in
-// the CORE math backend, so the default LIBM build carries no extra RAM.
-#if MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
+// Caller-owned ContextBuffer storage keeps the default LIBM build free of an
+// additional hidden snapshot while still allowing M61 to suspend the engine.
+static constexpr u32 CORE_CONTEXT_MAGIC = 0x4D4B3631UL; // "MK61"
+
 struct CoreContextSnapshot {
+  u32 magic;
   u8 ring[sizeof(ringM)];
   IK1302 ik1302;
   IK1303 ik1303;
@@ -2328,44 +2384,65 @@ struct CoreContextSnapshot {
   bool random_pending;
   u64 random_state;
   ActiveMk61Command active_command;
+  u32 command_sequence;
   bool keyboard_complete_pending;
-  bool valid;
 };
 
-static CoreContextSnapshot context_snapshot = {};
+static_assert(sizeof(CoreContextSnapshot) <= core_61::CONTEXT_BUFFER_SIZE,
+              "core context does not fit the public opaque buffer");
+
+bool save_context(ContextBuffer& out) {
+  CoreContextSnapshot snapshot = {};
+  snapshot.magic = CORE_CONTEXT_MAGIC;
+  memcpy(snapshot.ring, ringM, sizeof(ringM));
+  snapshot.ik1302 = m_IK1302;
+  snapshot.ik1303 = m_IK1303;
+  snapshot.ik1306 = m_IK1306;
+  snapshot.emu = m_emu;
+  snapshot.backstep_comma = backstep_comma_position;
+  snapshot.edit = edit_program;
+  snapshot.expanded = expanded_program_mode;
+  snapshot.random_enabled = external_random_enabled;
+  snapshot.random_pending = external_random_pending;
+  snapshot.random_state = external_random_state;
+  snapshot.active_command = active_mk61_command;
+  snapshot.command_sequence = mk61_command_sequence;
+  snapshot.keyboard_complete_pending = keyboard_command_complete_pending;
+  memset(out.bytes, 0, sizeof(out.bytes));
+  memcpy(out.bytes, &snapshot, sizeof(snapshot));
+  return true;
+}
+
+bool restore_context(const ContextBuffer& saved) {
+  CoreContextSnapshot snapshot = {};
+  memcpy(&snapshot, saved.bytes, sizeof(snapshot));
+  if(snapshot.magic != CORE_CONTEXT_MAGIC) return false;
+  memcpy(ringM, snapshot.ring, sizeof(ringM));
+  m_IK1302 = snapshot.ik1302;
+  m_IK1303 = snapshot.ik1303;
+  m_IK1306 = snapshot.ik1306;
+  m_emu = snapshot.emu;
+  backstep_comma_position = snapshot.backstep_comma;
+  edit_program = snapshot.edit;
+  expanded_program_mode = snapshot.expanded;
+  external_random_enabled = snapshot.random_enabled;
+  external_random_pending = snapshot.random_pending;
+  external_random_state = snapshot.random_state;
+  active_mk61_command = snapshot.active_command;
+  mk61_command_sequence = snapshot.command_sequence;
+  keyboard_command_complete_pending = snapshot.keyboard_complete_pending;
+  return true;
+}
+
+#if MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
+static ContextBuffer context_snapshot = {};
 
 void save_context(void) {
-  memcpy(context_snapshot.ring, ringM, sizeof(ringM));
-  context_snapshot.ik1302 = m_IK1302;
-  context_snapshot.ik1303 = m_IK1303;
-  context_snapshot.ik1306 = m_IK1306;
-  context_snapshot.emu = m_emu;
-  context_snapshot.backstep_comma = backstep_comma_position;
-  context_snapshot.edit = edit_program;
-  context_snapshot.expanded = expanded_program_mode;
-  context_snapshot.random_enabled = external_random_enabled;
-  context_snapshot.random_pending = external_random_pending;
-  context_snapshot.random_state = external_random_state;
-  context_snapshot.active_command = active_mk61_command;
-  context_snapshot.keyboard_complete_pending = keyboard_command_complete_pending;
-  context_snapshot.valid = true;
+  (void) save_context(context_snapshot);
 }
 
 void restore_context(void) {
-  if(!context_snapshot.valid) return;
-  memcpy(ringM, context_snapshot.ring, sizeof(ringM));
-  m_IK1302 = context_snapshot.ik1302;
-  m_IK1303 = context_snapshot.ik1303;
-  m_IK1306 = context_snapshot.ik1306;
-  m_emu = context_snapshot.emu;
-  backstep_comma_position = context_snapshot.backstep_comma;
-  edit_program = context_snapshot.edit;
-  expanded_program_mode = context_snapshot.expanded;
-  external_random_enabled = context_snapshot.random_enabled;
-  external_random_pending = context_snapshot.random_pending;
-  external_random_state = context_snapshot.random_state;
-  active_mk61_command = context_snapshot.active_command;
-  keyboard_command_complete_pending = context_snapshot.keyboard_complete_pending;
+  (void) restore_context(context_snapshot);
 }
 #endif // MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
 

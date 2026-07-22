@@ -16,6 +16,8 @@
 #include "ledcontrol.h"
 #include "mk_math.hpp"
 #include "mk61_ref.hpp"
+#include "m61_print.hpp"
+#include "m61_text.hpp"
 #include "virtual_fat.hpp"
 #include "program_store.hpp"
 #include "language_workspace.hpp"
@@ -106,6 +108,8 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "led",     CMD_LED,           "led <0|1>[,ms,0|1,...] - LED pattern" },
   { "beep",    CMD_BEEP,          "beep <Hz>,<ms>[,...] - sound pattern" },
   { "if",      CMD_IF,            "if <reg><op><val> <cmd> - conditional" },
+  { "print",   CMD_PRINT,          "print \"text {X} {R0}\\r\\n\" - M61 output" },
+  { "ret",     CMD_RET,            "return from an M61 script/trap" },
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
   { "run",     CMD_RUN,           "run [name] - run program / stored file" },
   { "open",    CMD_OPEN,          "open <name> - run stored file" },
@@ -902,7 +906,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       reset_command_state();
     }
 
-    terminal_protocol::Result execute_script_line(const char* line);
+    terminal_protocol::Result execute_script_line(const char* line,
+                                                   bool trap_mode = false);
 
     void  echo_mk61_stack(void) {
       char cvalue[15];
@@ -1329,7 +1334,50 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     // if <операнд><op><операнд> <команда> - команда выполняется при истинном
     // условии. В m61-скриптах вместе с "run :метка" даёт условные переходы.
-    terminal_protocol::Result exec_if(bool script_mode) {
+    static bool print_byte(u8 value, void*) {
+      return Serial.write(value) == 1;
+    }
+
+    static bool print_value(const m61_print::ValueRef& value, void*) {
+      char text[15];
+      text[14] = 0;
+      if(value.kind == m61_print::ValueKind::REGISTER) {
+        MK61Emu_ReadRegister((int) value.index, text, terminal_symbols);
+        Serial.print(text);
+        return true;
+      }
+
+      const m61_print::StackValue stack_value =
+          (m61_print::StackValue) value.index;
+      if(stack_value == m61_print::StackValue::X2) {
+        Serial.print(MK61Emu_GetIndicatorStr(terminal_symbols));
+        return true;
+      }
+
+      stack reg = stack::X;
+      switch(stack_value) {
+        case m61_print::StackValue::X: reg = stack::X; break;
+        case m61_print::StackValue::Y: reg = stack::Y; break;
+        case m61_print::StackValue::Z: reg = stack::Z; break;
+        case m61_print::StackValue::T: reg = stack::T; break;
+        case m61_print::StackValue::X1: reg = stack::X1; break;
+        case m61_print::StackValue::X2: break;
+      }
+      Serial.print(read_stack_register(reg, text, terminal_symbols));
+      return true;
+    }
+
+    bool exec_print(void) {
+      const m61_print::Result result = m61_print::render(
+          command_args(), core_61::expanded_program_is_on(),
+          print_byte, print_value, nullptr);
+      if(result.ok()) return true;
+      Serial.print("Print error: ");
+      Serial.println(m61_print::error_message(result.error));
+      return false;
+    }
+
+    terminal_protocol::Result exec_if(bool script_mode, bool trap_mode) {
       const char* p = command_args();
       double lhs = 0.0;
       double rhs = 0.0;
@@ -1371,12 +1419,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       memmove(input_buffer, tail, tail_len);
       input_buffer[tail_len] = CR; // контракт execute(): последний символ CR
       recive_pos = tail_len + 1;
-      return execute(script_mode);
+      return execute(script_mode, trap_mode);
     }
 
-    terminal_protocol::Result execute(bool script_mode = false) {
+    terminal_protocol::Result execute(bool script_mode = false,
+                                      bool trap_mode = false) {
         if(recive_pos == 0 || recive_pos > MAX_INPUT_CHAR) return terminal_protocol::Result::error();
         input_buffer[--recive_pos] = 0;
+        // The interactive terminal shares the same core as M61. It must not
+        // bypass a suspended trap with a direct kbd/cmd/run mutation.
+        if(m61_text::calculator_suspended()) trap_mode = true;
         if(!script_mode && current_directory != program_store::ROOT_ID) {
           program_store::Entry cwd_entry;
           if(!program_store::entry_by_id(current_directory, cwd_entry) ||
@@ -1384,7 +1436,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             current_directory = program_store::ROOT_ID;
           }
         }
-        Serial.println();
+        if(!script_mode) Serial.println();
         dbgln(MINI,"[", recive_pos, "] '", (char*) input_buffer);
 
         if(!script_mode && pending_confirmation_cmd != CMD_UNKNOWN) {
@@ -1438,6 +1490,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         dbgln(MINI, "command id ", (int) command_id);
         if(script_mode && !terminal_command_allowed_in_script(command_id)) {
           Serial.print("Command is not allowed in M61 scripts: ");
+          Serial.println((const char*) input_buffer);
+          recive_pos = 0;
+          return terminal_protocol::Result::error();
+        }
+        if(trap_mode && !terminal_command_allowed_in_trap(command_id)) {
+          Serial.print("Command is not allowed in an M61 trap handler: ");
           Serial.println((const char*) input_buffer);
           recive_pos = 0;
           return terminal_protocol::Result::error();
@@ -1931,6 +1989,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
+              if(trap_mode) {
+                Serial.println("Only run :label is allowed in an M61 trap handler!");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
               if(*args != 0) {
                 if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
                 if(!OpenStoredFile(current_directory, args)) {
@@ -2055,7 +2118,26 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
             break;
           case  CMD_IF:
-              return exec_if(script_mode);
+              return exec_if(script_mode, trap_mode);
+          case CMD_PRINT:
+              if(!exec_print()) {
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+            break;
+          case CMD_RET:
+              if(!terminal_core::at_end(command_args())) {
+                Serial.println("Usage: ret");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              if(script_mode) {
+                return script_action(
+                    terminal_protocol::ResultKind::RETURN_SCRIPT, "");
+              }
+              Serial.println("ret works in M61 scripts only!");
+              recive_pos = 0;
+              return terminal_protocol::Result::error();
           case  CMD_HISTORY:
               history_print();
             break;
@@ -2164,7 +2246,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
 };
 
-inline terminal_protocol::Result class_terminal::execute_script_line(const char* line) {
+inline terminal_protocol::Result class_terminal::execute_script_line(
+    const char* line, bool trap_mode) {
   if(line == NULL) return terminal_protocol::Result::error();
 
   // input_buffer один на прошивку: пока скрипт исполняется между итерациями
@@ -2190,7 +2273,7 @@ inline terminal_protocol::Result class_terminal::execute_script_line(const char*
   } else {
     input_buffer[len] = CR;
     recive_pos = len + 1;
-    result = execute(true);
+    result = execute(true, trap_mode);
   }
 
   memcpy(input_buffer, interactive_line, MAX_INPUT_CHAR);

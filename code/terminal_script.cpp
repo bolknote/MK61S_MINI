@@ -10,8 +10,8 @@ void reset(void) {
   terminal.init_script();
 }
 
-terminal_protocol::Result execute(const char* line) {
-  return terminal.execute_script_line(line);
+terminal_protocol::Result execute(const char* line, bool trap_mode) {
+  return terminal.execute_script_line(line, trap_mode);
 }
 
 } // пространство имён terminal_script

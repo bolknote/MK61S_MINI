@@ -6,7 +6,7 @@
 namespace terminal_script {
 
 void reset(void);
-terminal_protocol::Result execute(const char* line);
+terminal_protocol::Result execute(const char* line, bool trap_mode = false);
 
 } // пространство имён terminal_script
 

@@ -541,6 +541,10 @@ void   mk61_menu_hook(i32 key) {
 }
 
 void   mk61_baseloop_hook(i32 key) {
+  // A trap handler owns an exact snapshot of the calculator. Keep both
+  // stepping and calculator key delivery paused until its `ret` restores it.
+  if(m61_text::calculator_suspended()) return;
+
   #if MK61_USER_EXPLORER_SHORTCUT
   if(key == KEY_USER_PRESS && !core_61::edit_program) {
     kbd::get_key(); // сервисная клавиша, не передаем ее в автомат МК-61

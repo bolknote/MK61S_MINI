@@ -1,6 +1,7 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
+#include "m61_print.hpp"
 #include "rtc_clock_core.hpp"
 #include "rtc_idle_clock_core.hpp"
 #include "rtc_settings_core.hpp"
@@ -9,6 +10,8 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <vector>
 
 static void test_input_capacity_reserves_terminator(void) {
   assert(terminal_core::input_can_append(0));
@@ -85,6 +88,8 @@ static void test_script_allowlist_is_explicit(void) {
   assert(terminal_command_allowed_in_script(CMD_ASM));
   assert(terminal_command_allowed_in_script(CMD_RUN));
   assert(terminal_command_allowed_in_script(CMD_IF));
+  assert(terminal_command_allowed_in_script(CMD_PRINT));
+  assert(terminal_command_allowed_in_script(CMD_RET));
   assert(!terminal_command_allowed_in_script(CMD_DFU));
   assert(!terminal_command_allowed_in_script(CMD_RESET));
   assert(!terminal_command_allowed_in_script(CMD_FS_REMOVE));
@@ -101,6 +106,99 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_DATE));
   assert(!terminal_command_allowed_in_script(CMD_USB_SCREEN));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
+
+  assert(terminal_command_allowed_in_trap(CMD_PRINT));
+  assert(terminal_command_allowed_in_trap(CMD_RET));
+  assert(terminal_command_allowed_in_trap(CMD_IF));
+  assert(terminal_command_allowed_in_trap(CMD_RUN));
+  assert(!terminal_command_allowed_in_trap(CMD_HIN));
+  assert(!terminal_command_allowed_in_trap(CMD_REG_SET));
+  assert(!terminal_command_allowed_in_trap(CMD_KBD));
+  assert(!terminal_command_allowed_in_trap(CMD_CMD));
+  assert(!terminal_command_allowed_in_trap(CMD_OPEN));
+}
+
+struct PrintCapture {
+  std::vector<u8> bytes;
+};
+
+static bool capture_print_byte(u8 value, void* user_data) {
+  static_cast<PrintCapture*>(user_data)->bytes.push_back(value);
+  return true;
+}
+
+static bool capture_print_value(const m61_print::ValueRef& value,
+                                void* user_data) {
+  PrintCapture& capture = *static_cast<PrintCapture*>(user_data);
+  const char* name = nullptr;
+  if(value.kind == m61_print::ValueKind::REGISTER) {
+    static const char hex[] = "0123456789ABCDEF";
+    capture.bytes.push_back('<');
+    capture.bytes.push_back('R');
+    capture.bytes.push_back((u8) hex[value.index]);
+    capture.bytes.push_back('>');
+    return true;
+  }
+  static const char* stack_names[] = {"X", "Y", "Z", "T", "X1", "X2"};
+  name = stack_names[value.index];
+  capture.bytes.push_back('<');
+  while(*name != 0) capture.bytes.push_back((u8) *name++);
+  capture.bytes.push_back('>');
+  return true;
+}
+
+static std::string captured_text(const PrintCapture& capture) {
+  return std::string(capture.bytes.begin(), capture.bytes.end());
+}
+
+static void test_m61_print_escapes_and_interpolation(void) {
+  PrintCapture capture;
+  m61_print::Result result = m61_print::render(
+      "\"TEST\\x1B[2J\\xFF\\r\\n\"", false,
+      capture_print_byte, capture_print_value, &capture);
+  assert(result.ok());
+  const u8 expected[] = {'T', 'E', 'S', 'T', 0x1B, '[', '2', 'J', 0xFF, '\r', '\n'};
+  assert(capture.bytes == std::vector<u8>(expected, expected + sizeof(expected)));
+
+  capture.bytes.clear();
+  result = m61_print::render(
+      " \"{{{X}}} {Y}/{Z}/{T}/{X1}/{X2} {0}/{RE}\"  ", false,
+      capture_print_byte, capture_print_value, &capture);
+  assert(result.ok());
+  assert(captured_text(capture) ==
+         "{<X>} <Y>/<Z>/<T>/<X1>/<X2> <R0>/<RE>");
+
+  capture.bytes.clear();
+  result = m61_print::render("\"{RF}\"", true,
+                             capture_print_byte, capture_print_value, &capture);
+  assert(result.ok() && captured_text(capture) == "<RF>");
+}
+
+static void test_m61_print_rejects_malformed_input_atomically(void) {
+  const char* invalid[] = {
+    "not quoted",
+    "\"ok\" trailing",
+    "\"unterminated",
+    "\"bad \\q\"",
+    "\"bad \\x0\"",
+    "\"bad \\x00\"",
+    "\"bad {Q}\"",
+    "\"bad }\""
+  };
+  for(const char* text : invalid) {
+    PrintCapture capture;
+    const m61_print::Result result = m61_print::render(
+        text, false, capture_print_byte, capture_print_value, &capture);
+    assert(!result.ok());
+    assert(capture.bytes.empty());
+  }
+
+  PrintCapture capture;
+  const m61_print::Result unavailable = m61_print::render(
+      "\"classic {RF}\"", false,
+      capture_print_byte, capture_print_value, &capture);
+  assert(unavailable.error == m61_print::Error::REGISTER_UNAVAILABLE);
+  assert(capture.bytes.empty());
 }
 
 static void test_file_transfer_checksum_matches_posix_cksum(void) {
@@ -326,6 +424,8 @@ int main(void) {
   test_decimal_parser_is_finite_and_bounded();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_script_allowlist_is_explicit();
+  test_m61_print_escapes_and_interpolation();
+  test_m61_print_rejects_malformed_input_atomically();
   test_file_transfer_checksum_matches_posix_cksum();
   test_file_transfer_hex_codec();
   test_rtc_datetime_parser_and_formatter();

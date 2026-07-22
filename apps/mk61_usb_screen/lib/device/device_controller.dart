@@ -110,10 +110,7 @@ class DeviceController extends ChangeNotifier {
   String get terminalText {
     if (_terminalTextCacheRevision != _terminalRevision) {
       _terminalTextCache = _renderTerminalText(
-        utf8.decode(
-          _terminalBytes.sublist(_terminalStart),
-          allowMalformed: true,
-        ),
+        _terminalBytes.sublist(_terminalStart),
       );
       _terminalTextCacheRevision = _terminalRevision;
     }
@@ -807,38 +804,26 @@ class DeviceController extends ChangeNotifier {
   }
 }
 
-String _renderTerminalText(String source) {
+const _terminalCoordinateLimit = 64 * 1024 - 1;
+
+class _TerminalCanvas {
   final lines = <List<int>>[<int>[]];
   var row = 0;
   var column = 0;
+  var savedRow = 0;
+  var savedColumn = 0;
 
-  for (final rune in source.runes) {
-    switch (rune) {
-      case 0x0d: // carriage return
-        column = 0;
-        continue;
-      case 0x0a: // line feed
-        row++;
-        column = 0;
-        if (row == lines.length) lines.add(<int>[]);
-        continue;
-      case 0x08: // backspace
-        if (column > 0) column--;
-        continue;
-      case 0x09: // tab
-        final spaces = 4 - (column & 3);
-        for (var i = 0; i < spaces; i++) {
-          final line = lines[row];
-          if (column < line.length) {
-            line[column] = 0x20;
-          } else {
-            line.add(0x20);
-          }
-          column++;
-        }
-        continue;
+  int _coordinate(int value) =>
+      value.clamp(0, _terminalCoordinateLimit).toInt();
+
+  void _ensureRow() {
+    while (lines.length <= row) {
+      lines.add(<int>[]);
     }
-    if (rune < 0x20 || rune == 0x7f) continue;
+  }
+
+  void write(int rune) {
+    _ensureRow();
     final line = lines[row];
     while (line.length < column) {
       line.add(0x20);
@@ -851,5 +836,202 @@ String _renderTerminalText(String source) {
     column++;
   }
 
-  return lines.map(String.fromCharCodes).join('\n');
+  void carriageReturn() => column = 0;
+
+  void lineFeed() {
+    row++;
+    column = 0;
+    _ensureRow();
+  }
+
+  void backspace() {
+    if (column > 0) column--;
+  }
+
+  void tab() {
+    final spaces = 4 - (column & 3);
+    for (var i = 0; i < spaces; i++) {
+      write(0x20);
+    }
+  }
+
+  void moveUp(int amount) => row = _coordinate(row - amount);
+  void moveDown(int amount) => row = _coordinate(row + amount);
+  void moveForward(int amount) => column = _coordinate(column + amount);
+  void moveBack(int amount) => column = _coordinate(column - amount);
+
+  void position(int ansiRow, int ansiColumn) {
+    row = _coordinate(ansiRow - 1);
+    column = _coordinate(ansiColumn - 1);
+  }
+
+  void saveCursor() {
+    savedRow = row;
+    savedColumn = column;
+  }
+
+  void restoreCursor() {
+    row = savedRow;
+    column = savedColumn;
+  }
+
+  void eraseLine(int mode) {
+    if (row >= lines.length) return;
+    final line = lines[row];
+    switch (mode) {
+      case 0:
+        if (column < line.length) line.removeRange(column, line.length);
+      case 1:
+        final end = (column + 1).clamp(0, line.length);
+        for (var i = 0; i < end; i++) {
+          line[i] = 0x20;
+        }
+      case 2:
+        line.clear();
+    }
+  }
+
+  void eraseDisplay(int mode) {
+    switch (mode) {
+      case 0:
+        eraseLine(0);
+        for (var i = row + 1; i < lines.length; i++) {
+          lines[i].clear();
+        }
+      case 1:
+        for (var i = 0; i < row && i < lines.length; i++) {
+          lines[i].clear();
+        }
+        eraseLine(1);
+      case 2:
+      case 3:
+        lines
+          ..clear()
+          ..add(<int>[]);
+    }
+  }
+
+  String render() => lines.map(String.fromCharCodes).join('\n');
+}
+
+int _ansiParameter(List<int> parameters, int index, int fallback) {
+  if (index >= parameters.length || parameters[index] < 0) return fallback;
+  final value = parameters[index];
+  return value == 0 && fallback == 1 ? 1 : value;
+}
+
+List<int> _parseAnsiParameters(List<int> runes, int begin, int end) {
+  final parameters = <int>[];
+  var value = -1;
+  for (var i = begin; i < end; i++) {
+    final rune = runes[i];
+    if (rune >= 0x30 && rune <= 0x39) {
+      final digit = rune - 0x30;
+      value = value < 0
+          ? digit
+          : (value * 10 + digit).clamp(0, _terminalCoordinateLimit + 1).toInt();
+      continue;
+    }
+    if (rune == 0x3b) {
+      parameters.add(value);
+      value = -1;
+      continue;
+    }
+    // Private/intermediate CSI parameters are accepted for commands such as
+    // SGR, but are not interpreted by the monochrome terminal model.
+  }
+  parameters.add(value);
+  return parameters;
+}
+
+void _applyCsi(_TerminalCanvas canvas, int command, List<int> parameters) {
+  switch (command) {
+    case 0x41: // A: cursor up
+      canvas.moveUp(_ansiParameter(parameters, 0, 1));
+    case 0x42: // B: cursor down
+      canvas.moveDown(_ansiParameter(parameters, 0, 1));
+    case 0x43: // C: cursor forward
+      canvas.moveForward(_ansiParameter(parameters, 0, 1));
+    case 0x44: // D: cursor back
+      canvas.moveBack(_ansiParameter(parameters, 0, 1));
+    case 0x48: // H: cursor position
+    case 0x66: // f: horizontal/vertical position
+      canvas.position(
+        _ansiParameter(parameters, 0, 1),
+        _ansiParameter(parameters, 1, 1),
+      );
+    case 0x4a: // J: erase display
+      canvas.eraseDisplay(_ansiParameter(parameters, 0, 0));
+    case 0x4b: // K: erase line
+      canvas.eraseLine(_ansiParameter(parameters, 0, 0));
+    case 0x73: // s: save cursor
+      canvas.saveCursor();
+    case 0x75: // u: restore cursor
+      canvas.restoreCursor();
+    case 0x6d: // m: SGR (accepted; monochrome UI has no attributes)
+      return;
+  }
+}
+
+String _renderTerminalText(List<int> sourceBytes) {
+  final source = utf8.decode(sourceBytes, allowMalformed: true);
+  final runes = source.runes.toList(growable: false);
+  final canvas = _TerminalCanvas();
+
+  for (var index = 0; index < runes.length; index++) {
+    final rune = runes[index];
+    switch (rune) {
+      case 0x0d: // carriage return
+        canvas.carriageReturn();
+        continue;
+      case 0x0a: // line feed
+        canvas.lineFeed();
+        continue;
+      case 0x08: // backspace
+        canvas.backspace();
+        continue;
+      case 0x09: // tab
+        canvas.tab();
+        continue;
+      case 0x1b: // ESC
+        if (index + 1 >= runes.length) continue;
+        final next = runes[index + 1];
+        if (next == 0x37) {
+          // ESC 7: save cursor
+          canvas.saveCursor();
+          index++;
+          continue;
+        }
+        if (next == 0x38) {
+          // ESC 8: restore cursor
+          canvas.restoreCursor();
+          index++;
+          continue;
+        }
+        if (next != 0x5b) {
+          index++; // Swallow an unsupported two-byte ESC command.
+          continue;
+        }
+
+        final parametersBegin = index + 2;
+        var finalIndex = parametersBegin;
+        while (finalIndex < runes.length &&
+            (runes[finalIndex] < 0x40 || runes[finalIndex] > 0x7e)) {
+          finalIndex++;
+        }
+        if (finalIndex >= runes.length) return canvas.render();
+        final parameters = _parseAnsiParameters(
+          runes,
+          parametersBegin,
+          finalIndex,
+        );
+        _applyCsi(canvas, runes[finalIndex], parameters);
+        index = finalIndex;
+        continue;
+    }
+    if (rune < 0x20 || rune == 0x7f) continue;
+    canvas.write(rune);
+  }
+
+  return canvas.render();
 }
