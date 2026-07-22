@@ -111,6 +111,7 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "beep",    CMD_BEEP,          "beep <Hz>,<ms>[,...] - sound pattern" },
   { "if",      CMD_IF,            "if <reg><op><val> <cmd> - conditional" },
   { "print",   CMD_PRINT,          "print \"text {X} {R0}\\r\\n\" - M61 output" },
+  { "wait",    CMD_WAIT,           "wait <1..60000> - pause M61 script (ms)" },
   { "ret",     CMD_RET,            "return from an M61 script/trap" },
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
   { "run",     CMD_RUN,           "run [name] - run program / stored file" },
@@ -2184,6 +2185,19 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 return terminal_protocol::Result::error();
               }
             break;
+          case CMD_WAIT: {
+              usize milliseconds = 0;
+              if(!script_mode ||
+                 !terminal_core::parse_single_unsigned(
+                     command_args(), 10, 60000, milliseconds) ||
+                 milliseconds == 0) {
+                Serial.println("Usage in M61: wait <1..60000>");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              recive_pos = 0;
+              return terminal_protocol::Result::wait((i32) milliseconds);
+            }
           case CMD_RET:
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: ret");

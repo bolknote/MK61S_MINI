@@ -28,6 +28,7 @@ static core_61::Mk61ProgramBoundaryHook boundary_hook = nullptr;
 static void* boundary_user_data = nullptr;
 static int context_saves = 0;
 static int context_restores = 0;
+static u32 fake_millis = 0;
 static std::vector<std::string> executed_lines;
 static std::vector<bool> executed_in_trap;
 
@@ -145,6 +146,10 @@ void MK61Emu_ClearCodePage(void) {
   clear_count++;
 }
 
+u32 m61_text_host_millis(void) {
+  return fake_millis;
+}
+
 bool OpenStoredFile(const char* name) {
   return m61_text::open_program(name);
 }
@@ -160,6 +165,9 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
   if(std::strncmp(line, "print ", 6) == 0) {
     m61_text::claim_display();
     return terminal_protocol::Result::ok();
+  }
+  if(std::strcmp(line, "wait 500") == 0) {
+    return terminal_protocol::Result::wait(500);
   }
   if(std::strcmp(line, "bad") == 0) return terminal_protocol::Result::error();
   if(std::strcmp(line, "run") == 0) return terminal_protocol::Result::action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
@@ -189,6 +197,7 @@ static void reset_host(void) {
   boundary_user_data = nullptr;
   context_saves = 0;
   context_restores = 0;
+  fake_millis = 0;
   executed_lines.clear();
   executed_in_trap.clear();
   m_IK1302.comma = 0;
@@ -314,6 +323,31 @@ static void test_print_owns_display_until_root_script_finishes(void) {
   m61_text::service();
   assert(!m61_text::active());
   assert(!m61_text::display_owned());
+}
+
+static void test_trap_wait_holds_snapshot_and_resumes_at_deadline(void) {
+  reset_host();
+  add_script("WAIT", "trap 10 run :frame\nrun\nret\n:frame\nprint \"frame\"\nwait 500\nret\n");
+  assert(m61_text::load_program("WAIT"));
+  assert(fire_program_boundary(10, 0x02));
+
+  m61_text::service();
+  assert(m61_text::calculator_suspended());
+  assert(m61_text::display_owned());
+  assert(context_saves == 1);
+  assert(context_restores == 0);
+
+  fake_millis = 499;
+  m61_text::service();
+  assert(m61_text::calculator_suspended());
+  assert(context_restores == 0);
+
+  fake_millis = 500;
+  m61_text::service();
+  assert(!m61_text::calculator_suspended());
+  assert(context_restores == 1);
+  assert(m61_text::active());
+  m61_text::cancel();
 }
 
 static void test_nested_script_returns_to_parent_and_depth_is_bounded(void) {
@@ -510,6 +544,7 @@ int main(void) {
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
   test_print_owns_display_until_root_script_finishes();
+  test_trap_wait_holds_snapshot_and_resumes_at_deadline();
   test_nested_script_returns_to_parent_and_depth_is_bounded();
   test_explicit_id_disambiguates_directory_names();
   test_trap_saves_runs_and_restores_at_exact_address();

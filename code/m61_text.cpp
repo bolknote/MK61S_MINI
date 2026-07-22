@@ -15,6 +15,7 @@
 bool OpenStoredFile(const char* args);
 void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
+u32 m61_text_host_millis(void);
 #endif
 
 #include <stdio.h>
@@ -38,7 +39,8 @@ static constexpr u8 RETURN_STACK_DEPTH = SCRIPT_STACK_DEPTH + 1;
 enum class RunnerState : u8 {
   IDLE,
   EXECUTING,
-  WAIT_RUN_STOP
+  WAIT_RUN_STOP,
+  WAIT_TIME
 };
 
 enum class ScriptSource : u8 {
@@ -101,6 +103,7 @@ static bool bypass_trap_once = false;
 static u8 bypass_trap_address = 0;
 static bool boundary_hook_installed = false;
 static bool display_claimed = false;
+static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
@@ -121,6 +124,18 @@ static const char* skip_spaces(const char* p) {
 static bool token_ends(const char* p) {
   p = skip_spaces(p);
   return is_line_end(*p);
+}
+
+static u32 runner_millis(void) {
+#ifndef M61_TEXT_HOST_TEST
+  return millis();
+#else
+  return m61_text_host_millis();
+#endif
+}
+
+static bool time_reached(u32 now, u32 deadline) {
+  return (i32) (now - deadline) >= 0;
 }
 
 static void clear_error(void) {
@@ -306,6 +321,7 @@ static void stop_runner(void) {
   }
   runner_state = RunnerState::IDLE;
   display_claimed = false;
+  wait_until_ms = 0;
   clear_current_script();
   return_stack_depth = 0;
   script_stack_depth = 0;
@@ -870,6 +886,14 @@ static bool execute_script_line(const char* raw_line) {
       if(goto_label(result.args)) return true;
       line_error_message = "label not found or invalid";
       return false;
+    case terminal_protocol::ResultKind::WAIT:
+      if(result.key <= 0 || result.key > 60000) {
+        line_error_message = "invalid wait duration";
+        return false;
+      }
+      wait_until_ms = runner_millis() + (u32) result.key;
+      runner_state = RunnerState::WAIT_TIME;
+      return true;
     case terminal_protocol::ResultKind::RETURN_SCRIPT:
       return return_from_script();
     case terminal_protocol::ResultKind::ERROR:
@@ -881,6 +905,12 @@ static bool execute_script_line(const char* raw_line) {
 }
 
 void service(void) {
+  if(runner_state == RunnerState::WAIT_TIME) {
+    if(!time_reached(runner_millis(), wait_until_ms)) return;
+    wait_until_ms = 0;
+    runner_state = RunnerState::EXECUTING;
+  }
+
   if(trap_pending) {
     const u16 trap_line = script_line;
     if(!enter_pending_trap()) {
@@ -933,6 +963,7 @@ static bool load_frame(const ScriptFrame& frame) {
   return_stack_depth = 0;
   script_stack_depth = 0;
   display_claimed = false;
+  wait_until_ms = 0;
   clear_trap_runtime(false);
   if(!core_61::set_mk61_program_boundary_hook(program_boundary_hook, NULL)) {
     fail_script("calculator boundary hook is unavailable", 0);

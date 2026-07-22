@@ -17,7 +17,9 @@ kbd 09
 trap 98 run :frame
 print "\x1B[2;1H"
 run
+print "\x1B[2;1H{X2} "
 ret
 :frame
 print "\x1B[2;1H{X2} "
+wait 500
 ret

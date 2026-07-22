@@ -13,6 +13,7 @@ enum class ResultKind : u8 {
   OPEN_FILE,
   LOAD_SLOT,
   GOTO_LABEL,
+  WAIT,
   RETURN_SCRIPT
 };
 
@@ -24,6 +25,7 @@ struct Result {
   static Result ok(void) { return {ResultKind::OK, -1, ""}; }
   static Result error(void) { return {ResultKind::ERROR, -1, ""}; }
   static Result keyboard(i32 value) { return {ResultKind::KEY, value, ""}; }
+  static Result wait(i32 milliseconds) { return {ResultKind::WAIT, milliseconds, ""}; }
   static Result action(ResultKind kind, const char* args) { return {kind, -1, args == 0 ? "" : args}; }
 };
 
