@@ -47,6 +47,13 @@ R_SELECTED=0
 L_PAGE=0
 R_PAGE=0
 STATUS_TEXT=
+COMMAND_TEXT=
+COMMAND_CURSOR=0
+COMMAND_HISTORY_INDEX=-1
+COMMAND_HISTORY_DRAFT=
+LAST_REMOTE_OUTPUT=
+LAST_REMOTE_TITLE='Терминал MK61s'
+REMOTE_CAPTURE_PATH=/
 
 L_NAMES=()
 L_KINDS=()
@@ -67,6 +74,15 @@ PLAN_TOTAL=0
 PLAN_ERROR=
 PLAN_SERIAL=0
 SELECTED_INDICES=()
+COMMAND_HISTORY=()
+WBMP_BYTES=()
+WBMP_WIDTH=0
+WBMP_HEIGHT=0
+WBMP_OFFSET=0
+WBMP_ROW_BYTES=0
+WBMP_ERROR=
+WBMP_MB_VALUE=0
+WBMP_PIXEL_DARK=0
 
 TERM_COLS=80
 TERM_LINES=24
@@ -144,6 +160,10 @@ Keys:
   F6        rename/move         F7        mkdir
   F8        delete              F9        device info
   F10       quit                Ctrl-R    refresh
+  Ctrl-O    last MK61s output
+
+Type a command and press Enter: the left panel runs it locally, while the
+right panel sends it to the MK61s terminal and captures its output.
 
 Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp
 Legacy aliases accepted on upload: .t1, .m2, .wbm
@@ -1107,12 +1127,39 @@ draw_panel_info() {
   printf '%s%s' "$style" "$(center_text "$text" "$PANEL_INNER")" >&9
 }
 
-draw_status() {
-  local style=$C_COMMAND text
-  case "$STATUS_TEXT" in *ошиб*|*Ошибка*|*Нельзя*|*нельзя*|*Таймаут*|*не\ удалось*|*Нет\ ответа*) style=$C_COMMAND_ERROR ;; esac
-  if [ -n "$STATUS_TEXT" ]; then text="MKC> $STATUS_TEXT"; else text='MKC>_'; fi
+draw_command_line() {
+  local path prompt max_prompt path_start input_width offset=0 visible cursor_column
+  if [ "$ACTIVE_PANEL" = L ]; then
+    path=$(display_local_path)
+  else
+    path="MK61s:$REMOTE_PATH"
+  fi
+  max_prompt=$((UI_WIDTH / 2 - 2))
+  [ "$max_prompt" -ge 8 ] || max_prompt=8
+  if [ "${#path}" -gt "$max_prompt" ]; then
+    path_start=$((${#path} - max_prompt + 1))
+    path="…${path:$path_start}"
+  fi
+  prompt="$path> "
+  input_width=$((UI_WIDTH - ${#prompt}))
+  [ "$input_width" -ge 1 ] || input_width=1
+  if [ "$COMMAND_CURSOR" -ge "$input_width" ]; then
+    offset=$((COMMAND_CURSOR - input_width + 1))
+  fi
+  visible=${COMMAND_TEXT:$offset:$input_width}
   cursor_to "$COMMAND_ROW" "$UI_X"
-  printf '%s%s' "$style" "$(fit_text "$text" "$UI_WIDTH")" >&9
+  printf '%s%s%s' "$C_COMMAND" "$prompt" \
+    "$(fit_text "$visible" "$input_width")" >&9
+  cursor_column=$((COMMAND_CURSOR - offset))
+  [ "$cursor_column" -lt "$input_width" ] || cursor_column=$((input_width - 1))
+  cursor_to "$COMMAND_ROW" "$((UI_X + ${#prompt} + cursor_column))"
+  printf '\033[?25h' >&9
+}
+
+# Старые операции вызывают draw_status для промежуточного обновления. Строка
+# теперь всегда остаётся командной и больше не превращается в область сообщений.
+draw_status() {
+  draw_command_line
 }
 
 draw_function_bar() {
@@ -1145,8 +1192,8 @@ draw_screen() {
   draw_panel_frame R
   draw_panel_entries L
   draw_panel_entries R
-  draw_status
   draw_function_bar
+  draw_command_line
   printf '\033[?2026l' >&9
 }
 
@@ -1199,12 +1246,13 @@ switch_panel() {
   draw_panel_top "$old"; draw_panel_top "$ACTIVE_PANEL"
   draw_selection_delta "$old" "$old_selected" "$old_page"
   draw_selection_delta "$ACTIVE_PANEL" "$new_selected" "$new_page"
+  draw_command_line
   printf '\033[?2026l' >&9
 }
 
 read_escape_tail() {
   local rest= char count=0
-  stty -echo -icanon min 0 time 1 <&9 2>/dev/null || true
+  stty -echo -icanon -iexten discard undef min 0 time 1 <&9 2>/dev/null || true
   # Читаем ровно одну CSI/SS3-последовательность. У SS3 первый байт `O` —
   # это префикс, а не конец: macOS Terminal кодирует F1..F4 как Esc O P..S.
   while [ "$count" -lt 8 ]; do
@@ -1217,19 +1265,19 @@ read_escape_tail() {
     esac
     count=$((count + 1))
   done
-  stty -echo -icanon min 1 time 0 <&9 2>/dev/null || true
+  stty -echo -icanon -iexten discard undef min 1 time 0 <&9 2>/dev/null || true
   printf '%s' "$rest"
 }
 
 drain_pending_input() {
   local char count=0
-  stty -echo -icanon min 0 time 0 <&9 2>/dev/null || true
+  stty -echo -icanon -iexten discard undef min 0 time 0 <&9 2>/dev/null || true
   while [ "$count" -lt 64 ]; do
     char=$(dd bs=1 count=1 <&9 2>/dev/null) || true
     [ -n "$char" ] || break
     count=$((count + 1))
   done
-  stty -echo -icanon min 1 time 0 <&9 2>/dev/null || true
+  stty -echo -icanon -iexten discard undef min 1 time 0 <&9 2>/dev/null || true
 }
 
 read_key() {
@@ -1274,6 +1322,7 @@ read_key() {
   elif [ "$key" = $'\t' ]; then printf tab
   elif [ "$key" = ' ' ]; then printf space
   elif [ "$key" = $'\177' ] || [ "$key" = $'\010' ]; then printf backspace
+  elif [ "$key" = $'\017' ]; then printf console
   elif [ "$key" = $'\022' ]; then printf refresh
   else printf '%s' "$key"
   fi
@@ -1289,6 +1338,7 @@ dialog_geometry() {
 
 draw_dialog_frame() {
   local title=$1 requested_width=$2 requested_height=$3 row label rest left right
+  printf '\033[?25l' >&9
   dialog_geometry "$requested_width" "$requested_height"
 
   # Чёрная двухсимвольная тень — характерная деталь диалогов NC.
@@ -1510,7 +1560,7 @@ show_lines() {
   available=$((content_end - content_start + 1))
   max_top=$((${#lines[@]} - available)); [ "$max_top" -ge 0 ] || max_top=0
   while true; do
-    printf '%s\033[?2026h\033[2J\033[H' "$C_OUTSIDE" >&9
+    printf '%s\033[?25l\033[?2026h\033[2J\033[H' "$C_OUTSIDE" >&9
     label=" $title "; label=$(clip_text "$label" "$((UI_WIDTH - 8))")
     rest=$((inner - ${#label})); [ "$rest" -ge 0 ] || rest=0
     left=$((rest / 2)); right=$((rest - left))
@@ -1564,7 +1614,7 @@ Tab          сменить активную панель
 Enter        войти в каталог
 Backspace    перейти в родительский каталог
 Space/Ins    отметить несколько объектов
-F3           встроенный просмотр (без редактора)
+F3           текст и WBMP (iTerm2 image, иначе Брайль)
 F5           копировать между компьютером и калькулятором
 F6           переименовать или переместить в активной панели
 F7           создать каталог
@@ -1572,10 +1622,479 @@ F8           удалить с подтверждением
 F9           сведения о памяти калькулятора
 F10          выход
 Ctrl-R       обновить обе панели
+Ctrl-O       повторно показать последний вывод MK61s
+
+Начните печатать в нижней строке и нажмите Enter. При активной левой панели
+команда выполняется локально в её каталоге. При активной правой панели команда
+выполняется терминалом MK61s, а её вывод открывается внутри MKC. Esc очищает
+набранную команду; Ctrl-P/Ctrl-N листают историю.
 
 Серые файлы имеют неподдерживаемый формат, имя или размер. Их можно
 переименовать через F6, просмотреть через F3 и удалить через F8, но F5
 на калькулятор для них заблокирован.'
+}
+
+command_set_text() {
+  COMMAND_TEXT=$1
+  COMMAND_CURSOR=${#COMMAND_TEXT}
+}
+
+command_reset_history_navigation() {
+  COMMAND_HISTORY_INDEX=-1
+  COMMAND_HISTORY_DRAFT=
+}
+
+command_insert_text() {
+  local text=$1
+  COMMAND_TEXT=${COMMAND_TEXT:0:$COMMAND_CURSOR}$text${COMMAND_TEXT:$COMMAND_CURSOR}
+  COMMAND_CURSOR=$((COMMAND_CURSOR + ${#text}))
+  command_reset_history_navigation
+}
+
+command_backspace() {
+  [ "$COMMAND_CURSOR" -gt 0 ] || return
+  COMMAND_TEXT=${COMMAND_TEXT:0:$((COMMAND_CURSOR - 1))}${COMMAND_TEXT:$COMMAND_CURSOR}
+  COMMAND_CURSOR=$((COMMAND_CURSOR - 1))
+  command_reset_history_navigation
+}
+
+command_delete() {
+  [ "$COMMAND_CURSOR" -lt "${#COMMAND_TEXT}" ] || return
+  COMMAND_TEXT=${COMMAND_TEXT:0:$COMMAND_CURSOR}${COMMAND_TEXT:$((COMMAND_CURSOR + 1))}
+  command_reset_history_navigation
+}
+
+command_history_add() {
+  local command=$1 count=${#COMMAND_HISTORY[@]}
+  [ -n "$command" ] || return
+  if [ "$count" -eq 0 ] || [ "${COMMAND_HISTORY[$((count - 1))]}" != "$command" ]; then
+    COMMAND_HISTORY[$count]=$command
+  fi
+  command_reset_history_navigation
+}
+
+command_history_move() {
+  local direction=$1 count=${#COMMAND_HISTORY[@]}
+  [ "$count" -gt 0 ] || return
+  if [ "$COMMAND_HISTORY_INDEX" -lt 0 ]; then
+    COMMAND_HISTORY_DRAFT=$COMMAND_TEXT
+    if [ "$direction" = previous ]; then COMMAND_HISTORY_INDEX=$((count - 1)); else return; fi
+  elif [ "$direction" = previous ]; then
+    [ "$COMMAND_HISTORY_INDEX" -gt 0 ] && COMMAND_HISTORY_INDEX=$((COMMAND_HISTORY_INDEX - 1))
+  else
+    COMMAND_HISTORY_INDEX=$((COMMAND_HISTORY_INDEX + 1))
+    if [ "$COMMAND_HISTORY_INDEX" -ge "$count" ]; then
+      COMMAND_HISTORY_INDEX=-1
+      command_set_text "$COMMAND_HISTORY_DRAFT"
+      return
+    fi
+  fi
+  command_set_text "${COMMAND_HISTORY[$COMMAND_HISTORY_INDEX]}"
+}
+
+run_local_command() {
+  local command=$1 shown_path result return_text
+  shown_path=$(display_local_path)
+  printf '\033[0m\033[?25h\033[?1049l' >&9
+  stty "$TTY_SAVED" <&9 2>/dev/null || true
+  printf '\n%s> %s\n' "$shown_path" "$command" >&9
+
+  # Ctrl-C должен останавливать запущенную команду, а не весь MKC.
+  trap '' INT
+  (
+    trap - INT
+    cd "$LOCAL_PATH" || exit 1
+    eval "$command"
+  ) <&9 >&9 2>&9
+  result=$?
+  trap 'exit 130' INT
+  stty "$TTY_SAVED" <&9 2>/dev/null || true
+
+  if [ "$result" -eq 0 ]; then return_text='Enter — вернуться в MKC'
+  else return_text="Код завершения: $result · Enter — вернуться в MKC"
+  fi
+  printf '\n[%s]' "$return_text" >&9
+  IFS= read -r _ <&9 || true
+
+  # В canonical extensions Ctrl-O — системный discard. Без -iexten драйвер
+  # терминала съедает его до read_key(), и окно вывода MK61s не открывается.
+  stty -echo -icanon -iexten discard undef min 1 time 0 <&9
+  printf '\033[?1049h\033[?25l' >&9
+  load_local_panel
+  draw_screen
+}
+
+remote_line_is_prompt() {
+  local line=$1
+  case "$line" in
+    /*'> ')
+      REMOTE_CAPTURE_PATH=${line:0:$(( ${#line} - 2 ))}
+      return 0
+      ;;
+    '...> ')
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+# Выполняет одну строку терминала и пишет только её вывод: эхо команды и prompt
+# удаляются. Дополнительный пустой ввод переводит следующий prompt на отдельную
+# строку — прошивка сама печатает его без завершающего перевода строки.
+remote_capture_command() {
+  local command=$1 output=$2 line count=0 saw_echo=0
+  : > "$output" || return 1
+  REMOTE_CAPTURE_PATH=$REMOTE_PATH
+  if [ -n "$MOCK_ROOT" ]; then
+    case "$command" in
+      pwd) printf '%s\n' "$REMOTE_PATH" > "$output" ;;
+      help) printf 'Mock MK61s terminal\nCommands are routed to the right panel.\n' > "$output" ;;
+      *) printf 'Mock MK61s: %s\n' "$command" > "$output" ;;
+    esac
+    return 0
+  fi
+
+  if [ "$(byte_length "$command")" -gt 96 ]; then
+    STATUS_TEXT='Команда MK61s длиннее безопасных 96 байт'
+    printf '%s\n' "$STATUS_TEXT" > "$output"
+    return 1
+  fi
+  remote_send "$command" || { STATUS_TEXT='Не удалось отправить команду MK61s'; return 1; }
+  sleep 0.05
+  remote_send '' || return 1
+
+  while [ "$count" -lt 2000 ]; do
+    if ! serial_read_line 8; then
+      STATUS_TEXT='Таймаут ответа терминала MK61s'
+      printf '\n[%s]\n' "$STATUS_TEXT" >> "$output"
+      return 1
+    fi
+    line=$SERIAL_LINE
+    if [ "$saw_echo" -eq 1 ] && remote_line_is_prompt "$line"; then return 0; fi
+    case "$line" in
+      /*'> '*) line=${line#*> } ;;
+      '...> '*) line=${line#*> } ;;
+    esac
+    if [ "$saw_echo" -eq 0 ]; then
+      if [ "$line" = "$command" ]; then saw_echo=1; continue; fi
+      # Полный старый prompt мог остаться после внешнего терминального клиента.
+      if remote_line_is_prompt "$line"; then count=$((count + 1)); continue; fi
+      saw_echo=1
+    fi
+    printf '%s\n' "$line" >> "$output"
+    count=$((count + 1))
+  done
+  STATUS_TEXT='Слишком длинный вывод терминала MK61s'
+  printf '\n[%s]\n' "$STATUS_TEXT" >> "$output"
+  return 1
+}
+
+run_remote_command() {
+  local command=$1 raw="$SESSION_DIR/mk61-command.raw" sync="$SESSION_DIR/mk61-sync.raw"
+  local ok=1 captured_path=$REMOTE_PATH
+  LAST_REMOTE_OUTPUT="$SESSION_DIR/mk61-terminal.txt"
+  LAST_REMOTE_TITLE="MK61s · $command"
+  : > "$LAST_REMOTE_OUTPUT"
+
+  if [ -z "$MOCK_ROOT" ]; then
+    if ! remote_capture_command "cd \"$REMOTE_PATH\"" "$sync"; then
+      printf 'MK61s:%s> %s\n' "$REMOTE_PATH" "$command" >> "$LAST_REMOTE_OUTPUT"
+      cat "$sync" >> "$LAST_REMOTE_OUTPUT"
+      ok=0
+    fi
+  fi
+  if [ "$ok" -eq 1 ]; then
+    if remote_capture_command "$command" "$raw"; then ok=1; else ok=0; fi
+    captured_path=$REMOTE_CAPTURE_PATH
+    printf 'MK61s:%s> %s\n' "$REMOTE_PATH" "$command" >> "$LAST_REMOTE_OUTPUT"
+    cat "$raw" >> "$LAST_REMOTE_OUTPUT"
+  fi
+  [ -s "$LAST_REMOTE_OUTPUT" ] || printf '(команда выполнена без вывода)\n' > "$LAST_REMOTE_OUTPUT"
+
+  if [ "$ok" -eq 1 ]; then
+    case "$captured_path" in
+      /*) REMOTE_PATH=$(remote_normalize / "$captured_path") ;;
+    esac
+    load_remote_panel || true
+    save_config
+  fi
+  show_lines "$LAST_REMOTE_TITLE" "$LAST_REMOTE_OUTPUT"
+}
+
+show_terminal_output() {
+  if [ -n "$LAST_REMOTE_OUTPUT" ] && [ -r "$LAST_REMOTE_OUTPUT" ]; then
+    show_lines "$LAST_REMOTE_TITLE" "$LAST_REMOTE_OUTPUT"
+  else
+    show_message 'Терминал MK61s' 'Команды в правой панели ещё не выполнялись.'
+  fi
+}
+
+execute_command_line() {
+  local command=$COMMAND_TEXT panel=$ACTIVE_PANEL
+  [ -n "$command" ] || return
+  command_history_add "$command"
+  command_set_text ''
+  draw_command_line
+  if [ "$panel" = L ]; then run_local_command "$command"
+  else run_remote_command "$command"
+  fi
+}
+
+iterm_inline_images_supported() {
+  # Обычный tmux не пропускает OSC 1337 без отдельной настройки passthrough.
+  # В этом случае безопаснее показать Unicode-preview, чем испортить экран.
+  [ -z "${TMUX:-}" ] || return 1
+  [ "${TERM_PROGRAM:-}" = 'iTerm.app' ] ||
+    [ "${LC_TERMINAL:-}" = 'iTerm2' ] ||
+    [ -n "${ITERM_SESSION_ID:-}" ]
+}
+
+wbmp_read_mb_uint() {
+  local count=${#WBMP_BYTES[@]} value=0 octet index=0
+  while [ "$index" -lt 5 ]; do
+    [ "$WBMP_OFFSET" -lt "$count" ] || { WBMP_ERROR='обрезанный заголовок'; return 1; }
+    octet=${WBMP_BYTES[$WBMP_OFFSET]}
+    WBMP_OFFSET=$((WBMP_OFFSET + 1))
+    value=$((value * 128 + (octet & 127)))
+    if [ "$((octet & 128))" -eq 0 ]; then WBMP_MB_VALUE=$value; return 0; fi
+    index=$((index + 1))
+  done
+  WBMP_ERROR='слишком большое поле размера'
+  return 1
+}
+
+wbmp_load() {
+  local source=$1 line byte count expected used_bits padding_mask row last
+  WBMP_BYTES=(); WBMP_WIDTH=0; WBMP_HEIGHT=0; WBMP_OFFSET=0
+  WBMP_ROW_BYTES=0; WBMP_ERROR=
+  while IFS= read -r line || [ -n "$line" ]; do
+    for byte in $line; do WBMP_BYTES[${#WBMP_BYTES[@]}]=$byte; done
+  done < <(od -An -v -tu1 "$source" 2>/dev/null) || {
+    WBMP_ERROR='файл не читается'; return 1
+  }
+  count=${#WBMP_BYTES[@]}
+  [ "$count" -ge 4 ] || { WBMP_ERROR='обрезанный заголовок'; return 1; }
+  [ "${WBMP_BYTES[0]}" -eq 0 ] || { WBMP_ERROR='поддерживается только Type 0'; return 1; }
+  [ "$((WBMP_BYTES[1] & 159))" -eq 0 ] || {
+    WBMP_ERROR='некорректный fixed header'; return 1
+  }
+  WBMP_OFFSET=2
+  wbmp_read_mb_uint || return 1; WBMP_WIDTH=$WBMP_MB_VALUE
+  wbmp_read_mb_uint || return 1; WBMP_HEIGHT=$WBMP_MB_VALUE
+  [ "$WBMP_WIDTH" -gt 0 ] && [ "$WBMP_HEIGHT" -gt 0 ] || {
+    WBMP_ERROR='нулевой размер изображения'; return 1
+  }
+  WBMP_ROW_BYTES=$(((WBMP_WIDTH + 7) / 8))
+  expected=$((WBMP_OFFSET + WBMP_ROW_BYTES * WBMP_HEIGHT))
+  [ "$count" -eq "$expected" ] || {
+    WBMP_ERROR="размер файла $count байт, ожидалось $expected"; return 1
+  }
+  used_bits=$((WBMP_WIDTH & 7))
+  if [ "$used_bits" -ne 0 ]; then
+    padding_mask=$(((1 << (8 - used_bits)) - 1)); row=0
+    while [ "$row" -lt "$WBMP_HEIGHT" ]; do
+      last=${WBMP_BYTES[$((WBMP_OFFSET + row * WBMP_ROW_BYTES + WBMP_ROW_BYTES - 1))]}
+      [ "$((last & padding_mask))" -eq 0 ] || {
+        WBMP_ERROR='ненулевые хвостовые биты строки'; return 1
+      }
+      row=$((row + 1))
+    done
+  fi
+}
+
+binary_byte() {
+  printf "\\$(printf '%03o' "$(( $1 & 255 ))")"
+}
+
+binary_u16le() {
+  binary_byte "$1"; binary_byte "$(( $1 >> 8 ))"
+}
+
+binary_u32le() {
+  binary_byte "$1"; binary_byte "$(( $1 >> 8 ))"
+  binary_byte "$(( $1 >> 16 ))"; binary_byte "$(( $1 >> 24 ))"
+}
+
+wbmp_write_bmp() {
+  local output=$1 stride image_size file_size row index padding
+  stride=$((((WBMP_WIDTH + 31) / 32) * 4))
+  image_size=$((stride * WBMP_HEIGHT)); file_size=$((62 + image_size))
+  {
+    # BITMAPFILEHEADER + BITMAPINFOHEADER, 1 bpp, без сжатия.
+    printf 'BM'; binary_u32le "$file_size"; binary_u32le 0; binary_u32le 62
+    binary_u32le 40; binary_u32le "$WBMP_WIDTH"; binary_u32le "$WBMP_HEIGHT"
+    binary_u16le 1; binary_u16le 1; binary_u32le 0; binary_u32le "$image_size"
+    binary_u32le 2835; binary_u32le 2835; binary_u32le 2; binary_u32le 2
+    # Палитра BGRA: WBMP уже кодирует 0=black, 1=white.
+    binary_u32le 0; binary_byte 255; binary_byte 255; binary_byte 255; binary_byte 0
+    # BMP хранит положительную высоту снизу вверх и выравнивает строки до 4 байт.
+    row=$((WBMP_HEIGHT - 1))
+    while [ "$row" -ge 0 ]; do
+      index=0
+      while [ "$index" -lt "$WBMP_ROW_BYTES" ]; do
+        binary_byte "${WBMP_BYTES[$((WBMP_OFFSET + row * WBMP_ROW_BYTES + index))]}"
+        index=$((index + 1))
+      done
+      padding=$((stride - WBMP_ROW_BYTES))
+      while [ "$padding" -gt 0 ]; do binary_byte 0; padding=$((padding - 1)); done
+      row=$((row - 1))
+    done
+  } > "$output"
+}
+
+wbmp_to_bmp() {
+  local source=$1 output=$2
+  wbmp_load "$source" || return 1
+  wbmp_write_bmp "$output"
+}
+
+wbmp_dark_at() {
+  local x=$1 y=$2 value mask
+  if [ "$x" -lt 0 ] || [ "$x" -ge "$WBMP_WIDTH" ] ||
+     [ "$y" -lt 0 ] || [ "$y" -ge "$WBMP_HEIGHT" ]; then
+    WBMP_PIXEL_DARK=0
+    return
+  fi
+  value=${WBMP_BYTES[$((WBMP_OFFSET + y * WBMP_ROW_BYTES + x / 8))]}
+  mask=$((128 >> (x & 7)))
+  if [ "$((value & mask))" -eq 0 ]; then WBMP_PIXEL_DARK=1
+  else WBMP_PIXEL_DARK=0
+  fi
+}
+
+wbmp_dark_block() {
+  local start_x=$1 start_y=$2 size=$3 x y end_x end_y
+  end_x=$((start_x + size)); end_y=$((start_y + size))
+  WBMP_PIXEL_DARK=0; y=$start_y
+  while [ "$y" -lt "$end_y" ] && [ "$y" -lt "$WBMP_HEIGHT" ]; do
+    x=$start_x
+    while [ "$x" -lt "$end_x" ] && [ "$x" -lt "$WBMP_WIDTH" ]; do
+      wbmp_dark_at "$x" "$y"
+      [ "$WBMP_PIXEL_DARK" -eq 0 ] || return 0
+      x=$((x + 1))
+    done
+    y=$((y + 1))
+  done
+  return 0
+}
+
+utf8_codepoint() {
+  local codepoint=$1
+  # U+2800..U+28FF всегда занимает три байта UTF-8. Кодируем вручную:
+  # printf из системного Bash 3.2 macOS ещё не поддерживает escape \uNNNN.
+  binary_byte "$((224 | (codepoint >> 12)))"
+  binary_byte "$((128 | ((codepoint >> 6) & 63)))"
+  binary_byte "$((128 | (codepoint & 63)))"
+}
+
+wbmp_braille_preview() {
+  local source=$1 output=$2 max_cols max_rows scale=1 needed x y columns rows
+  local base_x base_y dot_x dot_y dot bit dots
+  wbmp_load "$source" || return 1
+  max_cols=$((UI_WIDTH - 6)); [ "$max_cols" -ge 8 ] || max_cols=8
+  max_rows=$((UI_HEIGHT - 7)); [ "$max_rows" -ge 2 ] || max_rows=2
+  needed=$(((WBMP_WIDTH + max_cols * 2 - 1) / (max_cols * 2)))
+  [ "$needed" -le "$scale" ] || scale=$needed
+  needed=$(((WBMP_HEIGHT + max_rows * 4 - 1) / (max_rows * 4)))
+  [ "$needed" -le "$scale" ] || scale=$needed
+  columns=$(((WBMP_WIDTH + scale * 2 - 1) / (scale * 2)))
+  rows=$(((WBMP_HEIGHT + scale * 4 - 1) / (scale * 4)))
+  printf '%s×%s · Braille preview%s\n\n' "$WBMP_WIDTH" "$WBMP_HEIGHT" \
+    "$([ "$scale" -eq 1 ] || printf ' · 1:%s' "$scale")" > "$output"
+
+  # Unicode Braille: слева точки 1,2,3,7; справа 4,5,6,8 — та же
+  # раскладка, что в https://github.com/bolknote/XBM-Braille.
+  y=0
+  while [ "$y" -lt "$rows" ]; do
+    x=0; base_y=$((y * scale * 4))
+    while [ "$x" -lt "$columns" ]; do
+      base_x=$((x * scale * 2)); dots=0; dot=0
+      while [ "$dot" -lt 8 ]; do
+        case "$dot" in
+          0) dot_x=0; dot_y=0; bit=1 ;;
+          1) dot_x=0; dot_y=1; bit=2 ;;
+          2) dot_x=0; dot_y=2; bit=4 ;;
+          3) dot_x=1; dot_y=0; bit=8 ;;
+          4) dot_x=1; dot_y=1; bit=16 ;;
+          5) dot_x=1; dot_y=2; bit=32 ;;
+          6) dot_x=0; dot_y=3; bit=64 ;;
+          *) dot_x=1; dot_y=3; bit=128 ;;
+        esac
+        # При уменьшении точка зажигается, если в соответствующем квадрате
+        # есть хотя бы один тёмный пиксель: тонкие линии не исчезают.
+        wbmp_dark_block "$((base_x + dot_x * scale))" \
+          "$((base_y + dot_y * scale))" "$scale"
+        [ "$WBMP_PIXEL_DARK" -eq 0 ] || dots=$((dots | bit))
+        dot=$((dot + 1))
+      done
+      utf8_codepoint "$((10240 + dots))" >> "$output"
+      x=$((x + 1))
+    done
+    printf '\n' >> "$output"
+    y=$((y + 1))
+  done
+}
+
+show_wbmp_iterm() {
+  local title=$1 bitmap=$2 payload size inner viewer_bottom content_start content_end
+  local status_row image_top image_rows image_cols row label rest left right key
+  payload=$(base64 < "$bitmap" 2>/dev/null | tr -d '\r\n') || return 1
+  [ -n "$payload" ] || return 1
+  size=$(wc -c < "$bitmap" | tr -d '[:space:]')
+  drain_pending_input
+  inner=$((UI_WIDTH - 2)); viewer_bottom=$((UI_Y + UI_HEIGHT - 2))
+  content_start=$((UI_Y + 1)); status_row=$((viewer_bottom - 1))
+  content_end=$((status_row - 1)); image_top=$((content_start + 1))
+  image_rows=$((content_end - image_top + 1)); image_cols=$((inner - 4))
+  [ "$image_rows" -ge 1 ] && [ "$image_cols" -ge 1 ] || return 1
+
+  printf '%s\033[?25l\033[?2026h\033[2J\033[H' "$C_OUTSIDE" >&9
+  label=" $title "; label=$(clip_text "$label" "$((UI_WIDTH - 8))")
+  rest=$((inner - ${#label})); [ "$rest" -ge 0 ] || rest=0
+  left=$((rest / 2)); right=$((rest - left))
+  cursor_to "$UI_Y" "$UI_X"
+  printf '%s╔%s%s%s%s%s╗' "$C_BORDER" "$(repeat_char '═' "$left")" \
+    "$C_MENU" "$label" "$C_BORDER" "$(repeat_char '═' "$right")" >&9
+  row=$content_start
+  while [ "$row" -le "$content_end" ]; do
+    cursor_to "$row" "$UI_X"
+    printf '%s║%s%s%s║' "$C_BORDER" "$C_PANEL" "$(repeat_char ' ' "$inner")" "$C_BORDER" >&9
+    row=$((row + 1))
+  done
+  cursor_to "$content_start" "$((UI_X + 1))"
+  printf '%s%s' "$C_STATUS" \
+    "$(center_text "${WBMP_WIDTH}×${WBMP_HEIGHT} · iTerm2 inline image" "$inner")" >&9
+  cursor_to "$image_top" "$((UI_X + 3))"
+  printf '\033]1337;File=size=%s;width=%s;height=%s;preserveAspectRatio=1;inline=1:%s\a' \
+    "$size" "$image_cols" "$image_rows" "$payload" >&9
+  cursor_to "$status_row" "$UI_X"
+  printf '%s║%s%s%s║' "$C_BORDER" "$C_STATUS" \
+    "$(center_text 'Esc/F3 — close' "$inner")" "$C_BORDER" >&9
+  cursor_to "$viewer_bottom" "$UI_X"
+  printf '%s╚%s╝' "$C_BORDER" "$(repeat_char '═' "$inner")" >&9
+  draw_function_bar
+  printf '\033[?2026l' >&9
+  while true; do
+    key=$(read_key) || break
+    case "$key" in esc|f3|enter|f10) break ;; esac
+  done
+  draw_screen
+}
+
+show_wbmp() {
+  local title=$1 source=$2 bitmap="$SESSION_DIR/view.bmp" view="$SESSION_DIR/view.txt"
+  WBMP_ERROR=
+  if iterm_inline_images_supported && wbmp_to_bmp "$source" "$bitmap"; then
+    if show_wbmp_iterm "$title" "$bitmap"; then return; fi
+  elif [ -n "$WBMP_ERROR" ]; then
+    ui_alert 'View' "Некорректный WBMP: $WBMP_ERROR"
+    return
+  fi
+  if ! wbmp_braille_preview "$source" "$view"; then
+    ui_alert 'View' "Некорректный WBMP: $WBMP_ERROR"
+    return
+  fi
+  show_lines "$title" "$view"
 }
 
 show_file() {
@@ -1597,7 +2116,10 @@ show_file() {
     }
   fi
   extension=$(lowercase "$name")
-  case "$extension" in *.wbmp|*.wbm|*.fmk) binary=1 ;; esac
+  case "$extension" in
+    *.wbmp|*.wbm) show_wbmp "$name" "$source"; return ;;
+    *.fmk) binary=1 ;;
+  esac
   if [ "$binary" -eq 0 ] && { [ ! -s "$source" ] || LC_ALL=C grep -Iq . "$source" 2>/dev/null; }; then
     sed -n '1,400p' "$source" > "$view"
   else
@@ -1902,12 +2424,50 @@ main_loop() {
     if [ "$RESIZE_PENDING" -eq 1 ]; then RESIZE_PENDING=0; draw_screen; fi
     key=$(read_key) || break
     case "$key" in
-      up|down|left|right|home|end|pgup|pgdn) move_selection "$key" ;;
+      up)
+        if [ -n "$COMMAND_TEXT" ]; then command_history_move previous
+        else move_selection up
+        fi
+        ;;
+      down)
+        if [ -n "$COMMAND_TEXT" ]; then command_history_move next
+        else move_selection down
+        fi
+        ;;
+      left)
+        if [ -n "$COMMAND_TEXT" ]; then [ "$COMMAND_CURSOR" -gt 0 ] && COMMAND_CURSOR=$((COMMAND_CURSOR - 1))
+        else move_selection left
+        fi
+        ;;
+      right)
+        if [ -n "$COMMAND_TEXT" ]; then [ "$COMMAND_CURSOR" -lt "${#COMMAND_TEXT}" ] && COMMAND_CURSOR=$((COMMAND_CURSOR + 1))
+        else move_selection right
+        fi
+        ;;
+      home)
+        if [ -n "$COMMAND_TEXT" ]; then COMMAND_CURSOR=0; else move_selection home; fi
+        ;;
+      end)
+        if [ -n "$COMMAND_TEXT" ]; then COMMAND_CURSOR=${#COMMAND_TEXT}; else move_selection end; fi
+        ;;
+      pgup|pgdn) [ -n "$COMMAND_TEXT" ] || move_selection "$key" ;;
       tab) switch_panel ;;
-      enter) open_selected ;;
-      backspace) go_parent ;;
-      space|insert) toggle_mark ;;
+      enter)
+        if [ -n "$COMMAND_TEXT" ]; then execute_command_line; else open_selected; fi
+        ;;
+      backspace)
+        if [ -n "$COMMAND_TEXT" ]; then command_backspace; else go_parent; fi
+        ;;
+      delete) [ -n "$COMMAND_TEXT" ] && command_delete ;;
+      space)
+        if [ -n "$COMMAND_TEXT" ]; then command_insert_text ' '; else toggle_mark; fi
+        ;;
+      insert) toggle_mark ;;
       refresh) STATUS_TEXT='Обновляю…'; draw_status; refresh_panels; STATUS_TEXT='Панели обновлены'; draw_screen ;;
+      console) show_terminal_output ;;
+      $'\020') command_history_move previous ;;
+      $'\016') command_history_move next ;;
+      $'\025') command_set_text ''; command_reset_history_navigation ;;
       f1) show_help ;;
       f2|f4) ;;
       f3) show_file ;;
@@ -1917,8 +2477,12 @@ main_loop() {
       f8) delete_selected ;;
       f9) device_info ;;
       f10) break ;;
-      esc) STATUS_TEXT='F10 — выход'; draw_status ;;
+      esc) command_set_text ''; command_reset_history_navigation ;;
+      *)
+        case "$key" in [[:cntrl:]]) ;; *) command_insert_text "$key" ;; esac
+        ;;
     esac
+    draw_command_line
   done
 }
 
@@ -1974,7 +2538,9 @@ main() {
   start_monitor || die "не удалось открыть ${PORT:-устройство}"
 
   TTY_SAVED=$(stty -g <&9) || die 'не удалось настроить терминал'
-  stty -echo -icanon min 1 time 0 <&9
+  # Оставляем сигналы (Ctrl-C), но отключаем extended input: иначе Ctrl-O
+  # перехватывается tty как discard вместо команды MKC.
+  stty -echo -icanon -iexten discard undef min 1 time 0 <&9
   printf '\033[?1049h\033[?25l' >&9
   SCREEN_ACTIVE=1
   term_size
