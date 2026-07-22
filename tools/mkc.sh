@@ -1585,7 +1585,7 @@ show_file() {
   if [ "$panel" = L ]; then source="$LOCAL_PATH/$name"
   else
     source="$SESSION_DIR/view.bin"
-    STATUS_TEXT="Читаю $name…"; draw_status
+    STATUS_TEXT="Читаю ${name}…"; draw_status
     remote_get_file "$(remote_join "$REMOTE_PATH" "$name")" "$source" || {
       ui_alert 'View' "$STATUS_TEXT"
       return
