@@ -52,6 +52,10 @@ class Surface {
     void setTextProfile(TextProfile profile);
     TextProfile textProfile(void) const { return profile_; }
     u8 rows(void) const { return grid_.rows(); }
+    u8 cursorX(void) const { return grid_.cursorX(); }
+    u8 cursorY(void) const { return grid_.cursorY(); }
+    bool cursorUnderline(void) const { return cursor_underline_; }
+    bool cursorBlink(void) const { return cursor_blink_; }
     void setCursor(u8 x, u8 y);
     void cursorOn(void);
     void cursorOff(void);

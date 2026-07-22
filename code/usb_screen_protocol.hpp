@@ -59,11 +59,12 @@ enum Capability : u16 {
   CAP_HEARTBEAT = 1U << 3,
   CAP_ATOMIC_FRAMES = 1U << 4,
   CAP_TERMINAL_MUX = 1U << 5,
+  CAP_TERMINAL_KBD = 1U << 6,
 };
 
 static constexpr u16 CAPABILITIES =
   CAP_PACKBITS | CAP_KEY_EVENTS | CAP_HEARTBEAT | CAP_ATOMIC_FRAMES |
-  CAP_TERMINAL_MUX;
+  CAP_TERMINAL_MUX | CAP_TERMINAL_KBD;
 static constexpr usize OFFER_PAYLOAD_SIZE = 10;
 static constexpr usize CAPS_PAYLOAD_SIZE = 14;
 static constexpr usize FRAME_BEGIN_PAYLOAD_SIZE = 4;

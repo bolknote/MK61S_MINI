@@ -55,17 +55,71 @@ if command -v expect >/dev/null 2>&1; then
   export MKC_TEST_LOCAL="$work/local/Good"
   export MKC_TEST_DEVICE="$work/device"
   expect -c '
-    set timeout 8
+    set timeout 10
     log_user 0
+    proc must_see {text} {
+      expect {
+        -exact $text { return }
+        timeout { puts stderr "mkc expect timeout: $text"; exit 1 }
+        eof { puts stderr "mkc exited before: $text"; exit 1 }
+      }
+    }
     spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
       "'"$root"'/tools/mkc.sh" --mock $env(MKC_TEST_DEVICE) \
       --local $env(MKC_TEST_LOCAL)
     after 400
+
+    # macOS Terminal sends F1..F4 as SS3 (Esc O P..S). These assertions
+    # prevent the parser from mistaking the `O` prefix for the final byte.
+    send "\033OP"
+    must_see "MKC — файловый менеджер MK61s"
+    send "\033"
+    must_see "MKC>"
+
+    send "\033\[B"
+    must_see "program.m61"
+    send "\033OR"
+    must_see "001"
+    send "\033OR"
+    must_see "MKC>"
+
+    # F5 must open a modal copy dialog and a lone Esc must cancel it.
+    send "\033\[15~"
+    must_see "Copy 1 item(s) to MK61s:"
+    send "\033"
+    must_see "Копирование отменено"
     send "\033\[21~"
-    expect eof
+    expect { eof {} timeout { exit 1 } }
     catch wait result
     exit [lindex $result 3]
   '
+
+  expect -c '
+    set timeout 10
+    log_user 0
+    proc must_see {text} {
+      expect {
+        -exact $text { return }
+        timeout { puts stderr "mkc expect timeout: $text"; exit 1 }
+        eof { puts stderr "mkc exited before: $text"; exit 1 }
+      }
+    }
+    spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
+      "'"$root"'/tools/mkc.sh" --mock $env(MKC_TEST_DEVICE) \
+      --local $env(MKC_TEST_LOCAL)
+    after 400
+    send "\033\[B"
+    must_see "program.m61"
+    send "\033\[15~"
+    must_see "Copy 1 item(s) to MK61s:"
+    send "\r"
+    must_see "Скопировано на MK61s: 1"
+    send "\033\[21~"
+    expect { eof {} timeout { exit 1 } }
+    catch wait result
+    exit [lindex $result 3]
+  '
+  cmp "$work/local/Good/program.m61" "$work/device/program.m61"
 fi
 
 echo 'mkc_tests: ok'

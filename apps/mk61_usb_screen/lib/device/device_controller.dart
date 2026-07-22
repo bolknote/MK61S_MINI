@@ -89,6 +89,9 @@ class DeviceController extends ChangeNotifier {
       _renderTerminalText(utf8.decode(_terminalBytes, allowMalformed: true));
   bool get terminalAvailable =>
       attached && ((_capabilities?.flags ?? 0) & MkCapability.terminalMux) != 0;
+  bool get terminalKeyboardAvailable =>
+      terminalAvailable &&
+      ((_capabilities?.flags ?? 0) & MkCapability.terminalKeyboard) != 0;
 
   KeyboardDefinition get keyboard => KeyboardDefinition.forLayout(
     _capabilities?.keyboardLayout ?? MkKeyboardLayout.mini,
@@ -419,6 +422,49 @@ class DeviceController extends ChangeNotifier {
     _pressedKeys.clear();
     if (attached) _send(MkMessage.releaseAllKeys);
     _notify();
+  }
+
+  /// Sends a short sequence through the firmware's `kbd <scan-code>` terminal
+  /// command. Unlike synthetic down/up pairs, `kbd` inserts one press directly
+  /// into the calculator keyboard queue, which preserves repeated SMS taps.
+  bool tapActions(Iterable<String> actions) {
+    if (!terminalAvailable) return false;
+    final scanCodes = <int>[];
+    for (final action in actions) {
+      final scanCode = keyboard.scanCodeFor(action);
+      if (scanCode == null || _pressedKeys.contains(scanCode)) return false;
+      scanCodes.add(scanCode);
+    }
+    if (scanCodes.isEmpty) return false;
+
+    if (!terminalKeyboardAvailable) return _tapLegacy(scanCodes);
+
+    final commands = StringBuffer();
+    for (final scanCode in scanCodes) {
+      commands
+        ..write('kbd ')
+        ..write(scanCode.toRadixString(16).padLeft(2, '0'))
+        ..writeCharCode(0x0d);
+    }
+    return _writeBytes(Uint8List.fromList(utf8.encode(commands.toString())));
+  }
+
+  bool _tapLegacy(List<int> scanCodes) {
+    for (final scanCode in scanCodes) {
+      _pressedKeys.add(scanCode);
+      if (!_send(MkMessage.keyEvent, [scanCode, 1])) {
+        _pressedKeys.remove(scanCode);
+        _notify();
+        return false;
+      }
+      _pressedKeys.remove(scanCode);
+      if (!_send(MkMessage.keyEvent, [scanCode, 0])) {
+        _notify();
+        return false;
+      }
+    }
+    _notify();
+    return true;
   }
 
   bool sendTerminalLine(String line) {

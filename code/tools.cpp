@@ -361,7 +361,7 @@ static PersistentSettings persistent_settings = {
   0,
   0xFF,
   0xFF,
-  lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS),
+  lcd_display::defaultSettingsTextProfile(),
   false
 };
 static bool persistent_settings_loaded = false;
@@ -375,7 +375,7 @@ static void reset_persistent_settings_cache(void) {
   persistent_settings.counter = 0;
   persistent_settings.flags = 0xFF;
   persistent_settings.sound = 0xFF;
-  persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+  persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
   persistent_settings_loaded = true;
   persistent_settings_sector_dirty = false;
@@ -392,7 +392,7 @@ static void apply_settings_record(const settings_journal::RecordData& record) {
   persistent_settings.text_profile_stored = false;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   if(record.text_profile_stored) {
-    persistent_settings.text_profile = lcd_display::normalizeTextProfile({
+    persistent_settings.text_profile = lcd_display::normalizeSettingsTextProfile({
       record.text_rows,
       record.text_width,
       record.text_height,
@@ -400,10 +400,10 @@ static void apply_settings_record(const settings_journal::RecordData& record) {
     });
     persistent_settings.text_profile_stored = true;
   } else {
-    persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+    persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   }
 #else
-  persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+  persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
 #endif
 }
 
@@ -443,7 +443,7 @@ static void import_legacy_settings(void) {
   persistent_settings.counter = (counter == 0xFF) ? 0 : counter;
   persistent_settings.flags = flags;
   persistent_settings.sound = sound;
-  persistent_settings.text_profile = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+  persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
   persistent_settings_needs_save = true;
 }
@@ -594,7 +594,7 @@ bool read_display_text_profile(lcd_display::TextProfile& out) {
   load_persistent_settings();
   if(!persistent_settings.text_profile_stored) return false;
 
-  out = lcd_display::normalizeTextProfile(persistent_settings.text_profile);
+  out = lcd_display::normalizeSettingsTextProfile(persistent_settings.text_profile);
   return true;
 #else
   (void) out;
@@ -606,7 +606,7 @@ bool read_display_text_profile(lcd_display::TextProfile& out) {
 void store_display_text_profile(lcd_display::TextProfile profile) {
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   load_persistent_settings();
-  profile = lcd_display::normalizeTextProfile(profile);
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
   const bool unchanged = persistent_settings.text_profile_stored &&
     persistent_settings.text_profile.rows == profile.rows &&
     persistent_settings.text_profile.glyph_width == profile.glyph_width &&
@@ -643,7 +643,7 @@ bool store_settings_snapshot(
 
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   if(text_profile != NULL) {
-    const lcd_display::TextProfile profile = lcd_display::normalizeTextProfile(*text_profile);
+    const lcd_display::TextProfile profile = lcd_display::normalizeSettingsTextProfile(*text_profile);
     const bool unchanged = persistent_settings.text_profile_stored &&
       persistent_settings.text_profile.rows == profile.rows &&
       persistent_settings.text_profile.glyph_width == profile.glyph_width &&

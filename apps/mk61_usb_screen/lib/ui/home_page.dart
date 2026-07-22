@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../device/device_controller.dart';
+import '../device/host_keyboard_mapping.dart';
 import '../protocol/mk61_protocol.dart';
 import 'virtual_display.dart';
 import 'virtual_keyboard.dart';
@@ -26,9 +27,9 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
   final FocusNode _terminalFocus = FocusNode(debugLabel: 'USB terminal input');
   final TextEditingController _terminalInput = TextEditingController();
   final ScrollController _terminalScroll = ScrollController();
-  final Map<LogicalKeyboardKey, int> _physicalKeys = {};
   DisplayPaletteChoice _palette = DisplayPaletteChoice.green;
   bool _showGrid = false;
+  bool _terminalExpanded = false;
   int _seenTerminalRevision = -1;
 
   DeviceController get controller => widget.controller;
@@ -71,27 +72,46 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
   }
 
   void _releasePhysicalKeys() {
-    _physicalKeys.clear();
     controller.releaseAllKeys();
   }
 
+  void _setTerminalExpanded(bool expanded) {
+    if (_terminalExpanded == expanded) return;
+    _releasePhysicalKeys();
+    setState(() => _terminalExpanded = expanded);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (expanded) {
+        _terminalFocus.requestFocus();
+        _scrollTerminal();
+      } else {
+        _keyboardFocus.requestFocus();
+      }
+    });
+  }
+
   void _onKeyEvent(KeyEvent event) {
-    if (_terminalFocus.hasFocus) return;
+    if (_terminalExpanded || _terminalFocus.hasFocus) return;
     if (!controller.attached) return;
-    final logical = event.logicalKey;
-    if (event is KeyDownEvent) {
-      if (_physicalKeys.containsKey(logical)) return;
-      final action = _actionForLogicalKey(logical);
-      final scanCode = action == null
-          ? null
-          : controller.keyboard.scanCodeFor(action);
-      if (scanCode == null) return;
-      _physicalKeys[logical] = scanCode;
-      controller.keyDown(scanCode);
-    } else if (event is KeyUpEvent) {
-      final scanCode = _physicalKeys.remove(logical);
-      if (scanCode != null) controller.keyUp(scanCode);
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return;
+
+    final hardwareKeyboard = HardwareKeyboard.instance;
+    if (hardwareKeyboard.isMetaPressed ||
+        hardwareKeyboard.isControlPressed ||
+        hardwareKeyboard.isAltPressed) {
+      return;
     }
+    final englishCharacter = HostKeyboardMapping.englishCharacterForPhysicalKey(
+      event.physicalKey,
+      shift: hardwareKeyboard.isShiftPressed,
+    );
+    if (englishCharacter != null) {
+      final actions = HostKeyboardMapping.actionsForCharacter(englishCharacter);
+      if (actions != null) controller.tapActions(actions);
+      return;
+    }
+    final action = _actionForLogicalKey(event.logicalKey);
+    if (action != null) controller.tapActions([action]);
   }
 
   void _scrollTerminal() {
@@ -157,13 +177,19 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     if (key == LogicalKeyboardKey.escape) return 'esc';
     if (key == LogicalKeyboardKey.arrowLeft) return 'left';
     if (key == LogicalKeyboardKey.arrowRight) return 'right';
+    if (key == LogicalKeyboardKey.arrowUp) return 'up';
+    if (key == LogicalKeyboardKey.arrowDown) return 'down';
     if (key == LogicalKeyboardKey.backspace ||
         key == LogicalKeyboardKey.delete) {
       return 'cx';
     }
-    if (key == LogicalKeyboardKey.space) return 'run';
+    if (key == LogicalKeyboardKey.space) return 'pp';
     if (key == LogicalKeyboardKey.f1) return 'k';
     if (key == LogicalKeyboardKey.f2) return 'alpha';
+    if (key == LogicalKeyboardKey.f3) return 'user';
+    if (key == LogicalKeyboardKey.f5) return 'run';
+    if (key == LogicalKeyboardKey.f6) return 'save';
+    if (key == LogicalKeyboardKey.f7) return 'load';
     return null;
   }
 
@@ -172,6 +198,7 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     final caps = controller.capabilities;
     final framebuffer = controller.framebuffer;
     return Scaffold(
+      bottomNavigationBar: _buildTerminalDrawer(context),
       body: SafeArea(
         child: KeyboardListener(
           focusNode: _keyboardFocus,
@@ -179,7 +206,9 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
           onKeyEvent: _onKeyEvent,
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTap: _keyboardFocus.requestFocus,
+            onTap: () {
+              if (!_terminalExpanded) _keyboardFocus.requestFocus();
+            },
             child: CustomScrollView(
               slivers: [
                 SliverPadding(
@@ -214,8 +243,6 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
                               _buildConnectionGuide(context),
                             ],
                             const SizedBox(height: 22),
-                            _buildTerminalPanel(context),
-                            const SizedBox(height: 18),
                             _buildKeyboardPanel(context),
                             const SizedBox(height: 18),
                             _buildDiagnostics(context),
@@ -465,6 +492,15 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
                 ),
             ],
           ),
+          const SizedBox(height: 8),
+          Text(
+            'ПК: фиксированная EN/QWERTY независимо от раскладки macOS · '
+            'A–Z, 0–9, знаки, пробел, ←↑↓→, Backspace, Enter, Esc · '
+            'F1=K, F2=F, F3=USER, F5=С/П, F6=SAVE, F7=LOAD',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: const Color(0xffa8b3b6)),
+          ),
           const SizedBox(height: 16),
           VirtualKeyboard(
             definition: controller.keyboard,
@@ -478,124 +514,220 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
     );
   }
 
-  Widget _buildTerminalPanel(BuildContext context) {
+  Widget _buildTerminalDrawer(BuildContext context) {
     final available = controller.terminalAvailable;
     final terminalText = controller.terminalText;
-    return _Panel(
+    final terminalHeight = MediaQuery.sizeOf(context).height < 700
+        ? 155.0
+        : 230.0;
+
+    return Material(
       color: const Color(0xff111719),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Терминал',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Text(
-                      'Работает одновременно с видеопотоком по тому же USB',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xff8e999d),
+      elevation: 18,
+      child: SafeArea(
+        top: false,
+        child: Container(
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: Color(0xff334044))),
+          ),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1240),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  InkWell(
+                    key: const ValueKey('terminal-toggle'),
+                    onTap: () => _setTerminalExpanded(!_terminalExpanded),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 10, 10, 10),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.terminal_rounded,
+                            color: Color(0xff79e2c2),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Терминал',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                                Text(
+                                  _terminalExpanded
+                                      ? 'Открыт · ввод клавиатуры направлен в USB-терминал'
+                                      : 'Скрыт · клавиатура ПК управляет MK61',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: const Color(0xff8e999d),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: available
+                                  ? const Color(0xff173b35)
+                                  : const Color(0xff252b2d),
+                              borderRadius: BorderRadius.circular(99),
+                              border: Border.all(
+                                color: available
+                                    ? const Color(0xff2d7165)
+                                    : const Color(0xff3b4447),
+                              ),
+                            ),
+                            child: Text(
+                              available ? 'MUX' : '—',
+                              style: TextStyle(
+                                color: available
+                                    ? const Color(0xff78dfc0)
+                                    : const Color(0xff929da0),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          if (_terminalExpanded)
+                            IconButton(
+                              tooltip: 'Очистить терминал',
+                              onPressed: terminalText.isEmpty
+                                  ? null
+                                  : controller.clearTerminal,
+                              icon: const Icon(Icons.delete_sweep_outlined),
+                            ),
+                          Icon(
+                            _terminalExpanded
+                                ? Icons.keyboard_arrow_down_rounded
+                                : Icons.keyboard_arrow_up_rounded,
+                            color: const Color(0xffaab5b8),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                decoration: BoxDecoration(
-                  color: available
-                      ? const Color(0xff173b35)
-                      : const Color(0xff252b2d),
-                  borderRadius: BorderRadius.circular(99),
-                  border: Border.all(
-                    color: available
-                        ? const Color(0xff2d7165)
-                        : const Color(0xff3b4447),
                   ),
-                ),
-                child: Text(
-                  available ? 'MUX активен' : 'Недоступен',
-                  style: TextStyle(
-                    color: available
-                        ? const Color(0xff78dfc0)
-                        : const Color(0xff929da0),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: _terminalExpanded
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(18, 2, 18, 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  height: terminalHeight,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xff080c0d),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: const Color(0xff2b3638),
+                                    ),
+                                  ),
+                                  child: Scrollbar(
+                                    controller: _terminalScroll,
+                                    thumbVisibility: true,
+                                    child: SingleChildScrollView(
+                                      controller: _terminalScroll,
+                                      child: SelectableText(
+                                        terminalText.isEmpty
+                                            ? available
+                                                  ? 'Терминал готов. Введите команду ниже.'
+                                                  : 'Подключите USB Screen для доступа к терминалу.'
+                                            : terminalText,
+                                        style: const TextStyle(
+                                          fontFamily: 'monospace',
+                                          fontSize: 13,
+                                          height: 1.35,
+                                          color: Color(0xffb8e7d7),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final input = Focus(
+                                      onKeyEvent: (_, event) {
+                                        if (event is KeyDownEvent &&
+                                            event.logicalKey ==
+                                                LogicalKeyboardKey.escape) {
+                                          _setTerminalExpanded(false);
+                                          return KeyEventResult.handled;
+                                        }
+                                        return KeyEventResult.ignored;
+                                      },
+                                      child: TextField(
+                                        key: const ValueKey('terminal-input'),
+                                        controller: _terminalInput,
+                                        focusNode: _terminalFocus,
+                                        enabled: available,
+                                        maxLines: 1,
+                                        textInputAction: TextInputAction.send,
+                                        onSubmitted: _submitTerminal,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Команда терминала',
+                                          hintText: 'help, ver, reg, ls…',
+                                          prefixIcon: Icon(
+                                            Icons.terminal_rounded,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                    final send = FilledButton.icon(
+                                      onPressed: available
+                                          ? _submitTerminal
+                                          : null,
+                                      icon: const Icon(Icons.send_rounded),
+                                      label: const Text('Выполнить'),
+                                    );
+                                    if (constraints.maxWidth < 590) {
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          input,
+                                          const SizedBox(height: 10),
+                                          send,
+                                        ],
+                                      );
+                                    }
+                                    return Row(
+                                      children: [
+                                        Expanded(child: input),
+                                        const SizedBox(width: 10),
+                                        send,
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox.shrink(),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 4),
-              IconButton(
-                tooltip: 'Очистить терминал',
-                onPressed: terminalText.isEmpty
-                    ? null
-                    : controller.clearTerminal,
-                icon: const Icon(Icons.delete_sweep_outlined),
-              ),
-            ],
-          ),
-          const SizedBox(height: 13),
-          Container(
-            height: 250,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xff080c0d),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xff2b3638)),
             ),
-            child: Scrollbar(
-              controller: _terminalScroll,
-              thumbVisibility: true,
-              child: SingleChildScrollView(
-                controller: _terminalScroll,
-                child: SelectableText(
-                  terminalText.isEmpty
-                      ? available
-                            ? 'Терминал готов. Введите команду ниже.'
-                            : 'Подключите USB Screen для доступа к терминалу.'
-                      : terminalText,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 13,
-                    height: 1.35,
-                    color: Color(0xffb8e7d7),
-                  ),
-                ),
-              ),
-            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _terminalInput,
-                  focusNode: _terminalFocus,
-                  enabled: available,
-                  maxLines: 1,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: _submitTerminal,
-                  decoration: const InputDecoration(
-                    labelText: 'Команда терминала',
-                    hintText: 'help, ver, reg, ls…',
-                    prefixIcon: Icon(Icons.terminal_rounded),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                onPressed: available ? _submitTerminal : null,
-                icon: const Icon(Icons.send_rounded),
-                label: const Text('Выполнить'),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

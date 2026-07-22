@@ -22,20 +22,28 @@ class VirtualKeyboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final keyHeight = constraints.maxWidth < 600 ? 48.0 : 56.0;
+        const spacing = 6.0;
+        final columns = definition.columnCount;
+        final displayKeys = definition.displayKeys;
+        final keyWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+        final keyHeight = columns == 8
+            ? (keyWidth * 0.72).clamp(58.0, 76.0).toDouble()
+            : (constraints.maxWidth < 600 ? 48.0 : 56.0);
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: definition.keys.length,
+          itemCount: displayKeys.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 5,
+            crossAxisCount: columns,
             mainAxisExtent: keyHeight,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
+            mainAxisSpacing: spacing,
+            crossAxisSpacing: spacing,
           ),
           itemBuilder: (context, index) {
-            final key = definition.keys[index];
+            final key = displayKeys[index];
             return _CalculatorKeyButton(
+              key: ValueKey('calculator-key-${key.action}'),
               calculatorKey: key,
               enabled: enabled,
               pressed: pressedKeys.contains(key.scanCode),
@@ -51,6 +59,7 @@ class VirtualKeyboard extends StatelessWidget {
 
 class _CalculatorKeyButton extends StatelessWidget {
   const _CalculatorKeyButton({
+    super.key,
     required this.calculatorKey,
     required this.enabled,
     required this.pressed,
@@ -103,15 +112,57 @@ class _CalculatorKeyButton extends StatelessWidget {
                   ),
                 ],
         ),
-        alignment: Alignment.center,
-        child: Text(
-          calculatorKey.label,
-          maxLines: 1,
-          overflow: TextOverflow.fade,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: foreground,
-            fontWeight: FontWeight.w700,
-            letterSpacing: calculatorKey.label.length <= 2 ? 0.6 : 0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (calculatorKey.neutralLegend case final legend?)
+                _KeyLegend(
+                  text: legend,
+                  alignment: Alignment.topLeft,
+                  color: const Color(0xffb8c1c4),
+                ),
+              if (calculatorKey.fLegend case final legend?)
+                _KeyLegend(
+                  text: legend,
+                  alignment: Alignment.topLeft,
+                  color: const Color(0xffffc66d),
+                ),
+              if (calculatorKey.kLegend case final legend?)
+                _KeyLegend(
+                  text: legend,
+                  alignment: Alignment.topRight,
+                  color: const Color(0xff7fe0c7),
+                ),
+              if (calculatorKey.alphaLegend case final legend?)
+                _KeyLegend(
+                  text: legend,
+                  alignment: Alignment.bottomLeft,
+                  color: const Color(0xffa9b5b8),
+                ),
+              Align(
+                alignment:
+                    calculatorKey.fLegend != null ||
+                        calculatorKey.kLegend != null ||
+                        calculatorKey.neutralLegend != null
+                    ? const Alignment(0, 0.38)
+                    : Alignment.center,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    calculatorKey.label,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: foreground,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: calculatorKey.label.length <= 2 ? 0.5 : 0,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -120,5 +171,37 @@ class _CalculatorKeyButton extends StatelessWidget {
     final hint = calculatorKey.hint;
     if (hint == null) return button;
     return Tooltip(message: hint, child: button);
+  }
+}
+
+class _KeyLegend extends StatelessWidget {
+  const _KeyLegend({
+    required this.text,
+    required this.alignment,
+    required this.color,
+  });
+
+  final String text;
+  final Alignment alignment;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          text,
+          maxLines: 1,
+          style: TextStyle(
+            color: color,
+            fontSize: 12.5,
+            height: 1,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
   }
 }

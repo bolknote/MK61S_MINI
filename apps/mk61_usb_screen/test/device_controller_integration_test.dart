@@ -96,7 +96,10 @@ class _FakeSerialConnection implements DeviceSerialConnection {
   }
 }
 
-List<int> _capabilities({required bool includeProfile}) => [
+List<int> _capabilities({
+  required bool includeProfile,
+  bool terminalKeyboard = true,
+}) => [
   192,
   0,
   64,
@@ -105,7 +108,8 @@ List<int> _capabilities({required bool includeProfile}) => [
       MkCapability.keyEvents |
       MkCapability.heartbeat |
       MkCapability.atomicFrames |
-      MkCapability.terminalMux,
+      MkCapability.terminalMux |
+      (terminalKeyboard ? MkCapability.terminalKeyboard : 0),
   0,
   0xb8,
   0x0b,
@@ -135,10 +139,14 @@ Future<DeviceController> _openController(_FakeSerialTransport transport) async {
   return controller;
 }
 
-void _attach(DeviceController controller, _FakeSerialConnection connection) {
+void _attach(
+  DeviceController controller,
+  _FakeSerialConnection connection, {
+  bool terminalKeyboard = true,
+}) {
   connection.sendDevicePacket(
     MkMessage.offer,
-    _capabilities(includeProfile: false),
+    _capabilities(includeProfile: false, terminalKeyboard: terminalKeyboard),
     const [1, 2, 5, 3],
   );
   expect(controller.state, DeviceConnectionState.attaching);
@@ -146,7 +154,7 @@ void _attach(DeviceController controller, _FakeSerialConnection connection) {
 
   connection.sendDevicePacket(
     MkMessage.caps,
-    _capabilities(includeProfile: true),
+    _capabilities(includeProfile: true, terminalKeyboard: terminalKeyboard),
     const [2, 1, 7],
   );
   expect(controller.state, DeviceConnectionState.attached);
@@ -220,6 +228,19 @@ void main() {
       ]);
       expect(keyPackets[0].payload, [39, 1]);
       expect(keyPackets[1].payload, [39, 0]);
+      expect(controller.pressedKeys, isEmpty);
+
+      final packetCountBeforeText = connection.hostPackets.length;
+      final terminalByteCountBeforeText = connection.hostTerminalBytes.length;
+      expect(controller.tapActions(['k', 'digit8', 'digit8']), isTrue);
+      expect(controller.tapActions(['not-a-key']), isFalse);
+      expect(connection.hostPackets, hasLength(packetCountBeforeText));
+      expect(
+        utf8.decode(
+          connection.hostTerminalBytes.sublist(terminalByteCountBeforeText),
+        ),
+        'kbd 25\rkbd 12\rkbd 12\r',
+      );
       expect(controller.pressedKeys, isEmpty);
 
       await controller.disconnect();
@@ -296,6 +317,38 @@ void main() {
       );
     },
   );
+
+  test('legacy firmware falls back to binary key taps', () async {
+    final transport = _FakeSerialTransport();
+    final controller = await _openController(transport);
+    addTearDown(controller.dispose);
+    final connection = transport.connection;
+    _attach(controller, connection, terminalKeyboard: false);
+
+    expect(controller.terminalKeyboardAvailable, isFalse);
+    final packetCount = connection.hostPackets.length;
+    final terminalByteCount = connection.hostTerminalBytes.length;
+    expect(controller.tapActions(['k', 'digit8', 'digit8']), isTrue);
+    expect(connection.hostTerminalBytes, hasLength(terminalByteCount));
+
+    final packets = connection.hostPackets.sublist(packetCount);
+    expect(packets.map((packet) => packet.type), [
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+      MkMessage.keyEvent,
+    ]);
+    expect(packets.map((packet) => packet.payload), [
+      [37, 1],
+      [37, 0],
+      [18, 1],
+      [18, 0],
+      [18, 1],
+      [18, 0],
+    ]);
+  });
 
   test('heartbeat PING/PONG keeps the real controller session alive', () async {
     final transport = _FakeSerialTransport();

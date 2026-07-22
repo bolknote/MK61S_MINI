@@ -7,6 +7,10 @@ class CalculatorKey {
     required this.label,
     required this.kind,
     this.hint,
+    this.fLegend,
+    this.kLegend,
+    this.alphaLegend,
+    this.neutralLegend,
   });
 
   final int scanCode;
@@ -14,6 +18,10 @@ class CalculatorKey {
   final String label;
   final CalculatorKeyKind kind;
   final String? hint;
+  final String? fLegend;
+  final String? kLegend;
+  final String? alphaLegend;
+  final String? neutralLegend;
 }
 
 class KeyboardDefinition {
@@ -33,6 +41,17 @@ class KeyboardDefinition {
   final Map<String, int> _scanCodes;
   final List<CalculatorKey> keys;
 
+  /// Keys in the order in which they are printed on the physical keyboard.
+  /// Matrix scan codes are deliberately kept independent from presentation.
+  List<CalculatorKey> get displayKeys {
+    if (layout == MkKeyboardLayout.classic) return keys;
+    return List.unmodifiable(
+      _miniPhysicalOrder.map((action) => keyForAction(action)),
+    );
+  }
+
+  int get columnCount => layout == MkKeyboardLayout.classic ? 5 : 8;
+
   String get name => switch (layout) {
     MkKeyboardLayout.classic => 'Classic',
     MkKeyboardLayout.fortieth => '40th',
@@ -40,6 +59,14 @@ class KeyboardDefinition {
   };
 
   int? scanCodeFor(String action) => _scanCodes[action];
+
+  CalculatorKey keyForAction(String action) {
+    final scanCode = _scanCodes[action];
+    if (scanCode == null) {
+      throw StateError('Unknown keyboard action: $action');
+    }
+    return keys[scanCode];
+  }
 
   CalculatorKey? keyForScanCode(int scanCode) {
     if (scanCode < 0 || scanCode >= keys.length) return null;
@@ -59,6 +86,10 @@ class KeyboardDefinition {
         label: spec.label,
         kind: spec.kind,
         hint: spec.hint,
+        fLegend: spec.fLegend,
+        kLegend: spec.kLegend,
+        alphaLegend: spec.alphaLegend,
+        neutralLegend: spec.neutralLegend,
       );
     }
     for (var scanCode = 0; scanCode < result.length; scanCode++) {
@@ -108,6 +139,8 @@ class KeyboardDefinition {
     'frw': 32,
     'bkw': 33,
     'left': 34,
+    'up': 32,
+    'down': 33,
     'load': 35,
     'save': 36,
     'k': 37,
@@ -155,50 +188,206 @@ class KeyboardDefinition {
     'right': 36,
     'ok': 37,
     'left': 38,
+    'up': 27,
+    'down': 28,
     'esc': 39,
   };
 
+  // mk61s-mini/A00 front-panel order, left-to-right and top-to-bottom.
+  // It must not be replaced with the numeric matrix scan-code order.
+  static const List<String> _miniPhysicalOrder = [
+    'esc',
+    'left',
+    'ok',
+    'right',
+    'user',
+    'radian',
+    'grade',
+    'degree',
+    'alpha',
+    'bkw',
+    'pToX',
+    'digit7',
+    'digit8',
+    'digit9',
+    'sub',
+    'div',
+    'k',
+    'frw',
+    'xToP',
+    'digit4',
+    'digit5',
+    'digit6',
+    'add',
+    'mul',
+    'load',
+    'ret',
+    'bp',
+    'digit1',
+    'digit2',
+    'digit3',
+    'xy',
+    'bx',
+    'save',
+    'run',
+    'pp',
+    'digit0',
+    'dot',
+    'neg',
+    'power',
+    'cx',
+  ];
+
   static const List<_KeySpec> _keySpecs = [
-    _KeySpec('cx', 'Cx', CalculatorKeyKind.system, 'Очистить'),
-    _KeySpec('bx', 'Bx', CalculatorKeyKind.system, 'Ввод экспоненты'),
-    _KeySpec('mul', '×', CalculatorKeyKind.operation),
-    _KeySpec('div', '÷', CalculatorKeyKind.operation),
-    _KeySpec('power', 'xʸ', CalculatorKeyKind.operation),
-    _KeySpec('xy', 'x↔y', CalculatorKeyKind.operation),
-    _KeySpec('add', '+', CalculatorKeyKind.operation),
-    _KeySpec('sub', '−', CalculatorKeyKind.operation),
-    _KeySpec('neg', '+/−', CalculatorKeyKind.operation),
-    _KeySpec('dot', '·', CalculatorKeyKind.digit),
-    _KeySpec('digit0', '0', CalculatorKeyKind.digit),
-    _KeySpec('digit1', '1', CalculatorKeyKind.digit),
-    _KeySpec('digit2', '2', CalculatorKeyKind.digit),
-    _KeySpec('digit3', '3', CalculatorKeyKind.digit),
-    _KeySpec('digit4', '4', CalculatorKeyKind.digit),
-    _KeySpec('digit5', '5', CalculatorKeyKind.digit),
-    _KeySpec('digit6', '6', CalculatorKeyKind.digit),
-    _KeySpec('digit7', '7', CalculatorKeyKind.digit),
-    _KeySpec('digit8', '8', CalculatorKeyKind.digit),
-    _KeySpec('digit9', '9', CalculatorKeyKind.digit),
-    _KeySpec('pp', 'ПП', CalculatorKeyKind.system),
-    _KeySpec('bp', 'БП', CalculatorKeyKind.system),
-    _KeySpec('xToP', 'X→П', CalculatorKeyKind.system),
-    _KeySpec('pToX', 'П→X', CalculatorKeyKind.system),
-    _KeySpec('run', 'С/П', CalculatorKeyKind.system, 'Пуск / стоп'),
-    _KeySpec('ret', 'В/О', CalculatorKeyKind.system, 'Возврат'),
-    _KeySpec('frw', 'ПРГ→', CalculatorKeyKind.navigation),
-    _KeySpec('bkw', '←ПРГ', CalculatorKeyKind.navigation),
+    _KeySpec(
+      'cx',
+      'Cx',
+      CalculatorKeyKind.system,
+      hint: 'Очистить',
+      fLegend: 'CF',
+      kLegend: 'ИНВ',
+      alphaLegend: 'd',
+    ),
+    _KeySpec(
+      'bx',
+      'В↑',
+      CalculatorKeyKind.system,
+      hint: 'Ввод экспоненты',
+      fLegend: 'Вx',
+      kLegend: 'СЧ',
+      alphaLegend: 'e',
+    ),
+    _KeySpec('mul', '×', CalculatorKeyKind.operation, fLegend: 'x²'),
+    _KeySpec('div', '÷', CalculatorKeyKind.operation, fLegend: '1/x'),
+    _KeySpec(
+      'power',
+      'ВП',
+      CalculatorKeyKind.operation,
+      fLegend: 'ПРГ',
+      kLegend: '⊕',
+      alphaLegend: 'c',
+    ),
+    _KeySpec(
+      'xy',
+      '↔',
+      CalculatorKeyKind.operation,
+      fLegend: 'xʸ',
+      kLegend: '°→′″',
+    ),
+    _KeySpec(
+      'add',
+      '+',
+      CalculatorKeyKind.operation,
+      fLegend: 'π',
+      kLegend: '°→′',
+    ),
+    _KeySpec('sub', '−', CalculatorKeyKind.operation, fLegend: '√'),
+    _KeySpec(
+      'neg',
+      '/−/',
+      CalculatorKeyKind.operation,
+      fLegend: 'АВТ',
+      kLegend: '∨',
+      alphaLegend: 'b',
+    ),
+    _KeySpec(
+      'dot',
+      '·',
+      CalculatorKeyKind.digit,
+      fLegend: '↻',
+      kLegend: '^',
+      alphaLegend: 'a',
+    ),
+    _KeySpec(
+      'digit0',
+      '0',
+      CalculatorKeyKind.digit,
+      fLegend: '10ˣ',
+      kLegend: 'НОП',
+    ),
+    _KeySpec('digit1', '1', CalculatorKeyKind.digit, fLegend: 'eˣ'),
+    _KeySpec('digit2', '2', CalculatorKeyKind.digit, fLegend: 'lg'),
+    _KeySpec(
+      'digit3',
+      '3',
+      CalculatorKeyKind.digit,
+      fLegend: 'ln',
+      kLegend: '°←′″',
+    ),
+    _KeySpec(
+      'digit4',
+      '4',
+      CalculatorKeyKind.digit,
+      fLegend: 'sin⁻¹',
+      kLegend: '|x|',
+    ),
+    _KeySpec(
+      'digit5',
+      '5',
+      CalculatorKeyKind.digit,
+      fLegend: 'cos⁻¹',
+      kLegend: 'ЗН',
+    ),
+    _KeySpec(
+      'digit6',
+      '6',
+      CalculatorKeyKind.digit,
+      fLegend: 'tg⁻¹',
+      kLegend: '°←′',
+    ),
+    _KeySpec(
+      'digit7',
+      '7',
+      CalculatorKeyKind.digit,
+      fLegend: 'sin',
+      kLegend: '[x]',
+    ),
+    _KeySpec(
+      'digit8',
+      '8',
+      CalculatorKeyKind.digit,
+      fLegend: 'cos',
+      kLegend: '{x}',
+    ),
+    _KeySpec(
+      'digit9',
+      '9',
+      CalculatorKeyKind.digit,
+      fLegend: 'tg',
+      kLegend: 'max',
+    ),
+    _KeySpec('pp', 'ПП', CalculatorKeyKind.system, fLegend: 'L3'),
+    _KeySpec('bp', 'БП', CalculatorKeyKind.system, fLegend: 'L2'),
+    _KeySpec('xToP', 'X→П', CalculatorKeyKind.system, fLegend: 'L1'),
+    _KeySpec('pToX', 'П→X', CalculatorKeyKind.system, fLegend: 'L0'),
+    _KeySpec(
+      'run',
+      'С/П',
+      CalculatorKeyKind.system,
+      hint: 'Пуск / стоп',
+      fLegend: 'X≠0',
+    ),
+    _KeySpec(
+      'ret',
+      'В/О',
+      CalculatorKeyKind.system,
+      hint: 'Возврат',
+      fLegend: 'X≥0',
+    ),
+    _KeySpec('frw', '←ШГ', CalculatorKeyKind.navigation, fLegend: 'X=0'),
+    _KeySpec('bkw', 'ШГ→', CalculatorKeyKind.navigation, fLegend: 'X<0'),
     _KeySpec('k', 'K', CalculatorKeyKind.shift),
     _KeySpec('alpha', 'F', CalculatorKeyKind.shift),
-    _KeySpec('degree', '°', CalculatorKeyKind.operation),
+    _KeySpec('degree', 'Г', CalculatorKeyKind.operation),
     _KeySpec('grade', 'ГРД', CalculatorKeyKind.operation),
-    _KeySpec('radian', 'РАД', CalculatorKeyKind.operation),
-    _KeySpec('user', 'USER', CalculatorKeyKind.system),
-    _KeySpec('save', 'SAVE', CalculatorKeyKind.system),
-    _KeySpec('load', 'LOAD', CalculatorKeyKind.system),
+    _KeySpec('radian', 'Р', CalculatorKeyKind.operation),
+    _KeySpec('user', '[USER]', CalculatorKeyKind.system),
+    _KeySpec('save', 'А↑', CalculatorKeyKind.system, hint: 'SAVE'),
+    _KeySpec('load', '↑↓', CalculatorKeyKind.system, hint: 'LOAD'),
     _KeySpec('left', '←', CalculatorKeyKind.navigation),
     _KeySpec('right', '→', CalculatorKeyKind.navigation),
     _KeySpec('ok', 'OK', CalculatorKeyKind.navigation),
-    _KeySpec('esc', 'ESC', CalculatorKeyKind.navigation),
+    _KeySpec('esc', 'ESC', CalculatorKeyKind.navigation, neutralLegend: 'MENU'),
   ];
 }
 
@@ -209,10 +398,23 @@ abstract final class MkKeyboardLayout {
 }
 
 class _KeySpec {
-  const _KeySpec(this.action, this.label, this.kind, [this.hint]);
+  const _KeySpec(
+    this.action,
+    this.label,
+    this.kind, {
+    this.hint,
+    this.fLegend,
+    this.kLegend,
+    this.alphaLegend,
+    this.neutralLegend,
+  });
 
   final String action;
   final String label;
   final CalculatorKeyKind kind;
   final String? hint;
+  final String? fLegend;
+  final String? kLegend;
+  final String? alphaLegend;
+  final String? neutralLegend;
 }

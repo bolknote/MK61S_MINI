@@ -95,6 +95,13 @@ static u16 canonicalLcdToken(u8 value) {
 #endif
 }
 
+static u8 lcdByteForCanonicalToken(u16 token) {
+  for(u16 value = 0; value <= 0xFF; value++) {
+    if(canonicalLcdToken((u8) value) == token) return (u8) value;
+  }
+  return token <= 0xFF ? (u8) token : (u8) '?';
+}
+
 } // анонимное пространство имён
 
 namespace {
@@ -236,8 +243,10 @@ MK61Display::MK61Display(void)
     shifted_viewport_shift(0)
 #if MK61_ENABLE_USB_SCREEN
     , usb_framebuffer{0},
+    usb_text_profile(lcd_display::defaultSettingsTextProfile()),
     usb_surface(usb_framebuffer),
     usb_screen_active(false),
+    display_mode_revision(0),
     physical_screen_enabled(true),
     usb_preview_font(),
     usb_preview_saved_profile(usb_screen::profile5x8()),
@@ -307,22 +316,16 @@ void MK61Display::endUpdate(void) {
 }
 void MK61Display::setRows(u8 rows) {
 #if MK61_ENABLE_USB_SCREEN
-  if(usb_screen_active) {
-    usb_screen::TextProfile profile = usb_surface.textProfile();
-    if(rows >= 10) profile = usb_screen::profile3x5();
-    else if(rows == 7) profile = usb_screen::profile5x9();
-    else profile = usb_screen::profile5x8();
-    usb_surface.setTextProfile(profile);
-    usb_surface.flush(millis());
-  }
+  setTextProfile(lcd_display::defaultSettingsTextProfileForRows(rows));
 #else
   (void) rows;
 #endif
 }
 void MK61Display::setTextProfile(lcd_display::TextProfile profile) {
 #if MK61_ENABLE_USB_SCREEN
+  usb_text_profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(usb_screen_active) {
-    usb_surface.setTextProfile(usbTextProfile(profile));
+    usb_surface.setTextProfile(usbTextProfile(usb_text_profile));
     usb_surface.flush(millis());
   }
 #else
@@ -337,6 +340,7 @@ lcd_display::TextProfile MK61Display::textProfile(void) const {
     return {profile.rows, profile.glyph_width, profile.glyph_height,
             profile.line_gap};
   }
+  return usb_text_profile;
 #endif
   return lcd_display::defaultTextProfileForRows(lcd_display::ROWS);
 }
@@ -1002,6 +1006,7 @@ MK61Display::MK61Display(void)
 #if MK61_ENABLE_USB_SCREEN
     , usb_surface(render_buffer),
     usb_screen_active(false),
+    display_mode_revision(0),
     physical_screen_enabled(true)
 #endif
     {
@@ -1864,7 +1869,25 @@ bool MK61Display::enterUsbScreen(void) {
   if(usb_screen_active) return true;
 
 #if defined(MK61_DISPLAY_LCD1602)
-  const usb_screen::TextProfile profile = usb_screen::profile5x8();
+  u8 seed_cells[lcd_display::ROWS][lcd_display::COLS] = {};
+  u8 seed_glyphs[usb_screen::Surface::CUSTOM_GLYPHS][8] = {};
+  bool seed_glyph_valid[usb_screen::Surface::CUSTOM_GLYPHS] = {};
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      if(!readCell(col, row, seed_cells[row][col])) {
+        seed_cells[row][col] = ' ';
+      }
+    }
+  }
+  for(u8 slot = 0; slot < usb_screen::Surface::CUSTOM_GLYPHS; slot++) {
+    seed_glyph_valid[slot] = copyCustomChar(slot, seed_glyphs[slot]);
+  }
+  const u8 seed_cursor_x = shadow_cursor_x;
+  const u8 seed_cursor_y = shadow_cursor_y;
+  const bool seed_cursor_underline =
+    (display_control & LCD_CURSORON) != 0;
+  const bool seed_cursor_blink = (display_control & LCD_BLINKON) != 0;
+  const usb_screen::TextProfile profile = usbTextProfile(usb_text_profile);
 #else
   const usb_screen::TextProfile profile = usbTextProfile(active_profile);
 #endif
@@ -1874,8 +1897,29 @@ bool MK61Display::enterUsbScreen(void) {
 #else
   usb_preview_font.reset();
   usb_preview_font_active = false;
+  for(u8 slot = 0; slot < usb_screen::Surface::CUSTOM_GLYPHS; slot++) {
+    if(seed_glyph_valid[slot]) {
+      usb_surface.createChar(slot, seed_glyphs[slot]);
+    }
+  }
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    usb_surface.setCursor(0, row);
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      const u8 value = seed_cells[row][col];
+      if(value < usb_screen::Surface::CUSTOM_GLYPHS &&
+         seed_glyph_valid[value]) {
+        usb_surface.writeByte(value);
+      } else {
+        usb_surface.writeCodepoint(canonicalLcdToken(value));
+      }
+    }
+  }
+  usb_surface.setCursor(seed_cursor_x, seed_cursor_y);
+  if(seed_cursor_underline) usb_surface.cursorOn();
+  if(seed_cursor_blink) usb_surface.blinkOn(millis());
 #endif
   usb_screen_active = true;
+  display_mode_revision++;
   setPhysicalScreenEnabled(false);
   usb_surface.flush(millis());
   return true;
@@ -1884,11 +1928,59 @@ bool MK61Display::enterUsbScreen(void) {
 void MK61Display::leaveUsbScreen(void) {
   if(!usb_screen_active) return;
 #if defined(MK61_DISPLAY_LCD1602)
+  u16 restore_cells[lcd_display::ROWS][lcd_display::COLS] = {};
+  bool restore_custom[lcd_display::ROWS][lcd_display::COLS] = {};
+  u8 restore_glyphs[usb_screen::Surface::CUSTOM_GLYPHS][8] = {};
+  bool restore_glyph_valid[usb_screen::Surface::CUSTOM_GLYPHS] = {};
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      if(!usb_surface.readCell(col, row, restore_cells[row][col],
+                               restore_custom[row][col])) {
+        restore_cells[row][col] = ' ';
+        restore_custom[row][col] = false;
+      }
+    }
+  }
+  for(u8 slot = 0; slot < usb_screen::Surface::CUSTOM_GLYPHS; slot++) {
+    restore_glyph_valid[slot] =
+      usb_surface.copyCustomChar(slot, restore_glyphs[slot]);
+  }
+  const u8 restore_cursor_x = usb_surface.cursorX();
+  const u8 restore_cursor_y = usb_surface.cursorY();
+  const bool restore_cursor_underline = usb_surface.cursorUnderline();
+  const bool restore_cursor_blink = usb_surface.cursorBlink();
   usb_preview_font.reset();
   usb_preview_font_active = false;
 #endif
   usb_surface.end();
   usb_screen_active = false;
+  display_mode_revision++;
+#if defined(MK61_DISPLAY_LCD1602)
+  // Rehydrate the physical text display before enabling it. This preserves
+  // whichever foreground UI owns the screen instead of exposing a calculator
+  // frame while a modal FOCAL/TinyBASIC screen is still active.
+  clear();
+  for(u8 slot = 0; slot < usb_screen::Surface::CUSTOM_GLYPHS; slot++) {
+    if(restore_glyph_valid[slot]) createChar(slot, restore_glyphs[slot]);
+    else clearCustomChar(slot);
+  }
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    setCursor(0, row);
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      const u16 token = restore_cells[row][col];
+      if(restore_custom[row][col] &&
+         token < usb_screen::Surface::CUSTOM_GLYPHS &&
+         restore_glyph_valid[token]) {
+        write((u8) token);
+      } else {
+        write(lcdByteForCanonicalToken(token));
+      }
+    }
+  }
+  setCursor(restore_cursor_x, restore_cursor_y);
+  if(restore_cursor_underline) cursorOn();
+  if(restore_cursor_blink) blinkOn();
+#endif
   setPhysicalScreenEnabled(true);
 }
 

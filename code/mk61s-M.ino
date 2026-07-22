@@ -641,41 +641,67 @@ void   mk61_baseloop_hook(i32 key) {
   }
 }
 
+#ifdef TERMINAL
+static bool terminal_poll_due(void) {
+  static u8 turbo_serial_poll_divider;
+  const bool turbo_run = core_61::is_RUN() && library_mk61::speed_is_turbo();
+  if(!turbo_run) {
+    turbo_serial_poll_divider = 0;
+    return true;
+  }
+  const bool due = turbo_serial_poll_divider == 0;
+  turbo_serial_poll_divider++;
+  if(turbo_serial_poll_divider >= cfg::TURBO_SERIAL_POLL_LOOPS) {
+    turbo_serial_poll_divider = 0;
+  }
+  return due;
+}
+
+// USB Screen must keep accepting terminal-backed `kbd` commands inside
+// blocking foreground editors too.  One complete command is handled per idle
+// iteration, so every scan-code reaches the editor before the following one.
+static void service_usb_screen_terminal(void) {
+  static bool in_progress;
+  if(in_progress || !usb_screen::active() || usb_mass_storage::active() ||
+     usb_screen::wireBusy() || !terminal_poll_due()) return;
+
+  in_progress = true;
+  u8 terminal_byte = 0;
+  while(usb_screen::takeTerminalByte(terminal_byte)) {
+    const class_terminal::InputResult result =
+      terminal.input_handler(terminal_byte);
+    if(result.key >= 0) kbd::push((i8) result.key);
+    if(result.line_complete) break;
+  }
+  in_progress = false;
+}
+#endif
+
 void  loop() {
+  static u32 top_level_display_mode_revision =
+    main_lcd().displayModeRevision();
   idle_main_process();
+  const u32 next_display_mode_revision = main_lcd().displayModeRevision();
+  if(next_display_mode_revision != top_level_display_mode_revision) {
+    top_level_display_mode_revision = next_display_mode_revision;
+    // A stateful menu can also span top-level loop calls, so redraw the
+    // calculator only when its base hook truly owns the foreground.
+    if(input_focus == &mk61_baseloop_hook && !lcd_hooked &&
+       !m61_text::active() && !user_short_press_pending) {
+      lcd_std_display_redraw();
+    }
+  }
 
   // A binary USB Screen packet may span several CDC writes. Serial-producing
   // services pause between its chunks, while calculator/key processing keeps
   // running. Terminal text is emitted only between complete framed packets.
   const bool usb_screen_wire_busy = usb_screen::wireBusy();
 
-  const bool turbo_run = core_61::is_RUN() && library_mk61::speed_is_turbo();
-
-  #ifdef TERMINAL // Подмена полученной с терминала клавиши через буфер клавиатуры
-    static u8 turbo_serial_poll_divider;
-    bool terminal_poll_enabled = true;
-    if(turbo_run) {
-      terminal_poll_enabled = (turbo_serial_poll_divider == 0);
-      turbo_serial_poll_divider++;
-      if(turbo_serial_poll_divider >= cfg::TURBO_SERIAL_POLL_LOOPS) turbo_serial_poll_divider = 0;
-    } else {
-      turbo_serial_poll_divider = 0;
-    }
-
-    if(terminal_poll_enabled && !usb_mass_storage::active() &&
-       !usb_screen_wire_busy) {
-      if(usb_screen::active()) {
-        u8 terminal_byte = 0;
-        while(usb_screen::takeTerminalByte(terminal_byte)) {
-          const class_terminal::InputResult result =
-            terminal.input_handler(terminal_byte);
-          if(result.key >= 0) kbd::push((i8) result.key);
-          if(result.line_complete) break;
-        }
-      } else {
-        const i32 key_from_terminal = terminal.serial_input_handler();
-        if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
-      }
+  #ifdef TERMINAL // Обычный serial-терминал вне USB Screen.
+    if(!usb_screen::active() && terminal_poll_due() &&
+       !usb_mass_storage::active() && !usb_screen_wire_busy) {
+      const i32 key_from_terminal = terminal.serial_input_handler();
+      if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
     }
   #endif
 
@@ -725,15 +751,13 @@ void  loop() {
 void idle_main_process(void) {
   usb_mass_storage::service();
   usb_screen::service();
-  switch(usb_screen::takeEvent()) {
-    case usb_screen::Event::ATTACHED:
-    case usb_screen::Event::CONNECTION_LOST:
-    case usb_screen::Event::EXITED:
-      lcd_std_display_redraw();
-      break;
-    case usb_screen::Event::NONE:
-      break;
-  }
+  // Consume the notification here, but never assume that the calculator owns
+  // the foreground. The active editor/menu redraws on display-mode revision;
+  // the outer loop handles the calculator after a nested UI has returned.
+  (void) usb_screen::takeEvent();
+  #ifdef TERMINAL
+  service_usb_screen_terminal();
+  #endif
   sound_poll();
   led::control();
   main_lcd().flush();

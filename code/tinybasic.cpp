@@ -2322,12 +2322,21 @@ static void EditTinyBasicSlot(int slot,
   text_editor::DisplaySession display_session(main_lcd());
 #endif
   bool dirty = true;
+#ifndef TINYBASIC_HOST_TEST
+  u32 display_mode_revision = main_lcd().displayModeRevision();
+#endif
   kbd::debounce_init();
   while(true) {
 #ifndef TINYBASIC_HOST_TEST
     // The editor owns the foreground loop, so it must keep USB Screen
     // heartbeats, virtual keys and frame transmission alive itself.
     idle_main_process();
+    const u32 next_display_mode_revision =
+      main_lcd().displayModeRevision();
+    if(next_display_mode_revision != display_mode_revision) {
+      display_mode_revision = next_display_mode_revision;
+      dirty = true;
+    }
 #endif
     const u32 now = millis();
     if(editor.sms.active && now >= editor.sms.deadline_ms) {

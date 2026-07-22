@@ -17,6 +17,67 @@ void main() {
       );
       expect(definition.scanCodeFor('ok'), isNotNull);
       expect(definition.scanCodeFor('esc'), isNotNull);
+      expect(definition.scanCodeFor('up'), isNotNull);
+      expect(definition.scanCodeFor('down'), isNotNull);
+      expect(
+        definition.scanCodeFor('up'),
+        isNot(definition.scanCodeFor('down')),
+      );
     });
   }
+
+  test('mini display order mirrors the physical A00 5x8 panel', () {
+    final definition = KeyboardDefinition.forLayout(MkKeyboardLayout.mini);
+
+    expect(definition.columnCount, 8);
+    expect(definition.displayKeys, hasLength(40));
+    expect(definition.displayKeys.take(8).map((key) => key.action), [
+      'esc',
+      'left',
+      'ok',
+      'right',
+      'user',
+      'radian',
+      'grade',
+      'degree',
+    ]);
+    expect(definition.displayKeys.skip(8).take(8).map((key) => key.action), [
+      'alpha',
+      'bkw',
+      'pToX',
+      'digit7',
+      'digit8',
+      'digit9',
+      'sub',
+      'div',
+    ]);
+    expect(definition.displayKeys.skip(32).map((key) => key.action), [
+      'save',
+      'run',
+      'pp',
+      'digit0',
+      'dot',
+      'neg',
+      'power',
+      'cx',
+    ]);
+  });
+
+  test('A00 key faces include the printed shifted and alphabet legends', () {
+    final definition = KeyboardDefinition.forLayout(MkKeyboardLayout.mini);
+
+    final seven = definition.keyForAction('digit7');
+    expect(seven.label, '7');
+    expect(seven.fLegend, 'sin');
+    expect(seven.kLegend, '[x]');
+
+    final clear = definition.keyForAction('cx');
+    expect(clear.fLegend, 'CF');
+    expect(clear.kLegend, 'ИНВ');
+    expect(clear.alphaLegend, 'd');
+
+    expect(definition.keyForAction('bkw').label, 'ШГ→');
+    expect(definition.keyForAction('frw').label, '←ШГ');
+    expect(definition.keyForAction('esc').neutralLegend, 'MENU');
+  });
 }

@@ -22,6 +22,12 @@
   #error "Select only one display backend"
 #endif
 
+#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
+  #define MK61_HAS_GRAPHICAL_TEXT_SETTINGS 1
+#else
+  #define MK61_HAS_GRAPHICAL_TEXT_SETTINGS 0
+#endif
+
 #if defined(MK61_DISPLAY_LCD1602)
   #include <LiquidCrystal.h>
 #else
@@ -52,29 +58,16 @@ struct TextProfile {
   u8 line_gap;
 };
 
-#if defined(MK61_DISPLAY_LCD1602)
-static constexpr u8 ROWS = 2;
-static constexpr u8 DDRAM_COLS = 40;
-static constexpr u8 DEFAULT_ROWS = ROWS;
-static constexpr u8 MAX_ROWS = ROWS;
-static constexpr TextProfile defaultTextProfileForRows(u8) {
-  return {ROWS, 5, 8, 0};
-}
-static inline TextProfile normalizeTextProfile(TextProfile) {
-  return defaultTextProfileForRows(ROWS);
-}
-#else
-// ROWS задаёт текстовую сетку по умолчанию. Графические дисплеи сохраняют
-// 16-столбцовый интерфейс и во время работы переключаются между несколькими
-// фиксированными наборами шрифтов.
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+// The virtual USB display and UC1609 share the same 192x64 text geometry.
+// Keep these presets independent from the physical LCD1602 geometry so an
+// LCD build can retain the selected USB-screen font between sessions.
 static constexpr u8 FONT_5X8_ROWS = 6;
 static constexpr u8 FONT_5X9_ROWS = 7;
 static constexpr u8 FONT_3X5_ROWS = 10;
-static constexpr u8 MIN_ROWS = 4; // нижняя граница для расширенных пользовательских профилей
-static constexpr u8 ROWS = FONT_5X8_ROWS;
-static constexpr u8 DEFAULT_ROWS = FONT_5X8_ROWS;
-static constexpr u8 COMPACT_ROWS = 8; // прежний сохраняемый режим «8 строк»
-static constexpr u8 MAX_ROWS = FONT_3X5_ROWS;
+static constexpr u8 MIN_ROWS = 4;
+static constexpr u8 COMPACT_ROWS = 8;
+static constexpr u8 GRAPHICS_MAX_ROWS = FONT_3X5_ROWS;
 static constexpr u8 PIXEL_WIDTH = 192;
 static constexpr u8 PIXEL_HEIGHT = 64;
 static constexpr u8 CELL_WIDTH = 12;
@@ -108,21 +101,21 @@ static inline bool isTextProfile3x5(TextProfile profile) {
   return profile.glyph_width == 3 && profile.glyph_height == 5;
 }
 
-static constexpr TextProfile defaultTextProfileForRows(u8 rows) {
+static constexpr TextProfile defaultGraphicalTextProfileForRows(u8 rows) {
   if(rows <= FONT_5X8_ROWS) return textProfile5x8();
   if(rows == FONT_5X9_ROWS) return textProfile5x9();
   return textProfile3x5();
 }
 
-static inline TextProfile presetTextProfile(TextProfile profile) {
+static inline TextProfile presetGraphicalTextProfile(TextProfile profile) {
   if(profile.glyph_width <= 3 || profile.rows >= FONT_3X5_ROWS) return textProfile3x5();
   if(profile.glyph_height >= 9 || profile.rows == FONT_5X9_ROWS) return textProfile5x9();
   return textProfile5x8();
 }
 
-static inline TextProfile normalizeTextProfile(TextProfile profile) {
+static inline TextProfile normalizeGraphicalTextProfile(TextProfile profile) {
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  profile.rows = clamp_u8(profile.rows, MIN_ROWS, MAX_ROWS);
+  profile.rows = clamp_u8(profile.rows, MIN_ROWS, GRAPHICS_MAX_ROWS);
   profile.glyph_width = clamp_u8(profile.glyph_width, 3, 10);
 
   const u8 max_height = PIXEL_HEIGHT / profile.rows;
@@ -130,13 +123,71 @@ static inline TextProfile normalizeTextProfile(TextProfile profile) {
   profile.line_gap = clamp_u8(profile.line_gap, 0, maxLineGap(profile.rows, profile.glyph_height));
   return profile;
 #else
-  return presetTextProfile(profile);
+  return presetGraphicalTextProfile(profile);
 #endif
 }
 #endif
 
+#if defined(MK61_DISPLAY_LCD1602)
+static constexpr u8 ROWS = 2;
+static constexpr u8 DDRAM_COLS = 40;
+static constexpr u8 DEFAULT_ROWS = ROWS;
+static constexpr u8 MAX_ROWS = ROWS;
+static constexpr TextProfile defaultTextProfileForRows(u8) {
+  return {ROWS, 5, 8, 0};
+}
+static inline TextProfile normalizeTextProfile(TextProfile) {
+  return defaultTextProfileForRows(ROWS);
+}
+#else
+// ROWS задаёт текстовую сетку по умолчанию. Графические дисплеи сохраняют
+// 16-столбцовый интерфейс и во время работы переключаются между несколькими
+// фиксированными наборами шрифтов.
+static constexpr u8 ROWS = FONT_5X8_ROWS;
+static constexpr u8 DEFAULT_ROWS = FONT_5X8_ROWS;
+static constexpr u8 MAX_ROWS = GRAPHICS_MAX_ROWS;
+
+static constexpr TextProfile defaultTextProfileForRows(u8 rows) {
+  return defaultGraphicalTextProfileForRows(rows);
+}
+
+static inline TextProfile presetTextProfile(TextProfile profile) {
+  return presetGraphicalTextProfile(profile);
+}
+
+static inline TextProfile normalizeTextProfile(TextProfile profile) {
+  return normalizeGraphicalTextProfile(profile);
+}
+#endif
+
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+static constexpr TextProfile defaultSettingsTextProfile(void) {
+  return textProfile5x8();
+}
+
+static constexpr TextProfile defaultSettingsTextProfileForRows(u8 rows) {
+  return defaultGraphicalTextProfileForRows(rows);
+}
+
+static inline TextProfile normalizeSettingsTextProfile(TextProfile profile) {
+  return normalizeGraphicalTextProfile(profile);
+}
+#else
+static constexpr TextProfile defaultSettingsTextProfile(void) {
+  return defaultTextProfileForRows(DEFAULT_ROWS);
+}
+
+static constexpr TextProfile defaultSettingsTextProfileForRows(u8 rows) {
+  return defaultTextProfileForRows(rows);
+}
+
+static inline TextProfile normalizeSettingsTextProfile(TextProfile profile) {
+  return normalizeTextProfile(profile);
+}
+#endif
+
 #if MK61_ENABLE_USB_SCREEN
-static constexpr u8 RUNTIME_MAX_ROWS = 10;
+static constexpr u8 RUNTIME_MAX_ROWS = GRAPHICS_MAX_ROWS;
 #else
 static constexpr u8 RUNTIME_MAX_ROWS = MAX_ROWS;
 #endif
@@ -218,6 +269,7 @@ class MK61Display : public Print {
     bool enterUsbScreen(void);
     void leaveUsbScreen(void);
     bool usbScreenActive(void) const { return usb_screen_active; }
+    u32 displayModeRevision(void) const { return display_mode_revision; }
     const u8* usbScreenFramebuffer(void) const {
       return usb_surface.framebuffer();
     }
@@ -226,6 +278,7 @@ class MK61Display : public Print {
     bool enterUsbScreen(void) { return false; }
     void leaveUsbScreen(void) {}
     bool usbScreenActive(void) const { return false; }
+    u32 displayModeRevision(void) const { return 0; }
     const u8* usbScreenFramebuffer(void) const { return NULL; }
     u32 usbScreenRevision(void) const { return 0; }
 #endif
@@ -335,9 +388,11 @@ class MK61Display : public Print {
 #if defined(MK61_DISPLAY_LCD1602)
     // LCD1602 has no readable graphics RAM, so it needs dedicated backing.
     u8 usb_framebuffer[usb_screen::FRAME_BYTES];
+    lcd_display::TextProfile usb_text_profile;
 #endif
     usb_screen::Surface usb_surface;
     bool usb_screen_active;
+    u32 display_mode_revision;
     bool physical_screen_enabled;
 #if defined(MK61_DISPLAY_LCD1602)
     fmk::Face usb_preview_font;

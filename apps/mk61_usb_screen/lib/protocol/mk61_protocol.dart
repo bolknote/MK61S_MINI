@@ -27,6 +27,7 @@ abstract final class MkCapability {
   static const heartbeat = 1 << 3;
   static const atomicFrames = 1 << 4;
   static const terminalMux = 1 << 5;
+  static const terminalKeyboard = 1 << 6;
 }
 
 abstract final class MkGeometry {

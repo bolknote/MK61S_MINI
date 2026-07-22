@@ -60,6 +60,9 @@ static void test_text_unicode_and_cursor(void) {
   const u32 before = surface.revision();
   surface.setCursor(2, 0);
   surface.cursorOn();
+  assert(surface.cursorX() == 2 && surface.cursorY() == 0);
+  assert(surface.cursorUnderline());
+  assert(!surface.cursorBlink());
   surface.flush(1);
   assert(surface.revision() > before);
   bool underline = false;
@@ -67,6 +70,7 @@ static void test_text_unicode_and_cursor(void) {
   assert(underline);
 
   surface.blinkOn(10);
+  assert(surface.cursorBlink());
   surface.flush(10);
   const u32 blink_before = surface.revision();
   surface.flush(510);

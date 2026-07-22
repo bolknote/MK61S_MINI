@@ -9,7 +9,13 @@ void main() {
 }
 
 class Mk61UsbScreenApp extends StatelessWidget {
-  const Mk61UsbScreenApp({super.key});
+  const Mk61UsbScreenApp({super.key, this.controller, this.autoStart = true});
+
+  static const double _desktopUiScale = 0.6;
+  static const double _desktopTextScale = 1.3;
+
+  final DeviceController? controller;
+  final bool autoStart;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +36,11 @@ class Mk61UsbScreenApp extends StatelessWidget {
     return MaterialApp(
       title: 'MK61 USB Screen',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => _ScaledDesktopUi(
+        scale: _desktopUiScale,
+        textScale: _desktopTextScale,
+        child: child ?? const SizedBox.shrink(),
+      ),
       theme: baseTheme.copyWith(
         textTheme: baseTheme.textTheme.copyWith(
           headlineSmall: baseTheme.textTheme.headlineSmall?.copyWith(
@@ -68,7 +79,64 @@ class Mk61UsbScreenApp extends StatelessWidget {
           ),
         ),
       ),
-      home: UsbScreenHomePage(controller: DeviceController()),
+      home: UsbScreenHomePage(
+        controller: controller ?? DeviceController(),
+        autoStart: autoStart,
+      ),
+    );
+  }
+}
+
+/// Flutter's Material controls are deliberately touch-sized.  The MK61
+/// client is a dense desktop instrument, so render its whole logical surface
+/// more compactly while giving the child proportionally more layout space.
+/// Text is compensated separately to remain readable on desktop displays.
+/// Keeping the scaling at this single boundary also scales overlays, pointer
+/// hit testing and text-field caret geometry consistently.
+class _ScaledDesktopUi extends StatelessWidget {
+  const _ScaledDesktopUi({
+    required this.scale,
+    required this.textScale,
+    required this.child,
+  });
+
+  final double scale;
+  final double textScale;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewport = Size(
+          constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : media.size.width,
+          constraints.maxHeight.isFinite
+              ? constraints.maxHeight
+              : media.size.height,
+        );
+        final logicalSize = Size(
+          viewport.width / scale,
+          viewport.height / scale,
+        );
+        return FittedBox(
+          fit: BoxFit.fill,
+          alignment: Alignment.topLeft,
+          clipBehavior: Clip.hardEdge,
+          child: SizedBox.fromSize(
+            size: logicalSize,
+            child: MediaQuery(
+              data: media.copyWith(
+                size: logicalSize,
+                textScaler: TextScaler.linear(textScale),
+              ),
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 }

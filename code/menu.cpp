@@ -48,8 +48,8 @@ static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
 static bool idle_signal_state = true;
-static u8 display_rows_state = lcd_display::DEFAULT_ROWS;
-static lcd_display::TextProfile display_text_profile_state = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+static lcd_display::TextProfile display_text_profile_state = lcd_display::defaultSettingsTextProfile();
+static u8 display_rows_state = lcd_display::defaultSettingsTextProfile().rows;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
 static RandomMode random_mode_state = RandomMode::MK61;
 static DeferredSave settings_save;
@@ -63,12 +63,12 @@ struct MutablePunct {
 
 static MutablePunct VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Volume 10      "};
 static MutablePunct RU_VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Громкость 10"};
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Font 5x8       "};
 static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Шрифт 5x8"};
 #endif
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 static constexpr u8 DISPLAY_ROWS_MIN =
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   lcd_display::MIN_ROWS;
@@ -77,12 +77,12 @@ static constexpr u8 DISPLAY_ROWS_MIN =
 #endif
 
 static u8 normalize_display_rows(u8 rows) {
-  return lcd_display::clamp_u8(rows, DISPLAY_ROWS_MIN, lcd_display::MAX_ROWS);
+  return lcd_display::clamp_u8(rows, DISPLAY_ROWS_MIN, lcd_display::GRAPHICS_MAX_ROWS);
 }
 
 static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProfile right) {
-  left = lcd_display::normalizeTextProfile(left);
-  right = lcd_display::normalizeTextProfile(right);
+  left = lcd_display::normalizeSettingsTextProfile(left);
+  right = lcd_display::normalizeSettingsTextProfile(right);
   return left.rows == right.rows &&
     left.glyph_width == right.glyph_width &&
     left.glyph_height == right.glyph_height &&
@@ -90,14 +90,14 @@ static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProf
 }
 
 static const char* fontPresetName(lcd_display::TextProfile profile) {
-  profile = lcd_display::normalizeTextProfile(profile);
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, lcd_display::textProfile3x5())) return "3x5";
   if(sameTextProfile(profile, lcd_display::textProfile5x9())) return "5x9";
   return "5x8";
 }
 
 static u8 display_rows_mode(lcd_display::TextProfile profile) {
-  profile = lcd_display::normalizeTextProfile(profile);
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, lcd_display::textProfile5x9())) return 1;
   if(sameTextProfile(profile, lcd_display::textProfile3x5())) return 3;
   return 0;
@@ -116,7 +116,7 @@ static u8 display_rows_from_mode(u8 mode) {
 }
 
 static lcd_display::TextProfile nextFontPreset(lcd_display::TextProfile profile, i8 delta) {
-  profile = lcd_display::normalizeTextProfile(profile);
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
   const u8 current = sameTextProfile(profile, lcd_display::textProfile5x9()) ? 1 :
     (sameTextProfile(profile, lcd_display::textProfile3x5()) ? 2 : 0);
   const u8 next = (u8) ((current + (delta > 0 ? 1 : 2)) % 3);
@@ -130,7 +130,7 @@ static lcd_display::TextProfile nextFontPreset(lcd_display::TextProfile profile,
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
 static u8 step_display_rows_value(u8 rows, i8 delta) {
   rows = normalize_display_rows(rows);
-  if(delta > 0 && rows < lcd_display::MAX_ROWS) {
+  if(delta > 0 && rows < lcd_display::GRAPHICS_MAX_ROWS) {
     return rows + 1;
   }
   if(delta < 0 && rows > DISPLAY_ROWS_MIN) {
@@ -292,12 +292,20 @@ t_punct* SETTINGS_MENU[] = {
       (t_punct*) &RANDOM_MK61_punct,
       (t_punct*) &DATE_TIME_punct,
       (t_punct*) &LANGUAGE_EN_punct,
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
       (t_punct*) &ROWS_punct,
 #endif
 };
 
 extern const int COUNT_SETTINGS_PUNCTS = sizeof(SETTINGS_MENU) / sizeof(SETTINGS_MENU[0]);
+
+int current_settings_punct_count(void) {
+#if defined(MK61_DISPLAY_LCD1602) && MK61_ENABLE_USB_SCREEN
+  return main_lcd().graphicsMode() ? COUNT_SETTINGS_PUNCTS : SETTINGS_DISPLAY_ROWS;
+#else
+  return COUNT_SETTINGS_PUNCTS;
+#endif
+}
 
 bool  sound_is_on(void) {
   return sound_volume_state != 0;
@@ -336,21 +344,27 @@ lcd_display::TextProfile display_text_profile(void) {
 }
 
 void set_display_text_profile(lcd_display::TextProfile profile) {
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 #if defined(MK61_DISPLAY_UC1609)
-  display_text_profile_state = main_lcd().externalFontActive() ? profile : lcd_display::normalizeTextProfile(profile);
+  display_text_profile_state = main_lcd().externalFontActive()
+    ? profile
+    : lcd_display::normalizeSettingsTextProfile(profile);
+#else
+  display_text_profile_state = lcd_display::normalizeSettingsTextProfile(profile);
+#endif
 #else
   (void) profile;
-  display_text_profile_state = lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS);
+  display_text_profile_state = lcd_display::defaultSettingsTextProfile();
 #endif
   display_rows_state = display_text_profile_state.rows;
 }
 
 void set_display_rows(u8 rows) {
-#if defined(MK61_DISPLAY_UC1609)
-  set_display_text_profile(lcd_display::defaultTextProfileForRows(normalize_display_rows(rows)));
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+  set_display_text_profile(lcd_display::defaultSettingsTextProfileForRows(normalize_display_rows(rows)));
 #else
   (void) rows;
-  set_display_text_profile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS));
+  set_display_text_profile(lcd_display::defaultSettingsTextProfile());
 #endif
 }
 
@@ -426,7 +440,7 @@ static t_punct* idle_signal_punct(void) {
   return (t_punct*) (russian_language ? &RU_IDLE_SIGNAL_OFF_punct : &IDLE_SIGNAL_OFF_punct);
 }
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 static t_punct* display_rows_punct(void) {
   return (t_punct*) (russian_language ? &RU_ROWS_punct : &ROWS_punct);
 }
@@ -444,7 +458,7 @@ static void format_volume_text(void) {
   RU_VOLUME_punct.size = 15;
 }
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 static void format_display_rows_text(void) {
   int used = snprintf(ROWS_punct.text, sizeof(ROWS_punct.text), "Font %s",
     fontPresetName(display_text_profile_state));
@@ -462,7 +476,7 @@ static void format_display_rows_text(void) {
 
 void refresh_menu_text(void) {
   format_volume_text();
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   format_display_rows_text();
 #endif
 
@@ -484,7 +498,7 @@ void refresh_menu_text(void) {
   SETTINGS_MENU[SETTINGS_RANDOM]   = random_punct();
   SETTINGS_MENU[SETTINGS_DATE_TIME] = (t_punct*) (russian_language ? &RU_DATE_TIME_punct : &DATE_TIME_punct);
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   SETTINGS_MENU[SETTINGS_DISPLAY_ROWS] = display_rows_punct();
 #endif
 }
@@ -496,18 +510,18 @@ bool  store_settings_state(void) {
   flags.bits.speed_mode = (u8) speed_mode_state;
   flags.bits.random_mode_mk61s = random_mode_is_mk61s() ? 1 : 0;
   flags.bits.idle_signal_off = idle_signal_state ? 0 : 1;
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   flags.bits.display_rows_8 = (display_text_profile_state.rows == lcd_display::COMPACT_ROWS) ? 1 : 0;
 #else
   flags.bits.display_rows_8 = 0;
 #endif
   SoundSettings sound_settings;
   sound_settings.bits.volume = sound_volume_state;
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   sound_settings.bits.display_rows_mode = display_rows_mode(display_text_profile_state);
 #endif
 
-#if defined(MK61_DISPLAY_UC1609) && MK61_ENABLE_EXTENDED_FONT_SETTINGS
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS && MK61_ENABLE_EXTENDED_FONT_SETTINGS
   const lcd_display::TextProfile* stored_profile = &display_text_profile_state;
 #else
   const lcd_display::TextProfile* stored_profile = NULL;
@@ -547,7 +561,7 @@ void  load_settings_state(void) {
   set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
   set_random_mode_state(flags.bits.random_mode_mk61s ? RandomMode::MK61S : RandomMode::MK61);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   const u8 stored_rows_mode = sound_settings.bits.display_rows_mode;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   lcd_display::TextProfile stored_profile;
@@ -765,7 +779,9 @@ bool SetDateTime(void) {
 
 bool settings_select(void) {
   library_mk61::refresh_menu_text();
-  class_menu settings_menu = class_menu((t_punct**) library_mk61::SETTINGS_MENU, library_mk61::COUNT_SETTINGS_PUNCTS);
+  class_menu settings_menu = class_menu(
+    (t_punct**) library_mk61::SETTINGS_MENU,
+    library_mk61::current_settings_punct_count());
   settings_menu.select();
   library_mk61::defer_settings_state_save();
   library_mk61::refresh_menu_text();
@@ -876,10 +892,10 @@ bool TurnIdleSignal(void) {
   return action::MENU_BACK;
 }
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProfile right) {
-  left = lcd_display::normalizeTextProfile(left);
-  right = lcd_display::normalizeTextProfile(right);
+  left = lcd_display::normalizeSettingsTextProfile(left);
+  right = lcd_display::normalizeSettingsTextProfile(right);
   return left.rows == right.rows &&
     left.glyph_width == right.glyph_width &&
     left.glyph_height == right.glyph_height &&
@@ -889,13 +905,8 @@ static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProf
 static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::TextProfile profile) {
 #if !MK61_ENABLE_EXTENDED_FONT_SETTINGS
   (void) field;
-#if defined(MK61_DISPLAY_UC1609)
   snprintf(out, size, library_mk61::language_is_ru() ? "Шрифт:%s" : "Font:%s",
     library_mk61::fontPresetName(profile));
-#else
-  (void) profile;
-  snprintf(out, size, library_mk61::language_is_ru() ? "Шрифт" : "Font");
-#endif
   return;
 #else
   if(library_mk61::language_is_ru()) {
@@ -979,8 +990,8 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
 }
 
 static void applyFontSetupProfile(lcd_display::TextProfile profile) {
-#if defined(MK61_DISPLAY_UC1609)
-  profile = lcd_display::normalizeTextProfile(profile);
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, library_mk61::display_text_profile()) && !main_lcd().externalFontActive()) return;
 
   main_lcd().useBuiltinFont();
@@ -994,8 +1005,8 @@ static void applyFontSetupProfile(lcd_display::TextProfile profile) {
 }
 
 static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8 delta) {
-#if defined(MK61_DISPLAY_UC1609)
-  profile = lcd_display::normalizeTextProfile(profile);
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
 #if !MK61_ENABLE_EXTENDED_FONT_SETTINGS
   (void) field;
   profile = library_mk61::nextFontPreset(profile, delta);
@@ -1022,7 +1033,7 @@ static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8
       if(delta < 0 && profile.glyph_width > 3) profile.glyph_width--;
       break;
   }
-  profile = lcd_display::normalizeTextProfile(profile);
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
 #endif
 #else
   (void) profile;
@@ -1044,7 +1055,8 @@ static i32 waitFontSetupKey(void) {
 #endif
 
 bool FontSetup(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+  if(!main_lcd().graphicsMode()) return action::MENU_BACK;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   static constexpr u8 FIELD_COUNT = 4;
 #endif
@@ -1052,7 +1064,7 @@ bool FontSetup(void) {
   u8 active = 0;
 
   do {
-    profile = lcd_display::normalizeTextProfile(profile);
+    profile = lcd_display::normalizeSettingsTextProfile(profile);
     drawFontSetup(active, profile);
     const i32 key = waitFontSetupKey();
     if(key == KEY_ESC_PRESS) {
@@ -1088,7 +1100,7 @@ bool FontSetup(void) {
 }
 
 bool TurnDisplayRows(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   return FontSetup();
 #endif
 
@@ -1276,7 +1288,7 @@ bool class_menu::handle_settings_adjustment(i32 key) {
       }
       break;
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
     case library_mk61::SETTINGS_DISPLAY_ROWS:
       if(key == KEY_OK_PRESS) {
         FontSetup();
@@ -1351,8 +1363,19 @@ void class_menu::draw(void) {
 }
 
 i32 class_menu::wait_key(void) {
+#if MK61_ENABLE_USB_SCREEN
+  u32 display_mode_revision = main_lcd().displayModeRevision();
+#endif
   do {
     idle_main_process();
+#if MK61_ENABLE_USB_SCREEN
+    const u32 next_display_mode_revision =
+      main_lcd().displayModeRevision();
+    if(next_display_mode_revision != display_mode_revision) {
+      display_mode_revision = next_display_mode_revision;
+      draw();
+    }
+#endif
 
     const i32 scan_code = kbd::scan_and_debounced();
     if(scan_code >= 0) kbd::exclude_before(scan_code);
