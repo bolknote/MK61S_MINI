@@ -24,6 +24,7 @@ class DeviceController extends ChangeNotifier {
   static const _baudRate = 115200;
   static const _scanInterval = Duration(seconds: 1);
   static const _probeTimeout = Duration(milliseconds: 3500);
+  static const _activationRetryInterval = Duration(milliseconds: 400);
   static const _attachTimeout = Duration(milliseconds: 1800);
   static const _heartbeatInterval = Duration(milliseconds: 750);
   static const _fallbackHeartbeatTimeout = Duration(milliseconds: 3500);
@@ -44,6 +45,7 @@ class DeviceController extends ChangeNotifier {
 
   Timer? _scanTimer;
   Timer? _probeTimer;
+  Timer? _activationTimer;
   Timer? _heartbeatTimer;
   DeviceSerialConnection? _connection;
   StreamSubscription<Uint8List>? _readerSubscription;
@@ -54,6 +56,7 @@ class DeviceController extends ChangeNotifier {
   int _pingNonce = 0;
   int _probeIndex = 0;
   bool _opening = false;
+  bool _refreshing = false;
   bool _closing = false;
   bool _disposed = false;
   bool _allowAutomaticActivation = true;
@@ -154,7 +157,8 @@ class DeviceController extends ChangeNotifier {
   }
 
   Future<void> refreshPorts() async {
-    if (_disposed) return;
+    if (_disposed || _refreshing) return;
+    _refreshing = true;
     try {
       final descriptors = _serialTransport.availablePorts.toList()
         ..sort((left, right) => left.name.compareTo(right.name));
@@ -164,6 +168,8 @@ class DeviceController extends ChangeNotifier {
       final discovered = descriptors
           .map((descriptor) => descriptor.name)
           .toList(growable: false);
+      final connectedPortMissing =
+          _connectedPort != null && !discovered.contains(_connectedPort);
       if (!listEquals(discovered, _ports)) {
         _ports = List.unmodifiable(discovered);
         if (_selectedPort == null || !_ports.contains(_selectedPort)) {
@@ -172,6 +178,21 @@ class DeviceController extends ChangeNotifier {
               ? candidates.first
               : (_ports.isEmpty ? null : _ports.first);
         }
+        _notify();
+      }
+      // USB DFU removes the CDC device and normally recreates it under the
+      // same path. libserialport does not consistently complete the old read
+      // stream on macOS, so the port list is the authoritative disconnect
+      // signal. Close the stale descriptor and allow the next scan to reopen
+      // the freshly enumerated device.
+      if (connectedPortMissing && _connection != null) {
+        _allowAutomaticActivation = true;
+        await _closePort(sendDetach: false);
+        if (_disposed) return;
+        _state = _autoConnect
+            ? DeviceConnectionState.scanning
+            : DeviceConnectionState.disconnected;
+        _markDisplayChanged();
         _notify();
       }
       if (_autoConnect && _connection == null && !_opening) {
@@ -189,6 +210,8 @@ class DeviceController extends ChangeNotifier {
       _lastError = 'Не удалось получить список портов: $error';
       _state = DeviceConnectionState.error;
       _notify();
+    } finally {
+      _refreshing = false;
     }
   }
 
@@ -231,15 +254,15 @@ class DeviceController extends ChangeNotifier {
     _probeTimer = Timer(_probeTimeout, () {
       if (_state == DeviceConnectionState.waitingForOffer &&
           _activationRequested) {
+        _stopActivationRetries();
         _activationRequested = false;
         _lastError = 'Устройство не подтвердило запуск USB Screen';
         _notify();
       }
     });
-    if (!_writeBytes(_activateUsbScreenCommand)) {
+    if (!_startActivationRetries()) {
       _probeTimer?.cancel();
       _probeTimer = null;
-      _activationRequested = false;
       return false;
     }
     _notify();
@@ -309,10 +332,7 @@ class DeviceController extends ChangeNotifier {
       );
       if (_allowAutomaticActivation &&
           _state == DeviceConnectionState.waitingForOffer) {
-        _activationRequested = true;
-        if (!_writeBytes(_activateUsbScreenCommand)) {
-          _activationRequested = false;
-        }
+        _startActivationRetries();
       }
       _notify();
     } catch (error) {
@@ -422,6 +442,7 @@ class DeviceController extends ChangeNotifier {
         _framesPerSecond = 0;
       }
       _capabilities = offer;
+      _stopActivationRetries();
       _activationRequested = false;
       _state = DeviceConnectionState.attaching;
       if (wasAttached) _markDisplayChanged();
@@ -647,6 +668,7 @@ class DeviceController extends ChangeNotifier {
     if (_connection == null || _disposed || _closing) return;
     _probeTimer?.cancel();
     _probeTimer = null;
+    _stopActivationRetries();
     _allowAutomaticActivation = false;
     _activationRequested = false;
     _pressedKeys.clear();
@@ -668,6 +690,7 @@ class DeviceController extends ChangeNotifier {
     try {
       _probeTimer?.cancel();
       _probeTimer = null;
+      _stopActivationRetries();
       if (sendDetach && _connection != null) {
         if (_pressedKeys.isNotEmpty) _send(MkMessage.releaseAllKeys);
         _send(MkMessage.detach);
@@ -711,6 +734,38 @@ class DeviceController extends ChangeNotifier {
         .toList(growable: false);
   }
 
+  bool _startActivationRetries() {
+    if (_connection == null ||
+        _state != DeviceConnectionState.waitingForOffer) {
+      return false;
+    }
+    _stopActivationRetries();
+    _activationRequested = true;
+    if (!_writeBytes(_activateUsbScreenCommand)) {
+      _activationRequested = false;
+      return false;
+    }
+    _activationTimer = Timer.periodic(_activationRetryInterval, (timer) {
+      if (_connection == null ||
+          _state != DeviceConnectionState.waitingForOffer ||
+          !_activationRequested) {
+        timer.cancel();
+        if (identical(_activationTimer, timer)) _activationTimer = null;
+        return;
+      }
+      if (!_writeBytes(_activateUsbScreenCommand)) {
+        timer.cancel();
+        if (identical(_activationTimer, timer)) _activationTimer = null;
+      }
+    });
+    return true;
+  }
+
+  void _stopActivationRetries() {
+    _activationTimer?.cancel();
+    _activationTimer = null;
+  }
+
   void _markDisplayChanged() {
     _displayRevision++;
     if (!_disposed) _displayChanges.value = _displayRevision;
@@ -732,6 +787,7 @@ class DeviceController extends ChangeNotifier {
     _scanTimer?.cancel();
     _heartbeatTimer?.cancel();
     _probeTimer?.cancel();
+    _stopActivationRetries();
     if (_connection != null) {
       if (_pressedKeys.isNotEmpty) _send(MkMessage.releaseAllKeys);
       _send(MkMessage.detach);

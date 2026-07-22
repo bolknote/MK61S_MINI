@@ -23,10 +23,14 @@ class _FakeSerialTransport implements DeviceSerialTransport {
             ),
           ];
 
-  final List<DeviceSerialPort> _ports;
+  List<DeviceSerialPort> _ports;
   final _FakeSerialConnection connection = _FakeSerialConnection();
   int openCount = 0;
   int? openedBaudRate;
+
+  void replacePorts(List<DeviceSerialPort> ports) {
+    _ports = List<DeviceSerialPort>.of(ports);
+  }
 
   @override
   List<DeviceSerialPort> get availablePorts => _ports;
@@ -369,6 +373,37 @@ void main() {
       expect(controller.state, DeviceConnectionState.attached);
     },
   );
+
+  test('activation is retried until the firmware offers USB Screen', () async {
+    final transport = _FakeSerialTransport();
+    final controller = await _openController(transport);
+    addTearDown(controller.dispose);
+    final connection = transport.connection;
+
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    expect(utf8.decode(connection.hostTerminalBytes), 'uscreen\ruscreen\r');
+
+    _attach(controller, connection);
+    final bytesAfterAttach = connection.hostTerminalBytes.length;
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    expect(connection.hostTerminalBytes, hasLength(bytesAfterAttach));
+  });
+
+  test('a CDC port disappearing closes its stale serial connection', () async {
+    final transport = _FakeSerialTransport();
+    final controller = await _openController(transport);
+    addTearDown(controller.dispose);
+    final connection = transport.connection;
+
+    transport.replacePorts(const []);
+    await controller.refreshPorts();
+
+    expect(connection.closed, isTrue);
+    expect(controller.hasOpenPort, isFalse);
+    expect(controller.connectedPort, isNull);
+    expect(controller.selectedPort, isNull);
+    expect(controller.state, DeviceConnectionState.scanning);
+  });
 
   test(
     'sequence loss and bad framebuffer CRC both request a keyframe',
