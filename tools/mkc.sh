@@ -123,6 +123,11 @@ DIALOG_WIDTH=60
 DIALOG_HEIGHT=9
 PROGRESS_ACTIVE=0
 
+# Входная строка прошивки вмещает блок из 96 байт, но STM32 CDC вместе с
+# arduino-cli monitor может потерять хвост одного рывка длиной около 128 байт.
+# 48 байт дают команду не длиннее 113 байт даже с четырёхзначным смещением.
+FS_PUT_CHUNK_BYTES=48
+
 usage() {
   cat <<'EOF'
 MKC — Norton Commander для файлов MK61s
@@ -569,7 +574,7 @@ remote_put_file() {
   [ "$expected" = "$size" ] || { STATUS_TEXT='Неверный ответ fsput begin'; return 1; }
   hex=$(file_to_hex "$source") || return 1
   while [ "$offset" -lt "$size" ]; do
-    chunk=${hex:$((offset * 2)):192}
+    chunk=${hex:$((offset * 2)):$((FS_PUT_CHUNK_BYTES * 2))}
     remote_send "fsput data $offset $chunk" || return 1
     wait_for_marker '@MKC:ACK ' || return 1
     offset=$((offset + ${#chunk} / 2))

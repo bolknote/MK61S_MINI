@@ -14,6 +14,7 @@ printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
 printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 dd if=/dev/zero of="$work/local/large.tbi" bs=1 count=1537 2>/dev/null
+dd if=/dev/zero of="$work/local/chunked.m61" bs=1 count=100 2>/dev/null
 
 test "$("$root/tools/mkc.sh" --classify "$work/local/demo.foc")" = supported
 test "$("$root/tools/mkc.sh" --classify "$work/local/Good")" = supported
@@ -48,6 +49,30 @@ case "$STATUS_TEXT" in
   *) echo "mkc: unclear old-firmware error: $STATUS_TEXT" >&2; exit 1 ;;
 esac
 exec 8<&-
+
+# Реальный fsput идёт через arduino-cli monitor и STM32 CDC. Команда длиннее
+# примерно 128 байт теряет хвост на некоторых сборках serial-monitor, поэтому
+# передача должна резать файл на безопасные 48-байтные блоки.
+chunk_crc=$(file_checksum "$work/local/chunked.m61")
+{
+  printf '@MKC:READY 100\n'
+  printf '@MKC:ACK 48\n'
+  printf '@MKC:ACK 96\n'
+  printf '@MKC:ACK 100\n'
+  printf '@MKC:DONE 100 %s\n' "$chunk_crc"
+} > "$work/fsput.responses"
+exec 7> "$work/fsput.commands"
+exec 8< "$work/fsput.responses"
+MONITOR_INPUT_FD=7
+MONITOR_OUTPUT_FD=8
+MOCK_ROOT=
+remote_put_file "$work/local/chunked.m61" /chunked.m61
+exec 7>&-
+exec 8<&-
+tr '\r' '\n' < "$work/fsput.commands" > "$work/fsput.commands.lines"
+test "$(awk '$1 == "fsput" && $2 == "data" { print length($4) }' \
+  "$work/fsput.commands.lines")" = "$(printf '96\n96\n8')"
+MOCK_ROOT="$work/device"
 
 plan_reset
 if plan_local_tree "$work/local" /Imported; then
