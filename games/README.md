@@ -10,7 +10,8 @@ values and the next three hold the clean frame. A trap before the fourth `В↑`
 `print "{X2}"`; ordinary intermediate indicator refreshes stay hidden while the
 M61 script owns the display. The print targets only the normal indicator row
 and does not clear the screen. The two `RECE55` stops are changed to returns so
-the trap remains active during the flight.
+the trap remains active during the flight. Before the main run, `kbd 09`
+selects the original game's required `ГРД` (grade) switch position.
 
 The branch and call operands in both Bumblebee files use the BCD program-address
 bytes entered on an MK-61 (`95`, `22`, and so on), rather than hexadecimal
