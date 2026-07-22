@@ -96,6 +96,10 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev
 
+      - name: Install macOS native toolchain
+        if: runner.os == 'macOS'
+        run: brew install automake libtool
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
