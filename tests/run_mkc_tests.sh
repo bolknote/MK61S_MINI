@@ -9,13 +9,15 @@ cleanup_test() {
 trap cleanup_test EXIT
 
 mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
-  "$work/module-limits"
+  "$work/module-limits" "$work/preflight-bad"
 printf '2+2\n' > "$work/local/demo.foc"
 printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
+printf 'raw\n' > "$work/preflight-bad/blocked.bin"
 printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 dd if=/dev/zero of="$work/local/large.tbi" bs=1 count=1537 2>/dev/null
+dd if=/dev/zero of="$work/preflight-bad/large.tbi" bs=1 count=1537 2>/dev/null
 dd if=/dev/zero of="$work/local/chunked.m61" bs=1 count=100 2>/dev/null
 dd if=/dev/zero of="$work/local/FOCAL.MOD" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/local/OTHER.MOD" bs=1 count=64 2>/dev/null
@@ -150,7 +152,7 @@ exec 9>&-
 test "$(cat "$work/command.routes")" = "$(printf 'local:printf local\nremote:help')"
 
 plan_reset
-if plan_local_tree "$work/local" /Imported; then
+if plan_local_tree "$work/preflight-bad" /Imported; then
   echo 'mkc: a directory containing an unsupported file was accepted' >&2
   exit 1
 fi
@@ -261,7 +263,9 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1 &
   export MKC_TEST_LOCAL="$work/local/Good"
   export MKC_TEST_DEVICE="$work/device"
   expect -c '
-    set timeout 10
+    # После полного sanitizer-набора холодный запуск pwsh иногда занимает
+    # больше десяти секунд; это не тайм-аут проверяемого интерфейса MKC.
+    set timeout 20
     log_user 0
     proc must_see {text} {
       expect {
