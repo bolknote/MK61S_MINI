@@ -3,6 +3,7 @@
 #include "bounded_string.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
+#include "stm32_sram_bit_band.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
 
@@ -35,13 +36,6 @@ static constexpr u8 TRAP_BITMAP_SIZE =
     (u8) ((core_61::MAX_PROGRAM_STEP + 7U) / 8U);
 static constexpr u8 INVALID_TRAP_TARGET = 0xFF;
 static constexpr u8 RETURN_STACK_DEPTH = SCRIPT_STACK_DEPTH + 1;
-
-#if !defined(M61_TEXT_HOST_TEST) && defined(ARDUINO_ARCH_STM32) && \
-    defined(__ARM_ARCH_7EM__)
-  #define M61_TEXT_STM32_SRAM_BIT_BAND 1
-#else
-  #define M61_TEXT_STM32_SRAM_BIT_BAND 0
-#endif
 
 enum class RunnerState : u8 {
   IDLE,
@@ -93,7 +87,7 @@ static u16 script_id = program_store::INVALID_ID;
 static u16 script_len = 0;
 static u16 script_pos = 0;
 static u16 script_line = 1;
-#if M61_TEXT_STM32_SRAM_BIT_BAND
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
 static volatile u8 active_traps[TRAP_BITMAP_SIZE] = {};
 #else
 static u8 active_traps[TRAP_BITMAP_SIZE] = {};
@@ -122,16 +116,9 @@ static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
 
-#if M61_TEXT_STM32_SRAM_BIT_BAND
-static constexpr uintptr_t SRAM_BIT_BAND_REGION_BASE = 0x20000000UL;
-static constexpr uintptr_t SRAM_BIT_BAND_ALIAS_BASE = 0x22000000UL;
-
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
 static volatile u32* active_trap_bit_alias_base(void) {
-  const uintptr_t storage_address =
-      reinterpret_cast<uintptr_t>(&active_traps[0]);
-  return reinterpret_cast<volatile u32*>(
-      SRAM_BIT_BAND_ALIAS_BASE +
-      ((storage_address - SRAM_BIT_BAND_REGION_BASE) << 5U));
+  return stm32_sram_bit_band::alias_base(&active_traps[0]);
 }
 
 static void* active_trap_boundary_hook_data(void) {
@@ -581,7 +568,7 @@ static TrapParse parse_trap(const char* line, ParsedTrap& out) {
 }
 
 static void set_trap_active(u8 address, bool active) {
-#if M61_TEXT_STM32_SRAM_BIT_BAND
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
   active_trap_bit_alias_base()[address] = active ? 1U : 0U;
 #else
   const u8 mask = (u8) (1U << (address & 7U));
@@ -591,7 +578,7 @@ static void set_trap_active(u8 address, bool active) {
 }
 
 static bool trap_is_active(u8 address) {
-#if M61_TEXT_STM32_SRAM_BIT_BAND
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
   return address < TRAP_ADDRESS_COUNT &&
          active_trap_bit_alias_base()[address] != 0;
 #else
@@ -887,7 +874,7 @@ static bool program_boundary_hook(
     if(bypass) return false;
   }
 
-#if M61_TEXT_STM32_SRAM_BIT_BAND
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
   const volatile u32* active_bits =
       reinterpret_cast<volatile u32*>(user_data);
   if(context.address >= TRAP_ADDRESS_COUNT ||

@@ -25,6 +25,7 @@
 #include "debug.h"
 #include "config.h"
 #include "rust_types.h"
+#include "stm32_sram_bit_band.hpp"
 
 typedef struct {  // Структору ПЗУ для одной микросхемы комплекта К145ИК(02,03,06)
     microinstruction_t microinstructions[68]; // микрокоманды
@@ -419,6 +420,8 @@ namespace {
 
 static constexpr u8 ROM_CHIP_COUNT = 3;
 static constexpr u8 INVALID_HOOK_SLOT = 0xFF;
+static constexpr usize HOOK_TARGET_COUNT = 256;
+static constexpr usize HOOK_TARGET_BITMAP_SIZE = HOOK_TARGET_COUNT / 8U;
 // Одно место зарезервировано встроенным обработчиком случайных чисел MK61s.
 // Внешним вызывающим сторонам всегда доступна вся ёмкость из mk61emu_core.h.
 static constexpr usize ROM_COMMAND_HOOK_SLOT_COUNT =
@@ -462,7 +465,12 @@ static_assert(MK61_COMMAND_HOOK_SLOT_COUNT < INVALID_HOOK_SLOT,
 static RomCommandHookSlot rom_command_hooks[ROM_COMMAND_HOOK_SLOT_COUNT] = {};
 static u8 rom_command_hook_head = INVALID_HOOK_SLOT;
 static u8 rom_command_hook_tail = INVALID_HOOK_SLOT;
-static u8 rom_command_hook_targets[ROM_CHIP_COUNT][32] = {};
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+static volatile u8
+    rom_command_hook_targets[ROM_CHIP_COUNT][HOOK_TARGET_BITMAP_SIZE] = {};
+#else
+static u8 rom_command_hook_targets[ROM_CHIP_COUNT][HOOK_TARGET_BITMAP_SIZE] = {};
+#endif
 static u8 rom_command_hook_dispatch_depth;
 static usize public_rom_command_hook_count;
 static core_61::RomCommandHookHandle random_rom_command_hook =
@@ -471,7 +479,14 @@ static core_61::RomCommandHookHandle random_rom_command_hook =
 static Mk61CommandHookSlot mk61_command_hooks[MK61_COMMAND_HOOK_SLOT_COUNT] = {};
 static u8 mk61_command_hook_head = INVALID_HOOK_SLOT;
 static u8 mk61_command_hook_tail = INVALID_HOOK_SLOT;
-static u8 mk61_command_hook_targets[2][32] = {};
+// Горячему декодеру важно только наличие хотя бы одного hook для opcode.
+// Фаза остается в слотах реестра и проверяется уже при редком полном dispatch.
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+static volatile u8
+    mk61_command_hook_targets[HOOK_TARGET_BITMAP_SIZE] = {};
+#else
+static u8 mk61_command_hook_targets[HOOK_TARGET_BITMAP_SIZE] = {};
+#endif
 static u8 mk61_command_hook_dispatch_depth;
 static usize public_mk61_command_hook_count;
 static core_61::Mk61CommandHookHandle random_mk61_command_hook =
@@ -493,22 +508,50 @@ static bool valid_rom_chip(core_61::RomChip chip) {
   return (u8) chip < ROM_CHIP_COUNT;
 }
 
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+static inline volatile u32* __attribute__((always_inline))
+rom_command_hook_target_bits(void) {
+  return stm32_sram_bit_band::alias_base(
+      &rom_command_hook_targets[0][0]);
+}
+
+static inline usize __attribute__((always_inline))
+rom_command_hook_target_bit(core_61::RomChip chip, u8 address) {
+  return (usize) (u8) chip * HOOK_TARGET_COUNT + address;
+}
+#endif
+
 static void mark_hook_target(core_61::RomChip chip, u8 address) {
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  rom_command_hook_target_bits()[
+      rom_command_hook_target_bit(chip, address)] = 1U;
+#else
   rom_command_hook_targets[(u8) chip][address >> 3] |= (u8) (1U << (address & 7U));
+#endif
 }
 
 static inline bool __attribute__((always_inline)) has_hook_target(
     core_61::RomChip chip, u8 address) {
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  return rom_command_hook_target_bits()[
+      rom_command_hook_target_bit(chip, address)] != 0;
+#else
   return (rom_command_hook_targets[(u8) chip][address >> 3] &
           (u8) (1U << (address & 7U))) != 0;
+#endif
 }
 
 static void clear_hook_target_if_unused(core_61::RomChip chip, u8 address) {
   for(const RomCommandHookSlot& slot : rom_command_hooks) {
     if(slot.callback != nullptr && slot.chip == (u8) chip && slot.address == address) return;
   }
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  rom_command_hook_target_bits()[
+      rom_command_hook_target_bit(chip, address)] = 0U;
+#else
   rom_command_hook_targets[(u8) chip][address >> 3] &=
       (u8) ~(1U << (address & 7U));
+#endif
 }
 
 static core_61::RomCommandHookHandle make_hook_handle(usize slot_index, u32 generation) {
@@ -629,27 +672,43 @@ static bool valid_mk61_command_phase(core_61::Mk61CommandHookPhase phase) {
          phase == core_61::Mk61CommandHookPhase::AFTER_EXECUTE;
 }
 
-static void mark_mk61_command_target(
-    u8 opcode, core_61::Mk61CommandHookPhase phase) {
-  mk61_command_hook_targets[(u8) phase][opcode >> 3] |=
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+static inline volatile u32* __attribute__((always_inline))
+mk61_command_hook_target_bits(void) {
+  return stm32_sram_bit_band::alias_base(
+      &mk61_command_hook_targets[0]);
+}
+#endif
+
+static void mark_mk61_command_target(u8 opcode) {
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  mk61_command_hook_target_bits()[opcode] = 1U;
+#else
+  mk61_command_hook_targets[opcode >> 3] |=
       (u8) (1U << (opcode & 7U));
+#endif
 }
 
 static inline bool __attribute__((always_inline)) has_mk61_command_target(
     u8 opcode) {
-  const u8 mask = (u8) (1U << (opcode & 7U));
-  return ((mk61_command_hook_targets[0][opcode >> 3] |
-           mk61_command_hook_targets[1][opcode >> 3]) & mask) != 0;
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  return mk61_command_hook_target_bits()[opcode] != 0;
+#else
+  return (mk61_command_hook_targets[opcode >> 3] &
+          (u8) (1U << (opcode & 7U))) != 0;
+#endif
 }
 
-static void clear_mk61_command_target_if_unused(u8 opcode, u8 phase) {
+static void clear_mk61_command_target_if_unused(u8 opcode) {
   for(const Mk61CommandHookSlot& slot : mk61_command_hooks) {
-    if(slot.callback != nullptr && slot.opcode == opcode && slot.phase == phase) {
-      return;
-    }
+    if(slot.callback != nullptr && slot.opcode == opcode) return;
   }
-  mk61_command_hook_targets[phase][opcode >> 3] &=
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  mk61_command_hook_target_bits()[opcode] = 0U;
+#else
+  mk61_command_hook_targets[opcode >> 3] &=
       (u8) ~(1U << (opcode & 7U));
+#endif
 }
 
 static core_61::Mk61CommandHookHandle make_mk61_command_hook_handle(
@@ -691,7 +750,7 @@ static core_61::Mk61CommandHookHandle add_mk61_command_hook(
     }
     mk61_command_hook_tail = (u8) i;
     if(!internal) public_mk61_command_hook_count++;
-    mark_mk61_command_target(opcode, phase);
+    mark_mk61_command_target(opcode);
     return make_mk61_command_hook_handle(i, slot.generation);
   }
   return core_61::INVALID_MK61_COMMAND_HOOK;
@@ -727,7 +786,6 @@ static bool remove_mk61_command_hook(
   if(mk61_command_hook_tail == slot_index) mk61_command_hook_tail = previous;
 
   const u8 opcode = slot.opcode;
-  const u8 phase = slot.phase;
   if(!internal) public_mk61_command_hook_count--;
   slot.callback = nullptr;
   slot.user_data = nullptr;
@@ -735,7 +793,7 @@ static bool remove_mk61_command_hook(
   slot.phase = 0;
   slot.next = INVALID_HOOK_SLOT;
   slot.flags = 0;
-  clear_mk61_command_target_if_unused(opcode, phase);
+  clear_mk61_command_target_if_unused(opcode);
   return true;
 }
 
