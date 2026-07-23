@@ -58,6 +58,10 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 
 [Команды USB-терминала](doc/src/MK61s-mini-Terminal.md)
 
+[Сценарии M61: Markdown](doc/src/MK61s-mini-M61.md) / [PDF](doc/MK61s-mini-M61.pdf)
+
+[Команда trap M61: Markdown](doc/src/MK61s-mini-M61-Trap.md) / [PDF](doc/MK61s-mini-M61-Trap.pdf)
+
 [Часы RTC](doc/src/MK61s-mini-RTC.md)
 
 [USB-экран 192×64 и desktop-приложение: Markdown](doc/src/MK61s-mini-USB-Screen.md) / [PDF](doc/MK61s-mini-USB-Screen.pdf)
