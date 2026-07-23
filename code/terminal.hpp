@@ -113,7 +113,7 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "led",     CMD_LED,           "led <0|1>[,ms,0|1,...] - LED pattern" },
   { "beep",    CMD_BEEP,          "beep <Hz>,<ms>[,...] - sound pattern" },
   { "if",      CMD_IF,            "if <reg><op><val> <cmd> - conditional" },
-  { "print",   CMD_PRINT,          "print \"text {X} {R0}\\r\\n\" - M61 output" },
+  { "print",   CMD_PRINT,          "print \"text {X}\"|off|on - M61 display" },
   { "wait",    CMD_WAIT,           "wait <1..60000> - pause M61 script (ms)" },
   { "ret",     CMD_RET,            "return from an M61 script/trap" },
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
@@ -1625,6 +1625,24 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     bool exec_print(bool script_mode) {
       MK61Display& display = main_lcd();
+      const m61_print::Control control =
+          m61_print::parse_control(command_args());
+      if(control != m61_print::Control::NONE) {
+        if(!script_mode) {
+          Serial.println("print off/on work in M61 scripts only");
+          return false;
+        }
+        if(control == m61_print::Control::OFF) {
+          MK61DisplayUpdate update(display);
+          display.clear();
+          display.setCursor(0, 0);
+          print_saved_cursor = {};
+          m61_text::claim_display();
+        } else {
+          m61_text::release_display();
+        }
+        return true;
+      }
       const m61_ansi::Sink sink = {
         screen_put_byte, screen_clear, &display
       };

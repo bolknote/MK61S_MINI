@@ -19,6 +19,7 @@ bool active(void);
 bool calculator_suspended(void);
 bool display_owned(void);
 void claim_display(void);
+void release_display(void);
 void service(void);
 void cancel(void);
 bool last_error(Error& out);

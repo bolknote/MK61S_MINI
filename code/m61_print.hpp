@@ -5,6 +5,12 @@
 
 namespace m61_print {
 
+enum class Control : u8 {
+  NONE,
+  OFF,
+  ON
+};
+
 enum class ValueKind : u8 {
   STACK,
   REGISTER
@@ -50,6 +56,10 @@ struct Result {
 
 using WriteByte = bool (*)(u8 value, void* user_data);
 using WriteValue = bool (*)(const ValueRef& value, void* user_data);
+
+// Распознаёт некавыченные команды экрана `print off` и `print on`.
+// Строки вроде `print "off"` остаются обычным выводом.
+Control parse_control(const char* args);
 
 // Разбирает один заключённый в кавычки аргумент print и выводит его без
 // неявного перевода строки. Заполнители регистров принимают и {R0}..{RF},

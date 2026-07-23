@@ -2,20 +2,13 @@
 
 Copy these `.m61` files to the MK61S USB disk.
 
-`Bumblebee Fly Trap.m61` keeps the calculator program as the animation and
-calculation engine. The original `ПП 95` subroutine copies a frame through the
-stack with six `В↑` instructions: the first three replace transient stack
-values and the next three hold the clean frame. A trap before the fourth `В↑`
-(address 98) publishes that stable calculator indicator through one
-`print "{X2}"`; ordinary intermediate indicator refreshes stay hidden while the
-M61 script owns the display. The print targets only the normal indicator row
-and does not clear the screen. Each selected frame is held for 500 ms so the two
-angle-key positions can be entered while the coordinate and manoeuvre count are
-visible. When the calculator program stops, one final `print` publishes its
-last indicator (for example `ЕГГОГ`). The two `RECE55` stops are changed to
-returns so the trap remains active during the flight. Before the main run,
-`kbd 09` selects the original game's required `ГРД` (grade) switch position.
+`Bumblebee.m61` is a small calculator-driven animation for the 16x2 display.
+Set the angle switch to `Г` and the bee `-0008` flies to the right; switch to
+`Р` and `8000-` flies to the left. The middle `ГРД` position is not used.
+Hitting either wall produces the calculator's `ЕГГОГ` error.
 
-The branch and call operands in both Bumblebee files use the BCD program-address
-bytes entered on an MK-61 (`95`, `22`, and so on), rather than hexadecimal
-encodings of decimal addresses (`5F`, `16`, ...).
+All movement, wall checks, angle-mode detection (`272`, `F cos`), and cursor
+coordinates are calculated by the MK-61 bytecode. The M61 layer blanks and
+owns the display, then two traps publish the right- and left-facing frames
+every 300 ms. The current coordinate is encoded as the exponent of `10^R0`,
+so `{X:e}` can be used directly as the ANSI column.

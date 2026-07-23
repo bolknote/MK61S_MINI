@@ -162,6 +162,10 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
   executed_commands++;
   executed_lines.emplace_back(line);
   executed_in_trap.push_back(trap_mode);
+  if(std::strcmp(line, "print on") == 0) {
+    m61_text::release_display();
+    return terminal_protocol::Result::ok();
+  }
   if(std::strncmp(line, "print ", 6) == 0) {
     m61_text::claim_display();
     return terminal_protocol::Result::ok();
@@ -318,6 +322,24 @@ static void test_print_owns_display_until_root_script_finishes(void) {
   assert(m61_text::load_program("DISPLAY"));
   assert(m61_text::active());
   assert(m61_text::display_owned());
+
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(!m61_text::active());
+  assert(!m61_text::display_owned());
+}
+
+static void test_print_off_and_on_control_display_ownership(void) {
+  reset_host();
+  add_script("DISPLAY", "print off\nrun\nprint on\nrun\nret\n");
+  assert(m61_text::load_program("DISPLAY"));
+  assert(m61_text::active());
+  assert(m61_text::display_owned());
+
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(m61_text::active());
+  assert(!m61_text::display_owned());
 
   m_IK1302.comma = 0;
   m61_text::service();
@@ -544,6 +566,7 @@ int main(void) {
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
   test_print_owns_display_until_root_script_finishes();
+  test_print_off_and_on_control_display_ownership();
   test_trap_wait_holds_snapshot_and_resumes_at_deadline();
   test_nested_script_returns_to_parent_and_depth_is_bounded();
   test_explicit_id_disambiguates_directory_names();

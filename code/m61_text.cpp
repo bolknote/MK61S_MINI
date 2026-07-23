@@ -300,6 +300,10 @@ void claim_display(void) {
   if(active()) display_claimed = true;
 }
 
+void release_display(void) {
+  display_claimed = false;
+}
+
 static void clear_trap_runtime(bool restore_calculator) {
   if(restore_calculator && trap_context_valid) {
     (void) core_61::restore_context(trap_context);

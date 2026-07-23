@@ -195,6 +195,15 @@ static void test_m61_print_escapes_and_interpolation(void) {
          "row=<RA:m> col=<RA:e> x=<X:m> x1=<X1:e>");
 }
 
+static void test_m61_print_display_controls_are_unquoted(void) {
+  assert(m61_print::parse_control("off") == m61_print::Control::OFF);
+  assert(m61_print::parse_control("  off\t") == m61_print::Control::OFF);
+  assert(m61_print::parse_control("on\r") == m61_print::Control::ON);
+  assert(m61_print::parse_control("\"off\"") == m61_print::Control::NONE);
+  assert(m61_print::parse_control("off now") == m61_print::Control::NONE);
+  assert(m61_print::parse_control(nullptr) == m61_print::Control::NONE);
+}
+
 static void test_m61_print_rejects_malformed_input_atomically(void) {
   const char* invalid[] = {
     "not quoted",
@@ -521,6 +530,7 @@ int main(void) {
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_script_allowlist_is_explicit();
   test_m61_print_escapes_and_interpolation();
+  test_m61_print_display_controls_are_unquoted();
   test_m61_print_rejects_malformed_input_atomically();
   test_m61_ansi_writes_only_requested_cells();
   test_file_transfer_checksum_matches_posix_cksum();

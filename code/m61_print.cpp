@@ -20,6 +20,23 @@ static char upper(char c) {
   return (c >= 'a' && c <= 'z') ? (char) (c - 'a' + 'A') : c;
 }
 
+static bool at_end(const char* p) {
+  p = skip_spaces(p);
+  return *p == 0 || *p == '\r' || *p == '\n';
+}
+
+Control parse_control(const char* args) {
+  if(args == nullptr) return Control::NONE;
+  const char* p = skip_spaces(args);
+  if(p[0] == 'o' && p[1] == 'f' && p[2] == 'f' && at_end(p + 3)) {
+    return Control::OFF;
+  }
+  if(p[0] == 'o' && p[1] == 'n' && at_end(p + 2)) {
+    return Control::ON;
+  }
+  return Control::NONE;
+}
+
 static Result parse_value(const char* begin, usize len, bool expanded,
                           ValueRef& value) {
   usize name_len = len;
