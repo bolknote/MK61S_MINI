@@ -156,6 +156,10 @@ void reset_ext_program_state(void) {
 
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
     MK61DisplayUpdate update(main_lcd());
+    // Меню, просмотрщики и часы могут временно занимать пользовательские
+    // символы LCD1602 A00. Перед возвратом к калькулятору восстанавливаем
+    // штатную CGRAM, иначе, например, код П (слот 1) рисует чужой глиф.
+    lcd_ru::restore_default_font();
     main_lcd().clear();
     GRDLabel.print(MK61Emu_GetAngleUnit());
     display_text[0] = (char) -1;
@@ -390,6 +394,9 @@ void  edit_extend_program(void) {
 }
 
 void  entry_programm_mode(void) { // Вход в режим ПРГ - событие генерируется key_mnemonics
+  // Мнемоники ПРГ сразу используют штатные CGRAM-коды (в частности П = 1),
+  // не проходя через lcd_std_display_redraw().
+  lcd_ru::restore_default_font();
   core_61::edit_program = true;
   dbgln(MINI, "AVT -> PRG");
   disassembler.enable();
