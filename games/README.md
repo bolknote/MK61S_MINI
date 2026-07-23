@@ -3,8 +3,9 @@
 Copy these `.m61` files to the MK61S USB disk.
 
 `Bumblebee.m61` is a small calculator-driven animation for the 16x2 display.
-Set the angle switch to `Г` and the bee `-0008` flies to the right; switch to
-`Р` and `8000-` flies to the left. The middle `ГРД` position is not used.
+The script selects `Г` on startup, and the bee `-0008` flies to the right;
+switch to `Р` and `8000-` flies to the left. The middle `ГРД` position is not
+used.
 Hitting either wall produces the calculator's `ЕГГОГ` error.
 
 All movement, wall checks, angle-mode detection (`272`, `F cos`), and cursor
