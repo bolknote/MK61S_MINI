@@ -652,10 +652,25 @@ static bool build_trap_index(const char*& error_message, u16& error_line) {
   return true;
 }
 
+static void discard_undefined_active_traps(void) {
+  for(u8 address = 0; address < TRAP_ADDRESS_COUNT; address++) {
+    if(trap_targets[address] == INVALID_TRAP_TARGET) {
+      set_trap_active(address, false);
+    }
+  }
+}
+
 static bool activate_frame(const ScriptFrame& frame, const char*& error_message, u16& error_line) {
   restore_frame(frame);
-  return build_label_index(error_message, error_line) &&
-         build_trap_index(error_message, error_line);
+  if(!build_label_index(error_message, error_line) ||
+     !build_trap_index(error_message, error_line)) {
+    return false;
+  }
+  // Повторный запуск того же корневого файла может принести активные биты из
+  // предыдущего запуска. Если файл успели переписать, не оставляем адреса,
+  // для которых в новой версии уже нет объявления и обработчика.
+  discard_undefined_active_traps();
+  return true;
 }
 
 static bool restore_return_frame(const ReturnFrame& returned) {
@@ -990,12 +1005,22 @@ void service(void) {
 }
 
 static bool load_frame(const ScriptFrame& frame) {
+  ScriptFrame next = frame;
+  const bool restart_same_root =
+      runner_state == RunnerState::WATCH_TRAPS &&
+      return_stack_depth == 0 &&
+      script_source == ScriptSource::STORE &&
+      frame.source == ScriptSource::STORE &&
+      script_id == frame.id;
+  if(restart_same_root) {
+    memcpy(next.active_traps, active_traps, sizeof(active_traps));
+  }
   if(active()) stop_runner();
   clear_error();
 
   const char* error_message = NULL;
   u16 error_line = 0;
-  if(!activate_frame(frame, error_message, error_line)) {
+  if(!activate_frame(next, error_message, error_line)) {
     fail_script(error_message, error_line);
     return false;
   }

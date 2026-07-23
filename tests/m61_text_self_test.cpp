@@ -555,6 +555,64 @@ static void test_trap_is_activated_only_when_its_line_executes(void) {
   m61_text::cancel();
 }
 
+static void test_restarting_same_root_preserves_active_traps(void) {
+  reset_host();
+  add_script(
+      "RESTART",
+      "run\n"
+      "trap 10 run :message\n"
+      "ret\n"
+      ":message\n"
+      "ret\n");
+
+  // Первый запуск доходит до `run` раньше объявления и пока не перехватывает
+  // адрес. После останова строка trap исполняется, а корневой ret оставляет
+  // наблюдатель активным.
+  assert(m61_text::load_program("RESTART"));
+  assert(!fire_program_boundary(10));
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(m61_text::active());
+
+  // Повторная загрузка того же корневого файла не должна создавать пустую
+  // карту: самый первый run уже использует ловушку предыдущего запуска.
+  assert(m61_text::load_program("RESTART"));
+  assert(fire_program_boundary(10));
+  m61_text::service();
+  assert(context_saves == 1 && context_restores == 1);
+
+  // Если тот же inode переписали и объявление удалили, старый активный бит
+  // не должен пережить повторную индексацию.
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(m61_text::active());
+  scripts[0].source = "run\nret\n";
+  assert(m61_text::load_program((u16) 0));
+  assert(!fire_program_boundary(10));
+  m61_text::cancel();
+
+  // Активные адреса всё ещё изолированы по корневому файлу.
+  reset_host();
+  add_script(
+      "FIRST",
+      "trap 10 run :message\n"
+      "ret\n"
+      ":message\n"
+      "ret\n");
+  add_script(
+      "SECOND",
+      "run\n"
+      "trap 10 run :message\n"
+      "ret\n"
+      ":message\n"
+      "ret\n");
+  assert(m61_text::load_program("FIRST"));
+  assert(m61_text::active());
+  assert(m61_text::load_program("SECOND"));
+  assert(!fire_program_boundary(10));
+  m61_text::cancel();
+}
+
 static void test_invalid_traps_fail_before_or_at_run(void) {
   reset_host();
   add_script("MISSING", "trap 10 run :missing\nrun\n");
@@ -654,6 +712,7 @@ int main(void) {
   test_explicit_id_disambiguates_directory_names();
   test_trap_saves_runs_and_restores_at_exact_address();
   test_trap_is_activated_only_when_its_line_executes();
+  test_restarting_same_root_preserves_active_traps();
   test_invalid_traps_fail_before_or_at_run();
   test_trap_handler_requires_ret_and_restores_on_error();
   test_ret_returns_from_nested_script_and_ends_root();
