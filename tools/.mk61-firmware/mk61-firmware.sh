@@ -2246,17 +2246,36 @@ interactive_main() {
   DEVICE_STATUS='не проверялось · пункт «Найти устройство»'
   local main_selection=upload
   while true; do
-    local selection platform_text screen_text target_text upload_label install_label
+    local selection platform_text screen_text target_text upload_label
+    local -a menu_items
     platform_text=$(platform_label "$HARDWARE_PLATFORM")
     screen_text=$(screen_label "$SCREEN_KIND")
     target_text=$(mcu_label "$MCU")
     if [ "$MCU" = f401 ]; then
       upload_label='▲ Шаг 1 · Собрать и прошить'
-      install_label='↓ Шаг 2 · Установить System APP'
     else
       upload_label='▲ Собрать и прошить'
-      install_label='↓ System APP · только F401'
     fi
+    menu_items=(
+      upload "$upload_label"
+      build '⚒ Только собрать'
+    )
+    if [ "$MCU" = f401 ]; then
+      menu_items+=(
+        install_apps '↓ Шаг 2 · Установить System APP'
+      )
+    fi
+    menu_items+=(
+      mcu      '◉ Контроллер'
+      platform '◉ Платформа'
+      screen   '◉ Экран'
+      options  '☑ Ключи компиляции'
+      detect   '⌕ Найти устройство'
+      deps     '✓ Проверить зависимости'
+      setup    '↓ Установить Arduino-зависимости'
+      log      '≡ Последний журнал'
+      quit     '× Выход'
+    )
     if platform_valid "$HARDWARE_PLATFORM" && screen_valid "$SCREEN_KIND" && \
         ! hardware_compatible "$HARDWARE_PLATFORM" "$SCREEN_KIND"; then
       screen_text="$screen_text · несовместим"
@@ -2267,18 +2286,7 @@ interactive_main() {
 Цель: $target_text · USB DFU
 DFU: $DFU_STATUS
 Устройство: $DEVICE_STATUS" "$main_selection" \
-      upload  "$upload_label" \
-      build   '⚒ Только собрать' \
-      install_apps "$install_label" \
-      mcu     '◉ Контроллер' \
-      platform '◉ Платформа' \
-      screen   '◉ Экран' \
-      options '☑ Ключи компиляции' \
-      detect  '⌕ Найти устройство' \
-      deps    '✓ Проверить зависимости' \
-      setup   '↓ Установить Arduino-зависимости' \
-      log     '≡ Последний журнал' \
-      quit    '× Выход') || break
+      "${menu_items[@]}") || break
     main_selection=$selection
     case "$selection" in
       upload) upload_selected || true ;;

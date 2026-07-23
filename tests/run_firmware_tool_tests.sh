@@ -108,7 +108,7 @@ expect {
 spawn $env(MK61_TEST_LAUNCHER)
 after 900
 expect "Esc назад"
-send -- "\033OB\033OB\033OB\033OB"
+send -- "\033OB\033OB\033OB"
 expect -re {\x1b\[30;46m[^\r\n]*Платформа}
 send -- "\r"
 expect "Выберите ревизию платы"

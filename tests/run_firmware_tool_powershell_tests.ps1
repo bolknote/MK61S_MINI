@@ -203,6 +203,9 @@ try {
     Assert-True ((Get-Checkbox 0) -eq '[ ]' -and (Get-Checkbox 1) -eq '[x]') 'Windows option summary still uses unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -notmatch '[☐☑]') 'Windows option details still contain unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
+    $f411MenuItems = @(Get-MainMenuItems)
+    Assert-True ('install_apps' -notin @($f411MenuItems.Tag)) 'F411 main menu still shows the F401 System APP action'
+    Assert-True (($f411MenuItems[2].Tag -eq 'mcu') -and ($f411MenuItems[3].Tag -eq 'platform')) 'F411 main-menu order differs'
     $menuItems = @(
         [pscustomobject]@{ Tag = 'upload' }
         [pscustomobject]@{ Tag = 'platform' }
@@ -218,6 +221,9 @@ try {
     Assert-True ($upload.Executable -eq $script:ArduinoCli) 'Windows upload does not use Arduino CLI'
     Assert-True (($upload.Arguments -join '|') -eq "upload|--fqbn|$($script:FqbnF411)|--input-file|C:\firmware\mk61.bin") 'Windows F411 upload arguments differ'
     $script:State.Mcu = 'f401'
+    $f401MenuItems = @(Get-MainMenuItems)
+    Assert-True ('install_apps' -in @($f401MenuItems.Tag)) 'F401 main menu is missing the System APP action'
+    Assert-True ($f401MenuItems[2].Tag -eq 'install_apps') 'F401 System APP action moved to an unexpected row'
     $script:State.EnableFocal = 0
     $script:State.EnableTinyBasic = 0
     $script:State.EnableWbmp = 0

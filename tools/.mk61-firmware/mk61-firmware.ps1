@@ -2237,16 +2237,23 @@ function Show-Profiles {
     }
 }
 
-function Invoke-InteractiveMain {
-    $script:State.Interactive = $true
-    Enter-Tui
-    Load-Config
-    [void](Configure-DfuUploader)
-    $script:State.DeviceStatus = 'не проверялось · пункт «Найти устройство»'
+function Get-MainMenuItems {
+    $uploadLabel = if ($script:State.Mcu -eq 'f401') {
+        "$($script:Glyphs.MenuUpload) Шаг 1 · Собрать и прошить"
+    } else {
+        "$($script:Glyphs.MenuUpload) Собрать и прошить"
+    }
     $items = @(
-        [pscustomobject]@{ Tag = 'upload'; Label = "$($script:Glyphs.MenuUpload) Собрать и прошить" }
+        [pscustomobject]@{ Tag = 'upload'; Label = $uploadLabel }
         [pscustomobject]@{ Tag = 'build'; Label = "$($script:Glyphs.MenuBuild) Только собрать" }
-        [pscustomobject]@{ Tag = 'install_apps'; Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP" }
+    )
+    if ($script:State.Mcu -eq 'f401') {
+        $items += [pscustomobject]@{
+            Tag = 'install_apps'
+            Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP"
+        }
+    }
+    $items += @(
         [pscustomobject]@{ Tag = 'mcu'; Label = "$($script:Glyphs.MenuChoice) Контроллер" }
         [pscustomobject]@{ Tag = 'platform'; Label = "$($script:Glyphs.MenuChoice) Платформа" }
         [pscustomobject]@{ Tag = 'screen'; Label = "$($script:Glyphs.MenuChoice) Экран" }
@@ -2257,15 +2264,18 @@ function Invoke-InteractiveMain {
         [pscustomobject]@{ Tag = 'log'; Label = "$($script:Glyphs.MenuLog) Последний журнал" }
         [pscustomobject]@{ Tag = 'quit'; Label = "$($script:Glyphs.MenuQuit) Выход" }
     )
+    return $items
+}
+
+function Invoke-InteractiveMain {
+    $script:State.Interactive = $true
+    Enter-Tui
+    Load-Config
+    [void](Configure-DfuUploader)
+    $script:State.DeviceStatus = 'не проверялось · пункт «Найти устройство»'
     $mainSelection = 'upload'
     while ($true) {
-        if ($script:State.Mcu -eq 'f401') {
-            $items[0].Label = "$($script:Glyphs.MenuUpload) Шаг 1 · Собрать и прошить"
-            $items[2].Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP"
-        } else {
-            $items[0].Label = "$($script:Glyphs.MenuUpload) Собрать и прошить"
-            $items[2].Label = "$($script:Glyphs.MenuInstall) System APP · только F401"
-        }
+        $items = @(Get-MainMenuItems)
         $platformText = Get-PlatformLabel $script:State.Platform
         $screenText = Get-ScreenLabel $script:State.Screen
         if ((Test-Platform $script:State.Platform) -and (Test-Screen $script:State.Screen) -and
