@@ -476,7 +476,8 @@ mock_path() {
 
 # Пишет каталог в машинном формате: kind<TAB>size<TAB>name.
 remote_list_raw() {
-  local path=$1 output=$2 line rest kind size name count=0 entry physical
+  local path=$1 output=$2 line rest kind size name entry physical
+  local attempt=0 line_count received expected
   : > "$output" || return 1
   if [ -n "$MOCK_ROOT" ]; then
     physical=$(mock_path "$path")
@@ -496,28 +497,56 @@ remote_list_raw() {
     return 0
   fi
 
-  remote_send "ls \"$path\"" || return 1
-  while [ "$count" -lt 10000 ]; do
-    serial_read_line 8 || { STATUS_TEXT="Нет ответа на ls $path"; return 1; }
-    line=$SERIAL_LINE
-    case "$line" in
-      $'d\t'*)
-        name=${line#$'d\t'}
-        name=${name%/}
-        printf 'd\t0\t%s\n' "$name" >> "$output"
-        ;;
-      $'f\t'*)
-        rest=${line#$'f\t'}
-        size=${rest%% B$'\t'*}
-        name=${rest#* B$'\t'}
-        case "$size" in ''|*[!0-9]*) ;; *) printf 'f\t%s\t%s\n' "$size" "$name" >> "$output" ;; esac
-        ;;
-      *' entry.'|*' entries.') return 0 ;;
-      ls:\ *|Unknown\ command:*) STATUS_TEXT=$line; return 1 ;;
-    esac
-    count=$((count + 1))
+  # На только что открытом STM32 CDC иногда теряется начало первого ответа.
+  # `ls` завершает вывод точным числом записей, поэтому неполный каталог можно
+  # обнаружить и безопасно запросить заново, не показывая тихо усечённую панель.
+  while [ "$attempt" -lt 3 ]; do
+    : > "$output" || return 1
+    line_count=0
+    received=0
+    expected=
+    remote_send "ls \"$path\"" || return 1
+    while [ "$line_count" -lt 10000 ]; do
+      serial_read_line 8 || break
+      line=$SERIAL_LINE
+      case "$line" in
+        $'d\t'*)
+          name=${line#$'d\t'}
+          name=${name%/}
+          printf 'd\t0\t%s\n' "$name" >> "$output"
+          received=$((received + 1))
+          ;;
+        $'f\t'*)
+          rest=${line#$'f\t'}
+          size=${rest%% B$'\t'*}
+          name=${rest#* B$'\t'}
+          case "$size" in
+            ''|*[!0-9]*) ;;
+            *)
+              printf 'f\t%s\t%s\n' "$size" "$name" >> "$output"
+              received=$((received + 1))
+              ;;
+          esac
+          ;;
+        [0-9]*' entry.'|[0-9]*' entries.')
+          expected=${line%% *}
+          case "$expected" in
+            ''|*[!0-9]*) expected= ;;
+            *) [ "$received" -eq "$expected" ] && return 0 ;;
+          esac
+          break
+          ;;
+        ls:\ *|Unknown\ command:*) STATUS_TEXT=$line; return 1 ;;
+      esac
+      line_count=$((line_count + 1))
+    done
+    attempt=$((attempt + 1))
   done
-  STATUS_TEXT='Каталог устройства слишком велик'
+  if [ -n "$expected" ]; then
+    STATUS_TEXT="Неполный ответ ls $path: получено $received из $expected"
+  else
+    STATUS_TEXT="Нет полного ответа на ls $path"
+  fi
   return 1
 }
 

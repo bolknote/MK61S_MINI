@@ -117,6 +117,26 @@ tr '\r' '\n' < "$work/fsput.commands" > "$work/fsput.commands.lines"
 test "$(awk '$1 == "fsput" && $2 == "data" { print length($4) }' \
   "$work/fsput.commands.lines")" = "$(printf '96\n96\n8')"
 
+# Потеря первой строки сразу после открытия CDC не должна превращаться в
+# тихо усечённую правую панель: число в финале `ls` заставляет сделать retry.
+{
+  printf 'f\t4 B\tsecond.m61\n'
+  printf '2 entries.\n'
+  printf 'f\t3 B\tfirst.m61\n'
+  printf 'f\t4 B\tsecond.m61\n'
+  printf '2 entries.\n'
+} > "$work/list-retry.responses"
+exec 7> "$work/list-retry.commands"
+exec 8< "$work/list-retry.responses"
+MONITOR_INPUT_FD=7
+MONITOR_OUTPUT_FD=8
+remote_list_raw / "$work/list-retry.output"
+exec 7>&-
+exec 8<&-
+test "$(cat "$work/list-retry.output")" = \
+  "$(printf 'f\t3\tfirst.m61\nf\t4\tsecond.m61')"
+test "$(tr '\r' '\n' < "$work/list-retry.commands" | grep -c '^ls "/"$')" = 2
+
 # Произвольная команда правой панели должна отделять старый prompt, эхо
 # команды и следующий prompt от текста, который увидит встроенный просмотрщик.
 {

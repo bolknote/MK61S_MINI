@@ -130,22 +130,45 @@ try {
         Assert-True ($serial.DtrEnable -and -not $serial.RtsEnable) 'direct COM control lines differ'
         $serial.Dispose()
         $fakeSerial = [pscustomobject]@{
-            IsOpen = $true; ReadTimeout = 0; LastWrite = ''; NextLine = "f`t4 B`tdemo.foc`r"
+            IsOpen = $true
+            ReadTimeout = 0
+            LastWrite = ''
+            NextLine = "f`t4 B`tdemo.foc`r"
+            Lines = [Collections.Generic.Queue[string]]::new()
+            Writes = [Collections.Generic.List[string]]::new()
         }
         $fakeSerial | Add-Member -MemberType ScriptMethod -Name Write -Value {
             param([string]$Text)
             $this.LastWrite = $Text
+            $this.Writes.Add($Text)
         }
-        $fakeSerial | Add-Member -MemberType ScriptMethod -Name ReadLine -Value { return $this.NextLine }
+        $fakeSerial | Add-Member -MemberType ScriptMethod -Name ReadLine -Value {
+            if ($this.Lines.Count -ne 0) { return $this.Lines.Dequeue() }
+            return $this.NextLine
+        }
         $oldDirectSerial = $script:DirectSerial
+        $oldMockRoot = $script:MockRoot
         try {
             $script:DirectSerial = $fakeSerial
             Assert-True (Send-RemoteLine 'ls "/"') 'direct COM write failed'
             Assert-True ($fakeSerial.LastWrite -eq "ls `"/`"`r") 'direct COM write does not use terminal CR'
             Assert-True (Read-SerialLine 250) 'direct COM read failed'
             Assert-True ($script:SerialLine -eq "f`t4 B`tdemo.foc") 'direct COM read did not trim CR'
+
+            $fakeSerial.Writes.Clear()
+            $fakeSerial.Lines.Enqueue("f`t4 B`tsecond.m61`r")
+            $fakeSerial.Lines.Enqueue("2 entries.`r")
+            $fakeSerial.Lines.Enqueue("f`t3 B`tfirst.m61`r")
+            $fakeSerial.Lines.Enqueue("f`t4 B`tsecond.m61`r")
+            $fakeSerial.Lines.Enqueue("2 entries.`r")
+            $script:MockRoot = ''
+            $retriedEntries = @(Get-RemoteEntries '/')
+            Assert-True ($retriedEntries.Count -eq 2) 'incomplete COM listing was accepted'
+            Assert-True ($retriedEntries[0].Name -eq 'first.m61') 'listing retry still lost its first entry'
+            Assert-True (@($fakeSerial.Writes | Where-Object { $_ -eq "ls `"/`"`r" }).Count -eq 2) 'incomplete COM listing was not retried'
         } finally {
             $script:DirectSerial = $oldDirectSerial
+            $script:MockRoot = $oldMockRoot
         }
     } finally {
         $script:IsWindowsHost = $oldWindowsHost

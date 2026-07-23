@@ -585,8 +585,8 @@ function Format-RemoteQuotedPath {
 
 function Get-RemoteEntries {
     param([string]$Path)
-    $entries = New-Object 'System.Collections.Generic.List[object]'
     if (-not [string]::IsNullOrEmpty($script:MockRoot)) {
+        $entries = New-Object 'System.Collections.Generic.List[object]'
         $physical = Get-MockPath $Path
         if (-not (Test-Path -LiteralPath $physical -PathType Container)) {
             $script:StatusText = "Нет каталога $Path"
@@ -604,30 +604,42 @@ function Get-RemoteEntries {
         return @($entries.ToArray())
     }
 
-    if (-not (Send-RemoteLine ('ls ' + (Format-RemoteQuotedPath $Path)))) {
-        throw $script:StatusText
-    }
-    for ($count = 0; $count -lt 10000; $count++) {
-        if (-not (Read-SerialLine 8000)) {
-            $script:StatusText = "Нет ответа на ls $Path"
+    # На только что открытом STM32 CDC иногда теряется начало первого ответа.
+    # Итоговая строка `ls` содержит точное число записей: при несовпадении
+    # перечитываем каталог вместо показа молча усечённой правой панели.
+    $expected = $null
+    for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        $entries = New-Object 'System.Collections.Generic.List[object]'
+        if (-not (Send-RemoteLine ('ls ' + (Format-RemoteQuotedPath $Path)))) {
             throw $script:StatusText
         }
-        $line = $script:SerialLine
-        if ($line -match '^d\t(.*)/$') {
-            $entries.Add((New-PanelEntry $Matches[1] 'd'))
-            continue
-        }
-        if ($line -match '^f\t([0-9]+) B\t(.*)$') {
-            $entries.Add((New-PanelEntry $Matches[2] 'f' ([long]$Matches[1])))
-            continue
-        }
-        if ($line -match ' entr(y|ies)\.$') { return @($entries.ToArray()) }
-        if ($line -match '^(ls:|Unknown command:)') {
-            $script:StatusText = $line
-            throw $line
+        for ($count = 0; $count -lt 10000; $count++) {
+            if (-not (Read-SerialLine 8000)) { break }
+            $line = $script:SerialLine
+            if ($line -match '^d\t(.*)/$') {
+                $entries.Add((New-PanelEntry $Matches[1] 'd'))
+                continue
+            }
+            if ($line -match '^f\t([0-9]+) B\t(.*)$') {
+                $entries.Add((New-PanelEntry $Matches[2] 'f' ([long]$Matches[1])))
+                continue
+            }
+            if ($line -match '^([0-9]+) entr(y|ies)\.$') {
+                $expected = [int]$Matches[1]
+                if ($entries.Count -eq $expected) { return @($entries.ToArray()) }
+                break
+            }
+            if ($line -match '^(ls:|Unknown command:)') {
+                $script:StatusText = $line
+                throw $line
+            }
         }
     }
-    $script:StatusText = 'Каталог устройства слишком велик'
+    if ($null -ne $expected) {
+        $script:StatusText = "Неполный ответ ls $Path`: получено $($entries.Count) из $expected"
+    } else {
+        $script:StatusText = "Нет полного ответа на ls $Path"
+    }
     throw $script:StatusText
 }
 
