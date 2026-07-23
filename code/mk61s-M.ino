@@ -180,7 +180,11 @@ void mk61_display_refresh(void) {
           }
         }
       }
-      XLabel.print(display_text); main_lcd().write(' ');
+      XLabel.print(display_text);
+      const u8 indicator_end = main_lcd().cursorX();
+      for(u8 x = indicator_end; x < main_lcd().cols(); x++) {
+        main_lcd().write(' ');
+      }
       dbgln(MINI, "[mk61_display_refresh] ", display_text);
     }
 
