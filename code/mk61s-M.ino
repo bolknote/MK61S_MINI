@@ -144,6 +144,8 @@ static  constexpr i32   COUNT_EXT_COMMAND = 7;
 const   char* mnemo[COUNT_EXT_COMMAND] = {"empty ", "0.2 sec", "0.5 sec", "1.0 sec", "2.0 sec", XP10, PX10};
 /*===============================================================================================================*/
 
+static void service_m61_controls(void);
+
 void reset_ext_program_state(void) {
   memset(&ext61_program, 0, sizeof(ext61_program));
   ext_command.code = 0;
@@ -410,6 +412,15 @@ static bool select_angle_unit(i32 keycode, bool draw_labels) {
   return true;
 }
 
+static bool select_m61_angle_unit(i32 keycode) {
+  MK61Display& display = main_lcd();
+  const u8 cursor_x = display.cursorX();
+  const u8 cursor_y = display.cursorY();
+  const bool selected = select_angle_unit(keycode, true);
+  display.setCursor(cursor_x, cursor_y);
+  return selected;
+}
+
 void key_press_handler(i32 keycode) {
   if(!runtime_safety::valid_index(keycode, keyboard_core::KEY_COUNT)) return;
   if(keycode == KEY_USER_PRESS && !core_61::edit_program) return;
@@ -583,13 +594,13 @@ static void service_m61_controls(void) {
     return;
   }
   if(kbd::take_immediate_press(KEY_DEGREE)) {
-    (void) select_angle_unit(KEY_DEGREE, false);
+    (void) select_m61_angle_unit(KEY_DEGREE);
   }
   if(kbd::take_immediate_press(KEY_GRADE)) {
-    (void) select_angle_unit(KEY_GRADE, false);
+    (void) select_m61_angle_unit(KEY_GRADE);
   }
   if(kbd::take_immediate_press(KEY_RADIAN)) {
-    (void) select_angle_unit(KEY_RADIAN, false);
+    (void) select_m61_angle_unit(KEY_RADIAN);
   }
 
   const i32 release_mask = (i32) keyboard_core::RELEASE_MASK;
@@ -602,7 +613,7 @@ static void service_m61_controls(void) {
     if(keycode == KEY_DEGREE || keycode == KEY_GRADE ||
        keycode == KEY_RADIAN) {
       (void) kbd::get_key();
-      if(pressed) (void) select_angle_unit(keycode, false);
+      if(pressed) (void) select_m61_angle_unit(keycode);
       continue;
     }
 

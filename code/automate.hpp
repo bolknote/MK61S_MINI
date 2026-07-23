@@ -67,6 +67,7 @@ inline void  event_start_prg_mk61(void) {
 }
 
 inline void service_run_keypress(void) {
+  if(m61_text::active()) return;
   const i32 keycode = kbd::get_key(PRESS);
   if(keycode >= 0) key_press_handler(keycode);
 }
@@ -81,7 +82,11 @@ inline void run_program_steps(void) {
       // между проходами loop(). Продвигаем штатный сканер после каждого шага,
       // чтобы Р/Г/ГРД и ESC опрашивались с той же частотой, что и в обычном
       // режиме. Debounce клавиатуры при этом остаётся общим.
-      if(m61_text::active()) (void) kbd::scan_m61_controls();
+      if(m61_text::active()) {
+        (void) kbd::scan_m61_controls();
+        service_m61_controls();
+        if(!m61_text::active() || !core_61::is_RUN()) return;
+      }
 
       // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
       // делать следующий турбо-шаг или передавать клавишу до сохранения контекста скриптом.
