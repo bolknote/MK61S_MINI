@@ -36,6 +36,13 @@ static constexpr u8 TRAP_BITMAP_SIZE =
 static constexpr u8 INVALID_TRAP_TARGET = 0xFF;
 static constexpr u8 RETURN_STACK_DEPTH = SCRIPT_STACK_DEPTH + 1;
 
+#if !defined(M61_TEXT_HOST_TEST) && defined(ARDUINO_ARCH_STM32) && \
+    defined(__ARM_ARCH_7EM__)
+  #define M61_TEXT_STM32_SRAM_BIT_BAND 1
+#else
+  #define M61_TEXT_STM32_SRAM_BIT_BAND 0
+#endif
+
 enum class RunnerState : u8 {
   IDLE,
   EXECUTING,
@@ -86,7 +93,11 @@ static u16 script_id = program_store::INVALID_ID;
 static u16 script_len = 0;
 static u16 script_pos = 0;
 static u16 script_line = 1;
+#if M61_TEXT_STM32_SRAM_BIT_BAND
+static volatile u8 active_traps[TRAP_BITMAP_SIZE] = {};
+#else
 static u8 active_traps[TRAP_BITMAP_SIZE] = {};
+#endif
 static ReturnFrame return_stack[RETURN_STACK_DEPTH];
 static u8 return_stack_depth = 0;
 static u8 script_stack_depth = 0;
@@ -110,6 +121,40 @@ static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
+
+#if M61_TEXT_STM32_SRAM_BIT_BAND
+static constexpr uintptr_t SRAM_BIT_BAND_REGION_BASE = 0x20000000UL;
+static constexpr uintptr_t SRAM_BIT_BAND_ALIAS_BASE = 0x22000000UL;
+
+static volatile u32* active_trap_bit_alias_base(void) {
+  const uintptr_t storage_address =
+      reinterpret_cast<uintptr_t>(&active_traps[0]);
+  return reinterpret_cast<volatile u32*>(
+      SRAM_BIT_BAND_ALIAS_BASE +
+      ((storage_address - SRAM_BIT_BAND_REGION_BASE) << 5U));
+}
+
+static void* active_trap_boundary_hook_data(void) {
+  return reinterpret_cast<void*>(
+      const_cast<u32*>(active_trap_bit_alias_base()));
+}
+#else
+static void* active_trap_boundary_hook_data(void) {
+  return NULL;
+}
+#endif
+
+static void clear_active_traps(void) {
+  for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) active_traps[i] = 0;
+}
+
+static void save_active_traps(u8 (&out)[TRAP_BITMAP_SIZE]) {
+  for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) out[i] = active_traps[i];
+}
+
+static void restore_active_traps(const u8 (&saved)[TRAP_BITMAP_SIZE]) {
+  for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) active_traps[i] = saved[i];
+}
 
 // Снимок ловушки фиксирует всё состояние ядра, включая единицу угла. Однако
 // Р/Г/ГРД на корпусе играют роль внешнего переключателя: изменение, сделанное
@@ -175,7 +220,7 @@ static void clear_current_script(void) {
   script_line = 1;
   invalidate_read_cache();
   label_count = 0;
-  memset(active_traps, 0, sizeof(active_traps));
+  clear_active_traps();
   memset(trap_targets, INVALID_TRAP_TARGET, sizeof(trap_targets));
 }
 
@@ -202,7 +247,7 @@ static void store_current_frame(ScriptFrame& frame) {
   frame.len = script_len;
   frame.pos = script_pos;
   frame.line = script_line;
-  memcpy(frame.active_traps, active_traps, sizeof(active_traps));
+  save_active_traps(frame.active_traps);
 }
 
 static void restore_frame(const ScriptFrame& frame) {
@@ -212,7 +257,7 @@ static void restore_frame(const ScriptFrame& frame) {
   script_len = frame.len;
   script_pos = frame.pos;
   script_line = frame.line;
-  memcpy(active_traps, frame.active_traps, sizeof(active_traps));
+  restore_active_traps(frame.active_traps);
   invalidate_read_cache();
 }
 
@@ -536,20 +581,29 @@ static TrapParse parse_trap(const char* line, ParsedTrap& out) {
 }
 
 static void set_trap_active(u8 address, bool active) {
+#if M61_TEXT_STM32_SRAM_BIT_BAND
+  active_trap_bit_alias_base()[address] = active ? 1U : 0U;
+#else
   const u8 mask = (u8) (1U << (address & 7U));
   if(active) active_traps[address >> 3] |= mask;
   else active_traps[address >> 3] &= (u8) ~mask;
+#endif
 }
 
 static bool trap_is_active(u8 address) {
+#if M61_TEXT_STM32_SRAM_BIT_BAND
+  return address < TRAP_ADDRESS_COUNT &&
+         active_trap_bit_alias_base()[address] != 0;
+#else
   return address < TRAP_ADDRESS_COUNT &&
          (active_traps[address >> 3] &
           (u8) (1U << (address & 7U))) != 0;
+#endif
 }
 
 static bool any_trap_is_active(void) {
-  for(u8 value : active_traps) {
-    if(value != 0) return true;
+  for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) {
+    if(active_traps[i] != 0) return true;
   }
   return false;
 }
@@ -820,7 +874,7 @@ static bool goto_label(const char* args) {
 }
 
 static bool program_boundary_hook(
-    const core_61::Mk61ProgramBoundaryContext& context, void*) {
+    const core_61::Mk61ProgramBoundaryContext& context, void* user_data) {
   if((runner_state != RunnerState::WAIT_RUN_STOP &&
       runner_state != RunnerState::WATCH_TRAPS) ||
      !core_61::is_RUN()) {
@@ -833,7 +887,15 @@ static bool program_boundary_hook(
     if(bypass) return false;
   }
 
+#if M61_TEXT_STM32_SRAM_BIT_BAND
+  const volatile u32* active_bits =
+      reinterpret_cast<volatile u32*>(user_data);
+  if(context.address >= TRAP_ADDRESS_COUNT ||
+     active_bits[context.address] == 0) return false;
+#else
+  (void) user_data;
   if(!trap_is_active(context.address)) return false;
+#endif
   const u8 target = trap_targets[context.address];
   if(target == INVALID_TRAP_TARGET || target >= label_count) return false;
   trap_pending = true;
@@ -1013,7 +1075,7 @@ static bool load_frame(const ScriptFrame& frame) {
       frame.source == ScriptSource::STORE &&
       script_id == frame.id;
   if(restart_same_root) {
-    memcpy(next.active_traps, active_traps, sizeof(active_traps));
+    save_active_traps(next.active_traps);
   }
   if(active()) stop_runner();
   clear_error();
@@ -1029,7 +1091,8 @@ static bool load_frame(const ScriptFrame& frame) {
   display_claimed = false;
   wait_until_ms = 0;
   clear_trap_runtime(false);
-  if(!core_61::set_mk61_program_boundary_hook(program_boundary_hook, NULL)) {
+  if(!core_61::set_mk61_program_boundary_hook(
+      program_boundary_hook, active_trap_boundary_hook_data())) {
     fail_script("calculator boundary hook is unavailable", 0);
     return false;
   }
