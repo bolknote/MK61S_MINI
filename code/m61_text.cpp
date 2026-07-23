@@ -108,6 +108,16 @@ static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
 
+// Снимок ловушки фиксирует всё состояние ядра, включая единицу угла. Однако
+// Р/Г/ГРД на корпусе играют роль внешнего переключателя: изменение, сделанное
+// пользователем, пока обработчик ловушки держит кадр, должно пережить `ret`.
+static bool restore_trap_context(void) {
+  const AngleUnit selected_angle = MK61Emu_GetAngleUnit();
+  if(!core_61::restore_context(trap_context)) return false;
+  MK61Emu_SetAngleUnit(selected_angle);
+  return true;
+}
+
 static bool is_line_end(char c) {
   return c == 0 || c == '\r' || c == '\n';
 }
@@ -306,7 +316,7 @@ void release_display(void) {
 
 static void clear_trap_runtime(bool restore_calculator) {
   if(restore_calculator && trap_context_valid) {
-    (void) core_61::restore_context(trap_context);
+    (void) restore_trap_context();
   }
   trap_pending = false;
   pending_trap_address = 0;
@@ -662,7 +672,7 @@ static bool return_from_script(void) {
     return true;
   }
 
-  if(!trap_context_valid || !core_61::restore_context(trap_context)) {
+  if(!trap_context_valid || !restore_trap_context()) {
     fail_script("cannot restore calculator trap context", script_line);
     return false;
   }

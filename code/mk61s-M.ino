@@ -557,6 +557,22 @@ void   mk61_menu_hook(i32 key) {
 }
 
 void   mk61_baseloop_hook(i32 key) {
+  // В турбо-режиме следующий trap может встретиться раньше, чем автомат МК-61
+  // дойдёт до обычной очереди клавиш. Р/Г/ГРД — внешний переключатель, поэтому
+  // M61-сценарий принимает его сразу, в том числе во время `wait` обработчика.
+  // Отпускание тоже снимаем из очереди, чтобы оно не заслонило следующее
+  // нажатие. Остальные клавиши при сохранённом контексте остаются заморожены.
+  if(m61_text::active() && key >= 0) {
+    const i32 release_mask = (i32) keyboard_core::RELEASE_MASK;
+    const i32 keycode = key & ~release_mask;
+    if(keycode == KEY_DEGREE || keycode == KEY_GRADE ||
+       keycode == KEY_RADIAN) {
+      (void) kbd::get_key();
+      if((key & release_mask) == 0) key_press_handler(keycode);
+      return;
+    }
+  }
+
   // Обработчик ловушки владеет точным снимком калькулятора. Шаги и передачу
   // клавиш калькулятору нужно приостановить, пока `ret` не восстановит снимок.
   if(m61_text::calculator_suspended()) return;

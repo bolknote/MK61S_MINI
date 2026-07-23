@@ -28,6 +28,8 @@ static core_61::Mk61ProgramBoundaryHook boundary_hook = nullptr;
 static void* boundary_user_data = nullptr;
 static int context_saves = 0;
 static int context_restores = 0;
+static AngleUnit host_angle_unit = DEGREE;
+static AngleUnit saved_context_angle = DEGREE;
 static u32 fake_millis = 0;
 static std::vector<std::string> executed_lines;
 static std::vector<bool> executed_in_trap;
@@ -126,17 +128,27 @@ bool program_boundary_yielded(void) { return false; }
 
 bool save_context(ContextBuffer& out) {
   std::memset(out.bytes, 0xA5, sizeof(out.bytes));
+  saved_context_angle = host_angle_unit;
   context_saves++;
   return true;
 }
 
 bool restore_context(const ContextBuffer& saved) {
   assert(saved.bytes[0] == 0xA5);
+  host_angle_unit = saved_context_angle;
   context_restores++;
   return true;
 }
 
 } // пространство имён core_61
+
+void MK61Emu_SetAngleUnit(AngleUnit angle) {
+  host_angle_unit = angle;
+}
+
+AngleUnit MK61Emu_GetAngleUnit(void) {
+  return host_angle_unit;
+}
 
 void hidden_start_loaded_program(void) {
   m_IK1302.comma = core_61::COMMA_RUN_POSITION;
@@ -201,6 +213,8 @@ static void reset_host(void) {
   boundary_user_data = nullptr;
   context_saves = 0;
   context_restores = 0;
+  host_angle_unit = DEGREE;
+  saved_context_angle = DEGREE;
   fake_millis = 0;
   executed_lines.clear();
   executed_in_trap.clear();
@@ -369,6 +383,34 @@ static void test_trap_wait_holds_snapshot_and_resumes_at_deadline(void) {
   assert(!m61_text::calculator_suspended());
   assert(context_restores == 1);
   assert(m61_text::active());
+  m61_text::cancel();
+}
+
+static void test_trap_ret_preserves_user_angle_change(void) {
+  reset_host();
+  add_script("ANGLE",
+             "trap 10 run :frame\n"
+             "run\n"
+             "ret\n"
+             ":frame\n"
+             "wait 500\n"
+             "ret\n");
+  MK61Emu_SetAngleUnit(DEGREE);
+  assert(m61_text::load_program("ANGLE"));
+  assert(fire_program_boundary(10));
+
+  m61_text::service();
+  assert(m61_text::calculator_suspended());
+  assert(MK61Emu_GetAngleUnit() == DEGREE);
+
+  // Имитируем Р, нажатую на физической клавиатуре во время показа кадра.
+  MK61Emu_SetAngleUnit(RADIAN);
+  fake_millis = 500;
+  m61_text::service();
+
+  assert(!m61_text::calculator_suspended());
+  assert(context_restores == 1);
+  assert(MK61Emu_GetAngleUnit() == RADIAN);
   m61_text::cancel();
 }
 
@@ -568,6 +610,7 @@ int main(void) {
   test_print_owns_display_until_root_script_finishes();
   test_print_off_and_on_control_display_ownership();
   test_trap_wait_holds_snapshot_and_resumes_at_deadline();
+  test_trap_ret_preserves_user_angle_change();
   test_nested_script_returns_to_parent_and_depth_is_bounded();
   test_explicit_id_disambiguates_directory_names();
   test_trap_saves_runs_and_restores_at_exact_address();
