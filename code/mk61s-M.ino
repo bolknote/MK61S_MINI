@@ -556,10 +556,13 @@ void   mk61_menu_hook(i32 key) {
     }
 }
 
-// Р/Г/ГРД — внешний переключатель калькулятора, а не команда выполняемой
-// программы. M61 должен обслуживать его независимо от текущего фокуса ввода и
-// от того, держит ли trap-обработчик сохранённый контекст во время `wait`.
-static void service_m61_angle_switch(void) {
+// M61 обслуживает системные клавиши независимо от текущего фокуса ввода и от
+// того, держит ли trap-обработчик сохранённый контекст во время `wait`.
+// Р/Г/ГРД меняют внешний переключатель калькулятора, ESC отменяет сценарий и
+// останавливает вычисление. Остальные события во время сохранённого кадра
+// снимаются из FIFO: передать их в замороженный снимок безопасно нельзя, а
+// оставлять в голове очереди нельзя — они заслонят последующее управление.
+static void service_m61_controls(void) {
   if(!m61_text::active()) return;
 
   const i32 release_mask = (i32) keyboard_core::RELEASE_MASK;
@@ -567,11 +570,27 @@ static void service_m61_angle_switch(void) {
     const i32 event = kbd::last_key();
     if(event < 0) return;
     const i32 keycode = event & ~release_mask;
-    if(keycode != KEY_DEGREE && keycode != KEY_GRADE &&
-       keycode != KEY_RADIAN) return;
+    const bool pressed = (event & release_mask) == 0;
 
+    if(keycode == KEY_DEGREE || keycode == KEY_GRADE ||
+       keycode == KEY_RADIAN) {
+      (void) kbd::get_key();
+      if(pressed) key_press_handler(keycode);
+      continue;
+    }
+
+    if(keycode == KEY_ESC) {
+      (void) kbd::get_key();
+      if(!pressed) continue;
+      m61_text::cancel();
+      if(core_61::is_RUN()) hidden_press_key(sw::RUN);
+      drop_pending_key_events();
+      lcd_std_display_redraw();
+      return;
+    }
+
+    if(!m61_text::calculator_suspended()) return;
     (void) kbd::get_key();
-    if((event & release_mask) == 0) key_press_handler(keycode);
   }
 }
 
@@ -753,7 +772,7 @@ void  loop() {
   // сканер ограничивает частоту до безопасного периода установления сигнала.
   if(m61_text::active()) kbd::scan();
   if(!usb_screen_wire_busy) m61_text::service();
-  service_m61_angle_switch();
+  service_m61_controls();
 
   const i32 used_key = kbd::last_key();
   if(drop_menu_exit_key_events) {
