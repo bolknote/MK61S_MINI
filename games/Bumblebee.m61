@@ -1,18 +1,23 @@
+print off
 hin 0000 0D400207021D5923600110400103115919270060155102600111400111591760155102
 trap 21 run :right
 trap 33 run :left
 kbd 04
-print off
 run
 print on
 ret
 
 :right
-print "\x1B[2;1H\x1B[2K\x1B[2;{X:e}H-0008"
-wait 300
+run :print
+print "-0008"
 ret
 
 :left
-print "\x1B[2;1H\x1B[2K\x1B[2;{X:e}H8000-"
-wait 300
+run :print
+print "8000-"
+ret
+
+:print
+print "\x1B[2;1H\x1B[2K\x1B[2;{X:e}H"
+wait 200
 ret

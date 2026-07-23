@@ -414,6 +414,34 @@ static void test_trap_ret_preserves_user_angle_change(void) {
   m61_text::cancel();
 }
 
+static void test_trap_handler_can_call_a_common_label(void) {
+  reset_host();
+  add_script("CALL",
+             "trap 10 run :frame\n"
+             "run\n"
+             "ret\n"
+             ":frame\n"
+             "run :common\n"
+             "print \"bee\"\n"
+             "ret\n"
+             ":common\n"
+             "print \"ansi\"\n"
+             "ret\n");
+  assert(m61_text::load_program("CALL"));
+  assert(fire_program_boundary(10));
+
+  m61_text::service();
+  assert(context_saves == 1 && context_restores == 1);
+  assert(executed_lines.size() == 6);
+  assert(executed_lines[1] == "run :common");
+  assert(executed_lines[2] == "print \"ansi\"");
+  assert(executed_lines[3] == "ret");
+  assert(executed_lines[4] == "print \"bee\"");
+  assert(executed_lines[5] == "ret");
+  assert(m61_text::active());
+  m61_text::cancel();
+}
+
 static void test_nested_script_returns_to_parent_and_depth_is_bounded(void) {
   reset_host();
   add_script("PARENT", "open CHILD\nbad\n");
@@ -487,10 +515,18 @@ static void test_trap_saves_runs_and_restores_at_exact_address(void) {
 
   m_IK1302.comma = 0;
   m61_text::service();
-  assert(!m61_text::active());
-  assert(boundary_hook == nullptr);
+  assert(m61_text::active());
+  assert(boundary_hook != nullptr);
+
+  // После ручного В/О → С/П наблюдатель остаётся привязан к программе.
+  m_IK1302.comma = core_61::COMMA_RUN_POSITION;
+  assert(fire_program_boundary(10, 0x02));
+  m61_text::service();
+  assert(context_saves == 3 && context_restores == 3);
+  assert(m61_text::active());
   m61_text::Error error = {};
   assert(!m61_text::last_error(error));
+  m61_text::cancel();
 }
 
 static void test_trap_is_activated_only_when_its_line_executes(void) {
@@ -515,7 +551,8 @@ static void test_trap_is_activated_only_when_its_line_executes(void) {
   assert(!fire_program_boundary(10));
   m_IK1302.comma = 0;
   m61_text::service();
-  assert(!m61_text::active());
+  assert(m61_text::active());
+  m61_text::cancel();
 }
 
 static void test_invalid_traps_fail_before_or_at_run(void) {
@@ -559,7 +596,8 @@ static void test_invalid_traps_fail_before_or_at_run(void) {
   assert(!fire_program_boundary(105));
   m_IK1302.comma = 0;
   m61_text::service();
-  assert(!m61_text::active());
+  assert(m61_text::active());
+  m61_text::cancel();
 }
 
 static void test_trap_handler_requires_ret_and_restores_on_error(void) {
@@ -611,6 +649,7 @@ int main(void) {
   test_print_off_and_on_control_display_ownership();
   test_trap_wait_holds_snapshot_and_resumes_at_deadline();
   test_trap_ret_preserves_user_angle_change();
+  test_trap_handler_can_call_a_common_label();
   test_nested_script_returns_to_parent_and_depth_is_bounded();
   test_explicit_id_disambiguates_directory_names();
   test_trap_saves_runs_and_restores_at_exact_address();

@@ -62,6 +62,24 @@ void test_sized_fifo_handles_a_full_virtual_keyboard_cycle(void) {
   assert(fifo.empty());
 }
 
+void test_press_edge_latch_maps_rows_and_collapses_duplicates(void) {
+  keyboard_core::PressEdgeLatch latch;
+  latch.reset();
+
+  // Верхняя физическая строка: Г = 04, Р = 0E.
+  latch.noteRow(4, 0x05);
+  latch.noteRow(4, 0x01);
+  assert(latch.take(4));
+  assert(!latch.take(4));
+  assert(latch.take(14));
+  assert(!latch.take(14));
+
+  latch.noteRow(keyboard_core::ROW_COUNT, 0xFF);
+  assert(!latch.take(0));
+  assert(!latch.take(-1));
+  assert(!latch.take((i32) keyboard_core::KEY_COUNT));
+}
+
 void test_external_keys_press_hold_release_and_clear(void) {
   keyboard_core::ExternalKeyState state;
   state.reset();
@@ -159,6 +177,7 @@ int main(void) {
   test_scan_code_validation();
   test_fifo_bounds_and_wrap();
   test_sized_fifo_handles_a_full_virtual_keyboard_cycle();
+  test_press_edge_latch_maps_rows_and_collapses_duplicates();
   test_external_keys_press_hold_release_and_clear();
   test_external_keys_multiple_keys_and_hold_wraparound();
   test_debounce_and_simultaneous_edges();

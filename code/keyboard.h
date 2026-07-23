@@ -26,11 +26,14 @@ namespace kbd {
   extern  i32     get_key_wait(void);
   extern  void    exclude_before(i32 before_key);
   extern  void    clear_hold_key(void);
+  extern  bool    take_immediate_press(i32 key_code);
+  extern  void    clear_immediate_presses(void);
   extern  bool    any_key_pressed(void);
   extern  bool    is_key_pressed(i32 key_code);
   extern  bool    is_physical_key_pressed(i32 key_code);
   extern  void    set_external_key_pressed(i32 key_code, bool pressed);
   extern  isize   scan(void);
+  extern  isize   scan_m61_controls(void);
   extern  isize   scan_and_debounced(void);
 }
 

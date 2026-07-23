@@ -65,6 +65,36 @@ class FixedFifo {
 
 using Fifo = FixedFifo<8>;
 
+class PressEdgeLatch {
+  public:
+    constexpr PressEdgeLatch(void) : pending_(0) {
+      static_assert(KEY_COUNT <= 64, "keyboard press latch exceeds u64");
+    }
+
+    void reset(void) { pending_ = 0; }
+
+    void noteRow(usize row, u8 columns) {
+      if(row >= ROW_COUNT) return;
+      for(usize column = 0; column < COLUMN_COUNT; column++) {
+        const u8 bit = (u8) (1u << column);
+        if((columns & bit) == 0) continue;
+        const usize key_code = column * ROW_COUNT + row;
+        pending_ |= (u64) 1U << key_code;
+      }
+    }
+
+    bool take(i32 key_code) {
+      if(key_code < 0 || key_code >= (i32) KEY_COUNT) return false;
+      const u64 bit = (u64) 1U << (u8) key_code;
+      if((pending_ & bit) == 0) return false;
+      pending_ &= ~bit;
+      return true;
+    }
+
+  private:
+    u64 pending_;
+};
+
 class ExternalKeyState {
   public:
     constexpr ExternalKeyState(void)
@@ -174,6 +204,7 @@ class DebouncedRow {
     }
 
     bool pressed_or_pending(void) const { return (stable_ | candidate_) != 0; }
+    u8 candidate_mask(void) const { return candidate_; }
 
     bool pressed(usize column) const {
       return column < COLUMN_COUNT && (stable_ & (u8) (1u << column)) != 0;

@@ -40,7 +40,8 @@ enum class RunnerState : u8 {
   IDLE,
   EXECUTING,
   WAIT_RUN_STOP,
-  WAIT_TIME
+  WAIT_TIME,
+  WATCH_TRAPS
 };
 
 enum class ScriptSource : u8 {
@@ -60,11 +61,13 @@ struct ScriptFrame {
 
 enum class ReturnKind : u8 {
   SCRIPT,
+  LABEL,
   TRAP
 };
 
 struct ReturnFrame {
   ReturnKind kind;
+  RunnerState runner_state;
   ScriptFrame script;
 };
 
@@ -289,6 +292,7 @@ static bool push_current_frame(ReturnKind kind) {
   }
   ReturnFrame& frame = return_stack[return_stack_depth++];
   frame.kind = kind;
+  frame.runner_state = runner_state;
   store_current_frame(frame.script);
   if(kind == ReturnKind::SCRIPT) script_stack_depth++;
   return true;
@@ -543,6 +547,13 @@ static bool trap_is_active(u8 address) {
           (u8) (1U << (address & 7U))) != 0;
 }
 
+static bool any_trap_is_active(void) {
+  for(u8 value : active_traps) {
+    if(value != 0) return true;
+  }
+  return false;
+}
+
 static bool build_label_index(const char*& error_message, u16& error_line) {
   const u16 resume_pos = script_pos;
   const u16 resume_line = script_line;
@@ -660,15 +671,22 @@ static bool restore_return_frame(const ReturnFrame& returned) {
 
 static bool return_from_script(void) {
   if(return_stack_depth == 0) {
+    if(any_trap_is_active()) {
+      runner_state = RunnerState::WATCH_TRAPS;
+      wait_until_ms = 0;
+      return true;
+    }
     stop_runner();
     return true;
   }
 
   const ReturnFrame returned = return_stack[--return_stack_depth];
-  if(returned.kind == ReturnKind::SCRIPT) {
-    if(script_stack_depth > 0) script_stack_depth--;
+  if(returned.kind != ReturnKind::TRAP) {
+    if(returned.kind == ReturnKind::SCRIPT && script_stack_depth > 0) {
+      script_stack_depth--;
+    }
     if(!restore_return_frame(returned)) return false;
-    runner_state = RunnerState::EXECUTING;
+    runner_state = returned.runner_state;
     return true;
   }
 
@@ -681,7 +699,7 @@ static bool return_from_script(void) {
   bypass_trap_address = suspended_trap_address;
   suspended_trap_address = 0;
   if(!restore_return_frame(returned)) return false;
-  runner_state = RunnerState::WAIT_RUN_STOP;
+  runner_state = returned.runner_state;
   return true;
 }
 
@@ -764,8 +782,9 @@ static bool open_slot(const char* args) {
   return open_store_script(name);
 }
 
-// "run :метка" - переход на строку ":метка" текущего скрипта. Поиск ведётся
-// с начала, поэтому переходы возможны и назад (циклы), и вперёд.
+// В обычном сценарии "run :метка" остаётся переходом и поддерживает циклы.
+// В обработчике trap это локальный вызов: ret возвращает на строку после run,
+// что позволяет вынести общий код кадра в одну метку.
 static bool goto_label(const char* args) {
   args = skip_spaces(args);
   usize label_len = 0;
@@ -774,6 +793,10 @@ static bool goto_label(const char* args) {
 
   const i16 target = find_label_index(args, label_len);
   if(target < 0) return false;
+  if(trap_context_valid && !push_current_frame(ReturnKind::LABEL)) {
+    line_error_message = "label return stack is full";
+    return false;
+  }
   const LabelEntry& entry = labels[target];
   script_pos = entry.target_pos;
   script_line = entry.target_line;
@@ -783,7 +806,9 @@ static bool goto_label(const char* args) {
 
 static bool program_boundary_hook(
     const core_61::Mk61ProgramBoundaryContext& context, void*) {
-  if(runner_state != RunnerState::WAIT_RUN_STOP || !core_61::is_RUN()) {
+  if((runner_state != RunnerState::WAIT_RUN_STOP &&
+      runner_state != RunnerState::WATCH_TRAPS) ||
+     !core_61::is_RUN()) {
     return false;
   }
 

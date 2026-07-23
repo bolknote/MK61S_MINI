@@ -92,6 +92,7 @@ static  isize          hold_quant_counter;    // счетчик квантов �
 static  t_time_ms      press_time;            // время в ms последнего нажатия (без отжатия)
 static  u32            scan_line_started_us;
 static  keyboard_core::ExternalKeyState external_keys;
+static  keyboard_core::PressEdgeLatch immediate_presses;
 
 inline void activate_scan_line(void) {
   digitalWrite(scan_pins[scan_line], HIGH);
@@ -148,6 +149,14 @@ void  clear_hold_key(void) {
   holded_scan_code = -1;
   hold_quant_counter = -1;
   external_keys.clearHold();
+}
+
+bool take_immediate_press(i32 key_code) {
+  return immediate_presses.take(key_code);
+}
+
+void clear_immediate_presses(void) {
+  immediate_presses.reset();
 }
 
 bool any_key_pressed(void) {
@@ -210,6 +219,7 @@ i32   get_key_wait(void) {
 void  debounce_init(void) {
   const t_time_ms init_time = millis();
   for(usize i = 0; i < KEY_IN_ROW; i++) RowArray[i].reset(init_time);
+  immediate_presses.reset();
 }
 
 void  init(void) {
@@ -263,7 +273,11 @@ isize scan(void) {
   }
 
   const u8 row = scan_line;
-  const u8 bit_changed = RowArray[row].update((u8) bus_in(), millis());
+  const u8 sample = (u8) bus_in();
+  const u8 rising =
+    (u8) (sample & (u8) ~RowArray[row].candidate_mask());
+  immediate_presses.noteRow(row, rising);
+  const u8 bit_changed = RowArray[row].update(sample, millis());
 
   advance_scan_line();
 
@@ -309,6 +323,21 @@ isize scan(void) {
   }
 
   return (isize) scan_code;
+}
+
+isize scan_m61_controls(void) {
+  // Р, ГРД, Г и ESC находятся на одной верхней строке матрицы. Во время
+  // работы M61 приоритетно возвращаем сканер на неё; после миллисекунды
+  // установления обычный scan() читает строку и сохраняет как штатное
+  // debounced-событие, так и короткий фронт.
+  if(scan_line != LAST_SCAN_ROW) {
+    pinMode(scan_pins[scan_line], INPUT);
+    scan_line = LAST_SCAN_ROW;
+    activate_scan_line();
+    check_hold_key();
+    return -1;
+  }
+  return scan();
 }
 
 isize  scan_and_debounced(void) {
