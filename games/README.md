@@ -12,3 +12,6 @@ coordinates are calculated by the MK-61 bytecode. The M61 layer blanks and
 owns the display, then two traps publish the right- and left-facing frames
 every 300 ms. The current coordinate is encoded as the exponent of `10^R0`,
 so `{X:e}` can be used directly as the ANSI column.
+
+`Bumblebee Fly.m61` is the earlier full MK-61 program port. It is kept as a
+separate game and is not replaced by `Bumblebee.m61`.
