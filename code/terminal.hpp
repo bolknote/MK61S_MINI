@@ -678,7 +678,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::error();
       }
       Serial.println(text);
-      if(!snapshot.time_set) Serial.println("установите дату");
+      if(!snapshot.time_set) Serial.println("Set the date.");
       return terminal_protocol::Result::ok();
     }
 
