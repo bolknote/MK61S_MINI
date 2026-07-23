@@ -33,7 +33,8 @@ $script:LastLog = Join-Path $script:BuildRoot 'last.log'
 
 $script:Stm32CoreVersion = '2.12.0'
 $script:Stm32PackageUrl = 'https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json'
-$script:Fqbn = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
+$script:FqbnF411 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
+$script:FqbnF401 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
 
 $script:IsWindowsHost = $env:OS -eq 'Windows_NT'
 $script:IsMacHost = $false
@@ -73,7 +74,9 @@ $script:State = [ordered]@{
     Profile = ''
     Platform = ''
     Screen = ''
+    Mcu = 'f411'
     CliProfile = $false
+    CliMcu = $false
     EnableFocal = 1
     EnableTinyBasic = 1
     EnableWbmp = 1
@@ -176,6 +179,47 @@ $script:ScreenLabels = [ordered]@{
 function Test-Profile { param([string]$Id) return $script:Profiles.Contains($Id) }
 function Test-Platform { param([string]$Id) return $script:PlatformLabels.Contains($Id) }
 function Test-Screen { param([string]$Id) return $script:ScreenLabels.Contains($Id) }
+function Test-Mcu { param([string]$Id) return $Id -eq 'f411' -or $Id -eq 'f401' }
+
+function Get-McuLabel {
+    param([string]$Id)
+    switch ($Id) {
+        'f411' { return 'STM32F411CE · 512 KiB Flash' }
+        'f401' { return 'STM32F401CC · 256 KiB Flash · APP в C5' }
+    }
+    return 'не выбран'
+}
+
+function Get-Fqbn {
+    param([string]$Mcu = $script:State.Mcu)
+    if ($Mcu -eq 'f401') { return $script:FqbnF401 }
+    if ($Mcu -eq 'f411') { return $script:FqbnF411 }
+    throw "Unsupported MCU: $Mcu"
+}
+
+function Get-ProfileArtifactName {
+    param([string]$Profile, [string]$Mcu = $script:State.Mcu)
+    if (-not (Test-Profile $Profile)) { throw "Unsupported profile: $Profile" }
+    if (-not (Test-Mcu $Mcu)) { throw "Unsupported MCU: $Mcu" }
+    $name = [string]$script:Profiles[$Profile].Artifact
+    if ($Mcu -eq 'f401') { return $name.Replace('-f411.bin', '-f401.bin') }
+    return $name
+}
+
+function Get-ProfileBundleDir {
+    param([string]$Profile)
+    $name = Get-ProfileArtifactName $Profile 'f401'
+    return Join-Path $script:OutputDir $name.Substring(0, $name.Length - 4)
+}
+
+function Get-ProfileArtifactPath {
+    param([string]$Profile)
+    $name = Get-ProfileArtifactName $Profile $script:State.Mcu
+    if ($script:State.Mcu -eq 'f401') {
+        return Join-Path (Get-ProfileBundleDir $Profile) $name
+    }
+    return Join-Path $script:OutputDir $name
+}
 
 function Test-HardwareCompatible {
     param([string]$Platform, [string]$Screen)
@@ -291,6 +335,7 @@ function Save-Config {
     $temporary = "$($script:ConfigFile).tmp"
     $lines = @(
         '# Создано tools/mk61-firmware.cmd. Можно редактировать, пока инструмент закрыт.'
+        "MCU=$($script:State.Mcu)"
         "PLATFORM=$($script:State.Platform)"
         "SCREEN=$($script:State.Screen)"
         "DFU_UTIL_PATH=$($script:State.DfuPath)"
@@ -327,6 +372,7 @@ function Load-Config {
     $savedProfile = ''
     $savedPlatform = ''
     $savedScreen = ''
+    $savedMcu = 'f411'
     foreach ($line in [IO.File]::ReadAllLines($script:ConfigFile)) {
         $index = $line.IndexOf('=')
         if ($index -lt 1) { continue }
@@ -336,6 +382,7 @@ function Load-Config {
             'PROFILE' { if (Test-Profile $value) { $savedProfile = $value } }
             'PLATFORM' { if (Test-Platform $value) { $savedPlatform = $value } }
             'SCREEN' { if (Test-Screen $value) { $savedScreen = $value } }
+            'MCU' { if (Test-Mcu $value) { $savedMcu = $value } }
             'DFU_UTIL_PATH' { $script:State.DfuPath = $value }
             'STM32_CUBE_PROGRAMMER_PATH' { $script:State.CubeProgrammerPath = $value }
             'MK61_ENABLE_FOCAL' { if (Test-BooleanValue $value) { $script:State.EnableFocal = [int]$value } }
@@ -348,6 +395,7 @@ function Load-Config {
         }
     }
 
+    if (-not $script:State.CliMcu) { $script:State.Mcu = $savedMcu }
     if ($script:State.CliProfile) {
         [void](Set-HardwareFromProfile $script:State.Profile)
         return
@@ -994,8 +1042,71 @@ function Test-ArduinoLibrariesReady {
         ($result.Output -match '(?m)^STM32duino RTC\s+1\.9\.0(\s|$)')
 }
 
+function Test-SystemAppsEnabled {
+    return $script:State.EnableFocal -eq 1 -or
+        $script:State.EnableTinyBasic -eq 1 -or
+        $script:State.EnableWbmp -eq 1
+}
+
+function Test-AnyAppsRequested {
+    return (Test-SystemAppsEnabled) -or
+        -not [string]::IsNullOrWhiteSpace(
+            [Environment]::GetEnvironmentVariable('MK61_APP_MANIFESTS'))
+}
+
+function Get-ExpectedSystemAppNames {
+    $names = New-Object 'System.Collections.Generic.List[string]'
+    if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
+    if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
+    if ($script:State.EnableWbmp -eq 1) { $names.Add('WBMP.APP') }
+    return $names.ToArray()
+}
+
+function Get-AllSystemAppNames {
+    return [string[]]@('FOCAL.APP', 'BASIC.APP', 'WBMP.APP')
+}
+
+function Find-BashExecutable {
+    $resolved = Resolve-Executable 'bash'
+    if (-not [string]::IsNullOrEmpty($resolved)) { return $resolved }
+    if ($script:IsWindowsHost) {
+        foreach ($rootName in @('ProgramFiles', 'ProgramW6432', 'LocalAppData')) {
+            $root = [Environment]::GetEnvironmentVariable($rootName)
+            if ([string]::IsNullOrWhiteSpace($root)) { continue }
+            foreach ($relative in @('Git/bin/bash.exe', 'Git/usr/bin/bash.exe', 'Programs/Git/bin/bash.exe')) {
+                $resolved = Resolve-Executable (Join-Path $root $relative)
+                if (-not [string]::IsNullOrEmpty($resolved)) { return $resolved }
+            }
+        }
+    }
+    return ''
+}
+
+function Convert-ToBashPath {
+    param([string]$Bash, [string]$Path)
+    if (-not $script:IsWindowsHost) { return $Path }
+    $result = Invoke-NativeCapture $Bash @('-lc', 'cygpath -u "$1"', '--', $Path)
+    if ($result.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($result.Output)) {
+        return $result.Output.Trim()
+    }
+    return $Path
+}
+
+function Test-F401HostToolsReady {
+    if ($script:State.Mcu -ne 'f401') { return $true }
+    if (-not (Test-Path -LiteralPath (Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh') -PathType Leaf)) {
+        return $false
+    }
+    $bash = Find-BashExecutable
+    if ([string]::IsNullOrEmpty($bash)) { return $false }
+    if (-not (Test-AnyAppsRequested)) { return $true }
+    $result = Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')
+    return $result.ExitCode -eq 0
+}
+
 function Test-BuildDependenciesReady {
-    return (Test-ArduinoCoreReady) -and (Test-ArduinoLibrariesReady)
+    return (Test-ArduinoCoreReady) -and (Test-ArduinoLibrariesReady) -and
+        (Test-F401HostToolsReady)
 }
 
 function Get-DependencyReport {
@@ -1014,6 +1125,28 @@ function Get-DependencyReport {
         $lines.Add('STM32duino RTC: 1.9.0')
     } else {
         $lines.Add('Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
+    }
+    if ($script:State.Mcu -eq 'f401') {
+        $builder = Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh'
+        if (Test-Path -LiteralPath $builder -PathType Leaf) {
+            $lines.Add('F401 bundle builder: найден')
+        } else {
+            $lines.Add('F401 bundle builder: НЕ НАЙДЕН')
+        }
+        $bash = Find-BashExecutable
+        if ([string]::IsNullOrEmpty($bash)) {
+            $lines.Add('Bash: НЕ НАЙДЕН (на Windows установите Git for Windows или MSYS2)')
+        } else {
+            $lines.Add("Bash: $bash")
+        }
+        if (-not (Test-AnyAppsRequested)) {
+            $lines.Add('Host C++17 compiler: не нужен (APP не запрошены)')
+        } elseif (-not [string]::IsNullOrEmpty($bash) -and
+            (Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')).ExitCode -eq 0) {
+            $lines.Add('Host C++17 compiler: найден')
+        } else {
+            $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для упаковщика APP)')
+        }
     }
     if ($script:IsWindowsHost) {
         if (Find-Stm32CubeProgrammer) {
@@ -1500,6 +1633,27 @@ function Choose-Platform {
     return $true
 }
 
+function Choose-Mcu {
+    $items = @(
+        [pscustomobject]@{
+            Tag = 'f411'
+            Label = 'STM32F411CE · 512 KiB Flash'
+            State = if ($script:State.Mcu -eq 'f411') { 'on' } else { 'off' }
+        }
+        [pscustomobject]@{
+            Tag = 'f401'
+            Label = 'STM32F401CC · 256 KiB Flash · APP в C5'
+            State = if ($script:State.Mcu -eq 'f401') { 'on' } else { 'off' }
+        }
+    )
+    $chosen = Show-RadioList 'Контроллер' `
+        'F411 хранит системные компоненты в прошивке. F401 собирает resident и согласованные System APP для C5:' $items
+    if ([string]::IsNullOrEmpty($chosen)) { return $false }
+    $script:State.Mcu = $chosen
+    Save-Config
+    return $true
+}
+
 function Choose-Screen {
     $items = foreach ($id in $script:ScreenLabels.Keys) {
         $state = 'off'
@@ -1590,6 +1744,52 @@ function Show-LastLogTail {
     foreach ($line in @(Get-Content -LiteralPath $script:LastLog -Tail $Count)) { [Console]::Error.WriteLine($line) }
 }
 
+function Invoke-F401BundleBuild {
+    param([string]$Profile)
+    $bash = Find-BashExecutable
+    if ([string]::IsNullOrEmpty($bash)) {
+        Write-LastLog 'Bash is required for tools/build_f401_bundle.sh.'
+        return $false
+    }
+    $builder = Convert-ToBashPath $bash (Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh')
+    $output = Convert-ToBashPath $bash $script:OutputDir
+    $build = Convert-ToBashPath $bash (Join-Path $script:BuildRoot "f401/$Profile")
+    $arduinoForBash = $script:ArduinoCli
+    $resolvedArduino = Resolve-Executable $script:ArduinoCli
+    if (-not [string]::IsNullOrEmpty($resolvedArduino)) {
+        $arduinoForBash = Convert-ToBashPath $bash $resolvedArduino
+    }
+
+    $values = [ordered]@{
+        MK61_ARDUINO_CLI = $arduinoForBash
+        MK61_ENABLE_FOCAL = [string]$script:State.EnableFocal
+        MK61_ENABLE_TINYBASIC = [string]$script:State.EnableTinyBasic
+        MK61_ENABLE_WBMP_VIEWER = [string]$script:State.EnableWbmp
+        MK61_ENABLE_USB_SCREEN = [string]$script:State.EnableUsbScreen
+        MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
+        MK61_USER_EXPLORER_SHORTCUT = [string]$script:State.EnableExplorer
+        MK61_MATH_BACKEND = [string]$script:State.EnableCoreMath
+    }
+    $previous = @{}
+    foreach ($name in $values.Keys) {
+        $previous[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+        [Environment]::SetEnvironmentVariable($name, $values[$name], 'Process')
+    }
+    try {
+        $arguments = [string[]]@(
+            $builder, '--profile', $Profile,
+            '--output-dir', $output,
+            '--build-root', $build)
+        return Invoke-ExternalWithProgress 'Сборка комплекта F401' `
+            "Собираю resident и System APP: $(Get-ProfileLabel $Profile)" `
+            $script:LastLog 'indeterminate' $bash $arguments
+    } finally {
+        foreach ($name in $values.Keys) {
+            [Environment]::SetEnvironmentVariable($name, $previous[$name], 'Process')
+        }
+    }
+}
+
 function Build-Selected {
     if (-not (Ensure-HardwareProfile)) { return $false }
     if (-not (Test-BuildDependenciesReady)) {
@@ -1600,12 +1800,50 @@ function Build-Selected {
     }
 
     $profile = $script:State.Profile
+    if ($script:State.Mcu -eq 'f401') {
+        if (-not (Invoke-F401BundleBuild $profile)) {
+            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+            else { Show-LastLogTail }
+            return $false
+        }
+        $artifact = Get-ProfileArtifactPath $profile
+        if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+            (Get-Item -LiteralPath $artifact).Length -eq 0) {
+            Write-LastLog "Build succeeded but $artifact was not created." -Append
+            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+            else { Show-LastLogTail }
+            return $false
+        }
+        $bundle = Get-ProfileBundleDir $profile
+        $size = (Get-Item -LiteralPath $artifact).Length
+        $apps = @(Get-ExpectedSystemAppNames)
+        if ($script:State.Interactive) {
+            if ($apps.Count -gt 0) {
+                $appText = $apps -join [Environment]::NewLine
+                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`nSystem APP:`n$appText`n`nПосле прошивки выполните пункт «Шаг 2 · Установить System APP»."
+            } else {
+                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nВсе System APP выключены. На чистом C5 второй шаг не требуется; если там остались прежние системные APP, второй шаг удалит только их."
+            }
+        } else {
+            [Console]::WriteLine("Built F401 bundle: $bundle")
+            [Console]::WriteLine("Resident: $artifact ($size bytes)")
+            if ($apps.Count -gt 0) {
+                [Console]::WriteLine('System APP:')
+                foreach ($app in $apps) { [Console]::WriteLine($app) }
+                [Console]::WriteLine('Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.')
+            } else {
+                [Console]::WriteLine('All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.')
+            }
+        }
+        return $true
+    }
+
     $flags = Get-AllCompileFlags $profile
     $signature = Get-FlagsSignature $flags
     $sketchProfileRoot = Join-Path $script:BuildRoot "sketch/$profile"
     $sketchDir = Join-Path $sketchProfileRoot 'mk61s-M'
     $buildDir = Join-Path $script:BuildRoot "build/$profile-$signature"
-    $artifact = Join-Path $script:OutputDir $script:Profiles[$profile].Artifact
+    $artifact = Get-ProfileArtifactPath $profile
     try {
         if (Test-Path -LiteralPath $sketchProfileRoot) { Remove-Item -LiteralPath $sketchProfileRoot -Recurse -Force }
         [void](New-Item -ItemType Directory -Force -Path $sketchDir)
@@ -1620,7 +1858,7 @@ function Build-Selected {
     }
 
     $arguments = @(
-        'compile', '--fqbn', $script:Fqbn,
+        'compile', '--fqbn', $script:FqbnF411,
         '--build-path', $buildDir,
         '--build-property', "compiler.cpp.extra_flags=$flags",
         $sketchDir)
@@ -1656,6 +1894,204 @@ function Build-Selected {
         Show-Message 'Сборка завершена' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nФайл: $artifact`nРазмер: $size байт"
     } else {
         [Console]::WriteLine("Built: $artifact ($size bytes)")
+    }
+    return $true
+}
+
+function Test-F401BundleReady {
+    $profile = $script:State.Profile
+    $bundle = Get-ProfileBundleDir $profile
+    $artifact = Get-ProfileArtifactPath $profile
+    $flagsFile = Join-Path $bundle 'build.flags'
+    if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $flagsFile -PathType Leaf) -or
+        (Get-Item -LiteralPath $artifact).Length -eq 0) {
+        Write-LastLog "F401 bundle is missing. Build the selected profile first: $bundle"
+        return $false
+    }
+    $lines = [IO.File]::ReadAllLines($flagsFile)
+    $actual = if ($lines.Count -gt 0) { $lines[0] } else { '' }
+    $expected = Get-AllCompileFlags $profile
+    if ($actual -ne $expected) {
+        Write-LastLog 'F401 bundle flags do not match the current selection. Rebuild it first.'
+        return $false
+    }
+    $source = Join-Path $bundle 'System'
+    foreach ($app in @(Get-ExpectedSystemAppNames)) {
+        $path = Join-Path $source $app
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
+            (Get-Item -LiteralPath $path).Length -eq 0) {
+            Write-LastLog "F401 bundle is incomplete: $path is missing."
+            return $false
+        }
+    }
+    return $true
+}
+
+function Find-C5Mount {
+    $override = [Environment]::GetEnvironmentVariable('MK61_C5_MOUNT')
+    if (-not [string]::IsNullOrWhiteSpace($override)) {
+        if (Test-Path -LiteralPath $override -PathType Container) {
+            return (Resolve-Path -LiteralPath $override).Path
+        }
+        return ''
+    }
+    if ($script:IsWindowsHost) {
+        foreach ($drive in [IO.DriveInfo]::GetDrives()) {
+            try {
+                if ($drive.IsReady -and $drive.VolumeLabel -eq 'MK61S C5') {
+                    return $drive.RootDirectory.FullName
+                }
+            } catch {}
+        }
+    }
+    $userName = [Environment]::UserName
+    $candidates = @(
+        '/Volumes/MK61S C5'
+        "/media/$userName/MK61S C5"
+        "/run/media/$userName/MK61S C5"
+        '/media/MK61S C5'
+        '/mnt/MK61S C5'
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Container) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+    return ''
+}
+
+function Wait-ForC5Mount {
+    param([int]$Seconds = 60)
+    $attempts = $Seconds * 2
+    for ($attempt = 0; $attempt -lt $attempts; $attempt++) {
+        $mount = Find-C5Mount
+        if (-not [string]::IsNullOrEmpty($mount)) { return $mount }
+        if ($script:State.Interactive) {
+            $percent = [Math]::Min(90, [int](90 * ($attempt + 1) / $attempts))
+            Draw-Progress 'USB-диск C5' 'Жду MK61S C5' $percent
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    Write-LastLog "USB disk `"MK61S C5`" was not found within $Seconds seconds."
+    return ''
+}
+
+function Get-FileSha256 {
+    param([string]$Path)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+    try {
+        return [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '')
+    } finally {
+        $stream.Dispose()
+        $sha.Dispose()
+    }
+}
+
+function Copy-SystemAppVerified {
+    param([string]$Source, [string]$Destination)
+    $input = $null
+    $output = $null
+    try {
+        $input = [IO.File]::Open($Source, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+        $output = [IO.FileStream]::new(
+            $Destination, [IO.FileMode]::Create, [IO.FileAccess]::Write,
+            [IO.FileShare]::None, 4096, [IO.FileOptions]::WriteThrough)
+        $input.CopyTo($output)
+        $output.Flush($true)
+    } finally {
+        if ($null -ne $output) { $output.Dispose() }
+        if ($null -ne $input) { $input.Dispose() }
+    }
+    if ((Get-Item -LiteralPath $Source).Length -ne (Get-Item -LiteralPath $Destination).Length -or
+        (Get-FileSha256 $Source) -ne (Get-FileSha256 $Destination)) {
+        throw "Verification failed: $Destination"
+    }
+}
+
+function Install-SystemApps {
+    if (-not (Ensure-HardwareProfile)) { return $false }
+    if ($script:State.Mcu -ne 'f401') {
+        $message = 'Второй шаг нужен только для STM32F401CC. На F411 системные компоненты находятся во внутренней Flash.'
+        if ($script:State.Interactive) { Show-Message 'System APP' $message }
+        else { [Console]::Error.WriteLine('Error: --install-apps is only valid for --mcu f401.') }
+        return $false
+    }
+    if (-not (Test-F401BundleReady)) {
+        if ($script:State.Interactive) {
+            Show-Message 'Комплект не готов' "Комплект F401 отсутствует, неполон или собран с другими ключами.`n`nСначала выполните «Только собрать» либо «Собрать и прошить»."
+        } else {
+            Show-LastLogTail 20
+        }
+        return $false
+    }
+
+    $instructions = "После прошивки дождитесь запуска MK61s.`n`nНа калькуляторе откройте Меню → USB-диск.`nНе нажимайте ESC до сообщения об успешной проверке файлов.`n`nПосле подтверждения инструмент будет ждать диск «MK61S C5» 60 секунд."
+    if ($script:State.Interactive) { Show-Message 'Шаг 2 · System APP' $instructions }
+    else { [Console]::WriteLine($instructions) }
+    $mount = Wait-ForC5Mount 60
+    if ([string]::IsNullOrEmpty($mount)) {
+        if ($script:State.Interactive) { Show-Log 'USB-диск не найден' $script:LastLog }
+        else { Show-LastLogTail 20 }
+        return $false
+    }
+
+    $source = Join-Path (Get-ProfileBundleDir $script:State.Profile) 'System'
+    $target = Join-Path $mount 'System'
+    try {
+        [void](New-Item -ItemType Directory -Force -Path $target)
+        $apps = @(Get-ExpectedSystemAppNames)
+        for ($index = 0; $index -lt $apps.Count; $index++) {
+            $app = $apps[$index]
+            if ($script:State.Interactive) {
+                $percent = [Math]::Min(95, [int](90 * ($index + 1) / $apps.Count))
+                Draw-Progress 'System APP' "Копирую и проверяю $app" $percent
+            }
+            Copy-SystemAppVerified (Join-Path $source $app) (Join-Path $target $app)
+        }
+        foreach ($app in @(Get-AllSystemAppNames)) {
+            if ($apps -notcontains $app) {
+                Remove-Item -LiteralPath (Join-Path $target $app) `
+                    -Force -ErrorAction SilentlyContinue
+            }
+        }
+        foreach ($app in @(Get-AllSystemAppNames)) {
+            if ($apps -notcontains $app -and
+                (Test-Path -LiteralPath (Join-Path $target $app))) {
+                throw "Removal verification failed: $(Join-Path $target $app)"
+            }
+        }
+    } catch {
+        Write-LastLog $_.Exception.Message
+        if ($script:State.Interactive) { Show-Log 'Ошибка установки APP' $script:LastLog }
+        else { Show-LastLogTail 20 }
+        return $false
+    }
+
+    $apps = @(Get-ExpectedSystemAppNames)
+    $appText = ($apps -join [Environment]::NewLine)
+    if ($apps.Count -gt 0) {
+        $script:State.DeviceStatus = 'System APP синхронизированы и проверены'
+    } else {
+        $script:State.DeviceStatus = 'System APP удалены по выключенным ключам'
+    }
+    if ($script:State.Interactive) {
+        Draw-Progress 'System APP' 'Готово' 100
+        Start-Sleep -Milliseconds 350
+        if ($apps.Count -gt 0) {
+            Show-Message 'Шаг 2 завершён' "В каталоге $target синхронизированы и побайтно проверены:`n$appText`n`nТеперь можно выйти из режима USB-диска клавишей ESC на MK61s."
+        } else {
+            Show-Message 'Шаг 2 завершён' "Из каталога $target удалены выключенные канонические System APP.`nДругие файлы C5 не изменялись.`n`nТеперь можно выйти из режима USB-диска клавишей ESC на MK61s."
+        }
+    } else {
+        if ($apps.Count -gt 0) {
+            [Console]::WriteLine("Synchronized and verified in ${target}:")
+            [Console]::WriteLine($appText)
+        } else {
+            [Console]::WriteLine("Removed disabled canonical System APP from ${target}.")
+        }
+        [Console]::WriteLine('You may now leave USB Disk mode with ESC on MK61s.')
     }
     return $true
 }
@@ -1731,7 +2167,7 @@ function Get-UploadInvocation {
     if ($script:IsWindowsHost) {
         return [pscustomobject]@{
             Executable = $script:ArduinoCli
-            Arguments = [string[]]@('upload', '--fqbn', $script:Fqbn, '--input-file', $Artifact)
+            Arguments = [string[]]@('upload', '--fqbn', (Get-Fqbn), '--input-file', $Artifact)
         }
     }
     return [pscustomobject]@{
@@ -1743,17 +2179,24 @@ function Get-UploadInvocation {
 function Upload-Selected {
     if (-not (Ensure-HardwareProfile)) { return $false }
     if ($script:State.Interactive) {
-        $question = "Профиль: $(Get-ProfileLabel $script:State.Profile)`nКонтроллер: STM32F411CE BlackPill`nМетод: USB DFU`n`n$(Get-CompileOptionsDetails)`n`nСобрать прошивку и загрузить её в устройство?"
+        $question = "Профиль: $(Get-ProfileLabel $script:State.Profile)`nКонтроллер: $(Get-McuLabel $script:State.Mcu)`nМетод: USB DFU`n`n$(Get-CompileOptionsDetails)`n`nСобрать согласованный комплект и загрузить resident-прошивку в устройство?"
         if (-not (Show-YesNo 'Собрать и прошить' $question)) { return $false }
     }
     if (-not (Build-Selected)) { return $false }
     if (-not (Ensure-DfuReady)) { return $false }
-    $artifact = Join-Path $script:OutputDir $script:Profiles[$script:State.Profile].Artifact
+    $artifact = Get-ProfileArtifactPath $script:State.Profile
     $upload = Get-UploadInvocation $artifact
     if (Invoke-ExternalWithProgress 'Загрузка прошивки' 'Записываю и перезапускаю STM32' `
         $script:LastLog 'measured' $upload.Executable $upload.Arguments) {
         $script:State.DeviceStatus = 'прошивка загружена; устройство перезапущено'
-        if ($script:State.Interactive) {
+        if ($script:State.Mcu -eq 'f401' -and (Test-SystemAppsEnabled)) {
+            if ($script:State.Interactive) {
+                Show-Message 'Шаг 1 завершён' "Resident-прошивка F401 загружена.`n`nДождитесь запуска MK61s, откройте на нём Меню → USB-диск и выполните пункт «Шаг 2 · Установить System APP»."
+            } else {
+                [Console]::WriteLine("Uploaded resident: $artifact")
+                [Console]::WriteLine('Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.')
+            }
+        } elseif ($script:State.Interactive) {
             Show-Message 'Готово' "Прошивка загружена.`n`n$(Get-ProfileLabel $script:State.Profile)"
         } else { [Console]::WriteLine("Uploaded: $artifact") }
         return $true
@@ -1770,6 +2213,7 @@ function Show-Dependencies {
 function Show-Config {
     Sync-ProfileFromHardware
     [Console]::WriteLine("CONFIG_FILE=$($script:ConfigFile)")
+    [Console]::WriteLine("MCU=$($script:State.Mcu)")
     [Console]::WriteLine("PLATFORM=$($script:State.Platform)")
     [Console]::WriteLine("SCREEN=$($script:State.Screen)")
     [Console]::WriteLine("PROFILE=$($script:State.Profile)")
@@ -1801,7 +2245,9 @@ function Invoke-InteractiveMain {
     $script:State.DeviceStatus = 'не проверялось · пункт «Найти устройство»'
     $items = @(
         [pscustomobject]@{ Tag = 'upload'; Label = "$($script:Glyphs.MenuUpload) Собрать и прошить" }
-        [pscustomobject]@{ Tag = 'build'; Label = "$($script:Glyphs.MenuBuild) Только собрать .bin" }
+        [pscustomobject]@{ Tag = 'build'; Label = "$($script:Glyphs.MenuBuild) Только собрать" }
+        [pscustomobject]@{ Tag = 'install_apps'; Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP" }
+        [pscustomobject]@{ Tag = 'mcu'; Label = "$($script:Glyphs.MenuChoice) Контроллер" }
         [pscustomobject]@{ Tag = 'platform'; Label = "$($script:Glyphs.MenuChoice) Платформа" }
         [pscustomobject]@{ Tag = 'screen'; Label = "$($script:Glyphs.MenuChoice) Экран" }
         [pscustomobject]@{ Tag = 'options'; Label = "$($script:Glyphs.MenuOptions) Ключи компиляции" }
@@ -1813,19 +2259,28 @@ function Invoke-InteractiveMain {
     )
     $mainSelection = 'upload'
     while ($true) {
+        if ($script:State.Mcu -eq 'f401') {
+            $items[0].Label = "$($script:Glyphs.MenuUpload) Шаг 1 · Собрать и прошить"
+            $items[2].Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP"
+        } else {
+            $items[0].Label = "$($script:Glyphs.MenuUpload) Собрать и прошить"
+            $items[2].Label = "$($script:Glyphs.MenuInstall) System APP · только F401"
+        }
         $platformText = Get-PlatformLabel $script:State.Platform
         $screenText = Get-ScreenLabel $script:State.Screen
         if ((Test-Platform $script:State.Platform) -and (Test-Screen $script:State.Screen) -and
             -not (Test-HardwareCompatible $script:State.Platform $script:State.Screen)) {
             $screenText += ' · несовместим'
         }
-        $text = "Платформа: $platformText`nЭкран: $screenText`nКлючи: $(Get-CompileOptionsSummary)`nЦель: STM32F411CE BlackPill · USB DFU`nDFU: $($script:State.DfuStatus)`nУстройство: $($script:State.DeviceStatus)"
+        $text = "Платформа: $platformText`nЭкран: $screenText`nКлючи: $(Get-CompileOptionsSummary)`nЦель: $(Get-McuLabel $script:State.Mcu) · USB DFU`nDFU: $($script:State.DfuStatus)`nУстройство: $($script:State.DeviceStatus)"
         $selection = Show-Menu 'MK61s · прошивка' $text $items $mainSelection
         if ([string]::IsNullOrEmpty($selection)) { break }
         $mainSelection = $selection
         switch ($selection) {
             'upload' { [void](Upload-Selected) }
             'build' { [void](Build-Selected) }
+            'install_apps' { [void](Install-SystemApps) }
+            'mcu' { [void](Choose-Mcu) }
             'platform' { [void](Choose-Platform) }
             'screen' { [void](Choose-Screen) }
             'options' { [void](Choose-CompileOptions) }
@@ -1848,8 +2303,9 @@ MK61s firmware builder and DFU uploader
 
 Usage:
   tools\mk61-firmware.cmd
-  tools\mk61-firmware.cmd --profile ID --build
-  tools\mk61-firmware.cmd --profile ID --upload
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --build
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --upload
+  tools\mk61-firmware.cmd --mcu f401 --profile ID --install-apps
   tools\mk61-firmware.cmd --detect
   tools\mk61-firmware.cmd --setup
   tools\mk61-firmware.cmd --list-profiles
@@ -1859,9 +2315,13 @@ Profiles:
   mini-v3-a00, mini-v3-a02, mini-v2-a00, mini-v2-a02,
   classic-v2, classic-v3, 40th
 
+MCU:
+  f411 (512 KiB Flash) or f401 (256 KiB Flash + System APP)
+
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,
-  MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_COLOR
+  MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_C5_MOUNT, MK61_APP_MANIFESTS,
+  MK61_COLOR
 
 The Bash and PowerShell tools share .mk61-firmware.conf.
 '@)
@@ -1873,6 +2333,15 @@ function Invoke-Application {
     for ($index = 0; $index -lt $CliArguments.Count; $index++) {
         $argument = $CliArguments[$index]
         switch -Regex ($argument) {
+            '^(--mcu|-Mcu)$' {
+                if ($index + 1 -ge $CliArguments.Count) {
+                    [Console]::Error.WriteLine('Error: --mcu needs f411 or f401.')
+                    return 2
+                }
+                $index++
+                $script:State.Mcu = $CliArguments[$index]
+                $script:State.CliMcu = $true
+            }
             '^(--profile|-Profile)$' {
                 if ($index + 1 -ge $CliArguments.Count) {
                     [Console]::Error.WriteLine('Error: --profile needs an ID.')
@@ -1884,6 +2353,7 @@ function Invoke-Application {
             }
             '^(--build|-Build)$' { $action = 'build' }
             '^(--upload|-Upload)$' { $action = 'upload' }
+            '^(--install-apps|-InstallApps)$' { $action = 'install-apps' }
             '^(--detect|-Detect)$' { $action = 'detect' }
             '^(--setup|-Setup)$' { $action = 'setup' }
             '^(--list-profiles|-ListProfiles)$' { $action = 'list-profiles' }
@@ -1898,6 +2368,11 @@ function Invoke-Application {
         }
     }
 
+    if (-not (Test-Mcu $script:State.Mcu)) {
+        [Console]::Error.WriteLine("Error: unsupported MCU: $($script:State.Mcu) (expected f411 or f401).")
+        return 2
+    }
+
     if (-not [string]::IsNullOrEmpty($script:State.Profile) -and
         -not (Test-Profile $script:State.Profile)) {
         [Console]::Error.WriteLine("Error: unsupported profile: $($script:State.Profile)")
@@ -1908,7 +2383,7 @@ function Invoke-Application {
         'tui' {
             try { $redirected = [Console]::IsInputRedirected } catch { $redirected = $false }
             if ($redirected) {
-                [Console]::Error.WriteLine('Error: interactive mode needs a terminal. Use --build/--upload/--detect.')
+                [Console]::Error.WriteLine('Error: interactive mode needs a terminal. Use --build/--upload/--install-apps/--detect.')
                 return 2
             }
             return Invoke-InteractiveMain
@@ -1924,6 +2399,11 @@ function Invoke-Application {
             $script:State.Interactive = $false
             Load-Config
             if (Upload-Selected) { return 0 } else { return 1 }
+        }
+        'install-apps' {
+            $script:State.Interactive = $false
+            Load-Config
+            if (Install-SystemApps) { return 0 } else { return 1 }
         }
         'detect' {
             $script:State.Interactive = $false

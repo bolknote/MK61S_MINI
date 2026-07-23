@@ -15,10 +15,13 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/tests/program_store_shim" \
   -I"$root/code" \
   "$root/tests/program_store_self_test.cpp" \
+  "$root/code/loadable_module_system_app.cpp" \
+  "$root/code/loadable_module_format.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \
   "$root/code/storage_path.cpp" \
   "$root/code/shared_scratch.cpp" \
+  "$root/code/zx0.cpp" \
   -o "$out"
 
 "$out"

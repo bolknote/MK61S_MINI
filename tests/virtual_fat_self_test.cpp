@@ -25,105 +25,18 @@ void control(t_time_ms) {}
 } // пространство имён led
 
 #if MK61_ANY_LOADABLE_MODULE
-namespace module_test_backend {
-static std::vector<u8> installed[3];
-
-static usize index(loadable_module::Kind kind) {
-  return (usize) kind - 1U;
-}
-
-static u32 slot_size(loadable_module::Kind kind) {
-  const u8 sectors = kind == loadable_module::Kind::FOCAL
-      ? storage_geometry::FOCAL_MODULE_SECTORS
-      : kind == loadable_module::Kind::TINYBASIC
-          ? storage_geometry::TINYBASIC_MODULE_SECTORS
-          : storage_geometry::WBMP_MODULE_SECTORS;
-  return (u32) sectors * storage_geometry::PHYSICAL_SECTOR_SIZE;
-}
-
-static void reset(void) {
-  for(std::vector<u8>& bytes : installed) bytes.clear();
-}
-} // namespace module_test_backend
-
 namespace loadable_module {
-bool enabled(Kind kind) {
-  return kind == Kind::FOCAL ? MK61_FOCAL_IS_LOADABLE != 0
-       : kind == Kind::TINYBASIC ? MK61_TINYBASIC_IS_LOADABLE != 0
-       : kind == Kind::WBMP_VIEWER ? MK61_WBMP_VIEWER_IS_LOADABLE != 0
-       : false;
-}
-
-StoreStatus validate_install(Kind kind, const ModuleSource& source,
-                             Header& header) {
+StoreStatus validate_app(const ModuleSource& source, Header& header) {
   memset(&header, 0, sizeof(header));
-  if(!enabled(kind) || source.read == nullptr || source.size < HEADER_SIZE) {
-    return StoreStatus::UNAVAILABLE;
-  }
-  u8 encoded[HEADER_SIZE];
-  if(!source.read(source.context, 0, encoded, sizeof(encoded))) {
+  if(source.read == nullptr || source.size < HEADER_SIZE ||
+     source.size > MAX_CONTAINER_SIZE) return StoreStatus::WRONG_FILE_SIZE;
+  u8 marker = 0;
+  if(!source.read(source.context, 0, &marker, 1)) {
     return StoreStatus::IO_ERROR;
   }
-  if(decode_header(encoded, module_test_backend::slot_size(kind), kind,
-                   header) != HeaderStatus::OK) {
-    return StoreStatus::INVALID_HEADER;
-  }
-  if(source.size != HEADER_SIZE + header.stored_size) {
-    return StoreStatus::WRONG_FILE_SIZE;
-  }
-  u8 buffer[97];
-  u32 crc = crc32_begin();
-  u32 position = HEADER_SIZE;
-  while(position < source.size) {
-    const usize count = source.size - position < sizeof(buffer)
-        ? (usize) (source.size - position) : sizeof(buffer);
-    if(!source.read(source.context, position, buffer, count)) {
-      return StoreStatus::IO_ERROR;
-    }
-    crc = crc32_extend(crc, buffer, count);
-    position += (u32) count;
-  }
-  return crc32_finish(crc) == header.stored_crc32
-      ? StoreStatus::OK : StoreStatus::BAD_STORED_CRC;
-}
-
-StoreStatus install(Kind kind, const ModuleSource& source, Header* installed) {
-  Header header = {};
-  const StoreStatus status = validate_install(kind, source, header);
-  if(status != StoreStatus::OK) return status;
-  std::vector<u8> replacement(source.size);
-  if(!source.read(source.context, 0, replacement.data(), replacement.size())) {
-    return StoreStatus::IO_ERROR;
-  }
-  module_test_backend::installed[module_test_backend::index(kind)] =
-      replacement;
-  if(installed != nullptr) *installed = header;
+  if(marker == 0xEE) return StoreStatus::INVALID_HEADER;
+  header.kind = Kind::APPLICATION;
   return StoreStatus::OK;
-}
-
-StoreStatus remove(Kind kind) {
-  if(!enabled(kind)) return StoreStatus::UNAVAILABLE;
-  module_test_backend::installed[module_test_backend::index(kind)].clear();
-  return StoreStatus::OK;
-}
-
-bool container_size(Kind kind, u32& size) {
-  size = 0;
-  if(!enabled(kind)) return false;
-  const std::vector<u8>& bytes =
-      module_test_backend::installed[module_test_backend::index(kind)];
-  if(bytes.empty()) return false;
-  size = (u32) bytes.size();
-  return true;
-}
-
-bool read_container(Kind kind, u32 offset, u8* output, usize size) {
-  if(output == nullptr || !enabled(kind)) return false;
-  const std::vector<u8>& bytes =
-      module_test_backend::installed[module_test_backend::index(kind)];
-  if(offset > bytes.size() || size > bytes.size() - offset) return false;
-  memcpy(output, bytes.data() + offset, size);
-  return true;
 }
 } // namespace loadable_module
 #endif
@@ -187,9 +100,6 @@ static u32 cluster_lba(const Layout& fs, u16 cluster, u8 sector = 0) {
 
 static void fresh(u32 capacity = SPIFlash::DEFAULT_CAPACITY) {
   virtual_fat::end_session();
-#if MK61_ANY_LOADABLE_MODULE
-  module_test_backend::reset();
-#endif
   SPIFlash::reset(capacity);
   program_store::init();
   assert(program_store::ready());
@@ -275,6 +185,19 @@ static u8 append_ascii_entry(u8* directory, u8 slot, const char* name,
   return (u8) (slot + 2);
 }
 
+#if MK61_ANY_LOADABLE_MODULE
+static void append_short_entry(u8* directory, u16 slot,
+                               const char short_name[11],
+                               bool is_directory, u16 cluster, u32 size) {
+  u8* item = directory + (u32) slot * 32U;
+  memset(item, 0, 32);
+  memcpy(item, short_name, 11);
+  item[11] = is_directory ? 0x10 : 0x20;
+  write_le16(item, 26, cluster);
+  write_le32(item, 28, size);
+}
+#endif
+
 static void dot_entries(u8* directory, u16 self_cluster,
                         u16 parent_cluster) {
   memset(directory, 0, 512);
@@ -307,210 +230,6 @@ static void expect_flush(void) {
                   virtual_fat::trace_line_at(0));
   assert(ok);
 }
-
-#if MK61_ANY_LOADABLE_MODULE
-static std::vector<u8> make_module_container(loadable_module::Kind kind,
-                                             u32 payload_size, u8 seed) {
-  std::vector<u8> bytes(loadable_module::HEADER_SIZE + payload_size);
-  for(u32 index = 0; index < payload_size; index++) {
-    bytes[loadable_module::HEADER_SIZE + index] =
-        (u8) (seed + index * 29U);
-  }
-  loadable_module::Header header = {};
-  header.kind = kind;
-  header.compression = loadable_module::Compression::NONE;
-  header.load_address = loadable_module::DEFAULT_LOAD_ADDRESS;
-  header.stored_size = payload_size;
-  header.image_size = payload_size;
-  header.memory_size = payload_size;
-  header.entry_offset = 0;
-  header.resident_size = 180000;
-  header.resident_crc32 = 0x12345678UL;
-  header.stored_crc32 = loadable_module::crc32(
-      bytes.data() + loadable_module::HEADER_SIZE, payload_size);
-  header.image_crc32 = header.stored_crc32;
-  assert(loadable_module::encode_header(
-      header, module_test_backend::slot_size(kind), bytes.data()));
-  return bytes;
-}
-
-static int short_entry(const u8* directory, const u8 name[11]) {
-  for(int slot = 0; slot < 16; slot++) {
-    const u8* item = directory + slot * 32;
-    if(item[0] == 0) return -1;
-    if(item[0] != 0xE5 && item[11] != 0x0F &&
-       memcmp(item, name, 11) == 0) return slot;
-  }
-  return -1;
-}
-
-static void stage_new_module_file(const Layout& fs,
-                                  const std::vector<u8>& bytes,
-                                  u16 first_cluster) {
-  const u32 cluster_bytes = (u32) fs.sectors_per_cluster * 512U;
-  const u8 clusters = (u8) ((bytes.size() + cluster_bytes - 1U) /
-                            cluster_bytes);
-  assert(clusters > 0 && clusters <= 8);
-  u8 fat[512];
-  assert(virtual_fat::read_sector(1, fat));
-  for(u8 index = 0; index < clusters; index++) {
-    set_fat12_value(fat, (u16) (first_cluster + index),
-                    index + 1U < clusters
-                        ? (u16) (first_cluster + index + 1U) : 0xFFF);
-  }
-
-  static const u8 focal_name[11] = {
-    'F','O','C','A','L',' ',' ',' ','M','O','D'
-  };
-  u8 root[512];
-  assert(virtual_fat::read_sector(fs.root_start, root));
-  int slot = short_entry(root, focal_name);
-  if(slot < 0) slot = first_free_slot(root);
-  assert(slot >= 0);
-  u8* item = root + slot * 32;
-  memset(item, 0, 32);
-  memcpy(item, focal_name, sizeof(focal_name));
-  item[11] = 0x20;
-  write_le16(item, 26, first_cluster);
-  write_le32(item, 28, (u32) bytes.size());
-  if(slot + 1 < 16) root[(slot + 1) * 32] = 0;
-
-  for(u8 cluster = 0; cluster < clusters; cluster++) {
-    for(u8 sector = 0; sector < fs.sectors_per_cluster; sector++) {
-      const u32 offset = ((u32) cluster * fs.sectors_per_cluster + sector) *
-                         512U;
-      if(offset >= bytes.size()) break;
-      u8 block[512] = {};
-      const usize count = bytes.size() - offset < sizeof(block)
-          ? bytes.size() - offset : sizeof(block);
-      memcpy(block, bytes.data() + offset, count);
-      assert(virtual_fat::write_sector(
-          cluster_lba(fs, (u16) (first_cluster + cluster), sector), block));
-    }
-  }
-  assert(virtual_fat::write_sector(fs.root_start, root));
-  assert(virtual_fat::write_sector(1, fat));
-}
-
-static void test_module_files_install_replace_reject_and_remove(void) {
-  fresh();
-  const Layout fs = layout();
-  const u16 first_cluster = 300;
-  const std::vector<u8> original = make_module_container(
-      loadable_module::Kind::FOCAL, 3000, 0x31);
-  stage_new_module_file(fs, original, first_cluster);
-  expect_flush();
-  assert(module_test_backend::installed[0] == original);
-  assert(program_store::vfat_stage_count() == 0);
-
-  static const u8 focal_name[11] = {
-    'F','O','C','A','L',' ',' ',' ','M','O','D'
-  };
-  u8 root[512];
-  assert(virtual_fat::read_sector(fs.root_start, root));
-  int slot = short_entry(root, focal_name);
-  assert(slot >= 0);
-  const u8* item = root + slot * 32;
-  assert(item[11] == 0);
-  assert(read_le32(item, 28) == original.size());
-  assert(read_le16(item, 26) == first_cluster);
-  assert(fat12_value(first_cluster) == first_cluster + 1U);
-  assert(fat12_value(first_cluster + 1U) >= 0xFF8);
-
-  // Меняем лишь один блок данных и заголовок. Остальные блоки установщик
-  // обязан дочитать из старого файла и закрепить в staging до стирания слота.
-  std::vector<u8> replacement = original;
-  replacement[loadable_module::HEADER_SIZE + 900] ^= 0x5A;
-  loadable_module::Header header = {};
-  assert(loadable_module::decode_header(
-      replacement.data(),
-      module_test_backend::slot_size(loadable_module::Kind::FOCAL),
-      loadable_module::Kind::FOCAL, header) ==
-      loadable_module::HeaderStatus::OK);
-  header.stored_crc32 = loadable_module::crc32(
-      replacement.data() + loadable_module::HEADER_SIZE,
-      replacement.size() - loadable_module::HEADER_SIZE);
-  header.image_crc32 = header.stored_crc32;
-  assert(loadable_module::encode_header(
-      header, module_test_backend::slot_size(header.kind),
-      replacement.data()));
-  u8 block[512];
-  memcpy(block, replacement.data(), sizeof(block));
-  assert(virtual_fat::write_sector(cluster_lba(fs, first_cluster), block));
-  memcpy(block, replacement.data() + 512, sizeof(block));
-  assert(virtual_fat::write_sector(cluster_lba(fs, first_cluster, 1), block));
-  expect_flush();
-  assert(module_test_backend::installed[0] == replacement);
-  assert(program_store::vfat_stage_count() == 0);
-
-  // Повреждённый пакет остаётся в журнале для исправления хостом, но рабочий
-  // контейнер не стирается и не заменяется.
-  assert(virtual_fat::read_sector(cluster_lba(fs, first_cluster), block));
-  block[20] ^= 1;
-  assert(virtual_fat::write_sector(cluster_lba(fs, first_cluster), block));
-  assert(!virtual_fat::flush_pending());
-  assert(module_test_backend::installed[0] == replacement);
-  assert(program_store::vfat_stage_count() != 0);
-  assert(program_store::vfat_stage_discard_all());
-  assert(virtual_fat::reset_session());
-
-  assert(virtual_fat::read_sector(fs.root_start, root));
-  slot = short_entry(root, focal_name);
-  assert(slot >= 0);
-  root[slot * 32] = 0;
-  assert(virtual_fat::write_sector(fs.root_start, root));
-  expect_flush();
-  assert(module_test_backend::installed[0].empty());
-  assert(virtual_fat::read_sector(fs.root_start, root));
-  assert(short_entry(root, focal_name) < 0);
-}
-
-static void test_legacy_stage_tail_flushes_before_module_layout(void) {
-  fresh();
-  const Layout fs = layout();
-  const u16 module_stage_sectors =
-      program_store::geometry().stage_data_sector_count;
-  const u32 module_first_sector =
-      program_store::geometry().module_first_sector;
-  assert(module_first_sector != 0);
-  u8 root[512];
-  assert(virtual_fat::read_sector(fs.root_start, root));
-
-  // Старая прошивка использовала все 65 секторов staging. Заполняем 379
-  // уникальных безопасных блоков и шестью обновлениями переносим живую копию
-  // корня FAT в сектор 55, который в новой схеме становится резервом.
-  program_store::test_use_legacy_stage_layout();
-  u8 zero[512] = {};
-  for(u16 index = 0; index < 379; index++) {
-    assert(program_store::vfat_stage_write(fs.data_start + index, zero));
-  }
-  assert(program_store::vfat_stage_write(fs.root_start, root));
-  for(u8 update = 0; update < 6; update++) {
-    assert(program_store::vfat_stage_write(fs.root_start, root));
-  }
-  virtual_fat::end_session();
-
-  program_store::init();
-  assert(program_store::stage_layout_migration_pending());
-  assert(program_store::geometry().module_first_sector == 0);
-  assert(virtual_fat::reset_session());
-  expect_flush();
-  virtual_fat::end_session();
-  assert(program_store::finish_stage_layout_migration());
-  assert(!program_store::stage_layout_migration_pending());
-  assert(program_store::geometry().stage_data_sector_count ==
-         module_stage_sectors);
-  assert(program_store::geometry().module_first_sector ==
-         module_first_sector);
-
-  program_store::init();
-  assert(program_store::ready());
-  assert(!program_store::stage_layout_migration_pending());
-  assert(program_store::geometry().module_first_sector ==
-         module_first_sector);
-  assert(virtual_fat::reset_session());
-}
-#endif
 
 static void test_dynamic_fat12_bpb(void) {
   const u32 capacities[] = {
@@ -722,6 +441,46 @@ static void test_staged_update_survives_session_reset(void) {
   expect_file(id, (const u8*) "new", 3);
 }
 
+static void test_full_staging_rejects_next_sector_without_tree_damage(void) {
+  fresh(16U * 1024U * 1024U);
+  static const u8 old_data[] = {'s', 'a', 'f', 'e'};
+  u16 old_id = 0;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 60, program_store::ProgramType::TEXT,
+      "keep-me", old_data, sizeof(old_data), &old_id));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  const u32 first = cluster_lba(fs, 500);
+  static constexpr u16 CAPACITY = 384;
+  assert(first + CAPACITY < fs.total_sectors);
+  u8 data[512] = {};
+  for(u16 index = 0; index < CAPACITY; index++) {
+    memset(data, 0, sizeof(data));
+    data[0] = (u8) (index + 1U);
+    data[1] = (u8) (index >> 8);
+    data[2] = 0x5A;
+    assert(virtual_fat::write_sector(first + index, data));
+  }
+  assert(program_store::vfat_stage_count() == CAPACITY);
+  memset(data, 0xA5, sizeof(data));
+  assert(!virtual_fat::write_sector(first + CAPACITY, data));
+  assert(program_store::vfat_stage_count() == CAPACITY);
+
+  // Не подтверждённый 385-й сектор остаётся только в исчезающем RAM-кэше.
+  // После reboot журнал первых 384 секторов цел, а их неиспользуемые данные
+  // можно безопасно отбросить без публикации изменений дерева.
+  virtual_fat::end_session();
+  program_store::init();
+  assert(program_store::ready());
+  assert(virtual_fat::reset_session());
+  assert(program_store::vfat_stage_count() == CAPACITY);
+  expect_file(old_id, old_data, sizeof(old_data));
+  expect_flush();
+  assert(program_store::vfat_stage_count() == 0);
+  expect_file(old_id, old_data, sizeof(old_data));
+}
+
 static void test_identical_data_writes_do_not_restage(void) {
   fresh();
   const Layout fs = layout();
@@ -912,6 +671,49 @@ static void test_host_deletes_file_via_directory(void) {
   assert(program_store::total_count() == 0);
 }
 
+static void test_incomplete_file_preflight_preserves_existing_tree(void) {
+  fresh();
+  static const u8 old_data[] = {0x41, 0x42, 0x43};
+  u16 old_id = 0;
+  assert(program_store::write_file(program_store::ROOT_ID, 60,
+                                   program_store::ProgramType::TEXT,
+                                   "keep-me", old_data, sizeof(old_data),
+                                   &old_id));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  const u16 new_cluster = 220;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, new_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const u16 user_offset = storage_geometry::ROOT_SYSTEM_DIRENTS * 32U;
+  memset(root + user_offset, 0, sizeof(root) - user_offset);
+  static const char short_name[11] =
+      {'N','E','W',' ',' ',' ',' ',' ','T','X','T'};
+  const u8 slot = append_ascii_entry(
+      root, storage_geometry::ROOT_SYSTEM_DIRENTS, "new.txt",
+      short_name, false, new_cluster, 1);
+  root[(u16) slot * 32U] = 0;
+
+  // Хост успел записать FAT и каталог, но data sector ещё не пришёл.
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  assert(!virtual_fat::flush_pending());
+  assert(strcmp(virtual_fat::trace_line_at(0), "file-data") == 0);
+
+  program_store::Entry kept = {};
+  assert(program_store::entry_by_id(old_id, kept));
+  assert(strcmp(kept.name, "keep-me") == 0);
+  expect_file(old_id, old_data, sizeof(old_data));
+  program_store::Entry rejected = {};
+  assert(!program_store::entry_by_id((u16) (new_cluster - 2U), rejected));
+  assert(program_store::vfat_stage_count() != 0);
+  assert(program_store::vfat_stage_discard_all());
+}
+
 static void test_finder_appledouble_does_not_abort_batch(void) {
   fresh();
   const Layout fs = layout();
@@ -1040,6 +842,428 @@ static void test_wbmp_short_name_alias(void) {
   assert(strcmp(image.name, "SCREEN") == 0);
 }
 
+static void expect_large_file(u16 id, const std::vector<u8>& expected) {
+  std::vector<u8> actual(expected.size());
+  u16 length = 0;
+  assert(program_store::read_id(id, actual.data(), (u16) actual.size(),
+                                &length));
+  assert(length == expected.size());
+  assert(actual == expected);
+}
+
+static void run_app_import_across_fat_chain(u32 capacity,
+                                            u8 expected_cluster_sectors,
+                                            u8 expected_cluster_count) {
+  fresh(capacity);
+  const Layout fs = layout();
+  assert(fs.sectors_per_cluster == expected_cluster_sectors);
+  const u16 first_cluster = 20;
+  const u32 size = program_store::MAX_APP_FILE_SIZE;
+  const u8 cluster_count = (u8) (
+      (size + (u32) fs.sectors_per_cluster * 512U - 1U) /
+      ((u32) fs.sectors_per_cluster * 512U));
+  assert(cluster_count == expected_cluster_count);
+  assert(cluster_count <=
+         program_store::MAX_FAT_EXTENTS_PER_FILE + 1U);
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  for(u8 index = 0; index < cluster_count; index++) {
+    set_fat12_value(fat, (u16) (first_cluster + index),
+                    index + 1U < cluster_count
+                        ? (u16) (first_cluster + index + 1U) : 0xFFF);
+  }
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'F','O','C','A','L',' ',' ',' ','A','P','P'};
+  const u8 next_slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "FOCAL.APP", short_name, false,
+      first_cluster, size);
+  root[next_slot * 32] = 0;
+
+  std::vector<u8> expected(size);
+  for(u32 offset = 0; offset < size; offset++) {
+    expected[offset] = (u8) (offset * 29U + (offset >> 7) + 3U);
+  }
+  const u16 sectors = (u16) ((size + 511U) / 512U);
+  // Данные намеренно приходят в обратном порядке, а FAT и каталог — последними.
+  for(u16 logical = sectors; logical != 0;) {
+    logical--;
+    const u8 cluster_index =
+        (u8) (logical / fs.sectors_per_cluster);
+    const u8 sector = (u8) (logical % fs.sectors_per_cluster);
+    u8 block[512] = {};
+    const u32 offset = (u32) logical * sizeof(block);
+    const u16 count = (u16) ((size - offset < sizeof(block))
+        ? size - offset : sizeof(block));
+    memcpy(block, expected.data() + offset, count);
+    assert(virtual_fat::write_sector(
+        cluster_lba(fs, (u16) (first_cluster + cluster_index), sector),
+        block));
+  }
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  expect_flush();
+
+  const u16 id = (u16) (first_cluster - 2U);
+  program_store::Entry app = {};
+  assert(program_store::entry_by_id(id, app));
+  assert(app.type == program_store::ProgramType::APP);
+  assert(strcmp(app.name, "FOCAL") == 0);
+  expect_large_file(id, expected);
+  for(u8 index = 0; index < cluster_count; index++) {
+    assert(fat12_value((u16) (first_cluster + index)) ==
+           (index + 1U < cluster_count
+                ? (u16) (first_cluster + index + 1U) : 0xFFF));
+  }
+
+  // Хост переписал только один сектор существующей цепочки. Остальные сектора
+  // должны браться из C5, а не считаться потерянными из-за отсутствия в staging.
+  static constexpr u16 changed_sector = 17;
+  u8 replacement[512];
+  memcpy(replacement, expected.data() + (u32) changed_sector * 512U,
+         sizeof(replacement));
+  for(u16 index = 0; index < sizeof(replacement); index++) {
+    replacement[index] ^= 0x5A;
+  }
+  const u8 changed_cluster =
+      (u8) (changed_sector / fs.sectors_per_cluster);
+  const u8 in_cluster =
+      (u8) (changed_sector % fs.sectors_per_cluster);
+  assert(virtual_fat::write_sector(
+      cluster_lba(fs, (u16) (first_cluster + changed_cluster), in_cluster),
+      replacement));
+  memcpy(expected.data() + (u32) changed_sector * 512U,
+         replacement, sizeof(replacement));
+  expect_flush();
+  expect_large_file(id, expected);
+}
+
+static void test_app_import_is_streamed_across_fat_chain(void) {
+  run_app_import_across_fat_chain(512U * 1024U, 4, 11);
+  run_app_import_across_fat_chain(16U * 1024U * 1024U, 8, 6);
+}
+
+#if MK61_ANY_LOADABLE_MODULE
+static void test_invalid_app_preflight_preserves_existing_tree(void) {
+  fresh();
+  static const u8 old_data[] = {0x11, 0x22, 0x33};
+  u16 old_id = 0;
+  assert(program_store::write_file(program_store::ROOT_ID, 60,
+                                   program_store::ProgramType::MK61,
+                                   "keep-me", old_data, sizeof(old_data),
+                                   &old_id));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  const u16 app_cluster = 220;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, app_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const u16 user_offset = storage_geometry::ROOT_SYSTEM_DIRENTS * 32U;
+  memset(root + user_offset, 0, sizeof(root) - user_offset);
+  static const char short_name[11] =
+      {'B','R','O','K','E','N',' ',' ','A','P','P'};
+  const u8 slot = append_ascii_entry(
+      root, storage_geometry::ROOT_SYSTEM_DIRENTS, "BROKEN.APP",
+      short_name, false, app_cluster, loadable_module::HEADER_SIZE);
+  root[(u16) slot * 32U] = 0;
+
+  u8 invalid[512] = {0xEE};
+  assert(virtual_fat::write_sector(cluster_lba(fs, app_cluster), invalid));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  assert(!virtual_fat::flush_pending());
+  assert(strcmp(virtual_fat::trace_line_at(0), "app-invalid") == 0);
+
+  program_store::Entry kept = {};
+  assert(program_store::entry_by_id(old_id, kept));
+  assert(strcmp(kept.name, "keep-me") == 0);
+  expect_file(old_id, old_data, sizeof(old_data));
+  program_store::Entry rejected = {};
+  assert(!program_store::entry_by_id((u16) (app_cluster - 2U), rejected));
+  assert(program_store::vfat_stage_count() != 0);
+  assert(program_store::vfat_stage_discard_all());
+}
+
+static void test_unchanged_invalid_app_does_not_block_other_files(void) {
+  fresh();
+  u8 old_app[loadable_module::HEADER_SIZE] = {0xEE};
+  u16 old_id = 0;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 60, program_store::ProgramType::APP,
+      "old-firmware", old_app, sizeof(old_app), &old_id));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  const u16 text_cluster = 220;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, text_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'N','O','T','E',' ',' ',' ',' ','T','X','T'};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "note.txt", short_name,
+      false, text_cluster, 3);
+  root[(u16) slot * 32U] = 0;
+  u8 data[512] = {'n', 'e', 'w'};
+  assert(virtual_fat::write_sector(cluster_lba(fs, text_cluster), data));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  expect_flush();
+
+  // Старый APP остаётся видимым и может быть удалён/заменён отдельно, но его
+  // несовместимость не превращает весь C5 в недоступный для записи том.
+  expect_file(old_id, old_app, sizeof(old_app));
+  expect_file((u16) (text_cluster - 2U), data, 3);
+}
+
+static constexpr u16 BATCH_DIRECTORY_CLUSTER = 20;
+static constexpr u16 BATCH_FIRST_APP_CLUSTER = 40;
+static constexpr u16 BATCH_APP_SIZE = loadable_module::HEADER_SIZE;
+
+static void batch_app_name(u16 index, char name[7],
+                           char short_name[11]) {
+  snprintf(name, 7, "APP%03u", (unsigned) index);
+  memset(short_name, ' ', 11);
+  memcpy(short_name, name, 6);
+  memcpy(short_name + 8, "APP", 3);
+}
+
+static void batch_app_payload(u16 index, u8 data[512]) {
+  memset(data, 0, 512);
+  for(u16 offset = 0; offset < BATCH_APP_SIZE; offset++) {
+    data[offset] = (u8) (index * 31U + offset * 7U + 1U);
+  }
+  assert(data[0] != 0xEE);
+}
+
+static void stage_app_batch(u16 count) {
+  assert(count != 0 && count <= 25);
+  const Layout fs = layout();
+  assert(fs.sectors_per_cluster == 8);
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, BATCH_DIRECTORY_CLUSTER, 0xFFF);
+  for(u16 index = 0; index < count; index++) {
+    set_fat12_value(fat, (u16) (BATCH_FIRST_APP_CLUSTER + index), 0xFFF);
+  }
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const u8 root_slot = (u8) first_free_slot(root);
+  static const char system_short[11] =
+      {'S','Y','S','T','E','M',' ',' ',' ',' ',' '};
+  const u8 root_end = append_ascii_entry(
+      root, root_slot, "System", system_short, true,
+      BATCH_DIRECTORY_CLUSTER, 0);
+  root[(u16) root_end * 32U] = 0;
+
+  u8 directory[8U * 512U] = {};
+  dot_entries(directory, BATCH_DIRECTORY_CLUSTER, 0);
+  for(u16 index = 0; index < count; index++) {
+    char name[7];
+    char short_name[11];
+    batch_app_name(index, name, short_name);
+    append_short_entry(directory, (u16) (2U + index), short_name, false,
+                       (u16) (BATCH_FIRST_APP_CLUSTER + index),
+                       BATCH_APP_SIZE);
+
+    u8 data[512];
+    batch_app_payload(index, data);
+    assert(virtual_fat::write_cached_sectors(
+        cluster_lba(fs, (u16) (BATCH_FIRST_APP_CLUSTER + index)), data, 1));
+  }
+  directory[(u32) (2U + count) * 32U] = 0;
+  assert(virtual_fat::write_cached_sectors(
+      cluster_lba(fs, BATCH_DIRECTORY_CLUSTER), directory,
+      fs.sectors_per_cluster));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+}
+
+static void expect_app_batch(u16 count) {
+  assert(program_store::count(program_store::ProgramType::APP) == count);
+  program_store::Entry system = {};
+  assert(program_store::entry_by_id(
+      (u16) (BATCH_DIRECTORY_CLUSTER - 2U), system));
+  assert(system.kind == program_store::NodeKind::DIRECTORY);
+  assert(strcmp(system.name, "System") == 0);
+  for(u16 index = 0; index < count; index++) {
+    const u16 id =
+        (u16) (BATCH_FIRST_APP_CLUSTER + index - 2U);
+    char name[7];
+    char short_name[11];
+    batch_app_name(index, name, short_name);
+    program_store::Entry app = {};
+    assert(program_store::entry_by_id(id, app));
+    assert(app.parent_id == system.id);
+    assert(app.type == program_store::ProgramType::APP);
+    assert(strcmp(app.name, name) == 0);
+    u8 expected[512];
+    batch_app_payload(index, expected);
+    expect_file(id, expected, BATCH_APP_SIZE);
+  }
+}
+
+static constexpr u16 REPURPOSED_APP_ID = 42;
+static constexpr u16 REPURPOSED_OLD_SIZE = 4097;
+
+static u16 stage_repurposed_app_extent(void) {
+  fresh(16U * 1024U * 1024U);
+  static u8 original[REPURPOSED_OLD_SIZE];
+  for(u16 offset = 0; offset < sizeof(original); offset++) {
+    original[offset] = (u8) (offset * 17U + 3U);
+  }
+  assert(original[0] != 0xEE);
+  assert(program_store::write_file(
+      program_store::ROOT_ID, REPURPOSED_APP_ID,
+      program_store::ProgramType::APP, "OLDAPP",
+      original, sizeof(original)));
+  u16 released_id = 0;
+  assert(program_store::first_file_extent(
+      REPURPOSED_APP_ID, released_id));
+  u16 extra = 0;
+  assert(!program_store::next_file_extent(released_id, extra));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  const u16 old_cluster = (u16) (REPURPOSED_APP_ID + 2U);
+  const u16 new_cluster = (u16) (released_id + 2U);
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, old_cluster, 0xFFF);
+  set_fat12_value(fat, new_cluster, 0xFFF);
+
+  // Новый APP намеренно расположен раньше уменьшаемого старого APP. APPLY не
+  // может полагаться на порядок записей каталога для освобождения extent.
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const u16 user_offset = storage_geometry::ROOT_SYSTEM_DIRENTS * 32U;
+  memset(root + user_offset, 0, sizeof(root) - user_offset);
+  static const char new_short[11] =
+      {'N','E','W','A','P','P',' ',' ','A','P','P'};
+  u8 slot = append_ascii_entry(
+      root, storage_geometry::ROOT_SYSTEM_DIRENTS, "NEWAPP.APP",
+      new_short, false, new_cluster, BATCH_APP_SIZE);
+  static const char old_short[11] =
+      {'O','L','D','A','P','P',' ',' ','A','P','P'};
+  slot = append_ascii_entry(
+      root, slot, "OLDAPP.APP", old_short, false,
+      old_cluster, BATCH_APP_SIZE);
+  root[(u16) slot * 32U] = 0;
+
+  u8 new_data[512];
+  batch_app_payload(77, new_data);
+  assert(virtual_fat::write_cached_sectors(
+      cluster_lba(fs, new_cluster), new_data, 1));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  return released_id;
+}
+
+static void expect_repurposed_app_extent(u16 released_id) {
+  assert(program_store::count(program_store::ProgramType::APP) == 2);
+  program_store::Entry old_app = {};
+  assert(program_store::entry_by_id(REPURPOSED_APP_ID, old_app));
+  assert(strcmp(old_app.name, "OLDAPP") == 0);
+  assert(old_app.data_len == BATCH_APP_SIZE);
+  u16 extent = 0;
+  assert(!program_store::first_file_extent(REPURPOSED_APP_ID, extent));
+
+  program_store::Entry new_app = {};
+  assert(program_store::entry_by_id(released_id, new_app));
+  assert(strcmp(new_app.name, "NEWAPP") == 0);
+  assert(new_app.type == program_store::ProgramType::APP);
+  u8 expected[512];
+  batch_app_payload(77, expected);
+  expect_file(released_id, expected, BATCH_APP_SIZE);
+}
+
+static void test_repurposed_app_extent_power_cuts_are_recoverable(void) {
+  const u16 released_id = stage_repurposed_app_extent();
+  assert(virtual_fat::flush_write_cache());
+  SPIFlash::resetOperationCounts();
+  expect_flush();
+  const u32 operation_count = SPIFlash::mutationOperations();
+  assert(operation_count > 12U);
+  expect_repurposed_app_extent(released_id);
+
+  for(u32 cut = 0; cut <= operation_count; cut++) {
+    const u16 current_released = stage_repurposed_app_extent();
+    assert(current_released == released_id);
+    assert(virtual_fat::flush_write_cache());
+    SPIFlash::resetOperationCounts();
+    SPIFlash::failAfterOperations((i32) cut);
+    (void) virtual_fat::flush_pending();
+    SPIFlash::clearFailure();
+
+    virtual_fat::end_session();
+    program_store::init();
+    assert(program_store::ready());
+    assert(virtual_fat::reset_session());
+    if(program_store::vfat_stage_count() != 0) expect_flush();
+    expect_repurposed_app_extent(released_id);
+    assert(program_store::vfat_stage_count() == 0);
+  }
+}
+
+static void test_many_apps_are_imported_in_one_batch(void) {
+  fresh(16U * 1024U * 1024U);
+  stage_app_batch(25);
+  expect_flush();
+  expect_app_batch(25);
+
+  virtual_fat::end_session();
+  program_store::init();
+  assert(program_store::ready());
+  assert(virtual_fat::reset_session());
+  expect_app_batch(25);
+}
+
+static u32 app_batch_commit_operation_count(u16 count) {
+  fresh(16U * 1024U * 1024U);
+  stage_app_batch(count);
+  assert(virtual_fat::flush_write_cache());
+  SPIFlash::resetOperationCounts();
+  expect_flush();
+  return SPIFlash::mutationOperations();
+}
+
+static void test_app_batch_power_cuts_are_recoverable(void) {
+  static constexpr u16 COUNT = 3;
+  const u32 operation_count = app_batch_commit_operation_count(COUNT);
+  assert(operation_count > 12U);
+
+  for(u32 cut = 0; cut <= operation_count; cut++) {
+    fresh(16U * 1024U * 1024U);
+    stage_app_batch(COUNT);
+    assert(virtual_fat::flush_write_cache());
+    SPIFlash::resetOperationCounts();
+    SPIFlash::failAfterOperations((i32) cut);
+    (void) virtual_fat::flush_pending();
+    SPIFlash::clearFailure();
+
+    virtual_fat::end_session();
+    program_store::init();
+    assert(program_store::ready());
+    assert(virtual_fat::reset_session());
+    if(program_store::vfat_stage_count() != 0) expect_flush();
+    expect_app_batch(COUNT);
+    assert(program_store::vfat_stage_count() == 0);
+  }
+}
+#endif
+
 static void test_malformed_fat_chain_is_rejected_atomically(void) {
   fresh();
   const Layout fs = layout();
@@ -1068,25 +1292,31 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
 } // безымянное пространство имён
 
 int main(void) {
-#if MK61_ANY_LOADABLE_MODULE
-  test_legacy_stage_tail_flushes_before_module_layout();
-  test_module_files_install_replace_reject_and_remove();
-#endif
   test_dynamic_fat12_bpb();
   test_macos_no_index_marker();
   test_stable_clusters_and_nested_reads();
   test_directory_extents_grow_without_flat_catalog_scan();
   test_host_creates_arbitrary_nested_tree();
   test_staged_update_survives_session_reset();
+  test_full_staging_rejects_next_sector_without_tree_damage();
   test_identical_data_writes_do_not_restage();
   test_write_cache_coalesces_and_evicts_lru();
   test_fast_usb_cache_is_atomic_and_defers_spi();
   test_optional_display_cache_span();
   test_host_deletes_file_via_directory();
+  test_incomplete_file_preflight_preserves_existing_tree();
   test_finder_appledouble_does_not_abort_batch();
   test_wbmp_import_uses_its_full_quota();
   test_wbmp_over_quota_is_rejected();
   test_wbmp_short_name_alias();
+  test_app_import_is_streamed_across_fat_chain();
+#if MK61_ANY_LOADABLE_MODULE
+  test_invalid_app_preflight_preserves_existing_tree();
+  test_unchanged_invalid_app_does_not_block_other_files();
+  test_repurposed_app_extent_power_cuts_are_recoverable();
+  test_many_apps_are_imported_in_one_batch();
+  test_app_batch_power_cuts_are_recoverable();
+#endif
   test_malformed_fat_chain_is_rejected_atomically();
   virtual_fat::end_session();
   printf("virtual_fat_self_test: ok\n");

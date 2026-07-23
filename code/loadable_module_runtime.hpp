@@ -3,9 +3,25 @@
 
 #include "config.h"
 #include "loadable_module_abi.hpp"
-#include "loadable_module_store.hpp"
+#include "loadable_module_format.hpp"
 
 namespace loadable_module {
+
+struct ModuleSource {
+  void* context;
+  u32 size;
+  bool (*read)(void* context, u32 offset, u8* output, usize size);
+};
+
+enum class StoreStatus : u8 {
+  OK = 0,
+  UNAVAILABLE,
+  IO_ERROR,
+  INVALID_HEADER,
+  WRONG_FILE_SIZE,
+  BAD_STORED_CRC,
+  INCOMPATIBLE_FIRMWARE
+};
 
 enum class RuntimeStatus : u8 {
   OK = 0,
@@ -26,36 +42,15 @@ RuntimeStatus invoke(Kind kind, Command command,
                      u32 argument0, u32 argument1,
                      u32 argument2, u32 argument3,
                      u32& result);
+RuntimeStatus run_app(u16 file_id, u32& result);
 
 inline RuntimeStatus invoke(Kind kind, Command command, u32& result) {
   return invoke(kind, command, 0, 0, 0, 0, result);
 }
 
-StoreStatus validate_install(Kind kind, const ModuleSource& source,
-                             Header& header);
-StoreStatus install(Kind kind, const ModuleSource& source,
-                    Header* installed = nullptr);
-StoreStatus remove(Kind kind);
-
-// Представление установленного контейнера для синтетических файлов USB FAT.
-bool container_size(Kind kind, u32& size);
-bool read_container(Kind kind, u32 offset, u8* output, usize size);
-
-// MKC принимает контейнер несколькими терминальными командами. На это время он
-// занимает тот же SRAM-overlay, что и исполняемый модуль; token позволяет
-// обнаружить, если между пакетами overlay понадобился другому модулю.
-struct TransferBuffer {
-  u8* data;
-  u32 capacity;
-  u32 token;
-};
-
-bool begin_transfer(u32 size, TransferBuffer& transfer);
-u8* transfer_data(u32 token, u32 size);
-StoreStatus finish_transfer(Kind kind, u32 token, u32 size,
-                            Header* installed = nullptr);
-void cancel_transfer(u32 token);
-void discard_transfer_staging(void);
+// Проверяет обычный C5-файл .APP до атомарной замены: заголовок, привязку к
+// resident, CRC сжатого потока, корректность распаковки и CRC SRAM-образа.
+StoreStatus validate_app(const ModuleSource& source, Header& header);
 
 } // namespace loadable_module
 

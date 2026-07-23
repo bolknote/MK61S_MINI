@@ -87,7 +87,7 @@ Keys:
   Ctrl-O    last MK61s output
 
 The left command line runs through cmd.exe; the right one is sent to MK61s.
-Loadable modules in the device root: FOCAL.MOD, BASIC.MOD, WBMP.MOD.
+System apps live in /System; other APP containers may live in any directory.
 '@
 }
 
@@ -546,13 +546,9 @@ function Get-UnsupportedReason {
     [long]$minimum = 0
     if ($Kind -eq 'f') {
         $lower = $name.ToLowerInvariant()
-        if ($lower -in @('focal.mod','basic.mod')) {
-            $base = $name.Substring(0, $name.Length - 4); $limit = 16384; $minimum = 64
+        if ($lower.EndsWith('.app')) {
+            $base = $name.Substring(0, $name.Length - 4); $limit = 20544; $minimum = 64
         }
-        elseif ($lower -eq 'wbmp.mod') {
-            $base = $name.Substring(0, $name.Length - 4); $limit = 4096; $minimum = 64
-        }
-        elseif ($lower.EndsWith('.mod')) { return 'допустимы только FOCAL.MOD, BASIC.MOD и WBMP.MOD' }
         elseif ($lower.EndsWith('.state.txt')) { $base = $name.Substring(0, $name.Length - 10) }
         elseif ($lower -match '\.(m61|foc|tbi|txt|fmk)$') { $base = $name.Substring(0, $name.Length - 4) }
         elseif ($lower.EndsWith('.wbmp')) { $base = $name.Substring(0, $name.Length - 5); $limit = 1600 }
@@ -941,15 +937,6 @@ function Add-LocalTreeToPlan {
         return $false
     }
     if ($kind -eq 'f') {
-        $sourceLower = $item.Name.ToLowerInvariant()
-        if ($sourceLower -in @('focal.mod','basic.mod','wbmp.mod')) {
-            $destinationLeaf = $Destination.TrimStart('/')
-            if ($destinationLeaf.Contains('/') -or
-                $destinationLeaf.ToLowerInvariant() -ne $sourceLower) {
-                $script:PlanError = "$($item.Name): модуль сохраняется только в корне под своим фиксированным именем"
-                return $false
-            }
-        }
         Add-CopyPlanItem 'f' $Source $Destination ([long]$item.Length)
         return $true
     }
@@ -1557,7 +1544,8 @@ Ctrl-O       повторно показать последний вывод MK6
 Командная строка работает в активной панели: слева команда выполняется через
 cmd.exe, справа — терминалом MK61s с выводом внутри MKC. Серые файлы нельзя
 загрузить на калькулятор, но можно просмотреть, переименовать или удалить.
-FOCAL.MOD, BASIC.MOD и WBMP.MOD загружаются только в корень под этими именами.
+Пользовательские APP можно хранить в любом каталоге. Системные APP находятся
+в /System под именами FOCAL.APP, BASIC.APP и WBMP.APP.
 '@
     Show-Lines 'Помощь' @($text -split "`r?`n")
 }
@@ -1915,7 +1903,7 @@ function Show-SelectedFile {
     }
     try { [byte[]]$bytes = [IO.File]::ReadAllBytes($source) }
     catch { Show-Alert 'View' $_.Exception.Message; return }
-    if (-not ($lower.EndsWith('.fmk') -or $lower.EndsWith('.mod')) -and
+    if (-not ($lower.EndsWith('.fmk') -or $lower.EndsWith('.app')) -and
         (Test-TextBytes $bytes)) {
         $text = [Text.Encoding]::UTF8.GetString($bytes)
         Show-Lines $entry.Name @([regex]::Split($text, "\r?\n") | Select-Object -First 400)

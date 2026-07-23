@@ -7,7 +7,7 @@
 namespace loadable_module {
 namespace {
 
-static constexpr u8 MAGIC[8] = {'M', 'K', '6', '1', 'M', 'O', 'D', 0};
+static constexpr u8 APP_MAGIC[8] = {'M', 'K', '6', '1', 'A', 'P', 'P', 0};
 static constexpr u16 FORMAT_OFFSET = 8;
 static constexpr u16 HEADER_SIZE_OFFSET = 10;
 static constexpr u16 ABI_OFFSET = 12;
@@ -136,11 +136,16 @@ static bool ascii_equal_ci(const char* left, const char* right) {
   return *left == *right;
 }
 
+static bool magic_valid(const u8* input) {
+  return input != nullptr &&
+         memcmp(input, APP_MAGIC, sizeof(APP_MAGIC)) == 0;
+}
+
 } // namespace
 
 bool valid_kind(Kind kind) {
   return kind == Kind::FOCAL || kind == Kind::TINYBASIC ||
-         kind == Kind::WBMP_VIEWER;
+         kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION;
 }
 
 bool valid_compression(Compression compression) {
@@ -157,11 +162,16 @@ Kind kind_at(u8 index) {
   return (Kind) 0;
 }
 
+bool system_directory_name_matches(const char* name) {
+  return ascii_equal_ci(name, SYSTEM_DIRECTORY_NAME);
+}
+
 const char* file_name(Kind kind) {
   switch(kind) {
-    case Kind::FOCAL: return "FOCAL.MOD";
-    case Kind::TINYBASIC: return "BASIC.MOD";
-    case Kind::WBMP_VIEWER: return "WBMP.MOD";
+    case Kind::FOCAL: return "FOCAL.APP";
+    case Kind::TINYBASIC: return "BASIC.APP";
+    case Kind::WBMP_VIEWER: return "WBMP.APP";
+    case Kind::APPLICATION: break;
   }
   return nullptr;
 }
@@ -209,7 +219,7 @@ bool encode_header(const Header& header, u32 slot_size,
     return false;
   }
   memset(output, 0, HEADER_SIZE);
-  memcpy(output, MAGIC, sizeof(MAGIC));
+  memcpy(output, APP_MAGIC, sizeof(APP_MAGIC));
   put_le16(output, FORMAT_OFFSET, FORMAT_VERSION);
   put_le16(output, HEADER_SIZE_OFFSET, HEADER_SIZE);
   put_le16(output, ABI_OFFSET, ABI_VERSION);
@@ -234,7 +244,7 @@ bool encode_header(const Header& header, u32 slot_size,
 HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
                            Kind expected_kind, Header& output) {
   memset(&output, 0, sizeof(output));
-  if(input == nullptr || memcmp(input, MAGIC, sizeof(MAGIC)) != 0) {
+  if(!magic_valid(input)) {
     return HeaderStatus::BAD_MAGIC;
   }
   if(get_le32(input, HEADER_CRC_OFFSET) != crc32(input, HEADER_CRC_OFFSET)) {
@@ -263,6 +273,15 @@ HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
   output.stored_crc32 = get_le32(input, STORED_CRC_OFFSET);
   output.image_crc32 = get_le32(input, IMAGE_CRC_OFFSET);
   return validate_header(output, slot_size, expected_kind);
+}
+
+HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
+                           Header& output) {
+  memset(&output, 0, sizeof(output));
+  if(!magic_valid(input)) return HeaderStatus::BAD_MAGIC;
+  const Kind kind = (Kind) input[KIND_OFFSET];
+  if(!valid_kind(kind)) return HeaderStatus::INVALID_FIELDS;
+  return decode_header(input, slot_size, kind, output);
 }
 
 bool decode_payload(const Reader& reader, Compression compression,

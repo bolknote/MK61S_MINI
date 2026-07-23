@@ -61,15 +61,20 @@ struct LfnState {
 
 struct ParsedNode {
   bool directory;
-#if MK61_ANY_LOADABLE_MODULE
-  bool module;
-  loadable_module::Kind module_kind;
-#endif
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
   u16 id;
   u16 data_len;
   u8 attributes;
+};
+
+static constexpr u8 MAX_C5_FILE_CLUSTERS =
+    program_store::MAX_FAT_EXTENTS_PER_FILE + 1U;
+
+struct FileChain {
+  u16 clusters[MAX_C5_FILE_CLUSTERS];
+  u16 size;
+  u8 cluster_count;
 };
 
 enum CacheState : u8 {
@@ -87,38 +92,11 @@ struct CacheEntry {
   CacheState state;
 };
 
-#if MK61_ANY_LOADABLE_MODULE
-static constexpr u8 MAX_MODULE_FILES = 3;
-static constexpr u8 MAX_MODULE_CLUSTERS = 8;
-
-struct ModuleFile {
-  u16 clusters[MAX_MODULE_CLUSTERS];
-  u16 size;
-  loadable_module::Kind kind;
-  u8 cluster_count;
-};
-
-struct ModuleUpdate {
-  u16 first_cluster;
-  u16 size;
-  loadable_module::Kind kind;
-  u8 cluster_count;
-};
-#endif
-
 struct SessionState {
   u8 desired_kinds[KIND_MAP_BYTES];
   u32 cache_clock;
   CacheEntry cache[MAX_CACHE_SLOTS];
   u8 cache_data[PRIMARY_CACHE_SLOTS][SECTOR_SIZE];
-#if MK61_ANY_LOADABLE_MODULE
-  ModuleFile modules[MAX_MODULE_FILES];
-  u8 module_count;
-  ModuleUpdate pending_modules[MAX_MODULE_FILES];
-  u8 pending_module_count;
-  u8 desired_module_mask;
-  u8 changed_module_mask;
-#endif
 };
 
 static_assert(sizeof(SessionState) <= language_workspace::SIZE,
@@ -146,9 +124,6 @@ static bool ensure_session(void) {
                               sizeof(SessionState))) return false;
   g_session = (SessionState*) g_session_lease.data();
   memset(g_session, 0, sizeof(*g_session));
-#if MK61_ANY_LOADABLE_MODULE
-  g_session->module_count = 0xFF;
-#endif
   return true;
 }
 
@@ -248,158 +223,10 @@ static const char* short_extension(program_store::ProgramType type) {
     case program_store::ProgramType::MK61_STATE: return "M2 ";
     case program_store::ProgramType::FONT: return "FMK";
     case program_store::ProgramType::IMAGE1: return "WBM";
+    case program_store::ProgramType::APP: return "APP";
   }
   return "BIN";
 }
-
-#if MK61_ANY_LOADABLE_MODULE
-static const loadable_module::Kind MODULE_KINDS[MAX_MODULE_FILES] = {
-  loadable_module::Kind::FOCAL,
-  loadable_module::Kind::TINYBASIC,
-  loadable_module::Kind::WBMP_VIEWER
-};
-
-static const u8* module_short_name(loadable_module::Kind kind) {
-  static const u8 focal[11] = {
-    'F','O','C','A','L',' ',' ',' ','M','O','D'
-  };
-  static const u8 basic[11] = {
-    'B','A','S','I','C',' ',' ',' ','M','O','D'
-  };
-  static const u8 wbmp[11] = {
-    'W','B','M','P',' ',' ',' ',' ','M','O','D'
-  };
-  switch(kind) {
-    case loadable_module::Kind::FOCAL: return focal;
-    case loadable_module::Kind::TINYBASIC: return basic;
-    case loadable_module::Kind::WBMP_VIEWER: return wbmp;
-  }
-  return focal;
-}
-
-static u32 module_slot_size(loadable_module::Kind kind) {
-  const u8 sectors = kind == loadable_module::Kind::FOCAL
-      ? storage_geometry::FOCAL_MODULE_SECTORS
-      : kind == loadable_module::Kind::TINYBASIC
-          ? storage_geometry::TINYBASIC_MODULE_SECTORS
-          : storage_geometry::WBMP_MODULE_SECTORS;
-  return (u32) sectors * storage_geometry::PHYSICAL_SECTOR_SIZE;
-}
-
-static bool module_name_kind(const char* name,
-                             loadable_module::Kind& kind) {
-  return loadable_module::kind_from_file_name(name, kind) &&
-         loadable_module::enabled(kind);
-}
-
-static u8 module_bit(loadable_module::Kind kind) {
-  return (u8) (1U << ((u8) kind - 1U));
-}
-
-static bool ensure_module_map(void);
-
-static ModuleFile* installed_module(loadable_module::Kind kind) {
-  if(!ensure_module_map()) return nullptr;
-  SessionState& state = session();
-  for(u8 index = 0; index < state.module_count; index++) {
-    if(state.modules[index].kind == kind) return &state.modules[index];
-  }
-  return nullptr;
-}
-
-static bool same_module_mapping(const ModuleFile& left,
-                                const ModuleFile& right) {
-  return left.kind == right.kind && left.size == right.size &&
-         left.cluster_count == right.cluster_count &&
-         memcmp(left.clusters, right.clusters,
-                (usize) left.cluster_count * sizeof(left.clusters[0])) == 0;
-}
-
-static bool installed_cluster_owner(u16 cluster,
-                                    loadable_module::Kind& kind) {
-  if(!ensure_module_map()) return false;
-  const SessionState& state = session();
-  for(u8 index = 0; index < state.module_count; index++) {
-    const ModuleFile& module = state.modules[index];
-    for(u8 item = 0; item < module.cluster_count; item++) {
-      if(module.clusters[item] == cluster) {
-        kind = module.kind;
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-static bool module_cluster_reserved(const SessionState& state, u16 cluster) {
-  for(u8 index = 0; index < state.module_count; index++) {
-    const ModuleFile& module = state.modules[index];
-    for(u8 item = 0; item < module.cluster_count; item++) {
-      if(module.clusters[item] == cluster) return true;
-    }
-  }
-  return false;
-}
-
-static bool c5_cluster_unused(u16 cluster) {
-  if(!valid_cluster(cluster)) return false;
-  const u16 id = id_for_cluster(cluster);
-  program_store::Entry entry;
-  u16 owner = 0;
-  u16 next = 0;
-  return !program_store::entry_by_id(id, entry) &&
-         !program_store::extent_info(id, owner, next);
-}
-
-static bool build_module_map(void) {
-  SessionState& state = session();
-  state.module_count = 0;
-  for(loadable_module::Kind kind : MODULE_KINDS) {
-    u32 size = 0;
-    if(!loadable_module::container_size(kind, size) || size == 0) continue;
-    const u32 cluster_bytes = (u32) geometry().sectors_per_cluster *
-                              SECTOR_SIZE;
-    const u32 required = (size + cluster_bytes - 1U) / cluster_bytes;
-    if(required == 0 || required > MAX_MODULE_CLUSTERS ||
-       state.module_count >= MAX_MODULE_FILES) continue;
-    ModuleFile candidate = {};
-    candidate.kind = kind;
-    candidate.size = (u16) size;
-    candidate.cluster_count = (u8) required;
-    u8 found = 0;
-    for(u16 id = geometry().max_nodes; id != 0 && found < required;) {
-      id--;
-      const u16 cluster = cluster_for_id(id);
-      if(c5_cluster_unused(cluster) &&
-         !module_cluster_reserved(state, cluster)) {
-        candidate.clusters[found++] = cluster;
-      }
-    }
-    if(found == required) state.modules[state.module_count++] = candidate;
-  }
-  return true;
-}
-
-static bool ensure_module_map(void) {
-  return session().module_count != 0xFF || build_module_map();
-}
-
-static bool module_cluster_location(u16 cluster, ModuleFile*& module,
-                                    u8& cluster_index) {
-  if(!ensure_module_map()) return false;
-  SessionState& state = session();
-  for(u8 index = 0; index < state.module_count; index++) {
-    for(u8 item = 0; item < state.modules[index].cluster_count; item++) {
-      if(state.modules[index].clusters[item] == cluster) {
-        module = &state.modules[index];
-        cluster_index = item;
-        return true;
-      }
-    }
-  }
-  return false;
-}
-#endif
 
 static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
   struct Suffix {
@@ -415,6 +242,7 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     {".t1", program_store::ProgramType::TEXT},
     {".m2", program_store::ProgramType::MK61_STATE},
     {".fmk", program_store::ProgramType::FONT},
+    {".app", program_store::ProgramType::APP},
     {".wbmp", program_store::ProgramType::IMAGE1},
     // Псевдоним нужен при чтении записи без LFN: 8.3-проекция WBMP — WBM.
     {".wbm", program_store::ProgramType::IMAGE1}
@@ -436,6 +264,9 @@ static u16 maximum_file_size(program_store::ProgramType type) {
   }
   if(type == program_store::ProgramType::IMAGE1) {
     return program_store::MAX_IMAGE1_SIZE;
+  }
+  if(type == program_store::ProgramType::APP) {
+    return program_store::MAX_APP_FILE_SIZE;
   }
   return program_store::MAX_MK61_TEXT_SIZE;
 }
@@ -655,18 +486,6 @@ static bool render_no_index_dirent(u8 offset, u8* item) {
   return true;
 }
 
-#if MK61_ANY_LOADABLE_MODULE
-static void render_module_dirent(const ModuleFile& module, u8* item) {
-  memset(item, 0, 32);
-  memcpy(item, module_short_name(module.kind), 11);
-  item[11] = 0;
-  put_le16(item, 22, 0);
-  put_le16(item, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 19));
-  put_le16(item, 26, module.clusters[0]);
-  put_le32(item, 28, module.size);
-}
-#endif
-
 static void boot_sector(u8* output) {
   memset(output, 0, SECTOR_SIZE);
   output[0] = 0xEB;
@@ -701,24 +520,27 @@ static u16 base_fat_value(u16 cluster) {
   if(cluster == 0) return (u16) (0xF00 | MEDIA_DESCRIPTOR);
   if(cluster == 1) return FAT12_EOF;
   if(!valid_cluster(cluster)) return FAT12_FREE;
-#if MK61_ANY_LOADABLE_MODULE
-  ModuleFile* module = nullptr;
-  u8 module_cluster = 0;
-  if(module_cluster_location(cluster, module, module_cluster)) {
-    return module_cluster + 1U < module->cluster_count
-        ? module->clusters[module_cluster + 1U] : FAT12_EOF;
-  }
-#endif
   const u16 id = id_for_cluster(cluster);
   program_store::Entry entry;
   if(program_store::entry_by_id(id, entry)) {
-    if(entry.kind == program_store::NodeKind::FILE) return FAT12_EOF;
+    if(entry.kind == program_store::NodeKind::FILE) {
+      u16 extent = 0;
+      return program_store::first_file_extent(id, extent)
+          ? cluster_for_id(extent) : FAT12_EOF;
+    }
     u16 extent = 0;
     return program_store::first_extent(id, extent)
         ? cluster_for_id(extent) : FAT12_EOF;
   }
   u16 owner = 0;
   u16 next = 0;
+  u8 cluster_index = 0;
+  if(program_store::file_extent_info(id, owner, cluster_index, next)) {
+    (void) owner;
+    (void) cluster_index;
+    return next == program_store::INVALID_ID
+        ? FAT12_EOF : cluster_for_id(next);
+  }
   if(program_store::extent_info(id, owner, next)) {
     (void) owner;
     return next == program_store::INVALID_ID ? FAT12_EOF : cluster_for_id(next);
@@ -776,17 +598,6 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
       }
     }
     cursor = storage_geometry::ROOT_SYSTEM_DIRENTS;
-#if MK61_ANY_LOADABLE_MODULE
-    if(!ensure_module_map()) return false;
-    for(u8 index = 0; index < session().module_count; index++) {
-      const u32 slot = cursor + index;
-      if(slot >= first_slot && slot < last_slot) {
-        render_module_dirent(session().modules[index],
-                             output + (slot - first_slot) * 32);
-      }
-    }
-    cursor += session().module_count;
-#endif
   } else {
     if(first_slot == 0) {
       memcpy(output, ".          ", 11);
@@ -851,19 +662,6 @@ static bool data_sector_base(u32 offset, u8* output) {
   const u16 cluster = (u16) (FIRST_DATA_CLUSTER + offset / sectors_per_cluster);
   const u8 sector = (u8) (offset % sectors_per_cluster);
   if(!valid_cluster(cluster)) return false;
-#if MK61_ANY_LOADABLE_MODULE
-  ModuleFile* module = nullptr;
-  u8 module_cluster = 0;
-  if(module_cluster_location(cluster, module, module_cluster)) {
-    const u32 file_offset =
-        ((u32) module_cluster * sectors_per_cluster + sector) * SECTOR_SIZE;
-    if(file_offset >= module->size) return true;
-    const usize count = module->size - file_offset < SECTOR_SIZE
-        ? (usize) (module->size - file_offset) : SECTOR_SIZE;
-    return loadable_module::read_container(module->kind, file_offset,
-                                            output, count);
-  }
-#endif
   const u16 id = id_for_cluster(cluster);
   program_store::Entry entry;
   if(program_store::entry_by_id(id, entry)) {
@@ -874,6 +672,20 @@ static bool data_sector_base(u32 offset, u8* output) {
       return program_store::read_range_id(id, file_offset, output, SECTOR_SIZE,
                                           &copied);
     }
+  }
+  u16 file_id = 0;
+  u16 file_next = 0;
+  u8 file_cluster = 0;
+  if(program_store::file_extent_info(id, file_id, file_cluster, file_next) &&
+     program_store::entry_by_id(file_id, entry) &&
+     entry.kind == program_store::NodeKind::FILE) {
+    (void) file_next;
+    const u32 file_offset =
+        ((u32) file_cluster * sectors_per_cluster + sector) * SECTOR_SIZE;
+    if(file_offset >= entry.data_len) return true;
+    u16 copied = 0;
+    return program_store::read_range_id(
+        file_id, (u16) file_offset, output, SECTOR_SIZE, &copied);
   }
   u16 directory_id = 0;
   u16 segment = 0;
@@ -1097,48 +909,30 @@ static bool set_desired_kind(u16 id, DesiredKind kind) {
   return true;
 }
 
-#if MK61_ANY_LOADABLE_MODULE
-static bool reserve_installed_module_clusters(void) {
-  if(!ensure_module_map()) return false;
-  const SessionState& state = session();
-  for(u8 index = 0; index < state.module_count; index++) {
-    const ModuleFile& module = state.modules[index];
-    for(u8 item = 0; item < module.cluster_count; item++) {
-      if(!set_desired_kind(id_for_cluster(module.clusters[item]),
-                           DESIRED_EXTENT)) return false;
-    }
-  }
-  return true;
-}
-
-static bool collect_module_file(const ParsedNode& parsed,
-                                ModuleFile& module) {
-  memset(&module, 0, sizeof(module));
-  module.kind = parsed.module_kind;
-  module.size = parsed.data_len;
-  const u32 cluster_bytes = (u32) geometry().sectors_per_cluster *
-                            SECTOR_SIZE;
-  const u32 required = (module.size + cluster_bytes - 1U) / cluster_bytes;
-  if(required == 0 || required > MAX_MODULE_CLUSTERS) return false;
-  module.cluster_count = (u8) required;
+static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
+                               FileChain& chain) {
+  memset(&chain, 0, sizeof(chain));
+  chain.size = parsed.data_len;
+  const u32 cluster_bytes =
+      (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
+  const u32 required = parsed.data_len == 0 ? 1 :
+      ((u32) parsed.data_len + cluster_bytes - 1U) / cluster_bytes;
+  if(required == 0 || required > MAX_C5_FILE_CLUSTERS) return false;
+  chain.cluster_count = (u8) required;
   u16 cluster = cluster_for_id(parsed.id);
-  for(u8 index = 0; index < module.cluster_count; index++) {
+  for(u8 index = 0; index < chain.cluster_count; index++) {
     if(!valid_cluster(cluster)) return false;
     for(u8 previous = 0; previous < index; previous++) {
-      if(module.clusters[previous] == cluster) return false;
+      if(chain.clusters[previous] == cluster) return false;
     }
-    module.clusters[index] = cluster;
-
-    loadable_module::Kind owner = (loadable_module::Kind) 0;
-    if(installed_cluster_owner(cluster, owner)) {
-      if(owner != module.kind) return false;
-    } else if(!set_desired_kind(id_for_cluster(cluster), DESIRED_EXTENT)) {
+    chain.clusters[index] = cluster;
+    if(index != 0 && reserve_extents &&
+       !set_desired_kind(id_for_cluster(cluster), DESIRED_EXTENT)) {
       return false;
     }
-
     u16 next = 0;
     if(!effective_fat_value(cluster, next)) return false;
-    if(index + 1U == module.cluster_count) {
+    if(index + 1U == chain.cluster_count) {
       if(!fat_eof(next)) return false;
     } else {
       if(!valid_cluster(next)) return false;
@@ -1148,141 +942,18 @@ static bool collect_module_file(const ParsedNode& parsed,
   return true;
 }
 
-static bool expand_module_update(const ModuleUpdate& update,
-                                 ModuleFile& module) {
-  memset(&module, 0, sizeof(module));
-  module.kind = update.kind;
-  module.size = update.size;
-  module.cluster_count = update.cluster_count;
-  if(module.cluster_count == 0 ||
-     module.cluster_count > MAX_MODULE_CLUSTERS) return false;
-  u16 cluster = update.first_cluster;
-  for(u8 index = 0; index < module.cluster_count; index++) {
-    if(!valid_cluster(cluster)) return false;
-    module.clusters[index] = cluster;
-    u16 next = 0;
-    if(!effective_fat_value(cluster, next)) return false;
-    if(index + 1U == module.cluster_count) {
-      if(!fat_eof(next)) return false;
-    } else {
-      if(!valid_cluster(next)) return false;
-      cluster = next;
+static bool file_chain_matches(const FileChain& chain, u16 file_id) {
+  u16 current = file_id;
+  for(u8 index = 0; index < chain.cluster_count; index++) {
+    if(current != id_for_cluster(chain.clusters[index])) return false;
+    if(index + 1U == chain.cluster_count) {
+      u16 extra = 0;
+      return !program_store::next_file_extent(current, extra);
     }
-  }
-  return true;
-}
-
-static bool module_data_staged(const ModuleFile& module) {
-  const u32 cluster_bytes = (u32) geometry().sectors_per_cluster *
-                            SECTOR_SIZE;
-  u32 remaining = module.size;
-  for(u8 index = 0; index < module.cluster_count && remaining != 0; index++) {
-    const u32 in_cluster = remaining < cluster_bytes ? remaining : cluster_bytes;
-    const u8 sectors = (u8) ((in_cluster + SECTOR_SIZE - 1U) / SECTOR_SIZE);
-    for(u8 sector = 0; sector < sectors; sector++) {
-      if(program_store::vfat_stage_exists(
-             cluster_lba(module.clusters[index], sector))) return true;
-    }
-    remaining -= in_cluster;
+    if(!program_store::next_file_extent(current, current)) return false;
   }
   return false;
 }
-
-static bool read_module_source(void* context, u32 offset,
-                               u8* output, usize size) {
-  const ModuleFile& module = *(ModuleFile*) context;
-  if(output == nullptr || offset > module.size || size > module.size - offset) {
-    return false;
-  }
-  const u32 cluster_bytes = (u32) geometry().sectors_per_cluster *
-                            SECTOR_SIZE;
-  while(size != 0) {
-    const u8 cluster_index = (u8) (offset / cluster_bytes);
-    const u32 in_cluster = offset % cluster_bytes;
-    if(cluster_index >= module.cluster_count) return false;
-    const u8 sector = (u8) (in_cluster / SECTOR_SIZE);
-    const u16 in_sector = (u16) (in_cluster % SECTOR_SIZE);
-    u8 block[SECTOR_SIZE];
-    if(!read_effective_sector(
-           cluster_lba(module.clusters[cluster_index], sector), block)) {
-      return false;
-    }
-    usize count = SECTOR_SIZE - in_sector;
-    if(count > size) count = size;
-    memcpy(output, block + in_sector, count);
-    output += count;
-    offset += (u32) count;
-    size -= count;
-  }
-  return true;
-}
-
-static bool stage_complete_module(const ModuleFile& module) {
-  const u32 cluster_bytes = (u32) geometry().sectors_per_cluster *
-                            SECTOR_SIZE;
-  u32 remaining = module.size;
-  for(u8 index = 0; index < module.cluster_count && remaining != 0; index++) {
-    const u32 in_cluster = remaining < cluster_bytes ? remaining : cluster_bytes;
-    const u8 sectors = (u8) ((in_cluster + SECTOR_SIZE - 1U) / SECTOR_SIZE);
-    for(u8 sector = 0; sector < sectors; sector++) {
-      const u32 lba = cluster_lba(module.clusters[index], sector);
-      if(program_store::vfat_stage_exists(lba)) continue;
-      u8 block[SECTOR_SIZE];
-      if(!read_effective_sector(lba, block) ||
-         !program_store::vfat_stage_write(lba, block)) return false;
-    }
-    remaining -= in_cluster;
-  }
-  return true;
-}
-
-static bool validate_module_node(u16 parent_id, const ParsedNode& parsed) {
-  if(parent_id != program_store::ROOT_ID) {
-    g_last_error = "module-directory";
-    return false;
-  }
-  SessionState& state = session();
-  const u8 bit = module_bit(parsed.module_kind);
-  if((state.desired_module_mask & bit) != 0 ||
-     state.pending_module_count >= MAX_MODULE_FILES) {
-    g_last_error = "duplicate-module";
-    return false;
-  }
-  ModuleFile module = {};
-  if(!collect_module_file(parsed, module)) {
-    g_last_error = "module-chain";
-    return false;
-  }
-  state.desired_module_mask = (u8) (state.desired_module_mask | bit);
-  ModuleFile* installed = installed_module(module.kind);
-  const bool changed = installed == nullptr ||
-                       !same_module_mapping(*installed, module) ||
-                       module_data_staged(module);
-  if(changed) {
-    const loadable_module::ModuleSource source = {
-      &module, module.size, read_module_source
-    };
-    loadable_module::Header header = {};
-    if(loadable_module::validate_install(module.kind, source, header) !=
-       loadable_module::StoreStatus::OK) {
-      g_last_error = "module-invalid";
-      return false;
-    }
-    if(!stage_complete_module(module)) {
-      g_last_error = "module-stage";
-      return false;
-    }
-    state.changed_module_mask = (u8) (state.changed_module_mask | bit);
-  }
-  ModuleUpdate& pending =
-      state.pending_modules[state.pending_module_count++];
-  pending.first_cluster = module.clusters[0];
-  pending.size = module.size;
-  pending.kind = module.kind;
-  pending.cluster_count = module.cluster_count;
-  return true;
-}
-#endif
 
 static void reset_lfn(LfnState& lfn) {
   memset(&lfn, 0, sizeof(lfn));
@@ -1390,22 +1061,6 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   }
   const u32 size = get_le32(item, 28);
   if(size == 0 && cluster == 0) return ParseStatus::SKIP;
-#if MK61_ANY_LOADABLE_MODULE
-  loadable_module::Kind module_kind = (loadable_module::Kind) 0;
-  if(module_name_kind(name, module_kind)) {
-    if(size < loadable_module::HEADER_SIZE ||
-       size > module_slot_size(module_kind) || !valid_cluster(cluster)) {
-      return ParseStatus::INVALID;
-    }
-    parsed.module = true;
-    parsed.module_kind = module_kind;
-    parsed.type = program_store::ProgramType::MK61;
-    parsed.name[0] = 0;
-    parsed.id = id_for_cluster(cluster);
-    parsed.data_len = (u16) size;
-    return ParseStatus::VALID;
-  }
-#endif
   if(host_sidecar_file(name) || !parse_file_name(name, parsed.type)) {
     return ParseStatus::SKIP;
   }
@@ -1425,60 +1080,132 @@ static bool reconcile_directory_chain(u16 directory_id);
 static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
                            u8 depth, WalkPass pass);
 
-static bool file_sector_staged(u16 id, u8 sector) {
-  return program_store::vfat_stage_exists(
-      cluster_lba(cluster_for_id(id), sector));
+static bool read_file_chain_source(void* context, u32 offset,
+                                   u8* output, usize size) {
+  const FileChain& chain = *(FileChain*) context;
+  if(output == NULL || offset > chain.size || size > chain.size - offset) {
+    return false;
+  }
+  const u32 cluster_bytes =
+      (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
+  while(size != 0) {
+    const u8 cluster_index = (u8) (offset / cluster_bytes);
+    const u32 in_cluster = offset % cluster_bytes;
+    if(cluster_index >= chain.cluster_count) return false;
+    const u8 sector = (u8) (in_cluster / SECTOR_SIZE);
+    const u16 in_sector = (u16) (in_cluster % SECTOR_SIZE);
+    u8 block[SECTOR_SIZE];
+    if(!read_effective_sector(
+           cluster_lba(chain.clusters[cluster_index], sector), block)) {
+      return false;
+    }
+    usize count = SECTOR_SIZE - in_sector;
+    if(count > size) count = size;
+    memcpy(output, block + in_sector, count);
+    output += count;
+    offset += (u32) count;
+    size -= count;
+  }
+  return true;
 }
 
+static bool base_file_cluster(u16 cluster, u16& file_id,
+                              u8& cluster_index) {
+  const u16 id = id_for_cluster(cluster);
+  program_store::Entry entry;
+  if(program_store::entry_by_id(id, entry) &&
+     entry.kind == program_store::NodeKind::FILE) {
+    file_id = id;
+    cluster_index = 0;
+    return true;
+  }
+  u16 next = 0;
+  return program_store::file_extent_info(id, file_id, cluster_index, next);
+}
+
+static bool file_chain_complete(const FileChain& chain,
+                                bool current_exists, u16 current_id,
+                                u16 current_size, bool& any_staged) {
+  any_staged = false;
+  const u32 cluster_bytes =
+      (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
+  u32 remaining = chain.size;
+  for(u8 index = 0; index < chain.cluster_count && remaining != 0; index++) {
+    const u32 in_cluster = remaining < cluster_bytes
+        ? remaining : cluster_bytes;
+    const u8 sectors =
+        (u8) ((in_cluster + SECTOR_SIZE - 1U) / SECTOR_SIZE);
+    for(u8 sector = 0; sector < sectors; sector++) {
+      const u32 lba = cluster_lba(chain.clusters[index], sector);
+      if(program_store::vfat_stage_exists(lba)) {
+        any_staged = true;
+        continue;
+      }
+      u16 owner = 0;
+      u8 old_cluster = 0;
+      if(!current_exists ||
+         !base_file_cluster(chain.clusters[index], owner, old_cluster) ||
+         owner != current_id ||
+         ((u32) old_cluster * geometry().sectors_per_cluster + sector) *
+             SECTOR_SIZE >= current_size) {
+        return false;
+      }
+    }
+    remaining -= in_cluster;
+  }
+  return true;
+}
+
+#if MK61_ANY_LOADABLE_MODULE
+static bool validate_app_chain(const ParsedNode& parsed,
+                               FileChain& chain) {
+  if(parsed.type != program_store::ProgramType::APP) return true;
+  const loadable_module::ModuleSource source = {
+    &chain, parsed.data_len, read_file_chain_source
+  };
+  loadable_module::Header header = {};
+  if(loadable_module::validate_app(source, header) ==
+     loadable_module::StoreStatus::OK) return true;
+  g_last_error = "app-invalid";
+  return false;
+}
+#endif
+
 static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
+  FileChain chain = {};
+  if(!collect_file_chain(parsed, false, chain)) return false;
   program_store::Entry current;
   const bool exists = program_store::entry_by_id(parsed.id, current) &&
                       current.kind == program_store::NodeKind::FILE;
-  const u8 sectors = (u8) ((parsed.data_len + SECTOR_SIZE - 1) / SECTOR_SIZE);
   bool any_staged = false;
-  for(u8 sector = 0; sector < sectors; sector++) {
-    if(file_sector_staged(parsed.id, sector)) any_staged = true;
+  if(!file_chain_complete(chain, exists, parsed.id,
+                          exists ? current.data_len : 0, any_staged)) {
+    return false;
   }
   const bool baseline_compatible = exists && current.type == parsed.type &&
                                    current.data_len == parsed.data_len;
-  if(baseline_compatible && !any_staged) {
+  if(baseline_compatible && !any_staged &&
+     file_chain_matches(chain, parsed.id)) {
     if(current.parent_id == parent_id && strcmp(current.name, parsed.name) == 0) {
       return true;
     }
     return program_store::move_rename(parsed.id, parent_id, parsed.name);
   }
-  if(!baseline_compatible) {
-    for(u8 sector = 0; sector < sectors; sector++) {
-      if(!file_sector_staged(parsed.id, sector)) return false;
-    }
+  u16 extents[program_store::MAX_FAT_EXTENTS_PER_FILE] = {};
+  for(u8 index = 1; index < chain.cluster_count; index++) {
+    extents[index - 1] = id_for_cluster(chain.clusters[index]);
   }
-
-  shared_scratch::Lease scratch(shared_scratch::Owner::VFAT_COMMIT,
-                                parsed.data_len);
-  if(parsed.data_len != 0 && !scratch.ok()) return false;
-  for(u8 sector = 0; sector < sectors; sector++) {
-    u8 block[SECTOR_SIZE];
-    if(!read_effective_sector(cluster_lba(cluster_for_id(parsed.id), sector),
-                              block)) return false;
-    const u16 offset = (u16) sector * SECTOR_SIZE;
-    const u16 count = (u16) ((parsed.data_len - offset < SECTOR_SIZE)
-        ? parsed.data_len - offset : SECTOR_SIZE);
-    memcpy(scratch.data() + offset, block, count);
-  }
-  return program_store::write_file(parent_id, parsed.id, parsed.type,
-                                   parsed.name,
-                                   parsed.data_len == 0 ? NULL : scratch.data(),
-                                   parsed.data_len, NULL);
+  const program_store::FileSource source = {
+    &chain, read_file_chain_source
+  };
+  return program_store::write_file_from_source(
+      parent_id, parsed.id, parsed.type, parsed.name, parsed.data_len, source,
+      chain.cluster_count > 1 ? extents : NULL,
+      (u8) (chain.cluster_count - 1U), NULL);
 }
 
 static bool process_node(u16 parent_id, const ParsedNode& parsed,
                          u8 depth, WalkPass pass) {
-#if MK61_ANY_LOADABLE_MODULE
-  if(parsed.module) {
-    return pass == WalkPass::VALIDATE
-        ? validate_module_node(parent_id, parsed) : true;
-  }
-#endif
   if(pass == WalkPass::VALIDATE) {
     const DesiredKind kind = parsed.directory ? DESIRED_DIRECTORY : DESIRED_FILE;
     if(!set_desired_kind(parsed.id, kind)) {
@@ -1496,14 +1223,35 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
         return false;
       }
     }
-    u16 next = 0;
-    if(!effective_fat_value(cluster_for_id(parsed.id), next)) {
-      g_last_error = "fat-read";
-      return false;
-    }
     if(!parsed.directory) {
-      if(!fat_eof(next)) g_last_error = "file-chain";
-      return fat_eof(next);
+      FileChain chain = {};
+      if(!collect_file_chain(parsed, true, chain)) {
+        g_last_error = "file-chain";
+        return false;
+      }
+      program_store::Entry current = {};
+      const bool exists =
+          program_store::entry_by_id(parsed.id, current) &&
+          current.kind == program_store::NodeKind::FILE;
+      bool any_staged = false;
+      if(!file_chain_complete(chain, exists, parsed.id,
+                              exists ? current.data_len : 0, any_staged)) {
+        g_last_error = "file-data";
+        return false;
+      }
+#if MK61_ANY_LOADABLE_MODULE
+      // Уже опубликованный APP может стать несовместимым после обновления
+      // resident-прошивки. Пока его байты и FAT-цепочка не меняются, он не
+      // должен блокировать удаление, переименование или копирование остальных
+      // файлов. Новое и изменённое содержимое по-прежнему полностью
+      // распаковывается и проверяется до первой мутации дерева C5.
+      const bool content_unchanged =
+          exists && current.type == parsed.type &&
+          current.data_len == parsed.data_len && !any_staged &&
+          file_chain_matches(chain, parsed.id);
+      if(!content_unchanged && !validate_app_chain(parsed, chain)) return false;
+#endif
+      return true;
     }
     return walk_directory(parsed.id, false, cluster_for_id(parsed.id),
                           (u8) (depth + 1), pass);
@@ -1672,6 +1420,20 @@ static bool release_mismatched_extent_chains(u16 parent_id, u8 depth = 0) {
   return true;
 }
 
+static bool release_repurposed_file_extents(void) {
+  for(u16 id = 0; id < program_store::max_nodes(); id++) {
+    const DesiredKind wanted = desired_kind(id);
+    if(wanted != DESIRED_FILE && wanted != DESIRED_DIRECTORY) continue;
+    u16 file_id = 0;
+    u16 next = 0;
+    u8 cluster_index = 0;
+    if(program_store::file_extent_info(
+           id, file_id, cluster_index, next) &&
+       !program_store::release_file_extent(id)) return false;
+  }
+  return true;
+}
+
 static bool prune_tree(u16 parent_id, bool strict) {
   int index = 0;
   while(index < program_store::child_count(parent_id)) {
@@ -1698,46 +1460,6 @@ static bool prune_tree(u16 parent_id, bool strict) {
   }
   return true;
 }
-
-#if MK61_ANY_LOADABLE_MODULE
-static bool apply_module_changes(void) {
-  SessionState& state = session();
-  for(u8 index = 0; index < state.pending_module_count; index++) {
-    ModuleFile module = {};
-    if(!expand_module_update(state.pending_modules[index], module)) {
-      g_last_error = "module-chain";
-      return false;
-    }
-    if((state.changed_module_mask & module_bit(module.kind)) == 0) continue;
-    const loadable_module::ModuleSource source = {
-      &module, module.size, read_module_source
-    };
-    if(loadable_module::install(module.kind, source, nullptr) !=
-       loadable_module::StoreStatus::OK) {
-      g_last_error = "module-install";
-      return false;
-    }
-  }
-  for(u8 index = 0; index < state.module_count; index++) {
-    const loadable_module::Kind kind = state.modules[index].kind;
-    if((state.desired_module_mask & module_bit(kind)) != 0) continue;
-    if(loadable_module::remove(kind) != loadable_module::StoreStatus::OK) {
-      g_last_error = "module-remove";
-      return false;
-    }
-  }
-
-  state.module_count = state.pending_module_count;
-  for(u8 index = 0; index < state.module_count; index++) {
-    if(!expand_module_update(state.pending_modules[index],
-                             state.modules[index])) {
-      g_last_error = "module-chain";
-      return false;
-    }
-  }
-  return true;
-}
-#endif
 
 static u32 directory_required_slots(u16 directory_id) {
   u32 slots = 2;
@@ -2080,22 +1802,14 @@ bool flush_pending(void) {
   ScopedCommitScratch commit_scratch;
   g_last_error = NULL;
   memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
-#if MK61_ANY_LOADABLE_MODULE
-  session().pending_module_count = 0;
-  session().desired_module_mask = 0;
-  session().changed_module_mask = 0;
-  if(!reserve_installed_module_clusters()) {
-    g_last_error = "module-map";
-    return false;
-  }
-#endif
   invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::VALIDATE)) {
     if(g_last_error == NULL) g_last_error = "validate";
     return false;
   }
-  if(!release_mismatched_extent_chains(program_store::ROOT_ID) ||
+  if(!release_repurposed_file_extents() ||
+     !release_mismatched_extent_chains(program_store::ROOT_ID) ||
      !prune_tree(program_store::ROOT_ID, false)) {
     g_last_error = "prepare";
     return false;
@@ -2110,9 +1824,6 @@ bool flush_pending(void) {
     g_last_error = "commit";
     return false;
   }
-#if MK61_ANY_LOADABLE_MODULE
-  if(!apply_module_changes()) return false;
-#endif
   if(!program_store::vfat_stage_discard_all()) {
     g_last_error = "commit";
     return false;
@@ -2130,9 +1841,6 @@ bool reset_session(void) {
     update_cache_slot_count();
   }
   memset(g_session, 0, sizeof(*g_session));
-#if MK61_ANY_LOADABLE_MODULE
-  g_session->module_count = 0xFF;
-#endif
   program_store::vfat_stage_clear();
   if(program_store::vfat_stage_count() == 0 && !ensure_all_directory_extents()) {
     return false;

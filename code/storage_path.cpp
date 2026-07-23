@@ -175,6 +175,7 @@ static const Extension EXTENSIONS[] = {
   { ".tbi",       program_store::ProgramType::TINYBASIC },
   { ".txt",       program_store::ProgramType::TEXT },
   { ".fmk",       program_store::ProgramType::FONT },
+  { ".app",       program_store::ProgramType::APP },
   { ".wbmp",      program_store::ProgramType::IMAGE1 },
   // Старые терминальные псевдонимы по-прежнему принимаются, но каноническая
   // запись использует расширения из program_store::file_extension().

@@ -30,9 +30,10 @@ struct Options {
   std::filesystem::path output;
   u32 memory_size = 0;
   u32 entry_offset = 0;
-  u32 load_address = loadable_module::DEFAULT_LOAD_ADDRESS;
+  u32 load_address = 0;
   bool memory_size_set = false;
   bool entry_offset_set = false;
+  bool load_address_set = false;
   bool require_zx0 = false;
 };
 
@@ -40,15 +41,16 @@ struct Options {
   if(message != nullptr) std::fprintf(stderr, "error: %s\n\n", message);
   std::fprintf(stderr,
       "usage: mk61_module_pack --kind KIND --resident FILE --image FILE\n"
-      "       --memory-size N --entry-offset N --output FILE [options]\n"
-      "  --kind KIND          focal, tinybasic, or wbmp-viewer\n"
+      "       --memory-size N --entry-offset N --load-address N\n"
+      "       --output FILE [--require-zx0]\n"
+      "  --kind KIND          app, focal, tinybasic, or wbmp-viewer\n"
       "  --resident FILE      exact resident firmware .bin\n"
       "  --image FILE         linked SRAM image without its .bss tail\n"
       "  --memory-size N      image plus zero-filled .bss\n"
       "  --entry-offset N     module entry offset from the load address\n"
-      "  --load-address N     SRAM overlay address from resident ELF\n"
+      "  --load-address N     exact SRAM overlay address from resident ELF\n"
       "  --require-zx0        reject an uncompressed result\n"
-      "  --output FILE        resulting .MOD container\n");
+      "  --output FILE        resulting .APP container\n");
   std::exit(message == nullptr ? 0 : 2);
 }
 
@@ -67,6 +69,7 @@ u32 parse_u32(const std::string& text, const char* name) {
 }
 
 Kind parse_kind(const std::string& text) {
+  if(text == "app") return Kind::APPLICATION;
   if(text == "focal") return Kind::FOCAL;
   if(text == "tinybasic") return Kind::TINYBASIC;
   if(text == "wbmp-viewer") return Kind::WBMP_VIEWER;
@@ -99,6 +102,7 @@ Options parse_options(int argc, char** argv) {
       options.entry_offset_set = true;
     } else if(option == "--load-address") {
       options.load_address = parse_u32(value, "load address");
+      options.load_address_set = true;
     } else if(option == "--output") {
       options.output = value;
     } else {
@@ -107,7 +111,7 @@ Options parse_options(int argc, char** argv) {
   }
   if(!options.kind_set || options.resident.empty() || options.image.empty() ||
      options.output.empty() || !options.memory_size_set ||
-     !options.entry_offset_set) {
+     !options.entry_offset_set || !options.load_address_set) {
     usage("all required options must be specified");
   }
   return options;
@@ -192,15 +196,8 @@ void verify_zx0(const std::vector<u8>& packed,
 }
 
 u32 slot_size(Kind kind) {
-  u8 sectors = 0;
-  switch(kind) {
-    case Kind::FOCAL: sectors = storage_geometry::FOCAL_MODULE_SECTORS; break;
-    case Kind::TINYBASIC:
-      sectors = storage_geometry::TINYBASIC_MODULE_SECTORS; break;
-    case Kind::WBMP_VIEWER:
-      sectors = storage_geometry::WBMP_MODULE_SECTORS; break;
-  }
-  return (u32) sectors * storage_geometry::PHYSICAL_SECTOR_SIZE;
+  return loadable_module::valid_kind(kind)
+      ? loadable_module::MAX_CONTAINER_SIZE : 0;
 }
 
 std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,

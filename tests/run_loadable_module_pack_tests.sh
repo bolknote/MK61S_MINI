@@ -7,6 +7,11 @@ trap 'rm -rf "$work"' EXIT
 
 packer="$work/mk61_module_pack"
 out="$work/loadable_module_pack_self_test"
+wrapper_packer="$work/wrapper/mk61_module_pack"
+MK61_MODULE_PACK_BIN="$wrapper_packer" \
+  "$root/tools/build_mk61_module_pack.sh" --help >/dev/null 2>&1
+test -x "$wrapper_packer"
+
 clang++ -x c++ -std=c++17 -Wall -Wextra -Werror -O2 \
   -I"$root/code" \
   "$root/tools/mk61_module_pack.cpp" \
@@ -26,13 +31,37 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
 
 "$out" --generate "$work/resident.bin" "$work/image.bin"
 
+if "$packer" \
+    --kind app \
+    --resident "$work/resident.bin" \
+    --image "$work/image.bin" \
+    --memory-size 10512 \
+    --entry-offset 0 \
+    --output "$work/missing-address.app" >/dev/null 2>&1; then
+  printf 'packer unexpectedly accepted an APP without --load-address\n' >&2
+  exit 1
+fi
+
 "$packer" \
   --kind focal \
   --resident "$work/resident.bin" \
   --image "$work/image.bin" \
   --memory-size 10512 \
   --entry-offset 0 \
+  --load-address 0x2000B000 \
   --require-zx0 \
-  --output "$work/focal.mkmod"
+  --output "$work/focal.app"
 
-"$out" "$work/focal.mkmod" "$work/image.bin" "$work/resident.bin"
+"$out" "$work/focal.app" "$work/image.bin" "$work/resident.bin"
+
+"$packer" \
+  --kind app \
+  --resident "$work/resident.bin" \
+  --image "$work/image.bin" \
+  --memory-size 10512 \
+  --entry-offset 0 \
+  --load-address 0x2000B000 \
+  --require-zx0 \
+  --output "$work/demo.app"
+
+"$out" "$work/demo.app" "$work/image.bin" "$work/resident.bin" app

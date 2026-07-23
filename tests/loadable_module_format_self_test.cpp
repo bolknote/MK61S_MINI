@@ -8,6 +8,8 @@ using namespace loadable_module;
 
 namespace {
 
+static constexpr u32 VALID_LOAD_ADDRESS = 0x2000B000UL;
+
 struct MemoryReader {
   const u8* data;
   u32 size;
@@ -26,7 +28,7 @@ static Header valid_header(void) {
   Header header = {};
   header.kind = Kind::FOCAL;
   header.compression = Compression::ZX0;
-  header.load_address = DEFAULT_LOAD_ADDRESS;
+  header.load_address = VALID_LOAD_ADDRESS;
   header.stored_size = 1234;
   header.image_size = 4096;
   header.memory_size = 4608;
@@ -44,17 +46,23 @@ static void test_kind_file_names(void) {
   assert(kind_at(0) == Kind::FOCAL);
   assert(kind_at(1) == Kind::TINYBASIC);
   assert(kind_at(2) == Kind::WBMP_VIEWER);
-  assert(!valid_kind(kind_at(KIND_COUNT)));
-  assert(strcmp(file_name(Kind::FOCAL), "FOCAL.MOD") == 0);
-  assert(strcmp(file_name(Kind::TINYBASIC), "BASIC.MOD") == 0);
-  assert(strcmp(file_name(Kind::WBMP_VIEWER), "WBMP.MOD") == 0);
+  assert(kind_at(KIND_COUNT) == (Kind) 0);
+  assert(valid_kind(Kind::APPLICATION));
+  assert(strcmp(SYSTEM_DIRECTORY_NAME, "System") == 0);
+  assert(system_directory_name_matches("system"));
+  assert(system_directory_name_matches("SYSTEM"));
+  assert(!system_directory_name_matches("Systems"));
+  assert(strcmp(file_name(Kind::FOCAL), "FOCAL.APP") == 0);
+  assert(strcmp(file_name(Kind::TINYBASIC), "BASIC.APP") == 0);
+  assert(strcmp(file_name(Kind::WBMP_VIEWER), "WBMP.APP") == 0);
+  assert(file_name(Kind::APPLICATION) == nullptr);
   assert(file_name((Kind) 0) == nullptr);
-  assert(kind_from_file_name("focal.mod", kind) && kind == Kind::FOCAL);
-  assert(kind_from_file_name("Basic.Mod", kind) &&
+  assert(kind_from_file_name("focal.app", kind) && kind == Kind::FOCAL);
+  assert(kind_from_file_name("Basic.App", kind) &&
          kind == Kind::TINYBASIC);
-  assert(kind_from_file_name("WBMP.MOD", kind) &&
+  assert(kind_from_file_name("WBMP.APP", kind) &&
          kind == Kind::WBMP_VIEWER);
-  assert(!kind_from_file_name("OTHER.MOD", kind));
+  assert(!kind_from_file_name("OTHER.APP", kind));
   assert(!valid_kind(kind));
 }
 
@@ -84,9 +92,16 @@ static void test_header_round_trip(void) {
   assert(decoded.stored_crc32 == source.stored_crc32);
   assert(decoded.image_crc32 == source.image_crc32);
 
-  bytes[20] ^= 1;
+  Header any_kind = {};
+  assert(decode_header(bytes, 16U * 1024U, any_kind) ==
+         HeaderStatus::OK);
+  assert(any_kind.kind == Kind::FOCAL);
+
+  // Единственный поддерживаемый контейнер имеет сигнатуру MK61APP.
+  memcpy(bytes + 4, "MOD", 3);
+  rewrite_crc(bytes);
   assert(decode_header(bytes, 16U * 1024U, Kind::FOCAL, decoded) ==
-         HeaderStatus::BAD_CRC);
+         HeaderStatus::BAD_MAGIC);
 }
 
 static void test_header_rejects_incompatible_images(void) {

@@ -24,9 +24,10 @@ int main(void) {
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
                 "this case tests an enabled module framework");
   static_assert(!MK61_FOCAL_IS_LOADABLE && !MK61_TINYBASIC_IS_LOADABLE &&
-                !MK61_WBMP_VIEWER_IS_LOADABLE &&
-                !MK61_ANY_LOADABLE_MODULE,
-                "disabled features must not leave module artifacts");
+                !MK61_WBMP_VIEWER_IS_LOADABLE,
+                "disabled features must not leave system APP artifacts");
+  static_assert(MK61_ANY_LOADABLE_MODULE,
+                "generic APP runtime must not depend on system APP keys");
 #elif defined(MK61_CONFIG_EXPECT_MODULES_DISABLED)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
                 "the explicit module override must win");

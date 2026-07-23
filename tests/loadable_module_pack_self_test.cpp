@@ -66,17 +66,23 @@ static bool read_vector(void* context, u32 offset, u8* output, usize size) {
 } // namespace
 
 int main(int argc, char** argv) {
-  assert(argc == 4);
+  assert(argc == 4 || argc == 5);
   if(strcmp(argv[1], "--generate") == 0) {
+    assert(argc == 4);
     generate_fixtures(argv[2], argv[3]);
     return 0;
   }
+  const Kind expected_kind =
+      argc == 5 && strcmp(argv[4], "app") == 0
+          ? Kind::APPLICATION : Kind::FOCAL;
   const std::vector<u8> module = read_file(argv[1]);
   const std::vector<u8> expected = read_file(argv[2]);
   const std::vector<u8> resident = read_file(argv[3]);
   assert(module.size() >= HEADER_SIZE);
   Header header = {};
-  assert(decode_header(module.data(), 16U * 1024U, Kind::FOCAL, header) ==
+  assert(memcmp(module.data(), "MK61APP", 7) == 0);
+  assert(decode_header(module.data(), MAX_CONTAINER_SIZE,
+                       expected_kind, header) ==
          HeaderStatus::OK);
   assert(header.compression == Compression::ZX0);
   assert(header.image_size == expected.size());

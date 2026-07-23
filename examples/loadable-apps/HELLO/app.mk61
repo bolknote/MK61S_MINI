@@ -1,0 +1,4 @@
+# MK61 loadable APP manifest
+format 1
+name HELLO
+source hello_app.cpp

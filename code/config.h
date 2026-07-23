@@ -95,7 +95,7 @@
 
 // F401CC вмещает основную прошивку, но почти не оставляет запаса во внутренней
 // Flash для всех необязательных рантаймов. Поэтому его штатный профиль хранит
-// включённые FOCAL, TinyBASIC и просмотрщик WBMP как загружаемые модули.
+// включённые FOCAL, TinyBASIC и просмотрщик WBMP как загружаемые APP в C5.
 // Остальные контроллеры сохраняют прежнюю встроенную компоновку. Явный ключ
 // -DMK61_ENABLE_LOADABLE_MODULES=0/1 всегда имеет приоритет над профилем платы.
 #ifndef MK61_ENABLE_LOADABLE_MODULES
@@ -109,19 +109,17 @@
   #error "MK61_ENABLE_LOADABLE_MODULES must be 0 or 1"
 #endif
 
-// Ключ каждого компонента остаётся главным: выключенный компонент не получает
-// ни встроенной реализации, ни файла, ни адресуемого слота, ни записи на USB.
-// Если включён хотя бы один модуль, вся общая область резервируется целиком,
-// чтобы смещения остальных слотов не зависели от набора ключей.
+// Ключ каждого системного компонента остаётся главным: выключенный компонент
+// не получает ни встроенной реализации, ни APP-артефакта.
+// Сам MK61_ENABLE_LOADABLE_MODULES включает общий загрузчик пользовательских
+// APP и единый SRAM-overlay даже тогда, когда все три системных APP выключены.
 #define MK61_FOCAL_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_FOCAL)
 #define MK61_TINYBASIC_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_TINYBASIC)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_WBMP_VIEWER)
-#define MK61_ANY_LOADABLE_MODULE \
-  (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE || \
-   MK61_WBMP_VIEWER_IS_LOADABLE)
+#define MK61_ANY_LOADABLE_MODULE (MK61_ENABLE_LOADABLE_MODULES)
 
 #define MK61_FOCAL_IS_BUILTIN \
   (MK61_ENABLE_FOCAL && !MK61_ENABLE_LOADABLE_MODULES)

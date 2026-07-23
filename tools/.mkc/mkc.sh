@@ -165,8 +165,8 @@ Keys:
 Type a command and press Enter: the left panel runs it locally, while the
 right panel sends it to the MK61s terminal and captures its output.
 
-Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp
-Loadable modules in the device root: FOCAL.MOD, BASIC.MOD, WBMP.MOD
+Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp, .app
+System apps: /System/FOCAL.APP, /System/BASIC.APP, /System/WBMP.APP
 Legacy aliases accepted on upload: .t1, .m2, .wbm
 EOF
 }
@@ -220,17 +220,11 @@ unsupported_reason() {
   if [ "$kind" = f ]; then
     lower=$(lowercase "$name")
     case "$lower" in
-      focal.mod|basic.mod)
+      *.app)
         base=${name:0:$(( ${#name} - 4 ))}
-        limit=16384
+        limit=20544
         minimum=64
         ;;
-      wbmp.mod)
-        base=${name:0:$(( ${#name} - 4 ))}
-        limit=4096
-        minimum=64
-        ;;
-      *.mod) printf '%s' 'допустимы только FOCAL.MOD, BASIC.MOD и WBMP.MOD'; return ;;
       *.state.txt) base=${name:0:$(( ${#name} - 10 ))} ;;
       *.m61|*.foc|*.tbi|*.txt|*.fmk)
         base=${name:0:$(( ${#name} - 4 ))}
@@ -891,7 +885,7 @@ plan_add() {
 }
 
 plan_local_tree() {
-  local source=$1 destination=$2 kind reason child name size source_lower destination_leaf destination_lower
+  local source=$1 destination=$2 kind reason child name size
   if [ -L "$source" ]; then kind=l
   elif [ -d "$source" ]; then kind=d
   elif [ -f "$source" ]; then kind=f
@@ -900,18 +894,6 @@ plan_local_tree() {
   reason=$(unsupported_reason "$source" "$kind")
   if [ -n "$reason" ]; then PLAN_ERROR="${source##*/}: $reason"; return 1; fi
   if [ "$kind" = f ]; then
-    source_lower=$(lowercase "${source##*/}")
-    case "$source_lower" in
-      focal.mod|basic.mod|wbmp.mod)
-        destination_leaf=${destination#/}
-        destination_lower=$(lowercase "$destination_leaf")
-        if [ "$destination_leaf" != "${destination_leaf#*/}" ] ||
-           [ "$destination_lower" != "$source_lower" ]; then
-          PLAN_ERROR="${source##*/}: модуль сохраняется только в корне под своим фиксированным именем"
-          return 1
-        fi
-        ;;
-    esac
     size=$(wc -c < "$source" | tr -d '[:space:]')
     plan_add f "$source" "$destination" "$size"
     return 0
@@ -1690,7 +1672,8 @@ Ctrl-O       повторно показать последний вывод MK6
 переименовать через F6, просмотреть через F3 и удалить через F8, но F5
 на калькулятор для них заблокирован.
 
-FOCAL.MOD, BASIC.MOD и WBMP.MOD загружаются только в корень под этими именами.'
+Пользовательские APP можно хранить в любом каталоге. Системные APP находятся
+в /System под именами FOCAL.APP, BASIC.APP и WBMP.APP.'
 }
 
 command_set_text() {
@@ -2177,7 +2160,7 @@ show_file() {
   extension=$(lowercase "$name")
   case "$extension" in
     *.wbmp|*.wbm) show_wbmp "$name" "$source"; return ;;
-    *.fmk|*.mod) binary=1 ;;
+    *.fmk|*.app) binary=1 ;;
   esac
   if [ "$binary" -eq 0 ] && { [ ! -s "$source" ] || LC_ALL=C grep -Iq . "$source" 2>/dev/null; }; then
     sed -n '1,400p' "$source" > "$view"

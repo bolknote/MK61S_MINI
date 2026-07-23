@@ -14,6 +14,19 @@ static constexpr u16 MAX_FONT_SIZE = 1536;
 // 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
 // гарантированно помещаются в минимальный 2-КиБ FAT-кластер C5.
 static constexpr u16 MAX_IMAGE1_SIZE = 1600;
+// Контейнер APP: 64-байтовый заголовок и не более 20 КиБ образа SRAM.
+// Хранилище читает его блоками и не требует такого же буфера в ОЗУ.
+static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
+// Верхняя граница служебных продолжений FAT у одного максимального APP
+// вычисляется для минимального допустимого 2-КиБ кластера. На штатной W25Q128
+// с кластером 4 КиБ реально используются только пять. Это не лимит количества
+// APP: файлов может быть столько, сколько помещается в C5 и каталогах.
+static constexpr u16 MIN_FAT_CLUSTER_SIZE =
+    (u16) storage_geometry::MIN_SECTORS_PER_CLUSTER *
+    storage_geometry::LOGICAL_SECTOR_SIZE;
+static constexpr u8 MAX_FAT_EXTENTS_PER_FILE =
+    (u8) ((MAX_APP_FILE_SIZE + MIN_FAT_CLUSTER_SIZE - 1U) /
+          MIN_FAT_CLUSTER_SIZE - 1U);
 
 enum class ProgramType : u8 {
   MK61 = 0,
@@ -22,13 +35,15 @@ enum class ProgramType : u8 {
   TEXT = 4,
   MK61_STATE = 5,
   FONT = 6,
-  IMAGE1 = 7
+  IMAGE1 = 7,
+  APP = 8
 };
 
 enum class NodeKind : u8 {
   FILE = 0,
   DIRECTORY = 1,
-  DIRECTORY_EXTENT = 2
+  DIRECTORY_EXTENT = 2,
+  FILE_EXTENT = 3
 };
 
 static constexpr u16 ROOT_ID = 0xFFFF;
@@ -44,6 +59,11 @@ struct Entry {
   u16 id;
   u16 parent_id;
   NodeKind kind;
+};
+
+struct FileSource {
+  void* context;
+  bool (*read)(void* context, u32 offset, u8* output, usize size);
 };
 
 enum class MountStatus : u8 {
@@ -89,6 +109,15 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
 bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
                 const char* name, const u8* data, u16 data_len,
                 u16* out_id = nullptr);
+// Потоковый вариант не держит файл целиком в SRAM. Для большого файла
+// fat_extents задаёт идентификаторы последующих FAT-кластеров; при NULL C5
+// выбирает свободные узлы самостоятельно.
+bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
+                            const char* name, u16 data_len,
+                            const FileSource& source,
+                            const u16* fat_extents = nullptr,
+                            u8 fat_extent_count = 0,
+                            u16* out_id = nullptr);
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
 bool remove_id(u16 id);
@@ -99,6 +128,14 @@ bool release_directory_extent(u16 extent_id);
 bool first_extent(u16 directory_id, u16& out_id);
 bool next_extent(u16 id, u16& out_id);
 bool extent_info(u16 extent_id, u16& directory_id, u16& next_id);
+bool first_file_extent(u16 file_id, u16& out_id);
+bool next_file_extent(u16 id, u16& out_id);
+bool file_extent_info(u16 extent_id, u16& file_id, u8& cluster_index,
+                      u16& next_id);
+// Атомарно отделяет служебный FAT-extent от большого файла и перенумеровывает
+// оставшуюся цепочку. Используется VFAT после полного read-only preflight,
+// когда host повторно выделил этот кластер другому узлу.
+bool release_file_extent(u16 extent_id);
 
 static constexpr u16 VFAT_STAGE_BLOCK_SIZE = 512;
 static constexpr u32 VFAT_STAGE_KEY_MAX = 0x007FFFFFUL;
@@ -111,16 +148,9 @@ void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all(void);
 void vfat_stage_clear(void);
 
-// При первом запуске прошивки со слотами модулей старый C5 мог оставить
-// действительные USB-записи в хвосте staging, который теперь резервируется под
-// модули. Пока такой хвост не зафиксирован или явно отброшен, старая геометрия
-// staging остаётся активной, а слоты модулей намеренно недоступны.
-bool stage_layout_migration_pending(void);
-bool finish_stage_layout_migration(void);
-
 #if defined(PROGRAM_STORE_HOST_TEST)
-// Только для воспроизведения тома, записанного прошивкой до появления модулей.
-void test_use_legacy_stage_layout(void);
+// Создаёт на томе настоящий каталог/локаторы C5 v5 для проверки миграции v6.
+bool test_rewrite_catalog_as_v5(void);
 #endif
 
 bool write_mk61(const char* name, const u8* code, u16 code_len);

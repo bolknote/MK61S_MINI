@@ -101,6 +101,7 @@ static const char* type_label(program_store::ProgramType type) {
     case program_store::ProgramType::MK61_STATE: return "M2";
     case program_store::ProgramType::FONT: return "f1";
     case program_store::ProgramType::IMAGE1: return "I1";
+    case program_store::ProgramType::APP: return "A1";
   }
   return "??";
 }

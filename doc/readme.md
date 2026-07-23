@@ -17,6 +17,7 @@
 - `MK61s-mini-TinyBASIC.pdf` - черновик инструкции по TinyBASIC.
 - `MK61s-mini-WBMP.pdf` - формат и просмотр монохромных изображений WBMP.
 - `MK61s-mini-USB-Screen.pdf` - полное руководство по USB-экрану, desktop-клиенту и wire protocol.
+- `src/MK61s-mini-APP.md` - разработка, согласованная сборка и установка пользовательских APP для F401.
 - `build_md_pdf.py` - воспроизводимая пакетная сборка PDF.
 
 Сборка из корня репозитория:
@@ -33,4 +34,5 @@ python3 doc/build_md_pdf.py
 извлеченные из первоначального Word-документа иллюстрации — в
 `src/assets/terminal/`. Исходник отдельного руководства по часам находится в
 `src/MK61s-mini-RTC.md`, аппаратная матрица - в
-`src/MK61s-mini-Hardware.md`.
+`src/MK61s-mini-Hardware.md`, а руководство разработчика APP — в
+`src/MK61s-mini-APP.md`.

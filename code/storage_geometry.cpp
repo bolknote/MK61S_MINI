@@ -73,11 +73,10 @@ static u16 stage_sectors_for(u32 physical_sectors) {
 
 } // пространство имён
 
-bool compute(u32 capacity_bytes, Geometry& out, u8 module_mask) {
+bool compute(u32 capacity_bytes, Geometry& out) {
   memset(&out, 0, sizeof(out));
   if(capacity_bytes < PHYSICAL_SECTOR_SIZE * 32 ||
-     capacity_bytes % PHYSICAL_SECTOR_SIZE != 0 ||
-     (module_mask & ~MODULE_ALL) != 0) return false;
+     capacity_bytes % PHYSICAL_SECTOR_SIZE != 0) return false;
 
   const u32 physical_sectors = capacity_bytes / PHYSICAL_SECTOR_SIZE;
   const u32 logical_capacity = capacity_bytes / LOGICAL_SECTOR_SIZE;
@@ -130,15 +129,6 @@ bool compute(u32 capacity_bytes, Geometry& out, u8 module_mask) {
   out.settings_sector = physical_sectors - 1;
   out.stage_sector_count = stage_sectors;
   out.stage_first_sector = out.settings_sector - stage_sectors;
-  out.stage_data_sector_count = stage_sectors;
-  if(module_mask != 0 &&
-     physical_sectors >= STAGE_TARGET_MIN_PHYSICAL_SECTORS &&
-     stage_sectors >= MODULE_SECTORS + STAGE_MIN_SECTORS) {
-    out.stage_data_sector_count = (u16) (stage_sectors - MODULE_SECTORS);
-    out.module_first_sector = out.stage_first_sector +
-                              out.stage_data_sector_count;
-    out.module_mask = module_mask;
-  }
   if(out.stage_first_sector <= out.data_first_sector + 2) return false;
   out.data_sector_count = out.stage_first_sector - out.data_first_sector;
 

@@ -88,6 +88,16 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
 #else
       return false;
 #endif
+    case program_store::ProgramType::APP:
+#if MK61_ANY_LOADABLE_MODULE
+      {
+        u32 result = 0;
+        return loadable_module::run_app(entry.id, result) ==
+               loadable_module::RuntimeStatus::OK;
+      }
+#else
+      return false;
+#endif
   }
   return false;
 }
@@ -756,20 +766,6 @@ void init_external_flash(void) {
 
   dbgln(SPIROM, "C5 init: start");
   program_store::init();
-#if MK61_ANY_LOADABLE_MODULE
-  if(program_store::stage_layout_migration_pending()) {
-    dbgln(SPIROM, "C5 module layout migration: recover USB staging");
-    const bool session_ready = virtual_fat::reset_session();
-    const bool committed = session_ready && virtual_fat::flush_pending();
-    virtual_fat::end_session();
-    const bool activated = committed &&
-        program_store::finish_stage_layout_migration();
-    dbgln(SPIROM, activated
-        ? "C5 module layout migration: complete"
-        : "C5 module layout migration: deferred");
-  }
-  loadable_module::discard_transfer_staging();
-#endif
   #ifdef DEBUG_SPIFLASH
     if(program_store::ready()) {
       Serial.print("C5 init: ready, measured capacity: ");
