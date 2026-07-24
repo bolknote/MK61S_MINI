@@ -491,6 +491,13 @@ function Get-RemoteParent {
     return $normalized.Substring(0, $index)
 }
 
+function Get-RemoteLeaf {
+    param([string]$Path)
+    $normalized = Normalize-RemotePath '/' $Path
+    if ($normalized -eq '/') { return '' }
+    return $normalized.Substring($normalized.LastIndexOf('/') + 1)
+}
+
 function Normalize-RemotePath {
     param([string]$Base, [string]$InputPath)
     $combined = if ($InputPath.StartsWith('/')) { $InputPath } else { Join-RemotePath $Base $InputPath }
@@ -863,8 +870,11 @@ function Set-PanelEntries {
 }
 
 function Load-LocalPanel {
+    param([string]$PreferredName = '')
     $state = $script:Panels.L
-    $oldName = if ($state.Entries.Count -gt 0 -and $state.Selected -lt $state.Entries.Count) {
+    $oldName = if (-not [string]::IsNullOrEmpty($PreferredName)) {
+        $PreferredName
+    } elseif ($state.Entries.Count -gt 0 -and $state.Selected -lt $state.Entries.Count) {
         $state.Entries[$state.Selected].Name
     } else { '' }
     $entries = New-Object 'System.Collections.Generic.List[object]'
@@ -887,8 +897,11 @@ function Load-LocalPanel {
 }
 
 function Load-RemotePanel {
+    param([string]$PreferredName = '')
     $state = $script:Panels.R
-    $oldName = if ($state.Entries.Count -gt 0 -and $state.Selected -lt $state.Entries.Count) {
+    $oldName = if (-not [string]::IsNullOrEmpty($PreferredName)) {
+        $PreferredName
+    } elseif ($state.Entries.Count -gt 0 -and $state.Selected -lt $state.Entries.Count) {
         $state.Entries[$state.Selected].Name
     } else { '' }
     try { $items = @(Get-RemoteEntries $script:RemotePath) }
@@ -2373,23 +2386,29 @@ function Open-SelectedEntry {
     if ($null -eq $entry) { return }
     if ($entry.Kind -ne 'd') { Show-SelectedFile; return }
     if ($panel -eq 'L') {
-        $target = if ($entry.Name -eq '..') { Get-LocalParent $script:LocalPath }
-            else { Join-Path $script:LocalPath $entry.Name }
+        $preferredName = '..'
+        $target = if ($entry.Name -eq '..') {
+            $preferredName = (Get-Item -LiteralPath $script:LocalPath -Force).Name
+            Get-LocalParent $script:LocalPath
+        } else { Join-Path $script:LocalPath $entry.Name }
         if ([string]::IsNullOrEmpty($target) -or -not (Test-Path -LiteralPath $target -PathType Container)) {
             Show-Alert 'Open' "Нет каталога $target"
             return
         }
         $script:LocalPath = (Resolve-Path -LiteralPath $target).Path
         $script:Panels.L.Selected = 0
-        Load-LocalPanel
+        Load-LocalPanel $preferredName
     } else {
         $old = $script:RemotePath
-        $script:RemotePath = if ($entry.Name -eq '..') { Get-RemoteParent $script:RemotePath }
-            else { Normalize-RemotePath $script:RemotePath $entry.Name }
+        $preferredName = '..'
+        $script:RemotePath = if ($entry.Name -eq '..') {
+            $preferredName = Get-RemoteLeaf $script:RemotePath
+            Get-RemoteParent $script:RemotePath
+        } else { Normalize-RemotePath $script:RemotePath $entry.Name }
         $script:Panels.R.Selected = 0
-        if (-not (Load-RemotePanel)) {
+        if (-not (Load-RemotePanel $preferredName)) {
             $script:RemotePath = $old
-            [void](Load-RemotePanel)
+            [void](Load-RemotePanel $entry.Name)
             Show-Alert 'Open' $script:StatusText
             return
         }
@@ -2402,13 +2421,17 @@ function Open-ParentDirectory {
     if ($script:ActivePanel -eq 'L') {
         $parent = Get-LocalParent $script:LocalPath
         if (-not [string]::IsNullOrEmpty($parent)) {
+            $preferredName = (Get-Item -LiteralPath $script:LocalPath -Force).Name
             $script:LocalPath = $parent
-            Load-LocalPanel
+            $script:Panels.L.Selected = 0
+            Load-LocalPanel $preferredName
         }
     } else {
         if ($script:RemotePath -ne '/') {
+            $preferredName = Get-RemoteLeaf $script:RemotePath
             $script:RemotePath = Get-RemoteParent $script:RemotePath
-            [void](Load-RemotePanel)
+            $script:Panels.R.Selected = 0
+            [void](Load-RemotePanel $preferredName)
         }
     }
     Save-Config

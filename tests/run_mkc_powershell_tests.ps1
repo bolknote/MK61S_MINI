@@ -45,6 +45,8 @@ $session = Join-Path $tempRoot 'session'
 [void](New-Item -ItemType Directory -Path (Join-Path $local 'Good'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'app-limits'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'editor'))
+$navigation = Join-Path $tempRoot 'navigation'
+[void](New-Item -ItemType Directory -Path (Join-Path $navigation '.mkc') -Force)
 [IO.File]::WriteAllText((Join-Path $local 'demo.foc'), "2+2`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'blocked.bin'), 'raw', [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'Good/program.m61'), "001`n", [Text.UTF8Encoding]::new($false))
@@ -98,6 +100,38 @@ try {
 
     $script:MockRoot = $device
     $script:SessionDir = $session
+    $script:LocalPath = $local
+
+    # Enter on `..` and Backspace both restore the directory being left.
+    # A hidden directory matches the original Windows regression.
+    & {
+        function Save-Config {}
+        function Draw-Screen {}
+        $script:LocalPath = $navigation
+        $script:ActivePanel = 'L'
+        $script:Panels.L.Entries = @()
+        $script:Panels.L.Selected = 0
+        Load-LocalPanel
+        $navigationIndex = -1
+        for ($index = 0; $index -lt $script:Panels.L.Entries.Count; $index++) {
+            if ($script:Panels.L.Entries[$index].Name -eq '.mkc') {
+                $navigationIndex = $index
+                break
+            }
+        }
+        Assert-True ($navigationIndex -ge 0) 'PowerShell panel omitted a hidden directory'
+        $script:Panels.L.Selected = $navigationIndex
+        Open-SelectedEntry
+        Assert-True ($script:LocalPath -eq (Join-Path $navigation '.mkc')) 'PowerShell panel did not enter .mkc'
+        Assert-True ((Get-SelectedEntry 'L').Name -eq '..') 'PowerShell child panel did not start on ..'
+        Open-SelectedEntry
+        Assert-True ($script:LocalPath -eq $navigation) 'PowerShell panel did not return to the parent'
+        Assert-True ((Get-SelectedEntry 'L').Name -eq '.mkc') 'PowerShell panel did not restore .mkc after Enter on ..'
+        Open-SelectedEntry
+        Open-ParentDirectory
+        Assert-True ($script:LocalPath -eq $navigation) 'PowerShell Backspace did not return to the parent'
+        Assert-True ((Get-SelectedEntry 'L').Name -eq '.mkc') 'PowerShell panel did not restore .mkc after Backspace'
+    }
     $script:LocalPath = $local
 
     $editorLocal = Join-Path $tempRoot 'editor/local.txt'

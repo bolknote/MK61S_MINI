@@ -741,8 +741,11 @@ add_remote_entry() {
 }
 
 load_local_panel() {
+  local preferred_name=${1-}
   local old_name= entry name kind size reason pass i found=-1
-  if [ "${#L_NAMES[@]}" -gt 0 ] && [ "$L_SELECTED" -lt "${#L_NAMES[@]}" ]; then
+  if [ -n "$preferred_name" ]; then
+    old_name=$preferred_name
+  elif [ "${#L_NAMES[@]}" -gt 0 ] && [ "$L_SELECTED" -lt "${#L_NAMES[@]}" ]; then
     old_name=${L_NAMES[$L_SELECTED]}
   fi
   L_NAMES=(); L_KINDS=(); L_SIZES=(); L_REASONS=(); L_MARKS=()
@@ -782,8 +785,11 @@ load_local_panel() {
 }
 
 load_remote_panel() {
+  local preferred_name=${1-}
   local old_name= raw="$SESSION_DIR/remote-panel.list" kind size name reason i found=-1 pass
-  if [ "${#R_NAMES[@]}" -gt 0 ] && [ "$R_SELECTED" -lt "${#R_NAMES[@]}" ]; then
+  if [ -n "$preferred_name" ]; then
+    old_name=$preferred_name
+  elif [ "${#R_NAMES[@]}" -gt 0 ] && [ "$R_SELECTED" -lt "${#R_NAMES[@]}" ]; then
     old_name=${R_NAMES[$R_SELECTED]}
   fi
   remote_list_raw "$REMOTE_PATH" "$raw" || return 1
@@ -2680,24 +2686,39 @@ toggle_mark() {
 }
 
 open_selected() {
-  local panel=$ACTIVE_PANEL selected name kind target
+  local panel=$ACTIVE_PANEL selected name kind target old_path preferred_name
   selected=$(panel_selected "$panel"); name=$(panel_name "$panel" "$selected")
   kind=$(panel_kind "$panel" "$selected")
   if [ "$kind" != d ]; then show_file; return; fi
   if [ "$panel" = L ]; then
-    if [ "$name" = '..' ]; then target=${LOCAL_PATH%/*}; [ -n "$target" ] || target=/
-    else target="$LOCAL_PATH/$name"
+    preferred_name='..'
+    if [ "$name" = '..' ]; then
+      preferred_name=${LOCAL_PATH##*/}
+      target=${LOCAL_PATH%/*}; [ -n "$target" ] || target=/
+    else
+      target="$LOCAL_PATH/$name"
     fi
-    if [ -d "$target" ]; then LOCAL_PATH=$(cd "$target" && pwd -P); L_SELECTED=0; load_local_panel
+    if [ -d "$target" ]; then
+      LOCAL_PATH=$(cd "$target" && pwd -P)
+      L_SELECTED=0
+      load_local_panel "$preferred_name"
     else STATUS_TEXT="Нет каталога $target"
     fi
   else
-    if [ "$name" = '..' ]; then target=$(remote_parent "$REMOTE_PATH")
-    else target=$(remote_join "$REMOTE_PATH" "$name")
+    old_path=$REMOTE_PATH
+    preferred_name='..'
+    if [ "$name" = '..' ]; then
+      preferred_name=${REMOTE_PATH##*/}
+      target=$(remote_parent "$REMOTE_PATH")
+    else
+      target=$(remote_join "$REMOTE_PATH" "$name")
     fi
     REMOTE_PATH=$(remote_normalize / "$target")
     R_SELECTED=0
-    if ! load_remote_panel; then REMOTE_PATH=$(remote_parent "$REMOTE_PATH"); load_remote_panel || true; fi
+    if ! load_remote_panel "$preferred_name"; then
+      REMOTE_PATH=$old_path
+      load_remote_panel "$name" || true
+    fi
   fi
   STATUS_TEXT='Каталог открыт'
   save_config
@@ -2705,13 +2726,22 @@ open_selected() {
 }
 
 go_parent() {
-  local selected
+  local preferred_name
   if [ "$ACTIVE_PANEL" = L ]; then
-    [ "$LOCAL_PATH" = / ] || { LOCAL_PATH=${LOCAL_PATH%/*}; [ -n "$LOCAL_PATH" ] || LOCAL_PATH=/; load_local_panel; }
+    if [ "$LOCAL_PATH" != / ]; then
+      preferred_name=${LOCAL_PATH##*/}
+      LOCAL_PATH=${LOCAL_PATH%/*}; [ -n "$LOCAL_PATH" ] || LOCAL_PATH=/
+      L_SELECTED=0
+      load_local_panel "$preferred_name"
+    fi
   else
-    [ "$REMOTE_PATH" = / ] || { REMOTE_PATH=$(remote_parent "$REMOTE_PATH"); load_remote_panel || true; }
+    if [ "$REMOTE_PATH" != / ]; then
+      preferred_name=${REMOTE_PATH##*/}
+      REMOTE_PATH=$(remote_parent "$REMOTE_PATH")
+      R_SELECTED=0
+      load_remote_panel "$preferred_name" || true
+    fi
   fi
-  selected=$(panel_selected "$ACTIVE_PANEL")
   STATUS_TEXT='Родительский каталог'
   save_config
   draw_screen

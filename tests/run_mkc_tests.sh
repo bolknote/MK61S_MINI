@@ -9,7 +9,8 @@ cleanup_test() {
 trap cleanup_test EXIT
 
 mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
-  "$work/app-limits" "$work/device/System" "$work/preflight-bad" "$work/editor"
+  "$work/app-limits" "$work/device/System" "$work/preflight-bad" "$work/editor" \
+  "$work/navigation/.mkc"
 printf '2+2\n' > "$work/local/demo.foc"
 printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
@@ -57,6 +58,36 @@ MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/.mkc/mkc.sh
 SESSION_DIR="$work/session"
 MOCK_ROOT="$work/device"
 shopt -s nullglob dotglob
+
+# Возврат через `..` или Backspace должен оставлять курсор на каталоге,
+# из которого вышли. Скрытое имя повторяет исходный Windows-сценарий.
+(
+  save_config() { :; }
+  draw_screen() { :; }
+  navigation_path=$(cd "$work/navigation" && pwd -P)
+  LOCAL_PATH=$navigation_path
+  ACTIVE_PANEL=L
+  L_NAMES=(); L_KINDS=(); L_SIZES=(); L_REASONS=(); L_MARKS=()
+  L_SELECTED=0
+  load_local_panel
+  navigation_index=0
+  while [ "$navigation_index" -lt "${#L_NAMES[@]}" ]; do
+    [ "${L_NAMES[$navigation_index]}" = .mkc ] && break
+    navigation_index=$((navigation_index + 1))
+  done
+  test "$navigation_index" -lt "${#L_NAMES[@]}"
+  L_SELECTED=$navigation_index
+  open_selected
+  test "$LOCAL_PATH" = "$navigation_path/.mkc"
+  test "${L_NAMES[$L_SELECTED]}" = '..'
+  open_selected
+  test "$LOCAL_PATH" = "$navigation_path"
+  test "${L_NAMES[$L_SELECTED]}" = .mkc
+  open_selected
+  go_parent
+  test "$LOCAL_PATH" = "$navigation_path"
+  test "${L_NAMES[$L_SELECTED]}" = .mkc
+)
 
 # Редактор хранит логические строки, мягко переносит их только для экрана и
 # побайтно сохраняет BOM/EOL. Двоичный/управляющий ввод F4 не принимает.
