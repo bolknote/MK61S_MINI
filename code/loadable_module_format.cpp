@@ -87,19 +87,9 @@ class BufferedInput {
 
     bool next(u8& value) {
       if(failed_ || position_ >= size_) return false;
-      if(cursor_ == buffered_) {
-        const u32 remaining = size_ - position_;
-        buffered_ = (usize) (remaining < INPUT_BUFFER_SIZE
-            ? remaining : INPUT_BUFFER_SIZE);
-        cursor_ = 0;
-        if(!reader_.read(reader_.context, position_, buffer_, buffered_)) {
-          failed_ = true;
-          return false;
-        }
-      }
+      if(cursor_ == buffered_ && !refill()) return false;
       value = buffer_[cursor_++];
       position_++;
-      crc_ = crc32_extend(crc_, &value, 1);
       return true;
     }
 
@@ -108,6 +98,23 @@ class BufferedInput {
     bool failed(void) const { return failed_; }
 
   private:
+    // Отдельная функция сохраняет коротким часто вызываемый из ZX0 путь next:
+    // заполнение и CRC выполняются только раз на порцию, а не раз на байт.
+    bool __attribute__((noinline)) refill(void) {
+      const u32 remaining = size_ - position_;
+      buffered_ = (usize) (remaining < INPUT_BUFFER_SIZE
+          ? remaining : INPUT_BUFFER_SIZE);
+      cursor_ = 0;
+      if(!reader_.read(reader_.context, position_, buffer_, buffered_)) {
+        failed_ = true;
+        return false;
+      }
+      // Успешный decode_payload принимает только полностью прочитанный поток,
+      // поэтому CRC блока эквивалентна последовательным побайтным обновлениям.
+      crc_ = crc32_extend(crc_, buffer_, buffered_);
+      return true;
+    }
+
     Reader reader_;
     u32 size_;
     u32 position_;

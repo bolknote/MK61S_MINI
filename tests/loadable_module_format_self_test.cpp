@@ -145,6 +145,26 @@ static void test_uncompressed_payload(void) {
   assert(result.image_crc32 == crc32(source, sizeof(source)));
 }
 
+static void test_buffered_crc_across_blocks(void) {
+  u8 source[129];
+  for(usize index = 0; index < sizeof(source); index++) {
+    source[index] = (u8) (index * 37U + 11U);
+  }
+  // 129 байт пересекают две полные внутренние порции по 64 байта и последнюю
+  // неполную. Ограничение reader дополнительно фиксирует размер порции.
+  MemoryReader memory = {source, sizeof(source), 64};
+  const Reader reader = {&memory, read_memory};
+  u8 output[sizeof(source)] = {};
+  DecodeResult result = {};
+  assert(decode_payload(reader, Compression::NONE, sizeof(source), output,
+                        sizeof(output), result));
+  assert(memcmp(source, output, sizeof(source)) == 0);
+  assert(result.input_size == sizeof(source));
+  assert(result.output_size == sizeof(source));
+  assert(result.stored_crc32 == crc32(source, sizeof(source)));
+  assert(result.image_crc32 == crc32(source, sizeof(source)));
+}
+
 static void test_zx0_payload(void) {
   // Оптимальный ZX0 v2: литералы ABC, перекрывающаяся ссылка и перевод строки.
   const u8 packed[] = {
@@ -274,6 +294,7 @@ int main(void) {
   test_header_round_trip();
   test_header_rejects_incompatible_images();
   test_uncompressed_payload();
+  test_buffered_crc_across_blocks();
   test_zx0_payload();
   test_zx0_rejects_bad_streams();
   test_zx0_corruption_is_bounded();
