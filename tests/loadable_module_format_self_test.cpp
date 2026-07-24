@@ -172,6 +172,22 @@ static void test_zx0_payload(void) {
                         sizeof(repeated), result));
   for(usize index = 0; index < 100; index++) assert(repeated[index] == 'x');
   assert(repeated[100] == '\n');
+
+  // Новый offset с двухбайтовым совпадением: младший бит байта offset равен 1
+  // и сразу завершает gamma-код длины. Это проверяет ZX0 backtrack без флага.
+  const u8 short_match[] = {
+    0x38, 0x41, 0x42, 0xFD, 0xD5, 0x58, 0x0A, 0x55, 0x60
+  };
+  const u8 short_expected[] = {'A', 'B', 'A', 'B', 'X', '\n'};
+  MemoryReader short_memory = {
+    short_match, sizeof(short_match), 0
+  };
+  const Reader short_reader = {&short_memory, read_memory};
+  u8 short_output[sizeof(short_expected)] = {};
+  assert(decode_payload(short_reader, Compression::ZX0,
+                        sizeof(short_match), short_output,
+                        sizeof(short_output), result));
+  assert(memcmp(short_expected, short_output, sizeof(short_expected)) == 0);
 }
 
 static void test_zx0_rejects_bad_streams(void) {

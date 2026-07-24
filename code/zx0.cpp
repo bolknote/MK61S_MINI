@@ -28,69 +28,59 @@ class BitInput {
   public:
     BitInput(const Input& input, u32 size)
       : input_(input), remaining_(size), bit_value_(0), bit_mask_(0),
-        last_byte_(0), backtrack_(false), failed_(input.next == nullptr) {}
+        byte_value_(0) {}
 
-    bool byte(u8& value) {
-      if(failed_ || remaining_ == 0 ||
-         !input_.next(input_.context, value)) {
-        failed_ = true;
-        return false;
-      }
+    i32 byte(void) {
+      if(remaining_ == 0 ||
+         !input_.next(input_.context, byte_value_)) return -1;
       remaining_--;
-      last_byte_ = value;
-      return true;
+      return byte_value_;
     }
 
-    bool bit(u32& value) {
-      if(backtrack_) {
-        backtrack_ = false;
-        value = last_byte_ & 1U;
-        return true;
-      }
+    i32 bit(void) {
       bit_mask_ >>= 1;
       if(bit_mask_ == 0) {
         bit_mask_ = 0x80;
-        if(!byte(bit_value_)) return false;
+        const i32 value = byte();
+        if(value < 0) return -1;
+        bit_value_ = (u8) value;
       }
-      value = (bit_value_ & bit_mask_) != 0;
-      return true;
+      return (bit_value_ & bit_mask_) != 0;
     }
 
-    bool gamma(bool inverted, u32& value) {
+    // Корректный gamma-код всегда не меньше 1, поэтому 0 означает ошибку.
+    // first передаёт уже прочитанный первый бит; -2 требует прочитать его.
+    u32 gamma(bool inverted, i32 first = -2) {
       u32 result = 1;
-      u32 current = 0;
+      i32 current = first == -2 ? bit() : first;
       while(true) {
-        if(!bit(current)) return false;
-        if(current != 0) break;
-        if(result > 0x7FFFFFFFUL || !bit(current)) return false;
-        result = (result << 1) | (current ^ (inverted ? 1U : 0U));
+        if(current < 0) return 0;
+        if(current != 0) return result;
+        if(result > 0x7FFFFFFFUL) return 0;
+        current = bit();
+        if(current < 0) return 0;
+        result = (result << 1) |
+                 ((u32) current ^ (inverted ? 1U : 0U));
+        current = bit();
       }
-      value = result;
-      return true;
     }
 
-    void backtrack(void) { backtrack_ = true; }
-    bool exhausted(void) const { return !failed_ && remaining_ == 0; }
+    bool exhausted(void) const { return remaining_ == 0; }
 
   private:
     Input input_;
     u32 remaining_;
     u8 bit_value_;
     u8 bit_mask_;
-    u8 last_byte_;
-    bool backtrack_;
-    bool failed_;
+    u8 byte_value_;
 };
 
-static bool copy_match(u8* output, u32 capacity, u32& written,
+static bool copy_match(u8*& output, const u8* begin, const u8* end,
                        u32 offset, u32 length) {
-  if(offset == 0 || offset > written || length > capacity - written) {
-    return false;
-  }
-  while(length-- != 0) {
-    output[written] = output[written - offset];
-    written++;
-  }
+  if(offset > (u32) (output - begin) ||
+     length > (u32) (end - output)) return false;
+  const u8* source = output - offset;
+  while(length-- != 0) *output++ = *source++;
   return true;
 }
 
@@ -103,38 +93,55 @@ bool decode(const Input& source, u32 source_size,
      output == nullptr || capacity == 0) return false;
 
   BitInput input(source, source_size);
+  u8* current = output;
+  u8* const end = output + capacity;
   u32 last_offset = 1;
-  u32 length = 0;
-  u32 selector = 0;
-  u8 value = 0;
+  i32 selector = 0;
 
 copy_literals:
-  if(!input.gamma(false, length) || length > capacity - written) return false;
+  u32 length = input.gamma(false);
+  if(length == 0 || length > (u32) (end - current)) goto fail;
   while(length-- != 0) {
-    if(!input.byte(output[written])) return false;
-    written++;
+    const i32 value = input.byte();
+    if(value < 0) goto fail;
+    *current++ = (u8) value;
   }
-  if(!input.bit(selector)) return false;
+  selector = input.bit();
+  if(selector < 0) goto fail;
   if(selector != 0) goto copy_new_offset;
 
-  if(!input.gamma(false, length) ||
-     !copy_match(output, capacity, written, last_offset, length) ||
-     !input.bit(selector)) return false;
+  length = input.gamma(false);
+  if(length == 0 ||
+     !copy_match(current, output, end, last_offset, length)) goto fail;
+  selector = input.bit();
+  if(selector < 0) goto fail;
   if(selector == 0) goto copy_literals;
 
 copy_new_offset:
-  if(!input.gamma(true, last_offset)) return false;
+  last_offset = input.gamma(true);
+  if(last_offset == 0) goto fail;
   if(last_offset == 256U) {
-    return written == capacity && input.exhausted();
+    written = (u32) (current - output);
+    return current == end && input.exhausted();
   }
-  if(last_offset > 256U || !input.byte(value)) return false;
-  last_offset = last_offset * 128U - (value >> 1);
-  input.backtrack();
-  if(!input.gamma(false, length) || length == 0xFFFFFFFFUL ||
-     !copy_match(output, capacity, written, last_offset, length + 1U) ||
-     !input.bit(selector)) return false;
+  if(last_offset > 256U) goto fail;
+  {
+    const i32 value = input.byte();
+    if(value < 0) goto fail;
+    last_offset = last_offset * 128U - ((u32) value >> 1);
+    // Младший бит байта смещения — первый бит следующего gamma-кода ZX0.
+    length = input.gamma(false, value & 1);
+  }
+  if(length == 0 || length == 0xFFFFFFFFUL ||
+     !copy_match(current, output, end, last_offset, length + 1U)) goto fail;
+  selector = input.bit();
+  if(selector < 0) goto fail;
   if(selector != 0) goto copy_new_offset;
   goto copy_literals;
+
+fail:
+  written = (u32) (current - output);
+  return false;
 }
 
 } // namespace zx0
