@@ -9,7 +9,7 @@ cleanup_test() {
 trap cleanup_test EXIT
 
 mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
-  "$work/app-limits" "$work/device/System" "$work/preflight-bad"
+  "$work/app-limits" "$work/device/System" "$work/preflight-bad" "$work/editor"
 printf '2+2\n' > "$work/local/demo.foc"
 printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
@@ -23,6 +23,11 @@ dd if=/dev/zero of="$work/local/FOCAL.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/local/DEMO.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/app-limits/HUGE.APP" bs=1 count=20545 2>/dev/null
 dd if=/dev/zero of="$work/app-limits/SMALL.APP" bs=1 count=63 2>/dev/null
+printf 'alpha\r\nbeta\r\n' > "$work/editor/local.txt"
+printf '\357\273\277bom\r\n' > "$work/editor/bom.txt"
+printf 'bare\r' > "$work/editor/bare-cr.txt"
+printf 'remote\n' > "$work/device/edit.txt"
+printf '\033unsafe\n' > "$work/editor/control.txt"
 
 test -x "$root/tools/mkc.cmd"
 test -x "$root/tools/.mkc/mkc.sh"
@@ -52,6 +57,83 @@ MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/.mkc/mkc.sh
 SESSION_DIR="$work/session"
 MOCK_ROOT="$work/device"
 shopt -s nullglob dotglob
+
+# Редактор хранит логические строки, мягко переносит их только для экрана и
+# побайтно сохраняет BOM/EOL. Двоичный/управляющий ввод F4 не принимает.
+editor_load_file "$work/editor/local.txt" local.txt
+test "${#EDITOR_LINES[@]}" -eq 3
+test "${EDITOR_LINES[0]}" = alpha
+test "${EDITOR_LINES[1]}" = beta
+test "$EDITOR_EOL" = $'\r\n'
+EDITOR_CURSOR_LINE=0
+EDITOR_CURSOR_COLUMN=5
+editor_insert_text '!'
+editor_split_line
+editor_insert_text middle
+test "${#EDITOR_LINES[@]}" -eq 4
+test "${EDITOR_LINES[0]}" = 'alpha!'
+test "${EDITOR_LINES[1]}" = middle
+editor_build_visual 3
+test "${EDITOR_VISUAL_LINES[0]}:${EDITOR_VISUAL_STARTS[0]}" = '0:0'
+test "${EDITOR_VISUAL_LINES[1]}:${EDITOR_VISUAL_STARTS[1]}" = '0:3'
+test "${EDITOR_VISUAL_LINES[2]}:${EDITOR_VISUAL_STARTS[2]}" = '1:0'
+EDITOR_CURSOR_LINE=3
+EDITOR_CURSOR_COLUMN=0
+editor_build_visual 3
+editor_ensure_cursor_visible 2
+test "$EDITOR_TOP" -eq "$((EDITOR_CURSOR_VISUAL - 1))"
+EDITOR_PANEL=L
+EDITOR_SOURCE="$work/editor/local.txt"
+EDITOR_NAME=local.txt
+editor_save
+printf 'alpha!\r\nmiddle\r\nbeta\r\n' > "$work/editor/expected.txt"
+cmp "$work/editor/expected.txt" "$work/editor/local.txt"
+
+cp "$work/editor/bom.txt" "$work/editor/bom.expected"
+editor_load_file "$work/editor/bom.txt" bom.txt
+test "$EDITOR_BOM" -eq 1
+test "${EDITOR_LINES[0]}" = bom
+editor_write_file "$work/editor/bom.roundtrip"
+cmp "$work/editor/bom.expected" "$work/editor/bom.roundtrip"
+
+editor_load_file "$work/editor/bare-cr.txt" bare-cr.txt
+editor_write_file "$work/editor/bare-cr.roundtrip"
+cmp "$work/editor/bare-cr.txt" "$work/editor/bare-cr.roundtrip"
+
+editor_load_file "$work/editor/local.txt" local.txt
+EDITOR_CURSOR_LINE=1
+EDITOR_CURSOR_COLUMN=0
+editor_backspace
+test "${EDITOR_LINES[0]}" = 'alpha!middle'
+test "${#EDITOR_LINES[@]}" -eq 3
+EDITOR_CURSOR_COLUMN=${#EDITOR_LINES[0]}
+editor_delete
+test "${EDITOR_LINES[0]}" = 'alpha!middlebeta'
+test "${#EDITOR_LINES[@]}" -eq 2
+
+remote_get_file /edit.txt "$work/editor/remote.txt"
+editor_load_file "$work/editor/remote.txt" edit.txt
+EDITOR_CURSOR_COLUMN=6
+editor_insert_text changed
+EDITOR_PANEL=R
+EDITOR_NAME=edit.txt
+EDITOR_REMOTE_TARGET=/edit.txt
+editor_save
+test "$(cat "$work/device/edit.txt")" = remotechanged
+EDITOR_LINES=("$(awk 'BEGIN { for(i = 0; i < 1537; i++) printf "x" }')")
+if editor_save; then
+  echo 'mkc: editor uploaded more than 1536 text bytes' >&2
+  exit 1
+fi
+case "$EDITOR_ERROR" in *'максимум MK61s — 1536'*) ;;
+  *) echo "mkc: unclear editor size error: $EDITOR_ERROR" >&2; exit 1 ;;
+esac
+test "$(cat "$work/device/edit.txt")" = remotechanged
+
+if editor_load_file "$work/editor/control.txt" control.txt; then
+  echo 'mkc: editor accepted terminal control bytes' >&2
+  exit 1
+fi
 
 remote_put_file "$work/local/demo.foc" /demo.foc
 cmp "$work/local/demo.foc" "$work/device/demo.foc"
@@ -271,6 +353,48 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1; 
     catch wait result
     exit [lindex $result 3]
   '
+
+  # Редактор рисует отдельный полноразмерный экран. Старый macOS Expect
+  # нестабилен, если смешать несколько таких экранов в одном spawn, поэтому
+  # F4 проверяется в чистом PTY.
+  expect -c '
+    set timeout 30
+    match_max 20000
+    log_user 0
+    proc must_see {text} {
+      expect {
+        -exact $text { return }
+        timeout { puts stderr "mkc editor expect timeout: $text"; exit 1 }
+        eof { puts stderr "mkc editor exited before: $text"; exit 1 }
+      }
+    }
+    spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
+      "'"$root"'/tools/mkc.cmd" --mock $env(MKC_TEST_DEVICE) \
+      --local $env(MKC_TEST_LOCAL)
+    after 400
+    send "\033\[B"
+    must_see "program.m61"
+    send "\033OS"
+    must_see "Edit: program.m61"
+    must_see "Ln 1, Col 1"
+    send "\033\[F"
+    send "X"
+    must_see "Ln 1, Col 5"
+    send "\033\[21~"
+    must_see "Confirm"
+    send "\r"
+    must_see "Ln 1, Col 5"
+    send "\033OQ"
+    after 200
+    send "\033\[21~"
+    must_see "Good> "
+    send "\033\[21~"
+    expect { eof {} timeout { exit 1 } }
+    catch wait result
+    exit [lindex $result 3]
+  '
+  test "$(cat "$work/local/Good/program.m61")" = 001X
+  printf '001\n' > "$work/local/Good/program.m61"
 fi
 
 if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1 &&
@@ -316,6 +440,45 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1 &
     catch wait result
     exit [lindex $result 3]
   '
+
+  expect -c '
+    set timeout 40
+    match_max 20000
+    log_user 0
+    proc must_see {text} {
+      expect {
+        -exact $text { return }
+        timeout { puts stderr "mkc PowerShell editor timeout: $text"; exit 1 }
+        eof { puts stderr "mkc PowerShell editor exited before: $text"; exit 1 }
+      }
+    }
+    spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
+      pwsh -NoLogo -NoProfile -File "'"$root"'/tools/.mkc/mkc.ps1" \
+      --mock $env(MKC_TEST_DEVICE) --local $env(MKC_TEST_LOCAL)
+    after 500
+    send "\033\[B"
+    must_see "program.m61"
+    send "\033OS"
+    must_see "Edit: program.m61"
+    must_see "Ln 1, Col 1"
+    send "\033\[F"
+    send "Y"
+    must_see "Ln 1, Col 5"
+    send "\033\[21~"
+    must_see "Edit"
+    send "\r"
+    must_see "Ln 1, Col 5"
+    send "\033OQ"
+    after 200
+    send "\033\[21~"
+    must_see "Good> "
+    send "\033\[21~"
+    expect { eof {} timeout { puts stderr "mkc PowerShell editor F10 timeout"; exit 1 } }
+    catch wait result
+    exit [lindex $result 3]
+  '
+  test "$(cat "$work/local/Good/program.m61")" = 001Y
+  printf '001\n' > "$work/local/Good/program.m61"
 fi
 
 echo 'mkc_tests: ok'

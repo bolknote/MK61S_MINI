@@ -84,6 +84,28 @@ WBMP_ERROR=
 WBMP_MB_VALUE=0
 WBMP_PIXEL_DARK=0
 
+EDITOR_LINES=()
+EDITOR_VISUAL_LINES=()
+EDITOR_VISUAL_STARTS=()
+EDITOR_CURSOR_LINE=0
+EDITOR_CURSOR_COLUMN=0
+EDITOR_CURSOR_VISUAL=0
+EDITOR_CURSOR_SCREEN_COLUMN=0
+EDITOR_PREFERRED_COLUMN=-1
+EDITOR_TOP=0
+EDITOR_VISIBLE_ROWS=1
+EDITOR_TEXT_WIDTH=1
+EDITOR_EOL=$'\n'
+EDITOR_BOM=0
+EDITOR_MODIFIED=0
+EDITOR_SAVED=0
+EDITOR_PANEL=L
+EDITOR_NAME=
+EDITOR_SOURCE=
+EDITOR_REMOTE_TARGET=
+EDITOR_ERROR=
+EDITOR_NOTICE=
+
 TERM_COLS=80
 TERM_LINES=24
 UI_X=1
@@ -156,7 +178,8 @@ Usage:
 Keys:
   Tab       switch panel        Enter     open directory
   Space     mark item           F1        help
-  F3        view                F5        copy
+  F3        view                F4        edit text
+  F5        copy
   F6        rename/move         F7        mkdir
   F8        delete              F9        device info
   F10       quit                Ctrl-R    refresh
@@ -1202,7 +1225,7 @@ draw_status() {
 }
 
 draw_function_bar() {
-  local labels=('Help' '' 'View' '' 'Copy' 'RenMov' 'Mkdir' 'Delete' 'Info' 'Quit')
+  local labels=('Help' '' 'View' 'Edit' 'Copy' 'RenMov' 'Mkdir' 'Delete' 'Info' 'Quit')
   local i=0 width base extra label number number_width
   base=$((UI_WIDTH / 10)); extra=$((UI_WIDTH % 10))
   cursor_to "$FUNCTION_ROW" "$UI_X"
@@ -1535,7 +1558,7 @@ dialog_wrap() {
 }
 
 ui_confirm() {
-  local prompt=$1 key choice=cancel row index width=66
+  local prompt=$1 redraw=${2:-main} key choice=cancel row index width=66
   dialog_wrap "$prompt" 54
   draw_dialog_frame 'Confirm' "$width" "$((7 + ${#DIALOG_LINES[@]}))"
   row=$((DIALOG_Y + 2)); index=0
@@ -1555,7 +1578,7 @@ ui_confirm() {
       enter) if [ "$choice" = ok ]; then UI_CONFIRMED=1; else UI_CONFIRMED=0; fi; break ;;
     esac
   done
-  draw_screen
+  [ "$redraw" != main ] || draw_screen
 }
 
 ui_input() {
@@ -1563,7 +1586,7 @@ ui_input() {
 }
 
 ui_alert() {
-  local title=$1 text=$2 key row index height
+  local title=$1 text=$2 redraw=${3:-main} key row index height
   dialog_wrap "$text" 54
   height=$((7 + ${#DIALOG_LINES[@]}))
   draw_dialog_frame "$title" 66 "$height"
@@ -1579,7 +1602,7 @@ ui_alert() {
     key=$(read_key) || break
     case "$key" in enter|space|esc|f10) break ;; esac
   done
-  draw_screen
+  [ "$redraw" != main ] || draw_screen
 }
 
 show_lines() {
@@ -1654,6 +1677,7 @@ Enter        войти в каталог
 Backspace    перейти в родительский каталог
 Space/Ins    отметить несколько объектов
 F3           текст и WBMP (iTerm2 image, иначе Брайль)
+F4           встроенный редактор UTF-8 текста
 F5           копировать между компьютером и калькулятором
 F6           переименовать или переместить в активной панели
 F7           создать каталог
@@ -2172,6 +2196,475 @@ show_file() {
   show_lines "$name" "$view"
 }
 
+editor_file_has_nul_or_control() {
+  LC_ALL=C od -An -v -tu1 "$1" 2>/dev/null | awk '
+    {
+      for(i = 1; i <= NF; i++) {
+        if($i == 0 || ($i < 32 && $i != 9 &&
+            $i != 10 && $i != 13) || $i == 127) {
+          unsafe = 1
+        }
+      }
+    }
+    END { exit unsafe ? 0 : 1 }
+  '
+}
+
+editor_text_file() {
+  local source=$1 name=$2 lower
+  EDITOR_ERROR=
+  lower=$(lowercase "$name")
+  case "$lower" in
+    *.fmk|*.app|*.wbmp|*.wbm)
+      EDITOR_ERROR='Двоичные файлы доступны только для просмотра'
+      return 1
+      ;;
+  esac
+  [ -r "$source" ] || {
+    EDITOR_ERROR="Не удалось прочитать $name"
+    return 1
+  }
+  if editor_file_has_nul_or_control "$source"; then
+    EDITOR_ERROR='F4 редактирует только обычный UTF-8 текст'
+    return 1
+  fi
+  if command -v iconv >/dev/null 2>&1 &&
+      ! iconv -f UTF-8 -t UTF-8 "$source" >/dev/null 2>&1; then
+    EDITOR_ERROR='F4 редактирует только корректный UTF-8 текст'
+    return 1
+  fi
+  return 0
+}
+
+editor_load_file() {
+  local source=$1 name=$2 line last_byte header first=1 terminated
+  editor_text_file "$source" "$name" || return 1
+  EDITOR_LINES=()
+  EDITOR_EOL=$'\n'
+  EDITOR_BOM=0
+  header=$(LC_ALL=C od -An -v -tu1 -N3 "$source" 2>/dev/null |
+    awk '{$1=$1; print}')
+  [ "$header" != '239 187 191' ] || EDITOR_BOM=1
+  last_byte=$(tail -c 1 "$source" 2>/dev/null |
+    LC_ALL=C od -An -v -tu1 | tr -d '[:space:]')
+  while true; do
+    line=
+    if IFS= read -r line; then terminated=1; else terminated=0; fi
+    [ "$terminated" -eq 1 ] || [ -n "$line" ] || break
+    if [ "$first" -eq 1 ]; then
+      first=0
+      [ "$EDITOR_BOM" -eq 0 ] || line=${line#$'\357\273\277'}
+    fi
+    case "$terminated:$line" in
+      1:*$'\r')
+        EDITOR_EOL=$'\r\n'
+        line=${line%$'\r'}
+        ;;
+    esac
+    EDITOR_LINES[${#EDITOR_LINES[@]}]=$line
+    [ "$terminated" -eq 1 ] || break
+  done < "$source"
+  if [ "$last_byte" = 10 ]; then
+    EDITOR_LINES[${#EDITOR_LINES[@]}]=
+  fi
+  [ "${#EDITOR_LINES[@]}" -gt 0 ] || EDITOR_LINES[0]=
+  EDITOR_CURSOR_LINE=0
+  EDITOR_CURSOR_COLUMN=0
+  EDITOR_CURSOR_VISUAL=0
+  EDITOR_CURSOR_SCREEN_COLUMN=0
+  EDITOR_PREFERRED_COLUMN=-1
+  EDITOR_TOP=0
+  EDITOR_MODIFIED=0
+  EDITOR_SAVED=0
+  EDITOR_ERROR=
+  EDITOR_NOTICE=
+}
+
+editor_write_file() {
+  local output=$1 index=0 count=${#EDITOR_LINES[@]}
+  : > "$output" 2>/dev/null || {
+    EDITOR_ERROR="Не удалось записать $output"
+    return 1
+  }
+  if [ "$EDITOR_BOM" -eq 1 ]; then
+    printf '\357\273\277' >> "$output" || return 1
+  fi
+  while [ "$index" -lt "$count" ]; do
+    printf '%s' "${EDITOR_LINES[$index]}" >> "$output" || return 1
+    if [ "$index" -lt "$((count - 1))" ]; then
+      printf '%s' "$EDITOR_EOL" >> "$output" || return 1
+    fi
+    index=$((index + 1))
+  done
+}
+
+editor_save() {
+  local temp size directory
+  EDITOR_ERROR=
+  if [ "$EDITOR_PANEL" = L ]; then
+    directory=${EDITOR_SOURCE%/*}
+    [ -n "$directory" ] || directory=.
+    temp=$(mktemp "$directory/.mkc-edit.XXXXXX") || {
+      EDITOR_ERROR='Не удалось создать временный файл рядом с оригиналом'
+      return 1
+    }
+    if ! cp -p "$EDITOR_SOURCE" "$temp" 2>/dev/null ||
+       ! editor_write_file "$temp" ||
+       ! mv -f "$temp" "$EDITOR_SOURCE" 2>/dev/null; then
+      rm -f "$temp"
+      [ -n "$EDITOR_ERROR" ] ||
+        EDITOR_ERROR="Не удалось сохранить $EDITOR_NAME"
+      return 1
+    fi
+  else
+    temp="$SESSION_DIR/editor-upload.tmp"
+    editor_write_file "$temp" || return 1
+    size=$(wc -c < "$temp" 2>/dev/null | tr -d '[:space:]')
+    case "$size" in
+      ''|*[!0-9]*)
+        EDITOR_ERROR='Не удалось определить размер результата'
+        return 1
+        ;;
+    esac
+    if [ "$size" -gt 1536 ]; then
+      EDITOR_ERROR="Файл занимает $size байт; максимум MK61s — 1536"
+      return 1
+    fi
+    STATUS_TEXT="Сохраняю ${EDITOR_NAME}…"
+    if ! remote_put_file "$temp" "$EDITOR_REMOTE_TARGET"; then
+      EDITOR_ERROR=$STATUS_TEXT
+      return 1
+    fi
+  fi
+  EDITOR_MODIFIED=0
+  EDITOR_SAVED=1
+  EDITOR_NOTICE='сохранено'
+  STATUS_TEXT="Сохранено: $EDITOR_NAME"
+  return 0
+}
+
+editor_add_visual() {
+  local line=$1 start=$2 index=${#EDITOR_VISUAL_LINES[@]}
+  EDITOR_VISUAL_LINES[$index]=$line
+  EDITOR_VISUAL_STARTS[$index]=$start
+}
+
+editor_build_visual() {
+  local width=$1 line_index=0 line length start visual_index visual_line visual_start
+  [ "$width" -ge 1 ] || width=1
+  EDITOR_TEXT_WIDTH=$width
+  EDITOR_VISUAL_LINES=()
+  EDITOR_VISUAL_STARTS=()
+  while [ "$line_index" -lt "${#EDITOR_LINES[@]}" ]; do
+    line=${EDITOR_LINES[$line_index]}
+    length=${#line}
+    start=0
+    if [ "$length" -eq 0 ]; then
+      editor_add_visual "$line_index" 0
+    else
+      while [ "$start" -lt "$length" ]; do
+        editor_add_visual "$line_index" "$start"
+        start=$((start + width))
+      done
+    fi
+    line_index=$((line_index + 1))
+  done
+  EDITOR_CURSOR_VISUAL=0
+  visual_index=0
+  while [ "$visual_index" -lt "${#EDITOR_VISUAL_LINES[@]}" ]; do
+    visual_line=${EDITOR_VISUAL_LINES[$visual_index]}
+    visual_start=${EDITOR_VISUAL_STARTS[$visual_index]}
+    if [ "$visual_line" -eq "$EDITOR_CURSOR_LINE" ] &&
+       [ "$visual_start" -le "$EDITOR_CURSOR_COLUMN" ] &&
+       [ "$EDITOR_CURSOR_COLUMN" -le "$((visual_start + width))" ]; then
+      EDITOR_CURSOR_VISUAL=$visual_index
+      EDITOR_CURSOR_SCREEN_COLUMN=$((EDITOR_CURSOR_COLUMN - visual_start))
+    fi
+    visual_index=$((visual_index + 1))
+  done
+}
+
+editor_ensure_cursor_visible() {
+  local rows=$1
+  [ "$rows" -ge 1 ] || rows=1
+  EDITOR_VISIBLE_ROWS=$rows
+  if [ "$EDITOR_CURSOR_VISUAL" -lt "$EDITOR_TOP" ]; then
+    EDITOR_TOP=$EDITOR_CURSOR_VISUAL
+  elif [ "$EDITOR_CURSOR_VISUAL" -ge "$((EDITOR_TOP + rows))" ]; then
+    EDITOR_TOP=$((EDITOR_CURSOR_VISUAL - rows + 1))
+  fi
+  [ "$EDITOR_TOP" -ge 0 ] || EDITOR_TOP=0
+}
+
+editor_reset_preferred_column() {
+  EDITOR_PREFERRED_COLUMN=-1
+}
+
+editor_insert_text() {
+  local text=$1 line=${EDITOR_LINES[$EDITOR_CURSOR_LINE]}
+  EDITOR_LINES[$EDITOR_CURSOR_LINE]=${line:0:$EDITOR_CURSOR_COLUMN}$text${line:$EDITOR_CURSOR_COLUMN}
+  EDITOR_CURSOR_COLUMN=$((EDITOR_CURSOR_COLUMN + ${#text}))
+  EDITOR_MODIFIED=1
+  EDITOR_NOTICE=
+  editor_reset_preferred_column
+}
+
+editor_split_line() {
+  local line=${EDITOR_LINES[$EDITOR_CURSOR_LINE]} count=${#EDITOR_LINES[@]}
+  local before=${line:0:$EDITOR_CURSOR_COLUMN} after=${line:$EDITOR_CURSOR_COLUMN} index=$count
+  while [ "$index" -gt "$((EDITOR_CURSOR_LINE + 1))" ]; do
+    EDITOR_LINES[$index]=${EDITOR_LINES[$((index - 1))]}
+    index=$((index - 1))
+  done
+  EDITOR_LINES[$EDITOR_CURSOR_LINE]=$before
+  EDITOR_CURSOR_LINE=$((EDITOR_CURSOR_LINE + 1))
+  EDITOR_LINES[$EDITOR_CURSOR_LINE]=$after
+  EDITOR_CURSOR_COLUMN=0
+  EDITOR_MODIFIED=1
+  EDITOR_NOTICE=
+  editor_reset_preferred_column
+}
+
+editor_remove_line() {
+  local removed=$1 count=${#EDITOR_LINES[@]} index
+  index=$removed
+  while [ "$index" -lt "$((count - 1))" ]; do
+    EDITOR_LINES[$index]=${EDITOR_LINES[$((index + 1))]}
+    index=$((index + 1))
+  done
+  unset "EDITOR_LINES[$((count - 1))]"
+}
+
+editor_backspace() {
+  local line previous previous_length
+  line=${EDITOR_LINES[$EDITOR_CURSOR_LINE]}
+  if [ "$EDITOR_CURSOR_COLUMN" -gt 0 ]; then
+    EDITOR_LINES[$EDITOR_CURSOR_LINE]=${line:0:$((EDITOR_CURSOR_COLUMN - 1))}${line:$EDITOR_CURSOR_COLUMN}
+    EDITOR_CURSOR_COLUMN=$((EDITOR_CURSOR_COLUMN - 1))
+  elif [ "$EDITOR_CURSOR_LINE" -gt 0 ]; then
+    previous=${EDITOR_LINES[$((EDITOR_CURSOR_LINE - 1))]}
+    previous_length=${#previous}
+    EDITOR_LINES[$((EDITOR_CURSOR_LINE - 1))]=$previous$line
+    editor_remove_line "$EDITOR_CURSOR_LINE"
+    EDITOR_CURSOR_LINE=$((EDITOR_CURSOR_LINE - 1))
+    EDITOR_CURSOR_COLUMN=$previous_length
+  else
+    return
+  fi
+  EDITOR_MODIFIED=1
+  EDITOR_NOTICE=
+  editor_reset_preferred_column
+}
+
+editor_delete() {
+  local line=${EDITOR_LINES[$EDITOR_CURSOR_LINE]} next
+  if [ "$EDITOR_CURSOR_COLUMN" -lt "${#line}" ]; then
+    EDITOR_LINES[$EDITOR_CURSOR_LINE]=${line:0:$EDITOR_CURSOR_COLUMN}${line:$((EDITOR_CURSOR_COLUMN + 1))}
+  elif [ "$EDITOR_CURSOR_LINE" -lt "$(( ${#EDITOR_LINES[@]} - 1 ))" ]; then
+    next=${EDITOR_LINES[$((EDITOR_CURSOR_LINE + 1))]}
+    EDITOR_LINES[$EDITOR_CURSOR_LINE]=$line$next
+    editor_remove_line "$((EDITOR_CURSOR_LINE + 1))"
+  else
+    return
+  fi
+  EDITOR_MODIFIED=1
+  EDITOR_NOTICE=
+  editor_reset_preferred_column
+}
+
+editor_move_left() {
+  if [ "$EDITOR_CURSOR_COLUMN" -gt 0 ]; then
+    EDITOR_CURSOR_COLUMN=$((EDITOR_CURSOR_COLUMN - 1))
+  elif [ "$EDITOR_CURSOR_LINE" -gt 0 ]; then
+    EDITOR_CURSOR_LINE=$((EDITOR_CURSOR_LINE - 1))
+    EDITOR_CURSOR_COLUMN=${#EDITOR_LINES[$EDITOR_CURSOR_LINE]}
+  fi
+  editor_reset_preferred_column
+}
+
+editor_move_right() {
+  local length=${#EDITOR_LINES[$EDITOR_CURSOR_LINE]}
+  if [ "$EDITOR_CURSOR_COLUMN" -lt "$length" ]; then
+    EDITOR_CURSOR_COLUMN=$((EDITOR_CURSOR_COLUMN + 1))
+  elif [ "$EDITOR_CURSOR_LINE" -lt "$(( ${#EDITOR_LINES[@]} - 1 ))" ]; then
+    EDITOR_CURSOR_LINE=$((EDITOR_CURSOR_LINE + 1))
+    EDITOR_CURSOR_COLUMN=0
+  fi
+  editor_reset_preferred_column
+}
+
+editor_move_vertical() {
+  local delta=$1 target line start length end column
+  editor_build_visual "$EDITOR_TEXT_WIDTH"
+  if [ "$EDITOR_PREFERRED_COLUMN" -lt 0 ]; then
+    EDITOR_PREFERRED_COLUMN=$EDITOR_CURSOR_SCREEN_COLUMN
+  fi
+  target=$((EDITOR_CURSOR_VISUAL + delta))
+  [ "$target" -ge 0 ] || target=0
+  [ "$target" -lt "${#EDITOR_VISUAL_LINES[@]}" ] ||
+    target=$((${#EDITOR_VISUAL_LINES[@]} - 1))
+  line=${EDITOR_VISUAL_LINES[$target]}
+  start=${EDITOR_VISUAL_STARTS[$target]}
+  length=${#EDITOR_LINES[$line]}
+  end=$((start + EDITOR_TEXT_WIDTH))
+  [ "$end" -le "$length" ] || end=$length
+  column=$((start + EDITOR_PREFERRED_COLUMN))
+  [ "$column" -le "$end" ] || column=$end
+  EDITOR_CURSOR_LINE=$line
+  EDITOR_CURSOR_COLUMN=$column
+}
+
+draw_editor_function_bar() {
+  local labels=('' 'Save' '' '' '' '' '' '' '' 'Quit')
+  local index=0 width base extra label number number_width
+  base=$((UI_WIDTH / 10)); extra=$((UI_WIDTH % 10))
+  cursor_to "$FUNCTION_ROW" "$UI_X"
+  while [ "$index" -lt 10 ]; do
+    width=$base
+    [ "$index" -lt "$extra" ] && width=$((width + 1))
+    number=$((index + 1)); label=${labels[$index]}
+    number_width=${#number}
+    printf '%s%s%s%s' "$C_FUNCTION_NUMBER" "$number" "$C_FUNCTION_LABEL" \
+      "$(fit_text "$label" "$((width - number_width))")" >&9
+    index=$((index + 1))
+  done
+}
+
+draw_editor() {
+  local inner bottom content_start content_end status_row row visual_index
+  local line_index start segment label rest left right status modified= notice=
+  term_size
+  inner=$((UI_WIDTH - 2))
+  bottom=$((UI_Y + UI_HEIGHT - 2))
+  content_start=$((UI_Y + 1))
+  status_row=$((bottom - 1))
+  content_end=$((status_row - 1))
+  EDITOR_VISIBLE_ROWS=$((content_end - content_start + 1))
+  editor_build_visual "$((inner - 1))"
+  editor_ensure_cursor_visible "$EDITOR_VISIBLE_ROWS"
+  printf '\033[?25l\033[?2026h' >&9
+  label=" Edit: $EDITOR_NAME "
+  label=$(clip_text "$label" "$((UI_WIDTH - 8))")
+  rest=$((inner - ${#label})); [ "$rest" -ge 0 ] || rest=0
+  left=$((rest / 2)); right=$((rest - left))
+  cursor_to "$UI_Y" "$UI_X"
+  printf '%s╔%s%s%s%s%s╗' "$C_BORDER" "$(repeat_char '═' "$left")" \
+    "$C_MENU" "$label" "$C_BORDER" "$(repeat_char '═' "$right")" >&9
+  row=$content_start
+  while [ "$row" -le "$content_end" ]; do
+    visual_index=$((EDITOR_TOP + row - content_start))
+    segment=
+    if [ "$visual_index" -lt "${#EDITOR_VISUAL_LINES[@]}" ]; then
+      line_index=${EDITOR_VISUAL_LINES[$visual_index]}
+      start=${EDITOR_VISUAL_STARTS[$visual_index]}
+      segment=${EDITOR_LINES[$line_index]:$start:$EDITOR_TEXT_WIDTH}
+    fi
+    cursor_to "$row" "$UI_X"
+    printf '%s║%s%s%s║' "$C_BORDER" "$C_FILE" \
+      "$(fit_text "$segment" "$inner")" "$C_BORDER" >&9
+    row=$((row + 1))
+  done
+  [ "$EDITOR_MODIFIED" -eq 0 ] || modified=' · изменён'
+  [ -z "$EDITOR_NOTICE" ] || notice=" · $EDITOR_NOTICE"
+  status="Ln $((EDITOR_CURSOR_LINE + 1)), Col $((EDITOR_CURSOR_COLUMN + 1)) · UTF-8 · Wrap$modified$notice"
+  cursor_to "$status_row" "$UI_X"
+  printf '%s║%s%s%s║' "$C_BORDER" "$C_STATUS" \
+    "$(center_text "$status" "$inner")" "$C_BORDER" >&9
+  cursor_to "$bottom" "$UI_X"
+  printf '%s╚%s╝' "$C_BORDER" "$(repeat_char '═' "$inner")" >&9
+  draw_editor_function_bar
+  cursor_to "$((content_start + EDITOR_CURSOR_VISUAL - EDITOR_TOP))" \
+    "$((UI_X + 1 + EDITOR_CURSOR_SCREEN_COLUMN))"
+  printf '\033[?25h\033[?2026l' >&9
+}
+
+run_editor() {
+  local key leave=0
+  drain_pending_input
+  while [ "$leave" -eq 0 ]; do
+    draw_editor
+    key=$(read_key) || key=f10
+    case "$key" in
+      up) editor_move_vertical -1 ;;
+      down) editor_move_vertical 1 ;;
+      pgup) editor_move_vertical "$((-EDITOR_VISIBLE_ROWS))" ;;
+      pgdn) editor_move_vertical "$EDITOR_VISIBLE_ROWS" ;;
+      left) editor_move_left ;;
+      right) editor_move_right ;;
+      home)
+        EDITOR_CURSOR_COLUMN=0
+        editor_reset_preferred_column
+        ;;
+      end)
+        EDITOR_CURSOR_COLUMN=${#EDITOR_LINES[$EDITOR_CURSOR_LINE]}
+        editor_reset_preferred_column
+        ;;
+      enter) editor_split_line ;;
+      backspace) editor_backspace ;;
+      delete) editor_delete ;;
+      tab) editor_insert_text '    ' ;;
+      space) editor_insert_text ' ' ;;
+      f1)
+        ui_alert 'Edit' 'F2 — сохранить · стрелки/Home/End/PgUp/PgDn — курсор и прокрутка · Enter — новая строка · Esc/F10 — выход' editor
+        ;;
+      f2)
+        if ! editor_save; then ui_alert 'Edit' "$EDITOR_ERROR" editor; fi
+        ;;
+      esc|f10)
+        if [ "$EDITOR_MODIFIED" -eq 1 ]; then
+          ui_confirm 'Выйти из редактора без сохранения?' editor
+          [ "$UI_CONFIRMED" -eq 1 ] && leave=1
+        else
+          leave=1
+        fi
+        ;;
+      f3|f4|f5|f6|f7|f8|f9|insert|refresh|console) ;;
+      *)
+        case "$key" in [[:cntrl:]]) ;; *) editor_insert_text "$key" ;; esac
+        ;;
+    esac
+  done
+  printf '\033[?25l' >&9
+}
+
+edit_selected() {
+  local panel=$ACTIVE_PANEL selected name kind source
+  selected=$(panel_selected "$panel")
+  name=$(panel_name "$panel" "$selected")
+  kind=$(panel_kind "$panel" "$selected")
+  if [ "$name" = '..' ] || [ "$kind" = d ]; then
+    ui_alert 'Edit' 'F4 редактирует файлы, а не каталоги'
+    return
+  fi
+  if [ "$kind" != f ]; then
+    ui_alert 'Edit' 'Этот объект нельзя безопасно редактировать'
+    return
+  fi
+  EDITOR_PANEL=$panel
+  EDITOR_NAME=$name
+  EDITOR_REMOTE_TARGET=
+  if [ "$panel" = L ]; then
+    source="$LOCAL_PATH/$name"
+  else
+    source="$SESSION_DIR/editor-source.tmp"
+    EDITOR_REMOTE_TARGET=$(remote_join "$REMOTE_PATH" "$name")
+    STATUS_TEXT="Читаю ${name}…"
+    draw_status
+    if ! remote_get_file "$EDITOR_REMOTE_TARGET" "$source"; then
+      ui_alert 'Edit' "$STATUS_TEXT"
+      return
+    fi
+  fi
+  EDITOR_SOURCE=$source
+  if ! editor_load_file "$source" "$name"; then
+    ui_alert 'Edit' "$EDITOR_ERROR"
+    return
+  fi
+  run_editor
+  if [ "$EDITOR_SAVED" -eq 1 ]; then refresh_panels; fi
+  draw_screen
+}
+
 toggle_mark() {
   local panel=$ACTIVE_PANEL selected old page mark name
   selected=$(panel_selected "$panel"); name=$(panel_name "$panel" "$selected")
@@ -2511,8 +3004,9 @@ main_loop() {
       $'\016') command_history_move next ;;
       $'\025') command_set_text ''; command_reset_history_navigation ;;
       f1) show_help ;;
-      f2|f4) ;;
+      f2) ;;
       f3) show_file ;;
+      f4) edit_selected ;;
       f5) copy_selected ;;
       f6) rename_selected ;;
       f7) make_directory ;;

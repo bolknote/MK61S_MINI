@@ -67,6 +67,27 @@ $script:CommandHistoryDraft = ''
 $script:CopyPlan = @()
 $script:CopyTotal = [long]0
 $script:PlanError = ''
+$script:EditorLines = [Collections.Generic.List[string]]::new()
+$script:EditorVisualLines = [Collections.Generic.List[int]]::new()
+$script:EditorVisualStarts = [Collections.Generic.List[int]]::new()
+$script:EditorCursorLine = 0
+$script:EditorCursorColumn = 0
+$script:EditorCursorVisual = 0
+$script:EditorCursorScreenColumn = 0
+$script:EditorPreferredColumn = -1
+$script:EditorTop = 0
+$script:EditorVisibleRows = 1
+$script:EditorTextWidth = 1
+$script:EditorEol = "`n"
+$script:EditorBom = $false
+$script:EditorModified = $false
+$script:EditorSaved = $false
+$script:EditorPanel = 'L'
+$script:EditorName = ''
+$script:EditorSource = ''
+$script:EditorRemoteTarget = ''
+$script:EditorError = ''
+$script:EditorNotice = ''
 
 function Show-Usage {
     @'
@@ -80,7 +101,8 @@ Usage:
 Keys:
   Tab       switch panel        Enter     open directory
   Space     mark item           F1        help
-  F3        view                F5        copy
+  F3        view                F4        edit text
+  F5        copy
   F6        rename/move         F7        mkdir
   F8        delete              F9        device info
   F10       quit                Ctrl-R    refresh
@@ -1232,7 +1254,7 @@ function Draw-CommandLine {
 }
 
 function Draw-FunctionBar {
-    $labels = @('Help','','View','','Copy','RenMov','Mkdir','Delete','Info','Quit')
+    $labels = @('Help','','View','Edit','Copy','RenMov','Mkdir','Delete','Info','Quit')
     $base = [int][Math]::Floor($script:Layout.Width / 10.0)
     $extra = $script:Layout.Width % 10
     $x = $script:Layout.X
@@ -1446,7 +1468,7 @@ function Show-InputDialog {
 }
 
 function Show-ConfirmDialog {
-    param([string]$Text, [string]$Title = 'Confirm')
+    param([string]$Text, [string]$Title = 'Confirm', [switch]$NoRedraw)
     $lines = @(Split-WrappedUiText $Text 54)
     Draw-DialogFrame $Title 66 (7 + $lines.Count)
     $d = $script:Dialog
@@ -1458,16 +1480,24 @@ function Show-ConfirmDialog {
         Draw-DialogButtons 'Yes' 'No' $focus
         $key = Read-UiKey
         if ($key -in @('left','right','tab')) { $focus = if ($focus -eq 'ok') { 'cancel' } else { 'ok' }; continue }
-        if ($key -eq 'char' -and $script:KeyChar -match '[yYдД]') { Draw-Screen; return $true }
-        if ($key -eq 'enter') { $answer = $focus -eq 'ok'; Draw-Screen; return $answer }
+        if ($key -eq 'char' -and $script:KeyChar -match '[yYдД]') {
+            if (-not $NoRedraw) { Draw-Screen }
+            return $true
+        }
+        if ($key -eq 'enter') {
+            $answer = $focus -eq 'ok'
+            if (-not $NoRedraw) { Draw-Screen }
+            return $answer
+        }
         if ($key -in @('esc','f10') -or ($key -eq 'char' -and $script:KeyChar -match '[nNтТ]')) {
-            Draw-Screen; return $false
+            if (-not $NoRedraw) { Draw-Screen }
+            return $false
         }
     }
 }
 
 function Show-Alert {
-    param([string]$Title, [string]$Text)
+    param([string]$Title, [string]$Text, [switch]$NoRedraw)
     $lines = @(Split-WrappedUiText $Text 54)
     Draw-DialogFrame $Title 66 (7 + $lines.Count)
     $d = $script:Dialog
@@ -1476,7 +1506,7 @@ function Show-Alert {
     }
     Draw-DialogButtons 'OK' '' 'ok'
     while ((Read-UiKey) -notin @('enter','space','esc','f10')) {}
-    Draw-Screen
+    if (-not $NoRedraw) { Draw-Screen }
 }
 
 function Show-Lines {
@@ -1532,6 +1562,7 @@ Enter        войти в каталог
 Backspace    перейти в родительский каталог
 Space/Ins    отметить несколько объектов
 F3           текст, HEX и WBMP в шрифте Брайля
+F4           встроенный редактор UTF-8 текста
 F5           копировать между компьютером и калькулятором
 F6           переименовать или переместить в активной панели
 F7           создать каталог
@@ -1878,6 +1909,418 @@ function Test-TextBytes {
         [void]$strict.GetString($Bytes)
         return $true
     } catch { return $false }
+}
+
+function Test-EditableTextBytes {
+    param([byte[]]$Bytes, [string]$Name)
+    $lower = $Name.ToLowerInvariant()
+    if ($lower.EndsWith('.fmk') -or $lower.EndsWith('.app') -or
+        $lower.EndsWith('.wbmp') -or $lower.EndsWith('.wbm')) {
+        $script:EditorError = 'Двоичные файлы доступны только для просмотра'
+        return $false
+    }
+    foreach ($byte in $Bytes) {
+        if ($byte -eq 0 -or ($byte -lt 32 -and $byte -notin @(9,10,13)) -or
+            $byte -eq 127) {
+            $script:EditorError = 'F4 редактирует только обычный UTF-8 текст'
+            return $false
+        }
+    }
+    if (-not (Test-TextBytes $Bytes)) {
+        $script:EditorError = 'F4 редактирует только корректный UTF-8 текст'
+        return $false
+    }
+    return $true
+}
+
+function Initialize-EditorFromFile {
+    param([string]$Source, [string]$Name)
+    $script:EditorError = ''
+    try { [byte[]]$bytes = [IO.File]::ReadAllBytes($Source) }
+    catch { $script:EditorError = $_.Exception.Message; return $false }
+    if (-not (Test-EditableTextBytes $bytes $Name)) { return $false }
+    $script:EditorBom = $bytes.Length -ge 3 -and
+        $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
+    $offset = if ($script:EditorBom) { 3 } else { 0 }
+    try {
+        $strict = New-Object Text.UTF8Encoding($false, $true)
+        $text = $strict.GetString($bytes, $offset, $bytes.Length - $offset)
+    } catch {
+        $script:EditorError = 'F4 редактирует только корректный UTF-8 текст'
+        return $false
+    }
+    $script:EditorEol = if ($text.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $normalized = $text.Replace("`r`n", "`n")
+    $script:EditorLines = [Collections.Generic.List[string]]::new()
+    foreach ($line in $normalized.Split([char]"`n")) { $script:EditorLines.Add($line) }
+    if ($script:EditorLines.Count -eq 0) { $script:EditorLines.Add('') }
+    $script:EditorCursorLine = 0
+    $script:EditorCursorColumn = 0
+    $script:EditorCursorVisual = 0
+    $script:EditorCursorScreenColumn = 0
+    $script:EditorPreferredColumn = -1
+    $script:EditorTop = 0
+    $script:EditorModified = $false
+    $script:EditorSaved = $false
+    $script:EditorError = ''
+    $script:EditorNotice = ''
+    return $true
+}
+
+function Get-EditorBytes {
+    $text = [string]::Join($script:EditorEol, $script:EditorLines.ToArray())
+    [byte[]]$payload = $script:Utf8NoBom.GetBytes($text)
+    if (-not $script:EditorBom) { return ,$payload }
+    [byte[]]$result = [byte[]]::new($payload.Length + 3)
+    $result[0] = 0xEF; $result[1] = 0xBB; $result[2] = 0xBF
+    if ($payload.Length -gt 0) { [Buffer]::BlockCopy($payload, 0, $result, 3, $payload.Length) }
+    return ,$result
+}
+
+function Write-EditorFile {
+    param([string]$Path)
+    try {
+        [byte[]]$bytes = Get-EditorBytes
+        [IO.File]::WriteAllBytes($Path, $bytes)
+        return $true
+    } catch {
+        $script:EditorError = $_.Exception.Message
+        return $false
+    }
+}
+
+function Save-Editor {
+    $script:EditorError = ''
+    if ($script:EditorPanel -eq 'L') {
+        $directory = Split-Path -Parent $script:EditorSource
+        $temporary = Join-Path $directory ('.mkc-edit.' + [guid]::NewGuid().ToString('N'))
+        try {
+            if (-not (Write-EditorFile $temporary)) { return $false }
+            try {
+                [IO.File]::Replace($temporary, $script:EditorSource, $null)
+            } catch {
+                [IO.File]::Copy($temporary, $script:EditorSource, $true)
+                Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue
+            }
+        } catch {
+            $script:EditorError = $_.Exception.Message
+            Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue
+            return $false
+        }
+    } else {
+        $temporary = Join-Path $script:SessionDir 'editor-upload.tmp'
+        if (-not (Write-EditorFile $temporary)) { return $false }
+        try { $size = (Get-Item -LiteralPath $temporary).Length }
+        catch { $script:EditorError = $_.Exception.Message; return $false }
+        if ($size -gt 1536) {
+            $script:EditorError = "Файл занимает $size байт; максимум MK61s — 1536"
+            return $false
+        }
+        $script:StatusText = "Сохраняю $($script:EditorName)…"
+        if (-not (Send-RemoteFile $temporary $script:EditorRemoteTarget)) {
+            $script:EditorError = $script:StatusText
+            return $false
+        }
+    }
+    $script:EditorModified = $false
+    $script:EditorSaved = $true
+    $script:EditorNotice = 'сохранено'
+    $script:StatusText = "Сохранено: $($script:EditorName)"
+    return $true
+}
+
+function Add-EditorVisualRow {
+    param([int]$Line, [int]$Start)
+    $script:EditorVisualLines.Add($Line)
+    $script:EditorVisualStarts.Add($Start)
+}
+
+function Build-EditorVisualMap {
+    param([int]$Width)
+    $width = [Math]::Max(1, $Width)
+    $script:EditorTextWidth = $width
+    $script:EditorVisualLines = [Collections.Generic.List[int]]::new()
+    $script:EditorVisualStarts = [Collections.Generic.List[int]]::new()
+    for ($lineIndex = 0; $lineIndex -lt $script:EditorLines.Count; $lineIndex++) {
+        $length = $script:EditorLines[$lineIndex].Length
+        if ($length -eq 0) {
+            Add-EditorVisualRow $lineIndex 0
+            continue
+        }
+        for ($start = 0; $start -lt $length; $start += $width) {
+            Add-EditorVisualRow $lineIndex $start
+        }
+    }
+    $script:EditorCursorVisual = 0
+    $script:EditorCursorScreenColumn = 0
+    for ($index = 0; $index -lt $script:EditorVisualLines.Count; $index++) {
+        $line = $script:EditorVisualLines[$index]
+        $start = $script:EditorVisualStarts[$index]
+        if ($line -eq $script:EditorCursorLine -and
+            $start -le $script:EditorCursorColumn -and
+            $script:EditorCursorColumn -le $start + $width) {
+            $script:EditorCursorVisual = $index
+            $script:EditorCursorScreenColumn = $script:EditorCursorColumn - $start
+        }
+    }
+}
+
+function Show-EditorCursor {
+    param([int]$Rows)
+    $rows = [Math]::Max(1, $Rows)
+    $script:EditorVisibleRows = $rows
+    if ($script:EditorCursorVisual -lt $script:EditorTop) {
+        $script:EditorTop = $script:EditorCursorVisual
+    } elseif ($script:EditorCursorVisual -ge $script:EditorTop + $rows) {
+        $script:EditorTop = $script:EditorCursorVisual - $rows + 1
+    }
+    $script:EditorTop = [Math]::Max(0, $script:EditorTop)
+}
+
+function Reset-EditorPreferredColumn {
+    $script:EditorPreferredColumn = -1
+}
+
+function Insert-EditorText {
+    param([string]$Text)
+    $line = $script:EditorLines[$script:EditorCursorLine]
+    $script:EditorLines[$script:EditorCursorLine] =
+        $line.Insert($script:EditorCursorColumn, $Text)
+    $script:EditorCursorColumn += $Text.Length
+    $script:EditorModified = $true
+    $script:EditorNotice = ''
+    Reset-EditorPreferredColumn
+}
+
+function Split-EditorLine {
+    $line = $script:EditorLines[$script:EditorCursorLine]
+    $before = $line.Substring(0, $script:EditorCursorColumn)
+    $after = $line.Substring($script:EditorCursorColumn)
+    $script:EditorLines[$script:EditorCursorLine] = $before
+    $script:EditorCursorLine++
+    $script:EditorLines.Insert($script:EditorCursorLine, $after)
+    $script:EditorCursorColumn = 0
+    $script:EditorModified = $true
+    $script:EditorNotice = ''
+    Reset-EditorPreferredColumn
+}
+
+function Remove-EditorCharacterBack {
+    $line = $script:EditorLines[$script:EditorCursorLine]
+    if ($script:EditorCursorColumn -gt 0) {
+        $script:EditorLines[$script:EditorCursorLine] =
+            $line.Remove($script:EditorCursorColumn - 1, 1)
+        $script:EditorCursorColumn--
+    } elseif ($script:EditorCursorLine -gt 0) {
+        $previous = $script:EditorLines[$script:EditorCursorLine - 1]
+        $script:EditorCursorColumn = $previous.Length
+        $script:EditorLines[$script:EditorCursorLine - 1] = $previous + $line
+        $script:EditorLines.RemoveAt($script:EditorCursorLine)
+        $script:EditorCursorLine--
+    } else { return }
+    $script:EditorModified = $true
+    $script:EditorNotice = ''
+    Reset-EditorPreferredColumn
+}
+
+function Remove-EditorCharacter {
+    $line = $script:EditorLines[$script:EditorCursorLine]
+    if ($script:EditorCursorColumn -lt $line.Length) {
+        $script:EditorLines[$script:EditorCursorLine] =
+            $line.Remove($script:EditorCursorColumn, 1)
+    } elseif ($script:EditorCursorLine -lt $script:EditorLines.Count - 1) {
+        $script:EditorLines[$script:EditorCursorLine] =
+            $line + $script:EditorLines[$script:EditorCursorLine + 1]
+        $script:EditorLines.RemoveAt($script:EditorCursorLine + 1)
+    } else { return }
+    $script:EditorModified = $true
+    $script:EditorNotice = ''
+    Reset-EditorPreferredColumn
+}
+
+function Move-EditorLeft {
+    if ($script:EditorCursorColumn -gt 0) {
+        $script:EditorCursorColumn--
+    } elseif ($script:EditorCursorLine -gt 0) {
+        $script:EditorCursorLine--
+        $script:EditorCursorColumn = $script:EditorLines[$script:EditorCursorLine].Length
+    }
+    Reset-EditorPreferredColumn
+}
+
+function Move-EditorRight {
+    $length = $script:EditorLines[$script:EditorCursorLine].Length
+    if ($script:EditorCursorColumn -lt $length) {
+        $script:EditorCursorColumn++
+    } elseif ($script:EditorCursorLine -lt $script:EditorLines.Count - 1) {
+        $script:EditorCursorLine++
+        $script:EditorCursorColumn = 0
+    }
+    Reset-EditorPreferredColumn
+}
+
+function Move-EditorVertical {
+    param([int]$Delta)
+    Build-EditorVisualMap $script:EditorTextWidth
+    if ($script:EditorPreferredColumn -lt 0) {
+        $script:EditorPreferredColumn = $script:EditorCursorScreenColumn
+    }
+    $target = [Math]::Max(0, [Math]::Min(
+        $script:EditorCursorVisual + $Delta, $script:EditorVisualLines.Count - 1))
+    $line = $script:EditorVisualLines[$target]
+    $start = $script:EditorVisualStarts[$target]
+    $end = [Math]::Min($start + $script:EditorTextWidth,
+        $script:EditorLines[$line].Length)
+    $script:EditorCursorLine = $line
+    $script:EditorCursorColumn = [Math]::Min(
+        $start + $script:EditorPreferredColumn, $end)
+}
+
+function Draw-EditorFunctionBar {
+    $labels = @('','Save','','','','','','','','Quit')
+    $base = [int][Math]::Floor($script:Layout.Width / 10.0)
+    $extra = $script:Layout.Width % 10
+    $x = $script:Layout.X
+    for ($index = 0; $index -lt 10; $index++) {
+        $width = $base + $(if ($index -lt $extra) { 1 } else { 0 })
+        $number = [string]($index + 1)
+        Write-Ui $x $script:Layout.FunctionRow $number 'FunctionNumber'
+        [Console]::Write($script:Styles.FunctionLabel +
+            (Get-FittedText $labels[$index] ($width - $number.Length)))
+        $x += $width
+    }
+}
+
+function Draw-Editor {
+    Update-Layout
+    $inner = $script:Layout.Width - 2
+    $bottom = $script:Layout.Y + $script:Layout.Height - 2
+    $contentStart = $script:Layout.Y + 1
+    $statusRow = $bottom - 1
+    $contentEnd = $statusRow - 1
+    $available = $contentEnd - $contentStart + 1
+    Build-EditorVisualMap ($inner - 1)
+    Show-EditorCursor $available
+    Set-UiCursorVisible $false
+    [Console]::Write("$($script:Escape)[?2026h")
+    $label = ' ' + (Get-ClippedText "Edit: $($script:EditorName)" ($script:Layout.Width - 8)) + ' '
+    $rest = [Math]::Max(0, $inner - $label.Length)
+    $left = [int][Math]::Floor($rest / 2.0)
+    Write-Ui $script:Layout.X $script:Layout.Y ('╔' + ('═' * $left)) 'Border'
+    [Console]::Write($script:Styles.Menu + $label + $script:Styles.Border +
+        ('═' * ($rest - $left)) + '╗')
+    for ($row = 0; $row -lt $available; $row++) {
+        $visual = $script:EditorTop + $row
+        $segment = ''
+        if ($visual -lt $script:EditorVisualLines.Count) {
+            $lineIndex = $script:EditorVisualLines[$visual]
+            $start = $script:EditorVisualStarts[$visual]
+            $line = $script:EditorLines[$lineIndex]
+            $length = [Math]::Min($script:EditorTextWidth,
+                [Math]::Max(0, $line.Length - $start))
+            if ($length -gt 0) { $segment = $line.Substring($start, $length) }
+        }
+        Write-Ui $script:Layout.X ($contentStart + $row) '║' 'Border'
+        [Console]::Write($script:Styles.File + (Get-FittedText $segment $inner) +
+            $script:Styles.Border + '║')
+    }
+    $changed = if ($script:EditorModified) { ' · изменён' } else { '' }
+    $notice = if ([string]::IsNullOrEmpty($script:EditorNotice)) {
+        ''
+    } else { " · $($script:EditorNotice)" }
+    $status = "Ln $($script:EditorCursorLine + 1), Col $($script:EditorCursorColumn + 1) · UTF-8 · Wrap$changed$notice"
+    Write-Ui $script:Layout.X $statusRow '║' 'Border'
+    [Console]::Write($script:Styles.Status + (Get-CenteredText $status $inner) +
+        $script:Styles.Border + '║')
+    Write-Ui $script:Layout.X $bottom ('╚' + ('═' * $inner) + '╝') 'Border'
+    Draw-EditorFunctionBar
+    Set-UiPosition ($script:Layout.X + 1 + $script:EditorCursorScreenColumn) `
+        ($contentStart + $script:EditorCursorVisual - $script:EditorTop)
+    Set-UiCursorVisible $true
+    [Console]::Write("$($script:Escape)[?2026l")
+}
+
+function Invoke-EditorLoop {
+    $leave = $false
+    while (-not $leave) {
+        Draw-Editor
+        $key = Read-UiKey
+        switch ($key) {
+            'up' { Move-EditorVertical -1 }
+            'down' { Move-EditorVertical 1 }
+            'pgup' { Move-EditorVertical (-$script:EditorVisibleRows) }
+            'pgdn' { Move-EditorVertical $script:EditorVisibleRows }
+            'left' { Move-EditorLeft }
+            'right' { Move-EditorRight }
+            'home' {
+                $script:EditorCursorColumn = 0
+                Reset-EditorPreferredColumn
+            }
+            'end' {
+                $script:EditorCursorColumn =
+                    $script:EditorLines[$script:EditorCursorLine].Length
+                Reset-EditorPreferredColumn
+            }
+            'enter' { Split-EditorLine }
+            'backspace' { Remove-EditorCharacterBack }
+            'delete' { Remove-EditorCharacter }
+            'tab' { Insert-EditorText '    ' }
+            'space' { Insert-EditorText ' ' }
+            'f1' {
+                Show-Alert 'Edit' 'F2 — сохранить · стрелки/Home/End/PgUp/PgDn — курсор и прокрутка · Enter — новая строка · Esc/F10 — выход' -NoRedraw
+            }
+            'f2' {
+                if (-not (Save-Editor)) { Show-Alert 'Edit' $script:EditorError -NoRedraw }
+            }
+            { $_ -in @('esc','f10') } {
+                if ($script:EditorModified) {
+                    if (Show-ConfirmDialog 'Выйти из редактора без сохранения?' 'Edit' -NoRedraw) {
+                        $leave = $true
+                    }
+                } else { $leave = $true }
+            }
+            { $_ -in @('f3','f4','f5','f6','f7','f8','f9','insert',
+                'refresh','console','ignore') } {}
+            'char' { Insert-EditorText ([string]$script:KeyChar) }
+        }
+    }
+    Set-UiCursorVisible $false
+}
+
+function Edit-SelectedFile {
+    $panel = $script:ActivePanel
+    $entry = Get-SelectedEntry $panel
+    if ($null -eq $entry -or $entry.Name -eq '..' -or $entry.Kind -eq 'd') {
+        Show-Alert 'Edit' 'F4 редактирует файлы, а не каталоги'
+        return
+    }
+    if ($entry.Kind -ne 'f') {
+        Show-Alert 'Edit' 'Этот объект нельзя безопасно редактировать'
+        return
+    }
+    $script:EditorPanel = $panel
+    $script:EditorName = $entry.Name
+    $script:EditorRemoteTarget = ''
+    if ($panel -eq 'L') {
+        $source = Join-Path $script:LocalPath $entry.Name
+    } else {
+        $source = Join-Path $script:SessionDir 'editor-source.tmp'
+        $script:EditorRemoteTarget = Join-RemotePath $script:RemotePath $entry.Name
+        $script:StatusText = "Читаю $($entry.Name)…"
+        Draw-CommandLine
+        if (-not (Receive-RemoteFile $script:EditorRemoteTarget $source)) {
+            Show-Alert 'Edit' $script:StatusText
+            return
+        }
+    }
+    $script:EditorSource = $source
+    if (-not (Initialize-EditorFromFile $source $entry.Name)) {
+        Show-Alert 'Edit' $script:EditorError
+        return
+    }
+    Invoke-EditorLoop
+    if ($script:EditorSaved) { Refresh-Panels }
+    Draw-Screen
 }
 
 function Show-SelectedFile {
@@ -2235,6 +2678,7 @@ function Invoke-MainLoop {
             'console' { Show-LastTerminalOutput }
             'f1' { Show-Help }
             'f3' { Show-SelectedFile }
+            'f4' { Edit-SelectedFile }
             'f5' { Copy-SelectedEntries }
             'f6' { Rename-SelectedEntry }
             'f7' { New-PanelDirectory }

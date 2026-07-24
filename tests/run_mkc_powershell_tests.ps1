@@ -44,6 +44,7 @@ $session = Join-Path $tempRoot 'session'
 [void](New-Item -ItemType Directory -Path $local, $device, $session)
 [void](New-Item -ItemType Directory -Path (Join-Path $local 'Good'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'app-limits'))
+[void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'editor'))
 [IO.File]::WriteAllText((Join-Path $local 'demo.foc'), "2+2`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'blocked.bin'), 'raw', [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'Good/program.m61'), "001`n", [Text.UTF8Encoding]::new($false))
@@ -52,6 +53,16 @@ $session = Join-Path $tempRoot 'session'
 [IO.File]::WriteAllBytes((Join-Path $local 'DEMO.APP'), [byte[]]::new(64))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'app-limits/HUGE.APP'), [byte[]]::new(20545))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'app-limits/SMALL.APP'), [byte[]]::new(63))
+[IO.File]::WriteAllText((Join-Path $tempRoot 'editor/local.txt'), "alpha`r`nbeta`r`n",
+    [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/bom.txt'),
+    [byte[]](0xEF,0xBB,0xBF,0x62,0x6F,0x6D,0x0D,0x0A))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/bare-cr.txt'),
+    [byte[]](0x62,0x61,0x72,0x65,0x0D))
+[IO.File]::WriteAllText((Join-Path $device 'edit.txt'), "remote`n",
+    [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/control.txt'),
+    [byte[]](27,117,110,115,97,102,101,10))
 
 try {
     $supported = Invoke-MkcTool @('--classify', (Join-Path $local 'demo.foc'))
@@ -88,6 +99,74 @@ try {
     $script:MockRoot = $device
     $script:SessionDir = $session
     $script:LocalPath = $local
+
+    $editorLocal = Join-Path $tempRoot 'editor/local.txt'
+    Assert-True (Initialize-EditorFromFile $editorLocal 'local.txt') 'PowerShell editor rejected CRLF text'
+    Assert-True ($script:EditorLines.Count -eq 3) 'PowerShell editor lost the trailing logical line'
+    Assert-True ($script:EditorLines[0] -eq 'alpha' -and $script:EditorLines[1] -eq 'beta') 'PowerShell editor split lines incorrectly'
+    Assert-True ($script:EditorEol -eq "`r`n") 'PowerShell editor did not preserve CRLF'
+    $script:EditorCursorLine = 0
+    $script:EditorCursorColumn = 5
+    Insert-EditorText '!'
+    Split-EditorLine
+    Insert-EditorText 'middle'
+    Assert-True ($script:EditorLines.Count -eq 4) 'PowerShell editor did not split a line'
+    Assert-True ($script:EditorLines[0] -eq 'alpha!' -and $script:EditorLines[1] -eq 'middle') 'PowerShell editor mutations differ'
+    Build-EditorVisualMap 3
+    Assert-True ($script:EditorVisualLines[0] -eq 0 -and $script:EditorVisualStarts[0] -eq 0) 'PowerShell wrap first row differs'
+    Assert-True ($script:EditorVisualLines[1] -eq 0 -and $script:EditorVisualStarts[1] -eq 3) 'PowerShell wrap continuation differs'
+    Assert-True ($script:EditorVisualLines[2] -eq 1 -and $script:EditorVisualStarts[2] -eq 0) 'PowerShell wrap added a phantom row'
+    $script:EditorCursorLine = 3
+    $script:EditorCursorColumn = 0
+    Build-EditorVisualMap 3
+    Show-EditorCursor 2
+    Assert-True ($script:EditorTop -eq $script:EditorCursorVisual - 1) 'PowerShell editor did not scroll to the cursor'
+    $script:EditorPanel = 'L'
+    $script:EditorSource = $editorLocal
+    $script:EditorName = 'local.txt'
+    Assert-True (Save-Editor) 'PowerShell local editor save failed'
+    Assert-True ([IO.File]::ReadAllText($editorLocal) -eq "alpha!`r`nmiddle`r`nbeta`r`n") 'PowerShell editor changed CRLF bytes'
+
+    $editorBom = Join-Path $tempRoot 'editor/bom.txt'
+    [byte[]]$expectedBom = [IO.File]::ReadAllBytes($editorBom)
+    Assert-True (Initialize-EditorFromFile $editorBom 'bom.txt') 'PowerShell editor rejected UTF-8 BOM'
+    Assert-True ($script:EditorBom -and $script:EditorLines[0] -eq 'bom') 'PowerShell editor exposed BOM as text'
+    $bomRoundtrip = Join-Path $tempRoot 'editor/bom.roundtrip'
+    Assert-True (Write-EditorFile $bomRoundtrip) 'PowerShell editor could not write BOM text'
+    Assert-True (([IO.File]::ReadAllBytes($bomRoundtrip) -join ',') -eq ($expectedBom -join ',')) 'PowerShell editor changed BOM bytes'
+
+    $bareCr = Join-Path $tempRoot 'editor/bare-cr.txt'
+    Assert-True (Initialize-EditorFromFile $bareCr 'bare-cr.txt') 'PowerShell editor rejected a bare CR'
+    $bareCrRoundtrip = Join-Path $tempRoot 'editor/bare-cr.roundtrip'
+    Assert-True (Write-EditorFile $bareCrRoundtrip) 'PowerShell editor could not write a bare CR'
+    Assert-True (([IO.File]::ReadAllBytes($bareCrRoundtrip) -join ',') -eq '98,97,114,101,13') 'PowerShell editor lost a bare CR'
+
+    Assert-True (Initialize-EditorFromFile $editorLocal 'local.txt') 'PowerShell editor could not reload its saved text'
+    $script:EditorCursorLine = 1
+    $script:EditorCursorColumn = 0
+    Remove-EditorCharacterBack
+    Assert-True ($script:EditorLines[0] -eq 'alpha!middle' -and $script:EditorLines.Count -eq 3) 'PowerShell Backspace did not join lines'
+    $script:EditorCursorColumn = $script:EditorLines[0].Length
+    Remove-EditorCharacter
+    Assert-True ($script:EditorLines[0] -eq 'alpha!middlebeta' -and $script:EditorLines.Count -eq 2) 'PowerShell Delete did not join lines'
+
+    $editorRemote = Join-Path $tempRoot 'editor/remote.txt'
+    Assert-True (Receive-RemoteFile '/edit.txt' $editorRemote) 'PowerShell editor mock download failed'
+    Assert-True (Initialize-EditorFromFile $editorRemote 'edit.txt') 'PowerShell editor rejected remote text'
+    $script:EditorCursorColumn = 6
+    Insert-EditorText 'changed'
+    $script:EditorPanel = 'R'
+    $script:EditorName = 'edit.txt'
+    $script:EditorRemoteTarget = '/edit.txt'
+    Assert-True (Save-Editor) 'PowerShell remote editor save failed'
+    Assert-True ([IO.File]::ReadAllText((Join-Path $device 'edit.txt')) -eq "remotechanged`n") 'PowerShell remote editor changed bytes'
+    $script:EditorLines = [Collections.Generic.List[string]]::new()
+    $script:EditorLines.Add(('x' * 1537))
+    Assert-True (-not (Save-Editor)) 'PowerShell editor uploaded more than 1536 text bytes'
+    Assert-True ($script:EditorError -match 'максимум MK61s — 1536') 'PowerShell editor size error is unclear'
+    Assert-True ([IO.File]::ReadAllText((Join-Path $device 'edit.txt')) -eq "remotechanged`n") 'Rejected PowerShell editor save changed the device file'
+    Assert-True (-not (Initialize-EditorFromFile (Join-Path $tempRoot 'editor/control.txt') 'control.txt')) 'PowerShell editor accepted terminal control bytes'
+
     Assert-True (Send-RemoteFile (Join-Path $local 'demo.foc') '/demo.foc') 'mock upload failed'
     Assert-True (Receive-RemoteFile '/demo.foc' (Join-Path $tempRoot 'download.foc')) 'mock download failed'
     Assert-True ([IO.File]::ReadAllText((Join-Path $tempRoot 'download.foc')) -eq "2+2`n") 'mock transfer changed bytes'
