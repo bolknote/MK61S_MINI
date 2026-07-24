@@ -1,0 +1,115 @@
+menu.mk61_platform=Платформа
+menu.mk61_display=Экран
+menu.mk61_focal=FOCAL
+menu.mk61_basic=TinyBASIC
+menu.mk61_wbmp=WBMP viewer
+menu.mk61_usb_screen=USB-экран
+menu.mk61_font_settings=Настройки шрифта
+menu.mk61_explorer=Быстрый Explorer
+menu.mk61_math=Математика
+
+mk61_f401_app.name=MK61s F401 + APP
+
+# Reuse the installed STM32duino 2.12.0 core and BlackPill F401CC variant.
+mk61_f401_app.build.core=STMicroelectronics:arduino
+mk61_f401_app.build.variant=STMicroelectronics:STM32F4xx/F401CC(F-U-Y)_F401C(B-D-E)(U-Y)
+mk61_f401_app.build.variant_h=variant_BLACKPILL_F401Cx.h
+mk61_f401_app.build.board=BLACKPILL_F401CC
+mk61_f401_app.build.product_line=STM32F401xC
+mk61_f401_app.build.mcu=cortex-m4
+mk61_f401_app.build.fpu=-mfpu=fpv4-sp-d16
+mk61_f401_app.build.float-abi=-mfloat-abi=hard
+mk61_f401_app.build.series=STM32F4xx
+mk61_f401_app.build.flash_offset=0x0
+mk61_f401_app.build.peripheral_pins=-DCUSTOM_PERIPHERAL_PINS
+mk61_f401_app.build.enable_usb={build.usb_flags} -DUSBD_USE_CDC
+mk61_f401_app.build.xSerial=-DHAL_UART_MODULE_ENABLED
+mk61_f401_app.build.enable_virtio=
+mk61_f401_app.build.bootloader_flags=
+mk61_f401_app.build.flags.optimize=-Os
+mk61_f401_app.build.flags.debug=-DNDEBUG
+mk61_f401_app.build.flags.ldspecs=--specs=nano.specs
+mk61_f401_app.build.preferred_out_format=bin
+
+mk61_f401_app.upload.maximum_size=262144
+mk61_f401_app.upload.maximum_data_size=65536
+mk61_f401_app.upload.vid=0x0483
+mk61_f401_app.upload.pid=0xdf11
+mk61_f401_app.upload.address=0x8000000
+mk61_f401_app.upload.start=0x8000000
+mk61_f401_app.upload.protocol=dfu
+mk61_f401_app.upload.options=-v {upload.vid} -p {upload.pid} -a {upload.address} -s {upload.start}
+mk61_f401_app.upload.tool=stm32CubeProg
+
+# Values from the independent menus are joined here so Arduino IDE builds the
+# same resident profile as tools/mk61-firmware.cmd.
+mk61_f401_app.build.st_extra_flags=-D{build.product_line} {build.enable_usb} {build.xSerial} {build.bootloader_flags} -DMK61_ARDUINO_IDE_SYSTEM_APPS=1 {build.mk61_platform_flags} {build.mk61_display_flags} -DMK61_ENABLE_FOCAL={build.mk61_focal} -DMK61_ENABLE_TINYBASIC={build.mk61_basic} -DMK61_ENABLE_WBMP_VIEWER={build.mk61_wbmp} -DMK61_ENABLE_USB_SCREEN={build.mk61_usb_screen} -DMK61_ENABLE_EXTENDED_FONT_SETTINGS={build.mk61_font_settings} -DMK61_USER_EXPLORER_SHORTCUT={build.mk61_explorer} -DMK61_MATH_BACKEND={build.mk61_math}
+
+# Platform and display stay separate.  The pre-build hook rejects incompatible
+# pairs before the compiler starts.
+mk61_f401_app.menu.mk61_platform.mini_v3=mini V3
+mk61_f401_app.menu.mk61_platform.mini_v3.build.mk61_platform_id=mini-v3
+mk61_f401_app.menu.mk61_platform.mini_v3.build.mk61_platform_flags=
+
+mk61_f401_app.menu.mk61_platform.mini_v2=mini V2
+mk61_f401_app.menu.mk61_platform.mini_v2.build.mk61_platform_id=mini-v2
+mk61_f401_app.menu.mk61_platform.mini_v2.build.mk61_platform_flags=-DREVISION_V2
+
+mk61_f401_app.menu.mk61_platform.classic_v3=Classic V3
+mk61_f401_app.menu.mk61_platform.classic_v3.build.mk61_platform_id=classic-v3
+mk61_f401_app.menu.mk61_platform.classic_v3.build.mk61_platform_flags=-DMK61_BOARD_CLASSIC_V3
+
+mk61_f401_app.menu.mk61_platform.classic_v2=Classic V2
+mk61_f401_app.menu.mk61_platform.classic_v2.build.mk61_platform_id=classic-v2
+mk61_f401_app.menu.mk61_platform.classic_v2.build.mk61_platform_flags=-DMK61_BOARD_CLASSIC_V2
+
+mk61_f401_app.menu.mk61_platform.anniversary=40th
+mk61_f401_app.menu.mk61_platform.anniversary.build.mk61_platform_id=40th
+mk61_f401_app.menu.mk61_platform.anniversary.build.mk61_platform_flags=-DMK61_BOARD_40TH
+
+mk61_f401_app.menu.mk61_display.lcd_a00=LCD1602 · CGROM A00
+mk61_f401_app.menu.mk61_display.lcd_a00.build.mk61_display_id=lcd1602-a00
+mk61_f401_app.menu.mk61_display.lcd_a00.build.mk61_display_flags=-DMK61_LCD1602_A00
+
+mk61_f401_app.menu.mk61_display.lcd_a02=LCD1602 · CGROM A02
+mk61_f401_app.menu.mk61_display.lcd_a02.build.mk61_display_id=lcd1602-a02
+mk61_f401_app.menu.mk61_display.lcd_a02.build.mk61_display_flags=-DMK61_LCD1602_A02
+
+mk61_f401_app.menu.mk61_display.uc1609=UC1609
+mk61_f401_app.menu.mk61_display.uc1609.build.mk61_display_id=uc1609
+mk61_f401_app.menu.mk61_display.uc1609.build.mk61_display_flags=
+
+mk61_f401_app.menu.mk61_focal.enabled=APP
+mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal=1
+mk61_f401_app.menu.mk61_focal.disabled=Выключен
+mk61_f401_app.menu.mk61_focal.disabled.build.mk61_focal=0
+
+mk61_f401_app.menu.mk61_basic.enabled=APP
+mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic=1
+mk61_f401_app.menu.mk61_basic.disabled=Выключен
+mk61_f401_app.menu.mk61_basic.disabled.build.mk61_basic=0
+
+mk61_f401_app.menu.mk61_wbmp.enabled=APP
+mk61_f401_app.menu.mk61_wbmp.enabled.build.mk61_wbmp=1
+mk61_f401_app.menu.mk61_wbmp.disabled=Выключен
+mk61_f401_app.menu.mk61_wbmp.disabled.build.mk61_wbmp=0
+
+mk61_f401_app.menu.mk61_usb_screen.disabled=Выключен
+mk61_f401_app.menu.mk61_usb_screen.disabled.build.mk61_usb_screen=0
+mk61_f401_app.menu.mk61_usb_screen.enabled=Включён
+mk61_f401_app.menu.mk61_usb_screen.enabled.build.mk61_usb_screen=1
+
+mk61_f401_app.menu.mk61_font_settings.disabled=Обычные
+mk61_f401_app.menu.mk61_font_settings.disabled.build.mk61_font_settings=0
+mk61_f401_app.menu.mk61_font_settings.enabled=Расширенные
+mk61_f401_app.menu.mk61_font_settings.enabled.build.mk61_font_settings=1
+
+mk61_f401_app.menu.mk61_explorer.enabled=Включён
+mk61_f401_app.menu.mk61_explorer.enabled.build.mk61_explorer=1
+mk61_f401_app.menu.mk61_explorer.disabled=Выключен
+mk61_f401_app.menu.mk61_explorer.disabled.build.mk61_explorer=0
+
+mk61_f401_app.menu.mk61_math.libm=libm
+mk61_f401_app.menu.mk61_math.libm.build.mk61_math=0
+mk61_f401_app.menu.mk61_math.core=CORE
+mk61_f401_app.menu.mk61_math.core.build.mk61_math=1

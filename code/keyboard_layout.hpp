@@ -5,41 +5,47 @@
 
 namespace keyboard_layout {
 
+// Физические scan-коды матрицы занимают диапазон 0..39. Байтовое хранение
+// экономит по 126 байт в resident и в каждом языковом APP без изменения
+// публичных i32-кодов клавиатурного API.
 struct Mapping {
-  i32 cx;
-  i32 bx;
-  i32 mul;
-  i32 div;
-  i32 power;
-  i32 xy;
-  i32 add;
-  i32 sub;
-  i32 neg;
-  i32 dot;
-  i32 digit[10];
-  i32 pp;
-  i32 bp;
-  i32 x_to_p;
-  i32 p_to_x;
-  i32 run;
-  i32 ret;
-  i32 frw;
-  i32 bkw;
-  i32 k;
-  i32 alpha;
-  i32 degree;
-  i32 grade;
-  i32 radian;
-  i32 user;
-  i32 save;
-  i32 load;
-  i32 left;
-  i32 right;
-  i32 ok;
-  i32 esc;
-  i32 shg_left;
-  i32 shg_right;
+  u8 cx;
+  u8 bx;
+  u8 mul;
+  u8 div;
+  u8 power;
+  u8 xy;
+  u8 add;
+  u8 sub;
+  u8 neg;
+  u8 dot;
+  u8 digit[10];
+  u8 pp;
+  u8 bp;
+  u8 x_to_p;
+  u8 p_to_x;
+  u8 run;
+  u8 ret;
+  u8 frw;
+  u8 bkw;
+  u8 k;
+  u8 alpha;
+  u8 degree;
+  u8 grade;
+  u8 radian;
+  u8 user;
+  u8 save;
+  u8 load;
+  u8 left;
+  u8 right;
+  u8 ok;
+  u8 esc;
+  u8 shg_left;
+  u8 shg_right;
 };
+
+static_assert(sizeof(Mapping) == 42,
+              "keyboard mapping must remain a compact scan-code table");
 
 static constexpr Mapping MINI = {
   0, 1, 2, 3, 5, 6, 7, 8, 10, 15,

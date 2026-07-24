@@ -5,6 +5,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 
 "$root/tests/run_firmware_tool_tests.sh"
 "$root/tests/run_f401_bundle_tool_tests.sh"
+"$root/tests/run_arduino_board_tests.sh"
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoLogo -NoProfile -File "$root/tests/run_firmware_tool_powershell_tests.ps1"
 fi

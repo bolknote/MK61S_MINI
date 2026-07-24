@@ -1,0 +1,11 @@
+name=MK61s F401 + APP
+version=1.0.0
+
+# The rest of platform.txt is inherited from the referenced
+# STMicroelectronics:arduino core.  These hooks add only MK61s profile
+# validation and System APP packaging.
+recipe.hooks.prebuild.20.pattern="{runtime.platform.path}/tools/mk61-app-postbuild.sh" check-profile --platform "{build.mk61_platform_id}" --display "{build.mk61_display_id}" --sketch "{build.source.path}"
+recipe.hooks.prebuild.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-postbuild.ps1" check-profile -Platform "{build.mk61_platform_id}" -Display "{build.mk61_display_id}" -Sketch "{build.source.path}"
+
+recipe.hooks.objcopy.postobjcopy.20.pattern="{runtime.platform.path}/tools/mk61-app-postbuild.sh" build --compiler "{compiler.path}{compiler.cpp.cmd}" --objcopy "{compiler.path}{compiler.objcopy.cmd}" --size "{compiler.path}{compiler.size.cmd}" --build-path "{build.path}" --sketch "{build.source.path}" --project "{build.project_name}" --bundle "mk61s-M-{build.mk61_platform_id}-{build.mk61_display_id}-f401" --focal "{build.mk61_focal}" --basic "{build.mk61_basic}" --wbmp "{build.mk61_wbmp}" --compile-flags "{build.st_extra_flags}"
+recipe.hooks.objcopy.postobjcopy.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-postbuild.ps1" build -Compiler "{compiler.path}{compiler.cpp.cmd}" -Objcopy "{compiler.path}{compiler.objcopy.cmd}" -SizeTool "{compiler.path}{compiler.size.cmd}" -BuildPath "{build.path}" -Sketch "{build.source.path}" -Project "{build.project_name}" -Bundle "mk61s-M-{build.mk61_platform_id}-{build.mk61_display_id}-f401" -Focal "{build.mk61_focal}" -Basic "{build.mk61_basic}" -Wbmp "{build.mk61_wbmp}" -CompileFlags "{build.st_extra_flags}"

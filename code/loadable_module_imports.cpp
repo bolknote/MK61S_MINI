@@ -60,12 +60,19 @@ static const Import imports[] = {
 #if MK61_WBMP_VIEWER_IS_LOADABLE
 using DisplayBegin = bool (MK61Display::*)(void);
 using DisplayWrite = bool (MK61Display::*)(const u8 (*)[8], const u8*, usize);
+using DisplayFullscreenWrite = bool (MK61Display::*)(const u8*, usize);
 using DisplayEnd = void (MK61Display::*)(void);
 static const DisplayBegin display_begin_import =
     &MK61Display::beginCellAnimation;
 static const DisplayWrite display_write_import =
     &MK61Display::writeCellAnimationPaletteFrame;
 static const DisplayEnd display_end_import = &MK61Display::endCellAnimation;
+static const DisplayBegin display_fullscreen_begin_import =
+    &MK61Display::beginFullscreenBitmap;
+static const DisplayFullscreenWrite display_fullscreen_write_import =
+    &MK61Display::showFullscreenBitmap;
+static const DisplayEnd display_fullscreen_end_import =
+    &MK61Display::endFullscreenBitmap;
 #endif
 
 } // namespace
@@ -76,7 +83,10 @@ void mk61_module_keep_imports(void) {
 #if MK61_WBMP_VIEWER_IS_LOADABLE
   __asm volatile("" : : "r" (&display_begin_import),
                           "r" (&display_write_import),
-                          "r" (&display_end_import) : "memory");
+                          "r" (&display_end_import),
+                          "r" (&display_fullscreen_begin_import),
+                          "r" (&display_fullscreen_write_import),
+                          "r" (&display_fullscreen_end_import) : "memory");
 #endif
 }
 
