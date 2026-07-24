@@ -65,22 +65,33 @@ void Grid::advance(void) {
   if(cursor_y + 1 < row_count) cursor_y++;
 }
 
-void Grid::writeCodepoint(u16 codepoint) {
-  cells[cursor_y][cursor_x] = codepoint;
-  custom_cols[cursor_y] &= (u16) ~((u16) 1 << cursor_x);
-  markCell(cursor_x, cursor_y);
+bool Grid::writeCodepoint(u16 codepoint) {
+  const u16 bit = (u16) 1U << cursor_x;
+  const bool changed = cells[cursor_y][cursor_x] != codepoint ||
+                       (custom_cols[cursor_y] & bit) != 0;
+  if(changed) {
+    cells[cursor_y][cursor_x] = codepoint;
+    custom_cols[cursor_y] &= (u16) ~bit;
+    markCell(cursor_x, cursor_y);
+  }
   advance();
+  return changed;
 }
 
-void Grid::writeByte(u8 value) {
+bool Grid::writeByte(u8 value) {
   if(value >= 8) {
-    writeCodepoint(value);
-    return;
+    return writeCodepoint(value);
   }
-  cells[cursor_y][cursor_x] = value;
-  custom_cols[cursor_y] |= (u16) 1 << cursor_x;
-  markCell(cursor_x, cursor_y);
+  const u16 bit = (u16) 1U << cursor_x;
+  const bool changed = cells[cursor_y][cursor_x] != value ||
+                       (custom_cols[cursor_y] & bit) == 0;
+  if(changed) {
+    cells[cursor_y][cursor_x] = value;
+    custom_cols[cursor_y] |= bit;
+    markCell(cursor_x, cursor_y);
+  }
   advance();
+  return changed;
 }
 
 u16 Grid::cell(u8 x, u8 y) const {
@@ -99,12 +110,17 @@ void Grid::markAll(void) {
   for(u8 row = 0; row < row_count; row++) dirty_cols[row] = 0xFFFF;
 }
 
-void Grid::markCustomSlot(u8 slot) {
+bool Grid::markCustomSlot(u8 slot) {
+  bool found = false;
   for(u8 row = 0; row < row_count; row++) {
     for(u8 col = 0; col < COLS; col++) {
-      if(cellIsCustom(col, row) && cells[row][col] == (slot & 7)) markCell(col, row);
+      if(cellIsCustom(col, row) && cells[row][col] == (slot & 7)) {
+        markCell(col, row);
+        found = true;
+      }
     }
   }
+  return found;
 }
 
 u16 Grid::dirtyMask(u8 row) const {

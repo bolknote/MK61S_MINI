@@ -301,11 +301,9 @@ void ERM19264_UC1609::LCDFillPage(uint8_t dataPattern=0)
 */
 void ERM19264_UC1609::LCDGotoXY(uint8_t column , uint8_t page)
 {
-        UC1609_CS_SetLow;
-        send_command(UC1609_SET_COLADD_LSB, (column & 0x0F)); 
-        send_command(UC1609_SET_COLADD_MSB, (column & 0xF0) >> 4);
-        send_command(UC1609_SET_PAGEADD, page++); 
-        UC1609_CS_SetHigh;
+	UC1609_CS_SetLow;
+	set_address(column, page);
+	UC1609_CS_SetHigh;
 }
 
 /*!
@@ -335,24 +333,27 @@ if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
 	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
 	UC1609_CS_SetLow;
 
-	uint8_t tx, ty;
-	uint16_t offset = 0;
-	uint8_t column = (x < 0) ? 0 : x;
-	uint8_t page = (y < 0) ? 0 : y >>3;
+	const int16_t visible_left = x < 0 ? 0 : x;
+	const int16_t right = x + w;
+	const int16_t visible_right = right > _widthScreen ? _widthScreen : right;
+	const uint8_t source_x = (uint8_t) (visible_left - x);
+	const uint8_t visible_width = (uint8_t) (visible_right - visible_left);
 
-	for (ty = 0; ty < h; ty = ty + 8)
+	for (uint8_t ty = 0; ty < h; ty = ty + 8)
 	{
-		if (y + ty < 0 || y + ty >= _heightScreen) {continue;}
-		send_command(UC1609_SET_COLADD_LSB, (column & 0x0F));
-		send_command(UC1609_SET_COLADD_MSB, (column & 0xF0) >> 4);
-		send_command(UC1609_SET_PAGEADD, page++);
-
-		for (tx = 0; tx < w; tx++)
-		{
-			if (x + tx < 0 || x + tx >= _widthScreen) {continue;}
-			offset = (w * (ty >> 3)) + tx;
-			send_data(pgm_read_byte(&data[offset]));
+		const int16_t absolute_y = y + ty;
+		if (absolute_y < 0 || absolute_y >= _heightScreen) {continue;}
+		const size_t offset = (size_t) w * (ty >> 3) + source_x;
+		set_address((uint8_t) visible_left, (uint8_t) (absolute_y >> 3));
+#if defined(ARDUINO_ARCH_STM32)
+		// На STM32 flash адресуется как обычная память, поэтому вся видимая
+		// строка страницы уходит одним вызовом spi_transfer().
+		send_data_buffer(data + offset, visible_width);
+#else
+		for (uint8_t tx = 0; tx < visible_width; tx++) {
+			send_data(pgm_read_byte(&data[offset + tx]));
 		}
+#endif
 	}
 	UC1609_CS_SetHigh;
 	#if defined(ESP8266)
@@ -408,6 +409,44 @@ void ERM19264_UC1609::send_data(uint8_t byte)
 	}
 }
 
+/*!
+	 @brief Send a contiguous data block to the UC1609.
+	 @param data bytes to transmit
+	 @param length number of bytes
+*/
+void ERM19264_UC1609::send_data_buffer(const uint8_t* data, size_t length)
+{
+	if (data == nullptr || length == 0) {return;}
+	if (isHardwareSPI())
+	{
+#if defined(ARDUINO_ARCH_STM32)
+		SPI.transfer((const void*) data, nullptr, length);
+#else
+		for (size_t i = 0; i < length; i++) {(void) SPI.transfer(data[i]);}
+#endif
+	}else
+	{
+		for (size_t i = 0; i < length; i++) {
+			CustomshiftOut(MSBFIRST, data[i]);
+		}
+	}
+}
+
+/*!
+	 @brief Set the UC1609 column and page address in one command block.
+*/
+void ERM19264_UC1609::set_address(uint8_t column, uint8_t page)
+{
+	const uint8_t commands[] = {
+		(uint8_t) (UC1609_SET_COLADD_LSB | (column & 0x0F)),
+		(uint8_t) (UC1609_SET_COLADD_MSB | ((column & 0xF0) >> 4)),
+		(uint8_t) (UC1609_SET_PAGEADD | page),
+	};
+	UC1609_CD_SetLow;
+	send_data_buffer(commands, sizeof(commands));
+	UC1609_CD_SetHigh;
+}
+
 
 /*!
 	 @brief updates the LCD  i.e. writes the  shared buffer to the active screen
@@ -450,25 +489,19 @@ void ERM19264_UC1609::LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint
  if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
  UC1609_CS_SetLow;
 
-	uint8_t tx, ty;
-	uint16_t offset = 0;
-	uint8_t column = (x < 0) ? 0 : x;
-	uint8_t page = (y < 0) ? 0 : y/8;
+	const int16_t visible_left = x < 0 ? 0 : x;
+	const int16_t right = x + w;
+	const int16_t visible_right = right > _widthScreen ? _widthScreen : right;
+	const uint8_t source_x = (uint8_t) (visible_left - x);
+	const uint8_t visible_width = (uint8_t) (visible_right - visible_left);
 
-	for (ty = 0; ty < h; ty = ty + 8)
+	for (uint8_t ty = 0; ty < h; ty = ty + 8)
 	{
-	if (y + ty < 0 || y + ty >= _heightScreen) {continue;}
-
-	send_command(UC1609_SET_COLADD_LSB, (column & 0x0F));
-	send_command(UC1609_SET_COLADD_MSB, (column & 0XF0) >> 4);
-	send_command(UC1609_SET_PAGEADD, page++);
-
-	for (tx = 0; tx < w; tx++)
-	{
-			if (x + tx < 0 || x + tx >= _widthScreen) {continue;}
-			offset = (w * (ty /8)) + tx;
-			send_data(data[offset++]);
-	}
+		const int16_t absolute_y = y + ty;
+		if (absolute_y < 0 || absolute_y >= _heightScreen) {continue;}
+		const size_t offset = (size_t) w * (ty >> 3) + source_x;
+		set_address((uint8_t) visible_left, (uint8_t) (absolute_y >> 3));
+		send_data_buffer(data + offset, visible_width);
 	}
 
 UC1609_CS_SetHigh;

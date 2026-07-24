@@ -215,10 +215,10 @@ class MK61Display : public Print {
     bool hasHardwareCursor(void) const;
     void createChar(u8 nChar, uint8_t* glyph);
     void clearCustomChars(void);
+    void clearCustomChar(u8 nChar);
 #if defined(MK61_DISPLAY_LCD1602)
     bool readCell(u8 x, u8 y, u8& value) const;
     bool copyCustomChar(u8 nChar, u8 glyph[8]) const;
-    void clearCustomChar(u8 nChar);
     void renderShiftedViewport(
       const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
     void endShiftedViewport(void);
@@ -336,6 +336,10 @@ class MK61Display : public Print {
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
     static constexpr u8 RENDER_PAGE_HEIGHT = 8;
+    static constexpr u8 RENDER_PAGE_COUNT =
+      lcd_display::PIXEL_HEIGHT / RENDER_PAGE_HEIGHT;
+    static_assert(lcd_display::PIXEL_HEIGHT % RENDER_PAGE_HEIGHT == 0,
+                  "display height must contain whole UC1609 pages");
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_WIDTH = 32;
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_HEIGHT = 16;
 #if MK61_ENABLE_USB_SCREEN
@@ -346,7 +350,7 @@ class MK61Display : public Print {
     uint8_t render_buffer[lcd_display::PIXEL_WIDTH];
 #endif
     ERM19264_UC1609 lcd;
-    ERM19264_UC1609_Screen render_screen;
+    u8 render_width;
     text_screen::Grid grid;
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
@@ -361,6 +365,8 @@ class MK61Display : public Print {
 #endif
     bool screen_dirty;
     bool dirty;
+    // Вне текстовой сетки damage создаёт верхняя правая пиксельная накладка.
+    u16 extra_dirty_page_cols[RENDER_PAGE_COUNT];
     usize update_depth;
     lcd_display::TextProfile active_profile;
     lcd_display::TextProfile preview_saved_profile;
@@ -384,6 +390,9 @@ class MK61Display : public Print {
     u8 glyphTop(u8 row) const;
     u8 glyphWidth(void) const;
     u8 glyphLeft(void) const;
+    void setRenderPixel(i16 x, i16 y);
+    void fillRenderRect(i16 x, i16 y, i16 width, i16 height,
+                        bool foreground);
     void drawGlyph(u8 x, i16 row_y, u8 row, const uint8_t* bitmap, u8 source_width, u8 source_height);
     void drawToken(u8 x, i16 row_y, u8 row, u16 value, bool custom);
     void drawCursor(u8 x, i16 row_y, u8 row, bool block);
@@ -394,10 +403,10 @@ class MK61Display : public Print {
     void markCellDirty(u8 x, u8 y);
     void markScreenDirty(void);
     void markAllDirty(void);
-    void markTopRightOverlayDirty(u8 width, u8 clear_border);
+    void markTopRightOverlayDirty(u8 width, u8 height, u8 clear_border);
     void drawTopRightOverlay(u8 first_col, u8 count, u8 page_y);
     void updateCursorBlink(void);
-    void renderRun(u8 row, u8 first_col, u8 count);
+    void renderPageRun(u8 page, u8 first_col, u8 count);
     void applyTextProfile(lcd_display::TextProfile profile, bool exact_geometry = false);
     lcd_display::TextProfile recommendedProfile(const fmk::Metrics& metrics) const;
     const fmk::Face* selectedFont(void) const;

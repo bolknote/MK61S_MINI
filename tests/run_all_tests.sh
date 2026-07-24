@@ -15,6 +15,7 @@ fi
 "$root/tests/run_bounded_string_tests.sh"
 "$root/tests/run_dfu_splash_tests.sh"
 "$root/tests/run_display_font_tests.sh"
+"$root/tests/run_uc1609_transport_tests.sh"
 "$root/tests/run_fmk_converter_tests.sh"
 "$root/tests/run_focal_tests.sh"
 "$root/tests/run_flash_capacity_probe_tests.sh"

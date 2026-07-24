@@ -134,7 +134,8 @@ void Surface::setCursor(u8 x, u8 y) {
   const u8 old_x = grid_.cursorX();
   const u8 old_y = grid_.cursorY();
   grid_.setCursor(x, y);
-  if(old_x != grid_.cursorX() || old_y != grid_.cursorY()) markDirty();
+  if(cursorVisible() &&
+     (old_x != grid_.cursorX() || old_y != grid_.cursorY())) markDirty();
 }
 
 void Surface::cursorOn(void) {
@@ -172,17 +173,30 @@ void Surface::blinkOff(void) {
 void Surface::writeByte(u8 value) {
   if(!active_) return;
   if(value == '\r') return;
+  const u8 old_x = grid_.cursorX();
+  const u8 old_y = grid_.cursorY();
+  bool content_changed = false;
   if(value == '\n') grid_.newline();
-  else if(value < CUSTOM_GLYPHS && custom_valid_[value]) grid_.writeByte(value);
-  else grid_.writeCodepoint(value);
-  markDirty();
+  else if(value < CUSTOM_GLYPHS && custom_valid_[value]) {
+    content_changed = grid_.writeByte(value);
+  } else {
+    content_changed = grid_.writeCodepoint(value);
+  }
+  const bool cursor_changed = old_x != grid_.cursorX() ||
+                              old_y != grid_.cursorY();
+  if(content_changed || (cursorVisible() && cursor_changed)) markDirty();
 }
 
 void Surface::writeCodepoint(u16 codepoint) {
   if(!active_ || codepoint == '\r') return;
+  const u8 old_x = grid_.cursorX();
+  const u8 old_y = grid_.cursorY();
+  bool content_changed = false;
   if(codepoint == '\n') grid_.newline();
-  else grid_.writeCodepoint(codepoint);
-  markDirty();
+  else content_changed = grid_.writeCodepoint(codepoint);
+  const bool cursor_changed = old_x != grid_.cursorX() ||
+                              old_y != grid_.cursorY();
+  if(content_changed || (cursorVisible() && cursor_changed)) markDirty();
 }
 
 void Surface::seedText(const text_screen::Grid& source,
@@ -228,18 +242,20 @@ void Surface::seedText(const text_screen::Grid& source,
 
 void Surface::createChar(u8 slot, const u8 glyph[8]) {
   if(slot >= CUSTOM_GLYPHS || glyph == NULL) return;
+  if(custom_valid_[slot] &&
+     memcmp(custom_glyphs_[slot], glyph,
+            sizeof(custom_glyphs_[slot])) == 0) return;
   memcpy(custom_glyphs_[slot], glyph, sizeof(custom_glyphs_[slot]));
   custom_valid_[slot] = true;
-  grid_.markCustomSlot(slot);
-  markDirty();
+  if(grid_.markCustomSlot(slot)) markDirty();
 }
 
 void Surface::clearCustomChar(u8 slot) {
-  if(slot >= CUSTOM_GLYPHS) return;
-  if(custom_valid_[slot]) grid_.markCustomSlot(slot);
+  if(slot >= CUSTOM_GLYPHS || !custom_valid_[slot]) return;
+  const bool visible = grid_.markCustomSlot(slot);
   memset(custom_glyphs_[slot], 0, sizeof(custom_glyphs_[slot]));
   custom_valid_[slot] = false;
-  markDirty();
+  if(visible) markDirty();
 }
 
 void Surface::clearCustomChars(void) {
@@ -307,6 +323,20 @@ bool Surface::showTopRightOverlay(const u32* rows, u8 width, u8 height,
      total_height > HEIGHT) return false;
 
   const u32 mask = width == 32 ? 0xFFFFFFFFUL : (((u32) 1U << width) - 1U);
+  bool unchanged = overlay_visible_ &&
+                   overlay_width_ == width &&
+                   overlay_height_ == height &&
+                   overlay_clear_border_ == clear_border;
+  if(unchanged) {
+    for(u8 y = 0; y < height; y++) {
+      if(overlay_rows_[y] != (rows[y] & mask)) {
+        unchanged = false;
+        break;
+      }
+    }
+  }
+  if(unchanged) return true;
+
   overlay_width_ = width;
   overlay_height_ = height;
   overlay_clear_border_ = clear_border;

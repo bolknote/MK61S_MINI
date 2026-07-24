@@ -194,6 +194,50 @@ static void test_update_batching(void) {
   assert(surface.revision() == before + 1);
 }
 
+static void test_noop_updates_do_not_render(void) {
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
+  surface.begin();
+  surface.flush(0);
+
+  u32 revision = surface.revision();
+  surface.setCursor(0, 0);
+  surface.writeByte(' ');
+  surface.flush(1);
+  assert(surface.revision() == revision);
+
+  surface.setCursor(0, 0);
+  surface.writeByte('A');
+  surface.flush(2);
+  revision = surface.revision();
+  surface.setCursor(0, 0);
+  surface.writeByte('A');
+  surface.flush(3);
+  assert(surface.revision() == revision);
+
+  const u8 glyph[8] = {0x1F, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F};
+  surface.createChar(2, glyph); // Пока слот не выведен, кадр не меняется.
+  surface.flush(4);
+  assert(surface.revision() == revision);
+  surface.createChar(2, glyph);
+  surface.flush(5);
+  assert(surface.revision() == revision);
+  surface.clearCustomChar(2);
+  surface.flush(6);
+  assert(surface.revision() == revision);
+  surface.clearCustomChar(2);
+  surface.flush(7);
+  assert(surface.revision() == revision);
+
+  const u32 overlay[2] = {0b101, 0b010};
+  assert(surface.showTopRightOverlay(overlay, 3, 2, 1));
+  surface.flush(8);
+  revision = surface.revision();
+  assert(surface.showTopRightOverlay(overlay, 3, 2, 1));
+  surface.flush(9);
+  assert(surface.revision() == revision);
+}
+
 } // безымянное пространство имён
 
 int main(void) {
@@ -203,6 +247,7 @@ int main(void) {
   test_backend_switch_seed_and_session_reset();
   test_fullscreen_and_overlay();
   test_update_batching();
+  test_noop_updates_do_not_render();
   printf("usb_screen_surface_self_test: ok\n");
   return 0;
 }

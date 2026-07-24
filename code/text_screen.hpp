@@ -26,8 +26,10 @@ class Grid {
     void clear(void);
     void setCursor(u8 x, u8 y);
     void newline(void);
-    void writeCodepoint(u16 codepoint);
-    void writeByte(u8 value);
+    // Возвращает true, только если видимое содержимое ячейки изменилось.
+    // Курсор продвигается в любом случае, как у обычного текстового дисплея.
+    bool writeCodepoint(u16 codepoint);
+    bool writeByte(u8 value);
 
     u8 rows(void) const { return row_count; }
     u8 cursorX(void) const { return cursor_x; }
@@ -37,7 +39,7 @@ class Grid {
 
     void markCell(u8 x, u8 y);
     void markAll(void);
-    void markCustomSlot(u8 slot);
+    bool markCustomSlot(u8 slot);
     u16 dirtyMask(u8 row) const;
     void clearDirty(u8 row);
     void clearColumns(u16 mask);

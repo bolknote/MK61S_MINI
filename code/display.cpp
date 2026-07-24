@@ -1,6 +1,7 @@
 #include "display.hpp"
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
+#include "page_damage.hpp"
 
 #include <string.h>
 
@@ -975,7 +976,7 @@ static inline bool timeReached(t_time_ms now, t_time_ms target) {
 MK61Display::MK61Display(void)
   : render_buffer{0},
     lcd(lcd_display::PIXEL_WIDTH, lcd_display::PIXEL_HEIGHT, PIN_GLCD_CD, PIN_GLCD_RST, PIN_GLCD_CS),
-    render_screen(render_buffer, lcd_display::PIXEL_WIDTH, RENDER_PAGE_HEIGHT, 0, 0),
+    render_width(lcd_display::PIXEL_WIDTH),
     grid(),
     custom_glyphs{{0}},
     custom_valid{false},
@@ -990,6 +991,7 @@ MK61Display::MK61Display(void)
 #endif
     screen_dirty(false),
     dirty(false),
+    extra_dirty_page_cols{0},
     update_depth(0),
     active_profile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS)),
     preview_saved_profile(active_profile),
@@ -1022,7 +1024,6 @@ void MK61Display::begin(u8, u8 rows) {
 #endif
   grid.reset(active_profile.rows);
   lcd.LCDbegin(GLCD_UC1609_BIAS, GLCD_UC1609_ADDRESS_SET);
-  lcd.ActiveBuffer = &render_screen;
   initialized = true;
   clearPhysicalScreen();
 }
@@ -1057,17 +1058,32 @@ void MK61Display::flush(void) {
   updateCursorBlink();
   if(!dirty && !screen_dirty && !grid.anyDirty()) return;
 
+  u16 page_masks[RENDER_PAGE_COUNT];
+  memcpy(page_masks, extra_dirty_page_cols, sizeof(page_masks));
+  page_damage::clear(extra_dirty_page_cols, RENDER_PAGE_COUNT);
+
+  // Ячейка повреждает только те 8-пиксельные страницы UC1609, с которыми
+  // пересекается её строка. Маски объединяются до начала передачи.
+  for(u8 row = 0; row < grid.rows(); row++) {
+    const u16 mask = grid.dirtyMask(row);
+    if(mask != 0) {
+      page_damage::markSpan(page_masks, RENDER_PAGE_COUNT,
+                            RENDER_PAGE_HEIGHT, rowTop(row), rowPitch(row),
+                            mask);
+    }
+    grid.clearDirty(row);
+  }
+
   if(screen_dirty) {
-    clearPhysicalScreen();
+    // Полная очистка и новое содержимое уходят одним итоговым кадром.
+    page_damage::markAll(page_masks, RENDER_PAGE_COUNT);
     screen_dirty = false;
   }
 
-  for(u8 row = 0; row < grid.rows(); row++) {
-    const uint16_t mask = grid.dirtyMask(row);
-    grid.clearDirty(row);
-
+  for(u8 page = 0; page < RENDER_PAGE_COUNT; page++) {
+    const u16 mask = page_masks[page];
     for(u8 col = 0; col < lcd_display::COLS;) {
-      if((mask & ((uint16_t) 1 << col)) == 0) {
+      if((mask & ((u16) 1U << col)) == 0) {
         col++;
         continue;
       }
@@ -1075,16 +1091,14 @@ void MK61Display::flush(void) {
       const u8 first_col = col;
       do {
         col++;
-      } while(col < lcd_display::COLS && (mask & ((uint16_t) 1 << col)) != 0);
-      renderRun(row, first_col, col - first_col);
-
-      uint16_t run_mask = 0;
-      for(u8 run_col = first_col; run_col < col; run_col++) run_mask |= (uint16_t) 1 << run_col;
-      grid.clearColumns(run_mask);
+      } while(col < lcd_display::COLS &&
+              (mask & ((u16) 1U << col)) != 0);
+      renderPageRun(page, first_col, col - first_col);
     }
   }
 
-  dirty = grid.anyDirty();
+  dirty = grid.anyDirty() ||
+          page_damage::any(extra_dirty_page_cols, RENDER_PAGE_COUNT);
 }
 
 void MK61Display::beginUpdate(void) {
@@ -1260,6 +1274,9 @@ bool MK61Display::hasHardwareCursor(void) const { return false; }
 
 void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   if(nChar >= CUSTOM_GLYPHS || glyph == NULL) return;
+  if(custom_valid[nChar] &&
+     memcmp(custom_glyphs[nChar], glyph,
+            sizeof(custom_glyphs[nChar])) == 0) return;
   memcpy(custom_glyphs[nChar], glyph, sizeof(custom_glyphs[nChar]));
   custom_valid[nChar] = true;
 #if MK61_ENABLE_USB_SCREEN
@@ -1279,7 +1296,9 @@ void MK61Display::clearCustomChars(void) {
   if(usb_screen_active) usb_surface.clearCustomChars();
 #endif
   for(u8 i = 0; i < CUSTOM_GLYPHS; i++) {
-    if(custom_valid[i]) grid.markCustomSlot(i);
+    if(!custom_valid[i]) continue;
+    grid.markCustomSlot(i);
+    memset(custom_glyphs[i], 0, sizeof(custom_glyphs[i]));
     custom_valid[i] = false;
   }
   dirty = dirty || grid.anyDirty();
@@ -1289,6 +1308,22 @@ void MK61Display::clearCustomChars(void) {
     return;
   }
 #endif
+  if(update_depth == 0) flush();
+}
+
+void MK61Display::clearCustomChar(u8 nChar) {
+  if(nChar >= CUSTOM_GLYPHS || !custom_valid[nChar]) return;
+  grid.markCustomSlot(nChar);
+  memset(custom_glyphs[nChar], 0, sizeof(custom_glyphs[nChar]));
+  custom_valid[nChar] = false;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.clearCustomChar(nChar);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
+  dirty = dirty || grid.anyDirty();
   if(update_depth == 0) flush();
 }
 
@@ -1327,6 +1362,7 @@ bool MK61Display::showTopRightOverlay(const u32* rows, u8 width, u8 height,
 
   if(top_right_overlay_visible) {
     markTopRightOverlayDirty(top_right_overlay_width,
+                             top_right_overlay_height,
                              top_right_overlay_clear_border);
   }
   memset(top_right_overlay_rows, 0, sizeof(top_right_overlay_rows));
@@ -1335,7 +1371,7 @@ bool MK61Display::showTopRightOverlay(const u32* rows, u8 width, u8 height,
   top_right_overlay_height = height;
   top_right_overlay_clear_border = clear_border;
   top_right_overlay_visible = true;
-  markTopRightOverlayDirty(width, clear_border);
+  markTopRightOverlayDirty(width, height, clear_border);
   if(update_depth == 0) flush();
   return true;
 }
@@ -1350,13 +1386,14 @@ void MK61Display::hideTopRightOverlay(void) {
 #endif
   if(!top_right_overlay_visible) return;
   const u8 old_width = top_right_overlay_width;
+  const u8 old_height = top_right_overlay_height;
   const u8 old_border = top_right_overlay_clear_border;
   top_right_overlay_visible = false;
   top_right_overlay_width = 0;
   top_right_overlay_height = 0;
   top_right_overlay_clear_border = 0;
   memset(top_right_overlay_rows, 0, sizeof(top_right_overlay_rows));
-  markTopRightOverlayDirty(old_width, old_border);
+  markTopRightOverlayDirty(old_width, old_height, old_border);
   if(update_depth == 0) flush();
 }
 
@@ -1522,10 +1559,11 @@ void MK61Display::writeCodepoint(u16 codepoint) {
 #endif
   if(codepoint == '\r') return;
   if(cursorOverlayVisible()) markCursorCellDirty();
+  bool content_changed = false;
   if(codepoint == '\n') grid.newline();
-  else grid.writeCodepoint(codepoint);
+  else content_changed = grid.writeCodepoint(codepoint);
   if(cursorOverlayVisible()) markCursorCellDirty();
-  dirty = true;
+  dirty = dirty || content_changed;
   if(update_depth == 0) flush();
 }
 
@@ -1534,7 +1572,7 @@ void MK61Display::clearShadow(void) {
 }
 
 void MK61Display::clearPhysicalScreen(void) {
-  memset(render_buffer, 0x00, sizeof(render_buffer));
+  memset(render_buffer, 0x00, lcd_display::PIXEL_WIDTH);
   for(u8 y = 0; y < lcd_display::PIXEL_HEIGHT; y += RENDER_PAGE_HEIGHT) {
     lcd.LCDBuffer(0, y, lcd_display::PIXEL_WIDTH, RENDER_PAGE_HEIGHT, render_buffer);
   }
@@ -1634,10 +1672,6 @@ u8 MK61Display::glyphLeft(void) const {
 void MK61Display::markScreenDirty(void) {
   screen_dirty = true;
   dirty = true;
-  if(top_right_overlay_visible) {
-    markTopRightOverlayDirty(top_right_overlay_width,
-                             top_right_overlay_clear_border);
-  }
   if(update_depth == 0 && initialized) flush();
 }
 
@@ -1647,14 +1681,18 @@ void MK61Display::markAllDirty(void) {
   if(update_depth == 0 && initialized) flush();
 }
 
-void MK61Display::markTopRightOverlayDirty(u8 width, u8 clear_border) {
+void MK61Display::markTopRightOverlayDirty(u8 width, u8 height,
+                                           u8 clear_border) {
   const u16 total_width = (u16) width + (u16) clear_border * 2U;
-  if(total_width == 0 || total_width > lcd_display::PIXEL_WIDTH) return;
+  const u16 total_height = (u16) height + (u16) clear_border * 2U;
+  if(total_width == 0 || total_width > lcd_display::PIXEL_WIDTH ||
+     total_height == 0) return;
   const u8 left = (u8) (lcd_display::PIXEL_WIDTH - total_width);
   const u8 first_col = left / lcd_display::CELL_WIDTH;
-  for(u8 col = first_col; col < lcd_display::COLS; col++) {
-    markCellDirtyDeferred(col, 0);
-  }
+  const u16 columns = (u16) (0xFFFFU << first_col);
+  page_damage::markSpan(extra_dirty_page_cols, RENDER_PAGE_COUNT,
+                        RENDER_PAGE_HEIGHT, 0, total_height, columns);
+  dirty = true;
 }
 
 void MK61Display::drawTopRightOverlay(u8 first_col, u8 count, u8 page_y) {
@@ -1676,8 +1714,8 @@ void MK61Display::drawTopRightOverlay(u8 first_col, u8 count, u8 page_y) {
   const i16 clear_top = page_y;
   const i16 clear_bottom = total_height < page_bottom ? total_height : page_bottom;
   if(clear_left < clear_right && clear_top < clear_bottom) {
-    lcd.fillRect(clear_left - run_left, clear_top - page_y,
-                 clear_right - clear_left, clear_bottom - clear_top, BACKGROUND);
+    fillRenderRect(clear_left - run_left, clear_top - page_y,
+                   clear_right - clear_left, clear_bottom - clear_top, false);
   }
 
   const i16 content_left = background_left + top_right_overlay_clear_border;
@@ -1690,7 +1728,7 @@ void MK61Display::drawTopRightOverlay(u8 first_col, u8 count, u8 page_y) {
       if((bits & ((u32) 1U << x)) == 0) continue;
       const i16 absolute_x = content_left + x;
       if(absolute_x < run_left || absolute_x >= run_right) continue;
-      lcd.drawPixel(absolute_x - run_left, absolute_y - page_y, FOREGROUND);
+      setRenderPixel(absolute_x - run_left, absolute_y - page_y);
     }
   }
 }
@@ -1723,15 +1761,39 @@ void MK61Display::moveCursorTo(u8 x, u8 y) {
   if(update_depth == 0) flush();
 }
 
+void MK61Display::setRenderPixel(i16 x, i16 y) {
+  if(x < 0 || x >= render_width ||
+     y < 0 || y >= RENDER_PAGE_HEIGHT) return;
+  render_buffer[x] |= (u8) 1U << y;
+}
+
+void MK61Display::fillRenderRect(i16 x, i16 y, i16 width, i16 height,
+                                 bool foreground) {
+  if(width <= 0 || height <= 0) return;
+  const i16 left = x < 0 ? 0 : x;
+  const i16 top = y < 0 ? 0 : y;
+  const i16 right = x + width > render_width
+                  ? render_width : x + width;
+  const i16 bottom = y + height > RENDER_PAGE_HEIGHT
+                   ? RENDER_PAGE_HEIGHT : y + height;
+  if(left >= right || top >= bottom) return;
+
+  const u16 below_bottom = ((u16) 1U << bottom) - 1U;
+  const u16 below_top = ((u16) 1U << top) - 1U;
+  const u8 mask = (u8) (below_bottom & ~below_top);
+  for(i16 px = left; px < right; px++) {
+    if(foreground) render_buffer[px] |= mask;
+    else render_buffer[px] &= (u8) ~mask;
+  }
+}
+
 void MK61Display::drawGlyph(u8 x, i16 row_y, u8 row, const uint8_t* bitmap,
                             u8 source_width, u8 source_height) {
-  const u8 pitch = rowPitch(row);
   const u8 height = glyphHeight(row);
   const u8 max_width = glyphWidth();
   const u8 width = source_width < max_width ? source_width : max_width;
   const u8 glyph_x = x + (u8) ((lcd_display::CELL_WIDTH - width) / 2);
   const i16 glyph_y = row_y + glyphTop(row);
-  lcd.fillRect(x, row_y, lcd_display::CELL_WIDTH, pitch, BACKGROUND);
   if(bitmap == NULL || source_width == 0 || source_height == 0 || width == 0 || height == 0) return;
 
   for(u8 dest_y = 0; dest_y < height; dest_y++) {
@@ -1739,7 +1801,7 @@ void MK61Display::drawGlyph(u8 x, i16 row_y, u8 row, const uint8_t* bitmap,
     for(u8 dest_x = 0; dest_x < width; dest_x++) {
       const u8 source_x = (u8) (((u16) dest_x * source_width) / width);
       if(fmk::bitmapPixel(bitmap, source_width, source_x, source_y)) {
-        lcd.drawPixel(glyph_x + dest_x, glyph_y + dest_y, FOREGROUND);
+        setRenderPixel(glyph_x + dest_x, glyph_y + dest_y);
       }
     }
   }
@@ -1758,8 +1820,9 @@ void MK61Display::drawCursor(u8 x, i16 row_y, u8 row, bool block) {
   if(cursor_width == 0 || height == 0) return;
   const i16 glyph_y = row_y + glyphTop(row);
   const u8 underline_height = (height >= 16) ? 2 : 1;
-  if(block) lcd.fillRect(cursor_x, glyph_y, cursor_width, height, FOREGROUND);
-  else lcd.fillRect(cursor_x, glyph_y + height - underline_height, cursor_width, underline_height, FOREGROUND);
+  if(block) fillRenderRect(cursor_x, glyph_y, cursor_width, height, true);
+  else fillRenderRect(cursor_x, glyph_y + height - underline_height,
+                      cursor_width, underline_height, true);
 }
 
 void MK61Display::updateCursorBlink(void) {
@@ -1774,39 +1837,41 @@ void MK61Display::updateCursorBlink(void) {
   markCursorCellDirty();
 }
 
-void MK61Display::renderRun(u8 row, u8 first_col, u8 count) {
-  if(count == 0 || first_col >= lcd_display::COLS || count > lcd_display::COLS - first_col) return;
-  (void) row;
+void MK61Display::renderPageRun(u8 page, u8 first_col, u8 count) {
+  if(page >= RENDER_PAGE_COUNT || count == 0 ||
+     first_col >= lcd_display::COLS ||
+     count > lcd_display::COLS - first_col) return;
 
   const u8 run_width = count * lcd_display::CELL_WIDTH;
-  const u8 saved_width = render_screen.width;
-  const u8 saved_height = render_screen.height;
-  render_screen.width = run_width;
-  render_screen.height = RENDER_PAGE_HEIGHT;
+  const u8 page_y = page * RENDER_PAGE_HEIGHT;
+  const u8 saved_width = render_width;
+  render_width = run_width;
 
-  for(u8 page_y = 0; page_y < lcd_display::PIXEL_HEIGHT; page_y += RENDER_PAGE_HEIGHT) {
-    memset(render_buffer, 0x00, run_width);
-    for(u8 render_row = 0; render_row < grid.rows(); render_row++) {
-      const u8 absolute_row_y = rowTop(render_row);
-      const u8 absolute_row_bottom = absolute_row_y + rowPitch(render_row);
-      if(absolute_row_bottom <= page_y || absolute_row_y >= page_y + RENDER_PAGE_HEIGHT) continue;
-      const i16 row_y = (i16) absolute_row_y - page_y;
-      for(u8 i = 0; i < count; i++) {
-        const u8 col = first_col + i;
-        const u8 x = i * lcd_display::CELL_WIDTH;
-        drawToken(x, row_y, render_row, grid.cell(col, render_row), grid.cellIsCustom(col, render_row));
-        if(render_row == grid.cursorY() && col == grid.cursorX()) {
-          if(cursor_blink && cursor_blink_phase) drawCursor(x, row_y, render_row, true);
-          else if(cursor_underline) drawCursor(x, row_y, render_row, false);
+  memset(render_buffer, 0x00, run_width);
+  for(u8 render_row = 0; render_row < grid.rows(); render_row++) {
+    const u8 absolute_row_y = rowTop(render_row);
+    const u8 absolute_row_bottom = absolute_row_y + rowPitch(render_row);
+    if(absolute_row_bottom <= page_y ||
+       absolute_row_y >= page_y + RENDER_PAGE_HEIGHT) continue;
+    const i16 row_y = (i16) absolute_row_y - page_y;
+    for(u8 i = 0; i < count; i++) {
+      const u8 col = first_col + i;
+      const u8 x = i * lcd_display::CELL_WIDTH;
+      drawToken(x, row_y, render_row, grid.cell(col, render_row),
+                grid.cellIsCustom(col, render_row));
+      if(render_row == grid.cursorY() && col == grid.cursorX()) {
+        if(cursor_blink && cursor_blink_phase) {
+          drawCursor(x, row_y, render_row, true);
+        } else if(cursor_underline) {
+          drawCursor(x, row_y, render_row, false);
         }
       }
     }
-    drawTopRightOverlay(first_col, count, page_y);
-    lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, page_y,
-                  run_width, RENDER_PAGE_HEIGHT, render_buffer);
   }
-  render_screen.width = saved_width;
-  render_screen.height = saved_height;
+  drawTopRightOverlay(first_col, count, page_y);
+  lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, page_y,
+                run_width, RENDER_PAGE_HEIGHT, render_buffer);
+  render_width = saved_width;
 }
 
 #if ARDUINO >= 100
@@ -1834,11 +1899,15 @@ void MK61Display::write(uint8_t value) {
   }
 
   if(cursorOverlayVisible()) markCursorCellDirty();
+  bool content_changed = false;
   if(value == '\n') grid.newline();
-  else if(value < CUSTOM_GLYPHS && custom_valid[value]) grid.writeByte(value);
-  else grid.writeCodepoint(value);
+  else if(value < CUSTOM_GLYPHS && custom_valid[value]) {
+    content_changed = grid.writeByte(value);
+  } else {
+    content_changed = grid.writeCodepoint(value);
+  }
   if(cursorOverlayVisible()) markCursorCellDirty();
-  dirty = true;
+  dirty = dirty || content_changed;
   if(update_depth == 0) flush();
 
 #if ARDUINO >= 100

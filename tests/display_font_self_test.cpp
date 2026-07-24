@@ -1,6 +1,7 @@
 #include "builtin_font.hpp"
 #include "display_symbols.hpp"
 #include "fmk_font.hpp"
+#include "page_damage.hpp"
 #include "text_screen.hpp"
 #include "uc1609_safety.hpp"
 
@@ -201,17 +202,18 @@ static void test_text_grid(void) {
   text_screen::Grid grid;
   grid.reset(2);
   grid.setCursor(15, 0);
-  grid.writeCodepoint(0x0410);
+  assert(grid.writeCodepoint(0x0410));
   assert(grid.cell(15, 0) == 0x0410);
   assert(grid.cursorX() == 0 && grid.cursorY() == 1);
   assert(grid.dirtyMask(0) == 0x8000);
 
-  grid.writeByte(3);
+  assert(grid.writeByte(3));
   assert(grid.cellIsCustom(0, 1));
   assert(grid.cell(0, 1) == 3);
   grid.clearDirty(0);
   grid.clearDirty(1);
-  grid.markCustomSlot(3);
+  assert(grid.markCustomSlot(3));
+  assert(!grid.markCustomSlot(4));
   assert(grid.dirtyMask(0) == 0);
   assert(grid.dirtyMask(1) == 1);
 
@@ -221,9 +223,63 @@ static void test_text_grid(void) {
   assert(grid.dirtyMask(0) == 0xFFF0 && grid.dirtyMask(1) == 0xFFF0);
 
   grid.setCursor(2, 1);
-  grid.writeCodepoint(0xFFF8);
+  assert(grid.writeCodepoint(0xFFF8));
   assert(grid.cell(2, 1) == 0xFFF8);
   assert(!grid.cellIsCustom(2, 1));
+}
+
+static void test_text_grid_skips_unchanged_cells(void) {
+  text_screen::Grid grid;
+  grid.reset(2);
+
+  // Пробел уже находится в очищенной ячейке: курсор движется, damage нет.
+  assert(!grid.writeCodepoint(' '));
+  assert(grid.cursorX() == 1);
+  assert(!grid.anyDirty());
+
+  grid.setCursor(3, 0);
+  assert(grid.writeCodepoint('A'));
+  assert(grid.dirtyMask(0) == ((u16) 1U << 3));
+  grid.clearDirty(0);
+  grid.setCursor(3, 0);
+  assert(!grid.writeCodepoint('A'));
+  assert(!grid.anyDirty());
+
+  // Одинаковое числовое значение, но другой тип ячейки — видимое изменение.
+  grid.setCursor(4, 0);
+  assert(grid.writeByte(3));
+  grid.clearDirty(0);
+  grid.setCursor(4, 0);
+  assert(!grid.writeByte(3));
+  assert(!grid.anyDirty());
+  grid.setCursor(4, 0);
+  assert(grid.writeCodepoint(3));
+  assert(!grid.cellIsCustom(4, 0));
+}
+
+static void test_page_damage(void) {
+  u16 masks[8] = {};
+  assert(!page_damage::any(masks, 8));
+
+  page_damage::markSpan(masks, 8, 8, 0, 10, 0x0001);
+  assert(masks[0] == 0x0001);
+  assert(masks[1] == 0x0001);
+  for(u8 page = 2; page < 8; page++) assert(masks[page] == 0);
+
+  page_damage::markSpan(masks, 8, 8, 18, 6, 0x0080);
+  assert(masks[2] == 0x0080);
+  page_damage::markSpan(masks, 8, 8, 63, 2, 0x8000);
+  assert(masks[7] == 0x8000);
+  page_damage::markSpan(masks, 8, 8, 64, 8, 0xFFFF);
+  assert(masks[7] == 0x8000);
+
+  page_damage::markAll(masks, 8, 0x0100);
+  for(u8 page = 0; page < 8; page++) {
+    assert((masks[page] & 0x0100) != 0);
+  }
+  assert(page_damage::any(masks, 8));
+  page_damage::clear(masks, 8);
+  assert(!page_damage::any(masks, 8));
 }
 
 static void test_uc1609_buffer_geometry(void) {
@@ -271,6 +327,8 @@ int main(int argc, char** argv) {
   test_lcd_scaling();
   test_uc1609_display_symbol_tokens();
   test_text_grid();
+  test_text_grid_skips_unchanged_cells();
+  test_page_damage();
   test_uc1609_buffer_geometry();
   if(argc > 1) validate_external_font(argv[1], argc > 2 && strcmp(argv[2], "--require-ink") == 0);
   printf("display_font_self_test: ok\n");

@@ -156,7 +156,9 @@ class ERM19264_UC1609 : public ERM19264_graphics {
   private:
 
     void send_data(uint8_t data); 
+    void send_data_buffer(const uint8_t* data, size_t length);
     void send_command(uint8_t command, uint8_t value);
+    void set_address(uint8_t column, uint8_t page);
     bool isHardwareSPI(void);
     void CustomshiftOut(uint8_t bitOrder, uint8_t val);
 
