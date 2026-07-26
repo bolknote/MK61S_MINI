@@ -1,5 +1,6 @@
 #include <wiring_constants.h>
 #include "keyboard.h"
+#include "keyboard_layout.hpp"
 #include "entropy_pool.hpp"
 #include "tools.hpp"
 #include "debug.h"
@@ -19,6 +20,17 @@ static constexpr t_time_ms  KEY_HOLD_MS       =   1500;  // константны
 static constexpr isize      KEY_CLICK_FREQ_HZ =   650;
 static constexpr usize      KEY_CLICK_MS      =   8;
 static constexpr usize      KEY_CLICK_VOLUME_PERCENT = 35;
+
+static constexpr t_time_ms initial_hold_ms(i32 key_code) {
+#if MK61_V2_RTC_POWEROFF_HANDOFF
+  if(key_code == (i32) keyboard_layout::ACTIVE.cx) {
+    return MK61_V2_RTC_POWEROFF_HOLD_MS;
+  }
+#else
+  (void) key_code;
+#endif
+  return KEY_HOLD_MS;
+}
 
 extern void idle_main_process(void);
 extern void idle_signal_reset(void);
@@ -192,7 +204,7 @@ void set_external_key_pressed(i32 key_code, bool pressed) {
   if(key_code < 0 || key_code >= (i32) KEY_IN_KEYBOARD) return;
 
   if(pressed) {
-    if(!external_keys.press(key_code, millis(), KEY_HOLD_MS)) return;
+    if(!external_keys.press(key_code, millis(), initial_hold_ms(key_code))) return;
     immediate_presses.note(key_code);
     entropy_pool::note_key((u8) key_code, micros());
     sound_scaled(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS,
@@ -315,7 +327,7 @@ isize scan(void) {
   // было нажатие, принимаем на удержание клавишу (учет только одного последнего удержания)
     hold_quant_counter  =   -1;
     holded_scan_code    =   scan_code;
-    press_time          =   millis() + KEY_HOLD_MS;
+    press_time          =   millis() + initial_hold_ms(scan_code);
     dbgln(KBD, "fixed press time: ", press_time, "ms, (hold) scan_code #", scan_code);
   } else {
   // было отжатие удержанной клавиши

@@ -15,6 +15,12 @@ namespace {
 static constexpr u32 TIME_SET_MARKER = 0x4D4B5254UL; // "MKRT"
 static bool initialized = false;
 
+struct PreservedBackupState {
+  bool time_was_set;
+  bool calibration_was_set;
+  u32 calibration_record;
+};
+
 #if defined(LSE_STARTUP_TIMEOUT)
 static constexpr u32 LSE_TIMEOUT_MS = LSE_STARTUP_TIMEOUT;
 #else
@@ -54,6 +60,33 @@ void write_marker(u32 value) {
   write_backup_register(RTC_BKP_DR2, value);
 }
 
+PreservedBackupState preserve_backup_state(void) {
+  const bool time_was_set =
+      backup_register_before_rtc_begin(LL_RTC_BKP_DR2) == TIME_SET_MARKER;
+  const u32 calibration_record =
+      backup_register_before_rtc_begin(LL_RTC_BKP_DR3);
+  i16 calibration = 0;
+  const bool calibration_was_set =
+      decode_calibration_record(calibration_record, calibration);
+  return {time_was_set, calibration_was_set, calibration_record};
+}
+
+void restore_backup_state(const PreservedBackupState& state) {
+  if(state.time_was_set && !marker_is_set()) {
+    // При смене RTCSEL библиотека возвращает календарь после сброса резервного
+    // домена, но пользовательские backup-регистры не восстанавливает.
+    write_marker(TIME_SET_MARKER);
+    dbgln(SPIROM, "RTC init: restored time-set marker after source change");
+  }
+
+  if(state.calibration_was_set &&
+     HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3) !=
+       state.calibration_record) {
+    write_backup_register(RTC_BKP_DR3, state.calibration_record);
+    dbgln(SPIROM, "RTC init: restored calibration after source change");
+  }
+}
+
 i16 stored_calibration_ppm(void) {
   i16 ppm = 0;
   const u32 record = HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3);
@@ -91,6 +124,13 @@ bool lse_gpio_is_released(void) {
          __HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) == RESET;
 }
 
+bool hardware_uses_clock_source(ClockSource source) {
+  const u32 selected = __HAL_RCC_GET_RTC_SOURCE();
+  return selected == (source == ClockSource::LSE
+      ? RCC_RTCCLKSOURCE_LSE
+      : RCC_RTCCLKSOURCE_LSI);
+}
+
 bool disable_retained_lse_for_gpio(void) {
   if(MK61_RTC_LSE_AVAILABLE) return true;
 
@@ -122,8 +162,14 @@ bool disable_retained_lse_for_gpio(void) {
   return stopped;
 }
 
-bool start_lse_without_fatal_handler(void) {
-  if(!MK61_RTC_LSE_AVAILABLE) return false;
+bool start_lse_without_fatal_handler(bool allow_shared_lcd_pin = false) {
+  bool allowed = MK61_RTC_LSE_AVAILABLE;
+#if MK61_V2_RTC_POWEROFF_HANDOFF
+  allowed = allowed || allow_shared_lcd_pin;
+#else
+  (void) allow_shared_lcd_pin;
+#endif
+  if(!allowed) return false;
 
   // enableClock(LSE_CLOCK) из STM32duino вызывает Error_Handler(), если кварц
   // не запускается. Поэтому предварительно проверяем генератор сами, используя
@@ -143,6 +189,29 @@ bool start_lse_without_fatal_handler(void) {
   return true;
 }
 
+void begin_with_clock_source(ClockSource source,
+                             const PreservedBackupState& backup) {
+  STM32RTC& rtc = hardware_rtc();
+  rtc.setClockSource(source == ClockSource::LSE
+      ? STM32RTC::LSE_CLOCK
+      : STM32RTC::LSI_CLOCK);
+  rtc.begin();
+  restore_backup_state(backup);
+}
+
+#if MK61_V2_RTC_POWEROFF_HANDOFF
+bool restore_lsi_after_failed_poweroff(
+    const PreservedBackupState& backup) {
+  begin_with_clock_source(ClockSource::LSI, backup);
+  const bool source_restored =
+      hardware_uses_clock_source(ClockSource::LSI);
+  const bool calibration_restored =
+      apply_smooth_calibration(stored_calibration_ppm());
+  const bool gpio_released = disable_retained_lse_for_gpio();
+  return source_restored && calibration_restored && gpio_released;
+}
+#endif
+
 } // анонимное пространство имён
 
 bool prepare_display_gpio(void) {
@@ -161,31 +230,8 @@ void init(void) {
   const bool lse_ready = start_lse_without_fatal_handler();
   const ClockSource source =
       select_clock_source(MK61_RTC_LSE_AVAILABLE, lse_ready);
-  STM32RTC& rtc = hardware_rtc();
-  rtc.setClockSource(source == ClockSource::LSE
-      ? STM32RTC::LSE_CLOCK
-      : STM32RTC::LSI_CLOCK);
-  const bool marker_was_set =
-      backup_register_before_rtc_begin(LL_RTC_BKP_DR2) == TIME_SET_MARKER;
-  const u32 calibration_record_before =
-      backup_register_before_rtc_begin(LL_RTC_BKP_DR3);
-  i16 calibration_before = 0;
-  const bool calibration_was_set =
-      decode_calibration_record(calibration_record_before, calibration_before);
-  rtc.begin(); // При смене источника библиотека сама переносит календарь.
-  if(marker_was_set && !marker_is_set()) {
-    // При смене RTCSEL библиотека возвращает календарь после сброса резервного
-    // домена, но пользовательские backup-регистры не восстанавливает.
-    write_marker(TIME_SET_MARKER);
-    dbgln(SPIROM, "RTC init: restored time-set marker after source change");
-  }
-  i16 calibration_after = 0;
-  if(calibration_was_set &&
-     !decode_calibration_record(
-       HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3), calibration_after)) {
-    write_backup_register(RTC_BKP_DR3, calibration_record_before);
-    dbgln(SPIROM, "RTC init: restored calibration after source change");
-  }
+  const PreservedBackupState backup = preserve_backup_state();
+  begin_with_clock_source(source, backup);
   if(!MK61_RTC_LSE_AVAILABLE && !lse_gpio_is_released() &&
      !disable_retained_lse_for_gpio()) {
     dbgln(SPIROM, "RTC init: WARNING, LSE returned after selecting LSI");
@@ -204,10 +250,15 @@ bool is_set(void) {
 
 bool read_clock_source(ClockSource& out) {
   if(!initialized) return false;
-  out = hardware_rtc().getClockSource() == STM32RTC::LSE_CLOCK
-      ? ClockSource::LSE
-      : ClockSource::LSI;
-  return true;
+  if(hardware_uses_clock_source(ClockSource::LSE)) {
+    out = ClockSource::LSE;
+    return true;
+  }
+  if(hardware_uses_clock_source(ClockSource::LSI)) {
+    out = ClockSource::LSI;
+    return true;
+  }
+  return false;
 }
 
 i16 calibration_ppm(void) {
@@ -231,6 +282,51 @@ bool set_calibration_ppm(i16 ppm) {
   write_backup_register(RTC_BKP_DR3, old_record);
   (void) apply_smooth_calibration(old_ppm);
   return false;
+}
+
+PoweroffLseResult switch_to_lse_for_poweroff(void) {
+#if !MK61_V2_RTC_POWEROFF_HANDOFF
+  return PoweroffLseResult::UNSUPPORTED;
+#else
+  if(!initialized) return PoweroffLseResult::NOT_INITIALIZED;
+
+  DateTime before = {};
+  if(!marker_is_set() || !read(before)) {
+    return PoweroffLseResult::TIME_NOT_SET;
+  }
+
+  const PreservedBackupState backup = preserve_backup_state();
+  dbgln(SPIROM, "RTC poweroff: starting LSE on shared PC15");
+  if(!start_lse_without_fatal_handler(true)) {
+    dbgln(SPIROM, "RTC poweroff: LSE failed to start");
+    return disable_retained_lse_for_gpio()
+        ? PoweroffLseResult::LSE_START_FAILED
+        : PoweroffLseResult::GPIO_RELEASE_FAILED;
+  }
+
+  // STM32duino переносит календарь при смене RTCSEL. Пользовательская поправка
+  // V2 относится к неточному LSI, поэтому для резервного хода от кварца LSE
+  // сбрасываем аппаратную smooth calibration, но сохраняем её запись для
+  // возврата на LSI при следующем включении.
+  begin_with_clock_source(ClockSource::LSE, backup);
+  DateTime after = {};
+  const bool switched =
+      __HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET &&
+      hardware_uses_clock_source(ClockSource::LSE) &&
+      read(after) &&
+      apply_smooth_calibration(0);
+  if(switched) {
+    dbgln(SPIROM, "RTC poweroff: LSE ready");
+    return PoweroffLseResult::READY;
+  }
+
+  dbgln(SPIROM, "RTC poweroff: source switch failed, restoring LSI");
+  if(!restore_lsi_after_failed_poweroff(backup) &&
+     !lse_gpio_is_released()) {
+    return PoweroffLseResult::GPIO_RELEASE_FAILED;
+  }
+  return PoweroffLseResult::SOURCE_SWITCH_FAILED;
+#endif
 }
 
 bool startup_snapshot(StartupSnapshot& out) {
