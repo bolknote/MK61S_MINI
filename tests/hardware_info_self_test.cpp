@@ -60,21 +60,37 @@ static void test_line_formatting(void) {
   assert(std::strcmp(line, "ЭКРАН:UC1609") == 0);
   assert(utf8_width(line) == 12);
 
+  assert(hardware_info::format_generator_line(
+    line, sizeof(line), true, "LSE"));
+  assert(std::strcmp(line, "Генератор:LSE") == 0);
+  assert(utf8_width(line) == 13);
+
+  assert(hardware_info::format_generator_line(
+    line, sizeof(line), false, "LSI"));
+  assert(std::strcmp(line, "Generator:LSI") == 0);
+  assert(utf8_width(line) == 13);
+
   char short_line[8];
   assert(!hardware_info::format_display_line(
     short_line, sizeof(short_line), false, "LCD1602A00"));
+  assert(!hardware_info::format_generator_line(
+    short_line, sizeof(short_line), false, "LSE"));
 }
 
 static void test_scroll_bounds(void) {
-  assert(hardware_info::max_scroll_offset(2) == 2);
+  assert(hardware_info::max_scroll_offset(2) == 3);
   assert(hardware_info::step_scroll_offset(0, 2, -1) == 0);
   assert(hardware_info::step_scroll_offset(0, 2, 1) == 1);
   assert(hardware_info::step_scroll_offset(1, 2, 1) == 2);
-  assert(hardware_info::step_scroll_offset(2, 2, 1) == 2);
+  assert(hardware_info::step_scroll_offset(2, 2, 1) == 3);
+  assert(hardware_info::step_scroll_offset(3, 2, 1) == 3);
+  assert(hardware_info::step_scroll_offset(3, 2, -1) == 2);
   assert(hardware_info::step_scroll_offset(2, 2, -1) == 1);
 
-  assert(hardware_info::max_scroll_offset(4) == 0);
-  assert(hardware_info::step_scroll_offset(2, 4, 1) == 0);
+  assert(hardware_info::max_scroll_offset(4) == 1);
+  assert(hardware_info::step_scroll_offset(0, 4, 1) == 1);
+  assert(hardware_info::step_scroll_offset(1, 4, 1) == 1);
+  assert(hardware_info::max_scroll_offset(5) == 0);
   assert(hardware_info::max_scroll_offset(6) == 0);
 }
 

@@ -336,6 +336,10 @@ static void test_rtc_datetime_parser_and_formatter(void) {
          rtc_clock::ClockSource::LSI);
   assert(rtc_clock::select_clock_source(true, true) ==
          rtc_clock::ClockSource::LSE);
+  assert(std::strcmp(
+    rtc_clock::clock_source_name(rtc_clock::ClockSource::LSI), "LSI") == 0);
+  assert(std::strcmp(
+    rtc_clock::clock_source_name(rtc_clock::ClockSource::LSE), "LSE") == 0);
   assert(!rtc_clock::retained_lse_must_be_disabled(false, false));
   assert(rtc_clock::retained_lse_must_be_disabled(false, true));
   assert(!rtc_clock::retained_lse_must_be_disabled(true, false));

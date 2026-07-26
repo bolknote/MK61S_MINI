@@ -158,6 +158,14 @@ bool is_set(void) {
   return initialized && marker_is_set();
 }
 
+bool read_clock_source(ClockSource& out) {
+  if(!initialized) return false;
+  out = hardware_rtc().getClockSource() == STM32RTC::LSE_CLOCK
+      ? ClockSource::LSE
+      : ClockSource::LSI;
+  return true;
+}
+
 bool startup_snapshot(StartupSnapshot& out) {
   if(!initialized) return false;
 

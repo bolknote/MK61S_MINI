@@ -8,6 +8,7 @@ namespace rtc_clock {
 bool prepare_display_gpio(void);
 void init(void);
 bool is_set(void);
+bool read_clock_source(ClockSource& out);
 bool startup_snapshot(StartupSnapshot& out);
 bool read(DateTime& out);
 bool set(const DateTime& value);

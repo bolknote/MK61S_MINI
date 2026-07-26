@@ -7,7 +7,7 @@
 
 namespace hardware_info {
 
-static constexpr u8 LINE_COUNT = 4;
+static constexpr u8 LINE_COUNT = 5;
 static constexpr u16 ADC_FULL_SCALE = 4095;
 static constexpr u16 VREF_CALIBRATION_MV = 3300;
 static constexpr u8 VBAT_DIVIDER = 4;
@@ -63,6 +63,15 @@ inline bool format_display_line(
   if(out == NULL || size == 0 || display_type == NULL) return false;
   const int written = snprintf(
     out, size, russian ? "ЭКРАН:%s" : "Disp:%s", display_type);
+  return written >= 0 && (usize) written < size;
+}
+
+inline bool format_generator_line(
+    char* out, usize size, bool russian, const char* generator_type) {
+  if(out == NULL || size == 0 || generator_type == NULL) return false;
+  const int written = snprintf(
+    out, size, russian ? "Генератор:%s" : "Generator:%s",
+    generator_type);
   return written >= 0 && (usize) written < size;
 }
 
