@@ -22,6 +22,23 @@ extern bool usb_start_mass_storage_mode(void);
 extern bool usb_start_terminal_mode(void);
 extern isize mk61_quants_reload;
 
+static constexpr i32 DISPLAY_MODE_CHANGED = -2;
+
+static i32 wait_key_or_display_change(u32 display_mode_revision) {
+  do {
+    idle_main_process();
+    if(main_lcd().displayModeRevision() != display_mode_revision) {
+      return DISPLAY_MODE_CHANGED;
+    }
+
+    const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0) kbd::exclude_before(scan_code);
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      return scan_code;
+    }
+  } while(true);
+}
+
 namespace library_mk61 {
 
 static constexpr int MENU_DFU      = 0;
@@ -176,7 +193,6 @@ static void build_ru_memory_text(char* out, usize size) {
 }
 
 static constexpr usize HARDWARE_LINE_SIZE = 32;
-static constexpr i32 HARDWARE_DISPLAY_CHANGED = -2;
 
 static void build_hardware_lines(
     char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
@@ -233,21 +249,6 @@ static void draw_hardware_lines(
   }
 }
 
-static i32 wait_hardware_key(u32 display_mode_revision) {
-  do {
-    idle_main_process();
-    if(main_lcd().displayModeRevision() != display_mode_revision) {
-      return HARDWARE_DISPLAY_CHANGED;
-    }
-
-    const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0) kbd::exclude_before(scan_code);
-    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
-      return scan_code;
-    }
-  } while(true);
-}
-
 bool  HardwareInfo(void) {
   char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE];
   build_hardware_lines(lines, hardware_info::read_vbat());
@@ -257,10 +258,10 @@ bool  HardwareInfo(void) {
     offset = hardware_info::clamp_scroll_offset(
       offset, main_lcd().rows());
     draw_hardware_lines(lines, offset);
-    const i32 key = wait_hardware_key(
+    const i32 key = wait_key_or_display_change(
       main_lcd().displayModeRevision());
 
-    if(key == HARDWARE_DISPLAY_CHANGED) continue;
+    if(key == DISPLAY_MODE_CHANGED) continue;
     if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
       offset = hardware_info::step_scroll_offset(
         offset, main_lcd().rows(), -1);
@@ -824,7 +825,9 @@ bool SetDateTime(void) {
 
   while(true) {
     drawDateTimeEditor(editor);
-    const i32 key = kbd::get_key_wait();
+    const i32 key = wait_key_or_display_change(
+      main_lcd().displayModeRevision());
+    if(key == DISPLAY_MODE_CHANGED) continue;
     const int digit = dateTimeDigitFromKey(key);
     if(digit >= 0) {
       rtc_settings::enter_digit(editor, digit);
@@ -885,7 +888,9 @@ bool SetRtcCalibration(void) {
 
   while(true) {
     drawRtcCalibrationEditor(editor);
-    const i32 key = kbd::get_key_wait();
+    const i32 key = wait_key_or_display_change(
+      main_lcd().displayModeRevision());
+    if(key == DISPLAY_MODE_CHANGED) continue;
     const int digit = dateTimeDigitFromKey(key);
     if(digit >= 0) {
       rtc_settings::enter_digit(editor, digit);
