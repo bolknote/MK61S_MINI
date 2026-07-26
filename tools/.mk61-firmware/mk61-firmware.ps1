@@ -932,6 +932,17 @@ function Resolve-Executable {
     return $resolved.Source
 }
 
+function Get-CurrentPowerShellExecutable {
+    if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        return Resolve-Executable (Join-Path $PSHOME 'powershell.exe')
+    }
+    try {
+        return Resolve-Executable (Get-Process -Id $PID).Path
+    } catch {
+        return Resolve-Executable 'pwsh'
+    }
+}
+
 function Test-CommandAvailable {
     param([string]$Command)
     return -not [string]::IsNullOrEmpty((Resolve-Executable $Command))
@@ -1057,8 +1068,12 @@ function Test-SystemAppsEnabled {
 
 function Test-AnyAppsRequested {
     return (Test-SystemAppsEnabled) -or
-        -not [string]::IsNullOrWhiteSpace(
-            [Environment]::GetEnvironmentVariable('MK61_APP_MANIFESTS'))
+        (Test-CustomAppsRequested)
+}
+
+function Test-CustomAppsRequested {
+    return -not [string]::IsNullOrWhiteSpace(
+        [Environment]::GetEnvironmentVariable('MK61_APP_MANIFESTS'))
 }
 
 function Get-ExpectedSystemAppNames {
@@ -1100,16 +1115,36 @@ function Convert-ToBashPath {
     return $Path
 }
 
+function Get-F401NativeBuilderPath {
+    return Join-Path $script:ScriptDir 'build-f401-native.ps1'
+}
+
+function Get-SystemAppsStandaloneBuilderPath {
+    return Join-Path (
+        Join-Path (Join-Path $script:ProjectRoot 'system_apps') '.tool'
+    ) 'build.ps1'
+}
+
 function Test-F401HostToolsReady {
     if ($script:State.Mcu -ne 'f401') { return $true }
-    if (-not (Test-Path -LiteralPath (Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh') -PathType Leaf)) {
+    if (Test-CustomAppsRequested) {
+        if (-not (Test-Path -LiteralPath (Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh') -PathType Leaf)) {
+            return $false
+        }
+        $bash = Find-BashExecutable
+        if ([string]::IsNullOrEmpty($bash)) { return $false }
+        $result = Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')
+        return $result.ExitCode -eq 0
+    }
+    if (-not (Test-Path -LiteralPath (Get-F401NativeBuilderPath) -PathType Leaf) -or
+        [string]::IsNullOrEmpty((Get-CurrentPowerShellExecutable))) {
         return $false
     }
-    $bash = Find-BashExecutable
-    if ([string]::IsNullOrEmpty($bash)) { return $false }
-    if (-not (Test-AnyAppsRequested)) { return $true }
-    $result = Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')
-    return $result.ExitCode -eq 0
+    if ((Test-SystemAppsEnabled) -and
+        -not (Test-Path -LiteralPath (Get-SystemAppsStandaloneBuilderPath) -PathType Leaf)) {
+        return $false
+    }
+    return $true
 }
 
 function Test-BuildDependenciesReady {
@@ -1135,25 +1170,39 @@ function Get-DependencyReport {
         $lines.Add('Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
     }
     if ($script:State.Mcu -eq 'f401') {
-        $builder = Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh'
-        if (Test-Path -LiteralPath $builder -PathType Leaf) {
-            $lines.Add('F401 bundle builder: найден')
+        if (Test-CustomAppsRequested) {
+            $builder = Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh'
+            if (Test-Path -LiteralPath $builder -PathType Leaf) {
+                $lines.Add('F401 custom APP builder: найден')
+            } else {
+                $lines.Add('F401 custom APP builder: НЕ НАЙДЕН')
+            }
+            $bash = Find-BashExecutable
+            if ([string]::IsNullOrEmpty($bash)) {
+                $lines.Add('Bash: НЕ НАЙДЕН (нужен для MK61_APP_MANIFESTS)')
+            } else {
+                $lines.Add("Bash: $bash")
+            }
+            if (-not [string]::IsNullOrEmpty($bash) -and
+                (Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')).ExitCode -eq 0) {
+                $lines.Add('Host C++17 compiler: найден')
+            } else {
+                $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для MK61_APP_MANIFESTS)')
+            }
         } else {
-            $lines.Add('F401 bundle builder: НЕ НАЙДЕН')
-        }
-        $bash = Find-BashExecutable
-        if ([string]::IsNullOrEmpty($bash)) {
-            $lines.Add('Bash: НЕ НАЙДЕН (на Windows установите Git for Windows или MSYS2)')
-        } else {
-            $lines.Add("Bash: $bash")
-        }
-        if (-not (Test-AnyAppsRequested)) {
-            $lines.Add('Host C++17 compiler: не нужен (APP не запрошены)')
-        } elseif (-not [string]::IsNullOrEmpty($bash) -and
-            (Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')).ExitCode -eq 0) {
-            $lines.Add('Host C++17 compiler: найден')
-        } else {
-            $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для упаковщика APP)')
+            if (Test-Path -LiteralPath (Get-F401NativeBuilderPath) -PathType Leaf) {
+                $lines.Add('F401 native builder: найден')
+            } else {
+                $lines.Add('F401 native builder: НЕ НАЙДЕН')
+            }
+            if (Test-SystemAppsEnabled) {
+                if (Test-Path -LiteralPath (Get-SystemAppsStandaloneBuilderPath) -PathType Leaf) {
+                    $lines.Add('System APP standalone builder: найден')
+                } else {
+                    $lines.Add('System APP standalone builder: НЕ НАЙДЕН')
+                }
+            }
+            $lines.Add('Bash и host C++17 compiler: не нужны')
         }
     }
     if ($script:IsWindowsHost) {
@@ -1754,7 +1803,7 @@ function Show-LastLogTail {
     foreach ($line in @(Get-Content -LiteralPath $script:LastLog -Tail $Count)) { [Console]::Error.WriteLine($line) }
 }
 
-function Invoke-F401BundleBuild {
+function Invoke-F401CustomBundleBuild {
     param([string]$Profile)
     $bash = Find-BashExecutable
     if ([string]::IsNullOrEmpty($bash)) {
@@ -1799,6 +1848,59 @@ function Invoke-F401BundleBuild {
             [Environment]::SetEnvironmentVariable($name, $previous[$name], 'Process')
         }
     }
+}
+
+function Invoke-F401NativeBundleBuild {
+    param([string]$Profile)
+    $powerShell = Get-CurrentPowerShellExecutable
+    if ([string]::IsNullOrEmpty($powerShell)) {
+        Write-LastLog 'PowerShell 5.1 or newer is required for the native F401 builder.'
+        return $false
+    }
+    $worker = Get-F401NativeBuilderPath
+    $resolvedArduino = Resolve-Executable $script:ArduinoCli
+    if ([string]::IsNullOrEmpty($resolvedArduino)) {
+        Write-LastLog "arduino-cli was not found: $($script:ArduinoCli)"
+        return $false
+    }
+    $artifactName = Get-ProfileArtifactName $Profile 'f401'
+    $bundle = [IO.Path]::GetFileNameWithoutExtension($artifactName)
+    $arguments = New-Object 'System.Collections.Generic.List[string]'
+    $arguments.Add('-NoLogo')
+    $arguments.Add('-NoProfile')
+    if ($script:IsWindowsHost) {
+        $arguments.Add('-ExecutionPolicy')
+        $arguments.Add('Bypass')
+    }
+    foreach ($argument in @(
+        '-File', $worker,
+        '-ArduinoCli', $resolvedArduino,
+        '-ProjectRoot', $script:ProjectRoot,
+        '-BuildRoot', (Join-Path $script:BuildRoot "f401-native/$Profile"),
+        '-OutputDir', $script:OutputDir,
+        '-Profile', $Profile,
+        '-Platform', [string]$script:State.Platform,
+        '-Display', [string]$script:State.Screen,
+        '-Bundle', $bundle,
+        '-CompileFlags', (Get-AllCompileFlags $Profile),
+        '-Focal', [string]$script:State.EnableFocal,
+        '-Basic', [string]$script:State.EnableTinyBasic,
+        '-Wbmp', [string]$script:State.EnableWbmp,
+        '-Chip8', [string]$script:State.EnableChip8
+    )) {
+        $arguments.Add([string]$argument)
+    }
+    return Invoke-ExternalWithProgress 'Сборка комплекта F401' `
+        "Собираю resident и System APP: $(Get-ProfileLabel $Profile)" `
+        $script:LastLog 'indeterminate' $powerShell $arguments.ToArray()
+}
+
+function Invoke-F401BundleBuild {
+    param([string]$Profile)
+    if (Test-CustomAppsRequested) {
+        return Invoke-F401CustomBundleBuild $Profile
+    }
+    return Invoke-F401NativeBundleBuild $Profile
 }
 
 function Build-Selected {

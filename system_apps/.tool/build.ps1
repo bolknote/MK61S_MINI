@@ -1,0 +1,485 @@
+#requires -Version 5.1
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$BuildPath,
+
+    [string]$ResidentElf,
+    [string]$ResidentBin,
+    [string]$CompileCommands,
+    [string]$OutputDirectory,
+
+    [ValidateSet('0', '1')]
+    [string]$Focal = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Basic = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Wbmp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Chip8 = '1',
+
+    [switch]$KeepBuild
+)
+
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+
+$script:ToolDir = $PSScriptRoot
+$script:AppsRoot = [IO.Path]::GetFullPath((Join-Path $script:ToolDir '..'))
+$script:ProjectRoot = [IO.Path]::GetFullPath(
+    (Join-Path $script:AppsRoot '..'))
+$script:LinkerScript = Join-Path $script:ProjectRoot 'tools/mk61_module.ld'
+$script:WorkPath = Join-Path $script:AppsRoot '.build'
+
+function Stop-SystemAppsBuild {
+    param([Parameter(Mandatory = $true)][string]$Message)
+    throw "MK61s System APP: $Message"
+}
+
+function Test-RequiredFile {
+    param([string]$Path, [string]$Description)
+    if ([string]::IsNullOrWhiteSpace($Path) -or
+        -not [IO.File]::Exists($Path)) {
+        Stop-SystemAppsBuild "$Description not found: $Path"
+    }
+}
+
+function Invoke-ArmTool {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string[]]$Arguments
+    )
+    & $Path @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        Stop-SystemAppsBuild (
+            "$([IO.Path]::GetFileName($Path)) failed with exit code " +
+            "$LASTEXITCODE")
+    }
+}
+
+function Get-ArmToolOutput {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string[]]$Arguments
+    )
+    $result = @(& $Path @Arguments 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        Stop-SystemAppsBuild (
+            "$([IO.Path]::GetFileName($Path)) failed with exit code " +
+            "$LASTEXITCODE")
+    }
+    return $result
+}
+
+function Get-ElfSymbol {
+    param([string]$Elf, [string]$Name)
+    foreach ($line in (Get-ArmToolOutput $script:Nm @(
+        '-g', '--defined-only', $Elf
+    ))) {
+        $text = [string]$line
+        if ($text -match '^\s*([0-9A-Fa-f]+)\s+\S+\s+(.+?)\s*$' -and
+            $Matches[2] -eq $Name) {
+            return $Matches[1]
+        }
+    }
+    Stop-SystemAppsBuild "ELF symbol not found: $Name"
+}
+
+function Get-HexUInt32 {
+    param([string]$Text)
+    return [Convert]::ToUInt32($Text, 16)
+}
+
+function Get-Crc32Bytes {
+    param(
+        [Parameter(Mandatory = $true)][byte[]]$Bytes,
+        [int]$Count = -1
+    )
+    if ($Count -lt 0) { $Count = $Bytes.Length }
+    if ($Count -gt $Bytes.Length) {
+        Stop-SystemAppsBuild 'internal CRC32 byte count error'
+    }
+    [uint32]$state = [uint32]::MaxValue
+    for ($index = 0; $index -lt $Count; $index++) {
+        $state = [uint32]($state -bxor [uint32]$Bytes[$index])
+        for ($bit = 0; $bit -lt 8; $bit++) {
+            if (($state -band [uint32]1) -ne 0) {
+                $state = [uint32](($state -shr 1) -bxor
+                    [uint32]3988292384)
+            } else {
+                $state = [uint32]($state -shr 1)
+            }
+        }
+    }
+    return [uint32]($state -bxor [uint32]::MaxValue)
+}
+
+function Set-Le16 {
+    param([byte[]]$Data, [int]$Offset, [uint16]$Value)
+    $Data[$Offset] = [byte]($Value -band 0xFF)
+    $Data[$Offset + 1] = [byte](($Value -shr 8) -band 0xFF)
+}
+
+function Set-Le32 {
+    param([byte[]]$Data, [int]$Offset, [uint32]$Value)
+    $Data[$Offset] = [byte]($Value -band 0xFF)
+    $Data[$Offset + 1] = [byte](($Value -shr 8) -band 0xFF)
+    $Data[$Offset + 2] = [byte](($Value -shr 16) -band 0xFF)
+    $Data[$Offset + 3] = [byte](($Value -shr 24) -band 0xFF)
+}
+
+function Write-AppContainer {
+    param(
+        [byte]$Kind,
+        [uint16]$HandledMagic,
+        [string]$Resident,
+        [string]$Image,
+        [uint32]$MemorySize,
+        [uint32]$EntryOffset,
+        [uint32]$LoadAddress,
+        [string]$Target
+    )
+    [byte[]]$residentBytes = [IO.File]::ReadAllBytes($Resident)
+    [byte[]]$imageBytes = [IO.File]::ReadAllBytes($Image)
+    if ($residentBytes.Length -le 0 -or
+        $residentBytes.Length -gt 512KB) {
+        Stop-SystemAppsBuild 'resident BIN has an invalid size'
+    }
+    if ($imageBytes.Length -le 0 -or
+        $imageBytes.Length -gt $MemorySize) {
+        Stop-SystemAppsBuild 'module image has an invalid size'
+    }
+    if ($MemorySize -gt 20KB -or $imageBytes.Length + 64 -gt 20544) {
+        Stop-SystemAppsBuild 'module does not fit the 20 KiB APP container'
+    }
+    if ($EntryOffset -ge $imageBytes.Length -or
+        ($EntryOffset -band 1) -ne 0) {
+        Stop-SystemAppsBuild 'module entry point is invalid'
+    }
+
+    [byte[]]$header = New-Object byte[] 64
+    [byte[]]$magic = [Text.Encoding]::ASCII.GetBytes("MK61APP`0")
+    [Array]::Copy($magic, 0, $header, 0, $magic.Length)
+    Set-Le16 $header 8 1
+    Set-Le16 $header 10 64
+    Set-Le16 $header 12 2
+    $header[14] = $Kind
+    $header[15] = 0
+    Set-Le32 $header 16 0
+    Set-Le32 $header 20 $LoadAddress
+    Set-Le32 $header 24 ([uint32]$imageBytes.Length)
+    Set-Le32 $header 28 ([uint32]$imageBytes.Length)
+    Set-Le32 $header 32 $MemorySize
+    Set-Le32 $header 36 $EntryOffset
+    Set-Le32 $header 40 ([uint32]$residentBytes.Length)
+    Set-Le32 $header 44 (Get-Crc32Bytes $residentBytes)
+    Set-Le32 $header 48 (Get-Crc32Bytes $imageBytes)
+    Set-Le32 $header 52 (Get-Crc32Bytes $imageBytes)
+    Set-Le16 $header 56 $HandledMagic
+    Set-Le16 $header 58 0
+    Set-Le32 $header 60 (Get-Crc32Bytes $header 60)
+
+    [byte[]]$container = New-Object byte[] (
+        $header.Length + $imageBytes.Length)
+    [Buffer]::BlockCopy($header, 0, $container, 0, $header.Length)
+    [Buffer]::BlockCopy(
+        $imageBytes, 0, $container, $header.Length, $imageBytes.Length)
+    $parent = [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Target))
+    [IO.Directory]::CreateDirectory($parent) | Out-Null
+    $temporary = "$Target.tmp"
+    [IO.File]::WriteAllBytes($temporary, $container)
+    Move-Item -LiteralPath $temporary -Destination $Target -Force
+}
+
+function Find-SingleArtifact {
+    param([string]$Directory, [string]$Extension, [string]$Description)
+    $items = @(Get-ChildItem -LiteralPath $Directory -File |
+        Where-Object { $_.Extension -ieq $Extension })
+    if ($items.Count -ne 1) {
+        Stop-SystemAppsBuild (
+            "expected one $Description in $Directory, found $($items.Count)")
+    }
+    return $items[0].FullName
+}
+
+function Get-CompileEntry {
+    param([object[]]$Entries, [string]$SourceName)
+    foreach ($entry in $Entries) {
+        if ([IO.Path]::GetFileName([string]$entry.file) -eq $SourceName) {
+            if ($null -eq $entry.arguments -or
+                $entry.arguments.Count -eq 0) {
+                Stop-SystemAppsBuild (
+                    "compile database entry for $SourceName has no " +
+                    'arguments array')
+            }
+            return $entry
+        }
+    }
+    Stop-SystemAppsBuild (
+        "compile database has no $SourceName entry")
+}
+
+function Test-SamePath {
+    param([string]$Left, [string]$Right)
+    if ($Left -eq $Right) { return $true }
+    try {
+        if (-not [IO.Path]::IsPathRooted($Left) -or
+            -not [IO.Path]::IsPathRooted($Right)) {
+            return $false
+        }
+        return [IO.Path]::GetFullPath($Left).Equals(
+            [IO.Path]::GetFullPath($Right),
+            [StringComparison]::OrdinalIgnoreCase)
+    } catch {
+        return $false
+    }
+}
+
+function Get-RelatedTool {
+    param([string]$Compiler, [string]$Name)
+    $directory = [IO.Path]::GetDirectoryName($Compiler)
+    $extension = [IO.Path]::GetExtension($Compiler)
+    $candidate = Join-Path $directory ("arm-none-eabi-$Name$extension")
+    Test-RequiredFile $candidate "ARM $Name"
+    return $candidate
+}
+
+function Get-SelectedApps {
+    $apps = New-Object 'System.Collections.Generic.List[object]'
+    if ($Focal -eq '1') {
+        $apps.Add([pscustomobject]@{
+            Id = 'focal'
+            FileName = 'FOCAL.APP'
+            Kind = [byte]1
+            HandledMagic = [uint16]0
+            Template = 'focal.cpp'
+        })
+    }
+    if ($Basic -eq '1') {
+        $apps.Add([pscustomobject]@{
+            Id = 'basic'
+            FileName = 'BASIC.APP'
+            Kind = [byte]2
+            HandledMagic = [uint16]0
+            Template = 'tinybasic.cpp'
+        })
+    }
+    if ($Wbmp -eq '1') {
+        $apps.Add([pscustomobject]@{
+            Id = 'wbmp'
+            FileName = 'WBMP.APP'
+            Kind = [byte]3
+            HandledMagic = [uint16]0x3149
+            Template = 'wbmp.cpp'
+        })
+    }
+    if ($Chip8 -eq '1') {
+        $apps.Add([pscustomobject]@{
+            Id = 'chip8'
+            FileName = 'CHIP8.APP'
+            Kind = [byte]5
+            HandledMagic = [uint16]0x3143
+            Template = 'chip8.cpp'
+        })
+    }
+    return $apps.ToArray()
+}
+
+function Build-SystemApp {
+    param([pscustomobject]$App, [object[]]$CompileEntries)
+
+    $compileEntry = Get-CompileEntry $CompileEntries $App.Template
+    [string[]]$template = @($compileEntry.arguments |
+        ForEach-Object { [string]$_ })
+    $entryCompiler = [IO.Path]::GetFullPath($template[0])
+    if (-not $entryCompiler.Equals(
+        $script:Compiler, [StringComparison]::OrdinalIgnoreCase)) {
+        Stop-SystemAppsBuild (
+            "$($App.FileName) uses a different ARM compiler")
+    }
+
+    $mainSource = Join-Path (
+        Join-Path $script:AppsRoot $App.Id) 'main.cpp'
+    Test-RequiredFile $mainSource "$($App.FileName) main translation unit"
+    $moduleDir = Join-Path $script:WorkPath $App.Id
+    [IO.Directory]::CreateDirectory($moduleDir) | Out-Null
+    $object = Join-Path $moduleDir "$($App.Id).o"
+    $moduleElf = Join-Path $moduleDir "$($App.Id).elf"
+    $moduleMap = Join-Path $moduleDir "$($App.Id).map"
+    $moduleImage = Join-Path $moduleDir "$($App.Id).bin"
+
+    $compileArguments = New-Object 'System.Collections.Generic.List[string]'
+    for ($index = 1; $index -lt $template.Count; $index++) {
+        $argument = $template[$index]
+        if ($argument -eq '-o') {
+            $index++
+            continue
+        }
+        if ((Test-SamePath $argument ([string]$compileEntry.file)) -or
+            $argument -eq '-MMD' -or $argument -eq '-flto') {
+            continue
+        }
+        $compileArguments.Add($argument)
+    }
+    $compileArguments.Add('-flto')
+    $compileArguments.Add("-I$(Join-Path $script:ProjectRoot 'code')")
+    $compileArguments.Add($mainSource)
+    $compileArguments.Add('-o')
+    $compileArguments.Add($object)
+    Invoke-ArmTool $script:Compiler $compileArguments.ToArray()
+
+    Invoke-ArmTool $script:Compiler @(
+        '-mcpu=cortex-m4',
+        '-mfpu=fpv4-sp-d16',
+        '-mfloat-abi=hard',
+        '-mthumb',
+        '-Os',
+        '-flto',
+        '-nostartfiles',
+        '-nostdlib',
+        '-Wl,--gc-sections',
+        "-Wl,--just-symbols=$script:ResidentElf",
+        "-Wl,--defsym=MK61_MODULE_ORIGIN=0x$script:OverlayHex",
+        "-Wl,-T,$script:LinkerScript",
+        "-Wl,-Map,$moduleMap",
+        $object,
+        '-o',
+        $moduleElf
+    )
+
+    $unexpected = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($line in (Get-ArmToolOutput $script:Size @(
+        '-A', $moduleElf
+    ))) {
+        if ([string]$line -match '^\s*(\.\S+)\s+([0-9]+)\s+' -and
+            [uint64]$Matches[2] -ne 0 -and
+            $Matches[1] -ne '.module_image' -and
+            $Matches[1] -ne '.module_bss') {
+            $unexpected.Add($Matches[1])
+        }
+    }
+    if ($unexpected.Count -ne 0) {
+        Stop-SystemAppsBuild (
+            "$($App.FileName) has unexpected ELF sections: " +
+            "$($unexpected -join ', ')")
+    }
+
+    [uint32]$imageStart = Get-HexUInt32 (
+        Get-ElfSymbol $moduleElf '__module_image_start')
+    [uint32]$memoryEnd = Get-HexUInt32 (
+        Get-ElfSymbol $moduleElf '__module_memory_end')
+    [uint32]$entryAddress = Get-HexUInt32 (
+        Get-ElfSymbol $moduleElf 'mk61_module_entry')
+    [uint32]$memorySize = $memoryEnd - $imageStart
+    [uint32]$entryOffset = $entryAddress - $imageStart
+    if ($memorySize -eq 0 -or $memorySize -gt 20KB -or
+        $entryOffset -ge 20KB -or ($entryOffset -band 1) -ne 0) {
+        Stop-SystemAppsBuild (
+            "$($App.FileName) does not fit the 20 KiB SRAM overlay")
+    }
+
+    Invoke-ArmTool $script:Objcopy @(
+        '-O', 'binary', '-j', '.module_image', $moduleElf, $moduleImage
+    )
+    if ($entryOffset -ge (Get-Item -LiteralPath $moduleImage).Length) {
+        Stop-SystemAppsBuild (
+            "$($App.FileName) entry point is outside its stored image")
+    }
+    $target = Join-Path $script:OutputDirectory $App.FileName
+    Write-AppContainer $App.Kind $App.HandledMagic `
+        $script:ResidentBin $moduleImage $memorySize $entryOffset `
+        (Get-HexUInt32 $script:OverlayHex) $target
+    [Console]::WriteLine(
+        ('MK61s APP: {0,-10} {1,5} bytes, SRAM {2,5} / 20480' -f
+            $App.FileName, (Get-Item -LiteralPath $target).Length,
+            $memorySize))
+}
+
+try {
+    $BuildPath = [IO.Path]::GetFullPath($BuildPath)
+    if (-not [IO.Directory]::Exists($BuildPath)) {
+        Stop-SystemAppsBuild (
+            "Arduino build directory not found: $BuildPath")
+    }
+    if ([string]::IsNullOrWhiteSpace($CompileCommands)) {
+        $CompileCommands = Join-Path $BuildPath 'compile_commands.json'
+    }
+    if ([string]::IsNullOrWhiteSpace($ResidentElf)) {
+        $ResidentElf = Find-SingleArtifact $BuildPath '.elf' 'resident ELF'
+    }
+    if ([string]::IsNullOrWhiteSpace($ResidentBin)) {
+        $ResidentBin = Find-SingleArtifact $BuildPath '.bin' 'resident BIN'
+    }
+    if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
+        $OutputDirectory = Join-Path $script:AppsRoot 'System'
+    }
+    $script:ResidentElf = [IO.Path]::GetFullPath($ResidentElf)
+    $script:ResidentBin = [IO.Path]::GetFullPath($ResidentBin)
+    $CompileCommands = [IO.Path]::GetFullPath($CompileCommands)
+    $finalOutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
+
+    Test-RequiredFile $script:LinkerScript 'MK61 module linker script'
+    Test-RequiredFile $script:ResidentElf 'resident ELF'
+    Test-RequiredFile $script:ResidentBin 'resident BIN'
+    Test-RequiredFile $CompileCommands 'Arduino compile database'
+
+    [object[]]$compileEntries = @(
+        Get-Content -LiteralPath $CompileCommands -Raw | ConvertFrom-Json)
+    [object[]]$selectedApps = @(Get-SelectedApps)
+
+    if ($selectedApps.Count -gt 0) {
+        $firstEntry = Get-CompileEntry $compileEntries `
+            $selectedApps[0].Template
+        $firstArguments = @($firstEntry.arguments |
+            ForEach-Object { [string]$_ })
+        $script:Compiler = [IO.Path]::GetFullPath($firstArguments[0])
+        Test-RequiredFile $script:Compiler 'ARM C++ compiler'
+        $script:Objcopy = Get-RelatedTool $script:Compiler 'objcopy'
+        $script:Nm = Get-RelatedTool $script:Compiler 'nm'
+        $script:Size = Get-RelatedTool $script:Compiler 'size'
+        $script:OverlayHex = Get-ElfSymbol $script:ResidentElf `
+            'mk61_module_overlay'
+
+        if ([IO.Directory]::Exists($script:WorkPath)) {
+            Remove-Item -LiteralPath $script:WorkPath -Recurse -Force
+        }
+        [IO.Directory]::CreateDirectory($script:WorkPath) | Out-Null
+        $script:OutputDirectory = Join-Path $script:WorkPath 'System'
+        [IO.Directory]::CreateDirectory(
+            $script:OutputDirectory) | Out-Null
+        foreach ($app in $selectedApps) {
+            Build-SystemApp $app $compileEntries
+        }
+    }
+
+    [IO.Directory]::CreateDirectory($finalOutputDirectory) | Out-Null
+    foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')) {
+        $target = Join-Path $finalOutputDirectory $name
+        if ([IO.File]::Exists($target)) {
+            Remove-Item -LiteralPath $target -Force
+        }
+        if ($selectedApps.Count -gt 0) {
+            $source = Join-Path $script:OutputDirectory $name
+            if ([IO.File]::Exists($source)) {
+                Copy-Item -LiteralPath $source -Destination $target
+            }
+        }
+    }
+
+    [Console]::WriteLine('')
+    [Console]::WriteLine('MK61s System APP built:')
+    [Console]::WriteLine("  $finalOutputDirectory")
+    [Console]::WriteLine("  resident $($script:ResidentBin)")
+
+    if (-not $KeepBuild -and
+        [IO.Directory]::Exists($script:WorkPath)) {
+        Remove-Item -LiteralPath $script:WorkPath -Recurse -Force
+    }
+} catch {
+    [Console]::Error.WriteLine($_.Exception.Message)
+    exit 1
+}
