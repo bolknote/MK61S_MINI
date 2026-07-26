@@ -16,7 +16,8 @@
 - `.mk61-gcc` — общий F401 GCC-бэкенд;
 - `.mk61-firmware`, `.mk61-arduino-board`, `.mkc` — реализации публичных
   полиглотных лаунчеров;
-- `.mk61-app` — linker script, упаковщик и ZX0 для legacy custom APP;
+- `.mk61-app` — общий APP linker script, а также упаковщик и ZX0 для legacy
+  custom APP;
 - `.fmk-font` — исходник конвертера FMK.
 
 Скомпилированные host-утилиты кэшируются в `.build/tools`, а не рядом с

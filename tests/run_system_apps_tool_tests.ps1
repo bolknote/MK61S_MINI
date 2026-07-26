@@ -130,6 +130,12 @@ Assert-True ($builderText -match "Get-RelatedTool.+?'nm'") `
     'standalone builder does not derive nm'
 Assert-True ($builderText -match 'compile_commands\.json') `
     'standalone builder does not consume the resident compile database'
+Assert-True ($builderText -match
+    'tools/\.mk61-app/mk61_module\.ld') `
+    'standalone builder does not use the canonical APP linker script'
+Assert-True ($builderText -notmatch
+    "ProjectRoot 'tools/mk61_module\.ld'") `
+    'standalone builder still references the removed linker script path'
 Assert-True ($builderText -notmatch 'mk61_ide_.*\.cpp\.o') `
     'standalone builder still consumes Arduino System APP objects'
 

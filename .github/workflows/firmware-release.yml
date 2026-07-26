@@ -26,7 +26,6 @@ jobs:
 
   f401-gcc-platforms:
     name: F401 direct GCC (${{ matrix.os }})
-    needs: host-tests
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -64,19 +63,65 @@ jobs:
           arduino-cli lib install "STM32duino RTC@1.9.0"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Build resident and all System APP directly with GCC
+      - name: Write full F401 build configuration
         shell: pwsh
         run: |
-          $buildRoot = Join-Path $env:RUNNER_TEMP 'f401-gcc'
-          $outputRoot = Join-Path $env:RUNNER_TEMP 'f401-output'
-          & ./tools/.mk61-gcc/build.ps1 `
-            -Profile mini-v3-a00 `
-            -UsbScreen 1 -Wbmp 1 -Chip8 1 `
-            -BuildRoot $buildRoot `
-            -OutputDirectory $outputRoot `
-            -Clean
+          @(
+            'MCU=f401',
+            'PLATFORM=mini-v3',
+            'SCREEN=lcd1602-a00',
+            'MK61_ENABLE_FOCAL=1',
+            'MK61_ENABLE_TINYBASIC=1',
+            'MK61_ENABLE_WBMP_VIEWER=1',
+            'MK61_ENABLE_CHIP8=1',
+            'MK61_ENABLE_USB_SCREEN=1',
+            'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0',
+            'MK61_USER_EXPLORER_SHORTCUT=1',
+            'MK61_MATH_BACKEND=0'
+          ) | Set-Content -LiteralPath (
+            Join-Path $env:RUNNER_TEMP 'f401.conf') -Encoding utf8
+
+      - name: Build through the macOS shell frontend
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          MK61_CONFIG_FILE="$RUNNER_TEMP/f401.conf" \
+          MK61_BUILD_ROOT="$RUNNER_TEMP/f401-work" \
+          MK61_OUTPUT_DIR="$RUNNER_TEMP/f401-output" \
+          MK61_COLOR=never \
+            ./tools/mk61-firmware.cmd \
+              --mcu f401 --profile mini-v3-a00 --build
+
+      - name: Build through the Windows PowerShell frontend
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:MK61_CONFIG_FILE = Join-Path $env:RUNNER_TEMP 'f401.conf'
+          $env:MK61_BUILD_ROOT = Join-Path $env:RUNNER_TEMP 'f401-work'
+          $env:MK61_OUTPUT_DIR = Join-Path $env:RUNNER_TEMP 'f401-output'
+          $env:MK61_COLOR = 'never'
+          & ./tools/mk61-firmware.cmd `
+            --mcu f401 --profile mini-v3-a00 --build
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $bundle = Join-Path $outputRoot `
+
+      - name: Verify resident and all System APP
+        shell: pwsh
+        run: |
+          $buildPath = Join-Path $env:RUNNER_TEMP `
+            'f401-work/f401-gcc/mini-v3-a00'
+          foreach ($name in @(
+            'resident.elf',
+            'resident.bin',
+            'compile_commands.json'
+          )) {
+            $path = Join-Path $buildPath $name
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
+                (Get-Item -LiteralPath $path).Length -eq 0) {
+              throw "Missing F401 build artifact: $name"
+            }
+          }
+          $bundle = Join-Path (
+            Join-Path $env:RUNNER_TEMP 'f401-output') `
             'mk61s-M-mini-v3-lcd1602-a00-f401'
           @(
             'mk61s-M-mini-v3-lcd1602-a00-f401.bin',
@@ -85,8 +130,9 @@ jobs:
             'System/WBMP.APP',
             'System/CHIP8.APP'
           ) | ForEach-Object {
-            if (-not (Test-Path -LiteralPath (Join-Path $bundle $_) `
-                -PathType Leaf)) {
+            $path = Join-Path $bundle $_
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
+                (Get-Item -LiteralPath $path).Length -eq 0) {
               throw "Missing F401 artifact: $_"
             }
           }

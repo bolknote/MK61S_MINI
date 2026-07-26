@@ -116,8 +116,19 @@ Assert-True ($releaseWorkflowText -match
     'tools/build-gcc\.cmd') `
     'release workflow does not use the canonical F401 GCC backend'
 Assert-True ($releaseWorkflowText -match
+    'mk61-firmware\.cmd[\s\S]+--mcu f401') `
+    'platform matrix does not exercise the public F401 frontend'
+Assert-True ($releaseWorkflowText -match
     'macos-latest[\s\S]+windows-latest') `
     'direct F401 GCC build is not checked on macOS and Windows'
+$f401Job = [regex]::Match(
+    $releaseWorkflowText,
+    '(?ms)^  f401-gcc-platforms:\r?\n(?<body>.*?)(?=^  build-release:)')
+Assert-True ($f401Job.Success) `
+    'release workflow has no direct F401 GCC matrix job'
+Assert-True ($f401Job.Groups['body'].Value -notmatch
+    '(?m)^\s+needs:') `
+    'direct F401 GCC matrix is hidden when an unrelated host job fails'
 Assert-True (-not (Test-Path -LiteralPath (
     Join-Path $root 'tools/.mk61-firmware/build-f401-native.ps1'))) `
     'obsolete Arduino-CLI F401 worker is still present'

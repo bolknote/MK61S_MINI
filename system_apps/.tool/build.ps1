@@ -32,7 +32,8 @@ $script:ToolDir = $PSScriptRoot
 $script:AppsRoot = [IO.Path]::GetFullPath((Join-Path $script:ToolDir '..'))
 $script:ProjectRoot = [IO.Path]::GetFullPath(
     (Join-Path $script:AppsRoot '..'))
-$script:LinkerScript = Join-Path $script:ProjectRoot 'tools/mk61_module.ld'
+$script:LinkerScript = Join-Path $script:ProjectRoot `
+    'tools/.mk61-app/mk61_module.ld'
 $script:WorkPath = Join-Path $script:AppsRoot '.build'
 
 function Stop-SystemAppsBuild {

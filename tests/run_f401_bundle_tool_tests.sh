@@ -179,37 +179,4 @@ grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
 grep -q '^format 1$' "$bundle/build.apps"
 grep -q 'Built F401 bundle:' "$work/output.log"
 
-# Публичный mk61-firmware должен направлять F401 в тот же bundle-builder,
-# передавать сохранённые ключи и сообщать, нужен ли второй шаг.
-firmware_tool="$root/tools/.mk61-firmware/mk61-firmware.sh"
-"$firmware_tool" --help | grep -q 'MK61_APP_MANIFESTS'
-firmware_config="$work/firmware.conf"
-firmware_output="$work/firmware-output"
-printf '%s\n' \
-  'MCU=f401' \
-  'PLATFORM=mini-v3' \
-  'SCREEN=lcd1602-a00' \
-  'MK61_ENABLE_FOCAL=0' \
-  'MK61_ENABLE_TINYBASIC=0' \
-  'MK61_ENABLE_WBMP_VIEWER=0' \
-  'MK61_ENABLE_CHIP8=0' \
-  'MK61_ENABLE_USB_SCREEN=0' \
-  'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0' \
-  'MK61_USER_EXPLORER_SHORTCUT=1' \
-  'MK61_MATH_BACKEND=0' > "$firmware_config"
-MK61_ARDUINO_CLI="$fake_cli" \
-MK61_BUILD_ROOT="$work/firmware-build" \
-MK61_OUTPUT_DIR="$firmware_output" \
-MK61_CONFIG_FILE="$firmware_config" \
-  "$firmware_tool" --build > "$work/firmware-output.log"
-
-firmware_bundle="$firmware_output/mk61s-M-mini-v3-lcd1602-a00-f401"
-test -s "$firmware_bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
-test -s "$firmware_bundle/build.flags"
-grep -q -- '-DMK61_ENABLE_FOCAL=0' "$firmware_bundle/build.flags"
-grep -q -- '-DMK61_ENABLE_CHIP8=0' "$firmware_bundle/build.flags"
-grep -q 'Built F401 bundle:' "$work/firmware-output.log"
-grep -q 'step 2 is only needed to remove previously installed canonical System APP' \
-  "$work/firmware-output.log"
-
 printf 'f401_bundle_tool_tests: ok\n'
