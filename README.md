@@ -188,9 +188,13 @@ LCD1602-сборке, вместе с ним компилируются наст
 На Windows дополнительно требуется STM32CubeProgrammer: `arduino-cli upload`
 запускает его через штатный recipe STM32 Core. На macOS/Linux загрузка напрямую
 выполняется утилитой `dfu-util`, входящей в пакет STM32 Tools.
-Для сборки любого System или пользовательского APP на F401 также нужны Bash и
-доступный в нём host-компилятор `c++` с C++17. На Windows Bash можно взять из
-Git for Windows или MSYS2; сам компилятор нужно установить отдельно.
+PowerShell-порт на Windows собирает штатные `FOCAL.APP`, `BASIC.APP` и
+`WBMP.APP` непосредственно ARM-компилятором из STM32 Core, поэтому для обычного
+F401-комплекта Bash и отдельный host-компилятор C++ не нужны. Они требуются
+только при заданном `MK61_APP_MANIFESTS`, то есть для произвольных
+пользовательских APP. Shell-порт macOS/Linux для упаковки APP по-прежнему
+использует `tools/build_f401_bundle.sh` и доступный в Bash host-компилятор
+`c++` с C++17.
 
 Есть и неинтерактивный режим:
 
@@ -231,8 +235,10 @@ Git for Windows или MSYS2; сам компилятор нужно устан�
 `binary/mk61s-M-mini-v3-lcd1602-a00-f401/` и содержит прошивку `.bin` и
 включённые ключами `System/FOCAL.APP`, `System/BASIC.APP`,
 `System/WBMP.APP`. Resident собирается с `-Os`, а каждый APP отдельно с
-`-Os -flto` и затем оптимально сжимается ZX0 в автоматизированном
-`mk61-firmware`/`build_f401_bundle.sh`-сценарии.
+`-Os -flto`. В PowerShell-порту штатные System APP создаёт общий
+`system_apps/build.cmd` через `arm-none-eabi-g++` и
+`arm-none-eabi-objcopy`; payload хранится в поддерживаемом формате `NONE`.
+Shell-порт `build_f401_bundle.sh` использует упаковку ZX0.
 Значения `MK61_ENABLE_FOCAL`, `MK61_ENABLE_TINYBASIC` и
 `MK61_ENABLE_WBMP_VIEWER` берутся из одноимённых переменных окружения; `0`
 убирает код соответствующего системного интерфейса и его артефакт. Общий
@@ -291,10 +297,45 @@ IDE-вариант использует только ARM-инструменты 
 на macOS/Linux post-build запускается через системный shell, на Windows —
 через встроенный PowerShell. Чтобы не требовать отдельный host-компилятор,
 System APP в этом режиме хранят несжатый payload `NONE`; он поддерживается
-тем же форматом и укладывается в 20-КиБ overlay. Автоматизированный
-`mk61-firmware` по-прежнему создаёт более компактные ZX0-контейнеры.
+тем же форматом и укладывается в 20-КиБ overlay. Тот же `NONE` использует
+нативный PowerShell-путь `mk61-firmware` на Windows; shell-сборщик
+`build_f401_bundle.sh` создаёт более компактные ZX0-контейнеры.
 Подробная инструкция и диагностика находятся в
 [`MK61s-mini-Arduino-IDE.md`](doc/src/MK61s-mini-Arduino-IDE.md).
+
+#### Автономная ARM-сборка штатных System APP
+
+Исходные единицы трансляции всех трёх модулей находятся отдельно от скетча:
+
+```text
+system_apps/
+├── build.cmd
+├── focal/main.cpp
+├── basic/main.cpp
+└── wbmp/main.cpp
+```
+
+Один полиглотный `build.cmd` запускает PowerShell и на Windows, и из shell при
+наличии `pwsh`. Он не компилирует и не долинковывает Arduino-библиотеки в APP:
+каждый `main.cpp` образует ровно один ARM-объект, а вызовы Arduino/Core и общих
+частей проекта разрешаются через точный resident ELF. Поэтому готовые APP
+всегда привязаны к resident BIN из той же сборки.
+
+Обычно этот инструмент автоматически вызывает Windows-порт
+`tools/mk61-firmware.cmd`. Для отдельного запуска ему нужен каталог уже
+собранной resident-прошивки с `.elf`, `.bin` и
+`compile_commands.json`:
+
+```bat
+system_apps\build.cmd ^
+  -BuildPath C:\work\mk61-resident ^
+  -Focal 1 -Basic 1 -Wbmp 1
+```
+
+По умолчанию результат записывается в `system_apps\System`. Другой каталог
+задаётся через `-OutputDirectory`. Пути к `arm-none-eabi-g++`, `objcopy`, `nm`
+и `size`, точные `-D` и `-I` берутся из `compile_commands.json`; установка
+второго GCC рядом со скриптом не требуется.
 
 Тот же процесс доступен без TUI:
 
