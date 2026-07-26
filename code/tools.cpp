@@ -8,6 +8,7 @@
 #include "tools.hpp"
 #include "development.hpp"
 #include "focal.hpp"
+#include "file_handlers.hpp"
 #include "program_store.hpp"
 #include "m61_text.hpp"
 #include "shared_scratch.hpp"
@@ -83,11 +84,8 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
     case program_store::ProgramType::FONT:
       return program_store_apply_font(entry);
     case program_store::ProgramType::IMAGE1:
-#if MK61_ENABLE_WBMP_VIEWER
-      return program_store_view_entry(entry);
-#else
-      return false;
-#endif
+      return file_handlers::open(entry) ==
+             loadable_module::FileOpenResult::OK;
     case program_store::ProgramType::APP:
 #if MK61_ANY_LOADABLE_MODULE
       {
@@ -98,6 +96,9 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
 #else
       return false;
 #endif
+    case program_store::ProgramType::CHIP8:
+      return file_handlers::open(entry) ==
+             loadable_module::FileOpenResult::OK;
   }
   return false;
 }

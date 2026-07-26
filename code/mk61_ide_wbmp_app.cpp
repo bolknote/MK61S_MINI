@@ -11,7 +11,6 @@
 #define result_text mk61_ide_wbmp_result_text
 
 #include "wbmp.cpp"
-#include "a00_image_multiplex.cpp"
 #include "image1_viewer.cpp"
 #include "image1_viewer_module_entry.cpp"
 

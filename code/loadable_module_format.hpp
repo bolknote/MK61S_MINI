@@ -21,12 +21,13 @@ enum class Kind : u8 {
   FOCAL = 1,
   TINYBASIC = 2,
   WBMP_VIEWER = 3,
-  APPLICATION = 4
+  APPLICATION = 4,
+  CHIP8 = 5
 };
 
 // Только системные APP имеют канонические имена. Пользовательских APPLICATION
 // может быть сколько угодно, и их имена задаются самим файлом в C5.
-static constexpr u8 KIND_COUNT = 3;
+static constexpr u8 KIND_COUNT = 4;
 static constexpr char SYSTEM_DIRECTORY_NAME[] = "System";
 
 enum class Compression : u8 {
@@ -47,6 +48,9 @@ struct Header {
   u32 resident_crc32;
   u32 stored_crc32;
   u32 image_crc32;
+  // Ноль означает обычный APP. Ненулевой двухбайтовый magic C5 объявляет,
+  // что модуль отвечает на универсальную команду FILE_OPEN для этого типа.
+  u16 handled_type_magic;
 };
 
 enum class HeaderStatus : u8 {

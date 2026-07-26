@@ -9,7 +9,7 @@ namespace {
 
 static constexpr u16 TARGET_ENTROPY_BITS = 64;
 static constexpr u16 MAX_STARTUP_SAMPLES = 1024;
-static constexpr usize DOMAIN_COUNT = 3;
+static constexpr usize DOMAIN_COUNT = 4;
 
 static u64 pool_state = 0x6A09E667F3BCC909ULL;
 static u64 stream_state[DOMAIN_COUNT];

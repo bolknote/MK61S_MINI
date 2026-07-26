@@ -16,6 +16,7 @@ param(
     [string]$Focal,
     [string]$Basic,
     [string]$Wbmp,
+    [string]$Chip8,
     [string]$CompileFlags
 )
 
@@ -140,6 +141,7 @@ function Write-Mk61App {
         [uint32]$MemorySize,
         [uint32]$EntryOffset,
         [uint32]$LoadAddress,
+        [uint16]$HandledMagic,
         [string]$Output
     )
     [byte[]]$residentBytes = [IO.File]::ReadAllBytes($Resident)
@@ -178,7 +180,8 @@ function Write-Mk61App {
     Set-Le32 $header 44 (Get-Crc32Bytes $residentBytes)
     Set-Le32 $header 48 (Get-Crc32Bytes $imageBytes)
     Set-Le32 $header 52 (Get-Crc32Bytes $imageBytes)
-    Set-Le32 $header 56 0
+    Set-Le16 $header 56 $HandledMagic
+    Set-Le16 $header 58 0
     Set-Le32 $header 60 (Get-Crc32Bytes $header 60)
 
     [byte[]]$container = New-Object byte[] ($header.Length +
@@ -200,7 +203,8 @@ function Build-Mk61Module {
         [string]$FileName,
         [byte]$Kind,
         [string]$EntrySymbol,
-        [string]$ObjectName
+        [string]$ObjectName,
+        [uint16]$HandledMagic
     )
     $object = Join-Path (Join-Path $script:BuildPathValue 'sketch') $ObjectName
     Test-RequiredFile $object "Arduino object $ObjectName"
@@ -266,7 +270,7 @@ function Build-Mk61Module {
     }
     $target = Join-Path $systemDir $FileName
     Write-Mk61App $Kind $script:ResidentBin $moduleImage $memorySize `
-        $entryOffset (Get-HexUInt32 $script:OverlayHex) $target
+        $entryOffset (Get-HexUInt32 $script:OverlayHex) $HandledMagic $target
     Write-Host ('MK61s APP: {0,-10} {1,5} bytes, SRAM {2,5} / 20480' -f
         $FileName, (Get-Item -LiteralPath $target).Length, $memorySize)
 }
@@ -295,7 +299,7 @@ function Build-Mk61Bundle {
         Stop-Mk61Build 'Arduino project or bundle name is missing'
     }
     if ($Focal -notmatch '^[01]$' -or $Basic -notmatch '^[01]$' -or
-        $Wbmp -notmatch '^[01]$') {
+        $Wbmp -notmatch '^[01]$' -or $Chip8 -notmatch '^[01]$') {
         Stop-Mk61Build 'System APP selections must be 0 or 1'
     }
 
@@ -336,15 +340,19 @@ function Build-Mk61Bundle {
 
     if ($Focal -eq '1') {
         Build-Mk61Module 'focal' 'FOCAL.APP' 1 `
-            'mk61_ide_focal_module_entry' 'mk61_ide_focal_app.cpp.o'
+            'mk61_ide_focal_module_entry' 'mk61_ide_focal_app.cpp.o' 0
     }
     if ($Basic -eq '1') {
         Build-Mk61Module 'basic' 'BASIC.APP' 2 `
-            'mk61_ide_basic_module_entry' 'mk61_ide_basic_app.cpp.o'
+            'mk61_ide_basic_module_entry' 'mk61_ide_basic_app.cpp.o' 0
     }
     if ($Wbmp -eq '1') {
         Build-Mk61Module 'wbmp' 'WBMP.APP' 3 `
-            'mk61_ide_wbmp_module_entry' 'mk61_ide_wbmp_app.cpp.o'
+            'mk61_ide_wbmp_module_entry' 'mk61_ide_wbmp_app.cpp.o' 0x3149
+    }
+    if ($Chip8 -eq '1') {
+        Build-Mk61Module 'chip8' 'CHIP8.APP' 5 `
+            'mk61_ide_chip8_module_entry' 'mk61_ide_chip8_app.cpp.o' 0x3143
     }
 
     $outputRoot = [IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))
@@ -353,7 +361,9 @@ function Build-Mk61Bundle {
     [IO.Directory]::CreateDirectory($outputSystem) | Out-Null
     Copy-Item -LiteralPath (Join-Path $script:Stage "$Bundle.bin") `
         -Destination (Join-Path $output "$Bundle.bin") -Force
-    foreach ($canonical in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP')) {
+    foreach ($canonical in @(
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP'
+    )) {
         $source = Join-Path (Join-Path $script:Stage 'System') $canonical
         $target = Join-Path $outputSystem $canonical
         if ([IO.File]::Exists($source)) {

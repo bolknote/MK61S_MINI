@@ -13,6 +13,10 @@ enum class ClockSource : u8 {
   LSE
 };
 
+constexpr const char* clock_source_name(ClockSource source) {
+  return source == ClockSource::LSE ? "LSE" : "LSI";
+}
+
 // Разводка платы определяет, безопасно ли использовать OSC32_IN/OUT. Даже если
 // LSE разрешён, нужно убедиться, что он действительно запустился; иначе загрузка
 // продолжается от внутреннего LSI вместо перехода в Error_Handler ядра STM32.

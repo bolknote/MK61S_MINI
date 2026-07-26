@@ -49,7 +49,8 @@ CLI_PROFILE=0
 CLI_MCU=0
 ENABLE_FOCAL=1
 ENABLE_TINYBASIC=1
-ENABLE_WBMP_VIEWER=1
+ENABLE_WBMP_VIEWER=0
+ENABLE_CHIP8=0
 ENABLE_USB_SCREEN=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
 ENABLE_USER_EXPLORER=1
@@ -1255,6 +1256,9 @@ load_config() {
       MK61_ENABLE_WBMP_VIEWER)
         boolean_valid "$value" && ENABLE_WBMP_VIEWER=$value
         ;;
+      MK61_ENABLE_CHIP8)
+        boolean_valid "$value" && ENABLE_CHIP8=$value
+        ;;
       MK61_ENABLE_USB_SCREEN)
         boolean_valid "$value" && ENABLE_USB_SCREEN=$value
         ;;
@@ -1300,6 +1304,7 @@ save_config() {
     printf 'MK61_ENABLE_FOCAL=%s\n' "$ENABLE_FOCAL"
     printf 'MK61_ENABLE_TINYBASIC=%s\n' "$ENABLE_TINYBASIC"
     printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
+    printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
     printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
     printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
     printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
@@ -1340,6 +1345,7 @@ compile_option_flags() {
   printf '%s' "-DMK61_ENABLE_FOCAL=$ENABLE_FOCAL" \
     " -DMK61_ENABLE_TINYBASIC=$ENABLE_TINYBASIC" \
     " -DMK61_ENABLE_WBMP_VIEWER=$ENABLE_WBMP_VIEWER" \
+    " -DMK61_ENABLE_CHIP8=$ENABLE_CHIP8" \
     " -DMK61_ENABLE_USB_SCREEN=$ENABLE_USB_SCREEN" \
     " -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ENABLE_EXTENDED_FONT_SETTINGS" \
     " -DMK61_USER_EXPLORER_SHORTCUT=$ENABLE_USER_EXPLORER" \
@@ -1353,10 +1359,11 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL  %s TinyBASIC  %s WBMP  %s USB  %s шрифты  %s USER  %s CORE math' \
+  printf '%s FOCAL  %s TinyBASIC  %s WBMP  %s CHIP-8  %s USB  %s шрифты  %s USER  %s CORE math' \
     "$(checkbox_marker "$ENABLE_FOCAL")" \
     "$(checkbox_marker "$ENABLE_TINYBASIC")" \
     "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
+    "$(checkbox_marker "$ENABLE_CHIP8")" \
     "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")" \
@@ -1367,6 +1374,7 @@ compile_options_details() {
   printf '%s FOCAL (MK61_ENABLE_FOCAL)\n' "$(checkbox_marker "$ENABLE_FOCAL")"
   printf '%s TinyBASIC (MK61_ENABLE_TINYBASIC)\n' "$(checkbox_marker "$ENABLE_TINYBASIC")"
   printf '%s WBMP viewer (MK61_ENABLE_WBMP_VIEWER)\n' "$(checkbox_marker "$ENABLE_WBMP_VIEWER")"
+  printf '%s CHIP-8 (MK61_ENABLE_CHIP8)\n' "$(checkbox_marker "$ENABLE_CHIP8")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
   printf '%s расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)\n' \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
@@ -1390,6 +1398,7 @@ show_config() {
   printf 'MK61_ENABLE_FOCAL=%s\n' "$ENABLE_FOCAL"
   printf 'MK61_ENABLE_TINYBASIC=%s\n' "$ENABLE_TINYBASIC"
   printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
+  printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
   printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
   printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
   printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
@@ -1478,6 +1487,7 @@ choose_compile_options() {
     focal      'FOCAL · MK61_ENABLE_FOCAL' "$(option_state "$ENABLE_FOCAL")" \
     tinybasic  'TinyBASIC · MK61_ENABLE_TINYBASIC' "$(option_state "$ENABLE_TINYBASIC")" \
     wbmp       'WBMP viewer · MK61_ENABLE_WBMP_VIEWER' "$(option_state "$ENABLE_WBMP_VIEWER")" \
+    chip8      'CHIP-8 · MK61_ENABLE_CHIP8' "$(option_state "$ENABLE_CHIP8")" \
     usb_screen 'USB-экран · MK61_ENABLE_USB_SCREEN' "$(option_state "$ENABLE_USB_SCREEN")" \
     fonts      'Расширенные настройки шрифта' "$(option_state "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     explorer   'Клавиша USER открывает Explorer' "$(option_state "$ENABLE_USER_EXPLORER")" \
@@ -1486,6 +1496,7 @@ choose_compile_options() {
   ENABLE_FOCAL=0
   ENABLE_TINYBASIC=0
   ENABLE_WBMP_VIEWER=0
+  ENABLE_CHIP8=0
   ENABLE_USB_SCREEN=0
   ENABLE_EXTENDED_FONT_SETTINGS=0
   ENABLE_USER_EXPLORER=0
@@ -1495,6 +1506,7 @@ choose_compile_options() {
       focal) ENABLE_FOCAL=1 ;;
       tinybasic) ENABLE_TINYBASIC=1 ;;
       wbmp) ENABLE_WBMP_VIEWER=1 ;;
+      chip8) ENABLE_CHIP8=1 ;;
       usb_screen) ENABLE_USB_SCREEN=1 ;;
       fonts) ENABLE_EXTENDED_FONT_SETTINGS=1 ;;
       explorer) ENABLE_USER_EXPLORER=1 ;;
@@ -1520,7 +1532,7 @@ arduino_libraries_ready() {
 
 f401_system_apps_enabled() {
   [ "$ENABLE_FOCAL" -eq 1 ] || [ "$ENABLE_TINYBASIC" -eq 1 ] || \
-    [ "$ENABLE_WBMP_VIEWER" -eq 1 ]
+    [ "$ENABLE_WBMP_VIEWER" -eq 1 ] || [ "$ENABLE_CHIP8" -eq 1 ]
 }
 
 f401_any_apps_requested() {
@@ -1850,6 +1862,7 @@ prepare_and_compile_f401_worker() {
     MK61_ENABLE_FOCAL="$ENABLE_FOCAL" \
     MK61_ENABLE_TINYBASIC="$ENABLE_TINYBASIC" \
     MK61_ENABLE_WBMP_VIEWER="$ENABLE_WBMP_VIEWER" \
+    MK61_ENABLE_CHIP8="$ENABLE_CHIP8" \
     MK61_ENABLE_USB_SCREEN="$ENABLE_USB_SCREEN" \
     MK61_ENABLE_EXTENDED_FONT_SETTINGS="$ENABLE_EXTENDED_FONT_SETTINGS" \
     MK61_USER_EXPLORER_SHORTCUT="$ENABLE_USER_EXPLORER" \
@@ -1872,10 +1885,11 @@ expected_system_app_names() {
   [ "$ENABLE_FOCAL" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && printf '%s\n' BASIC.APP
   [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && printf '%s\n' WBMP.APP
+  [ "$ENABLE_CHIP8" -eq 1 ] && printf '%s\n' CHIP8.APP
 }
 
 all_system_app_names() {
-  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP
+  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP CHIP8.APP
 }
 
 system_app_enabled() {
@@ -1883,6 +1897,7 @@ system_app_enabled() {
     FOCAL.APP) [ "$ENABLE_FOCAL" -eq 1 ] ;;
     BASIC.APP) [ "$ENABLE_TINYBASIC" -eq 1 ] ;;
     WBMP.APP) [ "$ENABLE_WBMP_VIEWER" -eq 1 ] ;;
+    CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] ;;
     *) return 1 ;;
   esac
 }

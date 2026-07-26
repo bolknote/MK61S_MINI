@@ -10,6 +10,7 @@ test -x "$tool"
 bash -n "$tool"
 "$tool" --help | grep -q -- '--profile ID'
 "$tool" --help | grep -q 'MK61_ENABLE_WBMP_VIEWER'
+"$tool" --help | grep -q 'MK61_ENABLE_CHIP8'
 "$tool" --help | grep -q -- '--app-manifest FILE'
 
 app_dir="$work/app"
@@ -153,6 +154,7 @@ mkdir -p "$bundle/Apps"
 printf 'stale' > "$bundle/System/FOCAL.APP"
 printf 'stale' > "$bundle/System/BASIC.APP"
 printf 'stale' > "$bundle/System/WBMP.APP"
+printf 'stale' > "$bundle/System/CHIP8.APP"
 printf 'stale' > "$bundle/Apps/STALE.APP"
 
 MK61_ARDUINO_CLI="$fake_cli" \
@@ -161,6 +163,7 @@ MK61_OUTPUT_DIR="$work/output" \
 MK61_ENABLE_FOCAL=0 \
 MK61_ENABLE_TINYBASIC=0 \
 MK61_ENABLE_WBMP_VIEWER=0 \
+MK61_ENABLE_CHIP8=0 \
   "$tool" --profile mini-v3-a00 > "$work/output.log"
 
 test -s "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
@@ -169,8 +172,10 @@ test -s "$bundle/build.apps"
 test ! -e "$bundle/System/FOCAL.APP"
 test ! -e "$bundle/System/BASIC.APP"
 test ! -e "$bundle/System/WBMP.APP"
+test ! -e "$bundle/System/CHIP8.APP"
 test ! -e "$bundle/Apps/STALE.APP"
 grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
+grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
 grep -q '^format 1$' "$bundle/build.apps"
 grep -q 'Built F401 bundle:' "$work/output.log"
 
@@ -187,6 +192,7 @@ printf '%s\n' \
   'MK61_ENABLE_FOCAL=0' \
   'MK61_ENABLE_TINYBASIC=0' \
   'MK61_ENABLE_WBMP_VIEWER=0' \
+  'MK61_ENABLE_CHIP8=0' \
   'MK61_ENABLE_USB_SCREEN=0' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0' \
   'MK61_USER_EXPLORER_SHORTCUT=1' \
@@ -201,6 +207,7 @@ firmware_bundle="$firmware_output/mk61s-M-mini-v3-lcd1602-a00-f401"
 test -s "$firmware_bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 test -s "$firmware_bundle/build.flags"
 grep -q -- '-DMK61_ENABLE_FOCAL=0' "$firmware_bundle/build.flags"
+grep -q -- '-DMK61_ENABLE_CHIP8=0' "$firmware_bundle/build.flags"
 grep -q 'Built F401 bundle:' "$work/firmware-output.log"
 grep -q 'step 2 is only needed to remove previously installed canonical System APP' \
   "$work/firmware-output.log"

@@ -31,6 +31,7 @@ struct Options {
   u32 memory_size = 0;
   u32 entry_offset = 0;
   u32 load_address = 0;
+  u16 handled_type_magic = 0;
   bool memory_size_set = false;
   bool entry_offset_set = false;
   bool load_address_set = false;
@@ -42,13 +43,14 @@ struct Options {
   std::fprintf(stderr,
       "usage: mk61_module_pack --kind KIND --resident FILE --image FILE\n"
       "       --memory-size N --entry-offset N --load-address N\n"
-      "       --output FILE [--require-zx0]\n"
-      "  --kind KIND          app, focal, tinybasic, or wbmp-viewer\n"
+      "       --output FILE [--handled-magic XX] [--require-zx0]\n"
+      "  --kind KIND          app, focal, tinybasic, wbmp-viewer, or chip8\n"
       "  --resident FILE      exact resident firmware .bin\n"
       "  --image FILE         linked SRAM image without its .bss tail\n"
       "  --memory-size N      image plus zero-filled .bss\n"
       "  --entry-offset N     module entry offset from the load address\n"
       "  --load-address N     exact SRAM overlay address from resident ELF\n"
+      "  --handled-magic XX   two-byte C5 type magic handled by FILE_OPEN\n"
       "  --require-zx0        reject an uncompressed result\n"
       "  --output FILE        resulting .APP container\n");
   std::exit(message == nullptr ? 0 : 2);
@@ -73,7 +75,22 @@ Kind parse_kind(const std::string& text) {
   if(text == "focal") return Kind::FOCAL;
   if(text == "tinybasic") return Kind::TINYBASIC;
   if(text == "wbmp-viewer") return Kind::WBMP_VIEWER;
+  if(text == "chip8") return Kind::CHIP8;
   throw std::runtime_error("unknown module kind: " + text);
+}
+
+u16 parse_type_magic(const std::string& text) {
+  const auto ascii_alnum = [](unsigned char value) {
+    return (value >= '0' && value <= '9') ||
+           (value >= 'A' && value <= 'Z') ||
+           (value >= 'a' && value <= 'z');
+  };
+  if(text.size() != 2 || !ascii_alnum((unsigned char) text[0]) ||
+     !ascii_alnum((unsigned char) text[1])) {
+    throw std::runtime_error(
+        "handled magic must contain exactly two ASCII letters or digits");
+  }
+  return (u16) (u8) text[0] | ((u16) (u8) text[1] << 8);
 }
 
 Options parse_options(int argc, char** argv) {
@@ -103,6 +120,8 @@ Options parse_options(int argc, char** argv) {
     } else if(option == "--load-address") {
       options.load_address = parse_u32(value, "load address");
       options.load_address_set = true;
+    } else if(option == "--handled-magic") {
+      options.handled_type_magic = parse_type_magic(value);
     } else if(option == "--output") {
       options.output = value;
     } else {
@@ -255,6 +274,7 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
       loadable_module::crc32(stored.data(), stored.size());
   header.image_crc32 =
       loadable_module::crc32(image.data(), image.size());
+  header.handled_type_magic = options.handled_type_magic;
 
   std::vector<u8> module(loadable_module::HEADER_SIZE + stored.size());
   if(!loadable_module::encode_header(header, limit, module.data())) {

@@ -3,7 +3,8 @@
 Версия документа: 26.07.2026
 
 Эта инструкция собирает через обычные кнопки Arduino IDE согласованный
-комплект для STM32F401CC:
+комплект для STM32F401CC. Ниже показан полный пример mini с включёнными
+USB-экраном и всеми System APP:
 
 ```text
 binary/mk61s-M-mini-v3-lcd1602-a00-f401/
@@ -13,10 +14,11 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
 └── System/
     ├── FOCAL.APP
     ├── BASIC.APP
-    └── WBMP.APP
+    ├── WBMP.APP
+    └── CHIP8.APP
 ```
 
-Это именно штатные FOCAL, TinyBASIC и просмотрщик WBMP. Создавать
+Это штатные FOCAL, TinyBASIC, просмотрщик WBMP и консоль CHIP-8. Создавать
 пользовательский `HELLO`, manifest `app.mk61` или менять прошивку для этого не
 нужно.
 
@@ -84,9 +86,15 @@ IDE.
    `mini V3`, `mini V2`, `Classic V3`, `Classic V2` или `40th`.
 4. Отдельно выберите экран:
    `LCD1602 · CGROM A00`, `LCD1602 · CGROM A02` или `UC1609`.
-5. Выберите `APP` или `Выключен` для FOCAL, TinyBASIC и WBMP viewer.
+5. Выберите `APP` или `Выключен` для FOCAL, TinyBASIC, WBMP viewer и CHIP-8.
 6. При необходимости задайте USB-экран, расширенные настройки шрифта,
    быстрый Explorer и математический backend.
+
+CHIP-8 по умолчанию выключен. WBMP и CHIP-8 можно включить только для
+графического UC1609 либо вместе с пунктом `USB-экран`. В mini-профиле с
+LCD1602 и включённым USB-экраном APP собираются, но их файлы запускаются лишь
+во время активной desktop-сессии. Если сессии нет или она исчезла, устройство
+показывает `Не поддерживается`.
 
 Допустимы только реальные сочетания:
 
@@ -106,7 +114,7 @@ IDE.
 
 - `.bin` resident-прошивки;
 - только включённые `System/FOCAL.APP`, `System/BASIC.APP`,
-  `System/WBMP.APP`;
+  `System/WBMP.APP`, `System/CHIP8.APP`;
 - `build.flags` с точными compile-time ключами.
 
 Повторная сборка того же профиля удаляет из результата канонический System APP,
@@ -138,8 +146,9 @@ LTO и host-упаковщик ZX0. Для полностью ручного п�
 Плата `MK61s F401 + APP` использует уже созданные Arduino IDE ARM-объекты,
 отдельно связывает каждый System APP по фактическому адресу SRAM-overlay и
 записывает payload `NONE`. Формат APP изначально поддерживает `NONE`; CRC,
-привязка к resident, проверка размеров и ABI остаются теми же. Все три штатных
-образа укладываются в 20 КиБ.
+привязка к resident, проверка размеров и ABI остаются теми же. Все штатные
+образы по отдельности укладываются в 20 КиБ; одновременно в overlay находится
+только один.
 
 Нативный PowerShell-путь `tools/mk61-firmware.cmd` также использует
 ARM-компилятор STM32 Core и контейнер `NONE`, но собирает исходники всех трёх
@@ -156,6 +165,7 @@ ARM-компилятор STM32 Core и контейнер `NONE`, но соби�
 | `LiquidCrystal.h: No such file` | Установить `LiquidCrystal 1.0.7` через Library Manager. |
 | Не найден `STM32duino RTC` | Установить `STM32duino RTC 1.9.0`. |
 | `incompatible platform/display pair` | Выбрать LCD для mini либо UC1609 для Classic/40th. |
+| `WBMP/CHIP-8 requires UC1609 or USB Screen` | Включить USB-экран для mini либо выключить графические APP. |
 | `does not fit the 20 KiB SRAM overlay` | Выбранный System APP вырос сверх лимита; это ошибка сборки, а не DFU. |
 | `app/firmware mismatch` | Скопировать `System` из каталога того же Verify/Upload, что и resident. |
 | Upload не находит устройство | Перевести STM32F401 в системный DFU и повторить Upload. |

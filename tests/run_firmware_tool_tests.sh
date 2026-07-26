@@ -65,6 +65,7 @@ printf '%s\n' \
   'MK61_ENABLE_FOCAL=0' \
   'MK61_ENABLE_TINYBASIC=1' \
   'MK61_ENABLE_WBMP_VIEWER=0' \
+  'MK61_ENABLE_CHIP8=0' \
   'MK61_ENABLE_USB_SCREEN=0' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1' \
   'MK61_USER_EXPLORER_SHORTCUT=0' \
@@ -146,6 +147,7 @@ grep -q '^PROFILE=classic-v3$' <<< "$config"
 grep -q '^DFU_UTIL_PATH=/bin/sh$' <<< "$config"
 grep -q '^MK61_ENABLE_FOCAL=0$' <<< "$config"
 grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$config"
+grep -q '^MK61_ENABLE_CHIP8=0$' <<< "$config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
 grep -q '^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$' <<< "$config"
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$config"
@@ -176,6 +178,7 @@ grep -q '^PROFILE=mini-v2-a02$' <<< "$legacy"
 grep -q '^PLATFORM=mini-v2$' "$legacy_config"
 grep -q '^SCREEN=lcd1602-a02$' "$legacy_config"
 grep -q '^MK61_ENABLE_FOCAL=1$' "$legacy_config"
+grep -q '^MK61_ENABLE_CHIP8=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' "$legacy_config"
 
 install_config="$installer_root/install.conf"
@@ -190,7 +193,8 @@ printf '%s\n' \
   'MK61_ENABLE_FOCAL=1' \
   'MK61_ENABLE_TINYBASIC=0' \
   'MK61_ENABLE_WBMP_VIEWER=1' \
-  'MK61_ENABLE_USB_SCREEN=0' \
+  'MK61_ENABLE_CHIP8=1' \
+  'MK61_ENABLE_USB_SCREEN=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0' \
   'MK61_USER_EXPLORER_SHORTCUT=1' \
   'MK61_MATH_BACKEND=0' > "$install_config"
@@ -200,6 +204,7 @@ printf '%s\n' "$install_flags" > "$bundle/build.flags"
 printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 printf 'focal-app\n' > "$bundle/System/FOCAL.APP"
 printf 'wbmp-app\n' > "$bundle/System/WBMP.APP"
+printf 'chip8-app\n' > "$bundle/System/CHIP8.APP"
 printf 'keep-me\n' > "$install_mount/System/KEEP.APP"
 printf 'stale-basic\n' > "$install_mount/System/BASIC.APP"
 
@@ -210,11 +215,13 @@ grep -q 'Меню → USB-диск' <<< "$install_result"
 grep -q 'Synchronized and verified' <<< "$install_result"
 cmp "$bundle/System/FOCAL.APP" "$install_mount/System/FOCAL.APP"
 cmp "$bundle/System/WBMP.APP" "$install_mount/System/WBMP.APP"
+cmp "$bundle/System/CHIP8.APP" "$install_mount/System/CHIP8.APP"
 grep -q '^keep-me$' "$install_mount/System/KEEP.APP"
 test ! -e "$install_mount/System/BASIC.APP"
 
 sed -e 's/^MK61_ENABLE_FOCAL=1$/MK61_ENABLE_FOCAL=0/' \
     -e 's/^MK61_ENABLE_WBMP_VIEWER=1$/MK61_ENABLE_WBMP_VIEWER=0/' \
+    -e 's/^MK61_ENABLE_CHIP8=1$/MK61_ENABLE_CHIP8=0/' \
     "$install_config" > "$install_config.disabled"
 mv "$install_config.disabled" "$install_config"
 disabled_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" --show-config)
@@ -227,6 +234,7 @@ grep -q 'Removed disabled canonical System APP' <<< "$disabled_result"
 test ! -e "$install_mount/System/FOCAL.APP"
 test ! -e "$install_mount/System/BASIC.APP"
 test ! -e "$install_mount/System/WBMP.APP"
+test ! -e "$install_mount/System/CHIP8.APP"
 grep -q '^keep-me$' "$install_mount/System/KEEP.APP"
 
 set +e

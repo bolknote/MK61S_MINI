@@ -37,15 +37,17 @@ static Header valid_header(void) {
   header.resident_crc32 = 0x11223344UL;
   header.stored_crc32 = 0x55667788UL;
   header.image_crc32 = 0xAABBCCDDUL;
+  header.handled_type_magic = 0x3143; // ASCII C1, little-endian on disk
   return header;
 }
 
 static void test_kind_file_names(void) {
   Kind kind = (Kind) 0;
-  assert(KIND_COUNT == 3);
+  assert(KIND_COUNT == 4);
   assert(kind_at(0) == Kind::FOCAL);
   assert(kind_at(1) == Kind::TINYBASIC);
   assert(kind_at(2) == Kind::WBMP_VIEWER);
+  assert(kind_at(3) == Kind::CHIP8);
   assert(kind_at(KIND_COUNT) == (Kind) 0);
   assert(valid_kind(Kind::APPLICATION));
   assert(strcmp(SYSTEM_DIRECTORY_NAME, "System") == 0);
@@ -55,6 +57,7 @@ static void test_kind_file_names(void) {
   assert(strcmp(file_name(Kind::FOCAL), "FOCAL.APP") == 0);
   assert(strcmp(file_name(Kind::TINYBASIC), "BASIC.APP") == 0);
   assert(strcmp(file_name(Kind::WBMP_VIEWER), "WBMP.APP") == 0);
+  assert(strcmp(file_name(Kind::CHIP8), "CHIP8.APP") == 0);
   assert(file_name(Kind::APPLICATION) == nullptr);
   assert(file_name((Kind) 0) == nullptr);
   assert(kind_from_file_name("focal.app", kind) && kind == Kind::FOCAL);
@@ -62,6 +65,8 @@ static void test_kind_file_names(void) {
          kind == Kind::TINYBASIC);
   assert(kind_from_file_name("WBMP.APP", kind) &&
          kind == Kind::WBMP_VIEWER);
+  assert(kind_from_file_name("chip8.app", kind) &&
+         kind == Kind::CHIP8);
   assert(!kind_from_file_name("OTHER.APP", kind));
   assert(!valid_kind(kind));
 }
@@ -91,6 +96,7 @@ static void test_header_round_trip(void) {
   assert(decoded.resident_crc32 == source.resident_crc32);
   assert(decoded.stored_crc32 == source.stored_crc32);
   assert(decoded.image_crc32 == source.image_crc32);
+  assert(decoded.handled_type_magic == source.handled_type_magic);
 
   Header any_kind = {};
   assert(decode_header(bytes, 16U * 1024U, any_kind) ==
@@ -120,7 +126,7 @@ static void test_header_rejects_incompatible_images(void) {
          HeaderStatus::UNSUPPORTED_ABI);
 
   assert(encode_header(header, 16U * 1024U, bytes));
-  bytes[56] = 1;
+  bytes[58] = 1;
   rewrite_crc(bytes);
   assert(decode_header(bytes, 16U * 1024U, Kind::FOCAL, decoded) ==
          HeaderStatus::INVALID_FIELDS);

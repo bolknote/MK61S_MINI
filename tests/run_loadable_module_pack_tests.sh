@@ -65,3 +65,29 @@ fi
   --output "$work/demo.app"
 
 "$out" "$work/demo.app" "$work/image.bin" "$work/resident.bin" app
+
+"$packer" \
+  --kind chip8 \
+  --resident "$work/resident.bin" \
+  --image "$work/image.bin" \
+  --memory-size 10512 \
+  --entry-offset 0 \
+  --load-address 0x2000B000 \
+  --handled-magic C1 \
+  --require-zx0 \
+  --output "$work/chip8.app"
+
+"$out" "$work/chip8.app" "$work/image.bin" "$work/resident.bin" chip8
+
+if "$packer" \
+    --kind chip8 \
+    --resident "$work/resident.bin" \
+    --image "$work/image.bin" \
+    --memory-size 10512 \
+    --entry-offset 0 \
+    --load-address 0x2000B000 \
+    --handled-magic '!1' \
+    --output "$work/invalid-magic.app" >/dev/null 2>&1; then
+  printf 'packer unexpectedly accepted non-alphanumeric handled magic\n' >&2
+  exit 1
+fi

@@ -56,6 +56,8 @@ grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
   "$root/code/mk61_ide_basic_app.cpp"
 grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
   "$root/code/mk61_ide_wbmp_app.cpp"
+grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
+  "$root/code/mk61_ide_chip8_app.cpp"
 grep -q 'mk61_arduino_sketch_anchor' "$root/code/code.ino"
 
 if command -v pwsh >/dev/null 2>&1; then
@@ -88,7 +90,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   mkdir -p "$shell_sketchbook/sketches/code" "$work/build"
   cp -R "$root/code/." "$shell_sketchbook/sketches/code/"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build" "$shell_sketchbook/sketches/code"
 
   bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v3-lcd1602-a00-f401"
@@ -99,7 +101,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   grep -q 'mk61_ide_basic_module_entry' "$module_root/basic/basic.map"
   grep -q 'mk61_ide_wbmp_module_entry' "$module_root/wbmp/wbmp.map"
   grep -q 'mk61_ide_wbmp_view' "$module_root/wbmp/wbmp.map"
-  for app in FOCAL.APP BASIC.APP WBMP.APP; do
+  grep -q 'mk61_ide_chip8_module_entry' "$module_root/chip8/chip8.map"
+  for app in FOCAL.APP BASIC.APP WBMP.APP CHIP8.APP; do
     file="$bundle/System/$app"
     test -s "$file"
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
@@ -107,6 +110,10 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     test "$(od -An -tx1 -N8 "$file" | tr -d '[:space:]')" = \
       4d4b363141505000
   done
+  test "$(od -An -tx1 -j56 -N2 "$bundle/System/WBMP.APP" |
+      tr -d '[:space:]')" = 4931
+  test "$(od -An -tx1 -j56 -N2 "$bundle/System/CHIP8.APP" |
+      tr -d '[:space:]')" = 4331
 
   direct_system="$work/direct-system"
   pwsh -NoLogo -NoProfile -File \
@@ -127,31 +134,33 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-all-options"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build-all-options" "$shell_sketchbook/sketches/code"
-  for app in FOCAL.APP BASIC.APP WBMP.APP; do
+  for app in FOCAL.APP BASIC.APP WBMP.APP CHIP8.APP; do
     test -s "$bundle/System/$app"
     test "$(wc -c < "$bundle/System/$app" | tr -d '[:space:]')" -le 20544
   done
 
   mkdir -p "$work/build-disabled"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_wbmp=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_wbmp=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build-disabled" "$shell_sketchbook/sketches/code"
   test ! -e "$bundle/System"
   grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
   grep -q -- '-DMK61_ENABLE_TINYBASIC=0' "$bundle/build.flags"
   grep -q -- '-DMK61_ENABLE_WBMP_VIEWER=0' "$bundle/build.flags"
+  grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
 
   mkdir -p "$work/build-classic"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v3,mk61_display=uc1609,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v3,mk61_display=uc1609,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_chip8=enabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build-classic" "$shell_sketchbook/sketches/code"
   classic_bundle="$shell_sketchbook/sketches/binary/mk61s-M-classic-v3-uc1609-f401"
   test -s "$classic_bundle/mk61s-M-classic-v3-uc1609-f401.bin"
   test -s "$classic_bundle/System/FOCAL.APP"
   test -s "$classic_bundle/System/BASIC.APP"
   test -s "$classic_bundle/System/WBMP.APP"
+  test -s "$classic_bundle/System/CHIP8.APP"
 fi
 
 printf 'arduino_board_tests: ok\n'

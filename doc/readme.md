@@ -16,6 +16,8 @@
 - `MK61s-mini-FOCAL.pdf` - черновик инструкции по FOCAL.
 - `MK61s-mini-TinyBASIC.pdf` - черновик инструкции по TinyBASIC.
 - `MK61s-mini-WBMP.pdf` - формат и просмотр монохромных изображений WBMP.
+- `MK61s-mini-CHIP8.pdf` - техническое задание и руководство по консоли
+  CHIP-8, типу `C1`, экрану и управлению.
 - `MK61s-mini-USB-Screen.pdf` - полное руководство по USB-экрану, desktop-клиенту и wire protocol.
 - `src/MK61s-mini-APP.md` - разработка, согласованная сборка и установка пользовательских APP для F401.
 - `build_md_pdf.py` - воспроизводимая пакетная сборка PDF.
@@ -35,4 +37,5 @@ python3 doc/build_md_pdf.py
 `src/assets/terminal/`. Исходник отдельного руководства по часам находится в
 `src/MK61s-mini-RTC.md`, аппаратная матрица - в
 `src/MK61s-mini-Hardware.md`, а руководство разработчика APP — в
-`src/MK61s-mini-APP.md`.
+`src/MK61s-mini-APP.md`. Контракт консольных файлов и первой платформы
+`C1` находится в `src/MK61s-mini-CHIP8.md`.

@@ -15,7 +15,8 @@ profile=mini-v3-a00
 
 enable_focal=${MK61_ENABLE_FOCAL:-1}
 enable_tinybasic=${MK61_ENABLE_TINYBASIC:-1}
-enable_wbmp=${MK61_ENABLE_WBMP_VIEWER:-1}
+enable_wbmp=${MK61_ENABLE_WBMP_VIEWER:-}
+enable_chip8=${MK61_ENABLE_CHIP8:-0}
 enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
@@ -27,6 +28,7 @@ custom_app_ids=()
 custom_app_dirs=()
 custom_app_sources=()
 custom_app_files=()
+custom_app_magics=()
 custom_app_manifest_paths=()
 
 fqbn_resident='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
@@ -49,6 +51,7 @@ Profiles:
 
 Feature environment variables (0 or 1):
   MK61_ENABLE_FOCAL, MK61_ENABLE_TINYBASIC, MK61_ENABLE_WBMP_VIEWER,
+  MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
   MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND
 
@@ -149,6 +152,7 @@ parse_app_manifest() {
 
   local format=
   local name=
+  local magic=-
   local sources=()
   local files=()
   local line directive value extra path_lower folded
@@ -202,6 +206,25 @@ parse_app_manifest() {
             ;;
         esac
         name=$value
+        ;;
+      magic)
+        if [ "$magic" != - ]; then
+          manifest_error "$requested:$line_number" "duplicate magic"
+          return 1
+        fi
+        if [ "${#value}" -ne 2 ]; then
+          manifest_error "$requested:$line_number" \
+            "magic must contain exactly two ASCII bytes"
+          return 1
+        fi
+        case "$value" in
+          *[!A-Za-z0-9]*)
+            manifest_error "$requested:$line_number" \
+              "magic must use ASCII letters or digits"
+            return 1
+            ;;
+        esac
+        magic=$value
         ;;
       source|file)
         if ! safe_app_relative_path "$value"; then
@@ -282,6 +305,7 @@ parse_app_manifest() {
   custom_app_dirs+=("$manifest_dir")
   custom_app_sources+=("${sources[*]}")
   custom_app_files+=("${files[*]}")
+  custom_app_magics+=("$magic")
   custom_app_manifest_paths+=("$manifest")
 }
 
@@ -356,7 +380,15 @@ board_flags=$(profile_flags "$profile") || {
 }
 firmware_name=$(artifact_name "$profile")
 
+if [ -z "$enable_wbmp" ]; then
+  case "$profile" in
+    classic-v2|classic-v3|40th) enable_wbmp=1 ;;
+    *) enable_wbmp=$enable_usb_screen ;;
+  esac
+fi
+
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
+             "$enable_chip8" \
              "$enable_usb_screen" "$enable_extended_font" \
              "$enable_user_explorer" "$math_backend"; do
   boolean_valid "$value" || {
@@ -364,8 +396,17 @@ for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
     exit 2
   }
 done
+case "$profile" in
+  classic-v2|classic-v3|40th) compiled_graphics=1 ;;
+  *) compiled_graphics=$enable_usb_screen ;;
+esac
+if [ "$compiled_graphics" -eq 0 ] &&
+   { [ "$enable_wbmp" -eq 1 ] || [ "$enable_chip8" -eq 1 ]; }; then
+  printf 'Error: WBMP/CHIP-8 requires UC1609 or MK61_ENABLE_USB_SCREEN=1.\n' >&2
+  exit 2
+fi
 custom_app_count=${#custom_app_names[@]}
-any_module=$((enable_focal | enable_tinybasic | enable_wbmp |
+any_module=$((enable_focal | enable_tinybasic | enable_wbmp | enable_chip8 |
               (custom_app_count > 0)))
 
 command -v "$arduino_cli" >/dev/null 2>&1 || {
@@ -381,6 +422,7 @@ compile_flags="$board_flags"
 compile_flags="$compile_flags -DMK61_ENABLE_FOCAL=$enable_focal"
 compile_flags="$compile_flags -DMK61_ENABLE_TINYBASIC=$enable_tinybasic"
 compile_flags="$compile_flags -DMK61_ENABLE_WBMP_VIEWER=$enable_wbmp"
+compile_flags="$compile_flags -DMK61_ENABLE_CHIP8=$enable_chip8"
 compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
@@ -474,7 +516,8 @@ build_module() {
   module_kind=$3
   module_macro=$4
   module_sketch=$5
-  shift 5
+  module_magic=$6
+  shift 6
 
   module_build="$work/build-$module_id"
   module_out="$work/module-$module_id"
@@ -539,6 +582,10 @@ build_module() {
   "$objcopy" -O binary -j .module_image "$module_elf" "$module_image"
   module_target="$bundle_stage/$module_file"
   mkdir -p "$(dirname "$module_target")"
+  module_magic_args=()
+  if [ "$module_magic" != - ]; then
+    module_magic_args=(--handled-magic "$module_magic")
+  fi
   MK61_MODULE_PACK_BIN="$work/mk61_module_pack" \
     "$root/tools/build_mk61_module_pack.sh" \
     --kind "$module_kind" \
@@ -547,6 +594,7 @@ build_module() {
     --memory-size "$memory_size" \
     --entry-offset "$entry_offset" \
     --load-address "0x$overlay_hex" \
+    "${module_magic_args[@]}" \
     --require-zx0 \
     --output "$module_target"
   "$size_tool" -A "$module_elf"
@@ -581,22 +629,29 @@ build_custom_app() {
     custom_objects+=("src/mk61_app/$relative")
   done
   build_module "app-$custom_id" "Apps/$custom_name.APP" app - \
-    "$custom_sketch" "${custom_objects[@]}"
+    "$custom_sketch" "${custom_app_magics[$custom_index]}" \
+    "${custom_objects[@]}"
 }
 
 cp "$resident_bin" "$bundle_stage/$firmware_name"
 if [ "$enable_focal" -eq 1 ]; then
-  build_module focal System/FOCAL.APP focal MK61_BUILD_FOCAL_MODULE "$sketch_dir" \
+  build_module focal System/FOCAL.APP focal MK61_BUILD_FOCAL_MODULE \
+    "$sketch_dir" - \
     focal.cpp focal_module_entry.cpp
 fi
 if [ "$enable_tinybasic" -eq 1 ]; then
-  build_module tinybasic System/BASIC.APP tinybasic MK61_BUILD_TINYBASIC_MODULE "$sketch_dir" \
+  build_module tinybasic System/BASIC.APP tinybasic MK61_BUILD_TINYBASIC_MODULE \
+    "$sketch_dir" - \
     tinybasic.cpp tinybasic_module_entry.cpp
 fi
 if [ "$enable_wbmp" -eq 1 ]; then
-  build_module wbmp System/WBMP.APP wbmp-viewer MK61_BUILD_WBMP_MODULE "$sketch_dir" \
-    wbmp.cpp a00_image_multiplex.cpp image1_viewer.cpp \
+  build_module wbmp System/WBMP.APP wbmp-viewer MK61_BUILD_WBMP_MODULE \
+    "$sketch_dir" I1 wbmp.cpp image1_viewer.cpp \
     image1_viewer_module_entry.cpp
+fi
+if [ "$enable_chip8" -eq 1 ]; then
+  build_module chip8 System/CHIP8.APP chip8 MK61_BUILD_CHIP8_MODULE \
+    "$sketch_dir" C1 chip8.cpp chip8_runner.cpp chip8_module_entry.cpp
 fi
 for index in "${!custom_app_names[@]}"; do
   build_custom_app "$index"
@@ -609,6 +664,7 @@ mkdir -p "$bundle_dir"
 # сборки этого же профиля.
 rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/BASIC.APP" "$bundle_dir/System/WBMP.APP" \
+      "$bundle_dir/System/CHIP8.APP" \
       "$bundle_dir/$firmware_name" "$bundle_dir/build.apps"
 if [ -d "$bundle_dir/System" ]; then
   rmdir "$bundle_dir/System" 2>/dev/null || true

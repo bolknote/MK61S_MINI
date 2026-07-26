@@ -224,6 +224,7 @@ static const char* short_extension(program_store::ProgramType type) {
     case program_store::ProgramType::FONT: return "FMK";
     case program_store::ProgramType::IMAGE1: return "WBM";
     case program_store::ProgramType::APP: return "APP";
+    case program_store::ProgramType::CHIP8: return "CH8";
   }
   return "BIN";
 }
@@ -243,6 +244,7 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     {".m2", program_store::ProgramType::MK61_STATE},
     {".fmk", program_store::ProgramType::FONT},
     {".app", program_store::ProgramType::APP},
+    {".ch8", program_store::ProgramType::CHIP8},
     {".wbmp", program_store::ProgramType::IMAGE1},
     // Псевдоним нужен при чтении записи без LFN: 8.3-проекция WBMP — WBM.
     {".wbm", program_store::ProgramType::IMAGE1}
@@ -264,6 +266,9 @@ static u16 maximum_file_size(program_store::ProgramType type) {
   }
   if(type == program_store::ProgramType::IMAGE1) {
     return program_store::MAX_IMAGE1_SIZE;
+  }
+  if(type == program_store::ProgramType::CHIP8) {
+    return program_store::MAX_CHIP8_SIZE;
   }
   if(type == program_store::ProgramType::APP) {
     return program_store::MAX_APP_FILE_SIZE;
@@ -1066,7 +1071,8 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   }
   // Неподдерживаемые файлы хоста намеренно игнорируются независимо от размера.
   // Квоту данных C5 применяем лишь после выбора известного расширения калькулятора.
-  if(size > maximum_file_size(parsed.type)) return ParseStatus::INVALID;
+  if((parsed.type == program_store::ProgramType::CHIP8 && size == 0) ||
+     size > maximum_file_size(parsed.type)) return ParseStatus::INVALID;
   if(!valid_cluster(cluster)) return ParseStatus::INVALID;
   bounded_string::copy(parsed.name, name);
   parsed.id = id_for_cluster(cluster);

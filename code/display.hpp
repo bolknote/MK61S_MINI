@@ -360,7 +360,7 @@ class MK61Display : public Print {
     bool external_font_suspended;
     bool preview_font_enabled;
     bool initialized;
-#if MK61_ENABLE_WBMP_VIEWER
+#if MK61_ANY_FULLSCREEN_FILE
     bool fullscreen_bitmap_active;
 #endif
     bool screen_dirty;

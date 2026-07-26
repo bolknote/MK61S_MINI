@@ -986,7 +986,7 @@ MK61Display::MK61Display(void)
     external_font_suspended(false),
     preview_font_enabled(false),
     initialized(false),
-#if MK61_ENABLE_WBMP_VIEWER
+#if MK61_ANY_FULLSCREEN_FILE
     fullscreen_bitmap_active(false),
 #endif
     screen_dirty(false),
@@ -1052,7 +1052,7 @@ void MK61Display::flush(void) {
   }
 #endif
   if(!initialized) return;
-#if MK61_ENABLE_WBMP_VIEWER
+#if MK61_ANY_FULLSCREEN_FILE
   if(fullscreen_bitmap_active) return;
 #endif
   updateCursorBlink();
@@ -1593,7 +1593,7 @@ bool MK61Display::beginFullscreenBitmap(void) {
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) return usb_surface.beginFullscreenBitmap();
 #endif
-#if MK61_ENABLE_WBMP_VIEWER
+#if MK61_ANY_FULLSCREEN_FILE
   if(!initialized) return false;
   cursor_underline = false;
   cursor_blink = false;
@@ -1614,7 +1614,7 @@ void MK61Display::endFullscreenBitmap(void) {
     return;
   }
 #endif
-#if MK61_ENABLE_WBMP_VIEWER
+#if MK61_ANY_FULLSCREEN_FILE
   if(!fullscreen_bitmap_active) return;
   fullscreen_bitmap_active = false;
   clearShadow();

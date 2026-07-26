@@ -16,3 +16,28 @@ so `{X:e}` can be used directly as the ANSI column.
 
 `Bumblebee Fly.m61` is the earlier full MK-61 program port. It is kept as a
 separate game and is not replaced by `Bumblebee.m61`.
+
+## CHIP-8 ROMs
+
+The CHIP-8 console opens unmodified `.ch8` ROMs from any C5 directory. Copy a
+base CHIP-8 ROM of up to 3584 bytes to the `MK61S C5` disk and open it in
+Explorer.
+
+The console uses C5 type magic `C1`; those bytes are not added to the ROM.
+Screen compatibility, the full 0-F key map and game aliases are documented in
+[`MK61s-mini-CHIP8.md`](../doc/src/MK61s-mini-CHIP8.md).
+
+Two ready-to-run examples are included:
+
+- `fuse.ch8` — **Fuse** by John Earnest, 424 bytes. Use CHIP-8 keys
+  `5/7/8/9` to move and `6` to place a piece.
+- `br8kout.ch8` — **Br8kout** by SharpenedSpoon, 199 bytes. Use CHIP-8 keys
+  `7` and `9` to move the paddle.
+
+Both ROMs come from the
+[Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), whose
+contents are released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Their archive
+SHA-1 values are respectively
+`0cd895dc3d489d0e40656218900a04310e95f560` and
+`31fc1c53cc610a9f4b9c5705c5a0f33fc028d123`.

@@ -14,6 +14,10 @@ using Entry = u32 (*)(u32 command, u32 argument0, u32 argument1,
 enum class Command : u32 {
   INITIALIZE = 0,
   APPLICATION_RUN = 1,
+  // Универсальный запуск файла зарегистрированного типа:
+  // argument0 — Api* для APPLICATION либо 0 для System APP,
+  // argument1 — стабильный C5 file id.
+  FILE_OPEN = 2,
 
   FOCAL_LIBRARY_SELECT = 0x100,
   FOCAL_MENU_SELECT,
@@ -39,6 +43,17 @@ enum class Command : u32 {
 
   WBMP_VIEW = 0x300,
   WBMP_VIEW_ENTRY
+};
+
+// Общий результат FILE_OPEN позволяет проводнику одинаково показывать ошибки
+// встроенных обработчиков, System APP и пользовательских APPLICATION.
+enum class FileOpenResult : u32 {
+  OK = 0,
+  INVALID_FILE,
+  UNSUPPORTED_DISPLAY,
+  BUSY,
+  IO_ERROR,
+  RUNTIME_ERROR
 };
 
 } // namespace loadable_module

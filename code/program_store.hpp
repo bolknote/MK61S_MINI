@@ -14,6 +14,9 @@ static constexpr u16 MAX_FONT_SIZE = 1536;
 // 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
 // гарантированно помещаются в минимальный 2-КиБ FAT-кластер C5.
 static constexpr u16 MAX_IMAGE1_SIZE = 1600;
+// CHIP-8 загружает программы с адреса 0x200 в 4-КиБ память, поэтому
+// классический ROM занимает не более 4096 - 0x200 = 3584 байт.
+static constexpr u16 MAX_CHIP8_SIZE = 3584;
 // Контейнер APP: 64-байтовый заголовок и не более 20 КиБ образа SRAM.
 // Хранилище читает его блоками и не требует такого же буфера в ОЗУ.
 static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
@@ -36,8 +39,21 @@ enum class ProgramType : u8 {
   MK61_STATE = 5,
   FONT = 6,
   IMAGE1 = 7,
-  APP = 8
+  APP = 8,
+  // Значение 1 принадлежало удалённому BASIC и намеренно не используется
+  // повторно: старые каталоги должны оставаться однозначными.
+  CHIP8 = 9
 };
+
+using TypeMagic = u16;
+
+constexpr TypeMagic make_type_magic(char family, char subtype) {
+  return (TypeMagic) (u8) family | ((TypeMagic) (u8) subtype << 8);
+}
+
+static constexpr TypeMagic TYPE_MAGIC_NONE = 0;
+static constexpr TypeMagic TYPE_MAGIC_IMAGE1 = make_type_magic('I', '1');
+static constexpr TypeMagic TYPE_MAGIC_CHIP8 = make_type_magic('C', '1');
 
 enum class NodeKind : u8 {
   FILE = 0,
@@ -85,6 +101,9 @@ u32 settings_address(void);
 u16 settings_size(void);
 bool erase_settings(void);
 const char* file_extension(ProgramType type);
+TypeMagic type_magic(ProgramType type);
+const char* type_magic_text(ProgramType type);
+bool type_from_magic(TypeMagic magic, ProgramType& type);
 
 int count(ProgramType type);
 bool entry(ProgramType type, int index, Entry& out);

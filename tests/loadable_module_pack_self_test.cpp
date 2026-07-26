@@ -72,9 +72,13 @@ int main(int argc, char** argv) {
     generate_fixtures(argv[2], argv[3]);
     return 0;
   }
+  const char* expected_type = argc == 5 ? argv[4] : "focal";
   const Kind expected_kind =
-      argc == 5 && strcmp(argv[4], "app") == 0
-          ? Kind::APPLICATION : Kind::FOCAL;
+      strcmp(expected_type, "app") == 0 ? Kind::APPLICATION :
+      strcmp(expected_type, "chip8") == 0 ? Kind::CHIP8 : Kind::FOCAL;
+  const u16 expected_magic =
+      expected_kind == Kind::CHIP8
+          ? (u16) ('C' | ((u16) '1' << 8)) : 0;
   const std::vector<u8> module = read_file(argv[1]);
   const std::vector<u8> expected = read_file(argv[2]);
   const std::vector<u8> resident = read_file(argv[3]);
@@ -89,6 +93,7 @@ int main(int argc, char** argv) {
   assert(header.memory_size == expected.size() + 512);
   assert(header.resident_size == resident.size());
   assert(header.resident_crc32 == crc32(resident.data(), resident.size()));
+  assert(header.handled_type_magic == expected_magic);
   assert(module.size() == HEADER_SIZE + header.stored_size);
 
   VectorReader source = {&module, HEADER_SIZE};

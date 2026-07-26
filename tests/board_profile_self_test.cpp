@@ -7,33 +7,54 @@ int main(void) {
 #if defined(MK61_CONFIG_EXPECT_WBMP_DISABLED)
   static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
                 "the WBMP-disabled build must keep the viewer disabled");
-#else
+#elif MK61_HAS_COMPILED_GRAPHICS
   static_assert(MK61_ENABLE_WBMP_VIEWER == 1,
-                "the WBMP viewer must be enabled by default");
+                "a graphical build must enable WBMP by default");
+#else
+  static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
+                "a non-graphical build must keep WBMP disabled by default");
+#endif
+  static_assert(MK61_ENABLE_CHIP8 ==
+#if defined(MK61_CONFIG_EXPECT_CHIP8)
+                1,
+#else
+                0,
+#endif
+                "CHIP-8 must remain opt-in");
+#if defined(MK61_CONFIG_EXPECT_GRAPHICS)
+  static_assert(MK61_HAS_COMPILED_GRAPHICS == 1,
+                "USB Screen or UC1609 must provide compiled graphics");
 #endif
 
 #if defined(MK61_CONFIG_EXPECT_LOADABLE_MODULES)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
                 "the F401CC profile must enable loadable modules");
-  static_assert(MK61_FOCAL_IS_LOADABLE && MK61_TINYBASIC_IS_LOADABLE &&
-                MK61_WBMP_VIEWER_IS_LOADABLE,
-                "enabled optional runtimes must become modules");
+  static_assert(MK61_FOCAL_IS_LOADABLE && MK61_TINYBASIC_IS_LOADABLE,
+                "enabled language runtimes must become modules");
+  static_assert(MK61_WBMP_VIEWER_IS_LOADABLE ==
+                    MK61_ENABLE_WBMP_VIEWER &&
+                MK61_CHIP8_IS_LOADABLE == MK61_ENABLE_CHIP8,
+                "enabled graphical runtimes must become modules");
   static_assert(MK61_ANY_LOADABLE_MODULE,
                 "the loader must remain present while a module is enabled");
 #elif defined(MK61_CONFIG_EXPECT_NO_MODULE_ARTIFACTS)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
                 "this case tests an enabled module framework");
   static_assert(!MK61_FOCAL_IS_LOADABLE && !MK61_TINYBASIC_IS_LOADABLE &&
-                !MK61_WBMP_VIEWER_IS_LOADABLE,
+                !MK61_WBMP_VIEWER_IS_LOADABLE &&
+                !MK61_CHIP8_IS_LOADABLE,
                 "disabled features must not leave system APP artifacts");
   static_assert(MK61_ANY_LOADABLE_MODULE,
                 "generic APP runtime must not depend on system APP keys");
 #elif defined(MK61_CONFIG_EXPECT_MODULES_DISABLED)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
                 "the explicit module override must win");
-  static_assert(MK61_FOCAL_IS_BUILTIN && MK61_TINYBASIC_IS_BUILTIN &&
-                MK61_WBMP_VIEWER_IS_BUILTIN,
-                "enabled features must stay built in when modules are off");
+  static_assert(MK61_FOCAL_IS_BUILTIN && MK61_TINYBASIC_IS_BUILTIN,
+                "enabled language features must stay built in");
+  static_assert(MK61_WBMP_VIEWER_IS_BUILTIN ==
+                    MK61_ENABLE_WBMP_VIEWER &&
+                MK61_CHIP8_IS_BUILTIN == MK61_ENABLE_CHIP8,
+                "enabled graphical features must stay built in");
 #else
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
                 "non-F401 profiles must keep modules disabled by default");

@@ -106,6 +106,53 @@ static void test_image_type_roundtrip_and_quota(void) {
   expect_text(id, source, program_store::MAX_IMAGE1_SIZE);
 }
 
+static void test_chip8_type_roundtrip_and_quota(void) {
+  fresh(512U * 1024U);
+  static u8 source[program_store::MAX_CHIP8_SIZE + 1U];
+  static u8 recovered[program_store::MAX_CHIP8_SIZE];
+  for(u16 index = 0; index < sizeof(source); index++) {
+    source[index] = (u8) (index * 17U + 0xC1U);
+  }
+
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::CHIP8, "fuse", source,
+      program_store::MAX_CHIP8_SIZE, &id));
+  assert(id != program_store::INVALID_ID);
+  assert(!program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::CHIP8, "empty", source, 0));
+  assert(!program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::CHIP8, "too large", source, sizeof(source)));
+  assert(program_store::count(ProgramType::CHIP8) == 1);
+  assert(strcmp(program_store::file_extension(ProgramType::CHIP8),
+                "ch8") == 0);
+  assert(program_store::type_magic(ProgramType::CHIP8) ==
+         program_store::TYPE_MAGIC_CHIP8);
+  assert(strcmp(program_store::type_magic_text(ProgramType::CHIP8),
+                "C1") == 0);
+  ProgramType decoded = ProgramType::MK61;
+  assert(program_store::type_from_magic(
+      program_store::TYPE_MAGIC_CHIP8, decoded));
+  assert(decoded == ProgramType::CHIP8);
+
+  u16 length = 0;
+  assert(program_store::read_id(
+      id, recovered, sizeof(recovered), &length));
+  assert(length == program_store::MAX_CHIP8_SIZE);
+  assert(memcmp(recovered, source, length) == 0);
+
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::count(ProgramType::CHIP8) == 1);
+  Entry rom = {};
+  assert(program_store::entry_by_id(id, rom));
+  assert(rom.type == ProgramType::CHIP8);
+  assert(rom.data_len == program_store::MAX_CHIP8_SIZE);
+}
+
 static void expect_text(const char* name, const char* expected) {
   u8 actual[128] = {};
   u16 actual_len = 0;
@@ -1706,6 +1753,7 @@ int main(void) {
   test_dynamic_geometry_and_lazy_format();
   test_roundtrip_ranges_and_noop();
   test_image_type_roundtrip_and_quota();
+  test_chip8_type_roundtrip_and_quota();
   test_arbitrary_nested_directories();
   test_paths_and_recursive_tree_operations();
   test_system_apps_are_resolved_only_from_system_directory();

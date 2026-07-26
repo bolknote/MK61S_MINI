@@ -181,6 +181,10 @@ static void build_hardware_lines(
     char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
     hardware_info::VbatReading vbat) {
   const bool russian = language_is_ru();
+  rtc_clock::ClockSource rtc_source = rtc_clock::ClockSource::LSI;
+  const char* rtc_source_name = rtc_clock::read_clock_source(rtc_source)
+      ? rtc_clock::clock_source_name(rtc_source)
+      : "--";
   if(russian) {
     snprintf(lines[0], HARDWARE_LINE_SIZE, "ЧИП:%s", chip_name);
     build_ru_memory_text(lines[1], HARDWARE_LINE_SIZE);
@@ -191,8 +195,10 @@ static void build_hardware_lines(
 
   hardware_info::format_vbat_line(
     lines[2], HARDWARE_LINE_SIZE, russian, vbat);
+  hardware_info::format_generator_line(
+    lines[3], HARDWARE_LINE_SIZE, russian, rtc_source_name);
   hardware_info::format_display_line(
-    lines[3], HARDWARE_LINE_SIZE, russian, hardware_info::display_type());
+    lines[4], HARDWARE_LINE_SIZE, russian, hardware_info::display_type());
 }
 
 static void draw_hardware_lines(
