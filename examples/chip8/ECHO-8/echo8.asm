@@ -1,6 +1,6 @@
 ; ECHO-8
 ; A complete base CHIP-8 first-person story game for a 64x32 display.
-; Build with tools/chip8_assemble.py; the ready ROM lives in games/.
+; Build with examples/chip8/ECHO-8/assemble.py; the ready ROM lives in games/.
 ;
 ; State registers survive all rendering and text helpers:
 ;   V8 room, V9 direction (N/E/S/W), VA mirrors, VB memories,

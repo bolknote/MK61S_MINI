@@ -13,7 +13,6 @@ expected="$(
     build_fmk_font.sh \
     build_mk61_module_pack.sh \
     build-gcc.cmd \
-    chip8_assemble.py \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd |

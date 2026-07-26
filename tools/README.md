@@ -8,8 +8,7 @@
 - `mkc.cmd` — двухпанельный файловый менеджер устройства;
 - `build_f401_bundle.sh` — legacy-сборка custom manifest APP и payload ZX0;
 - `build_fmk_font.sh` — конвертер шрифтов FMK;
-- `build_mk61_module_pack.sh` — низкоуровневый упаковщик custom APP;
-- `chip8_assemble.py` — ассемблер CHIP-8 для примеров и собственных ROM.
+- `build_mk61_module_pack.sh` — низкоуровневый упаковщик custom APP.
 
 Каталоги с точкой в имени — внутренние реализации этих команд. Они не являются
 дополнительными способами собрать одну и ту же прошивку:

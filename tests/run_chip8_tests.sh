@@ -16,7 +16,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/chip8.cpp" \
   -o "$out"
 
-python3 "$root/tools/chip8_assemble.py" \
+python3 "$root/examples/chip8/ECHO-8/assemble.py" \
   "$root/examples/chip8/ECHO-8/echo8.asm" "$echo8_out" >/dev/null
 cmp "$echo8_out" "$root/games/echo8.ch8"
 
