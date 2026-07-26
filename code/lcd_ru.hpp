@@ -255,18 +255,24 @@ inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
   write_text(map, text, width);
 }
 
-inline void print_lines(const char* text0, const char* text1) {
+inline void print_window(const char* const* lines, u8 count) {
   MK61DisplayUpdate update(main_lcd());
+  if(count > main_lcd().rows()) count = main_lcd().rows();
   font_map_t map = {{0}, 0, false};
-  scan_text(map, text0, LCD_WIDTH);
-  scan_text(map, text1, LCD_WIDTH);
+  for(u8 row = 0; row < count; row++) {
+    scan_text(map, lines[row], LCD_WIDTH);
+  }
   load_custom_font(map);
 
-  main_lcd().setCursor(0, 0);
-  write_text(map, text0, LCD_WIDTH);
+  for(u8 row = 0; row < count; row++) {
+    main_lcd().setCursor(0, row);
+    write_text(map, lines[row], LCD_WIDTH);
+  }
+}
 
-  main_lcd().setCursor(0, 1);
-  write_text(map, text1, LCD_WIDTH);
+inline void print_lines(const char* text0, const char* text1) {
+  const char* lines[] = {text0, text1};
+  print_window(lines, 2);
 }
 
 inline void print_menu_window(char mark0, const char* text0, char mark1, const char* text1) {

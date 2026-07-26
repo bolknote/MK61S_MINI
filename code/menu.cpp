@@ -6,6 +6,7 @@
 #include "lcd_ru.hpp"
 #include "development.hpp"
 #include "focal.hpp"
+#include "hardware_info.hpp"
 #include "tinybasic.hpp"
 #include "entropy_pool.hpp"
 #include "program_store.hpp"
@@ -173,28 +174,100 @@ static void build_ru_memory_text(char* out, usize size) {
   *cursor = 0;
 }
 
-bool  HardwareInfo(void) {
-  {
-    MK61DisplayUpdate update(main_lcd());
-    main_lcd().clear();
-    if(language_is_ru()) {
-      char chip_line[24] = "ЧИП:";
-      char memory_line[32];
-      char* cursor = &chip_line[sizeof("ЧИП:") - 1];
-      append_text(cursor, chip_line + sizeof(chip_line) - 1, chip_name);
-      *cursor = 0;
-      build_ru_memory_text(memory_line, sizeof(memory_line));
-      lcd_ru::print_lines(chip_line, memory_line);
-    } else {
-      main_lcd().setCursor(0, 0);
-      main_lcd().print("Chip:");
-      main_lcd().print(chip_name);
-      main_lcd().setCursor(0,1);
-      main_lcd().print(mem_text);
-    }
+static constexpr usize HARDWARE_LINE_SIZE = 32;
+static constexpr i32 HARDWARE_DISPLAY_CHANGED = -2;
+
+static void build_hardware_lines(
+    char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
+    hardware_info::VbatReading vbat) {
+  const bool russian = language_is_ru();
+  if(russian) {
+    snprintf(lines[0], HARDWARE_LINE_SIZE, "ЧИП:%s", chip_name);
+    build_ru_memory_text(lines[1], HARDWARE_LINE_SIZE);
+  } else {
+    snprintf(lines[0], HARDWARE_LINE_SIZE, "Chip:%s", chip_name);
+    snprintf(lines[1], HARDWARE_LINE_SIZE, "%s", mem_text);
   }
-  kbd::get_key_wait();
-  return action::MENU_BACK;
+
+  hardware_info::format_vbat_line(
+    lines[2], HARDWARE_LINE_SIZE, russian, vbat);
+  hardware_info::format_display_line(
+    lines[3], HARDWARE_LINE_SIZE, russian, hardware_info::display_type());
+}
+
+static void draw_hardware_lines(
+    const char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
+    u8 offset) {
+  const u8 rows = main_lcd().rows();
+  const u8 visible =
+    rows < hardware_info::LINE_COUNT ? rows : hardware_info::LINE_COUNT;
+  offset = hardware_info::clamp_scroll_offset(offset, rows);
+
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
+
+  if(language_is_ru()) {
+    const char* window[hardware_info::LINE_COUNT];
+    for(u8 row = 0; row < visible; row++) {
+      window[row] = lines[offset + row];
+    }
+    lcd_ru::print_window(window, visible);
+    return;
+  }
+
+  for(u8 row = 0; row < visible; row++) {
+    main_lcd().setCursor(0, row);
+    u8 used = 0;
+    const char* text = lines[offset + row];
+    while(text[used] != 0 && used < lcd_display::COLS) {
+      main_lcd().write((u8) text[used++]);
+    }
+    while(used++ < lcd_display::COLS) main_lcd().write((u8) ' ');
+  }
+}
+
+static i32 wait_hardware_key(u32 display_mode_revision) {
+  do {
+    idle_main_process();
+    if(main_lcd().displayModeRevision() != display_mode_revision) {
+      return HARDWARE_DISPLAY_CHANGED;
+    }
+
+    const i32 scan_code = kbd::scan_and_debounced();
+    if(scan_code >= 0) kbd::exclude_before(scan_code);
+    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      return scan_code;
+    }
+  } while(true);
+}
+
+bool  HardwareInfo(void) {
+  char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE];
+  build_hardware_lines(lines, hardware_info::read_vbat());
+  u8 offset = 0;
+
+  do {
+    offset = hardware_info::clamp_scroll_offset(
+      offset, main_lcd().rows());
+    draw_hardware_lines(lines, offset);
+    const i32 key = wait_hardware_key(
+      main_lcd().displayModeRevision());
+
+    if(key == HARDWARE_DISPLAY_CHANGED) continue;
+    if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+      offset = hardware_info::step_scroll_offset(
+        offset, main_lcd().rows(), -1);
+      continue;
+    }
+    if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
+      offset = hardware_info::step_scroll_offset(
+        offset, main_lcd().rows(), 1);
+      continue;
+    }
+
+    lcd_ru::restore_default_font();
+    return action::MENU_BACK;
+  } while(true);
 }
 
 bool  InfoData(void) {
