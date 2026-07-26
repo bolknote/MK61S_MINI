@@ -6,6 +6,7 @@
 
 #include "Arduino.h"
 #include "chip8.hpp"
+#include "chip8_frame_pacer.hpp"
 #include "cross_hal.h"
 #include "display.hpp"
 #include "entropy_pool.hpp"
@@ -29,7 +30,7 @@ static constexpr usize DISPLAY_BYTES =
 static constexpr u8 SCALE = 2;
 static constexpr u8 VIEW_X = (DISPLAY_WIDTH - chip8::SCREEN_WIDTH * SCALE) / 2;
 static constexpr u32 CPU_PERIOD_US = 1429;  // примерно 700 инструкций/с
-static constexpr u32 TIMER_PERIOD_US = 16667;
+static constexpr u32 TIMER_PERIOD_US = FramePacer::PERIOD_US;
 static constexpr u8 MAX_STEPS_PER_POLL = 24;
 static constexpr u16 BEEP_FREQUENCY_HZ = 800;
 static constexpr u16 BEEP_DURATION_MS = 20;
@@ -162,6 +163,7 @@ static loadable_module::FileOpenResult run(
   u32 last_us = micros();
   u32 cpu_accumulator = 0;
   u32 timer_accumulator = 0;
+  FramePacer frame_pacer;
   bool paused = false;
   bool previous_run = false;
   FileOpenResult result = FileOpenResult::OK;
@@ -195,7 +197,6 @@ static loadable_module::FileOpenResult run(
       timer_accumulator += elapsed;
     }
 
-    bool dirty = false;
     u8 steps = 0;
     while(!paused && cpu_accumulator >= CPU_PERIOD_US &&
           steps++ < MAX_STEPS_PER_POLL) {
@@ -205,7 +206,7 @@ static loadable_module::FileOpenResult run(
       const chip8::StepResult step =
           chip8::step(workspace.machine, random_byte);
       if(step == chip8::StepResult::DRAW) {
-        dirty = true;
+        frame_pacer.markDirty();
       } else if(step == chip8::StepResult::WAITING_KEY) {
         cpu_accumulator = 0;
         break;
@@ -227,7 +228,10 @@ static loadable_module::FileOpenResult run(
       }
     }
 
-    if(dirty &&
+    // CHIP-8 changes its XOR framebuffer immediately, but the real display
+    // observes at most one combined result per 60 Hz frame. Publishing every
+    // DXYN/CLS exposes intermediate erase/redraw states as heavy flicker.
+    if(frame_pacer.advance(elapsed) &&
        !render(display, workspace.machine, workspace.display)) {
       result = FileOpenResult::UNSUPPORTED_DISPLAY;
       break;

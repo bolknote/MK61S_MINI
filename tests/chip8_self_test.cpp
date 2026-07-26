@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../code/chip8.hpp"
+#include "../code/chip8_frame_pacer.hpp"
 
 namespace {
 
@@ -271,6 +272,31 @@ static void test_invalid_and_bounds(void) {
   assert(chip8::step(state, 0) == StepResult::MEMORY_ERROR);
 }
 
+static void test_frame_pacer(void) {
+  chip8_runner::FramePacer pacer;
+
+  // Несколько операций рисования внутри кадра объединяются.
+  pacer.markDirty();
+  pacer.markDirty();
+  assert(!pacer.advance(chip8_runner::FramePacer::PERIOD_US - 1U));
+  assert(pacer.advance(1));
+
+  // Без изменения framebuffer пустой тик не публикуется.
+  assert(!pacer.advance(chip8_runner::FramePacer::PERIOD_US));
+
+  // Новое изменение ждёт ближайшую границу кадра.
+  pacer.markDirty();
+  assert(!pacer.advance(chip8_runner::FramePacer::PERIOD_US / 2U));
+  assert(pacer.advance(
+      chip8_runner::FramePacer::PERIOD_US -
+      chip8_runner::FramePacer::PERIOD_US / 2U));
+
+  // После долгой задержки также публикуется только один итоговый кадр.
+  pacer.markDirty();
+  assert(pacer.advance(chip8_runner::FramePacer::PERIOD_US * 3U));
+  assert(!pacer.advance(0));
+}
+
 static u16 read_rom(const char* path, u8 output[chip8::MAX_ROM_SIZE]) {
   FILE* input = fopen(path, "rb");
   assert(input != nullptr);
@@ -335,6 +361,7 @@ int main(int argc, char** argv) {
   test_draw_collision_and_clear();
   test_keys_random_and_timers();
   test_invalid_and_bounds();
+  test_frame_pacer();
   assert(argc == 1 || argc == 4);
   if(argc == 4) {
     smoke_rom(argv[1], false);
