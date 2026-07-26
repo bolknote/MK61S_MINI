@@ -802,10 +802,13 @@ void  loop() {
   const u32 next_display_mode_revision = main_lcd().displayModeRevision();
   if(next_display_mode_revision != top_level_display_mode_revision) {
     top_level_display_mode_revision = next_display_mode_revision;
-    // Меню с состоянием тоже может работать между вызовами внешнего цикла,
-    // поэтому калькулятор перерисовывается лишь тогда, когда его базовый
-    // обработчик действительно владеет передним планом.
-    if(input_focus == &mk61_baseloop_hook && !lcd_hooked &&
+    // Главное меню работает неблокирующим hook-обработчиком и потому не
+    // проходит через class_menu::wait_key(), где модальные меню замечают смену
+    // поверхности. Без явной перерисовки USB Screen сначала показывает
+    // унаследованный двухстрочный снимок LCD1602 до первого нажатия.
+    if(input_focus == &mk61_menu_hook) {
+      mk61_menu.select(-1);
+    } else if(input_focus == &mk61_baseloop_hook && !lcd_hooked &&
        !m61_text::active() && !user_short_press_pending) {
       lcd_std_display_redraw();
     }

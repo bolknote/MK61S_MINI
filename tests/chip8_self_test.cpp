@@ -351,6 +351,193 @@ static void smoke_rom(const char* path, bool expects_key_wait) {
   assert((waits != 0) == expects_key_wait);
 }
 
+static void run_until_key_wait(State& state) {
+  for(u32 iteration = 0; iteration < 20000U; iteration++) {
+    const StepResult result =
+        chip8::step(state, (u8) (iteration * 37U + 11U));
+    if(result == StepResult::WAITING_KEY) return;
+    assert(result == StepResult::OK || result == StepResult::DRAW);
+    if(iteration % 12U == 0) chip8::tick_timers(state);
+  }
+  assert(!"CHIP-8 ROM did not reach its next input point");
+}
+
+static void press_waiting_key(State& state, u8 key) {
+  assert(state.waiting_register < chip8::KEY_COUNT);
+  chip8::update_keys(state, 0);
+  chip8::update_keys(state, (u16) 1U << key);
+  assert(chip8::step(state, 0x5A) == StepResult::OK);
+  chip8::update_keys(state, 0);
+  run_until_key_wait(state);
+}
+
+static void echo8_acknowledge_messages(State& state) {
+  // ECHO-8 deliberately uses V0 for story pages, V5 for exploration and V6
+  // for the final choice. This lets the traversal test distinguish them.
+  while(state.waiting_register == 0) press_waiting_key(state, 5);
+  assert(state.waiting_register == 5 || state.waiting_register == 6);
+}
+
+static void echo8_command(State& state, u8 key) {
+  assert(state.waiting_register == 5);
+  press_waiting_key(state, key);
+  echo8_acknowledge_messages(state);
+}
+
+static void echo8_start_game(const char* path, State& state) {
+  u8 rom[chip8::MAX_ROM_SIZE];
+  assert(chip8::load_rom(state, rom, read_rom(path, rom)));
+
+  run_until_key_wait(state);
+  assert(state.waiting_register == 0);  // title
+  press_waiting_key(state, 5);
+  assert(state.waiting_register == 0);  // introduction
+  press_waiting_key(state, 5);
+  assert(state.waiting_register == 5);
+  assert(state.v[8] == 0 && state.v[9] == 0);
+  assert(state.v[0xA] == 0 && state.v[0xB] == 0 && state.v[0xD] == 99);
+}
+
+static void test_echo8_complete_route(const char* path) {
+  State state;
+  echo8_start_game(path, state);
+
+  // Entry body.
+  echo8_command(state, 6);  // face east
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0x01);
+  echo8_command(state, 4);  // face north
+
+  // Mirror 1 in room 2 and body 04 in room 5.
+  echo8_command(state, 2);
+  echo8_command(state, 2);
+  assert(state.v[8] == 2);
+  echo8_command(state, 6);
+  echo8_command(state, 5);
+  assert(state.v[0xA] == 0x01);
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0x09);
+
+  // Mirror 3, bodies 07, 03 and 08 around the western loop.
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  assert(state.v[8] == 8 && state.v[9] == 3);
+  echo8_command(state, 5);
+  assert(state.v[0xA] == 0x05);
+  echo8_command(state, 6);
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0x49);
+  echo8_command(state, 8);
+  assert(state.v[8] == 4 && state.v[9] == 0);
+  echo8_command(state, 4);
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0x4D);
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0xCD);
+
+  // Eastern archive: body 02, mirror 2 and body 06.
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  echo8_command(state, 6);
+  echo8_command(state, 2);
+  assert(state.v[8] == 3 && state.v[9] == 1);
+  echo8_command(state, 6);
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0xCF);
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  assert(state.v[8] == 7 && state.v[9] == 1);
+  echo8_command(state, 5);
+  assert(state.v[0xA] == 0x07);
+  echo8_command(state, 4);
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0xEF);
+
+  // Last body in room 6, then the now-open core.
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  echo8_command(state, 6);
+  echo8_command(state, 2);
+  assert(state.v[8] == 6 && state.v[9] == 0);
+  echo8_command(state, 6);
+  echo8_command(state, 5);
+  assert(state.v[0xB] == 0xFF);
+  echo8_command(state, 4);
+  echo8_command(state, 2);
+  assert(state.v[8] == 10);
+  echo8_command(state, 2);
+  assert(state.v[8] == 11);
+  assert(state.waiting_register == 6);
+
+  // Choose ECHO. Stop on the ending page before the automatic new game.
+  press_waiting_key(state, 6);
+  assert(state.waiting_register == 0);
+  assert(state.v[0xC] == 0xE3);
+}
+
+static void test_echo8_other_endings_and_limits(const char* path) {
+  State state;
+
+  // The unopened core gate reports the lock and does not move the player.
+  echo8_start_game(path, state);
+  state.v[8] = 10;
+  state.v[9] = 0;
+  press_waiting_key(state, 5);
+  assert(state.waiting_register == 0);
+  press_waiting_key(state, 5);
+  assert(state.waiting_register == 5 && state.v[8] == 10);
+  echo8_command(state, 2);
+  assert(state.v[8] == 10 && state.v[0xA] == 0);
+
+  // Enter a prepared core and select ESCAPE.
+  state.v[0xA] = 7;
+  echo8_command(state, 2);
+  assert(state.v[8] == 11 && state.waiting_register == 6);
+  press_waiting_key(state, 2);
+  assert(state.waiting_register == 0 && state.v[0xC] == 0xE1);
+
+  // SILENCE is independent of the memory fragments.
+  echo8_start_game(path, state);
+  state.v[8] = 10;
+  state.v[9] = 0;
+  state.v[0xA] = 7;
+  echo8_command(state, 2);
+  press_waiting_key(state, 4);
+  assert(state.waiting_register == 0 && state.v[0xC] == 0xE2);
+
+  // ECHO remains unavailable without all eight fragments; 8 leaves the menu.
+  echo8_start_game(path, state);
+  state.v[8] = 10;
+  state.v[9] = 0;
+  state.v[0xA] = 7;
+  echo8_command(state, 2);
+  press_waiting_key(state, 6);
+  assert(state.waiting_register == 0 && state.v[0xC] == 1);
+  press_waiting_key(state, 5);
+  assert(state.waiting_register == 6);
+  press_waiting_key(state, 8);
+  assert(state.waiting_register == 5 && state.v[8] == 11 &&
+         state.v[0xC] == 0);
+  echo8_command(state, 8);
+  assert(state.v[8] == 10);
+  echo8_command(state, 2);
+  assert(state.v[8] == 11 && state.waiting_register == 6);
+  press_waiting_key(state, 8);
+  assert(state.waiting_register == 5);
+
+  // Exhausting the last signal unit shows SIGNAL LOST and starts a clean run.
+  state.v[0xD] = 1;
+  echo8_command(state, 4);
+  assert(state.v[8] == 0 && state.v[9] == 0);
+  assert(state.v[0xA] == 0 && state.v[0xB] == 0 && state.v[0xD] == 99);
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -362,11 +549,14 @@ int main(int argc, char** argv) {
   test_keys_random_and_timers();
   test_invalid_and_bounds();
   test_frame_pacer();
-  assert(argc == 1 || argc == 4);
-  if(argc == 4) {
+  assert(argc == 1 || argc == 5);
+  if(argc == 5) {
     smoke_rom(argv[1], false);
     smoke_rom(argv[2], true);
     smoke_rom(argv[3], false);
+    smoke_rom(argv[4], true);
+    test_echo8_complete_route(argv[4]);
+    test_echo8_other_endings_and_limits(argv[4]);
   }
   printf("chip8_self_test: ok\n");
   return 0;

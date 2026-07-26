@@ -94,6 +94,19 @@ static bool chip_key_pressed(u8 key) {
   return key == 5 && pressed(mapping.ok);
 }
 
+static void discard_queued_key_events(void) {
+  // CHIP-8 reads the independent edge latch and held-key state below. The
+  // ordinary calculator FIFO must still be drained: terminal `kbd` commands
+  // feed both paths, and otherwise fill the eight-event queue during play and
+  // reappear as Explorer search text after the game exits.
+  while(kbd::get_key() >= 0) {}
+}
+
+static void service_keyboard(void) {
+  (void) kbd::scan();
+  discard_queued_key_events();
+}
+
 static u16 key_mask(void) {
   u16 result = 0;
   for(u8 key = 0; key < chip8::KEY_COUNT; key++) {
@@ -119,11 +132,12 @@ static bool wait_launch_key_release(MK61Display& display,
                                     u8 bitmap[DISPLAY_BYTES]) {
   while(kbd::any_key_pressed()) {
     idle_main_process();
-    (void) kbd::scan();
+    service_keyboard();
     if(!service_display_change(display, display_mode_revision,
                                machine, bitmap)) return false;
     delay(1);
   }
+  discard_queued_key_events();
   kbd::debounce_init();
   kbd::clear_immediate_presses();
   return true;
@@ -170,7 +184,7 @@ static loadable_module::FileOpenResult run(
 
   while(true) {
     idle_main_process();
-    (void) kbd::scan();
+    service_keyboard();
     if(!service_display_change(display, display_mode_revision,
                                workspace.machine, workspace.display)) {
       result = FileOpenResult::UNSUPPORTED_DISPLAY;
@@ -242,6 +256,7 @@ static loadable_module::FileOpenResult run(
 finished:
   sound_stop();
   if(fullscreen) display.endFullscreenBitmap();
+  discard_queued_key_events();
   kbd::clear_hold_key();
   kbd::clear_immediate_presses();
   return result;

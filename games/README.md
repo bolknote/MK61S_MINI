@@ -21,6 +21,7 @@ stated explicitly instead of guessing an author or source.
 | `Samurai.m61` | MK-61 game with its register setup | Added as an `.m61` file during the built-in-library-to-filesystem migration in this repository. No earlier in-tree copy, external listing, or author attribution is recorded. |
 | `Wumpus.m61` | MK-61 **Wumpus** game with generated initial state | First added to this fork's embedded game library and then exported to `.m61`. The external listing or author used for that port was not recorded. |
 | `br8kout.ch8` | **Br8kout** CHIP-8 ROM by SharpenedSpoon, 199 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
+| `echo8.ch8` | **ECHO-8**, a 2039-byte first-person story game; source in `echo8.asm` | Original game written for this repository. Its plot, code, graphics and self-hosted assembler were created locally in collaboration with Codex rather than copied from an external ROM. |
 | `fuse.ch8` | **Fuse** CHIP-8 ROM by John Earnest, 424 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
 | `space-invaders.ch8` | **Space Invaders v0.9** CHIP-8 ROM by David Winter, 1283 bytes | Taken unchanged from the [Zophar public-domain CHIP-8 Games Pack](https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html). |
 | `pacman-120x28.wbmp` | Original 120x28 monochrome Pac-Man scene for testing the WBMP viewer | Original artwork by the MK61S_MINI project author, drawn specifically for this project in collaboration with Codex. It was not copied from an external image. |
@@ -52,7 +53,7 @@ The console uses C5 type magic `C1`; those bytes are not added to the ROM.
 Screen compatibility, the full 0-F key map and game aliases are documented in
 [`MK61s-mini-CHIP8.md`](../doc/src/MK61s-mini-CHIP8.md).
 
-Three ready-to-run examples are included:
+Four ready-to-run examples are included:
 
 - `fuse.ch8` — **Fuse** by John Earnest, 424 bytes. Use CHIP-8 keys
   `5/7/8/9` to move and `6` to place a piece.
@@ -60,11 +61,15 @@ Three ready-to-run examples are included:
   `7` and `9` to move the paddle.
 - `space-invaders.ch8` — **Space Invaders v0.9** by David Winter, 1283 bytes.
   Use `4/6` (or `Left/Right`) to move and `5` (or `OK`) to start and fire.
+- `echo8.ch8` — **ECHO-8**, an original first-person story game, 2039 bytes.
+  Use `2/8` to move, `4/6` to turn and `5` to interact; see
+  [`ECHO-8.md`](ECHO-8.md) for the spoiler-free manual.
 
 Their SHA-1 values are respectively
 `0cd895dc3d489d0e40656218900a04310e95f560` and
 `31fc1c53cc610a9f4b9c5705c5a0f33fc028d123`, while Space Invaders is
-`f100197f0f2f05b4f3c8c31ab9c2c3930d3e9571`.
+`f100197f0f2f05b4f3c8c31ab9c2c3930d3e9571`. ECHO-8 is
+`751fc6d702d83ab930a622f8fe4a078d18f74b48`.
 
 The SHA-1 value of `pacman-120x28.wbmp` is
 `c11baa9b3207fa89657d4545a0d2b6643fea0256`.
