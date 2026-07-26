@@ -10,7 +10,8 @@ namespace rtc_clock {
 namespace {
 
 // DR1 зарезервирован соглашениями RTC ядра STM32, а DR4 — его HID-загрузчиком.
-// DR2 свободен на STM32F401/F411 и сохраняется при питании от VBAT.
+// DR2 хранит признак установленного времени, DR3 — пользовательскую поправку
+// хода. Оба регистра сохраняются при питании от VBAT.
 static constexpr u32 TIME_SET_MARKER = 0x4D4B5254UL; // "MKRT"
 static bool initialized = false;
 
@@ -33,20 +34,47 @@ bool marker_is_set(void) {
   return HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR2) == TIME_SET_MARKER;
 }
 
-bool marker_is_set_before_rtc_begin(void) {
+u32 backup_register_before_rtc_begin(u32 index) {
   // Обычная переменная RAM переживёт сброс только резервного домена, который
   // STM32RTC выполняет внутри begin() при смене источника LSE/LSI.
   enableBackupDomain();
-  return getBackupRegister(LL_RTC_BKP_DR2) == TIME_SET_MARKER;
+  return getBackupRegister(index);
 }
 
-void write_marker(u32 value) {
+void write_backup_register(u32 index, u32 value) {
   // Повторный вызов соответствует вспомогательной функции домена резервного
   // питания ядра STM32 и гарантирует, что запись DBP прошла через мост APB/AHB
   // до записи в резервный регистр.
   HAL_PWR_EnableBkUpAccess();
   HAL_PWR_EnableBkUpAccess();
-  HAL_RTCEx_BKUPWrite(rtc_handle(), RTC_BKP_DR2, value);
+  HAL_RTCEx_BKUPWrite(rtc_handle(), index, value);
+}
+
+void write_marker(u32 value) {
+  write_backup_register(RTC_BKP_DR2, value);
+}
+
+i16 stored_calibration_ppm(void) {
+  i16 ppm = 0;
+  const u32 record = HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3);
+  return decode_calibration_record(record, ppm) ? ppm : 0;
+}
+
+bool apply_smooth_calibration(i16 ppm) {
+  SmoothCalibration calibration = {};
+  if(!smooth_calibration_for_ppm(ppm, calibration)) return false;
+
+  const u32 plus = calibration.plus_512_pulses
+      ? RTC_SMOOTHCALIB_PLUSPULSES_SET
+      : RTC_SMOOTHCALIB_PLUSPULSES_RESET;
+  const u32 desired = plus | calibration.minus_pulses;
+  const u32 mask = RTC_CALR_CALP | RTC_CALR_CALW8 |
+                   RTC_CALR_CALW16 | RTC_CALR_CALM;
+  if((rtc_handle()->Instance->CALR & mask) == desired) return true;
+
+  return HAL_RTCEx_SetSmoothCalib(
+      rtc_handle(), RTC_SMOOTHCALIB_PERIOD_32SEC, plus,
+      calibration.minus_pulses) == HAL_OK;
 }
 
 bool wait_for_lse_flag(bool ready, u32 timeout_ms) {
@@ -137,7 +165,13 @@ void init(void) {
   rtc.setClockSource(source == ClockSource::LSE
       ? STM32RTC::LSE_CLOCK
       : STM32RTC::LSI_CLOCK);
-  const bool marker_was_set = marker_is_set_before_rtc_begin();
+  const bool marker_was_set =
+      backup_register_before_rtc_begin(LL_RTC_BKP_DR2) == TIME_SET_MARKER;
+  const u32 calibration_record_before =
+      backup_register_before_rtc_begin(LL_RTC_BKP_DR3);
+  i16 calibration_before = 0;
+  const bool calibration_was_set =
+      decode_calibration_record(calibration_record_before, calibration_before);
   rtc.begin(); // При смене источника библиотека сама переносит календарь.
   if(marker_was_set && !marker_is_set()) {
     // При смене RTCSEL библиотека возвращает календарь после сброса резервного
@@ -145,9 +179,19 @@ void init(void) {
     write_marker(TIME_SET_MARKER);
     dbgln(SPIROM, "RTC init: restored time-set marker after source change");
   }
+  i16 calibration_after = 0;
+  if(calibration_was_set &&
+     !decode_calibration_record(
+       HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3), calibration_after)) {
+    write_backup_register(RTC_BKP_DR3, calibration_record_before);
+    dbgln(SPIROM, "RTC init: restored calibration after source change");
+  }
   if(!MK61_RTC_LSE_AVAILABLE && !lse_gpio_is_released() &&
      !disable_retained_lse_for_gpio()) {
     dbgln(SPIROM, "RTC init: WARNING, LSE returned after selecting LSI");
+  }
+  if(!apply_smooth_calibration(stored_calibration_ppm())) {
+    dbgln(SPIROM, "RTC init: WARNING, calibration was not applied");
   }
   initialized = true;
   dbgln(SPIROM, "RTC init: ready, clock ",
@@ -164,6 +208,29 @@ bool read_clock_source(ClockSource& out) {
       ? ClockSource::LSE
       : ClockSource::LSI;
   return true;
+}
+
+i16 calibration_ppm(void) {
+  return initialized ? stored_calibration_ppm() : 0;
+}
+
+bool set_calibration_ppm(i16 ppm) {
+  if(!initialized || !calibration_ppm_is_valid(ppm)) return false;
+
+  const u32 old_record =
+      HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3);
+  const i16 old_ppm = stored_calibration_ppm();
+  if(!apply_smooth_calibration(ppm)) return false;
+
+  const u32 new_record = encode_calibration_record(ppm);
+  write_backup_register(RTC_BKP_DR3, new_record);
+  if(HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3) == new_record) {
+    return true;
+  }
+
+  write_backup_register(RTC_BKP_DR3, old_record);
+  (void) apply_smooth_calibration(old_ppm);
+  return false;
 }
 
 bool startup_snapshot(StartupSnapshot& out) {

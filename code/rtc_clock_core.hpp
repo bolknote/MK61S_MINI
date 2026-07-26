@@ -13,6 +13,63 @@ enum class ClockSource : u8 {
   LSE
 };
 
+static constexpr i16 CALIBRATION_MIN_PPM = -487;
+static constexpr i16 CALIBRATION_MAX_PPM = 488;
+static constexpr u32 CALIBRATION_RECORD_MAGIC = 0x43410000UL; // "CA"
+static constexpr u32 CALIBRATION_RECORD_MAGIC_MASK = 0xFFFF0000UL;
+static constexpr u32 CALIBRATION_PULSES_PER_WINDOW = 1UL << 20;
+static constexpr u32 PPM_SCALE = 1000000UL;
+
+struct SmoothCalibration {
+  bool plus_512_pulses;
+  u16 minus_pulses;
+};
+
+constexpr bool calibration_ppm_is_valid(i32 ppm) {
+  return ppm >= CALIBRATION_MIN_PPM && ppm <= CALIBRATION_MAX_PPM;
+}
+
+// CALP добавляет 512 импульсов за окно 2^20 RTCCLK, а CALM затем вычитает
+// 0..511 импульсов. Положительная поправка ускоряет часы, отрицательная
+// замедляет. Округление даёт ближайший доступный шаг около 0,954 ppm.
+inline bool smooth_calibration_for_ppm(i32 ppm, SmoothCalibration& out) {
+  if(!calibration_ppm_is_valid(ppm)) return false;
+  if(ppm == 0) {
+    out = {false, 0};
+    return true;
+  }
+
+  const u32 magnitude = (u32) (ppm < 0 ? -ppm : ppm);
+  u32 pulses = (magnitude * CALIBRATION_PULSES_PER_WINDOW +
+                PPM_SCALE / 2U) / PPM_SCALE;
+  if(ppm < 0) {
+    if(pulses > 511U) pulses = 511U;
+    out = {false, (u16) pulses};
+  } else {
+    if(pulses > 512U) pulses = 512U;
+    out = {true, (u16) (512U - pulses)};
+  }
+  return true;
+}
+
+inline u32 encode_calibration_record(i32 ppm) {
+  if(!calibration_ppm_is_valid(ppm)) return 0;
+  return CALIBRATION_RECORD_MAGIC | (u16) (i16) ppm;
+}
+
+inline bool decode_calibration_record(u32 record, i16& out) {
+  if((record & CALIBRATION_RECORD_MAGIC_MASK) != CALIBRATION_RECORD_MAGIC) {
+    return false;
+  }
+  const u16 raw = (u16) record;
+  const i32 value = (raw & 0x8000U) != 0
+      ? (i32) raw - 0x10000L
+      : (i32) raw;
+  if(!calibration_ppm_is_valid(value)) return false;
+  out = (i16) value;
+  return true;
+}
+
 constexpr const char* clock_source_name(ClockSource source) {
   return source == ClockSource::LSE ? "LSE" : "LSI";
 }

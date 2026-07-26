@@ -9,6 +9,8 @@ bool prepare_display_gpio(void);
 void init(void);
 bool is_set(void);
 bool read_clock_source(ClockSource& out);
+i16 calibration_ppm(void);
+bool set_calibration_ppm(i16 ppm);
 bool startup_snapshot(StartupSnapshot& out);
 bool read(DateTime& out);
 bool set(const DateTime& value);

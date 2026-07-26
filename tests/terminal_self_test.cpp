@@ -345,6 +345,30 @@ static void test_rtc_datetime_parser_and_formatter(void) {
   assert(!rtc_clock::retained_lse_must_be_disabled(true, false));
   assert(!rtc_clock::retained_lse_must_be_disabled(true, true));
 
+  rtc_clock::SmoothCalibration calibration = {};
+  assert(rtc_clock::smooth_calibration_for_ppm(0, calibration));
+  assert(!calibration.plus_512_pulses && calibration.minus_pulses == 0);
+  assert(rtc_clock::smooth_calibration_for_ppm(-166, calibration));
+  assert(!calibration.plus_512_pulses && calibration.minus_pulses == 174);
+  assert(rtc_clock::smooth_calibration_for_ppm(166, calibration));
+  assert(calibration.plus_512_pulses && calibration.minus_pulses == 338);
+  assert(rtc_clock::smooth_calibration_for_ppm(
+    rtc_clock::CALIBRATION_MIN_PPM, calibration));
+  assert(!calibration.plus_512_pulses && calibration.minus_pulses == 511);
+  assert(rtc_clock::smooth_calibration_for_ppm(
+    rtc_clock::CALIBRATION_MAX_PPM, calibration));
+  assert(calibration.plus_512_pulses && calibration.minus_pulses == 0);
+  assert(!rtc_clock::smooth_calibration_for_ppm(-488, calibration));
+  assert(!rtc_clock::smooth_calibration_for_ppm(489, calibration));
+
+  i16 decoded_ppm = 0;
+  const u32 calibration_record = rtc_clock::encode_calibration_record(-166);
+  assert(rtc_clock::decode_calibration_record(
+    calibration_record, decoded_ppm));
+  assert(decoded_ppm == -166);
+  assert(rtc_clock::encode_calibration_record(-488) == 0);
+  assert(!rtc_clock::decode_calibration_record(0, decoded_ppm));
+
   rtc_clock::DateTime value = {};
   assert(rtc_clock::parse_datetime("2026-07-19 14:35:00", value));
   assert(value.year == 2026 && value.month == 7 && value.day == 19);
@@ -459,6 +483,36 @@ static void test_rtc_settings_editor(void) {
     assert(rtc_settings::enter_digit(editor, invalid_digits[i] - '0'));
   }
   assert(!rtc_settings::value(editor, value));
+
+  rtc_settings::CalibrationEditor calibration = {};
+  assert(rtc_settings::begin(calibration, -166));
+  assert(std::strcmp(calibration.text, "-166") == 0);
+  assert(rtc_settings::active_text_position(calibration) == 1);
+  rtc_settings::toggle_sign(calibration);
+  i16 ppm = 0;
+  assert(rtc_settings::value(calibration, ppm));
+  assert(ppm == 166);
+
+  assert(rtc_settings::begin(calibration, 0));
+  const char maximum_digits[] = "488";
+  for(u8 i = 0; i < rtc_settings::CALIBRATION_DIGIT_COUNT; i++) {
+    assert(rtc_settings::enter_digit(
+      calibration, maximum_digits[i] - '0'));
+  }
+  assert(std::strcmp(calibration.text, "+488") == 0);
+  assert(rtc_settings::active_text_position(calibration) == 3);
+  rtc_settings::move_right(calibration);
+  assert(rtc_settings::active_text_position(calibration) == 3);
+  assert(rtc_settings::value(calibration, ppm));
+  assert(ppm == rtc_clock::CALIBRATION_MAX_PPM);
+
+  rtc_settings::toggle_sign(calibration);
+  assert(!rtc_settings::value(calibration, ppm));
+  assert(rtc_settings::enter_digit(calibration, 7));
+  assert(rtc_settings::value(calibration, ppm));
+  assert(ppm == rtc_clock::CALIBRATION_MIN_PPM);
+  assert(!rtc_settings::enter_digit(calibration, -1));
+  assert(!rtc_settings::begin(calibration, -488));
 }
 
 static void test_rtc_idle_clock_glyphs_and_slots(void) {

@@ -49,6 +49,7 @@ extern bool UsbScreenMode(void);
 extern bool TurnIdleSignal(void);
 extern bool TurnDisplayRows(void);
 extern bool SetDateTime(void);
+extern bool SetRtcCalibration(void);
 extern bool FontSetup(void);
 extern bool ResetDevice(void);
 
