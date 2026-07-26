@@ -3,6 +3,7 @@ menu.mk61_display=Экран
 menu.mk61_focal=FOCAL
 menu.mk61_basic=TinyBASIC
 menu.mk61_wbmp=WBMP viewer
+menu.mk61_chip8=CHIP-8
 menu.mk61_usb_screen=USB-экран
 menu.mk61_font_settings=Настройки шрифта
 menu.mk61_explorer=Быстрый Explorer
@@ -43,7 +44,7 @@ mk61_f401_app.upload.tool=stm32CubeProg
 
 # Values from the independent menus are joined here so Arduino IDE builds the
 # same resident profile as tools/mk61-firmware.cmd.
-mk61_f401_app.build.st_extra_flags=-D{build.product_line} {build.enable_usb} {build.xSerial} {build.bootloader_flags} -DMK61_ARDUINO_IDE_SYSTEM_APPS=1 {build.mk61_platform_flags} {build.mk61_display_flags} -DMK61_ENABLE_FOCAL={build.mk61_focal} -DMK61_ENABLE_TINYBASIC={build.mk61_basic} -DMK61_ENABLE_WBMP_VIEWER={build.mk61_wbmp} -DMK61_ENABLE_USB_SCREEN={build.mk61_usb_screen} -DMK61_ENABLE_EXTENDED_FONT_SETTINGS={build.mk61_font_settings} -DMK61_USER_EXPLORER_SHORTCUT={build.mk61_explorer} -DMK61_MATH_BACKEND={build.mk61_math}
+mk61_f401_app.build.st_extra_flags=-D{build.product_line} {build.enable_usb} {build.xSerial} {build.bootloader_flags} -DMK61_ARDUINO_IDE_SYSTEM_APPS=1 {build.mk61_platform_flags} {build.mk61_display_flags} -DMK61_ENABLE_FOCAL={build.mk61_focal} -DMK61_ENABLE_TINYBASIC={build.mk61_basic} -DMK61_ENABLE_WBMP_VIEWER={build.mk61_wbmp} -DMK61_ENABLE_CHIP8={build.mk61_chip8} -DMK61_ENABLE_USB_SCREEN={build.mk61_usb_screen} -DMK61_ENABLE_EXTENDED_FONT_SETTINGS={build.mk61_font_settings} -DMK61_USER_EXPLORER_SHORTCUT={build.mk61_explorer} -DMK61_MATH_BACKEND={build.mk61_math}
 
 # Platform and display stay separate.  The pre-build hook rejects incompatible
 # pairs before the compiler starts.
@@ -89,10 +90,15 @@ mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic=1
 mk61_f401_app.menu.mk61_basic.disabled=Выключен
 mk61_f401_app.menu.mk61_basic.disabled.build.mk61_basic=0
 
-mk61_f401_app.menu.mk61_wbmp.enabled=APP
-mk61_f401_app.menu.mk61_wbmp.enabled.build.mk61_wbmp=1
 mk61_f401_app.menu.mk61_wbmp.disabled=Выключен
 mk61_f401_app.menu.mk61_wbmp.disabled.build.mk61_wbmp=0
+mk61_f401_app.menu.mk61_wbmp.enabled=APP
+mk61_f401_app.menu.mk61_wbmp.enabled.build.mk61_wbmp=1
+
+mk61_f401_app.menu.mk61_chip8.disabled=Выключен
+mk61_f401_app.menu.mk61_chip8.disabled.build.mk61_chip8=0
+mk61_f401_app.menu.mk61_chip8.enabled=APP · C1
+mk61_f401_app.menu.mk61_chip8.enabled.build.mk61_chip8=1
 
 mk61_f401_app.menu.mk61_usb_screen.disabled=Выключен
 mk61_f401_app.menu.mk61_usb_screen.disabled.build.mk61_usb_screen=0

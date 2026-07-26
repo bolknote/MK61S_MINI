@@ -13,6 +13,12 @@ struct ModuleSource {
   bool (*read)(void* context, u32 offset, u8* output, usize size);
 };
 
+struct FileHandler {
+  Kind kind;
+  u16 module_file_id;
+  u16 type_magic;
+};
+
 enum class StoreStatus : u8 {
   OK = 0,
   UNAVAILABLE,
@@ -43,6 +49,8 @@ RuntimeStatus invoke(Kind kind, Command command,
                      u32 argument2, u32 argument3,
                      u32& result);
 RuntimeStatus run_app(u16 file_id, u32& result);
+bool find_file_handler(u16 type_magic, FileHandler& handler);
+RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result);
 
 inline RuntimeStatus invoke(Kind kind, Command command, u32& result) {
   return invoke(kind, command, 0, 0, 0, 0, result);

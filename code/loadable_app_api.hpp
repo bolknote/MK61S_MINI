@@ -18,7 +18,10 @@ enum Capability : u32 {
   CAP_TEXT_DISPLAY = 1U << 1,
   CAP_KEYBOARD = 1U << 2,
   CAP_LED = 1U << 3,
-  CAP_SOUND = 1U << 4
+  CAP_SOUND = 1U << 4,
+  CAP_FILES = 1U << 5,
+  CAP_GRAPHICS = 1U << 6,
+  CAP_KEY_STATE = 1U << 7
 };
 
 // Независимые от физической раскладки логические коды. Неизвестная клавиша
@@ -85,10 +88,26 @@ struct Api {
 
   u32 (*beep)(u32 frequency_hz, u32 duration_ms, u32 volume_percent);
   void (*sound_stop)(void);
+
+  // Расширение ABI v1: старые APP видят прежний 64-байтовый префикс,
+  // новые проверяют struct_size перед использованием хвоста.
+  u32 (*file_size)(u32 file_id);
+  u32 (*file_read)(u32 file_id, u32 offset, u8* output, u32 length);
+
+  u32 (*graphics_available)(void);
+  u32 (*graphics_width)(void);
+  u32 (*graphics_height)(void);
+  u32 (*graphics_revision)(void);
+  u32 (*graphics_begin)(void);
+  u32 (*graphics_present)(const u8* bitmap, u32 size);
+  void (*graphics_end)(void);
+
+  u32 (*key_pressed)(i32 key);
 };
 
-static_assert(sizeof(void*) != 4 || sizeof(Api) == 64,
-              "loadable APP API v1 must remain a 64-byte ARM ABI prefix");
+static_assert(sizeof(void*) != 4 ||
+              __builtin_offsetof(Api, file_size) == 64,
+              "loadable APP API v1 must retain its 64-byte ARM ABI prefix");
 
 inline const Api* from_argument(u32 argument0) {
   return (const Api*) (uintptr_t) argument0;

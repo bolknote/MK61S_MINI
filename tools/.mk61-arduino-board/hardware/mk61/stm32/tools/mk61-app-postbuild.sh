@@ -82,7 +82,7 @@ emit_le32() {
 
 pack_uncompressed() {
   local kind=$1 resident=$2 image=$3 memory_size=$4
-  local entry_offset=$5 load_address=$6 output=$7
+  local entry_offset=$5 load_address=$6 output=$7 handled_magic=$8
   local resident_size image_size resident_crc image_crc header header_crc
 
   resident_size=$(wc -c < "$resident" | tr -d '[:space:]')
@@ -117,7 +117,8 @@ pack_uncompressed() {
     emit_le32 "$resident_crc"
     emit_le32 "$image_crc"
     emit_le32 "$image_crc"
-    emit_le32 0
+    emit_le16 "$handled_magic"
+    emit_le16 0
   } > "$header"
   [ "$(wc -c < "$header" | tr -d '[:space:]')" -eq 60 ] ||
     die 'internal APP header size error'
@@ -129,6 +130,7 @@ pack_uncompressed() {
 
 build_module() {
   local id=$1 file_name=$2 kind=$3 entry_symbol=$4 object_name=$5
+  local handled_magic=$6
   local object module_dir module_elf module_map module_image
   local unexpected image_start_hex memory_end_hex entry_hex
   local image_start memory_end entry_address memory_size entry_offset
@@ -182,7 +184,7 @@ build_module() {
     die "$file_name entry point is outside its stored image"
   pack_uncompressed "$kind" "$resident_bin" "$module_image" \
     "$memory_size" "$entry_offset" "$((0x$overlay_hex))" \
-    "$stage/System/$file_name"
+    "$stage/System/$file_name" "$handled_magic"
   printf 'MK61s APP: %-10s %5s bytes, SRAM %5s / 20480\n' \
     "$file_name" "$(wc -c < "$stage/System/$file_name" |
       tr -d '[:space:]')" "$memory_size"
@@ -190,7 +192,7 @@ build_module() {
 
 build_bundle() {
   local compiler= objcopy= size_tool_arg= build_path_arg=
-  local sketch= project= bundle= focal= basic= wbmp= compile_flags=
+  local sketch= project= bundle= focal= basic= wbmp= chip8= compile_flags=
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --compiler)
@@ -213,6 +215,8 @@ build_bundle() {
         require_value "$@"; basic=$2; shift 2 ;;
       --wbmp)
         require_value "$@"; wbmp=$2; shift 2 ;;
+      --chip8)
+        require_value "$@"; chip8=$2; shift 2 ;;
       --compile-flags)
         require_value "$@"; compile_flags=$2; shift 2 ;;
       *) die "unknown build option: $1" ;;
@@ -226,8 +230,8 @@ build_bundle() {
     die 'Arduino build path was not found'
   [ -n "$project" ] && [ -n "$bundle" ] ||
     die 'Arduino project or bundle name is missing'
-  case "$focal:$basic:$wbmp" in
-    [01]:[01]:[01]) ;;
+  case "$focal:$basic:$wbmp:$chip8" in
+    [01]:[01]:[01]:[01]) ;;
     *) die 'System APP selections must be 0 or 1' ;;
   esac
 
@@ -251,19 +255,22 @@ build_bundle() {
 
   [ "$focal" -eq 0 ] ||
     build_module focal FOCAL.APP 1 mk61_ide_focal_module_entry \
-      mk61_ide_focal_app.cpp.o
+      mk61_ide_focal_app.cpp.o 0
   [ "$basic" -eq 0 ] ||
     build_module basic BASIC.APP 2 mk61_ide_basic_module_entry \
-      mk61_ide_basic_app.cpp.o
+      mk61_ide_basic_app.cpp.o 0
   [ "$wbmp" -eq 0 ] ||
     build_module wbmp WBMP.APP 3 mk61_ide_wbmp_module_entry \
-      mk61_ide_wbmp_app.cpp.o
+      mk61_ide_wbmp_app.cpp.o 12617
+  [ "$chip8" -eq 0 ] ||
+    build_module chip8 CHIP8.APP 5 mk61_ide_chip8_module_entry \
+      mk61_ide_chip8_app.cpp.o 12611
 
   output_root="$(cd "$sketch/.." && pwd)/binary"
   output="$output_root/$bundle"
   mkdir -p "$output/System"
   cp "$stage/$bundle.bin" "$output/$bundle.bin"
-  for canonical in FOCAL.APP BASIC.APP WBMP.APP; do
+  for canonical in FOCAL.APP BASIC.APP WBMP.APP CHIP8.APP; do
     if [ -f "$stage/System/$canonical" ]; then
       cp "$stage/System/$canonical" "$output/System/$canonical"
     else

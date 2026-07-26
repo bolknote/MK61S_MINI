@@ -130,7 +130,8 @@ static bool same_header(const Header& left, const Header& right) {
          left.resident_size == right.resident_size &&
          left.resident_crc32 == right.resident_crc32 &&
          left.stored_crc32 == right.stored_crc32 &&
-         left.image_crc32 == right.image_crc32;
+         left.image_crc32 == right.image_crc32 &&
+         left.handled_type_magic == right.handled_type_magic;
 }
 
 static bool same_active_image(Kind kind, u16 file_id, const Header& header) {
@@ -235,6 +236,7 @@ bool enabled(Kind kind) {
     case Kind::FOCAL: return MK61_FOCAL_IS_LOADABLE != 0;
     case Kind::TINYBASIC: return MK61_TINYBASIC_IS_LOADABLE != 0;
     case Kind::WBMP_VIEWER: return MK61_WBMP_VIEWER_IS_LOADABLE != 0;
+    case Kind::CHIP8: return MK61_CHIP8_IS_LOADABLE != 0;
     case Kind::APPLICATION: return MK61_ENABLE_LOADABLE_MODULES != 0;
   }
   return false;
@@ -290,6 +292,67 @@ RuntimeStatus run_app(u16 file_id, u32& result) {
   return RuntimeStatus::OK;
 }
 
+bool find_file_handler(u16 type_magic, FileHandler& handler) {
+  handler = {(Kind) 0, program_store::INVALID_ID, 0};
+  if(type_magic == 0 || !program_store::ready() || !flash_is_ok) return false;
+
+  // Канонические System APP имеют приоритет: их включение контролируется
+  // конфигурацией прошивки и не зависит от порядка пользовательских файлов.
+  for(u8 index = 0; index < KIND_COUNT; index++) {
+    const Kind kind = kind_at(index);
+    if(!enabled(kind)) continue;
+    program_store::Entry app = {};
+    Header header = {};
+    if(find_system_app(kind, app) &&
+       read_app_header(app, kind, header) == StoreStatus::OK &&
+       header.handled_type_magic == type_magic) {
+      handler = {kind, app.id, type_magic};
+      return true;
+    }
+  }
+
+  const int count = program_store::count(program_store::ProgramType::APP);
+  bool found = false;
+  for(int index = 0; index < count; index++) {
+    program_store::Entry app = {};
+    Header header = {};
+    if(!program_store::entry(program_store::ProgramType::APP, index, app) ||
+       read_app_header(app, Kind::APPLICATION, header) != StoreStatus::OK ||
+       header.handled_type_magic != type_magic) continue;
+    // Два пользовательских APPLICATION с одним magic — неоднозначная
+    // регистрация. Порядок inode и имя файла не выбирают победителя.
+    if(found) {
+      handler = {(Kind) 0, program_store::INVALID_ID, 0};
+      return false;
+    }
+    handler = {Kind::APPLICATION, app.id, type_magic};
+    found = true;
+  }
+  return found;
+}
+
+RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result) {
+  result = 0;
+  RuntimeStatus loaded = RuntimeStatus::INVALID_MODULE;
+  if(handler.kind == Kind::APPLICATION) {
+    loaded = load_application(handler.module_file_id);
+  } else {
+    loaded = load(handler.kind);
+  }
+  if(loaded != RuntimeStatus::OK) return loaded;
+  if(g_active_entry == nullptr || g_active_kind != handler.kind) {
+    return RuntimeStatus::INVALID_MODULE;
+  }
+  g_call_depth++;
+  result = g_active_entry(
+      (u32) Command::FILE_OPEN,
+      handler.kind == Kind::APPLICATION
+          ? entry_api_argument(Kind::APPLICATION) : 0,
+      file_id, 0, 0);
+  g_call_depth--;
+  return RuntimeStatus::OK;
+}
+
 StoreStatus validate_app(const ModuleSource& source, Header& header) {
   memset(&header, 0, sizeof(header));
   mk61_module_keep_imports();
@@ -339,6 +402,14 @@ RuntimeStatus invoke(Kind, Command, u32, u32, u32, u32, u32& result) {
   return RuntimeStatus::DISABLED;
 }
 RuntimeStatus run_app(u16, u32& result) {
+  result = 0;
+  return RuntimeStatus::DISABLED;
+}
+bool find_file_handler(u16, FileHandler& handler) {
+  handler = {(Kind) 0, 0, 0};
+  return false;
+}
+RuntimeStatus open_file(const FileHandler&, u16, u32& result) {
   result = 0;
   return RuntimeStatus::DISABLED;
 }

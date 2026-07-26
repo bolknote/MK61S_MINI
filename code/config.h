@@ -82,15 +82,49 @@
   #error "MK61_ENABLE_TINYBASIC must be 0 or 1"
 #endif
 
-// Просмотр стандартных монохромных WBMP Type 0 включён по умолчанию.
-// Укажите -DMK61_ENABLE_WBMP_VIEWER=0 либо замените 1 на 0 здесь, чтобы
-// исключить декодер и экранные алгоритмы из прошивки. Поддержка файлов
-// .wbmp в C5/USB остаётся, поэтому отключение не делает данные недоступными.
+// USB-экран хранит собственный монохромный кадровый буфер 192x64 за обычным
+// API дисплея. По умолчанию он выключен, поскольку статические буферы расходуют
+// ОЗУ. Этот ключ также разрешает сборку графических файловых модулей для
+// LCD1602; их запуск всё равно требует активной сессии виртуального экрана.
+#ifndef MK61_ENABLE_USB_SCREEN
+  #define MK61_ENABLE_USB_SCREEN 0
+#endif
+#if MK61_ENABLE_USB_SCREEN != 0 && MK61_ENABLE_USB_SCREEN != 1
+  #error "MK61_ENABLE_USB_SCREEN must be 0 or 1"
+#endif
+
+// На момент объявления файловых модулей полные профили ещё не раскрыты в
+// MK61_DISPLAY_UC1609, поэтому учитываем и сами флаги готовых плат.
+#if defined(MK61_DISPLAY_UC1609) || defined(DISPLAY_UC1609) || \
+    defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3) || \
+    defined(MK61_BOARD_40TH) || MK61_ENABLE_USB_SCREEN
+  #define MK61_HAS_COMPILED_GRAPHICS 1
+#else
+  #define MK61_HAS_COMPILED_GRAPHICS 0
+#endif
+
+// WBMP доступен по умолчанию только в сборке с физическим или виртуальным
+// графическим экраном. Файлы .wbmp остаются типом C5 и при выключенном модуле.
 #ifndef MK61_ENABLE_WBMP_VIEWER
-  #define MK61_ENABLE_WBMP_VIEWER 1
+  #define MK61_ENABLE_WBMP_VIEWER MK61_HAS_COMPILED_GRAPHICS
 #endif
 #if MK61_ENABLE_WBMP_VIEWER != 0 && MK61_ENABLE_WBMP_VIEWER != 1
   #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
+#endif
+#if MK61_ENABLE_WBMP_VIEWER && !MK61_HAS_COMPILED_GRAPHICS
+  #error "MK61_ENABLE_WBMP_VIEWER requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
+#endif
+
+// Консоль CHIP-8 выключена по умолчанию. C1 — двухбайтовый magic типа C5;
+// .ch8 хранит стандартный сырой ROM без дополнительного заголовка.
+#ifndef MK61_ENABLE_CHIP8
+  #define MK61_ENABLE_CHIP8 0
+#endif
+#if MK61_ENABLE_CHIP8 != 0 && MK61_ENABLE_CHIP8 != 1
+  #error "MK61_ENABLE_CHIP8 must be 0 or 1"
+#endif
+#if MK61_ENABLE_CHIP8 && !MK61_HAS_COMPILED_GRAPHICS
+  #error "MK61_ENABLE_CHIP8 requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
 #endif
 
 // F401CC вмещает основную прошивку, но почти не оставляет запаса во внутренней
@@ -119,6 +153,8 @@
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_TINYBASIC)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_WBMP_VIEWER)
+#define MK61_CHIP8_IS_LOADABLE \
+  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_CHIP8)
 #define MK61_ANY_LOADABLE_MODULE (MK61_ENABLE_LOADABLE_MODULES)
 
 #define MK61_FOCAL_IS_BUILTIN \
@@ -127,17 +163,11 @@
   (MK61_ENABLE_TINYBASIC && !MK61_ENABLE_LOADABLE_MODULES)
 #define MK61_WBMP_VIEWER_IS_BUILTIN \
   (MK61_ENABLE_WBMP_VIEWER && !MK61_ENABLE_LOADABLE_MODULES)
+#define MK61_CHIP8_IS_BUILTIN \
+  (MK61_ENABLE_CHIP8 && !MK61_ENABLE_LOADABLE_MODULES)
 
-// USB-экран хранит собственный монохромный кадровый буфер 192x64 за обычным
-// API дисплея. По умолчанию он выключен, поскольку статические буферы расходуют ОЗУ.
-// Чтобы добавить режим и его пункт меню «Разработка», задайте
-// MK61_ENABLE_USB_SCREEN=1 в сборщике прошивки (или передайте такой же флаг -D).
-#ifndef MK61_ENABLE_USB_SCREEN
-  #define MK61_ENABLE_USB_SCREEN 0
-#endif
-#if MK61_ENABLE_USB_SCREEN != 0 && MK61_ENABLE_USB_SCREEN != 1
-  #error "MK61_ENABLE_USB_SCREEN must be 0 or 1"
-#endif
+#define MK61_ANY_FULLSCREEN_FILE \
+  (MK61_ENABLE_WBMP_VIEWER || MK61_ENABLE_CHIP8)
 
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
 // графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.
@@ -159,18 +189,6 @@
 // [USER] только для удержания стека и функций режима ПРГ.
 #ifndef MK61_USER_EXPLORER_SHORTCUT
   #define MK61_USER_EXPLORER_SHORTCUT 1
-#endif
-
-// Делитель максимально возможной частоты CGRAM-мультиплекса. Время реальной
-// перезаписи измеряется после ожидания busy flag; оставшееся время фазы
-// используется для опроса клавиатуры и фоновых задач.
-#if MK61_ENABLE_WBMP_VIEWER
-  #ifndef MK61_IMAGE1_RATE_DIVISOR
-    #define MK61_IMAGE1_RATE_DIVISOR 4
-  #endif
-  #if MK61_IMAGE1_RATE_DIVISOR < 1 || MK61_IMAGE1_RATE_DIVISOR > 16
-    #error "MK61_IMAGE1_RATE_DIVISOR must be in range 1..16"
-  #endif
 #endif
 
 #if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)

@@ -71,6 +71,7 @@ try {
         'MK61_ENABLE_FOCAL=0'
         'MK61_ENABLE_TINYBASIC=1'
         'MK61_ENABLE_WBMP_VIEWER=0'
+        'MK61_ENABLE_CHIP8=0'
         'MK61_ENABLE_USB_SCREEN=0'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1'
         'MK61_USER_EXPLORER_SHORTCUT=0'
@@ -87,6 +88,7 @@ try {
     Assert-True ($configText -match '(?m)^DFU_UTIL_PATH=C:\\Tools\\dfu-util\.exe$') 'DFU path was not preserved'
     Assert-True ($configText -match '(?m)^STM32_CUBE_PROGRAMMER_PATH=C:\\ST\\STM32_Programmer_CLI\.exe$') 'STM32CubeProgrammer path was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_FOCAL=0$') 'FOCAL flag was not preserved'
+    Assert-True ($configText -match '(?m)^MK61_ENABLE_CHIP8=0$') 'CHIP-8 flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_USB_SCREEN=0$') 'USB Screen flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$') 'font flag was not preserved'
     Assert-True ($configText -match 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1') 'compile flags differ'
@@ -117,7 +119,8 @@ try {
         'MK61_ENABLE_FOCAL=1'
         'MK61_ENABLE_TINYBASIC=0'
         'MK61_ENABLE_WBMP_VIEWER=1'
-        'MK61_ENABLE_USB_SCREEN=0'
+        'MK61_ENABLE_CHIP8=1'
+        'MK61_ENABLE_USB_SCREEN=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
         'MK61_USER_EXPLORER_SHORTCUT=1'
         'MK61_MATH_BACKEND=0'
@@ -131,6 +134,7 @@ try {
     [IO.File]::WriteAllText((Join-Path $bundle 'mk61s-M-mini-v3-lcd1602-a00-f401.bin'), "resident-f401`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'WBMP.APP'), "wbmp-app`n")
+    [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-app`n")
     [IO.File]::WriteAllText((Join-Path $targetSystem 'KEEP.APP'), "keep-me`n")
     [IO.File]::WriteAllText((Join-Path $targetSystem 'BASIC.APP'), "stale-basic`n")
 
@@ -147,6 +151,10 @@ try {
         (([IO.File]::ReadAllBytes((Join-Path $sourceSystem 'WBMP.APP'))) -join ',') -eq
         (([IO.File]::ReadAllBytes((Join-Path $targetSystem 'WBMP.APP'))) -join ',')
     ) 'WBMP.APP differs after copy'
+    Assert-True (
+        (([IO.File]::ReadAllBytes((Join-Path $sourceSystem 'CHIP8.APP'))) -join ',') -eq
+        (([IO.File]::ReadAllBytes((Join-Path $targetSystem 'CHIP8.APP'))) -join ',')
+    ) 'CHIP8.APP differs after copy'
     $keepText = [IO.File]::ReadAllText((Join-Path $targetSystem 'KEEP.APP')).Trim()
     Assert-True ($keepText -eq 'keep-me') 'unrelated APP was changed'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $targetSystem 'BASIC.APP'))) 'stale disabled BASIC.APP was not removed'
@@ -158,6 +166,7 @@ try {
         'MK61_ENABLE_FOCAL=0'
         'MK61_ENABLE_TINYBASIC=0'
         'MK61_ENABLE_WBMP_VIEWER=0'
+        'MK61_ENABLE_CHIP8=0'
         'MK61_ENABLE_USB_SCREEN=0'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
         'MK61_USER_EXPLORER_SHORTCUT=1'
@@ -172,7 +181,7 @@ try {
     $disabledInstall = Invoke-Tool @('--install-apps')
     Assert-True ($disabledInstall.ExitCode -eq 0) 'all-disabled System APP synchronization failed'
     Assert-True (($disabledInstall.Output -join "`n") -match 'Removed disabled canonical System APP') 'all-disabled removal was not reported'
-    foreach ($app in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP')) {
+    foreach ($app in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')) {
         Assert-True (-not (Test-Path -LiteralPath (Join-Path $targetSystem $app))) "$app survived all-disabled synchronization"
     }
     Assert-True (([IO.File]::ReadAllText((Join-Path $targetSystem 'KEEP.APP')).Trim() -eq 'keep-me')) 'all-disabled synchronization changed unrelated APP'
@@ -194,6 +203,7 @@ try {
     $script:IsWindowsHost = $true
     Initialize-TuiGlyphs
     Assert-True ($script:State.EnableUsbScreen -eq 0) 'USB Screen must be disabled by default'
+    Assert-True ($script:State.EnableChip8 -eq 0) 'CHIP-8 must be disabled by default'
     Assert-True ($script:State.Mcu -eq 'f411') 'F411 must be the default MCU'
     Assert-True ((Get-ProfileArtifactName 'mini-v3-a00' 'f401') -eq 'mk61s-M-mini-v3-lcd1602-a00-f401.bin') 'F401 artifact name differs'
     Assert-True ($script:TextWidth -ge 74) 'default TUI is too narrow for the compile-option summary'
@@ -203,6 +213,7 @@ try {
     Assert-True ((Get-Checkbox 0) -eq '[ ]' -and (Get-Checkbox 1) -eq '[x]') 'Windows option summary still uses unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -notmatch '[☐☑]') 'Windows option details still contain unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
+    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_CHIP8') 'CHIP-8 is missing from Windows option details'
     $f411MenuItems = @(Get-MainMenuItems)
     Assert-True ('install_apps' -notin @($f411MenuItems.Tag)) 'F411 main menu still shows the F401 System APP action'
     Assert-True (($f411MenuItems[2].Tag -eq 'mcu') -and ($f411MenuItems[3].Tag -eq 'platform')) 'F411 main-menu order differs'
@@ -227,6 +238,7 @@ try {
     $script:State.EnableFocal = 0
     $script:State.EnableTinyBasic = 0
     $script:State.EnableWbmp = 0
+    $script:State.EnableChip8 = 0
     $oldManifests = $env:MK61_APP_MANIFESTS
     try {
         $env:MK61_APP_MANIFESTS = $null

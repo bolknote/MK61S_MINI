@@ -14,6 +14,7 @@ enum class Result : u8 {
   INVALID_IMAGE,
   DECODE_ERROR,
   DISPLAY_ERROR,
+  UNSUPPORTED_DISPLAY,
 };
 
 // Низкоуровневый вход для уже загруженного WBMP Type 0.

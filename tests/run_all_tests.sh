@@ -11,7 +11,7 @@ if command -v pwsh >/dev/null 2>&1; then
 fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_board_profile_tests.sh"
-"$root/tests/run_a00_image_multiplex_tests.sh"
+"$root/tests/run_chip8_tests.sh"
 "$root/tests/run_wbmp_tests.sh"
 "$root/tests/run_bounded_string_tests.sh"
 "$root/tests/run_dfu_splash_tests.sh"

@@ -4,11 +4,9 @@
 
 #include "image1_viewer.hpp"
 
-#include "a00_image_multiplex.hpp"
 #include "cross_hal.h"
 #include "keyboard.h"
 #include "language_workspace.hpp"
-#include "lcd_ru.hpp"
 #include "shared_scratch.hpp"
 
 extern void idle_main_process(void);
@@ -16,30 +14,18 @@ extern void idle_main_process(void);
 namespace image1_viewer {
 namespace {
 
-static_assert(MK61_IMAGE1_RATE_DIVISOR >= a00_image_mux::MIN_RATE_DIVISOR &&
-              MK61_IMAGE1_RATE_DIVISOR <= a00_image_mux::MAX_RATE_DIVISOR,
-              "Default Image1 rate divisor is outside the interactive range");
-
 static constexpr u16 GRAPHICS_WIDTH = 192;
 static constexpr u16 GRAPHICS_HEIGHT = 64;
 static constexpr usize GRAPHICS_BYTES =
-  (usize) GRAPHICS_WIDTH * GRAPHICS_HEIGHT / 8U;
+    (usize) GRAPHICS_WIDTH * GRAPHICS_HEIGHT / 8U;
 static constexpr i32 VIEWER_DISPLAY_CHANGED = -2;
 
-struct CellWorkspace {
-  u8 viewport[a00_image_mux::VIEW_BYTES];
-  a00_image_mux::FrameSequence sequence;
-};
-
-union ViewerWorkspace {
-  CellWorkspace cell;
+struct ViewerWorkspace {
   u8 graphics[GRAPHICS_BYTES];
 };
 
 static_assert(sizeof(ViewerWorkspace) <= language_workspace::SIZE,
               "Image viewer must fit the shared runtime workspace");
-static_assert(GRAPHICS_BYTES == 1536,
-              "UC1609 fullscreen buffer geometry changed unexpectedly");
 
 static i32 scan_key(void) {
   const i32 scan_code = kbd::scan_and_debounced();
@@ -47,26 +33,6 @@ static i32 scan_key(void) {
   kbd::exclude_before(scan_code);
   if((scan_code & (i32) key_state::RELEASED) != 0) return -1;
   return scan_code & ~(i32) key_state::RELEASED;
-}
-
-static i32 wait_phase_and_scan(MK61Display& display,
-                               u32 display_mode_revision,
-                               u32 hold_us) {
-  static constexpr u32 POLL_SLICE_US = 1000;
-  const u32 started = micros();
-  while(true) {
-    idle_main_process();
-    if(display.displayModeRevision() != display_mode_revision) {
-      return VIEWER_DISPLAY_CHANGED;
-    }
-    const i32 key = scan_key();
-    if(key >= 0) return key;
-
-    const u32 elapsed = (u32) (micros() - started);
-    if(elapsed >= hold_us) return -1;
-    const u32 remaining = hold_us - elapsed;
-    delayMicroseconds(remaining < POLL_SLICE_US ? remaining : POLL_SLICE_US);
-  }
 }
 
 static i32 wait_key(MK61Display& display, u32 display_mode_revision) {
@@ -96,120 +62,18 @@ static bool navigation(i32 key, u32 max_x, u32 max_y,
   u32 next_x = x;
   u32 next_y = y;
   if(key == KEY_LEFT || key == KEY_LEFT_PRESS) {
-    next_x = step_backward(x, a00_image_mux::CELL_WIDTH);
+    next_x = step_backward(x, 8);
   } else if(key == KEY_RIGHT || key == KEY_RIGHT_PRESS) {
-    next_x = step_forward(x, a00_image_mux::CELL_WIDTH, max_x);
+    next_x = step_forward(x, 8, max_x);
   } else if(key == KEY_SHG_LEFT_PRESS) {
-    next_y = step_backward(y, a00_image_mux::VIEW_HEIGHT);
+    next_y = step_backward(y, GRAPHICS_HEIGHT);
   } else if(key == KEY_SHG_RIGHT_PRESS) {
-    next_y = step_forward(y, a00_image_mux::VIEW_HEIGHT, max_y);
+    next_y = step_forward(y, GRAPHICS_HEIGHT, max_y);
   }
   if(next_x == x && next_y == y) return false;
   x = next_x;
   y = next_y;
   return true;
-}
-
-static bool write_cell_frame(MK61Display& display,
-                             const a00_image_mux::TemporalFrame& frame,
-                             u32& transfer_us) {
-  const u32 started = micros();
-  const bool written = display.writeCellAnimationPaletteFrame(
-    frame.glyphs, frame.cells, a00_image_mux::CELL_COUNT);
-  transfer_us = (u32) (micros() - started);
-  return written;
-}
-
-static bool prepare_cell_view(const u8* data, u16 size,
-                              const wbmp::Info& info,
-                              u32 view_x, u32 view_y,
-                              CellWorkspace& workspace,
-                              wbmp::Status& status) {
-  status = wbmp::decode_viewport(
-    data, size, info, view_x, view_y,
-    a00_image_mux::VIEW_WIDTH, a00_image_mux::VIEW_HEIGHT,
-    wbmp::Layout::ROW_MAJOR_MSB,
-    workspace.viewport, sizeof(workspace.viewport));
-  return status == wbmp::Status::OK &&
-         a00_image_mux::build_diffusion_sequence(workspace.viewport,
-                                                  workspace.sequence);
-}
-
-static Result view_cell_display(MK61Display& display,
-                                const u8* data, u16 size,
-                                const wbmp::Info& info,
-                                CellWorkspace& workspace,
-                                wbmp::Status& status,
-                                u32 display_mode_revision,
-                                bool& display_changed) {
-  u32 view_x = 0;
-  u32 view_y = 0;
-  if(!prepare_cell_view(data, size, info, view_x, view_y,
-                        workspace, status)) {
-    return Result::DECODE_ERROR;
-  }
-  if(!display.beginCellAnimation()) return Result::DISPLAY_ERROR;
-
-  u8 phase = 0;
-  u32 transfer_us = 0;
-  if(!write_cell_frame(display, workspace.sequence.frames[phase],
-                       transfer_us)) {
-    display.endCellAnimation();
-    lcd_ru::restore_default_font();
-    return Result::DISPLAY_ERROR;
-  }
-
-  // Максимальная стоимость уже встреченного кадра задаёт одинаковое время
-  // свечения всем фазам, даже если часть CGRAM/DDRAM не пришлось менять.
-  u32 transfer_budget_us = transfer_us;
-  const u32 max_x = info.width > a00_image_mux::VIEW_WIDTH
-                  ? info.width - a00_image_mux::VIEW_WIDTH : 0;
-  const u32 max_y = info.height > a00_image_mux::VIEW_HEIGHT
-                  ? info.height - a00_image_mux::VIEW_HEIGHT : 0;
-  u8 rate_divisor = MK61_IMAGE1_RATE_DIVISOR;
-  kbd::debounce_init();
-
-  Result result = Result::OK;
-  while(true) {
-    const u32 hold_us = a00_image_mux::phase_hold_us(transfer_budget_us,
-                                                     rate_divisor);
-    const i32 key = wait_phase_and_scan(display, display_mode_revision,
-                                        hold_us);
-    if(key == VIEWER_DISPLAY_CHANGED) {
-      display_changed = true;
-      break;
-    }
-    if(key == KEY_ESC || key == KEY_OK) break;
-    if(key == KEY_DEGREE) {
-      rate_divisor = a00_image_mux::faster_rate(rate_divisor);
-    } else if(key == KEY_RADIAN) {
-      rate_divisor = a00_image_mux::slower_rate(rate_divisor);
-    }
-
-    if(navigation(key, max_x, max_y, view_x, view_y)) {
-      // Старый кадр остаётся видимым, пока новое окно декодируется и целиком
-      // планируется в общей RAM; промежуточная очистка экрана не нужна.
-      if(!prepare_cell_view(data, size, info, view_x, view_y,
-                            workspace, status)) {
-        result = Result::DECODE_ERROR;
-        break;
-      }
-      phase = 0;
-    } else {
-      phase = (u8) ((phase + 1U) % workspace.sequence.frame_count);
-    }
-
-    if(!write_cell_frame(display, workspace.sequence.frames[phase],
-                         transfer_us)) {
-      result = Result::DISPLAY_ERROR;
-      break;
-    }
-    if(transfer_us > transfer_budget_us) transfer_budget_us = transfer_us;
-  }
-
-  display.endCellAnimation();
-  lcd_ru::restore_default_font();
-  return result;
 }
 
 static bool render_graphics_view(MK61Display& display,
@@ -219,8 +83,8 @@ static bool render_graphics_view(MK61Display& display,
                                  u8 bitmap[GRAPHICS_BYTES],
                                  wbmp::Status& status) {
   status = wbmp::decode_viewport(
-    data, size, info, view_x, view_y, GRAPHICS_WIDTH, GRAPHICS_HEIGHT,
-    wbmp::Layout::PAGE_MAJOR_LSB, bitmap, GRAPHICS_BYTES);
+      data, size, info, view_x, view_y, GRAPHICS_WIDTH, GRAPHICS_HEIGHT,
+      wbmp::Layout::PAGE_MAJOR_LSB, bitmap, GRAPHICS_BYTES);
   return status == wbmp::Status::OK &&
          display.showFullscreenBitmap(bitmap, GRAPHICS_BYTES);
 }
@@ -234,7 +98,7 @@ static Result view_graphics_display(MK61Display& display,
                                     bool& display_changed) {
   u32 view_x = 0;
   u32 view_y = 0;
-  if(!display.beginFullscreenBitmap()) return Result::DISPLAY_ERROR;
+  if(!display.beginFullscreenBitmap()) return Result::UNSUPPORTED_DISPLAY;
   if(!render_graphics_view(display, data, size, info, view_x, view_y,
                            bitmap, status)) {
     display.endFullscreenBitmap();
@@ -267,7 +131,7 @@ static Result view_graphics_display(MK61Display& display,
   return result;
 }
 
-} // безымянное пространство имён
+} // namespace
 
 Result view(MK61Display& display, const u8* data, u16 size,
             wbmp::Status* image_status) {
@@ -278,6 +142,7 @@ Result view(MK61Display& display, const u8* data, u16 size,
     if(image_status != NULL) *image_status = status;
     return Result::INVALID_IMAGE;
   }
+  if(!display.graphicsMode()) return Result::UNSUPPORTED_DISPLAY;
 
   language_workspace::Lease lease(language_workspace::Owner::IMAGE_VIEWER,
                                    sizeof(ViewerWorkspace));
@@ -287,21 +152,14 @@ Result view(MK61Display& display, const u8* data, u16 size,
   Result result = Result::OK;
   bool display_changed = false;
   do {
+    if(!display.graphicsMode()) {
+      result = Result::UNSUPPORTED_DISPLAY;
+      break;
+    }
     display_changed = false;
-    const u32 display_mode_revision = display.displayModeRevision();
-#if defined(MK61_DISPLAY_LCD1602)
-    result = display.graphicsMode()
-      ? view_graphics_display(display, data, size, info,
-                              workspace.graphics, status,
-                              display_mode_revision, display_changed)
-      : view_cell_display(display, data, size, info,
-                          workspace.cell, status,
-                          display_mode_revision, display_changed);
-#else
-    result = view_graphics_display(display, data, size, info,
-                                   workspace.graphics, status,
-                                   display_mode_revision, display_changed);
-#endif
+    result = view_graphics_display(
+        display, data, size, info, workspace.graphics, status,
+        display.displayModeRevision(), display_changed);
   } while(display_changed);
   if(image_status != NULL) *image_status = status;
   return result;
@@ -320,7 +178,8 @@ Result view_entry(MK61Display& display, const program_store::Entry& entry,
                              program_store::MAX_IMAGE1_SIZE);
   if(!file.ok()) return Result::BUSY;
   u16 read_len = 0;
-  if(!program_store::read_id(entry.id, file.data(), entry.data_len, &read_len) ||
+  if(!program_store::read_id(entry.id, file.data(), entry.data_len,
+                             &read_len) ||
      read_len != entry.data_len) {
     return Result::READ_ERROR;
   }
@@ -335,10 +194,11 @@ const char* result_text(Result result) {
     case Result::INVALID_IMAGE: return "invalid WBMP";
     case Result::DECODE_ERROR: return "decode error";
     case Result::DISPLAY_ERROR: return "display error";
+    case Result::UNSUPPORTED_DISPLAY: return "graphics screen required";
   }
   return "unknown image viewer error";
 }
 
-} // пространство имён image1_viewer
+} // namespace image1_viewer
 
-#endif // built-in or separately linked WBMP module
+#endif

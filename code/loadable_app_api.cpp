@@ -12,6 +12,7 @@
 #include "lcd_ru.hpp"
 #include "ledcontrol.h"
 #include "runtime_safety.hpp"
+#include "program_store.hpp"
 #include "tools.hpp"
 
 #include <string.h>
@@ -130,6 +131,40 @@ static i32 normalize_key(i32 raw) {
   return raw >= 0 ? KEY_RAW_BASE + raw : KEY_NONE;
 }
 
+static i32 raw_key(i32 key) {
+  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
+  if(key >= KEY_DIGIT_0 && key <= KEY_DIGIT_9) {
+    return keys.digit[key - KEY_DIGIT_0];
+  }
+  switch(key) {
+    case KEY_DECIMAL: return keys.dot;
+    case KEY_ADD: return keys.add;
+    case KEY_SUBTRACT: return keys.sub;
+    case KEY_MULTIPLY: return keys.mul;
+    case KEY_DIVIDE: return keys.div;
+    case KEY_LEFT: return keys.left;
+    case KEY_RIGHT: return keys.right;
+    case KEY_SHIFT_LEFT: return keys.shg_left;
+    case KEY_SHIFT_RIGHT: return keys.shg_right;
+    case KEY_OK: return keys.ok;
+    case KEY_ESC: return keys.esc;
+    case KEY_RUN: return keys.run;
+    case KEY_CLEAR: return keys.cx;
+    case KEY_K: return keys.k;
+    case KEY_F: return keys.alpha;
+    case KEY_USER: return keys.user;
+    case KEY_PP: return keys.pp;
+    case KEY_BP: return keys.bp;
+    case KEY_X_TO_P: return keys.x_to_p;
+    case KEY_P_TO_X: return keys.p_to_x;
+    case KEY_RETURN: return keys.ret;
+    case KEY_FORWARD: return keys.frw;
+    case KEY_BACKWARD: return keys.bkw;
+    default:
+      return key >= KEY_RAW_BASE ? key - KEY_RAW_BASE : -1;
+  }
+}
+
 static i32 api_key_poll(void) {
   idle_main_process();
   const i32 scan_code = (i32) kbd::scan_and_debounced();
@@ -176,11 +211,66 @@ static void api_sound_stop(void) {
   sound_stop();
 }
 
+static u32 api_file_size(u32 file_id) {
+  if(file_id > 0xFFFFU) return 0xFFFFFFFFUL;
+  program_store::Entry entry = {};
+  if(!program_store::entry_by_id((u16) file_id, entry) ||
+     entry.kind != program_store::NodeKind::FILE) return 0xFFFFFFFFUL;
+  return entry.data_len;
+}
+
+static u32 api_file_read(u32 file_id, u32 offset, u8* output, u32 length) {
+  if(file_id > 0xFFFFU || offset > 0xFFFFU || length > 0xFFFFU ||
+     (output == nullptr && length != 0)) return 0xFFFFFFFFUL;
+  u16 read = 0;
+  if(!program_store::read_range_id((u16) file_id, (u16) offset, output,
+                                   (u16) length, &read)) {
+    return 0xFFFFFFFFUL;
+  }
+  return read;
+}
+
+static u32 api_graphics_available(void) {
+  return main_lcd().graphicsMode() ? 1U : 0U;
+}
+
+static u32 api_graphics_width(void) { return 192; }
+static u32 api_graphics_height(void) { return 64; }
+
+static u32 api_graphics_revision(void) {
+  return main_lcd().displayModeRevision();
+}
+
+static u32 api_graphics_begin(void) {
+  return main_lcd().beginFullscreenBitmap() ? 1U : 0U;
+}
+
+static u32 api_graphics_present(const u8* bitmap, u32 size) {
+  return main_lcd().showFullscreenBitmap(bitmap, size) ? 1U : 0U;
+}
+
+static void api_graphics_end(void) {
+  main_lcd().endFullscreenBitmap();
+}
+
+static u32 api_key_pressed(i32 key) {
+  idle_main_process();
+  (void) kbd::scan();
+  const i32 raw = raw_key(key);
+  return raw >= 0 && kbd::is_key_pressed(raw) ? 1U : 0U;
+}
+
 static const Api API = {
   API_MAGIC,
   API_VERSION,
   (u16) sizeof(Api),
-  CAP_TIME | CAP_TEXT_DISPLAY | CAP_KEYBOARD | CAP_LED | CAP_SOUND,
+  CAP_TIME | CAP_TEXT_DISPLAY | CAP_KEYBOARD | CAP_LED | CAP_SOUND |
+      CAP_FILES | CAP_KEY_STATE |
+#if MK61_HAS_COMPILED_GRAPHICS
+      CAP_GRAPHICS,
+#else
+      0,
+#endif
   api_millis,
   api_service,
   api_delay,
@@ -193,7 +283,17 @@ static const Api API = {
   api_led_set,
   api_led_blink,
   api_beep,
-  api_sound_stop
+  api_sound_stop,
+  api_file_size,
+  api_file_read,
+  api_graphics_available,
+  api_graphics_width,
+  api_graphics_height,
+  api_graphics_revision,
+  api_graphics_begin,
+  api_graphics_present,
+  api_graphics_end,
+  api_key_pressed
 };
 
 } // namespace

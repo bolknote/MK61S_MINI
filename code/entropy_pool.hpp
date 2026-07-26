@@ -8,7 +8,8 @@ namespace entropy_pool {
 enum class Domain : u8 {
   CALCULATOR = 0,
   FOCAL = 1,
-  TINYBASIC = 2
+  TINYBASIC = 2,
+  CHIP8 = 3
 };
 
 // Начинает сбор внутреннего шума АЦП AVBAT. poll_startup() достаточно дёшев,

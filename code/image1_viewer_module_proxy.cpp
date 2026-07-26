@@ -46,6 +46,7 @@ const char* result_text(Result result) {
     case Result::INVALID_IMAGE: return "invalid WBMP";
     case Result::DECODE_ERROR: return "decode error";
     case Result::DISPLAY_ERROR: return "display error";
+    case Result::UNSUPPORTED_DISPLAY: return "graphics screen required";
   }
   return "unknown image viewer error";
 }

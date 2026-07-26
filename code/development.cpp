@@ -3,12 +3,10 @@
 #include "Arduino.h"
 #include "bounded_string.hpp"
 #include "config.h"
+#include "file_handlers.hpp"
 #include "cross_hal.h"
 #include "focal.hpp"
 #include "fmk_font.hpp"
-#if MK61_ENABLE_WBMP_VIEWER
-  #include "image1_viewer.hpp"
-#endif
 #include "tinybasic.hpp"
 #include "keyboard.h"
 #include "lcd_gui.hpp"
@@ -93,17 +91,7 @@ struct ExplorerScroll {
 };
 
 static const char* type_label(program_store::ProgramType type) {
-  switch(type) {
-    case program_store::ProgramType::MK61: return "M1";
-    case program_store::ProgramType::FOCAL: return "F1";
-    case program_store::ProgramType::TINYBASIC: return "B2";
-    case program_store::ProgramType::TEXT: return "T1";
-    case program_store::ProgramType::MK61_STATE: return "M2";
-    case program_store::ProgramType::FONT: return "f1";
-    case program_store::ProgramType::IMAGE1: return "I1";
-    case program_store::ProgramType::APP: return "A1";
-  }
-  return "??";
+  return program_store::type_magic_text(type);
 }
 
 static char type_marker(program_store::ProgramType type) {
@@ -892,35 +880,32 @@ static bool apply_font_entry(const program_store::Entry& entry) {
 
 static bool view_entry(const program_store::Entry& entry) {
   if(entry.type == program_store::ProgramType::IMAGE1) {
-#if MK61_ENABLE_WBMP_VIEWER
-    const image1_viewer::Result result =
-      image1_viewer::view_entry(main_lcd(), entry);
-    if(result == image1_viewer::Result::OK) return true;
+    const loadable_module::FileOpenResult result =
+        file_handlers::open(entry);
+    if(result == loadable_module::FileOpenResult::OK) return true;
 
     const char* en = "Image error";
     const char* ru = "Ошибка картинки";
-    if(result == image1_viewer::Result::BUSY) {
+    if(result == loadable_module::FileOpenResult::BUSY) {
       en = "Busy";
       ru = "Занято";
-    } else if(result == image1_viewer::Result::READ_ERROR) {
+    } else if(result == loadable_module::FileOpenResult::IO_ERROR) {
       en = "Read error";
       ru = "Ошибка чтения";
-    } else if(result == image1_viewer::Result::INVALID_IMAGE) {
+    } else if(result == loadable_module::FileOpenResult::INVALID_FILE) {
       en = "Invalid WBMP";
       ru = "Неверный WBMP";
-    } else if(result == image1_viewer::Result::DISPLAY_ERROR) {
+    } else if(result == loadable_module::FileOpenResult::RUNTIME_ERROR) {
       en = "Display error";
       ru = "Ошибка экрана";
+    } else if(result ==
+              loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
+      en = "Not supported";
+      ru = "Не поддерживается";
     }
     show_message(en, ru, entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;
-#else
-    show_message("Viewer disabled", "Просмотр выключен",
-                 entry.name, entry.name);
-    (void) wait_explorer_key(false);
-    return false;
-#endif
   }
 
   shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_MK61_TEXT_SIZE);
@@ -1673,6 +1658,9 @@ static bool entry_can_run(const program_store::Entry& entry) {
     case program_store::ProgramType::FONT:
       return true;
 #endif
+    case program_store::ProgramType::IMAGE1:
+    case program_store::ProgramType::CHIP8:
+      return file_handlers::available(entry);
     default:
       return false;
   }
@@ -1755,11 +1743,25 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
 }
 
 static bool run_entry(const program_store::Entry& entry) {
+  loadable_module::FileOpenResult file_result =
+      loadable_module::FileOpenResult::OK;
+  const bool file_handler =
+      entry.type == program_store::ProgramType::IMAGE1 ||
+      entry.type == program_store::ProgramType::CHIP8;
   const bool ok = entry.type == program_store::ProgramType::FONT
     ? apply_font_entry(entry)
-    : OpenStoredEntry(entry);
+    : file_handler
+      ? (file_result = file_handlers::open(entry)) ==
+            loadable_module::FileOpenResult::OK
+      : OpenStoredEntry(entry);
   if(!ok) {
-    show_message("Run error", "Ошибка запуска", entry.name, entry.name);
+    if(file_handler &&
+       file_result == loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
+      show_message("Not supported", "Не поддерживается",
+                   entry.name, entry.name);
+    } else {
+      show_message("Run error", "Ошибка запуска", entry.name, entry.name);
+    }
     delay(900);
   } else if(entry.type == program_store::ProgramType::FONT) {
     show_message("Font applied", "Шрифт применен", entry.name, entry.name);

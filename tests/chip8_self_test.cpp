@@ -1,0 +1,277 @@
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "../code/chip8.hpp"
+
+namespace {
+
+using chip8::State;
+using chip8::StepResult;
+
+static void opcode(State& state, u16 value) {
+  state.memory[chip8::ROM_ADDRESS] = (u8) (value >> 8);
+  state.memory[chip8::ROM_ADDRESS + 1] = (u8) value;
+  state.pc = chip8::ROM_ADDRESS;
+}
+
+static void test_reset_and_rom(void) {
+  State state;
+  memset(&state, 0xA5, sizeof(state));
+  chip8::reset(state);
+  assert(state.pc == chip8::ROM_ADDRESS);
+  assert(state.waiting_register == 0xFF);
+  assert(state.memory[0x50] == 0xF0);
+  assert(state.memory[0x50 + 79] == 0x80);
+
+  const u8 rom[] = {0x60, 0x2A, 0x61, 0x03};
+  assert(chip8::load_rom(state, rom, sizeof(rom)));
+  assert(memcmp(state.memory + chip8::ROM_ADDRESS, rom, sizeof(rom)) == 0);
+  assert(!chip8::load_rom(state, nullptr, sizeof(rom)));
+  assert(!chip8::load_rom(state, rom, 0));
+
+  static u8 maximum[chip8::MAX_ROM_SIZE];
+  static u8 too_large[chip8::MAX_ROM_SIZE + 1];
+  assert(chip8::load_rom(state, maximum, sizeof(maximum)));
+  assert(!chip8::load_rom(state, too_large, sizeof(too_large)));
+}
+
+static void test_arithmetic_and_skips(void) {
+  State state;
+  chip8::reset(state);
+
+  opcode(state, 0x60FE);
+  assert(chip8::step(state, 0) == StepResult::OK && state.v[0] == 0xFE);
+  opcode(state, 0x7003);
+  assert(chip8::step(state, 0) == StepResult::OK && state.v[0] == 1);
+
+  state.v[1] = 250;
+  state.v[2] = 10;
+  opcode(state, 0x8124);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[1] == 4 && state.v[0xF] == 1);
+
+  state.v[1] = 3;
+  state.v[2] = 5;
+  opcode(state, 0x8125);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[1] == 254 && state.v[0xF] == 0);
+  state.v[1] = 3;
+  state.v[2] = 5;
+  opcode(state, 0x8127);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[1] == 2 && state.v[0xF] == 1);
+
+  state.v[3] = 0x55;
+  opcode(state, 0x3355);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == chip8::ROM_ADDRESS + 4);
+  opcode(state, 0x4355);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == chip8::ROM_ADDRESS + 2);
+
+  state.v[4] = 9;
+  state.v[5] = 9;
+  opcode(state, 0x5450);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == chip8::ROM_ADDRESS + 4);
+  opcode(state, 0x9450);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == chip8::ROM_ADDRESS + 2);
+
+  opcode(state, 0x5121);
+  assert(chip8::step(state, 0) == StepResult::INVALID_OPCODE);
+  opcode(state, 0x9121);
+  assert(chip8::step(state, 0) == StepResult::INVALID_OPCODE);
+}
+
+static void test_control_flow_and_stack(void) {
+  State state;
+  chip8::reset(state);
+
+  opcode(state, 0x1204);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == 0x204);
+
+  opcode(state, 0x2300);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.sp == 1 && state.stack[0] == 0x202 && state.pc == 0x300);
+  state.memory[0x300] = 0x00;
+  state.memory[0x301] = 0xEE;
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.sp == 0 && state.pc == 0x202);
+
+  opcode(state, 0x00EE);
+  assert(chip8::step(state, 0) == StepResult::STACK_ERROR);
+
+  opcode(state, 0x2200);
+  for(u8 depth = 0; depth < chip8::STACK_DEPTH; depth++) {
+    assert(chip8::step(state, 0) == StepResult::OK);
+  }
+  assert(chip8::step(state, 0) == StepResult::STACK_ERROR);
+
+  chip8::reset(state);
+  state.v[0] = 1;
+  state.v[1] = 3;
+  opcode(state, 0xB123);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == 0x124);
+  chip8::reset(state, chip8::QUIRK_JUMP_USES_VX);
+  state.v[0] = 1;
+  state.v[1] = 3;
+  opcode(state, 0xB123);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == 0x126);
+}
+
+static void test_memory_font_and_quirks(void) {
+  State state;
+  chip8::reset(state);
+  state.v[2] = 0x0A;
+  opcode(state, 0xF229);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.i == 0x50 + 10 * 5);
+
+  state.i = 0x300;
+  state.v[3] = 234;
+  opcode(state, 0xF333);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.memory[0x300] == 2);
+  assert(state.memory[0x301] == 3);
+  assert(state.memory[0x302] == 4);
+
+  state.i = 0x320;
+  state.v[0] = 1;
+  state.v[1] = 2;
+  state.v[2] = 3;
+  opcode(state, 0xF255);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.i == 0x320);
+  memset(state.v, 0, sizeof(state.v));
+  opcode(state, 0xF265);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[0] == 1 && state.v[1] == 2 && state.v[2] == 3);
+
+  chip8::reset(state, chip8::QUIRK_LOAD_STORE_INCREMENT_I);
+  state.i = 0x320;
+  opcode(state, 0xF255);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.i == 0x323);
+
+  chip8::reset(state);
+  state.v[1] = 8;
+  state.v[2] = 3;
+  opcode(state, 0x8126);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[1] == 4 && state.v[0xF] == 0);
+  chip8::reset(state, chip8::QUIRK_SHIFT_USES_VY);
+  state.v[1] = 8;
+  state.v[2] = 3;
+  opcode(state, 0x8126);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[1] == 1 && state.v[0xF] == 1);
+
+  chip8::reset(state);
+  state.i = chip8::MEMORY_SIZE - 1;
+  state.v[0] = 2;
+  opcode(state, 0xF01E);
+  assert(chip8::step(state, 0) == StepResult::MEMORY_ERROR);
+}
+
+static void test_draw_collision_and_clear(void) {
+  State state;
+  chip8::reset(state);
+  state.i = 0x300;
+  state.memory[state.i] = 0xC0;
+  state.v[0] = 63;
+  state.v[1] = 31;
+  opcode(state, 0xD011);
+  assert(chip8::step(state, 0) == StepResult::DRAW);
+  assert(chip8::pixel(state, 63, 31));
+  assert(chip8::pixel(state, 0, 31));
+  assert(state.v[0xF] == 0);
+
+  opcode(state, 0xD011);
+  assert(chip8::step(state, 0) == StepResult::DRAW);
+  assert(!chip8::pixel(state, 63, 31));
+  assert(!chip8::pixel(state, 0, 31));
+  assert(state.v[0xF] == 1);
+
+  chip8::reset(state, chip8::QUIRK_CLIP_SPRITES);
+  state.i = 0x300;
+  state.memory[state.i] = 0xC0;
+  state.v[0] = 63;
+  state.v[1] = 31;
+  opcode(state, 0xD011);
+  assert(chip8::step(state, 0) == StepResult::DRAW);
+  assert(chip8::pixel(state, 63, 31));
+  assert(!chip8::pixel(state, 0, 31));
+
+  opcode(state, 0x00E0);
+  assert(chip8::step(state, 0) == StepResult::DRAW);
+  for(u16 index = 0; index < chip8::FRAME_BYTES; index++) {
+    assert(state.framebuffer[index] == 0);
+  }
+}
+
+static void test_keys_random_and_timers(void) {
+  State state;
+  chip8::reset(state);
+  state.v[2] = 5;
+  chip8::update_keys(state, (u16) 1U << 5);
+  opcode(state, 0xE29E);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == chip8::ROM_ADDRESS + 4);
+  opcode(state, 0xE2A1);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == chip8::ROM_ADDRESS + 2);
+
+  // Удерживаемая до FX0A клавиша не принимается: нужен новый фронт.
+  opcode(state, 0xF10A);
+  assert(chip8::step(state, 0) == StepResult::WAITING_KEY);
+  assert(state.waiting_register == 1);
+  assert(chip8::step(state, 0) == StepResult::WAITING_KEY);
+  chip8::update_keys(state, (u16) 1U << 5);
+  assert(chip8::step(state, 0) == StepResult::WAITING_KEY);
+  chip8::update_keys(state, 0);
+  assert(chip8::step(state, 0) == StepResult::WAITING_KEY);
+  chip8::update_keys(state, (u16) 1U << 7);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[1] == 7 && state.waiting_register == 0xFF);
+
+  opcode(state, 0xC30F);
+  assert(chip8::step(state, 0xA5) == StepResult::OK);
+  assert(state.v[3] == 5);
+
+  state.delay_timer = 2;
+  state.sound_timer = 1;
+  chip8::tick_timers(state);
+  assert(state.delay_timer == 1 && state.sound_timer == 0);
+  chip8::tick_timers(state);
+  assert(state.delay_timer == 0 && state.sound_timer == 0);
+}
+
+static void test_invalid_and_bounds(void) {
+  State state;
+  chip8::reset(state);
+  opcode(state, 0x8018);
+  assert(chip8::step(state, 0) == StepResult::INVALID_OPCODE);
+  opcode(state, 0xD010);
+  assert(chip8::step(state, 0) == StepResult::INVALID_OPCODE);
+  state.pc = chip8::MEMORY_SIZE - 1;
+  assert(chip8::step(state, 0) == StepResult::MEMORY_ERROR);
+}
+
+} // namespace
+
+int main(void) {
+  test_reset_and_rom();
+  test_arithmetic_and_skips();
+  test_control_flow_and_stack();
+  test_memory_font_and_quirks();
+  test_draw_collision_and_clear();
+  test_keys_random_and_timers();
+  test_invalid_and_bounds();
+  printf("chip8_self_test: ok\n");
+  return 0;
+}

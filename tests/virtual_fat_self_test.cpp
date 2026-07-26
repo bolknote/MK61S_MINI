@@ -842,6 +842,77 @@ static void test_wbmp_short_name_alias(void) {
   assert(strcmp(image.name, "SCREEN") == 0);
 }
 
+static void expect_large_file(u16 id, const std::vector<u8>& expected);
+
+static void test_chip8_import_uses_raw_rom_and_full_quota(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 221;
+  const u8 cluster_count = (u8) (
+      (program_store::MAX_CHIP8_SIZE +
+       (u32) fs.sectors_per_cluster * virtual_fat::SECTOR_SIZE - 1U) /
+      ((u32) fs.sectors_per_cluster * virtual_fat::SECTOR_SIZE));
+  assert(cluster_count >= 1);
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  for(u8 index = 0; index < cluster_count; index++) {
+    set_fat12_value(
+        fat, (u16) (file_cluster + index),
+        index + 1U < cluster_count
+            ? (u16) (file_cluster + index + 1U) : 0xFFF);
+  }
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'F','U','S','E',' ',' ',' ',' ','C','H','8'};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "fuse.ch8", short_name, false,
+      file_cluster, program_store::MAX_CHIP8_SIZE);
+  root[slot * 32] = 0;
+
+  std::vector<u8> rom(program_store::MAX_CHIP8_SIZE);
+  for(usize index = 0; index < rom.size(); index++) {
+    rom[index] = (u8) (index * 19U + 0xC1U);
+  }
+  assert(virtual_fat::write_cached_sectors(
+      cluster_lba(fs, file_cluster), rom.data(),
+      (u16) (rom.size() / virtual_fat::SECTOR_SIZE)));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  expect_flush();
+
+  program_store::Entry entry = {};
+  assert(program_store::entry_by_id((u16) (file_cluster - 2), entry));
+  assert(entry.type == program_store::ProgramType::CHIP8);
+  assert(strcmp(entry.name, "fuse") == 0);
+  assert(entry.data_len == program_store::MAX_CHIP8_SIZE);
+  expect_large_file(entry.id, rom);
+}
+
+static void test_chip8_over_quota_is_rejected(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 221;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'L','A','R','G','E',' ',' ',' ','C','H','8'};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "large.ch8", short_name, false,
+      file_cluster, (u32) program_store::MAX_CHIP8_SIZE + 1U);
+  root[slot * 32] = 0;
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  assert(!virtual_fat::flush_pending());
+  assert(program_store::total_count() == 0);
+  assert(program_store::vfat_stage_discard_all());
+}
+
 static void expect_large_file(u16 id, const std::vector<u8>& expected) {
   std::vector<u8> actual(expected.size());
   u16 length = 0;
@@ -1309,6 +1380,8 @@ int main(void) {
   test_wbmp_import_uses_its_full_quota();
   test_wbmp_over_quota_is_rejected();
   test_wbmp_short_name_alias();
+  test_chip8_import_uses_raw_rom_and_full_quota();
+  test_chip8_over_quota_is_rejected();
   test_app_import_is_streamed_across_fat_chain();
 #if MK61_ANY_LOADABLE_MODULE
   test_invalid_app_preflight_preserves_existing_tree();

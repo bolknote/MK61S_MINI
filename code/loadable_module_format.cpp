@@ -23,7 +23,8 @@ static constexpr u16 RESIDENT_SIZE_OFFSET = 40;
 static constexpr u16 RESIDENT_CRC_OFFSET = 44;
 static constexpr u16 STORED_CRC_OFFSET = 48;
 static constexpr u16 IMAGE_CRC_OFFSET = 52;
-static constexpr u16 RESERVED_OFFSET = 56;
+static constexpr u16 HANDLED_TYPE_MAGIC_OFFSET = 56;
+static constexpr u16 RESERVED_OFFSET = 58;
 static constexpr u16 HEADER_CRC_OFFSET = 60;
 static constexpr usize INPUT_BUFFER_SIZE = 64;
 
@@ -152,7 +153,8 @@ static bool magic_valid(const u8* input) {
 
 bool valid_kind(Kind kind) {
   return kind == Kind::FOCAL || kind == Kind::TINYBASIC ||
-         kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION;
+         kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION ||
+         kind == Kind::CHIP8;
 }
 
 bool valid_compression(Compression compression) {
@@ -165,6 +167,7 @@ Kind kind_at(u8 index) {
     case 0: return Kind::FOCAL;
     case 1: return Kind::TINYBASIC;
     case 2: return Kind::WBMP_VIEWER;
+    case 3: return Kind::CHIP8;
   }
   return (Kind) 0;
 }
@@ -178,6 +181,7 @@ const char* file_name(Kind kind) {
     case Kind::FOCAL: return "FOCAL.APP";
     case Kind::TINYBASIC: return "BASIC.APP";
     case Kind::WBMP_VIEWER: return "WBMP.APP";
+    case Kind::CHIP8: return "CHIP8.APP";
     case Kind::APPLICATION: break;
   }
   return nullptr;
@@ -242,7 +246,8 @@ bool encode_header(const Header& header, u32 slot_size,
   put_le32(output, RESIDENT_CRC_OFFSET, header.resident_crc32);
   put_le32(output, STORED_CRC_OFFSET, header.stored_crc32);
   put_le32(output, IMAGE_CRC_OFFSET, header.image_crc32);
-  put_le32(output, RESERVED_OFFSET, 0);
+  put_le16(output, HANDLED_TYPE_MAGIC_OFFSET, header.handled_type_magic);
+  put_le16(output, RESERVED_OFFSET, 0);
   put_le32(output, HEADER_CRC_OFFSET,
            crc32(output, HEADER_CRC_OFFSET));
   return true;
@@ -264,7 +269,7 @@ HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
   if(get_le16(input, ABI_OFFSET) != ABI_VERSION) {
     return HeaderStatus::UNSUPPORTED_ABI;
   }
-  if(get_le32(input, RESERVED_OFFSET) != 0) {
+  if(get_le16(input, RESERVED_OFFSET) != 0) {
     return HeaderStatus::INVALID_FIELDS;
   }
   output.kind = (Kind) input[KIND_OFFSET];
@@ -279,6 +284,7 @@ HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
   output.resident_crc32 = get_le32(input, RESIDENT_CRC_OFFSET);
   output.stored_crc32 = get_le32(input, STORED_CRC_OFFSET);
   output.image_crc32 = get_le32(input, IMAGE_CRC_OFFSET);
+  output.handled_type_magic = get_le16(input, HANDLED_TYPE_MAGIC_OFFSET);
   return validate_header(output, slot_size, expected_kind);
 }
 

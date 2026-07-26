@@ -485,17 +485,20 @@ static int type_index(ProgramType type) {
     case ProgramType::FONT: return 5;
     case ProgramType::IMAGE1: return 6;
     case ProgramType::APP: return -1; // счётчик APP вычисляется по inode
+    case ProgramType::CHIP8: return -1; // счётчик CHIP-8 вычисляется по inode
   }
   return -1;
 }
 
 static bool supported_type(ProgramType type) {
-  return type == ProgramType::APP || type_index(type) >= 0;
+  return type == ProgramType::APP || type == ProgramType::CHIP8 ||
+         type_index(type) >= 0;
 }
 
 static u16 maximum_data_len(ProgramType type) {
   if(type == ProgramType::FONT) return MAX_FONT_SIZE;
   if(type == ProgramType::IMAGE1) return MAX_IMAGE1_SIZE;
+  if(type == ProgramType::CHIP8) return MAX_CHIP8_SIZE;
   if(type == ProgramType::APP) return MAX_APP_FILE_SIZE;
   return MAX_MK61_TEXT_SIZE;
 }
@@ -510,8 +513,24 @@ static const char* extension_for_type(ProgramType type) {
     case ProgramType::FONT: return "fmk";
     case ProgramType::IMAGE1: return "wbmp";
     case ProgramType::APP: return "app";
+    case ProgramType::CHIP8: return "ch8";
   }
   return "bin";
+}
+
+static const char* magic_for_type(ProgramType type) {
+  switch(type) {
+    case ProgramType::MK61: return "M1";
+    case ProgramType::FOCAL: return "F1";
+    case ProgramType::TINYBASIC: return "B2";
+    case ProgramType::TEXT: return "T1";
+    case ProgramType::MK61_STATE: return "M2";
+    case ProgramType::FONT: return "f1";
+    case ProgramType::IMAGE1: return "I1";
+    case ProgramType::APP: return "A1";
+    case ProgramType::CHIP8: return "C1";
+  }
+  return "??";
 }
 
 static Inode empty_inode(void) {
@@ -2240,19 +2259,48 @@ const char* file_extension(ProgramType type) {
   return extension_for_type(type);
 }
 
+TypeMagic type_magic(ProgramType type) {
+  const char* text = magic_for_type(type);
+  return make_type_magic(text[0], text[1]);
+}
+
+const char* type_magic_text(ProgramType type) {
+  return magic_for_type(type);
+}
+
+bool type_from_magic(TypeMagic magic, ProgramType& type) {
+  static const ProgramType TYPES[] = {
+    ProgramType::MK61,
+    ProgramType::FOCAL,
+    ProgramType::TINYBASIC,
+    ProgramType::TEXT,
+    ProgramType::MK61_STATE,
+    ProgramType::FONT,
+    ProgramType::IMAGE1,
+    ProgramType::APP,
+    ProgramType::CHIP8
+  };
+  for(const ProgramType candidate : TYPES) {
+    if(type_magic(candidate) != magic) continue;
+    type = candidate;
+    return true;
+  }
+  return false;
+}
+
 int total_count(void) { return g_ready ? g_meta.total_count : 0; }
 
 int count(ProgramType type) {
   const int index = type_index(type);
   if(!g_ready) return 0;
   if(index >= 0) return g_meta.type_count[index];
-  if(type != ProgramType::APP) return 0;
+  if(type != ProgramType::APP && type != ProgramType::CHIP8) return 0;
   int result = 0;
   for(u16 id = 0; id < g_geometry.max_nodes; id++) {
     Inode inode;
     if(get_inode(id, inode) && inode_used(inode) &&
        inode_kind(inode) == NodeKind::FILE &&
-       inode_type(inode) == ProgramType::APP) result++;
+       inode_type(inode) == type) result++;
   }
   return result;
 }
@@ -2630,10 +2678,12 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   LargeWriteGuard large_guard;
   const u16 max_data_len = maximum_data_len(type);
   if(!g_ready || !supported_type(type) || !valid_name(name) || !parent_valid(parent_id) ||
+     (type == ProgramType::CHIP8 && data_len == 0) ||
      data_len > max_data_len ||
      !source_valid(source, data_len)) return false;
-  const bool large = type == ProgramType::APP &&
-                     data_len > MAX_IMAGE1_SIZE;
+  const bool large =
+      (type == ProgramType::APP || type == ProgramType::CHIP8) &&
+      data_len > MAX_IMAGE1_SIZE;
   const u32 cluster_bytes =
       (u32) g_geometry.sectors_per_cluster * VFAT_STAGE_BLOCK_SIZE;
   const u8 required_clusters = data_len == 0 ? 1 : (u8) (
