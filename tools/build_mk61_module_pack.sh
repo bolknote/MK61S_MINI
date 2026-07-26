@@ -2,18 +2,19 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-output=${MK61_MODULE_PACK_BIN:-"$root/tools/mk61_module_pack"}
+tool_root="$root/tools/.mk61-app"
+output=${MK61_MODULE_PACK_BIN:-"$root/.build/tools/mk61_module_pack"}
 sources=(
-  "$root/tools/mk61_module_pack.cpp"
+  "$tool_root/mk61_module_pack.cpp"
   "$root/code/loadable_module_format.cpp"
   "$root/code/loadable_module_format.hpp"
   "$root/code/zx0.cpp"
   "$root/code/zx0.hpp"
   "$root/code/storage_geometry.hpp"
-  "$root/tools/third_party/zx0/zx0.h"
-  "$root/tools/third_party/zx0/optimize.c"
-  "$root/tools/third_party/zx0/compress.c"
-  "$root/tools/third_party/zx0/memory.c"
+  "$tool_root/third_party/zx0/zx0.h"
+  "$tool_root/third_party/zx0/optimize.c"
+  "$tool_root/third_party/zx0/compress.c"
+  "$tool_root/third_party/zx0/memory.c"
 )
 
 rebuild=0
@@ -32,12 +33,12 @@ if [[ "$rebuild" == "1" ]]; then
   mkdir -p "$(dirname "$output")"
   c++ -x c++ -std=c++17 -O2 -Wall -Wextra -Werror \
     -I"$root/code" \
-    "$root/tools/mk61_module_pack.cpp" \
+    "$tool_root/mk61_module_pack.cpp" \
     "$root/code/loadable_module_format.cpp" \
     "$root/code/zx0.cpp" \
-    "$root/tools/third_party/zx0/optimize.c" \
-    "$root/tools/third_party/zx0/compress.c" \
-    "$root/tools/third_party/zx0/memory.c" \
+    "$tool_root/third_party/zx0/optimize.c" \
+    "$tool_root/third_party/zx0/compress.c" \
+    "$tool_root/third_party/zx0/memory.c" \
     -o "$output"
 fi
 

@@ -4,8 +4,6 @@
 /.build/
 /.mk61-firmware.conf
 /.mkc.conf
-/tools/fmk_font
-/tools/mk61_module_pack
 
 # Кэши инструментов Python
 __pycache__/

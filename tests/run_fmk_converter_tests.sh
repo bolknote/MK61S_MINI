@@ -17,6 +17,8 @@ grep -q '^usage: fmk_font INPUT OUTPUT' "$help"
 "$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$mono" --cell 5x8 --size 8 --chars AB --compression auto
 "$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$proportional" --cell 8x12 --size 8 --chars AB --proportional --compression auto
 "$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_thin_test.bdf" "$thin" --cell 5x8 --size 32 --chars '1+' --compression auto 2>"$thin_warnings"
+test -x "$root/.build/tools/fmk_font"
+test ! -e "$root/tools/fmk_font"
 grep -q 'font is missing.*U+002B' "$thin_warnings"
 "$root/tests/run_display_font_tests.sh" "$mono" >/dev/null
 "$root/tests/run_display_font_tests.sh" "$proportional" >/dev/null

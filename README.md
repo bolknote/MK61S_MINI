@@ -55,6 +55,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 **Сборка F401 и штатных System APP прямо в Arduino IDE:**
 [Markdown](doc/src/MK61s-mini-Arduino-IDE.md)
 
+**Поддерживаемые команды каталога `tools`:**
+[Markdown](tools/README.md)
+
 **Технические форматы:**<br>
 [Формат внутреннего хранилища и USB FAT12](doc/src/MK61s-mini-Storage.md)
 

@@ -2,8 +2,8 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-source="$root/tools/fmk_font.cpp"
-output="$root/tools/fmk_font"
+source="$root/tools/.fmk-font/fmk_font.cpp"
+output=${MK61_FMK_FONT_BIN:-"$root/.build/tools/fmk_font"}
 
 if [[ ! -x "$output" || "$source" -nt "$output" ]]; then
   if ! pkg-config --exists freetype2; then
@@ -11,6 +11,7 @@ if [[ ! -x "$output" || "$source" -nt "$output" ]]; then
     exit 1
   fi
 
+  mkdir -p "$(dirname "$output")"
   read -r -a freetype_flags <<<"$(pkg-config --cflags --libs freetype2)"
   c++ -std=c++17 -O2 -Wall -Wextra -Werror \
     "$source" \

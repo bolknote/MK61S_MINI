@@ -8,18 +8,22 @@ trap 'rm -rf "$work"' EXIT
 packer="$work/mk61_module_pack"
 out="$work/loadable_module_pack_self_test"
 wrapper_packer="$work/wrapper/mk61_module_pack"
+default_packer="$root/.build/tools/mk61_module_pack"
 MK61_MODULE_PACK_BIN="$wrapper_packer" \
   "$root/tools/build_mk61_module_pack.sh" --help >/dev/null 2>&1
 test -x "$wrapper_packer"
+"$root/tools/build_mk61_module_pack.sh" --help >/dev/null 2>&1
+test -x "$default_packer"
+test ! -e "$root/tools/mk61_module_pack"
 
 clang++ -x c++ -std=c++17 -Wall -Wextra -Werror -O2 \
   -I"$root/code" \
-  "$root/tools/mk61_module_pack.cpp" \
+  "$root/tools/.mk61-app/mk61_module_pack.cpp" \
   "$root/code/loadable_module_format.cpp" \
   "$root/code/zx0.cpp" \
-  "$root/tools/third_party/zx0/optimize.c" \
-  "$root/tools/third_party/zx0/compress.c" \
-  "$root/tools/third_party/zx0/memory.c" \
+  "$root/tools/.mk61-app/third_party/zx0/optimize.c" \
+  "$root/tools/.mk61-app/third_party/zx0/compress.c" \
+  "$root/tools/.mk61-app/third_party/zx0/memory.c" \
   -o "$packer"
 
 clang++ -std=c++17 -Wall -Wextra -Werror \

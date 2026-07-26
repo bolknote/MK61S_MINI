@@ -8,7 +8,7 @@ labels, strings, and prose comments rather than synthetic runs of one byte.
 Run the comparison with:
 
 ```sh
-python3 tools/rle_strategy_benchmark.py \
+python3 tests/data/language_compression/benchmark.py \
   tests/data/language_compression/*.foc \
   tests/data/language_compression/*.tbi \
   --scan-splits --lzo

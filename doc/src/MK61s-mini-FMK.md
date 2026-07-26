@@ -8,7 +8,8 @@ BMP, моноширинные и пропорциональные глифы, а
 или RLE-представления для каждого глифа.
 
 Этот документ описывает именно бинарный формат. Эталонные реализации находятся
-в `code/fmk_font.cpp`, `code/fmk_font.hpp` и `tools/fmk_font.cpp`.
+в `code/fmk_font.cpp`, `code/fmk_font.hpp` и
+`tools/.fmk-font/fmk_font.cpp`.
 
 ## Краткие ограничения
 
@@ -269,8 +270,9 @@ RAM и подходит для небольшого лимита файла.
 tools/build_fmk_font.sh INPUT OUTPUT [options]
 ```
 
-Скрипт собирает `tools/fmk_font.cpp` через C++17 и `pkg-config freetype2`, если
-бинарник отсутствует или устарел.
+Скрипт собирает внутренний `tools/.fmk-font/fmk_font.cpp` через C++17 и
+`pkg-config freetype2`, если бинарник отсутствует или устарел. Готовая
+host-утилита кэшируется в `.build/tools/fmk_font`, а не в каталоге исходников.
 
 Основные параметры:
 

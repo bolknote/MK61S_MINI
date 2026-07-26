@@ -551,7 +551,7 @@ build_module() {
     -Wl,--gc-sections \
     -Wl,--just-symbols="$resident_elf" \
     -Wl,--defsym=MK61_MODULE_ORIGIN=0x$overlay_hex \
-    -Wl,-T,"$root/tools/mk61_module.ld" \
+    -Wl,-T,"$root/tools/.mk61-app/mk61_module.ld" \
     -Wl,-Map,"$module_map" \
     "${objects[@]}" -o "$module_elf"
 
@@ -608,7 +608,8 @@ build_custom_app() {
   custom_sketch="$work/sketch-app-$custom_id/mk61s-M"
   custom_source_root="$custom_sketch/src/mk61_app"
   mkdir -p "$custom_sketch" "$custom_source_root"
-  cp "$root/tools/loadable_app_template/mk61s-M.ino" "$custom_sketch/"
+  cp "$root/tools/.mk61-app/loadable_app_template/mk61s-M.ino" \
+    "$custom_sketch/"
   cp "$root/code/loadable_app_api.hpp" \
      "$root/code/loadable_module_abi.hpp" \
      "$root/code/rust_types.h" \
