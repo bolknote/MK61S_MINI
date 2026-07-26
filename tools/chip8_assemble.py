@@ -3,7 +3,7 @@
 
 The syntax is intentionally narrow: it covers the original CHIP-8 instruction
 set, labels, integer constants, byte data, compact 3x5 text and ASCII bitmaps
-whose width is a multiple of eight.  It is used to keep games/echo8.asm
+whose width is a multiple of eight. It is used to keep the ECHO-8 example
 readable and reproducible.
 """
 

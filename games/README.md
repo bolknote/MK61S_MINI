@@ -21,7 +21,7 @@ stated explicitly instead of guessing an author or source.
 | `Samurai.m61` | MK-61 game with its register setup | Added as an `.m61` file during the built-in-library-to-filesystem migration in this repository. No earlier in-tree copy, external listing, or author attribution is recorded. |
 | `Wumpus.m61` | MK-61 **Wumpus** game with generated initial state | First added to this fork's embedded game library and then exported to `.m61`. The external listing or author used for that port was not recorded. |
 | `br8kout.ch8` | **Br8kout** CHIP-8 ROM by SharpenedSpoon, 199 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
-| `echo8.ch8` | **ECHO-8**, a 2039-byte first-person story game; source in `echo8.asm` | Original game written for this repository. Its plot, code, graphics and self-hosted assembler were created locally in collaboration with Codex rather than copied from an external ROM. |
+| `echo8.ch8` | **ECHO-8**, a 2039-byte first-person story game | Original game written for this repository. Its plot, code and graphics were created locally in collaboration with Codex rather than copied from an external ROM. The source and build notes live under [`examples/chip8/ECHO-8`](../examples/chip8/ECHO-8/). |
 | `fuse.ch8` | **Fuse** CHIP-8 ROM by John Earnest, 424 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
 | `space-invaders.ch8` | **Space Invaders v0.9** CHIP-8 ROM by David Winter, 1283 bytes | Taken unchanged from the [Zophar public-domain CHIP-8 Games Pack](https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html). |
 | `pacman-120x28.wbmp` | Original 120x28 monochrome Pac-Man scene for testing the WBMP viewer | Original artwork by the MK61S_MINI project author, drawn specifically for this project in collaboration with Codex. It was not copied from an external image. |
@@ -63,7 +63,8 @@ Four ready-to-run examples are included:
   Use `4/6` (or `Left/Right`) to move and `5` (or `OK`) to start and fire.
 - `echo8.ch8` — **ECHO-8**, an original first-person story game, 2039 bytes.
   Use `2/8` to move, `4/6` to turn and `5` to interact; see
-  [`ECHO-8.md`](ECHO-8.md) for the spoiler-free manual.
+  [`examples/chip8/ECHO-8`](../examples/chip8/ECHO-8/) for the spoiler-free
+  manual and source.
 
 Their SHA-1 values are respectively
 `0cd895dc3d489d0e40656218900a04310e95f560` and

@@ -70,7 +70,7 @@
 ROM воспроизводимо собирается локальным ассемблером:
 
 ```sh
-python3 tools/chip8_assemble.py games/echo8.asm games/echo8.ch8
+python3 tools/chip8_assemble.py examples/chip8/ECHO-8/echo8.asm games/echo8.ch8
 tests/run_chip8_tests.sh
 ```
 
