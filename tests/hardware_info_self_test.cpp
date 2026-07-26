@@ -47,7 +47,7 @@ static void test_line_formatting(void) {
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), true, "LCD1602A00"));
-  assert(std::strcmp(line, "ЭКРАН:LCD1602A00") == 0);
+  assert(std::strcmp(line, "Экран:LCD1602A00") == 0);
   assert(utf8_width(line) == 16);
 
   assert(hardware_info::format_display_line(
@@ -57,7 +57,7 @@ static void test_line_formatting(void) {
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), true, "UC1609"));
-  assert(std::strcmp(line, "ЭКРАН:UC1609") == 0);
+  assert(std::strcmp(line, "Экран:UC1609") == 0);
   assert(utf8_width(line) == 12);
 
   assert(hardware_info::format_generator_line(

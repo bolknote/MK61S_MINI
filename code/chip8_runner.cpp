@@ -67,7 +67,9 @@ static bool render(MK61Display& display, const chip8::State& machine,
 }
 
 static bool pressed(i32 key) {
-  return key >= 0 && kbd::is_key_pressed(key);
+  if(key < 0) return false;
+  const bool just_pressed = kbd::take_immediate_press(key);
+  return kbd::is_key_pressed(key) || just_pressed;
 }
 
 static bool chip_key_pressed(u8 key) {

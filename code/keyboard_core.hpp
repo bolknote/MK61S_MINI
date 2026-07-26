@@ -73,13 +73,18 @@ class PressEdgeLatch {
 
     void reset(void) { pending_ = 0; }
 
+    void note(i32 key_code) {
+      if(key_code < 0 || key_code >= (i32) KEY_COUNT) return;
+      pending_ |= (u64) 1U << (u8) key_code;
+    }
+
     void noteRow(usize row, u8 columns) {
       if(row >= ROW_COUNT) return;
       for(usize column = 0; column < COLUMN_COUNT; column++) {
         const u8 bit = (u8) (1u << column);
         if((columns & bit) == 0) continue;
         const usize key_code = column * ROW_COUNT + row;
-        pending_ |= (u64) 1U << key_code;
+        note((i32) key_code);
       }
     }
 

@@ -62,7 +62,7 @@ inline bool format_display_line(
     char* out, usize size, bool russian, const char* display_type) {
   if(out == NULL || size == 0 || display_type == NULL) return false;
   const int written = snprintf(
-    out, size, russian ? "ЭКРАН:%s" : "Disp:%s", display_type);
+    out, size, russian ? "Экран:%s" : "Disp:%s", display_type);
   return written >= 0 && (usize) written < size;
 }
 

@@ -122,6 +122,15 @@ static void test_control_flow_and_stack(void) {
   opcode(state, 0xB123);
   assert(chip8::step(state, 0) == StepResult::OK);
   assert(state.pc == 0x126);
+
+  chip8::reset(state);
+  opcode(state, 0x1205);
+  state.memory[0x205] = 0x60;
+  state.memory[0x206] = 0x2A;
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.pc == 0x205);
+  assert(chip8::step(state, 0) == StepResult::OK);
+  assert(state.v[0] == 0x2A && state.pc == 0x207);
 }
 
 static void test_memory_font_and_quirks(void) {
@@ -262,9 +271,63 @@ static void test_invalid_and_bounds(void) {
   assert(chip8::step(state, 0) == StepResult::MEMORY_ERROR);
 }
 
+static u16 read_rom(const char* path, u8 output[chip8::MAX_ROM_SIZE]) {
+  FILE* input = fopen(path, "rb");
+  assert(input != nullptr);
+  assert(fseek(input, 0, SEEK_END) == 0);
+  const long size = ftell(input);
+  assert(size > 0 && size <= chip8::MAX_ROM_SIZE);
+  assert(fseek(input, 0, SEEK_SET) == 0);
+  assert(fread(output, 1, (usize) size, input) == (usize) size);
+  assert(fclose(input) == 0);
+  return (u16) size;
+}
+
+static void smoke_rom(const char* path, bool expects_key_wait) {
+  static const u8 TEST_KEYS[] = {5, 7, 8, 9, 6};
+  u8 rom[chip8::MAX_ROM_SIZE];
+  State state;
+  assert(chip8::load_rom(state, rom, read_rom(path, rom)));
+
+  u32 draws = 0;
+  u32 waits = 0;
+  u8 next_key = 0;
+  for(u32 iteration = 0; iteration < 100000U; iteration++) {
+    if(state.waiting_register < chip8::KEY_COUNT) {
+      chip8::update_keys(state, 0);
+      chip8::update_keys(
+          state, (u16) 1U << TEST_KEYS[next_key++ % sizeof(TEST_KEYS)]);
+    } else {
+      chip8::update_keys(state, 0);
+    }
+
+    const u16 pc = state.pc;
+    const u16 current_opcode =
+        pc <= chip8::MEMORY_SIZE - 2U
+            ? ((u16) state.memory[pc] << 8) | state.memory[pc + 1U]
+            : 0;
+    const StepResult result =
+        chip8::step(state, (u8) (iteration * 73U + 19U));
+    if(result == StepResult::DRAW) {
+      draws++;
+    } else if(result == StepResult::WAITING_KEY) {
+      waits++;
+    } else if(result != StepResult::OK) {
+      fprintf(stderr,
+              "CHIP-8 ROM failed: %s pc=%03X opcode=%04X result=%u\n",
+              path, (unsigned) pc, (unsigned) current_opcode,
+              (unsigned) result);
+      assert(false);
+    }
+    if(iteration % 12U == 0) chip8::tick_timers(state);
+  }
+  assert(draws != 0);
+  assert((waits != 0) == expects_key_wait);
+}
+
 } // namespace
 
-int main(void) {
+int main(int argc, char** argv) {
   test_reset_and_rom();
   test_arithmetic_and_skips();
   test_control_flow_and_stack();
@@ -272,6 +335,12 @@ int main(void) {
   test_draw_collision_and_clear();
   test_keys_random_and_timers();
   test_invalid_and_bounds();
+  assert(argc == 1 || argc == 4);
+  if(argc == 4) {
+    smoke_rom(argv[1], false);
+    smoke_rom(argv[2], true);
+    smoke_rom(argv[3], false);
+  }
   printf("chip8_self_test: ok\n");
   return 0;
 }

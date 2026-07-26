@@ -15,7 +15,7 @@ extern  i8    cir_buff_get(usize index);
 extern  i32   cir_buff_read(void);
 
 namespace kbd {
-  inline  bool    push(i8 key_code) { return cir_buff_write(key_code); }
+  extern  bool    push(i8 key_code);
   inline  i32     last_key(void)    { return  cir_buff_get(0); }
   inline  i32     get_key(void)     { return  cir_buff_read(); }
 

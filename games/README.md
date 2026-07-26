@@ -27,17 +27,22 @@ The console uses C5 type magic `C1`; those bytes are not added to the ROM.
 Screen compatibility, the full 0-F key map and game aliases are documented in
 [`MK61s-mini-CHIP8.md`](../doc/src/MK61s-mini-CHIP8.md).
 
-Two ready-to-run examples are included:
+Three ready-to-run examples are included:
 
 - `fuse.ch8` — **Fuse** by John Earnest, 424 bytes. Use CHIP-8 keys
   `5/7/8/9` to move and `6` to place a piece.
 - `br8kout.ch8` — **Br8kout** by SharpenedSpoon, 199 bytes. Use CHIP-8 keys
   `7` and `9` to move the paddle.
+- `space-invaders.ch8` — **Space Invaders v0.9** by David Winter, 1283 bytes.
+  Use `4/6` (or `Left/Right`) to move and `5` (or `OK`) to start and fire.
 
-Both ROMs come from the
+Fuse and Br8kout come from the
 [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), whose
 contents are released under
-[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Their archive
-SHA-1 values are respectively
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Space Invaders
+comes from the
+[Zophar public-domain CHIP-8 Games Pack](https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html).
+Their SHA-1 values are respectively
 `0cd895dc3d489d0e40656218900a04310e95f560` and
-`31fc1c53cc610a9f4b9c5705c5a0f33fc028d123`.
+`31fc1c53cc610a9f4b9c5705c5a0f33fc028d123`, while Space Invaders is
+`f100197f0f2f05b4f3c8c31ab9c2c3930d3e9571`.

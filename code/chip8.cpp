@@ -44,7 +44,10 @@ static int first_key(u16 mask) {
 }
 
 static bool valid_pc(u16 pc) {
-  return pc <= MEMORY_SIZE - 2U && (pc & 1U) == 0;
+  // CHIP-8 addresses byte-addressed memory. Most ROMs keep instructions
+  // aligned, but alignment is not part of the VM contract: for example,
+  // Br8kout deliberately starts its main routine at 0x29F.
+  return pc <= MEMORY_SIZE - 2U;
 }
 
 static void set_pixel(State& state, u8 x, u8 y, bool& collision) {

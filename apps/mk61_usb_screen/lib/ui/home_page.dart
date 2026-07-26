@@ -27,6 +27,8 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
   final FocusNode _terminalFocus = FocusNode(debugLabel: 'USB terminal input');
   final TextEditingController _terminalInput = TextEditingController();
   final ScrollController _terminalScroll = ScrollController();
+  final Map<PhysicalKeyboardKey, int> _hostPressedKeys =
+      <PhysicalKeyboardKey, int>{};
   DisplayPaletteChoice _palette = DisplayPaletteChoice.green;
   bool _showGrid = false;
   bool _terminalExpanded = false;
@@ -72,6 +74,7 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
   }
 
   void _releasePhysicalKeys() {
+    _hostPressedKeys.clear();
     controller.releaseAllKeys();
   }
 
@@ -102,14 +105,15 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
         event.logicalKey == LogicalKeyboardKey.arrowUp ||
         event.logicalKey == LogicalKeyboardKey.arrowDown;
 
-    // Обработанное здесь событие не должно попадать в обход фокуса Flutter или
-    // сочетания ScrollView. Даже без подключения поглощаем и нажатие, и отпускание
-    // стрелок, чтобы при скрытой панели терминала они не становились навигацией приложения.
     if (event is KeyUpEvent) {
-      return isArrow ? KeyEventResult.handled : KeyEventResult.ignored;
+      final scanCode = _hostPressedKeys.remove(event.physicalKey);
+      if (scanCode != null) {
+        controller.keyUp(scanCode);
+        return KeyEventResult.handled;
+      }
     }
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
+      return isArrow ? KeyEventResult.handled : KeyEventResult.ignored;
     }
 
     final hardwareKeyboard = HardwareKeyboard.instance;
@@ -122,18 +126,35 @@ class _UsbScreenHomePageState extends State<UsbScreenHomePage>
       event.physicalKey,
       shift: hardwareKeyboard.isShiftPressed,
     );
+    List<String>? actions;
     if (englishCharacter != null) {
-      final actions = HostKeyboardMapping.actionsForCharacter(englishCharacter);
-      if (actions != null && controller.attached) {
-        controller.tapActions(actions);
+      actions = HostKeyboardMapping.actionsForCharacter(englishCharacter);
+    } else if (action != null) {
+      actions = [action];
+    }
+    if (actions == null) return KeyEventResult.ignored;
+
+    // Одной физической клавише MK61 соответствует настоящий переход down/up.
+    // Интерпретация удержания и короткого нажатия остаётся на стороне firmware.
+    if (actions.length == 1) {
+      if (event is KeyRepeatEvent || !controller.attached) {
+        return KeyEventResult.handled;
       }
+      final scanCode = controller.keyboard.scanCodeFor(actions.single);
+      if (scanCode == null ||
+          _hostPressedKeys.containsKey(event.physicalKey) ||
+          controller.pressedKeys.contains(scanCode)) {
+        return KeyEventResult.handled;
+      }
+      _hostPressedKeys[event.physicalKey] = scanCode;
+      controller.keyDown(scanCode);
       return KeyEventResult.handled;
     }
-    if (action != null) {
-      if (controller.attached) controller.tapActions([action]);
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
+
+    // У букв и части знаков нет отдельной клавиши матрицы: для них сохраняется
+    // штатная последовательность K/F + многонажатийный ввод.
+    if (controller.attached) controller.tapActions(actions);
+    return KeyEventResult.handled;
   }
 
   void _scrollTerminal() {

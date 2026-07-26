@@ -152,16 +152,21 @@ void main() {
     expect(controller.tappedActions.last, ['alpha', 'digit0']);
 
     expect(await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowLeft), isTrue);
+    expect(controller.keyDowns, [controller.keyboard.scanCodeFor('left')]);
     expect(await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowLeft), isTrue);
-    expect(controller.tappedActions.last, ['left']);
+    expect(controller.keyUps, [controller.keyboard.scanCodeFor('left')]);
 
     expect(await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowUp), isTrue);
     expect(await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowUp), isTrue);
-    expect(controller.tappedActions.last, ['up']);
 
     expect(await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowDown), isTrue);
     expect(await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowDown), isTrue);
-    expect(controller.tappedActions.last, ['down']);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.digit5);
+    expect(controller.keyDowns.last, controller.keyboard.scanCodeFor('digit5'));
+    expect(controller.keyUps, hasLength(3));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.digit5);
+    expect(controller.keyUps.last, controller.keyboard.scanCodeFor('digit5'));
 
     await tester.tap(find.byKey(const ValueKey('terminal-toggle')));
     await _finishDrawerAnimation(tester);
@@ -174,7 +179,7 @@ void main() {
     );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.keyB, character: 'b');
-    expect(controller.tappedActions, hasLength(6));
+    expect(controller.tappedActions, hasLength(3));
 
     await tester.enterText(
       find.byKey(const ValueKey('terminal-input')),

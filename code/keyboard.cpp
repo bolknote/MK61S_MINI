@@ -126,6 +126,14 @@ void 	check_hold_key(void) {
 
 namespace kbd {
 
+bool push(i8 key_code) {
+  if(!cir_buff_write(key_code)) return false;
+  if(key_code >= 0 && key_code < (i8) KEY_RELEASE_MASK) {
+    immediate_presses.note((i32) key_code);
+  }
+  return true;
+}
+
 i32   get_key(key_state state) {
   i32 key_code;
   while(!cir_buff::IsEmpty()) {
@@ -185,6 +193,7 @@ void set_external_key_pressed(i32 key_code, bool pressed) {
 
   if(pressed) {
     if(!external_keys.press(key_code, millis(), KEY_HOLD_MS)) return;
+    immediate_presses.note(key_code);
     entropy_pool::note_key((u8) key_code, micros());
     sound_scaled(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS,
                  library_mk61::sound_volume(), KEY_CLICK_VOLUME_PERCENT);

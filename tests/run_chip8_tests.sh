@@ -14,4 +14,5 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/tests/chip8_self_test.cpp" \
   "$root/code/chip8.cpp" \
   -o "$out"
-"$out"
+"$out" "$root/games/br8kout.ch8" "$root/games/fuse.ch8" \
+  "$root/games/space-invaders.ch8"

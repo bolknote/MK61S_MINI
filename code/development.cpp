@@ -775,8 +775,18 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
 static void show_message(const char* en0, const char* ru0, const char* en1 = "", const char* ru1 = "") {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
-  print_localized_line(0, en0, ru0);
-  print_localized_line(1, en1, ru1);
+  if(library_mk61::language_is_ru()) {
+    // Both rows must share one LCD1602 CGRAM map. Loading the rows
+    // independently can replace custom Cyrillic glyphs used by row 0.
+    lcd_ru::print_lines(ru0, ru1);
+  } else {
+    print_line(0, en0);
+    print_line(1, en1);
+  }
+}
+
+static void show_graphics_unavailable() {
+  show_message("Graphics", "Графика", "unavailable", "недоступна");
 }
 
 static void draw_font_preview_header(const program_store::Entry& entry, const fmk::Face& face) {
@@ -900,8 +910,9 @@ static bool view_entry(const program_store::Entry& entry) {
       ru = "Ошибка экрана";
     } else if(result ==
               loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
-      en = "Not supported";
-      ru = "Не поддерживается";
+      show_graphics_unavailable();
+      (void) wait_explorer_key(false);
+      return false;
     }
     show_message(en, ru, entry.name, entry.name);
     (void) wait_explorer_key(false);
@@ -1757,8 +1768,7 @@ static bool run_entry(const program_store::Entry& entry) {
   if(!ok) {
     if(file_handler &&
        file_result == loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
-      show_message("Not supported", "Не поддерживается",
-                   entry.name, entry.name);
+      show_graphics_unavailable();
     } else {
       show_message("Run error", "Ошибка запуска", entry.name, entry.name);
     }

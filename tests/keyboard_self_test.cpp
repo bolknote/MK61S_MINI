@@ -66,6 +66,13 @@ void test_press_edge_latch_maps_rows_and_collapses_duplicates(void) {
   keyboard_core::PressEdgeLatch latch;
   latch.reset();
 
+  latch.note(7);
+  latch.note(7);
+  assert(latch.take(7));
+  assert(!latch.take(7));
+  latch.note(-1);
+  latch.note((i32) keyboard_core::KEY_COUNT);
+
   // Верхняя физическая строка: Г = 04, Р = 0E.
   latch.noteRow(4, 0x05);
   latch.noteRow(4, 0x01);
