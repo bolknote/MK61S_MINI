@@ -1,0 +1,73 @@
+cmake_minimum_required(VERSION 3.21)
+
+list(APPEND CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
+  MK61_ARM_TOOLCHAIN_BIN)
+
+if(NOT DEFINED MK61_ARM_TOOLCHAIN_BIN OR
+   NOT IS_DIRECTORY "${MK61_ARM_TOOLCHAIN_BIN}")
+  message(FATAL_ERROR
+    "MK61_ARM_TOOLCHAIN_BIN must point to the GNU Arm bin directory")
+endif()
+
+if(CMAKE_HOST_WIN32)
+  set(_mk61_tool_suffix ".exe")
+else()
+  set(_mk61_tool_suffix "")
+endif()
+
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+set(CMAKE_C_COMPILER
+  "${MK61_ARM_TOOLCHAIN_BIN}/arm-none-eabi-gcc${_mk61_tool_suffix}"
+  CACHE FILEPATH "" FORCE)
+set(CMAKE_CXX_COMPILER
+  "${MK61_ARM_TOOLCHAIN_BIN}/arm-none-eabi-g++${_mk61_tool_suffix}"
+  CACHE FILEPATH "" FORCE)
+set(CMAKE_ASM_COMPILER
+  "${MK61_ARM_TOOLCHAIN_BIN}/arm-none-eabi-gcc${_mk61_tool_suffix}"
+  CACHE FILEPATH "" FORCE)
+set(CMAKE_AR
+  "${MK61_ARM_TOOLCHAIN_BIN}/arm-none-eabi-ar${_mk61_tool_suffix}"
+  CACHE FILEPATH "" FORCE)
+set(CMAKE_RANLIB
+  "${MK61_ARM_TOOLCHAIN_BIN}/arm-none-eabi-ranlib${_mk61_tool_suffix}"
+  CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJCOPY
+  "${MK61_ARM_TOOLCHAIN_BIN}/arm-none-eabi-objcopy${_mk61_tool_suffix}"
+  CACHE FILEPATH "" FORCE)
+set(CMAKE_SIZE
+  "${MK61_ARM_TOOLCHAIN_BIN}/arm-none-eabi-size${_mk61_tool_suffix}"
+  CACHE FILEPATH "" FORCE)
+
+foreach(_mk61_required_tool
+    CMAKE_C_COMPILER
+    CMAKE_CXX_COMPILER
+    CMAKE_AR
+    CMAKE_RANLIB
+    CMAKE_OBJCOPY
+    CMAKE_SIZE)
+  if(NOT EXISTS "${${_mk61_required_tool}}")
+    message(FATAL_ERROR
+      "GNU Arm tool not found: ${${_mk61_required_tool}}")
+  endif()
+endforeach()
+
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+
+set(CMAKE_EXECUTABLE_SUFFIX ".elf")
+set(CMAKE_EXECUTABLE_SUFFIX_C ".elf")
+set(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
+set(CMAKE_EXECUTABLE_SUFFIX_ASM ".elf")
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)

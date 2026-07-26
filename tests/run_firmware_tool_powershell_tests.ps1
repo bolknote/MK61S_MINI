@@ -5,8 +5,8 @@ $ErrorActionPreference = 'Stop'
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $tool = Join-Path $root 'tools/.mk61-firmware/mk61-firmware.ps1'
-$nativeWorker = Join-Path $root `
-    'tools/.mk61-firmware/build-f401-native.ps1'
+$gccBuilder = Join-Path $root `
+    'tools/.mk61-gcc/build.ps1'
 $systemAppsBuilder = Join-Path $root `
     'system_apps/.tool/build.ps1'
 $launcher = Join-Path $root 'tools/mk61-firmware.cmd'
@@ -24,7 +24,10 @@ function Invoke-Tool {
 }
 
 Assert-True (Test-Path -LiteralPath $tool -PathType Leaf) 'PowerShell firmware tool is missing'
-Assert-True (Test-Path -LiteralPath $nativeWorker -PathType Leaf) 'native F401 worker is missing'
+Assert-True (Test-Path -LiteralPath $gccBuilder -PathType Leaf) 'direct GCC F401 builder is missing'
+Assert-True (-not (Test-Path -LiteralPath (
+    Join-Path $root 'tools/.mk61-firmware/build-f401-native.ps1'))) `
+    'obsolete Arduino-CLI F401 worker is still present'
 Assert-True (Test-Path -LiteralPath $systemAppsBuilder -PathType Leaf) 'standalone System APP builder is missing'
 Assert-True (Test-Path -LiteralPath $launcher -PathType Leaf) 'Windows command launcher is missing'
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'tools/mk61-firmware'))) 'legacy shell entry point is still exposed'
@@ -33,7 +36,7 @@ $launcherText = [IO.File]::ReadAllText($launcher)
 Assert-True ($launcherText -match '\A:; exec "\$\(dirname "\$0"\)/\.mk61-firmware/mk61-firmware\.sh" "\$@"') 'launcher is not a shell/batch polyglot'
 Assert-True ($launcherText -match '(?i)pwsh\.exe -NoLogo -NoProfile -ExecutionPolicy Bypass') 'launcher options differ'
 Assert-True ($launcherText -match '%~dp0\.mk61-firmware\\mk61-firmware\.ps1') 'launcher does not use its own directory'
-foreach ($powerShellFile in @($tool, $nativeWorker, $systemAppsBuilder)) {
+foreach ($powerShellFile in @($tool, $gccBuilder, $systemAppsBuilder)) {
     $tokens = $null
     $parseErrors = $null
     [void][Management.Automation.Language.Parser]::ParseFile(
@@ -254,18 +257,21 @@ try {
         $env:MK61_APP_MANIFESTS = $null
         Assert-True (-not (Test-AnyAppsRequested)) 'empty F401 build unexpectedly requests APP tools'
         Assert-True (-not (Test-CustomAppsRequested)) 'empty F401 build unexpectedly requests custom APP tools'
-        Assert-True (Test-F401HostToolsReady) 'native F401 tools were not recognized without Bash'
+        function Invoke-F401GccPreflight {
+            return [pscustomobject]@{ ExitCode = 0; Output = 'ready' }
+        }
+        Assert-True (Test-F401HostToolsReady) 'direct GCC F401 tools were not recognized without Bash'
         $env:MK61_APP_MANIFESTS = 'C:\apps\demo.mk61'
         Assert-True (Test-AnyAppsRequested) 'custom APP manifest did not request APP tools'
         Assert-True (Test-CustomAppsRequested) 'custom APP manifest was not recognized'
     } finally {
         $env:MK61_APP_MANIFESTS = $oldManifests
     }
-    $script:NativeBuildCalls = 0
+    $script:GccBuildCalls = 0
     $script:CustomBuildCalls = 0
-    function Invoke-F401NativeBundleBuild {
+    function Invoke-F401GccBundleBuild {
         param([string]$Profile)
-        $script:NativeBuildCalls++
+        $script:GccBuildCalls++
         return $Profile -eq 'mini-v3-a00'
     }
     function Invoke-F401CustomBundleBuild {
@@ -278,14 +284,14 @@ try {
         Assert-True (Invoke-F401BundleBuild 'mini-v3-a00') `
             'ordinary F401 route failed'
         Assert-True (
-            $script:NativeBuildCalls -eq 1 -and
+            $script:GccBuildCalls -eq 1 -and
             $script:CustomBuildCalls -eq 0) `
-            'ordinary F401 build did not use the native PowerShell route'
+            'ordinary F401 build did not use the direct GCC route'
         $env:MK61_APP_MANIFESTS = 'C:\apps\demo.mk61'
         Assert-True (Invoke-F401BundleBuild 'mini-v3-a00') `
             'custom APP F401 route failed'
         Assert-True (
-            $script:NativeBuildCalls -eq 1 -and
+            $script:GccBuildCalls -eq 1 -and
             $script:CustomBuildCalls -eq 1) `
             'custom APP build did not use the manifest/Bash route'
     } finally {

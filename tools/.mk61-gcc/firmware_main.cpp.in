@@ -1,0 +1,9 @@
+// Direct-GCC translation unit for the Arduino sketch.
+//
+// The two declarations below are the only prototypes that the Arduino .ino
+// preprocessor adds before their first use.  Keeping them in this generated
+// wrapper leaves the Arduino IDE source tabs untouched.
+void mk61_display_refresh(void);
+void idle_main_process(void);
+
+#include "mk61s-M.ino"

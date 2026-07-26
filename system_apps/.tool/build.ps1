@@ -210,17 +210,156 @@ function Get-CompileEntry {
     param([object[]]$Entries, [string]$SourceName)
     foreach ($entry in $Entries) {
         if ([IO.Path]::GetFileName([string]$entry.file) -eq $SourceName) {
-            if ($null -eq $entry.arguments -or
-                $entry.arguments.Count -eq 0) {
+            $argumentsProperty = $entry.PSObject.Properties['arguments']
+            $commandProperty = $entry.PSObject.Properties['command']
+            $hasArguments = $null -ne $argumentsProperty -and
+                $null -ne $argumentsProperty.Value -and
+                $argumentsProperty.Value.Count -gt 0
+            $hasCommand = $null -ne $commandProperty -and
+                -not [string]::IsNullOrWhiteSpace(
+                    [string]$commandProperty.Value)
+            if (-not $hasArguments -and -not $hasCommand) {
                 Stop-SystemAppsBuild (
-                    "compile database entry for $SourceName has no " +
-                    'arguments array')
+                    "compile database entry for $SourceName has neither " +
+                    'arguments nor command')
             }
             return $entry
         }
     }
     Stop-SystemAppsBuild (
         "compile database has no $SourceName entry")
+}
+
+function ConvertFrom-PosixCommandLine {
+    param([Parameter(Mandatory = $true)][string]$Command)
+
+    $arguments = New-Object 'System.Collections.Generic.List[string]'
+    $current = New-Object Text.StringBuilder
+    $state = 'plain'
+    $started = $false
+    for ($index = 0; $index -lt $Command.Length; $index++) {
+        $character = $Command[$index]
+        if ($state -eq 'single') {
+            if ($character -eq "'") {
+                $state = 'plain'
+            } else {
+                [void]$current.Append($character)
+            }
+            continue
+        }
+        if ($state -eq 'double') {
+            if ($character -eq '"') {
+                $state = 'plain'
+            } elseif ($character -eq '\') {
+                $index++
+                if ($index -ge $Command.Length) {
+                    Stop-SystemAppsBuild (
+                        'compile command ends with an escape character')
+                }
+                [void]$current.Append($Command[$index])
+            } else {
+                [void]$current.Append($character)
+            }
+            continue
+        }
+        if ([char]::IsWhiteSpace($character)) {
+            if ($started) {
+                $arguments.Add($current.ToString())
+                [void]$current.Clear()
+                $started = $false
+            }
+        } elseif ($character -eq "'") {
+            $state = 'single'
+            $started = $true
+        } elseif ($character -eq '"') {
+            $state = 'double'
+            $started = $true
+        } elseif ($character -eq '\') {
+            $index++
+            if ($index -ge $Command.Length) {
+                Stop-SystemAppsBuild (
+                    'compile command ends with an escape character')
+            }
+            [void]$current.Append($Command[$index])
+            $started = $true
+        } else {
+            [void]$current.Append($character)
+            $started = $true
+        }
+    }
+    if ($state -ne 'plain') {
+        Stop-SystemAppsBuild 'compile command contains an unterminated quote'
+    }
+    if ($started) {
+        $arguments.Add($current.ToString())
+    }
+    return $arguments.ToArray()
+}
+
+function ConvertFrom-WindowsCommandLine {
+    param([Parameter(Mandatory = $true)][string]$Command)
+
+    if ($null -eq ('Mk61.NativeCommandLine' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+
+namespace Mk61 {
+    public static class NativeCommandLine {
+        [DllImport("shell32.dll", SetLastError = true)]
+        public static extern IntPtr CommandLineToArgvW(
+            [MarshalAs(UnmanagedType.LPWStr)] string commandLine,
+            out int argumentCount);
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr LocalFree(IntPtr memory);
+    }
+}
+'@
+    }
+
+    $argumentCount = 0
+    $memory = [Mk61.NativeCommandLine]::CommandLineToArgvW(
+        $Command, [ref]$argumentCount)
+    if ($memory -eq [IntPtr]::Zero) {
+        Stop-SystemAppsBuild 'cannot parse the Windows compile command'
+    }
+    try {
+        $arguments = New-Object 'System.Collections.Generic.List[string]'
+        for ($index = 0; $index -lt $argumentCount; $index++) {
+            $pointer = [Runtime.InteropServices.Marshal]::ReadIntPtr(
+                $memory, $index * [IntPtr]::Size)
+            $arguments.Add(
+                [Runtime.InteropServices.Marshal]::PtrToStringUni($pointer))
+        }
+        return $arguments.ToArray()
+    } finally {
+        [void][Mk61.NativeCommandLine]::LocalFree($memory)
+    }
+}
+
+function Get-CompileArguments {
+    param([pscustomobject]$Entry, [string]$SourceName)
+
+    $argumentsProperty = $Entry.PSObject.Properties['arguments']
+    $commandProperty = $Entry.PSObject.Properties['command']
+    if ($null -ne $argumentsProperty -and
+        $null -ne $argumentsProperty.Value -and
+        $argumentsProperty.Value.Count -gt 0) {
+        return [string[]]@($argumentsProperty.Value |
+            ForEach-Object { [string]$_ })
+    }
+    if ($null -eq $commandProperty -or
+        [string]::IsNullOrWhiteSpace([string]$commandProperty.Value)) {
+        Stop-SystemAppsBuild (
+            "compile database entry for $SourceName has no command")
+    }
+    if ($env:OS -eq 'Windows_NT') {
+        return [string[]]@(ConvertFrom-WindowsCommandLine (
+            [string]$commandProperty.Value))
+    }
+    return [string[]]@(ConvertFrom-PosixCommandLine (
+        [string]$commandProperty.Value))
 }
 
 function Test-SamePath {
@@ -293,8 +432,8 @@ function Build-SystemApp {
     param([pscustomobject]$App, [object[]]$CompileEntries)
 
     $compileEntry = Get-CompileEntry $CompileEntries $App.Template
-    [string[]]$template = @($compileEntry.arguments |
-        ForEach-Object { [string]$_ })
+    [string[]]$template = Get-CompileArguments `
+        $compileEntry $App.Template
     $entryCompiler = [IO.Path]::GetFullPath($template[0])
     if (-not $entryCompiler.Equals(
         $script:Compiler, [StringComparison]::OrdinalIgnoreCase)) {
@@ -315,12 +454,16 @@ function Build-SystemApp {
     $compileArguments = New-Object 'System.Collections.Generic.List[string]'
     for ($index = 1; $index -lt $template.Count; $index++) {
         $argument = $template[$index]
-        if ($argument -eq '-o') {
+        if ($argument -eq '-o' -or $argument -eq '-MF' -or
+            $argument -eq '-MT' -or $argument -eq '-MQ' -or
+            $argument -eq '-MJ') {
             $index++
             continue
         }
         if ((Test-SamePath $argument ([string]$compileEntry.file)) -or
-            $argument -eq '-MMD' -or $argument -eq '-flto') {
+            $argument -eq '-MMD' -or $argument -eq '-MD' -or
+            $argument -eq '-MP' -or $argument -eq '-MG' -or
+            $argument -eq '-flto') {
             continue
         }
         $compileArguments.Add($argument)
@@ -403,7 +546,7 @@ try {
     $BuildPath = [IO.Path]::GetFullPath($BuildPath)
     if (-not [IO.Directory]::Exists($BuildPath)) {
         Stop-SystemAppsBuild (
-            "Arduino build directory not found: $BuildPath")
+            "resident build directory not found: $BuildPath")
     }
     if ([string]::IsNullOrWhiteSpace($CompileCommands)) {
         $CompileCommands = Join-Path $BuildPath 'compile_commands.json'
@@ -425,7 +568,7 @@ try {
     Test-RequiredFile $script:LinkerScript 'MK61 module linker script'
     Test-RequiredFile $script:ResidentElf 'resident ELF'
     Test-RequiredFile $script:ResidentBin 'resident BIN'
-    Test-RequiredFile $CompileCommands 'Arduino compile database'
+    Test-RequiredFile $CompileCommands 'resident compile database'
 
     [object[]]$compileEntries = @(
         Get-Content -LiteralPath $CompileCommands -Raw | ConvertFrom-Json)
@@ -434,8 +577,8 @@ try {
     if ($selectedApps.Count -gt 0) {
         $firstEntry = Get-CompileEntry $compileEntries `
             $selectedApps[0].Template
-        $firstArguments = @($firstEntry.arguments |
-            ForEach-Object { [string]$_ })
+        $firstArguments = Get-CompileArguments `
+            $firstEntry $selectedApps[0].Template
         $script:Compiler = [IO.Path]::GetFullPath($firstArguments[0])
         Test-RequiredFile $script:Compiler 'ARM C++ compiler'
         $script:Objcopy = Get-RelatedTool $script:Compiler 'objcopy'

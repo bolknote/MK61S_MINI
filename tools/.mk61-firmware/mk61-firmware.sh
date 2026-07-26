@@ -1535,49 +1535,84 @@ f401_system_apps_enabled() {
     [ "$ENABLE_WBMP_VIEWER" -eq 1 ] || [ "$ENABLE_CHIP8" -eq 1 ]
 }
 
-f401_any_apps_requested() {
-  f401_system_apps_enabled || [ -n "${MK61_APP_MANIFESTS:-}" ]
+f401_gcc_arguments() {
+  local requested_profile=${1:-$PROFILE}
+  printf '%s\n' \
+    -Profile "$requested_profile" \
+    -Focal "$ENABLE_FOCAL" \
+    -Basic "$ENABLE_TINYBASIC" \
+    -Wbmp "$ENABLE_WBMP_VIEWER" \
+    -Chip8 "$ENABLE_CHIP8" \
+    -UsbScreen "$ENABLE_USB_SCREEN" \
+    -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
+    -UserExplorer "$ENABLE_USER_EXPLORER" \
+    -MathBackend "$ENABLE_CORE_MATH"
+}
+
+f401_gcc_preflight() {
+  local arguments=()
+  while IFS= read -r argument; do arguments+=("$argument"); done \
+    < <(f401_gcc_arguments "$PROFILE")
+  "$PROJECT_ROOT/tools/build-gcc.cmd" "${arguments[@]}" -Check
 }
 
 f401_host_tools_ready() {
   [ "$MCU" != f401 ] || {
-    [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ] &&
-      { ! f401_any_apps_requested || command_available c++; }
+    if [ -n "${MK61_APP_MANIFESTS:-}" ]; then
+      [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ] &&
+        command_available c++
+    else
+      [ -x "$PROJECT_ROOT/tools/build-gcc.cmd" ] &&
+        command_available pwsh &&
+        f401_gcc_preflight >/dev/null 2>&1
+    fi
   }
 }
 
 build_dependencies_ready() {
+  if [ "$MCU" = f401 ] && [ -z "${MK61_APP_MANIFESTS:-}" ]; then
+    f401_host_tools_ready
+    return
+  fi
   arduino_core_ready && arduino_libraries_ready && f401_host_tools_ready
 }
 
 dependency_report() {
-  if command_available "$ARDUINO_CLI"; then
-    printf 'arduino-cli: %s\n' "$("$ARDUINO_CLI" version 2>/dev/null | head -n 1)"
-  else
-    printf 'arduino-cli: НЕ НАЙДЕН\n'
-  fi
-  if arduino_core_ready; then
-    printf 'STM32 Arduino Core: %s\n' "$STM32_CORE_VERSION"
-  else
-    printf 'STM32 Arduino Core: нужен %s\n' "$STM32_CORE_VERSION"
-  fi
-  if arduino_libraries_ready; then
-    printf 'LiquidCrystal: 1.0.7\nSTM32duino RTC: 1.9.0\n'
-  else
-    printf 'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0\n'
-  fi
-  if [ "$MCU" = f401 ]; then
-    if [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ]; then
-      printf 'F401 bundle builder: найден\n'
+  if [ "$MCU" = f401 ] && [ -z "${MK61_APP_MANIFESTS:-}" ]; then
+    if f401_gcc_preflight 2>&1; then
+      printf 'arduino-cli: для сборки F401 не нужен\n'
     else
-      printf 'F401 bundle builder: НЕ НАЙДЕН\n'
+      printf 'F401 direct GCC backend: НЕ ГОТОВ\n'
     fi
-    if ! f401_any_apps_requested; then
-      printf 'Host C++17 compiler: не нужен (APP не запрошены)\n'
-    elif command_available c++; then
-      printf 'Host C++17 compiler: %s\n' "$(command -v c++ 2>/dev/null || printf '%s' c++)"
+  else
+    if command_available "$ARDUINO_CLI"; then
+      printf 'arduino-cli: %s\n' \
+        "$("$ARDUINO_CLI" version 2>/dev/null | head -n 1)"
     else
-      printf 'Host C++17 compiler: НЕ НАЙДЕН (нужен для упаковщика APP)\n'
+      printf 'arduino-cli: НЕ НАЙДЕН\n'
+    fi
+    if arduino_core_ready; then
+      printf 'STM32 Arduino Core: %s\n' "$STM32_CORE_VERSION"
+    else
+      printf 'STM32 Arduino Core: нужен %s\n' "$STM32_CORE_VERSION"
+    fi
+    if arduino_libraries_ready; then
+      printf 'LiquidCrystal: 1.0.7\nSTM32duino RTC: 1.9.0\n'
+    else
+      printf 'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0\n'
+    fi
+    if [ "$MCU" = f401 ]; then
+      if [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ]; then
+        printf 'F401 custom APP/ZX0 builder: найден\n'
+      else
+        printf 'F401 custom APP/ZX0 builder: НЕ НАЙДЕН\n'
+      fi
+      if command_available c++; then
+        printf 'Host C++17 compiler: %s\n' \
+          "$(command -v c++ 2>/dev/null || printf '%s' c++)"
+      else
+        printf 'Host C++17 compiler: НЕ НАЙДЕН (нужен для custom APP/ZX0)\n'
+      fi
     fi
   fi
   if locate_dfu_util; then
@@ -1857,6 +1892,16 @@ prepare_and_compile_f411_worker() {
 
 prepare_and_compile_f401_worker() {
   local profile=$1
+  if [ -z "${MK61_APP_MANIFESTS:-}" ]; then
+    local arguments=()
+    while IFS= read -r argument; do arguments+=("$argument"); done \
+      < <(f401_gcc_arguments "$profile")
+    "$PROJECT_ROOT/tools/build-gcc.cmd" "${arguments[@]}" \
+      -BuildRoot "$BUILD_ROOT/f401-gcc" \
+      -OutputDirectory "$OUTPUT_DIR"
+    return
+  fi
+
   env \
     MK61_ARDUINO_CLI="$ARDUINO_CLI" \
     MK61_ENABLE_FOCAL="$ENABLE_FOCAL" \
@@ -1870,7 +1915,7 @@ prepare_and_compile_f401_worker() {
     "$PROJECT_ROOT/tools/build_f401_bundle.sh" \
       --profile "$profile" \
       --output-dir "$OUTPUT_DIR" \
-      --build-root "$BUILD_ROOT/f401/$profile"
+      --build-root "$BUILD_ROOT/f401-custom/$profile"
 }
 
 prepare_and_compile_worker() {

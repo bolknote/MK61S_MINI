@@ -7,9 +7,9 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $appsRoot = Join-Path $root 'system_apps'
 $launcher = Join-Path $appsRoot 'build.cmd'
 $builder = Join-Path (Join-Path $appsRoot '.tool') 'build.ps1'
-$nativeWorker = Join-Path (
-    Join-Path (Join-Path $root 'tools') '.mk61-firmware'
-) 'build-f401-native.ps1'
+$gccBuilder = Join-Path (
+    Join-Path (Join-Path $root 'tools') '.mk61-gcc'
+) 'build.ps1'
 
 function Assert-True {
     param([bool]$Condition, [string]$Message)
@@ -53,8 +53,11 @@ Assert-True (Test-Path -LiteralPath $launcher -PathType Leaf) `
     'System APP launcher is missing'
 Assert-True (Test-Path -LiteralPath $builder -PathType Leaf) `
     'System APP PowerShell builder is missing'
-Assert-True (Test-Path -LiteralPath $nativeWorker -PathType Leaf) `
-    'native F401 worker is missing'
+Assert-True (Test-Path -LiteralPath $gccBuilder -PathType Leaf) `
+    'direct GCC F401 builder is missing'
+Assert-True (-not (Test-Path -LiteralPath (
+    Join-Path $root 'tools/.mk61-firmware/build-f401-native.ps1'))) `
+    'obsolete Arduino-CLI F401 worker is still present'
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'focal_app'))) `
     'obsolete focal-only directory is still present'
 
@@ -66,7 +69,7 @@ Assert-True ($launcherText -match
     '(?i)powershell\.exe -NoLogo -NoProfile -ExecutionPolicy Bypass') `
     'Windows PowerShell fallback is missing'
 
-foreach ($file in @($builder, $nativeWorker)) {
+foreach ($file in @($builder, $gccBuilder)) {
     $tokens = $null
     $parseErrors = $null
     [void][Management.Automation.Language.Parser]::ParseFile(
@@ -130,13 +133,13 @@ Assert-True ($builderText -match 'compile_commands\.json') `
 Assert-True ($builderText -notmatch 'mk61_ide_.*\.cpp\.o') `
     'standalone builder still consumes Arduino System APP objects'
 
-$workerText = [IO.File]::ReadAllText($nativeWorker)
-Assert-True ($workerText -match 'system_apps') `
-    'native F401 worker does not call the standalone System APP builder'
-Assert-True ($workerText.Contains("'-Chip8', `$Chip8")) `
-    'native F401 worker does not forward the CHIP-8 selection'
-Assert-True ($workerText -notmatch 'mk61-app-postbuild') `
-    'native F401 worker still uses Arduino APP post-build objects'
+$gccText = [IO.File]::ReadAllText($gccBuilder)
+Assert-True ($gccText -match 'system_apps/\.tool/build\.ps1') `
+    'direct GCC builder does not call the standalone System APP builder'
+Assert-True ($gccText -match '"-DMK61_ENABLE_CHIP8=\$Chip8"') `
+    'direct GCC builder does not forward the CHIP-8 selection'
+Assert-True ($gccText -notmatch 'mk61-app-postbuild') `
+    'direct GCC builder still uses Arduino APP post-build objects'
 
 $integrationBuild = [Environment]::GetEnvironmentVariable(
     'MK61_SYSTEM_APPS_BUILD_PATH')

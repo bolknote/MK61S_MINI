@@ -189,21 +189,23 @@ LCD1602 A00/A02 их можно включить только вместе с US
 на Linux. Если ничего не найдено, меню просит полный путь и сохраняет его в том же
 конфиге.
 
-Для воспроизводимой сборки нужны `arduino-cli`, STM32 Arduino Core `2.12.0`,
-`LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`. Их состояние видно в пункте
-«Проверить зависимости». Пункт «Установить Arduino-зависимости» устанавливает
-только Arduino Core и эти две библиотеки; сам `arduino-cli` и TUI-утилиты он не
-ставит.
-На Windows дополнительно требуется STM32CubeProgrammer: `arduino-cli upload`
-запускает его через штатный recipe STM32 Core. На macOS/Linux загрузка напрямую
-выполняется утилитой `dfu-util`, входящей в пакет STM32 Tools.
-PowerShell-порт на Windows собирает штатные `FOCAL.APP`, `BASIC.APP`,
-`WBMP.APP` и `CHIP8.APP` непосредственно ARM-компилятором из STM32 Core,
-поэтому для обычного F401-комплекта Bash и отдельный host-компилятор C++ не
-нужны. Они требуются только при заданном `MK61_APP_MANIFESTS`, то есть для
-произвольных пользовательских APP. Shell-порт macOS/Linux для упаковки APP
-по-прежнему использует `tools/build_f401_bundle.sh` и доступный в Bash
-host-компилятор `c++` с C++17.
+Для воспроизводимой сборки нужны STM32 Arduino Core `2.12.0`,
+`LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`. Для F411 по-прежнему нужен
+`arduino-cli`. Каноническая сборка F401 на Windows и macOS/Linux выполняется
+напрямую через CMake, Ninja и GNU Arm GCC; `arduino-cli` для неё не
+запускается. На macOS/Linux дополнительно нужен `pwsh`, на Windows достаточно
+встроенного Windows PowerShell 5.1.
+
+Состояние зависимостей видно в пункте «Проверить зависимости». Пункт
+«Установить Arduino-зависимости» использует установленный `arduino-cli` только
+как установщик Core и библиотек. На Windows для DFU-загрузки пока требуются
+`arduino-cli` и STM32CubeProgrammer; на macOS/Linux загрузка выполняется
+напрямую через `dfu-util`.
+
+Оба порта `mk61-firmware` вызывают один F401-бэкенд `tools/build-gcc.cmd`.
+Bash и отдельный host-компилятор C++ нужны только при заданном
+`MK61_APP_MANIFESTS`: этот совместимый путь пока использует
+`tools/build_f401_bundle.sh` для пользовательских APP и упаковки ZX0.
 
 Есть и неинтерактивный режим:
 
@@ -243,11 +245,10 @@ host-компилятор `c++` с C++17.
 Комплект находится в
 `binary/mk61s-M-mini-v3-lcd1602-a00-f401/` и содержит прошивку `.bin` и
 включённые ключами `System/FOCAL.APP`, `System/BASIC.APP`,
-`System/WBMP.APP` и `System/CHIP8.APP`. Resident собирается с `-Os`, а каждый APP отдельно с
-`-Os -flto`. В PowerShell-порту штатные System APP создаёт общий
-`system_apps/build.cmd` через `arm-none-eabi-g++` и
+`System/WBMP.APP` и `System/CHIP8.APP`. Resident собирается с `-Os`, а каждый
+APP отдельно с `-Os -flto`. На всех поддерживаемых хостах штатные System APP
+создаёт общий `system_apps/build.cmd` через `arm-none-eabi-g++` и
 `arm-none-eabi-objcopy`; payload хранится в поддерживаемом формате `NONE`.
-Shell-порт `build_f401_bundle.sh` использует упаковку ZX0.
 Значения `MK61_ENABLE_FOCAL`, `MK61_ENABLE_TINYBASIC`,
 `MK61_ENABLE_WBMP_VIEWER` и `MK61_ENABLE_CHIP8` берутся из одноимённых
 переменных окружения; `0`
@@ -310,10 +311,48 @@ IDE-вариант использует только ARM-инструменты 
 через встроенный PowerShell. Чтобы не требовать отдельный host-компилятор,
 System APP в этом режиме хранят несжатый payload `NONE`; он поддерживается
 тем же форматом и укладывается в 20-КиБ overlay. Тот же `NONE` использует
-нативный PowerShell-путь `mk61-firmware` на Windows; shell-сборщик
-`build_f401_bundle.sh` создаёт более компактные ZX0-контейнеры.
+канонический GCC-путь `mk61-firmware` на Windows и macOS/Linux. Legacy-сборщик
+`build_f401_bundle.sh` оставлен для пользовательских manifest APP и
+ZX0-контейнеров.
 Подробная инструкция и диагностика находятся в
 [`MK61s-mini-Arduino-IDE.md`](doc/src/MK61s-mini-Arduino-IDE.md).
+
+#### Канонический F401-бэкенд: GCC без Arduino IDE и arduino-cli
+
+Для F401 resident-прошивку и согласованные с ней System APP можно собрать
+обычным GNU Arm GCC:
+
+```bat
+tools\build-gcc.cmd -Profile mini-v3-a00
+```
+
+И `mk61-firmware`, и release CI используют этот скрипт для обычной F401-сборки.
+Сам скрипт не запускает Arduino IDE или `arduino-cli`. Он вызывает CMake и Ninja,
+а те напрямую запускают `arm-none-eabi-gcc/g++` из установленного пакета STM32
+Core. От Arduino-инсталляции используются только файлы STM32 Core `2.12.0`,
+его GNU Arm toolchain и CMSIS, а также библиотеки `LiquidCrystal 1.0.7` и
+`STM32duino RTC 1.9.0`. В `PATH` дополнительно нужны CMake 3.21 или новее и
+Ninja; на Windows подходит встроенный Windows PowerShell 5.1, а на
+macOS/Linux нужен `pwsh`.
+
+По умолчанию создаются `FOCAL.APP` и `BASIC.APP`. Например, полный комплект
+для mini V3 с графикой через USB собирается так:
+
+```bat
+tools\build-gcc.cmd -Profile mini-v3-a00 -UsbScreen 1 -Wbmp 1 -Chip8 1
+```
+
+Для графических плат `classic-v2`, `classic-v3` и `40th` значение
+`-Wbmp auto` включает WBMP автоматически. Все ключи можно увидеть через
+`tools\build-gcc.cmd -Help`; `-Clean` пересоздаёт рабочий каталог профиля.
+
+Промежуточный `BuildPath` находится в `.build\gcc\<profile>` и содержит
+`resident.elf`, `resident.bin`, `resident.hex`, `resident.map` и
+`compile_commands.json` одной сборки. Готовый комплект публикуется в
+`binary\<имя-профиля>\`: resident `.bin` и включённые `System\*.APP`.
+Resident собирается с `-Os`, APP — с `-Os -flto` и payload `NONE`.
+На macOS/Linux тот же полиглотный файл запускается как
+`./tools/build-gcc.cmd`.
 
 #### Автономная ARM-сборка штатных System APP
 
@@ -334,8 +373,9 @@ system_apps/
 частей проекта разрешаются через точный resident ELF. Поэтому готовые APP
 всегда привязаны к resident BIN из той же сборки.
 
-Обычно этот инструмент автоматически вызывает Windows-порт
-`tools/mk61-firmware.cmd`. Для отдельного запуска ему нужен каталог уже
+Обычно этот внутренний компонент вызывает канонический GCC-бэкенд через
+`tools/mk61-firmware.cmd` или `tools/build-gcc.cmd`. Для отдельного
+диагностического запуска ему нужен каталог уже
 собранной resident-прошивки с `.elf`, `.bin` и
 `compile_commands.json`:
 
@@ -347,9 +387,10 @@ system_apps\build.cmd ^
 
 По умолчанию результат записывается в `system_apps\System`. Другой каталог
 задаётся через `-OutputDirectory`. Пути к `arm-none-eabi-g++`, `objcopy`, `nm`
-и `size`, точные `-D` и `-I` берутся из `compile_commands.json`; установка
-второго GCC рядом со скриптом не требуется. Заголовки WBMP- и CHIP-8-модулей
-регистрируют обработчики файлов `I1` и `C1` соответственно.
+и `size`, точные `-D` и `-I` берутся из `compile_commands.json`, созданного
+той же Arduino- или прямой CMake/GCC-сборкой; установка второго GCC рядом со
+скриптом не требуется. Заголовки WBMP- и CHIP-8-модулей регистрируют
+обработчики файлов `I1` и `C1` соответственно.
 
 Тот же процесс доступен без TUI:
 
@@ -360,11 +401,11 @@ system_apps\build.cmd ^
 ```
 
 Если метка тома недоступна хостовой ОС, точку монтирования можно задать через
-`MK61_C5_MOUNT`. Низкоуровневая команда
-`./tools/build_f401_bundle.sh --profile mini-v3-a00` остаётся для автоматизации
-только сборки; она создаёт тот же формат комплекта.
+`MK61_C5_MOUNT`. Для обычной низкоуровневой сборки используйте
+`./tools/build-gcc.cmd -Profile mini-v3-a00`.
 
-Пользовательские APP добавляются декларативным manifest без правки скрипта:
+Legacy-путь `build_f401_bundle.sh` нужен только для декларативных
+пользовательских APP и сжатия ZX0:
 
 ```bash
 ./tools/build_f401_bundle.sh \
@@ -384,8 +425,9 @@ Host-тест отдельно создаёт 200 APP, а VFAT-тест импо
 Очень большие наборы копируются порциями с sync/безопасным извлечением.
 Перед любыми изменениями дерева C5 read-only preflight проверяет каждый новый
 или изменённый APP: заголовок, совпадение resident, CRC сжатого потока,
-распаковку ZX0 и CRC готового образа. Повреждённый или чужой APP не удаляет и
-не заменяет существующие файлы. Уже опубликованный неизменённый APP не
+декодирование payload `NONE`/`ZX0` и CRC готового образа. Повреждённый или
+чужой APP не удаляет и не заменяет существующие файлы. Уже опубликованный
+неизменённый APP не
 блокирует работу с остальной ФС после обновления resident; при запуске его
 совместимость всё равно проверяется заново.
 

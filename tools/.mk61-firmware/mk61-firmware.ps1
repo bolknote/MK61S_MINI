@@ -1115,14 +1115,62 @@ function Convert-ToBashPath {
     return $Path
 }
 
-function Get-F401NativeBuilderPath {
-    return Join-Path $script:ScriptDir 'build-f401-native.ps1'
+function Get-F401GccBuilderPath {
+    return Join-Path (
+        Join-Path (Join-Path $script:ProjectRoot 'tools') '.mk61-gcc'
+    ) 'build.ps1'
 }
 
-function Get-SystemAppsStandaloneBuilderPath {
-    return Join-Path (
-        Join-Path (Join-Path $script:ProjectRoot 'system_apps') '.tool'
-    ) 'build.ps1'
+function Get-F401GccOptionArguments {
+    param([string]$Profile)
+    if ([string]::IsNullOrWhiteSpace($Profile)) {
+        $Profile = 'mini-v3-a00'
+    }
+    return [string[]]@(
+        '-Profile', $Profile,
+        '-Focal', [string]$script:State.EnableFocal,
+        '-Basic', [string]$script:State.EnableTinyBasic,
+        '-Wbmp', [string]$script:State.EnableWbmp,
+        '-Chip8', [string]$script:State.EnableChip8,
+        '-UsbScreen', [string]$script:State.EnableUsbScreen,
+        '-ExtendedFontSettings', [string]$script:State.EnableFonts,
+        '-UserExplorer', [string]$script:State.EnableExplorer,
+        '-MathBackend', [string]$script:State.EnableCoreMath)
+}
+
+function Get-F401GccPowerShellArguments {
+    param([string[]]$BuilderArguments)
+    $arguments = New-Object 'System.Collections.Generic.List[string]'
+    $arguments.Add('-NoLogo')
+    $arguments.Add('-NoProfile')
+    if ($script:IsWindowsHost) {
+        $arguments.Add('-ExecutionPolicy')
+        $arguments.Add('Bypass')
+    }
+    $arguments.Add('-File')
+    $arguments.Add((Get-F401GccBuilderPath))
+    foreach ($argument in $BuilderArguments) {
+        $arguments.Add([string]$argument)
+    }
+    return $arguments.ToArray()
+}
+
+function Invoke-F401GccPreflight {
+    $powerShell = Get-CurrentPowerShellExecutable
+    if ([string]::IsNullOrEmpty($powerShell)) {
+        return [pscustomobject]@{
+            ExitCode = 127
+            Output = 'PowerShell 5.1 or newer was not found'
+        }
+    }
+    $options = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($argument in (Get-F401GccOptionArguments `
+            $script:State.Profile)) {
+        $options.Add($argument)
+    }
+    $options.Add('-Check')
+    return Invoke-NativeCapture $powerShell (
+        Get-F401GccPowerShellArguments $options.ToArray())
 }
 
 function Test-F401HostToolsReady {
@@ -1136,46 +1184,71 @@ function Test-F401HostToolsReady {
         $result = Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')
         return $result.ExitCode -eq 0
     }
-    if (-not (Test-Path -LiteralPath (Get-F401NativeBuilderPath) -PathType Leaf) -or
-        [string]::IsNullOrEmpty((Get-CurrentPowerShellExecutable))) {
+    if (-not (Test-Path -LiteralPath (Get-F401GccBuilderPath) `
+            -PathType Leaf)) {
         return $false
     }
-    if ((Test-SystemAppsEnabled) -and
-        -not (Test-Path -LiteralPath (Get-SystemAppsStandaloneBuilderPath) -PathType Leaf)) {
-        return $false
-    }
-    return $true
+    return (Invoke-F401GccPreflight).ExitCode -eq 0
 }
 
 function Test-BuildDependenciesReady {
+    if ($script:State.Mcu -eq 'f401' -and
+        -not (Test-CustomAppsRequested)) {
+        return Test-F401HostToolsReady
+    }
     return (Test-ArduinoCoreReady) -and (Test-ArduinoLibrariesReady) -and
         (Test-F401HostToolsReady)
 }
 
 function Get-DependencyReport {
     $lines = New-Object 'System.Collections.Generic.List[string]'
-    if (Test-CommandAvailable $script:ArduinoCli) {
-        $version = Invoke-NativeCapture $script:ArduinoCli @('version')
-        $firstLine = @($version.Output -split "\r?\n")[0]
-        $lines.Add("arduino-cli: $firstLine")
+    $directF401 = $script:State.Mcu -eq 'f401' -and
+        -not (Test-CustomAppsRequested)
+    if ($directF401) {
+        $preflight = Invoke-F401GccPreflight
+        if ($preflight.ExitCode -eq 0) {
+            foreach ($line in @($preflight.Output -split "\r?\n")) {
+                if (-not [string]::IsNullOrWhiteSpace($line)) {
+                    $lines.Add($line.TrimEnd())
+                }
+            }
+            $lines.Add('arduino-cli: для сборки F401 не нужен')
+        } else {
+            $lines.Add('F401 direct GCC backend: НЕ ГОТОВ')
+            foreach ($line in @($preflight.Output -split "\r?\n")) {
+                if (-not [string]::IsNullOrWhiteSpace($line)) {
+                    $lines.Add($line.TrimEnd())
+                }
+            }
+        }
     } else {
-        $lines.Add('arduino-cli: НЕ НАЙДЕН')
-    }
-    if (Test-ArduinoCoreReady) { $lines.Add("STM32 Arduino Core: $($script:Stm32CoreVersion)") }
-    else { $lines.Add("STM32 Arduino Core: нужен $($script:Stm32CoreVersion)") }
-    if (Test-ArduinoLibrariesReady) {
-        $lines.Add('LiquidCrystal: 1.0.7')
-        $lines.Add('STM32duino RTC: 1.9.0')
-    } else {
-        $lines.Add('Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
-    }
-    if ($script:State.Mcu -eq 'f401') {
-        if (Test-CustomAppsRequested) {
+        if (Test-CommandAvailable $script:ArduinoCli) {
+            $version = Invoke-NativeCapture $script:ArduinoCli @('version')
+            $firstLine = @($version.Output -split "\r?\n")[0]
+            $lines.Add("arduino-cli: $firstLine")
+        } else {
+            $lines.Add('arduino-cli: НЕ НАЙДЕН')
+        }
+        if (Test-ArduinoCoreReady) {
+            $lines.Add("STM32 Arduino Core: $($script:Stm32CoreVersion)")
+        } else {
+            $lines.Add(
+                "STM32 Arduino Core: нужен $($script:Stm32CoreVersion)")
+        }
+        if (Test-ArduinoLibrariesReady) {
+            $lines.Add('LiquidCrystal: 1.0.7')
+            $lines.Add('STM32duino RTC: 1.9.0')
+        } else {
+            $lines.Add(
+                'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
+        }
+        if ($script:State.Mcu -eq 'f401' -and
+            (Test-CustomAppsRequested)) {
             $builder = Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh'
             if (Test-Path -LiteralPath $builder -PathType Leaf) {
-                $lines.Add('F401 custom APP builder: найден')
+                $lines.Add('F401 custom APP/ZX0 builder: найден')
             } else {
-                $lines.Add('F401 custom APP builder: НЕ НАЙДЕН')
+                $lines.Add('F401 custom APP/ZX0 builder: НЕ НАЙДЕН')
             }
             $bash = Find-BashExecutable
             if ([string]::IsNullOrEmpty($bash)) {
@@ -1189,20 +1262,6 @@ function Get-DependencyReport {
             } else {
                 $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для MK61_APP_MANIFESTS)')
             }
-        } else {
-            if (Test-Path -LiteralPath (Get-F401NativeBuilderPath) -PathType Leaf) {
-                $lines.Add('F401 native builder: найден')
-            } else {
-                $lines.Add('F401 native builder: НЕ НАЙДЕН')
-            }
-            if (Test-SystemAppsEnabled) {
-                if (Test-Path -LiteralPath (Get-SystemAppsStandaloneBuilderPath) -PathType Leaf) {
-                    $lines.Add('System APP standalone builder: найден')
-                } else {
-                    $lines.Add('System APP standalone builder: НЕ НАЙДЕН')
-                }
-            }
-            $lines.Add('Bash и host C++17 compiler: не нужны')
         }
     }
     if ($script:IsWindowsHost) {
@@ -1850,49 +1909,30 @@ function Invoke-F401CustomBundleBuild {
     }
 }
 
-function Invoke-F401NativeBundleBuild {
+function Invoke-F401GccBundleBuild {
     param([string]$Profile)
     $powerShell = Get-CurrentPowerShellExecutable
     if ([string]::IsNullOrEmpty($powerShell)) {
-        Write-LastLog 'PowerShell 5.1 or newer is required for the native F401 builder.'
+        Write-LastLog (
+            'PowerShell 5.1 or newer is required for the direct F401 ' +
+            'GCC builder.')
         return $false
     }
-    $worker = Get-F401NativeBuilderPath
-    $resolvedArduino = Resolve-Executable $script:ArduinoCli
-    if ([string]::IsNullOrEmpty($resolvedArduino)) {
-        Write-LastLog "arduino-cli was not found: $($script:ArduinoCli)"
-        return $false
-    }
-    $artifactName = Get-ProfileArtifactName $Profile 'f401'
-    $bundle = [IO.Path]::GetFileNameWithoutExtension($artifactName)
-    $arguments = New-Object 'System.Collections.Generic.List[string]'
-    $arguments.Add('-NoLogo')
-    $arguments.Add('-NoProfile')
-    if ($script:IsWindowsHost) {
-        $arguments.Add('-ExecutionPolicy')
-        $arguments.Add('Bypass')
+    $builderArguments = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($argument in (Get-F401GccOptionArguments $Profile)) {
+        $builderArguments.Add([string]$argument)
     }
     foreach ($argument in @(
-        '-File', $worker,
-        '-ArduinoCli', $resolvedArduino,
-        '-ProjectRoot', $script:ProjectRoot,
-        '-BuildRoot', (Join-Path $script:BuildRoot "f401-native/$Profile"),
-        '-OutputDir', $script:OutputDir,
-        '-Profile', $Profile,
-        '-Platform', [string]$script:State.Platform,
-        '-Display', [string]$script:State.Screen,
-        '-Bundle', $bundle,
-        '-CompileFlags', (Get-AllCompileFlags $Profile),
-        '-Focal', [string]$script:State.EnableFocal,
-        '-Basic', [string]$script:State.EnableTinyBasic,
-        '-Wbmp', [string]$script:State.EnableWbmp,
-        '-Chip8', [string]$script:State.EnableChip8
+        '-BuildRoot', (Join-Path $script:BuildRoot 'f401-gcc'),
+        '-OutputDirectory', $script:OutputDir
     )) {
-        $arguments.Add([string]$argument)
+        $builderArguments.Add([string]$argument)
     }
-    return Invoke-ExternalWithProgress 'Сборка комплекта F401' `
-        "Собираю resident и System APP: $(Get-ProfileLabel $Profile)" `
-        $script:LastLog 'indeterminate' $powerShell $arguments.ToArray()
+    $arguments = Get-F401GccPowerShellArguments `
+        $builderArguments.ToArray()
+    return Invoke-ExternalWithProgress 'Прямая GCC-сборка F401' `
+        "Собираю GCC resident и System APP: $(Get-ProfileLabel $Profile)" `
+        $script:LastLog 'indeterminate' $powerShell $arguments
 }
 
 function Invoke-F401BundleBuild {
@@ -1900,7 +1940,7 @@ function Invoke-F401BundleBuild {
     if (Test-CustomAppsRequested) {
         return Invoke-F401CustomBundleBuild $Profile
     }
-    return Invoke-F401NativeBundleBuild $Profile
+    return Invoke-F401GccBundleBuild $Profile
 }
 
 function Build-Selected {

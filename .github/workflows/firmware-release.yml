@@ -24,9 +24,78 @@ jobs:
           MK61_TEST_SANITIZERS: "1"
         run: tests/run_all_tests.sh
 
+  f401-gcc-platforms:
+    name: F401 direct GCC (${{ matrix.os }})
+    needs: host-tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+
+    env:
+      STM32_CORE_VERSION: 2.12.0
+      STM32_PACKAGE_URL: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Arduino CLI for dependency installation
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install pinned STM32 packages
+        shell: pwsh
+        run: |
+          arduino-cli config init --overwrite
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          arduino-cli config set board_manager.additional_urls "$env:STM32_PACKAGE_URL"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          arduino-cli core update-index
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          arduino-cli core install "STMicroelectronics:stm32@$env:STM32_CORE_VERSION"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          arduino-cli lib update-index
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          arduino-cli lib install "LiquidCrystal@1.0.7"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          arduino-cli lib install "STM32duino RTC@1.9.0"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build resident and all System APP directly with GCC
+        shell: pwsh
+        run: |
+          $buildRoot = Join-Path $env:RUNNER_TEMP 'f401-gcc'
+          $outputRoot = Join-Path $env:RUNNER_TEMP 'f401-output'
+          & ./tools/.mk61-gcc/build.ps1 `
+            -Profile mini-v3-a00 `
+            -UsbScreen 1 -Wbmp 1 -Chip8 1 `
+            -BuildRoot $buildRoot `
+            -OutputDirectory $outputRoot `
+            -Clean
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $bundle = Join-Path $outputRoot `
+            'mk61s-M-mini-v3-lcd1602-a00-f401'
+          @(
+            'mk61s-M-mini-v3-lcd1602-a00-f401.bin',
+            'System/FOCAL.APP',
+            'System/BASIC.APP',
+            'System/WBMP.APP',
+            'System/CHIP8.APP'
+          ) | ForEach-Object {
+            if (-not (Test-Path -LiteralPath (Join-Path $bundle $_) `
+                -PathType Leaf)) {
+              throw "Missing F401 artifact: $_"
+            }
+          }
+
   build-release:
     name: Build firmware
-    needs: host-tests
+    needs:
+      - host-tests
+      - f401-gcc-platforms
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -153,18 +222,20 @@ jobs:
             "$RUNNER_TEMP/mk61s-M"
           cp "$RUNNER_TEMP/build-40th/mk61s-M.ino.bin" "firmware/mk61s-M-40th-f411-${GITHUB_SHA::7}.bin"
 
-      - name: Build STM32F401CC firmware and loadable modules
+      - name: Build STM32F401CC firmware and System APP directly with GCC
         run: |
-          tools/build_f401_bundle.sh \
-            --profile mini-v3-a00 \
-            --build-root "$RUNNER_TEMP/build-f401-bundle" \
-            --output-dir firmware
+          tools/build-gcc.cmd \
+            -Profile mini-v3-a00 \
+            -BuildRoot "$RUNNER_TEMP/build-f401-gcc" \
+            -OutputDirectory firmware
 
       - name: Check pre-setup constructors
         run: |
           for elf in "$RUNNER_TEMP"/build-*/mk61s-M.ino.elf; do
             tests/check_global_constructors.sh "$elf"
           done
+          tests/check_global_constructors.sh \
+            "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/resident.elf"
 
       - name: Write checksums
         run: |

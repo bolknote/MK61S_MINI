@@ -21,9 +21,10 @@ system_apps\build.cmd ^
 ```
 
 В `BuildPath` должны находиться resident `.elf`, `.bin` и созданный той же
-Arduino-сборкой `compile_commands.json`. Из него берутся точные пути к ARM
-toolchain, include-каталогам и compile-time ключи. По умолчанию результат
-появляется в `system_apps\System`; для другого места передайте
+сборкой `compile_commands.json`. Это может быть как сборка Arduino, так и
+прямая CMake/GCC-сборка через `tools\build-gcc.cmd`. Из базы берутся точные
+пути к ARM toolchain, include-каталогам и compile-time ключи. По умолчанию
+результат появляется в `system_apps\System`; для другого места передайте
 `-OutputDirectory`. `WBMP.APP` регистрирует обработчик файлов `I1`, а
 `CHIP8.APP` — обработчик `C1`.
 

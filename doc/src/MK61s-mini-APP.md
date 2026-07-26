@@ -97,8 +97,9 @@ Windows-порт `tools/mk61-firmware.cmd` вызывает этот сборщ�
 для этого не нужны: используются `arm-none-eabi-g++`, `objcopy`, `nm` и
 `size` из установленного STM32 Core.
 
-Инструмент можно запустить отдельно, если уже имеется каталог Arduino-сборки с
-resident `.elf`, `.bin` и `compile_commands.json`:
+Инструмент можно запустить отдельно, если уже имеется каталог одной
+Arduino- или прямой CMake/GCC-сборки с resident `.elf`, `.bin` и
+`compile_commands.json`:
 
 ```bat
 system_apps\build.cmd ^
@@ -363,12 +364,12 @@ MK61_APP_MANIFESTS=apps/CLOCK/app.mk61:apps/GAME/app.mk61 \
   ./tools/mk61-firmware.cmd --mcu f401 --profile mini-v3-a00 --build
 ```
 
-Переменная наследуется командами `--build` и `--upload`. Host-компилятор C++17
-и Bash нужны именно для manifest-сборки пользовательских APP. Без
-`MK61_APP_MANIFESTS` Windows-порт собирает штатные System APP собственным
-PowerShell/ARM-путём без этих зависимостей. Комплект только с пользовательскими
-APP штатно собирается и тогда, когда FOCAL, TinyBASIC, WBMP viewer и CHIP-8
-выключены.
+Переменная наследуется командами `--build` и `--upload`. Host-компилятор C++17,
+Bash и legacy-сборщик нужны именно для manifest-сборки пользовательских APP.
+Без `MK61_APP_MANIFESTS` оба порта `mk61-firmware` используют канонический
+`build-gcc.cmd` и общий `system_apps`-сборщик. Комплект только с
+пользовательскими APP штатно собирается и тогда, когда FOCAL, TinyBASIC, WBMP
+viewer и CHIP-8 выключены.
 
 Сборщик:
 
