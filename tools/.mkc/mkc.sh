@@ -188,8 +188,8 @@ Keys:
 Type a command and press Enter: the left panel runs it locally, while the
 right panel sends it to the MK61s terminal and captures its output.
 
-Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp, .app
-System apps: /System/FOCAL.APP, /System/BASIC.APP, /System/WBMP.APP
+Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp, .ch8, .app
+System apps: /System/FOCAL.APP, /System/BASIC.APP, /System/WBMP.APP, /System/CHIP8.APP
 Legacy aliases accepted on upload: .t1, .m2, .wbm
 EOF
 }
@@ -255,6 +255,11 @@ unsupported_reason() {
       *.wbmp)
         base=${name:0:$(( ${#name} - 5 ))}
         limit=1600
+        ;;
+      *.ch8)
+        base=${name:0:$(( ${#name} - 4 ))}
+        limit=3584
+        minimum=1
         ;;
       *.t1|*.m2)
         base=${name:0:$(( ${#name} - 3 ))}
@@ -1703,7 +1708,7 @@ Ctrl-O       повторно показать последний вывод MK6
 на калькулятор для них заблокирован.
 
 Пользовательские APP можно хранить в любом каталоге. Системные APP находятся
-в /System под именами FOCAL.APP, BASIC.APP и WBMP.APP.'
+в /System под именами FOCAL.APP, BASIC.APP, WBMP.APP и CHIP8.APP.'
 }
 
 command_set_text() {

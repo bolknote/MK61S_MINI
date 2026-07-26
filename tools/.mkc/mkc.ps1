@@ -109,6 +109,7 @@ Keys:
   Ctrl-O    last MK61s output
 
 The left command line runs through cmd.exe; the right one is sent to MK61s.
+Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp, .ch8, .app
 System apps live in /System; other APP containers may live in any directory.
 '@
 }
@@ -581,6 +582,7 @@ function Get-UnsupportedReason {
         elseif ($lower.EndsWith('.state.txt')) { $base = $name.Substring(0, $name.Length - 10) }
         elseif ($lower -match '\.(m61|foc|tbi|txt|fmk)$') { $base = $name.Substring(0, $name.Length - 4) }
         elseif ($lower.EndsWith('.wbmp')) { $base = $name.Substring(0, $name.Length - 5); $limit = 1600 }
+        elseif ($lower.EndsWith('.ch8')) { $base = $name.Substring(0, $name.Length - 4); $limit = 3584; $minimum = 1 }
         elseif ($lower -match '\.(t1|m2)$') { $base = $name.Substring(0, $name.Length - 3) }
         elseif ($lower.EndsWith('.wbm')) { $base = $name.Substring(0, $name.Length - 4); $limit = 1600 }
         else { return 'формат не поддерживается' }
@@ -1589,7 +1591,7 @@ Ctrl-O       повторно показать последний вывод MK6
 cmd.exe, справа — терминалом MK61s с выводом внутри MKC. Серые файлы нельзя
 загрузить на калькулятор, но можно просмотреть, переименовать или удалить.
 Пользовательские APP можно хранить в любом каталоге. Системные APP находятся
-в /System под именами FOCAL.APP, BASIC.APP и WBMP.APP.
+в /System под именами FOCAL.APP, BASIC.APP, WBMP.APP и CHIP8.APP.
 '@
     Show-Lines 'Помощь' @($text -split "`r?`n")
 }

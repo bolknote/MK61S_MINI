@@ -10,13 +10,14 @@ trap cleanup_test EXIT
 
 mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
   "$work/app-limits" "$work/device/System" "$work/preflight-bad" "$work/editor" \
-  "$work/navigation/.mkc"
+  "$work/chip8-limits" "$work/navigation/.mkc"
 printf '2+2\n' > "$work/local/demo.foc"
 printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
 printf 'raw\n' > "$work/preflight-bad/blocked.bin"
 printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
+printf '\000\340\240\000' > "$work/local/game.ch8"
 dd if=/dev/zero of="$work/local/large.tbi" bs=1 count=1537 2>/dev/null
 dd if=/dev/zero of="$work/preflight-bad/large.tbi" bs=1 count=1537 2>/dev/null
 dd if=/dev/zero of="$work/local/chunked.m61" bs=1 count=100 2>/dev/null
@@ -24,6 +25,8 @@ dd if=/dev/zero of="$work/local/FOCAL.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/local/DEMO.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/app-limits/HUGE.APP" bs=1 count=20545 2>/dev/null
 dd if=/dev/zero of="$work/app-limits/SMALL.APP" bs=1 count=63 2>/dev/null
+dd if=/dev/zero of="$work/chip8-limits/HUGE.CH8" bs=1 count=3585 2>/dev/null
+: > "$work/chip8-limits/EMPTY.CH8"
 printf 'alpha\r\nbeta\r\n' > "$work/editor/local.txt"
 printf '\357\273\277bom\r\n' > "$work/editor/bom.txt"
 printf 'bare\r' > "$work/editor/bare-cr.txt"
@@ -39,6 +42,7 @@ test "$("$root/tools/mkc.cmd" --classify "$work/local/demo.foc")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/Good")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/FOCAL.APP")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/DEMO.APP")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/game.ch8")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/blocked.bin" || true)" = \
   'unsupported: формат не поддерживается'
 case "$("$root/tools/mkc.cmd" --classify "$work/app-limits/SMALL.APP" || true)" in
@@ -52,6 +56,14 @@ esac
 case "$("$root/tools/mkc.cmd" --classify "$work/local/large.tbi" || true)" in
   'unsupported: слишком большой:'*) ;;
   *) echo 'mkc: oversized file was accepted' >&2; exit 1 ;;
+esac
+case "$("$root/tools/mkc.cmd" --classify "$work/chip8-limits/EMPTY.CH8" || true)" in
+  'unsupported: слишком маленький:'*) ;;
+  *) echo 'mkc: empty CHIP-8 ROM was accepted' >&2; exit 1 ;;
+esac
+case "$("$root/tools/mkc.cmd" --classify "$work/chip8-limits/HUGE.CH8" || true)" in
+  'unsupported: слишком большой:'*) ;;
+  *) echo 'mkc: oversized CHIP-8 ROM was accepted' >&2; exit 1 ;;
 esac
 
 MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/.mkc/mkc.sh"
@@ -306,6 +318,11 @@ plan_reset
 plan_local_tree "$work/local/DEMO.APP" /Applications/DEMO.APP
 test "${#PLAN_KINDS[@]}" -eq 1
 test "$PLAN_TOTAL" -eq 64
+
+plan_reset
+plan_local_tree "$work/local/game.ch8" /Games/game.ch8
+test "${#PLAN_KINDS[@]}" -eq 1
+test "$PLAN_TOTAL" -eq 4
 
 # iTerm2-viewer действительно посылает картинку внутрь заданной области окна.
 exec 9> "$work/iterm.protocol"

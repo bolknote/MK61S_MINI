@@ -44,6 +44,7 @@ $session = Join-Path $tempRoot 'session'
 [void](New-Item -ItemType Directory -Path $local, $device, $session)
 [void](New-Item -ItemType Directory -Path (Join-Path $local 'Good'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'app-limits'))
+[void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'chip8-limits'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'editor'))
 $navigation = Join-Path $tempRoot 'navigation'
 [void](New-Item -ItemType Directory -Path (Join-Path $navigation '.mkc') -Force)
@@ -53,8 +54,11 @@ $navigation = Join-Path $tempRoot 'navigation'
 [IO.File]::WriteAllBytes((Join-Path $local 'preview.wbmp'), [byte[]](0,0,8,2,15,240))
 [IO.File]::WriteAllBytes((Join-Path $local 'FOCAL.APP'), [byte[]]::new(64))
 [IO.File]::WriteAllBytes((Join-Path $local 'DEMO.APP'), [byte[]]::new(64))
+[IO.File]::WriteAllBytes((Join-Path $local 'game.ch8'), [byte[]](0,0xE0,0xA0,0))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'app-limits/HUGE.APP'), [byte[]]::new(20545))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'app-limits/SMALL.APP'), [byte[]]::new(63))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/EMPTY.CH8'), [byte[]]::new(0))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/HUGE.CH8'), [byte[]]::new(3585))
 [IO.File]::WriteAllText((Join-Path $tempRoot 'editor/local.txt'), "alpha`r`nbeta`r`n",
     [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/bom.txt'),
@@ -73,12 +77,18 @@ try {
     Assert-True ($systemApp.ExitCode -eq 0 -and ($systemApp.Output -join '') -eq 'supported') 'PowerShell classifier rejected FOCAL.APP'
     $app = Invoke-MkcTool @('--classify', (Join-Path $local 'DEMO.APP'))
     Assert-True ($app.ExitCode -eq 0 -and ($app.Output -join '') -eq 'supported') 'PowerShell classifier rejected APP'
+    $chip8 = Invoke-MkcTool @('--classify', (Join-Path $local 'game.ch8'))
+    Assert-True ($chip8.ExitCode -eq 0 -and ($chip8.Output -join '') -eq 'supported') 'PowerShell classifier rejected CHIP-8 ROM'
     $unsupported = Invoke-MkcTool @('--classify', (Join-Path $local 'blocked.bin'))
     Assert-True ($unsupported.ExitCode -eq 1 -and ($unsupported.Output -join '') -eq 'unsupported: формат не поддерживается') 'PowerShell classifier accepted .bin'
     $smallApp = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'app-limits/SMALL.APP'))
     Assert-True ($smallApp.ExitCode -eq 1 -and ($smallApp.Output -join '') -match '^unsupported: слишком маленький:') 'PowerShell classifier accepted undersized APP'
     $largeApp = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'app-limits/HUGE.APP'))
     Assert-True ($largeApp.ExitCode -eq 1 -and ($largeApp.Output -join '') -match '^unsupported: слишком большой:') 'PowerShell classifier accepted oversized APP'
+    $emptyChip8 = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'chip8-limits/EMPTY.CH8'))
+    Assert-True ($emptyChip8.ExitCode -eq 1 -and ($emptyChip8.Output -join '') -match '^unsupported: слишком маленький:') 'PowerShell classifier accepted empty CHIP-8 ROM'
+    $largeChip8 = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'chip8-limits/HUGE.CH8'))
+    Assert-True ($largeChip8.ExitCode -eq 1 -and ($largeChip8.Output -join '') -match '^unsupported: слишком большой:') 'PowerShell classifier accepted oversized CHIP-8 ROM'
 
     $oldImportOnly = $env:MKC_POWERSHELL_IMPORT_ONLY
     $env:MKC_POWERSHELL_IMPORT_ONLY = '1'
@@ -228,6 +238,9 @@ try {
     Assert-True (Add-LocalTreeToPlan (Join-Path $local 'FOCAL.APP') '/System/FOCAL.APP') 'system APP upload was rejected'
     Reset-CopyPlan
     Assert-True (Add-LocalTreeToPlan (Join-Path $local 'DEMO.APP') '/Applications/DEMO.APP') 'APP upload outside root was rejected'
+    Reset-CopyPlan
+    Assert-True (Add-LocalTreeToPlan (Join-Path $local 'game.ch8') '/Games/game.ch8') 'CHIP-8 upload was rejected'
+    Assert-True ($script:CopyPlan.Count -eq 1 -and $script:CopyTotal -eq 4) 'CHIP-8 copy plan differs'
 
     $space = [ConsoleKeyInfo]::new(' ', [ConsoleKey]::Spacebar, $false, $false, $false)
     $f5 = [ConsoleKeyInfo]::new([char]0, [ConsoleKey]::F5, $false, $false, $false)
