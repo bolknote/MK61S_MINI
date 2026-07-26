@@ -25,6 +25,13 @@ function Read-Le32 {
         ([uint32]$Data[$Offset + 3] -shl 24))
 }
 
+function Read-Le16 {
+    param([byte[]]$Data, [int]$Offset)
+    return [uint16](
+        [uint16]$Data[$Offset] -bor
+        ([uint16]$Data[$Offset + 1] -shl 8))
+}
+
 function Get-Crc32 {
     param([byte[]]$Data)
     [uint32]$state = [uint32]::MaxValue
@@ -85,9 +92,16 @@ $sources = @(
         Macro = 'MK61_BUILD_WBMP_MODULE'
         Includes = @(
             'wbmp.cpp',
-            'a00_image_multiplex.cpp',
             'image1_viewer.cpp',
             'image1_viewer_module_entry.cpp')
+    }
+    @{
+        Path = Join-Path (Join-Path $appsRoot 'chip8') 'main.cpp'
+        Macro = 'MK61_BUILD_CHIP8_MODULE'
+        Includes = @(
+            'chip8.cpp',
+            'chip8_runner.cpp',
+            'chip8_module_entry.cpp')
     }
 )
 foreach ($source in $sources) {
@@ -103,7 +117,7 @@ foreach ($source in $sources) {
 }
 
 $builderText = [IO.File]::ReadAllText($builder)
-foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP')) {
+foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')) {
     Assert-True ($builderText -match [regex]::Escape($name)) `
         "$name is missing from the standalone builder"
 }
@@ -119,6 +133,8 @@ Assert-True ($builderText -notmatch 'mk61_ide_.*\.cpp\.o') `
 $workerText = [IO.File]::ReadAllText($nativeWorker)
 Assert-True ($workerText -match 'system_apps') `
     'native F401 worker does not call the standalone System APP builder'
+Assert-True ($workerText.Contains("'-Chip8', `$Chip8")) `
+    'native F401 worker does not forward the CHIP-8 selection'
 Assert-True ($workerText -notmatch 'mk61-app-postbuild') `
     'native F401 worker still uses Arduino APP post-build objects'
 
@@ -133,7 +149,7 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
         & $powerShell -NoLogo -NoProfile -File $builder `
             -BuildPath $integrationBuild `
             -OutputDirectory $output `
-            -Focal 1 -Basic 1 -Wbmp 1
+            -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
         Assert-True ($LASTEXITCODE -eq 0) `
             'real standalone System APP build failed'
 
@@ -149,6 +165,13 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             'FOCAL.APP' = 1
             'BASIC.APP' = 2
             'WBMP.APP' = 3
+            'CHIP8.APP' = 5
+        }
+        $expectedMagic = @{
+            'FOCAL.APP' = [uint16]0
+            'BASIC.APP' = [uint16]0
+            'WBMP.APP' = [uint16]0x3149
+            'CHIP8.APP' = [uint16]0x3143
         }
         foreach ($name in $expected.Keys) {
             $path = Join-Path $output $name
@@ -163,6 +186,11 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
                 "$name has an invalid kind"
             Assert-True ($bytes[15] -eq 0) `
                 "$name is not an uncompressed ARM-built APP"
+            Assert-True (
+                (Read-Le16 $bytes 56) -eq $expectedMagic[$name]) `
+                "$name has an invalid handled type magic"
+            Assert-True ((Read-Le16 $bytes 58) -eq 0) `
+                "$name has non-zero reserved header bytes"
             Assert-True ((Read-Le32 $bytes 40) -eq $expectedResidentSize) `
                 "$name is bound to a different resident size"
             Assert-True ((Read-Le32 $bytes 44) -eq $expectedResidentCrc) `

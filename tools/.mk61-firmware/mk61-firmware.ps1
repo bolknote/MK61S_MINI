@@ -1885,7 +1885,8 @@ function Invoke-F401NativeBundleBuild {
         '-CompileFlags', (Get-AllCompileFlags $Profile),
         '-Focal', [string]$script:State.EnableFocal,
         '-Basic', [string]$script:State.EnableTinyBasic,
-        '-Wbmp', [string]$script:State.EnableWbmp
+        '-Wbmp', [string]$script:State.EnableWbmp,
+        '-Chip8', [string]$script:State.EnableChip8
     )) {
         $arguments.Add([string]$argument)
     }

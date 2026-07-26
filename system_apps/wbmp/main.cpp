@@ -9,6 +9,5 @@
 #define result_text mk61_standalone_wbmp_result_text
 
 #include "../../code/wbmp.cpp"
-#include "../../code/a00_image_multiplex.cpp"
 #include "../../code/image1_viewer.cpp"
 #include "../../code/image1_viewer_module_entry.cpp"

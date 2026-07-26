@@ -75,14 +75,15 @@ host-компилятор C++17. Плата использует ARM-компи�
 
 ## Штатные APP через ARM toolchain
 
-Для командной сборки все три системных компонента вынесены в общий каталог:
+Для командной сборки все четыре системных компонента вынесены в общий каталог:
 
 ```text
 system_apps/
 ├── build.cmd
 ├── focal/main.cpp
 ├── basic/main.cpp
-└── wbmp/main.cpp
+├── wbmp/main.cpp
+└── chip8/main.cpp
 ```
 
 Каждый `main.cpp` включает реализацию только своего модуля и компилируется в
@@ -92,9 +93,9 @@ system_apps/
 PowerShell создаёт контейнер `NONE` с CRC этого же resident BIN.
 
 Windows-порт `tools/mk61-firmware.cmd` вызывает этот сборщик автоматически для
-всех включённых FOCAL, TinyBASIC и WBMP. Bash и host-компилятор C++ для этого
-не нужны: используются `arm-none-eabi-g++`, `objcopy`, `nm` и `size` из
-установленного STM32 Core.
+всех включённых FOCAL, TinyBASIC, WBMP и CHIP-8. Bash и host-компилятор C++
+для этого не нужны: используются `arm-none-eabi-g++`, `objcopy`, `nm` и
+`size` из установленного STM32 Core.
 
 Инструмент можно запустить отдельно, если уже имеется каталог Arduino-сборки с
 resident `.elf`, `.bin` и `compile_commands.json`:
@@ -102,13 +103,14 @@ resident `.elf`, `.bin` и `compile_commands.json`:
 ```bat
 system_apps\build.cmd ^
   -BuildPath C:\work\mk61-resident ^
-  -Focal 1 -Basic 1 -Wbmp 1
+  -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
 ```
 
 По умолчанию файлы появляются в `system_apps\System`; параметр
 `-OutputDirectory` задаёт другое место. `compile_commands.json` используется
 не как список готовых APP-объектов, а как надёжный источник версии ARM
-toolchain, include-путей и флагов конкретной resident-сборки.
+toolchain, include-путей и флагов конкретной resident-сборки. `WBMP.APP`
+объявляет обработчик типа `I1`, а `CHIP8.APP` — типа `C1`.
 
 ## Каталог приложения и manifest
 

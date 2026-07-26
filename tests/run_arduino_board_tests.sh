@@ -120,17 +120,25 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     "$root/system_apps/.tool/build.ps1" \
     -BuildPath "$work/build" \
     -OutputDirectory "$direct_system" \
-    -Focal 1 -Basic 1 -Wbmp 1
-  expected_kind=1
-  for app in FOCAL.APP BASIC.APP WBMP.APP; do
+    -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
+  for app in FOCAL.APP BASIC.APP WBMP.APP CHIP8.APP; do
     file="$direct_system/$app"
+    case "$app" in
+      FOCAL.APP) expected_kind=1 ;;
+      BASIC.APP) expected_kind=2 ;;
+      WBMP.APP) expected_kind=3 ;;
+      CHIP8.APP) expected_kind=5 ;;
+    esac
     test -s "$file"
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
     test "$(od -An -tu1 -j14 -N1 "$file" | tr -d '[:space:]')" = \
       "$expected_kind"
     test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 0
-    expected_kind=$((expected_kind + 1))
   done
+  test "$(od -An -tx1 -j56 -N2 "$direct_system/WBMP.APP" |
+      tr -d '[:space:]')" = 4931
+  test "$(od -An -tx1 -j56 -N2 "$direct_system/CHIP8.APP" |
+      tr -d '[:space:]')" = 4331
 
   mkdir -p "$work/build-all-options"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \

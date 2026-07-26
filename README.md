@@ -197,13 +197,13 @@ LCD1602 A00/A02 их можно включить только вместе с US
 На Windows дополнительно требуется STM32CubeProgrammer: `arduino-cli upload`
 запускает его через штатный recipe STM32 Core. На macOS/Linux загрузка напрямую
 выполняется утилитой `dfu-util`, входящей в пакет STM32 Tools.
-PowerShell-порт на Windows собирает штатные `FOCAL.APP`, `BASIC.APP` и
-`WBMP.APP` непосредственно ARM-компилятором из STM32 Core, поэтому для обычного
-F401-комплекта Bash и отдельный host-компилятор C++ не нужны. Они требуются
-только при заданном `MK61_APP_MANIFESTS`, то есть для произвольных
-пользовательских APP. Shell-порт macOS/Linux для упаковки APP по-прежнему
-использует `tools/build_f401_bundle.sh` и доступный в Bash host-компилятор
-`c++` с C++17.
+PowerShell-порт на Windows собирает штатные `FOCAL.APP`, `BASIC.APP`,
+`WBMP.APP` и `CHIP8.APP` непосредственно ARM-компилятором из STM32 Core,
+поэтому для обычного F401-комплекта Bash и отдельный host-компилятор C++ не
+нужны. Они требуются только при заданном `MK61_APP_MANIFESTS`, то есть для
+произвольных пользовательских APP. Shell-порт macOS/Linux для упаковки APP
+по-прежнему использует `tools/build_f401_bundle.sh` и доступный в Bash
+host-компилятор `c++` с C++17.
 
 Есть и неинтерактивный режим:
 
@@ -317,14 +317,15 @@ System APP в этом режиме хранят несжатый payload `NONE`
 
 #### Автономная ARM-сборка штатных System APP
 
-Исходные единицы трансляции всех трёх модулей находятся отдельно от скетча:
+Исходные единицы трансляции всех четырёх модулей находятся отдельно от скетча:
 
 ```text
 system_apps/
 ├── build.cmd
 ├── focal/main.cpp
 ├── basic/main.cpp
-└── wbmp/main.cpp
+├── wbmp/main.cpp
+└── chip8/main.cpp
 ```
 
 Один полиглотный `build.cmd` запускает PowerShell и на Windows, и из shell при
@@ -341,13 +342,14 @@ system_apps/
 ```bat
 system_apps\build.cmd ^
   -BuildPath C:\work\mk61-resident ^
-  -Focal 1 -Basic 1 -Wbmp 1
+  -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
 ```
 
 По умолчанию результат записывается в `system_apps\System`. Другой каталог
 задаётся через `-OutputDirectory`. Пути к `arm-none-eabi-g++`, `objcopy`, `nm`
 и `size`, точные `-D` и `-I` берутся из `compile_commands.json`; установка
-второго GCC рядом со скриптом не требуется.
+второго GCC рядом со скриптом не требуется. Заголовки WBMP- и CHIP-8-модулей
+регистрируют обработчики файлов `I1` и `C1` соответственно.
 
 Тот же процесс доступен без TUI:
 

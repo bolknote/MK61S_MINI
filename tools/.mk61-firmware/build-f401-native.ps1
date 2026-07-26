@@ -13,7 +13,8 @@ param(
     [Parameter(Mandatory = $true)][string]$CompileFlags,
     [Parameter(Mandatory = $true)][ValidateSet('0', '1')][string]$Focal,
     [Parameter(Mandatory = $true)][ValidateSet('0', '1')][string]$Basic,
-    [Parameter(Mandatory = $true)][ValidateSet('0', '1')][string]$Wbmp
+    [Parameter(Mandatory = $true)][ValidateSet('0', '1')][string]$Wbmp,
+    [Parameter(Mandatory = $true)][ValidateSet('0', '1')][string]$Chip8
 )
 
 Set-StrictMode -Version 2.0
@@ -90,7 +91,7 @@ function Remove-GeneratedBundleFiles {
         }
     }
     $system = Join-Path $Directory 'System'
-    foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP')) {
+    foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')) {
         $path = Join-Path $system $name
         if ([IO.File]::Exists($path)) {
             Remove-Item -LiteralPath $path -Force
@@ -128,7 +129,8 @@ try {
     $systemAppsTool = Join-Path (
         Join-Path $systemAppsRoot '.tool') 'build.ps1'
     $systemAppsRequested = (
-        $Focal -eq '1' -or $Basic -eq '1' -or $Wbmp -eq '1')
+        $Focal -eq '1' -or $Basic -eq '1' -or $Wbmp -eq '1' -or
+        $Chip8 -eq '1')
     Test-RequiredFile (Join-Path $code 'mk61s-M.ino') 'resident sketch'
     if ($systemAppsRequested) {
         Test-RequiredFile $systemAppsTool 'standalone System APP builder'
@@ -191,7 +193,8 @@ try {
                 '-OutputDirectory', $system,
                 '-Focal', $Focal,
                 '-Basic', $Basic,
-                '-Wbmp', $Wbmp
+                '-Wbmp', $Wbmp,
+                '-Chip8', $Chip8
             ))
     }
 

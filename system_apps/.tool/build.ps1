@@ -19,6 +19,9 @@ param(
     [ValidateSet('0', '1')]
     [string]$Wbmp = '1',
 
+    [ValidateSet('0', '1')]
+    [string]$Chip8 = '1',
+
     [switch]$KeepBuild
 )
 
@@ -132,6 +135,7 @@ function Set-Le32 {
 function Write-AppContainer {
     param(
         [byte]$Kind,
+        [uint16]$HandledMagic,
         [string]$Resident,
         [string]$Image,
         [uint32]$MemorySize,
@@ -175,7 +179,8 @@ function Write-AppContainer {
     Set-Le32 $header 44 (Get-Crc32Bytes $residentBytes)
     Set-Le32 $header 48 (Get-Crc32Bytes $imageBytes)
     Set-Le32 $header 52 (Get-Crc32Bytes $imageBytes)
-    Set-Le32 $header 56 0
+    Set-Le16 $header 56 $HandledMagic
+    Set-Le16 $header 58 0
     Set-Le32 $header 60 (Get-Crc32Bytes $header 60)
 
     [byte[]]$container = New-Object byte[] (
@@ -250,6 +255,7 @@ function Get-SelectedApps {
             Id = 'focal'
             FileName = 'FOCAL.APP'
             Kind = [byte]1
+            HandledMagic = [uint16]0
             Template = 'focal.cpp'
         })
     }
@@ -258,6 +264,7 @@ function Get-SelectedApps {
             Id = 'basic'
             FileName = 'BASIC.APP'
             Kind = [byte]2
+            HandledMagic = [uint16]0
             Template = 'tinybasic.cpp'
         })
     }
@@ -266,7 +273,17 @@ function Get-SelectedApps {
             Id = 'wbmp'
             FileName = 'WBMP.APP'
             Kind = [byte]3
+            HandledMagic = [uint16]0x3149
             Template = 'wbmp.cpp'
+        })
+    }
+    if ($Chip8 -eq '1') {
+        $apps.Add([pscustomobject]@{
+            Id = 'chip8'
+            FileName = 'CHIP8.APP'
+            Kind = [byte]5
+            HandledMagic = [uint16]0x3143
+            Template = 'chip8.cpp'
         })
     }
     return $apps.ToArray()
@@ -373,8 +390,9 @@ function Build-SystemApp {
             "$($App.FileName) entry point is outside its stored image")
     }
     $target = Join-Path $script:OutputDirectory $App.FileName
-    Write-AppContainer $App.Kind $script:ResidentBin $moduleImage `
-        $memorySize $entryOffset (Get-HexUInt32 $script:OverlayHex) $target
+    Write-AppContainer $App.Kind $App.HandledMagic `
+        $script:ResidentBin $moduleImage $memorySize $entryOffset `
+        (Get-HexUInt32 $script:OverlayHex) $target
     [Console]::WriteLine(
         ('MK61s APP: {0,-10} {1,5} bytes, SRAM {2,5} / 20480' -f
             $App.FileName, (Get-Item -LiteralPath $target).Length,
@@ -439,7 +457,7 @@ try {
     }
 
     [IO.Directory]::CreateDirectory($finalOutputDirectory) | Out-Null
-    foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP')) {
+    foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')) {
         $target = Join-Path $finalOutputDirectory $name
         if ([IO.File]::Exists($target)) {
             Remove-Item -LiteralPath $target -Force
