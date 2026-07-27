@@ -178,7 +178,18 @@ bool start_lse_without_fatal_handler(bool allow_shared_lcd_pin = false) {
   enableBackupDomain();
   if(__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) return true;
 
-#if defined(__HAL_RCC_LSEDRIVE_CONFIG) && defined(RCC_LSEDRIVE_LOW)
+#if defined(RCC_BDCR_LSEMOD)
+  // У STM32F411 два статически выбираемых режима LSE. На mini V2 к
+  // OSC32_OUT дополнительно подключён вход DB7 дисплея, поэтому штатного
+  // low-power режима может не хватить для запуска кварца. LSEMOD необходимо
+  // задать до LSEON; после успешного запуска high-drive остаётся включённым
+  // на всё время резервного хода.
+  if(allow_shared_lcd_pin) {
+    SET_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
+  } else {
+    CLEAR_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
+  }
+#elif defined(__HAL_RCC_LSEDRIVE_CONFIG) && defined(RCC_LSEDRIVE_LOW)
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 #endif
   __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);

@@ -975,10 +975,18 @@ static void v2_prepare_rtc_for_poweroff(void) {
     v2_show_poweroff_lines(
       "СНАЧАЛА ЧАСЫ", "НЕ ВЫКЛЮЧАТЬ",
       "SET DATE & TIME", "DO NOT POWER OFF");
-  } else {
+  } else if(result == rtc_clock::PoweroffLseResult::SOURCE_SWITCH_FAILED) {
+    v2_show_poweroff_lines(
+      "RTC НЕ НА LSE", "НЕ ВЫКЛЮЧАТЬ",
+      "RTC NOT ON LSE", "DO NOT POWER OFF");
+  } else if(result == rtc_clock::PoweroffLseResult::LSE_START_FAILED) {
     v2_show_poweroff_lines(
       "LSE НЕ ЗАПУЩЕН", "НЕ ВЫКЛЮЧАТЬ",
       "LSE FAILED", "DO NOT POWER OFF");
+  } else {
+    v2_show_poweroff_lines(
+      "RTC НЕ ГОТОВ", "НЕ ВЫКЛЮЧАТЬ",
+      "RTC NOT READY", "DO NOT POWER OFF");
   }
   delay_with_sound_poll(1500);
   lcd_ru::restore_default_font();
