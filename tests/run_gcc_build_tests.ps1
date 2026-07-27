@@ -15,6 +15,10 @@ $firmwareShell = Join-Path $root `
     'tools/.mk61-firmware/mk61-firmware.sh'
 $releaseWorkflow = Join-Path $root `
     '.github/workflows/firmware-release.yml'
+$arduinoSetupAction = Join-Path $root `
+    '.github/actions/setup-arduino-cli/action.yml'
+$arduinoSetupScript = Join-Path $root `
+    '.github/actions/setup-arduino-cli/install.ps1'
 $pwsh = (Get-Process -Id $PID).Path
 
 function Assert-True {
@@ -39,7 +43,9 @@ foreach ($file in @(
     $firmwareMain,
     $firmwarePowerShell,
     $firmwareShell,
-    $releaseWorkflow
+    $releaseWorkflow,
+    $arduinoSetupAction,
+    $arduinoSetupScript
 )) {
     Assert-True (Test-Path -LiteralPath $file -PathType Leaf) `
         "direct GCC build file is missing: $file"
@@ -88,6 +94,13 @@ $firmwareMainText = [IO.File]::ReadAllText($firmwareMain)
 $firmwarePowerShellText = [IO.File]::ReadAllText($firmwarePowerShell)
 $firmwareShellText = [IO.File]::ReadAllText($firmwareShell)
 $releaseWorkflowText = [IO.File]::ReadAllText($releaseWorkflow)
+$arduinoSetupActionText = [IO.File]::ReadAllText($arduinoSetupAction)
+$arduinoSetupScriptText = [IO.File]::ReadAllText($arduinoSetupScript)
+$allWorkflowText = @(
+    Get-ChildItem -LiteralPath (Join-Path $root '.github/workflows') `
+        -File -Filter '*.yml' |
+        ForEach-Object { [IO.File]::ReadAllText($_.FullName) }
+) -join "`n"
 Assert-True ($backendText -notmatch
     '(?i)Get-CommandPath\s+[''"]arduino-cli(?:\.exe)?[''"]') `
     'direct GCC backend invokes arduino-cli'
@@ -121,6 +134,31 @@ Assert-True ($releaseWorkflowText -match
 Assert-True ($releaseWorkflowText -match
     'macos-latest[\s\S]+windows-latest') `
     'direct F401 GCC build is not checked on macOS and Windows'
+Assert-True ($releaseWorkflowText -notmatch
+    'arduino/setup-arduino-cli') `
+    'release workflow still uses the Node.js 20 Arduino CLI action'
+Assert-True ($allWorkflowText -notmatch
+    'actions/checkout@v[1-5](?!\d)') `
+    'a workflow still uses checkout before its Node.js 24 release'
+Assert-True ($allWorkflowText -notmatch
+    'actions/upload-artifact@v[1-6](?!\d)') `
+    'a workflow still uses upload-artifact before its Node.js 24 release'
+Assert-True (([regex]::Matches(
+    $releaseWorkflowText,
+    'uses:\s+\./\.github/actions/setup-arduino-cli')).Count -eq 2) `
+    'release workflow does not consistently use the local Arduino CLI setup'
+Assert-True ($releaseWorkflowText -match
+    '(?m)^\s+ARDUINO_CLI_VERSION:\s+1\.5\.1\s*$') `
+    'release workflow does not pin the checksum-covered Arduino CLI version'
+Assert-True ($arduinoSetupActionText -match
+    '(?m)^\s+using:\s+composite\s*$') `
+    'local Arduino CLI setup is not a composite action'
+Assert-True ($arduinoSetupScriptText -match
+    "'1\.5\.1'\s*=\s*@\{") `
+    'local Arduino CLI setup does not pin the configured release'
+Assert-True ($arduinoSetupScriptText -match
+    'Get-FileHash[\s\S]+Algorithm SHA256') `
+    'local Arduino CLI setup does not verify its downloaded archive'
 $f401Job = [regex]::Match(
     $releaseWorkflowText,
     '(?ms)^  f401-gcc-platforms:\r?\n(?<body>.*?)(?=^  build-release:)')

@@ -1,0 +1,18 @@
+name: Setup pinned Arduino CLI
+description: Install a checksum-verified Arduino CLI without a Node.js action
+
+inputs:
+  version:
+    description: Exact Arduino CLI version
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download and verify Arduino CLI
+      shell: pwsh
+      env:
+        MK61_ARDUINO_CLI_VERSION: ${{ inputs.version }}
+      run: |
+        & "${{ github.action_path }}/install.ps1" `
+          -Version $env:MK61_ARDUINO_CLI_VERSION

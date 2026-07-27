@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  ARDUINO_CLI_VERSION: 1.5.1
+
 jobs:
   host-tests:
     name: Host tests
@@ -17,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run host test suite
         env:
@@ -40,10 +43,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Arduino CLI for dependency installation
-        uses: arduino/setup-arduino-cli@v2
+        uses: ./.github/actions/setup-arduino-cli
+        with:
+          version: ${{ env.ARDUINO_CLI_VERSION }}
 
       - name: Install pinned STM32 packages
         shell: pwsh
@@ -154,10 +159,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v2
+        uses: ./.github/actions/setup-arduino-cli
+        with:
+          version: ${{ env.ARDUINO_CLI_VERSION }}
 
       - name: Install STM32 core
         run: |
@@ -292,7 +299,7 @@ jobs:
             mk61s-M-mini-v3-lcd1602-a00-f401
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mk61s-firmware-${{ github.sha }}
           path: firmware/*

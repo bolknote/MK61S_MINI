@@ -138,7 +138,7 @@ jobs:
           tar -C build/linux/x64/release
           -czf ${{ matrix.archive }} bundle
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: usb-screen-${{ matrix.target }}
           path: ${{ env.APP_DIR }}/${{ matrix.archive }}
