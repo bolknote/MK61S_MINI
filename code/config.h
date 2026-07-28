@@ -51,11 +51,11 @@
   #define REVISION_V3
 #endif
 
-// В Mini V2 линия LCD DB7 подключена к PC15/OSC32_OUT, поэтому в обычной работе
-// включение LSE отбирает сигнал у LCD. Штатный источник здесь LSI; LSE допустим
-// только после явного завершения обмена с дисплеем в режиме подготовки к
-// выключению. В CDU оба вывода LSE также заняты. На остальных поддерживаемых
-// платах можно попробовать запустить LSE и перейти на LSI, если запуск не удался.
+// В Mini V2 линия LCD DB7 подключена к PC15/OSC32_OUT, поэтому включение LSE
+// отбирает сигнал у LCD, а электрическая нагрузка дисплея мешает генератору.
+// Штатный источник здесь LSI. В CDU оба вывода LSE также заняты. На остальных
+// поддерживаемых платах можно попробовать запустить LSE и перейти на LSI, если
+// запуск не удался.
 #if defined(REVISION_V2) || defined(CDU)
   static constexpr bool MK61_RTC_LSE_AVAILABLE = false;
 #else
@@ -262,17 +262,6 @@
 #if MK61_LCD1602_BUSY_FLAG && (!defined(MK61_DISPLAY_LCD1602) || defined(CDU) || defined(LK432))
   #error "MK61_LCD1602_BUSY_FLAG requires a mini V2/V3 LCD1602 profile with RW"
 #endif
-
-// На mini V2 кварц LSE и DB7 дисплея делят PC15. В обычной работе RTC идёт
-// от LSI. Специальный режим перед выключением сначала заканчивает обмен с ЖКИ,
-// переводит DB7 во вход и только затем временно отдаёт PC15 генератору LSE.
-#if defined(REVISION_V2) && defined(MK61_DISPLAY_LCD1602) && \
-    !defined(CDU) && !defined(LK432)
-  #define MK61_V2_RTC_POWEROFF_HANDOFF 1
-#else
-  #define MK61_V2_RTC_POWEROFF_HANDOFF 0
-#endif
-static constexpr t_time_ms MK61_V2_RTC_POWEROFF_HOLD_MS = 1000;
 
 // Клавиатура: у classic-платформы с UC1609 другая физическая матрица и коды.
 // Если вариант не задан явно, LCD1602 остается mk61s-mini, UC1609 выбирает classic.

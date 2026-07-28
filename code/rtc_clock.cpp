@@ -162,14 +162,8 @@ bool disable_retained_lse_for_gpio(void) {
   return stopped;
 }
 
-bool start_lse_without_fatal_handler(bool allow_shared_lcd_pin = false) {
-  bool allowed = MK61_RTC_LSE_AVAILABLE;
-#if MK61_V2_RTC_POWEROFF_HANDOFF
-  allowed = allowed || allow_shared_lcd_pin;
-#else
-  (void) allow_shared_lcd_pin;
-#endif
-  if(!allowed) return false;
+bool start_lse_without_fatal_handler(void) {
+  if(!MK61_RTC_LSE_AVAILABLE) return false;
 
   // enableClock(LSE_CLOCK) из STM32duino вызывает Error_Handler(), если кварц
   // не запускается. Поэтому предварительно проверяем генератор сами, используя
@@ -178,18 +172,7 @@ bool start_lse_without_fatal_handler(bool allow_shared_lcd_pin = false) {
   enableBackupDomain();
   if(__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) return true;
 
-#if defined(RCC_BDCR_LSEMOD)
-  // У STM32F411 два статически выбираемых режима LSE. На mini V2 к
-  // OSC32_OUT дополнительно подключён вход DB7 дисплея, поэтому штатного
-  // low-power режима может не хватить для запуска кварца. LSEMOD необходимо
-  // задать до LSEON; после успешного запуска high-drive остаётся включённым
-  // на всё время резервного хода.
-  if(allow_shared_lcd_pin) {
-    SET_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
-  } else {
-    CLEAR_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
-  }
-#elif defined(__HAL_RCC_LSEDRIVE_CONFIG) && defined(RCC_LSEDRIVE_LOW)
+#if defined(__HAL_RCC_LSEDRIVE_CONFIG) && defined(RCC_LSEDRIVE_LOW)
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 #endif
   __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);
@@ -209,19 +192,6 @@ void begin_with_clock_source(ClockSource source,
   rtc.begin();
   restore_backup_state(backup);
 }
-
-#if MK61_V2_RTC_POWEROFF_HANDOFF
-bool restore_lsi_after_failed_poweroff(
-    const PreservedBackupState& backup) {
-  begin_with_clock_source(ClockSource::LSI, backup);
-  const bool source_restored =
-      hardware_uses_clock_source(ClockSource::LSI);
-  const bool calibration_restored =
-      apply_smooth_calibration(stored_calibration_ppm());
-  const bool gpio_released = disable_retained_lse_for_gpio();
-  return source_restored && calibration_restored && gpio_released;
-}
-#endif
 
 } // анонимное пространство имён
 
@@ -293,51 +263,6 @@ bool set_calibration_ppm(i16 ppm) {
   write_backup_register(RTC_BKP_DR3, old_record);
   (void) apply_smooth_calibration(old_ppm);
   return false;
-}
-
-PoweroffLseResult switch_to_lse_for_poweroff(void) {
-#if !MK61_V2_RTC_POWEROFF_HANDOFF
-  return PoweroffLseResult::UNSUPPORTED;
-#else
-  if(!initialized) return PoweroffLseResult::NOT_INITIALIZED;
-
-  DateTime before = {};
-  if(!marker_is_set() || !read(before)) {
-    return PoweroffLseResult::TIME_NOT_SET;
-  }
-
-  const PreservedBackupState backup = preserve_backup_state();
-  dbgln(SPIROM, "RTC poweroff: starting LSE on shared PC15");
-  if(!start_lse_without_fatal_handler(true)) {
-    dbgln(SPIROM, "RTC poweroff: LSE failed to start");
-    return disable_retained_lse_for_gpio()
-        ? PoweroffLseResult::LSE_START_FAILED
-        : PoweroffLseResult::GPIO_RELEASE_FAILED;
-  }
-
-  // STM32duino переносит календарь при смене RTCSEL. Пользовательская поправка
-  // V2 относится к неточному LSI, поэтому для резервного хода от кварца LSE
-  // сбрасываем аппаратную smooth calibration, но сохраняем её запись для
-  // возврата на LSI при следующем включении.
-  begin_with_clock_source(ClockSource::LSE, backup);
-  DateTime after = {};
-  const bool switched =
-      __HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET &&
-      hardware_uses_clock_source(ClockSource::LSE) &&
-      read(after) &&
-      apply_smooth_calibration(0);
-  if(switched) {
-    dbgln(SPIROM, "RTC poweroff: LSE ready");
-    return PoweroffLseResult::READY;
-  }
-
-  dbgln(SPIROM, "RTC poweroff: source switch failed, restoring LSI");
-  if(!restore_lsi_after_failed_poweroff(backup) &&
-     !lse_gpio_is_released()) {
-    return PoweroffLseResult::GPIO_RELEASE_FAILED;
-  }
-  return PoweroffLseResult::SOURCE_SWITCH_FAILED;
-#endif
 }
 
 bool startup_snapshot(StartupSnapshot& out) {

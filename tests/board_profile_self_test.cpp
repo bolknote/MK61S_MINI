@@ -77,10 +77,6 @@ int main(void) {
   static_assert(PIN_BUZZER == PB10, "mini V2 buzzer pin regression");
   static_assert(!MK61_RTC_LSE_AVAILABLE,
                 "mini V2 must not enable LSE while LCD DB7 owns PC15");
-  static_assert(MK61_V2_RTC_POWEROFF_HANDOFF == 1,
-                "mini V2 must enable the controlled LSE handoff");
-  static_assert(MK61_V2_RTC_POWEROFF_HOLD_MS == 1000,
-                "mini V2 Cx handoff must trigger after one second");
 #else
   #if defined(REVISION_V2) || !defined(REVISION_V3)
     #error "the default build must select V3 only"
@@ -90,8 +86,6 @@ int main(void) {
                 "mini V3 LCD data pin regression");
   static_assert(MK61_RTC_LSE_AVAILABLE,
                 "mini V3 leaves the LSE pins available for RTC");
-  static_assert(MK61_V2_RTC_POWEROFF_HANDOFF == 0,
-                "non-V2 profiles must not expose the shared-pin handoff");
 #endif
 
 #if defined(MK61_CONFIG_EXPECT_CLASSIC_V2)
