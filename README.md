@@ -249,8 +249,9 @@ Bash и отдельный host-компилятор C++ нужны только
    скопирует сформированные файлы в `/System`, принудительно сбросит запись и
    проверит каждый файл. После сообщения об успехе можно нажать `ESC` на MK61s.
 
-Комплект находится в
-`binary/mk61s-M-mini-v3-lcd1602-a00-f401/` и содержит прошивку `.bin` и
+Комплект находится в каталоге вида
+`binary/mk61s-M-mini-v3-lcd1602-a00-f401/` либо
+`binary/mk61s-M-mini-v2-lcd1602-a00-f401/` и содержит прошивку `.bin` и
 включённые ключами `System/FOCAL.APP`, `System/BASIC.APP`,
 `System/WBMP.APP`, `System/MARKDOWN.APP` и `System/CHIP8.APP`. Канонический
 GCC-бэкенд собирает resident и каждый APP с `-Os -flto`. На всех
@@ -267,14 +268,14 @@ GCC-бэкенд собирает resident и каждый APP с `-Os -flto`. �
 загрузчик пользовательских APP при этом остаётся включённым самим
 `MK61_ENABLE_LOADABLE_MODULES`.
 
-Автоматический GitHub Release публикует F401 как один полный ZIP-комплект для
-mini V3 LCD1602 A00: resident `.bin`, `build.flags`, `build.apps`,
-`FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`. USB-экран в релизной прошивке
-выключен, поэтому CHIP-8 не включается; отдельного `WBMP.APP` нет, поскольку
-выбран Markdown. Для F401 release включены LTO и CORE math
-(`MK61_MATH_BACKEND=1`). Отдельный F401 `.bin` рядом с ZIP не публикуется,
-чтобы не смешивать resident и APP разных сборок. `SHA256SUMS.txt` покрывает
-как содержимое комплекта, так и сам ZIP.
+Автоматический GitHub Release публикует F401 как два полных ZIP-комплекта для
+mini V2 и mini V3 LCD1602 A00. Каждый содержит свой resident `.bin`,
+`build.flags`, `build.apps`, `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`.
+USB-экран в релизных прошивках выключен, поэтому CHIP-8 не включается;
+отдельного `WBMP.APP` нет, поскольку выбран Markdown. Для F401 release
+включены LTO и CORE math (`MK61_MATH_BACKEND=1`). Отдельные F401 `.bin`
+рядом с ZIP не публикуются, чтобы не смешивать resident и APP разных сборок.
+`SHA256SUMS.txt` покрывает содержимое обоих комплектов и оба ZIP.
 
 Пункт второго шага синхронизирует пять канонических имён System APP:
 копирует включённые и удаляет соответствующие файлы при выключенных ключах.

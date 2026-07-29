@@ -177,6 +177,10 @@ $releaseF401Step = [regex]::Match(
     'with GCC\r?\n(?<body>.*?)(?=^\s+- name:)')
 Assert-True ($releaseF401Step.Success) `
     'release workflow has no F401 release build step'
+foreach ($profile in @('mini-v3-a00', 'mini-v2-a00')) {
+    Assert-True ($releaseF401Step.Groups['body'].Value.Contains($profile)) `
+        "F401 release build is missing profile $profile"
+}
 foreach ($option in @(
     '-Focal 1',
     '-Basic 1',
@@ -191,16 +195,18 @@ foreach ($option in @(
         "F401 release bundle is missing option $option"
 }
 Assert-True ($releaseWorkflowText -match
-    '(?s)zip -qr mk61s-M-mini-v3-lcd1602-a00-f401\.zip.+?' +
+    '(?s)for revision in v3 v2.+?' +
+    'zip -qr "\$bundle\.zip" "\$bundle".+?' +
     'find \. -type f ! -name SHA256SUMS\.txt -print0.+?' +
     'xargs -0 sha256sum > SHA256SUMS\.txt') `
-    'release checksums do not cover the packaged F401 ZIP and APP'
+    'release checksums do not cover the packaged V2/V3 F401 ZIP and APP'
 Assert-True ($releaseWorkflowText -match
-    '(?s)Verify and package F401 bundle.+?' +
+    '(?s)Verify and package F401 bundles.+?' +
+    'mk61s-M-mini-\$revision-lcd1602-a00-f401.+?' +
     'System/FOCAL\.APP.+?System/BASIC\.APP.+?System/MARKDOWN\.APP.+?' +
     'System/WBMP\.APP.+?System/CHIP8\.APP.+?' +
     'Unexpected disabled F401 APP') `
-    'release workflow can publish an incomplete F401 ZIP'
+    'release workflow can publish an incomplete V2/V3 F401 ZIP'
 Assert-True ($releaseWorkflowText -notmatch
     'arduino/setup-arduino-cli') `
     'release workflow still uses the Node.js 20 Arduino CLI action'

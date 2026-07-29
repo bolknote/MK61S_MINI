@@ -294,60 +294,65 @@ jobs:
 
       - name: Build STM32F401CC firmware and System APP directly with GCC
         run: |
-          tools/build-gcc.cmd \
-            -Profile mini-v3-a00 \
-            -Focal 1 \
-            -Basic 1 \
-            -Wbmp 0 \
-            -Markdown 1 \
-            -Chip8 0 \
-            -UsbScreen 0 \
-            -MathBackend 1 \
-            -Lto 1 \
-            -BuildRoot "$RUNNER_TEMP/build-f401-gcc" \
-            -OutputDirectory firmware
+          for profile in mini-v3-a00 mini-v2-a00; do
+            tools/build-gcc.cmd \
+              -Profile "$profile" \
+              -Focal 1 \
+              -Basic 1 \
+              -Wbmp 0 \
+              -Markdown 1 \
+              -Chip8 0 \
+              -UsbScreen 0 \
+              -MathBackend 1 \
+              -Lto 1 \
+              -BuildRoot "$RUNNER_TEMP/build-f401-gcc" \
+              -OutputDirectory firmware
+          done
 
       - name: Check pre-setup constructors
         run: |
           for elf in "$RUNNER_TEMP"/build-*/mk61s-M.ino.elf; do
             tests/check_global_constructors.sh "$elf"
           done
-          tests/check_global_constructors.sh \
-            "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/resident.elf"
+          for profile in mini-v3-a00 mini-v2-a00; do
+            tests/check_global_constructors.sh \
+              "$RUNNER_TEMP/build-f401-gcc/$profile/resident.elf"
+          done
 
-      - name: Verify and package F401 bundle
+      - name: Verify and package F401 bundles
         run: |
           cd firmware
-          bundle=mk61s-M-mini-v3-lcd1602-a00-f401
-          for artifact in \
-            "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin" \
-            "$bundle/build.flags" \
-            "$bundle/build.apps" \
-            "$bundle/System/FOCAL.APP" \
-            "$bundle/System/BASIC.APP" \
-            "$bundle/System/MARKDOWN.APP"; do
-            if [ ! -s "$artifact" ]; then
-              echo "Missing F401 release artifact: $artifact" >&2
+          for revision in v3 v2; do
+            bundle="mk61s-M-mini-$revision-lcd1602-a00-f401"
+            for artifact in \
+              "$bundle/$bundle.bin" \
+              "$bundle/build.flags" \
+              "$bundle/build.apps" \
+              "$bundle/System/FOCAL.APP" \
+              "$bundle/System/BASIC.APP" \
+              "$bundle/System/MARKDOWN.APP"; do
+              if [ ! -s "$artifact" ]; then
+                echo "Missing F401 release artifact: $artifact" >&2
+                exit 1
+              fi
+            done
+            for disabled in \
+              "$bundle/System/WBMP.APP" \
+              "$bundle/System/CHIP8.APP"; do
+              if [ -e "$disabled" ]; then
+                echo "Unexpected disabled F401 APP: $disabled" >&2
+                exit 1
+              fi
+            done
+            grep -F -- '-DMK61_MATH_BACKEND=1' "$bundle/build.flags"
+            grep -F -- '-DMK61_ENABLE_LTO=1' "$bundle/build.flags"
+            markdown_size=$(stat -c %s "$bundle/System/MARKDOWN.APP")
+            if [ "$markdown_size" -gt 4096 ]; then
+              echo "Plain MARKDOWN.APP exceeds 4 KiB: $markdown_size" >&2
               exit 1
             fi
+            zip -qr "$bundle.zip" "$bundle"
           done
-          for disabled in \
-            "$bundle/System/WBMP.APP" \
-            "$bundle/System/CHIP8.APP"; do
-            if [ -e "$disabled" ]; then
-              echo "Unexpected disabled F401 APP: $disabled" >&2
-              exit 1
-            fi
-          done
-          grep -F -- '-DMK61_MATH_BACKEND=1' "$bundle/build.flags"
-          grep -F -- '-DMK61_ENABLE_LTO=1' "$bundle/build.flags"
-          markdown_size=$(stat -c %s "$bundle/System/MARKDOWN.APP")
-          if [ "$markdown_size" -gt 4096 ]; then
-            echo "Plain MARKDOWN.APP exceeds 4 KiB: $markdown_size" >&2
-            exit 1
-          fi
-          zip -qr mk61s-M-mini-v3-lcd1602-a00-f401.zip \
-            "$bundle"
           find . -type f ! -name SHA256SUMS.txt -print0 \
             | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
 
