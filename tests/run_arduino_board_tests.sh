@@ -39,7 +39,7 @@ grep -q '^mk61_f401_app.menu.mk61_platform.mini_v3=' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_display.lcd_a00=' \
   "$target/boards.txt"
-grep -q '^mk61_f401_app.menu.mk61_markdown.enabled=APP · T2$' \
+grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
   "$target/boards.txt"
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
@@ -94,7 +94,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   mkdir -p "$shell_sketchbook/sketches/code" "$work/build"
   cp -R "$root/code/." "$shell_sketchbook/sketches/code/"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_markdown=enabled,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build" "$shell_sketchbook/sketches/code"
 
   bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v3-lcd1602-a00-f401"
@@ -103,12 +103,11 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   test -s "$resident"
   grep -q 'mk61_ide_focal_module_entry' "$module_root/focal/focal.map"
   grep -q 'mk61_ide_basic_module_entry' "$module_root/basic/basic.map"
-  grep -q 'mk61_ide_wbmp_module_entry' "$module_root/wbmp/wbmp.map"
-  grep -q 'mk61_ide_wbmp_view' "$module_root/wbmp/wbmp.map"
   grep -q 'mk61_ide_markdown_module_entry' \
     "$module_root/markdown/markdown.map"
+  grep -q 'image1_viewer' "$module_root/markdown/markdown.map"
   grep -q 'mk61_ide_chip8_module_entry' "$module_root/chip8/chip8.map"
-  for app in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP; do
+  for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP; do
     file="$bundle/System/$app"
     test -s "$file"
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
@@ -116,8 +115,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     test "$(od -An -tx1 -N8 "$file" | tr -d '[:space:]')" = \
       4d4b363141505000
   done
-  test "$(od -An -tx1 -j56 -N2 "$bundle/System/WBMP.APP" |
-      tr -d '[:space:]')" = 4931
+  test ! -e "$bundle/System/WBMP.APP"
   test "$(od -An -tx1 -j56 -N2 "$bundle/System/MARKDOWN.APP" |
       tr -d '[:space:]')" = 5432
   test "$(od -An -tx1 -j56 -N2 "$bundle/System/CHIP8.APP" |
@@ -129,12 +127,11 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     -BuildPath "$work/build" \
     -OutputDirectory "$direct_system" \
     -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
-  for app in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP; do
+  for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP; do
     file="$direct_system/$app"
     case "$app" in
       FOCAL.APP) expected_kind=1 ;;
       BASIC.APP) expected_kind=2 ;;
-      WBMP.APP) expected_kind=3 ;;
       MARKDOWN.APP) expected_kind=6 ;;
       CHIP8.APP) expected_kind=5 ;;
     esac
@@ -144,8 +141,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
       "$expected_kind"
     test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 0
   done
-  test "$(od -An -tx1 -j56 -N2 "$direct_system/WBMP.APP" |
-      tr -d '[:space:]')" = 4931
+  test ! -e "$direct_system/WBMP.APP"
   test "$(od -An -tx1 -j56 -N2 "$direct_system/MARKDOWN.APP" |
       tr -d '[:space:]')" = 5432
   test "$(od -An -tx1 -j56 -N2 "$direct_system/CHIP8.APP" |
@@ -153,16 +149,16 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-all-options"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_markdown=enabled,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build-all-options" "$shell_sketchbook/sketches/code"
-  for app in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP; do
+  for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP; do
     test -s "$bundle/System/$app"
     test "$(wc -c < "$bundle/System/$app" | tr -d '[:space:]')" -le 20544
   done
 
   mkdir -p "$work/build-disabled"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_wbmp=disabled,mk61_markdown=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build-disabled" "$shell_sketchbook/sketches/code"
   test ! -e "$bundle/System"
   grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
@@ -173,15 +169,22 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-classic"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v3,mk61_display=uc1609,mk61_focal=enabled,mk61_basic=enabled,mk61_wbmp=enabled,mk61_markdown=enabled,mk61_chip8=enabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v3,mk61_display=uc1609,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=enabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
     --build-path "$work/build-classic" "$shell_sketchbook/sketches/code"
   classic_bundle="$shell_sketchbook/sketches/binary/mk61s-M-classic-v3-uc1609-f401"
   test -s "$classic_bundle/mk61s-M-classic-v3-uc1609-f401.bin"
   test -s "$classic_bundle/System/FOCAL.APP"
   test -s "$classic_bundle/System/BASIC.APP"
-  test -s "$classic_bundle/System/WBMP.APP"
+  test ! -e "$classic_bundle/System/WBMP.APP"
   test -s "$classic_bundle/System/MARKDOWN.APP"
   test -s "$classic_bundle/System/CHIP8.APP"
+
+  mkdir -p "$work/build-classic-wbmp"
+  ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v3,mk61_display=uc1609,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=wbmp,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=libm' \
+    --build-path "$work/build-classic-wbmp" "$shell_sketchbook/sketches/code"
+  test -s "$classic_bundle/System/WBMP.APP"
+  test ! -e "$classic_bundle/System/MARKDOWN.APP"
 fi
 
 printf 'arduino_board_tests: ok\n'

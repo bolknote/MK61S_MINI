@@ -144,16 +144,20 @@ try {
     $env:MK61_OUTPUT_DIR = $outputRoot
     $env:MK61_C5_MOUNT = $mountRoot
     $installSelection = Invoke-Tool @('--show-config')
+    Assert-True (
+        ($installSelection.Output -join "`n") -match
+            '(?m)^MK61_ENABLE_WBMP_VIEWER=0$') `
+        'Markdown did not suppress WBMP in PowerShell'
     $flagLine = @($installSelection.Output | Where-Object { $_ -like 'COMPILE_FLAGS=*' })[0]
     $flags = $flagLine.Substring('COMPILE_FLAGS='.Length)
     [IO.File]::WriteAllText((Join-Path $bundle 'build.flags'), $flags + [Environment]::NewLine)
     [IO.File]::WriteAllText((Join-Path $bundle 'mk61s-M-mini-v3-lcd1602-a00-f401.bin'), "resident-f401`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-app`n")
-    [IO.File]::WriteAllText((Join-Path $sourceSystem 'WBMP.APP'), "wbmp-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'MARKDOWN.APP'), "markdown-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-app`n")
     [IO.File]::WriteAllText((Join-Path $targetSystem 'KEEP.APP'), "keep-me`n")
     [IO.File]::WriteAllText((Join-Path $targetSystem 'BASIC.APP'), "stale-basic`n")
+    [IO.File]::WriteAllText((Join-Path $targetSystem 'WBMP.APP'), "stale-wbmp`n")
 
     $installed = Invoke-Tool @('--install-apps')
     $installedText = $installed.Output -join "`n"
@@ -165,10 +169,6 @@ try {
         (([IO.File]::ReadAllBytes((Join-Path $targetSystem 'FOCAL.APP'))) -join ',')
     ) 'FOCAL.APP differs after copy'
     Assert-True (
-        (([IO.File]::ReadAllBytes((Join-Path $sourceSystem 'WBMP.APP'))) -join ',') -eq
-        (([IO.File]::ReadAllBytes((Join-Path $targetSystem 'WBMP.APP'))) -join ',')
-    ) 'WBMP.APP differs after copy'
-    Assert-True (
         (([IO.File]::ReadAllBytes((Join-Path $sourceSystem 'MARKDOWN.APP'))) -join ',') -eq
         (([IO.File]::ReadAllBytes((Join-Path $targetSystem 'MARKDOWN.APP'))) -join ',')
     ) 'MARKDOWN.APP differs after copy'
@@ -179,6 +179,9 @@ try {
     $keepText = [IO.File]::ReadAllText((Join-Path $targetSystem 'KEEP.APP')).Trim()
     Assert-True ($keepText -eq 'keep-me') 'unrelated APP was changed'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $targetSystem 'BASIC.APP'))) 'stale disabled BASIC.APP was not removed'
+    Assert-True (-not (Test-Path -LiteralPath (
+        Join-Path $targetSystem 'WBMP.APP'))) `
+        'WBMP.APP survived while Markdown was enabled'
 
     $disabledConfig = @(
         'MCU=f401'
@@ -240,6 +243,11 @@ try {
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_MARKDOWN_VIEWER') 'Markdown is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_CHIP8') 'CHIP-8 is missing from Windows option details'
+    $script:State.EnableWbmp = 1
+    $script:State.EnableMarkdown = 1
+    Normalize-ViewerSelection
+    Assert-True ($script:State.EnableWbmp -eq 0) `
+        'Markdown did not suppress the standalone WBMP viewer'
     $f411MenuItems = @(Get-MainMenuItems)
     Assert-True ('install_apps' -notin @($f411MenuItems.Tag)) 'F411 main menu still shows the F401 System APP action'
     Assert-True (($f411MenuItems[2].Tag -eq 'mcu') -and ($f411MenuItems[3].Tag -eq 'platform')) 'F411 main-menu order differs'

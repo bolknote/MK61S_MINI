@@ -203,15 +203,16 @@ printf '%s\n' \
   'MK61_USER_EXPLORER_SHORTCUT=1' \
   'MK61_MATH_BACKEND=0' > "$install_config"
 install_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" --show-config)
+grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$install_selection"
 install_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$install_selection")
 printf '%s\n' "$install_flags" > "$bundle/build.flags"
 printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 printf 'focal-app\n' > "$bundle/System/FOCAL.APP"
-printf 'wbmp-app\n' > "$bundle/System/WBMP.APP"
 printf 'markdown-app\n' > "$bundle/System/MARKDOWN.APP"
 printf 'chip8-app\n' > "$bundle/System/CHIP8.APP"
 printf 'keep-me\n' > "$install_mount/System/KEEP.APP"
 printf 'stale-basic\n' > "$install_mount/System/BASIC.APP"
+printf 'stale-wbmp\n' > "$install_mount/System/WBMP.APP"
 
 install_result=$(MK61_CONFIG_FILE="$install_config" \
   MK61_OUTPUT_DIR="$install_output" MK61_C5_MOUNT="$install_mount" \
@@ -219,11 +220,11 @@ install_result=$(MK61_CONFIG_FILE="$install_config" \
 grep -q 'Меню → USB-диск' <<< "$install_result"
 grep -q 'Synchronized and verified' <<< "$install_result"
 cmp "$bundle/System/FOCAL.APP" "$install_mount/System/FOCAL.APP"
-cmp "$bundle/System/WBMP.APP" "$install_mount/System/WBMP.APP"
 cmp "$bundle/System/MARKDOWN.APP" "$install_mount/System/MARKDOWN.APP"
 cmp "$bundle/System/CHIP8.APP" "$install_mount/System/CHIP8.APP"
 grep -q '^keep-me$' "$install_mount/System/KEEP.APP"
 test ! -e "$install_mount/System/BASIC.APP"
+test ! -e "$install_mount/System/WBMP.APP"
 
 sed -e 's/^MK61_ENABLE_FOCAL=1$/MK61_ENABLE_FOCAL=0/' \
     -e 's/^MK61_ENABLE_WBMP_VIEWER=1$/MK61_ENABLE_WBMP_VIEWER=0/' \

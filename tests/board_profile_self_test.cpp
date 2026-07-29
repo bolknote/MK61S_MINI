@@ -7,12 +7,13 @@ int main(void) {
 #if defined(MK61_CONFIG_EXPECT_WBMP_DISABLED)
   static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
                 "the WBMP-disabled build must keep the viewer disabled");
-#elif MK61_HAS_COMPILED_GRAPHICS
+#elif defined(MK61_CONFIG_EXPECT_MARKDOWN_DISABLED) && \
+      MK61_HAS_COMPILED_GRAPHICS
   static_assert(MK61_ENABLE_WBMP_VIEWER == 1,
-                "a graphical build must enable WBMP by default");
+                "graphics without Markdown must enable WBMP by default");
 #else
   static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
-                "a non-graphical build must keep WBMP disabled by default");
+                "Markdown or a non-graphical build must default WBMP off");
 #endif
   static_assert(MK61_ENABLE_MARKDOWN_VIEWER ==
 #if defined(MK61_CONFIG_EXPECT_MARKDOWN_DISABLED)
@@ -25,6 +26,10 @@ int main(void) {
                     (MK61_ENABLE_MARKDOWN_VIEWER &&
                      MK61_HAS_COMPILED_GRAPHICS),
                 "Markdown must request WBMP decoding only for graphics");
+  static_assert(MK61_STANDALONE_WBMP_VIEWER_ENABLED ==
+                    (MK61_ENABLE_WBMP_VIEWER &&
+                     !MK61_ENABLE_MARKDOWN_VIEWER),
+                "the standalone WBMP viewer must be omitted with Markdown");
   static_assert(MK61_ENABLE_CHIP8 ==
 #if defined(MK61_CONFIG_EXPECT_CHIP8)
                 1,
@@ -43,7 +48,7 @@ int main(void) {
   static_assert(MK61_FOCAL_IS_LOADABLE && MK61_TINYBASIC_IS_LOADABLE,
                 "enabled language runtimes must become modules");
   static_assert(MK61_WBMP_VIEWER_IS_LOADABLE ==
-                    MK61_ENABLE_WBMP_VIEWER &&
+                    MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
                 MK61_MARKDOWN_VIEWER_IS_LOADABLE ==
                     MK61_ENABLE_MARKDOWN_VIEWER &&
                 MK61_CHIP8_IS_LOADABLE == MK61_ENABLE_CHIP8,
@@ -66,11 +71,16 @@ int main(void) {
   static_assert(MK61_FOCAL_IS_BUILTIN && MK61_TINYBASIC_IS_BUILTIN,
                 "enabled language features must stay built in");
   static_assert(MK61_WBMP_VIEWER_IS_BUILTIN ==
-                    MK61_ENABLE_WBMP_VIEWER &&
+                    MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
                 MK61_MARKDOWN_VIEWER_IS_BUILTIN ==
                     MK61_ENABLE_MARKDOWN_VIEWER &&
                 MK61_CHIP8_IS_BUILTIN == MK61_ENABLE_CHIP8,
                 "enabled graphical features must stay built in");
+  static_assert(MK61_IMAGE1_VIEWER_IS_BUILTIN ==
+                    (MK61_WBMP_VIEWER_IS_BUILTIN ||
+                     (MK61_MARKDOWN_VIEWER_IS_BUILTIN &&
+                      MK61_MARKDOWN_USES_WBMP)),
+                "Markdown must provide the built-in I1 viewer");
 #else
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
                 "non-F401 profiles must keep modules disabled by default");

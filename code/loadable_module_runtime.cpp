@@ -307,7 +307,12 @@ bool find_file_handler(u16 type_magic, FileHandler& handler) {
     Header header = {};
     if(find_system_app(kind, app) &&
        read_app_header(app, kind, header) == StoreStatus::OK &&
-       header.handled_type_magic == type_magic) {
+       (header.handled_type_magic == type_magic ||
+        (kind == Kind::MARKDOWN_VIEWER &&
+         MK61_MARKDOWN_USES_WBMP &&
+         header.handled_type_magic ==
+             program_store::TYPE_MAGIC_MARKDOWN &&
+         type_magic == program_store::TYPE_MAGIC_IMAGE1))) {
       handler = {kind, app.id, type_magic};
       return true;
     }

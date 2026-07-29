@@ -31,6 +31,10 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
+if ($Markdown -eq '1') {
+    $Wbmp = '0'
+}
+
 $script:ToolDir = $PSScriptRoot
 $script:AppsRoot = [IO.Path]::GetFullPath((Join-Path $script:ToolDir '..'))
 $script:ProjectRoot = [IO.Path]::GetFullPath(

@@ -2,8 +2,10 @@
   #include "config.h"
 #endif
 
-#if !defined(ARDUINO) || MK61_MARKDOWN_VIEWER_IS_BUILTIN || \
-    defined(MK61_BUILD_MARKDOWN_MODULE)
+#if !defined(ARDUINO) || \
+    (MK61_HAS_COMPILED_GRAPHICS && \
+     (MK61_MARKDOWN_VIEWER_IS_BUILTIN || \
+      defined(MK61_BUILD_MARKDOWN_MODULE)))
 
 #include "markdown_document.hpp"
 

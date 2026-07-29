@@ -304,6 +304,12 @@ function Build-Mk61Bundle {
         $Chip8 -notmatch '^[01]$') {
         Stop-Mk61Build 'System APP selections must be 0 or 1'
     }
+    if ($Markdown -eq '1') {
+        $Wbmp = '0'
+        $CompileFlags = $CompileFlags.Replace(
+            '-DMK61_ENABLE_WBMP_VIEWER=1',
+            '-DMK61_ENABLE_WBMP_VIEWER=0')
+    }
 
     $script:BuildPathValue = [IO.Path]::GetFullPath($BuildPath)
     $compilerDirectory = [IO.Path]::GetDirectoryName(

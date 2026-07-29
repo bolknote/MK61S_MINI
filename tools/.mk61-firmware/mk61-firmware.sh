@@ -1212,6 +1212,12 @@ boolean_valid() {
   return 1
 }
 
+normalize_viewer_selection() {
+  if [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ]; then
+    ENABLE_WBMP_VIEWER=0
+  fi
+}
+
 load_config() {
   if [ ! -r "$CONFIG_FILE" ]; then
     local legacy_profile=
@@ -1278,6 +1284,7 @@ load_config() {
     esac
   done < "$CONFIG_FILE"
 
+  normalize_viewer_selection
   if [ "$CLI_MCU" -eq 0 ]; then MCU=$saved_mcu; fi
   if [ "$CLI_PROFILE" -eq 1 ]; then
     hardware_from_profile "$PROFILE" || true
@@ -1296,6 +1303,7 @@ load_config() {
 }
 
 save_config() {
+  normalize_viewer_selection
   sync_profile_from_hardware
   local temporary="$CONFIG_FILE.tmp"
   mkdir -p "$(dirname "$CONFIG_FILE")" || return 1
@@ -1365,7 +1373,7 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL  %s TinyBASIC  %s WBMP  %s Markdown  %s CHIP-8  %s USB  %s шрифты  %s USER  %s CORE math' \
+  printf '%s FOCAL  %s TinyBASIC  %s WBMP APP  %s Markdown+WBMP  %s CHIP-8  %s USB  %s шрифты  %s USER  %s CORE math' \
     "$(checkbox_marker "$ENABLE_FOCAL")" \
     "$(checkbox_marker "$ENABLE_TINYBASIC")" \
     "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
@@ -1380,8 +1388,9 @@ compile_options_summary() {
 compile_options_details() {
   printf '%s FOCAL (MK61_ENABLE_FOCAL)\n' "$(checkbox_marker "$ENABLE_FOCAL")"
   printf '%s TinyBASIC (MK61_ENABLE_TINYBASIC)\n' "$(checkbox_marker "$ENABLE_TINYBASIC")"
-  printf '%s WBMP viewer (MK61_ENABLE_WBMP_VIEWER)\n' "$(checkbox_marker "$ENABLE_WBMP_VIEWER")"
-  printf '%s Markdown viewer (MK61_ENABLE_MARKDOWN_VIEWER)\n' \
+  printf '%s WBMP viewer без Markdown (MK61_ENABLE_WBMP_VIEWER)\n' \
+    "$(checkbox_marker "$ENABLE_WBMP_VIEWER")"
+  printf '%s Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)\n' \
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")"
   printf '%s CHIP-8 (MK61_ENABLE_CHIP8)\n' "$(checkbox_marker "$ENABLE_CHIP8")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
@@ -1493,11 +1502,11 @@ ensure_hardware_profile() {
 choose_compile_options() {
   local chosen tag
   chosen=$(ui_checklist 'Ключи компиляции' \
-    'Пробелом включайте и выключайте независимые функции. Все значения явно передаются Arduino CLI как -Dключи:' \
+    'Markdown включает просмотр T2 и I1; отдельный WBMP viewer используется только без Markdown:' \
     focal      'FOCAL · MK61_ENABLE_FOCAL' "$(option_state "$ENABLE_FOCAL")" \
     tinybasic  'TinyBASIC · MK61_ENABLE_TINYBASIC' "$(option_state "$ENABLE_TINYBASIC")" \
-    wbmp       'WBMP viewer · MK61_ENABLE_WBMP_VIEWER' "$(option_state "$ENABLE_WBMP_VIEWER")" \
-    markdown   'Markdown viewer · MK61_ENABLE_MARKDOWN_VIEWER' "$(option_state "$ENABLE_MARKDOWN_VIEWER")" \
+    wbmp       'WBMP viewer без Markdown · MK61_ENABLE_WBMP_VIEWER' "$(option_state "$ENABLE_WBMP_VIEWER")" \
+    markdown   'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER' "$(option_state "$ENABLE_MARKDOWN_VIEWER")" \
     chip8      'CHIP-8 · MK61_ENABLE_CHIP8' "$(option_state "$ENABLE_CHIP8")" \
     usb_screen 'USB-экран · MK61_ENABLE_USB_SCREEN' "$(option_state "$ENABLE_USB_SCREEN")" \
     fonts      'Расширенные настройки шрифта' "$(option_state "$ENABLE_EXTENDED_FONT_SETTINGS")" \
@@ -1526,6 +1535,7 @@ choose_compile_options() {
       core_math) ENABLE_CORE_MATH=1 ;;
     esac
   done < <(printf '%s\n' "$chosen")
+  normalize_viewer_selection
   save_config
 }
 
@@ -1945,7 +1955,8 @@ prepare_and_compile_worker() {
 expected_system_app_names() {
   [ "$ENABLE_FOCAL" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && printf '%s\n' BASIC.APP
-  [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && printf '%s\n' WBMP.APP
+  [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
+    [ "$ENABLE_MARKDOWN_VIEWER" -eq 0 ] && printf '%s\n' WBMP.APP
   [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] && printf '%s\n' MARKDOWN.APP
   [ "$ENABLE_CHIP8" -eq 1 ] && printf '%s\n' CHIP8.APP
 }
@@ -1958,7 +1969,10 @@ system_app_enabled() {
   case "$1" in
     FOCAL.APP) [ "$ENABLE_FOCAL" -eq 1 ] ;;
     BASIC.APP) [ "$ENABLE_TINYBASIC" -eq 1 ] ;;
-    WBMP.APP) [ "$ENABLE_WBMP_VIEWER" -eq 1 ] ;;
+    WBMP.APP)
+      [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
+        [ "$ENABLE_MARKDOWN_VIEWER" -eq 0 ]
+      ;;
     MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] ;;
     CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] ;;
     *) return 1 ;;

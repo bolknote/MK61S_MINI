@@ -8,16 +8,18 @@
 #include "keyboard.h"
 #include "language_workspace.hpp"
 #include "lcd_ru.hpp"
-#include "markdown_document.hpp"
-#include "markdown_scroll.hpp"
-#include "shared_scratch.hpp"
 #include "utf8_view.hpp"
 
 #if MK61_HAS_COMPILED_GRAPHICS
   #include "builtin_font.hpp"
   #include "fmk_font.hpp"
+  #include "markdown_document.hpp"
+  #include "markdown_scroll.hpp"
+  #include "shared_scratch.hpp"
   #include "storage_path.hpp"
   #include "wbmp.hpp"
+#else
+  #include "markdown_plain.hpp"
 #endif
 
 #include <stdio.h>
@@ -28,6 +30,11 @@ extern void idle_main_process(void);
 namespace markdown_viewer {
 namespace {
 
+static constexpr i32 VIEWER_DISPLAY_CHANGED = -2;
+static constexpr i32 VIEWER_KEY_NONE = -1;
+
+#if MK61_HAS_COMPILED_GRAPHICS
+
 static constexpr u16 DISPLAY_WIDTH = 192;
 static constexpr u8 DISPLAY_HEIGHT = 64;
 static constexpr u8 DISPLAY_PAGES = DISPLAY_HEIGHT / 8U;
@@ -37,8 +44,6 @@ static constexpr u8 SCROLL_CACHE_ROWS = 16;
 static constexpr usize SCROLL_CACHE_BYTES =
     (usize) DISPLAY_WIDTH * SCROLL_CACHE_ROWS / 8U;
 static constexpr u16 PLAIN_CAPACITY = 2048;
-static constexpr i32 VIEWER_DISPLAY_CHANGED = -2;
-static constexpr i32 VIEWER_KEY_NONE = -1;
 
 struct GraphicBuffers {
   u8 frame[FRAME_BYTES];
@@ -57,12 +62,23 @@ struct ViewerWorkspace {
 
 static_assert(sizeof(GraphicBuffers) <= PLAIN_CAPACITY,
               "Markdown scroll cache must fit the output overlay");
+
+#else
+
+struct ViewerWorkspace {
+  char plain[markdown_plain::MAX_OUTPUT_SIZE];
+};
+
+#endif
+
 static_assert(sizeof(ViewerWorkspace) <= language_workspace::SIZE,
               "Markdown viewer must fit the shared runtime workspace");
 
 struct Navigation {
   u16 plain_page;
+#if MK61_HAS_COMPILED_GRAPHICS
   u16 graphic_y;
+#endif
 };
 
 static i32 scan_key(void) {
@@ -235,19 +251,14 @@ static void draw_plain_page(MK61Display& display, const u8* data, u16 len,
   }
 }
 
-static Result view_plain(MK61Display& display, ViewerWorkspace& workspace,
-                         u16 compiled_size, Navigation& navigation,
-                         bool& display_changed) {
+static Result view_plain_text(MK61Display& display,
+                              const char* plain, u16 plain_size,
+                              Navigation& navigation,
+                              bool& display_changed) {
   display_changed = false;
-  u16 plain_size = 0;
-  const markdown::Status plain_status = markdown::to_plain_text(
-      workspace.compiled, compiled_size, workspace.output.plain,
-      sizeof(workspace.output.plain), plain_size);
-  if(plain_status != markdown::Status::OK) return Result::INVALID_DOCUMENT;
-
   const u8 rows = display.rows() == 0 ? 1 : display.rows();
   const u16 total_lines = plain_line_count(
-      (const u8*) workspace.output.plain, plain_size);
+      (const u8*) plain, plain_size);
   const u16 page_count =
       (u16) ((total_lines + rows - 1U) / rows);
   if(navigation.plain_page >= page_count) {
@@ -256,7 +267,7 @@ static Result view_plain(MK61Display& display, ViewerWorkspace& workspace,
 
   while(true) {
     const u32 revision = display.displayModeRevision();
-    draw_plain_page(display, (const u8*) workspace.output.plain, plain_size,
+    draw_plain_page(display, (const u8*) plain, plain_size,
                     (u16) (navigation.plain_page * rows));
     const i32 key = wait_key(display, revision);
     if(key == VIEWER_DISPLAY_CHANGED) {
@@ -273,6 +284,18 @@ static Result view_plain(MK61Display& display, ViewerWorkspace& workspace,
 }
 
 #if MK61_HAS_COMPILED_GRAPHICS
+
+static Result view_plain(MK61Display& display, ViewerWorkspace& workspace,
+                         u16 compiled_size, Navigation& navigation,
+                         bool& display_changed) {
+  u16 plain_size = 0;
+  const markdown::Status status = markdown::to_plain_text(
+      workspace.compiled, compiled_size, workspace.output.plain,
+      sizeof(workspace.output.plain), plain_size);
+  if(status != markdown::Status::OK) return Result::INVALID_DOCUMENT;
+  return view_plain_text(display, workspace.output.plain, plain_size,
+                         navigation, display_changed);
+}
 
 using markdown::BlockKind;
 using markdown::ListKind;
@@ -1111,6 +1134,8 @@ Result view_entry(MK61Display& display,
   ViewerWorkspace& workspace =
       *(ViewerWorkspace*) workspace_lease.data();
 
+#if MK61_HAS_COMPILED_GRAPHICS
+
   shared_scratch::Lease source(
       shared_scratch::Owner::MARKDOWN_VIEWER,
       program_store::MAX_MK61_TEXT_SIZE);
@@ -1145,6 +1170,36 @@ Result view_entry(MK61Display& display,
     }
     if(result != Result::OK || !display_changed) return result;
   }
+
+#else
+
+  static_assert(markdown_plain::MAX_SOURCE_SIZE >=
+                    program_store::MAX_MK61_TEXT_SIZE,
+                "plain Markdown input buffer is too small");
+  u16 source_size = 0;
+  if(!program_store::read_id(
+         entry.id, (u8*) workspace.plain, entry.data_len, &source_size) ||
+     source_size != entry.data_len) {
+    return Result::READ_ERROR;
+  }
+
+  u16 plain_size = 0;
+  const markdown_plain::Status status = markdown_plain::convert(
+      (const u8*) workspace.plain, source_size,
+      workspace.plain, sizeof(workspace.plain), plain_size);
+  if(status != markdown_plain::Status::OK) {
+    return Result::INVALID_DOCUMENT;
+  }
+
+  Navigation navigation = {0};
+  while(true) {
+    bool display_changed = false;
+    const Result result = view_plain_text(
+        display, workspace.plain, plain_size, navigation, display_changed);
+    if(result != Result::OK || !display_changed) return result;
+  }
+
+#endif
 }
 
 const char* result_text(Result result) {

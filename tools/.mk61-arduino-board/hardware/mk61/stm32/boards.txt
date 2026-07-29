@@ -2,8 +2,7 @@ menu.mk61_platform=Платформа
 menu.mk61_display=Экран
 menu.mk61_focal=FOCAL
 menu.mk61_basic=TinyBASIC
-menu.mk61_wbmp=WBMP viewer
-menu.mk61_markdown=Markdown viewer
+menu.mk61_documents=Документы
 menu.mk61_chip8=CHIP-8
 menu.mk61_usb_screen=USB-экран
 menu.mk61_font_settings=Настройки шрифта
@@ -91,15 +90,15 @@ mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic=1
 mk61_f401_app.menu.mk61_basic.disabled=Выключен
 mk61_f401_app.menu.mk61_basic.disabled.build.mk61_basic=0
 
-mk61_f401_app.menu.mk61_wbmp.disabled=Выключен
-mk61_f401_app.menu.mk61_wbmp.disabled.build.mk61_wbmp=0
-mk61_f401_app.menu.mk61_wbmp.enabled=APP
-mk61_f401_app.menu.mk61_wbmp.enabled.build.mk61_wbmp=1
-
-mk61_f401_app.menu.mk61_markdown.enabled=APP · T2
-mk61_f401_app.menu.mk61_markdown.enabled.build.mk61_markdown=1
-mk61_f401_app.menu.mk61_markdown.disabled=Выключен
-mk61_f401_app.menu.mk61_markdown.disabled.build.mk61_markdown=0
+mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1
+mk61_f401_app.menu.mk61_documents.markdown.build.mk61_wbmp=0
+mk61_f401_app.menu.mk61_documents.markdown.build.mk61_markdown=1
+mk61_f401_app.menu.mk61_documents.wbmp=WBMP.APP · только I1
+mk61_f401_app.menu.mk61_documents.wbmp.build.mk61_wbmp=1
+mk61_f401_app.menu.mk61_documents.wbmp.build.mk61_markdown=0
+mk61_f401_app.menu.mk61_documents.disabled=Выключены
+mk61_f401_app.menu.mk61_documents.disabled.build.mk61_wbmp=0
+mk61_f401_app.menu.mk61_documents.disabled.build.mk61_markdown=0
 
 mk61_f401_app.menu.mk61_chip8.disabled=Выключен
 mk61_f401_app.menu.mk61_chip8.disabled.build.mk61_chip8=0

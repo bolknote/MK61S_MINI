@@ -1,6 +1,7 @@
 #include "config.h"
 
-#if MK61_WBMP_VIEWER_IS_BUILTIN || defined(MK61_BUILD_WBMP_MODULE)
+#if MK61_IMAGE1_VIEWER_IS_BUILTIN || defined(MK61_BUILD_WBMP_MODULE) || \
+    (defined(MK61_BUILD_MARKDOWN_MODULE) && MK61_HAS_COMPILED_GRAPHICS)
 
 #include "image1_viewer.hpp"
 

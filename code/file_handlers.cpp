@@ -1,7 +1,7 @@
 #include "file_handlers.hpp"
 
 #include "config.h"
-#if MK61_WBMP_VIEWER_IS_BUILTIN
+#if MK61_IMAGE1_VIEWER_IS_BUILTIN
   #include "image1_viewer.hpp"
   #include "menu.hpp"
 #endif
@@ -24,7 +24,7 @@ static bool valid_file(const program_store::Entry& entry) {
              program_store::TYPE_MAGIC_NONE;
 }
 
-#if MK61_WBMP_VIEWER_IS_BUILTIN
+#if MK61_IMAGE1_VIEWER_IS_BUILTIN
 static loadable_module::FileOpenResult image_result(
     image1_viewer::Result result) {
   using loadable_module::FileOpenResult;
@@ -74,7 +74,7 @@ bool available(const program_store::Entry& entry) {
   const program_store::TypeMagic magic =
       program_store::type_magic(entry.type);
 
-#if MK61_WBMP_VIEWER_IS_BUILTIN
+#if MK61_IMAGE1_VIEWER_IS_BUILTIN
   if(magic == program_store::TYPE_MAGIC_IMAGE1) return true;
 #endif
 
@@ -100,7 +100,7 @@ loadable_module::FileOpenResult open(const program_store::Entry& entry) {
   const program_store::TypeMagic magic =
       program_store::type_magic(entry.type);
 
-#if MK61_WBMP_VIEWER_IS_BUILTIN
+#if MK61_IMAGE1_VIEWER_IS_BUILTIN
   if(magic == program_store::TYPE_MAGIC_IMAGE1) {
     return image_result(image1_viewer::view_entry(main_lcd(), entry));
   }

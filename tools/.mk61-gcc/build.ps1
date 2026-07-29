@@ -83,8 +83,8 @@ Profiles:
 System APP:
   -Focal 0|1       default 1
   -Basic 0|1       default 1
-  -Wbmp auto|0|1   default auto (graphics profiles only)
-  -Markdown 0|1    default 1
+  -Wbmp auto|0|1   default auto; standalone viewer when Markdown=0
+  -Markdown 0|1    default 1; handles both T2 and I1 on graphics
   -Chip8 0|1       default 0
 
 Firmware options:
@@ -343,7 +343,9 @@ if ($Help) {
 
 try {
     $profileInfo = Get-ProfileInfo $Profile
-    if ($Wbmp -eq 'auto') {
+    if ($Markdown -eq '1') {
+        $Wbmp = '0'
+    } elseif ($Wbmp -eq 'auto') {
         $Wbmp = if ($profileInfo.Graphics -or $UsbScreen -eq '1') {
             '1'
         } else {

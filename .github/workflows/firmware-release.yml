@@ -77,7 +77,7 @@ jobs:
             'SCREEN=lcd1602-a00',
             'MK61_ENABLE_FOCAL=1',
             'MK61_ENABLE_TINYBASIC=1',
-            'MK61_ENABLE_WBMP_VIEWER=1',
+            'MK61_ENABLE_WBMP_VIEWER=0',
             'MK61_ENABLE_MARKDOWN_VIEWER=1',
             'MK61_ENABLE_CHIP8=1',
             'MK61_ENABLE_USB_SCREEN=1',
@@ -110,7 +110,7 @@ jobs:
             --mcu f401 --profile mini-v3-a00 --build
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Verify resident and all System APP
+      - name: Verify resident and combined System APP
         shell: pwsh
         run: |
           $buildPath = Join-Path $env:RUNNER_TEMP `
@@ -134,7 +134,6 @@ jobs:
             'build.flags',
             'System/FOCAL.APP',
             'System/BASIC.APP',
-            'System/WBMP.APP',
             'System/MARKDOWN.APP',
             'System/CHIP8.APP'
           ) | ForEach-Object {
@@ -148,11 +147,16 @@ jobs:
             Join-Path $bundle 'build.flags') -Raw
           foreach ($required in @(
             '-DMK61_MATH_BACKEND=1',
-            '-DMK61_ENABLE_LTO=1'
+            '-DMK61_ENABLE_LTO=1',
+            '-DMK61_ENABLE_WBMP_VIEWER=0'
           )) {
             if (-not $flags.Contains($required)) {
               throw "Missing F401 build flag: $required"
             }
+          }
+          if (Test-Path -LiteralPath (
+              Join-Path $bundle 'System/WBMP.APP')) {
+            throw 'WBMP.APP must be folded into MARKDOWN.APP'
           }
 
   build-release:
@@ -337,6 +341,11 @@ jobs:
           done
           grep -F -- '-DMK61_MATH_BACKEND=1' "$bundle/build.flags"
           grep -F -- '-DMK61_ENABLE_LTO=1' "$bundle/build.flags"
+          markdown_size=$(stat -c %s "$bundle/System/MARKDOWN.APP")
+          if [ "$markdown_size" -gt 4096 ]; then
+            echo "Plain MARKDOWN.APP exceeds 4 KiB: $markdown_size" >&2
+            exit 1
+          fi
           zip -qr mk61s-M-mini-v3-lcd1602-a00-f401.zip \
             "$bundle"
           find . -type f ! -name SHA256SUMS.txt -print0 \

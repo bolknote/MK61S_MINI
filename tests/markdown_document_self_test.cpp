@@ -1,4 +1,5 @@
 #include "../code/markdown_document.hpp"
+#include "../code/markdown_plain.hpp"
 #include "../code/markdown_scroll.hpp"
 
 #include <assert.h>
@@ -26,6 +27,35 @@ static void expect_plain(const char* source, const char* expected) {
   if(strcmp(output, expected) != 0) {
     fprintf(stderr, "source:\n%s\nexpected:\n%s\nactual:\n%s\n",
             source, expected, output);
+    assert(false);
+  }
+
+  char lightweight[markdown_plain::MAX_OUTPUT_SIZE];
+  u16 lightweight_size = 0;
+  assert(markdown_plain::convert(
+      (const u8*) source, (u16) strlen(source),
+      lightweight, sizeof(lightweight), lightweight_size) ==
+      markdown_plain::Status::OK);
+  assert(lightweight_size == strlen(lightweight));
+  if(strcmp(lightweight, expected) != 0) {
+    fprintf(stderr,
+            "lightweight source:\n%s\nexpected:\n%s\nactual:\n%s\n",
+            source, expected, lightweight);
+    assert(false);
+  }
+
+  char in_place[markdown_plain::MAX_OUTPUT_SIZE];
+  memcpy(in_place, source, strlen(source) + 1U);
+  u16 in_place_size = 0;
+  assert(markdown_plain::convert(
+      (const u8*) in_place, (u16) strlen(source),
+      in_place, sizeof(in_place), in_place_size) ==
+      markdown_plain::Status::OK);
+  if(in_place_size != lightweight_size ||
+     strcmp(in_place, expected) != 0) {
+    fprintf(stderr,
+            "in-place source:\n%s\nexpected:\n%s\nactual:\n%s\n",
+            source, expected, in_place);
     assert(false);
   }
 }
@@ -136,6 +166,50 @@ static void test_bounds_and_malformed_stream(void) {
   markdown::Reader reader(bad, sizeof(bad));
   markdown::Event event = {};
   assert(reader.next(event) == markdown::Status::INVALID_STREAM);
+
+  char plain[16];
+  u16 plain_size = 123;
+  assert(markdown_plain::convert(
+      source, sizeof(source), plain, sizeof(plain), plain_size) ==
+      markdown_plain::Status::SOURCE_TOO_LARGE);
+  assert(plain_size == 0);
+  assert(markdown_plain::convert(
+      (const u8*) "1234", 4, plain, 4, plain_size) ==
+      markdown_plain::Status::OUTPUT_TOO_SMALL);
+  assert(markdown_plain::convert(
+      nullptr, 0, plain, sizeof(plain), plain_size) ==
+      markdown_plain::Status::INVALID_ARGUMENT);
+}
+
+static void test_lightweight_in_place_conversion(void) {
+  static const char alphabet[] =
+      "ab01 *_~`[]()!#-+>\\\t\n\r&;./x";
+  u32 state = 0x61C0DEU;
+  for(u16 iteration = 0; iteration < 2000; iteration++) {
+    char source[257];
+    state = state * 1664525U + 1013904223U;
+    const u16 length = (u16) (state % sizeof(source));
+    for(u16 index = 0; index < length; index++) {
+      state = state * 1664525U + 1013904223U;
+      source[index] = alphabet[state % (sizeof(alphabet) - 1U)];
+    }
+
+    char expected[markdown_plain::MAX_OUTPUT_SIZE];
+    u16 expected_size = 0;
+    assert(markdown_plain::convert(
+        (const u8*) source, length, expected, sizeof(expected),
+        expected_size) == markdown_plain::Status::OK);
+    assert(expected_size <= length);
+
+    char in_place[markdown_plain::MAX_OUTPUT_SIZE];
+    memcpy(in_place, source, length);
+    u16 actual_size = 0;
+    assert(markdown_plain::convert(
+        (const u8*) in_place, length, in_place, sizeof(in_place),
+        actual_size) == markdown_plain::Status::OK);
+    assert(actual_size == expected_size);
+    assert(memcmp(in_place, expected, expected_size + 1U) == 0);
+  }
 }
 
 static void test_adversarial_inline_density_fits(void) {
@@ -314,6 +388,7 @@ int main(void) {
   test_heading_forms_and_escapes();
   test_event_styles_and_image();
   test_bounds_and_malformed_stream();
+  test_lightweight_in_place_conversion();
   test_adversarial_inline_density_fits();
   test_adversarial_block_density_fits();
   test_graphic_scroll_frame_shift();

@@ -103,18 +103,6 @@
   #define MK61_HAS_COMPILED_GRAPHICS 0
 #endif
 
-// WBMP доступен по умолчанию только в сборке с физическим или виртуальным
-// графическим экраном. Файлы .wbmp остаются типом C5 и при выключенном модуле.
-#ifndef MK61_ENABLE_WBMP_VIEWER
-  #define MK61_ENABLE_WBMP_VIEWER MK61_HAS_COMPILED_GRAPHICS
-#endif
-#if MK61_ENABLE_WBMP_VIEWER != 0 && MK61_ENABLE_WBMP_VIEWER != 1
-  #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
-#endif
-#if MK61_ENABLE_WBMP_VIEWER && !MK61_HAS_COMPILED_GRAPHICS
-  #error "MK61_ENABLE_WBMP_VIEWER requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
-#endif
-
 // T2/.md доступен на любом экране: LCD1602 получает семантический plain text,
 // UC1609 и USB-экран — форматированный монохромный документ с WBMP-блоками.
 #ifndef MK61_ENABLE_MARKDOWN_VIEWER
@@ -122,6 +110,25 @@
 #endif
 #if MK61_ENABLE_MARKDOWN_VIEWER != 0 && MK61_ENABLE_MARKDOWN_VIEWER != 1
   #error "MK61_ENABLE_MARKDOWN_VIEWER must be 0 or 1"
+#endif
+
+// Отдельный WBMP-viewer по умолчанию существует только без Markdown и при
+// наличии физического или виртуального графического экрана. Явная прежняя
+// комбинация WBMP=1, MARKDOWN=1 безопасна: Markdown всё равно имеет приоритет.
+#ifndef MK61_ENABLE_WBMP_VIEWER
+  #define MK61_ENABLE_WBMP_VIEWER \
+    (MK61_HAS_COMPILED_GRAPHICS && !MK61_ENABLE_MARKDOWN_VIEWER)
+#endif
+#if MK61_ENABLE_WBMP_VIEWER != 0 && MK61_ENABLE_WBMP_VIEWER != 1
+  #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
+#endif
+
+#define MK61_MARKDOWN_USES_WBMP \
+  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_COMPILED_GRAPHICS)
+#define MK61_STANDALONE_WBMP_VIEWER_ENABLED \
+  (MK61_ENABLE_WBMP_VIEWER && !MK61_ENABLE_MARKDOWN_VIEWER)
+#if MK61_STANDALONE_WBMP_VIEWER_ENABLED && !MK61_HAS_COMPILED_GRAPHICS
+  #error "MK61_ENABLE_WBMP_VIEWER requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
 #endif
 
 // Консоль CHIP-8 выключена по умолчанию. C1 — двухбайтовый magic типа C5;
@@ -138,7 +145,7 @@
 
 // F401CC вмещает основную прошивку, но почти не оставляет запаса во внутренней
 // Flash для всех необязательных рантаймов. Поэтому его штатный профиль хранит
-// включённые FOCAL, TinyBASIC, WBMP и Markdown как загружаемые APP в C5.
+// включённые FOCAL, TinyBASIC и просмотрщики как загружаемые APP в C5.
 // Остальные контроллеры сохраняют прежнюю встроенную компоновку. Явный ключ
 // -DMK61_ENABLE_LOADABLE_MODULES=0/1 всегда имеет приоритет над профилем платы.
 #ifndef MK61_ENABLE_LOADABLE_MODULES
@@ -161,7 +168,8 @@
 #define MK61_TINYBASIC_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_TINYBASIC)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
-  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_WBMP_VIEWER)
+  (MK61_ENABLE_LOADABLE_MODULES && \
+   MK61_STANDALONE_WBMP_VIEWER_ENABLED)
 #define MK61_MARKDOWN_VIEWER_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_MARKDOWN_VIEWER)
 #define MK61_CHIP8_IS_LOADABLE \
@@ -173,23 +181,25 @@
 #define MK61_TINYBASIC_IS_BUILTIN \
   (MK61_ENABLE_TINYBASIC && !MK61_ENABLE_LOADABLE_MODULES)
 #define MK61_WBMP_VIEWER_IS_BUILTIN \
-  (MK61_ENABLE_WBMP_VIEWER && !MK61_ENABLE_LOADABLE_MODULES)
+  (MK61_STANDALONE_WBMP_VIEWER_ENABLED && \
+   !MK61_ENABLE_LOADABLE_MODULES)
 #define MK61_MARKDOWN_VIEWER_IS_BUILTIN \
   (MK61_ENABLE_MARKDOWN_VIEWER && !MK61_ENABLE_LOADABLE_MODULES)
 #define MK61_CHIP8_IS_BUILTIN \
   (MK61_ENABLE_CHIP8 && !MK61_ENABLE_LOADABLE_MODULES)
 
-// Markdown uses the WBMP decoder for local image blocks on a graphical
-// display, but never depends on WBMP.APP: loadable APPs share one overlay and
-// cannot call one another. The decoder is linked into the Markdown component.
-#define MK61_MARKDOWN_USES_WBMP \
-  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_COMPILED_GRAPHICS)
-#define MK61_WBMP_DECODER_IS_BUILTIN \
+// Графический Markdown владеет полным I1-viewer и WBMP-декодером: он показывает
+// как локальные блоки изображений, так и самостоятельные .wbmp. Загружаемые
+// APP делят один overlay и не могут вызывать друг друга, поэтому WBMP.APP
+// существует только в конфигурации без Markdown.
+#define MK61_IMAGE1_VIEWER_IS_BUILTIN \
   (MK61_WBMP_VIEWER_IS_BUILTIN || \
    (MK61_MARKDOWN_VIEWER_IS_BUILTIN && MK61_MARKDOWN_USES_WBMP))
+#define MK61_WBMP_DECODER_IS_BUILTIN \
+  (MK61_IMAGE1_VIEWER_IS_BUILTIN)
 
 #define MK61_ANY_FULLSCREEN_FILE \
-  (MK61_ENABLE_WBMP_VIEWER || MK61_ENABLE_CHIP8 || \
+  (MK61_STANDALONE_WBMP_VIEWER_ENABLED || MK61_ENABLE_CHIP8 || \
    (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_COMPILED_GRAPHICS))
 
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала

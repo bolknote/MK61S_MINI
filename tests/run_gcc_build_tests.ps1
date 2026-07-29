@@ -87,6 +87,7 @@ Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
 $invalid = Invoke-Backend @(
     '-Profile', 'mini-v3-a00',
     '-Wbmp', '1',
+    '-Markdown', '0',
     '-UsbScreen', '0')
 Assert-True ($invalid.ExitCode -eq 1) `
     'LCD1602 profile accepted a graphics APP without USB Screen'
@@ -156,7 +157,7 @@ Assert-True ($releaseWorkflowText -match
 foreach ($setting in @(
     'MK61_ENABLE_FOCAL=1',
     'MK61_ENABLE_TINYBASIC=1',
-    'MK61_ENABLE_WBMP_VIEWER=1',
+    'MK61_ENABLE_WBMP_VIEWER=0',
     'MK61_ENABLE_MARKDOWN_VIEWER=1',
     'MK61_ENABLE_CHIP8=1',
     'MK61_ENABLE_USB_SCREEN=1',

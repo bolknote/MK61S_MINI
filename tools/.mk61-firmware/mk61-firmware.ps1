@@ -303,7 +303,7 @@ function Get-Checkbox {
 }
 
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP  {3} Markdown  {4} CHIP-8  {5} USB  {6} шрифты  {7} USER  {8} CORE math' -f
+    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP APP  {3} Markdown+WBMP  {4} CHIP-8  {5} USB  {6} шрифты  {7} USER  {8} CORE math' -f
         (Get-Checkbox $script:State.EnableFocal),
         (Get-Checkbox $script:State.EnableTinyBasic),
         (Get-Checkbox $script:State.EnableWbmp),
@@ -324,8 +324,8 @@ function Get-CompileOptionsDetails {
     return @(
         "$(Get-Checkbox $script:State.EnableFocal) FOCAL (MK61_ENABLE_FOCAL)"
         "$(Get-Checkbox $script:State.EnableTinyBasic) TinyBASIC (MK61_ENABLE_TINYBASIC)"
-        "$(Get-Checkbox $script:State.EnableWbmp) WBMP viewer (MK61_ENABLE_WBMP_VIEWER)"
-        "$(Get-Checkbox $script:State.EnableMarkdown) Markdown viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
+        "$(Get-Checkbox $script:State.EnableWbmp) WBMP viewer без Markdown (MK61_ENABLE_WBMP_VIEWER)"
+        "$(Get-Checkbox $script:State.EnableMarkdown) Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
         "$(Get-Checkbox $script:State.EnableChip8) CHIP-8 (MK61_ENABLE_CHIP8)"
         "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
         "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
@@ -336,7 +336,14 @@ function Get-CompileOptionsDetails {
 
 function Test-BooleanValue { param([string]$Value) return $Value -eq '0' -or $Value -eq '1' }
 
+function Normalize-ViewerSelection {
+    if ($script:State.EnableMarkdown -eq 1) {
+        $script:State.EnableWbmp = 0
+    }
+}
+
 function Save-Config {
+    Normalize-ViewerSelection
     Sync-ProfileFromHardware
     $parent = Split-Path -Parent $script:ConfigFile
     if (-not [string]::IsNullOrEmpty($parent)) { [void](New-Item -ItemType Directory -Force -Path $parent) }
@@ -407,6 +414,7 @@ function Load-Config {
         }
     }
 
+    Normalize-ViewerSelection
     if (-not $script:State.CliMcu) { $script:State.Mcu = $savedMcu }
     if ($script:State.CliProfile) {
         [void](Set-HardwareFromProfile $script:State.Profile)
@@ -1087,7 +1095,10 @@ function Get-ExpectedSystemAppNames {
     $names = New-Object 'System.Collections.Generic.List[string]'
     if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
     if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
-    if ($script:State.EnableWbmp -eq 1) { $names.Add('WBMP.APP') }
+    if ($script:State.EnableWbmp -eq 1 -and
+        $script:State.EnableMarkdown -eq 0) {
+        $names.Add('WBMP.APP')
+    }
     if ($script:State.EnableMarkdown -eq 1) { $names.Add('MARKDOWN.APP') }
     if ($script:State.EnableChip8 -eq 1) { $names.Add('CHIP8.APP') }
     return $names.ToArray()
@@ -1805,8 +1816,8 @@ function Choose-CompileOptions {
     $items = @(
         [pscustomobject]@{ Tag = 'focal'; Label = 'FOCAL · MK61_ENABLE_FOCAL'; State = if ($script:State.EnableFocal) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'tinybasic'; Label = 'TinyBASIC · MK61_ENABLE_TINYBASIC'; State = if ($script:State.EnableTinyBasic) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'wbmp'; Label = 'WBMP viewer · MK61_ENABLE_WBMP_VIEWER'; State = if ($script:State.EnableWbmp) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'markdown'; Label = 'Markdown viewer · MK61_ENABLE_MARKDOWN_VIEWER'; State = if ($script:State.EnableMarkdown) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'wbmp'; Label = 'WBMP viewer без Markdown · MK61_ENABLE_WBMP_VIEWER'; State = if ($script:State.EnableWbmp) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'markdown'; Label = 'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER'; State = if ($script:State.EnableMarkdown) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'chip8'; Label = 'CHIP-8 · MK61_ENABLE_CHIP8'; State = if ($script:State.EnableChip8) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'usb_screen'; Label = 'USB-экран · MK61_ENABLE_USB_SCREEN'; State = if ($script:State.EnableUsbScreen) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'fonts'; Label = 'Расширенные настройки шрифта'; State = if ($script:State.EnableFonts) { 'on' } else { 'off' } }
@@ -1814,7 +1825,7 @@ function Choose-CompileOptions {
         [pscustomobject]@{ Tag = 'core_math'; Label = 'Математика CORE вместо libm'; State = if ($script:State.EnableCoreMath) { 'on' } else { 'off' } }
     )
     $result = Show-Checklist 'Ключи компиляции' `
-        'Пробелом включайте и выключайте независимые функции. Все значения явно передаются Arduino CLI как -Dключи:' $items
+        'Markdown включает просмотр T2 и I1; отдельный WBMP viewer используется только без Markdown:' $items
     if ($result.Cancelled) { return $false }
     $script:State.EnableFocal = [int]($result.Values -contains 'focal')
     $script:State.EnableTinyBasic = [int]($result.Values -contains 'tinybasic')
@@ -1825,6 +1836,7 @@ function Choose-CompileOptions {
     $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
     $script:State.EnableExplorer = [int]($result.Values -contains 'explorer')
     $script:State.EnableCoreMath = [int]($result.Values -contains 'core_math')
+    Normalize-ViewerSelection
     Save-Config
     return $true
 }

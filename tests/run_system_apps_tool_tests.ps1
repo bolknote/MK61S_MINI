@@ -103,7 +103,9 @@ $sources = @(
         Macro = 'MK61_BUILD_MARKDOWN_MODULE'
         Includes = @(
             'markdown_document.cpp',
+            'markdown_plain.cpp',
             'wbmp.cpp',
+            'image1_viewer.cpp',
             'markdown_viewer.cpp',
             'markdown_viewer_module_entry.cpp')
     }
@@ -150,6 +152,9 @@ Assert-True ($builderText -notmatch
 Assert-True ($builderText -notmatch 'mk61_ide_.*\.cpp\.o') `
     'standalone builder still consumes Arduino System APP objects'
 Assert-True ($builderText -match
+    '\$Markdown -eq ''1''[\s\S]+?\$Wbmp = ''0''') `
+    'standalone builder does not suppress WBMP.APP with Markdown'
+Assert-True ($builderText -match
     "\^-flto\(\?:=\.\*\)\?\$[\s\S]+-fno-fat-lto-objects") `
     'standalone builder does not normalize resident LTO flags'
 
@@ -190,17 +195,18 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
         $expected = [ordered]@{
             'FOCAL.APP' = 1
             'BASIC.APP' = 2
-            'WBMP.APP' = 3
             'MARKDOWN.APP' = 6
             'CHIP8.APP' = 5
         }
         $expectedMagic = @{
             'FOCAL.APP' = [uint16]0
             'BASIC.APP' = [uint16]0
-            'WBMP.APP' = [uint16]0x3149
             'MARKDOWN.APP' = [uint16]0x3254
             'CHIP8.APP' = [uint16]0x3143
         }
+        Assert-True (-not (Test-Path -LiteralPath (
+            Join-Path $output 'WBMP.APP'))) `
+            'WBMP.APP was built together with MARKDOWN.APP'
         foreach ($name in $expected.Keys) {
             $path = Join-Path $output $name
             Assert-True (Test-Path -LiteralPath $path -PathType Leaf) `

@@ -55,6 +55,8 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
   MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND
+  Markdown handles T2 and graphical I1; WBMP.APP is built only with
+  MK61_ENABLE_MARKDOWN_VIEWER=0.
 
 Other overrides:
   MK61_ARDUINO_CLI, MK61_F401_BUILD_ROOT, MK61_OUTPUT_DIR,
@@ -382,10 +384,14 @@ board_flags=$(profile_flags "$profile") || {
 firmware_name=$(artifact_name "$profile")
 
 if [ -z "$enable_wbmp" ]; then
-  case "$profile" in
-    classic-v2|classic-v3|40th) enable_wbmp=1 ;;
-    *) enable_wbmp=$enable_usb_screen ;;
-  esac
+  if [ "$enable_markdown" -eq 1 ]; then
+    enable_wbmp=0
+  else
+    case "$profile" in
+      classic-v2|classic-v3|40th) enable_wbmp=1 ;;
+      *) enable_wbmp=$enable_usb_screen ;;
+    esac
+  fi
 fi
 
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
@@ -397,6 +403,9 @@ for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
     exit 2
   }
 done
+if [ "$enable_markdown" -eq 1 ]; then
+  enable_wbmp=0
+fi
 case "$profile" in
   classic-v2|classic-v3|40th) compiled_graphics=1 ;;
   *) compiled_graphics=$enable_usb_screen ;;
@@ -656,8 +665,8 @@ fi
 if [ "$enable_markdown" -eq 1 ]; then
   build_module markdown System/MARKDOWN.APP markdown-viewer \
     MK61_BUILD_MARKDOWN_MODULE "$sketch_dir" T2 \
-    markdown_document.cpp wbmp.cpp markdown_viewer.cpp \
-    markdown_viewer_module_entry.cpp
+    markdown_document.cpp markdown_plain.cpp wbmp.cpp image1_viewer.cpp \
+    markdown_viewer.cpp markdown_viewer_module_entry.cpp
 fi
 if [ "$enable_chip8" -eq 1 ]; then
   build_module chip8 System/CHIP8.APP chip8 MK61_BUILD_CHIP8_MODULE \

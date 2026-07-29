@@ -237,6 +237,10 @@ build_bundle() {
     [01]:[01]:[01]:[01]:[01]) ;;
     *) die 'System APP selections must be 0 or 1' ;;
   esac
+  if [ "$markdown" -eq 1 ]; then
+    wbmp=0
+    compile_flags=${compile_flags/-DMK61_ENABLE_WBMP_VIEWER=1/-DMK61_ENABLE_WBMP_VIEWER=0}
+  fi
 
   build_path=$build_path_arg
   size_tool=$size_tool_arg
