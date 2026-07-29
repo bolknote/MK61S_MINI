@@ -8,7 +8,8 @@ namespace exclusive_buffer {
 enum class Owner : u8 {
   NONE,
   DISPLAY_FONT,
-  USB_CACHE
+  USB_CACHE,
+  PROGRAM_STORE_COMPRESSION
 };
 
 // Постоянное хранилище внешнего шрифта во время работы интерфейса; когда

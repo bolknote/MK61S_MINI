@@ -30,6 +30,20 @@ using program_store::Entry;
 using program_store::NodeKind;
 using program_store::ProgramType;
 
+struct TestSource {
+  const u8* data;
+  u16 size;
+};
+
+static bool read_test_source(void* context, u32 offset,
+                             u8* output, usize size) {
+  const TestSource& source = *(TestSource*) context;
+  if(output == nullptr || offset > source.size ||
+     size > source.size - offset) return false;
+  memcpy(output, source.data + offset, size);
+  return true;
+}
+
 static void fresh(u32 capacity = SPIFlash::DEFAULT_CAPACITY) {
   SPIFlash::reset(capacity);
   program_store::init();
@@ -194,6 +208,542 @@ static void test_markdown_type_roundtrip_without_catalog_migration(void) {
   assert(storage_path::format_entry(entry, path, sizeof(path)) ==
          storage_path::Status::OK);
   assert(strcmp(path, "/manual.md") == 0);
+}
+
+static void test_transparent_small_zx0_records(void) {
+  fresh(512U * 1024U);
+  static u8 workspace[8192];
+  static u8 source[1400];
+  for(u16 index = 0; index < sizeof(source); index++) {
+    source[index] = (u8) ("ZX0 bounded parser test\n"[index % 24U]);
+  }
+  TestSource memory = {source, sizeof(source)};
+  const program_store::FileSource file_source = {
+    &memory, read_test_source
+  };
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file_from_source(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::TEXT, "packed", sizeof(source), file_source,
+      nullptr, 0, &id, workspace, sizeof(workspace)));
+
+  u16 stored_len = 0;
+  bool large = true;
+  bool packed = false;
+  assert(program_store::test_file_storage_info(
+      id, stored_len, large, packed));
+  assert(packed && !large);
+  assert(stored_len + 64U <= sizeof(source));
+
+  u8 range[173] = {};
+  u16 copied = 0;
+  assert(program_store::read_range_id(
+      id, 511, range, sizeof(range), &copied));
+  assert(copied == sizeof(range));
+  assert(memcmp(range, source + 511, sizeof(range)) == 0);
+
+  assert(program_store::move_rename(
+      id, program_store::ROOT_ID, "renamed packed"));
+  u16 renamed_stored_len = 0;
+  assert(program_store::test_file_storage_info(
+      id, renamed_stored_len, large, packed));
+  assert(packed && !large && renamed_stored_len == stored_len);
+  expect_text(id, source, sizeof(source));
+
+  program_store::init();
+  assert(program_store::ready());
+  expect_text(id, source, sizeof(source));
+
+  // На LCD1602 нет external/exclusive 8-KiB buffer. Обычный write_file()
+  // обязан всё равно сжать memory source через локальный bounded fallback.
+  u16 fallback_id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::TEXT, "fallback packed", source, sizeof(source),
+      &fallback_id));
+  assert(program_store::test_file_storage_info(
+      fallback_id, stored_len, large, packed));
+  assert(packed && !large && stored_len + 64U <= sizeof(source));
+  expect_text(fallback_id, source, sizeof(source));
+}
+
+static void test_compression_policy_and_large_to_small_choice(void) {
+  fresh(512U * 1024U);
+  static u8 workspace[8192];
+  static u8 random_data[1400];
+  u32 state = 0xC001D00DUL;
+  for(u16 index = 0; index < sizeof(random_data); index++) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    random_data[index] = (u8) state;
+  }
+  TestSource random_memory = {random_data, sizeof(random_data)};
+  const program_store::FileSource random_source = {
+    &random_memory, read_test_source
+  };
+  u16 random_id = program_store::INVALID_ID;
+  assert(program_store::write_file_from_source(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::TEXT, "random", sizeof(random_data), random_source,
+      nullptr, 0, &random_id, workspace, sizeof(workspace)));
+  u16 stored_len = 0;
+  bool large = false;
+  bool packed = true;
+  assert(program_store::test_file_storage_info(
+      random_id, stored_len, large, packed));
+  assert(!packed && !large && stored_len == sizeof(random_data));
+
+  static u8 mk61_data[900];
+  memset(mk61_data, 'M', sizeof(mk61_data));
+  TestSource mk61_memory = {mk61_data, sizeof(mk61_data)};
+  const program_store::FileSource mk61_source = {
+    &mk61_memory, read_test_source
+  };
+  u16 mk61_id = program_store::INVALID_ID;
+  assert(program_store::write_file_from_source(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::MK61, "hot range", sizeof(mk61_data), mk61_source,
+      nullptr, 0, &mk61_id, workspace, sizeof(workspace)));
+  assert(program_store::test_file_storage_info(
+      mk61_id, stored_len, large, packed));
+  assert(!packed && stored_len == sizeof(mk61_data));
+
+  static u8 chip8[2039];
+  for(u16 index = 0; index < sizeof(chip8); index++) {
+    chip8[index] = (u8) (index % 251U);
+  }
+  TestSource chip8_memory = {chip8, sizeof(chip8)};
+  const program_store::FileSource chip8_source = {
+    &chip8_memory, read_test_source
+  };
+  u16 chip8_id = program_store::INVALID_ID;
+  assert(program_store::write_file_from_source(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::CHIP8, "logical large", sizeof(chip8), chip8_source,
+      nullptr, 0, &chip8_id, workspace, sizeof(workspace)));
+  assert(program_store::test_file_storage_info(
+      chip8_id, stored_len, large, packed));
+  assert(packed && !large && stored_len <= program_store::MAX_IMAGE1_SIZE);
+  static u8 recovered[sizeof(chip8)];
+  u16 recovered_len = 0;
+  assert(program_store::read_id(
+      chip8_id, recovered, sizeof(recovered), &recovered_len));
+  assert(recovered_len == sizeof(chip8));
+  assert(memcmp(recovered, chip8, sizeof(chip8)) == 0);
+}
+
+static void test_small_zx0_replacement_reuses_logical_fat_extents(void) {
+  static u8 chip8[program_store::MAX_CHIP8_SIZE];
+  static u8 recovered[program_store::MAX_CHIP8_SIZE];
+  fresh(128U * 1024U);
+  assert(program_store::max_nodes() == 30U);
+
+  for(u16 index = 0; index < sizeof(chip8); index++) {
+    chip8[index] = (u8) (index % 251U);
+  }
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::CHIP8, "extent reuse", chip8, sizeof(chip8), &id));
+  u16 stored_len = 0;
+  bool large = true;
+  bool zx0 = false;
+  assert(program_store::test_file_storage_info(
+      id, stored_len, large, zx0));
+  assert(zx0 && !large && stored_len <= program_store::MAX_IMAGE1_SIZE);
+
+  u16 original_extent = program_store::INVALID_ID;
+  assert(program_store::first_file_extent(id, original_extent));
+  u16 extra_extent = program_store::INVALID_ID;
+  assert(!program_store::next_file_extent(original_extent, extra_extent));
+
+  for(u8 index = 0; index < 28; index++) {
+    char name[8];
+    snprintf(name, sizeof(name), "Q%02u", (unsigned) index);
+    const u8 value = index;
+    assert(program_store::write(ProgramType::TEXT, name, &value, 1));
+  }
+  assert(program_store::used_nodes() == program_store::max_nodes());
+
+  for(u16 index = 0; index < sizeof(chip8); index++) {
+    chip8[index] = (u8) (index % 251U + 17U);
+  }
+  assert(program_store::write_file(
+      program_store::ROOT_ID, id, ProgramType::CHIP8,
+      "extent reuse", chip8, sizeof(chip8), &id));
+  u16 replacement_extent = program_store::INVALID_ID;
+  assert(program_store::first_file_extent(id, replacement_extent));
+  assert(replacement_extent == original_extent);
+  assert(program_store::used_nodes() == program_store::max_nodes());
+
+  u16 recovered_len = 0;
+  assert(program_store::read_id(
+      id, recovered, sizeof(recovered), &recovered_len));
+  assert(recovered_len == sizeof(chip8));
+  assert(memcmp(recovered, chip8, sizeof(chip8)) == 0);
+}
+
+static void test_large_zx0_chip8_roundtrip(void) {
+  fresh(512U * 1024U);
+  static u8 workspace[8192];
+  static u8 chip8[program_store::MAX_CHIP8_SIZE];
+  u32 state = 0x31415926UL;
+  for(u16 block = 0; block < sizeof(chip8) / 256U; block++) {
+    const u16 base = (u16) (block * 256U);
+    for(u16 index = 0; index < 160; index++) {
+      state ^= state << 13;
+      state ^= state >> 17;
+      state ^= state << 5;
+      chip8[base + index] = (u8) state;
+    }
+    memcpy(chip8 + base + 160, chip8 + base, 96);
+  }
+  TestSource memory = {chip8, sizeof(chip8)};
+  const program_store::FileSource source = {
+    &memory, read_test_source
+  };
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file_from_source(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::CHIP8, "large packed", sizeof(chip8), source,
+      nullptr, 0, &id, workspace, sizeof(workspace)));
+
+  u16 stored_len = 0;
+  bool large = false;
+  bool packed = false;
+  assert(program_store::test_file_storage_info(
+      id, stored_len, large, packed));
+  assert(packed && large);
+  assert(stored_len > program_store::MAX_IMAGE1_SIZE);
+  assert(stored_len + 64U <= sizeof(chip8));
+
+  u8 range[333] = {};
+  u16 copied = 0;
+  assert(program_store::read_range_id(
+      id, 1701, range, sizeof(range), &copied));
+  assert(copied == sizeof(range));
+  assert(memcmp(range, chip8 + 1701, sizeof(range)) == 0);
+
+  static u8 recovered[sizeof(chip8)];
+  u16 recovered_len = 0;
+  assert(program_store::read_id(
+      id, recovered, sizeof(recovered), &recovered_len));
+  assert(recovered_len == sizeof(chip8));
+  assert(memcmp(recovered, chip8, sizeof(chip8)) == 0);
+
+  assert(program_store::move_rename(
+      id, program_store::ROOT_ID, "large renamed"));
+  u16 renamed_len = 0;
+  assert(program_store::test_file_storage_info(
+      id, renamed_len, large, packed));
+  assert(packed && large && renamed_len == stored_len);
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::read_id(
+      id, recovered, sizeof(recovered), &recovered_len));
+  assert(memcmp(recovered, chip8, sizeof(chip8)) == 0);
+}
+
+static u32 churn_random(u32& state) {
+  state ^= state << 13;
+  state ^= state >> 17;
+  state ^= state << 5;
+  return state;
+}
+
+static ProgramType churn_type(u8 slot) {
+  switch(slot % 5U) {
+    case 0:
+    case 1: return ProgramType::TEXT;
+    case 2:
+    case 3: return ProgramType::CHIP8;
+    default: return ProgramType::MK61;
+  }
+}
+
+static u16 fill_churn_payload(u8 slot, u16 generation, u8* output) {
+  const u8 kind = (u8) (slot % 5U);
+  if(kind == 0) {
+    const u16 size = (u16) (700U + generation % 701U);
+    for(u16 index = 0; index < size; index++) {
+      output[index] = (u8) (
+          "mixed-order-small-zx0\n"[(index + slot) % 22U]);
+    }
+    return size;
+  }
+  if(kind == 1) {
+    const u16 size = (u16) (800U + generation % 601U);
+    u32 state = 0xA5C31E27UL ^ ((u32) slot << 24) ^ generation;
+    for(u16 index = 0; index < size; index++) {
+      output[index] = (u8) churn_random(state);
+    }
+    return size;
+  }
+  if(kind == 2) {
+    u32 state = 0xC0DEC0DEUL ^ ((u32) slot << 16) ^ generation;
+    for(u16 block = 0;
+        block < program_store::MAX_CHIP8_SIZE / 256U; block++) {
+      const u16 base = (u16) (block * 256U);
+      for(u16 index = 0; index < 160; index++) {
+        output[base + index] = (u8) churn_random(state);
+      }
+      memcpy(output + base + 160, output + base, 96);
+    }
+    return program_store::MAX_CHIP8_SIZE;
+  }
+  if(kind == 3) {
+    static constexpr u16 SIZE = 2039;
+    for(u16 index = 0; index < SIZE; index++) {
+      output[index] = (u8) ((index % 251U) + generation + slot);
+    }
+    return SIZE;
+  }
+
+  const u16 size = (u16) (800U + generation % 601U);
+  memset(output, (u8) (slot * 17U + generation), size);
+  return size;
+}
+
+struct ChurnFile {
+  bool present;
+  ProgramType type;
+  u16 id;
+  u16 generation;
+  u16 size;
+  char name[program_store::NAME_SIZE];
+  u8 data[program_store::MAX_CHIP8_SIZE];
+};
+
+static void verify_churn_files(ChurnFile* files, u8 count) {
+  static u8 recovered[program_store::MAX_CHIP8_SIZE];
+  u16 visible = 0;
+  for(u8 slot = 0; slot < count; slot++) {
+    ChurnFile& file = files[slot];
+    if(!file.present) continue;
+    visible++;
+    Entry entry = {};
+    assert(program_store::entry_by_id(file.id, entry));
+    assert(entry.kind == NodeKind::FILE);
+    assert(entry.type == file.type);
+    assert(entry.data_len == file.size);
+    assert(strcmp(entry.name, file.name) == 0);
+    u16 size = 0;
+    assert(program_store::read_id(
+        file.id, recovered, sizeof(recovered), &size));
+    assert(size == file.size);
+    assert(memcmp(recovered, file.data, size) == 0);
+
+    u16 stored_len = 0;
+    bool large = false;
+    bool zx0 = false;
+    assert(program_store::test_file_storage_info(
+        file.id, stored_len, large, zx0));
+    switch(slot % 5U) {
+      case 0:
+        assert(zx0 && !large && stored_len < file.size);
+        break;
+      case 1:
+        assert(!zx0 && !large && stored_len == file.size);
+        break;
+      case 2:
+        assert(zx0 && large &&
+               stored_len > program_store::MAX_IMAGE1_SIZE &&
+               stored_len < file.size);
+        break;
+      case 3:
+        assert(zx0 && !large &&
+               stored_len <= program_store::MAX_IMAGE1_SIZE);
+        break;
+      default:
+        assert(!zx0 && !large && stored_len == file.size);
+        break;
+    }
+  }
+  assert(program_store::total_count() == visible);
+}
+
+static void test_mixed_order_compression_churn(void) {
+  static constexpr u8 FILE_COUNT = 10;
+  static constexpr u16 OPERATION_COUNT = 180;
+  static ChurnFile files[FILE_COUNT];
+  static u8 candidate[program_store::MAX_CHIP8_SIZE];
+  static u8 workspace[8192];
+  memset(files, 0, sizeof(files));
+  fresh(256U * 1024U);
+  const u32 erase_before = SPIFlash::eraseCount();
+  const u64 programmed_before = SPIFlash::programmedBytes();
+  u32 random = 0x6D2B79F5UL;
+  u16 writes = 0;
+  u32 logical_written = 0;
+
+  for(u16 operation = 0;
+      operation < FILE_COUNT + OPERATION_COUNT; operation++) {
+    const u8 slot = operation < FILE_COUNT
+        ? (u8) operation
+        : (u8) (churn_random(random) % FILE_COUNT);
+    ChurnFile& file = files[slot];
+    const u8 action = operation < FILE_COUNT
+        ? 0 : (u8) (churn_random(random) % 100U);
+
+    if(!file.present || action < 66U) {
+      const u16 next_generation = (u16) (file.generation + 1U);
+      const u16 size =
+          fill_churn_payload(slot, next_generation, candidate);
+      char name[program_store::NAME_SIZE];
+      snprintf(name, sizeof(name), "mix-%02u-%04u",
+               (unsigned) slot, (unsigned) next_generation);
+      TestSource memory = {candidate, size};
+      const program_store::FileSource source = {
+        &memory, read_test_source
+      };
+      u16 id = program_store::INVALID_ID;
+      assert(program_store::write_file_from_source(
+          program_store::ROOT_ID,
+          file.present ? file.id : program_store::INVALID_ID,
+          churn_type(slot), name, size, source,
+          nullptr, 0, &id, workspace, sizeof(workspace)));
+      file.present = true;
+      file.type = churn_type(slot);
+      file.id = id;
+      file.generation = next_generation;
+      file.size = size;
+      strcpy(file.name, name);
+      memcpy(file.data, candidate, size);
+      writes++;
+      logical_written += size;
+    } else if(action < 84U) {
+      char name[program_store::NAME_SIZE];
+      snprintf(name, sizeof(name), "ren-%02u-%04u",
+               (unsigned) slot, (unsigned) operation);
+      assert(program_store::move_rename(
+          file.id, program_store::ROOT_ID, name));
+      strcpy(file.name, name);
+    } else {
+      assert(program_store::remove_id(file.id));
+      file.present = false;
+    }
+
+    if(operation % 13U == 12U) {
+      program_store::init();
+      assert(program_store::ready());
+      verify_churn_files(files, FILE_COUNT);
+    }
+  }
+
+  program_store::init();
+  assert(program_store::ready());
+  verify_churn_files(files, FILE_COUNT);
+  const u32 erased = SPIFlash::eraseCount() - erase_before;
+  const u64 programmed = SPIFlash::programmedBytes() - programmed_before;
+  bool recycled_sector = false;
+  const storage_geometry::Geometry& geometry = program_store::geometry();
+  for(u32 sector = geometry.data_first_sector;
+      sector < geometry.data_first_sector + geometry.data_sector_count;
+      sector++) {
+    if(SPIFlash::sectorEraseCount(sector) >= 2U) {
+      recycled_sector = true;
+      break;
+    }
+  }
+  assert(recycled_sector);
+  assert(erased <= (u32) writes * 8U + 64U);
+  assert(programmed <= (u64) logical_written * 5U + 512U * 1024U);
+}
+
+static void fill_power_cut_payload(bool large, u16 generation,
+                                   u8* output, u16& size) {
+  if(!large) {
+    size = 1400;
+    for(u16 index = 0; index < size; index++) {
+      output[index] = (u8) (
+          "power-cut-small-zx0\n"[(index + generation) % 20U]);
+    }
+    return;
+  }
+  size = program_store::MAX_CHIP8_SIZE;
+  u32 state = 0x1234ABCDUL ^ generation;
+  for(u16 block = 0; block < size / 256U; block++) {
+    const u16 base = (u16) (block * 256U);
+    for(u16 index = 0; index < 160; index++) {
+      output[base + index] = (u8) churn_random(state);
+    }
+    memcpy(output + base + 160, output + base, 96);
+  }
+}
+
+static bool write_power_cut_payload(bool large, const u8* data, u16 size,
+                                    u8* workspace, u16* id = nullptr) {
+  TestSource memory = {data, size};
+  const program_store::FileSource source = {
+    &memory, read_test_source
+  };
+  return program_store::write_file_from_source(
+      program_store::ROOT_ID,
+      id != nullptr && *id != program_store::INVALID_ID
+          ? *id : program_store::INVALID_ID,
+      large ? ProgramType::CHIP8 : ProgramType::TEXT,
+      large ? "power-large" : "power-small",
+      size, source, nullptr, 0, id, workspace, 8192);
+}
+
+static void test_zx0_replacement_power_cuts(void) {
+  static u8 old_data[program_store::MAX_CHIP8_SIZE];
+  static u8 new_data[program_store::MAX_CHIP8_SIZE];
+  static u8 recovered[program_store::MAX_CHIP8_SIZE];
+  static u8 workspace[8192];
+
+  for(u8 mode = 0; mode < 2; ++mode) {
+    const bool large = mode != 0;
+    u16 old_size = 0;
+    u16 new_size = 0;
+    fill_power_cut_payload(large, 1, old_data, old_size);
+    fill_power_cut_payload(large, 2, new_data, new_size);
+
+    fresh(256U * 1024U);
+    u16 id = program_store::INVALID_ID;
+    assert(write_power_cut_payload(
+        large, old_data, old_size, workspace, &id));
+    SPIFlash::resetOperationCounts();
+    assert(write_power_cut_payload(
+        large, new_data, new_size, workspace, &id));
+    const u32 operations = SPIFlash::mutationOperations();
+    assert(operations > 4U && operations < 160U);
+
+    for(u32 cut = 0; cut <= operations; cut++) {
+      fresh(256U * 1024U);
+      id = program_store::INVALID_ID;
+      assert(write_power_cut_payload(
+          large, old_data, old_size, workspace, &id));
+      SPIFlash::resetOperationCounts();
+      SPIFlash::failAfterOperations((i32) cut);
+      const bool committed = write_power_cut_payload(
+          large, new_data, new_size, workspace, &id);
+      SPIFlash::clearFailure();
+
+      program_store::init();
+      assert(program_store::ready());
+      u16 recovered_size = 0;
+      assert(program_store::read_id(
+          id, recovered, sizeof(recovered), &recovered_size));
+      assert(recovered_size == old_size);
+      const bool is_new =
+          memcmp(recovered, new_data, recovered_size) == 0;
+      const bool is_old =
+          memcmp(recovered, old_data, recovered_size) == 0;
+      assert(is_old || is_new);
+      if(committed) assert(is_new);
+
+      assert(write_power_cut_payload(
+          large, new_data, new_size, workspace, &id));
+      program_store::init();
+      assert(program_store::ready());
+      assert(program_store::read_id(
+          id, recovered, sizeof(recovered), &recovered_size));
+      assert(recovered_size == new_size);
+      assert(memcmp(recovered, new_data, new_size) == 0);
+    }
+  }
 }
 
 static void expect_text(const char* name, const char* expected) {
@@ -960,7 +1510,90 @@ static void gc_name(u8 index, char* out, usize capacity) {
 }
 
 static void fill_bytes(u8* data, u8 value) {
-  memset(data, value, program_store::MAX_MK61_TEXT_SIZE);
+  u32 state = 0x9E3779B9UL ^ ((u32) value * 0x01010101UL);
+  for(u16 index = 0; index < program_store::MAX_MK61_TEXT_SIZE; index++) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    data[index] = (u8) state;
+  }
+}
+
+static void test_compressed_rename_survives_source_sector_gc(void) {
+  static u8 packed[1400];
+  u8 data[program_store::MAX_MK61_TEXT_SIZE];
+  for(u16 index = 0; index < sizeof(packed); index++) {
+    packed[index] = (u8) (
+        "rename-zx0-gc-source\n"[index % 21U]);
+  }
+
+  fresh(128U * 1024U);
+  assert(program_store::max_nodes() == 30U);
+  u16 packed_id = program_store::INVALID_ID;
+  for(u8 index = 0; index < 30; index++) {
+    char name[8];
+    gc_name(index, name, sizeof(name));
+    if(index == 1) {
+      assert(program_store::write_file(
+          program_store::ROOT_ID, program_store::INVALID_ID,
+          ProgramType::TEXT, name, packed, sizeof(packed), &packed_id));
+    } else {
+      fill_bytes(data, index);
+      assert(program_store::write(ProgramType::TEXT, name, data,
+                                  sizeof(data)));
+    }
+  }
+
+  u16 stored_len = 0;
+  bool large = true;
+  bool zx0 = false;
+  assert(program_store::test_file_storage_info(
+      packed_id, stored_len, large, zx0));
+  assert(zx0 && !large && stored_len < sizeof(packed));
+
+  // GC00 и GC02 освобождают почти весь первый сектор, оставляя в нём только
+  // сжатый GC01. Следующие обновления заполняют последний обычный сектор так,
+  // что rename уже не помещается и GC выбирает именно сектор исходной записи.
+  fill_bytes(data, 0xA0U);
+  assert(program_store::write(ProgramType::TEXT, "GC00", data,
+                              sizeof(data)));
+  fill_bytes(data, 0xA2U);
+  assert(program_store::write(ProgramType::TEXT, "GC02", data,
+                              sizeof(data)));
+  fill_bytes(data, 0xA4U);
+  assert(program_store::write(ProgramType::TEXT, "GC04", data,
+                              sizeof(data)));
+  fill_bytes(data, 0xA6U);
+  assert(program_store::write(ProgramType::TEXT, "GC06", data, 930));
+
+  u32 source_sector = 0;
+  u16 source_record_len = 0;
+  assert(program_store::test_file_record_location(
+      packed_id, source_sector, source_record_len));
+  const u32 source_erases = SPIFlash::sectorEraseCount(source_sector);
+  assert(program_store::move_rename(
+      packed_id, program_store::ROOT_ID, "GC01-renamed-zx0"));
+  assert(SPIFlash::sectorEraseCount(source_sector) == source_erases + 1U);
+
+  u32 renamed_sector = 0;
+  u16 renamed_record_len = 0;
+  assert(program_store::test_file_record_location(
+      packed_id, renamed_sector, renamed_record_len));
+  assert(renamed_sector != source_sector);
+  assert(renamed_record_len ==
+         source_record_len + strlen("GC01-renamed-zx0") - strlen("GC01"));
+  u16 renamed_stored_len = 0;
+  assert(program_store::test_file_storage_info(
+      packed_id, renamed_stored_len, large, zx0));
+  assert(zx0 && !large && renamed_stored_len == stored_len);
+  expect_text(packed_id, packed, sizeof(packed));
+
+  program_store::init();
+  assert(program_store::ready());
+  Entry renamed = {};
+  assert(program_store::entry_by_id(packed_id, renamed));
+  assert(strcmp(renamed.name, "GC01-renamed-zx0") == 0);
+  expect_text(packed_id, packed, sizeof(packed));
 }
 
 static void prepare_gc_boundary(void) {
@@ -989,6 +1622,7 @@ static void prepare_gc_boundary(void) {
 
 static void verify_gc_files(bool gc04_may_be_new) {
   u8 data[program_store::MAX_MK61_TEXT_SIZE];
+  u8 expected_data[program_store::MAX_MK61_TEXT_SIZE];
   for(u8 index = 0; index < 30; index++) {
     char name[8];
     gc_name(index, name, sizeof(name));
@@ -997,13 +1631,15 @@ static void verify_gc_files(bool gc04_may_be_new) {
     assert(program_store::read(ProgramType::TEXT, name, data,
                                sizeof(data), &len));
     assert(len == sizeof(data));
-    u8 expected = index;
-    if(index == 0) expected = 0xA0U;
-    if(index == 2) expected = 0xA2U;
-    if(index == 4 && gc04_may_be_new && data[0] == 0xA4U) expected = 0xA4U;
-    for(u16 byte = 0; byte < sizeof(data); byte++) {
-      assert(data[byte] == expected);
+    u8 seed = index;
+    if(index == 0) seed = 0xA0U;
+    if(index == 2) seed = 0xA2U;
+    fill_bytes(expected_data, seed);
+    if(index == 4 && gc04_may_be_new &&
+       memcmp(data, expected_data, sizeof(data)) != 0) {
+      fill_bytes(expected_data, 0xA4U);
     }
+    assert(memcmp(data, expected_data, sizeof(data)) == 0);
   }
 }
 
@@ -1038,7 +1674,7 @@ static void test_gc_power_cuts_are_atomic_and_recoverable(void) {
       u16 len = 0;
       assert(program_store::read_range(ProgramType::TEXT, "GC04", 0,
                                        &first, 1, &len));
-      assert(len == 1 && first == 0xA4U);
+      assert(len == 1 && first == replacement[0]);
     }
 
     assert(program_store::write(ProgramType::TEXT, "GC04", replacement,
@@ -1050,7 +1686,7 @@ static void test_gc_power_cuts_are_atomic_and_recoverable(void) {
     u16 len = 0;
     assert(program_store::read_range(ProgramType::TEXT, "GC04", 0,
                                      &first, 1, &len));
-    assert(len == 1 && first == 0xA4U);
+    assert(len == 1 && first == replacement[0]);
   }
 }
 
@@ -1828,6 +2464,12 @@ int main(void) {
   test_image_type_roundtrip_and_quota();
   test_chip8_type_roundtrip_and_quota();
   test_markdown_type_roundtrip_without_catalog_migration();
+  test_transparent_small_zx0_records();
+  test_compression_policy_and_large_to_small_choice();
+  test_small_zx0_replacement_reuses_logical_fat_extents();
+  test_large_zx0_chip8_roundtrip();
+  test_mixed_order_compression_churn();
+  test_zx0_replacement_power_cuts();
   test_arbitrary_nested_directories();
   test_paths_and_recursive_tree_operations();
   test_explorer_autoexec_is_a_direct_m61_child();
@@ -1843,6 +2485,7 @@ int main(void) {
   test_checkpoint_power_cuts_are_atomic();
   test_power_cuts_are_atomic_and_retryable();
   test_gc_preserves_live_records();
+  test_compressed_rename_survives_source_sector_gc();
   test_gc_power_cuts_are_atomic_and_recoverable();
   test_stage_journal_survives_reboot_and_churn();
   test_stage_indexes_large_unique_write_burst();

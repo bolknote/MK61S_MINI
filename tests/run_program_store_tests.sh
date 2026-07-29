@@ -22,7 +22,9 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/storage_geometry.cpp" \
   "$root/code/storage_path.cpp" \
   "$root/code/shared_scratch.cpp" \
+  "$root/code/exclusive_buffer.cpp" \
   "$root/code/zx0.cpp" \
+  "$root/code/zx0_encode.cpp" \
   -o "$out"
 
 "$out"

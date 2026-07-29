@@ -112,6 +112,8 @@ static language_workspace::Lease g_session_lease;
 static shared_scratch::Lease g_cache_scratch;
 static SessionState* g_session;
 static u8* g_extra_cache;
+static u8* g_commit_compression_buffer;
+static usize g_commit_compression_buffer_size;
 static u8 g_scratch_cache_slots;
 static u8 g_extra_cache_slots;
 static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
@@ -1179,6 +1181,20 @@ static bool validate_app_chain(const ParsedNode& parsed,
 }
 #endif
 
+struct MaterializedFile {
+  const u8* data;
+  u16 size;
+};
+
+static bool read_materialized_file(void* context, u32 offset,
+                                   u8* output, usize size) {
+  const MaterializedFile& source = *(MaterializedFile*) context;
+  if(output == NULL || offset > source.size ||
+     size > source.size - offset) return false;
+  memcpy(output, source.data + offset, size);
+  return true;
+}
+
 static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
   FileChain chain = {};
   if(!collect_file_chain(parsed, false, chain)) return false;
@@ -1206,10 +1222,52 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
   const program_store::FileSource source = {
     &chain, read_file_chain_source
   };
+  if(parsed.data_len != 0 &&
+     program_store::transparent_compression_enabled(parsed.type)) {
+    const u8 source_slots = (u8) (
+        ((u32) parsed.data_len + SECTOR_SIZE - 1U) / SECTOR_SIZE);
+    if(source_slots < PRIMARY_CACHE_SLOTS) {
+      const u8 saved_cache_slots = g_cache_slots;
+      const u8 workspace_slots =
+          (u8) (PRIMARY_CACHE_SLOTS - source_slots);
+      memset(session().cache, 0, sizeof(session().cache));
+      g_cache_slots = workspace_slots;
+      u8* const bytes = session().cache_data[workspace_slots];
+      const bool loaded =
+          read_file_chain_source(&chain, 0, bytes, parsed.data_len);
+      memset(session().cache, 0, sizeof(session().cache));
+      g_cache_slots = 0;
+      if(!loaded) {
+        g_cache_slots = saved_cache_slots;
+        return false;
+      }
+      MaterializedFile materialized = {bytes, parsed.data_len};
+      const program_store::FileSource memory_source = {
+        &materialized, read_materialized_file
+      };
+      u8* const compression_buffer =
+          g_commit_compression_buffer != NULL
+              ? g_commit_compression_buffer
+              : session().cache_data[0];
+      const usize compression_buffer_size =
+          g_commit_compression_buffer != NULL
+              ? g_commit_compression_buffer_size
+              : (usize) workspace_slots * SECTOR_SIZE;
+      const bool written = program_store::write_file_from_source(
+          parent_id, parsed.id, parsed.type, parsed.name, parsed.data_len,
+          memory_source, chain.cluster_count > 1 ? extents : NULL,
+          (u8) (chain.cluster_count - 1U), NULL,
+          compression_buffer, compression_buffer_size, bytes);
+      memset(session().cache, 0, sizeof(session().cache));
+      g_cache_slots = saved_cache_slots;
+      return written;
+    }
+  }
   return program_store::write_file_from_source(
       parent_id, parsed.id, parsed.type, parsed.name, parsed.data_len, source,
       chain.cluster_count > 1 ? extents : NULL,
-      (u8) (chain.cluster_count - 1U), NULL);
+      (u8) (chain.cluster_count - 1U), NULL,
+      g_commit_compression_buffer, g_commit_compression_buffer_size);
 }
 
 static bool process_node(u16 parent_id, const ParsedNode& parsed,
@@ -1536,13 +1594,20 @@ static void invalidate_clean_cache(void) {
 
 class ScopedCommitScratch {
   public:
-    ScopedCommitScratch(void) {
+    ScopedCommitScratch(void)
+      : saved_extra_slots_(g_extra_cache_slots) {
       // К моменту создания этой защиты каждый грязный байт уже находится в
       // устойчивом к сбою питания журнале staging. Чистые записи кеша можно
-      // удалить, чтобы VFAT_COMMIT и GC хранилища заняли shared_scratch.
+      // удалить, чтобы VFAT_COMMIT занял shared_scratch, а
+      // внешний кеш временно стал workspace упаковщика C5.
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_scratch.reset();
       g_scratch_cache_slots = 0;
+      g_commit_compression_buffer =
+          saved_extra_slots_ != 0 ? g_extra_cache : NULL;
+      g_commit_compression_buffer_size =
+          (usize) saved_extra_slots_ * SECTOR_SIZE;
+      g_extra_cache_slots = 0;
       update_cache_slot_count();
     }
 
@@ -1550,6 +1615,9 @@ class ScopedCommitScratch {
       // Пока область scratch отсутствовала, фиксация могла заполнить чистые
       // записи кеша чтения. Очищаем их метаданные перед восстановлением слотов.
       memset(session().cache, 0, sizeof(session().cache));
+      g_commit_compression_buffer = NULL;
+      g_commit_compression_buffer_size = 0;
+      g_extra_cache_slots = saved_extra_slots_;
       g_scratch_cache_slots = g_cache_scratch.acquire(
         shared_scratch::Owner::USB_CACHE, shared_scratch::SIZE
       ) ? SCRATCH_CACHE_SLOTS : 0;
@@ -1558,6 +1626,9 @@ class ScopedCommitScratch {
 
     ScopedCommitScratch(const ScopedCommitScratch&) = delete;
     ScopedCommitScratch& operator=(const ScopedCommitScratch&) = delete;
+
+  private:
+    u8 saved_extra_slots_;
 };
 
 static bool cache_write_sector(u32 lba, const u8* data) {

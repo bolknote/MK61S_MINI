@@ -20,6 +20,9 @@
   CHIP-8, типу `C1`, экрану и управлению.
 - `MK61s-mini-USB-Screen.pdf` - полное руководство по USB-экрану, desktop-клиенту и wire protocol.
 - `src/MK61s-mini-APP.md` - разработка, согласованная сборка и установка пользовательских APP для F401.
+- `design/C5-ZX0-compression.md` - формат и реализация прозрачного
+  RAW/ZX0-сжатия C5, включая `read_range`, large storage и запланированный
+  переход FONT на raw-only FMK2.
 - `build_md_pdf.py` - воспроизводимая пакетная сборка PDF.
 
 Сборка из корня репозитория:

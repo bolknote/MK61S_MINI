@@ -20,6 +20,9 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/storage_geometry.cpp" \
   "$root/code/language_workspace.cpp" \
   "$root/code/shared_scratch.cpp" \
+  "$root/code/exclusive_buffer.cpp" \
+  "$root/code/zx0.cpp" \
+  "$root/code/zx0_encode.cpp" \
   -o "$out"
 
 "$out"
@@ -36,8 +39,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/storage_geometry.cpp" \
   "$root/code/language_workspace.cpp" \
   "$root/code/shared_scratch.cpp" \
+  "$root/code/exclusive_buffer.cpp" \
   "$root/code/loadable_module_format.cpp" \
   "$root/code/zx0.cpp" \
+  "$root/code/zx0_encode.cpp" \
   -o "$module_out"
 
 "$module_out"

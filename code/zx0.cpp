@@ -84,6 +84,52 @@ static bool copy_match(u8*& output, const u8* begin, const u8* end,
   return true;
 }
 
+class RangeOutput {
+  public:
+    RangeOutput(u32 logical_size, u32 range_offset,
+                u8* output, u32 range_size,
+                u8* window, u32 window_size)
+      : logical_size_(logical_size), range_offset_(range_offset),
+        output_(output), range_size_(range_size), window_(window),
+        window_size_(window_size), position_(0), range_written_(0) {}
+
+    bool byte(u8 value) {
+      if(position_ >= logical_size_) return false;
+      window_[position_ % window_size_] = value;
+      if(position_ >= range_offset_ &&
+         position_ - range_offset_ < range_size_) {
+        output_[position_ - range_offset_] = value;
+        range_written_++;
+      }
+      position_++;
+      return true;
+    }
+
+    bool match(u32 offset, u32 length) {
+      if(offset == 0 || offset > position_ || offset > window_size_ ||
+         length > logical_size_ - position_) return false;
+      while(length-- != 0) {
+        const u8 value = window_[(position_ - offset) % window_size_];
+        if(!byte(value)) return false;
+      }
+      return true;
+    }
+
+    bool complete(void) const {
+      return position_ == logical_size_ && range_written_ == range_size_;
+    }
+
+  private:
+    u32 logical_size_;
+    u32 range_offset_;
+    u8* output_;
+    u32 range_size_;
+    u8* window_;
+    u32 window_size_;
+    u32 position_;
+    u32 range_written_;
+};
+
 } // namespace
 
 bool decode(const Input& source, u32 source_size,
@@ -142,6 +188,57 @@ copy_new_offset:
 fail:
   written = (u32) (current - output);
   return false;
+}
+
+bool decode_range(const Input& source, u32 source_size, u32 logical_size,
+                  u32 range_offset, u8* output, u32 range_size,
+                  u8* window, u32 window_size) {
+  if(source.next == nullptr || source_size == 0 || logical_size == 0 ||
+     range_offset > logical_size ||
+     range_size > logical_size - range_offset ||
+     (range_size != 0 && output == nullptr) ||
+     window == nullptr || window_size == 0) return false;
+
+  BitInput input(source, source_size);
+  RangeOutput decoded(logical_size, range_offset, output, range_size,
+                      window, window_size);
+  u32 last_offset = 1;
+  i32 selector = 0;
+
+copy_literals_range:
+  u32 length = input.gamma(false);
+  if(length == 0 || length > logical_size) return false;
+  while(length-- != 0) {
+    const i32 value = input.byte();
+    if(value < 0 || !decoded.byte((u8) value)) return false;
+  }
+  selector = input.bit();
+  if(selector < 0) return false;
+  if(selector != 0) goto copy_new_offset_range;
+
+  length = input.gamma(false);
+  if(length == 0 || !decoded.match(last_offset, length)) return false;
+  selector = input.bit();
+  if(selector < 0) return false;
+  if(selector == 0) goto copy_literals_range;
+
+copy_new_offset_range:
+  last_offset = input.gamma(true);
+  if(last_offset == 0) return false;
+  if(last_offset == 256U) return decoded.complete() && input.exhausted();
+  if(last_offset > 256U) return false;
+  {
+    const i32 value = input.byte();
+    if(value < 0) return false;
+    last_offset = last_offset * 128U - ((u32) value >> 1);
+    length = input.gamma(false, value & 1);
+  }
+  if(length == 0 || length == 0xFFFFFFFFUL ||
+     !decoded.match(last_offset, length + 1U)) return false;
+  selector = input.bit();
+  if(selector < 0) return false;
+  if(selector != 0) goto copy_new_offset_range;
+  goto copy_literals_range;
 }
 
 } // namespace zx0

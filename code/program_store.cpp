@@ -5,11 +5,13 @@
 #include "Arduino.h"
 #include "config.h"
 #include "debug.h"
+#include "exclusive_buffer.hpp"
 #include "flash_capacity_probe.hpp"
 #include "ledcontrol.h"
 #include "shared_scratch.hpp"
 #include "spi_nor_flash.hpp"
 #include "tools.hpp"
+#include "zx0.hpp"
 
 #include <string.h>
 
@@ -77,6 +79,12 @@ static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
 static constexpr t_time_ms DISK_LED_OFF_MS = 35;
 static constexpr u8 INODE_FLAG_LARGE_FILE = 0x01;
+static constexpr u8 INODE_FLAG_ZX0 = 0x02;
+static constexpr u8 INODE_FILE_FLAGS =
+    INODE_FLAG_LARGE_FILE | INODE_FLAG_ZX0;
+static constexpr u16 ZX0_MIN_SAVING = 64;
+static constexpr u8 ZX0_MIN_SAVING_PERCENT = 10;
+static constexpr usize ZX0_FALLBACK_WORKSPACE_SIZE = 1024;
 static constexpr u16 LARGE_BLOCK_HEADER_SIZE = 32;
 static constexpr u16 LARGE_BLOCK_DATA_SIZE =
     storage_geometry::PHYSICAL_SECTOR_SIZE - LARGE_BLOCK_HEADER_SIZE;
@@ -85,7 +93,8 @@ static constexpr u8 LARGE_BLOCK_COUNT =
 static constexpr u16 LARGE_DESCRIPTOR_HEADER_SIZE = 20;
 static constexpr u16 LARGE_DESCRIPTOR_SIZE =
     LARGE_DESCRIPTOR_HEADER_SIZE + (u16) LARGE_BLOCK_COUNT * sizeof(u32);
-static constexpr u8 LARGE_DESCRIPTOR_VERSION = 1;
+static constexpr u8 LEGACY_LARGE_DESCRIPTOR_VERSION = 1;
+static constexpr u8 LARGE_DESCRIPTOR_VERSION = 2;
 
 static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C5 stage must pack seven sectors");
 static_assert(STAGE_KEY_MAX == (0xFFFFFFFFUL >> STAGE_REF_BITS),
@@ -143,7 +152,9 @@ struct LargeDescriptor {
   u32 generation;
   u32 data_crc;
   u16 data_len;
+  u16 stored_len;
   u8 block_count;
+  u8 version;
 };
 
 struct CatalogMeta {
@@ -568,6 +579,21 @@ static bool visible_inode(const Inode& inode) {
 static bool large_file_inode(const Inode& inode) {
   return inode_kind(inode) == NodeKind::FILE &&
          (inode.flags & INODE_FLAG_LARGE_FILE) != 0;
+}
+
+static bool zx0_file_inode(const Inode& inode) {
+  return inode_kind(inode) == NodeKind::FILE &&
+         (inode.flags & INODE_FLAG_ZX0) != 0;
+}
+
+static bool inode_flags_valid(const Inode& inode) {
+  const NodeKind kind = inode_kind(inode);
+  if(kind != NodeKind::FILE) return inode.flags == 0;
+  if((inode.flags & ~INODE_FILE_FLAGS) != 0) return false;
+  if(inode_type(inode) == ProgramType::APP && zx0_file_inode(inode)) {
+    return false;
+  }
+  return true;
 }
 
 static void serialize_inode(const Inode& inode, u8* out) {
@@ -1459,31 +1485,24 @@ static bool garbage_collect(void) {
   u32 victim = EMPTY_ADDRESS;
   if(!select_gc_victim(victim)) return false;
 
-  shared_scratch::Lease scratch(shared_scratch::Owner::PROGRAM_STORE_GC,
-                                shared_scratch::SIZE);
-  if(!scratch.ok()) return false;
-  u16* ids = (u16*) scratch.data();
-  const u16 id_capacity = (u16) (scratch.size() / sizeof(u16));
-  u16 id_count = 0;
-  for(u16 id = 0; id < g_geometry.max_nodes; id++) {
-    Inode inode;
-    if(!get_inode(id, inode) || !visible_inode(inode) || inode.address >= EXTENT_ADDRESS) continue;
-    if(inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE != victim) continue;
-    if(id_count >= id_capacity) return false;
-    ids[id_count++] = id;
-  }
-
   const u32 destination = g_meta.reserve_sector;
   if(!initialize_data_sector(destination)) return false;
   u16 destination_offset = DATA_SECTOR_HEADER_SIZE;
   u8 copy_buffer[64];
-  for(u16 index = 0; index < id_count;) {
+  u16 next_id = 0;
+  while(next_id < g_geometry.max_nodes) {
     Transaction transaction;
     txn_begin(transaction);
-    for(u8 batch = 0; batch < WAL_MAX_UPDATES && index < id_count;
-        batch++, index++) {
+    while(next_id < g_geometry.max_nodes &&
+          transaction.count < WAL_MAX_UPDATES) {
+      const u16 id = next_id++;
       Inode inode;
-      if(!get_inode(ids[index], inode) || inode.record_len == 0 ||
+      if(!get_inode(id, inode) || !visible_inode(inode) ||
+         inode.address >= EXTENT_ADDRESS ||
+         inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE != victim) {
+        continue;
+      }
+      if(inode.record_len == 0 ||
          (u32) destination_offset + inode.record_len >
              storage_geometry::PHYSICAL_SECTOR_SIZE) return false;
       const u32 new_address = sector_address(destination) + destination_offset;
@@ -1500,10 +1519,12 @@ static bool garbage_collect(void) {
         remaining = (u16) (remaining - copied);
       }
       inode.address = new_address;
-      if(!txn_set(transaction, ids[index], inode)) return false;
+      if(!txn_set(transaction, id, inode)) return false;
       destination_offset = (u16) (destination_offset + inode.record_len);
     }
-    if(!append_transaction(transaction)) return false;
+    if(transaction.count != 0 && !append_transaction(transaction)) {
+      return false;
+    }
   }
 
   CatalogMeta promoted = g_meta;
@@ -1561,21 +1582,207 @@ static bool source_valid(const FileSource& source, u16 data_len) {
   return data_len == 0 || source.read != NULL;
 }
 
-static bool record_crc_source(NodeKind kind, ProgramType type, u16 id,
-                              u16 parent_id, const char* name,
-                              const FileSource& source, u16 data_len,
-                              u32& output) {
+class CompressionBuffer {
+  public:
+    CompressionBuffer(u8* supplied, usize supplied_size)
+      : memory_(NULL), size_(0), acquired_(false) {
+      if(supplied != NULL && supplied_size != 0) {
+        memory_ = supplied;
+        size_ = supplied_size;
+        return;
+      }
+      if(exclusive_buffer::acquire(
+            exclusive_buffer::Owner::PROGRAM_STORE_COMPRESSION,
+            exclusive_buffer::SIZE)) {
+        memory_ = exclusive_buffer::data(
+            exclusive_buffer::Owner::PROGRAM_STORE_COMPRESSION);
+        size_ = exclusive_buffer::SIZE;
+        acquired_ = memory_ != NULL;
+      }
+    }
+
+    ~CompressionBuffer(void) {
+      if(acquired_) {
+        exclusive_buffer::release(
+            exclusive_buffer::Owner::PROGRAM_STORE_COMPRESSION);
+      }
+    }
+
+    u8* data(void) const { return memory_; }
+    usize size(void) const { return size_; }
+
+  private:
+    u8* memory_;
+    usize size_;
+    bool acquired_;
+};
+
+struct MemoryOutput {
+  u8* data;
+  u16 capacity;
+  u16 size;
+};
+
+struct CountingOutput {
+  u32 size;
+};
+
+static bool write_memory_output(void* context, u8 value) {
+  MemoryOutput& output = *(MemoryOutput*) context;
+  if(output.size >= output.capacity) return false;
+  output.data[output.size++] = value;
+  return true;
+}
+
+static bool count_output_byte(void* context, u8) {
+  CountingOutput& output = *(CountingOutput*) context;
+  if(output.size == 0xFFFFFFFFUL) return false;
+  output.size++;
+  return true;
+}
+
+enum class CompressionChoice : u8 {
+  RAW,
+  ZX0,
+  ERROR
+};
+
+struct CompressionPlan {
+  const u8* input;
+  u8* workspace;
+  usize workspace_size;
+  const u8* stored_data;
+  u16 stored_len;
+};
+
+static CompressionChoice prepare_compressed_payload(
+    ProgramType type, const FileSource& source, u16 data_len,
+    CompressionBuffer& large_buffer, shared_scratch::Lease& scratch,
+    const u8* contiguous_data,
+    u8* fallback_workspace, usize fallback_workspace_size,
+    CompressionPlan& plan) {
+  memset(&plan, 0, sizeof(plan));
+  plan.stored_len = data_len;
+  if(!transparent_compression_enabled(type) || data_len == 0 ||
+     data_len < ZX0_MIN_SAVING) return CompressionChoice::RAW;
+
+  const bool memory_source = source.read == read_memory_source;
+  u8* output = NULL;
+
+  if(contiguous_data != NULL) {
+    plan.input = contiguous_data;
+    if(large_buffer.data() != NULL &&
+       scratch.acquire(shared_scratch::Owner::PROGRAM_STORE_COMPRESSION,
+                       MAX_IMAGE1_SIZE)) {
+      output = scratch.data();
+      plan.workspace = large_buffer.data();
+      plan.workspace_size = large_buffer.size();
+    } else {
+      plan.workspace = fallback_workspace;
+      plan.workspace_size = fallback_workspace_size;
+    }
+  } else if(memory_source) {
+    const MemorySource& memory = *(const MemorySource*) source.context;
+    if(memory.size != data_len || memory.data == NULL) {
+      return CompressionChoice::RAW;
+    }
+    plan.input = memory.data;
+    if(large_buffer.data() != NULL &&
+       scratch.acquire(shared_scratch::Owner::PROGRAM_STORE_COMPRESSION,
+                       MAX_IMAGE1_SIZE)) {
+      output = scratch.data();
+      plan.workspace = large_buffer.data();
+      plan.workspace_size = large_buffer.size();
+    } else {
+      plan.workspace = fallback_workspace;
+      plan.workspace_size = fallback_workspace_size;
+    }
+  } else if(data_len <= MAX_IMAGE1_SIZE) {
+    if(large_buffer.size() <= MAX_IMAGE1_SIZE + sizeof(u32) ||
+       !scratch.acquire(shared_scratch::Owner::PROGRAM_STORE_COMPRESSION,
+                        data_len) ||
+       !source.read(source.context, 0, scratch.data(), data_len)) {
+      return CompressionChoice::RAW;
+    }
+    plan.input = scratch.data();
+    output = large_buffer.data();
+    plan.workspace = large_buffer.data() + MAX_IMAGE1_SIZE;
+    plan.workspace_size = large_buffer.size() - MAX_IMAGE1_SIZE;
+  } else {
+    if(large_buffer.size() <= (usize) data_len + sizeof(u32) ||
+       !scratch.acquire(shared_scratch::Owner::PROGRAM_STORE_COMPRESSION,
+                        MAX_IMAGE1_SIZE) ||
+       !source.read(source.context, 0, large_buffer.data(), data_len)) {
+      return CompressionChoice::RAW;
+    }
+    plan.input = large_buffer.data();
+    output = scratch.data();
+    plan.workspace = large_buffer.data() + data_len;
+    plan.workspace_size = large_buffer.size() - data_len;
+  }
+
+  if(plan.input == NULL || plan.workspace == NULL ||
+     plan.workspace_size < sizeof(u32)) return CompressionChoice::RAW;
+  CountingOutput measured = {};
+  const zx0::Output count_sink = {&measured, count_output_byte};
+  zx0::EncodeResult result = {};
+  if(!zx0::encode(plan.input, data_len,
+                  plan.workspace, plan.workspace_size,
+                  count_sink, result) ||
+     result.output_size != measured.size ||
+     measured.size > 0xFFFFU) return CompressionChoice::RAW;
+
+  if(measured.size >= data_len) return CompressionChoice::RAW;
+  const u16 saving = (u16) (data_len - measured.size);
+  if(saving < ZX0_MIN_SAVING ||
+     (u32) saving * 100U <
+         (u32) data_len * ZX0_MIN_SAVING_PERCENT) {
+    return CompressionChoice::RAW;
+  }
+  plan.stored_len = (u16) measured.size;
+  if(plan.stored_len <= MAX_IMAGE1_SIZE && output != NULL) {
+    MemoryOutput packed = {output, MAX_IMAGE1_SIZE, 0};
+    const zx0::Output sink = {&packed, write_memory_output};
+    if(!zx0::encode(plan.input, data_len,
+                    plan.workspace, plan.workspace_size,
+                    sink, result) ||
+       result.output_size != plan.stored_len ||
+       packed.size != plan.stored_len) return CompressionChoice::ERROR;
+    if(packed.data == scratch.data()) {
+      memcpy(large_buffer.data(), packed.data, packed.size);
+      plan.stored_data = large_buffer.data();
+    } else {
+      plan.stored_data = packed.data;
+    }
+    scratch.reset();
+  } else if(plan.stored_len > MAX_IMAGE1_SIZE && scratch.ok() &&
+            plan.input != scratch.data()) {
+    scratch.reset();
+  }
+  return CompressionChoice::ZX0;
+}
+
+static u32 record_crc_prefix(NodeKind kind, ProgramType type, u16 id,
+                             u16 parent_id, const char* name,
+                             u16 stored_len) {
   u8 stable[11];
   stable[0] = (u8) kind;
   stable[1] = (u8) type;
   put_le16(stable, 2, id);
   put_le16(stable, 4, parent_id);
-  put_le16(stable, 6, data_len);
+  put_le16(stable, 6, stored_len);
   stable[8] = (u8) strlen(name);
   stable[9] = PHYSICAL_FORMAT_VERSION;
   stable[10] = 0x5A;
   u32 crc = crc32_bytes(stable, sizeof(stable));
-  crc = crc32_bytes((const u8*) name, strlen(name), crc);
+  return crc32_bytes((const u8*) name, strlen(name), crc);
+}
+
+static bool record_crc_source(NodeKind kind, ProgramType type, u16 id,
+                              u16 parent_id, const char* name,
+                              const FileSource& source, u16 data_len,
+                              u32& output) {
+  u32 crc = record_crc_prefix(kind, type, id, parent_id, name, data_len);
   u8 buffer[64];
   u16 offset = 0;
   while(offset < data_len) {
@@ -1641,14 +1848,109 @@ static bool append_record(NodeKind kind, ProgramType type, u16 id,
                               data_len, address, record_len);
 }
 
+struct Zx0CrcOutput {
+  u32 crc;
+  u16 size;
+  u16 expected_size;
+};
+
+static bool write_zx0_crc_byte(void* context, u8 value) {
+  Zx0CrcOutput& output = *(Zx0CrcOutput*) context;
+  if(output.size >= output.expected_size) return false;
+  output.crc = crc32_update(output.crc, value);
+  output.size++;
+  return true;
+}
+
+struct FlashEncodeOutput {
+  u32 address;
+  u16 size;
+  u16 expected_size;
+  u8 buffer[64];
+  u8 buffered;
+};
+
+static bool flush_flash_encode_output(FlashEncodeOutput& output) {
+  if(output.buffered == 0) return true;
+  if(!write_bytes(output.address + output.size - output.buffered,
+                  output.buffer, output.buffered)) return false;
+  output.buffered = 0;
+  return true;
+}
+
+static bool write_flash_encode_byte(void* context, u8 value) {
+  FlashEncodeOutput& output = *(FlashEncodeOutput*) context;
+  if(output.size >= output.expected_size) return false;
+  output.buffer[output.buffered++] = value;
+  output.size++;
+  return output.buffered != sizeof(output.buffer) ||
+         flush_flash_encode_output(output);
+}
+
+static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
+                              const char* name,
+                              const u8* input, u16 input_size,
+                              u8* workspace, usize workspace_size,
+                              u16 stored_len,
+                              u32& address, u16& record_len) {
+  if(input == NULL || input_size == 0 || workspace == NULL ||
+     stored_len == 0) return false;
+  const u8 name_len = (u8) strlen(name);
+  record_len = (u16) (RECORD_HEADER_SIZE + name_len + stored_len);
+
+  Zx0CrcOutput checked = {
+    record_crc_prefix(NodeKind::FILE, type, id, parent_id, name, stored_len),
+    0, stored_len
+  };
+  const zx0::Output crc_sink = {&checked, write_zx0_crc_byte};
+  zx0::EncodeResult result = {};
+  if(!zx0::encode(input, input_size, workspace, workspace_size,
+                  crc_sink, result) ||
+     result.output_size != stored_len || checked.size != stored_len ||
+     !ensure_record_space(record_len, address)) return false;
+
+  u8 header[RECORD_HEADER_SIZE];
+  memset(header, 0xFF, sizeof(header));
+  header[0] = 'R';
+  header[1] = '5';
+  header[2] = STATE_WRITING;
+  header[3] = (u8) NodeKind::FILE;
+  put_le16(header, 4, id);
+  put_le16(header, 6, parent_id);
+  put_le16(header, 8, stored_len);
+  header[10] = name_len;
+  header[11] = (u8) type;
+  put_le32(header, 12, ~checked.crc);
+  if(!write_bytes(address, header, sizeof(header)) ||
+     !write_bytes(address + RECORD_HEADER_SIZE,
+                  (const u8*) name, name_len)) return false;
+
+  FlashEncodeOutput encoded = {
+    address + RECORD_HEADER_SIZE + name_len,
+    0, stored_len, {}, 0
+  };
+  const zx0::Output flash_sink = {&encoded, write_flash_encode_byte};
+  if(!zx0::encode(input, input_size, workspace, workspace_size,
+                  flash_sink, result) ||
+     result.output_size != stored_len || encoded.size != stored_len ||
+     !flush_flash_encode_output(encoded) ||
+     !write_byte(address + 2, STATE_ACTIVE)) return false;
+  g_meta.current_offset = (u16) (g_meta.current_offset + record_len);
+  return true;
+}
+
 static bool read_record_header(const Inode& inode, u16 expected_id, u8* header) {
   if(!visible_inode(inode) || inode.address >= EXTENT_ADDRESS || inode.record_len < RECORD_HEADER_SIZE ||
+     !inode_flags_valid(inode) ||
      !read_bytes(inode.address, header, RECORD_HEADER_SIZE)) return false;
   const u16 stored_len = get_le16(header, 8);
   const bool length_valid = large_file_inode(inode)
       ? stored_len <= LARGE_DESCRIPTOR_SIZE
-      : stored_len == (inode_kind(inode) == NodeKind::FILE
-            ? inode.data_len : 0);
+      : inode_kind(inode) != NodeKind::FILE
+          ? stored_len == 0
+          : zx0_file_inode(inode)
+              ? stored_len != 0 && stored_len < inode.data_len
+              : stored_len == inode.data_len;
   return header[0] == 'R' && header[1] == '5' && header[2] == STATE_ACTIVE &&
          header[3] == (u8) inode_kind(inode) && get_le16(header, 4) == expected_id &&
          get_le16(header, 6) == inode.parent_id && length_valid &&
@@ -1668,26 +1970,64 @@ static bool read_inode_name(u16 id, const Inode& inode, char* out) {
 static bool verify_record_crc(u16 id, const Inode& inode, const char* name) {
   u8 header[RECORD_HEADER_SIZE];
   if(!read_record_header(inode, id, header)) return false;
-  u8 stable[11];
-  stable[0] = header[3];
-  stable[1] = header[11];
-  put_le16(stable, 2, id);
-  put_le16(stable, 4, inode.parent_id);
-  put_le16(stable, 6, get_le16(header, 8));
-  stable[8] = header[10];
-  stable[9] = PHYSICAL_FORMAT_VERSION;
-  stable[10] = 0x5A;
-  u32 crc = crc32_bytes(stable, sizeof(stable));
-  crc = crc32_bytes((const u8*) name, strlen(name), crc);
+  u32 crc = record_crc_prefix(
+      (NodeKind) header[3], (ProgramType) header[11], id, inode.parent_id,
+      name, get_le16(header, 8));
   crc = crc32_flash(inode.address + RECORD_HEADER_SIZE + header[10],
                     get_le16(header, 8), crc);
   return ~crc == get_le32(header, 12);
 }
 
-static u16 large_block_length(u16 data_len, u8 block_index) {
+struct RecordPayloadInput {
+  u32 address;
+  u16 size;
+  u16 position;
+  u8 buffer[64];
+  u8 buffered;
+  u8 cursor;
+  u32 crc;
+};
+
+static bool next_record_payload_byte(void* context, u8& value) {
+  RecordPayloadInput& input = *(RecordPayloadInput*) context;
+  if(input.position >= input.size) return false;
+  if(input.cursor >= input.buffered) {
+    const u16 remaining = (u16) (input.size - input.position);
+    input.buffered = (u8) (remaining < sizeof(input.buffer)
+        ? remaining : sizeof(input.buffer));
+    input.cursor = 0;
+    if(!read_bytes(input.address + input.position,
+                   input.buffer, input.buffered)) return false;
+  }
+  value = input.buffer[input.cursor++];
+  input.position++;
+  input.crc = crc32_update(input.crc, value);
+  return true;
+}
+
+static bool read_zx0_record_range(u16 id, const Inode& inode,
+                                  const char* name, const u8* header,
+                                  u16 offset, u8* output, u16 size) {
+  const u16 stored_len = get_le16(header, 8);
+  RecordPayloadInput compressed = {
+    inode.address + RECORD_HEADER_SIZE + header[10],
+    stored_len, 0, {}, 0, 0,
+    record_crc_prefix((NodeKind) header[3], (ProgramType) header[11],
+                      id, inode.parent_id, name, stored_len)
+  };
+  const zx0::Input input = {&compressed, next_record_payload_byte};
+  u8 window[256] = {};
+  return zx0::decode_range(input, stored_len, inode.data_len,
+                           offset, output, size, window, sizeof(window)) &&
+         compressed.position == stored_len &&
+         ~compressed.crc == get_le32(header, 12);
+}
+
+static u16 large_block_length(const LargeDescriptor& descriptor,
+                              u8 block_index) {
   const u32 offset = (u32) block_index * LARGE_BLOCK_DATA_SIZE;
-  if(offset >= data_len) return 0;
-  const u32 remaining = (u32) data_len - offset;
+  if(offset >= descriptor.stored_len) return 0;
+  const u32 remaining = (u32) descriptor.stored_len - offset;
   return remaining < LARGE_BLOCK_DATA_SIZE
       ? (u16) remaining : LARGE_BLOCK_DATA_SIZE;
 }
@@ -1698,10 +2038,11 @@ static void encode_large_descriptor(const LargeDescriptor& descriptor,
                 (u16) descriptor.block_count * sizeof(u32));
   memset(output, 0xFF, LARGE_DESCRIPTOR_SIZE);
   memcpy(output, "C5L0", 4);
-  output[4] = LARGE_DESCRIPTOR_VERSION;
+  output[4] = descriptor.version;
   output[5] = descriptor.block_count;
   put_le16(output, 6, LARGE_DESCRIPTOR_HEADER_SIZE);
   put_le16(output, 8, descriptor.data_len);
+  put_le16(output, 10, descriptor.stored_len);
   put_le32(output, 12, descriptor.generation);
   put_le32(output, 16, descriptor.data_crc);
   for(u8 index = 0; index < descriptor.block_count; index++) {
@@ -1716,17 +2057,24 @@ static bool decode_large_descriptor(const u8* input, u16 size,
   memset(&descriptor, 0, sizeof(descriptor));
   if(input == NULL || size < LARGE_DESCRIPTOR_HEADER_SIZE ||
      memcmp(input, "C5L0", 4) != 0 ||
-     input[4] != LARGE_DESCRIPTOR_VERSION ||
+     (input[4] != LEGACY_LARGE_DESCRIPTOR_VERSION &&
+      input[4] != LARGE_DESCRIPTOR_VERSION) ||
      get_le16(input, 6) != LARGE_DESCRIPTOR_HEADER_SIZE) return false;
+  descriptor.version = input[4];
   descriptor.block_count = input[5];
   descriptor.data_len = get_le16(input, 8);
+  descriptor.stored_len =
+      descriptor.version == LEGACY_LARGE_DESCRIPTOR_VERSION
+          ? descriptor.data_len : get_le16(input, 10);
   descriptor.generation = get_le32(input, 12);
   descriptor.data_crc = get_le32(input, 16);
   if(descriptor.data_len == 0 || descriptor.data_len > MAX_APP_FILE_SIZE ||
+     descriptor.stored_len == 0 ||
+     descriptor.stored_len > descriptor.data_len ||
      descriptor.block_count == 0 ||
      descriptor.block_count > LARGE_BLOCK_COUNT ||
      descriptor.block_count !=
-         (descriptor.data_len + LARGE_BLOCK_DATA_SIZE - 1U) /
+         (descriptor.stored_len + LARGE_BLOCK_DATA_SIZE - 1U) /
              LARGE_BLOCK_DATA_SIZE ||
      size != LARGE_DESCRIPTOR_HEADER_SIZE +
                  (u16) descriptor.block_count * sizeof(u32) ||
@@ -1758,7 +2106,10 @@ static bool read_large_descriptor(u16 id, const Inode& inode,
   if(!read_bytes(inode.address + RECORD_HEADER_SIZE + header[10],
                  encoded, size) ||
      !decode_large_descriptor(encoded, size, descriptor) ||
-     descriptor.data_len != inode.data_len) return false;
+     descriptor.data_len != inode.data_len ||
+     (zx0_file_inode(inode)
+          ? descriptor.stored_len >= descriptor.data_len
+          : descriptor.stored_len != descriptor.data_len)) return false;
   return true;
 }
 
@@ -1769,9 +2120,9 @@ static bool large_block_header(u32 sector, u16 id,
      descriptor.sectors[block_index] != sector ||
      !read_bytes(sector_address(sector), header,
                  LARGE_BLOCK_HEADER_SIZE)) return false;
-  const u16 data_len = large_block_length(descriptor.data_len, block_index);
+  const u16 data_len = large_block_length(descriptor, block_index);
   return memcmp(header, "C5B0", 4) == 0 &&
-         header[4] == LARGE_DESCRIPTOR_VERSION &&
+         header[4] == descriptor.version &&
          header[5] == STATE_ACTIVE &&
          get_le16(header, 6) == LARGE_BLOCK_HEADER_SIZE &&
          get_le32(header, 8) == g_format_epoch &&
@@ -1811,7 +2162,7 @@ static bool read_large_data(u16 id, const LargeDescriptor& descriptor,
     if(block >= descriptor.block_count ||
        !verify_large_block(id, descriptor, block)) return false;
     const u16 available =
-        (u16) (large_block_length(descriptor.data_len, block) - in_block);
+        (u16) (large_block_length(descriptor, block) - in_block);
     const u16 count = size < available ? size : available;
     if(count == 0 ||
        !read_bytes(sector_address(descriptor.sectors[block]) +
@@ -1824,6 +2175,60 @@ static bool read_large_data(u16 id, const LargeDescriptor& descriptor,
   return true;
 }
 
+struct LargePayloadInput {
+  u16 id;
+  const LargeDescriptor* descriptor;
+  u16 position;
+  u8 buffer[64];
+  u8 buffered;
+  u8 cursor;
+  u32 crc;
+};
+
+static bool next_large_payload_byte(void* context, u8& value) {
+  LargePayloadInput& input = *(LargePayloadInput*) context;
+  if(input.position >= input.descriptor->stored_len) return false;
+  if(input.cursor >= input.buffered) {
+    const u8 block = (u8) (input.position / LARGE_BLOCK_DATA_SIZE);
+    const u16 in_block =
+        (u16) (input.position % LARGE_BLOCK_DATA_SIZE);
+    if(block >= input.descriptor->block_count ||
+       !verify_large_block(input.id, *input.descriptor, block)) return false;
+    const u16 block_remaining =
+        (u16) (large_block_length(*input.descriptor, block) - in_block);
+    const u16 total_remaining =
+        (u16) (input.descriptor->stored_len - input.position);
+    u16 count = block_remaining < total_remaining
+        ? block_remaining : total_remaining;
+    if(count > sizeof(input.buffer)) count = sizeof(input.buffer);
+    if(count == 0 ||
+       !read_bytes(sector_address(input.descriptor->sectors[block]) +
+                       LARGE_BLOCK_HEADER_SIZE + in_block,
+                   input.buffer, count)) return false;
+    input.buffered = (u8) count;
+    input.cursor = 0;
+  }
+  value = input.buffer[input.cursor++];
+  input.position++;
+  input.crc = crc32_update(input.crc, value);
+  return true;
+}
+
+static bool read_large_zx0_range(u16 id,
+                                 const LargeDescriptor& descriptor,
+                                 u16 offset, u8* output, u16 size) {
+  LargePayloadInput compressed = {
+    id, &descriptor, 0, {}, 0, 0, 0xFFFFFFFFUL
+  };
+  const zx0::Input input = {&compressed, next_large_payload_byte};
+  u8 window[256] = {};
+  return zx0::decode_range(input, descriptor.stored_len,
+                           descriptor.data_len, offset, output, size,
+                           window, sizeof(window)) &&
+         compressed.position == descriptor.stored_len &&
+         ~compressed.crc == descriptor.data_crc;
+}
+
 static bool payload_equals_source(u16 id, const Inode& inode,
                                   const char* name,
                                   const FileSource& source, u16 data_len) {
@@ -1832,13 +2237,14 @@ static bool payload_equals_source(u16 id, const Inode& inode,
   u8 actual[64];
   u8 expected[64];
   LargeDescriptor descriptor = {};
+  u8 header[RECORD_HEADER_SIZE] = {};
   u32 address = 0;
   if(large_file_inode(inode)) {
     if(!read_large_descriptor(id, inode, descriptor)) return false;
   } else {
-    u8 header[RECORD_HEADER_SIZE];
-    if(!verify_record_crc(id, inode, name) ||
-       !read_record_header(inode, id, header)) return false;
+    if(!read_record_header(inode, id, header) ||
+       (!zx0_file_inode(inode) &&
+        !verify_record_crc(id, inode, name))) return false;
     address = inode.address + RECORD_HEADER_SIZE + header[10];
   }
   u16 offset = 0;
@@ -1846,9 +2252,16 @@ static bool payload_equals_source(u16 id, const Inode& inode,
     const u16 remaining = (u16) (data_len - offset);
     const u16 count = remaining < (u16) sizeof(actual)
       ? remaining : (u16) sizeof(actual);
-    if(!(large_file_inode(inode)
-          ? read_large_data(id, descriptor, offset, actual, count)
-          : read_bytes(address + offset, actual, count)) ||
+    const bool read_ok = zx0_file_inode(inode)
+        ? (large_file_inode(inode)
+              ? read_large_zx0_range(
+                    id, descriptor, offset, actual, count)
+              : read_zx0_record_range(
+                    id, inode, name, header, offset, actual, count))
+        : (large_file_inode(inode)
+              ? read_large_data(id, descriptor, offset, actual, count)
+              : read_bytes(address + offset, actual, count));
+    if(!read_ok ||
        !source.read(source.context, offset, expected, count) ||
        memcmp(actual, expected, count) != 0) return false;
     offset = (u16) (offset + count);
@@ -2432,8 +2845,11 @@ static bool program_large_source(u16 id, const FileSource& source,
                                  LargeDescriptor& descriptor) {
   memset(&descriptor, 0, sizeof(descriptor));
   descriptor.data_len = data_len;
+  descriptor.stored_len = data_len;
+  descriptor.version = LARGE_DESCRIPTOR_VERSION;
   descriptor.block_count = (u8) (
-      (data_len + LARGE_BLOCK_DATA_SIZE - 1U) / LARGE_BLOCK_DATA_SIZE);
+      (descriptor.stored_len + LARGE_BLOCK_DATA_SIZE - 1U) /
+          LARGE_BLOCK_DATA_SIZE);
   if(descriptor.block_count == 0 ||
      descriptor.block_count > LARGE_BLOCK_COUNT) return false;
   descriptor.generation = ++g_meta.data_sequence;
@@ -2451,7 +2867,7 @@ static bool program_large_source(u16 id, const FileSource& source,
     descriptor.sectors[block] = sector;
     g_large_write_sectors[g_large_write_sector_count++] = sector;
 
-    const u16 block_len = large_block_length(data_len, block);
+    const u16 block_len = large_block_length(descriptor, block);
     u32 block_crc = 0xFFFFFFFFUL;
     u16 block_offset = 0;
     while(block_offset < block_len) {
@@ -2470,7 +2886,7 @@ static bool program_large_source(u16 id, const FileSource& source,
     u8 header[LARGE_BLOCK_HEADER_SIZE];
     memset(header, 0xFF, sizeof(header));
     memcpy(header, "C5B0", 4);
-    header[4] = LARGE_DESCRIPTOR_VERSION;
+    header[4] = descriptor.version;
     header[5] = STATE_WRITING;
     put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
     put_le32(header, 8, g_format_epoch);
@@ -2488,7 +2904,118 @@ static bool program_large_source(u16 id, const FileSource& source,
            get_le32(header, 24)) return false;
   }
   descriptor.data_crc = ~file_crc;
-  return file_offset == data_len;
+  return file_offset == descriptor.stored_len;
+}
+
+struct LargeZx0Output {
+  u16 id;
+  LargeDescriptor* descriptor;
+  u16 position;
+  u8 buffer[64];
+  u8 buffered;
+  u32 block_crc[LARGE_BLOCK_COUNT];
+  u32 file_crc;
+};
+
+static bool flush_large_zx0_output(LargeZx0Output& output) {
+  if(output.buffered == 0) return true;
+  const u16 start = (u16) (output.position - output.buffered);
+  const u8 block = (u8) (start / LARGE_BLOCK_DATA_SIZE);
+  const u16 in_block = (u16) (start % LARGE_BLOCK_DATA_SIZE);
+  if(block >= output.descriptor->block_count ||
+     (u32) in_block + output.buffered >
+         large_block_length(*output.descriptor, block) ||
+     !write_bytes(sector_address(output.descriptor->sectors[block]) +
+                      LARGE_BLOCK_HEADER_SIZE + in_block,
+                  output.buffer, output.buffered)) return false;
+  output.block_crc[block] =
+      crc32_bytes(output.buffer, output.buffered, output.block_crc[block]);
+  output.file_crc =
+      crc32_bytes(output.buffer, output.buffered, output.file_crc);
+  output.buffered = 0;
+  return true;
+}
+
+static bool write_large_zx0_byte(void* context, u8 value) {
+  LargeZx0Output& output = *(LargeZx0Output*) context;
+  if(output.position >= output.descriptor->stored_len) return false;
+  output.buffer[output.buffered++] = value;
+  output.position++;
+  if(output.buffered == sizeof(output.buffer) ||
+     output.position == output.descriptor->stored_len ||
+     output.position % LARGE_BLOCK_DATA_SIZE == 0) {
+    return flush_large_zx0_output(output);
+  }
+  return true;
+}
+
+static bool finish_large_zx0_output(LargeZx0Output& output) {
+  if(!flush_large_zx0_output(output) ||
+     output.position != output.descriptor->stored_len) return false;
+  for(u8 block = 0; block < output.descriptor->block_count; block++) {
+    const u16 block_len = large_block_length(*output.descriptor, block);
+    u8 header[LARGE_BLOCK_HEADER_SIZE];
+    memset(header, 0xFF, sizeof(header));
+    memcpy(header, "C5B0", 4);
+    header[4] = output.descriptor->version;
+    header[5] = STATE_WRITING;
+    put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
+    put_le32(header, 8, g_format_epoch);
+    put_le16(header, 12, output.id);
+    put_le16(header, 14, block);
+    put_le32(header, 16, output.descriptor->generation);
+    put_le16(header, 20, block_len);
+    put_le32(header, 24, ~output.block_crc[block]);
+    put_le32(header, 28,
+             normalized_record_crc(header, sizeof(header), 28, 5));
+    const u32 address =
+        sector_address(output.descriptor->sectors[block]);
+    if(!write_bytes(address, header, sizeof(header)) ||
+       !write_byte(address + 5, STATE_ACTIVE) ||
+       ~crc32_flash(address + LARGE_BLOCK_HEADER_SIZE, block_len) !=
+           get_le32(header, 24)) return false;
+  }
+  output.descriptor->data_crc = ~output.file_crc;
+  return true;
+}
+
+static bool program_large_zx0(u16 id, const u8* input, u16 data_len,
+                              u8* workspace, usize workspace_size,
+                              u16 stored_len,
+                              LargeDescriptor& descriptor) {
+  memset(&descriptor, 0, sizeof(descriptor));
+  descriptor.data_len = data_len;
+  descriptor.stored_len = stored_len;
+  descriptor.version = LARGE_DESCRIPTOR_VERSION;
+  descriptor.block_count = (u8) (
+      (stored_len + LARGE_BLOCK_DATA_SIZE - 1U) / LARGE_BLOCK_DATA_SIZE);
+  if(descriptor.block_count == 0 ||
+     descriptor.block_count > LARGE_BLOCK_COUNT) return false;
+  descriptor.generation = ++g_meta.data_sequence;
+  if(descriptor.generation == 0 ||
+     descriptor.generation == 0xFFFFFFFFUL) {
+    descriptor.generation = ++g_meta.data_sequence;
+  }
+  for(u8 block = 0; block < descriptor.block_count; block++) {
+    u32 sector = EMPTY_ADDRESS;
+    if(!select_large_sector(sector)) return false;
+    descriptor.sectors[block] = sector;
+    g_large_write_sectors[g_large_write_sector_count++] = sector;
+  }
+
+  LargeZx0Output encoded = {};
+  encoded.id = id;
+  encoded.descriptor = &descriptor;
+  encoded.file_crc = 0xFFFFFFFFUL;
+  for(u8 block = 0; block < LARGE_BLOCK_COUNT; block++) {
+    encoded.block_crc[block] = 0xFFFFFFFFUL;
+  }
+  const zx0::Output sink = {&encoded, write_large_zx0_byte};
+  zx0::EncodeResult result = {};
+  return zx0::encode(input, data_len, workspace, workspace_size,
+                     sink, result) &&
+         result.output_size == stored_len &&
+         finish_large_zx0_output(encoded);
 }
 
 static bool collect_file_extents(u16 file_id, const Inode& file,
@@ -2544,7 +3071,7 @@ static bool choose_file_extents(u16 file_id, const Inode& old_inode,
     return true;
   }
 
-  if(replacing && large_file_inode(old_inode)) {
+  if(replacing && inode_kind(old_inode) == NodeKind::FILE) {
     u16 old[MAX_FAT_EXTENTS_PER_FILE];
     u8 old_count = 0;
     if(!collect_file_extents(file_id, old_inode, old, old_count)) return false;
@@ -2588,7 +3115,8 @@ static bool file_extent_referenced(u16 extent_id, const Inode& extent) {
   if(inode_kind(extent) != NodeKind::FILE_EXTENT ||
      extent.parent_id >= g_geometry.max_nodes) return false;
   Inode file;
-  if(!get_inode(extent.parent_id, file) || !large_file_inode(file)) {
+  if(!get_inode(extent.parent_id, file) ||
+     inode_kind(file) != NodeKind::FILE) {
     return false;
   }
   u16 ids[MAX_FAT_EXTENTS_PER_FILE];
@@ -2678,24 +3206,28 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
                             const FileSource& source,
                             const u16* fat_extents, u8 fat_extent_count,
-                            u16* out_id) {
+                            u16* out_id,
+                            u8* compression_buffer,
+                            usize compression_buffer_size,
+                            const u8* contiguous_data) {
   DiskActivity activity;
   LargeWriteGuard large_guard;
+  alignas(4) u8 fallback_workspace[ZX0_FALLBACK_WORKSPACE_SIZE];
   const u16 max_data_len = maximum_data_len(type);
   if(!g_ready || !supported_type(type) || !valid_name(name) || !parent_valid(parent_id) ||
      (type == ProgramType::CHIP8 && data_len == 0) ||
      data_len > max_data_len ||
      !source_valid(source, data_len)) return false;
-  const bool large =
-      (type == ProgramType::APP || type == ProgramType::CHIP8) &&
-      data_len > MAX_IMAGE1_SIZE;
   const u32 cluster_bytes =
       (u32) g_geometry.sectors_per_cluster * VFAT_STAGE_BLOCK_SIZE;
   const u8 required_clusters = data_len == 0 ? 1 : (u8) (
       ((u32) data_len + cluster_bytes - 1U) / cluster_bytes);
   const u8 required_extents = (u8) (required_clusters - 1U);
-  if((!large && (fat_extents != NULL || fat_extent_count != 0)) ||
-     (large && required_extents > MAX_FAT_EXTENTS_PER_FILE)) return false;
+  if(required_extents > MAX_FAT_EXTENTS_PER_FILE ||
+     (fat_extents == NULL && fat_extent_count != 0) ||
+     (fat_extents != NULL && fat_extent_count != required_extents)) {
+    return false;
+  }
 
   u16 named_id = NONE;
   const bool named = find_child_id(parent_id, NodeKind::FILE, type, name,
@@ -2729,7 +3261,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   if(replacing) {
     if(!read_inode_name(id, old_inode, old_name)) return false;
     bool same_extents = fat_extents == NULL;
-    if(fat_extents != NULL && large_file_inode(old_inode)) {
+    if(fat_extents != NULL && inode_kind(old_inode) == NodeKind::FILE) {
       u16 current[MAX_FAT_EXTENTS_PER_FILE];
       u8 current_count = 0;
       same_extents = collect_file_extents(id, old_inode, current,
@@ -2747,22 +3279,59 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   }
 
   u16 extent_ids[MAX_FAT_EXTENTS_PER_FILE] = {};
-  if(large && !choose_file_extents(id, old_inode, replacing,
-                                   required_extents, fat_extents,
-                                   fat_extent_count, extent_ids)) return false;
+  if(!choose_file_extents(id, old_inode, replacing,
+                          required_extents, fat_extents,
+                          fat_extent_count, extent_ids)) return false;
+
+  CompressionBuffer compression(compression_buffer,
+                                compression_buffer_size);
+  shared_scratch::Lease compression_scratch;
+  CompressionPlan compression_plan = {};
+  const CompressionChoice compression_choice =
+      prepare_compressed_payload(type, source, data_len, compression,
+                                 compression_scratch, contiguous_data,
+                                 fallback_workspace,
+                                 sizeof(fallback_workspace),
+                                 compression_plan);
+  if(compression_choice == CompressionChoice::ERROR) return false;
+  const bool zx0 = compression_choice == CompressionChoice::ZX0;
+  const u16 stored_len = zx0 ? compression_plan.stored_len : data_len;
+  const bool large =
+      (type == ProgramType::APP || type == ProgramType::CHIP8) &&
+      stored_len > MAX_IMAGE1_SIZE;
 
   u32 address = 0;
   u16 record_len = 0;
   LargeDescriptor descriptor = {};
   if(large) {
-    if(!program_large_source(id, source, data_len, descriptor)) return false;
+    if(!(zx0
+          ? program_large_zx0(id, compression_plan.input, data_len,
+                              compression_plan.workspace,
+                              compression_plan.workspace_size,
+                              stored_len, descriptor)
+          : program_large_source(id, source, data_len, descriptor))) {
+      return false;
+    }
     u8 encoded[LARGE_DESCRIPTOR_SIZE];
     u16 encoded_size = 0;
     encode_large_descriptor(descriptor, encoded, encoded_size);
     if(!append_record(NodeKind::FILE, type, id, parent_id, name,
                       encoded, encoded_size, address, record_len)) return false;
+  } else if(zx0) {
+    if(compression_plan.stored_data != NULL) {
+      if(!append_record(NodeKind::FILE, type, id, parent_id, name,
+                        compression_plan.stored_data, stored_len,
+                        address, record_len)) return false;
+    } else if(!append_zx0_record(
+                  type, id, parent_id, name,
+                  compression_plan.input, data_len,
+                  compression_plan.workspace,
+                  compression_plan.workspace_size,
+                  stored_len, address, record_len)) {
+      return false;
+    }
   } else if(!append_record_source(NodeKind::FILE, type, id, parent_id, name,
-                                  source, data_len, address, record_len)) {
+                                  source, stored_len, address, record_len)) {
     return false;
   }
 
@@ -2773,8 +3342,9 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   inode.parent_id = parent_id;
   inode.name_hash = hash_name(name);
   inode.kind_type = make_kind_type(NodeKind::FILE, type);
-  inode.flags = large ? INODE_FLAG_LARGE_FILE : 0;
-  inode.first_child = large && required_extents != 0
+  inode.flags = (large ? INODE_FLAG_LARGE_FILE : 0) |
+                (zx0 ? INODE_FLAG_ZX0 : 0);
+  inode.first_child = required_extents != 0
       ? extent_ids[0] : NONE;
   if(!replacing) {
     inode.next_sibling = NONE;
@@ -2807,7 +3377,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
     if(index >= 0) transaction.meta.type_count[index]++;
     if(!link_at_head(transaction, id, inode, parent_id)) return false;
   }
-  if(large) {
+  if(required_extents != 0) {
     for(u8 index = 0; index < required_extents; index++) {
       const u16 previous = index == 0 ? NONE : extent_ids[index - 1];
       const u16 next = index + 1U < required_extents
@@ -2853,16 +3423,27 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
   const u16 copied = available < len ? available : len;
   if(large_file_inode(inode)) {
     LargeDescriptor descriptor = {};
-    if(!read_large_descriptor(id, inode, descriptor) ||
-       (copied != 0 &&
-        !read_large_data(id, descriptor, offset, data, copied))) return false;
+    if(!read_large_descriptor(id, inode, descriptor)) return false;
+    if(zx0_file_inode(inode)) {
+      if(!read_large_zx0_range(
+            id, descriptor, offset, data, copied)) return false;
+    } else if(copied != 0 &&
+              !read_large_data(id, descriptor, offset, data, copied)) {
+      return false;
+    }
   } else {
     u8 header[RECORD_HEADER_SIZE];
-    if(!verify_record_crc(id, inode, name) ||
-       !read_record_header(inode, id, header) ||
-       (copied != 0 &&
-        !read_bytes(inode.address + RECORD_HEADER_SIZE + header[10] + offset,
-                    data, copied))) return false;
+    if(!read_record_header(inode, id, header)) return false;
+    if(zx0_file_inode(inode)) {
+      if(!read_zx0_record_range(id, inode, name, header,
+                                offset, data, copied)) return false;
+    } else if(!verify_record_crc(id, inode, name) ||
+              (copied != 0 &&
+               !read_bytes(inode.address + RECORD_HEADER_SIZE +
+                               header[10] + offset,
+                           data, copied))) {
+      return false;
+    }
   }
   if(out_len != NULL) *out_len = copied;
   return true;
@@ -2989,35 +3570,33 @@ bool move_rename(u16 id, u16 new_parent_id, const char* new_name) {
                          new_name, id)) return false;
 
   shared_scratch::Lease scratch;
-  u8 large_payload[LARGE_DESCRIPTOR_SIZE];
+  u8 descriptor[LARGE_DESCRIPTOR_SIZE];
   const u8* payload = NULL;
   u16 payload_len = 0;
-  if(inode_kind(inode) == NodeKind::FILE && inode.data_len != 0) {
-    if(large_file_inode(inode)) {
-      u8 header[RECORD_HEADER_SIZE];
-      char old_name[NAME_SIZE];
-      if(!read_inode_name(id, inode, old_name) ||
-         !verify_record_crc(id, inode, old_name) ||
-         !read_record_header(inode, id, header)) return false;
-      payload_len = get_le16(header, 8);
-      if(payload_len > sizeof(large_payload) ||
-         !read_bytes(inode.address + RECORD_HEADER_SIZE + header[10],
-                     large_payload, payload_len)) return false;
-      payload = large_payload;
-    } else {
+  u8 header[RECORD_HEADER_SIZE];
+  char old_name[NAME_SIZE];
+  if(!read_inode_name(id, inode, old_name) ||
+     !verify_record_crc(id, inode, old_name) ||
+     !read_record_header(inode, id, header)) return false;
+  payload_len = get_le16(header, 8);
+  if(payload_len != 0) {
+    u8* target = descriptor;
+    usize capacity = sizeof(descriptor);
+    if(!large_file_inode(inode)) {
       if(!scratch.acquire(shared_scratch::Owner::PROGRAM_STORE_RENAME,
-                          inode.data_len)) return false;
-      u16 len = 0;
-      if(!read_id(id, scratch.data(), scratch.size(), &len) ||
-         len != inode.data_len) return false;
-      payload = scratch.data();
-      payload_len = inode.data_len;
+                          payload_len)) return false;
+      target = scratch.data();
+      capacity = scratch.size();
     }
+    if(payload_len > capacity ||
+       !read_bytes(inode.address + RECORD_HEADER_SIZE + header[10],
+                   target, payload_len)) return false;
+    payload = target;
   }
   u32 address = 0;
   u16 record_len = 0;
-  if(!append_record(inode_kind(inode), inode_type(inode), id, new_parent_id,
-                    new_name, payload, payload_len,
+  if(!append_record(inode_kind(inode), inode_type(inode), id,
+                    new_parent_id, new_name, payload, payload_len,
                     address, record_len)) return false;
 
   Transaction transaction;
@@ -3151,7 +3730,8 @@ bool release_file_extent(u16 extent_id) {
      inode_kind(extent) != NodeKind::FILE_EXTENT) return false;
   const u16 file_id = extent.parent_id;
   Inode file;
-  if(!get_inode(file_id, file) || !large_file_inode(file)) return false;
+  if(!get_inode(file_id, file) ||
+     inode_kind(file) != NodeKind::FILE) return false;
 
   u16 current[MAX_FAT_EXTENTS_PER_FILE] = {};
   u8 current_count = 0;
@@ -3194,7 +3774,8 @@ bool release_file_extent(u16 extent_id) {
 
 bool first_file_extent(u16 file_id, u16& out_id) {
   Inode file;
-  if(!g_ready || !get_inode(file_id, file) || !large_file_inode(file) ||
+  if(!g_ready || !get_inode(file_id, file) ||
+     inode_kind(file) != NodeKind::FILE ||
      file.first_child == NONE) return false;
   out_id = file.first_child;
   return true;
@@ -3203,7 +3784,7 @@ bool first_file_extent(u16 file_id, u16& out_id) {
 bool next_file_extent(u16 id, u16& out_id) {
   Inode inode;
   if(!g_ready || !get_inode(id, inode)) return false;
-  if(large_file_inode(inode)) {
+  if(inode_kind(inode) == NodeKind::FILE) {
     if(inode.first_child == NONE) return false;
     out_id = inode.first_child;
     return true;
@@ -3622,6 +4203,35 @@ bool test_rewrite_catalog_as_v5(void) {
   if(ok) ok = write_locators_version(LEGACY_CATALOG_VERSION);
   g_catalog_write_version = CATALOG_VERSION;
   return ok;
+}
+
+bool test_file_storage_info(u16 id, u16& stored_len,
+                            bool& large, bool& zx0) {
+  Inode inode;
+  u8 header[RECORD_HEADER_SIZE];
+  if(!g_ready || !get_inode(id, inode) ||
+     inode_kind(inode) != NodeKind::FILE ||
+     !read_record_header(inode, id, header)) return false;
+  large = large_file_inode(inode);
+  zx0 = zx0_file_inode(inode);
+  if(large) {
+    LargeDescriptor descriptor = {};
+    if(!read_large_descriptor(id, inode, descriptor)) return false;
+    stored_len = descriptor.stored_len;
+  } else {
+    stored_len = get_le16(header, 8);
+  }
+  return true;
+}
+
+bool test_file_record_location(u16 id, u32& sector, u16& record_len) {
+  Inode inode;
+  if(!g_ready || !get_inode(id, inode) ||
+     inode_kind(inode) != NodeKind::FILE ||
+     inode.address >= EXTENT_ADDRESS) return false;
+  sector = inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE;
+  record_len = inode.record_len;
+  return true;
 }
 #endif
 

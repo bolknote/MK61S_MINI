@@ -48,6 +48,26 @@ enum class ProgramType : u8 {
   MARKDOWN = 10
 };
 
+// Единая политика прозрачного C5 ZX0. FONT включится здесь только вместе с
+// переходом на raw-only FMK2; APP имеет собственное сжатие контейнера.
+constexpr bool transparent_compression_enabled(ProgramType type) {
+  switch(type) {
+    case ProgramType::FOCAL:
+    case ProgramType::TINYBASIC:
+    case ProgramType::TEXT:
+    case ProgramType::MK61_STATE:
+    case ProgramType::IMAGE1:
+    case ProgramType::CHIP8:
+    case ProgramType::MARKDOWN:
+      return true;
+    case ProgramType::MK61:
+    case ProgramType::FONT:
+    case ProgramType::APP:
+      return false;
+  }
+  return false;
+}
+
 using TypeMagic = u16;
 
 constexpr TypeMagic make_type_magic(char family, char subtype) {
@@ -119,7 +139,8 @@ bool child(u16 parent_id, int index, Entry& out);
 bool exists(ProgramType type, const char* name);
 
 bool write(ProgramType type, const char* name, const u8* data, u16 data_len);
-// Импорт через USB не тратит время на сжатие, пока исходные данные помещаются в хранилище.
+// Совместимый вход для прежних обработчиков; политика сжатия та же, что у
+// write_file().
 bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data_len);
 bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len);
 bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 len, u16* out_len);
@@ -132,7 +153,9 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
 bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
                 const char* name, const u8* data, u16 data_len,
                 u16* out_id = nullptr);
-// Потоковый вариант не держит файл целиком в SRAM. Для большого файла
+// Для RAW большой файл пишется потоково. Для ZX0 вызывающий может передать
+// свободный compression_buffer и непрерывный contiguous_data; иначе C5
+// использует доступные shared/exclusive buffers либо безопасно оставляет RAW.
 // fat_extents задаёт идентификаторы последующих FAT-кластеров; при NULL C5
 // выбирает свободные узлы самостоятельно.
 bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
@@ -140,7 +163,10 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const FileSource& source,
                             const u16* fat_extents = nullptr,
                             u8 fat_extent_count = 0,
-                            u16* out_id = nullptr);
+                            u16* out_id = nullptr,
+                            u8* compression_buffer = nullptr,
+                            usize compression_buffer_size = 0,
+                            const u8* contiguous_data = nullptr);
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
 bool remove_id(u16 id);
@@ -174,6 +200,9 @@ void vfat_stage_clear(void);
 #if defined(PROGRAM_STORE_HOST_TEST)
 // Создаёт на томе настоящий каталог/локаторы C5 v5 для проверки миграции v6.
 bool test_rewrite_catalog_as_v5(void);
+bool test_file_storage_info(u16 id, u16& stored_len,
+                            bool& large, bool& zx0);
+bool test_file_record_location(u16 id, u32& sector, u16& record_len);
 #endif
 
 bool write_mk61(const char* name, const u8* code, u16 code_len);
