@@ -674,6 +674,13 @@ static void fill_power_cut_payload(bool large, u16 generation,
 
 static bool write_power_cut_payload(bool large, const u8* data, u16 size,
                                     u8* workspace, u16* id = nullptr) {
+  if(!large) {
+    return program_store::write_file(
+        program_store::ROOT_ID,
+        id != nullptr && *id != program_store::INVALID_ID
+            ? *id : program_store::INVALID_ID,
+        ProgramType::TEXT, "power-small", data, size, id);
+  }
   TestSource memory = {data, size};
   const program_store::FileSource source = {
     &memory, read_test_source
@@ -682,8 +689,7 @@ static bool write_power_cut_payload(bool large, const u8* data, u16 size,
       program_store::ROOT_ID,
       id != nullptr && *id != program_store::INVALID_ID
           ? *id : program_store::INVALID_ID,
-      large ? ProgramType::CHIP8 : ProgramType::TEXT,
-      large ? "power-large" : "power-small",
+      ProgramType::CHIP8, "power-large",
       size, source, nullptr, 0, id, workspace, 8192);
 }
 
@@ -1596,6 +1602,72 @@ static void test_compressed_rename_survives_source_sector_gc(void) {
   expect_text(packed_id, packed, sizeof(packed));
 }
 
+static void test_prepared_zx0_survives_gc_before_emit(void) {
+  static u8 old_data[1400];
+  static u8 new_data[1400];
+  u8 data[program_store::MAX_MK61_TEXT_SIZE];
+  for(u16 index = 0; index < sizeof(old_data); index++) {
+    old_data[index] = (u8) (
+        "prepared-zx0-before-gc-old\n"[index % 27U]);
+  }
+  u32 state = 0xC5A55A3CUL;
+  for(u16 index = 0; index < 200; index++) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    new_data[index] = (u8) state;
+  }
+  for(u16 index = 200; index < sizeof(new_data); index++) {
+    new_data[index] = new_data[index % 200U];
+  }
+
+  fresh(128U * 1024U);
+  u16 packed_id = program_store::INVALID_ID;
+  for(u8 index = 0; index < 30; index++) {
+    char name[8];
+    gc_name(index, name, sizeof(name));
+    if(index == 1) {
+      assert(program_store::write_file(
+          program_store::ROOT_ID, program_store::INVALID_ID,
+          ProgramType::TEXT, name, old_data, sizeof(old_data), &packed_id));
+    } else {
+      fill_bytes(data, index);
+      assert(program_store::write(ProgramType::TEXT, name, data,
+                                  sizeof(data)));
+    }
+  }
+
+  fill_bytes(data, 0xA0U);
+  assert(program_store::write(ProgramType::TEXT, "GC00", data,
+                              sizeof(data)));
+  fill_bytes(data, 0xA2U);
+  assert(program_store::write(ProgramType::TEXT, "GC02", data,
+                              sizeof(data)));
+  fill_bytes(data, 0xA4U);
+  assert(program_store::write(ProgramType::TEXT, "GC04", data,
+                              sizeof(data)));
+  fill_bytes(data, 0xA6U);
+  assert(program_store::write(ProgramType::TEXT, "GC06", data, 930));
+
+  const u32 erases_before = SPIFlash::eraseCount();
+  assert(program_store::write_file(
+      program_store::ROOT_ID, packed_id, ProgramType::TEXT,
+      "GC01", new_data, sizeof(new_data), &packed_id));
+  assert(SPIFlash::eraseCount() > erases_before);
+
+  u16 stored_len = 0;
+  bool large = true;
+  bool zx0 = false;
+  assert(program_store::test_file_storage_info(
+      packed_id, stored_len, large, zx0));
+  assert(zx0 && !large && stored_len < sizeof(new_data));
+  expect_text(packed_id, new_data, sizeof(new_data));
+
+  program_store::init();
+  assert(program_store::ready());
+  expect_text(packed_id, new_data, sizeof(new_data));
+}
+
 static void prepare_gc_boundary(void) {
   fresh(128U * 1024U);
   assert(program_store::max_nodes() == 30U);
@@ -2486,6 +2558,7 @@ int main(void) {
   test_power_cuts_are_atomic_and_retryable();
   test_gc_preserves_live_records();
   test_compressed_rename_survives_source_sector_gc();
+  test_prepared_zx0_survives_gc_before_emit();
   test_gc_power_cuts_are_atomic_and_recoverable();
   test_stage_journal_survives_reboot_and_churn();
   test_stage_indexes_large_unique_write_burst();

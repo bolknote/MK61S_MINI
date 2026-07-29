@@ -1623,21 +1623,10 @@ struct MemoryOutput {
   u16 size;
 };
 
-struct CountingOutput {
-  u32 size;
-};
-
 static bool write_memory_output(void* context, u8 value) {
   MemoryOutput& output = *(MemoryOutput*) context;
   if(output.size >= output.capacity) return false;
   output.data[output.size++] = value;
-  return true;
-}
-
-static bool count_output_byte(void* context, u8) {
-  CountingOutput& output = *(CountingOutput*) context;
-  if(output.size == 0xFFFFFFFFUL) return false;
-  output.size++;
   return true;
 }
 
@@ -1653,6 +1642,7 @@ struct CompressionPlan {
   usize workspace_size;
   const u8* stored_data;
   u16 stored_len;
+  zx0::Prepared prepared;
 };
 
 static CompressionChoice prepare_compressed_payload(
@@ -1723,30 +1713,23 @@ static CompressionChoice prepare_compressed_payload(
 
   if(plan.input == NULL || plan.workspace == NULL ||
      plan.workspace_size < sizeof(u32)) return CompressionChoice::RAW;
-  CountingOutput measured = {};
-  const zx0::Output count_sink = {&measured, count_output_byte};
-  zx0::EncodeResult result = {};
-  if(!zx0::encode(plan.input, data_len,
-                  plan.workspace, plan.workspace_size,
-                  count_sink, result) ||
-     result.output_size != measured.size ||
-     measured.size > 0xFFFFU) return CompressionChoice::RAW;
+  if(!zx0::prepare(plan.input, data_len,
+                   plan.workspace, plan.workspace_size,
+                   plan.prepared) ||
+     plan.prepared.output_size > 0xFFFFU) return CompressionChoice::RAW;
 
-  if(measured.size >= data_len) return CompressionChoice::RAW;
-  const u16 saving = (u16) (data_len - measured.size);
+  if(plan.prepared.output_size >= data_len) return CompressionChoice::RAW;
+  const u16 saving = (u16) (data_len - plan.prepared.output_size);
   if(saving < ZX0_MIN_SAVING ||
      (u32) saving * 100U <
          (u32) data_len * ZX0_MIN_SAVING_PERCENT) {
     return CompressionChoice::RAW;
   }
-  plan.stored_len = (u16) measured.size;
+  plan.stored_len = (u16) plan.prepared.output_size;
   if(plan.stored_len <= MAX_IMAGE1_SIZE && output != NULL) {
     MemoryOutput packed = {output, MAX_IMAGE1_SIZE, 0};
     const zx0::Output sink = {&packed, write_memory_output};
-    if(!zx0::encode(plan.input, data_len,
-                    plan.workspace, plan.workspace_size,
-                    sink, result) ||
-       result.output_size != plan.stored_len ||
+    if(!zx0::emit(plan.prepared, sink) ||
        packed.size != plan.stored_len) return CompressionChoice::ERROR;
     if(packed.data == scratch.data()) {
       memcpy(large_buffer.data(), packed.data, packed.size);
@@ -1889,12 +1872,10 @@ static bool write_flash_encode_byte(void* context, u8 value) {
 
 static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
                               const char* name,
-                              const u8* input, u16 input_size,
-                              u8* workspace, usize workspace_size,
+                              const zx0::Prepared& prepared,
                               u16 stored_len,
                               u32& address, u16& record_len) {
-  if(input == NULL || input_size == 0 || workspace == NULL ||
-     stored_len == 0) return false;
+  if(stored_len == 0 || prepared.output_size != stored_len) return false;
   const u8 name_len = (u8) strlen(name);
   record_len = (u16) (RECORD_HEADER_SIZE + name_len + stored_len);
 
@@ -1903,10 +1884,7 @@ static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
     0, stored_len
   };
   const zx0::Output crc_sink = {&checked, write_zx0_crc_byte};
-  zx0::EncodeResult result = {};
-  if(!zx0::encode(input, input_size, workspace, workspace_size,
-                  crc_sink, result) ||
-     result.output_size != stored_len || checked.size != stored_len ||
+  if(!zx0::emit(prepared, crc_sink) || checked.size != stored_len ||
      !ensure_record_space(record_len, address)) return false;
 
   u8 header[RECORD_HEADER_SIZE];
@@ -1930,9 +1908,7 @@ static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
     0, stored_len, {}, 0
   };
   const zx0::Output flash_sink = {&encoded, write_flash_encode_byte};
-  if(!zx0::encode(input, input_size, workspace, workspace_size,
-                  flash_sink, result) ||
-     result.output_size != stored_len || encoded.size != stored_len ||
+  if(!zx0::emit(prepared, flash_sink) || encoded.size != stored_len ||
      !flush_flash_encode_output(encoded) ||
      !write_byte(address + 2, STATE_ACTIVE)) return false;
   g_meta.current_offset = (u16) (g_meta.current_offset + record_len);
@@ -2979,10 +2955,12 @@ static bool finish_large_zx0_output(LargeZx0Output& output) {
   return true;
 }
 
-static bool program_large_zx0(u16 id, const u8* input, u16 data_len,
-                              u8* workspace, usize workspace_size,
+static bool program_large_zx0(u16 id,
+                              const zx0::Prepared& prepared, u16 data_len,
                               u16 stored_len,
                               LargeDescriptor& descriptor) {
+  if(prepared.input_size != data_len ||
+     prepared.output_size != stored_len) return false;
   memset(&descriptor, 0, sizeof(descriptor));
   descriptor.data_len = data_len;
   descriptor.stored_len = stored_len;
@@ -3011,10 +2989,7 @@ static bool program_large_zx0(u16 id, const u8* input, u16 data_len,
     encoded.block_crc[block] = 0xFFFFFFFFUL;
   }
   const zx0::Output sink = {&encoded, write_large_zx0_byte};
-  zx0::EncodeResult result = {};
-  return zx0::encode(input, data_len, workspace, workspace_size,
-                     sink, result) &&
-         result.output_size == stored_len &&
+  return zx0::emit(prepared, sink) &&
          finish_large_zx0_output(encoded);
 }
 
@@ -3305,9 +3280,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   LargeDescriptor descriptor = {};
   if(large) {
     if(!(zx0
-          ? program_large_zx0(id, compression_plan.input, data_len,
-                              compression_plan.workspace,
-                              compression_plan.workspace_size,
+          ? program_large_zx0(id, compression_plan.prepared, data_len,
                               stored_len, descriptor)
           : program_large_source(id, source, data_len, descriptor))) {
       return false;
@@ -3324,9 +3297,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                         address, record_len)) return false;
     } else if(!append_zx0_record(
                   type, id, parent_id, name,
-                  compression_plan.input, data_len,
-                  compression_plan.workspace,
-                  compression_plan.workspace_size,
+                  compression_plan.prepared,
                   stored_len, address, record_len)) {
       return false;
     }

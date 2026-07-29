@@ -25,6 +25,20 @@ struct EncodeResult {
   EncodeMode mode;
 };
 
+// Ссылается на input и workspace, переданные prepare(). Оба буфера должны
+// оставаться неизменными до последнего emit(). Поля являются внутренним
+// описанием подготовленного потока; вызывающему нужны output_size и mode.
+struct Prepared {
+  const u8* input;
+  const u8* workspace;
+  u32 output_size;
+  u16 input_size;
+  u16 token_count;
+  u16 control_offset;
+  u16 control_count;
+  EncodeMode mode;
+};
+
 // Ограниченный упаковщик использует обычный формат ZX0 v2 и окно 256 байт.
 // При workspace_size >= 4 * (input_size + 1) он делает bounded-optimal поиск:
 // новые offset оптимизируются точно в пределах окна, а дешёвый last-offset
@@ -33,6 +47,15 @@ struct EncodeResult {
 //
 // Пересечение workspace с input отвергается. Упаковщик может вернуть false,
 // когда рабочего буфера недостаточно даже для greedy-плана.
+bool prepare(const u8* input, u32 input_size,
+             u8* workspace, usize workspace_size,
+             Prepared& prepared);
+
+// Повторно выдаёт уже подготовленный побитно идентичный поток, не перестраивая
+// DP/greedy-план и не изменяя input или workspace.
+bool emit(const Prepared& prepared, const Output& output);
+
+// Удобная однопроходная обёртка prepare() + emit().
 bool encode(const u8* input, u32 input_size,
             u8* workspace, usize workspace_size,
             const Output& output, EncodeResult& result);

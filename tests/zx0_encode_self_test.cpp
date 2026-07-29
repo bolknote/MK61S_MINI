@@ -13,6 +13,18 @@ static bool append_byte(void* context, u8 value) {
   return true;
 }
 
+struct FailingOutput {
+  usize accepted;
+  usize limit;
+};
+
+static bool fail_after_limit(void* context, u8) {
+  FailingOutput& output = *(FailingOutput*) context;
+  if(output.accepted >= output.limit) return false;
+  output.accepted++;
+  return true;
+}
+
 struct VectorInput {
   const std::vector<u8>* bytes;
   usize position;
@@ -114,6 +126,62 @@ static void test_deterministic_output(void) {
   assert(first_result.mode == second_result.mode);
 }
 
+static void verify_prepared_reuse(const std::vector<u8>& source,
+                                  usize workspace_size,
+                                  zx0::EncodeMode expected_mode) {
+  zx0::EncodeResult encoded_result = {};
+  const std::vector<u8> encoded =
+      pack(source, workspace_size, encoded_result);
+
+  std::vector<u8> workspace(workspace_size + 4U);
+  zx0::Prepared prepared = {};
+  assert(zx0::prepare(source.data(), (u32) source.size(),
+                      workspace.data() + 1, workspace_size, prepared));
+  assert(prepared.output_size == encoded.size());
+  assert(prepared.mode == expected_mode);
+  const std::vector<u8> snapshot = workspace;
+
+  std::vector<u8> first;
+  const zx0::Output first_sink = {&first, append_byte};
+  assert(zx0::emit(prepared, first_sink));
+  assert(first == encoded);
+  assert(workspace == snapshot);
+
+  FailingOutput failing = {0, prepared.output_size / 2U};
+  const zx0::Output failing_sink = {&failing, fail_after_limit};
+  assert(!zx0::emit(prepared, failing_sink));
+  assert(failing.accepted == prepared.output_size / 2U);
+  assert(workspace == snapshot);
+
+  std::vector<u8> second;
+  const zx0::Output second_sink = {&second, append_byte};
+  assert(zx0::emit(prepared, second_sink));
+  assert(second == encoded);
+  assert(workspace == snapshot);
+
+  zx0::Prepared invalid = prepared;
+  invalid.control_count = 0;
+  assert(!zx0::emit(invalid, second_sink));
+  invalid = prepared;
+  invalid.token_count = 0;
+  assert(!zx0::emit(invalid, second_sink));
+}
+
+static void test_prepared_reuse(void) {
+  std::vector<u8> bounded(900);
+  for(usize index = 0; index < bounded.size(); index++) {
+    bounded[index] = (u8) ((index % 71U) ^ (index / 13U));
+  }
+  verify_prepared_reuse(bounded, 8192,
+                        zx0::EncodeMode::BOUNDED_OPTIMAL);
+
+  std::vector<u8> greedy(600, 'A');
+  for(usize index = 0; index < greedy.size(); index += 37) {
+    greedy[index] = (u8) index;
+  }
+  verify_prepared_reuse(greedy, 512, zx0::EncodeMode::GREEDY);
+}
+
 static void test_range_decode(void) {
   std::vector<u8> source(1536);
   for(usize index = 0; index < source.size(); index++) {
@@ -175,6 +243,14 @@ static void test_invalid_arguments(void) {
   const zx0::Output invalid_output = {nullptr, nullptr};
   assert(!zx0::encode(&source, 1, workspace, sizeof(workspace),
                       invalid_output, result));
+
+  zx0::Prepared prepared = {};
+  assert(!zx0::prepare(nullptr, 1, workspace, sizeof(workspace), prepared));
+  assert(!zx0::prepare(&source, 0, workspace, sizeof(workspace), prepared));
+  assert(!zx0::prepare(&source, 1, nullptr, sizeof(workspace), prepared));
+  assert(!zx0::prepare(workspace, 1, workspace,
+                       sizeof(workspace), prepared));
+  assert(!zx0::emit(prepared, output));
 }
 
 } // namespace
@@ -184,6 +260,7 @@ int main(void) {
   test_repetitions_and_offsets();
   test_greedy_fallback();
   test_deterministic_output();
+  test_prepared_reuse();
   test_range_decode();
   test_invalid_arguments();
   puts("zx0 encode self-test: ok");

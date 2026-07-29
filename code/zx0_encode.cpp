@@ -32,7 +32,7 @@ static_assert(sizeof(Costs) == 4, "ZX0 cost entry must remain compact");
 static_assert(sizeof(Token) == 4, "ZX0 token must remain compact");
 
 struct Plan {
-  Token* tokens;
+  const Token* tokens;
   u16 count;
   EncodeMode mode;
 };
@@ -54,21 +54,25 @@ static u16 add_cost(u16 left, u32 right) {
 
 static u16 match_length(const u8* input, u16 size,
                         u16 position, u16 offset) {
-  u16 length = 0;
-  while((u32) position + length < size &&
-        input[position + length] == input[position + length - offset]) {
-    length++;
+  const u8* current = input + position;
+  const u8* source = current - offset;
+  const u8* const begin = current;
+  const u8* const end = input + size;
+  while(current < end && *current == *source) {
+    current++;
+    source++;
   }
-  return length;
+  return (u16) (current - begin);
 }
 
 static bool matching_offset(const u8* input, u16 size, u16 position,
                             u16 offset, u16 length) {
   if(offset == 0 || offset > position ||
      (u32) position + length > size) return false;
-  for(u16 index = 0; index < length; index++) {
-    if(input[position + index] !=
-       input[position + index - offset]) return false;
+  const u8* current = input + position;
+  const u8* source = current - offset;
+  while(length-- != 0) {
+    if(*current++ != *source++) return false;
   }
   return true;
 }
@@ -87,10 +91,9 @@ static bool append_token(Token* tokens, usize capacity, u16& count,
   return true;
 }
 
-static bool find_match_choice(const u8* input, u16 size, u16 position,
-                              const Costs* costs, u16 target,
-                              u16 preferred_offset,
-                              u16& chosen_length, u16& chosen_offset) {
+static Token find_match_choice(const u8* input, u16 size, u16 position,
+                               const Costs* costs, u16 target,
+                               u16 preferred_offset) {
   const u16 maximum_offset =
     position < MAX_OFFSET ? position : MAX_OFFSET;
 
@@ -99,14 +102,19 @@ static bool find_match_choice(const u8* input, u16 size, u16 position,
   if(preferred_offset != 0 && preferred_offset <= maximum_offset) {
     const u16 maximum =
       match_length(input, size, position, preferred_offset);
-    for(u16 length = maximum; length >= 2; length--) {
-      const u16 tail = costs[position + length].literal;
-      if(add_cost(tail, new_match_cost(preferred_offset, length)) == target) {
-        chosen_length = length;
-        chosen_offset = preferred_offset;
-        return true;
+    if(maximum >= 2) {
+      u16 cost = new_match_cost(preferred_offset, maximum);
+      for(u16 length = maximum;; length--) {
+        const u16 tail = costs[position + length].literal;
+        if(add_cost(tail, cost) == target) {
+          return {length, preferred_offset};
+        }
+        if(length == 2) break;
+        const u16 next_value = (u16) (length - 1U);
+        if((next_value & (next_value - 1U)) == 0) {
+          cost = (u16) (cost - 2U);
+        }
       }
-      if(length == 2) break;
     }
   }
 
@@ -117,9 +125,11 @@ static bool find_match_choice(const u8* input, u16 size, u16 position,
   for(u16 offset = 1; offset <= maximum_offset; offset++) {
     if(offset == preferred_offset) continue;
     const u16 maximum = match_length(input, size, position, offset);
-    for(u16 length = maximum; length >= 2; length--) {
+    if(maximum < 2) continue;
+    u16 cost = new_match_cost(offset, maximum);
+    for(u16 length = maximum;; length--) {
       const u16 tail = costs[position + length].literal;
-      if(add_cost(tail, new_match_cost(offset, length)) == target) {
+      if(add_cost(tail, cost) == target) {
         if(length > best_length ||
            (length == best_length &&
             (best_offset == 0 || offset < best_offset))) {
@@ -129,12 +139,13 @@ static bool find_match_choice(const u8* input, u16 size, u16 position,
         break;
       }
       if(length == 2) break;
+      const u16 next_value = (u16) (length - 1U);
+      if((next_value & (next_value - 1U)) == 0) {
+        cost = (u16) (cost - 2U);
+      }
     }
   }
-  if(best_offset == 0) return false;
-  chosen_length = best_length;
-  chosen_offset = best_offset;
-  return true;
+  return {best_length, best_offset};
 }
 
 static bool build_bounded_optimal_plan(const u8* input, u16 size,
@@ -170,28 +181,38 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
     }
 
     u16 best_match = INFINITE_COST;
+    u16 match_cost = 10;
     for(u16 length = 2; length <= near_length; length++) {
       const u16 candidate =
-        add_cost(costs[position + length].literal,
-                 new_match_cost(1, length));
+        add_cost(costs[position + length].literal, match_cost);
       if(candidate < best_match) best_match = candidate;
+      if((length & (length - 1U)) == 0) {
+        match_cost = (u16) (match_cost + 2U);
+      }
     }
+    match_cost = 12;
     for(u16 length = 2; length <= far_length; length++) {
       const u16 candidate =
-        add_cost(costs[position + length].literal,
-                 new_match_cost(129, length));
+        add_cost(costs[position + length].literal, match_cost);
       if(candidate < best_match) best_match = candidate;
+      if((length & (length - 1U)) == 0) {
+        match_cost = (u16) (match_cost + 2U);
+      }
     }
     costs[position].match = best_match;
 
     u16 best_literal = INFINITE_COST;
     const u16 remaining = (u16) (size - position);
+    u16 block_cost = 10;
     for(u16 length = 1; length <= remaining; length++) {
-      const u32 block_cost =
-        1U + gamma_cost(length) + (u32) length * 8U;
       const u16 candidate =
         add_cost(costs[position + length].match, block_cost);
       if(candidate < best_literal) best_literal = candidate;
+      const u16 next_length = (u16) (length + 1U);
+      block_cost = (u16) (block_cost + 8U);
+      if((next_length & (next_length - 1U)) == 0) {
+        block_cost = (u16) (block_cost + 2U);
+      }
     }
     // После match формат разрешает как literal (selector 0), так и ещё один
     // new-offset match (selector 1). Это существенно для данных с несколькими
@@ -212,14 +233,18 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
       const u16 target = costs[position].literal;
       const u16 maximum = (u16) (size - position);
       u16 chosen = 0;
-      for(u16 length = maximum; length >= 1; length--) {
-        const u32 block_cost =
-          1U + gamma_cost(length) + (u32) length * 8U;
+      u16 block_cost = (u16) (
+          1U + gamma_cost(maximum) + (u32) maximum * 8U);
+      for(u16 length = maximum;; length--) {
         if(add_cost(costs[position + length].match, block_cost) == target) {
           chosen = length;
           break;
         }
         if(length == 1) break;
+        block_cost = (u16) (block_cost - 8U);
+        if((length & (length - 1U)) == 0) {
+          block_cost = (u16) (block_cost - 2U);
+        }
       }
       if(chosen != 0) {
         if(!append_token(tokens, token_capacity, token_count, chosen, 0)) {
@@ -232,27 +257,27 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
 
       // Literal не является лучшим продолжением: остаёмся в состоянии
       // "после match" и записываем соседний new-offset match.
-      u16 length = 0;
-      u16 offset = 0;
-      if(!find_match_choice(input, size, position, costs, target,
-                            last_offset, length, offset) ||
-         !append_token(tokens, token_capacity, token_count, length, offset)) {
+      const Token choice =
+          find_match_choice(input, size, position, costs, target, last_offset);
+      if(choice.offset == 0 ||
+         !append_token(tokens, token_capacity, token_count,
+                       choice.length, choice.offset)) {
         return false;
       }
-      position = (u16) (position + length);
-      last_offset = offset;
+      position = (u16) (position + choice.length);
+      last_offset = choice.offset;
       need_literal = true;
     } else {
       const u16 target = costs[position].match;
-      u16 length = 0;
-      u16 offset = 0;
-      if(!find_match_choice(input, size, position, costs, target,
-                            last_offset, length, offset) ||
-         !append_token(tokens, token_capacity, token_count, length, offset)) {
+      const Token choice =
+          find_match_choice(input, size, position, costs, target, last_offset);
+      if(choice.offset == 0 ||
+         !append_token(tokens, token_capacity, token_count,
+                       choice.length, choice.offset)) {
         return false;
       }
-      position = (u16) (position + length);
-      last_offset = offset;
+      position = (u16) (position + choice.length);
+      last_offset = choice.offset;
       need_literal = true;
     }
   }
@@ -334,7 +359,7 @@ static bool write_gamma(Writer& writer, u32 value, bool inverted,
   return writer.bit(true);
 }
 
-template<typename Writer>
+template<bool validate_matches, typename Writer>
 static bool write_stream(const u8* input, u16 input_size,
                          const Plan& plan, Writer& writer) {
   u16 position = 0;
@@ -355,8 +380,9 @@ static bool write_stream(const u8* input, u16 input_size,
       previous_literal = true;
     } else {
       if(token.offset > MAX_OFFSET || token.offset > position ||
-         !matching_offset(input, input_size, position,
-                          token.offset, token.length)) return false;
+         (validate_matches &&
+          !matching_offset(input, input_size, position,
+                           token.offset, token.length))) return false;
       if(previous_literal && token.offset == last_offset) {
         if(!writer.bit(false) ||
            !write_gamma(writer, token.length, false)) return false;
@@ -457,14 +483,13 @@ class OutputWriter {
 
 } // namespace
 
-bool encode(const u8* input, u32 input_size,
-            u8* workspace, usize workspace_size,
-            const Output& output, EncodeResult& result) {
-  result.output_size = 0;
-  result.mode = EncodeMode::GREEDY;
+bool prepare(const u8* input, u32 input_size,
+             u8* workspace, usize workspace_size,
+             Prepared& prepared) {
+  prepared = {};
+  prepared.mode = EncodeMode::GREEDY;
   if(input == nullptr || input_size == 0 || input_size > MAX_INPUT_SIZE ||
-     workspace == nullptr || workspace_size < sizeof(Token) ||
-     output.next == nullptr) return false;
+     workspace == nullptr || workspace_size < sizeof(Token)) return false;
 
   const uintptr_t input_begin = (uintptr_t) input;
   const uintptr_t workspace_begin = (uintptr_t) workspace;
@@ -490,19 +515,62 @@ bool encode(const u8* input, u32 input_size,
   }
 
   const usize token_bytes = (usize) plan.count * sizeof(Token);
-  if(token_bytes >= workspace_size) return false;
+  if(token_bytes >= workspace_size || token_bytes > 0xFFFFU) return false;
   u8* const controls = workspace + token_bytes;
   const usize control_capacity = workspace_size - token_bytes;
   LayoutWriter layout(controls, control_capacity);
-  if(!write_stream(input, size, plan, layout)) return false;
+  if(!write_stream<true>(input, size, plan, layout) ||
+     layout.control_count() == 0 ||
+     layout.control_count() > 0xFFFFU) return false;
 
-  OutputWriter writer(output, controls, layout.control_count());
-  if(!write_stream(input, size, plan, writer) ||
-     !writer.complete() || writer.output_size() != layout.output_size()) {
+  prepared.input = input;
+  prepared.workspace = workspace;
+  prepared.output_size = layout.output_size();
+  prepared.input_size = size;
+  prepared.token_count = plan.count;
+  prepared.control_offset = (u16) token_bytes;
+  prepared.control_count = (u16) layout.control_count();
+  prepared.mode = plan.mode;
+  return true;
+}
+
+bool emit(const Prepared& prepared, const Output& output) {
+  if(prepared.input == nullptr || prepared.workspace == nullptr ||
+     prepared.input_size == 0 || prepared.input_size > MAX_INPUT_SIZE ||
+     prepared.token_count == 0 ||
+     prepared.token_count > prepared.input_size ||
+     prepared.control_offset !=
+         (usize) prepared.token_count * sizeof(Token) ||
+     prepared.control_count == 0 || prepared.output_size == 0 ||
+     output.next == nullptr) {
     return false;
   }
-  result.output_size = writer.output_size();
-  result.mode = plan.mode;
+
+  const Plan plan = {
+    (const Token*) prepared.workspace,
+    prepared.token_count,
+    prepared.mode
+  };
+  const u8* const controls =
+      prepared.workspace + prepared.control_offset;
+  OutputWriter writer(output, controls, prepared.control_count);
+  return write_stream<false>(
+             prepared.input, prepared.input_size, plan, writer) &&
+         writer.complete() &&
+         writer.output_size() == prepared.output_size;
+}
+
+bool encode(const u8* input, u32 input_size,
+            u8* workspace, usize workspace_size,
+            const Output& output, EncodeResult& result) {
+  result.output_size = 0;
+  result.mode = EncodeMode::GREEDY;
+  Prepared prepared = {};
+  if(!prepare(input, input_size, workspace, workspace_size, prepared) ||
+     !emit(prepared, output)) return false;
+
+  result.output_size = prepared.output_size;
+  result.mode = prepared.mode;
   return true;
 }
 
