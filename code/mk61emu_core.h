@@ -201,7 +201,11 @@ namespace core_61 {
   using Mk61CommandHook = void (*)(Mk61CommandHookContext& context, void* user_data);
   using Mk61CommandHookHandle = u32;
 
-  static constexpr usize MK61_COMMAND_HOOK_CAPACITY = 8;
+  // M61 bind uses paired BEFORE/AFTER hooks: BEFORE consumes the keyboard
+  // operation, AFTER enters the script only after the replacement NOP has
+  // completed. Sixteen public slots therefore provide eight simultaneous
+  // bindings without weakening the existing per-opcode fast path.
+  static constexpr usize MK61_COMMAND_HOOK_CAPACITY = 16;
   static constexpr Mk61CommandHookHandle INVALID_MK61_COMMAND_HOOK = 0;
 
   #pragma pack(push, 4)

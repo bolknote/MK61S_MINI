@@ -116,6 +116,7 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "print",   CMD_PRINT,          "print \"text {X}\"|off|on - M61 display" },
   { "wait",    CMD_WAIT,           "wait <1..60000> - pause M61 script (ms)" },
   { "ret",     CMD_RET,            "return from an M61 script/trap" },
+  { "reinit",  CMD_REINIT,         "clear calculator state and M61 handlers" },
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
   { "run",     CMD_RUN,           "run [name] - run program / stored file" },
   { "open",    CMD_OPEN,          "open <name> - run stored file" },
@@ -1733,6 +1734,20 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             break;
           case  CMD_RESET:
               if(Confirmation()) NVIC_SystemReset();
+            break;
+          case CMD_REINIT:
+              if(!terminal_core::at_end(command_args())) {
+                Serial.println("Usage: reinit");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              if(script_mode) {
+                return script_action(
+                    terminal_protocol::ResultKind::REINIT_CALCULATOR, "");
+              }
+              m61_text::cancel();
+              reinit_mk61_calculator_state();
+              Serial.println("Calculator reinitialized.");
             break;
           case  CMD_DFU:
               DFU_enable();

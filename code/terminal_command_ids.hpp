@@ -13,7 +13,7 @@ enum : u8 {
   CMD_LED, CMD_BEEP, CMD_IF, CMD_VFAT_LOG, CMD_FS_LIST, CMD_FS_REMOVE,
   CMD_FS_CLEAN, CMD_FS_PWD, CMD_FS_CD, CMD_FS_MKDIR, CMD_FS_MOVE,
   CMD_FS_RMDIR, CMD_FS_STAT, CMD_DATE, CMD_FS_GET, CMD_FS_PUT,
-  CMD_USB_SCREEN, CMD_PRINT, CMD_WAIT, CMD_RET
+  CMD_USB_SCREEN, CMD_PRINT, CMD_WAIT, CMD_RET, CMD_REINIT
 };
 
 // Файлы M61 — это данные, а не привилегированный сеанс терминала. Список
@@ -49,6 +49,7 @@ constexpr bool terminal_command_allowed_in_script(u8 id) {
     case CMD_PRINT:
     case CMD_WAIT:
     case CMD_RET:
+    case CMD_REINIT:
       return true;
     default:
       return false;

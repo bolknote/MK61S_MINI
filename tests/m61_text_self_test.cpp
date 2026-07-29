@@ -26,8 +26,19 @@ static int clear_count = 0;
 static usize active_program_steps = core_61::CLASSIC_PROGRAM_STEP;
 static core_61::Mk61ProgramBoundaryHook boundary_hook = nullptr;
 static void* boundary_user_data = nullptr;
+struct HostCommandHook {
+  core_61::Mk61CommandHookHandle handle;
+  u8 opcode;
+  core_61::Mk61CommandHookPhase phase;
+  core_61::Mk61CommandHook callback;
+  void* user_data;
+};
+static std::vector<HostCommandHook> command_hooks;
+static core_61::Mk61CommandHookHandle next_command_hook = 1;
+static u32 command_sequence = 0;
 static int context_saves = 0;
 static int context_restores = 0;
+static int reinit_count = 0;
 static AngleUnit host_angle_unit = DEGREE;
 static AngleUnit saved_context_angle = DEGREE;
 static u32 fake_millis = 0;
@@ -126,6 +137,31 @@ void clear_mk61_program_boundary_hook(void) {
 
 bool program_boundary_yielded(void) { return false; }
 
+Mk61CommandHookHandle register_mk61_command_hook(
+    u8 opcode, Mk61CommandHookPhase phase, Mk61CommandHook callback,
+    void* user_data) {
+  if(callback == nullptr ||
+     command_hooks.size() >= MK61_COMMAND_HOOK_CAPACITY) {
+    return INVALID_MK61_COMMAND_HOOK;
+  }
+  const Mk61CommandHookHandle handle = next_command_hook++;
+  command_hooks.push_back({handle, opcode, phase, callback, user_data});
+  return handle;
+}
+
+bool unregister_mk61_command_hook(Mk61CommandHookHandle handle) {
+  for(usize i = 0; i < command_hooks.size(); i++) {
+    if(command_hooks[i].handle != handle) continue;
+    command_hooks.erase(command_hooks.begin() + (isize) i);
+    return true;
+  }
+  return false;
+}
+
+usize registered_mk61_command_hook_count(void) {
+  return command_hooks.size();
+}
+
 bool save_context(ContextBuffer& out) {
   std::memset(out.bytes, 0xA5, sizeof(out.bytes));
   saved_context_angle = host_angle_unit;
@@ -156,6 +192,11 @@ void hidden_start_loaded_program(void) {
 
 void MK61Emu_ClearCodePage(void) {
   clear_count++;
+}
+
+void reinit_mk61_calculator_state(void) {
+  reinit_count++;
+  m_IK1302.comma = 0;
 }
 
 u32 m61_text_host_millis(void) {
@@ -197,6 +238,10 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
     return terminal_protocol::Result::action(
         terminal_protocol::ResultKind::RETURN_SCRIPT, "");
   }
+  if(std::strcmp(line, "reinit") == 0) {
+    return terminal_protocol::Result::action(
+        terminal_protocol::ResultKind::REINIT_CALCULATOR, "");
+  }
   return terminal_protocol::Result::ok();
 }
 
@@ -211,8 +256,12 @@ static void reset_host(void) {
   active_program_steps = core_61::CLASSIC_PROGRAM_STEP;
   boundary_hook = nullptr;
   boundary_user_data = nullptr;
+  command_hooks.clear();
+  next_command_hook = 1;
+  command_sequence = 0;
   context_saves = 0;
   context_restores = 0;
+  reinit_count = 0;
   host_angle_unit = DEGREE;
   saved_context_angle = DEGREE;
   fake_millis = 0;
@@ -236,6 +285,41 @@ static bool fire_program_boundary(u8 address, u8 opcode = 0) {
   assert(boundary_hook != nullptr);
   const core_61::Mk61ProgramBoundaryContext context = {address, opcode};
   return boundary_hook(context, boundary_user_data);
+}
+
+static u8 fire_mk61_command(
+    u8 opcode,
+    core_61::Mk61CommandSource source =
+        core_61::Mk61CommandSource::KEYBOARD) {
+  command_sequence++;
+  core_61::Mk61CommandHookContext before = {
+    core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+    source,
+    opcode,
+    opcode,
+    command_sequence
+  };
+  for(HostCommandHook& hook : command_hooks) {
+    if(hook.opcode == opcode &&
+       hook.phase == core_61::Mk61CommandHookPhase::BEFORE_EXECUTE) {
+      hook.callback(before, hook.user_data);
+    }
+  }
+
+  core_61::Mk61CommandHookContext after = {
+    core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+    source,
+    opcode,
+    before.replacement_opcode,
+    command_sequence
+  };
+  for(HostCommandHook& hook : command_hooks) {
+    if(hook.opcode == opcode &&
+       hook.phase == core_61::Mk61CommandHookPhase::AFTER_EXECUTE) {
+      hook.callback(after, hook.user_data);
+    }
+  }
+  return before.replacement_opcode;
 }
 
 static void test_command_failure_reports_script_and_line(void) {
@@ -677,6 +761,171 @@ static void test_trap_handler_requires_ret_and_restores_on_error(void) {
   assert(boundary_hook == nullptr);
 }
 
+static void test_bind_consumes_keyboard_opcode_and_calls_handler(void) {
+  reset_host();
+  add_script(
+      "BIND",
+      "bind AE run :pressed\n"
+      "ret\n"
+      ":pressed\n"
+      "ok\n"
+      "ret\n");
+  assert(m61_text::load_program("BIND"));
+  assert(m61_text::active());
+  assert(core_61::registered_mk61_command_hook_count() == 2);
+
+  assert(fire_mk61_command(
+             0xAE, core_61::Mk61CommandSource::PROGRAM) == 0xAE);
+  m61_text::service();
+  assert(executed_lines.size() == 1);
+
+  assert(fire_mk61_command(0xAD) == 0xAD);
+  m61_text::service();
+  assert(executed_lines.size() == 1);
+
+  assert(fire_mk61_command(0xAE) == (u8) MK61_NOP);
+  m61_text::service();
+  assert(m61_text::active());
+  assert(executed_lines.size() == 3);
+  assert(executed_lines[1] == "ok");
+  assert(executed_lines[2] == "ret");
+  assert(core_61::registered_mk61_command_hook_count() == 2);
+
+  assert(fire_mk61_command(0xAE) == (u8) MK61_NOP);
+  m61_text::service();
+  assert(executed_lines.size() == 5);
+  m61_text::cancel();
+  assert(core_61::registered_mk61_command_hook_count() == 0);
+}
+
+static void test_bind_is_validated_and_activated_only_when_executed(void) {
+  reset_host();
+  add_script("MISSING", "bind AE run :missing\nret\n");
+  assert(!m61_text::load_program("MISSING"));
+  m61_text::Error error = require_error();
+  assert(std::strcmp(error.message, "bind label not found") == 0);
+
+  reset_host();
+  add_script(
+      "DUPLICATE",
+      "bind AE run :one\n"
+      "bind AE run :two\n"
+      ":one\nret\n"
+      ":two\nret\n");
+  assert(!m61_text::load_program("DUPLICATE"));
+  error = require_error();
+  assert(std::strcmp(error.message, "duplicate bind opcode") == 0);
+
+  reset_host();
+  add_script("RANGE", "bind F0 run :key\n:key\nret\n");
+  assert(!m61_text::load_program("RANGE"));
+  error = require_error();
+  assert(std::strstr(error.message, "invalid bind") != nullptr);
+
+  reset_host();
+  add_script(
+      "SKIPPED",
+      "run :done\n"
+      "bind AE run :pressed\n"
+      ":done\n"
+      "ret\n"
+      ":pressed\n"
+      "ret\n");
+  assert(m61_text::load_program("SKIPPED"));
+  assert(!m61_text::active());
+  assert(core_61::registered_mk61_command_hook_count() == 0);
+  assert(fire_mk61_command(0xAE) == 0xAE);
+}
+
+static void test_bind_handler_requires_ret(void) {
+  reset_host();
+  add_script(
+      "BINDEND",
+      "bind AE run :pressed\n"
+      "ret\n"
+      ":pressed\n"
+      "ok\n");
+  assert(m61_text::load_program("BINDEND"));
+  assert(fire_mk61_command(0xAE) == (u8) MK61_NOP);
+  m61_text::service();
+  const m61_text::Error error = require_error();
+  assert(std::strstr(error.message, "bind handler") != nullptr);
+  assert(std::strstr(error.message, "without ret") != nullptr);
+  assert(!m61_text::active());
+  assert(core_61::registered_mk61_command_hook_count() == 0);
+}
+
+static void test_bind_limit_and_non_reentrant_handler(void) {
+  reset_host();
+  add_script(
+      "EIGHT",
+      "bind 00 run :pressed\n"
+      "bind 01 run :pressed\n"
+      "bind 02 run :pressed\n"
+      "bind 03 run :pressed\n"
+      "bind 04 run :pressed\n"
+      "bind 05 run :pressed\n"
+      "bind 06 run :pressed\n"
+      "bind EF run :pressed\n"
+      "ret\n"
+      ":pressed\n"
+      "wait 500\n"
+      "ok\n"
+      "ret\n");
+  assert(m61_text::load_program("EIGHT"));
+  m61_text::service(); // восьмая строка исчерпала бюджет первого прохода
+  assert(core_61::registered_mk61_command_hook_count() == 16);
+  assert(fire_mk61_command(0xEF) == (u8) MK61_NOP);
+  m61_text::service();
+  // Пока обработчик bind ждёт, новое нажатие не поглощается и не входит
+  // в тот же обработчик повторно.
+  assert(fire_mk61_command(0xEF) == 0xEF);
+  fake_millis = 500;
+  m61_text::service();
+  assert(executed_lines.back() == "ret");
+
+  reset_host();
+  add_script(
+      "NINE",
+      "bind 00 run :pressed\n"
+      "bind 01 run :pressed\n"
+      "bind 02 run :pressed\n"
+      "bind 03 run :pressed\n"
+      "bind 04 run :pressed\n"
+      "bind 05 run :pressed\n"
+      "bind 06 run :pressed\n"
+      "bind 07 run :pressed\n"
+      "bind 08 run :pressed\n"
+      ":pressed\n"
+      "ret\n");
+  assert(!m61_text::load_program("NINE"));
+  const m61_text::Error error = require_error();
+  assert(std::strcmp(error.message, "too many binds (maximum 8)") == 0);
+}
+
+static void test_reinit_continues_script_and_clears_handlers(void) {
+  reset_host();
+  add_script(
+      "REINIT",
+      "bind AE run :pressed\n"
+      "trap 10 run :trapped\n"
+      "reinit\n"
+      "ok\n"
+      "ret\n"
+      ":pressed\n"
+      "ret\n"
+      ":trapped\n"
+      "ret\n");
+  assert(m61_text::load_program("REINIT"));
+  assert(reinit_count == 1);
+  assert(!m61_text::active());
+  assert(core_61::registered_mk61_command_hook_count() == 0);
+  assert(executed_lines.size() == 3);
+  assert(executed_lines[0] == "reinit");
+  assert(executed_lines[1] == "ok");
+  assert(executed_lines[2] == "ret");
+}
+
 static void test_ret_returns_from_nested_script_and_ends_root(void) {
   reset_host();
   add_script("PARENT", "open CHILD\nbad\n");
@@ -715,6 +964,11 @@ int main(void) {
   test_restarting_same_root_preserves_active_traps();
   test_invalid_traps_fail_before_or_at_run();
   test_trap_handler_requires_ret_and_restores_on_error();
+  test_bind_consumes_keyboard_opcode_and_calls_handler();
+  test_bind_is_validated_and_activated_only_when_executed();
+  test_bind_handler_requires_ret();
+  test_bind_limit_and_non_reentrant_handler();
+  test_reinit_continues_script_and_clears_handlers();
   test_ret_returns_from_nested_script_and_ends_root();
   std::printf("m61_text_self_test: ok\n");
   return 0;

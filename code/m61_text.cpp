@@ -16,6 +16,7 @@
 bool OpenStoredFile(const char* args);
 void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
+void reinit_mk61_calculator_state(void);
 u32 m61_text_host_millis(void);
 #endif
 
@@ -35,6 +36,9 @@ static constexpr u8 TRAP_ADDRESS_COUNT = (u8) core_61::MAX_PROGRAM_STEP;
 static constexpr u8 TRAP_BITMAP_SIZE =
     (u8) ((core_61::MAX_PROGRAM_STEP + 7U) / 8U);
 static constexpr u8 INVALID_TRAP_TARGET = 0xFF;
+static constexpr u8 MAX_BINDS = 8;
+static constexpr u8 INVALID_BIND_OPCODE = 0xFF;
+static constexpr u8 INVALID_BIND_TARGET = 0xFF;
 static constexpr u8 RETURN_STACK_DEPTH = SCRIPT_STACK_DEPTH + 1;
 
 enum class RunnerState : u8 {
@@ -42,7 +46,7 @@ enum class RunnerState : u8 {
   EXECUTING,
   WAIT_RUN_STOP,
   WAIT_TIME,
-  WATCH_TRAPS
+  WATCH_EVENTS
 };
 
 enum class ScriptSource : u8 {
@@ -58,12 +62,14 @@ struct ScriptFrame {
   u16 pos;
   u16 line;
   u8 active_traps[TRAP_BITMAP_SIZE];
+  u8 active_bind_opcodes[MAX_BINDS];
 };
 
 enum class ReturnKind : u8 {
   SCRIPT,
   LABEL,
-  TRAP
+  TRAP,
+  BIND
 };
 
 struct ReturnFrame {
@@ -78,6 +84,11 @@ struct LabelEntry {
   u16 target_pos;
   u16 target_line;
   u8 len;
+};
+
+struct BindEntry {
+  u8 opcode;
+  u8 target;
 };
 
 static RunnerState runner_state = RunnerState::IDLE;
@@ -101,6 +112,11 @@ static u8 read_cache_len = 0;
 static LabelEntry labels[MAX_LABELS];
 static u8 label_count = 0;
 static u8 trap_targets[TRAP_ADDRESS_COUNT];
+static BindEntry binds[MAX_BINDS];
+static u8 bind_count = 0;
+static u8 active_bind_opcodes[MAX_BINDS];
+static core_61::Mk61CommandHookHandle bind_before_hooks[MAX_BINDS];
+static core_61::Mk61CommandHookHandle bind_after_hooks[MAX_BINDS];
 static bool trap_pending = false;
 static u8 pending_trap_address = 0;
 static u8 pending_trap_target = INVALID_TRAP_TARGET;
@@ -109,12 +125,20 @@ static core_61::ContextBuffer trap_context = {};
 static u8 suspended_trap_address = 0;
 static bool bypass_trap_once = false;
 static u8 bypass_trap_address = 0;
+static bool bind_pending = false;
+static bool bind_ready = false;
+static u8 pending_bind_target = INVALID_BIND_TARGET;
+static u32 pending_bind_sequence = 0;
+static bool bind_handler_active = false;
 static bool boundary_hook_installed = false;
 static bool display_claimed = false;
 static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
+
+static void bind_command_hook(
+    core_61::Mk61CommandHookContext& context, void* user_data);
 
 #if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
 static volatile u32* active_trap_bit_alias_base(void) {
@@ -135,12 +159,89 @@ static void clear_active_traps(void) {
   for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) active_traps[i] = 0;
 }
 
+static void clear_active_binds(void) {
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    active_bind_opcodes[i] = INVALID_BIND_OPCODE;
+  }
+}
+
 static void save_active_traps(u8 (&out)[TRAP_BITMAP_SIZE]) {
   for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) out[i] = active_traps[i];
 }
 
+static void save_active_binds(u8 (&out)[MAX_BINDS]) {
+  for(u8 i = 0; i < MAX_BINDS; i++) out[i] = active_bind_opcodes[i];
+}
+
 static void restore_active_traps(const u8 (&saved)[TRAP_BITMAP_SIZE]) {
   for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) active_traps[i] = saved[i];
+}
+
+static void restore_active_binds(const u8 (&saved)[MAX_BINDS]) {
+  for(u8 i = 0; i < MAX_BINDS; i++) active_bind_opcodes[i] = saved[i];
+}
+
+static bool bind_is_active(u8 opcode) {
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    if(active_bind_opcodes[i] == opcode) return true;
+  }
+  return false;
+}
+
+static bool any_bind_is_active(void) {
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    if(active_bind_opcodes[i] != INVALID_BIND_OPCODE) return true;
+  }
+  return false;
+}
+
+static i16 find_bind_index(u8 opcode) {
+  for(u8 i = 0; i < bind_count; i++) {
+    if(binds[i].opcode == opcode) return (i16) i;
+  }
+  return -1;
+}
+
+static void clear_bind_hooks(void) {
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    if(bind_before_hooks[i] != core_61::INVALID_MK61_COMMAND_HOOK) {
+      (void) core_61::unregister_mk61_command_hook(bind_before_hooks[i]);
+      bind_before_hooks[i] = core_61::INVALID_MK61_COMMAND_HOOK;
+    }
+    if(bind_after_hooks[i] != core_61::INVALID_MK61_COMMAND_HOOK) {
+      (void) core_61::unregister_mk61_command_hook(bind_after_hooks[i]);
+      bind_after_hooks[i] = core_61::INVALID_MK61_COMMAND_HOOK;
+    }
+  }
+}
+
+static bool sync_bind_hooks(void) {
+  clear_bind_hooks();
+  u8 hook_index = 0;
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    const u8 opcode = active_bind_opcodes[i];
+    if(opcode == INVALID_BIND_OPCODE) continue;
+    if(find_bind_index(opcode) < 0 || hook_index >= MAX_BINDS) {
+      clear_bind_hooks();
+      return false;
+    }
+
+    bind_before_hooks[hook_index] = core_61::register_mk61_command_hook(
+        opcode, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+        &bind_command_hook, NULL);
+    bind_after_hooks[hook_index] = core_61::register_mk61_command_hook(
+        opcode, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+        &bind_command_hook, NULL);
+    if(bind_before_hooks[hook_index] ==
+           core_61::INVALID_MK61_COMMAND_HOOK ||
+       bind_after_hooks[hook_index] ==
+           core_61::INVALID_MK61_COMMAND_HOOK) {
+      clear_bind_hooks();
+      return false;
+    }
+    hook_index++;
+  }
+  return true;
 }
 
 // Снимок ловушки фиксирует всё состояние ядра, включая единицу угла. Однако
@@ -207,7 +308,9 @@ static void clear_current_script(void) {
   script_line = 1;
   invalidate_read_cache();
   label_count = 0;
+  bind_count = 0;
   clear_active_traps();
+  clear_active_binds();
   memset(trap_targets, INVALID_TRAP_TARGET, sizeof(trap_targets));
 }
 
@@ -235,6 +338,7 @@ static void store_current_frame(ScriptFrame& frame) {
   frame.pos = script_pos;
   frame.line = script_line;
   save_active_traps(frame.active_traps);
+  save_active_binds(frame.active_bind_opcodes);
 }
 
 static void restore_frame(const ScriptFrame& frame) {
@@ -245,6 +349,7 @@ static void restore_frame(const ScriptFrame& frame) {
   script_pos = frame.pos;
   script_line = frame.line;
   restore_active_traps(frame.active_traps);
+  restore_active_binds(frame.active_bind_opcodes);
   invalidate_read_cache();
 }
 
@@ -260,6 +365,8 @@ static bool make_store_frame(u16 id, ScriptFrame& frame) {
   frame.pos = 0;
   frame.line = 1;
   memset(frame.active_traps, 0, sizeof(frame.active_traps));
+  memset(frame.active_bind_opcodes, INVALID_BIND_OPCODE,
+         sizeof(frame.active_bind_opcodes));
   return true;
 }
 
@@ -363,8 +470,18 @@ static void clear_trap_runtime(bool restore_calculator) {
   bypass_trap_address = 0;
 }
 
+static void clear_bind_runtime(void) {
+  bind_pending = false;
+  bind_ready = false;
+  pending_bind_target = INVALID_BIND_TARGET;
+  pending_bind_sequence = 0;
+  bind_handler_active = false;
+}
+
 static void stop_runner(void) {
   clear_trap_runtime(true);
+  clear_bind_runtime();
+  clear_bind_hooks();
   if(boundary_hook_installed) {
     core_61::clear_mk61_program_boundary_hook();
     boundary_hook_installed = false;
@@ -567,6 +684,64 @@ static TrapParse parse_trap(const char* line, ParsedTrap& out) {
   return TrapParse::VALID;
 }
 
+enum class BindParse : u8 { NONE, VALID, INVALID };
+
+struct ParsedBind {
+  u8 opcode;
+  const char* label;
+  usize label_len;
+};
+
+static i8 hex_value(char value) {
+  if(value >= '0' && value <= '9') return (i8) (value - '0');
+  if(value >= 'A' && value <= 'F') return (i8) (value - 'A' + 10);
+  if(value >= 'a' && value <= 'f') return (i8) (value - 'a' + 10);
+  return -1;
+}
+
+static BindParse parse_bind(const char* line, ParsedBind& out) {
+  const char* p = skip_spaces(line);
+  static const char keyword[] = "bind";
+  if(strncmp(p, keyword, sizeof(keyword) - 1) != 0 ||
+     (!is_space(p[sizeof(keyword) - 1]) &&
+      !is_line_end(p[sizeof(keyword) - 1]))) {
+    return BindParse::NONE;
+  }
+  p += sizeof(keyword) - 1;
+  if(!is_space(*p)) return BindParse::INVALID;
+  p = skip_spaces(p);
+
+  if(is_line_end(*p)) return BindParse::INVALID;
+  const i8 high = hex_value(*p++);
+  if(is_line_end(*p)) return BindParse::INVALID;
+  const i8 low = hex_value(*p++);
+  if(high < 0 || low < 0 || high > 0x0E || !is_space(*p)) {
+    return BindParse::INVALID;
+  }
+  out.opcode = (u8) (((u8) high << 4) | (u8) low);
+  p = skip_spaces(p);
+
+  static const char run_keyword[] = "run";
+  if(strncmp(p, run_keyword, sizeof(run_keyword) - 1) != 0 ||
+     !is_space(p[sizeof(run_keyword) - 1])) {
+    return BindParse::INVALID;
+  }
+  p = skip_spaces(p + sizeof(run_keyword) - 1);
+  if(*p != ':') return BindParse::INVALID;
+  p = skip_spaces(p + 1);
+
+  usize label_len = 0;
+  while(!is_space(p[label_len]) && !is_line_end(p[label_len])) label_len++;
+  if(label_len == 0 || label_len > MAX_LABEL_SIZE ||
+     !token_ends(p + label_len)) {
+    return BindParse::INVALID;
+  }
+
+  out.label = p;
+  out.label_len = label_len;
+  return BindParse::VALID;
+}
+
 static void set_trap_active(u8 address, bool active) {
 #if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
   active_trap_bit_alias_base()[address] = active ? 1U : 0U;
@@ -693,6 +868,56 @@ static bool build_trap_index(const char*& error_message, u16& error_line) {
   return true;
 }
 
+static bool build_bind_index(const char*& error_message, u16& error_line) {
+  const u16 resume_pos = script_pos;
+  const u16 resume_line = script_line;
+  script_pos = 0;
+  script_line = 1;
+  bind_count = 0;
+  invalidate_read_cache();
+
+  char line[MAX_LINE_SIZE + 1];
+  while(script_pos < script_len) {
+    const u16 line_number = script_line;
+    if(!read_next_line(line, sizeof(line))) {
+      error_message = "cannot read script or line is too long";
+      error_line = line_number;
+      return false;
+    }
+
+    ParsedBind parsed = {};
+    const BindParse result = parse_bind(line, parsed);
+    if(result == BindParse::NONE) continue;
+    if(result == BindParse::INVALID) {
+      error_message = "invalid bind (use: bind <00..EF> run :label)";
+      error_line = line_number;
+      return false;
+    }
+    if(bind_count >= MAX_BINDS) {
+      error_message = "too many binds (maximum 8)";
+      error_line = line_number;
+      return false;
+    }
+    if(find_bind_index(parsed.opcode) >= 0) {
+      error_message = "duplicate bind opcode";
+      error_line = line_number;
+      return false;
+    }
+    const i16 target = find_label_index(parsed.label, parsed.label_len);
+    if(target < 0) {
+      error_message = "bind label not found";
+      error_line = line_number;
+      return false;
+    }
+    binds[bind_count++] = {parsed.opcode, (u8) target};
+  }
+
+  script_pos = resume_pos;
+  script_line = resume_line;
+  invalidate_read_cache();
+  return true;
+}
+
 static void discard_undefined_active_traps(void) {
   for(u8 address = 0; address < TRAP_ADDRESS_COUNT; address++) {
     if(trap_targets[address] == INVALID_TRAP_TARGET) {
@@ -701,16 +926,56 @@ static void discard_undefined_active_traps(void) {
   }
 }
 
+static void discard_undefined_active_binds(void) {
+  u8 next = 0;
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    const u8 opcode = active_bind_opcodes[i];
+    if(opcode == INVALID_BIND_OPCODE || find_bind_index(opcode) < 0) continue;
+    bool duplicate = false;
+    for(u8 j = 0; j < next; j++) {
+      if(active_bind_opcodes[j] == opcode) {
+        duplicate = true;
+        break;
+      }
+    }
+    if(!duplicate) active_bind_opcodes[next++] = opcode;
+  }
+  while(next < MAX_BINDS) {
+    active_bind_opcodes[next++] = INVALID_BIND_OPCODE;
+  }
+}
+
+static bool activate_bind(u8 opcode) {
+  if(bind_is_active(opcode)) return true;
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    if(active_bind_opcodes[i] != INVALID_BIND_OPCODE) continue;
+    active_bind_opcodes[i] = opcode;
+    if(sync_bind_hooks()) return true;
+    active_bind_opcodes[i] = INVALID_BIND_OPCODE;
+    (void) sync_bind_hooks();
+    return false;
+  }
+  return false;
+}
+
 static bool activate_frame(const ScriptFrame& frame, const char*& error_message, u16& error_line) {
+  clear_bind_hooks();
   restore_frame(frame);
   if(!build_label_index(error_message, error_line) ||
-     !build_trap_index(error_message, error_line)) {
+     !build_trap_index(error_message, error_line) ||
+     !build_bind_index(error_message, error_line)) {
     return false;
   }
   // Повторный запуск того же корневого файла может принести активные биты из
   // предыдущего запуска. Если файл успели переписать, не оставляем адреса,
   // для которых в новой версии уже нет объявления и обработчика.
   discard_undefined_active_traps();
+  discard_undefined_active_binds();
+  if(!sync_bind_hooks()) {
+    error_message = "calculator command hook capacity is exhausted";
+    error_line = 0;
+    return false;
+  }
   return true;
 }
 
@@ -727,8 +992,8 @@ static bool restore_return_frame(const ReturnFrame& returned) {
 
 static bool return_from_script(void) {
   if(return_stack_depth == 0) {
-    if(any_trap_is_active()) {
-      runner_state = RunnerState::WATCH_TRAPS;
+    if(any_trap_is_active() || any_bind_is_active()) {
+      runner_state = RunnerState::WATCH_EVENTS;
       wait_until_ms = 0;
       return true;
     }
@@ -737,6 +1002,21 @@ static bool return_from_script(void) {
   }
 
   const ReturnFrame returned = return_stack[--return_stack_depth];
+  if(returned.kind == ReturnKind::BIND) {
+    if(!bind_handler_active) {
+      fail_script("bind handler context is unavailable", script_line);
+      return false;
+    }
+    if(!restore_return_frame(returned)) return false;
+    bind_handler_active = false;
+    runner_state = returned.runner_state;
+    if(runner_state == RunnerState::WATCH_EVENTS &&
+       !any_trap_is_active() && !any_bind_is_active()) {
+      stop_runner();
+    }
+    return true;
+  }
+
   if(returned.kind != ReturnKind::TRAP) {
     if(returned.kind == ReturnKind::SCRIPT && script_stack_depth > 0) {
       script_stack_depth--;
@@ -760,10 +1040,16 @@ static bool return_from_script(void) {
 }
 
 static void finish_script(void) {
-  if(return_stack_depth > 0 &&
-     return_stack[return_stack_depth - 1].kind == ReturnKind::TRAP) {
-    fail_script("trap handler reached end of script without ret", script_line);
-    return;
+  if(return_stack_depth > 0) {
+    const ReturnKind kind = return_stack[return_stack_depth - 1].kind;
+    if(kind == ReturnKind::TRAP) {
+      fail_script("trap handler reached end of script without ret", script_line);
+      return;
+    }
+    if(kind == ReturnKind::BIND) {
+      fail_script("bind handler reached end of script without ret", script_line);
+      return;
+    }
   }
   (void) return_from_script();
 }
@@ -839,8 +1125,8 @@ static bool open_slot(const char* args) {
 }
 
 // В обычном сценарии "run :метка" остаётся переходом и поддерживает циклы.
-// В обработчике trap это локальный вызов: ret возвращает на строку после run,
-// что позволяет вынести общий код кадра в одну метку.
+// В обработчике trap или bind это локальный вызов: ret возвращает на строку
+// после run, что позволяет вынести общий код кадра в одну метку.
 static bool goto_label(const char* args) {
   args = skip_spaces(args);
   usize label_len = 0;
@@ -849,7 +1135,8 @@ static bool goto_label(const char* args) {
 
   const i16 target = find_label_index(args, label_len);
   if(target < 0) return false;
-  if(trap_context_valid && !push_current_frame(ReturnKind::LABEL)) {
+  if((trap_context_valid || bind_handler_active) &&
+     !push_current_frame(ReturnKind::LABEL)) {
     line_error_message = "label return stack is full";
     return false;
   }
@@ -860,10 +1147,66 @@ static bool goto_label(const char* args) {
   return true;
 }
 
+static void bind_command_hook(
+    core_61::Mk61CommandHookContext& context, void* user_data) {
+  (void) user_data;
+  if(context.source != core_61::Mk61CommandSource::KEYBOARD) return;
+
+  if(context.phase == core_61::Mk61CommandHookPhase::AFTER_EXECUTE) {
+    if(bind_pending && context.sequence == pending_bind_sequence) {
+      bind_ready = true;
+    }
+    return;
+  }
+
+  if(context.phase != core_61::Mk61CommandHookPhase::BEFORE_EXECUTE ||
+     runner_state != RunnerState::WATCH_EVENTS ||
+     bind_handler_active || bind_pending ||
+     !bind_is_active(context.opcode)) {
+    return;
+  }
+
+  const i16 bind_index = find_bind_index(context.opcode);
+  if(bind_index < 0 || binds[bind_index].target >= label_count) return;
+
+  pending_bind_target = binds[bind_index].target;
+  pending_bind_sequence = context.sequence;
+  bind_pending = true;
+  bind_ready = false;
+  // bind является горячей клавишей, а не наблюдателем: исходная операция
+  // калькулятора поглощается, но завершает штатный клавиатурный цикл через NOP.
+  context.replacement_opcode = (u8) MK61_NOP;
+}
+
+static bool enter_pending_bind(void) {
+  if(!bind_pending || !bind_ready ||
+     pending_bind_target >= label_count) {
+    return false;
+  }
+  const u8 target = pending_bind_target;
+  if(!push_current_frame(ReturnKind::BIND)) {
+    line_error_message = "bind return stack is full";
+    return false;
+  }
+
+  bind_pending = false;
+  bind_ready = false;
+  pending_bind_target = INVALID_BIND_TARGET;
+  pending_bind_sequence = 0;
+  bind_handler_active = true;
+
+  const LabelEntry& entry = labels[target];
+  script_pos = entry.target_pos;
+  script_line = entry.target_line;
+  invalidate_read_cache();
+  runner_state = RunnerState::EXECUTING;
+  return true;
+}
+
 static bool program_boundary_hook(
     const core_61::Mk61ProgramBoundaryContext& context, void* user_data) {
   if((runner_state != RunnerState::WAIT_RUN_STOP &&
-      runner_state != RunnerState::WATCH_TRAPS) ||
+      runner_state != RunnerState::WATCH_EVENTS) ||
      !core_61::is_RUN()) {
     return false;
   }
@@ -946,9 +1289,34 @@ static bool open_referenced_file(const char* path) {
 #endif
 }
 
+static void clear_frame_handlers(ScriptFrame& frame) {
+  memset(frame.active_traps, 0, sizeof(frame.active_traps));
+  memset(frame.active_bind_opcodes, INVALID_BIND_OPCODE,
+         sizeof(frame.active_bind_opcodes));
+}
+
+static void clear_active_handlers(void) {
+  clear_bind_hooks();
+  clear_active_traps();
+  clear_active_binds();
+  for(u8 i = 0; i < return_stack_depth; i++) {
+    clear_frame_handlers(return_stack[i].script);
+  }
+
+  trap_pending = false;
+  pending_trap_address = 0;
+  pending_trap_target = INVALID_TRAP_TARGET;
+  bypass_trap_once = false;
+  bypass_trap_address = 0;
+  bind_pending = false;
+  bind_ready = false;
+  pending_bind_target = INVALID_BIND_TARGET;
+  pending_bind_sequence = 0;
+}
+
 // Вся грамматика команд разбирается терминалом (единый диспетчер интерактивного
 // и скриптового режимов). Сценарию терминал возвращает только действия,
-// влияющие на поток выполнения: run, open, load, переходы по меткам.
+// влияющие на поток выполнения: run, open, load, переходы по меткам и reinit.
 static bool execute_script_line(const char* raw_line) {
   line_error_message = NULL;
   const char* line = skip_spaces(raw_line);
@@ -963,6 +1331,18 @@ static bool execute_script_line(const char* raw_line) {
   }
   if(trap_result == TrapParse::INVALID) {
     line_error_message = "invalid trap (use: trap <0..111> run :label)";
+    return false;
+  }
+
+  ParsedBind parsed_bind = {};
+  const BindParse bind_result = parse_bind(line, parsed_bind);
+  if(bind_result == BindParse::VALID) {
+    if(activate_bind(parsed_bind.opcode)) return true;
+    line_error_message = "cannot activate bind command hooks";
+    return false;
+  }
+  if(bind_result == BindParse::INVALID) {
+    line_error_message = "invalid bind (use: bind <00..EF> run :label)";
     return false;
   }
 
@@ -999,6 +1379,15 @@ static bool execute_script_line(const char* raw_line) {
       return true;
     case terminal_protocol::ResultKind::RETURN_SCRIPT:
       return return_from_script();
+    case terminal_protocol::ResultKind::REINIT_CALCULATOR:
+      if(trap_context_valid) {
+        line_error_message = "reinit is not allowed in a trap handler";
+        return false;
+      }
+      clear_active_handlers();
+      display_claimed = false;
+      reinit_mk61_calculator_state();
+      return true;
     case terminal_protocol::ResultKind::ERROR:
     case terminal_protocol::ResultKind::KEY:
       line_error_message = "terminal command failed";
@@ -1019,6 +1408,17 @@ void service(void) {
     if(!enter_pending_trap()) {
       fail_script(line_error_message == NULL ? "cannot enter trap handler" : line_error_message,
                   trap_line);
+      return;
+    }
+  }
+
+  if(bind_pending && bind_ready) {
+    const u16 bind_line = script_line;
+    if(!enter_pending_bind()) {
+      fail_script(line_error_message == NULL
+                      ? "cannot enter bind handler"
+                      : line_error_message,
+                  bind_line);
       return;
     }
   }
@@ -1056,13 +1456,14 @@ void service(void) {
 static bool load_frame(const ScriptFrame& frame) {
   ScriptFrame next = frame;
   const bool restart_same_root =
-      runner_state == RunnerState::WATCH_TRAPS &&
+      runner_state == RunnerState::WATCH_EVENTS &&
       return_stack_depth == 0 &&
       script_source == ScriptSource::STORE &&
       frame.source == ScriptSource::STORE &&
       script_id == frame.id;
   if(restart_same_root) {
     save_active_traps(next.active_traps);
+    save_active_binds(next.active_bind_opcodes);
   }
   if(active()) stop_runner();
   clear_error();
@@ -1078,6 +1479,7 @@ static bool load_frame(const ScriptFrame& frame) {
   display_claimed = false;
   wait_until_ms = 0;
   clear_trap_runtime(false);
+  clear_bind_runtime();
   if(!core_61::set_mk61_program_boundary_hook(
       program_boundary_hook, active_trap_boundary_hook_data())) {
     fail_script("calculator boundary hook is unavailable", 0);

@@ -154,6 +154,24 @@ void reset_ext_program_state(void) {
 
 #include  "automate.hpp"
 
+void reinit_mk61_calculator_state(void) {
+  const AngleUnit selected_angle = MK61Emu_GetAngleUnit();
+  reset_ext_program_state();
+  memset(&ext61_reg, 0, sizeof(ext61_reg));
+  mk61_sending_keycode = MK61_REQUEST_BASE_LOOP;
+  mk61_quants = runtime_safety::positive_quantum(mk61_quants_reload);
+  YZ_ZT = true;
+  lcd_hooked = false;
+  need_draw_lock_message = false;
+  while(kbd::get_key() >= 0) {}
+  kbd::clear_hold_key();
+  kbd::clear_immediate_presses();
+  core_61::enable();
+  MK61Emu_SetAngleUnit(selected_angle);
+  display_text[0] = (char) -1;
+  turbo_display_dirty = true;
+}
+
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
     MK61DisplayUpdate update(main_lcd());
     // Меню, просмотрщики и часы могут временно занимать пользовательские

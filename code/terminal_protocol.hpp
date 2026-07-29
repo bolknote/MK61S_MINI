@@ -14,7 +14,8 @@ enum class ResultKind : u8 {
   LOAD_SLOT,
   GOTO_LABEL,
   WAIT,
-  RETURN_SCRIPT
+  RETURN_SCRIPT,
+  REINIT_CALCULATOR
 };
 
 struct Result {
