@@ -22,6 +22,9 @@ void claim_display(void);
 void release_display(void);
 void service(void);
 void cancel(void);
+// Снимает активные bind/trap, не прерывая ещё исполняющийся обычный сценарий.
+// Возвращает true, если было что снимать.
+bool clear_bindings_and_traps(void);
 bool last_error(Error& out);
 bool format_current_program(u8* out, u16 capacity, u16* out_len);
 

@@ -926,6 +926,123 @@ static void test_reinit_continues_script_and_clears_handlers(void) {
   assert(executed_lines[2] == "ret");
 }
 
+static void test_manual_clear_stops_bind_and_trap_watcher(void) {
+  reset_host();
+  add_script(
+      "CLEAR",
+      "bind AE run :pressed\n"
+      "trap 10 run :trapped\n"
+      "ret\n"
+      ":pressed\n"
+      "ret\n"
+      ":trapped\n"
+      "ret\n");
+  assert(m61_text::load_program("CLEAR"));
+  assert(m61_text::active());
+  assert(boundary_hook != nullptr);
+  assert(core_61::registered_mk61_command_hook_count() == 2);
+
+  assert(m61_text::clear_bindings_and_traps());
+  assert(!m61_text::active());
+  assert(!m61_text::calculator_suspended());
+  assert(boundary_hook == nullptr);
+  assert(core_61::registered_mk61_command_hook_count() == 0);
+  assert(fire_mk61_command(0xAE) == 0xAE);
+  assert(!m61_text::clear_bindings_and_traps());
+}
+
+static void test_bind_and_trap_survive_program_stop(void) {
+  reset_host();
+  add_script(
+      "PERSIST",
+      "bind AE run :pressed\n"
+      "trap 10 run :trapped\n"
+      "run\n"
+      "ret\n"
+      ":pressed\n"
+      "ret\n"
+      ":trapped\n"
+      "ret\n");
+  assert(m61_text::load_program("PERSIST"));
+  assert(m61_text::active());
+  assert(m_IK1302.comma == core_61::COMMA_RUN_POSITION);
+  assert(core_61::registered_mk61_command_hook_count() == 2);
+
+  // Штатный останов программы только продолжает сценарий до корневого ret.
+  // Активные обработчики переводят его в WATCH_EVENTS, а не очищаются.
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(m61_text::active());
+  assert(boundary_hook != nullptr);
+  assert(core_61::registered_mk61_command_hook_count() == 2);
+
+  assert(fire_mk61_command(0xAE) == (u8) MK61_NOP);
+  m61_text::service();
+  assert(m61_text::active());
+
+  m_IK1302.comma = core_61::COMMA_RUN_POSITION;
+  assert(fire_program_boundary(10));
+  m61_text::service();
+  assert(context_saves == 1 && context_restores == 1);
+  assert(m61_text::active());
+  m61_text::cancel();
+}
+
+static void test_manual_clear_preserves_running_script(void) {
+  reset_host();
+  add_script(
+      "CONTINUE",
+      "bind AE run :pressed\n"
+      "trap 10 run :trapped\n"
+      "wait 500\n"
+      "ok\n"
+      "ret\n"
+      ":pressed\n"
+      "ret\n"
+      ":trapped\n"
+      "ret\n");
+  assert(m61_text::load_program("CONTINUE"));
+  assert(m61_text::active());
+  assert(core_61::registered_mk61_command_hook_count() == 2);
+
+  assert(m61_text::clear_bindings_and_traps());
+  assert(m61_text::active());
+  assert(core_61::registered_mk61_command_hook_count() == 0);
+  assert(!fire_program_boundary(10));
+
+  fake_millis = 500;
+  m61_text::service();
+  assert(!m61_text::active());
+  assert(boundary_hook == nullptr);
+  assert(executed_lines.back() == "ret");
+}
+
+static void test_manual_clear_inside_trap_restores_context(void) {
+  reset_host();
+  add_script(
+      "TRAPCLEAR",
+      "trap 10 run :trapped\n"
+      "ret\n"
+      ":trapped\n"
+      "wait 500\n"
+      "ret\n");
+  assert(m61_text::load_program("TRAPCLEAR"));
+  m_IK1302.comma = core_61::COMMA_RUN_POSITION;
+  assert(fire_program_boundary(10));
+  m61_text::service();
+  assert(m61_text::calculator_suspended());
+  assert(context_saves == 1);
+
+  assert(m61_text::clear_bindings_and_traps());
+  assert(m61_text::calculator_suspended());
+  fake_millis = 500;
+  m61_text::service();
+  assert(context_restores == 1);
+  assert(!m61_text::calculator_suspended());
+  assert(!m61_text::active());
+  assert(boundary_hook == nullptr);
+}
+
 static void test_ret_returns_from_nested_script_and_ends_root(void) {
   reset_host();
   add_script("PARENT", "open CHILD\nbad\n");
@@ -969,6 +1086,10 @@ int main(void) {
   test_bind_handler_requires_ret();
   test_bind_limit_and_non_reentrant_handler();
   test_reinit_continues_script_and_clears_handlers();
+  test_manual_clear_stops_bind_and_trap_watcher();
+  test_bind_and_trap_survive_program_stop();
+  test_manual_clear_preserves_running_script();
+  test_manual_clear_inside_trap_restores_context();
   test_ret_returns_from_nested_script_and_ends_root();
   std::printf("m61_text_self_test: ok\n");
   return 0;

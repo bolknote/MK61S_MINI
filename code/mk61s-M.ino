@@ -911,6 +911,15 @@ void idle_main_process(void) {
 
 void event_hold_key(i32 holded_key, i32 hold_quant) {
   switch(holded_key) {
+      case KEY_CX:
+          if(hold_quant == 0 && m61_text::clear_bindings_and_traps()) {
+            dbgln(MINI, "HOLD [Cx]: clear M61 bind/trap");
+            lcd_std_display_redraw();
+          }
+          // Длинное Cx — одноразовое действие. Короткое нажатие уже было
+          // передано калькулятору обычным путём.
+          kbd::clear_hold_key();
+        break;
       case KEY_USER_PRESS: // Удержание клавиши USER, вывод стека XYZT на экран
           #if MK61_USER_EXPLORER_SHORTCUT
           user_short_press_pending = false;

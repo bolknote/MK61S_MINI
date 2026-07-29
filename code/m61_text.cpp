@@ -1036,6 +1036,10 @@ static bool return_from_script(void) {
   suspended_trap_address = 0;
   if(!restore_return_frame(returned)) return false;
   runner_state = returned.runner_state;
+  if(runner_state == RunnerState::WATCH_EVENTS &&
+     !any_trap_is_active() && !any_bind_is_active()) {
+    stop_runner();
+  }
   return true;
 }
 
@@ -1312,6 +1316,35 @@ static void clear_active_handlers(void) {
   bind_ready = false;
   pending_bind_target = INVALID_BIND_TARGET;
   pending_bind_sequence = 0;
+}
+
+static bool frame_has_active_handlers(const ScriptFrame& frame) {
+  for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) {
+    if(frame.active_traps[i] != 0) return true;
+  }
+  for(u8 i = 0; i < MAX_BINDS; i++) {
+    if(frame.active_bind_opcodes[i] != INVALID_BIND_OPCODE) return true;
+  }
+  return false;
+}
+
+bool clear_bindings_and_traps(void) {
+  bool had_handlers =
+      any_trap_is_active() || any_bind_is_active() ||
+      trap_pending || trap_context_valid ||
+      bind_pending || bind_handler_active ||
+      runner_state == RunnerState::WATCH_EVENTS;
+  for(u8 i = 0; i < return_stack_depth && !had_handlers; i++) {
+    had_handlers = frame_has_active_handlers(return_stack[i].script);
+  }
+  if(!had_handlers) return false;
+
+  clear_active_handlers();
+  // После корневого ret выполнять больше нечего: освобождаем boundary hook,
+  // дисплей и runner. Исполняющийся сценарий или текущий обработчик завершает
+  // свой обычный путь; очищенные кадры не восстановят старые bind/trap.
+  if(runner_state == RunnerState::WATCH_EVENTS) stop_runner();
+  return true;
 }
 
 // Вся грамматика команд разбирается терминалом (единый диспетчер интерактивного
