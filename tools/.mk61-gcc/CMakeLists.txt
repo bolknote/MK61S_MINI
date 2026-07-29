@@ -46,7 +46,8 @@ foreach(_mk61_bool
     MK61_ENABLE_USB_SCREEN
     MK61_ENABLE_EXTENDED_FONT_SETTINGS
     MK61_USER_EXPLORER_SHORTCUT
-    MK61_MATH_BACKEND)
+    MK61_MATH_BACKEND
+    MK61_ENABLE_LTO)
   if(NOT DEFINED ${_mk61_bool})
     message(FATAL_ERROR "${_mk61_bool} is required")
   endif()
@@ -90,7 +91,11 @@ target_link_libraries(BLACKPILL_F401CC INTERFACE
   BLACKPILL_F401CC_xusb_FS)
 
 include("${CORE_PATH}/cmake/overall_settings.cmake")
-overall_settings(OPTIMIZATION s)
+if(MK61_ENABLE_LTO)
+  overall_settings(OPTIMIZATION s LTO)
+else()
+  overall_settings(OPTIMIZATION s)
+endif()
 target_compile_definitions(user_settings INTERFACE
   ARDUINO=10607
   VECT_TAB_OFFSET=0x0)
@@ -143,6 +148,25 @@ target_link_libraries(resident PRIVATE
   mk61_rtc)
 target_link_options(resident PRIVATE
   "LINKER:-Map,${CMAKE_BINARY_DIR}/resident.map")
+
+if(MK61_ENABLE_LTO AND
+   (MK61_ENABLE_FOCAL OR MK61_ENABLE_TINYBASIC OR
+    MK61_ENABLE_WBMP_VIEWER OR MK61_ENABLE_MARKDOWN_VIEWER OR
+    MK61_ENABLE_CHIP8))
+  set(_mk61_system_app_exports
+    "${CMAKE_CURRENT_SOURCE_DIR}/system-app-exports.list")
+  if(NOT EXISTS "${_mk61_system_app_exports}")
+    message(FATAL_ERROR
+      "System APP LTO export list is missing: ${_mk61_system_app_exports}")
+  endif()
+  # Built-in APP link to exact resident ELF symbols after the resident link.
+  # Keep only that ABI surface public; --export-dynamic would retain the
+  # complete STM32 HAL and overflow the F401 flash.
+  target_link_options(resident PRIVATE
+    "LINKER:--export-dynamic-symbol-list=${_mk61_system_app_exports}")
+  set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS
+    "${_mk61_system_app_exports}")
+endif()
 
 add_custom_command(TARGET resident POST_BUILD
   COMMAND "${CMAKE_OBJCOPY}" -O binary

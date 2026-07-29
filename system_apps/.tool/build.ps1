@@ -476,7 +476,9 @@ function Build-SystemApp {
         if ((Test-SamePath $argument ([string]$compileEntry.file)) -or
             $argument -eq '-MMD' -or $argument -eq '-MD' -or
             $argument -eq '-MP' -or $argument -eq '-MG' -or
-            $argument -eq '-flto') {
+            $argument -match '^-flto(?:=.*)?$' -or
+            $argument -eq '-ffat-lto-objects' -or
+            $argument -eq '-fno-fat-lto-objects') {
             continue
         }
         $compileArguments.Add($argument)

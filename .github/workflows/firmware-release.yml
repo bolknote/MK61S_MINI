@@ -83,7 +83,7 @@ jobs:
             'MK61_ENABLE_USB_SCREEN=1',
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0',
             'MK61_USER_EXPLORER_SHORTCUT=1',
-            'MK61_MATH_BACKEND=0'
+            'MK61_MATH_BACKEND=1'
           ) | Set-Content -LiteralPath (
             Join-Path $env:RUNNER_TEMP 'f401.conf') -Encoding utf8
 
@@ -131,6 +131,7 @@ jobs:
             'mk61s-M-mini-v3-lcd1602-a00-f401'
           @(
             'mk61s-M-mini-v3-lcd1602-a00-f401.bin',
+            'build.flags',
             'System/FOCAL.APP',
             'System/BASIC.APP',
             'System/WBMP.APP',
@@ -141,6 +142,16 @@ jobs:
             if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
                 (Get-Item -LiteralPath $path).Length -eq 0) {
               throw "Missing F401 artifact: $_"
+            }
+          }
+          $flags = Get-Content -LiteralPath (
+            Join-Path $bundle 'build.flags') -Raw
+          foreach ($required in @(
+            '-DMK61_MATH_BACKEND=1',
+            '-DMK61_ENABLE_LTO=1'
+          )) {
+            if (-not $flags.Contains($required)) {
+              throw "Missing F401 build flag: $required"
             }
           }
 
@@ -287,6 +298,8 @@ jobs:
             -Markdown 1 \
             -Chip8 0 \
             -UsbScreen 0 \
+            -MathBackend 1 \
+            -Lto 1 \
             -BuildRoot "$RUNNER_TEMP/build-f401-gcc" \
             -OutputDirectory firmware
 
@@ -322,6 +335,8 @@ jobs:
               exit 1
             fi
           done
+          grep -F -- '-DMK61_MATH_BACKEND=1' "$bundle/build.flags"
+          grep -F -- '-DMK61_ENABLE_LTO=1' "$bundle/build.flags"
           zip -qr mk61s-M-mini-v3-lcd1602-a00-f401.zip \
             "$bundle"
           find . -type f ! -name SHA256SUMS.txt -print0 \

@@ -251,8 +251,8 @@ Bash и отдельный host-компилятор C++ нужны только
 Комплект находится в
 `binary/mk61s-M-mini-v3-lcd1602-a00-f401/` и содержит прошивку `.bin` и
 включённые ключами `System/FOCAL.APP`, `System/BASIC.APP`,
-`System/WBMP.APP`, `System/MARKDOWN.APP` и `System/CHIP8.APP`. Resident
-собирается с `-Os`, а каждый APP отдельно с `-Os -flto`. На всех
+`System/WBMP.APP`, `System/MARKDOWN.APP` и `System/CHIP8.APP`. Канонический
+GCC-бэкенд собирает resident и каждый APP с `-Os -flto`. На всех
 поддерживаемых хостах штатные System APP
 создаёт общий `system_apps/build.cmd` через `arm-none-eabi-g++` и
 `arm-none-eabi-objcopy`; payload хранится в поддерживаемом формате `NONE`.
@@ -267,9 +267,10 @@ Bash и отдельный host-компилятор C++ нужны только
 mini V3 LCD1602 A00: resident `.bin`, `build.flags`, `build.apps`,
 `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`. USB-экран в релизной прошивке
 выключен, поэтому графические `WBMP.APP` и `CHIP8.APP` в этот комплект не
-включаются. Отдельный F401 `.bin` рядом с ZIP не публикуется, чтобы не
-смешивать resident и APP разных сборок. `SHA256SUMS.txt` покрывает как
-содержимое комплекта, так и сам ZIP.
+включаются. Для F401 release включены LTO и CORE math
+(`MK61_MATH_BACKEND=1`). Отдельный F401 `.bin` рядом с ZIP не публикуется,
+чтобы не смешивать resident и APP разных сборок. `SHA256SUMS.txt` покрывает
+как содержимое комплекта, так и сам ZIP.
 
 Пункт второго шага синхронизирует пять канонических System APP:
 копирует включённые и удаляет соответствующие файлы при выключенных ключах.
@@ -359,13 +360,17 @@ tools\build-gcc.cmd -Profile mini-v3-a00 -UsbScreen 1 -Wbmp 1 -Chip8 1
 
 Для графических плат `classic-v2`, `classic-v3` и `40th` значение
 `-Wbmp auto` включает WBMP автоматически. Все ключи можно увидеть через
-`tools\build-gcc.cmd -Help`; `-Clean` пересоздаёт рабочий каталог профиля.
+`tools\build-gcc.cmd -Help`; LTO включён по умолчанию и при необходимости
+отключается ключом `-Lto 0`, а `-Clean` пересоздаёт рабочий каталог профиля.
 
 Промежуточный `BuildPath` находится в `.build\gcc\<profile>` и содержит
 `resident.elf`, `resident.bin`, `resident.hex`, `resident.map` и
 `compile_commands.json` одной сборки. Готовый комплект публикуется в
 `binary\<имя-профиля>\`: resident `.bin` и включённые `System\*.APP`.
-Resident собирается с `-Os`, APP — с `-Os -flto` и payload `NONE`.
+Resident и APP собираются с `-Os -flto`, APP использует payload `NONE`.
+При LTO resident сохраняет публичными только символы ABI штатных System APP;
+полная проверочная конфигурация со всеми пятью APP собирается на Windows и
+macOS в CI.
 На macOS/Linux тот же полиглотный файл запускается как
 `./tools/build-gcc.cmd`.
 

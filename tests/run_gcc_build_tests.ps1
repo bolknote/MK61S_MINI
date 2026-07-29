@@ -8,6 +8,8 @@ $launcher = Join-Path $root 'tools/build-gcc.cmd'
 $backend = Join-Path $root 'tools/.mk61-gcc/build.ps1'
 $cmakeProject = Join-Path $root 'tools/.mk61-gcc/CMakeLists.txt'
 $toolchain = Join-Path $root 'tools/.mk61-gcc/arm-none-eabi.cmake'
+$systemAppExports = Join-Path $root `
+    'tools/.mk61-gcc/system-app-exports.list'
 $firmwareMain = Join-Path $root 'tools/.mk61-gcc/firmware_main.cpp.in'
 $firmwarePowerShell = Join-Path $root `
     'tools/.mk61-firmware/mk61-firmware.ps1'
@@ -40,6 +42,7 @@ foreach ($file in @(
     $backend,
     $cmakeProject,
     $toolchain,
+    $systemAppExports,
     $firmwareMain,
     $firmwarePowerShell,
     $firmwareShell,
@@ -78,6 +81,8 @@ Assert-True ($helpText -match '-Check\s+validate dependencies') `
     'help does not expose dependency preflight'
 Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
     'help does not expose the Markdown System APP'
+Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
+    'help does not enable LTO by default'
 
 $invalid = Invoke-Backend @(
     '-Profile', 'mini-v3-a00',
@@ -92,6 +97,7 @@ Assert-True (($invalid.Output -join "`n") -match
 $backendText = [IO.File]::ReadAllText($backend)
 $cmakeText = [IO.File]::ReadAllText($cmakeProject)
 $toolchainText = [IO.File]::ReadAllText($toolchain)
+$systemAppExportsText = [IO.File]::ReadAllText($systemAppExports)
 $firmwareMainText = [IO.File]::ReadAllText($firmwareMain)
 $firmwarePowerShellText = [IO.File]::ReadAllText($firmwarePowerShell)
 $firmwareShellText = [IO.File]::ReadAllText($firmwareShell)
@@ -117,6 +123,15 @@ Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
     'CMake build does not emit compile_commands.json'
 Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
     'CMake build does not forward the Markdown selection'
+Assert-True ($cmakeText -match
+    'overall_settings\(OPTIMIZATION s LTO\)') `
+    'CMake build does not enable GNU Arm LTO'
+Assert-True ($cmakeText -match
+    '--export-dynamic-symbol-list=\$\{_mk61_system_app_exports\}') `
+    'LTO build does not preserve the System APP ABI'
+Assert-True ($systemAppExportsText -match
+    '_ZN18language_workspace4dataENS_5OwnerE;') `
+    'System APP LTO export list is incomplete'
 Assert-True ($cmakeText -match 'STM32 Arduino Core 2\.12\.0 is required') `
     'CMake build does not pin the STM32 Core'
 Assert-True ($toolchainText -match 'arm-none-eabi-gcc') `
@@ -145,6 +160,7 @@ foreach ($setting in @(
     'MK61_ENABLE_MARKDOWN_VIEWER=1',
     'MK61_ENABLE_CHIP8=1',
     'MK61_ENABLE_USB_SCREEN=1',
+    'MK61_MATH_BACKEND=1',
     'System/FOCAL.APP',
     'System/BASIC.APP',
     'System/WBMP.APP',
@@ -166,7 +182,9 @@ foreach ($option in @(
     '-Wbmp 0',
     '-Markdown 1',
     '-Chip8 0',
-    '-UsbScreen 0'
+    '-UsbScreen 0',
+    '-MathBackend 1',
+    '-Lto 1'
 )) {
     Assert-True ($releaseF401Step.Groups['body'].Value.Contains($option)) `
         "F401 release bundle is missing option $option"

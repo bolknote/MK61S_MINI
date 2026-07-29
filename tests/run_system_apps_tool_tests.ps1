@@ -149,6 +149,9 @@ Assert-True ($builderText -notmatch
     'standalone builder still references the removed linker script path'
 Assert-True ($builderText -notmatch 'mk61_ide_.*\.cpp\.o') `
     'standalone builder still consumes Arduino System APP objects'
+Assert-True ($builderText -match
+    "\^-flto\(\?:=\.\*\)\?\$[\s\S]+-fno-fat-lto-objects") `
+    'standalone builder does not normalize resident LTO flags'
 
 $gccText = [IO.File]::ReadAllText($gccBuilder)
 Assert-True ($gccText -match 'system_apps/\.tool/build\.ps1') `

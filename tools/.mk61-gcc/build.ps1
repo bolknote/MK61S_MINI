@@ -39,6 +39,9 @@ param(
     [ValidateSet('0', '1')]
     [string]$MathBackend = '0',
 
+    [ValidateSet('0', '1')]
+    [string]$Lto = '1',
+
     [string]$CorePath,
     [string]$ToolchainPath,
     [string]$LibrariesPath,
@@ -89,6 +92,7 @@ Firmware options:
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1
+  -Lto 0|1          default 1
 
 Paths:
   -CorePath DIR       STM32 Arduino Core 2.12.0
@@ -489,7 +493,8 @@ try {
         "-DMK61_ENABLE_USB_SCREEN=$UsbScreen",
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
-        "-DMK61_MATH_BACKEND=$MathBackend"
+        "-DMK61_MATH_BACKEND=$MathBackend",
+        "-DMK61_ENABLE_LTO=$Lto"
     )
     Invoke-GccTool $cmake $configureArguments
     Invoke-GccTool $cmake @(
@@ -559,6 +564,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
+    $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
     [IO.File]::WriteAllText(
         (Join-Path $outputBundle 'build.flags'),
         ($flagValues -join ' ') + [Environment]::NewLine,
