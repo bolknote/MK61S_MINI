@@ -75,10 +75,14 @@ int main(int argc, char** argv) {
   const char* expected_type = argc == 5 ? argv[4] : "focal";
   const Kind expected_kind =
       strcmp(expected_type, "app") == 0 ? Kind::APPLICATION :
-      strcmp(expected_type, "chip8") == 0 ? Kind::CHIP8 : Kind::FOCAL;
+      strcmp(expected_type, "chip8") == 0 ? Kind::CHIP8 :
+      strcmp(expected_type, "markdown") == 0
+          ? Kind::MARKDOWN_VIEWER : Kind::FOCAL;
   const u16 expected_magic =
       expected_kind == Kind::CHIP8
-          ? (u16) ('C' | ((u16) '1' << 8)) : 0;
+          ? (u16) ('C' | ((u16) '1' << 8))
+          : expected_kind == Kind::MARKDOWN_VIEWER
+              ? (u16) ('T' | ((u16) '2' << 8)) : 0;
   const std::vector<u8> module = read_file(argv[1]);
   const std::vector<u8> expected = read_file(argv[2]);
   const std::vector<u8> resident = read_file(argv[3]);

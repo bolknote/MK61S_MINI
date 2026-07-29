@@ -37,6 +37,10 @@ enum class Status : u8 {
 
 Status inspect(const u8* data, usize size, Info& info);
 
+// Reads one validated Type 0 source pixel. The returned boolean is true for a
+// dark pixel; false also covers invalid arguments and out-of-bounds coordinates.
+bool dark_pixel(const u8* data, usize size, const Info& info, u32 x, u32 y);
+
 // Декодирует окно фиксированного размера. Область за границами исходного
 // изображения остаётся белой; выходной бит 1 означает тёмный пиксель.
 Status decode_viewport(const u8* data, usize size, const Info& info,

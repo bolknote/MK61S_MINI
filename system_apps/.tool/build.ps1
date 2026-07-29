@@ -20,6 +20,9 @@ param(
     [string]$Wbmp = '1',
 
     [ValidateSet('0', '1')]
+    [string]$Markdown = '1',
+
+    [ValidateSet('0', '1')]
     [string]$Chip8 = '1',
 
     [switch]$KeepBuild
@@ -417,6 +420,15 @@ function Get-SelectedApps {
             Template = 'wbmp.cpp'
         })
     }
+    if ($Markdown -eq '1') {
+        $apps.Add([pscustomobject]@{
+            Id = 'markdown'
+            FileName = 'MARKDOWN.APP'
+            Kind = [byte]6
+            HandledMagic = [uint16]0x3254
+            Template = 'markdown_document.cpp'
+        })
+    }
     if ($Chip8 -eq '1') {
         $apps.Add([pscustomobject]@{
             Id = 'chip8'
@@ -601,7 +613,9 @@ try {
     }
 
     [IO.Directory]::CreateDirectory($finalOutputDirectory) | Out-Null
-    foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')) {
+    foreach ($name in @(
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
+    )) {
         $target = Join-Path $finalOutputDirectory $name
         if ([IO.File]::Exists($target)) {
             Remove-Item -LiteralPath $target -Force

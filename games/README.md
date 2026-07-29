@@ -18,6 +18,7 @@ stated explicitly instead of guessing an author or source.
 | `Lunolet 1.m61` | **Lunolet-1** spacecraft manoeuvring and landing simulator | Extracted from the embedded game library inherited from [UN7FGO/MK61S_MINI](https://github.com/UN7FGO/MK61S_MINI). The game is the classic `Lunolet-1` from the Soviet calculator-program series; the exact transcription used by the upstream firmware was not attributed there. |
 | `Mult Lunolet.m61` | MK-61 program imported under the supplied **Mult Lunolet** name | Supplied locally by the project maintainer. No author, publication, or upstream URL is embedded in the file or recorded in Git history. |
 | `Naval Battle.m61` | MK-61 naval battle game | Extracted from the embedded game library inherited from [UN7FGO/MK61S_MINI](https://github.com/UN7FGO/MK61S_MINI). The upstream code did not record the original listing or author. |
+| `Pogonya/` | Sergei Shinkevich's **Погоня** with an auto-starting illustrated Markdown manual | The program listing and line art were taken from the project maintainer's scan of `КЛИП/ЭКСПРЕСС №08/Экспресс №8 - 1.jpg` (`Экспресс`, No. 8, 1991). The scan's inconsistent start line and initial coordinates were checked against the tested [Lord_BSS transcription](https://lordbss.narod.ru/pmk47.html); the packaged game uses `БП 25`, `R3=49.50` and `R5=52.5`. |
 | `Samurai.m61` | MK-61 game with its register setup | Added as an `.m61` file during the built-in-library-to-filesystem migration in this repository. No earlier in-tree copy, external listing, or author attribution is recorded. |
 | `Wumpus.m61` | MK-61 **Wumpus** game with generated initial state | First added to this fork's embedded game library and then exported to `.m61`. The external listing or author used for that port was not recorded. |
 | `br8kout.ch8` | **Br8kout** CHIP-8 ROM by SharpenedSpoon, 199 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
@@ -25,6 +26,17 @@ stated explicitly instead of guessing an author or source.
 | `fuse.ch8` | **Fuse** CHIP-8 ROM by John Earnest, 424 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
 | `space-invaders.ch8` | **Space Invaders v0.9** CHIP-8 ROM by David Winter, 1283 bytes | Taken unchanged from the [Zophar public-domain CHIP-8 Games Pack](https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html). |
 | `pacman-120x28.wbmp` | Original 120x28 monochrome Pac-Man scene for testing the WBMP viewer | Original artwork by the MK61S_MINI project author, drawn specifically for this project in collaboration with Codex. It was not copied from an external image. |
+
+## Auto-starting folder package
+
+Copy the whole [`Pogonya`](Pogonya/) directory to the `games` directory on the
+MK61S C5 disk. Entering it in Explorer runs `autoexec.m61`. The script first
+opens `manual.md`; `LEFT` and `RIGHT` turn pages, and `ESC` or `OK` closes the
+viewer. The script then loads the 105 program steps, initializes the game and
+performs `БП 25 С/П`.
+
+The graphics build shows the two WBMP illustrations. An alphanumeric display
+shows the same manual as plain text with image alt text.
 
 ## Bumblebee display example
 

@@ -14,6 +14,17 @@ int main(void) {
   static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
                 "a non-graphical build must keep WBMP disabled by default");
 #endif
+  static_assert(MK61_ENABLE_MARKDOWN_VIEWER ==
+#if defined(MK61_CONFIG_EXPECT_MARKDOWN_DISABLED)
+                0,
+#else
+                1,
+#endif
+                "Markdown must be enabled by default");
+  static_assert(MK61_MARKDOWN_USES_WBMP ==
+                    (MK61_ENABLE_MARKDOWN_VIEWER &&
+                     MK61_HAS_COMPILED_GRAPHICS),
+                "Markdown must request WBMP decoding only for graphics");
   static_assert(MK61_ENABLE_CHIP8 ==
 #if defined(MK61_CONFIG_EXPECT_CHIP8)
                 1,
@@ -33,6 +44,8 @@ int main(void) {
                 "enabled language runtimes must become modules");
   static_assert(MK61_WBMP_VIEWER_IS_LOADABLE ==
                     MK61_ENABLE_WBMP_VIEWER &&
+                MK61_MARKDOWN_VIEWER_IS_LOADABLE ==
+                    MK61_ENABLE_MARKDOWN_VIEWER &&
                 MK61_CHIP8_IS_LOADABLE == MK61_ENABLE_CHIP8,
                 "enabled graphical runtimes must become modules");
   static_assert(MK61_ANY_LOADABLE_MODULE,
@@ -42,6 +55,7 @@ int main(void) {
                 "this case tests an enabled module framework");
   static_assert(!MK61_FOCAL_IS_LOADABLE && !MK61_TINYBASIC_IS_LOADABLE &&
                 !MK61_WBMP_VIEWER_IS_LOADABLE &&
+                !MK61_MARKDOWN_VIEWER_IS_LOADABLE &&
                 !MK61_CHIP8_IS_LOADABLE,
                 "disabled features must not leave system APP artifacts");
   static_assert(MK61_ANY_LOADABLE_MODULE,
@@ -53,6 +67,8 @@ int main(void) {
                 "enabled language features must stay built in");
   static_assert(MK61_WBMP_VIEWER_IS_BUILTIN ==
                     MK61_ENABLE_WBMP_VIEWER &&
+                MK61_MARKDOWN_VIEWER_IS_BUILTIN ==
+                    MK61_ENABLE_MARKDOWN_VIEWER &&
                 MK61_CHIP8_IS_BUILTIN == MK61_ENABLE_CHIP8,
                 "enabled graphical features must stay built in");
 #else

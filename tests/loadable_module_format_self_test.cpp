@@ -43,11 +43,12 @@ static Header valid_header(void) {
 
 static void test_kind_file_names(void) {
   Kind kind = (Kind) 0;
-  assert(KIND_COUNT == 4);
+  assert(KIND_COUNT == 5);
   assert(kind_at(0) == Kind::FOCAL);
   assert(kind_at(1) == Kind::TINYBASIC);
   assert(kind_at(2) == Kind::WBMP_VIEWER);
   assert(kind_at(3) == Kind::CHIP8);
+  assert(kind_at(4) == Kind::MARKDOWN_VIEWER);
   assert(kind_at(KIND_COUNT) == (Kind) 0);
   assert(valid_kind(Kind::APPLICATION));
   assert(strcmp(SYSTEM_DIRECTORY_NAME, "System") == 0);
@@ -58,6 +59,7 @@ static void test_kind_file_names(void) {
   assert(strcmp(file_name(Kind::TINYBASIC), "BASIC.APP") == 0);
   assert(strcmp(file_name(Kind::WBMP_VIEWER), "WBMP.APP") == 0);
   assert(strcmp(file_name(Kind::CHIP8), "CHIP8.APP") == 0);
+  assert(strcmp(file_name(Kind::MARKDOWN_VIEWER), "MARKDOWN.APP") == 0);
   assert(file_name(Kind::APPLICATION) == nullptr);
   assert(file_name((Kind) 0) == nullptr);
   assert(kind_from_file_name("focal.app", kind) && kind == Kind::FOCAL);
@@ -67,6 +69,8 @@ static void test_kind_file_names(void) {
          kind == Kind::WBMP_VIEWER);
   assert(kind_from_file_name("chip8.app", kind) &&
          kind == Kind::CHIP8);
+  assert(kind_from_file_name("Markdown.App", kind) &&
+         kind == Kind::MARKDOWN_VIEWER);
   assert(!kind_from_file_name("OTHER.APP", kind));
   assert(!valid_kind(kind));
 }

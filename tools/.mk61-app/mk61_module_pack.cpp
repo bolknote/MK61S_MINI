@@ -44,7 +44,8 @@ struct Options {
       "usage: mk61_module_pack --kind KIND --resident FILE --image FILE\n"
       "       --memory-size N --entry-offset N --load-address N\n"
       "       --output FILE [--handled-magic XX] [--require-zx0]\n"
-      "  --kind KIND          app, focal, tinybasic, wbmp-viewer, or chip8\n"
+      "  --kind KIND          app, focal, tinybasic, wbmp-viewer,\n"
+      "                       markdown-viewer, or chip8\n"
       "  --resident FILE      exact resident firmware .bin\n"
       "  --image FILE         linked SRAM image without its .bss tail\n"
       "  --memory-size N      image plus zero-filled .bss\n"
@@ -75,6 +76,7 @@ Kind parse_kind(const std::string& text) {
   if(text == "focal") return Kind::FOCAL;
   if(text == "tinybasic") return Kind::TINYBASIC;
   if(text == "wbmp-viewer") return Kind::WBMP_VIEWER;
+  if(text == "markdown-viewer") return Kind::MARKDOWN_VIEWER;
   if(text == "chip8") return Kind::CHIP8;
   throw std::runtime_error("unknown module kind: " + text);
 }

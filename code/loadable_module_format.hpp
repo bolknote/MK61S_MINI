@@ -22,12 +22,13 @@ enum class Kind : u8 {
   TINYBASIC = 2,
   WBMP_VIEWER = 3,
   APPLICATION = 4,
-  CHIP8 = 5
+  CHIP8 = 5,
+  MARKDOWN_VIEWER = 6
 };
 
 // Только системные APP имеют канонические имена. Пользовательских APPLICATION
 // может быть сколько угодно, и их имена задаются самим файлом в C5.
-static constexpr u8 KIND_COUNT = 4;
+static constexpr u8 KIND_COUNT = 5;
 static constexpr char SYSTEM_DIRECTORY_NAME[] = "System";
 
 enum class Compression : u8 {

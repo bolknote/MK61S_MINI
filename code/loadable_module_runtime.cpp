@@ -237,6 +237,8 @@ bool enabled(Kind kind) {
     case Kind::TINYBASIC: return MK61_TINYBASIC_IS_LOADABLE != 0;
     case Kind::WBMP_VIEWER: return MK61_WBMP_VIEWER_IS_LOADABLE != 0;
     case Kind::CHIP8: return MK61_CHIP8_IS_LOADABLE != 0;
+    case Kind::MARKDOWN_VIEWER:
+      return MK61_MARKDOWN_VIEWER_IS_LOADABLE != 0;
     case Kind::APPLICATION: return MK61_ENABLE_LOADABLE_MODULES != 0;
   }
   return false;

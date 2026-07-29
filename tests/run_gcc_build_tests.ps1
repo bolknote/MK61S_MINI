@@ -76,6 +76,8 @@ Assert-True ($helpText -match '(?s)mini-v2-a00.+classic-v2') `
     'help does not list the supported profiles'
 Assert-True ($helpText -match '-Check\s+validate dependencies') `
     'help does not expose dependency preflight'
+Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
+    'help does not expose the Markdown System APP'
 
 $invalid = Invoke-Backend @(
     '-Profile', 'mini-v3-a00',
@@ -113,6 +115,8 @@ Assert-True ($cmakeText -match
     'CMake build does not select the F401 board'
 Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
     'CMake build does not emit compile_commands.json'
+Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
+    'CMake build does not forward the Markdown selection'
 Assert-True ($cmakeText -match 'STM32 Arduino Core 2\.12\.0 is required') `
     'CMake build does not pin the STM32 Core'
 Assert-True ($toolchainText -match 'arm-none-eabi-gcc') `

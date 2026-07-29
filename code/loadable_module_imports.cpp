@@ -57,7 +57,8 @@ static const Import imports[] = {
 #endif
 };
 
-#if MK61_WBMP_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE
+#if MK61_WBMP_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE || \
+    (MK61_MARKDOWN_VIEWER_IS_LOADABLE && MK61_HAS_COMPILED_GRAPHICS)
 using DisplayBegin = bool (MK61Display::*)(void);
 using DisplayFullscreenWrite = bool (MK61Display::*)(const u8*, usize);
 using DisplayEnd = void (MK61Display::*)(void);
@@ -74,7 +75,8 @@ static const DisplayEnd display_fullscreen_end_import =
 extern "C" __attribute__((noinline, used))
 void mk61_module_keep_imports(void) {
   __asm volatile("" : : "r" (imports) : "memory");
-#if MK61_WBMP_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE
+#if MK61_WBMP_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE || \
+    (MK61_MARKDOWN_VIEWER_IS_LOADABLE && MK61_HAS_COMPILED_GRAPHICS)
   __asm volatile("" : : "r" (&display_fullscreen_begin_import),
                           "r" (&display_fullscreen_write_import),
                           "r" (&display_fullscreen_end_import) : "memory");

@@ -73,6 +73,8 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 
 [Изображения WBMP: Markdown](doc/src/MK61s-mini-WBMP.md) / [PDF](doc/MK61s-mini-WBMP.pdf)
 
+[Просмотр документов Markdown и тип T2](doc/src/MK61s-mini-Markdown.md)
+
 [Консоль CHIP-8 и тип C1: Markdown](doc/src/MK61s-mini-CHIP8.md) / [PDF](doc/MK61s-mini-CHIP8.pdf)
 
 [Часы RTC](doc/src/MK61s-mini-RTC.md)
@@ -166,9 +168,10 @@ bar. При навигации обновляются только две изм
 мигает. Ничего для интерфейса автоматически не устанавливается.
 
 В пункте «Ключи компиляции» можно независимо включать FOCAL, TinyBASIC,
-WBMP viewer, CHIP-8, USB-экран, расширенные настройки шрифтов, быстрый вызов
-Explorer и CORE математику вместо `libm`. Выбранные значения явно передаются
-сборке как `-D`ключи. USB-экран и CHIP-8 по умолчанию выключены. При выключенном
+WBMP viewer, Markdown viewer, CHIP-8, USB-экран, расширенные настройки
+шрифтов, быстрый вызов Explorer и CORE математику вместо `libm`. Выбранные
+значения явно передаются сборке как `-D`ключи. Markdown включён, а USB-экран
+и CHIP-8 по умолчанию выключены. При выключенном
 `MK61_ENABLE_USB_SCREEN` из прошивки удаляются сам режим, его статические буферы
 и пункт `Разработка → USB-экран`. Если USB-экран включён в
 LCD1602-сборке, вместе с ним компилируются настройки графического
@@ -248,18 +251,19 @@ Bash и отдельный host-компилятор C++ нужны только
 Комплект находится в
 `binary/mk61s-M-mini-v3-lcd1602-a00-f401/` и содержит прошивку `.bin` и
 включённые ключами `System/FOCAL.APP`, `System/BASIC.APP`,
-`System/WBMP.APP` и `System/CHIP8.APP`. Resident собирается с `-Os`, а каждый
-APP отдельно с `-Os -flto`. На всех поддерживаемых хостах штатные System APP
+`System/WBMP.APP`, `System/MARKDOWN.APP` и `System/CHIP8.APP`. Resident
+собирается с `-Os`, а каждый APP отдельно с `-Os -flto`. На всех
+поддерживаемых хостах штатные System APP
 создаёт общий `system_apps/build.cmd` через `arm-none-eabi-g++` и
 `arm-none-eabi-objcopy`; payload хранится в поддерживаемом формате `NONE`.
 Значения `MK61_ENABLE_FOCAL`, `MK61_ENABLE_TINYBASIC`,
-`MK61_ENABLE_WBMP_VIEWER` и `MK61_ENABLE_CHIP8` берутся из одноимённых
-переменных окружения; `0`
+`MK61_ENABLE_WBMP_VIEWER`, `MK61_ENABLE_MARKDOWN_VIEWER` и
+`MK61_ENABLE_CHIP8` берутся из одноимённых переменных окружения; `0`
 убирает код соответствующего системного интерфейса и его артефакт. Общий
 загрузчик пользовательских APP при этом остаётся включённым самим
 `MK61_ENABLE_LOADABLE_MODULES`.
 
-Пункт второго шага синхронизирует четыре канонических System APP:
+Пункт второго шага синхронизирует пять канонических System APP:
 копирует включённые и удаляет соответствующие файлы при выключенных ключах.
 Другие файлы C5, включая пользовательские APP, он не удаляет. Исходный каталог
 `System` при необходимости можно
@@ -269,16 +273,16 @@ APP отдельно с `-Os -flto`. На всех поддерживаемых 
 Пользовательские APP можно хранить под любыми допустимыми именами и в любых
 каталогах; `open` и Проводник запускают контейнер вида `APPLICATION`.
 Системные компоненты ищутся только как `/System/FOCAL.APP`,
-`/System/BASIC.APP`, `/System/WBMP.APP` и `/System/CHIP8.APP`. Минимальная
-точка входа, правила
+`/System/BASIC.APP`, `/System/WBMP.APP`, `/System/MARKDOWN.APP` и
+`/System/CHIP8.APP`. Минимальная точка входа, правила
 ABI, сборка произвольных исходников и установка описаны в
 [`MK61s-mini-APP.md`](doc/src/MK61s-mini-APP.md).
 
 #### Arduino IDE без arduino-cli
 
-Для ручной сборки штатных `FOCAL.APP`, `BASIC.APP`, `WBMP.APP` и `CHIP8.APP`
-есть отдельная плата `MK61s F401 + APP`. Один раз установите её из корня
-проекта:
+Для ручной сборки штатных `FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
+`MARKDOWN.APP` и `CHIP8.APP` есть отдельная плата `MK61s F401 + APP`. Один
+раз установите её из корня проекта:
 
 ```bash
 ./tools/mk61-arduino-board.cmd
@@ -300,8 +304,8 @@ tools\mk61-arduino-board.cmd
 1. откройте `code/code.ino`;
 2. выберите плату `MK61s F401 + APP`;
 3. отдельно выберите платформу и экран;
-4. оставьте нужные `FOCAL`, `TinyBASIC`, `WBMP viewer` и `CHIP-8` в положении
-   `APP` либо выключите их;
+4. оставьте нужные `FOCAL`, `TinyBASIC`, `WBMP viewer`, `Markdown viewer` и
+   `CHIP-8` в положении `APP` либо выключите их;
 5. нажмите Verify или Upload.
 
 Обычная кнопка Arduino собирает согласованный каталог в `binary/`: resident
@@ -338,8 +342,8 @@ Core. От Arduino-инсталляции используются только 
 Ninja; на Windows подходит встроенный Windows PowerShell 5.1, а на
 macOS/Linux нужен `pwsh`.
 
-По умолчанию создаются `FOCAL.APP` и `BASIC.APP`. Например, полный комплект
-для mini V3 с графикой через USB собирается так:
+По умолчанию создаются `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`. Например,
+полный комплект для mini V3 с графикой через USB собирается так:
 
 ```bat
 tools\build-gcc.cmd -Profile mini-v3-a00 -UsbScreen 1 -Wbmp 1 -Chip8 1
@@ -359,7 +363,7 @@ Resident собирается с `-Os`, APP — с `-Os -flto` и payload `NONE`
 
 #### Автономная ARM-сборка штатных System APP
 
-Исходные единицы трансляции всех четырёх модулей находятся отдельно от скетча:
+Исходные единицы трансляции всех пяти модулей находятся отдельно от скетча:
 
 ```text
 system_apps/
@@ -367,6 +371,7 @@ system_apps/
 ├── focal/main.cpp
 ├── basic/main.cpp
 ├── wbmp/main.cpp
+├── markdown/main.cpp
 └── chip8/main.cpp
 ```
 
@@ -385,15 +390,15 @@ system_apps/
 ```bat
 system_apps\build.cmd ^
   -BuildPath C:\work\mk61-resident ^
-  -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
+  -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
 ```
 
 По умолчанию результат записывается в `system_apps\System`. Другой каталог
 задаётся через `-OutputDirectory`. Пути к `arm-none-eabi-g++`, `objcopy`, `nm`
 и `size`, точные `-D` и `-I` берутся из `compile_commands.json`, созданного
 той же Arduino- или прямой CMake/GCC-сборкой; установка второго GCC рядом со
-скриптом не требуется. Заголовки WBMP- и CHIP-8-модулей регистрируют
-обработчики файлов `I1` и `C1` соответственно.
+скриптом не требуется. Заголовки WBMP-, Markdown- и CHIP-8-модулей
+регистрируют обработчики файлов `I1`, `T2` и `C1` соответственно.
 
 Тот же процесс доступен без TUI:
 
@@ -456,7 +461,8 @@ MK61_TEST_SANITIZERS=1 tests/run_all_tests.sh
 
 Тестовый набор проверяет FOCAL, TinyBASIC, математический CORE-бэкенд,
 эксклюзивное владение общими runtime/scratch-буферами, декодер WBMP Type 0,
-ядро CHIP-8 и регистрацию двухбайтовых типов,
+парсер Markdown, plain-text профиль T2, ядро CHIP-8 и регистрацию
+двухбайтовых типов,
 Virtual FAT и реальное
 устройство `program_store` через модель SPI flash с инъекцией ошибок записи и
 повреждения каталога, определение физической ёмкости с aliasing и ложным
@@ -489,9 +495,11 @@ host-тестами.
 но для новых сборок лучше указывать профиль платы явно.
 
 Просмотр WBMP Type 0 по умолчанию включён только при наличии графического
-backend; CHIP-8 по умолчанию выключен. Флаги `MK61_ENABLE_WBMP_VIEWER` и
-`MK61_ENABLE_CHIP8` меняют исполняемый код, но хранение `.wbmp` и `.ch8` в C5
-и USB-диске остаётся доступным.
+backend; Markdown включён, а CHIP-8 по умолчанию выключен. Флаги
+`MK61_ENABLE_WBMP_VIEWER`, `MK61_ENABLE_MARKDOWN_VIEWER` и
+`MK61_ENABLE_CHIP8` меняют исполняемый код, но хранение `.wbmp`, `.md` и
+`.ch8` в C5 и USB-диске остаётся доступным. Графический Markdown встраивает
+WBMP-декодер и не требует включённого `WBMP.APP`.
 
 73!
 

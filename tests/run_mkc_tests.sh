@@ -12,6 +12,7 @@ mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
   "$work/app-limits" "$work/device/System" "$work/preflight-bad" "$work/editor" \
   "$work/chip8-limits" "$work/navigation/.mkc"
 printf '2+2\n' > "$work/local/demo.foc"
+printf '# Demo\n' > "$work/local/manual.md"
 printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
 printf 'raw\n' > "$work/preflight-bad/blocked.bin"
@@ -39,6 +40,7 @@ test -f "$root/tools/.mkc/mkc.ps1"
 test ! -e "$root/tools/mkc.sh"
 test ! -e "$root/tools/mkc.ps1"
 test "$("$root/tools/mkc.cmd" --classify "$work/local/demo.foc")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/manual.md")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/Good")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/FOCAL.APP")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/DEMO.APP")" = supported

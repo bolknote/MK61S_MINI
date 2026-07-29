@@ -22,6 +22,9 @@ param(
     [string]$Wbmp = 'auto',
 
     [ValidateSet('0', '1')]
+    [string]$Markdown = '1',
+
+    [ValidateSet('0', '1')]
     [string]$Chip8 = '0',
 
     [ValidateSet('0', '1')]
@@ -78,6 +81,7 @@ System APP:
   -Focal 0|1       default 1
   -Basic 0|1       default 1
   -Wbmp auto|0|1   default auto (graphics profiles only)
+  -Markdown 0|1    default 1
   -Chip8 0|1       default 0
 
 Firmware options:
@@ -300,7 +304,7 @@ function Remove-GeneratedBundleFiles {
     }
     $system = Join-Path $Directory 'System'
     foreach ($name in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
     )) {
         $path = Join-Path $system $name
         if ([IO.File]::Exists($path)) {
@@ -480,6 +484,7 @@ try {
         "-DMK61_ENABLE_FOCAL=$Focal",
         "-DMK61_ENABLE_TINYBASIC=$Basic",
         "-DMK61_ENABLE_WBMP_VIEWER=$Wbmp",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown",
         "-DMK61_ENABLE_CHIP8=$Chip8",
         "-DMK61_ENABLE_USB_SCREEN=$UsbScreen",
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
@@ -505,7 +510,7 @@ try {
     }
     [IO.Directory]::CreateDirectory($stage) | Out-Null
     $systemRequested = $Focal -eq '1' -or $Basic -eq '1' -or
-        $Wbmp -eq '1' -or $Chip8 -eq '1'
+        $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
     if ($systemRequested) {
         $systemBuilder = Join-Path $script:ProjectRoot `
             'system_apps/.tool/build.ps1'
@@ -523,6 +528,7 @@ try {
             '-Focal', $Focal,
             '-Basic', $Basic,
             '-Wbmp', $Wbmp,
+            '-Markdown', $Markdown,
             '-Chip8', $Chip8)
     }
 
@@ -546,6 +552,7 @@ try {
     $flagValues.Add("-DMK61_ENABLE_FOCAL=$Focal")
     $flagValues.Add("-DMK61_ENABLE_TINYBASIC=$Basic")
     $flagValues.Add("-DMK61_ENABLE_WBMP_VIEWER=$Wbmp")
+    $flagValues.Add("-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown")
     $flagValues.Add("-DMK61_ENABLE_CHIP8=$Chip8")
     $flagValues.Add("-DMK61_ENABLE_USB_SCREEN=$UsbScreen")
     $flagValues.Add(

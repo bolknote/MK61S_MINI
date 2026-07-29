@@ -174,6 +174,7 @@ static const Extension EXTENSIONS[] = {
   { ".foc",       program_store::ProgramType::FOCAL },
   { ".tbi",       program_store::ProgramType::TINYBASIC },
   { ".txt",       program_store::ProgramType::TEXT },
+  { ".md",        program_store::ProgramType::MARKDOWN },
   { ".fmk",       program_store::ProgramType::FONT },
   { ".app",       program_store::ProgramType::APP },
   { ".ch8",       program_store::ProgramType::CHIP8 },

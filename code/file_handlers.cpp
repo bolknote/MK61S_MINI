@@ -5,6 +5,9 @@
   #include "image1_viewer.hpp"
   #include "menu.hpp"
 #endif
+#if MK61_MARKDOWN_VIEWER_IS_BUILTIN
+  #include "markdown_viewer.hpp"
+#endif
 #if MK61_CHIP8_IS_BUILTIN
   #include "chip8_runner.hpp"
 #endif
@@ -44,6 +47,26 @@ static loadable_module::FileOpenResult image_result(
 }
 #endif
 
+#if MK61_MARKDOWN_VIEWER_IS_BUILTIN
+static loadable_module::FileOpenResult markdown_result(
+    markdown_viewer::Result result) {
+  using loadable_module::FileOpenResult;
+  switch(result) {
+    case markdown_viewer::Result::OK:
+      return FileOpenResult::OK;
+    case markdown_viewer::Result::BUSY:
+      return FileOpenResult::BUSY;
+    case markdown_viewer::Result::READ_ERROR:
+      return FileOpenResult::IO_ERROR;
+    case markdown_viewer::Result::INVALID_DOCUMENT:
+      return FileOpenResult::INVALID_FILE;
+    case markdown_viewer::Result::DISPLAY_ERROR:
+      return FileOpenResult::RUNTIME_ERROR;
+  }
+  return FileOpenResult::RUNTIME_ERROR;
+}
+#endif
+
 } // namespace
 
 bool available(const program_store::Entry& entry) {
@@ -53,6 +76,10 @@ bool available(const program_store::Entry& entry) {
 
 #if MK61_WBMP_VIEWER_IS_BUILTIN
   if(magic == program_store::TYPE_MAGIC_IMAGE1) return true;
+#endif
+
+#if MK61_MARKDOWN_VIEWER_IS_BUILTIN
+  if(magic == program_store::TYPE_MAGIC_MARKDOWN) return true;
 #endif
 
 #if MK61_CHIP8_IS_BUILTIN
@@ -76,6 +103,12 @@ loadable_module::FileOpenResult open(const program_store::Entry& entry) {
 #if MK61_WBMP_VIEWER_IS_BUILTIN
   if(magic == program_store::TYPE_MAGIC_IMAGE1) {
     return image_result(image1_viewer::view_entry(main_lcd(), entry));
+  }
+#endif
+
+#if MK61_MARKDOWN_VIEWER_IS_BUILTIN
+  if(magic == program_store::TYPE_MAGIC_MARKDOWN) {
+    return markdown_result(markdown_viewer::view_entry(main_lcd(), entry));
   }
 #endif
 

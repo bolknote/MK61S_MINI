@@ -154,7 +154,7 @@ static bool magic_valid(const u8* input) {
 bool valid_kind(Kind kind) {
   return kind == Kind::FOCAL || kind == Kind::TINYBASIC ||
          kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION ||
-         kind == Kind::CHIP8;
+         kind == Kind::CHIP8 || kind == Kind::MARKDOWN_VIEWER;
 }
 
 bool valid_compression(Compression compression) {
@@ -168,6 +168,7 @@ Kind kind_at(u8 index) {
     case 1: return Kind::TINYBASIC;
     case 2: return Kind::WBMP_VIEWER;
     case 3: return Kind::CHIP8;
+    case 4: return Kind::MARKDOWN_VIEWER;
   }
   return (Kind) 0;
 }
@@ -182,6 +183,7 @@ const char* file_name(Kind kind) {
     case Kind::TINYBASIC: return "BASIC.APP";
     case Kind::WBMP_VIEWER: return "WBMP.APP";
     case Kind::CHIP8: return "CHIP8.APP";
+    case Kind::MARKDOWN_VIEWER: return "MARKDOWN.APP";
     case Kind::APPLICATION: break;
   }
   return nullptr;

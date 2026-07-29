@@ -99,6 +99,15 @@ $sources = @(
             'image1_viewer_module_entry.cpp')
     }
     @{
+        Path = Join-Path (Join-Path $appsRoot 'markdown') 'main.cpp'
+        Macro = 'MK61_BUILD_MARKDOWN_MODULE'
+        Includes = @(
+            'markdown_document.cpp',
+            'wbmp.cpp',
+            'markdown_viewer.cpp',
+            'markdown_viewer_module_entry.cpp')
+    }
+    @{
         Path = Join-Path (Join-Path $appsRoot 'chip8') 'main.cpp'
         Macro = 'MK61_BUILD_CHIP8_MODULE'
         Includes = @(
@@ -120,7 +129,9 @@ foreach ($source in $sources) {
 }
 
 $builderText = [IO.File]::ReadAllText($builder)
-foreach ($name in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')) {
+foreach ($name in @(
+    'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
+)) {
     Assert-True ($builderText -match [regex]::Escape($name)) `
         "$name is missing from the standalone builder"
 }
@@ -144,6 +155,9 @@ Assert-True ($gccText -match 'system_apps/\.tool/build\.ps1') `
     'direct GCC builder does not call the standalone System APP builder'
 Assert-True ($gccText -match '"-DMK61_ENABLE_CHIP8=\$Chip8"') `
     'direct GCC builder does not forward the CHIP-8 selection'
+Assert-True ($gccText -match
+    '"-DMK61_ENABLE_MARKDOWN_VIEWER=\$Markdown"') `
+    'direct GCC builder does not forward the Markdown selection'
 Assert-True ($gccText -notmatch 'mk61-app-postbuild') `
     'direct GCC builder still uses Arduino APP post-build objects'
 
@@ -158,7 +172,7 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
         & $powerShell -NoLogo -NoProfile -File $builder `
             -BuildPath $integrationBuild `
             -OutputDirectory $output `
-            -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
+            -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
         Assert-True ($LASTEXITCODE -eq 0) `
             'real standalone System APP build failed'
 
@@ -174,12 +188,14 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             'FOCAL.APP' = 1
             'BASIC.APP' = 2
             'WBMP.APP' = 3
+            'MARKDOWN.APP' = 6
             'CHIP8.APP' = 5
         }
         $expectedMagic = @{
             'FOCAL.APP' = [uint16]0
             'BASIC.APP' = [uint16]0
             'WBMP.APP' = [uint16]0x3149
+            'MARKDOWN.APP' = [uint16]0x3254
             'CHIP8.APP' = [uint16]0x3143
         }
         foreach ($name in $expected.Keys) {

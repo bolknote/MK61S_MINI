@@ -5,6 +5,7 @@
 - `focal/main.cpp` → `FOCAL.APP`;
 - `basic/main.cpp` → `BASIC.APP`;
 - `wbmp/main.cpp` → `WBMP.APP`;
+- `markdown/main.cpp` → `MARKDOWN.APP`;
 - `chip8/main.cpp` → `CHIP8.APP`.
 
 Каждый модуль компилируется как одна единица трансляции через
@@ -17,7 +18,7 @@
 ```bat
 system_apps\build.cmd ^
   -BuildPath C:\work\mk61-resident ^
-  -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
+  -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
 ```
 
 В `BuildPath` должны находиться resident `.elf`, `.bin` и созданный той же
@@ -25,8 +26,9 @@ system_apps\build.cmd ^
 прямая CMake/GCC-сборка через `tools\build-gcc.cmd`. Из базы берутся точные
 пути к ARM toolchain, include-каталогам и compile-time ключи. По умолчанию
 результат появляется в `system_apps\System`; для другого места передайте
-`-OutputDirectory`. `WBMP.APP` регистрирует обработчик файлов `I1`, а
-`CHIP8.APP` — обработчик `C1`.
+`-OutputDirectory`. `WBMP.APP` регистрирует обработчик файлов `I1`,
+`MARKDOWN.APP` — `T2`, а `CHIP8.APP` — `C1`. Графический Markdown содержит
+собственный WBMP-декодер и не требует наличия `WBMP.APP`.
 
 Сборщик не линкует Arduino-библиотеки внутрь APP. Общие функции resident
 разрешаются через `--just-symbols`, поэтому нельзя смешивать `.APP` и `.bin`

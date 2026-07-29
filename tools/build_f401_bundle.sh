@@ -16,6 +16,7 @@ profile=mini-v3-a00
 enable_focal=${MK61_ENABLE_FOCAL:-1}
 enable_tinybasic=${MK61_ENABLE_TINYBASIC:-1}
 enable_wbmp=${MK61_ENABLE_WBMP_VIEWER:-}
+enable_markdown=${MK61_ENABLE_MARKDOWN_VIEWER:-1}
 enable_chip8=${MK61_ENABLE_CHIP8:-0}
 enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
@@ -51,7 +52,7 @@ Profiles:
 
 Feature environment variables (0 or 1):
   MK61_ENABLE_FOCAL, MK61_ENABLE_TINYBASIC, MK61_ENABLE_WBMP_VIEWER,
-  MK61_ENABLE_CHIP8,
+  MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
   MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND
 
@@ -388,7 +389,7 @@ if [ -z "$enable_wbmp" ]; then
 fi
 
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
-             "$enable_chip8" \
+             "$enable_markdown" "$enable_chip8" \
              "$enable_usb_screen" "$enable_extended_font" \
              "$enable_user_explorer" "$math_backend"; do
   boolean_valid "$value" || {
@@ -406,7 +407,8 @@ if [ "$compiled_graphics" -eq 0 ] &&
   exit 2
 fi
 custom_app_count=${#custom_app_names[@]}
-any_module=$((enable_focal | enable_tinybasic | enable_wbmp | enable_chip8 |
+any_module=$((enable_focal | enable_tinybasic | enable_wbmp |
+              enable_markdown | enable_chip8 |
               (custom_app_count > 0)))
 
 command -v "$arduino_cli" >/dev/null 2>&1 || {
@@ -422,6 +424,7 @@ compile_flags="$board_flags"
 compile_flags="$compile_flags -DMK61_ENABLE_FOCAL=$enable_focal"
 compile_flags="$compile_flags -DMK61_ENABLE_TINYBASIC=$enable_tinybasic"
 compile_flags="$compile_flags -DMK61_ENABLE_WBMP_VIEWER=$enable_wbmp"
+compile_flags="$compile_flags -DMK61_ENABLE_MARKDOWN_VIEWER=$enable_markdown"
 compile_flags="$compile_flags -DMK61_ENABLE_CHIP8=$enable_chip8"
 compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
@@ -650,6 +653,12 @@ if [ "$enable_wbmp" -eq 1 ]; then
     "$sketch_dir" I1 wbmp.cpp image1_viewer.cpp \
     image1_viewer_module_entry.cpp
 fi
+if [ "$enable_markdown" -eq 1 ]; then
+  build_module markdown System/MARKDOWN.APP markdown-viewer \
+    MK61_BUILD_MARKDOWN_MODULE "$sketch_dir" T2 \
+    markdown_document.cpp wbmp.cpp markdown_viewer.cpp \
+    markdown_viewer_module_entry.cpp
+fi
 if [ "$enable_chip8" -eq 1 ]; then
   build_module chip8 System/CHIP8.APP chip8 MK61_BUILD_CHIP8_MODULE \
     "$sketch_dir" C1 chip8.cpp chip8_runner.cpp chip8_module_entry.cpp
@@ -665,6 +674,7 @@ mkdir -p "$bundle_dir"
 # сборки этого же профиля.
 rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/BASIC.APP" "$bundle_dir/System/WBMP.APP" \
+      "$bundle_dir/System/MARKDOWN.APP" \
       "$bundle_dir/System/CHIP8.APP" \
       "$bundle_dir/$firmware_name" "$bundle_dir/build.apps"
 if [ -d "$bundle_dir/System" ]; then

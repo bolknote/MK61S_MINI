@@ -2,8 +2,9 @@
   #include "config.h"
 #endif
 
-#if !defined(ARDUINO) || MK61_WBMP_VIEWER_IS_BUILTIN || \
-    defined(MK61_BUILD_WBMP_MODULE)
+#if !defined(ARDUINO) || MK61_WBMP_DECODER_IS_BUILTIN || \
+    defined(MK61_BUILD_WBMP_MODULE) || \
+    (defined(MK61_BUILD_MARKDOWN_MODULE) && MK61_HAS_COMPILED_GRAPHICS)
 
 #include "wbmp.hpp"
 
@@ -114,6 +115,12 @@ Status inspect(const u8* data, usize size, Info& info) {
     }
   }
   return Status::OK;
+}
+
+bool dark_pixel(const u8* data, usize size, const Info& info, u32 x, u32 y) {
+  return data != NULL && info_matches(info, size) &&
+         x < info.width && y < info.height &&
+         source_dark(data + info.pixel_offset, info, x, y);
 }
 
 Status decode_viewport(const u8* data, usize size, const Info& info,

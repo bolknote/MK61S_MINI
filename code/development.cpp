@@ -3,6 +3,7 @@
 #include "Arduino.h"
 #include "bounded_string.hpp"
 #include "config.h"
+#include "explorer_autoexec.hpp"
 #include "file_handlers.hpp"
 #include "cross_hal.h"
 #include "focal.hpp"
@@ -889,13 +890,16 @@ static bool apply_font_entry(const program_store::Entry& entry) {
 }
 
 static bool view_entry(const program_store::Entry& entry) {
-  if(entry.type == program_store::ProgramType::IMAGE1) {
+  if(entry.type == program_store::ProgramType::IMAGE1 ||
+     entry.type == program_store::ProgramType::MARKDOWN) {
     const loadable_module::FileOpenResult result =
         file_handlers::open(entry);
     if(result == loadable_module::FileOpenResult::OK) return true;
 
-    const char* en = "Image error";
-    const char* ru = "Ошибка картинки";
+    const bool markdown =
+        entry.type == program_store::ProgramType::MARKDOWN;
+    const char* en = markdown ? "Markdown error" : "Image error";
+    const char* ru = markdown ? "Ошибка Markdown" : "Ошибка картинки";
     if(result == loadable_module::FileOpenResult::BUSY) {
       en = "Busy";
       ru = "Занято";
@@ -903,8 +907,8 @@ static bool view_entry(const program_store::Entry& entry) {
       en = "Read error";
       ru = "Ошибка чтения";
     } else if(result == loadable_module::FileOpenResult::INVALID_FILE) {
-      en = "Invalid WBMP";
-      ru = "Неверный WBMP";
+      en = markdown ? "Invalid Markdown" : "Invalid WBMP";
+      ru = markdown ? "Неверный Markdown" : "Неверный WBMP";
     } else if(result == loadable_module::FileOpenResult::RUNTIME_ERROR) {
       en = "Display error";
       ru = "Ошибка экрана";
@@ -1671,6 +1675,7 @@ static bool entry_can_run(const program_store::Entry& entry) {
 #endif
     case program_store::ProgramType::IMAGE1:
     case program_store::ProgramType::CHIP8:
+    case program_store::ProgramType::MARKDOWN:
       return file_handlers::available(entry);
     default:
       return false;
@@ -1758,7 +1763,8 @@ static bool run_entry(const program_store::Entry& entry) {
       loadable_module::FileOpenResult::OK;
   const bool file_handler =
       entry.type == program_store::ProgramType::IMAGE1 ||
-      entry.type == program_store::ProgramType::CHIP8;
+      entry.type == program_store::ProgramType::CHIP8 ||
+      entry.type == program_store::ProgramType::MARKDOWN;
   const bool ok = entry.type == program_store::ProgramType::FONT
     ? apply_font_entry(entry)
     : file_handler
@@ -1778,6 +1784,12 @@ static bool run_entry(const program_store::Entry& entry) {
     delay(700);
   }
   return ok;
+}
+
+static bool run_directory_autoexec(u16 directory_id) {
+  program_store::Entry autoexec = {};
+  return explorer_autoexec::find(directory_id, autoexec) &&
+         run_entry(autoexec);
 }
 
 static bool load_mk61_entry(const program_store::Entry& entry) {
@@ -2114,6 +2126,9 @@ bool program_store_explorer_select(void) {
           active = 0;
           explorer_search_reset(search);
           explorer_scroll_reset(scroll);
+          if(run_directory_autoexec(directory_id)) {
+            return action::MENU_EXIT;
+          }
         } else if(entry_can_load(entry)) {
           if(load_mk61_entry(entry)) return action::MENU_EXIT;
         } else if(entry_can_run(entry)) {

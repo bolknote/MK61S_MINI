@@ -42,7 +42,10 @@ enum class ProgramType : u8 {
   APP = 8,
   // Значение 1 принадлежало удалённому BASIC и намеренно не используется
   // повторно: старые каталоги должны оставаться однозначными.
-  CHIP8 = 9
+  CHIP8 = 9,
+  // T2: UTF-8 Markdown. Тип сканируется по inode и не расширяет сохранённый
+  // массив счётчиков каталога, поэтому существующие тома C5 не мигрируют.
+  MARKDOWN = 10
 };
 
 using TypeMagic = u16;
@@ -54,6 +57,7 @@ constexpr TypeMagic make_type_magic(char family, char subtype) {
 static constexpr TypeMagic TYPE_MAGIC_NONE = 0;
 static constexpr TypeMagic TYPE_MAGIC_IMAGE1 = make_type_magic('I', '1');
 static constexpr TypeMagic TYPE_MAGIC_CHIP8 = make_type_magic('C', '1');
+static constexpr TypeMagic TYPE_MAGIC_MARKDOWN = make_type_magic('T', '2');
 
 enum class NodeKind : u8 {
   FILE = 0,

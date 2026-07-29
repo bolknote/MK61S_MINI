@@ -16,6 +16,7 @@ param(
     [string]$Focal,
     [string]$Basic,
     [string]$Wbmp,
+    [string]$Markdown,
     [string]$Chip8,
     [string]$CompileFlags
 )
@@ -299,7 +300,8 @@ function Build-Mk61Bundle {
         Stop-Mk61Build 'Arduino project or bundle name is missing'
     }
     if ($Focal -notmatch '^[01]$' -or $Basic -notmatch '^[01]$' -or
-        $Wbmp -notmatch '^[01]$' -or $Chip8 -notmatch '^[01]$') {
+        $Wbmp -notmatch '^[01]$' -or $Markdown -notmatch '^[01]$' -or
+        $Chip8 -notmatch '^[01]$') {
         Stop-Mk61Build 'System APP selections must be 0 or 1'
     }
 
@@ -350,6 +352,11 @@ function Build-Mk61Bundle {
         Build-Mk61Module 'wbmp' 'WBMP.APP' 3 `
             'mk61_ide_wbmp_module_entry' 'mk61_ide_wbmp_app.cpp.o' 0x3149
     }
+    if ($Markdown -eq '1') {
+        Build-Mk61Module 'markdown' 'MARKDOWN.APP' 6 `
+            'mk61_ide_markdown_module_entry' `
+            'mk61_ide_markdown_app.cpp.o' 0x3254
+    }
     if ($Chip8 -eq '1') {
         Build-Mk61Module 'chip8' 'CHIP8.APP' 5 `
             'mk61_ide_chip8_module_entry' 'mk61_ide_chip8_app.cpp.o' 0x3143
@@ -362,7 +369,7 @@ function Build-Mk61Bundle {
     Copy-Item -LiteralPath (Join-Path $script:Stage "$Bundle.bin") `
         -Destination (Join-Path $output "$Bundle.bin") -Force
     foreach ($canonical in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
     )) {
         $source = Join-Path (Join-Path $script:Stage 'System') $canonical
         $target = Join-Path $outputSystem $canonical

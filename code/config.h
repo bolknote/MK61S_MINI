@@ -115,6 +115,15 @@
   #error "MK61_ENABLE_WBMP_VIEWER requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
 #endif
 
+// T2/.md доступен на любом экране: LCD1602 получает семантический plain text,
+// UC1609 и USB-экран — форматированный монохромный документ с WBMP-блоками.
+#ifndef MK61_ENABLE_MARKDOWN_VIEWER
+  #define MK61_ENABLE_MARKDOWN_VIEWER 1
+#endif
+#if MK61_ENABLE_MARKDOWN_VIEWER != 0 && MK61_ENABLE_MARKDOWN_VIEWER != 1
+  #error "MK61_ENABLE_MARKDOWN_VIEWER must be 0 or 1"
+#endif
+
 // Консоль CHIP-8 выключена по умолчанию. C1 — двухбайтовый magic типа C5;
 // .ch8 хранит стандартный сырой ROM без дополнительного заголовка.
 #ifndef MK61_ENABLE_CHIP8
@@ -129,7 +138,7 @@
 
 // F401CC вмещает основную прошивку, но почти не оставляет запаса во внутренней
 // Flash для всех необязательных рантаймов. Поэтому его штатный профиль хранит
-// включённые FOCAL, TinyBASIC и просмотрщик WBMP как загружаемые APP в C5.
+// включённые FOCAL, TinyBASIC, WBMP и Markdown как загружаемые APP в C5.
 // Остальные контроллеры сохраняют прежнюю встроенную компоновку. Явный ключ
 // -DMK61_ENABLE_LOADABLE_MODULES=0/1 всегда имеет приоритет над профилем платы.
 #ifndef MK61_ENABLE_LOADABLE_MODULES
@@ -146,13 +155,15 @@
 // Ключ каждого системного компонента остаётся главным: выключенный компонент
 // не получает ни встроенной реализации, ни APP-артефакта.
 // Сам MK61_ENABLE_LOADABLE_MODULES включает общий загрузчик пользовательских
-// APP и единый SRAM-overlay даже тогда, когда все три системных APP выключены.
+// APP и единый SRAM-overlay даже тогда, когда все системные APP выключены.
 #define MK61_FOCAL_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_FOCAL)
 #define MK61_TINYBASIC_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_TINYBASIC)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_WBMP_VIEWER)
+#define MK61_MARKDOWN_VIEWER_IS_LOADABLE \
+  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_MARKDOWN_VIEWER)
 #define MK61_CHIP8_IS_LOADABLE \
   (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_CHIP8)
 #define MK61_ANY_LOADABLE_MODULE (MK61_ENABLE_LOADABLE_MODULES)
@@ -163,11 +174,23 @@
   (MK61_ENABLE_TINYBASIC && !MK61_ENABLE_LOADABLE_MODULES)
 #define MK61_WBMP_VIEWER_IS_BUILTIN \
   (MK61_ENABLE_WBMP_VIEWER && !MK61_ENABLE_LOADABLE_MODULES)
+#define MK61_MARKDOWN_VIEWER_IS_BUILTIN \
+  (MK61_ENABLE_MARKDOWN_VIEWER && !MK61_ENABLE_LOADABLE_MODULES)
 #define MK61_CHIP8_IS_BUILTIN \
   (MK61_ENABLE_CHIP8 && !MK61_ENABLE_LOADABLE_MODULES)
 
+// Markdown uses the WBMP decoder for local image blocks on a graphical
+// display, but never depends on WBMP.APP: loadable APPs share one overlay and
+// cannot call one another. The decoder is linked into the Markdown component.
+#define MK61_MARKDOWN_USES_WBMP \
+  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_COMPILED_GRAPHICS)
+#define MK61_WBMP_DECODER_IS_BUILTIN \
+  (MK61_WBMP_VIEWER_IS_BUILTIN || \
+   (MK61_MARKDOWN_VIEWER_IS_BUILTIN && MK61_MARKDOWN_USES_WBMP))
+
 #define MK61_ANY_FULLSCREEN_FILE \
-  (MK61_ENABLE_WBMP_VIEWER || MK61_ENABLE_CHIP8)
+  (MK61_ENABLE_WBMP_VIEWER || MK61_ENABLE_CHIP8 || \
+   (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_COMPILED_GRAPHICS))
 
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
 // графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.

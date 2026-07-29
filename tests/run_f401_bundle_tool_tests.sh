@@ -10,6 +10,7 @@ test -x "$tool"
 bash -n "$tool"
 "$tool" --help | grep -q -- '--profile ID'
 "$tool" --help | grep -q 'MK61_ENABLE_WBMP_VIEWER'
+"$tool" --help | grep -q 'MK61_ENABLE_MARKDOWN_VIEWER'
 "$tool" --help | grep -q 'MK61_ENABLE_CHIP8'
 "$tool" --help | grep -q -- '--app-manifest FILE'
 
@@ -154,6 +155,7 @@ mkdir -p "$bundle/Apps"
 printf 'stale' > "$bundle/System/FOCAL.APP"
 printf 'stale' > "$bundle/System/BASIC.APP"
 printf 'stale' > "$bundle/System/WBMP.APP"
+printf 'stale' > "$bundle/System/MARKDOWN.APP"
 printf 'stale' > "$bundle/System/CHIP8.APP"
 printf 'stale' > "$bundle/Apps/STALE.APP"
 
@@ -163,6 +165,7 @@ MK61_OUTPUT_DIR="$work/output" \
 MK61_ENABLE_FOCAL=0 \
 MK61_ENABLE_TINYBASIC=0 \
 MK61_ENABLE_WBMP_VIEWER=0 \
+MK61_ENABLE_MARKDOWN_VIEWER=0 \
 MK61_ENABLE_CHIP8=0 \
   "$tool" --profile mini-v3-a00 > "$work/output.log"
 
@@ -172,9 +175,11 @@ test -s "$bundle/build.apps"
 test ! -e "$bundle/System/FOCAL.APP"
 test ! -e "$bundle/System/BASIC.APP"
 test ! -e "$bundle/System/WBMP.APP"
+test ! -e "$bundle/System/MARKDOWN.APP"
 test ! -e "$bundle/System/CHIP8.APP"
 test ! -e "$bundle/Apps/STALE.APP"
 grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
+grep -q -- '-DMK61_ENABLE_MARKDOWN_VIEWER=0' "$bundle/build.flags"
 grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
 grep -q '^format 1$' "$bundle/build.apps"
 grep -q 'Built F401 bundle:' "$work/output.log"

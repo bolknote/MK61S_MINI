@@ -15,6 +15,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/tests/program_store_shim" \
   -I"$root/code" \
   "$root/tests/program_store_self_test.cpp" \
+  "$root/code/explorer_autoexec.cpp" \
   "$root/code/loadable_module_system_app.cpp" \
   "$root/code/loadable_module_format.cpp" \
   "$root/code/program_store.cpp" \

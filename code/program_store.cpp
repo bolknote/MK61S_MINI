@@ -486,12 +486,14 @@ static int type_index(ProgramType type) {
     case ProgramType::IMAGE1: return 6;
     case ProgramType::APP: return -1; // счётчик APP вычисляется по inode
     case ProgramType::CHIP8: return -1; // счётчик CHIP-8 вычисляется по inode
+    case ProgramType::MARKDOWN: return -1; // новый тип без миграции каталога
   }
   return -1;
 }
 
 static bool supported_type(ProgramType type) {
   return type == ProgramType::APP || type == ProgramType::CHIP8 ||
+         type == ProgramType::MARKDOWN ||
          type_index(type) >= 0;
 }
 
@@ -514,6 +516,7 @@ static const char* extension_for_type(ProgramType type) {
     case ProgramType::IMAGE1: return "wbmp";
     case ProgramType::APP: return "app";
     case ProgramType::CHIP8: return "ch8";
+    case ProgramType::MARKDOWN: return "md";
   }
   return "bin";
 }
@@ -529,6 +532,7 @@ static const char* magic_for_type(ProgramType type) {
     case ProgramType::IMAGE1: return "I1";
     case ProgramType::APP: return "A1";
     case ProgramType::CHIP8: return "C1";
+    case ProgramType::MARKDOWN: return "T2";
   }
   return "??";
 }
@@ -2278,7 +2282,8 @@ bool type_from_magic(TypeMagic magic, ProgramType& type) {
     ProgramType::FONT,
     ProgramType::IMAGE1,
     ProgramType::APP,
-    ProgramType::CHIP8
+    ProgramType::CHIP8,
+    ProgramType::MARKDOWN
   };
   for(const ProgramType candidate : TYPES) {
     if(type_magic(candidate) != magic) continue;
@@ -2294,7 +2299,7 @@ int count(ProgramType type) {
   const int index = type_index(type);
   if(!g_ready) return 0;
   if(index >= 0) return g_meta.type_count[index];
-  if(type != ProgramType::APP && type != ProgramType::CHIP8) return 0;
+  if(!supported_type(type)) return 0;
   int result = 0;
   for(u16 id = 0; id < g_geometry.max_nodes; id++) {
     Inode inode;

@@ -793,6 +793,42 @@ static void test_wbmp_import_uses_its_full_quota(void) {
   expect_file(image.id, clusters, program_store::MAX_IMAGE1_SIZE);
 }
 
+static void test_markdown_import_keeps_t2_type(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 220;
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'R','E','A','D','M','E',' ',' ','M','D',' '};
+  static const u8 payload[] = "# Read me\n\n**Markdown**\n";
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "readme.md", short_name,
+      false, file_cluster, sizeof(payload) - 1U);
+  root[(u16) slot * 32U] = 0;
+
+  u8 data[512] = {};
+  memcpy(data, payload, sizeof(payload) - 1U);
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), data));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  expect_flush();
+
+  program_store::Entry entry = {};
+  assert(program_store::entry_by_id((u16) (file_cluster - 2U), entry));
+  assert(entry.type == program_store::ProgramType::MARKDOWN);
+  assert(strcmp(entry.name, "readme") == 0);
+  expect_file(entry.id, payload, sizeof(payload) - 1U);
+
+  assert(virtual_fat::reset_session());
+  assert(program_store::count(program_store::ProgramType::MARKDOWN) == 1);
+}
+
 static void test_wbmp_over_quota_is_rejected(void) {
   fresh();
   const Layout fs = layout();
@@ -1377,6 +1413,7 @@ int main(void) {
   test_host_deletes_file_via_directory();
   test_incomplete_file_preflight_preserves_existing_tree();
   test_finder_appledouble_does_not_abort_batch();
+  test_markdown_import_keeps_t2_type();
   test_wbmp_import_uses_its_full_quota();
   test_wbmp_over_quota_is_rejected();
   test_wbmp_short_name_alias();

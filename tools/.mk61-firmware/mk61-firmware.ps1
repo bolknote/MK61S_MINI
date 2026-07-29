@@ -80,6 +80,7 @@ $script:State = [ordered]@{
     EnableFocal = 1
     EnableTinyBasic = 1
     EnableWbmp = 0
+    EnableMarkdown = 1
     EnableChip8 = 0
     EnableUsbScreen = 0
     EnableFonts = 0
@@ -280,6 +281,7 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_FOCAL=$($script:State.EnableFocal)"
         "-DMK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)"
         "-DMK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "-DMK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "-DMK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
@@ -301,10 +303,11 @@ function Get-Checkbox {
 }
 
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP  {3} CHIP-8  {4} USB  {5} шрифты  {6} USER  {7} CORE math' -f
+    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP  {3} Markdown  {4} CHIP-8  {5} USB  {6} шрифты  {7} USER  {8} CORE math' -f
         (Get-Checkbox $script:State.EnableFocal),
         (Get-Checkbox $script:State.EnableTinyBasic),
         (Get-Checkbox $script:State.EnableWbmp),
+        (Get-Checkbox $script:State.EnableMarkdown),
         (Get-Checkbox $script:State.EnableChip8),
         (Get-Checkbox $script:State.EnableUsbScreen),
         (Get-Checkbox $script:State.EnableFonts),
@@ -322,6 +325,7 @@ function Get-CompileOptionsDetails {
         "$(Get-Checkbox $script:State.EnableFocal) FOCAL (MK61_ENABLE_FOCAL)"
         "$(Get-Checkbox $script:State.EnableTinyBasic) TinyBASIC (MK61_ENABLE_TINYBASIC)"
         "$(Get-Checkbox $script:State.EnableWbmp) WBMP viewer (MK61_ENABLE_WBMP_VIEWER)"
+        "$(Get-Checkbox $script:State.EnableMarkdown) Markdown viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
         "$(Get-Checkbox $script:State.EnableChip8) CHIP-8 (MK61_ENABLE_CHIP8)"
         "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
         "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
@@ -347,6 +351,7 @@ function Save-Config {
         "MK61_ENABLE_FOCAL=$($script:State.EnableFocal)"
         "MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)"
         "MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
+        "MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "MK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
         "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
@@ -393,6 +398,7 @@ function Load-Config {
             'MK61_ENABLE_FOCAL' { if (Test-BooleanValue $value) { $script:State.EnableFocal = [int]$value } }
             'MK61_ENABLE_TINYBASIC' { if (Test-BooleanValue $value) { $script:State.EnableTinyBasic = [int]$value } }
             'MK61_ENABLE_WBMP_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableWbmp = [int]$value } }
+            'MK61_ENABLE_MARKDOWN_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableMarkdown = [int]$value } }
             'MK61_ENABLE_CHIP8' { if (Test-BooleanValue $value) { $script:State.EnableChip8 = [int]$value } }
             'MK61_ENABLE_USB_SCREEN' { if (Test-BooleanValue $value) { $script:State.EnableUsbScreen = [int]$value } }
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
@@ -1063,6 +1069,7 @@ function Test-SystemAppsEnabled {
     return $script:State.EnableFocal -eq 1 -or
         $script:State.EnableTinyBasic -eq 1 -or
         $script:State.EnableWbmp -eq 1 -or
+        $script:State.EnableMarkdown -eq 1 -or
         $script:State.EnableChip8 -eq 1
 }
 
@@ -1081,12 +1088,14 @@ function Get-ExpectedSystemAppNames {
     if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
     if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
     if ($script:State.EnableWbmp -eq 1) { $names.Add('WBMP.APP') }
+    if ($script:State.EnableMarkdown -eq 1) { $names.Add('MARKDOWN.APP') }
     if ($script:State.EnableChip8 -eq 1) { $names.Add('CHIP8.APP') }
     return $names.ToArray()
 }
 
 function Get-AllSystemAppNames {
-    return [string[]]@('FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'CHIP8.APP')
+    return [string[]]@(
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP')
 }
 
 function Find-BashExecutable {
@@ -1131,6 +1140,7 @@ function Get-F401GccOptionArguments {
         '-Focal', [string]$script:State.EnableFocal,
         '-Basic', [string]$script:State.EnableTinyBasic,
         '-Wbmp', [string]$script:State.EnableWbmp,
+        '-Markdown', [string]$script:State.EnableMarkdown,
         '-Chip8', [string]$script:State.EnableChip8,
         '-UsbScreen', [string]$script:State.EnableUsbScreen,
         '-ExtendedFontSettings', [string]$script:State.EnableFonts,
@@ -1796,6 +1806,7 @@ function Choose-CompileOptions {
         [pscustomobject]@{ Tag = 'focal'; Label = 'FOCAL · MK61_ENABLE_FOCAL'; State = if ($script:State.EnableFocal) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'tinybasic'; Label = 'TinyBASIC · MK61_ENABLE_TINYBASIC'; State = if ($script:State.EnableTinyBasic) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'wbmp'; Label = 'WBMP viewer · MK61_ENABLE_WBMP_VIEWER'; State = if ($script:State.EnableWbmp) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'markdown'; Label = 'Markdown viewer · MK61_ENABLE_MARKDOWN_VIEWER'; State = if ($script:State.EnableMarkdown) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'chip8'; Label = 'CHIP-8 · MK61_ENABLE_CHIP8'; State = if ($script:State.EnableChip8) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'usb_screen'; Label = 'USB-экран · MK61_ENABLE_USB_SCREEN'; State = if ($script:State.EnableUsbScreen) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'fonts'; Label = 'Расширенные настройки шрифта'; State = if ($script:State.EnableFonts) { 'on' } else { 'off' } }
@@ -1808,6 +1819,7 @@ function Choose-CompileOptions {
     $script:State.EnableFocal = [int]($result.Values -contains 'focal')
     $script:State.EnableTinyBasic = [int]($result.Values -contains 'tinybasic')
     $script:State.EnableWbmp = [int]($result.Values -contains 'wbmp')
+    $script:State.EnableMarkdown = [int]($result.Values -contains 'markdown')
     $script:State.EnableChip8 = [int]($result.Values -contains 'chip8')
     $script:State.EnableUsbScreen = [int]($result.Values -contains 'usb_screen')
     $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
@@ -1883,6 +1895,7 @@ function Invoke-F401CustomBundleBuild {
         MK61_ENABLE_FOCAL = [string]$script:State.EnableFocal
         MK61_ENABLE_TINYBASIC = [string]$script:State.EnableTinyBasic
         MK61_ENABLE_WBMP_VIEWER = [string]$script:State.EnableWbmp
+        MK61_ENABLE_MARKDOWN_VIEWER = [string]$script:State.EnableMarkdown
         MK61_ENABLE_CHIP8 = [string]$script:State.EnableChip8
         MK61_ENABLE_USB_SCREEN = [string]$script:State.EnableUsbScreen
         MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
@@ -2375,6 +2388,7 @@ function Show-Config {
     [Console]::WriteLine("MK61_ENABLE_FOCAL=$($script:State.EnableFocal)")
     [Console]::WriteLine("MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)")
     [Console]::WriteLine("MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)")
+    [Console]::WriteLine("MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)")
     [Console]::WriteLine("MK61_ENABLE_CHIP8=$($script:State.EnableChip8)")
     [Console]::WriteLine("MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)")
     [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")

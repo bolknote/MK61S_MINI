@@ -39,8 +39,9 @@ clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
 
 clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
   -DMK61_ENABLE_FOCAL=0 -DMK61_ENABLE_TINYBASIC=0 \
-  -DMK61_ENABLE_WBMP_VIEWER=0 \
+  -DMK61_ENABLE_WBMP_VIEWER=0 -DMK61_ENABLE_MARKDOWN_VIEWER=0 \
   -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_WBMP_DISABLED \
+  -DMK61_CONFIG_EXPECT_MARKDOWN_DISABLED \
   -DMK61_CONFIG_EXPECT_NO_MODULE_ARTIFACTS \
   -o "$out-f401-no-modules"
 "$out-f401-no-modules"
@@ -98,6 +99,13 @@ if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
     -DMK61_ENABLE_WBMP_VIEWER=2 -o "$out-invalid-wbmp" \
     >/dev/null 2>&1; then
   echo "invalid WBMP viewer flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_MARKDOWN_VIEWER=2 -o "$out-invalid-markdown" \
+    >/dev/null 2>&1; then
+  echo "invalid Markdown viewer flag unexpectedly compiled" >&2
   exit 1
 fi
 

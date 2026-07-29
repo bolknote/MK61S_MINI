@@ -15,12 +15,13 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
     ├── FOCAL.APP
     ├── BASIC.APP
     ├── WBMP.APP
+    ├── MARKDOWN.APP
     └── CHIP8.APP
 ```
 
-Это штатные FOCAL, TinyBASIC, просмотрщик WBMP и консоль CHIP-8. Создавать
-пользовательский `HELLO`, manifest `app.mk61` или менять прошивку для этого не
-нужно.
+Это штатные FOCAL, TinyBASIC, просмотрщики WBMP и Markdown и консоль CHIP-8.
+Создавать пользовательский `HELLO`, manifest `app.mk61` или менять прошивку
+для этого не нужно.
 
 ## Зависимости
 
@@ -86,7 +87,8 @@ IDE.
    `mini V3`, `mini V2`, `Classic V3`, `Classic V2` или `40th`.
 4. Отдельно выберите экран:
    `LCD1602 · CGROM A00`, `LCD1602 · CGROM A02` или `UC1609`.
-5. Выберите `APP` или `Выключен` для FOCAL, TinyBASIC, WBMP viewer и CHIP-8.
+5. Выберите `APP` или `Выключен` для FOCAL, TinyBASIC, WBMP viewer,
+   Markdown viewer и CHIP-8.
 6. При необходимости задайте USB-экран, расширенные настройки шрифта,
    быстрый Explorer и математический backend.
 
@@ -114,7 +116,7 @@ LCD1602 и включённым USB-экраном APP собираются, н�
 
 - `.bin` resident-прошивки;
 - только включённые `System/FOCAL.APP`, `System/BASIC.APP`,
-  `System/WBMP.APP`, `System/CHIP8.APP`;
+  `System/WBMP.APP`, `System/MARKDOWN.APP`, `System/CHIP8.APP`;
 - `build.flags` с точными compile-time ключами.
 
 Повторная сборка того же профиля удаляет из результата канонический System APP,
@@ -152,7 +154,7 @@ LTO и host-упаковщик ZX0. Он оставлен для пользов�
 
 Канонический путь `tools/mk61-firmware.cmd` на Windows и macOS/Linux вызывает
 `tools/build-gcc.cmd`, использует ARM-компилятор STM32 Core и контейнер `NONE`,
-но собирает исходники всех четырёх модулей из отдельного каталога
+но собирает исходники всех пяти модулей из отдельного каталога
 `system_apps/`. Если важна сборка одной кнопкой в Arduino IDE, используйте эту
 плату; если нужны custom manifest APP или ZX0 — legacy-сборщик.
 

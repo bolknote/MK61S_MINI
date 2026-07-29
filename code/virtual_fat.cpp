@@ -225,6 +225,7 @@ static const char* short_extension(program_store::ProgramType type) {
     case program_store::ProgramType::IMAGE1: return "WBM";
     case program_store::ProgramType::APP: return "APP";
     case program_store::ProgramType::CHIP8: return "CH8";
+    case program_store::ProgramType::MARKDOWN: return "MD ";
   }
   return "BIN";
 }
@@ -240,6 +241,7 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     {".foc", program_store::ProgramType::FOCAL},
     {".tbi", program_store::ProgramType::TINYBASIC},
     {".txt", program_store::ProgramType::TEXT},
+    {".md", program_store::ProgramType::MARKDOWN},
     {".t1", program_store::ProgramType::TEXT},
     {".m2", program_store::ProgramType::MK61_STATE},
     {".fmk", program_store::ProgramType::FONT},

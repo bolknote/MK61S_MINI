@@ -192,7 +192,8 @@ build_module() {
 
 build_bundle() {
   local compiler= objcopy= size_tool_arg= build_path_arg=
-  local sketch= project= bundle= focal= basic= wbmp= chip8= compile_flags=
+  local sketch= project= bundle= focal= basic= wbmp= markdown= chip8=
+  local compile_flags=
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --compiler)
@@ -215,6 +216,8 @@ build_bundle() {
         require_value "$@"; basic=$2; shift 2 ;;
       --wbmp)
         require_value "$@"; wbmp=$2; shift 2 ;;
+      --markdown)
+        require_value "$@"; markdown=$2; shift 2 ;;
       --chip8)
         require_value "$@"; chip8=$2; shift 2 ;;
       --compile-flags)
@@ -230,8 +233,8 @@ build_bundle() {
     die 'Arduino build path was not found'
   [ -n "$project" ] && [ -n "$bundle" ] ||
     die 'Arduino project or bundle name is missing'
-  case "$focal:$basic:$wbmp:$chip8" in
-    [01]:[01]:[01]:[01]) ;;
+  case "$focal:$basic:$wbmp:$markdown:$chip8" in
+    [01]:[01]:[01]:[01]:[01]) ;;
     *) die 'System APP selections must be 0 or 1' ;;
   esac
 
@@ -262,6 +265,9 @@ build_bundle() {
   [ "$wbmp" -eq 0 ] ||
     build_module wbmp WBMP.APP 3 mk61_ide_wbmp_module_entry \
       mk61_ide_wbmp_app.cpp.o 12617
+  [ "$markdown" -eq 0 ] ||
+    build_module markdown MARKDOWN.APP 6 mk61_ide_markdown_module_entry \
+      mk61_ide_markdown_app.cpp.o 12884
   [ "$chip8" -eq 0 ] ||
     build_module chip8 CHIP8.APP 5 mk61_ide_chip8_module_entry \
       mk61_ide_chip8_app.cpp.o 12611
@@ -270,7 +276,7 @@ build_bundle() {
   output="$output_root/$bundle"
   mkdir -p "$output/System"
   cp "$stage/$bundle.bin" "$output/$bundle.bin"
-  for canonical in FOCAL.APP BASIC.APP WBMP.APP CHIP8.APP; do
+  for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP; do
     if [ -f "$stage/System/$canonical" ]; then
       cp "$stage/System/$canonical" "$output/System/$canonical"
     else

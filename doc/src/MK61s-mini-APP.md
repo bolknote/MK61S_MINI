@@ -12,11 +12,12 @@ STM32F401CC: исходный код, manifest, стабильный resident AP
 различает:
 
 - пользовательское приложение `APPLICATION`;
-- системные компоненты FOCAL, TinyBASIC, WBMP viewer и консоль CHIP-8.
+- системные компоненты FOCAL, TinyBASIC, WBMP viewer, Markdown viewer и
+  консоль CHIP-8.
 
 Отдельных расширений `.MOD` или `.MKA` нет. Системные файлы имеют канонические
-пути `/System/FOCAL.APP`, `/System/BASIC.APP`, `/System/WBMP.APP` и
-`/System/CHIP8.APP`.
+пути `/System/FOCAL.APP`, `/System/BASIC.APP`, `/System/WBMP.APP`,
+`/System/MARKDOWN.APP` и `/System/CHIP8.APP`.
 Пользовательский APP можно хранить под любым допустимым именем в любом
 каталоге C5.
 
@@ -42,9 +43,9 @@ C5. При запуске она снова сверяет заголовок и
 
 ## Штатные APP через Arduino IDE
 
-Если нужны именно `FOCAL.APP`, `BASIC.APP`, `WBMP.APP` и `CHIP8.APP`, писать
-manifest или пример пользовательского приложения не требуется. Установите плату
-`MK61s F401 + APP`:
+Если нужны именно `FOCAL.APP`, `BASIC.APP`, `WBMP.APP`, `MARKDOWN.APP` и
+`CHIP8.APP`, писать manifest или пример пользовательского приложения не
+требуется. Установите плату `MK61s F401 + APP`:
 
 ```bash
 ./tools/mk61-arduino-board.cmd
@@ -75,7 +76,7 @@ host-компилятор C++17. Плата использует ARM-компи�
 
 ## Штатные APP через ARM toolchain
 
-Для командной сборки все четыре системных компонента вынесены в общий каталог:
+Для командной сборки все пять системных компонентов вынесены в общий каталог:
 
 ```text
 system_apps/
@@ -83,6 +84,7 @@ system_apps/
 ├── focal/main.cpp
 ├── basic/main.cpp
 ├── wbmp/main.cpp
+├── markdown/main.cpp
 └── chip8/main.cpp
 ```
 
@@ -93,9 +95,9 @@ system_apps/
 PowerShell создаёт контейнер `NONE` с CRC этого же resident BIN.
 
 Windows-порт `tools/mk61-firmware.cmd` вызывает этот сборщик автоматически для
-всех включённых FOCAL, TinyBASIC, WBMP и CHIP-8. Bash и host-компилятор C++
-для этого не нужны: используются `arm-none-eabi-g++`, `objcopy`, `nm` и
-`size` из установленного STM32 Core.
+всех включённых FOCAL, TinyBASIC, WBMP, Markdown и CHIP-8. Bash и
+host-компилятор C++ для этого не нужны: используются `arm-none-eabi-g++`,
+`objcopy`, `nm` и `size` из установленного STM32 Core.
 
 Инструмент можно запустить отдельно, если уже имеется каталог одной
 Arduino- или прямой CMake/GCC-сборки с resident `.elf`, `.bin` и
@@ -104,14 +106,15 @@ Arduino- или прямой CMake/GCC-сборки с resident `.elf`, `.bin` �
 ```bat
 system_apps\build.cmd ^
   -BuildPath C:\work\mk61-resident ^
-  -Focal 1 -Basic 1 -Wbmp 1 -Chip8 1
+  -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
 ```
 
 По умолчанию файлы появляются в `system_apps\System`; параметр
 `-OutputDirectory` задаёт другое место. `compile_commands.json` используется
 не как список готовых APP-объектов, а как надёжный источник версии ARM
 toolchain, include-путей и флагов конкретной resident-сборки. `WBMP.APP`
-объявляет обработчик типа `I1`, а `CHIP8.APP` — типа `C1`.
+объявляет обработчик типа `I1`, `MARKDOWN.APP` — `T2`, а `CHIP8.APP` —
+типа `C1`.
 
 ## Каталог приложения и manifest
 
@@ -393,6 +396,7 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
 │   ├── FOCAL.APP
 │   ├── BASIC.APP
 │   ├── WBMP.APP
+│   ├── MARKDOWN.APP
 │   └── CHIP8.APP
 └── Apps/
     ├── CLOCK.APP
@@ -423,8 +427,9 @@ MK61_APP_MANIFESTS=path/to/MYAPP/app.mk61 \
 ```
 
 Этот второй шаг синхронизирует только канонические файлы из `System`: копирует
-включённые и удаляет `FOCAL.APP`, `BASIC.APP`, `WBMP.APP` или `CHIP8.APP`, если
-соответствующий compile-time ключ выключен. Остальные файлы C5 он не трогает.
+включённые и удаляет `FOCAL.APP`, `BASIC.APP`, `WBMP.APP`, `MARKDOWN.APP` или
+`CHIP8.APP`, если соответствующий compile-time ключ выключен. Остальные файлы
+C5 он не трогает.
 Пользовательские файлы из `Apps` копируются вручную:
 
 1. откройте на MK61s `Меню → USB-диск`;
@@ -485,6 +490,8 @@ APP под каноническим системным именем в `/System`
 Для не-APP файла Проводник берёт двухбайтовую сигнатуру из его типа и вызывает
 зарегистрированный обработчик. Поэтому `open /Games/PONG.ch8` загружает
 `/System/CHIP8.APP`, а не пытается исполнять ROM как APP.
+Аналогично `open /Docs/readme.md` использует обработчик `T2` из
+`/System/MARKDOWN.APP`.
 
 ## Диагностика
 

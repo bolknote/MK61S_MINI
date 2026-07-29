@@ -26,6 +26,9 @@ static void test_type0_and_polarity(void) {
       wbmp::Layout::ROW_MAJOR_MSB, &output, sizeof(output)) ==
       wbmp::Status::OK);
   assert(output == 0x81); // WBMP 0 — чёрный; внутренний 1 — тёмный.
+  assert(wbmp::dark_pixel(image, sizeof(image), info, 0, 0));
+  assert(!wbmp::dark_pixel(image, sizeof(image), info, 1, 0));
+  assert(!wbmp::dark_pixel(image, sizeof(image), info, 8, 0));
 }
 
 static void test_multibyte_dimensions(void) {

@@ -109,8 +109,8 @@ Keys:
   Ctrl-O    last MK61s output
 
 The left command line runs through cmd.exe; the right one is sent to MK61s.
-Supported device files: .m61, .foc, .tbi, .txt, .state.txt, .fmk, .wbmp, .ch8, .app
-System apps live in /System; other APP containers may live in any directory.
+Supported device files: .m61, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .app
+System apps include /System/MARKDOWN.APP; other APP containers may live in any directory.
 '@
 }
 
@@ -581,6 +581,7 @@ function Get-UnsupportedReason {
         }
         elseif ($lower.EndsWith('.state.txt')) { $base = $name.Substring(0, $name.Length - 10) }
         elseif ($lower -match '\.(m61|foc|tbi|txt|fmk)$') { $base = $name.Substring(0, $name.Length - 4) }
+        elseif ($lower.EndsWith('.md')) { $base = $name.Substring(0, $name.Length - 3) }
         elseif ($lower.EndsWith('.wbmp')) { $base = $name.Substring(0, $name.Length - 5); $limit = 1600 }
         elseif ($lower.EndsWith('.ch8')) { $base = $name.Substring(0, $name.Length - 4); $limit = 3584; $minimum = 1 }
         elseif ($lower -match '\.(t1|m2)$') { $base = $name.Substring(0, $name.Length - 3) }

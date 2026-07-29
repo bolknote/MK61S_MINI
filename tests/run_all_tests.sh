@@ -16,6 +16,7 @@ fi
 "$root/tests/run_board_profile_tests.sh"
 "$root/tests/run_chip8_tests.sh"
 "$root/tests/run_wbmp_tests.sh"
+"$root/tests/run_markdown_document_tests.sh"
 "$root/tests/run_bounded_string_tests.sh"
 "$root/tests/run_dfu_splash_tests.sh"
 "$root/tests/run_display_font_tests.sh"

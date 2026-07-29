@@ -49,6 +49,7 @@ $session = Join-Path $tempRoot 'session'
 $navigation = Join-Path $tempRoot 'navigation'
 [void](New-Item -ItemType Directory -Path (Join-Path $navigation '.mkc') -Force)
 [IO.File]::WriteAllText((Join-Path $local 'demo.foc'), "2+2`n", [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $local 'manual.md'), "# Demo`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'blocked.bin'), 'raw', [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'Good/program.m61'), "001`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $local 'preview.wbmp'), [byte[]](0,0,8,2,15,240))
@@ -73,6 +74,8 @@ $navigation = Join-Path $tempRoot 'navigation'
 try {
     $supported = Invoke-MkcTool @('--classify', (Join-Path $local 'demo.foc'))
     Assert-True ($supported.ExitCode -eq 0 -and ($supported.Output -join '') -eq 'supported') 'PowerShell classifier rejected .foc'
+    $markdown = Invoke-MkcTool @('--classify', (Join-Path $local 'manual.md'))
+    Assert-True ($markdown.ExitCode -eq 0 -and ($markdown.Output -join '') -eq 'supported') 'PowerShell classifier rejected .md'
     $systemApp = Invoke-MkcTool @('--classify', (Join-Path $local 'FOCAL.APP'))
     Assert-True ($systemApp.ExitCode -eq 0 -and ($systemApp.Output -join '') -eq 'supported') 'PowerShell classifier rejected FOCAL.APP'
     $app = Invoke-MkcTool @('--classify', (Join-Path $local 'DEMO.APP'))

@@ -83,6 +83,19 @@ fi
 
 "$out" "$work/chip8.app" "$work/image.bin" "$work/resident.bin" chip8
 
+"$packer" \
+  --kind markdown-viewer \
+  --resident "$work/resident.bin" \
+  --image "$work/image.bin" \
+  --memory-size 10512 \
+  --entry-offset 0 \
+  --load-address 0x2000B000 \
+  --handled-magic T2 \
+  --require-zx0 \
+  --output "$work/markdown.app"
+
+"$out" "$work/markdown.app" "$work/image.bin" "$work/resident.bin" markdown
+
 if "$packer" \
     --kind chip8 \
     --resident "$work/resident.bin" \

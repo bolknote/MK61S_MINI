@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "SPIFlash.h"
+#include "explorer_autoexec.hpp"
 #include "ledcontrol.h"
 #include "loadable_module_system_app.hpp"
 #include "program_store.hpp"
@@ -151,6 +152,48 @@ static void test_chip8_type_roundtrip_and_quota(void) {
   assert(program_store::entry_by_id(id, rom));
   assert(rom.type == ProgramType::CHIP8);
   assert(rom.data_len == program_store::MAX_CHIP8_SIZE);
+}
+
+static void test_markdown_type_roundtrip_without_catalog_migration(void) {
+  fresh();
+  static const u8 source[] =
+      "# Manual\n\n**Bold**, ~~old~~ and ![screen](screen.wbmp).\n";
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::MARKDOWN, "manual", source,
+      (u16) (sizeof(source) - 1U), &id));
+  assert(program_store::count(ProgramType::MARKDOWN) == 1);
+  assert(strcmp(program_store::file_extension(ProgramType::MARKDOWN),
+                "md") == 0);
+  assert(program_store::type_magic(ProgramType::MARKDOWN) ==
+         program_store::TYPE_MAGIC_MARKDOWN);
+  assert(strcmp(program_store::type_magic_text(ProgramType::MARKDOWN),
+                "T2") == 0);
+  ProgramType decoded = ProgramType::TEXT;
+  assert(program_store::type_from_magic(
+      program_store::TYPE_MAGIC_MARKDOWN, decoded));
+  assert(decoded == ProgramType::MARKDOWN);
+  expect_text(id, source, sizeof(source) - 1U);
+
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::count(ProgramType::MARKDOWN) == 1);
+  Entry entry = {};
+  assert(program_store::entry(ProgramType::MARKDOWN, 0, entry));
+  assert(entry.id == id);
+  assert(entry.type == ProgramType::MARKDOWN);
+  assert(entry.data_len == sizeof(source) - 1U);
+
+  Entry resolved = {};
+  assert(storage_path::resolve_file(
+      program_store::ROOT_ID, "manual.md", resolved) ==
+      storage_path::Status::OK);
+  assert(resolved.id == id);
+  char path[64];
+  assert(storage_path::format_entry(entry, path, sizeof(path)) ==
+         storage_path::Status::OK);
+  assert(strcmp(path, "/manual.md") == 0);
 }
 
 static void expect_text(const char* name, const char* expected) {
@@ -405,6 +448,36 @@ static void test_paths_and_recursive_tree_operations(void) {
   program_store::init();
   assert(program_store::child_count(program_store::ROOT_ID) == 1);
   assert(by_id(archive).kind == NodeKind::DIRECTORY);
+}
+
+static void test_explorer_autoexec_is_a_direct_m61_child(void) {
+  fresh();
+  u16 app = program_store::INVALID_ID;
+  u16 nested = program_store::INVALID_ID;
+  u16 other = program_store::INVALID_ID;
+  assert(program_store::create_directory(
+      program_store::ROOT_ID, "Application", 20, &app));
+  assert(program_store::create_directory(app, "Nested", 21, &nested));
+  assert(program_store::create_directory(
+      program_store::ROOT_ID, "Other", 22, &other));
+
+  static const u8 SCRIPT[] = "print \"started\"\n";
+  u16 autoexec_id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      app, 23, ProgramType::MK61, "AUTOEXEC", SCRIPT,
+      (u16) (sizeof(SCRIPT) - 1U), &autoexec_id));
+  assert(program_store::write_file(
+      other, 24, ProgramType::TEXT, "autoexec", SCRIPT,
+      (u16) (sizeof(SCRIPT) - 1U)));
+
+  Entry found = {};
+  assert(explorer_autoexec::find(app, found));
+  assert(found.id == autoexec_id);
+  assert(found.parent_id == app);
+  assert(found.type == ProgramType::MK61);
+  assert(!explorer_autoexec::find(nested, found));
+  assert(!explorer_autoexec::find(other, found));
+  assert(!explorer_autoexec::find(0x7FFEU, found));
 }
 
 static void test_system_apps_are_resolved_only_from_system_directory(void) {
@@ -1754,8 +1827,10 @@ int main(void) {
   test_roundtrip_ranges_and_noop();
   test_image_type_roundtrip_and_quota();
   test_chip8_type_roundtrip_and_quota();
+  test_markdown_type_roundtrip_without_catalog_migration();
   test_arbitrary_nested_directories();
   test_paths_and_recursive_tree_operations();
+  test_explorer_autoexec_is_a_direct_m61_child();
   test_system_apps_are_resolved_only_from_system_directory();
   test_directory_depth_limit_includes_moved_subtrees();
   test_names_and_exact_preferred_ids();
