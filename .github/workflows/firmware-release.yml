@@ -78,6 +78,7 @@ jobs:
             'MK61_ENABLE_FOCAL=1',
             'MK61_ENABLE_TINYBASIC=1',
             'MK61_ENABLE_WBMP_VIEWER=1',
+            'MK61_ENABLE_MARKDOWN_VIEWER=1',
             'MK61_ENABLE_CHIP8=1',
             'MK61_ENABLE_USB_SCREEN=1',
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0',
@@ -133,6 +134,7 @@ jobs:
             'System/FOCAL.APP',
             'System/BASIC.APP',
             'System/WBMP.APP',
+            'System/MARKDOWN.APP',
             'System/CHIP8.APP'
           ) | ForEach-Object {
             $path = Join-Path $bundle $_
@@ -279,6 +281,12 @@ jobs:
         run: |
           tools/build-gcc.cmd \
             -Profile mini-v3-a00 \
+            -Focal 1 \
+            -Basic 1 \
+            -Wbmp 0 \
+            -Markdown 1 \
+            -Chip8 0 \
+            -UsbScreen 0 \
             -BuildRoot "$RUNNER_TEMP/build-f401-gcc" \
             -OutputDirectory firmware
 
@@ -290,13 +298,34 @@ jobs:
           tests/check_global_constructors.sh \
             "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/resident.elf"
 
-      - name: Write checksums
+      - name: Verify and package F401 bundle
         run: |
           cd firmware
-          find . -type f \( -name '*.bin' -o -name '*.MOD' \) -print \
-            | sort | xargs sha256sum > SHA256SUMS.txt
+          bundle=mk61s-M-mini-v3-lcd1602-a00-f401
+          for artifact in \
+            "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin" \
+            "$bundle/build.flags" \
+            "$bundle/build.apps" \
+            "$bundle/System/FOCAL.APP" \
+            "$bundle/System/BASIC.APP" \
+            "$bundle/System/MARKDOWN.APP"; do
+            if [ ! -s "$artifact" ]; then
+              echo "Missing F401 release artifact: $artifact" >&2
+              exit 1
+            fi
+          done
+          for disabled in \
+            "$bundle/System/WBMP.APP" \
+            "$bundle/System/CHIP8.APP"; do
+            if [ -e "$disabled" ]; then
+              echo "Unexpected disabled F401 APP: $disabled" >&2
+              exit 1
+            fi
+          done
           zip -qr mk61s-M-mini-v3-lcd1602-a00-f401.zip \
-            mk61s-M-mini-v3-lcd1602-a00-f401
+            "$bundle"
+          find . -type f ! -name SHA256SUMS.txt -print0 \
+            | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v7

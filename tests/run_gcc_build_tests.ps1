@@ -138,6 +138,50 @@ Assert-True ($releaseWorkflowText -match
 Assert-True ($releaseWorkflowText -match
     'macos-latest[\s\S]+windows-latest') `
     'direct F401 GCC build is not checked on macOS and Windows'
+foreach ($setting in @(
+    'MK61_ENABLE_FOCAL=1',
+    'MK61_ENABLE_TINYBASIC=1',
+    'MK61_ENABLE_WBMP_VIEWER=1',
+    'MK61_ENABLE_MARKDOWN_VIEWER=1',
+    'MK61_ENABLE_CHIP8=1',
+    'MK61_ENABLE_USB_SCREEN=1',
+    'System/FOCAL.APP',
+    'System/BASIC.APP',
+    'System/WBMP.APP',
+    'System/MARKDOWN.APP',
+    'System/CHIP8.APP'
+)) {
+    Assert-True ($releaseWorkflowText.Contains($setting)) `
+        "cross-platform full F401 matrix is missing $setting"
+}
+$releaseF401Step = [regex]::Match(
+    $releaseWorkflowText,
+    '(?ms)^\s+- name: Build STM32F401CC firmware and System APP directly ' +
+    'with GCC\r?\n(?<body>.*?)(?=^\s+- name:)')
+Assert-True ($releaseF401Step.Success) `
+    'release workflow has no F401 release build step'
+foreach ($option in @(
+    '-Focal 1',
+    '-Basic 1',
+    '-Wbmp 0',
+    '-Markdown 1',
+    '-Chip8 0',
+    '-UsbScreen 0'
+)) {
+    Assert-True ($releaseF401Step.Groups['body'].Value.Contains($option)) `
+        "F401 release bundle is missing option $option"
+}
+Assert-True ($releaseWorkflowText -match
+    '(?s)zip -qr mk61s-M-mini-v3-lcd1602-a00-f401\.zip.+?' +
+    'find \. -type f ! -name SHA256SUMS\.txt -print0.+?' +
+    'xargs -0 sha256sum > SHA256SUMS\.txt') `
+    'release checksums do not cover the packaged F401 ZIP and APP'
+Assert-True ($releaseWorkflowText -match
+    '(?s)Verify and package F401 bundle.+?' +
+    'System/FOCAL\.APP.+?System/BASIC\.APP.+?System/MARKDOWN\.APP.+?' +
+    'System/WBMP\.APP.+?System/CHIP8\.APP.+?' +
+    'Unexpected disabled F401 APP') `
+    'release workflow can publish an incomplete F401 ZIP'
 Assert-True ($releaseWorkflowText -notmatch
     'arduino/setup-arduino-cli') `
     'release workflow still uses the Node.js 20 Arduino CLI action'
