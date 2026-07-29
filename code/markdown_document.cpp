@@ -209,7 +209,8 @@ static Line line_at(const u8* source, u16 size, u16 offset) {
 
 static bool range_equal(const u8* source, Range range, const char* text) {
   const usize length = strlen(text);
-  return range.end - range.begin == length &&
+  const usize range_length = (usize) (range.end - range.begin);
+  return range_length == length &&
          memcmp(source + range.begin, text, length) == 0;
 }
 
