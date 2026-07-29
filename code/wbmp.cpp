@@ -7,6 +7,7 @@
     (defined(MK61_BUILD_MARKDOWN_MODULE) && MK61_HAS_COMPILED_GRAPHICS)
 
 #include "wbmp.hpp"
+#include "stm32_sram_bit_band.hpp"
 
 #include <string.h>
 
@@ -157,6 +158,25 @@ Status decode_viewport(const u8* data, usize size, const Info& info,
   }
 
   if(layout != Layout::PAGE_MAJOR_LSB) return Status::INVALID_ARGUMENT;
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  // F401/F411 WBMP decode buffers are allocated in main SRAM, which is
+  // bit-bandable. Source bytes stay sequential; only destination byte RMW
+  // is replaced.
+  volatile u32* const output_bits =
+      stm32_sram_bit_band::alias_base(output);
+  for(u32 y = 0; y < copy_height; y++) {
+    const usize output_byte =
+        (usize) (y / 8U) * view_width;
+    volatile u32* output_bit =
+        output_bits + output_byte * 8U + (y & 7U);
+    for(u32 x = 0; x < copy_width; x++) {
+      if(source_dark(pixels, info, view_x + x, view_y + y)) {
+        *output_bit = 1U;
+      }
+      output_bit += 8;
+    }
+  }
+#else
   for(u32 y = 0; y < copy_height; y++) {
     u8* const page = output + (y / 8U) * view_width;
     const u8 page_bit = (u8) (1U << (y & 7U));
@@ -166,6 +186,7 @@ Status decode_viewport(const u8* data, usize size, const Info& info,
       }
     }
   }
+#endif
   return Status::OK;
 }
 

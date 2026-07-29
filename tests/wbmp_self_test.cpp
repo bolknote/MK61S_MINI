@@ -1,4 +1,5 @@
 #include "wbmp.hpp"
+#include "stm32_sram_bit_band.hpp"
 
 #include <assert.h>
 #include <stdio.h>
@@ -117,6 +118,7 @@ static void test_row_viewport_crop_and_white_border(void) {
   assert(output[3] == 0x00);
 }
 
+#if !MK61_STM32_SRAM_BIT_BAND_AVAILABLE
 static void test_uc1609_page_layout(void) {
   // 2x9, белая строка = 11000000. Тёмные: (0,0), (1,7), (0,8), (1,8).
   const u8 image[] = {
@@ -133,6 +135,7 @@ static void test_uc1609_page_layout(void) {
   assert(output[2] == 0x01);
   assert(output[3] == 0x01);
 }
+#endif
 
 static void test_decode_guards(void) {
   const u8 image[] = {0x00, 0x00, 0x08, 0x01, 0xFF};
@@ -149,6 +152,18 @@ static void test_decode_guards(void) {
   assert(wbmp::viewport_bytes(192, 64, wbmp::Layout::PAGE_MAJOR_LSB) == 1536);
 }
 
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+static void test_sram_bit_band_mapping(void) {
+  using namespace stm32_sram_bit_band;
+
+  volatile void* const byte =
+      reinterpret_cast<volatile void*>(REGION_BASE + 0x300U);
+  assert(reinterpret_cast<uintptr_t>(alias_base(byte)) +
+             2U * sizeof(u32) ==
+         0x22006008UL);
+}
+#endif
+
 } // безымянное пространство имён
 
 int main(void) {
@@ -157,8 +172,13 @@ int main(void) {
   test_header_rejections();
   test_size_and_padding_validation();
   test_row_viewport_crop_and_white_border();
+#if !MK61_STM32_SRAM_BIT_BAND_AVAILABLE
   test_uc1609_page_layout();
+#endif
   test_decode_guards();
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  test_sram_bit_band_mapping();
+#endif
   assert(strcmp(wbmp::status_text(wbmp::Status::OK), "ok") == 0);
   printf("wbmp_self_test: ok\n");
   return 0;
