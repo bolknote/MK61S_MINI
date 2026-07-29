@@ -1,4 +1,5 @@
 #include "../code/markdown_document.hpp"
+#include "../code/markdown_scroll.hpp"
 
 #include <assert.h>
 #include <stdio.h>
@@ -171,6 +172,141 @@ static void test_adversarial_block_density_fits(void) {
   assert(compiled_size <= sizeof(compiled));
 }
 
+static markdown_scroll::Metrics scroll_metrics(
+    u16 current, const u16* anchors, usize anchor_count,
+    u16 document_height) {
+  markdown_scroll::Probe probe(current);
+  for(usize index = 0; index < anchor_count; index++) {
+    probe.note(anchors[index]);
+  }
+  return probe.finish(document_height);
+}
+
+static bool bitmap_pixel(
+    const u8* bitmap, u16 width, u16 x, u16 y) {
+  return (bitmap[(usize) (y / 8U) * width + x] &
+          (u8) (1U << (y & 7U))) != 0;
+}
+
+static void set_bitmap_pixel(
+    u8* bitmap, u16 width, u16 x, u16 y) {
+  bitmap[(usize) (y / 8U) * width + x] |=
+      (u8) (1U << (y & 7U));
+}
+
+static void test_graphic_scroll_frame_shift(void) {
+  static constexpr u16 WIDTH = 3;
+  static constexpr u8 PAGES = 2;
+  u8 original[WIDTH * PAGES] = {};
+  u8 incoming[WIDTH * PAGES] = {};
+  for(u16 x = 0; x < WIDTH; x++) {
+    for(u16 y = 0; y < PAGES * 8U; y++) {
+      if(((x * 5U + y * 3U) % 7U) < 3U) {
+        set_bitmap_pixel(original, WIDTH, x, y);
+      }
+      if(((x * 2U + y * 5U) % 11U) < 4U) {
+        set_bitmap_pixel(incoming, WIDTH, x, y);
+      }
+    }
+  }
+
+  u8 shifted[sizeof(original)] = {};
+  memcpy(shifted, original, sizeof(shifted));
+  markdown_scroll::shift_up_insert_row(
+      shifted, WIDTH, PAGES, incoming, 5);
+  for(u16 x = 0; x < WIDTH; x++) {
+    for(u16 y = 0; y + 1U < PAGES * 8U; y++) {
+      assert(bitmap_pixel(shifted, WIDTH, x, y) ==
+             bitmap_pixel(original, WIDTH, x, (u16) (y + 1U)));
+    }
+    assert(bitmap_pixel(shifted, WIDTH, x, PAGES * 8U - 1U) ==
+           bitmap_pixel(incoming, WIDTH, x, 5));
+  }
+
+  memcpy(shifted, original, sizeof(shifted));
+  markdown_scroll::shift_down_insert_row(
+      shifted, WIDTH, PAGES, incoming, 9);
+  for(u16 x = 0; x < WIDTH; x++) {
+    assert(bitmap_pixel(shifted, WIDTH, x, 0) ==
+           bitmap_pixel(incoming, WIDTH, x, 9));
+    for(u16 y = 1; y < PAGES * 8U; y++) {
+      assert(bitmap_pixel(shifted, WIDTH, x, y) ==
+             bitmap_pixel(original, WIDTH, x, (u16) (y - 1U)));
+    }
+  }
+}
+
+static void test_graphic_scroll_navigation(void) {
+  const u16 regular_anchors[] = {
+      0, 10, 20, 30, 40, 50, 60, 70, 80, 90,
+      100, 110, 120, 130, 140, 150
+  };
+
+  markdown_scroll::Metrics metrics = scroll_metrics(
+      0, regular_anchors,
+      sizeof(regular_anchors) / sizeof(regular_anchors[0]), 200);
+  assert(metrics.document_height == 200);
+  assert(metrics.current_top == 0);
+  assert(metrics.maximum_top == 136);
+  assert(metrics.previous_anchor == 0);
+  assert(metrics.next_anchor == 10);
+  assert(metrics.fast_previous_anchor == 0);
+  assert(metrics.fast_next_anchor == 50);
+  assert(metrics.snap_anchor == 0);
+
+  metrics = scroll_metrics(
+      35, regular_anchors,
+      sizeof(regular_anchors) / sizeof(regular_anchors[0]), 200);
+  assert(metrics.previous_anchor == 30);
+  assert(metrics.next_anchor == 40);
+  assert(metrics.fast_previous_anchor == 0);
+  assert(metrics.fast_next_anchor == 90);
+  assert(metrics.snap_anchor == 30);
+
+  metrics = scroll_metrics(
+      100, regular_anchors,
+      sizeof(regular_anchors) / sizeof(regular_anchors[0]), 200);
+  assert(metrics.previous_anchor == 90);
+  assert(metrics.next_anchor == 110);
+  assert(metrics.fast_previous_anchor == 50);
+  assert(metrics.fast_next_anchor == 136);
+  assert(metrics.snap_anchor == 100);
+
+  const u16 sparse_anchors[] = {0, 64, 128};
+  metrics = scroll_metrics(
+      0, sparse_anchors,
+      sizeof(sparse_anchors) / sizeof(sparse_anchors[0]), 192);
+  assert(metrics.maximum_top == 128);
+  assert(metrics.next_anchor == 64);
+  assert(metrics.fast_next_anchor == 56);
+
+  const u16 large_gap_anchors[] = {0, 160};
+  metrics = scroll_metrics(
+      100, large_gap_anchors,
+      sizeof(large_gap_anchors) / sizeof(large_gap_anchors[0]), 228);
+  assert(metrics.previous_anchor == 0);
+  assert(metrics.next_anchor == 160);
+  assert(metrics.fast_previous_anchor == 44);
+  assert(metrics.fast_next_anchor == 156);
+
+  metrics = scroll_metrics(
+      20, regular_anchors,
+      sizeof(regular_anchors) / sizeof(regular_anchors[0]), 50);
+  assert(metrics.current_top == 0);
+  assert(metrics.maximum_top == 0);
+  assert(metrics.previous_anchor == 0);
+  assert(metrics.next_anchor == 0);
+  assert(metrics.fast_previous_anchor == 0);
+  assert(metrics.fast_next_anchor == 0);
+  assert(metrics.snap_anchor == 0);
+
+  assert(markdown_scroll::pixel_toward(10, 15) == 11);
+  assert(markdown_scroll::pixel_toward(15, 10) == 14);
+  assert(markdown_scroll::pixel_toward(10, 15, 3) == 13);
+  assert(markdown_scroll::pixel_toward(10, 12, 3) == 12);
+  assert(markdown_scroll::pixel_toward(15, 10, 0) == 15);
+}
+
 } // namespace
 
 int main(void) {
@@ -180,6 +316,8 @@ int main(void) {
   test_bounds_and_malformed_stream();
   test_adversarial_inline_density_fits();
   test_adversarial_block_density_fits();
+  test_graphic_scroll_frame_shift();
+  test_graphic_scroll_navigation();
   printf("markdown_document_self_test: ok\n");
   return 0;
 }

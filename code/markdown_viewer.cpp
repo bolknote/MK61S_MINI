@@ -9,6 +9,7 @@
 #include "language_workspace.hpp"
 #include "lcd_ru.hpp"
 #include "markdown_document.hpp"
+#include "markdown_scroll.hpp"
 #include "shared_scratch.hpp"
 #include "utf8_view.hpp"
 
@@ -29,14 +30,23 @@ namespace {
 
 static constexpr u16 DISPLAY_WIDTH = 192;
 static constexpr u8 DISPLAY_HEIGHT = 64;
+static constexpr u8 DISPLAY_PAGES = DISPLAY_HEIGHT / 8U;
 static constexpr usize FRAME_BYTES =
     (usize) DISPLAY_WIDTH * DISPLAY_HEIGHT / 8U;
+static constexpr u8 SCROLL_CACHE_ROWS = 16;
+static constexpr usize SCROLL_CACHE_BYTES =
+    (usize) DISPLAY_WIDTH * SCROLL_CACHE_ROWS / 8U;
 static constexpr u16 PLAIN_CAPACITY = 2048;
 static constexpr i32 VIEWER_DISPLAY_CHANGED = -2;
 static constexpr i32 VIEWER_KEY_NONE = -1;
 
-union OutputBuffer {
+struct GraphicBuffers {
   u8 frame[FRAME_BYTES];
+  u8 incoming[SCROLL_CACHE_BYTES];
+};
+
+union OutputBuffer {
+  GraphicBuffers graphics;
   char plain[PLAIN_CAPACITY];
 };
 
@@ -45,11 +55,14 @@ struct ViewerWorkspace {
   OutputBuffer output;
 };
 
+static_assert(sizeof(GraphicBuffers) <= PLAIN_CAPACITY,
+              "Markdown scroll cache must fit the output overlay");
 static_assert(sizeof(ViewerWorkspace) <= language_workspace::SIZE,
               "Markdown viewer must fit the shared runtime workspace");
 
 struct Navigation {
-  u16 page;
+  u16 plain_page;
+  u16 graphic_y;
 };
 
 static i32 scan_key(void) {
@@ -83,6 +96,22 @@ static bool forward_key(i32 key) {
 static bool backward_key(i32 key) {
   return key == KEY_LEFT || key == KEY_LEFT_PRESS ||
          key == KEY_SHG_LEFT_PRESS;
+}
+
+static bool line_forward_key(i32 key) {
+  return key == KEY_RIGHT || key == KEY_RIGHT_PRESS;
+}
+
+static bool line_backward_key(i32 key) {
+  return key == KEY_LEFT || key == KEY_LEFT_PRESS;
+}
+
+static bool fast_forward_key(i32 key) {
+  return key == KEY_SHG_RIGHT_PRESS;
+}
+
+static bool fast_backward_key(i32 key) {
+  return key == KEY_SHG_LEFT_PRESS;
 }
 
 static bool exit_key(i32 key) {
@@ -221,24 +250,24 @@ static Result view_plain(MK61Display& display, ViewerWorkspace& workspace,
       (const u8*) workspace.output.plain, plain_size);
   const u16 page_count =
       (u16) ((total_lines + rows - 1U) / rows);
-  if(navigation.page >= page_count) {
-    navigation.page = page_count == 0 ? 0 : (u16) (page_count - 1U);
+  if(navigation.plain_page >= page_count) {
+    navigation.plain_page = page_count == 0 ? 0 : (u16) (page_count - 1U);
   }
 
   while(true) {
     const u32 revision = display.displayModeRevision();
     draw_plain_page(display, (const u8*) workspace.output.plain, plain_size,
-                    (u16) (navigation.page * rows));
+                    (u16) (navigation.plain_page * rows));
     const i32 key = wait_key(display, revision);
     if(key == VIEWER_DISPLAY_CHANGED) {
       display_changed = true;
       return Result::OK;
     }
     if(exit_key(key)) return Result::OK;
-    if(forward_key(key) && navigation.page + 1U < page_count) {
-      navigation.page++;
-    } else if(backward_key(key) && navigation.page != 0) {
-      navigation.page--;
+    if(forward_key(key) && navigation.plain_page + 1U < page_count) {
+      navigation.plain_page++;
+    } else if(backward_key(key) && navigation.plain_page != 0) {
+      navigation.plain_page--;
     }
   }
 }
@@ -256,9 +285,10 @@ using markdown::STYLE_STRIKE;
 using markdown::STYLE_CODE;
 using markdown::STYLE_LINK;
 
-static void set_frame_pixel(u8* frame, i16 x, i16 y, bool dark) {
+static void set_frame_pixel(
+    u8* frame, u8 frame_height, i16 x, i16 y, bool dark) {
   if(frame == nullptr || x < 0 || x >= (i16) DISPLAY_WIDTH ||
-     y < 0 || y >= (i16) DISPLAY_HEIGHT) return;
+     y < 0 || y >= (i16) frame_height) return;
   const usize offset = (usize) (y / 8) * DISPLAY_WIDTH + (u16) x;
   const u8 mask = (u8) (1U << (y & 7));
   if(dark) frame[offset] |= mask;
@@ -273,16 +303,24 @@ struct GlyphCell {
 
 class GraphicLayout {
  public:
-  GraphicLayout(u8* frame, u16 viewport_top, u16 parent_id)
-      : frame(frame), viewport_top(viewport_top), parent_id(parent_id),
+  GraphicLayout(u8* frame, u16 viewport_top, u8 viewport_height,
+                u16 parent_id,
+                markdown_scroll::Probe& scroll_probe)
+      : frame(frame), viewport_top(viewport_top),
+        viewport_height(viewport_height), parent_id(parent_id),
+        scroll_probe(scroll_probe),
         y(2), block_start_y(2), content_x(2), available_width(188),
         line_height(8), line_pitch(10), scale(1),
         face(builtin_font::FaceId::FONT_5X8), cell_count(0),
         cell_width(0), first_visual_line(true), style(STYLE_NONE),
         block({BlockKind::PARAGRAPH, 0, ListKind::NONE,
                TaskState::NONE, 0}), block_open(false),
-        stream_valid(true) {
-    memset(frame, 0, FRAME_BYTES);
+        stream_valid(true), first_anchor(true) {
+    if(frame != nullptr && viewport_height != 0) {
+      const usize bytes = (usize) DISPLAY_WIDTH *
+          ((viewport_height + 7U) / 8U);
+      memset(frame, 0, bytes);
+    }
   }
 
   u16 render(const u8* compiled, u16 size) {
@@ -329,7 +367,9 @@ class GraphicLayout {
 
   u8* frame;
   u16 viewport_top;
+  u8 viewport_height;
   u16 parent_id;
+  markdown_scroll::Probe& scroll_probe;
   u16 y;
   u16 block_start_y;
   u8 content_x;
@@ -346,27 +386,50 @@ class GraphicLayout {
   markdown::Block block;
   bool block_open;
   bool stream_valid;
+  bool first_anchor;
 
   static u8 glyph_advance(builtin_font::FaceId face, u8 scale) {
     return (u8) ((face == builtin_font::FaceId::FONT_3X5 ? 4U : 6U) *
                  scale);
   }
 
+  void record_anchor(u16 position) {
+    // Первое содержимое сохраняет исходный двухпиксельный верхний отступ:
+    // следующая остановка после начала документа должна быть уже второй
+    // визуальной строкой, а не смещением 2.
+    scroll_probe.note(first_anchor ? 0 : position);
+    first_anchor = false;
+  }
+
+  bool vertical_span_visible(i32 global_y, i32 height) const {
+    if(height <= 0) return false;
+    const i32 top = viewport_top;
+    const i32 bottom = top + viewport_height;
+    return global_y < bottom && global_y + height > top;
+  }
+
   void set_global_pixel(i16 x, i16 global_y, bool dark = true) {
     const i32 screen_y = (i32) global_y - viewport_top;
-    if(screen_y < 0 || screen_y >= DISPLAY_HEIGHT) return;
-    set_frame_pixel(frame, x, (i16) screen_y, dark);
+    if(screen_y < 0 || screen_y >= viewport_height) return;
+    set_frame_pixel(frame, viewport_height, x, (i16) screen_y, dark);
   }
 
   void hline(i16 x, i16 global_y, i16 width, bool dark = true) {
+    if(width <= 0 || !vertical_span_visible(global_y, 1)) return;
     for(i16 dx = 0; dx < width; dx++) {
       set_global_pixel((i16) (x + dx), global_y, dark);
     }
   }
 
   void vline(i16 x, i16 global_y, i16 height, bool dark = true) {
-    for(i16 dy = 0; dy < height; dy++) {
-      set_global_pixel(x, (i16) (global_y + dy), dark);
+    if(height <= 0) return;
+    const i32 begin = (i32) global_y < (i32) viewport_top
+        ? (i32) viewport_top : (i32) global_y;
+    const i32 raw_end = (i32) global_y + height;
+    const i32 viewport_end = (i32) viewport_top + viewport_height;
+    const i32 end = raw_end < viewport_end ? raw_end : viewport_end;
+    for(i32 py = begin; py < end; py++) {
+      set_global_pixel(x, (i16) py, dark);
     }
   }
 
@@ -379,14 +442,25 @@ class GraphicLayout {
   }
 
   void fill_rect(i16 x, i16 global_y, i16 width, i16 height, bool dark) {
-    for(i16 dy = 0; dy < height; dy++) {
-      hline(x, (i16) (global_y + dy), width, dark);
+    if(width <= 0 || height <= 0) return;
+    const i32 begin = (i32) global_y < (i32) viewport_top
+        ? (i32) viewport_top : (i32) global_y;
+    const i32 raw_end = (i32) global_y + height;
+    const i32 viewport_end = (i32) viewport_top + viewport_height;
+    const i32 end = raw_end < viewport_end ? raw_end : viewport_end;
+    for(i32 py = begin; py < end; py++) {
+      hline(x, (i16) py, width, dark);
     }
   }
 
   void draw_glyph(u16 codepoint, u8 glyph_style,
                   i16 x, i16 global_y,
                   builtin_font::FaceId selected_face, u8 selected_scale) {
+    const i16 expected_height = (i16) (
+        (selected_face == builtin_font::FaceId::FONT_3X5 ? 5U : 8U) *
+        selected_scale);
+    if(!vertical_span_visible(global_y, expected_height)) return;
+
     builtin_font::Raster raster = {};
     if(!builtin_font::decode(selected_face, codepoint, raster) &&
        !builtin_font::decode(selected_face, '?', raster)) return;
@@ -485,6 +559,7 @@ class GraphicLayout {
     style = STYLE_NONE;
     configure_block();
     if(block.kind == BlockKind::THEMATIC_BREAK) {
+      record_anchor(y);
       hline(4, (i16) (y + 2U), 184);
       y = (u16) (y + 5U);
     } else if(block.kind == BlockKind::BLANK) {
@@ -539,6 +614,7 @@ class GraphicLayout {
   }
 
   void render_cells(u8 count) {
+    record_anchor(y);
     draw_line_decorations(y);
     i16 x = content_x;
     for(u8 index = 0; index < count; index++) {
@@ -659,6 +735,7 @@ class GraphicLayout {
       if(cell_count != 0) render_cells(cell_count);
       remove_front(cell_count);
     } else if(force) {
+      record_anchor(y);
       draw_line_decorations(y);
       y = (u16) (y + line_pitch);
       first_visual_line = false;
@@ -692,6 +769,7 @@ class GraphicLayout {
 
   void draw_missing_image(const markdown::Event& event) {
     static constexpr u8 PLACEHOLDER_HEIGHT = 12;
+    record_anchor(y);
     rect(content_x, (i16) y, available_width, PLACEHOLDER_HEIGHT);
     i16 x = (i16) (content_x + 3U);
     const i16 max_x = (i16) (content_x + available_width - 3U);
@@ -746,9 +824,18 @@ class GraphicLayout {
     u16 width = 0;
     u16 height = 0;
     fit_image(info, available_width, width, height);
+    record_anchor(y);
     const i16 left = (i16) (content_x +
         (available_width > width ? (available_width - width) / 2U : 0));
-    for(u16 target_y = 0; target_y < height; target_y++) {
+    const i32 visible_begin = (i32) y > viewport_top ? y : viewport_top;
+    const i32 image_end = (i32) y + height;
+    const i32 viewport_end = (i32) viewport_top + viewport_height;
+    const i32 visible_end = image_end < viewport_end
+        ? image_end : viewport_end;
+    for(u16 target_y = visible_begin < visible_end
+            ? (u16) (visible_begin - y) : height;
+        target_y < height && (i32) (y + target_y) < visible_end;
+        target_y++) {
       const u32 source_y = (u32) target_y * info.height / height;
       for(u16 target_x = 0; target_x < width; target_x++) {
         const u32 source_x = (u32) target_x * info.width / width;
@@ -786,16 +873,177 @@ class GraphicLayout {
   }
 };
 
+static Result layout_graphic_region(
+    ViewerWorkspace& workspace, u16 compiled_size, u16 parent_id,
+    u8* bitmap, u16 region_top, u8 region_height, u16 metrics_top,
+    markdown_scroll::Metrics& scroll) {
+  markdown_scroll::Probe probe(metrics_top);
+  GraphicLayout layout(
+      bitmap, region_top, region_height, parent_id, probe);
+  const u16 document_height =
+      layout.render(workspace.compiled, compiled_size);
+  if(!layout.valid()) return Result::INVALID_DOCUMENT;
+  scroll = probe.finish(document_height);
+  return Result::OK;
+}
+
 static Result render_graphic_page(MK61Display& display,
                                   ViewerWorkspace& workspace,
                                   u16 compiled_size, u16 parent_id,
                                   u16 viewport_top,
-                                  u16& document_height) {
-  GraphicLayout layout(workspace.output.frame, viewport_top, parent_id);
-  document_height = layout.render(workspace.compiled, compiled_size);
-  if(!layout.valid()) return Result::INVALID_DOCUMENT;
-  return display.showFullscreenBitmap(workspace.output.frame, FRAME_BYTES)
+                                  markdown_scroll::Metrics& scroll) {
+  Result result = layout_graphic_region(
+      workspace, compiled_size, parent_id,
+      workspace.output.graphics.frame, viewport_top, DISPLAY_HEIGHT,
+      viewport_top, scroll);
+  if(result != Result::OK) return result;
+  return display.showFullscreenBitmap(
+      workspace.output.graphics.frame, FRAME_BYTES)
       ? Result::OK : Result::DISPLAY_ERROR;
+}
+
+static Result measure_graphic_page(
+    ViewerWorkspace& workspace, u16 compiled_size, u16 parent_id,
+    u16 viewport_top, markdown_scroll::Metrics& scroll) {
+  return layout_graphic_region(
+      workspace, compiled_size, parent_id, nullptr,
+      viewport_top, 0, viewport_top, scroll);
+}
+
+static constexpr u16 SCROLL_FRAME_MS = 20;
+
+static Result animate_graphic_scroll(
+    MK61Display& display, ViewerWorkspace& workspace,
+    u16 compiled_size, u16 parent_id, Navigation& navigation,
+    u16 target, u32 display_revision, markdown_scroll::Metrics& scroll,
+    bool& display_changed, i32 required_key, bool& key_released) {
+  key_released = false;
+  while(navigation.graphic_y != target) {
+    if(required_key >= 0 && !kbd::is_key_pressed(required_key)) {
+      key_released = true;
+      return Result::OK;
+    }
+
+    const bool forward = navigation.graphic_y < target;
+    const u16 remaining = forward
+        ? (u16) (target - navigation.graphic_y)
+        : (u16) (navigation.graphic_y - target);
+    const u8 rows = remaining < SCROLL_CACHE_ROWS
+        ? (u8) remaining : SCROLL_CACHE_ROWS;
+    const u16 destination = forward
+        ? (u16) (navigation.graphic_y + rows)
+        : (u16) (navigation.graphic_y - rows);
+    const u16 region_top = forward
+        ? (u16) (navigation.graphic_y + DISPLAY_HEIGHT)
+        : destination;
+
+    markdown_scroll::Metrics destination_scroll = {};
+    idle_main_process();
+    Result result = layout_graphic_region(
+        workspace, compiled_size, parent_id,
+        workspace.output.graphics.incoming,
+        region_top, SCROLL_CACHE_ROWS, destination,
+        destination_scroll);
+    if(result != Result::OK) {
+      if(display.displayModeRevision() == display_revision) return result;
+      display_changed = true;
+      return Result::OK;
+    }
+    idle_main_process();
+    if(display.displayModeRevision() != display_revision) {
+      display_changed = true;
+      return Result::OK;
+    }
+
+    for(u8 step = 0; step < rows; step++) {
+      const u32 frame_started = millis();
+      if(forward) {
+        markdown_scroll::shift_up_insert_row(
+            workspace.output.graphics.frame, DISPLAY_WIDTH, DISPLAY_PAGES,
+            workspace.output.graphics.incoming, step);
+        navigation.graphic_y++;
+      } else {
+        const u8 source_row = (u8) (rows - step - 1U);
+        markdown_scroll::shift_down_insert_row(
+            workspace.output.graphics.frame, DISPLAY_WIDTH, DISPLAY_PAGES,
+            workspace.output.graphics.incoming, source_row);
+        navigation.graphic_y--;
+      }
+
+      if(!display.showFullscreenBitmap(
+          workspace.output.graphics.frame, FRAME_BYTES)) {
+        if(display.displayModeRevision() == display_revision) {
+          return Result::DISPLAY_ERROR;
+        }
+        display_changed = true;
+        return Result::OK;
+      }
+
+      while((u32) (millis() - frame_started) < SCROLL_FRAME_MS) {
+        idle_main_process();
+        (void) kbd::scan();
+        if(display.displayModeRevision() != display_revision) {
+          display_changed = true;
+          return Result::OK;
+        }
+        if(required_key >= 0 && !kbd::is_key_pressed(required_key)) {
+          key_released = true;
+          return Result::OK;
+        }
+        delay(1);
+      }
+    }
+    scroll = destination_scroll;
+  }
+  return Result::OK;
+}
+
+static Result scroll_line(
+    MK61Display& display, ViewerWorkspace& workspace,
+    u16 compiled_size, u16 parent_id, Navigation& navigation,
+    bool forward, u32 display_revision, markdown_scroll::Metrics& scroll,
+    bool& display_changed) {
+  const u16 target = forward ? scroll.next_anchor
+                             : scroll.previous_anchor;
+  bool key_released = false;
+  Result result = animate_graphic_scroll(
+      display, workspace, compiled_size, parent_id, navigation,
+      target, display_revision, scroll, display_changed,
+      VIEWER_KEY_NONE, key_released);
+  if(result != Result::OK || display_changed) return result;
+
+  const i32 held_key = forward ? KEY_RIGHT : KEY_LEFT;
+  const u16 continuous_start = navigation.graphic_y;
+  if(kbd::is_key_pressed(held_key)) {
+    const u16 continuous_target = forward ? scroll.maximum_top : 0;
+    result = animate_graphic_scroll(
+        display, workspace, compiled_size, parent_id, navigation,
+        continuous_target, display_revision, scroll, display_changed,
+        held_key, key_released);
+    if(result != Result::OK || display_changed) return result;
+  }
+
+  const bool continuously_scrolled =
+      navigation.graphic_y != continuous_start;
+  if(continuously_scrolled) {
+    result = measure_graphic_page(
+        workspace, compiled_size, parent_id,
+        navigation.graphic_y, scroll);
+    if(result != Result::OK) {
+      if(display.displayModeRevision() == display_revision) return result;
+      display_changed = true;
+      return Result::OK;
+    }
+  }
+
+  if(continuously_scrolled &&
+     scroll.snap_anchor != navigation.graphic_y) {
+    result = animate_graphic_scroll(
+        display, workspace, compiled_size, parent_id, navigation,
+        scroll.snap_anchor, display_revision, scroll, display_changed,
+        VIEWER_KEY_NONE, key_released);
+  }
+  return result;
 }
 
 static Result view_graphics(MK61Display& display, ViewerWorkspace& workspace,
@@ -808,12 +1056,9 @@ static Result view_graphics(MK61Display& display, ViewerWorkspace& workspace,
   Result result = Result::OK;
   while(true) {
     const u32 revision = display.displayModeRevision();
-    u16 document_height = 1;
-    const u32 requested_top = (u32) navigation.page * DISPLAY_HEIGHT;
-    const u16 viewport_top = requested_top > 0xFFFFU
-        ? 0xFFFFU : (u16) requested_top;
+    markdown_scroll::Metrics scroll = {};
     result = render_graphic_page(display, workspace, compiled_size,
-                                 parent_id, viewport_top, document_height);
+                                 parent_id, navigation.graphic_y, scroll);
     if(result != Result::OK) {
       if(display.displayModeRevision() != revision) {
         display_changed = true;
@@ -821,10 +1066,8 @@ static Result view_graphics(MK61Display& display, ViewerWorkspace& workspace,
       }
       break;
     }
-    const u16 page_count = (u16) (
-        (document_height + DISPLAY_HEIGHT - 1U) / DISPLAY_HEIGHT);
-    if(navigation.page >= page_count) {
-      navigation.page = page_count == 0 ? 0 : (u16) (page_count - 1U);
+    if(navigation.graphic_y != scroll.current_top) {
+      navigation.graphic_y = scroll.current_top;
       continue;
     }
 
@@ -834,10 +1077,15 @@ static Result view_graphics(MK61Display& display, ViewerWorkspace& workspace,
       break;
     }
     if(exit_key(key)) break;
-    if(forward_key(key) && navigation.page + 1U < page_count) {
-      navigation.page++;
-    } else if(backward_key(key) && navigation.page != 0) {
-      navigation.page--;
+    if(line_forward_key(key) || line_backward_key(key)) {
+      result = scroll_line(
+          display, workspace, compiled_size, parent_id, navigation,
+          line_forward_key(key), revision, scroll, display_changed);
+      if(result != Result::OK || display_changed) break;
+    } else if(fast_forward_key(key)) {
+      navigation.graphic_y = scroll.fast_next_anchor;
+    } else if(fast_backward_key(key)) {
+      navigation.graphic_y = scroll.fast_previous_anchor;
     }
   }
   if(fullscreen) display.endFullscreenBitmap();
