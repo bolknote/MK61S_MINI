@@ -572,8 +572,10 @@ FMK1 с RLE потребуется пересобрать в FMK2. Если бу
 Проверенная сборка `mini-v3-a00`, LTO + CORE math:
 
 ```text
-mini-v3-a00 resident text = 190952 bytes
-mini-v2-a00 resident text = 191000 bytes
+mini-v3-a00 resident text, ZX0 baseline = 190952 bytes
+mini-v2-a00 resident text, ZX0 baseline = 191000 bytes
+mini-v3-a00 + STM32 CRC32             = 191440 bytes
+mini-v2-a00 + STM32 CRC32             = 191496 bytes
 resident data             =   2292 bytes
 resident bss              =  50896 bytes
 FOCAL.APP SRAM            = 19464 / 20480 bytes
@@ -581,7 +583,8 @@ FOCAL.APP SRAM            = 19464 / 20480 bytes
 
 Для mini-v3 добавка относительно того же HEAD без C5 ZX0 составляет 6240
 байт `.text` и 8 байт `.bss`. Это проверка компоновки, а не измерение скорости
-или аппаратного stack high-water.
+или аппаратного stack high-water. Следующий аппаратный CRC32 backend описан
+отдельно в `doc/design/STM32-hardware-CRC32.md`.
 
 ## Порядок реализации
 

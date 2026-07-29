@@ -18,6 +18,7 @@ fi
 "$root/tests/run_wbmp_tests.sh"
 "$root/tests/run_markdown_document_tests.sh"
 "$root/tests/run_bounded_string_tests.sh"
+"$root/tests/run_crc32_tests.sh"
 "$root/tests/run_dfu_splash_tests.sh"
 "$root/tests/run_display_font_tests.sh"
 "$root/tests/run_hardware_info_tests.sh"

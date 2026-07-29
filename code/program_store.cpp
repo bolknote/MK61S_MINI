@@ -1,6 +1,7 @@
 #include "program_store.hpp"
 
 #include "bounded_string.hpp"
+#include "crc32.hpp"
 #include "fat_name.hpp"
 #include "Arduino.h"
 #include "config.h"
@@ -352,29 +353,42 @@ static void put_le32(u8* data, u16 offset, u32 value) {
   data[offset + 3] = (u8) (value >> 24);
 }
 
-static u32 crc32_update(u32 crc, u8 value) {
-  crc ^= value;
-  for(u8 bit = 0; bit < 8; bit++) {
-    crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320UL : crc >> 1;
-  }
-  return crc;
-}
-
 static u32 crc32_bytes(const u8* data, usize len, u32 crc = 0xFFFFFFFFUL) {
-  for(usize i = 0; i < len; i++) crc = crc32_update(crc, data[i]);
-  return crc;
+  return mk61_crc32::extend(crc, data, len);
 }
 
-static u32 crc32_flash(u32 address, u32 len, u32 crc = 0xFFFFFFFFUL) {
+static bool crc32_flash(mk61_crc32::Context& crc,
+                        u32 address, u32 len) {
   u8 buffer[64];
   while(len != 0) {
     const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
-    if(!read_bytes(address, buffer, count)) return 0;
-    crc = crc32_bytes(buffer, count, crc);
+    if(!read_bytes(address, buffer, count) ||
+       !crc.update(buffer, count)) return false;
     address += count;
     len -= count;
   }
-  return crc;
+  return true;
+}
+
+static bool crc32_flash(u32 address, u32 len, u32& output) {
+  mk61_crc32::Context crc;
+  if(!crc32_flash(crc, address, len)) return false;
+  output = crc.finish();
+  return true;
+}
+
+static bool crc32_flash_software(u32 address, u32 len, u32& output) {
+  u32 state = mk61_crc32::INITIAL_STATE;
+  u8 buffer[64];
+  while(len != 0) {
+    const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
+    if(!read_bytes(address, buffer, count)) return false;
+    state = crc32_bytes(buffer, count, state);
+    address += count;
+    len -= count;
+  }
+  output = mk61_crc32::finish(state);
+  return true;
 }
 
 static void encode_settings_guard(u8* guard, u32 capacity) {
@@ -382,7 +396,7 @@ static void encode_settings_guard(u8* guard, u32 capacity) {
   memcpy(guard, "C5SG", 4);
   guard[4] = PHYSICAL_FORMAT_VERSION;
   put_le32(guard, 8, capacity);
-  put_le32(guard, 12, ~crc32_bytes(guard, 12));
+  put_le32(guard, 12, mk61_crc32::calculate(guard, 12));
 }
 
 static bool settings_guard_valid(const storage_geometry::Geometry& geometry) {
@@ -399,7 +413,7 @@ static bool settings_guard_valid(const storage_geometry::Geometry& geometry) {
   return memcmp(guard, "C5SG", 4) == 0 &&
          guard[4] == PHYSICAL_FORMAT_VERSION &&
          get_le32(guard, 8) == geometry.capacity_bytes &&
-         get_le32(guard, 12) == ~crc32_bytes(guard, 12);
+         get_le32(guard, 12) == mk61_crc32::calculate(guard, 12);
 }
 
 static bool write_settings_guard(void) {
@@ -754,7 +768,7 @@ static u32 normalized_record_crc(u8* record, u16 size, u16 crc_offset, u8 state_
   memcpy(saved_crc, record + crc_offset, sizeof(saved_crc));
   record[state_offset] = STATE_WRITING;
   memset(record + crc_offset, 0, sizeof(saved_crc));
-  const u32 crc = ~crc32_bytes(record, size);
+  const u32 crc = mk61_crc32::finish(crc32_bytes(record, size));
   record[state_offset] = saved_state;
   memcpy(record + crc_offset, saved_crc, sizeof(saved_crc));
   return crc;
@@ -925,7 +939,7 @@ static bool checkpoint(void) {
   u8 disk_inode[storage_geometry::INODE_BYTES];
   u16 buffered = 0;
   u32 destination_address = table_address(destination);
-  u32 crc = 0xFFFFFFFFUL;
+  mk61_crc32::Context crc;
   for(u16 id = 0; id < g_geometry.max_nodes; id++) {
     Inode inode;
     if(!get_inode(id, inode)) return false;
@@ -940,7 +954,7 @@ static bool checkpoint(void) {
       copied = (u8) (copied + count);
       if(buffered == sizeof(buffer)) {
         if(!write_bytes(destination_address, buffer, sizeof(buffer))) return false;
-        crc = crc32_bytes(buffer, sizeof(buffer), crc);
+        if(!crc.update(buffer, sizeof(buffer))) return false;
         destination_address += sizeof(buffer);
         buffered = 0;
       }
@@ -948,12 +962,12 @@ static bool checkpoint(void) {
   }
   if(buffered != 0) {
     if(!write_bytes(destination_address, buffer, buffered)) return false;
-    crc = crc32_bytes(buffer, buffered, crc);
+    if(!crc.update(buffer, buffered)) return false;
   }
-  crc = ~crc;
+  const u32 table_crc = crc.finish();
 
   u8 header[CATALOG_HEADER_SIZE];
-  encode_catalog_header(header, g_catalog_generation + 1, crc);
+  encode_catalog_header(header, g_catalog_generation + 1, table_crc);
   const u32 header_address = sector_address(bank_sector(destination));
   if(!write_bytes(header_address, header, sizeof(header)) ||
      !write_byte(header_address + 5, STATE_ACTIVE)) return false;
@@ -979,8 +993,11 @@ static bool decode_catalog_header(u8 bank, u8 catalog_version, u8* header,
   if(normalized_record_crc(header, CATALOG_HEADER_SIZE,
                           CATALOG_HEADER_CRC_OFFSET, 5) !=
      get_le32(header, CATALOG_HEADER_CRC_OFFSET)) return false;
-  const u32 table_crc = ~crc32_flash(table_address(bank),
-      (u32) g_geometry.max_nodes * storage_geometry::INODE_BYTES);
+  u32 table_crc = 0;
+  if(!crc32_flash(
+       table_address(bank),
+       (u32) g_geometry.max_nodes * storage_geometry::INODE_BYTES,
+       table_crc)) return false;
   if(table_crc != get_le32(header, 20)) return false;
 
   generation = get_le32(header, 8);
@@ -1745,10 +1762,9 @@ static CompressionChoice prepare_compressed_payload(
   return CompressionChoice::ZX0;
 }
 
-static u32 record_crc_prefix(NodeKind kind, ProgramType type, u16 id,
-                             u16 parent_id, const char* name,
-                             u16 stored_len) {
-  u8 stable[11];
+static void encode_record_crc_stable(
+    u8 stable[11], NodeKind kind, ProgramType type, u16 id,
+    u16 parent_id, const char* name, u16 stored_len) {
   stable[0] = (u8) kind;
   stable[1] = (u8) type;
   put_le16(stable, 2, id);
@@ -1757,25 +1773,45 @@ static u32 record_crc_prefix(NodeKind kind, ProgramType type, u16 id,
   stable[8] = (u8) strlen(name);
   stable[9] = PHYSICAL_FORMAT_VERSION;
   stable[10] = 0x5A;
-  u32 crc = crc32_bytes(stable, sizeof(stable));
-  return crc32_bytes((const u8*) name, strlen(name), crc);
+}
+
+static bool update_record_crc_prefix(mk61_crc32::Context& crc,
+                                     NodeKind kind, ProgramType type, u16 id,
+                                     u16 parent_id, const char* name,
+                                     u16 stored_len) {
+  u8 stable[11];
+  encode_record_crc_stable(
+      stable, kind, type, id, parent_id, name, stored_len);
+  return crc.update(stable, sizeof(stable)) &&
+         crc.update((const u8*) name, strlen(name));
+}
+
+static u32 record_crc_prefix_state(
+    NodeKind kind, ProgramType type, u16 id, u16 parent_id,
+    const char* name, u16 stored_len) {
+  u8 stable[11];
+  encode_record_crc_stable(
+      stable, kind, type, id, parent_id, name, stored_len);
+  const u32 state = crc32_bytes(stable, sizeof(stable));
+  return crc32_bytes((const u8*) name, strlen(name), state);
 }
 
 static bool record_crc_source(NodeKind kind, ProgramType type, u16 id,
                               u16 parent_id, const char* name,
                               const FileSource& source, u16 data_len,
                               u32& output) {
-  u32 crc = record_crc_prefix(kind, type, id, parent_id, name, data_len);
+  u32 state =
+      record_crc_prefix_state(kind, type, id, parent_id, name, data_len);
   u8 buffer[64];
   u16 offset = 0;
   while(offset < data_len) {
     const u16 count = (u16) ((data_len - offset < sizeof(buffer))
         ? data_len - offset : sizeof(buffer));
     if(!source.read(source.context, offset, buffer, count)) return false;
-    crc = crc32_bytes(buffer, count, crc);
+    state = crc32_bytes(buffer, count, state);
     offset = (u16) (offset + count);
   }
-  output = ~crc;
+  output = mk61_crc32::finish(state);
   return true;
 }
 
@@ -1832,15 +1868,15 @@ static bool append_record(NodeKind kind, ProgramType type, u16 id,
 }
 
 struct Zx0CrcOutput {
-  u32 crc;
+  mk61_crc32::Context* crc;
   u16 size;
   u16 expected_size;
 };
 
 static bool write_zx0_crc_byte(void* context, u8 value) {
   Zx0CrcOutput& output = *(Zx0CrcOutput*) context;
-  if(output.size >= output.expected_size) return false;
-  output.crc = crc32_update(output.crc, value);
+  if(output.size >= output.expected_size ||
+     !output.crc->update_byte(value)) return false;
   output.size++;
   return true;
 }
@@ -1879,13 +1915,16 @@ static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
   const u8 name_len = (u8) strlen(name);
   record_len = (u16) (RECORD_HEADER_SIZE + name_len + stored_len);
 
-  Zx0CrcOutput checked = {
-    record_crc_prefix(NodeKind::FILE, type, id, parent_id, name, stored_len),
-    0, stored_len
-  };
+  mk61_crc32::Context record_crc;
+  if(!update_record_crc_prefix(
+       record_crc, NodeKind::FILE, type, id, parent_id,
+       name, stored_len)) return false;
+  Zx0CrcOutput checked = {&record_crc, 0, stored_len};
   const zx0::Output crc_sink = {&checked, write_zx0_crc_byte};
-  if(!zx0::emit(prepared, crc_sink) || checked.size != stored_len ||
-     !ensure_record_space(record_len, address)) return false;
+  if(!zx0::emit(prepared, crc_sink) ||
+     checked.size != stored_len) return false;
+  const u32 checksum = record_crc.finish();
+  if(!ensure_record_space(record_len, address)) return false;
 
   u8 header[RECORD_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
@@ -1898,7 +1937,7 @@ static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
   put_le16(header, 8, stored_len);
   header[10] = name_len;
   header[11] = (u8) type;
-  put_le32(header, 12, ~checked.crc);
+  put_le32(header, 12, checksum);
   if(!write_bytes(address, header, sizeof(header)) ||
      !write_bytes(address + RECORD_HEADER_SIZE,
                   (const u8*) name, name_len)) return false;
@@ -1946,12 +1985,14 @@ static bool read_inode_name(u16 id, const Inode& inode, char* out) {
 static bool verify_record_crc(u16 id, const Inode& inode, const char* name) {
   u8 header[RECORD_HEADER_SIZE];
   if(!read_record_header(inode, id, header)) return false;
-  u32 crc = record_crc_prefix(
-      (NodeKind) header[3], (ProgramType) header[11], id, inode.parent_id,
-      name, get_le16(header, 8));
-  crc = crc32_flash(inode.address + RECORD_HEADER_SIZE + header[10],
-                    get_le16(header, 8), crc);
-  return ~crc == get_le32(header, 12);
+  mk61_crc32::Context crc;
+  return update_record_crc_prefix(
+             crc, (NodeKind) header[3], (ProgramType) header[11],
+             id, inode.parent_id, name, get_le16(header, 8)) &&
+         crc32_flash(
+             crc, inode.address + RECORD_HEADER_SIZE + header[10],
+             get_le16(header, 8)) &&
+         crc.finish() == get_le32(header, 12);
 }
 
 struct RecordPayloadInput {
@@ -1961,7 +2002,7 @@ struct RecordPayloadInput {
   u8 buffer[64];
   u8 buffered;
   u8 cursor;
-  u32 crc;
+  mk61_crc32::Context* crc;
 };
 
 static bool next_record_payload_byte(void* context, u8& value) {
@@ -1973,11 +2014,11 @@ static bool next_record_payload_byte(void* context, u8& value) {
         ? remaining : sizeof(input.buffer));
     input.cursor = 0;
     if(!read_bytes(input.address + input.position,
-                   input.buffer, input.buffered)) return false;
+                   input.buffer, input.buffered) ||
+       !input.crc->update(input.buffer, input.buffered)) return false;
   }
   value = input.buffer[input.cursor++];
   input.position++;
-  input.crc = crc32_update(input.crc, value);
   return true;
 }
 
@@ -1985,18 +2026,20 @@ static bool read_zx0_record_range(u16 id, const Inode& inode,
                                   const char* name, const u8* header,
                                   u16 offset, u8* output, u16 size) {
   const u16 stored_len = get_le16(header, 8);
+  mk61_crc32::Context record_crc;
+  if(!update_record_crc_prefix(
+       record_crc, (NodeKind) header[3], (ProgramType) header[11],
+       id, inode.parent_id, name, stored_len)) return false;
   RecordPayloadInput compressed = {
     inode.address + RECORD_HEADER_SIZE + header[10],
-    stored_len, 0, {}, 0, 0,
-    record_crc_prefix((NodeKind) header[3], (ProgramType) header[11],
-                      id, inode.parent_id, name, stored_len)
+    stored_len, 0, {}, 0, 0, &record_crc
   };
   const zx0::Input input = {&compressed, next_record_payload_byte};
   u8 window[256] = {};
   return zx0::decode_range(input, stored_len, inode.data_len,
                            offset, output, size, window, sizeof(window)) &&
          compressed.position == stored_len &&
-         ~compressed.crc == get_le32(header, 12);
+         record_crc.finish() == get_le32(header, 12);
 }
 
 static u16 large_block_length(const LargeDescriptor& descriptor,
@@ -2121,8 +2164,10 @@ static bool verify_large_block(u16 id, const LargeDescriptor& descriptor,
     return false;
   }
   const u16 data_len = get_le16(header, 20);
-  const u32 crc = ~crc32_flash(
-      sector_address(sector) + LARGE_BLOCK_HEADER_SIZE, data_len);
+  u32 crc = 0;
+  if(!crc32_flash(
+       sector_address(sector) + LARGE_BLOCK_HEADER_SIZE,
+       data_len, crc)) return false;
   if(crc != get_le32(header, 24)) return false;
   g_verified_large_id = id;
   g_verified_large_generation = descriptor.generation;
@@ -2181,12 +2226,12 @@ static bool next_large_payload_byte(void* context, u8& value) {
        !read_bytes(sector_address(input.descriptor->sectors[block]) +
                        LARGE_BLOCK_HEADER_SIZE + in_block,
                    input.buffer, count)) return false;
+    input.crc = crc32_bytes(input.buffer, count, input.crc);
     input.buffered = (u8) count;
     input.cursor = 0;
   }
   value = input.buffer[input.cursor++];
   input.position++;
-  input.crc = crc32_update(input.crc, value);
   return true;
 }
 
@@ -2194,7 +2239,7 @@ static bool read_large_zx0_range(u16 id,
                                  const LargeDescriptor& descriptor,
                                  u16 offset, u8* output, u16 size) {
   LargePayloadInput compressed = {
-    id, &descriptor, 0, {}, 0, 0, 0xFFFFFFFFUL
+    id, &descriptor, 0, {}, 0, 0, mk61_crc32::INITIAL_STATE
   };
   const zx0::Input input = {&compressed, next_large_payload_byte};
   u8 window[256] = {};
@@ -2202,7 +2247,7 @@ static bool read_large_zx0_range(u16 id,
                            descriptor.data_len, offset, output, size,
                            window, sizeof(window)) &&
          compressed.position == descriptor.stored_len &&
-         ~compressed.crc == descriptor.data_crc;
+         mk61_crc32::finish(compressed.crc) == descriptor.data_crc;
 }
 
 static bool payload_equals_source(u16 id, const Inode& inode,
@@ -2834,7 +2879,7 @@ static bool program_large_source(u16 id, const FileSource& source,
     descriptor.generation = ++g_meta.data_sequence;
   }
 
-  u32 file_crc = 0xFFFFFFFFUL;
+  u32 file_crc = mk61_crc32::INITIAL_STATE;
   u8 buffer[64];
   u16 file_offset = 0;
   for(u8 block = 0; block < descriptor.block_count; block++) {
@@ -2874,12 +2919,14 @@ static bool program_large_source(u16 id, const FileSource& source,
     put_le32(header, 28,
              normalized_record_crc(header, sizeof(header), 28, 5));
     const u32 address = sector_address(sector);
+    u32 verified_crc = 0;
     if(!write_bytes(address, header, sizeof(header)) ||
        !write_byte(address + 5, STATE_ACTIVE) ||
-       ~crc32_flash(address + LARGE_BLOCK_HEADER_SIZE, block_len) !=
-           get_le32(header, 24)) return false;
+       !crc32_flash(address + LARGE_BLOCK_HEADER_SIZE,
+                    block_len, verified_crc) ||
+       verified_crc != get_le32(header, 24)) return false;
   }
-  descriptor.data_crc = ~file_crc;
+  descriptor.data_crc = mk61_crc32::finish(file_crc);
   return file_offset == descriptor.stored_len;
 }
 
@@ -2890,7 +2937,7 @@ struct LargeZx0Output {
   u8 buffer[64];
   u8 buffered;
   u32 block_crc[LARGE_BLOCK_COUNT];
-  u32 file_crc;
+  mk61_crc32::Context* file_crc;
 };
 
 static bool flush_large_zx0_output(LargeZx0Output& output) {
@@ -2906,8 +2953,7 @@ static bool flush_large_zx0_output(LargeZx0Output& output) {
                   output.buffer, output.buffered)) return false;
   output.block_crc[block] =
       crc32_bytes(output.buffer, output.buffered, output.block_crc[block]);
-  output.file_crc =
-      crc32_bytes(output.buffer, output.buffered, output.file_crc);
+  if(!output.file_crc->update(output.buffer, output.buffered)) return false;
   output.buffered = 0;
   return true;
 }
@@ -2946,12 +2992,14 @@ static bool finish_large_zx0_output(LargeZx0Output& output) {
              normalized_record_crc(header, sizeof(header), 28, 5));
     const u32 address =
         sector_address(output.descriptor->sectors[block]);
+    u32 verified_crc = 0;
     if(!write_bytes(address, header, sizeof(header)) ||
        !write_byte(address + 5, STATE_ACTIVE) ||
-       ~crc32_flash(address + LARGE_BLOCK_HEADER_SIZE, block_len) !=
-           get_le32(header, 24)) return false;
+       !crc32_flash_software(address + LARGE_BLOCK_HEADER_SIZE,
+                             block_len, verified_crc) ||
+       verified_crc != get_le32(header, 24)) return false;
   }
-  output.descriptor->data_crc = ~output.file_crc;
+  output.descriptor->data_crc = output.file_crc->finish();
   return true;
 }
 
@@ -2981,10 +3029,11 @@ static bool program_large_zx0(u16 id,
     g_large_write_sectors[g_large_write_sector_count++] = sector;
   }
 
+  mk61_crc32::Context file_crc;
   LargeZx0Output encoded = {};
   encoded.id = id;
   encoded.descriptor = &descriptor;
-  encoded.file_crc = 0xFFFFFFFFUL;
+  encoded.file_crc = &file_crc;
   for(u8 block = 0; block < LARGE_BLOCK_COUNT; block++) {
     encoded.block_crc[block] = 0xFFFFFFFFUL;
   }
@@ -3858,8 +3907,9 @@ static u32 stage_crc(u32 key, u16 generation, const u8* data) {
   u8 prefix[6];
   put_le32(prefix, 0, key);
   put_le16(prefix, 4, generation);
-  u32 crc = crc32_bytes(prefix, sizeof(prefix));
-  return ~crc32_bytes(data, STAGE_DATA_SIZE, crc);
+  u32 state = crc32_bytes(prefix, sizeof(prefix));
+  state = crc32_bytes(data, STAGE_DATA_SIZE, state);
+  return mk61_crc32::finish(state);
 }
 
 static bool read_stage_record(u16 ref, u32& key, u16& generation,

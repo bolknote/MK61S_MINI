@@ -1,5 +1,6 @@
 #include "loadable_module_format.hpp"
 
+#include "crc32.hpp"
 #include "zx0.hpp"
 
 #include <string.h>
@@ -202,27 +203,19 @@ bool kind_from_file_name(const char* name, Kind& kind) {
 }
 
 u32 crc32_begin(void) {
-  return 0xFFFFFFFFUL;
+  return mk61_crc32::INITIAL_STATE;
 }
 
 u32 crc32_extend(u32 state, const u8* data, usize size) {
-  if(data == nullptr && size != 0) return state;
-  for(usize index = 0; index < size; index++) {
-    state ^= data[index];
-    for(u8 bit = 0; bit < 8; bit++) {
-      state = (state & 1U) != 0
-          ? (state >> 1) ^ 0xEDB88320UL : state >> 1;
-    }
-  }
-  return state;
+  return mk61_crc32::extend(state, data, size);
 }
 
 u32 crc32_finish(u32 state) {
-  return state ^ 0xFFFFFFFFUL;
+  return mk61_crc32::finish(state);
 }
 
 u32 crc32(const u8* data, usize size) {
-  return crc32_finish(crc32_extend(crc32_begin(), data, size));
+  return mk61_crc32::calculate(data, size);
 }
 
 bool encode_header(const Header& header, u32 slot_size,
