@@ -49,6 +49,21 @@
   #error "MK61_ENABLE_FAULT_INJECTION must be 0 or 1"
 #endif
 
+// Cortex-M4 MPU guards catch null access, stack/heap collision and (where no
+// System APP executes from SRAM) accidental code execution from data memory.
+#ifndef MK61_ENABLE_MPU_GUARDS
+  #define MK61_ENABLE_MPU_GUARDS 1
+#endif
+#if MK61_ENABLE_MPU_GUARDS != 0 && MK61_ENABLE_MPU_GUARDS != 1
+  #error "MK61_ENABLE_MPU_GUARDS must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_MPU_TEST
+  #define MK61_ENABLE_MPU_TEST 0
+#endif
+#if MK61_ENABLE_MPU_TEST != 0 && MK61_ENABLE_MPU_TEST != 1
+  #error "MK61_ENABLE_MPU_TEST must be 0 or 1"
+#endif
+
 // IWDG стартует только в конце setup и кормится после завершённого foreground
 // service epoch. Стендовые starvation/hang действия отсутствуют в release.
 #ifndef MK61_ENABLE_INDEPENDENT_WATCHDOG
@@ -73,16 +88,6 @@
 #endif
 #if MK61_ENABLE_IDLE_WFI != 0 && MK61_ENABLE_IDLE_WFI != 1
   #error "MK61_ENABLE_IDLE_WFI must be 0 or 1"
-#endif
-
-// SPI1 arbiter can wrap the existing synchronous polling transactions before
-// any DMA backend is introduced. At 0 clients retain the direct path and no
-// arbiter object, constructor or runtime cost is emitted.
-#ifndef MK61_ENABLE_SPI1_ARBITER
-  #define MK61_ENABLE_SPI1_ARBITER 0
-#endif
-#if MK61_ENABLE_SPI1_ARBITER != 0 && MK61_ENABLE_SPI1_ARBITER != 1
-  #error "MK61_ENABLE_SPI1_ARBITER must be 0 or 1"
 #endif
 
 // Старый резервный вариант хранения через EEPROM Arduino требует 8-КиБ буфер
@@ -382,6 +387,40 @@
 // ревизией Classic. Такая комбинация дала бы неверную распиновку буззера.
 #if defined(REVISION_V2) && (defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3) || defined(MK61_BOARD_40TH))
   #error "REVISION_V2 cannot be combined with a UC1609 board profile"
+#endif
+
+// Mini/LCD1602 has only the NOR client on SPI1, so its measured arbiter and DMA
+// backend are enabled by default. Physical UC1609 profiles stay on their
+// original polling path until the display is moved behind the same ownership
+// boundary and accepted on real Classic/40th hardware.
+#ifndef MK61_ENABLE_SPI1_ARBITER
+  #if defined(MK61_DISPLAY_UC1609)
+    #define MK61_ENABLE_SPI1_ARBITER 0
+  #else
+    #define MK61_ENABLE_SPI1_ARBITER 1
+  #endif
+#endif
+#if MK61_ENABLE_SPI1_ARBITER != 0 && MK61_ENABLE_SPI1_ARBITER != 1
+  #error "MK61_ENABLE_SPI1_ARBITER must be 0 or 1"
+#endif
+
+// Long SPI1 buffers can use DMA2 S2/S3 after the polling arbiter has granted
+// exclusive ownership. The measured threshold is deliberately configurable;
+// short command/address transfers remain on the cheaper polling path.
+#ifndef MK61_ENABLE_SPI1_DMA
+  #define MK61_ENABLE_SPI1_DMA MK61_ENABLE_SPI1_ARBITER
+#endif
+#if MK61_ENABLE_SPI1_DMA != 0 && MK61_ENABLE_SPI1_DMA != 1
+  #error "MK61_ENABLE_SPI1_DMA must be 0 or 1"
+#endif
+#if MK61_ENABLE_SPI1_DMA && !MK61_ENABLE_SPI1_ARBITER
+  #error "MK61_ENABLE_SPI1_DMA requires MK61_ENABLE_SPI1_ARBITER=1"
+#endif
+#ifndef MK61_SPI1_DMA_THRESHOLD
+  #define MK61_SPI1_DMA_THRESHOLD 128
+#endif
+#if MK61_SPI1_DMA_THRESHOLD < 1 || MK61_SPI1_DMA_THRESHOLD > 65535
+  #error "MK61_SPI1_DMA_THRESHOLD must be in 1..65535"
 #endif
 
 // Электрическая полярность PC13 задаётся полной платой, а не типом клавиатуры:

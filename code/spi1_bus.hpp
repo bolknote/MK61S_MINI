@@ -4,7 +4,7 @@
 #include "spi1_arbiter.hpp"
 
 #ifndef MK61_ENABLE_SPI1_ARBITER
-  #define MK61_ENABLE_SPI1_ARBITER 0
+  #define MK61_ENABLE_SPI1_ARBITER 1
 #endif
 #if MK61_ENABLE_SPI1_ARBITER != 0 && MK61_ENABLE_SPI1_ARBITER != 1
   #error "MK61_ENABLE_SPI1_ARBITER must be 0 or 1"

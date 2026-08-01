@@ -9,8 +9,10 @@ using usb_screen::VirtualKeyQueue;
 
 static void test_abort_discards_undelivered_press(void) {
   VirtualKeyQueue keys;
+  assert(!keys.workPending());
   assert(keys.enqueue(7, true) ==
          VirtualKeyQueue::EnqueueResult::QUEUED);
+  assert(keys.workPending());
   assert(keys.requestedPressed() == ((u64) 1 << 7));
   assert(keys.deliveredPressed() == 0);
 
@@ -19,6 +21,7 @@ static void test_abort_discards_undelivered_press(void) {
   assert(keys.front() < 0);
   assert(keys.requestedPressed() == 0);
   assert(keys.deliveredPressed() == 0);
+  assert(!keys.workPending());
 }
 
 static void test_abort_releases_only_delivered_press(void) {
@@ -61,6 +64,7 @@ static void test_release_all_preserves_event_order(void) {
   assert(keys.front() < 0);
   assert(keys.requestedPressed() == 0);
   assert(keys.deliveredPressed() == 0);
+  assert(!keys.workPending());
 }
 
 static void test_duplicate_and_invalid_events_are_ignored(void) {

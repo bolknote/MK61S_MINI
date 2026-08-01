@@ -28,6 +28,7 @@ using namespace kbd;
 #include "classic_timer.hpp"
 #include "dwt_profiler.hpp"
 #include "crash_dump.hpp"
+#include "mpu_guard.hpp"
 #include "independent_watchdog.hpp"
 #include "idle_sleep.hpp"
 #include "shared_scratch.hpp"
@@ -329,6 +330,8 @@ void setup() {
     DFU_enter_bootloader();
     return;
   }
+
+  (void) mpu_guard::initialize();
 
   // Эти конструкторы обращаются к Arduino/STM32 объектам или периферийным
   // описателям. Запускаем их только для обычной загрузки и после premain.
@@ -880,13 +883,11 @@ static bool idle_periodic_wake_ready(void) {
   return (SysTick->CTRL & required) == required;
 }
 
-static bool idle_terminal_active(void) {
+static bool idle_terminal_work_pending(void) {
 #ifdef TERMINAL
-  bool active = terminal_service_in_progress || Serial.available() > 0;
-  #if defined(USBCON) && defined(USBD_USE_CDC)
-    active = active || Serial.dtr();
-  #endif
-  return active;
+  // DTR only means that a host has the CDC endpoint open. Shallow WFI keeps
+  // USB configured and the USB/SysTick interrupt wakes us for actual input.
+  return terminal_service_in_progress || Serial.available() > 0;
 #else
   return false;
 #endif
@@ -908,8 +909,8 @@ static idle_sleep_policy::Conditions idle_sleep_conditions(void) {
     top_level_idle_sleep_permitted && idle_main_depth == 1,
     calculator_idle,
     usb_mass_storage::active(),
-    usb_screen::active(),
-    idle_terminal_active(),
+    usb_screen::idleWorkPending(),
+    idle_terminal_work_pending(),
     sound_busy(),
     kbd::last_key() >= 0 || kbd::any_key_pressed(),
     classic.active || classic.pending != 0,
@@ -922,6 +923,7 @@ static idle_sleep_policy::Conditions idle_sleep_conditions(void) {
 #endif
 
 void  loop() {
+  mpu_guard::observe_stack();
   static u32 top_level_display_mode_revision =
     main_lcd().displayModeRevision();
   #if MK61_IDLE_WFI_SUPPORTED

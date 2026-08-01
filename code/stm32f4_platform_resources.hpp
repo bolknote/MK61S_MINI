@@ -13,6 +13,10 @@
 
   #define MK61_CLASSIC_TIMER_INSTANCE TIM9
   #define MK61_SOUND_CUTOFF_TIMER_INSTANCE TIM10
+  #define MK61_SPI1_RX_DMA_INSTANCE DMA2_Stream2
+  #define MK61_SPI1_TX_DMA_INSTANCE DMA2_Stream3
+  #define MK61_SPI1_RX_DMA_IRQ DMA2_Stream2_IRQn
+  #define MK61_SPI1_TX_DMA_IRQ DMA2_Stream3_IRQn
 
 namespace stm32f4_platform_resources {
 

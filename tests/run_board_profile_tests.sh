@@ -150,3 +150,10 @@ if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
   echo "invalid TinyBASIC flag unexpectedly compiled" >&2
   exit 1
 fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_SPI1_ARBITER=0 -DMK61_ENABLE_SPI1_DMA=1 \
+    -o "$out-invalid-spi1-dma" >/dev/null 2>&1; then
+  echo "SPI1 DMA without the arbiter unexpectedly compiled" >&2
+  exit 1
+fi

@@ -23,8 +23,8 @@ static void test_policy_maps_every_blocker(void) {
   value.foreground_context = false;
   value.calculator_idle = false;
   value.usb_mass_storage_active = true;
-  value.usb_screen_active = true;
-  value.terminal_active = true;
+  value.usb_screen_work_pending = true;
+  value.terminal_work_pending = true;
   value.sound_active = true;
   value.keyboard_active = true;
   value.classic_active = true;

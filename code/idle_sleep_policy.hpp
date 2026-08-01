@@ -25,8 +25,8 @@ struct Conditions {
   bool foreground_context;
   bool calculator_idle;
   bool usb_mass_storage_active;
-  bool usb_screen_active;
-  bool terminal_active;
+  bool usb_screen_work_pending;
+  bool terminal_work_pending;
   bool sound_active;
   bool keyboard_active;
   bool classic_active;
@@ -38,8 +38,8 @@ constexpr u32 blockers(const Conditions& value) {
   return (!value.foreground_context ? BLOCK_FOREGROUND_CONTEXT : 0) |
          (!value.calculator_idle ? BLOCK_CALCULATOR_BUSY : 0) |
          (value.usb_mass_storage_active ? BLOCK_USB_MASS_STORAGE : 0) |
-         (value.usb_screen_active ? BLOCK_USB_SCREEN : 0) |
-         (value.terminal_active ? BLOCK_TERMINAL : 0) |
+         (value.usb_screen_work_pending ? BLOCK_USB_SCREEN : 0) |
+         (value.terminal_work_pending ? BLOCK_TERMINAL : 0) |
          (value.sound_active ? BLOCK_SOUND : 0) |
          (value.keyboard_active ? BLOCK_KEYBOARD : 0) |
          (value.classic_active ? BLOCK_CLASSIC : 0) |

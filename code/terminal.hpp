@@ -38,9 +38,13 @@
 #include "classic_timer.hpp"
 #include "crash_dump.hpp"
 #include "independent_watchdog.hpp"
+#include "mpu_guard.hpp"
 #include "idle_sleep.hpp"
 #if MK61_ENABLE_SPI1_ARBITER
   #include "spi1_bus.hpp"
+#endif
+#if MK61_ENABLE_SPI1_DMA
+  #include "spi1_dma.hpp"
 #endif
 
 extern  const char terminal_symbols[16];
@@ -172,6 +176,13 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "wdog",    CMD_WATCHDOG,      "wdog [status|test <starve|hang>]" },
   #else
   { "wdog",    CMD_WATCHDOG,      "wdog [status]" },
+  #endif
+#endif
+#if MK61_MPU_GUARD_SUPPORTED
+  #if MK61_ENABLE_MPU_TEST
+  { "mpu",     CMD_MPU,           "mpu [status|test <guard|null|exec>]" },
+  #else
+  { "mpu",     CMD_MPU,           "mpu [status]" },
   #endif
 #endif
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
@@ -547,6 +558,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       #else
       Serial.println("Usage: crash [show|clear|save [path.txt]]");
       #endif
+
     }
 
     terminal_protocol::Result show_crash_dump(void) {
@@ -673,6 +685,99 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       #endif
 
       print_crash_usage();
+      return terminal_protocol::Result::error();
+    }
+#endif
+
+#if MK61_MPU_GUARD_SUPPORTED
+    static void print_mpu_usage(void) {
+      #if MK61_ENABLE_MPU_TEST
+      Serial.println("Usage: mpu [status|test <guard|null|exec>]");
+      #else
+      Serial.println("Usage: mpu [status]");
+      #endif
+    }
+
+    terminal_protocol::Result show_mpu_status(void) {
+      const mpu_guard::Snapshot snapshot = mpu_guard::statistics();
+      Serial.print("MPU backend=");
+      Serial.print(mpu_guard::backend_name());
+      Serial.print(" enabled=");
+      Serial.print(snapshot.enabled ? 1 : 0);
+      Serial.print(" layout=");
+      Serial.print(snapshot.layout_valid ? "ok" : "invalid");
+      Serial.print(" regions=");
+      Serial.print(snapshot.available_regions);
+      Serial.print('/');
+      Serial.print(snapshot.required_regions);
+      Serial.print(" ram=0x");
+      Serial.print(snapshot.ram_start, HEX);
+      Serial.print("..0x");
+      Serial.print(snapshot.ram_end, HEX);
+      Serial.print(" static_end=0x");
+      Serial.print(snapshot.static_end, HEX);
+      Serial.print(" guard=0x");
+      Serial.print(snapshot.guard_base, HEX);
+      Serial.print('+');
+      Serial.print(snapshot.guard_size);
+      Serial.print(" stack_budget=");
+      Serial.print(snapshot.stack_budget);
+      Serial.print(" msp=0x");
+      Serial.print(snapshot.current_msp, HEX);
+      Serial.print(" observed_low=0x");
+      Serial.print(snapshot.lowest_observed_msp, HEX);
+      Serial.print(" observed_remaining=");
+      Serial.print(snapshot.remaining_stack_bytes());
+      Serial.print(" sram_xn=");
+      Serial.println(snapshot.sram_execute_never ? 1 : 0);
+      return snapshot.enabled
+          ? terminal_protocol::Result::ok()
+          : terminal_protocol::Result::error();
+    }
+
+    terminal_protocol::Result exec_mpu(void) {
+      const char* cursor = command_args();
+      if(terminal_core::at_end(cursor)) return show_mpu_status();
+
+      char action[12];
+      if(!terminal_core::parse_token(cursor, action, sizeof(action))) {
+        print_mpu_usage();
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(action, "status") == 0 && terminal_core::at_end(cursor)) {
+        return show_mpu_status();
+      }
+
+      #if MK61_ENABLE_MPU_TEST
+      if(strcmp(action, "test") == 0) {
+        char fault[12];
+        if(!terminal_core::parse_token(cursor, fault, sizeof(fault)) ||
+           !terminal_core::at_end(cursor)) {
+          print_mpu_usage();
+          return terminal_protocol::Result::error();
+        }
+        Serial.print("MPU injecting ");
+        Serial.println(fault);
+        Serial.flush();
+        delay(20);
+        bool injected = false;
+        if(strcmp(fault, "guard") == 0) {
+          injected = mpu_guard::inject_guard_fault();
+        } else if(strcmp(fault, "null") == 0) {
+          injected = mpu_guard::inject_null_fault();
+        } else if(strcmp(fault, "exec") == 0) {
+          injected = mpu_guard::inject_execute_fault();
+        } else {
+          print_mpu_usage();
+          return terminal_protocol::Result::error();
+        }
+        (void) injected;
+        Serial.println("MPU fault was not raised");
+        return terminal_protocol::Result::error();
+      }
+      #endif
+
+      print_mpu_usage();
       return terminal_protocol::Result::error();
     }
 #endif
@@ -894,6 +999,28 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println(spi1_arbiter::result_name(spi1.last_fault));
       #endif
 
+      #if MK61_ENABLE_SPI1_DMA
+      const spi1_dma::Snapshot dma = spi1_dma::statistics();
+      Serial.print("SPI1 DMA backend=");
+      Serial.print(spi1_dma::backend_name());
+      Serial.print(" threshold=");
+      Serial.print(dma.threshold);
+      Serial.print(" transfers=");
+      Serial.print(dma.transfers);
+      Serial.print(" bytes=");
+      Serial.print(dma.bytes);
+      Serial.print(" wfi=");
+      Serial.print(dma.wfi_entries);
+      Serial.print(" fallback=");
+      Serial.print(dma.polling_fallbacks);
+      Serial.print(" init_errors=");
+      Serial.print(dma.initialization_failures);
+      Serial.print(" errors=");
+      Serial.print(dma.transfer_failures);
+      Serial.print(" timeouts=");
+      Serial.println(dma.timeouts);
+      #endif
+
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
       Serial.print("SLEEP backend=");
       Serial.print(idle_sleep::backend_name());
@@ -968,6 +1095,27 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       report.append_u64(classic.pending);
       report.append_text(",max_pending=");
       report.append_u64(classic.maximum_pending);
+      #if MK61_ENABLE_SPI1_DMA
+      const spi1_dma::Snapshot dma = spi1_dma::statistics();
+      report.append_text("\nspi1_dma_backend=");
+      report.append_text(spi1_dma::backend_name());
+      report.append_text(",threshold=");
+      report.append_u64(dma.threshold);
+      report.append_text(",transfers=");
+      report.append_u64(dma.transfers);
+      report.append_text(",bytes=");
+      report.append_u64(dma.bytes);
+      report.append_text(",wfi=");
+      report.append_u64(dma.wfi_entries);
+      report.append_text(",fallback=");
+      report.append_u64(dma.polling_fallbacks);
+      report.append_text(",init_errors=");
+      report.append_u64(dma.initialization_failures);
+      report.append_text(",errors=");
+      report.append_u64(dma.transfer_failures);
+      report.append_text(",timeouts=");
+      report.append_u64(dma.timeouts);
+      #endif
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
       report.append_text("\nsleep_backend=");
       report.append_text(idle_sleep::backend_name());
@@ -1090,6 +1238,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         classic_timer::reset_statistics();
         idle_sleep::reset_statistics();
+        #if MK61_ENABLE_SPI1_DMA
+        spi1_dma::reset_statistics();
+        #endif
         Serial.println("PROF started");
         return terminal_protocol::Result::ok();
       }
@@ -1102,6 +1253,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         dwt_profiler::reset();
         classic_timer::reset_statistics();
         idle_sleep::reset_statistics();
+        #if MK61_ENABLE_SPI1_DMA
+        spi1_dma::reset_statistics();
+        #endif
         Serial.println("PROF reset");
         return terminal_protocol::Result::ok();
       }
@@ -2381,6 +2535,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 #if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
           case CMD_WATCHDOG: {
               const terminal_protocol::Result result = exec_watchdog();
+              recive_pos = 0;
+              return result;
+            }
+#endif
+#if MK61_MPU_GUARD_SUPPORTED
+          case CMD_MPU: {
+              const terminal_protocol::Result result = exec_mpu();
               recive_pos = 0;
               return result;
             }

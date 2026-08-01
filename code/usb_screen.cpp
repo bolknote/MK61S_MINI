@@ -503,6 +503,27 @@ bool active(void) { return session.state != State::IDLE; }
 bool attached(void) { return session.state == State::ATTACHED; }
 bool wireBusy(void) { return txPending(); }
 
+bool idleWorkPending(void) {
+  if(session.state == State::IDLE) return false;
+  if(Serial.available() > 0 || session.terminal_rx.size != 0 ||
+     session.virtual_keys.workPending()) return true;
+
+  // If the endpoint cannot accept another byte, USB or the 1 ms SysTick will
+  // wake shallow sleep. Spinning until that happens only burns CPU.
+  if(txPending()) return Serial.availableForWrite() > 0;
+  if(session.response.valid) return true;
+
+  if(session.state == State::WAITING_FOR_HOST) {
+    const t_time_ms now = millis();
+    return session.next_offer_ms == 0 ||
+        runtime_safety::time_reached(now, session.next_offer_ms);
+  }
+
+  return session.frame_stage != FrameStage::IDLE ||
+      session.resend_requested ||
+      main_lcd().usbScreenRevision() != session.sent_revision;
+}
+
 bool takeTerminalByte(u8& value) {
   return session.terminal_rx.pop(value);
 }

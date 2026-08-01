@@ -93,6 +93,14 @@ int main(void) {
   static_assert(sizeof(FULL_MODEL_NAME) == 17,
                 "startup model name must occupy exactly 16 characters");
 
+#if defined(MK61_DISPLAY_UC1609)
+  static_assert(MK61_ENABLE_SPI1_ARBITER == 0 && MK61_ENABLE_SPI1_DMA == 0,
+                "physical UC1609 must retain polling until hardware acceptance");
+#else
+  static_assert(MK61_ENABLE_SPI1_ARBITER == 1 && MK61_ENABLE_SPI1_DMA == 1,
+                "mini must enable the accepted SPI1 arbiter and DMA path");
+#endif
+
 #if defined(MK61_CONFIG_EXPECT_V2)
   #if !defined(REVISION_V2) || defined(REVISION_V3)
     #error "the V2 build must select V2 only"

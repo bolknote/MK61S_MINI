@@ -66,6 +66,7 @@ class SpiNorFlash {
     bool select(void);
     bool deselect(void);
     u8 transfer(u8 value);
+    bool transferBuffer(const void* tx_buffer, void* rx_buffer, usize len);
     void sendAddress(u32 address);
     bool readStatus(u8& status);
     bool waitReady(u32 timeout_ms);

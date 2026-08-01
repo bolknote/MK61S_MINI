@@ -97,6 +97,9 @@ class VirtualKeyQueue {
     u64 requestedPressed(void) const { return requested_pressed_; }
     u64 deliveredPressed(void) const { return delivered_pressed_; }
     usize pendingEvents(void) const { return events_.size(); }
+    bool workPending(void) const {
+      return release_all_pending_ || events_.size() != 0;
+    }
 
   private:
     u64 requested_pressed_;

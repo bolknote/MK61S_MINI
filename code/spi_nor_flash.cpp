@@ -1,11 +1,15 @@
+#if !defined(PROGRAM_STORE_HOST_TEST)
+  #include "config.h"
+#endif
+
 #include "spi_nor_flash.hpp"
 #include "flash_capacity_probe.hpp"
 #include "spi_nor_sfdp.hpp"
 #include "dwt_profiler.hpp"
+#include "spi1_dma.hpp"
 
 #if !defined(PROGRAM_STORE_HOST_TEST)
 
-#include "config.h"
 #include "spi1_bus.hpp"
 
 #include <string.h>
@@ -56,6 +60,17 @@ bool SpiNorFlash::deselect(void) {
 }
 
 u8 SpiNorFlash::transfer(u8 value) { return spi_->transfer(value); }
+
+bool SpiNorFlash::transferBuffer(const void* tx_buffer, void* rx_buffer,
+                                 usize len) {
+  if(len == 0) return true;
+  const spi1_dma::Result dma =
+      spi1_dma::transfer(spi_, tx_buffer, rx_buffer, len);
+  if(dma == spi1_dma::Result::COMPLETE) return true;
+  if(dma == spi1_dma::Result::FAILED) return false;
+  spi_->transfer(tx_buffer, rx_buffer, len);
+  return true;
+}
 
 void SpiNorFlash::sendAddress(u32 address) {
   if(four_byte_address_) transfer((u8) (address >> 24));
@@ -291,7 +306,10 @@ bool SpiNorFlash::rawRead(u32 address, u8* output, usize len) {
   // виртуальный сектор FAT пересекал бы эту сравнительно дорогую границу 512
   // раз. Перегрузка с буфером выполняет тот же обмен за один вызов HAL и
   // подставляет стандартные фиктивные байты передачи 0xFF, если tx_buf равен NULL.
-  if(len != 0) spi_->transfer((const void*) NULL, output, len);
+  if(!transferBuffer(NULL, output, len)) {
+    (void) deselect();
+    return false;
+  }
   return deselect();
 }
 
@@ -324,7 +342,10 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
     // За одну транзакцию HAL программируем один полный фрагмент страницы NOR.
     // Это не только намного быстрее побайтовой передачи, но и сохраняет границу
     // страницы, обязательную для каждой команды программирования страницы SPI NOR.
-    spi_->transfer((const void*) data, (void*) NULL, count);
+    if(!transferBuffer(data, NULL, count)) {
+      (void) deselect();
+      return false;
+    }
     if(!deselect()) return false;
     if(!waitReady(5000)) return false;
     address += count;
@@ -349,7 +370,10 @@ bool SpiNorFlash::verifyBytes(u32 address, const u8* expected, usize len) {
   while(offset < len) {
     const u16 count = (u16) (len - offset < sizeof(recovered)
         ? len - offset : sizeof(recovered));
-    spi_->transfer((const void*) NULL, recovered, count);
+    if(!transferBuffer(NULL, recovered, count)) {
+      (void) deselect();
+      return false;
+    }
     if(memcmp(recovered, expected + offset, count) != 0) {
       (void) deselect();
       return false;
