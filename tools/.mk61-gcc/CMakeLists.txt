@@ -105,6 +105,15 @@ add_subdirectory("${BUILD_VARIANT_PATH}" "${CMAKE_BINARY_DIR}/stm32/variant")
 add_subdirectory("${BUILD_CORE_PATH}" "${CMAKE_BINARY_DIR}/stm32/core")
 add_subdirectory("${BUILD_LIB_PATH}" "${CMAKE_BINARY_DIR}/stm32/libraries")
 
+# Keep the CDC queue-full call visible to GNU ld.  With whole-program LTO the
+# call to USBD_CDC_ClearBuffer is resolved inside usbd_cdc.c before --wrap can
+# redirect it, leaving F401 builds unprotected.  Only this small translation
+# unit needs to opt out; the rest of the resident firmware retains LTO.
+set_source_files_properties(
+  "${BUILD_LIB_PATH}/USBDevice/src/cdc/usbd_cdc.c"
+  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
+  PROPERTIES COMPILE_OPTIONS "-fno-lto")
+
 add_library(mk61_liquidcrystal STATIC
   "${MK61_LIQUIDCRYSTAL_ROOT}/src/LiquidCrystal.cpp")
 target_include_directories(mk61_liquidcrystal PUBLIC
@@ -147,7 +156,8 @@ target_link_libraries(resident PRIVATE
   mk61_liquidcrystal
   mk61_rtc)
 target_link_options(resident PRIVATE
-  "LINKER:-Map,${CMAKE_BINARY_DIR}/resident.map")
+  "LINKER:-Map,${CMAKE_BINARY_DIR}/resident.map"
+  "LINKER:--wrap=USBD_CDC_ClearBuffer")
 
 if(MK61_ENABLE_LTO AND
    (MK61_ENABLE_FOCAL OR MK61_ENABLE_TINYBASIC OR

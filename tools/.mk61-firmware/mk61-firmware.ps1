@@ -2039,6 +2039,7 @@ function Build-Selected {
         'compile', '--fqbn', $script:FqbnF411,
         '--build-path', $buildDir,
         '--build-property', "compiler.cpp.extra_flags=$flags",
+        '--build-property', 'compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer',
         $sketchDir)
     if (-not (Invoke-ExternalWithProgress 'Сборка прошивки' "Собираю $(Get-ProfileLabel $profile)" `
         $script:LastLog 'indeterminate' $script:ArduinoCli $arguments)) {

@@ -40,6 +40,7 @@
 #include "independent_watchdog.hpp"
 #include "mpu_guard.hpp"
 #include "idle_sleep.hpp"
+#include "usb_cdc_rx_guard.hpp"
 #if MK61_ENABLE_SPI1_ARBITER
   #include "spi1_bus.hpp"
 #endif
@@ -1021,6 +1022,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println(dma.timeouts);
       #endif
 
+      const usb_cdc_rx_guard::Snapshot usb_rx =
+        usb_cdc_rx_guard::statistics();
+      Serial.print("USB CDC RX backend=");
+      Serial.print(usb_cdc_rx_guard::backend_name());
+      Serial.print(" supported=");
+      Serial.print(usb_rx.supported ? 1 : 0);
+      Serial.print(" linked=");
+      Serial.print(usb_rx.linked ? 1 : 0);
+      Serial.print(" throttles=");
+      Serial.println(usb_rx.throttles);
+
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
       Serial.print("SLEEP backend=");
       Serial.print(idle_sleep::backend_name());
@@ -1116,6 +1128,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       report.append_text(",timeouts=");
       report.append_u64(dma.timeouts);
       #endif
+      const usb_cdc_rx_guard::Snapshot usb_rx =
+        usb_cdc_rx_guard::statistics();
+      report.append_text("\nusb_cdc_rx_backend=");
+      report.append_text(usb_cdc_rx_guard::backend_name());
+      report.append_text(",supported=");
+      report.append_u64(usb_rx.supported ? 1 : 0);
+      report.append_text(",linked=");
+      report.append_u64(usb_rx.linked ? 1 : 0);
+      report.append_text(",throttles=");
+      report.append_u64(usb_rx.throttles);
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
       report.append_text("\nsleep_backend=");
       report.append_text(idle_sleep::backend_name());
@@ -1241,6 +1263,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         #if MK61_ENABLE_SPI1_DMA
         spi1_dma::reset_statistics();
         #endif
+        usb_cdc_rx_guard::reset_statistics();
         Serial.println("PROF started");
         return terminal_protocol::Result::ok();
       }
@@ -1256,6 +1279,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         #if MK61_ENABLE_SPI1_DMA
         spi1_dma::reset_statistics();
         #endif
+        usb_cdc_rx_guard::reset_statistics();
         Serial.println("PROF reset");
         return terminal_protocol::Result::ok();
       }

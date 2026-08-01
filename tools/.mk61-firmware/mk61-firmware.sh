@@ -1902,6 +1902,7 @@ prepare_and_compile_f411_worker() {
     --fqbn "$FQBN_F411" \
     --build-path "$build_dir" \
     --build-property "compiler.cpp.extra_flags=$flags" \
+    --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
     "$sketch_dir" || return 1
 
   source_artifact="$build_dir/mk61s-M.ino.bin"

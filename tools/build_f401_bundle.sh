@@ -458,6 +458,7 @@ printf 'Building F401 resident firmware (%s)…\n' "$profile"
   --fqbn "$fqbn_resident" \
   --build-path "$resident_build" \
   --build-property "compiler.cpp.extra_flags=$compile_flags" \
+  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
   "$sketch_dir"
 
 resident_elf="$resident_build/mk61s-M.ino.elf"

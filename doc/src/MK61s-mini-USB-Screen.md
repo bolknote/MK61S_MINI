@@ -292,8 +292,13 @@ MK61_ENABLE_CHIP8=1
 arduino-cli compile \
   --fqbn "STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd" \
   --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00 -DMK61_ENABLE_USB_SCREEN=1" \
+  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
   /tmp/mk61s-M
 ```
+
+Последнее свойство обязательно для F401/F411 с USB CDC: оно включает NAK
+backpressure при заполнении входной очереди. `tools/mk61-firmware.cmd` и
+`tools/build_f401_bundle.sh` добавляют его автоматически.
 
 Для A02 замените аппаратный ключ на `-DMK61_LCD1602_A02`; для остальных плат
 используйте точные флаги, которые показывает
