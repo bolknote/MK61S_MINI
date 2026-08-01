@@ -93,6 +93,8 @@ namespace library_mk61 {
 }
 
 extern  void  DFU_enable(void);
+extern  void  DFU_enter_bootloader(void);
+extern  bool  DFU_consume_reboot_request(void);
 extern  void  reinit_mk61_calculator_state(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume);
 extern  void  sound_scaled(usize pin, isize freq_Hz, usize duration_ms, usize volume, usize volume_percent);
@@ -110,6 +112,7 @@ struct SoundNote {
 static constexpr usize SOUND_PATTERN_MAX = 16;
 extern  bool  sound_pattern_start(const SoundNote* notes, usize count);
 extern  void  sound_poll(void);
+extern  bool  sound_busy(void);
 extern  void  sound_startup(void);
 extern  void  delay_with_sound_poll(t_time_ms duration_ms);
 

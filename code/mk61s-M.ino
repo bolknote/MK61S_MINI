@@ -25,6 +25,12 @@ using namespace kbd;
 #include "rtc_clock.hpp"
 #include "rtc_idle_clock.hpp"
 #include "sound_driver.hpp"
+#include "classic_timer.hpp"
+#include "dwt_profiler.hpp"
+#include "crash_dump.hpp"
+#include "independent_watchdog.hpp"
+#include "idle_sleep.hpp"
+#include "shared_scratch.hpp"
 #include "menu.hpp"
 #include "development.hpp"
 #include "focal.hpp"
@@ -51,8 +57,6 @@ static  LCD_GRD_Label       GRDLabel;
 static  key_mnenonic        MnemoLabel;
 
 class_disassm_mk61 disassembler;
-static  isize               mk61_quants;
-isize                       mk61_quants_reload;
 
 static constexpr t_time_ms  ANGLE_SAVE_UPDATE_MS   =   3000;  // Время (мс) для запуска процесса сохранения переключателя угловых единиц Р-ГРД-Г
 static constexpr t_time_ms  IDLE_SIGNAL_DELAY_MS   = 300000;  // 5 минут до сигнала бездействия
@@ -101,6 +105,49 @@ static void mix_rtc_startup_snapshot(u8 snapshot_index) {
     snapshot_index,
     rtc_clock::startup_calendar_material(snapshot),
     rtc_clock::startup_phase_material(snapshot));
+}
+
+static void persist_retained_crash_dump(void) {
+#if MK61_CRASH_DUMP_SUPPORTED
+  crash_dump_format::Record record = {};
+  if(!crash_dump::copy(record)) return;
+
+  #ifdef SERIAL_OUTPUT
+    Serial.print("CRASH retained seq=");
+    Serial.print(record.sequence);
+    Serial.print(" exception=");
+    Serial.print(crash_dump_format::exception_name(record.exception_number));
+    Serial.print(" reset=0x");
+    Serial.println(crash_dump::boot_reset_flags(), HEX);
+  #endif
+
+  if(crash_dump::persisted() || !program_store::ready()) return;
+  shared_scratch::Lease scratch(
+      shared_scratch::Owner::TERMINAL_TRANSFER,
+      program_store::MAX_MK61_TEXT_SIZE);
+  if(!scratch.ok()) return;
+
+  const u16 length = crash_dump_format::format_report(
+      record, crash_dump::current_build_id(),
+      scratch.data(), scratch.size());
+  if(length == 0) return;
+
+  char name[16];
+  // ProgramType::TEXT сам добавляет .txt в виртуальном каталоге C5.
+  snprintf(name, sizeof(name), "CRASH%lu",
+           (unsigned long) (record.sequence & 3U));
+  if(!program_store::write_file(
+         program_store::ROOT_ID, program_store::INVALID_ID,
+         program_store::ProgramType::TEXT, name,
+         scratch.data(), length)) return;
+  (void) crash_dump::mark_persisted();
+  #ifdef SERIAL_OUTPUT
+    Serial.print("CRASH auto-saved ");
+    Serial.print(name);
+    Serial.print(" bytes=");
+    Serial.println(length);
+  #endif
+#endif
 }
 
 bool usb_start_mass_storage_mode(void) {
@@ -155,11 +202,11 @@ void reset_ext_program_state(void) {
 #include  "automate.hpp"
 
 void reinit_mk61_calculator_state(void) {
+  classic_timer::synchronize(false);
   const AngleUnit selected_angle = MK61Emu_GetAngleUnit();
   reset_ext_program_state();
   memset(&ext61_reg, 0, sizeof(ext61_reg));
   mk61_sending_keycode = MK61_REQUEST_BASE_LOOP;
-  mk61_quants = runtime_safety::positive_quantum(mk61_quants_reload);
   YZ_ZT = true;
   lcd_hooked = false;
   need_draw_lock_message = false;
@@ -188,6 +235,7 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
 }
 
 void mk61_display_refresh(void) {
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::DISPLAY_UPDATE);
   MK61DisplayUpdate update(main_lcd());
   // Обновление дисплея МК61, если изменилась информация на экране
     if(!core_61::update_indicator(&display_text[0], display_symbols)) {
@@ -244,12 +292,19 @@ void inline lcd_stack_output(void) {
 }
 
 void setup() {
+  crash_dump::initialize();
+  crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 1, 0);
+  dwt_profiler::initialize();
+
+  const bool dfu_reboot_requested = DFU_consume_reboot_request();
+
   // При входе с зажатой кнопкой ESC вызывается DFU-загрузчик
   pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
   pinMode(PIN_KBD_ROW0, OUTPUT);
   digitalWrite(PIN_KBD_ROW0, HIGH);
 
-  const bool dfu_requested = digitalRead(PIN_KBD_COL0) != LOW;
+  const bool dfu_requested = dfu_reboot_requested ||
+      digitalRead(PIN_KBD_COL0) != LOW;
 
   // В mini V2 линия PC15 используется как DB7 ЖКИ. Сохранённый после сброса
   // LSE необходимо отключить до конструктора LiquidCrystal: он начинает
@@ -268,21 +323,24 @@ void setup() {
   // проверки ESC. Остальная периферия в DFU-ветке вообще не конструируется.
   main_lcd_pointer = &mk61_lcd_storage.construct();
   main_lcd().begin(lcd_display::COLS, lcd_display::DEFAULT_ROWS);
+  crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 2, millis());
 
   if(dfu_requested) {
-    DFU_enable();
+    DFU_enter_bootloader();
     return;
   }
 
   // Эти конструкторы обращаются к Arduino/STM32 объектам или периферийным
   // описателям. Запускаем их только для обычной загрузки и после premain.
   sound_driver_construct();
+  classic_timer::construct();
   #ifdef SPI_FLASH
     construct_external_flash();
   #endif
 
   led::init();
   sound_driver_init(PIN_BUZZER);
+  classic_timer::initialize();
 
   // Запускаем CDC до обнаружения внешней флеш-памяти. Раньше DEBUG_SPIFLASH
   // начинал вывод только после program_store::init(), поэтому медленная или
@@ -290,11 +348,14 @@ void setup() {
   // так и не доходила до хоста. В DFU-ветке CDC приложения не запускается:
   // она уже завершилась переходом в системный загрузчик выше.
   usb_start_terminal_mode();
+  crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 3, millis());
   dbgln(MINI, "ESC unpressed!");
 
   #ifdef SPI_FLASH
       init_external_flash();
   #endif
+  persist_retained_crash_dump();
+  crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 4, millis());
 
   library_mk61::load_settings_state();
 
@@ -353,11 +414,6 @@ void setup() {
   YZ_ZT = true;
   angle_save.schedule(millis(), ANGLE_SAVE_UPDATE_MS);
 
- // Настройки режима MAXIMAL  
-  mk61_quants_reload  =   1;
-  mk61_quants         =   mk61_quants_reload;
-  //mk61_edit_program   =   false;
-
   reset_ext_program_state();
   memset(&ext61_reg, 0, sizeof(ext61_reg));
   dbgln(EXT_RUN, "Extended register sizeof = ", sizeof(ext61_reg));
@@ -373,7 +429,10 @@ void setup() {
   // подсистемы запуска.
   led::blink_stop();
 
+  (void) independent_watchdog::initialize(millis());
   dbgln(MINI, "ON");
+  crash_dump::update_runtime(
+      crash_dump::RUNTIME_CALCULATOR, (u32) core_61::get_IP(), millis());
 }
 
 //===================================================================
@@ -757,17 +816,16 @@ void   mk61_baseloop_hook(i32 key) {
 
         mk61_process();
       } else {        // Режим работы по программе (СЧЕТ) задержка устанавливается в меню Speed CLASSIC/MAXIMAL
-        if(mk61_quants <= 1) {
+        if(!library_mk61::speed_is_classic() || classic_timer::take_step()) {
           mk61_process();
-          mk61_quants = runtime_safety::positive_quantum(mk61_quants_reload);
-        } else {
-          mk61_quants--;
         }
       }
   }
 }
 
 #ifdef TERMINAL
+static bool terminal_service_in_progress;
+
 static bool terminal_poll_due(void) {
   static u8 turbo_serial_poll_divider;
   const bool turbo_run = core_61::is_RUN() && library_mk61::speed_is_turbo();
@@ -789,11 +847,11 @@ static bool terminal_poll_due(void) {
 // терминальных команд `kbd` после подключения. За один холостой цикл
 // обрабатывается одна полная команда.
 static void service_terminal(void) {
-  static bool in_progress;
-  if(in_progress || usb_mass_storage::active() || usb_screen::wireBusy() ||
+  if(terminal_service_in_progress || usb_mass_storage::active() ||
+     usb_screen::wireBusy() ||
      !terminal_poll_due()) return;
 
-  in_progress = true;
+  terminal_service_in_progress = true;
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen::active()) {
     u8 terminal_byte = 0;
@@ -809,14 +867,110 @@ static void service_terminal(void) {
     const i32 key_from_terminal = terminal.serial_input_handler();
     if(key_from_terminal >= 0) kbd::push((i8) key_from_terminal);
   }
-  in_progress = false;
+  terminal_service_in_progress = false;
+}
+#endif
+
+#if MK61_IDLE_WFI_SUPPORTED
+static bool top_level_idle_sleep_permitted;
+static u8 idle_main_depth;
+
+static bool idle_periodic_wake_ready(void) {
+  const u32 required = SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk;
+  return (SysTick->CTRL & required) == required;
+}
+
+static bool idle_terminal_active(void) {
+#ifdef TERMINAL
+  bool active = terminal_service_in_progress || Serial.available() > 0;
+  #if defined(USBCON) && defined(USBD_USE_CDC)
+    active = active || Serial.dtr();
+  #endif
+  return active;
+#else
+  return false;
+#endif
+}
+
+static idle_sleep_policy::Conditions idle_sleep_conditions(void) {
+  const classic_scheduler::Snapshot classic = classic_timer::statistics();
+  const bool calculator_idle =
+      input_focus == &mk61_baseloop_hook &&
+      core_61::is_CALC() &&
+      !core_61::edit_program &&
+      !lcd_hooked &&
+      !m61_text::active() &&
+      !m61_text::calculator_suspended() &&
+      !user_short_press_pending &&
+      !drop_menu_exit_key_events &&
+      mk61_calculator_is_idle();
+  const idle_sleep_policy::Conditions result = {
+    top_level_idle_sleep_permitted && idle_main_depth == 1,
+    calculator_idle,
+    usb_mass_storage::active(),
+    usb_screen::active(),
+    idle_terminal_active(),
+    sound_busy(),
+    kbd::last_key() >= 0 || kbd::any_key_pressed(),
+    classic.active || classic.pending != 0,
+    auto_start.pending() || angle_save.pending() ||
+        user_short_press_pending || drop_menu_exit_key_events,
+    idle_periodic_wake_ready()
+  };
+  return result;
 }
 #endif
 
 void  loop() {
   static u32 top_level_display_mode_revision =
     main_lcd().displayModeRevision();
+  #if MK61_IDLE_WFI_SUPPORTED
+  top_level_idle_sleep_permitted = true;
+  #endif
   idle_main_process();
+  #if MK61_IDLE_WFI_SUPPORTED
+  top_level_idle_sleep_permitted = false;
+  #endif
+
+  // CLASSIC считается только в основном контексте калькулятора. Меню,
+  // trap-снимок и фильтр выхода из меню останавливают таймер и сбрасывают его
+  // фазу, как прежде останавливали продвижение loop-счётчика.
+  classic_timer::synchronize(
+      input_focus == &mk61_baseloop_hook &&
+      core_61::is_RUN() &&
+      library_mk61::speed_is_classic() &&
+      !m61_text::calculator_suspended() &&
+      !drop_menu_exit_key_events);
+
+  u32 crash_runtime_state = crash_dump::RUNTIME_CALCULATOR;
+  if(usb_mass_storage::active()) {
+    crash_runtime_state = crash_dump::RUNTIME_USB_MASS_STORAGE;
+  } else if(usb_screen::active()) {
+    crash_runtime_state = crash_dump::RUNTIME_USB_SCREEN;
+  } else if(m61_text::active()) {
+    crash_runtime_state = crash_dump::RUNTIME_M61;
+  } else if(input_focus == &mk61_menu_hook) {
+    crash_runtime_state = crash_dump::RUNTIME_MENU;
+  } else if(core_61::is_RUN()) {
+    crash_runtime_state = library_mk61::speed_is_classic()
+        ? crash_dump::RUNTIME_RUN_CLASSIC
+        : crash_dump::RUNTIME_RUN_FAST;
+  }
+  const u32 crash_now = millis();
+  const u32 crash_detail = ((u32) core_61::get_IP() & 0xFFFFU) |
+      (core_61::edit_program ? (1UL << 16) : 0U) |
+      (m61_text::calculator_suspended() ? (1UL << 17) : 0U) |
+      (lcd_hooked ? (1UL << 18) : 0U);
+  crash_dump::update_runtime(
+      crash_runtime_state, crash_detail, crash_now);
+  static u32 next_crash_timer_snapshot;
+  if(next_crash_timer_snapshot == 0 ||
+     runtime_safety::time_reached(crash_now, next_crash_timer_snapshot)) {
+    next_crash_timer_snapshot = crash_now + 1000U;
+    const classic_scheduler::Snapshot classic = classic_timer::statistics();
+    crash_dump::update_classic(
+        classic.ticks, classic.steps, classic.missed_ticks, classic.pending);
+  }
   const u32 next_display_mode_revision = main_lcd().displayModeRevision();
   if(next_display_mode_revision != top_level_display_mode_revision) {
     top_level_display_mode_revision = next_display_mode_revision;
@@ -893,6 +1047,10 @@ void  loop() {
 }
 
 void idle_main_process(void) {
+  #if MK61_IDLE_WFI_SUPPORTED
+  idle_main_depth++;
+  #endif
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::IDLE_MAIN);
   usb_mass_storage::service();
   usb_screen::service();
   // Уведомление принимается здесь, но нельзя считать, что передним планом
@@ -907,6 +1065,13 @@ void idle_main_process(void) {
   led::control();
   main_lcd().flush();
   idle_signal_poll();
+  // Единственная production reload-точка IWDG: все foreground-сервисы этого
+  // epoch уже вернулись. Зависание внутри любого из них не дойдёт сюда.
+  independent_watchdog::foreground_epoch(millis());
+  #if MK61_IDLE_WFI_SUPPORTED
+  (void) idle_sleep::attempt(idle_sleep_conditions());
+  idle_main_depth--;
+  #endif
 }
 
 void event_hold_key(i32 holded_key, i32 hold_quant) {

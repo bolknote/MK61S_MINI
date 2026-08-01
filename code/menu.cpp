@@ -20,7 +20,6 @@ extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
 extern bool usb_start_mass_storage_mode(void);
 extern bool usb_start_terminal_mode(void);
-extern isize mk61_quants_reload;
 
 static constexpr i32 DISPLAY_MODE_CHANGED = -2;
 
@@ -162,7 +161,6 @@ static u8 step_display_rows_value(u8 rows, i8 delta) {
 
 static void set_speed_mode_state(SpeedMode mode) {
   speed_mode_state = mode;
-  ::mk61_quants_reload = (mode == SpeedMode::CLASSIC) ? cfg::CLASSIC_MK61_QUANTS : 1;
 }
 
 static void append_text(char*& out, char* end, const char* text) {
@@ -670,6 +668,10 @@ void  load_settings_state(void) {
 
 SpeedMode speed_mode(void) {
   return speed_mode_state;
+}
+
+bool  speed_is_classic(void) {
+  return speed_mode_state == SpeedMode::CLASSIC;
 }
 
 bool  speed_is_max(void) {

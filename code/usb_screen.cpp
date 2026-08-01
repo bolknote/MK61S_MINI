@@ -8,6 +8,7 @@
 #include "runtime_safety.hpp"
 #include "usb_screen_protocol.hpp"
 #include "usb_screen_virtual_keys.hpp"
+#include "dwt_profiler.hpp"
 
 #include <Arduino.h>
 #include <string.h>
@@ -484,6 +485,7 @@ void service(void) {
   const t_time_ms now = millis();
   serviceVirtualKeys();
   if(session.state == State::IDLE) return;
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::USB_SCREEN_SERVICE);
   readRx(now);
   if(session.state == State::ATTACHED &&
      (t_time_ms) (now - session.last_host_packet_ms) >=

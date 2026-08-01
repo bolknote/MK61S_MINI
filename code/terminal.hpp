@@ -34,6 +34,14 @@
 #include "usb_screen.hpp"
 #include "utf8_view.hpp"
 #include "rtc_clock.hpp"
+#include "dwt_profiler.hpp"
+#include "classic_timer.hpp"
+#include "crash_dump.hpp"
+#include "independent_watchdog.hpp"
+#include "idle_sleep.hpp"
+#if MK61_ENABLE_SPI1_ARBITER
+  #include "spi1_bus.hpp"
+#endif
 
 extern  const char terminal_symbols[16];
 extern  const char display_symbols[16];
@@ -148,6 +156,23 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "disa",    CMD_DISASM,        "toggle disassembler on display" },
 #if MK61_ENABLE_USB_SCREEN
   { "uscreen", CMD_USB_SCREEN,    "start USB Screen mode" },
+#endif
+#if MK61_DWT_PROFILER_SUPPORTED
+  { "prof",    CMD_PROFILE,       "prof [start|stop|reset|save [path.txt]]" },
+#endif
+#if MK61_CRASH_DUMP_SUPPORTED
+  #if MK61_ENABLE_FAULT_INJECTION
+  { "crash",   CMD_CRASH,         "crash [show|clear|save [path.txt]|test <fault>]" },
+  #else
+  { "crash",   CMD_CRASH,         "crash [show|clear|save [path.txt]]" },
+  #endif
+#endif
+#if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
+  #if MK61_ENABLE_WATCHDOG_TEST
+  { "wdog",    CMD_WATCHDOG,      "wdog [status|test <starve|hang>]" },
+  #else
+  { "wdog",    CMD_WATCHDOG,      "wdog [status]" },
+  #endif
 #endif
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
   { "dfu",     CMD_DFU,           "enter DFU bootloader" },
@@ -513,6 +538,578 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println("  R<r>=   R<r>= <value> - write register, e.g. R0= 3.14");
       Serial.println("  set$    set$<addr> <hex> - write program memory");
     }
+
+#if MK61_CRASH_DUMP_SUPPORTED
+    static void print_crash_usage(void) {
+      #if MK61_ENABLE_FAULT_INJECTION
+      Serial.println(
+          "Usage: crash [show|clear|save [path.txt]|test <usage|bus|hard>]");
+      #else
+      Serial.println("Usage: crash [show|clear|save [path.txt]]");
+      #endif
+    }
+
+    terminal_protocol::Result show_crash_dump(void) {
+      crash_dump_format::Record record = {};
+      if(!crash_dump::copy(record)) {
+        Serial.print("CRASH none reset=0x");
+        Serial.print(crash_dump::boot_reset_flags(), HEX);
+        Serial.print(" layout=");
+        Serial.println(crash_dump::memory_layout_valid() ? "ok" : "invalid");
+        return terminal_protocol::Result::ok();
+      }
+
+      shared_scratch::Lease scratch(
+          shared_scratch::Owner::TERMINAL_TRANSFER,
+          program_store::MAX_MK61_TEXT_SIZE);
+      if(!scratch.ok()) {
+        Serial.println("CRASH show busy");
+        return terminal_protocol::Result::error();
+      }
+      const u16 length = crash_dump_format::format_report(
+          record, crash_dump::current_build_id(),
+          scratch.data(), scratch.size());
+      if(length == 0) {
+        Serial.println("CRASH report failed");
+        return terminal_protocol::Result::error();
+      }
+      Serial.write(scratch.data(), length);
+      return terminal_protocol::Result::ok();
+    }
+
+    terminal_protocol::Result save_crash_dump(const char* path) {
+      crash_dump_format::Record record = {};
+      if(!crash_dump::copy(record)) {
+        Serial.println("CRASH no retained record");
+        return terminal_protocol::Result::error();
+      }
+
+      storage_path::FileTarget target = {};
+      const storage_path::Status path_status = storage_path::file_target(
+          current_directory, path, program_store::ProgramType::TEXT, target);
+      if(path_status != storage_path::Status::OK) {
+        terminal_path_error("crash save", path_status);
+        return terminal_protocol::Result::error();
+      }
+
+      shared_scratch::Lease scratch(
+          shared_scratch::Owner::TERMINAL_TRANSFER,
+          program_store::MAX_MK61_TEXT_SIZE);
+      if(!scratch.ok()) {
+        Serial.println("CRASH save busy");
+        return terminal_protocol::Result::error();
+      }
+      const u16 length = crash_dump_format::format_report(
+          record, crash_dump::current_build_id(),
+          scratch.data(), scratch.size());
+      if(length == 0 ||
+         !program_store::write_file(
+             target.parent_id, program_store::INVALID_ID,
+             program_store::ProgramType::TEXT, target.name,
+             scratch.data(), length)) {
+        Serial.println("CRASH save failed");
+        return terminal_protocol::Result::error();
+      }
+      (void) crash_dump::mark_persisted();
+      Serial.print("CRASH saved ");
+      Serial.print(path);
+      Serial.print(" bytes=");
+      Serial.println(length);
+      return terminal_protocol::Result::ok();
+    }
+
+    terminal_protocol::Result exec_crash(void) {
+      const char* cursor = command_args();
+      if(terminal_core::at_end(cursor)) return show_crash_dump();
+
+      char action[12];
+      if(!terminal_core::parse_token(cursor, action, sizeof(action))) {
+        print_crash_usage();
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(action, "show") == 0) {
+        if(!terminal_core::at_end(cursor)) {
+          print_crash_usage();
+          return terminal_protocol::Result::error();
+        }
+        return show_crash_dump();
+      }
+      if(strcmp(action, "clear") == 0) {
+        if(!terminal_core::at_end(cursor)) {
+          print_crash_usage();
+          return terminal_protocol::Result::error();
+        }
+        crash_dump::clear();
+        Serial.println("CRASH cleared");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(action, "save") == 0) {
+        char path[MAX_INPUT_CHAR];
+        if(terminal_core::at_end(cursor)) {
+          bounded_string::copy(path, "CRASH.TXT");
+        } else if(!terminal_copy_arg(path, sizeof(path), cursor)) {
+          print_crash_usage();
+          return terminal_protocol::Result::error();
+        }
+        return save_crash_dump(path);
+      }
+
+      #if MK61_ENABLE_FAULT_INJECTION
+      if(strcmp(action, "test") == 0) {
+        char fault[12];
+        if(!terminal_core::parse_token(cursor, fault, sizeof(fault)) ||
+           !terminal_core::at_end(cursor)) {
+          print_crash_usage();
+          return terminal_protocol::Result::error();
+        }
+        Serial.print("CRASH injecting ");
+        Serial.println(fault);
+        Serial.flush();
+        delay(20);
+        if(strcmp(fault, "usage") == 0) crash_dump::inject_usage_fault();
+        if(strcmp(fault, "bus") == 0) crash_dump::inject_bus_fault();
+        if(strcmp(fault, "hard") == 0) crash_dump::inject_hard_fault();
+      }
+      #endif
+
+      print_crash_usage();
+      return terminal_protocol::Result::error();
+    }
+#endif
+
+#if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
+    static const char* watchdog_state_name(u32 state) {
+      switch(state) {
+        case independent_watchdog::RETAINED_RUNNING: return "running";
+        case independent_watchdog::RETAINED_INHIBITED: return "inhibited";
+        case independent_watchdog::RETAINED_HANG_TEST: return "hang-test";
+        default: return "unknown";
+      }
+    }
+
+    static void print_watchdog_usage(void) {
+      #if MK61_ENABLE_WATCHDOG_TEST
+      Serial.println("Usage: wdog [status|test <starve|hang>]");
+      #else
+      Serial.println("Usage: wdog [status]");
+      #endif
+    }
+
+    terminal_protocol::Result show_watchdog_status(void) {
+      const independent_watchdog::Snapshot snapshot =
+          independent_watchdog::statistics();
+      Serial.print("WDOG backend=IWDG running=");
+      Serial.print(independent_watchdog::running() ? 1 : 0);
+      Serial.print(" nominal_ms=");
+      Serial.print(independent_watchdog::NOMINAL_TIMEOUT_MS);
+      Serial.print(" reset=");
+      Serial.print(snapshot.boot_was_watchdog_reset ? 1 : 0);
+      Serial.print(" generation=");
+      Serial.print(snapshot.generation);
+      Serial.print(" epochs=");
+      Serial.print(snapshot.gate.epochs);
+      Serial.print(" reloads=");
+      Serial.print(snapshot.gate.reloads);
+      Serial.print(" last_epoch_ms=");
+      Serial.print(snapshot.gate.last_epoch_ms);
+      Serial.print(" last_reload_ms=");
+      Serial.print(snapshot.gate.last_reload_ms);
+      Serial.print(" max_gap_ms=");
+      Serial.println(snapshot.gate.maximum_reload_gap_ms);
+
+      if(snapshot.previous_breadcrumb_valid) {
+        Serial.print("WDOG previous generation=");
+        Serial.print(snapshot.previous.generation);
+        Serial.print(" state=");
+        Serial.print(watchdog_state_name(snapshot.previous.state));
+        Serial.print(" epochs=");
+        Serial.print(snapshot.previous.epochs);
+        Serial.print(" reloads=");
+        Serial.print(snapshot.previous.reloads);
+        Serial.print(" last_epoch_ms=");
+        Serial.print(snapshot.previous.last_epoch_ms);
+        Serial.print(" last_reload_ms=");
+        Serial.print(snapshot.previous.last_reload_ms);
+        Serial.print(" max_gap_ms=");
+        Serial.println(snapshot.previous.maximum_reload_gap_ms);
+      }
+      return terminal_protocol::Result::ok();
+    }
+
+    terminal_protocol::Result exec_watchdog(void) {
+      const char* cursor = command_args();
+      if(terminal_core::at_end(cursor)) return show_watchdog_status();
+
+      char action[12];
+      if(!terminal_core::parse_token(cursor, action, sizeof(action))) {
+        print_watchdog_usage();
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(action, "status") == 0 && terminal_core::at_end(cursor)) {
+        return show_watchdog_status();
+      }
+
+      #if MK61_ENABLE_WATCHDOG_TEST
+      if(strcmp(action, "test") == 0) {
+        char mode[12];
+        if(!terminal_core::parse_token(cursor, mode, sizeof(mode)) ||
+           !terminal_core::at_end(cursor)) {
+          print_watchdog_usage();
+          return terminal_protocol::Result::error();
+        }
+        if(strcmp(mode, "starve") == 0) {
+          Serial.print("WDOG feed inhibited; reset expected within ");
+          Serial.print(independent_watchdog::NOMINAL_TIMEOUT_MS);
+          Serial.println(" nominal ms");
+          Serial.flush();
+          independent_watchdog::inhibit_for_test();
+          return terminal_protocol::Result::ok();
+        }
+        if(strcmp(mode, "hang") == 0) {
+          Serial.print("WDOG foreground hang; reset expected within ");
+          Serial.print(independent_watchdog::NOMINAL_TIMEOUT_MS);
+          Serial.println(" nominal ms");
+          Serial.flush();
+          independent_watchdog::hang_for_test();
+        }
+      }
+      #endif
+
+      print_watchdog_usage();
+      return terminal_protocol::Result::error();
+    }
+#endif
+
+#if MK61_DWT_PROFILER_SUPPORTED
+    class ProfileReportBuilder {
+      public:
+        ProfileReportBuilder(u8* output, usize capacity)
+          : output_(output), capacity_(capacity), length_(0),
+            valid_(output != NULL) {}
+
+        void append_text(const char* text) {
+          if(!valid_ || text == NULL) {
+            valid_ = false;
+            return;
+          }
+          while(*text != 0) append_char(*text++);
+        }
+
+        void append_char(char value) {
+          if(!valid_ || length_ >= capacity_) {
+            valid_ = false;
+            return;
+          }
+          output_[length_++] = (u8) value;
+        }
+
+        void append_u64(u64 value) {
+          char digits[21];
+          usize length = 0;
+          do {
+            digits[length++] = (char) ('0' + value % 10U);
+            value /= 10U;
+          } while(value != 0 && length < sizeof(digits));
+          while(length != 0) append_char(digits[--length]);
+        }
+
+        bool valid(void) const { return valid_; }
+        usize length(void) const { return length_; }
+
+      private:
+        u8* output_;
+        usize capacity_;
+        usize length_;
+        bool valid_;
+    };
+
+    static void print_u64(u64 value) {
+      char digits[21];
+      usize length = 0;
+      do {
+        digits[length++] = (char) ('0' + value % 10U);
+        value /= 10U;
+      } while(value != 0 && length < sizeof(digits));
+      while(length != 0) Serial.write(digits[--length]);
+    }
+
+    static void print_profile_statistics(void) {
+      Serial.print("PROF state=");
+      Serial.print(dwt_profiler::running() ? "running" : "stopped");
+      Serial.print(" clock=");
+      Serial.print(dwt_profiler::clock_hz());
+      Serial.print(" overhead=");
+      Serial.println(dwt_profiler::overhead_cycles());
+
+      const classic_scheduler::Snapshot classic =
+        classic_timer::statistics();
+      Serial.print("CLASSIC backend=");
+      Serial.print(classic_timer::backend_name());
+      Serial.print(" period_us=");
+      Serial.print(classic_timer::configured_period_us());
+      Serial.print(" active=");
+      Serial.print(classic.active ? 1 : 0);
+      Serial.print(" ticks=");
+      Serial.print(classic.ticks);
+      Serial.print(" steps=");
+      Serial.print(classic.steps);
+      Serial.print(" missed=");
+      Serial.print(classic.missed_ticks);
+      Serial.print(" pending=");
+      Serial.print(classic.pending);
+      Serial.print(" max_pending=");
+      Serial.println(classic.maximum_pending);
+
+      #if MK61_ENABLE_SPI1_ARBITER
+      const spi1_arbiter::Snapshot spi1 = spi1_bus::statistics();
+      Serial.print("SPI1 backend=");
+      Serial.print(spi1_bus::backend_name());
+      Serial.print(" state=");
+      Serial.print(spi1_arbiter::state_name(spi1.state));
+      Serial.print(" owner=");
+      Serial.print(spi1_arbiter::owner_name(spi1.owner));
+      Serial.print(" acquisitions=");
+      Serial.print(spi1.acquisitions);
+      Serial.print(" releases=");
+      Serial.print(spi1.releases);
+      Serial.print(" failures=");
+      Serial.print(spi1.failures);
+      Serial.print(" contentions=");
+      Serial.print(spi1.contentions);
+      Serial.print(" double=");
+      Serial.print(spi1.double_acquires);
+      Serial.print(" inactive=");
+      Serial.print(spi1.inactive_releases);
+      Serial.print(" wrong=");
+      Serial.print(spi1.wrong_owner_releases);
+      Serial.print(" invalid=");
+      Serial.print(spi1.invalid_owners);
+      Serial.print(" latched=");
+      Serial.print(spi1.rejected_while_error);
+      Serial.print(" recoveries=");
+      Serial.print(spi1.recoveries);
+      Serial.print(" last=");
+      Serial.print(spi1_arbiter::result_name(spi1.last_result));
+      Serial.print(" fault=");
+      Serial.println(spi1_arbiter::result_name(spi1.last_fault));
+      #endif
+
+      const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
+      Serial.print("SLEEP backend=");
+      Serial.print(idle_sleep::backend_name());
+      Serial.print(" enabled=");
+      Serial.print(idle_sleep::enabled() ? 1 : 0);
+      Serial.print(" attempts=");
+      Serial.print(sleep.attempts);
+      Serial.print(" entries=");
+      Serial.print(sleep.entries);
+      Serial.print(" total_us=");
+      print_u64(sleep.total_sleep_us);
+      Serial.print(" min_us=");
+      Serial.print(sleep.minimum_sleep_us);
+      Serial.print(" avg_us=");
+      Serial.print(sleep.average_sleep_us());
+      Serial.print(" max_us=");
+      Serial.print(sleep.maximum_sleep_us);
+      Serial.print(" last_blockers=0x");
+      Serial.println(sleep.last_blockers, HEX);
+      Serial.print("SLEEP reject");
+      for(usize index = 0; index < idle_sleep_policy::BLOCKER_COUNT; index++) {
+        Serial.write(' ');
+        Serial.print(idle_sleep_policy::blocker_name(index));
+        Serial.write('=');
+        Serial.print(sleep.rejected[index]);
+      }
+      Serial.println();
+
+      for(usize index = 0; index < dwt_profiler::POINT_COUNT; index++) {
+        const dwt_profiler::Point point = (dwt_profiler::Point) index;
+        const dwt_profiler::Statistics& stats =
+          dwt_profiler::statistics(point);
+        Serial.print("PROF ");
+        Serial.print(dwt_profiler::point_name(point));
+        Serial.print(" n=");
+        Serial.print(stats.samples);
+        Serial.print(" min=");
+        Serial.print(stats.minimum_cycles);
+        Serial.print(" avg=");
+        Serial.print(stats.average_cycles());
+        Serial.print(" max=");
+        Serial.print(stats.maximum_cycles);
+        Serial.print(" total=");
+        print_u64(stats.total_cycles);
+        Serial.println();
+      }
+    }
+
+    static u16 build_profile_report(u8* output, usize capacity) {
+      ProfileReportBuilder report(output, capacity);
+      report.append_text("MK61 DWT PROFILE 2\nstate=");
+      report.append_text(dwt_profiler::running() ? "running" : "stopped");
+      report.append_text(",clock=");
+      report.append_u64(dwt_profiler::clock_hz());
+      report.append_text(",overhead=");
+      report.append_u64(dwt_profiler::overhead_cycles());
+      const classic_scheduler::Snapshot classic =
+        classic_timer::statistics();
+      report.append_text("\nclassic_backend=");
+      report.append_text(classic_timer::backend_name());
+      report.append_text(",period_us=");
+      report.append_u64(classic_timer::configured_period_us());
+      report.append_text(",active=");
+      report.append_u64(classic.active ? 1 : 0);
+      report.append_text(",ticks=");
+      report.append_u64(classic.ticks);
+      report.append_text(",steps=");
+      report.append_u64(classic.steps);
+      report.append_text(",missed=");
+      report.append_u64(classic.missed_ticks);
+      report.append_text(",pending=");
+      report.append_u64(classic.pending);
+      report.append_text(",max_pending=");
+      report.append_u64(classic.maximum_pending);
+      const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
+      report.append_text("\nsleep_backend=");
+      report.append_text(idle_sleep::backend_name());
+      report.append_text(",enabled=");
+      report.append_u64(idle_sleep::enabled() ? 1 : 0);
+      report.append_text(",attempts=");
+      report.append_u64(sleep.attempts);
+      report.append_text(",entries=");
+      report.append_u64(sleep.entries);
+      report.append_text(",total_us=");
+      report.append_u64(sleep.total_sleep_us);
+      report.append_text(",min_us=");
+      report.append_u64(sleep.minimum_sleep_us);
+      report.append_text(",avg_us=");
+      report.append_u64(sleep.average_sleep_us());
+      report.append_text(",max_us=");
+      report.append_u64(sleep.maximum_sleep_us);
+      report.append_text(",last_blockers=");
+      report.append_u64(sleep.last_blockers);
+      report.append_text("\nsleep_reject,name,count\n");
+      for(usize index = 0; index < idle_sleep_policy::BLOCKER_COUNT; index++) {
+        report.append_text("sleep_reject,");
+        report.append_text(idle_sleep_policy::blocker_name(index));
+        report.append_char(',');
+        report.append_u64(sleep.rejected[index]);
+        report.append_char('\n');
+      }
+      report.append_text("\npoint,samples,min,avg,max,total\n");
+
+      for(usize index = 0; index < dwt_profiler::POINT_COUNT; index++) {
+        const dwt_profiler::Point point = (dwt_profiler::Point) index;
+        const dwt_profiler::Statistics& stats =
+          dwt_profiler::statistics(point);
+        report.append_text(dwt_profiler::point_name(point));
+        report.append_char(',');
+        report.append_u64(stats.samples);
+        report.append_char(',');
+        report.append_u64(stats.minimum_cycles);
+        report.append_char(',');
+        report.append_u64(stats.average_cycles());
+        report.append_char(',');
+        report.append_u64(stats.maximum_cycles);
+        report.append_char(',');
+        report.append_u64(stats.total_cycles);
+        report.append_char('\n');
+      }
+
+      return report.valid() && report.length() <= 0xFFFFU
+          ? (u16) report.length() : 0;
+    }
+
+    terminal_protocol::Result save_profile_report(const char* path) {
+      storage_path::FileTarget target = {};
+      const storage_path::Status path_status = storage_path::file_target(
+          current_directory, path, program_store::ProgramType::TEXT, target);
+      if(path_status != storage_path::Status::OK) {
+        terminal_path_error("prof save", path_status);
+        return terminal_protocol::Result::error();
+      }
+
+      // Фиксируем непротиворечивый снимок: сама запись C5 больше не меняет
+      // счётчики flash.write и прочих профилируемых участков.
+      dwt_profiler::stop();
+      shared_scratch::Lease scratch(
+          shared_scratch::Owner::TERMINAL_TRANSFER,
+          program_store::MAX_MK61_TEXT_SIZE);
+      if(!scratch.ok()) {
+        Serial.println("PROF save busy");
+        return terminal_protocol::Result::error();
+      }
+      const u16 length = build_profile_report(
+          scratch.data(), scratch.size());
+      if(length == 0 ||
+         !program_store::write_file(
+             target.parent_id, program_store::INVALID_ID,
+             program_store::ProgramType::TEXT, target.name,
+             scratch.data(), length)) {
+        Serial.println("PROF save failed");
+        return terminal_protocol::Result::error();
+      }
+
+      Serial.print("PROF saved ");
+      Serial.print(path);
+      Serial.print(" bytes=");
+      Serial.println(length);
+      return terminal_protocol::Result::ok();
+    }
+
+    terminal_protocol::Result exec_profile(void) {
+      const char* args = command_args();
+      if(terminal_core::at_end(args)) {
+        print_profile_statistics();
+        return terminal_protocol::Result::ok();
+      }
+
+      const char* cursor = args;
+      char action[8];
+      if(!terminal_core::parse_token(cursor, action, sizeof(action))) {
+        Serial.println("Usage: prof [start|stop|reset|save [path.txt]]");
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(action, "save") == 0) {
+        char path[MAX_INPUT_CHAR];
+        if(terminal_core::at_end(cursor)) {
+          bounded_string::copy(path, "PROFILE.TXT");
+        } else if(!terminal_copy_arg(path, sizeof(path), cursor)) {
+          Serial.println("Usage: prof save [path.txt]");
+          return terminal_protocol::Result::error();
+        }
+        return save_profile_report(path);
+      }
+      if(!terminal_core::at_end(cursor)) {
+        Serial.println("Usage: prof [start|stop|reset|save [path.txt]]");
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(action, "start") == 0) {
+        if(!dwt_profiler::start()) {
+          Serial.println("PROF unavailable");
+          return terminal_protocol::Result::error();
+        }
+        classic_timer::reset_statistics();
+        idle_sleep::reset_statistics();
+        Serial.println("PROF started");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(action, "stop") == 0) {
+        dwt_profiler::stop();
+        print_profile_statistics();
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(action, "reset") == 0) {
+        dwt_profiler::reset();
+        classic_timer::reset_statistics();
+        idle_sleep::reset_statistics();
+        Serial.println("PROF reset");
+        return terminal_protocol::Result::ok();
+      }
+
+      Serial.println("Usage: prof [start|stop|reset|save [path.txt]]");
+      return terminal_protocol::Result::error();
+    }
+#endif
 
     // args обычно указывает внутрь input_buffer, который execute_script_line()
     // восстановит перед возвратом, поэтому результат ссылается на отдельное
@@ -1766,6 +2363,27 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
               Serial.println("USB Screen starting.");
             break;
+#endif
+#if MK61_DWT_PROFILER_SUPPORTED
+          case CMD_PROFILE: {
+              const terminal_protocol::Result result = exec_profile();
+              recive_pos = 0;
+              return result;
+          }
+#endif
+#if MK61_CRASH_DUMP_SUPPORTED
+          case CMD_CRASH: {
+              const terminal_protocol::Result result = exec_crash();
+              recive_pos = 0;
+              return result;
+            }
+#endif
+#if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
+          case CMD_WATCHDOG: {
+              const terminal_protocol::Result result = exec_watchdog();
+              recive_pos = 0;
+              return result;
+            }
 #endif
           case  CMD_REG_DUMP:
               DumpRegisters();

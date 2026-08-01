@@ -63,11 +63,11 @@ class SpiNorFlash {
     bool four_byte_opcodes_;
     bool sfdp_present_;
 
-    void select(void);
-    void deselect(void);
+    bool select(void);
+    bool deselect(void);
     u8 transfer(u8 value);
     void sendAddress(u32 address);
-    u8 readStatus(void);
+    bool readStatus(u8& status);
     bool waitReady(u32 timeout_ms);
     bool writeEnable(void);
     bool sendAddressModeCommand(bool four_byte);

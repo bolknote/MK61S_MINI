@@ -3,6 +3,7 @@
 #include "runtime_safety.hpp"
 #include "sound_driver.hpp"
 #include "manual_lifetime.hpp"
+#include "stm32f4_platform_resources.hpp"
 
 #if defined(ARDUINO_ARCH_STM32) && defined(HAL_TIM_MODULE_ENABLED) && !defined(HAL_TIM_MODULE_ONLY)
 
@@ -11,7 +12,9 @@
 #include "pinmap.h"
 
 #ifndef MK61_SOUND_CUTOFF_TIMER
-  #ifdef TIMER_TONE
+  #if MK61_STM32F4_RESOURCE_MAP_SUPPORTED
+    #define MK61_SOUND_CUTOFF_TIMER MK61_SOUND_CUTOFF_TIMER_INSTANCE
+  #elif defined(TIMER_TONE)
     #define MK61_SOUND_CUTOFF_TIMER TIMER_TONE
   #elif defined(TIM10)
     #define MK61_SOUND_CUTOFF_TIMER TIM10
@@ -255,6 +258,10 @@ void sound_driver_poll(void) {
   }
 }
 
+bool sound_driver_busy(void) {
+  return sound_active || stop_cleanup_pending;
+}
+
 #else
 
 namespace {
@@ -293,5 +300,7 @@ void sound_driver_stop(void) {
 }
 
 void sound_driver_poll(void) {}
+
+bool sound_driver_busy(void) { return false; }
 
 #endif

@@ -108,6 +108,8 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_ERASE_STORAGE));
   assert(!terminal_command_allowed_in_script(CMD_DATE));
   assert(!terminal_command_allowed_in_script(CMD_USB_SCREEN));
+  assert(!terminal_command_allowed_in_script(CMD_CRASH));
+  assert(!terminal_command_allowed_in_script(CMD_WATCHDOG));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
 
   assert(terminal_command_allowed_in_trap(CMD_PRINT));
@@ -121,6 +123,8 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_trap(CMD_CMD));
   assert(!terminal_command_allowed_in_trap(CMD_OPEN));
   assert(!terminal_command_allowed_in_trap(CMD_REINIT));
+  assert(!terminal_command_allowed_in_trap(CMD_CRASH));
+  assert(!terminal_command_allowed_in_trap(CMD_WATCHDOG));
 }
 
 struct PrintCapture {

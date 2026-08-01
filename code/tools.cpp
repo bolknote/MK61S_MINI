@@ -215,7 +215,41 @@ static void Show_DFU_splash(void) {
   library_mk61::print_localized_at(0, 0, "Прошивка DFU", " DFU flash mode!");
 }
 
-void DFU_enable(void) {
+namespace {
+
+static constexpr u32 DFU_REBOOT_MAGIC = 0x31465544UL; // "DUF1" LE.
+
+struct DfuRebootRequest {
+  u32 magic;
+  u32 inverse_magic;
+};
+
+extern "C" {
+__attribute__((used, aligned(8), section(".noinit.mk61_dfu_request")))
+volatile DfuRebootRequest mk61_dfu_reboot_request;
+}
+
+static void publish_dfu_reboot_request(void) {
+  mk61_dfu_reboot_request.magic = 0;
+  __DMB();
+  mk61_dfu_reboot_request.inverse_magic = ~DFU_REBOOT_MAGIC;
+  __DMB();
+  mk61_dfu_reboot_request.magic = DFU_REBOOT_MAGIC;
+  __DSB();
+}
+
+} // namespace
+
+bool DFU_consume_reboot_request(void) {
+  const bool requested =
+      mk61_dfu_reboot_request.magic == DFU_REBOOT_MAGIC &&
+      mk61_dfu_reboot_request.inverse_magic == ~DFU_REBOOT_MAGIC;
+  mk61_dfu_reboot_request.magic = 0;
+  __DMB();
+  return requested;
+}
+
+void DFU_enter_bootloader(void) {
     void (*SysMemBootJump)(void);
 
     Show_DFU_splash();
@@ -232,7 +266,18 @@ void DFU_enable(void) {
     SysMemBootJump();
 
   while(true) {};
- 
+}
+
+void DFU_enable(void) {
+  // После старта IWDG прямой jump оставил бы watchdog работающим внутри ROM
+  // bootloader. Reset-handoff гарантированно входит в bootloader раньше нового
+  // independent_watchdog::initialize(). Тот же путь безопасен, если IWDG был
+  // отключён compile-time.
+  Show_DFU_splash();
+  main_lcd().flush();
+  publish_dfu_reboot_request();
+  NVIC_SystemReset();
+  while(true) {}
 }
 
 bool  Confirmation(void) {
@@ -251,6 +296,10 @@ bool  Confirmation(void) {
 void sound_poll(void) {
   sound_driver_poll();
   sound_sequence_poll();
+}
+
+bool sound_busy(void) {
+  return sound_sequence != NULL || sound_driver_busy();
 }
 
 void delay_with_sound_poll(t_time_ms duration_ms) {

@@ -24,6 +24,67 @@
 //#define DEBUG
 //#define DEBUG_M61
 
+// DWT CYCCNT-профилировщик не собирает данные до команды `prof start`.
+// Значение 0 полностью удаляет точки измерения и терминальную команду.
+#ifndef MK61_ENABLE_DWT_PROFILER
+  #define MK61_ENABLE_DWT_PROFILER 1
+#endif
+#if MK61_ENABLE_DWT_PROFILER != 0 && MK61_ENABLE_DWT_PROFILER != 1
+  #error "MK61_ENABLE_DWT_PROFILER must be 0 or 1"
+#endif
+
+// Аппаратные faults сохраняют компактную запись в .noinit и перезагружают
+// MCU. Преднамеренные faults никогда не входят в release по умолчанию и
+// включаются отдельным флагом только для стендовой проверки.
+#ifndef MK61_ENABLE_CRASH_DUMP
+  #define MK61_ENABLE_CRASH_DUMP 1
+#endif
+#if MK61_ENABLE_CRASH_DUMP != 0 && MK61_ENABLE_CRASH_DUMP != 1
+  #error "MK61_ENABLE_CRASH_DUMP must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_FAULT_INJECTION
+  #define MK61_ENABLE_FAULT_INJECTION 0
+#endif
+#if MK61_ENABLE_FAULT_INJECTION != 0 && MK61_ENABLE_FAULT_INJECTION != 1
+  #error "MK61_ENABLE_FAULT_INJECTION must be 0 or 1"
+#endif
+
+// IWDG стартует только в конце setup и кормится после завершённого foreground
+// service epoch. Стендовые starvation/hang действия отсутствуют в release.
+#ifndef MK61_ENABLE_INDEPENDENT_WATCHDOG
+  #define MK61_ENABLE_INDEPENDENT_WATCHDOG 1
+#endif
+#if MK61_ENABLE_INDEPENDENT_WATCHDOG != 0 && \
+    MK61_ENABLE_INDEPENDENT_WATCHDOG != 1
+  #error "MK61_ENABLE_INDEPENDENT_WATCHDOG must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_WATCHDOG_TEST
+  #define MK61_ENABLE_WATCHDOG_TEST 0
+#endif
+#if MK61_ENABLE_WATCHDOG_TEST != 0 && MK61_ENABLE_WATCHDOG_TEST != 1
+  #error "MK61_ENABLE_WATCHDOG_TEST must be 0 or 1"
+#endif
+
+// Shallow Cortex-M Sleep is entered only from a conservative top-level idle
+// policy. SysTick remains the periodic keyboard wake source; STOP/STANDBY are
+// deliberately not used.
+#ifndef MK61_ENABLE_IDLE_WFI
+  #define MK61_ENABLE_IDLE_WFI 1
+#endif
+#if MK61_ENABLE_IDLE_WFI != 0 && MK61_ENABLE_IDLE_WFI != 1
+  #error "MK61_ENABLE_IDLE_WFI must be 0 or 1"
+#endif
+
+// SPI1 arbiter can wrap the existing synchronous polling transactions before
+// any DMA backend is introduced. At 0 clients retain the direct path and no
+// arbiter object, constructor or runtime cost is emitted.
+#ifndef MK61_ENABLE_SPI1_ARBITER
+  #define MK61_ENABLE_SPI1_ARBITER 0
+#endif
+#if MK61_ENABLE_SPI1_ARBITER != 0 && MK61_ENABLE_SPI1_ARBITER != 1
+  #error "MK61_ENABLE_SPI1_ARBITER must be 0 or 1"
+#endif
+
 // Старый резервный вариант хранения через EEPROM Arduino требует 8-КиБ буфер
 // ОЗУ на STM32F4. Штатная конфигурация A00 хранит программы и настройки
 // во внешней SPI-флеш-памяти.
@@ -337,6 +398,43 @@
 //defined(__ARM_ARCH_7EM__)
 //defined(__ARM_FEATURE_SIMD32)
 
+// На F411 небольшие таблицы микрокоманд выгодно держать в однократной SRAM:
+// случайные обращения к ним находятся в самом горячем цикле эмулятора.
+// 0 = Flash, 1 = микрокоманды и DCW (~1.1 КиБ SRAM), 2 = также AND_AMK
+// (~7.1 КиБ SRAM суммарно). F401 с 64 КиБ оставляет SRAM для System APP.
+#ifndef MK61_CORE_HOT_TABLES_IN_SRAM
+  #if defined(STM32F411xE)
+    #define MK61_CORE_HOT_TABLES_IN_SRAM 2
+  #else
+    #define MK61_CORE_HOT_TABLES_IN_SRAM 0
+  #endif
+#endif
+#if MK61_CORE_HOT_TABLES_IN_SRAM < 0 || MK61_CORE_HOT_TABLES_IN_SRAM > 2
+  #error "MK61_CORE_HOT_TABLES_IN_SRAM must be 0, 1, or 2"
+#endif
+
+// Три последовательных Tick объединяются в один внешний вызов на микротакт.
+// Тела остаются раздельными в исходнике, но встраиваются в общий wrapper:
+// порядок эмуляции не меняется, а F411 тратит меньше времени на ABI-обвязку.
+#ifndef MK61_CORE_MERGED_TICK
+  #define MK61_CORE_MERGED_TICK 1
+#endif
+#if MK61_CORE_MERGED_TICK != 0 && MK61_CORE_MERGED_TICK != 1
+  #error "MK61_CORE_MERGED_TICK must be 0 or 1"
+#endif
+#if MK61_CORE_MERGED_TICK && MK61_DWT_CORE_DETAIL
+  #error "MK61_CORE_MERGED_TICK is incompatible with per-chip DWT detail"
+#endif
+
+// Полное разворачивание расписания уменьшает цену внутреннего цикла.
+// На F411 оно оказалось на 5.1% быстрее компактных циклов (+112 байт Flash).
+#ifndef MK61_CORE_UNROLL_SCHEDULE
+  #define MK61_CORE_UNROLL_SCHEDULE 1
+#endif
+#if MK61_CORE_UNROLL_SCHEDULE != 0 && MK61_CORE_UNROLL_SCHEDULE != 1
+  #error "MK61_CORE_UNROLL_SCHEDULE must be 0 or 1"
+#endif
+
 #if defined(TERMINAL) || defined(DEBUG)
  //#warning Serial module included!
 #endif
@@ -513,7 +611,12 @@ class class_calc_config {
 
 namespace cfg {
 
-static constexpr isize  CLASSIC_MK61_QUANTS    =    72500;   // Константна замедления ядра mk61s в классичесокм режиме
+// Измеренная совместимая скорость прежнего loop-счётчика: 13 шагов за 15 с.
+// Таймер задаётся в микросекундах; округление даёт ошибку меньше 1 ppm от
+// целевого периода 15/13 с ещё до аппаратного квантования PSC/ARR.
+static constexpr u32    CLASSIC_MK61_PERIOD_NUMERATOR = 15;
+static constexpr u32    CLASSIC_MK61_PERIOD_DENOMINATOR = 13;
+static constexpr u32    CLASSIC_MK61_PERIOD_US =  1153846;
 static constexpr usize  TURBO_MK61_BATCH_STEPS =       16;   // Сколько шагов ядра делать за один проход RUN-обвязки в режиме TURBO
 static constexpr t_time_ms TURBO_LCD_UPDATE_MS =      120;   // Минимальная пауза между обновлениями LCD в TURBO RUN
 static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как часто опрашивать терминал в TURBO RUN

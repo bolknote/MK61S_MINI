@@ -1,8 +1,12 @@
 #include "spi_nor_flash.hpp"
 #include "flash_capacity_probe.hpp"
 #include "spi_nor_sfdp.hpp"
+#include "dwt_profiler.hpp"
 
 #if !defined(PROGRAM_STORE_HOST_TEST)
+
+#include "config.h"
+#include "spi1_bus.hpp"
 
 #include <string.h>
 
@@ -38,14 +42,17 @@ SpiNorFlash::SpiNorFlash(u8 chip_select, SPIClass* interface)
       four_byte_opcodes_(false),
       sfdp_present_(false) {}
 
-void SpiNorFlash::select(void) {
+bool SpiNorFlash::select(void) {
+  if(!spi1_bus::acquire(spi1_arbiter::Owner::FLASH_CLIENT)) return false;
   spi_->beginTransaction(settings_);
   digitalWrite(chip_select_, LOW);
+  return true;
 }
 
-void SpiNorFlash::deselect(void) {
+bool SpiNorFlash::deselect(void) {
   digitalWrite(chip_select_, HIGH);
   spi_->endTransaction();
+  return spi1_bus::release(spi1_arbiter::Owner::FLASH_CLIENT);
 }
 
 u8 SpiNorFlash::transfer(u8 value) { return spi_->transfer(value); }
@@ -57,29 +64,31 @@ void SpiNorFlash::sendAddress(u32 address) {
   transfer((u8) address);
 }
 
-u8 SpiNorFlash::readStatus(void) {
-  select();
+bool SpiNorFlash::readStatus(u8& status) {
+  if(!select()) return false;
   transfer(CMD_READ_STATUS);
-  const u8 status = transfer(0xFF);
-  deselect();
-  return status;
+  status = transfer(0xFF);
+  return deselect();
 }
 
 bool SpiNorFlash::waitReady(u32 timeout_ms) {
   const u32 started = millis();
-  while((readStatus() & STATUS_BUSY) != 0) {
+  u8 status = 0;
+  while(true) {
+    if(!readStatus(status)) return false;
+    if((status & STATUS_BUSY) == 0) return true;
     if((u32) (millis() - started) >= timeout_ms) return false;
     delayMicroseconds(50);
   }
-  return true;
 }
 
 bool SpiNorFlash::writeEnable(void) {
   if(!waitReady(5000)) return false;
-  select();
+  if(!select()) return false;
   transfer(CMD_WRITE_ENABLE);
-  deselect();
-  return (readStatus() & STATUS_WRITE_ENABLE) != 0;
+  if(!deselect()) return false;
+  u8 status = 0;
+  return readStatus(status) && (status & STATUS_WRITE_ENABLE) != 0;
 }
 
 bool SpiNorFlash::sendAddressModeCommand(bool four_byte) {
@@ -88,9 +97,9 @@ bool SpiNorFlash::sendAddressModeCommand(bool four_byte) {
   if(address_mode_method_ == spi_nor_sfdp::WREN_EN4B_EX4B && !writeEnable()) {
     return false;
   }
-  select();
+  if(!select()) return false;
   transfer(four_byte ? CMD_ENTER_4BYTE : CMD_EXIT_4BYTE);
-  deselect();
+  if(!deselect()) return false;
   delayMicroseconds(2);
   return waitReady(5000);
 }
@@ -111,12 +120,12 @@ bool SpiNorFlash::setAddressWidth(bool four_byte) {
 }
 
 bool SpiNorFlash::readJedec(void) {
-  select();
+  if(!select()) return false;
   transfer(CMD_JEDEC_ID);
   const u8 manufacturer = transfer(0xFF);
   const u8 memory_type = transfer(0xFF);
   const u8 capacity_code = transfer(0xFF);
-  deselect();
+  if(!deselect()) return false;
   if(manufacturer == 0 || manufacturer == 0xFF ||
      (memory_type == 0 && capacity_code == 0)) return false;
   jedec_id_ = ((u32) manufacturer << 16) |
@@ -126,15 +135,14 @@ bool SpiNorFlash::readJedec(void) {
 
 bool SpiNorFlash::readSfdp(u32 address, u8* output, usize len) {
   if(output == NULL) return false;
-  select();
+  if(!select()) return false;
   transfer(CMD_READ_SFDP);
   transfer((u8) (address >> 16));
   transfer((u8) (address >> 8));
   transfer((u8) address);
   transfer(0xFF);
   for(usize i = 0; i < len; i++) output[i] = transfer(0xFF);
-  deselect();
-  return true;
+  return deselect();
 }
 
 bool SpiNorFlash::discoverSfdp(u32& capacity) {
@@ -214,9 +222,9 @@ bool SpiNorFlash::begin(u32 fallback_capacity) {
   pinMode(chip_select_, OUTPUT);
   digitalWrite(chip_select_, HIGH);
   spi_->begin();
-  select();
+  if(!select()) return false;
   transfer(CMD_RELEASE_POWER_DOWN);
-  deselect();
+  if(!deselect()) return false;
   // Учитывает более длительные значения tRES1 у семейств малопотребляющих
   // последовательных NOR.
   delayMicroseconds(50);
@@ -273,9 +281,10 @@ bool SpiNorFlash::rawPrepare(u32 candidate_capacity) {
 }
 
 bool SpiNorFlash::rawRead(u32 address, u8* output, usize len) {
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::FLASH_READ);
   if(output == NULL) return false;
   if(!waitReady(5000)) return false;
-  select();
+  if(!select()) return false;
   transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);
   sendAddress(address);
   // SPIClass::transfer(byte) входит в HAL STM32 для каждого байта. Поэтому
@@ -283,8 +292,7 @@ bool SpiNorFlash::rawRead(u32 address, u8* output, usize len) {
   // раз. Перегрузка с буфером выполняет тот же обмен за один вызов HAL и
   // подставляет стандартные фиктивные байты передачи 0xFF, если tx_buf равен NULL.
   if(len != 0) spi_->transfer((const void*) NULL, output, len);
-  deselect();
-  return true;
+  return deselect();
 }
 
 bool SpiNorFlash::readByteArray(u32 address, u8* output, usize len,
@@ -303,12 +311,13 @@ u8 SpiNorFlash::readByte(u32 address, bool fast_read) {
 }
 
 bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::FLASH_WRITE);
   if(data == NULL) return false;
   while(len != 0) {
     const u16 page_room = (u16) (page_size_ - address % page_size_);
     const u16 count = (u16) (len < page_room ? len : page_room);
     if(!writeEnable()) return false;
-    select();
+    if(!select()) return false;
     transfer(four_byte_address_ && four_byte_opcodes_
         ? CMD_PAGE_PROGRAM_4B : CMD_PAGE_PROGRAM);
     sendAddress(address);
@@ -316,7 +325,7 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
     // Это не только намного быстрее побайтовой передачи, но и сохраняет границу
     // страницы, обязательную для каждой команды программирования страницы SPI NOR.
     spi_->transfer((const void*) data, (void*) NULL, count);
-    deselect();
+    if(!deselect()) return false;
     if(!waitReady(5000)) return false;
     address += count;
     data += count;
@@ -326,13 +335,14 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
 }
 
 bool SpiNorFlash::verifyBytes(u32 address, const u8* expected, usize len) {
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::FLASH_VERIFY);
   if(expected == NULL || !waitReady(5000)) return false;
 
   // Удерживаем выбор микросхемы активным на протяжении всего сравнения. Стековый
   // буфер размером с сектор проверяет обычную 512-байтовую запись одной передачей
   // HAL; более крупные записи остаются ограниченными и сравниваются посекторно.
   u8 recovered[512];
-  select();
+  if(!select()) return false;
   transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);
   sendAddress(address);
   usize offset = 0;
@@ -341,13 +351,12 @@ bool SpiNorFlash::verifyBytes(u32 address, const u8* expected, usize len) {
         ? len - offset : sizeof(recovered));
     spi_->transfer((const void*) NULL, recovered, count);
     if(memcmp(recovered, expected + offset, count) != 0) {
-      deselect();
+      (void) deselect();
       return false;
     }
     offset += count;
   }
-  deselect();
-  return true;
+  return deselect();
 }
 
 bool SpiNorFlash::writeByteArray(u32 address, u8* data, usize len,
@@ -362,12 +371,13 @@ bool SpiNorFlash::writeByte(u32 address, u8 value, bool verify) {
 }
 
 bool SpiNorFlash::rawEraseSector(u32 address) {
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::FLASH_ERASE);
   if(!writeEnable()) return false;
-  select();
+  if(!select()) return false;
   transfer(four_byte_address_ && four_byte_opcodes_
       ? erase_opcode_4b_ : erase_opcode_);
   sendAddress(address & ~(SECTOR_SIZE - 1));
-  deselect();
+  if(!deselect()) return false;
   return waitReady(5000);
 }
 

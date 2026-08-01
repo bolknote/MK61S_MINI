@@ -26,6 +26,14 @@
 #include "config.h"
 #include "rust_types.h"
 #include "stm32_sram_bit_band.hpp"
+#include "dwt_profiler.hpp"
+
+#if MK61_CORE_MERGED_TICK
+  #define MK61_CORE_TICK_FUNCTION \
+    static inline void __attribute__((always_inline))
+#else
+  #define MK61_CORE_TICK_FUNCTION void
+#endif
 
 typedef struct {  // Структору ПЗУ для одной микросхемы комплекта К145ИК(02,03,06)
     microinstruction_t microinstructions[68]; // микрокоманды
@@ -64,9 +72,16 @@ typedef struct { // Структура микросхемы К145IИК306
     uint8_t*  pM;
 }  IK1306;
 
-void IK1302_Tick(mtick_t signal_I, usize J_signal_I);
-void IK1303_Tick(mtick_t signal_I, usize J_signal_I);
-void IK1306_Tick(mtick_t signal_I, usize J_signal_I);
+MK61_CORE_TICK_FUNCTION IK1302_Tick(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
+MK61_CORE_TICK_FUNCTION IK1303_Tick(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
+MK61_CORE_TICK_FUNCTION IK1306_Tick(
+    mtick_t signal_I, usize J_signal_I);
+#if MK61_CORE_MERGED_TICK
+static void __attribute__((noinline, aligned(16)))
+IK130X_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
+#endif
 
 /* Кольцо ДОЗУ - последовательно соединенная память комплектов микросхем К145ИК(02,03,06) в МК61 */
 u8 ringM[SIZE_RING_M/*252+252+42+42+42+42*/];
@@ -1508,13 +1523,128 @@ static const u8  IK1306_AND_AMK[((3 * 3) + 7) * 128] = {
   0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 
 };
 
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+static u8 __attribute__((aligned(4)))
+    ik1302_and_amk_ram[sizeof(IK1302_AND_AMK)];
+static u8 __attribute__((aligned(4)))
+    ik1303_and_amk_ram[sizeof(IK1303_AND_AMK)];
+static u8 __attribute__((aligned(4)))
+    ik1306_and_amk_ram[sizeof(IK1306_AND_AMK)];
+
+#define IK1302_AND_AMK_ACTIVE ik1302_and_amk_ram
+#define IK1303_AND_AMK_ACTIVE ik1303_and_amk_ram
+#define IK1306_AND_AMK_ACTIVE ik1306_and_amk_ram
+#else
+#define IK1302_AND_AMK_ACTIVE IK1302_AND_AMK
+#define IK1303_AND_AMK_ACTIVE IK1303_AND_AMK
+#define IK1306_AND_AMK_ACTIVE IK1306_AND_AMK
+#endif
+
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 1
+static microinstruction_t __attribute__((aligned(4)))
+    ik1302_microinstructions_ram[68];
+static microinstruction_t __attribute__((aligned(4)))
+    ik1303_microinstructions_ram[68];
+static microinstruction_t __attribute__((aligned(4)))
+    ik1306_microinstructions_ram[68];
+static u8 ik1302_dcw_ram[68];
+static u8 ik1302_dcwa_ram[68];
+static u8 ik1303_dcw_ram[68];
+static u8 ik1306_dcw_ram[68];
+
+#define IK1302_MICROINSTRUCTIONS_ACTIVE ik1302_microinstructions_ram
+#define IK1303_MICROINSTRUCTIONS_ACTIVE ik1303_microinstructions_ram
+#define IK1306_MICROINSTRUCTIONS_ACTIVE ik1306_microinstructions_ram
+#define IK1302_DCW_ACTIVE ik1302_dcw_ram
+#define IK1302_DCWA_ACTIVE ik1302_dcwa_ram
+#define IK1303_DCW_ACTIVE ik1303_dcw_ram
+#define IK1306_DCW_ACTIVE ik1306_dcw_ram
+
+static void init_core_hot_tables(void) {
+  memcpy(ik1302_microinstructions_ram, ROM.IK1302.microinstructions,
+         sizeof(ik1302_microinstructions_ram));
+  memcpy(ik1303_microinstructions_ram, ROM.IK1303.microinstructions,
+         sizeof(ik1303_microinstructions_ram));
+  memcpy(ik1306_microinstructions_ram, ROM.IK1306.microinstructions,
+         sizeof(ik1306_microinstructions_ram));
+  memcpy(ik1302_dcw_ram, IK1302_DCW, sizeof(ik1302_dcw_ram));
+  memcpy(ik1302_dcwa_ram, IK1302_DCWA, sizeof(ik1302_dcwa_ram));
+  memcpy(ik1303_dcw_ram, IK1303_DCW, sizeof(ik1303_dcw_ram));
+  memcpy(ik1306_dcw_ram, IK1306_DCW, sizeof(ik1306_dcw_ram));
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+  memcpy(ik1302_and_amk_ram, IK1302_AND_AMK,
+         sizeof(ik1302_and_amk_ram));
+  memcpy(ik1303_and_amk_ram, IK1303_AND_AMK,
+         sizeof(ik1303_and_amk_ram));
+  memcpy(ik1306_and_amk_ram, IK1306_AND_AMK,
+         sizeof(ik1306_and_amk_ram));
+#endif
+}
+#else
+#define IK1302_MICROINSTRUCTIONS_ACTIVE ROM.IK1302.microinstructions
+#define IK1303_MICROINSTRUCTIONS_ACTIVE ROM.IK1303.microinstructions
+#define IK1306_MICROINSTRUCTIONS_ACTIVE ROM.IK1306.microinstructions
+#define IK1302_DCW_ACTIVE IK1302_DCW
+#define IK1302_DCWA_ACTIVE IK1302_DCWA
+#define IK1303_DCW_ACTIVE IK1303_DCW
+#define IK1306_DCW_ACTIVE IK1306_DCW
+
+static inline void init_core_hot_tables(void) {}
+#endif
+
 // TODO: удалить static
-inline void __attribute__((always_inline)) _CycleE(int J_signal_I, mtick_t &signal_I) {
-    IK1302_Tick(signal_I, J_signal_I);
-    IK1303_Tick(signal_I, J_signal_I);
+#if MK61_DWT_CORE_DETAIL_SUPPORTED
+inline void __attribute__((always_inline)) _CycleE(
+    int J_signal_I, mtick_t &signal_I,
+    dwt_profiler::Accumulator& ik1302_time,
+    dwt_profiler::Accumulator& ik1303_time,
+    dwt_profiler::Accumulator& ik1306_time) {
+  const mtick_t signal_div3 = DIV3(signal_I);
+  if(!ik1302_time.active()) {
+    IK1302_Tick(signal_I, J_signal_I, signal_div3);
+    IK1303_Tick(signal_I, J_signal_I, signal_div3);
     IK1306_Tick(signal_I, J_signal_I);
+    return;
+  }
+  {
+    MK61_PROFILE_ACCUMULATE_SCOPE(ik1302_time);
+    IK1302_Tick(signal_I, J_signal_I, signal_div3);
+  }
+  {
+    MK61_PROFILE_ACCUMULATE_SCOPE(ik1303_time);
+    IK1303_Tick(signal_I, J_signal_I, signal_div3);
+  }
+  {
+    MK61_PROFILE_ACCUMULATE_SCOPE(ik1306_time);
+    IK1306_Tick(signal_I, J_signal_I);
+  }
 }
 
+// TODO: удалить
+inline void __attribute__((always_inline)) _CycleB(
+    int J_signal_I, mtick_t &signal_I,
+    dwt_profiler::Accumulator& ik1302_time,
+    dwt_profiler::Accumulator& ik1303_time,
+    dwt_profiler::Accumulator& ik1306_time) {
+    _CycleE(J_signal_I, signal_I, ik1302_time, ik1303_time, ik1306_time);
+    signal_I++;
+}
+
+#define CycleE(J_signal_I) \
+  _CycleE(J_signal_I, signal_I, ik1302_time, ik1303_time, ik1306_time)
+#define CycleB(J_signal_I) \
+  _CycleB(J_signal_I, signal_I, ik1302_time, ik1303_time, ik1306_time)
+#else
+inline void __attribute__((always_inline)) _CycleE(int J_signal_I, mtick_t &signal_I) {
+    const mtick_t signal_div3 = DIV3(signal_I);
+#if MK61_CORE_MERGED_TICK
+    IK130X_Tick_All(signal_I, J_signal_I, signal_div3);
+#else
+    IK1302_Tick(signal_I, J_signal_I, signal_div3);
+    IK1303_Tick(signal_I, J_signal_I, signal_div3);
+    IK1306_Tick(signal_I, J_signal_I);
+#endif
+}
 
 // TODO: удалить
 inline void __attribute__((always_inline)) _CycleB(int J_signal_I, mtick_t &signal_I) {
@@ -1524,6 +1654,7 @@ inline void __attribute__((always_inline)) _CycleB(int J_signal_I, mtick_t &sign
 
 #define CycleE(J_signal_I)  _CycleE(J_signal_I, signal_I)
 #define CycleB(J_signal_I)  _CycleB(J_signal_I, signal_I)
+#endif
 
 #ifdef out_dump
 
@@ -1586,8 +1717,8 @@ inline bool __attribute__((always_inline)) IK1302_GoZero(
     const usize uI_hi = uI >> 16;
 
 
-    m_IK1302.pAND_AMK = &IK1302_AND_AMK[(uI & 0xFF) * 16 /*MUL9((uint8_t) uI)*/];               // получаем из 1-ого байта команды адрес микропрограммы-1
-    m_IK1302.pAND_AMK1 = &IK1302_AND_AMK[((uI>>8) & 0xFF) * 16 /*MUL9( (((uint16_t) uI) >> 8) )*/];  // получаем из 2-ого байта команды адрес микропрограммы-2
+    m_IK1302.pAND_AMK = &IK1302_AND_AMK_ACTIVE[(uI & 0xFF) * 16 /*MUL9((uint8_t) uI)*/];               // получаем из 1-ого байта команды адрес микропрограммы-1
+    m_IK1302.pAND_AMK1 = &IK1302_AND_AMK_ACTIVE[((uI>>8) & 0xFF) * 16 /*MUL9( (((uint16_t) uI) >> 8) )*/];  // получаем из 2-ого байта команды адрес микропрограммы-2
 
     m_IK1302.MOD = (uint8_t) (uI >> 24);                                              // получаем из 4-ого байта команды модификатор
     m_IK1302.flag_FC = uI_hi & 0x000000FC;
@@ -1606,8 +1737,8 @@ inline  usize __attribute__((always_inline))  IK1303_GoZero(void) {
     uint32_t uI = ROM.IK1303.instructions[command];
     const usize uI_hi = uI >> 16;
 
-    m_IK1303.pAND_AMK = &IK1303_AND_AMK[(uI & 0xFF) * 16 /* MUL9((uint8_t) uI) */];
-    m_IK1303.pAND_AMK1 = &IK1303_AND_AMK[((uI>>8) & 0xFF) * 16/* MUL9((((uint16_t) uI) >> 8)) */];
+    m_IK1303.pAND_AMK = &IK1303_AND_AMK_ACTIVE[(uI & 0xFF) * 16 /* MUL9((uint8_t) uI) */];
+    m_IK1303.pAND_AMK1 = &IK1303_AND_AMK_ACTIVE[((uI>>8) & 0xFF) * 16/* MUL9((((uint16_t) uI) >> 8)) */];
 
     m_IK1303.MOD = (uint8_t) (uI >> 24);
     m_IK1303.flag_FC = uI_hi & 0x000000FC;
@@ -1625,8 +1756,8 @@ inline  usize __attribute__((always_inline))  IK1306_GoZero(void) {
     uint32_t uI = ROM.IK1306.instructions[command];
     const usize uI_hi = uI >> 16;
 
-    m_IK1306.pAND_AMK = &IK1306_AND_AMK[(uI & 0xFF) * 16/*MUL9((uint8_t) uI)*/];
-    m_IK1306.pAND_AMK1 = &IK1306_AND_AMK[((uI>>8) & 0xFF) * 16/*MUL9((((uint16_t) uI) >> 8))*/];
+    m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[(uI & 0xFF) * 16/*MUL9((uint8_t) uI)*/];
+    m_IK1306.pAND_AMK1 = &IK1306_AND_AMK_ACTIVE[((uI>>8) & 0xFF) * 16/*MUL9((((uint16_t) uI) >> 8))*/];
 
     m_IK1306.MOD = (uint8_t) (uI >> 24);
 
@@ -1680,63 +1811,91 @@ static void arm_external_random_seed(
   }
 }
 
-void  cycle(void) {
+void cycle(void) {
   mtick_t signal_I;
   const int MAX_CYCLE = (sergey_anvarov_hack_enable)? 280 : 560;
   const u8* active_end_ring_m = &ringM[core_61::ring_size()];
+  dwt_profiler::Accumulator fetch_time(dwt_profiler::Point::CORE_FETCH);
+  dwt_profiler::Accumulator ticks_00_26_time(
+      dwt_profiler::Point::CORE_TICKS_00_26);
+  dwt_profiler::Accumulator ticks_27_35_time(
+      dwt_profiler::Point::CORE_TICKS_27_35);
+  dwt_profiler::Accumulator ticks_36_41_time(
+      dwt_profiler::Point::CORE_TICKS_36_41);
+#if MK61_DWT_CORE_DETAIL_SUPPORTED
+  dwt_profiler::Accumulator ik1302_time(dwt_profiler::Point::CORE_IK1302);
+  dwt_profiler::Accumulator ik1303_time(dwt_profiler::Point::CORE_IK1303);
+  dwt_profiler::Accumulator ik1306_time(dwt_profiler::Point::CORE_IK1306);
+#endif
   for (int count = 1; count <= MAX_CYCLE; count++){
       signal_I = 0;
 
       usize IK1302_uI_hi = 0;
-      if(!IK1302_GoZero(IK1302_uI_hi)) {
-        mk61_program_boundary_yielded = true;
-        return;
+      usize IK1303_uI_hi;
+      usize IK1306_uI_hi;
+      {
+        MK61_PROFILE_ACCUMULATE_SCOPE(fetch_time);
+        if(!IK1302_GoZero(IK1302_uI_hi)) {
+          mk61_program_boundary_yielded = true;
+          return;
+        }
+
+        dbgtrace(CORE61, "IK1302.IP = 0x", m_IK1302.R[39]*16 + m_IK1302.R[36]);
+
+        IK1303_uI_hi = IK1303_GoZero();
+        IK1306_uI_hi = IK1306_GoZero();
       }
-
-      dbgtrace(CORE61, "IK1302.IP = 0x", m_IK1302.R[39]*16 + m_IK1302.R[36]);
-
-      const usize IK1303_uI_hi = IK1303_GoZero();
-      const usize IK1306_uI_hi = IK1306_GoZero();
-
 
       #ifdef out_dump
       dumpm(signal_I, count);
       #endif
 
-          #pragma GCC unroll 99 // TODO: удалить
+      {
+          MK61_PROFILE_ACCUMULATE_SCOPE(ticks_00_26_time);
+#if MK61_CORE_UNROLL_SCHEDULE
+          #pragma GCC unroll 99
+#endif
           for (auto _ : {0,1,2,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5, 6,7,8}) { CycleB(_); } //0..26
+      }
 
+      {
+          MK61_PROFILE_ACCUMULATE_SCOPE(ticks_27_35_time);
           m_IK1302.pAND_AMK = m_IK1302.pAND_AMK1;
           m_IK1303.pAND_AMK = m_IK1303.pAND_AMK1;
           m_IK1306.pAND_AMK = m_IK1306.pAND_AMK1;
 
-          #pragma GCC unroll 99 // TODO: удалить
+#if MK61_CORE_UNROLL_SCHEDULE
+          #pragma GCC unroll 99
+#endif
           for (auto _ : {0,1,2, 3,4,5,6,7,8}) { CycleB(_); }    //27..35
-
-      // signal == 36
-      if (IK1302_uI_hi > 0x1f)  { // рассматриваем 3-й байт команды
-          m_IK1302.R[37] = IK1302_uI_hi & 0xf;   // signal == 36   
-          m_IK1302.R[40] = IK1302_uI_hi >> 4;    // signal == 36
-          m_IK1302.pAND_AMK  = &IK1302_AND_AMK[0x5F * 16 /*0x5f * 9 */];
-      } else  {
-          m_IK1302.pAND_AMK  = &IK1302_AND_AMK[IK1302_uI_hi * 16 /*MUL9(IK1302_uI_hi)*/];  // получаем из 3-ого байта команды адрес микропрограммы-3
       }
 
-      if (IK1303_uI_hi > 0x1f)  {
-          m_IK1303.R[37] = IK1303_uI_hi & 0xf;   // signal == 36
-          m_IK1303.R[40] = IK1303_uI_hi >> 4;    // signal == 36
-          m_IK1303.pAND_AMK  = &IK1303_AND_AMK[0x5f * 16];// * 9];
-      } else  {
-           m_IK1303.pAND_AMK  = &IK1303_AND_AMK[IK1303_uI_hi * 16];//MUL9(IK1303_uI_hi)];
-      }
+      {
+          MK61_PROFILE_ACCUMULATE_SCOPE(ticks_36_41_time);
+          // signal == 36
+          if (IK1302_uI_hi > 0x1f)  { // рассматриваем 3-й байт команды
+              m_IK1302.R[37] = IK1302_uI_hi & 0xf;   // signal == 36
+              m_IK1302.R[40] = IK1302_uI_hi >> 4;    // signal == 36
+              m_IK1302.pAND_AMK  = &IK1302_AND_AMK_ACTIVE[0x5F * 16 /*0x5f * 9 */];
+          } else  {
+              m_IK1302.pAND_AMK  = &IK1302_AND_AMK_ACTIVE[IK1302_uI_hi * 16 /*MUL9(IK1302_uI_hi)*/];  // получаем из 3-ого байта команды адрес микропрограммы-3
+          }
 
-      if (IK1306_uI_hi > 0x1f)  {
-          m_IK1306.R[37] = IK1306_uI_hi & 0xf;   // signal == 36
-          m_IK1306.R[40] = IK1306_uI_hi >> 4;    // signal == 36
-          m_IK1306.pAND_AMK  = &IK1306_AND_AMK[0x5f * 16];// * 9];
-      } else  {
-          m_IK1306.pAND_AMK  = &IK1306_AND_AMK[IK1306_uI_hi * 16];//MUL9(IK1306_uI_hi)];
-      }
+          if (IK1303_uI_hi > 0x1f)  {
+              m_IK1303.R[37] = IK1303_uI_hi & 0xf;   // signal == 36
+              m_IK1303.R[40] = IK1303_uI_hi >> 4;    // signal == 36
+              m_IK1303.pAND_AMK  = &IK1303_AND_AMK_ACTIVE[0x5f * 16];// * 9];
+          } else  {
+               m_IK1303.pAND_AMK  = &IK1303_AND_AMK_ACTIVE[IK1303_uI_hi * 16];//MUL9(IK1303_uI_hi)];
+          }
+
+          if (IK1306_uI_hi > 0x1f)  {
+              m_IK1306.R[37] = IK1306_uI_hi & 0xf;   // signal == 36
+              m_IK1306.R[40] = IK1306_uI_hi >> 4;    // signal == 36
+              m_IK1306.pAND_AMK  = &IK1306_AND_AMK_ACTIVE[0x5f * 16];// * 9];
+          } else  {
+               m_IK1306.pAND_AMK  = &IK1306_AND_AMK_ACTIVE[IK1306_uI_hi * 16];//MUL9(IK1306_uI_hi)];
+          }
 
           CycleB(0);   // 36
           CycleB(1);   // 37
@@ -1757,6 +1916,7 @@ void  cycle(void) {
           else if(m_IK1306.pM == active_end_ring_m){
                    m_IK1306.pM = &ringM[0];
           }
+      }
   }
 #ifdef out_dump
   step++;
@@ -1769,7 +1929,7 @@ inline void __attribute__((always_inline))  dump_1302(mtick_t signal_I, usize J_
   for(u8 R : m_IK1302.R) dbghex(CORE61, ".", R);
   dbg(CORE61, "]\n 1302.ST[");
   for(u8 ST : m_IK1302.ST) dbghex(CORE61, ".", ST);
-  dbghexln(CORE61, "]\n pM = $", (usize) m_IK1302.pM - (usize) &ringM[0], " pAND_AMK = $", (usize) m_IK1302.pAND_AMK - (usize) IK1302_AND_AMK, " pAND_AMK1 = $", (usize) m_IK1302.pAND_AMK1 - (usize) IK1302_AND_AMK);
+  dbghexln(CORE61, "]\n pM = $", (usize) m_IK1302.pM - (usize) &ringM[0], " pAND_AMK = $", (usize) m_IK1302.pAND_AMK - (usize) IK1302_AND_AMK_ACTIVE, " pAND_AMK1 = $", (usize) m_IK1302.pAND_AMK1 - (usize) IK1302_AND_AMK_ACTIVE);
   dbghexln(CORE61, "AMK = ", m_IK1302.AMK);
   dbghex(CORE61, "FLAGS L ", m_IK1302.L);
   dbghex(CORE61, ":S ", m_IK1302.S);
@@ -1780,7 +1940,8 @@ inline void __attribute__((always_inline))  dump_1302(mtick_t signal_I, usize J_
   dbghexln(CORE61, ":flag_FC ", m_IK1302.flag_FC);
 }
 
-void IK1302_Tick(mtick_t signal_I, usize J_signal_I) { 
+MK61_CORE_TICK_FUNCTION IK1302_Tick(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
  uint32_t  microinstruction;
  uint32_t  val, tmp;
  uint32_t  mi_hi;
@@ -1789,13 +1950,13 @@ void IK1302_Tick(mtick_t signal_I, usize J_signal_I) {
     if (tmp > 59 && m_IK1302.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
        tmp++;
     }
-    microinstruction = ROM.IK1302.microinstructions[tmp];
+    microinstruction = IK1302_MICROINSTRUCTIONS_ACTIVE[tmp];
     m_IK1302.AMK = tmp;
 
     mi_hi = (microinstruction >> 16);
   //---------------------------------------------------------
     if((((microinstruction >> 24) & 0x03) == 0x2) || (((microinstruction >> 24) & 0x03) == 0x3)) {
-        if (DIV3(signal_I) != m_IK1302.key_xm)
+        if (signal_div3 != m_IK1302.key_xm)
            m_IK1302.S1 |= m_IK1302.key_y;
     }
   //---------------------------------------------------------
@@ -1804,7 +1965,7 @@ void IK1302_Tick(mtick_t signal_I, usize J_signal_I) {
     io_t sigma = 0;
 
     if((microinstruction & 0x7FFF) != 0){
-        switch(IK1302_DCWA[tmp/*m_IK1302.AMK*/]) {
+        switch(IK1302_DCWA_ACTIVE[tmp/*m_IK1302.AMK*/]) {
                 case 0: alpha = 0; break;
                 case 0x0002: alpha = m_IK1302.R[signal_I]; break;
                 case 0x0004: alpha = m_IK1302.pM[signal_I]; break;
@@ -1833,7 +1994,7 @@ void IK1302_Tick(mtick_t signal_I, usize J_signal_I) {
                 if (m_IK1302.key_y == 0) m_IK1302.T = 0;
         } else {
                 m_IK1302.displayed = 1;
-                val = DIV3(signal_I);
+                val = signal_div3;
                 if((val == m_IK1302.key_xm) && (m_IK1302.key_y != 0)){
                                 m_IK1302.S1 = m_IK1302.key_y;
                                 m_IK1302.T = 1;
@@ -1854,7 +2015,7 @@ void IK1302_Tick(mtick_t signal_I, usize J_signal_I) {
                 if (m_IK1302.key_y == 0) m_IK1302.T = 0;
         } else {
                 m_IK1302.displayed = 1;
-                val = DIV3(signal_I);
+                val = signal_div3;
                 if((val == m_IK1302.key_xm) && (m_IK1302.key_y != 0)){
                                 m_IK1302.S1 = m_IK1302.key_y;
                                 m_IK1302.T = 1;
@@ -1870,7 +2031,7 @@ void IK1302_Tick(mtick_t signal_I, usize J_signal_I) {
   #endif
   //---------------------------------------------------------
     if (m_IK1302.MOD == 0 || signal_I >= 36) {
-        tmp = IK1302_DCW[tmp/*m_IK1302.AMK*/];
+        tmp = IK1302_DCW_ACTIVE[tmp/*m_IK1302.AMK*/];
         if(tmp != 0){
           switch (tmp) {
             case 1: 
@@ -1922,7 +2083,8 @@ void IK1302_Tick(mtick_t signal_I, usize J_signal_I) {
     }
 }
 
-void IK1303_Tick(mtick_t signal_I, usize J_signal_I) {
+MK61_CORE_TICK_FUNCTION IK1303_Tick(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
  uint32_t tmp;
  uint32_t microinstruction;
  uint32_t mi_hi;
@@ -1932,13 +2094,13 @@ void IK1303_Tick(mtick_t signal_I, usize J_signal_I) {
       tmp++;
  }
 
- microinstruction = ROM.IK1303.microinstructions[tmp];
+ microinstruction = IK1303_MICROINSTRUCTIONS_ACTIVE[tmp];
  m_IK1303.AMK = tmp;
 
  mi_hi = (microinstruction >> 16);
   //---------------------------------------------------------
  if((((microinstruction >> 24) & 0x03) == 0x2) || (((microinstruction >> 24) & 0x03) == 0x3)) {
-     if (DIV3(signal_I) != m_IK1303.key_xm) {
+     if (signal_div3 != m_IK1303.key_xm) {
          // TODO: удалить if (m_IK1303.key_y > 0)
          m_IK1303.S1 |= m_IK1303.key_y;
      }
@@ -1979,7 +2141,7 @@ void IK1303_Tick(mtick_t signal_I, usize J_signal_I) {
                 if (m_IK1303.key_y == 0) m_IK1303.T = 0;
         }
         else{
-                tmp = DIV3(signal_I);
+                tmp = signal_div3;
                 if (tmp == m_IK1303.key_xm)
                         if (m_IK1303.key_y > 0) {
                                 m_IK1303.S1 = m_IK1303.key_y;
@@ -2002,7 +2164,7 @@ void IK1303_Tick(mtick_t signal_I, usize J_signal_I) {
                 if (m_IK1303.key_y == 0) m_IK1303.T = 0;
         }
         else{
-                tmp = DIV3(signal_I);
+                tmp = signal_div3;
                 if (tmp == m_IK1303.key_xm)
                         if (m_IK1303.key_y > 0) {
                                 m_IK1303.S1 = m_IK1303.key_y;
@@ -2020,7 +2182,7 @@ void IK1303_Tick(mtick_t signal_I, usize J_signal_I) {
   //---------------------------------------------------------
     if (m_IK1303.MOD == 0 || signal_I >= 36)
     {
-        tmp = IK1303_DCW[m_IK1303.AMK];
+        tmp = IK1303_DCW_ACTIVE[m_IK1303.AMK];
                 if(tmp != 0){
           switch (tmp)
           {
@@ -2073,7 +2235,8 @@ void IK1303_Tick(mtick_t signal_I, usize J_signal_I) {
     }
 }
 
-void IK1306_Tick(mtick_t signal_I, usize J_signal_I) {
+MK61_CORE_TICK_FUNCTION IK1306_Tick(
+    mtick_t signal_I, usize J_signal_I) {
     uint32_t tmp, mi_hi;
     uint32_t microinstruction;
 
@@ -2081,7 +2244,7 @@ void IK1306_Tick(mtick_t signal_I, usize J_signal_I) {
     if (tmp > 59 && m_IK1306.L == 0){                         // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
         tmp++;
     }
-    microinstruction = ROM.IK1306.microinstructions[tmp];
+    microinstruction = IK1306_MICROINSTRUCTIONS_ACTIVE[tmp];
     m_IK1306.AMK = tmp;
 
 
@@ -2135,7 +2298,7 @@ void IK1306_Tick(mtick_t signal_I, usize J_signal_I) {
   //---------------------------------------------------------
     if (m_IK1306.MOD == 0 || signal_I >= 36)
     {
-        tmp = IK1306_DCW[m_IK1306.AMK];
+        tmp = IK1306_DCW_ACTIVE[m_IK1306.AMK];
         if(tmp != 0){
           switch (tmp){
             case 1: m_IK1306.R[signal_I] = m_IK1306.R[MOD42(signal_I + 3)]; break;
@@ -2187,6 +2350,16 @@ void IK1306_Tick(mtick_t signal_I, usize J_signal_I) {
     }
 }
 
+#if MK61_CORE_MERGED_TICK
+static void __attribute__((noinline, aligned(16)))
+IK130X_Tick_All(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+  IK1302_Tick(signal_I, J_signal_I, signal_div3);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3);
+  IK1306_Tick(signal_I, J_signal_I);
+}
+#endif
+
 /**
  * mk61emu
  */
@@ -2197,8 +2370,8 @@ inline  void  __attribute__((always_inline))  IK1302_Clear(void) {
     dbgln(CORE61, "cleared IK1302 size = ", size_IK1302);
     memset(&m_IK1302, 0, size_IK1302);
     m_IK1302.pM = (uint8_t*) IK1302_M_START();
-    m_IK1302.pAND_AMK = &IK1302_AND_AMK[0];
-    m_IK1302.pAND_AMK1 = &IK1302_AND_AMK[0];
+    m_IK1302.pAND_AMK = &IK1302_AND_AMK_ACTIVE[0];
+    m_IK1302.pAND_AMK1 = &IK1302_AND_AMK_ACTIVE[0];
 }
 
 inline  void  __attribute__((always_inline))  IK1303_Clear(void) {
@@ -2206,8 +2379,8 @@ inline  void  __attribute__((always_inline))  IK1303_Clear(void) {
     dbgln(CORE61, "cleared IK1303 size = ", size_IK1303);
     memset(&m_IK1303, 0, size_IK1303);
     m_IK1303.pM = (uint8_t*) IK1303_M_START();
-    m_IK1303.pAND_AMK = &IK1303_AND_AMK[0];
-    m_IK1303.pAND_AMK1 = &IK1303_AND_AMK[0];
+    m_IK1303.pAND_AMK = &IK1303_AND_AMK_ACTIVE[0];
+    m_IK1303.pAND_AMK1 = &IK1303_AND_AMK_ACTIVE[0];
 }
 
 inline  void  __attribute__((always_inline))  IK1306_Clear(void) {
@@ -2215,8 +2388,8 @@ inline  void  __attribute__((always_inline))  IK1306_Clear(void) {
     dbgln(CORE61, "cleared IK1306 size = ", size_IK1306);
     memset(&m_IK1306, 0, size_IK1306);
     m_IK1306.pM = (uint8_t*) IK1306_M_START();
-    m_IK1306.pAND_AMK = &IK1306_AND_AMK[0];
-    m_IK1306.pAND_AMK1 = &IK1306_AND_AMK[0];
+    m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[0];
+    m_IK1306.pAND_AMK1 = &IK1306_AND_AMK_ACTIVE[0];
 }
 
 inline  void  __attribute__((always_inline))  mod42_table_init(void) {
@@ -2225,6 +2398,7 @@ inline  void  __attribute__((always_inline))  mod42_table_init(void) {
 
 void MK61Emu_Cleanup() {
     reset_mk61_command_runtime();
+    init_core_hot_tables();
     mod42_table_init(); // инициализация в ОЗУ таблицы остатка от деления на 42 (42+42 элемента)
     memset(&ringM,0,sizeof(ringM));
     IK1302_Clear();
@@ -2443,19 +2617,23 @@ usize len_code_command(u8 cod) {
 }
 
 void step(void) {
+    MK61_PROFILE_SCOPE(dwt_profiler::Point::CORE_STEP);
     mk61_program_boundary_yielded = false;
     m_IK1303.key_y = 1;
     m_IK1303.key_x = m_emu.m_angle_unit;
     ::cycle();
-    m_IK1302.key_x = 0;
-    m_IK1302.key_y = 0;
-    if(keyboard_command_complete_pending && active_mk61_command.active &&
-       active_mk61_command.source == Mk61CommandSource::KEYBOARD) {
-      finish_active_mk61_command();
-    }
-    if(active_mk61_command.active &&
-       active_mk61_command.source == Mk61CommandSource::PROGRAM && !is_RUN()) {
-      finish_active_mk61_command();
+    {
+      MK61_PROFILE_SCOPE(dwt_profiler::Point::CORE_STEP_FINISH);
+      m_IK1302.key_x = 0;
+      m_IK1302.key_y = 0;
+      if(keyboard_command_complete_pending && active_mk61_command.active &&
+         active_mk61_command.source == Mk61CommandSource::KEYBOARD) {
+        finish_active_mk61_command();
+      }
+      if(active_mk61_command.active &&
+         active_mk61_command.source == Mk61CommandSource::PROGRAM && !is_RUN()) {
+        finish_active_mk61_command();
+      }
     }
 }
 
@@ -2622,7 +2800,7 @@ void enable(void) {
     core_61::edit_program = false;
     core_61::clear_displayed();
     backstep_comma_position = core_61::comma_position();
-    dbghexln(CORE61," IK1302_AMK $", (isize) &IK1302_AND_AMK, " IK1302_DCW $", (isize) &IK1302_DCW, " IK1302_DCWA $", (isize) &IK1302_DCWA);
+    dbghexln(CORE61," IK1302_AMK $", (isize) &IK1302_AND_AMK_ACTIVE, " IK1302_DCW $", (isize) &IK1302_DCW_ACTIVE, " IK1302_DCWA $", (isize) &IK1302_DCWA_ACTIVE);
     step();
 }
 

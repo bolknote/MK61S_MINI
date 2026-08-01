@@ -20,6 +20,7 @@
  */
 
 #include "zx0.hpp"
+#include "dwt_profiler.hpp"
 
 namespace zx0 {
 namespace {
@@ -134,6 +135,7 @@ class RangeOutput {
 
 bool decode(const Input& source, u32 source_size,
             u8* output, u32 capacity, u32& written) {
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::ZX0_DECODE);
   written = 0;
   if(source.next == nullptr || source_size == 0 ||
      output == nullptr || capacity == 0) return false;
@@ -193,6 +195,7 @@ fail:
 bool decode_range(const Input& source, u32 source_size, u32 logical_size,
                   u32 range_offset, u8* output, u32 range_size,
                   u8* window, u32 window_size) {
+  MK61_PROFILE_SCOPE(dwt_profiler::Point::ZX0_DECODE);
   if(source.next == nullptr || source_size == 0 || logical_size == 0 ||
      range_offset > logical_size ||
      range_size > logical_size - range_offset ||

@@ -26,6 +26,7 @@ inline bool mk61_calculator_is_idle(void) {
 }
 
 inline  void  event_stop_in_prg_mk61(void) {
+  classic_timer::synchronize(false);
   runtime_ms = millis() - runtime_ms;
   // Для измерений производительности 
   #ifdef DEBUG_MEASURE
@@ -34,7 +35,8 @@ inline  void  event_stop_in_prg_mk61(void) {
     dbgln(MEASURE, "time elapsed (ms): ", runtime_ms, " : ", mk61_display);
   #endif
 
-  dbgln(MINI, "PRG: STOP dt = ", runtime_ms, " mk61_reload_quant = ", mk61_quants_reload);
+  dbgln(MINI, "PRG: STOP dt = ", runtime_ms,
+        " classic_period_us = ", classic_timer::configured_period_us());
   
   // >>>>>> Расширение системы команд МК-61 по режиму старт/стоп  <<<<<<<
   const i32 back_step = core_61::get_IP() - 1;
@@ -59,11 +61,12 @@ inline  void  event_stop_in_prg_mk61(void) {
 }
 
 inline void  event_start_prg_mk61(void) {
-  dbgln(MINI, "PRG: first step dt = ", runtime_ms, " mk61_reload_quant = ", mk61_quants_reload);
+  dbgln(MINI, "PRG: first step dt = ", runtime_ms,
+        " classic_period_us = ", classic_timer::configured_period_us());
   MnemoLabel.disable();
   disassembler.disable("RUN");
-  mk61_quants = runtime_safety::positive_quantum(mk61_quants_reload);
   runtime_ms  =   millis();
+  classic_timer::synchronize(library_mk61::speed_is_classic());
 }
 
 inline void service_run_keypress(void) {

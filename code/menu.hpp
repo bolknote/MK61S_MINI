@@ -83,6 +83,7 @@ namespace library_mk61 {
   extern  void  poll_settings_state_save(void);
   extern  void  load_settings_state(void);
   extern  SpeedMode speed_mode(void);
+  extern  bool  speed_is_classic(void);
   extern  bool  speed_is_max(void);
   extern  bool  speed_is_turbo(void);
 
