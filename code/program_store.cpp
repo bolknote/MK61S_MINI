@@ -207,11 +207,15 @@ static u8 g_disk_activity_depth;
 static u8 g_disk_led_poll_divider;
 
 // Упаковываем 18-битный виртуальный LBA и 9-битную ссылку на физическую запись
-// в одно слово. Это вчетверо увеличивает активный набор staging, добавляя менее
-// одного КиБ по сравнению с прежними параллельными массивами ключей, поколений
-// и ссылок.
-static u32 g_stage_index[STAGE_REF_CAPACITY];
+// в одно слово. Сам индекс арендует общую APP/USB overlay-арену и потому не
+// увеличивает постоянный расход SRAM. На короткой финальной фазе terminal
+// fsput он может быть сужен до диапазона одного файла в language workspace.
+static u32* g_stage_index;
+static u16 g_stage_index_capacity;
 static u16 g_stage_ref_count;
+static shared_memory::Lease g_stage_overlay_lease;
+static bool g_stage_locked;
+static bool g_stage_external;
 static u8 g_stage_used[storage_geometry::STAGE_TARGET_SECTORS];
 static u8 g_stage_sealed[storage_geometry::STAGE_TARGET_SECTORS];
 static u16 g_stage_generation;
@@ -227,6 +231,9 @@ static u8 g_verified_large_block = 0xFF;
 static_assert((u16) storage_geometry::STAGE_TARGET_SECTORS *
                   STAGE_RECORDS_PER_SECTOR <= STAGE_REF_MASK,
               "C5 stage references must fit in the packed index");
+static_assert((usize) STAGE_REF_CAPACITY * sizeof(u32) <=
+                  shared_memory::STAGE_INDEX_SIZE,
+              "full C5 staging index does not fit the shared overlay");
 
 static int g_flat_cache_index = -1;
 static u16 g_flat_cache_id;
@@ -3904,6 +3911,45 @@ static u32 pack_stage_index(u32 key, u16 ref) {
   return (key << STAGE_REF_BITS) | ref;
 }
 
+static void forget_stage_index_binding(void) {
+  g_stage_index = nullptr;
+  g_stage_index_capacity = 0;
+  g_stage_ref_count = 0;
+  g_stage_external = false;
+}
+
+static shared_memory::EvictionDecision prepare_stage_index_eviction(void) {
+  if(g_stage_locked) return shared_memory::EvictionDecision::KEEP;
+  forget_stage_index_binding();
+  return shared_memory::EvictionDecision::RELEASE;
+}
+
+static bool bind_full_stage_index(void) {
+  if(g_stage_overlay_lease.ok()) {
+    return !g_stage_external && g_stage_index != nullptr &&
+           g_stage_index_capacity == STAGE_REF_CAPACITY;
+  }
+  if(g_stage_external ||
+     !g_stage_overlay_lease.acquire_cache(
+         shared_memory::Arena::OVERLAY,
+         shared_memory::Owner::VFAT_STAGE,
+         (usize) STAGE_REF_CAPACITY * sizeof(u32))) return false;
+  if(!g_stage_overlay_lease.set_evictable(prepare_stage_index_eviction)) {
+    g_stage_overlay_lease.reset();
+    return false;
+  }
+  g_stage_index = reinterpret_cast<u32*>(g_stage_overlay_lease.data());
+  g_stage_index_capacity = STAGE_REF_CAPACITY;
+  g_stage_ref_count = 0;
+  return true;
+}
+
+static bool ensure_stage_index(void) {
+  if(g_stage_index != nullptr) return true;
+  vfat_stage_clear();
+  return g_stage_index != nullptr;
+}
+
 static u32 stage_index_key(u16 index) {
   return g_stage_index[index] >> STAGE_REF_BITS;
 }
@@ -3913,6 +3959,7 @@ static u16 stage_index_ref(u16 index) {
 }
 
 static int stage_ref_index(u32 key) {
+  if(g_stage_index == nullptr) return -1;
   for(u16 i = 0; i < g_stage_ref_count; i++) {
     if(stage_index_key(i) == key) return i;
   }
@@ -4036,7 +4083,7 @@ static bool append_stage_value(u16 sector, u32 key, const u8* data) {
   int index = stage_ref_index(key);
   const u16 old_ref = index < 0 ? 0 : stage_index_ref((u16) index);
   if(index < 0) {
-    if(g_stage_ref_count >= STAGE_REF_CAPACITY) return false;
+    if(g_stage_ref_count >= g_stage_index_capacity) return false;
     index = g_stage_ref_count++;
   }
   g_stage_index[index] = pack_stage_index(key, ref);
@@ -4189,6 +4236,10 @@ static bool find_stage_slot(u16& out_sector, u8& out_slot) {
 } // пространство имён
 
 void vfat_stage_clear(void) {
+  if(g_stage_external || !bind_full_stage_index()) {
+    g_stage_ref_count = 0;
+    return;
+  }
   g_stage_ref_count = 0;
   g_stage_generation = 0;
   memset(g_stage_used, 0, sizeof(g_stage_used));
@@ -4237,7 +4288,7 @@ void vfat_stage_clear(void) {
           g_stage_index[old] = pack_stage_index(key, ref);
         }
       } else if(key <= STAGE_KEY_MAX &&
-                g_stage_ref_count < STAGE_REF_CAPACITY) {
+                g_stage_ref_count < g_stage_index_capacity) {
         g_stage_index[g_stage_ref_count] = pack_stage_index(key, ref);
         g_stage_ref_count++;
       }
@@ -4295,8 +4346,10 @@ bool test_file_record_location(u16 id, u32& sector, u16& record_len) {
 
 bool vfat_stage_write(u32 block, const u8* data) {
   DiskActivity activity;
-  if(!g_ready || data == NULL || block > STAGE_KEY_MAX) return false;
-  if(stage_ref_index(block) < 0 && g_stage_ref_count >= STAGE_REF_CAPACITY) return false;
+  if(!g_ready || data == NULL || block > STAGE_KEY_MAX ||
+     !ensure_stage_index()) return false;
+  if(stage_ref_index(block) < 0 &&
+     g_stage_ref_count >= g_stage_index_capacity) return false;
   u16 sector = 0;
   u8 slot = 0;
   if(!find_stage_slot(sector, slot)) return false;
@@ -4305,7 +4358,7 @@ bool vfat_stage_write(u32 block, const u8* data) {
 }
 
 bool vfat_stage_read(u32 block, u8* data) {
-  if(!g_ready || data == NULL) return false;
+  if(!g_ready || data == NULL || !ensure_stage_index()) return false;
   const int index = stage_ref_index(block);
   if(index < 0) return false;
   u32 key = 0;
@@ -4321,14 +4374,15 @@ bool vfat_stage_read(u32 block, u8* data) {
 }
 
 bool vfat_stage_exists(u32 block) {
-  return g_ready && stage_ref_index(block) >= 0;
+  return g_ready && g_stage_index != nullptr && stage_ref_index(block) >= 0;
 }
 
 u16 vfat_stage_count(void) {
-  return g_ready ? g_stage_ref_count : 0;
+  return g_ready && g_stage_index != nullptr ? g_stage_ref_count : 0;
 }
 
 void vfat_stage_forget(u32 start_block, u16 blocks) {
+  if(!g_ready || !ensure_stage_index()) return;
   for(u16 offset = 0; offset < blocks; offset++) {
     const int index = stage_ref_index(start_block + offset);
     if(index < 0) continue;
@@ -4341,6 +4395,7 @@ void vfat_stage_forget(u32 start_block, u16 blocks) {
 }
 
 bool vfat_stage_discard_all(void) {
+  if(!g_ready || !ensure_stage_index()) return false;
   while(g_stage_ref_count != 0) {
     const u16 index = (u16) (g_stage_ref_count - 1);
     if(!write_byte(stage_record_address(stage_index_ref(index)) + 2,
@@ -4348,6 +4403,75 @@ bool vfat_stage_discard_all(void) {
     g_stage_ref_count--;
   }
   return true;
+}
+
+bool vfat_stage_lock(void) {
+  if(g_stage_locked) return g_stage_index != nullptr;
+  if(g_stage_external || !ensure_stage_index()) return false;
+  g_stage_locked = true;
+  return true;
+}
+
+bool vfat_stage_narrow(u32 start_block, u16 blocks,
+                       u32* index_storage, u16 index_capacity) {
+  if(!g_stage_locked || g_stage_external || !g_stage_overlay_lease.ok() ||
+     g_stage_index == nullptr || index_storage == nullptr || blocks == 0 ||
+     index_capacity < blocks ||
+     ((uintptr_t) index_storage & (alignof(u32) - 1U)) != 0) return false;
+
+  u16 count = 0;
+  const u32 end_block = start_block + blocks;
+  if(end_block < start_block) return false;
+  for(u16 index = 0; index < g_stage_ref_count; index++) {
+    const u32 key = stage_index_key(index);
+    if(key < start_block || key >= end_block) continue;
+    if(count >= index_capacity) return false;
+    index_storage[count++] = g_stage_index[index];
+  }
+
+  g_stage_index = index_storage;
+  g_stage_index_capacity = index_capacity;
+  g_stage_ref_count = count;
+  g_stage_external = true;
+  g_stage_overlay_lease.reset();
+  return true;
+}
+
+bool vfat_stage_narrow_matching(VfatStageKeyFilter include,
+                                void* context,
+                                u32* index_storage, u16 index_capacity) {
+  if(!g_stage_locked || g_stage_external || !g_stage_overlay_lease.ok() ||
+     g_stage_index == nullptr || include == nullptr ||
+     index_storage == nullptr || index_capacity == 0 ||
+     ((uintptr_t) index_storage & (alignof(u32) - 1U)) != 0) return false;
+
+  u16 count = 0;
+  for(u16 index = 0; index < g_stage_ref_count; index++) {
+    const u32 key = stage_index_key(index);
+    if(!include(context, key)) continue;
+    if(count >= index_capacity) return false;
+    index_storage[count++] = g_stage_index[index];
+  }
+
+  g_stage_index = index_storage;
+  g_stage_index_capacity = index_capacity;
+  g_stage_ref_count = count;
+  g_stage_external = true;
+  g_stage_overlay_lease.reset();
+  return true;
+}
+
+bool vfat_stage_restore_full(void) {
+  if(!g_stage_locked || !g_stage_external) return false;
+  forget_stage_index_binding();
+  vfat_stage_clear();
+  return g_stage_overlay_lease.ok() && g_stage_index != nullptr &&
+         g_stage_index_capacity == STAGE_REF_CAPACITY;
+}
+
+void vfat_stage_unlock(void) {
+  g_stage_locked = false;
+  if(g_stage_external) forget_stage_index_binding();
 }
 
 } // пространство имён program_store

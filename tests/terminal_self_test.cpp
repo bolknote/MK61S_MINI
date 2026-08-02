@@ -22,6 +22,27 @@ static void test_input_capacity_reserves_terminator(void) {
   assert(terminal_core::MAX_INPUT_TEXT + 1 == terminal_core::INPUT_CAPACITY);
 }
 
+static void test_script_argument_rebinds_without_copy(void) {
+  const char source[] = "open docs/manual.md";
+  u8 transient[terminal_core::INPUT_CAPACITY] = {};
+  std::memcpy(transient, source, sizeof(source));
+  const char* argument = (const char*) transient + 5;
+  assert(terminal_core::rebind_script_argument(
+      source, std::strlen(source), transient, sizeof(transient), argument));
+  assert(argument == source + 5);
+  assert(std::strcmp(argument, "docs/manual.md") == 0);
+
+  const char* literal = "";
+  argument = literal;
+  assert(terminal_core::rebind_script_argument(
+      source, std::strlen(source), transient, sizeof(transient), argument));
+  assert(argument == literal);
+
+  argument = (const char*) transient + std::strlen(source) + 1;
+  assert(!terminal_core::rebind_script_argument(
+      source, std::strlen(source), transient, sizeof(transient), argument));
+}
+
 static terminal_line_editor::Key decode_editor_sequence(const char* sequence) {
   terminal_line_editor::EscapeDecoder decoder;
   terminal_line_editor::Key key = terminal_line_editor::Key::NONE;
@@ -680,6 +701,7 @@ static void test_rtc_idle_clock_glyphs_and_slots(void) {
 
 int main(void) {
   test_input_capacity_reserves_terminator();
+  test_script_argument_rebinds_without_copy();
   test_terminal_escape_decoder();
   test_terminal_line_editing();
   test_terminal_line_editing_is_utf8_aware();

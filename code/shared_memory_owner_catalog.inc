@@ -53,3 +53,11 @@ MK61_SHARED_MEMORY_OWNER(
     WORKSPACE_SWAP, "workspace-swap",
     (arena_mask(Arena::SCRATCH) | arena_mask(Arena::BULK)), 0,
     arena_mask(Arena::BULK), arena_mask(Arena::BULK), 0)
+MK61_SHARED_MEMORY_OWNER(LOADABLE_MODULE, "module",
+                         arena_mask(Arena::OVERLAY), 0,
+                         arena_mask(Arena::OVERLAY),
+                         arena_mask(Arena::OVERLAY), 0)
+MK61_SHARED_MEMORY_OWNER(VFAT_STAGE, "vfat-stage",
+                         arena_mask(Arena::OVERLAY), 0,
+                         arena_mask(Arena::OVERLAY),
+                         arena_mask(Arena::OVERLAY), 0)

@@ -14,4 +14,7 @@ void sound_driver_stop(void);
 void sound_driver_poll(void);
 bool sound_driver_busy(void);
 
+// Вызывается общим STM32 SysTick-dispatcher из контекста прерывания.
+void sound_driver_on_systick_isr(void);
+
 #endif

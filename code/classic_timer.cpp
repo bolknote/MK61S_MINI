@@ -2,6 +2,7 @@
 #include "classic_timer.hpp"
 #include "config.h"
 #include "stm32f4_platform_resources.hpp"
+#include "stm32f4_timer_math.hpp"
 
 #if defined(ARDUINO_ARCH_STM32) && defined(HAL_TIM_MODULE_ENABLED) && \
     !defined(HAL_TIM_MODULE_ONLY) && MK61_STM32F4_RESOURCE_MAP_SUPPORTED
@@ -10,29 +11,34 @@
   #define MK61_CLASSIC_TIMER_USES_TIM9 0
 #endif
 
-#if MK61_CLASSIC_TIMER_USES_TIM9
-  #include <HardwareTimer.h>
-  #include "manual_lifetime.hpp"
-#endif
-
 namespace classic_timer {
 namespace {
 
 static classic_scheduler::Scheduler scheduler;
 static u32 actual_period_us = cfg::CLASSIC_MK61_PERIOD_US;
 
+static u32 next_tick_us = 0;
+
+static void poll_fallback(void) {
+  if(!scheduler.active()) return;
+  const u32 now = micros();
+  if((i32) (now - next_tick_us) < 0) return;
+
+  const u32 due = (u32) ((now - next_tick_us) /
+                         cfg::CLASSIC_MK61_PERIOD_US) + 1U;
+  scheduler.on_ticks(due);
+  next_tick_us += due * cfg::CLASSIC_MK61_PERIOD_US;
+}
+
 #if MK61_CLASSIC_TIMER_USES_TIM9
 
-// Карта ресурсов F401/F411: TIM10 обслуживает отсечку звука, TIM11 зарезервирован
-// STM32duino под Servo, а PWM буззера занимает TIM2/TIM4/TIM5 в зависимости от
-// профиля платы. TIM9 не пересекается ни с одним из этих потребителей.
-static manual_lifetime::Storage<HardwareTimer> timer_storage;
-static bool timer_constructed = false;
+// TIM9 работает свободным 16-битным счётчиком на 10 кГц. SysTick читает его
+// раз в миллисекунду, а дробный аккумулятор выдаёт ровно 13 шагов за 15 секунд.
+// Так средняя скорость задаётся аппаратной временной базой без тяжёлого
+// HardwareTimer и без дополнительного IRQ-вектора.
+static volatile u16 previous_counter = 0;
+static volatile u32 phase = 0;
 static bool timer_initialized = false;
-
-static HardwareTimer& timer(void) {
-  return timer_storage.get();
-}
 
 struct InterruptState {
   u32 primask;
@@ -48,92 +54,72 @@ static void restore_interrupts(InterruptState state) {
   __set_PRIMASK(state.primask);
 }
 
-static void clear_update_interrupt(void) {
-  TIM_HandleTypeDef* handle = timer().getHandle();
-  if(handle != NULL) __HAL_TIM_CLEAR_FLAG(handle, TIM_FLAG_UPDATE);
-}
-
-static void on_timer_tick(void) {
-  scheduler.on_tick();
-}
-
-static void configure_period(void) {
-  // HardwareTimer::setOverflow(MICROSEC_FORMAT) выбирает первый допустимый
-  // 16-битный делитель и на F401 ошибается примерно на 15 мкс за шаг. Для
-  // штатных частот BlackPill используем лучшие целочисленные пары PSC/ARR для
-  // измеренного рационального периода 15/13 с (ошибка не больше 0,023 мкс).
-  const u32 timer_hz = timer().getTimerClkFreq();
-  if(timer_hz == 84000000UL) {
-    timer().setPrescaleFactor(3109);
-    timer().setOverflow(31175, TICK_FORMAT);
-  } else if(timer_hz == 96000000UL) {
-    timer().setPrescaleFactor(3441);
-    timer().setOverflow(32191, TICK_FORMAT);
-  } else if(timer_hz == 100000000UL) {
-    timer().setPrescaleFactor(1986);
-    timer().setOverflow(58099, TICK_FORMAT);
-  } else {
-    timer().setOverflow(cfg::CLASSIC_MK61_PERIOD_US, MICROSEC_FORMAT);
-  }
-}
-
 static void stop_timer_locked(void) {
-  timer().pause();
-  timer().detachInterrupt();
-  clear_update_interrupt();
+  LL_TIM_DisableCounter(MK61_CLASSIC_TIMER_INSTANCE);
+  LL_TIM_DisableIT_UPDATE(MK61_CLASSIC_TIMER_INSTANCE);
+  LL_TIM_ClearFlag_UPDATE(MK61_CLASSIC_TIMER_INSTANCE);
   scheduler.set_active(false);
+  previous_counter = 0;
+  phase = 0;
 }
 
 static void start_timer_locked(void) {
-  timer().pause();
-  timer().detachInterrupt();
-  clear_update_interrupt();
-  timer().setCount(0);
+  LL_TIM_DisableCounter(MK61_CLASSIC_TIMER_INSTANCE);
+  LL_TIM_SetCounter(MK61_CLASSIC_TIMER_INSTANCE, 0);
+  LL_TIM_ClearFlag_UPDATE(MK61_CLASSIC_TIMER_INSTANCE);
+  previous_counter = 0;
+  phase = 0;
   scheduler.set_active(true);
-  timer().attachInterrupt(on_timer_tick);
-  clear_update_interrupt();
-  timer().resume();
+  LL_TIM_EnableCounter(MK61_CLASSIC_TIMER_INSTANCE);
 }
 
-#else
+static void configure_timer(void) {
+  __HAL_RCC_TIM9_CLK_ENABLE();
 
-static u32 next_tick_us = 0;
+  const u32 timer_hz = stm32f4_platform_resources::apb2_timer_clock_hz();
+  u32 prescaler = timer_hz / stm32f4_timer_math::CLASSIC_COUNTER_HZ;
+  if(prescaler == 0) prescaler = 1;
+  if(prescaler > stm32f4_timer_math::TIMER_FACTOR_LIMIT) {
+    prescaler = stm32f4_timer_math::TIMER_FACTOR_LIMIT;
+  }
 
-static void poll_fallback(void) {
-  if(!scheduler.active()) return;
-  const u32 now = micros();
-  if((i32) (now - next_tick_us) < 0) return;
+  TIM_TypeDef* const timer = MK61_CLASSIC_TIMER_INSTANCE;
+  timer->CR1 = 0;
+  timer->CR2 = 0;
+  timer->SMCR = 0;
+  timer->DIER = 0;
+  LL_TIM_SetPrescaler(timer, prescaler - 1UL);
+  LL_TIM_SetAutoReload(timer, 0xFFFFUL);
+  LL_TIM_SetCounter(timer, 0);
+  LL_TIM_GenerateEvent_UPDATE(timer);
+  LL_TIM_ClearFlag_UPDATE(timer);
 
-  const u32 due = (u32) ((now - next_tick_us) /
-                         cfg::CLASSIC_MK61_PERIOD_US) + 1U;
-  scheduler.on_ticks(due);
-  next_tick_us += due * cfg::CLASSIC_MK61_PERIOD_US;
+  const u32 counter_hz = timer_hz / prescaler;
+  actual_period_us = (u32) (((u64) 1000000UL *
+    stm32f4_timer_math::CLASSIC_PERIOD_NUMERATOR +
+    stm32f4_timer_math::CLASSIC_PERIOD_DENOMINATOR / 2UL) /
+    stm32f4_timer_math::CLASSIC_PERIOD_DENOMINATOR);
+
+  // Все штатные F401/F411-профили дают ровно 10 кГц. При пользовательской
+  // частоте тактирования безопаснее перейти на micros(), чем незаметно менять
+  // скорость классического режима.
+  timer_initialized = counter_hz == stm32f4_timer_math::CLASSIC_COUNTER_HZ;
+  if(!timer_initialized) {
+    __HAL_RCC_TIM9_CLK_DISABLE();
+  }
 }
 
 #endif
 
 } // namespace
 
-void construct(void) {
-#if MK61_CLASSIC_TIMER_USES_TIM9
-  if(timer_constructed) return;
-  timer_storage.construct(MK61_CLASSIC_TIMER_INSTANCE);
-  timer_constructed = true;
-#endif
-}
+void construct(void) {}
 
 void initialize(void) {
 #if MK61_CLASSIC_TIMER_USES_TIM9
-  if(!timer_constructed) construct();
   const InterruptState irq = disable_interrupts();
-  timer().pause();
-  timer().detachInterrupt();
-  configure_period();
-  timer().setCount(0);
-  clear_update_interrupt();
+  configure_timer();
   scheduler.set_active(false);
-  actual_period_us = timer().getOverflow(MICROSEC_FORMAT);
-  timer_initialized = true;
   restore_interrupts(irq);
 #else
   scheduler.set_active(false);
@@ -143,7 +129,14 @@ void initialize(void) {
 
 void synchronize(bool active) {
 #if MK61_CLASSIC_TIMER_USES_TIM9
-  if(!timer_initialized) return;
+  if(!timer_initialized) {
+    if(scheduler.active() != active) {
+      scheduler.set_active(active);
+      if(active) next_tick_us = micros() + cfg::CLASSIC_MK61_PERIOD_US;
+    }
+    if(active) poll_fallback();
+    return;
+  }
   if(scheduler.active() == active) return;
   const InterruptState irq = disable_interrupts();
   if(active) start_timer_locked();
@@ -160,6 +153,10 @@ void synchronize(bool active) {
 
 bool take_step(void) {
 #if MK61_CLASSIC_TIMER_USES_TIM9
+  if(!timer_initialized) {
+    poll_fallback();
+    return scheduler.take_step();
+  }
   const InterruptState irq = disable_interrupts();
   const bool ready = scheduler.take_step();
   restore_interrupts(irq);
@@ -182,6 +179,7 @@ void reset_statistics(void) {
 
 classic_scheduler::Snapshot statistics(void) {
 #if MK61_CLASSIC_TIMER_USES_TIM9
+  if(!timer_initialized) poll_fallback();
   const InterruptState irq = disable_interrupts();
   const classic_scheduler::Snapshot snapshot = scheduler.snapshot();
   restore_interrupts(irq);
@@ -194,7 +192,7 @@ classic_scheduler::Snapshot statistics(void) {
 
 const char* backend_name(void) {
 #if MK61_CLASSIC_TIMER_USES_TIM9
-  return "TIM9";
+  return timer_initialized ? "TIM9/SysTick" : "micros";
 #else
   return "micros";
 #endif
@@ -202,6 +200,22 @@ const char* backend_name(void) {
 
 u32 configured_period_us(void) {
   return actual_period_us;
+}
+
+void on_systick_isr(void) {
+#if MK61_CLASSIC_TIMER_USES_TIM9
+  if(!timer_initialized || !scheduler.active()) return;
+
+  const u16 current = (u16) LL_TIM_GetCounter(MK61_CLASSIC_TIMER_INSTANCE);
+  const u16 elapsed = stm32f4_timer_math::elapsed_counter_ticks(
+    previous_counter, current);
+  previous_counter = current;
+
+  u32 next_phase = phase;
+  const u32 due = stm32f4_timer_math::advance_classic_phase(elapsed, next_phase);
+  phase = next_phase;
+  scheduler.on_ticks(due);
+#endif
 }
 
 } // namespace classic_timer

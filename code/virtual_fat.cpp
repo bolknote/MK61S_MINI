@@ -124,6 +124,10 @@ static bool ensure_session(void) {
   if(g_session_lease.ok() && g_session != NULL) return true;
   if(!g_session_lease.acquire(language_workspace::Owner::USB_DISK,
                               sizeof(SessionState))) return false;
+  if(!program_store::vfat_stage_lock()) {
+    g_session_lease.reset();
+    return false;
+  }
   g_session = (SessionState*) g_session_lease.data();
   memset(g_session, 0, sizeof(*g_session));
   return true;
@@ -1167,15 +1171,48 @@ static bool file_chain_complete(const FileChain& chain,
 }
 
 #if MK61_ANY_LOADABLE_MODULE
+static constexpr u16 MAX_APP_STAGE_BLOCKS =
+    (program_store::MAX_APP_FILE_SIZE + SECTOR_SIZE - 1U) / SECTOR_SIZE;
+
+static bool app_chain_contains_stage_key(void* context, u32 key) {
+  if(context == NULL) return false;
+  const FileChain& chain = *(FileChain*) context;
+  const u32 cluster_bytes =
+      (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
+  u32 remaining = chain.size;
+  for(u8 index = 0; index < chain.cluster_count && remaining != 0; index++) {
+    const u32 in_cluster =
+        remaining < cluster_bytes ? remaining : cluster_bytes;
+    const u16 sectors =
+        (u16) ((in_cluster + SECTOR_SIZE - 1U) / SECTOR_SIZE);
+    const u32 first = cluster_lba(chain.clusters[index], 0);
+    if(key >= first && key - first < sectors) return true;
+    remaining -= in_cluster;
+  }
+  return false;
+}
+
 static bool validate_app_chain(const ParsedNode& parsed,
                                FileChain& chain) {
   if(parsed.type != program_store::ProgramType::APP) return true;
+  alignas(4) u32 app_stage_index[MAX_APP_STAGE_BLOCKS] = {};
+  if(!program_store::vfat_stage_narrow_matching(
+       app_chain_contains_stage_key, &chain,
+       app_stage_index, MAX_APP_STAGE_BLOCKS)) {
+    g_last_error = "app-stage";
+    return false;
+  }
   const loadable_module::ModuleSource source = {
     &chain, parsed.data_len, read_file_chain_source
   };
   loadable_module::Header header = {};
-  if(loadable_module::validate_app(source, header) ==
-     loadable_module::StoreStatus::OK) return true;
+  const loadable_module::StoreStatus status =
+      loadable_module::validate_app(source, header);
+  if(!program_store::vfat_stage_restore_full()) {
+    g_last_error = "app-stage-restore";
+    return false;
+  }
+  if(status == loadable_module::StoreStatus::OK) return true;
   g_last_error = "app-invalid";
   return false;
 }
@@ -1932,6 +1969,7 @@ void end_session(void) {
   g_cache_scratch.reset();
   g_session = NULL;
   g_session_lease.reset();
+  program_store::vfat_stage_unlock();
   g_extra_cache = NULL;
   g_scratch_cache_slots = 0;
   g_extra_cache_slots = 0;

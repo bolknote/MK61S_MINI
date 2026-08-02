@@ -196,6 +196,18 @@ u16 vfat_stage_count(void);
 void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all(void);
 void vfat_stage_clear(void);
+// Полный индекс staging живёт в общей APP/USB overlay-арене. USB-сеанс
+// блокирует её от вытеснения; терминальный upload перед проверкой APP сужает
+// индекс до собственного малого буфера и освобождает окно декодеру модуля.
+bool vfat_stage_lock(void);
+using VfatStageKeyFilter = bool (*)(void* context, u32 key);
+bool vfat_stage_narrow(u32 start_block, u16 blocks,
+                       u32* index_storage, u16 index_capacity);
+bool vfat_stage_narrow_matching(VfatStageKeyFilter include,
+                                void* context,
+                                u32* index_storage, u16 index_capacity);
+bool vfat_stage_restore_full(void);
+void vfat_stage_unlock(void);
 
 #if defined(PROGRAM_STORE_HOST_TEST)
 // Создаёт на томе настоящий каталог/локаторы C5 v5 для проверки миграции v6.

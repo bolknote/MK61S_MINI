@@ -6,6 +6,7 @@
 #include "loadable_app_api.hpp"
 #include "loadable_module_system_app.hpp"
 #include "program_store.hpp"
+#include "shared_memory.hpp"
 #include "spi_nor_flash.hpp"
 #include "tools.hpp"
 
@@ -19,12 +20,10 @@ static_assert(program_store::MAX_APP_FILE_SIZE == MAX_CONTAINER_SIZE,
 
 static constexpr u32 INTERNAL_FLASH_ADDRESS = 0x08000000UL;
 
-// Секция .bss.* подхватывается штатным скриптом STM32 Core и поэтому занимает
-// только SRAM, а не внутреннюю Flash. Глобальное имя извлекается упаковщиком из
-// resident ELF и служит адресом отдельной линковки модулей.
+// Глобальное имя принадлежит общей OVERLAY-арене. Упаковщик извлекает его адрес
+// из resident ELF и передаёт отдельной линковке модулей.
 extern "C" {
-__attribute__((used, aligned(8), section(".bss.mk61_module_overlay")))
-u8 mk61_module_overlay[OVERLAY_SIZE];
+extern u8 mk61_module_overlay[];
 
 // STM32 linker script кладёт начальные значения .data сразу после основной
 // Flash-части образа. Эта тройка даёт точный размер того же непрерывного .bin,
@@ -34,6 +33,9 @@ extern u8 _sdata;
 extern u8 _edata;
 }
 
+static_assert(shared_memory::OVERLAY_SIZE >= OVERLAY_SIZE,
+              "shared overlay is smaller than the APP ABI window");
+
 static Kind g_active_kind = (Kind) 0;
 static Header g_active_header;
 static Entry g_active_entry;
@@ -41,6 +43,7 @@ static u16 g_active_file_id = program_store::INVALID_ID;
 static u8 g_call_depth;
 static u32 g_cached_resident_size;
 static u32 g_cached_resident_crc;
+static shared_memory::Lease g_overlay_lease;
 
 extern "C" void mk61_module_keep_imports(void);
 
@@ -136,16 +139,41 @@ static bool same_header(const Header& left, const Header& right) {
 }
 
 static bool same_active_image(Kind kind, u16 file_id, const Header& header) {
-  return g_active_entry != nullptr && g_active_kind == kind &&
+  return g_overlay_lease.ok() && g_active_entry != nullptr &&
+         g_active_kind == kind &&
          g_active_file_id == file_id &&
          same_header(g_active_header, header);
 }
 
-static void invalidate_active(void) {
+static void clear_active_metadata(void) {
   g_active_kind = (Kind) 0;
   memset(&g_active_header, 0, sizeof(g_active_header));
   g_active_entry = nullptr;
   g_active_file_id = program_store::INVALID_ID;
+}
+
+static void invalidate_active(void) {
+  clear_active_metadata();
+  g_overlay_lease.reset();
+}
+
+static shared_memory::EvictionDecision prepare_overlay_eviction(void) {
+  if(g_call_depth != 0) return shared_memory::EvictionDecision::KEEP;
+  clear_active_metadata();
+  return shared_memory::EvictionDecision::RELEASE;
+}
+
+static u8* acquire_module_overlay(void) {
+  if(g_overlay_lease.ok()) return g_overlay_lease.data();
+  if(!g_overlay_lease.acquire_cache(
+       shared_memory::Arena::OVERLAY,
+       shared_memory::Owner::LOADABLE_MODULE, OVERLAY_SIZE)) return nullptr;
+  if(g_overlay_lease.data() != mk61_module_overlay ||
+     !g_overlay_lease.set_evictable(prepare_overlay_eviction)) {
+    g_overlay_lease.reset();
+    return nullptr;
+  }
+  return g_overlay_lease.data();
 }
 
 static u32 entry_api_argument(Kind kind) {
@@ -163,18 +191,22 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   if(g_call_depth != 0) return RuntimeStatus::BUSY;
 
   invalidate_active();
+  u8* const overlay = acquire_module_overlay();
+  if(overlay == nullptr) return RuntimeStatus::BUSY;
   DecodeResult decoded = {};
   if(!decode_payload(reader, header.compression, header.stored_size,
-                     mk61_module_overlay, header.image_size, decoded)) {
-    memset(mk61_module_overlay, 0, sizeof(mk61_module_overlay));
+                     overlay, header.image_size, decoded)) {
+    memset(overlay, 0, OVERLAY_SIZE);
+    invalidate_active();
     return RuntimeStatus::CORRUPT_MODULE;
   }
   if(decoded.stored_crc32 != header.stored_crc32 ||
      decoded.image_crc32 != header.image_crc32) {
-    memset(mk61_module_overlay, 0, sizeof(mk61_module_overlay));
+    memset(overlay, 0, OVERLAY_SIZE);
+    invalidate_active();
     return RuntimeStatus::CORRUPT_MODULE;
   }
-  memset(mk61_module_overlay + header.image_size, 0,
+  memset(overlay + header.image_size, 0,
          header.memory_size - header.image_size);
   __DSB();
   __ISB();
@@ -383,16 +415,20 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
   }
 
   invalidate_active();
+  u8* const overlay = acquire_module_overlay();
+  if(overlay == nullptr) return StoreStatus::UNAVAILABLE;
   InstallPayloadSource payload_context = {&source};
   const Reader payload_reader = {&payload_context, read_install_payload};
   DecodeResult decoded = {};
   if(!decode_payload(payload_reader, header.compression, header.stored_size,
-                     mk61_module_overlay, header.image_size, decoded) ||
+                     overlay, header.image_size, decoded) ||
      decoded.stored_crc32 != header.stored_crc32 ||
      decoded.image_crc32 != header.image_crc32) {
-    memset(mk61_module_overlay, 0, sizeof(mk61_module_overlay));
+    memset(overlay, 0, OVERLAY_SIZE);
+    invalidate_active();
     return StoreStatus::BAD_STORED_CRC;
   }
+  invalidate_active();
   return StoreStatus::OK;
 }
 

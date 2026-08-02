@@ -399,11 +399,6 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     u32     file_upload_checksum_state;
     storage_path::FileTarget file_upload_target;
 
-    // Аргументы скриптового действия переживают восстановление input_buffer:
-    // script_args_ptr указывает внутрь буфера строки, поэтому перед возвратом
-    // из execute_script_line() они переносятся сюда. Скрипт один в момент
-    // времени - хранилище общее (static).
-    static inline char script_args_storage[MAX_INPUT_CHAR];
     static inline m61_ansi::SavedCursor print_saved_cursor = {};
 
     // Буфер строки один на прошивку (C++17 inline): экземпляров терминала два
@@ -418,6 +413,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     // Диапазон терминального C5-upload отделён от USB LBA.
     static constexpr u32 FILE_UPLOAD_STAGE_FIRST_KEY =
         program_store::VFAT_STAGE_KEY_MAX - 127U;
+    static constexpr usize FILE_UPLOAD_WORKSPACE_SIZE =
+        program_store::VFAT_STAGE_BLOCK_SIZE +
+        (usize) FILE_UPLOAD_STAGE_BLOCKS * sizeof(u32);
 
     // ====== История команд: байтовое кольцо + каталог записей ======
     // Каталог хранит позицию и длину каждой записи, поэтому доступ по номеру
@@ -1510,18 +1508,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 #endif
 
-    // args обычно указывает внутрь input_buffer, который execute_script_line()
-    // восстановит перед возвратом, поэтому результат ссылается на отдельное
-    // хранилище.
     terminal_protocol::Result script_action(terminal_protocol::ResultKind action, const char* args) {
-      usize len = 0;
-      while(args[len] != 0 && len < sizeof(script_args_storage) - 1) {
-        script_args_storage[len] = args[len];
-        len++;
-      }
-      script_args_storage[len] = 0;
       recive_pos = 0;
-      return terminal_protocol::Result::action(action, script_args_storage);
+      return terminal_protocol::Result::action(action, args);
     }
 
     bool input_can_append(void) const {
@@ -1653,10 +1642,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     void cancel_file_upload(void) {
-      if(program_store::ready()) {
+      if(file_upload_active && program_store::ready()) {
         program_store::vfat_stage_forget(FILE_UPLOAD_STAGE_FIRST_KEY,
                                          FILE_UPLOAD_STAGE_BLOCKS);
       }
+      if(file_upload_active) program_store::vfat_stage_unlock();
       (void) language_workspace::discard(
           language_workspace::Owner::TERMINAL_TRANSFER);
       file_upload_active = false;
@@ -1799,8 +1789,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         language_workspace::Lease workspace(
             language_workspace::Owner::TERMINAL_TRANSFER,
-            program_store::VFAT_STAGE_BLOCK_SIZE);
+            FILE_UPLOAD_WORKSPACE_SIZE);
         if(!workspace.ok()) return file_transfer_error("PUT_BUSY");
+        if(!program_store::vfat_stage_lock()) {
+          return file_transfer_error("PUT_BUSY");
+        }
         memset(workspace.data(), 0, program_store::VFAT_STAGE_BLOCK_SIZE);
         file_upload_target = target;
         file_upload_size = (u16) length;
@@ -1834,7 +1827,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         language_workspace::Lease workspace(
             language_workspace::Owner::TERMINAL_TRANSFER,
-            program_store::VFAT_STAGE_BLOCK_SIZE);
+            FILE_UPLOAD_WORKSPACE_SIZE);
         if(!workspace.ok() || workspace.fresh()) {
           return file_transfer_error("PUT_INTERRUPTED");
         }
@@ -1881,7 +1874,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         language_workspace::Lease workspace(
             language_workspace::Owner::TERMINAL_TRANSFER,
-            program_store::VFAT_STAGE_BLOCK_SIZE);
+            FILE_UPLOAD_WORKSPACE_SIZE);
         if(!workspace.ok() || workspace.fresh()) {
           return file_transfer_error("PUT_INTERRUPTED");
         }
@@ -1899,6 +1892,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
             file_upload_checksum_state, file_upload_size);
         if(crc != file_upload_checksum) {
           return file_transfer_error("PUT_CHECKSUM");
+        }
+        u8* const workspace_bytes = (u8*) workspace.data();
+        u32* const narrow_index = reinterpret_cast<u32*>(
+            workspace_bytes + program_store::VFAT_STAGE_BLOCK_SIZE);
+        if(!program_store::vfat_stage_narrow(
+             FILE_UPLOAD_STAGE_FIRST_KEY, FILE_UPLOAD_STAGE_BLOCKS,
+             narrow_index, FILE_UPLOAD_STAGE_BLOCKS)) {
+          return file_transfer_error("PUT_BUSY");
         }
         const program_store::FileSource source = {
           &file_upload_size, read_staged_file_upload
@@ -1989,6 +1990,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         file_upload_target{}, recive_pos(0), input_cursor(0) {}
 
     void reset_command_state(void) {
+      const bool upload_was_active = file_upload_active;
       AT                    = 0;
       recive_pos            = 0;
       input_cursor          = 0;
@@ -2002,10 +2004,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       file_upload_received  = 0;
       file_upload_checksum  = 0;
       file_upload_checksum_state = 0;
-      if(program_store::ready()) {
+      if(upload_was_active && program_store::ready()) {
         program_store::vfat_stage_forget(FILE_UPLOAD_STAGE_FIRST_KEY,
                                          FILE_UPLOAD_STAGE_BLOCKS);
       }
+      if(upload_was_active) program_store::vfat_stage_unlock();
       (void) language_workspace::discard(
           language_workspace::Owner::TERMINAL_TRANSFER);
     }
@@ -3553,6 +3556,13 @@ inline terminal_protocol::Result class_terminal::execute_script_line(
     result = execute(true, trap_mode);
   }
 
+  // Действия с аргументом возвращают указатель внутрь временного input_buffer.
+  // Исходная строка вызывающего живёт до обработки Result, поэтому сохраняем
+  // не второй 240-байтный текст, а тот же проверенный offset.
+  if(!terminal_core::rebind_script_argument(
+       line, len, input_buffer, MAX_INPUT_CHAR, result.args)) {
+    result = terminal_protocol::Result::error();
+  }
   memcpy(input_buffer, interactive_line, MAX_INPUT_CHAR);
   return result;
 }

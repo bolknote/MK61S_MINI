@@ -56,7 +56,6 @@ enum class ScriptSource : u8 {
 
 struct ScriptFrame {
   ScriptSource source;
-  char name[program_store::NAME_SIZE];
   u16 id;
   u16 len;
   u16 pos;
@@ -348,7 +347,6 @@ static bool find_entry_by_type_name(program_store::ProgramType type, const char*
 
 static void store_current_frame(ScriptFrame& frame) {
   frame.source = script_source;
-  copy_script_name(frame.name, script_name);
   frame.id = script_id;
   frame.len = script_len;
   frame.pos = script_pos;
@@ -357,9 +355,14 @@ static void store_current_frame(ScriptFrame& frame) {
   save_active_binds(frame.active_bind_opcodes);
 }
 
-static void restore_frame(const ScriptFrame& frame) {
+static bool restore_frame(const ScriptFrame& frame) {
+  program_store::Entry entry;
+  if(frame.source != ScriptSource::STORE ||
+     !program_store::entry_by_id(frame.id, entry) ||
+     entry.kind != program_store::NodeKind::FILE ||
+     entry.type != program_store::ProgramType::MK61) return false;
   script_source = frame.source;
-  copy_script_name(script_name, frame.name);
+  copy_script_name(script_name, entry.name);
   script_id = frame.id;
   script_len = frame.len;
   script_pos = frame.pos;
@@ -367,6 +370,7 @@ static void restore_frame(const ScriptFrame& frame) {
   restore_active_traps(frame.active_traps);
   restore_active_binds(frame.active_bind_opcodes);
   invalidate_read_cache();
+  return true;
 }
 
 static bool make_store_frame(u16 id, ScriptFrame& frame) {
@@ -375,7 +379,6 @@ static bool make_store_frame(u16 id, ScriptFrame& frame) {
      entry.kind != program_store::NodeKind::FILE ||
      entry.type != program_store::ProgramType::MK61) return false;
   frame.source = ScriptSource::STORE;
-  copy_script_name(frame.name, entry.name);
   frame.id = entry.id;
   frame.len = entry.data_len;
   frame.pos = 0;
@@ -976,7 +979,11 @@ static bool activate_bind(u8 opcode) {
 
 static bool activate_frame(const ScriptFrame& frame, const char*& error_message, u16& error_line) {
   clear_bind_hooks();
-  restore_frame(frame);
+  if(!restore_frame(frame)) {
+    error_message = "script file is unavailable";
+    error_line = frame.line;
+    return false;
+  }
   if(!build_label_index(error_message, error_line) ||
      !build_trap_index(error_message, error_line) ||
      !build_bind_index(error_message, error_line)) {

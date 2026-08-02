@@ -2845,29 +2845,292 @@ namespace {
 
 static constexpr u32 CORE_CONTEXT_MAGIC = 0x4D4B3631UL; // "MK61"
 
+struct PackedIK1302 {
+  u32 AMK;
+  u32 key_y;
+  u32 key_x;
+  u32 key_xm;
+  u32 displayed;
+  u32 comma;
+  u32 L;
+  u32 S;
+  u32 S1;
+  u32 P;
+  u32 T;
+  u32 MOD;
+  u32 flag_FC;
+  u16 p_and_amk1;
+  u16 p_and_amk;
+  u16 p_m;
+  u8 registers[IK13_MTICK_COUNT];
+};
+
+struct PackedIK1303 {
+  u32 AMK;
+  u32 MOD;
+  u32 S;
+  u32 S1;
+  u32 L;
+  u32 T;
+  u32 P;
+  u32 flag_FC;
+  u16 p_m;
+  u16 p_and_amk;
+  u16 p_and_amk1;
+  u16 key_x;
+  u16 key_xm;
+  u16 key_y;
+  u16 comma;
+  u8 registers[IK13_MTICK_COUNT];
+};
+
+struct PackedIK1306 {
+  u32 AMK;
+  u32 L;
+  u32 S;
+  u32 S1;
+  u32 P;
+  u32 T;
+  u32 MOD;
+  u32 flag_FC;
+  u16 p_and_amk1;
+  u16 p_and_amk;
+  u16 p_m;
+  u8 registers[IK13_MTICK_COUNT];
+};
+
+struct PackedEmu {
+  char indicator[INDICATOR_STRING_LENGTH];
+  char stack_y[INDICATOR_STRING_LENGTH];
+  u8 angle_unit;
+};
+
+struct PackedActiveCommand {
+  u32 sequence;
+  u8 active;
+  u8 source;
+  u8 opcode;
+  u8 executed_opcode;
+};
+
+static constexpr u8 CONTEXT_EDIT = 0x01;
+static constexpr u8 CONTEXT_EXPANDED = 0x02;
+static constexpr u8 CONTEXT_RANDOM_ENABLED = 0x04;
+static constexpr u8 CONTEXT_RANDOM_PENDING = 0x08;
+static constexpr u8 CONTEXT_KEYBOARD_PENDING = 0x10;
+static constexpr u8 CONTEXT_STATE_MASK =
+    CONTEXT_EDIT | CONTEXT_EXPANDED | CONTEXT_RANDOM_ENABLED |
+    CONTEXT_RANDOM_PENDING | CONTEXT_KEYBOARD_PENDING;
+
 struct CoreContextSnapshot {
-  u32 magic;
-  u8 ring[sizeof(ringM)];
-  IK1302 ik1302;
-  IK1303 ik1303;
-  IK1306 ik1306;
-  MK61Emu emu;
-  usize backstep_comma;
-  bool edit;
-  bool expanded;
-  bool random_enabled;
-  bool random_pending;
   u64 random_state;
-  ActiveMk61Command active_command;
+  u32 magic;
   u32 command_sequence;
-  bool keyboard_complete_pending;
+  PackedIK1302 ik1302;
+  PackedIK1303 ik1303;
+  PackedIK1306 ik1306;
+  PackedActiveCommand active_command;
+  u8 ring[sizeof(ringM) / 2U];
+  PackedEmu emu;
   u8 call_operand_addresses[MK61_CALL_OPERAND_DEPTH];
   u8 call_operand_visits[MK61_CALL_OPERAND_DEPTH];
+  u8 backstep_comma;
+  u8 state_flags;
   u8 call_operand_depth;
 };
 
+static_assert((sizeof(ringM) & 1U) == 0,
+              "core ring nibble count must be even");
+static_assert(sizeof(PackedIK1302) == 100, "IK1302 snapshot layout changed");
+static_assert(sizeof(PackedIK1303) == 88, "IK1303 snapshot layout changed");
+static_assert(sizeof(PackedIK1306) == 80, "IK1306 snapshot layout changed");
+static_assert(sizeof(CoreContextSnapshot) == core_61::CONTEXT_BUFFER_SIZE,
+              "public core context size must match its packed representation");
 static_assert(sizeof(CoreContextSnapshot) <= core_61::CONTEXT_BUFFER_SIZE,
               "core context does not fit the public opaque buffer");
+
+static bool pack_nibbles(const u8* input, usize count, u8* output) {
+  if(input == nullptr || output == nullptr || (count & 1U) != 0) return false;
+  for(usize index = 0; index < count; index += 2) {
+    if(input[index] > 0x0FU || input[index + 1U] > 0x0FU) return false;
+    output[index / 2U] =
+        (u8) (input[index] | (u8) (input[index + 1U] << 4));
+  }
+  return true;
+}
+
+static void unpack_nibbles(const u8* input, usize count, u8* output) {
+  for(usize index = 0; index < count; index += 2) {
+    const u8 value = input[index / 2U];
+    output[index] = value & 0x0FU;
+    output[index + 1U] = value >> 4;
+  }
+}
+
+static bool snapshot_offset(const u8* pointer, const u8* base,
+                            usize size, u16& output) {
+  if(pointer == nullptr || base == nullptr) return false;
+  const uintptr_t address = (uintptr_t) pointer;
+  const uintptr_t begin = (uintptr_t) base;
+  if(address < begin || address - begin >= size ||
+     address - begin > 0xFFFFU) return false;
+  output = (u16) (address - begin);
+  return true;
+}
+
+static bool save_ik1302(PackedIK1302& output) {
+  output.AMK = m_IK1302.AMK;
+  output.key_y = m_IK1302.key_y;
+  output.key_x = m_IK1302.key_x;
+  output.key_xm = m_IK1302.key_xm;
+  output.displayed = m_IK1302.displayed;
+  output.comma = m_IK1302.comma;
+  output.L = m_IK1302.L;
+  output.S = m_IK1302.S;
+  output.S1 = m_IK1302.S1;
+  output.P = m_IK1302.P;
+  output.T = m_IK1302.T;
+  output.MOD = m_IK1302.MOD;
+  output.flag_FC = m_IK1302.flag_FC;
+  return pack_nibbles(m_IK1302.R, sizeof(m_IK1302.R),
+                      output.registers) &&
+         pack_nibbles(m_IK1302.ST, sizeof(m_IK1302.ST),
+                      output.registers + sizeof(m_IK1302.R) / 2U) &&
+         snapshot_offset(m_IK1302.pAND_AMK1, IK1302_AND_AMK_ACTIVE,
+                         sizeof(IK1302_AND_AMK), output.p_and_amk1) &&
+         snapshot_offset(m_IK1302.pAND_AMK, IK1302_AND_AMK_ACTIVE,
+                         sizeof(IK1302_AND_AMK), output.p_and_amk) &&
+         snapshot_offset(m_IK1302.pM, ringM, sizeof(ringM), output.p_m);
+}
+
+static bool save_ik1303(PackedIK1303& output) {
+  output.AMK = m_IK1303.AMK;
+  output.MOD = m_IK1303.MOD;
+  output.S = m_IK1303.S;
+  output.S1 = m_IK1303.S1;
+  output.L = m_IK1303.L;
+  output.T = m_IK1303.T;
+  output.P = m_IK1303.P;
+  output.flag_FC = m_IK1303.flag_FC;
+  output.key_x = m_IK1303.key_x;
+  output.key_xm = m_IK1303.key_xm;
+  output.key_y = m_IK1303.key_y;
+  output.comma = m_IK1303.comma;
+  return pack_nibbles(m_IK1303.R, sizeof(m_IK1303.R),
+                      output.registers) &&
+         pack_nibbles(m_IK1303.ST, sizeof(m_IK1303.ST),
+                      output.registers + sizeof(m_IK1303.R) / 2U) &&
+         snapshot_offset(m_IK1303.pM, ringM, sizeof(ringM), output.p_m) &&
+         snapshot_offset(m_IK1303.pAND_AMK, IK1303_AND_AMK_ACTIVE,
+                         sizeof(IK1303_AND_AMK), output.p_and_amk) &&
+         snapshot_offset(m_IK1303.pAND_AMK1, IK1303_AND_AMK_ACTIVE,
+                         sizeof(IK1303_AND_AMK), output.p_and_amk1);
+}
+
+static bool save_ik1306(PackedIK1306& output) {
+  output.AMK = m_IK1306.AMK;
+  output.L = m_IK1306.L;
+  output.S = m_IK1306.S;
+  output.S1 = m_IK1306.S1;
+  output.P = m_IK1306.P;
+  output.T = m_IK1306.T;
+  output.MOD = m_IK1306.MOD;
+  output.flag_FC = m_IK1306.flag_FC;
+  return pack_nibbles(m_IK1306.R, sizeof(m_IK1306.R),
+                      output.registers) &&
+         pack_nibbles(m_IK1306.ST, sizeof(m_IK1306.ST),
+                      output.registers + sizeof(m_IK1306.R) / 2U) &&
+         snapshot_offset(m_IK1306.pAND_AMK1, IK1306_AND_AMK_ACTIVE,
+                         sizeof(IK1306_AND_AMK), output.p_and_amk1) &&
+         snapshot_offset(m_IK1306.pAND_AMK, IK1306_AND_AMK_ACTIVE,
+                         sizeof(IK1306_AND_AMK), output.p_and_amk) &&
+         snapshot_offset(m_IK1306.pM, ringM, sizeof(ringM), output.p_m);
+}
+
+static bool valid_angle_unit(u8 value) {
+  return value == (u8) NONE || value == (u8) RADIAN ||
+         value == (u8) DEGREE || value == (u8) GRADE ||
+         value == (u8) DEGREE_ERASE;
+}
+
+static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
+  return snapshot.magic == CORE_CONTEXT_MAGIC &&
+         snapshot.ik1302.p_m < sizeof(ringM) &&
+         snapshot.ik1303.p_m < sizeof(ringM) &&
+         snapshot.ik1306.p_m < sizeof(ringM) &&
+         snapshot.ik1302.p_and_amk < sizeof(IK1302_AND_AMK) &&
+         snapshot.ik1302.p_and_amk1 < sizeof(IK1302_AND_AMK) &&
+         snapshot.ik1303.p_and_amk < sizeof(IK1303_AND_AMK) &&
+         snapshot.ik1303.p_and_amk1 < sizeof(IK1303_AND_AMK) &&
+         snapshot.ik1306.p_and_amk < sizeof(IK1306_AND_AMK) &&
+         snapshot.ik1306.p_and_amk1 < sizeof(IK1306_AND_AMK) &&
+         snapshot.active_command.active <= 1 &&
+         snapshot.active_command.source <=
+             (u8) core_61::Mk61CommandSource::PROGRAM &&
+         (snapshot.state_flags & ~CONTEXT_STATE_MASK) == 0 &&
+         snapshot.call_operand_depth <= MK61_CALL_OPERAND_DEPTH &&
+         valid_angle_unit(snapshot.emu.angle_unit);
+}
+
+static void restore_ik1302(const PackedIK1302& input) {
+  m_IK1302.AMK = input.AMK;
+  m_IK1302.key_y = input.key_y;
+  m_IK1302.key_x = input.key_x;
+  m_IK1302.key_xm = input.key_xm;
+  m_IK1302.displayed = input.displayed;
+  m_IK1302.comma = input.comma;
+  m_IK1302.L = input.L;
+  m_IK1302.S = input.S;
+  m_IK1302.S1 = input.S1;
+  m_IK1302.P = input.P;
+  m_IK1302.T = input.T;
+  m_IK1302.MOD = input.MOD;
+  m_IK1302.flag_FC = input.flag_FC;
+  unpack_nibbles(input.registers, sizeof(m_IK1302.R), m_IK1302.R);
+  unpack_nibbles(input.registers + sizeof(m_IK1302.R) / 2U,
+                 sizeof(m_IK1302.ST), m_IK1302.ST);
+  m_IK1302.pAND_AMK1 = IK1302_AND_AMK_ACTIVE + input.p_and_amk1;
+  m_IK1302.pAND_AMK = IK1302_AND_AMK_ACTIVE + input.p_and_amk;
+  m_IK1302.pM = ringM + input.p_m;
+}
+
+static void restore_ik1303(const PackedIK1303& input) {
+  m_IK1303.AMK = input.AMK;
+  m_IK1303.MOD = input.MOD;
+  m_IK1303.S = input.S;
+  m_IK1303.S1 = input.S1;
+  m_IK1303.L = input.L;
+  m_IK1303.T = input.T;
+  m_IK1303.P = input.P;
+  m_IK1303.flag_FC = input.flag_FC;
+  m_IK1303.key_x = input.key_x;
+  m_IK1303.key_xm = input.key_xm;
+  m_IK1303.key_y = input.key_y;
+  m_IK1303.comma = input.comma;
+  unpack_nibbles(input.registers, sizeof(m_IK1303.R), m_IK1303.R);
+  unpack_nibbles(input.registers + sizeof(m_IK1303.R) / 2U,
+                 sizeof(m_IK1303.ST), m_IK1303.ST);
+  m_IK1303.pM = ringM + input.p_m;
+  m_IK1303.pAND_AMK = IK1303_AND_AMK_ACTIVE + input.p_and_amk;
+  m_IK1303.pAND_AMK1 = IK1303_AND_AMK_ACTIVE + input.p_and_amk1;
+}
+
+static void restore_ik1306(const PackedIK1306& input) {
+  m_IK1306.AMK = input.AMK;
+  m_IK1306.L = input.L;
+  m_IK1306.S = input.S;
+  m_IK1306.S1 = input.S1;
+  m_IK1306.P = input.P;
+  m_IK1306.T = input.T;
+  m_IK1306.MOD = input.MOD;
+  m_IK1306.flag_FC = input.flag_FC;
+  unpack_nibbles(input.registers, sizeof(m_IK1306.R), m_IK1306.R);
+  unpack_nibbles(input.registers + sizeof(m_IK1306.R) / 2U,
+                 sizeof(m_IK1306.ST), m_IK1306.ST);
+  m_IK1306.pAND_AMK1 = IK1306_AND_AMK_ACTIVE + input.p_and_amk1;
+  m_IK1306.pAND_AMK = IK1306_AND_AMK_ACTIVE + input.p_and_amk;
+  m_IK1306.pM = ringM + input.p_m;
+}
 
 // Single-core firmware calls this API only from foreground code. Keeping the
 // owner beside the slot turns accidental re-entry into a clean failure instead
@@ -2898,20 +3161,36 @@ bool release_context_buffer(ContextBufferOwner owner) {
 bool save_context(ContextBuffer& out) {
   CoreContextSnapshot snapshot = {};
   snapshot.magic = CORE_CONTEXT_MAGIC;
-  memcpy(snapshot.ring, ringM, sizeof(ringM));
-  snapshot.ik1302 = m_IK1302;
-  snapshot.ik1303 = m_IK1303;
-  snapshot.ik1306 = m_IK1306;
-  snapshot.emu = m_emu;
-  snapshot.backstep_comma = backstep_comma_position;
-  snapshot.edit = edit_program;
-  snapshot.expanded = expanded_program_mode;
-  snapshot.random_enabled = external_random_enabled;
-  snapshot.random_pending = external_random_pending;
+  if(backstep_comma_position > 0xFFU ||
+     !pack_nibbles(ringM, sizeof(ringM), snapshot.ring) ||
+     !save_ik1302(snapshot.ik1302) ||
+     !save_ik1303(snapshot.ik1303) ||
+     !save_ik1306(snapshot.ik1306)) return false;
+  memcpy(snapshot.emu.indicator, m_emu.m_indicator_str,
+         sizeof(snapshot.emu.indicator));
+  memcpy(snapshot.emu.stack_y, m_emu.m_stack_y_str,
+         sizeof(snapshot.emu.stack_y));
+  snapshot.emu.angle_unit = (u8) m_emu.m_angle_unit;
+  snapshot.backstep_comma = (u8) backstep_comma_position;
+  if(edit_program) snapshot.state_flags |= CONTEXT_EDIT;
+  if(expanded_program_mode) snapshot.state_flags |= CONTEXT_EXPANDED;
+  if(external_random_enabled) {
+    snapshot.state_flags |= CONTEXT_RANDOM_ENABLED;
+  }
+  if(external_random_pending) {
+    snapshot.state_flags |= CONTEXT_RANDOM_PENDING;
+  }
+  if(keyboard_command_complete_pending) {
+    snapshot.state_flags |= CONTEXT_KEYBOARD_PENDING;
+  }
   snapshot.random_state = external_random_state;
-  snapshot.active_command = active_mk61_command;
+  snapshot.active_command.sequence = active_mk61_command.sequence;
+  snapshot.active_command.active = active_mk61_command.active ? 1 : 0;
+  snapshot.active_command.source = (u8) active_mk61_command.source;
+  snapshot.active_command.opcode = active_mk61_command.opcode;
+  snapshot.active_command.executed_opcode =
+      active_mk61_command.executed_opcode;
   snapshot.command_sequence = mk61_command_sequence;
-  snapshot.keyboard_complete_pending = keyboard_command_complete_pending;
   memcpy(snapshot.call_operand_addresses, mk61_call_operand_addresses,
          sizeof(snapshot.call_operand_addresses));
   memcpy(snapshot.call_operand_visits, mk61_call_operand_visits,
@@ -2925,31 +3204,44 @@ bool save_context(ContextBuffer& out) {
 bool restore_context(const ContextBuffer& saved) {
   CoreContextSnapshot snapshot = {};
   memcpy(&snapshot, saved.bytes, sizeof(snapshot));
-  if(snapshot.magic != CORE_CONTEXT_MAGIC) return false;
-  memcpy(ringM, snapshot.ring, sizeof(ringM));
-  m_IK1302 = snapshot.ik1302;
-  m_IK1303 = snapshot.ik1303;
-  m_IK1306 = snapshot.ik1306;
-  // Снимок хранит указатели того же запуска, но workspace мог быть вытеснен
-  // между save/restore. Всегда привязываем их к текущему Flash/SRAM view.
+  if(!valid_context_snapshot(snapshot)) return false;
+  unpack_nibbles(snapshot.ring, sizeof(ringM), ringM);
+  expanded_program_mode =
+      (snapshot.state_flags & CONTEXT_EXPANDED) != 0;
+  // Между save/restore hot tables могли переселиться между Flash и workspace.
+  // Сначала выбираем текущий view, затем восстанавливаем смещения относительно
+  // его канонических баз — в снимке нет ни одного абсолютного указателя.
   select_core_hot_table_view(core_hot_tables_view_cached());
-  m_emu = snapshot.emu;
+  restore_ik1302(snapshot.ik1302);
+  restore_ik1303(snapshot.ik1303);
+  restore_ik1306(snapshot.ik1306);
+  memcpy(m_emu.m_indicator_str, snapshot.emu.indicator,
+         sizeof(snapshot.emu.indicator));
+  memcpy(m_emu.m_stack_y_str, snapshot.emu.stack_y,
+         sizeof(snapshot.emu.stack_y));
+  m_emu.m_angle_unit = (AngleUnit) snapshot.emu.angle_unit;
   backstep_comma_position = snapshot.backstep_comma;
-  edit_program = snapshot.edit;
-  expanded_program_mode = snapshot.expanded;
-  external_random_enabled = snapshot.random_enabled;
-  external_random_pending = snapshot.random_pending;
+  edit_program = (snapshot.state_flags & CONTEXT_EDIT) != 0;
+  external_random_enabled =
+      (snapshot.state_flags & CONTEXT_RANDOM_ENABLED) != 0;
+  external_random_pending =
+      (snapshot.state_flags & CONTEXT_RANDOM_PENDING) != 0;
   external_random_state = snapshot.random_state;
-  active_mk61_command = snapshot.active_command;
+  active_mk61_command.active = snapshot.active_command.active != 0;
+  active_mk61_command.source =
+      (core_61::Mk61CommandSource) snapshot.active_command.source;
+  active_mk61_command.opcode = snapshot.active_command.opcode;
+  active_mk61_command.executed_opcode =
+      snapshot.active_command.executed_opcode;
+  active_mk61_command.sequence = snapshot.active_command.sequence;
   mk61_command_sequence = snapshot.command_sequence;
-  keyboard_command_complete_pending = snapshot.keyboard_complete_pending;
+  keyboard_command_complete_pending =
+      (snapshot.state_flags & CONTEXT_KEYBOARD_PENDING) != 0;
   memcpy(mk61_call_operand_addresses, snapshot.call_operand_addresses,
          sizeof(mk61_call_operand_addresses));
   memcpy(mk61_call_operand_visits, snapshot.call_operand_visits,
          sizeof(mk61_call_operand_visits));
-  mk61_call_operand_depth = snapshot.call_operand_depth <= MK61_CALL_OPERAND_DEPTH
-      ? snapshot.call_operand_depth
-      : 0;
+  mk61_call_operand_depth = snapshot.call_operand_depth;
   return true;
 }
 

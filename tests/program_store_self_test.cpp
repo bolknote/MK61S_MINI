@@ -1784,6 +1784,49 @@ static void test_stage_journal_survives_reboot_and_churn(void) {
   assert(!program_store::vfat_stage_exists(77));
 }
 
+static void test_stage_overlay_lock_and_terminal_narrowing(void) {
+  fresh();
+  static constexpr u32 TERMINAL_FIRST = 0x700000UL;
+  u8 terminal_data[program_store::VFAT_STAGE_BLOCK_SIZE];
+  u8 unrelated_data[program_store::VFAT_STAGE_BLOCK_SIZE];
+  u8 recovered[program_store::VFAT_STAGE_BLOCK_SIZE];
+  memset(terminal_data, 0x4D, sizeof(terminal_data));
+  memset(unrelated_data, 0xA6, sizeof(unrelated_data));
+
+  assert(program_store::vfat_stage_lock());
+  assert(program_store::vfat_stage_write(TERMINAL_FIRST, terminal_data));
+  assert(program_store::vfat_stage_write(1234, unrelated_data));
+
+  // Полный USB-сеанс не отдаёт исполняемое окно модулю.
+  shared_memory::Lease blocked_module(
+      shared_memory::Arena::OVERLAY,
+      shared_memory::Owner::LOADABLE_MODULE, 1024);
+  assert(!blocked_module.ok());
+
+  // Перед APP validation терминалу нужны только его блоки. Малый индекс живёт
+  // в workspace, поэтому модуль получает всё 20-КиБ окно без потери staging.
+  alignas(4) u32 terminal_index[2] = {};
+  assert(program_store::vfat_stage_narrow(
+      TERMINAL_FIRST, 2, terminal_index, 2));
+  shared_memory::Lease module(
+      shared_memory::Arena::OVERLAY,
+      shared_memory::Owner::LOADABLE_MODULE, 1024);
+  assert(module.ok());
+  assert(program_store::vfat_stage_read(TERMINAL_FIRST, recovered));
+  assert(memcmp(recovered, terminal_data, sizeof(recovered)) == 0);
+  assert(!program_store::vfat_stage_exists(1234));
+  program_store::vfat_stage_forget(TERMINAL_FIRST, 2);
+  program_store::vfat_stage_unlock();
+  module.reset();
+
+  // Сужение не удаляет чужие записи из persistent journal: полный индекс
+  // следующего сеанса восстанавливает их сканированием C5.
+  program_store::init();
+  assert(!program_store::vfat_stage_exists(TERMINAL_FIRST));
+  assert(program_store::vfat_stage_read(1234, recovered));
+  assert(memcmp(recovered, unrelated_data, sizeof(recovered)) == 0);
+}
+
 static void test_stage_indexes_large_unique_write_burst(void) {
   fresh();
   static constexpr u16 BLOCKS = 384;
@@ -2562,6 +2605,7 @@ int main(void) {
   test_prepared_zx0_survives_gc_before_emit();
   test_gc_power_cuts_are_atomic_and_recoverable();
   test_stage_journal_survives_reboot_and_churn();
+  test_stage_overlay_lock_and_terminal_narrowing();
   test_stage_indexes_large_unique_write_burst();
   test_stage_power_cut_keeps_previous_value();
   test_stage_compacts_when_every_normal_sector_is_live();

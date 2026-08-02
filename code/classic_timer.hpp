@@ -22,6 +22,9 @@ classic_scheduler::Snapshot statistics(void);
 const char* backend_name(void);
 u32 configured_period_us(void);
 
+// Вызывается общим STM32 SysTick-dispatcher из контекста прерывания.
+void on_systick_isr(void);
+
 } // namespace classic_timer
 
 #endif

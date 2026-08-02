@@ -15,6 +15,24 @@ inline bool input_can_append(usize length) {
   return length < MAX_INPUT_TEXT;
 }
 
+// Переносит лишь адрес подстроки из временного командного буфера в исходную
+// строку скрипта. Текст не копируется; указатели на литералы остаются как есть.
+inline bool rebind_script_argument(const char* source, usize source_length,
+                                   const u8* transient, usize capacity,
+                                   const char*& argument) {
+  if(source == nullptr || transient == nullptr || argument == nullptr ||
+     capacity == 0) return false;
+  const uintptr_t argument_address = (uintptr_t) argument;
+  const uintptr_t transient_address = (uintptr_t) transient;
+  if(argument_address < transient_address ||
+     argument_address >= transient_address + capacity) return true;
+  const usize offset =
+      (usize) (argument_address - transient_address);
+  if(offset > source_length) return false;
+  argument = source + offset;
+  return true;
+}
+
 inline bool is_space(char c) {
   return c == ' ' || c == '\t';
 }

@@ -11,6 +11,22 @@ namespace shared_memory {
 
 static constexpr usize WORKSPACE_SIZE = 8192;
 static constexpr usize SCRATCH_SIZE = 1600;
+static constexpr usize STAGE_INDEX_SIZE = 384U * sizeof(u32);
+
+// F401 по умолчанию и любой явно включённый загрузчик APP требуют полного
+// 20-КиБ окна исполнения. В остальных сборках та же физическая арена остаётся
+// ровно размером с индекс C5 staging: отдельный запас RAM не появляется.
+#if defined(MK61_ENABLE_LOADABLE_MODULES)
+  #if MK61_ENABLE_LOADABLE_MODULES
+static constexpr usize OVERLAY_SIZE = 20U * 1024U;
+  #else
+static constexpr usize OVERLAY_SIZE = STAGE_INDEX_SIZE;
+  #endif
+#elif defined(ARDUINO_BLACKPILL_F401CC)
+static constexpr usize OVERLAY_SIZE = 20U * 1024U;
+#else
+static constexpr usize OVERLAY_SIZE = STAGE_INDEX_SIZE;
+#endif
 
 #if defined(STM32F401xC) || defined(STM32F401xE)
 static constexpr usize BULK_SIZE = 1536;
@@ -33,6 +49,7 @@ enum class Arena : u8 {
   WORKSPACE = 0,
   SCRATCH,
   BULK,
+  OVERLAY,
   COUNT
 };
 

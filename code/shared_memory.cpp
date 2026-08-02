@@ -12,6 +12,18 @@ alignas(8) static u8 scratch_storage[SCRATCH_SIZE];
 alignas(8) static u8 bulk_storage[BULK_SIZE];
 #endif
 
+// Имя остаётся частью ABI упаковщика System APP: адрес этого символа берётся
+// из resident ELF и передаётся отдельной линковке модулей. Физически окно
+// теперь принадлежит общему диспетчеру и может безопасно служить C5 staging.
+extern "C" {
+#if defined(__ELF__)
+__attribute__((used, aligned(8), section(".bss.mk61_module_overlay")))
+#else
+__attribute__((used, aligned(8)))
+#endif
+u8 mk61_module_overlay[OVERLAY_SIZE];
+}
+
 struct ArenaPolicy {
   bool retain_resident;
   bool allow_nested;
@@ -20,6 +32,7 @@ struct ArenaPolicy {
 
 static constexpr ArenaPolicy arena_policies[] = {
   {true, true, true},
+  {false, false, false},
   {false, false, false},
   {false, false, false}
 };
@@ -41,7 +54,8 @@ static const char* const owner_names[] = {
 static constexpr u8 ALL_ARENAS =
     arena_mask(Arena::WORKSPACE) |
     arena_mask(Arena::SCRATCH) |
-    arena_mask(Arena::BULK);
+    arena_mask(Arena::BULK) |
+    arena_mask(Arena::OVERLAY);
 
 static constexpr bool policy_catalog_valid(void) {
   if(sizeof(arena_policies) / sizeof(arena_policies[0]) !=
@@ -117,10 +131,11 @@ static ArenaState arenas[] = {
   MK61_ARENA_STATE(workspace_storage, WORKSPACE_SIZE, true),
   MK61_ARENA_STATE(scratch_storage, SCRATCH_SIZE, true),
 #if MK61_SHARED_MEMORY_BULK_ENABLED
-  MK61_ARENA_STATE(bulk_storage, BULK_SIZE, true)
+  MK61_ARENA_STATE(bulk_storage, BULK_SIZE, true),
 #else
-  MK61_ARENA_STATE(nullptr, BULK_SIZE, false)
+  MK61_ARENA_STATE(nullptr, BULK_SIZE, false),
 #endif
+  MK61_ARENA_STATE(mk61_module_overlay, OVERLAY_SIZE, true)
 };
 
 #undef MK61_ARENA_STATE
@@ -627,6 +642,7 @@ const char* arena_name(Arena arena) {
     case Arena::WORKSPACE: return "workspace";
     case Arena::SCRATCH: return "scratch";
     case Arena::BULK: return "bulk";
+    case Arena::OVERLAY: return "overlay";
     case Arena::COUNT: break;
   }
   return "invalid";

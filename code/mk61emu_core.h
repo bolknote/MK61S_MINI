@@ -300,12 +300,10 @@ namespace core_61 {
   // позволяет приостановленной ловушке M61 сосуществовать с частным буфером
   // необязательной математической подсистемы CORE. Представление намеренно
   // непрозрачно и допустимо только в том же запуске прошивки.
-  // Snapshot is 1176 bytes on the 32-bit MCU and 1232 bytes in 64-bit host
-  // tests (the saved core structures contain same-process pointers).
-  static_assert(sizeof(void*) == 4 || sizeof(void*) == 8,
-                "unsupported core context pointer width");
-  static constexpr usize CONTEXT_BUFFER_SIZE =
-      sizeof(void*) == 4 ? 1176 : 1232;
+  // Холодный снимок хранит 4-битные регистры по два в байте, а внутренние
+  // указатели — как проверяемые 16-битные смещения. Поэтому его размер одинаков
+  // на MCU и host и не заставляет постоянно держать разложенный hot-state.
+  static constexpr usize CONTEXT_BUFFER_SIZE = 672;
   struct alignas(8) ContextBuffer {
     u8 bytes[CONTEXT_BUFFER_SIZE];
   };
