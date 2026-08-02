@@ -114,6 +114,7 @@ static bool backward_key(i32 key) {
          key == KEY_SHG_LEFT_PRESS;
 }
 
+#if MK61_HAS_COMPILED_GRAPHICS
 static bool line_forward_key(i32 key) {
   return key == KEY_RIGHT || key == KEY_RIGHT_PRESS;
 }
@@ -129,6 +130,7 @@ static bool fast_forward_key(i32 key) {
 static bool fast_backward_key(i32 key) {
   return key == KEY_SHG_LEFT_PRESS;
 }
+#endif
 
 static bool exit_key(i32 key) {
   return key == KEY_ESC || key == KEY_OK || key == KEY_OK_PRESS;
@@ -1154,7 +1156,7 @@ Result view_entry(MK61Display& display,
   source.reset();
   if(status != markdown::Status::OK) return Result::INVALID_DOCUMENT;
 
-  Navigation navigation = {0};
+  Navigation navigation = {};
   while(true) {
     bool display_changed = false;
     Result result = Result::OK;

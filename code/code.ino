@@ -6,4 +6,4 @@
 
 // Keep Arduino's generated prototypes after the type definitions above even
 // though the implementation lives in the second .ino tab.
-static void mk61_arduino_sketch_anchor(void) {}
+[[maybe_unused]] static void mk61_arduino_sketch_anchor(void) {}

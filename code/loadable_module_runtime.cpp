@@ -94,7 +94,8 @@ static bool read_app_container(void* context, u32 offset,
 static bool read_app_payload(void* context, u32 offset,
                              u8* output, usize size) {
   AppPayloadContext& app = *(AppPayloadContext*) context;
-  if(offset > app.container_size - HEADER_SIZE) return false;
+  if(app.container_size < HEADER_SIZE ||
+     offset > (u32) app.container_size - (u32) HEADER_SIZE) return false;
   return read_app_container(&app, HEADER_SIZE + offset, output, size);
 }
 

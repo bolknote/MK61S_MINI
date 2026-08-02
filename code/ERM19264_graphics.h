@@ -96,14 +96,14 @@ class ERM19264_graphics : public Print {
 	// Bitmap related
 	LCD_Return_Codes_e drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap,
 			int16_t w, int16_t h, uint8_t color, uint8_t bg);
-	void	setDrawBitmapAddr(boolean mode);
+	void	setDrawBitmapAddr(bool mode);
 
 	// Text related
 	void	setCursor(int16_t x, int16_t y);
 	void	setTextColor(uint8_t c);
 	void	setTextColor(uint8_t c, uint8_t bg);
 	void	setTextSize(uint8_t s);
-	void	setTextWrap(boolean w);
+	void	setTextWrap(bool w);
 	void setFontNum(LCD_Font_Type_e FontNumber);
 	LCD_Return_Codes_e drawChar(uint8_t x, uint8_t y, uint8_t c, uint8_t color , uint8_t bg);
 	LCD_Return_Codes_e drawText(uint8_t x, uint8_t y, char *pText, uint8_t color, uint8_t bg);
@@ -135,9 +135,9 @@ class ERM19264_graphics : public Print {
 	uint8_t _textColor= 0x00;  /**< Text foreground color */
 	uint8_t _textBgColor= 0x01;   /**< Text background color */
 	uint8_t   _textSize= 1; /**< Size of text ,fonts 1-6 */
-	boolean _textWrap;                    /**< If set, 'Wrap' text at right edge of display*/
+	bool _textWrap;                       /**< If set, 'Wrap' text at right edge of display*/
 
-	boolean drawBitmapAddr; /**< data addressing mode for method drawBitmap, True-vertical , false-horizontal */
+	bool drawBitmapAddr; /**< data addressing mode for method drawBitmap, True-vertical , false-horizontal */
 private:
 	/*! Width of the font in bits each representing a bytes sized column*/
 	enum LCD_Font_width_e : uint8_t

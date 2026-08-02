@@ -34,17 +34,21 @@ struct Conditions {
   bool periodic_wake_ready;
 };
 
+constexpr u32 blocker_if(bool condition, Blocker blocker) {
+  return condition ? static_cast<u32>(blocker) : 0U;
+}
+
 constexpr u32 blockers(const Conditions& value) {
-  return (!value.foreground_context ? BLOCK_FOREGROUND_CONTEXT : 0) |
-         (!value.calculator_idle ? BLOCK_CALCULATOR_BUSY : 0) |
-         (value.usb_mass_storage_active ? BLOCK_USB_MASS_STORAGE : 0) |
-         (value.usb_screen_work_pending ? BLOCK_USB_SCREEN : 0) |
-         (value.terminal_work_pending ? BLOCK_TERMINAL : 0) |
-         (value.sound_active ? BLOCK_SOUND : 0) |
-         (value.keyboard_active ? BLOCK_KEYBOARD : 0) |
-         (value.classic_active ? BLOCK_CLASSIC : 0) |
-         (value.scheduled_work ? BLOCK_SCHEDULED_WORK : 0) |
-         (!value.periodic_wake_ready ? BLOCK_PERIODIC_WAKE : 0);
+  return blocker_if(!value.foreground_context, BLOCK_FOREGROUND_CONTEXT) |
+         blocker_if(!value.calculator_idle, BLOCK_CALCULATOR_BUSY) |
+         blocker_if(value.usb_mass_storage_active, BLOCK_USB_MASS_STORAGE) |
+         blocker_if(value.usb_screen_work_pending, BLOCK_USB_SCREEN) |
+         blocker_if(value.terminal_work_pending, BLOCK_TERMINAL) |
+         blocker_if(value.sound_active, BLOCK_SOUND) |
+         blocker_if(value.keyboard_active, BLOCK_KEYBOARD) |
+         blocker_if(value.classic_active, BLOCK_CLASSIC) |
+         blocker_if(value.scheduled_work, BLOCK_SCHEDULED_WORK) |
+         blocker_if(!value.periodic_wake_ready, BLOCK_PERIODIC_WAKE);
 }
 
 constexpr u32 saturating_increment(u32 value) {

@@ -530,7 +530,7 @@ static bool direct_acquire(shared_memory::Owner owner, usize required,
 
 bool acquire(shared_memory::Owner owner, usize required, AcquireMode mode,
              shared_memory::Lease& destination) {
-  if(mode != AcquireMode::FOREGROUND &&
+  if(mode != AcquireMode::REQUIRED &&
      mode != AcquireMode::OPPORTUNISTIC) return false;
   if(destination.ok()) return direct_acquire(owner, required, mode,
                                              destination);

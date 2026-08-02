@@ -1825,8 +1825,9 @@ static bool record_crc_source(NodeKind kind, ProgramType type, u16 id,
   u8 buffer[64];
   u16 offset = 0;
   while(offset < data_len) {
-    const u16 count = (u16) ((data_len - offset < sizeof(buffer))
-        ? data_len - offset : sizeof(buffer));
+    const u16 remaining = (u16) (data_len - offset);
+    const u16 count = remaining < (u16) sizeof(buffer)
+        ? remaining : (u16) sizeof(buffer);
     if(!source.read(source.context, offset, buffer, count)) return false;
     state = crc32_bytes(buffer, count, state);
     offset = (u16) (offset + count);
@@ -1866,8 +1867,9 @@ static bool append_record_source(NodeKind kind, ProgramType type, u16 id,
   u8 buffer[64];
   u16 offset = 0;
   while(offset < data_len) {
-    const u16 count = (u16) ((data_len - offset < sizeof(buffer))
-        ? data_len - offset : sizeof(buffer));
+    const u16 remaining = (u16) (data_len - offset);
+    const u16 count = remaining < (u16) sizeof(buffer)
+        ? remaining : (u16) sizeof(buffer);
     if(!source.read(source.context, offset, buffer, count) ||
        !write_bytes(address + RECORD_HEADER_SIZE + name_len + offset,
                     buffer, count)) return false;
@@ -2912,8 +2914,9 @@ static bool program_large_source(u16 id, const FileSource& source,
     u32 block_crc = 0xFFFFFFFFUL;
     u16 block_offset = 0;
     while(block_offset < block_len) {
-      const u16 count = (u16) ((block_len - block_offset < sizeof(buffer))
-          ? block_len - block_offset : sizeof(buffer));
+      const u16 remaining = (u16) (block_len - block_offset);
+      const u16 count = remaining < (u16) sizeof(buffer)
+          ? remaining : (u16) sizeof(buffer);
       if(!source.read(source.context, file_offset, buffer, count) ||
          !write_bytes(sector_address(sector) + LARGE_BLOCK_HEADER_SIZE +
                           block_offset,
@@ -2949,6 +2952,8 @@ static bool program_large_source(u16 id, const FileSource& source,
   descriptor.data_crc = mk61_crc32::finish(file_crc);
   return file_offset == descriptor.stored_len;
 }
+
+namespace {
 
 struct LargeZx0Output {
   u16 id;
@@ -3022,6 +3027,8 @@ static bool finish_large_zx0_output(LargeZx0Output& output) {
   output.descriptor->data_crc = output.file_crc->finish();
   return true;
 }
+
+} // namespace
 
 static bool program_large_zx0(u16 id,
                               const zx0::Prepared& prepared, u16 data_len,

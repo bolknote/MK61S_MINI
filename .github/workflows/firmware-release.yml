@@ -175,8 +175,6 @@ jobs:
     env:
       STM32_CORE_VERSION: 2.12.0
       STM32_PACKAGE_URL: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
-      FQBN: STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd
-      FQBN_LTO: STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=o3lto
 
     steps:
       - name: Checkout
@@ -200,105 +198,24 @@ jobs:
           arduino-cli lib install "LiquidCrystal@1.0.7"
           arduino-cli lib install "STM32duino RTC@1.9.0"
 
-      - name: Prepare sketch
+      # This is the same entry point developers run locally. It compiles all
+      # ten F411 release/check variants with warnings-as-errors, checks the
+      # warning allowlist and rejects project-owned pre-setup constructors.
+      - name: Build strict STM32F411 release matrix
         run: |
-          mkdir -p "$RUNNER_TEMP/mk61s-M"
-          cp -R code/. "$RUNNER_TEMP/mk61s-M/"
-          mkdir -p firmware
+          MK61_F411_BUILD_ROOT="$RUNNER_TEMP/f411-release" \
+          MK61_FIRMWARE_OUTPUT_DIR="$GITHUB_WORKSPACE/firmware" \
+          MK61_FIRMWARE_TAG="${GITHUB_SHA::7}" \
+            tests/run_f411_release_matrix.sh
 
-      - name: Build LCD1602 A00 firmware
+      - name: Compile-check F401 Classic V3 UC1609 through Arduino
         run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-lcd1602-a00" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00" \
-            "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-lcd1602-a00/mk61s-M.ino.bin" "firmware/mk61s-M-lcd1602-a00-f411-${GITHUB_SHA::7}.bin"
-
-      - name: Compile-check LCD1602 A00 with USB Screen
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-lcd1602-a00-usb-screen" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00 -DMK61_ENABLE_USB_SCREEN=1" \
-            "$RUNNER_TEMP/mk61s-M"
-
-      # LiquidCrystal 1.0.7 определяет command() как inline только в .cpp.
-      # Отдельная LTO-сборка не даёт случайно вернуть внешний вызов этого
-      # отсутствующего символа из нашего LCD-транспорта.
-      - name: Link-check LCD1602 A00 with LTO
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN_LTO" \
-            --build-path "$RUNNER_TEMP/build-lcd1602-a00-lto" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00" \
-            "$RUNNER_TEMP/mk61s-M"
-
-      - name: Build LCD1602 A02 firmware
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-lcd1602-a02" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A02" \
-            "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-lcd1602-a02/mk61s-M.ino.bin" "firmware/mk61s-M-lcd1602-a02-f411-${GITHUB_SHA::7}.bin"
-
-      - name: Build mini V2 LCD1602 A00 firmware
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-mini-v2-lcd1602-a00" \
-            --build-property "compiler.cpp.extra_flags=-DREVISION_V2 -DMK61_LCD1602_A00" \
-            "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-mini-v2-lcd1602-a00/mk61s-M.ino.bin" "firmware/mk61s-M-mini-v2-lcd1602-a00-f411-${GITHUB_SHA::7}.bin"
-
-      - name: Build mini V2 LCD1602 A02 firmware
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-mini-v2-lcd1602-a02" \
-            --build-property "compiler.cpp.extra_flags=-DREVISION_V2 -DMK61_LCD1602_A02" \
-            "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-mini-v2-lcd1602-a02/mk61s-M.ino.bin" "firmware/mk61s-M-mini-v2-lcd1602-a02-f411-${GITHUB_SHA::7}.bin"
-
-      - name: Build Classic V2 UC1609 firmware
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-classic-v2" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_CLASSIC_V2" \
-            "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-classic-v2/mk61s-M.ino.bin" "firmware/mk61s-M-classic-v2-uc1609-f411-${GITHUB_SHA::7}.bin"
-
-      - name: Build Classic V3 UC1609 firmware
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-classic-v3" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_CLASSIC_V3" \
-            "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-classic-v3/mk61s-M.ino.bin" "firmware/mk61s-M-classic-v3-uc1609-f411-${GITHUB_SHA::7}.bin"
-
-      - name: Compile-check Classic V3 UC1609 with USB Screen
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-classic-v3-usb-screen" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_CLASSIC_V3 -DMK61_ENABLE_USB_SCREEN=1" \
-            "$RUNNER_TEMP/mk61s-M"
-
-      - name: Build MK61s 40th firmware
-        run: |
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-path "$RUNNER_TEMP/build-40th" \
-            --build-property "compiler.cpp.extra_flags=-DMK61_BOARD_40TH" \
-            "$RUNNER_TEMP/mk61s-M"
-          cp "$RUNNER_TEMP/build-40th/mk61s-M.ino.bin" "firmware/mk61s-M-40th-f411-${GITHUB_SHA::7}.bin"
+          MK61_F401_UC1609_BUILD_ROOT="$RUNNER_TEMP/f401-arduino-uc1609" \
+            tests/run_f401_uc1609_compile_check.sh
 
       - name: Build STM32F401CC firmware and System APP directly with GCC
         run: |
-          for profile in mini-v3-a00 mini-v2-a00; do
+          for profile in mini-v3-a00 mini-v2-a00 classic-v3; do
             tools/build-gcc.cmd \
               -Profile "$profile" \
               -Focal 1 \
@@ -315,10 +232,7 @@ jobs:
 
       - name: Check pre-setup constructors
         run: |
-          for elf in "$RUNNER_TEMP"/build-*/mk61s-M.ino.elf; do
-            tests/check_global_constructors.sh "$elf"
-          done
-          for profile in mini-v3-a00 mini-v2-a00; do
+          for profile in mini-v3-a00 mini-v2-a00 classic-v3; do
             tests/check_global_constructors.sh \
               "$RUNNER_TEMP/build-f401-gcc/$profile/resident.elf"
           done
@@ -326,8 +240,10 @@ jobs:
       - name: Verify and package F401 bundles
         run: |
           cd firmware
-          for revision in v3 v2; do
-            bundle="mk61s-M-mini-$revision-lcd1602-a00-f401"
+          for bundle in \
+            mk61s-M-mini-v3-lcd1602-a00-f401 \
+            mk61s-M-mini-v2-lcd1602-a00-f401 \
+            mk61s-M-classic-v3-uc1609-f401; do
             for artifact in \
               "$bundle/$bundle.bin" \
               "$bundle/build.flags" \
@@ -361,8 +277,12 @@ jobs:
             grep -F -- '-DMK61_MATH_BACKEND=1' "$bundle/build.flags"
             grep -F -- '-DMK61_ENABLE_LTO=1' "$bundle/build.flags"
             markdown_size=$(stat -c %s "$bundle/System/MARKDOWN.APP")
-            if [ "$markdown_size" -gt 4096 ]; then
-              echo "ZX0 MARKDOWN.APP exceeds 4 KiB: $markdown_size" >&2
+            markdown_limit=4096
+            case "$bundle" in
+              *-uc1609-*) markdown_limit=12288 ;;
+            esac
+            if [ "$markdown_size" -gt "$markdown_limit" ]; then
+              echo "ZX0 MARKDOWN.APP exceeds $markdown_limit bytes: $markdown_size" >&2
               exit 1
             fi
             zip -qr "$bundle.zip" "$bundle"

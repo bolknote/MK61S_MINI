@@ -22,7 +22,7 @@ Lease::Lease(Owner next_owner, usize required) : Lease() {
 bool Lease::acquire(Owner next_owner, usize required_size) {
   const shared_memory::Owner owner = unified_owner(next_owner);
   return workspace_swap::acquire(
-      owner, required_size, workspace_swap::AcquireMode::FOREGROUND, lease);
+      owner, required_size, workspace_swap::AcquireMode::REQUIRED, lease);
 }
 
 Lease::~Lease(void) {

@@ -10,7 +10,7 @@
 namespace workspace_swap {
 
 enum class AcquireMode : u8 {
-  FOREGROUND = 0,
+  REQUIRED = 0,
   OPPORTUNISTIC
 };
 

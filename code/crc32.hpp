@@ -190,12 +190,15 @@ class Context {
       if(finalized_ || (data == nullptr && size != 0)) return false;
 #if MK61_CRC32_STM32_BACKEND
       if(owns_hardware_) {
-        while(size != 0 && pending_size_ != 0) {
-          pending_[pending_size_++] = *data++;
-          size--;
-          if(pending_size_ == sizeof(pending_)) {
-            feed_pending_word();
-          }
+        if(pending_size_ >= sizeof(pending_)) return false;
+        if(size != 0 && pending_size_ != 0) {
+          const usize available = sizeof(pending_) - pending_size_;
+          const usize copied = size < available ? size : available;
+          memcpy(pending_ + pending_size_, data, copied);
+          pending_size_ = (u8) (pending_size_ + copied);
+          data += copied;
+          size -= copied;
+          if(pending_size_ == sizeof(pending_)) feed_pending_word();
         }
         while(size >= sizeof(pending_)) {
           u32 word = 0;
@@ -204,7 +207,10 @@ class Context {
           data += sizeof(word);
           size -= sizeof(word);
         }
-        while(size-- != 0) pending_[pending_size_++] = *data++;
+        if(size != 0) {
+          memcpy(pending_, data, size);
+          pending_size_ = (u8) size;
+        }
       } else {
         software_state_ = extend(software_state_, data, size);
       }
@@ -218,6 +224,7 @@ class Context {
       if(finalized_) return false;
 #if MK61_CRC32_STM32_BACKEND
       if(owns_hardware_) {
+        if(pending_size_ >= sizeof(pending_)) return false;
         pending_[pending_size_++] = value;
         if(pending_size_ == sizeof(pending_)) feed_pending_word();
       } else {

@@ -673,7 +673,7 @@ void ERM19264_graphics::setTextColor(uint8_t c, uint8_t b) {
 	@brief turn on or off screen _textWrap of the text (fonts 1-6)
 	@param w TRUE on
 */
-void ERM19264_graphics::setTextWrap(boolean w) {
+void ERM19264_graphics::setTextWrap(bool w) {
 	_textWrap = w;
 }
 
@@ -683,7 +683,7 @@ void ERM19264_graphics::setTextWrap(boolean w) {
 		-# True =  bitmap data vertically addressed 
 		-# False = bitmap data horizontally addressed 
 */
-void ERM19264_graphics::setDrawBitmapAddr(boolean mode) {
+void ERM19264_graphics::setDrawBitmapAddr(bool mode) {
 	drawBitmapAddr = mode;
 }
 

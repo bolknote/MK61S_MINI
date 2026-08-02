@@ -2841,6 +2841,8 @@ void reset_hot_table_cache_statistics(void) {
 //
 // Хранилище ContextBuffer во владении вызывающей стороны избавляет обычную
 // LIBM-сборку от дополнительного скрытого снимка, но позволяет M61 приостановить ядро.
+namespace {
+
 static constexpr u32 CORE_CONTEXT_MAGIC = 0x4D4B3631UL; // "MK61"
 
 struct CoreContextSnapshot {
@@ -2866,6 +2868,8 @@ struct CoreContextSnapshot {
 
 static_assert(sizeof(CoreContextSnapshot) <= core_61::CONTEXT_BUFFER_SIZE,
               "core context does not fit the public opaque buffer");
+
+} // namespace
 
 bool save_context(ContextBuffer& out) {
   CoreContextSnapshot snapshot = {};

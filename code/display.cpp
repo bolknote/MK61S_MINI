@@ -29,6 +29,7 @@ struct LcdAnimationState {
 
 static LcdAnimationState animation_state = {};
 
+#if MK61_ENABLE_USB_SCREEN
 static u16 canonicalLcdToken(u8 value) {
 #if defined(MK61_LCD1602_A02)
   switch(value) {
@@ -102,6 +103,7 @@ static u8 lcdByteForCanonicalToken(u16 token) {
   }
   return token <= 0xFF ? (u8) token : (u8) '?';
 }
+#endif
 
 } // анонимное пространство имён
 

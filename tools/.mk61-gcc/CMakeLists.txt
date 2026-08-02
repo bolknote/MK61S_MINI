@@ -149,6 +149,14 @@ target_compile_definitions(resident PRIVATE
   MK61_ENABLE_EXTENDED_FONT_SETTINGS=${MK61_ENABLE_EXTENDED_FONT_SETTINGS}
   MK61_USER_EXPLORER_SHORTCUT=${MK61_USER_EXPLORER_SHORTCUT}
   MK61_MATH_BACKEND=${MK61_MATH_BACKEND})
+# Keep the direct F401 path at least as strict as the Arduino release matrix.
+# This applies only to project sources; warnings in pinned third-party targets
+# stay visible without making their upstream diagnostics our build failures.
+target_compile_options(resident PRIVATE
+  -Wall
+  -Wextra
+  -Werror
+  -Wno-error=cpp)
 target_link_libraries(resident PRIVATE
   stm32_runtime
   SPI
