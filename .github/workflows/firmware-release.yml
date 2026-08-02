@@ -22,10 +22,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Run host test suite
-        env:
-          MK61_TEST_SANITIZERS: "1"
-        run: tests/run_all_tests.sh
+      - name: Run CI-strict host test suite
+        run: tests/run_ci_strict.sh
 
   f401-gcc-platforms:
     name: F401 direct GCC (${{ matrix.os }})
