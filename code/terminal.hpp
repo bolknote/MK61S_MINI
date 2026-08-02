@@ -30,6 +30,7 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
+#include "terminal_line_editor.hpp"
 #include "terminal_protocol.hpp"
 #include "usb_screen.hpp"
 #include "utf8_view.hpp"
@@ -430,10 +431,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     static inline u16   hist_used;                    // занято байт в текстовом кольце
     static inline u16   hist_write;                   // позиция записи в текстовом кольце
     static inline i8    hist_nav;                     // -1 - не в истории, 0 - самая новая
-    static inline u8    esc_state;                    // разбор escape-последовательностей
+    static inline terminal_line_editor::EscapeDecoder escape_decoder;
     static inline u8    prev_terminator;              // съедание второго символа пары CRLF
     static inline u8    saved_line[MAX_INPUT_CHAR];   // строка, редактируемая до входа в историю
     static inline usize saved_len;
+    static inline usize saved_cursor;
 
     void history_drop_oldest(void) {
       hist_used -= hist_length[hist_head];
@@ -499,29 +501,42 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print("> ");
     }
 
-    void redraw_input_line(usize old_columns) {
+    void move_terminal_cursor(char direction, usize columns) {
+      if(columns == 0) return;
+      Serial.write(0x1B);
+      Serial.write('[');
+      Serial.print(columns);
+      Serial.write(direction);
+    }
+
+    usize input_columns(usize begin, usize end) const {
+      if(begin >= end || end > recive_pos) return 0;
+      return utf8_view::codepoint_count(
+          (const char*) input_buffer + begin, (u16) (end - begin));
+    }
+
+    void redraw_input_line(void) {
       Serial.write('\r');
       print_prompt();
       Serial.write(input_buffer, recive_pos);
-      const usize columns = utf8_view::codepoint_count(
-          (const char*) input_buffer, (u16) recive_pos);
-      for(usize i = columns; i < old_columns; i++) Serial.write(' ');
-      for(usize i = columns; i < old_columns; i++) Serial.write('\b');
+      Serial.print("\x1B[K");
+      move_terminal_cursor('D', input_columns(input_cursor, recive_pos));
     }
 
     void history_recall(i8 nav) {
-      const usize old_columns = utf8_view::codepoint_count(
-          (const char*) input_buffer, (u16) recive_pos);
       if(nav < 0) {  // выход из истории: вернуть редактируемую строку
         memcpy(input_buffer, saved_line, saved_len);
         recive_pos = saved_len;
+        input_cursor = saved_cursor;
       } else {
         const u8 slot = (u8) ((hist_head + hist_count - 1 - nav) % HISTORY_DEPTH);
         history_entry_read(slot, input_buffer);
         recive_pos = hist_length[slot];
+        input_cursor = recive_pos;
       }
+      input_buffer[recive_pos] = 0;
       hist_nav = nav;
-      redraw_input_line(old_columns);
+      redraw_input_line();
     }
 
     void history_key_up(void) {
@@ -529,6 +544,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       if(hist_nav < 0) {  // запомнить строку, набранную до входа в историю
         memcpy(saved_line, input_buffer, recive_pos);
         saved_len = recive_pos;
+        saved_cursor = input_cursor;
       }
       history_recall((i8) (hist_nav + 1));
     }
@@ -536,6 +552,70 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     void history_key_down(void) {
       if(hist_nav < 0) return;
       history_recall((i8) (hist_nav - 1));
+    }
+
+    void editor_move_left(void) {
+      if(terminal_line_editor::move_left(input_buffer, recive_pos,
+                                         input_cursor)) {
+        move_terminal_cursor('D', 1);
+      }
+    }
+
+    void editor_move_right(void) {
+      if(terminal_line_editor::move_right(input_buffer, recive_pos,
+                                          input_cursor)) {
+        move_terminal_cursor('C', 1);
+      }
+    }
+
+    void editor_move_home(void) {
+      const usize columns = input_columns(0, input_cursor);
+      input_cursor = 0;
+      move_terminal_cursor('D', columns);
+    }
+
+    void editor_move_end(void) {
+      const usize columns = input_columns(input_cursor, recive_pos);
+      input_cursor = recive_pos;
+      move_terminal_cursor('C', columns);
+    }
+
+    void editor_backspace(void) {
+      if(terminal_line_editor::backspace(input_buffer, recive_pos,
+                                         input_cursor, MAX_INPUT_CHAR)) {
+        redraw_input_line();
+      }
+    }
+
+    void editor_delete_forward(void) {
+      if(terminal_line_editor::delete_forward(input_buffer, recive_pos,
+                                              input_cursor,
+                                              MAX_INPUT_CHAR)) {
+        redraw_input_line();
+      }
+    }
+
+    bool editor_insert(u8 byte) {
+      const bool at_end = input_cursor == recive_pos;
+      if(!terminal_line_editor::insert_byte(input_buffer, recive_pos,
+                                            input_cursor, MAX_INPUT_CHAR,
+                                            byte)) return false;
+      if(at_end) Serial.write(byte);
+      else redraw_input_line();
+      return true;
+    }
+
+    void editor_key(terminal_line_editor::Key key) {
+      switch(key) {
+        case terminal_line_editor::Key::UP:             history_key_up(); break;
+        case terminal_line_editor::Key::DOWN:           history_key_down(); break;
+        case terminal_line_editor::Key::RIGHT:          editor_move_right(); break;
+        case terminal_line_editor::Key::LEFT:           editor_move_left(); break;
+        case terminal_line_editor::Key::HOME:           editor_move_home(); break;
+        case terminal_line_editor::Key::END:            editor_move_end(); break;
+        case terminal_line_editor::Key::DELETE_FORWARD: editor_delete_forward(); break;
+        case terminal_line_editor::Key::NONE:            break;
+      }
     }
 
     void print_help(void) {
@@ -1754,6 +1834,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     };
 
     usize recive_pos;
+    usize input_cursor;
 
     constexpr class_terminal(void)
       : AT(0), pending_confirmation_cmd(CMD_UNKNOWN), nSlot(-1),
@@ -1762,11 +1843,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         current_directory(program_store::ROOT_ID), file_upload_active(false),
         file_upload_size(0), file_upload_received(0),
         file_upload_checksum(0), file_upload_checksum_state(0),
-        file_upload_target{}, recive_pos(0) {}
+        file_upload_target{}, recive_pos(0), input_cursor(0) {}
 
     void reset_command_state(void) {
       AT                    = 0;
       recive_pos            = 0;
+      input_cursor          = 0;
       pending_confirmation_cmd = CMD_UNKNOWN;
       nSlot                 = -1;
       input_overflow        = false;
@@ -1786,10 +1868,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     // История и редактор строки общие (static): сбрасываются только при
     // старте интерактивного терминала, скриптовый init их не трогает.
     void reset_line_editor(void) {
-      esc_state             = 0;
+      escape_decoder.reset();
       prev_terminator       = 0;
       hist_nav              = -1;
       saved_len             = 0;
+      saved_cursor          = 0;
       hist_head             = 0;
       hist_count            = 0;
       hist_used             = 0;
@@ -3201,21 +3284,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     InputResult input_handler(u8 rx_char) {
-      // --- escape-последовательности: стрелки листают историю ---
-      if(esc_state == 1) {
-        esc_state = (rx_char == '[') ? 2 : 0;
-        return {-1, false};
-      }
-      if(esc_state == 2) {
-        esc_state = 0;
-        if(!input_overflow) {
-          if(rx_char == 'A') history_key_up();
-          if(rx_char == 'B') history_key_down();
-        }
-        return {-1, false};
-      }
-      if(rx_char == 0x1B) {
-        esc_state = 1;
+      terminal_line_editor::Key escape_key;
+      if(escape_decoder.feed(rx_char, escape_key)) {
+        if(!input_overflow) editor_key(escape_key);
         return {-1, false};
       }
 
@@ -3232,6 +3303,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           // реакции на звуковой сигнал занятости).
           input_overflow = false;
           recive_pos = 0;
+          input_cursor = 0;
           Serial.println();
           Serial.println("Error: input line too long, command ignored!");
           print_prompt();
@@ -3239,6 +3311,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
 
         if(recive_pos == 0) { // пустая строка - только новое приглашение
+          input_cursor = 0;
           Serial.println();
           print_prompt();
           return {-1, false};
@@ -3249,6 +3322,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
         input_buffer[recive_pos++] = CR; // контракт execute(): последний символ CR
         const terminal_protocol::Result result = execute();
+        input_cursor = 0;
         print_prompt();
         return {
           result.kind == terminal_protocol::ResultKind::KEY ? result.key : -1,
@@ -3258,21 +3332,28 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       prev_terminator = 0;
 
       if(rx_char == 0x08 || rx_char == 0x7F) { // Удаление предыдущего символа
-        if(!input_overflow && recive_pos > 0) {
-          recive_pos = utf8_view::previous_offset(input_buffer,
-                                                  (u16) recive_pos,
-                                                  (u16) recive_pos);
-          Serial.print("\b \b");
-        }
+        if(!input_overflow) editor_backspace();
         return {-1, false};
+      }
+
+      // Стандартные управляющие клавиши остаются полезны в клиентах, которые
+      // не передают Home/End или Delete как ANSI-последовательность.
+      if(!input_overflow) {
+        switch(rx_char) {
+          case 0x01: editor_move_home();      return {-1, false}; // Ctrl+A
+          case 0x02: editor_move_left();      return {-1, false}; // Ctrl+B
+          case 0x04: editor_delete_forward(); return {-1, false}; // Ctrl+D
+          case 0x05: editor_move_end();       return {-1, false}; // Ctrl+E
+          case 0x06: editor_move_right();     return {-1, false}; // Ctrl+F
+          default: break;
+        }
       }
 
       // Управляющие символы, кроме табуляции, не буферизуем.
       if(rx_char < 0x20 && rx_char != '\t') return {-1, false};
 
-      if(input_can_append()) {
-        input_buffer[recive_pos++] = rx_char;
-        Serial.write(rx_char); // эхо
+      if(input_can_append() && editor_insert(rx_char)) {
+        // editor_insert() выводит обычное эхо либо перерисовывает хвост строки.
       } else if(!input_overflow) {
         input_overflow = true; // сигнал занятости - один раз на строку
         sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());

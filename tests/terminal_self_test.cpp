@@ -1,6 +1,7 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
+#include "terminal_line_editor.hpp"
 #include "m61_print.hpp"
 #include "m61_ansi.hpp"
 #include "rtc_clock_core.hpp"
@@ -19,6 +20,98 @@ static void test_input_capacity_reserves_terminator(void) {
   assert(terminal_core::input_can_append(terminal_core::MAX_INPUT_TEXT - 1));
   assert(!terminal_core::input_can_append(terminal_core::MAX_INPUT_TEXT));
   assert(terminal_core::MAX_INPUT_TEXT + 1 == terminal_core::INPUT_CAPACITY);
+}
+
+static terminal_line_editor::Key decode_editor_sequence(const char* sequence) {
+  terminal_line_editor::EscapeDecoder decoder;
+  terminal_line_editor::Key key = terminal_line_editor::Key::NONE;
+  for(const u8* p = (const u8*) sequence; *p != 0; p++) {
+    assert(decoder.feed(*p, key));
+  }
+  return key;
+}
+
+static void test_terminal_escape_decoder(void) {
+  using terminal_line_editor::Key;
+
+  assert(decode_editor_sequence("\x1B[A") == Key::UP);
+  assert(decode_editor_sequence("\x1B[B") == Key::DOWN);
+  assert(decode_editor_sequence("\x1B[C") == Key::RIGHT);
+  assert(decode_editor_sequence("\x1B[D") == Key::LEFT);
+  assert(decode_editor_sequence("\x1B[H") == Key::HOME);
+  assert(decode_editor_sequence("\x1B[F") == Key::END);
+  assert(decode_editor_sequence("\x1B[1~") == Key::HOME);
+  assert(decode_editor_sequence("\x1B[4~") == Key::END);
+  assert(decode_editor_sequence("\x1B[7~") == Key::HOME);
+  assert(decode_editor_sequence("\x1B[8~") == Key::END);
+  assert(decode_editor_sequence("\x1B[3~") == Key::DELETE_FORWARD);
+  assert(decode_editor_sequence("\x1BOH") == Key::HOME);
+  assert(decode_editor_sequence("\x1BOF") == Key::END);
+  assert(decode_editor_sequence("\x1B[1;5D") == Key::LEFT);
+
+  terminal_line_editor::EscapeDecoder decoder;
+  Key key = Key::UP;
+  assert(!decoder.feed('x', key));
+  assert(key == Key::NONE);
+  assert(decoder.feed(0x1B, key));
+  assert(decoder.feed('[', key));
+  assert(decoder.feed('9', key));
+  assert(decoder.feed('~', key));
+  assert(key == Key::NONE);
+  assert(!decoder.feed('x', key));
+}
+
+static void test_terminal_line_editing(void) {
+  u8 ascii[8] = {'h', 'e', 'l', 'o', 0};
+  usize length = 4;
+  usize cursor = 2;
+  assert(terminal_line_editor::insert_byte(
+      ascii, length, cursor, sizeof(ascii), 'l'));
+  assert(std::strcmp((const char*) ascii, "hello") == 0);
+  assert(length == 5 && cursor == 3);
+
+  assert(terminal_line_editor::backspace(
+      ascii, length, cursor, sizeof(ascii)));
+  assert(std::strcmp((const char*) ascii, "helo") == 0);
+  assert(length == 4 && cursor == 2);
+  assert(terminal_line_editor::delete_forward(
+      ascii, length, cursor, sizeof(ascii)));
+  assert(std::strcmp((const char*) ascii, "heo") == 0);
+  assert(length == 3 && cursor == 2);
+
+  u8 full[5] = {'a', 'b', 'c', 'd', 0};
+  length = 4;
+  cursor = 2;
+  assert(!terminal_line_editor::insert_byte(
+      full, length, cursor, sizeof(full), 'x'));
+  assert(std::strcmp((const char*) full, "abcd") == 0);
+  assert(length == 4 && cursor == 2);
+}
+
+static void test_terminal_line_editing_is_utf8_aware(void) {
+  u8 text[8] = {'A', 0xD0, 0x91, 'C', 0}; // A, Cyrillic Be, C
+  usize length = 4;
+  usize cursor = 4;
+
+  assert(terminal_line_editor::move_left(text, length, cursor));
+  assert(cursor == 3);
+  assert(terminal_line_editor::move_left(text, length, cursor));
+  assert(cursor == 1);
+  assert(terminal_line_editor::move_right(text, length, cursor));
+  assert(cursor == 3);
+  assert(terminal_line_editor::backspace(
+      text, length, cursor, sizeof(text)));
+  assert(std::strcmp((const char*) text, "AC") == 0);
+  assert(length == 2 && cursor == 1);
+
+  const u8 original[] = {'A', 0xD0, 0x91, 'C', 0};
+  std::memcpy(text, original, sizeof(original));
+  length = 4;
+  cursor = 1;
+  assert(terminal_line_editor::delete_forward(
+      text, length, cursor, sizeof(text)));
+  assert(std::strcmp((const char*) text, "AC") == 0);
+  assert(length == 2 && cursor == 1);
 }
 
 static void test_bounded_unsigned_parser(void) {
@@ -587,6 +680,9 @@ static void test_rtc_idle_clock_glyphs_and_slots(void) {
 
 int main(void) {
   test_input_capacity_reserves_terminator();
+  test_terminal_escape_decoder();
+  test_terminal_line_editing();
+  test_terminal_line_editing_is_utf8_aware();
   test_bounded_unsigned_parser();
   test_confirmation_is_a_complete_token();
   test_quoted_path_tokens();
