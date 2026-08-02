@@ -1673,41 +1673,18 @@ static void select_core_hot_table_view(bool use_workspace) {
   core_hot_tables_cached = use_ram;
 }
 
-static bool reclaim_core_hot_tables(void*) {
+static shared_memory::EvictionDecision prepare_core_hot_table_eviction(void) {
   select_core_hot_table_view(false);
-  core_hot_tables_lease.reset();
   increment_hot_table_counter(core_hot_table_evictions);
-  return true;
+  return shared_memory::EvictionDecision::RELEASE;
 }
 
 static bool ensure_core_hot_tables(void) {
   if(core_hot_tables_lease.ok()) return true;
-  const shared_memory::Owner active =
-      shared_memory::active_owner(shared_memory::Arena::WORKSPACE);
-  const shared_memory::Owner resident =
-      shared_memory::resident_owner(shared_memory::Arena::WORKSPACE);
-  if(active != shared_memory::Owner::NONE) return false;
-
-  // A calculator step is allowed to move an inactive language runtime into
-  // the volatile BULK swap, but never to discard it merely for speed. Once a
-  // complete image exists, a normal acquisition clears the resident marker;
-  // if capture is unavailable the core simply keeps using Flash.
-  const bool stashed_language =
-      resident != shared_memory::Owner::NONE &&
-      resident != shared_memory::Owner::CORE_TABLES;
-  if(stashed_language &&
-     !workspace_swap::capture_resident_before(
-         shared_memory::Owner::CORE_TABLES)) return false;
-  const bool acquired = stashed_language
-      ? core_hot_tables_lease.acquire(
-            shared_memory::Arena::WORKSPACE,
-            shared_memory::Owner::CORE_TABLES,
-            sizeof(CoreHotTables))
-      : core_hot_tables_lease.acquire_cache(
-            shared_memory::Arena::WORKSPACE,
-            shared_memory::Owner::CORE_TABLES,
-            sizeof(CoreHotTables));
-  if(!acquired) return false;
+  if(!workspace_swap::acquire(
+       shared_memory::Owner::CORE_TABLES, sizeof(CoreHotTables),
+       workspace_swap::AcquireMode::OPPORTUNISTIC,
+       core_hot_tables_lease)) return false;
   CoreHotTables* const tables = core_hot_tables_lease.as<CoreHotTables>();
   if(tables == nullptr) {
     core_hot_tables_lease.reset();
@@ -1746,7 +1723,8 @@ static bool ensure_core_hot_tables(void) {
     increment_hot_table_counter(core_hot_table_loads);
   }
   select_core_hot_table_view(true);
-  if(!core_hot_tables_lease.set_reclaimer(reclaim_core_hot_tables)) {
+  if(!core_hot_tables_lease.set_evictable(
+       prepare_core_hot_table_eviction)) {
     select_core_hot_table_view(false);
     core_hot_tables_lease.reset();
     return false;

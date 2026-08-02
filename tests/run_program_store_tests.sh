@@ -30,6 +30,7 @@ for backend in software stm32; do
     "$root/code/storage_path.cpp" \
     "$root/code/shared_scratch.cpp" \
     "$root/code/exclusive_buffer.cpp" \
+    "$root/code/workspace_swap.cpp" \
     "$root/code/zx0.cpp" \
     "$root/code/zx0_encode.cpp" \
     -o "$out-$backend"

@@ -168,6 +168,8 @@ namespace library_mk61 {
 
 #include "bounded_string.hpp"
 
+#include <type_traits>
+
 #if MK61_ENABLE_TINYBASIC && \
     (!MK61_TINYBASIC_IS_LOADABLE || defined(MK61_BUILD_TINYBASIC_MODULE) || \
      defined(TINYBASIC_HOST_TEST))
@@ -200,6 +202,8 @@ static constexpr int TB_PROGRAM_COUNT = 8;
 #else
 static constexpr int TB_PROGRAM_COUNT = 1;
 #endif
+static_assert(TB_PROGRAM_COUNT > 0 && TB_PROGRAM_COUNT <= 127,
+              "TinyBASIC source index must fit signed byte snapshot field");
 static constexpr int TB_SOURCE_SIZE = 1537;
 static constexpr int TB_NAME_SIZE = 32;
 #ifndef TINYBASIC_HOST_TEST
@@ -247,7 +251,7 @@ struct TbLine {
 struct TbAst {
   bool ok;
   char error[17];
-  const char* source;
+  i8 source_program;
   TbLine lines[TB_MAX_LINES];
   i16 line_count;
 };
@@ -307,6 +311,17 @@ struct TinyBasicRuntime {
   u8 tb_print_row;
 };
 
+static_assert(std::is_standard_layout<TinyBasicRuntime>::value,
+              "TinyBASIC snapshot runtime must have stable layout");
+static_assert(std::is_trivially_copyable<TinyBasicRuntime>::value,
+              "TinyBASIC snapshot runtime must be byte-copyable");
+static_assert(std::is_integral<decltype(TbAst::source_program)>::value,
+              "TinyBASIC AST must identify source without a pointer");
+#ifndef TINYBASIC_HOST_TEST
+static_assert(shared_memory::snapshot_schema::TINYBASIC_RUNTIME != 0,
+              "TinyBASIC snapshot schema must be explicit");
+#endif
+
 static void tinybasic_reset_runtime(TinyBasicRuntime& runtime) {
   memset(&runtime, 0, sizeof(runtime));
   for(int i = 0; i < TB_PROGRAM_COUNT; i++) {
@@ -314,6 +329,7 @@ static void tinybasic_reset_runtime(TinyBasicRuntime& runtime) {
     runtime.programs[i].parent_id = TB_ROOT_STORE_ID;
   }
   runtime.tb_ast.ok = true;
+  runtime.tb_ast.source_program = -1;
   runtime.NextTinyBasic = -1;
 }
 
@@ -564,6 +580,19 @@ static void tb_format_number(double value, char* out, usize size) {
 static void tb_ast_reset(TbAst& ast) {
   memset(&ast, 0, sizeof(ast));
   ast.ok = true;
+  ast.source_program = -1;
+}
+
+static i8 tb_source_program_index(const char* source) {
+  for(i8 index = 0; index < (i8) TB_PROGRAM_COUNT; index++) {
+    if(source == programs[index].source) return index;
+  }
+  return -1;
+}
+
+static const char* tb_compiled_source(const TbAst& ast) {
+  return ast.source_program >= 0 && ast.source_program < TB_PROGRAM_COUNT
+      ? programs[(int) ast.source_program].source : NULL;
 }
 
 static TbFlow tb_flow(TbFlowKind kind, i16 pc, u16 offset = 0) {
@@ -1261,7 +1290,7 @@ static bool tb_compile_source(const char* source, TbAst& ast) {
   usize source_len = 0;
   while(source_len < TB_SOURCE_SIZE && source[source_len] != 0) source_len++;
   if(source_len >= TB_SOURCE_SIZE) return tb_error("SORRY");
-  ast.source = source;
+  ast.source_program = tb_source_program_index(source);
 
   const char* cursor = source;
   while(*cursor != 0) {
@@ -1600,9 +1629,11 @@ static bool tb_find_after_matching_next(i16 current_pc, int var_index, i16& targ
   TbLoopSearch search;
   memset(&search, 0, sizeof(search));
   search.target_var = var_index;
+  const char* const source = tb_compiled_source(tb_ast);
+  if(source == NULL) return tb_error("HOW?");
   for(i16 pc = (i16) (current_pc + 1); pc < tb_ast.line_count; pc++) {
     const TbLine& line = tb_ast.lines[pc];
-    const char* line_begin = tb_ast.source + line.offset;
+    const char* line_begin = source + line.offset;
     const char* line_end = line_begin + line.len;
     if(!tb_scan_loop_events(line_begin, line_end, search)) return false;
     if(search.found) {
@@ -1819,6 +1850,8 @@ static bool tb_run_program(int program_index) {
     return false;
   }
   if(!tb_compile_source(programs[program_index].source, tb_ast)) return false;
+  const char* const source = tb_compiled_source(tb_ast);
+  if(source == NULL) return tb_error("HOW?");
 
   main_lcd().clear();
   tb_pending_print[0] = 0;
@@ -1844,7 +1877,7 @@ static bool tb_run_program(int program_index) {
       succeeded = tb_error("HOW?");
       break;
     }
-    const char* line_begin = tb_ast.source + line.offset;
+    const char* line_begin = source + line.offset;
     const char* begin = line_begin + entry_offset;
     const char* end = line_begin + line.len;
     entry_offset = 0;

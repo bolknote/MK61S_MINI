@@ -6,14 +6,14 @@
 namespace language_workspace {
 
 enum class Owner : u8 {
-  NONE,
-  FOCAL,
-  TINYBASIC,
-  IMAGE_VIEWER,
-  MARKDOWN_VIEWER,
-  CHIP8,
-  USB_DISK,
-  TERMINAL_TRANSFER
+  NONE = (u8) shared_memory::Owner::NONE,
+  FOCAL = (u8) shared_memory::Owner::FOCAL,
+  TINYBASIC = (u8) shared_memory::Owner::TINYBASIC,
+  IMAGE_VIEWER = (u8) shared_memory::Owner::IMAGE_VIEWER,
+  MARKDOWN_VIEWER = (u8) shared_memory::Owner::MARKDOWN_VIEWER,
+  CHIP8 = (u8) shared_memory::Owner::CHIP8,
+  USB_DISK = (u8) shared_memory::Owner::USB_DISK,
+  TERMINAL_TRANSFER = (u8) shared_memory::Owner::TERMINAL_TRANSFER
 };
 
 static constexpr usize SIZE = shared_memory::WORKSPACE_SIZE;

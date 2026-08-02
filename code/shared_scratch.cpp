@@ -2,45 +2,36 @@
 
 namespace shared_scratch {
 
+static constexpr shared_memory::Owner unified_owners[] = {
+  shared_memory::Owner::NONE,
+  shared_memory::Owner::EXPLORER_VIEW,
+  shared_memory::Owner::IMAGE_VIEWER,
+  shared_memory::Owner::MARKDOWN_VIEWER,
+  shared_memory::Owner::M61_FORMAT,
+  shared_memory::Owner::PROGRAM_STORE_RENAME,
+  shared_memory::Owner::PROGRAM_STORE_READ_RANGE,
+  shared_memory::Owner::PROGRAM_STORE_COMPRESSION,
+  shared_memory::Owner::VFAT_COMMIT,
+  shared_memory::Owner::USB_CACHE,
+  shared_memory::Owner::TERMINAL_TRANSFER
+};
+
+static_assert(sizeof(unified_owners) / sizeof(unified_owners[0]) ==
+              (usize) Owner::TERMINAL_TRANSFER + 1,
+              "shared-scratch owner facade is incomplete");
+
 static shared_memory::Owner unified_owner(Owner owner) {
-  switch(owner) {
-    case Owner::NONE: return shared_memory::Owner::NONE;
-    case Owner::EXPLORER_VIEW: return shared_memory::Owner::EXPLORER_VIEW;
-    case Owner::IMAGE_VIEWER: return shared_memory::Owner::IMAGE_VIEWER;
-    case Owner::MARKDOWN_VIEWER: return shared_memory::Owner::MARKDOWN_VIEWER;
-    case Owner::M61_FORMAT: return shared_memory::Owner::M61_FORMAT;
-    case Owner::PROGRAM_STORE_RENAME:
-      return shared_memory::Owner::PROGRAM_STORE_RENAME;
-    case Owner::PROGRAM_STORE_READ_RANGE:
-      return shared_memory::Owner::PROGRAM_STORE_READ_RANGE;
-    case Owner::PROGRAM_STORE_COMPRESSION:
-      return shared_memory::Owner::PROGRAM_STORE_COMPRESSION;
-    case Owner::VFAT_COMMIT: return shared_memory::Owner::VFAT_COMMIT;
-    case Owner::USB_CACHE: return shared_memory::Owner::USB_CACHE;
-    case Owner::TERMINAL_TRANSFER:
-      return shared_memory::Owner::TERMINAL_TRANSFER;
-  }
-  return shared_memory::Owner::NONE;
+  const usize index = (usize) owner;
+  return index < sizeof(unified_owners) / sizeof(unified_owners[0])
+      ? unified_owners[index] : shared_memory::Owner::NONE;
 }
 
 static Owner legacy_owner(shared_memory::Owner owner) {
-  switch(owner) {
-    case shared_memory::Owner::EXPLORER_VIEW: return Owner::EXPLORER_VIEW;
-    case shared_memory::Owner::IMAGE_VIEWER: return Owner::IMAGE_VIEWER;
-    case shared_memory::Owner::MARKDOWN_VIEWER: return Owner::MARKDOWN_VIEWER;
-    case shared_memory::Owner::M61_FORMAT: return Owner::M61_FORMAT;
-    case shared_memory::Owner::PROGRAM_STORE_RENAME:
-      return Owner::PROGRAM_STORE_RENAME;
-    case shared_memory::Owner::PROGRAM_STORE_READ_RANGE:
-      return Owner::PROGRAM_STORE_READ_RANGE;
-    case shared_memory::Owner::PROGRAM_STORE_COMPRESSION:
-      return Owner::PROGRAM_STORE_COMPRESSION;
-    case shared_memory::Owner::VFAT_COMMIT: return Owner::VFAT_COMMIT;
-    case shared_memory::Owner::USB_CACHE: return Owner::USB_CACHE;
-    case shared_memory::Owner::TERMINAL_TRANSFER:
-      return Owner::TERMINAL_TRANSFER;
-    default: return Owner::NONE;
+  for(usize index = 1;
+      index < sizeof(unified_owners) / sizeof(unified_owners[0]); index++) {
+    if(unified_owners[index] == owner) return (Owner) index;
   }
+  return Owner::NONE;
 }
 
 Lease::Lease(Owner next_owner, usize required) : Lease() {

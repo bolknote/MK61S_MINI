@@ -982,6 +982,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(memory.high_water);
       Serial.print(" resident_size=");
       Serial.print(memory.resident_size);
+      Serial.print(" epoch=");
+      Serial.print(memory.resident_epoch);
       Serial.print(" active=");
       Serial.print(shared_memory::owner_name(memory.active_owner));
       Serial.print(" resident=");
@@ -1038,6 +1040,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           index++) {
         print_memory_snapshot((shared_memory::Arena) index);
       }
+      Serial.print("MEM invariant=");
+      Serial.println(shared_memory::validate_invariants() ? "ok" : "BROKEN");
       const core_61::HotTableCacheSnapshot core_cache =
           core_61::hot_table_cache_statistics();
       Serial.print("MEM core-cache enabled=");
@@ -1062,6 +1066,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(swap.valid ? 1 : 0);
       Serial.print(" owner=");
       Serial.print(shared_memory::owner_name(swap.owner));
+      Serial.print(" schema=");
+      Serial.print(swap.schema);
       Serial.print(" codec=");
       Serial.print(swap.compressed ? "zx0" : "raw");
       Serial.print(" bytes=");
@@ -1074,6 +1080,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(swap.capture_attempts);
       Serial.print(" restore=");
       Serial.print(swap.restores);
+      Serial.print(" exchange=");
+      Serial.print(swap.exchanges);
+      Serial.write('/');
+      Serial.print(swap.exchange_attempts);
+      Serial.print(" exchange_fallback=");
+      Serial.print(swap.exchange_fallbacks);
       Serial.print(" evict=");
       Serial.print(swap.evictions);
       Serial.print(" busy=");

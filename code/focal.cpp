@@ -178,6 +178,8 @@ namespace library_mk61 {
 
 #include "bounded_string.hpp"
 #include "mk_math.hpp"
+
+#include <type_traits>
 #ifdef FOCAL_HOST_TEST
 #define MK61_REF_HOST_TEST
 #endif
@@ -320,6 +322,15 @@ struct FocalRuntime {
   i8 NextFocal;
   char focal_last_error[17];
 };
+
+static_assert(std::is_standard_layout<FocalRuntime>::value,
+              "FOCAL snapshot runtime must have stable layout");
+static_assert(std::is_trivially_copyable<FocalRuntime>::value,
+              "FOCAL snapshot runtime must be byte-copyable");
+#ifndef FOCAL_HOST_TEST
+static_assert(shared_memory::snapshot_schema::FOCAL_RUNTIME != 0,
+              "FOCAL snapshot schema must be explicit");
+#endif
 
 static void focal_reset_runtime(FocalRuntime& runtime) {
   memset(&runtime, 0, sizeof(runtime));

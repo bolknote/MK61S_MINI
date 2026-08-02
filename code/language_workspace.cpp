@@ -4,32 +4,15 @@
 namespace language_workspace {
 
 static shared_memory::Owner unified_owner(Owner owner) {
-  switch(owner) {
-    case Owner::NONE: return shared_memory::Owner::NONE;
-    case Owner::FOCAL: return shared_memory::Owner::FOCAL;
-    case Owner::TINYBASIC: return shared_memory::Owner::TINYBASIC;
-    case Owner::IMAGE_VIEWER: return shared_memory::Owner::IMAGE_VIEWER;
-    case Owner::MARKDOWN_VIEWER: return shared_memory::Owner::MARKDOWN_VIEWER;
-    case Owner::CHIP8: return shared_memory::Owner::CHIP8;
-    case Owner::USB_DISK: return shared_memory::Owner::USB_DISK;
-    case Owner::TERMINAL_TRANSFER:
-      return shared_memory::Owner::TERMINAL_TRANSFER;
-  }
-  return shared_memory::Owner::NONE;
+  const u8 value = (u8) owner;
+  return value <= (u8) Owner::TERMINAL_TRANSFER
+      ? (shared_memory::Owner) value : shared_memory::Owner::NONE;
 }
 
 static Owner legacy_owner(shared_memory::Owner owner) {
-  switch(owner) {
-    case shared_memory::Owner::FOCAL: return Owner::FOCAL;
-    case shared_memory::Owner::TINYBASIC: return Owner::TINYBASIC;
-    case shared_memory::Owner::IMAGE_VIEWER: return Owner::IMAGE_VIEWER;
-    case shared_memory::Owner::MARKDOWN_VIEWER: return Owner::MARKDOWN_VIEWER;
-    case shared_memory::Owner::CHIP8: return Owner::CHIP8;
-    case shared_memory::Owner::USB_DISK: return Owner::USB_DISK;
-    case shared_memory::Owner::TERMINAL_TRANSFER:
-      return Owner::TERMINAL_TRANSFER;
-    default: return Owner::NONE;
-  }
+  const u8 value = (u8) owner;
+  return value <= (u8) shared_memory::Owner::TERMINAL_TRANSFER
+      ? (Owner) value : Owner::NONE;
 }
 
 Lease::Lease(Owner next_owner, usize required) : Lease() {
@@ -38,17 +21,8 @@ Lease::Lease(Owner next_owner, usize required) : Lease() {
 
 bool Lease::acquire(Owner next_owner, usize required_size) {
   const shared_memory::Owner owner = unified_owner(next_owner);
-  if(lease.ok()) {
-    return lease.acquire(shared_memory::Arena::WORKSPACE,
-                         owner, required_size);
-  }
-  const workspace_swap::RestoreResult restored =
-      workspace_swap::restore(owner, required_size, lease);
-  if(restored == workspace_swap::RestoreResult::ACQUIRED) return true;
-  if(restored == workspace_swap::RestoreResult::BUSY) return false;
-  workspace_swap::capture_resident_before(owner);
-  return lease.acquire(shared_memory::Arena::WORKSPACE,
-                       owner, required_size);
+  return workspace_swap::acquire(
+      owner, required_size, workspace_swap::AcquireMode::FOREGROUND, lease);
 }
 
 Lease::~Lease(void) {

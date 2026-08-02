@@ -36,36 +36,75 @@ enum class Arena : u8 {
   COUNT
 };
 
+constexpr u8 arena_mask(Arena arena) {
+  return arena < Arena::COUNT ? (u8) (1U << (u8) arena) : 0;
+}
+
+namespace snapshot_schema {
+static constexpr u8 FOCAL_RUNTIME = 1;
+static constexpr u8 TINYBASIC_RUNTIME = 1;
+} // namespace snapshot_schema
+
 // Owner един для всех арен. Один логический компонент может одновременно
 // владеть несколькими аренами (например, Markdown: WORKSPACE + SCRATCH).
 enum class Owner : u8 {
-  NONE = 0,
-  FOCAL,
-  TINYBASIC,
-  IMAGE_VIEWER,
-  MARKDOWN_VIEWER,
-  CHIP8,
-  USB_DISK,
-  TERMINAL_TRANSFER,
-  CORE_TABLES,
-  EXPLORER_VIEW,
-  M61_FORMAT,
-  PROGRAM_STORE_RENAME,
-  PROGRAM_STORE_READ_RANGE,
-  PROGRAM_STORE_COMPRESSION,
-  VFAT_COMMIT,
-  USB_CACHE,
-  DISPLAY_FONT,
-  WORKSPACE_SWAP,
+#define MK61_SHARED_MEMORY_OWNER(name, text, allowed, persistent, cache, evictable, schema) name,
+#include "shared_memory_owner_catalog.inc"
+#undef MK61_SHARED_MEMORY_OWNER
   COUNT
 };
 
-using Reclaimer = bool (*)(void* context);
+struct OwnerPolicy {
+  u8 allowed_arenas;
+  u8 persistent_arenas;
+  u8 cache_arenas;
+  u8 evictable_arenas;
+  u8 snapshot_schema;
+};
+
+static_assert(sizeof(OwnerPolicy) == 5,
+              "shared-memory owner policy must remain a packed byte table");
+
+enum class EvictionDecision : u8 {
+  KEEP = 0,
+  RELEASE
+};
+
+// Callback лишь переводит клиента на безопасный fallback. Lease отзывает сам
+// менеджер после RELEASE, поэтому callback не получает ни Lease, ни context.
+using EvictionPrepare = EvictionDecision (*)(void);
+
+class ResidentToken {
+  public:
+    constexpr ResidentToken(void)
+      : arena_(Arena::COUNT), owner_(Owner::NONE), size_(0), epoch_(0) {}
+
+    bool valid(void) const {
+      return arena_ < Arena::COUNT && owner_ != Owner::NONE && epoch_ != 0;
+    }
+    Arena arena(void) const { return arena_; }
+    Owner owner(void) const { return owner_; }
+    usize size(void) const { return size_; }
+    u32 epoch(void) const { return epoch_; }
+
+  private:
+    Arena arena_;
+    Owner owner_;
+    usize size_;
+    u32 epoch_;
+
+    constexpr ResidentToken(Arena arena, Owner owner, usize size, u32 epoch)
+      : arena_(arena), owner_(owner), size_(size), epoch_(epoch) {}
+
+    friend ResidentToken resident_token(Arena arena);
+    friend bool commit_resident_handoff(const ResidentToken& token);
+};
 
 struct Snapshot {
   Arena arena;
   usize capacity;
   usize resident_size;
+  u32 resident_epoch;
   usize high_water;
   Owner active_owner;
   Owner resident_owner;
@@ -120,10 +159,9 @@ class [[nodiscard]] Lease {
           ? reinterpret_cast<T*>(memory_) : nullptr;
     }
 
-    // Разрешает другому владельцу синхронно вытеснить эту аренду. Callback
-    // обязан только переключить использующий память код на безопасный fallback
-    // и вызвать reset() исходного lease; I/O и повторный acquire запрещены.
-    bool set_reclaimer(Reclaimer callback, void* context = nullptr);
+    // Разрешает синхронное вытеснение opportunistic cache. Callback только
+    // готовит fallback; после RELEASE менеджер сам отзывает именно этот Lease.
+    bool set_evictable(EvictionPrepare prepare);
 
     // A validated snapshot has replaced the zeroed bytes of a newly acquired
     // persistent arena. Only the snapshot layer should call this.
@@ -140,12 +178,27 @@ class [[nodiscard]] Lease {
 
     bool acquire_impl(Arena arena, Owner owner, usize required,
                       bool opportunistic);
+    void release_impl(bool from_manager);
+    void revoke_from_manager(void);
+
+    friend bool detail_try_reclaim(Arena arena);
 };
 
 usize capacity(Arena arena);
 bool enabled(Arena arena);
 Owner active_owner(Arena arena);
 Owner resident_owner(Arena arena);
+OwnerPolicy owner_policy(Owner owner);
+bool owner_allowed(Arena arena, Owner owner);
+bool owner_persistent(Arena arena, Owner owner);
+bool owner_cache_allowed(Arena arena, Owner owner);
+bool owner_evictable(Arena arena, Owner owner);
+u8 owner_snapshot_schema(Owner owner);
+ResidentToken resident_token(Arena arena);
+// Commit succeeds only if no acquisition has changed the resident state since
+// token creation. On success the caller's validated backing image is the sole
+// retained copy and the in-arena resident marker is forgotten.
+bool commit_resident_handoff(const ResidentToken& token);
 // Idempotently forget retained state once the current outer lease, if any,
 // is released.
 // This is used by multi-command clients such as fsput: their bytes must
@@ -154,6 +207,7 @@ bool discard_resident(Arena arena, Owner owner);
 void* data(Arena arena, Owner owner);
 bool contains(Arena arena, const void* pointer, usize size = 1);
 Snapshot snapshot(Arena arena);
+bool validate_invariants(void);
 void reset_statistics(void);
 const char* arena_name(Arena arena);
 const char* owner_name(Owner owner);

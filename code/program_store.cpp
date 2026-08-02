@@ -13,6 +13,7 @@
 #include "shared_scratch.hpp"
 #include "spi_nor_flash.hpp"
 #include "tools.hpp"
+#include "workspace_swap.hpp"
 #include "zx0.hpp"
 
 #include <stdint.h>
@@ -3330,10 +3331,11 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                                 compression_buffer_size);
   shared_memory::Lease compression_workspace;
   if(transparent_compression_enabled(type) && data_len >= ZX0_MIN_SAVING) {
-    (void) compression_workspace.acquire_cache(
-        shared_memory::Arena::WORKSPACE,
+    (void) workspace_swap::acquire(
         shared_memory::Owner::PROGRAM_STORE_COMPRESSION,
-        shared_memory::WORKSPACE_SIZE);
+        shared_memory::WORKSPACE_SIZE,
+        workspace_swap::AcquireMode::OPPORTUNISTIC,
+        compression_workspace);
   }
   shared_scratch::Lease compression_scratch;
   CompressionPlan compression_plan = {};
