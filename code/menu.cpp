@@ -87,12 +87,7 @@ static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSe
 #endif
 
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
-static constexpr u8 DISPLAY_ROWS_MIN =
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  lcd_display::MIN_ROWS;
-#else
-  lcd_display::DEFAULT_ROWS;
-#endif
+static constexpr u8 DISPLAY_ROWS_MIN = lcd_display::MIN_ROWS;
 
 static u8 normalize_display_rows(u8 rows) {
   return lcd_display::clamp_u8(rows, DISPLAY_ROWS_MIN, lcd_display::GRAPHICS_MAX_ROWS);
@@ -109,6 +104,7 @@ static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProf
 
 static const char* fontPresetName(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
+  if(sameTextProfile(profile, lcd_display::textProfile10x16())) return "10x16";
   if(sameTextProfile(profile, lcd_display::textProfile3x5())) return "3x5";
   if(sameTextProfile(profile, lcd_display::textProfile5x9())) return "5x9";
   return "5x8";
@@ -117,6 +113,7 @@ static const char* fontPresetName(lcd_display::TextProfile profile) {
 static u8 display_rows_mode(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, lcd_display::textProfile5x9())) return 1;
+  if(sameTextProfile(profile, lcd_display::textProfile10x16())) return 2;
   if(sameTextProfile(profile, lcd_display::textProfile3x5())) return 3;
   return 0;
 }
@@ -124,8 +121,9 @@ static u8 display_rows_mode(lcd_display::TextProfile profile) {
 static u8 display_rows_from_mode(u8 mode) {
   switch(mode) {
     case 1:
-    case 2:
       return lcd_display::FONT_5X9_ROWS;
+    case 2:
+      return lcd_display::FONT_10X16_ROWS;
     case 3:
       return lcd_display::FONT_3X5_ROWS;
     default:
@@ -136,11 +134,13 @@ static u8 display_rows_from_mode(u8 mode) {
 static lcd_display::TextProfile nextFontPreset(lcd_display::TextProfile profile, i8 delta) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
   const u8 current = sameTextProfile(profile, lcd_display::textProfile5x9()) ? 1 :
-    (sameTextProfile(profile, lcd_display::textProfile3x5()) ? 2 : 0);
-  const u8 next = (u8) ((current + (delta > 0 ? 1 : 2)) % 3);
+    (sameTextProfile(profile, lcd_display::textProfile3x5()) ? 2 :
+      (sameTextProfile(profile, lcd_display::textProfile10x16()) ? 3 : 0));
+  const u8 next = (u8) ((current + (delta > 0 ? 1 : 3)) % 4);
   switch(next) {
     case 1: return lcd_display::textProfile5x9();
     case 2: return lcd_display::textProfile3x5();
+    case 3: return lcd_display::textProfile10x16();
     default: return lcd_display::textProfile5x8();
   }
 }

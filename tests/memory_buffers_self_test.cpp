@@ -5,8 +5,17 @@
 #include <assert.h>
 #include <stdio.h>
 
+#ifndef MK61_EXPECTED_EXCLUSIVE_BUFFER_SIZE
+#error "MK61_EXPECTED_EXCLUSIVE_BUFFER_SIZE is required"
+#endif
+
 int main(void) {
   using language_workspace::Owner;
+
+  static_assert(MK61_EXCLUSIVE_BUFFER_ENABLED,
+                "graphical build must provide the exclusive buffer");
+  static_assert(exclusive_buffer::SIZE == MK61_EXPECTED_EXCLUSIVE_BUFFER_SIZE,
+                "exclusive buffer size differs from the MCU policy");
 
   assert(language_workspace::resident_owner() == Owner::NONE);
   assert(language_workspace::active_owner() == Owner::NONE);
@@ -100,6 +109,7 @@ int main(void) {
   assert(!empty_scratch.ok());
 
   assert(exclusive_buffer::current_owner() == exclusive_buffer::Owner::NONE);
+  assert(exclusive_buffer::SIZE == MK61_EXPECTED_EXCLUSIVE_BUFFER_SIZE);
   assert(exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT, 1536));
   assert(exclusive_buffer::data(exclusive_buffer::Owner::DISPLAY_FONT) != NULL);
   assert(!exclusive_buffer::acquire(exclusive_buffer::Owner::USB_CACHE, 512));

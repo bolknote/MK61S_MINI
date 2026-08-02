@@ -70,9 +70,17 @@ inline void  event_start_prg_mk61(void) {
 }
 
 inline void service_run_keypress(void) {
-  if(m61_text::active()) return;
+  if(m61_text::calculator_suspended()) return;
   const i32 keycode = kbd::get_key(PRESS);
   if(keycode >= 0) key_press_handler(keycode);
+}
+
+inline void scan_m61_runtime_keyboard(void) {
+  if(m61_text::calculator_suspended()) {
+    (void) kbd::scan_m61_controls();
+  } else {
+    kbd::scan();
+  }
 }
 
 inline void run_program_steps(void) {
@@ -82,23 +90,23 @@ inline void run_program_steps(void) {
       core_61::step();
 
       // Во время M61 программа калькулятора может выполнять целый turbo-пакет
-      // между проходами loop(). Продвигаем штатный сканер после каждого шага,
-      // чтобы Р/Г/ГРД и ESC опрашивались с той же частотой, что и в обычном
-      // режиме. Debounce клавиатуры при этом остаётся общим.
+      // между проходами loop(). Пока калькулятор работает, опрашиваем всю
+      // матрицу: любая его клавиша должна штатно остановить программу. В
+      // замороженной trap-сцене остаются только Р/Г/ГРД и ESC.
       if(m61_text::active()) {
-        (void) kbd::scan_m61_controls();
+        scan_m61_runtime_keyboard();
         service_m61_controls();
-        if(!m61_text::active() || !core_61::is_RUN()) return;
+        if(!m61_text::active()) return;
       }
-
-      // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
-      // делать следующий турбо-шаг или передавать клавишу до сохранения контекста скриптом.
-      if(core_61::program_boundary_yielded()) return;
 
       if(core_61::is_CALC()) {
           event_stop_in_prg_mk61();     // обработка события "ОСТАНОВ ПРОГРАММЫ"
           break;
       }
+
+      // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
+      // делать следующий турбо-шаг или передавать клавишу до сохранения контекста скриптом.
+      if(core_61::program_boundary_yielded()) return;
   }
 
   service_run_keypress();

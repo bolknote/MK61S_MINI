@@ -66,7 +66,7 @@ static_assert(sizeof(DeferredWrite) <= 16,
 static DeferredWrite deferred_write = {};
 
 static bool acquire_cache_buffer(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_EXCLUSIVE_BUFFER_ENABLED
   return exclusive_buffer::acquire(exclusive_buffer::Owner::USB_CACHE,
                                    exclusive_buffer::SIZE);
 #else
@@ -75,7 +75,7 @@ static bool acquire_cache_buffer(void) {
 }
 
 static bool configure_cache_buffer(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_EXCLUSIVE_BUFFER_ENABLED
   return virtual_fat::set_external_cache(
     exclusive_buffer::data(exclusive_buffer::Owner::USB_CACHE),
     exclusive_buffer::SIZE
@@ -86,7 +86,7 @@ static bool configure_cache_buffer(void) {
 }
 
 static void release_cache_buffer(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_EXCLUSIVE_BUFFER_ENABLED
   if(exclusive_buffer::current_owner() != exclusive_buffer::Owner::USB_CACHE) return;
   exclusive_buffer::release(exclusive_buffer::Owner::USB_CACHE);
 #endif

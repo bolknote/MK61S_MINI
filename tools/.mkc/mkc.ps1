@@ -36,6 +36,7 @@ try {
 } catch {}
 
 $script:Port = ''
+$script:PortExplicit = $false
 $script:LocalPath = (Get-Location).Path
 $script:RemotePath = '/'
 $script:MockRoot = ''
@@ -122,6 +123,7 @@ function Parse-Arguments {
             '--port' {
                 if (++$i -ge $Arguments.Count) { throw '--port requires a value' }
                 $script:Port = [string]$Arguments[$i]
+                $script:PortExplicit = $true
             }
             '--local' {
                 if (++$i -ge $Arguments.Count) { throw '--local requires a value' }
@@ -296,6 +298,64 @@ function Test-UseDirectSerialTransport {
     return $script:IsWindowsHost
 }
 
+function Get-DirectSerialCandidates {
+    param([string]$Preferred, [object[]]$Detected)
+    $result = [Collections.Generic.List[string]]::new()
+    $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($candidate in @($Preferred) + @($Detected)) {
+        $port = ([string]$candidate).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($port) -and $seen.Add($port)) {
+            $result.Add($port)
+        }
+    }
+    return $result.ToArray()
+}
+
+function Test-Mk61IdentityLine {
+    param([string]$Line)
+    if ([string]::IsNullOrWhiteSpace($Line)) { return $false }
+    return $Line.Trim() -match '^MK61s(?:-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*| mini)?\s+ver\.\s+'
+}
+
+function Test-DirectSerialMk61Identity {
+    param(
+        [object]$Serial,
+        [int]$TimeoutMilliseconds = 1800,
+        [int]$MaximumLines = 24
+    )
+    if ($null -eq $Serial -or $TimeoutMilliseconds -le 0 -or $MaximumLines -le 0) {
+        return $false
+    }
+    $oldTimeout = $Serial.ReadTimeout
+    try {
+        try { $Serial.DiscardInBuffer() } catch {}
+        $Serial.ReadTimeout = [Math]::Max(50, [Math]::Min(300, $TimeoutMilliseconds))
+        [void]$Serial.Write("ver`r")
+        $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
+        for ($lineIndex = 0; $lineIndex -lt $MaximumLines -and
+             [DateTime]::UtcNow -lt $deadline; $lineIndex++) {
+            try {
+                $line = [string]$Serial.ReadLine()
+                if (Test-Mk61IdentityLine $line) { return $true }
+            } catch [TimeoutException] {
+                continue
+            } catch {
+                return $false
+            }
+        }
+        return $false
+    } finally {
+        try { $Serial.ReadTimeout = $oldTimeout } catch {}
+    }
+}
+
+function Close-DirectSerialPort {
+    param([object]$Serial)
+    if ($null -eq $Serial) { return }
+    try { if ($Serial.IsOpen) { $Serial.Close() } } catch {}
+    try { $Serial.Dispose() } catch {}
+}
+
 function New-ConfiguredSerialPort {
     param([string]$PortName)
     $serial = New-Object System.IO.Ports.SerialPort
@@ -315,24 +375,43 @@ function New-ConfiguredSerialPort {
 }
 
 function Start-DirectSerial {
-    try {
-        $script:DirectSerial = New-ConfiguredSerialPort $script:Port
-        $script:DirectSerial.Open()
-        Start-Sleep -Milliseconds 300
-        try { $script:DirectSerial.DiscardInBuffer() } catch {}
-        return $true
-    } catch {
-        $message = $_.Exception.Message
-        if ($_.Exception -is [UnauthorizedAccessException]) {
-            $message = "порт $($script:Port) занят — закройте TeraTerm или Serial Monitor"
-        }
-        $script:StatusText = "не удалось открыть $($script:Port): $message"
-        if ($null -ne $script:DirectSerial) {
-            try { $script:DirectSerial.Dispose() } catch {}
-            $script:DirectSerial = $null
-        }
+    $detected = if ($script:PortExplicit) { @() } else { @(Get-CdcPorts) }
+    $candidates = @(Get-DirectSerialCandidates $script:Port $detected)
+    if ($candidates.Count -eq 0) {
+        $script:StatusText = 'COM-порты STM32 0483:5740 не найдены'
         return $false
     }
+
+    Close-DirectSerialPort $script:DirectSerial
+    $script:DirectSerial = $null
+    $failures = [Collections.Generic.List[string]]::new()
+    foreach ($candidate in $candidates) {
+        $serial = $null
+        try {
+            $serial = New-ConfiguredSerialPort $candidate
+            $serial.Open()
+            Start-Sleep -Milliseconds 300
+            if (Test-DirectSerialMk61Identity $serial) {
+                $script:DirectSerial = $serial
+                $script:Port = $candidate
+                $script:StatusText = "MK61s найден на $candidate"
+                return $true
+            }
+            $failures.Add("${candidate}: это не MK61s")
+        } catch {
+            $message = $_.Exception.Message
+            if ($_.Exception -is [UnauthorizedAccessException]) {
+                $message = 'порт занят — закройте TeraTerm или Serial Monitor'
+            }
+            $failures.Add("${candidate}: $message")
+        } finally {
+            if ($null -ne $serial -and $serial -ne $script:DirectSerial) {
+                Close-DirectSerialPort $serial
+            }
+        }
+    }
+    $script:StatusText = 'MK61s не найден: ' + ($failures -join '; ')
+    return $false
 }
 
 function Start-Monitor {

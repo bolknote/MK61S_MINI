@@ -108,6 +108,106 @@ try {
     Assert-True ((Get-CdcPortFromPnpDevice $pnpDevice) -eq 'COM16') 'Windows PnP COM-port extraction failed'
     $json = '{"detected_ports":[{"port":{"address":"COM7","properties":{"vid":"0x0483","pid":"5740"}}},{"port":{"address":"COM8","properties":{"vid":"2341","pid":"0043"}}}]}'
     Assert-True ((@(Get-CdcPortsFromJson $json) -join ',') -eq 'COM7') 'arduino-cli JSON port detection failed'
+    $candidates = @(Get-DirectSerialCandidates 'COM12' @('COM16','com12','COM17'))
+    Assert-True (($candidates -join ',') -eq 'COM12,COM16,COM17') 'direct COM candidates are not ordered or deduplicated'
+    Assert-True (Test-Mk61IdentityLine 'MK61s-Classic-V3 ver. Aug 02 2026(12:34:56)') 'Classic V3 identity was rejected'
+    Assert-True (Test-Mk61IdentityLine 'MK61s-40th ver. Aug 02 2026(12:34:56)') '40th identity was rejected'
+    Assert-True (Test-Mk61IdentityLine 'MK61s mini ver. Jan 01 2024(00:00:00)') 'legacy MK61s identity was rejected'
+    Assert-True (-not (Test-Mk61IdentityLine 'STM32F401 test firmware ver. 1')) 'unrelated STM32 identity was accepted'
+
+    $probeSerial = [pscustomobject]@{
+        ReadTimeout = 777
+        NextLine = 'noise'
+        Lines = [Collections.Generic.Queue[string]]::new()
+        Writes = [Collections.Generic.List[string]]::new()
+    }
+    $probeSerial | Add-Member -MemberType ScriptMethod -Name Write -Value {
+        param([string]$Text)
+        $this.Writes.Add($Text)
+    }
+    $probeSerial | Add-Member -MemberType ScriptMethod -Name ReadLine -Value {
+        if ($this.Lines.Count -ne 0) { return $this.Lines.Dequeue() }
+        return $this.NextLine
+    }
+    $probeSerial.Lines.Enqueue("ver`r")
+    $probeSerial.Lines.Enqueue('sizeof Serial 216')
+    $probeSerial.Lines.Enqueue('MK61s-Classic-V2 ver. Aug 02 2026(12:34:56)')
+    Assert-True (Test-DirectSerialMk61Identity $probeSerial 200 8) 'MK61s serial probe failed'
+    Assert-True (($probeSerial.Writes -join '') -eq "ver`r") 'MK61s serial probe did not send ver'
+    Assert-True ($probeSerial.ReadTimeout -eq 777) 'MK61s serial probe did not restore timeout'
+    $probeSerial.Lines.Clear()
+    $probeSerial.Writes.Clear()
+    $probeSerial.NextLine = 'another STM32 firmware'
+    Assert-True (-not (Test-DirectSerialMk61Identity $probeSerial 200 4)) 'unrelated serial firmware passed the probe'
+
+    & {
+        function Get-CdcPorts { return @('COM12','COM16') }
+        function Start-Sleep { param([int]$Milliseconds) }
+        function New-ConfiguredSerialPort {
+            param([string]$PortName)
+            $identity = if ($PortName -eq 'COM16') {
+                'MK61s-Classic-V3 ver. Aug 02 2026(12:34:56)'
+            } else {
+                'unrelated STM32 firmware'
+            }
+            $serial = [pscustomobject]@{
+                PortName = $PortName
+                IsOpen = $false
+                ReadTimeout = 777
+                Identity = $identity
+                Disposed = $false
+                Writes = [Collections.Generic.List[string]]::new()
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name Open -Value {
+                $this.IsOpen = $true
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name Close -Value {
+                $this.IsOpen = $false
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name Dispose -Value {
+                $this.Disposed = $true
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name Write -Value {
+                param([string]$Text)
+                $this.Writes.Add($Text)
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name ReadLine -Value {
+                return $this.Identity
+            }
+            return $serial
+        }
+
+        $oldPort = $script:Port
+        $oldPortExplicit = $script:PortExplicit
+        $oldDirectSerial = $script:DirectSerial
+        $oldStatusText = $script:StatusText
+        try {
+            $script:Port = 'COM12'
+            $script:PortExplicit = $false
+            $script:DirectSerial = $null
+            Assert-True (Start-DirectSerial) 'automatic COM probing did not find MK61s'
+            Assert-True ($script:Port -eq 'COM16') 'automatic COM probing stayed on unrelated COM12'
+            Assert-True ($script:DirectSerial.PortName -eq 'COM16') 'automatic COM probing retained the wrong serial object'
+        } finally {
+            Close-DirectSerialPort $script:DirectSerial
+            $script:Port = $oldPort
+            $script:PortExplicit = $oldPortExplicit
+            $script:DirectSerial = $oldDirectSerial
+            $script:StatusText = $oldStatusText
+        }
+    }
+
+    $oldPort = $script:Port
+    $oldPortExplicit = $script:PortExplicit
+    try {
+        $script:Port = 'COM12'
+        $script:PortExplicit = $false
+        Assert-True (Parse-Arguments @('--port','COM99')) '--port parsing failed'
+        Assert-True ($script:Port -eq 'COM99' -and $script:PortExplicit) '--port was not marked explicit'
+    } finally {
+        $script:Port = $oldPort
+        $script:PortExplicit = $oldPortExplicit
+    }
     $crc = Get-PosixChecksumBytes ([Text.Encoding]::ASCII.GetBytes('123456789'))
     Assert-True ($crc -eq 930766865) 'POSIX cksum implementation differs'
 

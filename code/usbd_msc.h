@@ -20,6 +20,8 @@
 #ifndef __USBD_MSC_H
 #define __USBD_MSC_H
 
+#include "msc_memory_policy.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,11 +44,6 @@ extern "C" {
 /** @defgroup USBD_BOT_Exported_Defines
   * @{
   */
-/* MSC Class Config */
-#ifndef MSC_MEDIA_PACKET
-#define MSC_MEDIA_PACKET             512U
-#endif /* MSC_MEDIA_PACKET */
-
 /* Storage callbacks may defer a write until the firmware main loop can run it
  * outside the USB interrupt. Negative remains failure; zero is completed. */
 #define USBD_MSC_STORAGE_ERROR       (-1)

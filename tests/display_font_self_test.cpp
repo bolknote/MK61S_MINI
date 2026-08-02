@@ -189,6 +189,9 @@ static void test_text_grid(void) {
   assert(geometry5x8.rows == 6 && geometry5x8.line_gap == 2);
   const text_screen::FontGeometry geometry5x9 = text_screen::fitFontToDisplay(5, 9, 0);
   assert(geometry5x9.rows == 7);
+  const text_screen::FontGeometry geometry10x16 = text_screen::fitFontToDisplay(10, 16, 0);
+  assert(geometry10x16.rows == 4 && geometry10x16.width == 10 &&
+         geometry10x16.height == 16 && geometry10x16.line_gap == 0);
   const text_screen::FontGeometry geometry8x12 = text_screen::fitFontToDisplay(8, 12, 0);
   assert(geometry8x12.rows == 5 && geometry8x12.width == 8);
   const text_screen::FontGeometry oversized = text_screen::fitFontToDisplay(16, 32, 4);

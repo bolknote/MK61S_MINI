@@ -62,6 +62,7 @@ struct TextProfile {
 // Виртуальный USB-дисплей и UC1609 используют общую текстовую геометрию 192x64.
 // Эти профили не зависят от геометрии физического LCD1602, чтобы LCD-сборка
 // сохраняла выбранный шрифт USB-экрана между сеансами.
+static constexpr u8 FONT_10X16_ROWS = 4;
 static constexpr u8 FONT_5X8_ROWS = 6;
 static constexpr u8 FONT_5X9_ROWS = 7;
 static constexpr u8 FONT_3X5_ROWS = 10;
@@ -89,6 +90,10 @@ static constexpr TextProfile textProfile5x8(void) {
   return {FONT_5X8_ROWS, 5, 8, 2};
 }
 
+static constexpr TextProfile textProfile10x16(void) {
+  return {FONT_10X16_ROWS, 10, 16, 0};
+}
+
 static constexpr TextProfile textProfile5x9(void) {
   return {FONT_5X9_ROWS, 5, 9, 0};
 }
@@ -102,12 +107,15 @@ static inline bool isTextProfile3x5(TextProfile profile) {
 }
 
 static constexpr TextProfile defaultGraphicalTextProfileForRows(u8 rows) {
+  if(rows <= FONT_10X16_ROWS) return textProfile10x16();
   if(rows <= FONT_5X8_ROWS) return textProfile5x8();
   if(rows == FONT_5X9_ROWS) return textProfile5x9();
   return textProfile3x5();
 }
 
 static inline TextProfile presetGraphicalTextProfile(TextProfile profile) {
+  if(profile.rows <= FONT_10X16_ROWS || profile.glyph_width >= 10 ||
+     profile.glyph_height >= 16) return textProfile10x16();
   if(profile.glyph_width <= 3 || profile.rows >= FONT_3X5_ROWS) return textProfile3x5();
   if(profile.glyph_height >= 9 || profile.rows == FONT_5X9_ROWS) return textProfile5x9();
   return textProfile5x8();

@@ -2,7 +2,7 @@
 
 namespace exclusive_buffer {
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_EXCLUSIVE_BUFFER_ENABLED
 alignas(4) static u8 buffer[SIZE];
 static Owner owner = Owner::NONE;
 

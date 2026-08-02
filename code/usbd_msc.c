@@ -42,6 +42,13 @@ EndBSPDependencies */
 #include "usbd_msc.h"
 #include "msc_scsi_safety.h"
 
+#if MK61_MSC_COMPACT_MEMORY
+_Static_assert(MSC_MEDIA_PACKET == 512U,
+               "STM32F401 MSC packet must stay at one FAT sector");
+_Static_assert(sizeof(USBD_MSC_BOT_HandleTypeDef) <= 1024U,
+               "STM32F401 MSC handle no longer fits the guarded heap");
+#endif
+
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
   * @{

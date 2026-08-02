@@ -15,6 +15,7 @@ fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_dwt_profiler_tests.sh"
 "$root/tests/run_classic_scheduler_tests.sh"
+"$root/tests/run_automate_tests.sh"
 "$root/tests/run_board_profile_tests.sh"
 "$root/tests/run_chip8_tests.sh"
 "$root/tests/run_wbmp_tests.sh"
