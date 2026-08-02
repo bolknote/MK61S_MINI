@@ -7,6 +7,9 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $appsRoot = Join-Path $root 'system_apps'
 $launcher = Join-Path $appsRoot 'build.cmd'
 $builder = Join-Path (Join-Path $appsRoot '.tool') 'build.ps1'
+$packerBuilder = Join-Path (
+    Join-Path (Join-Path $root 'tools') '.mk61-app'
+) 'build.ps1'
 $gccBuilder = Join-Path (
     Join-Path (Join-Path $root 'tools') '.mk61-gcc'
 ) 'build.ps1'
@@ -53,6 +56,8 @@ Assert-True (Test-Path -LiteralPath $launcher -PathType Leaf) `
     'System APP launcher is missing'
 Assert-True (Test-Path -LiteralPath $builder -PathType Leaf) `
     'System APP PowerShell builder is missing'
+Assert-True (Test-Path -LiteralPath $packerBuilder -PathType Leaf) `
+    'host APP packer builder is missing'
 Assert-True (Test-Path -LiteralPath $gccBuilder -PathType Leaf) `
     'direct GCC F401 builder is missing'
 Assert-True (-not (Test-Path -LiteralPath (
@@ -69,7 +74,7 @@ Assert-True ($launcherText -match
     '(?i)powershell\.exe -NoLogo -NoProfile -ExecutionPolicy Bypass') `
     'Windows PowerShell fallback is missing'
 
-foreach ($file in @($builder, $gccBuilder)) {
+foreach ($file in @($builder, $packerBuilder, $gccBuilder)) {
     $tokens = $null
     $parseErrors = $null
     [void][Management.Automation.Language.Parser]::ParseFile(
@@ -157,6 +162,18 @@ Assert-True ($builderText -match
 Assert-True ($builderText -match
     "\^-flto\(\?:=\.\*\)\?\$[\s\S]+-fno-fat-lto-objects") `
     'standalone builder does not normalize resident LTO flags'
+Assert-True ($builderText -match '--require-zx0') `
+    'standalone builder does not require ZX0 APP payloads'
+Assert-True ($builderText -match 'tools/\.mk61-app/build\.ps1') `
+    'standalone builder does not build the native host packer'
+Assert-True ($builderText -notmatch '\$container\[15\]\s*=\s*0') `
+    'standalone builder still writes raw APP containers'
+
+$packerBuilderText = [IO.File]::ReadAllText($packerBuilder)
+Assert-True ($packerBuilderText -match 'MK61_HOST_CXX') `
+    'host packer builder has no explicit compiler override'
+Assert-True ($packerBuilderText -match "'c\+\+'.+?'clang\+\+'.+?'g\+\+'.+?'cl'") `
+    'host packer builder is not cross-platform'
 
 $gccText = [IO.File]::ReadAllText($gccBuilder)
 Assert-True ($gccText -match 'system_apps/\.tool/build\.ps1') `
@@ -168,6 +185,8 @@ Assert-True ($gccText -match
     'direct GCC builder does not forward the Markdown selection'
 Assert-True ($gccText -notmatch 'mk61-app-postbuild') `
     'direct GCC builder still uses Arduino APP post-build objects'
+Assert-True ($gccText -match 'tools/\.mk61-app/build\.ps1') `
+    'direct GCC dependency check omits the host APP packer'
 
 $integrationBuild = [Environment]::GetEnvironmentVariable(
     'MK61_SYSTEM_APPS_BUILD_PATH')
@@ -218,8 +237,8 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
                 "MK61APP`0") "$name has invalid magic"
             Assert-True ($bytes[14] -eq $expected[$name]) `
                 "$name has an invalid kind"
-            Assert-True ($bytes[15] -eq 0) `
-                "$name is not an uncompressed ARM-built APP"
+            Assert-True ($bytes[15] -eq 1) `
+                "$name is not a ZX0-compressed ARM-built APP"
             Assert-True (
                 (Read-Le16 $bytes 56) -eq $expectedMagic[$name]) `
                 "$name has an invalid handled type magic"
@@ -235,9 +254,11 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             [byte[]]$payload = $bytes[64..($bytes.Length - 1)]
             [uint32]$payloadCrc = Get-Crc32 $payload
             Assert-True (
-                (Read-Le32 $bytes 48) -eq $payloadCrc -and
-                (Read-Le32 $bytes 52) -eq $payloadCrc) `
-                "$name payload CRC differs"
+                (Read-Le32 $bytes 48) -eq $payloadCrc) `
+                "$name stored payload CRC differs"
+            Assert-True (
+                (Read-Le32 $bytes 24) -lt (Read-Le32 $bytes 28)) `
+                "$name ZX0 payload is not smaller than its image"
             [byte[]]$headerPrefix = $bytes[0..59]
             Assert-True (
                 (Read-Le32 $bytes 60) -eq (Get-Crc32 $headerPrefix)) `

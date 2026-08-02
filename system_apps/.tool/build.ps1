@@ -9,6 +9,7 @@ param(
     [string]$ResidentBin,
     [string]$CompileCommands,
     [string]$OutputDirectory,
+    [string]$ModulePacker,
 
     [ValidateSet('0', '1')]
     [string]$Focal = '1',
@@ -102,48 +103,9 @@ function Get-HexUInt32 {
     return [Convert]::ToUInt32($Text, 16)
 }
 
-function Get-Crc32Bytes {
+function Write-Zx0AppContainer {
     param(
-        [Parameter(Mandatory = $true)][byte[]]$Bytes,
-        [int]$Count = -1
-    )
-    if ($Count -lt 0) { $Count = $Bytes.Length }
-    if ($Count -gt $Bytes.Length) {
-        Stop-SystemAppsBuild 'internal CRC32 byte count error'
-    }
-    [uint32]$state = [uint32]::MaxValue
-    for ($index = 0; $index -lt $Count; $index++) {
-        $state = [uint32]($state -bxor [uint32]$Bytes[$index])
-        for ($bit = 0; $bit -lt 8; $bit++) {
-            if (($state -band [uint32]1) -ne 0) {
-                $state = [uint32](($state -shr 1) -bxor
-                    [uint32]3988292384)
-            } else {
-                $state = [uint32]($state -shr 1)
-            }
-        }
-    }
-    return [uint32]($state -bxor [uint32]::MaxValue)
-}
-
-function Set-Le16 {
-    param([byte[]]$Data, [int]$Offset, [uint16]$Value)
-    $Data[$Offset] = [byte]($Value -band 0xFF)
-    $Data[$Offset + 1] = [byte](($Value -shr 8) -band 0xFF)
-}
-
-function Set-Le32 {
-    param([byte[]]$Data, [int]$Offset, [uint32]$Value)
-    $Data[$Offset] = [byte]($Value -band 0xFF)
-    $Data[$Offset + 1] = [byte](($Value -shr 8) -band 0xFF)
-    $Data[$Offset + 2] = [byte](($Value -shr 16) -band 0xFF)
-    $Data[$Offset + 3] = [byte](($Value -shr 24) -band 0xFF)
-}
-
-function Write-AppContainer {
-    param(
-        [byte]$Kind,
-        [uint16]$HandledMagic,
+        [pscustomobject]$App,
         [string]$Resident,
         [string]$Image,
         [uint32]$MemorySize,
@@ -151,56 +113,30 @@ function Write-AppContainer {
         [uint32]$LoadAddress,
         [string]$Target
     )
-    [byte[]]$residentBytes = [IO.File]::ReadAllBytes($Resident)
-    [byte[]]$imageBytes = [IO.File]::ReadAllBytes($Image)
-    if ($residentBytes.Length -le 0 -or
-        $residentBytes.Length -gt 512KB) {
-        Stop-SystemAppsBuild 'resident BIN has an invalid size'
+    $arguments = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($argument in @(
+        '--kind', [string]$App.PackerKind,
+        '--resident', $Resident,
+        '--image', $Image,
+        '--memory-size', [string]$MemorySize,
+        '--entry-offset', [string]$EntryOffset,
+        '--load-address', ('0x{0:X8}' -f $LoadAddress),
+        '--require-zx0',
+        '--output', $Target
+    )) {
+        $arguments.Add($argument)
     }
-    if ($imageBytes.Length -le 0 -or
-        $imageBytes.Length -gt $MemorySize) {
-        Stop-SystemAppsBuild 'module image has an invalid size'
+    if (-not [string]::IsNullOrWhiteSpace([string]$App.HandledMagic)) {
+        $arguments.Add('--handled-magic')
+        $arguments.Add([string]$App.HandledMagic)
     }
-    if ($MemorySize -gt 20KB -or $imageBytes.Length + 64 -gt 20544) {
-        Stop-SystemAppsBuild 'module does not fit the 20 KiB APP container'
-    }
-    if ($EntryOffset -ge $imageBytes.Length -or
-        ($EntryOffset -band 1) -ne 0) {
-        Stop-SystemAppsBuild 'module entry point is invalid'
-    }
+    Invoke-ArmTool $script:ModulePacker $arguments.ToArray()
 
-    [byte[]]$header = New-Object byte[] 64
-    [byte[]]$magic = [Text.Encoding]::ASCII.GetBytes("MK61APP`0")
-    [Array]::Copy($magic, 0, $header, 0, $magic.Length)
-    Set-Le16 $header 8 1
-    Set-Le16 $header 10 64
-    Set-Le16 $header 12 2
-    $header[14] = $Kind
-    $header[15] = 0
-    Set-Le32 $header 16 0
-    Set-Le32 $header 20 $LoadAddress
-    Set-Le32 $header 24 ([uint32]$imageBytes.Length)
-    Set-Le32 $header 28 ([uint32]$imageBytes.Length)
-    Set-Le32 $header 32 $MemorySize
-    Set-Le32 $header 36 $EntryOffset
-    Set-Le32 $header 40 ([uint32]$residentBytes.Length)
-    Set-Le32 $header 44 (Get-Crc32Bytes $residentBytes)
-    Set-Le32 $header 48 (Get-Crc32Bytes $imageBytes)
-    Set-Le32 $header 52 (Get-Crc32Bytes $imageBytes)
-    Set-Le16 $header 56 $HandledMagic
-    Set-Le16 $header 58 0
-    Set-Le32 $header 60 (Get-Crc32Bytes $header 60)
-
-    [byte[]]$container = New-Object byte[] (
-        $header.Length + $imageBytes.Length)
-    [Buffer]::BlockCopy($header, 0, $container, 0, $header.Length)
-    [Buffer]::BlockCopy(
-        $imageBytes, 0, $container, $header.Length, $imageBytes.Length)
-    $parent = [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Target))
-    [IO.Directory]::CreateDirectory($parent) | Out-Null
-    $temporary = "$Target.tmp"
-    [IO.File]::WriteAllBytes($temporary, $container)
-    Move-Item -LiteralPath $temporary -Destination $Target -Force
+    [byte[]]$container = [IO.File]::ReadAllBytes($Target)
+    if ($container.Length -le 64 -or $container[15] -ne 1) {
+        Stop-SystemAppsBuild (
+            "$($App.FileName) was not packed with ZX0")
+    }
 }
 
 function Find-SingleArtifact {
@@ -401,8 +337,8 @@ function Get-SelectedApps {
         $apps.Add([pscustomobject]@{
             Id = 'focal'
             FileName = 'FOCAL.APP'
-            Kind = [byte]1
-            HandledMagic = [uint16]0
+            PackerKind = 'focal'
+            HandledMagic = ''
             Template = 'focal.cpp'
         })
     }
@@ -410,8 +346,8 @@ function Get-SelectedApps {
         $apps.Add([pscustomobject]@{
             Id = 'basic'
             FileName = 'BASIC.APP'
-            Kind = [byte]2
-            HandledMagic = [uint16]0
+            PackerKind = 'tinybasic'
+            HandledMagic = ''
             Template = 'tinybasic.cpp'
         })
     }
@@ -419,8 +355,8 @@ function Get-SelectedApps {
         $apps.Add([pscustomobject]@{
             Id = 'wbmp'
             FileName = 'WBMP.APP'
-            Kind = [byte]3
-            HandledMagic = [uint16]0x3149
+            PackerKind = 'wbmp-viewer'
+            HandledMagic = 'I1'
             Template = 'wbmp.cpp'
         })
     }
@@ -428,8 +364,8 @@ function Get-SelectedApps {
         $apps.Add([pscustomobject]@{
             Id = 'markdown'
             FileName = 'MARKDOWN.APP'
-            Kind = [byte]6
-            HandledMagic = [uint16]0x3254
+            PackerKind = 'markdown-viewer'
+            HandledMagic = 'T2'
             Template = 'markdown_document.cpp'
         })
     }
@@ -437,8 +373,8 @@ function Get-SelectedApps {
         $apps.Add([pscustomobject]@{
             Id = 'chip8'
             FileName = 'CHIP8.APP'
-            Kind = [byte]5
-            HandledMagic = [uint16]0x3143
+            PackerKind = 'chip8'
+            HandledMagic = 'C1'
             Template = 'chip8.cpp'
         })
     }
@@ -552,7 +488,7 @@ function Build-SystemApp {
             "$($App.FileName) entry point is outside its stored image")
     }
     $target = Join-Path $script:OutputDirectory $App.FileName
-    Write-AppContainer $App.Kind $App.HandledMagic `
+    Write-Zx0AppContainer $App `
         $script:ResidentBin $moduleImage $memorySize $entryOffset `
         (Get-HexUInt32 $script:OverlayHex) $target
     [Console]::WriteLine(
@@ -594,6 +530,22 @@ try {
     [object[]]$selectedApps = @(Get-SelectedApps)
 
     if ($selectedApps.Count -gt 0) {
+        if ([string]::IsNullOrWhiteSpace($ModulePacker)) {
+            $packerBuilder = Join-Path $script:ProjectRoot `
+                'tools/.mk61-app/build.ps1'
+            Test-RequiredFile $packerBuilder 'MK61 APP host packer builder'
+            $packerSuffix = if ($env:OS -eq 'Windows_NT') {
+                '.exe'
+            } else {
+                ''
+            }
+            $ModulePacker = Join-Path $script:ProjectRoot `
+                ".build/tools/mk61_module_pack$packerSuffix"
+            & $packerBuilder -OutputPath $ModulePacker | Out-Host
+        }
+        $script:ModulePacker = [IO.Path]::GetFullPath($ModulePacker)
+        Test-RequiredFile $script:ModulePacker 'MK61 APP host packer'
+
         $firstEntry = Get-CompileEntry $compileEntries `
             $selectedApps[0].Template
         $firstArguments = Get-CompileArguments `

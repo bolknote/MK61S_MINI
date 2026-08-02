@@ -16,6 +16,15 @@ test -x "$wrapper_packer"
 test -x "$default_packer"
 test ! -e "$root/tools/mk61_module_pack"
 
+if command -v pwsh >/dev/null 2>&1; then
+  powershell_packer="$work/powershell/mk61_module_pack"
+  MK61_HOST_CXX=clang++ pwsh -NoLogo -NoProfile -File \
+    "$root/tools/.mk61-app/build.ps1" \
+    -OutputPath "$powershell_packer" >/dev/null
+  test -x "$powershell_packer"
+  "$powershell_packer" --help >/dev/null 2>&1
+fi
+
 clang++ -x c++ -std=c++17 -Wall -Wextra -Werror -O2 \
   -I"$root/code" \
   "$root/tools/.mk61-app/mk61_module_pack.cpp" \

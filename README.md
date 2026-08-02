@@ -210,9 +210,10 @@ desktop-сессии. При её исчезновении модуль заве
 напрямую через `dfu-util`.
 
 Оба порта `mk61-firmware` вызывают один F401-бэкенд `tools/build-gcc.cmd`.
-Bash и отдельный host-компилятор C++ нужны только при заданном
-`MK61_APP_MANIFESTS`: этот совместимый путь пока использует
-`tools/build_f401_bundle.sh` для пользовательских APP и упаковки ZX0.
+Нативный host-компилятор C++17 нужен для ZX0-упаковки штатных APP. Bash
+дополнительно требуется только при заданном `MK61_APP_MANIFESTS`: этот
+совместимый путь использует `tools/build_f401_bundle.sh` для пользовательских
+APP.
 
 Есть и неинтерактивный режим:
 
@@ -257,7 +258,8 @@ Bash и отдельный host-компилятор C++ нужны только
 GCC-бэкенд собирает resident и каждый APP с `-Os -flto`. На всех
 поддерживаемых хостах штатные System APP
 создаёт общий `system_apps/build.cmd` через `arm-none-eabi-g++` и
-`arm-none-eabi-objcopy`; payload хранится в поддерживаемом формате `NONE`.
+`arm-none-eabi-objcopy`, после чего нативный host-паковщик оптимально сжимает
+payload в `ZX0`.
 Значения `MK61_ENABLE_FOCAL`, `MK61_ENABLE_TINYBASIC`,
 `MK61_ENABLE_WBMP_VIEWER`, `MK61_ENABLE_MARKDOWN_VIEWER` и
 `MK61_ENABLE_CHIP8` берутся из одноимённых переменных окружения; `0`
@@ -333,10 +335,10 @@ IDE-вариант использует только ARM-инструменты 
 на macOS/Linux post-build запускается через системный shell, на Windows —
 через встроенный PowerShell. Чтобы не требовать отдельный host-компилятор,
 System APP в этом режиме хранят несжатый payload `NONE`; он поддерживается
-тем же форматом и укладывается в 20-КиБ overlay. Тот же `NONE` использует
-канонический GCC-путь `mk61-firmware` на Windows и macOS/Linux. Legacy-сборщик
-`build_f401_bundle.sh` оставлен для пользовательских manifest APP и
-ZX0-контейнеров.
+тем же форматом и укладывается в 20-КиБ overlay. Канонический GCC-путь
+`mk61-firmware` на Windows и macOS/Linux, напротив, запускает нативный
+host-паковщик и создаёт `ZX0`. Legacy-сборщик `build_f401_bundle.sh` оставлен
+для пользовательских manifest APP.
 Подробная инструкция и диагностика находятся в
 [`MK61s-mini-Arduino-IDE.md`](doc/src/MK61s-mini-Arduino-IDE.md).
 
@@ -354,9 +356,10 @@ tools\build-gcc.cmd -Profile mini-v3-a00
 а те напрямую запускают `arm-none-eabi-gcc/g++` из установленного пакета STM32
 Core. От Arduino-инсталляции используются только файлы STM32 Core `2.12.0`,
 его GNU Arm toolchain и CMSIS, а также библиотеки `LiquidCrystal 1.0.7` и
-`STM32duino RTC 1.9.0`. В `PATH` дополнительно нужны CMake 3.21 или новее и
-Ninja; на Windows подходит встроенный Windows PowerShell 5.1, а на
-macOS/Linux нужен `pwsh`.
+`STM32duino RTC 1.9.0`. В `PATH` дополнительно нужны CMake 3.21 или новее,
+Ninja и нативный C++17-компилятор (`c++`, `clang++`, `g++` либо MSVC) для
+ZX0-паковщика; путь можно задать в `MK61_HOST_CXX`. На Windows подходит
+встроенный Windows PowerShell 5.1, а на macOS/Linux нужен `pwsh`.
 
 По умолчанию создаются `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`. Например,
 комплект для mini V3 с Markdown, WBMP и CHIP-8 через USB собирается так:
@@ -379,7 +382,7 @@ Release CI ограничивает размер такого APP четырьм
 `resident.elf`, `resident.bin`, `resident.hex`, `resident.map` и
 `compile_commands.json` одной сборки. Готовый комплект публикуется в
 `binary\<имя-профиля>\`: resident `.bin` и включённые `System\*.APP`.
-Resident и APP собираются с `-Os -flto`, APP использует payload `NONE`.
+Resident и APP собираются с `-Os -flto`, APP использует payload `ZX0`.
 При LTO resident сохраняет публичными только символы ABI штатных System APP;
 полная проверочная конфигурация со всеми пятью APP собирается на Windows и
 macOS в CI.
@@ -410,7 +413,7 @@ system_apps/
 `tools/mk61-firmware.cmd` или `tools/build-gcc.cmd`. Для отдельного
 диагностического запуска ему нужен каталог уже
 собранной resident-прошивки с `.elf`, `.bin` и
-`compile_commands.json`:
+`compile_commands.json`, а также нативный C++17-компилятор для ZX0-паковщика:
 
 ```bat
 system_apps\build.cmd ^

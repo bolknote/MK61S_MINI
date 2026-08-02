@@ -107,12 +107,13 @@ Other:
   -Check             validate dependencies without building
   -Help
 
-Required in PATH: CMake 3.21 or newer and Ninja.
+Required in PATH: CMake 3.21 or newer, Ninja, and a host C++17 compiler
+when at least one System APP is enabled.
 Required Arduino libraries: LiquidCrystal 1.0.7, STM32duino RTC 1.9.0.
 
 Environment overrides:
   MK61_GCC_CORE, MK61_GCC_TOOLCHAIN, MK61_ARDUINO_LIBRARY_ROOT,
-  MK61_GCC_BUILD_ROOT, MK61_OUTPUT_DIR
+  MK61_GCC_BUILD_ROOT, MK61_OUTPUT_DIR, MK61_HOST_CXX
 '@ | Write-Host
 }
 
@@ -357,6 +358,8 @@ try {
         Stop-GccBuild (
             'WBMP/CHIP-8 requires a UC1609 profile or -UsbScreen 1')
     }
+    $systemRequested = $Focal -eq '1' -or $Basic -eq '1' -or
+        $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
 
     if ([string]::IsNullOrWhiteSpace($CorePath)) {
         $CorePath = Get-DefaultCorePath
@@ -431,6 +434,12 @@ try {
         $cmakeVersion -notmatch 'cmake version ([0-9.]+)' -or
         [version]$Matches[1] -lt [version]'3.21') {
         Stop-GccBuild 'CMake 3.21 or newer is required'
+    }
+    if ($systemRequested) {
+        $hostPackerBuilder = Join-Path $script:ProjectRoot `
+            'tools/.mk61-app/build.ps1'
+        Test-RequiredFile $hostPackerBuilder 'MK61 APP host packer builder'
+        & $hostPackerBuilder -Check | Out-Host
     }
 
     if ($Check) {
@@ -516,8 +525,6 @@ try {
         Remove-Item -LiteralPath $stage -Recurse -Force
     }
     [IO.Directory]::CreateDirectory($stage) | Out-Null
-    $systemRequested = $Focal -eq '1' -or $Basic -eq '1' -or
-        $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
     if ($systemRequested) {
         $systemBuilder = Join-Path $script:ProjectRoot `
             'system_apps/.tool/build.ps1'

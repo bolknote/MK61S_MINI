@@ -27,6 +27,7 @@ fi
 
 test -f "$root/tools/.mk61-app/mk61_module_pack.cpp"
 test -f "$root/tools/.mk61-app/mk61_module.ld"
+test -f "$root/tools/.mk61-app/build.ps1"
 test -f "$root/tools/.fmk-font/fmk_font.cpp"
 test ! -e "$root/tools/fmk_font"
 test ! -e "$root/tools/mk61_module_pack"

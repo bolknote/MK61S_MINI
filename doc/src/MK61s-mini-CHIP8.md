@@ -351,8 +351,8 @@ source main.cpp
 
 - `kind = CHIP8`;
 - `handled_type_magic = C1`;
-- payload `NONE` в канонической GCC-сборке и Arduino IDE; `ZX0` доступен
-  только через совместимый путь пользовательских manifest APP;
+- payload `ZX0` в канонической GCC-сборке и `NONE` при сборке одной кнопкой в
+  Arduino IDE;
 - тот же 20-КиБ SRAM-overlay, что у других System APP;
 - обязательная привязка размером и CRC к точному resident `.bin`.
 

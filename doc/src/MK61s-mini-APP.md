@@ -94,12 +94,12 @@ system_apps/
 один ARM-объект. Arduino-библиотеки и остальные объектные файлы проекта к нему
 не долинковываются: общие вызовы разрешаются из точного resident ELF через
 `--just-symbols`. Затем `arm-none-eabi-objcopy` извлекает `.module_image`, а
-PowerShell создаёт контейнер `NONE` с CRC этого же resident BIN.
+нативный host-паковщик создаёт контейнер `ZX0` с CRC этого же resident BIN.
 
 Windows-порт `tools/mk61-firmware.cmd` вызывает этот сборщик автоматически для
-всех включённых FOCAL, TinyBASIC, WBMP, Markdown и CHIP-8. Bash и
-host-компилятор C++ для этого не нужны: используются `arm-none-eabi-g++`,
-`objcopy`, `nm` и `size` из установленного STM32 Core.
+всех включённых FOCAL, TinyBASIC, WBMP, Markdown и CHIP-8. Для ARM-части
+используются `arm-none-eabi-g++`, `objcopy`, `nm` и `size` из установленного
+STM32 Core; упаковщик дополнительно требует нативный C++17-компилятор.
 
 Инструмент можно запустить отдельно, если уже имеется каталог одной
 Arduino- или прямой CMake/GCC-сборки с resident `.elf`, `.bin` и
@@ -369,8 +369,9 @@ MK61_APP_MANIFESTS=apps/CLOCK/app.mk61:apps/GAME/app.mk61 \
   ./tools/mk61-firmware.cmd --mcu f401 --profile mini-v3-a00 --build
 ```
 
-Переменная наследуется командами `--build` и `--upload`. Host-компилятор C++17,
-Bash и legacy-сборщик нужны именно для manifest-сборки пользовательских APP.
+Переменная наследуется командами `--build` и `--upload`. Host-компилятор C++17
+теперь используется и штатным ZX0-паковщиком; Bash и legacy-сборщик нужны
+только для manifest-сборки пользовательских APP.
 Без `MK61_APP_MANIFESTS` оба порта `mk61-firmware` используют канонический
 `build-gcc.cmd` и общий `system_apps`-сборщик. Комплект только с
 пользовательскими APP штатно собирается и тогда, когда FOCAL, TinyBASIC, WBMP

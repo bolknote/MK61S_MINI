@@ -207,6 +207,14 @@ Assert-True ($releaseWorkflowText -match
     'System/WBMP\.APP.+?System/CHIP8\.APP.+?' +
     'Unexpected disabled F401 APP') `
     'release workflow can publish an incomplete V2/V3 F401 ZIP'
+Assert-True ($releaseWorkflowText -match
+    '(?s)Verify resident and combined System APP.+?' +
+    '\$container\[15\] -ne 1.+?' +
+    'F401 APP is not packed with ZX0') `
+    'cross-platform workflow does not reject raw System APP'
+Assert-True ($releaseWorkflowText -match
+    "(?s)od -An -tu1 -j15 -N1.+?F401 APP is not packed with ZX0") `
+    'release packaging does not reject raw System APP'
 Assert-True ($releaseWorkflowText -notmatch
     'arduino/setup-arduino-cli') `
     'release workflow still uses the Node.js 20 Arduino CLI action'

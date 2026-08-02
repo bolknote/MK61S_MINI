@@ -8,7 +8,7 @@
 - `mkc.cmd` — двухпанельный файловый менеджер устройства;
 - `build_f401_bundle.sh` — legacy-сборка custom manifest APP и payload ZX0;
 - `build_fmk_font.sh` — конвертер шрифтов FMK;
-- `build_mk61_module_pack.sh` — низкоуровневый упаковщик custom APP.
+- `build_mk61_module_pack.sh` — низкоуровневый ZX0-упаковщик APP.
 
 Каталоги с точкой в имени — внутренние реализации этих команд. Они не являются
 дополнительными способами собрать одну и ту же прошивку:
@@ -16,8 +16,7 @@
 - `.mk61-gcc` — общий F401 GCC-бэкенд;
 - `.mk61-firmware`, `.mk61-arduino-board`, `.mkc` — реализации публичных
   полиглотных лаунчеров;
-- `.mk61-app` — общий APP linker script, а также упаковщик и ZX0 для legacy
-  custom APP;
+- `.mk61-app` — общий APP linker script, нативный упаковщик и ZX0-кодек;
 - `.fmk-font` — исходник конвертера FMK.
 
 Скомпилированные host-утилиты кэшируются в `.build/tools`, а не рядом с

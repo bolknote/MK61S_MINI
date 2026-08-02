@@ -140,6 +140,12 @@ jobs:
                 (Get-Item -LiteralPath $path).Length -eq 0) {
               throw "Missing F401 artifact: $_"
             }
+            if ($_.EndsWith('.APP', [StringComparison]::OrdinalIgnoreCase)) {
+              [byte[]]$container = [IO.File]::ReadAllBytes($path)
+              if ($container.Length -le 64 -or $container[15] -ne 1) {
+                throw "F401 APP is not packed with ZX0: $_"
+              }
+            }
           }
           $flags = Get-Content -LiteralPath (
             Join-Path $bundle 'build.flags') -Raw
@@ -342,11 +348,21 @@ jobs:
                 exit 1
               fi
             done
+            for app in \
+              "$bundle/System/FOCAL.APP" \
+              "$bundle/System/BASIC.APP" \
+              "$bundle/System/MARKDOWN.APP"; do
+              codec=$(od -An -tu1 -j15 -N1 "$app" | tr -d '[:space:]')
+              if [ "$codec" != 1 ]; then
+                echo "F401 APP is not packed with ZX0: $app" >&2
+                exit 1
+              fi
+            done
             grep -F -- '-DMK61_MATH_BACKEND=1' "$bundle/build.flags"
             grep -F -- '-DMK61_ENABLE_LTO=1' "$bundle/build.flags"
             markdown_size=$(stat -c %s "$bundle/System/MARKDOWN.APP")
             if [ "$markdown_size" -gt 4096 ]; then
-              echo "Plain MARKDOWN.APP exceeds 4 KiB: $markdown_size" >&2
+              echo "ZX0 MARKDOWN.APP exceeds 4 KiB: $markdown_size" >&2
               exit 1
             fi
             zip -qr "$bundle.zip" "$bundle"

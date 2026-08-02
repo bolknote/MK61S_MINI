@@ -4,6 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 tool_root="$root/tools/.mk61-app"
 output=${MK61_MODULE_PACK_BIN:-"$root/.build/tools/mk61_module_pack"}
+host_cxx=${MK61_HOST_CXX:-c++}
 sources=(
   "$tool_root/mk61_module_pack.cpp"
   "$root/code/loadable_module_format.cpp"
@@ -31,7 +32,7 @@ fi
 
 if [[ "$rebuild" == "1" ]]; then
   mkdir -p "$(dirname "$output")"
-  c++ -x c++ -std=c++17 -O2 -Wall -Wextra -Werror \
+  "$host_cxx" -x c++ -std=c++17 -O2 -Wall -Wextra -Werror \
     -I"$root/code" \
     "$tool_root/mk61_module_pack.cpp" \
     "$root/code/loadable_module_format.cpp" \

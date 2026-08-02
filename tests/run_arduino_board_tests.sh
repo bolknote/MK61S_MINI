@@ -139,7 +139,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
     test "$(od -An -tu1 -j14 -N1 "$file" | tr -d '[:space:]')" = \
       "$expected_kind"
-    test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 0
+    test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 1
   done
   test ! -e "$direct_system/WBMP.APP"
   test "$(od -An -tx1 -j56 -N2 "$direct_system/MARKDOWN.APP" |
