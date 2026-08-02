@@ -1,7 +1,7 @@
 #ifndef LANGUAGE_WORKSPACE_HPP
 #define LANGUAGE_WORKSPACE_HPP
 
-#include "rust_types.h"
+#include "shared_memory.hpp"
 
 namespace language_workspace {
 
@@ -16,7 +16,7 @@ enum class Owner : u8 {
   TERMINAL_TRANSFER
 };
 
-static constexpr usize SIZE = 8192;
+static constexpr usize SIZE = shared_memory::WORKSPACE_SIZE;
 
 // Исключительная аренда для одной из крупных взаимоисключающих сред выполнения.
 // Один владелец может вкладывать аренды, но другой не может вытеснить активное
@@ -24,31 +24,28 @@ static constexpr usize SIZE = 8192;
 // внешней аренды новым владельцем.
 class [[nodiscard]] Lease {
   public:
-    constexpr Lease(void)
-      : owner(Owner::NONE), memory(nullptr), requested(0), was_fresh(false) {}
+    constexpr Lease(void) : lease() {}
     Lease(Owner owner, usize required);
     ~Lease(void);
 
     Lease(const Lease&) = delete;
     Lease& operator=(const Lease&) = delete;
 
-    bool ok(void) const { return memory != 0; }
-    bool fresh(void) const { return was_fresh; }
-    void* data(void) const { return memory; }
-    usize size(void) const { return requested; }
+    bool ok(void) const { return lease.ok(); }
+    bool fresh(void) const { return lease.fresh(); }
+    void* data(void) const { return lease.data(); }
+    usize size(void) const { return lease.size(); }
 
     bool acquire(Owner owner, usize required);
     void reset(void);
 
   private:
-    Owner owner;
-    void* memory;
-    usize requested;
-    bool was_fresh;
+    shared_memory::Lease lease;
 };
 
 Owner resident_owner(void);
 Owner active_owner(void);
+bool discard(Owner owner);
 void* data(Owner owner);
 
 } // пространство имён language_workspace

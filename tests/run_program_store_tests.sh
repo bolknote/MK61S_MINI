@@ -25,6 +25,7 @@ for backend in software stm32; do
     "$root/code/loadable_module_system_app.cpp" \
     "$root/code/loadable_module_format.cpp" \
     "$root/code/program_store.cpp" \
+    "$root/code/shared_memory.cpp" \
     "$root/code/storage_geometry.cpp" \
     "$root/code/storage_path.cpp" \
     "$root/code/shared_scratch.cpp" \

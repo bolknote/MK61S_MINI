@@ -14,7 +14,9 @@ namespace zx0 {
 namespace {
 
 static constexpr u16 MAX_OFFSET = 256;
-static constexpr u32 MAX_INPUT_SIZE = 4095;
+// C5 currently feeds at most 3584 bytes, while the RAM-only workspace swap
+// may encode a complete 8-KiB arena. Indices are u16, so both remain bounded.
+static constexpr u32 MAX_INPUT_SIZE = 8192;
 static constexpr u16 INFINITE_COST = 0xFFFFU;
 static constexpr u16 END_COST = 18;
 

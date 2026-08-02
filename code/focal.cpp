@@ -321,6 +321,15 @@ struct FocalRuntime {
   char focal_last_error[17];
 };
 
+static void focal_reset_runtime(FocalRuntime& runtime) {
+  memset(&runtime, 0, sizeof(runtime));
+  for(int i = 0; i < FOCAL_PROGRAM_COUNT; i++) {
+    runtime.programs[i].store_id = FOCAL_INVALID_STORE_ID;
+    runtime.programs[i].parent_id = FOCAL_ROOT_STORE_ID;
+  }
+  runtime.NextFocal = -1;
+}
+
 static_assert(sizeof(FocalAst) < 3072, "FOCAL parsed representation must remain compact");
 static_assert(sizeof(FocalRuntime) < 5120, "FOCAL runtime must leave workspace headroom");
 
@@ -338,8 +347,7 @@ class FocalWorkspaceScope {
       : lease(language_workspace::Owner::FOCAL, sizeof(FocalRuntime)) {
       if(!lease.ok() || !lease.fresh()) return;
       FocalRuntime* runtime = (FocalRuntime*) lease.data();
-      memset(runtime, 0, sizeof(*runtime));
-      runtime->NextFocal = -1;
+      focal_reset_runtime(*runtime);
     }
 
     bool ok(void) const { return lease.ok(); }
@@ -2465,15 +2473,7 @@ void InitFocal(void) {
   FocalWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return;
 #endif
-  memset(programs, 0, sizeof(programs));
-  for(int i = 0; i < FOCAL_PROGRAM_COUNT; i++) {
-    programs[i].store_id = FOCAL_INVALID_STORE_ID;
-    programs[i].parent_id = FOCAL_ROOT_STORE_ID;
-  }
-  focal_ast_reset(focal_ast);
-  focal_clear_vars();
-  NextFocal = -1;
-  focal_last_error[0] = 0;
+  focal_reset_runtime(focal_runtime());
 #ifdef FOCAL_HOST_TEST
   focal_random_state = 0x3B6B120EUL;
   focal_host_ask_cancelled = false;

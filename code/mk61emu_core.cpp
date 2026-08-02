@@ -27,6 +27,10 @@
 #include "rust_types.h"
 #include "stm32_sram_bit_band.hpp"
 #include "dwt_profiler.hpp"
+#if MK61_CORE_HOT_TABLES_IN_SRAM > 0
+  #include "shared_memory.hpp"
+  #include "workspace_swap.hpp"
+#endif
 
 #if MK61_CORE_MERGED_TICK
   #define MK61_CORE_TICK_FUNCTION \
@@ -1523,62 +1527,243 @@ static const u8  IK1306_AND_AMK[((3 * 3) + 7) * 128] = {
   0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 
 };
 
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 1
+struct alignas(8) CoreHotTables {
+  microinstruction_t ik1302_microinstructions[68];
+  microinstruction_t ik1303_microinstructions[68];
+  microinstruction_t ik1306_microinstructions[68];
+  u8 ik1302_dcw[68];
+  u8 ik1302_dcwa[68];
+  u8 ik1303_dcw[68];
+  u8 ik1306_dcw[68];
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
-static u8 __attribute__((aligned(4)))
-    ik1302_and_amk_ram[sizeof(IK1302_AND_AMK)];
-static u8 __attribute__((aligned(4)))
-    ik1303_and_amk_ram[sizeof(IK1303_AND_AMK)];
-static u8 __attribute__((aligned(4)))
-    ik1306_and_amk_ram[sizeof(IK1306_AND_AMK)];
+  u8 ik1302_and_amk[sizeof(IK1302_AND_AMK)];
+  u8 ik1303_and_amk[sizeof(IK1303_AND_AMK)];
+  u8 ik1306_and_amk[sizeof(IK1306_AND_AMK)];
+#endif
+};
 
-#define IK1302_AND_AMK_ACTIVE ik1302_and_amk_ram
-#define IK1303_AND_AMK_ACTIVE ik1303_and_amk_ram
-#define IK1306_AND_AMK_ACTIVE ik1306_and_amk_ram
+static_assert(sizeof(CoreHotTables) <= shared_memory::WORKSPACE_SIZE,
+              "core hot tables do not fit shared workspace");
+
+static shared_memory::Lease core_hot_tables_lease;
+static CoreHotTables* core_hot_tables_memory = nullptr;
+static bool core_hot_tables_cached = false;
+static u32 core_hot_table_loads = 0;
+static u32 core_hot_table_evictions = 0;
+static u32 core_hot_table_flash_steps = 0;
+
+static inline void increment_hot_table_counter(u32& counter) {
+  if(counter != 0xFFFFFFFFUL) counter++;
+}
+
+// Keep the source tables in their canonical Flash objects. With whole-program
+// LTO a series of constant-sized memcpy calls may otherwise be specialized
+// into a second anonymous ~7 KiB constant pool, buying no runtime speed because
+// this path runs only when the cache is (re)loaded.
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline, noclone))
+#else
+__attribute__((noinline))
+#endif
+static void copy_core_hot_table(void* destination, const void* source,
+                                usize size) {
+  memcpy(destination, source, size);
+}
+
+static const microinstruction_t* ik1302_microinstructions_active =
+    ROM.IK1302.microinstructions;
+static const microinstruction_t* ik1303_microinstructions_active =
+    ROM.IK1303.microinstructions;
+static const microinstruction_t* ik1306_microinstructions_active =
+    ROM.IK1306.microinstructions;
+static const u8* ik1302_dcw_active = IK1302_DCW;
+static const u8* ik1302_dcwa_active = IK1302_DCWA;
+static const u8* ik1303_dcw_active = IK1303_DCW;
+static const u8* ik1306_dcw_active = IK1306_DCW;
+
+#define IK1302_MICROINSTRUCTIONS_ACTIVE ik1302_microinstructions_active
+#define IK1303_MICROINSTRUCTIONS_ACTIVE ik1303_microinstructions_active
+#define IK1306_MICROINSTRUCTIONS_ACTIVE ik1306_microinstructions_active
+#define IK1302_DCW_ACTIVE ik1302_dcw_active
+#define IK1302_DCWA_ACTIVE ik1302_dcwa_active
+#define IK1303_DCW_ACTIVE ik1303_dcw_active
+#define IK1306_DCW_ACTIVE ik1306_dcw_active
+
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+static const u8* ik1302_and_amk_active = IK1302_AND_AMK;
+static const u8* ik1303_and_amk_active = IK1303_AND_AMK;
+static const u8* ik1306_and_amk_active = IK1306_AND_AMK;
+#define IK1302_AND_AMK_ACTIVE ik1302_and_amk_active
+#define IK1303_AND_AMK_ACTIVE ik1303_and_amk_active
+#define IK1306_AND_AMK_ACTIVE ik1306_and_amk_active
 #else
 #define IK1302_AND_AMK_ACTIVE IK1302_AND_AMK
 #define IK1303_AND_AMK_ACTIVE IK1303_AND_AMK
 #define IK1306_AND_AMK_ACTIVE IK1306_AND_AMK
 #endif
 
-#if MK61_CORE_HOT_TABLES_IN_SRAM >= 1
-static microinstruction_t __attribute__((aligned(4)))
-    ik1302_microinstructions_ram[68];
-static microinstruction_t __attribute__((aligned(4)))
-    ik1303_microinstructions_ram[68];
-static microinstruction_t __attribute__((aligned(4)))
-    ik1306_microinstructions_ram[68];
-static u8 ik1302_dcw_ram[68];
-static u8 ik1302_dcwa_ram[68];
-static u8 ik1303_dcw_ram[68];
-static u8 ik1306_dcw_ram[68];
+static bool pointer_offset(const u8* pointer, const u8* base,
+                           usize size, usize& offset) {
+  if(pointer == nullptr || base == nullptr) return false;
+  const uintptr_t address = (uintptr_t) pointer;
+  const uintptr_t begin = (uintptr_t) base;
+  if(address < begin || address - begin >= size) return false;
+  offset = (usize) (address - begin);
+  return true;
+}
 
-#define IK1302_MICROINSTRUCTIONS_ACTIVE ik1302_microinstructions_ram
-#define IK1303_MICROINSTRUCTIONS_ACTIVE ik1303_microinstructions_ram
-#define IK1306_MICROINSTRUCTIONS_ACTIVE ik1306_microinstructions_ram
-#define IK1302_DCW_ACTIVE ik1302_dcw_ram
-#define IK1302_DCWA_ACTIVE ik1302_dcwa_ram
-#define IK1303_DCW_ACTIVE ik1303_dcw_ram
-#define IK1306_DCW_ACTIVE ik1306_dcw_ram
+static const u8* rebase_and_amk_pointer(
+    const u8* pointer, const u8* flash_base, const u8* ram_base,
+    const u8* target_base, usize size) {
+  usize offset = 0;
+  if(pointer_offset(pointer, flash_base, size, offset) ||
+     pointer_offset(pointer, ram_base, size, offset)) {
+    return target_base + offset;
+  }
+  return pointer;
+}
+
+static void select_core_hot_table_view(bool use_workspace) {
+  CoreHotTables* const tables = core_hot_tables_memory;
+  const bool use_ram = use_workspace && tables != nullptr;
+  ik1302_microinstructions_active = use_ram
+      ? tables->ik1302_microinstructions : ROM.IK1302.microinstructions;
+  ik1303_microinstructions_active = use_ram
+      ? tables->ik1303_microinstructions : ROM.IK1303.microinstructions;
+  ik1306_microinstructions_active = use_ram
+      ? tables->ik1306_microinstructions : ROM.IK1306.microinstructions;
+  ik1302_dcw_active = use_ram ? tables->ik1302_dcw : IK1302_DCW;
+  ik1302_dcwa_active = use_ram ? tables->ik1302_dcwa : IK1302_DCWA;
+  ik1303_dcw_active = use_ram ? tables->ik1303_dcw : IK1303_DCW;
+  ik1306_dcw_active = use_ram ? tables->ik1306_dcw : IK1306_DCW;
+
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+  const u8* const ram1302 = tables == nullptr
+      ? nullptr : tables->ik1302_and_amk;
+  const u8* const ram1303 = tables == nullptr
+      ? nullptr : tables->ik1303_and_amk;
+  const u8* const ram1306 = tables == nullptr
+      ? nullptr : tables->ik1306_and_amk;
+  const u8* const next1302 = use_ram ? ram1302 : IK1302_AND_AMK;
+  const u8* const next1303 = use_ram ? ram1303 : IK1303_AND_AMK;
+  const u8* const next1306 = use_ram ? ram1306 : IK1306_AND_AMK;
+  m_IK1302.pAND_AMK = rebase_and_amk_pointer(
+      m_IK1302.pAND_AMK, IK1302_AND_AMK, ram1302, next1302,
+      sizeof(IK1302_AND_AMK));
+  m_IK1302.pAND_AMK1 = rebase_and_amk_pointer(
+      m_IK1302.pAND_AMK1, IK1302_AND_AMK, ram1302, next1302,
+      sizeof(IK1302_AND_AMK));
+  m_IK1303.pAND_AMK = rebase_and_amk_pointer(
+      m_IK1303.pAND_AMK, IK1303_AND_AMK, ram1303, next1303,
+      sizeof(IK1303_AND_AMK));
+  m_IK1303.pAND_AMK1 = rebase_and_amk_pointer(
+      m_IK1303.pAND_AMK1, IK1303_AND_AMK, ram1303, next1303,
+      sizeof(IK1303_AND_AMK));
+  m_IK1306.pAND_AMK = rebase_and_amk_pointer(
+      m_IK1306.pAND_AMK, IK1306_AND_AMK, ram1306, next1306,
+      sizeof(IK1306_AND_AMK));
+  m_IK1306.pAND_AMK1 = rebase_and_amk_pointer(
+      m_IK1306.pAND_AMK1, IK1306_AND_AMK, ram1306, next1306,
+      sizeof(IK1306_AND_AMK));
+  ik1302_and_amk_active = next1302;
+  ik1303_and_amk_active = next1303;
+  ik1306_and_amk_active = next1306;
+#endif
+  core_hot_tables_cached = use_ram;
+}
+
+static bool reclaim_core_hot_tables(void*) {
+  select_core_hot_table_view(false);
+  core_hot_tables_lease.reset();
+  increment_hot_table_counter(core_hot_table_evictions);
+  return true;
+}
+
+static bool ensure_core_hot_tables(void) {
+  if(core_hot_tables_lease.ok()) return true;
+  const shared_memory::Owner active =
+      shared_memory::active_owner(shared_memory::Arena::WORKSPACE);
+  const shared_memory::Owner resident =
+      shared_memory::resident_owner(shared_memory::Arena::WORKSPACE);
+  if(active != shared_memory::Owner::NONE) return false;
+
+  // A calculator step is allowed to move an inactive language runtime into
+  // the volatile BULK swap, but never to discard it merely for speed. Once a
+  // complete image exists, a normal acquisition clears the resident marker;
+  // if capture is unavailable the core simply keeps using Flash.
+  const bool stashed_language =
+      resident != shared_memory::Owner::NONE &&
+      resident != shared_memory::Owner::CORE_TABLES;
+  if(stashed_language &&
+     !workspace_swap::capture_resident_before(
+         shared_memory::Owner::CORE_TABLES)) return false;
+  const bool acquired = stashed_language
+      ? core_hot_tables_lease.acquire(
+            shared_memory::Arena::WORKSPACE,
+            shared_memory::Owner::CORE_TABLES,
+            sizeof(CoreHotTables))
+      : core_hot_tables_lease.acquire_cache(
+            shared_memory::Arena::WORKSPACE,
+            shared_memory::Owner::CORE_TABLES,
+            sizeof(CoreHotTables));
+  if(!acquired) return false;
+  CoreHotTables* const tables = core_hot_tables_lease.as<CoreHotTables>();
+  if(tables == nullptr) {
+    core_hot_tables_lease.reset();
+    return false;
+  }
+  core_hot_tables_memory = tables;
+  if(core_hot_tables_lease.fresh()) {
+    copy_core_hot_table(
+        tables->ik1302_microinstructions, ROM.IK1302.microinstructions,
+        sizeof(tables->ik1302_microinstructions));
+    copy_core_hot_table(
+        tables->ik1303_microinstructions, ROM.IK1303.microinstructions,
+        sizeof(tables->ik1303_microinstructions));
+    copy_core_hot_table(
+        tables->ik1306_microinstructions, ROM.IK1306.microinstructions,
+        sizeof(tables->ik1306_microinstructions));
+    copy_core_hot_table(
+        tables->ik1302_dcw, IK1302_DCW, sizeof(tables->ik1302_dcw));
+    copy_core_hot_table(
+        tables->ik1302_dcwa, IK1302_DCWA, sizeof(tables->ik1302_dcwa));
+    copy_core_hot_table(
+        tables->ik1303_dcw, IK1303_DCW, sizeof(tables->ik1303_dcw));
+    copy_core_hot_table(
+        tables->ik1306_dcw, IK1306_DCW, sizeof(tables->ik1306_dcw));
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+    copy_core_hot_table(
+        tables->ik1302_and_amk, IK1302_AND_AMK,
+        sizeof(tables->ik1302_and_amk));
+    copy_core_hot_table(
+        tables->ik1303_and_amk, IK1303_AND_AMK,
+        sizeof(tables->ik1303_and_amk));
+    copy_core_hot_table(
+        tables->ik1306_and_amk, IK1306_AND_AMK,
+        sizeof(tables->ik1306_and_amk));
+#endif
+    increment_hot_table_counter(core_hot_table_loads);
+  }
+  select_core_hot_table_view(true);
+  if(!core_hot_tables_lease.set_reclaimer(reclaim_core_hot_tables)) {
+    select_core_hot_table_view(false);
+    core_hot_tables_lease.reset();
+    return false;
+  }
+  return true;
+}
 
 static void init_core_hot_tables(void) {
-  memcpy(ik1302_microinstructions_ram, ROM.IK1302.microinstructions,
-         sizeof(ik1302_microinstructions_ram));
-  memcpy(ik1303_microinstructions_ram, ROM.IK1303.microinstructions,
-         sizeof(ik1303_microinstructions_ram));
-  memcpy(ik1306_microinstructions_ram, ROM.IK1306.microinstructions,
-         sizeof(ik1306_microinstructions_ram));
-  memcpy(ik1302_dcw_ram, IK1302_DCW, sizeof(ik1302_dcw_ram));
-  memcpy(ik1302_dcwa_ram, IK1302_DCWA, sizeof(ik1302_dcwa_ram));
-  memcpy(ik1303_dcw_ram, IK1303_DCW, sizeof(ik1303_dcw_ram));
-  memcpy(ik1306_dcw_ram, IK1306_DCW, sizeof(ik1306_dcw_ram));
-#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
-  memcpy(ik1302_and_amk_ram, IK1302_AND_AMK,
-         sizeof(ik1302_and_amk_ram));
-  memcpy(ik1303_and_amk_ram, IK1303_AND_AMK,
-         sizeof(ik1303_and_amk_ram));
-  memcpy(ik1306_and_amk_ram, IK1306_AND_AMK,
-         sizeof(ik1306_and_amk_ram));
-#endif
+  if(!ensure_core_hot_tables()) select_core_hot_table_view(false);
+}
+
+static inline void prepare_core_hot_tables_for_step(void) {
+  if(!ensure_core_hot_tables()) increment_hot_table_counter(
+      core_hot_table_flash_steps);
+}
+static inline bool core_hot_tables_view_cached(void) {
+  return core_hot_tables_lease.ok();
 }
 #else
 #define IK1302_MICROINSTRUCTIONS_ACTIVE ROM.IK1302.microinstructions
@@ -1588,8 +1773,15 @@ static void init_core_hot_tables(void) {
 #define IK1302_DCWA_ACTIVE IK1302_DCWA
 #define IK1303_DCW_ACTIVE IK1303_DCW
 #define IK1306_DCW_ACTIVE IK1306_DCW
+#define IK1302_AND_AMK_ACTIVE IK1302_AND_AMK
+#define IK1303_AND_AMK_ACTIVE IK1303_AND_AMK
+#define IK1306_AND_AMK_ACTIVE IK1306_AND_AMK
 
 static inline void init_core_hot_tables(void) {}
+static inline bool ensure_core_hot_tables(void) { return false; }
+static inline void select_core_hot_table_view(bool) {}
+static inline void prepare_core_hot_tables_for_step(void) {}
+static inline bool core_hot_tables_view_cached(void) { return false; }
 #endif
 
 // TODO: удалить static
@@ -2618,6 +2810,7 @@ usize len_code_command(u8 cod) {
 
 void step(void) {
     MK61_PROFILE_SCOPE(dwt_profiler::Point::CORE_STEP);
+    prepare_core_hot_tables_for_step();
     mk61_program_boundary_yielded = false;
     m_IK1303.key_y = 1;
     m_IK1303.key_x = m_emu.m_angle_unit;
@@ -2635,6 +2828,31 @@ void step(void) {
         finish_active_mk61_command();
       }
     }
+}
+
+HotTableCacheSnapshot hot_table_cache_statistics(void) {
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 1
+  const HotTableCacheSnapshot result = {
+    sizeof(CoreHotTables),
+    core_hot_table_loads,
+    core_hot_table_evictions,
+    core_hot_table_flash_steps,
+    MK61_CORE_HOT_TABLES_IN_SRAM,
+    true,
+    core_hot_tables_cached && core_hot_tables_lease.ok()
+  };
+#else
+  const HotTableCacheSnapshot result = {0, 0, 0, 0, 0, false, false};
+#endif
+  return result;
+}
+
+void reset_hot_table_cache_statistics(void) {
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 1
+  core_hot_table_loads = 0;
+  core_hot_table_evictions = 0;
+  core_hot_table_flash_steps = 0;
+#endif
 }
 
 // Полное состояние ядра: кольцо ДОЗУ, структуры трёх микросхем и единица угла.
@@ -2706,6 +2924,9 @@ bool restore_context(const ContextBuffer& saved) {
   m_IK1302 = snapshot.ik1302;
   m_IK1303 = snapshot.ik1303;
   m_IK1306 = snapshot.ik1306;
+  // Снимок хранит указатели того же запуска, но workspace мог быть вытеснен
+  // между save/restore. Всегда привязываем их к текущему Flash/SRAM view.
+  select_core_hot_table_view(core_hot_tables_view_cached());
   m_emu = snapshot.emu;
   backstep_comma_position = snapshot.backstep_comma;
   edit_program = snapshot.edit;

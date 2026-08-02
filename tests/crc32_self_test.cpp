@@ -74,6 +74,52 @@ static void test_sequential_contexts(void) {
   assert(second_context.finish() == software_crc(second, sizeof(second)));
 }
 
+static void test_nested_contexts_are_isolated(void) {
+  const u8 outer_data[] = {0x61, 0x5A, 0xC5, 1, 2, 3, 4, 5, 6};
+  const u8 inner_data[] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+  mk61_crc32::reset_arbitration_statistics();
+  mk61_crc32::Context outer;
+  assert(outer.update(outer_data, 4));
+  {
+    mk61_crc32::Context inner;
+#if defined(MK61_CRC32_EMULATE_STM32)
+    assert(outer.using_hardware());
+    assert(!inner.using_hardware());
+#endif
+    assert(inner.update(inner_data, sizeof(inner_data)));
+    assert(inner.finish() == software_crc(inner_data, sizeof(inner_data)));
+  }
+  assert(outer.update(outer_data + 4, sizeof(outer_data) - 4));
+  assert(outer.finish() == software_crc(outer_data, sizeof(outer_data)));
+
+  const mk61_crc32::ArbitrationSnapshot arbitration =
+      mk61_crc32::arbitration_statistics();
+#if defined(MK61_CRC32_EMULATE_STM32)
+  assert(arbitration.supported && !arbitration.busy);
+  assert(arbitration.hardware_acquisitions == 1);
+  assert(arbitration.software_fallbacks == 1);
+  mk61_crc32::Context after;
+  assert(after.using_hardware());
+#else
+  assert(!arbitration.supported && !arbitration.busy);
+  assert(arbitration.hardware_acquisitions == 0);
+  assert(arbitration.software_fallbacks == 0);
+#endif
+}
+
+static void test_abandoned_context_releases_hardware(void) {
+#if defined(MK61_CRC32_EMULATE_STM32)
+  {
+    mk61_crc32::Context abandoned;
+    assert(abandoned.using_hardware());
+    const u8 value = 0xA5;
+    assert(abandoned.update(&value, 1));
+  }
+  mk61_crc32::Context next;
+  assert(next.using_hardware());
+#endif
+}
+
 static void test_invalid_update(void) {
   mk61_crc32::Context context;
   assert(!context.update(nullptr, 1));
@@ -89,6 +135,8 @@ int main(void) {
   test_known_vector();
   test_sizes_and_chunking();
   test_sequential_contexts();
+  test_nested_contexts_are_isolated();
+  test_abandoned_context_releases_hardware();
   test_invalid_update();
   puts("crc32_self_test: ok");
   return 0;

@@ -2,19 +2,45 @@
 
 namespace shared_scratch {
 
-alignas(8) static u8 scratch[SIZE];
-static Owner active_owner = Owner::NONE;
-static u32 active_token = 0;
-static u32 next_token = 0;
+static shared_memory::Owner unified_owner(Owner owner) {
+  switch(owner) {
+    case Owner::NONE: return shared_memory::Owner::NONE;
+    case Owner::EXPLORER_VIEW: return shared_memory::Owner::EXPLORER_VIEW;
+    case Owner::IMAGE_VIEWER: return shared_memory::Owner::IMAGE_VIEWER;
+    case Owner::MARKDOWN_VIEWER: return shared_memory::Owner::MARKDOWN_VIEWER;
+    case Owner::M61_FORMAT: return shared_memory::Owner::M61_FORMAT;
+    case Owner::PROGRAM_STORE_RENAME:
+      return shared_memory::Owner::PROGRAM_STORE_RENAME;
+    case Owner::PROGRAM_STORE_READ_RANGE:
+      return shared_memory::Owner::PROGRAM_STORE_READ_RANGE;
+    case Owner::PROGRAM_STORE_COMPRESSION:
+      return shared_memory::Owner::PROGRAM_STORE_COMPRESSION;
+    case Owner::VFAT_COMMIT: return shared_memory::Owner::VFAT_COMMIT;
+    case Owner::USB_CACHE: return shared_memory::Owner::USB_CACHE;
+    case Owner::TERMINAL_TRANSFER:
+      return shared_memory::Owner::TERMINAL_TRANSFER;
+  }
+  return shared_memory::Owner::NONE;
+}
 
-static bool interrupt_context(void) {
-#if defined(__arm__) || defined(__thumb__)
-  u32 ipsr = 0;
-  __asm__ volatile ("mrs %0, ipsr" : "=r" (ipsr));
-  return ipsr != 0;
-#else
-  return false;
-#endif
+static Owner legacy_owner(shared_memory::Owner owner) {
+  switch(owner) {
+    case shared_memory::Owner::EXPLORER_VIEW: return Owner::EXPLORER_VIEW;
+    case shared_memory::Owner::IMAGE_VIEWER: return Owner::IMAGE_VIEWER;
+    case shared_memory::Owner::MARKDOWN_VIEWER: return Owner::MARKDOWN_VIEWER;
+    case shared_memory::Owner::M61_FORMAT: return Owner::M61_FORMAT;
+    case shared_memory::Owner::PROGRAM_STORE_RENAME:
+      return Owner::PROGRAM_STORE_RENAME;
+    case shared_memory::Owner::PROGRAM_STORE_READ_RANGE:
+      return Owner::PROGRAM_STORE_READ_RANGE;
+    case shared_memory::Owner::PROGRAM_STORE_COMPRESSION:
+      return Owner::PROGRAM_STORE_COMPRESSION;
+    case shared_memory::Owner::VFAT_COMMIT: return Owner::VFAT_COMMIT;
+    case shared_memory::Owner::USB_CACHE: return Owner::USB_CACHE;
+    case shared_memory::Owner::TERMINAL_TRANSFER:
+      return Owner::TERMINAL_TRANSFER;
+    default: return Owner::NONE;
+  }
 }
 
 Lease::Lease(Owner next_owner, usize required) : Lease() {
@@ -22,20 +48,8 @@ Lease::Lease(Owner next_owner, usize required) : Lease() {
 }
 
 bool Lease::acquire(Owner next_owner, usize required_size) {
-  if(buffer != 0) return owner == next_owner && required_size <= requested;
-  owner = next_owner;
-  requested = 0;
-  token = 0;
-  if(next_owner == Owner::NONE || required_size == 0 || required_size > SIZE ||
-     active_owner != Owner::NONE || interrupt_context()) return false;
-  active_owner = next_owner;
-  next_token++;
-  if(next_token == 0) next_token++;
-  active_token = next_token;
-  token = active_token;
-  requested = required_size;
-  buffer = scratch;
-  return true;
+  return lease.acquire(shared_memory::Arena::SCRATCH,
+                       unified_owner(next_owner), required_size);
 }
 
 Lease::~Lease(void) {
@@ -43,21 +57,12 @@ Lease::~Lease(void) {
 }
 
 void Lease::reset(void) {
-  if(buffer == 0) return;
-  // Только этот объект аренды может снять своё резервирование. После удаления
-  // низкоуровневого API освобождения несовпадение означает повреждение памяти
-  // или ошибку времени жизни объекта.
-  if(active_owner != owner || active_token != token) __builtin_trap();
-  active_owner = Owner::NONE;
-  active_token = 0;
-  owner = Owner::NONE;
-  buffer = 0;
-  requested = 0;
-  token = 0;
+  lease.reset();
 }
 
 Owner current_owner(void) {
-  return active_owner;
+  return legacy_owner(
+      shared_memory::active_owner(shared_memory::Arena::SCRATCH));
 }
 
 } // пространство имён shared_scratch

@@ -9,6 +9,7 @@
 #include "config.h"
 #include "rust_types.h"
 #include "cross_hal.h"
+#include "crc32.hpp"
 #include "mk61emu_core.h"
 #include "disasm.hpp"
 #include "tools.hpp"
@@ -26,6 +27,8 @@
   #include "loadable_module_runtime.hpp"
 #endif
 #include "shared_scratch.hpp"
+#include "shared_memory.hpp"
+#include "workspace_swap.hpp"
 #include "storage_path.hpp"
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
@@ -187,6 +190,7 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "mpu",     CMD_MPU,           "mpu [status]" },
   #endif
 #endif
+  { "mem",     CMD_MEMORY,        "shared SRAM arenas [reset]" },
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
   { "dfu",     CMD_DFU,           "enter DFU bootloader" },
 };
@@ -966,6 +970,131 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 #endif
 
+    static void print_memory_snapshot(shared_memory::Arena arena) {
+      const shared_memory::Snapshot memory = shared_memory::snapshot(arena);
+      Serial.print("MEM ");
+      Serial.print(shared_memory::arena_name(arena));
+      Serial.print(" enabled=");
+      Serial.print(memory.enabled ? 1 : 0);
+      Serial.print(" capacity=");
+      Serial.print(memory.capacity);
+      Serial.print(" high=");
+      Serial.print(memory.high_water);
+      Serial.print(" resident_size=");
+      Serial.print(memory.resident_size);
+      Serial.print(" active=");
+      Serial.print(shared_memory::owner_name(memory.active_owner));
+      Serial.print(" resident=");
+      Serial.print(shared_memory::owner_name(memory.resident_owner));
+      Serial.print(" depth=");
+      Serial.print(memory.active_depth);
+      Serial.print(" max_depth=");
+      Serial.print(memory.max_depth);
+      Serial.print(" acquire=");
+      Serial.print(memory.acquisitions);
+      Serial.print(" nested=");
+      Serial.print(memory.nested_acquisitions);
+      Serial.print(" release=");
+      Serial.print(memory.releases);
+      Serial.print(" busy=");
+      Serial.print(memory.busy_failures);
+      Serial.print(" cache_defer=");
+      Serial.print(memory.cache_deferrals);
+      Serial.print(" invalid=");
+      Serial.print(memory.invalid_failures);
+      Serial.print(" switches=");
+      Serial.print(memory.owner_switches);
+      Serial.print(" clears=");
+      Serial.print(memory.clears);
+      Serial.print(" clear_bytes=");
+      Serial.print(memory.cleared_bytes);
+      Serial.print(" reclaim=");
+      Serial.print(memory.reclaims);
+      Serial.write('/');
+      Serial.print(memory.reclaim_attempts);
+      Serial.print(" reclaim_fail=");
+      Serial.println(memory.reclaim_failures);
+    }
+
+    terminal_protocol::Result exec_memory(void) {
+      const char* args = terminal_skip_spaces(command_args());
+      if(!terminal_core::at_end(args)) {
+        char action[8];
+        const char* cursor = args;
+        if(!terminal_core::parse_token(cursor, action, sizeof(action)) ||
+           strcmp(action, "reset") != 0 ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println("Usage: mem [reset]");
+          return terminal_protocol::Result::error();
+        }
+        shared_memory::reset_statistics();
+        core_61::reset_hot_table_cache_statistics();
+        workspace_swap::reset_statistics();
+        mk61_crc32::reset_arbitration_statistics();
+        Serial.println("MEM reset");
+        return terminal_protocol::Result::ok();
+      }
+      for(usize index = 0; index < (usize) shared_memory::Arena::COUNT;
+          index++) {
+        print_memory_snapshot((shared_memory::Arena) index);
+      }
+      const core_61::HotTableCacheSnapshot core_cache =
+          core_61::hot_table_cache_statistics();
+      Serial.print("MEM core-cache enabled=");
+      Serial.print(core_cache.enabled ? 1 : 0);
+      Serial.print(" level=");
+      Serial.print(core_cache.level);
+      Serial.print(" cached=");
+      Serial.print(core_cache.cached ? 1 : 0);
+      Serial.print(" bytes=");
+      Serial.print(core_cache.bytes);
+      Serial.print(" loads=");
+      Serial.print(core_cache.loads);
+      Serial.print(" evictions=");
+      Serial.print(core_cache.evictions);
+      Serial.print(" flash_steps=");
+      Serial.println(core_cache.flash_steps);
+      const workspace_swap::Statistics swap =
+          workspace_swap::statistics();
+      Serial.print("MEM swap enabled=");
+      Serial.print(swap.enabled ? 1 : 0);
+      Serial.print(" valid=");
+      Serial.print(swap.valid ? 1 : 0);
+      Serial.print(" owner=");
+      Serial.print(shared_memory::owner_name(swap.owner));
+      Serial.print(" codec=");
+      Serial.print(swap.compressed ? "zx0" : "raw");
+      Serial.print(" bytes=");
+      Serial.print(swap.stored_size);
+      Serial.write('/');
+      Serial.print(swap.raw_size);
+      Serial.print(" capture=");
+      Serial.print(swap.captures);
+      Serial.write('/');
+      Serial.print(swap.capture_attempts);
+      Serial.print(" restore=");
+      Serial.print(swap.restores);
+      Serial.print(" evict=");
+      Serial.print(swap.evictions);
+      Serial.print(" busy=");
+      Serial.print(swap.busy_failures);
+      Serial.print(" encode_fail=");
+      Serial.print(swap.encode_failures);
+      Serial.print(" integrity_fail=");
+      Serial.println(swap.integrity_failures);
+      const mk61_crc32::ArbitrationSnapshot crc =
+          mk61_crc32::arbitration_statistics();
+      Serial.print("MEM crc-hw supported=");
+      Serial.print(crc.supported ? 1 : 0);
+      Serial.print(" busy=");
+      Serial.print(crc.busy ? 1 : 0);
+      Serial.print(" acquire=");
+      Serial.print(crc.hardware_acquisitions);
+      Serial.print(" fallback=");
+      Serial.println(crc.software_fallbacks);
+      return terminal_protocol::Result::ok();
+    }
+
 #if MK61_DWT_PROFILER_SUPPORTED
     class ProfileReportBuilder {
       public:
@@ -1516,6 +1645,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         program_store::vfat_stage_forget(FILE_UPLOAD_STAGE_FIRST_KEY,
                                          FILE_UPLOAD_STAGE_BLOCKS);
       }
+      (void) language_workspace::discard(
+          language_workspace::Owner::TERMINAL_TRANSFER);
       file_upload_active = false;
       file_upload_size = 0;
       file_upload_received = 0;
@@ -1863,6 +1994,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         program_store::vfat_stage_forget(FILE_UPLOAD_STAGE_FIRST_KEY,
                                          FILE_UPLOAD_STAGE_BLOCKS);
       }
+      (void) language_workspace::discard(
+          language_workspace::Owner::TERMINAL_TRANSFER);
     }
 
     // История и редактор строки общие (static): сбрасываются только при
@@ -2625,6 +2758,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               Serial.println("USB Screen starting.");
             break;
 #endif
+          case CMD_MEMORY: {
+              const terminal_protocol::Result result = exec_memory();
+              recive_pos = 0;
+              return result;
+            }
 #if MK61_DWT_PROFILER_SUPPORTED
           case CMD_PROFILE: {
               const terminal_protocol::Result result = exec_profile();

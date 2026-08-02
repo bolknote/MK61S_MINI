@@ -9,11 +9,13 @@
 #include "exclusive_buffer.hpp"
 #include "flash_capacity_probe.hpp"
 #include "ledcontrol.h"
+#include "shared_memory.hpp"
 #include "shared_scratch.hpp"
 #include "spi_nor_flash.hpp"
 #include "tools.hpp"
 #include "zx0.hpp"
 
+#include <stdint.h>
 #include <string.h>
 
 #ifdef SPI_FLASH
@@ -1666,6 +1668,7 @@ static CompressionChoice prepare_compressed_payload(
     ProgramType type, const FileSource& source, u16 data_len,
     CompressionBuffer& large_buffer, shared_scratch::Lease& scratch,
     const u8* contiguous_data,
+    u8* preferred_workspace, usize preferred_workspace_size,
     u8* fallback_workspace, usize fallback_workspace_size,
     CompressionPlan& plan) {
   memset(&plan, 0, sizeof(plan));
@@ -1726,6 +1729,22 @@ static CompressionChoice prepare_compressed_payload(
     output = scratch.data();
     plan.workspace = large_buffer.data() + data_len;
     plan.workspace_size = large_buffer.size() - data_len;
+  }
+
+  // Свободная runtime-арена даёт ZX0 полный 8-КиБ план без постоянной SRAM.
+  // Она применяется только как отдельная область: encoder намеренно запрещает
+  // пересечение input/workspace.
+  if(plan.input != NULL && preferred_workspace != NULL &&
+     preferred_workspace_size >= sizeof(u32)) {
+    const uintptr_t input_begin = (uintptr_t) plan.input;
+    const uintptr_t input_end = input_begin + data_len;
+    const uintptr_t work_begin = (uintptr_t) preferred_workspace;
+    const uintptr_t work_end = work_begin + preferred_workspace_size;
+    if(input_end >= input_begin && work_end >= work_begin &&
+       !(input_begin < work_end && work_begin < input_end)) {
+      plan.workspace = preferred_workspace;
+      plan.workspace_size = preferred_workspace_size;
+    }
   }
 
   if(plan.input == NULL || plan.workspace == NULL ||
@@ -3309,11 +3328,20 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
 
   CompressionBuffer compression(compression_buffer,
                                 compression_buffer_size);
+  shared_memory::Lease compression_workspace;
+  if(transparent_compression_enabled(type) && data_len >= ZX0_MIN_SAVING) {
+    (void) compression_workspace.acquire_cache(
+        shared_memory::Arena::WORKSPACE,
+        shared_memory::Owner::PROGRAM_STORE_COMPRESSION,
+        shared_memory::WORKSPACE_SIZE);
+  }
   shared_scratch::Lease compression_scratch;
   CompressionPlan compression_plan = {};
   const CompressionChoice compression_choice =
       prepare_compressed_payload(type, source, data_len, compression,
                                  compression_scratch, contiguous_data,
+                                 compression_workspace.data(),
+                                 compression_workspace.size(),
                                  fallback_workspace,
                                  sizeof(fallback_workspace),
                                  compression_plan);

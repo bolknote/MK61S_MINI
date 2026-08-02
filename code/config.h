@@ -437,12 +437,13 @@
 //defined(__ARM_ARCH_7EM__)
 //defined(__ARM_FEATURE_SIMD32)
 
-// На F411 небольшие таблицы микрокоманд выгодно держать в однократной SRAM:
-// случайные обращения к ним находятся в самом горячем цикле эмулятора.
-// 0 = Flash, 1 = микрокоманды и DCW (~1.1 КиБ SRAM), 2 = также AND_AMK
-// (~7.1 КиБ SRAM суммарно). F401 с 64 КиБ оставляет SRAM для System APP.
+// На STM32F4 горячие таблицы размещаются не в отдельном BSS, а в вытесняемом
+// общем workspace: обычный калькулятор получает SRAM-ускорение, а Markdown,
+// USB и System APP могут мгновенно вернуть все 8 КиБ и переключить ядро на
+// Flash fallback. 0 = только Flash, 1 = микрокоманды/DCW (~1.1 КиБ),
+// 2 = также AND_AMK (~7.1 КиБ суммарно).
 #ifndef MK61_CORE_HOT_TABLES_IN_SRAM
-  #if defined(STM32F411xE)
+  #if defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE)
     #define MK61_CORE_HOT_TABLES_IN_SRAM 2
   #else
     #define MK61_CORE_HOT_TABLES_IN_SRAM 0

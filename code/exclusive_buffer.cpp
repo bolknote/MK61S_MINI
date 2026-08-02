@@ -2,36 +2,48 @@
 
 namespace exclusive_buffer {
 
-#if MK61_EXCLUSIVE_BUFFER_ENABLED
-alignas(4) static u8 buffer[SIZE];
-static Owner owner = Owner::NONE;
+static shared_memory::Lease lease;
+
+static shared_memory::Owner unified_owner(Owner owner) {
+  switch(owner) {
+    case Owner::NONE: return shared_memory::Owner::NONE;
+    case Owner::DISPLAY_FONT: return shared_memory::Owner::DISPLAY_FONT;
+    case Owner::USB_CACHE: return shared_memory::Owner::USB_CACHE;
+    case Owner::PROGRAM_STORE_COMPRESSION:
+      return shared_memory::Owner::PROGRAM_STORE_COMPRESSION;
+  }
+  return shared_memory::Owner::NONE;
+}
+
+static Owner legacy_owner(shared_memory::Owner owner) {
+  switch(owner) {
+    case shared_memory::Owner::DISPLAY_FONT: return Owner::DISPLAY_FONT;
+    case shared_memory::Owner::USB_CACHE: return Owner::USB_CACHE;
+    case shared_memory::Owner::PROGRAM_STORE_COMPRESSION:
+      return Owner::PROGRAM_STORE_COMPRESSION;
+    default: return Owner::NONE;
+  }
+}
 
 bool acquire(Owner next_owner, usize required) {
-  if(next_owner == Owner::NONE || required == 0 || required > SIZE) return false;
-  if(owner == next_owner) return true;
-  if(owner != Owner::NONE) return false;
-  owner = next_owner;
-  return true;
+  return lease.acquire(shared_memory::Arena::BULK,
+                       unified_owner(next_owner), required);
 }
 
 void release(Owner released_owner) {
   if(released_owner == Owner::NONE) return;
-  if(owner != released_owner) __builtin_trap();
-  owner = Owner::NONE;
+  if(current_owner() != released_owner) __builtin_trap();
+  lease.reset();
 }
 
 u8* data(Owner expected_owner) {
-  return expected_owner != Owner::NONE && owner == expected_owner ? buffer : 0;
+  return (u8*) shared_memory::data(shared_memory::Arena::BULK,
+                                   unified_owner(expected_owner));
 }
 
 Owner current_owner(void) {
-  return owner;
+  return legacy_owner(
+      shared_memory::active_owner(shared_memory::Arena::BULK));
 }
-#else
-bool acquire(Owner, usize) { return false; }
-void release(Owner) {}
-u8* data(Owner) { return 0; }
-Owner current_owner(void) { return Owner::NONE; }
-#endif
 
 } // пространство имён exclusive_buffer

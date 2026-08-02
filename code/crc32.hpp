@@ -54,6 +54,70 @@ inline u32 finish(u32 state) {
 
 namespace detail {
 
+struct ArbitrationState {
+  bool busy;
+  u32 acquisitions;
+  u32 fallbacks;
+};
+
+inline ArbitrationState& arbitration_state(void) {
+  static ArbitrationState value = {};
+  return value;
+}
+
+inline void increment(u32& value) {
+  if(value != 0xFFFFFFFFUL) value++;
+}
+
+inline u32 enter_critical(void) {
+#if (defined(__arm__) || defined(__thumb__)) && MK61_CRC32_STM32_BACKEND
+  u32 primask = 0;
+  __asm__ volatile (
+      "mrs %0, primask\n"
+      "cpsid i"
+      : "=r" (primask) :: "memory");
+  return primask;
+#else
+  return 0;
+#endif
+}
+
+inline void leave_critical(u32 primask) {
+#if (defined(__arm__) || defined(__thumb__)) && MK61_CRC32_STM32_BACKEND
+  if((primask & 1U) == 0) {
+    __asm__ volatile ("cpsie i" ::: "memory");
+  }
+#else
+  (void) primask;
+#endif
+}
+
+inline bool acquire_hardware(void) {
+#if MK61_CRC32_STM32_BACKEND
+  const u32 primask = enter_critical();
+  ArbitrationState& state = arbitration_state();
+  const bool acquired = !state.busy;
+  if(acquired) {
+    state.busy = true;
+    increment(state.acquisitions);
+  } else {
+    increment(state.fallbacks);
+  }
+  leave_critical(primask);
+  return acquired;
+#else
+  return false;
+#endif
+}
+
+inline void release_hardware(void) {
+#if MK61_CRC32_STM32_BACKEND
+  const u32 primask = enter_critical();
+  arbitration_state().busy = false;
+  leave_critical(primask);
+#endif
+}
+
 inline u32 reverse_bits_portable(u32 value) {
   value = ((value & 0x55555555UL) << 1) |
           ((value >> 1) & 0x55555555UL);
@@ -93,24 +157,30 @@ inline u32 emulate_stm32_word(u32 state, u32 value) {
 } // namespace detail
 
 // F401/F411 имеют один глобальный CRC-блок с фиксированным полиномом и
-// 32-битным входом. На STM32 контексты нельзя вкладывать друг в друга:
-// для параллельного CRC второго потока вызывающий использует extend().
+// 32-битным входом. Первый живой Context арендует регистр, а вложенный или
+// прервавший его Context автоматически продолжает программно. Критическая
+// секция защищает только флаг владения; сами длинные вычисления IRQ не держат.
 class Context {
   public:
     Context(void)
-      :
-#if !MK61_CRC32_STM32_BACKEND
-        software_state_(INITIAL_STATE),
-#endif
-        result_(0), pending_{}, pending_size_(0), finalized_(false)
+      : software_state_(INITIAL_STATE), result_(0), pending_{},
+        pending_size_(0), finalized_(false),
+        used_hardware_(detail::acquire_hardware()),
+        owns_hardware_(used_hardware_)
     {
 #if MK61_CRC32_STM32_EMULATED
-      detail::emulated_state() = INITIAL_STATE;
+      if(owns_hardware_) detail::emulated_state() = INITIAL_STATE;
 #elif MK61_CRC32_STM32_BACKEND
-      RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;
-      (void) RCC->AHB1ENR;
-      CRC->CR = CRC_CR_RESET;
+      if(owns_hardware_) {
+        RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;
+        (void) RCC->AHB1ENR;
+        CRC->CR = CRC_CR_RESET;
+      }
 #endif
+    }
+
+    ~Context(void) {
+      release_hardware();
     }
 
     Context(const Context&) = delete;
@@ -119,21 +189,25 @@ class Context {
     bool update(const u8* data, usize size) {
       if(finalized_ || (data == nullptr && size != 0)) return false;
 #if MK61_CRC32_STM32_BACKEND
-      while(size != 0 && pending_size_ != 0) {
-        pending_[pending_size_++] = *data++;
-        size--;
-        if(pending_size_ == sizeof(pending_)) {
-          feed_pending_word();
+      if(owns_hardware_) {
+        while(size != 0 && pending_size_ != 0) {
+          pending_[pending_size_++] = *data++;
+          size--;
+          if(pending_size_ == sizeof(pending_)) {
+            feed_pending_word();
+          }
         }
+        while(size >= sizeof(pending_)) {
+          u32 word = 0;
+          memcpy(&word, data, sizeof(word));
+          feed_word(word);
+          data += sizeof(word);
+          size -= sizeof(word);
+        }
+        while(size-- != 0) pending_[pending_size_++] = *data++;
+      } else {
+        software_state_ = extend(software_state_, data, size);
       }
-      while(size >= sizeof(pending_)) {
-        u32 word = 0;
-        memcpy(&word, data, sizeof(word));
-        feed_word(word);
-        data += sizeof(word);
-        size -= sizeof(word);
-      }
-      while(size-- != 0) pending_[pending_size_++] = *data++;
 #else
       software_state_ = extend(software_state_, data, size);
 #endif
@@ -143,8 +217,12 @@ class Context {
     bool update_byte(u8 value) {
       if(finalized_) return false;
 #if MK61_CRC32_STM32_BACKEND
-      pending_[pending_size_++] = value;
-      if(pending_size_ == sizeof(pending_)) feed_pending_word();
+      if(owns_hardware_) {
+        pending_[pending_size_++] = value;
+        if(pending_size_ == sizeof(pending_)) feed_pending_word();
+      } else {
+        software_state_ = mk61_crc32::update_byte(software_state_, value);
+      }
 #else
       software_state_ = mk61_crc32::update_byte(software_state_, value);
 #endif
@@ -154,18 +232,20 @@ class Context {
     u32 finish(void) {
       if(finalized_) return result_;
 #if MK61_CRC32_STM32_BACKEND
-      u32 state = hardware_state();
-      state = extend(state, pending_, pending_size_);
+      u32 state = owns_hardware_
+          ? hardware_state() : software_state_;
+      if(owns_hardware_) state = extend(state, pending_, pending_size_);
 #else
       const u32 state = software_state_;
 #endif
       result_ = mk61_crc32::finish(state);
       finalized_ = true;
+      release_hardware();
       return result_;
     }
 
     bool using_hardware(void) const {
-      return MK61_CRC32_STM32_BACKEND != 0;
+      return used_hardware_;
     }
 
   private:
@@ -198,14 +278,44 @@ class Context {
 #endif
     }
 
-#if !MK61_CRC32_STM32_BACKEND
     u32 software_state_;
-#endif
     u32 result_;
     u8 pending_[4];
     u8 pending_size_;
     bool finalized_;
+    bool used_hardware_;
+    bool owns_hardware_;
+
+    void release_hardware(void) {
+      if(!owns_hardware_) return;
+      detail::release_hardware();
+      owns_hardware_ = false;
+    }
 };
+
+struct ArbitrationSnapshot {
+  bool supported;
+  bool busy;
+  u32 hardware_acquisitions;
+  u32 software_fallbacks;
+};
+
+inline ArbitrationSnapshot arbitration_statistics(void) {
+  const detail::ArbitrationState& state = detail::arbitration_state();
+  const ArbitrationSnapshot result = {
+    MK61_CRC32_STM32_BACKEND != 0,
+    state.busy,
+    state.acquisitions,
+    state.fallbacks
+  };
+  return result;
+}
+
+inline void reset_arbitration_statistics(void) {
+  detail::ArbitrationState& state = detail::arbitration_state();
+  state.acquisitions = 0;
+  state.fallbacks = 0;
+}
 
 inline u32 calculate(const u8* data, usize size) {
   Context context;

@@ -7,6 +7,7 @@
 #include "ledcontrol.h"
 #include "loadable_module_system_app.hpp"
 #include "program_store.hpp"
+#include "shared_memory.hpp"
 #include "storage_path.hpp"
 
 SPIFlash flash;
@@ -2580,6 +2581,11 @@ int main(void) {
   test_max_app_power_cuts_are_atomic();
   test_middle_file_extent_can_be_repurposed();
   test_two_hundred_apps_have_no_fixed_slot_limit();
+  const shared_memory::Snapshot workspace =
+      shared_memory::snapshot(shared_memory::Arena::WORKSPACE);
+  assert(workspace.acquisitions != 0);
+  assert(workspace.high_water == shared_memory::WORKSPACE_SIZE);
+  assert(workspace.active_owner == shared_memory::Owner::NONE);
   printf("program_store_self_test: ok\n");
   return 0;
 }

@@ -321,6 +321,21 @@ namespace core_61 {
   extern    void  enable(void);
   extern    void  step(void);
 
+  // Горячие таблицы ядра могут жить во Flash либо занимать вытесняемый общий
+  // workspace. Это наблюдаемая диагностика политики памяти, но не часть
+  // сохраняемого состояния калькулятора.
+  struct HotTableCacheSnapshot {
+    usize bytes;
+    u32 loads;
+    u32 evictions;
+    u32 flash_steps;
+    u8 level;
+    bool enabled;
+    bool cached;
+  };
+  extern HotTableCacheSnapshot hot_table_cache_statistics(void);
+  extern void reset_hot_table_cache_statistics(void);
+
   // возращает false - есть изменения в дисплейной строке/ true - нет изменений
   //  - дисплейный буфер buffer обновляется только измененным содержимым
   //  - display_symbols - массив набор символов замены знаков индикатора 

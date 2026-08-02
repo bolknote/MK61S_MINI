@@ -15,6 +15,9 @@
 
 #include "mk_math.hpp"       // MK61_MATH_BACKEND == CORE (задаётся через -D)
 #include "mk61emu_core.h"
+#include "language_workspace.hpp"
+#include "shared_memory.hpp"
+#include "workspace_swap.hpp"
 
 static int g_failures = 0;
 
@@ -946,7 +949,94 @@ static void test_save_restore(void) {
   check_true("X2/display preserved", std::strcmp(x2_before, x2_after) == 0);
 }
 
+#if MK61_CORE_HOT_TABLES_IN_SRAM > 0
+static void test_hot_table_cache_eviction(void) {
+  std::printf("core hot-table cache eviction:\n");
+  shared_memory::reset_statistics();
+  core_61::reset_hot_table_cache_statistics();
+  core_61::enable();
+
+  core_61::HotTableCacheSnapshot cache =
+      core_61::hot_table_cache_statistics();
+  check_true("cache enabled and resident",
+      cache.enabled && cache.level == MK61_CORE_HOT_TABLES_IN_SRAM &&
+      cache.cached && cache.bytes <= shared_memory::WORKSPACE_SIZE);
+
+  core_61::ContextBuffer start = {};
+  core_61::ContextBuffer cached_result = {};
+  core_61::ContextBuffer flash_result = {};
+  check_true("cache test start saved", core_61::save_context(start));
+  static constexpr int STEPS = 37;
+  for(int step = 0; step < STEPS; step++) core_61::step();
+
+  // Новый foreground-владелец должен синхронно переключить ядро на Flash,
+  // а не получить BUSY и не оставить ни одного указателя в перезаписанной SRAM.
+  shared_memory::Lease foreground(
+      shared_memory::Arena::WORKSPACE,
+      shared_memory::Owner::MARKDOWN_VIEWER,
+      shared_memory::WORKSPACE_SIZE);
+  check_true("foreground evicts core cache", foreground.ok());
+  cache = core_61::hot_table_cache_statistics();
+  check_true("cache reports eviction", !cache.cached && cache.evictions == 1);
+  check_true("cached result saved after rebase",
+      core_61::save_context(cached_result));
+
+  check_true("start restored on Flash", core_61::restore_context(start));
+  for(int step = 0; step < STEPS; step++) core_61::step();
+  check_true("flash result saved", core_61::save_context(flash_result));
+  check_true("SRAM and Flash execution are bit-identical",
+      std::memcmp(cached_result.bytes, flash_result.bytes,
+                  sizeof(cached_result.bytes)) == 0);
+  cache = core_61::hot_table_cache_statistics();
+  check_true("busy interval counted as Flash steps",
+      cache.flash_steps == STEPS);
+
+  foreground.reset();
+  core_61::enable();
+  cache = core_61::hot_table_cache_statistics();
+  check_true("cache reloads after foreground release",
+      cache.cached && cache.loads >= 2);
+  const shared_memory::Snapshot workspace =
+      shared_memory::snapshot(shared_memory::Arena::WORKSPACE);
+  check_true("arena records one successful reclaim",
+      workspace.reclaim_attempts == 1 && workspace.reclaims == 1 &&
+      workspace.reclaim_failures == 0);
+
+  // Returning from a language to the calculator must not leave the core on
+  // Flash forever. The complete inactive runtime is first stashed in BULK;
+  // only then may the optional table cache replace its resident workspace.
+  workspace_swap::discard();
+  {
+    language_workspace::Lease focal(
+        language_workspace::Owner::FOCAL, 512);
+    check_true("language evicts table cache", focal.ok() && focal.fresh());
+    if(focal.ok()) {
+      std::memset(focal.data(), 0, focal.size());
+      ((u8*) focal.data())[0] = 0x61;
+      ((u8*) focal.data())[511] = 0x5A;
+    }
+  }
+  core_61::enable();
+  cache = core_61::hot_table_cache_statistics();
+  const workspace_swap::Statistics swap = workspace_swap::statistics();
+  check_true("calculator stashes language and reloads cache",
+      cache.cached && swap.valid &&
+      swap.owner == shared_memory::Owner::FOCAL && swap.raw_size == 512);
+  {
+    language_workspace::Lease focal(
+        language_workspace::Owner::FOCAL, 512);
+    check_true("language restores after table-cache eviction",
+        focal.ok() && !focal.fresh() &&
+        ((const u8*) focal.data())[0] == 0x61 &&
+        ((const u8*) focal.data())[511] == 0x5A);
+  }
+}
+#endif
+
 int main(void) {
+#if MK61_CORE_HOT_TABLES_IN_SRAM > 0
+  test_hot_table_cache_eviction();
+#endif
   test_pure_helpers();
   test_transcendental();
   test_authentic_core_smoke();

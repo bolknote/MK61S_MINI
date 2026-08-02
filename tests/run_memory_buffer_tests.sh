@@ -21,7 +21,11 @@ build_and_run() {
     "$root/tests/memory_buffers_self_test.cpp" \
     "$root/code/exclusive_buffer.cpp" \
     "$root/code/language_workspace.cpp" \
+    "$root/code/shared_memory.cpp" \
     "$root/code/shared_scratch.cpp" \
+    "$root/code/workspace_swap.cpp" \
+    "$root/code/zx0.cpp" \
+    "$root/code/zx0_encode.cpp" \
     -o "$out"
   "$out"
 }
@@ -30,3 +34,18 @@ build_and_run host 8192 -DMK61_DISPLAY_UC1609
 # Проверяет и компактный размер, и то, что полный профиль платы включает
 # буфер в отдельной translation unit без предварительного include config.h.
 build_and_run f401 1536 -DSTM32F401xC -DMK61_BOARD_CLASSIC_V3
+
+no_bulk_out="${TMPDIR:-/tmp}/memory_buffers_no_bulk_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  -DMK61_ENABLE_FOCAL=0 \
+  -DMK61_ENABLE_TINYBASIC=0 \
+  "${sanitizer_flags[@]}" \
+  "$root/tests/memory_buffers_no_bulk_self_test.cpp" \
+  "$root/code/exclusive_buffer.cpp" \
+  "$root/code/language_workspace.cpp" \
+  "$root/code/shared_memory.cpp" \
+  "$root/code/workspace_swap.cpp" \
+  "$root/code/zx0.cpp" \
+  "$root/code/zx0_encode.cpp" \
+  -o "$no_bulk_out"
+"$no_bulk_out"

@@ -404,12 +404,11 @@ void setup() {
 
  // Система ззагрузки программ
   init_library();
-#if MK61_ENABLE_FOCAL
-  InitFocal();
-#endif
-#if MK61_ENABLE_TINYBASIC
-  InitTinyBasic();
-#endif
+
+  // FOCAL/TinyBASIC initialize their complete runtime on the first fresh
+  // workspace acquisition. Eagerly touching both here would leave one
+  // language resident and prevent the optional core-table cache from using an
+  // otherwise idle workspace immediately after boot.
 
  // Запуск эмулятора MK61
   GRDLabel.print(load_grade_switch()); // считаем состояние переключателя ГРД отобразим градусную меру

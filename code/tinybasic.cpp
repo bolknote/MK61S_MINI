@@ -307,6 +307,16 @@ struct TinyBasicRuntime {
   u8 tb_print_row;
 };
 
+static void tinybasic_reset_runtime(TinyBasicRuntime& runtime) {
+  memset(&runtime, 0, sizeof(runtime));
+  for(int i = 0; i < TB_PROGRAM_COUNT; i++) {
+    runtime.programs[i].store_id = TB_INVALID_STORE_ID;
+    runtime.programs[i].parent_id = TB_ROOT_STORE_ID;
+  }
+  runtime.tb_ast.ok = true;
+  runtime.NextTinyBasic = -1;
+}
+
 #ifdef TINYBASIC_HOST_TEST
 static TinyBasicRuntime tinybasic_runtime_storage;
 static TinyBasicRuntime& tinybasic_runtime(void) {
@@ -321,9 +331,7 @@ class TinyBasicWorkspaceScope {
       : lease(language_workspace::Owner::TINYBASIC, sizeof(TinyBasicRuntime)) {
       if(!lease.ok() || !lease.fresh()) return;
       TinyBasicRuntime* runtime = (TinyBasicRuntime*) lease.data();
-      memset(runtime, 0, sizeof(*runtime));
-      runtime->tb_ast.ok = true;
-      runtime->NextTinyBasic = -1;
+      tinybasic_reset_runtime(*runtime);
     }
 
     bool ok(void) const { return lease.ok(); }
@@ -1955,17 +1963,7 @@ void InitTinyBasic(void) {
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return;
 #endif
-  memset(programs, 0, sizeof(programs));
-  for(int i = 0; i < TB_PROGRAM_COUNT; i++) {
-    programs[i].store_id = TB_INVALID_STORE_ID;
-    programs[i].parent_id = TB_ROOT_STORE_ID;
-  }
-  tb_ast_reset(tb_ast);
-  memset(tb_vars, 0, sizeof(tb_vars));
-  tb_last_error[0] = 0;
-  tb_pending_print[0] = 0;
-  tb_print_row = 0;
-  NextTinyBasic = -1;
+  tinybasic_reset_runtime(tinybasic_runtime());
 #ifdef TINYBASIC_HOST_TEST
   tb_random_state = 0x3B6B120EUL;
   tinybasic_host_angle_unit = RADIAN;
