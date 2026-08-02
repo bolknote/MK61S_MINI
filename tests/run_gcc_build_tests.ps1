@@ -7,6 +7,7 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $launcher = Join-Path $root 'tools/build-gcc.cmd'
 $backend = Join-Path $root 'tools/.mk61-gcc/build.ps1'
 $cmakeProject = Join-Path $root 'tools/.mk61-gcc/CMakeLists.txt'
+$ramCheck = Join-Path $root 'tools/.mk61-gcc/check-ram.cmake'
 $toolchain = Join-Path $root 'tools/.mk61-gcc/arm-none-eabi.cmake'
 $systemAppExports = Join-Path $root `
     'tools/.mk61-gcc/system-app-exports.list'
@@ -41,6 +42,7 @@ foreach ($file in @(
     $launcher,
     $backend,
     $cmakeProject,
+    $ramCheck,
     $toolchain,
     $systemAppExports,
     $firmwareMain,
@@ -97,6 +99,7 @@ Assert-True (($invalid.Output -join "`n") -match
 
 $backendText = [IO.File]::ReadAllText($backend)
 $cmakeText = [IO.File]::ReadAllText($cmakeProject)
+$ramCheckText = [IO.File]::ReadAllText($ramCheck)
 $toolchainText = [IO.File]::ReadAllText($toolchain)
 $systemAppExportsText = [IO.File]::ReadAllText($systemAppExports)
 $firmwareMainText = [IO.File]::ReadAllText($firmwareMain)
@@ -122,6 +125,17 @@ Assert-True ($cmakeText -match
     'CMake build does not select the F401 board'
 Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
     'CMake build does not emit compile_commands.json'
+Assert-True ($cmakeText -match
+    'MK61_GLOBAL_RAM_LIMIT=.+52428') `
+    'canonical F401 build does not enforce the 80% static RAM budget'
+Assert-True ($cmakeText -match 'HAL_UART_MODULE_ONLY') `
+    'canonical F401 build still retains the unused hardware UART state'
+Assert-True ($cmakeText -match 'USBD_CLASS_USER_STRING_DESC=0') `
+    'canonical F401 build still retains the empty USB user-string buffer'
+foreach ($section in @('_mk61_data', '_mk61_bss', '_mk61_noinit')) {
+    Assert-True ($ramCheckText.Contains($section)) `
+        "F401 RAM budget does not count $section"
+}
 Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
     'CMake build does not forward the Markdown selection'
 Assert-True ($cmakeText -match

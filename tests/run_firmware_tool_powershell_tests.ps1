@@ -107,6 +107,7 @@ try {
     Assert-True ($configText -match '(?m)^MK61_ENABLE_USB_SCREEN=0$') 'USB Screen flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$') 'font flag was not preserved'
     Assert-True ($configText -match 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1') 'compile flags differ'
+    Assert-True ($configText -match 'HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0') 'platform RAM flags differ'
 
     $override = Invoke-Tool @('--profile','mini-v3-a00','--show-config')
     Assert-True (($override.Output -join "`n") -match '(?m)^PROFILE=mini-v3-a00$') 'CLI profile override failed'

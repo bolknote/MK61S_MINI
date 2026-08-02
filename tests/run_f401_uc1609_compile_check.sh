@@ -34,8 +34,9 @@ compile_log="$build_root/compile.log"
 mkdir -p "$sketch" "$compile_path"
 cp -R "$root/code/." "$sketch/"
 
-fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
-strict_flags='-DMK61_BOARD_CLASSIC_V3 -Werror -Wno-error=cpp'
+fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+strict_flags="-DMK61_BOARD_CLASSIC_V3 $platform_ram_flags -Werror -Wno-error=cpp"
 
 set +e
 "$arduino_cli" compile \
@@ -43,6 +44,7 @@ set +e
   --fqbn "$fqbn" \
   --build-path "$compile_path" \
   --build-property "compiler.cpp.extra_flags=$strict_flags" \
+  --build-property "compiler.c.extra_flags=$platform_ram_flags" \
   "$sketch" 2>&1 | tee "$compile_log"
 pipeline_status=("${PIPESTATUS[@]}")
 compile_status=${pipeline_status[0]}
@@ -63,6 +65,19 @@ if [[ -n "$unexpected_warnings" ]]; then
     "$unexpected_warnings" >&2
   exit 1
 fi
+
+# Arduino's generic low-memory warning starts below our deliberately chosen
+# 80% regression boundary.  Enforce the numeric value so the check remains
+# useful instead of either ignoring RAM entirely or depending on that message.
+ram_limit=52428
+ram_line="$(grep -E 'Global variables use [0-9]+ bytes' "$compile_log" | tail -1 || true)"
+[[ -n "$ram_line" ]] || fail 'could not read global RAM usage from compiler output'
+ram_used="$(printf '%s\n' "$ram_line" | sed -E 's/.*Global variables use ([0-9]+) bytes.*/\1/')"
+[[ "$ram_used" =~ ^[0-9]+$ ]] || fail "invalid global RAM usage: $ram_used"
+if ((ram_used > ram_limit)); then
+  fail "static RAM budget exceeded: $ram_used > $ram_limit bytes"
+fi
+printf 'F401 RAM budget: %d/%d bytes\n' "$ram_used" "$ram_limit"
 
 test -s "$compile_path/mk61s-M.ino.elf" || fail 'missing ELF'
 test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'

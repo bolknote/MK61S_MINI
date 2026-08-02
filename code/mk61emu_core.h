@@ -300,15 +300,31 @@ namespace core_61 {
   // позволяет приостановленной ловушке M61 сосуществовать с частным буфером
   // необязательной математической подсистемы CORE. Представление намеренно
   // непрозрачно и допустимо только в том же запуске прошивки.
-  static constexpr usize CONTEXT_BUFFER_SIZE = 1280;
+  // Snapshot is 1176 bytes on the 32-bit MCU and 1232 bytes in 64-bit host
+  // tests (the saved core structures contain same-process pointers).
+  static_assert(sizeof(void*) == 4 || sizeof(void*) == 8,
+                "unsupported core context pointer width");
+  static constexpr usize CONTEXT_BUFFER_SIZE =
+      sizeof(void*) == 4 ? 1176 : 1232;
   struct alignas(8) ContextBuffer {
     u8 bytes[CONTEXT_BUFFER_SIZE];
   };
 
+  // Математический backend CORE держит снимок лишь на время одного вызова,
+  // ловушка M61 — до завершения обработчика. Эти режимы не должны пересекаться,
+  // поэтому один явно арбитрируемый слот заменяет два постоянных буфера по
+  // 1280 байт. Владелец обязан освободить полученный указатель тем же token.
+  enum class ContextBufferOwner : u8 {
+    MATH_CORE = 1,
+    M61_TRAP
+  };
+
+  extern    ContextBuffer* acquire_context_buffer(ContextBufferOwner owner);
+  extern    ContextBuffer* owned_context_buffer(ContextBufferOwner owner);
+  extern    bool release_context_buffer(ContextBufferOwner owner);
+
   extern    bool  save_context(ContextBuffer& out);
   extern    bool  restore_context(const ContextBuffer& saved);
-  extern    void  save_context(void);
-  extern    void  restore_context(void);
 
   // В улучшенном режиме встроенный обработчик пользовательской команды распознаёт
   // код 3B (K RNG) и взводит однократный обработчик ПЗУ IK1306:A7. Новое семизначное

@@ -162,6 +162,26 @@ usize registered_mk61_command_hook_count(void) {
   return command_hooks.size();
 }
 
+static ContextBuffer context_buffer = {};
+static ContextBufferOwner context_buffer_owner = (ContextBufferOwner) 0;
+
+ContextBuffer* acquire_context_buffer(ContextBufferOwner owner) {
+  if((u8) owner == 0 || (u8) context_buffer_owner != 0) return nullptr;
+  context_buffer_owner = owner;
+  return &context_buffer;
+}
+
+ContextBuffer* owned_context_buffer(ContextBufferOwner owner) {
+  return (u8) owner != 0 && context_buffer_owner == owner
+      ? &context_buffer : nullptr;
+}
+
+bool release_context_buffer(ContextBufferOwner owner) {
+  if((u8) owner == 0 || context_buffer_owner != owner) return false;
+  context_buffer_owner = (ContextBufferOwner) 0;
+  return true;
+}
+
 bool save_context(ContextBuffer& out) {
   std::memset(out.bytes, 0xA5, sizeof(out.bytes));
   saved_context_angle = host_angle_unit;
@@ -249,6 +269,7 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
 
 static void reset_host(void) {
   m61_text::cancel();
+  assert((u8) core_61::context_buffer_owner == 0);
   scripts.clear();
   range_reads = 0;
   executed_commands = 0;

@@ -33,8 +33,9 @@ $script:LastLog = Join-Path $script:BuildRoot 'last.log'
 
 $script:Stm32CoreVersion = '2.12.0'
 $script:Stm32PackageUrl = 'https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json'
-$script:FqbnF411 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
-$script:FqbnF401 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
+$script:FqbnF411 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+$script:FqbnF401 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+$script:PlatformRamFlags = '-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 
 $script:IsWindowsHost = $env:OS -eq 'Windows_NT'
 $script:IsMacHost = $false
@@ -293,7 +294,7 @@ function Get-CompileOptionFlags {
 function Get-AllCompileFlags {
     param([string]$Profile)
     if (-not (Test-Profile $Profile)) { throw "Unsupported profile: $Profile" }
-    return "$($script:Profiles[$Profile].Flags) $(Get-CompileOptionFlags)"
+    return "$($script:Profiles[$Profile].Flags) $(Get-CompileOptionFlags) $script:PlatformRamFlags"
 }
 
 function Get-Checkbox {
@@ -2039,6 +2040,7 @@ function Build-Selected {
         'compile', '--fqbn', $script:FqbnF411,
         '--build-path', $buildDir,
         '--build-property', "compiler.cpp.extra_flags=$flags",
+        '--build-property', "compiler.c.extra_flags=$script:PlatformRamFlags",
         '--build-property', 'compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer',
         $sketchDir)
     if (-not (Invoke-ExternalWithProgress 'Сборка прошивки' "Собираю $(Get-ProfileLabel $profile)" `

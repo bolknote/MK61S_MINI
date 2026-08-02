@@ -2869,7 +2869,31 @@ struct CoreContextSnapshot {
 static_assert(sizeof(CoreContextSnapshot) <= core_61::CONTEXT_BUFFER_SIZE,
               "core context does not fit the public opaque buffer");
 
+// Single-core firmware calls this API only from foreground code. Keeping the
+// owner beside the slot turns accidental re-entry into a clean failure instead
+// of silently corrupting the suspended calculator.
+static core_61::ContextBuffer shared_context_buffer = {};
+static core_61::ContextBufferOwner shared_context_owner =
+    (core_61::ContextBufferOwner) 0;
+
 } // namespace
+
+ContextBuffer* acquire_context_buffer(ContextBufferOwner owner) {
+  if((u8) owner == 0 || (u8) shared_context_owner != 0) return nullptr;
+  shared_context_owner = owner;
+  return &shared_context_buffer;
+}
+
+ContextBuffer* owned_context_buffer(ContextBufferOwner owner) {
+  return (u8) owner != 0 && shared_context_owner == owner
+      ? &shared_context_buffer : nullptr;
+}
+
+bool release_context_buffer(ContextBufferOwner owner) {
+  if((u8) owner == 0 || shared_context_owner != owner) return false;
+  shared_context_owner = (ContextBufferOwner) 0;
+  return true;
+}
 
 bool save_context(ContextBuffer& out) {
   CoreContextSnapshot snapshot = {};
@@ -2928,18 +2952,6 @@ bool restore_context(const ContextBuffer& saved) {
       : 0;
   return true;
 }
-
-#if MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
-static ContextBuffer context_snapshot = {};
-
-void save_context(void) {
-  (void) save_context(context_snapshot);
-}
-
-void restore_context(void) {
-  (void) restore_context(context_snapshot);
-}
-#endif // MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE
 
 void configure_random_seed(bool enable, u64 seed_material) {
   if(!enable) {

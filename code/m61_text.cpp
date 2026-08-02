@@ -120,8 +120,6 @@ static core_61::Mk61CommandHookHandle bind_after_hooks[MAX_BINDS];
 static bool trap_pending = false;
 static u8 pending_trap_address = 0;
 static u8 pending_trap_target = INVALID_TRAP_TARGET;
-static bool trap_context_valid = false;
-static core_61::ContextBuffer trap_context = {};
 static u8 suspended_trap_address = 0;
 static bool bypass_trap_once = false;
 static u8 bypass_trap_address = 0;
@@ -247,11 +245,29 @@ static bool sync_bind_hooks(void) {
 // Снимок ловушки фиксирует всё состояние ядра, включая единицу угла. Однако
 // Р/Г/ГРД на корпусе играют роль внешнего переключателя: изменение, сделанное
 // пользователем, пока обработчик ловушки держит кадр, должно пережить `ret`.
+static core_61::ContextBuffer* trap_context(void) {
+  return core_61::owned_context_buffer(
+      core_61::ContextBufferOwner::M61_TRAP);
+}
+
+static bool trap_context_valid(void) {
+  return trap_context() != nullptr;
+}
+
 static bool restore_trap_context(void) {
+  core_61::ContextBuffer* saved = trap_context();
+  if(saved == nullptr) return false;
   const AngleUnit selected_angle = MK61Emu_GetAngleUnit();
-  if(!core_61::restore_context(trap_context)) return false;
+  if(!core_61::restore_context(*saved)) return false;
   MK61Emu_SetAngleUnit(selected_angle);
   return true;
+}
+
+static void release_trap_context(void) {
+  if(trap_context_valid()) {
+    (void) core_61::release_context_buffer(
+        core_61::ContextBufferOwner::M61_TRAP);
+  }
 }
 
 static bool is_line_end(char c) {
@@ -442,7 +458,7 @@ bool active(void) {
 }
 
 bool calculator_suspended(void) {
-  return trap_pending || trap_context_valid;
+  return trap_pending || trap_context_valid();
 }
 
 bool display_owned(void) {
@@ -458,13 +474,13 @@ void release_display(void) {
 }
 
 static void clear_trap_runtime(bool restore_calculator) {
-  if(restore_calculator && trap_context_valid) {
+  if(restore_calculator && trap_context_valid()) {
     (void) restore_trap_context();
   }
+  release_trap_context();
   trap_pending = false;
   pending_trap_address = 0;
   pending_trap_target = INVALID_TRAP_TARGET;
-  trap_context_valid = false;
   suspended_trap_address = 0;
   bypass_trap_once = false;
   bypass_trap_address = 0;
@@ -1026,11 +1042,11 @@ static bool return_from_script(void) {
     return true;
   }
 
-  if(!trap_context_valid || !restore_trap_context()) {
+  if(!trap_context_valid() || !restore_trap_context()) {
     fail_script("cannot restore calculator trap context", script_line);
     return false;
   }
-  trap_context_valid = false;
+  release_trap_context();
   bypass_trap_once = true;
   bypass_trap_address = suspended_trap_address;
   suspended_trap_address = 0;
@@ -1099,7 +1115,7 @@ static bool open_store_script(u16 id) {
 // Запуск загруженной программы прямо на ядре, ожидание останова — асинхронно
 // из service(). Клавиши через буфер клавиатуры терялись бы при выходе из меню.
 static bool start_current_program(void) {
-  if(trap_context_valid) return false;
+  if(trap_context_valid()) return false;
   const usize steps = core_61::program_steps();
   for(u8 address = 0; address < TRAP_ADDRESS_COUNT; address++) {
     if(trap_is_active(address) && address >= steps) return false;
@@ -1139,7 +1155,7 @@ static bool goto_label(const char* args) {
 
   const i16 target = find_label_index(args, label_len);
   if(target < 0) return false;
-  if((trap_context_valid || bind_handler_active) &&
+  if((trap_context_valid() || bind_handler_active) &&
      !push_current_frame(ReturnKind::LABEL)) {
     line_error_message = "label return stack is full";
     return false;
@@ -1247,7 +1263,10 @@ static bool enter_pending_trap(void) {
     line_error_message = "trap return stack is full";
     return false;
   }
-  if(!core_61::save_context(trap_context)) {
+  core_61::ContextBuffer* saved = core_61::acquire_context_buffer(
+      core_61::ContextBufferOwner::M61_TRAP);
+  if(saved == nullptr || !core_61::save_context(*saved)) {
+    release_trap_context();
     return_stack_depth--;
     line_error_message = "cannot save calculator trap context";
     return false;
@@ -1256,7 +1275,6 @@ static bool enter_pending_trap(void) {
   trap_pending = false;
   pending_trap_address = 0;
   pending_trap_target = INVALID_TRAP_TARGET;
-  trap_context_valid = true;
   suspended_trap_address = address;
 
   const LabelEntry& entry = labels[target];
@@ -1331,7 +1349,7 @@ static bool frame_has_active_handlers(const ScriptFrame& frame) {
 bool clear_bindings_and_traps(void) {
   bool had_handlers =
       any_trap_is_active() || any_bind_is_active() ||
-      trap_pending || trap_context_valid ||
+      trap_pending || trap_context_valid() ||
       bind_pending || bind_handler_active ||
       runner_state == RunnerState::WATCH_EVENTS;
   for(u8 i = 0; i < return_stack_depth && !had_handlers; i++) {
@@ -1380,13 +1398,13 @@ static bool execute_script_line(const char* raw_line) {
   }
 
   const terminal_protocol::Result result =
-      terminal_script::execute(line, trap_context_valid);
+      terminal_script::execute(line, trap_context_valid());
   switch(result.kind) {
     case terminal_protocol::ResultKind::OK:
       return true;
     case terminal_protocol::ResultKind::RUN_PROGRAM:
       if(start_current_program()) return true;
-      line_error_message = trap_context_valid
+      line_error_message = trap_context_valid()
           ? "cannot run calculator from a trap handler"
           : "active trap address is outside current program memory";
       return false;
@@ -1413,7 +1431,7 @@ static bool execute_script_line(const char* raw_line) {
     case terminal_protocol::ResultKind::RETURN_SCRIPT:
       return return_from_script();
     case terminal_protocol::ResultKind::REINIT_CALCULATOR:
-      if(trap_context_valid) {
+      if(trap_context_valid()) {
         line_error_message = "reinit is not allowed in a trap handler";
         return false;
       }

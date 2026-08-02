@@ -25,7 +25,7 @@ static const u32 dec2nat_setup_size         = 1 + 6 + 1;
 static constexpr usize Double_interpol_setup_offset = 0;
 static constexpr usize dec2nat_setup_offset = Double_interpol_setup_offset + Double_interpol_setup_size;
 
-static  TPunct programs[COUNT_PROGRAMS] = {
+static const TPunct programs[COUNT_PROGRAMS] = {
 //          0123456789ABCDEF
   {.text = "Factorial      ", .offset = 0},
   {.text = "Double interpol", .offset = Factorial_size, .setup_offset = Double_interpol_setup_offset},
@@ -35,7 +35,7 @@ static  TPunct programs[COUNT_PROGRAMS] = {
   {.text = "Power for U & R", .offset = Factorial_size + Double_interpol_size + Simple_num_size + e_num_size + dec2nat}
 };
 
-static  u8          mk61_program_setups[] = {
+static const u8 mk61_program_setups[] = {
 // Настройка двойной интерполяции
   40,
   0x04, 0x00, 0x41,                   // 40 xP1
@@ -56,7 +56,7 @@ static  u8          mk61_program_setups[] = {
   0xFF
 };
 
-static  u8          mk61_lib[] = {
+static const u8 mk61_lib[] = {
 // Факториал
   8,
 //  0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
@@ -133,7 +133,7 @@ usize load_code_only(usize offs, const u8* data_stream, bool force_expanded = fa
   return code_offs + code_len;
 }
 
-void load_registers(usize offs, u8* data_stream) {
+void load_registers(usize offs, const u8* data_stream) {
   const u8* pPack_number = &data_stream[offs];
   while(*pPack_number != 0xFF) {
     const u8 RegisterN = *pPack_number++;
@@ -215,7 +215,8 @@ bool run_loaded_setup_program(void) {
   return false;
 }
 
-bool run_setup_from(usize setup_offs, u8* setup_stream, u8 setup_angle, bool force_expanded) {
+bool run_setup_from(usize setup_offs, const u8* setup_stream,
+                    u8 setup_angle, bool force_expanded) {
   const usize register_offs = load_code_only(setup_offs, setup_stream, force_expanded);
   clear_registers();
 
@@ -289,7 +290,7 @@ static int select_texts(usize count, const char* text, usize stride, i8& selecto
   } while(true);
 }
 
-int   select_from(usize COUNT, TPunct* list, i8& selector) {
+int select_from(usize COUNT, const TPunct* list, i8& selector) {
   return select_texts(COUNT, list[0].text, sizeof(list[0]), selector);
 }
 
@@ -321,14 +322,16 @@ void loaded_message(const TPunct& item) {
   library_mk61::restore_localized_font();
 }
 
-bool  load_from(usize offs, /*TPunct* list,*/ u8* data_stream, bool force_expanded = false) {
+bool load_from(usize offs, const u8* data_stream,
+               bool force_expanded = false) {
   offs = load_code_only(offs, data_stream, force_expanded);
   clear_registers();
   load_registers(offs, data_stream);
   return true;
 }
 
-bool load_item(const TPunct& item, u8* code_stream, u8* setup_stream) {
+bool load_item(const TPunct& item, const u8* code_stream,
+               const u8* setup_stream) {
   const bool needs_expanded = code_needs_expanded((usize) item.offset, code_stream);
   if(!library_mk61::program_memory_mode_accepts(needs_expanded)) {
     memory_mode_error();

@@ -86,7 +86,9 @@ set(BOARD_MAXDATASIZE "${BLACKPILL_F401CC_MAXDATASIZE}")
 set(MCU "${BLACKPILL_F401CC_MCU}")
 set(FPCONF "${BLACKPILL_F401CC_FPCONF}")
 target_link_libraries(BLACKPILL_F401CC INTERFACE
-  BLACKPILL_F401CC_serial_generic
+  # The firmware terminal is USB CDC.  Instantiating the board's unused UART
+  # Serial1 object costs SRAM and also pulls the HAL UART debug state in.
+  BLACKPILL_F401CC_serial_none
   BLACKPILL_F401CC_usb_CDCgen
   BLACKPILL_F401CC_xusb_FS)
 
@@ -98,7 +100,13 @@ else()
 endif()
 target_compile_definitions(user_settings INTERFACE
   ARDUINO=10607
-  VECT_TAB_OFFSET=0x0)
+  VECT_TAB_OFFSET=0x0
+  # Terminal I/O is USB CDC. Disable the unused Arduino UART wrapper/debug
+  # state while leaving the STM32 HAL UART module available.
+  HAL_UART_MODULE_ONLY
+  # CDC and our MSC class publish no class-specific user strings. The Core
+  # default callback merely reserves an otherwise unused 255-byte RAM buffer.
+  USBD_CLASS_USER_STRING_DESC=0)
 
 include("${CORE_PATH}/cmake/set_base_arduino_config.cmake")
 add_subdirectory("${BUILD_VARIANT_PATH}" "${CMAKE_BINARY_DIR}/stm32/variant")
@@ -191,6 +199,16 @@ add_custom_command(TARGET resident POST_BUILD
     "$<TARGET_FILE:resident>" "${CMAKE_BINARY_DIR}/resident.bin"
   COMMAND "${CMAKE_OBJCOPY}" -O ihex
     "$<TARGET_FILE:resident>" "${CMAKE_BINARY_DIR}/resident.hex"
+  # Keep the canonical F401/LTO firmware within our explicit 80% static-RAM
+  # budget. Arduino uses a more conservative generic warning threshold; the
+  # numeric project budget is the regression contract. USB Screen is an
+  # explicit diagnostic build with a separate RAM trade-off.
+  COMMAND "${CMAKE_COMMAND}"
+    "-DMK61_SIZE_TOOL=${CMAKE_SIZE}"
+    "-DMK61_ELF=$<TARGET_FILE:resident>"
+    "-DMK61_RAM_CAPACITY=${BOARD_MAXDATASIZE}"
+    "-DMK61_GLOBAL_RAM_LIMIT=$<IF:$<AND:$<BOOL:${MK61_ENABLE_LTO}>,$<NOT:$<BOOL:${MK61_ENABLE_USB_SCREEN}>>>,52428,65536>"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/check-ram.cmake"
   COMMAND "${CMAKE_SIZE}" "$<TARGET_FILE:resident>"
   BYPRODUCTS
     "${CMAKE_BINARY_DIR}/resident.bin"

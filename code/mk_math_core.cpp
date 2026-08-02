@@ -121,7 +121,15 @@ double eval_unary(double x, const MatrixKey& op) {
     const int exponent = mk_math::log10_floor(mk_math::fabs(x));
     if(exponent < -99 || exponent > 99) return __builtin_nan("");
   }
-  core_61::save_context();
+  core_61::ContextBuffer* saved = core_61::acquire_context_buffer(
+      core_61::ContextBufferOwner::MATH_CORE);
+  if(saved == nullptr || !core_61::save_context(*saved)) {
+    if(saved != nullptr) {
+      (void) core_61::release_context_buffer(
+          core_61::ContextBufferOwner::MATH_CORE);
+    }
+    return __builtin_nan("");
+  }
 
   core_61::enable();          // Чистое состояние калькулятора без оставшегося префикса или ошибки
   MK61Emu_SetAngleUnit(RADIAN);
@@ -136,7 +144,10 @@ double eval_unary(double x, const MatrixKey& op) {
     if(!core_61::has_error()) result = read_x();
   }
 
-  core_61::restore_context(); // Возвращаем калькулятор точно в прежнем состоянии
+  const bool restored = core_61::restore_context(*saved);
+  (void) core_61::release_context_buffer(
+      core_61::ContextBufferOwner::MATH_CORE);
+  if(!restored) return __builtin_nan("");
   return result;
 }
 

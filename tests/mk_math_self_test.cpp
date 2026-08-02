@@ -949,6 +949,32 @@ static void test_save_restore(void) {
   check_true("X2/display preserved", std::strcmp(x2_before, x2_after) == 0);
 }
 
+static void test_context_slot_arbitration(void) {
+  std::printf("core context slot arbitration:\n");
+  core_61::ContextBuffer* trap = core_61::acquire_context_buffer(
+      core_61::ContextBufferOwner::M61_TRAP);
+  check_true("trap acquires shared slot", trap != nullptr);
+  check_true("owned slot is stable",
+      core_61::owned_context_buffer(
+          core_61::ContextBufferOwner::M61_TRAP) == trap);
+  check_true("math cannot overwrite trap",
+      core_61::acquire_context_buffer(
+          core_61::ContextBufferOwner::MATH_CORE) == nullptr);
+  check_true("busy math fails without stealing slot",
+      std::isnan(mk_math::sin(1.0)) &&
+      core_61::owned_context_buffer(
+          core_61::ContextBufferOwner::M61_TRAP) == trap);
+  check_true("wrong owner cannot release trap",
+      !core_61::release_context_buffer(
+          core_61::ContextBufferOwner::MATH_CORE));
+  check_true("trap releases shared slot",
+      core_61::release_context_buffer(
+          core_61::ContextBufferOwner::M61_TRAP));
+  check_true("released slot has no owner",
+      core_61::owned_context_buffer(
+          core_61::ContextBufferOwner::M61_TRAP) == nullptr);
+}
+
 #if MK61_CORE_HOT_TABLES_IN_SRAM > 0
 static void test_hot_table_cache_eviction(void) {
   std::printf("core hot-table cache eviction:\n");
@@ -1045,6 +1071,7 @@ int main(void) {
   test_random_seed_hook();
   test_program_boundary_yield();
   test_core_boundaries();
+  test_context_slot_arbitration();
   test_save_restore();
 
   if(g_failures == 0) {

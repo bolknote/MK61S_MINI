@@ -123,10 +123,10 @@ struct TMnemo {
   char*   txt;
 };
 
-extern const char* mnemo_code[40];
+extern const char* const mnemo_code[40];
 extern const u8    mnemo_code_register[40];
-extern const char* mnemo_code_F[40];
-extern const char* mnemo_code_K[40];
+extern const char* const mnemo_code_F[40];
+extern const char* const mnemo_code_K[40];
 static const u8    STORE_KEY = 0x80;
 
 #endif

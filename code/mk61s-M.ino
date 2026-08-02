@@ -189,7 +189,7 @@ static  core_61::bcd_value  ext61_reg[16];
 static  constexpr char  XP10[8] = {'x', '-', '>', P_RUS, '1', '0', ' ', 0};
 static  constexpr char  PX10[8] = {P_RUS, '-', '>', 'x', '1', '0', ' ', 0};
 static  constexpr i32   COUNT_EXT_COMMAND = 7;
-const   char* mnemo[COUNT_EXT_COMMAND] = {"empty ", "0.2 sec", "0.5 sec", "1.0 sec", "2.0 sec", XP10, PX10};
+const   char* const mnemo[COUNT_EXT_COMMAND] = {"empty ", "0.2 sec", "0.5 sec", "1.0 sec", "2.0 sec", XP10, PX10};
 /*===============================================================================================================*/
 
 static void service_m61_controls(void);

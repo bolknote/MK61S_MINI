@@ -32,7 +32,7 @@ class class_disassm_mk61 {
     bool  lcd_enable;        // Дизассемблер МК-61 в верхней строке ЖКИ: 1 — включён, 0 — выключен
     u8    cache_IP_mk61;
 
-    const u32 mk61_disassm_50_60[15] = {
+    static constexpr u32 mk61_disassm_50_60[15] = {
       ' ' << 24 | ' ' << 16   | P_RUS << 8 | 'C',
       ' ' << 24 | ' ' << 16   | P_RUS << 8 | B_RUS,
       ' ' << 24 | 'O' << 16   | '/' << 8   | 'B',
@@ -49,7 +49,7 @@ class class_disassm_mk61 {
       ' ' << 24 | ' ' << 16   | '0' << 8   | 'L',
       ' ' << 24 | '0' << 16   | '=' << 8   | 'x'
     };
-    const u32 mk61_disassm_0A_1E[21] = {
+    static constexpr u32 mk61_disassm_0A_1E[21] = {
       ' ' << 24 | ' ' << 16   | ' ' << 8 | '.',
       ' ' << 24 | '/' << 16   | '-' << 8 | '/',
       ' ' << 24 | ' ' << 16   | P_RUS << 8 | 'B',
@@ -72,7 +72,7 @@ class class_disassm_mk61 {
       ' ' << 24 | 's' << 16   | 'o' << 8 | 'c',
       ' ' << 24 | ' ' << 16   | 'g' << 8 | 't'
     };
-    const u32 mk61_disassm_20_2A[11] = {
+    static constexpr u32 mk61_disassm_20_2A[11] = {
       ' ' << 24 | ' ' << 16   | ' ' << 8 | LCD_PI_CHAR,
       ' ' << 24 | ' ' << 16   | ' ' << 8 | LCD_SQRT_CHAR,
       ' ' << 24 | ' ' << 16   | LCD_CHAR_POW2 << 8 | 'x',
@@ -85,7 +85,7 @@ class class_disassm_mk61 {
       ' ' << 24 | '?' << 16   | '?' << 8   | ' ',
       '"' << 24 | LCD_QUOTE_CHAR << 16   | LCD_RT_ARROW_CHAR << 8   | LCD_GRAD_CHAR
     };
-    const u32 mk61_disassm_30_3E[15] = {
+    static constexpr u32 mk61_disassm_30_3E[15] = {
       '"' << 24 | LCD_QUOTE_CHAR << 16 | LCD_LT_ARROW_CHAR << 8 | LCD_GRAD_CHAR,      // 0x30  o<-'"
       ' ' << 24 | '|' << 16   | 'x' << 8 | '|',                                       // 0x31  |x|
       ' ' << 24 | ' ' << 16   | 'H' << 8 | '3',                                       // 0x32  ЗН

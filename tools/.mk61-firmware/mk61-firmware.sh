@@ -38,8 +38,9 @@ LAST_LOG="$BUILD_ROOT/last.log"
 
 STM32_CORE_VERSION=2.12.0
 STM32_PACKAGE_URL=https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
-FQBN_F411='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
-FQBN_F401='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
+FQBN_F411='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+FQBN_F401='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+PLATFORM_RAM_FLAGS='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 
 PROFILE=
 HARDWARE_PLATFORM=
@@ -1369,7 +1370,8 @@ compile_option_flags() {
 all_compile_flags() {
   local board_flags
   board_flags=$(profile_flags "$1") || return 1
-  printf '%s %s' "$board_flags" "$(compile_option_flags)"
+  printf '%s %s %s' "$board_flags" "$(compile_option_flags)" \
+    "$PLATFORM_RAM_FLAGS"
 }
 
 compile_options_summary() {
@@ -1902,6 +1904,7 @@ prepare_and_compile_f411_worker() {
     --fqbn "$FQBN_F411" \
     --build-path "$build_dir" \
     --build-property "compiler.cpp.extra_flags=$flags" \
+    --build-property "compiler.c.extra_flags=$PLATFORM_RAM_FLAGS" \
     --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
     "$sketch_dir" || return 1
 

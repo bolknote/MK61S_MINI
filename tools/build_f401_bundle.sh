@@ -32,8 +32,9 @@ custom_app_files=()
 custom_app_magics=()
 custom_app_manifest_paths=()
 
-fqbn_resident='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
-fqbn_module='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=oslto'
+fqbn_resident='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+fqbn_module='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 
 usage() {
   cat <<'EOF'
@@ -439,6 +440,7 @@ compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
+compile_flags="$compile_flags $platform_ram_flags"
 
 mkdir -p "$build_root" "$output_root"
 work=$(mktemp -d "$build_root/work.XXXXXX")
@@ -458,6 +460,7 @@ printf 'Building F401 resident firmware (%s)…\n' "$profile"
   --fqbn "$fqbn_resident" \
   --build-path "$resident_build" \
   --build-property "compiler.cpp.extra_flags=$compile_flags" \
+  --build-property "compiler.c.extra_flags=$platform_ram_flags" \
   --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
   "$sketch_dir"
 

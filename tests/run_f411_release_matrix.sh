@@ -68,9 +68,10 @@ if [[ -n "$output_dir" ]]; then
   mkdir -p "$output_dir"
 fi
 
-fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd'
-fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=o3lto'
+fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=o3lto'
 strict_flags='-Werror -Wno-error=cpp'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 variant_index=0
 variant_count=10
 
@@ -81,7 +82,7 @@ compile_variant() {
   local artifact_name="$4"
   local build_path="$matrix_root/build-$name"
   local compile_log="$build_path/compile.log"
-  local compile_flags="$board_flags $strict_flags"
+  local compile_flags="$board_flags $platform_ram_flags $strict_flags"
   variant_index=$((variant_index + 1))
   printf '\n[%d/%d] F411 %s\n' "$variant_index" "$variant_count" "$name"
   mkdir -p "$build_path"
@@ -91,6 +92,7 @@ compile_variant() {
     --fqbn "$variant_fqbn" \
     --build-path "$build_path" \
     --build-property "compiler.cpp.extra_flags=$compile_flags" \
+    --build-property "compiler.c.extra_flags=$platform_ram_flags" \
     "$sketch" 2>&1 | tee "$compile_log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}

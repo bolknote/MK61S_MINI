@@ -59,16 +59,24 @@ STM32duino RTC 1.9.0
 ```text
 STMicroelectronics:stm32:GenF4:
 pnum=BLACKPILL_F411CE,upload_method=dfuMethod,
-xserial=generic,usb=CDCgen,opt=osstd
+xserial=none,usb=CDCgen,opt=osstd
 ```
+
+Терминал прошивки работает через USB CDC; аппаратный `Serial1` не используется,
+поэтому канонические F401/F411-сборки выбирают `xserial=none` и задают
+`HAL_UART_MODULE_ONLY`: объект Arduino UART и его debug-буферы RAM не создаются.
+Также задаётся `USBD_CLASS_USER_STRING_DESC=0`, поскольку CDC/MSC не публикуют
+class-specific строки и штатный пустой 255-байтный буфер им не нужен.
 
 Готовая прошивка F411 не должна загружаться в F401 только потому, что обе платы
 называются BlackPill. Для другого микроконтроллера нужна отдельная сборка с
 правильным board target и проверкой размера flash/RAM.
 
 Для F401CC канонический CMake-бэкенд выбирает board target
-`BLACKPILL_F401CC`; resident компилируется с `-Os`, отдельные APP — с
-`-Os -flto`.
+`BLACKPILL_F401CC`; и resident, и отдельные APP компилируются с `-Os -flto`.
+Отдельная Arduino-совместимая проверка без LTO остаётся намеренно: она не даёт
+случайно спрятать в SRAM изменяемые таблицы, которые LTO способен сам
+перенести во Flash.
 В `tools/mk61-firmware.cmd` нужно выбрать контроллер STM32F401CC: пункт
 «Собрать и прошить» создаёт один каталог с
 согласованными `.bin`, `System/FOCAL.APP`, `System/BASIC.APP` и

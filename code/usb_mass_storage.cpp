@@ -15,6 +15,13 @@ extern "C" {
 #include "usbd_ctlreq.h"
 #include "usbd_msc.h"
 #include "usbd_msc_scsi.h"
+
+// CDC and MSC are two modes of the same physical USB peripheral.  The mode
+// switch stops CDC before entering this file and starts it again only after
+// deinit(), so keeping a second 732-byte device handle would only duplicate
+// mutually exclusive state.
+extern USBD_HandleTypeDef hUSBD_Device_CDC;
+extern uint8_t USBD_StrDesc[USBD_MAX_STR_DESC_SIZ];
 }
 
 #if !defined(USBD_VID) || USBD_VID == 0
@@ -24,7 +31,10 @@ extern "C" {
 
 namespace usb_mass_storage {
 
-static USBD_HandleTypeDef usb_device;
+static inline USBD_HandleTypeDef* usb_device(void) {
+  return &hUSBD_Device_CDC;
+}
+
 static bool initialized = false;
 static bool session_open = false;
 static bool device_configured = false;
@@ -39,8 +49,8 @@ static void set_initialized(bool value) {
 
 static void release_usb_device(void) {
   if(!device_configured) return;
-  (void) USBD_DeInit(&usb_device);
-  memset(&usb_device, 0, sizeof(usb_device));
+  (void) USBD_DeInit(usb_device());
+  memset(usb_device(), 0, sizeof(*usb_device()));
   device_configured = false;
 }
 
@@ -176,9 +186,7 @@ static void reset_deferred_io(void) {
   }
 }
 
-static u8 string_desc[USBD_MAX_STR_DESC_SIZ];
-
-static u8 device_desc[USB_LEN_DEV_DESC] = {
+static const u8 device_desc[USB_LEN_DEV_DESC] = {
   0x12,
   USB_DESC_TYPE_DEVICE,
   0x00, 0x02,
@@ -195,14 +203,14 @@ static u8 device_desc[USB_LEN_DEV_DESC] = {
   USBD_MAX_NUM_CONFIGURATION
 };
 
-static u8 lang_id_desc[USB_LEN_LANGID_STR_DESC] = {
+static const u8 lang_id_desc[USB_LEN_LANGID_STR_DESC] = {
   USB_LEN_LANGID_STR_DESC,
   USB_DESC_TYPE_STRING,
   0x09,
   0x04
 };
 
-static u8 serial_desc[] = {
+static const u8 serial_desc[] = {
   20,
   USB_DESC_TYPE_STRING,
   'M', 0,
@@ -219,18 +227,20 @@ static u8 serial_desc[] = {
 static u8* device_descriptor(USBD_SpeedTypeDef speed, u16* length) {
   (void) speed;
   *length = sizeof(device_desc);
-  return device_desc;
+  return const_cast<u8*>(device_desc);
 }
 
 static u8* lang_id_descriptor(USBD_SpeedTypeDef speed, u16* length) {
   (void) speed;
   *length = sizeof(lang_id_desc);
-  return lang_id_desc;
+  return const_cast<u8*>(lang_id_desc);
 }
 
 static u8* string_descriptor(const char* text, u16* length) {
-  USBD_GetString((u8*) text, string_desc, length);
-  return string_desc;
+  // CDC is stopped for the complete MSC lifetime, therefore its descriptor
+  // scratch buffer is another safe mode-local resource to reuse.
+  USBD_GetString((u8*) text, USBD_StrDesc, length);
+  return USBD_StrDesc;
 }
 
 static u8* manufacturer_descriptor(USBD_SpeedTypeDef speed, u16* length) {
@@ -246,7 +256,7 @@ static u8* product_descriptor(USBD_SpeedTypeDef speed, u16* length) {
 static u8* serial_descriptor(USBD_SpeedTypeDef speed, u16* length) {
   (void) speed;
   *length = sizeof(serial_desc);
-  return serial_desc;
+  return const_cast<u8*>(serial_desc);
 }
 
 static u8* configuration_descriptor(USBD_SpeedTypeDef speed, u16* length) {
@@ -259,7 +269,7 @@ static u8* interface_descriptor(USBD_SpeedTypeDef speed, u16* length) {
   return string_descriptor("MK61S FS Interface", length);
 }
 
-static USBD_DescriptorsTypeDef descriptors = {
+static const USBD_DescriptorsTypeDef descriptors = {
   device_descriptor,
   lang_id_descriptor,
   manufacturer_descriptor,
@@ -377,7 +387,7 @@ static int8_t storage_max_lun(void) {
   return 0;
 }
 
-static int8_t inquiry_data[] = {
+static const int8_t inquiry_data[] = {
   0x00,
   -128,
   0x02,
@@ -392,7 +402,7 @@ static int8_t inquiry_data[] = {
   '0', '.', '0', '1'
 };
 
-static USBD_StorageTypeDef storage = {
+static const USBD_StorageTypeDef storage = {
   storage_init,
   storage_capacity,
   storage_ready,
@@ -400,7 +410,7 @@ static USBD_StorageTypeDef storage = {
   storage_read,
   storage_write,
   storage_max_lun,
-  inquiry_data
+  const_cast<int8_t*>(inquiry_data)
 };
 
 static void close_session(void) {
@@ -416,7 +426,7 @@ bool init(void) {
   if(session_open) {
     if(device_configured) {
       set_initialized(true);
-      if(USBD_Start(&usb_device) == USBD_OK) return true;
+      if(USBD_Start(usb_device()) == USBD_OK) return true;
       set_initialized(false);
       close_session();
       return false;
@@ -433,21 +443,23 @@ bool init(void) {
   }
   session_open = true;
 
-  if(USBD_Init(&usb_device, &descriptors, 0) != USBD_OK) {
+  if(USBD_Init(usb_device(),
+               const_cast<USBD_DescriptorsTypeDef*>(&descriptors), 0) != USBD_OK) {
     virtual_fat::end_session();
     session_open = false;
     release_cache_buffer();
     return false;
   }
   device_configured = true;
-  if(USBD_RegisterClass(&usb_device, USBD_MSC_CLASS) != USBD_OK) {
+  if(USBD_RegisterClass(usb_device(), USBD_MSC_CLASS) != USBD_OK) {
     release_usb_device();
     virtual_fat::end_session();
     session_open = false;
     release_cache_buffer();
     return false;
   }
-  if(USBD_MSC_RegisterStorage(&usb_device, &storage) != USBD_OK) {
+  if(USBD_MSC_RegisterStorage(
+       usb_device(), const_cast<USBD_StorageTypeDef*>(&storage)) != USBD_OK) {
     release_usb_device();
     virtual_fat::end_session();
     session_open = false;
@@ -456,7 +468,7 @@ bool init(void) {
   }
 
   set_initialized(true);
-  if(USBD_Start(&usb_device) != USBD_OK) {
+  if(USBD_Start(usb_device()) != USBD_OK) {
     set_initialized(false);
     close_session();
     return false;
@@ -479,7 +491,7 @@ bool deinit(void) {
   // а одновременный с этим сбросом обратный вызов хранилища повредил бы обе
   // передачи.
   set_initialized(false);
-  (void) USBD_Stop(&usb_device);
+  (void) USBD_Stop(usb_device());
   bool pending_ok = true;
   if(deferred_state() == DeferredWriteState::PENDING) {
     set_deferred_state(DeferredWriteState::PROCESSING);
@@ -529,7 +541,7 @@ void service(void) {
 
     // Этот вызов повторно входит в storage_write(), где обрабатывается COMPLETE_*,
     // после чего автомат BOT подтверждает блок или возвращает хосту WRITE_FAULT.
-    if(SCSI_ContinueWrite(&usb_device) < 0) reset_deferred_write();
+    if(SCSI_ContinueWrite(usb_device()) < 0) reset_deferred_write();
     return;
   }
 
@@ -553,7 +565,7 @@ void service(void) {
       set_deferred_read_state(DeferredReadState::EMPTY);
       return;
     }
-    if(SCSI_ContinueRead(&usb_device) < 0) reset_deferred_read();
+    if(SCSI_ContinueRead(usb_device()) < 0) reset_deferred_read();
     return;
   }
 
@@ -570,7 +582,7 @@ void service(void) {
       set_deferred_sync(DeferredSyncState::EMPTY);
       return;
     }
-    (void) SCSI_CompleteSync(&usb_device, ok ? 1U : 0U);
+    (void) SCSI_CompleteSync(usb_device(), ok ? 1U : 0U);
   }
 }
 

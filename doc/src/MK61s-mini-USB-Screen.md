@@ -290,8 +290,9 @@ MK61_ENABLE_CHIP8=1
 
 ```bash
 arduino-cli compile \
-  --fqbn "STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=generic,usb=CDCgen,opt=osstd" \
-  --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00 -DMK61_ENABLE_USB_SCREEN=1" \
+  --fqbn "STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd" \
+  --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00 -DMK61_ENABLE_USB_SCREEN=1 -DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0" \
+  --build-property "compiler.c.extra_flags=-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0" \
   --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
   /tmp/mk61s-M
 ```
