@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include "config.h"
 #include "menu.hpp"
 #include "cross_hal.h"
@@ -163,50 +162,22 @@ static void set_speed_mode_state(SpeedMode mode) {
   speed_mode_state = mode;
 }
 
-static void append_text(char*& out, char* end, const char* text) {
-  while(*text != 0 && out < end) *out++ = *text++;
-}
-
-static void append_until_space(char*& out, char* end, const char* text) {
-  while(*text != 0 && *text != ' ' && out < end) *out++ = *text++;
-}
-
-static void build_ru_memory_text(char* out, usize size) {
-  char* cursor = out;
-  char* end = out + size - 1;
-  const char* ram = strstr(mem_text, "RAM:");
-  const char* rom = strstr(mem_text, "ROM:");
-
-  if(ram == NULL || rom == NULL) {
-    append_text(cursor, end, mem_text);
-    *cursor = 0;
-    return;
-  }
-
-  append_text(cursor, end, "ОЗУ:");
-  append_until_space(cursor, end, ram + 4);
-  append_text(cursor, end, " ПЗУ:");
-  append_until_space(cursor, end, rom + 4);
-  *cursor = 0;
-}
-
 static constexpr usize HARDWARE_LINE_SIZE = 32;
 
 static void build_hardware_lines(
     char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
     hardware_info::VbatReading vbat) {
   const bool russian = language_is_ru();
+  const hardware_info::DeviceIdentity device =
+    hardware_info::read_device_identity();
   rtc_clock::ClockSource rtc_source = rtc_clock::ClockSource::LSI;
   const char* rtc_source_name = rtc_clock::read_clock_source(rtc_source)
       ? rtc_clock::clock_source_name(rtc_source)
       : "--";
-  if(russian) {
-    snprintf(lines[0], HARDWARE_LINE_SIZE, "ЧИП:%s", chip_name);
-    build_ru_memory_text(lines[1], HARDWARE_LINE_SIZE);
-  } else {
-    snprintf(lines[0], HARDWARE_LINE_SIZE, "Chip:%s", chip_name);
-    snprintf(lines[1], HARDWARE_LINE_SIZE, "%s", mem_text);
-  }
+  hardware_info::format_device_line(
+    lines[0], HARDWARE_LINE_SIZE, russian, device);
+  hardware_info::format_memory_line(
+    lines[1], HARDWARE_LINE_SIZE, russian, device);
 
   hardware_info::format_vbat_line(
     lines[2], HARDWARE_LINE_SIZE, russian, vbat);

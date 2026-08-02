@@ -14,6 +14,62 @@ static usize utf8_width(const char* text) {
   return width;
 }
 
+static void test_device_identity(void) {
+  const hardware_info::DeviceIdentity f401xb =
+    hardware_info::decode_device_identity(0x10000423U, 128);
+  assert(f401xb.device_id == 0x423);
+  assert(f401xb.revision_id == 0x1000);
+  assert(f401xb.flash_kb == 128);
+  assert(f401xb.ram_kb == 64);
+  assert(std::strcmp(f401xb.family, "STM32F401") == 0);
+  assert(f401xb.pin_count_code == 'x');
+  assert(f401xb.flash_size_code == 'B');
+
+  const hardware_info::DeviceIdentity f401xc =
+    hardware_info::decode_device_identity(0x20010423U, 256, 'C');
+  assert(f401xc.revision_id == 0x2001);
+  assert(std::strcmp(f401xc.family, "STM32F401") == 0);
+  assert(f401xc.pin_count_code == 'C');
+  assert(f401xc.flash_size_code == 'C');
+
+  const hardware_info::DeviceIdentity f401xd =
+    hardware_info::decode_device_identity(0x10000433U, 384);
+  assert(f401xd.ram_kb == 96);
+  assert(f401xd.flash_size_code == 'D');
+
+  const hardware_info::DeviceIdentity f401xe =
+    hardware_info::decode_device_identity(0x10000433U, 512);
+  assert(f401xe.flash_size_code == 'E');
+
+  const hardware_info::DeviceIdentity f411xc =
+    hardware_info::decode_device_identity(0x10000431U, 256);
+  assert(f411xc.ram_kb == 128);
+  assert(std::strcmp(f411xc.family, "STM32F411") == 0);
+  assert(f411xc.flash_size_code == 'C');
+
+  const hardware_info::DeviceIdentity f411xe =
+    hardware_info::decode_device_identity(0x10000431U, 512);
+  assert(f411xe.flash_size_code == 'E');
+
+  const hardware_info::DeviceIdentity unexpected_density =
+    hardware_info::decode_device_identity(0x10000431U, 384);
+  assert(unexpected_density.flash_size_code == '?');
+  assert(unexpected_density.flash_kb == 384);
+
+  const hardware_info::DeviceIdentity invalid_signature =
+    hardware_info::decode_device_identity(0x10000423U, 0xFFFF);
+  assert(invalid_signature.flash_size_code == '?');
+  assert(invalid_signature.flash_kb == 0);
+
+  const hardware_info::DeviceIdentity unknown =
+    hardware_info::decode_device_identity(0xABCD0999U, 1024);
+  assert(unknown.device_id == 0x999);
+  assert(unknown.revision_id == 0xABCD);
+  assert(unknown.flash_kb == 1024);
+  assert(unknown.ram_kb == 0);
+  assert(unknown.family == NULL);
+}
+
 static void test_vbat_conversion(void) {
   const hardware_info::VbatReading nominal =
     hardware_info::calculate_vbat_millivolts(931, 1500, 1500);
@@ -33,6 +89,38 @@ static void test_vbat_conversion(void) {
 
 static void test_line_formatting(void) {
   char line[32];
+  const hardware_info::DeviceIdentity f401xc =
+    hardware_info::decode_device_identity(0x10000423U, 256, 'C');
+  assert(hardware_info::format_device_line(
+    line, sizeof(line), true, f401xc));
+  assert(std::strcmp(line, "ЧИП:STM32F401CC") == 0);
+  assert(utf8_width(line) == 15);
+
+  const hardware_info::DeviceIdentity unspecified_package =
+    hardware_info::decode_device_identity(0x10000423U, 256);
+  assert(hardware_info::format_device_line(
+    line, sizeof(line), false, unspecified_package));
+  assert(std::strcmp(line, "Chip:STM32F401xC") == 0);
+
+  assert(hardware_info::format_memory_line(
+    line, sizeof(line), false, f401xc));
+  assert(std::strcmp(line, "RAM:64 ROM:256") == 0);
+
+  const hardware_info::DeviceIdentity unknown =
+    hardware_info::decode_device_identity(0x10000999U, 512);
+  assert(hardware_info::format_device_line(
+    line, sizeof(line), false, unknown));
+  assert(std::strcmp(line, "Chip:ID 0x999") == 0);
+  assert(hardware_info::format_memory_line(
+    line, sizeof(line), true, unknown));
+  assert(std::strcmp(line, "ОЗУ:? ПЗУ:512") == 0);
+
+  const hardware_info::DeviceIdentity missing_flash =
+    hardware_info::decode_device_identity(0x10000431U, 0);
+  assert(hardware_info::format_memory_line(
+    line, sizeof(line), false, missing_flash));
+  assert(std::strcmp(line, "RAM:128 ROM:?") == 0);
+
   assert(hardware_info::format_vbat_line(
     line, sizeof(line), true, {true, 3020}));
   assert(std::strcmp(line, "VBAT:3,02 В") == 0);
@@ -95,6 +183,7 @@ static void test_scroll_bounds(void) {
 }
 
 int main(void) {
+  test_device_identity();
   test_vbat_conversion();
   test_line_formatting();
   test_scroll_bounds();

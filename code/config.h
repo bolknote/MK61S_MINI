@@ -576,39 +576,6 @@
   constexpr bool DBG_FOCAL = false;
 #endif
 
-#ifdef ARDUINO_BLACKPILL_F411CE
-  const char chip_name[] = "STM32F411CE";
-  const char mem_text[] = "RAM:128 ROM:512";
-#else
-  #ifdef ARDUINO_BLACKPILL_F401CE
-    const char chip_name[] = "STM32F401CE";
-    const char mem_text[] = "RAM:96 ROM:512";
-  #else
-    #ifdef ARDUINO_BLACKPILL_F401CC
-      const char chip_name[] = "STM32F401CC";
-      const char mem_text[] = "RAM:64 ROM:256";
-    #else
-      #ifdef ARDUINO_GENERIC_F401CDUX
-        const char chip_name[] = "STM32F401CD";
-        const char mem_text[] = "RAM:96 ROM:384";
-      #else
-        #ifdef ARDUINO_GENERIC_F411CCUX
-          const char chip_name[] = "STM32F411CC";
-          const char mem_text[] = "RAM:128 ROM:256";
-        #else
-          #ifdef ARDUINO_GENERIC_F401CBYX
-            const char chip_name[] = "STM32F401CB";
-            const char mem_text[] = "RAM:64 ROM:128";
-          #else
-            const char chip_name[] = "unknown chip";
-            const char mem_text[] = "unknown memory";
-          #endif
-        #endif
-      #endif
-    #endif
-  #endif
-#endif
-
 #ifdef MK61s
   #if defined(MK61_BOARD_CLASSIC_V2)
     constexpr char MODEL[] = "MK61s-Classic-V2";

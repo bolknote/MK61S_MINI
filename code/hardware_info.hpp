@@ -17,6 +17,112 @@ struct VbatReading {
   u16 millivolts;
 };
 
+struct DeviceIdentity {
+  u16 device_id;
+  u16 revision_id;
+  u16 flash_kb;
+  u16 ram_kb;
+  const char* family;
+  char pin_count_code;
+  char flash_size_code;
+};
+
+inline bool valid_flash_size(u16 flash_kb) {
+  return flash_kb != 0 && flash_kb != 0xFFFFU;
+}
+
+inline DeviceIdentity decode_device_identity(
+    u32 idcode, u16 flash_kb, char pin_count_code = 'x') {
+  const u16 device_id = (u16) (idcode & 0x0FFFU);
+  const u16 revision_id = (u16) (idcode >> 16);
+  const u16 detected_flash_kb = valid_flash_size(flash_kb) ? flash_kb : 0;
+  if(pin_count_code == 0) pin_count_code = 'x';
+
+  // DEV_ID и Flash signature задают семейство и плотность памяти.
+  // Код числа выводов приходит от compile-time target: его в MCU нет.
+  switch(device_id) {
+    // RM0368: STM32F401xB/C and STM32F401xD/E have different DEV_IDs.
+    case 0x423:
+      return {
+        device_id,
+        revision_id,
+        detected_flash_kb,
+        64,
+        "STM32F401",
+        pin_count_code,
+        detected_flash_kb == 128 ? 'B' :
+          (detected_flash_kb == 256 ? 'C' : '?')
+      };
+    case 0x433:
+      return {
+        device_id,
+        revision_id,
+        detected_flash_kb,
+        96,
+        "STM32F401",
+        pin_count_code,
+        detected_flash_kb == 384 ? 'D' :
+          (detected_flash_kb == 512 ? 'E' : '?')
+      };
+    case 0x431: // RM0383: STM32F411xC/E.
+      return {
+        device_id,
+        revision_id,
+        detected_flash_kb,
+        128,
+        "STM32F411",
+        pin_count_code,
+        detected_flash_kb == 256 ? 'C' :
+          (detected_flash_kb == 512 ? 'E' : '?')
+      };
+    default:
+      return {
+        device_id,
+        revision_id,
+        detected_flash_kb,
+        0,
+        NULL,
+        pin_count_code,
+        '?'
+      };
+  }
+}
+
+inline bool format_device_line(
+    char* out, usize size, bool russian, const DeviceIdentity& identity) {
+  if(out == NULL || size == 0) return false;
+  const int written = identity.family != NULL
+    ? snprintf(out, size, russian ? "ЧИП:%s%c%c" : "Chip:%s%c%c",
+        identity.family, identity.pin_count_code, identity.flash_size_code)
+    : snprintf(out, size, russian ? "ЧИП:ID 0x%03X" : "Chip:ID 0x%03X",
+        (unsigned) identity.device_id);
+  return written >= 0 && (usize) written < size;
+}
+
+inline bool format_memory_line(
+    char* out, usize size, bool russian, const DeviceIdentity& identity) {
+  if(out == NULL || size == 0) return false;
+
+  int written;
+  if(identity.ram_kb != 0 && identity.flash_kb != 0) {
+    written = snprintf(
+      out, size, russian ? "ОЗУ:%u ПЗУ:%u" : "RAM:%u ROM:%u",
+      (unsigned) identity.ram_kb, (unsigned) identity.flash_kb);
+  } else if(identity.ram_kb != 0) {
+    written = snprintf(
+      out, size, russian ? "ОЗУ:%u ПЗУ:?" : "RAM:%u ROM:?",
+      (unsigned) identity.ram_kb);
+  } else if(identity.flash_kb != 0) {
+    written = snprintf(
+      out, size, russian ? "ОЗУ:? ПЗУ:%u" : "RAM:? ROM:%u",
+      (unsigned) identity.flash_kb);
+  } else {
+    written = snprintf(
+      out, size, russian ? "ОЗУ:? ПЗУ:?" : "RAM:? ROM:?");
+  }
+  return written >= 0 && (usize) written < size;
+}
+
 inline VbatReading calculate_vbat_millivolts(
     u16 raw_vbat, u16 raw_vref, u16 calibrated_vref) {
   if(raw_vbat > ADC_FULL_SCALE || raw_vref == 0 ||
@@ -95,6 +201,7 @@ inline u8 step_scroll_offset(u8 offset, u8 rows, i8 delta) {
 }
 
 VbatReading read_vbat(void);
+DeviceIdentity read_device_identity(void);
 const char* display_type(void);
 
 } // пространство имён hardware_info
