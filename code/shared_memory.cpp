@@ -550,7 +550,7 @@ Snapshot snapshot(Arena arena) {
     value->reclaim_attempts,
     value->reclaims,
     value->reclaim_failures,
-    value->enabled,
+    value->enabled != 0,
     value->eviction_prepare != nullptr
   };
   return result;
