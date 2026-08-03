@@ -1057,13 +1057,30 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   if(item[0] == '.') return ParseStatus::SKIP;
   char name[program_store::NAME_SIZE + 16];
   if(!accepted_lfn(lfn, item, name, sizeof(name)) &&
-     !short_name(item, name, sizeof(name))) return ParseStatus::INVALID;
+     !short_name(item, name, sizeof(name))) {
+    snprintf(g_error_detail, sizeof(g_error_detail),
+             "dir-name:%02X%02X%02X%02X:a%02X",
+             (unsigned) item[0], (unsigned) item[1],
+             (unsigned) item[2], (unsigned) item[3],
+             (unsigned) item[11]);
+    g_last_error = g_error_detail;
+    return ParseStatus::INVALID;
+  }
   parsed.directory = (item[11] & ATTR_DIRECTORY) != 0;
   parsed.attributes = item[11];
   const u16 cluster = get_le16(item, 26);
   if(parsed.directory) {
     if(system_directory(name, parsed.attributes)) return ParseStatus::SKIP;
-    if(!valid_cluster(cluster) || strlen(name) >= program_store::NAME_SIZE) {
+    if(!valid_cluster(cluster)) {
+      snprintf(g_error_detail, sizeof(g_error_detail),
+               "dir-cluster:%u:%.23s", (unsigned) cluster, name);
+      g_last_error = g_error_detail;
+      return ParseStatus::INVALID;
+    }
+    if(strlen(name) >= program_store::NAME_SIZE) {
+      snprintf(g_error_detail, sizeof(g_error_detail),
+               "dir-name-long:%.32s", name);
+      g_last_error = g_error_detail;
       return ParseStatus::INVALID;
     }
     bounded_string::copy(parsed.name, name);
@@ -1079,9 +1096,28 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   }
   // Неподдерживаемые файлы хоста намеренно игнорируются независимо от размера.
   // Квоту данных C5 применяем лишь после выбора известного расширения калькулятора.
-  if((parsed.type == program_store::ProgramType::CHIP8 && size == 0) ||
-     size > maximum_file_size(parsed.type)) return ParseStatus::INVALID;
-  if(!valid_cluster(cluster)) return ParseStatus::INVALID;
+  const u16 size_limit = maximum_file_size(parsed.type);
+  if(parsed.type == program_store::ProgramType::CHIP8 && size == 0) {
+    snprintf(g_error_detail, sizeof(g_error_detail),
+             "empty:%.3s:%.31s", visible_extension(parsed.type), name);
+    g_last_error = g_error_detail;
+    return ParseStatus::INVALID;
+  }
+  if(size > size_limit) {
+    snprintf(g_error_detail, sizeof(g_error_detail),
+             "oversize:%.3s:%u>%u:%.10s",
+             visible_extension(parsed.type), (unsigned) size,
+             (unsigned) size_limit, name);
+    g_last_error = g_error_detail;
+    return ParseStatus::INVALID;
+  }
+  if(!valid_cluster(cluster)) {
+    snprintf(g_error_detail, sizeof(g_error_detail),
+             "cluster:%.3s:%u:%.20s", visible_extension(parsed.type),
+             (unsigned) cluster, name);
+    g_last_error = g_error_detail;
+    return ParseStatus::INVALID;
+  }
   bounded_string::copy(parsed.name, name);
   parsed.id = id_for_cluster(cluster);
   parsed.data_len = (u16) size;
@@ -1387,7 +1423,7 @@ static bool handle_directory_item(u16 parent_id, const u8* item,
   reset_lfn(lfn);
   if(status == ParseStatus::SKIP) return true;
   if(status == ParseStatus::INVALID) {
-    g_last_error = "directory-entry";
+    if(g_last_error == NULL) g_last_error = "directory-entry";
     return false;
   }
   return process_node(parent_id, parsed, depth, pass);

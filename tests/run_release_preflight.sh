@@ -58,6 +58,8 @@ for profile in mini-v3-a00 mini-v2-a00 classic-v3; do
     -OutputDirectory "$f401_output"
   "$root/tests/check_global_constructors.sh" \
     "$f401_build_root/$profile/resident.elf"
+  "$root/tests/check_early_dfu_elf.sh" \
+    "$f401_build_root/$profile/resident.elf"
 done
 
 for bundle in \

@@ -83,5 +83,7 @@ test -s "$compile_path/mk61s-M.ino.elf" || fail 'missing ELF'
 test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
 "$root/tests/check_global_constructors.sh" \
   "$compile_path/mk61s-M.ino.elf"
+"$root/tests/check_early_dfu_elf.sh" \
+  "$compile_path/mk61s-M.ino.elf"
 
 printf '\nF401 Classic V3 UC1609 Arduino compile check: OK\n'

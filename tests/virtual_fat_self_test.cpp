@@ -4,9 +4,11 @@
 #include <vector>
 
 #include "SPIFlash.h"
+#include "exclusive_buffer.hpp"
 #include "ledcontrol.h"
 #include "loadable_module_runtime.hpp"
 #include "program_store.hpp"
+#include "shared_memory.hpp"
 #include "virtual_fat.hpp"
 
 SPIFlash flash;
@@ -30,6 +32,12 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
   memset(&header, 0, sizeof(header));
   if(source.read == nullptr || source.size < HEADER_SIZE ||
      source.size > MAX_CONTAINER_SIZE) return StoreStatus::WRONG_FILE_SIZE;
+  shared_memory::Lease module_overlay;
+  if(!module_overlay.acquire_cache(
+       shared_memory::Arena::OVERLAY,
+       shared_memory::Owner::LOADABLE_MODULE, OVERLAY_SIZE)) {
+    return StoreStatus::UNAVAILABLE;
+  }
   u8 marker = 0;
   if(!source.read(source.context, 0, &marker, 1)) {
     return StoreStatus::IO_ERROR;
@@ -651,13 +659,24 @@ static void test_optional_display_cache_span(void) {
   assert(virtual_fat::write_cache_capacity() == 32);
 }
 
-static void run_usb_commit_zx0_workspace_test(bool external) {
+static void run_usb_commit_zx0_workspace_test(usize external_size,
+                                               bool managed_bulk = false) {
   fresh();
   alignas(4) static u8 display_cache[8192];
-  if(external) {
+  u8* external_data = display_cache;
+  if(external_size != 0) {
+    assert(external_size <= sizeof(display_cache));
     virtual_fat::end_session();
-    assert(virtual_fat::set_external_cache(display_cache,
-                                           sizeof(display_cache)));
+    if(managed_bulk) {
+      assert(external_size == exclusive_buffer::SIZE);
+      assert(exclusive_buffer::acquire(
+          exclusive_buffer::Owner::USB_CACHE, external_size));
+      external_data = exclusive_buffer::data(
+          exclusive_buffer::Owner::USB_CACHE);
+      assert(external_data != nullptr);
+    }
+    assert(virtual_fat::set_external_cache(external_data,
+                                           external_size));
     assert(virtual_fat::reset_session());
   }
   const Layout fs = layout();
@@ -687,7 +706,9 @@ static void run_usb_commit_zx0_workspace_test(bool external) {
   assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
   assert(virtual_fat::write_cached_sectors(1, fat, 1));
   expect_flush();
-  assert(virtual_fat::write_cache_capacity() == (external ? 32 : 16));
+  const usize external_slots = external_size / virtual_fat::SECTOR_SIZE;
+  assert(virtual_fat::write_cache_capacity() ==
+         16U + (external_slots > 16U ? 16U : external_slots));
 
   program_store::Entry entry = {};
   assert(program_store::entry_by_id((u16) (file_cluster - 2U), entry));
@@ -704,13 +725,22 @@ static void run_usb_commit_zx0_workspace_test(bool external) {
   assert(virtual_fat::read_sectors(
       cluster_lba(fs, file_cluster), readback, 3));
   assert(memcmp(readback, sectors, sizeof(readback)) == 0);
+  if(managed_bulk) {
+    virtual_fat::end_session();
+    exclusive_buffer::release(exclusive_buffer::Owner::USB_CACHE);
+  }
 }
 
 static void test_usb_commit_uses_available_cache_for_zx0(void) {
   // LCD1602: только primary cache. UC1609: внешний display buffer
-  // временно отдаётся компрессору.
-  run_usb_commit_zx0_workspace_test(false);
-  run_usb_commit_zx0_workspace_test(true);
+  // временно отдаётся компрессору. F401 предоставляет ровно три сектора,
+  // F411 — шестнадцать; оба размера должны проходить один путь фиксации.
+  run_usb_commit_zx0_workspace_test(0);
+  run_usb_commit_zx0_workspace_test(1536);
+  run_usb_commit_zx0_workspace_test(8192);
+#if MK61_EXCLUSIVE_BUFFER_ENABLED
+  run_usb_commit_zx0_workspace_test(exclusive_buffer::SIZE, true);
+#endif
 }
 
 static void test_host_deletes_file_via_directory(void) {
@@ -909,6 +939,32 @@ static void test_wbmp_over_quota_is_rejected(void) {
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::flush_pending());
+  assert(strcmp(virtual_fat::trace_line_at(0),
+                "oversize:wbm:1601>1600:large") == 0);
+  assert(program_store::total_count() == 0);
+  assert(program_store::vfat_stage_discard_all());
+}
+
+static void test_markdown_over_quota_reports_file_and_limit(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 220;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'R','E','A','D','M','E',' ',' ','M','D',' '};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "README.md", short_name, false,
+      file_cluster, 7492U);
+  root[slot * 32] = 0;
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  assert(!virtual_fat::flush_pending());
+  assert(strcmp(virtual_fat::trace_line_at(0),
+                "oversize:md:7492>1536:README") == 0);
   assert(program_store::total_count() == 0);
   assert(program_store::vfat_stage_discard_all());
 }
@@ -1028,6 +1084,8 @@ static void test_chip8_over_quota_is_rejected(void) {
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::flush_pending());
+  assert(strcmp(virtual_fat::trace_line_at(0),
+                "oversize:ch8:3585>3584:large") == 0);
   assert(program_store::total_count() == 0);
   assert(program_store::vfat_stage_discard_all());
 }
@@ -1500,6 +1558,7 @@ int main(void) {
   test_markdown_import_keeps_t2_type();
   test_wbmp_import_uses_its_full_quota();
   test_wbmp_over_quota_is_rejected();
+  test_markdown_over_quota_reports_file_and_limit();
   test_wbmp_short_name_alias();
   test_chip8_import_uses_full_quota_and_large_zx0();
   test_chip8_over_quota_is_rejected();

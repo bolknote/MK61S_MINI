@@ -297,15 +297,16 @@ void setup() {
   crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 1, 0);
   dwt_profiler::initialize();
 
-  const bool dfu_reboot_requested = DFU_consume_reboot_request();
-
-  // При входе с зажатой кнопкой ESC вызывается DFU-загрузчик
-  pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
-  pinMode(PIN_KBD_ROW0, OUTPUT);
-  digitalWrite(PIN_KBD_ROW0, HIGH);
-
-  const bool dfu_requested = dfu_reboot_requested ||
-      digitalRead(PIN_KBD_COL0) != LOW;
+  #if !MK61_EARLY_DFU_SUPPORTED
+    // Резервный путь для других STM32. На F401/F411 ESC уже проверен прямым
+    // доступом к GPIO до HAL, тактового дерева, USB CDC и входа в setup().
+    const bool dfu_reboot_requested = early_dfu::consume_request();
+    pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
+    pinMode(PIN_KBD_ROW0, OUTPUT);
+    digitalWrite(PIN_KBD_ROW0, HIGH);
+    const bool dfu_requested = dfu_reboot_requested ||
+        digitalRead(PIN_KBD_COL0) != LOW;
+  #endif
 
   // В mini V2 линия PC15 используется как DB7 ЖКИ. Сохранённый после сброса
   // LSE необходимо отключить до конструктора LiquidCrystal: он начинает
@@ -320,16 +321,18 @@ void setup() {
     digitalWrite(PIN_LCD_DB7, LOW);
   #endif
 
-  // Дисплей нужен и для короткого сообщения DFU, но создаётся только после
-  // проверки ESC. Остальная периферия в DFU-ветке вообще не конструируется.
+  // F401/F411 попадает сюда только при обычной загрузке: сверхаварийный ESC
+  // принципиально не зависит от конструктора или исправности дисплея.
   main_lcd_pointer = &mk61_lcd_storage.construct();
   main_lcd().begin(lcd_display::COLS, lcd_display::DEFAULT_ROWS);
   crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 2, millis());
 
-  if(dfu_requested) {
-    DFU_enter_bootloader();
-    return;
-  }
+  #if !MK61_EARLY_DFU_SUPPORTED
+    if(dfu_requested) {
+      DFU_enter_bootloader();
+      return;
+    }
+  #endif
 
   (void) mpu_guard::initialize();
 

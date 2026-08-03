@@ -32,6 +32,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO_BLACKPILL_F401CC \
+  -DMK61_DISPLAY_UC1609=1 \
   -include "$root/tests/program_store_shim/program_store_test_shim.h" \
   -I"$root/tests/program_store_shim" \
   -I"$root/code" \

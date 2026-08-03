@@ -3,6 +3,7 @@
 
 #include "rust_types.h"
 #include "display.hpp"
+#include "early_dfu.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 
@@ -93,8 +94,9 @@ namespace library_mk61 {
 }
 
 extern  void  DFU_enable(void);
+#if !MK61_EARLY_DFU_SUPPORTED
 extern  void  DFU_enter_bootloader(void);
-extern  bool  DFU_consume_reboot_request(void);
+#endif
 extern  void  reinit_mk61_calculator_state(void);
 extern  void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume);
 extern  void  sound_scaled(usize pin, isize freq_Hz, usize duration_ms, usize volume, usize volume_percent);

@@ -32,6 +32,7 @@
 #include "menu.hpp"
 #include "debug.h"
 #include "dfu_splash.hpp"
+#include "early_dfu.hpp"
 
 #include "ledcontrol.h"
 #include <string.h>
@@ -215,40 +216,7 @@ static void Show_DFU_splash(void) {
   library_mk61::print_localized_at(0, 0, "Прошивка DFU", " DFU flash mode!");
 }
 
-namespace {
-
-static constexpr u32 DFU_REBOOT_MAGIC = 0x31465544UL; // "DUF1" LE.
-
-struct DfuRebootRequest {
-  u32 magic;
-  u32 inverse_magic;
-};
-
-extern "C" {
-__attribute__((used, aligned(8), section(".noinit.mk61_dfu_request")))
-volatile DfuRebootRequest mk61_dfu_reboot_request;
-}
-
-static void publish_dfu_reboot_request(void) {
-  mk61_dfu_reboot_request.magic = 0;
-  __DMB();
-  mk61_dfu_reboot_request.inverse_magic = ~DFU_REBOOT_MAGIC;
-  __DMB();
-  mk61_dfu_reboot_request.magic = DFU_REBOOT_MAGIC;
-  __DSB();
-}
-
-} // namespace
-
-bool DFU_consume_reboot_request(void) {
-  const bool requested =
-      mk61_dfu_reboot_request.magic == DFU_REBOOT_MAGIC &&
-      mk61_dfu_reboot_request.inverse_magic == ~DFU_REBOOT_MAGIC;
-  mk61_dfu_reboot_request.magic = 0;
-  __DMB();
-  return requested;
-}
-
+#if !MK61_EARLY_DFU_SUPPORTED
 void DFU_enter_bootloader(void) {
     void (*SysMemBootJump)(void);
 
@@ -267,17 +235,15 @@ void DFU_enter_bootloader(void) {
 
   while(true) {};
 }
+#endif
 
 void DFU_enable(void) {
-  // После старта IWDG прямой jump оставил бы watchdog работающим внутри ROM
-  // bootloader. Reset-handoff гарантированно входит в bootloader раньше нового
-  // independent_watchdog::initialize(). Тот же путь безопасен, если IWDG был
-  // отключён compile-time.
+  // Штатный вход из меню может оставить пользователю заставку. После reset
+  // ранний F401/F411-пролог уйдёт в ROM до HAL, дисплея и повторного запуска
+  // IWDG; контроллер экрана при этом сохраняет уже переданный кадр.
   Show_DFU_splash();
   main_lcd().flush();
-  publish_dfu_reboot_request();
-  NVIC_SystemReset();
-  while(true) {}
+  early_dfu::request();
 }
 
 bool  Confirmation(void) {

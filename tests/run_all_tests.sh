@@ -29,6 +29,7 @@ fi
 "$root/tests/run_spi1_arbiter_tests.sh"
 "$root/tests/run_spi1_dma_tests.sh"
 "$root/tests/run_idle_sleep_policy_tests.sh"
+"$root/tests/run_early_dfu_tests.sh"
 "$root/tests/run_dfu_splash_tests.sh"
 "$root/tests/run_display_font_tests.sh"
 "$root/tests/run_hardware_info_tests.sh"

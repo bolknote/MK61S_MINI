@@ -119,6 +119,8 @@ compile_variant() {
     fail "missing BIN for $name"
   "$root/tests/check_global_constructors.sh" \
     "$build_path/mk61s-M.ino.elf"
+  "$root/tests/check_early_dfu_elf.sh" \
+    "$build_path/mk61s-M.ino.elf"
   if [[ -n "$output_dir" && -n "$artifact_name" ]]; then
     cp "$build_path/mk61s-M.ino.bin" \
       "$output_dir/${artifact_name}-${firmware_tag}.bin"
