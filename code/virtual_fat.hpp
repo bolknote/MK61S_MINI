@@ -25,6 +25,10 @@ bool flush_write_cache(void);
 bool write_sector(u32 lba, const u8* data);
 bool write_sectors(u32 lba, const u8* data, u16 count);
 bool flush_pending(void);
+// Финальная граница USB-сеанса: после детерминированного отказа read-only
+// preflight отменяет host-транзакцию. Retryable I/O/resource failure сохраняет
+// staging для восстановления и повтора.
+bool finalize_pending(void);
 bool reset_session(void);
 void end_session(void);
 

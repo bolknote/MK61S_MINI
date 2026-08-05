@@ -239,6 +239,12 @@ static void expect_flush(void) {
   assert(ok);
 }
 
+static void expect_rejected_pending_recovered(void) {
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::reset_session());
+  assert(virtual_fat::finalize_pending());
+}
+
 static void test_dynamic_fat12_bpb(void) {
   const u32 capacities[] = {
     128U * 1024U, 512U * 1024U,
@@ -795,6 +801,7 @@ static void test_incomplete_file_preflight_preserves_existing_tree(void) {
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::flush_pending());
   assert(strcmp(virtual_fat::trace_line_at(0), "file-data") == 0);
+  assert(program_store::vfat_stage_count() != 0);
 
   program_store::Entry kept = {};
   assert(program_store::entry_by_id(old_id, kept));
@@ -802,8 +809,8 @@ static void test_incomplete_file_preflight_preserves_existing_tree(void) {
   expect_file(old_id, old_data, sizeof(old_data));
   program_store::Entry rejected = {};
   assert(!program_store::entry_by_id((u16) (new_cluster - 2U), rejected));
-  assert(program_store::vfat_stage_count() != 0);
-  assert(program_store::vfat_stage_discard_all());
+  assert(!virtual_fat::finalize_pending());
+  expect_rejected_pending_recovered();
 }
 
 static void test_finder_appledouble_does_not_abort_batch(void) {
@@ -938,14 +945,14 @@ static void test_wbmp_over_quota_is_rejected(void) {
   root[slot * 32] = 0;
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
-  assert(!virtual_fat::flush_pending());
+  assert(!virtual_fat::finalize_pending());
   assert(strcmp(virtual_fat::trace_line_at(0),
                 "oversize:wbm:1601>1600:large") == 0);
   assert(program_store::total_count() == 0);
-  assert(program_store::vfat_stage_discard_all());
+  expect_rejected_pending_recovered();
 }
 
-static void test_markdown_over_quota_reports_file_and_limit(void) {
+static void test_markdown_over_quota_does_not_poison_next_session(void) {
   fresh();
   const Layout fs = layout();
   const u16 file_cluster = 220;
@@ -966,7 +973,15 @@ static void test_markdown_over_quota_reports_file_and_limit(void) {
   assert(strcmp(virtual_fat::trace_line_at(0),
                 "oversize:md:7492>1536:README") == 0);
   assert(program_store::total_count() == 0);
-  assert(program_store::vfat_stage_discard_all());
+  assert(program_store::vfat_stage_count() != 0);
+
+  virtual_fat::end_session();
+  program_store::init();
+  assert(program_store::ready());
+  assert(virtual_fat::reset_session());
+  assert(program_store::vfat_stage_count() != 0);
+  assert(!virtual_fat::finalize_pending());
+  expect_rejected_pending_recovered();
 }
 
 static void test_wbmp_short_name_alias(void) {
@@ -1083,11 +1098,11 @@ static void test_chip8_over_quota_is_rejected(void) {
   root[slot * 32] = 0;
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
-  assert(!virtual_fat::flush_pending());
+  assert(!virtual_fat::finalize_pending());
   assert(strcmp(virtual_fat::trace_line_at(0),
                 "oversize:ch8:3585>3584:large") == 0);
   assert(program_store::total_count() == 0);
-  assert(program_store::vfat_stage_discard_all());
+  expect_rejected_pending_recovered();
 }
 
 static void expect_large_file(u16 id, const std::vector<u8>& expected) {
@@ -1226,7 +1241,7 @@ static void test_invalid_app_preflight_preserves_existing_tree(void) {
   assert(virtual_fat::write_sector(cluster_lba(fs, app_cluster), invalid));
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
-  assert(!virtual_fat::flush_pending());
+  assert(!virtual_fat::finalize_pending());
   assert(strcmp(virtual_fat::trace_line_at(0), "app-invalid") == 0);
 
   program_store::Entry kept = {};
@@ -1235,8 +1250,7 @@ static void test_invalid_app_preflight_preserves_existing_tree(void) {
   expect_file(old_id, old_data, sizeof(old_data));
   program_store::Entry rejected = {};
   assert(!program_store::entry_by_id((u16) (app_cluster - 2U), rejected));
-  assert(program_store::vfat_stage_count() != 0);
-  assert(program_store::vfat_stage_discard_all());
+  expect_rejected_pending_recovered();
 }
 
 static void test_unchanged_invalid_app_does_not_block_other_files(void) {
@@ -1452,7 +1466,7 @@ static void test_repurposed_app_extent_power_cuts_are_recoverable(void) {
     assert(virtual_fat::flush_write_cache());
     SPIFlash::resetOperationCounts();
     SPIFlash::failAfterOperations((i32) cut);
-    (void) virtual_fat::flush_pending();
+    (void) virtual_fat::finalize_pending();
     SPIFlash::clearFailure();
 
     virtual_fat::end_session();
@@ -1498,7 +1512,7 @@ static void test_app_batch_power_cuts_are_recoverable(void) {
     assert(virtual_fat::flush_write_cache());
     SPIFlash::resetOperationCounts();
     SPIFlash::failAfterOperations((i32) cut);
-    (void) virtual_fat::flush_pending();
+    (void) virtual_fat::finalize_pending();
     SPIFlash::clearFailure();
 
     virtual_fat::end_session();
@@ -1531,10 +1545,9 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
   assert(virtual_fat::write_sector(cluster_lba(fs, 202), data));
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
-  assert(!virtual_fat::flush_pending());
+  assert(!virtual_fat::finalize_pending());
   assert(program_store::total_count() == 0);
-  assert(program_store::vfat_stage_count() != 0);
-  assert(program_store::vfat_stage_discard_all());
+  expect_rejected_pending_recovered();
 }
 
 } // безымянное пространство имён
@@ -1558,7 +1571,7 @@ int main(void) {
   test_markdown_import_keeps_t2_type();
   test_wbmp_import_uses_its_full_quota();
   test_wbmp_over_quota_is_rejected();
-  test_markdown_over_quota_reports_file_and_limit();
+  test_markdown_over_quota_does_not_poison_next_session();
   test_wbmp_short_name_alias();
   test_chip8_import_uses_full_quota_and_large_zx0();
   test_chip8_over_quota_is_rejected();

@@ -483,7 +483,7 @@ bool deinit(void) {
       release_cache_buffer();
       return true;
     }
-    const bool flushed = virtual_fat::flush_pending();
+    const bool flushed = virtual_fat::finalize_pending();
     close_session();
     return flushed;
   }
@@ -503,13 +503,14 @@ bool deinit(void) {
     set_deferred_state(DeferredWriteState::EMPTY);
   }
   reset_deferred_io();
-  // Сохраняем завершённые транзакции хоста. Если незавершённую транзакцию
-  // невозможно сбросить, явное нажатие ESC всё равно должно остановить MSC:
+  // Сохраняем завершённые транзакции хоста. Детерминированный отказ preflight
+  // откатывается к последнему committed C5, а retryable I/O-ошибка остаётся в
+  // persistent staging. Явное нажатие ESC в любом случае должно остановить MSC:
   // перезапуск того же сбойного BOT-сеанса оставляет в macOS фантомный диск
   // нулевого размера и делает следующее подключение невозможным. Зафиксированные
-  // файлы уже сохранены; при освобождении VFAT в close_session() отбрасывается
-  // только незавершённая транзакция.
-  const bool flushed = virtual_fat::flush_pending();
+  // файлы уже сохранены; финальный отказ сообщает о потере batch, но staging
+  // для следующего сеанса уже очищен.
+  const bool flushed = virtual_fat::finalize_pending();
   close_session();
   return pending_ok && flushed;
 }

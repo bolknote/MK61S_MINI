@@ -120,6 +120,15 @@ static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
 static const char* g_last_error;
 static char g_error_detail[48];
 
+enum class FlushFailure : u8 {
+  NONE,
+  RETRYABLE,
+  REJECTED
+};
+
+static FlushFailure g_last_flush_failure = FlushFailure::NONE;
+static bool g_preflight_retryable;
+
 static bool ensure_session(void) {
   if(g_session_lease.ok() && g_session != NULL) return true;
   if(!g_session_lease.acquire(language_workspace::Owner::USB_DISK,
@@ -944,7 +953,10 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
       return false;
     }
     u16 next = 0;
-    if(!effective_fat_value(cluster, next)) return false;
+    if(!effective_fat_value(cluster, next)) {
+      g_preflight_retryable = true;
+      return false;
+    }
     if(index + 1U == chain.cluster_count) {
       if(!fat_eof(next)) return false;
     } else {
@@ -1147,6 +1159,7 @@ static bool read_file_chain_source(void* context, u32 offset,
     u8 block[SECTOR_SIZE];
     if(!read_effective_sector(
            cluster_lba(chain.clusters[cluster_index], sector), block)) {
+      g_preflight_retryable = true;
       return false;
     }
     usize count = SECTOR_SIZE - in_sector;
@@ -1235,6 +1248,7 @@ static bool validate_app_chain(const ParsedNode& parsed,
   if(!program_store::vfat_stage_narrow_matching(
        app_chain_contains_stage_key, &chain,
        app_stage_index, MAX_APP_STAGE_BLOCKS)) {
+    g_preflight_retryable = true;
     g_last_error = "app-stage";
     return false;
   }
@@ -1245,10 +1259,15 @@ static bool validate_app_chain(const ParsedNode& parsed,
   const loadable_module::StoreStatus status =
       loadable_module::validate_app(source, header);
   if(!program_store::vfat_stage_restore_full()) {
+    g_preflight_retryable = true;
     g_last_error = "app-stage-restore";
     return false;
   }
   if(status == loadable_module::StoreStatus::OK) return true;
+  if(status == loadable_module::StoreStatus::UNAVAILABLE ||
+     status == loadable_module::StoreStatus::IO_ERROR) {
+    g_preflight_retryable = true;
+  }
   g_last_error = "app-invalid";
   return false;
 }
@@ -1443,6 +1462,7 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
       for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
         const u8* block = NULL;
         if(!cached_effective_sector(root_start() + sector, block)) {
+          g_preflight_retryable = true;
           g_last_error = "root-read";
           return false;
         }
@@ -1467,6 +1487,7 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
       for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
         const u8* block = NULL;
         if(!cached_effective_sector(cluster_lba(cluster, sector), block)) {
+          g_preflight_retryable = true;
           g_last_error = "directory-read";
           return false;
         }
@@ -1479,6 +1500,7 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
     }
     u16 next = 0;
     if(!effective_fat_value(cluster, next)) {
+      g_preflight_retryable = true;
       g_last_error = "directory-fat-read";
       return false;
     }
@@ -1948,16 +1970,23 @@ bool write_sectors(u32 lba, const u8* data, u16 count) {
 }
 
 bool flush_pending(void) {
+  g_last_flush_failure = FlushFailure::RETRYABLE;
   if(!program_store::ready() || !ensure_session()) return false;
   if(!flush_write_cache_internal()) return false;
-  if(program_store::vfat_stage_count() == 0) return true;
+  if(program_store::vfat_stage_count() == 0) {
+    g_last_flush_failure = FlushFailure::NONE;
+    return true;
+  }
   ScopedCommitScratch commit_scratch;
   g_last_error = NULL;
+  g_preflight_retryable = false;
   memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
   invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::VALIDATE)) {
     if(g_last_error == NULL) g_last_error = "validate";
+    g_last_flush_failure = g_preflight_retryable
+        ? FlushFailure::RETRYABLE : FlushFailure::REJECTED;
     return false;
   }
   if(!release_repurposed_file_extents() ||
@@ -1981,7 +2010,23 @@ bool flush_pending(void) {
     return false;
   }
   invalidate_clean_cache();
-  return ensure_all_directory_extents();
+  if(!ensure_all_directory_extents()) {
+    g_last_error = "commit";
+    return false;
+  }
+  g_last_flush_failure = FlushFailure::NONE;
+  return true;
+}
+
+bool finalize_pending(void) {
+  const bool flushed = flush_pending();
+  if(flushed || g_last_flush_failure != FlushFailure::REJECTED) return flushed;
+  if(program_store::ready() && ensure_session() &&
+     program_store::vfat_stage_discard_all()) {
+    memset(session().cache, 0, sizeof(session().cache));
+    g_last_flush_failure = FlushFailure::NONE;
+  }
+  return false;
 }
 
 bool reset_session(void) {
