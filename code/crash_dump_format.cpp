@@ -97,6 +97,17 @@ void append_registers(ReportBuilder& report, const Record& record) {
   report.text(",pc="); report.hex(record.stacked_pc);
   report.text(",xpsr="); report.hex(record.stacked_xpsr);
   report.character('\n');
+  if((record.capture_flags & CALLEE_SAVED_VALID) != 0) {
+    report.text("r4="); report.hex(record.r4);
+    report.text(",r5="); report.hex(record.r5);
+    report.text(",r6="); report.hex(record.r6);
+    report.text(",r7="); report.hex(record.r7);
+    report.text("\nr8="); report.hex(record.r8);
+    report.text(",r9="); report.hex(record.r9);
+    report.text(",r10="); report.hex(record.r10);
+    report.text(",r11="); report.hex(record.r11);
+    report.character('\n');
+  }
 }
 
 } // namespace

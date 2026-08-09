@@ -123,15 +123,15 @@ static void test_line_formatting(void) {
 
   assert(hardware_info::format_vbat_line(
     line, sizeof(line), true, {true, 3020}));
-  assert(std::strcmp(line, "VBAT:3,02 В") == 0);
+  assert(std::strcmp(line, "VBAT вход:3,02 В") == 0);
 
   assert(hardware_info::format_vbat_line(
     line, sizeof(line), false, {true, 3025}));
-  assert(std::strcmp(line, "VBAT:3.03 V") == 0);
+  assert(std::strcmp(line, "VBAT pin:3.03 V") == 0);
 
   assert(hardware_info::format_vbat_line(
     line, sizeof(line), true, {false, 0}));
-  assert(std::strcmp(line, "VBAT:--,-- В") == 0);
+  assert(std::strcmp(line, "VBAT вход:--,-- В") == 0);
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), true, "LCD1602A00"));

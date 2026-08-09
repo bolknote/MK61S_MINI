@@ -2,6 +2,9 @@
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
 #include "page_damage.hpp"
+#if defined(MK61_DISPLAY_UC1609)
+  #include "shared_scratch.hpp"
+#endif
 
 #include <string.h>
 
@@ -984,9 +987,7 @@ MK61Display::MK61Display(void)
     custom_valid{false},
     active_font(),
     preview_font(),
-    active_font_enabled(false),
-    external_font_suspended(false),
-    preview_font_enabled(false),
+    active_font_state(ActiveFontState::BUILTIN),
     initialized(false),
 #if MK61_ANY_FULLSCREEN_FILE
     fullscreen_bitmap_active(false),
@@ -1411,18 +1412,30 @@ bool MK61Display::installFont(const u8* data, u16 size) {
   if(!source.open(data, size)) return false;
   if(!exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT, fmk::MAX_FILE_SIZE)) return false;
   u8* const font_data = exclusive_buffer::data(exclusive_buffer::Owner::DISPLAY_FONT);
-  if(font_data == NULL) return false;
-  memmove(font_data, data, size);
-  if(!active_font.open(font_data, size)) {
+  if(font_data == NULL) {
     exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
     return false;
   }
 
-  active_font_enabled = true;
-  external_font_suspended = false;
-  preview_font_enabled = false;
-  preview_profile_active = false;
+  // Ни flush(), ни фоновый клиент не должны увидеть Face, пока его backing
+  // storage заменяется. Сначала делаем старые представления недостижимыми,
+  // затем копируем и только после полной повторной валидации публикуем новое.
+  MK61DisplayUpdate update(*this);
+  active_font_state = ActiveFontState::BUILTIN;
+  active_font.reset();
   preview_font.reset();
+  preview_profile_active = false;
+  memmove(font_data, data, size);
+  if(!active_font.open(font_data, size)) {
+    active_font_state = ActiveFontState::BUILTIN;
+    exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
+    applyTextProfile(lcd_display::defaultTextProfileForRows(
+        lcd_display::DEFAULT_ROWS));
+    markAllDirty();
+    return false;
+  }
+
+  active_font_state = ActiveFontState::READY;
   applyTextProfile(recommendedProfile(active_font.metrics()), true);
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) usb_surface.setFont(&active_font);
@@ -1433,8 +1446,15 @@ bool MK61Display::installFont(const u8* data, u16 size) {
 
 bool MK61Display::setFontPreview(const u8* data, u16 size) {
   if(data == NULL || size == 0 || size > fmk::MAX_FILE_SIZE) return false;
+  // preview_font не владеет копией: этот контракт должен быть подкреплён
+  // живой арендой проводника, а не только комментарием у вызывающего кода.
+  if(shared_scratch::current_owner() !=
+         shared_scratch::Owner::EXPLORER_VIEW ||
+     !shared_memory::contains(shared_memory::Arena::SCRATCH,
+                              data, size)) return false;
   fmk::Face candidate;
   if(!candidate.open(data, size)) return false;
+  MK61DisplayUpdate update(*this);
   // Проводник удерживает аренду shared-scratch до clearFontPreview().
   // Сохраняем представление этих байтов, чтобы не делать вторую копию на 1536 байт.
   if(!preview_font.open(data, size)) return false;
@@ -1442,7 +1462,6 @@ bool MK61Display::setFontPreview(const u8* data, u16 size) {
     preview_saved_profile = active_profile;
     preview_profile_active = true;
   }
-  preview_font_enabled = true;
   applyTextProfile(recommendedProfile(preview_font.metrics()), true);
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) usb_surface.setFont(&preview_font);
@@ -1452,10 +1471,10 @@ bool MK61Display::setFontPreview(const u8* data, u16 size) {
 }
 
 void MK61Display::clearFontPreview(void) {
-  if(!preview_font_enabled && !preview_profile_active) return;
+  if(!preview_font.valid() && !preview_profile_active) return;
+  MK61DisplayUpdate update(*this);
   const bool restore_profile = preview_profile_active;
   const lcd_display::TextProfile saved_profile = preview_saved_profile;
-  preview_font_enabled = false;
   preview_profile_active = false;
   preview_font.reset();
   if(restore_profile) applyTextProfile(saved_profile, true);
@@ -1466,43 +1485,64 @@ void MK61Display::clearFontPreview(void) {
 }
 
 void MK61Display::useBuiltinFont(void) {
+  MK61DisplayUpdate update(*this);
   const bool restore_profile = preview_profile_active;
   const lcd_display::TextProfile saved_profile = preview_saved_profile;
-  const bool had_active_font = active_font_enabled || external_font_suspended;
-  const bool changed = had_active_font || preview_font_enabled || preview_profile_active;
-  if(active_font_enabled) exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
-  active_font_enabled = false;
-  external_font_suspended = false;
-  preview_font_enabled = false;
+  const ActiveFontState previous_state = active_font_state;
+  const bool had_active_font = previous_state != ActiveFontState::BUILTIN;
+  const bool changed = had_active_font || preview_font.valid() ||
+                       preview_profile_active;
+
+  // Сначала запрещаем выбор Face и обнуляем его указатель. Только после этого
+  // backing arena может перейти USB-кэшу, swap или компрессору.
+  active_font_state = ActiveFontState::BUILTIN;
   preview_profile_active = false;
   active_font.reset();
   preview_font.reset();
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) usb_surface.setFont(NULL);
 #endif
+  if(previous_state == ActiveFontState::READY &&
+     exclusive_buffer::current_owner() ==
+         exclusive_buffer::Owner::DISPLAY_FONT) {
+    exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
+  }
   if(had_active_font) applyTextProfile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS));
   else if(restore_profile) applyTextProfile(saved_profile, true);
   if(changed) markAllDirty();
 }
 
 bool MK61Display::externalFontActive(void) const {
-  return active_font_enabled;
+  return active_font_state == ActiveFontState::READY &&
+         active_font.valid() &&
+         exclusive_buffer::current_owner() ==
+             exclusive_buffer::Owner::DISPLAY_FONT &&
+         shared_memory::contains(shared_memory::Arena::BULK,
+                                 active_font.data(), active_font.size());
 }
 
 bool MK61Display::suspendExternalFontForUsb(void) {
-  if(preview_font_enabled || preview_profile_active) return false;
-  if(external_font_suspended) return true;
-  if(!active_font_enabled) return true;
-  active_font_enabled = false;
-  external_font_suspended = true;
+  if(preview_font.valid() || preview_profile_active) return false;
+  if(active_font_state == ActiveFontState::SUSPENDED) return true;
+  if(active_font_state == ActiveFontState::BUILTIN) return true;
+  active_font_state = ActiveFontState::SUSPENDED;
   active_font.reset();
-  exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
+  if(exclusive_buffer::current_owner() ==
+     exclusive_buffer::Owner::DISPLAY_FONT) {
+    exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
+  }
   return true;
 }
 
 const fmk::Face* MK61Display::selectedFont(void) const {
-  if(preview_font_enabled) return &preview_font;
-  return active_font_enabled ? &active_font : NULL;
+  if(preview_font.valid() &&
+     shared_scratch::current_owner() ==
+         shared_scratch::Owner::EXPLORER_VIEW &&
+     shared_memory::contains(shared_memory::Arena::SCRATCH,
+                             preview_font.data(), preview_font.size())) {
+    return &preview_font;
+  }
+  return externalFontActive() ? &active_font : NULL;
 }
 
 builtin_font::FaceId MK61Display::fallbackFont(void) const {

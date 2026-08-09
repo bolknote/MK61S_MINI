@@ -91,6 +91,8 @@ static void test_mono_raw_and_rle(void) {
   const std::vector<u8> bytes = mono_fixture();
   fmk::Face face;
   assert(face.open(bytes.data(), bytes.size()));
+  assert(face.data() == bytes.data());
+  assert(face.size() == bytes.size());
   assert(face.metrics().monospaced);
   assert(face.metrics().glyph_count == 2);
   assert(face.metrics().line_gap == 1);
@@ -110,6 +112,17 @@ static void test_mono_raw_and_rle(void) {
   assert(face.decode(glyph, bitmap, sizeof(bitmap)));
   for(u8 row = 0; row < 5; row++) assert(bitmap[row] == 0xE0);
   assert(!face.glyph('C', glyph));
+}
+
+static void test_reset_revokes_backing_storage(void) {
+  const std::vector<u8> bytes = mono_fixture();
+  fmk::Face face;
+  assert(face.open(bytes.data(), bytes.size()));
+
+  face.reset();
+  assert(!face.valid());
+  assert(face.data() == nullptr);
+  assert(face.size() == 0);
 }
 
 static void test_proportional_metadata_is_read(void) {
@@ -325,6 +338,7 @@ static void validate_external_font(const char* path, bool require_ink) {
 
 int main(int argc, char** argv) {
   test_mono_raw_and_rle();
+  test_reset_revokes_backing_storage();
   test_proportional_metadata_is_read();
   test_crc_and_padding_are_validated();
   test_lcd_scaling();

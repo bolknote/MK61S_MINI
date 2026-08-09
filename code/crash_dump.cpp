@@ -93,7 +93,8 @@ static void fill_frame(const u32* frame) {
 
 extern "C" __attribute__((noreturn, noinline, used, externally_visible))
 void mk61_crash_fault_entry(u32 exc_return, u32 original_msp,
-                            u32 original_psp) {
+                            u32 original_psp,
+                            const u32* callee_saved) {
   const u32 captured_primask = __get_PRIMASK();
   __disable_irq();
 
@@ -142,6 +143,17 @@ void mk61_crash_fault_entry(u32 exc_return, u32 original_msp,
   } else {
     fill_invalid_frame();
   }
+  if(callee_saved != nullptr) {
+    mk61_crash_record.r4 = callee_saved[0];
+    mk61_crash_record.r5 = callee_saved[1];
+    mk61_crash_record.r6 = callee_saved[2];
+    mk61_crash_record.r7 = callee_saved[3];
+    mk61_crash_record.r8 = callee_saved[4];
+    mk61_crash_record.r9 = callee_saved[5];
+    mk61_crash_record.r10 = callee_saved[6];
+    mk61_crash_record.r11 = callee_saved[7];
+    flags |= crash_dump_format::CALLEE_SAVED_VALID;
+  }
   mk61_crash_record.capture_flags = flags;
 
   mk61_crash_record.runtime_uptime_ms = runtime_uptime_ms;
@@ -151,11 +163,6 @@ void mk61_crash_fault_entry(u32 exc_return, u32 original_msp,
   mk61_crash_record.classic_steps = classic_steps;
   mk61_crash_record.classic_missed = classic_missed;
   mk61_crash_record.classic_pending = classic_pending;
-  for(usize index = 0;
-      index < sizeof(mk61_crash_record.reserved) / sizeof(u32); index++) {
-    mk61_crash_record.reserved[index] = 0;
-  }
-
   finish_record_update();
   NVIC_SystemReset();
   while(true) {}
@@ -172,6 +179,7 @@ void mk61_crash_fault_entry(u32 exc_return, u32 original_msp,
       "movt r3, #:upper16:mk61_crash_emergency_stack\n"                   \
       "add.w r3, r3, #512\n"                                              \
       "bic r3, r3, #7\n"                                                  \
+      "stmdb r3!, {r4-r11}\n"                                             \
       "msr msp, r3\n"                                                     \
       "b mk61_crash_fault_entry\n");                                      \
   }

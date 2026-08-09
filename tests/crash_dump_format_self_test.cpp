@@ -19,7 +19,11 @@ static Record valid_record(void) {
   record.stacked_lr = 0x08010001UL;
   record.cfsr = 1UL << 16;
   record.build_id = 0x12345678UL;
-  record.capture_flags = crash_dump_format::FRAME_VALID;
+  record.capture_flags = crash_dump_format::FRAME_VALID |
+                         crash_dump_format::CALLEE_SAVED_VALID;
+  record.r4 = 0x44444444UL;
+  record.r5 = 0x55555555UL;
+  record.r11 = 0xBBBBBBBBUL;
   record.runtime_uptime_ms = 31415;
   record.runtime_state = 3;
   record.classic_ticks = 27;
@@ -69,6 +73,9 @@ static void test_report_contains_actionable_fields(void) {
   const std::string report((const char*) output, length);
   assert(report.find("exception=UsageFault(6)") != std::string::npos);
   assert(report.find("pc=0x08012345") != std::string::npos);
+  assert(report.find("r4=0x44444444,r5=0x55555555") !=
+         std::string::npos);
+  assert(report.find("r11=0xBBBBBBBB") != std::string::npos);
   assert(report.find("cfsr=0x00010000") != std::string::npos);
   assert(report.find("current_build=0x87654321") != std::string::npos);
   assert(report.find("classic_ticks=27,steps=26,missed=1") !=
@@ -77,6 +84,20 @@ static void test_report_contains_actionable_fields(void) {
   u8 too_small[32] = {};
   assert(crash_dump_format::format_report(
              record, 0, too_small, sizeof(too_small)) == 0);
+}
+
+static void test_legacy_record_does_not_print_reserved_registers(void) {
+  Record record = valid_record();
+  record.capture_flags &= ~crash_dump_format::CALLEE_SAVED_VALID;
+  record.crc32 = crash_dump_format::calculate_crc(record);
+
+  u8 output[1024] = {};
+  const u16 length = crash_dump_format::format_report(
+      record, 0x87654321UL, output, sizeof(output));
+  assert(length != 0);
+  const std::string report((const char*) output, length);
+  assert(report.find("r4=") == std::string::npos);
+  assert(report.find("r11=") == std::string::npos);
 }
 
 static void test_exception_names(void) {
@@ -92,6 +113,7 @@ int main(void) {
   test_commit_and_crc();
   test_header_rejects_other_versions_and_sizes();
   test_report_contains_actionable_fields();
+  test_legacy_record_does_not_print_reserved_registers();
   test_exception_names();
   std::cout << "crash_dump_format_self_test: ok\n";
   return 0;

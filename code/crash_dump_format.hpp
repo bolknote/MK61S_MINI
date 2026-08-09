@@ -14,7 +14,8 @@ enum CaptureFlag : u32 {
   FRAME_VALID = 1UL << 0,
   STACK_USED_PSP = 1UL << 1,
   EXTENDED_FP_FRAME = 1UL << 2,
-  PERSISTED_TO_C5 = 1UL << 3
+  PERSISTED_TO_C5 = 1UL << 3,
+  CALLEE_SAVED_VALID = 1UL << 4
 };
 
 // Поля намеренно только 32-битные: fault-handler заполняет запись прямыми
@@ -66,7 +67,17 @@ struct Record {
   u32 classic_missed;
   u32 classic_pending;
 
-  u32 reserved[8];
+  // Cortex-M не складывает r4..r11 автоматически. Fault trampoline сохраняет
+  // их на аварийный стек до первого C-вызова; эти поля занимают прежний
+  // reserved-хвост, поэтому размер и on-disk версия записи не меняются.
+  u32 r4;
+  u32 r5;
+  u32 r6;
+  u32 r7;
+  u32 r8;
+  u32 r9;
+  u32 r10;
+  u32 r11;
   u32 crc32;
 };
 

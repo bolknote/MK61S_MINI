@@ -40,6 +40,8 @@ class Face {
     bool open(const u8* data, usize size);
     void reset(void);
     bool valid(void) const { return bytes != 0; }
+    const u8* data(void) const { return bytes; }
+    usize size(void) const { return byte_count; }
     const Metrics& metrics(void) const { return face_metrics; }
 
     bool glyph(u16 codepoint, Glyph& out) const;

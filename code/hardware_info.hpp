@@ -150,14 +150,17 @@ inline bool format_vbat_line(
     char* out, usize size, bool russian, VbatReading reading) {
   if(out == NULL || size == 0) return false;
 
+  // Это напряжение на входе VBAT МК, а не детектор установленной батареи.
+  // На плате без элемента VBAT может быть штатно соединён с VDD, поэтому
+  // подпись намеренно говорит "pin/вход" и не создаёт ложного статуса батареи.
   int written;
   if(!reading.valid) {
     written = snprintf(
-      out, size, russian ? "VBAT:--,-- В" : "VBAT:--.-- V");
+      out, size, russian ? "VBAT вход:--,-- В" : "VBAT pin:--.-- V");
   } else {
     const u16 centivolts = (u16) ((reading.millivolts + 5U) / 10U);
     written = snprintf(
-      out, size, russian ? "VBAT:%u,%02u В" : "VBAT:%u.%02u V",
+      out, size, russian ? "VBAT вход:%u,%02u В" : "VBAT pin:%u.%02u V",
       (unsigned) (centivolts / 100U),
       (unsigned) (centivolts % 100U));
   }

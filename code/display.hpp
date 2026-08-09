@@ -364,9 +364,12 @@ class MK61Display : public Print {
     bool custom_valid[CUSTOM_GLYPHS];
     fmk::Face active_font;
     fmk::Face preview_font;
-    bool active_font_enabled;
-    bool external_font_suspended;
-    bool preview_font_enabled;
+    enum class ActiveFontState : u8 {
+      BUILTIN,
+      READY,
+      SUSPENDED
+    };
+    ActiveFontState active_font_state;
     bool initialized;
 #if MK61_ANY_FULLSCREEN_FILE
     bool fullscreen_bitmap_active;

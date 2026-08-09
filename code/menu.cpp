@@ -11,6 +11,7 @@
 #include "program_store.hpp"
 #include "rtc_clock.hpp"
 #include "rtc_settings_core.hpp"
+#include "crash_dump.hpp"
 #include "virtual_fat.hpp"
 #include "usb_screen.hpp"
 
@@ -1028,6 +1029,25 @@ bool TurnIdleSignal(void) {
 }
 
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+enum class FontSetupPhase : u8 {
+  DRAW = 1,
+  WAIT_KEY,
+  KEY_RECEIVED,
+  DROP_EXTERNAL_FONT,
+  SET_PROFILE,
+  REFRESH_MENU,
+  LEAVE
+};
+
+static void noteFontSetupPhase(FontSetupPhase phase) {
+  // "FN" + фаза: дамп остаётся коротким, но точно показывает, внутри какого
+  // перехода шрифта произошёл fault, даже если модальное меню держит loop().
+  crash_dump::update_runtime(
+      crash_dump::RUNTIME_MENU,
+      0x464E0000UL | (u32) phase,
+      millis());
+}
+
 static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProfile right) {
   left = lcd_display::normalizeSettingsTextProfile(left);
   right = lcd_display::normalizeSettingsTextProfile(right);
@@ -1102,6 +1122,7 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
 #else
   static constexpr u8 FIELD_COUNT = 1;
 #endif
+  noteFontSetupPhase(FontSetupPhase::DRAW);
   MK61DisplayUpdate update(main_lcd());
   const u8 rows = main_lcd().rows();
   const u8 visible_fields = (rows < FIELD_COUNT) ? rows : FIELD_COUNT;
@@ -1129,9 +1150,12 @@ static void applyFontSetupProfile(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, library_mk61::display_text_profile()) && !main_lcd().externalFontActive()) return;
 
+  noteFontSetupPhase(FontSetupPhase::DROP_EXTERNAL_FONT);
   main_lcd().useBuiltinFont();
+  noteFontSetupPhase(FontSetupPhase::SET_PROFILE);
   library_mk61::set_display_text_profile(profile);
   main_lcd().setTextProfile(library_mk61::display_text_profile());
+  noteFontSetupPhase(FontSetupPhase::REFRESH_MENU);
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
 #else
@@ -1178,6 +1202,7 @@ static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8
 }
 
 static i32 waitFontSetupKey(void) {
+  noteFontSetupPhase(FontSetupPhase::WAIT_KEY);
   do {
     idle_main_process();
     const i32 scan_code = kbd::scan_and_debounced();
@@ -1197,38 +1222,49 @@ bool FontSetup(void) {
 #endif
   lcd_display::TextProfile profile = library_mk61::display_text_profile();
   u8 active = 0;
+  profile = lcd_display::normalizeSettingsTextProfile(profile);
+  drawFontSetup(active, profile);
 
-  do {
-    profile = lcd_display::normalizeSettingsTextProfile(profile);
-    drawFontSetup(active, profile);
+  while(true) {
     const i32 key = waitFontSetupKey();
+    noteFontSetupPhase(FontSetupPhase::KEY_RECEIVED);
     if(key == KEY_ESC_PRESS) {
+      noteFontSetupPhase(FontSetupPhase::LEAVE);
+      MK61DisplayUpdate update(main_lcd());
       lcd_ru::restore_default_font();
       return action::MENU_BACK;
     }
 
+    bool redraw = false;
+    bool apply = false;
     if(key == KEY_OK_PRESS) {
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
       active = (u8) ((active + 1) % FIELD_COUNT);
+      redraw = true;
 #else
       stepFontSetupProfile(profile, active, 1);
-      applyFontSetupProfile(profile);
+      redraw = true;
+      apply = true;
 #endif
-      continue;
-    }
-
-    if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
+    } else if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
       stepFontSetupProfile(profile, active, 1);
-      applyFontSetupProfile(profile);
-      continue;
+      redraw = true;
+      apply = true;
+    } else if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+      stepFontSetupProfile(profile, active, -1);
+      redraw = true;
+      apply = true;
     }
 
-    if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-      stepFontSetupProfile(profile, active, -1);
-      applyFontSetupProfile(profile);
-      continue;
+    if(redraw) {
+      profile = lcd_display::normalizeSettingsTextProfile(profile);
+      // Смена backing font, геометрии сетки и следующая картинка образуют одну
+      // транзакцию: промежуточный кадр со старой ссылкой не существует.
+      MK61DisplayUpdate update(main_lcd());
+      if(apply) applyFontSetupProfile(profile);
+      drawFontSetup(active, profile);
     }
-  } while(true);
+  }
 #else
   return action::MENU_BACK;
 #endif
@@ -1433,7 +1469,9 @@ bool class_menu::handle_settings_adjustment(i32 key) {
       if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS || key == KEY_RIGHT_PRESS || key == KEY_LEFT_PRESS) {
         lcd_display::TextProfile profile = library_mk61::display_text_profile();
         stepFontSetupProfile(profile, 0, (key == KEY_SHG_LEFT_PRESS || key == KEY_LEFT_PRESS) ? -1 : 1);
+        MK61DisplayUpdate update(main_lcd());
         applyFontSetupProfile(profile);
+        draw();
         return true;
       }
       break;
