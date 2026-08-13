@@ -131,7 +131,8 @@ Usage:
 
 Options:
   --mcu MCU       f411 (512 KiB Flash) or f401 (256 KiB Flash + System APP)
-  --profile ID    mini-v3-a00, mini-v3-a02, mini-v2-a00, mini-v2-a02,
+  --profile ID    mini-v3-a00, mini-v3-a02, mini-v3-ws0010,
+                  mini-v2-a00, mini-v2-a02,
                   classic-v2, classic-v3, or 40th
   --plain         use the built-in shell UI even when dialog/whiptail exists
   -h, --help      show this help
@@ -168,7 +169,7 @@ fqbn_for_mcu() {
 
 profile_valid() {
   case "${1:-}" in
-    mini-v3-a00|mini-v3-a02|mini-v2-a00|mini-v2-a02|classic-v2|classic-v3|40th)
+    mini-v3-a00|mini-v3-a02|mini-v3-ws0010|mini-v2-a00|mini-v2-a02|classic-v2|classic-v3|40th)
       return 0
       ;;
   esac
@@ -184,7 +185,7 @@ platform_valid() {
 
 screen_valid() {
   case "${1:-}" in
-    lcd1602-a00|lcd1602-a02|uc1609) return 0 ;;
+    lcd1602-a00|lcd1602-a02|oled1602-ws0010|uc1609) return 0 ;;
   esac
   return 1
 }
@@ -204,6 +205,7 @@ screen_label() {
   case "${1:-}" in
     lcd1602-a00) printf '%s' 'LCD1602 · CGROM A00' ;;
     lcd1602-a02) printf '%s' 'LCD1602 · CGROM A02' ;;
+    oled1602-ws0010) printf '%s' 'OLED1602 · WS0010 FT=10' ;;
     uc1609)      printf '%s' 'UC1609 · 192×64' ;;
     *)           printf '%s' 'не выбран' ;;
   esac
@@ -211,7 +213,8 @@ screen_label() {
 
 hardware_compatible() {
   case "${1:-}:${2:-}" in
-    mini-v3:lcd1602-a00|mini-v3:lcd1602-a02|mini-v2:lcd1602-a00|mini-v2:lcd1602-a02|\
+    mini-v3:lcd1602-a00|mini-v3:lcd1602-a02|mini-v3:oled1602-ws0010|\
+    mini-v2:lcd1602-a00|mini-v2:lcd1602-a02|\
     classic-v2:uc1609|classic-v3:uc1609|40th:uc1609)
       return 0
       ;;
@@ -223,6 +226,7 @@ profile_from_hardware() {
   case "${1:-}:${2:-}" in
     mini-v3:lcd1602-a00) printf '%s' mini-v3-a00 ;;
     mini-v3:lcd1602-a02) printf '%s' mini-v3-a02 ;;
+    mini-v3:oled1602-ws0010) printf '%s' mini-v3-ws0010 ;;
     mini-v2:lcd1602-a00) printf '%s' mini-v2-a00 ;;
     mini-v2:lcd1602-a02) printf '%s' mini-v2-a02 ;;
     classic-v2:uc1609)   printf '%s' classic-v2 ;;
@@ -236,6 +240,7 @@ hardware_from_profile() {
   case "${1:-}" in
     mini-v3-a00) HARDWARE_PLATFORM=mini-v3; SCREEN_KIND=lcd1602-a00 ;;
     mini-v3-a02) HARDWARE_PLATFORM=mini-v3; SCREEN_KIND=lcd1602-a02 ;;
+    mini-v3-ws0010) HARDWARE_PLATFORM=mini-v3; SCREEN_KIND=oled1602-ws0010 ;;
     mini-v2-a00) HARDWARE_PLATFORM=mini-v2; SCREEN_KIND=lcd1602-a00 ;;
     mini-v2-a02) HARDWARE_PLATFORM=mini-v2; SCREEN_KIND=lcd1602-a02 ;;
     classic-v2)  HARDWARE_PLATFORM=classic-v2; SCREEN_KIND=uc1609 ;;
@@ -253,6 +258,7 @@ profile_label() {
   case "$1" in
     mini-v3-a00) printf '%s' 'mini V3 · LCD1602 A00' ;;
     mini-v3-a02) printf '%s' 'mini V3 · LCD1602 A02' ;;
+    mini-v3-ws0010) printf '%s' 'mini V3 · OLED1602 WS0010' ;;
     mini-v2-a00) printf '%s' 'mini V2 · LCD1602 A00' ;;
     mini-v2-a02) printf '%s' 'mini V2 · LCD1602 A02' ;;
     classic-v2)  printf '%s' 'Classic V2 · UC1609 192×64' ;;
@@ -266,6 +272,7 @@ profile_flags() {
   case "$1" in
     mini-v3-a00) printf '%s' '-DMK61_LCD1602_A00' ;;
     mini-v3-a02) printf '%s' '-DMK61_LCD1602_A02' ;;
+    mini-v3-ws0010) printf '%s' '-DMK61_OLED1602_WS0010' ;;
     mini-v2-a00) printf '%s' '-DREVISION_V2 -DMK61_LCD1602_A00' ;;
     mini-v2-a02) printf '%s' '-DREVISION_V2 -DMK61_LCD1602_A02' ;;
     classic-v2)  printf '%s' '-DMK61_BOARD_CLASSIC_V2' ;;
@@ -281,6 +288,7 @@ profile_artifact_name() {
   case "$1" in
     mini-v3-a00) printf 'mk61s-M-mini-v3-lcd1602-a00-%s.bin' "$suffix" ;;
     mini-v3-a02) printf 'mk61s-M-mini-v3-lcd1602-a02-%s.bin' "$suffix" ;;
+    mini-v3-ws0010) printf 'mk61s-M-mini-v3-oled1602-ws0010-%s.bin' "$suffix" ;;
     mini-v2-a00) printf 'mk61s-M-mini-v2-lcd1602-a00-%s.bin' "$suffix" ;;
     mini-v2-a02) printf 'mk61s-M-mini-v2-lcd1602-a02-%s.bin' "$suffix" ;;
     classic-v2)  printf 'mk61s-M-classic-v2-uc1609-%s.bin' "$suffix" ;;
@@ -308,7 +316,7 @@ profile_artifact_path() {
 
 list_profiles() {
   local id
-  for id in mini-v3-a00 mini-v3-a02 mini-v2-a00 mini-v2-a02 classic-v2 classic-v3 40th; do
+  for id in mini-v3-a00 mini-v3-a02 mini-v3-ws0010 mini-v2-a00 mini-v2-a02 classic-v2 classic-v3 40th; do
     printf '%s\t%s\t%s\n' "$id" "$(profile_label "$id")" "$(profile_flags "$id")"
   done
 }
@@ -1461,6 +1469,7 @@ choose_screen() {
     'Выберите дисплей. Символ ⊘ означает, что экран не совместим с выбранной платформой:' \
     lcd1602-a00 'LCD1602 · CGROM A00' "$(screen_option_state lcd1602-a00)" \
     lcd1602-a02 'LCD1602 · CGROM A02' "$(screen_option_state lcd1602-a02)" \
+    oled1602-ws0010 'OLED1602 · WS0010 FT=10' "$(screen_option_state oled1602-ws0010)" \
     uc1609      'UC1609 · 192×64' "$(screen_option_state uc1609)") || return 1
   if platform_valid "$HARDWARE_PLATFORM" && \
       ! hardware_compatible "$HARDWARE_PLATFORM" "$chosen"; then

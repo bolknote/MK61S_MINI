@@ -239,7 +239,7 @@ static void draw_plain_page(MK61Display& display, const u8* data, u16 len,
                     rows[row], sizeof(rows[row]));
   }
 
-  lcd_ru::font_map_t map = {{0}, 0, false};
+  lcd_ru::font_map_t map = {};
   for(u8 row = 0; row < row_count; row++) {
     lcd_ru::scan_text(map, rows[row], lcd_display::COLS);
   }

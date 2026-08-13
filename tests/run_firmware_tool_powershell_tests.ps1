@@ -52,6 +52,7 @@ Assert-True ($profiles.ExitCode -eq 0) '--list-profiles failed'
 $expected = @(
     "mini-v3-a00`tmini V3 · LCD1602 A00`t-DMK61_LCD1602_A00"
     "mini-v3-a02`tmini V3 · LCD1602 A02`t-DMK61_LCD1602_A02"
+    "mini-v3-ws0010`tmini V3 · OLED1602 WS0010`t-DMK61_OLED1602_WS0010"
     "mini-v2-a00`tmini V2 · LCD1602 A00`t-DREVISION_V2 -DMK61_LCD1602_A00"
     "mini-v2-a02`tmini V2 · LCD1602 A02`t-DREVISION_V2 -DMK61_LCD1602_A02"
     "classic-v2`tClassic V2 · UC1609 192×64`t-DMK61_BOARD_CLASSIC_V2"

@@ -10,7 +10,8 @@ namespace settings_journal {
 static constexpr usize RECORD_SIZE = 16;
 static constexpr u8 VERSION_1 = 1;
 static constexpr u8 VERSION_2 = 2;
-static constexpr u8 VERSION = 3;
+static constexpr u8 VERSION_3 = 3;
+static constexpr u8 VERSION = 4;
 static constexpr u8 COMMIT_MARKER = 0xA5;
 static constexpr usize COMMIT_INDEX = 15;
 
@@ -28,7 +29,7 @@ static constexpr usize IDX_TEXT_ROWS = 9;
 static constexpr usize IDX_TEXT_WIDTH = 10;
 static constexpr usize IDX_TEXT_HEIGHT = 11;
 static constexpr usize IDX_TEXT_GAP = 12;
-static constexpr usize IDX_TEXT_RESERVED = 13;
+static constexpr usize IDX_OLED = 13;
 static constexpr usize IDX_CRC = 14;
 
 struct RecordData {
@@ -41,6 +42,8 @@ struct RecordData {
   u8 text_height;
   u8 text_gap;
   bool text_profile_stored;
+  u8 oled;
+  bool oled_stored;
 };
 
 enum class RecordStatus : u8 {
@@ -82,7 +85,7 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
     if(record[IDX_V1_CRC] != checksum(record, IDX_V1_CRC)) return RecordStatus::INVALID;
   } else if(version == VERSION_2) {
     if(record[IDX_CRC] != checksum(record, IDX_CRC)) return RecordStatus::INVALID;
-  } else if(version == VERSION) {
+  } else if(version == VERSION_3 || version == VERSION) {
     if(record[COMMIT_INDEX] != COMMIT_MARKER) return RecordStatus::INVALID;
     if(record[IDX_CRC] != checksum(record, IDX_CRC)) return RecordStatus::INVALID;
   } else {
@@ -99,6 +102,8 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
   decoded.text_height = 0xFF;
   decoded.text_gap = 0xFF;
   decoded.text_profile_stored = false;
+  decoded.oled = 0xFF;
+  decoded.oled_stored = false;
 
   if(version >= VERSION_2 &&
      record[IDX_TEXT_ROWS] != 0xFF &&
@@ -112,6 +117,11 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
     decoded.text_profile_stored = true;
   }
 
+  if(version >= VERSION && record[IDX_OLED] != 0xFF) {
+    decoded.oled = record[IDX_OLED];
+    decoded.oled_stored = true;
+  }
+
   out = decoded;
   if(decoded_version != NULL) *decoded_version = version;
   return RecordStatus::VALID;
@@ -123,7 +133,11 @@ inline void encode_uncommitted(const RecordData& data, u8 record[RECORD_SIZE]) {
   record[IDX_MAGIC_1] = '6';
   record[IDX_MAGIC_2] = '1';
   record[IDX_MAGIC_3] = 'S';
-  record[IDX_VERSION] = VERSION;
+  // Profiles without an OLED setting keep emitting the established v3
+  // record. This avoids making A00/A02/UC1609 settings unreadable by an older
+  // firmware merely because WS0010 added one optional byte to the shared
+  // journal format.
+  record[IDX_VERSION] = data.oled_stored ? VERSION : VERSION_3;
   record[IDX_GRADE] = data.grade;
   record[IDX_COUNTER] = data.counter;
   record[IDX_FLAGS] = data.flags;
@@ -134,14 +148,14 @@ inline void encode_uncommitted(const RecordData& data, u8 record[RECORD_SIZE]) {
     record[IDX_TEXT_HEIGHT] = data.text_height;
     record[IDX_TEXT_GAP] = data.text_gap;
   }
-  record[IDX_TEXT_RESERVED] = 0xFF;
+  record[IDX_OLED] = data.oled_stored ? data.oled : 0xFF;
   record[IDX_CRC] = checksum(record, IDX_CRC);
   record[COMMIT_INDEX] = 0xFF;
 }
 
 class Scanner {
   public:
-    explicit Scanner(usize sector_size) :
+    explicit Scanner(usize sector_size, u8 target_version = VERSION) :
       sector_size_(sector_size - (sector_size % RECORD_SIZE)),
       next_offset_(0),
       active_(sector_size_ >= RECORD_SIZE),
@@ -149,6 +163,7 @@ class Scanner {
       ended_at_erased_(false),
       needs_reclaim_(sector_size_ < RECORD_SIZE),
       latest_version_(0),
+      target_version_(target_version),
       latest_{} {}
 
     bool active(void) const { return active_; }
@@ -156,7 +171,9 @@ class Scanner {
     bool has_value(void) const { return has_value_; }
     bool ended_at_erased(void) const { return ended_at_erased_; }
     bool needs_reclaim(void) const { return needs_reclaim_; }
-    bool migration_needed(void) const { return has_value_ && latest_version_ != VERSION; }
+    bool migration_needed(void) const {
+      return has_value_ && latest_version_ != target_version_;
+    }
     const RecordData& latest(void) const { return latest_; }
 
     void consume(const u8 record[RECORD_SIZE]) {
@@ -196,6 +213,7 @@ class Scanner {
     bool ended_at_erased_;
     bool needs_reclaim_;
     u8 latest_version_;
+    u8 target_version_;
     RecordData latest_;
 };
 

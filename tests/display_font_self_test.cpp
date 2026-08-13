@@ -195,6 +195,22 @@ static void test_uc1609_display_symbol_tokens(void) {
   assert(raster.width == 3 && raster.height == 5);
 }
 
+static void test_supplemental_cyrillic_glyphs(void) {
+  static constexpr u16 codepoints[] = {
+    0x0404, 0x0454, 0x0406, 0x0456, 0x0407,
+    0x0457, 0x0490, 0x0491, 0x040E, 0x045E,
+  };
+  for(const u16 codepoint : codepoints) {
+    const u8* rows = builtin_font::rows5x8(codepoint);
+    assert(rows != nullptr);
+    bool has_ink = false;
+    for(u8 row = 0; row < 7; row++) has_ink = has_ink || rows[row] != 0;
+    assert(has_ink);
+    // WS0010 5x8 mode reserves row 7 for its hardware cursor.
+    assert(rows[7] == 0);
+  }
+}
+
 static void test_text_grid(void) {
   const text_screen::FontGeometry geometry3x5 = text_screen::fitFontToDisplay(3, 5, 1);
   assert(geometry3x5.rows == 10 && geometry3x5.width == 3 && geometry3x5.height == 5 && geometry3x5.line_gap == 1);
@@ -343,6 +359,7 @@ int main(int argc, char** argv) {
   test_crc_and_padding_are_validated();
   test_lcd_scaling();
   test_uc1609_display_symbol_tokens();
+  test_supplemental_cyrillic_glyphs();
   test_text_grid();
   test_text_grid_skips_unchanged_cells();
   test_page_damage();

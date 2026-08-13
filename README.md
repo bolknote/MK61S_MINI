@@ -49,6 +49,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 **Поддерживаемые платы, дисплеи и аппаратные профили:**
 [Markdown](doc/src/MK61s-mini-Hardware.md) / [PDF](doc/MK61s-mini-Hardware.pdf)
 
+**OLED1602 WEH001602A/WS0010 — подключение и аппаратная приёмка:**
+[Markdown](doc/src/MK61s-mini-WS0010.md) / [PDF](doc/MK61s-mini-WS0010.pdf)
+
 **Разработка и сборка пользовательских APP для F401:**
 [Markdown](doc/src/MK61s-mini-APP.md)
 
@@ -152,7 +155,7 @@ STM32CubeProgrammer. Поэтому отдельный `dfu-util.exe` на Windo
 Он позволяет отдельно выбрать контроллер, платформу и экран. По умолчанию
 выбран STM32F411CE; для платы с урезанной Flash нужно явно выбрать
 `STM32F401CC · 256 KiB Flash · APP в C5`. Для mini V2/V3 доступны
-LCD1602 A00 и A02, а для Classic V2/V3 и 40th — UC1609; несовместимые пары
+LCD1602 A00/A02 и OLED1602 WS0010, а для Classic V2/V3 и 40th — UC1609; несовместимые пары
 помечаются и не выбираются. Меню может
 собрать `.bin` либо согласованный F401-комплект, перевести уже работающий MK61s в системный DFU командой
 терминала и загрузить прошивку. Поиск USB не тормозит старт: он выполняется
@@ -220,6 +223,7 @@ APP.
 ```bash
 ./tools/mk61-firmware.cmd --list-profiles
 ./tools/mk61-firmware.cmd --profile mini-v3-a00 --build
+./tools/mk61-firmware.cmd --profile mini-v3-ws0010 --build
 ./tools/mk61-firmware.cmd --profile classic-v3 --upload
 ./tools/mk61-firmware.cmd --mcu f401 --profile mini-v3-a00 --build
 ./tools/mk61-firmware.cmd --detect

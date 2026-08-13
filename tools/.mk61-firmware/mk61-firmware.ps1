@@ -143,6 +143,10 @@ $script:Profiles = [ordered]@{
         Label = 'mini V3 · LCD1602 A02'; Platform = 'mini-v3'; Screen = 'lcd1602-a02'
         Flags = '-DMK61_LCD1602_A02'; Artifact = 'mk61s-M-mini-v3-lcd1602-a02-f411.bin'
     }
+    'mini-v3-ws0010' = @{
+        Label = 'mini V3 · OLED1602 WS0010'; Platform = 'mini-v3'; Screen = 'oled1602-ws0010'
+        Flags = '-DMK61_OLED1602_WS0010'; Artifact = 'mk61s-M-mini-v3-oled1602-ws0010-f411.bin'
+    }
     'mini-v2-a00' = @{
         Label = 'mini V2 · LCD1602 A00'; Platform = 'mini-v2'; Screen = 'lcd1602-a00'
         Flags = '-DREVISION_V2 -DMK61_LCD1602_A00'; Artifact = 'mk61s-M-mini-v2-lcd1602-a00-f411.bin'
@@ -176,6 +180,7 @@ $script:PlatformLabels = [ordered]@{
 $script:ScreenLabels = [ordered]@{
     'lcd1602-a00' = 'LCD1602 · CGROM A00'
     'lcd1602-a02' = 'LCD1602 · CGROM A02'
+    'oled1602-ws0010' = 'OLED1602 · WS0010 FT=10'
     'uc1609' = 'UC1609 · 192×64'
 }
 
@@ -229,6 +234,7 @@ function Test-HardwareCompatible {
     switch ("$Platform`:$Screen") {
         'mini-v3:lcd1602-a00' { return $true }
         'mini-v3:lcd1602-a02' { return $true }
+        'mini-v3:oled1602-ws0010' { return $true }
         'mini-v2:lcd1602-a00' { return $true }
         'mini-v2:lcd1602-a02' { return $true }
         'classic-v2:uc1609' { return $true }
@@ -2505,7 +2511,8 @@ Usage:
   tools\mk61-firmware.cmd --show-config
 
 Profiles:
-  mini-v3-a00, mini-v3-a02, mini-v2-a00, mini-v2-a02,
+  mini-v3-a00, mini-v3-a02, mini-v3-ws0010,
+  mini-v2-a00, mini-v2-a02,
   classic-v2, classic-v3, 40th
 
 MCU:

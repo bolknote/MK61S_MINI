@@ -39,12 +39,16 @@ grep -q '^mk61_f401_app.menu.mk61_platform.mini_v3=' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_display.lcd_a00=' \
   "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_display.oled_ws0010=' \
+  "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
   "$target/boards.txt"
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
+  --sketch "$root/code"
+"$hook" check-profile --platform mini-v3 --display oled1602-ws0010 \
   --sketch "$root/code"
 if "$hook" check-profile --platform mini-v3 --display uc1609 \
     --sketch "$root/code" >/dev/null 2>&1; then
@@ -75,6 +79,9 @@ if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code"
+  pwsh -NoLogo -NoProfile -File \
+    "$platform/tools/mk61-app-postbuild.ps1" check-profile \
+    -Platform mini-v3 -Display oled1602-ws0010 -Sketch "$root/code"
 fi
 
 if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then

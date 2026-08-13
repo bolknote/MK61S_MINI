@@ -88,6 +88,23 @@ static const Glyph5x8 CYRILLIC[] = {
 #endif
 };
 
+// The WS0010 FT=10 ROM contains the complete Russian alphabet, but not the
+// Ukrainian/Belarusian additions below.  They live in Flash and can be leased
+// into the same eight CGRAM cells as any other non-ROM Unicode glyph.  Keeping
+// both cases explicit avoids substituting visually similar Latin letters.
+static const Glyph5x8 CYRILLIC_SUPPLEMENTAL[] = {
+  {0x0404, {0b01110, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b01110, 0b00000}}, // Є
+  {0x0454, {0b00000, 0b01110, 0b10000, 0b11110, 0b10000, 0b10000, 0b01110, 0b00000}}, // є
+  {0x0406, {0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // І
+  {0x0456, {0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // і
+  {0x0407, {0b01010, 0b00000, 0b01110, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // Ї
+  {0x0457, {0b01010, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // ї
+  {0x0490, {0b00001, 0b11111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000}}, // Ґ
+  {0x0491, {0b00001, 0b01111, 0b01000, 0b01000, 0b01000, 0b01000, 0b01000, 0b00000}}, // ґ
+  {0x040E, {0b01010, 0b00100, 0b10001, 0b10001, 0b01111, 0b00001, 0b11110, 0b00000}}, // Ў
+  {0x045E, {0b01010, 0b00100, 0b10001, 0b10001, 0b01111, 0b00001, 0b11110, 0b00000}}, // ў
+};
+
 static const Glyph5x8 SPECIAL_5X8[] = {
   {display_symbol::uc1609::GE, {0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01001, 0b00010, 0b00100}}
 };
@@ -135,6 +152,13 @@ const u8* rows5x8(u16 codepoint) {
   codepoint = aliasedCodepoint(codepoint);
   for(usize i = 0; i < sizeof(CYRILLIC) / sizeof(CYRILLIC[0]); i++) {
     if(CYRILLIC[i].codepoint == codepoint) return CYRILLIC[i].rows;
+  }
+  for(usize i = 0;
+      i < sizeof(CYRILLIC_SUPPLEMENTAL) / sizeof(CYRILLIC_SUPPLEMENTAL[0]);
+      i++) {
+    if(CYRILLIC_SUPPLEMENTAL[i].codepoint == codepoint) {
+      return CYRILLIC_SUPPLEMENTAL[i].rows;
+    }
   }
   return NULL;
 }

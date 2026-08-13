@@ -199,7 +199,7 @@ jobs:
           arduino-cli lib install "STM32duino RTC@1.9.0"
 
       # This is the same entry point developers run locally. It compiles all
-      # ten F411 release/check variants with warnings-as-errors, checks the
+      # F411 release/check matrix with warnings-as-errors, checks the
       # warning allowlist and rejects project-owned pre-setup constructors.
       - name: Build strict STM32F411 release matrix
         run: |
@@ -215,7 +215,7 @@ jobs:
 
       - name: Build STM32F401CC firmware and System APP directly with GCC
         run: |
-          for profile in mini-v3-a00 mini-v2-a00 classic-v3; do
+          for profile in mini-v3-a00 mini-v3-ws0010 mini-v2-a00 classic-v3; do
             tools/build-gcc.cmd \
               -Profile "$profile" \
               -Focal 1 \
@@ -230,18 +230,60 @@ jobs:
               -OutputDirectory firmware
           done
 
+      - name: Build F401 WS0010 capability cross-matrix
+        run: |
+          for case_id in a00-usb ws-usb ws-graphics ws-usb-graphics; do
+            profile=mini-v3-ws0010
+            usb=0
+            graphics=0
+            case "$case_id" in
+              a00-usb) profile=mini-v3-a00; usb=1 ;;
+              ws-usb) usb=1 ;;
+              ws-graphics) graphics=1 ;;
+              ws-usb-graphics) usb=1; graphics=1 ;;
+            esac
+            tools/build-gcc.cmd \
+              -Profile "$profile" \
+              -Focal 0 -Basic 0 -Wbmp 0 -Markdown 0 -Chip8 0 \
+              -UsbScreen "$usb" \
+              -Ws0010Graphics "$graphics" \
+              -MathBackend 1 -Lto 1 \
+              -BuildRoot "$RUNNER_TEMP/build-f401-$case_id" \
+              -OutputDirectory "$RUNNER_TEMP/output-f401-$case_id"
+            tests/check_global_constructors.sh \
+              "$RUNNER_TEMP/build-f401-$case_id/$profile/resident.elf"
+          done
+
       - name: Check pre-setup constructors
         run: |
-          for profile in mini-v3-a00 mini-v2-a00 classic-v3; do
+          for profile in mini-v3-a00 mini-v3-ws0010 mini-v2-a00 classic-v3; do
             tests/check_global_constructors.sh \
               "$RUNNER_TEMP/build-f401-gcc/$profile/resident.elf"
           done
+
+      - name: Enforce zero-RAM-cost WS0010 profile
+        run: |
+          size_tool="$(awk -F= '/^CMAKE_SIZE:FILEPATH=/ {print $2; exit}' \
+            "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/CMakeCache.txt")"
+          tests/check_ws0010_ram.sh "$size_tool" \
+            "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/resident.elf" \
+            "$RUNNER_TEMP/build-f401-gcc/mini-v3-ws0010/resident.elf"
+          tests/check_ws0010_ram.sh "$size_tool" \
+            "$RUNNER_TEMP/f411-release/build-lcd1602-a00/mk61s-M.ino.elf" \
+            "$RUNNER_TEMP/f411-release/build-oled1602-ws0010/mk61s-M.ino.elf"
+          tests/check_ws0010_ram.sh "$size_tool" \
+            "$RUNNER_TEMP/build-f401-a00-usb/mini-v3-a00/resident.elf" \
+            "$RUNNER_TEMP/build-f401-ws-usb/mini-v3-ws0010/resident.elf"
+          tests/check_ws0010_ram.sh "$size_tool" \
+            "$RUNNER_TEMP/build-f401-ws-usb/mini-v3-ws0010/resident.elf" \
+            "$RUNNER_TEMP/build-f401-ws-usb-graphics/mini-v3-ws0010/resident.elf"
 
       - name: Verify and package F401 bundles
         run: |
           cd firmware
           for bundle in \
             mk61s-M-mini-v3-lcd1602-a00-f401 \
+            mk61s-M-mini-v3-oled1602-ws0010-f401 \
             mk61s-M-mini-v2-lcd1602-a00-f401 \
             mk61s-M-classic-v3-uc1609-f401; do
             for artifact in \

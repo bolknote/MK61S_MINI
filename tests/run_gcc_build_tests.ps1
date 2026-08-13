@@ -85,6 +85,8 @@ Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
     'help does not expose the Markdown System APP'
 Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
+Assert-True ($helpText -match '-Ws0010Graphics 0\|1') `
+    'help does not expose isolated WS0010 graphics qualification'
 
 $invalid = Invoke-Backend @(
     '-Profile', 'mini-v3-a00',
@@ -96,6 +98,15 @@ Assert-True ($invalid.ExitCode -eq 1) `
 Assert-True (($invalid.Output -join "`n") -match
     'WBMP/CHIP-8 requires') `
     'invalid graphics selection has no useful diagnostic'
+
+$invalidWsGraphics = Invoke-Backend @(
+    '-Profile', 'mini-v3-a00',
+    '-Ws0010Graphics', '1')
+Assert-True ($invalidWsGraphics.ExitCode -eq 1) `
+    'non-WS0010 profile accepted WS0010 graphics qualification'
+Assert-True (($invalidWsGraphics.Output -join "`n") -match
+    'requires profile mini-v3-ws0010') `
+    'invalid WS0010 graphics selection has no useful diagnostic'
 
 $backendText = [IO.File]::ReadAllText($backend)
 $cmakeText = [IO.File]::ReadAllText($cmakeProject)
@@ -138,6 +149,8 @@ foreach ($section in @('_mk61_data', '_mk61_bss', '_mk61_noinit')) {
 }
 Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
     'CMake build does not forward the Markdown selection'
+Assert-True ($cmakeText -match 'MK61_WS0010_GRAPHICS_100X16') `
+    'CMake build does not forward WS0010 graphics qualification'
 Assert-True ($cmakeText -match
     'overall_settings\(OPTIMIZATION s LTO\)') `
     'CMake build does not enable GNU Arm LTO'
@@ -191,7 +204,8 @@ $releaseF401Step = [regex]::Match(
     'with GCC\r?\n(?<body>.*?)(?=^\s+- name:)')
 Assert-True ($releaseF401Step.Success) `
     'release workflow has no F401 release build step'
-foreach ($profile in @('mini-v3-a00', 'mini-v2-a00', 'classic-v3')) {
+foreach ($profile in @(
+    'mini-v3-a00', 'mini-v3-ws0010', 'mini-v2-a00', 'classic-v3')) {
     Assert-True ($releaseF401Step.Groups['body'].Value.Contains($profile)) `
         "F401 release build is missing profile $profile"
 }

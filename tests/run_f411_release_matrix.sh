@@ -73,7 +73,7 @@ fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfu
 strict_flags='-Werror -Wno-error=cpp'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 variant_index=0
-variant_count=10
+variant_count=14
 
 compile_variant() {
   local name="$1"
@@ -135,6 +135,14 @@ compile_variant lcd1602-a00-lto "$fqbn_lto" \
   '-DMK61_LCD1602_A00' ''
 compile_variant lcd1602-a02 "$fqbn" \
   '-DMK61_LCD1602_A02' 'mk61s-M-lcd1602-a02-f411'
+compile_variant oled1602-ws0010 "$fqbn" \
+  '-DMK61_OLED1602_WS0010' 'mk61s-M-mini-v3-oled1602-ws0010-f411'
+compile_variant oled1602-ws0010-usb-screen "$fqbn" \
+  '-DMK61_OLED1602_WS0010 -DMK61_ENABLE_USB_SCREEN=1' ''
+compile_variant oled1602-ws0010-graphics "$fqbn" \
+  '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=1' ''
+compile_variant oled1602-ws0010-usb-screen-graphics "$fqbn" \
+  '-DMK61_OLED1602_WS0010 -DMK61_ENABLE_USB_SCREEN=1 -DMK61_WS0010_GRAPHICS_100X16=1' ''
 compile_variant mini-v2-lcd1602-a00 "$fqbn" \
   '-DREVISION_V2 -DMK61_LCD1602_A00' \
   'mk61s-M-mini-v2-lcd1602-a00-f411'

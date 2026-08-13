@@ -15,7 +15,7 @@ require_value() {
 profile_valid() {
   case "$1:$2" in
     mini-v2:lcd1602-a00|mini-v2:lcd1602-a02|\
-    mini-v3:lcd1602-a00|mini-v3:lcd1602-a02|\
+    mini-v3:lcd1602-a00|mini-v3:lcd1602-a02|mini-v3:oled1602-ws0010|\
     classic-v2:uc1609|classic-v3:uc1609|40th:uc1609)
       return 0
       ;;

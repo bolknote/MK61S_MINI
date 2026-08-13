@@ -49,6 +49,8 @@ MK61_SHARED_MEMORY_OWNER(
     (arena_mask(Arena::SCRATCH) | arena_mask(Arena::BULK)), 0, 0, 0, 0)
 MK61_SHARED_MEMORY_OWNER(DISPLAY_FONT, "font", arena_mask(Arena::BULK),
                          0, 0, 0, 0)
+MK61_SHARED_MEMORY_OWNER(DISPLAY_GRAPHICS, "display-graphics",
+                         arena_mask(Arena::SCRATCH), 0, 0, 0, 0)
 MK61_SHARED_MEMORY_OWNER(
     WORKSPACE_SWAP, "workspace-swap",
     (arena_mask(Arena::SCRATCH) | arena_mask(Arena::BULK)), 0,

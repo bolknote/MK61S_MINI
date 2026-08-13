@@ -19,7 +19,38 @@ constexpr u32 fnv1a_text(const char* text, u32 state = 2166136261UL) {
       text + 1, fnv1a_character(state, *text));
 }
 
-static constexpr u32 BUILD_ID = fnv1a_text(FIRMWARE_VER);
+#if defined(MK61_BOARD_CLASSIC_V2)
+static constexpr char BUILD_PROFILE[] = "classic-v2-uc1609";
+#elif defined(MK61_BOARD_CLASSIC_V3)
+static constexpr char BUILD_PROFILE[] = "classic-v3-uc1609";
+#elif defined(MK61_BOARD_40TH)
+static constexpr char BUILD_PROFILE[] = "40th-uc1609";
+#elif defined(MK61_DISPLAY_UC1609)
+// Compatibility selector retained for sketches that predate the explicit
+// Classic V2/V3 board profiles.
+static constexpr char BUILD_PROFILE[] = "uc1609-compat";
+#elif defined(MK61_OLED1602_WS0010)
+  #if defined(REVISION_V2)
+static constexpr char BUILD_PROFILE[] = "mini-v2-ws0010";
+  #else
+static constexpr char BUILD_PROFILE[] = "mini-v3-ws0010";
+  #endif
+#elif defined(MK61_LCD1602_A02)
+  #if defined(REVISION_V2)
+static constexpr char BUILD_PROFILE[] = "mini-v2-a02";
+  #else
+static constexpr char BUILD_PROFILE[] = "mini-v3-a02";
+  #endif
+#else
+  #if defined(REVISION_V2)
+static constexpr char BUILD_PROFILE[] = "mini-v2-a00";
+  #else
+static constexpr char BUILD_PROFILE[] = "mini-v3-a00";
+  #endif
+#endif
+
+static constexpr u32 BUILD_ID =
+  fnv1a_text(BUILD_PROFILE, fnv1a_text(FIRMWARE_VER));
 
 #if MK61_CRASH_DUMP_SUPPORTED
 

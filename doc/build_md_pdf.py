@@ -33,6 +33,10 @@ DOC_WIDTH = PAGE_SIZE[0] - 2 * MARGIN_X
 
 FONT_CANDIDATES = [
     (
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+    ),
+    (
         "/System/Library/Fonts/Supplemental/Arial.ttf",
         "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
     ),
@@ -97,17 +101,29 @@ def default_title(source: Path) -> str:
 
 
 def inline(text: str) -> str:
-    out: list[str] = []
-    parts = text.split("`")
-    for index, part in enumerate(parts):
-        if index % 2:
-            font = "Courier" if all(ord(ch) < 128 for ch in part) else "DocSans"
-            out.append('<font name="%s">%s</font>' % (font, escape(part)))
-        else:
-            escaped = escape(part)
-            escaped = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escaped)
-            out.append(escaped)
-    return "".join(out)
+    # Protect inline-code spans before parsing links.  Splitting on backticks
+    # first loses links such as [`guide.md`](guide.md), because the link then
+    # spans three independently processed fragments.
+    code_spans: list[str] = []
+
+    def stash_code(match: re.Match[str]) -> str:
+        marker = f"MK61CODEPLACEHOLDER{len(code_spans)}END"
+        value = match.group(1)
+        font = "Courier" if all(ord(ch) < 128 for ch in value) else "DocSans"
+        code_spans.append('<font name="%s">%s</font>' % (font, escape(value)))
+        return marker
+
+    protected = re.sub(r"`([^`]*)`", stash_code, text)
+    rendered = escape(protected)
+    rendered = re.sub(
+        r"\[([^\]]+)\]\(([^)]+)\)",
+        r'<link href="\2" color="#1a5fb4">\1</link>',
+        rendered,
+    )
+    rendered = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", rendered)
+    for index, code_span in enumerate(code_spans):
+        rendered = rendered.replace(f"MK61CODEPLACEHOLDER{index}END", code_span)
+    return rendered
 
 
 def make_table(lines: list[str], base_style) -> list:

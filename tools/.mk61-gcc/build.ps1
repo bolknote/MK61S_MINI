@@ -5,6 +5,7 @@ param(
     [ValidateSet(
         'mini-v3-a00',
         'mini-v3-a02',
+        'mini-v3-ws0010',
         'mini-v2-a00',
         'mini-v2-a02',
         'classic-v2',
@@ -29,6 +30,9 @@ param(
 
     [ValidateSet('0', '1')]
     [string]$UsbScreen = '0',
+
+    [ValidateSet('0', '1')]
+    [string]$Ws0010Graphics = '0',
 
     [ValidateSet('0', '1')]
     [string]$ExtendedFontSettings = '0',
@@ -77,7 +81,8 @@ Usage:
   tools\build-gcc.cmd [-Profile ID] [options]
 
 Profiles:
-  mini-v3-a00 (default), mini-v3-a02, mini-v2-a00, mini-v2-a02,
+  mini-v3-a00 (default), mini-v3-a02, mini-v3-ws0010,
+  mini-v2-a00, mini-v2-a02,
   classic-v2, classic-v3, 40th
 
 System APP:
@@ -89,6 +94,7 @@ System APP:
 
 Firmware options:
   -UsbScreen 0|1
+  -Ws0010Graphics 0|1  isolated WEH001602A G/C qualification only
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1
@@ -245,6 +251,13 @@ function Get-ProfileInfo {
                 Graphics = $false
             }
         }
+        'mini-v3-ws0010' {
+            return @{
+                Bundle = 'mk61s-M-mini-v3-oled1602-ws0010-f401'
+                Flags = @('-DMK61_OLED1602_WS0010')
+                Graphics = $false
+            }
+        }
         'mini-v2-a00' {
             return @{
                 Bundle = 'mk61s-M-mini-v2-lcd1602-a00-f401'
@@ -357,6 +370,10 @@ try {
         ($Wbmp -eq '1' -or $Chip8 -eq '1')) {
         Stop-GccBuild (
             'WBMP/CHIP-8 requires a UC1609 profile or -UsbScreen 1')
+    }
+    if ($Ws0010Graphics -eq '1' -and $Profile -ne 'mini-v3-ws0010') {
+        Stop-GccBuild (
+            '-Ws0010Graphics 1 requires profile mini-v3-ws0010')
     }
     $systemRequested = $Focal -eq '1' -or $Basic -eq '1' -or
         $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
@@ -502,6 +519,7 @@ try {
         "-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown",
         "-DMK61_ENABLE_CHIP8=$Chip8",
         "-DMK61_ENABLE_USB_SCREEN=$UsbScreen",
+        "-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics",
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
@@ -569,6 +587,7 @@ try {
     $flagValues.Add("-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown")
     $flagValues.Add("-DMK61_ENABLE_CHIP8=$Chip8")
     $flagValues.Add("-DMK61_ENABLE_USB_SCREEN=$UsbScreen")
+    $flagValues.Add("-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics")
     $flagValues.Add(
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")

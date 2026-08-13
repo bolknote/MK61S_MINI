@@ -5,6 +5,9 @@
 #include  "display.hpp"
 #include  "display_symbols.hpp"
 #include  "lcd_charset.hpp"
+#if defined(MK61_OLED1602_WS0010)
+  #include "ws0010_charset.hpp"
+#endif
 #include  "mk61emu_core.h"
 
 #if defined(MK61_DISPLAY_UC1609)
@@ -33,6 +36,32 @@ static const u8 LCD_GRAD_CHAR     = display_symbol::uc1609::GRAD;
 static const u8 LCD_QUOTE_CHAR    = 0x60;
 static const u8 LCD_DOUBLE_QUOTE_CHAR    = 0x22;
 static const u8 CH_RUS            = display_symbol::uc1609::CYR_CHE;
+#elif defined(MK61_OLED1602_WS0010)
+static const u8 GE                = ws0010_charset::cgram::GREATER_OR_EQUAL;
+static const u8 P_RUS             = ws0010_charset::CYR_PE;
+static const u8 B_RUS             = ws0010_charset::CYR_BE;
+static const u8 D_RUS             = ws0010_charset::CYR_DE;
+static const u8 I_RUS             = ws0010_charset::CYR_I;
+static const u8 G_RUS             = ws0010_charset::CYR_GHE;
+static const u8 LCD_CHAR_POW2     = ws0010_charset::cgram::POWER_2;
+static const u8 LCD_CHAR_POWY     = ws0010_charset::cgram::POWER_Y;
+static const u8 LCD_CHAR_XOR      = ws0010_charset::cgram::XOR;
+
+/* FT=10 ROM plus the project's fixed WS0010 CGRAM slots. */
+static const u8 LCD_CYC_ARROW     = ws0010_charset::cgram::CYCLE_ARROW;
+static const u8 LCD_DIVIDE_CHAR   = ws0010_charset::DIVIDE;
+static const u8 LCD_NOT_EQU_CHAR  = ws0010_charset::cgram::NOT_EQUAL;
+static const u8 LCD_POW_X_CHAR    = ws0010_charset::cgram::POWER_X;
+static const u8 LCD_UP_ARROW_CHAR = ws0010_charset::UP_ARROW_FALLBACK;
+static const u8 LCD_LT_ARROW_CHAR = ws0010_charset::LEFT_ARROW;
+static const u8 LCD_RT_ARROW_CHAR = ws0010_charset::RIGHT_ARROW;
+static const u8 LCD_PI_CHAR       = ws0010_charset::PI_SYMBOL;
+static const u8 LCD_SQRT_CHAR     = ws0010_charset::cgram::SQUARE_ROOT;
+static const u8 LCD_Em1_CHAR      = ws0010_charset::INVERSE_MARKER_FALLBACK;
+static const u8 LCD_GRAD_CHAR     = ws0010_charset::DEGREE;
+static const u8 LCD_QUOTE_CHAR    = 0x60;
+static const u8 LCD_DOUBLE_QUOTE_CHAR = 0x22;
+static const u8 CH_RUS            = ws0010_charset::CYR_CHE;
 #elif defined(MK61_LCD1602_A02)
 static const u8 GE                = 0x00;
 static const u8 P_RUS             = lcd_charset::CYR_PE;
@@ -332,6 +361,37 @@ class class_LCD_fonts {
     };
 //    const u8* fonts = {&GE_bit, &P_ru, &B_ru, &D_ru, &I_ru, &G_ru, POWSQR_bit, &POWY_bit, &XOR_bit};
   public:
+#if defined(MK61_OLED1602_WS0010)
+    void loadWs0010Slot(u8 slot) const {
+      switch(slot) {
+        case ws0010_charset::cgram::GREATER_OR_EQUAL:
+          main_lcd().createChar(slot, (uint8_t*) &fonts[0]);
+          break;
+        case ws0010_charset::cgram::POWER_Y:
+          main_lcd().createChar(slot, (uint8_t*) &fonts[7 * 8]);
+          break;
+        case ws0010_charset::cgram::XOR:
+          main_lcd().createChar(slot, (uint8_t*) &fonts[8 * 8]);
+          break;
+        case ws0010_charset::cgram::NOT_EQUAL:
+          main_lcd().createChar(slot, (uint8_t*) &not_equal_bit[0]);
+          break;
+        case ws0010_charset::cgram::SQUARE_ROOT:
+          main_lcd().createChar(slot, (uint8_t*) &sqrt_bit[0]);
+          break;
+        case ws0010_charset::cgram::CYCLE_ARROW:
+          main_lcd().createChar(slot, (uint8_t*) &ROUND_ARROW_bit[0]);
+          break;
+        case ws0010_charset::cgram::POWER_X:
+          main_lcd().createChar(slot, (uint8_t*) &pow_x_bit[0]);
+          break;
+        case ws0010_charset::cgram::POWER_2:
+          main_lcd().createChar(slot, (uint8_t*) &fonts[6 * 8]);
+          break;
+      }
+    }
+#endif
+
     void load(void) const {
       #if defined(MK61_DISPLAY_UC1609)
         main_lcd().clearCustomChars();
@@ -342,7 +402,10 @@ class class_LCD_fonts {
         return;
       }
       u32 ascii=0;
-      #if defined(MK61_LCD1602_A02)
+      #if defined(MK61_LCD1602_A02) || defined(MK61_OLED1602_WS0010)
+#if defined(MK61_OLED1602_WS0010)
+        for(u8 slot = 0; slot < 8; slot++) loadWs0010Slot(slot);
+#else
         main_lcd().createChar(GE, (uint8_t*) &fonts[0]);
         main_lcd().createChar(LCD_CHAR_POWY, (uint8_t*) &fonts[7 * 8]);
         main_lcd().createChar(LCD_CHAR_XOR, (uint8_t*) &fonts[8 * 8]);
@@ -350,6 +413,7 @@ class class_LCD_fonts {
         main_lcd().createChar(LCD_SQRT_CHAR, (uint8_t*) &sqrt_bit[0]);
         main_lcd().createChar(LCD_CYC_ARROW, (uint8_t*) &ROUND_ARROW_bit[0]);
         main_lcd().createChar(LCD_POW_X_CHAR, (uint8_t*) &pow_x_bit[0]);
+#endif
         return;
       #endif
       for(int i=0; i < 9 * 8; i += 8) {

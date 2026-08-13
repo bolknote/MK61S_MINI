@@ -101,8 +101,11 @@
 // полный профиль MK61_BOARD_CLASSIC_V2 или MK61_BOARD_CLASSIC_V3 ниже.
 // Один MK61_DISPLAY_UC1609 сохранён как совместимый способ выбрать Classic V2.
 //#define MK61_DISPLAY_UC1609
-// CGROM LCD1602: по умолчанию японский A00. Для европейского A02 включить MK61_LCD1602_A02.
+// Символьный дисплей: по умолчанию LCD1602 с японской A00. Для европейской
+// A02 включить MK61_LCD1602_A02, для OLED WEH001602A/WS0010 —
+// MK61_OLED1602_WS0010. Контроллер WS0010 выбирает English/Russian FT=10.
 //#define MK61_LCD1602_A02
+//#define MK61_OLED1602_WS0010
 
 //#define CDU
 //#define LK432
@@ -339,11 +342,21 @@
   #define MK61_LCD1602_A02
 #endif
 
-#if defined(MK61_LCD1602_A00) && defined(MK61_LCD1602_A02)
-  #error "Select only one LCD1602 CGROM variant"
+#if defined(DISPLAY_OLED1602_WS0010) && !defined(MK61_OLED1602_WS0010)
+  #define MK61_OLED1602_WS0010
 #endif
 
-#if defined(MK61_DISPLAY_LCD1602) && !defined(MK61_LCD1602_A00) && !defined(MK61_LCD1602_A02)
+#if (defined(MK61_LCD1602_A00) + defined(MK61_LCD1602_A02) + \
+     defined(MK61_OLED1602_WS0010)) > 1
+  #error "Select only one character-display controller/CGROM profile"
+#endif
+
+#if defined(MK61_OLED1602_WS0010) && !defined(MK61_DISPLAY_LCD1602)
+  #error "MK61_OLED1602_WS0010 requires the 16x2 character-display backend"
+#endif
+
+#if defined(MK61_DISPLAY_LCD1602) && !defined(MK61_LCD1602_A00) && \
+    !defined(MK61_LCD1602_A02) && !defined(MK61_OLED1602_WS0010)
   #define MK61_LCD1602_A00
 #endif
 
@@ -351,7 +364,8 @@
 // можно ждать готовность контроллера по DB7 вместо консервативных задержек.
 // Остальные профили сохраняют прежний режим обмена только на запись.
 #ifndef MK61_LCD1602_BUSY_FLAG
-  #if defined(MK61_DISPLAY_LCD1602) && !defined(CDU) && !defined(LK432)
+  #if defined(MK61_DISPLAY_LCD1602) && !defined(MK61_OLED1602_WS0010) && \
+      !defined(CDU) && !defined(LK432)
     #define MK61_LCD1602_BUSY_FLAG 1
   #else
     #define MK61_LCD1602_BUSY_FLAG 0
@@ -360,6 +374,36 @@
 
 #if MK61_LCD1602_BUSY_FLAG && (!defined(MK61_DISPLAY_LCD1602) || defined(CDU) || defined(LK432))
   #error "MK61_LCD1602_BUSY_FLAG requires a mini V2/V3 LCD1602 profile with RW"
+#endif
+
+#if defined(MK61_OLED1602_WS0010) && MK61_LCD1602_BUSY_FLAG
+  #error "WS0010 keeps RW low and must use fixed controller-specific delays"
+#endif
+
+// The controller documents a 100x16 GDRAM, but WEH001602A is sold as a
+// character module. Keep the isolated bring-up API compiled out of release
+// profiles until the exact module/order code passes the hardware test page.
+#ifndef MK61_WS0010_GRAPHICS_100X16
+  #define MK61_WS0010_GRAPHICS_100X16 0
+#endif
+#if MK61_WS0010_GRAPHICS_100X16 != 0 && MK61_WS0010_GRAPHICS_100X16 != 1
+  #error "MK61_WS0010_GRAPHICS_100X16 must be 0 or 1"
+#endif
+#if MK61_WS0010_GRAPHICS_100X16 && !defined(MK61_OLED1602_WS0010)
+  #error "WS0010 100x16 graphics requires MK61_OLED1602_WS0010"
+#endif
+
+// No brightness/current command is enabled without an official command for
+// the qualified WS0010-TX revision. Display-off OLED protection is independent
+// of this experimental capability and remains available.
+#ifndef MK61_WS0010_BRIGHTNESS_CONTROL
+  #define MK61_WS0010_BRIGHTNESS_CONTROL 0
+#endif
+#if MK61_WS0010_BRIGHTNESS_CONTROL != 0 && MK61_WS0010_BRIGHTNESS_CONTROL != 1
+  #error "MK61_WS0010_BRIGHTNESS_CONTROL must be 0 or 1"
+#endif
+#if MK61_WS0010_BRIGHTNESS_CONTROL
+  #error "WS0010 brightness control is not qualified for WEH001602A"
 #endif
 
 // Клавиатура: у classic-платформы с UC1609 другая физическая матрица и коды.

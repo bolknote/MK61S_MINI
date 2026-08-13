@@ -72,6 +72,8 @@ VbatReading read_vbat(void) {
 const char* display_type(void) {
 #if defined(MK61_DISPLAY_UC1609)
   return "UC1609";
+#elif defined(MK61_OLED1602_WS0010)
+  return "WS0010";
 #elif defined(MK61_LCD1602_A02)
   return "LCD1602A02";
 #else

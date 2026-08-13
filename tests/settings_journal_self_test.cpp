@@ -17,6 +17,8 @@ settings_journal::RecordData fixture(u8 counter) {
   data.text_height = 5;
   data.text_gap = 1;
   data.text_profile_stored = true;
+  data.oled = 0x25;
+  data.oled_stored = true;
   return data;
 }
 
@@ -24,7 +26,7 @@ void commit(u8 record[settings_journal::RECORD_SIZE]) {
   record[settings_journal::COMMIT_INDEX] = settings_journal::COMMIT_MARKER;
 }
 
-void test_v3_commit_and_corruption(void) {
+void test_v4_commit_and_corruption(void) {
   u8 record[settings_journal::RECORD_SIZE];
   settings_journal::encode_uncommitted(fixture(7), record);
 
@@ -35,6 +37,7 @@ void test_v3_commit_and_corruption(void) {
   assert(decoded.counter == 7);
   assert(decoded.text_profile_stored);
   assert(decoded.text_rows == 8 && decoded.text_width == 3);
+  assert(decoded.oled_stored && decoded.oled == 0x25);
 
   for(usize index = 0; index < settings_journal::COMMIT_INDEX; index++) {
     u8 corrupted[settings_journal::RECORD_SIZE];
@@ -45,6 +48,48 @@ void test_v3_commit_and_corruption(void) {
 
   record[settings_journal::COMMIT_INDEX] = 0x00;
   assert(settings_journal::decode(record, decoded) == settings_journal::RecordStatus::INVALID);
+}
+
+void test_legacy_v3_compatibility(void) {
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(fixture(8), record);
+  record[settings_journal::IDX_VERSION] = settings_journal::VERSION_3;
+  record[settings_journal::IDX_OLED] = 0xFF;
+  record[settings_journal::IDX_CRC] =
+    settings_journal::checksum(record, settings_journal::IDX_CRC);
+  commit(record);
+
+  settings_journal::RecordData decoded = {};
+  u8 version = 0;
+  assert(settings_journal::decode(record, decoded, &version) ==
+         settings_journal::RecordStatus::VALID);
+  assert(version == settings_journal::VERSION_3);
+  assert(decoded.counter == 8);
+  assert(!decoded.oled_stored && decoded.oled == 0xFF);
+}
+
+void test_profiles_without_oled_keep_v3(void) {
+  settings_journal::RecordData data = fixture(10);
+  data.oled = 0xFF;
+  data.oled_stored = false;
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(data, record);
+  assert(record[settings_journal::IDX_VERSION] ==
+         settings_journal::VERSION_3);
+  assert(record[settings_journal::IDX_OLED] == 0xFF);
+  commit(record);
+
+  settings_journal::Scanner legacy_target(
+    settings_journal::RECORD_SIZE * 2, settings_journal::VERSION_3);
+  legacy_target.consume(record);
+  assert(legacy_target.has_value());
+  assert(!legacy_target.migration_needed());
+
+  settings_journal::Scanner oled_target(
+    settings_journal::RECORD_SIZE * 2, settings_journal::VERSION);
+  oled_target.consume(record);
+  assert(oled_target.has_value());
+  assert(oled_target.migration_needed());
 }
 
 void test_legacy_v2_compatibility(void) {
@@ -129,7 +174,9 @@ void test_erased_detection_checks_entire_record(void) {
 } // безымянное пространство имён
 
 int main(void) {
-  test_v3_commit_and_corruption();
+  test_v4_commit_and_corruption();
+  test_legacy_v3_compatibility();
+  test_profiles_without_oled_keep_v3();
   test_legacy_v2_compatibility();
   test_legacy_v1_compatibility();
   test_scanner_uses_latest_complete_record();

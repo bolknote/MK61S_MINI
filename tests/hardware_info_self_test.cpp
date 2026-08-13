@@ -148,6 +148,11 @@ static void test_line_formatting(void) {
   assert(std::strcmp(line, "Экран:UC1609") == 0);
   assert(utf8_width(line) == 12);
 
+  assert(hardware_info::format_display_line(
+    line, sizeof(line), true, "WS0010"));
+  assert(std::strcmp(line, "Экран:WS0010") == 0);
+  assert(utf8_width(line) == 12);
+
   assert(hardware_info::format_generator_line(
     line, sizeof(line), true, "LSE"));
   assert(std::strcmp(line, "Генератор:LSE") == 0);

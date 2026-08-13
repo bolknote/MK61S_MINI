@@ -67,6 +67,10 @@ clang++ "${common[@]}" -DREVISION_V3 -DMK61_ENABLE_USB_SCREEN=1 \
 clang++ "${common[@]}" -DREVISION_V2 -DMK61_CONFIG_EXPECT_V2 -o "$out-v2"
 "$out-v2"
 
+clang++ "${common[@]}" -DREVISION_V3 -DMK61_OLED1602_WS0010 \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_WS0010 -o "$out-ws0010"
+"$out-ws0010"
+
 clang++ "${common[@]}" -DMK61_BOARD_CLASSIC_V2 \
   -DMK61_CONFIG_EXPECT_CLASSIC_V2 -o "$out-classic-v2"
 "$out-classic-v2"
@@ -87,6 +91,27 @@ clang++ "${common[@]}" -DMK61_BOARD_40TH \
 if clang++ "${common[@]}" -DREVISION_V2 -DREVISION_V3 -o "$out-invalid" \
     >/dev/null 2>&1; then
   echo "conflicting board revisions unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_LCD1602_A00 \
+    -DMK61_OLED1602_WS0010 -o "$out-invalid-display-profile" \
+    >/dev/null 2>&1; then
+  echo "conflicting A00/WS0010 profiles unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_OLED1602_WS0010 \
+    -DMK61_LCD1602_BUSY_FLAG=1 -o "$out-invalid-ws0010-read" \
+    >/dev/null 2>&1; then
+  echo "WS0010 busy-flag read unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_OLED1602_WS0010 \
+    -DMK61_WS0010_BRIGHTNESS_CONTROL=1 -o "$out-invalid-ws0010-brightness" \
+    >/dev/null 2>&1; then
+  echo "unqualified WS0010 brightness command unexpectedly compiled" >&2
   exit 1
 fi
 

@@ -587,7 +587,7 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
     explorer_scroll_reset(scroll);
   }
 
-  lcd_ru::font_map_t name_map = {{0}, 0, false};
+  lcd_ru::font_map_t name_map = {};
   for(int row = 0; row < visible; row++) {
     const int index = filtered
       ? matching_index_at(directory_id, top + row, search_text)
@@ -764,7 +764,7 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
     else rows[row][0] = 0;
   }
 
-  lcd_ru::font_map_t map = {{0}, 0, false};
+  lcd_ru::font_map_t map = {};
   for(u8 row = 0; row < payload_rows; row++) lcd_ru::scan_text(map, rows[row], lcd_display::COLS);
   lcd_ru::load_custom_font(map);
   for(u8 row = 0; row < payload_rows; row++) {
@@ -1010,7 +1010,7 @@ static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
                        (u8) (lcd_display::COLS - 1), false,
                        line + 1, sizeof(line) - 1);
 
-  lcd_ru::font_map_t map = {{0}, 0, false};
+  lcd_ru::font_map_t map = {};
   lcd_ru::scan_text(map, title, lcd_display::COLS);
   lcd_ru::scan_text(map, line, lcd_display::COLS);
   lcd_ru::load_custom_font(map);
@@ -1390,7 +1390,7 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
     explorer_scroll_reset(scroll);
   }
 
-  lcd_ru::font_map_t name_map = {{0}, 0, false};
+  lcd_ru::font_map_t name_map = {};
   for(int row = 0; row < visible; row++) {
     DialogItem item;
     const int index = top + row;
@@ -1883,10 +1883,12 @@ static bool explorer_action(void) {
   return program_store_explorer_select();
 }
 
+#if MK61_ENABLE_FOCAL
 static bool focal_action(void) {
   FOCAL_menu_select();
   return action::MENU_BACK;
 }
+#endif
 
 static bool m61_load_action(void) {
   program_store::Entry entry = {};

@@ -4,7 +4,7 @@ https://github.com/UN7FGO/MK61S_MINI
 
 # Руководство по работе с терминалом
 
-Версия инструкции: 02.08.2026
+Версия инструкции: 13.08.2026
 
 Терминал дает доступ к программной памяти, стеку и регистрам МК-61, внутреннему
 хранилищу, клавиатуре устройства, сервисным функциям и часам RTC. Настоящее
@@ -185,6 +185,7 @@ MK61s mini ver. Jul 19 2026(12:34:56)
 | `crash` | Просмотр, сохранение и очистка сохранённого аппаратного fault dump. |
 | `wdog` | Состояние independent watchdog, причина последнего reset и retained breadcrumbs. |
 | `mpu` | Состояние аппаратной защиты нулевого адреса, границы stack/heap и исполнения из SRAM. |
+| `display` | Статус и стендовые тесты OLED1602/WS0010; в других профилях доступен только статус. |
 | `uscreen` | Запуск ожидания desktop-клиента USB Screen, если возможность включена при сборке. |
 | `rst` | Перезагрузка после подтверждения на устройстве. |
 | `dfu` | Немедленный переход в USB DFU-загрузчик. |
@@ -1126,6 +1127,43 @@ SRAM сохраняется, потому что загружаемые System A
 Преднамеренные `mpu test guard|null|exec` доступны только в стендовой сборке с
 `MK61_ENABLE_MPU_TEST=1`. В release код этих действий отсутствует; реальные
 MemManage-проверки выполнены вместе с сохранением crash dump.
+
+### `display` — OLED1602/WS0010
+
+```text
+display
+display status
+display reinit
+display on
+display off
+display test text
+display test alphabet 0
+display test symbols
+display test map 0
+display test ddram 0
+display test row 0 17
+display test cgram
+display test cursor
+display test clear
+display test home
+display test entry
+display test autoshift
+display test sleep
+display test graphics 0
+display test restore
+```
+
+`display status` сообщает контроллер, FT, карту DDRAM, fixed-delay, состояние
+OLED, маршрут USB Screen, тайм-аут сна, фазу запуска и число recovery. В
+профиле WEH001602A остальные подкоманды выполняют аппаратную приёмку: смешанный
+текст, алфавит, все 256 байтов CGROM, 2x64 DDRAM, независимую строку, CGRAM,
+cursor/blink, clear/home, entry shift и сон. Числа: `alphabet 0..4`,
+`map 0..7`, `ddram 0..63`, `row 0..1 0..63`.
+
+Тесты временно заменяют содержимое физического экрана. После них выполните
+`display test restore`. Графика доступна только в отдельной сборке с
+`MK61_WS0010_GRAPHICS_100X16=1` и не означает, что конкретный WEH001602A уже
+квалифицирован. Полный порядок приведён в `MK61s-mini-WS0010.md`.
 
 ### `uscreen` — внешний USB-экран
 

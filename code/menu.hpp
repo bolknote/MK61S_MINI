@@ -47,6 +47,9 @@ extern bool TurnRandomMode(void);
 extern bool UsbDiskMode(void);
 extern bool UsbScreenMode(void);
 extern bool TurnIdleSignal(void);
+#if defined(MK61_OLED1602_WS0010)
+extern bool TurnOledProtection(void);
+#endif
 extern bool TurnDisplayRows(void);
 extern bool SetDateTime(void);
 extern bool SetRtcCalibration(void);
@@ -64,6 +67,10 @@ namespace library_mk61 {
   extern  bool  language_is_ru(void);
   extern  bool  expanded_program_is_on(void);
   extern  bool  idle_signal_is_on(void);
+#if defined(MK61_OLED1602_WS0010)
+  extern  u8    oled_timeout(void);
+  extern  void  set_oled_timeout(u8 timeout);
+#endif
   extern  u8    display_rows(void);
   extern  lcd_display::TextProfile display_text_profile(void);
   extern  ProgramMemoryMode program_memory_mode(void);

@@ -1,6 +1,6 @@
 # MK61s F401 + APP в Arduino IDE
 
-Версия документа: 29.07.2026
+Версия документа: 13.08.2026
 
 Эта инструкция собирает через обычные кнопки Arduino IDE согласованный
 комплект для STM32F401CC. Ниже показан полный пример mini с включёнными
@@ -85,7 +85,8 @@ IDE.
 3. В меню Tools выберите платформу:
    `mini V3`, `mini V2`, `Classic V3`, `Classic V2` или `40th`.
 4. Отдельно выберите экран:
-   `LCD1602 · CGROM A00`, `LCD1602 · CGROM A02` или `UC1609`.
+   `LCD1602 · CGROM A00`, `LCD1602 · CGROM A02`,
+   `OLED1602 · WS0010 FT=10` или `UC1609`.
 5. Выберите `APP` или `Выключен` для FOCAL, TinyBASIC,
    `Markdown + WBMP viewer` и CHIP-8. Отдельный `WBMP viewer` выбирайте
    только при выключенном Markdown.
@@ -102,12 +103,18 @@ LCD1602 и включённым USB-экраном файлы запускают
 
 | Платформа | Экран |
 | --- | --- |
-| mini V2/V3 | LCD1602 A00 или A02 |
+| mini V3 | LCD1602 A00/A02 или OLED1602 WS0010 |
+| mini V2 | LCD1602 A00 или A02; WS0010 только экспериментальной ручной сборкой |
 | Classic V2/V3 | UC1609 |
 | 40th | UC1609 |
 
 Несовместимая пара останавливает сборку до запуска компилятора с понятной
 ошибкой. Платформа и экран намеренно остаются двумя независимыми меню.
+
+WS0010-профиль предназначен для Winstar WEH001602A с интерфейсом 6800,
+питанием 5 В и English/Russian `FT=10`; он не является синонимом A00/A02.
+Подключение и обязательная аппаратная приёмка описаны в
+[`MK61s-mini-WS0010.md`](MK61s-mini-WS0010.md).
 
 ## Verify, Export и Upload
 
@@ -171,6 +178,7 @@ custom manifest APP.
 | `LiquidCrystal.h: No such file` | Установить `LiquidCrystal 1.0.7` через Library Manager. |
 | Не найден `STM32duino RTC` | Установить `STM32duino RTC 1.9.0`. |
 | `incompatible platform/display pair` | Выбрать LCD для mini либо UC1609 для Classic/40th. |
+| OLED включается, но текст неверный | Выбрать `OLED1602 · WS0010 FT=10`, затем проверить `display test map 0..7`. |
 | `WBMP/CHIP-8 requires UC1609 or USB Screen` | Включить USB-экран для mini либо выключить графические APP. |
 | `does not fit the 20 KiB SRAM overlay` | Выбранный System APP вырос сверх лимита; это ошибка сборки, а не DFU. |
 | `app/firmware mismatch` | Скопировать `System` из каталога того же Verify/Upload, что и resident. |

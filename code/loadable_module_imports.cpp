@@ -70,6 +70,19 @@ static const DisplayEnd display_fullscreen_end_import =
     &MK61Display::endFullscreenBitmap;
 #endif
 
+#if defined(MK61_DISPLAY_LCD1602) && \
+    (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE)
+// The loadable language editors instantiate text_editor::draw() in the APP,
+// while LTO is free to inline the resident splash's only ordinary call and
+// discard the public member symbol. Retain the exact profile-dependent ABI
+// (2x40 for HD44780, 2x64 for WS0010) so the APP linker can resolve it.
+using DisplayRenderShiftedViewport =
+  void (MK61Display::*)(
+    const u8 (*)[lcd_display::DDRAM_COLS], u8);
+static const DisplayRenderShiftedViewport display_viewport_import =
+    &MK61Display::renderShiftedViewport;
+#endif
+
 } // namespace
 
 extern "C" __attribute__((noinline, used))
@@ -80,6 +93,10 @@ void mk61_module_keep_imports(void) {
   __asm volatile("" : : "r" (&display_fullscreen_begin_import),
                           "r" (&display_fullscreen_write_import),
                           "r" (&display_fullscreen_end_import) : "memory");
+#endif
+#if defined(MK61_DISPLAY_LCD1602) && \
+    (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE)
+  __asm volatile("" : : "r" (&display_viewport_import) : "memory");
 #endif
 }
 

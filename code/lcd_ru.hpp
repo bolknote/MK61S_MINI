@@ -4,22 +4,32 @@
 #include "lcd_gui.hpp"
 #include "lcd_charset.hpp"
 #include "builtin_font.hpp"
+#include "cgram_window_plan.hpp"
+#if defined(MK61_OLED1602_WS0010)
+  #include "ws0010_charset.hpp"
+#endif
 
 namespace lcd_ru {
 
 static constexpr u8 LCD_WIDTH = lcd_display::COLS;
 static constexpr u8 CUSTOM_GLYPHS = 8;
 
-struct font_map_t {
-  u16 codepoints[CUSTOM_GLYPHS];
-  u8  count;
-  bool overflow;
-};
+using font_map_t = cgram_window_plan::Plan;
 
 inline u16 uppercase(u16 codepoint) {
   if(codepoint >= 0x0430 && codepoint <= 0x044F) return codepoint - 0x20;
   if(codepoint == 0x0451) return 0x0401;
   return codepoint;
+}
+
+inline u16 display_codepoint(u16 codepoint) {
+#if defined(MK61_OLED1602_WS0010) || defined(MK61_DISPLAY_UC1609)
+  // These backends have native lowercase glyphs. A00/A02 retain their
+  // long-standing uppercase UI policy.
+  return codepoint;
+#else
+  return uppercase(codepoint);
+#endif
 }
 
 inline u16 read_utf8(const char*& text) {
@@ -129,13 +139,37 @@ inline bool rom_char(u16 codepoint, u8& out) {
   (void) out;
   return false;
 #else
-  if(a02_rom_char(codepoint, out)) return true;
-  return a00_rom_char(codepoint, out);
+  #if defined(MK61_OLED1602_WS0010)
+    return ws0010_charset::unicodeToByte(codepoint, out);
+  #else
+    if(a02_rom_char(codepoint, out)) return true;
+    return a00_rom_char(codepoint, out);
+  #endif
+#endif
+}
+
+inline bool fixed_cgram_char(u16 codepoint, u8& slot) {
+#if defined(MK61_OLED1602_WS0010)
+  switch(display_codepoint(codepoint)) {
+    case 0x2265: slot = ws0010_charset::cgram::GREATER_OR_EQUAL; return true;
+    case 0x02B8: slot = ws0010_charset::cgram::POWER_Y; return true;
+    case 0x22BB: slot = ws0010_charset::cgram::XOR; return true;
+    case 0x2260: slot = ws0010_charset::cgram::NOT_EQUAL; return true;
+    case 0x221A: slot = ws0010_charset::cgram::SQUARE_ROOT; return true;
+    case 0x21BB: slot = ws0010_charset::cgram::CYCLE_ARROW; return true;
+    case 0x02E3: slot = ws0010_charset::cgram::POWER_X; return true;
+    case 0x00B2: slot = ws0010_charset::cgram::POWER_2; return true;
+    default: return false;
+  }
+#else
+  (void) codepoint;
+  (void) slot;
+  return false;
 #endif
 }
 
 inline bool fallback_char(u16 codepoint, u8& out) {
-  codepoint = uppercase(codepoint);
+  codepoint = display_codepoint(codepoint);
   if(codepoint == 0x0427) {
     out = '4'; // Ч: допустимо, только когда уже используются все 8 пользовательских символов.
     return true;
@@ -148,7 +182,7 @@ inline bool fallback_char(u16 codepoint, u8& out) {
 }
 
 inline const u8* glyph_for(u16 codepoint) {
-#if !defined(MK61_DISPLAY_UC1609)
+#if !defined(MK61_DISPLAY_UC1609) && !defined(MK61_OLED1602_WS0010)
   codepoint = uppercase(codepoint);
 #endif
   if(const u8* glyph = builtin_font::rows5x8(codepoint)) return glyph;
@@ -160,25 +194,22 @@ inline const u8* glyph_for(u16 codepoint) {
 }
 
 inline i8 slot_for(const font_map_t& map, u16 codepoint) {
-  codepoint = uppercase(codepoint);
-  for(u8 i = 0; i < map.count; i++) {
-    if(map.codepoints[i] == codepoint) return i;
-  }
-  return -1;
+  codepoint = display_codepoint(codepoint);
+  return cgram_window_plan::slotFor(map, codepoint);
 }
 
 inline void add_custom(font_map_t& map, u16 codepoint) {
   u8 rom;
-  codepoint = uppercase(codepoint);
+  codepoint = display_codepoint(codepoint);
+  u8 fixed_slot = 0;
+  if(fixed_cgram_char(codepoint, fixed_slot)) {
+    cgram_window_plan::reserve(map, fixed_slot);
+    return;
+  }
   if(rom_char(codepoint, rom)) return;
   if(glyph_for(codepoint) == NULL) return;
   if(slot_for(map, codepoint) >= 0) return;
-
-  if(map.count < CUSTOM_GLYPHS) {
-    map.codepoints[map.count++] = codepoint;
-  } else {
-    map.overflow = true;
-  }
+  (void) cgram_window_plan::add(map, codepoint);
 }
 
 inline void scan_text(font_map_t& map, const char* text, u8 width) {
@@ -192,8 +223,17 @@ inline void load_custom_font(const font_map_t& map) {
   (void) map;
 #else
   if(main_lcd().graphicsMode()) return;
+#if defined(MK61_OLED1602_WS0010)
+  const class_LCD_fonts default_fonts;
+  for(u8 slot = 0; slot < CUSTOM_GLYPHS; slot++) {
+    if((map.reserved_mask & ((u8) 1u << slot)) != 0) {
+      default_fonts.loadWs0010Slot(slot);
+    }
+  }
+#endif
   for(u8 i = 0; i < map.count; i++) {
-    main_lcd().createChar(i, (uint8_t*) glyph_for(map.codepoints[i]));
+    main_lcd().createChar(map.slots[i],
+                          (uint8_t*) glyph_for(map.codepoints[i]));
   }
 #endif
 }
@@ -224,7 +264,7 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
     if(main_lcd().graphicsMode()) {
       main_lcd().writeCodepoint(raw_codepoint);
     } else {
-      const u16 codepoint = uppercase(raw_codepoint);
+      const u16 codepoint = display_codepoint(raw_codepoint);
       u8 out;
       if(rom_char(codepoint, out)) {
         main_lcd().write(out);
@@ -248,7 +288,7 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
 
 inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
   MK61DisplayUpdate update(main_lcd());
-  font_map_t map = {{0}, 0, false};
+  font_map_t map = {};
   scan_text(map, text, width);
   load_custom_font(map);
   main_lcd().setCursor(x, y);
@@ -258,7 +298,7 @@ inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
 inline void print_window(const char* const* lines, u8 count) {
   MK61DisplayUpdate update(main_lcd());
   if(count > main_lcd().rows()) count = main_lcd().rows();
-  font_map_t map = {{0}, 0, false};
+  font_map_t map = {};
   for(u8 row = 0; row < count; row++) {
     scan_text(map, lines[row], LCD_WIDTH);
   }
@@ -277,7 +317,7 @@ inline void print_lines(const char* text0, const char* text1) {
 
 inline void print_menu_window(char mark0, const char* text0, char mark1, const char* text1) {
   MK61DisplayUpdate update(main_lcd());
-  font_map_t map = {{0}, 0, false};
+  font_map_t map = {};
   scan_text(map, text0, LCD_WIDTH - 1);
   scan_text(map, text1, LCD_WIDTH - 1);
   load_custom_font(map);
@@ -293,7 +333,7 @@ inline void print_menu_window(char mark0, const char* text0, char mark1, const c
 
 inline void print_menu_line(u8 y, char mark, const char* text) {
   MK61DisplayUpdate update(main_lcd());
-  font_map_t map = {{0}, 0, false};
+  font_map_t map = {};
   scan_text(map, text, LCD_WIDTH - 1);
   load_custom_font(map);
 

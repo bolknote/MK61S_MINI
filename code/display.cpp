@@ -11,10 +11,37 @@
 #if defined(MK61_DISPLAY_LCD1602)
 
 #include "lcd1602_shifted_viewport.hpp"
+#include "lcd_6800_4bit_bus.hpp"
 #include "lcd_charset.hpp"
+#if defined(MK61_OLED1602_WS0010)
+  #include "crash_dump.hpp"
+  #include "ws0010_charset.hpp"
+  #include "ws0010_controller.hpp"
+  #include "ws0010_graphics.hpp"
+  #include "ws0010_shifted_viewport.hpp"
+#endif
 
 static_assert(lcd1602_shifted_viewport::COMMAND_RETURN_HOME == LCD_RETURNHOME,
               "HD44780 Return Home command mismatch");
+#if defined(MK61_OLED1602_WS0010)
+static_assert(ws0010_shifted_viewport::COMMAND_RETURN_HOME == LCD_RETURNHOME,
+              "WS0010 Return Home command mismatch");
+static_assert(ws0010_shifted_viewport::DDRAM_COLS == lcd_display::DDRAM_COLS,
+              "WS0010 viewport must expose all 64 DDRAM columns");
+
+static void noteWs0010InitializationPhase(ws0010::InitializationPhase phase) {
+  // "DS" + profile byte + phase fits the existing compact crash detail.
+  // No new retained fields or RAM journal are required.
+  crash_dump::update_runtime(
+    crash_dump::RUNTIME_DISPLAY,
+    0x44530000UL | (u32) phase,
+    millis());
+}
+#else
+static_assert(lcd1602_shifted_viewport::DDRAM_COLS ==
+              lcd_display::DDRAM_COLS,
+              "HD44780 viewport geometry mismatch");
+#endif
 static_assert(lcd1602_shifted_viewport::COMMAND_SET_DDRAM == LCD_SETDDRAMADDR,
               "HD44780 Set DDRAM command mismatch");
 static_assert(lcd1602_shifted_viewport::COMMAND_SHIFT_LEFT ==
@@ -32,9 +59,60 @@ struct LcdAnimationState {
 
 static LcdAnimationState animation_state = {};
 
+static constexpr u32 lcdClearDelayUs(void) {
+#if defined(MK61_OLED1602_WS0010)
+  return ws0010::CLEAR_DELAY_US;
+#else
+  return 2000;
+#endif
+}
+
+static constexpr u32 lcdReturnHomeDelayUs(void) {
+#if defined(MK61_OLED1602_WS0010)
+  return ws0010::COMMAND_DELAY_US;
+#else
+  return 2000;
+#endif
+}
+
+static inline u8 lcdLogicalColumn(u8 shift, u8 visible_column) {
+  return character_display_geometry::physicalAddress(shift, visible_column);
+}
+
+static inline u8 lcdHardwareColumn(u8 shift, u8 visible_column) {
+  return lcdLogicalColumn(shift, visible_column);
+}
+
 #if MK61_ENABLE_USB_SCREEN
 static u16 canonicalLcdToken(u8 value) {
-#if defined(MK61_LCD1602_A02)
+#if defined(MK61_OLED1602_WS0010)
+  switch(value) {
+    case ws0010_charset::cgram::GREATER_OR_EQUAL:
+      return display_symbol::uc1609::GE;
+    case ws0010_charset::cgram::POWER_Y:
+      return display_symbol::uc1609::POWY;
+    case ws0010_charset::cgram::XOR:
+      return display_symbol::uc1609::XOR;
+    case ws0010_charset::cgram::NOT_EQUAL:
+      return display_symbol::uc1609::NOT_EQUAL;
+    case ws0010_charset::cgram::SQUARE_ROOT:
+      return display_symbol::uc1609::SQRT;
+    case ws0010_charset::cgram::CYCLE_ARROW:
+      return display_symbol::uc1609::CYC_ARROW;
+    case ws0010_charset::cgram::POWER_X:
+      return display_symbol::uc1609::POW_X;
+    case ws0010_charset::cgram::POWER_2:
+      return display_symbol::uc1609::POW2;
+    case ws0010_charset::RIGHT_ARROW:
+      return display_symbol::uc1609::RT_ARROW;
+    case ws0010_charset::LEFT_ARROW:
+      return display_symbol::uc1609::LT_ARROW;
+    case ws0010_charset::PI_SYMBOL: return display_symbol::uc1609::PI_SYMBOL;
+    case ws0010_charset::DEGREE: return display_symbol::uc1609::GRAD;
+    case ws0010_charset::DIVIDE: return display_symbol::uc1609::DIVIDE;
+    default: return ws0010_charset::canonicalForByte(value);
+  }
+#elif defined(MK61_LCD1602_A02)
   switch(value) {
     case 0x00: return display_symbol::uc1609::GE;
     case 0x01: return display_symbol::uc1609::POWY;
@@ -101,10 +179,48 @@ static u16 canonicalLcdToken(u8 value) {
 }
 
 static u8 lcdByteForCanonicalToken(u16 token) {
+#if defined(MK61_OLED1602_WS0010)
+  u8 value = 0;
+  // canonicalLcdToken() represents otherwise-unknown WS0010 CGROM cells as
+  // U+E000..U+E0FF.  Accept that private-use form here as well as Unicode so
+  // a USB Screen round-trip preserves every physical controller byte.
+  if(ws0010_charset::canonicalToByte(token, value)) return value;
+  switch(token) {
+    case display_symbol::uc1609::GE:
+      return ws0010_charset::cgram::GREATER_OR_EQUAL;
+    case display_symbol::uc1609::POWY:
+      return ws0010_charset::cgram::POWER_Y;
+    case display_symbol::uc1609::XOR:
+      return ws0010_charset::cgram::XOR;
+    case display_symbol::uc1609::NOT_EQUAL:
+      return ws0010_charset::cgram::NOT_EQUAL;
+    case display_symbol::uc1609::SQRT:
+      return ws0010_charset::cgram::SQUARE_ROOT;
+    case display_symbol::uc1609::CYC_ARROW:
+      return ws0010_charset::cgram::CYCLE_ARROW;
+    case display_symbol::uc1609::POW_X:
+      return ws0010_charset::cgram::POWER_X;
+    case display_symbol::uc1609::RT_ARROW:
+      return ws0010_charset::RIGHT_ARROW;
+    case display_symbol::uc1609::LT_ARROW:
+      return ws0010_charset::LEFT_ARROW;
+    case display_symbol::uc1609::UP_ARROW:
+      return ws0010_charset::UP_ARROW_FALLBACK;
+    case display_symbol::uc1609::EM1:
+      return ws0010_charset::INVERSE_MARKER_FALLBACK;
+    case display_symbol::uc1609::PI_SYMBOL: return ws0010_charset::PI_SYMBOL;
+    case display_symbol::uc1609::POW2:
+      return ws0010_charset::cgram::POWER_2;
+    case display_symbol::uc1609::GRAD:      return ws0010_charset::DEGREE;
+    case display_symbol::uc1609::DIVIDE:    return ws0010_charset::DIVIDE;
+    default: return token <= 0xFF ? (u8) token : (u8) '?';
+  }
+#else
   for(u16 value = 0; value <= 0xFF; value++) {
     if(canonicalLcdToken((u8) value) == token) return (u8) value;
   }
   return token <= 0xFF ? (u8) token : (u8) '?';
+#endif
 }
 #endif
 
@@ -142,7 +258,7 @@ enum class LcdReadyResult : u8 {
 static LcdParallelBus lcdParallelBus(void) {
   return {
     digitalPinToPinName(PIN_LCD_RS),
-#if MK61_LCD1602_BUSY_FLAG
+#if MK61_LCD1602_BUSY_FLAG || defined(MK61_OLED1602_WS0010)
     digitalPinToPinName(PIN_LCD_RW),
 #else
     NC,
@@ -173,24 +289,36 @@ static inline void lcdSetDataOutput(const LcdParallelBus& bus, bool output) {
   for(u8 i = 0; i < 4; i++) lcdSetPinOutput(bus.data[i], output);
 }
 
+struct LcdHardwareWriteSink {
+  const LcdParallelBus& bus;
+
+  void setOutputLow(PinName pin) {
+    if(pin == NC) return;
+    lcdWritePin(pin, false);
+    lcdSetPinOutput(pin, true);
+  }
+
+  void setRwOutputLow(void) { setOutputLow(bus.rw); }
+  void setRsOutputLow(void) { setOutputLow(bus.rs); }
+  void setEnableOutputLow(void) { setOutputLow(bus.enable); }
+  void setDataOutputLow(u8 bit) { setOutputLow(bus.data[bit]); }
+  void rw(bool high) {
+    if(bus.rw != NC) lcdWritePin(bus.rw, high);
+  }
+  void rs(bool high) { lcdWritePin(bus.rs, high); }
+  void enable(bool high) { lcdWritePin(bus.enable, high); }
+  void data(u8 bit, bool high) { lcdWritePin(bus.data[bit], high); }
+  void delayMicroseconds(u8 duration) { ::delayMicroseconds(duration); }
+};
+
 static inline void lcdWriteNibble(const LcdParallelBus& bus, u8 nibble) {
-  lcdWritePin(bus.enable, false);
-  lcdWritePin(bus.data[0], (nibble & 0x01u) != 0);
-  lcdWritePin(bus.data[1], (nibble & 0x02u) != 0);
-  lcdWritePin(bus.data[2], (nibble & 0x04u) != 0);
-  lcdWritePin(bus.data[3], (nibble & 0x08u) != 0);
-  delayMicroseconds(1);
-  lcdWritePin(bus.enable, true);
-  delayMicroseconds(1);
-  lcdWritePin(bus.enable, false);
-  delayMicroseconds(1);
+  LcdHardwareWriteSink sink = {bus};
+  lcd_6800_4bit_bus::writeNibble(sink, nibble);
 }
 
 static inline void lcdWriteByte(const LcdParallelBus& bus, u8 value, bool data) {
-  if(bus.rw != NC) lcdWritePin(bus.rw, false);
-  lcdWritePin(bus.rs, data);
-  lcdWriteNibble(bus, value >> 4);
-  lcdWriteNibble(bus, value & 0x0Fu);
+  LcdHardwareWriteSink sink = {bus};
+  lcd_6800_4bit_bus::writeByte(sink, value, data);
 }
 
 #if MK61_LCD1602_BUSY_FLAG
@@ -236,8 +364,13 @@ static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
 } // анонимное пространство имён
 
 MK61Display::MK61Display(void)
+#if defined(MK61_OLED1602_WS0010)
+  : ddram_shadow{{0}},
+    ddram_home_shadow{{0}},
+#else
   : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7),
     ddram_shadow{{0}},
+#endif
     shadow_cursor_x(0),
     shadow_cursor_y(0),
     custom_glyphs{{0}},
@@ -247,6 +380,12 @@ MK61Display::MK61Display(void)
     busy_flag_timeouts(0),
     shifted_viewport_active(false),
     shifted_viewport_shift(0)
+#if defined(MK61_OLED1602_WS0010)
+    , reinitialization_count(0),
+    initialization_phase(ws0010::InitializationPhase::IDLE),
+    ws0010_graphics_active(false),
+    oled_protection_state()
+#endif
 #if MK61_ENABLE_USB_SCREEN
     , usb_framebuffer{0},
     usb_text_profile(lcd_display::defaultSettingsTextProfile()),
@@ -260,29 +399,385 @@ MK61Display::MK61Display(void)
 #endif
     {
   memset(ddram_shadow, ' ', sizeof(ddram_shadow));
+#if defined(MK61_OLED1602_WS0010)
+  memset(ddram_home_shadow, ' ', sizeof(ddram_home_shadow));
+#endif
 }
+
+#if defined(MK61_OLED1602_WS0010)
+bool MK61Display::initializeWs0010Controller(bool cold_start,
+                                             bool display_on_after_init) {
+  initialization_phase = ws0010::InitializationPhase::GPIO_SAFE;
+  noteWs0010InitializationPhase(initialization_phase);
+
+  const LcdParallelBus bus = lcdParallelBus();
+  if(!bus.validForWrite() || bus.rw == NC) {
+    initialization_phase = ws0010::InitializationPhase::IDLE;
+    noteWs0010InitializationPhase(initialization_phase);
+    return false;
+  }
+  // Establish a completely inert 6800 bus before any line is allowed to
+  // become an output. RW and E are always LOW in the qualified profile.
+  LcdHardwareWriteSink hardware_sink = {bus};
+  lcd_6800_4bit_bus::prepareWrite(hardware_sink);
+
+  initialization_phase = ws0010::InitializationPhase::POWER_WAIT;
+  noteWs0010InitializationPhase(initialization_phase);
+  delay(cold_start ? ws0010::POWER_STABILIZATION_MS
+                   : ws0010::RECOVERY_STABILIZATION_MS);
+  initialization_phase = ws0010::InitializationPhase::BUS_SYNC;
+  noteWs0010InitializationPhase(initialization_phase);
+  struct InitSink {
+    const LcdParallelBus& bus;
+    void nibble(u8 value) {
+      lcdWriteNibble(bus, value);
+      delayMicroseconds(ws0010::COMMAND_DELAY_US);
+    }
+    void command(u8 value) {
+      lcdWriteByte(bus, value, false);
+      delayMicroseconds(value == ws0010::CLEAR_DISPLAY
+                          ? ws0010::CLEAR_DELAY_US
+                          : ws0010::COMMAND_DELAY_US);
+    }
+  } sink = {bus};
+  if(cold_start) {
+    ws0010::emitFourBitInitialization(sink, display_on_after_init);
+  } else {
+    ws0010::emitFourBitRecovery(sink, display_on_after_init);
+  }
+  initialization_phase = ws0010::InitializationPhase::CONTROLLER_CONFIGURED;
+  noteWs0010InitializationPhase(initialization_phase);
+  return true;
+}
+
+void MK61Display::refreshWs0010VisibleShadow(
+    const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift) {
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      ddram_shadow[row][col] = cells[row][
+        ws0010_shifted_viewport::physicalAddress(shift, col)];
+    }
+  }
+}
+#endif
 
 void MK61Display::begin(u8 cols, u8 rows) {
   (void) cols;
   (void) rows;
-#if MK61_LCD1602_BUSY_FLAG
+#if defined(MK61_OLED1602_WS0010)
+  // A real power-on/brown-out resets both chips, so the exact manufacturer
+  // sequence is sufficient. Every other MCU reset must assume the separately
+  // powered OLED stopped in an arbitrary 4-bit transfer phase.
+  bool cold_start = false;
+#if defined(RCC_CSR_PORRSTF) && defined(RCC_CSR_BORRSTF)
+  const u32 reset_flags = crash_dump::boot_reset_flags();
+  cold_start = (reset_flags & (RCC_CSR_PORRSTF | RCC_CSR_BORRSTF)) != 0;
+#endif
+  const bool controller_ready =
+    initializeWs0010Controller(cold_start, false);
+#else
+  #if MK61_LCD1602_BUSY_FLAG
   // RW должен быть прижат к записи ещё до стандартной последовательности
   // инициализации LiquidCrystal.
-  pinMode(PIN_LCD_RW, OUTPUT);
   digitalWrite(PIN_LCD_RW, LOW);
-#endif
+  pinMode(PIN_LCD_RW, OUTPUT);
+  #endif
   lcd.begin(lcd_display::COLS, lcd_display::ROWS);
   lcd.noCursor();
   lcd.noBlink();
+#endif
   display_control = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
   busy_flag_timeouts = 0;
   probeBusyFlag();
   memset(ddram_shadow, ' ', sizeof(ddram_shadow));
+#if defined(MK61_OLED1602_WS0010)
+  memset(ddram_home_shadow, ' ', sizeof(ddram_home_shadow));
+#endif
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
   shifted_viewport_active = false;
   shifted_viewport_shift = 0;
+#if defined(MK61_OLED1602_WS0010)
+  ws0010_graphics_active = false;
+  oled_protection_state.configure(oled_protection::Timeout::MINUTES_15,
+                                  millis());
+  if(controller_ready) {
+    // Clear all controller CGRAM while D=0. Clear Display affects DDRAM only;
+    // without this pass a warm reset could briefly expose a previous owner's
+    // glyphs before the splash/default font is loaded.
+    initialization_phase = ws0010::InitializationPhase::RESTORING_CGRAM;
+    noteWs0010InitializationPhase(initialization_phase);
+    sendCommand(LCD_SETCGRAMADDR);
+    for(u8 address = 0; address < 64; address++) sendData(0);
+    sendCommand(LCD_SETDDRAMADDR);
+    sendDisplayControl();
+    initialization_phase = ws0010::InitializationPhase::READY;
+  } else {
+    initialization_phase = ws0010::InitializationPhase::IDLE;
+  }
+  noteWs0010InitializationPhase(initialization_phase);
+#endif
 }
+
+bool MK61Display::reinitialize(void) {
+#if !defined(MK61_OLED1602_WS0010)
+  return false;
+#else
+  const bool restore_shifted = shifted_viewport_active;
+  const u8 restore_shift = shifted_viewport_shift;
+  const u8 restore_cursor_x = shadow_cursor_x;
+  const u8 restore_cursor_y = shadow_cursor_y;
+  const u8 restore_control = display_control;
+
+  // Keep D=0 until CGRAM and both retained windows are coherent. The final
+  // sendDisplayControl() below restores the exact on/off/cursor/blink state in
+  // one command and prevents a flash of half-restored contents.
+  if(!initializeWs0010Controller(false, false)) return false;
+  ws0010_graphics_active = false;
+
+  initialization_phase = ws0010::InitializationPhase::RESTORING_CGRAM;
+  noteWs0010InitializationPhase(initialization_phase);
+  for(u8 slot = 0; slot < 8; slot++) {
+    sendCommand((u8) (LCD_SETCGRAMADDR | (slot << 3)));
+    for(u8 row = 0; row < 8; row++) {
+      sendData(custom_valid[slot] ? custom_glyphs[slot][row] : 0);
+    }
+  }
+
+  initialization_phase = ws0010::InitializationPhase::RESTORING_DDRAM;
+  noteWs0010InitializationPhase(initialization_phase);
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    sendCommand((u8) (LCD_SETDDRAMADDR | (row == 0 ? 0x00u : 0x40u)));
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      sendData(ddram_home_shadow[row][col]);
+    }
+  }
+
+  shifted_viewport_active = false;
+  shifted_viewport_shift = 0;
+  if(restore_shifted) {
+    // The owner deliberately retains the hidden 2x64 layout.  Recovery can
+    // nevertheless reconstruct both compact windows immediately; the next
+    // owner redraw replenishes the remaining hidden controller DDRAM.
+    for(u8 row = 0; row < lcd_display::ROWS; row++) {
+      for(u8 col = 0; col < lcd_display::COLS; col++) {
+        const u8 address = ws0010_shifted_viewport::physicalAddress(
+          restore_shift, col);
+        sendCommand(ws0010_shifted_viewport::setDdramAddressCommand(row,
+                                                                    address));
+        sendData(ddram_shadow[row][col]);
+      }
+    }
+    const auto emit = [this](ws0010_shifted_viewport::BusWrite write) {
+      sendCommand(write.value, write.value ==
+                  ws0010_shifted_viewport::COMMAND_RETURN_HOME
+                    ? lcdReturnHomeDelayUs() : 0);
+    };
+    (void) ws0010_shifted_viewport::shiftTo(
+      shifted_viewport_active, shifted_viewport_shift, restore_shift, emit);
+  }
+
+  display_control = restore_control;
+  sendDisplayControl();
+  // Restore the physical address counter directly. Calling the public
+  // setCursor() here would redirect to usb_surface when recovery is requested
+  // from the multiplexed terminal during an active USB Screen session.
+  shadow_cursor_x = restore_cursor_x < lcd_display::COLS
+                  ? restore_cursor_x : (u8) (lcd_display::COLS - 1u);
+  shadow_cursor_y = restore_cursor_y < lcd_display::ROWS
+                  ? restore_cursor_y : (u8) (lcd_display::ROWS - 1u);
+  const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
+  const u8 hardware_x = shifted_viewport_active
+                      ? lcdHardwareColumn(shifted_viewport_shift,
+                                          shadow_cursor_x)
+                      : shadow_cursor_x;
+  sendCommand((u8) (LCD_SETDDRAMADDR | row_address | hardware_x));
+  reinitialization_count++;
+  initialization_phase = ws0010::InitializationPhase::READY;
+  noteWs0010InitializationPhase(initialization_phase);
+  return true;
+#endif
+}
+
+#if defined(MK61_OLED1602_WS0010)
+bool MK61Display::beginWs0010Graphics(void) {
+#if !MK61_WS0010_GRAPHICS_100X16
+  return false;
+#else
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return false;
+#endif
+  if(ws0010_graphics_active) return true;
+  // Cursor/blink are meaningless in graphics mode, but they are logical UI
+  // state and must survive the experiment. Hide them on the controller
+  // without mutating display_control; reinitialize() will restore the exact
+  // character-mode value on return.
+  sendCommand((u8) (LCD_DISPLAYCONTROL |
+    (display_control & (u8) ~(LCD_DISPLAYON | LCD_CURSORON | LCD_BLINKON))));
+  sendCommand(ws0010::MODE_GRAPHICS_POWER_ON);
+  ws0010_graphics_active = true;
+  sendDisplayControl();
+  return true;
+#endif
+}
+
+bool MK61Display::writeWs0010GraphicsPage(u8 page, u8 first,
+                                          const u8* data, usize count) {
+#if !MK61_WS0010_GRAPHICS_100X16
+  (void) page;
+  (void) first;
+  (void) data;
+  (void) count;
+  return false;
+#else
+  if(!ws0010_graphics_active) return false;
+  const auto command = [this](u8 value) { sendCommand(value); };
+  const auto write_data = [this](u8 value) { sendData(value); };
+  return ws0010_graphics::streamPage(page, first, data, count,
+                                     command, write_data);
+#endif
+}
+
+bool MK61Display::showWs0010GraphicsFrame(const u8* frame, usize size) {
+#if !MK61_WS0010_GRAPHICS_100X16
+  (void) frame;
+  (void) size;
+  return false;
+#else
+  if(frame == NULL || size != ws0010_graphics::FRAME_BYTES ||
+     !beginWs0010Graphics()) return false;
+  for(u8 page = 0; page < ws0010_graphics::PAGES; page++) {
+    if(!writeWs0010GraphicsPage(page, 0,
+         frame + (usize) page * ws0010_graphics::WIDTH,
+         ws0010_graphics::WIDTH)) return false;
+  }
+  return true;
+#endif
+}
+
+void MK61Display::endWs0010Graphics(void) {
+  if(!ws0010_graphics_active) return;
+  // A full recovery is intentional: it proves character mode, CGRAM, the two
+  // compact windows and display-control are restored after every experiment.
+  (void) reinitialize();
+}
+
+bool MK61Display::returnWs0010Home(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return false;
+#endif
+  if(ws0010_graphics_active) return false;
+  sendCommand(ws0010::RETURN_HOME, lcdReturnHomeDelayUs());
+  shifted_viewport_active = false;
+  shifted_viewport_shift = 0;
+  memcpy(ddram_shadow, ddram_home_shadow, sizeof(ddram_shadow));
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
+  return true;
+}
+
+bool MK61Display::shiftWs0010Cursor(bool right) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return false;
+#endif
+  if(ws0010_graphics_active || shifted_viewport_active) return false;
+  if((right && shadow_cursor_x >= lcd_display::COLS - 1u) ||
+     (!right && shadow_cursor_x == 0)) return false;
+  sendCommand(right ? ws0010::CURSOR_RIGHT : ws0010::CURSOR_LEFT);
+  shadow_cursor_x = right ? (u8) (shadow_cursor_x + 1u)
+                          : (u8) (shadow_cursor_x - 1u);
+  return true;
+}
+
+bool MK61Display::showWs0010EntryModeTest(bool automatic_shift) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return false;
+#endif
+  if(ws0010_graphics_active) return false;
+
+  if(!automatic_shift) {
+    clear();
+    setCursor(0, 0);
+    print("ENTRY DEC: CBA  ");
+    sendCommand(ws0010::ENTRY_DECREMENT_NO_SHIFT);
+    setCursor(7, 1);
+    sendData('A');
+    sendData('B');
+    sendData('C');
+    ddram_shadow[1][7] = ddram_home_shadow[1][7] = 'A';
+    ddram_shadow[1][6] = ddram_home_shadow[1][6] = 'B';
+    ddram_shadow[1][5] = ddram_home_shadow[1][5] = 'C';
+    sendCommand(ws0010::ENTRY_INCREMENT_NO_SHIFT);
+    setCursor(8, 1);
+    cursorOn();
+    return true;
+  }
+
+  u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS];
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    for(u8 col = 0; col < lcd_display::DDRAM_COLS; col++) {
+      cells[row][col] = (u8) ('A' + ((row * 7u + col) % 26u));
+    }
+  }
+  renderShiftedViewport(cells, 0);
+  sendCommand(ws0010::ENTRY_INCREMENT_WITH_SHIFT);
+  sendCommand((u8) (LCD_SETDDRAMADDR | 15u));
+  sendData('*');
+  cells[0][15] = '*';
+  sendCommand(ws0010::ENTRY_INCREMENT_NO_SHIFT);
+  shifted_viewport_active = true;
+  shifted_viewport_shift = 1;
+  memcpy(ddram_home_shadow[0], cells[0], lcd_display::COLS);
+  memcpy(ddram_home_shadow[1], cells[1], lcd_display::COLS);
+  refreshWs0010VisibleShadow(cells, shifted_viewport_shift);
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
+  return true;
+}
+
+void MK61Display::configureOledProtection(oled_protection::Timeout timeout,
+                                          u32 now) {
+  oled_protection_state.configure(timeout, now);
+}
+
+void MK61Display::setDisplayEnabled(bool enabled, u32 now) {
+  oled_protection_state.force(enabled, now);
+  if(enabled) display_control |= LCD_DISPLAYON;
+  else display_control &= (u8) ~LCD_DISPLAYON;
+#if MK61_ENABLE_USB_SCREEN
+  if(physical_screen_enabled)
+#else
+  if(true)
+#endif
+    sendDisplayControl();
+}
+
+void MK61Display::noteDisplayActivity(u32 now) {
+  if(oled_protection_state.activity(now) ==
+     oled_protection::Transition::DISPLAY_ON) {
+    display_control |= LCD_DISPLAYON;
+#if MK61_ENABLE_USB_SCREEN
+    if(physical_screen_enabled)
+#else
+    if(true)
+#endif
+      sendDisplayControl();
+  }
+}
+
+void MK61Display::pollOledProtection(u32 now) {
+  if(oled_protection_state.poll(now) ==
+     oled_protection::Transition::DISPLAY_OFF) {
+    display_control &= (u8) ~LCD_DISPLAYON;
+#if MK61_ENABLE_USB_SCREEN
+    if(physical_screen_enabled)
+#else
+    if(true)
+#endif
+      sendDisplayControl();
+  }
+}
+#endif
 
 void MK61Display::clear(void) {
 #if MK61_ENABLE_USB_SCREEN
@@ -294,8 +789,11 @@ void MK61Display::clear(void) {
 #endif
   display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
   sendDisplayControl();
-  sendCommand(LCD_CLEARDISPLAY, 2000);
+  sendCommand(LCD_CLEARDISPLAY, lcdClearDelayUs());
   memset(ddram_shadow, ' ', sizeof(ddram_shadow));
+#if defined(MK61_OLED1602_WS0010)
+  memset(ddram_home_shadow, ' ', sizeof(ddram_home_shadow));
+#endif
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
   shifted_viewport_active = false;
@@ -362,11 +860,11 @@ void MK61Display::setCursor(u8 x, u8 y) {
   shadow_cursor_x = x < lcd_display::COLS ? x : (u8) (lcd_display::COLS - 1);
   shadow_cursor_y = y < lcd_display::ROWS ? y : (u8) (lcd_display::ROWS - 1);
   const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
-  const u8 physical_x = shifted_viewport_active
-                      ? lcd1602_shifted_viewport::physical_address(
-                          shifted_viewport_shift, shadow_cursor_x)
+  const u8 hardware_x = shifted_viewport_active
+                      ? lcdHardwareColumn(shifted_viewport_shift,
+                                          shadow_cursor_x)
                       : shadow_cursor_x;
-  sendCommand((u8) (LCD_SETDDRAMADDR | (row_address + physical_x)));
+  sendCommand((u8) (LCD_SETDDRAMADDR | (row_address + hardware_x)));
 }
 
 void MK61Display::cursorOn(void) {
@@ -426,26 +924,39 @@ bool MK61Display::hasHardwareCursor(void) const {
 
 void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
   if(nChar >= 8 || glyph == NULL) return;
-  memcpy(custom_glyphs[nChar], glyph, sizeof(custom_glyphs[nChar]));
+  for(u8 row = 0; row < 8; row++) {
+#if defined(MK61_OLED1602_WS0010)
+    custom_glyphs[nChar][row] = ws0010::normalizeCgramRow(row, glyph[row]);
+#else
+    custom_glyphs[nChar][row] = (u8) (glyph[row] & 0x1Fu);
+#endif
+  }
   custom_valid[nChar] = true;
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) {
-    usb_surface.createChar(nChar, glyph);
+    usb_surface.createChar(nChar, custom_glyphs[nChar]);
     usb_surface.flush(millis());
     return;
   }
 #endif
   sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
-  for(u8 row = 0; row < 8; row++) sendData(glyph[row]);
+  for(u8 row = 0; row < 8; row++) sendData(custom_glyphs[nChar][row]);
 }
 
 void MK61Display::clearCustomChars(void) {
+  memset(custom_glyphs, 0, sizeof(custom_glyphs));
+  memset(custom_valid, 0, sizeof(custom_valid));
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) {
     usb_surface.clearCustomChars();
     usb_surface.flush(millis());
+    return;
   }
 #endif
+  // Clearing the software catalogue must clear the controller as well; a
+  // later reinitialize must not resurrect glyphs the current owner released.
+  sendCommand(LCD_SETCGRAMADDR);
+  for(u8 address = 0; address < 64; address++) sendData(0);
 }
 
 bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
@@ -459,10 +970,16 @@ bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
   }
 #endif
   if(x >= lcd_display::COLS || y >= lcd_display::ROWS) return false;
+#if defined(MK61_OLED1602_WS0010)
+  // WS0010 keeps a compact snapshot of the window that is physically visible;
+  // the remaining 96 hidden bytes live only in the controller's own DDRAM.
+  value = ddram_shadow[y][x];
+#else
   const u8 physical_x = shifted_viewport_active
-                      ? lcd1602_shifted_viewport::physical_address(
+                      ? lcdLogicalColumn(
                           shifted_viewport_shift, x) : x;
   value = ddram_shadow[y][physical_x];
+#endif
   return true;
 }
 
@@ -477,7 +994,6 @@ bool MK61Display::copyCustomChar(u8 nChar, u8 glyph[8]) const {
 
 void MK61Display::clearCustomChar(u8 nChar) {
   if(nChar >= 8) return;
-  static uint8_t blank[8] = {};
   memset(custom_glyphs[nChar], 0, sizeof(custom_glyphs[nChar]));
   custom_valid[nChar] = false;
 #if MK61_ENABLE_USB_SCREEN
@@ -488,7 +1004,7 @@ void MK61Display::clearCustomChar(u8 nChar) {
   }
 #endif
   sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
-  for(u8 row = 0; row < 8; row++) sendData(blank[row]);
+  for(u8 row = 0; row < 8; row++) sendData(0);
 }
 
 void MK61Display::renderShiftedViewport(
@@ -516,19 +1032,140 @@ void MK61Display::renderShiftedViewport(
     sendDisplayControl();
   }
 
+#if defined(MK61_OLED1602_WS0010)
+  const auto emit = [this](ws0010_shifted_viewport::BusWrite write) {
+    if(write.data) {
+      sendData(write.value);
+    } else {
+      const u32 delay_us = write.value ==
+          ws0010_shifted_viewport::COMMAND_RETURN_HOME
+            ? lcdReturnHomeDelayUs() : 0;
+      sendCommand(write.value, delay_us);
+    }
+  };
+  if(ws0010_shifted_viewport::render(
+       shifted_viewport_active, shifted_viewport_shift, cells, shift, emit)) {
+    for(u8 row = 0; row < lcd_display::ROWS; row++) {
+      memcpy(ddram_home_shadow[row], cells[row], lcd_display::COLS);
+    }
+    refreshWs0010VisibleShadow(cells, shift);
+  }
+#else
   const auto emit = [this](lcd1602_shifted_viewport::BusWrite write) {
     if(write.data) {
       sendData(write.value);
     } else {
       const u32 delay_us = write.value ==
-          lcd1602_shifted_viewport::COMMAND_RETURN_HOME ? 2000 : 0;
+          lcd1602_shifted_viewport::COMMAND_RETURN_HOME
+            ? lcdReturnHomeDelayUs() : 0;
       sendCommand(write.value, delay_us);
     }
   };
   (void) lcd1602_shifted_viewport::render(
       ddram_shadow, shifted_viewport_active, shifted_viewport_shift,
       cells, shift, emit);
+#endif
 }
+
+bool MK61Display::shiftShiftedViewport(
+    const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift) {
+  if(cells == NULL || shift >= lcd_display::DDRAM_COLS) return false;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.beginUpdate();
+    usb_surface.clear();
+    for(u8 row = 0; row < lcd_display::ROWS; row++) {
+      usb_surface.setCursor(0, row);
+      for(u8 col = 0; col < lcd_display::COLS; col++) {
+        usb_surface.writeCodepoint(canonicalLcdToken(
+          cells[row][(u8) ((shift + col) % lcd_display::DDRAM_COLS)]));
+      }
+    }
+    usb_surface.endUpdate();
+    usb_surface.flush(millis());
+    return true;
+  }
+#endif
+
+  if(!shifted_viewport_active) return false;
+  if((display_control & (LCD_CURSORON | LCD_BLINKON)) != 0) {
+    display_control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
+    sendDisplayControl();
+  }
+
+#if defined(MK61_OLED1602_WS0010)
+  const auto emit = [this](ws0010_shifted_viewport::BusWrite write) {
+    sendCommand(write.value, write.value ==
+                ws0010_shifted_viewport::COMMAND_RETURN_HOME
+                  ? lcdReturnHomeDelayUs() : 0);
+  };
+  if(!ws0010_shifted_viewport::shiftTo(
+       shifted_viewport_active, shifted_viewport_shift, shift, emit)) {
+    return false;
+  }
+  refreshWs0010VisibleShadow(cells, shift);
+  return true;
+#else
+  // The HD44780 renderer already compares against its complete 2x40 shadow;
+  // for an unchanged owner layout this emits only the shortest shift command
+  // sequence and therefore provides the same fast path.
+  const auto emit = [this](lcd1602_shifted_viewport::BusWrite write) {
+    if(write.data) sendData(write.value);
+    else sendCommand(write.value, write.value ==
+                     lcd1602_shifted_viewport::COMMAND_RETURN_HOME
+                       ? lcdReturnHomeDelayUs() : 0);
+  };
+  return lcd1602_shifted_viewport::render(
+    ddram_shadow, shifted_viewport_active, shifted_viewport_shift,
+    cells, shift, emit);
+#endif
+}
+
+#if defined(MK61_OLED1602_WS0010)
+bool MK61Display::updateWs0010ShiftedViewportRow(
+    const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS],
+    u8 row, u8 shift) {
+  if(cells == NULL || row >= lcd_display::ROWS ||
+     shift >= lcd_display::DDRAM_COLS) return false;
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.beginUpdate();
+    usb_surface.setCursor(0, row);
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      usb_surface.writeCodepoint(canonicalLcdToken(
+        cells[row][ws0010_shifted_viewport::physicalAddress(shift, col)]));
+    }
+    usb_surface.endUpdate();
+    usb_surface.flush(millis());
+    return true;
+  }
+#endif
+  if(ws0010_graphics_active) return false;
+
+  const auto emit = [this](ws0010_shifted_viewport::BusWrite write) {
+    if(write.data) sendData(write.value);
+    else sendCommand(write.value, write.value ==
+                     ws0010_shifted_viewport::COMMAND_RETURN_HOME
+                       ? lcdReturnHomeDelayUs() : 0);
+  };
+  if(!ws0010_shifted_viewport::writeRow(
+       shifted_viewport_active, shifted_viewport_shift, cells, row, shift,
+       emit)) return false;
+  for(u8 col = 0; col < lcd_display::COLS; col++) {
+    ddram_home_shadow[row][col] = cells[row][
+      ws0010_shifted_viewport::independentSourceAddress(
+        shifted_viewport_shift, shift, col)];
+  }
+  for(u8 col = 0; col < lcd_display::COLS; col++) {
+    ddram_shadow[row][col] = cells[row][(u8) (
+      (shift + col) % lcd_display::DDRAM_COLS)];
+  }
+  const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
+  sendCommand((u8) (LCD_SETDDRAMADDR | row_address |
+    lcdHardwareColumn(shifted_viewport_shift, shadow_cursor_x)));
+  return true;
+}
+#endif
 
 void MK61Display::endShiftedViewport(void) {
 #if MK61_ENABLE_USB_SCREEN
@@ -536,12 +1173,24 @@ void MK61Display::endShiftedViewport(void) {
 #endif
   if(!shifted_viewport_active) return;
   cursorOff();
+#if defined(MK61_OLED1602_WS0010)
+  const auto emit = [this](ws0010_shifted_viewport::BusWrite write) {
+    sendCommand(write.value, write.value ==
+                ws0010_shifted_viewport::COMMAND_RETURN_HOME
+                  ? lcdReturnHomeDelayUs() : 0);
+  };
+  ws0010_shifted_viewport::end(shifted_viewport_active,
+                               shifted_viewport_shift, emit);
+  memcpy(ddram_shadow, ddram_home_shadow, sizeof(ddram_shadow));
+#else
   const auto emit = [this](lcd1602_shifted_viewport::BusWrite write) {
     sendCommand(write.value, write.value ==
-                lcd1602_shifted_viewport::COMMAND_RETURN_HOME ? 2000 : 0);
+                lcd1602_shifted_viewport::COMMAND_RETURN_HOME
+                  ? lcdReturnHomeDelayUs() : 0);
   };
   lcd1602_shifted_viewport::end(shifted_viewport_active,
                                 shifted_viewport_shift, emit);
+#endif
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
 }
@@ -554,7 +1203,12 @@ void MK61Display::writeCodepoint(u16 codepoint) {
     return;
   }
 #endif
+#if defined(MK61_OLED1602_WS0010)
+  u8 value = 0;
+  write(ws0010_charset::unicodeToByte(codepoint, value) ? value : (u8) '?');
+#else
   write(codepoint <= 0xFF ? (u8) codepoint : (u8) '?');
+#endif
 }
 
 bool MK61Display::installFont(const u8*, u16) { return false; }
@@ -659,8 +1313,11 @@ bool MK61Display::beginCellAnimation(void) {
   endShiftedViewport();
   cursorOff();
   blinkOff();
-  sendCommand(LCD_CLEARDISPLAY, 2000);
+  sendCommand(LCD_CLEARDISPLAY, lcdClearDelayUs());
   memset(ddram_shadow, ' ', sizeof(ddram_shadow));
+#if defined(MK61_OLED1602_WS0010)
+  memset(ddram_home_shadow, ' ', sizeof(ddram_home_shadow));
+#endif
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
   shifted_viewport_active = false;
@@ -697,6 +1354,10 @@ bool MK61Display::writeCellAnimationFrame(const u8* cells, usize count) {
     }
     memcpy(ddram_shadow[row], cells + row * lcd_display::COLS,
            lcd_display::COLS);
+#if defined(MK61_OLED1602_WS0010)
+    memcpy(ddram_home_shadow[row], cells + row * lcd_display::COLS,
+           lcd_display::COLS);
+#endif
   }
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
@@ -737,8 +1398,13 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
   for(u8 slot = 0; slot < GLYPH_COUNT; slot++) {
     if((used_slots & ((u8) 1U << slot)) == 0) continue;
     for(u8 row = 0; row < GLYPH_ROWS; row++) {
-      if(!custom_valid[slot] || custom_glyphs[slot][row] !=
-          (u8) (glyphs[slot][row] & 0x1FU)) {
+      const u8 desired =
+#if defined(MK61_OLED1602_WS0010)
+        ws0010::normalizeCgramRow(row, glyphs[slot][row]);
+#else
+        (u8) (glyphs[slot][row] & 0x1FU);
+#endif
+      if(!custom_valid[slot] || custom_glyphs[slot][row] != desired) {
         changed_rows |= (u64) 1U << (slot * GLYPH_ROWS + row);
       }
     }
@@ -782,7 +1448,13 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
     for(u8 changed = first; changed <= last; changed++) {
       const u8 slot = (u8) (changed / GLYPH_ROWS);
       const u8 row = (u8) (changed % GLYPH_ROWS);
-      sendData((u8) (glyphs[slot][row] & 0x1FU));
+      sendData(
+#if defined(MK61_OLED1602_WS0010)
+        ws0010::normalizeCgramRow(row, glyphs[slot][row])
+#else
+        (u8) (glyphs[slot][row] & 0x1FU)
+#endif
+      );
     }
     address = (u8) (last + 1U);
   }
@@ -812,13 +1484,22 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
   for(usize slot = 0; slot < GLYPH_COUNT; slot++) {
     if((used_slots & ((u8) 1U << slot)) == 0) continue;
     for(usize row = 0; row < GLYPH_ROWS; row++) {
-      custom_glyphs[slot][row] = (u8) (glyphs[slot][row] & 0x1FU);
+      custom_glyphs[slot][row] =
+#if defined(MK61_OLED1602_WS0010)
+        ws0010::normalizeCgramRow((u8) row, glyphs[slot][row]);
+#else
+        (u8) (glyphs[slot][row] & 0x1FU);
+#endif
     }
     custom_valid[slot] = true;
   }
   for(u8 row = 0; row < lcd_display::ROWS; row++) {
     memcpy(ddram_shadow[row], cells + row * lcd_display::COLS,
            lcd_display::COLS);
+#if defined(MK61_OLED1602_WS0010)
+    memcpy(ddram_home_shadow[row], cells + row * lcd_display::COLS,
+           lcd_display::COLS);
+#endif
   }
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
@@ -832,7 +1513,9 @@ void MK61Display::endCellAnimation(void) {
 }
 
 lcd_display::BusyFlagStatus MK61Display::busyFlagStatus(void) const {
-#if MK61_LCD1602_BUSY_FLAG
+#if defined(MK61_OLED1602_WS0010)
+  return lcd_display::BusyFlagStatus::FIXED_DELAYS;
+#elif MK61_LCD1602_BUSY_FLAG
   return busy_flag_active ? lcd_display::BusyFlagStatus::ACTIVE
                           : lcd_display::BusyFlagStatus::FIXED_DELAYS;
 #else
@@ -848,8 +1531,8 @@ void MK61Display::probeBusyFlag(void) {
   busy_flag_active = false;
 
 #if MK61_LCD1602_BUSY_FLAG
-  pinMode(PIN_LCD_RW, OUTPUT);
   digitalWrite(PIN_LCD_RW, LOW);
+  pinMode(PIN_LCD_RW, OUTPUT);
 
   const LcdParallelBus bus = lcdParallelBus();
   if(!bus.validForRead()) return;
@@ -891,12 +1574,18 @@ void MK61Display::sendByte(u8 value, bool data, u32 fallback_delay_us) {
   // Не вызываем LiquidCrystal::command/write: в Arduino LiquidCrystal 1.0.7
   // эти методы ошибочно определены как inline только в .cpp. При -O2 их
   // внешние символы исчезают, и прошивка не линкуется. Стандартная
-  // инициализация остаётся за библиотекой, последующий обмен идёт через тот же
-  // четырёхбитный интерфейс напрямую.
+  // инициализация HD44780 остаётся за библиотекой; WS0010 инициализируется
+  // выше явной последовательностью. Последующий обмен обоих контроллеров идёт
+  // через тот же четырёхбитный интерфейс напрямую.
   const LcdParallelBus bus = lcdParallelBus();
   if(!bus.validForWrite()) return;
   lcdWriteByte(bus, value, data);
-  delayMicroseconds(fallback_delay_us != 0 ? fallback_delay_us : 50);
+  delayMicroseconds(fallback_delay_us != 0 ? fallback_delay_us
+#if defined(MK61_OLED1602_WS0010)
+                                           : ws0010::COMMAND_DELAY_US);
+#else
+                                           : 50);
+#endif
 }
 
 void MK61Display::sendCommand(u8 value, u32 fallback_delay_us) {
@@ -908,7 +1597,58 @@ void MK61Display::sendData(u8 value) {
 }
 
 void MK61Display::sendDisplayControl(void) {
-  sendCommand((u8) (LCD_DISPLAYCONTROL | display_control));
+  u8 control = display_control;
+#if defined(MK61_OLED1602_WS0010)
+  // In G/C=1 only D is meaningful. Keep cursor/blink in the logical state so
+  // character recovery is lossless, but never send those bits to graphics.
+  if(ws0010_graphics_active) {
+    control &= (u8) ~(LCD_CURSORON | LCD_BLINKON);
+  }
+#endif
+  sendCommand((u8) (LCD_DISPLAYCONTROL | control));
+}
+
+void MK61Display::writeCharacterCell(u8 value) {
+  const u8 row = shadow_cursor_y;
+  const u8 visible_x = shadow_cursor_x;
+#if defined(MK61_OLED1602_WS0010)
+  const u8 hardware_x = shifted_viewport_active
+                      ? lcdHardwareColumn(shifted_viewport_shift, visible_x)
+                      : visible_x;
+#else
+  const u8 logical_x = shifted_viewport_active
+                     ? lcdLogicalColumn(shifted_viewport_shift, visible_x)
+                     : visible_x;
+#endif
+
+  sendData(value);
+
+#if defined(MK61_OLED1602_WS0010)
+  ddram_shadow[row][visible_x] = value;
+  if(hardware_x < lcd_display::COLS) {
+    ddram_home_shadow[row][hardware_x] = value;
+  }
+#else
+  ddram_shadow[row][logical_x] = value;
+#endif
+  shadow_cursor_x++;
+  if(shadow_cursor_x >= lcd_display::COLS) {
+    shadow_cursor_x = 0;
+    shadow_cursor_y = (u8) ((shadow_cursor_y + 1) % lcd_display::ROWS);
+  }
+
+#if defined(MK61_OLED1602_WS0010)
+  if(shifted_viewport_active || visible_x == lcd_display::COLS - 1u) {
+    // A logical 16-column row wrap never matches WS0010's native 64-byte AC
+    // progression. Re-arm AC for both normal and shifted text so a Print
+    // crossing column 15 continues at column 0 of the other logical row.
+    const u8 next_row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
+    const u8 next_hardware_x = lcdHardwareColumn(
+      shifted_viewport_shift, shadow_cursor_x);
+    sendCommand((u8) (LCD_SETDDRAMADDR | next_row_address |
+                      next_hardware_x));
+  }
+#endif
 }
 
 #if ARDUINO >= 100
@@ -926,17 +1666,7 @@ size_t MK61Display::write(uint8_t value) {
     return 1;
   }
 #endif
-  sendData(value);
-  const u8 physical_x = shifted_viewport_active
-                      ? lcd1602_shifted_viewport::physical_address(
-                          shifted_viewport_shift, shadow_cursor_x)
-                      : shadow_cursor_x;
-  ddram_shadow[shadow_cursor_y][physical_x] = value;
-  shadow_cursor_x++;
-  if(shadow_cursor_x >= lcd_display::COLS) {
-    shadow_cursor_x = 0;
-    shadow_cursor_y = (u8) ((shadow_cursor_y + 1) % lcd_display::ROWS);
-  }
+  writeCharacterCell(value);
   return 1;
 }
 #else
@@ -954,17 +1684,7 @@ void MK61Display::write(uint8_t value) {
     return;
   }
 #endif
-  sendData(value);
-  const u8 physical_x = shifted_viewport_active
-                      ? lcd1602_shifted_viewport::physical_address(
-                          shifted_viewport_shift, shadow_cursor_x)
-                      : shadow_cursor_x;
-  ddram_shadow[shadow_cursor_y][physical_x] = value;
-  shadow_cursor_x++;
-  if(shadow_cursor_x >= lcd_display::COLS) {
-    shadow_cursor_x = 0;
-    shadow_cursor_y = (u8) ((shadow_cursor_y + 1) % lcd_display::ROWS);
-  }
+  writeCharacterCell(value);
 }
 #endif
 
@@ -1979,6 +2699,15 @@ usb_screen::TextProfile MK61Display::usbTextProfile(
 bool MK61Display::enterUsbScreen(void) {
   if(usb_screen_active) return true;
 
+#if defined(MK61_OLED1602_WS0010)
+  // USB Screen owns a character-oriented canonical surface. Never seed it
+  // from, or later restore it into, an experimental G/C session. The same
+  // idempotent recovery used by diagnostics reconstructs character DDRAM,
+  // CGRAM, cursor/blink and the compact viewport before ownership changes.
+  if(ws0010_graphics_active) endWs0010Graphics();
+  if(ws0010_graphics_active) return false;
+#endif
+
 #if defined(MK61_DISPLAY_LCD1602)
   u8 seed_cells[lcd_display::ROWS][lcd_display::COLS] = {};
   u8 seed_glyphs[usb_screen::Surface::CUSTOM_GLYPHS][8] = {};
@@ -2149,7 +2878,11 @@ void MK61Display::setPhysicalScreenEnabled(bool enabled) {
   if(physical_screen_enabled == enabled) return;
   physical_screen_enabled = enabled;
 #if defined(MK61_DISPLAY_LCD1602)
-  if(enabled) display_control |= LCD_DISPLAYON;
+  if(enabled
+#if defined(MK61_OLED1602_WS0010)
+     && oled_protection_state.awake()
+#endif
+     ) display_control |= LCD_DISPLAYON;
   else display_control &= (u8) ~LCD_DISPLAYON;
   sendDisplayControl();
 #else

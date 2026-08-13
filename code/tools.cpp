@@ -71,13 +71,17 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
   switch(entry.type) {
     case program_store::ProgramType::MK61:
       return m61_text::open_program(entry.id);
-#if MK61_ENABLE_FOCAL
     case program_store::ProgramType::FOCAL:
+#if MK61_ENABLE_FOCAL
       return FocalRunSucceeded(RunFocalProgram(entry.id));
+#else
+      return false;
 #endif
-#if MK61_ENABLE_TINYBASIC
     case program_store::ProgramType::TINYBASIC:
+#if MK61_ENABLE_TINYBASIC
       return RunTinyBasicProgram(entry.id);
+#else
+      return false;
 #endif
     case program_store::ProgramType::TEXT:
     case program_store::ProgramType::MK61_STATE:
@@ -385,6 +389,9 @@ struct PersistentSettings {
   u8 counter;
   u8 flags;
   u8 sound;
+#if defined(MK61_OLED1602_WS0010)
+  u8 oled;
+#endif
   lcd_display::TextProfile text_profile;
   bool text_profile_stored;
 };
@@ -394,6 +401,9 @@ static PersistentSettings persistent_settings = {
   0,
   0xFF,
   0xFF,
+#if defined(MK61_OLED1602_WS0010)
+  0xFF,
+#endif
   lcd_display::defaultSettingsTextProfile(),
   false
 };
@@ -408,6 +418,9 @@ static void reset_persistent_settings_cache(void) {
   persistent_settings.counter = 0;
   persistent_settings.flags = 0xFF;
   persistent_settings.sound = 0xFF;
+#if defined(MK61_OLED1602_WS0010)
+  persistent_settings.oled = 0xFF;
+#endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
   persistent_settings_loaded = true;
@@ -422,6 +435,9 @@ static void apply_settings_record(const settings_journal::RecordData& record) {
   persistent_settings.counter = record.counter;
   persistent_settings.flags = record.flags;
   persistent_settings.sound = record.sound;
+#if defined(MK61_OLED1602_WS0010)
+  persistent_settings.oled = record.oled_stored ? record.oled : 0xFF;
+#endif
   persistent_settings.text_profile_stored = false;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   if(record.text_profile_stored) {
@@ -476,6 +492,9 @@ static void import_legacy_settings(void) {
   persistent_settings.counter = (counter == 0xFF) ? 0 : counter;
   persistent_settings.flags = flags;
   persistent_settings.sound = sound;
+#if defined(MK61_OLED1602_WS0010)
+  persistent_settings.oled = 0xFF;
+#endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
   persistent_settings_needs_save = true;
@@ -499,7 +518,14 @@ static void load_persistent_settings(void) {
     return;
   }
 
-  settings_journal::Scanner scanner(settings_size);
+  settings_journal::Scanner scanner(
+    settings_size,
+#if defined(MK61_OLED1602_WS0010)
+    settings_journal::VERSION
+#else
+    settings_journal::VERSION_3
+#endif
+  );
   while(scanner.active()) {
     u8 record[settings_journal::RECORD_SIZE];
     const u32 address = settings_address + (u32) scanner.next_offset();
@@ -553,6 +579,10 @@ static bool write_persistent_settings(void) {
   data.counter = persistent_settings.counter;
   data.flags = persistent_settings.flags;
   data.sound = persistent_settings.sound;
+#if defined(MK61_OLED1602_WS0010)
+  data.oled = normalize_oled_settings(persistent_settings.oled).raw;
+  data.oled_stored = true;
+#endif
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   data.text_profile_stored = persistent_settings.text_profile_stored;
   data.text_rows = persistent_settings.text_profile.rows;
@@ -622,6 +652,29 @@ void store_sound_settings(SoundSettings settings) {
   write_persistent_settings();
 }
 
+OledSettings read_oled_settings(void) {
+#if defined(MK61_OLED1602_WS0010)
+  load_persistent_settings();
+  return normalize_oled_settings(persistent_settings.oled);
+#else
+  return normalize_oled_settings(0xFF);
+#endif
+}
+
+void store_oled_settings(OledSettings settings) {
+#if defined(MK61_OLED1602_WS0010)
+  load_persistent_settings();
+  settings = normalize_oled_settings(settings.raw);
+  if(persistent_settings.oled != settings.raw) {
+    persistent_settings.oled = settings.raw;
+    persistent_settings_needs_save = true;
+  }
+  write_persistent_settings();
+#else
+  (void) settings;
+#endif
+}
+
 bool read_display_text_profile(lcd_display::TextProfile& out) {
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   load_persistent_settings();
@@ -659,7 +712,8 @@ void store_display_text_profile(lcd_display::TextProfile profile) {
 bool store_settings_snapshot(
   SettingsFlags flags,
   SoundSettings sound,
-  const lcd_display::TextProfile* text_profile
+  const lcd_display::TextProfile* text_profile,
+  const OledSettings* oled_settings
 ) {
   load_persistent_settings();
   flags = normalize_settings_flags(flags.raw);
@@ -690,6 +744,18 @@ bool store_settings_snapshot(
   }
 #else
   (void) text_profile;
+#endif
+
+#if defined(MK61_OLED1602_WS0010)
+  if(oled_settings != NULL) {
+    const OledSettings oled = normalize_oled_settings(oled_settings->raw);
+    if(persistent_settings.oled != oled.raw) {
+      persistent_settings.oled = oled.raw;
+      persistent_settings_needs_save = true;
+    }
+  }
+#else
+  (void) oled_settings;
 #endif
 
   return write_persistent_settings();

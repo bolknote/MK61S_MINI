@@ -39,7 +39,8 @@ enum RuntimeState : u32 {
   RUNTIME_M61 = 6,
   RUNTIME_USB_MASS_STORAGE = 7,
   RUNTIME_USB_SCREEN = 8,
-  RUNTIME_FAULT_TEST = 9
+  RUNTIME_FAULT_TEST = 9,
+  RUNTIME_DISPLAY = 10
 };
 
 // Вызывать первой строкой setup(): функция читает reset flags до их очистки,

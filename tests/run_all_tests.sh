@@ -32,6 +32,7 @@ fi
 "$root/tests/run_early_dfu_tests.sh"
 "$root/tests/run_dfu_splash_tests.sh"
 "$root/tests/run_display_font_tests.sh"
+"$root/tests/run_ws0010_tests.sh"
 "$root/tests/run_hardware_info_tests.sh"
 "$root/tests/run_uc1609_transport_tests.sh"
 "$root/tests/run_fmk_converter_tests.sh"

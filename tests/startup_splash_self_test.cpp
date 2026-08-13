@@ -1,4 +1,5 @@
 #include "startup_splash.hpp"
+#include "lcd1602_shifted_viewport.hpp"
 
 #include <assert.h>
 #include <stdio.h>

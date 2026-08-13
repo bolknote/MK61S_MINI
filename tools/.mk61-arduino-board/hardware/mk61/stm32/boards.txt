@@ -76,6 +76,10 @@ mk61_f401_app.menu.mk61_display.lcd_a02=LCD1602 · CGROM A02
 mk61_f401_app.menu.mk61_display.lcd_a02.build.mk61_display_id=lcd1602-a02
 mk61_f401_app.menu.mk61_display.lcd_a02.build.mk61_display_flags=-DMK61_LCD1602_A02
 
+mk61_f401_app.menu.mk61_display.oled_ws0010=OLED1602 · WS0010 FT=10
+mk61_f401_app.menu.mk61_display.oled_ws0010.build.mk61_display_id=oled1602-ws0010
+mk61_f401_app.menu.mk61_display.oled_ws0010.build.mk61_display_flags=-DMK61_OLED1602_WS0010
+
 mk61_f401_app.menu.mk61_display.uc1609=UC1609
 mk61_f401_app.menu.mk61_display.uc1609.build.mk61_display_id=uc1609
 mk61_f401_app.menu.mk61_display.uc1609.build.mk61_display_flags=

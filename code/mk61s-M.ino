@@ -313,12 +313,12 @@ void setup() {
   // обращаться к выводам и посылать команды уже внутри конструктора.
   rtc_clock::prepare_display_gpio();
   #if defined(MK61_DISPLAY_LCD1602) && (defined(REVISION_V2) || defined(REVISION_V3))
-    pinMode(PIN_LCD_RW, OUTPUT);
     digitalWrite(PIN_LCD_RW, LOW);
+    pinMode(PIN_LCD_RW, OUTPUT);
   #endif
   #if defined(MK61_DISPLAY_LCD1602) && defined(REVISION_V2)
-    pinMode(PIN_LCD_DB7, OUTPUT);
     digitalWrite(PIN_LCD_DB7, LOW);
+    pinMode(PIN_LCD_DB7, OUTPUT);
   #endif
 
   // F401/F411 попадает сюда только при обычной загрузке: сверхаварийный ESC
@@ -591,7 +591,13 @@ inline void message_of_unuse(void) {
 }
 
 void idle_signal_reset(void) {
-  idle_signal_at = millis() + IDLE_SIGNAL_DELAY_MS;
+  const t_time_ms now = millis();
+  idle_signal_at = now + IDLE_SIGNAL_DELAY_MS;
+#if defined(MK61_OLED1602_WS0010)
+  // Keyboard and terminal input share this activity hook. Waking only changes
+  // display-control; DDRAM/CGRAM and the current viewport remain intact.
+  main_lcd().noteDisplayActivity(now);
+#endif
 }
 
 void idle_signal_poll(void) {
@@ -1065,6 +1071,9 @@ void idle_main_process(void) {
   sound_poll();
   led::control();
   main_lcd().flush();
+#if defined(MK61_OLED1602_WS0010)
+  main_lcd().pollOledProtection(millis());
+#endif
   idle_signal_poll();
   // Единственная production reload-точка IWDG: все foreground-сервисы этого
   // epoch уже вернулись. Зависание внутри любого из них не дойдёт сюда.

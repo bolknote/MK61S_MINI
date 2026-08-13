@@ -142,6 +142,19 @@ int main(void) {
   static_assert(PIN_BUZZER == PB9, "Classic V3 buzzer pin regression");
   static_assert(PIN_LED_ACTIVE_LOW == 0,
                 "Classic V3 LED must turn off at LOW");
+#elif defined(MK61_CONFIG_EXPECT_WS0010)
+  static_assert(MK61_LCD1602_BUSY_FLAG == 0,
+                "WS0010 must remain write-only at 5 V");
+  #if !defined(MK61_OLED1602_WS0010) || \
+      defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
+    #error "the WS0010 build must select its own character-display profile"
+  #endif
+  #if defined(REVISION_V2) || !defined(REVISION_V3)
+    #error "the accepted WS0010 profile currently targets mini V3"
+  #endif
+  static_assert(PIN_BUZZER == PA0, "mini V3 buzzer regression");
+  static_assert(PIN_LED_ACTIVE_LOW == 0,
+                "mini V3 LED must turn off at LOW");
 #elif defined(MK61_CONFIG_EXPECT_V2) || defined(MK61_CONFIG_EXPECT_V3)
   static_assert(MK61_LCD1602_BUSY_FLAG == 1,
                 "mini V2/V3 must use the connected LCD busy flag");

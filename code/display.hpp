@@ -29,6 +29,11 @@
 #endif
 
 #if defined(MK61_DISPLAY_LCD1602)
+  #include "character_display_geometry.hpp"
+#if defined(MK61_OLED1602_WS0010)
+  #include "ws0010_controller.hpp"
+  #include "oled_protection.hpp"
+#endif
   #include <LiquidCrystal.h>
 #else
   #include "ERM19264_UC1609.h"
@@ -137,8 +142,15 @@ static inline TextProfile normalizeGraphicalTextProfile(TextProfile profile) {
 #endif
 
 #if defined(MK61_DISPLAY_LCD1602)
-static constexpr u8 ROWS = 2;
-static constexpr u8 DDRAM_COLS = 40;
+static constexpr u8 ROWS = character_display_geometry::ROWS;
+static constexpr u8 DDRAM_COLS = character_display_geometry::DDRAM_COLS;
+// A00/A02 retain a full 2x40 diff shadow. WS0010 streams the owner's 2x64
+// layout into controller DDRAM and keeps only the visible and Home windows.
+#if defined(MK61_OLED1602_WS0010)
+static constexpr u8 DDRAM_SHADOW_COLS = COLS;
+#else
+static constexpr u8 DDRAM_SHADOW_COLS = DDRAM_COLS;
+#endif
 static constexpr u8 DEFAULT_ROWS = ROWS;
 static constexpr u8 MAX_ROWS = ROWS;
 static constexpr TextProfile defaultTextProfileForRows(u8) {
@@ -207,6 +219,31 @@ class MK61Display : public Print {
     MK61Display(void);
 
     void begin(u8 cols = lcd_display::COLS, u8 rows = lcd_display::ROWS);
+    // Reinitialises an already powered character controller without losing
+    // the visible window, custom glyphs or cursor/display-control state.
+    // Currently supported by the explicit WS0010 backend.
+    bool reinitialize(void);
+#if defined(MK61_OLED1602_WS0010)
+    bool supportsWs0010Graphics(void) const {
+      return MK61_WS0010_GRAPHICS_100X16 != 0;
+    }
+    bool beginWs0010Graphics(void);
+    bool writeWs0010GraphicsPage(u8 page, u8 first,
+                                 const u8* data, usize count);
+    bool showWs0010GraphicsFrame(const u8* frame, usize size);
+    void endWs0010Graphics(void);
+    bool returnWs0010Home(void);
+    bool shiftWs0010Cursor(bool right);
+    bool showWs0010EntryModeTest(bool automatic_shift);
+    void configureOledProtection(oled_protection::Timeout timeout, u32 now);
+    void noteDisplayActivity(u32 now);
+    void pollOledProtection(u32 now);
+    void setDisplayEnabled(bool enabled, u32 now);
+    bool displayEnabled(void) const { return oled_protection_state.awake(); }
+    oled_protection::Timeout oledProtectionTimeout(void) const {
+      return oled_protection_state.timeout();
+    }
+#endif
     void clear(void);
     void flush(void);
     void beginUpdate(void);
@@ -229,7 +266,26 @@ class MK61Display : public Print {
     bool copyCustomChar(u8 nChar, u8 glyph[8]) const;
     void renderShiftedViewport(
       const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+    // Moves an already loaded native DDRAM layout without retransmitting it.
+    // `cells` remains owner-owned and is consulted only to refresh the compact
+    // visible-window shadow used by USB/recovery.
+    bool shiftShiftedViewport(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+#if defined(MK61_OLED1602_WS0010)
+    // Rewrites one controller DDRAM row while preserving the other row and
+    // the shared hardware shift. This is the independent-scroll path for a
+    // 2-line module whose display-shift command necessarily moves both rows.
+    bool updateWs0010ShiftedViewportRow(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS],
+      u8 row, u8 shift);
+#endif
     void endShiftedViewport(void);
+#if defined(MK61_OLED1602_WS0010)
+    u16 reinitializationCount(void) const { return reinitialization_count; }
+    ws0010::InitializationPhase initializationPhase(void) const {
+      return initialization_phase;
+    }
+#endif
 #endif
     bool showTopRightOverlay(const u32* rows, u8 width, u8 height,
                              u8 clear_border);
@@ -286,6 +342,14 @@ class MK61Display : public Print {
     bool graphicsMode(void) const {
 #if defined(MK61_DISPLAY_UC1609)
       return true;
+#elif defined(MK61_OLED1602_WS0010)
+#if MK61_ENABLE_USB_SCREEN
+      // USB Screen is a graphics backend even when the physical WS0010 is
+      // currently in character mode. Modal graphics owners must therefore
+      // see the active virtual display, not the dormant physical mode.
+      if(usb_screen_active) return true;
+#endif
+      return ws0010_graphics_active;
 #elif MK61_ENABLE_USB_SCREEN
       return usb_screen_active;
 #else
@@ -324,8 +388,13 @@ class MK61Display : public Print {
   private:
     bool writeCellAnimationFrame(const u8* cells, usize count);
 #if defined(MK61_DISPLAY_LCD1602)
+#if !defined(MK61_OLED1602_WS0010)
     LiquidCrystal lcd;
-    u8 ddram_shadow[lcd_display::ROWS][lcd_display::DDRAM_COLS];
+#endif
+    u8 ddram_shadow[lcd_display::ROWS][lcd_display::DDRAM_SHADOW_COLS];
+#if defined(MK61_OLED1602_WS0010)
+    u8 ddram_home_shadow[lcd_display::ROWS][lcd_display::COLS];
+#endif
     u8 shadow_cursor_x;
     u8 shadow_cursor_y;
     u8 custom_glyphs[8][8];
@@ -335,12 +404,24 @@ class MK61Display : public Print {
     u32 busy_flag_timeouts;
     bool shifted_viewport_active;
     u8 shifted_viewport_shift;
+#if defined(MK61_OLED1602_WS0010)
+    u16 reinitialization_count;
+    ws0010::InitializationPhase initialization_phase;
+    bool ws0010_graphics_active;
+    oled_protection::State oled_protection_state;
+
+    bool initializeWs0010Controller(bool cold_start,
+                                    bool display_on_after_init);
+    void refreshWs0010VisibleShadow(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+#endif
 
     void probeBusyFlag(void);
     void sendByte(u8 value, bool data, u32 fallback_delay_us = 0);
     void sendCommand(u8 value, u32 fallback_delay_us = 0);
     void sendData(u8 value);
     void sendDisplayControl(void);
+    void writeCharacterCell(u8 value);
 #else
     static constexpr u8 CUSTOM_GLYPHS = 8;
     static constexpr u8 RENDER_PAGE_HEIGHT = 8;

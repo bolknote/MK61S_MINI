@@ -59,13 +59,21 @@ static constexpr int SETTINGS_RANDOM  = 4;
 static constexpr int SETTINGS_DATE_TIME = 5;
 static constexpr int SETTINGS_RTC_CALIBRATION = 6;
 static constexpr int SETTINGS_LANGUAGE = 7;
+#if defined(MK61_OLED1602_WS0010)
+static constexpr int SETTINGS_OLED_TIMEOUT = 8;
+static constexpr int SETTINGS_DISPLAY_ROWS = 9;
+#else
 static constexpr int SETTINGS_DISPLAY_ROWS = 8;
+#endif
 
 static u8 sound_volume_state = 10;
 static SpeedMode speed_mode_state = SpeedMode::MAXIMUM;
 static bool russian_language = false;
 static bool expanded_program = false;
 static bool idle_signal_state = true;
+#if defined(MK61_OLED1602_WS0010)
+static u8 oled_timeout_state = DEFAULT_OLED_TIMEOUT;
+#endif
 static lcd_display::TextProfile display_text_profile_state = lcd_display::defaultSettingsTextProfile();
 static u8 display_rows_state = lcd_display::defaultSettingsTextProfile().rows;
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
@@ -297,6 +305,20 @@ const t_punct IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &Turn
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
 const t_punct HARDWARE_punct      = {.size = 8,  .action = (menu_action) &HardwareInfo,         .text = "Hardware"};
 
+#if defined(MK61_OLED1602_WS0010)
+// These variants deliberately live in Flash.  A pair of mutable 32-byte menu
+// buffers would be a surprisingly expensive way to format four fixed values
+// on the 64-KiB F401 target.
+const t_punct OLED_TIMEOUT_OFF_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep OFF "};
+const t_punct OLED_TIMEOUT_5M_punct  = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 5m  "};
+const t_punct OLED_TIMEOUT_15M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 15m "};
+const t_punct OLED_TIMEOUT_30M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 30m "};
+const t_punct RU_OLED_TIMEOUT_OFF_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон выкл"};
+const t_punct RU_OLED_TIMEOUT_5M_punct  = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон 5 мин"};
+const t_punct RU_OLED_TIMEOUT_15M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон 15мин"};
+const t_punct RU_OLED_TIMEOUT_30M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон 30мин"};
+#endif
+
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
 const t_punct RU_USB_DISK_punct   = {.size = 15, .action = (menu_action) &UsbDiskMode,          .text = "USB-диск"};
 const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
@@ -346,6 +368,9 @@ t_punct* SETTINGS_MENU[] = {
       (t_punct*) &DATE_TIME_punct,
       (t_punct*) &RTC_CALIBRATION_punct,
       (t_punct*) &LANGUAGE_EN_punct,
+#if defined(MK61_OLED1602_WS0010)
+      (t_punct*) &OLED_TIMEOUT_15M_punct,
+#endif
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
       (t_punct*) &ROWS_punct,
 #endif
@@ -355,7 +380,12 @@ extern const int COUNT_SETTINGS_PUNCTS = sizeof(SETTINGS_MENU) / sizeof(SETTINGS
 
 int current_settings_punct_count(void) {
 #if defined(MK61_DISPLAY_LCD1602) && MK61_ENABLE_USB_SCREEN
-  return main_lcd().graphicsMode() ? COUNT_SETTINGS_PUNCTS : SETTINGS_DISPLAY_ROWS;
+  if(main_lcd().graphicsMode()) return COUNT_SETTINGS_PUNCTS;
+  #if defined(MK61_OLED1602_WS0010)
+    return SETTINGS_OLED_TIMEOUT + 1;
+  #else
+    return SETTINGS_DISPLAY_ROWS;
+  #endif
 #else
   return COUNT_SETTINGS_PUNCTS;
 #endif
@@ -388,6 +418,16 @@ bool idle_signal_is_on(void) {
 void set_idle_signal_state(bool enable) {
   idle_signal_state = enable;
 }
+
+#if defined(MK61_OLED1602_WS0010)
+u8 oled_timeout(void) { return oled_timeout_state; }
+
+void set_oled_timeout(u8 timeout) {
+  oled_timeout_state = (u8) oled_protection::normalizeTimeout(timeout);
+  main_lcd().configureOledProtection(
+    (oled_protection::Timeout) oled_timeout_state, millis());
+}
+#endif
 
 u8 display_rows(void) {
   return display_rows_state;
@@ -512,6 +552,21 @@ static void format_volume_text(void) {
   RU_VOLUME_punct.size = 15;
 }
 
+#if defined(MK61_OLED1602_WS0010)
+static t_punct* oled_timeout_punct(void) {
+  static const t_punct* const EN[] = {
+    &OLED_TIMEOUT_OFF_punct, &OLED_TIMEOUT_5M_punct,
+    &OLED_TIMEOUT_15M_punct, &OLED_TIMEOUT_30M_punct
+  };
+  static const t_punct* const RU[] = {
+    &RU_OLED_TIMEOUT_OFF_punct, &RU_OLED_TIMEOUT_5M_punct,
+    &RU_OLED_TIMEOUT_15M_punct, &RU_OLED_TIMEOUT_30M_punct
+  };
+  const u8 index = oled_timeout_state & 3u;
+  return (t_punct*) (russian_language ? RU[index] : EN[index]);
+}
+#endif
+
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 static void format_display_rows_text(void) {
   int used = snprintf(ROWS_punct.text, sizeof(ROWS_punct.text), "Font %s",
@@ -554,6 +609,9 @@ void refresh_menu_text(void) {
   SETTINGS_MENU[SETTINGS_RTC_CALIBRATION] = (t_punct*) (
     russian_language ? &RU_RTC_CALIBRATION_punct : &RTC_CALIBRATION_punct);
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? &LANGUAGE_RU_punct : &LANGUAGE_EN_punct);
+#if defined(MK61_OLED1602_WS0010)
+  SETTINGS_MENU[SETTINGS_OLED_TIMEOUT] = oled_timeout_punct();
+#endif
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   SETTINGS_MENU[SETTINGS_DISPLAY_ROWS] = display_rows_punct();
 #endif
@@ -582,7 +640,14 @@ bool  store_settings_state(void) {
 #else
   const lcd_display::TextProfile* stored_profile = NULL;
 #endif
+#if defined(MK61_OLED1602_WS0010)
+  OledSettings oled_settings = read_oled_settings();
+  oled_settings.setTimeout(oled_timeout_state);
+  return store_settings_snapshot(flags, sound_settings, stored_profile,
+                                 &oled_settings);
+#else
   return store_settings_snapshot(flags, sound_settings, stored_profile);
+#endif
 }
 
 static void mark_settings_dirty(void) {
@@ -635,6 +700,9 @@ void  load_settings_state(void) {
   set_display_rows(lcd_display::DEFAULT_ROWS);
 #endif
   set_sound_volume(sound_settings.bits.volume);
+#if defined(MK61_OLED1602_WS0010)
+  set_oled_timeout(read_oled_settings().timeout());
+#endif
   refresh_menu_text();
 }
 
@@ -1027,6 +1095,24 @@ bool TurnIdleSignal(void) {
 
   return action::MENU_BACK;
 }
+
+#if defined(MK61_OLED1602_WS0010)
+bool TurnOledProtection(void) {
+  library_mk61::set_oled_timeout(
+    (u8) ((library_mk61::oled_timeout() + 1u) & 3u));
+  library_mk61::refresh_menu_text();
+  library_mk61::mark_settings_dirty();
+  return action::MENU_BACK;
+}
+
+static void StepOledProtection(i8 delta) {
+  const u8 current = library_mk61::oled_timeout();
+  const u8 next = (u8) ((current + (delta > 0 ? 1u : 3u)) & 3u);
+  library_mk61::set_oled_timeout(next);
+  library_mk61::refresh_menu_text();
+  library_mk61::mark_settings_dirty();
+}
+#endif
 
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 enum class FontSetupPhase : u8 {
@@ -1458,6 +1544,23 @@ bool class_menu::handle_settings_adjustment(i32 key) {
         return true;
       }
       break;
+
+#if defined(MK61_OLED1602_WS0010)
+    case library_mk61::SETTINGS_OLED_TIMEOUT:
+      if(key == KEY_OK_PRESS) {
+        TurnOledProtection();
+        return true;
+      }
+      if(key == KEY_SHG_RIGHT_PRESS || key == KEY_RIGHT_PRESS) {
+        StepOledProtection(1);
+        return true;
+      }
+      if(key == KEY_SHG_LEFT_PRESS || key == KEY_LEFT_PRESS) {
+        StepOledProtection(-1);
+        return true;
+      }
+      break;
+#endif
 
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
     case library_mk61::SETTINGS_DISPLAY_ROWS:

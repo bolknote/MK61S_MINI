@@ -36,6 +36,7 @@ function Test-Mk61Profile {
         'mini-v2:lcd1602-a02' { return $true }
         'mini-v3:lcd1602-a00' { return $true }
         'mini-v3:lcd1602-a02' { return $true }
+        'mini-v3:oled1602-ws0010' { return $true }
         'classic-v2:uc1609' { return $true }
         'classic-v3:uc1609' { return $true }
         '40th:uc1609' { return $true }

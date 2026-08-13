@@ -48,7 +48,8 @@ Usage:
                               [--app-manifest FILE]...
 
 Profiles:
-  mini-v3-a00, mini-v3-a02, mini-v2-a00, mini-v2-a02,
+  mini-v3-a00, mini-v3-a02, mini-v3-ws0010,
+  mini-v2-a00, mini-v2-a02,
   classic-v2, classic-v3, 40th
 
 Feature environment variables (0 or 1):
@@ -69,6 +70,7 @@ profile_flags() {
   case "$1" in
     mini-v3-a00) printf '%s' '-DMK61_LCD1602_A00' ;;
     mini-v3-a02) printf '%s' '-DMK61_LCD1602_A02' ;;
+    mini-v3-ws0010) printf '%s' '-DMK61_OLED1602_WS0010' ;;
     mini-v2-a00) printf '%s' '-DREVISION_V2 -DMK61_LCD1602_A00' ;;
     mini-v2-a02) printf '%s' '-DREVISION_V2 -DMK61_LCD1602_A02' ;;
     classic-v2)  printf '%s' '-DMK61_BOARD_CLASSIC_V2' ;;
@@ -82,6 +84,7 @@ artifact_name() {
   case "$1" in
     mini-v3-a00) printf '%s' 'mk61s-M-mini-v3-lcd1602-a00-f401.bin' ;;
     mini-v3-a02) printf '%s' 'mk61s-M-mini-v3-lcd1602-a02-f401.bin' ;;
+    mini-v3-ws0010) printf '%s' 'mk61s-M-mini-v3-oled1602-ws0010-f401.bin' ;;
     mini-v2-a00) printf '%s' 'mk61s-M-mini-v2-lcd1602-a00-f401.bin' ;;
     mini-v2-a02) printf '%s' 'mk61s-M-mini-v2-lcd1602-a02-f401.bin' ;;
     classic-v2)  printf '%s' 'mk61s-M-classic-v2-uc1609-f401.bin' ;;

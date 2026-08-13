@@ -98,7 +98,7 @@ Result show(MK61Display& display, const char* model, const char* version,
 
 #if defined(MK61_DISPLAY_LCD1602)
   const char* const text[ROWS] = {model, version};
-  u8 ddram[ROWS][lcd1602_shifted_viewport::DDRAM_COLS];
+  u8 ddram[ROWS][character_display_geometry::DDRAM_COLS];
   for(u8 row = 0; row < ROWS; row++) {
     composeLcd1602DdramRow(text[row], LOGO[row], ddram[row]);
   }
@@ -109,7 +109,11 @@ Result show(MK61Display& display, const char* model, const char* version,
 
   for(u8 frame = 1; frame <= FINAL_FRAME && !skipped; frame++) {
     current_frame = frame;
-    display.renderShiftedViewport(ddram, lcd1602ShiftForFrame(frame));
+    // The owner layout is unchanged throughout the animation.  Once it is in
+    // controller DDRAM, each frame needs only the shortest hardware shift.
+    if(!display.shiftShiftedViewport(ddram, lcd1602ShiftForFrame(frame))) {
+      display.renderShiftedViewport(ddram, lcd1602ShiftForFrame(frame));
+    }
     const t_time_ms hold_ms = frame == FINAL_FRAME ? FINAL_HOLD_MS : FRAME_MS;
     skipped = waitOrEscape(hold_ms, escape_policy);
   }

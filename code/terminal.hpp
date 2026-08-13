@@ -14,6 +14,7 @@
 #include "disasm.hpp"
 #include "tools.hpp"
 #include "library_pmk.hpp"
+#include "lcd_ru.hpp"
 #include "ledcontrol.h"
 #include "mk_math.hpp"
 #include "mk61_ref.hpp"
@@ -30,6 +31,10 @@
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 #include "storage_path.hpp"
+#if defined(MK61_OLED1602_WS0010)
+  #include "ws0010_charset.hpp"
+  #include "ws0010_graphics.hpp"
+#endif
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
@@ -88,6 +93,7 @@ static  constexpr usize     MAX_INPUT_CHAR = terminal_core::INPUT_CAPACITY;
 
 extern  class_disassm_mk61  disassembler;
 extern  void DFU_enable(void);
+extern  void idle_signal_reset(void);
 
 
 
@@ -191,6 +197,7 @@ static constexpr TerminalCommand terminal_commands[] = {
   #endif
 #endif
   { "mem",     CMD_MEMORY,        "shared SRAM arenas [reset]" },
+  { "display", CMD_DISPLAY,       "display status/test/reinit/on/off" },
   { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
   { "dfu",     CMD_DFU,           "enter DFU bootloader" },
 };
@@ -1105,6 +1112,425 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return terminal_protocol::Result::ok();
     }
 
+    static void print_display_status(void) {
+      Serial.print("DISPLAY controller=");
+#if defined(MK61_OLED1602_WS0010)
+      Serial.print("WS0010 FT=10 wait=fixed-delay ddram=2x64 cgram=8");
+      Serial.print(" graphics=");
+      Serial.print(main_lcd().supportsWs0010Graphics()
+                   ? "qualification" : "disabled");
+      Serial.print(" brightness=unsupported");
+      Serial.print(" mode=");
+      Serial.print(main_lcd().graphicsMode() ? "graphics" : "character");
+      Serial.print(" state=");
+      Serial.print(main_lcd().displayEnabled() ? "on" : "off");
+      Serial.print(" route=");
+      Serial.print(main_lcd().usbScreenActive() ? "usb-screen" : "oled");
+      Serial.print(" sleep=");
+      Serial.print(oled_protection::timeoutName(
+        main_lcd().oledProtectionTimeout()));
+      Serial.print(" boot=");
+#if defined(RCC_CSR_PORRSTF) && defined(RCC_CSR_BORRSTF)
+      const bool cold_start =
+        (crash_dump::boot_reset_flags() &
+         (RCC_CSR_PORRSTF | RCC_CSR_BORRSTF)) != 0;
+      Serial.print(cold_start ? "cold" : "warm");
+      Serial.print(" power-wait-ms=");
+      Serial.print(cold_start ? ws0010::POWER_STABILIZATION_MS
+                              : ws0010::RECOVERY_STABILIZATION_MS);
+#else
+      Serial.print("unknown power-wait-ms=unknown");
+#endif
+      Serial.print(" init=");
+      Serial.print(ws0010::initializationPhaseName(
+        main_lcd().initializationPhase()));
+      Serial.print(" reinit=");
+      Serial.println(main_lcd().reinitializationCount());
+#elif defined(MK61_DISPLAY_UC1609)
+      Serial.println("UC1609 mode=graphics");
+#elif defined(MK61_LCD1602_A02)
+      Serial.println("HD44780 cgrom=A02 ddram=2x40");
+#else
+      Serial.println("HD44780 cgrom=A00 ddram=2x40");
+#endif
+    }
+
+    static void print_display_usage(void) {
+#if defined(MK61_OLED1602_WS0010)
+      Serial.println("Usage: display [status|reinit|on|off|test <text|alphabet N|symbols|map N|ddram N|row R N|cgram|clear|home|cursor [left|right]|entry|autoshift|sleep|graphics N|restore>]");
+#else
+      Serial.println("Usage: display [status]");
+#endif
+    }
+
+#if defined(MK61_OLED1602_WS0010)
+    static void display_test_text(void) {
+      main_lcd().endWs0010Graphics();
+      lcd_ru::restore_default_font();
+      main_lcd().clear();
+      static constexpr u16 row0[] = {
+        'A', 'B', 'C', ' ', 0x0410, 0x0411, 0x0412, ' ',
+        'U', 'S', 'B', '-', 'A', '1', '.', 'm'
+      };
+      static constexpr u16 row1[] = {
+        0x0424, 0x0430, 0x0439, 0x043B, ' ',
+        0x0401, 0x0451, ' ', 0x03C0, ' ', 0x00F7, ' ',
+        0x2190, 0x2192, 0x00B0, '!'
+      };
+      for(u8 row = 0; row < lcd_display::ROWS; row++) {
+        main_lcd().setCursor(0, row);
+        const u16* text = row == 0 ? row0 : row1;
+        for(u8 col = 0; col < lcd_display::COLS; col++) {
+          main_lcd().writeCodepoint(text[col]);
+        }
+      }
+    }
+
+    static void display_test_map(u8 page) {
+      main_lcd().endWs0010Graphics();
+      main_lcd().clear();
+      const u8 first = (u8) (page << 5);
+      for(u8 row = 0; row < lcd_display::ROWS; row++) {
+        main_lcd().setCursor(0, row);
+        for(u8 col = 0; col < lcd_display::COLS; col++) {
+          main_lcd().write((u8) (first + row * lcd_display::COLS + col));
+        }
+      }
+    }
+
+    static void display_test_alphabet(u8 page) {
+      main_lcd().endWs0010Graphics();
+      lcd_ru::restore_default_font();
+      main_lcd().clear();
+      if(page < 2) {
+        const bool lowercase = page != 0;
+        for(u8 index = 0; index < 32; index++) {
+          main_lcd().setCursor((u8) (index & 0x0Fu), (u8) (index >> 4));
+          main_lcd().writeCodepoint(
+            ws0010_charset::russianAlphabetCodepoint(lowercase, index));
+        }
+        return;
+      }
+
+      if(page == 3) {
+        // FT=10 has no Ukrainian І/Ї/Є/Ґ. These eight glyphs exercise the
+        // allocation-free CGRAM planner at its exact capacity.
+        lcd_ru::print_lines("ІіЇїЄєҐґ", "CGRAM Unicode");
+        return;
+      }
+      if(page == 4) {
+        lcd_ru::print_lines("Ўў Belarus", "USB + Русский");
+        return;
+      }
+
+      // The last alphabet characters plus deliberately interleaved Latin and
+      // Cyrillic look-alikes. USB Screen must retain their Unicode identity
+      // even where the WS0010 ROM intentionally shares a physical glyph.
+      static constexpr u16 mixed[lcd_display::ROWS][lcd_display::COLS] = {
+        { 0x042F, 0x044F, ' ', 'A', 0x0410, 'B', 0x0412,
+          'C', 0x0421, 'E', 0x0415, 'H', 0x041D, 'K', 0x041A, ' ' },
+        { 'M', 0x041C, 'O', 0x041E, 'P', 0x0420, 'T', 0x0422,
+          'X', 0x0425, ' ', 0x0401, 0x0451, 0x042B, 0x044B, ' ' }
+      };
+      for(u8 row = 0; row < lcd_display::ROWS; row++) {
+        main_lcd().setCursor(0, row);
+        for(u8 col = 0; col < lcd_display::COLS; col++) {
+          main_lcd().writeCodepoint(mixed[row][col]);
+        }
+      }
+    }
+
+    static void display_test_symbols(void) {
+      main_lcd().endWs0010Graphics();
+      lcd_ru::restore_default_font();
+      main_lcd().clear();
+      main_lcd().print("CGRAM ");
+      for(u8 slot = 0; slot < 8; slot++) main_lcd().write(slot);
+      main_lcd().setCursor(0, 1);
+      static constexpr u16 symbols[] = {
+        'R', 'O', 'M', ' ', 0x2190, 0x2192, 0x03C0, 0x00B0,
+        0x00F7, ' ', '^', 'x', '-', ' ', ' ', ' '
+      };
+      for(u8 col = 0; col < lcd_display::COLS; col++) {
+        main_lcd().writeCodepoint(symbols[col]);
+      }
+    }
+
+    static void make_display_ddram(u8 cells[lcd_display::ROWS]
+                                            [lcd_display::DDRAM_COLS]) {
+      for(u8 row = 0; row < lcd_display::ROWS; row++) {
+        for(u8 col = 0; col < lcd_display::DDRAM_COLS; col++) {
+          // Every 16-column window carries its own row/page/column markers;
+          // boundaries 39/40 and 63/0 therefore cannot pass by mirroring.
+          const u8 within = col & 0x0Fu;
+          if(within == 0) cells[row][col] = row == 0 ? 'U' : 'L';
+          else if(within == 1) cells[row][col] = (u8) ('0' + (col >> 4));
+          else cells[row][col] = (u8) ('A' + ((col - 2u) % 26u));
+        }
+      }
+    }
+
+    static void display_test_cgram(void) {
+      main_lcd().endWs0010Graphics();
+      u8 glyph[8];
+      for(u8 slot = 0; slot < 8; slot++) {
+        for(u8 row = 0; row < 8; row++) {
+          glyph[row] = (u8) (((1u << (slot % 5u)) |
+                              (row == slot ? 0x1Fu : 0u)) & 0x1Fu);
+        }
+        main_lcd().createChar(slot, glyph);
+      }
+      main_lcd().clear();
+      main_lcd().print("CGRAM 0..7      ");
+      main_lcd().setCursor(0, 1);
+      for(u8 slot = 0; slot < 8; slot++) main_lcd().write(slot);
+      main_lcd().print(" 0123456");
+    }
+
+    static terminal_protocol::Result display_test_graphics(u8 pattern) {
+#if MK61_WS0010_GRAPHICS_100X16
+      shared_memory::Lease frame(
+        shared_memory::Arena::SCRATCH,
+        shared_memory::Owner::DISPLAY_GRAPHICS,
+        ws0010_graphics::FRAME_BYTES);
+      if(!frame.ok()) {
+        Serial.println("DISPLAY graphics busy");
+        return terminal_protocol::Result::error();
+      }
+      ws0010_graphics::makeQualificationPattern(
+        frame.data(), frame.size(), pattern);
+      if(!main_lcd().showWs0010GraphicsFrame(frame.data(), frame.size())) {
+        main_lcd().endWs0010Graphics();
+        Serial.println("DISPLAY graphics failed; character mode restored");
+        return terminal_protocol::Result::error();
+      }
+      Serial.print("DISPLAY graphics pattern=");
+      Serial.print(pattern);
+      Serial.println(" shown; use 'display test restore'");
+      return terminal_protocol::Result::ok();
+#else
+      (void) pattern;
+      Serial.println("DISPLAY graphics qualification disabled; rebuild with MK61_WS0010_GRAPHICS_100X16=1 for the isolated experiment");
+      return terminal_protocol::Result::error();
+#endif
+    }
+#endif
+
+    terminal_protocol::Result exec_display(void) {
+      const char* cursor = command_args();
+      if(terminal_core::at_end(cursor)) {
+        print_display_status();
+        return terminal_protocol::Result::ok();
+      }
+      char action[12];
+      if(!terminal_core::parse_token(cursor, action, sizeof(action))) {
+        print_display_usage();
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(action, "status") == 0 && terminal_core::at_end(cursor)) {
+        print_display_status();
+        return terminal_protocol::Result::ok();
+      }
+#if !defined(MK61_OLED1602_WS0010)
+      print_display_usage();
+      return terminal_protocol::Result::error();
+#else
+      if(strcmp(action, "reinit") == 0 && terminal_core::at_end(cursor)) {
+        const bool ok = main_lcd().reinitialize();
+        Serial.println(ok ? "DISPLAY reinitialized" : "DISPLAY reinitialize failed");
+        return ok ? terminal_protocol::Result::ok()
+                  : terminal_protocol::Result::error();
+      }
+      if((strcmp(action, "on") == 0 || strcmp(action, "off") == 0) &&
+         terminal_core::at_end(cursor)) {
+        const bool enabled = action[1] == 'n';
+        main_lcd().setDisplayEnabled(enabled, millis());
+        Serial.println(enabled ? "DISPLAY on" : "DISPLAY off");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(action, "test") != 0) {
+        print_display_usage();
+        return terminal_protocol::Result::error();
+      }
+      char test[12];
+      if(!terminal_core::parse_token(cursor, test, sizeof(test))) {
+        print_display_usage();
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(test, "text") == 0 && terminal_core::at_end(cursor)) {
+        display_test_text();
+        Serial.println("DISPLAY text test shown");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "map") == 0) {
+        usize page = 0;
+        if(!terminal_core::parse_unsigned(cursor, 10, 7, page) ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println("Usage: display test map <0..7>");
+          return terminal_protocol::Result::error();
+        }
+        display_test_map((u8) page);
+        Serial.print("DISPLAY byte map 0x");
+        Serial.print((u8) (page << 5), HEX);
+        Serial.print("..0x");
+        Serial.println((u8) ((page << 5) + 31u), HEX);
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "alphabet") == 0) {
+        usize page = 0;
+        if(!terminal_core::parse_unsigned(cursor, 10, 4, page) ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println("Usage: display test alphabet <0..4>");
+          return terminal_protocol::Result::error();
+        }
+        display_test_alphabet((u8) page);
+        Serial.print("DISPLAY Russian/mixed alphabet page=");
+        Serial.println(page);
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "symbols") == 0 && terminal_core::at_end(cursor)) {
+        display_test_symbols();
+        Serial.println("DISPLAY ROM/CGRAM symbols shown");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "ddram") == 0) {
+        usize shift = 0;
+        if(!terminal_core::parse_unsigned(cursor, 10, 63, shift) ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println("Usage: display test ddram <0..63>");
+          return terminal_protocol::Result::error();
+        }
+        u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS];
+        make_display_ddram(cells);
+        if(!main_lcd().shiftShiftedViewport(cells, (u8) shift)) {
+          main_lcd().renderShiftedViewport(cells, (u8) shift);
+        }
+        Serial.print("DISPLAY DDRAM shift=");
+        Serial.println(shift);
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "row") == 0) {
+        usize row = 0;
+        usize shift = 0;
+        if(!terminal_core::parse_unsigned(cursor, 10, 1, row) ||
+           !terminal_core::parse_unsigned(cursor, 10, 63, shift) ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println("Usage: display test row <0..1> <0..63>");
+          return terminal_protocol::Result::error();
+        }
+        u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS];
+        make_display_ddram(cells);
+        // Lowercase the selected row's payload so a photograph proves that
+        // it was redrawn while the other row and common hardware shift stayed
+        // untouched. Run `display test ddram 0` first for the clearest check.
+        for(u8 col = 2; col < lcd_display::DDRAM_COLS; col++) {
+          const u8 value = cells[row][col];
+          if(value >= 'A' && value <= 'Z') {
+            cells[row][col] = (u8) (value - 'A' + 'a');
+          }
+        }
+        if(!main_lcd().updateWs0010ShiftedViewportRow(
+             cells, (u8) row, (u8) shift)) {
+          Serial.println("DISPLAY independent-row test failed");
+          return terminal_protocol::Result::error();
+        }
+        Serial.print("DISPLAY independent row=");
+        Serial.print(row);
+        Serial.print(" logical-shift=");
+        Serial.println(shift);
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "cgram") == 0 && terminal_core::at_end(cursor)) {
+        display_test_cgram();
+        Serial.println("DISPLAY CGRAM test shown");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "clear") == 0 && terminal_core::at_end(cursor)) {
+        main_lcd().endWs0010Graphics();
+        main_lcd().clear();
+        main_lcd().setCursor(0, 0);
+        main_lcd().cursorOn();
+        Serial.println("DISPLAY clear; cursor expected at row=0 col=0");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "home") == 0 && terminal_core::at_end(cursor)) {
+        main_lcd().endWs0010Graphics();
+        if(!main_lcd().returnWs0010Home()) {
+          Serial.println("DISPLAY home unavailable");
+          return terminal_protocol::Result::error();
+        }
+        Serial.println("DISPLAY home; shift=0 address=0");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "cursor") == 0) {
+        char direction[8] = {};
+        const bool has_direction =
+          terminal_core::parse_token(cursor, direction, sizeof(direction));
+        if(!terminal_core::at_end(cursor) ||
+           (has_direction && strcmp(direction, "left") != 0 &&
+                             strcmp(direction, "right") != 0)) {
+          Serial.println("Usage: display test cursor [left|right]");
+          return terminal_protocol::Result::error();
+        }
+        main_lcd().endWs0010Graphics();
+        main_lcd().clear();
+        main_lcd().print("0123456789ABCDEF");
+        main_lcd().setCursor(8, 1);
+        main_lcd().print("X");
+        main_lcd().setCursor(8, 1);
+        main_lcd().cursorOn();
+        main_lcd().blinkOn();
+        if(has_direction && !main_lcd().shiftWs0010Cursor(
+             strcmp(direction, "right") == 0)) {
+          Serial.println("DISPLAY cursor shift failed");
+          return terminal_protocol::Result::error();
+        }
+        Serial.print("DISPLAY cursor+blink at row=1 col=");
+        Serial.println(has_direction ?
+          (strcmp(direction, "right") == 0 ? 9 : 7) : 8);
+        return terminal_protocol::Result::ok();
+      }
+      if((strcmp(test, "entry") == 0 || strcmp(test, "autoshift") == 0) &&
+         terminal_core::at_end(cursor)) {
+        main_lcd().endWs0010Graphics();
+        const bool automatic_shift = strcmp(test, "autoshift") == 0;
+        if(!main_lcd().showWs0010EntryModeTest(automatic_shift)) {
+          Serial.println("DISPLAY entry-mode test unavailable");
+          return terminal_protocol::Result::error();
+        }
+        Serial.println(automatic_shift
+          ? "DISPLAY entry auto-shift=left one cell; use restore"
+          : "DISPLAY entry decrement wrote CBA; normal entry restored");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "sleep") == 0 && terminal_core::at_end(cursor)) {
+        main_lcd().endWs0010Graphics();
+        main_lcd().setDisplayEnabled(false, millis());
+        Serial.println("DISPLAY asleep; the next keyboard/terminal activity must wake it");
+        return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "graphics") == 0) {
+        usize pattern = 0;
+        if(!terminal_core::parse_unsigned(cursor, 10, 7, pattern) ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println("Usage: display test graphics <0..7>");
+          return terminal_protocol::Result::error();
+        }
+        return display_test_graphics((u8) pattern);
+      }
+      if(strcmp(test, "restore") == 0 && terminal_core::at_end(cursor)) {
+        main_lcd().endWs0010Graphics();
+        lcd_ru::restore_default_font();
+        extern void lcd_std_display_redraw(void);
+        lcd_std_display_redraw();
+        Serial.println("DISPLAY character UI restored");
+        return terminal_protocol::Result::ok();
+      }
+      print_display_usage();
+      return terminal_protocol::Result::error();
+#endif
+    }
+
 #if MK61_DWT_PROFILER_SUPPORTED
     class ProfileReportBuilder {
       public:
@@ -1280,6 +1706,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
       Serial.println();
 
+#if defined(MK61_OLED1602_WS0010)
+      print_display_status();
+#endif
+
       for(usize index = 0; index < dwt_profiler::POINT_COUNT; index++) {
         const dwt_profiler::Point point = (dwt_profiler::Point) index;
         const dwt_profiler::Statistics& stats =
@@ -1384,6 +1814,29 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         report.append_u64(sleep.rejected[index]);
         report.append_char('\n');
       }
+#if defined(MK61_OLED1602_WS0010)
+      report.append_text("display_controller=WS0010,ft=10,wait=fixed-delay");
+      report.append_text(",graphics=");
+      report.append_text(main_lcd().supportsWs0010Graphics()
+                         ? "qualification" : "disabled");
+      report.append_text(",brightness=unsupported,mode=");
+      report.append_text(main_lcd().graphicsMode()
+                         ? "graphics" : "character");
+      report.append_text(",state=");
+      report.append_text(main_lcd().displayEnabled() ? "on" : "off");
+      report.append_text(",route=");
+      report.append_text(main_lcd().usbScreenActive()
+                         ? "usb-screen" : "oled");
+      report.append_text(",sleep=");
+      report.append_text(oled_protection::timeoutName(
+        main_lcd().oledProtectionTimeout()));
+      report.append_text(",init=");
+      report.append_text(ws0010::initializationPhaseName(
+        main_lcd().initializationPhase()));
+      report.append_text(",reinit=");
+      report.append_u64(main_lcd().reinitializationCount());
+      report.append_char('\n');
+#endif
       report.append_text("\npoint,samples,min,avg,max,total\n");
 
       for(usize index = 0; index < dwt_profiler::POINT_COUNT; index++) {
@@ -2645,6 +3098,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     terminal_protocol::Result execute(bool script_mode = false,
                                       bool trap_mode = false) {
         if(recive_pos == 0 || recive_pos > MAX_INPUT_CHAR) return terminal_protocol::Result::error();
+#if defined(MK61_OLED1602_WS0010)
+        idle_signal_reset();
+#endif
         input_buffer[--recive_pos] = 0;
         // Интерактивный терминал использует общее с M61 ядро. Он не должен
         // обходить приостановленную ловушку прямым изменением через kbd/cmd/run.
@@ -2775,6 +3231,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 #endif
           case CMD_MEMORY: {
               const terminal_protocol::Result result = exec_memory();
+              recive_pos = 0;
+              return result;
+            }
+          case CMD_DISPLAY: {
+              const terminal_protocol::Result result = exec_display();
               recive_pos = 0;
               return result;
             }
