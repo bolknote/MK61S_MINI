@@ -101,10 +101,10 @@ if clang++ "${common[@]}" -DREVISION_V3 -DMK61_LCD1602_A00 \
   exit 1
 fi
 
-if clang++ "${common[@]}" -DREVISION_V3 -DMK61_OLED1602_WS0010 \
+if clang++ "${common[@]}" -DREVISION_V2 -DMK61_OLED1602_WS0010 \
     -DMK61_LCD1602_BUSY_FLAG=1 -o "$out-invalid-ws0010-read" \
     >/dev/null 2>&1; then
-  echo "WS0010 busy-flag read unexpectedly compiled" >&2
+  echo "unqualified V2 WS0010 busy-flag read unexpectedly compiled" >&2
   exit 1
 fi
 

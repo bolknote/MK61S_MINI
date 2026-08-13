@@ -1143,6 +1143,7 @@ display test map 0
 display test ddram 0
 display test row 0 17
 display test cgram
+display test zero
 display test cursor
 display test clear
 display test home
@@ -1153,12 +1154,19 @@ display test graphics 0
 display test restore
 ```
 
-`display status` сообщает контроллер, FT, карту DDRAM, fixed-delay, состояние
-OLED, маршрут USB Screen, тайм-аут сна, фазу запуска и число recovery. В
+`display status` сообщает контроллер, FT, карту DDRAM, состояние BF (`bf-seen`,
+`bf-timeouts`, `bf-fault`), состояние OLED, маршрут USB Screen, тайм-аут сна,
+фазу запуска и число recovery. В
 профиле WEH001602A остальные подкоманды выполняют аппаратную приёмку: смешанный
 текст, алфавит, все 256 байтов CGROM, 2x64 DDRAM, независимую строку, CGRAM,
 cursor/blink, clear/home, entry shift и сон. Числа: `alphabet 0..4`,
 `map 0..7`, `ddram 0..63`, `row 0..1 0..63`.
+
+`display test zero` скрыто записывает 256 нулевых байтов — существенно больше
+полевого сценария рассинхронизации — затем очищает DDRAM и должен показать
+`ZERO/BF 256: OK` / `4BIT SYNC: OK`. В терминале ожидаются `bf-seen=1` и
+`bf-timeouts=0`, `bf-fault=0`; `bf-seen=0` означает, что DB7/RW или уровни надо исследовать
+логическим анализатором, даже если фиксированный нижний предел пока даёт вывод.
 
 Тесты временно заменяют содержимое физического экрана. После них выполните
 `display test restore`. Графика доступна только в отдельной сборке с

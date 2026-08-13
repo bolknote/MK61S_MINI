@@ -46,6 +46,7 @@ enum class BusEventKind : u8 {
   PRELOAD_LOW,
   OUTPUT,
   WRITE,
+  INPUT,
   DELAY,
 };
 
@@ -97,6 +98,11 @@ struct BusTrace {
   void data(u8 bit, bool high) {
     append(BusEventKind::WRITE,
            (BusSignal) ((u8) BusSignal::DB4 + bit), high ? 1 : 0);
+  }
+  bool readData(u8 bit) {
+    append(BusEventKind::INPUT,
+           (BusSignal) ((u8) BusSignal::DB4 + bit), 0);
+    return false;
   }
   void delayMicroseconds(u8 duration) {
     append(BusEventKind::DELAY, BusSignal::TIME, duration);
@@ -157,6 +163,46 @@ void test_low_level_6800_write_trace(void) {
          trace.events[1].value == 1);
 }
 
+struct BusyReadTrace {
+  bool busy[4];
+  u8 samples = 0;
+  u8 rising_edges = 0;
+  u8 falling_edges = 0;
+
+  void enable(bool high) {
+    if(high) rising_edges++;
+    else falling_edges++;
+  }
+  bool busyBit(void) {
+    assert(samples < sizeof(busy) / sizeof(busy[0]));
+    return busy[samples++];
+  }
+  void delayMicroseconds(u8) {}
+};
+
+void test_busy_flag_read_closes_every_four_bit_transfer(void) {
+  // One poll is a byte-wide operation even though only DB7 from its first
+  // nibble is interpreted. This is the disputed zero-run corner case from
+  // field reports and the explicit rule in the WS0010 controller datasheet.
+  BusyReadTrace ready = {{false, false, false, false}};
+  assert(!lcd_6800_4bit_bus::readBusyFlagByte(ready));
+  assert(ready.samples == 1);
+  assert(ready.rising_edges == 2 && ready.falling_edges == 2);
+
+  BusyReadTrace once_busy = {{true, false, false, false}};
+  assert(lcd_6800_4bit_bus::readBusyFlagByte(once_busy));
+  assert(!lcd_6800_4bit_bus::readBusyFlagByte(once_busy));
+  assert(once_busy.samples == 2);
+
+  // The stress payload which exposed revision-dependent desynchronisation is
+  // intentionally all zeroes; every byte still owns two write strobes and a
+  // complete two-strobe BF/AC read before the next byte starts.
+  static constexpr usize ZERO_STRESS_BYTES = 256;
+  assert(ws0010::BUSY_READ_NIBBLES_PER_POLL == 2);
+  assert(ZERO_STRESS_BYTES * 2u == ZERO_STRESS_BYTES *
+         ws0010::BUSY_READ_NIBBLES_PER_POLL);
+}
+
 struct ControllerBusSink {
   BusTrace& trace;
   void nibble(u8 value) {
@@ -178,15 +224,15 @@ void test_controller_init_expands_to_safe_bus_trace(void) {
     if(event.kind == BusEventKind::WRITE &&
        event.signal == BusSignal::ENABLE && event.value != 0) rising_edges++;
   }
-  // Six raw synchronization nibbles plus six complete command bytes.
-  assert(rising_edges == 18);
+  // Six raw synchronization nibbles plus seven complete command bytes.
+  assert(rising_edges == 20);
 }
 
 void test_initialization_trace(void) {
   TraceSink trace;
   ws0010::emitFourBitInitialization(trace);
 
-  assert(trace.count == 12);
+  assert(trace.count == 13);
   for(u8 i = 0; i < ws0010::BUS_SYNCHRONIZATION_WRITES; i++) {
     assert(trace.transfers[i].kind == TransferKind::NIBBLE);
     assert(trace.transfers[i].value == 0x00);
@@ -195,9 +241,10 @@ void test_initialization_trace(void) {
   assert(trace.transfers[5].value == 0x02);
 
   static constexpr u8 commands[] = {
-    0x2A, // 4-bit, 2-line, 5x8, English/Russian FT=10
-    0x17, // character mode, internal power on
-    0x08, // display/cursor/blink off while RAM is initialized
+    0x2A, // mandatory first full Function Set after bus synchronization
+    0x08, // hide before any documented mode/configuration change
+    0x2A, // repeat Function Set in its specified display-off state
+    0x17, // character mode, internal power on while still hidden
     0x01, // clear DDRAM
     0x06, // increment, no automatic display shift
     0x0C, // display on, cursor and blink off
@@ -216,15 +263,15 @@ void test_initialization_trace(void) {
 void test_hidden_initialization_trace(void) {
   TraceSink trace;
   ws0010::emitFourBitInitialization(trace, false);
-  assert(trace.count == 12);
-  assert(trace.transfers[11].kind == TransferKind::COMMAND);
-  assert(trace.transfers[11].value == ws0010::DISPLAY_OFF);
+  assert(trace.count == 13);
+  assert(trace.transfers[12].kind == TransferKind::COMMAND);
+  assert(trace.transfers[12].value == ws0010::DISPLAY_OFF);
 }
 
 void test_recovery_trace_and_nibble_convergence(void) {
   TraceSink trace;
   ws0010::emitFourBitRecovery(trace);
-  assert(trace.count == 12);
+  assert(trace.count == 13);
   for(u8 i = 0; i < ws0010::BUS_SYNCHRONIZATION_WRITES; i++) {
     assert(trace.transfers[i].kind == TransferKind::NIBBLE);
     assert(trace.transfers[i].value == 0x00);
@@ -258,6 +305,26 @@ void test_recovery_trace_and_nibble_convergence(void) {
   assert(hidden.count == trace.count);
   assert(hidden.transfers[hidden.count - 1].kind == TransferKind::COMMAND);
   assert(hidden.transfers[hidden.count - 1].value == ws0010::DISPLAY_OFF);
+}
+
+void test_mode_changes_are_hidden(void) {
+  TraceSink graphics;
+  ws0010::emitHiddenGraphicsMode(
+    [&graphics](u8 value) { graphics.command(value); });
+  assert(graphics.count == 2);
+  assert(graphics.transfers[0].kind == TransferKind::COMMAND);
+  assert(graphics.transfers[0].value == ws0010::DISPLAY_OFF);
+  assert(graphics.transfers[1].kind == TransferKind::COMMAND);
+  assert(graphics.transfers[1].value == ws0010::MODE_GRAPHICS_POWER_ON);
+
+  TraceSink character;
+  ws0010::emitHiddenCharacterMode(
+    [&character](u8 value) { character.command(value); });
+  assert(character.count == 2);
+  assert(character.transfers[0].kind == TransferKind::COMMAND);
+  assert(character.transfers[0].value == ws0010::DISPLAY_OFF);
+  assert(character.transfers[1].kind == TransferKind::COMMAND);
+  assert(character.transfers[1].value == ws0010::MODE_CHARACTER_POWER_ON);
 }
 
 void test_cgram_cursor_row_policy(void) {
@@ -438,6 +505,7 @@ void test_complete_canonical_byte_map(void) {
   expect_mapping(0x2191, ws0010_charset::UP_ARROW_FALLBACK);
   expect_mapping(0x03C0, ws0010_charset::PI_SYMBOL);
   expect_mapping(0x00B0, ws0010_charset::DEGREE);
+  assert(ws0010_charset::DEGREE == 0xDF);
   expect_mapping(0x00F7, ws0010_charset::DIVIDE);
   expect_mapping(0x00D7, ws0010_charset::MULTIPLY_FALLBACK);
   expect_mapping(0x2265, ws0010_charset::cgram::GREATER_OR_EQUAL);
@@ -462,11 +530,19 @@ void test_graphics_address_policy(void) {
   assert(ws0010::graphicsPageAddress(0) == 0x40);
   assert(ws0010::graphicsPageAddress(1) == 0x41);
   assert(ws0010::MODE_GRAPHICS_POWER_ON == 0x1F);
+  assert(ws0010::MODE_GRAPHICS_POWER_OFF == 0x1B);
   assert(ws0010::MODE_CHARACTER_POWER_ON == 0x17);
+  assert(ws0010::MODE_CHARACTER_POWER_OFF == 0x13);
 }
 
 void test_character_control_state_model(void) {
   ws0010::CharacterState state;
+  ws0010::applyCharacterCommand(state, ws0010::MODE_CHARACTER_POWER_ON);
+  assert(!state.graphics && state.power_on);
+  ws0010::applyCharacterCommand(state, ws0010::MODE_GRAPHICS_POWER_OFF);
+  assert(state.graphics && !state.power_on);
+  ws0010::applyCharacterCommand(state, ws0010::MODE_CHARACTER_POWER_OFF);
+  assert(!state.graphics && !state.power_on);
   ws0010::applyCharacterCommand(state, ws0010::MODE_CHARACTER_POWER_ON);
   assert(!state.graphics && state.power_on);
   ws0010::applyCharacterCommand(state, 0x0F);
@@ -510,6 +586,16 @@ void test_character_control_state_model(void) {
                                  ws0010::ENTRY_INCREMENT_NO_SHIFT);
   ws0010::applyCharacterDataWrite(state);
   assert(state.address == 0);
+
+  // A public createChar-style transaction must restore the logical DDRAM
+  // cursor explicitly; data following a CGRAM write must never become a ninth
+  // glyph row by accident.
+  ws0010::applyCharacterCommand(
+    state, ws0010::characterDdramAddressCommand(1, 5));
+  assert(state.space == ws0010::AddressSpace::DDRAM &&
+         state.address == 0x45);
+  ws0010::applyCharacterDataWrite(state);
+  assert(state.address == 0x46);
 
   state.display_shift = 17;
   ws0010::applyCharacterCommand(state, ws0010::RETURN_HOME);
@@ -895,10 +981,12 @@ void test_ws0010_native_64_column_viewport(void) {
 
 int main(void) {
   test_low_level_6800_write_trace();
+  test_busy_flag_read_closes_every_four_bit_transfer();
   test_controller_init_expands_to_safe_bus_trace();
   test_initialization_trace();
   test_hidden_initialization_trace();
   test_recovery_trace_and_nibble_convergence();
+  test_mode_changes_are_hidden();
   test_cgram_cursor_row_policy();
   test_cgram_window_plan_reserves_fixed_symbols();
   test_english_russian_ft10();

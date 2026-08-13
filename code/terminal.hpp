@@ -1115,11 +1115,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     static void print_display_status(void) {
       Serial.print("DISPLAY controller=");
 #if defined(MK61_OLED1602_WS0010)
-      Serial.print("WS0010 FT=10 wait=fixed-delay ddram=2x64 cgram=8");
+      Serial.print("WS0010 FT=10 wait=busy+floor ddram=2x64 cgram=8");
+      Serial.print(" bf-seen=");
+      Serial.print(main_lcd().busyFlagObserved() ? 1 : 0);
+      Serial.print(" bf-timeouts=");
+      Serial.print(main_lcd().busyFlagTimeouts());
+      Serial.print(" bf-fault=");
+      Serial.print(main_lcd().busyFlagFaulted() ? 1 : 0);
       Serial.print(" graphics=");
       Serial.print(main_lcd().supportsWs0010Graphics()
                    ? "qualification" : "disabled");
-      Serial.print(" brightness=unsupported");
+      Serial.print(" brightness=software-unsupported");
       Serial.print(" mode=");
       Serial.print(main_lcd().graphicsMode() ? "graphics" : "character");
       Serial.print(" state=");
@@ -1157,7 +1163,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     static void print_display_usage(void) {
 #if defined(MK61_OLED1602_WS0010)
-      Serial.println("Usage: display [status|reinit|on|off|test <text|alphabet N|symbols|map N|ddram N|row R N|cgram|clear|home|cursor [left|right]|entry|autoshift|sleep|graphics N|restore>]");
+      Serial.println("Usage: display [status|reinit|on|off|test <text|alphabet N|symbols|map N|ddram N|row R N|cgram|zero|clear|home|cursor [left|right]|entry|autoshift|sleep|graphics N|restore>]");
 #else
       Serial.println("Usage: display [status]");
 #endif
@@ -1272,6 +1278,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     static void display_test_cgram(void) {
       main_lcd().endWs0010Graphics();
+      main_lcd().clear();
+      main_lcd().print("CGRAM AC:");
       u8 glyph[8];
       for(u8 slot = 0; slot < 8; slot++) {
         for(u8 row = 0; row < 8; row++) {
@@ -1280,8 +1288,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         main_lcd().createChar(slot, glyph);
       }
-      main_lcd().clear();
-      main_lcd().print("CGRAM 0..7      ");
+      // Deliberately do not call clear()/setCursor() after createChar().  The
+      // visible OK proves that the driver restored AC from CGRAM to the
+      // logical DDRAM cursor instead of sending these bytes into glyph RAM.
+      main_lcd().print("OK");
       main_lcd().setCursor(0, 1);
       for(u8 slot = 0; slot < 8; slot++) main_lcd().write(slot);
       main_lcd().print(" 0123456");
@@ -1442,8 +1452,24 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
       if(strcmp(test, "cgram") == 0 && terminal_core::at_end(cursor)) {
         display_test_cgram();
-        Serial.println("DISPLAY CGRAM test shown");
+        Serial.println("DISPLAY CGRAM/AC test shown; expect 'CGRAM AC:OK'");
         return terminal_protocol::Result::ok();
+      }
+      if(strcmp(test, "zero") == 0 && terminal_core::at_end(cursor)) {
+        main_lcd().endWs0010Graphics();
+        if(!main_lcd().showWs0010ZeroRunTest()) {
+          Serial.println("DISPLAY zero-run test unavailable");
+          return terminal_protocol::Result::error();
+        }
+        Serial.print("DISPLAY zero-run=256 expect two OK markers bf-seen=");
+        Serial.print(main_lcd().busyFlagObserved() ? 1 : 0);
+        Serial.print(" bf-timeouts=");
+        Serial.print(main_lcd().busyFlagTimeouts());
+        Serial.print(" bf-fault=");
+        Serial.println(main_lcd().busyFlagFaulted() ? 1 : 0);
+        return main_lcd().busyFlagFaulted()
+             ? terminal_protocol::Result::error()
+             : terminal_protocol::Result::ok();
       }
       if(strcmp(test, "clear") == 0 && terminal_core::at_end(cursor)) {
         main_lcd().endWs0010Graphics();
@@ -1815,11 +1841,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         report.append_char('\n');
       }
 #if defined(MK61_OLED1602_WS0010)
-      report.append_text("display_controller=WS0010,ft=10,wait=fixed-delay");
+      report.append_text("display_controller=WS0010,ft=10,wait=busy+floor");
+      report.append_text(",bf_seen=");
+      report.append_u64(main_lcd().busyFlagObserved() ? 1 : 0);
+      report.append_text(",bf_timeouts=");
+      report.append_u64(main_lcd().busyFlagTimeouts());
+      report.append_text(",bf_fault=");
+      report.append_u64(main_lcd().busyFlagFaulted() ? 1 : 0);
       report.append_text(",graphics=");
       report.append_text(main_lcd().supportsWs0010Graphics()
                          ? "qualification" : "disabled");
-      report.append_text(",brightness=unsupported,mode=");
+      report.append_text(",brightness=software-unsupported,mode=");
       report.append_text(main_lcd().graphicsMode()
                          ? "graphics" : "character");
       report.append_text(",state=");

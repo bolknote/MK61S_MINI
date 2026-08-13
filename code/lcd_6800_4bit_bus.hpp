@@ -3,9 +3,10 @@
 
 #include "rust_types.h"
 
-// Executable, platform-independent description of the 6800 write-only bus.
-// The firmware and host trace test instantiate the same templates, so GPIO
-// order, E pulse width and the permanent RW=LOW rule cannot silently diverge.
+// Executable, platform-independent description of the 6800 four-bit bus. The
+// firmware and host trace test instantiate the same templates, so GPIO order,
+// E pulse width, write RW=LOW and the complete two-strobe BF/AC read cannot
+// silently diverge.
 namespace lcd_6800_4bit_bus {
 
 static constexpr u8 SETUP_US = 1;
@@ -41,6 +42,25 @@ inline void writeByte(Sink& sink, u8 value, bool data) {
   sink.rs(data);
   writeNibble(sink, (u8) (value >> 4));
   writeNibble(sink, (u8) (value & 0x0Fu));
+}
+
+// A 4-bit read is still one byte-wide bus transaction.  WS0010 explicitly
+// requires both E strobes even when the caller only needs BF from DB7 of the
+// first nibble; omitting the second strobe leaves the controller half a byte
+// out of phase and is the root of several revision-dependent field failures.
+template<typename Source>
+inline bool readBusyFlagByte(Source& source) {
+  source.enable(true);
+  source.delayMicroseconds(ENABLE_US);
+  const bool busy = source.busyBit();
+  source.enable(false);
+  source.delayMicroseconds(HOLD_US);
+
+  source.enable(true);
+  source.delayMicroseconds(ENABLE_US);
+  source.enable(false);
+  source.delayMicroseconds(HOLD_US);
+  return busy;
 }
 
 static_assert(SETUP_US * 1000u >= 40u && ENABLE_US * 1000u >= 250u,

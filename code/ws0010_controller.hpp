@@ -13,11 +13,15 @@ static constexpr u16 POWER_STABILIZATION_MS = 500;
 static constexpr u8 RECOVERY_STABILIZATION_MS = 10;
 static constexpr u8 FOUR_BIT_FUNCTION_NIBBLE = 0x02;
 static constexpr u8 BUS_SYNCHRONIZATION_WRITES = 5;
+// In 4-bit mode the WS0010 timing diagram requires a complete BF/AC read
+// (high and low nibble) after every complete command or data byte.
+static constexpr u8 BUSY_READ_NIBBLES_PER_POLL = 2;
 
 static constexpr u8 FUNCTION_SET_4BIT_2LINE_5X8_FT10 = 0x2A;
 static constexpr u8 MODE_CHARACTER_POWER_ON = 0x17;
 static constexpr u8 MODE_CHARACTER_POWER_OFF = 0x13;
 static constexpr u8 MODE_GRAPHICS_POWER_ON = 0x1F;
+static constexpr u8 MODE_GRAPHICS_POWER_OFF = 0x1B;
 static constexpr u8 DISPLAY_OFF = 0x08;
 static constexpr u8 DISPLAY_ON = 0x0C;
 static constexpr u8 CLEAR_DISPLAY = 0x01;
@@ -30,6 +34,8 @@ static constexpr u8 CURSOR_LEFT = 0x10;
 static constexpr u8 CURSOR_RIGHT = 0x14;
 static constexpr u8 DISPLAY_SHIFT_LEFT = 0x18;
 static constexpr u8 DISPLAY_SHIFT_RIGHT = 0x1C;
+static constexpr u8 SET_CGRAM_ADDRESS = 0x40;
+static constexpr u8 SET_DDRAM_ADDRESS = 0x80;
 
 enum class InitializationPhase : u8 {
   IDLE = 0,
@@ -99,6 +105,16 @@ struct CharacterState {
 constexpr u8 stepAddress(u8 address, u8 mask, bool increment) {
   return increment ? (u8) ((address + 1u) & mask)
                    : (u8) ((address - 1u) & mask);
+}
+
+// A CGRAM transfer changes the controller address space.  Every public glyph
+// operation must explicitly return to the logical character cursor before the
+// next Print::write(), otherwise that byte is interpreted as another CGRAM
+// row.  Keep the command construction here so production and host tests share
+// the exact 2x64 WS0010 address policy.
+constexpr u8 characterDdramAddressCommand(u8 row, u8 column) {
+  return (u8) (SET_DDRAM_ADDRESS | (row == 0 ? 0x00u : 0x40u) |
+               (column & 0x3Fu));
 }
 
 inline void applyCharacterCommand(CharacterState& state, u8 command) {
@@ -191,15 +207,32 @@ constexpr u8 graphicsPageAddress(u8 page) {
 
 template<typename Sink>
 inline void emitControllerConfiguration(Sink& sink, bool display_on) {
-  // Function Set is legal only while the display is off. Both cold and warm
-  // callers arrive here immediately after selecting a known 4-bit boundary.
-  // Recovery can deliberately leave D=0 while retained RAM is restored.
+  // The synchronization procedure requires Function Set to be the first full
+  // instruction after its raw 0010 transfer. A warm MCU reset, however, may
+  // have left D=1, while WS0010 permits Function Set only with D=0. Complete
+  // the mandatory bus transition, turn the panel off immediately, then repeat
+  // Function Set in its documented state before changing G/C or touching RAM.
+  sink.command(FUNCTION_SET_4BIT_2LINE_5X8_FT10);
+  sink.command(DISPLAY_OFF);
   sink.command(FUNCTION_SET_4BIT_2LINE_5X8_FT10);
   sink.command(MODE_CHARACTER_POWER_ON);
-  sink.command(DISPLAY_OFF);
   sink.command(CLEAR_DISPLAY);
   sink.command(ENTRY_INCREMENT_NO_SHIFT);
   sink.command(display_on ? DISPLAY_ON : DISPLAY_OFF);
+}
+
+template<typename EmitCommand>
+inline void emitHiddenGraphicsMode(EmitCommand emit_command) {
+  // G/C is changed only while D=0. The caller fills GDRAM before issuing its
+  // final Display On, so stale or partially written graphics cannot flash.
+  emit_command(DISPLAY_OFF);
+  emit_command(MODE_GRAPHICS_POWER_ON);
+}
+
+template<typename EmitCommand>
+inline void emitHiddenCharacterMode(EmitCommand emit_command) {
+  emit_command(DISPLAY_OFF);
+  emit_command(MODE_CHARACTER_POWER_ON);
 }
 
 template<typename Sink>
@@ -243,12 +276,22 @@ static_assert(RETURN_HOME == 0x02 && ENTRY_INCREMENT_NO_SHIFT == 0x06 &&
               CURSOR_LEFT == 0x10 && CURSOR_RIGHT == 0x14 &&
               DISPLAY_SHIFT_LEFT == 0x18 && DISPLAY_SHIFT_RIGHT == 0x1C,
               "WS0010 character-control command regression");
+static_assert(MODE_CHARACTER_POWER_OFF == 0x13 &&
+              MODE_CHARACTER_POWER_ON == 0x17 &&
+              MODE_GRAPHICS_POWER_OFF == 0x1B &&
+              MODE_GRAPHICS_POWER_ON == 0x1F,
+              "WS0010 G/C and PWR command regression");
 static_assert(graphicsXAddress(0) == 0x80 &&
               graphicsXAddress(99) == 0xE3,
               "WS0010 graphics X command regression");
 static_assert(graphicsPageAddress(0) == 0x40 &&
               graphicsPageAddress(1) == 0x41,
               "WS0010 graphics page command regression");
+static_assert(characterDdramAddressCommand(0, 0) == 0x80 &&
+              characterDdramAddressCommand(0, 63) == 0xBF &&
+              characterDdramAddressCommand(1, 0) == 0xC0 &&
+              characterDdramAddressCommand(1, 63) == 0xFF,
+              "WS0010 character DDRAM command regression");
 
 } // namespace ws0010
 

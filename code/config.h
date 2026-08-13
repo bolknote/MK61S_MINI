@@ -360,12 +360,14 @@
   #define MK61_LCD1602_A00
 #endif
 
-// На mini V2/V3 линия RW подключена к PB1, поэтому после инициализации ЖКИ
-// можно ждать готовность контроллера по DB7 вместо консервативных задержек.
-// Остальные профили сохраняют прежний режим обмена только на запись.
+// На mini V2/V3 линия RW подключена к PB1. У mini V3 все четыре линии данных
+// (PB10/PA3/PA2/PA1) являются FT GPIO у STM32F401CC и STM32F411CE, поэтому
+// после инициализации можно завершать каждый 4-битный обмен обязательным для
+// WS0010 двухполубайтным чтением BF/AC. Остальные профили сохраняют прежнюю
+// политику: обычный HD44780 mini читает DB7, а платы без RW только пишут.
 #ifndef MK61_LCD1602_BUSY_FLAG
-  #if defined(MK61_DISPLAY_LCD1602) && !defined(MK61_OLED1602_WS0010) && \
-      !defined(CDU) && !defined(LK432)
+  #if defined(MK61_DISPLAY_LCD1602) && !defined(CDU) && !defined(LK432) && \
+      (!defined(MK61_OLED1602_WS0010) || defined(REVISION_V3))
     #define MK61_LCD1602_BUSY_FLAG 1
   #else
     #define MK61_LCD1602_BUSY_FLAG 0
@@ -376,8 +378,13 @@
   #error "MK61_LCD1602_BUSY_FLAG requires a mini V2/V3 LCD1602 profile with RW"
 #endif
 
-#if defined(MK61_OLED1602_WS0010) && MK61_LCD1602_BUSY_FLAG
-  #error "WS0010 keeps RW low and must use fixed controller-specific delays"
+#if defined(MK61_OLED1602_WS0010) && MK61_LCD1602_BUSY_FLAG && \
+    !defined(REVISION_V3)
+  #error "WS0010 busy-flag reads are qualified only on mini V3 FT data pins"
+#endif
+#if defined(MK61_OLED1602_WS0010) && defined(REVISION_V3) && \
+    !MK61_LCD1602_BUSY_FLAG
+  #error "mini V3 WS0010 requires the datasheet busy-flag read after every byte"
 #endif
 
 // The controller documents a 100x16 GDRAM, but WEH001602A is sold as a
@@ -393,9 +400,11 @@
   #error "WS0010 100x16 graphics requires MK61_OLED1602_WS0010"
 #endif
 
-// No brightness/current command is enabled without an official command for
-// the qualified WS0010-TX revision. Display-off OLED protection is independent
-// of this experimental capability and remains available.
+// The module can route analogue brightness to connector pin 3 after a
+// revision-specific solder-jumper modification, but mini V3 connects that pin
+// only to its manual potentiometer, not to an MCU GPIO. No software
+// brightness/current command is enabled without an official, qualified
+// controller command. Display-off OLED protection remains independent.
 #ifndef MK61_WS0010_BRIGHTNESS_CONTROL
   #define MK61_WS0010_BRIGHTNESS_CONTROL 0
 #endif

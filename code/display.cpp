@@ -59,6 +59,10 @@ struct LcdAnimationState {
 
 static LcdAnimationState animation_state = {};
 
+static constexpr u8 LCD_BUSY_ACTIVE = 0x01u;
+static constexpr u8 LCD_BUSY_OBSERVED = 0x02u;
+static constexpr u8 LCD_BUSY_FAULTED = 0x04u;
+
 static constexpr u32 lcdClearDelayUs(void) {
 #if defined(MK61_OLED1602_WS0010)
   return ws0010::CLEAR_DELAY_US;
@@ -285,6 +289,12 @@ static inline void lcdSetPinOutput(PinName pin, bool output) {
   port->MODER = (port->MODER & ~mask) | mode;
 }
 
+static inline void lcdDisablePull(PinName pin) {
+  GPIO_TypeDef* const port = get_GPIO_Port(STM_PORT(pin));
+  const u32 shift = (u32) STM_PIN(pin) * 2u;
+  port->PUPDR &= ~(0x3u << shift);
+}
+
 static inline void lcdSetDataOutput(const LcdParallelBus& bus, bool output) {
   for(u8 i = 0; i < 4; i++) lcdSetPinOutput(bus.data[i], output);
 }
@@ -311,6 +321,14 @@ struct LcdHardwareWriteSink {
   void delayMicroseconds(u8 duration) { ::delayMicroseconds(duration); }
 };
 
+struct LcdHardwareBusySource {
+  const LcdParallelBus& bus;
+
+  void enable(bool high) { lcdWritePin(bus.enable, high); }
+  bool busyBit(void) { return digitalReadFast(bus.data[3]) != LOW; }
+  void delayMicroseconds(u8 duration) { ::delayMicroseconds(duration); }
+};
+
 static inline void lcdWriteNibble(const LcdParallelBus& bus, u8 nibble) {
   LcdHardwareWriteSink sink = {bus};
   lcd_6800_4bit_bus::writeNibble(sink, nibble);
@@ -327,6 +345,10 @@ static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
   const u32 started_at = micros();
 
   lcdWritePin(bus.enable, false);
+  // FT pins tolerate the 5 V WS0010 outputs only as digital inputs without
+  // internal pull-up/pull-down resistors.  Force that state explicitly rather
+  // than inheriting an Arduino pin mode from a previous owner.
+  for(u8 i = 0; i < 4; i++) lcdDisablePull(bus.data[i]);
   lcdSetDataOutput(bus, false);
   lcdWritePin(bus.rs, false);
   lcdWritePin(bus.rw, true);
@@ -334,17 +356,8 @@ static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
 
   LcdReadyResult result = LcdReadyResult::TIMEOUT;
   do {
-    lcdWritePin(bus.enable, true);
-    delayMicroseconds(1);
-    const bool busy = digitalReadFast(bus.data[3]) != LOW;
-    lcdWritePin(bus.enable, false);
-    delayMicroseconds(1);
-
-    // В четырёхбитном режиме чтение всегда завершается вторым полубайтом.
-    lcdWritePin(bus.enable, true);
-    delayMicroseconds(1);
-    lcdWritePin(bus.enable, false);
-    delayMicroseconds(1);
+    LcdHardwareBusySource source = {bus};
+    const bool busy = lcd_6800_4bit_bus::readBusyFlagByte(source);
 
     if(!busy) {
       result = saw_busy ? LcdReadyResult::READY_AFTER_BUSY
@@ -376,7 +389,7 @@ MK61Display::MK61Display(void)
     custom_glyphs{{0}},
     custom_valid{false},
     display_control(LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF),
-    busy_flag_active(false),
+    busy_flag_state(0),
     busy_flag_timeouts(0),
     shifted_viewport_active(false),
     shifted_viewport_shift(0)
@@ -420,6 +433,11 @@ bool MK61Display::initializeWs0010Controller(bool cold_start,
   // become an output. RW and E are always LOW in the qualified profile.
   LcdHardwareWriteSink hardware_sink = {bus};
   lcd_6800_4bit_bus::prepareWrite(hardware_sink);
+#if MK61_LCD1602_BUSY_FLAG
+  // Raw synchronization nibbles cannot be followed by a read, but every full
+  // byte beginning with Function Set must complete with the WS0010 BF/AC read.
+  busy_flag_state = LCD_BUSY_ACTIVE;
+#endif
 
   initialization_phase = ws0010::InitializationPhase::POWER_WAIT;
   noteWs0010InitializationPhase(initialization_phase);
@@ -429,21 +447,43 @@ bool MK61Display::initializeWs0010Controller(bool cold_start,
   noteWs0010InitializationPhase(initialization_phase);
   struct InitSink {
     const LcdParallelBus& bus;
+    u8& busy_state;
+    u32& timeouts;
     void nibble(u8 value) {
       lcdWriteNibble(bus, value);
       delayMicroseconds(ws0010::COMMAND_DELAY_US);
     }
     void command(u8 value) {
+      if((busy_state & LCD_BUSY_FAULTED) != 0) return;
       lcdWriteByte(bus, value, false);
+#if MK61_LCD1602_BUSY_FLAG
+      const LcdReadyResult ready = lcdWaitReady(bus, 8000);
+      if(ready == LcdReadyResult::TIMEOUT) {
+        timeouts++;
+        busy_state |= LCD_BUSY_FAULTED;
+        return; // 8 ms already exceeds every documented execution time.
+      }
+      if(ready == LcdReadyResult::READY_AFTER_BUSY) {
+        busy_state |= LCD_BUSY_OBSERVED;
+        return;
+      }
+#endif
+      // A tied-low or not-yet-driven BF must never shorten the conservative
+      // timing. The full two-strobe read above is still performed.
       delayMicroseconds(value == ws0010::CLEAR_DISPLAY
                           ? ws0010::CLEAR_DELAY_US
                           : ws0010::COMMAND_DELAY_US);
     }
-  } sink = {bus};
+  } sink = {bus, busy_flag_state, busy_flag_timeouts};
   if(cold_start) {
     ws0010::emitFourBitInitialization(sink, display_on_after_init);
   } else {
     ws0010::emitFourBitRecovery(sink, display_on_after_init);
+  }
+  if((busy_flag_state & LCD_BUSY_FAULTED) != 0) {
+    initialization_phase = ws0010::InitializationPhase::IDLE;
+    noteWs0010InitializationPhase(initialization_phase);
+    return false;
   }
   initialization_phase = ws0010::InitializationPhase::CONTROLLER_CONFIGURED;
   noteWs0010InitializationPhase(initialization_phase);
@@ -459,11 +499,26 @@ void MK61Display::refreshWs0010VisibleShadow(
     }
   }
 }
+
+void MK61Display::restoreWs0010DdramAddress(void) {
+  // In graphics mode 0x40/0x80 select GDRAM coordinates rather than character
+  // address spaces.  The retained CGRAM catalogue will be restored when the
+  // isolated graphics transaction returns through reinitialize().
+  if(ws0010_graphics_active) return;
+  const u8 hardware_x = shifted_viewport_active
+                      ? lcdHardwareColumn(shifted_viewport_shift,
+                                          shadow_cursor_x)
+                      : shadow_cursor_x;
+  sendCommand(ws0010::characterDdramAddressCommand(shadow_cursor_y,
+                                                    hardware_x));
+}
 #endif
 
 void MK61Display::begin(u8 cols, u8 rows) {
   (void) cols;
   (void) rows;
+  busy_flag_state = 0;
+  busy_flag_timeouts = 0;
 #if defined(MK61_OLED1602_WS0010)
   // A real power-on/brown-out resets both chips, so the exact manufacturer
   // sequence is sufficient. Every other MCU reset must assume the separately
@@ -487,8 +542,9 @@ void MK61Display::begin(u8 cols, u8 rows) {
   lcd.noBlink();
 #endif
   display_control = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
-  busy_flag_timeouts = 0;
+#if !defined(MK61_OLED1602_WS0010)
   probeBusyFlag();
+#endif
   memset(ddram_shadow, ' ', sizeof(ddram_shadow));
 #if defined(MK61_OLED1602_WS0010)
   memset(ddram_home_shadow, ' ', sizeof(ddram_home_shadow));
@@ -511,7 +567,9 @@ void MK61Display::begin(u8 cols, u8 rows) {
     for(u8 address = 0; address < 64; address++) sendData(0);
     sendCommand(LCD_SETDDRAMADDR);
     sendDisplayControl();
-    initialization_phase = ws0010::InitializationPhase::READY;
+    initialization_phase = busyFlagFaulted()
+                         ? ws0010::InitializationPhase::IDLE
+                         : ws0010::InitializationPhase::READY;
   } else {
     initialization_phase = ws0010::InitializationPhase::IDLE;
   }
@@ -577,21 +635,23 @@ bool MK61Display::reinitialize(void) {
       shifted_viewport_active, shifted_viewport_shift, restore_shift, emit);
   }
 
-  display_control = restore_control;
-  sendDisplayControl();
   // Restore the physical address counter directly. Calling the public
   // setCursor() here would redirect to usb_surface when recovery is requested
-  // from the multiplexed terminal during an active USB Screen session.
+  // from the multiplexed terminal during an active USB Screen session. Keep
+  // D=0 until AC is correct as well: otherwise cursor/blink can flash at the
+  // last restored byte before moving to the logical cursor.
   shadow_cursor_x = restore_cursor_x < lcd_display::COLS
                   ? restore_cursor_x : (u8) (lcd_display::COLS - 1u);
   shadow_cursor_y = restore_cursor_y < lcd_display::ROWS
                   ? restore_cursor_y : (u8) (lcd_display::ROWS - 1u);
-  const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
-  const u8 hardware_x = shifted_viewport_active
-                      ? lcdHardwareColumn(shifted_viewport_shift,
-                                          shadow_cursor_x)
-                      : shadow_cursor_x;
-  sendCommand((u8) (LCD_SETDDRAMADDR | row_address | hardware_x));
+  restoreWs0010DdramAddress();
+  display_control = restore_control;
+  sendDisplayControl();
+  if(busyFlagFaulted()) {
+    initialization_phase = ws0010::InitializationPhase::IDLE;
+    noteWs0010InitializationPhase(initialization_phase);
+    return false;
+  }
   reinitialization_count++;
   initialization_phase = ws0010::InitializationPhase::READY;
   noteWs0010InitializationPhase(initialization_phase);
@@ -607,16 +667,20 @@ bool MK61Display::beginWs0010Graphics(void) {
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) return false;
 #endif
-  if(ws0010_graphics_active) return true;
+  if(ws0010_graphics_active) {
+    // Every update transaction starts hidden as well; a second full frame
+    // must not tear merely because graphics mode was already selected.
+    sendCommand(ws0010::DISPLAY_OFF);
+    return true;
+  }
   // Cursor/blink are meaningless in graphics mode, but they are logical UI
   // state and must survive the experiment. Hide them on the controller
   // without mutating display_control; reinitialize() will restore the exact
-  // character-mode value on return.
-  sendCommand((u8) (LCD_DISPLAYCONTROL |
-    (display_control & (u8) ~(LCD_DISPLAYON | LCD_CURSORON | LCD_BLINKON))));
-  sendCommand(ws0010::MODE_GRAPHICS_POWER_ON);
+  // character-mode value on return. WS0010 requires G/C to change while the
+  // display is off, so keep it hidden until presentWs0010Graphics().
+  ws0010::emitHiddenGraphicsMode(
+    [this](u8 command) { sendCommand(command); });
   ws0010_graphics_active = true;
-  sendDisplayControl();
   return true;
 #endif
 }
@@ -638,6 +702,18 @@ bool MK61Display::writeWs0010GraphicsPage(u8 page, u8 first,
 #endif
 }
 
+bool MK61Display::presentWs0010Graphics(void) {
+#if !MK61_WS0010_GRAPHICS_100X16
+  return false;
+#else
+  if(!ws0010_graphics_active) return false;
+  // sendDisplayControl() honours both the logical display state and OLED
+  // protection; it cannot accidentally wake a deliberately sleeping panel.
+  sendDisplayControl();
+  return true;
+#endif
+}
+
 bool MK61Display::showWs0010GraphicsFrame(const u8* frame, usize size) {
 #if !MK61_WS0010_GRAPHICS_100X16
   (void) frame;
@@ -651,7 +727,7 @@ bool MK61Display::showWs0010GraphicsFrame(const u8* frame, usize size) {
          frame + (usize) page * ws0010_graphics::WIDTH,
          ws0010_graphics::WIDTH)) return false;
   }
-  return true;
+  return presentWs0010Graphics();
 #endif
 }
 
@@ -732,6 +808,62 @@ bool MK61Display::showWs0010EntryModeTest(bool automatic_shift) {
   refreshWs0010VisibleShadow(cells, shifted_viewport_shift);
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
+  return true;
+}
+
+bool MK61Display::showWs0010ZeroRunTest(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) return false;
+#endif
+  if(ws0010_graphics_active || busyFlagFaulted()) return false;
+
+  // A field report reproduced 4-bit desynchronisation specifically on long
+  // runs of zero data. Keep the OLED hidden, issue a much longer run than the
+  // original reproducer, then prove command/data alignment with two markers.
+  const u32 timeouts_before = busy_flag_timeouts;
+  sendCommand(ws0010::DISPLAY_OFF);
+  sendCommand(ws0010::characterDdramAddressCommand(0, 0));
+  for(u16 index = 0; index < 256; index++) sendData(0x00);
+  sendCommand(ws0010::CLEAR_DISPLAY, ws0010::CLEAR_DELAY_US);
+  if(busyFlagFaulted() || busy_flag_timeouts != timeouts_before) {
+    (void) reinitialize();
+    return false;
+  }
+
+  static constexpr char row0[] = "ZERO/BF 256: OK ";
+  static constexpr char row1[] = "4BIT SYNC: OK   ";
+  static_assert(sizeof(row0) - 1u == lcd_display::COLS &&
+                sizeof(row1) - 1u == lcd_display::COLS,
+                "WS0010 zero-run markers must fill both visible rows");
+  const char* rows[lcd_display::ROWS] = {row0, row1};
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    sendCommand(ws0010::characterDdramAddressCommand(row, 0));
+    for(u8 col = 0; col < lcd_display::COLS; col++) {
+      sendData((u8) rows[row][col]);
+    }
+  }
+  if(busyFlagFaulted() || busy_flag_timeouts != timeouts_before) {
+    (void) reinitialize();
+    return false;
+  }
+  // Commit the software shadow only after the complete physical transaction
+  // succeeds. A failed qualification test must never be restored as "OK".
+  for(u8 row = 0; row < lcd_display::ROWS; row++) {
+    memcpy(ddram_shadow[row], rows[row], lcd_display::COLS);
+    memcpy(ddram_home_shadow[row], rows[row], lcd_display::COLS);
+  }
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
+  shifted_viewport_active = false;
+  shifted_viewport_shift = 0;
+  restoreWs0010DdramAddress();
+  display_control |= LCD_DISPLAYON;
+  oled_protection_state.force(true, millis());
+  sendDisplayControl();
+  if(busyFlagFaulted()) {
+    (void) reinitialize();
+    return false;
+  }
   return true;
 }
 
@@ -939,8 +1071,17 @@ void MK61Display::createChar(u8 nChar, uint8_t* glyph) {
     return;
   }
 #endif
+#if defined(MK61_OLED1602_WS0010)
+  // CGRAM address commands become graphics-page commands in G/C=1. Retain the
+  // catalogue only; endWs0010Graphics()/reinitialize() will install it safely
+  // after returning to character mode.
+  if(ws0010_graphics_active) return;
+#endif
   sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
   for(u8 row = 0; row < 8; row++) sendData(custom_glyphs[nChar][row]);
+#if defined(MK61_OLED1602_WS0010)
+  restoreWs0010DdramAddress();
+#endif
 }
 
 void MK61Display::clearCustomChars(void) {
@@ -953,10 +1094,16 @@ void MK61Display::clearCustomChars(void) {
     return;
   }
 #endif
+#if defined(MK61_OLED1602_WS0010)
+  if(ws0010_graphics_active) return;
+#endif
   // Clearing the software catalogue must clear the controller as well; a
   // later reinitialize must not resurrect glyphs the current owner released.
   sendCommand(LCD_SETCGRAMADDR);
   for(u8 address = 0; address < 64; address++) sendData(0);
+#if defined(MK61_OLED1602_WS0010)
+  restoreWs0010DdramAddress();
+#endif
 }
 
 bool MK61Display::readCell(u8 x, u8 y, u8& value) const {
@@ -1003,8 +1150,14 @@ void MK61Display::clearCustomChar(u8 nChar) {
     return;
   }
 #endif
+#if defined(MK61_OLED1602_WS0010)
+  if(ws0010_graphics_active) return;
+#endif
   sendCommand((u8) (LCD_SETCGRAMADDR | (nChar << 3)));
   for(u8 row = 0; row < 8; row++) sendData(0);
+#if defined(MK61_OLED1602_WS0010)
+  restoreWs0010DdramAddress();
+#endif
 }
 
 void MK61Display::renderShiftedViewport(
@@ -1049,6 +1202,7 @@ void MK61Display::renderShiftedViewport(
       memcpy(ddram_home_shadow[row], cells[row], lcd_display::COLS);
     }
     refreshWs0010VisibleShadow(cells, shift);
+    restoreWs0010DdramAddress();
   }
 #else
   const auto emit = [this](lcd1602_shifted_viewport::BusWrite write) {
@@ -1160,9 +1314,7 @@ bool MK61Display::updateWs0010ShiftedViewportRow(
     ddram_shadow[row][col] = cells[row][(u8) (
       (shift + col) % lcd_display::DDRAM_COLS)];
   }
-  const u8 row_address = shadow_cursor_y == 0 ? 0x00u : 0x40u;
-  sendCommand((u8) (LCD_SETDDRAMADDR | row_address |
-    lcdHardwareColumn(shifted_viewport_shift, shadow_cursor_x)));
+  restoreWs0010DdramAddress();
   return true;
 }
 #endif
@@ -1361,6 +1513,9 @@ bool MK61Display::writeCellAnimationFrame(const u8* cells, usize count) {
   }
   shadow_cursor_x = 0;
   shadow_cursor_y = 0;
+#if defined(MK61_OLED1602_WS0010)
+  restoreWs0010DdramAddress();
+#endif
   return true;
 }
 
@@ -1420,9 +1575,10 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
   }
   if(changed_rows == 0 && !cells_changed) return true;
 
-  // Гасим экран только на время изменения видимой CGRAM. Основной драйвер
-  // сам использует busy flag, а при аппаратной ошибке безопасно возвращается
-  // к фиксированным задержкам.
+  // Гасим экран только на время изменения видимой CGRAM. Основной драйвер сам
+  // использует busy flag; HD44780 при аппаратной ошибке возвращается к
+  // задержкам, а WS0010 продолжает обязательный BF/AC read и журналирует
+  // timeout без опасной повторной записи байта.
   const bool display_off = changed_rows != 0;
   if(display_off) {
     sendCommand((u8) (LCD_DISPLAYCONTROL |
@@ -1479,6 +1635,14 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
     }
   }
 
+  shadow_cursor_x = 0;
+  shadow_cursor_y = 0;
+#if defined(MK61_OLED1602_WS0010)
+  // A frame which changes glyph pixels but not cell bytes otherwise leaves AC
+  // in CGRAM. Restore DDRAM while the OLED is still hidden, then present the
+  // coherent frame.
+  restoreWs0010DdramAddress();
+#endif
   if(display_off) sendDisplayControl();
 
   for(usize slot = 0; slot < GLYPH_COUNT; slot++) {
@@ -1501,8 +1665,6 @@ bool MK61Display::writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
            lcd_display::COLS);
 #endif
   }
-  shadow_cursor_x = 0;
-  shadow_cursor_y = 0;
   return true;
 }
 
@@ -1513,13 +1675,28 @@ void MK61Display::endCellAnimation(void) {
 }
 
 lcd_display::BusyFlagStatus MK61Display::busyFlagStatus(void) const {
-#if defined(MK61_OLED1602_WS0010)
-  return lcd_display::BusyFlagStatus::FIXED_DELAYS;
-#elif MK61_LCD1602_BUSY_FLAG
-  return busy_flag_active ? lcd_display::BusyFlagStatus::ACTIVE
-                          : lcd_display::BusyFlagStatus::FIXED_DELAYS;
+#if MK61_LCD1602_BUSY_FLAG
+  return (busy_flag_state & LCD_BUSY_ACTIVE) != 0
+       ? lcd_display::BusyFlagStatus::ACTIVE
+       : lcd_display::BusyFlagStatus::FIXED_DELAYS;
 #else
   return lcd_display::BusyFlagStatus::NOT_AVAILABLE;
+#endif
+}
+
+bool MK61Display::busyFlagObserved(void) const {
+#if MK61_LCD1602_BUSY_FLAG
+  return (busy_flag_state & LCD_BUSY_OBSERVED) != 0;
+#else
+  return false;
+#endif
+}
+
+bool MK61Display::busyFlagFaulted(void) const {
+#if MK61_LCD1602_BUSY_FLAG
+  return (busy_flag_state & LCD_BUSY_FAULTED) != 0;
+#else
+  return false;
 #endif
 }
 
@@ -1528,7 +1705,7 @@ u32 MK61Display::busyFlagTimeouts(void) const {
 }
 
 void MK61Display::probeBusyFlag(void) {
-  busy_flag_active = false;
+  busy_flag_state = 0;
 
 #if MK61_LCD1602_BUSY_FLAG
   digitalWrite(PIN_LCD_RW, LOW);
@@ -1537,11 +1714,21 @@ void MK61Display::probeBusyFlag(void) {
   const LcdParallelBus bus = lcdParallelBus();
   if(!bus.validForRead()) return;
 
-  // Clear выполняется достаточно долго, чтобы надёжно увидеть переход BF 1 -> 0.
+#if defined(MK61_OLED1602_WS0010)
+  // WS0010's 4-bit interface specification requires BF/AC to be read as one
+  // complete byte after every write.  Do not conditionally "probe" it with a
+  // Clear: even a controller which happens to answer 0 immediately still
+  // needs both read strobes to close the transfer. The V3 pin profile is the
+  // electrical qualification boundary for this path.
+  busy_flag_state = LCD_BUSY_ACTIVE;
+  return;
+#else
+  // Clear выполняется достаточно долго, чтобы надёжно увидеть переход BF
+  // 1 -> 0.
   lcdWriteByte(bus, LCD_CLEARDISPLAY, false);
   const LcdReadyResult result = lcdWaitReady(bus, 3000);
   if(result == LcdReadyResult::READY_AFTER_BUSY) {
-    busy_flag_active = true;
+    busy_flag_state = LCD_BUSY_ACTIVE | LCD_BUSY_OBSERVED;
     return;
   }
 
@@ -1550,24 +1737,61 @@ void MK61Display::probeBusyFlag(void) {
   } else {
     // При неподключённом или прижатом к нулю DB7 чтение завершится сразу,
     // хотя только что отправленный Clear ещё может выполняться.
-    delayMicroseconds(2000);
+    delayMicroseconds(lcdClearDelayUs());
   }
+#endif
 #endif
 }
 
 void MK61Display::sendByte(u8 value, bool data, u32 fallback_delay_us) {
 #if MK61_LCD1602_BUSY_FLAG
-  if(busy_flag_active) {
+  if((busy_flag_state & LCD_BUSY_FAULTED) != 0) return;
+  if((busy_flag_state & LCD_BUSY_ACTIVE) != 0) {
     const LcdParallelBus bus = lcdParallelBus();
     if(bus.validForRead()) {
       lcdWriteByte(bus, value, data);
-      if(lcdWaitReady(bus, 3000) != LcdReadyResult::TIMEOUT) return;
-      busy_flag_active = false;
+      const LcdReadyResult ready = lcdWaitReady(bus,
+#if defined(MK61_OLED1602_WS0010)
+                       8000
+#else
+                       3000
+#endif
+                       );
+      if(ready == LcdReadyResult::READY_AFTER_BUSY) {
+        busy_flag_state |= LCD_BUSY_OBSERVED;
+        return;
+      }
+      if(ready == LcdReadyResult::READY_WITHOUT_BUSY) {
+        // Keep the fixed lower bound if BF is electrically tied low or the
+        // instruction completed before the first sample. The WS0010 transfer
+        // nevertheless included its mandatory two read strobes.
+        delayMicroseconds(fallback_delay_us != 0 ? fallback_delay_us
+#if defined(MK61_OLED1602_WS0010)
+                                                 : ws0010::COMMAND_DELAY_US);
+#else
+                                                 : 50);
+#endif
+        return;
+      }
       busy_flag_timeouts++;
-      // После трёх миллисекунд ожидания повторять уже принятый байт нельзя.
+#if !defined(MK61_OLED1602_WS0010)
+      busy_flag_state &= (u8) ~LCD_BUSY_ACTIVE;
+#else
+      // A still-high BF means the just-written byte may not have completed;
+      // stop the caller from continuing into a half-known controller state.
+      // Latch the fault so callers cannot write another byte into a still-busy
+      // controller. Explicit reinitialize() performs the documented five-zero
+      // resynchronisation before more UI traffic.
+      busy_flag_state |= LCD_BUSY_FAULTED;
+#endif
+      // После тайм-аута повторять уже принятый байт нельзя. WS0010 продолжает
+      // выполнять полный BF/AC read после следующих байтов; уход в write-only
+      // снова сделал бы 4-битный обмен непаспортным.
       return;
     }
-    busy_flag_active = false;
+#if !defined(MK61_OLED1602_WS0010)
+    busy_flag_state &= (u8) ~LCD_BUSY_ACTIVE;
+#endif
   }
 #endif
 
@@ -2394,6 +2618,14 @@ void MK61Display::endCellAnimation(void) {}
 
 lcd_display::BusyFlagStatus MK61Display::busyFlagStatus(void) const {
   return lcd_display::BusyFlagStatus::NOT_AVAILABLE;
+}
+
+bool MK61Display::busyFlagObserved(void) const {
+  return false;
+}
+
+bool MK61Display::busyFlagFaulted(void) const {
+  return false;
 }
 
 u32 MK61Display::busyFlagTimeouts(void) const {

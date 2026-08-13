@@ -230,11 +230,13 @@ class MK61Display : public Print {
     bool beginWs0010Graphics(void);
     bool writeWs0010GraphicsPage(u8 page, u8 first,
                                  const u8* data, usize count);
+    bool presentWs0010Graphics(void);
     bool showWs0010GraphicsFrame(const u8* frame, usize size);
     void endWs0010Graphics(void);
     bool returnWs0010Home(void);
     bool shiftWs0010Cursor(bool right);
     bool showWs0010EntryModeTest(bool automatic_shift);
+    bool showWs0010ZeroRunTest(void);
     void configureOledProtection(oled_protection::Timeout timeout, u32 now);
     void noteDisplayActivity(u32 now);
     void pollOledProtection(u32 now);
@@ -307,6 +309,8 @@ class MK61Display : public Print {
                                         const u8* cells, usize count);
     void endCellAnimation(void);
     lcd_display::BusyFlagStatus busyFlagStatus(void) const;
+    bool busyFlagObserved(void) const;
+    bool busyFlagFaulted(void) const;
     u32 busyFlagTimeouts(void) const;
     u8 cols(void) const { return lcd_display::COLS; }
     u8 cursorX(void) const {
@@ -400,7 +404,8 @@ class MK61Display : public Print {
     u8 custom_glyphs[8][8];
     bool custom_valid[8];
     u8 display_control;
-    bool busy_flag_active;
+    // Bit-packed so richer BF diagnostics do not enlarge MK61Display.
+    u8 busy_flag_state;
     u32 busy_flag_timeouts;
     bool shifted_viewport_active;
     u8 shifted_viewport_shift;
@@ -414,6 +419,7 @@ class MK61Display : public Print {
                                     bool display_on_after_init);
     void refreshWs0010VisibleShadow(
       const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+    void restoreWs0010DdramAddress(void);
 #endif
 
     void probeBusyFlag(void);
