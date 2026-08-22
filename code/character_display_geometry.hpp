@@ -1,6 +1,14 @@
 #ifndef MK61_CHARACTER_DISPLAY_GEOMETRY_HPP
 #define MK61_CHARACTER_DISPLAY_GEOMETRY_HPP
 
+// Arduino IDE users may select the display by uncommenting its define inside
+// config.h rather than by passing a global compiler flag.  Load that choice
+// before freezing the geometry constants so every translation unit agrees on
+// the array dimensions used in public function signatures.
+#if defined(ARDUINO)
+  #include "config.h"
+#endif
+
 #include "rust_types.h"
 
 // The visible module geometry is shared by all character displays, while the

@@ -9,6 +9,14 @@
 #include "keyboard.h"
 #include "runtime_safety.hpp"
 
+#if defined(MK61_OLED1602_WS0010)
+static_assert(character_display_geometry::DDRAM_COLS == 64,
+              "WS0010 splash geometry must use 64-column DDRAM");
+#else
+static_assert(character_display_geometry::DDRAM_COLS == 40,
+              "HD44780 splash geometry must use 40-column DDRAM");
+#endif
+
 namespace startup_splash {
 namespace {
 
