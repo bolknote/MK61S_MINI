@@ -1,4 +1,4 @@
-#include <wiring_constants.h>
+#include <Arduino.h>
 #include "keyboard.h"
 #include "entropy_pool.hpp"
 #include "tools.hpp"
