@@ -11,6 +11,10 @@ static constexpr u16 POWER_STABILIZATION_MS = 500;
 // A controller-only recovery does not need the full cold power-on interval,
 // but it must let a half-finished Clear finish before changing interface mode.
 static constexpr u8 RECOVERY_STABILIZATION_MS = 10;
+// A warm MCU reset leaves the separately powered OLED panel and its internal
+// DC/DC alive.  Cycle PWR while D=0 after restoring the four-bit boundary;
+// this is the only reset mechanism available on modules without a reset pin.
+static constexpr u8 INTERNAL_POWER_CYCLE_MS = 10;
 static constexpr u8 FOUR_BIT_FUNCTION_NIBBLE = 0x02;
 static constexpr u8 BUS_SYNCHRONIZATION_WRITES = 5;
 // In 4-bit mode the WS0010 timing diagram requires a complete BF/AC read
@@ -206,7 +210,8 @@ constexpr u8 graphicsPageAddress(u8 page) {
 }
 
 template<typename Sink>
-inline void emitControllerConfiguration(Sink& sink, bool display_on) {
+inline void emitControllerConfiguration(Sink& sink, bool display_on,
+                                         bool cycle_internal_power) {
   // The synchronization procedure requires Function Set to be the first full
   // instruction after its raw 0010 transfer. A warm MCU reset, however, may
   // have left D=1, while WS0010 permits Function Set only with D=0. Complete
@@ -215,7 +220,14 @@ inline void emitControllerConfiguration(Sink& sink, bool display_on) {
   sink.command(FUNCTION_SET_4BIT_2LINE_5X8_FT10);
   sink.command(DISPLAY_OFF);
   sink.command(FUNCTION_SET_4BIT_2LINE_5X8_FT10);
+  if(cycle_internal_power) {
+    sink.command(MODE_CHARACTER_POWER_OFF);
+    sink.delayMilliseconds(INTERNAL_POWER_CYCLE_MS);
+  }
   sink.command(MODE_CHARACTER_POWER_ON);
+  if(cycle_internal_power) {
+    sink.delayMilliseconds(INTERNAL_POWER_CYCLE_MS);
+  }
   sink.command(CLEAR_DISPLAY);
   sink.command(ENTRY_INCREMENT_NO_SHIFT);
   sink.command(display_on ? DISPLAY_ON : DISPLAY_OFF);
@@ -237,7 +249,8 @@ inline void emitHiddenCharacterMode(EmitCommand emit_command) {
 
 template<typename Sink>
 inline void emitSynchronizedFourBitInitialization(Sink& sink,
-                                                   bool display_on) {
+                                                   bool display_on,
+                                                   bool cycle_internal_power) {
   // This is the controller's own "Repeated procedures for an 4-bit bus
   // interface" trace, not the superficially similar HD44780 reset recipe.
   // Five consecutive 0000 transfers trigger WS0010's synchronization
@@ -246,7 +259,7 @@ inline void emitSynchronizedFourBitInitialization(Sink& sink,
   // following complete Function Set as 0010,N/F/FT1/FT0.
   for(u8 i = 0; i < BUS_SYNCHRONIZATION_WRITES; i++) sink.nibble(0);
   sink.nibble(FOUR_BIT_FUNCTION_NIBBLE);
-  emitControllerConfiguration(sink, display_on);
+  emitControllerConfiguration(sink, display_on, cycle_internal_power);
 }
 
 template<typename Sink>
@@ -254,15 +267,15 @@ inline void emitFourBitInitialization(Sink& sink, bool display_on = true) {
   // The manufacturer's synchronization flow explicitly starts at Power ON,
   // so using it here also protects against a display supply which decays more
   // slowly than the MCU supply.
-  emitSynchronizedFourBitInitialization(sink, display_on);
+  emitSynchronizedFourBitInitialization(sink, display_on, false);
 }
 
 template<typename Sink>
 inline void emitFourBitRecovery(Sink& sink, bool display_on = true) {
-  // A warm MCU reset can interrupt either half of a 4-bit transfer. Use the
-  // same documented synchronization function; only the preceding power-wait
-  // duration differs between cold initialization and recovery.
-  emitSynchronizedFourBitInitialization(sink, display_on);
+  // A warm MCU reset can interrupt either half of a 4-bit transfer while the
+  // OLED remains powered. Restore the byte boundary first, then cycle the
+  // controller's documented internal PWR bit while the display is hidden.
+  emitSynchronizedFourBitInitialization(sink, display_on, true);
 }
 
 static_assert(GRAPHICS_FRAME_BYTES == 200,

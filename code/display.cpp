@@ -465,6 +465,7 @@ bool MK61Display::initializeWs0010Controller(bool cold_start,
       lcdWriteNibble(bus, value);
       delayMicroseconds(ws0010::COMMAND_DELAY_US);
     }
+    void delayMilliseconds(u8 duration) { ::delay(duration); }
     void command(u8 value) {
       if((busy_state & LCD_BUSY_FAULTED) != 0) return;
       lcdWriteByte(bus, value, false);

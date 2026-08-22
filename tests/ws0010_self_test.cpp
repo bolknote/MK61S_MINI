@@ -32,6 +32,8 @@ struct Transfer {
 struct TraceSink {
   Transfer transfers[24] = {};
   u8 count = 0;
+  u8 delay_count = 0;
+  u16 delay_total_ms = 0;
 
   void append(TransferKind kind, u8 value) {
     assert(count < sizeof(transfers) / sizeof(transfers[0]));
@@ -40,6 +42,10 @@ struct TraceSink {
 
   void nibble(u8 value) { append(TransferKind::NIBBLE, value); }
   void command(u8 value) { append(TransferKind::COMMAND, value); }
+  void delayMilliseconds(u8 duration) {
+    delay_count++;
+    delay_total_ms += duration;
+  }
 };
 
 enum class BusEventKind : u8 {
@@ -211,6 +217,7 @@ struct ControllerBusSink {
   void command(u8 value) {
     lcd_6800_4bit_bus::writeByte(trace, value, false);
   }
+  void delayMilliseconds(u8) {}
 };
 
 void test_controller_init_expands_to_safe_bus_trace(void) {
@@ -233,6 +240,7 @@ void test_initialization_trace(void) {
   ws0010::emitFourBitInitialization(trace);
 
   assert(trace.count == 13);
+  assert(trace.delay_count == 0 && trace.delay_total_ms == 0);
   for(u8 i = 0; i < ws0010::BUS_SYNCHRONIZATION_WRITES; i++) {
     assert(trace.transfers[i].kind == TransferKind::NIBBLE);
     assert(trace.transfers[i].value == 0x00);
@@ -256,6 +264,7 @@ void test_initialization_trace(void) {
   }
 
   assert(ws0010::POWER_STABILIZATION_MS == 500);
+  assert(ws0010::INTERNAL_POWER_CYCLE_MS >= 10);
   assert(ws0010::CLEAR_DELAY_US >= 6200);
   assert(ws0010::COMMAND_DELAY_US >= 50);
 }
@@ -271,7 +280,7 @@ void test_hidden_initialization_trace(void) {
 void test_recovery_trace_and_nibble_convergence(void) {
   TraceSink trace;
   ws0010::emitFourBitRecovery(trace);
-  assert(trace.count == 13);
+  assert(trace.count == 14);
   for(u8 i = 0; i < ws0010::BUS_SYNCHRONIZATION_WRITES; i++) {
     assert(trace.transfers[i].kind == TransferKind::NIBBLE);
     assert(trace.transfers[i].value == 0x00);
@@ -280,6 +289,23 @@ void test_recovery_trace_and_nibble_convergence(void) {
   assert(trace.transfers[5].value == 0x02);
   assert(trace.transfers[6].kind == TransferKind::COMMAND);
   assert(trace.transfers[6].value == 0x2A);
+  static constexpr u8 recovery_commands[] = {
+    0x2A, // mandatory Function Set
+    0x08, // D=0 before configuration and power changes
+    0x2A, // final two-line/FT=10 Function Set
+    0x13, // character mode, internal power off
+    0x17, // character mode, internal power on
+    0x01, // clear DDRAM
+    0x06, // increment, no automatic display shift
+    0x0C, // display on, cursor and blink off
+  };
+  for(u8 i = 0; i < sizeof(recovery_commands); i++) {
+    assert(trace.transfers[6 + i].kind == TransferKind::COMMAND);
+    assert(trace.transfers[6 + i].value == recovery_commands[i]);
+  }
+  assert(trace.delay_count == 2);
+  assert(trace.delay_total_ms ==
+         (u16) ws0010::INTERNAL_POWER_CYCLE_MS * 2u);
 
   // WS0010 defines five consecutive 0000 transfers as a controller-level
   // synchronization operation: regardless of the interrupted half-byte, the
