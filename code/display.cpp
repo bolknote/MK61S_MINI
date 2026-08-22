@@ -281,6 +281,20 @@ static inline void lcdWritePin(PinName pin, bool high) {
   digitalWriteFast(pin, high ? HIGH : LOW);
 }
 
+static inline void lcdPrepareOutputPinLow(PinName pin) {
+  if(pin == NC) return;
+
+  // Unlike pinMode(), digitalWriteFast() and direct MODER access do not
+  // enable the GPIO peripheral clock.  The WS0010 backend does not construct
+  // LiquidCrystal, so GPIOA (DB5..DB7 on mini V3) can still be clock-gated at
+  // the first display transaction.  Enable the port before preloading ODR,
+  // then establish the complete push-pull/no-pull configuration explicitly.
+  (void) set_GPIO_Port_Clock(STM_PORT(pin));
+  lcdWritePin(pin, false);
+  pin_function(pin, STM_PIN_DATA(STM_MODE_OUTPUT_PP, GPIO_NOPULL, 0));
+  lcdWritePin(pin, false);
+}
+
 static inline void lcdSetPinOutput(PinName pin, bool output) {
   GPIO_TypeDef* const port = get_GPIO_Port(STM_PORT(pin));
   const u32 shift = (u32) STM_PIN(pin) * 2u;
@@ -303,9 +317,7 @@ struct LcdHardwareWriteSink {
   const LcdParallelBus& bus;
 
   void setOutputLow(PinName pin) {
-    if(pin == NC) return;
-    lcdWritePin(pin, false);
-    lcdSetPinOutput(pin, true);
+    lcdPrepareOutputPinLow(pin);
   }
 
   void setRwOutputLow(void) { setOutputLow(bus.rw); }
