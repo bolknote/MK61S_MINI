@@ -3,7 +3,10 @@
 // both .ino tabs before compiling them.
 
 #include "rust_types.h"
+#include "idle_sleep_policy.hpp"
 
-// Keep Arduino's generated prototypes after the type definitions above even
-// though the implementation lives in the second .ino tab.
+// Keep Arduino's generated prototypes after every non-built-in type used by
+// an .ino function signature.  The implementation lives in the second tab,
+// but Arduino IDE preprocesses this file first because it matches the sketch
+// directory name.
 [[maybe_unused]] static void mk61_arduino_sketch_anchor(void) {}
