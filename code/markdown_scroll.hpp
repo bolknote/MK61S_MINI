@@ -9,6 +9,12 @@ static constexpr u16 VIEWPORT_HEIGHT = 64;
 static constexpr u16 FAST_OVERLAP = 8;
 static constexpr u16 FAST_DISTANCE = VIEWPORT_HEIGHT - FAST_OVERLAP;
 
+inline u16 fast_distance(u16 viewport_height, u16 overlap) {
+  if(viewport_height == 0) return 1;
+  return viewport_height > overlap
+      ? (u16) (viewport_height - overlap) : 1;
+}
+
 struct Metrics {
   u16 document_height;
   u16 current_top;
@@ -25,12 +31,16 @@ struct Metrics {
 // пиксельного смещения, поэтому отдельный массив координат не нужен.
 class Probe {
  public:
-  explicit Probe(u16 current)
+  explicit Probe(u16 current,
+                 u16 viewport_height = VIEWPORT_HEIGHT,
+                 u16 fast_overlap = FAST_OVERLAP)
       : current(current),
-        backward_limit(current > FAST_DISTANCE
-            ? (u16) (current - FAST_DISTANCE) : 0),
-        forward_limit(current > (u16) (0xFFFFU - FAST_DISTANCE)
-            ? 0xFFFFU : (u16) (current + FAST_DISTANCE)),
+        viewport_height(viewport_height == 0 ? 1 : viewport_height),
+        scroll_distance(fast_distance(viewport_height, fast_overlap)),
+        backward_limit(current > scroll_distance
+            ? (u16) (current - scroll_distance) : 0),
+        forward_limit(current > (u16) (0xFFFFU - scroll_distance)
+            ? 0xFFFFU : (u16) (current + scroll_distance)),
         previous(0), next(0), fast_previous(0), fast_next(0),
         has_previous(false), has_next(false),
         has_fast_previous(false), has_fast_next(false),
@@ -66,8 +76,8 @@ class Probe {
   }
 
   Metrics finish(u16 document_height) const {
-    const u16 maximum = document_height > VIEWPORT_HEIGHT
-        ? (u16) (document_height - VIEWPORT_HEIGHT) : 0;
+    const u16 maximum = document_height > viewport_height
+        ? (u16) (document_height - viewport_height) : 0;
     const u16 top = current > maximum ? maximum : current;
     if(top != current) {
       return {
@@ -85,7 +95,7 @@ class Probe {
 
     u16 fast_previous_target = current;
     if(current != 0) {
-      if(current <= FAST_DISTANCE) {
+      if(current <= scroll_distance) {
         fast_previous_target = 0;
       } else if(has_fast_previous) {
         fast_previous_target = fast_previous;
@@ -98,7 +108,7 @@ class Probe {
 
     u16 fast_next_target = current;
     if(current < maximum) {
-      if((u16) (maximum - current) <= FAST_DISTANCE) {
+      if((u16) (maximum - current) <= scroll_distance) {
         fast_next_target = maximum;
       } else if(has_fast_next && fast_next > current) {
         fast_next_target = fast_next;
@@ -125,6 +135,8 @@ class Probe {
 
  private:
   u16 current;
+  u16 viewport_height;
+  u16 scroll_distance;
   u16 backward_limit;
   u16 forward_limit;
   u16 previous;

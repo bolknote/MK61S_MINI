@@ -162,6 +162,19 @@
   #error "MK61_ENABLE_USB_SCREEN must be 0 or 1"
 #endif
 
+// WS0010 exposes a small 100x16 GDRAM in addition to its character mode.
+// Keep it opt-in: unlike UC1609/USB this is only a fullscreen bitmap target,
+// not the 192x64 graphical text backend used by Markdown and CHIP-8.
+#ifndef MK61_WS0010_GRAPHICS_100X16
+  #define MK61_WS0010_GRAPHICS_100X16 0
+#endif
+#if MK61_WS0010_GRAPHICS_100X16 != 0 && MK61_WS0010_GRAPHICS_100X16 != 1
+  #error "MK61_WS0010_GRAPHICS_100X16 must be 0 or 1"
+#endif
+#if MK61_WS0010_GRAPHICS_100X16 && !defined(MK61_OLED1602_WS0010)
+  #error "WS0010 100x16 graphics requires MK61_OLED1602_WS0010"
+#endif
+
 // На момент объявления файловых модулей полные профили ещё не раскрыты в
 // MK61_DISPLAY_UC1609, поэтому учитываем и сами флаги готовых плат.
 #if defined(MK61_DISPLAY_UC1609) || defined(DISPLAY_UC1609) || \
@@ -170,6 +183,16 @@
   #define MK61_HAS_COMPILED_GRAPHICS 1
 #else
   #define MK61_HAS_COMPILED_GRAPHICS 0
+#endif
+
+// WBMP needs only a modal, page-major fullscreen bitmap target.  The hybrid
+// WS0010 provides that target when its separately qualified G/C mode is built,
+// while it deliberately remains outside MK61_HAS_COMPILED_GRAPHICS.
+#if MK61_HAS_COMPILED_GRAPHICS || \
+    (defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16)
+  #define MK61_HAS_FULLSCREEN_BITMAP 1
+#else
+  #define MK61_HAS_FULLSCREEN_BITMAP 0
 #endif
 
 // T2/.md доступен на любом экране: LCD1602 получает семантический plain text,
@@ -181,23 +204,23 @@
   #error "MK61_ENABLE_MARKDOWN_VIEWER must be 0 or 1"
 #endif
 
-// Отдельный WBMP-viewer по умолчанию существует только без Markdown и при
-// наличии физического или виртуального графического экрана. Явная прежняя
-// комбинация WBMP=1, MARKDOWN=1 безопасна: Markdown всё равно имеет приоритет.
+// Графический Markdown сам открывает WBMP на любом fullscreen bitmap backend,
+// включая квалификационную GDRAM WS0010 100x16. Отдельный viewer нужен только
+// без Markdown.
 #ifndef MK61_ENABLE_WBMP_VIEWER
   #define MK61_ENABLE_WBMP_VIEWER \
-    (MK61_HAS_COMPILED_GRAPHICS && !MK61_ENABLE_MARKDOWN_VIEWER)
+    (MK61_HAS_FULLSCREEN_BITMAP && !MK61_ENABLE_MARKDOWN_VIEWER)
 #endif
 #if MK61_ENABLE_WBMP_VIEWER != 0 && MK61_ENABLE_WBMP_VIEWER != 1
   #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
 #endif
 
 #define MK61_MARKDOWN_USES_WBMP \
-  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_COMPILED_GRAPHICS)
+  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_FULLSCREEN_BITMAP)
 #define MK61_STANDALONE_WBMP_VIEWER_ENABLED \
-  (MK61_ENABLE_WBMP_VIEWER && !MK61_ENABLE_MARKDOWN_VIEWER)
-#if MK61_STANDALONE_WBMP_VIEWER_ENABLED && !MK61_HAS_COMPILED_GRAPHICS
-  #error "MK61_ENABLE_WBMP_VIEWER requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
+  (MK61_ENABLE_WBMP_VIEWER && !MK61_MARKDOWN_USES_WBMP)
+#if MK61_STANDALONE_WBMP_VIEWER_ENABLED && !MK61_HAS_FULLSCREEN_BITMAP
+  #error "MK61_ENABLE_WBMP_VIEWER requires UC1609, USB Screen, or WS0010 100x16 graphics"
 #endif
 
 // Консоль CHIP-8 выключена по умолчанию. C1 — двухбайтовый magic типа C5;
@@ -258,9 +281,8 @@
   (MK61_ENABLE_CHIP8 && !MK61_ENABLE_LOADABLE_MODULES)
 
 // Графический Markdown владеет полным I1-viewer и WBMP-декодером: он показывает
-// как локальные блоки изображений, так и самостоятельные .wbmp. Загружаемые
-// APP делят один overlay и не могут вызывать друг друга, поэтому WBMP.APP
-// существует только в конфигурации без Markdown.
+// как локальные блоки изображений, так и самостоятельные .wbmp. Это правило
+// одинаково для UC1609, USB Screen и квалификационной GDRAM WS0010 100x16.
 #define MK61_IMAGE1_VIEWER_IS_BUILTIN \
   (MK61_WBMP_VIEWER_IS_BUILTIN || \
    (MK61_MARKDOWN_VIEWER_IS_BUILTIN && MK61_MARKDOWN_USES_WBMP))
@@ -269,7 +291,7 @@
 
 #define MK61_ANY_FULLSCREEN_FILE \
   (MK61_STANDALONE_WBMP_VIEWER_ENABLED || MK61_ENABLE_CHIP8 || \
-   (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_COMPILED_GRAPHICS))
+   MK61_MARKDOWN_USES_WBMP)
 
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
 // графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.
@@ -385,19 +407,6 @@
 #if defined(MK61_OLED1602_WS0010) && defined(REVISION_V3) && \
     !MK61_LCD1602_BUSY_FLAG
   #error "mini V3 WS0010 requires the datasheet busy-flag read after every byte"
-#endif
-
-// The controller documents a 100x16 GDRAM, but WEH001602A is sold as a
-// character module. Keep the isolated bring-up API compiled out of release
-// profiles until the exact module/order code passes the hardware test page.
-#ifndef MK61_WS0010_GRAPHICS_100X16
-  #define MK61_WS0010_GRAPHICS_100X16 0
-#endif
-#if MK61_WS0010_GRAPHICS_100X16 != 0 && MK61_WS0010_GRAPHICS_100X16 != 1
-  #error "MK61_WS0010_GRAPHICS_100X16 must be 0 or 1"
-#endif
-#if MK61_WS0010_GRAPHICS_100X16 && !defined(MK61_OLED1602_WS0010)
-  #error "WS0010 100x16 graphics requires MK61_OLED1602_WS0010"
 #endif
 
 // The module can route analogue brightness to connector pin 3 after a

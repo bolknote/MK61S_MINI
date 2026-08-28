@@ -7,10 +7,13 @@ int main(void) {
 #if defined(MK61_CONFIG_EXPECT_WBMP_DISABLED)
   static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
                 "the WBMP-disabled build must keep the viewer disabled");
-#elif defined(MK61_CONFIG_EXPECT_MARKDOWN_DISABLED) && \
-      MK61_HAS_COMPILED_GRAPHICS
+#elif defined(MK61_CONFIG_EXPECT_WBMP_ENABLED)
   static_assert(MK61_ENABLE_WBMP_VIEWER == 1,
-                "graphics without Markdown must enable WBMP by default");
+                "the selected bitmap build must enable WBMP");
+#elif defined(MK61_CONFIG_EXPECT_MARKDOWN_DISABLED) && \
+      MK61_HAS_FULLSCREEN_BITMAP
+  static_assert(MK61_ENABLE_WBMP_VIEWER == 1,
+                "a fullscreen bitmap target without Markdown must enable WBMP by default");
 #else
   static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
                 "Markdown or a non-graphical build must default WBMP off");
@@ -24,12 +27,14 @@ int main(void) {
                 "Markdown must be enabled by default");
   static_assert(MK61_MARKDOWN_USES_WBMP ==
                     (MK61_ENABLE_MARKDOWN_VIEWER &&
-                     MK61_HAS_COMPILED_GRAPHICS),
-                "Markdown must request WBMP decoding only for graphics");
+                     MK61_HAS_FULLSCREEN_BITMAP),
+                "Markdown must own WBMP on every fullscreen bitmap target");
+  static_assert(MK61_HAS_FULLSCREEN_BITMAP >= MK61_HAS_COMPILED_GRAPHICS,
+                "every full graphics backend must accept fullscreen bitmaps");
   static_assert(MK61_STANDALONE_WBMP_VIEWER_ENABLED ==
                     (MK61_ENABLE_WBMP_VIEWER &&
-                     !MK61_ENABLE_MARKDOWN_VIEWER),
-                "the standalone WBMP viewer must be omitted with Markdown");
+                     !MK61_MARKDOWN_USES_WBMP),
+                "only graphical Markdown may absorb the WBMP viewer");
   static_assert(MK61_ENABLE_CHIP8 ==
 #if defined(MK61_CONFIG_EXPECT_CHIP8)
                 1,
@@ -40,6 +45,10 @@ int main(void) {
 #if defined(MK61_CONFIG_EXPECT_GRAPHICS)
   static_assert(MK61_HAS_COMPILED_GRAPHICS == 1,
                 "USB Screen or UC1609 must provide compiled graphics");
+#endif
+#if defined(MK61_CONFIG_EXPECT_FULLSCREEN_BITMAP)
+  static_assert(MK61_HAS_FULLSCREEN_BITMAP == 1,
+                "the selected display must accept fullscreen bitmaps");
 #endif
 
 #if defined(MK61_CONFIG_EXPECT_LOADABLE_MODULES)

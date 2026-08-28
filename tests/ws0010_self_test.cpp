@@ -551,6 +551,8 @@ void test_graphics_address_policy(void) {
   assert(ws0010::GRAPHICS_WIDTH == 100);
   assert(ws0010::GRAPHICS_HEIGHT == 16);
   assert(ws0010::GRAPHICS_FRAME_BYTES == 200);
+  assert(ws0010::GRAPHICS_VISIBLE_WIDTH == 80);
+  assert(ws0010::GRAPHICS_VISIBLE_FRAME_BYTES == 160);
   assert(ws0010::graphicsXAddress(0) == 0x80);
   assert(ws0010::graphicsXAddress(99) == 0xE3);
   assert(ws0010::graphicsPageAddress(0) == 0x40);

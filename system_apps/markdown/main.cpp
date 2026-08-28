@@ -6,7 +6,7 @@
 
 #include "../../code/config.h"
 
-#if MK61_HAS_COMPILED_GRAPHICS
+#if MK61_MARKDOWN_USES_WBMP
   #include "../../code/markdown_document.cpp"
   #include "../../code/wbmp.cpp"
   #include "../../code/image1_viewer.cpp"

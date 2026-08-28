@@ -158,7 +158,7 @@ Assert-True ($builderText -notmatch 'mk61_ide_.*\.cpp\.o') `
     'standalone builder still consumes Arduino System APP objects'
 Assert-True ($builderText -match
     '\$Markdown -eq ''1''[\s\S]+?\$Wbmp = ''0''') `
-    'standalone builder does not suppress WBMP.APP with Markdown'
+    'standalone builder does not suppress WBMP.APP owned by Markdown'
 Assert-True ($builderText -match
     "\^-flto\(\?:=\.\*\)\?\$[\s\S]+-fno-fat-lto-objects") `
     'standalone builder does not normalize resident LTO flags'

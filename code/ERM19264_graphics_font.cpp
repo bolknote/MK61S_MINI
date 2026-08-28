@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
+#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
 
 #include "ERM19264_graphics_font.h"
 

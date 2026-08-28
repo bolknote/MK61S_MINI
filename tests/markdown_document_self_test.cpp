@@ -248,8 +248,9 @@ static void test_adversarial_block_density_fits(void) {
 
 static markdown_scroll::Metrics scroll_metrics(
     u16 current, const u16* anchors, usize anchor_count,
-    u16 document_height) {
-  markdown_scroll::Probe probe(current);
+    u16 document_height,
+    u16 viewport_height = markdown_scroll::VIEWPORT_HEIGHT) {
+  markdown_scroll::Probe probe(current, viewport_height);
   for(usize index = 0; index < anchor_count; index++) {
     probe.note(anchors[index]);
   }
@@ -373,6 +374,22 @@ static void test_graphic_scroll_navigation(void) {
   assert(metrics.fast_previous_anchor == 0);
   assert(metrics.fast_next_anchor == 0);
   assert(metrics.snap_anchor == 0);
+
+  // WS0010 GDRAM has a 16-pixel viewport. Its scroll limit and fast
+  // navigation distance must not retain the UC1609 64-pixel geometry.
+  metrics = scroll_metrics(
+      0, regular_anchors,
+      sizeof(regular_anchors) / sizeof(regular_anchors[0]), 50, 16);
+  assert(metrics.maximum_top == 34);
+  assert(metrics.next_anchor == 10);
+  assert(metrics.fast_next_anchor == 8);
+
+  metrics = scroll_metrics(
+      10, regular_anchors,
+      sizeof(regular_anchors) / sizeof(regular_anchors[0]), 50, 16);
+  assert(metrics.maximum_top == 34);
+  assert(metrics.fast_previous_anchor == 2);
+  assert(metrics.fast_next_anchor == 18);
 
   assert(markdown_scroll::pixel_toward(10, 15) == 11);
   assert(markdown_scroll::pixel_toward(15, 10) == 14);

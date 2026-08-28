@@ -301,6 +301,43 @@ class MK61Display : public Print {
     bool suspendExternalFontForUsb(void);
     // Modal-пара подавляет фоновые flush во время просмотра WBMP.
     // Сам showFullscreenBitmap остаётся пригоден для одноразового DFU-сплеша.
+    bool supportsFullscreenBitmap(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return true;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+      return true;
+#elif defined(MK61_OLED1602_WS0010)
+      return MK61_WS0010_GRAPHICS_100X16 != 0;
+#else
+      return false;
+#endif
+    }
+    u16 fullscreenBitmapWidth(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_screen::WIDTH;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+      return lcd_display::PIXEL_WIDTH;
+#elif defined(MK61_OLED1602_WS0010)
+      return MK61_WS0010_GRAPHICS_100X16
+          ? ws0010::GRAPHICS_VISIBLE_WIDTH : 0;
+#else
+      return 0;
+#endif
+    }
+    u16 fullscreenBitmapHeight(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_screen::HEIGHT;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+      return lcd_display::PIXEL_HEIGHT;
+#elif defined(MK61_OLED1602_WS0010)
+      return MK61_WS0010_GRAPHICS_100X16 ? ws0010::GRAPHICS_HEIGHT : 0;
+#else
+      return 0;
+#endif
+    }
     bool beginFullscreenBitmap(void);
     bool showFullscreenBitmap(const u8* bitmap, usize size);
     void endFullscreenBitmap(void);

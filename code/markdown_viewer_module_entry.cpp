@@ -1,7 +1,7 @@
 #if defined(MK61_BUILD_MARKDOWN_MODULE)
 
 #include "config.h"
-#if MK61_HAS_COMPILED_GRAPHICS
+#if MK61_MARKDOWN_USES_WBMP
   #include "image1_viewer.hpp"
 #endif
 #include "loadable_module_abi.hpp"
@@ -28,7 +28,7 @@ static loadable_module::FileOpenResult markdown_result(
   return FileOpenResult::RUNTIME_ERROR;
 }
 
-#if MK61_HAS_COMPILED_GRAPHICS
+#if MK61_MARKDOWN_USES_WBMP
 static loadable_module::FileOpenResult image_result(
     image1_viewer::Result result) {
   using loadable_module::FileOpenResult;
@@ -70,7 +70,7 @@ u32 mk61_module_entry(u32 raw_command, u32, u32 argument1, u32, u32) {
         return (u32) markdown_result(
             markdown_viewer::view_entry(main_lcd(), entry));
       }
-#if MK61_HAS_COMPILED_GRAPHICS
+#if MK61_MARKDOWN_USES_WBMP
       if(entry.type == program_store::ProgramType::IMAGE1) {
         return (u32) image_result(
             image1_viewer::view_entry(main_lcd(), entry));

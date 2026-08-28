@@ -96,7 +96,7 @@ $invalid = Invoke-Backend @(
 Assert-True ($invalid.ExitCode -eq 1) `
     'LCD1602 profile accepted a graphics APP without USB Screen'
 Assert-True (($invalid.Output -join "`n") -match
-    'WBMP/CHIP-8 requires') `
+    'WBMP requires UC1609') `
     'invalid graphics selection has no useful diagnostic'
 
 $invalidWsGraphics = Invoke-Backend @(

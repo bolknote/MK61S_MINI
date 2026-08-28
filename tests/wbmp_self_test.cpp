@@ -149,6 +149,8 @@ static void test_decode_guards(void) {
       wbmp::Layout::ROW_MAJOR_MSB, &output, sizeof(output)) ==
       wbmp::Status::INVALID_HEADER);
   assert(wbmp::viewport_bytes(80, 14, wbmp::Layout::ROW_MAJOR_MSB) == 140);
+  assert(wbmp::viewport_bytes(100, 16,
+      wbmp::Layout::PAGE_MAJOR_LSB) == 200);
   assert(wbmp::viewport_bytes(192, 64, wbmp::Layout::PAGE_MAJOR_LSB) == 1536);
 }
 

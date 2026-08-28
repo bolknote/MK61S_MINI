@@ -114,9 +114,9 @@ system_apps\build.cmd ^
 По умолчанию файлы появляются в `system_apps\System`; параметр
 `-OutputDirectory` задаёт другое место. `compile_commands.json` используется
 не как список готовых APP-объектов, а как надёжный источник версии ARM
-toolchain, include-путей и флагов конкретной resident-сборки. При выключенном
-Markdown `WBMP.APP` объявляет обработчик `I1`. Графический `MARKDOWN.APP`
-обслуживает `T2` и `I1`, а `CHIP8.APP` — `C1`.
+toolchain, include-путей и флагов конкретной resident-сборки. На fullscreen
+bitmap backend `MARKDOWN.APP` обслуживает `T2` и `I1`, включая
+квалификационный профиль WS0010 100x16; `CHIP8.APP` обслуживает `C1`.
 
 ## Каталог приложения и manifest
 
@@ -405,9 +405,9 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
     └── GAME.APP
 ```
 
-`System` содержит только включённые compile-time ключами компоненты; если
-Markdown включён, `WBMP.APP` отсутствует и его функции входят в
-`MARKDOWN.APP`.
+`System` содержит только включённые compile-time ключами компоненты. На
+fullscreen bitmap backend при включённом Markdown `WBMP.APP` отсутствует и его
+функции входят в `MARKDOWN.APP`, включая профиль WS0010 100x16.
 `Apps` является полностью генерируемым каталогом: следующая сборка удаляет
 устаревшие пользовательские артефакты, которых больше нет в manifest-списке.
 `build.apps` хранит точный список созданных путей.

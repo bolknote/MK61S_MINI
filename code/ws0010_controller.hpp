@@ -200,6 +200,13 @@ static constexpr u8 GRAPHICS_HEIGHT = 16;
 static constexpr u8 GRAPHICS_PAGES = GRAPHICS_HEIGHT / 8;
 static constexpr u16 GRAPHICS_FRAME_BYTES =
   (u16) GRAPHICS_WIDTH * GRAPHICS_PAGES;
+// WEH001602A is a 16x2 character panel: each character cell contains five
+// emitting columns. The WS0010 still exposes all 100 GDRAM addresses, but the
+// module connects only 16 * 5 of them to visible OLED dots in graphics mode.
+static constexpr u8 GRAPHICS_VISIBLE_WIDTH =
+  CHARACTER_VISIBLE_COLS * 5;
+static constexpr u16 GRAPHICS_VISIBLE_FRAME_BYTES =
+  (u16) GRAPHICS_VISIBLE_WIDTH * GRAPHICS_PAGES;
 
 constexpr u8 graphicsXAddress(u8 x) {
   return (u8) (0x80u | x);
@@ -280,6 +287,9 @@ inline void emitFourBitRecovery(Sink& sink, bool display_on = true) {
 
 static_assert(GRAPHICS_FRAME_BYTES == 200,
               "WS0010 100x16 GDRAM must occupy exactly 200 bytes");
+static_assert(GRAPHICS_VISIBLE_WIDTH == 80 &&
+              GRAPHICS_VISIBLE_FRAME_BYTES == 160,
+              "WEH001602A visible graphics matrix must be 80x16");
 static_assert(CHARACTER_DDRAM_BYTES == 128,
               "WS0010 two-line DDRAM must occupy 128 bytes");
 static_assert(normalizeCgramRow(0, 0xFF) == 0x1F &&

@@ -733,12 +733,20 @@ bool MK61Display::showWs0010GraphicsFrame(const u8* frame, usize size) {
   (void) size;
   return false;
 #else
-  if(frame == NULL || size != ws0010_graphics::FRAME_BYTES ||
+  if(frame == NULL ||
+     (size != ws0010_graphics::FRAME_BYTES &&
+      size != ws0010::GRAPHICS_VISIBLE_FRAME_BYTES) ||
      !beginWs0010Graphics()) return false;
+  const u8 source_width = size == ws0010_graphics::FRAME_BYTES
+      ? ws0010_graphics::WIDTH : ws0010::GRAPHICS_VISIBLE_WIDTH;
+  static const u8 BLANK_TAIL[
+      ws0010_graphics::WIDTH - ws0010::GRAPHICS_VISIBLE_WIDTH] = {};
   for(u8 page = 0; page < ws0010_graphics::PAGES; page++) {
     if(!writeWs0010GraphicsPage(page, 0,
-         frame + (usize) page * ws0010_graphics::WIDTH,
-         ws0010_graphics::WIDTH)) return false;
+         frame + (usize) page * source_width, source_width)) return false;
+    if(source_width < ws0010_graphics::WIDTH &&
+       !writeWs0010GraphicsPage(
+         page, source_width, BLANK_TAIL, sizeof(BLANK_TAIL))) return false;
   }
   return presentWs0010Graphics();
 #endif
@@ -1420,22 +1428,34 @@ bool MK61Display::beginFullscreenBitmap(void) {
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) return usb_surface.beginFullscreenBitmap();
 #endif
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+  return beginWs0010Graphics();
+#else
   return false;
+#endif
 }
 bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) return usb_surface.showFullscreenBitmap(bitmap, size);
 #endif
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+  return showWs0010GraphicsFrame(bitmap, size);
+#else
   (void) bitmap;
   (void) size;
   return false;
+#endif
 }
 void MK61Display::endFullscreenBitmap(void) {
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) {
     usb_surface.endFullscreenBitmap();
     usb_surface.flush(millis());
+    return;
   }
+#endif
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+  endWs0010Graphics();
 #endif
 }
 

@@ -1,7 +1,7 @@
 #include "config.h"
 
 #if MK61_IMAGE1_VIEWER_IS_BUILTIN || defined(MK61_BUILD_WBMP_MODULE) || \
-    (defined(MK61_BUILD_MARKDOWN_MODULE) && MK61_HAS_COMPILED_GRAPHICS)
+    (defined(MK61_BUILD_MARKDOWN_MODULE) && MK61_MARKDOWN_USES_WBMP)
 
 #include "image1_viewer.hpp"
 
@@ -15,14 +15,14 @@ extern void idle_main_process(void);
 namespace image1_viewer {
 namespace {
 
-static constexpr u16 GRAPHICS_WIDTH = 192;
-static constexpr u16 GRAPHICS_HEIGHT = 64;
-static constexpr usize GRAPHICS_BYTES =
-    (usize) GRAPHICS_WIDTH * GRAPHICS_HEIGHT / 8U;
+static constexpr u16 MAX_GRAPHICS_WIDTH = 192;
+static constexpr u16 MAX_GRAPHICS_HEIGHT = 64;
+static constexpr usize GRAPHICS_CAPACITY =
+    (usize) MAX_GRAPHICS_WIDTH * MAX_GRAPHICS_HEIGHT / 8U;
 static constexpr i32 VIEWER_DISPLAY_CHANGED = -2;
 
 struct ViewerWorkspace {
-  u8 graphics[GRAPHICS_BYTES];
+  u8 graphics[GRAPHICS_CAPACITY];
 };
 
 static_assert(sizeof(ViewerWorkspace) <= language_workspace::SIZE,
@@ -59,7 +59,7 @@ static u32 step_backward(u32 value, u32 step) {
 }
 
 static bool navigation(i32 key, u32 max_x, u32 max_y,
-                       u32& x, u32& y) {
+                       u16 viewport_height, u32& x, u32& y) {
   u32 next_x = x;
   u32 next_y = y;
   if(key == KEY_LEFT || key == KEY_LEFT_PRESS) {
@@ -67,9 +67,9 @@ static bool navigation(i32 key, u32 max_x, u32 max_y,
   } else if(key == KEY_RIGHT || key == KEY_RIGHT_PRESS) {
     next_x = step_forward(x, 8, max_x);
   } else if(key == KEY_SHG_LEFT_PRESS) {
-    next_y = step_backward(y, GRAPHICS_HEIGHT);
+    next_y = step_backward(y, viewport_height);
   } else if(key == KEY_SHG_RIGHT_PRESS) {
-    next_y = step_forward(y, GRAPHICS_HEIGHT, max_y);
+    next_y = step_forward(y, viewport_height, max_y);
   }
   if(next_x == x && next_y == y) return false;
   x = next_x;
@@ -81,36 +81,52 @@ static bool render_graphics_view(MK61Display& display,
                                  const u8* data, u16 size,
                                  const wbmp::Info& info,
                                  u32 view_x, u32 view_y,
-                                 u8 bitmap[GRAPHICS_BYTES],
+                                 u16 viewport_width, u16 viewport_height,
+                                 u8 bitmap[GRAPHICS_CAPACITY],
                                  wbmp::Status& status) {
+  const usize frame_bytes = wbmp::viewport_bytes(
+      viewport_width, viewport_height, wbmp::Layout::PAGE_MAJOR_LSB);
+  if(frame_bytes == 0 || frame_bytes > GRAPHICS_CAPACITY) {
+    status = wbmp::Status::OUTPUT_TOO_SMALL;
+    return false;
+  }
   status = wbmp::decode_viewport(
-      data, size, info, view_x, view_y, GRAPHICS_WIDTH, GRAPHICS_HEIGHT,
-      wbmp::Layout::PAGE_MAJOR_LSB, bitmap, GRAPHICS_BYTES);
+      data, size, info, view_x, view_y, viewport_width, viewport_height,
+      wbmp::Layout::PAGE_MAJOR_LSB, bitmap, frame_bytes);
   return status == wbmp::Status::OK &&
-         display.showFullscreenBitmap(bitmap, GRAPHICS_BYTES);
+         display.showFullscreenBitmap(bitmap, frame_bytes);
 }
 
 static Result view_graphics_display(MK61Display& display,
                                     const u8* data, u16 size,
                                     const wbmp::Info& info,
-                                    u8 bitmap[GRAPHICS_BYTES],
+                                    u8 bitmap[GRAPHICS_CAPACITY],
                                     wbmp::Status& status,
                                     u32 display_mode_revision,
                                     bool& display_changed) {
   u32 view_x = 0;
   u32 view_y = 0;
   if(!display.beginFullscreenBitmap()) return Result::UNSUPPORTED_DISPLAY;
+  const u16 viewport_width = display.fullscreenBitmapWidth();
+  const u16 viewport_height = display.fullscreenBitmapHeight();
+  if(viewport_width == 0 || viewport_height == 0 ||
+     wbmp::viewport_bytes(viewport_width, viewport_height,
+                          wbmp::Layout::PAGE_MAJOR_LSB) >
+       GRAPHICS_CAPACITY) {
+    display.endFullscreenBitmap();
+    return Result::UNSUPPORTED_DISPLAY;
+  }
   if(!render_graphics_view(display, data, size, info, view_x, view_y,
-                           bitmap, status)) {
+                           viewport_width, viewport_height, bitmap, status)) {
     display.endFullscreenBitmap();
     return status == wbmp::Status::OK ? Result::DISPLAY_ERROR
                                       : Result::DECODE_ERROR;
   }
 
-  const u32 max_x = info.width > GRAPHICS_WIDTH
-                  ? info.width - GRAPHICS_WIDTH : 0;
-  const u32 max_y = info.height > GRAPHICS_HEIGHT
-                  ? info.height - GRAPHICS_HEIGHT : 0;
+  const u32 max_x = info.width > viewport_width
+                  ? info.width - viewport_width : 0;
+  const u32 max_y = info.height > viewport_height
+                  ? info.height - viewport_height : 0;
   kbd::debounce_init();
   Result result = Result::OK;
   while(true) {
@@ -120,9 +136,12 @@ static Result view_graphics_display(MK61Display& display,
       break;
     }
     if(key == KEY_ESC || key == KEY_OK) break;
-    if(!navigation(key, max_x, max_y, view_x, view_y)) continue;
+    if(!navigation(key, max_x, max_y, viewport_height, view_x, view_y)) {
+      continue;
+    }
     if(!render_graphics_view(display, data, size, info, view_x, view_y,
-                             bitmap, status)) {
+                             viewport_width, viewport_height, bitmap,
+                             status)) {
       result = status == wbmp::Status::OK ? Result::DISPLAY_ERROR
                                           : Result::DECODE_ERROR;
       break;
@@ -143,7 +162,7 @@ Result view(MK61Display& display, const u8* data, u16 size,
     if(image_status != NULL) *image_status = status;
     return Result::INVALID_IMAGE;
   }
-  if(!display.graphicsMode()) return Result::UNSUPPORTED_DISPLAY;
+  if(!display.supportsFullscreenBitmap()) return Result::UNSUPPORTED_DISPLAY;
 
   language_workspace::Lease lease(language_workspace::Owner::IMAGE_VIEWER,
                                    sizeof(ViewerWorkspace));
@@ -153,7 +172,7 @@ Result view(MK61Display& display, const u8* data, u16 size,
   Result result = Result::OK;
   bool display_changed = false;
   do {
-    if(!display.graphicsMode()) {
+    if(!display.supportsFullscreenBitmap()) {
       result = Result::UNSUPPORTED_DISPLAY;
       break;
     }

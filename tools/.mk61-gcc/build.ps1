@@ -94,7 +94,7 @@ System APP:
 
 Firmware options:
   -UsbScreen 0|1
-  -Ws0010Graphics 0|1  isolated WEH001602A G/C qualification only
+  -Ws0010Graphics 0|1  WEH001602A 100x16 Markdown/WBMP qualification
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1
@@ -357,19 +357,28 @@ if ($Help) {
 
 try {
     $profileInfo = Get-ProfileInfo $Profile
-    if ($Markdown -eq '1') {
-        $Wbmp = '0'
-    } elseif ($Wbmp -eq 'auto') {
-        $Wbmp = if ($profileInfo.Graphics -or $UsbScreen -eq '1') {
+    $ws0010Bitmap = $Profile -eq 'mini-v3-ws0010' -and
+        $Ws0010Graphics -eq '1'
+    $fullGraphics = $profileInfo.Graphics -or $UsbScreen -eq '1'
+    $wbmpGraphics = $fullGraphics -or $ws0010Bitmap
+    if ($Wbmp -eq 'auto') {
+        $Wbmp = if ($wbmpGraphics -and $Markdown -ne '1') {
             '1'
         } else {
             '0'
         }
     }
-    if (-not $profileInfo.Graphics -and $UsbScreen -eq '0' -and
-        ($Wbmp -eq '1' -or $Chip8 -eq '1')) {
+    if ($Markdown -eq '1' -and $wbmpGraphics) {
+        $Wbmp = '0'
+    }
+    if (-not $wbmpGraphics -and $Wbmp -eq '1') {
         Stop-GccBuild (
-            'WBMP/CHIP-8 requires a UC1609 profile or -UsbScreen 1')
+            'WBMP requires UC1609, -UsbScreen 1, or WS0010 with ' +
+            '-Ws0010Graphics 1')
+    }
+    if (-not $fullGraphics -and $Chip8 -eq '1') {
+        Stop-GccBuild (
+            'CHIP-8 requires a UC1609 profile or -UsbScreen 1')
     }
     if ($Ws0010Graphics -eq '1' -and $Profile -ne 'mini-v3-ws0010') {
         Stop-GccBuild (
@@ -565,6 +574,16 @@ try {
     }
 
     $bundle = [string]$profileInfo.Bundle
+    if ($ws0010Bitmap) {
+        $variant = if ($Markdown -eq '1') {
+            'graphics-markdown'
+        } elseif ($Wbmp -eq '1') {
+            'graphics-wbmp'
+        } else {
+            'graphics'
+        }
+        $bundle = $bundle -replace '-f401$', "-$variant-f401"
+    }
     $residentName = "$bundle.bin"
     [IO.Directory]::CreateDirectory($OutputDirectory) | Out-Null
     $outputBundle = Join-Path $OutputDirectory $bundle
