@@ -4,6 +4,13 @@
 #include "config.h"
 
 int main(void) {
+#if defined(MK61_CONFIG_EXPECT_NATIVE_HOT_PATHS)
+  static_assert(MK61_CORE_NATIVE_HOT_PATHS == 1,
+                "size-optimised F411 must enable native core hot paths");
+#elif defined(MK61_CONFIG_EXPECT_GENERIC_HOT_PATHS)
+  static_assert(MK61_CORE_NATIVE_HOT_PATHS == 0,
+                "this profile must keep the generic core decoder");
+#endif
 #if defined(MK61_CONFIG_EXPECT_WBMP_DISABLED)
   static_assert(MK61_ENABLE_WBMP_VIEWER == 0,
                 "the WBMP-disabled build must keep the viewer disabled");

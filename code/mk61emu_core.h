@@ -28,6 +28,17 @@
 #include "rust_types.h"
 #include <stdbool.h>
 
+#ifndef MK61_CORE_BODY_PROFILE
+  #define MK61_CORE_BODY_PROFILE 0
+#endif
+#ifndef MK61_CORE_NATIVE_HOT_PATHS
+  #if defined(STM32F411xE) && defined(__OPTIMIZE_SIZE__)
+    #define MK61_CORE_NATIVE_HOT_PATHS 1
+  #else
+    #define MK61_CORE_NATIVE_HOT_PATHS 0
+  #endif
+#endif
+
 static  constexpr usize MK61_NOP= 0x54; // NOP
 static  constexpr usize MK61_CLASSIC_PROGRAM_STEPS = 105;
 static  constexpr usize MK61_EXPANDED_PROGRAM_STEPS = MK61_CLASSIC_PROGRAM_STEPS + 7;
@@ -263,6 +274,38 @@ namespace core_61 {
   extern    bool unregister_rom_command_hook(RomCommandHookHandle handle);
   extern    usize registered_rom_command_hook_count(void);
   extern    u32 rom_command_instruction(RomChip chip, u8 address);
+
+#if MK61_CORE_BODY_PROFILE
+  // One command selects three microprogram bodies per chip: region 0 handles
+  // microticks 0..26, region 1 handles 27..35, and region 2 handles 36..41.
+  // The host profiler records the selected body before execution.  It is
+  // intentionally absent from firmware when MK61_CORE_BODY_PROFILE == 0.
+  static constexpr u8 BODY_PROFILE_REGION_COUNT = 3;
+  static constexpr u8 BODY_PROFILE_MICROPROGRAM_COUNT = 128;
+  extern void reset_body_profile(void);
+  extern u64 body_profile_count(RomChip chip, u8 region, u8 microprogram);
+  extern u64 body_profile_total(void);
+#endif
+
+#if MK61_CORE_NATIVE_HOT_PATHS
+  enum class NativeHotPath : u8 {
+    IK1306_ZERO_REGION1 = 0,
+    IK1306_ZERO_REGION2,
+    IK1306_ADD_S_REGION3,
+    IK1306_ADVANCE_REGION3,
+    IK1306_RESET_REGION3,
+    COUNT
+  };
+#if !defined(ARDUINO)
+  // Runtime switching exists so the host test can execute the generic and
+  // native implementations from the same saved state. It and the counters
+  // are omitted from firmware, where a compiled native path stays enabled.
+  extern void set_native_hot_paths_enabled(bool enabled);
+  extern bool native_hot_paths_enabled(void);
+  extern void reset_native_hot_path_counts(void);
+  extern u64 native_hot_path_count(NativeHotPath path);
+#endif
+#endif
 
   // Регистрирует независимые обработчики видимых пользователю кодов МК-61.
   // Несколько обработчиков могут относиться к одному коду и фазе; они выполняются

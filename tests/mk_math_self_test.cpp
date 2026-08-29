@@ -21,10 +21,108 @@
 
 static int g_failures = 0;
 
+#if MK61_CORE_BODY_PROFILE
+struct RankedBody {
+  core_61::RomChip chip;
+  u8 region;
+  u8 microprogram;
+  u64 calls;
+};
+
+static const char* body_chip_name(core_61::RomChip chip) {
+  switch(chip) {
+    case core_61::RomChip::IK1302: return "IK02";
+    case core_61::RomChip::IK1303: return "IK03";
+    case core_61::RomChip::IK1306: return "IK06";
+  }
+  return "IK??";
+}
+
+static void dump_body_profile(void) {
+  static constexpr usize TOP_COUNT = 32;
+  RankedBody top[TOP_COUNT] = {};
+  usize distinct = 0;
+  bool rom_bodies[3][core_61::BODY_PROFILE_REGION_COUNT]
+                 [core_61::BODY_PROFILE_MICROPROGRAM_COUNT] = {};
+
+  for(u8 chip = 0; chip < 3; chip++) {
+    for(usize address = 0; address < 256; address++) {
+      const u32 instruction = core_61::rom_command_instruction(
+          (core_61::RomChip) chip, (u8) address);
+      const u8 body[3] = {
+        (u8) instruction,
+        (u8) (instruction >> 8),
+        (u8) ((u8) (instruction >> 16) > 0x1FU
+            ? 0x5FU : (u8) (instruction >> 16))
+      };
+      for(u8 region = 0; region < 3; region++) {
+        if(body[region] < core_61::BODY_PROFILE_MICROPROGRAM_COUNT)
+          rom_bodies[chip][region][body[region]] = true;
+      }
+    }
+  }
+
+  usize rom_distinct = 0;
+  for(u8 chip = 0; chip < 3; chip++) {
+    for(u8 region = 0; region < 3; region++) {
+      for(u8 body = 0;
+          body < core_61::BODY_PROFILE_MICROPROGRAM_COUNT; body++) {
+        if(rom_bodies[chip][region][body]) rom_distinct++;
+      }
+    }
+  }
+
+  for(u8 chip = 0; chip < 3; chip++) {
+    for(u8 region = 0; region < core_61::BODY_PROFILE_REGION_COUNT;
+        region++) {
+      for(u8 microprogram = 0;
+          microprogram < core_61::BODY_PROFILE_MICROPROGRAM_COUNT;
+          microprogram++) {
+        const u64 calls = core_61::body_profile_count(
+            (core_61::RomChip) chip, region, microprogram);
+        if(calls == 0) continue;
+        distinct++;
+        for(usize position = 0; position < TOP_COUNT; position++) {
+          if(calls <= top[position].calls) continue;
+          for(usize move = TOP_COUNT - 1; move > position; move--)
+            top[move] = top[move - 1];
+          top[position] = {
+              (core_61::RomChip) chip, region, microprogram, calls};
+          break;
+        }
+      }
+    }
+  }
+
+  const u64 total = core_61::body_profile_total();
+  std::printf(
+      "core body profile: total=%llu observed=%lu rom_distinct=%lu\n",
+      (unsigned long long) total, (unsigned long) distinct,
+      (unsigned long) rom_distinct);
+  u64 cumulative = 0;
+  usize bodies_for_90_percent = 0;
+  for(usize rank = 0; rank < TOP_COUNT && top[rank].calls != 0; rank++) {
+    cumulative += top[rank].calls;
+    const double coverage = total == 0
+        ? 0.0 : 100.0 * (double) cumulative / (double) total;
+    std::printf("  %2lu %-4s r%u mp=%02X calls=%llu cumulative=%6.2f%%\n",
+        (unsigned long) (rank + 1), body_chip_name(top[rank].chip),
+        (unsigned) (top[rank].region + 1),
+        (unsigned) top[rank].microprogram,
+        (unsigned long long) top[rank].calls, coverage);
+    if(bodies_for_90_percent == 0 && coverage >= 90.0)
+      bodies_for_90_percent = rank + 1;
+  }
+  std::printf("  bodies_for_90_percent=%lu\n",
+      (unsigned long) bodies_for_90_percent);
+}
+#endif
+
 static void check_near(const char* label, double got, double want, double tol) {
   const double diff = std::fabs(got - want);
   const double scale = std::fabs(want) > 1.0 ? std::fabs(want) : 1.0;
-  if(diff > tol * scale) {
+  if(!std::isfinite(got) || !std::isfinite(want) ||
+     diff > tol * scale) {
     std::printf("  FAIL %-14s got=%.10g want=%.10g diff=%.3g\n", label, got, want, diff);
     g_failures++;
   } else {
@@ -558,6 +656,12 @@ static void test_transcendental(void) {
   std::printf("CORE transcendental vs libm (tol 1e-6):\n");
   const double tol = 1e-6;
 
+  // The Flash-only test build does not run the SRAM-cache test which happens
+  // to initialize the calculator.  Keep this test independent from build
+  // options: eval_unary() deliberately refuses to snapshot an uninitialized
+  // core whose internal table/ring pointers are still null.
+  core_61::enable();
+
   check_near("sin(1)",   mk_math::sin(1.0),   std::sin(1.0),   tol);
   check_near("sin(-0.7)",mk_math::sin(-0.7),  std::sin(-0.7),  tol);
   check_near("cos(1)",   mk_math::cos(1.0),   std::cos(1.0),   tol);
@@ -1059,9 +1163,116 @@ static void test_hot_table_cache_eviction(void) {
 }
 #endif
 
+#if MK61_CORE_NATIVE_HOT_PATHS
+static bool compare_native_steps(const char* label, bool expanded) {
+  core_61::set_expanded_program_mode(expanded);
+  core_61::set_native_hot_paths_enabled(false);
+  core_61::enable();
+
+  core_61::ContextBuffer start = {};
+  core_61::ContextBuffer reference = {};
+  core_61::ContextBuffer native = {};
+  static const MatrixKey keys[] = {
+    {4, 1},   // 2
+    {11, 8},  // ENTER
+    {5, 1},   // 3
+    {2, 8},   // +
+    {10, 9},  // K
+    {11, 8}   // K-function continuation
+  };
+
+  for(usize iteration = 0; iteration < 160; iteration++) {
+    const usize phase = iteration %
+        (sizeof(keys) / sizeof(keys[0]) * 8U);
+    if((phase & 7U) < 4U) {
+      const MatrixKey key = keys[phase / 8U];
+      MK61Emu_SetKeyPress(key.x, key.y);
+    } else {
+      MK61Emu_SetKeyPress(0, 0);
+    }
+
+    if(!core_61::save_context(start)) {
+      std::printf("  FAIL %s: cannot save start at step %lu\n",
+          label, (unsigned long) iteration);
+      return false;
+    }
+
+    core_61::set_native_hot_paths_enabled(false);
+    core_61::step();
+    if(!core_61::save_context(reference)) {
+      std::printf("  FAIL %s: cannot save reference at step %lu\n",
+          label, (unsigned long) iteration);
+      return false;
+    }
+
+    if(!core_61::restore_context(start)) {
+      std::printf("  FAIL %s: cannot restore start at step %lu\n",
+          label, (unsigned long) iteration);
+      return false;
+    }
+    core_61::set_native_hot_paths_enabled(true);
+    core_61::step();
+    if(!core_61::save_context(native)) {
+      std::printf("  FAIL %s: cannot save native state at step %lu\n",
+          label, (unsigned long) iteration);
+      return false;
+    }
+
+    if(std::memcmp(reference.bytes, native.bytes,
+                   sizeof(reference.bytes)) != 0) {
+      usize offset = 0;
+      while(offset < sizeof(reference.bytes) &&
+            reference.bytes[offset] == native.bytes[offset]) offset++;
+      std::printf(
+          "  FAIL %s: state differs at step %lu byte %lu (%02X != %02X)\n",
+          label, (unsigned long) iteration, (unsigned long) offset,
+          (unsigned) reference.bytes[offset], (unsigned) native.bytes[offset]);
+      return false;
+    }
+
+    // Continue from the reference timeline so every comparison starts from a
+    // state produced exclusively by the original bit-serial decoder.
+    if(!core_61::restore_context(reference)) {
+      std::printf("  FAIL %s: cannot continue reference at step %lu\n",
+          label, (unsigned long) iteration);
+      return false;
+    }
+  }
+  return true;
+}
+
+static void test_native_hot_paths(void) {
+  std::printf("native microprogram hot paths vs bit-serial reference:\n");
+  core_61::reset_native_hot_path_counts();
+  check_true("classic full-state differential",
+      compare_native_steps("classic", false));
+  check_true("expanded full-state differential",
+      compare_native_steps("expanded", true));
+  check_true("IK06 r1 body 00 exercised",
+      core_61::native_hot_path_count(
+          core_61::NativeHotPath::IK1306_ZERO_REGION1) > 0);
+  check_true("IK06 r2 body 00 exercised",
+      core_61::native_hot_path_count(
+          core_61::NativeHotPath::IK1306_ZERO_REGION2) > 0);
+  check_true("IK06 r3 body 06 exercised",
+      core_61::native_hot_path_count(
+          core_61::NativeHotPath::IK1306_ADD_S_REGION3) > 0);
+  check_true("IK06 r3 body 07 exercised",
+      core_61::native_hot_path_count(
+          core_61::NativeHotPath::IK1306_ADVANCE_REGION3) > 0);
+  check_true("IK06 r3 body 09 exercised",
+      core_61::native_hot_path_count(
+          core_61::NativeHotPath::IK1306_RESET_REGION3) > 0);
+  core_61::set_native_hot_paths_enabled(true);
+}
+#endif
+
 int main(void) {
 #if MK61_CORE_HOT_TABLES_IN_SRAM > 0
   test_hot_table_cache_eviction();
+#endif
+#if MK61_CORE_BODY_PROFILE
+  core_61::reset_body_profile();
 #endif
   test_pure_helpers();
   test_transcendental();
@@ -1073,6 +1284,13 @@ int main(void) {
   test_core_boundaries();
   test_context_slot_arbitration();
   test_save_restore();
+
+#if MK61_CORE_BODY_PROFILE
+  dump_body_profile();
+#endif
+#if MK61_CORE_NATIVE_HOT_PATHS
+  test_native_hot_paths();
+#endif
 
   if(g_failures == 0) {
     std::printf("mk_math_self_test: ok\n");

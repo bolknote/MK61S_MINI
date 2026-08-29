@@ -85,6 +85,11 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
 #if MK61_CORE_MERGED_TICK
 static void __attribute__((noinline, aligned(16)))
 IK130X_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
+#if MK61_CORE_NATIVE_HOT_PATHS
+static void __attribute__((noinline, aligned(16)))
+IK1302_1303_Tick_All(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
+#endif
 #endif
 
 /* Кольцо ДОЗУ - последовательно соединенная память комплектов микросхем К145ИК(02,03,06) в МК61 */
@@ -105,6 +110,52 @@ static u64 external_random_state = 0xA0761D6478BD642FULL;
 const bool sergey_anvarov_hack_enable = true;
 
 MK61Emu m_emu;
+
+static inline u8 region3_microprogram(u8 encoded) {
+  // Bytes above 1F carry an inline operand in R37/R40 and execute the common
+  // decoder body 5F, exactly as cycle() does before microtick 36.
+  return encoded > 0x1FU ? 0x5FU : encoded;
+}
+
+#if MK61_CORE_BODY_PROFILE
+static u64 body_profile_counts[3]
+                              [core_61::BODY_PROFILE_REGION_COUNT]
+                              [core_61::BODY_PROFILE_MICROPROGRAM_COUNT] = {};
+static u64 body_profile_call_count = 0;
+
+static inline void profile_body(core_61::RomChip chip, u8 region,
+                                u8 microprogram) {
+  const u8 chip_index = (u8) chip;
+  if(chip_index >= 3 ||
+     region >= core_61::BODY_PROFILE_REGION_COUNT ||
+     microprogram >= core_61::BODY_PROFILE_MICROPROGRAM_COUNT) return;
+  body_profile_counts[chip_index][region][microprogram]++;
+  body_profile_call_count++;
+}
+
+static inline void profile_instruction(core_61::RomChip chip,
+                                       instruction_t instruction) {
+  profile_body(chip, 0, (u8) instruction);
+  profile_body(chip, 1, (u8) (instruction >> 8));
+  profile_body(chip, 2, region3_microprogram((u8) (instruction >> 16)));
+}
+#else
+static inline void profile_instruction(core_61::RomChip, instruction_t) {}
+#endif
+
+#if MK61_CORE_NATIVE_HOT_PATHS
+#if defined(ARDUINO)
+static constexpr bool native_hot_paths_are_enabled = true;
+static inline void count_native_hot_path(core_61::NativeHotPath) {}
+#else
+static bool native_hot_paths_are_enabled = true;
+static u64 native_hot_path_counts[(u8) core_61::NativeHotPath::COUNT] = {};
+
+static inline void count_native_hot_path(core_61::NativeHotPath path) {
+  native_hot_path_counts[(u8) path]++;
+}
+#endif
+#endif
 
 static const char default_symbols[16] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'L', 'C', 'r', 'E', ' '
@@ -434,6 +485,59 @@ const uint8_t* IK1306_M_START = &ringM[0];
 IK1302  m_IK1302;
 static  IK1303  m_IK1303;
 static  IK1306  m_IK1306;
+
+#if MK61_CORE_NATIVE_HOT_PATHS
+static inline void native_ik1306_zero_body(core_61::NativeHotPath path) {
+  // AND_AMK body 00 contains only microinstruction 00. Every bit-serial tick
+  // therefore clears P and leaves all persistent data untouched; the final
+  // AMK latch is 00 as well.
+  m_IK1306.AMK = 0;
+  m_IK1306.P = 0;
+  count_native_hot_path(path);
+}
+
+static inline void native_ik1306_region3_06(void) {
+  // Closed form of 2A,02,00,2D,02,00 over microticks 36..41: add the
+  // current S nibble to the two-nibble ASP register, then expose the updated
+  // high nibble/carry in S/L. Capture S before the first microinstruction
+  // replaces it with the low result.
+  const u32 addend = m_IK1306.S;
+  const u32 low = m_IK1306.R[36] + addend;
+  m_IK1306.R[36] = low & 0x0FU;
+  const u32 high = m_IK1306.R[39] + ((low >> 4) & 1U);
+  m_IK1306.R[39] = high & 0x0FU;
+  m_IK1306.L = (high >> 4) & 1U;
+  m_IK1306.S = high & 0x0FU;
+  m_IK1306.P = 0;
+  m_IK1306.AMK = 0;
+  count_native_hot_path(core_61::NativeHotPath::IK1306_ADD_S_REGION3);
+}
+
+static inline void native_ik1306_region3_07(void) {
+  // Closed form of 03,12,05,2D,02,00 over microticks 36..41: increment the
+  // two-nibble ASP register and expose its high nibble/carry in S/L.
+  const u32 low = m_IK1306.R[36] + 1U;
+  m_IK1306.R[36] = low & 0x0FU;
+  const u32 high = m_IK1306.R[39] + ((low >> 4) & 1U);
+  m_IK1306.R[39] = high & 0x0FU;
+  m_IK1306.L = (high >> 4) & 1U;
+  m_IK1306.S = high & 0x0FU;
+  m_IK1306.P = 0;
+  m_IK1306.AMK = 0;
+  count_native_hot_path(core_61::NativeHotPath::IK1306_ADVANCE_REGION3);
+}
+
+static inline void native_ik1306_region3_09(void) {
+  // Closed form of 0E,02,00,24,02,00 over microticks 36..41: load ASP=01.
+  // L is deliberately preserved, matching the bit-serial microinstructions.
+  m_IK1306.R[36] = 1;
+  m_IK1306.R[39] = 0;
+  m_IK1306.S = 0;
+  m_IK1306.P = 0;
+  m_IK1306.AMK = 0;
+  count_native_hot_path(core_61::NativeHotPath::IK1306_RESET_REGION3);
+}
+#endif
 
 namespace {
 
@@ -1082,6 +1186,44 @@ u32 rom_command_instruction(RomChip chip, u8 address) {
   }
   return 0;
 }
+
+#if MK61_CORE_BODY_PROFILE
+void reset_body_profile(void) {
+  memset(body_profile_counts, 0, sizeof(body_profile_counts));
+  body_profile_call_count = 0;
+}
+
+u64 body_profile_count(RomChip chip, u8 region, u8 microprogram) {
+  const u8 chip_index = (u8) chip;
+  if(chip_index >= 3 || region >= BODY_PROFILE_REGION_COUNT ||
+     microprogram >= BODY_PROFILE_MICROPROGRAM_COUNT) return 0;
+  return body_profile_counts[chip_index][region][microprogram];
+}
+
+u64 body_profile_total(void) {
+  return body_profile_call_count;
+}
+#endif
+
+#if MK61_CORE_NATIVE_HOT_PATHS && !defined(ARDUINO)
+void set_native_hot_paths_enabled(bool enabled) {
+  native_hot_paths_are_enabled = enabled;
+}
+
+bool native_hot_paths_enabled(void) {
+  return native_hot_paths_are_enabled;
+}
+
+void reset_native_hot_path_counts(void) {
+  memset(native_hot_path_counts, 0, sizeof(native_hot_path_counts));
+}
+
+u64 native_hot_path_count(NativeHotPath path) {
+  const u8 index = (u8) path;
+  return index < (u8) NativeHotPath::COUNT
+      ? native_hot_path_counts[index] : 0;
+}
+#endif
 
 } // пространство имён core_61
 
@@ -1800,10 +1942,49 @@ inline void __attribute__((always_inline)) _CycleB(
     signal_I++;
 }
 
+#if MK61_CORE_NATIVE_HOT_PATHS
+inline void __attribute__((always_inline)) _CycleEWithoutIK1306(
+    int J_signal_I, mtick_t &signal_I,
+    dwt_profiler::Accumulator& ik1302_time,
+    dwt_profiler::Accumulator& ik1303_time) {
+  const mtick_t signal_div3 = DIV3(signal_I);
+  if(!ik1302_time.active()) {
+    IK1302_Tick(signal_I, J_signal_I, signal_div3);
+    IK1303_Tick(signal_I, J_signal_I, signal_div3);
+    return;
+  }
+  {
+    MK61_PROFILE_ACCUMULATE_SCOPE(ik1302_time);
+    IK1302_Tick(signal_I, J_signal_I, signal_div3);
+  }
+  {
+    MK61_PROFILE_ACCUMULATE_SCOPE(ik1303_time);
+    IK1303_Tick(signal_I, J_signal_I, signal_div3);
+  }
+}
+
+inline void __attribute__((always_inline)) _CycleBWithoutIK1306(
+    int J_signal_I, mtick_t &signal_I,
+    dwt_profiler::Accumulator& ik1302_time,
+    dwt_profiler::Accumulator& ik1303_time) {
+  _CycleEWithoutIK1306(
+      J_signal_I, signal_I, ik1302_time, ik1303_time);
+  signal_I++;
+}
+#endif
+
 #define CycleE(J_signal_I) \
   _CycleE(J_signal_I, signal_I, ik1302_time, ik1303_time, ik1306_time)
 #define CycleB(J_signal_I) \
   _CycleB(J_signal_I, signal_I, ik1302_time, ik1303_time, ik1306_time)
+#if MK61_CORE_NATIVE_HOT_PATHS
+  #define CycleEWithoutIK1306(J_signal_I) \
+    _CycleEWithoutIK1306( \
+        J_signal_I, signal_I, ik1302_time, ik1303_time)
+  #define CycleBWithoutIK1306(J_signal_I) \
+    _CycleBWithoutIK1306( \
+        J_signal_I, signal_I, ik1302_time, ik1303_time)
+#endif
 #else
 inline void __attribute__((always_inline)) _CycleE(int J_signal_I, mtick_t &signal_I) {
     const mtick_t signal_div3 = DIV3(signal_I);
@@ -1822,8 +2003,33 @@ inline void __attribute__((always_inline)) _CycleB(int J_signal_I, mtick_t &sign
     signal_I++;
 }
 
+#if MK61_CORE_NATIVE_HOT_PATHS
+inline void __attribute__((always_inline)) _CycleEWithoutIK1306(
+    int J_signal_I, mtick_t &signal_I) {
+  const mtick_t signal_div3 = DIV3(signal_I);
+#if MK61_CORE_MERGED_TICK
+  IK1302_1303_Tick_All(signal_I, J_signal_I, signal_div3);
+#else
+  IK1302_Tick(signal_I, J_signal_I, signal_div3);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3);
+#endif
+}
+
+inline void __attribute__((always_inline)) _CycleBWithoutIK1306(
+    int J_signal_I, mtick_t &signal_I) {
+  _CycleEWithoutIK1306(J_signal_I, signal_I);
+  signal_I++;
+}
+#endif
+
 #define CycleE(J_signal_I)  _CycleE(J_signal_I, signal_I)
 #define CycleB(J_signal_I)  _CycleB(J_signal_I, signal_I)
+#if MK61_CORE_NATIVE_HOT_PATHS
+  #define CycleEWithoutIK1306(J_signal_I) \
+    _CycleEWithoutIK1306(J_signal_I, signal_I)
+  #define CycleBWithoutIK1306(J_signal_I) \
+    _CycleBWithoutIK1306(J_signal_I, signal_I)
+#endif
 #endif
 
 #ifdef out_dump
@@ -1884,6 +2090,7 @@ inline bool __attribute__((always_inline)) IK1302_GoZero(
     const u8 command = apply_rom_command_hooks(
         core_61::RomChip::IK1302, address, m_IK1302.R, m_IK1302.ST);
     uint32_t uI = ROM.IK1302.instructions[command]; // читаем команду
+    profile_instruction(core_61::RomChip::IK1302, uI);
     const usize uI_hi = uI >> 16;
 
 
@@ -1905,6 +2112,7 @@ inline  usize __attribute__((always_inline))  IK1303_GoZero(void) {
     const u8 command = apply_rom_command_hooks(
         core_61::RomChip::IK1303, address, m_IK1303.R, m_IK1303.ST);
     uint32_t uI = ROM.IK1303.instructions[command];
+    profile_instruction(core_61::RomChip::IK1303, uI);
     const usize uI_hi = uI >> 16;
 
     m_IK1303.pAND_AMK = &IK1303_AND_AMK_ACTIVE[(uI & 0xFF) * 16 /* MUL9((uint8_t) uI) */];
@@ -1919,19 +2127,19 @@ inline  usize __attribute__((always_inline))  IK1303_GoZero(void) {
   return uI_hi & 0xFF;
 }
 
-inline  usize __attribute__((always_inline))  IK1306_GoZero(void) {
+inline instruction_t __attribute__((always_inline)) IK1306_GoZero(void) {
     const u8 address = (u8) (m_IK1306.R[36] + 16U * m_IK1306.R[39]);
     const u8 command = apply_rom_command_hooks(
         core_61::RomChip::IK1306, address, m_IK1306.R, m_IK1306.ST);
     uint32_t uI = ROM.IK1306.instructions[command];
-    const usize uI_hi = uI >> 16;
+    profile_instruction(core_61::RomChip::IK1306, uI);
 
     m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[(uI & 0xFF) * 16/*MUL9((uint8_t) uI)*/];
     m_IK1306.pAND_AMK1 = &IK1306_AND_AMK_ACTIVE[((uI>>8) & 0xFF) * 16/*MUL9((((uint16_t) uI) >> 8))*/];
 
     m_IK1306.MOD = (uint8_t) (uI >> 24);
 
-  return uI_hi & 0xFF;
+  return uI;
 }
 
 inline u64 __attribute__((always_inline)) random_avalanche(u64 value) {
@@ -2002,6 +2210,7 @@ void cycle(void) {
 
       usize IK1302_uI_hi = 0;
       usize IK1303_uI_hi;
+      instruction_t IK1306_uI;
       usize IK1306_uI_hi;
       {
         MK61_PROFILE_ACCUMULATE_SCOPE(fetch_time);
@@ -2013,7 +2222,8 @@ void cycle(void) {
         dbgtrace(CORE61, "IK1302.IP = 0x", m_IK1302.R[39]*16 + m_IK1302.R[36]);
 
         IK1303_uI_hi = IK1303_GoZero();
-        IK1306_uI_hi = IK1306_GoZero();
+        IK1306_uI = IK1306_GoZero();
+        IK1306_uI_hi = (IK1306_uI >> 16) & 0xFFU;
       }
 
       #ifdef out_dump
@@ -2022,10 +2232,36 @@ void cycle(void) {
 
       {
           MK61_PROFILE_ACCUMULATE_SCOPE(ticks_00_26_time);
+#if MK61_CORE_NATIVE_HOT_PATHS
+          if(native_hot_paths_are_enabled && (u8) IK1306_uI == 0) {
 #if MK61_CORE_UNROLL_SCHEDULE
-          #pragma GCC unroll 99
+            #pragma GCC unroll 99
 #endif
-          for (auto _ : {0,1,2,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5, 6,7,8}) { CycleB(_); } //0..26
+            for (auto _ : {0,1,2,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5,
+                           3,4,5,3,4,5, 6,7,8}) {
+              CycleBWithoutIK1306(_);
+            }
+#if MK61_DWT_CORE_DETAIL_SUPPORTED
+            {
+              MK61_PROFILE_ACCUMULATE_SCOPE(ik1306_time);
+              native_ik1306_zero_body(
+                  core_61::NativeHotPath::IK1306_ZERO_REGION1);
+            }
+#else
+            native_ik1306_zero_body(
+                core_61::NativeHotPath::IK1306_ZERO_REGION1);
+#endif
+          } else
+#endif
+          {
+#if MK61_CORE_UNROLL_SCHEDULE
+            #pragma GCC unroll 99
+#endif
+            for (auto _ : {0,1,2,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5,
+                           3,4,5,3,4,5, 6,7,8}) {
+              CycleB(_);
+            }
+          } // 0..26
       }
 
       {
@@ -2034,10 +2270,35 @@ void cycle(void) {
           m_IK1303.pAND_AMK = m_IK1303.pAND_AMK1;
           m_IK1306.pAND_AMK = m_IK1306.pAND_AMK1;
 
+#if MK61_CORE_NATIVE_HOT_PATHS
+          if(native_hot_paths_are_enabled &&
+             (u8) (IK1306_uI >> 8) == 0) {
 #if MK61_CORE_UNROLL_SCHEDULE
-          #pragma GCC unroll 99
+            #pragma GCC unroll 99
 #endif
-          for (auto _ : {0,1,2, 3,4,5,6,7,8}) { CycleB(_); }    //27..35
+            for (auto _ : {0,1,2, 3,4,5,6,7,8}) {
+              CycleBWithoutIK1306(_);
+            }
+#if MK61_DWT_CORE_DETAIL_SUPPORTED
+            {
+              MK61_PROFILE_ACCUMULATE_SCOPE(ik1306_time);
+              native_ik1306_zero_body(
+                  core_61::NativeHotPath::IK1306_ZERO_REGION2);
+            }
+#else
+            native_ik1306_zero_body(
+                core_61::NativeHotPath::IK1306_ZERO_REGION2);
+#endif
+          } else
+#endif
+          {
+#if MK61_CORE_UNROLL_SCHEDULE
+            #pragma GCC unroll 99
+#endif
+            for (auto _ : {0,1,2, 3,4,5,6,7,8}) {
+              CycleB(_);
+            }
+          } // 27..35
       }
 
       {
@@ -2067,12 +2328,46 @@ void cycle(void) {
                m_IK1306.pAND_AMK  = &IK1306_AND_AMK_ACTIVE[IK1306_uI_hi * 16];//MUL9(IK1306_uI_hi)];
           }
 
-          CycleB(0);   // 36
-          CycleB(1);   // 37
-          CycleB(2);   // 38
-          CycleB(3);   // 39
-          CycleB(4);
-          CycleE(5);    // 41
+#if MK61_CORE_NATIVE_HOT_PATHS
+          const u8 IK1306_region3 = region3_microprogram(
+              (u8) IK1306_uI_hi);
+          if(native_hot_paths_are_enabled &&
+             (IK1306_region3 == 0x06U || IK1306_region3 == 0x07U ||
+              IK1306_region3 == 0x09U)) {
+            CycleBWithoutIK1306(0); // 36
+            CycleBWithoutIK1306(1); // 37
+            CycleBWithoutIK1306(2); // 38
+            CycleBWithoutIK1306(3); // 39
+            CycleBWithoutIK1306(4); // 40
+            CycleEWithoutIK1306(5); // 41
+#if MK61_DWT_CORE_DETAIL_SUPPORTED
+            {
+              MK61_PROFILE_ACCUMULATE_SCOPE(ik1306_time);
+              if(IK1306_region3 == 0x06U)
+                native_ik1306_region3_06();
+              else if(IK1306_region3 == 0x07U)
+                native_ik1306_region3_07();
+              else
+                native_ik1306_region3_09();
+            }
+#else
+            if(IK1306_region3 == 0x06U)
+              native_ik1306_region3_06();
+            else if(IK1306_region3 == 0x07U)
+              native_ik1306_region3_07();
+            else
+              native_ik1306_region3_09();
+#endif
+          } else
+#endif
+          {
+            CycleB(0);   // 36
+            CycleB(1);   // 37
+            CycleB(2);   // 38
+            CycleB(3);   // 39
+            CycleB(4);   // 40
+            CycleE(5);   // 41
+          }
 
           m_IK1302.pM += 42;
           m_IK1303.pM += 42;
@@ -2528,6 +2823,15 @@ IK130X_Tick_All(
   IK1303_Tick(signal_I, J_signal_I, signal_div3);
   IK1306_Tick(signal_I, J_signal_I);
 }
+
+#if MK61_CORE_NATIVE_HOT_PATHS
+static void __attribute__((noinline, aligned(16)))
+IK1302_1303_Tick_All(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+  IK1302_Tick(signal_I, J_signal_I, signal_div3);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3);
+}
+#endif
 #endif
 
 /**

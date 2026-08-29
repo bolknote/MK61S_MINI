@@ -19,6 +19,21 @@ common=(
 clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 -o "$out-v3"
 "$out-v3"
 
+clang++ -Os "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_NATIVE_HOT_PATHS \
+  -o "$out-f411-native-core"
+"$out-f411-native-core"
+
+clang++ -O3 "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_GENERIC_HOT_PATHS \
+  -o "$out-f411-o3-generic-core"
+"$out-f411-o3-generic-core"
+
+clang++ -Os "${common[@]}" -DREVISION_V3 -DSTM32F401xC \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_GENERIC_HOT_PATHS \
+  -o "$out-f401-generic-core"
+"$out-f401-generic-core"
+
 clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
   -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_LOADABLE_MODULES \
   -o "$out-f401-modules"
