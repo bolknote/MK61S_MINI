@@ -41,6 +41,7 @@ using namespace kbd;
 #include "focal.hpp"
 #include "tinybasic.hpp"
 #include "usb_mass_storage.hpp"
+#include "usb_power.hpp"
 #include "usb_screen.hpp"
 
 #include "ledcontrol.h"
@@ -951,10 +952,19 @@ static deep_idle_policy::Conditions deep_idle_conditions(
     const idle_sleep_policy::Conditions& light) {
   const spi1_arbiter::Snapshot spi1 = spi1_bus::statistics();
   rtc_clock::StartupSnapshot rtc = {};
+  const bool msc_quiescent = usb_mass_storage::deep_idle_quiescent();
+#if MK61_USB_SUSPEND_SUPPORTED
+  const bool usb_stop_ready =
+      usb_power::stop_blockers(msc_quiescent, millis()) == 0U;
+  const bool msc_blocked = light.usb_mass_storage_active && !msc_quiescent;
+#else
+  const bool usb_stop_ready = true;
+  const bool msc_blocked = light.usb_mass_storage_active;
+#endif
   return {
     light.foreground_context,
     light.calculator_idle,
-    light.usb_mass_storage_active,
+    msc_blocked,
     usb_screen::active(),
     light.terminal_work_pending,
     light.sound_active,
@@ -965,7 +975,8 @@ static deep_idle_policy::Conditions deep_idle_conditions(
     !main_lcd().graphicsMode() && !main_lcd().busyFlagFaulted(),
     rtc_clock::startup_snapshot(rtc),
     independent_watchdog::running(),
-    false
+    false,
+    usb_stop_ready
   };
 }
 #endif
@@ -1119,6 +1130,7 @@ void idle_main_process(void) {
   rtc_clock::poll();
   usb_mass_storage::service();
   usb_screen::service();
+  usb_power::service(millis());
   // Уведомление принимается здесь, но нельзя считать, что передним планом
   // владеет калькулятор. Активный редактор или меню перерисуется при смене
   // ревизии режима дисплея, а внешний цикл обработает калькулятор после выхода

@@ -112,6 +112,39 @@
   #error "MK61_ENABLE_DEEP_IDLE_QUALIFICATION must be 0 or 1"
 #endif
 
+// Observe the STM32 USB device state through linker wrappers.  This exposes
+// exact reset/setup/suspend/resume telemetry but does not alter descriptors or
+// power behaviour in a normal release.
+#ifndef MK61_ENABLE_USB_POWER_OBSERVER
+  #define MK61_ENABLE_USB_POWER_OBSERVER 1
+#endif
+#if MK61_ENABLE_USB_POWER_OBSERVER != 0 && \
+    MK61_ENABLE_USB_POWER_OBSERVER != 1
+  #error "MK61_ENABLE_USB_POWER_OBSERVER must be 0 or 1"
+#endif
+
+// Preserving a configured USB device through STOP remains qualification-only
+// until the real host suspend/resume, local keyboard-wake and current gates
+// have passed.  It deliberately does not advertise USB Remote Wake: a key
+// wakes the calculator locally while the host is allowed to remain asleep.
+// Normal firmware keeps the proven CDC disconnect/re-enumerate fallback used
+// by `prof deep`.
+#ifndef MK61_ENABLE_USB_SUSPEND_QUALIFICATION
+  #define MK61_ENABLE_USB_SUSPEND_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 0 && \
+    MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 1
+  #error "MK61_ENABLE_USB_SUSPEND_QUALIFICATION must be 0 or 1"
+#endif
+#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION && \
+    !MK61_ENABLE_DEEP_IDLE_QUALIFICATION
+  #error "USB suspend qualification requires deep-idle qualification"
+#endif
+#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION && \
+    !MK61_ENABLE_USB_POWER_OBSERVER
+  #error "USB suspend qualification requires the USB power observer"
+#endif
+
 // PVD (programmable voltage detector) blocks the start of new NOR program /
 // erase commands and USB MSC writes before VDD reaches the W25Q128 minimum.
 // Level 6 is the conservative common F401/F411 threshold: falling edge

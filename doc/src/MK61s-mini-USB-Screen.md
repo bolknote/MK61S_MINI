@@ -295,7 +295,7 @@ arduino-cli compile \
   --fqbn "STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd" \
   --build-property "compiler.cpp.extra_flags=-DMK61_LCD1602_A00 -DMK61_ENABLE_USB_SCREEN=1 -DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0" \
   --build-property "compiler.c.extra_flags=-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0" \
-  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
+  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected" \
   /tmp/mk61s-M
 ```
 

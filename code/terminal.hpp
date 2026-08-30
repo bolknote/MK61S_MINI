@@ -59,6 +59,7 @@
 #include "idle_sleep.hpp"
 #include "deep_idle.hpp"
 #include "usb_cdc_rx_guard.hpp"
+#include "usb_power.hpp"
 #if MK61_ENABLE_SPI1_ARBITER
   #include "spi1_bus.hpp"
 #endif
@@ -1816,6 +1817,55 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(" throttles=");
       Serial.println(usb_rx.throttles);
 
+      const usb_power::Snapshot usb_power_state =
+        usb_power::statistics(millis());
+      Serial.print("USB POWER backend=");
+      Serial.print(usb_power::backend_name());
+      Serial.print(" supported=");
+      Serial.print(usb_power_state.supported ? 1 : 0);
+      Serial.print(" linked=");
+      Serial.print(usb_power_state.wrappers_linked ? 1 : 0);
+      Serial.print(" callbacks=");
+      Serial.print(usb_power_state.callbacks_ready ? 1 : 0);
+      Serial.print(" qualification=");
+      Serial.print(usb_power_state.qualification_enabled ? 1 : 0);
+      Serial.print(" state=");
+      Serial.print(usb_power_policy::state_name(usb_power_state.state));
+      Serial.print(" raw=");
+      Serial.print(usb_power_state.raw_state);
+      Serial.write('/');
+      Serial.print(usb_power_state.old_state);
+      Serial.print(" host_remote=");
+      Serial.print(usb_power_state.host_remote_wakeup_enabled ? 1 : 0);
+      Serial.print(" endpoints=");
+      Serial.print(usb_power_state.endpoints_idle ? 1 : 0);
+      Serial.print(" age_ms=");
+      Serial.print(usb_power_state.suspend_age_ms);
+      Serial.print(" events=");
+      Serial.print(usb_power_state.setup_callbacks);
+      Serial.write('/');
+      Serial.print(usb_power_state.reset_callbacks);
+      Serial.write('/');
+      Serial.print(usb_power_state.suspend_callbacks);
+      Serial.write('/');
+      Serial.print(usb_power_state.resume_callbacks);
+      Serial.write('/');
+      Serial.print(usb_power_state.connect_callbacks);
+      Serial.write('/');
+      Serial.print(usb_power_state.disconnect_callbacks);
+      Serial.print(" stop=");
+      Serial.print(usb_power_state.stop_arms);
+      Serial.write('/');
+      Serial.print(usb_power_state.stop_aborts);
+      Serial.write('/');
+      Serial.print(usb_power_state.host_wakes);
+      Serial.write('/');
+      Serial.print(usb_power_state.local_wakes);
+      Serial.print(" blockers=0x");
+      Serial.print(usb_power_state.last_stop_blockers, HEX);
+      Serial.print(" epblock=0x");
+      Serial.println(usb_power_state.last_endpoint_blockers, HEX);
+
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
       Serial.print("SLEEP backend=");
       Serial.print(idle_sleep::backend_name());
@@ -1978,6 +2028,55 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       report.append_u64(usb_rx.linked ? 1 : 0);
       report.append_text(",throttles=");
       report.append_u64(usb_rx.throttles);
+      const usb_power::Snapshot usb_power_state =
+        usb_power::statistics(millis());
+      report.append_text("\nusb_power_backend=");
+      report.append_text(usb_power::backend_name());
+      report.append_text(",supported=");
+      report.append_u64(usb_power_state.supported ? 1 : 0);
+      report.append_text(",linked=");
+      report.append_u64(usb_power_state.wrappers_linked ? 1 : 0);
+      report.append_text(",callbacks=");
+      report.append_u64(usb_power_state.callbacks_ready ? 1 : 0);
+      report.append_text(",qualification=");
+      report.append_u64(usb_power_state.qualification_enabled ? 1 : 0);
+      report.append_text(",state=");
+      report.append_text(usb_power_policy::state_name(usb_power_state.state));
+      report.append_text(",raw=");
+      report.append_u64(usb_power_state.raw_state);
+      report.append_char('/');
+      report.append_u64(usb_power_state.old_state);
+      report.append_text(",host_remote=");
+      report.append_u64(
+          usb_power_state.host_remote_wakeup_enabled ? 1 : 0);
+      report.append_text(",endpoints=");
+      report.append_u64(usb_power_state.endpoints_idle ? 1 : 0);
+      report.append_text(",age_ms=");
+      report.append_u64(usb_power_state.suspend_age_ms);
+      report.append_text(",setup=");
+      report.append_u64(usb_power_state.setup_callbacks);
+      report.append_text(",reset=");
+      report.append_u64(usb_power_state.reset_callbacks);
+      report.append_text(",suspend=");
+      report.append_u64(usb_power_state.suspend_callbacks);
+      report.append_text(",resume=");
+      report.append_u64(usb_power_state.resume_callbacks);
+      report.append_text(",connect=");
+      report.append_u64(usb_power_state.connect_callbacks);
+      report.append_text(",disconnect=");
+      report.append_u64(usb_power_state.disconnect_callbacks);
+      report.append_text(",stop_arms=");
+      report.append_u64(usb_power_state.stop_arms);
+      report.append_text(",stop_aborts=");
+      report.append_u64(usb_power_state.stop_aborts);
+      report.append_text(",host_wakes=");
+      report.append_u64(usb_power_state.host_wakes);
+      report.append_text(",local_wakes=");
+      report.append_u64(usb_power_state.local_wakes);
+      report.append_text(",stop_blockers=");
+      report.append_u64(usb_power_state.last_stop_blockers);
+      report.append_text(",endpoint_blockers=");
+      report.append_u64(usb_power_state.last_endpoint_blockers);
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
       report.append_text("\nsleep_backend=");
       report.append_text(idle_sleep::backend_name());
@@ -2264,7 +2363,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.print(seconds);
         Serial.print(" cycles=");
         Serial.print(cycles);
+#if MK61_USB_SUSPEND_SUPPORTED
+        Serial.println(
+            "; waiting for host USB suspend; USB will stay enumerated");
+#else
         Serial.println("; USB and OLED will disconnect after 750 ms");
+#endif
         return terminal_protocol::Result::ok();
       }
 #endif
@@ -2286,6 +2390,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         spi1_dma::reset_statistics();
         #endif
         usb_cdc_rx_guard::reset_statistics();
+        usb_power::reset_statistics();
         Serial.println("PROF started");
         return terminal_protocol::Result::ok();
       }
@@ -2305,6 +2410,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         spi1_dma::reset_statistics();
         #endif
         usb_cdc_rx_guard::reset_statistics();
+        usb_power::reset_statistics();
         Serial.println("PROF reset");
         return terminal_protocol::Result::ok();
       }

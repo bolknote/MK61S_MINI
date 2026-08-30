@@ -1915,7 +1915,7 @@ prepare_and_compile_f411_worker() {
     --build-path "$build_dir" \
     --build-property "compiler.cpp.extra_flags=$flags" \
     --build-property "compiler.c.extra_flags=$PLATFORM_RAM_FLAGS" \
-    --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
+    --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected" \
     "$sketch_dir" || return 1
 
   source_artifact="$build_dir/mk61s-M.ino.bin"

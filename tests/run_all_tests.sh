@@ -30,6 +30,7 @@ fi
 "$root/tests/run_watchdog_gate_tests.sh"
 "$root/tests/run_mpu_guard_policy_tests.sh"
 "$root/tests/run_usb_cdc_rx_guard_tests.sh"
+"$root/tests/run_usb_power_policy_tests.sh"
 "$root/tests/run_spi1_arbiter_tests.sh"
 "$root/tests/run_spi1_dma_tests.sh"
 "$root/tests/run_idle_sleep_policy_tests.sh"

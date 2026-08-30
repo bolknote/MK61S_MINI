@@ -128,6 +128,7 @@ add_subdirectory("${BUILD_LIB_PATH}" "${CMAKE_BINARY_DIR}/stm32/libraries")
 # unit needs to opt out; the rest of the resident firmware retains LTO.
 set_source_files_properties(
   "${BUILD_LIB_PATH}/USBDevice/src/cdc/usbd_cdc.c"
+  "${BUILD_LIB_PATH}/USBDevice/src/usbd_conf.c"
   DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
 
@@ -184,7 +185,13 @@ target_link_libraries(resident PRIVATE
   mk61_rtc)
 target_link_options(resident PRIVATE
   "LINKER:-Map,${CMAKE_BINARY_DIR}/resident.map"
-  "LINKER:--wrap=USBD_CDC_ClearBuffer")
+  "LINKER:--wrap=USBD_CDC_ClearBuffer"
+  "LINKER:--wrap=USBD_LL_SetupStage"
+  "LINKER:--wrap=USBD_LL_Reset"
+  "LINKER:--wrap=USBD_LL_Suspend"
+  "LINKER:--wrap=USBD_LL_Resume"
+  "LINKER:--wrap=USBD_LL_DevConnected"
+  "LINKER:--wrap=USBD_LL_DevDisconnected")
 
 if(MK61_ENABLE_LTO AND
    (MK61_ENABLE_FOCAL OR MK61_ENABLE_TINYBASIC OR

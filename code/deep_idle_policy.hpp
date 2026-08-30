@@ -25,6 +25,7 @@ enum class WakeReason : u8 {
   RTC_TIMER,
   KEYBOARD,
   RTC_ALARM,
+  USB_HOST,
   OTHER,
   ERROR,
 };
@@ -40,6 +41,8 @@ enum class FailureReason : u8 {
   TICK_RESTORE,
   RTC_DISARM,
   DISPLAY_RESUME,
+  USB_ARM,
+  USB_RESUME,
 };
 
 enum Blocker : u32 {
@@ -57,9 +60,10 @@ enum Blocker : u32 {
   BLOCK_RTC = 1UL << 11,
   BLOCK_WATCHDOG = 1UL << 12,
   BLOCK_IRQ = 1UL << 13,
+  BLOCK_USB = 1UL << 14,
 };
 
-static constexpr usize BLOCKER_COUNT = 14;
+static constexpr usize BLOCKER_COUNT = 15;
 
 struct Conditions {
   bool foreground_context;
@@ -76,6 +80,7 @@ struct Conditions {
   bool rtc_ready;
   bool watchdog_safe;
   bool irq_context;
+  bool usb_stop_ready;
 };
 
 constexpr u32 blocker_if(bool condition, Blocker blocker) {
@@ -96,7 +101,8 @@ constexpr u32 blockers(const Conditions& value) {
          blocker_if(!value.display_ready, BLOCK_DISPLAY) |
          blocker_if(!value.rtc_ready, BLOCK_RTC) |
          blocker_if(!value.watchdog_safe, BLOCK_WATCHDOG) |
-         blocker_if(value.irq_context, BLOCK_IRQ);
+         blocker_if(value.irq_context, BLOCK_IRQ) |
+         blocker_if(!value.usb_stop_ready, BLOCK_USB);
 }
 
 constexpr bool valid_request(u8 seconds, u16 cycles) {
@@ -212,6 +218,7 @@ class Controller {
         case WakeReason::RTC_ALARM:
           rtc_alarm_wakes_ = saturating_increment(rtc_alarm_wakes_);
           break;
+        case WakeReason::USB_HOST:
         case WakeReason::OTHER:
           other_wakes_ = saturating_increment(other_wakes_);
           break;
@@ -321,6 +328,7 @@ inline const char* wake_name(WakeReason reason) {
     case WakeReason::RTC_TIMER: return "rtc-timer";
     case WakeReason::KEYBOARD: return "keyboard";
     case WakeReason::RTC_ALARM: return "rtc-alarm";
+    case WakeReason::USB_HOST: return "usb-host";
     case WakeReason::OTHER: return "other";
     case WakeReason::ERROR: return "error";
   }
@@ -339,6 +347,8 @@ inline const char* failure_name(FailureReason reason) {
     case FailureReason::TICK_RESTORE: return "tick-restore";
     case FailureReason::RTC_DISARM: return "rtc-disarm";
     case FailureReason::DISPLAY_RESUME: return "display-resume";
+    case FailureReason::USB_ARM: return "usb-arm";
+    case FailureReason::USB_RESUME: return "usb-resume";
   }
   return "unknown";
 }
@@ -359,6 +369,7 @@ inline const char* blocker_name(usize index) {
     case 11: return "rtc";
     case 12: return "watchdog";
     case 13: return "irq";
+    case 14: return "usb";
     default: return "unknown";
   }
 }

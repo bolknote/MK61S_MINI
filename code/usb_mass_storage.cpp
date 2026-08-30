@@ -528,6 +528,14 @@ bool active(void) {
   return is_initialized();
 }
 
+bool deep_idle_quiescent(void) {
+  if(!is_initialized()) return true;
+  return deferred_state() == DeferredWriteState::EMPTY &&
+         deferred_read_state() == DeferredReadState::EMPTY &&
+         deferred_sync() == DeferredSyncState::EMPTY &&
+         virtual_fat::dirty_cache_sectors() == 0;
+}
+
 void service(void) {
   if(!is_initialized()) return;
 
@@ -618,6 +626,7 @@ namespace usb_mass_storage {
 bool init(void) { return false; }
 bool deinit(void) { return true; }
 bool active(void) { return false; }
+bool deep_idle_quiescent(void) { return true; }
 void service(void) {}
 }
 

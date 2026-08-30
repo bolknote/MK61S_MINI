@@ -8,6 +8,8 @@
   #include "independent_watchdog.hpp"
   #include "keyboard.h"
   #include "rtc_clock.hpp"
+  #include "usb_mass_storage.hpp"
+  #include "usb_power.hpp"
 #endif
 
 namespace deep_idle {
@@ -28,9 +30,11 @@ static bool time_reached(u32 now, u32 target) {
 }
 
 static deep_idle_policy::WakeReason classify_wake(bool keyboard,
+                                                   bool usb_host,
                                                    bool rtc_timer,
                                                    bool rtc_alarm) {
   if(keyboard) return deep_idle_policy::WakeReason::KEYBOARD;
+  if(usb_host) return deep_idle_policy::WakeReason::USB_HOST;
   if(rtc_timer) return deep_idle_policy::WakeReason::RTC_TIMER;
   if(rtc_alarm) return deep_idle_policy::WakeReason::RTC_ALARM;
   return deep_idle_policy::WakeReason::OTHER;
@@ -56,6 +60,7 @@ static bool restore_tick_from_rtc(
 }
 
 static bool run_cycle(u8 seconds,
+                      bool usb_application_idle,
                       deep_idle_policy::WakeReason& wake_reason,
                       u32& elapsed_ms,
                       deep_idle_policy::FailureReason& failure) {
@@ -86,16 +91,33 @@ static bool run_cycle(u8 seconds,
 
   HAL_SuspendTick();
   __disable_irq();
+#if MK61_USB_SUSPEND_SUPPORTED
+  if(!usb_power::prepare_stop(usb_application_idle, tick_before)) {
+    HAL_ResumeTick();
+    __set_PRIMASK(saved_primask);
+    (void) rtc_clock::disarm_stop_wakeup();
+    kbd::cancel_stop_wake();
+    failure = deep_idle_policy::FailureReason::USB_ARM;
+    return false;
+  }
+#else
+  (void) usb_application_idle;
+#endif
   const bool key_before_stop = kbd::stop_wake_pending();
   const bool timer_before_stop = rtc_clock::stop_wakeup_pending();
   const bool alarm_before_stop = rtc_clock::alarm_wakeup_pending();
-  if(key_before_stop || timer_before_stop || alarm_before_stop) {
+  const bool usb_before_stop = usb_power::stop_wake_pending();
+  if(key_before_stop || timer_before_stop || alarm_before_stop ||
+     usb_before_stop) {
     HAL_ResumeTick();
     __set_PRIMASK(saved_primask);
     const u8 captured = kbd::resume_from_stop();
     (void) rtc_clock::disarm_stop_wakeup();
+    (void) usb_power::finish_stop(
+        usb_before_stop, key_before_stop || captured != 0);
     wake_reason = classify_wake(
         key_before_stop || captured != 0,
+        usb_before_stop,
         timer_before_stop, alarm_before_stop);
     elapsed_ms = 0;
     return true;
@@ -112,6 +134,7 @@ static bool run_cycle(u8 seconds,
   const bool key_wake = kbd::stop_wake_pending();
   const bool timer_wake = rtc_clock::stop_wakeup_pending();
   const bool alarm_wake = rtc_clock::alarm_wakeup_pending();
+  const bool usb_wake = usb_power::stop_wake_pending();
 
   // STOP returns on HSI. Let the minimal pending ISR run and let SysTick supply
   // bounded HAL timeouts while the board's weak variant function restores the
@@ -129,25 +152,35 @@ static bool run_cycle(u8 seconds,
       (u32) seconds * 1000U + MAX_ELAPSED_MARGIN_MS, elapsed_ms);
   const u8 captured = kbd::resume_from_stop();
   const bool timer_ok = rtc_clock::disarm_stop_wakeup();
+  const bool usb_ok =
+      !MK61_USB_SUSPEND_SUPPORTED ||
+      usb_power::finish_stop(usb_wake, key_wake || captured != 0);
   wake_reason = classify_wake(
-      key_wake || captured != 0, timer_wake, alarm_wake);
+      key_wake || captured != 0, usb_wake, timer_wake, alarm_wake);
   if(!clock_ok) failure = deep_idle_policy::FailureReason::CLOCK_RESTORE;
   else if(!tick_ok) failure = deep_idle_policy::FailureReason::TICK_RESTORE;
   else if(!timer_ok) failure = deep_idle_policy::FailureReason::RTC_DISARM;
-  return clock_ok && tick_ok && timer_ok;
+  else if(!usb_ok) failure = deep_idle_policy::FailureReason::USB_RESUME;
+  return clock_ok && tick_ok && timer_ok && usb_ok;
 }
 
 static bool execute_request(void) {
   bool serial_stopped = false;
   bool display_suspended = false;
   bool ok = true;
+  const bool preserve_usb =
+      MK61_USB_SUSPEND_SUPPORTED && usb_power::suspended();
+  const bool usb_application_idle =
+      usb_mass_storage::deep_idle_quiescent();
   deep_idle_policy::FailureReason failure =
       deep_idle_policy::FailureReason::NONE;
 
 #if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
-  Serial.flush();
-  Serial.end();
-  serial_stopped = true;
+  if(!preserve_usb) {
+    Serial.flush();
+    Serial.end();
+    serial_stopped = true;
+  }
 #endif
 
   main_lcd().flush();
@@ -160,7 +193,8 @@ static bool execute_request(void) {
   while(ok) {
     deep_idle_policy::WakeReason wake = deep_idle_policy::WakeReason::ERROR;
     u32 elapsed_ms = 0;
-    if(!run_cycle(controller.seconds(), wake, elapsed_ms, failure)) {
+    if(!run_cycle(controller.seconds(), usb_application_idle,
+                  wake, elapsed_ms, failure)) {
       ok = false;
       break;
     }
@@ -200,6 +234,7 @@ static bool execute_request(void) {
     // failure remains visible in counters/last_wake without stranding the UI.
     kbd::cancel_stop_wake();
     (void) rtc_clock::disarm_stop_wakeup();
+    usb_power::cancel_stop();
     controller.note_failure(
         failure == deep_idle_policy::FailureReason::NONE
           ? deep_idle_policy::FailureReason::STATE : failure);

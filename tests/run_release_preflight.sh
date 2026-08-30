@@ -22,6 +22,10 @@ MK61_FIRMWARE_OUTPUT_DIR="$preflight_root/firmware" \
 MK61_FIRMWARE_TAG=preflight \
   "$root/tests/run_f411_release_matrix.sh"
 
+printf '\n=== F411 USB suspend qualification ===\n'
+MK61_F411_USB_SUSPEND_BUILD_ROOT="$preflight_root/f411-usb-suspend" \
+  "$root/tests/run_f411_usb_suspend_compile_check.sh"
+
 for artifact in \
   mk61s-M-lcd1602-a00-f411 \
   mk61s-M-lcd1602-a02-f411 \

@@ -12,7 +12,7 @@ using deep_idle_policy::WakeReason;
 static Conditions ready_conditions(void) {
   return {
     true, true, false, false, false, false, false, false, false,
-    true, true, true, true, false
+    true, true, true, true, false, true
   };
 }
 
@@ -23,9 +23,10 @@ static void test_blockers(void) {
   value.msc_active = true;
   value.spi_idle = false;
   value.irq_context = true;
+  value.usb_stop_ready = false;
   const u32 expected = deep_idle_policy::BLOCK_FOREGROUND |
       deep_idle_policy::BLOCK_MSC | deep_idle_policy::BLOCK_SPI |
-      deep_idle_policy::BLOCK_IRQ;
+      deep_idle_policy::BLOCK_IRQ | deep_idle_policy::BLOCK_USB;
   assert(deep_idle_policy::blockers(value) == expected);
 }
 

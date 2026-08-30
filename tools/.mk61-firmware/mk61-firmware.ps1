@@ -2048,7 +2048,7 @@ function Build-Selected {
         '--build-path', $buildDir,
         '--build-property', "compiler.cpp.extra_flags=$flags",
         '--build-property', "compiler.c.extra_flags=$script:PlatformRamFlags",
-        '--build-property', 'compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer',
+        '--build-property', 'compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected',
         $sketchDir)
     if (-not (Invoke-ExternalWithProgress 'Сборка прошивки' "Собираю $(Get-ProfileLabel $profile)" `
         $script:LastLog 'indeterminate' $script:ArduinoCli $arguments)) {
