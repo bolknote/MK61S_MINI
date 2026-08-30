@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+mode=enabled
+if [[ "${1:-}" == "--disabled" ]]; then
+  mode=disabled
+  shift
+fi
 if [[ $# -ne 1 ]]; then
-  echo "usage: $0 firmware.elf" >&2
+  echo "usage: $0 [--disabled] firmware.elf" >&2
   exit 2
 fi
 
@@ -42,6 +47,24 @@ require_text_symbol() {
     }
 }
 
+require_data_symbol() {
+  local pattern="$1"
+  local label="$2"
+  grep -Eq "[[:space:]][BbDd][[:space:]]${pattern}$" <<<"$symbols" || {
+    printf 'USB suspend ELF check: missing %s\n' "$label" >&2
+    exit 1
+  }
+}
+
+forbid_data_symbol() {
+  local pattern="$1"
+  local label="$2"
+  if grep -Eq "[[:space:]][BbDd][[:space:]]${pattern}$" <<<"$symbols"; then
+    printf 'USB suspend ELF check: unexpected %s\n' "$label" >&2
+    exit 1
+  fi
+}
+
 forbid_symbol() {
   local pattern="$1"
   local label="$2"
@@ -50,6 +73,20 @@ forbid_symbol() {
     exit 1
   fi
 }
+
+if [[ "$mode" == disabled ]]; then
+  # The STM32 core owns a strong OTG_FS_WKUP_IRQHandler in every USB build.
+  # These private state objects, in contrast, exist only when our preserving
+  # STOP and automatic controller were actually compiled.
+  forbid_data_symbol \
+    'deep_idle::\(anonymous namespace\)::automatic_controller' \
+    'automatic STOP controller in disabled profile'
+  forbid_data_symbol \
+    'usb_power::\(anonymous namespace\)::stop_arms' \
+    'USB STOP accounting in disabled profile'
+  echo 'USB suspend ELF check: safely disabled'
+  exit 0
+fi
 
 for callback in \
   SetupStage Reset Suspend Resume DevConnected DevDisconnected; do
@@ -67,6 +104,12 @@ require_text_symbol 'usb_power::stop_wake_pending\(\)' \
   'USB wake-source classifier'
 require_text_symbol 'OTG_FS_WKUP_IRQHandler' \
   'USB OTG FS wake interrupt'
+require_data_symbol \
+  'deep_idle::\(anonymous namespace\)::automatic_controller' \
+  'automatic STOP controller'
+require_data_symbol \
+  'usb_power::\(anonymous namespace\)::stop_arms' \
+  'USB STOP accounting'
 
 forbid_symbol 'usb_power::advertise_remote_wakeup\(\)' \
   'remote-wakeup descriptor patch'

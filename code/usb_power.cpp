@@ -17,6 +17,12 @@
 #endif
 
 namespace usb_power {
+
+#if MK61_USB_POWER_OBSERVER_SUPPORTED
+extern "C" USBD_StatusTypeDef __wrap_USBD_LL_Suspend(
+    USBD_HandleTypeDef* value);
+#endif
+
 namespace {
 
 #if MK61_USB_POWER_OBSERVER_SUPPORTED
@@ -42,13 +48,16 @@ static volatile u16 resume_callbacks;
 static volatile u16 connect_callbacks;
 static volatile u16 disconnect_callbacks;
 #if MK61_USB_SUSPEND_SUPPORTED
+static volatile bool hardware_was_suspended;
+static volatile u16 hardware_suspend_events;
+static volatile u16 recovered_suspend_events;
 static volatile u16 stop_arms;
 static volatile u16 stop_aborts;
 static volatile u16 host_wakes;
 static volatile u16 local_wakes;
 static volatile u8 last_stop_blockers;
 static volatile u8 last_endpoint_blockers;
-static volatile bool stop_armed;
+static volatile u8 stop_session;
 #endif
 
 static u32 load(const volatile u32& value) {
@@ -82,6 +91,20 @@ static u8 load_u8(const volatile u8& value) {
 #if MK61_USB_SUSPEND_SUPPORTED
 static void store_u8(volatile u8& target, u8 value) {
   __atomic_store_n(&target, value, __ATOMIC_RELEASE);
+}
+
+static u8 exchange_u8(volatile u8& target, u8 value) {
+  return __atomic_exchange_n(&target, value, __ATOMIC_ACQ_REL);
+}
+
+static void note_stop_host_event(void) {
+  u8 observed = load_u8(stop_session);
+  while((observed & usb_power_policy::STOP_SESSION_ARMED) != 0U) {
+    const u8 desired = usb_power_policy::note_host_event(observed);
+    if(__atomic_compare_exchange_n(
+        &stop_session, &observed, desired, false,
+        __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+  }
 }
 #endif
 
@@ -169,6 +192,43 @@ static u8 endpoint_blockers_now(void) {
 static bool endpoints_are_idle(void) {
   return endpoint_blockers_now() == 0U;
 }
+
+#if MK61_USB_SUSPEND_SUPPORTED
+static bool hardware_suspended_now(void) {
+  USB_OTG_DeviceTypeDef* const registers =
+      reinterpret_cast<USB_OTG_DeviceTypeDef*>(
+          reinterpret_cast<uintptr_t>(USB_OTG_FS) + USB_OTG_DEVICE_BASE);
+  return (registers->DSTS & USB_OTG_DSTS_SUSPSTS) != 0U;
+}
+
+static void service_hardware_suspend_fallback(void) {
+  const bool current = hardware_suspended_now();
+  const bool previous = load_bool(hardware_was_suspended);
+  if(current != previous) {
+    store_bool(hardware_was_suspended, current);
+    if(current) increment(hardware_suspend_events);
+  }
+  if(!current || !load_bool(link_present) ||
+     device()->dev_state == USBD_STATE_SUSPENDED) return;
+
+  // The OTG FS DSTS.SUSPSTS bit is the same authoritative condition checked
+  // by HAL_PCD_IRQHandler before it calls HAL_PCD_SuspendCallback.  On some
+  // host/hub sleep transitions the interrupt can be observed too late for
+  // that callback even though the bus remains suspended.  Recheck atomically,
+  // then perform the two harmless operations from the stock callback: update
+  // the USB middleware state and gate the PHY clock.  A concurrent host resume
+  // remains safe: its pending IRQ restores CONFIGURED and ungates the PHY.
+  const u32 primask = __get_PRIMASK();
+  __disable_irq();
+  if(hardware_suspended_now() && load_bool(link_present) &&
+     device()->dev_state != USBD_STATE_SUSPENDED) {
+    (void) __wrap_USBD_LL_Suspend(device());
+    __HAL_PCD_GATE_PHYCLOCK(&g_hpcd);
+    increment(recovered_suspend_events);
+  }
+  __set_PRIMASK(primask);
+}
+#endif
 
 extern "C" USBD_StatusTypeDef __real_USBD_LL_SetupStage(
     USBD_HandleTypeDef*, u8*) __attribute__((weak));
@@ -276,8 +336,8 @@ extern "C" USBD_StatusTypeDef __wrap_USBD_LL_Resume(
   note_wrapper(SEEN_RESUME, resume_callbacks);
   store(suspend_started_ms, 0);
 #if MK61_USB_SUSPEND_SUPPORTED
+  note_stop_host_event();
   g_hpcd.Init.low_power_enable = DISABLE;
-  store_bool(stop_armed, false);
 #endif
   observe(value, true);
   return result;
@@ -298,8 +358,8 @@ extern "C" USBD_StatusTypeDef __wrap_USBD_LL_DevDisconnected(
   const USBD_StatusTypeDef result = __real_USBD_LL_DevDisconnected(value);
   note_wrapper(SEEN_DISCONNECT, disconnect_callbacks);
 #if MK61_USB_SUSPEND_SUPPORTED
+  note_stop_host_event();
   g_hpcd.Init.low_power_enable = DISABLE;
-  store_bool(stop_armed, false);
 #endif
   observe(value, false);
   return result;
@@ -321,9 +381,14 @@ void service(u32 now_ms) {
     // report merely because the USB stack was initialized without a cable.
     store_bool(link_present, true);
   }
-  if(state == USBD_STATE_SUSPENDED && load(suspend_started_ms) == 0U) {
+#if MK61_USB_SUSPEND_SUPPORTED
+  service_hardware_suspend_fallback();
+#endif
+  const u8 refreshed_state = value->dev_state;
+  if(refreshed_state == USBD_STATE_SUSPENDED &&
+     load(suspend_started_ms) == 0U) {
     store(suspend_started_ms, now_ms);
-  } else if(state != USBD_STATE_SUSPENDED) {
+  } else if(refreshed_state != USBD_STATE_SUSPENDED) {
     store(suspend_started_ms, 0);
   }
 #else
@@ -341,6 +406,9 @@ Snapshot statistics(u32 now_ms) {
   const bool is_suspended = present && state == USBD_STATE_SUSPENDED;
   const u32 started = load(suspend_started_ms);
 #if MK61_USB_SUSPEND_SUPPORTED
+  const bool hardware_suspended = hardware_suspended_now();
+  const u32 hardware_event_count = load(hardware_suspend_events);
+  const u32 recovered_event_count = load(recovered_suspend_events);
   const u32 arm_count = load(stop_arms);
   const u32 abort_count = load(stop_aborts);
   const u32 host_wake_count = load(host_wakes);
@@ -348,6 +416,9 @@ Snapshot statistics(u32 now_ms) {
   const u32 stop_blocker_bits = load_u8(last_stop_blockers);
   const u32 endpoint_blocker_bits = load_u8(last_endpoint_blockers);
 #else
+  constexpr bool hardware_suspended = false;
+  constexpr u32 hardware_event_count = 0;
+  constexpr u32 recovered_event_count = 0;
   constexpr u32 arm_count = 0;
   constexpr u32 abort_count = 0;
   constexpr u32 host_wake_count = 0;
@@ -369,6 +440,9 @@ Snapshot statistics(u32 now_ms) {
     state,
     previous_state,
     is_suspended ? now_ms - started : 0U,
+    hardware_suspended,
+    hardware_event_count,
+    recovered_event_count,
     load(setup_callbacks),
     load(reset_callbacks),
     load(suspend_callbacks),
@@ -387,7 +461,7 @@ Snapshot statistics(u32 now_ms) {
   return {
     false, false, false, false, false, false, false,
     usb_power_policy::LinkState::LINK_DETACHED, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   };
 #endif
 }
@@ -401,6 +475,9 @@ void reset_statistics(void) {
   store(connect_callbacks, 0);
   store(disconnect_callbacks, 0);
 #if MK61_USB_SUSPEND_SUPPORTED
+  store_bool(hardware_was_suspended, hardware_suspended_now());
+  store(hardware_suspend_events, 0);
+  store(recovered_suspend_events, 0);
   store(stop_arms, 0);
   store(stop_aborts, 0);
   store(host_wakes, 0);
@@ -453,26 +530,30 @@ u32 stop_blockers(bool application_idle, u32 now_ms) {
 #endif
 }
 
-bool prepare_stop(bool application_idle, u32 now_ms) {
+PrepareResult prepare_stop(bool application_idle, u32 now_ms) {
 #if MK61_USB_SUSPEND_SUPPORTED
   const u32 blockers = stop_blockers(application_idle, now_ms);
-  if(blockers != 0U) return false;
+  if(blockers != 0U) {
+    return suspended() ? PrepareResult::BLOCKED
+                       : PrepareResult::HOST_RESUMED;
+  }
   enable_usb_wakeup_irq();
   // The Core's suspend callback has already run, so enabling this here cannot
   // trigger its automatic SLEEPONEXIT path. It only lets the stock wake IRQ
   // restore clocks and ungate the PHY if the host resumes during our STOP.
   g_hpcd.Init.low_power_enable = ENABLE;
-  store_bool(stop_armed, true);
-  if(stop_wake_pending()) {
-    cancel_stop();
-    return false;
-  }
+  store_u8(stop_session, usb_power_policy::begin_stop_session());
   increment(stop_arms);
-  return true;
+  if(stop_wake_pending()) {
+    const StopCompletion completion = finish_stop(true, false);
+    return completion.completed && completion.host_wake
+        ? PrepareResult::HOST_RESUMED : PrepareResult::BLOCKED;
+  }
+  return PrepareResult::ARMED;
 #else
   (void) application_idle;
   (void) now_ms;
-  return false;
+  return PrepareResult::BLOCKED;
 #endif
 }
 
@@ -485,13 +566,18 @@ bool stop_wake_pending(void) {
 #endif
 }
 
-bool finish_stop(bool usb_host_wake, bool keyboard_wake) {
+StopCompletion finish_stop(bool usb_host_wake, bool keyboard_wake) {
 #if MK61_USB_SUSPEND_SUPPORTED
-  if(!load_bool(stop_armed)) return false;
-  if(usb_host_wake) increment(host_wakes);
+  const u8 session = exchange_u8(
+      stop_session, usb_power_policy::STOP_SESSION_IDLE);
+  const usb_power_policy::StopCompletion completion =
+      usb_power_policy::complete_stop_session(
+          session, usb_host_wake, suspended());
+  if(!completion.active) return {false, false};
+  if(completion.host_wake) increment(host_wakes);
   if(keyboard_wake) increment(local_wakes);
 
-  if(usb_host_wake) {
+  if(completion.host_wake) {
     // The host owns resume.  Restore the PHY immediately and let the pending
     // USB core IRQ complete the middleware CONFIGURED transition.
     __HAL_PCD_UNGATE_PHYCLOCK(&g_hpcd);
@@ -501,24 +587,24 @@ bool finish_stop(bool usb_host_wake, bool keyboard_wake) {
   // For keyboard and RTC wake the host is still suspended.  Keep its PHY
   // clock gated and its wake IRQ armed while the calculator runs locally;
   // this is deliberately not USB Remote Wake.
-  store_bool(stop_armed, false);
-  return true;
+  return {true, completion.host_wake};
 #else
   (void) usb_host_wake;
   (void) keyboard_wake;
-  return false;
+  return {false, false};
 #endif
 }
 
 void cancel_stop(void) {
 #if MK61_USB_SUSPEND_SUPPORTED
-  if(!load_bool(stop_armed)) return;
+  const u8 session = exchange_u8(
+      stop_session, usb_power_policy::STOP_SESSION_IDLE);
+  if((session & usb_power_policy::STOP_SESSION_ARMED) == 0U) return;
   if(!suspended()) {
     __HAL_PCD_UNGATE_PHYCLOCK(&g_hpcd);
     g_hpcd.Init.low_power_enable = DISABLE;
     clear_usb_wakeup_flag();
   }
-  store_bool(stop_armed, false);
   increment(stop_aborts);
 #endif
 }

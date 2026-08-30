@@ -24,8 +24,8 @@
 #endif
 
 #if MK61_USB_POWER_OBSERVER_SUPPORTED && \
-    MK61_ENABLE_USB_SUSPEND_QUALIFICATION && \
-    MK61_ENABLE_DEEP_IDLE_QUALIFICATION
+    MK61_USB_SUSPEND_ENABLED && MK61_DEEP_IDLE_ENABLED && \
+    defined(MK61_KEYBOARD_MINI) && defined(MK61_OLED1602_WS0010)
   #define MK61_USB_SUSPEND_SUPPORTED 1
 #else
   #define MK61_USB_SUSPEND_SUPPORTED 0
@@ -47,7 +47,7 @@ struct Snapshot {
   bool supported;
   bool wrappers_linked;
   bool callbacks_ready;
-  bool qualification_enabled;
+  bool stop_preservation_enabled;
   bool configured_before_suspend;
   bool host_remote_wakeup_enabled;
   bool endpoints_idle;
@@ -55,6 +55,9 @@ struct Snapshot {
   u8 raw_state;
   u8 old_state;
   u32 suspend_age_ms;
+  bool hardware_suspended;
+  u32 hardware_suspend_events;
+  u32 recovered_suspend_events;
   u32 setup_callbacks;
   u32 reset_callbacks;
   u32 suspend_callbacks;
@@ -69,6 +72,17 @@ struct Snapshot {
   u32 last_endpoint_blockers;
 };
 
+struct StopCompletion {
+  bool completed;
+  bool host_wake;
+};
+
+enum class PrepareResult : u8 {
+  ARMED,
+  HOST_RESUMED,
+  BLOCKED,
+};
+
 // Refreshes the main-context snapshot in addition to the exact IRQ wrappers.
 void service(u32 now_ms);
 Snapshot statistics(u32 now_ms);
@@ -81,9 +95,9 @@ u32 stop_blockers(bool application_idle, u32 now_ms);
 
 // These calls bracket only a confirmed USB-suspended STOP interval. They do
 // not stop, deinitialize or re-enumerate the USB device.
-bool prepare_stop(bool application_idle, u32 now_ms);
+PrepareResult prepare_stop(bool application_idle, u32 now_ms);
 bool stop_wake_pending(void);
-bool finish_stop(bool usb_host_wake, bool keyboard_wake);
+StopCompletion finish_stop(bool usb_host_wake, bool keyboard_wake);
 void cancel_stop(void);
 
 } // namespace usb_power

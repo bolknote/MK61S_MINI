@@ -19,9 +19,16 @@ namespace {
 
 static deep_idle_policy::Controller controller;
 static u32 not_before_ms;
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+static deep_idle_auto_policy::Controller automatic_controller;
+static bool request_is_automatic;
+#endif
 
 static constexpr u32 START_DELAY_MS = 750;
 static constexpr u32 MAX_ELAPSED_MARGIN_MS = 2000;
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+static constexpr u8 AUTOMATIC_CYCLE_SECONDS = 5;
+#endif
 
 extern "C" void SystemClock_Config(void);
 
@@ -92,11 +99,18 @@ static bool run_cycle(u8 seconds,
   HAL_SuspendTick();
   __disable_irq();
 #if MK61_USB_SUSPEND_SUPPORTED
-  if(!usb_power::prepare_stop(usb_application_idle, tick_before)) {
+  const usb_power::PrepareResult usb_prepare =
+      usb_power::prepare_stop(usb_application_idle, tick_before);
+  if(usb_prepare != usb_power::PrepareResult::ARMED) {
     HAL_ResumeTick();
     __set_PRIMASK(saved_primask);
     (void) rtc_clock::disarm_stop_wakeup();
     kbd::cancel_stop_wake();
+    if(usb_prepare == usb_power::PrepareResult::HOST_RESUMED) {
+      wake_reason = deep_idle_policy::WakeReason::USB_HOST;
+      elapsed_ms = 0;
+      return true;
+    }
     failure = deep_idle_policy::FailureReason::USB_ARM;
     return false;
   }
@@ -113,11 +127,17 @@ static bool run_cycle(u8 seconds,
     __set_PRIMASK(saved_primask);
     const u8 captured = kbd::resume_from_stop();
     (void) rtc_clock::disarm_stop_wakeup();
-    (void) usb_power::finish_stop(
+    const usb_power::StopCompletion usb_completion = usb_power::finish_stop(
         usb_before_stop, key_before_stop || captured != 0);
+    if(MK61_USB_SUSPEND_SUPPORTED && !usb_completion.completed) {
+      failure = deep_idle_policy::FailureReason::USB_RESUME;
+      return false;
+    }
+    const bool usb_host_wake =
+        usb_before_stop || usb_completion.host_wake;
     wake_reason = classify_wake(
         key_before_stop || captured != 0,
-        usb_before_stop,
+        usb_host_wake,
         timer_before_stop, alarm_before_stop);
     elapsed_ms = 0;
     return true;
@@ -147,16 +167,21 @@ static bool run_cycle(u8 seconds,
 
   const bool clock_ok = SystemCoreClock == (u32) F_CPU;
 
+  // Resolve the waking key as soon as the GPIO timing clock is trustworthy.
+  // RTC bookkeeping can wait; a short physical press cannot.
+  const u8 captured = kbd::resume_from_stop();
+
   const bool tick_ok = restore_tick_from_rtc(
       tick_before, before,
       (u32) seconds * 1000U + MAX_ELAPSED_MARGIN_MS, elapsed_ms);
-  const u8 captured = kbd::resume_from_stop();
   const bool timer_ok = rtc_clock::disarm_stop_wakeup();
-  const bool usb_ok =
-      !MK61_USB_SUSPEND_SUPPORTED ||
+  const usb_power::StopCompletion usb_completion =
       usb_power::finish_stop(usb_wake, key_wake || captured != 0);
+  const bool usb_ok = !MK61_USB_SUSPEND_SUPPORTED ||
+      usb_completion.completed;
+  const bool usb_host_wake = usb_wake || usb_completion.host_wake;
   wake_reason = classify_wake(
-      key_wake || captured != 0, usb_wake, timer_wake, alarm_wake);
+      key_wake || captured != 0, usb_host_wake, timer_wake, alarm_wake);
   if(!clock_ok) failure = deep_idle_policy::FailureReason::CLOCK_RESTORE;
   else if(!tick_ok) failure = deep_idle_policy::FailureReason::TICK_RESTORE;
   else if(!timer_ok) failure = deep_idle_policy::FailureReason::RTC_DISARM;
@@ -165,6 +190,9 @@ static bool run_cycle(u8 seconds,
 }
 
 static bool execute_request(void) {
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  const bool automatic_request = request_is_automatic;
+#endif
   bool serial_stopped = false;
   bool display_suspended = false;
   bool ok = true;
@@ -204,12 +232,19 @@ static bool execute_request(void) {
     const deep_idle_policy::Snapshot state = controller.snapshot();
     if(state.state == deep_idle_policy::State::STOPPED) {
       controller.note_wake(wake, elapsed_ms);
+    } else if(state.state == deep_idle_policy::State::STOP_ENTERING &&
+              wake == deep_idle_policy::WakeReason::USB_HOST) {
+      controller.note_interruption(wake);
     } else {
       controller.finish();
       break;
     }
 
     if(!controller.continue_cycles()) break;
+    if(preserve_usb && !usb_power::suspended()) {
+      controller.note_interruption(deep_idle_policy::WakeReason::USB_HOST);
+      break;
+    }
     independent_watchdog::foreground_epoch(millis());
     controller.prepare_next_cycle();
   }
@@ -240,6 +275,12 @@ static bool execute_request(void) {
           ? deep_idle_policy::FailureReason::STATE : failure);
     controller.recover();
   }
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  request_is_automatic = false;
+  if(!automatic_request) {
+    automatic_controller.note_manual_completion(usb_power::suspended());
+  }
+#endif
   return ok;
 }
 
@@ -250,6 +291,9 @@ static bool execute_request(void) {
 bool request(u8 seconds, u16 cycles, u32 now_ms) {
 #if MK61_DEEP_IDLE_SUPPORTED
   if(!controller.request(seconds, cycles)) return false;
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  request_is_automatic = false;
+#endif
   not_before_ms = now_ms + START_DELAY_MS;
   return true;
 #else
@@ -262,7 +306,11 @@ bool request(u8 seconds, u16 cycles, u32 now_ms) {
 
 bool cancel(void) {
 #if MK61_DEEP_IDLE_SUPPORTED
-  return controller.cancel();
+  const bool cancelled = controller.cancel();
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  if(cancelled) request_is_automatic = false;
+#endif
+  return cancelled;
 #else
   return false;
 #endif
@@ -276,13 +324,48 @@ bool pending(void) {
 #endif
 }
 
+bool service_needed(void) {
+#if MK61_DEEP_IDLE_SUPPORTED
+  if(controller.pending()) return true;
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  return usb_power::suspended() || automatic_controller.session_active();
+#else
+  return false;
+#endif
+#else
+  return false;
+#endif
+}
+
 bool service(const deep_idle_policy::Conditions& conditions, u32 now_ms) {
 #if MK61_DEEP_IDLE_SUPPORTED
-  if(!controller.pending() || !time_reached(now_ms, not_before_ms)) return false;
   u32 mask = deep_idle_policy::blockers(conditions);
   if(__get_PRIMASK() != 0 || __get_IPSR() != 0) {
     mask |= deep_idle_policy::BLOCK_IRQ;
   }
+
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  if(!controller.pending()) {
+    const deep_idle_auto_policy::Conditions automatic_conditions = {
+      true,
+      usb_power::suspended(),
+      controller.pending_or_running(),
+      (mask & ~((u32) deep_idle_policy::BLOCK_USB)) == 0U,
+      (mask & (u32) deep_idle_policy::BLOCK_USB) == 0U,
+    };
+    if(automatic_controller.poll(automatic_conditions, now_ms)) {
+      if(controller.request_automatic(AUTOMATIC_CYCLE_SECONDS)) {
+        request_is_automatic = true;
+        not_before_ms = now_ms;
+        automatic_controller.note_request_accepted();
+      } else {
+        automatic_controller.note_request_rejected(now_ms);
+      }
+    }
+  }
+#endif
+
+  if(!controller.pending() || !time_reached(now_ms, not_before_ms)) return false;
   if(!controller.prepare(mask)) return false;
   return execute_request();
 #else
@@ -295,6 +378,9 @@ bool service(const deep_idle_policy::Conditions& conditions, u32 now_ms) {
 void reset_statistics(void) {
 #if MK61_DEEP_IDLE_SUPPORTED
   controller.reset_statistics();
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  automatic_controller.reset_statistics();
+#endif
 #endif
 }
 
@@ -312,6 +398,18 @@ deep_idle_policy::Snapshot statistics(void) {
 #endif
 }
 
+deep_idle_auto_policy::Snapshot automatic_statistics(u32 now_ms) {
+#if MK61_DEEP_IDLE_SUPPORTED && \
+    MK61_USB_AUTO_DEEP_IDLE_ENABLED
+  return automatic_controller.snapshot(now_ms);
+#else
+  (void) now_ms;
+  return {
+    deep_idle_auto_policy::Phase::DISABLED, false, 0, 0, 0
+  };
+#endif
+}
+
 const char* backend_name(void) {
 #if MK61_DEEP_IDLE_SUPPORTED
   return "STOP-RTC+KBD";
@@ -322,6 +420,11 @@ const char* backend_name(void) {
 
 bool enabled(void) {
   return MK61_DEEP_IDLE_SUPPORTED != 0;
+}
+
+bool automatic_enabled(void) {
+  return MK61_DEEP_IDLE_SUPPORTED != 0 &&
+      MK61_USB_AUTO_DEEP_IDLE_ENABLED != 0;
 }
 
 } // namespace deep_idle

@@ -124,5 +124,7 @@ fi
   "$compile_path/mk61s-M.ino.elf"
 "$root/tests/check_rtc_alarm_elf.sh" \
   "$compile_path/mk61s-M.ino.elf"
+"$root/tests/check_usb_suspend_elf.sh" --disabled \
+  "$compile_path/mk61s-M.ino.elf"
 
 printf '\nF401 Classic V3 UC1609 Arduino compile check: OK\n'

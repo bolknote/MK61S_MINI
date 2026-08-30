@@ -29,6 +29,40 @@ enum StopBlocker : u32 {
   BLOCK_APPLICATION = 1UL << 6,
 };
 
+// STOP ownership crosses the main context and the USB resume interrupt.  Keep
+// that handshake in one byte so the firmware can atomically exchange the
+// complete state instead of racing two independent booleans.
+enum StopSessionFlag : u8 {
+  STOP_SESSION_IDLE = 0,
+  STOP_SESSION_ARMED = 1U << 0,
+  STOP_SESSION_HOST_EVENT = 1U << 1,
+};
+
+struct StopCompletion {
+  bool active;
+  bool host_wake;
+};
+
+constexpr u8 begin_stop_session(void) {
+  return STOP_SESSION_ARMED;
+}
+
+constexpr u8 note_host_event(u8 session) {
+  return (session & STOP_SESSION_ARMED) != 0U
+      ? (u8) (session | STOP_SESSION_HOST_EVENT) : session;
+}
+
+constexpr StopCompletion complete_stop_session(
+    u8 session, bool wake_flag_seen, bool link_still_suspended) {
+  const bool active = (session & STOP_SESSION_ARMED) != 0U;
+  return {
+    active,
+    active && (wake_flag_seen ||
+               (session & STOP_SESSION_HOST_EVENT) != 0U ||
+               !link_still_suspended),
+  };
+}
+
 struct Conditions {
   bool supported;
   bool wrappers_ready;

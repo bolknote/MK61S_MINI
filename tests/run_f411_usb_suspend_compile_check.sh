@@ -36,7 +36,9 @@ cp -R "$root/code/." "$sketch/"
 
 fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-strict_flags="-DMK61_OLED1602_WS0010 -DMK61_ENABLE_DEEP_IDLE_QUALIFICATION=1 -DMK61_ENABLE_USB_SUSPEND_QUALIFICATION=1 -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
+# Deliberately pass no STOP feature override here: this compiles the same
+# production defaults shipped by the ordinary F411 mini V3 WS0010 release.
+strict_flags="-DMK61_OLED1602_WS0010 -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
 wrap_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
 
 set +e
@@ -62,7 +64,7 @@ unexpected_warnings="$(
     true
 )"
 if [[ -n "$unexpected_warnings" ]]; then
-  printf 'Unexpected compiler warnings for F411 USB suspend qualification:\n%s\n' \
+  printf 'Unexpected compiler warnings for F411 USB suspend production:\n%s\n' \
     "$unexpected_warnings" >&2
   exit 1
 fi
@@ -78,9 +80,9 @@ flash_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$flash_line")"
 ram_used="$(sed -E 's/^Global variables use ([0-9]+) bytes .*$/\1/' <<<"$ram_line")"
 ram_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$ram_line")"
 ((flash_max - flash_used >= 131072)) ||
-  fail "qualification Flash headroom is below 128 KiB: $((flash_max - flash_used))"
+  fail "production Flash headroom is below 128 KiB: $((flash_max - flash_used))"
 ((ram_used <= 32768)) ||
-  fail "qualification static RAM exceeds 32 KiB: $ram_used"
+  fail "production static RAM exceeds 32 KiB: $ram_used"
 printf 'F411 USB suspend budgets: Flash %d/%d, RAM %d/%d bytes\n' \
   "$flash_used" "$flash_max" "$ram_used" "$ram_max"
 
@@ -96,4 +98,4 @@ bin="$compile_path/mk61s-M.ino.bin"
 "$root/tests/check_rtc_alarm_elf.sh" "$elf"
 "$root/tests/check_usb_suspend_elf.sh" "$elf"
 
-printf '\nF411 USB suspend qualification compile check: OK\n'
+printf '\nF411 USB suspend production compile check: OK\n'

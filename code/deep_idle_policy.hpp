@@ -8,7 +8,8 @@ namespace deep_idle_policy {
 static constexpr u8 MIN_SECONDS = 1;
 static constexpr u8 MAX_SECONDS = 5;
 static constexpr u16 MIN_CYCLES = 1;
-static constexpr u16 MAX_CYCLES = 120;
+static constexpr u16 MAX_CYCLES = 1000;
+static constexpr u16 AUTOMATIC_CYCLES = 0xFFFFU;
 
 enum class State : u8 {
   ACTIVE,
@@ -152,6 +153,17 @@ class Controller {
 
     bool request(u8 seconds, u16 cycles) {
       if(!valid_request(seconds, cycles) || pending_or_running()) return false;
+      return begin_request(seconds, cycles);
+    }
+
+    bool request_automatic(u8 seconds) {
+      if(seconds < MIN_SECONDS || seconds > MAX_SECONDS ||
+         pending_or_running()) return false;
+      return begin_request(seconds, AUTOMATIC_CYCLES);
+    }
+
+  private:
+    bool begin_request(u8 seconds, u16 cycles) {
       seconds_ = seconds;
       requested_cycles_ = cycles;
       completed_cycles_ = 0;
@@ -162,6 +174,8 @@ class Controller {
       state_ = State::DEEP_IDLE_PENDING;
       return true;
     }
+
+  public:
 
     bool cancel(void) {
       if(state_ != State::DEEP_IDLE_PENDING) return false;
@@ -226,6 +240,22 @@ class Controller {
         case WakeReason::ERROR:
           break;
       }
+    }
+
+    // The host can resume after an RTC cycle has completed but before the
+    // next STOP entry is armed. This is a normal termination boundary, not a
+    // failed STOP. Record the external reason without inventing another entry
+    // or completed timer cycle.
+    void note_interruption(WakeReason reason) {
+      if((state_ != State::STOP_ENTERING && state_ != State::RESUMING) ||
+         (reason != WakeReason::USB_HOST && reason != WakeReason::OTHER)) {
+        note_failure(FailureReason::STATE);
+        return;
+      }
+      state_ = State::RESUMING;
+      last_wake_ = reason;
+      last_elapsed_ms_ = 0;
+      other_wakes_ = saturating_increment(other_wakes_);
     }
 
     bool continue_cycles(void) const {

@@ -245,6 +245,27 @@ inline isize first_set_bit(u8 value) {
   return -1;
 }
 
+// keyboard.cpp's legacy bus_in() shifts COL0 first, so physical entries in
+// data_pins[] appear in the resulting byte in reverse bit order. Any scanner
+// which addresses those pins individually must preserve the same mapping.
+constexpr usize logical_column_from_data_index(usize data_index) {
+  return data_index < COLUMN_COUNT
+      ? COLUMN_COUNT - 1U - data_index : COLUMN_COUNT;
+}
+
+inline u8 qualified_rows(const u8* high_votes, u8 allowed_rows,
+                         u8 required_votes) {
+  if(high_votes == nullptr || required_votes == 0) return 0;
+  u8 result = 0;
+  for(usize row = 0; row < ROW_COUNT; row++) {
+    const u8 bit = (u8) (1u << row);
+    if((allowed_rows & bit) != 0 && high_votes[row] >= required_votes) {
+      result |= bit;
+    }
+  }
+  return result;
+}
+
 } // пространство имён keyboard_core
 
 #endif

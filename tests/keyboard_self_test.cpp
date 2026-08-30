@@ -195,6 +195,31 @@ void test_stop_wake_prime_has_no_duplicate_press(void) {
   assert(row.update(0x00, 1040) == 0x04);
 }
 
+void test_stop_wake_row_qualification_rejects_transients(void) {
+  const u8 votes[keyboard_core::ROW_COUNT] = {0, 3, 4, 5, 5};
+  // Row 4 has enough votes but did not cause the wake; row 1 caused the wake
+  // but is a transient. Only stable, originally waking rows survive.
+  assert(keyboard_core::qualified_rows(votes, 0x06, 4) == 0x04);
+  assert(keyboard_core::qualified_rows(votes, 0x1F, 5) == 0x18);
+  assert(keyboard_core::qualified_rows(nullptr, 0x1F, 4) == 0);
+  assert(keyboard_core::qualified_rows(votes, 0x1F, 0) == 0);
+}
+
+void test_stop_wake_physical_columns_match_legacy_bus_order(void) {
+  assert(keyboard_core::logical_column_from_data_index(0) == 7);
+  assert(keyboard_core::logical_column_from_data_index(3) == 4);
+  assert(keyboard_core::logical_column_from_data_index(4) == 3);
+  assert(keyboard_core::logical_column_from_data_index(7) == 0);
+  assert(keyboard_core::logical_column_from_data_index(8) == 8);
+
+  // On mini, physical key 5 is row 2 on data_pins[4]. It must resolve to
+  // logical column 3 and scan-code 17, not direct-index scan-code 22 (key 4).
+  const usize five =
+      keyboard_core::logical_column_from_data_index(4) *
+      keyboard_core::ROW_COUNT + 2;
+  assert(five == 17);
+}
+
 } // безымянное пространство имён
 
 int main(void) {
@@ -207,6 +232,8 @@ int main(void) {
   test_debounce_and_simultaneous_edges();
   test_time_wraparound();
   test_stop_wake_prime_has_no_duplicate_press();
+  test_stop_wake_row_qualification_rejects_transients();
+  test_stop_wake_physical_columns_match_legacy_bus_order();
   printf("keyboard_self_test: ok\n");
   return 0;
 }

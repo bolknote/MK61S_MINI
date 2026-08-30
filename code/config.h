@@ -90,26 +90,13 @@
   #error "MK61_ENABLE_WATCHDOG_TEST must be 0 or 1"
 #endif
 
-// Shallow Cortex-M Sleep is entered only from a conservative top-level idle
-// policy. SysTick remains the periodic keyboard wake source; STOP/STANDBY are
-// deliberately not used.
+// Shallow Cortex-M Sleep is the conservative fallback whenever the qualified
+// profile below cannot enter STOP. SysTick remains its periodic wake source.
 #ifndef MK61_ENABLE_IDLE_WFI
   #define MK61_ENABLE_IDLE_WFI 1
 #endif
 #if MK61_ENABLE_IDLE_WFI != 0 && MK61_ENABLE_IDLE_WFI != 1
   #error "MK61_ENABLE_IDLE_WFI must be 0 or 1"
-#endif
-
-// STOP mode is deliberately a qualification-only feature until keyboard,
-// RTC, USB re-enumeration and current consumption have all passed HIL.  The
-// normal release therefore keeps the proven shallow WFI path.  A laboratory
-// image enables the bounded `prof deep` experiment explicitly.
-#ifndef MK61_ENABLE_DEEP_IDLE_QUALIFICATION
-  #define MK61_ENABLE_DEEP_IDLE_QUALIFICATION 0
-#endif
-#if MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 0 && \
-    MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 1
-  #error "MK61_ENABLE_DEEP_IDLE_QUALIFICATION must be 0 or 1"
 #endif
 
 // Observe the STM32 USB device state through linker wrappers.  This exposes
@@ -121,28 +108,6 @@
 #if MK61_ENABLE_USB_POWER_OBSERVER != 0 && \
     MK61_ENABLE_USB_POWER_OBSERVER != 1
   #error "MK61_ENABLE_USB_POWER_OBSERVER must be 0 or 1"
-#endif
-
-// Preserving a configured USB device through STOP remains qualification-only
-// until the real host suspend/resume, local keyboard-wake and current gates
-// have passed.  It deliberately does not advertise USB Remote Wake: a key
-// wakes the calculator locally while the host is allowed to remain asleep.
-// Normal firmware keeps the proven CDC disconnect/re-enumerate fallback used
-// by `prof deep`.
-#ifndef MK61_ENABLE_USB_SUSPEND_QUALIFICATION
-  #define MK61_ENABLE_USB_SUSPEND_QUALIFICATION 0
-#endif
-#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 0 && \
-    MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 1
-  #error "MK61_ENABLE_USB_SUSPEND_QUALIFICATION must be 0 or 1"
-#endif
-#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION && \
-    !MK61_ENABLE_DEEP_IDLE_QUALIFICATION
-  #error "USB suspend qualification requires deep-idle qualification"
-#endif
-#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION && \
-    !MK61_ENABLE_USB_POWER_OBSERVER
-  #error "USB suspend qualification requires the USB power observer"
 #endif
 
 // PVD (programmable voltage detector) blocks the start of new NOR program /
@@ -571,6 +536,88 @@
 // ревизией Classic. Такая комбинация дала бы неверную распиновку буззера.
 #if defined(REVISION_V2) && (defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3) || defined(MK61_BOARD_40TH))
   #error "REVISION_V2 cannot be combined with a UC1609 board profile"
+#endif
+
+// Production STOP is enabled only on the exact hardware combination that has
+// passed the full physical qualification: STM32F411CE, mini V3 keyboard and
+// WEH001602A/WS0010. F401, A00/A02 and every UC1609 profile retain shallow
+// WFI until their own display/keyboard HIL is complete.
+#ifndef MK61_ENABLE_DEEP_IDLE
+  #if defined(STM32F411xE) && defined(MK61_KEYBOARD_MINI) && \
+      defined(MK61_OLED1602_WS0010) && defined(REVISION_V3)
+    #define MK61_ENABLE_DEEP_IDLE 1
+  #else
+    #define MK61_ENABLE_DEEP_IDLE 0
+  #endif
+#endif
+#if MK61_ENABLE_DEEP_IDLE != 0 && MK61_ENABLE_DEEP_IDLE != 1
+  #error "MK61_ENABLE_DEEP_IDLE must be 0 or 1"
+#endif
+#if MK61_ENABLE_DEEP_IDLE && \
+    !(defined(STM32F411xE) && defined(MK61_KEYBOARD_MINI) && \
+      defined(MK61_OLED1602_WS0010) && defined(REVISION_V3))
+  #error "production deep idle is qualified only for F411 mini V3 WS0010"
+#endif
+
+// Backward-compatible laboratory override for bounded STOP experiments on
+// otherwise unsupported profiles. It never changes the production default.
+#ifndef MK61_ENABLE_DEEP_IDLE_QUALIFICATION
+  #define MK61_ENABLE_DEEP_IDLE_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 0 && \
+    MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 1
+  #error "MK61_ENABLE_DEEP_IDLE_QUALIFICATION must be 0 or 1"
+#endif
+#define MK61_DEEP_IDLE_ENABLED \
+  (MK61_ENABLE_DEEP_IDLE || MK61_ENABLE_DEEP_IDLE_QUALIFICATION)
+
+// A suspended USB connection is preserved across STOP. No Remote Wake bit is
+// advertised and no resume signal is sent: a key wakes only the calculator;
+// the host remains asleep until it wakes for an independent reason.
+#ifndef MK61_ENABLE_USB_SUSPEND
+  #define MK61_ENABLE_USB_SUSPEND MK61_ENABLE_DEEP_IDLE
+#endif
+#if MK61_ENABLE_USB_SUSPEND != 0 && MK61_ENABLE_USB_SUSPEND != 1
+  #error "MK61_ENABLE_USB_SUSPEND must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_USB_SUSPEND_QUALIFICATION
+  #define MK61_ENABLE_USB_SUSPEND_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 0 && \
+    MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 1
+  #error "MK61_ENABLE_USB_SUSPEND_QUALIFICATION must be 0 or 1"
+#endif
+#define MK61_USB_SUSPEND_ENABLED \
+  (MK61_ENABLE_USB_SUSPEND || MK61_ENABLE_USB_SUSPEND_QUALIFICATION)
+#if MK61_USB_SUSPEND_ENABLED && !MK61_DEEP_IDLE_ENABLED
+  #error "USB suspend preservation requires deep idle"
+#endif
+#if MK61_USB_SUSPEND_ENABLED && !MK61_ENABLE_USB_POWER_OBSERVER
+  #error "USB suspend preservation requires the USB power observer"
+#endif
+
+// Once the host suspends USB, production firmware enters repeated bounded
+// five-second STOP cycles automatically. The same state machine is also used
+// by the explicit `prof deep` diagnostic command.
+#ifndef MK61_ENABLE_USB_AUTO_DEEP_IDLE
+  #define MK61_ENABLE_USB_AUTO_DEEP_IDLE MK61_ENABLE_USB_SUSPEND
+#endif
+#if MK61_ENABLE_USB_AUTO_DEEP_IDLE != 0 && \
+    MK61_ENABLE_USB_AUTO_DEEP_IDLE != 1
+  #error "MK61_ENABLE_USB_AUTO_DEEP_IDLE must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION
+  #define MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION != 0 && \
+    MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION != 1
+  #error "MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION must be 0 or 1"
+#endif
+#define MK61_USB_AUTO_DEEP_IDLE_ENABLED \
+  (MK61_ENABLE_USB_AUTO_DEEP_IDLE || \
+   MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION)
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED && !MK61_USB_SUSPEND_ENABLED
+  #error "automatic USB deep idle requires USB suspend preservation"
 #endif
 
 // Mini/LCD1602 has only the NOR client on SPI1, so its measured arbiter and DMA

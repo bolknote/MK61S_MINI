@@ -52,9 +52,37 @@ static void test_state_classification(void) {
                 "suspended") == 0);
 }
 
+static void test_stop_session_irq_handshake(void) {
+  using namespace usb_power_policy;
+
+  const u8 armed = begin_stop_session();
+  assert((armed & STOP_SESSION_ARMED) != 0U);
+
+  StopCompletion completion = complete_stop_session(armed, false, true);
+  assert(completion.active);
+  assert(!completion.host_wake);
+
+  const u8 resumed = note_host_event(armed);
+  completion = complete_stop_session(resumed, false, false);
+  assert(completion.active);
+  assert(completion.host_wake);
+
+  // The EXTI snapshot remains sufficient even if the resume callback has not
+  // run yet, and a callback after completion cannot resurrect an idle owner.
+  completion = complete_stop_session(armed, true, true);
+  assert(completion.active);
+  assert(completion.host_wake);
+  assert(note_host_event(STOP_SESSION_IDLE) == STOP_SESSION_IDLE);
+
+  completion = complete_stop_session(STOP_SESSION_IDLE, true, false);
+  assert(!completion.active);
+  assert(!completion.host_wake);
+}
+
 int main(void) {
   test_stop_gate();
   test_state_classification();
+  test_stop_session_irq_handshake();
   puts("usb_power_policy_self_test: ok");
   return 0;
 }

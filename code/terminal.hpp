@@ -1827,8 +1827,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(usb_power_state.wrappers_linked ? 1 : 0);
       Serial.print(" callbacks=");
       Serial.print(usb_power_state.callbacks_ready ? 1 : 0);
-      Serial.print(" qualification=");
-      Serial.print(usb_power_state.qualification_enabled ? 1 : 0);
+      Serial.print(" stop_preserve=");
+      Serial.print(usb_power_state.stop_preservation_enabled ? 1 : 0);
       Serial.print(" state=");
       Serial.print(usb_power_policy::state_name(usb_power_state.state));
       Serial.print(" raw=");
@@ -1841,6 +1841,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(usb_power_state.endpoints_idle ? 1 : 0);
       Serial.print(" age_ms=");
       Serial.print(usb_power_state.suspend_age_ms);
+      Serial.print(" hw=");
+      Serial.print(usb_power_state.hardware_suspended ? 1 : 0);
+      Serial.write('/');
+      Serial.print(usb_power_state.hardware_suspend_events);
+      Serial.write('/');
+      Serial.print(usb_power_state.recovered_suspend_events);
       Serial.print(" events=");
       Serial.print(usb_power_state.setup_callbacks);
       Serial.write('/');
@@ -1865,6 +1871,21 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(usb_power_state.last_stop_blockers, HEX);
       Serial.print(" epblock=0x");
       Serial.println(usb_power_state.last_endpoint_blockers, HEX);
+
+      const keyboard_stop_wake_snapshot keyboard_wake =
+        kbd::stop_wake_statistics();
+      Serial.print("KBD STOP supported=");
+      Serial.print(keyboard_wake.supported ? 1 : 0);
+      Serial.print(" captures=");
+      Serial.print(keyboard_wake.capture_events);
+      Serial.print(" last=");
+      Serial.print(keyboard_wake.last_scan_code);
+      Serial.print(" count=");
+      Serial.print(keyboard_wake.last_capture_count);
+      Serial.print(" wake_rows=0x");
+      Serial.print(keyboard_wake.wake_rows, HEX);
+      Serial.print(" captured_rows=0x");
+      Serial.println(keyboard_wake.captured_rows, HEX);
 
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
       Serial.print("SLEEP backend=");
@@ -1940,6 +1961,20 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.print(deep.rejected[index]);
       }
       Serial.println();
+      const deep_idle_auto_policy::Snapshot automatic =
+          deep_idle::automatic_statistics(millis());
+      Serial.print("DEEP AUTO enabled=");
+      Serial.print(deep_idle::automatic_enabled() ? 1 : 0);
+      Serial.print(" phase=");
+      Serial.print(deep_idle_auto_policy::phase_name(automatic.phase));
+      Serial.print(" holdoff=");
+      Serial.print(automatic.manual_holdoff ? 1 : 0);
+      Serial.print(" requests=");
+      Serial.print(automatic.automatic_requests);
+      Serial.print(" reentries=");
+      Serial.print(automatic.automatic_reentries);
+      Serial.print(" wait_ms=");
+      Serial.println(automatic.wait_remaining_ms);
 #endif
 
       print_power_status();
@@ -2038,8 +2073,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       report.append_u64(usb_power_state.wrappers_linked ? 1 : 0);
       report.append_text(",callbacks=");
       report.append_u64(usb_power_state.callbacks_ready ? 1 : 0);
-      report.append_text(",qualification=");
-      report.append_u64(usb_power_state.qualification_enabled ? 1 : 0);
+      report.append_text(",stop_preserve=");
+      report.append_u64(
+          usb_power_state.stop_preservation_enabled ? 1 : 0);
       report.append_text(",state=");
       report.append_text(usb_power_policy::state_name(usb_power_state.state));
       report.append_text(",raw=");
@@ -2053,6 +2089,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       report.append_u64(usb_power_state.endpoints_idle ? 1 : 0);
       report.append_text(",age_ms=");
       report.append_u64(usb_power_state.suspend_age_ms);
+      report.append_text(",hardware_suspended=");
+      report.append_u64(usb_power_state.hardware_suspended ? 1 : 0);
+      report.append_text(",hardware_suspend_events=");
+      report.append_u64(usb_power_state.hardware_suspend_events);
+      report.append_text(",recovered_suspend_events=");
+      report.append_u64(usb_power_state.recovered_suspend_events);
       report.append_text(",setup=");
       report.append_u64(usb_power_state.setup_callbacks);
       report.append_text(",reset=");
@@ -2352,7 +2394,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
            cycles < deep_idle_policy::MIN_CYCLES ||
            !terminal_core::at_end(cursor)) {
           Serial.println(
-              "Usage: prof deep <1..5 seconds> [1..120 cycles]|cancel");
+              "Usage: prof deep <1..5 seconds> [1..1000 cycles]|cancel");
           return terminal_protocol::Result::error();
         }
         if(!deep_idle::request((u8) seconds, (u16) cycles, millis())) {
@@ -2391,6 +2433,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         #endif
         usb_cdc_rx_guard::reset_statistics();
         usb_power::reset_statistics();
+        kbd::reset_stop_wake_statistics();
         Serial.println("PROF started");
         return terminal_protocol::Result::ok();
       }
@@ -2411,6 +2454,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         #endif
         usb_cdc_rx_guard::reset_statistics();
         usb_power::reset_statistics();
+        kbd::reset_stop_wake_statistics();
         Serial.println("PROF reset");
         return terminal_protocol::Result::ok();
       }

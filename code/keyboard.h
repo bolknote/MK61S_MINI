@@ -5,7 +5,7 @@
 #include "keyboard_core.hpp"
 #include "rust_types.h"
 
-#if MK61_ENABLE_DEEP_IDLE_QUALIFICATION && \
+#if MK61_DEEP_IDLE_ENABLED && \
     defined(MK61_KEYBOARD_MINI) && defined(ARDUINO_ARCH_STM32) && \
     defined(__ARM_ARCH_7EM__) && \
     (defined(STM32F401xC) || defined(STM32F401xE) || \
@@ -16,6 +16,15 @@
 #endif
 
 enum class key_state {PRESSED=0, RELEASED=keyboard_core::RELEASE_MASK};
+
+struct keyboard_stop_wake_snapshot {
+  bool supported;
+  u32 capture_events;
+  i32 last_scan_code;
+  u8 last_capture_count;
+  u8 wake_rows;
+  u8 captured_rows;
+};
 
 static constexpr key_state PRESS             =   key_state::PRESSED;
 static constexpr key_state RELEASE           =   key_state::RELEASED;
@@ -44,6 +53,8 @@ namespace kbd {
   extern  void    set_external_key_pressed(i32 key_code, bool pressed);
   extern  bool    prepare_stop_wake(void);
   extern  bool    stop_wake_pending(void);
+  extern  keyboard_stop_wake_snapshot stop_wake_statistics(void);
+  extern  void    reset_stop_wake_statistics(void);
   // Restores the ordinary matrix scanner and returns the number of physical
   // presses preserved from the wake configuration.
   extern  u8      resume_from_stop(void);

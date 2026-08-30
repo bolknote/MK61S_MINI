@@ -1160,7 +1160,7 @@ void idle_main_process(void) {
   independent_watchdog::foreground_epoch(millis());
   #if MK61_IDLE_WFI_SUPPORTED
   #if MK61_DEEP_IDLE_SUPPORTED
-  if(deep_idle::pending()) {
+  if(deep_idle::service_needed()) {
     const idle_sleep_policy::Conditions light = idle_sleep_conditions();
     (void) deep_idle::service(deep_idle_conditions(light), millis());
   }

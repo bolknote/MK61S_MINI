@@ -22,7 +22,7 @@ MK61_FIRMWARE_OUTPUT_DIR="$preflight_root/firmware" \
 MK61_FIRMWARE_TAG=preflight \
   "$root/tests/run_f411_release_matrix.sh"
 
-printf '\n=== F411 USB suspend qualification ===\n'
+printf '\n=== F411 USB-preserving STOP production image ===\n'
 MK61_F411_USB_SUSPEND_BUILD_ROOT="$preflight_root/f411-usb-suspend" \
   "$root/tests/run_f411_usb_suspend_compile_check.sh"
 
@@ -71,6 +71,8 @@ for profile in mini-v3-a00 mini-v3-ws0010 mini-v2-a00 classic-v3; do
     "$f401_build_root/$profile/resident.elf"
   "$root/tests/check_early_dfu_elf.sh" \
     "$f401_build_root/$profile/resident.elf"
+  "$root/tests/check_usb_suspend_elf.sh" --disabled \
+    "$f401_build_root/$profile/resident.elf"
 done
 
 printf '\n=== F401 WS0010 capability cross-matrix ===\n'
@@ -103,7 +105,8 @@ size_tool="$(awk -F= '/^CMAKE_SIZE:FILEPATH=/ {print $2; exit}' \
   "$f401_build_root/mini-v3-ws0010/resident.elf"
 "$root/tests/check_ws0010_ram.sh" "$size_tool" \
   "$f411_build_root/build-lcd1602-a00/mk61s-M.ino.elf" \
-  "$f411_build_root/build-oled1602-ws0010/mk61s-M.ino.elf"
+  "$f411_build_root/build-oled1602-ws0010/mk61s-M.ino.elf" \
+  256
 "$root/tests/check_ws0010_ram.sh" "$size_tool" \
   "$preflight_root/f401-a00-usb/mini-v3-a00/resident.elf" \
   "$preflight_root/f401-ws-usb/mini-v3-ws0010/resident.elf"

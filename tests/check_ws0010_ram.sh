@@ -6,15 +6,18 @@ fail() {
   exit 2
 }
 
-[[ $# -eq 3 ]] ||
-  fail 'usage: check_ws0010_ram.sh ARM_SIZE A00_ELF WS0010_ELF'
+[[ $# -eq 3 || $# -eq 4 ]] ||
+  fail 'usage: check_ws0010_ram.sh ARM_SIZE A00_ELF WS0010_ELF [MAX_GROWTH]'
 
 size_tool="$1"
 a00_elf="$2"
 ws0010_elf="$3"
+maximum_growth="${4:-0}"
 [[ -x "$size_tool" ]] || fail "size tool is not executable: $size_tool"
 [[ -s "$a00_elf" ]] || fail "A00 ELF is missing: $a00_elf"
 [[ -s "$ws0010_elf" ]] || fail "WS0010 ELF is missing: $ws0010_elf"
+[[ "$maximum_growth" =~ ^[0-9]+$ ]] ||
+  fail "invalid maximum growth: $maximum_growth"
 
 global_ram() {
   local elf="$1"
@@ -38,9 +41,10 @@ ws0010_ram="$(global_ram "$ws0010_elf")"
 [[ "$a00_ram" =~ ^[0-9]+$ && "$ws0010_ram" =~ ^[0-9]+$ ]] ||
   fail 'could not parse global RAM usage'
 
-if (( ws0010_ram > a00_ram )); then
-  fail "WS0010 grows static RAM: $ws0010_ram > A00 $a00_ram"
+growth=$((ws0010_ram - a00_ram))
+if (( growth > maximum_growth )); then
+  fail "WS0010 static RAM growth $growth exceeds budget $maximum_growth bytes"
 fi
 
-printf 'WS0010 RAM check: OK (WS0010 %d, A00 %d, delta %d bytes)\n' \
-  "$ws0010_ram" "$a00_ram" "$((ws0010_ram - a00_ram))"
+printf 'WS0010 RAM check: OK (WS0010 %d, A00 %d, delta %d, budget %d bytes)\n' \
+  "$ws0010_ram" "$a00_ram" "$growth" "$maximum_growth"
