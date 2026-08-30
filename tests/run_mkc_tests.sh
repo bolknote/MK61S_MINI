@@ -73,6 +73,71 @@ SESSION_DIR="$work/session"
 MOCK_ROOT="$work/device"
 shopt -s nullglob dotglob
 
+# Автовыбор CDC не доверяет сохранённому/первому порту: каждый кандидат
+# обязан ответить identity handshake. Несколько MK61s требуют selector.
+parse_identity_line \
+  'MK61 ID v=1 public=0123456789ABCDEF short=89ABCDEF usb=112233445566 volume=A1B2C3D4 build=12345678 profile=mini-v3-a00'
+test "$PROBE_KIND:$PROBE_PUBLIC:$PROBE_SHORT:$PROBE_USB:$PROBE_PROFILE" = \
+  'identity:0123456789ABCDEF:89ABCDEF:112233445566:mini-v3-a00'
+if parse_identity_line \
+  'MK61 ID v=1 public=bad short=bad usb=bad volume=bad build=bad profile=x'; then
+  echo 'mkc: malformed identity line was accepted' >&2
+  exit 1
+fi
+if parse_identity_line \
+  'MK61 ID v=1 public=0123456789ABCDEF short=DEADBEEF usb=112233445566 volume=A1B2C3D4 build=12345678 profile=mini-v3-a00'; then
+  echo 'mkc: inconsistent short identity was accepted' >&2
+  exit 1
+fi
+parse_identity_line 'MK61s-Classic-V3 ver. Aug 02 2026(12:34:56)'
+test "$PROBE_KIND:$PROBE_PROFILE" = legacy:legacy
+
+(
+  list_cdc_ports() { printf '%s\n' /dev/cu.COM12 /dev/cu.COM16; }
+  probe_port() {
+    PROBE_KIND=; PROBE_PUBLIC=; PROBE_SHORT=; PROBE_USB=; PROBE_PROFILE=
+    [ "$1" = /dev/cu.COM16 ] || return 1
+    PROBE_KIND=identity
+    PROBE_PUBLIC=0123456789ABCDEF
+    PROBE_SHORT=89ABCDEF
+    PROBE_USB=112233445566
+    PROBE_PROFILE=mini-v3-a00
+  }
+  PORT=/dev/cu.COM12
+  PORT_EXPLICIT=0
+  DEVICE_SELECTOR=
+  select_mk61_port
+  test "$PORT:$DETECTED_DEVICE_ID" = \
+    '/dev/cu.COM16:0123456789ABCDEF'
+)
+
+(
+  list_cdc_ports() { printf '%s\n' /dev/cu.ONE /dev/cu.TWO; }
+  probe_port() {
+    PROBE_KIND=identity
+    PROBE_PROFILE=mini-v3-a00
+    if [ "$1" = /dev/cu.ONE ]; then
+      PROBE_PUBLIC=1111111111111111; PROBE_SHORT=11111111
+      PROBE_USB=AAAAAAAAAAAA
+    else
+      PROBE_PUBLIC=2222222222222222; PROBE_SHORT=22222222
+      PROBE_USB=BBBBBBBBBBBB
+    fi
+  }
+  PORT=
+  PORT_EXPLICIT=0
+  DEVICE_SELECTOR=
+  if select_mk61_port; then
+    echo 'mkc: silently selected the first of two MK61s devices' >&2
+    exit 1
+  fi
+  case "$SELECT_ERROR" in *'несколько MK61s'*) ;; *) exit 1 ;; esac
+  DEVICE_SELECTOR=22222222
+  select_mk61_port
+  test "$PORT:$DETECTED_DEVICE_ID" = \
+    '/dev/cu.TWO:2222222222222222'
+)
+
 # Возврат через `..` или Backspace должен оставлять курсор на каталоге,
 # из которого вышли. Скрытое имя повторяет исходный Windows-сценарий.
 (

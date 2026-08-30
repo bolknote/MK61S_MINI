@@ -42,6 +42,16 @@
 #if MK61_ENABLE_CRASH_DUMP != 0 && MK61_ENABLE_CRASH_DUMP != 1
   #error "MK61_ENABLE_CRASH_DUMP must be 0 or 1"
 #endif
+
+// Release builders set this to 1 and seal the resident BIN after linking.
+// Generic Arduino development builds remain bootable but report "unsealed";
+// they must never be labelled as CRC-verified release artifacts.
+#ifndef MK61_REQUIRE_RESIDENT_CRC
+  #define MK61_REQUIRE_RESIDENT_CRC 0
+#endif
+#if MK61_REQUIRE_RESIDENT_CRC != 0 && MK61_REQUIRE_RESIDENT_CRC != 1
+  #error "MK61_REQUIRE_RESIDENT_CRC must be 0 or 1"
+#endif
 #ifndef MK61_ENABLE_FAULT_INJECTION
   #define MK61_ENABLE_FAULT_INJECTION 0
 #endif
@@ -88,6 +98,43 @@
 #endif
 #if MK61_ENABLE_IDLE_WFI != 0 && MK61_ENABLE_IDLE_WFI != 1
   #error "MK61_ENABLE_IDLE_WFI must be 0 or 1"
+#endif
+
+// STOP mode is deliberately a qualification-only feature until keyboard,
+// RTC, USB re-enumeration and current consumption have all passed HIL.  The
+// normal release therefore keeps the proven shallow WFI path.  A laboratory
+// image enables the bounded `prof deep` experiment explicitly.
+#ifndef MK61_ENABLE_DEEP_IDLE_QUALIFICATION
+  #define MK61_ENABLE_DEEP_IDLE_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 0 && \
+    MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 1
+  #error "MK61_ENABLE_DEEP_IDLE_QUALIFICATION must be 0 or 1"
+#endif
+
+// PVD (programmable voltage detector) blocks the start of new NOR program /
+// erase commands and USB MSC writes before VDD reaches the W25Q128 minimum.
+// Level 6 is the conservative common F401/F411 threshold: falling edge
+// 2.85..2.99 V, rising edge 2.96..3.10 V.  The fitted W25Q128JV is specified
+// down to 2.7 V; a 100 ms stable interval prevents write-enable chatter.
+#ifndef MK61_ENABLE_PVD
+  #define MK61_ENABLE_PVD 1
+#endif
+#if MK61_ENABLE_PVD != 0 && MK61_ENABLE_PVD != 1
+  #error "MK61_ENABLE_PVD must be 0 or 1"
+#endif
+#ifndef MK61_PVD_LEVEL
+  #define MK61_PVD_LEVEL 6
+#endif
+#if MK61_PVD_LEVEL < 0 || MK61_PVD_LEVEL > 7
+  #error "MK61_PVD_LEVEL must be in the range 0..7"
+#endif
+#ifndef MK61_PVD_RECOVERY_STABLE_MS
+  #define MK61_PVD_RECOVERY_STABLE_MS 100UL
+#endif
+#if MK61_PVD_RECOVERY_STABLE_MS < 10UL || \
+    MK61_PVD_RECOVERY_STABLE_MS > 5000UL
+  #error "MK61_PVD_RECOVERY_STABLE_MS must be 10..5000"
 #endif
 
 // Старый резервный вариант хранения через EEPROM Arduino требует 8-КиБ буфер
@@ -356,6 +403,48 @@
   #define MK61_DISPLAY_LCD1602
 #endif
 
+// Read benchmarks are service diagnostics, not calculator functionality.
+// Keep them on normal builds and on the F411 qualification board, but do not
+// spend the last internal-Flash reserve of the F401/UC1609 release on a command
+// that is used only while characterising storage performance.  An explicit
+// build flag always wins, so a laboratory F401 image can still enable it.
+#ifndef MK61_ENABLE_READ_BENCHMARKS
+  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
+    #define MK61_ENABLE_READ_BENCHMARKS 0
+  #else
+    #define MK61_ENABLE_READ_BENCHMARKS 1
+  #endif
+#endif
+#if MK61_ENABLE_READ_BENCHMARKS != 0 && MK61_ENABLE_READ_BENCHMARKS != 1
+  #error "MK61_ENABLE_READ_BENCHMARKS must be 0 or 1"
+#endif
+
+// Raw ADC fields are a service report; the user-facing Hardware menu keeps
+// VDD/MCU temperature/honest battery state on every target.  The constrained
+// F401/UC1609 release omits only this duplicate terminal rendering to retain
+// the mandatory sealed-Flash reserve.  Laboratory builds may override it.
+#ifndef MK61_ENABLE_ANALOG_REPORT
+  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
+    #define MK61_ENABLE_ANALOG_REPORT 0
+  #else
+    #define MK61_ENABLE_ANALOG_REPORT 1
+  #endif
+#endif
+#if MK61_ENABLE_ANALOG_REPORT != 0 && MK61_ENABLE_ANALOG_REPORT != 1
+  #error "MK61_ENABLE_ANALOG_REPORT must be 0 or 1"
+#endif
+
+// Alarm scheduling is user-visible functionality, not a laboratory report.
+// Keep the same command/API on F401 and F411; the constrained F401 release is
+// built with size-LTO and retains its sealed-image reserve that way.
+#ifndef MK61_ENABLE_RTC_ALARM_TERMINAL
+  #define MK61_ENABLE_RTC_ALARM_TERMINAL 1
+#endif
+#if MK61_ENABLE_RTC_ALARM_TERMINAL != 0 && \
+    MK61_ENABLE_RTC_ALARM_TERMINAL != 1
+  #error "MK61_ENABLE_RTC_ALARM_TERMINAL must be 0 or 1"
+#endif
+
 #if defined(DISPLAY_LCD1602_A00) && !defined(MK61_LCD1602_A00)
   #define MK61_LCD1602_A00
 #endif
@@ -479,12 +568,23 @@
   #error "MK61_ENABLE_SPI1_DMA requires MK61_ENABLE_SPI1_ARBITER=1"
 #endif
 #ifndef MK61_SPI1_DMA_THRESHOLD
-  #define MK61_SPI1_DMA_THRESHOLD 128
+  // HIL A/B on F411/W25Q128: 64-byte transfers amortize DMA setup and reduce
+  // latency for small C5 records; shorter command/address traffic stays polling.
+  #define MK61_SPI1_DMA_THRESHOLD 64
 #endif
 #if MK61_SPI1_DMA_THRESHOLD < 1 || MK61_SPI1_DMA_THRESHOLD > 65535
   #error "MK61_SPI1_DMA_THRESHOLD must be in 1..65535"
 #endif
 
+// Small C5 records and ZX0 input are consumed incrementally. 512 bytes won the
+// 64/128/256/512 HIL matrix and remains a stack-local buffer, so static RAM is
+// unchanged. Keep the compile-time tuning point for repeatable qualification.
+#ifndef MK61_PROGRAM_STORE_READ_CHUNK
+  #define MK61_PROGRAM_STORE_READ_CHUNK 512
+#endif
+#if MK61_PROGRAM_STORE_READ_CHUNK < 32 || MK61_PROGRAM_STORE_READ_CHUNK > 512
+  #error "MK61_PROGRAM_STORE_READ_CHUNK must be in 32..512"
+#endif
 // Электрическая полярность PC13 задаётся полной платой, а не типом клавиатуры:
 // mini V2/V3 и Classic V3 — active HIGH; Classic V2 и 40th — active LOW.
 // Храним полярность в профиле платы, чтобы все вызовы led::on/off/blink
@@ -526,6 +626,18 @@
 #endif
 #if MK61_CORE_MERGED_TICK && MK61_DWT_CORE_DETAIL
   #error "MK61_CORE_MERGED_TICK is incompatible with per-chip DWT detail"
+#endif
+
+// Research switch for a three-byte Cortex-M4 DSP selector in the merged Tick.
+// It stays off until the same-device DWT A/B clears the >=3% full-step gate.
+#ifndef MK61_CORE_PACKED_AMK
+  #define MK61_CORE_PACKED_AMK 0
+#endif
+#if MK61_CORE_PACKED_AMK != 0 && MK61_CORE_PACKED_AMK != 1
+  #error "MK61_CORE_PACKED_AMK must be 0 or 1"
+#endif
+#if MK61_CORE_PACKED_AMK && !MK61_CORE_MERGED_TICK
+  #error "MK61_CORE_PACKED_AMK requires MK61_CORE_MERGED_TICK"
 #endif
 
 // Полное разворачивание расписания уменьшает цену внутреннего цикла.

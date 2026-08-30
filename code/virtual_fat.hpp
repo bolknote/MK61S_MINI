@@ -8,6 +8,7 @@ namespace virtual_fat {
 static constexpr u16 SECTOR_SIZE = 512;
 
 u32 sector_count(void);
+u32 volume_serial(void);
 bool read_sector(u32 lba, u8* out);
 bool read_sectors(u32 lba, u8* out, u16 count);
 // Подключает дополнительную ОЗУ только на время сеанса до reset_session().

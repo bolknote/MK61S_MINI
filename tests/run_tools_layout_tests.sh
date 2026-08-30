@@ -15,7 +15,9 @@ expected="$(
     build-gcc.cmd \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
-    mkc.cmd |
+    mkc.cmd \
+    seal-firmware.ps1 \
+    seal-firmware.sh |
     LC_ALL=C sort
 )"
 
@@ -29,6 +31,7 @@ test -f "$root/tools/.mk61-app/mk61_module_pack.cpp"
 test -f "$root/tools/.mk61-app/mk61_module.ld"
 test -f "$root/tools/.mk61-app/build.ps1"
 test -f "$root/tools/.fmk-font/fmk_font.cpp"
+test -f "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp"
 test ! -e "$root/tools/fmk_font"
 test ! -e "$root/tools/mk61_module_pack"
 

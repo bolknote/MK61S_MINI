@@ -3,6 +3,7 @@
 #include "rust_types.h"
 #include "exclusive_buffer.hpp"
 #include "msc_scsi_safety.h"
+#include "power_monitor.hpp"
 #include "virtual_fat.hpp"
 
 #include <Arduino.h>
@@ -306,7 +307,7 @@ static int8_t storage_ready(uint8_t lun) {
 
 static int8_t storage_write_protected(uint8_t lun) {
   if(lun != 0) return 1;
-  return 0;
+  return power_monitor::writes_allowed() ? 0 : 1;
 }
 
 static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
@@ -363,6 +364,12 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
     return result;
   }
   if(state != DeferredWriteState::EMPTY) return USBD_MSC_STORAGE_BUSY;
+
+  // This callback normally runs in USB context. It may copy into RAM, but it
+  // must not acknowledge a new host write after PVD has closed the gate.
+  if(!power_monitor::allow(power_monitor::Operation::MSC_WRITE)) {
+    return USBD_MSC_STORAGE_ERROR;
+  }
 
   // Обычный случай — простое копирование в ОЗУ: один полный пакет BOT размером
   // 8 КиБ помещается в кэш A00 (два пакета на UC1609), и его можно подтвердить
@@ -495,11 +502,13 @@ bool deinit(void) {
   bool pending_ok = true;
   if(deferred_state() == DeferredWriteState::PENDING) {
     set_deferred_state(DeferredWriteState::PROCESSING);
-    pending_ok = virtual_fat::write_cached_sectors(
-      deferred_write.block_addr,
-      deferred_write.buffer,
-      deferred_write.block_len
-    );
+    pending_ok =
+      power_monitor::allow(power_monitor::Operation::MSC_WRITE) &&
+      virtual_fat::write_cached_sectors(
+        deferred_write.block_addr,
+        deferred_write.buffer,
+        deferred_write.block_len
+      );
     set_deferred_state(DeferredWriteState::EMPTY);
   }
   reset_deferred_io();
@@ -527,11 +536,13 @@ void service(void) {
     if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
                                     DeferredWriteState::PROCESSING, false,
                                     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
-    const bool ok = virtual_fat::write_cached_sectors(
-      deferred_write.block_addr,
-      deferred_write.buffer,
-      deferred_write.block_len
-    );
+    const bool ok =
+      power_monitor::allow(power_monitor::Operation::MSC_WRITE) &&
+      virtual_fat::write_cached_sectors(
+        deferred_write.block_addr,
+        deferred_write.buffer,
+        deferred_write.block_len
+      );
     expected = DeferredWriteState::PROCESSING;
     if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
                                     ok ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR,
@@ -575,7 +586,9 @@ void service(void) {
     if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                     DeferredSyncState::PROCESSING, false,
                                     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
-    const bool ok = virtual_fat::flush_pending();
+    const bool ok =
+      power_monitor::allow(power_monitor::Operation::MSC_WRITE) &&
+      virtual_fat::flush_pending();
     expected = DeferredSyncState::PROCESSING;
     if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                     DeferredSyncState::EMPTY, false,
@@ -589,6 +602,7 @@ void service(void) {
 
 extern "C" u8 MK61_VirtualFatSync(void) {
   if(!is_initialized()) return 1U;
+  if(!power_monitor::allow(power_monitor::Operation::MSC_WRITE)) return 1U;
   DeferredSyncState expected = DeferredSyncState::EMPTY;
   if(__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                  DeferredSyncState::PENDING, false,

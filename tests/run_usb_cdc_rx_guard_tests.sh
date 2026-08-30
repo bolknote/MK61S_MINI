@@ -16,7 +16,9 @@ linker_flag='--wrap=USBD_CDC_ClearBuffer'
 for builder in \
   "$root/tools/.mk61-firmware/mk61-firmware.sh" \
   "$root/tools/.mk61-firmware/mk61-firmware.ps1" \
-  "$root/tools/build_f401_bundle.sh"; do
+  "$root/tools/build_f401_bundle.sh" \
+  "$root/tests/run_f411_release_matrix.sh" \
+  "$root/tests/run_f401_uc1609_compile_check.sh"; do
   grep -Fq -- "$linker_flag" "$builder"
 done
 

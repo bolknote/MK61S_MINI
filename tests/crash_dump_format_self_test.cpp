@@ -81,6 +81,17 @@ static void test_report_contains_actionable_fields(void) {
   assert(report.find("classic_ticks=27,steps=26,missed=1") !=
          std::string::npos);
 
+  const crash_dump_format::ReportMetadata metadata = {
+    "0123456789ABCDEF", "mini-v3-a00"
+  };
+  const u16 metadata_length = crash_dump_format::format_report(
+      record, 0x87654321UL, output, sizeof(output), &metadata);
+  assert(metadata_length != 0);
+  const std::string metadata_report((const char*) output, metadata_length);
+  assert(metadata_report.find(
+      "device_public=0123456789ABCDEF,current_profile=mini-v3-a00") !=
+      std::string::npos);
+
   u8 too_small[32] = {};
   assert(crash_dump_format::format_report(
              record, 0, too_small, sizeof(too_small)) == 0);

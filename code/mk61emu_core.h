@@ -31,6 +31,9 @@
 #ifndef MK61_CORE_BODY_PROFILE
   #define MK61_CORE_BODY_PROFILE 0
 #endif
+#ifndef MK61_CORE_PACKED_AMK
+  #define MK61_CORE_PACKED_AMK 0
+#endif
 #ifndef MK61_CORE_NATIVE_HOT_PATHS
   #if defined(STM32F411xE) && defined(__OPTIMIZE_SIZE__)
     #define MK61_CORE_NATIVE_HOT_PATHS 1
@@ -307,6 +310,13 @@ namespace core_61 {
 #endif
 #endif
 
+#if MK61_CORE_PACKED_AMK && !defined(ARDUINO)
+  // Host-only switch for full-state differential testing. Firmware keeps the
+  // selected implementation fixed so the hot path has no runtime branch.
+  extern void set_packed_amk_enabled(bool enabled);
+  extern bool packed_amk_enabled(void);
+#endif
+
   // Регистрирует независимые обработчики видимых пользователю кодов МК-61.
   // Несколько обработчиков могут относиться к одному коду и фазе; они выполняются
   // в порядке регистрации и совместно используют replacement_opcode. Замена
@@ -357,7 +367,10 @@ namespace core_61 {
   // 1280 байт. Владелец обязан освободить полученный указатель тем же token.
   enum class ContextBufferOwner : u8 {
     MATH_CORE = 1,
-    M61_TRAP
+    M61_TRAP,
+    // Foreground profiling borrows the existing slot and restores the live
+    // calculator before returning, avoiding destructive benchmark setup.
+    BENCHMARK
   };
 
   extern    ContextBuffer* acquire_context_buffer(ContextBufferOwner owner);

@@ -7,6 +7,7 @@ body_profile="${MK61_CORE_BODY_PROFILE:-0}"
 # Exercise the F411 path in ordinary CI. The differential test compiled into
 # this build also runs the generic decoder from every saved start state.
 native_hot_paths="${MK61_CORE_NATIVE_HOT_PATHS:-1}"
+packed_amk="${MK61_CORE_PACKED_AMK:-1}"
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
@@ -26,6 +27,7 @@ build_and_run() {
     -DMK61_CORE_HOT_TABLES_IN_SRAM="$hot_tables" \
     -DMK61_CORE_BODY_PROFILE="$body_profile" \
     -DMK61_CORE_NATIVE_HOT_PATHS="$native_hot_paths" \
+    -DMK61_CORE_PACKED_AMK="$packed_amk" \
     -DMK61_DISPLAY_UC1609 \
     -include "$root/tests/mk_math_shim/debug.h" \
     -I"$root/tests/mk_math_shim" \

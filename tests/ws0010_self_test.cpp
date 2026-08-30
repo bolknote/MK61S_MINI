@@ -561,6 +561,11 @@ void test_graphics_address_policy(void) {
   assert(ws0010::MODE_GRAPHICS_POWER_OFF == 0x1B);
   assert(ws0010::MODE_CHARACTER_POWER_ON == 0x17);
   assert(ws0010::MODE_CHARACTER_POWER_OFF == 0x13);
+  assert(!ws0010::graphicsOwned(ws0010::GraphicsOwner::NONE));
+  assert(ws0010::graphicsOwned(ws0010::GraphicsOwner::API));
+  assert(ws0010::graphicsOwned(ws0010::GraphicsOwner::QUALIFICATION));
+  assert(strcmp(ws0010::graphicsOwnerName(
+           ws0010::GraphicsOwner::QUALIFICATION), "qualification") == 0);
 }
 
 void test_character_control_state_model(void) {

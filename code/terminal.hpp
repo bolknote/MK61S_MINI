@@ -7,6 +7,8 @@
 #include "Arduino.h"
 #include "bounded_string.hpp"
 #include "config.h"
+#include "device_identity.hpp"
+#include "hardware_info.hpp"
 #include "rust_types.h"
 #include "cross_hal.h"
 #include "crc32.hpp"
@@ -31,6 +33,12 @@
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 #include "storage_path.hpp"
+#include "spi_nor_flash.hpp"
+#if MK61_ENABLE_READ_BENCHMARKS
+  #include "read_benchmark.hpp"
+#endif
+#include "resident_firmware.hpp"
+#include "power_monitor.hpp"
 #if defined(MK61_OLED1602_WS0010)
   #include "ws0010_charset.hpp"
   #include "ws0010_graphics.hpp"
@@ -49,6 +57,7 @@
 #include "independent_watchdog.hpp"
 #include "mpu_guard.hpp"
 #include "idle_sleep.hpp"
+#include "deep_idle.hpp"
 #include "usb_cdc_rx_guard.hpp"
 #if MK61_ENABLE_SPI1_ARBITER
   #include "spi1_bus.hpp"
@@ -115,7 +124,11 @@ struct TerminalCommand {
 // Добавление команды: строка здесь + case в execute().
 static constexpr TerminalCommand terminal_commands[] = {
   { "ver",     CMD_VERSION,       "firmware version" },
-  { "date",    CMD_DATE,          "date [YYYY-MM-DD HH:MM:SS] - read/set clock" },
+  { "identity",CMD_IDENTITY,      "stable device/build identity" },
+  { "date",    CMD_DATE,          "date [ms|YYYY-MM-DD HH:MM:SS] - read/set clock" },
+#if MK61_ENABLE_RTC_ALARM_TERMINAL
+  { "alarm",   CMD_ALARM,         "RTC Alarm A/B status, daily or one-shot" },
+#endif
   { "help",    CMD_HELP,          "this list" },
   { "history", CMD_HISTORY,       "recent command lines" },
   { "list",    CMD_LIST,          "program memory in hex, vertical" },
@@ -155,6 +168,9 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "del",     CMD_FS_REMOVE,     "alias for rm" },
   { "rmdir",   CMD_FS_RMDIR,      "rmdir <path> - remove empty directory" },
   { "df",      CMD_FS_STAT,       "show C5 capacity and node quota" },
+#if MK61_ENABLE_READ_BENCHMARKS
+  { "bench",   CMD_BENCHMARK,     "read-only C5 benchmark" },
+#endif
   { "fsget",   CMD_FS_GET,        "fsget <path> - machine file download" },
   { "fsput",   CMD_FS_PUT,        "fsput begin|data|end|cancel - machine upload" },
   { "smap",    CMD_SMAP,          "numeric M1 slot occupancy map" },
@@ -173,7 +189,11 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "uscreen", CMD_USB_SCREEN,    "start USB Screen mode" },
 #endif
 #if MK61_DWT_PROFILER_SUPPORTED
-  { "prof",    CMD_PROFILE,       "prof [start|stop|reset|save [path.txt]]" },
+  #if MK61_DEEP_IDLE_SUPPORTED
+  { "prof",    CMD_PROFILE,       "prof [start|stop|reset|core|deep <1..5> [cycles]|save]" },
+  #else
+  { "prof",    CMD_PROFILE,       "prof [start|stop|reset|core [steps]|save [path.txt]]" },
+  #endif
 #endif
 #if MK61_CRASH_DUMP_SUPPORTED
   #if MK61_ENABLE_FAULT_INJECTION
@@ -198,7 +218,7 @@ static constexpr TerminalCommand terminal_commands[] = {
 #endif
   { "mem",     CMD_MEMORY,        "shared SRAM arenas [reset]" },
   { "display", CMD_DISPLAY,       "display status/test/reinit/on/off" },
-  { "rst",     CMD_RESET,         "reboot MCU (confirm on device)" },
+  { "rst",     CMD_RESET,         "rst [now] - reboot; plain rst confirms on device" },
   { "dfu",     CMD_DFU,           "enter DFU bootloader" },
 };
 static constexpr usize TERMINAL_COMMAND_COUNT = sizeof(terminal_commands) / sizeof(terminal_commands[0]);
@@ -332,6 +352,18 @@ static void terminal_print_fs_entry(const program_store::Entry& entry) {
     Serial.print(" B\t");
     Serial.println(name);
   }
+}
+
+static void terminal_print_hex_byte(u8 value) {
+  Serial.write(terminal_file_transfer::hex_char((u8) (value >> 4)));
+  Serial.write(terminal_file_transfer::hex_char((u8) (value & 0x0F)));
+}
+
+static void terminal_print_hex_u32(u32 value) {
+  terminal_print_hex_byte((u8) (value >> 24));
+  terminal_print_hex_byte((u8) (value >> 16));
+  terminal_print_hex_byte((u8) (value >> 8));
+  terminal_print_hex_byte((u8) value);
 }
 
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
@@ -668,9 +700,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.println("CRASH show busy");
         return terminal_protocol::Result::error();
       }
-      const u16 length = crash_dump_format::format_report(
-          record, crash_dump::current_build_id(),
-          scratch.data(), scratch.size());
+      const u16 length = crash_dump::format_report(
+          record, scratch.data(), scratch.size());
       if(length == 0) {
         Serial.println("CRASH report failed");
         return terminal_protocol::Result::error();
@@ -701,9 +732,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.println("CRASH save busy");
         return terminal_protocol::Result::error();
       }
-      const u16 length = crash_dump_format::format_report(
-          record, crash_dump::current_build_id(),
-          scratch.data(), scratch.size());
+      const u16 length = crash_dump::format_report(
+          record, scratch.data(), scratch.size());
       if(length == 0 ||
          !program_store::write_file(
              target.parent_id, program_store::INVALID_ID,
@@ -1128,8 +1158,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(" brightness=software-unsupported");
       Serial.print(" mode=");
       Serial.print(main_lcd().graphicsMode() ? "graphics" : "character");
+      Serial.print(" owner=");
+      Serial.print(ws0010::graphicsOwnerName(main_lcd().ws0010GraphicsOwner()));
       Serial.print(" state=");
       Serial.print(main_lcd().displayEnabled() ? "on" : "off");
+      Serial.print(" pwr=");
+      Serial.print(main_lcd().internalPowerEnabled() ? "on" : "off");
       Serial.print(" route=");
       Serial.print(main_lcd().usbScreenActive() ? "usb-screen" : "oled");
       Serial.print(" sleep=");
@@ -1309,7 +1343,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
       ws0010_graphics::makeQualificationPattern(
         frame.data(), frame.size(), pattern);
-      if(!main_lcd().showWs0010GraphicsFrame(frame.data(), frame.size())) {
+      if(!main_lcd().showWs0010GraphicsQualificationFrame(
+           frame.data(), frame.size())) {
         main_lcd().endWs0010Graphics();
         Serial.println("DISPLAY graphics failed; character mode restored");
         return terminal_protocol::Result::error();
@@ -1545,7 +1580,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return display_test_graphics((u8) pattern);
       }
       if(strcmp(test, "restore") == 0 && terminal_core::at_end(cursor)) {
-        main_lcd().endWs0010Graphics();
+        if(!main_lcd().endWs0010Graphics()) {
+          Serial.println("DISPLAY character recovery failed");
+          return terminal_protocol::Result::error();
+        }
         lcd_ru::restore_default_font();
         extern void lcd_std_display_redraw(void);
         lcd_std_display_redraw();
@@ -1556,6 +1594,80 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return terminal_protocol::Result::error();
 #endif
     }
+
+    static const char* power_state_name(
+        const power_monitor::Snapshot& snapshot) {
+      if(!snapshot.supported) return "unsupported";
+      if(snapshot.below_threshold) return "low";
+      if(snapshot.recovering) return "recovering";
+      return snapshot.initialized ? "stable" : "uninitialized";
+    }
+
+    static void print_power_status(void) {
+      const power_monitor::Snapshot power = power_monitor::snapshot();
+      const power_monitor::ThresholdRange threshold =
+          power_monitor::threshold_range();
+      Serial.print("POWER PVD");
+      Serial.print(power.level);
+      Serial.print(" fall=");
+      Serial.print(threshold.falling_min_mv);
+      Serial.write('-');
+      Serial.print(threshold.falling_max_mv);
+      Serial.print(" rise=");
+      Serial.print(threshold.rising_min_mv);
+      Serial.write('-');
+      Serial.print(threshold.rising_max_mv);
+      Serial.print(" state=");
+      Serial.print(power_state_name(power));
+      Serial.print(" gate=");
+      Serial.print(power.writes_allowed ? 1 : 0);
+      Serial.print(" wait=");
+      Serial.print(power.stable_remaining_ms);
+      Serial.print(" event=");
+      Serial.print(power.low_events);
+      Serial.write('/');
+      Serial.print(power.recovery_events);
+      Serial.print(" last=");
+      Serial.print(!power.edge_seen ? "none"
+          : (power.last_edge_low ? "fall" : "rise"));
+      Serial.write('@');
+      Serial.print(power.last_edge_ms);
+      Serial.print(" prev=");
+      Serial.print(power.previous_unstable ? 1 : 0);
+      Serial.write('@');
+      Serial.print(power.previous_edge_ms);
+      Serial.print(" reject=");
+      Serial.print(power.rejected_programs);
+      Serial.write('/');
+      Serial.print(power.rejected_erases);
+      Serial.write('/');
+      Serial.print(power.rejected_msc_writes);
+      Serial.print(" reset_flags=0x");
+      Serial.println(crash_dump::boot_reset_flags(), HEX);
+    }
+
+#if MK61_ENABLE_ANALOG_REPORT
+    static void print_analog_status(void) {
+      const hardware_info::AnalogSnapshot analog =
+        hardware_info::read_analog_snapshot();
+      char report[144];
+      snprintf(report, sizeof(report),
+        "ANALOG us/n=%u/%u raw(v/t/b)=%u/%u/%u "
+        "val(mV/dC/mV)=%ld/%ld/%ld bat=%s",
+        (unsigned) analog.elapsed_us,
+        (unsigned) analog.conversion_count,
+        (unsigned) analog.raw_vref,
+        (unsigned) analog.raw_temperature,
+        (unsigned) analog.raw_vbat,
+        (long) (analog.vdda.valid ? analog.vdda.millivolts : -1L),
+        (long) (analog.mcu_temperature.valid
+          ? analog.mcu_temperature.decicelsius : -10000L),
+        (long) (analog.battery.voltage.valid
+          ? analog.battery.voltage.millivolts : -1L),
+        hardware_info::battery_status_name(analog.battery));
+      Serial.println(report);
+    }
+#endif
 
 #if MK61_DWT_PROFILER_SUPPORTED
     class ProfileReportBuilder {
@@ -1732,6 +1844,59 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
       Serial.println();
 
+#if MK61_DEEP_IDLE_SUPPORTED
+      const deep_idle_policy::Snapshot deep = deep_idle::statistics();
+      Serial.print("DEEP backend=");
+      Serial.print(deep_idle::backend_name());
+      Serial.print(" enabled=");
+      Serial.print(deep_idle::enabled() ? 1 : 0);
+      Serial.print(" state=");
+      Serial.print(deep_idle_policy::state_name(deep.state));
+      Serial.print(" wake=");
+      Serial.print(deep_idle_policy::wake_name(deep.last_wake));
+      Serial.print(" failure=");
+      Serial.print(deep_idle_policy::failure_name(deep.last_failure));
+      Serial.print(" request=");
+      Serial.print(deep.seconds);
+      Serial.write('x');
+      Serial.print(deep.requested_cycles);
+      Serial.print(" completed=");
+      Serial.print(deep.completed_cycles);
+      Serial.print(" attempts=");
+      Serial.print(deep.attempts);
+      Serial.print(" entries=");
+      Serial.print(deep.entries);
+      Serial.print(" wakes=");
+      Serial.print(deep.rtc_timer_wakes);
+      Serial.write('/');
+      Serial.print(deep.keyboard_wakes);
+      Serial.write('/');
+      Serial.print(deep.rtc_alarm_wakes);
+      Serial.write('/');
+      Serial.print(deep.other_wakes);
+      Serial.print(" failures=");
+      Serial.print(deep.failures);
+      Serial.print(" total_ms=");
+      print_u64(deep.total_elapsed_ms);
+      Serial.print(" last_ms=");
+      Serial.print(deep.last_elapsed_ms);
+      Serial.print(" blockers=0x");
+      Serial.println(deep.last_blockers, HEX);
+      Serial.print("DEEP reject");
+      for(usize index = 0; index < deep_idle_policy::BLOCKER_COUNT; index++) {
+        Serial.write(' ');
+        Serial.print(deep_idle_policy::blocker_name(index));
+        Serial.write('=');
+        Serial.print(deep.rejected[index]);
+      }
+      Serial.println();
+#endif
+
+      print_power_status();
+#if MK61_ENABLE_ANALOG_REPORT
+      print_analog_status();
+#endif
+
 #if defined(MK61_OLED1602_WS0010)
       print_display_status();
 #endif
@@ -1840,6 +2005,45 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         report.append_u64(sleep.rejected[index]);
         report.append_char('\n');
       }
+
+#if MK61_DEEP_IDLE_SUPPORTED
+      const deep_idle_policy::Snapshot deep = deep_idle::statistics();
+      report.append_text("deep_backend=");
+      report.append_text(deep_idle::backend_name());
+      report.append_text(",enabled=");
+      report.append_u64(deep_idle::enabled() ? 1 : 0);
+      report.append_text(",state=");
+      report.append_text(deep_idle_policy::state_name(deep.state));
+      report.append_text(",wake=");
+      report.append_text(deep_idle_policy::wake_name(deep.last_wake));
+      report.append_text(",failure=");
+      report.append_text(deep_idle_policy::failure_name(deep.last_failure));
+      report.append_text(",seconds=");
+      report.append_u64(deep.seconds);
+      report.append_text(",requested=");
+      report.append_u64(deep.requested_cycles);
+      report.append_text(",completed=");
+      report.append_u64(deep.completed_cycles);
+      report.append_text(",entries=");
+      report.append_u64(deep.entries);
+      report.append_text(",rtc=");
+      report.append_u64(deep.rtc_timer_wakes);
+      report.append_text(",keyboard=");
+      report.append_u64(deep.keyboard_wakes);
+      report.append_text(",alarm=");
+      report.append_u64(deep.rtc_alarm_wakes);
+      report.append_text(",other=");
+      report.append_u64(deep.other_wakes);
+      report.append_text(",failures=");
+      report.append_u64(deep.failures);
+      report.append_text(",total_ms=");
+      report.append_u64(deep.total_elapsed_ms);
+      report.append_text(",last_ms=");
+      report.append_u64(deep.last_elapsed_ms);
+      report.append_text(",blockers=");
+      report.append_u64(deep.last_blockers);
+      report.append_char('\n');
+#endif
 #if defined(MK61_OLED1602_WS0010)
       report.append_text("display_controller=WS0010,ft=10,wait=busy+floor");
       report.append_text(",bf_seen=");
@@ -1953,8 +2157,119 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         return save_profile_report(path);
       }
+      if(strcmp(action, "core") == 0) {
+        usize steps = 40;
+        if(!terminal_core::at_end(cursor) &&
+           !terminal_core::parse_single_unsigned(
+               cursor, 10, 1000, steps)) {
+          Serial.println("Usage: prof core [1..1000]");
+          return terminal_protocol::Result::error();
+        }
+        if(steps == 0) {
+          Serial.println("Usage: prof core [1..1000]");
+          return terminal_protocol::Result::error();
+        }
+        if(core_61::is_RUN()) {
+          Serial.println("PROF core busy: calculator is running");
+          return terminal_protocol::Result::error();
+        }
+
+        core_61::ContextBuffer* saved = core_61::acquire_context_buffer(
+            core_61::ContextBufferOwner::BENCHMARK);
+        if(saved == nullptr) {
+          Serial.println("PROF core busy: context buffer is owned");
+          return terminal_protocol::Result::error();
+        }
+        if(!core_61::save_context(*saved)) {
+          (void) core_61::release_context_buffer(
+              core_61::ContextBufferOwner::BENCHMARK);
+          Serial.println("PROF core failed: cannot save calculator state");
+          return terminal_protocol::Result::error();
+        }
+        // The live state is safely parked in the shared slot.  Seed the same
+        // volatile core state on every board/build so results do not depend on
+        // the user's current X register, program, key latch or angle mode.
+        core_61::enable();
+        if(!dwt_profiler::start()) {
+          (void) core_61::restore_context(*saved);
+          (void) core_61::release_context_buffer(
+              core_61::ContextBufferOwner::BENCHMARK);
+          Serial.println("PROF unavailable");
+          return terminal_protocol::Result::error();
+        }
+
+        for(usize index = 0; index < steps; index++) {
+          core_61::step();
+        }
+        dwt_profiler::stop();
+        const bool restored = core_61::restore_context(*saved);
+        core_61::ContextBuffer verification = {};
+        const bool verified = restored &&
+            core_61::save_context(verification) &&
+            memcmp(saved->bytes, verification.bytes,
+                   sizeof(verification.bytes)) == 0;
+        if(!verified) {
+          // Keep the original slot intact and make one final best-effort
+          // restore before reporting a failed non-destructive benchmark.
+          (void) core_61::restore_context(*saved);
+        }
+        const bool released = core_61::release_context_buffer(
+            core_61::ContextBufferOwner::BENCHMARK);
+        if(!verified || !released) {
+          Serial.println("PROF core failed: calculator restore error");
+          return terminal_protocol::Result::error();
+        }
+
+        Serial.print("PROF corebench steps=");
+        Serial.print(steps);
+        Serial.println(" restored=1");
+        print_profile_statistics();
+        return terminal_protocol::Result::ok();
+      }
+#if MK61_DEEP_IDLE_SUPPORTED
+      if(strcmp(action, "deep") == 0) {
+        char subaction[8];
+        const char* probe = cursor;
+        if(terminal_core::parse_token(
+               probe, subaction, sizeof(subaction)) &&
+           strcmp(subaction, "cancel") == 0 &&
+           terminal_core::at_end(probe)) {
+          if(!deep_idle::cancel()) {
+            Serial.println("PROF deep: no pending request");
+            return terminal_protocol::Result::error();
+          }
+          Serial.println("PROF deep cancelled");
+          return terminal_protocol::Result::ok();
+        }
+
+        usize seconds = 0;
+        usize cycles = 1;
+        if(!terminal_core::parse_unsigned(
+               cursor, 10, deep_idle_policy::MAX_SECONDS, seconds) ||
+           seconds < deep_idle_policy::MIN_SECONDS ||
+           (!terminal_core::at_end(cursor) &&
+            !terminal_core::parse_unsigned(
+                cursor, 10, deep_idle_policy::MAX_CYCLES, cycles)) ||
+           cycles < deep_idle_policy::MIN_CYCLES ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println(
+              "Usage: prof deep <1..5 seconds> [1..120 cycles]|cancel");
+          return terminal_protocol::Result::error();
+        }
+        if(!deep_idle::request((u8) seconds, (u16) cycles, millis())) {
+          Serial.println("PROF deep busy/unavailable");
+          return terminal_protocol::Result::error();
+        }
+        Serial.print("PROF deep scheduled seconds=");
+        Serial.print(seconds);
+        Serial.print(" cycles=");
+        Serial.print(cycles);
+        Serial.println("; USB and OLED will disconnect after 750 ms");
+        return terminal_protocol::Result::ok();
+      }
+#endif
       if(!terminal_core::at_end(cursor)) {
-        Serial.println("Usage: prof [start|stop|reset|save [path.txt]]");
+        Serial.println("Usage: prof [start|stop|reset|core [steps]|save [path.txt]]");
         return terminal_protocol::Result::error();
       }
       if(strcmp(action, "start") == 0) {
@@ -1964,6 +2279,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         classic_timer::reset_statistics();
         idle_sleep::reset_statistics();
+#if MK61_DEEP_IDLE_SUPPORTED
+        deep_idle::reset_statistics();
+#endif
         #if MK61_ENABLE_SPI1_DMA
         spi1_dma::reset_statistics();
         #endif
@@ -1980,6 +2298,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         dwt_profiler::reset();
         classic_timer::reset_statistics();
         idle_sleep::reset_statistics();
+#if MK61_DEEP_IDLE_SUPPORTED
+        deep_idle::reset_statistics();
+#endif
         #if MK61_ENABLE_SPI1_DMA
         spi1_dma::reset_statistics();
         #endif
@@ -1988,7 +2309,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::ok();
       }
 
-      Serial.println("Usage: prof [start|stop|reset|save [path.txt]]");
+      Serial.println("Usage: prof [start|stop|reset|core [steps]|save [path.txt]]");
       return terminal_protocol::Result::error();
     }
 #endif
@@ -2082,10 +2403,283 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println(')');
     }
 
+    terminal_protocol::Result exec_identity(void) {
+      if(!terminal_core::at_end(command_args())) {
+        Serial.println("Usage: identity");
+        return terminal_protocol::Result::error();
+      }
+
+      char report[device_identity::REPORT_TEXT_SIZE];
+      const usize length = device_identity::format_report(
+          device_identity::read(), virtual_fat::volume_serial(),
+          crash_dump::current_build_id(), crash_dump::current_build_profile(),
+          report, sizeof(report));
+      if(length == 0) {
+        Serial.println("IDENTITY report failed");
+        return terminal_protocol::Result::error();
+      }
+      Serial.println(report);
+      return terminal_protocol::Result::ok();
+    }
+
+#if MK61_ENABLE_READ_BENCHMARKS
+    void print_benchmark_pass(u8 pass, u32 elapsed_us, u32 crc) {
+      Serial.print("BENCH pass=");
+      Serial.print(pass);
+      Serial.print(" read_us=");
+      Serial.print(elapsed_us);
+      Serial.print(" crc=0x");
+      terminal_print_hex_u32(crc);
+      Serial.println();
+    }
+
+    terminal_protocol::Result print_benchmark_summary(
+        const char* kind, u32 bytes,
+        const read_benchmark::Summary& summary) {
+      if(summary.samples == 0 || !summary.crc_consistent) {
+        Serial.println("BENCH error=data-mismatch");
+        return terminal_protocol::Result::error();
+      }
+      Serial.print("BENCH summary kind=");
+      Serial.print(kind);
+      Serial.print(" bytes=");
+      Serial.print(bytes);
+      Serial.print(" passes=");
+      Serial.print(summary.samples);
+      Serial.print(" min_us=");
+      Serial.print(summary.minimum_us);
+      Serial.print(" avg_us=");
+      Serial.print(summary.average_us());
+      Serial.print(" max_us=");
+      Serial.print(summary.maximum_us);
+      Serial.print(" read_Bps=");
+      Serial.print(summary.bytes_per_second(bytes));
+      Serial.print(" crc=0x");
+      terminal_print_hex_u32(summary.reference_crc);
+      Serial.println();
+      return terminal_protocol::Result::ok();
+    }
+
+    terminal_protocol::Result benchmark_file(const char* cursor) {
+      char path[MAX_INPUT_CHAR];
+      usize passes = 5;
+      if(!terminal_core::parse_token(cursor, path, sizeof(path)) ||
+         (!terminal_core::at_end(cursor) &&
+          !terminal_core::parse_unsigned(cursor, 10, 20, passes)) ||
+         passes == 0 || !terminal_core::at_end(cursor)) {
+        Serial.println("Usage: bench file <path> [1..20 passes]");
+        return terminal_protocol::Result::error();
+      }
+
+      program_store::Entry entry;
+      const storage_path::Status status = storage_path::resolve_file(
+          current_directory, path, entry);
+      if(status != storage_path::Status::OK) {
+        terminal_path_error("bench", status);
+        return terminal_protocol::Result::error();
+      }
+      if(entry.data_len > program_store::MAX_MK61_TEXT_SIZE) {
+        Serial.print("BENCH error=file-too-large max=");
+        Serial.println(program_store::MAX_MK61_TEXT_SIZE);
+        return terminal_protocol::Result::error();
+      }
+
+      Serial.print("BENCH kind=file path=");
+      Serial.print(path);
+      Serial.print(" bytes=");
+      Serial.print(entry.data_len);
+      Serial.print(" passes=");
+      Serial.println(passes);
+
+      alignas(4) u8 data[program_store::MAX_MK61_TEXT_SIZE];
+      read_benchmark::Summary summary;
+      for(usize pass = 0; pass < passes; pass++) {
+        u16 recovered = 0;
+        const u32 started_at = micros();
+        const bool read_ok = program_store::read_id(
+            entry.id, data, sizeof(data), &recovered);
+        const u32 elapsed_us = (u32) (micros() - started_at);
+        if(!read_ok || recovered != entry.data_len) {
+          Serial.println("BENCH error=read");
+          return terminal_protocol::Result::error();
+        }
+        const u32 crc = mk61_crc32::calculate(data, recovered);
+        print_benchmark_pass((u8) (pass + 1), elapsed_us, crc);
+        if(!summary.add(elapsed_us, crc)) {
+          Serial.println("BENCH error=data-mismatch");
+          return terminal_protocol::Result::error();
+        }
+      }
+      return print_benchmark_summary("file", entry.data_len, summary);
+    }
+
+    terminal_protocol::Result benchmark_flash(const char* cursor) {
+      usize bytes = 64U * 1024U;
+      usize passes = 3;
+      if(!terminal_core::at_end(cursor) &&
+         !terminal_core::parse_unsigned(cursor, 10, 1024U * 1024U, bytes)) {
+        Serial.println("Usage: bench flash [1..1048576 bytes] [1..20 passes]");
+        return terminal_protocol::Result::error();
+      }
+      if(!terminal_core::at_end(cursor) &&
+         !terminal_core::parse_unsigned(cursor, 10, 20, passes)) {
+        Serial.println("Usage: bench flash [1..1048576 bytes] [1..20 passes]");
+        return terminal_protocol::Result::error();
+      }
+      if(bytes == 0 || passes == 0 || !terminal_core::at_end(cursor) ||
+         !program_store::ready()) {
+        Serial.println("Usage: bench flash [1..1048576 bytes] [1..20 passes]");
+        return terminal_protocol::Result::error();
+      }
+
+      const storage_geometry::Geometry& geometry = program_store::geometry();
+      const u32 address = geometry.data_first_sector *
+                          storage_geometry::PHYSICAL_SECTOR_SIZE;
+      const u32 available = geometry.data_sector_count *
+                            storage_geometry::PHYSICAL_SECTOR_SIZE;
+      if(bytes > available) {
+        Serial.print("BENCH error=range max=");
+        Serial.println(available);
+        return terminal_protocol::Result::error();
+      }
+
+      Serial.print("BENCH kind=flash address=");
+      Serial.print(address);
+      Serial.print(" bytes=");
+      Serial.print(bytes);
+      Serial.print(" passes=");
+      Serial.println(passes);
+
+      alignas(4) u8 block[512];
+      read_benchmark::Summary summary;
+      for(usize pass = 0; pass < passes; pass++) {
+        mk61_crc32::Context crc;
+        u32 elapsed_us = 0;
+        for(u32 offset = 0; offset < bytes;) {
+          const usize remaining = bytes - offset;
+          const usize count = remaining < sizeof(block)
+              ? remaining : sizeof(block);
+          const u32 started_at = micros();
+          const bool read_ok = external_flash().readByteArray(
+              address + offset, block, count);
+          elapsed_us += (u32) (micros() - started_at);
+          if(!read_ok || !crc.update(block, count)) {
+            Serial.println("BENCH error=read");
+            return terminal_protocol::Result::error();
+          }
+          offset += (u32) count;
+        }
+        const u32 checksum = crc.finish();
+        print_benchmark_pass((u8) (pass + 1), elapsed_us, checksum);
+        if(!summary.add(elapsed_us, checksum)) {
+          Serial.println("BENCH error=data-mismatch");
+          return terminal_protocol::Result::error();
+        }
+      }
+      return print_benchmark_summary("flash", (u32) bytes, summary);
+    }
+
+    terminal_protocol::Result benchmark_random(const char* cursor) {
+      usize reads = 1024;
+      usize passes = 3;
+      if(!terminal_core::at_end(cursor) &&
+         !terminal_core::parse_unsigned(cursor, 10, 8192, reads)) {
+        Serial.println("Usage: bench random [1..8192 reads] [1..20 passes]");
+        return terminal_protocol::Result::error();
+      }
+      if(!terminal_core::at_end(cursor) &&
+         !terminal_core::parse_unsigned(cursor, 10, 20, passes)) {
+        Serial.println("Usage: bench random [1..8192 reads] [1..20 passes]");
+        return terminal_protocol::Result::error();
+      }
+      if(reads == 0 || passes == 0 || !terminal_core::at_end(cursor) ||
+         !program_store::ready()) {
+        Serial.println("Usage: bench random [1..8192 reads] [1..20 passes]");
+        return terminal_protocol::Result::error();
+      }
+
+      static constexpr u32 BLOCK_SIZE = 512;
+      static constexpr u32 SEED = 0x61C5F411UL;
+      const storage_geometry::Geometry& geometry = program_store::geometry();
+      const u32 first_block = geometry.data_first_sector *
+                              storage_geometry::PHYSICAL_SECTOR_SIZE /
+                              BLOCK_SIZE;
+      const u32 block_count = geometry.data_sector_count *
+                              storage_geometry::PHYSICAL_SECTOR_SIZE /
+                              BLOCK_SIZE;
+      if(block_count == 0) {
+        Serial.println("BENCH error=range");
+        return terminal_protocol::Result::error();
+      }
+
+      Serial.print("BENCH kind=random reads=");
+      Serial.print(reads);
+      Serial.print(" bytes=");
+      Serial.print((u32) reads * BLOCK_SIZE);
+      Serial.print(" passes=");
+      Serial.print(passes);
+      Serial.print(" seed=0x");
+      terminal_print_hex_u32(SEED);
+      Serial.println();
+
+      alignas(4) u8 block[BLOCK_SIZE];
+      read_benchmark::Summary summary;
+      for(usize pass = 0; pass < passes; pass++) {
+        mk61_crc32::Context crc;
+        u32 state = SEED;
+        u32 elapsed_us = 0;
+        for(usize sample = 0; sample < reads; sample++) {
+          state = state * 1664525UL + 1013904223UL;
+          const u32 address = (first_block + state % block_count) * BLOCK_SIZE;
+          const u32 started_at = micros();
+          const bool read_ok = external_flash().readByteArray(
+              address, block, sizeof(block));
+          elapsed_us += (u32) (micros() - started_at);
+          if(!read_ok || !crc.update(block, sizeof(block))) {
+            Serial.println("BENCH error=read");
+            return terminal_protocol::Result::error();
+          }
+        }
+        const u32 checksum = crc.finish();
+        print_benchmark_pass((u8) (pass + 1), elapsed_us, checksum);
+        if(!summary.add(elapsed_us, checksum)) {
+          Serial.println("BENCH error=data-mismatch");
+          return terminal_protocol::Result::error();
+        }
+      }
+      return print_benchmark_summary(
+          "random", (u32) reads * BLOCK_SIZE, summary);
+    }
+
+    terminal_protocol::Result exec_benchmark(void) {
+      const char* cursor = command_args();
+      char kind[8];
+      if(!terminal_core::parse_token(cursor, kind, sizeof(kind))) {
+        Serial.println("Usage: bench <file|flash|random> ...");
+        return terminal_protocol::Result::error();
+      }
+      if(strcmp(kind, "file") == 0) return benchmark_file(cursor);
+      if(strcmp(kind, "flash") == 0) return benchmark_flash(cursor);
+      if(strcmp(kind, "random") == 0) return benchmark_random(cursor);
+      Serial.println("Usage: bench <file|flash|random> ...");
+      return terminal_protocol::Result::error();
+    }
+#endif
+
     terminal_protocol::Result exec_date(void) {
-      const rtc_clock::TerminalRequest request = rtc_clock::parse_date_request(command_args());
+      const char* args = command_args();
+      const char* option_cursor = args;
+      char option[3] = {};
+      const bool precise = terminal_core::parse_token(
+          option_cursor, option, sizeof(option)) &&
+          strcmp(option, "ms") == 0 &&
+          terminal_core::at_end(option_cursor);
+      const rtc_clock::TerminalRequest request = precise
+          ? rtc_clock::TerminalRequest{
+              rtc_clock::TerminalAction::SHOW, {0, 0, 0, 0, 0, 0}}
+          : rtc_clock::parse_date_request(args);
       if(request.action == rtc_clock::TerminalAction::INVALID) {
-        Serial.println("DATE ERROR: expected YYYY-MM-DD HH:MM:SS");
+        Serial.println("DATE ERROR: expected ms or YYYY-MM-DD HH:MM:SS");
         return terminal_protocol::Result::error();
       }
 
@@ -2105,10 +2699,139 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.println("DATE ERROR");
         return terminal_protocol::Result::error();
       }
-      Serial.println(text);
+      Serial.print(text);
+      if(precise) {
+        const u16 milliseconds = rtc_clock::snapshot_milliseconds(snapshot);
+        Serial.write('.');
+        Serial.write((u8) ('0' + milliseconds / 100));
+        Serial.write((u8) ('0' + (milliseconds / 10) % 10));
+        Serial.write((u8) ('0' + milliseconds % 10));
+      }
+      Serial.println();
       if(!snapshot.time_set) Serial.println("Set the date.");
       return terminal_protocol::Result::ok();
     }
+
+#if MK61_ENABLE_RTC_ALARM_TERMINAL
+    static char alarm_id_letter(rtc_clock::AlarmId id) {
+      return id == rtc_clock::AlarmId::A ? 'A' : 'B';
+    }
+
+    static void print_two_digits(u8 value) {
+      Serial.write((u8) ('0' + value / 10));
+      Serial.write((u8) ('0' + value % 10));
+    }
+
+    static void print_alarm_line(rtc_clock::AlarmId id) {
+      rtc_clock::Alarm alarm = {};
+      Serial.print("RTC ALARM ");
+      Serial.write((u8) alarm_id_letter(id));
+      if(!rtc_clock::read_alarm(id, alarm)) {
+        Serial.println(" error");
+        return;
+      }
+      if(!alarm.enabled) {
+        Serial.println(" off");
+        return;
+      }
+      Serial.write(' ');
+      Serial.print(rtc_backup_layout::repeat_name(alarm.repeat));
+      Serial.write(' ');
+      if(alarm.repeat == rtc_clock::Repeat::ONE_SHOT) {
+        char text[rtc_clock::DATETIME_TEXT_SIZE];
+        if(rtc_clock::format_datetime(alarm.when, text)) {
+          Serial.print(text);
+          if(alarm.millisecond != rtc_backup_layout::MILLISECOND_IGNORED) {
+            Serial.write('.');
+            Serial.write((u8) ('0' + alarm.millisecond / 100));
+            Serial.write((u8) ('0' + (alarm.millisecond / 10) % 10));
+            Serial.write((u8) ('0' + alarm.millisecond % 10));
+          }
+          Serial.println();
+        } else {
+          Serial.println("invalid");
+        }
+        return;
+      }
+      print_two_digits(alarm.when.hour);
+      Serial.write(':');
+      print_two_digits(alarm.when.minute);
+      Serial.write(':');
+      print_two_digits(alarm.when.second);
+      Serial.println();
+    }
+
+    static void print_alarm_status(void) {
+      rtc_clock::BackupStatus status = {};
+      (void) rtc_clock::backup_status(status);
+      Serial.print("RTC META valid=");
+      Serial.print(status.valid ? 1 : 0);
+      Serial.print(" boot-valid=");
+      Serial.print(status.valid_at_boot ? 1 : 0);
+      Serial.print(" boot=");
+      Serial.print(status.boot_count);
+      Serial.print(" reset=0x");
+      Serial.print(status.reset_flags, HEX);
+      Serial.print(" wake=");
+      Serial.print(rtc_backup_layout::wake_reason_name(status.last_wake));
+      Serial.print(" power-fail=");
+      Serial.print(status.previous_power_unstable ? 1 : 0);
+      Serial.print(" arm-fail=");
+      Serial.println(status.alarm_arm_failures);
+      print_alarm_line(rtc_clock::AlarmId::A);
+      print_alarm_line(rtc_clock::AlarmId::B);
+    }
+
+    terminal_protocol::Result exec_alarm(void) {
+      const char* cursor = command_args();
+      if(terminal_core::at_end(cursor)) {
+        print_alarm_status();
+        return terminal_protocol::Result::ok();
+      }
+
+      char slot[2] = {};
+      char action[8] = {};
+      if(!terminal_core::parse_token(cursor, slot, sizeof(slot)) ||
+         !terminal_core::parse_token(cursor, action, sizeof(action)) ||
+         slot[1] != 0 || (slot[0] != 'a' && slot[0] != 'A' &&
+                         slot[0] != 'b' && slot[0] != 'B')) {
+        Serial.println("Usage: alarm <a|b> <off|at|daily|in> ...");
+        return terminal_protocol::Result::error();
+      }
+      const rtc_clock::AlarmId id = slot[0] == 'a' || slot[0] == 'A'
+          ? rtc_clock::AlarmId::A : rtc_clock::AlarmId::B;
+
+      bool ok = false;
+      if(strcmp(action, "off") == 0 && terminal_core::at_end(cursor)) {
+        ok = rtc_clock::cancel_alarm(id);
+      } else if(strcmp(action, "at") == 0) {
+        rtc_clock::DateTime when = {};
+        ok = rtc_clock::parse_datetime(cursor, when) &&
+            rtc_clock::schedule_alarm(
+                id, {true, rtc_clock::Repeat::ONE_SHOT, when,
+                     rtc_backup_layout::MILLISECOND_IGNORED});
+      } else if(strcmp(action, "daily") == 0) {
+        rtc_clock::DateTime when = {};
+        ok = rtc_clock::parse_time_of_day(cursor, when) &&
+            rtc_clock::schedule_alarm(
+                id, {true, rtc_clock::Repeat::DAILY, when,
+                     rtc_backup_layout::MILLISECOND_IGNORED});
+      } else if(strcmp(action, "in") == 0) {
+        usize seconds = 0;
+        ok = terminal_core::parse_unsigned(
+                 cursor, 10, 31536000UL, seconds) &&
+             terminal_core::at_end(cursor) &&
+             rtc_clock::schedule_after(id, (u32) seconds);
+      } else {
+        Serial.println("Usage: alarm <a|b> off | at YYYY-MM-DD HH:MM:SS | daily HH:MM:SS | in <seconds>");
+        return terminal_protocol::Result::error();
+      }
+
+      Serial.println(ok ? "ALARM OK" : "ALARM ERROR");
+      return ok ? terminal_protocol::Result::ok()
+                : terminal_protocol::Result::error();
+    }
+#endif
 
     static u16 file_capacity(program_store::ProgramType type) {
       if(type == program_store::ProgramType::IMAGE1) {
@@ -3215,11 +3938,30 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           case  CMD_VERSION:
               output_version();
             break;
+          case CMD_IDENTITY: {
+              const terminal_protocol::Result result = exec_identity();
+              recive_pos = 0;
+              return result;
+            }
+#if MK61_ENABLE_READ_BENCHMARKS
+          case CMD_BENCHMARK: {
+              const terminal_protocol::Result result = exec_benchmark();
+              recive_pos = 0;
+              return result;
+            }
+#endif
           case  CMD_DATE: {
               const terminal_protocol::Result result = exec_date();
               recive_pos = 0;
               return result;
             }
+#if MK61_ENABLE_RTC_ALARM_TERMINAL
+          case CMD_ALARM: {
+              const terminal_protocol::Result result = exec_alarm();
+              recive_pos = 0;
+              return result;
+            }
+#endif
           case  CMD_ISA:
               echo_ISA_61();
             break;
@@ -3227,7 +3969,29 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               list_mk61_code_page();
             break;
           case  CMD_RESET:
-              if(Confirmation()) NVIC_SystemReset();
+              if(terminal_core::at_end(command_args())) {
+                if(Confirmation()) NVIC_SystemReset();
+                break;
+              }
+              {
+                const char* cursor = command_args();
+                char action[4] = {};
+                if(!terminal_core::parse_token(
+                     cursor, action, sizeof(action)) ||
+                   strcmp(action, "now") != 0 ||
+                   !terminal_core::at_end(cursor)) {
+                  Serial.println("Usage: rst [now]");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+                // An explicit one-line token is intended for unattended HIL.
+                // Flush the acknowledgement before CDC disappears; ordinary
+                // interactive `rst` keeps the physical-key confirmation.
+                Serial.println("Resetting.");
+                Serial.flush();
+                delay(20);
+                NVIC_SystemReset();
+              }
             break;
           case CMD_REINIT:
               if(!terminal_core::at_end(command_args())) {
@@ -3723,6 +4487,82 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               Serial.println(" bytes (virtual)");
               Serial.print("Settings: "); Serial.print(program_store::settings_size());
               Serial.println(" bytes reserved");
+              SpiNorFlash::Diagnostics flash = {};
+              if(external_flash().diagnostics(flash)) {
+                Serial.print("NOR JEDEC=0x");
+                terminal_print_hex_byte((u8) (flash.jedec_id >> 16));
+                terminal_print_hex_byte((u8) (flash.jedec_id >> 8));
+                terminal_print_hex_byte((u8) flash.jedec_id);
+                Serial.print(" SFDP=");
+                Serial.print(flash.sfdp_present ? 1 : 0);
+                Serial.print(" probe=");
+                Serial.print(flash.probe_upper_bytes);
+                Serial.print(" page=");
+                Serial.print(flash.page_size);
+                Serial.print(" erase=0x");
+                terminal_print_hex_byte(flash.erase_opcode);
+                Serial.print(" address-bytes=");
+                Serial.print(flash.four_byte_address ? 4 : 3);
+                Serial.print(" opcodes=");
+                Serial.print(flash.four_byte_opcodes ? "4-byte" : "legacy");
+                Serial.print(" status=");
+                for(u8 index = 0; index < flash.status_count; index++) {
+                  if(index != 0) Serial.write('/');
+                  terminal_print_hex_byte(flash.status[index]);
+                }
+                Serial.println();
+                Serial.print("SPI1 requested_hz=");
+                Serial.print(flash.requested_clock_hz);
+                Serial.print(" pclk_hz=");
+                Serial.print(flash.peripheral_clock_hz);
+                Serial.print(" prescaler=");
+                Serial.print(flash.prescaler);
+                Serial.print(" actual_hz=");
+                Serial.println(flash.actual_clock_hz);
+              } else {
+                Serial.println("NOR diagnostics=unavailable");
+              }
+              print_power_status();
+#if MK61_ENABLE_ANALOG_REPORT
+              print_analog_status();
+#endif
+              const resident_firmware::Result firmware =
+                  resident_firmware::verify();
+              Serial.print("FIRMWARE CRC state=");
+              Serial.print(resident_firmware_format::status_name(
+                  firmware.status));
+              Serial.print(" required=");
+              Serial.print(MK61_REQUIRE_RESIDENT_CRC);
+              Serial.print(" image=");
+              Serial.print(firmware.image_size);
+              Serial.print(" footer=");
+              Serial.print(firmware.footer_offset);
+              Serial.print(" expected=0x");
+              terminal_print_hex_u32(firmware.expected_crc32);
+              Serial.print(" build=0x");
+              terminal_print_hex_u32(resident_firmware::build_id());
+              Serial.print(" actual=0x");
+              terminal_print_hex_u32(firmware.actual_crc32);
+              Serial.print(" backend=");
+              Serial.print(firmware.status ==
+                               resident_firmware_format::Status::VALID
+                           ? (firmware.hardware_crc ? "hardware" : "software")
+                           : "not-run");
+              Serial.print(" cycles=");
+              Serial.println(firmware.cycles);
+              resident_firmware::Failure firmware_failure = {};
+              if(resident_firmware::last_failure(firmware_failure)) {
+                Serial.print("FIRMWARE last-failure state=");
+                Serial.print(resident_firmware_format::status_name(
+                    firmware_failure.status));
+                Serial.print(" build=0x");
+                terminal_print_hex_u32(firmware_failure.build_id);
+                Serial.print(" expected=0x");
+                terminal_print_hex_u32(firmware_failure.expected_crc32);
+                Serial.print(" actual=0x");
+                terminal_print_hex_u32(firmware_failure.actual_crc32);
+                Serial.println();
+              }
             }
             break;
           case CMD_FS_GET: {

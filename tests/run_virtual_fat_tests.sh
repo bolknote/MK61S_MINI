@@ -15,6 +15,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/tests/program_store_shim" \
   -I"$root/code" \
   "$root/tests/virtual_fat_self_test.cpp" \
+  "$root/code/device_identity.cpp" \
   "$root/code/virtual_fat.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \
@@ -37,6 +38,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/tests/program_store_shim" \
   -I"$root/code" \
   "$root/tests/virtual_fat_self_test.cpp" \
+  "$root/code/device_identity.cpp" \
   "$root/code/virtual_fat.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \

@@ -37,6 +37,11 @@ try {
 
 $script:Port = ''
 $script:PortExplicit = $false
+$script:DeviceSelector = ''
+$script:DeviceSelectorExplicit = $false
+$script:DetectedDeviceId = ''
+$script:DetectedUsbSerial = ''
+$script:DetectedProfile = ''
 $script:LocalPath = (Get-Location).Path
 $script:RemotePath = '/'
 $script:MockRoot = ''
@@ -95,7 +100,7 @@ function Show-Usage {
 MKC — Norton Commander for MK61s files
 
 Usage:
-  tools\mkc.cmd [--port COMx] [--local DIRECTORY]
+  tools\mkc.cmd [--port COMx] [--device ID] [--local DIRECTORY]
   tools\mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools\mkc.cmd --classify FILE
 
@@ -124,6 +129,11 @@ function Parse-Arguments {
                 if (++$i -ge $Arguments.Count) { throw '--port requires a value' }
                 $script:Port = [string]$Arguments[$i]
                 $script:PortExplicit = $true
+            }
+            '--device' {
+                if (++$i -ge $Arguments.Count) { throw '--device requires a value' }
+                $script:DeviceSelector = [string]$Arguments[$i]
+                $script:DeviceSelectorExplicit = $true
             }
             '--local' {
                 if (++$i -ge $Arguments.Count) { throw '--local requires a value' }
@@ -182,6 +192,11 @@ function Load-Config {
         switch ($parts[0]) {
             'LOCAL_PATH' { $savedLocal = $parts[1] }
             'PORT' { if ([string]::IsNullOrEmpty($script:Port)) { $script:Port = $parts[1] } }
+            'DEVICE_ID' {
+                if ([string]::IsNullOrEmpty($script:DeviceSelector)) {
+                    $script:DeviceSelector = $parts[1]
+                }
+            }
             'ARDUINO_CLI' {
                 if ($script:ArduinoCli -eq 'arduino-cli' -and -not [string]::IsNullOrEmpty($parts[1])) {
                     $script:ArduinoCli = $parts[1]
@@ -202,7 +217,9 @@ function Save-Config {
     if (-not [string]::IsNullOrEmpty($parent)) {
         [void](New-Item -ItemType Directory -Force -Path $parent)
     }
-    $text = "# Создано tools/mkc.cmd.`nLOCAL_PATH=$($script:LocalPath)`nPORT=$($script:Port)`nARDUINO_CLI=$($script:ArduinoCli)`n"
+    $savedDevice = $script:DetectedDeviceId
+    if ([string]::IsNullOrEmpty($savedDevice)) { $savedDevice = $script:DeviceSelector }
+    $text = "# Создано tools/mkc.cmd.`nLOCAL_PATH=$($script:LocalPath)`nPORT=$($script:Port)`nDEVICE_ID=$savedDevice`nARDUINO_CLI=$($script:ArduinoCli)`n"
     [IO.File]::WriteAllText($script:ConfigFile, $text, $script:Utf8NoBom)
 }
 
@@ -311,10 +328,73 @@ function Get-DirectSerialCandidates {
     return $result.ToArray()
 }
 
+function ConvertFrom-Mk61IdentityLine {
+    param([string]$Line)
+    if ([string]::IsNullOrWhiteSpace($Line)) { return $null }
+    $trimmed = $Line.Trim()
+    $match = [regex]::Match($trimmed,
+        '^MK61 ID v=1 public=([0-9A-Fa-f]{16}) short=([0-9A-Fa-f]{8}) usb=([0-9A-Fa-f]{12}) volume=([0-9A-Fa-f]{8}) build=([0-9A-Fa-f]{8}) profile=([A-Za-z0-9._-]+)$')
+    if ($match.Success) {
+        if (-not $match.Groups[1].Value.EndsWith(
+                $match.Groups[2].Value, [StringComparison]::OrdinalIgnoreCase)) {
+            return $null
+        }
+        return [pscustomobject]@{
+            Kind = 'identity'
+            PublicId = $match.Groups[1].Value.ToUpperInvariant()
+            ShortId = $match.Groups[2].Value.ToUpperInvariant()
+            UsbSerial = $match.Groups[3].Value.ToUpperInvariant()
+            VolumeSerial = $match.Groups[4].Value.ToUpperInvariant()
+            BuildId = $match.Groups[5].Value.ToUpperInvariant()
+            Profile = $match.Groups[6].Value
+            Line = $trimmed
+        }
+    }
+    if ($trimmed -match '^MK61s(?:-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*| mini)?\s+ver\.\s+') {
+        return [pscustomobject]@{
+            Kind = 'legacy'; PublicId = ''; ShortId = ''; UsbSerial = ''
+            VolumeSerial = ''; BuildId = ''; Profile = 'legacy'; Line = $trimmed
+        }
+    }
+    return $null
+}
+
 function Test-Mk61IdentityLine {
     param([string]$Line)
-    if ([string]::IsNullOrWhiteSpace($Line)) { return $false }
-    return $Line.Trim() -match '^MK61s(?:-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*| mini)?\s+ver\.\s+'
+    return $null -ne (ConvertFrom-Mk61IdentityLine $Line)
+}
+
+function Get-DirectSerialMk61Identity {
+    param(
+        [object]$Serial,
+        [int]$TimeoutMilliseconds = 1800,
+        [int]$MaximumLines = 24
+    )
+    if ($null -eq $Serial -or $TimeoutMilliseconds -le 0 -or $MaximumLines -le 0) {
+        return $null
+    }
+    $oldTimeout = $Serial.ReadTimeout
+    try {
+        try { $Serial.DiscardInBuffer() } catch {}
+        $Serial.ReadTimeout = [Math]::Max(50, [Math]::Min(300, $TimeoutMilliseconds))
+        [void]$Serial.Write("identity`rver`r")
+        $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
+        for ($lineIndex = 0; $lineIndex -lt $MaximumLines -and
+             [DateTime]::UtcNow -lt $deadline; $lineIndex++) {
+            try {
+                $line = [string]$Serial.ReadLine()
+                $identity = ConvertFrom-Mk61IdentityLine $line
+                if ($null -ne $identity) { return $identity }
+            } catch [TimeoutException] {
+                continue
+            } catch {
+                return $null
+            }
+        }
+        return $null
+    } finally {
+        try { $Serial.ReadTimeout = $oldTimeout } catch {}
+    }
 }
 
 function Test-DirectSerialMk61Identity {
@@ -323,30 +403,22 @@ function Test-DirectSerialMk61Identity {
         [int]$TimeoutMilliseconds = 1800,
         [int]$MaximumLines = 24
     )
-    if ($null -eq $Serial -or $TimeoutMilliseconds -le 0 -or $MaximumLines -le 0) {
-        return $false
+    return $null -ne (Get-DirectSerialMk61Identity `
+        $Serial $TimeoutMilliseconds $MaximumLines)
+}
+
+function Test-Mk61IdentitySelector {
+    param([object]$Identity, [string]$Selector)
+    if ($null -eq $Identity -or [string]::IsNullOrWhiteSpace($Selector)) {
+        return [string]::IsNullOrWhiteSpace($Selector)
     }
-    $oldTimeout = $Serial.ReadTimeout
-    try {
-        try { $Serial.DiscardInBuffer() } catch {}
-        $Serial.ReadTimeout = [Math]::Max(50, [Math]::Min(300, $TimeoutMilliseconds))
-        [void]$Serial.Write("ver`r")
-        $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
-        for ($lineIndex = 0; $lineIndex -lt $MaximumLines -and
-             [DateTime]::UtcNow -lt $deadline; $lineIndex++) {
-            try {
-                $line = [string]$Serial.ReadLine()
-                if (Test-Mk61IdentityLine $line) { return $true }
-            } catch [TimeoutException] {
-                continue
-            } catch {
-                return $false
-            }
+    foreach ($value in @($Identity.PublicId, $Identity.ShortId, $Identity.UsbSerial)) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$value) -and
+            ([string]$value).Equals($Selector, [StringComparison]::OrdinalIgnoreCase)) {
+            return $true
         }
-        return $false
-    } finally {
-        try { $Serial.ReadTimeout = $oldTimeout } catch {}
     }
+    return $false
 }
 
 function Close-DirectSerialPort {
@@ -385,19 +457,17 @@ function Start-DirectSerial {
     Close-DirectSerialPort $script:DirectSerial
     $script:DirectSerial = $null
     $failures = [Collections.Generic.List[string]]::new()
+    $matches = [Collections.Generic.List[object]]::new()
     foreach ($candidate in $candidates) {
         $serial = $null
         try {
             $serial = New-ConfiguredSerialPort $candidate
             $serial.Open()
             Start-Sleep -Milliseconds 300
-            if (Test-DirectSerialMk61Identity $serial) {
-                $script:DirectSerial = $serial
-                $script:Port = $candidate
-                $script:StatusText = "MK61s найден на $candidate"
-                return $true
-            }
-            $failures.Add("${candidate}: это не MK61s")
+            $identity = Get-DirectSerialMk61Identity $serial
+            if ($null -ne $identity) {
+                $matches.Add([pscustomobject]@{ Port = $candidate; Identity = $identity })
+            } else { $failures.Add("${candidate}: это не MK61s") }
         } catch {
             $message = $_.Exception.Message
             if ($_.Exception -is [UnauthorizedAccessException]) {
@@ -405,13 +475,44 @@ function Start-DirectSerial {
             }
             $failures.Add("${candidate}: $message")
         } finally {
-            if ($null -ne $serial -and $serial -ne $script:DirectSerial) {
-                Close-DirectSerialPort $serial
-            }
+            Close-DirectSerialPort $serial
         }
     }
-    $script:StatusText = 'MK61s не найден: ' + ($failures -join '; ')
-    return $false
+    if ($matches.Count -eq 0) {
+        $script:StatusText = 'MK61s не найден: ' + ($failures -join '; ')
+        return $false
+    }
+
+    $selected = @($matches | Where-Object {
+        Test-Mk61IdentitySelector $_.Identity $script:DeviceSelector
+    })
+    if ($selected.Count -ne 1) {
+        if ([string]::IsNullOrWhiteSpace($script:DeviceSelector) -and
+            $matches.Count -gt 1) {
+            $script:StatusText = "Подключено несколько MK61s ($($matches.Count)); укажите --device PUBLIC_ID"
+        } else {
+            $script:StatusText = "ID '$($script:DeviceSelector)' выбрал $($selected.Count) устройств MK61s"
+        }
+        return $false
+    }
+
+    $chosen = $selected[0]
+    try {
+        $serial = New-ConfiguredSerialPort $chosen.Port
+        $serial.Open()
+        Start-Sleep -Milliseconds 150
+        $script:DirectSerial = $serial
+        $script:Port = $chosen.Port
+        $script:DetectedDeviceId = [string]$chosen.Identity.PublicId
+        $script:DetectedUsbSerial = [string]$chosen.Identity.UsbSerial
+        $script:DetectedProfile = [string]$chosen.Identity.Profile
+        $script:StatusText = "MK61s найден на $($chosen.Port)"
+        return $true
+    } catch {
+        Close-DirectSerialPort $serial
+        $script:StatusText = "$($chosen.Port): $($_.Exception.Message)"
+        return $false
+    }
 }
 
 function Start-Monitor {
@@ -2736,14 +2837,26 @@ function Show-DeviceInfo {
         } catch {}
     } else {
         $lines.Add("Порт: $($script:Port)")
+        if (-not [string]::IsNullOrEmpty($script:DetectedDeviceId)) {
+            $lines.Add("Public ID: $($script:DetectedDeviceId)")
+        }
+        if (-not [string]::IsNullOrEmpty($script:DetectedUsbSerial)) {
+            $lines.Add("USB serial: $($script:DetectedUsbSerial)")
+        }
+        if (-not [string]::IsNullOrEmpty($script:DetectedProfile)) {
+            $lines.Add("Profile: $($script:DetectedProfile)")
+        }
         $lines.Add('')
-        if (-not (Send-RemoteLine 'df') -or -not (Send-RemoteLine 'ls "/"')) {
+        if (-not (Send-RemoteLine 'identity') -or
+            -not (Send-RemoteLine 'df') -or
+            -not (Send-RemoteLine 'ls "/"')) {
             Show-Alert 'Info' $script:StatusText
             return
         }
         for ($count = 0; $count -lt 10000; $count++) {
             if (-not (Read-SerialLine 10000)) { break }
             $line = $script:SerialLine
+            if ($line -match '^MK61 ID v=1 ') { $lines.Add($line) }
             if ($line -match '^(Flash:|Nodes:|Visible:|FAT12 cluster:|Settings:)') { $lines.Add($line) }
             if ($line -match ' entr(y|ies)\.$') { break }
         }
@@ -2833,6 +2946,11 @@ function Invoke-MkcApplication {
     param([object[]]$Arguments)
     Load-Config
     if (-not (Parse-Arguments $Arguments)) { return 0 }
+    # Explicit --port is itself a user selector. Do not let an ID remembered
+    # from another session reject a deliberately selected legacy firmware.
+    if ($script:PortExplicit -and -not $script:DeviceSelectorExplicit) {
+        $script:DeviceSelector = ''
+    }
     if ($script:ListPortsOnly) {
         foreach ($port in @(Get-CdcPorts)) { [Console]::WriteLine($port) }
         return 0

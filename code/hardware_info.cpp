@@ -1,12 +1,12 @@
 #include "hardware_info.hpp"
 
+#include <Arduino.h>
+
 #include "config.h"
 #include "stm32f4xx_ll_adc.h"
 
 namespace hardware_info {
 namespace {
-
-static constexpr u8 ADC_SAMPLE_COUNT = 8;
 
 static constexpr char configured_pin_count_code(void) {
 #if defined(ARDUINO_BLACKPILL_F411CE) || \
@@ -22,12 +22,23 @@ static constexpr char configured_pin_count_code(void) {
 #endif
 }
 
-static u16 average_adc(u32 pin) {
-  u32 sum = 0;
-  for(u8 sample = 0; sample < ADC_SAMPLE_COUNT; sample++) {
-    sum += analogRead(pin);
+static u16 filtered_adc(u32 pin) {
+  u16 samples[ADC_FILTER_SAMPLES];
+  for(u8 sample = 0; sample < ADC_FILTER_SAMPLES; sample++) {
+    const u16 value = (u16) analogRead(pin);
+    u8 position = sample;
+    while(position > 0 && samples[position - 1] > value) {
+      samples[position] = samples[position - 1];
+      position--;
+    }
+    samples[position] = value;
   }
-  return (u16) ((sum + ADC_SAMPLE_COUNT / 2U) / ADC_SAMPLE_COUNT);
+  return samples[ADC_FILTER_SAMPLES / 2U];
+}
+
+static u16 elapsed_u16(u32 started_at) {
+  const u32 elapsed = micros() - started_at;
+  return (u16) (elapsed > 0xFFFFU ? 0xFFFFU : elapsed);
 }
 
 } // анонимное пространство имён
@@ -50,23 +61,52 @@ DeviceIdentity read_device_identity(void) {
     idcode, flash_kb, configured_pin_count_code());
 }
 
-VbatReading read_vbat(void) {
-#if defined(AVREF) && defined(AVBAT) && defined(VREFINT_CAL_ADDR)
+AnalogSnapshot read_analog_snapshot(void) {
+  AnalogSnapshot result = {};
+  result.vdda = {false, 0};
+  result.mcu_temperature = {false, 0};
+  result.battery = unqualified_battery_status({false, 0});
+
+#if defined(AVREF) && defined(ATEMP) && defined(AVBAT) && \
+    defined(VREFINT_CAL_ADDR) && defined(TEMPSENSOR_CAL1_ADDR) && \
+    defined(TEMPSENSOR_CAL2_ADDR)
+  const u32 started_at = micros();
   analogReadResolution(12);
 
-  // Первые отсчёты оставляем вне среднего после переключения внутреннего канала.
+  // STM32duino selects the maximum (480-cycle on F4) internal-channel sample
+  // time and HAL waits the specified 10 us temperature-sensor startup time.
+  // Discard one conversion after every mux change and use a median-of-five:
+  // 18 conversions total, the same count as the previous VBAT-only average.
   (void) analogRead(AVREF);
-  const u16 raw_vref = average_adc(AVREF);
+  result.raw_vref = filtered_adc(AVREF);
+  (void) analogRead(ATEMP);
+  result.raw_temperature = filtered_adc(ATEMP);
   (void) analogRead(AVBAT);
-  const u16 raw_vbat = average_adc(AVBAT);
+  result.raw_vbat = filtered_adc(AVBAT);
+
   const u16 calibrated_vref = *VREFINT_CAL_ADDR;
+  const u16 calibrated_temperature_30 = *TEMPSENSOR_CAL1_ADDR;
+  const u16 calibrated_temperature_110 = *TEMPSENSOR_CAL2_ADDR;
+  result.conversion_count = 3U * (ADC_FILTER_SAMPLES + 1U);
 
   analogReadResolution(ADC_RESOLUTION);
-  return calculate_vbat_millivolts(
-    raw_vbat, raw_vref, calibrated_vref);
-#else
-  return {false, 0};
+
+  result.vdda = calculate_vdda_millivolts(
+    result.raw_vref, calibrated_vref);
+  if(result.vdda.valid) {
+    result.mcu_temperature = calculate_temperature_decicelsius(
+      result.raw_temperature,
+      result.vdda.millivolts,
+      calibrated_temperature_30,
+      calibrated_temperature_110);
+  }
+  result.battery = unqualified_battery_status(
+    calculate_vbat_millivolts(
+      result.raw_vbat, result.raw_vref, calibrated_vref));
+  result.elapsed_us = elapsed_u16(started_at);
 #endif
+
+  return result;
 }
 
 const char* display_type(void) {

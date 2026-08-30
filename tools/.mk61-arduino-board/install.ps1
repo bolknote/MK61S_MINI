@@ -34,6 +34,10 @@ function Test-InstalledPlatform {
         [IO.File]::Exists((Join-Path $Path 'platform.txt')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-postbuild.sh')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-postbuild.ps1')) -and
+        [IO.File]::Exists((Join-Path $Path 'tools\mk61_firmware_seal.cpp')) -and
+        [IO.File]::Exists((Join-Path $Path 'tools\resident_firmware_format.hpp')) -and
+        [IO.File]::Exists((Join-Path $Path 'tools\rust_types.h')) -and
+        [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware.ps1')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61_module.ld'))
     )
 }
@@ -57,6 +61,7 @@ try {
     }
 
     $sourcePlatform = Join-Path $PSScriptRoot 'hardware\mk61\stm32'
+    $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $target = Join-Path $Sketchbook 'hardware\mk61\stm32'
 
     if ($Check) {
@@ -91,6 +96,16 @@ try {
         Copy-Item -LiteralPath (Join-Path $sourcePlatform "tools\$name") `
             -Destination (Join-Path $targetTools $name) -Force
     }
+    Copy-Item -LiteralPath (Join-Path $projectRoot `
+        'tools/.mk61-firmware-seal/mk61_firmware_seal.cpp') `
+        -Destination (Join-Path $targetTools 'mk61_firmware_seal.cpp') -Force
+    Copy-Item -LiteralPath (Join-Path $projectRoot `
+        'code/resident_firmware_format.hpp') `
+        -Destination (Join-Path $targetTools 'resident_firmware_format.hpp') -Force
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'code/rust_types.h') `
+        -Destination (Join-Path $targetTools 'rust_types.h') -Force
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'tools/seal-firmware.ps1') `
+        -Destination (Join-Path $targetTools 'seal-firmware.ps1') -Force
 
     Write-Host 'MK61s F401 + APP installed in:'
     Write-Host "  $target"

@@ -140,7 +140,8 @@ const char* exception_name(u32 exception_number) {
 }
 
 u16 format_report(const Record& record, u32 current_build_id,
-                  u8* output, usize capacity) {
+                  u8* output, usize capacity,
+                  const ReportMetadata* metadata) {
   if(!valid(record) || output == 0 || capacity == 0) return 0;
 
   ReportBuilder report(output, capacity);
@@ -154,6 +155,13 @@ u16 format_report(const Record& record, u32 current_build_id,
   report.hex(record.build_id);
   report.text(",current_build=");
   report.hex(current_build_id);
+  if(metadata != nullptr && metadata->device_public_id != nullptr &&
+     metadata->current_build_profile != nullptr) {
+    report.text("\ndevice_public=");
+    report.text(metadata->device_public_id);
+    report.text(",current_profile=");
+    report.text(metadata->current_build_profile);
+  }
   report.text("\nexc_return=");
   report.hex(record.exc_return);
   report.text(",frame=");

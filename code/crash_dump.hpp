@@ -52,6 +52,9 @@ bool copy(crash_dump_format::Record& output);
 void clear(void);
 u32 boot_reset_flags(void);
 u32 current_build_id(void);
+const char* current_build_profile(void);
+u16 format_report(const crash_dump_format::Record& record,
+                  u8* output, usize capacity);
 bool memory_layout_valid(void);
 
 void update_runtime(u32 state, u32 detail, u32 uptime_ms);

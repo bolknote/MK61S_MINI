@@ -428,8 +428,8 @@ command -v "$arduino_cli" >/dev/null 2>&1 || {
   printf 'Error: arduino-cli is not installed.\n' >&2
   exit 1
 }
-if [ "$any_module" -eq 1 ] && ! command -v c++ >/dev/null 2>&1; then
-  printf 'Error: a host C++17 compiler is required for the ZX0 packer.\n' >&2
+if ! command -v "${MK61_HOST_CXX:-${CXX:-c++}}" >/dev/null 2>&1; then
+  printf 'Error: a host C++17 compiler is required for firmware sealing.\n' >&2
   exit 1
 fi
 
@@ -443,6 +443,7 @@ compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
+compile_flags="$compile_flags -DMK61_REQUIRE_RESIDENT_CRC=1"
 compile_flags="$compile_flags $platform_ram_flags"
 
 mkdir -p "$build_root" "$output_root"
@@ -473,6 +474,8 @@ if [ ! -s "$resident_elf" ] || [ ! -s "$resident_bin" ]; then
   printf 'Error: Arduino build did not create resident ELF and BIN files.\n' >&2
   exit 1
 fi
+"$root/tools/seal-firmware.sh" seal --max-size 262144 "$resident_bin"
+"$root/tools/seal-firmware.sh" check --max-size 262144 "$resident_bin"
 
 compiler=
 objcopy=

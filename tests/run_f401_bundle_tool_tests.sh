@@ -112,6 +112,10 @@ test "$status" -eq 2
 # При выключенных ключах сборщик не должен требовать overlay/toolchain и не
 # должен оставлять старые системные APP в комплекте. Arduino CLI здесь заменён
 # минимальной моделью только resident-сборки.
+cxx="${CXX:-clang++}"
+"$cxx" -std=c++17 -Wall -Wextra -Werror -pedantic \
+  -I"$root/code" "$root/tests/resident_firmware_fixture.cpp" \
+  -o "$work/resident-fixture"
 fake_cli="$work/arduino-cli"
 cat > "$fake_cli" <<'EOF'
 #!/usr/bin/env bash
@@ -144,7 +148,7 @@ done
 [ -n "$build_path" ]
 mkdir -p "$build_path"
 printf 'resident-elf' > "$build_path/mk61s-M.ino.elf"
-printf 'resident-bin' > "$build_path/mk61s-M.ino.bin"
+"$MK61_TEST_RESIDENT_FIXTURE" "$build_path/mk61s-M.ino.bin"
 EOF
 chmod +x "$fake_cli"
 
@@ -160,6 +164,7 @@ printf 'stale' > "$bundle/System/CHIP8.APP"
 printf 'stale' > "$bundle/Apps/STALE.APP"
 
 MK61_ARDUINO_CLI="$fake_cli" \
+MK61_TEST_RESIDENT_FIXTURE="$work/resident-fixture" \
 MK61_F401_BUILD_ROOT="$work/build" \
 MK61_OUTPUT_DIR="$work/output" \
 MK61_ENABLE_FOCAL=0 \
@@ -181,6 +186,9 @@ test ! -e "$bundle/Apps/STALE.APP"
 grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
 grep -q -- '-DMK61_ENABLE_MARKDOWN_VIEWER=0' "$bundle/build.flags"
 grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
+grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$bundle/build.flags"
+"$root/tools/seal-firmware.sh" check --max-size 262144 \
+  "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin" >/dev/null
 grep -q '^format 1$' "$bundle/build.apps"
 grep -q 'Built F401 bundle:' "$work/output.log"
 

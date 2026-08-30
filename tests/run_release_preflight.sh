@@ -36,11 +36,15 @@ for artifact in \
       "$artifact" >&2
     exit 1
   }
+  "$root/tools/seal-firmware.sh" check --max-size 524288 \
+    "$preflight_root/firmware/$artifact-preflight.bin"
 done
 
 printf '\n=== Arduino F401 Classic V3 UC1609 ===\n'
 MK61_F401_UC1609_BUILD_ROOT="$preflight_root/f401-arduino-uc1609" \
   "$root/tests/run_f401_uc1609_compile_check.sh"
+"$root/tools/seal-firmware.sh" check --max-size 262144 \
+  "$preflight_root/f401-arduino-uc1609/build/mk61s-M.ino.bin"
 
 printf '\n=== F401 release profiles ===\n'
 f401_build_root="$preflight_root/f401-build"
@@ -109,6 +113,8 @@ for bundle in \
   mk61s-M-mini-v2-lcd1602-a00-f401 \
   mk61s-M-classic-v3-uc1609-f401; do
   bundle_root="$f401_output/$bundle"
+  "$root/tools/seal-firmware.sh" check --max-size 262144 \
+    "$bundle_root/$bundle.bin"
   for artifact in \
     "$bundle.bin" \
     build.flags \

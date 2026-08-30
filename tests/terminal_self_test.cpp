@@ -224,6 +224,9 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_USB_SCREEN));
   assert(!terminal_command_allowed_in_script(CMD_CRASH));
   assert(!terminal_command_allowed_in_script(CMD_WATCHDOG));
+  assert(!terminal_command_allowed_in_script(CMD_IDENTITY));
+  assert(!terminal_command_allowed_in_script(CMD_BENCHMARK));
+  assert(!terminal_command_allowed_in_script(CMD_ALARM));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
 
   assert(terminal_command_allowed_in_trap(CMD_PRINT));
@@ -239,6 +242,9 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_trap(CMD_REINIT));
   assert(!terminal_command_allowed_in_trap(CMD_CRASH));
   assert(!terminal_command_allowed_in_trap(CMD_WATCHDOG));
+  assert(terminal_command_allowed_in_trap(CMD_IDENTITY));
+  assert(!terminal_command_allowed_in_trap(CMD_BENCHMARK));
+  assert(!terminal_command_allowed_in_trap(CMD_ALARM));
 }
 
 struct PrintCapture {
@@ -508,6 +514,12 @@ static void test_rtc_datetime_parser_and_formatter(void) {
   assert(!rtc_clock::parse_datetime("2026-07-19 24:00:00", value));
   assert(!rtc_clock::parse_datetime("2026-07-19 14:35:60", value));
   assert(!rtc_clock::parse_datetime("2026-07-19 14:35:00 junk", value));
+
+  assert(rtc_clock::parse_time_of_day(" 23:59:58 ", value));
+  assert(value.hour == 23 && value.minute == 59 && value.second == 58);
+  assert(!rtc_clock::parse_time_of_day("3:04:05", value));
+  assert(!rtc_clock::parse_time_of_day("24:00:00", value));
+  assert(!rtc_clock::parse_time_of_day("12:60:00", value));
 }
 
 static void test_rtc_startup_material(void) {

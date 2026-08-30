@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "device_identity.hpp"
 #include "mk61emu_core.h"
 
 namespace entropy_pool {
@@ -95,11 +96,11 @@ void begin(void) {
   collection_started = true;
 
   absorb(((u64) micros() << 32) ^ millis() ^ 0x424F4F54ULL);
-#if defined(UID_BASE)
-  const volatile u32* const uid = reinterpret_cast<const volatile u32*>(UID_BASE);
-  absorb(((u64) uid[0] << 32) | uid[1]);
-  absorb(((u64) uid[2] << 32) ^ 0x554944ULL);
-#endif
+  const device_identity::Uid96 uid = device_identity::read();
+  if(uid.available()) {
+    absorb(((u64) uid.word0 << 32) | uid.word1);
+    absorb(((u64) uid.word2 << 32) ^ 0x554944ULL);
+  }
 
   analogReadResolution(12);
   adc_resolution_owned = true;

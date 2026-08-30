@@ -30,6 +30,13 @@ cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
 cmp "$hook" "$target/tools/mk61-app-postbuild.sh"
 cmp "$platform/tools/mk61-app-postbuild.ps1" \
     "$target/tools/mk61-app-postbuild.ps1"
+cmp "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
+    "$target/tools/mk61_firmware_seal.cpp"
+cmp "$root/code/resident_firmware_format.hpp" \
+    "$target/tools/resident_firmware_format.hpp"
+cmp "$root/code/rust_types.h" "$target/tools/rust_types.h"
+cmp "$root/tools/seal-firmware.ps1" \
+    "$target/tools/seal-firmware.ps1"
 
 grep -q '^mk61_f401_app.name=MK61s F401 + APP$' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
@@ -45,6 +52,7 @@ grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
   "$target/boards.txt"
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
+grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"

@@ -124,6 +124,10 @@ jobs:
               throw "Missing F401 build artifact: $name"
             }
           }
+          & ./tools/seal-firmware.ps1 check `
+            -InputFile (Join-Path $buildPath 'resident.bin') `
+            -MaxSize 262144
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $bundle = Join-Path (
             Join-Path $env:RUNNER_TEMP 'f401-output') `
             'mk61s-M-mini-v3-lcd1602-a00-f401'
@@ -298,6 +302,10 @@ jobs:
                 exit 1
               fi
             done
+            "$GITHUB_WORKSPACE/tools/seal-firmware.sh" check \
+              --max-size 262144 "$bundle/$bundle.bin"
+            grep -F -- '-DMK61_REQUIRE_RESIDENT_CRC=1' \
+              "$bundle/build.flags"
             for disabled in \
               "$bundle/System/WBMP.APP" \
               "$bundle/System/CHIP8.APP"; do

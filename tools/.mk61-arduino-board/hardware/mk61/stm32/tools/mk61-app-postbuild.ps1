@@ -326,6 +326,20 @@ function Build-Mk61Bundle {
     $script:ResidentBin = Join-Path $script:BuildPathValue "$Project.bin"
     Test-RequiredFile $script:ResidentElf 'resident ELF'
     Test-RequiredFile $script:ResidentBin 'resident BIN'
+    $sealer = Join-Path $PSScriptRoot 'seal-firmware.ps1'
+    Test-RequiredFile $sealer 'resident firmware sealer; reinstall the MK61s board'
+    $powerShell = if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        Join-Path $PSHOME 'powershell.exe'
+    } else {
+        (Get-Process -Id $PID).Path
+    }
+    Test-RequiredFile $powerShell 'PowerShell executable'
+    Invoke-Mk61Tool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
+        '-InputFile', $script:ResidentBin, '-MaxSize', '262144')
+    Invoke-Mk61Tool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
+        '-InputFile', $script:ResidentBin, '-MaxSize', '262144')
     $script:OverlayHex = Get-Mk61Symbol $script:ResidentElf `
         'mk61_module_overlay'
 

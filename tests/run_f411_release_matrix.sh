@@ -69,9 +69,14 @@ if [[ -n "$output_dir" ]]; then
 fi
 
 fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
-fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=o3lto'
-strict_flags='-Werror -Wno-error=cpp'
+# LTO is qualified with the same size-oriented optimization policy as the
+# release build.  The old o3lto probe already occupied 520964/524288 bytes at
+# the plan-hard baseline, so it had no safe growth margin and was not a viable
+# release configuration even before new features were added.
+fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
+strict_flags='-DMK61_REQUIRE_RESIDENT_CRC=1 -Werror -Wno-error=cpp'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+minimum_flash_headroom=16384
 variant_index=0
 variant_count=16
 
@@ -93,6 +98,7 @@ compile_variant() {
     --build-path "$build_path" \
     --build-property "compiler.cpp.extra_flags=$compile_flags" \
     --build-property "compiler.c.extra_flags=$platform_ram_flags" \
+    --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
     "$sketch" 2>&1 | tee "$compile_log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}
@@ -113,13 +119,31 @@ compile_variant() {
       "$name" "$unexpected_warnings" >&2
     exit 1
   fi
+  local flash_line flash_used flash_max flash_headroom
+  flash_line="$(grep -E '^Sketch uses [0-9]+ bytes .*Maximum is [0-9]+ bytes\.$' \
+    "$compile_log" | tail -n 1)"
+  [[ -n "$flash_line" ]] ||
+    fail "could not parse Flash usage for $name"
+  flash_used="$(sed -E 's/^Sketch uses ([0-9]+) bytes .*$/\1/' <<<"$flash_line")"
+  flash_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$flash_line")"
+  flash_headroom=$((flash_max - flash_used))
+  [[ "$flash_headroom" -ge "$minimum_flash_headroom" ]] ||
+    fail "unsafe Flash headroom for $name: ${flash_headroom} B (minimum ${minimum_flash_headroom} B)"
   test -s "$build_path/mk61s-M.ino.elf" ||
     fail "missing ELF for $name"
   test -s "$build_path/mk61s-M.ino.bin" ||
     fail "missing BIN for $name"
+  "$root/tools/seal-firmware.sh" seal --max-size 524288 \
+    "$build_path/mk61s-M.ino.bin"
+  "$root/tools/seal-firmware.sh" check --max-size 524288 \
+    "$build_path/mk61s-M.ino.bin"
   "$root/tests/check_global_constructors.sh" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_early_dfu_elf.sh" \
+    "$build_path/mk61s-M.ino.elf"
+  "$root/tests/check_power_monitor_elf.sh" \
+    "$build_path/mk61s-M.ino.elf"
+  "$root/tests/check_rtc_alarm_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
   if [[ -n "$output_dir" && -n "$artifact_name" ]]; then
     cp "$build_path/mk61s-M.ino.bin" \

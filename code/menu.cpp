@@ -175,7 +175,7 @@ static constexpr usize HARDWARE_LINE_SIZE = 32;
 
 static void build_hardware_lines(
     char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
-    hardware_info::VbatReading vbat) {
+    const hardware_info::AnalogSnapshot& analog) {
   const bool russian = language_is_ru();
   const hardware_info::DeviceIdentity device =
     hardware_info::read_device_identity();
@@ -188,12 +188,16 @@ static void build_hardware_lines(
   hardware_info::format_memory_line(
     lines[1], HARDWARE_LINE_SIZE, russian, device);
 
-  hardware_info::format_vbat_line(
-    lines[2], HARDWARE_LINE_SIZE, russian, vbat);
+  hardware_info::format_vdda_line(
+    lines[2], HARDWARE_LINE_SIZE, russian, analog.vdda);
+  hardware_info::format_temperature_line(
+    lines[3], HARDWARE_LINE_SIZE, russian, analog.mcu_temperature);
+  hardware_info::format_battery_line(
+    lines[4], HARDWARE_LINE_SIZE, russian, analog.battery);
   hardware_info::format_generator_line(
-    lines[3], HARDWARE_LINE_SIZE, russian, rtc_source_name);
+    lines[5], HARDWARE_LINE_SIZE, russian, rtc_source_name);
   hardware_info::format_display_line(
-    lines[4], HARDWARE_LINE_SIZE, russian, hardware_info::display_type());
+    lines[6], HARDWARE_LINE_SIZE, russian, hardware_info::display_type());
 }
 
 static void draw_hardware_lines(
@@ -229,7 +233,7 @@ static void draw_hardware_lines(
 
 bool  HardwareInfo(void) {
   char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE];
-  build_hardware_lines(lines, hardware_info::read_vbat());
+  build_hardware_lines(lines, hardware_info::read_analog_snapshot());
   u8 offset = 0;
 
   do {

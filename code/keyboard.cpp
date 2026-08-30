@@ -94,6 +94,17 @@ static  u32            scan_line_started_us;
 static  keyboard_core::ExternalKeyState external_keys;
 static  keyboard_core::PressEdgeLatch immediate_presses;
 
+#if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
+static bool stop_wake_armed;
+static volatile bool stop_wake_irq_seen;
+static constexpr u32 STOP_WAKE_EXTI_MASK =
+    (1UL << 4) | (1UL << 5) | (1UL << 6) | (1UL << 7) | (1UL << 8);
+
+static void stop_wake_irq(void) {
+  stop_wake_irq_seen = true;
+}
+#endif
+
 inline void activate_scan_line(void) {
   digitalWrite(scan_pins[scan_line], HIGH);
   pinMode(scan_pins[scan_line], OUTPUT);
@@ -204,6 +215,130 @@ void set_external_key_pressed(i32 key_code, bool pressed) {
   i32 unhold_quant = -1;
   if(!external_keys.release(key_code, unhold_quant)) return;
   if(unhold_quant >= 0) event_unhold_key(key_code, unhold_quant);
+}
+
+bool prepare_stop_wake(void) {
+#if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
+  if(stop_wake_armed || any_key_pressed() || kbd::last_key() >= 0) return false;
+
+  // Remove the one driven scan row first. Then every matrix column drives the
+  // same HIGH level, so any number of simultaneous keys can only connect equal
+  // outputs. Rows PB4..PB8 are unique EXTI lines and use pulldowns.
+  for(usize row = 0; row < KEY_IN_ROW; row++) pinMode(scan_pins[row], INPUT);
+  for(usize column = 0; column < KEY_IN_COLUMN; column++) {
+    digitalWrite(data_pins[column], HIGH);
+    pinMode(data_pins[column], OUTPUT);
+  }
+  for(usize row = 0; row < KEY_IN_ROW; row++) {
+    pinMode(scan_pins[row], INPUT_PULLDOWN);
+  }
+
+  stop_wake_irq_seen = false;
+  EXTI->PR = STOP_WAKE_EXTI_MASK;
+  for(usize row = 0; row < KEY_IN_ROW; row++) {
+    attachInterrupt(scan_pins[row], stop_wake_irq, RISING);
+  }
+  EXTI->PR = STOP_WAKE_EXTI_MASK;
+  stop_wake_armed = true;
+
+  // A key which became active while GPIO/EXTI were changing directions must
+  // abort the pending STOP instead of being erased with the setup flags.
+  for(usize row = 0; row < KEY_IN_ROW; row++) {
+    if(digitalRead(scan_pins[row]) != LOW) stop_wake_irq_seen = true;
+  }
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool stop_wake_pending(void) {
+#if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
+  if(!stop_wake_armed) return false;
+  if(stop_wake_irq_seen || (EXTI->PR & STOP_WAKE_EXTI_MASK) != 0) return true;
+  for(usize row = 0; row < KEY_IN_ROW; row++) {
+    if(digitalRead(scan_pins[row]) != LOW) return true;
+  }
+#endif
+  return false;
+}
+
+#if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
+static u8 restore_stop_wake(bool preserve_presses) {
+  if(!stop_wake_armed) return 0;
+
+  u8 pressed_by_row[KEY_IN_ROW] = {};
+  if(preserve_presses) {
+    // Resolve the column immediately while the waking key is still held. All
+    // columns are kept as outputs at equal LOW except the one being sampled.
+    for(usize column = 0; column < KEY_IN_COLUMN; column++) {
+      digitalWrite(data_pins[column], LOW);
+    }
+    for(usize column = 0; column < KEY_IN_COLUMN; column++) {
+      digitalWrite(data_pins[column], HIGH);
+      delayMicroseconds(3);
+      for(usize row = 0; row < KEY_IN_ROW; row++) {
+        if(digitalRead(scan_pins[row]) != LOW) {
+          pressed_by_row[row] |= (u8) (1U << column);
+        }
+      }
+      digitalWrite(data_pins[column], LOW);
+    }
+  }
+
+  for(usize row = 0; row < KEY_IN_ROW; row++) {
+    detachInterrupt(scan_pins[row]);
+  }
+  EXTI->PR = STOP_WAKE_EXTI_MASK;
+  stop_wake_irq_seen = false;
+  stop_wake_armed = false;
+
+  for(usize row = 0; row < KEY_IN_ROW; row++) pinMode(scan_pins[row], INPUT);
+  for(usize column = 0; column < KEY_IN_COLUMN; column++) {
+    pinMode(data_pins[column], INPUT_PULLDOWN);
+  }
+
+  const t_time_ms now = millis();
+  u8 captured = 0;
+  i32 last_captured = -1;
+  for(usize row = 0; row < KEY_IN_ROW; row++) {
+    RowArray[row].prime(pressed_by_row[row], now);
+    immediate_presses.noteRow(row, pressed_by_row[row]);
+    for(usize column = 0; column < KEY_IN_COLUMN; column++) {
+      if((pressed_by_row[row] & (u8) (1U << column)) == 0) continue;
+      const i32 code = (i32) (column * KEY_IN_ROW + row);
+      if(cir_buff_write((i8) code) && captured != 0xFFU) captured++;
+      last_captured = code;
+      entropy_pool::note_key((u8) code, micros());
+    }
+  }
+
+  scan_line = 0;
+  activate_scan_line();
+  if(last_captured >= 0) {
+    hold_quant_counter = -1;
+    holded_scan_code = last_captured;
+    press_time = now + KEY_HOLD_MS;
+    sound_scaled(PIN_BUZZER, KEY_CLICK_FREQ_HZ, KEY_CLICK_MS,
+                 library_mk61::sound_volume(), KEY_CLICK_VOLUME_PERCENT);
+    idle_signal_reset();
+  }
+  return captured;
+}
+#endif
+
+u8 resume_from_stop(void) {
+#if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
+  return restore_stop_wake(true);
+#else
+  return 0;
+#endif
+}
+
+void cancel_stop_wake(void) {
+#if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
+  (void) restore_stop_wake(false);
+#endif
 }
 
 void  exclude_before(i32 before_key) { // убрать все коды клавиш в том числе before_key, из очереди клавиатуры

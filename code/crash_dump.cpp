@@ -1,6 +1,9 @@
 #include "crash_dump.hpp"
 
 #include "config.h"
+#include "device_identity.hpp"
+#include "firmware_build.hpp"
+#include "resident_firmware.hpp"
 
 #if MK61_CRASH_DUMP_SUPPORTED
   #include <Arduino.h>
@@ -9,48 +12,6 @@
 
 namespace crash_dump {
 namespace {
-
-constexpr u32 fnv1a_character(u32 state, char value) {
-  return (state ^ (u8) value) * 16777619UL;
-}
-
-constexpr u32 fnv1a_text(const char* text, u32 state = 2166136261UL) {
-  return *text == 0 ? state : fnv1a_text(
-      text + 1, fnv1a_character(state, *text));
-}
-
-#if defined(MK61_BOARD_CLASSIC_V2)
-static constexpr char BUILD_PROFILE[] = "classic-v2-uc1609";
-#elif defined(MK61_BOARD_CLASSIC_V3)
-static constexpr char BUILD_PROFILE[] = "classic-v3-uc1609";
-#elif defined(MK61_BOARD_40TH)
-static constexpr char BUILD_PROFILE[] = "40th-uc1609";
-#elif defined(MK61_DISPLAY_UC1609)
-// Compatibility selector retained for sketches that predate the explicit
-// Classic V2/V3 board profiles.
-static constexpr char BUILD_PROFILE[] = "uc1609-compat";
-#elif defined(MK61_OLED1602_WS0010)
-  #if defined(REVISION_V2)
-static constexpr char BUILD_PROFILE[] = "mini-v2-ws0010";
-  #else
-static constexpr char BUILD_PROFILE[] = "mini-v3-ws0010";
-  #endif
-#elif defined(MK61_LCD1602_A02)
-  #if defined(REVISION_V2)
-static constexpr char BUILD_PROFILE[] = "mini-v2-a02";
-  #else
-static constexpr char BUILD_PROFILE[] = "mini-v3-a02";
-  #endif
-#else
-  #if defined(REVISION_V2)
-static constexpr char BUILD_PROFILE[] = "mini-v2-a00";
-  #else
-static constexpr char BUILD_PROFILE[] = "mini-v3-a00";
-  #endif
-#endif
-
-static constexpr u32 BUILD_ID =
-  fnv1a_text(BUILD_PROFILE, fnv1a_text(FIRMWARE_VER));
 
 #if MK61_CRASH_DUMP_SUPPORTED
 
@@ -156,7 +117,7 @@ void mk61_crash_fault_entry(u32 exc_return, u32 original_msp,
   mk61_crash_record.shcsr = SCB->SHCSR;
   mk61_crash_record.rcc_csr_at_fault = RCC->CSR;
   mk61_crash_record.rcc_csr_after_reboot = 0;
-  mk61_crash_record.build_id = BUILD_ID;
+  mk61_crash_record.build_id = resident_firmware::build_id();
 
   u32 flags = 0;
   const bool uses_psp = (exc_return & (1UL << 2)) != 0;
@@ -290,7 +251,24 @@ u32 boot_reset_flags(void) {
 }
 
 u32 current_build_id(void) {
-  return BUILD_ID;
+  return resident_firmware::build_id();
+}
+
+const char* current_build_profile(void) {
+  return firmware_build::PROFILE;
+}
+
+u16 format_report(const crash_dump_format::Record& record,
+                  u8* output, usize capacity) {
+  char public_id[device_identity::PUBLIC_ID_TEXT_SIZE];
+  const bool available = device_identity::format_public_id(
+      device_identity::read(), public_id);
+  const crash_dump_format::ReportMetadata metadata = {
+    available ? public_id : "unsupported",
+    firmware_build::PROFILE
+  };
+  return crash_dump_format::format_report(
+      record, resident_firmware::build_id(), output, capacity, &metadata);
 }
 
 bool memory_layout_valid(void) {

@@ -2,6 +2,7 @@
 
 #include "bounded_string.hpp"
 #include "config.h"
+#include "device_identity.hpp"
 #include "fat_name.hpp"
 #include "language_workspace.hpp"
 #if MK61_ANY_LOADABLE_MODULE
@@ -531,7 +532,7 @@ static void boot_sector(u8* output) {
   put_le32(output, 28, 0);
   output[36] = 0x80;
   output[38] = 0x29;
-  put_le32(output, 39, 0xC5000000UL ^ geometry().capacity_bytes);
+  put_le32(output, 39, volume_serial());
   memcpy(output + 43, "MK61S C5   ", 11);
   memcpy(output + 54, "FAT12   ", 8);
   output[510] = 0x55;
@@ -1877,6 +1878,14 @@ static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
 
 u32 sector_count(void) {
   return program_store::ready() ? geometry().logical_sectors : 0;
+}
+
+u32 volume_serial(void) {
+  const u32 capacity =
+      program_store::ready() ? geometry().capacity_bytes : 0;
+  const u32 legacy_volume_serial = 0xC5000000UL ^ capacity;
+  return device_identity::fat_volume_serial(
+      device_identity::read(), legacy_volume_serial);
 }
 
 bool read_sector(u32 lba, u8* output) {

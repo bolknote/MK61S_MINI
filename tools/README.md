@@ -9,6 +9,8 @@
 - `build_f401_bundle.sh` — legacy-сборка custom manifest APP и payload ZX0;
 - `build_fmk_font.sh` — конвертер шрифтов FMK;
 - `build_mk61_module_pack.sh` — низкоуровневый ZX0-упаковщик APP.
+- `seal-firmware.sh`, `seal-firmware.ps1` — post-link запечатывание и
+  независимая проверка CRC/content ID resident BIN для release-сборщиков.
 
 Каталоги с точкой в имени — внутренние реализации этих команд. Они не являются
 дополнительными способами собрать одну и ту же прошивку:
@@ -17,6 +19,7 @@
 - `.mk61-firmware`, `.mk61-arduino-board`, `.mkc` — реализации публичных
   полиглотных лаунчеров;
 - `.mk61-app` — общий APP linker script, нативный упаковщик и ZX0-кодек;
+- `.mk61-firmware-seal` — единая C++-реализация post-link sealer;
 - `.fmk-font` — исходник конвертера FMK.
 
 Скомпилированные host-утилиты кэшируются в `.build/tools`, а не рядом с

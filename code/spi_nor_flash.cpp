@@ -5,12 +5,14 @@
 #include "spi_nor_flash.hpp"
 #include "flash_capacity_probe.hpp"
 #include "spi_nor_sfdp.hpp"
+#include "stm32_spi_clock.hpp"
 #include "dwt_profiler.hpp"
 #include "spi1_dma.hpp"
 
 #if !defined(PROGRAM_STORE_HOST_TEST)
 
 #include "spi1_bus.hpp"
+#include "power_monitor.hpp"
 
 #include <string.h>
 
@@ -22,6 +24,8 @@ static constexpr u8 CMD_PAGE_PROGRAM = 0x02;
 static constexpr u8 CMD_PAGE_PROGRAM_4B = 0x12;
 static constexpr u8 CMD_WRITE_ENABLE = 0x06;
 static constexpr u8 CMD_READ_STATUS = 0x05;
+static constexpr u8 CMD_READ_STATUS2 = 0x35;
+static constexpr u8 CMD_READ_STATUS3 = 0x15;
 static constexpr u8 CMD_ERASE_4K = 0x20;
 static constexpr u8 CMD_JEDEC_ID = 0x9F;
 static constexpr u8 CMD_READ_SFDP = 0x5A;
@@ -79,11 +83,55 @@ void SpiNorFlash::sendAddress(u32 address) {
   transfer((u8) address);
 }
 
-bool SpiNorFlash::readStatus(u8& status) {
+bool SpiNorFlash::readRegister(u8 opcode, u8& value) {
   if(!select()) return false;
-  transfer(CMD_READ_STATUS);
-  status = transfer(0xFF);
+  transfer(opcode);
+  value = transfer(0xFF);
   return deselect();
+}
+
+bool SpiNorFlash::readStatus(u8& status) {
+  return readRegister(CMD_READ_STATUS, status);
+}
+
+bool SpiNorFlash::diagnostics(Diagnostics& out) {
+  memset(&out, 0, sizeof(out));
+  out.jedec_id = jedec_id_;
+  out.capacity_bytes = capacity_;
+  out.probe_upper_bytes = probe_upper_;
+  out.requested_clock_hz = CLOCK_HZ;
+  out.page_size = page_size_;
+  out.erase_opcode = erase_opcode_;
+  out.sfdp_present = sfdp_present_;
+  out.four_byte_address = four_byte_address_;
+  out.four_byte_opcodes = four_byte_opcodes_;
+
+  // Выполняем одну штатную read-only транзакцию перед чтением handle: так BR
+  // гарантированно соответствует settings_ этого клиента, а не предыдущему
+  // владельцу общего SPI1.
+  if(!readRegister(CMD_READ_STATUS, out.status[0])) return false;
+  out.status_count = 1;
+  if((jedec_id_ >> 16) == 0xEF) {
+    if(!readRegister(CMD_READ_STATUS2, out.status[1]) ||
+       !readRegister(CMD_READ_STATUS3, out.status[2])) return false;
+    out.status_count = 3;
+  }
+
+  SPI_HandleTypeDef* const handle = spi_->getHandle();
+  if(handle == NULL || handle->Instance == NULL) return false;
+  if(handle->Instance == SPI1) {
+    out.peripheral_clock_hz = HAL_RCC_GetPCLK2Freq();
+  } else {
+    // На mini V3 C5 всегда находится на SPI1. Не угадываем APB неизвестного
+    // экземпляра: остальные поля JEDEC остаются валидны, частота — unknown.
+    return true;
+  }
+  const u8 br_code = (u8) ((handle->Instance->CR1 & SPI_CR1_BR_Msk) >>
+                           SPI_CR1_BR_Pos);
+  out.prescaler = stm32_spi_clock::prescaler_from_br(br_code);
+  out.actual_clock_hz = stm32_spi_clock::actual_hz(
+      out.peripheral_clock_hz, br_code);
+  return out.prescaler != 0 && out.actual_clock_hz != 0;
 }
 
 bool SpiNorFlash::waitReady(u32 timeout_ms) {
@@ -334,8 +382,20 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
   while(len != 0) {
     const u16 page_room = (u16) (page_size_ - address % page_size_);
     const u16 count = (u16) (len < page_room ? len : page_room);
+    // Check immediately before WREN for every page. A higher layer may have
+    // checked VDD earlier, but PVD can trip between that check and this bus
+    // transaction.
+    if(!power_monitor::allow(power_monitor::Operation::NOR_PROGRAM)) {
+      return false;
+    }
     if(!writeEnable()) return false;
     if(!select()) return false;
+    // writeEnable() can spend time waiting for an earlier operation. Recheck
+    // after CS is asserted and immediately before the destructive opcode.
+    if(!power_monitor::allow(power_monitor::Operation::NOR_PROGRAM)) {
+      (void) deselect();
+      return false;
+    }
     transfer(four_byte_address_ && four_byte_opcodes_
         ? CMD_PAGE_PROGRAM_4B : CMD_PAGE_PROGRAM);
     sendAddress(address);
@@ -396,8 +456,15 @@ bool SpiNorFlash::writeByte(u32 address, u8 value, bool verify) {
 
 bool SpiNorFlash::rawEraseSector(u32 address) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::FLASH_ERASE);
+  if(!power_monitor::allow(power_monitor::Operation::NOR_ERASE)) {
+    return false;
+  }
   if(!writeEnable()) return false;
   if(!select()) return false;
+  if(!power_monitor::allow(power_monitor::Operation::NOR_ERASE)) {
+    (void) deselect();
+    return false;
+  }
   transfer(four_byte_address_ && four_byte_opcodes_
       ? erase_opcode_4b_ : erase_opcode_);
   sendAddress(address & ~(SECTOR_SIZE - 1));

@@ -41,6 +41,7 @@ STM32_PACKAGE_URL=https://github.com/stm32duino/BoardManagerFiles/raw/main/packa
 FQBN_F411='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
 FQBN_F401='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
 PLATFORM_RAM_FLAGS='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+RESIDENT_RELEASE_FLAGS='-DMK61_REQUIRE_RESIDENT_CRC=1'
 
 PROFILE=
 HARDWARE_PLATFORM=
@@ -1378,8 +1379,8 @@ compile_option_flags() {
 all_compile_flags() {
   local board_flags
   board_flags=$(profile_flags "$1") || return 1
-  printf '%s %s %s' "$board_flags" "$(compile_option_flags)" \
-    "$PLATFORM_RAM_FLAGS"
+  printf '%s %s %s %s' "$board_flags" "$(compile_option_flags)" \
+    "$RESIDENT_RELEASE_FLAGS" "$PLATFORM_RAM_FLAGS"
 }
 
 compile_options_summary() {
@@ -1922,6 +1923,10 @@ prepare_and_compile_f411_worker() {
     printf 'Build succeeded but %s was not created.\n' "$source_artifact" >&2
     return 1
   }
+  "$PROJECT_ROOT/tools/seal-firmware.sh" seal --max-size 524288 \
+    "$source_artifact" || return 1
+  "$PROJECT_ROOT/tools/seal-firmware.sh" check --max-size 524288 \
+    "$source_artifact" || return 1
   cp "$source_artifact" "$artifact.tmp" || return 1
   mv "$artifact.tmp" "$artifact" || return 1
   printf '%s\n' "$flags" > "$artifact.flags.tmp" || return 1

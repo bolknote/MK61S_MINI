@@ -121,7 +121,6 @@ Result transfer(SPIClass* interface, const void* tx_buffer, void* rx_buffer,
         saturated_increment(counters.polling_fallbacks);
     return Result::NOT_USED;
   }
-
   SPI_HandleTypeDef* const spi = interface->getHandle();
   if(spi == nullptr || spi->Instance != SPI1 ||
      HAL_SPI_GetState(spi) != HAL_SPI_STATE_READY) {

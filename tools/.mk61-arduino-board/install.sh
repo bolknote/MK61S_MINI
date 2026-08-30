@@ -3,6 +3,7 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
+project_root="$(cd "$script_dir/../.." && pwd)"
 source_platform="$script_dir/hardware/mk61/stm32"
 sketchbook=${MK61_ARDUINO_SKETCHBOOK:-}
 check_only=0
@@ -66,6 +67,10 @@ platform_installed() {
     [ -f "$target/platform.txt" ] &&
     [ -f "$target/tools/mk61-app-postbuild.sh" ] &&
     [ -f "$target/tools/mk61-app-postbuild.ps1" ] &&
+    [ -f "$target/tools/mk61_firmware_seal.cpp" ] &&
+    [ -f "$target/tools/resident_firmware_format.hpp" ] &&
+    [ -f "$target/tools/rust_types.h" ] &&
+    [ -f "$target/tools/seal-firmware.ps1" ] &&
     [ -f "$target/tools/mk61_module.ld" ]
 }
 
@@ -79,7 +84,11 @@ if [ "$check_only" -eq 1 ]; then
 fi
 
 [ -f "$source_platform/boards.txt" ] &&
-  [ -f "$source_platform/platform.txt" ] ||
+  [ -f "$source_platform/platform.txt" ] &&
+  [ -f "$project_root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" ] &&
+  [ -f "$project_root/code/resident_firmware_format.hpp" ] &&
+  [ -f "$project_root/code/rust_types.h" ] &&
+  [ -f "$project_root/tools/seal-firmware.ps1" ] ||
   die 'the board package is incomplete'
 
 mkdir -p "$target/tools"
@@ -91,6 +100,14 @@ cp "$source_platform/tools/mk61-app-postbuild.sh" \
    "$target/tools/mk61-app-postbuild.sh"
 cp "$source_platform/tools/mk61-app-postbuild.ps1" \
    "$target/tools/mk61-app-postbuild.ps1"
+cp "$project_root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
+   "$target/tools/mk61_firmware_seal.cpp"
+cp "$project_root/code/resident_firmware_format.hpp" \
+   "$target/tools/resident_firmware_format.hpp"
+cp "$project_root/code/rust_types.h" \
+   "$target/tools/rust_types.h"
+cp "$project_root/tools/seal-firmware.ps1" \
+   "$target/tools/seal-firmware.ps1"
 chmod +x "$target/tools/mk61-app-postbuild.sh"
 
 printf 'MK61s F401 + APP installed in:\n  %s\n' "$target"

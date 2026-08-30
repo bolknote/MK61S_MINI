@@ -153,6 +153,71 @@ inline bool is_valid(const StartupSnapshot& value) {
   return is_valid(value.date_time) && value.subsecond <= value.second_fraction;
 }
 
+// RTC SSR counts down. Convert the coherent raw phase to elapsed milliseconds
+// within the named calendar second without floating point or assuming a
+// particular LSE/LSI prescaler.
+inline u16 snapshot_milliseconds(const StartupSnapshot& value) {
+  if(value.subsecond > value.second_fraction) return 0;
+  return (u16) (((u64) (value.second_fraction - value.subsecond) * 1000U) /
+                ((u64) value.second_fraction + 1U));
+}
+
+// Monotonic calendar projection used to repair Arduino's millisecond clock
+// after STM32 STOP, where SysTick is intentionally suspended.  The supported
+// RTC domain is only 2000..2099, so the result easily fits in u64 and does not
+// need libc time zones, epochs or floating point.
+inline bool snapshot_milliseconds_since_2000(const StartupSnapshot& value,
+                                             u64& out) {
+  if(!is_valid(value)) return false;
+
+  u32 days = 0;
+  for(u16 year = 2000; year < value.date_time.year; year++) {
+    days += is_leap_year(year) ? 366U : 365U;
+  }
+  for(u8 month = 1; month < value.date_time.month; month++) {
+    days += days_in_month(value.date_time.year, month);
+  }
+  days += (u32) value.date_time.day - 1U;
+
+  const u64 seconds = (u64) days * 86400U +
+      (u64) value.date_time.hour * 3600U +
+      (u64) value.date_time.minute * 60U + value.date_time.second;
+  out = seconds * 1000U + snapshot_milliseconds(value);
+  return true;
+}
+
+inline bool elapsed_snapshot_milliseconds(const StartupSnapshot& before,
+                                          const StartupSnapshot& after,
+                                          u32& out) {
+  u64 before_ms = 0;
+  u64 after_ms = 0;
+  if(!snapshot_milliseconds_since_2000(before, before_ms) ||
+     !snapshot_milliseconds_since_2000(after, after_ms) ||
+     after_ms < before_ms || after_ms - before_ms > 0xFFFFFFFFULL) {
+    return false;
+  }
+  out = (u32) (after_ms - before_ms);
+  return true;
+}
+
+// ck_spre is phase-aligned to the next calendar second, so its first interval
+// may be much shorter than requested. Derive a phase-independent RTCCLK/16
+// counter from the live calendar prescalers instead. This covers both the
+// usual 32768 Hz LSE (127,255) and 32000 Hz LSI (127,249).
+inline bool stop_wakeup_counter(u32 prediv_async, u32 prediv_sync,
+                                u8 seconds, u16& out) {
+  if(seconds == 0 || seconds > 5 || prediv_async > 0x7FU ||
+     prediv_sync > 0x7FFFU) {
+    return false;
+  }
+  const u64 source_ticks = (u64) (prediv_async + 1U) *
+      (prediv_sync + 1U) * seconds;
+  const u64 divided_ticks = (source_ticks + 8U) / 16U;
+  if(divided_ticks == 0 || divided_ticks > 65536U) return false;
+  out = (u16) (divided_ticks - 1U);
+  return true;
+}
+
 // Храним календарь и фазу в отдельных словах, чтобы пул энтропии мог помечать
 // и поглощать их независимо. time_set отличает календарь, установленный
 // пользователем, от корректного календаря по умолчанию, который ведёт RTC.
@@ -201,6 +266,28 @@ inline bool parse_datetime(const char* text, DateTime& out) {
     (u8) parse_fixed_decimal(text + 11, 2),
     (u8) parse_fixed_decimal(text + 14, 2),
     (u8) parse_fixed_decimal(text + 17, 2)
+  };
+  if(!is_valid(parsed)) return false;
+  out = parsed;
+  return true;
+}
+
+inline bool parse_time_of_day(const char* text, DateTime& out) {
+  text = skip_horizontal_spaces(text);
+  if(text == 0) return false;
+  usize length = 0;
+  while(!is_text_end(text[length])) length++;
+  while(length > 0 && is_horizontal_space(text[length - 1])) length--;
+  if(length != 8 || text[2] != ':' || text[5] != ':') return false;
+  static constexpr usize DIGITS[] = {0, 1, 3, 4, 6, 7};
+  for(usize position : DIGITS) {
+    if(text[position] < '0' || text[position] > '9') return false;
+  }
+  const DateTime parsed = {
+    2000, 1, 1,
+    (u8) parse_fixed_decimal(text, 2),
+    (u8) parse_fixed_decimal(text + 3, 2),
+    (u8) parse_fixed_decimal(text + 6, 2)
   };
   if(!is_valid(parsed)) return false;
   out = parsed;

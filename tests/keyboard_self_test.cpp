@@ -178,6 +178,23 @@ void test_time_wraparound(void) {
   assert(row.update(0x80, 0x0000000Eu) == 0x80);
 }
 
+void test_stop_wake_prime_has_no_duplicate_press(void) {
+  keyboard_core::DebouncedRow row;
+  row.reset(100);
+  row.prime(0x05, 110);
+  assert(row.pressed(0));
+  assert(row.pressed(2));
+  assert(row.candidate_mask() == 0x05);
+
+  // A still-held key creates no second press after resume.
+  assert(row.update(0x05, 1000) == 0);
+  // Release remains subject to the ordinary 30 ms debounce window.
+  assert(row.update(0x00, 1010) == 0);
+  assert(row.update(0x00, 1039) == 0);
+  assert(row.update(0x00, 1040) == 0x01);
+  assert(row.update(0x00, 1040) == 0x04);
+}
+
 } // безымянное пространство имён
 
 int main(void) {
@@ -189,6 +206,7 @@ int main(void) {
   test_external_keys_multiple_keys_and_hold_wraparound();
   test_debounce_and_simultaneous_edges();
   test_time_wraparound();
+  test_stop_wake_prime_has_no_duplicate_press();
   printf("keyboard_self_test: ok\n");
   return 0;
 }

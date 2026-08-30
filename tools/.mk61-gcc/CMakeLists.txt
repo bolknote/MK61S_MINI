@@ -18,6 +18,11 @@ project(mk61s_f401_gcc LANGUAGES C CXX ASM)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# A raw developer build stays bootable for debugger/IDE workflows. Public
+# builders explicitly set this to 1 and seal resident.bin after the link.
+set(MK61_REQUIRE_RESIDENT_CRC "0" CACHE STRING
+  "Require a post-link CRC-sealed resident image")
+
 file(REAL_PATH "${MK61_PROJECT_ROOT}" MK61_PROJECT_ROOT)
 file(REAL_PATH "${MK61_STM32_CORE}" CORE_PATH)
 file(REAL_PATH "${CORE_PATH}/cores/arduino" BUILD_CORE_PATH)
@@ -48,6 +53,7 @@ foreach(_mk61_bool
     MK61_ENABLE_EXTENDED_FONT_SETTINGS
     MK61_USER_EXPLORER_SHORTCUT
     MK61_MATH_BACKEND
+    MK61_REQUIRE_RESIDENT_CRC
     MK61_ENABLE_LTO)
   if(NOT DEFINED ${_mk61_bool})
     message(FATAL_ERROR "${_mk61_bool} is required")
@@ -160,7 +166,8 @@ target_compile_definitions(resident PRIVATE
   MK61_WS0010_GRAPHICS_100X16=${MK61_WS0010_GRAPHICS_100X16}
   MK61_ENABLE_EXTENDED_FONT_SETTINGS=${MK61_ENABLE_EXTENDED_FONT_SETTINGS}
   MK61_USER_EXPLORER_SHORTCUT=${MK61_USER_EXPLORER_SHORTCUT}
-  MK61_MATH_BACKEND=${MK61_MATH_BACKEND})
+  MK61_MATH_BACKEND=${MK61_MATH_BACKEND}
+  MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC})
 # Keep the direct F401 path at least as strict as the Arduino release matrix.
 # This applies only to project sources; warnings in pinned third-party targets
 # stay visible without making their upstream diagnostics our build failures.

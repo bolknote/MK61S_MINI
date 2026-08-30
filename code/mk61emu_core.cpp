@@ -27,9 +27,19 @@
 #include "rust_types.h"
 #include "stm32_sram_bit_band.hpp"
 #include "dwt_profiler.hpp"
+#if MK61_CORE_PACKED_AMK
+  #include "core_packed_amk.hpp"
+#endif
 #if MK61_CORE_HOT_TABLES_IN_SRAM > 0
   #include "shared_memory.hpp"
   #include "workspace_swap.hpp"
+#endif
+
+#if MK61_CORE_PACKED_AMK
+  #define MK61_PACKED_AMK_PARAMETERS \
+      , u8 selected_amk, u32 selected_microinstruction
+#else
+  #define MK61_PACKED_AMK_PARAMETERS
 #endif
 
 #if MK61_CORE_MERGED_TICK
@@ -77,11 +87,14 @@ typedef struct { // Структура микросхемы К145IИК306
 }  IK1306;
 
 MK61_CORE_TICK_FUNCTION IK1302_Tick(
-    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
+    MK61_PACKED_AMK_PARAMETERS);
 MK61_CORE_TICK_FUNCTION IK1303_Tick(
-    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
+    MK61_PACKED_AMK_PARAMETERS);
 MK61_CORE_TICK_FUNCTION IK1306_Tick(
-    mtick_t signal_I, usize J_signal_I);
+    mtick_t signal_I, usize J_signal_I
+    MK61_PACKED_AMK_PARAMETERS);
 #if MK61_CORE_MERGED_TICK
 static void __attribute__((noinline, aligned(16)))
 IK130X_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
@@ -155,6 +168,10 @@ static inline void count_native_hot_path(core_61::NativeHotPath path) {
   native_hot_path_counts[(u8) path]++;
 }
 #endif
+#endif
+
+#if MK61_CORE_PACKED_AMK && !defined(ARDUINO)
+static bool packed_amk_is_enabled = true;
 #endif
 
 static const char default_symbols[16] = {
@@ -485,6 +502,36 @@ const uint8_t* IK1306_M_START = &ringM[0];
 IK1302  m_IK1302;
 static  IK1303  m_IK1303;
 static  IK1306  m_IK1306;
+
+#if MK61_CORE_PACKED_AMK
+static inline core_packed_amk::Selection select_amk_lanes(
+    u8 ik1302, u8 ik1303, u8 ik1306) {
+#if !defined(ARDUINO)
+  if(!packed_amk_is_enabled) {
+    return core_packed_amk::select_reference(
+        ik1302, ik1303, ik1306,
+        m_IK1302.L != 0, m_IK1303.L != 0, m_IK1306.L != 0);
+  }
+#endif
+  return core_packed_amk::select(
+      ik1302, ik1303, ik1306,
+      m_IK1302.L != 0, m_IK1303.L != 0, m_IK1306.L != 0);
+}
+
+static inline core_packed_amk::Selection select_amk_lanes_1302_1303(
+    u8 ik1302, u8 ik1303) {
+#if !defined(ARDUINO)
+  if(!packed_amk_is_enabled) {
+    return core_packed_amk::select_reference(
+        ik1302, ik1303, 0,
+        m_IK1302.L != 0, m_IK1303.L != 0, true);
+  }
+#endif
+  return core_packed_amk::select(
+      ik1302, ik1303, 0,
+      m_IK1302.L != 0, m_IK1303.L != 0, true);
+}
+#endif
 
 #if MK61_CORE_NATIVE_HOT_PATHS
 static inline void native_ik1306_zero_body(core_61::NativeHotPath path) {
@@ -1222,6 +1269,16 @@ u64 native_hot_path_count(NativeHotPath path) {
   const u8 index = (u8) path;
   return index < (u8) NativeHotPath::COUNT
       ? native_hot_path_counts[index] : 0;
+}
+#endif
+
+#if MK61_CORE_PACKED_AMK && !defined(ARDUINO)
+void set_packed_amk_enabled(bool enabled) {
+  packed_amk_is_enabled = enabled;
+}
+
+bool packed_amk_enabled(void) {
+  return packed_amk_is_enabled;
 }
 #endif
 
@@ -2406,16 +2463,23 @@ inline void __attribute__((always_inline))  dump_1302(mtick_t signal_I, usize J_
 }
 
 MK61_CORE_TICK_FUNCTION IK1302_Tick(
-    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
+    MK61_PACKED_AMK_PARAMETERS) {
  uint32_t  microinstruction;
  uint32_t  val, tmp;
  uint32_t  mi_hi;
 
+  #if MK61_CORE_PACKED_AMK
+    (void) J_signal_I;
+    tmp = selected_amk;
+    microinstruction = selected_microinstruction;
+  #else
     tmp = (uint8_t) m_IK1302.pAND_AMK[J_signal_I]; // чтение из pAND_AMK: 3D(61) => 3E(62), 3E(62) => 40(64), 3F(63) => 42(66) замены в оригинальном ПЗУ
     if (tmp > 59 && m_IK1302.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
        tmp++;
     }
     microinstruction = IK1302_MICROINSTRUCTIONS_ACTIVE[tmp];
+  #endif
     m_IK1302.AMK = tmp;
 
     mi_hi = (microinstruction >> 16);
@@ -2549,17 +2613,24 @@ MK61_CORE_TICK_FUNCTION IK1302_Tick(
 }
 
 MK61_CORE_TICK_FUNCTION IK1303_Tick(
-    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
+    MK61_PACKED_AMK_PARAMETERS) {
  uint32_t tmp;
  uint32_t microinstruction;
  uint32_t mi_hi;
 
+ #if MK61_CORE_PACKED_AMK
+ (void) J_signal_I;
+ tmp = selected_amk;
+ microinstruction = selected_microinstruction;
+ #else
  tmp = (uint8_t) m_IK1303.pAND_AMK[J_signal_I];
  if (tmp > 59 && m_IK1303.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
       tmp++;
  }
 
  microinstruction = IK1303_MICROINSTRUCTIONS_ACTIVE[tmp];
+ #endif
  m_IK1303.AMK = tmp;
 
  mi_hi = (microinstruction >> 16);
@@ -2701,15 +2772,22 @@ MK61_CORE_TICK_FUNCTION IK1303_Tick(
 }
 
 MK61_CORE_TICK_FUNCTION IK1306_Tick(
-    mtick_t signal_I, usize J_signal_I) {
+    mtick_t signal_I, usize J_signal_I
+    MK61_PACKED_AMK_PARAMETERS) {
     uint32_t tmp, mi_hi;
     uint32_t microinstruction;
 
+  #if MK61_CORE_PACKED_AMK
+    (void) J_signal_I;
+    tmp = selected_amk;
+    microinstruction = selected_microinstruction;
+  #else
     tmp = (uint8_t) m_IK1306.pAND_AMK[J_signal_I];            //    AMK = AND_AMK[ASPx9 + J_signal_I];
     if (tmp > 59 && m_IK1306.L == 0){                         // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
         tmp++;
     }
     microinstruction = IK1306_MICROINSTRUCTIONS_ACTIVE[tmp];
+  #endif
     m_IK1306.AMK = tmp;
 
 
@@ -2819,17 +2897,40 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
 static void __attribute__((noinline, aligned(16)))
 IK130X_Tick_All(
     mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+#if MK61_CORE_PACKED_AMK
+  const core_packed_amk::Selection selected = select_amk_lanes(
+      m_IK1302.pAND_AMK[J_signal_I],
+      m_IK1303.pAND_AMK[J_signal_I],
+      m_IK1306.pAND_AMK[J_signal_I]);
+  IK1302_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1302, IK1302_MICROINSTRUCTIONS_ACTIVE[selected.ik1302]);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1303, IK1303_MICROINSTRUCTIONS_ACTIVE[selected.ik1303]);
+  IK1306_Tick(signal_I, J_signal_I,
+      selected.ik1306, IK1306_MICROINSTRUCTIONS_ACTIVE[selected.ik1306]);
+#else
   IK1302_Tick(signal_I, J_signal_I, signal_div3);
   IK1303_Tick(signal_I, J_signal_I, signal_div3);
   IK1306_Tick(signal_I, J_signal_I);
+#endif
 }
 
 #if MK61_CORE_NATIVE_HOT_PATHS
 static void __attribute__((noinline, aligned(16)))
 IK1302_1303_Tick_All(
     mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+#if MK61_CORE_PACKED_AMK
+  const core_packed_amk::Selection selected = select_amk_lanes_1302_1303(
+      m_IK1302.pAND_AMK[J_signal_I],
+      m_IK1303.pAND_AMK[J_signal_I]);
+  IK1302_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1302, IK1302_MICROINSTRUCTIONS_ACTIVE[selected.ik1302]);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1303, IK1303_MICROINSTRUCTIONS_ACTIVE[selected.ik1303]);
+#else
   IK1302_Tick(signal_I, J_signal_I, signal_div3);
   IK1303_Tick(signal_I, J_signal_I, signal_div3);
+#endif
 }
 #endif
 #endif

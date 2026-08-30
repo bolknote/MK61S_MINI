@@ -36,6 +36,7 @@ $script:Stm32PackageUrl = 'https://github.com/stm32duino/BoardManagerFiles/raw/m
 $script:FqbnF411 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
 $script:FqbnF401 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
 $script:PlatformRamFlags = '-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+$script:ResidentReleaseFlags = '-DMK61_REQUIRE_RESIDENT_CRC=1'
 
 $script:IsWindowsHost = $env:OS -eq 'Windows_NT'
 $script:IsMacHost = $false
@@ -300,7 +301,7 @@ function Get-CompileOptionFlags {
 function Get-AllCompileFlags {
     param([string]$Profile)
     if (-not (Test-Profile $Profile)) { throw "Unsupported profile: $Profile" }
-    return "$($script:Profiles[$Profile].Flags) $(Get-CompileOptionFlags) $script:PlatformRamFlags"
+    return "$($script:Profiles[$Profile].Flags) $(Get-CompileOptionFlags) $script:ResidentReleaseFlags $script:PlatformRamFlags"
 }
 
 function Get-Checkbox {
@@ -2060,6 +2061,27 @@ function Build-Selected {
     if (-not (Test-Path -LiteralPath $sourceArtifact -PathType Leaf) -or (Get-Item -LiteralPath $sourceArtifact).Length -eq 0) {
         Write-LastLog "Build succeeded but $sourceArtifact was not created." -Append
         if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+
+    $powerShell = Get-CurrentPowerShellExecutable
+    $sealer = Join-Path $script:ProjectRoot 'tools/seal-firmware.ps1'
+    $sealArguments = @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
+        '-InputFile', $sourceArtifact, '-MaxSize', '524288')
+    if (-not (Invoke-ExternalWithProgress 'CRC прошивки' 'Запечатываю resident' `
+        $script:LastLog 'indeterminate' $powerShell $sealArguments -Append)) {
+        if ($script:State.Interactive) { Show-Log 'Ошибка CRC прошивки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+    $checkArguments = @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
+        '-InputFile', $sourceArtifact, '-MaxSize', '524288')
+    if (-not (Invoke-ExternalWithProgress 'CRC прошивки' 'Проверяю resident' `
+        $script:LastLog 'indeterminate' $powerShell $checkArguments -Append)) {
+        if ($script:State.Interactive) { Show-Log 'Ошибка CRC прошивки' $script:LastLog }
         else { Show-LastLogTail }
         return $false
     }

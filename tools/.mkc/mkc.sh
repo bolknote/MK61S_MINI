@@ -28,6 +28,15 @@ ARDUINO_CLI=${MKC_ARDUINO_CLI:-${MK61_ARDUINO_CLI:-arduino-cli}}
 CONFIG_FILE=${MKC_CONFIG_FILE:-"$PROJECT_ROOT/.mkc.conf"}
 
 PORT=
+PORT_EXPLICIT=0
+DEVICE_SELECTOR=
+DEVICE_SELECTOR_EXPLICIT=0
+DETECTED_DEVICE_ID=
+DETECTED_USB_SERIAL=
+DETECTED_PROFILE=
+SELECT_ERROR=
+CANDIDATE_COUNT=0
+PROBE_SEQUENCE=0
 LOCAL_PATH=$(pwd -P)
 REMOTE_PATH=/
 MOCK_ROOT=
@@ -171,7 +180,7 @@ usage() {
 MKC — Norton Commander для файлов MK61s
 
 Usage:
-  tools/mkc.cmd [--port PORT] [--local DIRECTORY]
+  tools/mkc.cmd [--port PORT] [--device ID] [--local DIRECTORY]
   tools/mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools/mkc.cmd --classify FILE
 
@@ -333,28 +342,34 @@ if [ "${MKC_SOURCE_ONLY:-0}" != 1 ]; then
 fi
 
 load_config() {
-  local key value saved_local= saved_port=
+  local key value saved_local= saved_port= saved_device=
   [ -r "$CONFIG_FILE" ] || return 0
   while IFS='=' read -r key value || [ -n "${key:-}${value:-}" ]; do
     value=${value%$'\r'}
     case "$key" in
       LOCAL_PATH) saved_local=$value ;;
       PORT) saved_port=$value ;;
+      DEVICE_ID) saved_device=$value ;;
     esac
   done < "$CONFIG_FILE"
   if [ -z "$PORT" ] && [ -n "$saved_port" ]; then PORT=$saved_port; fi
+  if [ -z "$DEVICE_SELECTOR" ] && [ -n "$saved_device" ]; then
+    DEVICE_SELECTOR=$saved_device
+  fi
   if [ "$LOCAL_PATH" = "$(pwd -P)" ] && [ -d "$saved_local" ]; then
     LOCAL_PATH=$(cd "$saved_local" && pwd -P)
   fi
 }
 
 save_config() {
-  local temporary="$CONFIG_FILE.tmp"
+  local temporary="$CONFIG_FILE.tmp" saved_device=$DETECTED_DEVICE_ID
   [ "$CONFIG_FILE" != /dev/null ] || return 0
+  [ -n "$saved_device" ] || saved_device=$DEVICE_SELECTOR
   {
     printf '# Создано tools/mkc.cmd.\n'
     printf 'LOCAL_PATH=%s\n' "$LOCAL_PATH"
     printf 'PORT=%s\n' "$PORT"
+    printf 'DEVICE_ID=%s\n' "$saved_device"
   } > "$temporary" 2>/dev/null && mv "$temporary" "$CONFIG_FILE" 2>/dev/null
 }
 
@@ -388,21 +403,189 @@ list_cdc_ports() {
   '
 }
 
-detect_port() {
-  local found
-  while IFS= read -r found; do
-    [ -n "$found" ] || continue
-    PORT=$found
-    return 0
-  done < <(list_cdc_ports)
+identity_token_value() {
+  local line=$1 wanted=$2 token
+  for token in $line; do
+    case "$token" in
+      "$wanted"=*) printf '%s' "${token#*=}"; return 0 ;;
+    esac
+  done
   return 1
+}
+
+valid_hex_id() {
+  local value=$1 length=$2
+  [ "${#value}" -eq "$length" ] || return 1
+  case "$value" in *[!0123456789abcdefABCDEF]*) return 1 ;; esac
+  return 0
+}
+
+parse_identity_line() {
+  local line=$1 public short usb volume build profile
+  PROBE_KIND=
+  PROBE_PUBLIC=
+  PROBE_SHORT=
+  PROBE_USB=
+  PROBE_PROFILE=
+  case "$line" in
+    'MK61 ID v=1 '*)
+      public=$(identity_token_value "$line" public) || return 1
+      short=$(identity_token_value "$line" short) || return 1
+      usb=$(identity_token_value "$line" usb) || return 1
+      volume=$(identity_token_value "$line" volume) || return 1
+      build=$(identity_token_value "$line" build) || return 1
+      profile=$(identity_token_value "$line" profile) || return 1
+      valid_hex_id "$public" 16 || return 1
+      valid_hex_id "$short" 8 || return 1
+      valid_hex_id "$usb" 12 || return 1
+      valid_hex_id "$volume" 8 || return 1
+      valid_hex_id "$build" 8 || return 1
+      case "$profile" in ''|*[!A-Za-z0-9._-]*) return 1 ;; esac
+      [ "$(lowercase "$short")" = "$(lowercase "${public:8:8}")" ] || return 1
+      [ "$line" = "MK61 ID v=1 public=$public short=$short usb=$usb volume=$volume build=$build profile=$profile" ] || return 1
+      PROBE_KIND=identity
+      PROBE_PUBLIC=$public
+      PROBE_SHORT=$short
+      PROBE_USB=$usb
+      PROBE_PROFILE=$profile
+      return 0
+      ;;
+    MK61s*' ver. '*)
+      PROBE_KIND=legacy
+      PROBE_PROFILE=legacy
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+probe_port() {
+  local candidate=$1 probe_dir probe_pid line attempts=0 result=1
+  PROBE_KIND=
+  PROBE_PUBLIC=
+  PROBE_SHORT=
+  PROBE_USB=
+  PROBE_PROFILE=
+  PROBE_SEQUENCE=$((PROBE_SEQUENCE + 1))
+  probe_dir="$SESSION_DIR/probe.$PROBE_SEQUENCE"
+  mkdir -p "$probe_dir" || return 1
+  mkfifo "$probe_dir/in" "$probe_dir/out" || return 1
+  exec 5<>"$probe_dir/in" || return 1
+  exec 6<>"$probe_dir/out" || { exec 5>&-; return 1; }
+  "$ARDUINO_CLI" monitor --quiet --port "$candidate" \
+    --config baudrate=115200 <&5 >&6 2>"$probe_dir/error.log" &
+  probe_pid=$!
+  sleep 0.35
+  if kill -0 "$probe_pid" 2>/dev/null; then
+    # Две read-only команды дают совместимость со старой прошивкой; новая
+    # отвечает на identity первой и предоставляет стабильный selector.
+    printf 'identity\rver\r' >&5
+    while [ "$attempts" -lt 4 ]; do
+      if IFS= read -r -t 1 line <&6; then
+        line=${line%$'\r'}
+        if parse_identity_line "$line"; then
+          result=0
+          break
+        fi
+      fi
+      attempts=$((attempts + 1))
+    done
+  fi
+  exec 5>&-
+  exec 6>&-
+  kill "$probe_pid" 2>/dev/null || true
+  wait "$probe_pid" 2>/dev/null || true
+  return "$result"
+}
+
+selector_matches_probe() {
+  local wanted current
+  wanted=$(lowercase "$DEVICE_SELECTOR")
+  [ -n "$wanted" ] || return 0
+  for current in "$PROBE_PUBLIC" "$PROBE_SHORT" "$PROBE_USB"; do
+    [ -n "$current" ] || continue
+    [ "$(lowercase "$current")" = "$wanted" ] && return 0
+  done
+  return 1
+}
+
+select_mk61_port() {
+  local candidate existing duplicate found_count=0 match_count=0
+  local candidates=() found_ports=() found_public=() found_short=()
+  local found_usb=() found_profile=() found_kind=()
+  SELECT_ERROR=
+  CANDIDATE_COUNT=0
+  PROBE_SEQUENCE=0
+
+  if [ "$PORT_EXPLICIT" -eq 1 ]; then
+    candidates[0]=$PORT
+  else
+    if [ -n "$PORT" ]; then candidates[${#candidates[@]}]=$PORT; fi
+    while IFS= read -r candidate; do
+      [ -n "$candidate" ] || continue
+      duplicate=0
+      for existing in "${candidates[@]}"; do
+        [ "$existing" = "$candidate" ] && duplicate=1
+      done
+      [ "$duplicate" -eq 1 ] || candidates[${#candidates[@]}]=$candidate
+    done < <(list_cdc_ports)
+  fi
+  CANDIDATE_COUNT=${#candidates[@]}
+  if [ "$CANDIDATE_COUNT" -eq 0 ]; then
+    SELECT_ERROR='устройства STM32 CDC 0483:5740 не найдены'
+    return 1
+  fi
+
+  for candidate in "${candidates[@]}"; do
+    if probe_port "$candidate"; then
+      found_ports[$found_count]=$candidate
+      found_public[$found_count]=$PROBE_PUBLIC
+      found_short[$found_count]=$PROBE_SHORT
+      found_usb[$found_count]=$PROBE_USB
+      found_profile[$found_count]=$PROBE_PROFILE
+      found_kind[$found_count]=$PROBE_KIND
+      found_count=$((found_count + 1))
+    fi
+  done
+  if [ "$found_count" -eq 0 ]; then
+    SELECT_ERROR='ни один найденный STM32 CDC не ответил как MK61s'
+    return 1
+  fi
+
+  selected_index=-1
+  if [ -n "$DEVICE_SELECTOR" ]; then
+    for ((candidate_index=0; candidate_index<found_count; candidate_index++)); do
+      PROBE_PUBLIC=${found_public[$candidate_index]}
+      PROBE_SHORT=${found_short[$candidate_index]}
+      PROBE_USB=${found_usb[$candidate_index]}
+      if selector_matches_probe; then
+        selected_index=$candidate_index
+        match_count=$((match_count + 1))
+      fi
+    done
+    if [ "$match_count" -ne 1 ]; then
+      SELECT_ERROR="ID '$DEVICE_SELECTOR' не выбрал ровно один MK61s (совпадений: $match_count)"
+      return 1
+    fi
+  elif [ "$found_count" -eq 1 ]; then
+    selected_index=0
+  else
+    SELECT_ERROR="подключено несколько MK61s ($found_count); укажите --device PUBLIC_ID"
+    return 1
+  fi
+
+  PORT=${found_ports[$selected_index]}
+  DETECTED_DEVICE_ID=${found_public[$selected_index]}
+  DETECTED_USB_SERIAL=${found_usb[$selected_index]}
+  DETECTED_PROFILE=${found_profile[$selected_index]}
+  return 0
 }
 
 start_monitor() {
   [ -n "$MOCK_ROOT" ] && return 0
   command -v "$ARDUINO_CLI" >/dev/null 2>&1 ||
     die "arduino-cli не найден (задайте MKC_ARDUINO_CLI)"
-  [ -n "$PORT" ] || detect_port || return 1
+  [ -n "$PORT" ] || return 1
 
   mkfifo "$SESSION_DIR/monitor.in" "$SESSION_DIR/monitor.out" || return 1
   exec 7<>"$SESSION_DIR/monitor.in" || return 1
@@ -2974,12 +3157,21 @@ device_info() {
     { printf 'Режим: тестовый каталог\nПуть: %s\n\n' "$MOCK_ROOT"; df -h "$MOCK_ROOT" 2>/dev/null; } > "$file"
   else
     : > "$file"
+    [ -n "$DETECTED_DEVICE_ID" ] &&
+      printf 'Public ID: %s\n' "$DETECTED_DEVICE_ID" >> "$file"
+    [ -n "$DETECTED_USB_SERIAL" ] &&
+      printf 'USB serial: %s\n' "$DETECTED_USB_SERIAL" >> "$file"
+    [ -n "$DETECTED_PROFILE" ] &&
+      printf 'Profile: %s\n' "$DETECTED_PROFILE" >> "$file"
+    [ -s "$file" ] && printf '\n' >> "$file"
+    remote_send identity || { STATUS_TEXT='Не удалось запросить identity'; draw_status; return; }
     remote_send df || { STATUS_TEXT='Не удалось отправить df'; draw_status; return; }
     remote_send 'ls "/"' || return
     while [ "$count" -lt 10000 ]; do
       serial_read_line 10 || break
       line=$SERIAL_LINE
       case "$line" in
+        MK61\ ID\ v=1\ *) printf '%s\n' "$line" >> "$file" ;;
         Flash:\ *|Nodes:\ *|Visible:\ *|FAT12\ cluster:\ *|Settings:\ *) printf '%s\n' "$line" >> "$file" ;;
         *' entry.'|*' entries.') break ;;
       esac
@@ -3063,7 +3255,14 @@ main_loop() {
 parse_args() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      --port) [ "$#" -ge 2 ] || die 'после --port нужен порт'; PORT=$2; shift 2 ;;
+      --port)
+        [ "$#" -ge 2 ] || die 'после --port нужен порт'
+        PORT=$2; PORT_EXPLICIT=1; shift 2
+        ;;
+      --device)
+        [ "$#" -ge 2 ] || die 'после --device нужен ID'
+        DEVICE_SELECTOR=$2; DEVICE_SELECTOR_EXPLICIT=1; shift 2
+        ;;
       --local) [ "$#" -ge 2 ] || die 'после --local нужен каталог'; LOCAL_PATH=$2; shift 2 ;;
       --mock) [ "$#" -ge 2 ] || die 'после --mock нужен каталог'; MOCK_ROOT=$2; shift 2 ;;
       --classify) [ "$#" -ge 2 ] || die 'после --classify нужен файл'; CLASSIFY_ONLY=$2; shift 2 ;;
@@ -3077,6 +3276,12 @@ main() {
   local reason kind prompted_port
   load_config
   parse_args "$@"
+  # Явный порт — самостоятельный selector пользователя. Сохранённый ID от
+  # прежней сессии не должен запрещать открыть указанную legacy-прошивку;
+  # одновременно заданный --device по-прежнему обязан совпасть.
+  if [ "$PORT_EXPLICIT" -eq 1 ] && [ "$DEVICE_SELECTOR_EXPLICIT" -eq 0 ]; then
+    DEVICE_SELECTOR=
+  fi
   if [ -n "$CLASSIFY_ONLY" ]; then
     if [ -L "$CLASSIFY_ONLY" ]; then kind=l
     elif [ -d "$CLASSIFY_ONLY" ]; then kind=d
@@ -3103,12 +3308,18 @@ main() {
   # открытие /dev/tty может быть запрещено.
   exec 9<&0 || die 'нужен интерактивный терминал'
   TTY_FD=9
-  if [ -z "$MOCK_ROOT" ] && [ -z "$PORT" ] && ! detect_port; then
-    printf 'MKC: устройство 0483:5740 не найдено. Укажите последовательный порт: ' >&9
-    IFS= read -r prompted_port <&9 || prompted_port=
-    PORT=$prompted_port
+  if [ -z "$MOCK_ROOT" ] && ! select_mk61_port; then
+    if [ "$CANDIDATE_COUNT" -eq 0 ] && [ "$PORT_EXPLICIT" -eq 0 ]; then
+      printf 'MKC: устройство 0483:5740 не найдено. Укажите последовательный порт: ' >&9
+      IFS= read -r prompted_port <&9 || prompted_port=
+      PORT=$prompted_port
+      PORT_EXPLICIT=1
+      [ -n "$PORT" ] || die 'порт не указан'
+      select_mk61_port || die "$SELECT_ERROR"
+    else
+      die "$SELECT_ERROR"
+    fi
   fi
-  [ -n "$MOCK_ROOT" ] || [ -n "$PORT" ] || die 'порт не указан'
   start_monitor || die "не удалось открыть ${PORT:-устройство}"
 
   TTY_SAVED=$(stty -g <&9) || die 'не удалось настроить терминал'

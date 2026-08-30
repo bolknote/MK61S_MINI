@@ -28,9 +28,13 @@ using namespace kbd;
 #include "classic_timer.hpp"
 #include "dwt_profiler.hpp"
 #include "crash_dump.hpp"
+#include "resident_firmware.hpp"
+#include "power_monitor.hpp"
 #include "mpu_guard.hpp"
 #include "independent_watchdog.hpp"
 #include "idle_sleep.hpp"
+#include "deep_idle.hpp"
+#include "spi1_bus.hpp"
 #include "shared_scratch.hpp"
 #include "menu.hpp"
 #include "development.hpp"
@@ -128,9 +132,8 @@ static void persist_retained_crash_dump(void) {
       program_store::MAX_MK61_TEXT_SIZE);
   if(!scratch.ok()) return;
 
-  const u16 length = crash_dump_format::format_report(
-      record, crash_dump::current_build_id(),
-      scratch.data(), scratch.size());
+  const u16 length = crash_dump::format_report(
+      record, scratch.data(), scratch.size());
   if(length == 0) return;
 
   char name[16];
@@ -225,6 +228,11 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
     // Меню, просмотрщики и часы могут временно занимать пользовательские
     // символы LCD1602 A00. Перед возвратом к калькулятору восстанавливаем
     // штатную CGRAM, иначе, например, код П (слот 1) рисует чужой глиф.
+    // Они также могут оставить аппаратный cursor/blink включённым. На WS0010
+    // такой курсор накладывается на последний символ мнемоники и превращает
+    // обычную F в посторонний составной знак; стандартный экран курсором не
+    // пользуется и обязан нормализовать это состояние на каждом возврате.
+    main_lcd().cursorOff();
     lcd_ru::restore_default_font();
     main_lcd().clear();
     GRDLabel.print(MK61Emu_GetAngleUnit());
@@ -294,8 +302,13 @@ void inline lcd_stack_output(void) {
 
 void setup() {
   crash_dump::initialize();
-  crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 1, 0);
   dwt_profiler::initialize();
+  // Сверхранний ESC уже был обработан из .preinit_array. Проверка resident
+  // идёт до дисплея, C5, USB и watchdog; повреждённый release образ может
+  // только оставить компактный breadcrumb и уйти через тот же ROM DFU путь.
+  resident_firmware::enforce_or_dfu();
+  power_monitor::initialize();
+  crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 1, 0);
 
   #if !MK61_EARLY_DFU_SUPPORTED
     // Резервный путь для других STM32. На F401/F411 ESC уже проверен прямым
@@ -630,11 +643,15 @@ static void drop_pending_key_events(void) {
   kbd::clear_hold_key();
 }
 
-static void leave_menu_mode(void) {
+static void drop_key_events_until_release(void) {
   drop_pending_key_events();
-  user_short_press_pending = false;
   drop_menu_exit_key_events = true;
   drop_menu_exit_scan_count = 0;
+}
+
+static void leave_menu_mode(void) {
+  drop_key_events_until_release();
+  user_short_press_pending = false;
   lcd_std_display_redraw();
   input_focus = &mk61_baseloop_hook;
 }
@@ -928,6 +945,30 @@ static idle_sleep_policy::Conditions idle_sleep_conditions(void) {
   };
   return result;
 }
+
+#if MK61_DEEP_IDLE_SUPPORTED
+static deep_idle_policy::Conditions deep_idle_conditions(
+    const idle_sleep_policy::Conditions& light) {
+  const spi1_arbiter::Snapshot spi1 = spi1_bus::statistics();
+  rtc_clock::StartupSnapshot rtc = {};
+  return {
+    light.foreground_context,
+    light.calculator_idle,
+    light.usb_mass_storage_active,
+    usb_screen::active(),
+    light.terminal_work_pending,
+    light.sound_active,
+    light.keyboard_active,
+    light.classic_active,
+    light.scheduled_work,
+    spi1.state == spi1_arbiter::State::IDLE,
+    !main_lcd().graphicsMode() && !main_lcd().busyFlagFaulted(),
+    rtc_clock::startup_snapshot(rtc),
+    independent_watchdog::running(),
+    false
+  };
+}
+#endif
 #endif
 
 void  loop() {
@@ -1024,6 +1065,22 @@ void  loop() {
     return;
   }
 
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+  if(used_key >= 0 && main_lcd().ws0010GraphicsQualificationActive()) {
+    // A qualification pattern is deliberately modal.  Consume the complete
+    // press/release pair, restore character RAM/font atomically and do not let
+    // the same key also act on the calculator or menu behind the test.
+    const bool restored = main_lcd().endWs0010Graphics();
+    drop_key_events_until_release();
+    if(restored) {
+      lcd_ru::restore_default_font();
+      lcd_std_display_redraw();
+    }
+    kbd::scan();
+    return;
+  }
+#endif
+
   if(used_key >= 0) { 
   //== кнопка нажата - перепланировка выдачи сообщения о бездействии на следующие 5 минут
     rtc_idle_clock::hide(main_lcd());
@@ -1058,6 +1115,8 @@ void idle_main_process(void) {
   idle_main_depth++;
   #endif
   MK61_PROFILE_SCOPE(dwt_profiler::Point::IDLE_MAIN);
+  power_monitor::poll(millis());
+  rtc_clock::poll();
   usb_mass_storage::service();
   usb_screen::service();
   // Уведомление принимается здесь, но нельзя считать, что передним планом
@@ -1068,6 +1127,15 @@ void idle_main_process(void) {
   #ifdef TERMINAL
   service_terminal();
   #endif
+  if(!sound_busy()) {
+    rtc_clock::AlarmEvent alarm_event = {};
+    if(rtc_clock::take_alarm_event(alarm_event)) {
+      // Alarm is notification-only: never seize the display or auto-run a
+      // program. The user's normal volume setting, including mute, applies.
+      sound(PIN_BUZZER, alarm_event.missed ? 1600 : 2400, 250,
+            library_mk61::sound_volume());
+    }
+  }
   sound_poll();
   led::control();
   main_lcd().flush();
@@ -1079,6 +1147,12 @@ void idle_main_process(void) {
   // epoch уже вернулись. Зависание внутри любого из них не дойдёт сюда.
   independent_watchdog::foreground_epoch(millis());
   #if MK61_IDLE_WFI_SUPPORTED
+  #if MK61_DEEP_IDLE_SUPPORTED
+  if(deep_idle::pending()) {
+    const idle_sleep_policy::Conditions light = idle_sleep_conditions();
+    (void) deep_idle::service(deep_idle_conditions(light), millis());
+  }
+  #endif
   (void) idle_sleep::attempt(idle_sleep_conditions());
   idle_main_depth--;
   #endif

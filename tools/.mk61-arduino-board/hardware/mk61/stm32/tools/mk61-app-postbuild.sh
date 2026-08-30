@@ -62,6 +62,35 @@ crc32_file() {
   printf '%u' "$(( $1 | ($2 << 8) | ($3 << 16) | ($4 << 24) ))"
 }
 
+seal_resident() {
+  local resident=$1 tool_dir host_cxx sealer_root sealer temporary
+  tool_dir="$(cd "$(dirname "$0")" && pwd)"
+  host_cxx=${MK61_HOST_CXX:-${CXX:-c++}}
+  command -v "$host_cxx" >/dev/null 2>&1 ||
+    die "host C++17 compiler not found: $host_cxx"
+  [ -f "$tool_dir/mk61_firmware_seal.cpp" ] &&
+    [ -f "$tool_dir/resident_firmware_format.hpp" ] &&
+    [ -f "$tool_dir/rust_types.h" ] ||
+    die 'resident firmware sealer payload is missing; reinstall the MK61s board'
+  sealer_root="$build_path/.mk61-host-tools"
+  sealer="$sealer_root/mk61_firmware_seal"
+  mkdir -p "$sealer_root"
+  if [ ! -x "$sealer" ] ||
+     [ "$tool_dir/mk61_firmware_seal.cpp" -nt "$sealer" ] ||
+     [ "$tool_dir/resident_firmware_format.hpp" -nt "$sealer" ] ||
+     [ "$tool_dir/rust_types.h" -nt "$sealer" ]; then
+    temporary="$sealer.tmp"
+    "$host_cxx" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
+      -I"$tool_dir" "$tool_dir/mk61_firmware_seal.cpp" -o "$temporary" ||
+      die 'could not build the resident firmware sealer'
+    mv "$temporary" "$sealer"
+  fi
+  "$sealer" seal --max-size 262144 "$resident" ||
+    die 'could not seal resident firmware'
+  "$sealer" check --max-size 262144 "$resident" ||
+    die 'sealed resident firmware did not pass verification'
+}
+
 emit_byte() {
   local value=$(( $1 & 255 )) octal
   octal=$(printf '%03o' "$value")
@@ -251,6 +280,7 @@ build_bundle() {
   resident_bin="$build_path/$project.bin"
   [ -s "$resident_elf" ] && [ -s "$resident_bin" ] ||
     die 'Arduino did not produce resident ELF and BIN files'
+  seal_resident "$resident_bin"
   overlay_hex=$(symbol_hex "$resident_elf" mk61_module_overlay) ||
     die 'resident ELF has no mk61_module_overlay symbol'
 

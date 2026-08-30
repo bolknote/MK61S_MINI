@@ -1064,6 +1064,9 @@ static void test_context_slot_arbitration(void) {
   check_true("math cannot overwrite trap",
       core_61::acquire_context_buffer(
           core_61::ContextBufferOwner::MATH_CORE) == nullptr);
+  check_true("benchmark cannot overwrite trap",
+      core_61::acquire_context_buffer(
+          core_61::ContextBufferOwner::BENCHMARK) == nullptr);
   check_true("busy math fails without stealing slot",
       std::isnan(mk_math::sin(1.0)) &&
       core_61::owned_context_buffer(
@@ -1077,6 +1080,12 @@ static void test_context_slot_arbitration(void) {
   check_true("released slot has no owner",
       core_61::owned_context_buffer(
           core_61::ContextBufferOwner::M61_TRAP) == nullptr);
+  core_61::ContextBuffer* benchmark = core_61::acquire_context_buffer(
+      core_61::ContextBufferOwner::BENCHMARK);
+  check_true("benchmark reuses released slot", benchmark == trap);
+  check_true("benchmark releases shared slot",
+      core_61::release_context_buffer(
+          core_61::ContextBufferOwner::BENCHMARK));
 }
 
 #if MK61_CORE_HOT_TABLES_IN_SRAM > 0
@@ -1267,6 +1276,65 @@ static void test_native_hot_paths(void) {
 }
 #endif
 
+#if MK61_CORE_PACKED_AMK
+static bool compare_packed_amk_steps(const char* label, bool expanded) {
+  core_61::set_expanded_program_mode(expanded);
+  core_61::set_packed_amk_enabled(false);
+  core_61::enable();
+
+  core_61::ContextBuffer start = {};
+  core_61::ContextBuffer reference = {};
+  core_61::ContextBuffer packed = {};
+  static const MatrixKey keys[] = {
+    {4, 1}, {11, 8}, {5, 1}, {2, 8}, {10, 9}, {11, 8}
+  };
+
+  for(usize iteration = 0; iteration < 160; iteration++) {
+    const usize phase = iteration %
+        (sizeof(keys) / sizeof(keys[0]) * 8U);
+    if((phase & 7U) < 4U) {
+      const MatrixKey key = keys[phase / 8U];
+      MK61Emu_SetKeyPress(key.x, key.y);
+    } else {
+      MK61Emu_SetKeyPress(0, 0);
+    }
+
+    if(!core_61::save_context(start)) return false;
+    core_61::set_packed_amk_enabled(false);
+    core_61::step();
+    if(!core_61::save_context(reference) ||
+       !core_61::restore_context(start)) return false;
+
+    core_61::set_packed_amk_enabled(true);
+    core_61::step();
+    if(!core_61::save_context(packed)) return false;
+    if(std::memcmp(reference.bytes, packed.bytes,
+                   sizeof(reference.bytes)) != 0) {
+      usize offset = 0;
+      while(offset < sizeof(reference.bytes) &&
+            reference.bytes[offset] == packed.bytes[offset]) offset++;
+      std::printf(
+          "  FAIL %s: packed AMK differs at step %lu byte %lu "
+          "(%02X != %02X)\n",
+          label, (unsigned long) iteration, (unsigned long) offset,
+          (unsigned) reference.bytes[offset], (unsigned) packed.bytes[offset]);
+      return false;
+    }
+    if(!core_61::restore_context(reference)) return false;
+  }
+  return true;
+}
+
+static void test_packed_amk(void) {
+  std::printf("packed AMK selector vs scalar full state:\n");
+  check_true("classic packed-AMK differential",
+      compare_packed_amk_steps("classic", false));
+  check_true("expanded packed-AMK differential",
+      compare_packed_amk_steps("expanded", true));
+  core_61::set_packed_amk_enabled(true);
+}
+#endif
+
 int main(void) {
 #if MK61_CORE_HOT_TABLES_IN_SRAM > 0
   test_hot_table_cache_eviction();
@@ -1290,6 +1358,9 @@ int main(void) {
 #endif
 #if MK61_CORE_NATIVE_HOT_PATHS
   test_native_hot_paths();
+#endif
+#if MK61_CORE_PACKED_AMK
+  test_packed_amk();
 #endif
 
   if(g_failures == 0) {

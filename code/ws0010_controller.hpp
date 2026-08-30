@@ -52,6 +52,28 @@ enum class InitializationPhase : u8 {
   READY,
 };
 
+// Graphics is an exclusive controller address space, not merely a rendering
+// preference.  Keep the owner in the same single byte previously occupied by
+// the active flag so enforcing ownership costs no persistent RAM.
+enum class GraphicsOwner : u8 {
+  NONE = 0,
+  API,
+  QUALIFICATION,
+};
+
+constexpr bool graphicsOwned(GraphicsOwner owner) {
+  return owner != GraphicsOwner::NONE;
+}
+
+inline const char* graphicsOwnerName(GraphicsOwner owner) {
+  switch(owner) {
+    case GraphicsOwner::NONE: return "none";
+    case GraphicsOwner::API: return "api";
+    case GraphicsOwner::QUALIFICATION: return "qualification";
+  }
+  return "unknown";
+}
+
 inline const char* initializationPhaseName(InitializationPhase phase) {
   switch(phase) {
     case InitializationPhase::IDLE: return "idle";

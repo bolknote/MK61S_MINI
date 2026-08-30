@@ -16,6 +16,10 @@
 #include "workspace_swap.hpp"
 #include "zx0.hpp"
 
+#if !defined(PROGRAM_STORE_HOST_TEST)
+  #include "power_monitor.hpp"
+#endif
+
 #include <stdint.h>
 #include <string.h>
 
@@ -328,6 +332,11 @@ static bool erase_sector(u32 sector) {
   if(!flash_is_ok || sector >= g_geometry.physical_sectors) return false;
   const u32 stop_at = millis() + ERASE_TIMEOUT_MS;
   while(!flash_device().eraseSector(sector_address(sector))) {
+#if !defined(PROGRAM_STORE_HOST_TEST)
+    // A PVD rejection is not a transient NOR busy/error. Avoid spinning for
+    // the normal five-second erase retry window while the rail is unsafe.
+    if(!power_monitor::writes_allowed()) return false;
+#endif
     led::control();
     if((i32) (millis() - stop_at) >= 0) return false;
   }
@@ -369,7 +378,7 @@ static u32 crc32_bytes(const u8* data, usize len, u32 crc = 0xFFFFFFFFUL) {
 
 static bool crc32_flash(mk61_crc32::Context& crc,
                         u32 address, u32 len) {
-  u8 buffer[64];
+  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
   while(len != 0) {
     const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
     if(!read_bytes(address, buffer, count) ||
@@ -389,7 +398,7 @@ static bool crc32_flash(u32 address, u32 len, u32& output) {
 
 static bool crc32_flash_software(u32 address, u32 len, u32& output) {
   u32 state = mk61_crc32::INITIAL_STATE;
-  u8 buffer[64];
+  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
   while(len != 0) {
     const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
     if(!read_bytes(address, buffer, count)) return false;
@@ -2028,9 +2037,9 @@ struct RecordPayloadInput {
   u32 address;
   u16 size;
   u16 position;
-  u8 buffer[64];
-  u8 buffered;
-  u8 cursor;
+  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
+  u16 buffered;
+  u16 cursor;
   mk61_crc32::Context* crc;
 };
 
@@ -2039,7 +2048,7 @@ static bool next_record_payload_byte(void* context, u8& value) {
   if(input.position >= input.size) return false;
   if(input.cursor >= input.buffered) {
     const u16 remaining = (u16) (input.size - input.position);
-    input.buffered = (u8) (remaining < sizeof(input.buffer)
+    input.buffered = (u16) (remaining < sizeof(input.buffer)
         ? remaining : sizeof(input.buffer));
     input.cursor = 0;
     if(!read_bytes(input.address + input.position,
@@ -2059,14 +2068,16 @@ static bool read_zx0_record_range(u16 id, const Inode& inode,
   if(!update_record_crc_prefix(
        record_crc, (NodeKind) header[3], (ProgramType) header[11],
        id, inode.parent_id, name, stored_len)) return false;
-  RecordPayloadInput compressed = {
-    inode.address + RECORD_HEADER_SIZE + header[10],
-    stored_len, 0, {}, 0, 0, &record_crc
-  };
+  RecordPayloadInput compressed = {};
+  compressed.address = inode.address + RECORD_HEADER_SIZE + header[10];
+  compressed.size = stored_len;
+  compressed.crc = &record_crc;
   const zx0::Input input = {&compressed, next_record_payload_byte};
   u8 window[256] = {};
-  return zx0::decode_range(input, stored_len, inode.data_len,
-                           offset, output, size, window, sizeof(window)) &&
+  const bool decoded = zx0::decode_range(
+      input, stored_len, inode.data_len,
+      offset, output, size, window, sizeof(window));
+  return decoded &&
          compressed.position == stored_len &&
          record_crc.finish() == get_le32(header, 12);
 }
@@ -2229,9 +2240,9 @@ struct LargePayloadInput {
   u16 id;
   const LargeDescriptor* descriptor;
   u16 position;
-  u8 buffer[64];
-  u8 buffered;
-  u8 cursor;
+  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
+  u16 buffered;
+  u16 cursor;
   u32 crc;
 };
 
@@ -2256,7 +2267,7 @@ static bool next_large_payload_byte(void* context, u8& value) {
                        LARGE_BLOCK_HEADER_SIZE + in_block,
                    input.buffer, count)) return false;
     input.crc = crc32_bytes(input.buffer, count, input.crc);
-    input.buffered = (u8) count;
+    input.buffered = count;
     input.cursor = 0;
   }
   value = input.buffer[input.cursor++];
@@ -2284,6 +2295,9 @@ static bool payload_equals_source(u16 id, const Inode& inode,
                                   const FileSource& source, u16 data_len) {
   if(inode_kind(inode) != NodeKind::FILE || inode.data_len != data_len ||
      !source_valid(source, data_len)) return false;
+  // Equality checking is not on the read hot path.  Keep its two simultaneous
+  // work buffers small so compressed-file verification preserves stack headroom
+  // on the 64 KiB F401 build.
   u8 actual[64];
   u8 expected[64];
   LargeDescriptor descriptor = {};

@@ -183,6 +183,18 @@ class DebouncedRow {
       for(usize column = 0; column < COLUMN_COUNT; column++) changed_at_[column] = now;
     }
 
+    // A STOP wake edge is sampled before the ordinary row scanner resumes.
+    // Prime both debounce planes with that physically observed state so the
+    // preserved press is emitted exactly once, while its later release still
+    // follows the normal debounced path.
+    void prime(u8 pressed_mask, t_time_ms now) {
+      stable_ = pressed_mask;
+      candidate_ = pressed_mask;
+      for(usize column = 0; column < COLUMN_COUNT; column++) {
+        changed_at_[column] = now;
+      }
+    }
+
   // Возвращает не более одного стабилизированного бита столбца. Остальные
   // одновременные переходы возвращаются последующими вызовами, поэтому ни одно
   // событие не теряется.

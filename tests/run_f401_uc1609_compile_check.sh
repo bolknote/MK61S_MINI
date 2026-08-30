@@ -34,9 +34,13 @@ compile_log="$build_root/compile.log"
 mkdir -p "$sketch" "$compile_path"
 cp -R "$root/code/." "$sketch/"
 
-fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+# Size-LTO is part of the constrained production profile, not an optional
+# experiment: it preserves the same alarm functionality as F411 while keeping
+# the sealed-image safety reserve. Strict warnings and ELF gates still run on
+# the exact linked artifact.
+fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-strict_flags="-DMK61_BOARD_CLASSIC_V3 $platform_ram_flags -Werror -Wno-error=cpp"
+strict_flags="-DMK61_BOARD_CLASSIC_V3 -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
 
 set +e
 "$arduino_cli" compile \
@@ -45,6 +49,7 @@ set +e
   --build-path "$compile_path" \
   --build-property "compiler.cpp.extra_flags=$strict_flags" \
   --build-property "compiler.c.extra_flags=$platform_ram_flags" \
+  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer" \
   "$sketch" 2>&1 | tee "$compile_log"
 pipeline_status=("${PIPESTATUS[@]}")
 compile_status=${pipeline_status[0]}
@@ -81,9 +86,43 @@ printf 'F401 RAM budget: %d/%d bytes\n' "$ram_used" "$ram_limit"
 
 test -s "$compile_path/mk61s-M.ino.elf" || fail 'missing ELF'
 test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
+"$root/tools/seal-firmware.sh" seal --max-size 262144 \
+  "$compile_path/mk61s-M.ino.bin"
+"$root/tools/seal-firmware.sh" check --max-size 262144 \
+  "$compile_path/mk61s-M.ino.bin"
+
+# Merely fitting below 256 KiB is not a release criterion: sealing appends a
+# footer and tiny future linker fluctuations must not break the public build.
+# The pre-PVD reference had 2496 bytes free, so keep at least 2 KiB here.
+flash_capacity=262144
+minimum_flash_headroom=2048
+sealed_size="$(wc -c < "$compile_path/mk61s-M.ino.bin" | tr -d '[:space:]')"
+[[ "$sealed_size" =~ ^[0-9]+$ ]] || fail "invalid sealed BIN size: $sealed_size"
+flash_headroom=$((flash_capacity - sealed_size))
+if ((flash_headroom < minimum_flash_headroom)); then
+  fail "sealed Flash headroom too small: $flash_headroom < $minimum_flash_headroom bytes"
+fi
+printf 'F401 sealed Flash budget: %d/%d bytes (%d bytes free)\n' \
+  "$sealed_size" "$flash_capacity" "$flash_headroom"
+
+# This constrained production profile deliberately omits only the laboratory
+# read benchmark; the command remains available on F411 qualification builds.
+if grep -aFq 'Usage: bench' "$compile_path/mk61s-M.ino.elf"; then
+  fail 'read benchmark unexpectedly present in constrained F401 image'
+fi
+if grep -aFq 'ANALOG us/n=' "$compile_path/mk61s-M.ino.elf"; then
+  fail 'raw analog terminal report unexpectedly present in constrained F401 image'
+fi
+if ! grep -aFq 'RTC ALARM' "$compile_path/mk61s-M.ino.elf"; then
+  fail 'RTC alarm command unexpectedly missing from constrained F401 image'
+fi
 "$root/tests/check_global_constructors.sh" \
   "$compile_path/mk61s-M.ino.elf"
 "$root/tests/check_early_dfu_elf.sh" \
+  "$compile_path/mk61s-M.ino.elf"
+"$root/tests/check_power_monitor_elf.sh" \
+  "$compile_path/mk61s-M.ino.elf"
+"$root/tests/check_rtc_alarm_elf.sh" \
   "$compile_path/mk61s-M.ino.elf"
 
 printf '\nF401 Classic V3 UC1609 Arduino compile check: OK\n'

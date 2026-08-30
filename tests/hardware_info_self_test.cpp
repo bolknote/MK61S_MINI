@@ -70,7 +70,14 @@ static void test_device_identity(void) {
   assert(unknown.family == NULL);
 }
 
-static void test_vbat_conversion(void) {
+static void test_analog_conversion(void) {
+  const hardware_info::MillivoltReading vdda =
+    hardware_info::calculate_vdda_millivolts(1500, 1500);
+  assert(vdda.valid);
+  assert(vdda.millivolts == 3300);
+  assert(!hardware_info::calculate_vdda_millivolts(0, 1500).valid);
+  assert(!hardware_info::calculate_vdda_millivolts(1500, 0).valid);
+
   const hardware_info::VbatReading nominal =
     hardware_info::calculate_vbat_millivolts(931, 1500, 1500);
   assert(nominal.valid);
@@ -85,6 +92,42 @@ static void test_vbat_conversion(void) {
   assert(!hardware_info::calculate_vbat_millivolts(931, 0, 1500).valid);
   assert(!hardware_info::calculate_vbat_millivolts(931, 1500, 0).valid);
   assert(!hardware_info::calculate_vbat_millivolts(4096, 1500, 1500).valid);
+
+  const hardware_info::TemperatureReading rising =
+    hardware_info::calculate_temperature_decicelsius(
+      1100, 3300, 1000, 1400);
+  assert(rising.valid);
+  assert(rising.decicelsius == 500);
+
+  const hardware_info::TemperatureReading compensated =
+    hardware_info::calculate_temperature_decicelsius(
+      1100, 3000, 1000, 1400);
+  assert(compensated.valid);
+  assert(compensated.decicelsius == 300);
+
+  const hardware_info::TemperatureReading falling =
+    hardware_info::calculate_temperature_decicelsius(
+      1300, 3300, 1400, 1000);
+  assert(falling.valid);
+  assert(falling.decicelsius == 500);
+
+  assert(!hardware_info::calculate_temperature_decicelsius(
+    1000, 3300, 1200, 1200).valid);
+  assert(!hardware_info::calculate_temperature_decicelsius(
+    1000, 1000, 1200, 800).valid);
+
+  const hardware_info::BatteryStatus unqualified =
+    hardware_info::unqualified_battery_status(nominal);
+  assert(unqualified.presence == hardware_info::BatteryPresence::UNKNOWN);
+  assert(unqualified.reason ==
+    hardware_info::BatteryPresenceReason::NO_DETECTOR);
+  assert(unqualified.voltage.valid);
+
+  const hardware_info::BatteryStatus invalid =
+    hardware_info::unqualified_battery_status({false, 0});
+  assert(invalid.presence == hardware_info::BatteryPresence::UNKNOWN);
+  assert(invalid.reason ==
+    hardware_info::BatteryPresenceReason::ADC_INVALID);
 }
 
 static void test_line_formatting(void) {
@@ -121,17 +164,50 @@ static void test_line_formatting(void) {
     line, sizeof(line), false, missing_flash));
   assert(std::strcmp(line, "RAM:128 ROM:?") == 0);
 
-  assert(hardware_info::format_vbat_line(
-    line, sizeof(line), true, {true, 3020}));
-  assert(std::strcmp(line, "VBAT вход:3,02 В") == 0);
+  assert(hardware_info::format_vdda_line(
+    line, sizeof(line), true, {true, 3300}));
+  assert(std::strcmp(line, "Питание:3,30 В") == 0);
+  assert(utf8_width(line) == 14);
 
-  assert(hardware_info::format_vbat_line(
-    line, sizeof(line), false, {true, 3025}));
-  assert(std::strcmp(line, "VBAT pin:3.03 V") == 0);
+  assert(hardware_info::format_vdda_line(
+    line, sizeof(line), false, {false, 0}));
+  assert(std::strcmp(line, "VDD:--.-- V") == 0);
 
-  assert(hardware_info::format_vbat_line(
-    line, sizeof(line), true, {false, 0}));
-  assert(std::strcmp(line, "VBAT вход:--,-- В") == 0);
+  assert(hardware_info::format_temperature_line(
+    line, sizeof(line), true, {true, 293}));
+  assert(std::strcmp(line, "МК:29,3 C") == 0);
+
+  assert(hardware_info::format_temperature_line(
+    line, sizeof(line), false, {true, -55}));
+  assert(std::strcmp(line, "MCU:-5.5 C") == 0);
+
+  const hardware_info::BatteryStatus unknown_battery = {
+    hardware_info::BatteryPresence::UNKNOWN,
+    hardware_info::BatteryPresenceReason::NO_DETECTOR,
+    {true, 3020}
+  };
+  assert(hardware_info::format_battery_line(
+    line, sizeof(line), true, unknown_battery));
+  assert(std::strcmp(line, "Батарея:неизв.") == 0);
+  assert(utf8_width(line) == 14);
+
+  const hardware_info::BatteryStatus present = {
+    hardware_info::BatteryPresence::PRESENT,
+    hardware_info::BatteryPresenceReason::HARDWARE_DETECTOR,
+    {true, 3025}
+  };
+  assert(hardware_info::format_battery_line(
+    line, sizeof(line), false, present));
+  assert(std::strcmp(line, "Battery:3.03 V") == 0);
+
+  const hardware_info::BatteryStatus absent = {
+    hardware_info::BatteryPresence::ABSENT,
+    hardware_info::BatteryPresenceReason::HARDWARE_DETECTOR,
+    {false, 0}
+  };
+  assert(hardware_info::format_battery_line(
+    line, sizeof(line), false, absent));
+  assert(std::strcmp(line, "Battery:absent") == 0);
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), true, "LCD1602A00"));
@@ -171,25 +247,32 @@ static void test_line_formatting(void) {
 }
 
 static void test_scroll_bounds(void) {
-  assert(hardware_info::max_scroll_offset(2) == 3);
+  assert(hardware_info::max_scroll_offset(2) == 5);
   assert(hardware_info::step_scroll_offset(0, 2, -1) == 0);
   assert(hardware_info::step_scroll_offset(0, 2, 1) == 1);
   assert(hardware_info::step_scroll_offset(1, 2, 1) == 2);
   assert(hardware_info::step_scroll_offset(2, 2, 1) == 3);
-  assert(hardware_info::step_scroll_offset(3, 2, 1) == 3);
+  assert(hardware_info::step_scroll_offset(3, 2, 1) == 4);
+  assert(hardware_info::step_scroll_offset(4, 2, 1) == 5);
+  assert(hardware_info::step_scroll_offset(5, 2, 1) == 5);
+  assert(hardware_info::step_scroll_offset(5, 2, -1) == 4);
+  assert(hardware_info::step_scroll_offset(4, 2, -1) == 3);
   assert(hardware_info::step_scroll_offset(3, 2, -1) == 2);
   assert(hardware_info::step_scroll_offset(2, 2, -1) == 1);
 
-  assert(hardware_info::max_scroll_offset(4) == 1);
+  assert(hardware_info::max_scroll_offset(4) == 3);
   assert(hardware_info::step_scroll_offset(0, 4, 1) == 1);
-  assert(hardware_info::step_scroll_offset(1, 4, 1) == 1);
-  assert(hardware_info::max_scroll_offset(5) == 0);
-  assert(hardware_info::max_scroll_offset(6) == 0);
+  assert(hardware_info::step_scroll_offset(1, 4, 1) == 2);
+  assert(hardware_info::step_scroll_offset(2, 4, 1) == 3);
+  assert(hardware_info::step_scroll_offset(3, 4, 1) == 3);
+  assert(hardware_info::max_scroll_offset(5) == 2);
+  assert(hardware_info::max_scroll_offset(6) == 1);
+  assert(hardware_info::max_scroll_offset(7) == 0);
 }
 
 int main(void) {
   test_device_identity();
-  test_vbat_conversion();
+  test_analog_conversion();
   test_line_formatting();
   test_scroll_bounds();
   std::cout << "hardware_info_self_test: ok\n";

@@ -114,6 +114,19 @@ try {
     Assert-True (Test-Mk61IdentityLine 'MK61s-40th ver. Aug 02 2026(12:34:56)') '40th identity was rejected'
     Assert-True (Test-Mk61IdentityLine 'MK61s mini ver. Jan 01 2024(00:00:00)') 'legacy MK61s identity was rejected'
     Assert-True (-not (Test-Mk61IdentityLine 'STM32F401 test firmware ver. 1')) 'unrelated STM32 identity was accepted'
+    $identityLine = 'MK61 ID v=1 public=0123456789ABCDEF short=89ABCDEF usb=112233445566 volume=A1B2C3D4 build=12345678 profile=mini-v3-a00'
+    $parsedIdentity = ConvertFrom-Mk61IdentityLine $identityLine
+    Assert-True ($null -ne $parsedIdentity -and $parsedIdentity.Kind -eq 'identity') 'new identity handshake was rejected'
+    Assert-True ($parsedIdentity.PublicId -eq '0123456789ABCDEF' -and
+        $parsedIdentity.ShortId -eq '89ABCDEF' -and
+        $parsedIdentity.UsbSerial -eq '112233445566') 'new identity fields were parsed incorrectly'
+    Assert-True (Test-Mk61IdentitySelector $parsedIdentity '89abcdef') 'short device selector is not case-insensitive'
+    Assert-True (Test-Mk61IdentitySelector $parsedIdentity '112233445566') 'USB serial selector was rejected'
+    Assert-True (-not (Test-Mk61IdentitySelector $parsedIdentity 'DEADBEEF')) 'wrong device selector was accepted'
+    Assert-True ($null -eq (ConvertFrom-Mk61IdentityLine `
+        'MK61 ID v=1 public=bad short=bad usb=bad volume=bad build=bad profile=x')) 'malformed identity handshake was accepted'
+    Assert-True ($null -eq (ConvertFrom-Mk61IdentityLine `
+        'MK61 ID v=1 public=0123456789ABCDEF short=DEADBEEF usb=112233445566 volume=A1B2C3D4 build=12345678 profile=mini-v3-a00')) 'inconsistent short identity was accepted'
 
     $probeSerial = [pscustomobject]@{
         ReadTimeout = 777
@@ -133,7 +146,7 @@ try {
     $probeSerial.Lines.Enqueue('sizeof Serial 216')
     $probeSerial.Lines.Enqueue('MK61s-Classic-V2 ver. Aug 02 2026(12:34:56)')
     Assert-True (Test-DirectSerialMk61Identity $probeSerial 200 8) 'MK61s serial probe failed'
-    Assert-True (($probeSerial.Writes -join '') -eq "ver`r") 'MK61s serial probe did not send ver'
+    Assert-True (($probeSerial.Writes -join '') -eq "identity`rver`r") 'MK61s serial probe did not send identity/ver'
     Assert-True ($probeSerial.ReadTimeout -eq 777) 'MK61s serial probe did not restore timeout'
     $probeSerial.Lines.Clear()
     $probeSerial.Writes.Clear()
@@ -204,6 +217,9 @@ try {
         $script:PortExplicit = $false
         Assert-True (Parse-Arguments @('--port','COM99')) '--port parsing failed'
         Assert-True ($script:Port -eq 'COM99' -and $script:PortExplicit) '--port was not marked explicit'
+        Assert-True (Parse-Arguments @('--device','89ABCDEF')) '--device parsing failed'
+        Assert-True ($script:DeviceSelector -eq '89ABCDEF' -and
+            $script:DeviceSelectorExplicit) '--device was not marked explicit'
     } finally {
         $script:Port = $oldPort
         $script:PortExplicit = $oldPortExplicit

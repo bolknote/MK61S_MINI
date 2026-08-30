@@ -114,6 +114,14 @@ static void fresh(u32 capacity = SPIFlash::DEFAULT_CAPACITY) {
   assert(virtual_fat::reset_session());
 }
 
+static void test_boot_sector_volume_serial_fallback(void) {
+  fresh();
+  u8 boot[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(0, boot));
+  assert(read_le32(boot, 39) ==
+         (0xC5000000UL ^ SPIFlash::DEFAULT_CAPACITY));
+}
+
 static u16 fat12_value(u16 cluster) {
   const Layout fs = layout();
   const u32 byte_offset = (u32) cluster + cluster / 2;
@@ -1553,6 +1561,7 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
 } // безымянное пространство имён
 
 int main(void) {
+  test_boot_sector_volume_serial_fallback();
   test_dynamic_fat12_bpb();
   test_macos_no_index_marker();
   test_stable_clusters_and_nested_reads();

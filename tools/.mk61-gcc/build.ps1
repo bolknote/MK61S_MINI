@@ -532,6 +532,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
+        '-DMK61_REQUIRE_RESIDENT_CRC=1',
         "-DMK61_ENABLE_LTO=$Lto"
     )
     Invoke-GccTool $cmake $configureArguments
@@ -542,10 +543,31 @@ try {
 
     $residentElf = Join-Path $buildDirectory 'resident.elf'
     $residentBin = Join-Path $buildDirectory 'resident.bin'
+    $residentHex = Join-Path $buildDirectory 'resident.hex'
     $compileCommands = Join-Path $buildDirectory 'compile_commands.json'
     Test-RequiredFile $residentElf 'resident ELF'
     Test-RequiredFile $residentBin 'resident BIN'
     Test-RequiredFile $compileCommands 'CMake compile database'
+
+    $powerShell = Get-CurrentPowerShell
+    $sealer = Join-Path $script:ProjectRoot 'tools/seal-firmware.ps1'
+    Test-RequiredFile $sealer 'resident firmware sealer'
+    Invoke-GccTool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
+        '-InputFile', $residentBin, '-MaxSize', '262144')
+    Invoke-GccTool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
+        '-InputFile', $residentBin, '-MaxSize', '262144')
+
+    # CMake emitted HEX before the post-link footer was sealed. Regenerate it
+    # from the authoritative sealed BIN so neither public format can bypass
+    # the startup integrity check.
+    $objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy$toolSuffix"
+    Test-RequiredFile $objcopy 'GNU Arm objcopy'
+    Invoke-GccTool $objcopy @(
+        '-I', 'binary', '-O', 'ihex', '--change-addresses', '0x08000000',
+        $residentBin, $residentHex)
+    Test-RequiredFile $residentHex 'sealed resident HEX'
 
     $stage = Join-Path $buildDirectory 'bundle'
     if ([IO.Directory]::Exists($stage)) {
@@ -611,6 +633,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
+    $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
     $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
     [IO.File]::WriteAllText(
         (Join-Path $outputBundle 'build.flags'),

@@ -93,10 +93,18 @@ bool valid(const volatile Record& record);
 
 const char* exception_name(u32 exception_number);
 
+// Эти поля принадлежат экспортируемому тексту, а не retained Record v1.
+// Поэтому добавление identity не меняет 192-байтный crash ABI и CRC записи.
+struct ReportMetadata {
+  const char* device_public_id;
+  const char* current_build_profile;
+};
+
 // Человекочитаемый отчёт не содержит завершающий NUL. Ноль означает
 // невалидную запись либо недостаточный буфер.
 u16 format_report(const Record& record, u32 current_build_id,
-                  u8* output, usize capacity);
+                  u8* output, usize capacity,
+                  const ReportMetadata* metadata = nullptr);
 
 } // namespace crash_dump_format
 

@@ -232,7 +232,14 @@ class MK61Display : public Print {
                                  const u8* data, usize count);
     bool presentWs0010Graphics(void);
     bool showWs0010GraphicsFrame(const u8* frame, usize size);
-    void endWs0010Graphics(void);
+    bool showWs0010GraphicsQualificationFrame(const u8* frame, usize size);
+    ws0010::GraphicsOwner ws0010GraphicsOwner(void) const {
+      return ws0010_graphics_owner;
+    }
+    bool ws0010GraphicsQualificationActive(void) const {
+      return ws0010_graphics_owner == ws0010::GraphicsOwner::QUALIFICATION;
+    }
+    bool endWs0010Graphics(void);
     bool returnWs0010Home(void);
     bool shiftWs0010Cursor(bool right);
     bool showWs0010EntryModeTest(bool automatic_shift);
@@ -241,7 +248,15 @@ class MK61Display : public Print {
     void noteDisplayActivity(u32 now);
     void pollOledProtection(u32 now);
     void setDisplayEnabled(bool enabled, u32 now);
+    // Qualification-only STOP pair. It changes only WS0010's documented
+    // internal PWR bit; DDRAM/CGRAM shadows and the user's display-on policy
+    // remain owned by the normal renderer.
+    bool prepareDeepIdle(void);
+    bool resumeDeepIdle(void);
     bool displayEnabled(void) const { return oled_protection_state.awake(); }
+    bool internalPowerEnabled(void) const {
+      return (ws0010_power_state & WS0010_POWER_ENABLED) != 0;
+    }
     oled_protection::Timeout oledProtectionTimeout(void) const {
       return oled_protection_state.timeout();
     }
@@ -390,7 +405,7 @@ class MK61Display : public Print {
       // see the active virtual display, not the dormant physical mode.
       if(usb_screen_active) return true;
 #endif
-      return ws0010_graphics_active;
+      return ws0010::graphicsOwned(ws0010_graphics_owner);
 #elif MK61_ENABLE_USB_SCREEN
       return usb_screen_active;
 #else
@@ -447,16 +462,30 @@ class MK61Display : public Print {
     bool shifted_viewport_active;
     u8 shifted_viewport_shift;
 #if defined(MK61_OLED1602_WS0010)
+    static constexpr u8 WS0010_POWER_ENABLED = 0x01u;
+    static constexpr u8 WS0010_DEEP_RESTORE_POWER = 0x02u;
     u16 reinitialization_count;
     ws0010::InitializationPhase initialization_phase;
-    bool ws0010_graphics_active;
+    ws0010::GraphicsOwner ws0010_graphics_owner;
+    // Bit 0 is the tracked WS0010 DC/DC PWR state; bit 1 records whether a
+    // deep-idle transaction must restore it. Packed explicitly so the normal
+    // OLED timeout costs no extra bool/padding pair on F401/F411.
+    u8 ws0010_power_state;
     oled_protection::State oled_protection_state;
 
+    bool beginWs0010GraphicsFor(ws0010::GraphicsOwner owner);
+    bool writeWs0010GraphicsPageFor(ws0010::GraphicsOwner owner,
+                                    u8 page, u8 first,
+                                    const u8* data, usize count);
+    bool presentWs0010GraphicsFor(ws0010::GraphicsOwner owner);
+    bool showWs0010GraphicsFrameFor(ws0010::GraphicsOwner owner,
+                                    const u8* frame, usize size);
     bool initializeWs0010Controller(bool cold_start,
                                     bool display_on_after_init);
     void refreshWs0010VisibleShadow(
       const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
     void restoreWs0010DdramAddress(void);
+    bool setWs0010InternalPower(bool enabled);
 #endif
 
     void probeBusyFlag(void);
