@@ -10,7 +10,36 @@
 #ifdef MK61_DISPLAY_UC1609
 
 #include "ERM19264_UC1609.h"
+#include "spi1_bus.hpp"
 #include "uc1609_safety.hpp"
+
+ERM19264_UC1609::BusTransaction::BusTransaction(
+	ERM19264_UC1609& display)
+	: hardware_(display.isHardwareSPI()), ready_(false)
+{
+	if (!hardware_)
+	{
+		ready_ = true;
+		return;
+	}
+	if (!spi1_bus::acquire(spi1_arbiter::Owner::DISPLAY_CLIENT)) {return;}
+#ifdef SPI_HAS_TRANSACTION
+	SPI.beginTransaction(
+		SPISettings(UC_SPI_FREQ, UC_SPI_DIRECTION, UC_SPI_UC1609_MODE));
+#else
+	SPI.setClockDivider(UC_SPI_CLOCK_DIV);
+#endif
+	ready_ = true;
+}
+
+ERM19264_UC1609::BusTransaction::~BusTransaction()
+{
+	if (!ready_ || !hardware_) {return;}
+#ifdef SPI_HAS_TRANSACTION
+	SPI.endTransaction();
+#endif
+	(void) spi1_bus::release(spi1_arbiter::Owner::DISPLAY_CLIENT);
+}
 
 /*!
 	@brief init the screen/sharedBuffer object
@@ -116,9 +145,10 @@ void ERM19264_UC1609::LCDbegin (uint8_t VbiasPOT, uint8_t AddressSet)
 */
 void ERM19264_UC1609::LCDinit()
  {
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
 	UC1609_CD_SetHigh;
 	UC1609_CS_SetHigh;
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return;}
 	delay(UC1609_INIT_DELAY2);
 
 	LCDReset();
@@ -139,7 +169,6 @@ void ERM19264_UC1609::LCDinit()
 	send_command(UC1609_LCD_CONTROL, UC1609_ROTATION_NORMAL); // rotate to normal
 
 	UC1609_CS_SetHigh;
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 
@@ -175,7 +204,10 @@ void ERM19264_UC1609::LCDPowerDown(void)
 {
 	LCDReset ();
 	LCDEnable(0);
-	if(isHardwareSPI()) {SPI.end();}
+	// On shared SPI1, stopping the peripheral here would also tear down the
+	// external NOR client. Preserve the legacy behaviour only when no common
+	// ownership boundary is active.
+	if(isHardwareSPI() && !spi1_bus::enabled()) {SPI.end();}
 }
 
 
@@ -185,11 +217,11 @@ void ERM19264_UC1609::LCDPowerDown(void)
 */
 void ERM19264_UC1609::LCDEnable (uint8_t bits)
 {
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return;}
 	UC1609_CS_SetLow;
 	send_command(UC1609_DISPLAY_ON, bits);
 	UC1609_CS_SetHigh;
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 /*!
@@ -201,11 +233,11 @@ void ERM19264_UC1609::LCDEnable (uint8_t bits)
 */
 void ERM19264_UC1609::LCDscroll (uint8_t bits)
 {
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return;}
 	UC1609_CS_SetLow;
 	send_command(UC1609_SCROLL, bits);
 	UC1609_CS_SetHigh;
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 /*!
@@ -216,7 +248,8 @@ void ERM19264_UC1609::LCDscroll (uint8_t bits)
 */
 void ERM19264_UC1609::LCDrotate(uint8_t rotatevalue)
 {
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return;}
 	UC1609_CS_SetLow;
 	switch (rotatevalue)
 	{
@@ -228,7 +261,6 @@ void ERM19264_UC1609::LCDrotate(uint8_t rotatevalue)
 	}
 	send_command(UC1609_LCD_CONTROL, rotatevalue);
 	UC1609_CS_SetHigh;
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 /*!
@@ -237,11 +269,11 @@ void ERM19264_UC1609::LCDrotate(uint8_t rotatevalue)
 */
 void ERM19264_UC1609::LCDInvertDisplay (uint8_t bits)
 {
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return;}
 	UC1609_CS_SetLow;
 	send_command(UC1609_INVERSE_DISPLAY, bits);
 	UC1609_CS_SetHigh;
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 /*!
@@ -251,11 +283,11 @@ void ERM19264_UC1609::LCDInvertDisplay (uint8_t bits)
 */
 void ERM19264_UC1609::LCDallpixelsOn(uint8_t bits)
 {
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return;}
 	UC1609_CS_SetLow;
 	send_command(UC1609_ALL_PIXEL_ON, bits);
 	UC1609_CS_SetHigh;
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 /*!
@@ -265,7 +297,8 @@ void ERM19264_UC1609::LCDallpixelsOn(uint8_t bits)
 */
 void ERM19264_UC1609::LCDFillScreen(uint8_t dataPattern=0, uint8_t delay=0)
 {
-	 if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	 BusTransaction transaction(*this);
+	 if (!transaction.ready()) {return;}
 	 UC1609_CS_SetLow;
 	uint16_t numofbytes = _widthScreen * (_heightScreen/8); // width * height
 	for (uint16_t i = 0; i < numofbytes; i++)
@@ -274,7 +307,6 @@ void ERM19264_UC1609::LCDFillScreen(uint8_t dataPattern=0, uint8_t delay=0)
 			delayMicroseconds(delay);
 	}
 	UC1609_CS_SetHigh;
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 /*!
@@ -283,7 +315,8 @@ void ERM19264_UC1609::LCDFillScreen(uint8_t dataPattern=0, uint8_t delay=0)
 */
 void ERM19264_UC1609::LCDFillPage(uint8_t dataPattern=0)
 {
-	 if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	 BusTransaction transaction(*this);
+	 if (!transaction.ready()) {return;}
 	 UC1609_CS_SetLow;
 	uint16_t numofbytes = ((_widthScreen * (_heightScreen/8))/8); // (width * height/8)/8 = 192 bytes
 	for (uint16_t i = 0; i < numofbytes; i++)
@@ -291,7 +324,6 @@ void ERM19264_UC1609::LCDFillPage(uint8_t dataPattern=0)
 		send_data(dataPattern);
 	}
 	 UC1609_CS_SetHigh;
-	 if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 }
 
 /*!
@@ -301,6 +333,8 @@ void ERM19264_UC1609::LCDFillPage(uint8_t dataPattern=0)
 */
 void ERM19264_UC1609::LCDGotoXY(uint8_t column , uint8_t page)
 {
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return;}
 	UC1609_CS_SetLow;
 	set_address(column, page);
 	UC1609_CS_SetHigh;
@@ -330,7 +364,8 @@ if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
 	// ESP8266 needs a periodic yield() call to avoid watchdog reset.
 	yield();
 #endif
-	if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+	BusTransaction transaction(*this);
+	if (!transaction.ready()) {return LCD_SPIBusBusy;}
 	UC1609_CS_SetLow;
 
 	const int16_t visible_left = x < 0 ? 0 : x;
@@ -359,7 +394,6 @@ if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
 	#if defined(ESP8266)
 		yield();
 	#endif
-	 if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 	 return LCD_Success;
 }
 
@@ -486,7 +520,8 @@ void ERM19264_UC1609::LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint
  #if defined(ESP8266)
 	yield();
 #endif
- if (isHardwareSPI()) {UC_SPI_TRANSACTION_START}
+ BusTransaction transaction(*this);
+ if (!transaction.ready()) {return;}
  UC1609_CS_SetLow;
 
 	const int16_t visible_left = x < 0 ? 0 : x;
@@ -505,7 +540,6 @@ void ERM19264_UC1609::LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint
 	}
 
 UC1609_CS_SetHigh;
- if (isHardwareSPI()) {UC_SPI_TRANSACTION_END}
 #if defined(ESP8266)
 	yield();
 #endif

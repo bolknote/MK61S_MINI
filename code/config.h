@@ -621,14 +621,16 @@
 #endif
 
 // Mini/LCD1602 has only the NOR client on SPI1, so its measured arbiter and DMA
-// backend are enabled by default. Physical UC1609 profiles stay on their
-// original polling path until the display is moved behind the same ownership
-// boundary and accepted on real Classic/40th hardware.
+// backend are enabled by default. UC1609 shares SPI1 with NOR and is enabled
+// only on the exact F411 Classic V3 profile qualified on physical hardware;
+// F401, Classic V2 and 40th retain the original polling path until their own
+// hardware acceptance. Explicit laboratory overrides still take precedence.
 #ifndef MK61_ENABLE_SPI1_ARBITER
-  #if defined(MK61_DISPLAY_UC1609)
-    #define MK61_ENABLE_SPI1_ARBITER 0
-  #else
+  #if !defined(MK61_DISPLAY_UC1609) || \
+      (defined(STM32F411xE) && defined(MK61_BOARD_CLASSIC_V3))
     #define MK61_ENABLE_SPI1_ARBITER 1
+  #else
+    #define MK61_ENABLE_SPI1_ARBITER 0
   #endif
 #endif
 #if MK61_ENABLE_SPI1_ARBITER != 0 && MK61_ENABLE_SPI1_ARBITER != 1

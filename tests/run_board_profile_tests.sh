@@ -108,6 +108,14 @@ clang++ "${common[@]}" -DMK61_BOARD_CLASSIC_V3 \
   -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-classic-v3"
 "$out-classic-v3"
 
+clang++ "${common[@]}" -DSTM32F411xE -DMK61_BOARD_CLASSIC_V3 \
+  -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-f411-classic-v3"
+"$out-f411-classic-v3"
+
+clang++ "${common[@]}" -DSTM32F401xC -DMK61_BOARD_CLASSIC_V3 \
+  -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-f401-classic-v3"
+"$out-f401-classic-v3"
+
 # Прежняя комбинация флагов остаётся алиасом Classic V2.
 clang++ "${common[@]}" -DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC \
   -DMK61_CONFIG_EXPECT_CLASSIC_V2 -o "$out-classic-legacy"

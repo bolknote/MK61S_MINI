@@ -93,16 +93,6 @@
 #define UC_SPI_UC1609_MODE SPI_MODE0 /**< SPI Mode 0-3 */
 #define UC_SPI_CLOCK_DIV SPI_CLOCK_DIV8 /**< SPI bus baud rate  ,STM32 data use only */
 
-//There is a pre-defined macro SPI_HAS_TRANSACTION in SPI library for checking 
- //whether the firmware of the Arduino board supports SPI.beginTransaction().
-#ifdef SPI_HAS_TRANSACTION
-    #define UC_SPI_TRANSACTION_START SPI.beginTransaction(SPISettings(UC_SPI_FREQ, UC_SPI_DIRECTION, UC_SPI_UC1609_MODE)); 
-    #define UC_SPI_TRANSACTION_END SPI.endTransaction();                
-#else // SPI transactions likewise not present in MCU or lib
-    #define UC_SPI_TRANSACTION_START SPI.setClockDivider(UC_SPI_CLOCK_DIV); // 72/8 = 9Mhz
-    #define UC_SPI_TRANSACTION_END  // Blank
-#endif
-
 /*! @brief class to hold screen data , multiple screens can be made for the shared buffer. Buffer must be same size and offsets to if saving Data memory is goal 
   */
 class  ERM19264_UC1609_Screen
@@ -154,6 +144,18 @@ class ERM19264_UC1609 : public ERM19264_graphics {
     ERM19264_UC1609_Screen* ActiveBuffer = nullptr; /**< Active buffer pointer , a pointer to which screen object shared buffer will be written to */
  
   private:
+	class BusTransaction {
+	  public:
+		explicit BusTransaction(ERM19264_UC1609& display);
+		~BusTransaction();
+		BusTransaction(const BusTransaction&) = delete;
+		BusTransaction& operator=(const BusTransaction&) = delete;
+		bool ready(void) const {return ready_;}
+
+	  private:
+		bool hardware_;
+		bool ready_;
+	};
 
     void send_data(uint8_t data); 
     void send_data_buffer(const uint8_t* data, size_t length);

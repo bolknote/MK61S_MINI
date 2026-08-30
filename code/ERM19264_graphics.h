@@ -41,6 +41,7 @@ enum LCD_Return_Codes_e : uint8_t
 	LCD_BitmapLargerThanScreen = 9, /**< The Bitmap is larger than screen , check  w and h*/
 	LCD_BitmapVerticalSize = 10,    /**< A vertical  Bitmap's height must be divisible by 8. */
 	LCD_BitmapHorizontalSize = 11,  /**< A horizontal Bitmap's width  must be divisible by 8  */
+	LCD_SPIBusBusy = 12,            /**< The shared SPI bus could not be acquired safely. */
 };
 
 /*! LCD Enum to define current font type selected  */

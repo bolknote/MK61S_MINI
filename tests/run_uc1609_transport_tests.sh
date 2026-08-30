@@ -14,10 +14,12 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -DARDUINO_ARCH_STM32 \
   -DCONFIG \
   -DMK61_DISPLAY_UC1609 \
+  -DMK61_ENABLE_SPI1_ARBITER=1 \
   -I"$root/tests/uc1609_transport_shim" \
   -I"$root/code" \
   "$root/tests/uc1609_transport_self_test.cpp" \
   "$root/code/ERM19264_UC1609.cpp" \
+  "$root/code/spi1_bus.cpp" \
   -o "$out"
 
 "$out"

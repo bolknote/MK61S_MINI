@@ -18,11 +18,15 @@ class SPISettings {
 class SPIClass {
   public:
     std::vector<std::vector<uint8_t>> transfers;
+    unsigned begin_calls = 0;
+    unsigned end_calls = 0;
+    unsigned begin_transaction_calls = 0;
+    unsigned end_transaction_calls = 0;
 
-    void begin(void) {}
-    void end(void) {}
-    void beginTransaction(const SPISettings&) {}
-    void endTransaction(void) {}
+    void begin(void) { begin_calls++; }
+    void end(void) { end_calls++; }
+    void beginTransaction(const SPISettings&) { begin_transaction_calls++; }
+    void endTransaction(void) { end_transaction_calls++; }
     void setClockDivider(uint8_t) {}
 
     uint8_t transfer(uint8_t value) {
@@ -35,7 +39,13 @@ class SPIClass {
       transfers.emplace_back(bytes, bytes + count);
     }
 
-    void clear(void) { transfers.clear(); }
+    void clear(void) {
+      transfers.clear();
+      begin_calls = 0;
+      end_calls = 0;
+      begin_transaction_calls = 0;
+      end_transaction_calls = 0;
+    }
 };
 
 inline SPIClass SPI;

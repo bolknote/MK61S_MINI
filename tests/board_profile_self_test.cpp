@@ -110,8 +110,13 @@ int main(void) {
                 "startup model name must occupy exactly 16 characters");
 
 #if defined(MK61_DISPLAY_UC1609)
-  static_assert(MK61_ENABLE_SPI1_ARBITER == 0 && MK61_ENABLE_SPI1_DMA == 0,
-                "physical UC1609 must retain polling until hardware acceptance");
+  #if defined(STM32F411xE) && defined(MK61_BOARD_CLASSIC_V3)
+    static_assert(MK61_ENABLE_SPI1_ARBITER == 1 && MK61_ENABLE_SPI1_DMA == 1,
+                  "qualified F411 Classic V3 UC1609 must use shared SPI1 DMA");
+  #else
+    static_assert(MK61_ENABLE_SPI1_ARBITER == 0 && MK61_ENABLE_SPI1_DMA == 0,
+                  "unqualified UC1609 profiles must retain polling");
+  #endif
 #else
   static_assert(MK61_ENABLE_SPI1_ARBITER == 1 && MK61_ENABLE_SPI1_DMA == 1,
                 "mini must enable the accepted SPI1 arbiter and DMA path");
