@@ -6,13 +6,13 @@ fail() {
   exit 2
 }
 
-[[ $# -eq 3 || $# -eq 4 ]] ||
-  fail 'usage: check_ws0010_ram.sh ARM_SIZE A00_ELF WS0010_ELF [MAX_GROWTH]'
+[[ $# -eq 4 ]] ||
+  fail 'usage: check_ws0010_ram.sh ARM_SIZE A00_ELF WS0010_ELF MAX_GROWTH'
 
 size_tool="$1"
 a00_elf="$2"
 ws0010_elf="$3"
-maximum_growth="${4:-0}"
+maximum_growth="$4"
 [[ -x "$size_tool" ]] || fail "size tool is not executable: $size_tool"
 [[ -s "$a00_elf" ]] || fail "A00 ELF is missing: $a00_elf"
 [[ -s "$ws0010_elf" ]] || fail "WS0010 ELF is missing: $ws0010_elf"

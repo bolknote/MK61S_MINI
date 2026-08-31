@@ -265,20 +265,16 @@ jobs:
               "$RUNNER_TEMP/build-f401-gcc/$profile/resident.elf"
           done
 
-      - name: Enforce zero-RAM-cost WS0010 profile
+      - name: Enforce WS0010 RAM budgets
         run: |
           size_tool="$(awk -F= '/^CMAKE_SIZE:FILEPATH=/ {print $2; exit}' \
             "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/CMakeCache.txt")"
-          tests/check_ws0010_ram.sh "$size_tool" \
+          tests/check_release_ws0010_ram.sh "$size_tool" \
             "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/resident.elf" \
-            "$RUNNER_TEMP/build-f401-gcc/mini-v3-ws0010/resident.elf"
-          tests/check_ws0010_ram.sh "$size_tool" \
+            "$RUNNER_TEMP/build-f401-gcc/mini-v3-ws0010/resident.elf" \
             "$RUNNER_TEMP/f411-release/build-lcd1602-a00/mk61s-M.ino.elf" \
-            "$RUNNER_TEMP/f411-release/build-oled1602-ws0010/mk61s-M.ino.elf"
-          tests/check_ws0010_ram.sh "$size_tool" \
+            "$RUNNER_TEMP/f411-release/build-oled1602-ws0010/mk61s-M.ino.elf" \
             "$RUNNER_TEMP/build-f401-a00-usb/mini-v3-a00/resident.elf" \
-            "$RUNNER_TEMP/build-f401-ws-usb/mini-v3-ws0010/resident.elf"
-          tests/check_ws0010_ram.sh "$size_tool" \
             "$RUNNER_TEMP/build-f401-ws-usb/mini-v3-ws0010/resident.elf" \
             "$RUNNER_TEMP/build-f401-ws-usb-graphics/mini-v3-ws0010/resident.elf"
 

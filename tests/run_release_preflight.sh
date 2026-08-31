@@ -100,17 +100,12 @@ done
 
 size_tool="$(awk -F= '/^CMAKE_SIZE:FILEPATH=/ {print $2; exit}' \
   "$f401_build_root/mini-v3-a00/CMakeCache.txt")"
-"$root/tests/check_ws0010_ram.sh" "$size_tool" \
+"$root/tests/check_release_ws0010_ram.sh" "$size_tool" \
   "$f401_build_root/mini-v3-a00/resident.elf" \
-  "$f401_build_root/mini-v3-ws0010/resident.elf"
-"$root/tests/check_ws0010_ram.sh" "$size_tool" \
+  "$f401_build_root/mini-v3-ws0010/resident.elf" \
   "$f411_build_root/build-lcd1602-a00/mk61s-M.ino.elf" \
   "$f411_build_root/build-oled1602-ws0010/mk61s-M.ino.elf" \
-  256
-"$root/tests/check_ws0010_ram.sh" "$size_tool" \
   "$preflight_root/f401-a00-usb/mini-v3-a00/resident.elf" \
-  "$preflight_root/f401-ws-usb/mini-v3-ws0010/resident.elf"
-"$root/tests/check_ws0010_ram.sh" "$size_tool" \
   "$preflight_root/f401-ws-usb/mini-v3-ws0010/resident.elf" \
   "$preflight_root/f401-ws-usb-graphics/mini-v3-ws0010/resident.elf"
 
