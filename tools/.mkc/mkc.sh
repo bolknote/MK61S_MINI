@@ -510,7 +510,8 @@ selector_matches_probe() {
 }
 
 select_mk61_port() {
-  local candidate existing duplicate found_count=0 match_count=0
+  local candidate duplicate found_count=0 match_count=0
+  local candidate_count=0 candidate_index=0 existing_index=0 selected_index=-1
   local candidates=() found_ports=() found_public=() found_short=()
   local found_usb=() found_profile=() found_kind=()
   SELECT_ERROR=
@@ -518,25 +519,35 @@ select_mk61_port() {
   PROBE_SEQUENCE=0
 
   if [ "$PORT_EXPLICIT" -eq 1 ]; then
-    candidates[0]=$PORT
+    candidates[$candidate_count]=$PORT
+    candidate_count=$((candidate_count + 1))
   else
-    if [ -n "$PORT" ]; then candidates[${#candidates[@]}]=$PORT; fi
+    if [ -n "$PORT" ]; then
+      candidates[$candidate_count]=$PORT
+      candidate_count=$((candidate_count + 1))
+    fi
     while IFS= read -r candidate; do
       [ -n "$candidate" ] || continue
       duplicate=0
-      for existing in "${candidates[@]}"; do
-        [ "$existing" = "$candidate" ] && duplicate=1
+      # Bash 3.2 with `set -u` rejects "${empty_array[@]}".  Indexing up to
+      # the explicit count keeps first-device discovery safe on stock macOS.
+      for ((existing_index=0; existing_index<candidate_count; existing_index++)); do
+        [ "${candidates[$existing_index]}" = "$candidate" ] && duplicate=1
       done
-      [ "$duplicate" -eq 1 ] || candidates[${#candidates[@]}]=$candidate
+      if [ "$duplicate" -ne 1 ]; then
+        candidates[$candidate_count]=$candidate
+        candidate_count=$((candidate_count + 1))
+      fi
     done < <(list_cdc_ports)
   fi
-  CANDIDATE_COUNT=${#candidates[@]}
+  CANDIDATE_COUNT=$candidate_count
   if [ "$CANDIDATE_COUNT" -eq 0 ]; then
     SELECT_ERROR='устройства STM32 CDC 0483:5740 не найдены'
     return 1
   fi
 
-  for candidate in "${candidates[@]}"; do
+  for ((candidate_index=0; candidate_index<CANDIDATE_COUNT; candidate_index++)); do
+    candidate=${candidates[$candidate_index]}
     if probe_port "$candidate"; then
       found_ports[$found_count]=$candidate
       found_public[$found_count]=$PROBE_PUBLIC
@@ -552,7 +563,6 @@ select_mk61_port() {
     return 1
   fi
 
-  selected_index=-1
   if [ -n "$DEVICE_SELECTOR" ]; then
     for ((candidate_index=0; candidate_index<found_count; candidate_index++)); do
       PROBE_PUBLIC=${found_public[$candidate_index]}
@@ -692,16 +702,18 @@ remote_list_raw() {
     [ -d "$physical" ] || { STATUS_TEXT="Нет каталога $path"; return 1; }
     local entries=()
     entries=("$physical"/*)
-    for entry in "${entries[@]}"; do
-      [ -e "$entry" ] || [ -L "$entry" ] || continue
-      name=${entry##*/}
-      if [ -d "$entry" ] && [ ! -L "$entry" ]; then
-        printf 'd\t0\t%s\n' "$name" >> "$output"
-      elif [ -f "$entry" ] && [ ! -L "$entry" ]; then
-        size=$(wc -c < "$entry" | tr -d '[:space:]')
-        printf 'f\t%s\t%s\n' "$size" "$name" >> "$output"
-      fi
-    done
+    if [ "${#entries[@]}" -gt 0 ]; then
+      for entry in "${entries[@]}"; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+        name=${entry##*/}
+        if [ -d "$entry" ] && [ ! -L "$entry" ]; then
+          printf 'd\t0\t%s\n' "$name" >> "$output"
+        elif [ -f "$entry" ] && [ ! -L "$entry" ]; then
+          size=$(wc -c < "$entry" | tr -d '[:space:]')
+          printf 'f\t%s\t%s\n' "$size" "$name" >> "$output"
+        fi
+      done
+    fi
     return 0
   fi
 
@@ -943,24 +955,26 @@ load_local_panel() {
   [ "$LOCAL_PATH" = / ] || add_local_entry '..' d 0 ''
   local entries=("$LOCAL_PATH"/*)
   for pass in d f; do
-    for entry in "${entries[@]}"; do
-      [ -e "$entry" ] || [ -L "$entry" ] || continue
-      name=${entry##*/}
-      if [ -L "$entry" ]; then kind=l
-      elif [ -d "$entry" ]; then kind=d
-      elif [ -f "$entry" ]; then kind=f
-      else kind=o
-      fi
-      if [ "$pass" = d ]; then
-        [ "$kind" = d ] || continue
-      else
-        [ "$kind" != d ] || continue
-      fi
-      size=0
-      [ "$kind" = f ] && size=$(wc -c < "$entry" 2>/dev/null | tr -d '[:space:]')
-      reason=$(unsupported_reason "$entry" "$kind")
-      add_local_entry "$name" "$kind" "${size:-0}" "$reason"
-    done
+    if [ "${#entries[@]}" -gt 0 ]; then
+      for entry in "${entries[@]}"; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+        name=${entry##*/}
+        if [ -L "$entry" ]; then kind=l
+        elif [ -d "$entry" ]; then kind=d
+        elif [ -f "$entry" ]; then kind=f
+        else kind=o
+        fi
+        if [ "$pass" = d ]; then
+          [ "$kind" = d ] || continue
+        else
+          [ "$kind" != d ] || continue
+        fi
+        size=0
+        [ "$kind" = f ] && size=$(wc -c < "$entry" 2>/dev/null | tr -d '[:space:]')
+        reason=$(unsupported_reason "$entry" "$kind")
+        add_local_entry "$name" "$kind" "${size:-0}" "$reason"
+      done
+    fi
   done
   if [ "${#L_NAMES[@]}" -eq 0 ]; then add_local_entry '..' d 0 ''; fi
   if [ -n "$old_name" ]; then
@@ -1120,11 +1134,13 @@ plan_local_tree() {
   fi
   plan_add d "$source" "$destination" 0
   local children=("$source"/*)
-  for child in "${children[@]}"; do
-    [ -e "$child" ] || [ -L "$child" ] || continue
-    name=${child##*/}
-    plan_local_tree "$child" "$(remote_join "$destination" "$name")" || return 1
-  done
+  if [ "${#children[@]}" -gt 0 ]; then
+    for child in "${children[@]}"; do
+      [ -e "$child" ] || [ -L "$child" ] || continue
+      name=${child##*/}
+      plan_local_tree "$child" "$(remote_join "$destination" "$name")" || return 1
+    done
+  fi
 }
 
 plan_remote_tree() {
@@ -1742,14 +1758,16 @@ dialog_wrap() {
   DIALOG_LINES=()
   text=${text//$'\n'/ }
   IFS=' ' read -r -a words <<< "$text"
-  for word in "${words[@]}"; do
-    if [ -z "$current" ]; then combined=$word; else combined="$current $word"; fi
-    if [ "${#combined}" -le "$width" ]; then current=$combined
-    else
-      DIALOG_LINES[${#DIALOG_LINES[@]}]=$current
-      current=$word
-    fi
-  done
+  if [ "${#words[@]}" -gt 0 ]; then
+    for word in "${words[@]}"; do
+      if [ -z "$current" ]; then combined=$word; else combined="$current $word"; fi
+      if [ "${#combined}" -le "$width" ]; then current=$combined
+      else
+        DIALOG_LINES[${#DIALOG_LINES[@]}]=$current
+        current=$word
+      fi
+    done
+  fi
   [ -n "$current" ] && DIALOG_LINES[${#DIALOG_LINES[@]}]=$current
   [ "${#DIALOG_LINES[@]}" -gt 0 ] || DIALOG_LINES[0]=
 }

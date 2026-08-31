@@ -60,7 +60,14 @@ fi
 "$root/tests/run_m61_text_tests.sh"
 "$root/tests/run_mk_math_tests.sh"
 "$root/tests/run_mk61_ref_tests.sh"
-"$root/tests/run_mkc_tests.sh"
+# MKC promises compatibility with stock macOS Bash 3.2.  Homebrew Bash may
+# appear earlier in PATH, so exercise the manager with the system interpreter
+# when it is available; Linux /bin/bash covers the current Bash branch.
+if [ -x /bin/bash ]; then
+  /bin/bash "$root/tests/run_mkc_tests.sh"
+else
+  "$root/tests/run_mkc_tests.sh"
+fi
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoLogo -NoProfile -File "$root/tests/run_mkc_powershell_tests.ps1"
 fi
