@@ -177,6 +177,19 @@ static void test_validation_and_calendar_math(void) {
 }
 
 int main(void) {
+  static_assert(EARLY_DFU_DIAGNOSTIC_REGISTER == 5,
+                "early DFU diagnostic allocation changed");
+  static_assert(EARLY_DFU_ATTEMPT_REGISTER == 6 &&
+                    EARLY_DFU_ATTEMPT_INVERSE_REGISTER == 7,
+                "early DFU attempt allocation changed");
+  static_assert(EARLY_DFU_MAGIC_REGISTER == 8 &&
+                    EARLY_DFU_INVERSE_REGISTER == 9,
+                "early DFU backup allocation changed");
+  static_assert(EARLY_DFU_ATTEMPT_INVERSE_REGISTER <
+                    EARLY_DFU_MAGIC_REGISTER,
+                "early DFU attempt overlaps request");
+  static_assert(EARLY_DFU_INVERSE_REGISTER < FIRST_REGISTER,
+                "early DFU request overlaps RTC metadata");
   static_assert(FIRST_REGISTER == 11 && LAST_REGISTER == 19,
                 "RTC backup window changed");
   static_assert(WORD_COUNT == 9, "RTC backup format changed");

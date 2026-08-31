@@ -242,12 +242,28 @@ void DFU_enter_bootloader(void) {
 #endif
 
 void DFU_enable(void) {
+  static constexpr u16 USB_HOST_DETACH_MS = 500;
+
   // Штатный вход из меню может оставить пользователю заставку. После reset
   // ранний F401/F411-пролог уйдёт в ROM до HAL, дисплея и повторного запуска
   // IWDG; контроллер экрана при этом сохраняет уже переданный кадр.
   Show_DFU_splash();
   main_lcd().flush();
-  early_dfu::request();
+
+  // Сначала фиксируем torn-safe запрос: после фактического USB disconnect
+  // любой неожиданный reset всё равно приведёт в ROM DFU. Простого reset сразу
+  // из активного CDC недостаточно: host/hub должен однозначно увидеть смену
+  // application -> ROM descriptor. USBD_Stop внутри Serial.end() выставляет
+  // OTG DCTL.SDIS; 500 мс дают консервативный запас macOS и USB-хабу. Этот
+  // интервал не маскирует отдельный F411 ROM/HSE reset: его обрабатывает
+  // retained bounded-retry в раннем preinit.
+  early_dfu::prepare_request();
+#if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
+  Serial.flush();
+  Serial.end();
+  delay(USB_HOST_DETACH_MS);
+#endif
+  early_dfu::reset_prepared();
 }
 
 bool  Confirmation(void) {

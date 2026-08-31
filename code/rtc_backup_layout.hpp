@@ -5,14 +5,37 @@
 
 namespace rtc_backup_layout {
 
-// F401/F411 expose DR0..DR19. The project deliberately uses only the high
-// window DR11..DR19: DR1 is the STM32 core convention, DR2/DR3 belong to the
-// existing RTC marker/calibration, and DR4/DR10 are current/legacy HID-loader
-// magic registers. DR6/DR7 are used by STM32RTC only on STM32F1.
+// F401/F411 expose DR0..DR19. Calendar/alarm metadata deliberately stays in
+// the contiguous high window DR11..DR19. In the low window DR1 is the STM32
+// core convention, DR2/DR3 belong to the existing RTC marker/calibration, and
+// DR4/DR10 are current/legacy HID-loader magic registers. DR5 is a diagnostic
+// breadcrumb. DR6/DR7 (used by STM32RTC only on STM32F1, not on these F4
+// targets) hold the bounded ROM-DFU attempt pair; DR8/DR9 are the redundant
+// one-shot request pair. Keeping every allocation here makes an accidental
+// collision a compile-time failure.
+static constexpr u8 EARLY_DFU_DIAGNOSTIC_REGISTER = 5;
+static constexpr u8 EARLY_DFU_ATTEMPT_REGISTER = 6;
+static constexpr u8 EARLY_DFU_ATTEMPT_INVERSE_REGISTER = 7;
+static constexpr u8 EARLY_DFU_MAGIC_REGISTER = 8;
+static constexpr u8 EARLY_DFU_INVERSE_REGISTER = 9;
 static constexpr u8 FIRST_REGISTER = 11;
 static constexpr usize WORD_COUNT = 9;
 static constexpr u8 LAST_REGISTER = FIRST_REGISTER + WORD_COUNT - 1;
 static constexpr u32 HEADER = 0x4D4B0109UL; // "MK", version 1, 9 words
+
+static_assert(EARLY_DFU_MAGIC_REGISTER + 1 ==
+                  EARLY_DFU_INVERSE_REGISTER,
+              "early DFU backup pair must stay contiguous");
+static_assert(EARLY_DFU_ATTEMPT_REGISTER + 1 ==
+                  EARLY_DFU_ATTEMPT_INVERSE_REGISTER,
+              "early DFU attempt pair must stay contiguous");
+static_assert(EARLY_DFU_DIAGNOSTIC_REGISTER <
+                  EARLY_DFU_ATTEMPT_REGISTER &&
+                  EARLY_DFU_ATTEMPT_INVERSE_REGISTER <
+                      EARLY_DFU_MAGIC_REGISTER,
+              "early DFU retained fields overlap");
+static_assert(EARLY_DFU_INVERSE_REGISTER < FIRST_REGISTER,
+              "early DFU request overlaps RTC metadata");
 
 enum Word : u8 {
   WORD_HEADER = 0,

@@ -220,7 +220,7 @@ static constexpr TerminalCommand terminal_commands[] = {
   { "mem",     CMD_MEMORY,        "shared SRAM arenas [reset]" },
   { "display", CMD_DISPLAY,       "display status/test/reinit/on/off" },
   { "rst",     CMD_RESET,         "rst [now] - reboot; plain rst confirms on device" },
-  { "dfu",     CMD_DFU,           "enter DFU bootloader" },
+  { "dfu",     CMD_DFU,           "dfu [status] - enter/report ROM DFU" },
 };
 static constexpr usize TERMINAL_COMMAND_COUNT = sizeof(terminal_commands) / sizeof(terminal_commands[0]);
 
@@ -4157,9 +4157,35 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               reinit_mk61_calculator_state();
               Serial.println("Calculator reinitialized.");
             break;
-          case  CMD_DFU:
-              DFU_enable();
-            break;
+          case CMD_DFU:
+              if(terminal_core::at_end(command_args())) {
+                DFU_enable();
+                break;
+              } else {
+                const char* cursor = command_args();
+                char action[8];
+                if(!terminal_core::parse_token(
+                       cursor, action, sizeof(action)) ||
+                   strcmp(action, "status") != 0 ||
+                   !terminal_core::at_end(cursor)) {
+                  Serial.println("Usage: dfu [status]");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+                const early_dfu::Diagnostic diagnostic =
+                    early_dfu::diagnostic();
+                Serial.print("DFU status valid=");
+                Serial.print(diagnostic.valid ? 1 : 0);
+                Serial.print(" generation=");
+                Serial.print(diagnostic.generation);
+                Serial.print(" stage=");
+                Serial.print(early_dfu::diagnostic_stage_name(
+                    diagnostic.stage));
+                Serial.print(" sources=0x");
+                Serial.println(diagnostic.sources, HEX);
+                recive_pos = 0;
+                return terminal_protocol::Result::ok();
+              }
 #if MK61_ENABLE_USB_SCREEN
           case  CMD_USB_SCREEN:
               if(!terminal_core::at_end(command_args())) {
