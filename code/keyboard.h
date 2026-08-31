@@ -6,7 +6,10 @@
 #include "rust_types.h"
 
 #if MK61_DEEP_IDLE_ENABLED && \
-    defined(MK61_KEYBOARD_MINI) && defined(ARDUINO_ARCH_STM32) && \
+    ((defined(MK61_KEYBOARD_MINI) && defined(MK61_OLED1602_WS0010)) || \
+     (defined(MK61_KEYBOARD_CLASSIC) && defined(MK61_DISPLAY_UC1609) && \
+      defined(MK61_BOARD_CLASSIC_V3))) && \
+    defined(ARDUINO_ARCH_STM32) && \
     defined(__ARM_ARCH_7EM__) && \
     (defined(STM32F401xC) || defined(STM32F401xE) || \
      defined(STM32F411xE))

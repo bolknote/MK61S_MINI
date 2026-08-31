@@ -160,6 +160,18 @@ static void test_contention_fails_closed(void) {
   assert(state.state == spi1_arbiter::State::ERROR);
   assert(state.contentions == 2);
   assert(spi1_bus::recover());
+
+  SPI.clear();
+  arduino_test::clear();
+  assert(spi1_bus::acquire(spi1_arbiter::Owner::FLASH_CLIENT));
+  assert(!lcd.LCDSetSleep(true));
+  assert(SPI.transfers.empty());
+  assert(SPI.begin_transaction_calls == 0);
+  assert(arduino_test::pin_writes.empty());
+  state = spi1_bus::statistics();
+  assert(state.state == spi1_arbiter::State::ERROR);
+  assert(state.contentions == 3);
+  assert(spi1_bus::recover());
 }
 
 static void test_power_down_keeps_shared_spi_alive(void) {
@@ -171,6 +183,25 @@ static void test_power_down_keeps_shared_spi_alive(void) {
   assert(SPI.end_calls == 0);
   assert(SPI.transfers.size() == 1);
   assert_balanced_hardware_transaction();
+}
+
+static void test_display_sleep_retains_controller_state(void) {
+  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+
+  SPI.clear();
+  assert(lcd.LCDSetSleep(true));
+  assert(SPI.transfers.size() == 1);
+  const uint8_t display_off[] = {0xAE};
+  assert_bytes(SPI.transfers[0], display_off, sizeof(display_off));
+  assert_balanced_hardware_transaction();
+
+  SPI.clear();
+  assert(lcd.LCDSetSleep(false));
+  assert(SPI.transfers.size() == 1);
+  const uint8_t display_on[] = {0xAF};
+  assert_bytes(SPI.transfers[0], display_on, sizeof(display_on));
+  assert_balanced_hardware_transaction();
+
 }
 
 static void test_software_spi_does_not_claim_spi1(void) {
@@ -198,6 +229,7 @@ int main(void) {
   test_goto_xy_is_a_complete_owned_transaction();
   test_power_down_keeps_shared_spi_alive();
   test_software_spi_does_not_claim_spi1();
+  test_display_sleep_retains_controller_state();
   test_contention_fails_closed();
   printf("uc1609_transport_self_test: ok\n");
   return 0;

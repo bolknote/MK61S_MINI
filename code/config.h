@@ -538,13 +538,21 @@
   #error "REVISION_V2 cannot be combined with a UC1609 board profile"
 #endif
 
-// Production STOP is enabled only on the exact hardware combination that has
-// passed the full physical qualification: STM32F411CE, mini V3 keyboard and
-// WEH001602A/WS0010. F401, A00/A02 and every UC1609 profile retain shallow
-// WFI until their own display/keyboard HIL is complete.
+// Production STOP is enabled only on exact F411 hardware combinations that
+// passed physical display, keyboard, RTC and FNB58 qualification. Mini V3
+// WS0010 and Classic V3 UC1609 use different display sleep commands but share
+// the proven STOP/clock/USB core. F401, A00/A02, Classic V2 and 40th retain
+// shallow WFI.
+#if defined(STM32F411xE) && defined(REVISION_V3) && \
+    ((defined(MK61_KEYBOARD_MINI) && defined(MK61_OLED1602_WS0010)) || \
+     (defined(MK61_BOARD_CLASSIC_V3) && \
+      defined(MK61_KEYBOARD_CLASSIC) && defined(MK61_DISPLAY_UC1609)))
+  #define MK61_DEEP_IDLE_PRODUCTION_PROFILE 1
+#else
+  #define MK61_DEEP_IDLE_PRODUCTION_PROFILE 0
+#endif
 #ifndef MK61_ENABLE_DEEP_IDLE
-  #if defined(STM32F411xE) && defined(MK61_KEYBOARD_MINI) && \
-      defined(MK61_OLED1602_WS0010) && defined(REVISION_V3)
+  #if MK61_DEEP_IDLE_PRODUCTION_PROFILE
     #define MK61_ENABLE_DEEP_IDLE 1
   #else
     #define MK61_ENABLE_DEEP_IDLE 0
@@ -553,10 +561,8 @@
 #if MK61_ENABLE_DEEP_IDLE != 0 && MK61_ENABLE_DEEP_IDLE != 1
   #error "MK61_ENABLE_DEEP_IDLE must be 0 or 1"
 #endif
-#if MK61_ENABLE_DEEP_IDLE && \
-    !(defined(STM32F411xE) && defined(MK61_KEYBOARD_MINI) && \
-      defined(MK61_OLED1602_WS0010) && defined(REVISION_V3))
-  #error "production deep idle is qualified only for F411 mini V3 WS0010"
+#if MK61_ENABLE_DEEP_IDLE && !MK61_DEEP_IDLE_PRODUCTION_PROFILE
+  #error "production deep idle is qualified only for exact F411 WS0010/Classic-V3-UC1609 profiles"
 #endif
 
 // Backward-compatible laboratory override for bounded STOP experiments on

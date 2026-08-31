@@ -223,6 +223,15 @@ class MK61Display : public Print {
     // the visible window, custom glyphs or cursor/display-control state.
     // Currently supported by the explicit WS0010 backend.
     bool reinitialize(void);
+#if MK61_DEEP_IDLE_ENABLED && \
+    (defined(MK61_OLED1602_WS0010) || defined(MK61_DISPLAY_UC1609))
+    // STOP is entered only after the backend proves that no modal renderer or
+    // outstanding display transaction owns the panel. The pair preserves the
+    // logical screen and restores the same visible state on wake.
+    bool deepIdleReady(void) const;
+    bool prepareDeepIdle(void);
+    bool resumeDeepIdle(void);
+#endif
 #if defined(MK61_OLED1602_WS0010)
     bool supportsWs0010Graphics(void) const {
       return MK61_WS0010_GRAPHICS_100X16 != 0;
@@ -248,11 +257,6 @@ class MK61Display : public Print {
     void noteDisplayActivity(u32 now);
     void pollOledProtection(u32 now);
     void setDisplayEnabled(bool enabled, u32 now);
-    // Qualification-only STOP pair. It changes only WS0010's documented
-    // internal PWR bit; DDRAM/CGRAM shadows and the user's display-on policy
-    // remain owned by the normal renderer.
-    bool prepareDeepIdle(void);
-    bool resumeDeepIdle(void);
     bool displayEnabled(void) const { return oled_protection_state.awake(); }
     bool internalPowerEnabled(void) const {
       return (ws0010_power_state & WS0010_POWER_ENABLED) != 0;

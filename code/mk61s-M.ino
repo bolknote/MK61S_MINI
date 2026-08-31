@@ -952,8 +952,8 @@ static deep_idle_policy::Conditions deep_idle_conditions(
     const idle_sleep_policy::Conditions& light) {
   const spi1_arbiter::Snapshot spi1 = spi1_bus::statistics();
   rtc_clock::StartupSnapshot rtc = {};
-  const bool msc_quiescent = usb_mass_storage::deep_idle_quiescent();
 #if MK61_USB_SUSPEND_SUPPORTED
+  const bool msc_quiescent = usb_mass_storage::deep_idle_quiescent();
   const bool usb_stop_ready =
       usb_power::stop_blockers(msc_quiescent, millis()) == 0U;
   const bool msc_blocked = light.usb_mass_storage_active && !msc_quiescent;
@@ -972,7 +972,7 @@ static deep_idle_policy::Conditions deep_idle_conditions(
     light.classic_active,
     light.scheduled_work,
     spi1.state == spi1_arbiter::State::IDLE,
-    !main_lcd().graphicsMode() && !main_lcd().busyFlagFaulted(),
+    main_lcd().deepIdleReady(),
     rtc_clock::startup_snapshot(rtc),
     independent_watchdog::running(),
     false,

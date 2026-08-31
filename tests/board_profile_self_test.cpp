@@ -113,9 +113,17 @@ int main(void) {
   #if defined(STM32F411xE) && defined(MK61_BOARD_CLASSIC_V3)
     static_assert(MK61_ENABLE_SPI1_ARBITER == 1 && MK61_ENABLE_SPI1_DMA == 1,
                   "qualified F411 Classic V3 UC1609 must use shared SPI1 DMA");
+    static_assert(MK61_ENABLE_DEEP_IDLE == 1 &&
+                  MK61_ENABLE_USB_SUSPEND == 1 &&
+                  MK61_ENABLE_USB_AUTO_DEEP_IDLE == 1,
+                  "qualified F411 Classic V3 UC1609 must use production STOP");
   #else
     static_assert(MK61_ENABLE_SPI1_ARBITER == 0 && MK61_ENABLE_SPI1_DMA == 0,
                   "unqualified UC1609 profiles must retain polling");
+    static_assert(MK61_ENABLE_DEEP_IDLE == 0 &&
+                  MK61_ENABLE_USB_SUSPEND == 0 &&
+                  MK61_ENABLE_USB_AUTO_DEEP_IDLE == 0,
+                  "unqualified UC1609 profiles must retain shallow idle");
   #endif
 #else
   static_assert(MK61_ENABLE_SPI1_ARBITER == 1 && MK61_ENABLE_SPI1_DMA == 1,

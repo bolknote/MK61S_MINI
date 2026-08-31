@@ -125,6 +125,10 @@ class ERM19264_UC1609 : public ERM19264_graphics {
     void LCDbegin(uint8_t VbiasPot = UC1609_DEFAULT_GN_PM , uint8_t AddressSet =UC1609_ADDRESS_SET);
     void LCDinit(void);
     void LCDEnable(uint8_t on);
+    // Enter/leave the controller's documented display-off sleep without a
+    // hardware reset. Control registers and display RAM remain retained.
+    // Returns false when the shared SPI1 bus could not be acquired.
+    bool LCDSetSleep(bool sleep);
     void LCDFillScreen(uint8_t pixel, uint8_t mircodelay);
     void LCDFillPage(uint8_t pixels);
     void  LCDGotoXY(uint8_t column , uint8_t page);

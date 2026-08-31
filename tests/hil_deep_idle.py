@@ -8,6 +8,7 @@ prints a marker after CDC disappears and expects one physical key press.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import os
 import re
 import sys
@@ -27,6 +28,9 @@ CLOCK = re.compile(r"(?m)^PROF state=\S+ clock=(\d+) ")
 DISPLAY = re.compile(
     r"(?m)^DISPLAY .*bf-timeouts=(\d+) bf-fault=(\d+).*state=([^ ]+)"
 )
+DISPLAY_UC1609 = re.compile(
+    r"(?m)^DISPLAY controller=UC1609 mode=graphics\r?$"
+)
 POWER = re.compile(r"(?m)^POWER .*state=([^ ]+) gate=(\d+)")
 
 
@@ -36,6 +40,37 @@ def read_date(port: Port) -> str:
     if not match:
         raise AssertionError(f"precise RTC date missing:\n{report}")
     return f"{match.group(1)}.{match.group(2)}"
+
+
+def parsed_date(value: str) -> dt.datetime:
+    return dt.datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+
+
+def verify_spi_health(report: str) -> None:
+    spi_line = next(
+        (
+            line for line in report.splitlines()
+            if line.startswith("SPI1 backend=")
+        ),
+        "",
+    )
+    for token in (
+        "state=idle", "owner=none", "failures=0", "contentions=0",
+        "double=0", "inactive=0", "wrong=0", "invalid=0", "latched=0",
+    ):
+        if token not in spi_line:
+            raise AssertionError(f"bad SPI1 recovery ({token}):\n{report}")
+    dma_line = next(
+        (
+            line for line in report.splitlines()
+            if line.startswith("SPI1 DMA backend=")
+        ),
+        "",
+    )
+    if dma_line:
+        for token in ("init_errors=0", "errors=0", "timeouts=0"):
+            if token not in dma_line:
+                raise AssertionError(f"bad DMA recovery ({token}):\n{report}")
 
 
 def wait_for_disconnect(path: str, timeout: float) -> float:
@@ -51,7 +86,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", required=True)
     parser.add_argument("--seconds", type=int, default=1, choices=range(1, 6))
-    parser.add_argument("--cycles", type=int, default=1, choices=range(1, 121))
+    parser.add_argument("--cycles", type=int, default=1, choices=range(1, 1001))
     parser.add_argument(
         "--wake", choices=("rtc", "keyboard", "alarm"), default="rtc"
     )
@@ -92,8 +127,11 @@ def main() -> int:
     try:
         reconnect_seconds = time.monotonic() - started
         report = port.command("prof")
+        display_report = port.command("display")
         date_after = read_date(port)
         identity_after = port.command("identity")
+        storage_report = port.command("df", timeout=10.0)
+        crash_report = port.command("crash")
         if args.wake == "alarm":
             alarm_report = port.command("alarm")
             port.command("alarm a off")
@@ -102,12 +140,19 @@ def main() -> int:
 
     if public_id not in identity_after:
         raise AssertionError(f"device identity changed:\n{identity_after}")
+    if "FIRMWARE CRC state=valid" not in storage_report:
+        raise AssertionError(f"resident firmware invalid:\n{storage_report}")
+    if "CRASH none" not in crash_report:
+        raise AssertionError(f"fault during STOP run:\n{crash_report}")
     deep = DEEP.search(report)
     clock = CLOCK.search(report)
     display = DISPLAY.search(report)
+    uc1609 = DISPLAY_UC1609.search(display_report)
     power = POWER.search(report)
-    if not deep or not clock or not display or not power:
-        raise AssertionError(f"recovery report incomplete:\n{report}")
+    if not deep or not clock or (not display and not uc1609) or not power:
+        raise AssertionError(
+            f"recovery report incomplete:\n{report}{display_report}"
+        )
 
     (backend, enabled, state, wake, failure, seconds, requested, completed,
      attempts, entries, rtc_wakes, keyboard_wakes, alarm_wakes, other_wakes,
@@ -128,8 +173,9 @@ def main() -> int:
         raise AssertionError(f"STOP failure/blocker recorded:\n{report}")
     if clock.group(1) != "96000000":
         raise AssertionError(f"HCLK was not restored:\n{report}")
-    if display.group(1) != "0" or display.group(2) != "0" or \
-       display.group(3) != "on":
+    verify_spi_health(report)
+    if display and (display.group(1) != "0" or display.group(2) != "0" or
+                    display.group(3) != "on"):
         raise AssertionError(f"WS0010 was not restored cleanly:\n{report}")
     if power.group(1) != "stable" or power.group(2) != "1":
         raise AssertionError(f"power write gate was not restored:\n{report}")
@@ -143,6 +189,15 @@ def main() -> int:
         if abs(total_ms_n - expected_ms) > max(20, args.cycles * 4):
             raise AssertionError(
                 f"RTC STOP duration {total_ms_n} ms != {expected_ms} ms"
+            )
+        calendar_ms = int(
+            (parsed_date(date_after) - parsed_date(date_before)).total_seconds()
+            * 1000
+        )
+        if abs(calendar_ms - expected_ms) > max(3000, args.cycles * 5):
+            raise AssertionError(
+                f"RTC calendar advanced {calendar_ms} ms, expected "
+                f"approximately {expected_ms} ms"
             )
     elif args.wake == "keyboard":
         # A multi-cycle request provides a human-sized interaction window.

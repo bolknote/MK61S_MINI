@@ -22,7 +22,7 @@ MK61_FIRMWARE_OUTPUT_DIR="$preflight_root/firmware" \
 MK61_FIRMWARE_TAG=preflight \
   "$root/tests/run_f411_release_matrix.sh"
 
-printf '\n=== F411 USB-preserving STOP production image ===\n'
+printf '\n=== F411 USB-preserving STOP production images ===\n'
 MK61_F411_USB_SUSPEND_BUILD_ROOT="$preflight_root/f411-usb-suspend" \
   "$root/tests/run_f411_usb_suspend_compile_check.sh"
 

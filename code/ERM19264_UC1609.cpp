@@ -217,11 +217,26 @@ void ERM19264_UC1609::LCDPowerDown(void)
 */
 void ERM19264_UC1609::LCDEnable (uint8_t bits)
 {
+	(void) LCDSetSleep((bits & 0x01U) == 0U);
+}
+
+/*!
+	 @brief Enters or leaves UC1609 display-off sleep without resetting GDRAM.
+	 @param sleep true sends AE (display off), false sends AF (display on)
+	 @return true only when the complete command owned the shared SPI bus
+*/
+bool ERM19264_UC1609::LCDSetSleep(bool sleep)
+{
 	BusTransaction transaction(*this);
-	if (!transaction.ready()) {return;}
+	if (!transaction.ready()) {return false;}
 	UC1609_CS_SetLow;
-	send_command(UC1609_DISPLAY_ON, bits);
+	send_command(UC1609_DISPLAY_ON, sleep ? 0x00U : 0x01U);
 	UC1609_CS_SetHigh;
+	// The controller specification requires at least 10 us before subsequent
+	// commands after display on/off. Keep that boundary inside the transaction
+	// API so every caller gets the same safe sequence.
+	delayMicroseconds(10);
+	return true;
 }
 
 /*!

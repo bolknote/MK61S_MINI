@@ -992,13 +992,19 @@ void MK61Display::setDisplayEnabled(bool enabled, u32 now) {
   }
 }
 
-bool MK61Display::prepareDeepIdle(void) {
+#if MK61_DEEP_IDLE_ENABLED
+bool MK61Display::deepIdleReady(void) const {
   if(ws0010::graphicsOwned(ws0010_graphics_owner) ||
      busyFlagFaulted()) return false;
-  const u32 timeouts_before = busy_flag_timeouts;
 #if MK61_ENABLE_USB_SCREEN
   if(!physical_screen_enabled || usb_screen_active) return false;
 #endif
+  return true;
+}
+
+bool MK61Display::prepareDeepIdle(void) {
+  if(!deepIdleReady()) return false;
+  const u32 timeouts_before = busy_flag_timeouts;
   // Do not mutate display_control or the OLED inactivity policy: a keyboard
   // wake must reproduce the exact on/cursor/blink state, while an RTC wake of
   // an already-dark panel must not waste power by re-enabling its converter.
@@ -1020,6 +1026,7 @@ bool MK61Display::resumeDeepIdle(void) {
   ws0010_power_state &= (u8) ~WS0010_DEEP_RESTORE_POWER;
   return !restore_power || setWs0010InternalPower(true);
 }
+#endif
 
 void MK61Display::noteDisplayActivity(u32 now) {
   if(oled_protection_state.activity(now) ==
@@ -2176,6 +2183,39 @@ void MK61Display::begin(u8, u8 rows) {
   initialized = true;
   clearPhysicalScreen();
 }
+
+#if MK61_DEEP_IDLE_ENABLED
+bool MK61Display::deepIdleReady(void) const {
+  if(!initialized || update_depth != 0) return false;
+#if MK61_ANY_FULLSCREEN_FILE
+  if(fullscreen_bitmap_active) return false;
+#endif
+#if MK61_ENABLE_USB_SCREEN
+  if(!physical_screen_enabled || usb_screen_active) return false;
+#endif
+  return true;
+}
+
+bool MK61Display::prepareDeepIdle(void) {
+  if(!deepIdleReady()) return false;
+  flush();
+  // A deferred renderer update must never be hidden behind display-off. The
+  // SPI command itself is fail-closed if NOR or another display transaction
+  // owns the shared bus.
+  if(dirty || screen_dirty || grid.anyDirty() ||
+     page_damage::any(extra_dirty_page_cols, RENDER_PAGE_COUNT)) return false;
+  return lcd.LCDSetSleep(true);
+}
+
+bool MK61Display::resumeDeepIdle(void) {
+  if(!lcd.LCDSetSleep(false)) return false;
+  // GDRAM is retained by AE/AF, but redraw the complete logical screen after
+  // clock/SPI restoration. This makes recovery deterministic even if a panel
+  // revision loses pixels while its analogue section is asleep.
+  markScreenDirty();
+  return true;
+}
+#endif
 
 void MK61Display::clear(void) {
 #if MK61_ENABLE_USB_SCREEN

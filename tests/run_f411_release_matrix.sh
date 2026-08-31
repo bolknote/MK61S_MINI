@@ -145,8 +145,9 @@ compile_variant() {
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_rtc_alarm_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
-  if [[ "$board_flags" == *'-DMK61_OLED1602_WS0010'* && \
-        "$board_flags" != *'-DREVISION_V2'* ]]; then
+  if [[ ("$board_flags" == *'-DMK61_OLED1602_WS0010'* && \
+         "$board_flags" != *'-DREVISION_V2'*) || \
+        "$board_flags" == *'-DMK61_BOARD_CLASSIC_V3'* ]]; then
     "$root/tests/check_usb_suspend_elf.sh" \
       "$build_path/mk61s-M.ino.elf"
   else

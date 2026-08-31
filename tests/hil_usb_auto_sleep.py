@@ -15,7 +15,8 @@ import sys
 
 from hil_rtc_alarm import IDENTITY, Port
 from hil_usb_suspend import (
-    CLOCK, DEEP, DISPLAY, KEYBOARD_STOP, POWER, open_port, usb_fields,
+    CLOCK, DEEP, DISPLAY, DISPLAY_UC1609, KEYBOARD_STOP, POWER, open_port,
+    usb_fields,
 )
 
 
@@ -81,6 +82,7 @@ def verify(path: str, expected_key_code: int | None,
         if not identity_match:
             raise AssertionError(f"not an MK61 identity response:\n{identity}")
         report = port.command("prof", timeout=6.0)
+        display_report = port.command("display", timeout=6.0)
     finally:
         port.close()
 
@@ -90,9 +92,13 @@ def verify(path: str, expected_key_code: int | None,
     deep = DEEP.search(report)
     clock = CLOCK.search(report)
     display = DISPLAY.search(report)
+    uc1609 = DISPLAY_UC1609.search(display_report)
     power = POWER.search(report)
-    if not deep or not clock or not display or not power:
-        raise AssertionError(f"automatic STOP recovery report incomplete:\n{report}")
+    if not deep or not clock or (not display and not uc1609) or not power:
+        raise AssertionError(
+            f"automatic STOP recovery report incomplete:\n"
+            f"{report}{display_report}"
+        )
 
     (
         backend, enabled, state, wake, failure,
@@ -152,8 +158,8 @@ def verify(path: str, expected_key_code: int | None,
             raise AssertionError(f"wrong physical wake key captured:\n{report}")
     if clock.group(1) != "96000000":
         raise AssertionError(f"96 MHz clock was not restored:\n{report}")
-    if display.group(1) != "0" or display.group(2) != "0" or \
-       display.group(3) != "on":
+    if display and (display.group(1) != "0" or display.group(2) != "0" or
+                    display.group(3) != "on"):
         raise AssertionError(f"WS0010 did not recover cleanly:\n{report}")
     if power.group(1) != "stable" or power.group(2) != "1":
         raise AssertionError(f"PVD write gate did not recover:\n{report}")

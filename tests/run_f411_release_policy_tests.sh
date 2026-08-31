@@ -10,6 +10,7 @@ preflight="$root/tests/run_release_preflight.sh"
 workflow="$root/.github/workflows/firmware-release.yml"
 
 bash -n "$matrix"
+bash -n "$usb_build"
 bash -n "$budgets"
 bash -n "$ram_check"
 bash -n "$preflight"
@@ -28,12 +29,13 @@ grep -Fq 'MK61_REQUIRE_RESIDENT_CRC=1' "$matrix"
 grep -Fq 'seal-firmware.sh" seal --max-size 524288' "$matrix"
 grep -Fq 'seal-firmware.sh" check --max-size 524288' "$matrix"
 
-# The ordinary mini V3 WS0010 release, not a one-off laboratory define set,
-# must carry the qualified USB-preserving STOP path. Other profiles are
-# checked for the absence of its strong wake IRQ.
+# Both ordinary qualified releases, not one-off laboratory define sets, must
+# carry the USB-preserving STOP path. Other profiles are checked for the
+# absence of its strong wake IRQ.
 grep -Fq 'check_usb_suspend_elf.sh"' "$matrix"
 grep -Fq 'check_usb_suspend_elf.sh" --disabled' "$matrix"
-grep -Fq -- '-DMK61_OLED1602_WS0010 -DMK61_REQUIRE_RESIDENT_CRC=1' \
+grep -Fq "compile_profile ws0010 '-DMK61_OLED1602_WS0010'" "$usb_build"
+grep -Fq "compile_profile classic-v3-uc1609 '-DMK61_BOARD_CLASSIC_V3'" \
   "$usb_build"
 if grep -Eq 'MK61_ENABLE_(DEEP_IDLE|USB_SUSPEND|USB_AUTO_DEEP_IDLE)_QUALIFICATION=1' \
     "$usb_build"; then
