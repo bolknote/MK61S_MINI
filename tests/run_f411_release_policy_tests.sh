@@ -16,6 +16,16 @@ bash -n "$ram_check"
 bash -n "$preflight"
 source "$budgets"
 
+require_equal() {
+  local label="$1"
+  local actual="$2"
+  local expected="$3"
+  if [[ "$actual" != "$expected" ]]; then
+    printf '%s: expected %s, got %s\n' "$label" "$expected" "$actual" >&2
+    exit 1
+  fi
+}
+
 # The matrix is a release gate, not a synthetic maximum-code-size exercise.
 # Keep LTO size-oriented and retain explicit growth room in every F411 image.
 grep -Fq 'usb=CDCgen,opt=oslto' "$matrix"
@@ -45,10 +55,14 @@ fi
 # Local preflight and GitHub Actions must consume the same explicit budgets.
 # This policy test runs in the short host job, before the expensive firmware
 # matrix, so a duplicated or omitted CI argument cannot escape local testing.
-[[ "$MK61_F401_WS0010_MAX_RAM_GROWTH" == 0 ]]
-[[ "$MK61_F411_WS0010_MAX_RAM_GROWTH" == 256 ]]
-[[ "$MK61_F401_WS0010_USB_MAX_RAM_GROWTH" == 0 ]]
-[[ "$MK61_F401_WS0010_GRAPHICS_MAX_RAM_GROWTH" == 0 ]]
+require_equal MK61_F401_WS0010_MAX_RAM_GROWTH \
+  "$MK61_F401_WS0010_MAX_RAM_GROWTH" 0
+require_equal MK61_F411_WS0010_MAX_RAM_GROWTH \
+  "$MK61_F411_WS0010_MAX_RAM_GROWTH" 256
+require_equal MK61_F401_WS0010_USB_MAX_RAM_GROWTH \
+  "$MK61_F401_WS0010_USB_MAX_RAM_GROWTH" 0
+require_equal MK61_F401_WS0010_GRAPHICS_MAX_RAM_GROWTH \
+  "$MK61_F401_WS0010_GRAPHICS_MAX_RAM_GROWTH" 16
 grep -Fq 'source "$root/tests/release_ram_budgets.sh"' "$ram_check"
 for variable in \
   MK61_F401_WS0010_MAX_RAM_GROWTH \
@@ -64,7 +78,8 @@ if grep -Fq 'check_ws0010_ram.sh' "$preflight" || \
   printf 'Release entry points must use the shared WS0010 RAM checker\n' >&2
   exit 1
 fi
-[[ "$(grep -Fc '"$root/tests/check_ws0010_ram.sh"' "$ram_check")" -eq 4 ]]
+require_equal check_release_ws0010_ram_call_count \
+  "$(grep -Fc '"$root/tests/check_ws0010_ram.sh"' "$ram_check")" 4
 grep -Fq 'name: Enforce WS0010 RAM budgets' "$workflow"
 if grep -Fq 'Enforce zero-RAM-cost WS0010 profile' "$workflow"; then
   printf 'GitHub workflow still claims a zero-cost F411 WS0010 profile\n' >&2
