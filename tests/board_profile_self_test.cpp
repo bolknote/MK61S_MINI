@@ -57,6 +57,16 @@ int main(void) {
   static_assert(MK61_HAS_FULLSCREEN_BITMAP == 1,
                 "the selected display must accept fullscreen bitmaps");
 #endif
+#if defined(MK61_CONFIG_EXPECT_WS0010_GRAPHICS_QUALIFIED)
+  static_assert(MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED == 1,
+                "qualified F411 mini V3 WS0010 profile was lost");
+  static_assert(MK61_WS0010_GRAPHICS_100X16 == 1 &&
+                MK61_HAS_FULLSCREEN_BITMAP == 1,
+                "qualified WS0010 graphics must be enabled by default");
+#elif defined(MK61_CONFIG_EXPECT_WS0010)
+  static_assert(MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED == 0,
+                "an unqualified WS0010 profile became production graphics");
+#endif
 
 #if defined(MK61_CONFIG_EXPECT_LOADABLE_MODULES)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,

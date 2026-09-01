@@ -341,6 +341,20 @@ struct LcdHardwareBusySource {
   void delayMicroseconds(u8 duration) { ::delayMicroseconds(duration); }
 };
 
+struct LcdHardwareDataSource {
+  const LcdParallelBus& bus;
+
+  void enable(bool high) { lcdWritePin(bus.enable, high); }
+  u8 nibble(void) {
+    u8 value = 0;
+    for(u8 bit = 0; bit < 4; bit++) {
+      if(digitalReadFast(bus.data[bit]) != LOW) value |= (u8) 1u << bit;
+    }
+    return value;
+  }
+  void delayMicroseconds(u8 duration) { ::delayMicroseconds(duration); }
+};
+
 static inline void lcdWriteNibble(const LcdParallelBus& bus, u8 nibble) {
   LcdHardwareWriteSink sink = {bus};
   lcd_6800_4bit_bus::writeNibble(sink, nibble);
@@ -349,6 +363,30 @@ static inline void lcdWriteNibble(const LcdParallelBus& bus, u8 nibble) {
 static inline void lcdWriteByte(const LcdParallelBus& bus, u8 value, bool data) {
   LcdHardwareWriteSink sink = {bus};
   lcd_6800_4bit_bus::writeByte(sink, value, data);
+}
+
+static inline void lcdBeginRead(const LcdParallelBus& bus, bool data) {
+  lcdWritePin(bus.enable, false);
+  for(u8 bit = 0; bit < 4; bit++) lcdDisablePull(bus.data[bit]);
+  lcdSetDataOutput(bus, false);
+  lcdWritePin(bus.rs, data);
+  lcdWritePin(bus.rw, true);
+  delayMicroseconds(lcd_6800_4bit_bus::SETUP_US);
+}
+
+static inline u8 lcdReadByteActive(const LcdParallelBus& bus) {
+  LcdHardwareDataSource source = {bus};
+  return lcd_6800_4bit_bus::readByte(source);
+}
+
+static inline void lcdEndRead(const LcdParallelBus& bus) {
+  lcdWritePin(bus.enable, false);
+  lcdWritePin(bus.rw, false);
+  delayMicroseconds(lcd_6800_4bit_bus::HOLD_US);
+  // Preload low while the pins are still inputs, then return ownership to the
+  // MCU.  The panel has already released DB4..DB7 because RW is low.
+  for(u8 bit = 0; bit < 4; bit++) lcdWritePin(bus.data[bit], false);
+  lcdSetDataOutput(bus, true);
 }
 
 #if MK61_LCD1602_BUSY_FLAG
@@ -831,6 +869,48 @@ bool MK61Display::showWs0010GraphicsFrame(const u8* frame, usize size) {
 bool MK61Display::showWs0010GraphicsQualificationFrame(
     const u8* frame, usize size) {
   return showWs0010GraphicsFrameFor(
+      ws0010::GraphicsOwner::QUALIFICATION, frame, size);
+}
+
+bool MK61Display::readWs0010GraphicsFrameFor(
+    ws0010::GraphicsOwner owner, u8* frame, usize size) {
+#if !MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED || \
+    !MK61_WS0010_GRAPHICS_100X16
+  (void) owner;
+  (void) frame;
+  (void) size;
+  return false;
+#else
+  if(frame == NULL || size != ws0010_graphics::FRAME_BYTES ||
+     ws0010_graphics_owner != owner ||
+     owner == ws0010::GraphicsOwner::NONE) return false;
+  const LcdParallelBus bus = lcdParallelBus();
+  if(!bus.validForWrite() || bus.rw == NC) return false;
+  const u32 timeouts_before = busy_flag_timeouts;
+  for(u8 page = 0; page < ws0010_graphics::PAGES; page++) {
+    sendCommand(ws0010::graphicsXAddress(0));
+    sendCommand(ws0010::graphicsPageAddress(page));
+    if(busyFlagFaulted() || busy_flag_timeouts != timeouts_before) return false;
+
+    lcdBeginRead(bus, true);
+    // GDRAM differs from the character-memory read pipeline here: after both
+    // graphic axes have been selected, the first complete data read is GXA=0.
+    // Discarding it rotates every 100-byte row by one column (confirmed by
+    // sparse, border and 10-column HIL patterns on the production module).
+    // Consume exactly 100 reads while GXA auto-increments and wraps.
+    for(u8 x = 0; x < ws0010_graphics::WIDTH; x++) {
+      frame[(usize) page * ws0010_graphics::WIDTH + x] =
+        lcdReadByteActive(bus);
+    }
+    lcdEndRead(bus);
+  }
+  return !busyFlagFaulted() && busy_flag_timeouts == timeouts_before;
+#endif
+}
+
+bool MK61Display::readWs0010GraphicsQualificationFrame(
+    u8* frame, usize size) {
+  return readWs0010GraphicsFrameFor(
       ws0010::GraphicsOwner::QUALIFICATION, frame, size);
 }
 

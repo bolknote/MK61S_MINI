@@ -242,6 +242,7 @@ class MK61Display : public Print {
     bool presentWs0010Graphics(void);
     bool showWs0010GraphicsFrame(const u8* frame, usize size);
     bool showWs0010GraphicsQualificationFrame(const u8* frame, usize size);
+    bool readWs0010GraphicsQualificationFrame(u8* frame, usize size);
     ws0010::GraphicsOwner ws0010GraphicsOwner(void) const {
       return ws0010_graphics_owner;
     }
@@ -484,6 +485,8 @@ class MK61Display : public Print {
     bool presentWs0010GraphicsFor(ws0010::GraphicsOwner owner);
     bool showWs0010GraphicsFrameFor(ws0010::GraphicsOwner owner,
                                     const u8* frame, usize size);
+    bool readWs0010GraphicsFrameFor(ws0010::GraphicsOwner owner,
+                                    u8* frame, usize size);
     bool initializeWs0010Controller(bool cold_start,
                                     bool display_on_after_init);
     void refreshWs0010VisibleShadow(

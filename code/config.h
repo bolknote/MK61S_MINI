@@ -207,11 +207,35 @@
   #error "MK61_ENABLE_USB_SCREEN must be 0 or 1"
 #endif
 
-// WS0010 exposes a small 100x16 GDRAM in addition to its character mode.
-// Keep it opt-in: unlike UC1609/USB this is only a fullscreen bitmap target,
-// not the 192x64 graphical text backend used by Markdown and CHIP-8.
+// WS0010 exposes 100x16 controller GDRAM, of which the qualified WEH001602A
+// panel connects 80x16 pixels to the visible 16x2 OLED window.  The exact
+// F411 mini V3 profile has passed the physical geometry/mode-isolation tests;
+// other MCUs and board revisions keep graphics laboratory-only even when an
+// explicit build flag compiles the same controller API.
+#ifndef MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED
+  #if defined(STM32F411xE) && defined(REVISION_V3) && \
+      defined(MK61_OLED1602_WS0010)
+    #define MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED 1
+  #else
+    #define MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED 0
+  #endif
+#endif
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED != 0 && \
+    MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED != 1
+  #error "MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED must be 0 or 1"
+#endif
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED && \
+    (!defined(STM32F411xE) || !defined(REVISION_V3) || \
+     !defined(MK61_OLED1602_WS0010))
+  #error "qualified WS0010 graphics requires F411 mini V3/WS0010"
+#endif
+
+// Preserve the established build flag name because it describes the full
+// controller address space.  Production defaults it on only for the qualified
+// profile above; an explicit 0 remains a supported feature opt-out.
 #ifndef MK61_WS0010_GRAPHICS_100X16
-  #define MK61_WS0010_GRAPHICS_100X16 0
+  #define MK61_WS0010_GRAPHICS_100X16 \
+    MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED
 #endif
 #if MK61_WS0010_GRAPHICS_100X16 != 0 && MK61_WS0010_GRAPHICS_100X16 != 1
   #error "MK61_WS0010_GRAPHICS_100X16 must be 0 or 1"

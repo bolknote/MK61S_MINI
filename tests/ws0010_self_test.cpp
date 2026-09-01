@@ -209,6 +209,35 @@ void test_busy_flag_read_closes_every_four_bit_transfer(void) {
          ws0010::BUSY_READ_NIBBLES_PER_POLL);
 }
 
+struct DataReadTrace {
+  u8 values[2];
+  u8 samples = 0;
+  u8 rising_edges = 0;
+  u8 falling_edges = 0;
+  u8 delays = 0;
+
+  void enable(bool high) {
+    if(high) rising_edges++;
+    else falling_edges++;
+  }
+  u8 nibble(void) {
+    assert(samples < sizeof(values) / sizeof(values[0]));
+    return values[samples++];
+  }
+  void delayMicroseconds(u8) { delays++; }
+};
+
+void test_full_data_read_samples_two_nibbles(void) {
+  DataReadTrace trace = {{0x0A, 0x05}};
+  assert(lcd_6800_4bit_bus::readByte(trace) == 0xA5);
+  assert(trace.samples == 2);
+  assert(trace.rising_edges == 2 && trace.falling_edges == 2);
+  assert(trace.delays == 4);
+
+  DataReadTrace masked = {{0xF3, 0xC7}};
+  assert(lcd_6800_4bit_bus::readByte(masked) == 0x37);
+}
+
 struct ControllerBusSink {
   BusTrace& trace;
   void nibble(u8 value) {
@@ -1015,6 +1044,7 @@ void test_ws0010_native_64_column_viewport(void) {
 int main(void) {
   test_low_level_6800_write_trace();
   test_busy_flag_read_closes_every_four_bit_transfer();
+  test_full_data_read_samples_two_nibbles();
   test_controller_init_expands_to_safe_bus_trace();
   test_initialization_trace();
   test_hidden_initialization_trace();

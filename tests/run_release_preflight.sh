@@ -96,6 +96,14 @@ for case_id in a00-usb ws-usb ws-graphics ws-usb-graphics; do
     -OutputDirectory "$preflight_root/output-$case_id"
   "$root/tests/check_global_constructors.sh" \
     "$preflight_root/f401-$case_id/$profile/resident.elf"
+  if [[ "$profile" == mini-v3-ws0010 ]]; then
+    # F401 may explicitly compile the laboratory GDRAM writer, but the
+    # production-qualified readback/terminal path belongs to F411 only.  This
+    # also protects the tight 256 KiB ws-usb-graphics image from accidental
+    # qualification-code growth.
+    "$root/tests/check_ws0010_graphics_elf.sh" --disabled \
+      "$preflight_root/f401-$case_id/$profile/resident.elf"
+  fi
 done
 
 size_tool="$(awk -F= '/^CMAKE_SIZE:FILEPATH=/ {print $2; exit}' \

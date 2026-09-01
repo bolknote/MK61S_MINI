@@ -154,6 +154,16 @@ compile_variant() {
     "$root/tests/check_usb_suspend_elf.sh" --disabled \
       "$build_path/mk61s-M.ino.elf"
   fi
+  if [[ "$board_flags" == *'-DMK61_OLED1602_WS0010'* && \
+        "$board_flags" != *'-DREVISION_V2'* ]]; then
+    if [[ "$board_flags" == *'-DMK61_WS0010_GRAPHICS_100X16=0'* ]]; then
+      "$root/tests/check_ws0010_graphics_elf.sh" --disabled \
+        "$build_path/mk61s-M.ino.elf"
+    else
+      "$root/tests/check_ws0010_graphics_elf.sh" \
+        "$build_path/mk61s-M.ino.elf"
+    fi
+  fi
   if [[ -n "$output_dir" && -n "$artifact_name" ]]; then
     cp "$build_path/mk61s-M.ino.bin" \
       "$output_dir/${artifact_name}-${firmware_tag}.bin"
@@ -172,16 +182,16 @@ compile_variant oled1602-ws0010 "$fqbn" \
   '-DMK61_OLED1602_WS0010' 'mk61s-M-mini-v3-oled1602-ws0010-f411'
 compile_variant oled1602-ws0010-usb-screen "$fqbn" \
   '-DMK61_OLED1602_WS0010 -DMK61_ENABLE_USB_SCREEN=1' ''
-compile_variant oled1602-ws0010-graphics "$fqbn" \
-  '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=1' ''
+compile_variant oled1602-ws0010-no-graphics "$fqbn" \
+  '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=0' ''
 compile_variant oled1602-ws0010-graphics-wbmp "$fqbn" \
   '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=1 -DMK61_ENABLE_MARKDOWN_VIEWER=0 -DMK61_ENABLE_WBMP_VIEWER=1' \
   'mk61s-M-mini-v3-oled1602-ws0010-graphics-wbmp-f411'
 compile_variant oled1602-ws0010-graphics-wbmp-markdown "$fqbn" \
   '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=1 -DMK61_ENABLE_MARKDOWN_VIEWER=1 -DMK61_ENABLE_WBMP_VIEWER=1' \
   'mk61s-M-mini-v3-oled1602-ws0010-graphics-wbmp-markdown-f411'
-compile_variant oled1602-ws0010-usb-screen-graphics "$fqbn" \
-  '-DMK61_OLED1602_WS0010 -DMK61_ENABLE_USB_SCREEN=1 -DMK61_WS0010_GRAPHICS_100X16=1' ''
+compile_variant oled1602-ws0010-usb-screen-no-graphics "$fqbn" \
+  '-DMK61_OLED1602_WS0010 -DMK61_ENABLE_USB_SCREEN=1 -DMK61_WS0010_GRAPHICS_100X16=0' ''
 compile_variant mini-v2-lcd1602-a00 "$fqbn" \
   '-DREVISION_V2 -DMK61_LCD1602_A00' \
   'mk61s-M-mini-v2-lcd1602-a00-f411'

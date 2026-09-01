@@ -44,6 +44,9 @@ grep -Fq 'seal-firmware.sh" check --max-size 524288' "$matrix"
 # absence of its strong wake IRQ.
 grep -Fq 'check_usb_suspend_elf.sh"' "$matrix"
 grep -Fq 'check_usb_suspend_elf.sh" --disabled' "$matrix"
+grep -Fq 'check_ws0010_graphics_elf.sh"' "$matrix"
+grep -Fq 'check_ws0010_graphics_elf.sh" --disabled' "$matrix"
+grep -Fq 'check_ws0010_graphics_elf.sh" --disabled' "$preflight"
 grep -Fq "compile_profile ws0010 '-DMK61_OLED1602_WS0010'" "$usb_build"
 grep -Fq "compile_profile classic-v3-uc1609 '-DMK61_BOARD_CLASSIC_V3'" \
   "$usb_build"

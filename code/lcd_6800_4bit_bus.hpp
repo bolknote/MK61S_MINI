@@ -63,6 +63,26 @@ inline bool readBusyFlagByte(Source& source) {
   return busy;
 }
 
+// Full data reads use the same two-strobe 4-bit transaction, but sample all
+// four bus lines on each edge.  Bus direction and RS/RW ownership stay in the
+// hardware adapter so this primitive can be exhaustively trace-tested on the
+// host without Arduino GPIO state.
+template<typename Source>
+inline u8 readByte(Source& source) {
+  source.enable(true);
+  source.delayMicroseconds(ENABLE_US);
+  const u8 high = (u8) (source.nibble() & 0x0Fu);
+  source.enable(false);
+  source.delayMicroseconds(HOLD_US);
+
+  source.enable(true);
+  source.delayMicroseconds(ENABLE_US);
+  const u8 low = (u8) (source.nibble() & 0x0Fu);
+  source.enable(false);
+  source.delayMicroseconds(HOLD_US);
+  return (u8) ((high << 4) | low);
+}
+
 static_assert(SETUP_US * 1000u >= 40u && ENABLE_US * 1000u >= 250u,
               "6800 write timing must satisfy WS0010 minimums");
 

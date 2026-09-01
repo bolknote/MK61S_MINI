@@ -1154,8 +1154,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(" bf-fault=");
       Serial.print(main_lcd().busyFlagFaulted() ? 1 : 0);
       Serial.print(" graphics=");
-      Serial.print(main_lcd().supportsWs0010Graphics()
-                   ? "qualification" : "disabled");
+      if(!main_lcd().supportsWs0010Graphics()) {
+        Serial.print("disabled");
+      } else {
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED && \
+    MK61_WS0010_GRAPHICS_100X16
+        Serial.print("qualified");
+#else
+        Serial.print("laboratory");
+#endif
+        Serial.print(" gdram=100x16 visible=80x16");
+      }
       Serial.print(" brightness=software-unsupported");
       Serial.print(" mode=");
       Serial.print(main_lcd().graphicsMode() ? "graphics" : "character");
@@ -1198,7 +1207,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     static void print_display_usage(void) {
 #if defined(MK61_OLED1602_WS0010)
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED && \
+    MK61_WS0010_GRAPHICS_100X16
+      Serial.println("Usage: display [status|reinit|on|off|test <text|alphabet N|symbols|map N|ddram N|row R N|cgram|zero|clear|home|cursor [left|right]|entry|autoshift|sleep|graphics N|graphics-read N|restore>]");
+#else
       Serial.println("Usage: display [status|reinit|on|off|test <text|alphabet N|symbols|map N|ddram N|row R N|cgram|zero|clear|home|cursor [left|right]|entry|autoshift|sleep|graphics N|restore>]");
+#endif
 #else
       Serial.println("Usage: display [status]");
 #endif
@@ -1360,6 +1374,69 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       return terminal_protocol::Result::error();
 #endif
     }
+
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED && \
+    MK61_WS0010_GRAPHICS_100X16
+    static terminal_protocol::Result display_test_graphics_readback(
+        u8 pattern) {
+      static constexpr usize FRAME_BYTES = ws0010_graphics::FRAME_BYTES;
+      shared_memory::Lease frames(
+        shared_memory::Arena::SCRATCH,
+        shared_memory::Owner::DISPLAY_GRAPHICS,
+        FRAME_BYTES * 2u);
+      if(!frames.ok()) {
+        Serial.println("DISPLAY graphics readback busy");
+        return terminal_protocol::Result::error();
+      }
+      u8* const expected = frames.data();
+      u8* const actual = expected + FRAME_BYTES;
+      ws0010_graphics::makeQualificationPattern(
+        expected, FRAME_BYTES, pattern);
+      if(!main_lcd().showWs0010GraphicsQualificationFrame(
+           expected, FRAME_BYTES)) {
+        main_lcd().endWs0010Graphics();
+        Serial.println("DISPLAY graphics readback write failed");
+        return terminal_protocol::Result::error();
+      }
+      const bool read = main_lcd().readWs0010GraphicsQualificationFrame(
+        actual, FRAME_BYTES);
+      const bool restored = main_lcd().endWs0010Graphics();
+      if(!read || !restored) {
+        Serial.println(read
+          ? "DISPLAY graphics readback character recovery failed"
+          : "DISPLAY graphics readback transport failed");
+        return terminal_protocol::Result::error();
+      }
+
+      usize mismatches = 0;
+      usize first_mismatch = FRAME_BYTES;
+      for(usize index = 0; index < FRAME_BYTES; index++) {
+        if(expected[index] == actual[index]) continue;
+        if(first_mismatch == FRAME_BYTES) first_mismatch = index;
+        mismatches++;
+      }
+      const u32 expected_crc = mk61_crc32::calculate(expected, FRAME_BYTES);
+      const u32 actual_crc = mk61_crc32::calculate(actual, FRAME_BYTES);
+      Serial.print("DISPLAY graphics readback pattern=");
+      Serial.print(pattern);
+      Serial.print(" bytes=");
+      Serial.print(FRAME_BYTES);
+      Serial.print(" expected=");
+      terminal_print_hex_u32(expected_crc);
+      Serial.print(" actual=");
+      terminal_print_hex_u32(actual_crc);
+      Serial.print(" mismatches=");
+      Serial.print(mismatches);
+      if(mismatches != 0) {
+        Serial.print(" first=");
+        Serial.print(first_mismatch);
+      }
+      Serial.println(" dummy=0");
+      return mismatches == 0
+           ? terminal_protocol::Result::ok()
+           : terminal_protocol::Result::error();
+    }
+#endif
 #endif
 
     terminal_protocol::Result exec_display(void) {
@@ -1398,7 +1475,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         print_display_usage();
         return terminal_protocol::Result::error();
       }
-      char test[12];
+      char test[16];
       if(!terminal_core::parse_token(cursor, test, sizeof(test))) {
         print_display_usage();
         return terminal_protocol::Result::error();
@@ -1580,6 +1657,18 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         return display_test_graphics((u8) pattern);
       }
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED && \
+    MK61_WS0010_GRAPHICS_100X16
+      if(strcmp(test, "graphics-read") == 0) {
+        usize pattern = 0;
+        if(!terminal_core::parse_unsigned(cursor, 10, 7, pattern) ||
+           !terminal_core::at_end(cursor)) {
+          Serial.println("Usage: display test graphics-read <0..7>");
+          return terminal_protocol::Result::error();
+        }
+        return display_test_graphics_readback((u8) pattern);
+      }
+#endif
       if(strcmp(test, "restore") == 0 && terminal_core::at_end(cursor)) {
         if(!main_lcd().endWs0010Graphics()) {
           Serial.println("DISPLAY character recovery failed");
@@ -2194,8 +2283,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       report.append_text(",bf_fault=");
       report.append_u64(main_lcd().busyFlagFaulted() ? 1 : 0);
       report.append_text(",graphics=");
-      report.append_text(main_lcd().supportsWs0010Graphics()
-                         ? "qualification" : "disabled");
+      if(!main_lcd().supportsWs0010Graphics()) {
+        report.append_text("disabled");
+      } else {
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED
+        report.append_text("qualified,gdram=100x16,visible=80x16");
+#else
+        report.append_text("laboratory,gdram=100x16,visible=80x16");
+#endif
+      }
       report.append_text(",brightness=software-unsupported,mode=");
       report.append_text(main_lcd().graphicsMode()
                          ? "graphics" : "character");
