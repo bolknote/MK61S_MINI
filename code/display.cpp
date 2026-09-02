@@ -916,9 +916,21 @@ bool MK61Display::readWs0010GraphicsQualificationFrame(
 
 bool MK61Display::endWs0010Graphics(void) {
   if(!ws0010::graphicsOwned(ws0010_graphics_owner)) return true;
+  // DDRAM and GDRAM are separate. Returning to G/C=0 hides GDRAM but does not
+  // erase it, so a warm MCU reset could briefly expose the last qualification
+  // pattern before the controller reaches character mode again. Blank GDRAM
+  // while the display is hidden, with a zero-allocation streaming pass.
+  const u32 timeouts_before = busy_flag_timeouts;
+  sendCommand(ws0010::DISPLAY_OFF);
+  ws0010_graphics::clearControllerGdram(
+    [this](u8 command) { sendCommand(command); },
+    [this](u8 value) { sendData(value); });
+  const bool gdram_cleared =
+    !busyFlagFaulted() && busy_flag_timeouts == timeouts_before;
   // A full recovery is intentional: it proves character mode, CGRAM, the two
   // compact windows and display-control are restored after every experiment.
-  return reinitialize();
+  const bool character_restored = reinitialize();
+  return gdram_cleared && character_restored;
 }
 
 bool MK61Display::returnWs0010Home(void) {

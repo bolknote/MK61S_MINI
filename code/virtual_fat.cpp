@@ -120,14 +120,6 @@ static u8 g_extra_cache_slots;
 static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
 static const char* g_last_error;
 static char g_error_detail[48];
-
-enum class FlushFailure : u8 {
-  NONE,
-  RETRYABLE,
-  REJECTED
-};
-
-static FlushFailure g_last_flush_failure = FlushFailure::NONE;
 static bool g_preflight_retryable;
 
 static bool ensure_session(void) {
@@ -1978,13 +1970,11 @@ bool write_sectors(u32 lba, const u8* data, u16 count) {
   return write_cached_sectors(lba, data, count) && flush_write_cache();
 }
 
-bool flush_pending(void) {
-  g_last_flush_failure = FlushFailure::RETRYABLE;
-  if(!program_store::ready() || !ensure_session()) return false;
-  if(!flush_write_cache_internal()) return false;
+CommitResult flush_pending_result(void) {
+  if(!program_store::ready() || !ensure_session()) return CommitResult::IO_FAILED;
+  if(!flush_write_cache_internal()) return CommitResult::IO_FAILED;
   if(program_store::vfat_stage_count() == 0) {
-    g_last_flush_failure = FlushFailure::NONE;
-    return true;
+    return CommitResult::OK;
   }
   ScopedCommitScratch commit_scratch;
   g_last_error = NULL;
@@ -1994,48 +1984,54 @@ bool flush_pending(void) {
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::VALIDATE)) {
     if(g_last_error == NULL) g_last_error = "validate";
-    g_last_flush_failure = g_preflight_retryable
-        ? FlushFailure::RETRYABLE : FlushFailure::REJECTED;
-    return false;
+    return g_preflight_retryable
+        ? CommitResult::IO_FAILED : CommitResult::REJECTED;
   }
   if(!release_repurposed_file_extents() ||
      !release_mismatched_extent_chains(program_store::ROOT_ID) ||
      !prune_tree(program_store::ROOT_ID, false)) {
     g_last_error = "prepare";
-    return false;
+    return CommitResult::IO_FAILED;
   }
   invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::APPLY)) {
     g_last_error = "apply";
-    return false;
+    return CommitResult::IO_FAILED;
   }
   if(!prune_tree(program_store::ROOT_ID, true)) {
     g_last_error = "commit";
-    return false;
+    return CommitResult::IO_FAILED;
   }
   if(!program_store::vfat_stage_discard_all()) {
     g_last_error = "commit";
-    return false;
+    return CommitResult::IO_FAILED;
   }
   invalidate_clean_cache();
   if(!ensure_all_directory_extents()) {
     g_last_error = "commit";
-    return false;
+    return CommitResult::IO_FAILED;
   }
-  g_last_flush_failure = FlushFailure::NONE;
-  return true;
+  return CommitResult::OK;
 }
 
-bool finalize_pending(void) {
-  const bool flushed = flush_pending();
-  if(flushed || g_last_flush_failure != FlushFailure::REJECTED) return flushed;
+bool flush_pending(void) {
+  return flush_pending_result() == CommitResult::OK;
+}
+
+CommitResult finalize_pending_result(void) {
+  const CommitResult result = flush_pending_result();
+  if(result != CommitResult::REJECTED) return result;
   if(program_store::ready() && ensure_session() &&
      program_store::vfat_stage_discard_all()) {
     memset(session().cache, 0, sizeof(session().cache));
-    g_last_flush_failure = FlushFailure::NONE;
+    return CommitResult::REJECTED;
   }
-  return false;
+  return CommitResult::IO_FAILED;
+}
+
+bool finalize_pending(void) {
+  return finalize_pending_result() == CommitResult::OK;
 }
 
 bool reset_session(void) {

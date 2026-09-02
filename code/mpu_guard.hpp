@@ -26,6 +26,7 @@ struct Snapshot {
   bool enabled;
   bool layout_valid;
   bool sram_execute_never;
+  bool stack_watermark_enabled;
   u8 available_regions;
   u8 required_regions;
   u32 ram_start;
@@ -37,11 +38,19 @@ struct Snapshot {
   u32 initial_msp;
   u32 current_msp;
   u32 lowest_observed_msp;
+  u32 watermark_remaining_stack_bytes;
 
-  u32 remaining_stack_bytes(void) const {
+  u32 sampled_remaining_stack_bytes(void) const {
     const u32 guard_end = guard_base + guard_size;
     return lowest_observed_msp >= guard_end
         ? lowest_observed_msp - guard_end : 0;
+  }
+
+  u32 remaining_stack_bytes(void) const {
+    const u32 sampled = sampled_remaining_stack_bytes();
+    return stack_watermark_enabled &&
+           watermark_remaining_stack_bytes < sampled
+        ? watermark_remaining_stack_bytes : sampled;
   }
 };
 

@@ -3,6 +3,7 @@
 // both .ino tabs before compiling them.
 
 #include "rust_types.h"
+#include "deep_idle_policy.hpp"
 #include "idle_sleep_policy.hpp"
 
 // Keep Arduino's generated prototypes after every non-built-in type used by

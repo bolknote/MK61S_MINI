@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # Собирает согласованный комплект для STM32F401CC: resident-прошивку и
-# включённые системные APP, привязанные к её точному ELF/.bin. Resident остаётся
-# на штатном -Os, чтобы экспортируемые символы не локализовал LTO; каждый APP
-# отдельно собирается с -Os -flto и оптимально упаковывается ZX0.
+# включённые системные APP, привязанные к её точному ELF/.bin. Resident и APP
+# собираются с size-LTO; узкий версионируемый список ABI не даёт LTO
+# локализовать только те resident-символы, которые нужны System APP.
 
 set -euo pipefail
 
@@ -32,9 +32,10 @@ custom_app_files=()
 custom_app_magics=()
 custom_app_manifest_paths=()
 
-fqbn_resident='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+fqbn_resident='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 fqbn_module='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+system_app_exports="$root/tools/.mk61-gcc/system-app-exports.list"
 
 usage() {
   cat <<'EOF'
@@ -424,8 +425,22 @@ any_module=$((enable_focal | enable_tinybasic | enable_wbmp |
               enable_markdown | enable_chip8 |
               (custom_app_count > 0)))
 
+resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
+if [ "$any_module" -eq 1 ]; then
+  [ -f "$system_app_exports" ] || {
+    printf 'Error: System APP LTO export list is missing: %s\n' \
+      "$system_app_exports" >&2
+    exit 1
+  }
+  resident_link_flags="$resident_link_flags -Wl,--export-dynamic-symbol-list=$system_app_exports"
+fi
+
 command -v "$arduino_cli" >/dev/null 2>&1 || {
   printf 'Error: arduino-cli is not installed.\n' >&2
+  exit 1
+}
+command -v python3 >/dev/null 2>&1 || {
+  printf 'Error: python3 is required for the stack-usage release gate.\n' >&2
   exit 1
 }
 if ! command -v "${MK61_HOST_CXX:-${CXX:-c++}}" >/dev/null 2>&1; then
@@ -465,8 +480,12 @@ printf 'Building F401 resident firmware (%s)…\n' "$profile"
   --build-path "$resident_build" \
   --build-property "compiler.cpp.extra_flags=$compile_flags" \
   --build-property "compiler.c.extra_flags=$platform_ram_flags" \
-  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected" \
+  --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
   "$sketch_dir"
+
+python3 "$root/tests/analyze_stack_usage.py" \
+  --compile-commands "$resident_build/compile_commands.json" \
+  --source-root "$resident_build/sketch" --top 3
 
 resident_elf="$resident_build/mk61s-M.ino.elf"
 resident_bin="$resident_build/mk61s-M.ino.bin"
@@ -555,6 +574,14 @@ build_module() {
     --build-property "compiler.cpp.extra_flags=$module_compile_flags" \
     "$module_sketch"
 
+  stack_source_args=()
+  for source_name in "$@"; do
+    stack_source_args+=(--source "$module_build/sketch/$source_name")
+  done
+  python3 "$root/tests/analyze_stack_usage.py" \
+    --compile-commands "$module_build/compile_commands.json" \
+    "${stack_source_args[@]}" --top 3
+
   objects=()
   for source_name in "$@"; do
     object="$module_build/sketch/$source_name.o"
@@ -569,7 +596,7 @@ build_module() {
   module_map="$module_out/$module_id.map"
   "$compiler" \
     -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb \
-    -Os -flto -nostartfiles -nostdlib \
+    -Os -flto -fipa-pta -nostartfiles -nostdlib \
     -Wl,--gc-sections \
     -Wl,--just-symbols="$resident_elf" \
     -Wl,--defsym=MK61_MODULE_ORIGIN=0x$overlay_hex \

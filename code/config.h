@@ -456,6 +456,22 @@
   #error "MK61_ENABLE_ANALOG_REPORT must be 0 or 1"
 #endif
 
+// Serial `prof` remains available on every supported STM32. Only the second,
+// file-oriented formatter behind `prof save` is omitted from the constrained
+// F401/UC1609 resident image: it duplicates the same statistics in a large
+// textual builder and is not calculator functionality. F411 and the modular
+// F401 character-display profiles retain the export command.
+#ifndef MK61_ENABLE_PROFILE_SAVE
+  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
+    #define MK61_ENABLE_PROFILE_SAVE 0
+  #else
+    #define MK61_ENABLE_PROFILE_SAVE 1
+  #endif
+#endif
+#if MK61_ENABLE_PROFILE_SAVE != 0 && MK61_ENABLE_PROFILE_SAVE != 1
+  #error "MK61_ENABLE_PROFILE_SAVE must be 0 or 1"
+#endif
+
 // Alarm scheduling is user-visible functionality, not a laboratory report.
 // Keep the same command/API on F401 and F411; the constrained F401 release is
 // built with size-LTO and retains its sealed-image reserve that way.

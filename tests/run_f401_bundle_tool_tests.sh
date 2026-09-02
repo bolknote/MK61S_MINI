@@ -147,6 +147,13 @@ while [ "$#" -gt 0 ]; do
 done
 [ -n "$build_path" ]
 mkdir -p "$build_path"
+mkdir -p "$build_path/sketch"
+stack_source="$build_path/sketch/stack-fixture.cpp"
+stack_object="$build_path/stack-fixture.cpp.o"
+printf 'int mk61_stack_fixture(void) { return 0; }\n' > "$stack_source"
+printf '[{"directory":"%s","file":"%s","arguments":["c++","-c","%s","-o","%s"]}]\n' \
+  "$PWD" "$stack_source" "$stack_source" "$stack_object" \
+  > "$build_path/compile_commands.json"
 printf 'resident-elf' > "$build_path/mk61s-M.ino.elf"
 "$MK61_TEST_RESIDENT_FIXTURE" "$build_path/mk61s-M.ino.bin"
 EOF

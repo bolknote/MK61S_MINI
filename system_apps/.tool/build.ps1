@@ -331,6 +331,18 @@ function Get-RelatedTool {
     return $candidate
 }
 
+function Get-PythonInterpreter {
+    foreach ($name in @('python3', 'python')) {
+        $command = Get-Command $name -ErrorAction SilentlyContinue
+        if ($null -ne $command -and
+            -not [string]::IsNullOrWhiteSpace($command.Source)) {
+            return [IO.Path]::GetFullPath($command.Source)
+        }
+    }
+    Stop-SystemAppsBuild (
+        'python3 is required for the stack-usage release gate')
+}
+
 function Get-SelectedApps {
     $apps = New-Object 'System.Collections.Generic.List[object]'
     if ($Focal -eq '1') {
@@ -404,7 +416,8 @@ function Build-SystemApp {
     $moduleMap = Join-Path $moduleDir "$($App.Id).map"
     $moduleImage = Join-Path $moduleDir "$($App.Id).bin"
 
-    $compileArguments = New-Object 'System.Collections.Generic.List[string]'
+    $baseCompileArguments = New-Object `
+        'System.Collections.Generic.List[string]'
     for ($index = 1; $index -lt $template.Count; $index++) {
         $argument = $template[$index]
         if ($argument -eq '-o' -or $argument -eq '-MF' -or
@@ -416,19 +429,43 @@ function Build-SystemApp {
         if ((Test-SamePath $argument ([string]$compileEntry.file)) -or
             $argument -eq '-MMD' -or $argument -eq '-MD' -or
             $argument -eq '-MP' -or $argument -eq '-MG' -or
+            $argument -eq '-fstack-usage' -or
             $argument -match '^-flto(?:=.*)?$' -or
             $argument -eq '-ffat-lto-objects' -or
             $argument -eq '-fno-fat-lto-objects') {
             continue
         }
+        $baseCompileArguments.Add($argument)
+    }
+    $codeInclude = "-I$(Join-Path $script:ProjectRoot 'code')"
+    $compileArguments = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($argument in $baseCompileArguments) {
         $compileArguments.Add($argument)
     }
     $compileArguments.Add('-flto')
-    $compileArguments.Add("-I$(Join-Path $script:ProjectRoot 'code')")
+    $compileArguments.Add($codeInclude)
     $compileArguments.Add($mainSource)
     $compileArguments.Add('-o')
     $compileArguments.Add($object)
     Invoke-ArmTool $script:Compiler $compileArguments.ToArray()
+
+    # Compile the identical translation unit once more without LTO solely for
+    # a conservative per-frame report. The production object and link command
+    # remain untouched.
+    $stackObject = Join-Path $moduleDir "$($App.Id).stack.o"
+    $stackArguments = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($argument in $baseCompileArguments) {
+        $stackArguments.Add($argument)
+    }
+    $stackArguments.Add('-fno-lto')
+    $stackArguments.Add('-fstack-usage')
+    $stackArguments.Add($codeInclude)
+    $stackArguments.Add($mainSource)
+    $stackArguments.Add('-o')
+    $stackArguments.Add($stackObject)
+    Invoke-ArmTool $script:Compiler $stackArguments.ToArray()
+    Invoke-ArmTool $script:Python @(
+        $script:StackUsageChecker, $moduleDir, '--top', '3')
 
     Invoke-ArmTool $script:Compiler @(
         '-mcpu=cortex-m4',
@@ -437,6 +474,7 @@ function Build-SystemApp {
         '-mthumb',
         '-Os',
         '-flto',
+        '-fipa-pta',
         '-nostartfiles',
         '-nostdlib',
         '-Wl,--gc-sections',
@@ -552,6 +590,11 @@ try {
             $firstEntry $selectedApps[0].Template
         $script:Compiler = [IO.Path]::GetFullPath($firstArguments[0])
         Test-RequiredFile $script:Compiler 'ARM C++ compiler'
+        $script:Python = Get-PythonInterpreter
+        $script:StackUsageChecker = Join-Path $script:ProjectRoot `
+            'tests/check_stack_usage.py'
+        Test-RequiredFile $script:StackUsageChecker `
+            'stack-usage release gate'
         $script:Objcopy = Get-RelatedTool $script:Compiler 'objcopy'
         $script:Nm = Get-RelatedTool $script:Compiler 'nm'
         $script:Size = Get-RelatedTool $script:Compiler 'size'

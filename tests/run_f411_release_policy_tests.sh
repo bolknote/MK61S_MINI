@@ -38,6 +38,8 @@ grep -Fq 'unsafe Flash headroom' "$matrix"
 grep -Fq 'MK61_REQUIRE_RESIDENT_CRC=1' "$matrix"
 grep -Fq 'seal-firmware.sh" seal --max-size 524288' "$matrix"
 grep -Fq 'seal-firmware.sh" check --max-size 524288' "$matrix"
+grep -Fq 'analyze_stack_usage.py' "$matrix"
+grep -Fq 'shipping_artifact=untouched' "$root/tests/analyze_stack_usage.py"
 
 # Both ordinary qualified releases, not one-off laboratory define sets, must
 # carry the USB-preserving STOP path. Other profiles are checked for the

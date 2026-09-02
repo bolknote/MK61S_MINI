@@ -13,6 +13,8 @@ fail() {
 
 command -v "$arduino_cli" >/dev/null 2>&1 ||
   fail "arduino-cli is not installed: $arduino_cli"
+command -v python3 >/dev/null 2>&1 ||
+  fail "python3 is required for the stack-usage release gate"
 
 cli_version="$("$arduino_cli" version 2>/dev/null || true)"
 printf '%s\n' "$cli_version" |
@@ -119,6 +121,9 @@ compile_variant() {
       "$name" "$unexpected_warnings" >&2
     exit 1
   fi
+  python3 "$root/tests/analyze_stack_usage.py" \
+    --compile-commands "$build_path/compile_commands.json" \
+    --source-root "$build_path/sketch" --top 3
   local flash_line flash_used flash_max flash_headroom
   flash_line="$(grep -E '^Sketch uses [0-9]+ bytes .*Maximum is [0-9]+ bytes\.$' \
     "$compile_log" | tail -n 1)"

@@ -1,9 +1,11 @@
 #include "usb_mass_storage.hpp"
 
 #include "rust_types.h"
+#include "device_identity.hpp"
 #include "exclusive_buffer.hpp"
 #include "msc_scsi_safety.h"
 #include "power_monitor.hpp"
+#include "usb_disk_session.hpp"
 #include "virtual_fat.hpp"
 
 #include <Arduino.h>
@@ -37,7 +39,7 @@ static inline USBD_HandleTypeDef* usb_device(void) {
 }
 
 static bool initialized = false;
-static bool session_open = false;
+static u8 session_state_value = (u8) usb_disk_session::State::CLOSED;
 static bool device_configured = false;
 
 static bool is_initialized(void) {
@@ -46,6 +48,31 @@ static bool is_initialized(void) {
 
 static void set_initialized(bool value) {
   __atomic_store_n(&initialized, value, __ATOMIC_RELEASE);
+}
+
+static usb_disk_session::State current_session_state(void) {
+  return (usb_disk_session::State) __atomic_load_n(
+      &session_state_value, __ATOMIC_ACQUIRE);
+}
+
+static bool session_is_open(void) {
+  return usb_disk_session::is_open(current_session_state());
+}
+
+static usb_disk_session::Transition apply_session_event(
+    usb_disk_session::Event event) {
+  u8 observed = __atomic_load_n(&session_state_value, __ATOMIC_ACQUIRE);
+  while(true) {
+    const usb_disk_session::State current =
+        (usb_disk_session::State) observed;
+    const usb_disk_session::Transition result =
+        usb_disk_session::transition(current, event);
+    if(!result.accepted) return result;
+    const u8 desired = (u8) result.next;
+    if(__atomic_compare_exchange_n(&session_state_value, &observed, desired,
+                                   false, __ATOMIC_ACQ_REL,
+                                   __ATOMIC_ACQUIRE)) return result;
+  }
 }
 
 static void release_usb_device(void) {
@@ -211,20 +238,6 @@ static const u8 lang_id_desc[USB_LEN_LANGID_STR_DESC] = {
   0x04
 };
 
-static const u8 serial_desc[] = {
-  20,
-  USB_DESC_TYPE_STRING,
-  'M', 0,
-  'K', 0,
-  '6', 0,
-  '1', 0,
-  'S', 0,
-  '0', 0,
-  '0', 0,
-  '0', 0,
-  '1', 0
-};
-
 static u8* device_descriptor(USBD_SpeedTypeDef speed, u16* length) {
   (void) speed;
   *length = sizeof(device_desc);
@@ -256,8 +269,15 @@ static u8* product_descriptor(USBD_SpeedTypeDef speed, u16* length) {
 
 static u8* serial_descriptor(USBD_SpeedTypeDef speed, u16* length) {
   (void) speed;
-  *length = sizeof(serial_desc);
-  return const_cast<u8*>(serial_desc);
+  // Keep the device identity stable across CDC -> MSC re-enumeration. A
+  // fixed serial made two connected calculators indistinguishable and let
+  // host caches/topology races associate a volume with the wrong board.
+  char serial[device_identity::USB_SERIAL_TEXT_SIZE];
+  if(!device_identity::format_stm32duino_usb_serial(
+       device_identity::read(), serial)) {
+    return string_descriptor("MK61S0001", length);
+  }
+  return string_descriptor(serial, length);
 }
 
 static u8* configuration_descriptor(USBD_SpeedTypeDef speed, u16* length) {
@@ -376,7 +396,9 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
   // немедленно. В основной цикл, где доступ к SPI безопасен, передаётся только
   // нехватка кэша, требующая вытеснения изменённых данных.
   if(virtual_fat::try_write_cached_sectors(block_addr, buf, block_len)) {
-    return USBD_MSC_STORAGE_OK;
+    return apply_session_event(
+        usb_disk_session::Event::WRITE_ACCEPTED).accepted
+        ? USBD_MSC_STORAGE_OK : USBD_MSC_STORAGE_ERROR;
   }
 
   deferred_write.block_addr = block_addr;
@@ -420,26 +442,70 @@ static const USBD_StorageTypeDef storage = {
   const_cast<int8_t*>(inquiry_data)
 };
 
-static void close_session(void) {
+static void release_session_resources(void) {
   release_usb_device();
-  if(session_open) virtual_fat::end_session();
-  session_open = false;
+  if(session_is_open()) virtual_fat::end_session();
   release_cache_buffer();
+}
+
+static void abort_session(void) {
+  release_session_resources();
+  (void) apply_session_event(usb_disk_session::Event::DISCONNECT);
+}
+
+static usb_disk_session::Event commit_event(
+    virtual_fat::CommitResult result) {
+  switch(result) {
+    case virtual_fat::CommitResult::OK:
+      return usb_disk_session::Event::COMMIT_OK;
+    case virtual_fat::CommitResult::REJECTED:
+      return usb_disk_session::Event::COMMIT_REJECTED;
+    case virtual_fat::CommitResult::IO_FAILED:
+      return usb_disk_session::Event::COMMIT_IO_FAILED;
+  }
+  return usb_disk_session::Event::COMMIT_IO_FAILED;
+}
+
+static usb_disk_session::Event finalize_event(
+    virtual_fat::CommitResult result) {
+  switch(result) {
+    case virtual_fat::CommitResult::OK:
+      return usb_disk_session::Event::FINALIZE_OK;
+    case virtual_fat::CommitResult::REJECTED:
+      return usb_disk_session::Event::FINALIZE_REJECTED;
+    case virtual_fat::CommitResult::IO_FAILED:
+      return usb_disk_session::Event::FINALIZE_IO_FAILED;
+  }
+  return usb_disk_session::Event::FINALIZE_IO_FAILED;
+}
+
+static virtual_fat::CommitResult finalize_session(void) {
+  if(!apply_session_event(usb_disk_session::Event::CLOSE_REQUEST).accepted) {
+    abort_session();
+    return virtual_fat::CommitResult::IO_FAILED;
+  }
+  const virtual_fat::CommitResult result =
+      virtual_fat::finalize_pending_result();
+  release_session_resources();
+  if(!apply_session_event(finalize_event(result)).accepted) {
+    (void) apply_session_event(usb_disk_session::Event::DISCONNECT);
+    return virtual_fat::CommitResult::IO_FAILED;
+  }
+  return result;
 }
 
 bool init(void) {
   if(is_initialized()) return true;
   if(!acquire_cache_buffer()) return false;
-  if(session_open) {
+  if(session_is_open()) {
     if(device_configured) {
       set_initialized(true);
       if(USBD_Start(usb_device()) == USBD_OK) return true;
       set_initialized(false);
-      close_session();
+      abort_session();
       return false;
     }
-    virtual_fat::end_session();
-    session_open = false;
+    abort_session();
   }
 
   reset_deferred_io();
@@ -448,36 +514,32 @@ bool init(void) {
     release_cache_buffer();
     return false;
   }
-  session_open = true;
+  if(!apply_session_event(usb_disk_session::Event::OPEN).accepted) {
+    virtual_fat::end_session();
+    release_cache_buffer();
+    return false;
+  }
 
   if(USBD_Init(usb_device(),
                const_cast<USBD_DescriptorsTypeDef*>(&descriptors), 0) != USBD_OK) {
-    virtual_fat::end_session();
-    session_open = false;
-    release_cache_buffer();
+    abort_session();
     return false;
   }
   device_configured = true;
   if(USBD_RegisterClass(usb_device(), USBD_MSC_CLASS) != USBD_OK) {
-    release_usb_device();
-    virtual_fat::end_session();
-    session_open = false;
-    release_cache_buffer();
+    abort_session();
     return false;
   }
   if(USBD_MSC_RegisterStorage(
        usb_device(), const_cast<USBD_StorageTypeDef*>(&storage)) != USBD_OK) {
-    release_usb_device();
-    virtual_fat::end_session();
-    session_open = false;
-    release_cache_buffer();
+    abort_session();
     return false;
   }
 
   set_initialized(true);
   if(USBD_Start(usb_device()) != USBD_OK) {
     set_initialized(false);
-    close_session();
+    abort_session();
     return false;
   }
 
@@ -486,13 +548,11 @@ bool init(void) {
 
 bool deinit(void) {
   if(!is_initialized()) {
-    if(!session_open) {
+    if(!session_is_open()) {
       release_cache_buffer();
       return true;
     }
-    const bool flushed = virtual_fat::finalize_pending();
-    close_session();
-    return flushed;
+    return finalize_session() == virtual_fat::CommitResult::OK;
   }
   // Сначала останавливаем USB: его прерывание работает с той же SPI-флеш-памятью,
   // а одновременный с этим сбросом обратный вызов хранилища повредил бы обе
@@ -509,6 +569,10 @@ bool deinit(void) {
         deferred_write.buffer,
         deferred_write.block_len
       );
+    if(pending_ok) {
+      pending_ok = apply_session_event(
+          usb_disk_session::Event::WRITE_ACCEPTED).accepted;
+    }
     set_deferred_state(DeferredWriteState::EMPTY);
   }
   reset_deferred_io();
@@ -519,13 +583,27 @@ bool deinit(void) {
   // нулевого размера и делает следующее подключение невозможным. Зафиксированные
   // файлы уже сохранены; финальный отказ сообщает о потере batch, но staging
   // для следующего сеанса уже очищен.
-  const bool flushed = virtual_fat::finalize_pending();
-  close_session();
-  return pending_ok && flushed;
+  const virtual_fat::CommitResult result = finalize_session();
+  return pending_ok && result == virtual_fat::CommitResult::OK;
 }
 
 bool active(void) {
   return is_initialized();
+}
+
+bool host_configured(void) {
+  return is_initialized() && device_configured &&
+      usb_device()->dev_state == USBD_STATE_CONFIGURED;
+}
+
+bool host_ejected(void) {
+  if(!is_initialized() || !device_configured) return false;
+  USBD_HandleTypeDef* const device = usb_device();
+  if(device->classId >= USBD_MAX_SUPPORTED_CLASS) return false;
+  const USBD_MSC_BOT_HandleTypeDef* const msc =
+      (const USBD_MSC_BOT_HandleTypeDef*)
+          device->pClassDataCmsit[device->classId];
+  return msc != NULL && msc->scsi_medium_state == SCSI_MEDIUM_EJECTED;
 }
 
 bool deep_idle_quiescent(void) {
@@ -551,9 +629,11 @@ void service(void) {
         deferred_write.buffer,
         deferred_write.block_len
       );
+    const bool tracked = ok && apply_session_event(
+        usb_disk_session::Event::WRITE_ACCEPTED).accepted;
     expected = DeferredWriteState::PROCESSING;
     if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
-                                    ok ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR,
+                                    tracked ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR,
                                     false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
       set_deferred_state(DeferredWriteState::EMPTY);
       return;
@@ -594,9 +674,12 @@ void service(void) {
     if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                     DeferredSyncState::PROCESSING, false,
                                     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
-    const bool ok =
-      power_monitor::allow(power_monitor::Operation::MSC_WRITE) &&
-      virtual_fat::flush_pending();
+    virtual_fat::CommitResult result = virtual_fat::CommitResult::IO_FAILED;
+    if(apply_session_event(usb_disk_session::Event::SERVICE).accepted &&
+       power_monitor::allow(power_monitor::Operation::MSC_WRITE)) {
+      result = virtual_fat::flush_pending_result();
+    }
+    const bool state_ok = apply_session_event(commit_event(result)).accepted;
     expected = DeferredSyncState::PROCESSING;
     if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                     DeferredSyncState::EMPTY, false,
@@ -604,7 +687,9 @@ void service(void) {
       set_deferred_sync(DeferredSyncState::EMPTY);
       return;
     }
-    (void) SCSI_CompleteSync(usb_device(), ok ? 1U : 0U);
+    (void) SCSI_CompleteSync(
+        usb_device(), state_ok && result == virtual_fat::CommitResult::OK
+            ? 1U : 0U);
   }
 }
 
@@ -614,7 +699,13 @@ extern "C" u8 MK61_VirtualFatSync(void) {
   DeferredSyncState expected = DeferredSyncState::EMPTY;
   if(__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                  DeferredSyncState::PENDING, false,
-                                 __ATOMIC_RELEASE, __ATOMIC_ACQUIRE)) return 2U;
+                                 __ATOMIC_RELEASE, __ATOMIC_ACQUIRE)) {
+    if(apply_session_event(usb_disk_session::Event::SYNC_REQUEST).accepted) {
+      return 2U;
+    }
+    set_deferred_sync(DeferredSyncState::EMPTY);
+    return 1U;
+  }
   return deferred_sync() == DeferredSyncState::PENDING ? 2U : 1U;
 }
 
@@ -626,6 +717,8 @@ namespace usb_mass_storage {
 bool init(void) { return false; }
 bool deinit(void) { return true; }
 bool active(void) { return false; }
+bool host_configured(void) { return false; }
+bool host_ejected(void) { return false; }
 bool deep_idle_quiescent(void) { return true; }
 void service(void) {}
 }

@@ -112,6 +112,19 @@ bool streamPage(u8 page, u8 first, const u8* data, usize count,
   return true;
 }
 
+template<typename EmitCommand, typename EmitData>
+inline void clearControllerGdram(EmitCommand command, EmitData write_data) {
+  // GDRAM is independent from character DDRAM and survives a return to
+  // character mode.  Stream zeroes directly instead of allocating a second
+  // 200-byte framebuffer: this makes graphics teardown deterministic without
+  // consuming any additional F401/F411 RAM.
+  for(u8 page = 0; page < PAGES; page++) {
+    command(ws0010::graphicsXAddress(0));
+    command(ws0010::graphicsPageAddress(page));
+    for(u8 x = 0; x < WIDTH; x++) write_data(0);
+  }
+}
+
 static_assert(byteIndex(99, 15) == FRAME_BYTES - 1,
               "WS0010 vertical-page framebuffer layout regression");
 static_assert(bitMask(0) == 0x01 && bitMask(7) == 0x80 && bitMask(8) == 0x01,

@@ -16,6 +16,8 @@ endforeach()
 
 project(mk61s_f401_gcc LANGUAGES C CXX ASM)
 
+find_package(Python3 3 REQUIRED COMPONENTS Interpreter)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # A raw developer build stays bootable for debugger/IDE workflows. Public
@@ -213,6 +215,10 @@ if(MK61_ENABLE_LTO AND
 endif()
 
 add_custom_command(TARGET resident POST_BUILD
+  COMMAND "${Python3_EXECUTABLE}"
+    "${MK61_PROJECT_ROOT}/tests/analyze_stack_usage.py"
+    --compile-commands "${CMAKE_BINARY_DIR}/compile_commands.json"
+    --source-root "${MK61_PROJECT_ROOT}/code" --top 3
   COMMAND "${CMAKE_OBJCOPY}" -O binary
     "$<TARGET_FILE:resident>" "${CMAKE_BINARY_DIR}/resident.bin"
   COMMAND "${CMAKE_OBJCOPY}" -O ihex

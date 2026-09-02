@@ -725,6 +725,31 @@ void test_graphics_pack_clip_stream_and_damage(void) {
   assert(!ws0010_graphics::streamPage(
     0, 99, payload, 2, [](u8) {}, [](u8) {}));
 
+  struct GdramClearTrace {
+    u8 commands[ws0010_graphics::PAGES * 2u] = {};
+    u8 command_count = 0;
+    usize data_count = 0;
+    bool nonzero_data = false;
+  } clear_trace;
+  ws0010_graphics::clearControllerGdram(
+    [&clear_trace](u8 value) {
+      assert(clear_trace.command_count < sizeof(clear_trace.commands));
+      clear_trace.commands[clear_trace.command_count++] = value;
+    },
+    [&clear_trace](u8 value) {
+      clear_trace.data_count++;
+      clear_trace.nonzero_data |= value != 0;
+    });
+  assert(clear_trace.command_count == ws0010_graphics::PAGES * 2u);
+  assert(clear_trace.data_count == ws0010_graphics::FRAME_BYTES);
+  assert(!clear_trace.nonzero_data);
+  for(u8 page = 0; page < ws0010_graphics::PAGES; page++) {
+    assert(clear_trace.commands[page * 2u] ==
+           ws0010::graphicsXAddress(0));
+    assert(clear_trace.commands[page * 2u + 1u] ==
+           ws0010::graphicsPageAddress(page));
+  }
+
   for(u8 pattern = 0; pattern < 8; pattern++) {
     ws0010_graphics::makeQualificationPattern(frame, sizeof(frame), pattern);
     bool any = false;

@@ -191,9 +191,17 @@ static constexpr TerminalCommand terminal_commands[] = {
 #endif
 #if MK61_DWT_PROFILER_SUPPORTED
   #if MK61_DEEP_IDLE_SUPPORTED
+    #if MK61_ENABLE_PROFILE_SAVE
   { "prof",    CMD_PROFILE,       "prof [start|stop|reset|core|deep <1..5> [cycles]|save]" },
+    #else
+  { "prof",    CMD_PROFILE,       "prof [start|stop|reset|core|deep <1..5> [cycles]]" },
+    #endif
   #else
+    #if MK61_ENABLE_PROFILE_SAVE
   { "prof",    CMD_PROFILE,       "prof [start|stop|reset|core [steps]|save [path.txt]]" },
+    #else
+  { "prof",    CMD_PROFILE,       "prof [start|stop|reset|core [steps]]" },
+    #endif
   #endif
 #endif
 #if MK61_CRASH_DUMP_SUPPORTED
@@ -847,6 +855,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(snapshot.current_msp, HEX);
       Serial.print(" observed_low=0x");
       Serial.print(snapshot.lowest_observed_msp, HEX);
+      Serial.print(" sampled_remaining=");
+      Serial.print(snapshot.sampled_remaining_stack_bytes());
+      Serial.print(" watermark=");
+      Serial.print(snapshot.stack_watermark_enabled ? 1 : 0);
+      Serial.print(" watermark_remaining=");
+      Serial.print(snapshot.watermark_remaining_stack_bytes);
       Serial.print(" observed_remaining=");
       Serial.print(snapshot.remaining_stack_bytes());
       Serial.print(" sram_xn=");
@@ -1760,6 +1774,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 #endif
 
 #if MK61_DWT_PROFILER_SUPPORTED
+#if MK61_ENABLE_PROFILE_SAVE
     class ProfileReportBuilder {
       public:
         ProfileReportBuilder(u8* output, usize capacity)
@@ -1801,6 +1816,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         usize length_;
         bool valid_;
     };
+#endif
 
     static void print_u64(u64 value) {
       char digits[21];
@@ -2095,6 +2111,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
     }
 
+#if MK61_ENABLE_PROFILE_SAVE
     static u16 build_profile_report(u8* output, usize capacity) {
       ProfileReportBuilder report(output, capacity);
       report.append_text("MK61 DWT PROFILE 2\nstate=");
@@ -2370,6 +2387,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println(length);
       return terminal_protocol::Result::ok();
     }
+#endif
 
     terminal_protocol::Result exec_profile(void) {
       const char* args = command_args();
@@ -2381,9 +2399,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       const char* cursor = args;
       char action[8];
       if(!terminal_core::parse_token(cursor, action, sizeof(action))) {
+#if MK61_ENABLE_PROFILE_SAVE
         Serial.println("Usage: prof [start|stop|reset|save [path.txt]]");
+#else
+        Serial.println("Usage: prof [start|stop|reset|core [steps]]");
+#endif
         return terminal_protocol::Result::error();
       }
+#if MK61_ENABLE_PROFILE_SAVE
       if(strcmp(action, "save") == 0) {
         char path[MAX_INPUT_CHAR];
         if(terminal_core::at_end(cursor)) {
@@ -2394,6 +2417,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         }
         return save_profile_report(path);
       }
+#endif
       if(strcmp(action, "core") == 0) {
         usize steps = 40;
         if(!terminal_core::at_end(cursor) &&
@@ -2511,7 +2535,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
 #endif
       if(!terminal_core::at_end(cursor)) {
+#if MK61_ENABLE_PROFILE_SAVE
         Serial.println("Usage: prof [start|stop|reset|core [steps]|save [path.txt]]");
+#else
+        Serial.println("Usage: prof [start|stop|reset|core [steps]]");
+#endif
         return terminal_protocol::Result::error();
       }
       if(strcmp(action, "start") == 0) {
@@ -2555,7 +2583,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::ok();
       }
 
+#if MK61_ENABLE_PROFILE_SAVE
       Serial.println("Usage: prof [start|stop|reset|core [steps]|save [path.txt]]");
+#else
+      Serial.println("Usage: prof [start|stop|reset|core [steps]]");
+#endif
       return terminal_protocol::Result::error();
     }
 #endif

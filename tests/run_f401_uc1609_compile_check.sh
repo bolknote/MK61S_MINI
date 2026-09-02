@@ -10,6 +10,8 @@ fail() {
 }
 
 "$root/tests/run_f411_release_matrix.sh" --check-dependencies
+command -v python3 >/dev/null 2>&1 ||
+  fail 'python3 is required for the stack-usage release gate'
 
 temporary_root=0
 if [[ -n "${MK61_F401_UC1609_BUILD_ROOT:-}" ]]; then
@@ -70,6 +72,9 @@ if [[ -n "$unexpected_warnings" ]]; then
     "$unexpected_warnings" >&2
   exit 1
 fi
+python3 "$root/tests/analyze_stack_usage.py" \
+  --compile-commands "$compile_path/compile_commands.json" \
+  --source-root "$compile_path/sketch" --top 3
 
 # Arduino's generic low-memory warning starts below our deliberately chosen
 # 80% regression boundary.  Enforce the numeric value so the check remains
@@ -92,10 +97,10 @@ test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
   "$compile_path/mk61s-M.ino.bin"
 
 # Merely fitting below 256 KiB is not a release criterion: sealing appends a
-# footer and tiny future linker fluctuations must not break the public build.
-# The pre-PVD reference had 2496 bytes free, so keep at least 2 KiB here.
+# footer and future linker fluctuations must not break the public build. Keep
+# the same 8 KiB resident reserve as the modular F401 release contract.
 flash_capacity=262144
-minimum_flash_headroom=2048
+minimum_flash_headroom=8192
 sealed_size="$(wc -c < "$compile_path/mk61s-M.ino.bin" | tr -d '[:space:]')"
 [[ "$sealed_size" =~ ^[0-9]+$ ]] || fail "invalid sealed BIN size: $sealed_size"
 flash_headroom=$((flash_capacity - sealed_size))
@@ -112,6 +117,12 @@ if grep -aFq 'Usage: bench' "$compile_path/mk61s-M.ino.elf"; then
 fi
 if grep -aFq 'ANALOG us/n=' "$compile_path/mk61s-M.ino.elf"; then
   fail 'raw analog terminal report unexpectedly present in constrained F401 image'
+fi
+if grep -aFq 'PROF saved ' "$compile_path/mk61s-M.ino.elf"; then
+  fail 'profile file exporter unexpectedly present in constrained F401 image'
+fi
+if ! grep -aFq 'PROF state=' "$compile_path/mk61s-M.ino.elf"; then
+  fail 'live profiler unexpectedly missing from constrained F401 image'
 fi
 if ! grep -aFq 'RTC ALARM' "$compile_path/mk61s-M.ino.elf"; then
   fail 'RTC alarm command unexpectedly missing from constrained F401 image'

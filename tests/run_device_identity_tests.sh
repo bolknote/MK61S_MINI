@@ -16,3 +16,13 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+
+# CDC and MSC must expose the same UID-derived serial.  A fixed MSC serial
+# makes two simultaneously connected calculators indistinguishable to host
+# caches and defeats the identity/topology safeguards in the HIL runner.
+grep -q 'device_identity::format_stm32duino_usb_serial' \
+  "$root/code/usb_mass_storage.cpp"
+if grep -q 'static const u8 serial_desc' "$root/code/usb_mass_storage.cpp"; then
+  echo "usb_mass_storage.cpp must not contain a fixed serial descriptor" >&2
+  exit 1
+fi

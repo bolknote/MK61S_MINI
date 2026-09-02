@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "mpu_guard_policy.hpp"
+#include "stack_watermark.hpp"
 
 #if MK61_MPU_GUARD_SUPPORTED
   #include <Arduino.h>
@@ -97,6 +98,23 @@ bool initialize(void) {
     __DSB();
     __ISB();
     hardware_enabled = (MPU->CTRL & MPU_CTRL_ENABLE_Msk) != 0;
+    if(hardware_enabled) {
+      // Paint only memory below the current MSP. The loop is deliberately in
+      // this frame: calling a painter after capturing MSP could overwrite the
+      // painter's own newly allocated frame. Stack grows downwards, so the
+      // half-open [guard_end, current_msp) interval is inactive and safe.
+      const u32 guard_end = active_layout.guard_end;
+      const u32 current_msp = read_msp() & ~3UL;
+      const u32 watermark_high = current_msp < active_layout.initial_msp
+          ? current_msp : active_layout.initial_msp;
+      volatile u32* const words = reinterpret_cast<volatile u32*>(guard_end);
+      const usize word_count = watermark_high > guard_end
+          ? (watermark_high - guard_end) / sizeof(u32) : 0;
+      for(usize index = 0; index < word_count; index++) {
+        words[index] = stack_watermark::pattern(index);
+      }
+      __DSB();
+    }
   } else {
     hardware_enabled = false;
   }
@@ -120,16 +138,29 @@ Snapshot statistics(void) {
 #if MK61_MPU_GUARD_SUPPORTED
   const u32 current_msp = read_msp();
   if(hardware_enabled && current_msp < lowest_msp) lowest_msp = current_msp;
+  const bool stack_watermark_enabled =
+    hardware_enabled && active_layout.initial_msp > active_layout.guard_end;
+  u32 watermark_remaining = 0;
+  if(stack_watermark_enabled) {
+    const volatile u32* const words =
+      reinterpret_cast<const volatile u32*>(active_layout.guard_end);
+    const usize word_count =
+      (active_layout.initial_msp - active_layout.guard_end) / sizeof(u32);
+    watermark_remaining = (u32)
+      (stack_watermark::untouchedPrefixWords(words, word_count) * sizeof(u32));
+  }
   return {
       true, hardware_enabled, active_layout.valid,
-      active_layout.sram_execute_never, available_region_count,
+      active_layout.sram_execute_never, stack_watermark_enabled,
+      available_region_count,
       active_layout.required_regions, active_layout.ram_start,
       active_layout.ram_end, active_layout.static_end,
       active_layout.guard_base, active_layout.guard_size,
       active_layout.stack_budget, active_layout.initial_msp,
-      current_msp, lowest_msp};
+      current_msp, lowest_msp, watermark_remaining};
 #else
-  return {false, false, false, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  return {false, false, false, false, false, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0};
 #endif
 }
 

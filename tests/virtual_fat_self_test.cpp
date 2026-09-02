@@ -807,7 +807,8 @@ static void test_incomplete_file_preflight_preserves_existing_tree(void) {
   // Хост успел записать FAT и каталог, но data sector ещё не пришёл.
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
-  assert(!virtual_fat::flush_pending());
+  assert(virtual_fat::flush_pending_result() ==
+         virtual_fat::CommitResult::REJECTED);
   assert(strcmp(virtual_fat::trace_line_at(0), "file-data") == 0);
   assert(program_store::vfat_stage_count() != 0);
 
@@ -817,8 +818,22 @@ static void test_incomplete_file_preflight_preserves_existing_tree(void) {
   expect_file(old_id, old_data, sizeof(old_data));
   program_store::Entry rejected = {};
   assert(!program_store::entry_by_id((u16) (new_cluster - 2U), rejected));
-  assert(!virtual_fat::finalize_pending());
+  assert(virtual_fat::finalize_pending_result() ==
+         virtual_fat::CommitResult::REJECTED);
   expect_rejected_pending_recovered();
+}
+
+static void test_flush_result_distinguishes_media_failure(void) {
+  fresh();
+  const Layout fs = layout();
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  root[511] ^= 0x5A;
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  SPIFlash::failAfterOperations(0);
+  assert(virtual_fat::flush_pending_result() ==
+         virtual_fat::CommitResult::IO_FAILED);
+  SPIFlash::clearFailure();
 }
 
 static void test_finder_appledouble_does_not_abort_batch(void) {
@@ -1576,6 +1591,7 @@ int main(void) {
   test_usb_commit_uses_available_cache_for_zx0();
   test_host_deletes_file_via_directory();
   test_incomplete_file_preflight_preserves_existing_tree();
+  test_flush_result_distinguishes_media_failure();
   test_finder_appledouble_does_not_abort_batch();
   test_markdown_import_keeps_t2_type();
   test_wbmp_import_uses_its_full_quota();
