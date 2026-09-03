@@ -9,8 +9,9 @@ small, removable, writable USB MK61S medium.  No raw-device operation or
 format command exists in this runner.
 
 The test creates one unique 8.3 text file, fsyncs it, asks macOS to eject the
-exact selected disk, verifies automatic MSC->CDC recovery, then warm-resets
-the calculator to prove the import survived.  Finally it removes only that
+exact selected disk, verifies automatic MSC->CDC recovery and reads the bytes
+back through C5/CDC, then repeats the read after a warm reset to prove the
+import survived. Finally it removes only that
 reserved file through the terminal and requires the original root listing to
 be restored.
 """
@@ -201,24 +202,78 @@ def listing_entries(report: str) -> tuple[str, ...]:
     )
 
 
+def posix_cksum(payload: bytes) -> int:
+    """The fsget wire checksum: POSIX cksum, including the byte length."""
+    def update(crc: int, value: int) -> int:
+        crc ^= value << 24
+        for _ in range(8):
+            crc = ((crc << 1) ^ (0x04C11DB7 if crc & 0x80000000 else 0))
+            crc &= 0xFFFFFFFF
+        return crc
+
+    crc = 0
+    for value in payload:
+        crc = update(crc, value)
+    length = len(payload)
+    while length:
+        crc = update(crc, length & 0xFF)
+        length >>= 8
+    return crc ^ 0xFFFFFFFF
+
+
+def require_file_contents(report: str, expected: bytes) -> None:
+    """Verify C5 bytes, not merely a directory entry or the host's cache."""
+    markers = [line for line in report.splitlines() if line.startswith("@MKC:")]
+    checksum = posix_cksum(expected)
+    if (
+        len(markers) < 2
+        or markers[0] != f"@MKC:GET {len(expected)} {checksum}"
+        or markers[-1] != f"@MKC:END {len(expected)} {checksum}"
+    ):
+        raise AssertionError(f"invalid C5 file readback framing/checksum:\n{report}")
+    received = bytearray()
+    for line in markers[1:-1]:
+        match = re.fullmatch(r"@MKC:DATA ([0-9]+) ([0-9A-Fa-f]+)", line)
+        if not match or int(match.group(1)) != len(received):
+            raise AssertionError(f"invalid C5 file readback chunk: {line!r}")
+        encoded = match.group(2)
+        if len(encoded) % 2 or len(received) + len(encoded) // 2 > len(expected):
+            raise AssertionError(f"invalid C5 file readback size: {line!r}")
+        received.extend(bytes.fromhex(encoded))
+    if received != expected:
+        raise AssertionError("C5 file readback differs from the written fixture")
+
+
 def wait_for_msc_disk(
     location_id: int,
     expected_usb_serial: str,
     baseline: set[str],
     timeout: float,
 ) -> tuple[str, dict[str, Any]]:
-    deadline = time.monotonic() + timeout
+    started = time.monotonic()
+    deadline = started + timeout
     last = "MSC USB node not present"
+    observations: list[str] = []
+
+    def note(state: str) -> None:
+        nonlocal last
+        last = state
+        if not observations or not observations[-1].endswith(state):
+            message = f"{time.monotonic() - started:.3f}s {state}"
+            if len(observations) < 16:
+                observations.append(message)
+                print(f"USB stage: {message}", flush=True)
+
     while time.monotonic() < deadline:
         tree = usb_tree()
         node = find_msc_node(tree, location_id, expected_usb_serial)
         if node is None:
-            last = "MSC USB node not present"
+            note("MSC USB node not present")
             time.sleep(0.10)
             continue
         if not msc_configured(node):
             state = "locked" if console_locked(tree) else "unlocked"
-            last = f"MSC enumerated but not configured (console={state})"
+            note(f"MSC enumerated but not configured (console={state})")
             time.sleep(0.10)
             continue
         current = whole_disks()
@@ -227,12 +282,14 @@ def wait_for_msc_disk(
             identifier = next(iter(added))
             info = disk_info(identifier)
             validate_new_disk(baseline, current, info)
+            note(f"MSC configured; verified disk={identifier}")
             return identifier, info
-        last = f"configured MSC has new disks {sorted(added)}"
+        note(f"configured MSC has new disks {sorted(added)}")
         time.sleep(0.15)
     raise TimeoutError(
         f"MK61S disk did not become safely selectable at "
-        f"location 0x{location_id:08X}: {last}"
+        f"location 0x{location_id:08X}: {last}; "
+        f"observations={observations}"
     )
 
 
@@ -309,9 +366,14 @@ def main() -> int:
 
     tree = usb_tree()
     if console_locked(tree):
-        raise AssertionError(
-            "macOS console is locked; USB Restricted Mode would reject the "
-            "new MSC PID, so the test was not started"
+        # A locked console is not proof that USB Restricted Mode will reject
+        # this accessory: previously authorised devices can still configure.
+        # Do not change host security policy. The actual MSC configuration,
+        # UID/topology and block-device gates below remain authoritative.
+        print(
+            "USB note: console reports locked; checking actual MSC access "
+            "without changing host security settings",
+            flush=True,
         )
     location_id = find_cdc_location(tree, identity)
     baseline = whole_disks()
@@ -361,6 +423,10 @@ def main() -> int:
             raise AssertionError(
                 f"committed fixture is not visible after eject:\n{imported}"
             )
+        require_file_contents(
+            terminal_report(target, f"fsget /{fixture_name}", timeout=10.0),
+            payload,
+        )
         vlog = terminal_report(target, "vlog", timeout=10.0)
 
         request_transition(target, "rst now", timeout=5.0)
@@ -373,6 +439,10 @@ def main() -> int:
             raise AssertionError(
                 f"fixture did not survive reset:\n{after_reset}"
             )
+        require_file_contents(
+            terminal_report(target, f"fsget /{fixture_name}", timeout=10.0),
+            payload,
+        )
 
         removed = terminal_report(target, f"rm /{fixture_name}", timeout=10.0)
         if "Removed 1 entry." not in removed:
@@ -393,7 +463,9 @@ def main() -> int:
         print(
             "USB DISK HIL OK "
             f"public={identity.public} profile={identity.profile} "
+            f"build={identity.build} "
             f"location=0x{location_id:08X} fixture={fixture_name} "
+            f"bytes={len(payload)} c5_readback=2/2 "
             "copy=1 eject=1 cdc=1 reset=1 cleanup=1",
             flush=True,
         )
