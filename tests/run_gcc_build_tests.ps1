@@ -8,6 +8,7 @@ $launcher = Join-Path $root 'tools/build-gcc.cmd'
 $backend = Join-Path $root 'tools/.mk61-gcc/build.ps1'
 $cmakeProject = Join-Path $root 'tools/.mk61-gcc/CMakeLists.txt'
 $ramCheck = Join-Path $root 'tools/.mk61-gcc/check-ram.cmake'
+$flashCheck = Join-Path $root 'tools/.mk61-gcc/check-flash.cmake'
 $toolchain = Join-Path $root 'tools/.mk61-gcc/arm-none-eabi.cmake'
 $systemAppExports = Join-Path $root `
     'tools/.mk61-gcc/system-app-exports.list'
@@ -43,6 +44,7 @@ foreach ($file in @(
     $backend,
     $cmakeProject,
     $ramCheck,
+    $flashCheck,
     $toolchain,
     $systemAppExports,
     $firmwareMain,
@@ -139,6 +141,13 @@ Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
 Assert-True ($cmakeText -match
     'MK61_GLOBAL_RAM_LIMIT=.+52428') `
     'canonical F401 build does not enforce the 80% static RAM budget'
+Assert-True ($cmakeText -match 'MK61_FLASH_MIN_HEADROOM=512') `
+    'canonical F401 build does not reserve Flash growth headroom'
+Assert-True ($cmakeText -match '-P "\$\{CMAKE_CURRENT_SOURCE_DIR\}/check-flash\.cmake"') `
+    'canonical F401 build does not invoke the shared Flash budget gate'
+Assert-True ($cmakeText -match
+    '(?s)elseif\(MK61_ENABLE_LTO\).*?target_link_options\(resident PRIVATE -ffunction-sections -fdata-sections\)') `
+    'per-function/data GC must be limited to LTO without System APP imports'
 Assert-True ($cmakeText -match 'HAL_UART_MODULE_ONLY') `
     'canonical F401 build still retains the unused hardware UART state'
 Assert-True ($cmakeText -match 'USBD_CLASS_USER_STRING_DESC=0') `

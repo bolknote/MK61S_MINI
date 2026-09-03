@@ -47,6 +47,7 @@
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
 #include "terminal_line_editor.hpp"
+#include "terminal_output.hpp"
 #include "terminal_protocol.hpp"
 #include "usb_screen.hpp"
 #include "utf8_view.hpp"
@@ -695,10 +696,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     terminal_protocol::Result show_crash_dump(void) {
       crash_dump_format::Record record = {};
       if(!crash_dump::copy(record)) {
-        Serial.print("CRASH none reset=0x");
-        Serial.print(crash_dump::boot_reset_flags(), HEX);
-        Serial.print(" layout=");
-        Serial.println(crash_dump::memory_layout_valid() ? "ok" : "invalid");
+        terminal_output::field(
+            Serial, "CRASH none reset=0x", crash_dump::boot_reset_flags(), HEX);
+        terminal_output::line(
+            Serial, " layout=", crash_dump::memory_layout_valid() ? "ok" : "invalid");
         return terminal_protocol::Result::ok();
       }
 
@@ -752,10 +753,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::error();
       }
       (void) crash_dump::mark_persisted();
-      Serial.print("CRASH saved ");
-      Serial.print(path);
-      Serial.print(" bytes=");
-      Serial.println(length);
+      terminal_output::field(Serial, "CRASH saved ", path);
+      terminal_output::line(Serial, " bytes=", length);
       return terminal_protocol::Result::ok();
     }
 
@@ -803,8 +802,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           print_crash_usage();
           return terminal_protocol::Result::error();
         }
-        Serial.print("CRASH injecting ");
-        Serial.println(fault);
+        terminal_output::line(Serial, "CRASH injecting ", fault);
         Serial.flush();
         delay(20);
         if(strcmp(fault, "usage") == 0) crash_dump::inject_usage_fault();
@@ -829,42 +827,29 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     terminal_protocol::Result show_mpu_status(void) {
       const mpu_guard::Snapshot snapshot = mpu_guard::statistics();
-      Serial.print("MPU backend=");
-      Serial.print(mpu_guard::backend_name());
-      Serial.print(" enabled=");
-      Serial.print(snapshot.enabled ? 1 : 0);
-      Serial.print(" layout=");
-      Serial.print(snapshot.layout_valid ? "ok" : "invalid");
-      Serial.print(" regions=");
-      Serial.print(snapshot.available_regions);
+      terminal_output::field(Serial, "MPU backend=", mpu_guard::backend_name());
+      terminal_output::field(Serial, " enabled=", snapshot.enabled ? 1 : 0);
+      terminal_output::field(Serial, " layout=", snapshot.layout_valid ? "ok" : "invalid");
+      terminal_output::field(Serial, " regions=", snapshot.available_regions);
       Serial.print('/');
       Serial.print(snapshot.required_regions);
-      Serial.print(" ram=0x");
-      Serial.print(snapshot.ram_start, HEX);
-      Serial.print("..0x");
-      Serial.print(snapshot.ram_end, HEX);
-      Serial.print(" static_end=0x");
-      Serial.print(snapshot.static_end, HEX);
-      Serial.print(" guard=0x");
-      Serial.print(snapshot.guard_base, HEX);
+      terminal_output::field(Serial, " ram=0x", snapshot.ram_start, HEX);
+      terminal_output::field(Serial, "..0x", snapshot.ram_end, HEX);
+      terminal_output::field(Serial, " static_end=0x", snapshot.static_end, HEX);
+      terminal_output::field(Serial, " guard=0x", snapshot.guard_base, HEX);
       Serial.print('+');
       Serial.print(snapshot.guard_size);
-      Serial.print(" stack_budget=");
-      Serial.print(snapshot.stack_budget);
-      Serial.print(" msp=0x");
-      Serial.print(snapshot.current_msp, HEX);
-      Serial.print(" observed_low=0x");
-      Serial.print(snapshot.lowest_observed_msp, HEX);
-      Serial.print(" sampled_remaining=");
-      Serial.print(snapshot.sampled_remaining_stack_bytes());
-      Serial.print(" watermark=");
-      Serial.print(snapshot.stack_watermark_enabled ? 1 : 0);
-      Serial.print(" watermark_remaining=");
-      Serial.print(snapshot.watermark_remaining_stack_bytes);
-      Serial.print(" observed_remaining=");
-      Serial.print(snapshot.remaining_stack_bytes());
-      Serial.print(" sram_xn=");
-      Serial.println(snapshot.sram_execute_never ? 1 : 0);
+      terminal_output::field(Serial, " stack_budget=", snapshot.stack_budget);
+      terminal_output::field(Serial, " msp=0x", snapshot.current_msp, HEX);
+      terminal_output::field(Serial, " observed_low=0x", snapshot.lowest_observed_msp, HEX);
+      terminal_output::field(
+          Serial, " sampled_remaining=", snapshot.sampled_remaining_stack_bytes());
+      terminal_output::field(Serial, " watermark=", snapshot.stack_watermark_enabled ? 1 : 0);
+      terminal_output::field(
+          Serial, " watermark_remaining=", snapshot.watermark_remaining_stack_bytes);
+      terminal_output::field(
+          Serial, " observed_remaining=", snapshot.remaining_stack_bytes());
+      terminal_output::line(Serial, " sram_xn=", snapshot.sram_execute_never ? 1 : 0);
       return snapshot.enabled
           ? terminal_protocol::Result::ok()
           : terminal_protocol::Result::error();
@@ -891,8 +876,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           print_mpu_usage();
           return terminal_protocol::Result::error();
         }
-        Serial.print("MPU injecting ");
-        Serial.println(fault);
+        terminal_output::line(Serial, "MPU injecting ", fault);
         Serial.flush();
         delay(20);
         bool injected = false;
@@ -938,40 +922,29 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     terminal_protocol::Result show_watchdog_status(void) {
       const independent_watchdog::Snapshot snapshot =
           independent_watchdog::statistics();
-      Serial.print("WDOG backend=IWDG running=");
-      Serial.print(independent_watchdog::running() ? 1 : 0);
-      Serial.print(" nominal_ms=");
-      Serial.print(independent_watchdog::NOMINAL_TIMEOUT_MS);
-      Serial.print(" reset=");
-      Serial.print(snapshot.boot_was_watchdog_reset ? 1 : 0);
-      Serial.print(" generation=");
-      Serial.print(snapshot.generation);
-      Serial.print(" epochs=");
-      Serial.print(snapshot.gate.epochs);
-      Serial.print(" reloads=");
-      Serial.print(snapshot.gate.reloads);
-      Serial.print(" last_epoch_ms=");
-      Serial.print(snapshot.gate.last_epoch_ms);
-      Serial.print(" last_reload_ms=");
-      Serial.print(snapshot.gate.last_reload_ms);
-      Serial.print(" max_gap_ms=");
-      Serial.println(snapshot.gate.maximum_reload_gap_ms);
+      terminal_output::field(
+          Serial, "WDOG backend=IWDG running=", independent_watchdog::running() ? 1 : 0);
+      terminal_output::field(
+          Serial, " nominal_ms=", independent_watchdog::NOMINAL_TIMEOUT_MS);
+      terminal_output::field(Serial, " reset=", snapshot.boot_was_watchdog_reset ? 1 : 0);
+      terminal_output::field(Serial, " generation=", snapshot.generation);
+      terminal_output::field(Serial, " epochs=", snapshot.gate.epochs);
+      terminal_output::field(Serial, " reloads=", snapshot.gate.reloads);
+      terminal_output::field(Serial, " last_epoch_ms=", snapshot.gate.last_epoch_ms);
+      terminal_output::field(Serial, " last_reload_ms=", snapshot.gate.last_reload_ms);
+      terminal_output::line(Serial, " max_gap_ms=", snapshot.gate.maximum_reload_gap_ms);
 
       if(snapshot.previous_breadcrumb_valid) {
-        Serial.print("WDOG previous generation=");
-        Serial.print(snapshot.previous.generation);
-        Serial.print(" state=");
-        Serial.print(watchdog_state_name(snapshot.previous.state));
-        Serial.print(" epochs=");
-        Serial.print(snapshot.previous.epochs);
-        Serial.print(" reloads=");
-        Serial.print(snapshot.previous.reloads);
-        Serial.print(" last_epoch_ms=");
-        Serial.print(snapshot.previous.last_epoch_ms);
-        Serial.print(" last_reload_ms=");
-        Serial.print(snapshot.previous.last_reload_ms);
-        Serial.print(" max_gap_ms=");
-        Serial.println(snapshot.previous.maximum_reload_gap_ms);
+        terminal_output::field(
+            Serial, "WDOG previous generation=", snapshot.previous.generation);
+        terminal_output::field(
+            Serial, " state=", watchdog_state_name(snapshot.previous.state));
+        terminal_output::field(Serial, " epochs=", snapshot.previous.epochs);
+        terminal_output::field(Serial, " reloads=", snapshot.previous.reloads);
+        terminal_output::field(Serial, " last_epoch_ms=", snapshot.previous.last_epoch_ms);
+        terminal_output::field(Serial, " last_reload_ms=", snapshot.previous.last_reload_ms);
+        terminal_output::line(
+            Serial, " max_gap_ms=", snapshot.previous.maximum_reload_gap_ms);
       }
       return terminal_protocol::Result::ok();
     }
@@ -998,16 +971,16 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           return terminal_protocol::Result::error();
         }
         if(strcmp(mode, "starve") == 0) {
-          Serial.print("WDOG feed inhibited; reset expected within ");
-          Serial.print(independent_watchdog::NOMINAL_TIMEOUT_MS);
+          terminal_output::field(
+              Serial, "WDOG feed inhibited; reset expected within ", independent_watchdog::NOMINAL_TIMEOUT_MS);
           Serial.println(" nominal ms");
           Serial.flush();
           independent_watchdog::inhibit_for_test();
           return terminal_protocol::Result::ok();
         }
         if(strcmp(mode, "hang") == 0) {
-          Serial.print("WDOG foreground hang; reset expected within ");
-          Serial.print(independent_watchdog::NOMINAL_TIMEOUT_MS);
+          terminal_output::field(
+              Serial, "WDOG foreground hang; reset expected within ", independent_watchdog::NOMINAL_TIMEOUT_MS);
           Serial.println(" nominal ms");
           Serial.flush();
           independent_watchdog::hang_for_test();
@@ -1022,50 +995,31 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
     static void print_memory_snapshot(shared_memory::Arena arena) {
       const shared_memory::Snapshot memory = shared_memory::snapshot(arena);
-      Serial.print("MEM ");
-      Serial.print(shared_memory::arena_name(arena));
-      Serial.print(" enabled=");
-      Serial.print(memory.enabled ? 1 : 0);
-      Serial.print(" capacity=");
-      Serial.print(memory.capacity);
-      Serial.print(" high=");
-      Serial.print(memory.high_water);
-      Serial.print(" resident_size=");
-      Serial.print(memory.resident_size);
-      Serial.print(" epoch=");
-      Serial.print(memory.resident_epoch);
-      Serial.print(" active=");
-      Serial.print(shared_memory::owner_name(memory.active_owner));
-      Serial.print(" resident=");
-      Serial.print(shared_memory::owner_name(memory.resident_owner));
-      Serial.print(" depth=");
-      Serial.print(memory.active_depth);
-      Serial.print(" max_depth=");
-      Serial.print(memory.max_depth);
-      Serial.print(" acquire=");
-      Serial.print(memory.acquisitions);
-      Serial.print(" nested=");
-      Serial.print(memory.nested_acquisitions);
-      Serial.print(" release=");
-      Serial.print(memory.releases);
-      Serial.print(" busy=");
-      Serial.print(memory.busy_failures);
-      Serial.print(" cache_defer=");
-      Serial.print(memory.cache_deferrals);
-      Serial.print(" invalid=");
-      Serial.print(memory.invalid_failures);
-      Serial.print(" switches=");
-      Serial.print(memory.owner_switches);
-      Serial.print(" clears=");
-      Serial.print(memory.clears);
-      Serial.print(" clear_bytes=");
-      Serial.print(memory.cleared_bytes);
-      Serial.print(" reclaim=");
-      Serial.print(memory.reclaims);
+      terminal_output::field(Serial, "MEM ", shared_memory::arena_name(arena));
+      terminal_output::field(Serial, " enabled=", memory.enabled ? 1 : 0);
+      terminal_output::field(Serial, " capacity=", memory.capacity);
+      terminal_output::field(Serial, " high=", memory.high_water);
+      terminal_output::field(Serial, " resident_size=", memory.resident_size);
+      terminal_output::field(Serial, " epoch=", memory.resident_epoch);
+      terminal_output::field(
+          Serial, " active=", shared_memory::owner_name(memory.active_owner));
+      terminal_output::field(
+          Serial, " resident=", shared_memory::owner_name(memory.resident_owner));
+      terminal_output::field(Serial, " depth=", memory.active_depth);
+      terminal_output::field(Serial, " max_depth=", memory.max_depth);
+      terminal_output::field(Serial, " acquire=", memory.acquisitions);
+      terminal_output::field(Serial, " nested=", memory.nested_acquisitions);
+      terminal_output::field(Serial, " release=", memory.releases);
+      terminal_output::field(Serial, " busy=", memory.busy_failures);
+      terminal_output::field(Serial, " cache_defer=", memory.cache_deferrals);
+      terminal_output::field(Serial, " invalid=", memory.invalid_failures);
+      terminal_output::field(Serial, " switches=", memory.owner_switches);
+      terminal_output::field(Serial, " clears=", memory.clears);
+      terminal_output::field(Serial, " clear_bytes=", memory.cleared_bytes);
+      terminal_output::field(Serial, " reclaim=", memory.reclaims);
       Serial.write('/');
       Serial.print(memory.reclaim_attempts);
-      Serial.print(" reclaim_fail=");
-      Serial.println(memory.reclaim_failures);
+      terminal_output::line(Serial, " reclaim_fail=", memory.reclaim_failures);
     }
 
     terminal_protocol::Result exec_memory(void) {
@@ -1090,70 +1044,45 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           index++) {
         print_memory_snapshot((shared_memory::Arena) index);
       }
-      Serial.print("MEM invariant=");
-      Serial.println(shared_memory::validate_invariants() ? "ok" : "BROKEN");
+      terminal_output::line(
+          Serial, "MEM invariant=", shared_memory::validate_invariants() ? "ok" : "BROKEN");
       const core_61::HotTableCacheSnapshot core_cache =
           core_61::hot_table_cache_statistics();
-      Serial.print("MEM core-cache enabled=");
-      Serial.print(core_cache.enabled ? 1 : 0);
-      Serial.print(" level=");
-      Serial.print(core_cache.level);
-      Serial.print(" cached=");
-      Serial.print(core_cache.cached ? 1 : 0);
-      Serial.print(" bytes=");
-      Serial.print(core_cache.bytes);
-      Serial.print(" loads=");
-      Serial.print(core_cache.loads);
-      Serial.print(" evictions=");
-      Serial.print(core_cache.evictions);
-      Serial.print(" flash_steps=");
-      Serial.println(core_cache.flash_steps);
+      terminal_output::field(Serial, "MEM core-cache enabled=", core_cache.enabled ? 1 : 0);
+      terminal_output::field(Serial, " level=", core_cache.level);
+      terminal_output::field(Serial, " cached=", core_cache.cached ? 1 : 0);
+      terminal_output::field(Serial, " bytes=", core_cache.bytes);
+      terminal_output::field(Serial, " loads=", core_cache.loads);
+      terminal_output::field(Serial, " evictions=", core_cache.evictions);
+      terminal_output::line(Serial, " flash_steps=", core_cache.flash_steps);
       const workspace_swap::Statistics swap =
           workspace_swap::statistics();
-      Serial.print("MEM swap enabled=");
-      Serial.print(swap.enabled ? 1 : 0);
-      Serial.print(" valid=");
-      Serial.print(swap.valid ? 1 : 0);
-      Serial.print(" owner=");
-      Serial.print(shared_memory::owner_name(swap.owner));
-      Serial.print(" schema=");
-      Serial.print(swap.schema);
-      Serial.print(" codec=");
-      Serial.print(swap.compressed ? "zx0" : "raw");
-      Serial.print(" bytes=");
-      Serial.print(swap.stored_size);
+      terminal_output::field(Serial, "MEM swap enabled=", swap.enabled ? 1 : 0);
+      terminal_output::field(Serial, " valid=", swap.valid ? 1 : 0);
+      terminal_output::field(Serial, " owner=", shared_memory::owner_name(swap.owner));
+      terminal_output::field(Serial, " schema=", swap.schema);
+      terminal_output::field(Serial, " codec=", swap.compressed ? "zx0" : "raw");
+      terminal_output::field(Serial, " bytes=", swap.stored_size);
       Serial.write('/');
       Serial.print(swap.raw_size);
-      Serial.print(" capture=");
-      Serial.print(swap.captures);
+      terminal_output::field(Serial, " capture=", swap.captures);
       Serial.write('/');
       Serial.print(swap.capture_attempts);
-      Serial.print(" restore=");
-      Serial.print(swap.restores);
-      Serial.print(" exchange=");
-      Serial.print(swap.exchanges);
+      terminal_output::field(Serial, " restore=", swap.restores);
+      terminal_output::field(Serial, " exchange=", swap.exchanges);
       Serial.write('/');
       Serial.print(swap.exchange_attempts);
-      Serial.print(" exchange_fallback=");
-      Serial.print(swap.exchange_fallbacks);
-      Serial.print(" evict=");
-      Serial.print(swap.evictions);
-      Serial.print(" busy=");
-      Serial.print(swap.busy_failures);
-      Serial.print(" encode_fail=");
-      Serial.print(swap.encode_failures);
-      Serial.print(" integrity_fail=");
-      Serial.println(swap.integrity_failures);
+      terminal_output::field(Serial, " exchange_fallback=", swap.exchange_fallbacks);
+      terminal_output::field(Serial, " evict=", swap.evictions);
+      terminal_output::field(Serial, " busy=", swap.busy_failures);
+      terminal_output::field(Serial, " encode_fail=", swap.encode_failures);
+      terminal_output::line(Serial, " integrity_fail=", swap.integrity_failures);
       const mk61_crc32::ArbitrationSnapshot crc =
           mk61_crc32::arbitration_statistics();
-      Serial.print("MEM crc-hw supported=");
-      Serial.print(crc.supported ? 1 : 0);
-      Serial.print(" busy=");
-      Serial.print(crc.busy ? 1 : 0);
-      Serial.print(" acquire=");
-      Serial.print(crc.hardware_acquisitions);
-      Serial.print(" fallback=");
-      Serial.println(crc.software_fallbacks);
+      terminal_output::field(Serial, "MEM crc-hw supported=", crc.supported ? 1 : 0);
+      terminal_output::field(Serial, " busy=", crc.busy ? 1 : 0);
+      terminal_output::field(Serial, " acquire=", crc.hardware_acquisitions);
+      terminal_output::line(Serial, " fallback=", crc.software_fallbacks);
       return terminal_protocol::Result::ok();
     }
 
@@ -1163,10 +1092,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print("WS0010 FT=10 wait=busy+floor ddram=2x64 cgram=8");
       Serial.print(" bf-seen=");
       Serial.print(main_lcd().busyFlagObserved() ? 1 : 0);
-      Serial.print(" bf-timeouts=");
-      Serial.print(main_lcd().busyFlagTimeouts());
-      Serial.print(" bf-fault=");
-      Serial.print(main_lcd().busyFlagFaulted() ? 1 : 0);
+      terminal_output::field(Serial, " bf-timeouts=", main_lcd().busyFlagTimeouts());
+      terminal_output::field(Serial, " bf-fault=", main_lcd().busyFlagFaulted() ? 1 : 0);
       Serial.print(" graphics=");
       if(!main_lcd().supportsWs0010Graphics()) {
         Serial.print("disabled");
@@ -1182,14 +1109,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(" brightness=software-unsupported");
       Serial.print(" mode=");
       Serial.print(main_lcd().graphicsMode() ? "graphics" : "character");
-      Serial.print(" owner=");
-      Serial.print(ws0010::graphicsOwnerName(main_lcd().ws0010GraphicsOwner()));
-      Serial.print(" state=");
-      Serial.print(main_lcd().displayEnabled() ? "on" : "off");
-      Serial.print(" pwr=");
-      Serial.print(main_lcd().internalPowerEnabled() ? "on" : "off");
-      Serial.print(" route=");
-      Serial.print(main_lcd().usbScreenActive() ? "usb-screen" : "oled");
+      terminal_output::field(
+          Serial, " owner=", ws0010::graphicsOwnerName(main_lcd().ws0010GraphicsOwner()));
+      terminal_output::field(Serial, " state=", main_lcd().displayEnabled() ? "on" : "off");
+      terminal_output::field(
+          Serial, " pwr=", main_lcd().internalPowerEnabled() ? "on" : "off");
+      terminal_output::field(
+          Serial, " route=", main_lcd().usbScreenActive() ? "usb-screen" : "oled");
       Serial.print(" sleep=");
       Serial.print(oled_protection::timeoutName(
         main_lcd().oledProtectionTimeout()));
@@ -1208,8 +1134,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(" init=");
       Serial.print(ws0010::initializationPhaseName(
         main_lcd().initializationPhase()));
-      Serial.print(" reinit=");
-      Serial.println(main_lcd().reinitializationCount());
+      terminal_output::line(Serial, " reinit=", main_lcd().reinitializationCount());
 #elif defined(MK61_DISPLAY_UC1609)
       Serial.println("UC1609 mode=graphics");
 #elif defined(MK61_LCD1602_A02)
@@ -1378,8 +1303,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.println("DISPLAY graphics failed; character mode restored");
         return terminal_protocol::Result::error();
       }
-      Serial.print("DISPLAY graphics pattern=");
-      Serial.print(pattern);
+      terminal_output::field(Serial, "DISPLAY graphics pattern=", pattern);
       Serial.println(" shown; use 'display test restore'");
       return terminal_protocol::Result::ok();
 #else
@@ -1431,19 +1355,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       }
       const u32 expected_crc = mk61_crc32::calculate(expected, FRAME_BYTES);
       const u32 actual_crc = mk61_crc32::calculate(actual, FRAME_BYTES);
-      Serial.print("DISPLAY graphics readback pattern=");
-      Serial.print(pattern);
-      Serial.print(" bytes=");
-      Serial.print(FRAME_BYTES);
+      terminal_output::field(Serial, "DISPLAY graphics readback pattern=", pattern);
+      terminal_output::field(Serial, " bytes=", FRAME_BYTES);
       Serial.print(" expected=");
       terminal_print_hex_u32(expected_crc);
       Serial.print(" actual=");
       terminal_print_hex_u32(actual_crc);
-      Serial.print(" mismatches=");
-      Serial.print(mismatches);
+      terminal_output::field(Serial, " mismatches=", mismatches);
       if(mismatches != 0) {
-        Serial.print(" first=");
-        Serial.print(first_mismatch);
+        terminal_output::field(Serial, " first=", first_mismatch);
       }
       Serial.println(" dummy=0");
       return mismatches == 0
@@ -1507,10 +1427,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           return terminal_protocol::Result::error();
         }
         display_test_map((u8) page);
-        Serial.print("DISPLAY byte map 0x");
-        Serial.print((u8) (page << 5), HEX);
-        Serial.print("..0x");
-        Serial.println((u8) ((page << 5) + 31u), HEX);
+        terminal_output::field(Serial, "DISPLAY byte map 0x", (u8) (page << 5), HEX);
+        terminal_output::line(Serial, "..0x", (u8) ((page << 5) + 31u), HEX);
         return terminal_protocol::Result::ok();
       }
       if(strcmp(test, "alphabet") == 0) {
@@ -1521,8 +1439,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           return terminal_protocol::Result::error();
         }
         display_test_alphabet((u8) page);
-        Serial.print("DISPLAY Russian/mixed alphabet page=");
-        Serial.println(page);
+        terminal_output::line(Serial, "DISPLAY Russian/mixed alphabet page=", page);
         return terminal_protocol::Result::ok();
       }
       if(strcmp(test, "symbols") == 0 && terminal_core::at_end(cursor)) {
@@ -1542,8 +1459,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         if(!main_lcd().shiftShiftedViewport(cells, (u8) shift)) {
           main_lcd().renderShiftedViewport(cells, (u8) shift);
         }
-        Serial.print("DISPLAY DDRAM shift=");
-        Serial.println(shift);
+        terminal_output::line(Serial, "DISPLAY DDRAM shift=", shift);
         return terminal_protocol::Result::ok();
       }
       if(strcmp(test, "row") == 0) {
@@ -1571,10 +1487,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           Serial.println("DISPLAY independent-row test failed");
           return terminal_protocol::Result::error();
         }
-        Serial.print("DISPLAY independent row=");
-        Serial.print(row);
-        Serial.print(" logical-shift=");
-        Serial.println(shift);
+        terminal_output::field(Serial, "DISPLAY independent row=", row);
+        terminal_output::line(Serial, " logical-shift=", shift);
         return terminal_protocol::Result::ok();
       }
       if(strcmp(test, "cgram") == 0 && terminal_core::at_end(cursor)) {
@@ -1588,12 +1502,10 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           Serial.println("DISPLAY zero-run test unavailable");
           return terminal_protocol::Result::error();
         }
-        Serial.print("DISPLAY zero-run=256 expect two OK markers bf-seen=");
-        Serial.print(main_lcd().busyFlagObserved() ? 1 : 0);
-        Serial.print(" bf-timeouts=");
-        Serial.print(main_lcd().busyFlagTimeouts());
-        Serial.print(" bf-fault=");
-        Serial.println(main_lcd().busyFlagFaulted() ? 1 : 0);
+        terminal_output::field(
+            Serial, "DISPLAY zero-run=256 expect two OK markers bf-seen=", main_lcd().busyFlagObserved() ? 1 : 0);
+        terminal_output::field(Serial, " bf-timeouts=", main_lcd().busyFlagTimeouts());
+        terminal_output::line(Serial, " bf-fault=", main_lcd().busyFlagFaulted() ? 1 : 0);
         return main_lcd().busyFlagFaulted()
              ? terminal_protocol::Result::error()
              : terminal_protocol::Result::ok();
@@ -1711,24 +1623,17 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       const power_monitor::Snapshot power = power_monitor::snapshot();
       const power_monitor::ThresholdRange threshold =
           power_monitor::threshold_range();
-      Serial.print("POWER PVD");
-      Serial.print(power.level);
-      Serial.print(" fall=");
-      Serial.print(threshold.falling_min_mv);
+      terminal_output::field(Serial, "POWER PVD", power.level);
+      terminal_output::field(Serial, " fall=", threshold.falling_min_mv);
       Serial.write('-');
       Serial.print(threshold.falling_max_mv);
-      Serial.print(" rise=");
-      Serial.print(threshold.rising_min_mv);
+      terminal_output::field(Serial, " rise=", threshold.rising_min_mv);
       Serial.write('-');
       Serial.print(threshold.rising_max_mv);
-      Serial.print(" state=");
-      Serial.print(power_state_name(power));
-      Serial.print(" gate=");
-      Serial.print(power.writes_allowed ? 1 : 0);
-      Serial.print(" wait=");
-      Serial.print(power.stable_remaining_ms);
-      Serial.print(" event=");
-      Serial.print(power.low_events);
+      terminal_output::field(Serial, " state=", power_state_name(power));
+      terminal_output::field(Serial, " gate=", power.writes_allowed ? 1 : 0);
+      terminal_output::field(Serial, " wait=", power.stable_remaining_ms);
+      terminal_output::field(Serial, " event=", power.low_events);
       Serial.write('/');
       Serial.print(power.recovery_events);
       Serial.print(" last=");
@@ -1736,18 +1641,15 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           : (power.last_edge_low ? "fall" : "rise"));
       Serial.write('@');
       Serial.print(power.last_edge_ms);
-      Serial.print(" prev=");
-      Serial.print(power.previous_unstable ? 1 : 0);
+      terminal_output::field(Serial, " prev=", power.previous_unstable ? 1 : 0);
       Serial.write('@');
       Serial.print(power.previous_edge_ms);
-      Serial.print(" reject=");
-      Serial.print(power.rejected_programs);
+      terminal_output::field(Serial, " reject=", power.rejected_programs);
       Serial.write('/');
       Serial.print(power.rejected_erases);
       Serial.write('/');
       Serial.print(power.rejected_msc_writes);
-      Serial.print(" reset_flags=0x");
-      Serial.println(crash_dump::boot_reset_flags(), HEX);
+      terminal_output::line(Serial, " reset_flags=0x", crash_dump::boot_reset_flags(), HEX);
     }
 
 #if MK61_ENABLE_ANALOG_REPORT
@@ -1829,131 +1731,84 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     }
 
     static void print_profile_statistics(void) {
-      Serial.print("PROF state=");
-      Serial.print(dwt_profiler::running() ? "running" : "stopped");
-      Serial.print(" clock=");
-      Serial.print(dwt_profiler::clock_hz());
-      Serial.print(" overhead=");
-      Serial.println(dwt_profiler::overhead_cycles());
+      terminal_output::field(
+          Serial, "PROF state=", dwt_profiler::running() ? "running" : "stopped");
+      terminal_output::field(Serial, " clock=", dwt_profiler::clock_hz());
+      terminal_output::line(Serial, " overhead=", dwt_profiler::overhead_cycles());
 
       const classic_scheduler::Snapshot classic =
         classic_timer::statistics();
-      Serial.print("CLASSIC backend=");
-      Serial.print(classic_timer::backend_name());
-      Serial.print(" period_us=");
-      Serial.print(classic_timer::configured_period_us());
-      Serial.print(" active=");
-      Serial.print(classic.active ? 1 : 0);
-      Serial.print(" ticks=");
-      Serial.print(classic.ticks);
-      Serial.print(" steps=");
-      Serial.print(classic.steps);
-      Serial.print(" missed=");
-      Serial.print(classic.missed_ticks);
-      Serial.print(" pending=");
-      Serial.print(classic.pending);
-      Serial.print(" max_pending=");
-      Serial.println(classic.maximum_pending);
+      terminal_output::field(Serial, "CLASSIC backend=", classic_timer::backend_name());
+      terminal_output::field(Serial, " period_us=", classic_timer::configured_period_us());
+      terminal_output::field(Serial, " active=", classic.active ? 1 : 0);
+      terminal_output::field(Serial, " ticks=", classic.ticks);
+      terminal_output::field(Serial, " steps=", classic.steps);
+      terminal_output::field(Serial, " missed=", classic.missed_ticks);
+      terminal_output::field(Serial, " pending=", classic.pending);
+      terminal_output::line(Serial, " max_pending=", classic.maximum_pending);
 
       #if MK61_ENABLE_SPI1_ARBITER
       const spi1_arbiter::Snapshot spi1 = spi1_bus::statistics();
-      Serial.print("SPI1 backend=");
-      Serial.print(spi1_bus::backend_name());
-      Serial.print(" state=");
-      Serial.print(spi1_arbiter::state_name(spi1.state));
-      Serial.print(" owner=");
-      Serial.print(spi1_arbiter::owner_name(spi1.owner));
-      Serial.print(" acquisitions=");
-      Serial.print(spi1.acquisitions);
-      Serial.print(" releases=");
-      Serial.print(spi1.releases);
-      Serial.print(" failures=");
-      Serial.print(spi1.failures);
-      Serial.print(" contentions=");
-      Serial.print(spi1.contentions);
-      Serial.print(" double=");
-      Serial.print(spi1.double_acquires);
-      Serial.print(" inactive=");
-      Serial.print(spi1.inactive_releases);
-      Serial.print(" wrong=");
-      Serial.print(spi1.wrong_owner_releases);
-      Serial.print(" invalid=");
-      Serial.print(spi1.invalid_owners);
-      Serial.print(" latched=");
-      Serial.print(spi1.rejected_while_error);
-      Serial.print(" recoveries=");
-      Serial.print(spi1.recoveries);
-      Serial.print(" last=");
-      Serial.print(spi1_arbiter::result_name(spi1.last_result));
-      Serial.print(" fault=");
-      Serial.println(spi1_arbiter::result_name(spi1.last_fault));
+      terminal_output::field(Serial, "SPI1 backend=", spi1_bus::backend_name());
+      terminal_output::field(Serial, " state=", spi1_arbiter::state_name(spi1.state));
+      terminal_output::field(Serial, " owner=", spi1_arbiter::owner_name(spi1.owner));
+      terminal_output::field(Serial, " acquisitions=", spi1.acquisitions);
+      terminal_output::field(Serial, " releases=", spi1.releases);
+      terminal_output::field(Serial, " failures=", spi1.failures);
+      terminal_output::field(Serial, " contentions=", spi1.contentions);
+      terminal_output::field(Serial, " double=", spi1.double_acquires);
+      terminal_output::field(Serial, " inactive=", spi1.inactive_releases);
+      terminal_output::field(Serial, " wrong=", spi1.wrong_owner_releases);
+      terminal_output::field(Serial, " invalid=", spi1.invalid_owners);
+      terminal_output::field(Serial, " latched=", spi1.rejected_while_error);
+      terminal_output::field(Serial, " recoveries=", spi1.recoveries);
+      terminal_output::field(Serial, " last=", spi1_arbiter::result_name(spi1.last_result));
+      terminal_output::line(Serial, " fault=", spi1_arbiter::result_name(spi1.last_fault));
       #endif
 
       #if MK61_ENABLE_SPI1_DMA
       const spi1_dma::Snapshot dma = spi1_dma::statistics();
-      Serial.print("SPI1 DMA backend=");
-      Serial.print(spi1_dma::backend_name());
-      Serial.print(" threshold=");
-      Serial.print(dma.threshold);
-      Serial.print(" transfers=");
-      Serial.print(dma.transfers);
-      Serial.print(" bytes=");
-      Serial.print(dma.bytes);
-      Serial.print(" wfi=");
-      Serial.print(dma.wfi_entries);
-      Serial.print(" fallback=");
-      Serial.print(dma.polling_fallbacks);
-      Serial.print(" init_errors=");
-      Serial.print(dma.initialization_failures);
-      Serial.print(" errors=");
-      Serial.print(dma.transfer_failures);
-      Serial.print(" timeouts=");
-      Serial.println(dma.timeouts);
+      terminal_output::field(Serial, "SPI1 DMA backend=", spi1_dma::backend_name());
+      terminal_output::field(Serial, " threshold=", dma.threshold);
+      terminal_output::field(Serial, " transfers=", dma.transfers);
+      terminal_output::field(Serial, " bytes=", dma.bytes);
+      terminal_output::field(Serial, " wfi=", dma.wfi_entries);
+      terminal_output::field(Serial, " fallback=", dma.polling_fallbacks);
+      terminal_output::field(Serial, " init_errors=", dma.initialization_failures);
+      terminal_output::field(Serial, " errors=", dma.transfer_failures);
+      terminal_output::line(Serial, " timeouts=", dma.timeouts);
       #endif
 
       const usb_cdc_rx_guard::Snapshot usb_rx =
         usb_cdc_rx_guard::statistics();
-      Serial.print("USB CDC RX backend=");
-      Serial.print(usb_cdc_rx_guard::backend_name());
-      Serial.print(" supported=");
-      Serial.print(usb_rx.supported ? 1 : 0);
-      Serial.print(" linked=");
-      Serial.print(usb_rx.linked ? 1 : 0);
-      Serial.print(" throttles=");
-      Serial.println(usb_rx.throttles);
+      terminal_output::field(Serial, "USB CDC RX backend=", usb_cdc_rx_guard::backend_name());
+      terminal_output::field(Serial, " supported=", usb_rx.supported ? 1 : 0);
+      terminal_output::field(Serial, " linked=", usb_rx.linked ? 1 : 0);
+      terminal_output::line(Serial, " throttles=", usb_rx.throttles);
 
       const usb_power::Snapshot usb_power_state =
         usb_power::statistics(millis());
-      Serial.print("USB POWER backend=");
-      Serial.print(usb_power::backend_name());
-      Serial.print(" supported=");
-      Serial.print(usb_power_state.supported ? 1 : 0);
-      Serial.print(" linked=");
-      Serial.print(usb_power_state.wrappers_linked ? 1 : 0);
-      Serial.print(" callbacks=");
-      Serial.print(usb_power_state.callbacks_ready ? 1 : 0);
-      Serial.print(" stop_preserve=");
-      Serial.print(usb_power_state.stop_preservation_enabled ? 1 : 0);
-      Serial.print(" state=");
-      Serial.print(usb_power_policy::state_name(usb_power_state.state));
-      Serial.print(" raw=");
-      Serial.print(usb_power_state.raw_state);
+      terminal_output::field(Serial, "USB POWER backend=", usb_power::backend_name());
+      terminal_output::field(Serial, " supported=", usb_power_state.supported ? 1 : 0);
+      terminal_output::field(Serial, " linked=", usb_power_state.wrappers_linked ? 1 : 0);
+      terminal_output::field(Serial, " callbacks=", usb_power_state.callbacks_ready ? 1 : 0);
+      terminal_output::field(
+          Serial, " stop_preserve=", usb_power_state.stop_preservation_enabled ? 1 : 0);
+      terminal_output::field(
+          Serial, " state=", usb_power_policy::state_name(usb_power_state.state));
+      terminal_output::field(Serial, " raw=", usb_power_state.raw_state);
       Serial.write('/');
       Serial.print(usb_power_state.old_state);
-      Serial.print(" host_remote=");
-      Serial.print(usb_power_state.host_remote_wakeup_enabled ? 1 : 0);
-      Serial.print(" endpoints=");
-      Serial.print(usb_power_state.endpoints_idle ? 1 : 0);
-      Serial.print(" age_ms=");
-      Serial.print(usb_power_state.suspend_age_ms);
-      Serial.print(" hw=");
-      Serial.print(usb_power_state.hardware_suspended ? 1 : 0);
+      terminal_output::field(
+          Serial, " host_remote=", usb_power_state.host_remote_wakeup_enabled ? 1 : 0);
+      terminal_output::field(Serial, " endpoints=", usb_power_state.endpoints_idle ? 1 : 0);
+      terminal_output::field(Serial, " age_ms=", usb_power_state.suspend_age_ms);
+      terminal_output::field(Serial, " hw=", usb_power_state.hardware_suspended ? 1 : 0);
       Serial.write('/');
       Serial.print(usb_power_state.hardware_suspend_events);
       Serial.write('/');
       Serial.print(usb_power_state.recovered_suspend_events);
-      Serial.print(" events=");
-      Serial.print(usb_power_state.setup_callbacks);
+      terminal_output::field(Serial, " events=", usb_power_state.setup_callbacks);
       Serial.write('/');
       Serial.print(usb_power_state.reset_callbacks);
       Serial.write('/');
@@ -1964,53 +1819,37 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.print(usb_power_state.connect_callbacks);
       Serial.write('/');
       Serial.print(usb_power_state.disconnect_callbacks);
-      Serial.print(" stop=");
-      Serial.print(usb_power_state.stop_arms);
+      terminal_output::field(Serial, " stop=", usb_power_state.stop_arms);
       Serial.write('/');
       Serial.print(usb_power_state.stop_aborts);
       Serial.write('/');
       Serial.print(usb_power_state.host_wakes);
       Serial.write('/');
       Serial.print(usb_power_state.local_wakes);
-      Serial.print(" blockers=0x");
-      Serial.print(usb_power_state.last_stop_blockers, HEX);
-      Serial.print(" epblock=0x");
-      Serial.println(usb_power_state.last_endpoint_blockers, HEX);
+      terminal_output::field(Serial, " blockers=0x", usb_power_state.last_stop_blockers, HEX);
+      terminal_output::line(
+          Serial, " epblock=0x", usb_power_state.last_endpoint_blockers, HEX);
 
       const keyboard_stop_wake_snapshot keyboard_wake =
         kbd::stop_wake_statistics();
-      Serial.print("KBD STOP supported=");
-      Serial.print(keyboard_wake.supported ? 1 : 0);
-      Serial.print(" captures=");
-      Serial.print(keyboard_wake.capture_events);
-      Serial.print(" last=");
-      Serial.print(keyboard_wake.last_scan_code);
-      Serial.print(" count=");
-      Serial.print(keyboard_wake.last_capture_count);
-      Serial.print(" wake_rows=0x");
-      Serial.print(keyboard_wake.wake_rows, HEX);
-      Serial.print(" captured_rows=0x");
-      Serial.println(keyboard_wake.captured_rows, HEX);
+      terminal_output::field(Serial, "KBD STOP supported=", keyboard_wake.supported ? 1 : 0);
+      terminal_output::field(Serial, " captures=", keyboard_wake.capture_events);
+      terminal_output::field(Serial, " last=", keyboard_wake.last_scan_code);
+      terminal_output::field(Serial, " count=", keyboard_wake.last_capture_count);
+      terminal_output::field(Serial, " wake_rows=0x", keyboard_wake.wake_rows, HEX);
+      terminal_output::line(Serial, " captured_rows=0x", keyboard_wake.captured_rows, HEX);
 
       const idle_sleep_policy::Snapshot sleep = idle_sleep::statistics();
-      Serial.print("SLEEP backend=");
-      Serial.print(idle_sleep::backend_name());
-      Serial.print(" enabled=");
-      Serial.print(idle_sleep::enabled() ? 1 : 0);
-      Serial.print(" attempts=");
-      Serial.print(sleep.attempts);
-      Serial.print(" entries=");
-      Serial.print(sleep.entries);
+      terminal_output::field(Serial, "SLEEP backend=", idle_sleep::backend_name());
+      terminal_output::field(Serial, " enabled=", idle_sleep::enabled() ? 1 : 0);
+      terminal_output::field(Serial, " attempts=", sleep.attempts);
+      terminal_output::field(Serial, " entries=", sleep.entries);
       Serial.print(" total_us=");
       print_u64(sleep.total_sleep_us);
-      Serial.print(" min_us=");
-      Serial.print(sleep.minimum_sleep_us);
-      Serial.print(" avg_us=");
-      Serial.print(sleep.average_sleep_us());
-      Serial.print(" max_us=");
-      Serial.print(sleep.maximum_sleep_us);
-      Serial.print(" last_blockers=0x");
-      Serial.println(sleep.last_blockers, HEX);
+      terminal_output::field(Serial, " min_us=", sleep.minimum_sleep_us);
+      terminal_output::field(Serial, " avg_us=", sleep.average_sleep_us());
+      terminal_output::field(Serial, " max_us=", sleep.maximum_sleep_us);
+      terminal_output::line(Serial, " last_blockers=0x", sleep.last_blockers, HEX);
       Serial.print("SLEEP reject");
       for(usize index = 0; index < idle_sleep_policy::BLOCKER_COUNT; index++) {
         Serial.write(' ');
@@ -2022,42 +1861,30 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
 #if MK61_DEEP_IDLE_SUPPORTED
       const deep_idle_policy::Snapshot deep = deep_idle::statistics();
-      Serial.print("DEEP backend=");
-      Serial.print(deep_idle::backend_name());
-      Serial.print(" enabled=");
-      Serial.print(deep_idle::enabled() ? 1 : 0);
-      Serial.print(" state=");
-      Serial.print(deep_idle_policy::state_name(deep.state));
-      Serial.print(" wake=");
-      Serial.print(deep_idle_policy::wake_name(deep.last_wake));
-      Serial.print(" failure=");
-      Serial.print(deep_idle_policy::failure_name(deep.last_failure));
-      Serial.print(" request=");
-      Serial.print(deep.seconds);
+      terminal_output::field(Serial, "DEEP backend=", deep_idle::backend_name());
+      terminal_output::field(Serial, " enabled=", deep_idle::enabled() ? 1 : 0);
+      terminal_output::field(Serial, " state=", deep_idle_policy::state_name(deep.state));
+      terminal_output::field(Serial, " wake=", deep_idle_policy::wake_name(deep.last_wake));
+      terminal_output::field(
+          Serial, " failure=", deep_idle_policy::failure_name(deep.last_failure));
+      terminal_output::field(Serial, " request=", deep.seconds);
       Serial.write('x');
       Serial.print(deep.requested_cycles);
-      Serial.print(" completed=");
-      Serial.print(deep.completed_cycles);
-      Serial.print(" attempts=");
-      Serial.print(deep.attempts);
-      Serial.print(" entries=");
-      Serial.print(deep.entries);
-      Serial.print(" wakes=");
-      Serial.print(deep.rtc_timer_wakes);
+      terminal_output::field(Serial, " completed=", deep.completed_cycles);
+      terminal_output::field(Serial, " attempts=", deep.attempts);
+      terminal_output::field(Serial, " entries=", deep.entries);
+      terminal_output::field(Serial, " wakes=", deep.rtc_timer_wakes);
       Serial.write('/');
       Serial.print(deep.keyboard_wakes);
       Serial.write('/');
       Serial.print(deep.rtc_alarm_wakes);
       Serial.write('/');
       Serial.print(deep.other_wakes);
-      Serial.print(" failures=");
-      Serial.print(deep.failures);
+      terminal_output::field(Serial, " failures=", deep.failures);
       Serial.print(" total_ms=");
       print_u64(deep.total_elapsed_ms);
-      Serial.print(" last_ms=");
-      Serial.print(deep.last_elapsed_ms);
-      Serial.print(" blockers=0x");
-      Serial.println(deep.last_blockers, HEX);
+      terminal_output::field(Serial, " last_ms=", deep.last_elapsed_ms);
+      terminal_output::line(Serial, " blockers=0x", deep.last_blockers, HEX);
       Serial.print("DEEP reject");
       for(usize index = 0; index < deep_idle_policy::BLOCKER_COUNT; index++) {
         Serial.write(' ');
@@ -2068,18 +1895,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       Serial.println();
       const deep_idle_auto_policy::Snapshot automatic =
           deep_idle::automatic_statistics(millis());
-      Serial.print("DEEP AUTO enabled=");
-      Serial.print(deep_idle::automatic_enabled() ? 1 : 0);
-      Serial.print(" phase=");
-      Serial.print(deep_idle_auto_policy::phase_name(automatic.phase));
-      Serial.print(" holdoff=");
-      Serial.print(automatic.manual_holdoff ? 1 : 0);
-      Serial.print(" requests=");
-      Serial.print(automatic.automatic_requests);
-      Serial.print(" reentries=");
-      Serial.print(automatic.automatic_reentries);
-      Serial.print(" wait_ms=");
-      Serial.println(automatic.wait_remaining_ms);
+      terminal_output::field(
+          Serial, "DEEP AUTO enabled=", deep_idle::automatic_enabled() ? 1 : 0);
+      terminal_output::field(
+          Serial, " phase=", deep_idle_auto_policy::phase_name(automatic.phase));
+      terminal_output::field(Serial, " holdoff=", automatic.manual_holdoff ? 1 : 0);
+      terminal_output::field(Serial, " requests=", automatic.automatic_requests);
+      terminal_output::field(Serial, " reentries=", automatic.automatic_reentries);
+      terminal_output::line(Serial, " wait_ms=", automatic.wait_remaining_ms);
 #endif
 
       print_power_status();
@@ -2095,16 +1918,11 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         const dwt_profiler::Point point = (dwt_profiler::Point) index;
         const dwt_profiler::Statistics& stats =
           dwt_profiler::statistics(point);
-        Serial.print("PROF ");
-        Serial.print(dwt_profiler::point_name(point));
-        Serial.print(" n=");
-        Serial.print(stats.samples);
-        Serial.print(" min=");
-        Serial.print(stats.minimum_cycles);
-        Serial.print(" avg=");
-        Serial.print(stats.average_cycles());
-        Serial.print(" max=");
-        Serial.print(stats.maximum_cycles);
+        terminal_output::field(Serial, "PROF ", dwt_profiler::point_name(point));
+        terminal_output::field(Serial, " n=", stats.samples);
+        terminal_output::field(Serial, " min=", stats.minimum_cycles);
+        terminal_output::field(Serial, " avg=", stats.average_cycles());
+        terminal_output::field(Serial, " max=", stats.maximum_cycles);
         Serial.print(" total=");
         print_u64(stats.total_cycles);
         Serial.println();
@@ -2381,10 +2199,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::error();
       }
 
-      Serial.print("PROF saved ");
-      Serial.print(path);
-      Serial.print(" bytes=");
-      Serial.println(length);
+      terminal_output::field(Serial, "PROF saved ", path);
+      terminal_output::line(Serial, " bytes=", length);
       return terminal_protocol::Result::ok();
     }
 #endif
@@ -2481,8 +2297,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           return terminal_protocol::Result::error();
         }
 
-        Serial.print("PROF corebench steps=");
-        Serial.print(steps);
+        terminal_output::field(Serial, "PROF corebench steps=", steps);
         Serial.println(" restored=1");
         print_profile_statistics();
         return terminal_protocol::Result::ok();
@@ -2521,10 +2336,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
           Serial.println("PROF deep busy/unavailable");
           return terminal_protocol::Result::error();
         }
-        Serial.print("PROF deep scheduled seconds=");
-        Serial.print(seconds);
-        Serial.print(" cycles=");
-        Serial.print(cycles);
+        terminal_output::field(Serial, "PROF deep scheduled seconds=", seconds);
+        terminal_output::field(Serial, " cycles=", cycles);
 #if MK61_USB_SUSPEND_SUPPORTED
         Serial.println(
             "; waiting for host USB suspend; USB will stay enumerated");
@@ -2702,10 +2515,8 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
 
 #if MK61_ENABLE_READ_BENCHMARKS
     void print_benchmark_pass(u8 pass, u32 elapsed_us, u32 crc) {
-      Serial.print("BENCH pass=");
-      Serial.print(pass);
-      Serial.print(" read_us=");
-      Serial.print(elapsed_us);
+      terminal_output::field(Serial, "BENCH pass=", pass);
+      terminal_output::field(Serial, " read_us=", elapsed_us);
       Serial.print(" crc=0x");
       terminal_print_hex_u32(crc);
       Serial.println();
@@ -2718,20 +2529,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         Serial.println("BENCH error=data-mismatch");
         return terminal_protocol::Result::error();
       }
-      Serial.print("BENCH summary kind=");
-      Serial.print(kind);
-      Serial.print(" bytes=");
-      Serial.print(bytes);
-      Serial.print(" passes=");
-      Serial.print(summary.samples);
-      Serial.print(" min_us=");
-      Serial.print(summary.minimum_us);
-      Serial.print(" avg_us=");
-      Serial.print(summary.average_us());
-      Serial.print(" max_us=");
-      Serial.print(summary.maximum_us);
-      Serial.print(" read_Bps=");
-      Serial.print(summary.bytes_per_second(bytes));
+      terminal_output::field(Serial, "BENCH summary kind=", kind);
+      terminal_output::field(Serial, " bytes=", bytes);
+      terminal_output::field(Serial, " passes=", summary.samples);
+      terminal_output::field(Serial, " min_us=", summary.minimum_us);
+      terminal_output::field(Serial, " avg_us=", summary.average_us());
+      terminal_output::field(Serial, " max_us=", summary.maximum_us);
+      terminal_output::field(Serial, " read_Bps=", summary.bytes_per_second(bytes));
       Serial.print(" crc=0x");
       terminal_print_hex_u32(summary.reference_crc);
       Serial.println();
@@ -2757,17 +2561,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::error();
       }
       if(entry.data_len > program_store::MAX_MK61_TEXT_SIZE) {
-        Serial.print("BENCH error=file-too-large max=");
-        Serial.println(program_store::MAX_MK61_TEXT_SIZE);
+        terminal_output::line(
+            Serial, "BENCH error=file-too-large max=", program_store::MAX_MK61_TEXT_SIZE);
         return terminal_protocol::Result::error();
       }
 
-      Serial.print("BENCH kind=file path=");
-      Serial.print(path);
-      Serial.print(" bytes=");
-      Serial.print(entry.data_len);
-      Serial.print(" passes=");
-      Serial.println(passes);
+      terminal_output::field(Serial, "BENCH kind=file path=", path);
+      terminal_output::field(Serial, " bytes=", entry.data_len);
+      terminal_output::line(Serial, " passes=", passes);
 
       alignas(4) u8 data[program_store::MAX_MK61_TEXT_SIZE];
       read_benchmark::Summary summary;
@@ -2816,17 +2617,13 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
       const u32 available = geometry.data_sector_count *
                             storage_geometry::PHYSICAL_SECTOR_SIZE;
       if(bytes > available) {
-        Serial.print("BENCH error=range max=");
-        Serial.println(available);
+        terminal_output::line(Serial, "BENCH error=range max=", available);
         return terminal_protocol::Result::error();
       }
 
-      Serial.print("BENCH kind=flash address=");
-      Serial.print(address);
-      Serial.print(" bytes=");
-      Serial.print(bytes);
-      Serial.print(" passes=");
-      Serial.println(passes);
+      terminal_output::field(Serial, "BENCH kind=flash address=", address);
+      terminal_output::field(Serial, " bytes=", bytes);
+      terminal_output::line(Serial, " passes=", passes);
 
       alignas(4) u8 block[512];
       read_benchmark::Summary summary;
@@ -2890,12 +2687,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
         return terminal_protocol::Result::error();
       }
 
-      Serial.print("BENCH kind=random reads=");
-      Serial.print(reads);
-      Serial.print(" bytes=");
-      Serial.print((u32) reads * BLOCK_SIZE);
-      Serial.print(" passes=");
-      Serial.print(passes);
+      terminal_output::field(Serial, "BENCH kind=random reads=", reads);
+      terminal_output::field(Serial, " bytes=", (u32) reads * BLOCK_SIZE);
+      terminal_output::field(Serial, " passes=", passes);
       Serial.print(" seed=0x");
       terminal_print_hex_u32(SEED);
       Serial.println();
@@ -3042,20 +2836,14 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
     static void print_alarm_status(void) {
       rtc_clock::BackupStatus status = {};
       (void) rtc_clock::backup_status(status);
-      Serial.print("RTC META valid=");
-      Serial.print(status.valid ? 1 : 0);
-      Serial.print(" boot-valid=");
-      Serial.print(status.valid_at_boot ? 1 : 0);
-      Serial.print(" boot=");
-      Serial.print(status.boot_count);
-      Serial.print(" reset=0x");
-      Serial.print(status.reset_flags, HEX);
-      Serial.print(" wake=");
-      Serial.print(rtc_backup_layout::wake_reason_name(status.last_wake));
-      Serial.print(" power-fail=");
-      Serial.print(status.previous_power_unstable ? 1 : 0);
-      Serial.print(" arm-fail=");
-      Serial.println(status.alarm_arm_failures);
+      terminal_output::field(Serial, "RTC META valid=", status.valid ? 1 : 0);
+      terminal_output::field(Serial, " boot-valid=", status.valid_at_boot ? 1 : 0);
+      terminal_output::field(Serial, " boot=", status.boot_count);
+      terminal_output::field(Serial, " reset=0x", status.reset_flags, HEX);
+      terminal_output::field(
+          Serial, " wake=", rtc_backup_layout::wake_reason_name(status.last_wake));
+      terminal_output::field(Serial, " power-fail=", status.previous_power_unstable ? 1 : 0);
+      terminal_output::line(Serial, " arm-fail=", status.alarm_arm_failures);
       print_alarm_line(rtc_clock::AlarmId::A);
       print_alarm_line(rtc_clock::AlarmId::B);
     }
@@ -4302,15 +4090,12 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 }
                 const early_dfu::Diagnostic diagnostic =
                     early_dfu::diagnostic();
-                Serial.print("DFU status valid=");
-                Serial.print(diagnostic.valid ? 1 : 0);
-                Serial.print(" generation=");
-                Serial.print(diagnostic.generation);
+                terminal_output::field(Serial, "DFU status valid=", diagnostic.valid ? 1 : 0);
+                terminal_output::field(Serial, " generation=", diagnostic.generation);
                 Serial.print(" stage=");
                 Serial.print(early_dfu::diagnostic_stage_name(
                     diagnostic.stage));
-                Serial.print(" sources=0x");
-                Serial.println(diagnostic.sources, HEX);
+                terminal_output::line(Serial, " sources=0x", diagnostic.sources, HEX);
                 recive_pos = 0;
                 return terminal_protocol::Result::ok();
               }
@@ -4774,20 +4559,18 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               }
               const u16 used = program_store::used_nodes();
               const u16 maximum = program_store::max_nodes();
-              Serial.print("Flash: ");
-              Serial.print(program_store::geometry().capacity_bytes);
+              terminal_output::field(
+                  Serial, "Flash: ", program_store::geometry().capacity_bytes);
               Serial.println(" bytes");
               Serial.print("Nodes: "); Serial.print(used); Serial.print(" used, ");
               Serial.print(maximum - used); Serial.print(" free, ");
               Serial.print(maximum); Serial.println(" total");
-              Serial.print("Visible: ");
-              Serial.print(stored_visible - directories);
+              terminal_output::field(Serial, "Visible: ", stored_visible - directories);
               Serial.print(" files, "); Serial.print(directories);
-              Serial.print(" directories, ");
-              Serial.print(used - stored_visible);
+              terminal_output::field(Serial, " directories, ", used - stored_visible);
               Serial.println(" directory extents");
-              Serial.print("FAT12 cluster: ");
-              Serial.print((u32) program_store::geometry().sectors_per_cluster * 512U);
+              terminal_output::field(
+                  Serial, "FAT12 cluster: ", (u32) program_store::geometry().sectors_per_cluster * 512U);
               Serial.println(" bytes (virtual)");
               Serial.print("Settings: "); Serial.print(program_store::settings_size());
               Serial.println(" bytes reserved");
@@ -4797,32 +4580,26 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                 terminal_print_hex_byte((u8) (flash.jedec_id >> 16));
                 terminal_print_hex_byte((u8) (flash.jedec_id >> 8));
                 terminal_print_hex_byte((u8) flash.jedec_id);
-                Serial.print(" SFDP=");
-                Serial.print(flash.sfdp_present ? 1 : 0);
-                Serial.print(" probe=");
-                Serial.print(flash.probe_upper_bytes);
-                Serial.print(" page=");
-                Serial.print(flash.page_size);
+                terminal_output::field(Serial, " SFDP=", flash.sfdp_present ? 1 : 0);
+                terminal_output::field(Serial, " probe=", flash.probe_upper_bytes);
+                terminal_output::field(Serial, " page=", flash.page_size);
                 Serial.print(" erase=0x");
                 terminal_print_hex_byte(flash.erase_opcode);
-                Serial.print(" address-bytes=");
-                Serial.print(flash.four_byte_address ? 4 : 3);
-                Serial.print(" opcodes=");
-                Serial.print(flash.four_byte_opcodes ? "4-byte" : "legacy");
+                terminal_output::field(
+                    Serial, " address-bytes=", flash.four_byte_address ? 4 : 3);
+                terminal_output::field(
+                    Serial, " opcodes=", flash.four_byte_opcodes ? "4-byte" : "legacy");
                 Serial.print(" status=");
                 for(u8 index = 0; index < flash.status_count; index++) {
                   if(index != 0) Serial.write('/');
                   terminal_print_hex_byte(flash.status[index]);
                 }
                 Serial.println();
-                Serial.print("SPI1 requested_hz=");
-                Serial.print(flash.requested_clock_hz);
-                Serial.print(" pclk_hz=");
-                Serial.print(flash.peripheral_clock_hz);
-                Serial.print(" prescaler=");
-                Serial.print(flash.prescaler);
-                Serial.print(" actual_hz=");
-                Serial.println(flash.actual_clock_hz);
+                terminal_output::field(
+                    Serial, "SPI1 requested_hz=", flash.requested_clock_hz);
+                terminal_output::field(Serial, " pclk_hz=", flash.peripheral_clock_hz);
+                terminal_output::field(Serial, " prescaler=", flash.prescaler);
+                terminal_output::line(Serial, " actual_hz=", flash.actual_clock_hz);
               } else {
                 Serial.println("NOR diagnostics=unavailable");
               }
@@ -4835,12 +4612,9 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
               Serial.print("FIRMWARE CRC state=");
               Serial.print(resident_firmware_format::status_name(
                   firmware.status));
-              Serial.print(" required=");
-              Serial.print(MK61_REQUIRE_RESIDENT_CRC);
-              Serial.print(" image=");
-              Serial.print(firmware.image_size);
-              Serial.print(" footer=");
-              Serial.print(firmware.footer_offset);
+              terminal_output::field(Serial, " required=", MK61_REQUIRE_RESIDENT_CRC);
+              terminal_output::field(Serial, " image=", firmware.image_size);
+              terminal_output::field(Serial, " footer=", firmware.footer_offset);
               Serial.print(" expected=0x");
               terminal_print_hex_u32(firmware.expected_crc32);
               Serial.print(" build=0x");
@@ -4852,8 +4626,7 @@ Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=
                                resident_firmware_format::Status::VALID
                            ? (firmware.hardware_crc ? "hardware" : "software")
                            : "not-run");
-              Serial.print(" cycles=");
-              Serial.println(firmware.cycles);
+              terminal_output::line(Serial, " cycles=", firmware.cycles);
               resident_firmware::Failure firmware_failure = {};
               if(resident_firmware::last_failure(firmware_failure)) {
                 Serial.print("FIRMWARE last-failure state=");

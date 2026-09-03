@@ -212,7 +212,18 @@ if(MK61_ENABLE_LTO AND
     "LINKER:--export-dynamic-symbol-list=${_mk61_system_app_exports}")
   set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS
     "${_mk61_system_app_exports}")
+elseif(MK61_ENABLE_LTO)
+  # No built-in APP imports resident symbols through --just-symbols, so the
+  # live reference graph (including the user-APP API table) is sufficient for
+  # GC. Keep per-function/data sections through the LTO link instead of merged
+  # LTRANS data/bss blocks with partition-dependent padding. Do not apply this
+  # to System APP builds: exported visibility alone is not a GC root for the
+  # direct-symbol ABI used by those separately linked modules.
+  target_link_options(resident PRIVATE -ffunction-sections -fdata-sections)
 endif()
+
+set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/check-flash.cmake")
 
 add_custom_command(TARGET resident POST_BUILD
   COMMAND "${Python3_EXECUTABLE}"
@@ -223,6 +234,14 @@ add_custom_command(TARGET resident POST_BUILD
     "$<TARGET_FILE:resident>" "${CMAKE_BINARY_DIR}/resident.bin"
   COMMAND "${CMAKE_OBJCOPY}" -O ihex
     "$<TARGET_FILE:resident>" "${CMAKE_BINARY_DIR}/resident.hex"
+  # The laboratory USB Screen + WS0010 graphics combination is close to the
+  # F401 limit. Do not accept an image that fits by only a handful of bytes.
+  # This gate also runs in local, Windows and macOS builds, not just CI.
+  COMMAND "${CMAKE_COMMAND}"
+    "-DMK61_BIN=${CMAKE_BINARY_DIR}/resident.bin"
+    "-DMK61_FLASH_CAPACITY=${BOARD_MAXSIZE}"
+    "-DMK61_FLASH_MIN_HEADROOM=512"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/check-flash.cmake"
   # Keep the canonical F401/LTO firmware within our explicit 80% static-RAM
   # budget. Arduino uses a more conservative generic warning threshold; the
   # numeric project budget is the regression contract. USB Screen is an

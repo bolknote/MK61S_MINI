@@ -2,6 +2,7 @@
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
 #include "terminal_line_editor.hpp"
+#include "terminal_output.hpp"
 #include "m61_print.hpp"
 #include "m61_ansi.hpp"
 #include "rtc_clock_core.hpp"
@@ -13,7 +14,69 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <typeinfo>
 #include <vector>
+
+// Record both values and their types. A text-only mock would miss a narrowing
+// conversion or char/byte overload change in the shared diagnostic writer.
+struct DiagnosticPrintProbe {
+  std::vector<std::string> calls;
+
+  void print(const char* text) {
+    calls.push_back(std::string("text:") + text);
+  }
+
+  template<typename Value> void print(Value value) {
+    calls.push_back(std::string(typeid(Value).name()) + ":" +
+                    std::to_string(value));
+  }
+
+  template<typename Value> void print(Value value, int base) {
+    print(value);
+    calls.push_back("base:" + std::to_string(base));
+  }
+
+  void println() { calls.push_back("CRLF"); }
+};
+
+template<typename Value, typename... Format>
+static void check_diagnostic_field(Value value, Format... format) {
+  DiagnosticPrintProbe direct;
+  DiagnosticPrintProbe shared;
+  direct.print(" field=");
+  direct.print(value, format...);
+  terminal_output::field(shared, " field=", value, format...);
+  assert(shared.calls == direct.calls);
+
+  shared.calls.clear();
+  direct.println();
+  terminal_output::line(shared, " field=", value, format...);
+  assert(shared.calls == direct.calls);
+}
+
+static void test_diagnostic_field_preserves_print_protocol(void) {
+  check_diagnostic_field("WFI");
+  check_diagnostic_field("");
+  check_diagnostic_field('F');
+  check_diagnostic_field(false);
+  check_diagnostic_field(true);
+  check_diagnostic_field(u8{255});
+  check_diagnostic_field(u16{65535});
+  check_diagnostic_field(UINT32_MAX);
+  check_diagnostic_field(UINT64_MAX);
+  check_diagnostic_field(INT32_MIN);
+  check_diagnostic_field(INT64_MIN);
+  check_diagnostic_field(UINT32_MAX, 16);
+  check_diagnostic_field(u8{0x80}, 16);
+  check_diagnostic_field(-42, 10);
+
+  DiagnosticPrintProbe stream;
+  terminal_output::field(stream, "DISPLAY backend=", "WS0010");
+  terminal_output::field(stream, " mode=", "character");
+  assert((stream.calls == std::vector<std::string>{
+      "text:DISPLAY backend=", "text:WS0010",
+      "text: mode=", "text:character"}));
+}
 
 static void test_input_capacity_reserves_terminator(void) {
   assert(terminal_core::input_can_append(0));
@@ -712,6 +775,7 @@ static void test_rtc_idle_clock_glyphs_and_slots(void) {
 }
 
 int main(void) {
+  test_diagnostic_field_preserves_print_protocol();
   test_input_capacity_reserves_terminator();
   test_script_argument_rebinds_without_copy();
   test_terminal_escape_decoder();

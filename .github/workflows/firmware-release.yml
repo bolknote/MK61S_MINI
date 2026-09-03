@@ -43,12 +43,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Test stack analyzer on the native host
+      - name: Test build gates on the native host
         shell: pwsh
         run: |
           python3 tests/check_stack_usage_self_test.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python3 tests/analyze_stack_usage_self_test.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python3 tests/flash_budget_self_test.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Setup Arduino CLI for dependency installation
