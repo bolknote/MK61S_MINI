@@ -28,14 +28,23 @@ DROP_OPTIONS = {"-MMD", "-MD", "-MP", "-MG", "-ffat-lto-objects",
 
 
 def windows_command_line(command: str) -> list[str]:
+    # ctypes defaults DLL return values to C int, which loses pointers on
+    # Win64. Bind both allocation and release with their actual pointer types.
+    parse = ctypes.windll.shell32.CommandLineToArgvW
+    parse.argtypes = [ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_int)]
+    parse.restype = ctypes.POINTER(ctypes.c_wchar_p)
+    free = ctypes.windll.kernel32.LocalFree
+    free.argtypes = [ctypes.c_void_p]
+    free.restype = ctypes.c_void_p
+
     count = ctypes.c_int()
-    argv = ctypes.windll.shell32.CommandLineToArgvW(command, ctypes.byref(count))
+    argv = parse(command, ctypes.byref(count))
     if not argv:
         raise OSError("CommandLineToArgvW failed")
     try:
         return [argv[index] for index in range(count.value)]
     finally:
-        ctypes.windll.kernel32.LocalFree(argv)
+        free(argv)
 
 
 def entry_arguments(entry: dict[str, object]) -> list[str]:
