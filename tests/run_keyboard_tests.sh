@@ -2,6 +2,9 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+python3 "$root/tests/keyboard_source_gate_self_test.py"
+bash "$root/tests/check_keyboard_handoff.sh" "$root/code"
+
 out="${TMPDIR:-/tmp}/mk61_keyboard_self_test"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
@@ -20,8 +23,3 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" -I"$root/code" \
   "$root/tests/keyboard_handoff_self_test.cpp" -o "${out}_handoff"
 "${out}_handoff"
-
-if rg -n 'exclude_before|drop_pending_key_events|drop_menu_exit_key_events|drop_key_events_until_release' "$root/code"; then
-  printf 'Legacy input discard path must not coexist with keyboard handoff.\n' >&2
-  exit 1
-fi

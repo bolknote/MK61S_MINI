@@ -1,5 +1,8 @@
 // Included by the existing production-backed VFAT/C5 harness. Test-only: uses
 // its block device adapter and real transaction/rollback code, not a FAT model.
+#include <cstdio>
+#include <cstring>
+
 static void test_bounded_vfat_mutations(void) {
   static const u8 keep[] = "unchanged C5 payload";
   static const char short_name[11] = {'M','U','T','A','T','E','~','1','T','X','T'};
