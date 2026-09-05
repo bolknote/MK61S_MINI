@@ -297,6 +297,7 @@ namespace core_61 {
     IK1306_ADD_S_REGION3,
     IK1306_ADVANCE_REGION3,
     IK1306_RESET_REGION3,
+    IK1306_WAIT_REGION1,
     COUNT
   };
 #if !defined(ARDUINO)

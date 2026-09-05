@@ -534,6 +534,28 @@ static inline core_packed_amk::Selection select_amk_lanes_1302_1303(
 #endif
 
 #if MK61_CORE_NATIVE_HOT_PATHS
+static inline void __attribute__((always_inline)) native_ik1306_wait_tick(
+    mtick_t signal, usize j) {
+  // Body 40 polls eight ring nibbles with 3B, then reduces the last nibble
+  // to a wake bit with 12/14. Keep every ring read on its original microtick.
+  m_IK1306.AMK = 0;
+  m_IK1306.P = 0;
+  if(j == 1 || j == 4) {
+    m_IK1306.AMK = 0x3B;
+    m_IK1306.S = m_IK1306.pM[signal];
+    if(m_IK1306.MOD == 0) m_IK1306.R[signal] = m_IK1306.S;
+  } else if(j == 6) {
+    m_IK1306.AMK = 0x12;
+    const u32 sum = m_IK1306.S + 1U;
+    m_IK1306.P = sum >> 4;
+    m_IK1306.L = m_IK1306.P & 1U;
+    m_IK1306.S = sum & 15U;
+  } else if(j == 7) {
+    m_IK1306.AMK = 0x14;
+    m_IK1306.S = m_IK1306.L;
+  }
+}
+
 static inline void native_ik1306_zero_body(core_61::NativeHotPath path) {
   // AND_AMK body 00 contains only microinstruction 00. Every bit-serial tick
   // therefore clears P and leaves all persistent data untouched; the final
@@ -669,6 +691,9 @@ static core_61::Mk61ProgramBoundaryHook mk61_program_boundary_hook;
 static void* mk61_program_boundary_user_data;
 static bool mk61_program_boundary_dispatching;
 static bool mk61_program_boundary_yielded;
+// One-shot operand of a direct jump/conditional branch. Zero means none;
+// otherwise store address + 1 so reset state needs no nonzero initializer.
+static u8 mk61_jump_operand;
 static constexpr u8 MK61_CALL_OPERAND_DEPTH = 5;
 static u8 mk61_call_operand_addresses[MK61_CALL_OPERAND_DEPTH];
 static u8 mk61_call_operand_visits[MK61_CALL_OPERAND_DEPTH];
@@ -1068,6 +1093,7 @@ static void reset_mk61_command_runtime(void) {
   keyboard_command_complete_pending = false;
   external_random_pending = false;
   mk61_program_boundary_yielded = false;
+  mk61_jump_operand = 0;
   memset(mk61_call_operand_addresses, 0,
          sizeof(mk61_call_operand_addresses));
   memset(mk61_call_operand_visits, 0,
@@ -1110,9 +1136,14 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
   if(address == 0x06U) {
     const u8 program_address = prefetched_program_address();
 
-    // Следующий код программы уже находится в R30/R33. Достижение этой точки
-    // также подтверждает завершение предыдущей программной команды.
-    if(active_mk61_command.active) finish_active_mk61_command();
+    // A branch's address byte can visit the same prefetch point as an opcode.
+    // Consume only the immediately following visit: a jump to its own operand
+    // must expose that address as a real command on the subsequent visit.
+    if(mk61_jump_operand != 0) {
+      const u8 operand = mk61_jump_operand - 1U;
+      mk61_jump_operand = 0;
+      if(program_address == operand) return false;
+    }
 
     // Штатное ПЗУ ПП/CALL дважды показывает операнд по этому микроадресу:
     // при выборке цели и снова при возврате за эту ячейку. Ни одно посещение
@@ -1125,6 +1156,10 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
       if(visits == 0) mk61_call_operand_depth--;
       return false;
     }
+
+    // Only a real command boundary completes the preceding command; neither
+    // BEFORE/AFTER callbacks nor boundary hooks may observe an address operand.
+    if(active_mk61_command.active) finish_active_mk61_command();
 
     const u8 opcode = decode_mk61_opcode();
     if(dispatch_mk61_program_boundary(program_address, opcode)) return true;
@@ -1143,6 +1178,10 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
             (u8) (((usize) program_address + 1U) % steps);
         mk61_call_operand_visits[mk61_call_operand_depth - 1] = 2;
       }
+    } else if(executed_opcode != 0x53U &&
+              core_61::len_code_command(executed_opcode) == 2) {
+      mk61_jump_operand =
+          (u8) (((usize) program_address + 1U) % core_61::program_steps() + 1U);
     }
     return false;
   }
@@ -1153,7 +1192,10 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     // Клавиатурная В/О начинает новую цепочку вызовов калькулятора. Обычное
     // продолжение С/П намеренно сохраняет ожидающие операнды подпрограммы,
     // приостановленной клавишей С/П.
-    if(opcode == 0x52U) mk61_call_operand_depth = 0;
+    if(opcode == 0x52U) {
+      mk61_call_operand_depth = 0;
+      mk61_jump_operand = 0;
+    }
     if(!has_mk61_command_target(opcode)) return false;
     const u8 replacement = begin_mk61_command(
         opcode, core_61::Mk61CommandSource::KEYBOARD);
@@ -2282,6 +2324,10 @@ void cycle(void) {
         IK1306_uI = IK1306_GoZero();
         IK1306_uI_hi = (IK1306_uI >> 16) & 0xFFU;
       }
+#if defined(MK61_CORE_TEST_BOUNDARY) && !defined(ARDUINO)
+      // Host-only lockstep observation; absent from firmware, including SRAM.
+      MK61_CORE_TEST_BOUNDARY(count, 0);
+#endif
 
       #ifdef out_dump
       dumpm(signal_I, count);
@@ -2308,6 +2354,17 @@ void cycle(void) {
             native_ik1306_zero_body(
                 core_61::NativeHotPath::IK1306_ZERO_REGION1);
 #endif
+          } else if(native_hot_paths_are_enabled && (u8) IK1306_uI == 0x40U) {
+            for(auto j : {0,1,2,3,4,5, 3,4,5,3,4,5, 3,4,5,3,4,5,
+                          3,4,5,3,4,5, 6,7,8}) {
+              const mtick_t current = signal_I;
+              CycleBWithoutIK1306(j);
+#if MK61_DWT_CORE_DETAIL_SUPPORTED
+              MK61_PROFILE_ACCUMULATE_SCOPE(ik1306_time);
+#endif
+              native_ik1306_wait_tick(current, j);
+            }
+            count_native_hot_path(core_61::NativeHotPath::IK1306_WAIT_REGION1);
           } else
 #endif
           {
@@ -2320,6 +2377,9 @@ void cycle(void) {
             }
           } // 0..26
       }
+#if defined(MK61_CORE_TEST_BOUNDARY) && !defined(ARDUINO)
+      MK61_CORE_TEST_BOUNDARY(count, 27);
+#endif
 
       {
           MK61_PROFILE_ACCUMULATE_SCOPE(ticks_27_35_time);
@@ -2357,6 +2417,9 @@ void cycle(void) {
             }
           } // 27..35
       }
+#if defined(MK61_CORE_TEST_BOUNDARY) && !defined(ARDUINO)
+      MK61_CORE_TEST_BOUNDARY(count, 36);
+#endif
 
       {
           MK61_PROFILE_ACCUMULATE_SCOPE(ticks_36_41_time);
@@ -2425,6 +2488,9 @@ void cycle(void) {
             CycleB(4);   // 40
             CycleE(5);   // 41
           }
+#if defined(MK61_CORE_TEST_BOUNDARY) && !defined(ARDUINO)
+          MK61_CORE_TEST_BOUNDARY(count, 42);
+#endif
 
           m_IK1302.pM += 42;
           m_IK1303.pM += 42;
@@ -2438,6 +2504,10 @@ void cycle(void) {
           else if(m_IK1306.pM == active_end_ring_m){
                    m_IK1306.pM = &ringM[0];
           }
+#if defined(MK61_CORE_TEST_BOUNDARY) && !defined(ARDUINO)
+          // 43 denotes transport after all 42 ticks, not an extra microtick.
+          MK61_CORE_TEST_BOUNDARY(count, 43);
+#endif
       }
   }
 #ifdef out_dump
@@ -3312,11 +3382,13 @@ struct PackedEmu {
 
 struct PackedActiveCommand {
   u32 sequence;
-  u8 active;
+  u8 active_and_jump_operand; // low bit: active; upper 7: operand address + 1
   u8 source;
   u8 opcode;
   u8 executed_opcode;
 };
+static_assert(core_61::MAX_PROGRAM_STEP < 128,
+              "pending operand must fit beside the active command bit");
 
 static constexpr u8 CONTEXT_EDIT = 0x01;
 static constexpr u8 CONTEXT_EXPANDED = 0x02;
@@ -3469,7 +3541,8 @@ static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
          snapshot.ik1303.p_and_amk1 < sizeof(IK1303_AND_AMK) &&
          snapshot.ik1306.p_and_amk < sizeof(IK1306_AND_AMK) &&
          snapshot.ik1306.p_and_amk1 < sizeof(IK1306_AND_AMK) &&
-         snapshot.active_command.active <= 1 &&
+         (snapshot.active_command.active_and_jump_operand >> 1) <=
+             core_61::MAX_PROGRAM_STEP &&
          snapshot.active_command.source <=
              (u8) core_61::Mk61CommandSource::PROGRAM &&
          (snapshot.state_flags & ~CONTEXT_STATE_MASK) == 0 &&
@@ -3590,7 +3663,8 @@ bool save_context(ContextBuffer& out) {
   }
   snapshot.random_state = external_random_state;
   snapshot.active_command.sequence = active_mk61_command.sequence;
-  snapshot.active_command.active = active_mk61_command.active ? 1 : 0;
+  snapshot.active_command.active_and_jump_operand =
+      (u8) ((mk61_jump_operand << 1) | (active_mk61_command.active ? 1U : 0U));
   snapshot.active_command.source = (u8) active_mk61_command.source;
   snapshot.active_command.opcode = active_mk61_command.opcode;
   snapshot.active_command.executed_opcode =
@@ -3632,7 +3706,9 @@ bool restore_context(const ContextBuffer& saved) {
   external_random_pending =
       (snapshot.state_flags & CONTEXT_RANDOM_PENDING) != 0;
   external_random_state = snapshot.random_state;
-  active_mk61_command.active = snapshot.active_command.active != 0;
+  active_mk61_command.active =
+      (snapshot.active_command.active_and_jump_operand & 1U) != 0;
+  mk61_jump_operand = snapshot.active_command.active_and_jump_operand >> 1;
   active_mk61_command.source =
       (core_61::Mk61CommandSource) snapshot.active_command.source;
   active_mk61_command.opcode = snapshot.active_command.opcode;

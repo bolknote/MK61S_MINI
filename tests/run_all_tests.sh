@@ -17,6 +17,7 @@ fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_dwt_profiler_tests.sh"
 "$root/tests/run_core_packed_amk_tests.sh"
+bash "$root/tests/run_core_native_tests.sh"
 "$root/tests/run_classic_scheduler_tests.sh"
 "$root/tests/run_automate_tests.sh"
 "$root/tests/run_board_profile_tests.sh"

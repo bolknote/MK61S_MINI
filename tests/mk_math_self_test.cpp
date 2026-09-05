@@ -1272,6 +1272,9 @@ static void test_native_hot_paths(void) {
   check_true("IK06 r3 body 09 exercised",
       core_61::native_hot_path_count(
           core_61::NativeHotPath::IK1306_RESET_REGION3) > 0);
+  check_true("IK06 r1 wait body 40 exercised",
+      core_61::native_hot_path_count(
+          core_61::NativeHotPath::IK1306_WAIT_REGION1) > 0);
   core_61::set_native_hot_paths_enabled(true);
 }
 #endif
