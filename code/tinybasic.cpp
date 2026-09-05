@@ -117,8 +117,7 @@ enum class key_state {PRESSED=0, RELEASED=0x40};
 
 namespace kbd {
   static bool host_alpha_pressed;
-  void debounce_init(void) {}
-  isize scan_and_debounced(void) { return 0; }
+  isize scan(void) { return 0; }
   i32 get_key(key_state) { return -1; }
   i32 get_key_wait(void) { return KEY_OK; }
   bool is_key_pressed(i32 key_code) { return key_code == KEY_ALPHA && host_alpha_pressed; }
@@ -1796,11 +1795,9 @@ static bool tb_execute_command_list(const char* begin, const char* end, i16 curr
 static bool tb_runtime_interrupted(void) {
 #ifndef TINYBASIC_HOST_TEST
   idle_main_process();
-  kbd::scan_and_debounced();
-  const i32 key = kbd::last_key();
-  if(key == KEY_ESC || key == KEY_ESC_PRESS) {
-    (void) kbd::get_key();
-    kbd::clear_hold_key();
+  kbd::scan();
+  if(kbd::take_immediate_press(KEY_ESC) || kbd::last_key() == KEY_ESC_PRESS) {
+    kbd::handoff(kbd::Event(KEY_ESC_PRESS));
     tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
     return true;
   }
@@ -1809,28 +1806,14 @@ static bool tb_runtime_interrupted(void) {
 }
 
 #ifndef TINYBASIC_HOST_TEST
-static void tinybasic_wait_keys_released(void) {
-  kbd::clear_hold_key();
-  while(kbd::get_key() >= 0) {
-  }
-  while(kbd::any_key_pressed()) {
-    idle_main_process();
-    kbd::scan_and_debounced();
-    delay(10);
-  }
-  kbd::debounce_init();
-}
 
 static void tinybasic_wait_after_run(void) {
-  tinybasic_wait_keys_released();
   while(true) {
     idle_main_process();
-    const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0) {
-      kbd::exclude_before(scan_code);
-    }
+    const i32 scan_code = kbd::poll_event().code();
+
     if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
-      kbd::clear_hold_key();
+      kbd::handoff(kbd::Event(scan_code));
       return;
     }
     delay(10);
@@ -2376,7 +2359,7 @@ static void EditTinyBasicSlot(int slot,
 #ifndef TINYBASIC_HOST_TEST
   u32 display_mode_revision = main_lcd().displayModeRevision();
 #endif
-  kbd::debounce_init();
+
   while(true) {
 #ifndef TINYBASIC_HOST_TEST
     // Редактор владеет циклом переднего плана, поэтому сам должен поддерживать
@@ -2399,7 +2382,7 @@ static void EditTinyBasicSlot(int slot,
       draw_tinybasic_editor(source, editor.len, editor.cursor, editor.view_top, editor.sms.active);
       dirty = false;
     }
-    kbd::scan_and_debounced();
+    kbd::scan();
     i32 key_code = kbd::get_key(key_state::PRESSED);
     if(key_code < 0) {
       main_lcd().flush();
@@ -2424,6 +2407,9 @@ static void EditTinyBasicSlot(int slot,
     const text_editor::KeyResult result = text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, key_code, now);
     dirty = result != text_editor::KeyResult::NONE;
     if(result == text_editor::KeyResult::SAVE) {
+#ifndef TINYBASIC_HOST_TEST
+      kbd::handoff(kbd::Event(key_code));
+#endif
       main_lcd().cursorOff();
       if(!tb_confirm_save()) return;
       char name[TB_NAME_SIZE];
@@ -2437,20 +2423,20 @@ static void EditTinyBasicSlot(int slot,
       if(!program_store_choose_save_target(
           program_store::ProgramType::TINYBASIC, parent, name,
           sizeof(name), parent)) {
-        kbd::debounce_init();
+
         dirty = true;
         continue;
       }
 #else
       if(!tb_input_program_name(name, sizeof(name))) {
-        kbd::debounce_init();
+
         dirty = true;
         continue;
       }
 #endif
       if(store_edited_program(slot, source, name, parent)) return;
       delay(700);
-      kbd::debounce_init();
+
       dirty = true;
     }
   }

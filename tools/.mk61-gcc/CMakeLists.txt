@@ -14,6 +14,10 @@ foreach(_mk61_path_variable
   endif()
 endforeach()
 
+if(NOT DEFINED MK61_CORE_VERSION OR MK61_CORE_VERSION STREQUAL "")
+  message(FATAL_ERROR "MK61_CORE_VERSION is required")
+endif()
+
 project(mk61s_f401_gcc LANGUAGES C CXX ASM)
 
 find_package(Python3 3 REQUIRED COMPONENTS Interpreter)
@@ -24,6 +28,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # builders explicitly set this to 1 and seal resident.bin after the link.
 set(MK61_REQUIRE_RESIDENT_CRC "0" CACHE STRING
   "Require a post-link CRC-sealed resident image")
+set(MK61_FLASH_MIN_HEADROOM "512" CACHE STRING
+  "Required free bytes in the sealed resident Flash image")
+set(MK61_GLOBAL_RAM_LIMIT "52428" CACHE STRING
+  "Maximum resident .data + .bss bytes")
+set(MK61_STACK_FRAME_LIMIT "5120" CACHE STRING
+  "Maximum project-owned static or bounded-dynamic stack frame")
 
 file(REAL_PATH "${MK61_PROJECT_ROOT}" MK61_PROJECT_ROOT)
 file(REAL_PATH "${MK61_STM32_CORE}" CORE_PATH)
@@ -40,8 +50,10 @@ if(NOT EXISTS "${CORE_PATH}/platform.txt" OR
 endif()
 
 file(READ "${CORE_PATH}/platform.txt" _mk61_platform_text)
-if(NOT _mk61_platform_text MATCHES "(^|\n)version=2\\.12\\.0(\r?\n|$)")
-  message(FATAL_ERROR "STM32 Arduino Core 2.12.0 is required")
+string(REPLACE "." "\\." _mk61_core_version_regex "${MK61_CORE_VERSION}")
+if(NOT _mk61_platform_text MATCHES
+   "(^|\n)version=${_mk61_core_version_regex}(\r?\n|$)")
+  message(FATAL_ERROR "STM32 Arduino Core ${MK61_CORE_VERSION} is required")
 endif()
 
 foreach(_mk61_bool
@@ -65,25 +77,17 @@ foreach(_mk61_bool
   endif()
 endforeach()
 
-set(_mk61_profile_definitions)
-if(MK61_PROFILE STREQUAL "mini-v3-a00")
-  list(APPEND _mk61_profile_definitions MK61_LCD1602_A00)
-elseif(MK61_PROFILE STREQUAL "mini-v3-a02")
-  list(APPEND _mk61_profile_definitions MK61_LCD1602_A02)
-elseif(MK61_PROFILE STREQUAL "mini-v3-ws0010")
-  list(APPEND _mk61_profile_definitions MK61_OLED1602_WS0010)
-elseif(MK61_PROFILE STREQUAL "mini-v2-a00")
-  list(APPEND _mk61_profile_definitions REVISION_V2 MK61_LCD1602_A00)
-elseif(MK61_PROFILE STREQUAL "mini-v2-a02")
-  list(APPEND _mk61_profile_definitions REVISION_V2 MK61_LCD1602_A02)
-elseif(MK61_PROFILE STREQUAL "classic-v2")
-  list(APPEND _mk61_profile_definitions MK61_BOARD_CLASSIC_V2)
-elseif(MK61_PROFILE STREQUAL "classic-v3")
-  list(APPEND _mk61_profile_definitions MK61_BOARD_CLASSIC_V3)
-elseif(MK61_PROFILE STREQUAL "40th")
-  list(APPEND _mk61_profile_definitions MK61_BOARD_40TH)
-else()
-  message(FATAL_ERROR "Unsupported MK61_PROFILE: ${MK61_PROFILE}")
+execute_process(
+  COMMAND "${Python3_EXECUTABLE}"
+    "${MK61_PROJECT_ROOT}/tools/release_contract.py"
+    profile --id "${MK61_PROFILE}" --format cmake
+  RESULT_VARIABLE _mk61_profile_result
+  OUTPUT_VARIABLE _mk61_profile_definitions
+  ERROR_VARIABLE _mk61_profile_error
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT _mk61_profile_result EQUAL 0)
+  message(FATAL_ERROR
+    "Unsupported MK61_PROFILE ${MK61_PROFILE}: ${_mk61_profile_error}")
 endif()
 
 # Reuse the board, core, HAL and Arduino-library targets shipped with the
@@ -230,6 +234,8 @@ add_custom_command(TARGET resident POST_BUILD
     "${MK61_PROJECT_ROOT}/tests/analyze_stack_usage.py"
     --compile-commands "${CMAKE_BINARY_DIR}/compile_commands.json"
     --source-root "${MK61_PROJECT_ROOT}/code" --top 3
+    --max-frame "${MK61_STACK_FRAME_LIMIT}"
+    --summary-json "${CMAKE_BINARY_DIR}/stack-usage.json"
   COMMAND "${CMAKE_OBJCOPY}" -O binary
     "$<TARGET_FILE:resident>" "${CMAKE_BINARY_DIR}/resident.bin"
   COMMAND "${CMAKE_OBJCOPY}" -O ihex
@@ -240,7 +246,7 @@ add_custom_command(TARGET resident POST_BUILD
   COMMAND "${CMAKE_COMMAND}"
     "-DMK61_BIN=${CMAKE_BINARY_DIR}/resident.bin"
     "-DMK61_FLASH_CAPACITY=${BOARD_MAXSIZE}"
-    "-DMK61_FLASH_MIN_HEADROOM=512"
+    "-DMK61_FLASH_MIN_HEADROOM=${MK61_FLASH_MIN_HEADROOM}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check-flash.cmake"
   # Keep the canonical F401/LTO firmware within our explicit 80% static-RAM
   # budget. Arduino uses a more conservative generic warning threshold; the
@@ -250,7 +256,7 @@ add_custom_command(TARGET resident POST_BUILD
     "-DMK61_SIZE_TOOL=${CMAKE_SIZE}"
     "-DMK61_ELF=$<TARGET_FILE:resident>"
     "-DMK61_RAM_CAPACITY=${BOARD_MAXDATASIZE}"
-    "-DMK61_GLOBAL_RAM_LIMIT=$<IF:$<AND:$<BOOL:${MK61_ENABLE_LTO}>,$<NOT:$<BOOL:${MK61_ENABLE_USB_SCREEN}>>>,52428,65536>"
+    "-DMK61_GLOBAL_RAM_LIMIT=${MK61_GLOBAL_RAM_LIMIT}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check-ram.cmake"
   COMMAND "${CMAKE_SIZE}" "$<TARGET_FILE:resident>"
   BYPRODUCTS

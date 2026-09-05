@@ -200,24 +200,13 @@ static void scheduleReleaseAll(void) {
 }
 
 static void serviceVirtualKeys(void) {
-  u8 released_key = 0;
-  while(session.virtual_keys.stageNextRelease(released_key)) {
-    kbd::set_external_key_pressed(released_key, false);
-  }
-
-  const i32 event = session.virtual_keys.front();
-  if(event >= 0 && kbd::push((i8) event)) {
-    (void) session.virtual_keys.markFrontDelivered();
-  }
+  while(session.virtual_keys.stageNextRelease()) {}
+  (void) session.virtual_keys.deliverFront(kbd::push,
+                                         kbd::set_external_key_pressed);
 }
 
 static void abortVirtualKeys(void) {
-  const u64 external_pressed = session.virtual_keys.abortPending();
-  for(u8 key = 0; key < keyboard_core::KEY_COUNT; key++) {
-    if((external_pressed & ((u64) 1 << key)) != 0) {
-      kbd::set_external_key_pressed(key, false);
-    }
-  }
+  session.virtual_keys.abortPending();
 }
 
 static void setEvent(Event event) {
@@ -261,9 +250,7 @@ static void handleKeyEvent(const usb_screen_protocol::PacketView& packet) {
   if(key >= keyboard_core::KEY_COUNT || packet.payload[1] > 1) return;
   const VirtualKeyQueue::EnqueueResult result =
     session.virtual_keys.enqueue(key, down);
-  if(result == VirtualKeyQueue::EnqueueResult::QUEUED) {
-    kbd::set_external_key_pressed(key, down);
-  } else if(result == VirtualKeyQueue::EnqueueResult::FULL) {
+  if(result == VirtualKeyQueue::EnqueueResult::FULL) {
     scheduleReleaseAll();
   }
 }

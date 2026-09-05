@@ -42,11 +42,14 @@ namespace kbd {
   inline  i32     get_key(void)     { return  cir_buff_read(); }
 
   extern  void    test(void);
-  extern  void    debounce_init(void);
   extern  void    init(void);
   extern  i32     get_key(key_state state);
   extern  i32     get_key_wait(void);
-  extern  void    exclude_before(i32 before_key);
+  using Event = keyboard_core::Event;
+  extern  Event   poll_event(void); // scan once, consume exactly one FIFO event
+  extern  void    handoff(Event cause);
+  extern  bool    handoff_pending(void);
+  extern  u32     overflow_count(void);
   extern  void    clear_hold_key(void);
   extern  bool    take_immediate_press(i32 key_code);
   extern  void    clear_immediate_presses(void);
@@ -64,7 +67,6 @@ namespace kbd {
   extern  void    cancel_stop_wake(void);
   extern  isize   scan(void);
   extern  isize   scan_m61_controls(void);
-  extern  isize   scan_and_debounced(void);
 }
 
 #endif

@@ -3,6 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 arduino_cli="${MK61_ARDUINO_CLI:-arduino-cli}"
+contract="$root/tools/release_contract.py"
 
 fail() {
   printf 'F401 UC1609 compile check: %s\n' "$1" >&2
@@ -12,6 +13,12 @@ fail() {
 "$root/tests/run_f411_release_matrix.sh" --check-dependencies
 command -v python3 >/dev/null 2>&1 ||
   fail 'python3 is required for the stack-usage release gate'
+
+IFS=$'\t' read -r \
+  case_id profile optimization board_flags _artifact flash_capacity \
+  minimum_flash_headroom ram_capacity ram_limit stack_frame_limit \
+  _product _publish _usb_suspend _ws0010_graphics _features \
+  <<<"$(python3 "$contract" cases --group f401-arduino --format tsv)"
 
 temporary_root=0
 if [[ -n "${MK61_F401_UC1609_BUILD_ROOT:-}" ]]; then
@@ -40,9 +47,9 @@ cp -R "$root/code/." "$sketch/"
 # experiment: it preserves the same alarm functionality as F411 while keeping
 # the sealed-image safety reserve. Strict warnings and ELF gates still run on
 # the exact linked artifact.
-fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
+fqbn="STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=$optimization"
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-strict_flags="-DMK61_BOARD_CLASSIC_V3 -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
+strict_flags="$board_flags -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
 
 set +e
 "$arduino_cli" compile \
@@ -74,12 +81,13 @@ if [[ -n "$unexpected_warnings" ]]; then
 fi
 python3 "$root/tests/analyze_stack_usage.py" \
   --compile-commands "$compile_path/compile_commands.json" \
-  --source-root "$compile_path/sketch" --top 3
+  --source-root "$compile_path/sketch" --top 3 \
+  --max-frame "$stack_frame_limit" \
+  --summary-json "$compile_path/stack-usage.json"
 
 # Arduino's generic low-memory warning starts below our deliberately chosen
 # 80% regression boundary.  Enforce the numeric value so the check remains
 # useful instead of either ignoring RAM entirely or depending on that message.
-ram_limit=52428
 ram_line="$(grep -E 'Global variables use [0-9]+ bytes' "$compile_log" | tail -1 || true)"
 [[ -n "$ram_line" ]] || fail 'could not read global RAM usage from compiler output'
 ram_used="$(printf '%s\n' "$ram_line" | sed -E 's/.*Global variables use ([0-9]+) bytes.*/\1/')"
@@ -91,16 +99,14 @@ printf 'F401 RAM budget: %d/%d bytes\n' "$ram_used" "$ram_limit"
 
 test -s "$compile_path/mk61s-M.ino.elf" || fail 'missing ELF'
 test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
-"$root/tools/seal-firmware.sh" seal --max-size 262144 \
+"$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" \
   "$compile_path/mk61s-M.ino.bin"
-"$root/tools/seal-firmware.sh" check --max-size 262144 \
+"$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
   "$compile_path/mk61s-M.ino.bin"
 
 # Merely fitting below 256 KiB is not a release criterion: sealing appends a
 # footer and future linker fluctuations must not break the public build. Keep
 # the same 8 KiB resident reserve as the modular F401 release contract.
-flash_capacity=262144
-minimum_flash_headroom=8192
 sealed_size="$(wc -c < "$compile_path/mk61s-M.ino.bin" | tr -d '[:space:]')"
 [[ "$sealed_size" =~ ^[0-9]+$ ]] || fail "invalid sealed BIN size: $sealed_size"
 flash_headroom=$((flash_capacity - sealed_size))
@@ -109,6 +115,13 @@ if ((flash_headroom < minimum_flash_headroom)); then
 fi
 printf 'F401 sealed Flash budget: %d/%d bytes (%d bytes free)\n' \
   "$sealed_size" "$flash_capacity" "$flash_headroom"
+python3 "$contract" resource-report \
+  --case "$case_id" \
+  --elf "$compile_path/mk61s-M.ino.elf" \
+  --bin "$compile_path/mk61s-M.ino.bin" \
+  --compile-commands "$compile_path/compile_commands.json" \
+  --stack-summary "$compile_path/stack-usage.json" \
+  --output-prefix "$compile_path/resource-report"
 
 # This constrained production profile deliberately omits only the laboratory
 # read benchmark; the command remains available on F411 qualification builds.

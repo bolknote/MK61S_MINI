@@ -15,3 +15,13 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" -I"$root/code" \
+  "$root/tests/keyboard_handoff_self_test.cpp" -o "${out}_handoff"
+"${out}_handoff"
+
+if rg -n 'exclude_before|drop_pending_key_events|drop_menu_exit_key_events|drop_key_events_until_release' "$root/code"; then
+  printf 'Legacy input discard path must not coexist with keyboard handoff.\n' >&2
+  exit 1
+fi

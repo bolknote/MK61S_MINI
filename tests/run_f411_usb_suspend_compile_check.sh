@@ -3,6 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 arduino_cli="${MK61_ARDUINO_CLI:-arduino-cli}"
+contract="$root/tools/release_contract.py"
 
 fail() {
   printf 'F411 USB suspend compile check: %s\n' "$1" >&2
@@ -37,11 +38,18 @@ platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 wrap_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
 
 compile_profile() {
-  local name="$1"
-  local board_flags="$2"
-  local ram_limit="$3"
+  local case_id="$1"
+  local profile="$2"
+  local board_flags="$3"
+  local flash_capacity="$4"
+  local minimum_flash_headroom="$5"
+  local ram_capacity="$6"
+  local ram_limit="$7"
+  local stack_frame_limit="$8"
+  local name="${case_id#f411-stop-}"
   local compile_path="$build_root/build-$name"
   local compile_log="$compile_path/compile.log"
+  local stack_summary="$compile_path/stack-usage.json"
   local strict_flags="$board_flags -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
   mkdir -p "$compile_path"
 
@@ -78,6 +86,11 @@ compile_profile() {
     exit 1
   fi
 
+  python3 "$root/tests/analyze_stack_usage.py" \
+    --compile-commands "$compile_path/compile_commands.json" \
+    --source-root "$compile_path/sketch" --top 3 \
+    --max-frame "$stack_frame_limit" --summary-json "$stack_summary"
+
   local flash_line ram_line flash_used flash_max ram_used ram_max
   flash_line="$(grep -E '^Sketch uses [0-9]+ bytes .*Maximum is [0-9]+ bytes\.$' \
     "$compile_log" | tail -n 1)"
@@ -89,8 +102,10 @@ compile_profile() {
   flash_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$flash_line")"
   ram_used="$(sed -E 's/^Global variables use ([0-9]+) bytes .*$/\1/' <<<"$ram_line")"
   ram_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$ram_line")"
-  ((flash_max - flash_used >= 131072)) ||
-    fail "$name Flash headroom is below 128 KiB: $((flash_max - flash_used))"
+  ((flash_max == flash_capacity)) ||
+    fail "$name Flash capacity differs from contract: $flash_max != $flash_capacity"
+  ((ram_max == ram_capacity)) ||
+    fail "$name RAM capacity differs from contract: $ram_max != $ram_capacity"
   ((ram_used <= ram_limit)) ||
     fail "$name static RAM exceeds $ram_limit bytes: $ram_used"
   printf 'F411 USB suspend %s budgets: Flash %d/%d, RAM %d/%d bytes\n' \
@@ -100,8 +115,13 @@ compile_profile() {
   local bin="$compile_path/mk61s-M.ino.bin"
   [[ -s "$elf" ]] || fail "$name ELF is missing"
   [[ -s "$bin" ]] || fail "$name BIN is missing"
-  "$root/tools/seal-firmware.sh" seal --max-size 524288 "$bin"
-  "$root/tools/seal-firmware.sh" check --max-size 524288 "$bin"
+  "$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" "$bin"
+  "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" "$bin"
+  python3 "$contract" resource-report \
+    --case "$case_id" --elf "$elf" --bin "$bin" \
+    --compile-commands "$compile_path/compile_commands.json" \
+    --stack-summary "$stack_summary" \
+    --output-prefix "$compile_path/resource-report"
   "$root/tests/check_global_constructors.sh" "$elf"
   "$root/tests/check_early_dfu_elf.sh" "$elf"
   "$root/tests/check_power_monitor_elf.sh" "$elf"
@@ -109,7 +129,17 @@ compile_profile() {
   "$root/tests/check_usb_suspend_elf.sh" "$elf"
 }
 
-compile_profile ws0010 '-DMK61_OLED1602_WS0010' 32768
-compile_profile classic-v3-uc1609 '-DMK61_BOARD_CLASSIC_V3' 49152
+profile_count="$(python3 "$contract" cases --group f411-stop --format count)"
+while IFS=$'\t' read -r \
+    case_id profile _optimization board_flags _artifact flash_capacity \
+    minimum_flash_headroom ram_capacity ram_limit stack_frame_limit \
+    _product _publish _usb_suspend _ws0010_graphics _focal _basic _wbmp \
+    _markdown _chip8 _usb_screen _graphics _extended_font _user_explorer \
+    _math_backend _lto; do
+  compile_profile "$case_id" "$profile" "$board_flags" "$flash_capacity" \
+    "$minimum_flash_headroom" "$ram_capacity" "$ram_limit" \
+    "$stack_frame_limit"
+done < <(python3 "$contract" cases --group f411-stop --format tsv)
 
-printf '\nF411 USB suspend production compile check: OK (2 profiles)\n'
+printf '\nF411 USB suspend production compile check: OK (%d profiles)\n' \
+  "$profile_count"

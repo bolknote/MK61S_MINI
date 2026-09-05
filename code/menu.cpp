@@ -31,9 +31,9 @@ static i32 wait_key_or_display_change(u32 display_mode_revision) {
       return DISPLAY_MODE_CHANGED;
     }
 
-    const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0) kbd::exclude_before(scan_code);
+    const i32 scan_code = kbd::poll_event().code();
     if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      kbd::handoff(kbd::Event(scan_code));
       return scan_code;
     }
   } while(true);
@@ -1065,9 +1065,10 @@ bool UsbDiskMode(void) {
       host_configuration_timeout = true;
       break;
     }
-    const i32 key = kbd::scan_and_debounced();
-    if(key >= 0) kbd::exclude_before(key);
+    const i32 key = kbd::poll_event().code();
+
     if(key == KEY_ESC_PRESS) {
+      kbd::handoff(kbd::Event(key));
       break;
     }
   }
@@ -1078,7 +1079,10 @@ bool UsbDiskMode(void) {
                          "USB заблок.", "USB blocked");
     delay(900);
   } else if(!clean_exit) {
-    draw_usb_disk_status("Ошибка записи", "Write error", "данные отброш.", "data discarded");
+    char error_code[10];
+    virtual_fat::format_error_code(virtual_fat::diagnostic().code, error_code);
+    draw_usb_disk_status(error_code, error_code,
+                         "подробно: vlog", "details: vlog");
     delay(900);
   }
   lcd_ru::restore_default_font();
@@ -1098,9 +1102,10 @@ bool UsbScreenMode(void) {
   // подсказку. После ATTACH display backend сам гасит его до выхода из режима.
   while(usb_screen::state() == usb_screen::State::WAITING_FOR_HOST) {
     idle_main_process();
-    const i32 key = kbd::scan_and_debounced();
-    if(key >= 0) kbd::exclude_before(key);
+    const i32 key = kbd::poll_event().code();
+
     if(key == KEY_ESC_PRESS) {
+      kbd::handoff(kbd::Event(key));
       usb_screen::cancel();
       lcd_ru::restore_default_font();
       return action::MENU_BACK;
@@ -1317,9 +1322,9 @@ static i32 waitFontSetupKey(void) {
   noteFontSetupPhase(FontSetupPhase::WAIT_KEY);
   do {
     idle_main_process();
-    const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0) kbd::exclude_before(scan_code);
+    const i32 scan_code = kbd::poll_event().code();
     if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
+      kbd::handoff(kbd::Event(scan_code));
       return scan_code;
     }
   } while(true);
@@ -1679,8 +1684,8 @@ i32 class_menu::wait_key(void) {
     }
 #endif
 
-    const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0) kbd::exclude_before(scan_code);
+    const i32 scan_code = kbd::poll_event().code();
+
     if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
       return scan_code;
     }
@@ -1701,6 +1706,7 @@ bool class_menu::select(void) {
               if(active_punct > 0) active_punct--;
         break;
       case KEY_OK_PRESS:
+            kbd::handoff(kbd::Event(last_key_code));
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
             main_lcd().clear();
             lcd_ru::restore_default_font();
@@ -1711,6 +1717,7 @@ bool class_menu::select(void) {
               break;
             }
       case KEY_ESC_PRESS:
+            kbd::handoff(kbd::Event(last_key_code));
             lcd_ru::restore_default_font();
             return action::MENU_BACK; // отмена
     }
@@ -1735,6 +1742,7 @@ i32 class_menu::select(i32 key) {
               if(active_punct > 0) active_punct--;
         break;
       case KEY_OK_PRESS:
+            kbd::handoff(kbd::Event(key));
             dbgln(MENU, "Select menu: '", puncts[active_punct]->text, "\'");
             main_lcd().clear();
             lcd_ru::restore_default_font();
@@ -1745,10 +1753,11 @@ i32 class_menu::select(i32 key) {
               break;
             }
       case KEY_ESC_PRESS:
+            kbd::handoff(kbd::Event(key));
             lcd_ru::restore_default_font();
             return -1; // отмена
     }
-  
+
   draw();
   dbgln(MENU, "select exit");
   return 0;

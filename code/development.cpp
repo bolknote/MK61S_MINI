@@ -118,9 +118,9 @@ static void print_localized_line(u8 row, const char* en, const char* ru) {
 }
 
 static i32 scan_direct_key(void) {
-  const i32 scan_code = kbd::scan_and_debounced();
+  const i32 scan_code = kbd::poll_event().code();
   if(scan_code < 0) return -1;
-  kbd::exclude_before(scan_code);
+
   return scan_code;
 }
 
@@ -133,15 +133,7 @@ static bool wait_ok_release(void) {
     idle_main_process();
     if(main_lcd().displayModeRevision() != display_mode_revision) return false;
 
-    const i32 scan_code = scan_direct_key();
-    if(scan_code >= 0) {
-      const bool released = (scan_code & (i32) key_state::RELEASED) != 0;
-      const i32 code = scan_code & ~(i32) key_state::RELEASED;
-      if(released && code == (i32) KEY_OK) {
-        kbd::clear_hold_key();
-        return true;
-      }
-    }
+    (void) kbd::scan();
 
     // Терминальные команды `kbd` — это завершённые нажатия: в отличие от
     // физических и двоичных USB-клавиш, у них намеренно нет отдельного отпускания.
@@ -153,18 +145,10 @@ static bool wait_ok_release(void) {
   }
 }
 
-static void wait_all_keys_released(void) {
-  kbd::clear_hold_key();
-
-  while(true) {
+static void wait_input_handoff(void) {
+  while(kbd::handoff_pending()) {
     idle_main_process();
-    const i32 scan_code = kbd::scan_and_debounced();
-    if(scan_code >= 0) kbd::exclude_before(scan_code);
-
-    if(!kbd::any_key_pressed() && kbd::last_key() < 0) {
-      kbd::clear_hold_key();
-      return;
-    }
+    (void) kbd::scan();
     delay(10);
   }
 }
@@ -194,7 +178,7 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
   u32 long_ok_at = 0;
   const u32 tick_at = tick_ms == 0 ? 0 : millis() + tick_ms;
   const u32 display_mode_revision = main_lcd().displayModeRevision();
-  kbd::debounce_init();
+
   explorer_cursor_on(cursor_row);
 
   while(true) {
@@ -207,7 +191,7 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
     const u32 now = millis();
     if(tick_ms != 0 && !ok_down && explorer_time_reached(now, tick_at)) return EXPLORER_KEY_TICK;
     if(allow_long_ok && ok_down && explorer_time_reached(now, long_ok_at)) {
-      kbd::clear_hold_key();
+      kbd::handoff(kbd::Event(KEY_OK));
       return EXPLORER_KEY_LONG_OK;
     }
 
@@ -235,7 +219,10 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
       long_ok_at = millis() + EXPLORER_LONG_OK_MS;
       continue;
     }
-    if(code == (i32) KEY_ESC) return EXPLORER_KEY_ESC;
+    if(code == (i32) KEY_ESC) {
+      kbd::handoff(kbd::Event(scan_code));
+      return EXPLORER_KEY_ESC;
+    }
     if(code == (i32) KEY_RIGHT || code == (i32) KEY_SHG_RIGHT_PRESS) return EXPLORER_KEY_DOWN;
     if(code == (i32) KEY_LEFT || code == (i32) KEY_SHG_LEFT_PRESS) return EXPLORER_KEY_UP;
     return code;
@@ -244,7 +231,7 @@ static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row 
 
 static i32 wait_explorer_raw_key(void) {
   const u32 display_mode_revision = main_lcd().displayModeRevision();
-  kbd::debounce_init();
+
   while(true) {
     idle_main_process();
     if(main_lcd().displayModeRevision() != display_mode_revision) {
@@ -258,6 +245,7 @@ static i32 wait_explorer_raw_key(void) {
       continue;
     }
     if((scan_code & (i32) key_state::RELEASED) != 0) continue;
+    kbd::handoff(kbd::Event(scan_code));
     return scan_code & ~(i32) key_state::RELEASED;
   }
 }
@@ -1438,7 +1426,7 @@ static ProgramStoreFileDialogResult run_storage_dialog(
   int active = 0;
   ExplorerScroll scroll;
   explorer_scroll_reset(scroll);
-  wait_all_keys_released();
+  wait_input_handoff();
   while(true) {
     int count = dialog_count(directory_id, mode, type, allow_new,
                              forbidden_tree);
@@ -2040,7 +2028,7 @@ bool program_store_explorer_select(void) {
   ExplorerScroll scroll;
   explorer_search_reset(search);
   explorer_scroll_reset(scroll);
-  wait_all_keys_released();
+  wait_input_handoff();
 
   while(true) {
     explorer_search_expire_sms(search, millis());

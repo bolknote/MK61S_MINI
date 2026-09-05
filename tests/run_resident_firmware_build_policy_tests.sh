@@ -44,12 +44,14 @@ for file in "$f411_matrix" "$f401_check" "$f401_bundle" \
 done
 
 require_text "$f411_matrix" 'MK61_REQUIRE_RESIDENT_CRC=1'
-require_text "$f411_matrix" 'seal-firmware.sh" seal --max-size 524288'
-require_text "$f411_matrix" 'seal-firmware.sh" check --max-size 524288'
+require_text "$f411_matrix" 'seal-firmware.sh" seal --max-size "$flash_capacity"'
+require_text "$f411_matrix" 'seal-firmware.sh" check --max-size "$flash_capacity"'
+require_text "$f411_matrix" 'cases --group f411-release --format tsv'
 require_text "$f411_matrix" 'analyze_stack_usage.py'
 require_text "$f401_check" 'MK61_REQUIRE_RESIDENT_CRC=1'
-require_text "$f401_check" 'seal-firmware.sh" seal --max-size 262144'
-require_text "$f401_check" 'usb=CDCgen,opt=oslto'
+require_text "$f401_check" 'seal-firmware.sh" seal --max-size "$flash_capacity"'
+require_text "$f401_check" 'usb=CDCgen,opt=$optimization'
+require_text "$f401_check" 'cases --group f401-arduino --format tsv'
 require_text "$f401_check" 'check_rtc_alarm_elf.sh'
 require_text "$f401_check" 'analyze_stack_usage.py'
 require_text "$f411_matrix" 'check_rtc_alarm_elf.sh'

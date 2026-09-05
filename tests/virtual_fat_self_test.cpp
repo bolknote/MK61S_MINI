@@ -108,6 +108,7 @@ static u32 cluster_lba(const Layout& fs, u16 cluster, u8 sector = 0) {
 
 static void fresh(u32 capacity = SPIFlash::DEFAULT_CAPACITY) {
   virtual_fat::end_session();
+  virtual_fat::clear_diagnostic();
   SPIFlash::reset(capacity);
   program_store::init();
   assert(program_store::ready());
@@ -242,15 +243,72 @@ static void expect_file(u16 id, const u8* expected, u16 expected_len) {
 
 static void expect_flush(void) {
   const bool ok = virtual_fat::flush_pending();
-  if(!ok) fprintf(stderr, "VFAT flush failed in %s\n",
-                  virtual_fat::trace_line_at(0));
+  if(!ok) {
+    char report[virtual_fat::DIAGNOSTIC_LINE_SIZE];
+    assert(virtual_fat::format_diagnostic(virtual_fat::diagnostic(), report,
+                                          sizeof(report)));
+    fprintf(stderr, "VFAT flush failed: %s\n", report);
+  }
   assert(ok);
 }
 
 static void expect_rejected_pending_recovered(void) {
+  const virtual_fat::Diagnostic cause = virtual_fat::diagnostic();
+  assert(cause.code != virtual_fat::ErrorCode::NONE);
   assert(program_store::vfat_stage_count() == 0);
+  virtual_fat::end_session();
+  assert(memcmp(&cause, &virtual_fat::diagnostic(), sizeof(cause)) == 0);
   assert(virtual_fat::reset_session());
   assert(virtual_fat::finalize_pending());
+  assert(memcmp(&cause, &virtual_fat::diagnostic(), sizeof(cause)) == 0);
+}
+
+static void test_diagnostic_contract(void) {
+  using namespace virtual_fat;
+  DiagnosticState state = {};
+  assert(state.value.code == ErrorCode::NONE);
+  assert(!state.fail(ErrorCode::FILE_TOO_LARGE, Phase::ENTRY,
+                     7492, 1536, "README"));
+  assert(!state.fail(ErrorCode::DIRECTORY_ENTRY, Phase::ENTRY));
+  char line[DIAGNOSTIC_LINE_SIZE];
+  assert(format_diagnostic(state.value, line, sizeof(line)));
+  assert(strcmp(line, "VFAT v=1 code=1221 phase=3 flags=0 actual=7492 limit=1536 subject=524541444D45") == 0);
+  char screen[10];
+  format_error_code(state.value.code, screen);
+  assert(strcmp(screen, "USB E1221") == 0);
+
+  state.begin_attempt();
+  assert(state.value.code == ErrorCode::FILE_TOO_LARGE);
+  state.fail(ErrorCode::ROOT_READ, Phase::VALIDATE, 0xFEDCBA98, 15, nullptr, true);
+  assert(state.value.code == ErrorCode::ROOT_READ);
+  assert(state.value.flags == RETRYABLE);
+  assert(state.value.subject[0] == 0);
+  assert(format_diagnostic(state.value, line, sizeof(line)));
+  assert(strcmp(line, "VFAT v=1 code=1233 phase=5 flags=1 actual=4275878552 limit=15 subject=") == 0);
+  state.clear();
+  assert(state.value.code == ErrorCode::NONE && state.value.flags == 0);
+  state.fail(ErrorCode::NAME_TOO_LONG, Phase::ENTRY, 20, 15,
+              "12345678901234Ж");
+  assert(strcmp(state.value.subject, "12345678901234") == 0);
+  assert(state.value.flags == SUBJECT_TRUNCATED);
+  state.clear();
+  state.fail(ErrorCode::NAME, Phase::ENTRY, 0, 0, "A\n/\\\xFF\xF0\x90");
+  assert(strcmp(state.value.subject, "A??????") == 0);
+  state.clear();
+  state.fail(ErrorCode::NAME, Phase::ENTRY, UINT32_MAX, UINT32_MAX,
+              "ЯЯЯЯЯЯЯЯ");
+  assert(strcmp(state.value.subject, "ЯЯЯЯЯЯЯ") == 0);
+  assert(format_diagnostic(state.value, line, sizeof(line)));
+  const usize length = strlen(line);
+  // Every insufficient output capacity stays terminated and inside its bound.
+  for(usize size = 1; size <= length; ++size) {
+    char bounded[DIAGNOSTIC_LINE_SIZE];
+    memset(bounded, '#', sizeof(bounded));
+    assert(!format_diagnostic(state.value, bounded, size));
+    assert(memchr(bounded, 0, size) != nullptr);
+    assert(bounded[size] == '#');
+  }
+  assert(!format_diagnostic(state.value, nullptr, 0));
 }
 
 static void test_dynamic_fat12_bpb(void) {
@@ -809,7 +867,10 @@ static void test_incomplete_file_preflight_preserves_existing_tree(void) {
   assert(virtual_fat::write_sector(1, fat));
   assert(virtual_fat::flush_pending_result() ==
          virtual_fat::CommitResult::REJECTED);
-  assert(strcmp(virtual_fat::trace_line_at(0), "file-data") == 0);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_DATA);
+  assert(virtual_fat::diagnostic().phase == virtual_fat::Phase::VALIDATE);
+  assert(virtual_fat::diagnostic().actual == cluster_lba(fs, new_cluster));
+  assert(virtual_fat::diagnostic().limit == 0);
   assert(program_store::vfat_stage_count() != 0);
 
   program_store::Entry kept = {};
@@ -833,6 +894,9 @@ static void test_flush_result_distinguishes_media_failure(void) {
   SPIFlash::failAfterOperations(0);
   assert(virtual_fat::flush_pending_result() ==
          virtual_fat::CommitResult::IO_FAILED);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::CACHE_WRITE);
+  assert(virtual_fat::diagnostic().phase == virtual_fat::Phase::CACHE);
+  assert((virtual_fat::diagnostic().flags & virtual_fat::RETRYABLE) != 0);
   SPIFlash::clearFailure();
 }
 
@@ -969,8 +1033,10 @@ static void test_wbmp_over_quota_is_rejected(void) {
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::finalize_pending());
-  assert(strcmp(virtual_fat::trace_line_at(0),
-                "oversize:wbm:1601>1600:large") == 0);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_TOO_LARGE);
+  assert(virtual_fat::diagnostic().actual == 1601);
+  assert(virtual_fat::diagnostic().limit == 1600);
+  assert(strcmp(virtual_fat::diagnostic().subject, "large") == 0);
   assert(program_store::total_count() == 0);
   expect_rejected_pending_recovered();
 }
@@ -993,8 +1059,10 @@ static void test_markdown_over_quota_does_not_poison_next_session(void) {
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::flush_pending());
-  assert(strcmp(virtual_fat::trace_line_at(0),
-                "oversize:md:7492>1536:README") == 0);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_TOO_LARGE);
+  assert(virtual_fat::diagnostic().actual == 7492);
+  assert(virtual_fat::diagnostic().limit == 1536);
+  assert(strcmp(virtual_fat::diagnostic().subject, "README") == 0);
   assert(program_store::total_count() == 0);
   assert(program_store::vfat_stage_count() != 0);
 
@@ -1005,6 +1073,15 @@ static void test_markdown_over_quota_does_not_poison_next_session(void) {
   assert(program_store::vfat_stage_count() != 0);
   assert(!virtual_fat::finalize_pending());
   expect_rejected_pending_recovered();
+
+  // A real successful import, unlike a no-op sync, retires the old error.
+  write_le32(root + (u16) (slot - 1) * 32, 28, 1);
+  u8 data[512] = {'#'};
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), data));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  expect_flush();
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::NONE);
 }
 
 static void test_wbmp_short_name_alias(void) {
@@ -1122,8 +1199,9 @@ static void test_chip8_over_quota_is_rejected(void) {
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::finalize_pending());
-  assert(strcmp(virtual_fat::trace_line_at(0),
-                "oversize:ch8:3585>3584:large") == 0);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_TOO_LARGE);
+  assert(virtual_fat::diagnostic().actual == 3585);
+  assert(virtual_fat::diagnostic().limit == 3584);
   assert(program_store::total_count() == 0);
   expect_rejected_pending_recovered();
 }
@@ -1265,7 +1343,9 @@ static void test_invalid_app_preflight_preserves_existing_tree(void) {
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::finalize_pending());
-  assert(strcmp(virtual_fat::trace_line_at(0), "app-invalid") == 0);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::APP_INVALID);
+  assert(virtual_fat::diagnostic().actual ==
+         (u32) loadable_module::StoreStatus::INVALID_HEADER);
 
   program_store::Entry kept = {};
   assert(program_store::entry_by_id(old_id, kept));
@@ -1569,13 +1649,20 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
   assert(virtual_fat::write_sector(fs.root_start, root));
   assert(virtual_fat::write_sector(1, fat));
   assert(!virtual_fat::finalize_pending());
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_CHAIN);
+  assert(virtual_fat::diagnostic().phase == virtual_fat::Phase::CHAIN);
+  assert(virtual_fat::diagnostic().actual == 202);
+  assert(virtual_fat::diagnostic().limit == 202);
   assert(program_store::total_count() == 0);
   expect_rejected_pending_recovered();
 }
 
 } // безымянное пространство имён
 
+#include "vfat_mutation_cases.hpp"
+
 int main(void) {
+  test_diagnostic_contract();
   test_boot_sector_volume_serial_fallback();
   test_dynamic_fat12_bpb();
   test_macos_no_index_marker();
@@ -1609,6 +1696,7 @@ int main(void) {
   test_app_batch_power_cuts_are_recoverable();
 #endif
   test_malformed_fat_chain_is_rejected_atomically();
+  test_bounded_vfat_mutations();
   virtual_fat::end_session();
   printf("virtual_fat_self_test: ok\n");
   return 0;

@@ -29,10 +29,11 @@ static_assert(sizeof(ViewerWorkspace) <= language_workspace::SIZE,
               "Image viewer must fit the shared runtime workspace");
 
 static i32 scan_key(void) {
-  const i32 scan_code = kbd::scan_and_debounced();
+  const i32 scan_code = kbd::poll_event().code();
   if(scan_code < 0) return -1;
-  kbd::exclude_before(scan_code);
+
   if((scan_code & (i32) key_state::RELEASED) != 0) return -1;
+  kbd::handoff(kbd::Event(scan_code));
   return scan_code & ~(i32) key_state::RELEASED;
 }
 
@@ -127,7 +128,7 @@ static Result view_graphics_display(MK61Display& display,
                   ? info.width - viewport_width : 0;
   const u32 max_y = info.height > viewport_height
                   ? info.height - viewport_height : 0;
-  kbd::debounce_init();
+
   Result result = Result::OK;
   while(true) {
     const i32 key = wait_key(display, display_mode_revision);

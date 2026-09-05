@@ -2,6 +2,11 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+python3 "$root/tests/vfat_diagnostic_tool_self_test.py"
+if grep -Eq 'g_last_error|g_error_detail|trace_line_at' "$root/code/virtual_fat.cpp"; then
+  printf 'VFAT diagnostic must not reintroduce mutable error strings\n' >&2
+  exit 1
+fi
 out="${TMPDIR:-/tmp}/virtual_fat_self_test"
 module_out="${TMPDIR:-/tmp}/virtual_fat_module_self_test"
 sanitizer_flags=()
@@ -17,6 +22,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/tests/virtual_fat_self_test.cpp" \
   "$root/code/device_identity.cpp" \
   "$root/code/virtual_fat.cpp" \
+  "$root/code/virtual_fat_diagnostic.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \
   "$root/code/language_workspace.cpp" \
@@ -40,6 +46,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/tests/virtual_fat_self_test.cpp" \
   "$root/code/device_identity.cpp" \
   "$root/code/virtual_fat.cpp" \
+  "$root/code/virtual_fat_diagnostic.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \
   "$root/code/language_workspace.cpp" \

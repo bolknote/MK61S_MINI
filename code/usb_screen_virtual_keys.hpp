@@ -40,9 +40,8 @@ class VirtualKeyQueue {
     }
 
     // Ставит одно отпускание после уже находящихся в очереди событий клавиш.
-    // Вызывающий код использует возвращённую клавишу для обновления внешнего
-    // состояния удерживаемых клавиш.
-    bool stageNextRelease(u8& key) {
+    // Удержание заканчивается при ДОСТАВКЕ отпускания, не при его постановке.
+    bool stageNextRelease(void) {
       if(!release_all_pending_) return false;
       for(u8 candidate = 0; candidate < keyboard_core::KEY_COUNT;
           candidate++) {
@@ -53,7 +52,6 @@ class VirtualKeyQueue {
         }
         requested_pressed_ &= ~bit;
         release_all_pending_ = requested_pressed_ != 0;
-        key = candidate;
         return true;
       }
       release_all_pending_ = false;
@@ -61,6 +59,20 @@ class VirtualKeyQueue {
     }
 
     i32 front(void) const { return events_.peek(); }
+
+    // Один порядок для FIFO и held-state. Быстрые PRESS+RELEASE могут прийти
+    // в одном USB-пакете обслуживания, но handoff после PRESS должен ещё видеть
+    // клавишу нажатой. Backpressure не меняет held-state и не теряет событие.
+    template<class Push, class SetPressed>
+    bool deliverFront(Push push, SetPressed set_pressed) {
+      const i32 event = front();
+      if(event < 0 || !push((i8) event)) return false;
+      // enqueue/FixedFifo already validate the byte; decode it without another
+      // checked Event constructor in this hot, size-sensitive delivery path.
+      set_pressed(event & ~(i32) keyboard_core::RELEASE_MASK,
+                  (event & keyboard_core::RELEASE_MASK) == 0);
+      return markFrontDelivered();
+    }
 
     // Вызывать только после принятия первого события очередью калькулятора.
     bool markFrontDelivered(void) {
@@ -78,10 +90,9 @@ class VirtualKeyQueue {
     }
 
     // Отбрасывает все недоставленные события и ставит в очередь отпускания лишь
-    // для нажатий, уже увиденных калькулятором. Возвращает маску внешнего
-    // состояния, которую вызывающий код должен немедленно очистить.
-    u64 abortPending(void) {
-      const u64 external_pressed = requested_pressed_;
+    // для нажатий, уже увиденных калькулятором. Они заканчиваются обычной
+    // доставкой RELEASE даже после закрытия USB Screen (service работает IDLE).
+    void abortPending(void) {
       requested_pressed_ = 0;
       release_all_pending_ = false;
       events_.clear();
@@ -91,7 +102,6 @@ class VirtualKeyQueue {
           (void) events_.push(key | keyboard_core::RELEASE_MASK);
         }
       }
-      return external_pressed;
     }
 
     u64 requestedPressed(void) const { return requested_pressed_; }

@@ -1,0 +1,450 @@
+{
+  "schema": 1,
+  "toolchain": {
+    "arduino_cli": "1.5.1",
+    "stm32_core": "2.12.0",
+    "stm32_package_url": "https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json",
+    "gnu_arm": "14.2.1-1.1",
+    "cmsis": "6.2.0",
+    "cmsis_dsp": "1.16.2",
+    "libraries": {
+      "LiquidCrystal": "1.0.7",
+      "STM32duino RTC": "1.9.0"
+    }
+  },
+  "profiles": [
+    {
+      "id": "mini-v3-a00",
+      "platform": "mini-v3",
+      "display": "lcd1602-a00",
+      "defines": ["MK61_LCD1602_A00"],
+      "graphics": false,
+      "artifacts": {
+        "f401": "mk61s-M-mini-v3-lcd1602-a00-f401",
+        "f411": "mk61s-M-lcd1602-a00-f411"
+      }
+    },
+    {
+      "id": "mini-v3-a02",
+      "platform": "mini-v3",
+      "display": "lcd1602-a02",
+      "defines": ["MK61_LCD1602_A02"],
+      "graphics": false,
+      "artifacts": {
+        "f401": "mk61s-M-mini-v3-lcd1602-a02-f401",
+        "f411": "mk61s-M-lcd1602-a02-f411"
+      }
+    },
+    {
+      "id": "mini-v3-ws0010",
+      "platform": "mini-v3",
+      "display": "oled1602-ws0010",
+      "defines": ["MK61_OLED1602_WS0010"],
+      "graphics": false,
+      "artifacts": {
+        "f401": "mk61s-M-mini-v3-oled1602-ws0010-f401",
+        "f411": "mk61s-M-mini-v3-oled1602-ws0010-f411"
+      }
+    },
+    {
+      "id": "mini-v2-a00",
+      "platform": "mini-v2",
+      "display": "lcd1602-a00",
+      "defines": ["REVISION_V2", "MK61_LCD1602_A00"],
+      "graphics": false,
+      "artifacts": {
+        "f401": "mk61s-M-mini-v2-lcd1602-a00-f401",
+        "f411": "mk61s-M-mini-v2-lcd1602-a00-f411"
+      }
+    },
+    {
+      "id": "mini-v2-a02",
+      "platform": "mini-v2",
+      "display": "lcd1602-a02",
+      "defines": ["REVISION_V2", "MK61_LCD1602_A02"],
+      "graphics": false,
+      "artifacts": {
+        "f401": "mk61s-M-mini-v2-lcd1602-a02-f401",
+        "f411": "mk61s-M-mini-v2-lcd1602-a02-f411"
+      }
+    },
+    {
+      "id": "classic-v2",
+      "platform": "classic-v2",
+      "display": "uc1609",
+      "defines": ["MK61_BOARD_CLASSIC_V2"],
+      "graphics": true,
+      "artifacts": {
+        "f401": "mk61s-M-classic-v2-uc1609-f401",
+        "f411": "mk61s-M-classic-v2-uc1609-f411"
+      }
+    },
+    {
+      "id": "classic-v3",
+      "platform": "classic-v3",
+      "display": "uc1609",
+      "defines": ["MK61_BOARD_CLASSIC_V3"],
+      "graphics": true,
+      "artifacts": {
+        "f401": "mk61s-M-classic-v3-uc1609-f401",
+        "f411": "mk61s-M-classic-v3-uc1609-f411"
+      }
+    },
+    {
+      "id": "40th",
+      "platform": "40th",
+      "display": "uc1609",
+      "defines": ["MK61_BOARD_40TH"],
+      "graphics": true,
+      "artifacts": {
+        "f401": "mk61s-M-40th-f401",
+        "f411": "mk61s-M-40th-f411"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "f411-lcd1602-a00",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-a00",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-lcd1602-a00-usb-screen",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-a00",
+      "optimization": "osstd",
+      "defines": ["MK61_ENABLE_USB_SCREEN=1"],
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-lcd1602-a00-lto",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-a00",
+      "optimization": "oslto",
+      "defines": [],
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-lcd1602-a02",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-a02",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-oled1602-ws0010",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-ws0010",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": true}
+    },
+    {
+      "id": "f411-oled1602-ws0010-usb-screen",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-ws0010",
+      "optimization": "osstd",
+      "defines": ["MK61_ENABLE_USB_SCREEN=1"],
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": true}
+    },
+    {
+      "id": "f411-oled1602-ws0010-no-graphics",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-ws0010",
+      "optimization": "osstd",
+      "defines": ["MK61_WS0010_GRAPHICS_100X16=0"],
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": false}
+    },
+    {
+      "id": "f411-oled1602-ws0010-graphics-wbmp",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-ws0010",
+      "optimization": "osstd",
+      "defines": ["MK61_WS0010_GRAPHICS_100X16=1", "MK61_ENABLE_MARKDOWN_VIEWER=0", "MK61_ENABLE_WBMP_VIEWER=1"],
+      "product": true,
+      "publish": true,
+      "artifact": "mk61s-M-mini-v3-oled1602-ws0010-graphics-wbmp-f411",
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": true}
+    },
+    {
+      "id": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-ws0010",
+      "optimization": "osstd",
+      "defines": ["MK61_WS0010_GRAPHICS_100X16=1", "MK61_ENABLE_MARKDOWN_VIEWER=1", "MK61_ENABLE_WBMP_VIEWER=1"],
+      "product": true,
+      "publish": true,
+      "artifact": "mk61s-M-mini-v3-oled1602-ws0010-graphics-wbmp-markdown-f411",
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": true}
+    },
+    {
+      "id": "f411-oled1602-ws0010-usb-screen-no-graphics",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-ws0010",
+      "optimization": "osstd",
+      "defines": ["MK61_ENABLE_USB_SCREEN=1", "MK61_WS0010_GRAPHICS_100X16=0"],
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": false}
+    },
+    {
+      "id": "f411-mini-v2-a00",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v2-a00",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-mini-v2-a02",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v2-a02",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-classic-v2",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "classic-v2",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-classic-v3",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "classic-v3",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-classic-v3-usb-screen",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "classic-v3",
+      "optimization": "osstd",
+      "defines": ["MK61_ENABLE_USB_SCREEN=1"],
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-40th",
+      "groups": ["f411-release"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "40th",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f411-stop-ws0010",
+      "groups": ["f411-stop"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "mini-v3-ws0010",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 131072, "ram_capacity": 131072, "ram_limit": 32768, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": true}
+    },
+    {
+      "id": "f411-stop-classic-v3-uc1609",
+      "groups": ["f411-stop"],
+      "mcu": "f411",
+      "builder": "arduino",
+      "profile": "classic-v3",
+      "optimization": "osstd",
+      "defines": [],
+      "product": true,
+      "publish": false,
+      "budgets": {"flash_capacity": 524288, "flash_min_headroom": 131072, "ram_capacity": 131072, "ram_limit": 49152, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": true, "ws0010_graphics": null}
+    },
+    {
+      "id": "f401-arduino-classic-v3",
+      "groups": ["f401-arduino"],
+      "mcu": "f401",
+      "builder": "arduino",
+      "profile": "classic-v3",
+      "optimization": "oslto",
+      "defines": [],
+      "product": true,
+      "publish": false,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 8192, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 5120},
+      "expect": {"usb_suspend": false, "ws0010_graphics": null}
+    },
+    {
+      "id": "f401-product-a00",
+      "groups": ["f401-product"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "mini-v3-a00",
+      "features": {"focal": 1, "basic": 1, "wbmp": 0, "markdown": 1, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 8192, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 4096}
+    },
+    {
+      "id": "f401-product-ws0010",
+      "groups": ["f401-product"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "mini-v3-ws0010",
+      "features": {"focal": 1, "basic": 1, "wbmp": 0, "markdown": 1, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 8192, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 4096}
+    },
+    {
+      "id": "f401-product-mini-v2-a00",
+      "groups": ["f401-product"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "mini-v2-a00",
+      "features": {"focal": 1, "basic": 1, "wbmp": 0, "markdown": 1, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 8192, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 4096}
+    },
+    {
+      "id": "f401-product-classic-v3",
+      "groups": ["f401-product"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "classic-v3",
+      "features": {"focal": 1, "basic": 1, "wbmp": 0, "markdown": 1, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": true,
+      "publish": true,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 8192, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 12288}
+    },
+    {
+      "id": "f401-capability-a00-usb",
+      "groups": ["f401-capability"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "mini-v3-a00",
+      "features": {"focal": 0, "basic": 0, "wbmp": 0, "markdown": 0, "chip8": 0, "usb_screen": 1, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 512, "ram_capacity": 65536, "ram_limit": 65536, "stack_frame_limit": 2048}
+    },
+    {
+      "id": "f401-capability-ws-usb",
+      "groups": ["f401-capability"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "mini-v3-ws0010",
+      "features": {"focal": 0, "basic": 0, "wbmp": 0, "markdown": 0, "chip8": 0, "usb_screen": 1, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 512, "ram_capacity": 65536, "ram_limit": 65536, "stack_frame_limit": 2048}
+    },
+    {
+      "id": "f401-capability-ws-graphics",
+      "groups": ["f401-capability"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "mini-v3-ws0010",
+      "features": {"focal": 0, "basic": 0, "wbmp": 0, "markdown": 0, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 1, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 512, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048}
+    },
+    {
+      "id": "f401-capability-ws-usb-graphics",
+      "groups": ["f401-capability"],
+      "mcu": "f401",
+      "builder": "gcc",
+      "profile": "mini-v3-ws0010",
+      "features": {"focal": 0, "basic": 0, "wbmp": 0, "markdown": 0, "chip8": 0, "usb_screen": 1, "ws0010_graphics": 1, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "product": false,
+      "publish": false,
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 512, "ram_capacity": 65536, "ram_limit": 65536, "stack_frame_limit": 2048}
+    }
+  ],
+  "comparison_budgets": {
+    "f401_ws0010_ram_growth": 0,
+    "f411_ws0010_ram_growth": 256,
+    "f401_ws0010_usb_ram_growth": 0,
+    "f401_ws0010_graphics_ram_growth": 16
+  }
+}

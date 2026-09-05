@@ -17,3 +17,12 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+
+for screen in 0 1; do
+  clang++ -std=c++17 -Wall -Wextra -Werror \
+    "${sanitizer_flags[@]}" -DMK61_ENABLE_USB_SCREEN="$screen" \
+    -I"$root/tests/mk_math_shim" -I"$root/code" \
+    "$root/tests/terminal_catalog_self_test.cpp" \
+    "$root/code/terminal_catalog.cpp" -o "${out}_catalog"
+  "${out}_catalog"
+done

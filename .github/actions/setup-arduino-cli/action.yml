@@ -3,8 +3,9 @@ description: Install a checksum-verified Arduino CLI without a Node.js action
 
 inputs:
   version:
-    description: Exact Arduino CLI version
-    required: true
+    description: Exact Arduino CLI version; defaults to the release contract
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -14,5 +15,11 @@ runs:
       env:
         MK61_ARDUINO_CLI_VERSION: ${{ inputs.version }}
       run: |
+        if ([string]::IsNullOrWhiteSpace($env:MK61_ARDUINO_CLI_VERSION)) {
+          $env:MK61_ARDUINO_CLI_VERSION = & python3 `
+            "$env:GITHUB_WORKSPACE/tools/release_contract.py" `
+            toolchain --field arduino_cli
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
         & "${{ github.action_path }}/install.ps1" `
           -Version $env:MK61_ARDUINO_CLI_VERSION

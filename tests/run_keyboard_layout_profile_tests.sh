@@ -25,6 +25,13 @@ build_and_run() {
     -o "$out"
 
   "$out"
+
+  clang++ -std=c++17 -Wall -Wextra -Werror \
+    "${sanitizer_flags[@]}" "${profile_flags[@]}" \
+    -I"$root/tests/mk_math_shim" -I"$root/code" \
+    "$root/tests/terminal_key_sequence_self_test.cpp" \
+    "$root/code/terminal_key_sequence.cpp" -o "${out}_terminal"
+  "${out}_terminal"
 }
 
 build_and_run mini MK61_KEYBOARD_MINI

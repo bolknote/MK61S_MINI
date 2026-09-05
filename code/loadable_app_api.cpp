@@ -167,10 +167,12 @@ static i32 raw_key(i32 key) {
 
 static i32 api_key_poll(void) {
   idle_main_process();
-  const i32 scan_code = (i32) kbd::scan_and_debounced();
+  const i32 scan_code = kbd::poll_event().code();
   if(scan_code < 0) return KEY_NONE;
-  kbd::exclude_before(scan_code);
+
   if((scan_code & (i32) key_state::RELEASED) != 0) return KEY_NONE;
+  // Public APP API returns press pulses, never release or hold callbacks.
+  kbd::handoff(kbd::Event(scan_code));
   return normalize_key(scan_code);
 }
 

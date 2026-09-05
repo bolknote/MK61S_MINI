@@ -2,16 +2,10 @@
 
 [CmdletBinding()]
 param(
-    [ValidateSet(
-        'mini-v3-a00',
-        'mini-v3-a02',
-        'mini-v3-ws0010',
-        'mini-v2-a00',
-        'mini-v2-a02',
-        'classic-v2',
-        'classic-v3',
-        '40th')]
     [string]$Profile = 'mini-v3-a00',
+
+    [ValidatePattern('^[a-z0-9][a-z0-9-]*$')]
+    [string]$ReleaseCase,
 
     [ValidateSet('0', '1')]
     [string]$Focal = '1',
@@ -67,10 +61,11 @@ $script:BackendRoot = $PSScriptRoot
 $script:ProjectRoot = [IO.Path]::GetFullPath(
     (Join-Path $script:BackendRoot '../..'))
 $script:Utf8NoBom = New-Object Text.UTF8Encoding($false)
-$script:CoreVersion = '2.12.0'
-$script:ToolchainVersion = '14.2.1-1.1'
-$script:CmsisVersion = '6.2.0'
-$script:CmsisDspVersion = '1.16.2'
+$script:ReleaseManifest = $null
+$script:CoreVersion = $null
+$script:ToolchainVersion = $null
+$script:CmsisVersion = $null
+$script:CmsisDspVersion = $null
 
 function Show-Usage {
     @'
@@ -80,10 +75,8 @@ Arduino IDE and arduino-cli are not invoked.
 Usage:
   tools\build-gcc.cmd [-Profile ID] [options]
 
-Profiles:
-  mini-v3-a00 (default), mini-v3-a02, mini-v3-ws0010,
-  mini-v2-a00, mini-v2-a02,
-  classic-v2, classic-v3, 40th
+Profiles and release budgets are defined by tools/release-contract.json.
+Run `python3 tools/release_contract.py profiles` to list profile IDs.
 
 System APP:
   -Focal 0|1       default 1
@@ -101,8 +94,8 @@ Firmware options:
   -Lto 0|1          default 1
 
 Paths:
-  -CorePath DIR       STM32 Arduino Core 2.12.0
-  -ToolchainPath DIR  xPack GNU Arm 14.2.1-1.1 or its bin directory
+  -CorePath DIR       pinned STM32 Arduino Core
+  -ToolchainPath DIR  pinned xPack GNU Arm directory or its bin directory
   -LibrariesPath DIR  Arduino libraries directory
   -BuildRoot DIR      default .build\gcc
   -OutputDirectory DIR default binary
@@ -115,7 +108,7 @@ Other:
 
 Required in PATH: CMake 3.21 or newer, Ninja, and a host C++17 compiler
 when at least one System APP is enabled.
-Required Arduino libraries: LiquidCrystal 1.0.7, STM32duino RTC 1.9.0.
+Required versions are read from tools/release-contract.json.
 
 Environment overrides:
   MK61_GCC_CORE, MK61_GCC_TOOLCHAIN, MK61_ARDUINO_LIBRARY_ROOT,
@@ -236,65 +229,41 @@ function Get-LibraryVersion {
 
 function Get-ProfileInfo {
     param([string]$Id)
-    switch ($Id) {
-        'mini-v3-a00' {
-            return @{
-                Bundle = 'mk61s-M-mini-v3-lcd1602-a00-f401'
-                Flags = @('-DMK61_LCD1602_A00')
-                Graphics = $false
-            }
-        }
-        'mini-v3-a02' {
-            return @{
-                Bundle = 'mk61s-M-mini-v3-lcd1602-a02-f401'
-                Flags = @('-DMK61_LCD1602_A02')
-                Graphics = $false
-            }
-        }
-        'mini-v3-ws0010' {
-            return @{
-                Bundle = 'mk61s-M-mini-v3-oled1602-ws0010-f401'
-                Flags = @('-DMK61_OLED1602_WS0010')
-                Graphics = $false
-            }
-        }
-        'mini-v2-a00' {
-            return @{
-                Bundle = 'mk61s-M-mini-v2-lcd1602-a00-f401'
-                Flags = @('-DREVISION_V2', '-DMK61_LCD1602_A00')
-                Graphics = $false
-            }
-        }
-        'mini-v2-a02' {
-            return @{
-                Bundle = 'mk61s-M-mini-v2-lcd1602-a02-f401'
-                Flags = @('-DREVISION_V2', '-DMK61_LCD1602_A02')
-                Graphics = $false
-            }
-        }
-        'classic-v2' {
-            return @{
-                Bundle = 'mk61s-M-classic-v2-uc1609-f401'
-                Flags = @('-DMK61_BOARD_CLASSIC_V2')
-                Graphics = $true
-            }
-        }
-        'classic-v3' {
-            return @{
-                Bundle = 'mk61s-M-classic-v3-uc1609-f401'
-                Flags = @('-DMK61_BOARD_CLASSIC_V3')
-                Graphics = $true
-            }
-        }
-        '40th' {
-            return @{
-                Bundle = 'mk61s-M-40th-f401'
-                Flags = @('-DMK61_BOARD_40TH')
-                Graphics = $true
-            }
-        }
+    $matches = @($script:ReleaseManifest.profiles | Where-Object {
+        $_.id -eq $Id
+    })
+    if ($matches.Count -ne 1) {
+        Stop-GccBuild "unsupported profile: $Id"
     }
-    Stop-GccBuild "unsupported profile: $Id"
+    $selected = $matches[0]
+    return @{
+        Bundle = [string]$selected.artifacts.f401
+        Flags = @($selected.defines | ForEach-Object { "-D$_" })
+        Graphics = [bool]$selected.graphics
+    }
+}
+
+function Get-ReleaseCase {
+    param([string]$Id)
+    if ([string]::IsNullOrWhiteSpace($Id)) {
+        return $null
+    }
+    $matches = @($script:ReleaseManifest.cases | Where-Object {
+        $_.id -eq $Id
+    })
+    if ($matches.Count -ne 1) {
+        Stop-GccBuild "unknown release case: $Id"
+    }
+    $selected = $matches[0]
+    if ($selected.mcu -ne 'f401' -or $selected.builder -ne 'gcc') {
+        Stop-GccBuild "release case is not an F401 GCC case: $Id"
+    }
+    if ($selected.profile -ne $Profile) {
+        Stop-GccBuild (
+            "release case $Id requires profile $($selected.profile), " +
+            "not $Profile")
+    }
+    return $selected
 }
 
 function Test-SafeBuildDirectory {
@@ -356,6 +325,19 @@ if ($Help) {
 }
 
 try {
+    $manifestPath = Join-Path $script:ProjectRoot 'tools/release-contract.json'
+    $contractTool = Join-Path $script:ProjectRoot 'tools/release_contract.py'
+    Test-RequiredFile $manifestPath 'release contract manifest'
+    Test-RequiredFile $contractTool 'release contract tool'
+    $python = Get-CommandPath 'python3' 'Python 3'
+    Invoke-GccTool $python @($contractTool, 'validate')
+    $script:ReleaseManifest = ConvertFrom-Json -InputObject (
+        [IO.File]::ReadAllText($manifestPath))
+    $script:CoreVersion = [string]$script:ReleaseManifest.toolchain.stm32_core
+    $script:ToolchainVersion = [string]$script:ReleaseManifest.toolchain.gnu_arm
+    $script:CmsisVersion = [string]$script:ReleaseManifest.toolchain.cmsis
+    $script:CmsisDspVersion = [string]$script:ReleaseManifest.toolchain.cmsis_dsp
+
     $profileInfo = Get-ProfileInfo $Profile
     $ws0010Bitmap = $Profile -eq 'mini-v3-ws0010' -and
         $Ws0010Graphics -eq '1'
@@ -386,6 +368,46 @@ try {
     }
     $systemRequested = $Focal -eq '1' -or $Basic -eq '1' -or
         $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
+    $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
+    if ($null -ne $releaseCaseInfo) {
+        $actualFeatures = @{
+            focal = $Focal
+            basic = $Basic
+            wbmp = $Wbmp
+            markdown = $Markdown
+            chip8 = $Chip8
+            usb_screen = $UsbScreen
+            ws0010_graphics = $Ws0010Graphics
+            extended_font_settings = $ExtendedFontSettings
+            user_explorer = $UserExplorer
+            math_backend = $MathBackend
+            lto = $Lto
+        }
+        foreach ($name in $actualFeatures.Keys) {
+            $expected = [string](
+                $releaseCaseInfo.features.PSObject.Properties[$name].Value)
+            if ($actualFeatures[$name] -ne $expected) {
+                Stop-GccBuild (
+                    "release case $ReleaseCase requires $name=$expected, " +
+                    "not $($actualFeatures[$name])")
+            }
+        }
+        $flashCapacity = [string]$releaseCaseInfo.budgets.flash_capacity
+        $flashHeadroom = [string](
+            $releaseCaseInfo.budgets.flash_min_headroom)
+        $ramLimit = [string]$releaseCaseInfo.budgets.ram_limit
+        $stackFrameLimit = [string](
+            $releaseCaseInfo.budgets.stack_frame_limit)
+    } else {
+        $flashCapacity = '262144'
+        $flashHeadroom = '512'
+        $ramLimit = if ($Lto -eq '1' -and $UsbScreen -ne '1') {
+            '52428'
+        } else {
+            '65536'
+        }
+        $stackFrameLimit = '5120'
+    }
 
     if ([string]::IsNullOrWhiteSpace($CorePath)) {
         $CorePath = Get-DefaultCorePath
@@ -446,11 +468,15 @@ try {
     $rtc = Join-Path $LibrariesPath 'STM32duino_RTC'
     Test-RequiredDirectory $liquidCrystal 'LiquidCrystal library'
     Test-RequiredDirectory $rtc 'STM32duino RTC library'
-    if ((Get-LibraryVersion $liquidCrystal) -ne '1.0.7') {
-        Stop-GccBuild 'LiquidCrystal 1.0.7 is required'
+    $lcdVersion = [string](
+        $script:ReleaseManifest.toolchain.libraries.LiquidCrystal)
+    $rtcVersion = [string](
+        $script:ReleaseManifest.toolchain.libraries.'STM32duino RTC')
+    if ((Get-LibraryVersion $liquidCrystal) -ne $lcdVersion) {
+        Stop-GccBuild "LiquidCrystal $lcdVersion is required"
     }
-    if ((Get-LibraryVersion $rtc) -ne '1.9.0') {
-        Stop-GccBuild 'STM32duino RTC 1.9.0 is required'
+    if ((Get-LibraryVersion $rtc) -ne $rtcVersion) {
+        Stop-GccBuild "STM32duino RTC $rtcVersion is required"
     }
 
     $cmake = Get-CommandPath 'cmake' 'CMake 3.21 or newer'
@@ -516,6 +542,7 @@ try {
         "-DCMAKE_TOOLCHAIN_FILE=$toolchainFile",
         "-DMK61_ARM_TOOLCHAIN_BIN=$toolchainBin",
         "-DMK61_PROJECT_ROOT=$script:ProjectRoot",
+        "-DMK61_CORE_VERSION=$script:CoreVersion",
         "-DMK61_STM32_CORE=$CorePath",
         "-DMK61_CMSIS_ROOT=$cmsisRoot",
         "-DMK61_CMSIS_DSP_ROOT=$cmsisDspRoot",
@@ -533,7 +560,10 @@ try {
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
         '-DMK61_REQUIRE_RESIDENT_CRC=1',
-        "-DMK61_ENABLE_LTO=$Lto"
+        "-DMK61_ENABLE_LTO=$Lto",
+        "-DMK61_FLASH_MIN_HEADROOM=$flashHeadroom",
+        "-DMK61_GLOBAL_RAM_LIMIT=$ramLimit",
+        "-DMK61_STACK_FRAME_LIMIT=$stackFrameLimit"
     )
     Invoke-GccTool $cmake $configureArguments
     Invoke-GccTool $cmake @(
@@ -554,10 +584,26 @@ try {
     Test-RequiredFile $sealer 'resident firmware sealer'
     Invoke-GccTool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
-        '-InputFile', $residentBin, '-MaxSize', '262144')
+        '-InputFile', $residentBin, '-MaxSize', $flashCapacity)
     Invoke-GccTool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
-        '-InputFile', $residentBin, '-MaxSize', '262144')
+        '-InputFile', $residentBin, '-MaxSize', $flashCapacity)
+
+    if ($null -ne $releaseCaseInfo) {
+        $sizeTool = Join-Path $toolchainBin "arm-none-eabi-size$toolSuffix"
+        $nmTool = Join-Path $toolchainBin "arm-none-eabi-nm$toolSuffix"
+        Test-RequiredFile $sizeTool 'GNU Arm size tool'
+        Test-RequiredFile $nmTool 'GNU Arm nm tool'
+        Invoke-GccTool $python @(
+            $contractTool, 'resource-report',
+            '--case', $ReleaseCase,
+            '--elf', $residentElf,
+            '--bin', $residentBin,
+            '--size-tool', $sizeTool,
+            '--nm-tool', $nmTool,
+            '--stack-summary', (Join-Path $buildDirectory 'stack-usage.json'),
+            '--output-prefix', (Join-Path $buildDirectory 'resource-report'))
+    }
 
     # CMake emitted HEX before the post-link footer was sealed. Regenerate it
     # from the authoritative sealed BIN so neither public format can bypass

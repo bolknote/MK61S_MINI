@@ -37,6 +37,30 @@ class StackUsageSelfTest(unittest.TestCase):
         self.assertTrue(any("unbounded" in failure for failure in failures))
         self.assertTrue(any("exceeds" in failure for failure in failures))
 
+    def test_machine_summary_is_stable_and_contains_no_report_paths(self) -> None:
+        records = [
+            stack_usage.parse_line(
+                Path("/private/build/one.su"), 1,
+                "/src/a.cpp:1:1:void alpha()\t64\tstatic"),
+            stack_usage.parse_line(
+                Path("C:/temporary/two.su"), 1,
+                "/src/b.cpp:2:1:void beta()\t96\tdynamic,bounded"),
+        ]
+        result = stack_usage.summary(records, 128, compiled_units=2)
+        self.assertEqual(result, {
+            "schema": 1,
+            "records": 2,
+            "max_frame": 96,
+            "max_function": "b.cpp:2:1:void beta()",
+            "limit": 128,
+            "dynamic_bounded": 1,
+            "unbounded": 0,
+            "status": "ok",
+            "compiled_units": 2,
+        })
+        self.assertNotIn("private/build", str(result))
+        self.assertNotIn("temporary", str(result))
+
     def test_rejects_unknown_or_malformed_records(self) -> None:
         report = Path("unit.su")
         with self.assertRaisesRegex(stack_usage.StackUsageError, "malformed"):

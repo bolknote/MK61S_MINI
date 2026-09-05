@@ -52,6 +52,36 @@ MENU_KEYS = {
 }
 
 
+def parse_vfat_diagnostic(report: str) -> dict[str, Any] | None:
+    """Read the versioned machine line; never interpret translated prose.
+
+    A legacy empty trace is accepted for older qualified resident images.
+    An unknown or malformed versioned record is always an error.
+    """
+    lines = [line.strip() for line in report.splitlines()
+             if line.startswith("VFAT ")]
+    if not lines and "Trace is empty" in report:
+        return None
+    if len(lines) != 1:
+        raise AssertionError("expected one VFAT diagnostic record")
+    match = re.fullmatch(
+        r"VFAT v=1 code=(\d+) phase=(\d+) flags=(\d+) "
+        r"actual=(\d+) limit=(\d+) subject=([0-9A-F]{0,30})", lines[0])
+    if match is None:
+        raise AssertionError("invalid or unsupported VFAT diagnostic")
+    code, phase, flags, actual, limit = map(int, match.groups()[:5])
+    if (code not in range(1200, 1300) and code != 0) or phase > 8 or flags > 3:
+        raise AssertionError("invalid VFAT code/phase/flags")
+    if actual > 0xFFFFFFFF or limit > 0xFFFFFFFF:
+        raise AssertionError("VFAT context outside uint32")
+    try:
+        subject = bytes.fromhex(match[6]).decode("utf-8")
+    except (ValueError, UnicodeError) as error:
+        raise AssertionError("invalid VFAT subject") from error
+    return dict(code=code, phase=phase, flags=flags,
+                actual=actual, limit=limit, subject=subject)
+
+
 def run_bytes(command: list[str], timeout: float = 10.0) -> bytes:
     completed = subprocess.run(
         command, capture_output=True, timeout=timeout, check=False
@@ -428,6 +458,9 @@ def main() -> int:
             payload,
         )
         vlog = terminal_report(target, "vlog", timeout=10.0)
+        diagnostic = parse_vfat_diagnostic(vlog)
+        if diagnostic is not None and diagnostic["code"] != 0:
+            raise AssertionError(f"USB import retained an error: {diagnostic}")
 
         request_transition(target, "rst now", timeout=5.0)
         reconnect(target, args.reconnect_timeout)

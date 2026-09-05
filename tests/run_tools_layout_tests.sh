@@ -13,9 +13,13 @@ expected="$(
     build_fmk_font.sh \
     build_mk61_module_pack.sh \
     build-gcc.cmd \
+    install_arduino_dependencies.ps1 \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \
+    release-contract.json \
+    release_contract.py \
+    vfat_diagnostic.py \
     seal-firmware.ps1 \
     seal-firmware.sh |
     LC_ALL=C sort

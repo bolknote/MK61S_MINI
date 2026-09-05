@@ -14,6 +14,7 @@ from hil_usb_disk_transaction import (
     listing_entries,
     msc_configured,
     posix_cksum,
+    parse_vfat_diagnostic,
     require_file_contents,
     validate_new_disk,
     wait_for_msc_disk,
@@ -39,6 +40,25 @@ def usb_node(pid: int, serial: str, location: int, configured: bool = True):
 
 
 class UsbDiskTransactionTest(unittest.TestCase):
+    def test_vfat_record_ignores_human_language_and_preserves_context(self):
+        machine = ("VFAT v=1 code=1221 phase=3 flags=0 actual=7492 "
+                   "limit=1536 subject=524541444D45")
+        for prose in ("File exceeds its size limit.", "Слишком большой файл."):
+            self.assertEqual(parse_vfat_diagnostic("vlog\r\n" + machine +
+                             "\r\n" + prose + "\r\n/> "),
+                             dict(code=1221, phase=3, flags=0, actual=7492,
+                                  limit=1536, subject="README"))
+        self.assertIsNone(parse_vfat_diagnostic(
+            "Trace is empty (build with MK61_VFAT_TRACE)."))
+        for malformed in (machine.replace("v=1", "v=2"),
+                          machine.replace("phase=3", "phase=9"),
+                          machine.replace("7492", "4294967296"),
+                          machine.replace("524541444D45", "F"),
+                          machine.replace("524541444D45", "FF"),
+                          machine + " extra=1", machine + "\n" + machine):
+            with self.subTest(malformed=malformed), self.assertRaises(AssertionError):
+                parse_vfat_diagnostic(malformed)
+
     def test_file_readback_checksum_matches_posix_vectors(self):
         self.assertEqual(posix_cksum(b""), 4294967295)
         self.assertEqual(posix_cksum(b"123456789"), 930766865)

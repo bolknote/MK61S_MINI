@@ -55,12 +55,12 @@
   _ZN18language_workspace5LeaseD1Ev;
   _ZN3fmk11bitmapPixelEPKhhhh;
   _ZN3kbd12get_key_waitEv;
-  _ZN3kbd13debounce_initEv;
   _ZN3kbd14clear_hold_keyEv;
-  _ZN3kbd14exclude_beforeEl;
+  _ZN3kbd10poll_eventEv;
+  _ZN3kbd7handoffEN13keyboard_core5EventE;
+  _ZN3kbd15handoff_pendingEv;
   _ZN3kbd14is_key_pressedEl;
   _ZN3kbd15any_key_pressedEv;
-  _ZN3kbd18scan_and_debouncedEv;
   _ZN3kbd20take_immediate_pressEl;
   _ZN3kbd23clear_immediate_pressesEv;
   _ZN3kbd4scanEv;

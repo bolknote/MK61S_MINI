@@ -3,8 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 arduino_cli="${MK61_ARDUINO_CLI:-arduino-cli}"
-expected_cli_version=1.5.1
-expected_core_version=2.12.0
+contract="$root/tools/release_contract.py"
 
 fail() {
   printf 'F411 release matrix: %s\n' "$1" >&2
@@ -15,6 +14,12 @@ command -v "$arduino_cli" >/dev/null 2>&1 ||
   fail "arduino-cli is not installed: $arduino_cli"
 command -v python3 >/dev/null 2>&1 ||
   fail "python3 is required for the stack-usage release gate"
+python3 "$contract" validate >/dev/null ||
+  fail 'release contract is invalid'
+expected_cli_version="$(python3 "$contract" toolchain --field arduino_cli)"
+expected_core_version="$(python3 "$contract" toolchain --field stm32_core)"
+expected_lcd_version="$(python3 "$contract" toolchain --field 'library:LiquidCrystal')"
+expected_rtc_version="$(python3 "$contract" toolchain --field 'library:STM32duino RTC')"
 
 cli_version="$("$arduino_cli" version 2>/dev/null || true)"
 printf '%s\n' "$cli_version" |
@@ -25,11 +30,11 @@ printf '%s\n' "$cli_version" |
   grep -Eq "^STMicroelectronics:stm32[[:space:]]+$expected_core_version([[:space:]]|$)" ||
   fail "STM32 Core $expected_core_version is required"
 "$arduino_cli" lib list |
-  grep -Eq '^LiquidCrystal[[:space:]]+1\.0\.7([[:space:]]|$)' ||
-  fail 'LiquidCrystal 1.0.7 is required'
+  grep -Eq "^LiquidCrystal[[:space:]]+$expected_lcd_version([[:space:]]|$)" ||
+  fail "LiquidCrystal $expected_lcd_version is required"
 "$arduino_cli" lib list |
-  grep -Eq '^STM32duino RTC[[:space:]]+1\.9\.0([[:space:]]|$)' ||
-  fail 'STM32duino RTC 1.9.0 is required'
+  grep -Eq "^STM32duino RTC[[:space:]]+$expected_rtc_version([[:space:]]|$)" ||
+  fail "STM32duino RTC $expected_rtc_version is required"
 
 if [[ "${1:-}" == "--check-dependencies" ]]; then
   printf 'F411 release dependencies: OK\n'
@@ -78,17 +83,29 @@ fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMeth
 fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 strict_flags='-DMK61_REQUIRE_RESIDENT_CRC=1 -Werror -Wno-error=cpp'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-minimum_flash_headroom=16384
 variant_index=0
-variant_count=16
+variant_count="$(python3 "$contract" cases --group f411-release --format count)"
 
 compile_variant() {
-  local name="$1"
-  local variant_fqbn="$2"
-  local board_flags="$3"
-  local artifact_name="$4"
+  local case_id="$1"
+  local profile="$2"
+  local optimization="$3"
+  local board_flags="$4"
+  local artifact_name="$5"
+  local flash_capacity="$6"
+  local minimum_flash_headroom="$7"
+  local stack_frame_limit="$8"
+  local publish="$9"
+  local expect_usb_suspend="${10}"
+  local expect_ws0010_graphics="${11}"
+  local name="${case_id#f411-}"
+  local variant_fqbn="$fqbn"
+  if [[ "$optimization" == oslto ]]; then
+    variant_fqbn="$fqbn_lto"
+  fi
   local build_path="$matrix_root/build-$name"
   local compile_log="$build_path/compile.log"
+  local stack_summary="$build_path/stack-usage.json"
   local compile_flags="$board_flags $platform_ram_flags $strict_flags"
   variant_index=$((variant_index + 1))
   printf '\n[%d/%d] F411 %s\n' "$variant_index" "$variant_count" "$name"
@@ -123,25 +140,31 @@ compile_variant() {
   fi
   python3 "$root/tests/analyze_stack_usage.py" \
     --compile-commands "$build_path/compile_commands.json" \
-    --source-root "$build_path/sketch" --top 3
-  local flash_line flash_used flash_max flash_headroom
+    --source-root "$build_path/sketch" --top 3 \
+    --max-frame "$stack_frame_limit" --summary-json "$stack_summary"
+  local flash_line flash_max
   flash_line="$(grep -E '^Sketch uses [0-9]+ bytes .*Maximum is [0-9]+ bytes\.$' \
     "$compile_log" | tail -n 1)"
   [[ -n "$flash_line" ]] ||
     fail "could not parse Flash usage for $name"
-  flash_used="$(sed -E 's/^Sketch uses ([0-9]+) bytes .*$/\1/' <<<"$flash_line")"
   flash_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$flash_line")"
-  flash_headroom=$((flash_max - flash_used))
-  [[ "$flash_headroom" -ge "$minimum_flash_headroom" ]] ||
-    fail "unsafe Flash headroom for $name: ${flash_headroom} B (minimum ${minimum_flash_headroom} B)"
+  [[ "$flash_max" -eq "$flash_capacity" ]] ||
+    fail "Flash capacity differs from contract for $name: $flash_max != $flash_capacity"
   test -s "$build_path/mk61s-M.ino.elf" ||
     fail "missing ELF for $name"
   test -s "$build_path/mk61s-M.ino.bin" ||
     fail "missing BIN for $name"
-  "$root/tools/seal-firmware.sh" seal --max-size 524288 \
+  "$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" \
     "$build_path/mk61s-M.ino.bin"
-  "$root/tools/seal-firmware.sh" check --max-size 524288 \
+  "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
     "$build_path/mk61s-M.ino.bin"
+  python3 "$contract" resource-report \
+    --case "$case_id" \
+    --elf "$build_path/mk61s-M.ino.elf" \
+    --bin "$build_path/mk61s-M.ino.bin" \
+    --compile-commands "$build_path/compile_commands.json" \
+    --stack-summary "$stack_summary" \
+    --output-prefix "$build_path/resource-report"
   "$root/tests/check_global_constructors.sh" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_early_dfu_elf.sh" \
@@ -150,18 +173,15 @@ compile_variant() {
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_rtc_alarm_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
-  if [[ ("$board_flags" == *'-DMK61_OLED1602_WS0010'* && \
-         "$board_flags" != *'-DREVISION_V2'*) || \
-        "$board_flags" == *'-DMK61_BOARD_CLASSIC_V3'* ]]; then
+  if [[ "$expect_usb_suspend" == 1 ]]; then
     "$root/tests/check_usb_suspend_elf.sh" \
       "$build_path/mk61s-M.ino.elf"
   else
     "$root/tests/check_usb_suspend_elf.sh" --disabled \
       "$build_path/mk61s-M.ino.elf"
   fi
-  if [[ "$board_flags" == *'-DMK61_OLED1602_WS0010'* && \
-        "$board_flags" != *'-DREVISION_V2'* ]]; then
-    if [[ "$board_flags" == *'-DMK61_WS0010_GRAPHICS_100X16=0'* ]]; then
+  if [[ "$expect_ws0010_graphics" != - ]]; then
+    if [[ "$expect_ws0010_graphics" == 0 ]]; then
       "$root/tests/check_ws0010_graphics_elf.sh" --disabled \
         "$build_path/mk61s-M.ino.elf"
     else
@@ -169,47 +189,23 @@ compile_variant() {
         "$build_path/mk61s-M.ino.elf"
     fi
   fi
-  if [[ -n "$output_dir" && -n "$artifact_name" ]]; then
+  if [[ -n "$output_dir" && "$publish" == 1 ]]; then
     cp "$build_path/mk61s-M.ino.bin" \
       "$output_dir/${artifact_name}-${firmware_tag}.bin"
   fi
 }
 
-compile_variant lcd1602-a00 "$fqbn" \
-  '-DMK61_LCD1602_A00' 'mk61s-M-lcd1602-a00-f411'
-compile_variant lcd1602-a00-usb-screen "$fqbn" \
-  '-DMK61_LCD1602_A00 -DMK61_ENABLE_USB_SCREEN=1' ''
-compile_variant lcd1602-a00-lto "$fqbn_lto" \
-  '-DMK61_LCD1602_A00' ''
-compile_variant lcd1602-a02 "$fqbn" \
-  '-DMK61_LCD1602_A02' 'mk61s-M-lcd1602-a02-f411'
-compile_variant oled1602-ws0010 "$fqbn" \
-  '-DMK61_OLED1602_WS0010' 'mk61s-M-mini-v3-oled1602-ws0010-f411'
-compile_variant oled1602-ws0010-usb-screen "$fqbn" \
-  '-DMK61_OLED1602_WS0010 -DMK61_ENABLE_USB_SCREEN=1' ''
-compile_variant oled1602-ws0010-no-graphics "$fqbn" \
-  '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=0' ''
-compile_variant oled1602-ws0010-graphics-wbmp "$fqbn" \
-  '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=1 -DMK61_ENABLE_MARKDOWN_VIEWER=0 -DMK61_ENABLE_WBMP_VIEWER=1' \
-  'mk61s-M-mini-v3-oled1602-ws0010-graphics-wbmp-f411'
-compile_variant oled1602-ws0010-graphics-wbmp-markdown "$fqbn" \
-  '-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=1 -DMK61_ENABLE_MARKDOWN_VIEWER=1 -DMK61_ENABLE_WBMP_VIEWER=1' \
-  'mk61s-M-mini-v3-oled1602-ws0010-graphics-wbmp-markdown-f411'
-compile_variant oled1602-ws0010-usb-screen-no-graphics "$fqbn" \
-  '-DMK61_OLED1602_WS0010 -DMK61_ENABLE_USB_SCREEN=1 -DMK61_WS0010_GRAPHICS_100X16=0' ''
-compile_variant mini-v2-lcd1602-a00 "$fqbn" \
-  '-DREVISION_V2 -DMK61_LCD1602_A00' \
-  'mk61s-M-mini-v2-lcd1602-a00-f411'
-compile_variant mini-v2-lcd1602-a02 "$fqbn" \
-  '-DREVISION_V2 -DMK61_LCD1602_A02' \
-  'mk61s-M-mini-v2-lcd1602-a02-f411'
-compile_variant classic-v2 "$fqbn" \
-  '-DMK61_BOARD_CLASSIC_V2' 'mk61s-M-classic-v2-uc1609-f411'
-compile_variant classic-v3 "$fqbn" \
-  '-DMK61_BOARD_CLASSIC_V3' 'mk61s-M-classic-v3-uc1609-f411'
-compile_variant classic-v3-usb-screen "$fqbn" \
-  '-DMK61_BOARD_CLASSIC_V3 -DMK61_ENABLE_USB_SCREEN=1' ''
-compile_variant 40th "$fqbn" \
-  '-DMK61_BOARD_40TH' 'mk61s-M-40th-f411'
+while IFS=$'\t' read -r \
+    case_id profile optimization board_flags artifact_name \
+    flash_capacity minimum_flash_headroom _ram_capacity _ram_limit \
+    stack_frame_limit _product publish expect_usb_suspend \
+    expect_ws0010_graphics _focal _basic _wbmp _markdown _chip8 \
+    _usb_screen _ws0010_graphics _extended_font _user_explorer \
+    _math_backend _lto; do
+  compile_variant "$case_id" "$profile" "$optimization" "$board_flags" \
+    "$artifact_name" "$flash_capacity" "$minimum_flash_headroom" \
+    "$stack_frame_limit" "$publish" "$expect_usb_suspend" \
+    "$expect_ws0010_graphics"
+done < <(python3 "$contract" cases --group f411-release --format tsv)
 
 printf '\nF411 strict release matrix: OK (%d variants)\n' "$variant_count"

@@ -19,10 +19,14 @@ $firmwareShell = Join-Path $root `
     'tools/.mk61-firmware/mk61-firmware.sh'
 $releaseWorkflow = Join-Path $root `
     '.github/workflows/firmware-release.yml'
+$releaseManifest = Join-Path $root 'tools/release-contract.json'
+$releaseContract = Join-Path $root 'tools/release_contract.py'
+$f401ReleaseMatrix = Join-Path $root 'tests/run_f401_release_matrix.sh'
 $arduinoSetupAction = Join-Path $root `
     '.github/actions/setup-arduino-cli/action.yml'
 $arduinoSetupScript = Join-Path $root `
     '.github/actions/setup-arduino-cli/install.ps1'
+$dependencyInstaller = Join-Path $root 'tools/install_arduino_dependencies.ps1'
 $pwsh = (Get-Process -Id $PID).Path
 
 function Assert-True {
@@ -51,8 +55,12 @@ foreach ($file in @(
     $firmwarePowerShell,
     $firmwareShell,
     $releaseWorkflow,
+    $releaseManifest,
+    $releaseContract,
+    $f401ReleaseMatrix,
     $arduinoSetupAction,
-    $arduinoSetupScript
+    $arduinoSetupScript,
+    $dependencyInstaller
 )) {
     Assert-True (Test-Path -LiteralPath $file -PathType Leaf) `
         "direct GCC build file is missing: $file"
@@ -79,8 +87,8 @@ $helpText = $help.Output -join "`n"
 Assert-True ($help.ExitCode -eq 0) 'direct GCC help failed'
 Assert-True ($helpText -match 'Arduino IDE and arduino-cli are not invoked') `
     'help does not state that the build is direct'
-Assert-True ($helpText -match '(?s)mini-v2-a00.+classic-v2') `
-    'help does not list the supported profiles'
+Assert-True ($helpText -match 'tools/release-contract\.json') `
+    'help does not identify the canonical profile source'
 Assert-True ($helpText -match '-Check\s+validate dependencies') `
     'help does not expose dependency preflight'
 Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
@@ -119,8 +127,11 @@ $firmwareMainText = [IO.File]::ReadAllText($firmwareMain)
 $firmwarePowerShellText = [IO.File]::ReadAllText($firmwarePowerShell)
 $firmwareShellText = [IO.File]::ReadAllText($firmwareShell)
 $releaseWorkflowText = [IO.File]::ReadAllText($releaseWorkflow)
+$releaseManifestText = [IO.File]::ReadAllText($releaseManifest)
+$f401ReleaseMatrixText = [IO.File]::ReadAllText($f401ReleaseMatrix)
 $arduinoSetupActionText = [IO.File]::ReadAllText($arduinoSetupAction)
 $arduinoSetupScriptText = [IO.File]::ReadAllText($arduinoSetupScript)
+$dependencyInstallerText = [IO.File]::ReadAllText($dependencyInstaller)
 $allWorkflowText = @(
     Get-ChildItem -LiteralPath (Join-Path $root '.github/workflows') `
         -File -Filter '*.yml' |
@@ -139,10 +150,11 @@ Assert-True ($cmakeText -match
 Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
     'CMake build does not emit compile_commands.json'
 Assert-True ($cmakeText -match
-    'MK61_GLOBAL_RAM_LIMIT=.+52428') `
-    'canonical F401 build does not enforce the 80% static RAM budget'
-Assert-True ($cmakeText -match 'MK61_FLASH_MIN_HEADROOM=512') `
-    'canonical F401 build does not reserve Flash growth headroom'
+    'MK61_GLOBAL_RAM_LIMIT=\$\{MK61_GLOBAL_RAM_LIMIT\}') `
+    'canonical F401 build does not consume its selected RAM budget'
+Assert-True ($cmakeText -match
+    'MK61_FLASH_MIN_HEADROOM=\$\{MK61_FLASH_MIN_HEADROOM\}') `
+    'canonical F401 build does not consume its selected Flash budget'
 Assert-True ($cmakeText -match '-P "\$\{CMAKE_CURRENT_SOURCE_DIR\}/check-flash\.cmake"') `
     'canonical F401 build does not invoke the shared Flash budget gate'
 Assert-True ($cmakeText -match
@@ -169,8 +181,9 @@ Assert-True ($cmakeText -match
 Assert-True ($systemAppExportsText -match
     '_ZN18language_workspace4dataENS_5OwnerE;') `
     'System APP LTO export list is incomplete'
-Assert-True ($cmakeText -match 'STM32 Arduino Core 2\.12\.0 is required') `
-    'CMake build does not pin the STM32 Core'
+Assert-True ($cmakeText -match
+    'STM32 Arduino Core \$\{MK61_CORE_VERSION\} is required') `
+    'CMake build does not consume the selected STM32 Core version'
 Assert-True ($toolchainText -match 'arm-none-eabi-gcc') `
     'CMake toolchain does not use GNU Arm GCC'
 Assert-True ($firmwareMainText -match '#include "mk61s-M\.ino"') `
@@ -182,8 +195,8 @@ Assert-True ($firmwareShellText -match
     'tools/build-gcc\.cmd[\s\S]+-BuildRoot') `
     'macOS/Linux firmware frontend does not use the direct GCC backend'
 Assert-True ($releaseWorkflowText -match
-    'tools/build-gcc\.cmd') `
-    'release workflow does not use the canonical F401 GCC backend'
+    'tests/run_f401_release_matrix\.sh') `
+    'release workflow does not use the repository-owned F401 matrix'
 Assert-True ($releaseWorkflowText -match
     'mk61-firmware\.cmd[\s\S]+--mcu f401') `
     'platform matrix does not exercise the public F401 frontend'
@@ -207,57 +220,28 @@ foreach ($setting in @(
     Assert-True ($releaseWorkflowText.Contains($setting)) `
         "cross-platform full F401 matrix is missing $setting"
 }
-$releaseF401Step = [regex]::Match(
-    $releaseWorkflowText,
-    '(?ms)^\s+- name: Build STM32F401CC firmware and System APP directly ' +
-    'with GCC\r?\n(?<body>.*?)(?=^\s+- name:)')
-Assert-True ($releaseF401Step.Success) `
-    'release workflow has no F401 release build step'
-foreach ($profile in @(
-    'mini-v3-a00', 'mini-v3-ws0010', 'mini-v2-a00', 'classic-v3')) {
-    Assert-True ($releaseF401Step.Groups['body'].Value.Contains($profile)) `
-        "F401 release build is missing profile $profile"
-}
-foreach ($option in @(
-    '-Focal 1',
-    '-Basic 1',
-    '-Wbmp 0',
-    '-Markdown 1',
-    '-Chip8 0',
-    '-UsbScreen 0',
-    '-MathBackend 1',
-    '-Lto 1'
-)) {
-    Assert-True ($releaseF401Step.Groups['body'].Value.Contains($option)) `
-        "F401 release bundle is missing option $option"
-}
+Assert-True ($f401ReleaseMatrixText -match
+    'release_contract\.py[\s\S]+cases --group "\$group" --format tsv') `
+    'F401 release matrix does not enumerate the shared contract'
+Assert-True ($f401ReleaseMatrixText -match '-ReleaseCase "\$case_id"') `
+    'F401 GCC builds are not bound to their selected release case'
 Assert-True ($releaseWorkflowText -match
-    '(?s)for bundle in.+?' +
-    'zip -qr "\$bundle\.zip" "\$bundle".+?' +
+    '(?s)run: tests/run_f401_release_matrix\.sh.+?' +
     'find \. -type f ! -name SHA256SUMS\.txt -print0.+?' +
     'xargs -0 sha256sum > SHA256SUMS\.txt') `
     'release checksums do not cover the packaged F401 ZIP and APP'
-foreach ($bundle in @(
-    'mk61s-M-mini-v3-lcd1602-a00-f401',
-    'mk61s-M-mini-v2-lcd1602-a00-f401',
-    'mk61s-M-classic-v3-uc1609-f401'
-)) {
-    Assert-True ($releaseWorkflowText.Contains($bundle)) `
-        "F401 release packaging is missing bundle $bundle"
-}
-Assert-True ($releaseWorkflowText -match
-    '(?s)Verify and package F401 bundles.+?' +
-    'System/FOCAL\.APP.+?System/BASIC\.APP.+?System/MARKDOWN\.APP.+?' +
+Assert-True ($f401ReleaseMatrixText -match
+    '(?s)System/FOCAL\.APP.+?System/BASIC\.APP.+?System/MARKDOWN\.APP.+?' +
     'System/WBMP\.APP.+?System/CHIP8\.APP.+?' +
-    'Unexpected disabled F401 APP') `
+    'disabled APP was packaged') `
     'release workflow can publish an incomplete F401 ZIP'
 Assert-True ($releaseWorkflowText -match
     '(?s)Verify resident and combined System APP.+?' +
     '\$container\[15\] -ne 1.+?' +
     'F401 APP is not packed with ZX0') `
     'cross-platform workflow does not reject raw System APP'
-Assert-True ($releaseWorkflowText -match
-    "(?s)od -An -tu1 -j15 -N1.+?F401 APP is not packed with ZX0") `
+Assert-True ($f401ReleaseMatrixText -match
+    "(?s)od -An -tu1 -j15 -N1.+?System APP is not ZX0") `
     'release packaging does not reject raw System APP'
 Assert-True ($releaseWorkflowText -notmatch
     'arduino/setup-arduino-cli') `
@@ -272,18 +256,27 @@ Assert-True (([regex]::Matches(
     $releaseWorkflowText,
     'uses:\s+\./\.github/actions/setup-arduino-cli')).Count -eq 2) `
     'release workflow does not consistently use the local Arduino CLI setup'
-Assert-True ($releaseWorkflowText -match
-    '(?m)^\s+ARDUINO_CLI_VERSION:\s+1\.5\.1\s*$') `
-    'release workflow does not pin the checksum-covered Arduino CLI version'
+Assert-True ($releaseWorkflowText -notmatch 'ARDUINO_CLI_VERSION') `
+    'release workflow duplicates the Arduino CLI contract version'
 Assert-True ($arduinoSetupActionText -match
     '(?m)^\s+using:\s+composite\s*$') `
     'local Arduino CLI setup is not a composite action'
+Assert-True ($arduinoSetupActionText -match
+    'release_contract\.py[\s\S]+toolchain --field arduino_cli') `
+    'local Arduino CLI setup does not consume the release contract'
 Assert-True ($arduinoSetupScriptText -match
     "'1\.5\.1'\s*=\s*@\{") `
     'local Arduino CLI setup does not pin the configured release'
 Assert-True ($arduinoSetupScriptText -match
     'Get-FileHash[\s\S]+Algorithm SHA256') `
     'local Arduino CLI setup does not verify its downloaded archive'
+Assert-True (([regex]::Matches(
+    $releaseWorkflowText,
+    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 2) `
+    'release jobs do not share the repository-owned dependency installer'
+Assert-True ($dependencyInstallerText -match
+    'release-contract\.json[\s\S]+toolchain\.libraries') `
+    'dependency installer has a second hard-coded library list'
 $f401Job = [regex]::Match(
     $releaseWorkflowText,
     '(?ms)^  f401-gcc-platforms:\r?\n(?<body>.*?)(?=^  build-release:)')

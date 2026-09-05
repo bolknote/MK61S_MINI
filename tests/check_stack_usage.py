@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sys
 
 
@@ -103,6 +104,37 @@ def policy_failures(records: list[Record], maximum: int) -> list[str]:
                 f"({record.bytes} bytes, {record.report})"
             )
     return failures
+
+
+def summary(records: list[Record], maximum: int,
+            *, compiled_units: int | None = None) -> dict[str, object]:
+    """Return a stable, path-free summary suitable for release evidence."""
+    if not records:
+        raise StackUsageError("cannot summarize an empty stack report")
+    ranked = sorted(
+        records,
+        key=lambda record: (record.bytes, record.description),
+        reverse=True,
+    )
+    failures = policy_failures(records, maximum)
+    description = re.sub(r"^.*[/\\](?=[^/\\]+:\d+:\d+:)", "",
+                         ranked[0].description)
+    result: dict[str, object] = {
+        "schema": 1,
+        "records": len(records),
+        "max_frame": ranked[0].bytes,
+        "max_function": description,
+        "limit": maximum,
+        "dynamic_bounded": sum(
+            "dynamic" in record.qualifier.split(",") and not record.unbounded
+            for record in records
+        ),
+        "unbounded": sum(record.unbounded for record in records),
+        "status": "ok" if not failures else "failed",
+    }
+    if compiled_units is not None:
+        result["compiled_units"] = compiled_units
+    return result
 
 
 def print_report(

@@ -81,10 +81,8 @@ void drawFrame(MK61Display& display, const char* model, const char* version,
 #endif
 
 bool pollEscape(void) {
-  const isize scan_code = kbd::scan();
-  if(scan_code < 0) return false;
-
-  while(kbd::get_key() >= 0) {}
+  const i32 scan_code = kbd::poll_event().code();
+  kbd::handoff(kbd::Event(scan_code));
   return scan_code == KEY_ESC_PRESS;
 }
 

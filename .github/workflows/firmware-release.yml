@@ -10,9 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-  ARDUINO_CLI_VERSION: 1.5.1
-
 jobs:
   host-tests:
     name: Host tests
@@ -35,10 +32,6 @@ jobs:
           - macos-latest
           - windows-latest
 
-    env:
-      STM32_CORE_VERSION: 2.12.0
-      STM32_PACKAGE_URL: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -55,26 +48,10 @@ jobs:
 
       - name: Setup Arduino CLI for dependency installation
         uses: ./.github/actions/setup-arduino-cli
-        with:
-          version: ${{ env.ARDUINO_CLI_VERSION }}
 
       - name: Install pinned STM32 packages
         shell: pwsh
-        run: |
-          arduino-cli config init --overwrite
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          arduino-cli config set board_manager.additional_urls "$env:STM32_PACKAGE_URL"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          arduino-cli core update-index
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          arduino-cli core install "STMicroelectronics:stm32@$env:STM32_CORE_VERSION"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          arduino-cli lib update-index
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          arduino-cli lib install "LiquidCrystal@1.0.7"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          arduino-cli lib install "STM32duino RTC@1.9.0"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        run: tools/install_arduino_dependencies.ps1
 
       - name: Write full F401 build configuration
         shell: pwsh
@@ -186,31 +163,16 @@ jobs:
     permissions:
       contents: write
 
-    env:
-      STM32_CORE_VERSION: 2.12.0
-      STM32_PACKAGE_URL: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Setup Arduino CLI
         uses: ./.github/actions/setup-arduino-cli
-        with:
-          version: ${{ env.ARDUINO_CLI_VERSION }}
 
-      - name: Install STM32 core
-        run: |
-          arduino-cli config init --overwrite
-          arduino-cli config set board_manager.additional_urls "$STM32_PACKAGE_URL"
-          arduino-cli core update-index
-          arduino-cli core install "STMicroelectronics:stm32@$STM32_CORE_VERSION"
-
-      - name: Install Arduino libraries
-        run: |
-          arduino-cli lib update-index
-          arduino-cli lib install "LiquidCrystal@1.0.7"
-          arduino-cli lib install "STM32duino RTC@1.9.0"
+      - name: Install pinned STM32 packages
+        shell: pwsh
+        run: tools/install_arduino_dependencies.ps1
 
       # This is the same entry point developers run locally. It compiles all
       # F411 release/check matrix with warnings-as-errors, checks the
@@ -227,122 +189,22 @@ jobs:
           MK61_F401_UC1609_BUILD_ROOT="$RUNNER_TEMP/f401-arduino-uc1609" \
             tests/run_f401_uc1609_compile_check.sh
 
-      - name: Build STM32F401CC firmware and System APP directly with GCC
-        run: |
-          for profile in mini-v3-a00 mini-v3-ws0010 mini-v2-a00 classic-v3; do
-            tools/build-gcc.cmd \
-              -Profile "$profile" \
-              -Focal 1 \
-              -Basic 1 \
-              -Wbmp 0 \
-              -Markdown 1 \
-              -Chip8 0 \
-              -UsbScreen 0 \
-              -MathBackend 1 \
-              -Lto 1 \
-              -BuildRoot "$RUNNER_TEMP/build-f401-gcc" \
-              -OutputDirectory firmware
-          done
+      - name: Build, verify and package contract-driven F401 matrix
+        env:
+          MK61_F401_MATRIX_ROOT: ${{ runner.temp }}/f401-release
+          MK61_F411_MATRIX_ROOT: ${{ runner.temp }}/f411-release
+          MK61_FIRMWARE_OUTPUT_DIR: ${{ github.workspace }}/firmware
+          MK61_PACKAGE_RELEASE: '1'
+        run: tests/run_f401_release_matrix.sh
 
-      - name: Build F401 WS0010 capability cross-matrix
+      - name: Write release checksums
         run: |
-          for case_id in a00-usb ws-usb ws-graphics ws-usb-graphics; do
-            profile=mini-v3-ws0010
-            usb=0
-            graphics=0
-            case "$case_id" in
-              a00-usb) profile=mini-v3-a00; usb=1 ;;
-              ws-usb) usb=1 ;;
-              ws-graphics) graphics=1 ;;
-              ws-usb-graphics) usb=1; graphics=1 ;;
-            esac
-            tools/build-gcc.cmd \
-              -Profile "$profile" \
-              -Focal 0 -Basic 0 -Wbmp 0 -Markdown 0 -Chip8 0 \
-              -UsbScreen "$usb" \
-              -Ws0010Graphics "$graphics" \
-              -MathBackend 1 -Lto 1 \
-              -BuildRoot "$RUNNER_TEMP/build-f401-$case_id" \
-              -OutputDirectory "$RUNNER_TEMP/output-f401-$case_id"
-            tests/check_global_constructors.sh \
-              "$RUNNER_TEMP/build-f401-$case_id/$profile/resident.elf"
-          done
-
-      - name: Check pre-setup constructors
-        run: |
-          for profile in mini-v3-a00 mini-v3-ws0010 mini-v2-a00 classic-v3; do
-            tests/check_global_constructors.sh \
-              "$RUNNER_TEMP/build-f401-gcc/$profile/resident.elf"
-          done
-
-      - name: Enforce WS0010 RAM budgets
-        run: |
-          size_tool="$(awk -F= '/^CMAKE_SIZE:FILEPATH=/ {print $2; exit}' \
-            "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/CMakeCache.txt")"
-          tests/check_release_ws0010_ram.sh "$size_tool" \
-            "$RUNNER_TEMP/build-f401-gcc/mini-v3-a00/resident.elf" \
-            "$RUNNER_TEMP/build-f401-gcc/mini-v3-ws0010/resident.elf" \
-            "$RUNNER_TEMP/f411-release/build-lcd1602-a00/mk61s-M.ino.elf" \
-            "$RUNNER_TEMP/f411-release/build-oled1602-ws0010/mk61s-M.ino.elf" \
-            "$RUNNER_TEMP/build-f401-a00-usb/mini-v3-a00/resident.elf" \
-            "$RUNNER_TEMP/build-f401-ws-usb/mini-v3-ws0010/resident.elf" \
-            "$RUNNER_TEMP/build-f401-ws-usb-graphics/mini-v3-ws0010/resident.elf"
-
-      - name: Verify and package F401 bundles
-        run: |
+          python3 tools/release_contract.py aggregate-reports \
+            --reports-below "$RUNNER_TEMP/f411-release" \
+            --reports-below "$RUNNER_TEMP/f401-arduino-uc1609" \
+            --reports-below "$RUNNER_TEMP/f401-release" \
+            --output-prefix firmware/RESOURCE_REPORT
           cd firmware
-          for bundle in \
-            mk61s-M-mini-v3-lcd1602-a00-f401 \
-            mk61s-M-mini-v3-oled1602-ws0010-f401 \
-            mk61s-M-mini-v2-lcd1602-a00-f401 \
-            mk61s-M-classic-v3-uc1609-f401; do
-            for artifact in \
-              "$bundle/$bundle.bin" \
-              "$bundle/build.flags" \
-              "$bundle/build.apps" \
-              "$bundle/System/FOCAL.APP" \
-              "$bundle/System/BASIC.APP" \
-              "$bundle/System/MARKDOWN.APP"; do
-              if [ ! -s "$artifact" ]; then
-                echo "Missing F401 release artifact: $artifact" >&2
-                exit 1
-              fi
-            done
-            "$GITHUB_WORKSPACE/tools/seal-firmware.sh" check \
-              --max-size 262144 "$bundle/$bundle.bin"
-            grep -F -- '-DMK61_REQUIRE_RESIDENT_CRC=1' \
-              "$bundle/build.flags"
-            for disabled in \
-              "$bundle/System/WBMP.APP" \
-              "$bundle/System/CHIP8.APP"; do
-              if [ -e "$disabled" ]; then
-                echo "Unexpected disabled F401 APP: $disabled" >&2
-                exit 1
-              fi
-            done
-            for app in \
-              "$bundle/System/FOCAL.APP" \
-              "$bundle/System/BASIC.APP" \
-              "$bundle/System/MARKDOWN.APP"; do
-              codec=$(od -An -tu1 -j15 -N1 "$app" | tr -d '[:space:]')
-              if [ "$codec" != 1 ]; then
-                echo "F401 APP is not packed with ZX0: $app" >&2
-                exit 1
-              fi
-            done
-            grep -F -- '-DMK61_MATH_BACKEND=1' "$bundle/build.flags"
-            grep -F -- '-DMK61_ENABLE_LTO=1' "$bundle/build.flags"
-            markdown_size=$(stat -c %s "$bundle/System/MARKDOWN.APP")
-            markdown_limit=4096
-            case "$bundle" in
-              *-uc1609-*) markdown_limit=12288 ;;
-            esac
-            if [ "$markdown_size" -gt "$markdown_limit" ]; then
-              echo "ZX0 MARKDOWN.APP exceeds $markdown_limit bytes: $markdown_size" >&2
-              exit 1
-            fi
-            zip -qr "$bundle.zip" "$bundle"
-          done
           find . -type f ! -name SHA256SUMS.txt -print0 \
             | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
 

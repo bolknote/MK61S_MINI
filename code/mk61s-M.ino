@@ -215,7 +215,6 @@ void reinit_mk61_calculator_state(void) {
   YZ_ZT = true;
   lcd_hooked = false;
   need_draw_lock_message = false;
-  while(kbd::get_key() >= 0) {}
   kbd::clear_hold_key();
   kbd::clear_immediate_presses();
   core_61::enable();
@@ -636,22 +635,7 @@ void   mk61_menu_hook(i32 key);
 using HookFunc = void (*)(i32 key);
 static HookFunc input_focus = &mk61_baseloop_hook;
 static bool user_short_press_pending = false;
-static bool drop_menu_exit_key_events = false;
-static u8 drop_menu_exit_scan_count = 0;
-
-static void drop_pending_key_events(void) {
-  while(kbd::get_key() >= 0) {}
-  kbd::clear_hold_key();
-}
-
-static void drop_key_events_until_release(void) {
-  drop_pending_key_events();
-  drop_menu_exit_key_events = true;
-  drop_menu_exit_scan_count = 0;
-}
-
 static void leave_menu_mode(void) {
-  drop_key_events_until_release();
   user_short_press_pending = false;
   lcd_std_display_redraw();
   input_focus = &mk61_baseloop_hook;
@@ -662,6 +646,7 @@ void   mk61_menu_hook(i32 key) {
       #if MK61_USER_EXPLORER_SHORTCUT
       if(key == KEY_USER_PRESS) {
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
+        kbd::handoff(kbd::Event(key));
         lcd_ru::restore_default_font();
         if(program_store_explorer_select() == action::MENU_EXIT) {
           leave_menu_mode();
@@ -705,7 +690,7 @@ static void service_m61_controls(void) {
   if(kbd::take_immediate_press(KEY_ESC)) {
     m61_text::cancel();
     if(core_61::is_RUN()) hidden_press_key(sw::RUN);
-    drop_pending_key_events();
+    kbd::handoff(kbd::Event(KEY_ESC_PRESS));
     was_active = false;
     lcd_std_display_redraw();
     return;
@@ -739,7 +724,7 @@ static void service_m61_controls(void) {
       if(!pressed) continue;
       m61_text::cancel();
       if(core_61::is_RUN()) hidden_press_key(sw::RUN);
-      drop_pending_key_events();
+      kbd::handoff(kbd::Event(event));
       was_active = false;
       lcd_std_display_redraw();
       return;
@@ -782,16 +767,19 @@ void   mk61_baseloop_hook(i32 key) {
       break;
     case  KEY_ESC_PRESS:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
+        kbd::handoff(kbd::Event(key));
         input_focus = &mk61_menu_hook;
         mk61_menu.select(-1);  // Отобразим меню
       break;
     case  KEY_LOAD:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
+        kbd::handoff(kbd::Event(key));
         if(Load() && !m61_text::active()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
         lcd_std_display_redraw(); 
       break;
     case  KEY_SAVE:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
+        kbd::handoff(kbd::Event(key));
         if(Store()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
         lcd_std_display_redraw(); 
       break;
@@ -929,7 +917,7 @@ static idle_sleep_policy::Conditions idle_sleep_conditions(void) {
       !m61_text::active() &&
       !m61_text::calculator_suspended() &&
       !user_short_press_pending &&
-      !drop_menu_exit_key_events &&
+      !kbd::handoff_pending() &&
       mk61_calculator_is_idle();
   const idle_sleep_policy::Conditions result = {
     top_level_idle_sleep_permitted && idle_main_depth == 1,
@@ -941,7 +929,7 @@ static idle_sleep_policy::Conditions idle_sleep_conditions(void) {
     kbd::last_key() >= 0 || kbd::any_key_pressed(),
     classic.active || classic.pending != 0,
     auto_start.pending() || angle_save.pending() ||
-        user_short_press_pending || drop_menu_exit_key_events,
+        user_short_press_pending || kbd::handoff_pending(),
     idle_periodic_wake_ready()
   };
   return result;
@@ -1002,7 +990,7 @@ void  loop() {
       core_61::is_RUN() &&
       library_mk61::speed_is_classic() &&
       !m61_text::calculator_suspended() &&
-      !drop_menu_exit_key_events);
+      !kbd::handoff_pending());
 
   u32 crash_runtime_state = crash_dump::RUNTIME_CALCULATOR;
   if(usb_mass_storage::active()) {
@@ -1065,16 +1053,6 @@ void  loop() {
   service_m61_controls();
 
   const i32 used_key = kbd::last_key();
-  if(drop_menu_exit_key_events) {
-    drop_pending_key_events();
-    kbd::scan();
-    if(drop_menu_exit_scan_count < 8) drop_menu_exit_scan_count++;
-    drop_pending_key_events();
-    if(drop_menu_exit_scan_count >= 8 && !kbd::any_key_pressed() && kbd::last_key() < 0) {
-      drop_menu_exit_key_events = false;
-    }
-    return;
-  }
 
 #if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
   if(used_key >= 0 && main_lcd().ws0010GraphicsQualificationActive()) {
@@ -1082,7 +1060,8 @@ void  loop() {
     // press/release pair, restore character RAM/font atomically and do not let
     // the same key also act on the calculator or menu behind the test.
     const bool restored = main_lcd().endWs0010Graphics();
-    drop_key_events_until_release();
+    (void) kbd::get_key();
+    kbd::handoff(kbd::Event(used_key));
     if(restored) {
       lcd_ru::restore_default_font();
       lcd_std_display_redraw();
@@ -1112,7 +1091,7 @@ void  loop() {
       !lcd_hooked &&
       !m61_text::active() &&
       !user_short_press_pending &&
-      !drop_menu_exit_key_events;
+      !kbd::handoff_pending();
   const bool calculator_idle =
       calculator_context &&
       mk61_calculator_is_idle() &&
@@ -1202,7 +1181,8 @@ void event_unhold_key(i32 unholded_key, i32 hold_quant) {
           #endif
           lcd_hooked = false;
           dbgln(MENU, "UNHOLD [USER], quant = ", hold_quant);
-          kbd::exclude_before(KEY_USER_PRESS); // уберем все коды отпускания/нажатия клавиш включая нажатие KEY_USER, из очереди клавиатуры
+          // The release belongs to this gesture; neighboring FIFO input stays.
+          kbd::handoff(kbd::Event(KEY_USER_PRESS));
           lcd_std_display_redraw();
         break;
   }

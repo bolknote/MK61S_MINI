@@ -15,16 +15,31 @@ inline bool time_reached(t_time_ms now, t_time_ms target) {
   return (i32) (now - target) >= 0;
 }
 
-inline bool valid_scan_code(i32 scan_code) {
+constexpr bool valid_scan_code(i32 scan_code) {
   if(scan_code < 0 || scan_code > 0x7F) return false;
   return (scan_code & ~((i32) RELEASE_MASK)) < (i32) KEY_COUNT;
 }
+
+// Typed view of the existing wire/FIFO byte. 0xFF is the empty sentinel.
+class Event {
+  u8 raw;
+public:
+  explicit constexpr Event(i32 code = -1)
+      : raw(valid_scan_code(code) ? (u8) code : (u8) 0xFF) {}
+  bool valid() const { return raw != 0xFF; }
+  bool press() const { return valid() && (raw & RELEASE_MASK) == 0; }
+  bool release() const { return valid() && (raw & RELEASE_MASK) != 0; }
+  i32 key() const { return valid() ? raw & ~RELEASE_MASK : -1; }
+  i32 code() const { return valid() ? raw : -1; }
+};
+static_assert(sizeof(Event) == 1, "keyboard event is one FIFO byte");
 
 template<usize CapacityValue>
 class FixedFifo {
   public:
     static constexpr usize CAPACITY = CapacityValue;
     static_assert(CAPACITY > 0, "keyboard FIFO must not be empty");
+    static_assert(CAPACITY <= 255, "keyboard FIFO indices must fit one byte");
 
     constexpr FixedFifo(void) : head_(0), size_(0), data_{} {}
 
@@ -58,12 +73,71 @@ class FixedFifo {
     }
 
   private:
-    usize head_;
-    usize size_;
+    u8 head_;
+    u8 size_;
     u8 data_[CAPACITY];
 };
 
 using Fifo = FixedFifo<8>;
+
+// One owner for queued input and context handoff. Only the causal key is
+// suppressed through its release; other keys and a later press are preserved.
+class DeliveryQueue {
+  u8 suppressed_[(KEY_COUNT + 7) / 8] = {};
+  u32 overflows_ = 0;
+  Fifo fifo_;
+
+  bool consume(Event event) {
+    if(!suppressed(event.key())) return false;
+    if(event.release()) released(event.key());
+    return true;
+  }
+public:
+  bool push(i32 code) {
+    const Event event(code);
+    if(!valid_scan_code(code)) return false;
+    if(consume(event) || fifo_.push(code)) return true;
+    if(overflows_ != UINT32_MAX) ++overflows_;
+    return false;
+  }
+  i32 pop() { return fifo_.pop(); }
+  i32 peek(usize index = 0) const { return fifo_.peek(index); }
+  bool empty() const { return fifo_.empty(); }
+  bool full() const { return fifo_.full(); }
+  usize size() const { return fifo_.size(); }
+  u32 overflows() const { return overflows_; }
+  bool pending() const {
+    for(u8 bits : suppressed_) if(bits != 0) return true;
+    return false;
+  }
+  bool suppressed(i32 key) const {
+    return key >= 0 && key < (i32) KEY_COUNT &&
+        (suppressed_[(u8) key / 8] & (1U << ((u8) key % 8))) != 0;
+  }
+  void released(i32 key) {
+    if(key >= 0 && key < (i32) KEY_COUNT)
+      suppressed_[(u8) key / 8] &= (u8) ~(1U << ((u8) key % 8));
+  }
+  void handoff(Event cause, bool still_down) {
+    if(!cause.press()) return;
+    suppressed_[(u8) cause.key() / 8] |= (u8) (1U << ((u8) cause.key() % 8));
+    // Stable rotation: inspect exactly the old queue length. A queued release
+    // ends this gesture, so a later press of the SAME key is not discarded.
+    const usize count = fifo_.size();
+    for(usize i = 0; i < count; ++i) {
+      const Event event(fifo_.pop());
+      if(!consume(event)) (void) fifo_.push(event.code());
+    }
+    // Terminal pulse events have no held state or future release.
+    if(!still_down) released(cause.key());
+  }
+  void reset() {
+    fifo_.clear();
+    for(u8& bits : suppressed_) bits = 0;
+    overflows_ = 0;
+  }
+};
+static_assert(sizeof(DeliveryQueue) <= 32, "input delivery RAM budget");
 
 class PressEdgeLatch {
   public:
@@ -151,6 +225,8 @@ class ExternalKeyState {
       held_key_ = -1;
       hold_quant_ = -1;
     }
+
+    void clearHold(i32 key) { if(held_key_ == key) clearHold(); }
 
     bool anyPressed(void) const { return pressed_ != 0; }
 

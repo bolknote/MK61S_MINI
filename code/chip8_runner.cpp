@@ -94,17 +94,20 @@ static bool chip_key_pressed(u8 key) {
   return key == 5 && pressed(mapping.ok);
 }
 
-static void discard_queued_key_events(void) {
+static void consume_game_input(void) {
   // CHIP-8 reads the independent edge latch and held-key state below. The
   // ordinary calculator FIFO must still be drained: terminal `kbd` commands
   // feed both paths, and otherwise fill the eight-event queue during play and
   // reappear as Explorer search text after the game exits.
-  while(kbd::get_key() >= 0) {}
+  // ESC belongs to the transition out of the game; leave later input queued.
+  while(kbd::last_key() >= 0 &&
+        kbd::last_key() != keyboard_layout::ACTIVE.esc)
+    (void) kbd::get_key();
 }
 
 static void service_keyboard(void) {
   (void) kbd::scan();
-  discard_queued_key_events();
+  consume_game_input();
 }
 
 static u16 key_mask(void) {
@@ -130,16 +133,13 @@ static bool wait_launch_key_release(MK61Display& display,
                                     u32& display_mode_revision,
                                     const chip8::State& machine,
                                     u8 bitmap[DISPLAY_BYTES]) {
-  while(kbd::any_key_pressed()) {
+  while(kbd::handoff_pending()) {
     idle_main_process();
     service_keyboard();
     if(!service_display_change(display, display_mode_revision,
                                machine, bitmap)) return false;
     delay(1);
   }
-  discard_queued_key_events();
-  kbd::debounce_init();
-  kbd::clear_immediate_presses();
   return true;
 }
 
@@ -193,7 +193,10 @@ static loadable_module::FileOpenResult run(
     }
 
     const keyboard_layout::Mapping& mapping = keyboard_layout::ACTIVE;
-    if(pressed(mapping.esc)) break;
+    if(pressed(mapping.esc)) {
+      kbd::handoff(kbd::Event(mapping.esc));
+      break;
+    }
     const bool run_pressed = pressed(mapping.run);
     if(run_pressed && !previous_run) {
       paused = !paused;
@@ -256,9 +259,7 @@ static loadable_module::FileOpenResult run(
 finished:
   sound_stop();
   if(fullscreen) display.endFullscreenBitmap();
-  discard_queued_key_events();
   kbd::clear_hold_key();
-  kbd::clear_immediate_presses();
   return result;
 }
 

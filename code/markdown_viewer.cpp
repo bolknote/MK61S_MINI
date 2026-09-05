@@ -81,17 +81,18 @@ struct Navigation {
 };
 
 static i32 scan_key(void) {
-  const i32 scan_code = kbd::scan_and_debounced();
+  const i32 scan_code = kbd::poll_event().code();
   if(scan_code < 0) return VIEWER_KEY_NONE;
-  kbd::exclude_before(scan_code);
+
   if((scan_code & (i32) key_state::RELEASED) != 0) {
     return VIEWER_KEY_NONE;
   }
+  kbd::handoff(kbd::Event(scan_code));
   return scan_code & ~(i32) key_state::RELEASED;
 }
 
 static i32 wait_key(MK61Display& display, u32 display_revision) {
-  kbd::debounce_init();
+
   while(true) {
     idle_main_process();
     if(display.displayModeRevision() != display_revision) {

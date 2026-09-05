@@ -168,6 +168,7 @@ def main() -> int:
     parser.add_argument("--max-frame", type=int,
                         default=check_stack_usage.DEFAULT_MAX_FRAME)
     parser.add_argument("--top", type=int, default=5)
+    parser.add_argument("--summary-json", type=Path)
     args = parser.parse_args()
     if not args.source_root and not args.source:
         parser.error("at least one --source-root or --source is required")
@@ -195,6 +196,15 @@ def main() -> int:
                     if output:
                         print(output, end="", file=sys.stderr)
             reports, records = check_stack_usage.read_records(work)
+            if args.summary_json is not None:
+                args.summary_json.parent.mkdir(parents=True, exist_ok=True)
+                value = check_stack_usage.summary(
+                    records, args.max_frame, compiled_units=len(entries)
+                )
+                args.summary_json.write_text(
+                    json.dumps(value, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8", newline="\n"
+                )
             print(f"stack analysis: compiled={len(entries)} shipping_artifact=untouched")
             return 0 if check_stack_usage.print_report(
                 reports, records, args.max_frame, args.top

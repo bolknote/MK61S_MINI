@@ -2,6 +2,7 @@
 #define MK61_VIRTUAL_FAT_HPP
 
 #include "rust_types.h"
+#include "virtual_fat_diagnostic.hpp"
 
 namespace virtual_fat {
 
@@ -41,8 +42,10 @@ CommitResult finalize_pending_result(void);
 bool reset_session(void);
 void end_session(void);
 
-// Доступ к диагностической трассировке (строки не NULL только в сборках MK61_VFAT_TRACE).
-const char* trace_line_at(u16 index);
+// Retained across MSC -> CDC and no-op sync; cleared by a successful import
+// or explicitly by "vlog clear". No diagnostic is persisted to Flash.
+const Diagnostic& diagnostic(void);
+void clear_diagnostic(void);
 
 } // пространство имён virtual_fat
 

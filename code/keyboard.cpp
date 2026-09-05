@@ -31,14 +31,14 @@ extern void event_hold_key(i32 holded_key, i32 hold_quant);
 extern void event_unhold_key(i32 unholded_key, i32 hold_quant);
 
 inline void scan_out(usize data) {
-  for(int pin : scan_pins) { 
+  for(int pin : scan_pins) {
     digitalWrite(pin, data & 1);
     data >>= 1;
   }
 }
 
 inline void bus_out(usize data) {
-  for(int pin : data_pins) { 
+  for(int pin : data_pins) {
     digitalWrite(pin, data & 1);
     data >>= 1;
   }
@@ -52,10 +52,10 @@ inline usize bus_in(void) {
 
 /* Циркулярный буфер для накопления скан-кодов клавиатуры FIFO */
 
-static keyboard_core::Fifo key_fifo;
+static keyboard_core::DeliveryQueue key_fifo;
 
 namespace cir_buff {
-  inline void Init(void) { key_fifo.clear(); }
+  inline void Init(void) { key_fifo.reset(); }
   inline bool IsFull(void) { return key_fifo.full(); }
   inline bool IsEmpty(void) { return key_fifo.empty(); }
   inline usize count(void) { return key_fifo.size(); }
@@ -162,8 +162,9 @@ void 	check_hold_key(void) {
 namespace kbd {
 
 bool push(i8 key_code) {
+  const bool suppressed = key_fifo.suppressed(key_code);
   if(!cir_buff_write(key_code)) return false;
-  if(key_code >= 0 && key_code < (i8) KEY_RELEASE_MASK) {
+  if(!suppressed && key_code >= 0 && key_code < (i8) KEY_RELEASE_MASK) {
     immediate_presses.note((i32) key_code);
   }
   return true;
@@ -177,7 +178,7 @@ i32   get_key(key_state state) {
     if((key_code & KEY_RELEASE_MASK) == (i8) state){
       dbghexln(KBD, " get_key ret ", key_code);
       return key_code;
-    } 
+    }
   }
   return -1;
 }
@@ -195,7 +196,7 @@ void  clear_hold_key(void) {
 }
 
 bool take_immediate_press(i32 key_code) {
-  return immediate_presses.take(key_code);
+  return immediate_presses.take(key_code) && !key_fifo.suppressed(key_code);
 }
 
 void clear_immediate_presses(void) {
@@ -427,26 +428,40 @@ void cancel_stop_wake(void) {
 #endif
 }
 
-void  exclude_before(i32 before_key) { // убрать все коды клавиш в том числе before_key, из очереди клавиатуры
-  i32 exclude_key;
-  do {
-    exclude_key = get_key();
-    dbghexln(KBD, "del scancode $", exclude_key);
-  } while(exclude_key >= 0 && exclude_key != before_key);
+void handoff(Event cause) {
+  if(!cause.press()) return;
+  const i32 key = cause.key();
+  const usize row = (usize) key % KEY_IN_ROW;
+  const usize column = (usize) key / KEY_IN_ROW;
+  const bool pending =
+      (RowArray[row].candidate_mask() & (1U << column)) != 0;
+  key_fifo.handoff(cause, is_key_pressed(key) || pending);
+  (void) immediate_presses.take(key);
+  if(key_fifo.suppressed(key) && holded_scan_code == key) {
+    holded_scan_code = -1;
+    hold_quant_counter = -1;
+  }
+  if(key_fifo.suppressed(key)) external_keys.clearHold(key);
 }
+
+bool handoff_pending() { return key_fifo.pending(); }
+u32 overflow_count() { return key_fifo.overflows(); }
+Event poll_event() { (void) scan(); return Event(get_key()); }
 
 i32   get_key_wait(void) {
   do {
     idle_main_process();  // отдаем безделье в основной поток бездействия
-    const i32 scan_code = scan_and_debounced();
+    const i32 scan_code = poll_event().code();
     if(scan_code < 0) continue;
-    kbd::exclude_before(scan_code);
-    if(scan_code < KEY_RELEASE_MASK) return scan_code;
+    if(scan_code < KEY_RELEASE_MASK) {
+      handoff(Event(scan_code));
+      return scan_code;
+    }
   } while (true);
 }
 
 /*inline*/  /*__attribute__((always_inline))*/
-void  debounce_init(void) {
+static void debounce_init(void) {
   const t_time_ms init_time = millis();
   for(usize i = 0; i < KEY_IN_ROW; i++) RowArray[i].reset(init_time);
   immediate_presses.reset();
@@ -485,16 +500,16 @@ void  test(void) {
   for(usize pin : scan_pins) pinMode(pin, INPUT);
   isize i = 0;
   for(usize pin : scan_pins) {
-    pinMode(pin, OUTPUT); 
+    pinMode(pin, OUTPUT);
     digitalWrite(pin, LOW);
     dbghex(KBD, (const char*) "kbd.scan_line[", i++, (const char*) "] LOW, kbd.data=", digitalRead(bus_in()));
     digitalWrite(pin, HIGH);
     dbghex(KBD, " HIGH, kbd.data=", digitalRead(bus_in()));
-    pinMode(pin, INPUT); 
+    pinMode(pin, INPUT);
     dbghexln(KBD, " hi-Z, kbd.data=", digitalRead(bus_in()));
     delay(40);
   }
-*/  
+*/
 }
 
 isize scan(void) {
@@ -513,8 +528,19 @@ isize scan(void) {
   advance_scan_line();
 
   if(bit_changed == 0) {    // нет изменений в столбцах клавиатуры (выход)
-    check_hold_key();       // Проверка врремени удержания 
-    return -1;             
+    // An immediate M61 edge can be shorter than debounce and never produce
+    // a RELEASE event. Once this row is entirely up for the key, end handoff.
+    if(key_fifo.pending()) {
+      for(usize column = 0; column < KEY_IN_COLUMN; ++column) {
+        const i32 key = (i32) (column * KEY_IN_ROW + row);
+        if(!RowArray[row].pressed(column) &&
+           (RowArray[row].candidate_mask() & (1U << column)) == 0 &&
+           !external_keys.pressed(key))
+          key_fifo.released(key);
+      }
+    }
+    check_hold_key();       // Проверка врремени удержания
+    return -1;
   }
 
   const isize changed_column = keyboard_core::first_set_bit(bit_changed);
@@ -536,7 +562,7 @@ isize scan(void) {
     idle_signal_reset();
   // было нажатие, принимаем на удержание клавишу (учет только одного последнего удержания)
     hold_quant_counter  =   -1;
-    holded_scan_code    =   scan_code;
+    holded_scan_code    =   key_fifo.suppressed(code) ? -1 : scan_code;
     press_time          =   millis() + KEY_HOLD_MS;
     dbgln(KBD, "fixed press time: ", press_time, "ms, (hold) scan_code #", scan_code);
   } else {
@@ -549,7 +575,7 @@ isize scan(void) {
         event_unhold_key(holded_scan_code, hold_quant_counter);
         hold_quant_counter  = -1;   // снимаем счетчик квантов удержания
       }
-      holded_scan_code    = -1;   // снимаем удержание 
+      holded_scan_code    = -1;   // снимаем удержание
     }
   }
 
@@ -571,9 +597,6 @@ isize scan_m61_controls(void) {
   return scan();
 }
 
-isize  scan_and_debounced(void) {
-  (void) kbd::scan();
-  return kbd::last_key();
-}
+
 
 }

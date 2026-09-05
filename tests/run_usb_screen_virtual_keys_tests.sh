@@ -15,3 +15,12 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+
+# There must be no eager held-state update when a USB event is merely queued.
+python3 - "$root/code/usb_screen.cpp" <<'PY'
+import pathlib
+import sys
+source = pathlib.Path(sys.argv[1]).read_text()
+assert source.count('kbd::set_external_key_pressed') == 1
+assert 'deliverFront(kbd::push,' in source
+PY

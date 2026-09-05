@@ -118,9 +118,7 @@ static usize g_commit_compression_buffer_size;
 static u8 g_scratch_cache_slots;
 static u8 g_extra_cache_slots;
 static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
-static const char* g_last_error;
-static char g_error_detail[48];
-static bool g_preflight_retryable;
+static DiagnosticState g_error;
 
 static bool ensure_session(void) {
   if(g_session_lease.ok() && g_session != NULL) return true;
@@ -932,28 +930,44 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
   const u32 required = parsed.data_len == 0 ? 1 :
       ((u32) parsed.data_len + cluster_bytes - 1U) / cluster_bytes;
-  if(required == 0 || required > MAX_C5_FILE_CLUSTERS) return false;
+  if(required == 0 || required > MAX_C5_FILE_CLUSTERS) {
+    return g_error.fail(ErrorCode::CLUSTER_LIMIT, Phase::CHAIN,
+                        required, MAX_C5_FILE_CLUSTERS, parsed.name);
+  }
   chain.cluster_count = (u8) required;
   u16 cluster = cluster_for_id(parsed.id);
   for(u8 index = 0; index < chain.cluster_count; index++) {
-    if(!valid_cluster(cluster)) return false;
+    if(!valid_cluster(cluster)) {
+      return g_error.fail(ErrorCode::FILE_CLUSTER, Phase::CHAIN,
+                          cluster, cluster_limit(), parsed.name);
+    }
     for(u8 previous = 0; previous < index; previous++) {
-      if(chain.clusters[previous] == cluster) return false;
+      if(chain.clusters[previous] == cluster) {
+        return g_error.fail(ErrorCode::FILE_CHAIN, Phase::CHAIN,
+                            cluster, index, parsed.name);
+      }
     }
     chain.clusters[index] = cluster;
     if(index != 0 && reserve_extents &&
        !set_desired_kind(id_for_cluster(cluster), DESIRED_EXTENT)) {
-      return false;
+      return g_error.fail(ErrorCode::DUPLICATE_CLUSTER, Phase::CHAIN,
+                          cluster, index, parsed.name);
     }
     u16 next = 0;
     if(!effective_fat_value(cluster, next)) {
-      g_preflight_retryable = true;
-      return false;
+      return g_error.fail(ErrorCode::FAT_READ, Phase::CHAIN,
+                          cluster, 0, parsed.name, true);
     }
     if(index + 1U == chain.cluster_count) {
-      if(!fat_eof(next)) return false;
+      if(!fat_eof(next)) {
+        return g_error.fail(ErrorCode::FILE_CHAIN, Phase::CHAIN,
+                            cluster, next, parsed.name);
+      }
     } else {
-      if(!valid_cluster(next)) return false;
+      if(!valid_cluster(next)) {
+        return g_error.fail(ErrorCode::FILE_CHAIN, Phase::CHAIN,
+                            cluster, next, parsed.name);
+      }
       cluster = next;
     }
   }
@@ -1063,12 +1077,7 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   char name[program_store::NAME_SIZE + 16];
   if(!accepted_lfn(lfn, item, name, sizeof(name)) &&
      !short_name(item, name, sizeof(name))) {
-    snprintf(g_error_detail, sizeof(g_error_detail),
-             "dir-name:%02X%02X%02X%02X:a%02X",
-             (unsigned) item[0], (unsigned) item[1],
-             (unsigned) item[2], (unsigned) item[3],
-             (unsigned) item[11]);
-    g_last_error = g_error_detail;
+    g_error.fail(ErrorCode::NAME, Phase::ENTRY, get_le32(item, 0), item[11]);
     return ParseStatus::INVALID;
   }
   parsed.directory = (item[11] & ATTR_DIRECTORY) != 0;
@@ -1077,15 +1086,13 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   if(parsed.directory) {
     if(system_directory(name, parsed.attributes)) return ParseStatus::SKIP;
     if(!valid_cluster(cluster)) {
-      snprintf(g_error_detail, sizeof(g_error_detail),
-               "dir-cluster:%u:%.23s", (unsigned) cluster, name);
-      g_last_error = g_error_detail;
+      g_error.fail(ErrorCode::DIRECTORY_CLUSTER, Phase::ENTRY,
+                    cluster, cluster_limit(), name);
       return ParseStatus::INVALID;
     }
     if(strlen(name) >= program_store::NAME_SIZE) {
-      snprintf(g_error_detail, sizeof(g_error_detail),
-               "dir-name-long:%.32s", name);
-      g_last_error = g_error_detail;
+      g_error.fail(ErrorCode::NAME_TOO_LONG, Phase::ENTRY,
+                    (u32) strlen(name), program_store::NAME_SIZE - 1, name);
       return ParseStatus::INVALID;
     }
     bounded_string::copy(parsed.name, name);
@@ -1103,24 +1110,16 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   // Квоту данных C5 применяем лишь после выбора известного расширения калькулятора.
   const u16 size_limit = maximum_file_size(parsed.type);
   if(parsed.type == program_store::ProgramType::CHIP8 && size == 0) {
-    snprintf(g_error_detail, sizeof(g_error_detail),
-             "empty:%.3s:%.31s", visible_extension(parsed.type), name);
-    g_last_error = g_error_detail;
+    g_error.fail(ErrorCode::EMPTY_FILE, Phase::ENTRY, 0, 1, name);
     return ParseStatus::INVALID;
   }
   if(size > size_limit) {
-    snprintf(g_error_detail, sizeof(g_error_detail),
-             "oversize:%.3s:%u>%u:%.10s",
-             visible_extension(parsed.type), (unsigned) size,
-             (unsigned) size_limit, name);
-    g_last_error = g_error_detail;
+    g_error.fail(ErrorCode::FILE_TOO_LARGE, Phase::ENTRY, size, size_limit, name);
     return ParseStatus::INVALID;
   }
   if(!valid_cluster(cluster)) {
-    snprintf(g_error_detail, sizeof(g_error_detail),
-             "cluster:%.3s:%u:%.20s", visible_extension(parsed.type),
-             (unsigned) cluster, name);
-    g_last_error = g_error_detail;
+    g_error.fail(ErrorCode::FILE_CLUSTER, Phase::ENTRY,
+                  cluster, cluster_limit(), name);
     return ParseStatus::INVALID;
   }
   bounded_string::copy(parsed.name, name);
@@ -1152,8 +1151,9 @@ static bool read_file_chain_source(void* context, u32 offset,
     u8 block[SECTOR_SIZE];
     if(!read_effective_sector(
            cluster_lba(chain.clusters[cluster_index], sector), block)) {
-      g_preflight_retryable = true;
-      return false;
+      return g_error.fail(ErrorCode::FILE_READ, Phase::VALIDATE,
+                          cluster_lba(chain.clusters[cluster_index], sector),
+                          chain.size, nullptr, true);
     }
     usize count = SECTOR_SIZE - in_sector;
     if(count > size) count = size;
@@ -1204,7 +1204,8 @@ static bool file_chain_complete(const FileChain& chain,
          owner != current_id ||
          ((u32) old_cluster * geometry().sectors_per_cluster + sector) *
              SECTOR_SIZE >= current_size) {
-        return false;
+        return g_error.fail(ErrorCode::FILE_DATA, Phase::VALIDATE,
+                            lba, current_size);
       }
     }
     remaining -= in_cluster;
@@ -1241,9 +1242,8 @@ static bool validate_app_chain(const ParsedNode& parsed,
   if(!program_store::vfat_stage_narrow_matching(
        app_chain_contains_stage_key, &chain,
        app_stage_index, MAX_APP_STAGE_BLOCKS)) {
-    g_preflight_retryable = true;
-    g_last_error = "app-stage";
-    return false;
+    return g_error.fail(ErrorCode::APP_STAGE, Phase::VALIDATE,
+                        parsed.data_len, MAX_APP_STAGE_BLOCKS, parsed.name, true);
   }
   const loadable_module::ModuleSource source = {
     &chain, parsed.data_len, read_file_chain_source
@@ -1252,17 +1252,14 @@ static bool validate_app_chain(const ParsedNode& parsed,
   const loadable_module::StoreStatus status =
       loadable_module::validate_app(source, header);
   if(!program_store::vfat_stage_restore_full()) {
-    g_preflight_retryable = true;
-    g_last_error = "app-stage-restore";
-    return false;
+    return g_error.fail(ErrorCode::APP_STAGE_RESTORE, Phase::VALIDATE,
+                        (u32) status, 0, parsed.name, true);
   }
   if(status == loadable_module::StoreStatus::OK) return true;
-  if(status == loadable_module::StoreStatus::UNAVAILABLE ||
-     status == loadable_module::StoreStatus::IO_ERROR) {
-    g_preflight_retryable = true;
-  }
-  g_last_error = "app-invalid";
-  return false;
+  return g_error.fail(ErrorCode::APP_INVALID, Phase::VALIDATE,
+                      (u32) status, parsed.data_len, parsed.name,
+                      status == loadable_module::StoreStatus::UNAVAILABLE ||
+                      status == loadable_module::StoreStatus::IO_ERROR);
 }
 #endif
 
@@ -1360,25 +1357,24 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
   if(pass == WalkPass::VALIDATE) {
     const DesiredKind kind = parsed.directory ? DESIRED_DIRECTORY : DESIRED_FILE;
     if(!set_desired_kind(parsed.id, kind)) {
-      snprintf(g_error_detail, sizeof(g_error_detail), "duplicate-cluster:%u:%.22s",
-               (unsigned) parsed.id, parsed.name);
-      g_last_error = g_error_detail;
-      return false;
+      return g_error.fail(ErrorCode::DUPLICATE_CLUSTER, Phase::VALIDATE,
+                          cluster_for_id(parsed.id), (u32) kind, parsed.name);
     }
     program_store::Entry current;
     if(program_store::entry_by_id(parsed.id, current)) {
       if(parsed.directory != (current.kind == program_store::NodeKind::DIRECTORY)) {
         // Повторное использование между типами файла и каталога безопасно лишь
         // после полного удаления старого дерева; отказ сохраняет детерминизм восстановления.
-        g_last_error = "kind-change";
-        return false;
+        return g_error.fail(ErrorCode::KIND_CHANGE, Phase::VALIDATE,
+                            cluster_for_id(parsed.id), (u32) current.kind,
+                            parsed.name);
       }
     }
     if(!parsed.directory) {
       FileChain chain = {};
       if(!collect_file_chain(parsed, true, chain)) {
-        g_last_error = "file-chain";
-        return false;
+        return g_error.fail(ErrorCode::FILE_CHAIN, Phase::VALIDATE,
+                            cluster_for_id(parsed.id), parsed.data_len, parsed.name);
       }
       program_store::Entry current = {};
       const bool exists =
@@ -1387,8 +1383,8 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
       bool any_staged = false;
       if(!file_chain_complete(chain, exists, parsed.id,
                               exists ? current.data_len : 0, any_staged)) {
-        g_last_error = "file-data";
-        return false;
+        return g_error.fail(ErrorCode::FILE_DATA, Phase::VALIDATE,
+                            cluster_for_id(parsed.id), parsed.data_len, parsed.name);
       }
 #if MK61_ANY_LOADABLE_MODULE
       // Уже опубликованный APP может стать несовместимым после обновления
@@ -1435,8 +1431,7 @@ static bool handle_directory_item(u16 parent_id, const u8* item,
   reset_lfn(lfn);
   if(status == ParseStatus::SKIP) return true;
   if(status == ParseStatus::INVALID) {
-    if(g_last_error == NULL) g_last_error = "directory-entry";
-    return false;
+    return g_error.fail(ErrorCode::DIRECTORY_ENTRY, Phase::ENTRY, parent_id);
   }
   return process_node(parent_id, parsed, depth, pass);
 }
@@ -1444,8 +1439,7 @@ static bool handle_directory_item(u16 parent_id, const u8* item,
 static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
                            u8 depth, WalkPass pass) {
   if(depth > MAX_DEPTH) {
-    g_last_error = "depth";
-    return false;
+    return g_error.fail(ErrorCode::DEPTH, Phase::VALIDATE, depth, MAX_DEPTH);
   }
   LfnState lfn;
   reset_lfn(lfn);
@@ -1455,9 +1449,8 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
       for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
         const u8* block = NULL;
         if(!cached_effective_sector(root_start() + sector, block)) {
-          g_preflight_retryable = true;
-          g_last_error = "root-read";
-          return false;
+          return g_error.fail(ErrorCode::ROOT_READ, Phase::VALIDATE,
+                              root_start() + sector, slot, nullptr, true);
         }
         u8 item[32];
         memcpy(item, block + slot * 32, sizeof(item));
@@ -1472,17 +1465,16 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
   u16 cluster = first_cluster;
   for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
     if(!valid_cluster(cluster)) {
-      g_last_error = "directory-cluster";
-      return false;
+      return g_error.fail(ErrorCode::DIRECTORY_CLUSTER, Phase::CHAIN,
+                          cluster, cluster_limit());
     }
     for(u8 sector = 0; sector < geometry().sectors_per_cluster; sector++) {
       if(end) break;
       for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
         const u8* block = NULL;
         if(!cached_effective_sector(cluster_lba(cluster, sector), block)) {
-          g_preflight_retryable = true;
-          g_last_error = "directory-read";
-          return false;
+          return g_error.fail(ErrorCode::DIRECTORY_READ, Phase::CHAIN,
+                              cluster_lba(cluster, sector), slot, nullptr, true);
         }
         u8 item[32];
         memcpy(item, block + slot * 32, sizeof(item));
@@ -1493,23 +1485,21 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
     }
     u16 next = 0;
     if(!effective_fat_value(cluster, next)) {
-      g_preflight_retryable = true;
-      g_last_error = "directory-fat-read";
-      return false;
+      return g_error.fail(ErrorCode::FAT_READ, Phase::CHAIN,
+                          cluster, 0, nullptr, true);
     }
     if(fat_eof(next)) return true;
     if(next == FAT12_FREE || next == FAT12_BAD || !valid_cluster(next)) {
-      g_last_error = "directory-chain";
-      return false;
+      return g_error.fail(ErrorCode::DIRECTORY_CHAIN, Phase::CHAIN, cluster, next);
     }
     if(pass == WalkPass::VALIDATE &&
        !set_desired_kind(id_for_cluster(next), DESIRED_EXTENT)) {
-      g_last_error = "extent-chain";
-      return false;
+      return g_error.fail(ErrorCode::EXTENT_CHAIN, Phase::CHAIN, cluster, next);
     }
     cluster = next;
   }
-  return false;
+  return g_error.fail(ErrorCode::DIRECTORY_CHAIN, Phase::CHAIN,
+                      cluster, geometry().max_nodes);
 }
 
 static bool directory_chain_matches(u16 directory_id) {
@@ -1971,47 +1961,55 @@ bool write_sectors(u32 lba, const u8* data, u16 count) {
 }
 
 CommitResult flush_pending_result(void) {
-  if(!program_store::ready() || !ensure_session()) return CommitResult::IO_FAILED;
-  if(!flush_write_cache_internal()) return CommitResult::IO_FAILED;
+  g_error.begin_attempt();
+  if(!program_store::ready() || !ensure_session()) {
+    g_error.fail(ErrorCode::STORAGE_UNAVAILABLE, Phase::SESSION,
+                  0, 0, nullptr, true);
+    return CommitResult::IO_FAILED;
+  }
+  if(!flush_write_cache_internal()) {
+    g_error.fail(ErrorCode::CACHE_WRITE, Phase::CACHE,
+                  dirty_cache_sectors(), g_cache_slots, nullptr, true);
+    return CommitResult::IO_FAILED;
+  }
   if(program_store::vfat_stage_count() == 0) {
     return CommitResult::OK;
   }
   ScopedCommitScratch commit_scratch;
-  g_last_error = NULL;
-  g_preflight_retryable = false;
   memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
   invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::VALIDATE)) {
-    if(g_last_error == NULL) g_last_error = "validate";
-    return g_preflight_retryable
+    g_error.fail(ErrorCode::VALIDATE, Phase::VALIDATE);
+    return (g_error.value.flags & RETRYABLE) != 0
         ? CommitResult::IO_FAILED : CommitResult::REJECTED;
   }
   if(!release_repurposed_file_extents() ||
      !release_mismatched_extent_chains(program_store::ROOT_ID) ||
      !prune_tree(program_store::ROOT_ID, false)) {
-    g_last_error = "prepare";
+    g_error.fail(ErrorCode::PREPARE, Phase::PREPARE, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
   invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::APPLY)) {
-    g_last_error = "apply";
+    g_error.fail(ErrorCode::APPLY, Phase::APPLY, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
   if(!prune_tree(program_store::ROOT_ID, true)) {
-    g_last_error = "commit";
+    g_error.fail(ErrorCode::PRUNE, Phase::COMMIT, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
   if(!program_store::vfat_stage_discard_all()) {
-    g_last_error = "commit";
+    g_error.fail(ErrorCode::STAGE_DISCARD, Phase::COMMIT, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
   invalidate_clean_cache();
   if(!ensure_all_directory_extents()) {
-    g_last_error = "commit";
+    g_error.fail(ErrorCode::DIRECTORY_EXTENTS, Phase::COMMIT, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+  clear_diagnostic();
   return CommitResult::OK;
 }
 
@@ -2027,6 +2025,7 @@ CommitResult finalize_pending_result(void) {
     memset(session().cache, 0, sizeof(session().cache));
     return CommitResult::REJECTED;
   }
+  g_error.fail(ErrorCode::STAGE_DISCARD, Phase::COMMIT, 0, 0, nullptr, true);
   return CommitResult::IO_FAILED;
 }
 
@@ -2062,8 +2061,7 @@ void end_session(void) {
   update_cache_slot_count();
 }
 
-const char* trace_line_at(u16 index) {
-  return index == 0 ? g_last_error : NULL;
-}
+const Diagnostic& diagnostic(void) { return g_error.value; }
+void clear_diagnostic(void) { g_error.clear(); }
 
 } // пространство имён virtual_fat
