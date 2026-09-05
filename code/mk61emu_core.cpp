@@ -1139,11 +1139,9 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     // A branch's address byte can visit the same prefetch point as an opcode.
     // Consume only the immediately following visit: a jump to its own operand
     // must expose that address as a real command on the subsequent visit.
-    if(mk61_jump_operand != 0) {
-      const u8 operand = mk61_jump_operand - 1U;
-      mk61_jump_operand = 0;
-      if(program_address == operand) return false;
-    }
+    const u8 jump_operand = mk61_jump_operand;
+    mk61_jump_operand = 0;
+    if((usize) program_address + 1U == jump_operand) return false;
 
     // Штатное ПЗУ ПП/CALL дважды показывает операнд по этому микроадресу:
     // при выборке цели и снова при возврате за эту ячейку. Ни одно посещение
@@ -1159,7 +1157,7 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
 
     // Only a real command boundary completes the preceding command; neither
     // BEFORE/AFTER callbacks nor boundary hooks may observe an address operand.
-    if(active_mk61_command.active) finish_active_mk61_command();
+    finish_active_mk61_command();
 
     const u8 opcode = decode_mk61_opcode();
     if(dispatch_mk61_program_boundary(program_address, opcode)) return true;
@@ -1170,18 +1168,17 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
           opcode, core_61::Mk61CommandSource::PROGRAM);
       encode_mk61_opcode(executed_opcode);
     }
-    if(executed_opcode == 0x53U &&
-       mk61_call_operand_depth < MK61_CALL_OPERAND_DEPTH) {
-      const usize steps = core_61::program_steps();
-      if(steps != 0) {
-        mk61_call_operand_addresses[mk61_call_operand_depth++] =
-            (u8) (((usize) program_address + 1U) % steps);
-        mk61_call_operand_visits[mk61_call_operand_depth - 1] = 2;
+    if(core_61::len_code_command(executed_opcode) == 2) {
+      const u8 operand =
+          (u8) (((usize) program_address + 1U) % core_61::program_steps());
+      if(executed_opcode == 0x53U) {
+        if(mk61_call_operand_depth < MK61_CALL_OPERAND_DEPTH) {
+          mk61_call_operand_addresses[mk61_call_operand_depth] = operand;
+          mk61_call_operand_visits[mk61_call_operand_depth++] = 2;
+        }
+      } else {
+        mk61_jump_operand = operand + 1U;
       }
-    } else if(executed_opcode != 0x53U &&
-              core_61::len_code_command(executed_opcode) == 2) {
-      mk61_jump_operand =
-          (u8) (((usize) program_address + 1U) % core_61::program_steps() + 1U);
     }
     return false;
   }
@@ -3252,13 +3249,8 @@ void  get_stack_register(stack reg, bcd_value &value) {
 }
 
 usize len_code_command(u8 cod) {
-  /*
-  static const u8 values[10] = {81,83,87,88,89,90,91,92,93,94};
-    for (int i = 0; i<10; i++) {
-      if (cod == values[i] ) { return 2; }
-    }*/
-    for(u8 opcode_2byte: {81,83,87,88,89,90,91,92,93,94}) if(cod == opcode_2byte) return 2;
-  return 1;
+  return cod == 0x51U || cod == 0x53U || (cod >= 0x57U && cod <= 0x5EU)
+      ? 2 : 1;
 }
 
 void step(void) {

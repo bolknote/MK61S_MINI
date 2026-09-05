@@ -323,6 +323,22 @@ static void run_program(const u8* code, usize length) {
   for(int i = 0; i < 256 && core_61::is_RUN(); i++) core_61::step();
 }
 
+static void test_mk61_command_lengths(void) {
+  static const u8 with_operand[] = {
+      0x51, 0x53, 0x57, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E
+  };
+  bool all_match = true;
+  for(unsigned opcode = 0; opcode < 256; ++opcode) {
+    usize expected = 1;
+    for(u8 entry : with_operand) if(opcode == entry) expected = 2;
+    if(core_61::len_code_command((u8) opcode) != expected) {
+      std::fprintf(stderr, "  FAIL opcode %02X: wrong instruction length\n", opcode);
+      all_match = false;
+    }
+  }
+  check_true("all 256 MK-61 instruction lengths", all_match);
+}
+
 static void test_mk61_command_hooks(void) {
   std::printf("MK-61 user command hook registry:\n");
   core_61::configure_random_seed(false, 1);
@@ -1349,6 +1365,7 @@ int main(void) {
   test_transcendental();
   test_authentic_core_smoke();
   test_rom_command_hooks();
+  test_mk61_command_lengths();
   test_mk61_command_hooks();
   test_random_seed_hook();
   test_program_boundary_yield();
