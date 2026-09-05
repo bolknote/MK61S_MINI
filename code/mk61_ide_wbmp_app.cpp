@@ -2,7 +2,7 @@
 
 // See mk61_ide_focal_app.cpp.  The normal resident link discards this object;
 // the MK61s board hook relinks it at the exact SRAM overlay address.
-#if defined(MK61_ARDUINO_IDE_SYSTEM_APPS) && MK61_WBMP_VIEWER_IS_LOADABLE
+#if !MK61_ENABLE_PORTABLE_APPS && defined(MK61_ARDUINO_IDE_SYSTEM_APPS) && MK61_WBMP_VIEWER_IS_LOADABLE
 
 #define MK61_BUILD_WBMP_MODULE 1
 #define mk61_module_entry mk61_ide_wbmp_module_entry

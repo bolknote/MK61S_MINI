@@ -92,6 +92,16 @@ build_group() {
         local codec
         codec="$(od -An -tu1 -j15 -N1 "$bundle_root/$file" | tr -d '[:space:]')"
         [[ "$codec" == 1 ]] || fail "System APP is not ZX0: $artifact/$file"
+        python3 - "$bundle_root/$file" <<'PY'
+from pathlib import Path
+import struct
+import sys
+data = Path(sys.argv[1]).read_bytes()
+assert struct.unpack_from('<H', data, 12)[0] == 3, 'System APP must use ABI 3'
+assert struct.unpack_from('<I', data, 16)[0] in (1, 3), 'portable flags'
+assert struct.unpack_from('<I', data, 20)[0] == 0x20000000, 'fixed overlay'
+assert struct.unpack_from('<II', data, 40) == (0, 0), 'resident binding must be absent'
+PY
       done
       for flag in \
           '-DMK61_REQUIRE_RESIDENT_CRC=1' \

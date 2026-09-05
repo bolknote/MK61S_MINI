@@ -7,6 +7,9 @@
 - `mk61-arduino-board.cmd` — установка платы `MK61s F401 + APP` в Arduino IDE;
 - `mkc.cmd` — двухпанельный файловый менеджер устройства;
 - `build_f401_bundle.sh` — legacy-сборка custom manifest APP и payload ZX0;
+- `build_portable_app.py` — C/C++ SDK и сборщик всех System APP: самостоятельный ABI 3
+  с автоматическим выбором ZX0 или BCJ + ZX0; инструкция в
+  [`sdk/portable/README.md`](../sdk/portable/README.md);
 - `build_fmk_font.sh` — конвертер шрифтов FMK;
 - `build_mk61_module_pack.sh` — низкоуровневый ZX0-упаковщик APP.
 - `seal-firmware.sh`, `seal-firmware.ps1` — post-link запечатывание и

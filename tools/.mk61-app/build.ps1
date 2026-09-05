@@ -74,6 +74,8 @@ $sources = @(
     (Join-Path $script:ToolRoot 'mk61_module_pack.cpp'),
     (Join-Path $script:ProjectRoot 'code/loadable_module_format.cpp'),
     (Join-Path $script:ProjectRoot 'code/loadable_module_format.hpp'),
+    (Join-Path $script:ProjectRoot 'code/portable_app_config.h'),
+    (Join-Path $script:ProjectRoot 'code/arm_thumb_bcj.hpp'),
     (Join-Path $script:ProjectRoot 'code/zx0.cpp'),
     (Join-Path $script:ProjectRoot 'code/zx0.hpp'),
     (Join-Path $script:ProjectRoot 'code/storage_geometry.hpp'),
@@ -122,12 +124,14 @@ if ($rebuild) {
             if ($msvcStyle) {
                 $arguments = @(
                     '/nologo', '/std:c++17', '/O2', '/W3', '/EHsc', '/TP',
+                    '/DMK61_ENABLE_PORTABLE_APPS=1',
                     "/I$(Join-Path $script:ProjectRoot 'code')"
                 ) + $compileSources + @("/Fe$temporary")
             } else {
                 $arguments = @(
                     '-x', 'c++', '-std=c++17', '-O2',
                     '-Wall', '-Wextra', '-Werror',
+                    '-DMK61_ENABLE_PORTABLE_APPS=1',
                     "-I$(Join-Path $script:ProjectRoot 'code')"
                 ) + $compileSources + @('-o', $temporary)
             }

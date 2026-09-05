@@ -22,6 +22,7 @@ enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
 math_backend=${MK61_MATH_BACKEND:-0}
+portable_apps=${MK61_ENABLE_PORTABLE_APPS:-1}
 check_app_manifests=0
 app_manifests=()
 custom_app_names=()
@@ -402,7 +403,7 @@ fi
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$enable_markdown" "$enable_chip8" \
              "$enable_usb_screen" "$enable_extended_font" \
-             "$enable_user_explorer" "$math_backend"; do
+             "$enable_user_explorer" "$math_backend" "$portable_apps"; do
   boolean_valid "$value" || {
     printf 'Error: all MK61 feature values must be 0 or 1.\n' >&2
     exit 2
@@ -426,7 +427,7 @@ any_module=$((enable_focal | enable_tinybasic | enable_wbmp |
               (custom_app_count > 0)))
 
 resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-if [ "$any_module" -eq 1 ]; then
+if [ "$any_module" -eq 1 ] && { [ "$portable_apps" -eq 0 ] || [ "$custom_app_count" -gt 0 ]; }; then
   [ -f "$system_app_exports" ] || {
     printf 'Error: System APP LTO export list is missing: %s\n' \
       "$system_app_exports" >&2
@@ -473,6 +474,18 @@ resident_build="$work/resident"
 bundle_stage="$work/bundle"
 mkdir -p "$sketch_dir" "$resident_build" "$bundle_stage"
 cp -R "$root/code/." "$sketch_dir/"
+
+compile_flags="$compile_flags -DMK61_ENABLE_PORTABLE_APPS=$portable_apps"
+if [ "$portable_apps" -eq 1 ]; then
+  "$arduino_cli" compile --fqbn "$fqbn_resident" \
+    --build-path "$work/properties-layout" --show-properties=expanded \
+    "$sketch_dir" > "$work/layout.properties"
+  variant_path=$(sed -n 's/^build\.variant\.path=//p' "$work/layout.properties" | tr -d '\r')
+  ld_name=$(sed -n 's/^build\.ldscript=//p' "$work/layout.properties" | tr -d '\r')
+  python3 "$root/tools/.mk61-gcc/portable-layout.py" \
+    "$variant_path/$ld_name" "$resident_build/mk61-portable.ld"
+  resident_link_flags="$resident_link_flags -Wl,--default-script=$resident_build/mk61-portable.ld"
+fi
 
 printf 'Building F401 resident firmware (%s)…\n' "$profile"
 "$arduino_cli" compile \
@@ -563,6 +576,17 @@ build_module() {
   module_build="$work/build-$module_id"
   module_out="$work/module-$module_id"
   mkdir -p "$module_build" "$module_out"
+  if [ "$portable_apps" -eq 1 ] && [ "$module_kind" != app ]; then
+    portable_options=()
+    if [ "$module_kind" = markdown-viewer ] && [ "$compiled_graphics" -eq 0 ]; then
+      portable_options+=(--text-only)
+    fi
+    python3 "$root/tools/build_portable_app.py" --system "$module_kind" \
+      --arm-toolchain-bin "$(dirname "$compiler")" --output-dir "$module_out" "${portable_options[@]}"
+    mkdir -p "$(dirname "$bundle_stage/$module_file")"
+    cp "$module_out/$(basename "$module_file")" "$bundle_stage/$module_file"
+    return
+  fi
   printf 'Building %s APP with -Os -flto…\n' "$module_id"
   module_compile_flags=$compile_flags
   if [ "$module_macro" != - ]; then
@@ -660,6 +684,7 @@ build_custom_app() {
   cp "$root/tools/.mk61-app/loadable_app_template/mk61s-M.ino" \
     "$custom_sketch/"
   cp "$root/code/loadable_app_api.hpp" \
+     "$root/code/loadable_app_api.h" \
      "$root/code/loadable_module_abi.hpp" \
      "$root/code/rust_types.h" \
      "$custom_sketch/"

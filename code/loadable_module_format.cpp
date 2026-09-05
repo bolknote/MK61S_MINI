@@ -2,6 +2,9 @@
 
 #include "crc32.hpp"
 #include "zx0.hpp"
+#if MK61_ENABLE_PORTABLE_APPS
+#include "arm_thumb_bcj.hpp"
+#endif
 
 #include <string.h>
 
@@ -54,9 +57,23 @@ static void put_le32(u8* data, u16 offset, u32 value) {
 
 static HeaderStatus validate_header(const Header& header, u32 slot_size,
                                     Kind expected_kind) {
+#if MK61_ENABLE_PORTABLE_APPS
+  bool binding_valid = header.flags == 0 && header.resident_size != 0 &&
+      header.resident_size <= MAX_RESIDENT_SIZE;
+  if((header.flags & MK61_PORTABLE_APP_FLAG) != 0 &&
+     (header.flags & ~(MK61_PORTABLE_APP_FLAG | MK61_APP_ARM_THUMB_BCJ_FLAG)) == 0) {
+    binding_valid = header.load_address == MK61_PORTABLE_APP_ADDRESS &&
+        header.resident_size == 0 && header.resident_crc32 == 0 &&
+        header.compression == Compression::ZX0;
+  }
+#endif
   if(!valid_kind(header.kind) ||
      !valid_compression(header.compression) ||
+#if MK61_ENABLE_PORTABLE_APPS
+     !binding_valid ||
+#else
      header.flags != 0 ||
+#endif
      header.load_address < SRAM_FIRST_ADDRESS ||
      header.load_address > SRAM_LAST_ADDRESS - OVERLAY_SIZE ||
      (header.load_address & 7U) != 0 ||
@@ -64,9 +81,11 @@ static HeaderStatus validate_header(const Header& header, u32 slot_size,
      header.image_size == 0 ||
      header.memory_size < header.image_size ||
      header.entry_offset >= header.image_size ||
-     (header.entry_offset & 1U) != 0 ||
-     header.resident_size == 0 ||
-     header.resident_size > MAX_RESIDENT_SIZE) {
+     (header.entry_offset & 1U) != 0
+#if !MK61_ENABLE_PORTABLE_APPS
+     || header.resident_size == 0 || header.resident_size > MAX_RESIDENT_SIZE
+#endif
+     ) {
     return HeaderStatus::INVALID_FIELDS;
   }
   if(header.kind != expected_kind) return HeaderStatus::WRONG_KIND;
@@ -228,7 +247,11 @@ bool encode_header(const Header& header, u32 slot_size,
   memcpy(output, APP_MAGIC, sizeof(APP_MAGIC));
   put_le16(output, FORMAT_OFFSET, FORMAT_VERSION);
   put_le16(output, HEADER_SIZE_OFFSET, HEADER_SIZE);
-  put_le16(output, ABI_OFFSET, ABI_VERSION);
+  put_le16(output, ABI_OFFSET,
+#if MK61_ENABLE_PORTABLE_APPS
+      (header.flags & MK61_PORTABLE_APP_FLAG) != 0 ? MK61_PORTABLE_APP_ABI :
+#endif
+      ABI_VERSION);
   output[KIND_OFFSET] = (u8) header.kind;
   output[COMPRESSION_OFFSET] = (u8) header.compression;
   put_le32(output, FLAGS_OFFSET, header.flags);
@@ -261,9 +284,20 @@ HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
      get_le16(input, HEADER_SIZE_OFFSET) != HEADER_SIZE) {
     return HeaderStatus::UNSUPPORTED_FORMAT;
   }
-  if(get_le16(input, ABI_OFFSET) != ABI_VERSION) {
+  const u16 abi = get_le16(input, ABI_OFFSET);
+#if MK61_ENABLE_PORTABLE_APPS
+  const u32 flags = get_le32(input, FLAGS_OFFSET);
+#endif
+  if(abi != ABI_VERSION
+#if MK61_ENABLE_PORTABLE_APPS
+     && !(abi == MK61_PORTABLE_APP_ABI && (flags & MK61_PORTABLE_APP_FLAG) != 0)
+#endif
+     ) {
     return HeaderStatus::UNSUPPORTED_ABI;
   }
+#if MK61_ENABLE_PORTABLE_APPS
+  if(abi == ABI_VERSION && flags != 0) return HeaderStatus::INVALID_FIELDS;
+#endif
   if(get_le16(input, RESERVED_OFFSET) != 0) {
     return HeaderStatus::INVALID_FIELDS;
   }
@@ -294,8 +328,19 @@ HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
 
 bool decode_payload(const Reader& reader, Compression compression,
                     u32 stored_size, u8* output, u32 image_size,
-                    DecodeResult& result) {
+                    DecodeResult& result
+#if MK61_ENABLE_PORTABLE_APPS
+                    , u32 flags
+#endif
+                    ) {
   memset(&result, 0, sizeof(result));
+#if MK61_ENABLE_PORTABLE_APPS
+  if(flags != 0) {
+    if((flags != MK61_PORTABLE_APP_FLAG &&
+        flags != (MK61_PORTABLE_APP_FLAG | MK61_APP_ARM_THUMB_BCJ_FLAG)) ||
+       compression != Compression::ZX0) return false;
+  }
+#endif
   if(reader.read == nullptr || !valid_compression(compression) ||
      output == nullptr || stored_size == 0 || image_size == 0) return false;
   if(compression == Compression::NONE && stored_size != image_size) return false;
@@ -315,6 +360,10 @@ bool decode_payload(const Reader& reader, Compression compression,
   }
   if(written != image_size) return false;
   if(input.failed() || input.position() != stored_size) return false;
+#if MK61_ENABLE_PORTABLE_APPS
+  if((flags & MK61_APP_ARM_THUMB_BCJ_FLAG) != 0)
+    arm_thumb_bcj::transform(output, image_size, false);
+#endif
   result.stored_crc32 = input.checksum();
   result.image_crc32 = crc32(output, image_size);
   result.input_size = input.position();

@@ -39,6 +39,18 @@ int main(void) {
   assert(f411.guard_end == 0x2001C000UL);
   assert(f411.sram_execute_never);
 
+  const Layout portable = with_app_overlay(f411, 8);
+  assert(portable.valid && portable.required_regions == 4);
+  assert(portable.sram_execute_never && portable.guard_base == f411.guard_base);
+  assert(!with_app_overlay(f411, 3).valid);
+  assert(with_app_overlay(f401, 2).required_regions == 2);
+  // Evaluate the actual SRD mask at every byte, including the 20-KiB edge.
+  for(u32 offset = 0; offset < APP_REGION_SIZE; ++offset) {
+    const u32 subregion = offset / (APP_REGION_SIZE / 8U);
+    const bool executable = (APP_DISABLED_SUBREGIONS & (1U << subregion)) == 0;
+    assert(executable == (offset < 20U * 1024U));
+  }
+
   assert(!make_layout(F411_PROFILE, 0x2001BF01UL,
                       0x2001FFF0UL, 8).valid);
   assert(!make_layout(F411_PROFILE, 0x2000AD88UL,

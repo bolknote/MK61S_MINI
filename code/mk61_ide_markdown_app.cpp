@@ -1,7 +1,7 @@
 #include "config.h"
 
 // Arduino IDE post-build relinks this discarded object into the SRAM overlay.
-#if defined(MK61_ARDUINO_IDE_SYSTEM_APPS) && \
+#if !MK61_ENABLE_PORTABLE_APPS && defined(MK61_ARDUINO_IDE_SYSTEM_APPS) && \
     MK61_MARKDOWN_VIEWER_IS_LOADABLE
 
 #define MK61_BUILD_MARKDOWN_MODULE 1

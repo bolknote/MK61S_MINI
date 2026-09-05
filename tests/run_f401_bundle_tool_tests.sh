@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Keep the original ABI 2 mock-tool regression; ABI 3 is exercised with ARM GCC.
+export MK61_ENABLE_PORTABLE_APPS=0
+
 root="$(cd "$(dirname "$0")/.." && pwd)"
 tool="$root/tools/build_f401_bundle.sh"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-f401-bundle-test.XXXXXX")"

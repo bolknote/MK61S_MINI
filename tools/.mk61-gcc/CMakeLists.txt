@@ -34,6 +34,8 @@ set(MK61_GLOBAL_RAM_LIMIT "52428" CACHE STRING
   "Maximum resident .data + .bss bytes")
 set(MK61_STACK_FRAME_LIMIT "5120" CACHE STRING
   "Maximum project-owned static or bounded-dynamic stack frame")
+set(MK61_ENABLE_PORTABLE_APPS "1" CACHE STRING
+  "Standalone APP ABI with fixed SRAM placement (0: legacy ABI)")
 
 file(REAL_PATH "${MK61_PROJECT_ROOT}" MK61_PROJECT_ROOT)
 file(REAL_PATH "${MK61_STM32_CORE}" CORE_PATH)
@@ -68,6 +70,7 @@ foreach(_mk61_bool
     MK61_USER_EXPLORER_SHORTCUT
     MK61_MATH_BACKEND
     MK61_REQUIRE_RESIDENT_CRC
+    MK61_ENABLE_PORTABLE_APPS
     MK61_ENABLE_LTO)
   if(NOT DEFINED ${_mk61_bool})
     message(FATAL_ERROR "${_mk61_bool} is required")
@@ -94,6 +97,23 @@ endif()
 # pinned STM32 Core.  Include its generated board database directly so this
 # build never invokes Arduino CLI or the database updater.
 include("${CORE_PATH}/cmake/boards_db.cmake")
+if(MK61_ENABLE_PORTABLE_APPS)
+  set(_mk61_portable_ld "${CMAKE_BINARY_DIR}/portable-resident.ld")
+  execute_process(
+    COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py"
+      "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld" "${_mk61_portable_ld}"
+    COMMAND_ERROR_IS_FATAL ANY)
+  get_target_property(_mk61_board_link BLACKPILL_F401CC INTERFACE_LINK_OPTIONS)
+  list(REMOVE_ITEM _mk61_board_link
+    "LINKER:--default-script=${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld")
+  list(APPEND _mk61_board_link "LINKER:--default-script=${_mk61_portable_ld}")
+  set_property(TARGET BLACKPILL_F401CC PROPERTY
+    INTERFACE_LINK_OPTIONS "${_mk61_board_link}")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py"
+    "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld")
+endif()
 add_library(board ALIAS BLACKPILL_F401CC)
 set(BUILD_VARIANT_PATH "${BLACKPILL_F401CC_VARIANT_PATH}")
 set(BOARD_MAXSIZE "${BLACKPILL_F401CC_MAXSIZE}")
@@ -174,6 +194,7 @@ target_compile_definitions(resident PRIVATE
   MK61_ENABLE_EXTENDED_FONT_SETTINGS=${MK61_ENABLE_EXTENDED_FONT_SETTINGS}
   MK61_USER_EXPLORER_SHORTCUT=${MK61_USER_EXPLORER_SHORTCUT}
   MK61_MATH_BACKEND=${MK61_MATH_BACKEND}
+  MK61_ENABLE_PORTABLE_APPS=${MK61_ENABLE_PORTABLE_APPS}
   MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC})
 # Keep the direct F401 path at least as strict as the Arduino release matrix.
 # This applies only to project sources; warnings in pinned third-party targets
@@ -199,7 +220,7 @@ target_link_options(resident PRIVATE
   "LINKER:--wrap=USBD_LL_DevConnected"
   "LINKER:--wrap=USBD_LL_DevDisconnected")
 
-if(MK61_ENABLE_LTO AND
+if(MK61_ENABLE_LTO AND NOT MK61_ENABLE_PORTABLE_APPS AND
    (MK61_ENABLE_FOCAL OR MK61_ENABLE_TINYBASIC OR
     MK61_ENABLE_WBMP_VIEWER OR MK61_ENABLE_MARKDOWN_VIEWER OR
     MK61_ENABLE_CHIP8))
@@ -228,6 +249,9 @@ endif()
 
 set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/check-flash.cmake")
+if(MK61_ENABLE_PORTABLE_APPS)
+  set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS "${_mk61_portable_ld}")
+endif()
 
 add_custom_command(TARGET resident POST_BUILD
   COMMAND "${Python3_EXECUTABLE}"

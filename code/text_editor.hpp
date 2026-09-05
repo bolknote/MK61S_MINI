@@ -86,8 +86,12 @@ enum class KeyResult : u8 {
   DIRTY,
   SAVE
 };
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+KeyResult portable_handle_key(Buffer&, const KeyMap&, const Hooks&, const Options&, i32, u32);
+#endif
 
-#if defined(MK61_DISPLAY_LCD1602) && !defined(TEXT_EDITOR_HOST_TEST)
+#if (defined(MK61_DISPLAY_LCD1602) && !defined(TEXT_EDITOR_HOST_TEST)) || \
+    defined(MK61_BUILD_PORTABLE_SYSTEM)
 // Аппаратный shift HD44780 относится сразу к обеим строкам и переживает
 // обычные записи в DDRAM. Сессия гарантирует возврат дисплея к стандартному
 // положению при любом выходе из редактора, в том числе через ранний return.
@@ -112,7 +116,7 @@ inline const Options& default_options(void) {
     true,
     true,
     true,
-    keyboard_layout::ACTIVE.cx
+    keyboard_layout::active().cx
   };
   return options;
 }
@@ -178,7 +182,7 @@ inline int digit_from_key(i32 key_code, const keyboard_layout::Mapping& mapping)
 }
 
 inline int digit_from_key(i32 key_code) {
-  return digit_from_key(key_code, keyboard_layout::ACTIVE);
+  return digit_from_key(key_code, keyboard_layout::active());
 }
 
 inline const char* sms_letters_for_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
@@ -197,7 +201,7 @@ inline const char* sms_letters_for_key(i32 key_code, const keyboard_layout::Mapp
 }
 
 inline const char* sms_letters_for_key(i32 key_code) {
-  return sms_letters_for_key(key_code, keyboard_layout::ACTIVE);
+  return sms_letters_for_key(key_code, keyboard_layout::active());
 }
 
 inline bool sms_key_is_letters(i32 key_code) {
@@ -234,7 +238,7 @@ inline const char* symbol_for_digit_key(i32 key_code, const keyboard_layout::Map
 }
 
 inline const char* symbol_for_digit_key(i32 key_code) {
-  return symbol_for_digit_key(key_code, keyboard_layout::ACTIVE);
+  return symbol_for_digit_key(key_code, keyboard_layout::active());
 }
 
 inline const char* kshift_text_for_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
@@ -253,7 +257,7 @@ inline const char* kshift_text_for_key(i32 key_code, const keyboard_layout::Mapp
 }
 
 inline const char* kshift_text_for_key(i32 key_code) {
-  return kshift_text_for_key(key_code, keyboard_layout::ACTIVE);
+  return kshift_text_for_key(key_code, keyboard_layout::active());
 }
 
 inline const char* plain_text_for_key(i32 key_code, const keyboard_layout::Mapping& mapping) {
@@ -282,7 +286,7 @@ inline const char* plain_text_for_key(i32 key_code, const keyboard_layout::Mappi
 }
 
 inline const char* plain_text_for_key(i32 key_code) {
-  return plain_text_for_key(key_code, keyboard_layout::ACTIVE);
+  return plain_text_for_key(key_code, keyboard_layout::active());
 }
 
 inline u16 line_start_for_cursor(const char* source, u16 cursor) {
@@ -374,6 +378,10 @@ inline u8 visible_rows(MK61Display& display) {
 }
 
 inline void ensure_cursor_visible(MK61Display& display, const char* source, u16 len, u16 cursor, u16& view_top) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  (void) display;
+  portable_system::editor(false, source, len, cursor, view_top);
+#else
   if(source == NULL) {
     view_top = 0;
     return;
@@ -402,6 +410,7 @@ inline void ensure_cursor_visible(MK61Display& display, const char* source, u16 
   for(u8 row = 1; row < rows && view_top > 0; row++) {
     view_top = previous_line_start(source, view_top);
   }
+#endif
 }
 
 inline u8 cursor_screen_row(MK61Display& display, const char* source, u16 len, u16 cursor, u16 view_top) {
@@ -422,6 +431,10 @@ inline u8 cursor_screen_row(MK61Display& display, const char* source, u16 len, u
 }
 
 inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  (void) display;
+  portable_system::editor(true, source, len, cursor, view_top, sms_cursor);
+#else
   static const char EMPTY[] = "";
   if(source == NULL) {
     source = EMPTY;
@@ -489,6 +502,7 @@ inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, 
   display.setCursor(cursor_col, cursor_row);
   if(display.supportsCursor()) display.cursorOn();
   else display.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
+#endif
 }
 
 inline bool insert_text(char* source, u16& len, u16& cursor, u16 capacity, const char* text) {
@@ -592,6 +606,9 @@ inline bool sms_tap(char* source, u16& len, u16& cursor, u16 capacity, SmsState&
 }
 
 inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hooks, const Options& options, i32 key_code, u32 now) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return portable_handle_key(editor, keys, hooks, options, key_code, now);
+#else
   sanitize(editor);
   const bool shifted_key = editor.shift != Shift::NONE;
   if(options.sms_enabled && !shifted_key && editor.sms.active) {
@@ -635,7 +652,7 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   }
 
   if(options.alpha_cx_clear_line && editor.shift == Shift::ALPHA &&
-      key_code == keyboard_layout::ACTIVE.cx) {
+      key_code == keyboard_layout::active().cx) {
     clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
     sms_reset(editor.sms);
     editor.shift = Shift::NONE;
@@ -693,6 +710,7 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
   editor.shift = Shift::NONE;
   sanitize(editor);
   return KeyResult::DIRTY;
+#endif
 }
 
 inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hooks, i32 key_code, u32 now) {

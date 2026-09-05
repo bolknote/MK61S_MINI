@@ -14,11 +14,16 @@
 #include "loadable_module_abi.hpp"
 
 extern "C" __attribute__((used, section(".mk61_module_entry")))
-u32 mk61_module_entry(u32 raw_command, u32 argument0, u32, u32, u32) {
+u32 mk61_module_entry(u32 raw_command, u32 argument0, u32 argument1, u32 argument2, u32) {
+  (void) argument0; (void) argument1; (void) argument2;
   const loadable_module::Command command =
       (loadable_module::Command) raw_command;
   switch(command) {
     case loadable_module::Command::INITIALIZE:
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+      if(argument0 != 0) return portable_system::bind(argument0, argument1, argument2)
+          ? 0 : (u32) loadable_module::FileOpenResult::RUNTIME_ERROR;
+#endif
       InitFocal(); return 0;
     case loadable_module::Command::FOCAL_LIBRARY_SELECT:
       return FOCAL_library_select();

@@ -2,108 +2,69 @@
 #define MK61_LOADABLE_APP_API_HPP
 
 #include "rust_types.h"
-#include <stdint.h>
+#include "loadable_app_api.h"
 
 namespace loadable_app {
 
 // Таблица передаётся пользовательскому APPLICATION через argument0 команд
 // INITIALIZE и APPLICATION_RUN. Все поля имеют фиксированные 32-битные
 // аргументы; новые callbacks можно добавлять только в конец структуры.
-static constexpr u32 API_MAGIC = 0x31505041UL; // "APP1" little-endian
-static constexpr u16 API_VERSION = 1;
-static constexpr u32 MAX_TEXT_BYTES = 63;
+static constexpr u32 API_MAGIC = MK61_APP_API_MAGIC; // "APP1" little-endian
+static constexpr u16 API_VERSION = MK61_APP_API_VERSION;
+static constexpr u32 MAX_TEXT_BYTES = MK61_APP_MAX_TEXT_BYTES;
 
 enum Capability : u32 {
-  CAP_TIME = 1U << 0,
-  CAP_TEXT_DISPLAY = 1U << 1,
-  CAP_KEYBOARD = 1U << 2,
-  CAP_LED = 1U << 3,
-  CAP_SOUND = 1U << 4,
-  CAP_FILES = 1U << 5,
-  CAP_GRAPHICS = 1U << 6,
-  CAP_KEY_STATE = 1U << 7
+  CAP_TIME = MK61_APP_CAP_TIME,
+  CAP_TEXT_DISPLAY = MK61_APP_CAP_TEXT_DISPLAY,
+  CAP_KEYBOARD = MK61_APP_CAP_KEYBOARD,
+  CAP_LED = MK61_APP_CAP_LED,
+  CAP_SOUND = MK61_APP_CAP_SOUND,
+  CAP_FILES = MK61_APP_CAP_FILES,
+  CAP_GRAPHICS = MK61_APP_CAP_GRAPHICS,
+  CAP_KEY_STATE = MK61_APP_CAP_KEY_STATE
 };
 
 // Независимые от физической раскладки логические коды. Неизвестная клавиша
 // возвращается как KEY_RAW_BASE + её scan code и поэтому не теряется.
 enum Key : i32 {
-  KEY_NONE = -1,
-  KEY_DIGIT_0 = 0,
-  KEY_DIGIT_1,
-  KEY_DIGIT_2,
-  KEY_DIGIT_3,
-  KEY_DIGIT_4,
-  KEY_DIGIT_5,
-  KEY_DIGIT_6,
-  KEY_DIGIT_7,
-  KEY_DIGIT_8,
-  KEY_DIGIT_9,
-  KEY_DECIMAL,
-  KEY_ADD,
-  KEY_SUBTRACT,
-  KEY_MULTIPLY,
-  KEY_DIVIDE,
-  KEY_LEFT,
-  KEY_RIGHT,
-  KEY_SHIFT_LEFT,
-  KEY_SHIFT_RIGHT,
-  KEY_OK,
-  KEY_ESC,
-  KEY_RUN,
-  KEY_CLEAR,
-  KEY_K,
-  KEY_F,
-  KEY_USER,
-  KEY_PP,
-  KEY_BP,
-  KEY_X_TO_P,
-  KEY_P_TO_X,
-  KEY_RETURN,
-  KEY_FORWARD,
-  KEY_BACKWARD,
-  KEY_RAW_BASE = 0x100
+  KEY_NONE = MK61_APP_KEY_NONE,
+  KEY_DIGIT_0 = MK61_APP_KEY_DIGIT_0,
+  KEY_DIGIT_1 = MK61_APP_KEY_DIGIT_1,
+  KEY_DIGIT_2 = MK61_APP_KEY_DIGIT_2,
+  KEY_DIGIT_3 = MK61_APP_KEY_DIGIT_3,
+  KEY_DIGIT_4 = MK61_APP_KEY_DIGIT_4,
+  KEY_DIGIT_5 = MK61_APP_KEY_DIGIT_5,
+  KEY_DIGIT_6 = MK61_APP_KEY_DIGIT_6,
+  KEY_DIGIT_7 = MK61_APP_KEY_DIGIT_7,
+  KEY_DIGIT_8 = MK61_APP_KEY_DIGIT_8,
+  KEY_DIGIT_9 = MK61_APP_KEY_DIGIT_9,
+  KEY_DECIMAL = MK61_APP_KEY_DECIMAL,
+  KEY_ADD = MK61_APP_KEY_ADD,
+  KEY_SUBTRACT = MK61_APP_KEY_SUBTRACT,
+  KEY_MULTIPLY = MK61_APP_KEY_MULTIPLY,
+  KEY_DIVIDE = MK61_APP_KEY_DIVIDE,
+  KEY_LEFT = MK61_APP_KEY_LEFT,
+  KEY_RIGHT = MK61_APP_KEY_RIGHT,
+  KEY_SHIFT_LEFT = MK61_APP_KEY_SHIFT_LEFT,
+  KEY_SHIFT_RIGHT = MK61_APP_KEY_SHIFT_RIGHT,
+  KEY_OK = MK61_APP_KEY_OK,
+  KEY_ESC = MK61_APP_KEY_ESC,
+  KEY_RUN = MK61_APP_KEY_RUN,
+  KEY_CLEAR = MK61_APP_KEY_CLEAR,
+  KEY_K = MK61_APP_KEY_K,
+  KEY_F = MK61_APP_KEY_F,
+  KEY_USER = MK61_APP_KEY_USER,
+  KEY_PP = MK61_APP_KEY_PP,
+  KEY_BP = MK61_APP_KEY_BP,
+  KEY_X_TO_P = MK61_APP_KEY_X_TO_P,
+  KEY_P_TO_X = MK61_APP_KEY_P_TO_X,
+  KEY_RETURN = MK61_APP_KEY_RETURN,
+  KEY_FORWARD = MK61_APP_KEY_FORWARD,
+  KEY_BACKWARD = MK61_APP_KEY_BACKWARD,
+  KEY_RAW_BASE = MK61_APP_KEY_RAW_BASE
 };
 
-struct Api {
-  u32 magic;
-  u16 version;
-  u16 struct_size;
-  u32 capabilities;
-
-  u32 (*millis_ms)(void);
-  void (*service)(void);
-  void (*delay_ms)(u32 duration_ms);
-
-  u32 (*display_columns)(void);
-  u32 (*display_rows)(void);
-  u32 (*display_clear)(void);
-  u32 (*display_write_utf8)(u32 column, u32 row,
-                            const char* text, u32 byte_length);
-
-  i32 (*key_poll)(void);
-  i32 (*key_wait)(void);
-
-  void (*led_set)(u32 enabled);
-  u32 (*led_blink)(u32 count, u32 on_ms, u32 off_ms);
-
-  u32 (*beep)(u32 frequency_hz, u32 duration_ms, u32 volume_percent);
-  void (*sound_stop)(void);
-
-  // Расширение ABI v1: старые APP видят прежний 64-байтовый префикс,
-  // новые проверяют struct_size перед использованием хвоста.
-  u32 (*file_size)(u32 file_id);
-  u32 (*file_read)(u32 file_id, u32 offset, u8* output, u32 length);
-
-  u32 (*graphics_available)(void);
-  u32 (*graphics_width)(void);
-  u32 (*graphics_height)(void);
-  u32 (*graphics_revision)(void);
-  u32 (*graphics_begin)(void);
-  u32 (*graphics_present)(const u8* bitmap, u32 size);
-  void (*graphics_end)(void);
-
-  u32 (*key_pressed)(i32 key);
-};
+using Api = mk61_app_api;
 
 static_assert(sizeof(void*) != 4 ||
               __builtin_offsetof(Api, file_size) == 64,

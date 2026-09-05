@@ -358,9 +358,10 @@
 #define MK61_WBMP_DECODER_IS_BUILTIN \
   (MK61_IMAGE1_VIEWER_IS_BUILTIN)
 
+#include "portable_app_config.h"
 #define MK61_ANY_FULLSCREEN_FILE \
   (MK61_STANDALONE_WBMP_VIEWER_ENABLED || MK61_ENABLE_CHIP8 || \
-   MK61_MARKDOWN_USES_WBMP)
+   MK61_MARKDOWN_USES_WBMP || MK61_ENABLE_PORTABLE_APPS)
 
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
 // графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.

@@ -32,6 +32,19 @@ static constexpr Profile F401_PROFILE = {
 static constexpr Profile F411_PROFILE = {
     0x20000000UL, 128UL * 1024UL, 16UL * 1024UL, 256UL, true};
 
+// One higher-priority region grants execution to the portable APP arena.
+// Five 4-KiB subregions are active; the final three fall back to SRAM XN.
+static constexpr u32 APP_REGION_SIZE = 32UL * 1024UL;
+static constexpr u8 APP_DISABLED_SUBREGIONS = 0xE0;
+
+constexpr Layout with_app_overlay(Layout layout, u8 available_regions) {
+  if(layout.sram_execute_never) {
+    ++layout.required_regions;
+    layout.valid = layout.valid && available_regions >= layout.required_regions;
+  }
+  return layout;
+}
+
 constexpr bool power_of_two(u32 value) {
   return value >= 32U && (value & (value - 1U)) == 0;
 }

@@ -81,6 +81,8 @@ inline bool register_available(u8 reg) {
 #ifdef MK61_REF_HOST_TEST
   extern bool host_rf_enabled;
   return reg == 15 && host_rf_enabled;
+#elif defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return reg == 15 && portable_system::call(MK61_SYS_SETTINGS, MK61_SYS_REGISTER_F);
 #else
   return reg == 15 && core_61::expanded_program_is_on();
 #endif
@@ -184,6 +186,8 @@ inline bool read(const Ref& ref, double& value) {
   if(ref.kind == Kind::R) value = host_get_register(ref.reg);
   else value = host_get_stack(ref.kind);
   return true;
+#elif defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return portable_system::call(MK61_SYS_REF_READ, (u32) ref.kind, ref.reg, 0, &value);
 #else
   char text[15];
   text[14] = 0;
@@ -197,7 +201,7 @@ inline bool read(const Ref& ref, double& value) {
 #endif
 }
 
-#ifndef MK61_REF_HOST_TEST
+#if !defined(MK61_REF_HOST_TEST) && !defined(MK61_BUILD_PORTABLE_SYSTEM)
 inline void write_register(u8 reg, char sign, const char mantissa[8], isize pow10) {
   const usize base = (usize) reg * 42;
   isize addr = (isize) base + 21;
@@ -222,6 +226,9 @@ inline void write_register(u8 reg, char sign, const char mantissa[8], isize pow1
 #endif
 
 inline bool write(const Ref& ref, double value) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return portable_system::call(MK61_SYS_REF_WRITE, (u32) ref.kind, ref.reg, 0, &value);
+#else
   if(ref.kind == Kind::R && !register_available(ref.reg)) return false;
   if(!mk_math::is_finite(value)) return false;
 
@@ -240,6 +247,7 @@ inline bool write(const Ref& ref, double value) {
     return true;
   }
   return write_stack_register(stack_from_ref(ref.kind), sign, mantissa, pow10);
+#endif
 #endif
 }
 

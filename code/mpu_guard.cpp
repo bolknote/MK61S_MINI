@@ -4,6 +4,18 @@
 #include "mpu_guard_policy.hpp"
 #include "stack_watermark.hpp"
 
+#if defined(STM32F411xE) && MK61_ENABLE_PORTABLE_APPS && \
+    MK61_ENABLE_LOADABLE_MODULES
+  #define MK61_MPU_APP_OVERLAY 1
+  #include "loadable_module_format.hpp"
+  static_assert(loadable_module::OVERLAY_SIZE == 20U * 1024U &&
+                MK61_PORTABLE_APP_ADDRESS == 0x20000000UL,
+                "MPU APP subregions must match the fixed executable arena");
+#else
+  // F401 already permits SRAM execution; do not ship an unused MPU region.
+  #define MK61_MPU_APP_OVERLAY 0
+#endif
+
 #if MK61_MPU_GUARD_SUPPORTED
   #include <Arduino.h>
   #include <stm32f4xx.h>
@@ -73,6 +85,10 @@ bool initialize(void) {
   active_layout = mpu_guard_policy::make_layout(
       ACTIVE_PROFILE, (u32) (usize) &_end, initial_msp,
       available_region_count);
+#if MK61_MPU_APP_OVERLAY
+  active_layout = mpu_guard_policy::with_app_overlay(
+      active_layout, available_region_count);
+#endif
   lowest_msp = initial_msp;
 
   MPU->CTRL = 0;
@@ -88,6 +104,13 @@ bool initialize(void) {
       configure_region(region++, active_layout.ram_start,
                        active_layout.ram_end - active_layout.ram_start,
                        SRAM_XN_ATTRIBUTES);
+#if MK61_MPU_APP_OVERLAY
+      configure_region(region++, MK61_PORTABLE_APP_ADDRESS,
+                       mpu_guard_policy::APP_REGION_SIZE,
+                       (SRAM_XN_ATTRIBUTES & ~MPU_RASR_XN_Msk) |
+                       ((u32) mpu_guard_policy::APP_DISABLED_SUBREGIONS
+                        << MPU_RASR_SRD_Pos));
+#endif
     }
     configure_region(region++, 0x00000000UL, 32UL,
                      NO_ACCESS_ATTRIBUTES);

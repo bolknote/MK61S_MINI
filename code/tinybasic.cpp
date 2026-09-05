@@ -27,16 +27,16 @@
 #if MK61_ENABLE_TINYBASIC && \
     (!MK61_TINYBASIC_IS_LOADABLE || defined(MK61_BUILD_TINYBASIC_MODULE) || \
      defined(TINYBASIC_HOST_TEST))
-static const int KEY_LEFT = keyboard_layout::ACTIVE.left;
-static const int KEY_RIGHT = keyboard_layout::ACTIVE.right;
-static const int KEY_OK = keyboard_layout::ACTIVE.ok;
-static const int KEY_ESC = keyboard_layout::ACTIVE.esc;
-static const int KEY_K = keyboard_layout::ACTIVE.k;
-static const int KEY_ALPHA = keyboard_layout::ACTIVE.alpha;
-static const int KEY_CX = keyboard_layout::ACTIVE.cx;
-static const int KEY_PP = keyboard_layout::ACTIVE.pp;
-static const int KEY_SHG_RIGHT_PRESS = keyboard_layout::ACTIVE.shg_right;
-static const int KEY_SHG_LEFT_PRESS = keyboard_layout::ACTIVE.shg_left;
+static const int KEY_LEFT = keyboard_layout::active().left;
+static const int KEY_RIGHT = keyboard_layout::active().right;
+static const int KEY_OK = keyboard_layout::active().ok;
+static const int KEY_ESC = keyboard_layout::active().esc;
+static const int KEY_K = keyboard_layout::active().k;
+static const int KEY_ALPHA = keyboard_layout::active().alpha;
+static const int KEY_CX = keyboard_layout::active().cx;
+static const int KEY_PP = keyboard_layout::active().pp;
+static const int KEY_SHG_RIGHT_PRESS = keyboard_layout::active().shg_right;
+static const int KEY_SHG_LEFT_PRESS = keyboard_layout::active().shg_left;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -2076,6 +2076,9 @@ bool TinyBASIC_library_select(void) {
   return true;
 }
 
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+static const text_editor::KeyMap& portable_editor_keys() {
+#endif
 static const text_editor::KeyMap TB_EDITOR_KEYS = {
   (i32) KEY_LEFT,
   KEY_LEFT_PRESS,
@@ -2091,6 +2094,11 @@ static const text_editor::KeyMap TB_EDITOR_KEYS = {
   KEY_ALPHA,
   (i32) KEY_PP
 };
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return TB_EDITOR_KEYS;
+}
+#define TB_EDITOR_KEYS portable_editor_keys()
+#endif
 
 static const char* tinybasic_editor_insert_text_hook(text_editor::Shift shift, i32 key_code, const char*, u16, void*) {
   if(key_code < 0 || key_code >= 40) return NULL;
@@ -2113,6 +2121,9 @@ static const text_editor::Hooks TB_EDITOR_HOOKS = {
   NULL
 };
 
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+static const text_editor::Options& portable_editor_options() {
+#endif
 static const text_editor::Options TB_EDITOR_OPTIONS = {
   "\n",
   true,
@@ -2120,6 +2131,11 @@ static const text_editor::Options TB_EDITOR_OPTIONS = {
   true,
   KEY_CX
 };
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return TB_EDITOR_OPTIONS;
+}
+#define TB_EDITOR_OPTIONS portable_editor_options()
+#endif
 
 static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
   text_editor::draw(main_lcd(), source, len, cursor, view_top, sms_cursor);
@@ -2352,7 +2368,7 @@ static void EditTinyBasicSlot(int slot,
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, TB_SOURCE_SIZE);
-#if defined(MK61_DISPLAY_LCD1602) && !defined(TINYBASIC_HOST_TEST)
+#if (defined(MK61_DISPLAY_LCD1602) && !defined(TINYBASIC_HOST_TEST)) || defined(MK61_BUILD_PORTABLE_SYSTEM)
   text_editor::DisplaySession display_session(main_lcd());
 #endif
   bool dirty = true;

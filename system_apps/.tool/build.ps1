@@ -12,6 +12,12 @@ param(
     [string]$ModulePacker,
 
     [ValidateSet('0', '1')]
+    [string]$PortableApps = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Graphics = '1',
+
+    [ValidateSet('0', '1')]
     [string]$Focal = '1',
 
     [ValidateSet('0', '1')]
@@ -395,6 +401,23 @@ function Get-SelectedApps {
 
 function Build-SystemApp {
     param([pscustomobject]$App, [object[]]$CompileEntries)
+
+    if ($PortableApps -eq '1') {
+        $moduleDir = Join-Path $script:WorkPath $App.Id
+        $arguments = @(
+            (Join-Path $script:ProjectRoot 'tools/build_portable_app.py'),
+            '--system', [string]$App.PackerKind,
+            '--arm-toolchain-bin', [IO.Path]::GetDirectoryName($script:Compiler),
+            '--packer', $script:ModulePacker,
+            '--output-dir', $moduleDir)
+        if ($Graphics -eq '0' -and $App.PackerKind -eq 'markdown-viewer') {
+            $arguments += '--text-only'
+        }
+        Invoke-ArmTool $script:Python $arguments
+        Copy-Item -LiteralPath (Join-Path $moduleDir $App.FileName) `
+            -Destination (Join-Path $script:OutputDirectory $App.FileName)
+        return
+    }
 
     $compileEntry = Get-CompileEntry $CompileEntries $App.Template
     [string[]]$template = Get-CompileArguments `

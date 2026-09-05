@@ -12,6 +12,7 @@ expected="$(
     build_f401_bundle.sh \
     build_fmk_font.sh \
     build_mk61_module_pack.sh \
+    build_portable_app.py \
     build-gcc.cmd \
     install_arduino_dependencies.ps1 \
     mk61-arduino-board.cmd \

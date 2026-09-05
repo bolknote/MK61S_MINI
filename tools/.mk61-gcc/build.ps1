@@ -38,6 +38,9 @@ param(
     [string]$MathBackend = '0',
 
     [ValidateSet('0', '1')]
+    [string]$PortableApps = '1',
+
+    [ValidateSet('0', '1')]
     [string]$Lto = '1',
 
     [string]$CorePath,
@@ -91,6 +94,7 @@ Firmware options:
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1
+  -PortableApps 0|1 standalone APP ABI 3; default 1 (0: legacy ABI 2)
   -Lto 0|1          default 1
 
 Paths:
@@ -559,6 +563,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
+        "-DMK61_ENABLE_PORTABLE_APPS=$PortableApps",
         '-DMK61_REQUIRE_RESIDENT_CRC=1',
         "-DMK61_ENABLE_LTO=$Lto",
         "-DMK61_FLASH_MIN_HEADROOM=$flashHeadroom",
@@ -638,7 +643,9 @@ try {
             '-Basic', $Basic,
             '-Wbmp', $Wbmp,
             '-Markdown', $Markdown,
-            '-Chip8', $Chip8)
+            '-Chip8', $Chip8,
+            '-Graphics', $(if ($wbmpGraphics) { '1' } else { '0' }),
+            '-PortableApps', $PortableApps)
     }
 
     $bundle = [string]$profileInfo.Bundle
@@ -679,6 +686,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
+    $flagValues.Add("-DMK61_ENABLE_PORTABLE_APPS=$PortableApps")
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
     $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
     [IO.File]::WriteAllText(
@@ -695,7 +703,9 @@ try {
     [Console]::WriteLine("  $outputBundle")
     [Console]::WriteLine("  resident: $residentName")
     if ($systemRequested) {
-        [Console]::WriteLine('  System APP: matched to this resident')
+        [Console]::WriteLine($(if ($PortableApps -eq '1') {
+            '  System APP: standalone ABI 3, ZX0/BCJ'
+        } else { '  System APP: legacy ABI 2, matched to this resident' }))
     }
 } catch {
     [Console]::Error.WriteLine($_.Exception.Message)

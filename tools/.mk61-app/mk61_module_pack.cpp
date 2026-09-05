@@ -1,6 +1,7 @@
 #include "loadable_module_format.hpp"
 #include "storage_geometry.hpp"
 #include "zx0.hpp"
+#include "arm_thumb_bcj.hpp"
 
 #include "third_party/zx0/zx0.h"
 
@@ -36,17 +37,19 @@ struct Options {
   bool entry_offset_set = false;
   bool load_address_set = false;
   bool require_zx0 = false;
+  bool portable = false;
 };
 
 [[noreturn]] void usage(const char* message = nullptr) {
   if(message != nullptr) std::fprintf(stderr, "error: %s\n\n", message);
   std::fprintf(stderr,
-      "usage: mk61_module_pack --kind KIND --resident FILE --image FILE\n"
+      "usage: mk61_module_pack --kind KIND (--resident FILE | --portable) --image FILE\n"
       "       --memory-size N --entry-offset N --load-address N\n"
       "       --output FILE [--handled-magic XX] [--require-zx0]\n"
       "  --kind KIND          app, focal, tinybasic, wbmp-viewer,\n"
       "                       markdown-viewer, or chip8\n"
       "  --resident FILE      exact resident firmware .bin\n"
+      "  --portable           experimental ABI 3; fixed SRAM; best of ZX0 / BCJ+ZX0\n"
       "  --image FILE         linked SRAM image without its .bss tail\n"
       "  --memory-size N      image plus zero-filled .bss\n"
       "  --entry-offset N     module entry offset from the load address\n"
@@ -104,6 +107,11 @@ Options parse_options(int argc, char** argv) {
       options.require_zx0 = true;
       continue;
     }
+    if(option == "--portable") {
+      options.portable = true;
+      options.require_zx0 = true;
+      continue;
+    }
     if(index + 1 >= argc) usage(("missing value for " + option).c_str());
     const std::string value = argv[++index];
     if(option == "--kind") {
@@ -130,7 +138,17 @@ Options parse_options(int argc, char** argv) {
       usage(("unknown option: " + option).c_str());
     }
   }
-  if(!options.kind_set || options.resident.empty() || options.image.empty() ||
+  if(options.portable) {
+    if(!options.resident.empty() ||
+       (options.load_address_set &&
+        options.load_address != MK61_PORTABLE_APP_ADDRESS)) {
+      usage("portable APP requires no resident and fixed SRAM");
+    }
+    options.load_address = MK61_PORTABLE_APP_ADDRESS;
+    options.load_address_set = true;
+  }
+  if(!options.kind_set || (!options.portable && options.resident.empty()) ||
+     options.image.empty() ||
      options.output.empty() || !options.memory_size_set ||
      !options.entry_offset_set || !options.load_address_set) {
     usage("all required options must be specified");
@@ -223,8 +241,8 @@ u32 slot_size(Kind kind) {
 
 std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
                      const std::vector<u8>& image) {
-  if(resident.empty() ||
-     resident.size() > loadable_module::MAX_RESIDENT_SIZE) {
+  if(!options.portable && (resident.empty() ||
+     resident.size() > loadable_module::MAX_RESIDENT_SIZE)) {
     throw std::runtime_error(
         "resident image size is outside the supported range");
   }
@@ -247,6 +265,23 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
 
   std::vector<u8> stored = zx0_encode_optimal(image);
   verify_zx0(stored, image);
+  u32 flags = options.portable ? MK61_PORTABLE_APP_FLAG : 0;
+  if(options.portable) {
+    std::vector<u8> filtered = image;
+    arm_thumb_bcj::transform(filtered.data(), (u32) filtered.size(), true);
+    std::vector<u8> candidate = zx0_encode_optimal(filtered);
+    verify_zx0(candidate, filtered);
+    arm_thumb_bcj::transform(filtered.data(), (u32) filtered.size(), false);
+    if(filtered != image) throw std::runtime_error("BCJ round-trip failed");
+    // Same header size; ties keep the plain stream and skip the inverse pass.
+    std::printf("ZX0 candidates: plain=%zu BCJ=%zu; selected=%s\n",
+                stored.size(), candidate.size(),
+                candidate.size() < stored.size() ? "BCJ" : "plain");
+    if(candidate.size() < stored.size()) {
+      stored.swap(candidate);
+      flags |= MK61_APP_ARM_THUMB_BCJ_FLAG;
+    }
+  }
   Compression compression = Compression::ZX0;
   if(!options.require_zx0 && stored.size() >= image.size()) {
     stored = image;
@@ -262,6 +297,7 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
   }
 
   Header header = {};
+  header.flags = flags;
   header.kind = options.kind;
   header.compression = compression;
   header.load_address = options.load_address;
@@ -292,7 +328,8 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
 int main(int argc, char** argv) {
   try {
     const Options options = parse_options(argc, argv);
-    const std::vector<u8> resident = read_file(options.resident);
+    const std::vector<u8> resident = options.portable
+        ? std::vector<u8>{} : read_file(options.resident);
     const std::vector<u8> image = read_file(options.image);
     const std::vector<u8> module = pack(options, resident, image);
     write_file(options.output, module);

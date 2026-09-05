@@ -31,16 +31,16 @@
 #if MK61_ENABLE_FOCAL && \
     (!MK61_FOCAL_IS_LOADABLE || defined(MK61_BUILD_FOCAL_MODULE) || \
      defined(FOCAL_HOST_TEST))
-static const int KEY_LEFT = keyboard_layout::ACTIVE.left;
-static const int KEY_RIGHT = keyboard_layout::ACTIVE.right;
-static const int KEY_OK = keyboard_layout::ACTIVE.ok;
-static const int KEY_ESC = keyboard_layout::ACTIVE.esc;
-static const int KEY_K = keyboard_layout::ACTIVE.k;
-static const int KEY_ALPHA = keyboard_layout::ACTIVE.alpha;
-static const int KEY_CX = keyboard_layout::ACTIVE.cx;
-static const int KEY_PP = keyboard_layout::ACTIVE.pp;
-static const int KEY_SHG_RIGHT_PRESS = keyboard_layout::ACTIVE.shg_right;
-static const int KEY_SHG_LEFT_PRESS = keyboard_layout::ACTIVE.shg_left;
+static const int KEY_LEFT = keyboard_layout::active().left;
+static const int KEY_RIGHT = keyboard_layout::active().right;
+static const int KEY_OK = keyboard_layout::active().ok;
+static const int KEY_ESC = keyboard_layout::active().esc;
+static const int KEY_K = keyboard_layout::active().k;
+static const int KEY_ALPHA = keyboard_layout::active().alpha;
+static const int KEY_CX = keyboard_layout::active().cx;
+static const int KEY_PP = keyboard_layout::active().pp;
+static const int KEY_SHG_RIGHT_PRESS = keyboard_layout::active().shg_right;
+static const int KEY_SHG_LEFT_PRESS = keyboard_layout::active().shg_left;
 static const int KEY_LEFT_PRESS = KEY_LEFT;
 static const int KEY_RIGHT_PRESS = KEY_RIGHT;
 static const int KEY_OK_PRESS = KEY_OK;
@@ -2764,7 +2764,7 @@ static bool focal_segment_is_simple(const char* begin, const char* end) {
 }
 
 static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, u16 capacity, i32 key_code) {
-  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
+  const keyboard_layout::Mapping& keys = keyboard_layout::active();
   const bool square = key_code == keys.mul;
   const bool inverse = key_code == keys.div;
   const bool power10 = key_code == keys.digit[0];
@@ -2857,7 +2857,7 @@ static bool focal_cursor_after_line_address(const char* source, u16 cursor, Foca
 }
 
 static const char* focal_statement_insert_text(i32 key_code, bool leading_space = false) {
-  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
+  const keyboard_layout::Mapping& keys = keyboard_layout::active();
   if(key_code == keys.dot) return leading_space ? " ASK " : "ASK ";
   if(key_code == keys.neg) return leading_space ? " BRANCH " : "BRANCH ";
   if(key_code == keys.power) return leading_space ? " COMMENT " : "COMMENT ";
@@ -2881,7 +2881,7 @@ static const char* focal_editor_insert_text_for_key(FocalEditShift shift, i32 ke
       }
       FocalAddress address;
       if(focal_cursor_after_line_address(source, cursor, &address)) {
-        if(key_code == keyboard_layout::ACTIVE.dot && !address.has_minor) return focal_plain_key_text(key_code);
+        if(key_code == keyboard_layout::active().dot && !address.has_minor) return focal_plain_key_text(key_code);
         const char* statement = focal_statement_insert_text(key_code, true);
         if(statement != NULL) return statement;
       }
@@ -2923,6 +2923,9 @@ static bool focal_editor_backspace_hook(char* source, u16& len, u16& cursor, u16
   return focal_editor_backspace(source, len, cursor, capacity);
 }
 
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+static const text_editor::KeyMap& portable_editor_keys() {
+#endif
 static const text_editor::KeyMap FOCAL_EDITOR_KEYS = {
   (i32) KEY_LEFT,
   KEY_LEFT_PRESS,
@@ -2938,6 +2941,11 @@ static const text_editor::KeyMap FOCAL_EDITOR_KEYS = {
   KEY_ALPHA,
   (i32) KEY_PP
 };
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return FOCAL_EDITOR_KEYS;
+}
+#define FOCAL_EDITOR_KEYS portable_editor_keys()
+#endif
 
 static const text_editor::Hooks FOCAL_EDITOR_HOOKS = {
   &focal_editor_insert_text_hook,
@@ -3195,7 +3203,7 @@ static void EditFocalSlot(int slot,
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, FOCAL_SOURCE_SIZE);
-#if defined(MK61_DISPLAY_LCD1602) && !defined(FOCAL_HOST_TEST)
+#if (defined(MK61_DISPLAY_LCD1602) && !defined(FOCAL_HOST_TEST)) || defined(MK61_BUILD_PORTABLE_SYSTEM)
   text_editor::DisplaySession display_session(main_lcd());
 #endif
   bool dirty = true;

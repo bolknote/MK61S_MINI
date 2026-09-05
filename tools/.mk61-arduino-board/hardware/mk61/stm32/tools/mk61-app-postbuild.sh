@@ -24,7 +24,7 @@ profile_valid() {
 }
 
 check_profile() {
-  local platform= display= sketch=
+  local platform= display= sketch= build_path= variant_ld=
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --platform)
@@ -33,6 +33,10 @@ check_profile() {
         require_value "$@"; display=$2; shift 2 ;;
       --sketch)
         require_value "$@"; sketch=$2; shift 2 ;;
+      --build-path)
+        require_value "$@"; build_path=$2; shift 2 ;;
+      --variant-ld)
+        require_value "$@"; variant_ld=$2; shift 2 ;;
       *) die "unknown check-profile option: $1" ;;
     esac
   done
@@ -40,6 +44,10 @@ check_profile() {
     die "incompatible platform/display pair: $platform + $display"
   [ -f "$sketch/mk61s-M.ino" ] && [ -f "$sketch/config.h" ] ||
     die 'open code/mk61s-M.ino before selecting this board'
+  if [ -n "$variant_ld" ]; then
+    mkdir -p "$build_path"
+    python3 "$sketch/../tools/.mk61-gcc/portable-layout.py" "$variant_ld" "$build_path/mk61-portable.ld"
+  fi
 }
 
 symbol_hex() {
@@ -163,6 +171,26 @@ build_module() {
   local object module_dir module_elf module_map module_image
   local unexpected image_start_hex memory_end_hex entry_hex
   local image_start memory_end entry_address memory_size entry_offset
+
+  if [[ "$compile_flags" == *-DMK61_ENABLE_PORTABLE_APPS=1* ]]; then
+  local portable_kind
+  case "$kind" in
+    1) portable_kind=focal ;; 2) portable_kind=tinybasic ;;
+    3) portable_kind=wbmp-viewer ;; 5) portable_kind=chip8 ;;
+    6) portable_kind=markdown-viewer ;; *) die "unknown System APP kind $kind" ;;
+  esac
+  module_dir="$stage/modules/$id"
+  local portable_options=()
+  if [ "$kind" -eq 6 ] && [[ "$compile_flags" != *MK61_BOARD_CLASSIC* ]] && \
+     [[ "$compile_flags" != *MK61_BOARD_40TH* ]] && [[ "$compile_flags" != *DISPLAY_UC1609* ]] && \
+     [[ "$compile_flags" != *MK61_ENABLE_USB_SCREEN=1* ]] && [[ "$compile_flags" != *MK61_WS0010_GRAPHICS_100X16=1* ]]; then
+    portable_options+=(--text-only)
+  fi
+  python3 "$sketch/../tools/build_portable_app.py" --system "$portable_kind" \
+    --arm-toolchain-bin "$(dirname "$compiler")" --output-dir "$module_dir" "${portable_options[@]}"
+  cp "$module_dir/$file_name" "$stage/System/$file_name"
+  return
+  fi
 
   object="$build_path/sketch/$object_name"
   [ -s "$object" ] ||

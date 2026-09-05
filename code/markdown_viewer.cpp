@@ -239,6 +239,11 @@ static void draw_plain_page(MK61Display& display, const u8* data, u16 len,
                     rows[row], sizeof(rows[row]));
   }
 
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  const char* lines[lcd_display::RUNTIME_MAX_ROWS];
+  for(u8 row = 0; row < row_count; ++row) lines[row] = rows[row];
+  portable_system::text_rows(lines, row_count);
+#else
   lcd_ru::font_map_t map = {};
   for(u8 row = 0; row < row_count; row++) {
     lcd_ru::scan_text(map, rows[row], lcd_display::COLS);
@@ -251,6 +256,7 @@ static void draw_plain_page(MK61Display& display, const u8* data, u16 len,
     display.setCursor(0, row);
     lcd_ru::write_text(map, rows[row], lcd_display::COLS);
   }
+#endif
 }
 
 static Result view_plain_text(MK61Display& display,

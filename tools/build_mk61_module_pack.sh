@@ -9,6 +9,8 @@ sources=(
   "$tool_root/mk61_module_pack.cpp"
   "$root/code/loadable_module_format.cpp"
   "$root/code/loadable_module_format.hpp"
+  "$root/code/portable_app_config.h"
+  "$root/code/arm_thumb_bcj.hpp"
   "$root/code/zx0.cpp"
   "$root/code/zx0.hpp"
   "$root/code/storage_geometry.hpp"
@@ -33,6 +35,7 @@ fi
 if [[ "$rebuild" == "1" ]]; then
   mkdir -p "$(dirname "$output")"
   "$host_cxx" -x c++ -std=c++17 -O2 -Wall -Wextra -Werror \
+    -DMK61_ENABLE_PORTABLE_APPS=1 \
     -I"$root/code" \
     "$tool_root/mk61_module_pack.cpp" \
     "$root/code/loadable_module_format.cpp" \

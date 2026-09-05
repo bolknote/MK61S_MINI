@@ -11,6 +11,7 @@ param(
     [string]$Objcopy,
     [string]$SizeTool,
     [string]$BuildPath,
+    [string]$VariantLd,
     [string]$Project,
     [string]$Bundle,
     [string]$Focal,
@@ -23,6 +24,14 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+
+function Get-Python {
+    foreach ($name in @('python3', 'python')) {
+        $command = Get-Command $name -ErrorAction SilentlyContinue
+        if ($null -ne $command) { return $command.Source }
+    }
+    throw 'Python 3 is required for portable System APP builds'
+}
 
 function Stop-Mk61Build {
     param([Parameter(Mandatory = $true)][string]$Message)
@@ -208,6 +217,24 @@ function Build-Mk61Module {
         [string]$ObjectName,
         [uint16]$HandledMagic
     )
+    if ($CompileFlags -match '-DMK61_ENABLE_PORTABLE_APPS=1') {
+    $kinds = @{ 1 = 'focal'; 2 = 'tinybasic'; 3 = 'wbmp-viewer'; 5 = 'chip8'; 6 = 'markdown-viewer' }
+    $moduleDir = Join-Path (Join-Path $script:Stage 'modules') $Id
+    $python = Get-Python
+    $arguments = @(
+        (Join-Path $Sketch '../tools/build_portable_app.py'),
+        '--system', $kinds[[int]$Kind],
+        '--arm-toolchain-bin', [IO.Path]::GetDirectoryName($Compiler),
+        '--output-dir', $moduleDir)
+    if ($Kind -eq 6 -and $CompileFlags -notmatch 'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609|MK61_ENABLE_USB_SCREEN=1|MK61_WS0010_GRAPHICS_100X16=1') {
+        $arguments += '--text-only'
+    }
+    Invoke-Mk61Tool $python $arguments
+    Copy-Item -LiteralPath (Join-Path $moduleDir $FileName) `
+        -Destination (Join-Path (Join-Path $script:Stage 'System') $FileName)
+    return
+    }
+
     $object = Join-Path (Join-Path $script:BuildPathValue 'sketch') $ObjectName
     Test-RequiredFile $object "Arduino object $ObjectName"
 
@@ -423,7 +450,15 @@ function Build-Mk61Bundle {
 
 try {
     switch ($Command) {
-        'check-profile' { Check-Mk61Profile }
+        'check-profile' {
+            Check-Mk61Profile
+            if (-not [string]::IsNullOrWhiteSpace($VariantLd)) {
+                [IO.Directory]::CreateDirectory($BuildPath) | Out-Null
+                Invoke-Mk61Tool (Get-Python) @(
+                    (Join-Path $Sketch '../tools/.mk61-gcc/portable-layout.py'),
+                    $VariantLd, (Join-Path $BuildPath 'mk61-portable.ld'))
+            }
+        }
         'build' { Build-Mk61Bundle }
     }
 } catch {

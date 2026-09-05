@@ -4,6 +4,8 @@
 
 #include "Arduino.h"
 #include "loadable_app_api.hpp"
+#include "loadable_system_api.hpp"
+#define MK61_PORTABLE_SYSTEM_ENABLED (MK61_ENABLE_PORTABLE_APPS && (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE || MK61_WBMP_VIEWER_IS_LOADABLE || MK61_MARKDOWN_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE))
 #include "loadable_module_system_app.hpp"
 #include "program_store.hpp"
 #include "shared_memory.hpp"
@@ -55,6 +57,10 @@ static u32 resident_image_size(void) {
 }
 
 static bool resident_matches(const Header& header) {
+  if(header.load_address != (u32) (usize) mk61_module_overlay) return false;
+#if MK61_ENABLE_PORTABLE_APPS
+  if((header.flags & MK61_PORTABLE_APP_FLAG) != 0) return true;
+#endif
   const u32 resident_size = resident_image_size();
   if(resident_size == 0 || header.resident_size != resident_size) return false;
   if(resident_size == g_cached_resident_size)
@@ -147,9 +153,8 @@ static bool same_active_image(Kind kind, u16 file_id, const Header& header) {
 
 static void clear_active_metadata(void) {
   g_active_kind = (Kind) 0;
-  memset(&g_active_header, 0, sizeof(g_active_header));
+  // Header/file id are read only while entry/lease are valid, then replaced.
   g_active_entry = nullptr;
-  g_active_file_id = program_store::INVALID_ID;
 }
 
 static void invalidate_active(void) {
@@ -177,31 +182,42 @@ static u8* acquire_module_overlay(void) {
 }
 
 static u32 entry_api_argument(Kind kind) {
+#if MK61_PORTABLE_SYSTEM_ENABLED
+  if(kind != Kind::APPLICATION && (g_active_header.flags & MK61_PORTABLE_APP_FLAG) != 0)
+    return (u32) (usize) &system_api();
+#endif
   return kind == Kind::APPLICATION
       ? (u32) (usize) &loadable_app::resident_api() : 0;
+}
+
+static bool decode_checked(const Header& header, const Reader& reader, u8* overlay) {
+  DecodeResult decoded = {};
+  return decode_payload(reader, header.compression, header.stored_size,
+                         overlay, header.image_size, decoded
+#if MK61_ENABLE_PORTABLE_APPS
+                         , header.flags
+#endif
+                         ) && decoded.stored_crc32 == header.stored_crc32 &&
+         decoded.image_crc32 == header.image_crc32;
 }
 
 static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
                               const Reader& reader) {
   const u32 overlay_address = (u32) (usize) mk61_module_overlay;
-  if(header.load_address != overlay_address || !resident_matches(header)) {
+  if(!resident_matches(header)) {
     return RuntimeStatus::INCOMPATIBLE_FIRMWARE;
   }
-  if(same_active_image(kind, file_id, header)) return RuntimeStatus::OK;
+  if(same_active_image(kind, file_id, header)
+#if MK61_ENABLE_PORTABLE_APPS
+     && ((header.flags & MK61_PORTABLE_APP_FLAG) == 0 || kind != Kind::APPLICATION)
+#endif
+     ) return RuntimeStatus::OK;
   if(g_call_depth != 0) return RuntimeStatus::BUSY;
 
   invalidate_active();
   u8* const overlay = acquire_module_overlay();
   if(overlay == nullptr) return RuntimeStatus::BUSY;
-  DecodeResult decoded = {};
-  if(!decode_payload(reader, header.compression, header.stored_size,
-                     overlay, header.image_size, decoded)) {
-    memset(overlay, 0, OVERLAY_SIZE);
-    invalidate_active();
-    return RuntimeStatus::CORRUPT_MODULE;
-  }
-  if(decoded.stored_crc32 != header.stored_crc32 ||
-     decoded.image_crc32 != header.image_crc32) {
+  if(!decode_checked(header, reader, overlay)) {
     memset(overlay, 0, OVERLAY_SIZE);
     invalidate_active();
     return RuntimeStatus::CORRUPT_MODULE;
@@ -216,9 +232,25 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   g_active_entry = (Entry) (usize) (overlay_address + header.entry_offset + 1U);
 
   g_call_depth++;
-  (void) g_active_entry((u32) Command::INITIALIZE,
-                        entry_api_argument(kind), 0, 0, 0);
+  const u32 initialized = g_active_entry((u32) Command::INITIALIZE,
+                                         entry_api_argument(kind),
+#if MK61_PORTABLE_SYSTEM_ENABLED
+                                         kind != Kind::APPLICATION && (header.flags & MK61_PORTABLE_APP_FLAG) != 0
+                                             ? (u32) (usize) &loadable_app::resident_api() : 0,
+                                         header.image_crc32,
+#else
+                                         0, 0,
+#endif
+                                         0);
   g_call_depth--;
+#if MK61_ENABLE_PORTABLE_APPS
+  if((header.flags & MK61_PORTABLE_APP_FLAG) != 0 && initialized != 0) {
+    invalidate_active();
+    return RuntimeStatus::INVALID_MODULE;
+  }
+#else
+  (void) initialized;
+#endif
   return RuntimeStatus::OK;
 }
 
@@ -307,6 +339,12 @@ RuntimeStatus invoke(Kind kind, Command command,
     return RuntimeStatus::INVALID_MODULE;
   }
   g_call_depth++;
+#if MK61_PORTABLE_SYSTEM_ENABLED
+  // The portable wire protocol carries an inode, never a resident C++ Entry.
+  if(command == Command::WBMP_VIEW_ENTRY && argument1 != 0 &&
+     (g_active_header.flags & MK61_PORTABLE_APP_FLAG) != 0)
+    argument1 = ((const program_store::Entry*) (usize) argument1)->id;
+#endif
   result = g_active_entry((u32) command, argument0, argument1,
                           argument2, argument3);
   g_call_depth--;
@@ -409,8 +447,7 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
   if(source.size != HEADER_SIZE + header.stored_size) {
     return StoreStatus::WRONG_FILE_SIZE;
   }
-  const u32 overlay_address = (u32) (usize) mk61_module_overlay;
-  if(header.load_address != overlay_address || !resident_matches(header)) {
+  if(!resident_matches(header)) {
     return StoreStatus::INCOMPATIBLE_FIRMWARE;
   }
 
@@ -419,11 +456,7 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
   if(overlay == nullptr) return StoreStatus::UNAVAILABLE;
   InstallPayloadSource payload_context = {&source};
   const Reader payload_reader = {&payload_context, read_install_payload};
-  DecodeResult decoded = {};
-  if(!decode_payload(payload_reader, header.compression, header.stored_size,
-                     overlay, header.image_size, decoded) ||
-     decoded.stored_crc32 != header.stored_crc32 ||
-     decoded.image_crc32 != header.image_crc32) {
+  if(!decode_checked(header, payload_reader, overlay)) {
     memset(overlay, 0, OVERLAY_SIZE);
     invalidate_active();
     return StoreStatus::BAD_STORED_CRC;

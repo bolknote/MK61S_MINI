@@ -2,6 +2,7 @@
 #define MK61_LOADABLE_MODULE_FORMAT_HPP
 
 #include "rust_types.h"
+#include "portable_app_config.h"
 
 namespace loadable_module {
 
@@ -104,7 +105,11 @@ u32 crc32(const u8* data, usize size);
 // образ в памяти не требуются.
 bool decode_payload(const Reader& reader, Compression compression,
                     u32 stored_size, u8* output, u32 image_size,
-                    DecodeResult& result);
+                    DecodeResult& result
+#if MK61_ENABLE_PORTABLE_APPS
+                    , u32 flags = 0
+#endif
+                    );
 
 } // namespace loadable_module
 

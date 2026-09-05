@@ -32,20 +32,39 @@ static loadable_module::FileOpenResult file_open_result(
 extern "C" __attribute__((used, section(".mk61_module_entry")))
 u32 mk61_module_entry(u32 raw_command, u32 argument0, u32 argument1,
                       u32 argument2, u32 argument3) {
+  (void) argument0; (void) argument1; (void) argument2;
   const loadable_module::Command command =
       (loadable_module::Command) raw_command;
   switch(command) {
     case loadable_module::Command::INITIALIZE:
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+      if(argument0 != 0) return portable_system::bind(argument0, argument1, argument2)
+          ? 0 : (u32) loadable_module::FileOpenResult::RUNTIME_ERROR;
+#endif
       return 0;
     case loadable_module::Command::WBMP_VIEW:
       return (u32) image1_viewer::view(
-          *(MK61Display*) argument0, (const u8*) argument1, (u16) argument2,
+          #if defined(MK61_BUILD_PORTABLE_SYSTEM)
+          main_lcd(), (const u8*) argument1
+#else
+          *(MK61Display*) argument0, (const u8*) argument1
+#endif
+          , (u16) argument2,
           (wbmp::Status*) argument3);
     case loadable_module::Command::WBMP_VIEW_ENTRY:
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+    {
+      program_store::Entry entry = {};
+      if(argument1 > 0xFFFFU || !program_store::entry_by_id((u16) argument1, entry))
+        return (u32) image1_viewer::Result::READ_ERROR;
+      return (u32) image1_viewer::view_entry(main_lcd(), entry, (wbmp::Status*) argument2);
+    }
+#else
       return (u32) image1_viewer::view_entry(
           *(MK61Display*) argument0,
           *(const program_store::Entry*) argument1,
           (wbmp::Status*) argument2);
+#endif
     case loadable_module::Command::FILE_OPEN: {
       program_store::Entry entry = {};
       if(argument1 > 0xFFFFU ||

@@ -74,7 +74,7 @@ static bool pressed(i32 key) {
 }
 
 static bool chip_key_pressed(u8 key) {
-  const keyboard_layout::Mapping& mapping = keyboard_layout::ACTIVE;
+  const keyboard_layout::Mapping& mapping = keyboard_layout::active();
   if(key <= 9 && pressed(mapping.digit[key])) return true;
   switch(key) {
     case 0xA: return pressed(mapping.dot);
@@ -101,7 +101,7 @@ static void consume_game_input(void) {
   // reappear as Explorer search text after the game exits.
   // ESC belongs to the transition out of the game; leave later input queued.
   while(kbd::last_key() >= 0 &&
-        kbd::last_key() != keyboard_layout::ACTIVE.esc)
+        kbd::last_key() != keyboard_layout::active().esc)
     (void) kbd::get_key();
 }
 
@@ -192,7 +192,7 @@ static loadable_module::FileOpenResult run(
       break;
     }
 
-    const keyboard_layout::Mapping& mapping = keyboard_layout::ACTIVE;
+    const keyboard_layout::Mapping& mapping = keyboard_layout::active();
     if(pressed(mapping.esc)) {
       kbd::handoff(kbd::Event(mapping.esc));
       break;

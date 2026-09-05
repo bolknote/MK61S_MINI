@@ -2,47 +2,14 @@
 #define MK61_KEYBOARD_LAYOUT_HPP
 
 #include "rust_types.h"
+#include "loadable_system_api.h"
 
 namespace keyboard_layout {
 
 // Физические scan-коды матрицы занимают диапазон 0..39. Байтовое хранение
 // экономит по 126 байт в resident и в каждом языковом APP без изменения
 // публичных i32-кодов клавиатурного API.
-struct Mapping {
-  u8 cx;
-  u8 bx;
-  u8 mul;
-  u8 div;
-  u8 power;
-  u8 xy;
-  u8 add;
-  u8 sub;
-  u8 neg;
-  u8 dot;
-  u8 digit[10];
-  u8 pp;
-  u8 bp;
-  u8 x_to_p;
-  u8 p_to_x;
-  u8 run;
-  u8 ret;
-  u8 frw;
-  u8 bkw;
-  u8 k;
-  u8 alpha;
-  u8 degree;
-  u8 grade;
-  u8 radian;
-  u8 user;
-  u8 save;
-  u8 load;
-  u8 left;
-  u8 right;
-  u8 ok;
-  u8 esc;
-  u8 shg_left;
-  u8 shg_right;
-};
+using Mapping = mk61_system_keyboard;
 
 static_assert(sizeof(Mapping) == 42,
               "keyboard mapping must remain a compact scan-code table");
@@ -80,6 +47,12 @@ static_assert(CLASSIC.k != CLASSIC.right, "classic K and Right must be distinct"
 static_assert(CLASSIC.alpha != CLASSIC.ok, "classic F and OK must be distinct");
 static_assert(FORTIETH.k != FORTIETH.right, "40TH K and Right must be distinct");
 static_assert(FORTIETH.alpha != FORTIETH.ok, "40TH F and OK must be distinct");
+
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+const Mapping& active();
+#else
+constexpr const Mapping& active() { return ACTIVE; }
+#endif
 
 inline int digit_from_key(const Mapping& mapping, i32 key_code) {
   for(int digit = 0; digit <= 9; digit++) {

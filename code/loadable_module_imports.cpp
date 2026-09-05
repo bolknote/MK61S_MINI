@@ -1,6 +1,6 @@
 #include "config.h"
 
-#if MK61_ANY_LOADABLE_MODULE
+#if MK61_ANY_LOADABLE_MODULE && !MK61_ENABLE_PORTABLE_APPS
 
 #include "display.hpp"
 #include "language_workspace.hpp"
@@ -100,4 +100,8 @@ void mk61_module_keep_imports(void) {
 #endif
 }
 
+#endif
+
+#if MK61_ANY_LOADABLE_MODULE && MK61_ENABLE_PORTABLE_APPS
+extern "C" void mk61_module_keep_imports(void) {}
 #endif
