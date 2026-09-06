@@ -131,11 +131,6 @@ def build(args: argparse.Namespace) -> dict:
         parts = line.split()
         if len(parts) == 3:
             symbols[parts[2]] = int(parts[0], 16)
-    for line in run([tool("size"), "-A", elf]).splitlines():
-        parts = line.split()
-        if len(parts) >= 2 and parts[0].startswith("."):
-            if parts[0] not in (".module_image", ".module_bss") and not parts[0].startswith(".rel.") and int(parts[1]):
-                raise ValueError(f"unpacked ELF section: {parts[0]}")
     base = symbols["__module_image_start"]
     memory_size = symbols["__module_memory_end"] - base
     entry_offset = (symbols["mk61_module_entry"] & ~1) - base

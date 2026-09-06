@@ -47,7 +47,11 @@ def extract(path: Path, base: int, image_size: int, memory_size: int):
     if not module_sections:
         raise ValueError('missing APP sections')
     offsets, records = [], 0
-    for section in sections:
+    for index, section in enumerate(sections):
+        # Only allocated sections belong in the APP memory image. Toolchains
+        # may also emit debug metadata, whose relocations are ignored below.
+        if section[2] & 2 and section[5] and index not in module_sections:
+            raise ValueError(f'unpacked ELF section: {name(section)}')
         if section[1] not in (4, 9):
             continue
         target = section[7]

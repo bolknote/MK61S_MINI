@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
+python3 "$root/tests/app_relocations_self_test.py"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-portable-tests.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 flags=(-std=c++17 -O1 -Wall -Wextra -Werror -I"$root/code")
