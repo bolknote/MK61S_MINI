@@ -1,0 +1,331 @@
+{
+  "date": "2026-09-06",
+  "before_commit": "68828b4330d090afa3620d736e018ff0f770fe73",
+  "after_commit": "a1a3b23c7c25ea707e234e1cf500398b8a09e8c8",
+  "compiler": "xPack GNU Arm Embedded GCC 14.2.1 20241119",
+  "stm32_core": "2.12.0",
+  "common_options": {
+    "Focal": 1,
+    "Basic": 1,
+    "Wbmp": "auto",
+    "UsbScreen": 0,
+    "MathBackend": 1,
+    "Lto": 1
+  },
+  "system_app_optimization": {
+    "before": "-Os -flto",
+    "after": "-Oz -flto"
+  },
+  "units": "bytes",
+  "configurations": [
+    {
+      "name": "mini",
+      "profile": "mini-v3-a00",
+      "options": {
+        "Markdown": 1,
+        "Chip8": 0
+      },
+      "before": {
+        "resident": {
+          "bytes": 235628,
+          "sha256": "6b38dc0ae21d9366a99dcbc454c4dfb0f3987cee05b55243920b3207b838574f",
+          "global_ram_bytes": 47112
+        },
+        "apps": {
+          "BASIC.APP": {
+            "app_bytes": 11799,
+            "image_bytes": 16291,
+            "memory_bytes": 16296,
+            "bss_bytes": 5,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "0d0abf36d3ffd27feeb5ea74893e9ae84e2967c2d18c13b6666a5b25be1c93f3"
+          },
+          "FOCAL.APP": {
+            "app_bytes": 13988,
+            "image_bytes": 19175,
+            "memory_bytes": 19176,
+            "bss_bytes": 1,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "3c58db8076677a9a1cd8aa3412afd985f9ab1beb38b54e6eddd1991de8976d43"
+          },
+          "MARKDOWN.APP": {
+            "app_bytes": 3331,
+            "image_bytes": 3956,
+            "memory_bytes": 3960,
+            "bss_bytes": 4,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "203954d4eff314df7ba7856733c7c10fbbf8a3616d70a02f9b6b7d1737f2435e"
+          }
+        }
+      },
+      "after": {
+        "resident": {
+          "bytes": 240020,
+          "sha256": "3d35aaac54c41a6f1ce2183b81a17bf1f807628f5e82d50956c27f876520f6d5",
+          "global_ram_bytes": 47108
+        },
+        "apps": {
+          "BASIC.APP": {
+            "app_bytes": 11522,
+            "image_bytes": 17176,
+            "memory_bytes": 17252,
+            "bss_bytes": 76,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "05fd5947d018ddfd5363e7af563abe7d9746e9dba4bfc8d01275a1d6c2c8cb3b",
+            "plain_zx0_app_bytes": 12303,
+            "bcj_zx0_app_bytes": 11522,
+            "bcj_saving_bytes": 781
+          },
+          "FOCAL.APP": {
+            "app_bytes": 13620,
+            "image_bytes": 20060,
+            "memory_bytes": 20140,
+            "bss_bytes": 80,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "5cb9e1f9541251ab46209c6d7d8a936acdd8ff1fa7f2e6e5c174f91f28a4f41c",
+            "plain_zx0_app_bytes": 14511,
+            "bcj_zx0_app_bytes": 13620,
+            "bcj_saving_bytes": 891
+          },
+          "MARKDOWN.APP": {
+            "app_bytes": 3812,
+            "image_bytes": 4636,
+            "memory_bytes": 4652,
+            "bss_bytes": 16,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "94d7a0572d053794a9be345c52f3f849527fb24c7e97b49eaf38f6e2a2aafb8f",
+            "plain_zx0_app_bytes": 3890,
+            "bcj_zx0_app_bytes": 3812,
+            "bcj_saving_bytes": 78
+          }
+        }
+      }
+    },
+    {
+      "name": "classic",
+      "profile": "classic-v3",
+      "options": {
+        "Markdown": 1,
+        "Chip8": 1
+      },
+      "before": {
+        "resident": {
+          "bytes": 236784,
+          "sha256": "543cec782275f03c6b2bf1e9613ca2e78937c1c165f9f4c7f0c3b2848bd2d882",
+          "global_ram_bytes": 49108
+        },
+        "apps": {
+          "BASIC.APP": {
+            "app_bytes": 11769,
+            "image_bytes": 16275,
+            "memory_bytes": 16280,
+            "bss_bytes": 5,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "90c5829784508023649352e6aa75d1dcae45b953e4e00d95bb92b50e5cc654da"
+          },
+          "CHIP8.APP": {
+            "app_bytes": 2232,
+            "image_bytes": 2851,
+            "memory_bytes": 2856,
+            "bss_bytes": 5,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "4bca7b789f0435cd3ca7ce65c220e6fb73fc7498f600950c7a05b6677ca9a08b"
+          },
+          "FOCAL.APP": {
+            "app_bytes": 13987,
+            "image_bytes": 19207,
+            "memory_bytes": 19208,
+            "bss_bytes": 1,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "f91d93ab7cc5c96d5efd179d2056b03b1484bdb03ae5b36ee7448e097740fa57"
+          },
+          "MARKDOWN.APP": {
+            "app_bytes": 9373,
+            "image_bytes": 11496,
+            "memory_bytes": 11496,
+            "bss_bytes": 0,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "497c89deb90db51913ab55d7a91b3efe0f40c13fc0a2a894f58376571f116d7b"
+          }
+        }
+      },
+      "after": {
+        "resident": {
+          "bytes": 241208,
+          "sha256": "2ffd39de64f7447f6027a5acf4b23c83d35b68fabd430b339b541ac87b8c3eeb",
+          "global_ram_bytes": 49092
+        },
+        "apps": {
+          "BASIC.APP": {
+            "app_bytes": 11522,
+            "image_bytes": 17176,
+            "memory_bytes": 17252,
+            "bss_bytes": 76,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "05fd5947d018ddfd5363e7af563abe7d9746e9dba4bfc8d01275a1d6c2c8cb3b",
+            "plain_zx0_app_bytes": 12303,
+            "bcj_zx0_app_bytes": 11522,
+            "bcj_saving_bytes": 781
+          },
+          "CHIP8.APP": {
+            "app_bytes": 2563,
+            "image_bytes": 3342,
+            "memory_bytes": 3356,
+            "bss_bytes": 14,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "8e8f27a0fc4108d5941e81a4599098eda7999d0a9c1ecc1f865705e74ec49793",
+            "plain_zx0_app_bytes": 2630,
+            "bcj_zx0_app_bytes": 2563,
+            "bcj_saving_bytes": 67
+          },
+          "FOCAL.APP": {
+            "app_bytes": 13620,
+            "image_bytes": 20060,
+            "memory_bytes": 20140,
+            "bss_bytes": 80,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "5cb9e1f9541251ab46209c6d7d8a936acdd8ff1fa7f2e6e5c174f91f28a4f41c",
+            "plain_zx0_app_bytes": 14511,
+            "bcj_zx0_app_bytes": 13620,
+            "bcj_saving_bytes": 891
+          },
+          "MARKDOWN.APP": {
+            "app_bytes": 12080,
+            "image_bytes": 15312,
+            "memory_bytes": 15324,
+            "bss_bytes": 12,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "e35002f5d02f9595d5a2e56c6be41fe377d33c9348bdfefec2680c2401ccdaf0",
+            "plain_zx0_app_bytes": 12372,
+            "bcj_zx0_app_bytes": 12080,
+            "bcj_saving_bytes": 292
+          }
+        }
+      }
+    },
+    {
+      "name": "wbmp",
+      "profile": "classic-v3",
+      "options": {
+        "Markdown": 0,
+        "Chip8": 1
+      },
+      "before": {
+        "resident": {
+          "bytes": 236752,
+          "sha256": "64fe71c235eaae6f3265cc6174ef7d24a71ed097bbd92936445b6c59b71327fe",
+          "global_ram_bytes": 49108
+        },
+        "apps": {
+          "BASIC.APP": {
+            "app_bytes": 11771,
+            "image_bytes": 16275,
+            "memory_bytes": 16280,
+            "bss_bytes": 5,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "2a8aebc01fab78c56299ad8f332b89e5a3c37e703b84429229a73ae58d5709ff"
+          },
+          "CHIP8.APP": {
+            "app_bytes": 2230,
+            "image_bytes": 2851,
+            "memory_bytes": 2856,
+            "bss_bytes": 5,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "9fe7e0bd0233965f89d669fdf2c1da2d1b6a5eacf2e0dbfc79d0b5a6b02d8b1b"
+          },
+          "FOCAL.APP": {
+            "app_bytes": 13989,
+            "image_bytes": 19207,
+            "memory_bytes": 19208,
+            "bss_bytes": 1,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "6760e590b1c01dd6c07c594623966b02570c86f06408cca98c48d728fcda17c6"
+          },
+          "WBMP.APP": {
+            "app_bytes": 1185,
+            "image_bytes": 1319,
+            "memory_bytes": 1320,
+            "bss_bytes": 1,
+            "abi": 2,
+            "flags": 0,
+            "sha256": "fd37a55326214fe2c4dd6d9c0c7ed54a2ef3698f57727f8e48d525067fdae8f8"
+          }
+        }
+      },
+      "after": {
+        "resident": {
+          "bytes": 241096,
+          "sha256": "79a280706e78c10d013954256097f670db22bf5e7fffce66db52a0852056a085",
+          "global_ram_bytes": 49092
+        },
+        "apps": {
+          "BASIC.APP": {
+            "app_bytes": 11522,
+            "image_bytes": 17176,
+            "memory_bytes": 17252,
+            "bss_bytes": 76,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "05fd5947d018ddfd5363e7af563abe7d9746e9dba4bfc8d01275a1d6c2c8cb3b",
+            "plain_zx0_app_bytes": 12303,
+            "bcj_zx0_app_bytes": 11522,
+            "bcj_saving_bytes": 781
+          },
+          "CHIP8.APP": {
+            "app_bytes": 2563,
+            "image_bytes": 3342,
+            "memory_bytes": 3356,
+            "bss_bytes": 14,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "8e8f27a0fc4108d5941e81a4599098eda7999d0a9c1ecc1f865705e74ec49793",
+            "plain_zx0_app_bytes": 2630,
+            "bcj_zx0_app_bytes": 2563,
+            "bcj_saving_bytes": 67
+          },
+          "FOCAL.APP": {
+            "app_bytes": 13620,
+            "image_bytes": 20060,
+            "memory_bytes": 20140,
+            "bss_bytes": 80,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "5cb9e1f9541251ab46209c6d7d8a936acdd8ff1fa7f2e6e5c174f91f28a4f41c",
+            "plain_zx0_app_bytes": 14511,
+            "bcj_zx0_app_bytes": 13620,
+            "bcj_saving_bytes": 891
+          },
+          "WBMP.APP": {
+            "app_bytes": 1616,
+            "image_bytes": 1905,
+            "memory_bytes": 1924,
+            "bss_bytes": 19,
+            "abi": 3,
+            "flags": 3,
+            "sha256": "6bc75777fc4c69aa41e0cfa124e109aebab403e5b56a6d86c3d5d193f92d0859",
+            "plain_zx0_app_bytes": 1664,
+            "bcj_zx0_app_bytes": 1616,
+            "bcj_saving_bytes": 48
+          }
+        }
+      }
+    }
+  ]
+}

@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
-from html import escape
+import unicodedata
+from html import escape, unescape
 from pathlib import Path
+from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -14,6 +17,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     Image,
+    KeepTogether,
     ListFlowable,
     ListItem,
     Paragraph,
@@ -100,7 +104,16 @@ def default_title(source: Path) -> str:
     return name.replace("-", " ")
 
 
-def inline(text: str) -> str:
+def heading_anchor(text: str) -> str:
+    # Match the heading fragments used by GitHub, including Cyrillic titles.
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text).lower()
+    return "".join(
+        char for char in text
+        if char in "-_ " or unicodedata.category(char)[0] in "LN"
+    ).replace(" ", "-")
+
+
+def inline(text: str, resolve_link=None) -> str:
     # Protect inline-code spans before parsing links.  Splitting on backticks
     # first loses links such as [`guide.md`](guide.md), because the link then
     # spans three independently processed fragments.
@@ -117,7 +130,10 @@ def inline(text: str) -> str:
     rendered = escape(protected)
     rendered = re.sub(
         r"\[([^\]]+)\]\(([^)]+)\)",
-        r'<link href="\2" color="#1a5fb4">\1</link>',
+        lambda match: '<link href="%s" color="#1a5fb4">%s</link>' % (
+            escape(resolve_link(unescape(match.group(2))), quote=True)
+            if resolve_link else match.group(2), match.group(1),
+        ),
         rendered,
     )
     rendered = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", rendered)
@@ -126,13 +142,13 @@ def inline(text: str) -> str:
     return rendered
 
 
-def make_table(lines: list[str], base_style) -> list:
+def make_table(lines: list[str], base_style, render_inline=inline) -> list:
     rows = []
     for line in lines:
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
         if all(set(cell) <= {"-", ":", " "} for cell in cells):
             continue
-        rows.append([Paragraph(inline(cell), base_style) for cell in cells])
+        rows.append([Paragraph(render_inline(cell), base_style) for cell in cells])
     if not rows:
         return []
 
@@ -161,17 +177,17 @@ def make_table(lines: list[str], base_style) -> list:
     return [table, Spacer(1, 5)]
 
 
-def flush_paragraph(buffer: list[str], story: list, style) -> None:
+def flush_paragraph(buffer: list[str], story: list, style, render_inline=inline) -> None:
     if not buffer:
         return
-    story.append(Paragraph(inline(" ".join(buffer)), style))
+    story.append(Paragraph(render_inline(" ".join(buffer)), style))
     buffer.clear()
 
 
-def flush_list(buffer: list[str], story: list, styles, ordered: bool) -> None:
+def flush_list(buffer: list[str], story: list, styles, ordered: bool, render_inline=inline) -> None:
     if not buffer:
         return
-    items = [ListItem(Paragraph(inline(item), styles["DocList"])) for item in buffer]
+    items = [ListItem(Paragraph(render_inline(item), styles["DocList"])) for item in buffer]
     story.append(ListFlowable(items, bulletType="1" if ordered else "bullet", start="1" if ordered else "circle", leftIndent=12))
     story.append(Spacer(1, 3))
     buffer.clear()
@@ -192,14 +208,15 @@ def add_image(line: str, source_dir: Path, story: list, styles) -> bool:
         scale = DOC_WIDTH / image.drawWidth
         image.drawWidth *= scale
         image.drawHeight *= scale
-    story.append(image)
+    block = [image]
     if alt:
-        story.append(Paragraph(inline(alt), styles["DocCaption"]))
-    story.append(Spacer(1, 5))
+        block.append(Paragraph(inline(alt), styles["DocCaption"]))
+    block.append(Spacer(1, 5))
+    story.append(KeepTogether(block))
     return True
 
 
-def build_story(markdown: str, source_dir: Path, styles) -> list:
+def build_story(markdown: str, source_dir: Path, styles, render_inline=inline) -> list:
     story = []
     paragraph: list[str] = []
     bullets: list[str] = []
@@ -207,11 +224,12 @@ def build_story(markdown: str, source_dir: Path, styles) -> list:
     code: list[str] = []
     table: list[str] = []
     in_code = False
+    anchors: set[str] = set()
 
     def flush_blocks() -> None:
-        flush_paragraph(paragraph, story, styles["DocBase"])
-        flush_list(bullets, story, styles, False)
-        flush_list(ordered, story, styles, True)
+        flush_paragraph(paragraph, story, styles["DocBase"], render_inline)
+        flush_list(bullets, story, styles, False, render_inline)
+        flush_list(ordered, story, styles, True, render_inline)
 
     for raw in markdown.splitlines():
         line = raw.rstrip()
@@ -219,8 +237,11 @@ def build_story(markdown: str, source_dir: Path, styles) -> list:
         if line.startswith("```"):
             flush_blocks()
             if in_code:
-                story.append(Preformatted("\n".join(code), styles["DocCode"], maxLineLength=92))
-                story.append(Spacer(1, 5))
+                # Keep a short example on one page; oversized listings may split.
+                story.append(KeepTogether([
+                    Preformatted("\n".join(code), styles["DocCode"], maxLineLength=92),
+                    Spacer(1, 5),
+                ]))
                 code.clear()
             in_code = not in_code
             continue
@@ -234,7 +255,7 @@ def build_story(markdown: str, source_dir: Path, styles) -> list:
             table.append(line)
             continue
         if table:
-            story.extend(make_table(table, styles["DocBase"]))
+            story.extend(make_table(table, styles["DocBase"], render_inline))
             table.clear()
 
         if not line:
@@ -250,19 +271,30 @@ def build_story(markdown: str, source_dir: Path, styles) -> list:
             flush_blocks()
             level = len(heading.group(1))
             style_name = "DocTitle" if level == 1 else "DocH1" if level == 2 else "DocH2" if level == 3 else "DocH3"
-            story.append(Paragraph(inline(heading.group(2)), styles[style_name]))
+            title = heading.group(2)
+            base_anchor = heading_anchor(title)
+            anchor = base_anchor
+            suffix = 1
+            while anchor in anchors:
+                anchor = f"{base_anchor}-{suffix}"
+                suffix += 1
+            anchors.add(anchor)
+            story.append(Paragraph(
+                f'<a name="{escape(anchor, quote=True)}"/>' + render_inline(title),
+                styles[style_name],
+            ))
             continue
 
         if line.startswith("- "):
-            flush_paragraph(paragraph, story, styles["DocBase"])
-            flush_list(ordered, story, styles, True)
+            flush_paragraph(paragraph, story, styles["DocBase"], render_inline)
+            flush_list(ordered, story, styles, True, render_inline)
             bullets.append(line[2:])
             continue
 
         numbered = re.match(r"^\d+\.\s+(.*)$", line)
         if numbered:
-            flush_paragraph(paragraph, story, styles["DocBase"])
-            flush_list(bullets, story, styles, False)
+            flush_paragraph(paragraph, story, styles["DocBase"], render_inline)
+            flush_list(bullets, story, styles, False, render_inline)
             ordered.append(numbered.group(1))
             continue
 
@@ -276,7 +308,7 @@ def build_story(markdown: str, source_dir: Path, styles) -> list:
         paragraph.append(line)
 
     if table:
-        story.extend(make_table(table, styles["DocBase"]))
+        story.extend(make_table(table, styles["DocBase"], render_inline))
     flush_blocks()
     return story
 
@@ -294,6 +326,8 @@ def footer(title: str):
 
 
 def build_pdf(source: Path, output: Path, title: str) -> None:
+    source = source.resolve()
+    output = output.resolve()
     register_fonts()
     styles = build_styles()
     doc = SimpleDocTemplate(
@@ -306,7 +340,26 @@ def build_pdf(source: Path, output: Path, title: str) -> None:
         title=title,
     )
     markdown = source.read_text(encoding="utf-8")
-    doc.build(build_story(markdown, source.parent, styles), onFirstPage=footer(title), onLaterPages=footer(title))
+
+    def resolve_link(target: str) -> str:
+        parts = urlsplit(target)
+        if parts.scheme or parts.netloc:
+            return target
+        if not parts.path:
+            return "#" + unquote(parts.fragment) if parts.fragment else target
+        path = (source.parent / unquote(parts.path)).resolve()
+        if path == source.resolve() and parts.fragment:
+            return "#" + unquote(parts.fragment)
+        # Sibling manuals are built together. Source/code links must instead
+        # remain relative to the PDF directory, which differs from doc/src.
+        if path.suffix == ".md" and path.parent == source.parent.resolve() and not parts.fragment:
+            path = output.parent / (path.stem + ".pdf")
+        relative = Path(os.path.relpath(path, output.parent)).as_posix()
+        return urlunsplit(("", "", quote(relative, safe="/"), parts.query, parts.fragment))
+
+    render_inline = lambda text: inline(text, resolve_link)
+    doc.build(build_story(markdown, source.parent, styles, render_inline),
+              onFirstPage=footer(title), onLaterPages=footer(title))
 
 
 def discover_sources(source_dir: Path) -> list[Path]:
