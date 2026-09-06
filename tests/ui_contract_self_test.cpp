@@ -1,4 +1,5 @@
 #include "rust_types.h"
+#include "loadable_system_api.h"
 #include "rtc_idle_clock_core.hpp"
 #include "startup_splash.hpp"
 #include "virtual_fat_diagnostic.hpp"

@@ -5,6 +5,7 @@ Only hardware/C5 and workspace backing are mocked. The resident's actual
 arithmetic, printf, font decoder and editor key handler execute as ARM code.
 """
 import argparse
+import binascii
 import json
 import struct
 import tempfile
@@ -36,8 +37,19 @@ class Elf:
             if s[2] & 2 and s[5]:
                 uc.mem_write(s[3], bytes(s[5]) if s[1] == 8 else self.data[s[4]:s[4]+s[5]])
 
+def preview_font():
+    # FMK1, eight 3x5 monospaced glyphs A..H, literal pixel records.
+    data = bytearray(b'FMK1' + bytes((1,3,5,0x31)) + struct.pack('<H',8) + bytes((1,0,0,0,0,0)))
+    data += struct.pack('<HB',ord('A'),7)
+    data += bytes.fromhex('2bed') * 8  # Literal bit followed by 15 pixel bits.
+    struct.pack_into('<H',data,12,len(data))
+    struct.pack_into('<H',data,14,binascii.crc_hqx(data,0xffff))
+    return bytes(data)
+
+
 class Machine:
-    def __init__(self, resident, graphics):
+    def __init__(self, resident, graphics, address_index=0):
+        self.address_index = address_index
         self.uc = Uc(UC_ARCH_ARM, UC_MODE_MCLASS | UC_MODE_THUMB)
         self.uc.mem_map(BASE, 65536)
         self.uc.mem_map(0x08000000, 0x100000)
@@ -63,6 +75,12 @@ class Machine:
         self.chip_exit = False
         self.key_calls = 0
         self.trace = []
+        self.datetime = [2026, 9, 6, 12, 34, 56]
+        self.rtc_writes = []
+        self.calibration = 123
+        self.profile = bytes((6, 5, 8, 2))
+        self.extended = False
+        self.font_restores = 0
     def words(self, address, count):
         return struct.unpack('<'+'I'*count, self.uc.mem_read(address, count*4))
     def put(self, address, *values):
@@ -184,11 +202,31 @@ class Machine:
             self.uc.mem_write(p,struct.pack('<d',self.refs.get((a,b),0))); return 1
         if op == 22: self.refs[a,b] = struct.unpack('<d',self.uc.mem_read(p,8))[0]; return 1
         if op == 23: return any(x[:2] == (a,self.string(p)) for x in self.files.values())
+        if op == 25:
+            if a == 0: return 1
+            if a == 1:
+                self.put(p, 0x10000423, 256, ord('C'), 7, 3300, 3000, 253, 0, 0)
+                self.uc.mem_write(p+36,b'LSI\0'+b'LCD1602'.ljust(16,b'\0')); return 1
+            if a == 2: self.put(p,*self.datetime); return 1
+            if a == 3:
+                self.datetime = list(self.words(p,6)); self.rtc_writes.append(self.datetime); return 1
+            if a == 4:
+                if b: self.calibration = c - 0x100000000 if c & 0x80000000 else c
+                return 1 if b else self.calibration
+            if a == 5: self.uc.mem_write(p,self.profile); return 1
+            if a == 6: self.profile = bytes(self.uc.mem_read(p,4)); return 1
+            if a == 7: return self.graphics
+            if a in (8,9): return 1
+            if a == 10: self.font_restores += 1; return 1
+            if a == 11: self.lines.append(self.string(p)); return 1
+            if a == 12: return 1
+            if a == 13: return int(self.graphics) | (2 if self.extended else 0)
         raise AssertionError(('unexpected system operation',op,a,b,c))
     def load(self, package):
-        self.kind, self.image, self.image_size, self.entry, self.crc = package
+        self.kind, variants, self.image_size, self.entry, self.crc = package
+        self.base, self.image = variants[self.address_index]
         self.uc.mem_write(BASE,b'\xCD'*OVERLAY)
-        self.uc.mem_write(BASE,self.image)
+        self.uc.mem_write(self.base,self.image)
         self.uc.ctl_remove_cache(BASE, BASE + OVERLAY)
         assert self.call(0,self.sys,self.api,self.crc) == 0
     def call(self, command, a=0, b=0, c=0, d=0):
@@ -200,12 +238,14 @@ class Machine:
         for i,r in enumerate(saved_fp): uc.reg_write(r,0x3141592600000000+i)
         for r,v in zip([UC_ARM_REG_SP,UC_ARM_REG_LR,UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3],[sp,self.stop|1,command,a,b,c]): uc.reg_write(r,v)
         self.put(sp,d)
-        uc.emu_start(BASE+self.entry+1,self.stop,timeout=10_000_000,count=10_000_000)
+        uc.emu_start(self.base+self.entry+1,self.stop,timeout=10_000_000,count=10_000_000)
         assert uc.reg_read(UC_ARM_REG_PC) == self.stop, ('did not return',hex(uc.reg_read(UC_ARM_REG_PC)))
         assert uc.reg_read(UC_ARM_REG_SP) == sp
         for i,r in enumerate(saved): assert uc.reg_read(r) == 0x31410000+i
         for i,r in enumerate(saved_fp): assert uc.reg_read(r) == 0x3141592600000000+i
-        assert bytes(uc.mem_read(BASE+len(self.image),OVERLAY-len(self.image))) == b'\xCD'*(OVERLAY-len(self.image))
+        assert bytes(uc.mem_read(BASE,self.base-BASE)) == b'\xCD'*(self.base-BASE)
+        tail = BASE+OVERLAY-self.base-len(self.image)
+        if tail: assert bytes(uc.mem_read(self.base+len(self.image),tail)) == b'\xCD'*tail
         assert not self.leases and not self.depth, ('leaked lease',self.leases)
         return uc.reg_read(UC_ARM_REG_R0)
     def source(self, text):
@@ -222,59 +262,97 @@ def main():
         reader=Path(temp)/'reader'
         run(['c++','-std=c++17','-O2','-DMK61_ENABLE_PORTABLE_APPS=1','-I'+str(ROOT/'code'),ROOT/'tests/portable_app_format_self_test.cpp',ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
         packages={}
-        for kind,name in [('focal','FOCAL'),('tinybasic','BASIC'),('wbmp-viewer','WBMP'),('markdown-viewer','MARKDOWN'),('chip8','CHIP8'),('markdown-text','MARKDOWN')]:
+        for kind,name in [('focal','FOCAL'),('tinybasic','BASIC'),('wbmp-viewer','WBMP'),('markdown-viewer','MARKDOWN'),('chip8','CHIP8'),('markdown-text','MARKDOWN'),('setup','SETUP')]:
             path=args.apps_dir/kind/(name+'.APP'); packed=path.read_bytes()
-            target=Path(temp)/(name+'.bin'); run([reader,path,target])
-            image_size,_,entry=struct.unpack_from('<III',packed,28)
+            target=Path(temp)/(name+'.bin')
+            image_size,memory_size,entry=struct.unpack_from('<III',packed,28)
             crc=struct.unpack_from('<I',packed,52)[0]
-            packages[kind]=(kind,target.read_bytes(),image_size,entry,crc)
+            high=(OVERLAY-memory_size)&~7
+            variants=[]
+            for offset in (0, (high//2)&~7, high):
+                address=BASE+offset
+                run([reader,path,target,hex(address)])
+                variants.append((address,target.read_bytes()))
+            packages[kind]=(kind,variants,image_size,entry,crc)
         for index,resident in enumerate(args.resident_elf):
-            m=Machine(resident,index==0)
-            m.load(packages['focal'])
-            assert m.call(0x102,m.source('1.10 S A=2+3*4\n1.20 S .R0=A\n1.30 P 100000000\n1.40 P A/3\n1.50 E')) == 1, m.lines
-            assert m.call(0x104,0) == 0
-            assert m.refs[4,0] == 14, m.refs
-            assert any('1E+8' in x for x in m.lines), m.lines
-            assert any('4.6666667' in x for x in m.lines), m.lines
-            m.load(packages['tinybasic'])
-            m.keys=[m.mapping[39]]
-            m.files[42]=(3,'BTEST',b'10 LET A=6*7\n20 LET .R1=A\n30 .R2=SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))\n40 PRINT A/3\n50 END\n')
-            assert m.call(0x206,42) == 1, (m.lines, m.refs, m.trace[-25:])
-            assert m.refs[4,1] == 42,m.refs
-            assert abs(m.refs[4,2]-6) < 1e-6,m.refs
-            m.load(packages['focal'])
-            assert m.call(0x103) == 1
-            assert m.call(0x104,0) == 0
-            assert m.refs[4,0] == 14
-            # Exercise actual resident editor + callbacks back into the APP.
-            for kind,edit in [('focal',0x107),('tinybasic',0x207)]:
-                m.load(packages[kind]); m.keys=[m.mapping[11],m.mapping[11],m.mapping[36],m.mapping[39],m.mapping[39]]
-                # Reuse an existing file; edit-id avoids the directory chooser.
-                inode=next(i for i,x in m.files.items() if x[0] == (2 if kind=='focal' else 3))
-                assert m.call(edit+2,inode) == 1
-                assert m.viewport_ends > 0
-            assert m.key_calls >= 4
-            # View WBMP with exact pixel checks and unsupported-display fallback.
-            m.files[42]=(7,'WIDE',wbmp(208,48)); m.keys=[m.mapping[37],m.mapping[37],m.mapping[39]]
-            m.load(packages['wbmp-viewer']); m.frames=[]
-            result=m.call(2,0,42)
-            assert result == (0 if m.graphics else 2),result
-            if m.graphics: assert m.frames == [oracle(208,48,x) for x in (0,8,16)]
-            m.load(packages['markdown-viewer']);m.files[43]=(10,'README',b'# Test\n\nHello **world**.\n');m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
-            assert m.call(2,0,43)==0
-            assert m.frames if m.graphics else any('Hello' in x for x in m.lines)
-            m.load(packages['markdown-text']); m.lines=[]
-            m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
-            assert m.call(2,0,43)==0
-            assert any('Hello' in line for line in m.lines), m.lines
-            m.load(packages['chip8']);m.files[44]=(9,'LOOP',bytes.fromhex('00e01200'));m.chip_exit=True;m.services=0
-            assert m.call(2,0,44)==(0 if m.graphics else 2)
-            # An old/truncated System API is refused before callbacks run.
-            before=len(m.trace)
-            m.uc.mem_write(m.sys+6,struct.pack('<H',24))
-            assert m.call(0,m.sys,m.api,m.crc) == 5
-            assert len(m.trace) == before
-            m.uc.mem_write(m.sys+6,struct.pack('<H',28))
-            print(f'{resident}: all five APPs, arithmetic/state/editor/WBMP/Markdown/CHIP8 PASS')
+            for address_index in range(3):
+                m=Machine(resident,index==0,address_index)
+                m.load(packages['focal'])
+                assert m.call(0x102,m.source('1.10 S A=2+3*4\n1.20 S .R0=A\n1.30 P 100000000\n1.40 P A/3\n1.50 E')) == 1, m.lines
+                assert m.call(0x104,0) == 0
+                assert m.refs[4,0] == 14, m.refs
+                assert any('1E+8' in x for x in m.lines), m.lines
+                assert any('4.6666667' in x for x in m.lines), m.lines
+                m.load(packages['tinybasic'])
+                m.keys=[m.mapping[39]]
+                m.files[42]=(3,'BTEST',b'10 LET A=6*7\n20 LET .R1=A\n30 .R2=SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))\n40 PRINT A/3\n50 END\n')
+                assert m.call(0x206,42) == 1, (m.lines, m.refs, m.trace[-25:])
+                assert m.refs[4,1] == 42,m.refs
+                assert abs(m.refs[4,2]-6) < 1e-6,m.refs
+                m.address_index = (m.address_index + 1) % 3
+                m.load(packages['focal'])
+                assert m.call(0x103) == 1
+                assert m.call(0x104,0) == 0
+                assert m.refs[4,0] == 14
+                # Exercise actual resident editor + callbacks back into the APP.
+                for kind,edit in [('focal',0x107),('tinybasic',0x207)]:
+                    m.load(packages[kind]); m.keys=[m.mapping[11],m.mapping[11],m.mapping[36],m.mapping[39],m.mapping[39]]
+                    # Reuse an existing file; edit-id avoids the directory chooser.
+                    inode=next(i for i,x in m.files.items() if x[0] == (2 if kind=='focal' else 3))
+                    assert m.call(edit+2,inode) == 1
+                    assert m.viewport_ends > 0
+                assert m.key_calls >= 4
+                # View WBMP with exact pixel checks and unsupported-display fallback.
+                m.files[42]=(7,'WIDE',wbmp(208,48)); m.keys=[m.mapping[37],m.mapping[37],m.mapping[39]]
+                m.load(packages['wbmp-viewer']); m.frames=[]
+                result=m.call(2,0,42)
+                assert result == (0 if m.graphics else 2),result
+                if m.graphics: assert m.frames == [oracle(208,48,x) for x in (0,8,16)]
+                m.load(packages['markdown-viewer']);m.files[43]=(10,'README',b'# Test\n\nHello **world**.\n');m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
+                assert m.call(2,0,43)==0
+                assert m.frames if m.graphics else any('Hello' in x for x in m.lines)
+                m.load(packages['markdown-text']); m.lines=[]
+                m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
+                assert m.call(2,0,43)==0
+                assert any('Hello' in line for line in m.lines), m.lines
+                m.load(packages['chip8']);m.files[44]=(9,'LOOP',bytes.fromhex('00e01200'));m.chip_exit=True;m.services=0
+                assert m.call(2,0,44)==(0 if m.graphics else 2)
+                # An old/truncated System API is refused before callbacks run.
+                before=len(m.trace)
+                m.uc.mem_write(m.sys+6,struct.pack('<H',24))
+                assert m.call(0,m.sys,m.api,m.crc) == 5
+                assert len(m.trace) == before
+                m.uc.mem_write(m.sys+6,struct.pack('<H',28))
+                m.load(packages['setup']); m.lines=[]; m.keys=[m.mapping[37],m.mapping[39]]
+                assert m.call(0x400)==0
+                assert 'STM32F401' in ''.join(m.lines),m.lines
+                m.keys=[m.mapping[39]]; before=list(m.datetime)
+                assert m.call(0x401)==0 and not m.rtc_writes and m.datetime==before
+                m.keys=[m.mapping[38]]
+                assert m.call(0x401)==0 and m.rtc_writes==[before]
+                m.keys=[m.mapping[8],m.mapping[38]]
+                assert m.call(0x402)==0 and m.calibration==-123,m.calibration
+                for extended in (False,True):
+                    m.extended=extended; m.profile=bytes((6,5,8,2))
+                    m.keys=[m.mapping[37],m.mapping[39]]
+                    assert m.call(0x403)==0
+                    assert m.profile == (bytes((7,5,8,1)) if extended and m.graphics else
+                                         bytes((7,5,9,0)) if m.graphics else bytes((6,5,8,2))),m.profile
+                m.keys=[m.mapping[39]]
+                pointer=m.source('bad font'); m.lines=[]
+                assert m.call(0x404,pointer,pointer,8)==0
+                assert 'Bad font' in ''.join(m.lines),m.lines
+                assert m.font_restores>0
+                font=preview_font(); pointer=0x2000D100
+                m.uc.mem_write(pointer,font); m.keys=[m.mapping[39]]; m.lines=[]
+                trace_start=len(m.trace)
+                assert m.call(0x404,m.source('TEST'),pointer,len(font))==0
+                assert 'f1 3x5 TEST' in ''.join(m.lines),m.lines
+                operations=[x[1] for x in m.trace[trace_start:] if x[0]==25]
+                if m.graphics:
+                    assert 7 in operations and 8 in operations
+                else:
+                    assert operations.count(9)==8 and 10 in operations
+                print(f'{resident}: address variant {address_index}, all six APPs + cross-address language state + SETUP PASS')
 
 if __name__=='__main__': main()

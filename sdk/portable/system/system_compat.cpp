@@ -173,11 +173,13 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   memcpy(out.data, glyph.pixels, sizeof(glyph.pixels)); return true;
 }
 }
+#if !defined(MK61_BUILD_SETUP_MODULE)
 namespace fmk {
 bool bitmapPixel(const u8* bitmap, u8 width, u8 x, u8 y) {
   return bitmap && (bitmap[(usize) y * ((width + 7U) / 8U) + x / 8U] & (0x80U >> (x & 7U)));
 }
 }
+#endif
 namespace mk_math {
 double sin(double x) { return portable_system::api->math(MK61_SYS_SIN, x, 0); }
 double cos(double x) { return portable_system::api->math(MK61_SYS_COS, x, 0); }

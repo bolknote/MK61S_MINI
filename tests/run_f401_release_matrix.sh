@@ -80,7 +80,7 @@ build_group() {
       "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
         "$resident"
       for file in build.flags build.apps System/FOCAL.APP System/BASIC.APP \
-          System/MARKDOWN.APP; do
+          System/MARKDOWN.APP System/SETUP.APP System/HELP0.TXT System/HELP1.TXT; do
         [[ -s "$bundle_root/$file" ]] ||
           fail "missing product artifact: $artifact/$file"
       done
@@ -88,7 +88,7 @@ build_group() {
         [[ ! -e "$bundle_root/$file" ]] ||
           fail "disabled APP was packaged: $artifact/$file"
       done
-      for file in System/FOCAL.APP System/BASIC.APP System/MARKDOWN.APP; do
+      for file in System/FOCAL.APP System/BASIC.APP System/MARKDOWN.APP System/SETUP.APP; do
         local codec
         codec="$(od -An -tu1 -j15 -N1 "$bundle_root/$file" | tr -d '[:space:]')"
         [[ "$codec" == 1 ]] || fail "System APP is not ZX0: $artifact/$file"
@@ -97,10 +97,11 @@ from pathlib import Path
 import struct
 import sys
 data = Path(sys.argv[1]).read_bytes()
-assert struct.unpack_from('<H', data, 12)[0] == 3, 'System APP must use ABI 3'
-assert struct.unpack_from('<I', data, 16)[0] in (1, 3), 'portable flags'
+assert struct.unpack_from('<H', data, 12)[0] == 4, 'System APP must use ABI 4'
+assert struct.unpack_from('<I', data, 16)[0] in (5, 7), 'relocatable flags'
 assert struct.unpack_from('<I', data, 20)[0] == 0x20000000, 'fixed overlay'
-assert struct.unpack_from('<II', data, 40) == (0, 0), 'resident binding must be absent'
+code_size, relocations = struct.unpack_from('<II', data, 40)
+assert 0 < code_size <= len(data) - 64 and relocations <= (len(data) - 64 - code_size), 'relocation tail'
 PY
       done
       for flag in \

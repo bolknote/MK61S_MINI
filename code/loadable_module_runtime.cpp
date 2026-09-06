@@ -5,7 +5,7 @@
 #include "Arduino.h"
 #include "loadable_app_api.hpp"
 #include "loadable_system_api.hpp"
-#define MK61_PORTABLE_SYSTEM_ENABLED (MK61_ENABLE_PORTABLE_APPS && (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE || MK61_WBMP_VIEWER_IS_LOADABLE || MK61_MARKDOWN_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE))
+#define MK61_PORTABLE_SYSTEM_ENABLED (MK61_ENABLE_PORTABLE_APPS && (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE || MK61_WBMP_VIEWER_IS_LOADABLE || MK61_MARKDOWN_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE || MK61_SETUP_IS_LOADABLE))
 #include "loadable_module_system_app.hpp"
 #include "program_store.hpp"
 #include "shared_memory.hpp"
@@ -57,10 +57,12 @@ static u32 resident_image_size(void) {
 }
 
 static bool resident_matches(const Header& header) {
-  if(header.load_address != (u32) (usize) mk61_module_overlay) return false;
 #if MK61_ENABLE_PORTABLE_APPS
-  if((header.flags & MK61_PORTABLE_APP_FLAG) != 0) return true;
+  if((header.flags & MK61_PORTABLE_APP_FLAG) != 0)
+    return (header.flags & MK61_APP_RELOCATABLE_FLAG) != 0 ||
+           header.load_address == (u32) (usize) mk61_module_overlay;
 #endif
+  if(header.load_address != (u32) (usize) mk61_module_overlay) return false;
   const u32 resident_size = resident_image_size();
   if(resident_size == 0 || header.resident_size != resident_size) return false;
   if(resident_size == g_cached_resident_size)
@@ -168,13 +170,18 @@ static shared_memory::EvictionDecision prepare_overlay_eviction(void) {
   return shared_memory::EvictionDecision::RELEASE;
 }
 
-static u8* acquire_module_overlay(void) {
+static u8* acquire_module_overlay(const Header& header) {
   if(g_overlay_lease.ok()) return g_overlay_lease.data();
+#if MK61_ENABLE_PORTABLE_APPS
+  const bool movable = (header.flags & MK61_APP_RELOCATABLE_FLAG) != 0;
+#else
+  (void) header;
+  const bool movable = false;
+#endif
   if(!g_overlay_lease.acquire_cache(
-       shared_memory::Arena::OVERLAY,
-       shared_memory::Owner::LOADABLE_MODULE, OVERLAY_SIZE)) return nullptr;
-  if(g_overlay_lease.data() != mk61_module_overlay ||
-     !g_overlay_lease.set_evictable(prepare_overlay_eviction)) {
+       movable ? shared_memory::Arena::APP : shared_memory::Arena::OVERLAY,
+       shared_memory::Owner::LOADABLE_MODULE, movable ? header.memory_size : OVERLAY_SIZE)) return nullptr;
+  if(!g_overlay_lease.set_evictable(prepare_overlay_eviction)) {
     g_overlay_lease.reset();
     return nullptr;
   }
@@ -191,19 +198,11 @@ static u32 entry_api_argument(Kind kind) {
 }
 
 static bool decode_checked(const Header& header, const Reader& reader, u8* overlay) {
-  DecodeResult decoded = {};
-  return decode_payload(reader, header.compression, header.stored_size,
-                         overlay, header.image_size, decoded
-#if MK61_ENABLE_PORTABLE_APPS
-                         , header.flags
-#endif
-                         ) && decoded.stored_crc32 == header.stored_crc32 &&
-         decoded.image_crc32 == header.image_crc32;
+  return decode_image(header, reader, overlay, (u32) (usize) overlay);
 }
 
 static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
                               const Reader& reader) {
-  const u32 overlay_address = (u32) (usize) mk61_module_overlay;
   if(!resident_matches(header)) {
     return RuntimeStatus::INCOMPATIBLE_FIRMWARE;
   }
@@ -215,10 +214,10 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   if(g_call_depth != 0) return RuntimeStatus::BUSY;
 
   invalidate_active();
-  u8* const overlay = acquire_module_overlay();
+  u8* const overlay = acquire_module_overlay(header);
   if(overlay == nullptr) return RuntimeStatus::BUSY;
   if(!decode_checked(header, reader, overlay)) {
-    memset(overlay, 0, OVERLAY_SIZE);
+    memset(overlay, 0, g_overlay_lease.size());
     invalidate_active();
     return RuntimeStatus::CORRUPT_MODULE;
   }
@@ -229,7 +228,7 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   g_active_kind = kind;
   g_active_header = header;
   g_active_file_id = file_id;
-  g_active_entry = (Entry) (usize) (overlay_address + header.entry_offset + 1U);
+  g_active_entry = (Entry) (usize) ((usize) overlay + header.entry_offset + 1U);
 
   g_call_depth++;
   const u32 initialized = g_active_entry((u32) Command::INITIALIZE,
@@ -298,6 +297,7 @@ static RuntimeStatus load_application(u16 file_id) {
 
 bool enabled(Kind kind) {
   switch(kind) {
+    case Kind::SETUP: return MK61_SETUP_IS_LOADABLE != 0;
     case Kind::FOCAL: return MK61_FOCAL_IS_LOADABLE != 0;
     case Kind::TINYBASIC: return MK61_TINYBASIC_IS_LOADABLE != 0;
     case Kind::WBMP_VIEWER: return MK61_WBMP_VIEWER_IS_LOADABLE != 0;
@@ -452,12 +452,12 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
   }
 
   invalidate_active();
-  u8* const overlay = acquire_module_overlay();
+  u8* const overlay = acquire_module_overlay(header);
   if(overlay == nullptr) return StoreStatus::UNAVAILABLE;
   InstallPayloadSource payload_context = {&source};
   const Reader payload_reader = {&payload_context, read_install_payload};
   if(!decode_checked(header, payload_reader, overlay)) {
-    memset(overlay, 0, OVERLAY_SIZE);
+    memset(overlay, 0, g_overlay_lease.size());
     invalidate_active();
     return StoreStatus::BAD_STORED_CRC;
   }

@@ -215,7 +215,10 @@ foreach ($setting in @(
     'System/BASIC.APP',
     'System/WBMP.APP',
     'System/MARKDOWN.APP',
-    'System/CHIP8.APP'
+    'System/CHIP8.APP',
+    'System/SETUP.APP',
+    'System/HELP0.TXT',
+    'System/HELP1.TXT'
 )) {
     Assert-True ($releaseWorkflowText.Contains($setting)) `
         "cross-platform full F401 matrix is missing $setting"

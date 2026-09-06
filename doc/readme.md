@@ -6,7 +6,7 @@
 
 | Руководство | Исходник | PDF |
 | --- | --- | --- |
-| Написание самостоятельных APP на C/C++ (ABI 3) | [Markdown](src/MK61s-mini-APP-Programming.md) | [PDF](MK61s-mini-APP-Programming.pdf) |
+| Написание самостоятельных APP на C/C++ (ABI 4) | [Markdown](src/MK61s-mini-APP-Programming.md) | [PDF](MK61s-mini-APP-Programming.pdf) |
 | Прежняя manifest-сборка APP (ABI 2) | [Markdown](src/MK61s-mini-APP.md) | [PDF](MK61s-mini-APP.pdf) |
 | F401 и System APP в Arduino IDE | [Markdown](src/MK61s-mini-Arduino-IDE.md) | [PDF](MK61s-mini-Arduino-IDE.pdf) |
 | Терминал | [Markdown](src/MK61s-mini-Terminal.md) | [PDF](MK61s-mini-Terminal.pdf) |
@@ -38,6 +38,9 @@
 - [Инструкция по прошивке микроконтроллера](MK61s-mini-Programming.pdf).
 
 Дополнительные материалы:
+
+- [Релокации APP и запас Flash F401](../sdk/portable/RELOCATION-RESULTS.md):
+  размеры ABI 4, разделение общей памяти и результаты проверок.
 
 - [Размеры APP до и после переноса](../sdk/portable/SIZE-COMPARISON.md):
   файлы, SRAM, resident и отдельный выигрыш BCJ.

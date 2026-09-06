@@ -24,6 +24,8 @@ def transform(source: str) -> str:
     if result.count(marker) != 1:
         raise ValueError("unsupported STM32 data layout")
     result = result.replace(marker, bss + "\n" + marker)
+    # Preserve generated resources in ELF only, excluded from the MCU image.
+    result = result.replace("SECTIONS\n{", "SECTIONS\n{\n  .mk61_help 0 (INFO) : { KEEP(*(.mk61_help)) }")
     return result + '''
 ASSERT(mk61_module_overlay == 0x20000000,
        "portable APP overlay address mismatch")

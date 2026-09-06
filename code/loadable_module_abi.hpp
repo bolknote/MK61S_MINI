@@ -42,7 +42,10 @@ enum class Command : u32 {
   TINYBASIC_EDIT_ID,
 
   WBMP_VIEW = 0x300,
-  WBMP_VIEW_ENTRY
+  WBMP_VIEW_ENTRY,
+
+  SETUP_HARDWARE = 0x400,
+  SETUP_DATE_TIME, SETUP_CALIBRATION, SETUP_FONT, SETUP_PREVIEW, SETUP_FONT_STEP
 };
 
 // Общий результат FILE_OPEN позволяет проводнику одинаково показывать ошибки

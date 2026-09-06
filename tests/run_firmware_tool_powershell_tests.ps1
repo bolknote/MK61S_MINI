@@ -157,6 +157,9 @@ try {
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'MARKDOWN.APP'), "markdown-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-app`n")
+    foreach ($resource in @('SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+        [IO.File]::WriteAllText((Join-Path $sourceSystem $resource), "service-resource`n")
+    }
     [IO.File]::WriteAllText((Join-Path $targetSystem 'KEEP.APP'), "keep-me`n")
     [IO.File]::WriteAllText((Join-Path $targetSystem 'BASIC.APP'), "stale-basic`n")
     [IO.File]::WriteAllText((Join-Path $targetSystem 'WBMP.APP'), "stale-wbmp`n")
@@ -207,7 +210,7 @@ try {
         $disabledFlagLine.Substring('COMPILE_FLAGS='.Length) + [Environment]::NewLine)
     $disabledInstall = Invoke-Tool @('--install-apps')
     Assert-True ($disabledInstall.ExitCode -eq 0) 'all-disabled System APP synchronization failed'
-    Assert-True (($disabledInstall.Output -join "`n") -match 'Removed disabled canonical System APP') 'all-disabled removal was not reported'
+    Assert-True (($disabledInstall.Output -join "`n") -match 'Synchronized and verified') 'all-disabled removal was not reported'
     foreach ($app in @(
         'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
     )) {

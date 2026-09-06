@@ -52,7 +52,7 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 **OLED1602 WEH001602A/WS0010 — подключение и аппаратная приёмка:**
 [Markdown](doc/src/MK61s-mini-WS0010.md) / [PDF](doc/MK61s-mini-WS0010.pdf)
 
-**Как писать самостоятельные APP на C и C++ (ABI 3):**
+**Как писать самостоятельные APP на C и C++ (ABI 4):**
 [Руководство](doc/src/MK61s-mini-APP-Programming.md) /
 [PDF](doc/MK61s-mini-APP-Programming.pdf) /
 [Сравнение размеров до и после переноса](sdk/portable/SIZE-COMPARISON.md)
@@ -264,8 +264,9 @@ APP.
 ### Комплект для STM32F401CC
 
 Для F401CC штатный сборщик создаёт комплект resident-прошивки и приложений
-ABI 3. APP используют таблицы C API и не привязаны к адресам функций или CRC
-точной прошивки. При первом переходе на ABI 3 обновите и прошивку, и `/System`;
+ABI 4. APP используют таблицы C API и не привязаны к адресам функций или CRC
+точной прошивки. Внутренние указатели исправляются по таблице релокаций;
+APP арендует только свой размер в общем 20-КиБ пуле. При первом переходе на ABI 4 обновите и прошивку, и `/System`;
 затем совместимую прошивку можно менять без пересборки APP. Основной
 двухшаговый сценарий находится прямо в `mk61-firmware`:
 
@@ -282,7 +283,8 @@ ABI 3. APP используют таблицы C API и не привязаны 
 `binary/mk61s-M-mini-v3-lcd1602-a00-f401/` либо
 `binary/mk61s-M-mini-v2-lcd1602-a00-f401/` и содержит прошивку `.bin` и
 включённые ключами `System/FOCAL.APP`, `System/BASIC.APP`,
-`System/WBMP.APP`, `System/MARKDOWN.APP` и `System/CHIP8.APP`. Канонический
+`System/WBMP.APP`, `System/MARKDOWN.APP` и `System/CHIP8.APP`, а также
+обязательные `System/SETUP.APP`, `System/HELP0.TXT`, `System/HELP1.TXT`. Канонический
 GCC-бэкенд собирает resident с `-Os -flto`, System APP — с `-Oz -flto`. На всех
 поддерживаемых хостах штатные System APP
 создаёт общий `system_apps/build.cmd` через `arm-none-eabi-g++` и
@@ -300,15 +302,17 @@ payload, выбирая меньший из `ZX0` и `BCJ + ZX0`.
 
 Автоматический GitHub Release публикует F401 как два полных ZIP-комплекта для
 mini V2 и mini V3 LCD1602 A00. Каждый содержит свой resident `.bin`,
-`build.flags`, `build.apps`, `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`.
+`build.flags`, `build.apps`, `FOCAL.APP`, `BASIC.APP`, `MARKDOWN.APP`,
+`SETUP.APP` и оба файла справки.
 USB-экран в релизных прошивках выключен, поэтому CHIP-8 не включается;
 отдельного `WBMP.APP` нет, поскольку выбран Markdown. Для F401 release
 включены LTO и CORE math (`MK61_MATH_BACKEND=1`). Отдельные F401 `.bin`
 рядом с ZIP не публикуются, чтобы не смешивать resident и APP разных сборок.
 `SHA256SUMS.txt` покрывает содержимое обоих комплектов и оба ZIP.
 
-Пункт второго шага синхронизирует пять канонических имён System APP:
-копирует включённые и удаляет соответствующие файлы при выключенных ключах.
+Пункт второго шага устанавливает SETUP и справку, затем синхронизирует
+пять имён дополнительных System APP: копирует включённые и удаляет
+соответствующие файлы при выключенных ключах.
 На любом fullscreen bitmap backend, включая квалификационный WS0010 100x16,
 `WBMP.APP` и `MARKDOWN.APP` взаимоисключающие: Markdown уже обслуживает `I1`.
 Другие файлы C5, включая пользовательские APP, он не удаляет. Исходный каталог
@@ -320,7 +324,7 @@ USB-экран в релизных прошивках выключен, поэт
 каталогах; `open` и Проводник запускают контейнер вида `APPLICATION`.
 Системные компоненты ищутся только как `/System/FOCAL.APP`,
 `/System/BASIC.APP`, `/System/WBMP.APP`, `/System/MARKDOWN.APP` и
-`/System/CHIP8.APP`. Минимальная точка входа, правила
+`/System/CHIP8.APP`, `/System/SETUP.APP`. Минимальная точка входа, правила
 ABI, сборка произвольных исходников и установка описаны в
 [руководстве по C/C++ APP](doc/src/MK61s-mini-APP-Programming.md).
 
@@ -356,14 +360,15 @@ tools\mk61-arduino-board.cmd
 5. нажмите Verify или Upload.
 
 Обычная кнопка Arduino собирает согласованный каталог в `binary/`: resident
-`.bin` и только включённые файлы `System/*.APP`. Upload пишет в DFU только
+`.bin`, включённые языки/просмотрщики, `System/SETUP.APP` и справку
+`System/HELP0.TXT`, `HELP1.TXT`. Upload пишет в DFU только
 resident; после его запуска каталог `System` из того же результата нужно
 скопировать в корень диска `MK61S C5`.
 
 IDE-вариант использует ARM-инструменты установленного STM32 Core, Python
 3.10+ и нативный C++17-компилятор для упаковщика. На macOS/Linux post-build
 запускается через системный shell, на Windows — через встроенный PowerShell.
-Как и GCC-путь, он создаёт самостоятельные APP ABI 3 с ZX0 или BCJ + ZX0.
+Как и GCC-путь, он создаёт самостоятельные APP ABI 4 с ZX0 или BCJ + ZX0.
 Legacy-сборщик `build_f401_bundle.sh` оставлен для пользовательских manifest APP.
 Подробная инструкция и диагностика находятся в
 [`MK61s-mini-Arduino-IDE.md`](doc/src/MK61s-mini-Arduino-IDE.md).
@@ -438,7 +443,7 @@ system_apps/
 ```
 
 Один полиглотный `build.cmd` запускает PowerShell и на Windows, и из shell при
-наличии `pwsh`. По умолчанию он вызывает самостоятельный SDK ABI 3;
+наличии `pwsh`. По умолчанию он вызывает самостоятельный SDK ABI 4;
 объединённые `main.cpp` выше сохранены для режима `-PortableApps 0`.
 В новом режиме ARM-код использует адаптеры `sdk/portable/system` и таблицы
 C API, без прямой линковки с Arduino-объектами или resident ELF.
@@ -447,7 +452,7 @@ C API, без прямой линковки с Arduino-объектами или
 `tools/mk61-firmware.cmd` или `tools/build-gcc.cmd`. Для отдельного
 диагностического запуска оболочка по-прежнему ожидает полный каталог
 сборки: resident `.elf`, `.bin` и `compile_commands.json`. Последний
-задаёт компилятор; в ABI 3 адреса resident в APP не импортируются.
+задаёт компилятор; в ABI 4 адреса resident в APP не импортируются.
 Нужны также Python 3.10+ и нативный C++17-компилятор для ZX0-паковщика:
 
 ```bat

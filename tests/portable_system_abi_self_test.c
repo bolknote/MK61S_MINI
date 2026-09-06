@@ -17,3 +17,8 @@ _Static_assert(sizeof(mk61_system_menu_item) == 12, "menu wire layout");
 _Static_assert(sizeof(mk61_system_edit_hook) == 32, "editor callback wire layout");
 _Static_assert(sizeof(mk61_system_edit_key) == 124, "editor state wire layout");
 _Static_assert(MK61_RUNTIME_COUNT == 22, "runtime service slots are append-only");
+_Static_assert(sizeof(mk61_setup_datetime) == 24, "RTC wire layout");
+_Static_assert(sizeof(mk61_setup_hardware) == 56, "hardware snapshot layout");
+_Static_assert(offsetof(mk61_setup_hardware, rtc_source) == 36, "hardware text boundary");
+_Static_assert(sizeof(mk61_setup_profile) == 4, "font profile layout");
+_Static_assert(MK61_SYS_EDITOR_KEY == 24 && MK61_SYS_SETUP == 25, "append-only System operations");

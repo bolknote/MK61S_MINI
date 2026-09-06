@@ -20,7 +20,7 @@ enum mk61_system_operation {
   MK61_SYS_MEMORY_ACQUIRE, MK61_SYS_MEMORY_RELEASE, MK61_SYS_MEMORY_DATA,
   MK61_SYS_TEXT_ROWS, MK61_SYS_EDITOR_DRAW, MK61_SYS_EDITOR_SCROLL,
   MK61_SYS_MENU, MK61_SYS_FONT, MK61_SYS_REF_READ, MK61_SYS_REF_WRITE,
-  MK61_SYS_FILE_EXISTS, MK61_SYS_EDITOR_KEY
+  MK61_SYS_FILE_EXISTS, MK61_SYS_EDITOR_KEY, MK61_SYS_SETUP
 };
 enum mk61_system_display_operation {
   MK61_SYS_DISPLAY_CLEAR, MK61_SYS_DISPLAY_CURSOR, MK61_SYS_DISPLAY_WRITE,
@@ -42,6 +42,25 @@ enum mk61_system_setting { MK61_SYS_LANGUAGE, MK61_SYS_VOLUME,
 enum mk61_system_math_operation { MK61_SYS_SIN, MK61_SYS_COS, MK61_SYS_TAN,
   MK61_SYS_ASIN, MK61_SYS_ACOS, MK61_SYS_ATAN, MK61_SYS_LN, MK61_SYS_LOG10,
   MK61_SYS_EXP, MK61_SYS_SQRT, MK61_SYS_POW };
+
+/* SETUP service v1. Explicit C fields, no native C++ layouts. */
+enum mk61_setup_operation {
+  MK61_SETUP_VERSION, MK61_SETUP_HARDWARE, MK61_SETUP_RTC_READ,
+  MK61_SETUP_RTC_WRITE, MK61_SETUP_RTC_CALIBRATION, MK61_SETUP_FONT_READ,
+  MK61_SETUP_FONT_APPLY, MK61_SETUP_FONT_PREVIEW, MK61_SETUP_FONT_PREVIEW_END,
+  MK61_SETUP_LCD_CHAR, MK61_SETUP_FONT_RESTORE, MK61_SETUP_TEXT,
+  MK61_SETUP_PHASE, MK61_SETUP_FEATURES
+};
+typedef struct mk61_setup_datetime {
+  uint32_t year, month, day, hour, minute, second;
+} mk61_setup_datetime;
+typedef struct mk61_setup_hardware {
+  uint32_t idcode, flash_kb, pin_code, valid, vdda, vbat;
+  int32_t temperature;
+  uint32_t battery_presence, battery_reason;
+  char rtc_source[4], display[16];
+} mk61_setup_hardware;
+typedef struct mk61_setup_profile { uint8_t rows, width, height, gap; } mk61_setup_profile;
 
 typedef struct mk61_system_file {
   uint32_t id, parent, size, type, kind;

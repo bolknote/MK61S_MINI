@@ -24,8 +24,34 @@ namespace terminal_catalog {
 // per command. Offsets are constructed and range-checked at compile time.
 struct Entry { u16 offset; u8 id; u8 name_size; };
 static_assert(sizeof(Entry) == 4, "command catalog Flash contract");
+#if MK61_ENABLE_PORTABLE_APPS
+// ELF metadata for the host bundle builder; the linker marks it non-allocating.
+// The signature is constant-folded; the resource never occupies MCU Flash/RAM.
+__attribute__((used, section(".mk61_help"))) static constexpr char help_text[] =
+#define COMMAND(name, id, desc) "  " name "\t" desc "\n"
+#include "terminal_commands.inc"
+#undef COMMAND
+"  R<r>=   R<r>= <value> - write register, e.g. R0= 3.14\n"
+"  set$    set$<addr> <hex> - write program memory\n";
+static_assert(sizeof(help_text) - 1 <= 2800, "increase HELP page count in reader and builder");
+struct HelpTag { char text[9]; };
+constexpr HelpTag make_help_tag() {
+  u32 hash = 2166136261U;
+  for(usize i = 0; i < sizeof(help_text) - 1; ++i) hash = (hash ^ (u8) help_text[i]) * 16777619U;
+  HelpTag result = {};
+  for(unsigned i = 0; i < 8; ++i) result.text[i] = "0123456789abcdef"[(hash >> (28 - 4 * i)) & 15];
+  result.text[8] = '\n';
+  return result;
+}
+static constexpr HelpTag help_tag = make_help_tag();
+const char* help_signature() { return help_tag.text; }
+#endif
 static constexpr char command_text[] =
+#if MK61_ENABLE_PORTABLE_APPS
+#define COMMAND(name, id, desc) name "\0"
+#else
 #define COMMAND(name, id, desc) name "\0" desc "\0"
+#endif
 #include "terminal_commands.inc"
 #undef COMMAND
 ;
@@ -46,7 +72,9 @@ constexpr Entries make_entries() {
   for(usize i = 0; i < TERMINAL_COMMAND_COUNT; ++i) {
     result.values[i].offset = (u16) offset;
     offset += result.values[i].name_size + 1;
+#if !MK61_ENABLE_PORTABLE_APPS
     while(command_text[offset++] != 0) {}
+#endif
   }
   return result;
 }
@@ -54,7 +82,13 @@ static constexpr Entries entries = make_entries();
 constexpr TerminalCommand entry(usize index) {
   const auto& value = entries.values[index];
   const char* name = command_text + value.offset;
-  return {name, value.id, name + value.name_size + 1};
+  return {name, value.id,
+#if MK61_ENABLE_PORTABLE_APPS
+    nullptr
+#else
+    name + value.name_size + 1
+#endif
+  };
 }
 
 

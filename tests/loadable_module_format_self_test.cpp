@@ -43,7 +43,7 @@ static Header valid_header(void) {
 
 static void test_kind_file_names(void) {
   Kind kind = (Kind) 0;
-  assert(KIND_COUNT == 5);
+  assert(KIND_COUNT == 6);
   assert(kind_at(0) == Kind::FOCAL);
   assert(kind_at(1) == Kind::TINYBASIC);
   assert(kind_at(2) == Kind::WBMP_VIEWER);

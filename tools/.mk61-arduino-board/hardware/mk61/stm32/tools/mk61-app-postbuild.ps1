@@ -218,7 +218,7 @@ function Build-Mk61Module {
         [uint16]$HandledMagic
     )
     if ($CompileFlags -match '-DMK61_ENABLE_PORTABLE_APPS=1') {
-    $kinds = @{ 1 = 'focal'; 2 = 'tinybasic'; 3 = 'wbmp-viewer'; 5 = 'chip8'; 6 = 'markdown-viewer' }
+    $kinds = @{ 1 = 'focal'; 2 = 'tinybasic'; 3 = 'wbmp-viewer'; 5 = 'chip8'; 6 = 'markdown-viewer'; 7 = 'setup' }
     $moduleDir = Join-Path (Join-Path $script:Stage 'modules') $Id
     $python = Get-Python
     $arguments = @(
@@ -410,6 +410,14 @@ function Build-Mk61Bundle {
             'mk61_ide_chip8_module_entry' 'mk61_ide_chip8_app.cpp.o' 0x3143
     }
 
+    if ($CompileFlags -match '-DMK61_ENABLE_PORTABLE_APPS=1') {
+        Build-Mk61Module 'setup' 'SETUP.APP' 7 '-' '-' 0
+        Invoke-Mk61Tool (Get-Python) @(
+            (Join-Path $Sketch '../tools/.mk61-app/build_terminal_help.py'),
+            '--resident-elf', $script:ResidentElf,
+            '--output-dir', (Join-Path $script:Stage 'System'))
+    }
+
     $outputRoot = [IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))
     $output = Join-Path $outputRoot $Bundle
     $outputSystem = Join-Path $output 'System'
@@ -417,7 +425,7 @@ function Build-Mk61Bundle {
     Copy-Item -LiteralPath (Join-Path $script:Stage "$Bundle.bin") `
         -Destination (Join-Path $output "$Bundle.bin") -Force
     foreach ($canonical in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'HELP0.TXT', 'HELP1.TXT'
     )) {
         $source = Join-Path (Join-Path $script:Stage 'System') $canonical
         $target = Join-Path $outputSystem $canonical

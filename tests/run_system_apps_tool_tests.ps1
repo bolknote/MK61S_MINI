@@ -207,21 +207,22 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             Where-Object { $_.Extension -ieq '.bin' })
         Assert-True ($resident.Count -eq 1) `
             'integration build must contain one resident BIN'
-        $expectedResidentSize = [uint32]$resident[0].Length
-        [byte[]]$residentBytes = [IO.File]::ReadAllBytes(
-            $resident[0].FullName)
-        [uint32]$expectedResidentCrc = Get-Crc32 $residentBytes
+        foreach ($name in @('HELP0.TXT','HELP1.TXT')) {
+            Assert-True (Test-Path -LiteralPath (Join-Path $output $name)) "$name missing"
+        }
         $expected = [ordered]@{
             'FOCAL.APP' = 1
             'BASIC.APP' = 2
             'MARKDOWN.APP' = 6
             'CHIP8.APP' = 5
+            'SETUP.APP' = 7
         }
         $expectedMagic = @{
             'FOCAL.APP' = [uint16]0
             'BASIC.APP' = [uint16]0
             'MARKDOWN.APP' = [uint16]0x3254
             'CHIP8.APP' = [uint16]0x3143
+            'SETUP.APP' = [uint16]0
         }
         Assert-True (-not (Test-Path -LiteralPath (
             Join-Path $output 'WBMP.APP'))) `
@@ -244,10 +245,13 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
                 "$name has an invalid handled type magic"
             Assert-True ((Read-Le16 $bytes 58) -eq 0) `
                 "$name has non-zero reserved header bytes"
-            Assert-True ((Read-Le32 $bytes 40) -eq $expectedResidentSize) `
-                "$name is bound to a different resident size"
-            Assert-True ((Read-Le32 $bytes 44) -eq $expectedResidentCrc) `
-                "$name is bound to a different resident CRC"
+            Assert-True ((Read-Le16 $bytes 12) -eq 4) "$name is not ABI 4"
+            Assert-True ((Read-Le32 $bytes 16) -in @(5,7)) "$name has invalid flags"
+            Assert-True ((Read-Le32 $bytes 20) -eq 0x20000000) "$name linked base changed"
+            Assert-True ((Read-Le32 $bytes 40) -gt 0 -and
+                (Read-Le32 $bytes 40) -le (Read-Le32 $bytes 24)) "$name has invalid code size"
+            Assert-True ((Read-Le32 $bytes 44) -le
+                ((Read-Le32 $bytes 24) - (Read-Le32 $bytes 40))) "$name has invalid relocation count"
             Assert-True (
                 (Read-Le32 $bytes 24) + 64 -eq $bytes.Length) `
                 "$name stored size differs from its container"

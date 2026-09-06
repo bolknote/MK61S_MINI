@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iterator>
@@ -103,7 +104,7 @@ int main(int argc, char** argv) {
   }
   // This mode is also used before the ARM emulator: execute only bytes which
   // passed the production header, ZX0, inverse BCJ and original-image CRC.
-  if(argc != 3) return 2;
+  if(argc != 3 && argc != 4) return 2;
   const auto bytes = read_file(argv[1]);
   Header header{};
   if(bytes.size() < HEADER_SIZE ||
@@ -111,16 +112,11 @@ int main(int argc, char** argv) {
      bytes.size() != HEADER_SIZE + header.stored_size) return 3;
   std::vector<u8> payload(bytes.begin() + HEADER_SIZE, bytes.end());
   std::vector<u8> memory(header.memory_size + 16, 0xCD);
-  DecodeResult result{};
-  if(!decode_payload({&payload, read_bytes}, header.compression,
-                     header.stored_size, memory.data() + 8,
-                     header.image_size, result
-#if MK61_ENABLE_PORTABLE_APPS
-                     , header.flags
-#endif
-                     ) ||
-     result.stored_crc32 != header.stored_crc32 ||
-     result.image_crc32 != header.image_crc32) return 4;
+  const u32 address = argc == 4 ? (u32) std::strtoul(argv[3], nullptr, 0) : header.load_address;
+  const bool decoded = decode_image(header, {&payload, read_bytes}, memory.data() + 8, address);
+  for(u32 i = 0; i < 8; ++i)
+    assert(memory[i] == 0xCD && memory[header.memory_size + 8 + i] == 0xCD);
+  if(!decoded) return 4;
   for(u32 i = 0; i < 8; ++i)
     assert(memory[i] == 0xCD && memory[header.memory_size + 8 + i] == 0xCD);
   for(u32 i = header.image_size; i < header.memory_size; ++i)

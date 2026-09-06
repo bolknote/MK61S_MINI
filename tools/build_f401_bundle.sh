@@ -422,7 +422,7 @@ if [ "$compiled_graphics" -eq 0 ] &&
   exit 2
 fi
 custom_app_count=${#custom_app_names[@]}
-any_module=$((enable_focal | enable_tinybasic | enable_wbmp |
+any_module=$((portable_apps | enable_focal | enable_tinybasic | enable_wbmp |
               enable_markdown | enable_chip8 |
               (custom_app_count > 0)))
 
@@ -709,6 +709,10 @@ build_custom_app() {
 }
 
 cp "$resident_bin" "$bundle_stage/$firmware_name"
+if [ "$portable_apps" -eq 1 ]; then
+  build_module setup System/SETUP.APP setup MK61_BUILD_SETUP_MODULE "$sketch_dir" - setup_ui.cpp setup_module_entry.cpp
+  python3 "$root/tools/.mk61-app/build_terminal_help.py" --resident-elf "$resident_elf" --output-dir "$bundle_stage/System"
+fi
 if [ "$enable_focal" -eq 1 ]; then
   build_module focal System/FOCAL.APP focal MK61_BUILD_FOCAL_MODULE \
     "$sketch_dir" - \
@@ -746,7 +750,8 @@ mkdir -p "$bundle_dir"
 rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/BASIC.APP" "$bundle_dir/System/WBMP.APP" \
       "$bundle_dir/System/MARKDOWN.APP" \
-      "$bundle_dir/System/CHIP8.APP" \
+      "$bundle_dir/System/CHIP8.APP" "$bundle_dir/System/SETUP.APP" \
+      "$bundle_dir/System/HELP0.TXT" "$bundle_dir/System/HELP1.TXT" \
       "$bundle_dir/$firmware_name" "$bundle_dir/build.apps"
 if [ -d "$bundle_dir/System" ]; then
   rmdir "$bundle_dir/System" 2>/dev/null || true

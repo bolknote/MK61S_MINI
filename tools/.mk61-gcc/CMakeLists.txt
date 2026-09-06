@@ -35,7 +35,7 @@ set(MK61_GLOBAL_RAM_LIMIT "52428" CACHE STRING
 set(MK61_STACK_FRAME_LIMIT "5120" CACHE STRING
   "Maximum project-owned static or bounded-dynamic stack frame")
 set(MK61_ENABLE_PORTABLE_APPS "1" CACHE STRING
-  "Standalone APP ABI with fixed SRAM placement (0: legacy ABI)")
+  "Standalone APP ABI with compact relocations (0: legacy ABI)")
 
 file(REAL_PATH "${MK61_PROJECT_ROOT}" MK61_PROJECT_ROOT)
 file(REAL_PATH "${MK61_STM32_CORE}" CORE_PATH)

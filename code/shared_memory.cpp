@@ -34,6 +34,7 @@ static constexpr ArenaPolicy arena_policies[] = {
   {true, true, true},
   {false, false, false},
   {false, false, false},
+  {false, false, false},
   {false, false, false}
 };
 
@@ -55,7 +56,7 @@ static constexpr u8 ALL_ARENAS =
     arena_mask(Arena::WORKSPACE) |
     arena_mask(Arena::SCRATCH) |
     arena_mask(Arena::BULK) |
-    arena_mask(Arena::OVERLAY);
+    arena_mask(Arena::OVERLAY) | arena_mask(Arena::APP);
 
 static constexpr bool policy_catalog_valid(void) {
   if(sizeof(arena_policies) / sizeof(arena_policies[0]) !=
@@ -96,6 +97,7 @@ struct ArenaState {
   u8* memory;
   usize capacity;
   usize resident_size;
+  usize allocated_size;
   usize high_water;
   EvictionPrepare eviction_prepare;
   Lease* eviction_lease;
@@ -123,7 +125,7 @@ struct ArenaState {
 };
 
 #define MK61_ARENA_STATE(memory_value, capacity_value, enabled_value)       \
-  {memory_value, capacity_value, 0, 0, nullptr, nullptr, 0, 0,             \
+  {memory_value, capacity_value, 0, 0, 0, nullptr, nullptr, 0, 0,             \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,                                  \
    0, 0, Owner::NONE, Owner::NONE, enabled_value, false, false}
 
@@ -135,7 +137,9 @@ static ArenaState arenas[] = {
 #else
   MK61_ARENA_STATE(nullptr, BULK_SIZE, false),
 #endif
-  MK61_ARENA_STATE(mk61_module_overlay, OVERLAY_SIZE, true)
+  MK61_ARENA_STATE(mk61_module_overlay, OVERLAY_SIZE, true),
+  MK61_ARENA_STATE(OVERLAY_SIZE >= 20U * 1024U ? mk61_module_overlay + OVERLAY_SIZE : nullptr,
+                  0, OVERLAY_SIZE >= 20U * 1024U)
 };
 
 #undef MK61_ARENA_STATE
@@ -144,7 +148,7 @@ static_assert(sizeof(arenas) / sizeof(arenas[0]) == (usize) Arena::COUNT,
               "shared-memory arena table is incomplete");
 
 // Eviction is a global one-way transition, not merely a lock on one arena.
-// Scanning the three existing states costs no RAM and prevents a callback from
+// Scanning the arena states costs no RAM and prevents a callback from
 // acquiring or mutating another shared arena before the manager has revoked
 // the registered lease.
 static bool transition_in_progress(void) {
@@ -291,7 +295,8 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
   const ArenaPolicy* const policy = arena_policy(next_arena);
   if(arena == nullptr || !arena->enabled || next_owner == Owner::NONE ||
      next_owner >= Owner::COUNT || required == 0 ||
-     required > (arena == nullptr ? 0 : arena->capacity) || policy == nullptr ||
+     required > ((next_arena == Arena::APP || next_arena == Arena::OVERLAY)
+                     ? OVERLAY_SIZE : arena == nullptr ? 0 : arena->capacity) || policy == nullptr ||
      !owner_allowed(next_arena, next_owner) ||
      (opportunistic && !owner_cache_allowed(next_arena, next_owner)) ||
      interrupt_context()) {
@@ -324,6 +329,27 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
      arena->resident != next_owner) {
     increment(arena->cache_deferrals);
     return false;
+  }
+
+  // APP occupies a suffix; normal OVERLAY clients retain a stable prefix.
+  // Both leases may coexist. Growing either side may only evict a cache
+  // whose existing callback agrees; active APP entry frames remain pinned.
+  if(arena->active == Owner::NONE &&
+     (next_arena == Arena::APP || next_arena == Arena::OVERLAY)) {
+    const Arena peer_id = next_arena == Arena::APP ? Arena::OVERLAY : Arena::APP;
+    ArenaState& peer = *state(peer_id);
+    const usize aligned = (required + 7U) & ~(usize) 7U;
+    if(aligned > OVERLAY_SIZE - ((peer.allocated_size + 7U) & ~(usize) 7U)) {
+      if(!detail_try_reclaim(peer_id)) {
+        increment(opportunistic ? arena->cache_deferrals : arena->busy_failures);
+        return false;
+      }
+    }
+    if(next_arena == Arena::APP) {
+      arena->capacity = aligned;
+      arena->memory = mk61_module_overlay + OVERLAY_SIZE - aligned;
+      peer.capacity = OVERLAY_SIZE - aligned;
+    }
   }
 
   bool is_nested = false;
@@ -360,6 +386,7 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
       is_fresh = true;
     }
 
+    arena->allocated_size = required;
     arena->active = next_owner;
     arena->depth = 1;
     arena->token++;
@@ -399,6 +426,12 @@ void Lease::release_impl(bool from_manager) {
   arena->depth--;
   increment(arena->releases);
   if(arena->depth == 0) {
+    arena->allocated_size = 0;
+    if(arena_ == Arena::APP) {
+      arena->capacity = 0;
+      arena->memory = mk61_module_overlay + OVERLAY_SIZE;
+      state(Arena::OVERLAY)->capacity = OVERLAY_SIZE;
+    }
     arena->active = Owner::NONE;
     arena->eviction_prepare = nullptr;
     arena->eviction_lease = nullptr;
@@ -578,7 +611,11 @@ bool validate_invariants(void) {
     const ArenaState& arena = arenas[index];
     const ArenaPolicy& policy = arena_policies[index];
     if(arena.reclaiming) reclaiming_count++;
-    if(arena.capacity == 0 || arena.high_water > arena.capacity ||
+    const usize physical_limit = (arena_id == Arena::APP || arena_id == Arena::OVERLAY)
+        ? OVERLAY_SIZE : arena.capacity;
+    if((arena.capacity == 0 && arena_id != Arena::APP && arena_id != Arena::OVERLAY) ||
+       arena.high_water > physical_limit || arena.allocated_size > arena.capacity ||
+       ((arena.allocated_size == 0) != (arena.depth == 0)) ||
        arena.high_water < arena.resident_size ||
        arena.max_depth < arena.depth ||
        (arena.enabled && arena.memory == nullptr) ||
@@ -612,6 +649,10 @@ bool validate_invariants(void) {
         !policy.retain_resident)) return false;
     if(arena.reclaiming && arena.eviction_prepare == nullptr) return false;
   }
+  const ArenaState& app = *state(Arena::APP);
+  const ArenaState& prefix = *state(Arena::OVERLAY);
+  if(prefix.capacity + app.capacity != OVERLAY_SIZE ||
+     (app.enabled && app.memory != mk61_module_overlay + prefix.capacity)) return false;
   return reclaiming_count <= 1;
 }
 
@@ -643,6 +684,7 @@ const char* arena_name(Arena arena) {
     case Arena::SCRATCH: return "scratch";
     case Arena::BULK: return "bulk";
     case Arena::OVERLAY: return "overlay";
+    case Arena::APP: return "app";
     case Arena::COUNT: break;
   }
   return "invalid";

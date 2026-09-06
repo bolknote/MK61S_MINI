@@ -103,16 +103,18 @@ class Machine:
         self.uc.mem_write(self.stop, b"\x70\x47")
         self.uc.hook_add(UC_HOOK_CODE, self.hook)
 
-    def load(self, image, image_size, entry):
+    def load(self, image, image_size, entry, address=BASE):
+        self.base = address
         self.uc.mem_write(BASE, b"\xcd" * OVERLAY)
-        self.uc.mem_write(BASE, image)
+        self.uc.mem_write(self.base, image)
+        self.uc.ctl_remove_cache(BASE, BASE + OVERLAY)
         self.memory_size, self.image_size, self.entry = len(image), image_size, entry
         self.frames, self.text, self.keys = [], [], []
         self.begins = self.ends = self.services = 0
         self.file = b""
 
     def hook(self, uc, address, _size, _context):
-        if BASE <= address < BASE + self.image_size or address == self.stop:
+        if self.base <= address < self.base + self.image_size or address == self.stop:
             return
         name = self.callbacks.get(address)
         assert name is not None, f"execution escaped APP/API: {address:#x}"
@@ -123,11 +125,11 @@ class Machine:
             result = len(self.file) if a == 42 else 0xFFFFFFFF
         elif name == "file_read":
             assert a == 42 and b + d <= len(self.file)
-            assert BASE <= c <= BASE + self.memory_size - d
+            assert self.base <= c <= self.base + self.memory_size - d
             uc.mem_write(c, self.file[b:b + d])
             result = d
         elif name == "graphics_present":
-            assert b == 1536 and BASE <= a <= BASE + self.memory_size - b
+            assert b == 1536 and self.base <= a <= self.base + self.memory_size - b
             self.frames.append(bytes(uc.mem_read(a, b)))
             result = 1
         elif name == "graphics_begin":
@@ -173,13 +175,15 @@ class Machine:
                 (UC_ARM_REG_R2, argument), (UC_ARM_REG_R3, 0)):
             uc.reg_write(register, value)
         uc.mem_write(sp, bytes(4))  # Fifth entry argument, per AAPCS.
-        uc.emu_start(BASE + self.entry + 1, self.stop, timeout=10_000_000, count=10_000_000)
+        uc.emu_start(self.base + self.entry + 1, self.stop, timeout=10_000_000, count=10_000_000)
         assert uc.reg_read(UC_ARM_REG_PC) == self.stop, "APP failed to return"
         assert uc.reg_read(UC_ARM_REG_SP) == sp
         for index, register in enumerate(saved):
             assert uc.reg_read(register) == 0x31410000 + index
-        assert bytes(uc.mem_read(BASE + self.memory_size, OVERLAY - self.memory_size)) == \
-            b"\xcd" * (OVERLAY - self.memory_size), "APP wrote beyond its memory"
+        for begin, end in ((BASE, self.base), (self.base + self.memory_size, BASE + OVERLAY)):
+            if end > begin:
+                assert bytes(uc.mem_read(begin, end - begin)) == b"\xcd" * (end - begin), \
+                    "APP wrote outside its allocation"
         return uc.reg_read(UC_ARM_REG_R0)
 
 
@@ -198,8 +202,8 @@ def main():
         run(["c++", "-std=c++17", "-O2", "-DMK61_ENABLE_PORTABLE_APPS=1",
              "-I" + str(ROOT / "code"), ROOT / "tests/portable_app_format_self_test.cpp",
              ROOT / "code/loadable_module_format.cpp", ROOT / "code/zx0.cpp", "-o", reader])
-        for name in ("HELLO", "WBMP"):
-            sources = [ROOT / "examples/portable-apps" / name / "main.c"]
+        for name in ("HELLO", "WBMP", "RELOC"):
+            sources = [ROOT / "tests/portable_app_relocation_probe.c"] if name == "RELOC" else [ROOT / "examples/portable-apps" / name / "main.c"]
             if name == "WBMP":
                 sources += [ROOT / "examples/portable-apps/WBMP/viewer.cpp", ROOT / "code/wbmp.cpp"]
             command = ["python3", ROOT / "tools/build_portable_app.py", "--name", name,
@@ -216,28 +220,34 @@ def main():
             image_size, _, entry = struct.unpack_from("<III", packed, 28)
             assert decoded[:image_size] == (work / name / (name + ".bin")).read_bytes()
             assert decoded[image_size:] == bytes(len(decoded) - image_size)
-            for api_address, api in apis:
-                machine = Machine(api_address, api)
-                for launch in range(2):
-                    machine.load(decoded, image_size, entry)
-                    assert machine.call(0) == 0
-                    if name == "HELLO":
-                        assert machine.call(1) == 0
-                        assert machine.text == ["HELLO C APP"]
-                        assert machine.call(1) == 1  # Negative control: dirty .data/.bss.
-                    else:
-                        width, height = (208, 48) if launch == 0 else (144, 80)
-                        machine.file = wbmp(width, height)
-                        machine.keys = [16, 16, 16, 15, 20] if launch == 0 else [18, 18, 17, 19]
-                        expected = ([oracle(width, height, x) for x in (0, 8, 16, 8)] if launch == 0
-                                    else [oracle(width, height, 0, y) for y in (0, 16, 0)])
-                        assert machine.call(2, 42) == 0
-                        assert machine.frames == expected
-                        assert machine.begins == machine.ends == 1
-                # Startup refuses an old, truncated API before invoking callbacks.
-                machine.load(decoded, image_size, entry)
-                machine.uc.mem_write(api_address + 6, struct.pack("<H", 64))
-                assert machine.call(0) == 5
+            for offset in (0, 8, (OVERLAY-len(decoded))&~7):
+                address = BASE + offset
+                run([reader, app, memory, hex(address)])
+                relocated = memory.read_bytes()
+                for api_address, api in apis:
+                    machine = Machine(api_address, api)
+                    for launch in range(2):
+                        machine.load(relocated, image_size, entry, address)
+                        assert machine.call(0) == 0
+                        if name == "HELLO":
+                            assert machine.call(1) == 0
+                            assert machine.text == ["HELLO C APP"]
+                            assert machine.call(1) == 1  # Negative control: dirty .data/.bss.
+                        elif name == "RELOC":
+                            assert machine.call(1) == 0
+                        else:
+                            width, height = (208, 48) if launch == 0 else (144, 80)
+                            machine.file = wbmp(width, height)
+                            machine.keys = [16, 16, 16, 15, 20] if launch == 0 else [18, 18, 17, 19]
+                            expected = ([oracle(width, height, x) for x in (0, 8, 16, 8)] if launch == 0
+                                        else [oracle(width, height, 0, y) for y in (0, 16, 0)])
+                            assert machine.call(2, 42) == 0
+                            assert machine.frames == expected
+                            assert machine.begins == machine.ends == 1
+                    # Startup refuses an old, truncated API before invoking callbacks.
+                    machine.load(relocated, image_size, entry, address)
+                    machine.uc.mem_write(api_address + 6, struct.pack("<H", 64))
+                    assert machine.call(0) == 5
             print(f"{name}: same {len(packed)}-byte APP ran with {len(apis)} resident API tables; "
                   "startup, pixels/globals, register and memory guards PASS")
 

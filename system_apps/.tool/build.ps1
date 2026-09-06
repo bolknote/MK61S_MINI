@@ -351,6 +351,14 @@ function Get-PythonInterpreter {
 
 function Get-SelectedApps {
     $apps = New-Object 'System.Collections.Generic.List[object]'
+    if ($PortableApps -eq '1') {
+        $apps.Add([pscustomobject]@{
+            Id = 'setup'; FileName = 'SETUP.APP'; PackerKind = 'setup'
+            Template = 'setup_ui.cpp'
+            Sources = @('setup_ui.cpp', 'setup_module_entry.cpp', 'fmk_font.cpp')
+            HandledMagic = ''
+        })
+    }
     if ($Focal -eq '1') {
         $apps.Add([pscustomobject]@{
             Id = 'focal'
@@ -634,11 +642,17 @@ try {
         foreach ($app in $selectedApps) {
             Build-SystemApp $app $compileEntries
         }
+        if ($PortableApps -eq '1') {
+            Invoke-ArmTool $script:Python @(
+                (Join-Path $script:ProjectRoot 'tools/.mk61-app/build_terminal_help.py'),
+                '--resident-elf', $script:ResidentElf,
+                '--output-dir', $script:OutputDirectory)
+        }
     }
 
     [IO.Directory]::CreateDirectory($finalOutputDirectory) | Out-Null
     foreach ($name in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'HELP0.TXT', 'HELP1.TXT'
     )) {
         $target = Join-Path $finalOutputDirectory $name
         if ([IO.File]::Exists($target)) {

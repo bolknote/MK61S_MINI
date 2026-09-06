@@ -177,7 +177,7 @@ build_module() {
   case "$kind" in
     1) portable_kind=focal ;; 2) portable_kind=tinybasic ;;
     3) portable_kind=wbmp-viewer ;; 5) portable_kind=chip8 ;;
-    6) portable_kind=markdown-viewer ;; *) die "unknown System APP kind $kind" ;;
+    6) portable_kind=markdown-viewer ;; 7) portable_kind=setup ;; *) die "unknown System APP kind $kind" ;;
   esac
   module_dir="$stage/modules/$id"
   local portable_options=()
@@ -334,11 +334,16 @@ build_bundle() {
     build_module chip8 CHIP8.APP 5 mk61_ide_chip8_module_entry \
       mk61_ide_chip8_app.cpp.o 12611
 
+  if [[ "$compile_flags" == *-DMK61_ENABLE_PORTABLE_APPS=1* ]]; then
+    build_module setup SETUP.APP 7 - - 0
+    python3 "$sketch/../tools/.mk61-app/build_terminal_help.py" --resident-elf "$resident_elf" --output-dir "$stage/System"
+  fi
+
   output_root="$(cd "$sketch/.." && pwd)/binary"
   output="$output_root/$bundle"
   mkdir -p "$output/System"
   cp "$stage/$bundle.bin" "$output/$bundle.bin"
-  for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP; do
+  for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP HELP0.TXT HELP1.TXT; do
     if [ -f "$stage/System/$canonical" ]; then
       cp "$stage/System/$canonical" "$output/System/$canonical"
     else

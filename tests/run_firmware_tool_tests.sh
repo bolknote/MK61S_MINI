@@ -211,6 +211,9 @@ printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 printf 'focal-app\n' > "$bundle/System/FOCAL.APP"
 printf 'markdown-app\n' > "$bundle/System/MARKDOWN.APP"
 printf 'chip8-app\n' > "$bundle/System/CHIP8.APP"
+for resource in SETUP.APP HELP0.TXT HELP1.TXT; do
+  printf 'service-resource\n' > "$bundle/System/$resource"
+done
 printf 'keep-me\n' > "$install_mount/System/KEEP.APP"
 printf 'stale-basic\n' > "$install_mount/System/BASIC.APP"
 printf 'stale-wbmp\n' > "$install_mount/System/WBMP.APP"
@@ -239,7 +242,10 @@ printf '%s\n' "$disabled_flags" > "$bundle/build.flags"
 disabled_result=$(MK61_CONFIG_FILE="$install_config" \
   MK61_OUTPUT_DIR="$install_output" MK61_C5_MOUNT="$install_mount" \
   "$tool" --install-apps)
-grep -q 'Removed disabled canonical System APP' <<< "$disabled_result"
+grep -q 'Synchronized and verified' <<< "$disabled_result"
+for resource in SETUP.APP HELP0.TXT HELP1.TXT; do
+  cmp "$bundle/System/$resource" "$install_mount/System/$resource"
+done
 test ! -e "$install_mount/System/FOCAL.APP"
 test ! -e "$install_mount/System/BASIC.APP"
 test ! -e "$install_mount/System/WBMP.APP"

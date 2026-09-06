@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a standalone experimental APP using ARM GCC; no resident ELF/BIN.
+"""Build a standalone relocatable APP using ARM GCC; no resident ELF/BIN.
 
 Examples and the ABI contract are in sdk/portable/README.md.
 """
@@ -14,7 +14,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools/.mk61-app"))
+from app_relocations import extract
 SYSTEM_MODULES = {
+    "setup": ("SETUP", "SETUP", ["setup_ui.cpp", "setup_module_entry.cpp", "fmk_font.cpp"], None),
     "focal": ("FOCAL", "FOCAL", ["focal.cpp", "focal_module_entry.cpp"], None),
     "tinybasic": ("BASIC", "TINYBASIC", ["tinybasic.cpp", "tinybasic_module_entry.cpp"], None),
     "wbmp-viewer": ("WBMP", "WBMP", ["image1_viewer.cpp", "image1_viewer_module_entry.cpp", "wbmp.cpp"], "I1"),
@@ -65,6 +68,8 @@ def build(args: argparse.Namespace) -> dict:
     sources = ([ROOT / "sdk/portable/system/system_compat.cpp",
                 *[ROOT / "code" / x for x in system[2]]] if system else
                [ROOT / "sdk/portable/start.c", *[x.resolve() for x in args.source]])
+    if args.system == "setup":
+        sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
     sources += [ROOT / "sdk/portable/memory.c"]
     if args.system in ("focal", "tinybasic"):
         sources += [ROOT / "sdk/portable/system/runtime.S", ROOT / "sdk/portable/system/editor.cpp"]
@@ -72,7 +77,7 @@ def build(args: argparse.Namespace) -> dict:
         raise ValueError("duplicate source")
     flags = ["-mcpu=cortex-m4", "-mthumb", "-mfpu=fpv4-sp-d16",
              "-mfloat-abi=hard", "-Oz" if system else "-Os", "-flto", "-fipa-pta",
-             "-fno-builtin", "-ffunction-sections", "-fdata-sections",
+             "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
     if not system:
         flags.append("-ffreestanding")
@@ -115,7 +120,7 @@ def build(args: argparse.Namespace) -> dict:
         print(run(stack_command), end="")
     elf = out / (args.name + ".elf")
     run([tool("g++"), *flags, "-nostdlib", "-nostartfiles",
-         "-Wl,--gc-sections", "-Wl,--defsym=MK61_MODULE_ORIGIN=0x20000000",
+         "-Wl,--gc-sections,--emit-relocs", "-Wl,--defsym=MK61_MODULE_ORIGIN=0x20000000",
          "-Wl,-T," + str(ROOT / "tools/.mk61-app/mk61_module.ld"),
          "-Wl,-Map," + str(out / (args.name + ".map")),
          *objects, *args.library, *(["-lc"] if system else []), "-lgcc", "-o", elf])
@@ -129,7 +134,7 @@ def build(args: argparse.Namespace) -> dict:
     for line in run([tool("size"), "-A", elf]).splitlines():
         parts = line.split()
         if len(parts) >= 2 and parts[0].startswith("."):
-            if parts[0] not in (".module_image", ".module_bss") and int(parts[1]):
+            if parts[0] not in (".module_image", ".module_bss") and not parts[0].startswith(".rel.") and int(parts[1]):
                 raise ValueError(f"unpacked ELF section: {parts[0]}")
     base = symbols["__module_image_start"]
     memory_size = symbols["__module_memory_end"] - base
@@ -150,12 +155,19 @@ def build(args: argparse.Namespace) -> dict:
     command = [packer, "--portable", "--kind", args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
+    offsets, table = extract(elf, base, image.stat().st_size, memory_size)
+    if not args.fixed_address:
+        relocations = out / (args.name + ".rel")
+        relocations.write_bytes(table)
+        command += ["--relocations", relocations]
     handled_magic = args.handled_magic or (system[3] if system else None)
     if handled_magic:
         command += ["--handled-magic", handled_magic]
     print(run(command), end="")
     image_flags = struct.unpack_from("<I", app.read_bytes(), 16)[0]
-    report = {"name": args.name, "abi": 3, "load_address": base,
+    report = {"name": args.name, "abi": 3 if args.fixed_address else 4, "load_address": base,
+              "relocations": 0 if args.fixed_address else len(offsets),
+              "relocation_bytes": 0 if args.fixed_address else len(table),
               "entry_offset": entry_offset, "image_bytes": image.stat().st_size,
               "bss_bytes": memory_size - image.stat().st_size,
               "memory_bytes": memory_size, "app_bytes": app.stat().st_size,
@@ -169,6 +181,7 @@ def build(args: argparse.Namespace) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--name")
+    parser.add_argument("--fixed-address", action="store_true", help="emit legacy portable ABI 3")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)
     parser.add_argument("--text-only", action="store_true",

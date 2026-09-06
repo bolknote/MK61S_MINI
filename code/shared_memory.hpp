@@ -50,6 +50,7 @@ enum class Arena : u8 {
   SCRATCH,
   BULK,
   OVERLAY,
+  APP, // dynamically sized suffix of OVERLAY storage; no extra SRAM buffer
   COUNT
 };
 

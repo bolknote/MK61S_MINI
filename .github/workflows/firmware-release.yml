@@ -124,7 +124,10 @@ jobs:
             'System/FOCAL.APP',
             'System/BASIC.APP',
             'System/MARKDOWN.APP',
-            'System/CHIP8.APP'
+            'System/CHIP8.APP',
+            'System/SETUP.APP',
+            'System/HELP0.TXT',
+            'System/HELP1.TXT'
           ) | ForEach-Object {
             $path = Join-Path $bundle $_
             if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
@@ -135,6 +138,10 @@ jobs:
               [byte[]]$container = [IO.File]::ReadAllBytes($path)
               if ($container.Length -le 64 -or $container[15] -ne 1) {
                 throw "F401 APP is not packed with ZX0: $_"
+              }
+              if ([BitConverter]::ToUInt16($container, 12) -ne 4 -or
+                  [BitConverter]::ToUInt32($container, 16) -notin @(5, 7)) {
+                throw "F401 APP is not relocatable ABI 4: $_"
               }
             }
           }

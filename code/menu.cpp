@@ -10,7 +10,7 @@
 #include "entropy_pool.hpp"
 #include "program_store.hpp"
 #include "rtc_clock.hpp"
-#include "rtc_settings_core.hpp"
+#include "setup_ui.hpp"
 #include "crash_dump.hpp"
 #include "virtual_fat.hpp"
 #include "usb_screen.hpp"
@@ -21,23 +21,6 @@ extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
 extern bool usb_start_mass_storage_mode(void);
 extern bool usb_start_terminal_mode(void);
-
-static constexpr i32 DISPLAY_MODE_CHANGED = -2;
-
-static i32 wait_key_or_display_change(u32 display_mode_revision) {
-  do {
-    idle_main_process();
-    if(main_lcd().displayModeRevision() != display_mode_revision) {
-      return DISPLAY_MODE_CHANGED;
-    }
-
-    const i32 scan_code = kbd::poll_event().code();
-    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
-      kbd::handoff(kbd::Event(scan_code));
-      return scan_code;
-    }
-  } while(true);
-}
 
 namespace library_mk61 {
 
@@ -140,125 +123,11 @@ static u8 display_rows_from_mode(u8 mode) {
   }
 }
 
-static lcd_display::TextProfile nextFontPreset(lcd_display::TextProfile profile, i8 delta) {
-  profile = lcd_display::normalizeSettingsTextProfile(profile);
-  const u8 current = sameTextProfile(profile, lcd_display::textProfile5x9()) ? 1 :
-    (sameTextProfile(profile, lcd_display::textProfile3x5()) ? 2 :
-      (sameTextProfile(profile, lcd_display::textProfile10x16()) ? 3 : 0));
-  const u8 next = (u8) ((current + (delta > 0 ? 1 : 3)) % 4);
-  switch(next) {
-    case 1: return lcd_display::textProfile5x9();
-    case 2: return lcd_display::textProfile3x5();
-    case 3: return lcd_display::textProfile10x16();
-    default: return lcd_display::textProfile5x8();
-  }
-}
 
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-static u8 step_display_rows_value(u8 rows, i8 delta) {
-  rows = normalize_display_rows(rows);
-  if(delta > 0 && rows < lcd_display::GRAPHICS_MAX_ROWS) {
-    return rows + 1;
-  }
-  if(delta < 0 && rows > DISPLAY_ROWS_MIN) {
-    return rows - 1;
-  }
-  return rows;
-}
-#endif
 #endif
 
 static void set_speed_mode_state(SpeedMode mode) {
   speed_mode_state = mode;
-}
-
-static constexpr usize HARDWARE_LINE_SIZE = 32;
-
-static void build_hardware_lines(
-    char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
-    const hardware_info::AnalogSnapshot& analog) {
-  const bool russian = language_is_ru();
-  const hardware_info::DeviceIdentity device =
-    hardware_info::read_device_identity();
-  rtc_clock::ClockSource rtc_source = rtc_clock::ClockSource::LSI;
-  const char* rtc_source_name = rtc_clock::read_clock_source(rtc_source)
-      ? rtc_clock::clock_source_name(rtc_source)
-      : "--";
-  hardware_info::format_device_line(
-    lines[0], HARDWARE_LINE_SIZE, russian, device);
-  hardware_info::format_memory_line(
-    lines[1], HARDWARE_LINE_SIZE, russian, device);
-
-  hardware_info::format_vdda_line(
-    lines[2], HARDWARE_LINE_SIZE, russian, analog.vdda);
-  hardware_info::format_temperature_line(
-    lines[3], HARDWARE_LINE_SIZE, russian, analog.mcu_temperature);
-  hardware_info::format_battery_line(
-    lines[4], HARDWARE_LINE_SIZE, russian, analog.battery);
-  hardware_info::format_generator_line(
-    lines[5], HARDWARE_LINE_SIZE, russian, rtc_source_name);
-  hardware_info::format_display_line(
-    lines[6], HARDWARE_LINE_SIZE, russian, hardware_info::display_type());
-}
-
-static void draw_hardware_lines(
-    const char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
-    u8 offset) {
-  const u8 rows = main_lcd().rows();
-  const u8 visible =
-    rows < hardware_info::LINE_COUNT ? rows : hardware_info::LINE_COUNT;
-  offset = hardware_info::clamp_scroll_offset(offset, rows);
-
-  MK61DisplayUpdate update(main_lcd());
-  main_lcd().clear();
-
-  if(language_is_ru()) {
-    const char* window[hardware_info::LINE_COUNT];
-    for(u8 row = 0; row < visible; row++) {
-      window[row] = lines[offset + row];
-    }
-    lcd_ru::print_window(window, visible);
-    return;
-  }
-
-  for(u8 row = 0; row < visible; row++) {
-    main_lcd().setCursor(0, row);
-    u8 used = 0;
-    const char* text = lines[offset + row];
-    while(text[used] != 0 && used < lcd_display::COLS) {
-      main_lcd().write((u8) text[used++]);
-    }
-    while(used++ < lcd_display::COLS) main_lcd().write((u8) ' ');
-  }
-}
-
-bool  HardwareInfo(void) {
-  char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE];
-  build_hardware_lines(lines, hardware_info::read_analog_snapshot());
-  u8 offset = 0;
-
-  do {
-    offset = hardware_info::clamp_scroll_offset(
-      offset, main_lcd().rows());
-    draw_hardware_lines(lines, offset);
-    const i32 key = wait_key_or_display_change(
-      main_lcd().displayModeRevision());
-
-    if(key == DISPLAY_MODE_CHANGED) continue;
-    if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-      offset = hardware_info::step_scroll_offset(
-        offset, main_lcd().rows(), -1);
-      continue;
-    }
-    if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
-      offset = hardware_info::step_scroll_offset(
-        offset, main_lcd().rows(), 1);
-      continue;
-    }
-
-    lcd_ru::restore_default_font();
-    return action::MENU_BACK;
-  } while(true);
 }
 
 bool  InfoData(void) {
@@ -284,6 +153,8 @@ bool  InfoData(void) {
   kbd::get_key_wait();
   return false;
 }
+
+bool HardwareInfo(void) { return setup_ui::hardware(); }
 
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
 const t_punct USB_DISK_punct      = {.size = 8,  .action = (menu_action) &UsbDiskMode,          .text = "USB Disk"};
@@ -655,7 +526,7 @@ bool  store_settings_state(void) {
 #endif
 }
 
-static void mark_settings_dirty(void) {
+void mark_settings_dirty(void) {
   settings_save.schedule(millis(), SETTINGS_SAVE_IDLE_MS);
 }
 
@@ -812,179 +683,9 @@ static void CycleSoundVolumeUp(void) {
   ApplySoundVolume((volume >= 10) ? 0 : (volume + 1));
 }
 
-static int dateTimeDigitFromKey(i32 key) {
-  switch(key) {
-    case (i32) sw::_0: return 0;
-    case (i32) sw::_1: return 1;
-    case (i32) sw::_2: return 2;
-    case (i32) sw::_3: return 3;
-    case (i32) sw::_4: return 4;
-    case (i32) sw::_5: return 5;
-    case (i32) sw::_6: return 6;
-    case (i32) sw::_7: return 7;
-    case (i32) sw::_8: return 8;
-    case (i32) sw::_9: return 9;
-    default: return -1;
-  }
-}
-
-static void drawDateTimeEditor(const rtc_settings::Editor& editor) {
-  const bool russian = library_mk61::language_is_ru();
-  char date_line[32];
-  char time_line[32];
-  snprintf(date_line, sizeof(date_line), russian ? "Дата %.10s" : "Date %.10s", editor.text);
-  snprintf(time_line, sizeof(time_line), russian ? "Время %.8s" : "Time %.8s", editor.text + 11);
-
-  MK61DisplayUpdate update(main_lcd());
-  main_lcd().clear();
-  lcd_ru::print_lines(date_line, time_line);
-
-  const usize position = rtc_settings::active_text_position(editor);
-  if(position < 10) {
-    main_lcd().setCursor((u8) (5 + position), 0);
-  } else {
-    const u8 time_start = russian ? 6 : 5;
-    main_lcd().setCursor((u8) (time_start + position - 11), 1);
-  }
-  if(main_lcd().supportsCursor()) main_lcd().cursorOn();
-}
-
-static void showDateTimeMessage(const char* ru0, const char* en0, const char* ru1, const char* en1,
-                                t_time_ms duration_ms) {
-  {
-    MK61DisplayUpdate update(main_lcd());
-    main_lcd().clear();
-    lcd_ru::print_lines(
-      library_mk61::language_is_ru() ? ru0 : en0,
-      library_mk61::language_is_ru() ? ru1 : en1);
-  }
-  delay(duration_ms);
-}
-
-bool SetDateTime(void) {
-  rtc_clock::DateTime initial = {};
-  if(!rtc_clock::read(initial) && !rtc_clock::parse_build_datetime(__DATE__, __TIME__, initial)) {
-    initial = {2001, 1, 1, 0, 0, 0};
-  }
-
-  rtc_settings::Editor editor = {};
-  if(!rtc_settings::begin(editor, initial)) return action::MENU_BACK;
-
-  while(true) {
-    drawDateTimeEditor(editor);
-    const i32 key = wait_key_or_display_change(
-      main_lcd().displayModeRevision());
-    if(key == DISPLAY_MODE_CHANGED) continue;
-    const int digit = dateTimeDigitFromKey(key);
-    if(digit >= 0) {
-      rtc_settings::enter_digit(editor, digit);
-      continue;
-    }
-
-    if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-      rtc_settings::move_left(editor);
-      continue;
-    }
-    if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
-      rtc_settings::move_right(editor);
-      continue;
-    }
-    if(key == KEY_ESC_PRESS) {
-      main_lcd().cursorOff();
-      lcd_ru::restore_default_font();
-      return action::MENU_BACK;
-    }
-    if(key != KEY_OK_PRESS) continue;
-
-    rtc_clock::DateTime value = {};
-    if(!rtc_settings::value(editor, value)) {
-      showDateTimeMessage("Неверная дата", "Invalid date", "или время", "or time", 900);
-      continue;
-    }
-    if(!rtc_clock::set(value)) {
-      showDateTimeMessage("Ошибка RTC", "RTC error", "Не сохранено", "Not saved", 900);
-      continue;
-    }
-
-    showDateTimeMessage("Дата и время", "Date and time", "сохранены", "saved", 650);
-    lcd_ru::restore_default_font();
-    return action::MENU_BACK;
-  }
-}
-
-static void drawRtcCalibrationEditor(
-    const rtc_settings::CalibrationEditor& editor) {
-  char value_line[20];
-  snprintf(value_line, sizeof(value_line), "%s ppm", editor.text);
-
-  MK61DisplayUpdate update(main_lcd());
-  main_lcd().clear();
-  lcd_ru::print_lines(
-    library_mk61::language_is_ru() ? "Поправка RTC" : "RTC correction",
-    value_line);
-  main_lcd().setCursor(
-    (u8) rtc_settings::active_text_position(editor), 1);
-  if(main_lcd().supportsCursor()) main_lcd().cursorOn();
-}
-
-bool SetRtcCalibration(void) {
-  rtc_settings::CalibrationEditor editor = {};
-  if(!rtc_settings::begin(editor, rtc_clock::calibration_ppm())) {
-    return action::MENU_BACK;
-  }
-
-  while(true) {
-    drawRtcCalibrationEditor(editor);
-    const i32 key = wait_key_or_display_change(
-      main_lcd().displayModeRevision());
-    if(key == DISPLAY_MODE_CHANGED) continue;
-    const int digit = dateTimeDigitFromKey(key);
-    if(digit >= 0) {
-      rtc_settings::enter_digit(editor, digit);
-      continue;
-    }
-    if(key == KEY_NEG) {
-      rtc_settings::toggle_sign(editor);
-      continue;
-    }
-    if(key == KEY_CX) {
-      rtc_settings::begin(editor, 0);
-      continue;
-    }
-    if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-      rtc_settings::move_left(editor);
-      continue;
-    }
-    if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
-      rtc_settings::move_right(editor);
-      continue;
-    }
-    if(key == KEY_ESC_PRESS) {
-      main_lcd().cursorOff();
-      lcd_ru::restore_default_font();
-      return action::MENU_BACK;
-    }
-    if(key != KEY_OK_PRESS) continue;
-
-    i16 ppm = 0;
-    if(!rtc_settings::value(editor, ppm)) {
-      showDateTimeMessage(
-        "Диапазон RTC", "RTC range", "-487...+488 ppm",
-        "-487...+488 ppm", 900);
-      continue;
-    }
-    if(!rtc_clock::set_calibration_ppm(ppm)) {
-      showDateTimeMessage(
-        "Ошибка RTC", "RTC error", "Не сохранено", "Not saved", 900);
-      continue;
-    }
-
-    showDateTimeMessage(
-      "Поправка RTC", "RTC correction", "сохранена", "saved", 650);
-    lcd_ru::restore_default_font();
-    return action::MENU_BACK;
-  }
-}
+bool SetDateTime(void) { return setup_ui::date_time(); }
+bool SetRtcCalibration(void) { return setup_ui::calibration(); }
+bool FontSetup(void) { return setup_ui::font(); }
 
 bool settings_select(void) {
   library_mk61::refresh_menu_text();
@@ -1144,248 +845,6 @@ static void StepOledProtection(i8 delta) {
   library_mk61::mark_settings_dirty();
 }
 #endif
-
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
-enum class FontSetupPhase : u8 {
-  DRAW = 1,
-  WAIT_KEY,
-  KEY_RECEIVED,
-  DROP_EXTERNAL_FONT,
-  SET_PROFILE,
-  REFRESH_MENU,
-  LEAVE
-};
-
-static void noteFontSetupPhase(FontSetupPhase phase) {
-  // "FN" + фаза: дамп остаётся коротким, но точно показывает, внутри какого
-  // перехода шрифта произошёл fault, даже если модальное меню держит loop().
-  crash_dump::update_runtime(
-      crash_dump::RUNTIME_MENU,
-      0x464E0000UL | (u32) phase,
-      millis());
-}
-
-static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProfile right) {
-  left = lcd_display::normalizeSettingsTextProfile(left);
-  right = lcd_display::normalizeSettingsTextProfile(right);
-  return left.rows == right.rows &&
-    left.glyph_width == right.glyph_width &&
-    left.glyph_height == right.glyph_height &&
-    left.line_gap == right.line_gap;
-}
-
-static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::TextProfile profile) {
-#if !MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  (void) field;
-  snprintf(out, size, library_mk61::language_is_ru() ? "Шрифт:%s" : "Font:%s",
-    library_mk61::fontPresetName(profile));
-  return;
-#else
-  if(library_mk61::language_is_ru()) {
-    switch(field) {
-      case 0:
-        snprintf(out, size, "Строки:%u", (unsigned) profile.rows);
-        break;
-      case 1:
-        snprintf(out, size, "Шрифт:%ux%u", (unsigned) profile.glyph_width, (unsigned) profile.glyph_height);
-        break;
-      case 2:
-        snprintf(out, size, "Интервал:%u", (unsigned) profile.line_gap);
-        break;
-      case 3:
-      default:
-        snprintf(out, size, "Ширина:%u", (unsigned) profile.glyph_width);
-        break;
-    }
-    return;
-  }
-
-  switch(field) {
-    case 0:
-      snprintf(out, size, "Rows:%u", (unsigned) profile.rows);
-      break;
-    case 1:
-      snprintf(out, size, "Font:%ux%u", (unsigned) profile.glyph_width, (unsigned) profile.glyph_height);
-      break;
-    case 2:
-      snprintf(out, size, "Gap:%u", (unsigned) profile.line_gap);
-      break;
-    case 3:
-    default:
-      snprintf(out, size, "Width:%u", (unsigned) profile.glyph_width);
-      break;
-  }
-#endif
-}
-
-static void printFontSetupLine(u8 row, char mark, const char* text) {
-  if(library_mk61::language_is_ru()) {
-    lcd_ru::print_menu_line(row, mark, text);
-    return;
-  }
-
-  main_lcd().setCursor(0, row);
-  main_lcd().write((u8) mark);
-  u8 used = 0;
-  while(text[used] != 0 && used < lcd_display::COLS - 1) {
-    main_lcd().write((u8) text[used++]);
-  }
-  while(used++ < lcd_display::COLS - 1) main_lcd().write((u8) ' ');
-}
-
-static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  static constexpr u8 FIELD_COUNT = 4;
-#else
-  static constexpr u8 FIELD_COUNT = 1;
-#endif
-  noteFontSetupPhase(FontSetupPhase::DRAW);
-  MK61DisplayUpdate update(main_lcd());
-  const u8 rows = main_lcd().rows();
-  const u8 visible_fields = (rows < FIELD_COUNT) ? rows : FIELD_COUNT;
-  u8 top = (active + 1 > visible_fields) ? (u8) (active + 1 - visible_fields) : 0;
-  if(top + visible_fields > FIELD_COUNT) top = FIELD_COUNT - visible_fields;
-
-  char line[32];
-  for(u8 row = 0; row < visible_fields; row++) {
-    const u8 field = top + row;
-    formatFontSetupLine(line, sizeof(line), field, profile);
-    printFontSetupLine(row, (field == active) ? '>' : ' ', line);
-  }
-
-  for(u8 row = visible_fields; row < rows; row++) {
-    if(row == visible_fields) {
-      printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "Образец 123АБВ" : "Sample 123ABC");
-    } else {
-      printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "0123456789+-*/" : "0123456789+-*/");
-    }
-  }
-}
-
-static void applyFontSetupProfile(lcd_display::TextProfile profile) {
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
-  profile = lcd_display::normalizeSettingsTextProfile(profile);
-  if(sameTextProfile(profile, library_mk61::display_text_profile()) && !main_lcd().externalFontActive()) return;
-
-  noteFontSetupPhase(FontSetupPhase::DROP_EXTERNAL_FONT);
-  main_lcd().useBuiltinFont();
-  noteFontSetupPhase(FontSetupPhase::SET_PROFILE);
-  library_mk61::set_display_text_profile(profile);
-  main_lcd().setTextProfile(library_mk61::display_text_profile());
-  noteFontSetupPhase(FontSetupPhase::REFRESH_MENU);
-  library_mk61::refresh_menu_text();
-  library_mk61::mark_settings_dirty();
-#else
-  (void) profile;
-#endif
-}
-
-static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8 delta) {
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
-  profile = lcd_display::normalizeSettingsTextProfile(profile);
-#if !MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  (void) field;
-  profile = library_mk61::nextFontPreset(profile, delta);
-#else
-  switch(field) {
-    case 0: {
-      profile.rows = library_mk61::step_display_rows_value(profile.rows, delta);
-      break;
-    }
-    case 1: {
-      const u8 max_height = lcd_display::PIXEL_HEIGHT / profile.rows;
-      if(delta > 0 && profile.glyph_height < max_height) profile.glyph_height++;
-      if(delta < 0 && profile.glyph_height > 5) profile.glyph_height--;
-      break;
-    }
-    case 2: {
-      const u8 max_gap = lcd_display::maxLineGap(profile.rows, profile.glyph_height);
-      if(delta > 0 && profile.line_gap < max_gap) profile.line_gap++;
-      if(delta < 0 && profile.line_gap > 0) profile.line_gap--;
-      break;
-    }
-    case 3:
-      if(delta > 0 && profile.glyph_width < 10) profile.glyph_width++;
-      if(delta < 0 && profile.glyph_width > 3) profile.glyph_width--;
-      break;
-  }
-  profile = lcd_display::normalizeSettingsTextProfile(profile);
-#endif
-#else
-  (void) profile;
-  (void) field;
-  (void) delta;
-#endif
-}
-
-static i32 waitFontSetupKey(void) {
-  noteFontSetupPhase(FontSetupPhase::WAIT_KEY);
-  do {
-    idle_main_process();
-    const i32 scan_code = kbd::poll_event().code();
-    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
-      kbd::handoff(kbd::Event(scan_code));
-      return scan_code;
-    }
-  } while(true);
-}
-#endif
-
-bool FontSetup(void) {
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
-  if(!main_lcd().graphicsMode()) return action::MENU_BACK;
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  static constexpr u8 FIELD_COUNT = 4;
-#endif
-  lcd_display::TextProfile profile = library_mk61::display_text_profile();
-  u8 active = 0;
-  profile = lcd_display::normalizeSettingsTextProfile(profile);
-  drawFontSetup(active, profile);
-
-  while(true) {
-    const i32 key = waitFontSetupKey();
-    noteFontSetupPhase(FontSetupPhase::KEY_RECEIVED);
-    if(key == KEY_ESC_PRESS) {
-      noteFontSetupPhase(FontSetupPhase::LEAVE);
-      MK61DisplayUpdate update(main_lcd());
-      lcd_ru::restore_default_font();
-      return action::MENU_BACK;
-    }
-
-    bool redraw = false;
-    bool apply = false;
-    if(key == KEY_OK_PRESS) {
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-      active = (u8) ((active + 1) % FIELD_COUNT);
-      redraw = true;
-#else
-      stepFontSetupProfile(profile, active, 1);
-      redraw = true;
-      apply = true;
-#endif
-    } else if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
-      stepFontSetupProfile(profile, active, 1);
-      redraw = true;
-      apply = true;
-    } else if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-      stepFontSetupProfile(profile, active, -1);
-      redraw = true;
-      apply = true;
-    }
-
-    if(redraw) {
-      profile = lcd_display::normalizeSettingsTextProfile(profile);
-      // Смена backing font, геометрии сетки и следующая картинка образуют одну
-      // транзакцию: промежуточный кадр со старой ссылкой не существует.
-      MK61DisplayUpdate update(main_lcd());
-      if(apply) applyFontSetupProfile(profile);
-      drawFontSetup(active, profile);
-    }
-  }
-#else
-  return action::MENU_BACK;
-#endif
-}
 
 bool TurnDisplayRows(void) {
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
@@ -1601,10 +1060,7 @@ bool class_menu::handle_settings_adjustment(i32 key) {
       }
 
       if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS || key == KEY_RIGHT_PRESS || key == KEY_LEFT_PRESS) {
-        lcd_display::TextProfile profile = library_mk61::display_text_profile();
-        stepFontSetupProfile(profile, 0, (key == KEY_SHG_LEFT_PRESS || key == KEY_LEFT_PRESS) ? -1 : 1);
-        MK61DisplayUpdate update(main_lcd());
-        applyFontSetupProfile(profile);
+        setup_ui::step_font((key == KEY_SHG_LEFT_PRESS || key == KEY_LEFT_PRESS) ? -1 : 1);
         draw();
         return true;
       }

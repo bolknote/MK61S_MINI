@@ -1,0 +1,222 @@
+{
+  "date": "2026-09-06",
+  "baseline": "ba34cf65bb5fa2340519fae544020f3b878395ef",
+  "compiler": "xPack ARM GCC 14.2.1 20241119",
+  "resident_flags": "-Os -flto",
+  "system_app_flags": "-Oz -flto -fipa-pta -mword-relocations",
+  "stages": {
+    "baseline_bytes": 261608,
+    "setup_help_bytes": 256980,
+    "relocatable_bytes": 257864,
+    "extraction_saved": 4628,
+    "loader_and_allocator_added": 884,
+    "net_saved": 3744,
+    "final_free": 4280
+  },
+  "f401": [
+    {
+      "case": "f401-capability-a00-usb",
+      "profile": "mini-v3-a00",
+      "before_bytes": 250444,
+      "after_bytes": 246740,
+      "saved": 3704,
+      "flash_free": 15404,
+      "static_ram": 54112,
+      "max_frame": 2032,
+      "sha256": "55250b633b9c191d1754d1c0d8022b606ee2448df22b757ab2538d0a3330ee57"
+    },
+    {
+      "case": "f401-capability-ws-graphics",
+      "profile": "mini-v3-ws0010",
+      "before_bytes": 243148,
+      "after_bytes": 239092,
+      "saved": 4056,
+      "flash_free": 23052,
+      "static_ram": 47176,
+      "max_frame": 2032,
+      "sha256": "23f49cfc82aafed158817b5d6717c5731094ea86bc34045f80e4ef6a15210e23"
+    },
+    {
+      "case": "f401-capability-ws-usb",
+      "profile": "mini-v3-ws0010",
+      "before_bytes": 260652,
+      "after_bytes": 256888,
+      "saved": 3764,
+      "flash_free": 5256,
+      "static_ram": 54084,
+      "max_frame": 2032,
+      "sha256": "337e4ae5313bd85466ab577b4bd70eab6ade7346a03b2b77fc71694c2489a69d"
+    },
+    {
+      "case": "f401-capability-ws-usb-graphics",
+      "profile": "mini-v3-ws0010",
+      "before_bytes": 261608,
+      "after_bytes": 257864,
+      "saved": 3744,
+      "flash_free": 4280,
+      "static_ram": 54084,
+      "max_frame": 2032,
+      "sha256": "51e6857a0f52b53d5aa9176946a93c247e9468e32361bdf763f81dd9425ff168"
+    },
+    {
+      "case": "f401-product-a00",
+      "profile": "mini-v3-a00",
+      "before_bytes": 240020,
+      "after_bytes": 234620,
+      "saved": 5400,
+      "flash_free": 27524,
+      "static_ram": 47216,
+      "max_frame": 2032,
+      "sha256": "7357a80f513f101a8ff077dcbb044e3c1164c89102733cd8ecf003779c3bc0a4"
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "profile": "classic-v3",
+      "before_bytes": 241192,
+      "after_bytes": 236864,
+      "saved": 4328,
+      "flash_free": 25280,
+      "static_ram": 49204,
+      "max_frame": 2032,
+      "sha256": "c5b7da5ac5c9c1fa886ad2180f6ecfeda427f602ebbd9512da2ae41b25d2acd5"
+    },
+    {
+      "case": "f401-product-mini-v2-a00",
+      "profile": "mini-v2-a00",
+      "before_bytes": 240048,
+      "after_bytes": 234648,
+      "saved": 5400,
+      "flash_free": 27496,
+      "static_ram": 47216,
+      "max_frame": 2032,
+      "sha256": "e9df8fb4bfdde132170f90a514e1a3186e9d1a99c35ce72affa61e08e8ababf2"
+    },
+    {
+      "case": "f401-product-ws0010",
+      "profile": "mini-v3-ws0010",
+      "before_bytes": 250064,
+      "after_bytes": 244524,
+      "saved": 5540,
+      "flash_free": 17620,
+      "static_ram": 47192,
+      "max_frame": 2032,
+      "sha256": "b56aab7f697567110d96d3dae93bb6768e524262dc3a23ec44d15abbfe74d5be"
+    }
+  ],
+  "apps": [
+    {
+      "kind": "focal",
+      "before_abi3_bytes": 13620,
+      "after_abi4_bytes": 13932,
+      "growth": 312,
+      "memory_bytes": 20140,
+      "allocated_bytes": 20144,
+      "free_prefix": 336,
+      "relocations": 278,
+      "relocation_bytes": 312,
+      "sha256": "ed9622cd432984f91b35c3d578bb10f517af1999ebcefd3c9ecbc6e0cf5bf9b6"
+    },
+    {
+      "kind": "tinybasic",
+      "before_abi3_bytes": 11522,
+      "after_abi4_bytes": 11772,
+      "growth": 250,
+      "memory_bytes": 17252,
+      "allocated_bytes": 17256,
+      "free_prefix": 3224,
+      "relocations": 219,
+      "relocation_bytes": 250,
+      "sha256": "b2a7a000aa2af8ea70afbc4fcfe1e38ca3a7746e669b122d8793e21d37ff8168"
+    },
+    {
+      "kind": "wbmp-viewer",
+      "before_abi3_bytes": 1616,
+      "after_abi4_bytes": 1631,
+      "growth": 15,
+      "memory_bytes": 1924,
+      "allocated_bytes": 1928,
+      "free_prefix": 18552,
+      "relocations": 11,
+      "relocation_bytes": 15,
+      "sha256": "bc9dd6155f48c6e602c0dbddcc845d11e8a4812bcf67e58a6682b087ee347010"
+    },
+    {
+      "kind": "markdown-viewer",
+      "before_abi3_bytes": 12080,
+      "after_abi4_bytes": 12156,
+      "growth": 76,
+      "memory_bytes": 15324,
+      "allocated_bytes": 15328,
+      "free_prefix": 5152,
+      "relocations": 62,
+      "relocation_bytes": 76,
+      "sha256": "330557651f82cbbabd1811cb3d26430e236a406db6278e978eacc1cc784741b7"
+    },
+    {
+      "kind": "markdown-text",
+      "before_abi3_bytes": 3812,
+      "after_abi4_bytes": 3834,
+      "growth": 22,
+      "memory_bytes": 4652,
+      "allocated_bytes": 4656,
+      "free_prefix": 15824,
+      "relocations": 16,
+      "relocation_bytes": 22,
+      "sha256": "29cc3d383e033b66c839d074a444a226268e28ab9fd8e94b7b56b04c24c8a0c7"
+    },
+    {
+      "kind": "chip8",
+      "before_abi3_bytes": 2563,
+      "after_abi4_bytes": 2582,
+      "growth": 19,
+      "memory_bytes": 3356,
+      "allocated_bytes": 3360,
+      "free_prefix": 17120,
+      "relocations": 14,
+      "relocation_bytes": 19,
+      "sha256": "aad25435dd8d410c35a785ef14be9362f540c96f59d47728f02d0ac3d3c1d823"
+    },
+    {
+      "kind": "setup",
+      "before_abi3_bytes": null,
+      "after_abi4_bytes": 6756,
+      "growth": null,
+      "memory_bytes": 9216,
+      "allocated_bytes": 9216,
+      "free_prefix": 11264,
+      "relocations": 111,
+      "relocation_bytes": 121,
+      "sha256": "10a671ad82f520c5a38da90028eaca0bd9932359fd9f351f62753590ef4ffe71"
+    }
+  ],
+  "verification": {
+    "host_asan_ubsan": "PASS",
+    "f401_matrix_cases": 8,
+    "arduino_ide_cases": 5,
+    "powershell_system_builder": "PASS",
+    "system_arm_residents": 2,
+    "system_arm_placements_per_resident": 3,
+    "user_arm_apps": [
+      "HELLO",
+      "WBMP",
+      "RELOC"
+    ],
+    "user_arm_residents": 2,
+    "user_arm_placements_per_resident": 3,
+    "builtin_f411": {
+      "profile": "classic-v3",
+      "resident_bytes": 332580,
+      "static_ram": 37252,
+      "checks": [
+        "compile",
+        "global constructors",
+        "early DFU",
+        "USB suspend wrappers",
+        "sealed CRC"
+      ]
+    },
+    "hardware_abi4": "NOT_RUN",
+    "full_f411_matrix": "NOT_RUN",
+    "pdf_updated": 8
+  }
+}

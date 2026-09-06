@@ -49,3 +49,9 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/zx0_encode.cpp" \
   -o "$no_bulk_out"
 "$no_bulk_out"
+
+app_out="${TMPDIR:-/tmp}/mk61_app_arena_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
+  "${sanitizer_flags[@]}" "$root/tests/app_arena_self_test.cpp" \
+  "$root/code/shared_memory.cpp" -o "$app_out"
+"$app_out"

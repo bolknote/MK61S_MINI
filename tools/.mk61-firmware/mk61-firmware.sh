@@ -1566,9 +1566,8 @@ arduino_libraries_ready() {
 }
 
 f401_system_apps_enabled() {
-  [ "$ENABLE_FOCAL" -eq 1 ] || [ "$ENABLE_TINYBASIC" -eq 1 ] || \
-    [ "$ENABLE_WBMP_VIEWER" -eq 1 ] || \
-    [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] || [ "$ENABLE_CHIP8" -eq 1 ]
+  # SETUP and HELP are part of every portable F401 bundle.
+  return 0
 }
 
 f401_gcc_arguments() {
@@ -1971,16 +1970,18 @@ prepare_and_compile_worker() {
 }
 
 expected_system_app_names() {
+  printf '%s\n' SETUP.APP HELP0.TXT HELP1.TXT
   [ "$ENABLE_FOCAL" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && printf '%s\n' BASIC.APP
   [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
     [ "$ENABLE_MARKDOWN_VIEWER" -eq 0 ] && printf '%s\n' WBMP.APP
   [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] && printf '%s\n' MARKDOWN.APP
   [ "$ENABLE_CHIP8" -eq 1 ] && printf '%s\n' CHIP8.APP
+  return 0
 }
 
 all_system_app_names() {
-  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP
+  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP HELP0.TXT HELP1.TXT
 }
 
 system_app_enabled() {
@@ -1993,6 +1994,7 @@ system_app_enabled() {
       ;;
     MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] ;;
     CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] ;;
+    SETUP.APP|HELP0.TXT|HELP1.TXT) return 0 ;;
     *) return 1 ;;
   esac
 }

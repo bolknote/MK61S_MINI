@@ -8,6 +8,7 @@
 #include "cross_hal.h"
 #include "focal.hpp"
 #include "fmk_font.hpp"
+#include "setup_ui.hpp"
 #include "tinybasic.hpp"
 #include "keyboard.h"
 #include "lcd_gui.hpp"
@@ -778,86 +779,6 @@ static void show_graphics_unavailable() {
   show_message("Graphics", "Графика", "unavailable", "недоступна");
 }
 
-static void draw_font_preview_header(const program_store::Entry& entry, const fmk::Face& face) {
-  char header[24];
-  snprintf(header, sizeof(header), "f1 %ux%u %.12s",
-    (unsigned) face.metrics().max_width, (unsigned) face.metrics().height,
-    entry.name);
-  print_line(0, header);
-}
-
-static void view_font_entry(const program_store::Entry& entry, const u8* data, u16 len) {
-  fmk::Face face;
-  if(!face.open(data, len)) {
-    show_message("Bad font", "Ошибка шрифта", entry.name, entry.name);
-    wait_explorer_key(false);
-    return;
-  }
-  if(!main_lcd().graphicsMode() && !face.metrics().monospaced) {
-    show_message("Proportional", "Пропорциональный", "Not supported", "Не поддержан");
-    wait_explorer_key(false);
-    return;
-  }
-
-  if(main_lcd().graphicsMode()) {
-    if(!main_lcd().setFontPreview(data, len)) {
-      show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
-      wait_explorer_key(false);
-      return;
-    }
-
-    {
-      MK61DisplayUpdate update(main_lcd());
-      main_lcd().clear();
-      draw_font_preview_header(entry, face);
-      if(main_lcd().rows() > 1) print_line(1, "0123456789+-*/");
-      if(main_lcd().rows() > 2) print_line(2, "ABCDEFGHIJKLMNO");
-      if(main_lcd().rows() > 3) print_line(3, "abcdefghijklmno");
-      if(main_lcd().rows() > 4) lcd_ru::print_at(0, 4, "АБВГДЕЖЗИЙКЛМНО", lcd_display::COLS);
-      if(main_lcd().rows() > 5) lcd_ru::print_at(0, 5, "абвгдежзийклмно", lcd_display::COLS);
-      for(u8 row = 6; row < main_lcd().rows(); row++) print_line(row, "");
-    }
-    wait_explorer_key(false);
-    main_lcd().clearFontPreview();
-    main_lcd().clear();
-    return;
-  }
-
-#if defined(MK61_DISPLAY_LCD1602)
-  fmk::Glyph glyphs[8];
-  if(fmk::selectPreviewGlyphs(face, glyphs) != 8) {
-    show_message("No glyphs", "Нет символов", entry.name, entry.name);
-    wait_explorer_key(false);
-    return;
-  }
-
-  u8 rows[8][8];
-  for(u8 slot = 0; slot < 8; slot++) {
-    if(!fmk::scaleToLcd5x8(face, glyphs[slot], rows[slot])) {
-      show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
-      wait_explorer_key(false);
-      return;
-    }
-    main_lcd().createChar(slot, rows[slot]);
-  }
-
-  {
-    MK61DisplayUpdate update(main_lcd());
-    main_lcd().clear();
-    draw_font_preview_header(entry, face);
-    main_lcd().setCursor(0, 1);
-    for(u8 slot = 0; slot < 8; slot++) main_lcd().write(slot);
-    for(u8 col = 8; col < lcd_display::COLS; col++) main_lcd().write((u8) ' ');
-  }
-  wait_explorer_key(false);
-  lcd_ru::restore_default_font();
-  main_lcd().clear();
-#else
-  show_message("Preview error", "Ошибка просмотра", entry.name, entry.name);
-  wait_explorer_key(false);
-#endif
-}
-
 static bool apply_font_entry(const program_store::Entry& entry) {
 #if !defined(MK61_DISPLAY_UC1609)
   (void) entry;
@@ -927,7 +848,7 @@ static bool view_entry(const program_store::Entry& entry) {
   }
 
   if(entry.type == program_store::ProgramType::FONT) {
-    view_font_entry(entry, data, len);
+    setup_ui::preview(entry.name, data, len);
     return true;
   }
 

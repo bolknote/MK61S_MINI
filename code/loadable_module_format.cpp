@@ -61,10 +61,15 @@ static HeaderStatus validate_header(const Header& header, u32 slot_size,
   bool binding_valid = header.flags == 0 && header.resident_size != 0 &&
       header.resident_size <= MAX_RESIDENT_SIZE;
   if((header.flags & MK61_PORTABLE_APP_FLAG) != 0 &&
-     (header.flags & ~(MK61_PORTABLE_APP_FLAG | MK61_APP_ARM_THUMB_BCJ_FLAG)) == 0) {
+     (header.flags & ~(MK61_PORTABLE_APP_FLAG | MK61_APP_ARM_THUMB_BCJ_FLAG | MK61_APP_RELOCATABLE_FLAG)) == 0) {
     binding_valid = header.load_address == MK61_PORTABLE_APP_ADDRESS &&
-        header.resident_size == 0 && header.resident_crc32 == 0 &&
-        header.compression == Compression::ZX0;
+        header.compression == Compression::ZX0 &&
+        ((header.flags & MK61_APP_RELOCATABLE_FLAG)
+          ? header.code_stored_size > 0 && header.code_stored_size <= header.stored_size &&
+            header.relocation_count <= header.image_size / 4 &&
+            header.relocation_count <= header.stored_size - header.code_stored_size &&
+            header.stored_size - header.code_stored_size <= 3 * header.relocation_count
+          : header.resident_size == 0 && header.resident_crc32 == 0);
   }
 #endif
   if(!valid_kind(header.kind) ||
@@ -102,9 +107,9 @@ static HeaderStatus validate_header(const Header& header, u32 slot_size,
 
 class BufferedInput {
   public:
-    BufferedInput(const Reader& reader, u32 size)
+    BufferedInput(const Reader& reader, u32 size, u32 seed = crc32_begin())
       : reader_(reader), size_(size), position_(0), buffered_(0), cursor_(0),
-        crc_(crc32_begin()), failed_(reader.read == nullptr) {}
+        crc_(seed), failed_(reader.read == nullptr) {}
 
     bool next(u8& value) {
       if(failed_ || position_ >= size_) return false;
@@ -174,7 +179,7 @@ static bool magic_valid(const u8* input) {
 bool valid_kind(Kind kind) {
   return kind == Kind::FOCAL || kind == Kind::TINYBASIC ||
          kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION ||
-         kind == Kind::CHIP8 || kind == Kind::MARKDOWN_VIEWER;
+         kind == Kind::CHIP8 || kind == Kind::MARKDOWN_VIEWER || kind == Kind::SETUP;
 }
 
 bool valid_compression(Compression compression) {
@@ -189,6 +194,7 @@ Kind kind_at(u8 index) {
     case 2: return Kind::WBMP_VIEWER;
     case 3: return Kind::CHIP8;
     case 4: return Kind::MARKDOWN_VIEWER;
+    case 5: return Kind::SETUP;
   }
   return (Kind) 0;
 }
@@ -204,6 +210,7 @@ const char* file_name(Kind kind) {
     case Kind::WBMP_VIEWER: return "WBMP.APP";
     case Kind::CHIP8: return "CHIP8.APP";
     case Kind::MARKDOWN_VIEWER: return "MARKDOWN.APP";
+    case Kind::SETUP: return "SETUP.APP";
     case Kind::APPLICATION: break;
   }
   return nullptr;
@@ -249,6 +256,7 @@ bool encode_header(const Header& header, u32 slot_size,
   put_le16(output, HEADER_SIZE_OFFSET, HEADER_SIZE);
   put_le16(output, ABI_OFFSET,
 #if MK61_ENABLE_PORTABLE_APPS
+      (header.flags & MK61_APP_RELOCATABLE_FLAG) != 0 ? MK61_RELOCATABLE_APP_ABI :
       (header.flags & MK61_PORTABLE_APP_FLAG) != 0 ? MK61_PORTABLE_APP_ABI :
 #endif
       ABI_VERSION);
@@ -290,7 +298,10 @@ HeaderStatus decode_header(const u8 input[HEADER_SIZE], u32 slot_size,
 #endif
   if(abi != ABI_VERSION
 #if MK61_ENABLE_PORTABLE_APPS
-     && !(abi == MK61_PORTABLE_APP_ABI && (flags & MK61_PORTABLE_APP_FLAG) != 0)
+     && !(abi == MK61_PORTABLE_APP_ABI && (flags & MK61_PORTABLE_APP_FLAG) != 0 &&
+          (flags & MK61_APP_RELOCATABLE_FLAG) == 0)
+     && !(abi == MK61_RELOCATABLE_APP_ABI && (flags & MK61_PORTABLE_APP_FLAG) != 0 &&
+          (flags & MK61_APP_RELOCATABLE_FLAG) != 0)
 #endif
      ) {
     return HeaderStatus::UNSUPPORTED_ABI;
@@ -369,6 +380,65 @@ bool decode_payload(const Reader& reader, Compression compression,
   result.input_size = input.position();
   result.output_size = written;
   return true;
+}
+
+#if MK61_ENABLE_PORTABLE_APPS
+namespace {
+struct RelocationSource { const Reader* reader; u32 offset; };
+bool read_relocations(void* context, u32 offset, u8* output, usize size) {
+  const auto& source = *(const RelocationSource*) context;
+  return source.reader->read(source.reader->context, source.offset + offset, output, size);
+}
+}
+#endif
+
+bool decode_image(const Header& header, const Reader& reader, u8* output, u32 address) {
+  DecodeResult decoded = {};
+  u32 code_size = header.stored_size;
+#if MK61_ENABLE_PORTABLE_APPS
+  const bool relocatable = (header.flags & MK61_APP_RELOCATABLE_FLAG) != 0;
+  if(relocatable) code_size = header.code_stored_size;
+  if(address < SRAM_FIRST_ADDRESS || header.memory_size > OVERLAY_SIZE ||
+     address > SRAM_LAST_ADDRESS - header.memory_size || (address & 7U) ||
+     (!relocatable && address != header.load_address) || code_size > header.stored_size) return false;
+#else
+  if(address != header.load_address) return false;
+#endif
+  if(!decode_payload(reader, header.compression, code_size, output, header.image_size, decoded
+#if MK61_ENABLE_PORTABLE_APPS
+       , header.flags & ~MK61_APP_RELOCATABLE_FLAG
+#endif
+       ) || decoded.image_crc32 != header.image_crc32) return false;
+#if MK61_ENABLE_PORTABLE_APPS
+  if(relocatable) {
+    if(header.relocation_count > header.image_size / 4) return false;
+    const RelocationSource source = {&reader, code_size};
+    const Reader tail = {(void*) &source, read_relocations};
+    BufferedInput input(tail, header.stored_size - code_size, decoded.stored_crc32 ^ 0xFFFFFFFFU);
+    u32 end = 0;
+    const u32 delta = address - header.load_address;
+    for(u32 i = 0; i < header.relocation_count; ++i) {
+      u32 gap = 0;
+      for(u32 shift = 0; ; shift += 7) {
+        u8 byte = 0;
+        if(shift > 14 || !input.next(byte) ||
+           (shift != 0 && byte == 0)) return false;
+        gap |= (u32) (byte & 127U) << shift;
+        if(!(byte & 128U)) break;
+      }
+      if(end > header.image_size || gap > header.image_size - end ||
+         header.image_size - end - gap < 4) return false;
+      const u32 offset = end + gap;
+      const u32 pointer = get_le32(output, (u16) offset);
+      if(pointer < header.load_address || pointer - header.load_address > header.memory_size) return false;
+      put_le32(output, (u16) offset, pointer + delta);
+      end = offset + 4;
+    }
+    return !input.failed() && input.position() == header.stored_size - code_size &&
+           input.checksum() == header.stored_crc32;
+  }
+#endif
+  return decoded.stored_crc32 == header.stored_crc32;
 }
 
 } // namespace loadable_module

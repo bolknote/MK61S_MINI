@@ -6,9 +6,8 @@
 
 namespace loadable_module {
 
-// Основная прошивка резервирует единый 20-КиБ массив в SRAM; его фактический
-// адрес извлекается из resident ELF и передаётся отдельной линковке модулей.
-// Поэтому размещение остаётся проверяемым линкером и не зависит от размера .bss.
+// Shared SRAM pool: ABI 2/3 use its full fixed window; ABI 4 receives an
+// aligned block of image+BSS bytes and relocates internal pointers on load.
 static constexpr u32 SRAM_FIRST_ADDRESS = 0x20000000UL;
 static constexpr u32 SRAM_LAST_ADDRESS = 0x20020000UL;
 static constexpr u32 OVERLAY_SIZE = 20U * 1024U;
@@ -24,12 +23,13 @@ enum class Kind : u8 {
   WBMP_VIEWER = 3,
   APPLICATION = 4,
   CHIP8 = 5,
-  MARKDOWN_VIEWER = 6
+  MARKDOWN_VIEWER = 6,
+  SETUP = 7
 };
 
 // Только системные APP имеют канонические имена. Пользовательских APPLICATION
 // может быть сколько угодно, и их имена задаются самим файлом в C5.
-static constexpr u8 KIND_COUNT = 5;
+static constexpr u8 KIND_COUNT = 6;
 static constexpr char SYSTEM_DIRECTORY_NAME[] = "System";
 
 enum class Compression : u8 {
@@ -46,8 +46,10 @@ struct Header {
   u32 image_size;
   u32 memory_size;
   u32 entry_offset;
-  u32 resident_size;
-  u32 resident_crc32;
+  // ABI 2: resident binding. ABI 3: zero. ABI 4: compressed image length
+  // and number of word relocations in the following delta-coded table.
+  union { u32 resident_size; u32 code_stored_size; };
+  union { u32 resident_crc32; u32 relocation_count; };
   u32 stored_crc32;
   u32 image_crc32;
   // Ноль означает обычный APP. Ненулевой двухбайтовый magic C5 объявляет
@@ -103,6 +105,11 @@ u32 crc32(const u8* data, usize size);
 // Читает ровно stored_size байт и распаковывает ZX0 непосредственно в SRAM.
 // Уже полученная часть output служит окном, поэтому отдельный словарь и второй
 // образ в памяти не требуются.
+// CRC verification precedes relocation; no entry may execute on failure.
+// Header must have passed decode_header. load_address is the actual allocation.
+bool decode_image(const Header& header, const Reader& reader,
+                  u8* output, u32 load_address);
+
 bool decode_payload(const Reader& reader, Compression compression,
                     u32 stored_size, u8* output, u32 image_size,
                     DecodeResult& result

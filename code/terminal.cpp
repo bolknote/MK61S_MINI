@@ -457,6 +457,41 @@ void class_terminal::editor_key(terminal_line_editor::Key key) {
     }
 
 void class_terminal::print_help(void) {
+#if MK61_ENABLE_PORTABLE_APPS
+      program_store::Entry pages[2] = {};
+      bool available = true;
+      char path[] = "/System/HELP0.TXT";
+      for(u8 page = 0; page < 2; ++page) {
+        path[12] = (char) ('0' + page);
+        u8 tag[9]; u16 count = 0;
+        available = available && storage_path::resolve_file(program_store::ROOT_ID,
+            path, program_store::ProgramType::TEXT, pages[page]) == storage_path::Status::OK &&
+            program_store::read_range_id(pages[page].id, 0, tag, sizeof(tag), &count) &&
+            count == sizeof(tag) && memcmp(tag, terminal_catalog::help_signature(), sizeof(tag)) == 0;
+      }
+      Serial.println("Available commands:");
+      if(available) {
+        u8 buffer[64];
+        for(const auto& page : pages) {
+          for(u16 offset = 9; offset < page.data_len;) {
+            const u16 wanted = (u16) (((usize) (page.data_len - offset) < sizeof(buffer))
+                ? page.data_len - offset : sizeof(buffer));
+            u16 count = 0;
+            if(!program_store::read_range_id(page.id, offset, buffer, wanted, &count) || count != wanted) {
+              Serial.println("HELP read error"); return;
+            }
+            Serial.write(buffer, count); offset += count;
+          }
+        }
+        return;
+      }
+      for(usize i = 0; i < terminal_catalog::count(); ++i) {
+        Serial.print(terminal_catalog::at(i).name); Serial.write(' ');
+      }
+      Serial.println("\nInstall matching /System/HELP0.TXT and HELP1.TXT");
+      Serial.println("fsls /System; fsput begin /System/<file> <size> <crc32>; fsput data <offset> <hex>; fsput end");
+#else
+
       Serial.println("Available commands:");
       for(usize i = 0; i < terminal_catalog::count(); i++) {
         const auto command = terminal_catalog::at(i);
@@ -468,6 +503,7 @@ void class_terminal::print_help(void) {
       }
       Serial.println("  R<r>=   R<r>= <value> - write register, e.g. R0= 3.14");
       Serial.println("  set$    set$<addr> <hex> - write program memory");
+#endif
     }
 
 #if MK61_CRASH_DUMP_SUPPORTED

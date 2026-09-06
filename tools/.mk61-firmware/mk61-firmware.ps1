@@ -1101,6 +1101,7 @@ function Test-CustomAppsRequested {
 
 function Get-ExpectedSystemAppNames {
     $names = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($name in @('SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
     if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
     if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
     if ($script:State.EnableWbmp -eq 1 -and
@@ -1114,7 +1115,7 @@ function Get-ExpectedSystemAppNames {
 
 function Get-AllSystemAppNames {
     return [string[]]@(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP')
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')
 }
 
 function Find-BashExecutable {

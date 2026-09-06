@@ -28,6 +28,7 @@ struct Options {
   bool kind_set = false;
   std::filesystem::path resident;
   std::filesystem::path image;
+  std::filesystem::path relocations;
   std::filesystem::path output;
   u32 memory_size = 0;
   u32 entry_offset = 0;
@@ -47,13 +48,14 @@ struct Options {
       "       --memory-size N --entry-offset N --load-address N\n"
       "       --output FILE [--handled-magic XX] [--require-zx0]\n"
       "  --kind KIND          app, focal, tinybasic, wbmp-viewer,\n"
-      "                       markdown-viewer, or chip8\n"
+      "                       markdown-viewer, chip8, or setup\n"
       "  --resident FILE      exact resident firmware .bin\n"
-      "  --portable           experimental ABI 3; fixed SRAM; best of ZX0 / BCJ+ZX0\n"
+      "  --portable           standalone; best of ZX0 / BCJ+ZX0\n"
+      "  --relocations FILE   add compact relocation table (ABI 4; otherwise ABI 3)\n"
       "  --image FILE         linked SRAM image without its .bss tail\n"
       "  --memory-size N      image plus zero-filled .bss\n"
       "  --entry-offset N     module entry offset from the load address\n"
-      "  --load-address N     exact SRAM overlay address from resident ELF\n"
+      "  --load-address N     linked SRAM base (portable: 0x20000000)\n"
       "  --handled-magic XX   two-byte C5 type magic handled by FILE_OPEN\n"
       "  --require-zx0        reject an uncompressed result\n"
       "  --output FILE        resulting .APP container\n");
@@ -75,6 +77,7 @@ u32 parse_u32(const std::string& text, const char* name) {
 }
 
 Kind parse_kind(const std::string& text) {
+  if(text == "setup") return Kind::SETUP;
   if(text == "app") return Kind::APPLICATION;
   if(text == "focal") return Kind::FOCAL;
   if(text == "tinybasic") return Kind::TINYBASIC;
@@ -119,6 +122,8 @@ Options parse_options(int argc, char** argv) {
       options.kind_set = true;
     } else if(option == "--resident") {
       options.resident = value;
+    } else if(option == "--relocations") {
+      options.relocations = value;
     } else if(option == "--image") {
       options.image = value;
     } else if(option == "--memory-size") {
@@ -138,6 +143,7 @@ Options parse_options(int argc, char** argv) {
       usage(("unknown option: " + option).c_str());
     }
   }
+  if(!options.portable && !options.relocations.empty()) usage("relocations require --portable");
   if(options.portable) {
     if(!options.resident.empty() ||
        (options.load_address_set &&
@@ -288,6 +294,17 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
     compression = Compression::NONE;
   }
 
+  const u32 code_stored_size = (u32) stored.size();
+  u32 relocation_count = 0;
+  if(!options.relocations.empty()) {
+    // Empty tables are valid for position-independent images.
+    std::ifstream file(options.relocations, std::ios::binary);
+    if(!file) throw std::runtime_error("cannot read relocation table");
+    const std::vector<u8> table((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    for(u8 byte : table) if(!(byte & 128U)) ++relocation_count;
+    stored.insert(stored.end(), table.begin(), table.end());
+    flags |= MK61_APP_RELOCATABLE_FLAG;
+  }
   const u32 limit = slot_size(options.kind);
   if(stored.size() + loadable_module::HEADER_SIZE > limit) {
     throw std::runtime_error(
@@ -308,11 +325,25 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
   header.resident_size = (u32) resident.size();
   header.resident_crc32 =
       loadable_module::crc32(resident.data(), resident.size());
+  if(flags & MK61_APP_RELOCATABLE_FLAG) {
+    header.code_stored_size = code_stored_size;
+    header.relocation_count = relocation_count;
+  }
   header.stored_crc32 =
       loadable_module::crc32(stored.data(), stored.size());
   header.image_crc32 =
       loadable_module::crc32(image.data(), image.size());
   header.handled_type_magic = options.handled_type_magic;
+
+  const loadable_module::Reader reader = {&stored,
+      [](void* context, u32 offset, u8* out, usize size) -> bool {
+        const auto& data = *(const std::vector<u8>*) context;
+        if(offset > data.size() || size > data.size() - offset) return false;
+        std::memcpy(out, data.data() + offset, size); return true;
+      }};
+  std::vector<u8> verified(image.size());
+  if(!loadable_module::decode_image(header, reader, verified.data(), header.load_address) || verified != image)
+    throw std::runtime_error("APP decode/relocation verification failed");
 
   std::vector<u8> module(loadable_module::HEADER_SIZE + stored.size());
   if(!loadable_module::encode_header(header, limit, module.data())) {

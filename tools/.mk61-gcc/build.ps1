@@ -94,7 +94,7 @@ Firmware options:
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1
-  -PortableApps 0|1 standalone APP ABI 3; default 1 (0: legacy ABI 2)
+  -PortableApps 0|1 standalone APP ABI 4; default 1 (0: legacy ABI 2)
   -Lto 0|1          default 1
 
 Paths:
@@ -295,7 +295,7 @@ function Remove-GeneratedBundleFiles {
     }
     $system = Join-Path $Directory 'System'
     foreach ($name in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'HELP0.TXT', 'HELP1.TXT'
     )) {
         $path = Join-Path $system $name
         if ([IO.File]::Exists($path)) {
@@ -370,7 +370,7 @@ try {
         Stop-GccBuild (
             '-Ws0010Graphics 1 requires profile mini-v3-ws0010')
     }
-    $systemRequested = $Focal -eq '1' -or $Basic -eq '1' -or
+    $systemRequested = $PortableApps -eq '1' -or $Focal -eq '1' -or $Basic -eq '1' -or
         $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
     if ($null -ne $releaseCaseInfo) {
@@ -704,7 +704,7 @@ try {
     [Console]::WriteLine("  resident: $residentName")
     if ($systemRequested) {
         [Console]::WriteLine($(if ($PortableApps -eq '1') {
-            '  System APP: standalone ABI 3, ZX0/BCJ'
+            '  System APP: standalone ABI 4, ZX0/BCJ + relocations'
         } else { '  System APP: legacy ABI 2, matched to this resident' }))
     }
 } catch {

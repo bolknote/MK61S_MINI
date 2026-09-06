@@ -14,6 +14,69 @@ def run(command):
                           text=True, check=True).stdout
 
 
+def relocation_checks(args, work):
+    image, app, memory, table = (work / x for x in ('reloc.bin', 'reloc.APP', 'relocated.bin', 'table.rel'))
+    base, memory_size = 0x20000000, 64
+    original = bytearray(32)
+    # .data pointer, Thumb function pointer, BSS one-past pointer, and an
+    # integer with the same bit pattern as an address (not a relocation).
+    for offset, value in ((0, base + 4), (8, base + 17), (12, base + 64), (20, base + 8)):
+        struct.pack_into('<I', original, offset, value)
+    image.write_bytes(original); table.write_bytes(bytes((0, 4, 0)))
+    command = [args.packer, '--portable', '--kind', 'app', '--image', image,
+               '--memory-size', memory_size, '--entry-offset', 0,
+               '--relocations', table, '--output', app]
+    run(command)
+    good = app.read_bytes()
+    assert good[12] == 4 and good[16] & 4
+    for address in (base, base + 8, base + 1024, base + 20480 - memory_size):
+        run([args.reader, app, memory, hex(address)])
+        expected = original + bytes(32)
+        for offset in (0, 8, 12):
+            struct.pack_into('<I', expected, offset, struct.unpack_from('<I', original, offset)[0] + address - base)
+        assert memory.read_bytes() == expected
+    assert subprocess.run([str(args.reader), str(app), str(memory), hex(base+1)]).returncode == 4
+    code_size = struct.unpack_from('<I', good, 40)[0]
+    def damaged_tail(tail, count):
+        bad = bytearray(good[:64+code_size] + tail)
+        struct.pack_into('<I', bad, 24, len(bad)-64)
+        struct.pack_into('<I', bad, 44, count)
+        struct.pack_into('<I', bad, 48, zlib.crc32(bad[64:]))
+        struct.pack_into('<I', bad, 60, zlib.crc32(bad[:60]))
+        app.write_bytes(bad)
+        result = subprocess.run([str(args.reader), str(app), str(memory), hex(base+8)])
+        assert result.returncode in (3,4), (tail, count, result.returncode)
+    # Valid CRCs cannot hide truncated/overlong gaps, extra records, bounds,
+    # or a relocation of a non-pointer word. Reader uses canaries even on failure.
+    for tail,count in ((b'\x80',1), (b'\x80\x00',1), (b'\x80\x80',1),
+                       (b'\x7f',1), (b'\xff\x7f',1), (b'\x04',1),
+                       (b'\x80\x80\0',1), (b'\x80\x80\x80',1), (b'\xff\xff\x7f',1),
+                       (b'\0\0',1), (b'',1), (b'\0',9)):
+        damaged_tail(tail,count)
+    for tail in (b'\x80', b'\x80\0', b'\x7f', b'\x04'):
+        table.write_bytes(tail)
+        result = subprocess.run([str(x) for x in command], capture_output=True)
+        assert result.returncode != 0, 'packer accepted malformed relocations'
+    # A single pointer may live past 16 KiB: its first delta needs three
+    # bytes. Exercise both the ULEB boundary and the last possible word.
+    for offset in (16383, 16384, 20476):
+        large = bytearray(20480)
+        struct.pack_into('<I', large, offset, base + 20480)
+        image.write_bytes(large)
+        gap, encoded = offset, bytearray()
+        while gap >= 128:
+            encoded.append((gap & 127) | 128); gap >>= 7
+        encoded.append(gap); table.write_bytes(encoded)
+        expanded = [args.packer, '--portable', '--kind', 'app', '--image', image,
+                    '--memory-size', 20480, '--entry-offset', 0,
+                    '--relocations', table, '--output', app]
+        run(expanded)
+        run([args.reader, app, memory, hex(base + 8)])
+        struct.pack_into('<I', large, offset, base + 20488)
+        assert memory.read_bytes() == large
+    print('APP relocation: shifted addresses, Thumb pointers, BSS, constants and forged-CRC failures PASS')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("packer", type=Path)
@@ -98,6 +161,7 @@ def main():
         struct.pack_into("<I", trailing, 48, zlib.crc32(trailing[64:]))
         struct.pack_into("<I", trailing, 60, zlib.crc32(trailing[:60]))
         reject(trailing)
+        relocation_checks(args, work)
     print("portable APP packages: BCJ/plain/tie selection, BSS, legacy and corruption PASS")
 
 

@@ -2,8 +2,9 @@
 
 #if MK61_ENABLE_PORTABLE_APPS && (MK61_FOCAL_IS_LOADABLE || \
     MK61_TINYBASIC_IS_LOADABLE || MK61_WBMP_VIEWER_IS_LOADABLE || \
-    MK61_MARKDOWN_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE)
+    MK61_MARKDOWN_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE || MK61_SETUP_IS_LOADABLE)
 
+#define MK61_OTHER_SYSTEM_LOADABLE (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE || MK61_WBMP_VIEWER_IS_LOADABLE || MK61_MARKDOWN_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE)
 #include "loadable_system_api.hpp"
 #include "loadable_app_api.hpp"
 #include "loadable_module_format.hpp"
@@ -16,6 +17,7 @@
 #include "storage_path.hpp"
 #include "text_editor.hpp"
 #include "mk61_ref.hpp"
+#include "setup_service.hpp"
 #if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
 #include "loadable_system_editor.hpp"
 #endif
@@ -32,7 +34,9 @@ static_assert(sizeof(shared_scratch::Lease) <= MK61_SYSTEM_LEASE_BYTES,
               "increase the versioned opaque lease storage");
 static_assert(alignof(mk61_system_lease) >= alignof(language_workspace::Lease),
               "opaque lease alignment");
+#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
 static u32 language_image_crc[2];
+#endif
 #if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
 #define MK61_RUNTIME(name) extern "C" void service_##name() asm(#name);
 #include "loadable_system_runtime.def"
@@ -44,6 +48,7 @@ static const mk61_system_runtime_function runtime[] = {
 };
 #endif
 
+#if MK61_OTHER_SYSTEM_LOADABLE
 static language_workspace::Owner owner(u32 kind) {
   switch((Kind) kind) {
     case Kind::FOCAL: return language_workspace::Owner::FOCAL;
@@ -61,6 +66,8 @@ static void export_file(const program_store::Entry& entry, mk61_system_file& out
   out.type = (u8) entry.type; out.kind = (u8) entry.kind;
   memcpy(out.name, entry.name, sizeof(out.name));
 }
+
+#endif
 
 static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
   MK61Display& lcd = main_lcd();
@@ -111,6 +118,7 @@ static u32 key_call(u32 operation, u32 value) {
 
 static u32 system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   switch(operation) {
+    case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
     case MK61_SYS_DISPLAY: return display_call(a, b, c, payload);
     case MK61_SYS_KEYBOARD: return key_call(a, b);
     case MK61_SYS_MICROS: return micros();
@@ -124,6 +132,7 @@ static u32 system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
         case MK61_SYS_REGISTER_F: return core_61::expanded_program_is_on();
       }
       return 0;
+#if MK61_OTHER_SYSTEM_LOADABLE
     case MK61_SYS_FILE_COUNT: return (u32) program_store::count((program_store::ProgramType) a);
     case MK61_SYS_FILE_ENTRY: {
       if(!payload) return 0;
@@ -155,10 +164,12 @@ static u32 system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
         auto* lease = new(out.opaque) language_workspace::Lease(owner(b), c);
         if(!lease->ok()) { lease->~Lease(); return 0; }
         out.data = (u8*) lease->data(); out.size = lease->size(); out.fresh = lease->fresh();
+#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
         if(b == (u32) Kind::FOCAL || b == (u32) Kind::TINYBASIC) {
           u32& stamp = language_image_crc[b - 1U];
           if(stamp != out.image_crc) { out.fresh = 1; stamp = out.image_crc; }
         }
+#endif
       } else if(a == 1 && (b == (u32) Kind::MARKDOWN_VIEWER || b == (u32) Kind::WBMP_VIEWER)) {
         auto* lease = new(out.opaque) shared_scratch::Lease(
             b == (u32) Kind::MARKDOWN_VIEWER ? shared_scratch::Owner::MARKDOWN_VIEWER
@@ -177,6 +188,7 @@ static u32 system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
       return 1;
     }
     case MK61_SYS_MEMORY_DATA: return (u32) (usize) language_workspace::data(owner(a));
+#endif
     case MK61_SYS_TEXT_ROWS: {
       if(!payload || a > MK61_SYSTEM_MAX_ROWS) return 0;
       const char* const* lines = (const char* const*) payload;
