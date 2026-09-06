@@ -2718,7 +2718,13 @@ bool class_terminal::read_staged_file_upload(void* context, u32 offset,
       if(context == NULL || output == NULL) return false;
       const u16 length = *(u16*) context;
       if(offset > length || size > length - offset) return false;
-      u8 block[program_store::VFAT_STAGE_BLOCK_SIZE];
+      // Upload is complete before this source is read. Its existing sector
+      // buffer is free; the narrowed staging index starts after that sector.
+      language_workspace::Lease workspace(
+          language_workspace::Owner::TERMINAL_TRANSFER,
+          FILE_UPLOAD_WORKSPACE_SIZE);
+      if(!workspace.ok() || workspace.fresh()) return false;
+      u8* const block = (u8*) workspace.data();
       while(size != 0) {
         const u16 block_index =
             (u16) (offset / program_store::VFAT_STAGE_BLOCK_SIZE);

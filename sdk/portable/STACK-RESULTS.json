@@ -1,0 +1,334 @@
+{
+  "date": "2026-09-06",
+  "baseline_commit": "09d62fa",
+  "baseline_build": "EDFFB94F",
+  "tested_build": "B07CC4CB",
+  "stack_budget": 16384,
+  "minimum_required": 12288,
+  "before_remaining": 11136,
+  "after_remaining": 12328,
+  "stack_gain": 1192,
+  "frames": {
+    "write_file_from_source": {
+      "before": 2032,
+      "after": 1488
+    },
+    "read_staged_file_upload": {
+      "before": 544,
+      "after": 56
+    },
+    "append_transaction": {
+      "before": 568,
+      "after": 40
+    },
+    "append_transaction_record": {
+      "after": 560
+    },
+    "checkpoint": {
+      "before": 680,
+      "after": 616
+    }
+  },
+  "f401": [
+    {
+      "case": "f401-capability-a00-usb",
+      "before_bin": 246764,
+      "after_bin": 246944,
+      "flash_delta": 180,
+      "flash_free": 15200,
+      "before_static_ram": 33636,
+      "after_static_ram": 33636,
+      "max_frame_before": 2032,
+      "max_frame_after": 1928,
+      "status": "ok"
+    },
+    {
+      "case": "f401-capability-ws-graphics",
+      "before_bin": 239104,
+      "after_bin": 239292,
+      "flash_delta": 188,
+      "flash_free": 22852,
+      "before_static_ram": 26692,
+      "after_static_ram": 26692,
+      "max_frame_before": 2032,
+      "max_frame_after": 1928,
+      "status": "ok"
+    },
+    {
+      "case": "f401-capability-ws-usb",
+      "before_bin": 256924,
+      "after_bin": 257092,
+      "flash_delta": 168,
+      "flash_free": 5052,
+      "before_static_ram": 33600,
+      "after_static_ram": 33600,
+      "max_frame_before": 2032,
+      "max_frame_after": 1928,
+      "status": "ok"
+    },
+    {
+      "case": "f401-capability-ws-usb-graphics",
+      "before_bin": 257888,
+      "after_bin": 258060,
+      "flash_delta": 172,
+      "flash_free": 4084,
+      "before_static_ram": 33600,
+      "after_static_ram": 33600,
+      "max_frame_before": 2032,
+      "max_frame_after": 1928,
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-a00",
+      "before_bin": 234640,
+      "after_bin": 234844,
+      "flash_delta": 204,
+      "flash_free": 27300,
+      "before_static_ram": 26736,
+      "after_static_ram": 26736,
+      "max_frame_before": 2032,
+      "max_frame_after": 1928,
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "before_bin": 236832,
+      "after_bin": 237104,
+      "flash_delta": 272,
+      "flash_free": 25040,
+      "before_static_ram": 28724,
+      "after_static_ram": 28720,
+      "max_frame_before": 2032,
+      "max_frame_after": 1488,
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-mini-v2-a00",
+      "before_bin": 234660,
+      "after_bin": 234872,
+      "flash_delta": 212,
+      "flash_free": 27272,
+      "before_static_ram": 26736,
+      "after_static_ram": 26736,
+      "max_frame_before": 2032,
+      "max_frame_after": 1928,
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-ws0010",
+      "before_bin": 244524,
+      "after_bin": 244696,
+      "flash_delta": 172,
+      "flash_free": 17448,
+      "before_static_ram": 26688,
+      "after_static_ram": 26688,
+      "max_frame_before": 2032,
+      "max_frame_after": 1928,
+      "status": "ok"
+    }
+  ],
+  "f411": {
+    "before_bin": 302660,
+    "after_bin": 302852,
+    "flash_delta": 192,
+    "static_ram_before": 40876,
+    "static_ram_after": 40876
+  },
+  "hil": {
+    "c5": {
+      "result": "PASS",
+      "writes": 26,
+      "readback_equal": true,
+      "temporary_files_removed": true,
+      "minimum_stack_remaining": 12328,
+      "cases": [
+        {
+          "bytes": 1,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 511,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 511,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 512,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 512,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 513,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 513,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1023,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1023,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1536,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1536,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1536,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1536,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1023,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1023,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 513,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 513,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 512,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 512,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 511,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 511,
+          "repeat": 1,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1,
+          "repeat": 0,
+          "remaining": 12424
+        },
+        {
+          "bytes": 1,
+          "repeat": 1,
+          "remaining": 12424
+        }
+      ]
+    },
+    "app": {
+      "startup_launches": 6,
+      "wbmp_launches": 7,
+      "display_switches": 2,
+      "minimum_stack_remaining": 12328,
+      "frames_verified_transport": 45,
+      "result": "PASS",
+      "relocation_address": "0x2001b700",
+      "app_sha256": "2e695c28ff87403fef675979121197b25188aeb626cfbb0ddcec30636e2a6627"
+    },
+    "system": {
+      "language_runs": 12,
+      "state_restores": 6,
+      "chip8_runs": 3,
+      "markdown_runs": 3,
+      "minimum_stack_remaining": 12328,
+      "result": "PASS",
+      "frames_verified_transport": 187
+    },
+    "setup": {
+      "result": "PASS",
+      "views": [
+        "hardware",
+        "date edit/cancel",
+        "calibration edit/cancel/reopen",
+        "font"
+      ],
+      "setup_allocation_bytes": 9216
+    },
+    "negative": {
+      "result": "PASS",
+      "corrupt_apps_rejected": [
+        "fixed-abi3",
+        "payload-crc",
+        "unknown-flags",
+        "truncated-gap",
+        "noncanonical-gap",
+        "out-of-range-gap"
+      ],
+      "rejection_preserves_c5": true,
+      "help_cases": [
+        "complete",
+        "missing",
+        "stale",
+        "restored"
+      ]
+    },
+    "restoration": {
+      "result": "RESTORED",
+      "tested_build": "B07CC4CB",
+      "restored_build": "2504D75A",
+      "tested_firmware_bytes": 302852,
+      "tested_firmware_sha256": "2331f60582fd9223df9ebbe811136d27c5c75bdff1bf37883ada99ff08c0f161",
+      "full_flash_readback_equal": true,
+      "original_files_restored": 18,
+      "temporary_files_removed": 16,
+      "calculator_state_restored": true,
+      "other_device_unchanged": true,
+      "stack_remaining": 12328
+    }
+  },
+  "tests": {
+    "host_suite": "ASan/UBSan PASS",
+    "f401_cases": 8,
+    "f411_elf_and_stack_analysis": "PASS",
+    "c5_vfat_mutations": 587
+  }
+}

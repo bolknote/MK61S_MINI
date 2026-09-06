@@ -862,22 +862,14 @@ static u8 new_overlay_slots(const Transaction& transaction) {
   return added;
 }
 
-static bool append_transaction(const Transaction& transaction) {
+// Do not keep the WAL sector buffer on the stack while checkpoint() copies
+// the catalog. This separate call also prevents LTO from merging the frames.
+__attribute__((noinline))
+static bool append_transaction_record(const Transaction& transaction) {
   const u16 record_size = wal_record_size(g_catalog_write_version);
-  const u8 maximum_updates = wal_max_updates(g_catalog_write_version);
   const u16 image_count_offset =
       wal_image_count_offset(g_catalog_write_version);
   const u16 crc_offset = wal_crc_offset(g_catalog_write_version);
-  if(transaction.count > maximum_updates) return false;
-  const u8 records_per_bank = (u8) ((u32) storage_geometry::CATALOG_WAL_SECTORS *
-      storage_geometry::PHYSICAL_SECTOR_SIZE / record_size);
-  if(g_wal_sealed || g_wal_records >= records_per_bank ||
-     g_overlay_count + new_overlay_slots(transaction) > OVERLAY_CAPACITY) {
-    if(!checkpoint()) {
-      (void) load_catalog();
-      return false;
-    }
-  }
 
   u8 record[WAL_RECORD_SIZE];
   memset(record, 0xFF, record_size);
@@ -916,6 +908,23 @@ static bool append_transaction(const Transaction& transaction) {
   g_wal_records++;
   invalidate_iteration_caches();
   return true;
+}
+
+static bool append_transaction(const Transaction& transaction) {
+  const u16 record_size = wal_record_size(g_catalog_write_version);
+  const u8 maximum_updates = wal_max_updates(g_catalog_write_version);
+  if(transaction.count > maximum_updates) return false;
+  const u8 records_per_bank = (u8) ((u32) storage_geometry::CATALOG_WAL_SECTORS *
+      storage_geometry::PHYSICAL_SECTOR_SIZE / record_size);
+  if(g_wal_sealed || g_wal_records >= records_per_bank ||
+     g_overlay_count + new_overlay_slots(transaction) > OVERLAY_CAPACITY) {
+    if(!checkpoint()) {
+      (void) load_catalog();
+      return false;
+    }
+  }
+
+  return append_transaction_record(transaction);
 }
 
 static void encode_catalog_header(u8* header, u32 generation, u32 table_crc) {
@@ -985,10 +994,11 @@ static bool checkpoint(void) {
   }
   const u32 table_crc = crc.finish();
 
-  u8 header[CATALOG_HEADER_SIZE];
+  // The table has been written and checksummed; its buffer can hold the header.
+  u8* const header = buffer;
   encode_catalog_header(header, g_catalog_generation + 1, table_crc);
   const u32 header_address = sector_address(bank_sector(destination));
-  if(!write_bytes(header_address, header, sizeof(header)) ||
+  if(!write_bytes(header_address, header, CATALOG_HEADER_SIZE) ||
      !write_byte(header_address + 5, STATE_ACTIVE)) return false;
 
   g_active_bank = destination;
@@ -2904,6 +2914,9 @@ static bool select_large_sector(u32& output) {
   return false;
 }
 
+// Keep large-file work buffers out of the caller's small-file/encoder paths.
+// GCC otherwise inlines them and reserves their stack for every C5 write.
+__attribute__((noinline))
 static bool program_large_source(u16 id, const FileSource& source,
                                  u16 data_len,
                                  LargeDescriptor& descriptor) {
@@ -3051,6 +3064,7 @@ static bool finish_large_zx0_output(LargeZx0Output& output) {
 
 } // namespace
 
+__attribute__((noinline))
 static bool program_large_zx0(u16 id,
                               const zx0::Prepared& prepared, u16 data_len,
                               u16 stored_len,
@@ -3284,7 +3298,13 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const u8* contiguous_data) {
   DiskActivity activity;
   LargeWriteGuard large_guard;
-  alignas(4) u8 fallback_workspace[ZX0_FALLBACK_WORKSPACE_SIZE];
+  // The compression plan is consumed before the catalog transaction starts.
+  union {
+    alignas(4) u8 compression[ZX0_FALLBACK_WORKSPACE_SIZE];
+    Transaction transaction;
+  } write_workspace;
+  write_workspace.compression[0] = 0; // Start the trivial array's lifetime.
+  auto& fallback_workspace = write_workspace.compression;
   const u16 max_data_len = maximum_data_len(type);
   if(!g_ready || !supported_type(type) || !valid_name(name) || !parent_valid(parent_id) ||
      (type == ProgramType::CHIP8 && data_len == 0) ||
@@ -3429,7 +3449,8 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
     inode.prev_sibling = NONE;
   }
 
-  Transaction transaction;
+  write_workspace.transaction.count = 0; // Start Transaction's lifetime.
+  Transaction& transaction = write_workspace.transaction;
   txn_begin(transaction);
   if(replacing) {
     const int old_type_index = type_index(inode_type(old_inode));

@@ -84,9 +84,13 @@ def main():
     parser.add_argument('--directory', default='/SAPPTEST')
     parser.add_argument('--output-dir', type=Path)
     parser.add_argument('--cycles', type=int, default=3)
+    parser.add_argument('--minimum-stack-remaining', type=int, default=0,
+                        help='required watermark headroom in bytes (F411 release: 12288)')
     parser.add_argument('--markdown', action='store_true')
     parser.add_argument('--write-fixtures', type=Path)
     args = parser.parse_args()
+    if args.minimum_stack_remaining < 0:
+        parser.error('--minimum-stack-remaining must be nonnegative')
     if args.write_fixtures:
         fixtures(args.write_fixtures)
         return
@@ -163,7 +167,11 @@ def main():
                 report = port.command(command,timeout=15)
                 (args.output_dir/(command.replace(' ','-')+'.txt')).write_text(report)
                 if command == 'crash show': assert 'CRASH none' in report, report
-                if command == 'mpu status': assert 'enabled=1 layout=ok' in report, report
+                if command == 'mpu status':
+                    assert 'enabled=1 layout=ok' in report and 'watermark=1' in report, report
+                    remaining = int(re.search(r' observed_remaining=(\d+)', report)[1])
+                    assert remaining >= args.minimum_stack_remaining, (remaining, args.minimum_stack_remaining)
+                    counts['minimum_stack_remaining'] = remaining
                 if command == 'mem': assert 'MEM invariant=ok' in report, report
                 if command == 'df': assert 'FIRMWARE CRC state=valid' in report, report
             counts.update(result='PASS',frames_verified_transport=len(port.frames))

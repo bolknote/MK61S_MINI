@@ -200,12 +200,16 @@ def main():
     parser.add_argument('--public-id')
     parser.add_argument('--directory', default='/PAPPTEST')
     parser.add_argument('--cycles', type=int, default=10)
+    parser.add_argument('--minimum-stack-remaining', type=int, default=0,
+                        help='required watermark headroom in bytes (F411 release: 12288)')
     parser.add_argument('--output-dir', type=Path)
     parser.add_argument('--relocation-app', type=Path,
                         help='installed CHECK.APP built from portable_app_hil_relocation.c')
     parser.add_argument('--write-fixtures', type=Path,
                         help='only generate Wide/Tall.wbmp locally; no device access')
     args = parser.parse_args()
+    if args.minimum_stack_remaining < 0:
+        parser.error('--minimum-stack-remaining must be nonnegative')
     if args.write_fixtures:
         write_fixtures(args.write_fixtures)
         return
@@ -282,11 +286,15 @@ def main():
                 report = port.command(command, timeout=10)
                 (args.output_dir / filename).write_text(report)
                 if command == 'crash show': assert 'CRASH none' in report, report
-                if command == 'mpu status': assert 'enabled=1 layout=ok' in report, report
+                if command == 'mpu status':
+                    assert 'enabled=1 layout=ok' in report and 'watermark=1' in report, report
+                    remaining = int(re.search(r' observed_remaining=(\d+)', report)[1])
+                    assert remaining >= args.minimum_stack_remaining, (remaining, args.minimum_stack_remaining)
                 if command == 'mem': assert 'MEM invariant=ok' in report, report
                 if command == 'df': assert 'FIRMWARE CRC state=valid' in report, report
             result = {'startup_launches': args.cycles + 1, 'wbmp_launches': 7,
                       'display_switches': 2,
+                      'minimum_stack_remaining': remaining,
                       'frames_verified_transport': len(port.frames), 'result': 'PASS'}
             if relocation_address is not None:
                 result.update(relocation_address=f'{relocation_address:#010x}',
