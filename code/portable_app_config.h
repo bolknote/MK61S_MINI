@@ -1,8 +1,8 @@
 #ifndef MK61_PORTABLE_APP_CONFIG_H
 #define MK61_PORTABLE_APP_CONFIG_H
 
-/* Bundle builders enable this ABI and pin the existing overlay at this
- * address. Generic/custom linker workflows opt in explicitly; no extra SRAM. */
+/* Bundle builders enable ABI 4 and export free-RAM linker bounds. This is
+ * the virtual link base, never a reservation or a physical load address. */
 #ifndef MK61_ENABLE_PORTABLE_APPS
 #define MK61_ENABLE_PORTABLE_APPS 0
 #endif

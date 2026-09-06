@@ -67,6 +67,7 @@ build_group() {
     local elf="$build_path/resident.elf"
     [[ -s "$elf" ]] || fail "missing ELF for $case_id"
     "$root/tests/check_global_constructors.sh" "$elf"
+    python3 "$root/tests/check_app_memory_elf.py" "$elf"
     "$root/tests/check_early_dfu_elf.sh" "$elf"
     "$root/tests/check_usb_suspend_elf.sh" --disabled "$elf"
     if [[ "$profile" == mini-v3-ws0010 ]]; then
@@ -99,7 +100,7 @@ import sys
 data = Path(sys.argv[1]).read_bytes()
 assert struct.unpack_from('<H', data, 12)[0] == 4, 'System APP must use ABI 4'
 assert struct.unpack_from('<I', data, 16)[0] in (5, 7), 'relocatable flags'
-assert struct.unpack_from('<I', data, 20)[0] == 0x20000000, 'fixed overlay'
+assert struct.unpack_from('<I', data, 20)[0] == 0x20000000, 'virtual link base'
 code_size, relocations = struct.unpack_from('<II', data, 40)
 assert 0 < code_size <= len(data) - 64 and relocations <= (len(data) - 64 - code_size), 'relocation tail'
 PY

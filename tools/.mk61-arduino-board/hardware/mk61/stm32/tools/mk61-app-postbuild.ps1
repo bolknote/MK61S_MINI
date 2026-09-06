@@ -367,8 +367,10 @@ function Build-Mk61Bundle {
     Invoke-Mk61Tool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
         '-InputFile', $script:ResidentBin, '-MaxSize', '262144')
-    $script:OverlayHex = Get-Mk61Symbol $script:ResidentElf `
-        'mk61_module_overlay'
+    if ($CompileFlags -notmatch '-DMK61_ENABLE_PORTABLE_APPS=1') {
+        $script:OverlayHex = Get-Mk61Symbol $script:ResidentElf `
+            'mk61_module_overlay'
+    }
 
     $stageRoot = Join-Path $script:BuildPathValue 'mk61-system-apps'
     $script:Stage = [IO.Path]::GetFullPath((Join-Path $stageRoot $Bundle))

@@ -2,30 +2,35 @@
 #define MK61_SHARED_MEMORY_HPP
 
 #include "rust_types.h"
+#include "portable_app_config.h"
 
-// Один диспетчер управляет всеми крупными статическими аренами прошивки.
-// Физически арены остаются раздельными: некоторые режимы намеренно используют
-// workspace и scratch/bulk одновременно. Общими являются правила владения,
-// проверка контекста, поколение lease, вытеснение и диагностика.
+// Один диспетчер управляет рабочими аренами прошивки. WORKSPACE/SCRATCH/BULK
+// остаются раздельными, поскольку используются одновременно. В ABI 4 APP и
+// OVERLAY разделяют свободную RAM с системной кучей. Общими являются правила
+// владения, проверка контекста, поколение lease, вытеснение и диагностика.
 namespace shared_memory {
 
 static constexpr usize WORKSPACE_SIZE = 8192;
 static constexpr usize SCRATCH_SIZE = 1600;
 static constexpr usize STAGE_INDEX_SIZE = 384U * sizeof(u32);
+static constexpr usize APP_MAX_SIZE = 20U * 1024U;
 
-// F401 по умолчанию и любой явно включённый загрузчик APP требуют полного
-// 20-КиБ окна исполнения. В остальных сборках та же физическая арена остаётся
-// ровно размером с индекс C5 staging: отдельный запас RAM не появляется.
-#if defined(MK61_ENABLE_LOADABLE_MODULES)
-  #if MK61_ENABLE_LOADABLE_MODULES
-static constexpr usize OVERLAY_SIZE = 20U * 1024U;
+// ABI 4 uses the free linker range, shared with the C heap and staging.
+// Only the explicit legacy build retains a fixed-address APP window.
+#define MK61_SHARED_MEMORY_DYNAMIC MK61_ENABLE_PORTABLE_APPS
+#if (defined(MK61_ENABLE_LOADABLE_MODULES) && MK61_ENABLE_LOADABLE_MODULES) || \
+    (!defined(MK61_ENABLE_LOADABLE_MODULES) && defined(ARDUINO_BLACKPILL_F401CC))
+  #define MK61_SHARED_MEMORY_APP_ENABLED 1
+#else
+  #define MK61_SHARED_MEMORY_APP_ENABLED 0
+#endif
+
+#if !MK61_SHARED_MEMORY_DYNAMIC
+  #if MK61_SHARED_MEMORY_APP_ENABLED
+static constexpr usize OVERLAY_SIZE = APP_MAX_SIZE;
   #else
 static constexpr usize OVERLAY_SIZE = STAGE_INDEX_SIZE;
   #endif
-#elif defined(ARDUINO_BLACKPILL_F401CC)
-static constexpr usize OVERLAY_SIZE = 20U * 1024U;
-#else
-static constexpr usize OVERLAY_SIZE = STAGE_INDEX_SIZE;
 #endif
 
 #if defined(STM32F401xC) || defined(STM32F401xE)
@@ -50,7 +55,7 @@ enum class Arena : u8 {
   SCRATCH,
   BULK,
   OVERLAY,
-  APP, // dynamically sized suffix of OVERLAY storage; no extra SRAM buffer
+  APP, // top of free RAM; OVERLAY buffers and the C heap occupy its bottom
   COUNT
 };
 
@@ -229,6 +234,12 @@ bool validate_invariants(void);
 void reset_statistics(void);
 const char* arena_name(Arena arena);
 const char* owner_name(Owner owner);
+
+#if MK61_SHARED_MEMORY_DYNAMIC
+// Backend for newlib _sbrk. No eviction/callbacks inside libc. A live OVERLAY
+// lease pins the lower boundary; APP pins the upper boundary. nullptr = OOM.
+void* adjust_heap(i32 increment);
+#endif
 
 } // namespace shared_memory
 

@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-# Собирает согласованный комплект для STM32F401CC: resident-прошивку и
-# включённые системные APP, привязанные к её точному ELF/.bin. Resident и APP
-# собираются с size-LTO; узкий версионируемый список ABI не даёт LTO
-# локализовать только те resident-символы, которые нужны System APP.
+# Собирает комплект для STM32F401CC: resident и независимые System APP ABI 4.
+# Явный MK61_ENABLE_PORTABLE_APPS=0 сохраняет прежнюю привязку ABI 2 к ELF/BIN
+# для manifest-приложений. Оба пути используют size-LTO.
 
 set -euo pipefail
 
@@ -58,13 +57,16 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_FOCAL, MK61_ENABLE_TINYBASIC, MK61_ENABLE_WBMP_VIEWER,
   MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
-  MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND
+  MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND, MK61_ENABLE_PORTABLE_APPS
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
   MK61_ENABLE_MARKDOWN_VIEWER=0.
 
 Other overrides:
   MK61_ARDUINO_CLI, MK61_F401_BUILD_ROOT, MK61_OUTPUT_DIR,
   MK61_APP_MANIFESTS (colon-separated manifest paths)
+
+Portable ABI 4 is the default. Manifest APPs require
+MK61_ENABLE_PORTABLE_APPS=0; use tools/build_portable_app.py for new C APPs.
 EOF
 }
 
@@ -422,6 +424,10 @@ if [ "$compiled_graphics" -eq 0 ] &&
   exit 2
 fi
 custom_app_count=${#custom_app_names[@]}
+if [ "$custom_app_count" -gt 0 ] && [ "$portable_apps" -eq 1 ]; then
+  printf 'Error: manifest APPs use ABI 2; set MK61_ENABLE_PORTABLE_APPS=0 or rebuild with tools/build_portable_app.py for ABI 4.\n' >&2
+  exit 2
+fi
 any_module=$((portable_apps | enable_focal | enable_tinybasic | enable_wbmp |
               enable_markdown | enable_chip8 |
               (custom_app_count > 0)))
@@ -550,11 +556,13 @@ if [ "$any_module" -eq 1 ]; then
     }
   done
 
-  overlay_hex=$("$nm_tool" -g --defined-only "$resident_elf" | tr -d '\r' |
-    awk '$3 == "mk61_module_overlay" && !found { print $1; found=1 }')
-  if [ -z "$overlay_hex" ]; then
-    printf 'Error: resident ELF has no mk61_module_overlay symbol.\n' >&2
-    exit 1
+  if [ "$portable_apps" -eq 0 ]; then
+    overlay_hex=$("$nm_tool" -g --defined-only "$resident_elf" | tr -d '\r' |
+      awk '$3 == "mk61_module_overlay" && !found { print $1; found=1 }')
+    if [ -z "$overlay_hex" ]; then
+      printf 'Error: legacy resident ELF has no mk61_module_overlay symbol.\n' >&2
+      exit 1
+    fi
   fi
 fi
 

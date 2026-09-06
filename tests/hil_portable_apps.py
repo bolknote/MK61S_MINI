@@ -10,6 +10,7 @@ import binascii
 import hashlib
 import json
 import os
+import re
 import select
 import struct
 import time
@@ -219,13 +220,17 @@ def main():
         assert len(container) >= 64 and struct.unpack_from('<H', container, 12)[0] == 4
         memory_size = struct.unpack_from('<I', container, 32)[0]
         assert 0 < memory_size < 20480
-        relocation_address = 0x20000000 + ((20480 - memory_size) & ~7)
-        expected_check = struct.pack('<I', relocation_address) + expected_check[4:]
     foreground = False
     with ScreenPort(args.port) as port:
         report = port.command('identity')
         assert f'public={args.public_id.upper()}' in report, report
         (args.output_dir / 'identity.txt').write_text(report)
+        if args.relocation_app:
+            report = port.command('mpu status')
+            match = re.search(r' guard=0x([0-9A-Fa-f]+)', report)
+            assert match and 'enabled=1 layout=ok' in report, report
+            relocation_address = int(match.group(1), 16) - ((memory_size + 31) & ~31)
+            expected_check = struct.pack('<I', relocation_address) + expected_check[4:]
         try:
             port.attach()
             for cycle in range(args.cycles):

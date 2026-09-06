@@ -54,10 +54,11 @@ def resident_api(path):
                 start = source[4] + value - source[3]
                 assert size == 104
                 api_address, api = value, data[start:start + size]
-    assert symbols["mk61_module_overlay"] == BASE
-    assert symbols["_sbss"] == BASE and symbols["_ebss"] >= BASE + OVERLAY
-    assert symbols["_sdata"] >= symbols["_ebss"]
-    assert symbols["_edata"] <= symbols["_end"] < 0x20010000
+    assert "mk61_module_overlay" not in symbols, "fixed APP reserve returned"
+    assert BASE <= symbols["_sdata"] <= symbols["_edata"] <= symbols["_sbss"]
+    assert symbols["_ebss"] <= symbols["_end"] <= symbols["__mk61_dynamic_begin"]
+    assert symbols["__mk61_dynamic_begin"] + OVERLAY <= symbols["__mk61_dynamic_end"]
+    assert symbols["__mk61_dynamic_end"] in (0x2000E700, 0x2001BF00)
     assert struct.unpack_from("<IHH", api) == (0x31505041, 1, 104)
     return api_address, api
 
@@ -90,7 +91,7 @@ def oracle(width, height, x0=0, y0=0):
 class Machine:
     def __init__(self, api_address, api):
         self.uc = Uc(UC_ARCH_ARM, UC_MODE_THUMB | UC_MODE_MCLASS)
-        self.uc.mem_map(BASE, 65536)
+        self.uc.mem_map(BASE, 131072)
         self.uc.mem_map(0x08000000, 0x100000)
         self.api_address, self.api = api_address, api
         self.uc.mem_write(api_address, api)
@@ -105,9 +106,11 @@ class Machine:
 
     def load(self, image, image_size, entry, address=BASE):
         self.base = address
-        self.uc.mem_write(BASE, b"\xcd" * OVERLAY)
+        self.low, self.high = self.base - 32, self.base + len(image) + 32
+        if self.low < BASE: self.low = BASE
+        self.uc.mem_write(self.low, b"\xcd" * (self.high - self.low))
         self.uc.mem_write(self.base, image)
-        self.uc.ctl_remove_cache(BASE, BASE + OVERLAY)
+        self.uc.ctl_remove_cache(self.low, self.high)
         self.memory_size, self.image_size, self.entry = len(image), image_size, entry
         self.frames, self.text, self.keys = [], [], []
         self.begins = self.ends = self.services = 0
@@ -165,7 +168,7 @@ class Machine:
         uc.reg_write(UC_ARM_REG_PC, uc.reg_read(UC_ARM_REG_LR))
 
     def call(self, command, argument=0):
-        uc, sp = self.uc, 0x2000FFF0
+        uc, sp = self.uc, 0x2001FFF0
         saved = (UC_ARM_REG_R4, UC_ARM_REG_R5, UC_ARM_REG_R6, UC_ARM_REG_R7,
                  UC_ARM_REG_R8, UC_ARM_REG_R9, UC_ARM_REG_R10, UC_ARM_REG_R11)
         for index, register in enumerate(saved):
@@ -180,7 +183,7 @@ class Machine:
         assert uc.reg_read(UC_ARM_REG_SP) == sp
         for index, register in enumerate(saved):
             assert uc.reg_read(register) == 0x31410000 + index
-        for begin, end in ((BASE, self.base), (self.base + self.memory_size, BASE + OVERLAY)):
+        for begin, end in ((self.low, self.base), (self.base + self.memory_size, self.high)):
             if end > begin:
                 assert bytes(uc.mem_read(begin, end - begin)) == b"\xcd" * (end - begin), \
                     "APP wrote outside its allocation"
@@ -220,8 +223,8 @@ def main():
             image_size, _, entry = struct.unpack_from("<III", packed, 28)
             assert decoded[:image_size] == (work / name / (name + ".bin")).read_bytes()
             assert decoded[image_size:] == bytes(len(decoded) - image_size)
-            for offset in (0, 8, (OVERLAY-len(decoded))&~7):
-                address = BASE + offset
+            reserved = (len(decoded) + 31) & ~31
+            for address in (BASE, BASE + 8, 0x2000E700 - reserved, 0x2001BF00 - reserved):
                 run([reader, app, memory, hex(address)])
                 relocated = memory.read_bytes()
                 for api_address, api in apis:
@@ -241,7 +244,11 @@ def main():
                             machine.keys = [16, 16, 16, 15, 20] if launch == 0 else [18, 18, 17, 19]
                             expected = ([oracle(width, height, x) for x in (0, 8, 16, 8)] if launch == 0
                                         else [oracle(width, height, 0, y) for y in (0, 16, 0)])
-                            assert machine.call(2, 42) == 0
+                            result = machine.call(2, 42)
+                            if not struct.unpack_from('<I', api, 8)[0] & (1 << 6):
+                                assert result == 2 and not machine.frames and machine.begins == 0
+                                continue  # A character-only resident has no graphics capability.
+                            assert result == 0, (hex(address), launch, result)
                             assert machine.frames == expected
                             assert machine.begins == machine.ends == 1
                     # Startup refuses an old, truncated API before invoking callbacks.

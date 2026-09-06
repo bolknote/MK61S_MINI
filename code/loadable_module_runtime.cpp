@@ -9,6 +9,7 @@
 #include "loadable_module_system_app.hpp"
 #include "program_store.hpp"
 #include "shared_memory.hpp"
+#include "mpu_guard.hpp"
 #include "spi_nor_flash.hpp"
 #include "tools.hpp"
 
@@ -22,9 +23,8 @@ static_assert(program_store::MAX_APP_FILE_SIZE == MAX_CONTAINER_SIZE,
 
 static constexpr u32 INTERNAL_FLASH_ADDRESS = 0x08000000UL;
 
-// Глобальное имя принадлежит общей OVERLAY-арене. Упаковщик извлекает его адрес
-// из resident ELF и передаёт отдельной линковке модулей.
 extern "C" {
+#if !MK61_ENABLE_PORTABLE_APPS
 extern u8 mk61_module_overlay[];
 
 // STM32 linker script кладёт начальные значения .data сразу после основной
@@ -33,35 +33,41 @@ extern u8 mk61_module_overlay[];
 extern u8 _sidata;
 extern u8 _sdata;
 extern u8 _edata;
+#endif
 }
 
-static_assert(shared_memory::OVERLAY_SIZE >= OVERLAY_SIZE,
-              "shared overlay is smaller than the APP ABI window");
+static_assert(shared_memory::APP_MAX_SIZE == OVERLAY_SIZE,
+              "allocator and APP format limits differ");
 
 static Kind g_active_kind = (Kind) 0;
 static Header g_active_header;
 static Entry g_active_entry;
 static u16 g_active_file_id = program_store::INVALID_ID;
 static u8 g_call_depth;
+#if !MK61_ENABLE_PORTABLE_APPS
 static u32 g_cached_resident_size;
 static u32 g_cached_resident_crc;
+#endif
 static shared_memory::Lease g_overlay_lease;
 
 extern "C" void mk61_module_keep_imports(void);
 
+#if !MK61_ENABLE_PORTABLE_APPS
 static u32 resident_image_size(void) {
   const usize data_size = (usize) &_edata - (usize) &_sdata;
   const usize data_load_end = (usize) &_sidata + data_size;
   return data_load_end >= INTERNAL_FLASH_ADDRESS
       ? (u32) (data_load_end - INTERNAL_FLASH_ADDRESS) : 0;
 }
+#endif
 
 static bool resident_matches(const Header& header) {
 #if MK61_ENABLE_PORTABLE_APPS
-  if((header.flags & MK61_PORTABLE_APP_FLAG) != 0)
-    return (header.flags & MK61_APP_RELOCATABLE_FLAG) != 0 ||
-           header.load_address == (u32) (usize) mk61_module_overlay;
-#endif
+  // Fixed-address ABI 2/3 cannot coexist with ordinary globals at their old
+  // destination. Reject before acquiring memory or writing any payload.
+  return (header.flags & (MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG)) ==
+         (MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG);
+#else
   if(header.load_address != (u32) (usize) mk61_module_overlay) return false;
   const u32 resident_size = resident_image_size();
   if(resident_size == 0 || header.resident_size != resident_size) return false;
@@ -71,6 +77,7 @@ static bool resident_matches(const Header& header) {
   g_cached_resident_size = resident_size;
   g_cached_resident_crc = crc32(resident, resident_size);
   return header.resident_crc32 == g_cached_resident_crc;
+#endif
 }
 
 struct AppPayloadContext {
@@ -160,12 +167,14 @@ static void clear_active_metadata(void) {
 }
 
 static void invalidate_active(void) {
+  (void) mpu_guard::set_app_execution(nullptr, 0);
   clear_active_metadata();
   g_overlay_lease.reset();
 }
 
 static shared_memory::EvictionDecision prepare_overlay_eviction(void) {
   if(g_call_depth != 0) return shared_memory::EvictionDecision::KEEP;
+  (void) mpu_guard::set_app_execution(nullptr, 0);
   clear_active_metadata();
   return shared_memory::EvictionDecision::RELEASE;
 }
@@ -223,6 +232,11 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   }
   memset(overlay + header.image_size, 0,
          header.memory_size - header.image_size);
+  if(!mpu_guard::set_app_execution(overlay,
+        shared_memory::capacity(g_overlay_lease.arena()))) {
+    invalidate_active();
+    return RuntimeStatus::INVALID_MODULE;
+  }
   __DSB();
   __ISB();
   g_active_kind = kind;

@@ -629,8 +629,10 @@ try {
         $script:Objcopy = Get-RelatedTool $script:Compiler 'objcopy'
         $script:Nm = Get-RelatedTool $script:Compiler 'nm'
         $script:Size = Get-RelatedTool $script:Compiler 'size'
-        $script:OverlayHex = Get-ElfSymbol $script:ResidentElf `
-            'mk61_module_overlay'
+        if ($PortableApps -eq '0') {
+            $script:OverlayHex = Get-ElfSymbol $script:ResidentElf `
+                'mk61_module_overlay'
+        }
 
         if ([IO.Directory]::Exists($script:WorkPath)) {
             Remove-Item -LiteralPath $script:WorkPath -Recurse -Force

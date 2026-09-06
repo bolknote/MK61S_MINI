@@ -6,8 +6,8 @@
 
 namespace loadable_module {
 
-// Shared SRAM pool: ABI 2/3 use its full fixed window; ABI 4 receives an
-// aligned block of image+BSS bytes and relocates internal pointers on load.
+// Container/image limit, not a reserved SRAM window. ABI 4 receives a block
+// at the top of free RAM. Fixed ABI 2/3 files require the legacy firmware.
 static constexpr u32 SRAM_FIRST_ADDRESS = 0x20000000UL;
 static constexpr u32 SRAM_LAST_ADDRESS = 0x20020000UL;
 static constexpr u32 OVERLAY_SIZE = 20U * 1024U;

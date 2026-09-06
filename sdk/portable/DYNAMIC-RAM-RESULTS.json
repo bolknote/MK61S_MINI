@@ -1,0 +1,224 @@
+{
+  "date": "2026-09-06",
+  "baseline_commit": "6c7ceaf",
+  "fixed_app_reserve_bytes": 0,
+  "max_app_memory_bytes": 20480,
+  "app_allocation_alignment": 32,
+  "f401": [
+    {
+      "case": "f401-capability-a00-usb",
+      "before_bin": 246740,
+      "after_bin": 246764,
+      "flash_delta": 24,
+      "flash_free": 15380,
+      "before_static_ram": 54112,
+      "after_static_ram": 33636,
+      "ram_released": 20476,
+      "stack_frame_max": 2032,
+      "sha256": "044a87aace9cdb8100e86fead333453d413234cc89c2219c8275419f93bafa4f",
+      "status": "ok"
+    },
+    {
+      "case": "f401-capability-ws-graphics",
+      "before_bin": 239092,
+      "after_bin": 239104,
+      "flash_delta": 12,
+      "flash_free": 23040,
+      "before_static_ram": 47176,
+      "after_static_ram": 26692,
+      "ram_released": 20484,
+      "stack_frame_max": 2032,
+      "sha256": "a0ede7a77002bd8e35f4c133f61672a96d3c070254a88b07df9dd0ab43de8e6b",
+      "status": "ok"
+    },
+    {
+      "case": "f401-capability-ws-usb",
+      "before_bin": 256888,
+      "after_bin": 256924,
+      "flash_delta": 36,
+      "flash_free": 5220,
+      "before_static_ram": 54084,
+      "after_static_ram": 33600,
+      "ram_released": 20484,
+      "stack_frame_max": 2032,
+      "sha256": "82c0f059abeb7d371b9946a553409cd0cd5032591f8373661fc54ab0303c42e1",
+      "status": "ok"
+    },
+    {
+      "case": "f401-capability-ws-usb-graphics",
+      "before_bin": 257864,
+      "after_bin": 257888,
+      "flash_delta": 24,
+      "flash_free": 4256,
+      "before_static_ram": 54084,
+      "after_static_ram": 33600,
+      "ram_released": 20484,
+      "stack_frame_max": 2032,
+      "sha256": "e87930b954d5e670df6df15cb988550a375235bdcb8c55bb09f68164a9a785b4",
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-a00",
+      "before_bin": 234620,
+      "after_bin": 234640,
+      "flash_delta": 20,
+      "flash_free": 27504,
+      "before_static_ram": 47216,
+      "after_static_ram": 26736,
+      "ram_released": 20480,
+      "stack_frame_max": 2032,
+      "sha256": "e41b0f5909d0177180323b3a8f854448f25397d43b3d9a031864d24c3aa6dffb",
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "before_bin": 236864,
+      "after_bin": 236832,
+      "flash_delta": -32,
+      "flash_free": 25312,
+      "before_static_ram": 49204,
+      "after_static_ram": 28724,
+      "ram_released": 20480,
+      "stack_frame_max": 2032,
+      "sha256": "08ae4a8e87998e0208ce32912fe8ea573905b4f5e224966a59f3eb5ef57269fb",
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-mini-v2-a00",
+      "before_bin": 234648,
+      "after_bin": 234660,
+      "flash_delta": 12,
+      "flash_free": 27484,
+      "before_static_ram": 47216,
+      "after_static_ram": 26736,
+      "ram_released": 20480,
+      "stack_frame_max": 2032,
+      "sha256": "6f320206d92e29320b0450ae73be170f9f2ec8fd53ecadcd90216468f5e01780",
+      "status": "ok"
+    },
+    {
+      "case": "f401-product-ws0010",
+      "before_bin": 244524,
+      "after_bin": 244524,
+      "flash_delta": 0,
+      "flash_free": 17620,
+      "before_static_ram": 47192,
+      "after_static_ram": 26688,
+      "ram_released": 20504,
+      "stack_frame_max": 2032,
+      "sha256": "402761e229857957fe0f1651dbd833649a7fd86747a2121093ccb12748935783",
+      "status": "ok"
+    }
+  ],
+  "f411": {
+    "before_bin": 302248,
+    "after_bin": 302660,
+    "flash_delta": 412,
+    "before_static_ram": 61360,
+    "after_static_ram": 40876
+  },
+  "host_tests": "ASan/UBSan PASS",
+  "arm_user_tests": "4 addresses, 2 resident APIs PASS",
+  "arm_system_tests": "3 addresses, F411 graphics/F401 character LIBM resident APIs PASS",
+  "hil": {
+    "probes": [
+      {
+        "startup_launches": 6,
+        "wbmp_launches": 7,
+        "display_switches": 2,
+        "frames_verified_transport": 45,
+        "result": "PASS",
+        "relocation_address": "0x2001b700",
+        "app_sha256": "2e695c28ff87403fef675979121197b25188aeb626cfbb0ddcec30636e2a6627"
+      },
+      {
+        "startup_launches": 3,
+        "wbmp_launches": 7,
+        "display_switches": 2,
+        "frames_verified_transport": 39,
+        "result": "PASS",
+        "relocation_address": "0x2001b300",
+        "app_sha256": "6ac4311da70584ed51f67c4c9a48d7b30cc1f599a35bc8ed331e40d9de622c19"
+      },
+      {
+        "startup_launches": 3,
+        "wbmp_launches": 7,
+        "display_switches": 2,
+        "frames_verified_transport": 39,
+        "result": "PASS",
+        "relocation_address": "0x2001a700",
+        "app_sha256": "cec3431dfe1faa4d5c9a216ae33c8fce7bc4551aa1f912b36f1835cf212b252b"
+      }
+    ],
+    "system": {
+      "language_runs": 12,
+      "state_restores": 6,
+      "chip8_runs": 3,
+      "markdown_runs": 3,
+      "result": "PASS",
+      "frames_verified_transport": 188
+    },
+    "setup": {
+      "result": "PASS",
+      "views": [
+        "hardware",
+        "date edit/cancel",
+        "calibration edit/cancel/reopen",
+        "font"
+      ],
+      "setup_allocation_bytes": 9216
+    },
+    "negative": {
+      "result": "PASS",
+      "corrupt_apps_rejected": [
+        "fixed-abi3",
+        "payload-crc",
+        "unknown-flags",
+        "truncated-gap",
+        "noncanonical-gap",
+        "out-of-range-gap"
+      ],
+      "rejection_preserves_c5": true,
+      "help_cases": [
+        "complete",
+        "missing",
+        "stale",
+        "restored"
+      ]
+    },
+    "restoration": {
+      "result": "RESTORED",
+      "tested_build": "EDFFB94F",
+      "restored_build": "2504D75A",
+      "tested_firmware_bytes": 302660,
+      "tested_firmware_sha256": "37416ba8c952b31e681d505aa7c48d09e2c528c5143def30f6ef993d9a8eb609",
+      "full_flash_readback_equal": true,
+      "original_files_restored": 18,
+      "temporary_files_removed": 14,
+      "calculator_state_restored": true,
+      "other_device_unchanged": true,
+      "stack_remaining": 11136
+    }
+  },
+  "arduino_cli_bundle": "F401 mini-v3-a00 PASS",
+  "build_tool_tests": "Bash manifest gate, PowerShell/GCC PASS",
+  "pdf_checks": "8 PDFs rebuilt; renderer regression tests PASS",
+  "precommit": {
+    "host_tests": "ASan/UBSan PASS",
+    "arm_user_tests": "4 addresses, F411 graphics/F401 character resident APIs PASS",
+    "arm_system_tests": "3 addresses, F411 graphics/F401 character LIBM resident APIs PASS",
+    "clean_f401_build": {
+      "case": "f401-capability-ws-usb-graphics",
+      "status": "ok",
+      "binary": {
+        "bytes": 257896,
+        "flash_free": 4248,
+        "sha256": "2033eb2f9da318d7e0206fd7debb529a5ab02865d1136ee687834b24e0466a8c"
+      },
+      "static_ram": 33600,
+      "stack_frame_max": 2032,
+      "layout_checks": "no static APP reserve, heap/stack bounds, constructors, early DFU, USB/WS0010 policy PASS",
+      "size_difference_reason": "8 extra .rodata bytes: distinct __TIME__ strings in terminal.cpp and setup_service.cpp; .text size unchanged"
+    }
+  }
+}

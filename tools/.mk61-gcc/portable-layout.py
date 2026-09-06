@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Pin the existing APP arena without holes or a second zero-init pass.
+"""Export the free SRAM interval without allocating an APP array or section.
 
-The pinned STM32 script normally places .data before .bss. Put .bss first,
-with the overlay first inside it, then .noinit (inserted by the Core), .data
-and the heap/stack reserve. The original startup still clears all BSS and
-copies .data correctly. Fail closed if the upstream script changes shape.
+Keep the Core's .data/.bss/.noinit/startup layout. APP, staging and newlib
+share [_end, stack guard); the existing MPU stack budgets remain unchanged.
 """
 import argparse
 import re
@@ -12,27 +10,23 @@ from pathlib import Path
 
 
 def transform(source: str) -> str:
-    match = re.search(r"  /\* Uninitialized data section.*?\n  \} >RAM\n",
-                      source, re.S)
-    if match is None or source.count("    *(.bss)\n") != 1:
-        raise ValueError("unsupported STM32 BSS layout")
-    bss = match.group().replace("  .bss :", "  .bss 0x20000000 (NOLOAD) :")
-    bss = bss.replace("    *(.bss)\n",
-                      "    KEEP(*(.bss.mk61_module_overlay))\n    *(.bss)\n")
-    result = source[:match.start()] + source[match.end():]
-    marker = '  /* Initialized data sections into "RAM" Ram type memory */'
-    if result.count(marker) != 1:
-        raise ValueError("unsupported STM32 data layout")
-    result = result.replace(marker, bss + "\n" + marker)
+    if (source.count("SECTIONS\n{") != 1 or
+            not re.search(r'PROVIDE\s*\(\s*_end\s*=\s*\.\s*\)', source) or
+            source.count("    *(.bss)\n") != 1):
+        raise ValueError("unsupported STM32 startup/heap layout")
     # Preserve generated resources in ELF only, excluded from the MCU image.
-    result = result.replace("SECTIONS\n{", "SECTIONS\n{\n  .mk61_help 0 (INFO) : { KEEP(*(.mk61_help)) }")
+    result = source.replace("SECTIONS\n{", "SECTIONS\n{\n  .mk61_help 0 (INFO) : { KEEP(*(.mk61_help)) }")
     return result + '''
-ASSERT(mk61_module_overlay == 0x20000000,
-       "portable APP overlay address mismatch")
-ASSERT(_sbss <= mk61_module_overlay && _ebss >= mk61_module_overlay + 20K,
-       "portable APP overlay must be zeroed by startup")
-ASSERT(_sdata >= _ebss && _edata <= _end && _end <= _estack,
-       "portable APP startup/heap layout overlaps")
+__mk61_dynamic_begin = ALIGN(_end, 8);
+__mk61_dynamic_end = ORIGIN(RAM) + LENGTH(RAM)
+                    - (LENGTH(RAM) == 64K ? 6K : 16K) - 256;
+ASSERT(LENGTH(RAM) == 64K || LENGTH(RAM) == 128K,
+       "portable APP requires an F401/F411 SRAM profile")
+ASSERT(_edata <= _sbss && _ebss <= _end &&
+       __mk61_dynamic_begin <= __mk61_dynamic_end,
+       "portable APP static data overlaps the stack guard")
+ASSERT(!DEFINED(mk61_module_overlay),
+       "portable APP must not reserve a fixed SRAM overlay")
 '''
 
 

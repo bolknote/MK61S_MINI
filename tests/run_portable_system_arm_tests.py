@@ -51,11 +51,15 @@ class Machine:
     def __init__(self, resident, graphics, address_index=0):
         self.address_index = address_index
         self.uc = Uc(UC_ARCH_ARM, UC_MODE_MCLASS | UC_MODE_THUMB)
-        self.uc.mem_map(BASE, 65536)
+        self.uc.mem_map(BASE, 131072)
         self.uc.mem_map(0x08000000, 0x100000)
         self.uc.reg_write(UC_ARM_REG_C1_C0_2, 0xF00000)
         self.uc.reg_write(UC_ARM_REG_FPEXC, 0x40000000)
         elf = Elf(resident); elf.load(self.uc)
+        self.input = elf.symbol('__mk61_dynamic_begin')
+        self.pool_begin = (self.input + 2048 + 31) & ~31
+        self.pool_end = elf.symbol('__mk61_dynamic_end')
+        self.stack_top = elf.symbol('_estack') - 16
         self.api = elf.symbol('_ZN12loadable_app12_GLOBAL__N_1L3APIE')
         self.sys = elf.symbol('_ZZN15loadable_module10system_apiEvE3api')
         assert struct.unpack('<IHH', self.uc.mem_read(self.sys, 8)) == (0x31535953, 1, 28)
@@ -225,12 +229,12 @@ class Machine:
     def load(self, package):
         self.kind, variants, self.image_size, self.entry, self.crc = package
         self.base, self.image = variants[self.address_index]
-        self.uc.mem_write(BASE,b'\xCD'*OVERLAY)
+        self.uc.mem_write(self.pool_begin,b'\xCD'*(self.pool_end-self.pool_begin))
         self.uc.mem_write(self.base,self.image)
-        self.uc.ctl_remove_cache(BASE, BASE + OVERLAY)
+        self.uc.ctl_remove_cache(self.pool_begin, self.pool_end)
         assert self.call(0,self.sys,self.api,self.crc) == 0
     def call(self, command, a=0, b=0, c=0, d=0):
-        uc,sp = self.uc,0x2000FFF0
+        uc,sp = self.uc,self.stack_top
         saved = [UC_ARM_REG_R4,UC_ARM_REG_R5,UC_ARM_REG_R6,UC_ARM_REG_R7,UC_ARM_REG_R8,UC_ARM_REG_R9,UC_ARM_REG_R10,UC_ARM_REG_R11]
         for i,r in enumerate(saved): uc.reg_write(r,0x31410000+i)
         saved_fp = [UC_ARM_REG_D8, UC_ARM_REG_D9, UC_ARM_REG_D10, UC_ARM_REG_D11,
@@ -243,13 +247,14 @@ class Machine:
         assert uc.reg_read(UC_ARM_REG_SP) == sp
         for i,r in enumerate(saved): assert uc.reg_read(r) == 0x31410000+i
         for i,r in enumerate(saved_fp): assert uc.reg_read(r) == 0x3141592600000000+i
-        assert bytes(uc.mem_read(BASE,self.base-BASE)) == b'\xCD'*(self.base-BASE)
-        tail = BASE+OVERLAY-self.base-len(self.image)
+        assert bytes(uc.mem_read(self.pool_begin,self.base-self.pool_begin)) == b'\xCD'*(self.base-self.pool_begin)
+        tail = self.pool_end-self.base-len(self.image)
         if tail: assert bytes(uc.mem_read(self.base+len(self.image),tail)) == b'\xCD'*tail
         assert not self.leases and not self.depth, ('leaked lease',self.leases)
         return uc.reg_read(UC_ARM_REG_R0)
     def source(self, text):
-        self.uc.mem_write(0x2000D000,text.encode()+b'\0'); return 0x2000D000
+        assert len(text.encode()) < 1024
+        self.uc.mem_write(self.input,text.encode()+b'\0'); return self.input
 
 
 def main():
@@ -261,20 +266,23 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mk61-system-arm-') as temp:
         reader=Path(temp)/'reader'
         run(['c++','-std=c++17','-O2','-DMK61_ENABLE_PORTABLE_APPS=1','-I'+str(ROOT/'code'),ROOT/'tests/portable_app_format_self_test.cpp',ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
-        packages={}
-        for kind,name in [('focal','FOCAL'),('tinybasic','BASIC'),('wbmp-viewer','WBMP'),('markdown-viewer','MARKDOWN'),('chip8','CHIP8'),('markdown-text','MARKDOWN'),('setup','SETUP')]:
-            path=args.apps_dir/kind/(name+'.APP'); packed=path.read_bytes()
-            target=Path(temp)/(name+'.bin')
-            image_size,memory_size,entry=struct.unpack_from('<III',packed,28)
-            crc=struct.unpack_from('<I',packed,52)[0]
-            high=(OVERLAY-memory_size)&~7
-            variants=[]
-            for offset in (0, (high//2)&~7, high):
-                address=BASE+offset
-                run([reader,path,target,hex(address)])
-                variants.append((address,target.read_bytes()))
-            packages[kind]=(kind,variants,image_size,entry,crc)
         for index,resident in enumerate(args.resident_elf):
+            elf=Elf(resident)
+            low=(elf.symbol('__mk61_dynamic_begin')+2048+31)&~31
+            end=elf.symbol('__mk61_dynamic_end')
+            packages={}
+            for kind,name in [('focal','FOCAL'),('tinybasic','BASIC'),('wbmp-viewer','WBMP'),('markdown-viewer','MARKDOWN'),('chip8','CHIP8'),('markdown-text','MARKDOWN'),('setup','SETUP')]:
+                path=args.apps_dir/kind/(name+'.APP'); packed=path.read_bytes()
+                target=Path(temp)/(name+'.bin')
+                image_size,memory_size,entry=struct.unpack_from('<III',packed,28)
+                crc=struct.unpack_from('<I',packed,52)[0]
+                high=end-((memory_size+31)&~31)
+                assert high >= low, 'APP and input buffer must fit the actual free RAM'
+                variants=[]
+                for address in (low, ((low+high)//2)&~31, high):
+                    run([reader,path,target,hex(address)])
+                    variants.append((address,target.read_bytes()))
+                packages[kind]=(kind,variants,image_size,entry,crc)
             for address_index in range(3):
                 m=Machine(resident,index==0,address_index)
                 m.load(packages['focal'])
@@ -343,7 +351,7 @@ def main():
                 assert m.call(0x404,pointer,pointer,8)==0
                 assert 'Bad font' in ''.join(m.lines),m.lines
                 assert m.font_restores>0
-                font=preview_font(); pointer=0x2000D100
+                font=preview_font(); pointer=m.input+1024
                 m.uc.mem_write(pointer,font); m.keys=[m.mapping[39]]; m.lines=[]
                 trace_start=len(m.trace)
                 assert m.call(0x404,m.source('TEST'),pointer,len(font))==0

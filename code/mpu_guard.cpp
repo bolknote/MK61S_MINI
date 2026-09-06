@@ -4,13 +4,12 @@
 #include "mpu_guard_policy.hpp"
 #include "stack_watermark.hpp"
 
-#if defined(STM32F411xE) && MK61_ENABLE_PORTABLE_APPS && \
+#if MK61_MPU_GUARD_SUPPORTED && defined(STM32F411xE) && MK61_ENABLE_PORTABLE_APPS && \
     MK61_ENABLE_LOADABLE_MODULES
   #define MK61_MPU_APP_OVERLAY 1
   #include "loadable_module_format.hpp"
-  static_assert(loadable_module::OVERLAY_SIZE == 20U * 1024U &&
-                MK61_PORTABLE_APP_ADDRESS == 0x20000000UL,
-                "MPU APP subregions must match the fixed executable arena");
+  static_assert(loadable_module::OVERLAY_SIZE == 20U * 1024U,
+                "MPU APP region budget must cover the maximum APP size");
 #else
   // F401 already permits SRAM execution; do not ship an unused MPU region.
   #define MK61_MPU_APP_OVERLAY 0
@@ -105,11 +104,9 @@ bool initialize(void) {
                        active_layout.ram_end - active_layout.ram_start,
                        SRAM_XN_ATTRIBUTES);
 #if MK61_MPU_APP_OVERLAY
-      configure_region(region++, MK61_PORTABLE_APP_ADDRESS,
-                       mpu_guard_policy::APP_REGION_SIZE,
-                       (SRAM_XN_ATTRIBUTES & ~MPU_RASR_XN_Msk) |
-                       ((u32) mpu_guard_policy::APP_DISABLED_SUBREGIONS
-                        << MPU_RASR_SRD_Pos));
+      // The verified loader fills these slots later. Null/stack guards keep
+      // higher priority than every executable APP region.
+      region += mpu_guard_policy::APP_REGION_COUNT;
 #endif
     }
     configure_region(region++, 0x00000000UL, 32UL,
@@ -147,6 +144,47 @@ bool initialize(void) {
 #else
   return false;
 #endif
+}
+
+bool set_app_execution(const void* address, usize size) {
+#if MK61_MPU_APP_OVERLAY
+  const u32 begin = (u32) (usize) address;
+  const u32 end = active_layout.guard_base;
+  if(size != 0 && (!hardware_enabled || !active_layout.valid ||
+     begin < active_layout.static_end || begin > end ||
+     size != end - begin || size > loadable_module::OVERLAY_SIZE ||
+     ((begin | size) & 31U) != 0)) return false;
+  // Validate the complete plan before changing the live MPU.
+  u8 count = 0;
+  for(u32 cursor = begin; size != 0 && cursor < end; ++count) {
+    const auto region = mpu_guard_policy::next_app_region(cursor, end);
+    if(region.size == 0 || count == mpu_guard_policy::APP_REGION_COUNT) return false;
+    cursor = region.end;
+  }
+  const u32 primask = __get_PRIMASK();
+  __disable_irq();
+  __DSB();
+  u32 cursor = begin;
+  for(u8 index = 0; index < mpu_guard_policy::APP_REGION_COUNT; ++index) {
+    const u8 slot = 1U + index;
+    if(index < count) {
+      const auto region = mpu_guard_policy::next_app_region(cursor, end);
+      configure_region(slot, region.base, region.size,
+          (SRAM_XN_ATTRIBUTES & ~MPU_RASR_XN_Msk) |
+          ((u32) region.disabled_subregions << MPU_RASR_SRD_Pos));
+      cursor = region.end;
+    } else {
+      disable_region(slot);
+    }
+  }
+  __DSB();
+  __ISB();
+  __set_PRIMASK(primask);
+#else
+  (void) address;
+  (void) size;
+#endif
+  return true;
 }
 
 void observe_stack(void) {

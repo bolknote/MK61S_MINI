@@ -30,6 +30,13 @@ printf '%s\n' '#pragma once' > "$app_dir/include/demo.hpp"
   --app-manifest "$app_dir/app.mk61" > "$work/app-check.log"
 grep -q '^Validated APP manifests: 1$' "$work/app-check.log"
 grep -q '^Apps/DEMO.APP <- ' "$work/app-check.log"
+set +e
+MK61_ENABLE_PORTABLE_APPS=1 "$tool" --app-manifest "$app_dir/app.mk61" \
+  > "$work/manifest-abi-mismatch.log" 2>&1
+status=$?
+set -e
+test "$status" -eq 2
+grep -q 'manifest APPs use ABI 2' "$work/manifest-abi-mismatch.log"
 MK61_APP_MANIFESTS="$app_dir/app.mk61" \
   "$tool" --check-app-manifests > "$work/app-env-check.log"
 grep -q '^Validated APP manifests: 1$' "$work/app-env-check.log"

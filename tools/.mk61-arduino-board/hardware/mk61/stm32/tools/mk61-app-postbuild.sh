@@ -309,8 +309,10 @@ build_bundle() {
   [ -s "$resident_elf" ] && [ -s "$resident_bin" ] ||
     die 'Arduino did not produce resident ELF and BIN files'
   seal_resident "$resident_bin"
-  overlay_hex=$(symbol_hex "$resident_elf" mk61_module_overlay) ||
-    die 'resident ELF has no mk61_module_overlay symbol'
+  if [[ "$compile_flags" != *-DMK61_ENABLE_PORTABLE_APPS=1* ]]; then
+    overlay_hex=$(symbol_hex "$resident_elf" mk61_module_overlay) ||
+      die 'legacy resident ELF has no mk61_module_overlay symbol'
+  fi
 
   stage="$build_path/mk61-system-apps/$bundle"
   case "$stage" in "$build_path"/*) ;; *) die 'unsafe staging path' ;; esac

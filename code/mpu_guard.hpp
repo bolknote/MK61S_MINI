@@ -55,6 +55,8 @@ struct Snapshot {
 };
 
 bool initialize(void);
+// Enable execution only for the verified APP lease. (nullptr, 0) revokes it.
+bool set_app_execution(const void* address, usize size);
 void observe_stack(void);
 Snapshot statistics(void);
 const char* backend_name(void);

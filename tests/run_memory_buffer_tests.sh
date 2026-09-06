@@ -55,3 +55,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
   "${sanitizer_flags[@]}" "$root/tests/app_arena_self_test.cpp" \
   "$root/code/shared_memory.cpp" -o "$app_out"
 "$app_out"
+
+dynamic_out="${TMPDIR:-/tmp}/mk61_dynamic_app_memory_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
+  -DMK61_ENABLE_PORTABLE_APPS=1 "${sanitizer_flags[@]}" \
+  "$root/tests/dynamic_app_memory_self_test.cpp" \
+  "$root/code/shared_memory.cpp" -o "$dynamic_out"
+"$dynamic_out"

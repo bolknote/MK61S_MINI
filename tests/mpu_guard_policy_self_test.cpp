@@ -40,16 +40,40 @@ int main(void) {
   assert(f411.sram_execute_never);
 
   const Layout portable = with_app_overlay(f411, 8);
-  assert(portable.valid && portable.required_regions == 4);
+  assert(portable.valid && portable.required_regions == 8);
   assert(portable.sram_execute_never && portable.guard_base == f411.guard_base);
-  assert(!with_app_overlay(f411, 3).valid);
+  assert(!with_app_overlay(f411, 7).valid);
   assert(with_app_overlay(f401, 2).required_regions == 2);
-  // Evaluate the actual SRD mask at every byte, including the 20-KiB edge.
-  for(u32 offset = 0; offset < APP_REGION_SIZE; ++offset) {
-    const u32 subregion = offset / (APP_REGION_SIZE / 8U);
-    const bool executable = (APP_DISABLED_SUBREGIONS & (1U << subregion)) == 0;
-    assert(executable == (offset < 20U * 1024U));
+  // Decode actual MPU base/size/SRD at every minimum-size (32-byte) block
+  // of SRAM, for every possible rounded APP size. Include globals and stack.
+  u8 maximum_regions = 0;
+  for(u32 bytes = 32; bytes <= 20U * 1024U; bytes += 32) {
+    const u32 begin = f411.guard_base - bytes;
+    AppRegion regions[APP_REGION_COUNT] = {};
+    u8 count = 0;
+    for(u32 cursor = begin; cursor < f411.guard_base;) {
+      assert(count < APP_REGION_COUNT);
+      const AppRegion region = next_app_region(cursor, f411.guard_base);
+      assert(power_of_two(region.size) && (region.base & (region.size - 1)) == 0);
+      assert(region.end > cursor && region.end <= f411.guard_base);
+      regions[count++] = region;
+      cursor = region.end;
+    }
+    if(count > maximum_regions) maximum_regions = count;
+    for(u32 address = f411.ram_start; address < f411.ram_end; address += 32) {
+      bool executable = false;
+      for(u8 i = 0; i < count; ++i) {
+        const AppRegion& r = regions[i];
+        if(address < r.base || address >= r.base + r.size) continue;
+        if(r.size < 256 || (r.disabled_subregions &
+            (1U << ((address - r.base) / (r.size / 8)))) == 0) executable = true;
+      }
+      assert(executable == (address >= begin && address < f411.guard_base));
+    }
   }
+  assert(maximum_regions == APP_REGION_COUNT);
+  assert(next_app_region(f411.guard_base - 1, f411.guard_base).size == 0);
+  assert(next_app_region(f411.guard_base, f411.guard_base).size == 0);
 
   assert(!make_layout(F411_PROFILE, 0x2001BF01UL,
                       0x2001FFF0UL, 8).valid);

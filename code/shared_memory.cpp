@@ -12,9 +12,25 @@ alignas(8) static u8 scratch_storage[SCRATCH_SIZE];
 alignas(8) static u8 bulk_storage[BULK_SIZE];
 #endif
 
-// Имя остаётся частью ABI упаковщика System APP: адрес этого символа берётся
-// из resident ELF и передаётся отдельной линковке модулей. Физически окно
-// теперь принадлежит общему диспетчеру и может безопасно служить C5 staging.
+#if MK61_SHARED_MEMORY_DYNAMIC
+#if defined(ARDUINO_ARCH_STM32)
+extern "C" u8 __mk61_dynamic_begin, __mk61_dynamic_end;
+static uintptr_t region_begin(void) { return (uintptr_t) &__mk61_dynamic_begin; }
+static uintptr_t region_end(void) { return (uintptr_t) &__mk61_dynamic_end; }
+#else
+// Host tests exercise the same allocator against simulated SRAM. This array
+// is never part of an STM32 firmware image.
+#ifndef MK61_TEST_RAM_SIZE
+#define MK61_TEST_RAM_SIZE 32768
+#endif
+alignas(32) static u8 simulated_ram[MK61_TEST_RAM_SIZE];
+static uintptr_t region_begin(void) { return (uintptr_t) simulated_ram; }
+static uintptr_t region_end(void) { return (uintptr_t) simulated_ram + sizeof(simulated_ram); }
+#endif
+static uintptr_t heap_cursor;
+static constexpr usize APP_ALIGNMENT = 32; // ARMv7-M MPU minimum region
+#else
+// Fixed-address modules remain available only in the explicit legacy build.
 extern "C" {
 #if defined(__ELF__)
 __attribute__((used, aligned(8), section(".bss.mk61_module_overlay")))
@@ -23,6 +39,27 @@ __attribute__((used, aligned(8)))
 #endif
 u8 mk61_module_overlay[OVERLAY_SIZE];
 }
+static constexpr usize APP_ALIGNMENT = 8;
+#endif
+
+static uintptr_t pool_begin(void) {
+#if MK61_SHARED_MEMORY_DYNAMIC
+  if(heap_cursor == 0) heap_cursor = region_begin();
+  return (heap_cursor + 7U) & ~(uintptr_t) 7U;
+#else
+  return (uintptr_t) mk61_module_overlay;
+#endif
+}
+
+static uintptr_t pool_end(void) {
+#if MK61_SHARED_MEMORY_DYNAMIC
+  return region_end();
+#else
+  return (uintptr_t) mk61_module_overlay + OVERLAY_SIZE;
+#endif
+}
+
+static usize pool_size(void) { return pool_end() - pool_begin(); }
 
 struct ArenaPolicy {
   bool retain_resident;
@@ -137,15 +174,28 @@ static ArenaState arenas[] = {
 #else
   MK61_ARENA_STATE(nullptr, BULK_SIZE, false),
 #endif
+#if MK61_SHARED_MEMORY_DYNAMIC
+  MK61_ARENA_STATE(nullptr, 0, true),
+  MK61_ARENA_STATE(nullptr, 0, MK61_SHARED_MEMORY_APP_ENABLED)
+#else
   MK61_ARENA_STATE(mk61_module_overlay, OVERLAY_SIZE, true),
-  MK61_ARENA_STATE(OVERLAY_SIZE >= 20U * 1024U ? mk61_module_overlay + OVERLAY_SIZE : nullptr,
-                  0, OVERLAY_SIZE >= 20U * 1024U)
+  MK61_ARENA_STATE(MK61_SHARED_MEMORY_APP_ENABLED ? mk61_module_overlay + OVERLAY_SIZE : nullptr,
+                  0, MK61_SHARED_MEMORY_APP_ENABLED)
+#endif
 };
 
 #undef MK61_ARENA_STATE
 
 static_assert(sizeof(arenas) / sizeof(arenas[0]) == (usize) Arena::COUNT,
               "shared-memory arena table is incomplete");
+
+static void refresh_pool(void) {
+  ArenaState& prefix = arenas[(usize) Arena::OVERLAY];
+  ArenaState& app = arenas[(usize) Arena::APP];
+  prefix.memory = (u8*) pool_begin();
+  prefix.capacity = pool_size() - app.capacity;
+  app.memory = app.enabled ? (u8*) (pool_end() - app.capacity) : nullptr;
+}
 
 // Eviction is a global one-way transition, not merely a lock on one arena.
 // Scanning the arena states costs no RAM and prevents a callback from
@@ -159,6 +209,9 @@ static bool transition_in_progress(void) {
 }
 
 static ArenaState* state(Arena arena) {
+#if MK61_SHARED_MEMORY_DYNAMIC
+  if(arenas[(usize) Arena::OVERLAY].memory == nullptr) refresh_pool();
+#endif
   const usize index = (usize) arena;
   return index < (usize) Arena::COUNT ? &arenas[index] : nullptr;
 }
@@ -210,6 +263,27 @@ static void clear_resident(ArenaState& arena) {
 }
 
 } // namespace
+
+#if MK61_SHARED_MEMORY_DYNAMIC
+void* adjust_heap(i32 increment) {
+  ArenaState& prefix = *state(Arena::OVERLAY);
+  const ArenaState& app = *state(Arena::APP);
+  if(interrupt_context() || transition_in_progress() ||
+     (increment != 0 && prefix.allocated_size != 0)) return nullptr;
+  const uintptr_t previous = heap_cursor;
+  // Compute the magnitude without negating INT32_MIN.
+  const u32 magnitude = increment < 0 ? 0U - (u32) increment : (u32) increment;
+  if(increment < 0) {
+    if(magnitude > previous - region_begin()) return nullptr;
+    heap_cursor -= magnitude;
+  } else {
+    if(magnitude > pool_end() - app.capacity - previous) return nullptr;
+    heap_cursor += magnitude;
+  }
+  refresh_pool();
+  return (void*) previous;
+}
+#endif
 
 OwnerPolicy owner_policy(Owner owner) {
   const usize index = (usize) owner;
@@ -295,8 +369,9 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
   const ArenaPolicy* const policy = arena_policy(next_arena);
   if(arena == nullptr || !arena->enabled || next_owner == Owner::NONE ||
      next_owner >= Owner::COUNT || required == 0 ||
-     required > ((next_arena == Arena::APP || next_arena == Arena::OVERLAY)
-                     ? OVERLAY_SIZE : arena == nullptr ? 0 : arena->capacity) || policy == nullptr ||
+     required > (next_arena == Arena::APP ? APP_MAX_SIZE :
+                 next_arena == Arena::OVERLAY ? pool_size() :
+                 arena == nullptr ? 0 : arena->capacity) || policy == nullptr ||
      !owner_allowed(next_arena, next_owner) ||
      (opportunistic && !owner_cache_allowed(next_arena, next_owner)) ||
      interrupt_context()) {
@@ -331,24 +406,30 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
     return false;
   }
 
-  // APP occupies a suffix; normal OVERLAY clients retain a stable prefix.
-  // Both leases may coexist. Growing either side may only evict a cache
-  // whose existing callback agrees; active APP entry frames remain pinned.
+  // APP occupies the top; normal OVERLAY clients retain a stable bottom.
   if(arena->active == Owner::NONE &&
      (next_arena == Arena::APP || next_arena == Arena::OVERLAY)) {
     const Arena peer_id = next_arena == Arena::APP ? Arena::OVERLAY : Arena::APP;
     ArenaState& peer = *state(peer_id);
-    const usize aligned = (required + 7U) & ~(usize) 7U;
-    if(aligned > OVERLAY_SIZE - ((peer.allocated_size + 7U) & ~(usize) 7U)) {
-      if(!detail_try_reclaim(peer_id)) {
+    const usize alignment = next_arena == Arena::APP ? APP_ALIGNMENT : 8U;
+    const usize aligned = (required + alignment - 1U) & ~(alignment - 1U);
+    const usize peer_size = peer_id == Arena::APP ? peer.capacity :
+        (peer.allocated_size + 7U) & ~(usize) 7U;
+    if(aligned > pool_size() - peer_size) {
+      // Loading a movable APP never discards a live lower buffer, even an
+      // evictable cache. Its existing address and contents remain stable.
+      if(
+#if MK61_SHARED_MEMORY_DYNAMIC
+         next_arena == Arena::APP ||
+#endif
+         !detail_try_reclaim(peer_id)) {
         increment(opportunistic ? arena->cache_deferrals : arena->busy_failures);
         return false;
       }
     }
     if(next_arena == Arena::APP) {
       arena->capacity = aligned;
-      arena->memory = mk61_module_overlay + OVERLAY_SIZE - aligned;
-      peer.capacity = OVERLAY_SIZE - aligned;
+      refresh_pool();
     }
   }
 
@@ -429,8 +510,7 @@ void Lease::release_impl(bool from_manager) {
     arena->allocated_size = 0;
     if(arena_ == Arena::APP) {
       arena->capacity = 0;
-      arena->memory = mk61_module_overlay + OVERLAY_SIZE;
-      state(Arena::OVERLAY)->capacity = OVERLAY_SIZE;
+      refresh_pool();
     }
     arena->active = Owner::NONE;
     arena->eviction_prepare = nullptr;
@@ -605,6 +685,14 @@ Snapshot snapshot(Arena arena) {
 }
 
 bool validate_invariants(void) {
+  (void) state(Arena::OVERLAY);
+#if MK61_SHARED_MEMORY_DYNAMIC
+  if(region_begin() > heap_cursor || pool_begin() > pool_end() ||
+     (pool_end() & (APP_ALIGNMENT - 1U)) != 0) return false;
+  const usize physical_size = region_end() - region_begin();
+#else
+  const usize physical_size = OVERLAY_SIZE;
+#endif
   usize reclaiming_count = 0;
   for(usize index = 0; index < (usize) Arena::COUNT; index++) {
     const Arena arena_id = (Arena) index;
@@ -612,7 +700,7 @@ bool validate_invariants(void) {
     const ArenaPolicy& policy = arena_policies[index];
     if(arena.reclaiming) reclaiming_count++;
     const usize physical_limit = (arena_id == Arena::APP || arena_id == Arena::OVERLAY)
-        ? OVERLAY_SIZE : arena.capacity;
+        ? physical_size : arena.capacity;
     if((arena.capacity == 0 && arena_id != Arena::APP && arena_id != Arena::OVERLAY) ||
        arena.high_water > physical_limit || arena.allocated_size > arena.capacity ||
        ((arena.allocated_size == 0) != (arena.depth == 0)) ||
@@ -651,8 +739,9 @@ bool validate_invariants(void) {
   }
   const ArenaState& app = *state(Arena::APP);
   const ArenaState& prefix = *state(Arena::OVERLAY);
-  if(prefix.capacity + app.capacity != OVERLAY_SIZE ||
-     (app.enabled && app.memory != mk61_module_overlay + prefix.capacity)) return false;
+  if(prefix.capacity + app.capacity != pool_size() ||
+     (uintptr_t) prefix.memory != pool_begin() ||
+     (app.enabled && (uintptr_t) app.memory != pool_end() - app.capacity)) return false;
   return reclaiming_count <= 1;
 }
 
@@ -696,3 +785,18 @@ const char* owner_name(Owner owner) {
 }
 
 } // namespace shared_memory
+
+#if MK61_SHARED_MEMORY_DYNAMIC && defined(ARDUINO_ARCH_STM32)
+#include <errno.h>
+#undef errno
+extern int errno;
+
+// Override STM32 Core's weak _sbrk, which only knows the current MSP and
+// would otherwise allocate straight through a loaded APP or the MPU guard.
+extern "C" char* _sbrk(int increment) {
+  void* const result = shared_memory::adjust_heap(increment);
+  if(result != nullptr) return (char*) result;
+  errno = ENOMEM;
+  return (char*) -1;
+}
+#endif
