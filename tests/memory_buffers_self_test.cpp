@@ -299,6 +299,28 @@ int main(void) {
   assert(language_workspace::active_owner() == Owner::NONE);
 
   {
+    language_workspace::Lease app(Owner::APPLICATION, 128);
+    shared_scratch::Lease scratch(shared_scratch::Owner::APPLICATION, 64);
+    assert(app.ok() && app.fresh() && scratch.ok());
+    assert(language_workspace::active_owner() == Owner::APPLICATION);
+    assert(shared_scratch::current_owner() == shared_scratch::Owner::APPLICATION);
+    assert(language_workspace::data(Owner::APPLICATION) == app.data());
+    ((u8*) app.data())[0] = 0xA4;
+    scratch.data()[0] = 0x61;
+    language_workspace::Lease conflict(Owner::FOCAL, 32);
+    shared_scratch::Lease scratch_conflict(shared_scratch::Owner::IMAGE_VIEWER, 32);
+    assert(!conflict.ok() && !scratch_conflict.ok());
+    assert(((u8*) app.data())[0] == 0xA4 && scratch.data()[0] == 0x61);
+  }
+  assert(language_workspace::active_owner() == Owner::NONE);
+  assert(language_workspace::resident_owner() == Owner::NONE);
+  assert(shared_scratch::current_owner() == shared_scratch::Owner::NONE);
+  {
+    language_workspace::Lease next_app(Owner::APPLICATION, 128);
+    assert(next_app.ok() && next_app.fresh() && ((u8*) next_app.data())[0] == 0);
+  }
+
+  {
     language_workspace::Lease focal(Owner::FOCAL, 128);
     assert(focal.ok());
     assert(focal.fresh());

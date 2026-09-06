@@ -98,6 +98,10 @@ typedef struct mk61_app_api {
   void (*graphics_end)(void);
 
   uint32_t (*key_pressed)(int32_t key);
+
+  /* Optional services. Unknown id/version returns NULL; never read this tail
+   * without checking struct_size. The original 104-byte ARM prefix is stable. */
+  const void* (*query_service)(uint32_t service_id, uint32_t version);
 } mk61_app_api;
 
 static inline int mk61_app_api_compatible(const mk61_app_api* api,

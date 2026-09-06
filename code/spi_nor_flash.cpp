@@ -419,10 +419,10 @@ bool SpiNorFlash::verifyBytes(u32 address, const u8* expected, usize len) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::FLASH_VERIFY);
   if(expected == NULL || !waitReady(5000)) return false;
 
-  // Удерживаем выбор микросхемы активным на протяжении всего сравнения. Стековый
-  // буфер размером с сектор проверяет обычную 512-байтовую запись одной передачей
-  // HAL; более крупные записи остаются ограниченными и сравниваются посекторно.
-  u8 recovered[512];
+  // Удерживаем выбор микросхемы активным на протяжении всего сравнения.
+  // Полусекторный буфер экономит 256 байт в глубокой цепочке APP -> C5 -> NOR;
+  // все байты проверяются в одном READ, обычный сектор требует двух передач HAL.
+  u8 recovered[256];
   if(!select()) return false;
   transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);
   sendAddress(address);

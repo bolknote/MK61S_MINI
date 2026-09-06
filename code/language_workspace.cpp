@@ -5,13 +5,14 @@ namespace language_workspace {
 
 static shared_memory::Owner unified_owner(Owner owner) {
   const u8 value = (u8) owner;
-  return value <= (u8) Owner::TERMINAL_TRANSFER
+  return value <= (u8) Owner::TERMINAL_TRANSFER || owner == Owner::APPLICATION
       ? (shared_memory::Owner) value : shared_memory::Owner::NONE;
 }
 
 static Owner legacy_owner(shared_memory::Owner owner) {
   const u8 value = (u8) owner;
-  return value <= (u8) shared_memory::Owner::TERMINAL_TRANSFER
+  return value <= (u8) shared_memory::Owner::TERMINAL_TRANSFER ||
+      owner == shared_memory::Owner::APPLICATION
       ? (Owner) value : Owner::NONE;
 }
 

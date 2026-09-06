@@ -2,6 +2,9 @@
 
 const mk61_app_api* mk61_api;
 extern int main(void);
+#if defined(MK61_APP_SHARED_RUNTIME)
+extern int mk61_app_bind_runtime(const mk61_app_api* api);
+#endif
 
 __attribute__((weak)) uint32_t mk61_app_open_file(uint32_t file_id) {
   (void) file_id;
@@ -19,7 +22,11 @@ uint32_t mk61_module_entry(uint32_t command, uint32_t argument0,
     return MK61_APP_RUNTIME_ERROR;
   mk61_api = api;
   switch(command) {
-    case MK61_APP_INITIALIZE: return MK61_APP_OK;
+    case MK61_APP_INITIALIZE:
+#if defined(MK61_APP_SHARED_RUNTIME)
+      if(!mk61_app_bind_runtime(api)) return MK61_APP_RUNTIME_ERROR;
+#endif
+      return MK61_APP_OK;
     case MK61_APP_RUN: return (uint32_t) main();
     case MK61_APP_FILE_OPEN: return mk61_app_open_file(argument1);
     default: return MK61_APP_RUNTIME_ERROR;

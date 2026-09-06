@@ -3,7 +3,7 @@
 
 namespace {
 
-// Private BSS fits in the existing 20-KiB executable arena. The decoder is
+// Private BSS fits in the 20-KiB limit of one APP allocation. The decoder is
 // reused unchanged; this prototype needs no resident C++ objects or leases.
 u8 file_bytes[1600];
 u8 frame[192 * 64 / 8];

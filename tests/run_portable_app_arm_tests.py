@@ -52,14 +52,14 @@ def resident_api(path):
             if name.startswith("_ZN12loadable_app12_GLOBAL__N_1L3APIE"):
                 source = sections[index]
                 start = source[4] + value - source[3]
-                assert size == 104
+                assert size >= 104
                 api_address, api = value, data[start:start + size]
     assert "mk61_module_overlay" not in symbols, "fixed APP reserve returned"
     assert BASE <= symbols["_sdata"] <= symbols["_edata"] <= symbols["_sbss"]
     assert symbols["_ebss"] <= symbols["_end"] <= symbols["__mk61_dynamic_begin"]
     assert symbols["__mk61_dynamic_begin"] + OVERLAY <= symbols["__mk61_dynamic_end"]
     assert symbols["__mk61_dynamic_end"] in (0x2000E700, 0x2001BF00)
-    assert struct.unpack_from("<IHH", api) == (0x31505041, 1, 104)
+    assert struct.unpack_from("<IHH", api) == (0x31505041, 1, len(api))
     return api_address, api
 
 

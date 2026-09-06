@@ -2,12 +2,24 @@
 #define MK61_APP_H
 
 #include "loadable_app_api.h"
+#include "loadable_app_services.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 extern const mk61_app_api* mk61_api;
+
+/* Query MK61_SERVICE_CAP_FORMAT first. Compact firmware provides integer,
+ * string and character formatting; floating conversions are not promised. */
+static inline int mk61_app_snprintf(const mk61_app_services* services,
+    char* output, uint32_t size, const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  const int result = services->format(output, size, format, args);
+  va_end(args);
+  return result;
+}
 
 enum mk61_app_command {
   MK61_APP_INITIALIZE = 0,

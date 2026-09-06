@@ -11,12 +11,13 @@ const mk61_system_api* api;
 const mk61_app_api* app;
 u32 image_crc;
 bool bind(u32 system_address, u32 app_address, u32 crc) {
-  const auto* sys = (const mk61_system_api*) (usize) system_address;
+  (void) system_address;
   const auto* base = (const mk61_app_api*) (usize) app_address;
-  if(!sys || sys->magic != MK61_SYSTEM_API_MAGIC ||
-      sys->version != MK61_SYSTEM_API_VERSION || sys->struct_size < sizeof(*sys) ||
-      !sys->keyboard_mapping || !sys->call || !sys->math || !sys->format ||
-      !mk61_app_api_compatible(base, sizeof(*base), MK61_APP_CAP_TIME | MK61_APP_CAP_FILES)) return false;
+  // Every newly built APP obtains services through the current public API.
+  const auto* sys = mk61_app_get_services(base, 0);
+  const u32 required = MK61_APP_CAP_TIME | MK61_APP_CAP_FILES;
+  if(!sys || !sys->keyboard_mapping || !sys->math || !sys->format ||
+      (base->capabilities & required) != required) return false;
   api = sys; app = base; image_crc = crc;
 #if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE)
   if(!sys->runtime) return false;

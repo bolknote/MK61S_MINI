@@ -5,8 +5,10 @@ python3 "$root/tests/app_relocations_self_test.py"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-portable-tests.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 flags=(-std=c++17 -O1 -Wall -Wextra -Werror -I"$root/code")
+cflags=(-std=c11 -O1 -Wall -Wextra -Werror -I"$root/code")
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+  cflags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 clang++ "${flags[@]}" -DMK61_ENABLE_PORTABLE_APPS=1 \
   "$root/tests/portable_app_format_self_test.cpp" \
@@ -26,6 +28,10 @@ clang++ "${flags[@]}" -I"$root/sdk/portable/include" \
   "$root/examples/portable-apps/WBMP/viewer.cpp" "$root/code/wbmp.cpp" \
   -o "$work/wbmp"
 "$work/wbmp"
+clang "${cflags[@]}" -I"$root/sdk/portable/include" \
+  "$root/tests/app_services_self_test.c" "$root/sdk/portable/shared_runtime.c" \
+  -o "$work/services"
+"$work/services"
 clang --target=arm-none-eabi -mcpu=cortex-m4 -mthumb \
   -std=c11 -Wall -Wextra -Werror -ffreestanding -I"$root/code" \
   -c "$root/tests/portable_system_abi_self_test.c" -o "$work/system-api.o"

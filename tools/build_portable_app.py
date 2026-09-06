@@ -40,6 +40,8 @@ def build(args: argparse.Namespace) -> dict:
         raise ValueError("--text-only applies to markdown-viewer")
     if system and args.source:
         raise ValueError("--system selects its own sources")
+    if system and args.shared_runtime:
+        raise ValueError("System APP selects its runtime automatically")
     if not system and not args.source:
         raise ValueError("--source is required for a user APP")
     args.name = args.name or (system[0] if system else None)
@@ -73,6 +75,8 @@ def build(args: argparse.Namespace) -> dict:
     sources += [ROOT / "sdk/portable/memory.c"]
     if args.system in ("focal", "tinybasic"):
         sources += [ROOT / "sdk/portable/system/runtime.S", ROOT / "sdk/portable/system/editor.cpp"]
+    if args.shared_runtime:
+        sources += [ROOT / "sdk/portable/shared_runtime.c", ROOT / "sdk/portable/system/runtime.S"]
     if len(set(sources)) != len(sources):
         raise ValueError("duplicate source")
     flags = ["-mcpu=cortex-m4", "-mthumb", "-mfpu=fpv4-sp-d16",
@@ -81,6 +85,8 @@ def build(args: argparse.Namespace) -> dict:
              "-Wall", "-Wextra", "-Werror"]
     if not system:
         flags.append("-ffreestanding")
+    if args.shared_runtime:
+        flags += ["-DMK61_APP_SHARED_RUNTIME=1", "-DMK61_RUNTIME_POINTER=mk61_app_runtime"]
     includes = ([ROOT / "sdk/portable/system"] if system else []) + [
         ROOT / "sdk/portable/include", ROOT / "code", *args.include]
     include_flags = ["-I" + str(x.resolve()) for x in includes]
@@ -179,6 +185,8 @@ def main() -> None:
     parser.add_argument("--fixed-address", action="store_true", help="emit legacy portable ABI 3")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)
+    parser.add_argument("--shared-runtime", action="store_true",
+                        help="use resident ARM EABI/string helpers; require runtime service at startup")
     parser.add_argument("--text-only", action="store_true",
                         help="compact Markdown without graphical rendering or WBMP")
     parser.add_argument("--include", type=Path, action="append", default=[])

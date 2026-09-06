@@ -1,0 +1,213 @@
+{
+  "base_commit": "96b9204bf1a03b13345193d4a1fd9f656635c69d",
+  "compiler": "xPack ARM GCC 14.2.1",
+  "api_prefix_bytes": 104,
+  "api_bytes": 108,
+  "services_bytes": 28,
+  "container_abi": 4,
+  "f401": [
+    {
+      "case": "f401-capability-a00-usb",
+      "before_bytes": 246944,
+      "after_bytes": 247948,
+      "delta": 1004,
+      "flash_free": 14196,
+      "static_ram": 33628,
+      "ram_delta": -8,
+      "max_stack_frame": 1928,
+      "stack_fix_bytes": 24
+    },
+    {
+      "case": "f401-capability-ws-graphics",
+      "before_bytes": 239292,
+      "after_bytes": 240248,
+      "delta": 956,
+      "flash_free": 21896,
+      "static_ram": 26680,
+      "ram_delta": -12,
+      "max_stack_frame": 1928,
+      "stack_fix_bytes": 16
+    },
+    {
+      "case": "f401-capability-ws-usb",
+      "before_bytes": 257092,
+      "after_bytes": 258084,
+      "delta": 992,
+      "flash_free": 4060,
+      "static_ram": 33604,
+      "ram_delta": 4,
+      "max_stack_frame": 1928,
+      "stack_fix_bytes": 36
+    },
+    {
+      "case": "f401-capability-ws-usb-graphics",
+      "before_bytes": 258060,
+      "after_bytes": 259048,
+      "delta": 988,
+      "flash_free": 3096,
+      "static_ram": 33608,
+      "ram_delta": 8,
+      "max_stack_frame": 1928,
+      "stack_fix_bytes": 12
+    },
+    {
+      "case": "f401-product-a00",
+      "before_bytes": 234844,
+      "after_bytes": 234940,
+      "delta": 96,
+      "flash_free": 27204,
+      "static_ram": 26736,
+      "ram_delta": 0,
+      "max_stack_frame": 1928,
+      "stack_fix_bytes": 20
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "before_bytes": 237104,
+      "after_bytes": 237208,
+      "delta": 104,
+      "flash_free": 24936,
+      "static_ram": 28720,
+      "ram_delta": 0,
+      "max_stack_frame": 1488,
+      "stack_fix_bytes": 20
+    },
+    {
+      "case": "f401-product-mini-v2-a00",
+      "before_bytes": 234872,
+      "after_bytes": 234968,
+      "delta": 96,
+      "flash_free": 27176,
+      "static_ram": 26736,
+      "ram_delta": 0,
+      "max_stack_frame": 1928,
+      "stack_fix_bytes": 20
+    },
+    {
+      "case": "f401-product-ws0010",
+      "before_bytes": 244696,
+      "after_bytes": 244780,
+      "delta": 84,
+      "flash_free": 17364,
+      "static_ram": 26688,
+      "ram_delta": 0,
+      "max_stack_frame": 1928,
+      "stack_fix_bytes": 20
+    }
+  ],
+  "apps": [
+    {
+      "name": "FOCAL",
+      "before_app": 13932,
+      "after_app": 13952,
+      "before_ram": 20140,
+      "after_ram": 20156
+    },
+    {
+      "name": "BASIC",
+      "before_app": 11772,
+      "after_app": 11786,
+      "before_ram": 17252,
+      "after_ram": 17268
+    },
+    {
+      "name": "MARKDOWN",
+      "before_app": 12156,
+      "after_app": 12169,
+      "before_ram": 15324,
+      "after_ram": 15324
+    },
+    {
+      "name": "SETUP",
+      "before_app": 6756,
+      "after_app": 6780,
+      "before_ram": 9216,
+      "after_ram": 9240
+    }
+  ],
+  "c_probe": {
+    "standalone_app": 3124,
+    "shared_runtime_app": 1005,
+    "standalone_ram": 4140,
+    "shared_runtime_ram": 1256
+  },
+  "tests": {
+    "host_asan_ubsan": "PASS full suite; UBSAN_OPTIONS=halt_on_error=1",
+    "portable_c_arm_layout": "PASS",
+    "memory_ownership": "PASS",
+    "f401_release_matrix": "PASS 8 cases after hardware stack fix",
+    "new_system_arm": "PASS 2 final residents x 3 addresses",
+    "legacy_system_arm": "PASS 2 residents x 3 addresses",
+    "public_services_arm": "PASS 2 final residents x 3 addresses plus reduced-build refusal",
+    "hardware": "PASS Classic V3 STM32F411; original firmware, C5 and calculator state restored",
+    "github_actions": "NOT_RUN",
+    "public_base_arm": "PASS 2 current resident API tables"
+  },
+  "old_firmware_support": false,
+  "minimum_required_api_bytes": 108,
+  "hardware": {
+    "date": "2026-09-06",
+    "profile": "classic-v3-uc1609",
+    "mcu": "STM32F411",
+    "public_id": "AEB505B6E0067623",
+    "firmware_bytes_before_stack_fix": 302932,
+    "firmware_bytes": 302956,
+    "stack_fix_flash_delta": 24,
+    "static_ram": 40876,
+    "stack_budget": 16384,
+    "stack_minimum_before_fix": 11872,
+    "stack_minimum_after_fix": 12496,
+    "stack_threshold": 12288,
+    "stack_threshold_margin": 208,
+    "service_launches": 14,
+    "app": {
+      "startup_launches": 6,
+      "wbmp_launches": 7,
+      "display_switches": 2,
+      "minimum_stack_remaining": 12496,
+      "frames_verified_transport": 45,
+      "result": "PASS",
+      "relocation_address": "0x2001b700",
+      "app_sha256": "13e6bc902a0d68b2ee87ed7993e2f128845a2a1adfad67da37e0e19ca0f56a1b"
+    },
+    "system": {
+      "language_runs": 12,
+      "state_restores": 6,
+      "chip8_runs": 3,
+      "markdown_runs": 3,
+      "minimum_stack_remaining": 12496,
+      "result": "PASS",
+      "frames_verified_transport": 187
+    },
+    "setup": {
+      "result": "PASS",
+      "views": [
+        "hardware",
+        "date edit/cancel",
+        "calibration edit/cancel/reopen",
+        "font"
+      ],
+      "setup_allocation_bytes": 9248
+    },
+    "c5": {
+      "result": "PASS",
+      "writes": 26,
+      "readback_equal": true,
+      "temporary_files_removed": true,
+      "minimum_stack_remaining": 12496
+    },
+    "restoration": {
+      "result": "RESTORED",
+      "tested_build": "C7E4C796",
+      "restored_build": "2504D75A",
+      "tested_firmware_bytes": 302956,
+      "tested_firmware_sha256": "cf24d13a9d2ea584e022ed87e5009ae572767975a647903c60cb8b8a647d7f7e",
+      "full_flash_readback_equal": true,
+      "original_files_restored": 18,
+      "temporary_files_removed": 18,
+      "calculator_state_restored": true,
+      "other_device_unchanged": true,
+      "stack_remaining": 12496
+    }
+  }
+}

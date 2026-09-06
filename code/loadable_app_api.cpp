@@ -3,6 +3,7 @@
 #if MK61_ANY_LOADABLE_MODULE
 
 #include "loadable_app_api.hpp"
+#include "loadable_system_api.hpp"
 
 #include "Arduino.h"
 #include "cross_hal.h"
@@ -295,7 +296,12 @@ static const Api API = {
   api_graphics_begin,
   api_graphics_present,
   api_graphics_end,
-  api_key_pressed
+  api_key_pressed,
+#if MK61_ENABLE_PORTABLE_APPS
+  loadable_module::query_service
+#else
+  nullptr
+#endif
 };
 
 } // namespace

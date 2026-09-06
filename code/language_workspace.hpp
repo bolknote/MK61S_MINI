@@ -13,7 +13,8 @@ enum class Owner : u8 {
   MARKDOWN_VIEWER = (u8) shared_memory::Owner::MARKDOWN_VIEWER,
   CHIP8 = (u8) shared_memory::Owner::CHIP8,
   USB_DISK = (u8) shared_memory::Owner::USB_DISK,
-  TERMINAL_TRANSFER = (u8) shared_memory::Owner::TERMINAL_TRANSFER
+  TERMINAL_TRANSFER = (u8) shared_memory::Owner::TERMINAL_TRANSFER,
+  APPLICATION = (u8) shared_memory::Owner::APPLICATION
 };
 
 static constexpr usize SIZE = shared_memory::WORKSPACE_SIZE;

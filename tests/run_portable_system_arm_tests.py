@@ -108,9 +108,9 @@ class Machine:
         result = None
         if address == (self.syscall & ~1):
             payload = self.words(uc.reg_read(UC_ARM_REG_SP),1)[0]
-            if a in (20,24):
+            if a in (20,24,26):
                 self.key_calls += a == 24
-                return  # Execute the real resident font/editor dispatcher.
+                return  # Execute the real resident font/editor/capability dispatcher.
             self.trace.append((a,b,c,d))
             result = self.system(a,b,c,d,payload)
         elif address in self.callbacks:
@@ -127,6 +127,12 @@ class Machine:
             elif name == 'delay_ms': self.clock += a
             elif name == 'display_columns': result = 16
             elif name == 'display_rows': result = 4 if self.graphics else 2
+            elif name == 'display_clear': self.lines = []; result = 1
+            elif name == 'display_write_utf8':
+                self.lines.append(bytes(uc.mem_read(c,d)).decode('utf8')); result = 1
+            elif name in ('key_poll','key_wait'):
+                assert self.keys, 'user APP keyboard underflow'
+                result = self.keys.pop(0)
             elif name == 'graphics_available': result = self.graphics
             elif name == 'graphics_width': result = 192 if self.graphics else 0
             elif name == 'graphics_height': result = 64 if self.graphics else 0
@@ -261,6 +267,8 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--resident-elf',type=Path,action='append',required=True)
     parser.add_argument('--apps-dir',type=Path,required=True)
+    parser.add_argument('--expect-public-services',action='store_true',
+                        help='verify new adapters require the common API')
     args=parser.parse_args()
     assert len(args.resident_elf) == 2, 'classic graphics, then mini character resident'
     with tempfile.TemporaryDirectory(prefix='mk61-system-arm-') as temp:
@@ -286,6 +294,14 @@ def main():
             for address_index in range(3):
                 m=Machine(resident,index==0,address_index)
                 m.load(packages['focal'])
+                if args.expect_public_services:
+                    # A poison legacy pointer proves the new adapter uses
+                    # query_service; a truncated public table must be refused.
+                    assert m.call(0,1,m.api,m.crc) == 0
+                    api_size = m.words(m.api+4,1)[0] >> 16
+                    m.uc.mem_write(m.api+6,struct.pack('<H',104))
+                    assert m.call(0,m.sys,m.api,m.crc) == 5
+                    m.uc.mem_write(m.api+6,struct.pack('<H',api_size))
                 assert m.call(0x102,m.source('1.10 S A=2+3*4\n1.20 S .R0=A\n1.30 P 100000000\n1.40 P A/3\n1.50 E')) == 1, m.lines
                 assert m.call(0x104,0) == 0
                 assert m.refs[4,0] == 14, m.refs

@@ -13,11 +13,12 @@ static constexpr shared_memory::Owner unified_owners[] = {
   shared_memory::Owner::PROGRAM_STORE_COMPRESSION,
   shared_memory::Owner::VFAT_COMMIT,
   shared_memory::Owner::USB_CACHE,
-  shared_memory::Owner::TERMINAL_TRANSFER
+  shared_memory::Owner::TERMINAL_TRANSFER,
+  shared_memory::Owner::APPLICATION
 };
 
 static_assert(sizeof(unified_owners) / sizeof(unified_owners[0]) ==
-              (usize) Owner::TERMINAL_TRANSFER + 1,
+              (usize) Owner::APPLICATION + 1,
               "shared-scratch owner facade is incomplete");
 
 static shared_memory::Owner unified_owner(Owner owner) {

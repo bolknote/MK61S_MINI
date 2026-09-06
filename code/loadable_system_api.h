@@ -1,154 +1,100 @@
 #ifndef MK61_LOADABLE_SYSTEM_API_H
 #define MK61_LOADABLE_SYSTEM_API_H
 
-#include "loadable_app_api.h"
-#include <stdbool.h>
-#include <stdarg.h>
+/* Source compatibility for existing System APP adapters. All services are
+ * public through loadable_app_services.h and mk61_app_api.query_service. */
+#include "loadable_app_services.h"
 
-/* System APP services are a separate, versioned C ABI. No resident C++
- * objects, enum layouts or symbol addresses occur in the wire structures. */
-#define MK61_SYSTEM_API_MAGIC 0x31535953UL
-#define MK61_SYSTEM_API_VERSION 1U
-#define MK61_SYSTEM_MAX_ROWS 10U
-#define MK61_SYSTEM_LEASE_BYTES 32U
-
-enum mk61_system_operation {
-  MK61_SYS_DISPLAY = 1, MK61_SYS_KEYBOARD, MK61_SYS_SETTINGS,
-  MK61_SYS_RANDOM, MK61_SYS_MICROS, MK61_SYS_FILE_COUNT,
-  MK61_SYS_FILE_ENTRY, MK61_SYS_FILE_RESOLVE, MK61_SYS_FILE_WRITE,
-  MK61_SYS_FILE_REMOVE, MK61_SYS_FILE_CHOOSE, MK61_SYS_FILE_SAVE_TARGET,
-  MK61_SYS_MEMORY_ACQUIRE, MK61_SYS_MEMORY_RELEASE, MK61_SYS_MEMORY_DATA,
-  MK61_SYS_TEXT_ROWS, MK61_SYS_EDITOR_DRAW, MK61_SYS_EDITOR_SCROLL,
-  MK61_SYS_MENU, MK61_SYS_FONT, MK61_SYS_REF_READ, MK61_SYS_REF_WRITE,
-  MK61_SYS_FILE_EXISTS, MK61_SYS_EDITOR_KEY, MK61_SYS_SETUP
-};
-enum mk61_system_display_operation {
-  MK61_SYS_DISPLAY_CLEAR, MK61_SYS_DISPLAY_CURSOR, MK61_SYS_DISPLAY_WRITE,
-  MK61_SYS_DISPLAY_PRINT, MK61_SYS_DISPLAY_CURSOR_ON,
-  MK61_SYS_DISPLAY_CURSOR_OFF, MK61_SYS_DISPLAY_SUPPORTS_CURSOR,
-  MK61_SYS_DISPLAY_FLUSH, MK61_SYS_DISPLAY_BEGIN_UPDATE,
-  MK61_SYS_DISPLAY_END_UPDATE, MK61_SYS_DISPLAY_END_VIEWPORT,
-  MK61_SYS_DISPLAY_GRAPHICS, MK61_SYS_DISPLAY_WIDTH, MK61_SYS_DISPLAY_HEIGHT,
-  MK61_SYS_DISPLAY_GRAPHICS_MODE
-};
-enum mk61_system_keyboard_operation {
-  MK61_SYS_KEY_POLL, MK61_SYS_KEY_GET, MK61_SYS_KEY_WAIT,
-  MK61_SYS_KEY_PRESSED, MK61_SYS_KEY_IMMEDIATE, MK61_SYS_KEY_CLEAR_IMMEDIATE,
-  MK61_SYS_KEY_SCAN, MK61_SYS_KEY_HANDOFF, MK61_SYS_KEY_HANDOFF_PENDING,
-  MK61_SYS_KEY_ANY, MK61_SYS_KEY_CLEAR_HOLD, MK61_SYS_KEY_LAST
-};
-enum mk61_system_setting { MK61_SYS_LANGUAGE, MK61_SYS_VOLUME,
-                           MK61_SYS_ANGLE, MK61_SYS_REGISTER_F };
-enum mk61_system_math_operation { MK61_SYS_SIN, MK61_SYS_COS, MK61_SYS_TAN,
-  MK61_SYS_ASIN, MK61_SYS_ACOS, MK61_SYS_ATAN, MK61_SYS_LN, MK61_SYS_LOG10,
-  MK61_SYS_EXP, MK61_SYS_SQRT, MK61_SYS_POW };
-
-/* SETUP service v1. Explicit C fields, no native C++ layouts. */
-enum mk61_setup_operation {
-  MK61_SETUP_VERSION, MK61_SETUP_HARDWARE, MK61_SETUP_RTC_READ,
-  MK61_SETUP_RTC_WRITE, MK61_SETUP_RTC_CALIBRATION, MK61_SETUP_FONT_READ,
-  MK61_SETUP_FONT_APPLY, MK61_SETUP_FONT_PREVIEW, MK61_SETUP_FONT_PREVIEW_END,
-  MK61_SETUP_LCD_CHAR, MK61_SETUP_FONT_RESTORE, MK61_SETUP_TEXT,
-  MK61_SETUP_PHASE, MK61_SETUP_FEATURES
-};
-typedef struct mk61_setup_datetime {
-  uint32_t year, month, day, hour, minute, second;
-} mk61_setup_datetime;
-typedef struct mk61_setup_hardware {
-  uint32_t idcode, flash_kb, pin_code, valid, vdda, vbat;
-  int32_t temperature;
-  uint32_t battery_presence, battery_reason;
-  char rtc_source[4], display[16];
-} mk61_setup_hardware;
-typedef struct mk61_setup_profile { uint8_t rows, width, height, gap; } mk61_setup_profile;
-
-typedef struct mk61_system_file {
-  uint32_t id, parent, size, type, kind;
-  char name[32];
-} mk61_system_file;
-typedef struct mk61_system_write {
-  const char* name;
-  const uint8_t* data;
-  uint32_t size, id;
-} mk61_system_write;
-typedef struct mk61_system_choice {
-  mk61_system_file file;
-  uint32_t parent;
-} mk61_system_choice;
-typedef struct mk61_system_save_target {
-  char* name;
-  uint32_t parent;
-} mk61_system_save_target;
-typedef struct mk61_system_lease {
-  /* Opaque resident-owned storage, aligned for any supported native lease. */
-  uint64_t opaque[MK61_SYSTEM_LEASE_BYTES / 8];
-  uint8_t* data;
-  uint32_t size, fresh, image_crc;
-} mk61_system_lease;
-typedef struct mk61_system_editor {
-  const char* source;
-  uint32_t length, cursor, top, sms;
-} mk61_system_editor;
-typedef struct mk61_system_menu_item {
-  const char* text;
-  bool (*action)(void);
-  uint32_t display_size;
-} mk61_system_menu_item;
-typedef struct mk61_system_glyph {
-  uint32_t width, height;
-  uint8_t pixels[8]; /* canonical row-major MSB, at most 8x8 */
-} mk61_system_glyph;
-
-typedef struct mk61_system_edit_hook {
-  char* source;
-  uint32_t length, cursor, capacity, shift;
-  int32_t key, delta;
-  void* context;
-} mk61_system_edit_hook;
-enum mk61_system_edit_hook_operation {
-  MK61_EDIT_INSERT, MK61_EDIT_ALPHA, MK61_EDIT_MOVE, MK61_EDIT_BACKSPACE
-};
-typedef struct mk61_system_edit_key {
-  char* source;
-  uint32_t capacity, length, cursor, top, shift;
-  uint32_t sms_active, sms_index, sms_deadline;
-  int32_t sms_key;
-  int32_t keys[13]; /* left/press, right/press, ok/press, esc/press, step L/R, K, alpha, PP */
-  const char* ok_text;
-  uint32_t options; /* SMS=1, alpha symbols=2, alpha clear line=4 */
-  int32_t backspace_key, key;
-  uint32_t now, hook_mask;
-  uint32_t (*hook)(uint32_t operation, mk61_system_edit_hook* event);
-  void* context;
-} mk61_system_edit_key;
-
-typedef struct mk61_system_keyboard {
-  uint8_t cx, bx, mul, div, power, xy, add, sub, neg, dot;
-  uint8_t digit[10];
-  uint8_t pp, bp, x_to_p, p_to_x, run, ret, frw, bkw, k, alpha;
-  uint8_t degree, grade, radian, user, save, load;
-  uint8_t left, right, ok, esc, shg_left, shg_right;
-} mk61_system_keyboard;
-
-/* Standard compiler helpers use their ARM EABI calling convention; string
- * functions use ISO C/AAPCS. See loadable_system_runtime.def for slot order. */
-typedef void (*mk61_system_runtime_function)(void);
-enum mk61_system_runtime_slot {
-#define MK61_RUNTIME(name) MK61_RUNTIME_SLOT_##name,
-#include "loadable_system_runtime.def"
-#undef MK61_RUNTIME
-  MK61_RUNTIME_COUNT
-};
-
-typedef struct mk61_system_api {
-  uint32_t magic;
-  uint16_t version, struct_size;
-  const mk61_system_keyboard* keyboard_mapping;
-  uint32_t (*call)(uint32_t operation, uint32_t a, uint32_t b,
-                   uint32_t c, void* payload);
-  double (*math)(uint32_t operation, double x, double y);
-  int (*format)(char* output, uint32_t size, const char* format, va_list args);
-  const mk61_system_runtime_function* runtime;
-} mk61_system_api;
+#define MK61_SYSTEM_API_MAGIC MK61_APP_SERVICES_MAGIC
+#define MK61_SYSTEM_API_VERSION MK61_APP_SERVICES_VERSION
+#define MK61_SYSTEM_LEASE_BYTES MK61_SERVICE_LEASE_BYTES
+#define MK61_SYSTEM_MAX_ROWS MK61_SERVICE_MAX_ROWS
+#define MK61_SYS_ACOS MK61_SERVICE_ACOS
+#define MK61_SYS_ANGLE MK61_SERVICE_ANGLE
+#define MK61_SYS_ASIN MK61_SERVICE_ASIN
+#define MK61_SYS_ATAN MK61_SERVICE_ATAN
+#define MK61_SYS_COS MK61_SERVICE_COS
+#define MK61_SYS_DISPLAY MK61_SERVICE_DISPLAY
+#define MK61_SYS_DISPLAY_BEGIN_UPDATE MK61_SERVICE_DISPLAY_BEGIN_UPDATE
+#define MK61_SYS_DISPLAY_CLEAR MK61_SERVICE_DISPLAY_CLEAR
+#define MK61_SYS_DISPLAY_CURSOR MK61_SERVICE_DISPLAY_CURSOR
+#define MK61_SYS_DISPLAY_CURSOR_OFF MK61_SERVICE_DISPLAY_CURSOR_OFF
+#define MK61_SYS_DISPLAY_CURSOR_ON MK61_SERVICE_DISPLAY_CURSOR_ON
+#define MK61_SYS_DISPLAY_END_UPDATE MK61_SERVICE_DISPLAY_END_UPDATE
+#define MK61_SYS_DISPLAY_END_VIEWPORT MK61_SERVICE_DISPLAY_END_VIEWPORT
+#define MK61_SYS_DISPLAY_FLUSH MK61_SERVICE_DISPLAY_FLUSH
+#define MK61_SYS_DISPLAY_GRAPHICS MK61_SERVICE_DISPLAY_GRAPHICS
+#define MK61_SYS_DISPLAY_GRAPHICS_MODE MK61_SERVICE_DISPLAY_GRAPHICS_MODE
+#define MK61_SYS_DISPLAY_HEIGHT MK61_SERVICE_DISPLAY_HEIGHT
+#define MK61_SYS_DISPLAY_PRINT MK61_SERVICE_DISPLAY_PRINT
+#define MK61_SYS_DISPLAY_SUPPORTS_CURSOR MK61_SERVICE_DISPLAY_SUPPORTS_CURSOR
+#define MK61_SYS_DISPLAY_WIDTH MK61_SERVICE_DISPLAY_WIDTH
+#define MK61_SYS_DISPLAY_WRITE MK61_SERVICE_DISPLAY_WRITE
+#define MK61_SYS_EDITOR_DRAW MK61_SERVICE_EDITOR_DRAW
+#define MK61_SYS_EDITOR_KEY MK61_SERVICE_EDITOR_KEY
+#define MK61_SYS_EDITOR_SCROLL MK61_SERVICE_EDITOR_SCROLL
+#define MK61_SYS_EXP MK61_SERVICE_EXP
+#define MK61_SYS_FILE_CHOOSE MK61_SERVICE_FILE_CHOOSE
+#define MK61_SYS_FILE_COUNT MK61_SERVICE_FILE_COUNT
+#define MK61_SYS_FILE_ENTRY MK61_SERVICE_FILE_ENTRY
+#define MK61_SYS_FILE_EXISTS MK61_SERVICE_FILE_EXISTS
+#define MK61_SYS_FILE_REMOVE MK61_SERVICE_FILE_REMOVE
+#define MK61_SYS_FILE_RESOLVE MK61_SERVICE_FILE_RESOLVE
+#define MK61_SYS_FILE_SAVE_TARGET MK61_SERVICE_FILE_SAVE_TARGET
+#define MK61_SYS_FILE_WRITE MK61_SERVICE_FILE_WRITE
+#define MK61_SYS_FONT MK61_SERVICE_FONT
+#define MK61_SYS_KEYBOARD MK61_SERVICE_KEYBOARD
+#define MK61_SYS_KEY_ANY MK61_SERVICE_KEY_ANY
+#define MK61_SYS_KEY_CLEAR_HOLD MK61_SERVICE_KEY_CLEAR_HOLD
+#define MK61_SYS_KEY_CLEAR_IMMEDIATE MK61_SERVICE_KEY_CLEAR_IMMEDIATE
+#define MK61_SYS_KEY_GET MK61_SERVICE_KEY_GET
+#define MK61_SYS_KEY_HANDOFF MK61_SERVICE_KEY_HANDOFF
+#define MK61_SYS_KEY_HANDOFF_PENDING MK61_SERVICE_KEY_HANDOFF_PENDING
+#define MK61_SYS_KEY_IMMEDIATE MK61_SERVICE_KEY_IMMEDIATE
+#define MK61_SYS_KEY_LAST MK61_SERVICE_KEY_LAST
+#define MK61_SYS_KEY_POLL MK61_SERVICE_KEY_POLL
+#define MK61_SYS_KEY_PRESSED MK61_SERVICE_KEY_PRESSED
+#define MK61_SYS_KEY_SCAN MK61_SERVICE_KEY_SCAN
+#define MK61_SYS_KEY_WAIT MK61_SERVICE_KEY_WAIT
+#define MK61_SYS_LANGUAGE MK61_SERVICE_LANGUAGE
+#define MK61_SYS_LN MK61_SERVICE_LN
+#define MK61_SYS_LOG10 MK61_SERVICE_LOG10
+#define MK61_SYS_MEMORY_ACQUIRE MK61_SERVICE_MEMORY_ACQUIRE
+#define MK61_SYS_MEMORY_DATA MK61_SERVICE_MEMORY_DATA
+#define MK61_SYS_MEMORY_RELEASE MK61_SERVICE_MEMORY_RELEASE
+#define MK61_SYS_MENU MK61_SERVICE_MENU
+#define MK61_SYS_MICROS MK61_SERVICE_MICROS
+#define MK61_SYS_POW MK61_SERVICE_POW
+#define MK61_SYS_RANDOM MK61_SERVICE_RANDOM
+#define MK61_SYS_REF_READ MK61_SERVICE_REF_READ
+#define MK61_SYS_REF_WRITE MK61_SERVICE_REF_WRITE
+#define MK61_SYS_REGISTER_F MK61_SERVICE_REGISTER_F
+#define MK61_SYS_SETTINGS MK61_SERVICE_SETTINGS
+#define MK61_SYS_SETUP MK61_SERVICE_SETUP
+#define MK61_SYS_SIN MK61_SERVICE_SIN
+#define MK61_SYS_SQRT MK61_SERVICE_SQRT
+#define MK61_SYS_TAN MK61_SERVICE_TAN
+#define MK61_SYS_TEXT_ROWS MK61_SERVICE_TEXT_ROWS
+#define MK61_SYS_VOLUME MK61_SERVICE_VOLUME
+#define mk61_system_api mk61_app_services
+#define mk61_system_choice mk61_service_choice
+#define mk61_system_display_operation mk61_service_display_operation
+#define mk61_system_edit_hook mk61_service_edit_hook
+#define mk61_system_edit_hook_operation mk61_service_edit_hook_operation
+#define mk61_system_edit_key mk61_service_edit_key
+#define mk61_system_editor mk61_service_editor
+#define mk61_system_file mk61_service_file
+#define mk61_system_glyph mk61_service_glyph
+#define mk61_system_keyboard mk61_service_keyboard
+#define mk61_system_keyboard_operation mk61_service_keyboard_operation
+#define mk61_system_lease mk61_service_lease
+#define mk61_system_math_operation mk61_service_math_operation
+#define mk61_system_menu_item mk61_service_menu_item
+#define mk61_system_operation mk61_service_operation
+#define mk61_system_runtime_function mk61_service_runtime_function
+#define mk61_system_runtime_slot mk61_service_runtime_slot
+#define mk61_system_save_target mk61_service_save_target
+#define mk61_system_setting mk61_service_setting
+#define mk61_system_write mk61_service_write
 
 #endif
