@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise preinstalled ABI 3 System APPs on a Classic V3 via USB Screen.
+"""Exercise preinstalled portable System APPs on a Classic V3 via USB Screen.
 
 Generate fixtures locally with --write-fixtures. Hardware mode runs only those
 fixtures, changes R0 through R4, and temporarily sends keys/takes the display.

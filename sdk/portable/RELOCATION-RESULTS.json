@@ -215,7 +215,17 @@
         "sealed CRC"
       ]
     },
-    "hardware_abi4": "NOT_RUN",
+    "hardware_abi4": {
+      "result": "PASS",
+      "report": "HIL-ABI4-2026-09-06.md",
+      "mcu": "STM32F411CE",
+      "resident_builds": ["FA9408B7", "B5DA55D4"],
+      "user_app_load_addresses": ["0x20004808", "0x20004408", "0x20003808"],
+      "system_apps": 6,
+      "minimum_observed_stack_remaining": 11136,
+      "original_flash_bytes_restored_and_verified": 524288,
+      "original_c5_files_restored": 18
+    },
     "full_f411_matrix": "NOT_RUN",
     "pdf_updated": 8
   }

@@ -200,6 +200,8 @@ def main():
     parser.add_argument('--directory', default='/PAPPTEST')
     parser.add_argument('--cycles', type=int, default=10)
     parser.add_argument('--output-dir', type=Path)
+    parser.add_argument('--relocation-app', type=Path,
+                        help='installed CHECK.APP built from portable_app_hil_relocation.c')
     parser.add_argument('--write-fixtures', type=Path,
                         help='only generate Wide/Tall.wbmp locally; no device access')
     args = parser.parse_args()
@@ -211,6 +213,14 @@ def main():
     assert 1 <= args.cycles <= 100 and '"' not in args.directory
     args.output_dir.mkdir(parents=True, exist_ok=True)
     expected_check = bytes(((i * 17 + i // 16) ^ 0xA5) & 255 for i in range(1536))
+    relocation_address = None
+    if args.relocation_app:
+        container = args.relocation_app.read_bytes()
+        assert len(container) >= 64 and struct.unpack_from('<H', container, 12)[0] == 4
+        memory_size = struct.unpack_from('<I', container, 32)[0]
+        assert 0 < memory_size < 20480
+        relocation_address = 0x20000000 + ((20480 - memory_size) & ~7)
+        expected_check = struct.pack('<I', relocation_address) + expected_check[4:]
     foreground = False
     with ScreenPort(args.port) as port:
         report = port.command('identity')
@@ -225,6 +235,9 @@ def main():
                 port.close_app(); foreground = False
                 port.pump(.15)
             print(f'C startup: {args.cycles} fresh launches, full .data/BSS bitmap PASS', flush=True)
+            if relocation_address is not None:
+                print(f'ARM relocations: data/function/packed/end pointers and PC at '
+                      f'{relocation_address:#010x} PASS', flush=True)
 
             for name, width, height, steps in (
                     ('Wide', 208, 48, ((36, 8, 0), (36, 16, 0), (38, 8, 0))),
@@ -270,6 +283,9 @@ def main():
             result = {'startup_launches': args.cycles + 1, 'wbmp_launches': 7,
                       'display_switches': 2,
                       'frames_verified_transport': len(port.frames), 'result': 'PASS'}
+            if relocation_address is not None:
+                result.update(relocation_address=f'{relocation_address:#010x}',
+                              app_sha256=hashlib.sha256(container).hexdigest())
             (args.output_dir / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
             print('Runtime: CRC, MPU, no crash, SRAM ownership PASS', flush=True)
         finally:
