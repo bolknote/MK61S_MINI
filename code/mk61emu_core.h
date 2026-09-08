@@ -45,6 +45,17 @@
 static  constexpr usize MK61_NOP= 0x54; // NOP
 static  constexpr usize MK61_CLASSIC_PROGRAM_STEPS = 105;
 static  constexpr usize MK61_EXPANDED_PROGRAM_STEPS = MK61_CLASSIC_PROGRAM_STEPS + 7;
+static  constexpr usize MK61_PROGRAM_STEPS_PER_PAGE = 7;
+static  constexpr usize MK61_MEMORY_PAGE_TETRADES = 42;
+// M2 contains the marker, communication channel and five stack words before
+// the optional program/data reserve Ms.  The 16-page 112+RF configuration
+// therefore exposes nine exchange pages: R0..R8 or 63 program steps.
+static  constexpr usize MK61_M2_SYSTEM_PAGES = 7;
+static  constexpr usize MK61_EXPANDED_MS_PAGES =
+    MK61_EXPANDED_PROGRAM_STEPS / MK61_PROGRAM_STEPS_PER_PAGE -
+    MK61_M2_SYSTEM_PAGES;
+static  constexpr usize MK61_EXPANDED_MS_PROGRAM_STEPS =
+    MK61_EXPANDED_MS_PAGES * MK61_PROGRAM_STEPS_PER_PAGE;
 static constexpr  usize   MK61_CLASSIC_RING_SIZE       = 252 + 252 + 42 + 42 + 42;
 static constexpr  usize   MK61_EXPANDED_RING_SIZE      = MK61_CLASSIC_RING_SIZE + 42;
 static constexpr  usize   SIZE_RING_M                  = MK61_EXPANDED_RING_SIZE;

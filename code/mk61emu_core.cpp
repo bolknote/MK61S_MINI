@@ -1077,6 +1077,55 @@ static void finish_active_mk61_command(void) {
   dispatch_mk61_command_after(completed);
 }
 
+static constexpr u8 MK61_EXCHANGE_DATA_WITH_MS = 0x55U;
+static constexpr u8 MK61_EXCHANGE_PROGRAM_WITH_MS = 0x56U;
+static constexpr usize MK61_TETRADES_PER_PAGE = 14U;
+static constexpr usize MK61_NUMERIC_TETRADES = 12U;
+
+static inline bool extended_ms_command(u8 opcode) {
+  return expanded_program_mode &&
+      (opcode == MK61_EXCHANGE_DATA_WITH_MS ||
+       opcode == MK61_EXCHANGE_PROGRAM_WITH_MS);
+}
+
+static inline void exchange_ring_tetrades(usize left, usize right) {
+  const u8 saved = ringM[left];
+  ringM[left] = ringM[right];
+  ringM[right] = saved;
+}
+
+static void exchange_data_with_ms(void) {
+  // M1, M2 and M3 are interleaved at offsets 0, 1 and 2 in every group
+  // of three ring tetras.  A numeric word occupies 12 of a page's 14 M1/M2
+  // tetras; the two service tetras in Ms must remain untouched.
+  for(usize page = 0; page < MK61_EXPANDED_MS_PAGES; page++) {
+    const usize base = page * MK61_MEMORY_PAGE_TETRADES;
+    for(usize digit = 0; digit < MK61_NUMERIC_TETRADES; digit++) {
+      exchange_ring_tetrades(base + digit * 3U,
+                             base + digit * 3U + 1U);
+    }
+  }
+}
+
+static void exchange_program_with_ms(void) {
+  // Program exchange uses the complete seven-byte page, including the two
+  // M2 tetras which numeric exchange deliberately preserves.
+  for(usize page = 0; page < MK61_EXPANDED_MS_PAGES; page++) {
+    const usize base = page * MK61_MEMORY_PAGE_TETRADES;
+    for(usize digit = 0; digit < MK61_TETRADES_PER_PAGE; digit++) {
+      exchange_ring_tetrades(base + digit * 3U + 1U,
+                             base + digit * 3U + 2U);
+    }
+  }
+}
+
+static bool execute_extended_ms_command(u8 opcode) {
+  if(!extended_ms_command(opcode)) return false;
+  if(opcode == MK61_EXCHANGE_DATA_WITH_MS) exchange_data_with_ms();
+  else exchange_program_with_ms();
+  return true;
+}
+
 static u8 begin_mk61_command(u8 opcode, core_61::Mk61CommandSource source) {
   mk61_command_sequence++;
   if(mk61_command_sequence == 0) mk61_command_sequence = 1;
@@ -1085,7 +1134,13 @@ static u8 begin_mk61_command(u8 opcode, core_61::Mk61CommandSource source) {
   active_mk61_command = {
       true, source, opcode, executed_opcode, mk61_command_sequence
   };
-  return executed_opcode;
+  // The stock 55/56 ROM branches are inert on a serial MK-61.  In the
+  // opt-in 112+RF configuration perform the architected bank exchange here,
+  // after BEFORE hooks have selected the effective opcode, and let the ROM
+  // complete a harmless one-step NOP.  The semantic opcode retained above is
+  // still reported to AFTER hooks.
+  return execute_extended_ms_command(executed_opcode)
+      ? (u8) MK61_NOP : executed_opcode;
 }
 
 static void reset_mk61_command_runtime(void) {
@@ -1163,7 +1218,7 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     if(dispatch_mk61_program_boundary(program_address, opcode)) return true;
 
     u8 executed_opcode = opcode;
-    if(has_mk61_command_target(opcode)) {
+    if(has_mk61_command_target(opcode) || extended_ms_command(opcode)) {
       executed_opcode = begin_mk61_command(
           opcode, core_61::Mk61CommandSource::PROGRAM);
       encode_mk61_opcode(executed_opcode);
@@ -1193,7 +1248,7 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
       mk61_call_operand_depth = 0;
       mk61_jump_operand = 0;
     }
-    if(!has_mk61_command_target(opcode)) return false;
+    if(!has_mk61_command_target(opcode) && !extended_ms_command(opcode)) return false;
     const u8 replacement = begin_mk61_command(
         opcode, core_61::Mk61CommandSource::KEYBOARD);
     encode_mk61_opcode(replacement);

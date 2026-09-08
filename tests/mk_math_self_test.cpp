@@ -323,6 +323,277 @@ static void run_program(const u8* code, usize length) {
   for(int i = 0; i < 256 && core_61::is_RUN(); i++) core_61::step();
 }
 
+static constexpr usize MS_PROGRAM_BYTE_HIGH_TETRADES[
+    MK61_PROGRAM_STEPS_PER_PAGE] = {41, 5, 11, 17, 23, 29, 35};
+
+static usize ring_lane_tetrade(usize page, usize lane, usize tetrade) {
+  return page * MK61_MEMORY_PAGE_TETRADES + lane + tetrade * 3U;
+}
+
+static void set_ms_program_byte(usize address, u8 opcode) {
+  const usize page = address / MK61_PROGRAM_STEPS_PER_PAGE;
+  const usize slot = address % MK61_PROGRAM_STEPS_PER_PAGE;
+  const usize high = page * MK61_MEMORY_PAGE_TETRADES +
+      MS_PROGRAM_BYTE_HIGH_TETRADES[slot] - 1U;
+  ringM[high] = opcode >> 4;
+  ringM[high - 3U] = opcode & 0x0FU;
+}
+
+static u8 get_ms_program_byte(usize address) {
+  const usize page = address / MK61_PROGRAM_STEPS_PER_PAGE;
+  const usize slot = address % MK61_PROGRAM_STEPS_PER_PAGE;
+  const usize high = page * MK61_MEMORY_PAGE_TETRADES +
+      MS_PROGRAM_BYTE_HIGH_TETRADES[slot] - 1U;
+  return (u8) ((ringM[high] << 4) | ringM[high - 3U]);
+}
+
+static void press_k_digit(u8 digit) {
+  press_matrix({10, 9}); // K
+  press_matrix(digit_key(digit));
+}
+
+static void test_ms_exchange_commands(void) {
+  std::printf("expanded Ms exchange commands 55/56:\n");
+  core_61::configure_random_seed(false, 1);
+  check_true("expanded Ms has nine pages",
+      MK61_EXPANDED_MS_PAGES == 9 &&
+      MK61_EXPANDED_MS_PROGRAM_STEPS == 63);
+
+  // 55 / K 1: nine complete numeric words are exchanged between M1
+  // (R0..R8) and M2 (Ms).  The two non-numeric tetras in every page and the
+  // remaining registers/program must not be touched.
+  core_61::set_expanded_program_mode(true);
+  core_61::enable();
+  u8 code_before[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  for(usize address = 0; address < core_61::program_steps(); address++)
+    code_before[address] = (u8) (address % 10U);
+  core_61::set_code_page(code_before);
+
+  u8 data_before[16][14] = {};
+  u8 ms_before[MK61_EXPANDED_MS_PAGES][14] = {};
+  for(usize page = 0; page < 16; page++) {
+    for(usize tetrade = 0; tetrade < 14; tetrade++) {
+      data_before[page][tetrade] =
+          (u8) ((page * 3U + tetrade + 1U) % 10U);
+      ringM[ring_lane_tetrade(page, 0, tetrade)] =
+          data_before[page][tetrade];
+      if(page < MK61_EXPANDED_MS_PAGES) {
+        ms_before[page][tetrade] =
+            (u8) ((page * 7U + tetrade + 4U) % 10U);
+        ringM[ring_lane_tetrade(page, 1, tetrade)] =
+            ms_before[page][tetrade];
+      }
+    }
+  }
+
+  CommandHookProbe data_after = {};
+  const core_61::Mk61CommandHookHandle data_after_handle =
+      core_61::register_mk61_command_hook(
+          0x55, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &data_after);
+  check_true("55 AFTER hook registered",
+      data_after_handle != core_61::INVALID_MK61_COMMAND_HOOK);
+  press_k_digit(1); // K PV / K 1
+
+  bool numeric_words_swapped = true;
+  bool service_tetrades_untouched = true;
+  bool later_registers_untouched = true;
+  for(usize page = 0; page < MK61_EXPANDED_MS_PAGES; page++) {
+    for(usize tetrade = 0; tetrade < 12; tetrade++) {
+      numeric_words_swapped &=
+          ringM[ring_lane_tetrade(page, 0, tetrade)] ==
+              ms_before[page][tetrade] &&
+          ringM[ring_lane_tetrade(page, 1, tetrade)] ==
+              data_before[page][tetrade];
+    }
+    for(usize tetrade = 12; tetrade < 14; tetrade++) {
+      service_tetrades_untouched &=
+          ringM[ring_lane_tetrade(page, 0, tetrade)] ==
+              data_before[page][tetrade] &&
+          ringM[ring_lane_tetrade(page, 1, tetrade)] ==
+              ms_before[page][tetrade];
+    }
+  }
+  for(usize page = MK61_EXPANDED_MS_PAGES; page < 16; page++) {
+    for(usize tetrade = 0; tetrade < 14; tetrade++) {
+      later_registers_untouched &=
+          ringM[ring_lane_tetrade(page, 0, tetrade)] ==
+              data_before[page][tetrade];
+    }
+  }
+  u8 code_after[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  core_61::get_code_page(code_after);
+  check_true("55 swaps R0..R8 with nine Ms words", numeric_words_swapped);
+  check_true("55 preserves page service tetras", service_tetrades_untouched);
+  check_true("55 preserves R9..RF", later_registers_untouched);
+  check_true("55 preserves program",
+      std::memcmp(code_before, code_after,
+                  MK61_EXPANDED_PROGRAM_STEPS) == 0);
+  check_true("55 hook reports keyboard command",
+      data_after.calls == 1 &&
+      data_after.last_source == core_61::Mk61CommandSource::KEYBOARD &&
+      data_after.last_opcode == 0x55 &&
+      data_after.last_replacement == 0x55);
+
+  press_k_digit(1);
+  bool data_exchange_reversed = true;
+  for(usize page = 0; page < MK61_EXPANDED_MS_PAGES; page++) {
+    for(usize tetrade = 0; tetrade < 14; tetrade++) {
+      data_exchange_reversed &=
+          ringM[ring_lane_tetrade(page, 0, tetrade)] ==
+              data_before[page][tetrade] &&
+          ringM[ring_lane_tetrade(page, 1, tetrade)] ==
+              ms_before[page][tetrade];
+    }
+  }
+  check_true("55 is reversible", data_exchange_reversed);
+  check_true("55 AFTER fires once per exchange", data_after.calls == 2);
+  check_true("remove 55 AFTER hook",
+      core_61::unregister_mk61_command_hook(data_after_handle));
+
+  // 56 / K 2: all seven bytes of each Ms page participate.  Run 56 from
+  // address 00 itself; address 01 must then be fetched from the newly active
+  // bank, proving that the swap occurs on the command boundary.
+  core_61::enable();
+  u8 active_program[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  u8 hidden_program[MK61_EXPANDED_MS_PROGRAM_STEPS] = {};
+  for(usize address = 0; address < core_61::program_steps(); address++)
+    active_program[address] = (u8) (address % 10U);
+  active_program[0] = 0x56;
+  active_program[1] = 0x01;
+  active_program[70] = 0x50;
+  core_61::set_code_page(active_program);
+  for(usize address = 0; address < MK61_EXPANDED_MS_PROGRAM_STEPS;
+      address++) {
+    hidden_program[address] =
+        (u8) ((((address + 3U) % 10U) << 4) |
+              ((address + 7U) % 10U));
+    set_ms_program_byte(address, hidden_program[address]);
+  }
+  hidden_program[1] = 0x50;
+  set_ms_program_byte(1, hidden_program[1]);
+
+  CommandHookProbe program_after = {};
+  const core_61::Mk61CommandHookHandle program_after_handle =
+      core_61::register_mk61_command_hook(
+          0x56, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+          &command_hook_probe, &program_after);
+  check_true("56 AFTER hook registered",
+      program_after_handle != core_61::INVALID_MK61_COMMAND_HOOK);
+  ProgramBoundaryProbe boundary = {};
+  check_true("56 boundary probe installed",
+      core_61::set_mk61_program_boundary_hook(
+          &program_boundary_probe, &boundary));
+  core_61::set_IP(0);
+  press_matrix({2, 9}); // C/P
+  for(int i = 0; i < 512 && core_61::is_RUN(); i++) core_61::step();
+  check_true("56 program finishes from exchanged bank", core_61::is_CALC());
+  check_true("56 next fetch uses exchanged bank",
+      boundary.calls >= 2 && boundary.addresses[0] == 0 &&
+      boundary.opcodes[0] == 0x56 && boundary.addresses[1] == 1 &&
+      boundary.opcodes[1] == 0x50);
+  core_61::clear_mk61_program_boundary_hook();
+
+  core_61::get_code_page(code_after);
+  bool program_bank_swapped = true;
+  bool hidden_bank_swapped = true;
+  for(usize address = 0; address < MK61_EXPANDED_MS_PROGRAM_STEPS;
+      address++) {
+    program_bank_swapped &= code_after[address] == hidden_program[address];
+    hidden_bank_swapped &= get_ms_program_byte(address) ==
+        active_program[address];
+  }
+  check_true("56 swaps first 63 program steps", program_bank_swapped);
+  check_true("56 moves old program into Ms", hidden_bank_swapped);
+  check_true("56 preserves steps 63..111",
+      std::memcmp(code_after + MK61_EXPANDED_MS_PROGRAM_STEPS,
+                  active_program + MK61_EXPANDED_MS_PROGRAM_STEPS,
+                  MK61_EXPANDED_PROGRAM_STEPS -
+                      MK61_EXPANDED_MS_PROGRAM_STEPS) == 0);
+  check_true("56 hook reports program command",
+      program_after.calls == 1 &&
+      program_after.last_source == core_61::Mk61CommandSource::PROGRAM &&
+      program_after.last_opcode == 0x56 &&
+      program_after.last_replacement == 0x56);
+
+  press_k_digit(2); // K OD / K 2
+  core_61::get_code_page(code_after);
+  bool program_exchange_reversed =
+      std::memcmp(code_after, active_program,
+                  MK61_EXPANDED_PROGRAM_STEPS) == 0;
+  bool hidden_exchange_reversed = true;
+  for(usize address = 0; address < MK61_EXPANDED_MS_PROGRAM_STEPS;
+      address++) {
+    hidden_exchange_reversed &=
+        get_ms_program_byte(address) == hidden_program[address];
+  }
+  check_true("56 is reversible", program_exchange_reversed &&
+      hidden_exchange_reversed);
+  check_true("56 hook reports keyboard command",
+      program_after.calls == 2 &&
+      program_after.last_source == core_61::Mk61CommandSource::KEYBOARD);
+  check_true("remove 56 AFTER hook",
+      core_61::unregister_mk61_command_hook(program_after_handle));
+
+  // The extension is deliberately opt-in: a serial/classic 105-step core
+  // retains the authentic inert behavior for both opcodes.
+  core_61::set_expanded_program_mode(false);
+  core_61::enable();
+  u8 classic_program[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  for(usize address = 0; address < core_61::program_steps(); address++)
+    classic_program[address] = (u8) (address % 10U);
+  classic_program[0] = 0x56;
+  classic_program[1] = 0x50;
+  u8 classic_data[8][12] = {};
+  u8 classic_ms_data[8][12] = {};
+  u8 classic_ms_program[56] = {};
+  for(usize page = 0; page < 8; page++) {
+    for(usize tetrade = 0; tetrade < 12; tetrade++) {
+      classic_data[page][tetrade] =
+          (u8) ((page + tetrade + 2U) % 10U);
+      classic_ms_data[page][tetrade] =
+          (u8) ((page * 2U + tetrade + 5U) % 10U);
+      ringM[ring_lane_tetrade(page, 0, tetrade)] =
+          classic_data[page][tetrade];
+      ringM[ring_lane_tetrade(page, 1, tetrade)] =
+          classic_ms_data[page][tetrade];
+    }
+  }
+  press_k_digit(1);
+  bool classic_55_inert = true;
+  for(usize page = 0; page < 8; page++) {
+    for(usize tetrade = 0; tetrade < 12; tetrade++) {
+      classic_55_inert &=
+          ringM[ring_lane_tetrade(page, 0, tetrade)] ==
+              classic_data[page][tetrade] &&
+          ringM[ring_lane_tetrade(page, 1, tetrade)] ==
+              classic_ms_data[page][tetrade];
+    }
+  }
+  check_true("classic 55 remains inert", classic_55_inert);
+
+  core_61::enable();
+  core_61::set_code_page(classic_program);
+  for(usize address = 0; address < 56; address++) {
+    classic_ms_program[address] =
+        (u8) ((((address + 1U) % 10U) << 4) |
+              ((address + 6U) % 10U));
+    set_ms_program_byte(address, classic_ms_program[address]);
+  }
+  core_61::set_IP(0);
+  press_matrix({2, 9});
+  for(int i = 0; i < 256 && core_61::is_RUN(); i++) core_61::step();
+  core_61::get_code_page(code_after);
+  bool classic_56_inert =
+      std::memcmp(code_after, classic_program,
+                  MK61_CLASSIC_PROGRAM_STEPS) == 0;
+  for(usize address = 0; address < 56; address++) {
+    classic_56_inert &=
+        get_ms_program_byte(address) == classic_ms_program[address];
+  }
+  check_true("classic 56 remains inert", classic_56_inert);
+}
+
 static void test_mk61_command_lengths(void) {
   static const u8 with_operand[] = {
       0x51, 0x53, 0x57, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E
@@ -1367,6 +1638,7 @@ int main(void) {
   test_rom_command_hooks();
   test_mk61_command_lengths();
   test_mk61_command_hooks();
+  test_ms_exchange_commands();
   test_random_seed_hook();
   test_program_boundary_yield();
   test_core_boundaries();
