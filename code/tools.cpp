@@ -16,6 +16,7 @@
 #include "storage_path.hpp"
 #include "runtime_safety.hpp"
 #include "mk61emu_core.h"
+#include "program_memory_policy.hpp"
 #include "keyboard.h"
 #include "cross_hal.h"
 #include "sound_driver.hpp"
@@ -43,8 +44,6 @@ extern void reset_ext_program_state(void);
 const  class_LCD_Label  STORE_message(0, 0);
 const  class_LCD_Label  STORE_progress_message(0, 1);
 
-static constexpr u8 MK61_STORE_REGISTER_F = 0x4F;
-static constexpr u8 MK61_LOAD_REGISTER_F  = 0x6F;
 static_assert(shared_scratch::SIZE >= program_store::MAX_MK61_TEXT_SIZE, "shared scratch too small for MK61 scripts");
 
 static const SoundNote STARTUP_JINGLE[] = {
@@ -165,28 +164,15 @@ static void sound_sequence_poll(void) {
   sound_sequence_next_at = now + (t_time_ms) note.duration_ms + (t_time_ms) note.gap_ms;
 }
 
-static bool opcode_needs_expanded_memory(u8 opcode) {
-  return opcode == MK61_STORE_REGISTER_F || opcode == MK61_LOAD_REGISTER_F;
-}
-
 bool program_needs_expanded_memory(const u8* code_page, usize code_len) {
-  const usize bounded_len = (code_len > core_61::MAX_PROGRAM_STEP) ? core_61::MAX_PROGRAM_STEP : code_len;
-
-  for(usize i = core_61::CLASSIC_PROGRAM_STEP; i < bounded_len; i++) {
-    if(code_page[i] != 0) return true;
-  }
-
-  for(usize i = 0; i < bounded_len;) {
-    const u8 opcode = code_page[i];
-    if(opcode_needs_expanded_memory(opcode)) return true;
-    const usize opcode_len = core_61::len_code_command(opcode);
-    i += (opcode_len == 0) ? 1 : opcode_len;
-  }
-
-  return false;
+  return program_memory_policy::listing_needs_expanded_memory(
+      code_page, code_len, &core_61::len_code_command);
 }
 
 void apply_program_memory_auto(const u8* code_page, usize code_len, bool preserve_program, bool force_expanded) {
+  // Ручные 105ШГ и 112ШГ+ПF — жёсткий выбор пользователя.
+  if(library_mk61::program_memory_mode() != ProgramMemoryMode::AUTO) return;
+
   const bool enable_expanded = force_expanded || program_needs_expanded_memory(code_page, code_len);
   if(library_mk61::expanded_program_is_on() == enable_expanded) return;
 
@@ -203,7 +189,9 @@ void apply_program_memory_auto(const u8* code_page, usize code_len, bool preserv
 }
 
 void ensure_program_memory_for_write(usize linear_addr, u8 opcode) {
-  const bool force_expanded = linear_addr >= core_61::CLASSIC_PROGRAM_STEP || opcode_needs_expanded_memory(opcode);
+  const bool force_expanded =
+      linear_addr >= core_61::CLASSIC_PROGRAM_STEP ||
+      program_memory_policy::opcode_needs_expanded_memory(opcode);
   if(force_expanded) apply_program_memory_auto(NULL, 0, true, true);
 }
 

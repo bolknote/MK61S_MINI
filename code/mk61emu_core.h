@@ -43,6 +43,8 @@
 #endif
 
 static  constexpr usize MK61_NOP= 0x54; // NOP
+static  constexpr u8 MK61_EXCHANGE_DATA_WITH_MS = 0x55U;    // К 1 / К ПВ
+static  constexpr u8 MK61_EXCHANGE_PROGRAM_WITH_MS = 0x56U; // К 2 / К ОД
 static  constexpr usize MK61_CLASSIC_PROGRAM_STEPS = 105;
 static  constexpr usize MK61_EXPANDED_PROGRAM_STEPS = MK61_CLASSIC_PROGRAM_STEPS + 7;
 static  constexpr usize MK61_PROGRAM_STEPS_PER_PAGE = 7;

@@ -1077,8 +1077,6 @@ static void finish_active_mk61_command(void) {
   dispatch_mk61_command_after(completed);
 }
 
-static constexpr u8 MK61_EXCHANGE_DATA_WITH_MS = 0x55U;
-static constexpr u8 MK61_EXCHANGE_PROGRAM_WITH_MS = 0x56U;
 static constexpr usize MK61_TETRADES_PER_PAGE = 14U;
 static constexpr usize MK61_NUMERIC_TETRADES = 12U;
 
