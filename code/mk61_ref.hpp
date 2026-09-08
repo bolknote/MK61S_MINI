@@ -324,7 +324,9 @@ inline bool write_fraction7(const Ref& ref, u32 value) {
   if(!fraction7_to_parts(value, mantissa, pow10)) return false;
 
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
-  const double number = (double) value / 10000000.0;
+  // Системный ABI принимает void*: операция только читает число, но локальная
+  // переменная должна оставаться неконстантной для строгой C++-совместимости.
+  double number = (double) value / 10000000.0;
   return portable_system::call(
       MK61_SYS_REF_WRITE, (u32) ref.kind, ref.reg, 0, &number);
 #elif defined(MK61_REF_HOST_TEST)
