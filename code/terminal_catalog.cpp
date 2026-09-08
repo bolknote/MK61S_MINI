@@ -31,7 +31,7 @@ __attribute__((used, section(".mk61_help"))) static constexpr char help_text[] =
 #define COMMAND(name, id, desc) "  " name "\t" desc "\n"
 #include "terminal_commands.inc"
 #undef COMMAND
-"  R<r>=   R<r>= <value> - write register, e.g. R0= 3.14\n"
+"  R<r>=   R<r>= <number|random|raw 12hex> - write register\n"
 "  set$    set$<addr> <hex> - write program memory\n";
 static_assert(sizeof(help_text) - 1 <= 2800, "increase HELP page count in reader and builder");
 struct HelpTag { char text[9]; };

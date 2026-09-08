@@ -2,6 +2,13 @@
 
 Copy these `.m61` files to the MK61S USB disk.
 
+Historical game scenarios begin with `reinit`. This restores the original
+built-in loader's clean-register guarantee without changing ordinary
+user-created `.m61` files, which may intentionally use the current registers.
+New scenarios can initialize a register from an independent hardware-seeded
+stream with `R0= random`, or reproduce non-decimal calculator tetrads exactly
+with `R0= raw <12 hex tetrads>`.
+
 ## File catalogue and provenance
 
 The table records where every bundled game or image came from. When the exact

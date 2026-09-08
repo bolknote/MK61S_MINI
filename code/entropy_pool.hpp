@@ -9,7 +9,9 @@ enum class Domain : u8 {
   CALCULATOR = 0,
   FOCAL = 1,
   TINYBASIC = 2,
-  CHIP8 = 3
+  CHIP8 = 3,
+  M61_INIT = 4,
+  COUNT
 };
 
 // Начинает сбор внутреннего шума АЦП AVBAT. poll_startup() достаточно дёшев,
@@ -30,10 +32,13 @@ void note_rtc_snapshot(u8 snapshot_index, u64 calendar_material, u64 phase_mater
 // расширенном режиме меняет ключ потока калькулятора.
 void note_key(u8 keycode, u32 timestamp_us);
 
-// Независимые, разделённые по доменам случайные потоки для калькулятора, FOCAL
-// и TinyBASIC. Потоки языков никогда не зависят от настройки совместимости
-// калькулятора.
+// Независимые, разделённые по доменам потоки для калькулятора, M61, FOCAL,
+// TinyBASIC и CHIP-8. Настройка совместимости управляет только тем, использует
+// ли ROM-команда К СЧ поток CALCULATOR.
 u32 next_u32(Domain domain);
+// Равномерное ненулевое семизначное слово 1..9 999 999. Отдельный домен
+// M61_INIT позволяет R<r>= random не расходовать поток команды К СЧ.
+u32 next_decimal7(Domain domain);
 void configure_calculator(bool enhanced);
 
 u16 startup_raw_samples(void);

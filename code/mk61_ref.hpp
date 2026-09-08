@@ -156,14 +156,46 @@ inline bool double_to_parts(double value, char& sign, char mantissa[8], isize& p
   return true;
 }
 
+// Представляет равномерное семизначное слово как точную дробь 0.ddddddd,
+// не проходя через double. Например, 1234 превращается в 1.2340000 E-04.
+inline bool fraction7_to_parts(u32 value, char mantissa[8], isize& pow10) {
+  if(value == 0 || value > 9999999UL || mantissa == nullptr) return false;
+
+  char digits[7];
+  for(int index = 6; index >= 0; index--) {
+    digits[index] = (char) ('0' + value % 10U);
+    value /= 10U;
+  }
+
+  usize first = 0;
+  while(first < 6 && digits[first] == '0') first++;
+  usize out = 0;
+  for(usize index = first; index < 7; index++) mantissa[out++] = digits[index];
+  while(out < 8) mantissa[out++] = '0';
+  pow10 = -(isize) (first + 1U);
+  return true;
+}
+
 #ifdef MK61_REF_HOST_TEST
 extern double host_stack_value[5];
 extern double host_register_value[16];
 extern bool host_rf_enabled;
 
+inline u8 (&host_register_raw(void))[16][12] {
+  static u8 value[16][12] = {};
+  return value;
+}
+
+inline bool (&host_register_is_raw(void))[16] {
+  static bool value[16] = {};
+  return value;
+}
+
 inline void host_reset(void) {
   memset(host_stack_value, 0, sizeof(double) * 5);
   memset(host_register_value, 0, sizeof(double) * 16);
+  memset(host_register_raw(), 0, sizeof(u8) * 16 * 12);
+  memset(host_register_is_raw(), 0, sizeof(bool) * 16);
   host_rf_enabled = false;
 }
 
@@ -179,6 +211,36 @@ inline double host_get_register(u8 reg) {
   return reg < 16 ? host_register_value[reg] : 0.0;
 }
 #endif
+
+// Точная запись одного логического слова регистра. В отличие от write(), эта
+// форма намеренно допускает тетрады A..F: они используются некоторыми
+// историческими играми МК-61 как упакованные данные. Все 12 тетрад проверены
+// вызывающим parser-ом, а адреса остаются строго внутри выбранной дорожки R.
+inline bool write_raw_register(u8 reg, const u8 raw[12]) {
+  if(raw == nullptr || !register_available(reg)) return false;
+  for(usize index = 0; index < 12; index++) {
+    if(raw[index] > 0x0F) return false;
+  }
+
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  // Публичный portable ABI пока предоставляет только числовую запись.
+  return false;
+#elif defined(MK61_REF_HOST_TEST)
+  memcpy(host_register_raw()[reg], raw, 12);
+  host_register_is_raw()[reg] = true;
+  return true;
+#else
+  const usize base = (usize) reg * 42;
+  for(usize index = 0; index < 8; index++) {
+    ringM[base + 21 - index * 3] = raw[index];
+  }
+  ringM[base + 24] = raw[8];
+  ringM[base + 33] = raw[9];
+  ringM[base + 30] = raw[10];
+  ringM[base + 27] = raw[11];
+  return true;
+#endif
+}
 
 inline bool read(const Ref& ref, double& value) {
   if(ref.kind == Kind::R && !register_available(ref.reg)) return false;
@@ -238,8 +300,12 @@ inline bool write(const Ref& ref, double value) {
   if(!double_to_parts(value, sign, mantissa, pow10)) return false;
 
 #ifdef MK61_REF_HOST_TEST
-  if(ref.kind == Kind::R) host_register_value[ref.reg] = value;
-  else host_stack_value[(int) stack_from_ref(ref.kind)] = value;
+  if(ref.kind == Kind::R) {
+    host_register_value[ref.reg] = value;
+    host_register_is_raw()[ref.reg] = false;
+  } else {
+    host_stack_value[(int) stack_from_ref(ref.kind)] = value;
+  }
   return true;
 #else
   if(ref.kind == Kind::R) {
@@ -248,6 +314,26 @@ inline bool write(const Ref& ref, double value) {
   }
   return write_stack_register(stack_from_ref(ref.kind), sign, mantissa, pow10);
 #endif
+#endif
+}
+
+inline bool write_fraction7(const Ref& ref, u32 value) {
+  if(ref.kind != Kind::R || !register_available(ref.reg)) return false;
+  char mantissa[8];
+  isize pow10 = 0;
+  if(!fraction7_to_parts(value, mantissa, pow10)) return false;
+
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  const double number = (double) value / 10000000.0;
+  return portable_system::call(
+      MK61_SYS_REF_WRITE, (u32) ref.kind, ref.reg, 0, &number);
+#elif defined(MK61_REF_HOST_TEST)
+  host_register_value[ref.reg] = (double) value / 10000000.0;
+  host_register_is_raw()[ref.reg] = false;
+  return true;
+#else
+  write_register(ref.reg, ' ', mantissa, pow10);
+  return true;
 #endif
 }
 

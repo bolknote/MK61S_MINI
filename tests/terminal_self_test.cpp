@@ -3,6 +3,7 @@
 #include "terminal_file_transfer.hpp"
 #include "terminal_line_editor.hpp"
 #include "terminal_output.hpp"
+#include "mk61_register_init.hpp"
 #include "m61_print.hpp"
 #include "m61_ansi.hpp"
 #include "rtc_clock_core.hpp"
@@ -243,6 +244,41 @@ static void test_decimal_parser_is_finite_and_bounded(void) {
   assert(!terminal_core::parse_single_decimal("2.0 junk", value));
 }
 
+static void test_register_initializer_parser_is_atomic(void) {
+  using mk61_register_init::Kind;
+  mk61_register_init::Value value = {};
+
+  assert(mk61_register_init::parse(" -1.25e+02 ", value));
+  assert(value.kind == Kind::NUMBER);
+  assert(std::fabs(value.number + 125.0) < 0.000001);
+
+  assert(mk61_register_init::parse("random", value));
+  assert(value.kind == Kind::RANDOM);
+  assert(mk61_register_init::parse("  random  ", value));
+  assert(value.kind == Kind::RANDOM);
+  assert(!mk61_register_init::parse("random trailing", value));
+
+  assert(mk61_register_init::parse("raw 8cEc6aBa9907", value));
+  assert(value.kind == Kind::RAW);
+  const u8 expected[12] = {
+      8, 0xC, 0xE, 0xC, 6, 0xA, 0xB, 0xA, 9, 9, 0, 7};
+  assert(memcmp(value.raw, expected, sizeof(expected)) == 0);
+  assert(!mk61_register_init::parse("raw 8CEC6ABA990", value));
+  assert(!mk61_register_init::parse("raw 8CEC6ABA99070", value));
+  assert(!mk61_register_init::parse("raw 8CEC6ABX9907", value));
+  assert(!mk61_register_init::parse("raw8CEC6ABA9907", value));
+
+  value.kind = Kind::RAW;
+  value.number = 17.0;
+  memset(value.raw, 0x0A, sizeof(value.raw));
+  assert(!mk61_register_init::parse("not-a-value", value));
+  assert(value.kind == Kind::RAW);
+  assert(value.number == 17.0);
+  for(usize index = 0; index < sizeof(value.raw); index++) {
+    assert(value.raw[index] == 0x0A);
+  }
+}
+
 static void test_assembler_accepts_final_mnemonic_and_is_atomic_input(void) {
   const char isa[] = "0,1,add,jnz[E]";
   terminal_core::Assembly assembly = terminal_core::parse_assembly("0007  1\tadd  jnz[E]", 0, isa, 112);
@@ -265,6 +301,7 @@ static void test_script_allowlist_is_explicit(void) {
   assert(terminal_command_allowed_in_script(CMD_HIN));
   assert(terminal_command_allowed_in_script(CMD_ASM));
   assert(terminal_command_allowed_in_script(CMD_RUN));
+  assert(terminal_command_allowed_in_script(CMD_REG_SET));
   assert(terminal_command_allowed_in_script(CMD_IF));
   assert(terminal_command_allowed_in_script(CMD_PRINT));
   assert(terminal_command_allowed_in_script(CMD_WAIT));
@@ -785,6 +822,7 @@ int main(void) {
   test_confirmation_is_a_complete_token();
   test_quoted_path_tokens();
   test_decimal_parser_is_finite_and_bounded();
+  test_register_initializer_parser_is_atomic();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_script_allowlist_is_explicit();
   test_m61_print_escapes_and_interpolation();

@@ -15,6 +15,8 @@
 #include "ledcontrol.h"
 #include "mk_math.hpp"
 #include "mk61_ref.hpp"
+#include "mk61_register_init.hpp"
+#include "entropy_pool.hpp"
 #include "m61_print.hpp"
 #include "m61_ansi.hpp"
 #include "m61_text.hpp"
@@ -501,7 +503,7 @@ void class_terminal::print_help(void) {
         for(usize pad = strlen(command.name); pad < 8; pad++) Serial.write(' ');
         Serial.println(command.desc);
       }
-      Serial.println("  R<r>=   R<r>= <value> - write register, e.g. R0= 3.14");
+      Serial.println("  R<r>=   R<r>= <number|random|raw 12hex> - write register");
       Serial.println("  set$    set$<addr> <hex> - write program memory");
 #endif
     }
@@ -3370,10 +3372,29 @@ bool class_terminal::value_fits_mk61(double value) {
     }
 
 bool class_terminal::write_register_value(u8 reg, const char* args) {
-      double value = 0.0;
-      if(!terminal_core::parse_single_decimal(args, value) || !value_fits_mk61(value)) return false;
       const mk61_ref::Ref ref = {mk61_ref::Kind::R, reg};
-      return mk61_ref::write(ref, value);
+      mk61_register_init::Value value = {};
+      if(!mk61_register_init::parse(args, value)) return false;
+      // Сначала проверяем сам адрес. В частности, недоступный RF не должен
+      // расходовать очередное значение независимого потока M61_INIT.
+      if(!mk61_ref::register_available(reg)) return false;
+
+      switch(value.kind) {
+        case mk61_register_init::Kind::NUMBER:
+          return value_fits_mk61(value.number) &&
+                 mk61_ref::write(ref, value.number);
+        case mk61_register_init::Kind::RANDOM: {
+          // Этот путь намеренно не проверяет random_seed_enabled(): настройка
+          // управляет только ROM-командой К СЧ, а инициализатор M61 имеет свой
+          // независимый поток аппаратно собранной энтропии.
+          const u32 seed7 = entropy_pool::next_decimal7(
+              entropy_pool::Domain::M61_INIT);
+          return mk61_ref::write_fraction7(ref, seed7);
+        }
+        case mk61_register_init::Kind::RAW:
+          return mk61_ref::write_raw_register(reg, value.raw);
+      }
+      return false;
     }
 
 bool class_terminal::write_stack_value(const char* args) {
@@ -3917,7 +3938,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
               if(!write_register_value((u8) reg, command_args())) {
-                Serial.println("Usage: R<0..F>= <finite number with exponent -99..99>");
+                Serial.println("Usage: R<0..F>= <number|random|raw 12-hex-tetrads>");
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }

@@ -10,7 +10,11 @@ namespace {
 
 static constexpr u16 TARGET_ENTROPY_BITS = 64;
 static constexpr u16 MAX_STARTUP_SAMPLES = 1024;
-static constexpr usize DOMAIN_COUNT = 4;
+static constexpr usize DOMAIN_COUNT = (usize) Domain::COUNT;
+static constexpr u32 DECIMAL7_RANGE = 9999999UL;
+static constexpr u64 U32_VALUE_COUNT = 0x100000000ULL;
+static constexpr u64 DECIMAL7_ACCEPT_LIMIT =
+    (U32_VALUE_COUNT / DECIMAL7_RANGE) * DECIMAL7_RANGE;
 
 static u64 pool_state = 0x6A09E667F3BCC909ULL;
 static u64 stream_state[DOMAIN_COUNT];
@@ -151,6 +155,14 @@ u32 next_u32(Domain domain) {
   stream_state[index] += 0x9E3779B97F4A7C15ULL;
   const u64 value = avalanche(stream_state[index]);
   return (u32) (value ^ (value >> 32));
+}
+
+u32 next_decimal7(Domain domain) {
+  u32 value = 0;
+  do {
+    value = next_u32(domain);
+  } while((u64) value >= DECIMAL7_ACCEPT_LIMIT);
+  return 1U + value % DECIMAL7_RANGE;
 }
 
 void configure_calculator(bool enhanced) {
