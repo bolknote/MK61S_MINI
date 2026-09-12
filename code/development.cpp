@@ -1673,6 +1673,10 @@ static bool entry_can_run(const program_store::Entry& entry) {
     case program_store::ProgramType::TINYBASIC:
       return true;
 #endif
+#if MK61_ANY_LOADABLE_MODULE
+    case program_store::ProgramType::APP:
+      return true;
+#endif
 #if defined(MK61_DISPLAY_UC1609)
     case program_store::ProgramType::FONT:
       return true;
