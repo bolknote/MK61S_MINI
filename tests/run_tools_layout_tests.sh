@@ -16,6 +16,7 @@ expected="$(
     build_portable_app.py \
     build-gcc.cmd \
     font_preview_study.py \
+    generate_eliza_doctor.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
     mk61-arduino-board.cmd \

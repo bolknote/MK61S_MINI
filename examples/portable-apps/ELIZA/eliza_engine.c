@@ -1,534 +1,629 @@
 #include "eliza_engine.h"
 
 /*
- * Compact, fixed-script ELIZA/DOCTOR engine for a freestanding target.
- * It keeps the important mechanisms of the 1966 script: ranked keywords,
- * decomposition tails, rotating reassemblies, pronoun reflection and memory.
+ * Compact interpreter for Joseph Weizenbaum's 1966 CACM DOCTOR script.
+ *
+ * The script is compiled by tools/generate_eliza_doctor.py. Runtime rule
+ * semantics follow the recovered MAD-SLIP ELIZA: ranked keyword stacks,
+ * word substitution, decomposition/reassembly, =KEY, NEWKEY, PRE, DLIST,
+ * rotating responses, the LIMIT counter, and the Hollerith memory hash.
  */
 
-#define ARRAY_COUNT(a) ((uint8_t) (sizeof(a) / sizeof((a)[0])))
+#define ELIZA_NO_ID 255U
+#define ELIZA_MAX_WORDS 48U
+#define ELIZA_MAX_PATTERN_TERMS 9U
 
-enum response_set_id {
-  RS_EMPTY,
-  RS_REPEAT,
-  RS_COMPUTER,
-  RS_NAME,
-  RS_SORRY,
-  RS_REMEMBER,
-  RS_REMEMBER_ME,
-  RS_DREAMED,
-  RS_DREAM,
-  RS_HELLO,
-  RS_IF,
-  RS_I_WANT,
-  RS_I_SAD,
-  RS_I_HAPPY,
-  RS_I_WAS,
-  RS_I_AM,
-  RS_I_CANT,
-  RS_I_DONT,
-  RS_I_FEEL,
-  RS_I_BELIEVE,
-  RS_I_GENERIC,
-  RS_YOU_ARE,
-  RS_YOU_ME,
-  RS_YOU_GENERIC,
-  RS_MY_FAMILY,
-  RS_MY,
-  RS_CAN_YOU,
-  RS_CAN_I,
-  RS_WHY_DONT_YOU,
-  RS_WHY_CANT_I,
-  RS_QUESTION,
-  RS_BECAUSE,
-  RS_PERHAPS,
-  RS_YES,
-  RS_NO,
-  RS_EVERYONE,
-  RS_ALWAYS,
-  RS_LIKE,
-  RS_FOREIGN,
-  RS_MEMORY,
-  RS_NONE
+enum pattern_opcode {
+  PATTERN_COUNT = 1,
+  PATTERN_WORD = 2,
+  PATTERN_ANY = 3,
+  PATTERN_TAG = 4
 };
 
-/* Keep this assertion independent of C11 so the host and APP builds agree. */
-typedef char response_set_count_must_match[
-    RS_NONE + 1 == ELIZA_RESPONSE_SET_COUNT ? 1 : -1];
+enum reassembly_opcode {
+  REASSEMBLY_TEXT = 0,
+  REASSEMBLY_LINK = 1,
+  REASSEMBLY_NEWKEY = 2,
+  REASSEMBLY_PRE = 3
+};
 
-typedef struct response_set {
-  const char* const* item;
+enum action {
+  ACTION_INAPPLICABLE,
+  ACTION_COMPLETE,
+  ACTION_NEWKEY,
+  ACTION_LINK
+};
+
+enum token_id {
+  TOKEN_DELIMITER = 254,
+  TOKEN_UNKNOWN = 255
+};
+
+typedef struct ElizaRuleData {
+  uint8_t substitute;
+  uint8_t rank;
+  uint8_t first_transform;
+  uint8_t transform_count;
+  uint8_t link;
+} ElizaRuleData;
+
+typedef struct ElizaTransformData {
+  uint16_t pattern_offset;
+  uint16_t first_reassembly;
+  uint8_t pattern_size;
+  uint8_t reassembly_count;
+} ElizaTransformData;
+
+typedef struct ElizaToken {
+  uint8_t word;
+  uint8_t offset;
+  uint8_t length;
+} ElizaToken;
+
+typedef struct ElizaCapture {
+  uint8_t start;
   uint8_t count;
-} response_set;
+} ElizaCapture;
 
-static const char* const RESP_EMPTY[] = {
-  "PLEASE SAY SOMETHING.",
-  "WHAT WOULD YOU LIKE TO DISCUSS?"
-};
-static const char* const RESP_REPEAT[] = {
-  "PLEASE DON'T REPEAT YOURSELF.",
-  "YOU ARE REPEATING YOURSELF.",
-  "WHY DID YOU SAY THAT AGAIN?"
-};
-static const char* const RESP_COMPUTER[] = {
-  "DO COMPUTERS WORRY YOU?",
-  "WHY DO YOU MENTION COMPUTERS?",
-  "WHAT DO MACHINES HAVE TO DO WITH YOUR PROBLEM?",
-  "DON'T YOU THINK COMPUTERS CAN HELP PEOPLE?"
-};
-static const char* const RESP_NAME[] = {
-  "I AM NOT INTERESTED IN NAMES.",
-  "I DON'T CARE ABOUT NAMES. PLEASE CONTINUE."
-};
-static const char* const RESP_SORRY[] = {
-  "PLEASE DON'T APOLOGIZE.",
-  "APOLOGIES ARE NOT NECESSARY.",
-  "WHAT FEELINGS DO YOU HAVE WHEN YOU APOLOGIZE?"
-};
-static const char* const RESP_REMEMBER[] = {
-  "DO YOU OFTEN THINK OF %?",
-  "DOES THINKING OF % BRING ANYTHING ELSE TO MIND?",
-  "WHY DO YOU REMEMBER % JUST NOW?",
-  "WHAT IN THE PRESENT SITUATION REMINDS YOU OF %?"
-};
-static const char* const RESP_REMEMBER_ME[] = {
-  "DID YOU THINK I WOULD FORGET %?",
-  "WHY DO YOU THINK I SHOULD RECALL % NOW?",
-  "WHAT ABOUT %?",
-  "YOU MENTIONED %."
-};
-static const char* const RESP_DREAMED[] = {
-  "REALLY, %?",
-  "HAVE YOU EVER FANTASIED % WHILE YOU WERE AWAKE?",
-  "HAVE YOU DREAMED % BEFORE?"
-};
-static const char* const RESP_DREAM[] = {
-  "WHAT DOES THAT DREAM SUGGEST TO YOU?",
-  "DO YOU DREAM OFTEN?",
-  "WHAT PERSONS APPEAR IN YOUR DREAMS?",
-  "DOES THAT DREAM HAVE SOMETHING TO DO WITH YOUR PROBLEM?"
-};
-static const char* const RESP_HELLO[] = {
-  "HOW DO YOU DO. PLEASE STATE YOUR PROBLEM."
-};
-static const char* const RESP_IF[] = {
-  "DO YOU THINK IT IS LIKELY THAT %?",
-  "DO YOU WISH THAT %?",
-  "WHAT DO YOU THINK ABOUT %?",
-  "REALLY, IF %?"
-};
-static const char* const RESP_I_WANT[] = {
-  "WHAT WOULD IT MEAN TO YOU IF YOU GOT %?",
-  "WHY DO YOU WANT %?",
-  "SUPPOSE YOU GOT % SOON.",
-  "WHAT IF YOU NEVER GOT %?"
-};
-static const char* const RESP_I_SAD[] = {
-  "I AM SORRY TO HEAR YOU ARE %.",
-  "DO YOU THINK COMING HERE WILL HELP YOU NOT TO BE %?",
-  "I'M SURE IT IS NOT PLEASANT TO BE %.",
-  "CAN YOU EXPLAIN WHAT MADE YOU %?"
-};
-static const char* const RESP_I_HAPPY[] = {
-  "HOW HAVE I HELPED YOU TO BE %?",
-  "WHAT MAKES YOU % JUST NOW?",
-  "CAN YOU EXPLAIN WHY YOU ARE SUDDENLY %?"
-};
-static const char* const RESP_I_WAS[] = {
-  "WERE YOU REALLY %?",
-  "WHY DO YOU TELL ME YOU WERE % NOW?",
-  "WHAT WOULD IT MEAN IF YOU WERE %?"
-};
-static const char* const RESP_I_AM[] = {
-  "IS IT BECAUSE YOU ARE % THAT YOU CAME TO ME?",
-  "HOW LONG HAVE YOU BEEN %?",
-  "DO YOU BELIEVE IT IS NORMAL TO BE %?",
-  "DO YOU ENJOY BEING %?"
-};
-static const char* const RESP_I_CANT[] = {
-  "HOW DO YOU KNOW YOU CAN'T %?",
-  "HAVE YOU TRIED?",
-  "PERHAPS YOU COULD % NOW.",
-  "DO YOU REALLY WANT TO BE ABLE TO %?"
-};
-static const char* const RESP_I_DONT[] = {
-  "DON'T YOU REALLY %?",
-  "WHY DON'T YOU %?",
-  "DO YOU WISH TO BE ABLE TO %?",
-  "DOES THAT TROUBLE YOU?"
-};
-static const char* const RESP_I_FEEL[] = {
-  "TELL ME MORE ABOUT SUCH FEELINGS.",
-  "DO YOU OFTEN FEEL %?",
-  "DO YOU ENJOY FEELING %?",
-  "OF WHAT DOES FEELING % REMIND YOU?"
-};
-static const char* const RESP_I_BELIEVE[] = {
-  "DO YOU REALLY THINK SO?",
-  "BUT YOU ARE NOT SURE YOU %.",
-  "DO YOU REALLY DOUBT YOU %?"
-};
-static const char* const RESP_I_GENERIC[] = {
-  "YOU SAY %.",
-  "CAN YOU ELABORATE ON THAT?",
-  "DO YOU SAY % FOR SOME SPECIAL REASON?",
-  "THAT IS QUITE INTERESTING."
-};
-static const char* const RESP_YOU_ARE[] = {
-  "WHAT MAKES YOU THINK I AM %?",
-  "DOES IT PLEASE YOU TO BELIEVE I AM %?",
-  "DO YOU SOMETIMES WISH YOU WERE %?",
-  "PERHAPS YOU WOULD LIKE TO BE %."
-};
-static const char* const RESP_YOU_ME[] = {
-  "WHY DO YOU THINK I % YOU?",
-  "WHAT MAKES YOU THINK I % YOU?",
-  "DO YOU WISH TO BELIEVE I % YOU?",
-  "SUPPOSE I DID % YOU. WHAT WOULD THAT MEAN?"
-};
-static const char* const RESP_YOU_GENERIC[] = {
-  "WE WERE DISCUSSING YOU, NOT ME.",
-  "OH, I %?",
-  "YOU'RE NOT REALLY TALKING ABOUT ME, ARE YOU?",
-  "WHAT ARE YOUR FEELINGS NOW?"
-};
-static const char* const RESP_MY_FAMILY[] = {
-  "TELL ME MORE ABOUT YOUR FAMILY.",
-  "WHO ELSE IN YOUR FAMILY %?",
-  "WHAT ELSE COMES TO MIND WHEN YOU THINK OF YOUR FAMILY?"
-};
-static const char* const RESP_MY[] = {
-  "YOUR %?",
-  "WHY DO YOU SAY YOUR %?",
-  "DOES THAT SUGGEST ANYTHING ELSE WHICH BELONGS TO YOU?",
-  "IS IT IMPORTANT TO YOU THAT YOUR %?"
-};
-static const char* const RESP_CAN_YOU[] = {
-  "YOU BELIEVE I CAN %, DON'T YOU?",
-  "YOU WANT ME TO BE ABLE TO %?",
-  "PERHAPS YOU WOULD LIKE TO BE ABLE TO % YOURSELF."
-};
-static const char* const RESP_CAN_I[] = {
-  "WHETHER OR NOT YOU CAN % DEPENDS ON YOU MORE THAN ON ME.",
-  "DO YOU WANT TO BE ABLE TO %?",
-  "PERHAPS YOU DON'T WANT TO %."
-};
-static const char* const RESP_WHY_DONT_YOU[] = {
-  "DO YOU BELIEVE I DON'T %?",
-  "PERHAPS I WILL % IN GOOD TIME.",
-  "SHOULD YOU % YOURSELF?",
-  "YOU WANT ME TO %?"
-};
-static const char* const RESP_WHY_CANT_I[] = {
-  "DO YOU THINK YOU SHOULD BE ABLE TO %?",
-  "DO YOU WANT TO BE ABLE TO %?",
-  "HAVE YOU ANY IDEA WHY YOU CAN'T %?"
-};
-static const char* const RESP_QUESTION[] = {
-  "WHY DO YOU ASK?",
-  "DOES THAT QUESTION INTEREST YOU?",
-  "WHAT IS IT YOU REALLY WANT TO KNOW?",
-  "WHAT ANSWER WOULD PLEASE YOU MOST?",
-  "WHAT DO YOU THINK?"
-};
-static const char* const RESP_BECAUSE[] = {
-  "IS THAT THE REAL REASON?",
-  "DON'T ANY OTHER REASONS COME TO MIND?",
-  "DOES THAT REASON EXPLAIN ANYTHING ELSE?",
-  "WHAT OTHER REASONS MIGHT THERE BE?"
-};
-static const char* const RESP_PERHAPS[] = {
-  "YOU DON'T SEEM QUITE CERTAIN.",
-  "WHY THE UNCERTAIN TONE?",
-  "CAN'T YOU BE MORE POSITIVE?",
-  "YOU AREN'T SURE?"
-};
-static const char* const RESP_YES[] = {
-  "YOU SEEM QUITE POSITIVE.",
-  "YOU ARE SURE.",
-  "I SEE.",
-  "I UNDERSTAND."
-};
-static const char* const RESP_NO[] = {
-  "ARE YOU SAYING NO JUST TO BE NEGATIVE?",
-  "YOU ARE BEING A BIT NEGATIVE.",
-  "WHY NOT?",
-  "WHY NO?"
-};
-static const char* const RESP_EVERYONE[] = {
-  "REALLY, %?",
-  "SURELY NOT %.",
-  "CAN YOU THINK OF ANYONE IN PARTICULAR?",
-  "WHO, FOR EXAMPLE?",
-  "YOU HAVE A PARTICULAR PERSON IN MIND, DON'T YOU?"
-};
-static const char* const RESP_ALWAYS[] = {
-  "CAN YOU THINK OF A SPECIFIC EXAMPLE?",
-  "WHEN?",
-  "WHAT INCIDENT ARE YOU THINKING OF?",
-  "REALLY, ALWAYS?"
-};
-static const char* const RESP_LIKE[] = {
-  "IN WHAT WAY?",
-  "WHAT RESEMBLANCE DO YOU SEE?",
-  "WHAT DOES THAT SIMILARITY SUGGEST TO YOU?",
-  "WHAT OTHER CONNECTIONS DO YOU SEE?"
-};
-static const char* const RESP_FOREIGN[] = {
-  "I AM SORRY, I SPEAK ONLY ENGLISH."
-};
-static const char* const RESP_MEMORY[] = {
-  "LET'S DISCUSS FURTHER WHY YOUR %.",
-  "EARLIER YOU SAID YOUR %.",
-  "BUT YOUR %?",
-  "DOES THAT HAVE ANYTHING TO DO WITH YOUR %?"
-};
-static const char* const RESP_NONE[] = {
-  "I AM NOT SURE I UNDERSTAND YOU FULLY.",
-  "PLEASE GO ON.",
-  "WHAT DOES THAT SUGGEST TO YOU?",
-  "DO YOU FEEL STRONGLY ABOUT DISCUSSING SUCH THINGS?"
-};
+#include "eliza_doctor_data.inc"
 
-#define RESPONSE_SET(name) {name, ARRAY_COUNT(name)}
-static const response_set RESPONSE_SETS[ELIZA_RESPONSE_SET_COUNT] = {
-  RESPONSE_SET(RESP_EMPTY),
-  RESPONSE_SET(RESP_REPEAT),
-  RESPONSE_SET(RESP_COMPUTER),
-  RESPONSE_SET(RESP_NAME),
-  RESPONSE_SET(RESP_SORRY),
-  RESPONSE_SET(RESP_REMEMBER),
-  RESPONSE_SET(RESP_REMEMBER_ME),
-  RESPONSE_SET(RESP_DREAMED),
-  RESPONSE_SET(RESP_DREAM),
-  RESPONSE_SET(RESP_HELLO),
-  RESPONSE_SET(RESP_IF),
-  RESPONSE_SET(RESP_I_WANT),
-  RESPONSE_SET(RESP_I_SAD),
-  RESPONSE_SET(RESP_I_HAPPY),
-  RESPONSE_SET(RESP_I_WAS),
-  RESPONSE_SET(RESP_I_AM),
-  RESPONSE_SET(RESP_I_CANT),
-  RESPONSE_SET(RESP_I_DONT),
-  RESPONSE_SET(RESP_I_FEEL),
-  RESPONSE_SET(RESP_I_BELIEVE),
-  RESPONSE_SET(RESP_I_GENERIC),
-  RESPONSE_SET(RESP_YOU_ARE),
-  RESPONSE_SET(RESP_YOU_ME),
-  RESPONSE_SET(RESP_YOU_GENERIC),
-  RESPONSE_SET(RESP_MY_FAMILY),
-  RESPONSE_SET(RESP_MY),
-  RESPONSE_SET(RESP_CAN_YOU),
-  RESPONSE_SET(RESP_CAN_I),
-  RESPONSE_SET(RESP_WHY_DONT_YOU),
-  RESPONSE_SET(RESP_WHY_CANT_I),
-  RESPONSE_SET(RESP_QUESTION),
-  RESPONSE_SET(RESP_BECAUSE),
-  RESPONSE_SET(RESP_PERHAPS),
-  RESPONSE_SET(RESP_YES),
-  RESPONSE_SET(RESP_NO),
-  RESPONSE_SET(RESP_EVERYONE),
-  RESPONSE_SET(RESP_ALWAYS),
-  RESPONSE_SET(RESP_LIKE),
-  RESPONSE_SET(RESP_FOREIGN),
-  RESPONSE_SET(RESP_MEMORY),
-  RESPONSE_SET(RESP_NONE)
-};
+typedef char transform_slot_count_must_match[
+    ELIZA_SCRIPT_TRANSFORM_COUNT == ELIZA_TRANSFORM_SLOTS ? 1 : -1];
+typedef char word_ids_must_not_overlap_special_tokens[
+    ELIZA_SCRIPT_WORD_COUNT < TOKEN_DELIMITER ? 1 : -1];
 
-static size_t text_length(const char* text) {
+static size_t string_length(const char* text) {
   size_t length = 0;
   if(text != NULL) while(text[length] != 0) ++length;
   return length;
 }
 
-static int text_equal(const char* a, const char* b) {
-  size_t index = 0;
-  if(a == NULL || b == NULL) return a == b;
-  while(a[index] != 0 && a[index] == b[index]) ++index;
-  return a[index] == b[index];
-}
-
-static void text_copy(char* output, size_t capacity, const char* input) {
-  size_t index = 0;
+static void copy_text(char* output, size_t capacity, const char* input) {
+  size_t used = 0;
   if(output == NULL || capacity == 0) return;
   if(input != NULL) {
-    while(index + 1 < capacity && input[index] != 0) {
-      output[index] = input[index];
-      ++index;
-    }
-  }
-  output[index] = 0;
-}
-
-static int ascii_letter(char value) {
-  return (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z');
-}
-
-/* Apostrophes are discarded inside words: I'M, IM and I-M all become IM. */
-static void normalize(const char* input, char* output, size_t capacity) {
-  size_t used = 0;
-  int between_words = 0;
-  if(output == NULL || capacity == 0) return;
-  if(input == NULL) input = "";
-  while(*input != 0) {
-    char value = *input++;
-    if(ascii_letter(value) || (value >= '0' && value <= '9')) {
-      if(between_words && used != 0 && used + 1 < capacity) output[used++] = ' ';
-      between_words = 0;
-      if(value >= 'a' && value <= 'z') value = (char) (value - 'a' + 'A');
-      if(used + 1 < capacity) output[used++] = value;
-    } else if(value == '\'' && !between_words) {
-      /* Keep both sides of a contraction in one normalized word. */
-    } else {
-      between_words = used != 0;
+    while(used + 1 < capacity && input[used] != 0) {
+      output[used] = input[used];
+      ++used;
     }
   }
   output[used] = 0;
 }
 
-static int word_boundary(char value) {
-  return value == 0 || value == ' ';
+static const char* word_text(uint8_t word) {
+  return &eliza_script_word_pool[eliza_script_word_offsets[word]];
 }
 
-static const char* find_phrase(const char* text, const char* phrase) {
-  const size_t phrase_length = text_length(phrase);
-  const char* candidate = text;
-  if(phrase_length == 0) return text;
-  while(candidate != NULL && *candidate != 0) {
-    size_t index = 0;
-    while(index < phrase_length && candidate[index] == phrase[index]) ++index;
-    if(index == phrase_length && word_boundary(candidate[index])) return candidate;
-    while(*candidate != 0 && *candidate != ' ') ++candidate;
-    while(*candidate == ' ') ++candidate;
+static uint8_t find_word(const char* text, size_t length) {
+  uint8_t word;
+  for(word = 0; word < ELIZA_SCRIPT_WORD_COUNT; ++word) {
+    size_t index;
+    if(eliza_script_word_lengths[word] != length) continue;
+    for(index = 0; index < length; ++index)
+      if(word_text(word)[index] != text[index]) break;
+    if(index == length) return word;
   }
-  return NULL;
+  return TOKEN_UNKNOWN;
 }
 
-static int has_phrase(const char* text, const char* phrase) {
-  return find_phrase(text, phrase) != NULL;
+static int word_character(unsigned char value) {
+  return (value >= 'A' && value <= 'Z') ||
+         (value >= '0' && value <= '9') || value == '\'' || value == '-' ||
+         value == '+' || value == '$' || value == '/' || value == '=' ||
+         value == '*' || value == '(' || value == ')';
 }
 
-static const char* tail_after(const char* text, const char* phrase) {
-  const char* found = find_phrase(text, phrase);
-  if(found == NULL) return NULL;
-  found += text_length(phrase);
-  while(*found == ' ') ++found;
-  return *found != 0 ? found : NULL;
+static void finish_input_word(ElizaToken* words, uint8_t* word_count,
+                              const char* normalized, uint8_t start,
+                              uint8_t length) {
+  ElizaToken* token;
+  if(length == 0 || *word_count >= ELIZA_MAX_WORDS) return;
+  token = &words[(*word_count)++];
+  token->word = find_word(normalized + start, length);
+  token->offset = start;
+  token->length = length;
 }
 
-static const char* tail_after_either(const char* text, const char* first,
-                                     const char* second) {
-  const char* tail = tail_after(text, first);
-  return tail != NULL ? tail : tail_after(text, second);
-}
+static uint8_t parse_input(const char* input, char* normalized,
+                           ElizaToken* words) {
+  const unsigned char* cursor =
+      (const unsigned char*) (input != NULL ? input : "");
+  uint8_t word_count = 0;
+  uint8_t used = 0;
+  uint8_t word_start = 0;
+  uint8_t word_length = 0;
 
-static int starts_with_word(const char* text, const char* word) {
-  const size_t length = text_length(word);
-  size_t index = 0;
-  while(index < length && text[index] == word[index]) ++index;
-  return index == length && word_boundary(text[index]);
-}
+  while(*cursor != 0 && word_count < ELIZA_MAX_WORDS) {
+    unsigned char value = *cursor++;
 
-static const char* reflected_word(const char* word, size_t length) {
-  struct reflection { const char* from; const char* to; };
-  static const struct reflection reflections[] = {
-    {"I", "YOU"}, {"ME", "YOU"}, {"MY", "YOUR"},
-    {"MINE", "YOURS"}, {"MYSELF", "YOURSELF"},
-    {"AM", "ARE"}, {"IM", "YOU ARE"},
-    {"YOU", "I"}, {"YOUR", "MY"}, {"YOURS", "MINE"},
-    {"YOURSELF", "MYSELF"}, {"ARE", "AM"}, {"YOURE", "I AM"}
-  };
-  uint8_t index;
-  for(index = 0; index < ARRAY_COUNT(reflections); ++index) {
-    const char* candidate = reflections[index].from;
-    size_t offset = 0;
-    while(offset < length && candidate[offset] == word[offset]) ++offset;
-    if(offset == length && candidate[offset] == 0) return reflections[index].to;
-  }
-  return NULL;
-}
-
-static void append_char(char* output, size_t capacity, size_t* used, char value) {
-  if(*used + 1 < capacity) output[(*used)++] = value;
-}
-
-static void append_text(char* output, size_t capacity, size_t* used,
-                        const char* text) {
-  if(text == NULL) return;
-  while(*text != 0) append_char(output, capacity, used, *text++);
-}
-
-static void append_reflected(char* output, size_t capacity, size_t* used,
-                             const char* text) {
-  int need_space = 0;
-  while(text != NULL && *text != 0) {
-    const char* word;
-    size_t length = 0;
-    const char* replacement;
-    while(*text == ' ') ++text;
-    if(*text == 0) break;
-    word = text;
-    while(text[length] != 0 && text[length] != ' ') ++length;
-    replacement = reflected_word(word, length);
-    if(need_space) append_char(output, capacity, used, ' ');
-    if(replacement != NULL) append_text(output, capacity, used, replacement);
-    else {
-      size_t index;
-      for(index = 0; index < length; ++index)
-        append_char(output, capacity, used, word[index]);
+    /* Accept the typographic apostrophe commonly pasted in I'M/DON'T. */
+    if(value == 0xe2U && cursor[0] == 0x80U && cursor[1] == 0x99U) {
+      value = '\'';
+      cursor += 2;
     }
-    need_space = 1;
-    text += length;
+    if(value >= 'a' && value <= 'z')
+      value = (unsigned char) (value - 'a' + 'A');
+    if(value == '?' || value == '!') value = '.';
+    else if(value == ':' || value == ';') value = ',';
+
+    if(word_character(value)) {
+      if(word_length == 0) word_start = used;
+      if(used + 1U < ELIZA_INPUT_BYTES) {
+        normalized[used++] = (char) value;
+        ++word_length;
+      }
+      continue;
+    }
+
+    finish_input_word(words, &word_count, normalized, word_start, word_length);
+    word_length = 0;
+    if((value == ',' || value == '.') && word_count < ELIZA_MAX_WORDS) {
+      words[word_count].word = TOKEN_DELIMITER;
+      words[word_count].offset = 0;
+      words[word_count].length = 0;
+      ++word_count;
+    }
+  }
+  finish_input_word(words, &word_count, normalized, word_start, word_length);
+  normalized[used] = 0;
+  return word_count;
+}
+
+static void token_bytes(const ElizaToken* token, const char* normalized,
+                        const char** text, uint8_t* length) {
+  if(token->word < ELIZA_SCRIPT_WORD_COUNT) {
+    *text = word_text(token->word);
+    *length = eliza_script_word_lengths[token->word];
+  } else {
+    *text = normalized + token->offset;
+    *length = token->length;
   }
 }
 
-static void assemble(const char* pattern, const char* capture,
-                     char* output, size_t capacity) {
-  size_t used = 0;
-  if(output == NULL || capacity == 0) return;
-  while(pattern != NULL && *pattern != 0) {
-    if(*pattern == '%') append_reflected(output, capacity, &used, capture);
-    else append_char(output, capacity, &used, *pattern);
-    ++pattern;
+static int token_equals(const ElizaToken* token, const char* normalized,
+                        const char* expected) {
+  const char* text;
+  uint8_t length;
+  size_t index;
+  const size_t expected_length = string_length(expected);
+  if(token->word == TOKEN_DELIMITER) return 0;
+  token_bytes(token, normalized, &text, &length);
+  if(length != expected_length) return 0;
+  for(index = 0; index < expected_length; ++index)
+    if(text[index] != expected[index]) return 0;
+  return 1;
+}
+
+static void remove_word_prefix(ElizaToken* words, uint8_t* count,
+                               uint8_t remove_count) {
+  uint8_t index;
+  if(remove_count >= *count) {
+    *count = 0;
+    return;
   }
-  output[used] = 0;
+  for(index = remove_count; index < *count; ++index)
+    words[index - remove_count] = words[index];
+  *count = (uint8_t) (*count - remove_count);
 }
 
-static void use_response(eliza_state* state, enum response_set_id id,
-                         const char* capture, char* output, size_t capacity) {
-  const response_set* set = &RESPONSE_SETS[id];
-  uint8_t index = state->next_response[id];
-  if(index >= set->count) index = 0;
-  state->next_response[id] = (uint8_t) (index + 1 == set->count ? 0 : index + 1);
-  assemble(set->item[index], capture, output, capacity);
-}
-
-static const char* sentiment_tail(const char* text, const char* prefix,
-                                  const char* const* words, uint8_t count) {
-  const char* tail = tail_after(text, prefix);
+static void stack_push_front(uint8_t* stack, uint8_t* count, uint8_t value) {
   uint8_t index;
-  if(tail == NULL) return NULL;
-  for(index = 0; index < count; ++index)
-    if(has_phrase(tail, words[index])) return tail;
-  return NULL;
+  if(*count >= ELIZA_MAX_WORDS) return;
+  for(index = *count; index != 0; --index) stack[index] = stack[index - 1U];
+  stack[0] = value;
+  ++*count;
 }
 
-static int has_family_word(const char* text) {
-  static const char* const family[] = {
-    "MOTHER", "MOM", "FATHER", "DAD", "SISTER", "BROTHER",
-    "WIFE", "HUSBAND", "CHILD", "CHILDREN", "FAMILY"
-  };
+static void stack_push_back(uint8_t* stack, uint8_t* count, uint8_t value) {
+  if(*count < ELIZA_MAX_WORDS) stack[(*count)++] = value;
+}
+
+static uint8_t stack_pop_front(uint8_t* stack, uint8_t* count) {
   uint8_t index;
-  for(index = 0; index < ARRAY_COUNT(family); ++index)
-    if(has_phrase(text, family[index])) return 1;
+  const uint8_t value = stack[0];
+  for(index = 1; index < *count; ++index) stack[index - 1U] = stack[index];
+  --*count;
+  return value;
+}
+
+static int rule_has_transformation(const ElizaRuleData* rule) {
+  return rule->transform_count != 0 || rule->link != ELIZA_NO_ID;
+}
+
+static void scan_keywords(ElizaToken* words, uint8_t* word_count,
+                          uint8_t* stack, uint8_t* stack_count) {
+  uint8_t top_rank = 0;
+  uint8_t index = 0;
+
+  *stack_count = 0;
+  while(index < *word_count) {
+    ElizaToken* token = &words[index];
+    if(token->word == TOKEN_DELIMITER ||
+       token->word == ELIZA_SCRIPT_BUT_WORD) {
+      if(*stack_count == 0) {
+        remove_word_prefix(words, word_count, (uint8_t) (index + 1U));
+        index = 0;
+        continue;
+      }
+      *word_count = index;
+      break;
+    }
+
+    if(token->word < ELIZA_SCRIPT_WORD_COUNT) {
+      const uint8_t rule_id = eliza_script_word_rules[token->word];
+      if(rule_id != ELIZA_NO_ID) {
+        const ElizaRuleData* rule = &eliza_script_rules[rule_id];
+        if(rule_has_transformation(rule)) {
+          if(rule->rank > top_rank) {
+            stack_push_front(stack, stack_count, rule_id);
+            top_rank = rule->rank;
+          } else {
+            stack_push_back(stack, stack_count, rule_id);
+          }
+        }
+        if(rule->substitute != ELIZA_NO_ID) {
+          token->word = rule->substitute;
+          token->offset = 0;
+          token->length = eliza_script_word_lengths[rule->substitute];
+        }
+      }
+    }
+    ++index;
+  }
+}
+
+static int pattern_any_matches(const uint8_t* choices, uint8_t choice_count,
+                               const ElizaToken* token) {
+  uint8_t index;
+  for(index = 0; index < choice_count; ++index)
+    if(token->word == choices[index]) return 1;
   return 0;
 }
 
-static void remember_my(eliza_state* state, const char* normalized) {
-  const char* tail = tail_after(normalized, "MY");
-  if(tail == NULL) return;
-  text_copy(state->memory, sizeof(state->memory), tail);
-  state->memory_pending = 1;
+static int match_pattern_from(const uint8_t* pattern, const uint8_t* end,
+                              const ElizaToken* words, uint8_t word_count,
+                              uint8_t word_index, uint8_t term_index,
+                              ElizaCapture* captures) {
+  const uint8_t* next;
+  uint8_t opcode;
+  uint8_t value;
+
+  if(pattern == end) return word_index == word_count;
+  if(pattern > end || term_index >= ELIZA_MAX_PATTERN_TERMS) return 0;
+  opcode = *pattern++;
+  if(pattern >= end) return 0;
+  value = *pattern++;
+  next = pattern;
+
+  if(opcode == PATTERN_COUNT) {
+    if(value == 0) {
+      uint8_t length;
+      for(length = 0; (uint16_t) word_index + length <= word_count; ++length) {
+        captures[term_index].start = word_index;
+        captures[term_index].count = length;
+        if(match_pattern_from(next, end, words, word_count,
+                              (uint8_t) (word_index + length),
+                              (uint8_t) (term_index + 1U), captures)) return 1;
+      }
+      return 0;
+    }
+    if((uint16_t) word_index + value > word_count) return 0;
+    captures[term_index].start = word_index;
+    captures[term_index].count = value;
+    return match_pattern_from(next, end, words, word_count,
+                              (uint8_t) (word_index + value),
+                              (uint8_t) (term_index + 1U), captures);
+  }
+
+  if(word_index >= word_count) return 0;
+  if(opcode == PATTERN_WORD) {
+    if(words[word_index].word != value) return 0;
+  } else if(opcode == PATTERN_ANY) {
+    if((size_t) (end - pattern) < value ||
+       !pattern_any_matches(pattern, value, &words[word_index])) return 0;
+    next = pattern + value;
+  } else if(opcode == PATTERN_TAG) {
+    if(words[word_index].word >= ELIZA_SCRIPT_WORD_COUNT ||
+       (eliza_script_word_tags[words[word_index].word] & value) == 0) return 0;
+  } else {
+    return 0;
+  }
+
+  captures[term_index].start = word_index;
+  captures[term_index].count = 1;
+  return match_pattern_from(next, end, words, word_count,
+                            (uint8_t) (word_index + 1U),
+                            (uint8_t) (term_index + 1U), captures);
+}
+
+static int match_transform(const ElizaTransformData* transform,
+                           const ElizaToken* words, uint8_t word_count,
+                           ElizaCapture* captures) {
+  const uint8_t* pattern = eliza_script_patterns + transform->pattern_offset;
+  return match_pattern_from(pattern, pattern + transform->pattern_size,
+                            words, word_count, 0, 0, captures);
+}
+
+static void append_item(char* output, size_t capacity, size_t* used,
+                        const char* text, size_t length) {
+  size_t index;
+  if(length == 0 || output == NULL || capacity == 0) return;
+  if(*used != 0 && *used + 1U < capacity) output[(*used)++] = ' ';
+  for(index = 0; index < length && *used + 1U < capacity; ++index)
+    output[(*used)++] = text[index];
+  output[*used] = 0;
+}
+
+static void append_token(char* output, size_t capacity, size_t* used,
+                         const ElizaToken* token, const char* normalized) {
+  const char* text;
+  uint8_t length;
+  if(token->word == TOKEN_DELIMITER) return;
+  token_bytes(token, normalized, &text, &length);
+  append_item(output, capacity, used, text, length);
+}
+
+static void assemble_template(const unsigned char* template_text,
+                              const ElizaToken* words,
+                              const char* normalized,
+                              const ElizaCapture* captures,
+                              char* output, size_t capacity) {
+  size_t used = 0;
+  const unsigned char* cursor = template_text;
+  if(output == NULL || capacity == 0) return;
+  output[0] = 0;
+
+  while(*cursor != 0) {
+    const unsigned char* start;
+    size_t length;
+    while(*cursor == ' ') ++cursor;
+    if(*cursor == 0) break;
+    start = cursor;
+    while(*cursor != 0 && *cursor != ' ') ++cursor;
+    length = (size_t) (cursor - start);
+    if(length == 1 && start[0] >= 1 &&
+       start[0] <= ELIZA_MAX_PATTERN_TERMS) {
+      const ElizaCapture* capture = &captures[start[0] - 1U];
+      uint8_t index;
+      for(index = 0; index < capture->count; ++index)
+        append_token(output, capacity, &used,
+                     &words[capture->start + index], normalized);
+    } else {
+      append_item(output, capacity, &used, (const char*) start, length);
+    }
+  }
+}
+
+static void copy_capture(const ElizaToken* words, const char* normalized,
+                         const ElizaCapture* capture,
+                         char* output, size_t capacity) {
+  size_t used = 0;
+  uint8_t index;
+  if(output == NULL || capacity == 0) return;
+  output[0] = 0;
+  for(index = 0; index < capture->count; ++index)
+    append_token(output, capacity, &used,
+                 &words[capture->start + index], normalized);
+}
+
+static void assemble_memory(const unsigned char* template_text,
+                            const char* capture,
+                            char* output, size_t capacity) {
+  size_t used = 0;
+  const unsigned char* cursor = template_text;
+  if(output == NULL || capacity == 0) return;
+  output[0] = 0;
+  while(*cursor != 0) {
+    const unsigned char* start;
+    size_t length;
+    while(*cursor == ' ') ++cursor;
+    if(*cursor == 0) break;
+    start = cursor;
+    while(*cursor != 0 && *cursor != ' ') ++cursor;
+    length = (size_t) (cursor - start);
+    if(length == 1 && start[0] == 3)
+      append_item(output, capacity, &used, capture, string_length(capture));
+    else
+      append_item(output, capacity, &used, (const char*) start, length);
+  }
+}
+
+static int build_pre_sentence(const unsigned char* template_text,
+                              const ElizaToken* old_words,
+                              const ElizaCapture* captures,
+                              ElizaToken* new_words, uint8_t* new_count) {
+  const unsigned char* cursor = template_text;
+  *new_count = 0;
+  while(*cursor != 0) {
+    const unsigned char* start;
+    size_t length;
+    while(*cursor == ' ') ++cursor;
+    if(*cursor == 0) break;
+    start = cursor;
+    while(*cursor != 0 && *cursor != ' ') ++cursor;
+    length = (size_t) (cursor - start);
+    if(length == 1 && start[0] >= 1 &&
+       start[0] <= ELIZA_MAX_PATTERN_TERMS) {
+      const ElizaCapture* capture = &captures[start[0] - 1U];
+      uint8_t index;
+      if((uint16_t) *new_count + capture->count > ELIZA_MAX_WORDS) return 0;
+      for(index = 0; index < capture->count; ++index)
+        new_words[(*new_count)++] =
+            old_words[capture->start + index];
+    } else {
+      const uint8_t word = find_word((const char*) start, length);
+      if(word == TOKEN_UNKNOWN || *new_count >= ELIZA_MAX_WORDS) return 0;
+      new_words[*new_count].word = word;
+      new_words[*new_count].offset = 0;
+      new_words[*new_count].length = eliza_script_word_lengths[word];
+      ++*new_count;
+    }
+  }
+  return 1;
+}
+
+static enum action select_reassembly(eliza_state* state, uint8_t transform_id,
+                                     ElizaToken* words, uint8_t* word_count,
+                                     const char* normalized,
+                                     const ElizaCapture* captures,
+                                     char* output, size_t output_size,
+                                     uint8_t* link_rule) {
+  const ElizaTransformData* transform = &eliza_script_transforms[transform_id];
+  uint8_t cursor = state->next_reassembly[transform_id];
+  uint16_t offset;
+  const unsigned char* data;
+  uint8_t kind;
+
+  if(cursor >= transform->reassembly_count) cursor = 0;
+  state->next_reassembly[transform_id] =
+      (uint8_t) (cursor + 1U == transform->reassembly_count ? 0 : cursor + 1U);
+  offset =
+      eliza_script_reassembly_offsets[transform->first_reassembly + cursor];
+  data = eliza_script_reassemblies + offset;
+  kind = *data++;
+
+  if(kind == REASSEMBLY_TEXT) {
+    assemble_template(data, words, normalized, captures, output, output_size);
+    return ACTION_COMPLETE;
+  }
+  if(kind == REASSEMBLY_LINK) {
+    *link_rule = *data;
+    return ACTION_LINK;
+  }
+  if(kind == REASSEMBLY_NEWKEY) return ACTION_NEWKEY;
+  if(kind == REASSEMBLY_PRE) {
+    ElizaToken replacement[ELIZA_MAX_WORDS];
+    uint8_t replacement_count;
+    uint8_t index;
+    *link_rule = *data++;
+    if(!build_pre_sentence(data, words, captures,
+                           replacement, &replacement_count))
+      return ACTION_INAPPLICABLE;
+    for(index = 0; index < replacement_count; ++index)
+      words[index] = replacement[index];
+    *word_count = replacement_count;
+    return ACTION_LINK;
+  }
+  return ACTION_INAPPLICABLE;
+}
+
+static enum action apply_rule(eliza_state* state, uint8_t rule_id,
+                              ElizaToken* words, uint8_t* word_count,
+                              const char* normalized, char* output,
+                              size_t output_size, uint8_t* link_rule) {
+  const ElizaRuleData* rule;
+  uint8_t index;
+  if(rule_id >= ELIZA_SCRIPT_RULE_COUNT) return ACTION_INAPPLICABLE;
+  rule = &eliza_script_rules[rule_id];
+  for(index = 0; index < rule->transform_count; ++index) {
+    const uint8_t transform_id =
+        (uint8_t) (rule->first_transform + index);
+    ElizaCapture captures[ELIZA_MAX_PATTERN_TERMS] = {{0, 0}};
+    if(match_transform(&eliza_script_transforms[transform_id],
+                       words, *word_count, captures))
+      return select_reassembly(state, transform_id, words, word_count,
+                               normalized, captures, output, output_size,
+                               link_rule);
+  }
+  if(rule->link != ELIZA_NO_ID) {
+    *link_rule = rule->link;
+    return ACTION_LINK;
+  }
+  return ACTION_INAPPLICABLE;
+}
+
+static uint8_t hollerith_code(unsigned char value) {
+  if(value >= '0' && value <= '9') return (uint8_t) (value - '0');
+  if(value >= 'A' && value <= 'I') return (uint8_t) (17U + value - 'A');
+  if(value >= 'J' && value <= 'R') return (uint8_t) (33U + value - 'J');
+  if(value >= 'S' && value <= 'Z') return (uint8_t) (50U + value - 'S');
+  switch(value) {
+    case '=': return 11;
+    case '\'': return 12;
+    case '+': return 16;
+    case '.': return 27;
+    case ')': return 28;
+    case '-': return 32;
+    case '$': return 43;
+    case '*': return 44;
+    case ' ': return 48;
+    case '/': return 49;
+    case ',': return 59;
+    case '(': return 60;
+    default: return (uint8_t) (value & 0x3fU);
+  }
+}
+
+static uint8_t memory_hash(const ElizaToken* token, const char* normalized) {
+  const char* text;
+  uint8_t length;
+  uint8_t chunk_start = 0;
+  uint8_t count = 0;
+  uint64_t datum = 0;
+  token_bytes(token, normalized, &text, &length);
+  if(length != 0) chunk_start = (uint8_t) (((length - 1U) / 6U) * 6U);
+  while(chunk_start + count < length && count < 6U) {
+    datum = (datum << 6U) |
+            hollerith_code((unsigned char) text[chunk_start + count]);
+    ++count;
+  }
+  while(count < 6U) {
+    datum = (datum << 6U) | hollerith_code(' ');
+    ++count;
+  }
+  datum &= 0x7ffffffffULL;
+  datum *= datum;
+  return (uint8_t) ((datum >> 34U) & 3U);
+}
+
+static void create_memory(eliza_state* state, const ElizaToken* words,
+                          uint8_t word_count, const char* normalized) {
+  const uint8_t kind = word_count == 0 ? ELIZA_NO_ID :
+      memory_hash(&words[word_count - 1U], normalized);
+  const uint8_t transform_id = kind == ELIZA_NO_ID ? ELIZA_NO_ID :
+      eliza_script_memory_transforms[kind];
+  const ElizaTransformData* transform;
+  ElizaCapture captures[ELIZA_MAX_PATTERN_TERMS] = {{0, 0}};
+  uint8_t slot;
+
+  if(transform_id == ELIZA_NO_ID ||
+     state->memory_count >= ELIZA_MEMORY_SLOTS) return;
+  transform = &eliza_script_transforms[transform_id];
+  if(!match_transform(transform, words, word_count, captures)) return;
+  slot = (uint8_t)
+      ((state->memory_head + state->memory_count) % ELIZA_MEMORY_SLOTS);
+  state->memory_kind[slot] = kind;
+  copy_capture(words, normalized, &captures[2],
+               state->memory[slot], sizeof(state->memory[slot]));
+  ++state->memory_count;
+}
+
+static void recall_memory(eliza_state* state, char* output,
+                          size_t output_size) {
+  const uint8_t slot = state->memory_head;
+  const uint8_t transform_id =
+      eliza_script_memory_transforms[state->memory_kind[slot]];
+  const ElizaTransformData* transform =
+      &eliza_script_transforms[transform_id];
+  const uint16_t offset =
+      eliza_script_reassembly_offsets[transform->first_reassembly];
+  const unsigned char* data = eliza_script_reassemblies + offset;
+  if(*data++ == REASSEMBLY_TEXT)
+    assemble_memory(data, state->memory[slot], output, output_size);
+  else
+    output[0] = 0;
+  state->memory_head =
+      (uint8_t) ((state->memory_head + 1U) % ELIZA_MEMORY_SLOTS);
+  --state->memory_count;
+}
+
+static const char* nomatch_message(uint8_t limit) {
+  switch(limit) {
+    case 1: return "PLEASE CONTINUE";
+    case 2: return "HMMM";
+    case 3: return "GO ON , PLEASE";
+    default: return "I SEE";
+  }
 }
 
 void eliza_init(eliza_state* state) {
@@ -536,212 +631,76 @@ void eliza_init(eliza_state* state) {
   if(state == NULL) return;
   for(index = 0; index < sizeof(*state); ++index)
     ((uint8_t*) state)[index] = 0;
+  state->limit = 1;
 }
 
 int eliza_is_goodbye(const char* input) {
   char normalized[ELIZA_INPUT_BYTES];
-  normalize(input, normalized, sizeof(normalized));
-  return text_equal(normalized, "BYE") || text_equal(normalized, "GOODBYE") ||
-         text_equal(normalized, "GOOD BYE") ||
-         text_equal(normalized, "QUIT") || text_equal(normalized, "EXIT");
+  ElizaToken words[ELIZA_MAX_WORDS];
+  ElizaToken compact[2];
+  uint8_t count = parse_input(input, normalized, words);
+  uint8_t used = 0;
+  uint8_t index;
+  for(index = 0; index < count && used < 2; ++index)
+    if(words[index].word != TOKEN_DELIMITER) compact[used++] = words[index];
+  for(; index < count; ++index)
+    if(words[index].word != TOKEN_DELIMITER) return 0;
+  if(used == 1)
+    return token_equals(&compact[0], normalized, "BYE") ||
+           token_equals(&compact[0], normalized, "GOODBYE") ||
+           token_equals(&compact[0], normalized, "GOOD-BYE") ||
+           token_equals(&compact[0], normalized, "QUIT") ||
+           token_equals(&compact[0], normalized, "EXIT");
+  return used == 2 && token_equals(&compact[0], normalized, "GOOD") &&
+         token_equals(&compact[1], normalized, "BYE");
 }
 
 void eliza_reply(eliza_state* state, const char* input,
                  char* output, size_t output_size) {
-  static const char* const sad_words[] = {
-    "SAD", "UNHAPPY", "DEPRESSED", "SICK", "AFRAID", "LONELY"
-  };
-  static const char* const happy_words[] = {
-    "HAPPY", "ELATED", "GLAD", "BETTER"
-  };
   char normalized[ELIZA_INPUT_BYTES];
-  const char* capture;
-  const char* my_tail;
+  ElizaToken words[ELIZA_MAX_WORDS];
+  uint8_t stack[ELIZA_MAX_WORDS];
+  uint8_t word_count;
+  uint8_t stack_count;
+  uint8_t steps = 0;
 
   if(output == NULL || output_size == 0) return;
   output[0] = 0;
   if(state == NULL) return;
-  normalize(input, normalized, sizeof(normalized));
 
-  if(normalized[0] == 0) {
-    use_response(state, RS_EMPTY, NULL, output, output_size);
+  word_count = parse_input(input, normalized, words);
+  state->limit = (uint8_t) (state->limit % 4U + 1U);
+  scan_keywords(words, &word_count, stack, &stack_count);
+
+  if(stack_count == 0 && state->limit == 4 &&
+     state->memory_count != 0) {
+    recall_memory(state, output, output_size);
     return;
   }
-  if(text_equal(normalized, state->previous)) {
-    use_response(state, RS_REPEAT, NULL, output, output_size);
-    return;
-  }
-  text_copy(state->previous, sizeof(state->previous), normalized);
-  remember_my(state, normalized);
 
-  /* Highest ranks from the original DOCTOR script come first. */
-  if(has_phrase(normalized, "COMPUTER") || has_phrase(normalized, "COMPUTERS") ||
-     has_phrase(normalized, "MACHINE") || has_phrase(normalized, "MACHINES")) {
-    use_response(state, RS_COMPUTER, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "NAME")) {
-    use_response(state, RS_NAME, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "ALIKE") || has_phrase(normalized, "SAME") ||
-     has_phrase(normalized, "IS LIKE") || has_phrase(normalized, "ARE LIKE") ||
-     has_phrase(normalized, "WAS LIKE") || has_phrase(normalized, "AM LIKE")) {
-    use_response(state, RS_LIKE, NULL, output, output_size); return;
-  }
-  capture = tail_after(normalized, "I REMEMBER");
-  if(capture != NULL) {
-    use_response(state, RS_REMEMBER, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "DO YOU REMEMBER");
-  if(capture != NULL) {
-    use_response(state, RS_REMEMBER_ME, capture, output, output_size); return;
-  }
-  capture = tail_after_either(normalized, "I DREAMED", "I DREAMT");
-  if(capture != NULL) {
-    use_response(state, RS_DREAMED, capture, output, output_size); return;
-  }
-  if(has_phrase(normalized, "DREAM") || has_phrase(normalized, "DREAMS")) {
-    use_response(state, RS_DREAM, NULL, output, output_size); return;
-  }
-  capture = tail_after(normalized, "IF");
-  if(capture != NULL) {
-    use_response(state, RS_IF, capture, output, output_size); return;
-  }
-  if(has_phrase(normalized, "EVERYONE") || has_phrase(normalized, "EVERYBODY") ||
-     has_phrase(normalized, "NOBODY") || has_phrase(normalized, "NOONE")) {
-    capture = has_phrase(normalized, "NOBODY") ? "NOBODY" : "EVERYONE";
-    use_response(state, RS_EVERYONE, capture, output, output_size); return;
-  }
-  my_tail = tail_after(normalized, "MY");
-  if(my_tail != NULL && has_family_word(my_tail)) {
-    use_response(state, RS_MY_FAMILY, my_tail, output, output_size); return;
-  }
-  if(my_tail != NULL) {
-    use_response(state, RS_MY, my_tail, output, output_size); return;
-  }
-  if(has_phrase(normalized, "ALWAYS")) {
-    use_response(state, RS_ALWAYS, NULL, output, output_size); return;
-  }
-
-  if(has_phrase(normalized, "SORRY")) {
-    use_response(state, RS_SORRY, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "HELLO") || has_phrase(normalized, "HI")) {
-    use_response(state, RS_HELLO, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "DEUTSCH") || has_phrase(normalized, "FRANCAIS") ||
-     has_phrase(normalized, "ITALIANO") || has_phrase(normalized, "ESPANOL")) {
-    use_response(state, RS_FOREIGN, NULL, output, output_size); return;
-  }
-
-  capture = tail_after_either(normalized, "I WANT", "I NEED");
-  if(capture != NULL) {
-    use_response(state, RS_I_WANT, capture, output, output_size); return;
-  }
-  capture = sentiment_tail(normalized, "I AM", sad_words, ARRAY_COUNT(sad_words));
-  if(capture == NULL)
-    capture = sentiment_tail(normalized, "IM", sad_words, ARRAY_COUNT(sad_words));
-  if(capture != NULL) {
-    use_response(state, RS_I_SAD, capture, output, output_size); return;
-  }
-  capture = sentiment_tail(normalized, "I AM", happy_words, ARRAY_COUNT(happy_words));
-  if(capture == NULL)
-    capture = sentiment_tail(normalized, "IM", happy_words, ARRAY_COUNT(happy_words));
-  if(capture != NULL) {
-    use_response(state, RS_I_HAPPY, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "I WAS");
-  if(capture != NULL) {
-    use_response(state, RS_I_WAS, capture, output, output_size); return;
-  }
-  capture = tail_after_either(normalized, "I AM", "IM");
-  if(capture != NULL) {
-    use_response(state, RS_I_AM, capture, output, output_size); return;
-  }
-  capture = tail_after_either(normalized, "I CANT", "I CANNOT");
-  if(capture != NULL) {
-    use_response(state, RS_I_CANT, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "I DONT");
-  if(capture != NULL) {
-    use_response(state, RS_I_DONT, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "I FEEL");
-  if(capture != NULL) {
-    use_response(state, RS_I_FEEL, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "I THINK");
-  if(capture == NULL) capture = tail_after(normalized, "I BELIEVE");
-  if(capture == NULL) capture = tail_after(normalized, "I WISH");
-  if(capture != NULL) {
-    use_response(state, RS_I_BELIEVE, capture, output, output_size); return;
-  }
-
-  capture = tail_after(normalized, "WHY DONT YOU");
-  if(capture != NULL) {
-    use_response(state, RS_WHY_DONT_YOU, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "WHY CANT I");
-  if(capture != NULL) {
-    use_response(state, RS_WHY_CANT_I, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "CAN YOU");
-  if(capture != NULL) {
-    use_response(state, RS_CAN_YOU, capture, output, output_size); return;
-  }
-  capture = tail_after(normalized, "CAN I");
-  if(capture != NULL) {
-    use_response(state, RS_CAN_I, capture, output, output_size); return;
-  }
-  if(has_phrase(normalized, "WHAT") || has_phrase(normalized, "HOW") ||
-     has_phrase(normalized, "WHEN") || has_phrase(normalized, "WHY")) {
-    use_response(state, RS_QUESTION, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "BECAUSE")) {
-    use_response(state, RS_BECAUSE, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "PERHAPS") || has_phrase(normalized, "MAYBE")) {
-    use_response(state, RS_PERHAPS, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "YES") || has_phrase(normalized, "CERTAINLY")) {
-    use_response(state, RS_YES, NULL, output, output_size); return;
-  }
-  if(has_phrase(normalized, "NO")) {
-    use_response(state, RS_NO, NULL, output, output_size); return;
-  }
-
-  capture = tail_after_either(normalized, "YOU ARE", "YOURE");
-  if(capture != NULL) {
-    use_response(state, RS_YOU_ARE, capture, output, output_size); return;
-  }
-  if(starts_with_word(normalized, "YOU") && has_phrase(normalized, "ME")) {
-    const char* after_you = tail_after(normalized, "YOU");
-    size_t length = 0;
-    while(after_you != NULL && after_you[length] != 0) ++length;
-    while(length != 0 && after_you[length - 1] == ' ') --length;
-    if(length >= 3 && after_you[length - 3] == ' ' &&
-       after_you[length - 2] == 'M' && after_you[length - 1] == 'E') {
-      char verb[ELIZA_INPUT_BYTES];
-      size_t index;
-      length -= 3;
-      for(index = 0; index < length && index + 1 < sizeof(verb); ++index)
-        verb[index] = after_you[index];
-      verb[index] = 0;
-      if(verb[0] != 0) {
-        use_response(state, RS_YOU_ME, verb, output, output_size); return;
-      }
+  while(stack_count != 0 && steps++ < 64U) {
+    const uint8_t rule_id = stack_pop_front(stack, &stack_count);
+    uint8_t link_rule = ELIZA_NO_ID;
+    enum action result;
+    if(rule_id == ELIZA_SCRIPT_MEMORY_RULE)
+      create_memory(state, words, word_count, normalized);
+    result = apply_rule(state, rule_id, words, &word_count, normalized,
+                        output, output_size, &link_rule);
+    if(result == ACTION_COMPLETE) return;
+    if(result == ACTION_INAPPLICABLE) {
+      copy_text(output, output_size, nomatch_message(state->limit));
+      return;
     }
-  }
-  capture = tail_after(normalized, "YOU");
-  if(capture != NULL) {
-    use_response(state, RS_YOU_GENERIC, capture, output, output_size); return;
-  }
-  if(starts_with_word(normalized, "I")) {
-    use_response(state, RS_I_GENERIC, normalized, output, output_size); return;
+    if(result == ACTION_LINK)
+      stack_push_front(stack, &stack_count, link_rule);
+    /* NEWKEY exposes the next rule already in the stack. */
   }
 
-  if(state->memory_pending && state->memory[0] != 0) {
-    state->memory_pending = 0;
-    use_response(state, RS_MEMORY, state->memory, output, output_size); return;
+  {
+    uint8_t discard = ELIZA_NO_ID;
+    if(apply_rule(state, ELIZA_SCRIPT_NONE_RULE, words, &word_count,
+                  normalized, output, output_size,
+                  &discard) == ACTION_COMPLETE) return;
   }
-  use_response(state, RS_NONE, NULL, output, output_size);
+  copy_text(output, output_size, nomatch_message(state->limit));
 }

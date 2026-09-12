@@ -5,5 +5,5 @@ C5. Сейчас каталог содержит `ELIZA.APP`; её исходн�
 воспроизводимой сборке находятся в
 [`examples/portable-apps/ELIZA`](../../examples/portable-apps/ELIZA/).
 
-Текущая сборка `ELIZA.APP`: 6567 байт, SHA-256
-`a63f7e0224a58787fcfe772f18c52c8610dc211d8bb85954e60654fd8440edd3`.
+Текущая точная сборка ELIZA/DOCTOR 1966: 8602 байта, SHA-256
+`a617cd3141d5d861a5c403e9006df30f57b50529226da1ae16ff066939d8b3bd`.

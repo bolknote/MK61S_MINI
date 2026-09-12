@@ -5,6 +5,8 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-eliza-tests.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
+python3 "$root/tools/generate_eliza_doctor.py" --check
+
 flags=(-std=c11 -O2 -Wall -Wextra -Werror
   -I"$root/examples/portable-apps/ELIZA")
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then

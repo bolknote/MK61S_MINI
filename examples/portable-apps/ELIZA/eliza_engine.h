@@ -10,13 +10,16 @@ extern "C" {
 
 #define ELIZA_INPUT_BYTES 96U
 #define ELIZA_REPLY_BYTES 192U
-#define ELIZA_RESPONSE_SET_COUNT 41U
+#define ELIZA_TRANSFORM_SLOTS 59U
+#define ELIZA_MEMORY_SLOTS 16U
 
 typedef struct eliza_state {
-  uint8_t next_response[ELIZA_RESPONSE_SET_COUNT];
-  uint8_t memory_pending;
-  char previous[ELIZA_INPUT_BYTES];
-  char memory[ELIZA_INPUT_BYTES];
+  uint8_t next_reassembly[ELIZA_TRANSFORM_SLOTS];
+  uint8_t limit;
+  uint8_t memory_head;
+  uint8_t memory_count;
+  uint8_t memory_kind[ELIZA_MEMORY_SLOTS];
+  char memory[ELIZA_MEMORY_SLOTS][ELIZA_INPUT_BYTES];
 } eliza_state;
 
 void eliza_init(eliza_state* state);
