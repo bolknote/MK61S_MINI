@@ -414,6 +414,23 @@ void test_fixed_calculator_face() {
   assert(!framePixel(straight, 7, 44));
   assert(!framePixel(straight, 12, 44));
 
+  // Г and L are full-height derivatives of E. In particular, Г must retain
+  // E's lower-left segment and L must retain its upper-left segment.
+  text_screen::Grid letters;
+  letters.reset(6);
+  letters.setCursor(0, 1);
+  letters.writeCodepoint('E');
+  letters.writeCodepoint(display_symbol::uc1609::CYR_GHE);
+  letters.writeCodepoint('L');
+  Frame letter_frame{};
+  calculator_face::renderFrame(letters, letter_frame.data());
+  assert(framePixel(letter_frame, 16 + 5, 24));  // Г: top
+  assert(framePixel(letter_frame, 16 + 0, 44));  // Г: lower stem
+  assert(!framePixel(letter_frame, 16 + 0, 47)); // Г: no bottom
+  assert(!framePixel(letter_frame, 32 + 5, 24)); // L: no top
+  assert(framePixel(letter_frame, 32 + 3, 29));  // L: upper stem
+  assert(framePixel(letter_frame, 32 + 0, 47));  // L: bottom
+
   text_screen::Grid without_dot;
   without_dot.reset(6);
   writeGridLine(without_dot, 1, 0, "-1234567 -09");

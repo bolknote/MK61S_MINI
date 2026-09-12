@@ -61,14 +61,19 @@ u8 segments(u16 token) {
     SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G,
     SEG_A | SEG_B | SEG_C | SEG_D | SEG_F | SEG_G,
   };
+  static constexpr u8 LETTER_E = SEG_A | SEG_D | SEG_E | SEG_F | SEG_G;
   if(token >= '0' && token <= '9') return DIGITS[token - '0'];
   switch(token) {
     case 'O': return DIGITS[0];
     case '-': return SEG_G;
-    case 'L': return SEG_D | SEG_E | SEG_F;
-    case 'C': return SEG_A | SEG_D | SEG_E | SEG_F;
-    case 'E': return SEG_A | SEG_D | SEG_E | SEG_F | SEG_G;
-    case display_symbol::uc1609::CYR_GHE: return SEG_A | SEG_F;
+    // Keep both halves of E's left stem. Using only the upper segment made
+    // Г look like a small hook; deriving the letters from E keeps their full
+    // height and the exact slant/chamfers of the selected calculator face.
+    case 'L': return LETTER_E & (u8) ~(SEG_A | SEG_G);
+    case 'C': return LETTER_E & (u8) ~SEG_G;
+    case 'E': return LETTER_E;
+    case display_symbol::uc1609::CYR_GHE:
+      return LETTER_E & (u8) ~(SEG_D | SEG_G);
     default: return 0;
   }
 }
