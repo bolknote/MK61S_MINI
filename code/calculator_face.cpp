@@ -41,14 +41,12 @@ enum Segment : u8 {
   SEG_G = 1U << 6,
 };
 
-// Twelve physical positions use the whole 192-pixel glass.  A 16-pixel pitch
-// leaves five clear columns between 11-pixel digits, while the extra gap keeps
-// the two-digit exponent visually separate.  The last vertical segment ends
-// at x=190, retaining a one-pixel safety margin at the controller boundary.
-static constexpr i16 DIGIT_LEFT = 2;
+// kimstik's 16x32 strike: twelve physical cells exactly occupy the 192-pixel
+// glass. The full 32-pixel source raster is centred in the 48-pixel calculator
+// area below the two status pages.
+// Source: https://gist.github.com/kimstik/9210d1a34c91c30b42ed4cb134e908e0
+static constexpr i16 DIGIT_TOP = 24;
 static constexpr i16 DIGIT_PITCH = 16;
-static constexpr i16 EXPONENT_FIRST_SLOT = 9;
-static constexpr i16 EXPONENT_GAP = 2;
 
 u8 segments(u16 token) {
   static constexpr u8 DIGITS[10] = {
@@ -75,45 +73,40 @@ u8 segments(u16 token) {
   }
 }
 
-void horizontalPage(u8* out, i16 x, u8 edge, u8 body) {
-  out[x + 1] |= edge;
-  for(u8 col = 2; col < 8; ++col) out[x + col] |= body;
-  out[x + 8] |= edge;
-}
+// Pixel-exact segment rows from kimstik/mk61_font16x32.h. Source bits are
+// MSB-left, one u16 per 16-pixel row; the eighth plane is the decimal point.
+static constexpr u16 GIST_SEGMENT_ROWS[8][32] = {
+  { 0x07F0,0x0FE0,0x0FC0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0x0006,0x0006,0x000E,0x001E,0x001C,0x001C,
+    0x001C,0x003C,0x001C,0x0008,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0x0018,0x0038,0x0070,0x0070,0x00F0,0x00F0,0x00F0,0x00E0,
+    0x0060,0x0060,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0xE000,0xFE00,0x7F00,0x3F00,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x2000,
+    0x7000,0x7000,0x7000,0x7000,0xF000,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0x1E00,0x1C00,0x1C00,0x1C00,0x3800,0x2000,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0x07E0,0x0FE0,0x0FC0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0x0003,0x0003,0x0003,0x0007,0x0007,0x0007 },
+};
 
-// The fixed geometry is emitted directly in UC1609 page bytes.  This is both
-// faster and markedly smaller than clipping every constituent pixel against
-// the current page, which matters on the 256-KiB F401 without changing one
-// pixel of the reviewed ИВ-2-style face.
-void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask) {
-  switch(page) {
-    case 2:
-      if(mask & SEG_A) horizontalPage(out, x, 0x08, 0x1C);
-      if(mask & SEG_F) { out[x] |= 0x80; out[x + 1] |= 0xC0; }
-      if(mask & SEG_B) { out[x + 9] |= 0xC0; out[x + 10] |= 0x80; }
-      break;
-    case 3:
-      if(mask & SEG_F) { out[x] = 0xFF; out[x + 1] = 0xFF; }
-      if(mask & SEG_B) { out[x + 9] = 0xFF; out[x + 10] = 0xFF; }
-      break;
-    case 4:
-      if(mask & SEG_F) out[x + 1] |= 0x01;
-      if(mask & SEG_B) out[x + 9] |= 0x01;
-      if(mask & SEG_G) horizontalPage(out, x, 0x08, 0x1C);
-      if(mask & SEG_E) { out[x] |= 0x80; out[x + 1] |= 0xC0; }
-      if(mask & SEG_C) { out[x + 9] |= 0xC0; out[x + 10] |= 0x80; }
-      break;
-    case 5:
-      if(mask & SEG_E) { out[x] = 0xFF; out[x + 1] = 0xFF; }
-      if(mask & SEG_C) { out[x + 9] = 0xFF; out[x + 10] = 0xFF; }
-      break;
-    case 6:
-      if(mask & SEG_E) out[x + 1] |= 0x01;
-      if(mask & SEG_C) out[x + 9] |= 0x01;
-      if(mask & SEG_D) horizontalPage(out, x, 0x08, 0x1C);
-      break;
-    default:
-      break;
+void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
+  for(u8 row = 0; row < 32; ++row) {
+    const i16 y = DIGIT_TOP + row;
+    if((u8) (y / PAGE_HEIGHT) != page) continue;
+    u16 pixels = dot ? GIST_SEGMENT_ROWS[7][row] : 0;
+    for(u8 segment = 0; segment < 7; ++segment) {
+      if(mask & (1U << segment)) pixels |= GIST_SEGMENT_ROWS[segment][row];
+    }
+    const u8 page_bit = (u8) (1U << (y & 7));
+    for(u8 col = 0; col < 16; ++col) {
+      if(pixels & ((u16) 0x8000U >> col)) out[x + col] |= page_bit;
+    }
   }
 }
 
@@ -129,8 +122,7 @@ void drawArrowPage(u8* out, u8 page, i16 x) {
 }
 
 i16 digitLeft(u8 slot) {
-  return DIGIT_LEFT + (i16) slot * DIGIT_PITCH +
-      (slot >= EXPONENT_FIRST_SLOT ? EXPONENT_GAP : 0);
+  return (i16) slot * DIGIT_PITCH;
 }
 
 void drawDigitPage(u8* out, u8 page, i16 x, u16 token) {
@@ -139,9 +131,7 @@ void drawDigitPage(u8* out, u8 page, i16 x, u16 token) {
 }
 
 void drawDecimalPage(u8* out, u8 page, i16 x) {
-  if(page != 6) return;
-  out[x + 11] |= 0x18;
-  out[x + 12] |= 0x18;
+  drawSegmentsPage(out, page, x, 0, true);
 }
 
 void __attribute__((noinline)) drawIndicatorPage(

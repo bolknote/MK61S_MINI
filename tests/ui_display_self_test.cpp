@@ -388,25 +388,31 @@ void test_fixed_calculator_face() {
   assert(ui_display_test::transfers == 8);
   expectFrame(expected);
 
-  // The decimal point belongs to slot 2 and slot 3 starts at its fixed x=50.
-  assert(framePixel(expected, 45, 51) && framePixel(expected, 46, 52));
-  assert(framePixel(expected, 52, 18));
-  // The exponent sign starts after the deliberately wider VFD group gap.
-  assert(framePixel(expected, 150, 35) && !framePixel(expected, 143, 35));
+  // Twelve 16-pixel cells occupy the full 192-pixel glass. The decimal point
+  // belongs to slot 2, slot 3 starts at x=48 and the exponent sign at x=144.
+  assert(framePixel(expected, 46, 50) && framePixel(expected, 45, 55));
+  assert(framePixel(expected, 53, 24));
+  assert(framePixel(expected, 149, 36) && !framePixel(expected, 148, 36));
 
-  // The narrow vertical body stays on one axis. Only its one-pixel caps are
-  // chamfered; the former approximation moved whole halves sideways.
+  // Preserve the asymmetric chamfers and widening of kimstik's exact raster;
+  // replacing it with a generic straight seven-segment face is a regression.
   text_screen::Grid one;
   one.reset(6);
   writeGridLine(one, 1, 0, "1");
   Frame straight{};
   calculator_face::renderFrame(one, straight.data());
-  assert(framePixel(straight, 11, 25));
-  assert(framePixel(straight, 12, 25));
+  assert(framePixel(straight, 13, 26));
+  assert(framePixel(straight, 14, 26));
+  assert(!framePixel(straight, 12, 26));
+  assert(!framePixel(straight, 15, 26));
   assert(framePixel(straight, 11, 29));
-  assert(framePixel(straight, 12, 29));
+  assert(framePixel(straight, 14, 29));
   assert(!framePixel(straight, 10, 29));
-  assert(!framePixel(straight, 13, 29));
+  assert(!framePixel(straight, 15, 29));
+  assert(framePixel(straight, 8, 44));
+  assert(framePixel(straight, 11, 44));
+  assert(!framePixel(straight, 7, 44));
+  assert(!framePixel(straight, 12, 44));
 
   text_screen::Grid without_dot;
   without_dot.reset(6);
@@ -423,7 +429,7 @@ void test_fixed_calculator_face() {
     u8 bits = (u8) (plain[i] ^ dotted[i]);
     while(bits) { changed_bits += bits & 1U; bits >>= 1U; }
   }
-  assert(changed_bits == 4);
+  assert(changed_bits == 15);
 
 #if MK61_ENABLE_USB_SCREEN
   assert(display.enterUsbScreen());
