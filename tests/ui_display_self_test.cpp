@@ -388,11 +388,11 @@ void test_fixed_calculator_face() {
   assert(ui_display_test::transfers == 8);
   expectFrame(expected);
 
-  // The decimal point belongs to slot 2 and slot 3 starts at its fixed x=46.
-  assert(framePixel(expected, 43, 51) && framePixel(expected, 44, 52));
-  assert(framePixel(expected, 48, 18));
+  // The decimal point belongs to slot 2 and slot 3 starts at its fixed x=50.
+  assert(framePixel(expected, 45, 51) && framePixel(expected, 46, 52));
+  assert(framePixel(expected, 52, 18));
   // The exponent sign starts after the deliberately wider VFD group gap.
-  assert(framePixel(expected, 139, 35) && !framePixel(expected, 132, 35));
+  assert(framePixel(expected, 150, 35) && !framePixel(expected, 143, 35));
 
   // The narrow vertical body stays on one axis. Only its one-pixel caps are
   // chamfered; the former approximation moved whole halves sideways.
@@ -401,12 +401,12 @@ void test_fixed_calculator_face() {
   writeGridLine(one, 1, 0, "1");
   Frame straight{};
   calculator_face::renderFrame(one, straight.data());
-  assert(framePixel(straight, 13, 25));
-  assert(framePixel(straight, 14, 25));
-  assert(framePixel(straight, 13, 29));
-  assert(framePixel(straight, 14, 29));
-  assert(!framePixel(straight, 12, 29));
-  assert(!framePixel(straight, 15, 29));
+  assert(framePixel(straight, 11, 25));
+  assert(framePixel(straight, 12, 25));
+  assert(framePixel(straight, 11, 29));
+  assert(framePixel(straight, 12, 29));
+  assert(!framePixel(straight, 10, 29));
+  assert(!framePixel(straight, 13, 29));
 
   text_screen::Grid without_dot;
   without_dot.reset(6);

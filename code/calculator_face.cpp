@@ -47,6 +47,15 @@ struct Indicator {
   bool leading_dot;
 };
 
+// Twelve physical positions use the whole 192-pixel glass.  A 16-pixel pitch
+// leaves five clear columns between 11-pixel digits, while the extra gap keeps
+// the two-digit exponent visually separate.  The last vertical segment ends
+// at x=190, retaining a one-pixel safety margin at the controller boundary.
+static constexpr i16 DIGIT_LEFT = 2;
+static constexpr i16 DIGIT_PITCH = 16;
+static constexpr i16 EXPONENT_FIRST_SLOT = 9;
+static constexpr i16 EXPONENT_GAP = 2;
+
 u8 segments(u16 token) {
   switch(token) {
     case '0': case 'O': return SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F;
@@ -181,13 +190,14 @@ void render(PageCanvas& canvas, const text_screen::Grid& grid) {
   drawService(canvas, grid);
   const Indicator indicator = readIndicator(grid);
   for(u8 slot = 0; slot < 12; ++slot) {
-    const i16 x = 4 + (i16) slot * 14 + (slot >= 9 ? 7 : 0);
+    const i16 x = DIGIT_LEFT + (i16) slot * DIGIT_PITCH +
+                  (slot >= EXPONENT_FIRST_SLOT ? EXPONENT_GAP : 0);
     drawDigit(canvas, x, indicator.cells[slot],
               (indicator.dots & ((u16) 1U << slot)) != 0);
   }
   if(indicator.leading_dot) {
-    canvas.pixel(2, 51); canvas.pixel(3, 51);
-    canvas.pixel(2, 52); canvas.pixel(3, 52);
+    canvas.pixel(0, 51); canvas.pixel(1, 51);
+    canvas.pixel(0, 52); canvas.pixel(1, 52);
   }
 }
 
