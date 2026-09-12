@@ -85,6 +85,7 @@ $script:State = [ordered]@{
     EnableMarkdown = 1
     EnableChip8 = 0
     EnableUsbScreen = 0
+    EnableUserApps = 0
     EnableFonts = 0
     EnableExplorer = 1
     EnableCoreMath = 0
@@ -292,6 +293,7 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "-DMK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "-DMK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
+        "-DMK61_ENABLE_USER_APPS=$($script:State.EnableUserApps)"
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "-DMK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "-DMK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
@@ -311,13 +313,14 @@ function Get-Checkbox {
 }
 
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP APP  {3} Markdown+WBMP  {4} CHIP-8  {5} USB  {6} шрифты  {7} USER  {8} CORE math' -f
+    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP APP  {3} Markdown+WBMP  {4} CHIP-8  {5} USB  {6} user APP  {7} шрифты  {8} USER  {9} CORE math' -f
         (Get-Checkbox $script:State.EnableFocal),
         (Get-Checkbox $script:State.EnableTinyBasic),
         (Get-Checkbox $script:State.EnableWbmp),
         (Get-Checkbox $script:State.EnableMarkdown),
         (Get-Checkbox $script:State.EnableChip8),
         (Get-Checkbox $script:State.EnableUsbScreen),
+        (Get-Checkbox $script:State.EnableUserApps),
         (Get-Checkbox $script:State.EnableFonts),
         (Get-Checkbox $script:State.EnableExplorer),
         (Get-Checkbox $script:State.EnableCoreMath))
@@ -336,6 +339,7 @@ function Get-CompileOptionsDetails {
         "$(Get-Checkbox $script:State.EnableMarkdown) Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
         "$(Get-Checkbox $script:State.EnableChip8) CHIP-8 (MK61_ENABLE_CHIP8)"
         "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
+        "$(Get-Checkbox $script:State.EnableUserApps) пользовательские APP (MK61_ENABLE_USER_APPS)"
         "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
         "$(Get-Checkbox $script:State.EnableExplorer) USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)"
         $mathText
@@ -369,6 +373,7 @@ function Save-Config {
         "MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "MK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
+        "MK61_ENABLE_USER_APPS=$($script:State.EnableUserApps)"
         "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "MK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
@@ -416,6 +421,7 @@ function Load-Config {
             'MK61_ENABLE_MARKDOWN_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableMarkdown = [int]$value } }
             'MK61_ENABLE_CHIP8' { if (Test-BooleanValue $value) { $script:State.EnableChip8 = [int]$value } }
             'MK61_ENABLE_USB_SCREEN' { if (Test-BooleanValue $value) { $script:State.EnableUsbScreen = [int]$value } }
+            'MK61_ENABLE_USER_APPS' { if (Test-BooleanValue $value) { $script:State.EnableUserApps = [int]$value } }
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
             'MK61_USER_EXPLORER_SHORTCUT' { if (Test-BooleanValue $value) { $script:State.EnableExplorer = [int]$value } }
             'MK61_MATH_BACKEND' { if (Test-BooleanValue $value) { $script:State.EnableCoreMath = [int]$value } }
@@ -986,6 +992,22 @@ function Invoke-NativeCapture {
     }
 }
 
+function Get-Python3Command {
+    $candidates = @(
+        [pscustomobject]@{ Executable = 'python3'; PrefixArguments = [string[]]@() }
+        [pscustomobject]@{ Executable = 'python'; PrefixArguments = [string[]]@() }
+        [pscustomobject]@{ Executable = 'py'; PrefixArguments = [string[]]@('-3') }
+    )
+    foreach ($candidate in $candidates) {
+        $arguments = @($candidate.PrefixArguments) + @('--version')
+        $result = Invoke-NativeCapture $candidate.Executable $arguments
+        if ($result.ExitCode -eq 0 -and $result.Output -match '(?m)^Python 3\.') {
+            return $candidate
+        }
+    }
+    return $null
+}
+
 function Get-LogPercent {
     param([string]$Path)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return -1 }
@@ -1163,6 +1185,7 @@ function Get-F401GccOptionArguments {
         '-Markdown', [string]$script:State.EnableMarkdown,
         '-Chip8', [string]$script:State.EnableChip8,
         '-UsbScreen', [string]$script:State.EnableUsbScreen,
+        '-UserApps', [string]$script:State.EnableUserApps,
         '-ExtendedFontSettings', [string]$script:State.EnableFonts,
         '-UserExplorer', [string]$script:State.EnableExplorer,
         '-MathBackend', [string]$script:State.EnableCoreMath)
@@ -1226,8 +1249,11 @@ function Test-BuildDependenciesReady {
         -not (Test-CustomAppsRequested)) {
         return Test-F401HostToolsReady
     }
+    $pythonReady = $script:State.Mcu -ne 'f411' -or
+        $script:State.EnableUserApps -eq 0 -or
+        $null -ne (Get-Python3Command)
     return (Test-ArduinoCoreReady) -and (Test-ArduinoLibrariesReady) -and
-        (Test-F401HostToolsReady)
+        (Test-F401HostToolsReady) -and $pythonReady
 }
 
 function Get-DependencyReport {
@@ -1271,6 +1297,15 @@ function Get-DependencyReport {
         } else {
             $lines.Add(
                 'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
+        }
+        if ($script:State.Mcu -eq 'f411' -and
+            $script:State.EnableUserApps -eq 1) {
+            $python = Get-Python3Command
+            if ($null -ne $python) {
+                $lines.Add("Python 3 (APP linker): $($python.Executable)")
+            } else {
+                $lines.Add('Python 3 (APP linker): НЕ НАЙДЕН')
+            }
         }
         if ($script:State.Mcu -eq 'f401' -and
             (Test-CustomAppsRequested)) {
@@ -1829,6 +1864,7 @@ function Choose-CompileOptions {
         [pscustomobject]@{ Tag = 'markdown'; Label = 'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER'; State = if ($script:State.EnableMarkdown) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'chip8'; Label = 'CHIP-8 · MK61_ENABLE_CHIP8'; State = if ($script:State.EnableChip8) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'usb_screen'; Label = 'USB-экран · MK61_ENABLE_USB_SCREEN'; State = if ($script:State.EnableUsbScreen) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'user_apps'; Label = 'Пользовательские APP · MK61_ENABLE_USER_APPS'; State = if ($script:State.EnableUserApps) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'fonts'; Label = 'Расширенные настройки шрифта'; State = if ($script:State.EnableFonts) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'explorer'; Label = 'Клавиша USER открывает Explorer'; State = if ($script:State.EnableExplorer) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'core_math'; Label = 'Математика CORE вместо libm'; State = if ($script:State.EnableCoreMath) { 'on' } else { 'off' } }
@@ -1842,6 +1878,7 @@ function Choose-CompileOptions {
     $script:State.EnableMarkdown = [int]($result.Values -contains 'markdown')
     $script:State.EnableChip8 = [int]($result.Values -contains 'chip8')
     $script:State.EnableUsbScreen = [int]($result.Values -contains 'usb_screen')
+    $script:State.EnableUserApps = [int]($result.Values -contains 'user_apps')
     $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
     $script:State.EnableExplorer = [int]($result.Values -contains 'explorer')
     $script:State.EnableCoreMath = [int]($result.Values -contains 'core_math')
@@ -1919,6 +1956,7 @@ function Invoke-F401CustomBundleBuild {
         MK61_ENABLE_MARKDOWN_VIEWER = [string]$script:State.EnableMarkdown
         MK61_ENABLE_CHIP8 = [string]$script:State.EnableChip8
         MK61_ENABLE_USB_SCREEN = [string]$script:State.EnableUsbScreen
+        MK61_ENABLE_USER_APPS = [string]$script:State.EnableUserApps
         MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
         MK61_USER_EXPLORER_SHORTCUT = [string]$script:State.EnableExplorer
         MK61_MATH_BACKEND = [string]$script:State.EnableCoreMath
@@ -2044,12 +2082,68 @@ function Build-Selected {
         return $false
     }
 
+    $residentLinkFlags = '-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
+    if ($script:State.EnableUserApps -eq 1) {
+        $python = Get-Python3Command
+        if ($null -eq $python) {
+            Write-LastLog 'Python 3 is required to prepare the F411 APP linker script.'
+            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+            else { Show-LastLogTail }
+            return $false
+        }
+        $propertiesBuild = Join-Path $buildDir 'properties-layout'
+        [void](New-Item -ItemType Directory -Force -Path $propertiesBuild)
+        $properties = Invoke-NativeCapture $script:ArduinoCli @(
+            'compile', '--fqbn', $script:FqbnF411,
+            '--build-path', $propertiesBuild,
+            '--show-properties=expanded', $sketchDir)
+        if ($properties.ExitCode -ne 0) {
+            Write-LastLog $properties.Output
+            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+            else { Show-LastLogTail }
+            return $false
+        }
+        $variantMatch = [regex]::Match(
+            $properties.Output, '(?m)^build\.variant\.path=(.+?)\r?$')
+        $linkerMatch = [regex]::Match(
+            $properties.Output, '(?m)^build\.ldscript=(.+?)\r?$')
+        if (-not $variantMatch.Success -or -not $linkerMatch.Success) {
+            Write-LastLog 'Cannot resolve the STM32F411 linker script from Arduino build properties.'
+            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+            else { Show-LastLogTail }
+            return $false
+        }
+        $sourceLinker = Join-Path $variantMatch.Groups[1].Value.Trim() `
+            $linkerMatch.Groups[1].Value.Trim()
+        if (-not (Test-Path -LiteralPath $sourceLinker -PathType Leaf)) {
+            Write-LastLog "STM32F411 linker script was not found: $sourceLinker"
+            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+            else { Show-LastLogTail }
+            return $false
+        }
+        $portableLinker = Join-Path $buildDir 'mk61-portable.ld'
+        $pythonArguments = [string[]](
+            @($python.PrefixArguments) +
+            @((Join-Path $script:ProjectRoot 'tools/.mk61-gcc/portable-layout.py'),
+              $sourceLinker, $portableLinker))
+        $layout = Invoke-NativeCapture $python.Executable $pythonArguments
+        if ($layout.ExitCode -ne 0 -or
+            -not (Test-Path -LiteralPath $portableLinker -PathType Leaf)) {
+            Write-LastLog $layout.Output
+            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+            else { Show-LastLogTail }
+            return $false
+        }
+        $linkerFlagPath = $portableLinker.Replace('\', '/')
+        $residentLinkFlags += " -Wl,--default-script=$linkerFlagPath"
+    }
+
     $arguments = @(
         'compile', '--fqbn', $script:FqbnF411,
         '--build-path', $buildDir,
         '--build-property', "compiler.cpp.extra_flags=$flags",
         '--build-property', "compiler.c.extra_flags=$script:PlatformRamFlags",
-        '--build-property', 'compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected',
+        '--build-property', "compiler.c.elf.extra_flags=$residentLinkFlags",
         $sketchDir)
     if (-not (Invoke-ExternalWithProgress 'Сборка прошивки' "Собираю $(Get-ProfileLabel $profile)" `
         $script:LastLog 'indeterminate' $script:ArduinoCli $arguments)) {
@@ -2435,6 +2529,7 @@ function Show-Config {
     [Console]::WriteLine("MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)")
     [Console]::WriteLine("MK61_ENABLE_CHIP8=$($script:State.EnableChip8)")
     [Console]::WriteLine("MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)")
+    [Console]::WriteLine("MK61_ENABLE_USER_APPS=$($script:State.EnableUserApps)")
     [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")
     [Console]::WriteLine("MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)")
     [Console]::WriteLine("MK61_MATH_BACKEND=$($script:State.EnableCoreMath)")

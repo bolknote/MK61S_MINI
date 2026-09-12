@@ -55,6 +55,7 @@ ENABLE_WBMP_VIEWER=0
 ENABLE_MARKDOWN_VIEWER=1
 ENABLE_CHIP8=0
 ENABLE_USB_SCREEN=0
+ENABLE_USER_APPS=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
 ENABLE_USER_EXPLORER=1
 ENABLE_CORE_MATH=0
@@ -1282,6 +1283,9 @@ load_config() {
       MK61_ENABLE_USB_SCREEN)
         boolean_valid "$value" && ENABLE_USB_SCREEN=$value
         ;;
+      MK61_ENABLE_USER_APPS)
+        boolean_valid "$value" && ENABLE_USER_APPS=$value
+        ;;
       MK61_ENABLE_EXTENDED_FONT_SETTINGS)
         boolean_valid "$value" && ENABLE_EXTENDED_FONT_SETTINGS=$value
         ;;
@@ -1329,6 +1333,7 @@ save_config() {
     printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
     printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
     printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
+    printf 'MK61_ENABLE_USER_APPS=%s\n' "$ENABLE_USER_APPS"
     printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
     printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
     printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
@@ -1371,6 +1376,7 @@ compile_option_flags() {
     " -DMK61_ENABLE_MARKDOWN_VIEWER=$ENABLE_MARKDOWN_VIEWER" \
     " -DMK61_ENABLE_CHIP8=$ENABLE_CHIP8" \
     " -DMK61_ENABLE_USB_SCREEN=$ENABLE_USB_SCREEN" \
+    " -DMK61_ENABLE_USER_APPS=$ENABLE_USER_APPS" \
     " -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ENABLE_EXTENDED_FONT_SETTINGS" \
     " -DMK61_USER_EXPLORER_SHORTCUT=$ENABLE_USER_EXPLORER" \
     " -DMK61_MATH_BACKEND=$ENABLE_CORE_MATH"
@@ -1384,13 +1390,14 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL  %s TinyBASIC  %s WBMP APP  %s Markdown+WBMP  %s CHIP-8  %s USB  %s шрифты  %s USER  %s CORE math' \
+  printf '%s FOCAL  %s TinyBASIC  %s WBMP APP  %s Markdown+WBMP  %s CHIP-8  %s USB  %s user APP  %s шрифты  %s USER  %s CORE math' \
     "$(checkbox_marker "$ENABLE_FOCAL")" \
     "$(checkbox_marker "$ENABLE_TINYBASIC")" \
     "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")" \
     "$(checkbox_marker "$ENABLE_CHIP8")" \
     "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
+    "$(checkbox_marker "$ENABLE_USER_APPS")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")" \
     "$(checkbox_marker "$ENABLE_CORE_MATH")"
@@ -1405,6 +1412,8 @@ compile_options_details() {
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")"
   printf '%s CHIP-8 (MK61_ENABLE_CHIP8)\n' "$(checkbox_marker "$ENABLE_CHIP8")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
+  printf '%s пользовательские APP (MK61_ENABLE_USER_APPS)\n' \
+    "$(checkbox_marker "$ENABLE_USER_APPS")"
   printf '%s расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)\n' \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
   printf '%s USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)\n' \
@@ -1430,6 +1439,7 @@ show_config() {
   printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
   printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
   printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
+  printf 'MK61_ENABLE_USER_APPS=%s\n' "$ENABLE_USER_APPS"
   printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
   printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
   printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
@@ -1521,6 +1531,7 @@ choose_compile_options() {
     markdown   'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER' "$(option_state "$ENABLE_MARKDOWN_VIEWER")" \
     chip8      'CHIP-8 · MK61_ENABLE_CHIP8' "$(option_state "$ENABLE_CHIP8")" \
     usb_screen 'USB-экран · MK61_ENABLE_USB_SCREEN' "$(option_state "$ENABLE_USB_SCREEN")" \
+    user_apps  'Пользовательские APP · MK61_ENABLE_USER_APPS' "$(option_state "$ENABLE_USER_APPS")" \
     fonts      'Расширенные настройки шрифта' "$(option_state "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     explorer   'Клавиша USER открывает Explorer' "$(option_state "$ENABLE_USER_EXPLORER")" \
     core_math  'Математика CORE вместо libm' "$(option_state "$ENABLE_CORE_MATH")") || return 1
@@ -1531,6 +1542,7 @@ choose_compile_options() {
   ENABLE_MARKDOWN_VIEWER=0
   ENABLE_CHIP8=0
   ENABLE_USB_SCREEN=0
+  ENABLE_USER_APPS=0
   ENABLE_EXTENDED_FONT_SETTINGS=0
   ENABLE_USER_EXPLORER=0
   ENABLE_CORE_MATH=0
@@ -1542,6 +1554,7 @@ choose_compile_options() {
       markdown) ENABLE_MARKDOWN_VIEWER=1 ;;
       chip8) ENABLE_CHIP8=1 ;;
       usb_screen) ENABLE_USB_SCREEN=1 ;;
+      user_apps) ENABLE_USER_APPS=1 ;;
       fonts) ENABLE_EXTENDED_FONT_SETTINGS=1 ;;
       explorer) ENABLE_USER_EXPLORER=1 ;;
       core_math) ENABLE_CORE_MATH=1 ;;
@@ -1580,6 +1593,7 @@ f401_gcc_arguments() {
     -Markdown "$ENABLE_MARKDOWN_VIEWER" \
     -Chip8 "$ENABLE_CHIP8" \
     -UsbScreen "$ENABLE_USB_SCREEN" \
+    -UserApps "$ENABLE_USER_APPS" \
     -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
     -UserExplorer "$ENABLE_USER_EXPLORER" \
     -MathBackend "$ENABLE_CORE_MATH"
@@ -1610,7 +1624,9 @@ build_dependencies_ready() {
     f401_host_tools_ready
     return
   fi
-  arduino_core_ready && arduino_libraries_ready && f401_host_tools_ready
+  arduino_core_ready && arduino_libraries_ready && f401_host_tools_ready && \
+    { [ "$MCU" != f411 ] || [ "$ENABLE_USER_APPS" -eq 0 ] || \
+      command_available python3; }
 }
 
 dependency_report() {
@@ -1636,6 +1652,13 @@ dependency_report() {
       printf 'LiquidCrystal: 1.0.7\nSTM32duino RTC: 1.9.0\n'
     else
       printf 'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0\n'
+    fi
+    if [ "$MCU" = f411 ] && [ "$ENABLE_USER_APPS" -eq 1 ]; then
+      if command_available python3; then
+        printf 'Python 3 (APP linker): %s\n' "$(command -v python3)"
+      else
+        printf 'Python 3 (APP linker): НЕ НАЙДЕН\n'
+      fi
     fi
     if [ "$MCU" = f401 ]; then
       if [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ]; then
@@ -1899,7 +1922,7 @@ detect_device() {
 prepare_and_compile_f411_worker() {
   local profile=$1
   local sketch_dir="$BUILD_ROOT/sketch/$profile/mk61s-M"
-  local build_dir flags signature artifact source_artifact
+  local build_dir flags signature artifact source_artifact resident_link_flags
   flags=$(all_compile_flags "$profile") || return 1
   signature=$(printf '%s\n' "$flags" | cksum | awk '{print $1}')
   build_dir="$BUILD_ROOT/build/$profile-$signature"
@@ -1909,12 +1932,35 @@ prepare_and_compile_f411_worker() {
   mkdir -p "$sketch_dir" "$build_dir" "$OUTPUT_DIR" || return 1
   cp -R "$PROJECT_ROOT/code/." "$sketch_dir/" || return 1
 
+  resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
+  if [ "$ENABLE_USER_APPS" -eq 1 ]; then
+    local layout_properties variant_path ld_name portable_linker
+    layout_properties=$("$ARDUINO_CLI" compile \
+      --fqbn "$FQBN_F411" \
+      --build-path "$build_dir/properties-layout" \
+      --show-properties=expanded \
+      "$sketch_dir") || return 1
+    variant_path=$(printf '%s\n' "$layout_properties" | \
+      sed -n 's/^build\.variant\.path=//p' | tr -d '\r')
+    ld_name=$(printf '%s\n' "$layout_properties" | \
+      sed -n 's/^build\.ldscript=//p' | tr -d '\r')
+    [ -n "$variant_path" ] && [ -n "$ld_name" ] && \
+      [ -f "$variant_path/$ld_name" ] || {
+        printf 'Cannot resolve the STM32F411 linker script from Arduino build properties.\n' >&2
+        return 1
+      }
+    portable_linker="$build_dir/mk61-portable.ld"
+    python3 "$PROJECT_ROOT/tools/.mk61-gcc/portable-layout.py" \
+      "$variant_path/$ld_name" "$portable_linker" || return 1
+    resident_link_flags="$resident_link_flags -Wl,--default-script=$portable_linker"
+  fi
+
   "$ARDUINO_CLI" compile \
     --fqbn "$FQBN_F411" \
     --build-path "$build_dir" \
     --build-property "compiler.cpp.extra_flags=$flags" \
     --build-property "compiler.c.extra_flags=$PLATFORM_RAM_FLAGS" \
-    --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected" \
+    --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
     "$sketch_dir" || return 1
 
   source_artifact="$build_dir/mk61s-M.ino.bin"
@@ -1952,6 +1998,7 @@ prepare_and_compile_f401_worker() {
     MK61_ENABLE_MARKDOWN_VIEWER="$ENABLE_MARKDOWN_VIEWER" \
     MK61_ENABLE_CHIP8="$ENABLE_CHIP8" \
     MK61_ENABLE_USB_SCREEN="$ENABLE_USB_SCREEN" \
+    MK61_ENABLE_USER_APPS="$ENABLE_USER_APPS" \
     MK61_ENABLE_EXTENDED_FONT_SETTINGS="$ENABLE_EXTENDED_FONT_SETTINGS" \
     MK61_USER_EXPLORER_SHORTCUT="$ENABLE_USER_EXPLORER" \
     MK61_MATH_BACKEND="$ENABLE_CORE_MATH" \

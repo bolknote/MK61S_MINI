@@ -66,6 +66,7 @@ jobs:
             'MK61_ENABLE_MARKDOWN_VIEWER=1',
             'MK61_ENABLE_CHIP8=1',
             'MK61_ENABLE_USB_SCREEN=1',
+            'MK61_ENABLE_USER_APPS=0',
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0',
             'MK61_USER_EXPLORER_SHORTCUT=1',
             'MK61_MATH_BACKEND=1'
@@ -150,6 +151,7 @@ jobs:
           foreach ($required in @(
             '-DMK61_MATH_BACKEND=1',
             '-DMK61_ENABLE_LTO=1',
+            '-DMK61_ENABLE_USER_APPS=0',
             '-DMK61_ENABLE_WBMP_VIEWER=0'
           )) {
             if (-not $flags.Contains($required)) {

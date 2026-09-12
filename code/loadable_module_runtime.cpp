@@ -318,7 +318,7 @@ bool enabled(Kind kind) {
     case Kind::CHIP8: return MK61_CHIP8_IS_LOADABLE != 0;
     case Kind::MARKDOWN_VIEWER:
       return MK61_MARKDOWN_VIEWER_IS_LOADABLE != 0;
-    case Kind::APPLICATION: return MK61_ENABLE_LOADABLE_MODULES != 0;
+    case Kind::APPLICATION: return MK61_ENABLE_USER_APPS != 0;
   }
   return false;
 }
@@ -403,6 +403,7 @@ bool find_file_handler(u16 type_magic, FileHandler& handler) {
     }
   }
 
+#if MK61_ENABLE_USER_APPS
   const int count = program_store::count(program_store::ProgramType::APP);
   bool found = false;
   for(int index = 0; index < count; index++) {
@@ -421,6 +422,9 @@ bool find_file_handler(u16 type_magic, FileHandler& handler) {
     found = true;
   }
   return found;
+#else
+  return false;
+#endif
 }
 
 RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result) {

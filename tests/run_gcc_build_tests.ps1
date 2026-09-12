@@ -97,6 +97,8 @@ Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
 Assert-True ($helpText -match '-Ws0010Graphics 0\|1') `
     'help does not expose isolated WS0010 graphics qualification'
+Assert-True ($helpText -match '-UserApps 0\|1.+default 0') `
+    'help does not expose opt-in user APP execution'
 
 $invalid = Invoke-Backend @(
     '-Profile', 'mini-v3-a00',
@@ -170,6 +172,8 @@ foreach ($section in @('_mk61_data', '_mk61_bss', '_mk61_noinit')) {
 }
 Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
     'CMake build does not forward the Markdown selection'
+Assert-True ($cmakeText -match 'MK61_ENABLE_USER_APPS') `
+    'CMake build does not forward the user APP selection'
 Assert-True ($cmakeText -match 'MK61_WS0010_GRAPHICS_100X16') `
     'CMake build does not forward WS0010 graphics qualification'
 Assert-True ($cmakeText -match
@@ -191,9 +195,21 @@ Assert-True ($firmwareMainText -match '#include "mk61s-M\.ino"') `
 Assert-True ($firmwarePowerShellText -match
     'Invoke-F401GccBundleBuild') `
     'PowerShell firmware frontend does not use the direct GCC backend'
+Assert-True ($firmwarePowerShellText -match
+    "'-UserApps', \[string\]\`$script:State\.EnableUserApps") `
+    'PowerShell firmware frontend does not forward the user APP selection'
+Assert-True ($firmwarePowerShellText -match
+    'portable-layout\.py[\s\S]+--default-script=') `
+    'PowerShell F411 frontend does not prepare the portable APP linker'
 Assert-True ($firmwareShellText -match
     'tools/build-gcc\.cmd[\s\S]+-BuildRoot') `
     'macOS/Linux firmware frontend does not use the direct GCC backend'
+Assert-True ($firmwareShellText -match
+    '-UserApps "\$ENABLE_USER_APPS"') `
+    'macOS/Linux firmware frontend does not forward the user APP selection'
+Assert-True ($firmwareShellText -match
+    'portable-layout\.py[\s\S]+--default-script=') `
+    'macOS/Linux F411 frontend does not prepare the portable APP linker'
 Assert-True ($releaseWorkflowText -match
     'tests/run_f401_release_matrix\.sh') `
     'release workflow does not use the repository-owned F401 matrix'
@@ -210,6 +226,7 @@ foreach ($setting in @(
     'MK61_ENABLE_MARKDOWN_VIEWER=1',
     'MK61_ENABLE_CHIP8=1',
     'MK61_ENABLE_USB_SCREEN=1',
+    'MK61_ENABLE_USER_APPS=0',
     'MK61_MATH_BACKEND=1',
     'System/FOCAL.APP',
     'System/BASIC.APP',

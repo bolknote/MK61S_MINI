@@ -88,6 +88,7 @@ try {
         'MK61_ENABLE_MARKDOWN_VIEWER=1'
         'MK61_ENABLE_CHIP8=0'
         'MK61_ENABLE_USB_SCREEN=0'
+        'MK61_ENABLE_USER_APPS=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1'
         'MK61_USER_EXPLORER_SHORTCUT=0'
         'MK61_MATH_BACKEND=1'
@@ -106,6 +107,7 @@ try {
     Assert-True ($configText -match '(?m)^MK61_ENABLE_MARKDOWN_VIEWER=1$') 'Markdown flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_CHIP8=0$') 'CHIP-8 flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_USB_SCREEN=0$') 'USB Screen flag was not preserved'
+    Assert-True ($configText -match '(?m)^MK61_ENABLE_USER_APPS=1$') 'user APP flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$') 'font flag was not preserved'
     Assert-True ($configText -match 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1') 'compile flags differ'
     Assert-True ($configText -match 'HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0') 'platform RAM flags differ'
@@ -139,6 +141,7 @@ try {
         'MK61_ENABLE_MARKDOWN_VIEWER=1'
         'MK61_ENABLE_CHIP8=1'
         'MK61_ENABLE_USB_SCREEN=1'
+        'MK61_ENABLE_USER_APPS=0'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
         'MK61_USER_EXPLORER_SHORTCUT=1'
         'MK61_MATH_BACKEND=0'
@@ -198,6 +201,7 @@ try {
         'MK61_ENABLE_MARKDOWN_VIEWER=0'
         'MK61_ENABLE_CHIP8=0'
         'MK61_ENABLE_USB_SCREEN=0'
+        'MK61_ENABLE_USER_APPS=0'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
         'MK61_USER_EXPLORER_SHORTCUT=1'
         'MK61_MATH_BACKEND=0'
@@ -237,6 +241,7 @@ try {
     Assert-True ($script:State.EnableUsbScreen -eq 0) 'USB Screen must be disabled by default'
     Assert-True ($script:State.EnableMarkdown -eq 1) 'Markdown must be enabled by default'
     Assert-True ($script:State.EnableChip8 -eq 0) 'CHIP-8 must be disabled by default'
+    Assert-True ($script:State.EnableUserApps -eq 0) 'user APP runtime must be disabled by default'
     Assert-True ($script:State.Mcu -eq 'f411') 'F411 must be the default MCU'
     Assert-True ((Get-ProfileArtifactName 'mini-v3-a00' 'f401') -eq 'mk61s-M-mini-v3-lcd1602-a00-f401.bin') 'F401 artifact name differs'
     Assert-True ($script:TextWidth -ge 74) 'default TUI is too narrow for the compile-option summary'
@@ -248,6 +253,7 @@ try {
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_MARKDOWN_VIEWER') 'Markdown is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_CHIP8') 'CHIP-8 is missing from Windows option details'
+    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USER_APPS') 'user APP runtime is missing from Windows option details'
     $script:State.EnableWbmp = 1
     $script:State.EnableMarkdown = 1
     Normalize-ViewerSelection

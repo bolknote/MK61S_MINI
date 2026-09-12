@@ -53,7 +53,7 @@ class HelpTest(unittest.TestCase):
 #include <string>
 #include <vector>
 using u8=uint8_t; using u16=uint16_t; using usize=size_t;
-#define MK61_ENABLE_PORTABLE_APPS 1
+#define MK61_SETUP_IS_LOADABLE 1
 static std::vector<std::string> files;
 static bool busy=false, fail_body=false;
 struct Output {

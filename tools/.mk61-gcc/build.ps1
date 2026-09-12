@@ -38,6 +38,9 @@ param(
     [string]$MathBackend = '0',
 
     [ValidateSet('0', '1')]
+    [string]$UserApps = '0',
+
+    [ValidateSet('0', '1')]
     [string]$PortableApps = '1',
 
     [ValidateSet('0', '1')]
@@ -94,6 +97,7 @@ Firmware options:
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1
+  -UserApps 0|1     run user-supplied APP files; default 0
   -PortableApps 0|1 standalone APP ABI 4; default 1 (0: legacy ABI 2)
   -Lto 0|1          default 1
 
@@ -383,6 +387,11 @@ try {
         $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
     if ($null -ne $releaseCaseInfo) {
+        if ($UserApps -ne '0') {
+            Stop-GccBuild (
+                'release-contract cases require -UserApps 0; build an ' +
+                'uncontracted developer bundle to enable user APP execution')
+        }
         $actualFeatures = @{
             focal = $Focal
             basic = $Basic
@@ -572,6 +581,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
+        "-DMK61_ENABLE_USER_APPS=$UserApps",
         "-DMK61_ENABLE_PORTABLE_APPS=$PortableApps",
         '-DMK61_REQUIRE_RESIDENT_CRC=1',
         "-DMK61_ENABLE_LTO=$Lto",
@@ -696,6 +706,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
+    $flagValues.Add("-DMK61_ENABLE_USER_APPS=$UserApps")
     $flagValues.Add("-DMK61_ENABLE_PORTABLE_APPS=$PortableApps")
     $flagValues.Add('-DMK61_PORTABLE_UI_FONTS=0')
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')

@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "rust_types.h"
+#include "portable_app_config.h"
 
 //#define DEBUG_CORE61        // Полная отладочная информация по ядру mk61s (почти не слушает клавиатуру)
 //#define DEBUG_TRACE         // Отладочная трассировочная информация по значению
@@ -307,10 +308,11 @@
 // F401CC вмещает основную прошивку, но почти не оставляет запаса во внутренней
 // Flash для всех необязательных рантаймов. Поэтому его штатный профиль хранит
 // включённые FOCAL, TinyBASIC и просмотрщики как загружаемые APP в C5.
-// Остальные контроллеры сохраняют прежнюю встроенную компоновку. Явный ключ
-// -DMK61_ENABLE_LOADABLE_MODULES=0/1 всегда имеет приоритет над профилем платы.
+// На остальных контроллерах загрузчик появляется только по явному разрешению
+// пользовательских APP, но системные компоненты остаются встроенными.
+// -DMK61_ENABLE_LOADABLE_MODULES=0/1 всегда имеет приоритет над этим выбором.
 #ifndef MK61_ENABLE_LOADABLE_MODULES
-  #if defined(ARDUINO_BLACKPILL_F401CC)
+  #if defined(ARDUINO_BLACKPILL_F401CC) || MK61_ENABLE_USER_APPS
     #define MK61_ENABLE_LOADABLE_MODULES 1
   #else
     #define MK61_ENABLE_LOADABLE_MODULES 0
@@ -320,35 +322,56 @@
   #error "MK61_ENABLE_LOADABLE_MODULES must be 0 or 1"
 #endif
 
+// Системные APP и пользовательский APP runtime — независимые возможности.
+// Только F401 выносит штатные компоненты наружу по умолчанию; явный override
+// сохранён для лабораторных и совместимых legacy-сборок.
+#ifndef MK61_EXTERNALIZE_SYSTEM_APPS
+  #if defined(ARDUINO_BLACKPILL_F401CC) && MK61_ENABLE_LOADABLE_MODULES
+    #define MK61_EXTERNALIZE_SYSTEM_APPS 1
+  #else
+    #define MK61_EXTERNALIZE_SYSTEM_APPS 0
+  #endif
+#endif
+#if MK61_EXTERNALIZE_SYSTEM_APPS != 0 && MK61_EXTERNALIZE_SYSTEM_APPS != 1
+  #error "MK61_EXTERNALIZE_SYSTEM_APPS must be 0 or 1"
+#endif
+#if MK61_ENABLE_USER_APPS && !MK61_ENABLE_LOADABLE_MODULES
+  #error "MK61_ENABLE_USER_APPS requires MK61_ENABLE_LOADABLE_MODULES"
+#endif
+#if MK61_EXTERNALIZE_SYSTEM_APPS && !MK61_ENABLE_LOADABLE_MODULES
+  #error "MK61_EXTERNALIZE_SYSTEM_APPS requires MK61_ENABLE_LOADABLE_MODULES"
+#endif
+
 // Ключ каждого системного компонента остаётся главным: выключенный компонент
 // не получает ни встроенной реализации, ни APP-артефакта.
-// Сам MK61_ENABLE_LOADABLE_MODULES включает общий загрузчик пользовательских
-// APP и единый SRAM-overlay даже тогда, когда все системные APP выключены.
+// MK61_ENABLE_LOADABLE_MODULES означает наличие общего загрузчика и SRAM
+// overlay; запуск обычных APP отдельно контролирует MK61_ENABLE_USER_APPS.
 #define MK61_FOCAL_IS_LOADABLE \
-  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_FOCAL)
+  (MK61_EXTERNALIZE_SYSTEM_APPS && MK61_ENABLE_FOCAL)
 #define MK61_TINYBASIC_IS_LOADABLE \
-  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_TINYBASIC)
+  (MK61_EXTERNALIZE_SYSTEM_APPS && MK61_ENABLE_TINYBASIC)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
-  (MK61_ENABLE_LOADABLE_MODULES && \
+  (MK61_EXTERNALIZE_SYSTEM_APPS && \
    MK61_STANDALONE_WBMP_VIEWER_ENABLED)
 #define MK61_MARKDOWN_VIEWER_IS_LOADABLE \
-  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_MARKDOWN_VIEWER)
+  (MK61_EXTERNALIZE_SYSTEM_APPS && MK61_ENABLE_MARKDOWN_VIEWER)
 #define MK61_CHIP8_IS_LOADABLE \
-  (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_CHIP8)
-#define MK61_SETUP_IS_LOADABLE (MK61_ENABLE_LOADABLE_MODULES && MK61_ENABLE_PORTABLE_APPS)
+  (MK61_EXTERNALIZE_SYSTEM_APPS && MK61_ENABLE_CHIP8)
+#define MK61_SETUP_IS_LOADABLE \
+  (MK61_EXTERNALIZE_SYSTEM_APPS && MK61_ENABLE_PORTABLE_APPS)
 #define MK61_ANY_LOADABLE_MODULE (MK61_ENABLE_LOADABLE_MODULES)
 
 #define MK61_FOCAL_IS_BUILTIN \
-  (MK61_ENABLE_FOCAL && !MK61_ENABLE_LOADABLE_MODULES)
+  (MK61_ENABLE_FOCAL && !MK61_EXTERNALIZE_SYSTEM_APPS)
 #define MK61_TINYBASIC_IS_BUILTIN \
-  (MK61_ENABLE_TINYBASIC && !MK61_ENABLE_LOADABLE_MODULES)
+  (MK61_ENABLE_TINYBASIC && !MK61_EXTERNALIZE_SYSTEM_APPS)
 #define MK61_WBMP_VIEWER_IS_BUILTIN \
   (MK61_STANDALONE_WBMP_VIEWER_ENABLED && \
-   !MK61_ENABLE_LOADABLE_MODULES)
+   !MK61_EXTERNALIZE_SYSTEM_APPS)
 #define MK61_MARKDOWN_VIEWER_IS_BUILTIN \
-  (MK61_ENABLE_MARKDOWN_VIEWER && !MK61_ENABLE_LOADABLE_MODULES)
+  (MK61_ENABLE_MARKDOWN_VIEWER && !MK61_EXTERNALIZE_SYSTEM_APPS)
 #define MK61_CHIP8_IS_BUILTIN \
-  (MK61_ENABLE_CHIP8 && !MK61_ENABLE_LOADABLE_MODULES)
+  (MK61_ENABLE_CHIP8 && !MK61_EXTERNALIZE_SYSTEM_APPS)
 
 // Графический Markdown владеет полным I1-viewer и WBMP-декодером: он показывает
 // как локальные блоки изображений, так и самостоятельные .wbmp. Это правило
@@ -359,7 +382,6 @@
 #define MK61_WBMP_DECODER_IS_BUILTIN \
   (MK61_IMAGE1_VIEWER_IS_BUILTIN)
 
-#include "portable_app_config.h"
 #define MK61_ANY_FULLSCREEN_FILE \
   (MK61_STANDALONE_WBMP_VIEWER_ENABLED || MK61_ENABLE_CHIP8 || \
    MK61_MARKDOWN_USES_WBMP || MK61_ENABLE_PORTABLE_APPS)

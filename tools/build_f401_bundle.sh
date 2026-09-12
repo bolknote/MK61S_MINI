@@ -21,6 +21,7 @@ enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
 math_backend=${MK61_MATH_BACKEND:-0}
+enable_user_apps=${MK61_ENABLE_USER_APPS:-0}
 portable_apps=${MK61_ENABLE_PORTABLE_APPS:-1}
 check_app_manifests=0
 app_manifests=()
@@ -57,7 +58,8 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_FOCAL, MK61_ENABLE_TINYBASIC, MK61_ENABLE_WBMP_VIEWER,
   MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
-  MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND, MK61_ENABLE_PORTABLE_APPS
+  MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND, MK61_ENABLE_USER_APPS,
+  MK61_ENABLE_PORTABLE_APPS
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
   MK61_ENABLE_MARKDOWN_VIEWER=0.
 
@@ -66,7 +68,8 @@ Other overrides:
   MK61_APP_MANIFESTS (colon-separated manifest paths)
 
 Portable ABI 4 is the default. Manifest APPs require
-MK61_ENABLE_PORTABLE_APPS=0; use tools/build_portable_app.py for new C APPs.
+MK61_ENABLE_USER_APPS=1 and MK61_ENABLE_PORTABLE_APPS=0; use
+tools/build_portable_app.py for new C APPs.
 EOF
 }
 
@@ -405,7 +408,8 @@ fi
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$enable_markdown" "$enable_chip8" \
              "$enable_usb_screen" "$enable_extended_font" \
-             "$enable_user_explorer" "$math_backend" "$portable_apps"; do
+             "$enable_user_explorer" "$math_backend" \
+             "$enable_user_apps" "$portable_apps"; do
   boolean_valid "$value" || {
     printf 'Error: all MK61 feature values must be 0 or 1.\n' >&2
     exit 2
@@ -428,9 +432,13 @@ if [ "$custom_app_count" -gt 0 ] && [ "$portable_apps" -eq 1 ]; then
   printf 'Error: manifest APPs use ABI 2; set MK61_ENABLE_PORTABLE_APPS=0 or rebuild with tools/build_portable_app.py for ABI 4.\n' >&2
   exit 2
 fi
+if [ "$custom_app_count" -gt 0 ] && [ "$enable_user_apps" -ne 1 ]; then
+  printf 'Error: manifest APPs require MK61_ENABLE_USER_APPS=1.\n' >&2
+  exit 2
+fi
 any_module=$((portable_apps | enable_focal | enable_tinybasic | enable_wbmp |
               enable_markdown | enable_chip8 |
-              (custom_app_count > 0)))
+              enable_user_apps | (custom_app_count > 0)))
 
 resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
 if [ "$any_module" -eq 1 ] && { [ "$portable_apps" -eq 0 ] || [ "$custom_app_count" -gt 0 ]; }; then
@@ -465,6 +473,7 @@ compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
+compile_flags="$compile_flags -DMK61_ENABLE_USER_APPS=$enable_user_apps"
 compile_flags="$compile_flags -DMK61_REQUIRE_RESIDENT_CRC=1"
 compile_flags="$compile_flags $platform_ram_flags"
 

@@ -18,7 +18,8 @@ static constexpr usize APP_MAX_SIZE = 20U * 1024U;
 // ABI 4 uses the free linker range, shared with the C heap and staging.
 // Only the explicit legacy build retains a fixed-address APP window.
 #define MK61_SHARED_MEMORY_DYNAMIC MK61_ENABLE_PORTABLE_APPS
-#if (defined(MK61_ENABLE_LOADABLE_MODULES) && MK61_ENABLE_LOADABLE_MODULES) || \
+#if MK61_ENABLE_USER_APPS || \
+    (defined(MK61_ENABLE_LOADABLE_MODULES) && MK61_ENABLE_LOADABLE_MODULES) || \
     (!defined(MK61_ENABLE_LOADABLE_MODULES) && defined(ARDUINO_BLACKPILL_F401CC))
   #define MK61_SHARED_MEMORY_APP_ENABLED 1
 #else

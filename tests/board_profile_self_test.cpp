@@ -68,9 +68,35 @@ int main(void) {
                 "an unqualified WS0010 profile became production graphics");
 #endif
 
-#if defined(MK61_CONFIG_EXPECT_LOADABLE_MODULES)
+#if defined(MK61_CONFIG_EXPECT_USER_APPS)
+  static_assert(MK61_ENABLE_USER_APPS == 1,
+                "the selected build must enable user APP execution");
+  static_assert(MK61_ENABLE_PORTABLE_APPS == 1,
+                "user APP builds must select the portable ABI by default");
+  static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
+                "user APP execution requires the module loader");
+  static_assert(MK61_EXTERNALIZE_SYSTEM_APPS == 0,
+                "non-F401 user APP builds must keep System components resident");
+  static_assert(MK61_FOCAL_IS_BUILTIN && MK61_TINYBASIC_IS_BUILTIN,
+                "user APP support must not externalize language runtimes");
+  static_assert(MK61_WBMP_VIEWER_IS_BUILTIN ==
+                    MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
+                MK61_MARKDOWN_VIEWER_IS_BUILTIN ==
+                    MK61_ENABLE_MARKDOWN_VIEWER &&
+                MK61_CHIP8_IS_BUILTIN == MK61_ENABLE_CHIP8,
+                "user APP support must not externalize resident viewers");
+  static_assert(!MK61_FOCAL_IS_LOADABLE && !MK61_TINYBASIC_IS_LOADABLE &&
+                !MK61_WBMP_VIEWER_IS_LOADABLE &&
+                !MK61_MARKDOWN_VIEWER_IS_LOADABLE &&
+                !MK61_CHIP8_IS_LOADABLE && !MK61_SETUP_IS_LOADABLE,
+                "non-F401 user APP builds must not emit System APP");
+#elif defined(MK61_CONFIG_EXPECT_LOADABLE_MODULES)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
                 "the F401CC profile must enable loadable modules");
+  static_assert(MK61_EXTERNALIZE_SYSTEM_APPS == 1,
+                "the F401CC profile must externalize System components");
+  static_assert(MK61_ENABLE_USER_APPS == 0,
+                "user APP execution must remain opt-in on F401");
   static_assert(MK61_FOCAL_IS_LOADABLE && MK61_TINYBASIC_IS_LOADABLE,
                 "enabled language runtimes must become modules");
   static_assert(MK61_WBMP_VIEWER_IS_LOADABLE ==
@@ -84,16 +110,24 @@ int main(void) {
 #elif defined(MK61_CONFIG_EXPECT_NO_MODULE_ARTIFACTS)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 1,
                 "this case tests an enabled module framework");
+  static_assert(MK61_EXTERNALIZE_SYSTEM_APPS == 1,
+                "the F401 framework must retain System APP layout");
+  static_assert(MK61_ENABLE_USER_APPS == 0,
+                "an empty System APP set must not enable user APP execution");
   static_assert(!MK61_FOCAL_IS_LOADABLE && !MK61_TINYBASIC_IS_LOADABLE &&
                 !MK61_WBMP_VIEWER_IS_LOADABLE &&
                 !MK61_MARKDOWN_VIEWER_IS_LOADABLE &&
                 !MK61_CHIP8_IS_LOADABLE,
                 "disabled features must not leave system APP artifacts");
   static_assert(MK61_ANY_LOADABLE_MODULE,
-                "generic APP runtime must not depend on system APP keys");
+                "the F401 loader must not depend on System feature keys");
 #elif defined(MK61_CONFIG_EXPECT_MODULES_DISABLED)
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
                 "the explicit module override must win");
+  static_assert(MK61_EXTERNALIZE_SYSTEM_APPS == 0,
+                "System components cannot be external without the loader");
+  static_assert(MK61_ENABLE_USER_APPS == 0,
+                "user APP execution must remain opt-in");
   static_assert(MK61_FOCAL_IS_BUILTIN && MK61_TINYBASIC_IS_BUILTIN,
                 "enabled language features must stay built in");
   static_assert(MK61_WBMP_VIEWER_IS_BUILTIN ==
@@ -110,6 +144,18 @@ int main(void) {
 #else
   static_assert(MK61_ENABLE_LOADABLE_MODULES == 0,
                 "non-F401 profiles must keep modules disabled by default");
+  static_assert(MK61_EXTERNALIZE_SYSTEM_APPS == 0,
+                "non-F401 profiles must keep System components resident");
+  static_assert(MK61_ENABLE_USER_APPS == 0,
+                "user APP execution must be disabled by default");
+#endif
+#if defined(MK61_CONFIG_EXPECT_PORTABLE_SYSTEM_APPS)
+  static_assert(MK61_ENABLE_PORTABLE_APPS == 1,
+                "the selected F401 build must use portable System APP");
+  static_assert(MK61_SETUP_IS_LOADABLE == 1,
+                "portable external System APP must include SETUP");
+  static_assert(MK61_ENABLE_USER_APPS == 0,
+                "portable System APP must not imply user APP execution");
 #endif
   static_assert(PIN_SPIFLASH_CS == PA4,
                 "all supported mini revisions use SPI1 NSS on PA4");

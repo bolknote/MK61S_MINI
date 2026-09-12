@@ -53,6 +53,10 @@ grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
 grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
+grep -q -- '-DMK61_ENABLE_USER_APPS={build.mk61_user_apps}' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_user_apps.disabled.build.mk61_user_apps=0$' \
+  "$target/boards.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"

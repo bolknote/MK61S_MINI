@@ -69,6 +69,7 @@ printf '%s\n' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=0' \
   'MK61_ENABLE_USB_SCREEN=0' \
+  'MK61_ENABLE_USER_APPS=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1' \
   'MK61_USER_EXPLORER_SHORTCUT=0' \
   'MK61_MATH_BACKEND=1' > "$config_file"
@@ -152,9 +153,10 @@ grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' <<< "$config"
 grep -q '^MK61_ENABLE_CHIP8=0$' <<< "$config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
+grep -q '^MK61_ENABLE_USER_APPS=1$' <<< "$config"
 grep -q '^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$' <<< "$config"
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$config"
-grep -q -- 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_FOCAL=0 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1 .*HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0$' <<< "$config"
+grep -q -- 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_FOCAL=0 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_ENABLE_USER_APPS=1 .*MK61_MATH_BACKEND=1 .*HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0$' <<< "$config"
 grep -q '^PLATFORM=classic-v3$' "$config_file"
 grep -q '^SCREEN=uc1609$' "$config_file"
 grep -q '^MCU=f411$' "$config_file"
@@ -184,6 +186,7 @@ grep -q '^MK61_ENABLE_FOCAL=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_CHIP8=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' "$legacy_config"
+grep -q '^MK61_ENABLE_USER_APPS=0$' "$legacy_config"
 
 install_config="$installer_root/install.conf"
 install_output="$installer_root/output"
@@ -200,6 +203,7 @@ printf '%s\n' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=1' \
   'MK61_ENABLE_USB_SCREEN=1' \
+  'MK61_ENABLE_USER_APPS=0' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0' \
   'MK61_USER_EXPLORER_SHORTCUT=1' \
   'MK61_MATH_BACKEND=0' > "$install_config"

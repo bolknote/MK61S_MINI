@@ -108,6 +108,7 @@ PY
       for flag in \
           '-DMK61_REQUIRE_RESIDENT_CRC=1' \
           '-DMK61_PORTABLE_UI_FONTS=0' \
+          '-DMK61_ENABLE_USER_APPS=0' \
           "-DMK61_MATH_BACKEND=$math_backend" \
           "-DMK61_ENABLE_LTO=$lto"; do
         grep -Fq -- "$flag" "$bundle_root/build.flags" ||

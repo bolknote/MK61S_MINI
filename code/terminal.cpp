@@ -459,7 +459,7 @@ void class_terminal::editor_key(terminal_line_editor::Key key) {
     }
 
 void class_terminal::print_help(void) {
-#if MK61_ENABLE_PORTABLE_APPS
+#if MK61_SETUP_IS_LOADABLE
       program_store::Entry pages[2] = {};
       bool available = true;
       char path[] = "/System/HELP0.TXT";

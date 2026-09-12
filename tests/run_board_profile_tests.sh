@@ -35,7 +35,9 @@ clang++ -Os "${common[@]}" -DREVISION_V3 -DSTM32F401xC \
 "$out-f401-generic-core"
 
 clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
+  -DMK61_ENABLE_PORTABLE_APPS=1 \
   -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_LOADABLE_MODULES \
+  -DMK61_CONFIG_EXPECT_PORTABLE_SYSTEM_APPS \
   -o "$out-f401-modules"
 "$out-f401-modules"
 
@@ -58,6 +60,12 @@ clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
   -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_MODULES_DISABLED \
   -o "$out-f401-builtins"
 "$out-f401-builtins"
+
+clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_ENABLE_USER_APPS=1 \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_USER_APPS \
+  -o "$out-f411-user-apps"
+"$out-f411-user-apps"
 
 clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
   -DMK61_ENABLE_FOCAL=0 -DMK61_ENABLE_TINYBASIC=0 \
@@ -208,6 +216,34 @@ if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
     -DMK61_ENABLE_LOADABLE_MODULES=2 -o "$out-invalid-modules" \
     >/dev/null 2>&1; then
   echo "invalid loadable module flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_USER_APPS=2 -o "$out-invalid-user-apps" \
+    >/dev/null 2>&1; then
+  echo "invalid user APP flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_EXTERNALIZE_SYSTEM_APPS=2 -o "$out-invalid-system-apps" \
+    >/dev/null 2>&1; then
+  echo "invalid System APP externalization flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_USER_APPS=1 -DMK61_ENABLE_LOADABLE_MODULES=0 \
+    -o "$out-user-apps-without-loader" >/dev/null 2>&1; then
+  echo "user APP execution without the loader unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_EXTERNALIZE_SYSTEM_APPS=1 -DMK61_ENABLE_LOADABLE_MODULES=0 \
+    -o "$out-system-apps-without-loader" >/dev/null 2>&1; then
+  echo "System APP externalization without the loader unexpectedly compiled" >&2
   exit 1
 fi
 

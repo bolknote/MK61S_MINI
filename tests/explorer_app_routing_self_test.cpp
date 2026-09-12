@@ -45,7 +45,7 @@ int main() {
   using program_store::ProgramType;
 
   const Entry app = {NodeKind::FILE, ProgramType::APP};
-#if MK61_ANY_LOADABLE_MODULE
+#if MK61_ENABLE_USER_APPS
   assert(entry_can_run(app));
 #else
   assert(!entry_can_run(app));
