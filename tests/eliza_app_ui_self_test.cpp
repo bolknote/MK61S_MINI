@@ -46,10 +46,16 @@ static unsigned editor_draws;
 static unsigned graphics_begins;
 static unsigned graphics_ends;
 static bool expose_ui_font;
+static uint8_t conversation_memory[ELIZA_MEMORY_WORKSPACE_BYTES];
+static bool memory_active;
+static unsigned memory_acquires;
+static unsigned memory_releases;
 
 static uint32_t mock_millis(void) { return clock_ms++; }
 static void mock_service(void) {}
 static void mock_delay(uint32_t duration) { clock_ms += duration; }
+static uint32_t mock_display_columns(void) { return 16; }
+static uint32_t mock_display_rows(void) { return 6; }
 static uint32_t mock_display_clear(void) {
   display_lines.clear();
   return 1;
@@ -87,7 +93,31 @@ static uint32_t mock_call(uint32_t operation, uint32_t a, uint32_t b,
   (void) c;
   if(operation == MK61_SERVICE_CAPABILITIES) {
     return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_EDITOR |
+        MK61_SERVICE_CAP_MEMORY |
         (expose_ui_font ? MK61_SERVICE_CAP_UI_FONT : 0U);
+  }
+  if(operation == MK61_SERVICE_MEMORY_ACQUIRE) {
+    mk61_service_lease* lease = static_cast<mk61_service_lease*>(payload);
+    assert(a == MK61_SERVICE_WORKSPACE);
+    assert(b == MK61_SERVICE_OWNER_APP);
+    assert(c == sizeof(conversation_memory));
+    assert(!memory_active);
+    lease->data = conversation_memory;
+    lease->size = sizeof(conversation_memory);
+    memory_active = true;
+    ++memory_acquires;
+    return 1;
+  }
+  if(operation == MK61_SERVICE_MEMORY_RELEASE) {
+    mk61_service_lease* lease = static_cast<mk61_service_lease*>(payload);
+    assert(a == MK61_SERVICE_WORKSPACE);
+    assert(memory_active);
+    assert(lease->data == conversation_memory);
+    lease->data = NULL;
+    lease->size = 0;
+    memory_active = false;
+    ++memory_releases;
+    return 1;
   }
   if(operation == MK61_SERVICE_UI_FONT) {
     mk61_service_ui_glyph* glyph =
@@ -168,6 +198,16 @@ static void reset_mocks(void) {
   graphics_begins = 0;
   graphics_ends = 0;
   expose_ui_font = true;
+  memory_active = false;
+  memory_acquires = 0;
+  memory_releases = 0;
+}
+
+static const void* mock_query_service(uint32_t service_id,
+                                      uint32_t version) {
+  if(service_id != MK61_APP_SERVICE_COMMON ||
+     version != MK61_APP_SERVICES_VERSION) return NULL;
+  return &app_services;
 }
 
 static void push_digit(unsigned digit, unsigned taps) {
@@ -304,24 +344,48 @@ static void test_frame_clipping(void) {
   assert(help_frame[HELP_FRAME_BYTES - 1] == 0x80);
 }
 
+static void test_app_memory_lifecycle(void) {
+  reset_mocks();
+  input_keys = {MK61_APP_KEY_OK, MK61_APP_KEY_OK};
+  push_digit(8, 2);                 // B
+  push_digit(0, 1);
+  push_digit(3, 3);                 // Y
+  push_digit(0, 1);
+  push_digit(9, 2);                 // E
+  input_keys.push_back(app_keys.ok);
+  input_keys.push_back(MK61_APP_KEY_OK); // dismiss goodbye
+  assert(eliza_app_entry() == MK61_APP_OK);
+  assert(input_key_index == input_keys.size());
+  assert(memory_acquires == 1);
+  assert(memory_releases == 1);
+  assert(!memory_active);
+}
+
 int main(void) {
   app_api.millis_ms = mock_millis;
   app_api.service = mock_service;
   app_api.delay_ms = mock_delay;
+  app_api.display_columns = mock_display_columns;
+  app_api.display_rows = mock_display_rows;
   app_api.display_clear = mock_display_clear;
   app_api.display_write_utf8 = mock_display_write;
   app_api.key_wait = mock_key_wait;
   app_api.magic = MK61_APP_API_MAGIC;
   app_api.version = MK61_APP_API_VERSION;
   app_api.struct_size = sizeof(app_api);
-  app_api.capabilities = MK61_APP_CAP_GRAPHICS;
+  app_api.capabilities = MK61_APP_CAP_TIME | MK61_APP_CAP_TEXT_DISPLAY |
+      MK61_APP_CAP_KEYBOARD | MK61_APP_CAP_GRAPHICS;
   app_api.graphics_available = mock_graphics_available;
   app_api.graphics_width = mock_graphics_width;
   app_api.graphics_height = mock_graphics_height;
   app_api.graphics_begin = mock_graphics_begin;
   app_api.graphics_present = mock_graphics_present;
   app_api.graphics_end = mock_graphics_end;
+  app_api.query_service = mock_query_service;
   mk61_api = &app_api;
+  app_services.magic = MK61_APP_SERVICES_MAGIC;
+  app_services.version = MK61_APP_SERVICES_VERSION;
+  app_services.struct_size = sizeof(app_services);
   app_services.keyboard_mapping = &app_keys;
   app_services.call = mock_call;
 
@@ -332,6 +396,7 @@ int main(void) {
   test_pages_require_ok();
   test_graphic_help();
   test_frame_clipping();
+  test_app_memory_lifecycle();
   puts("eliza APP UI tests passed");
   return 0;
 }

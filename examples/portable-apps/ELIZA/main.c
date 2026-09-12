@@ -42,7 +42,10 @@ static const char goodbye[] =
   "GOODBYE. IT WAS NICE TALKING TO YOU.";
 
 static const char service_error[] =
-  "ELIZA NEEDS THE EDITOR SERVICE FROM THE CURRENT SYSTEM APP SET.";
+  "ELIZA NEEDS THE EDITOR AND MEMORY SERVICES FROM THE CURRENT SYSTEM APP SET.";
+
+static const char memory_error[] =
+  "ELIZA COULD NOT RESERVE ITS CONVERSATION MEMORY.";
 
 static void help_clear(void) {
   uint32_t index;
@@ -403,6 +406,7 @@ int main(void) {
   const uint32_t required = MK61_APP_CAP_TIME | MK61_APP_CAP_TEXT_DISPLAY |
                             MK61_APP_CAP_KEYBOARD;
   const mk61_app_services* services;
+  mk61_service_lease memory = {{0}, NULL, 0, 0, 0};
   uint32_t columns;
   uint32_t rows;
   eliza_state state;
@@ -418,13 +422,13 @@ int main(void) {
   if(columns > MK61_APP_MAX_TEXT_BYTES) columns = MK61_APP_MAX_TEXT_BYTES;
 
   services = mk61_app_get_services(mk61_api, MK61_SERVICE_CAP_UI |
-                                             MK61_SERVICE_CAP_EDITOR);
+                                             MK61_SERVICE_CAP_EDITOR |
+                                             MK61_SERVICE_CAP_MEMORY);
   if(services == NULL || services->keyboard_mapping == NULL) {
     show_pages(service_error, columns, rows);
     return MK61_APP_RUNTIME_ERROR;
   }
 
-  eliza_init(&state);
   intro = show_graphic_intro(services);
   if(intro == HELP_EXIT) return MK61_APP_OK;
   if(intro == HELP_UNAVAILABLE) {
@@ -432,13 +436,22 @@ int main(void) {
     if(!show_pages(control_help, columns, rows)) return MK61_APP_OK;
     if(!show_pages(greeting, columns, rows)) return MK61_APP_OK;
   }
+  if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE, MK61_SERVICE_WORKSPACE,
+                     MK61_SERVICE_OWNER_APP, ELIZA_MEMORY_WORKSPACE_BYTES,
+                     &memory)) {
+    show_pages(memory_error, columns, rows);
+    return MK61_APP_BUSY;
+  }
+  eliza_init(&state, memory.data, memory.size);
   while(read_sms_line(services, input, sizeof(input))) {
     if(eliza_is_goodbye(input)) {
       show_pages(goodbye, columns, rows);
-      return MK61_APP_OK;
+      break;
     }
     eliza_reply(&state, input, reply, sizeof(reply));
-    if(!show_pages(reply, columns, rows)) return MK61_APP_OK;
+    if(!show_pages(reply, columns, rows)) break;
   }
+  services->call(MK61_SERVICE_MEMORY_RELEASE, MK61_SERVICE_WORKSPACE,
+                 0, 0, &memory);
   return MK61_APP_OK;
 }

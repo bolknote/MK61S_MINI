@@ -26,8 +26,9 @@ static void expect_reply(eliza_state* state, const char* input,
 
 static void run_transcript(const struct exchange* transcript, size_t count) {
   eliza_state state;
+  uint8_t memory[ELIZA_MEMORY_WORKSPACE_BYTES];
   size_t index;
-  eliza_init(&state);
+  eliza_init(&state, memory, sizeof(memory));
   for(index = 0; index < count; ++index)
     expect_reply(&state, transcript[index].prompt, transcript[index].response);
 }
@@ -246,35 +247,72 @@ static void test_rotation(void) {
   run_transcript(transcript, sizeof(transcript) / sizeof(transcript[0]));
 }
 
-static void test_memory_fifo_capacity(void) {
+static void test_memory_fifo_arena(void) {
+  enum { MEMORY_COUNT = 256 };
   eliza_state state;
+  uint8_t memory[ELIZA_MEMORY_WORKSPACE_BYTES];
   char input[ELIZA_INPUT_BYTES];
   char expected[ELIZA_REPLY_BYTES];
   char output[ELIZA_REPLY_BYTES];
   unsigned index;
-  eliza_init(&state);
+  eliza_init(&state, memory, sizeof(memory));
 
-  for(index = 0; index < ELIZA_MEMORY_SLOTS; ++index) {
+  for(index = 0; index < MEMORY_COUNT; ++index) {
     snprintf(input, sizeof(input), "MY MEMORY NUMBER %u ENDS HERE", index);
     eliza_reply(&state, input, output, sizeof(output));
   }
-  assert(state.memory_count == ELIZA_MEMORY_SLOTS);
+  assert(state.memory_used != 0);
 
-  for(index = 0; index < ELIZA_MEMORY_SLOTS; ++index) {
-    const uint8_t before = state.memory_count;
+  for(index = 0; index < MEMORY_COUNT; ++index) {
+    const size_t before = state.memory_used;
+    unsigned attempts = 0;
+    assert(before != 0);
     do {
       eliza_reply(&state, "ZQXV", output, sizeof(output));
-    } while(state.memory_count == before);
+      ++attempts;
+    } while(state.memory_used == before && attempts < 4);
+    assert(state.memory_used < before);
     snprintf(expected, sizeof(expected),
              "DOES THAT HAVE ANYTHING TO DO WITH THE FACT THAT YOUR "
              "MEMORY NUMBER %u ENDS HERE", index);
     assert(strcmp(output, expected) == 0);
   }
-  assert(state.memory_count == 0);
+  assert(state.memory_used == 0);
+}
+
+static void test_long_input(void) {
+  eliza_state state;
+  uint8_t memory[ELIZA_MEMORY_WORKSPACE_BYTES];
+  char input[ELIZA_INPUT_BYTES];
+  char expected[ELIZA_REPLY_BYTES];
+  char output[ELIZA_REPLY_BYTES];
+  size_t index;
+
+  strcpy(input, "I WANT");
+  strcpy(expected, "WHAT WOULD IT MEAN TO YOU IF YOU GOT");
+  for(index = 0; index < 252; ++index) {
+    strcat(input, " I");
+    strcat(expected, " YOU");
+  }
+  assert(strlen(input) > 95);
+  assert(strlen(input) + 1 < sizeof(input));
+  assert(strlen(expected) + 1 < sizeof(expected));
+  eliza_init(&state, memory, sizeof(memory));
+  eliza_reply(&state, input, output, sizeof(output));
+  assert(strcmp(output, expected) == 0);
+
+  input[0] = 0;
+  for(index = 0; index < 240; ++index) strcat(input, "X,");
+  strcat(input, "I WANT HELP");
+  assert(strlen(input) + 1 < sizeof(input));
+  eliza_init(&state, memory, sizeof(memory));
+  eliza_reply(&state, input, output, sizeof(output));
+  assert(strcmp(output, "WHAT WOULD IT MEAN TO YOU IF YOU GOT HELP") == 0);
 }
 
 static void test_goodbye_and_bounds(void) {
   eliza_state state;
+  uint8_t memory[ELIZA_MEMORY_WORKSPACE_BYTES];
   struct {
     char output[12];
     unsigned char guard;
@@ -285,7 +323,7 @@ static void test_goodbye_and_bounds(void) {
   assert(eliza_is_goodbye("QUIT."));
   assert(!eliza_is_goodbye("goodbye for now"));
 
-  eliza_init(&state);
+  eliza_init(&state, memory, sizeof(memory));
   eliza_reply(&state, "I want an extraordinarily long reply", bounded.output,
               sizeof(bounded.output));
   assert(bounded.output[sizeof(bounded.output) - 1] == 0);
@@ -299,7 +337,8 @@ int main(void) {
                  sizeof(REFERENCE_COVERAGE) / sizeof(REFERENCE_COVERAGE[0]));
   test_memory_hash_routes();
   test_rotation();
-  test_memory_fifo_capacity();
+  test_memory_fifo_arena();
+  test_long_input();
   test_goodbye_and_bounds();
   puts("exact ELIZA/DOCTOR engine tests passed");
   return 0;

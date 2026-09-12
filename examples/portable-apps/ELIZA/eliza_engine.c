@@ -10,8 +10,9 @@
  */
 
 #define ELIZA_NO_ID 255U
-#define ELIZA_MAX_WORDS 48U
+#define ELIZA_MAX_WORDS 256U
 #define ELIZA_MAX_PATTERN_TERMS 9U
+#define ELIZA_MEMORY_HEADER_BYTES 3U
 
 enum pattern_opcode {
   PATTERN_COUNT = 1,
@@ -56,13 +57,13 @@ typedef struct ElizaTransformData {
 
 typedef struct ElizaToken {
   uint8_t word;
-  uint8_t offset;
-  uint8_t length;
+  uint16_t offset;
+  uint16_t length;
 } ElizaToken;
 
 typedef struct ElizaCapture {
-  uint8_t start;
-  uint8_t count;
+  uint16_t start;
+  uint16_t count;
 } ElizaCapture;
 
 #include "eliza_doctor_data.inc"
@@ -71,6 +72,17 @@ typedef char transform_slot_count_must_match[
     ELIZA_SCRIPT_TRANSFORM_COUNT == ELIZA_TRANSFORM_SLOTS ? 1 : -1];
 typedef char word_ids_must_not_overlap_special_tokens[
     ELIZA_SCRIPT_WORD_COUNT < TOKEN_DELIMITER ? 1 : -1];
+
+static int rule_has_transformation(const ElizaRuleData* rule) {
+  return rule->transform_count != 0 || rule->link != ELIZA_NO_ID;
+}
+
+static int word_triggers_rule(uint8_t word) {
+  const uint8_t rule_id = word < ELIZA_SCRIPT_WORD_COUNT ?
+      eliza_script_word_rules[word] : ELIZA_NO_ID;
+  return rule_id != ELIZA_NO_ID &&
+      rule_has_transformation(&eliza_script_rules[rule_id]);
+}
 
 static size_t string_length(const char* text) {
   size_t length = 0;
@@ -113,25 +125,27 @@ static int word_character(unsigned char value) {
          value == '*' || value == '(' || value == ')';
 }
 
-static void finish_input_word(ElizaToken* words, uint8_t* word_count,
-                              const char* normalized, uint8_t start,
-                              uint8_t length) {
+static int finish_input_word(ElizaToken* words, uint16_t* word_count,
+                             const char* normalized, uint16_t start,
+                             uint16_t length) {
   ElizaToken* token;
-  if(length == 0 || *word_count >= ELIZA_MAX_WORDS) return;
+  if(length == 0 || *word_count >= ELIZA_MAX_WORDS) return -1;
   token = &words[(*word_count)++];
   token->word = find_word(normalized + start, length);
   token->offset = start;
   token->length = length;
+  return token->word;
 }
 
-static uint8_t parse_input(const char* input, char* normalized,
-                           ElizaToken* words) {
+static uint16_t parse_input(const char* input, char* normalized,
+                            ElizaToken* words, int select_clause) {
   const unsigned char* cursor =
       (const unsigned char*) (input != NULL ? input : "");
-  uint8_t word_count = 0;
-  uint8_t used = 0;
-  uint8_t word_start = 0;
-  uint8_t word_length = 0;
+  uint16_t word_count = 0;
+  uint16_t used = 0;
+  uint16_t word_start = 0;
+  uint16_t word_length = 0;
+  int clause_has_keyword = 0;
 
   while(*cursor != 0 && word_count < ELIZA_MAX_WORDS) {
     unsigned char value = *cursor++;
@@ -155,22 +169,51 @@ static uint8_t parse_input(const char* input, char* normalized,
       continue;
     }
 
-    finish_input_word(words, &word_count, normalized, word_start, word_length);
+    {
+      const int finished = finish_input_word(
+          words, &word_count, normalized, word_start, word_length);
+      if(select_clause && finished >= 0) {
+        if((uint8_t) finished == ELIZA_SCRIPT_BUT_WORD) {
+          --word_count;
+          if(clause_has_keyword) {
+            word_length = 0;
+            break;
+          }
+          word_count = 0;
+        } else if(word_triggers_rule((uint8_t) finished)) {
+          clause_has_keyword = 1;
+        }
+      }
+    }
     word_length = 0;
-    if((value == ',' || value == '.') && word_count < ELIZA_MAX_WORDS) {
-      words[word_count].word = TOKEN_DELIMITER;
-      words[word_count].offset = 0;
-      words[word_count].length = 0;
-      ++word_count;
+    if(value == ',' || value == '.') {
+      if(select_clause) {
+        if(clause_has_keyword) break;
+        word_count = 0;
+      } else if(word_count < ELIZA_MAX_WORDS) {
+        words[word_count].word = TOKEN_DELIMITER;
+        words[word_count].offset = 0;
+        words[word_count].length = 0;
+        ++word_count;
+      }
     }
   }
-  finish_input_word(words, &word_count, normalized, word_start, word_length);
+  if(word_length != 0) {
+    const int finished = finish_input_word(
+        words, &word_count, normalized, word_start, word_length);
+    if(select_clause && finished >= 0) {
+      if((uint8_t) finished == ELIZA_SCRIPT_BUT_WORD) {
+        --word_count;
+        if(!clause_has_keyword) word_count = 0;
+      }
+    }
+  }
   normalized[used] = 0;
   return word_count;
 }
 
 static void token_bytes(const ElizaToken* token, const char* normalized,
-                        const char** text, uint8_t* length) {
+                        const char** text, uint16_t* length) {
   if(token->word < ELIZA_SCRIPT_WORD_COUNT) {
     *text = word_text(token->word);
     *length = eliza_script_word_lengths[token->word];
@@ -183,7 +226,7 @@ static void token_bytes(const ElizaToken* token, const char* normalized,
 static int token_equals(const ElizaToken* token, const char* normalized,
                         const char* expected) {
   const char* text;
-  uint8_t length;
+  uint16_t length;
   size_t index;
   const size_t expected_length = string_length(expected);
   if(token->word == TOKEN_DELIMITER) return 0;
@@ -194,46 +237,42 @@ static int token_equals(const ElizaToken* token, const char* normalized,
   return 1;
 }
 
-static void remove_word_prefix(ElizaToken* words, uint8_t* count,
-                               uint8_t remove_count) {
-  uint8_t index;
+static void remove_word_prefix(ElizaToken* words, uint16_t* count,
+                               uint16_t remove_count) {
+  uint16_t index;
   if(remove_count >= *count) {
     *count = 0;
     return;
   }
   for(index = remove_count; index < *count; ++index)
     words[index - remove_count] = words[index];
-  *count = (uint8_t) (*count - remove_count);
+  *count = (uint16_t) (*count - remove_count);
 }
 
-static void stack_push_front(uint8_t* stack, uint8_t* count, uint8_t value) {
-  uint8_t index;
+static void stack_push_front(uint8_t* stack, uint16_t* count, uint8_t value) {
+  uint16_t index;
   if(*count >= ELIZA_MAX_WORDS) return;
   for(index = *count; index != 0; --index) stack[index] = stack[index - 1U];
   stack[0] = value;
   ++*count;
 }
 
-static void stack_push_back(uint8_t* stack, uint8_t* count, uint8_t value) {
+static void stack_push_back(uint8_t* stack, uint16_t* count, uint8_t value) {
   if(*count < ELIZA_MAX_WORDS) stack[(*count)++] = value;
 }
 
-static uint8_t stack_pop_front(uint8_t* stack, uint8_t* count) {
-  uint8_t index;
+static uint8_t stack_pop_front(uint8_t* stack, uint16_t* count) {
+  uint16_t index;
   const uint8_t value = stack[0];
   for(index = 1; index < *count; ++index) stack[index - 1U] = stack[index];
   --*count;
   return value;
 }
 
-static int rule_has_transformation(const ElizaRuleData* rule) {
-  return rule->transform_count != 0 || rule->link != ELIZA_NO_ID;
-}
-
-static void scan_keywords(ElizaToken* words, uint8_t* word_count,
-                          uint8_t* stack, uint8_t* stack_count) {
+static void scan_keywords(ElizaToken* words, uint16_t* word_count,
+                          uint8_t* stack, uint16_t* stack_count) {
   uint8_t top_rank = 0;
-  uint8_t index = 0;
+  uint16_t index = 0;
 
   *stack_count = 0;
   while(index < *word_count) {
@@ -241,7 +280,7 @@ static void scan_keywords(ElizaToken* words, uint8_t* word_count,
     if(token->word == TOKEN_DELIMITER ||
        token->word == ELIZA_SCRIPT_BUT_WORD) {
       if(*stack_count == 0) {
-        remove_word_prefix(words, word_count, (uint8_t) (index + 1U));
+        remove_word_prefix(words, word_count, (uint16_t) (index + 1U));
         index = 0;
         continue;
       }
@@ -281,8 +320,8 @@ static int pattern_any_matches(const uint8_t* choices, uint8_t choice_count,
 }
 
 static int match_pattern_from(const uint8_t* pattern, const uint8_t* end,
-                              const ElizaToken* words, uint8_t word_count,
-                              uint8_t word_index, uint8_t term_index,
+                              const ElizaToken* words, uint16_t word_count,
+                              uint16_t word_index, uint8_t term_index,
                               ElizaCapture* captures) {
   const uint8_t* next;
   uint8_t opcode;
@@ -297,21 +336,21 @@ static int match_pattern_from(const uint8_t* pattern, const uint8_t* end,
 
   if(opcode == PATTERN_COUNT) {
     if(value == 0) {
-      uint8_t length;
-      for(length = 0; (uint16_t) word_index + length <= word_count; ++length) {
+      uint16_t length;
+      for(length = 0; word_index + length <= word_count; ++length) {
         captures[term_index].start = word_index;
         captures[term_index].count = length;
         if(match_pattern_from(next, end, words, word_count,
-                              (uint8_t) (word_index + length),
+                              (uint16_t) (word_index + length),
                               (uint8_t) (term_index + 1U), captures)) return 1;
       }
       return 0;
     }
-    if((uint16_t) word_index + value > word_count) return 0;
+    if(word_index + value > word_count) return 0;
     captures[term_index].start = word_index;
     captures[term_index].count = value;
     return match_pattern_from(next, end, words, word_count,
-                              (uint8_t) (word_index + value),
+                              (uint16_t) (word_index + value),
                               (uint8_t) (term_index + 1U), captures);
   }
 
@@ -332,12 +371,12 @@ static int match_pattern_from(const uint8_t* pattern, const uint8_t* end,
   captures[term_index].start = word_index;
   captures[term_index].count = 1;
   return match_pattern_from(next, end, words, word_count,
-                            (uint8_t) (word_index + 1U),
+                            (uint16_t) (word_index + 1U),
                             (uint8_t) (term_index + 1U), captures);
 }
 
 static int match_transform(const ElizaTransformData* transform,
-                           const ElizaToken* words, uint8_t word_count,
+                           const ElizaToken* words, uint16_t word_count,
                            ElizaCapture* captures) {
   const uint8_t* pattern = eliza_script_patterns + transform->pattern_offset;
   return match_pattern_from(pattern, pattern + transform->pattern_size,
@@ -357,7 +396,7 @@ static void append_item(char* output, size_t capacity, size_t* used,
 static void append_token(char* output, size_t capacity, size_t* used,
                          const ElizaToken* token, const char* normalized) {
   const char* text;
-  uint8_t length;
+  uint16_t length;
   if(token->word == TOKEN_DELIMITER) return;
   token_bytes(token, normalized, &text, &length);
   append_item(output, capacity, used, text, length);
@@ -384,7 +423,7 @@ static void assemble_template(const unsigned char* template_text,
     if(length == 1 && start[0] >= 1 &&
        start[0] <= ELIZA_MAX_PATTERN_TERMS) {
       const ElizaCapture* capture = &captures[start[0] - 1U];
-      uint8_t index;
+      uint16_t index;
       for(index = 0; index < capture->count; ++index)
         append_token(output, capacity, &used,
                      &words[capture->start + index], normalized);
@@ -394,20 +433,21 @@ static void assemble_template(const unsigned char* template_text,
   }
 }
 
-static void copy_capture(const ElizaToken* words, const char* normalized,
-                         const ElizaCapture* capture,
-                         char* output, size_t capacity) {
+static size_t copy_capture(const ElizaToken* words, const char* normalized,
+                           const ElizaCapture* capture,
+                           char* output, size_t capacity) {
   size_t used = 0;
-  uint8_t index;
-  if(output == NULL || capacity == 0) return;
+  uint16_t index;
+  if(output == NULL || capacity == 0) return 0;
   output[0] = 0;
   for(index = 0; index < capture->count; ++index)
     append_token(output, capacity, &used,
                  &words[capture->start + index], normalized);
+  return used;
 }
 
 static void assemble_memory(const unsigned char* template_text,
-                            const char* capture,
+                            const char* capture, size_t capture_length,
                             char* output, size_t capacity) {
   size_t used = 0;
   const unsigned char* cursor = template_text;
@@ -422,18 +462,20 @@ static void assemble_memory(const unsigned char* template_text,
     while(*cursor != 0 && *cursor != ' ') ++cursor;
     length = (size_t) (cursor - start);
     if(length == 1 && start[0] == 3)
-      append_item(output, capacity, &used, capture, string_length(capture));
+      append_item(output, capacity, &used, capture, capture_length);
     else
       append_item(output, capacity, &used, (const char*) start, length);
   }
 }
 
 static int build_pre_sentence(const unsigned char* template_text,
-                              const ElizaToken* old_words,
+                              ElizaToken* words,
                               const ElizaCapture* captures,
-                              ElizaToken* new_words, uint8_t* new_count) {
+                              uint16_t* word_count) {
   const unsigned char* cursor = template_text;
-  *new_count = 0;
+  ElizaToken prefix[ELIZA_MAX_PATTERN_TERMS];
+  const ElizaCapture* tail = NULL;
+  uint16_t prefix_count = 0;
   while(*cursor != 0) {
     const unsigned char* start;
     size_t length;
@@ -444,26 +486,42 @@ static int build_pre_sentence(const unsigned char* template_text,
     length = (size_t) (cursor - start);
     if(length == 1 && start[0] >= 1 &&
        start[0] <= ELIZA_MAX_PATTERN_TERMS) {
-      const ElizaCapture* capture = &captures[start[0] - 1U];
-      uint8_t index;
-      if((uint16_t) *new_count + capture->count > ELIZA_MAX_WORDS) return 0;
-      for(index = 0; index < capture->count; ++index)
-        new_words[(*new_count)++] =
-            old_words[capture->start + index];
+      if(tail != NULL) return 0;
+      tail = &captures[start[0] - 1U];
     } else {
       const uint8_t word = find_word((const char*) start, length);
-      if(word == TOKEN_UNKNOWN || *new_count >= ELIZA_MAX_WORDS) return 0;
-      new_words[*new_count].word = word;
-      new_words[*new_count].offset = 0;
-      new_words[*new_count].length = eliza_script_word_lengths[word];
-      ++*new_count;
+      if(tail != NULL || word == TOKEN_UNKNOWN ||
+         prefix_count >= ELIZA_MAX_PATTERN_TERMS) return 0;
+      prefix[prefix_count].word = word;
+      prefix[prefix_count].offset = 0;
+      prefix[prefix_count].length = eliza_script_word_lengths[word];
+      ++prefix_count;
     }
+  }
+  if(tail != NULL) {
+    uint16_t index;
+    if(prefix_count + tail->count > ELIZA_MAX_WORDS) return 0;
+    if(prefix_count > tail->start) {
+      for(index = tail->count; index != 0; --index)
+        words[prefix_count + index - 1U] =
+            words[tail->start + index - 1U];
+    } else {
+      for(index = 0; index < tail->count; ++index)
+        words[prefix_count + index] = words[tail->start + index];
+    }
+    *word_count = (uint16_t) (prefix_count + tail->count);
+  } else {
+    *word_count = prefix_count;
+  }
+  {
+    uint16_t index;
+    for(index = 0; index < prefix_count; ++index) words[index] = prefix[index];
   }
   return 1;
 }
 
 static enum action select_reassembly(eliza_state* state, uint8_t transform_id,
-                                     ElizaToken* words, uint8_t* word_count,
+                                     ElizaToken* words, uint16_t* word_count,
                                      const char* normalized,
                                      const ElizaCapture* captures,
                                      char* output, size_t output_size,
@@ -492,23 +550,16 @@ static enum action select_reassembly(eliza_state* state, uint8_t transform_id,
   }
   if(kind == REASSEMBLY_NEWKEY) return ACTION_NEWKEY;
   if(kind == REASSEMBLY_PRE) {
-    ElizaToken replacement[ELIZA_MAX_WORDS];
-    uint8_t replacement_count;
-    uint8_t index;
     *link_rule = *data++;
-    if(!build_pre_sentence(data, words, captures,
-                           replacement, &replacement_count))
+    if(!build_pre_sentence(data, words, captures, word_count))
       return ACTION_INAPPLICABLE;
-    for(index = 0; index < replacement_count; ++index)
-      words[index] = replacement[index];
-    *word_count = replacement_count;
     return ACTION_LINK;
   }
   return ACTION_INAPPLICABLE;
 }
 
 static enum action apply_rule(eliza_state* state, uint8_t rule_id,
-                              ElizaToken* words, uint8_t* word_count,
+                              ElizaToken* words, uint16_t* word_count,
                               const char* normalized, char* output,
                               size_t output_size, uint8_t* link_rule) {
   const ElizaRuleData* rule;
@@ -556,12 +607,12 @@ static uint8_t hollerith_code(unsigned char value) {
 
 static uint8_t memory_hash(const ElizaToken* token, const char* normalized) {
   const char* text;
-  uint8_t length;
-  uint8_t chunk_start = 0;
+  uint16_t length;
+  uint16_t chunk_start = 0;
   uint8_t count = 0;
   uint64_t datum = 0;
   token_bytes(token, normalized, &text, &length);
-  if(length != 0) chunk_start = (uint8_t) (((length - 1U) / 6U) * 6U);
+  if(length != 0) chunk_start = (uint16_t) (((length - 1U) / 6U) * 6U);
   while(chunk_start + count < length && count < 6U) {
     datum = (datum << 6U) |
             hollerith_code((unsigned char) text[chunk_start + count]);
@@ -576,45 +627,95 @@ static uint8_t memory_hash(const ElizaToken* token, const char* normalized) {
   return (uint8_t) ((datum >> 34U) & 3U);
 }
 
+static size_t capture_text_length(const ElizaToken* words,
+                                  const char* normalized,
+                                  const ElizaCapture* capture) {
+  size_t length = 0;
+  uint16_t index;
+  for(index = 0; index < capture->count; ++index) {
+    const ElizaToken* token = &words[capture->start + index];
+    const char* text;
+    uint16_t token_length;
+    if(token->word == TOKEN_DELIMITER) continue;
+    token_bytes(token, normalized, &text, &token_length);
+    (void) text;
+    if(token_length != 0) length += token_length + (length != 0 ? 1U : 0U);
+  }
+  return length;
+}
+
 static void create_memory(eliza_state* state, const ElizaToken* words,
-                          uint8_t word_count, const char* normalized) {
+                          uint16_t word_count, const char* normalized) {
   const uint8_t kind = word_count == 0 ? ELIZA_NO_ID :
       memory_hash(&words[word_count - 1U], normalized);
   const uint8_t transform_id = kind == ELIZA_NO_ID ? ELIZA_NO_ID :
       eliza_script_memory_transforms[kind];
   const ElizaTransformData* transform;
   ElizaCapture captures[ELIZA_MAX_PATTERN_TERMS] = {{0, 0}};
-  uint8_t slot;
+  size_t capture_length;
+  size_t record_size;
+  uint8_t* record;
 
-  if(transform_id == ELIZA_NO_ID ||
-     state->memory_count >= ELIZA_MEMORY_SLOTS) return;
+  if(transform_id == ELIZA_NO_ID || state->memory == NULL ||
+     state->memory_used > state->memory_capacity) return;
   transform = &eliza_script_transforms[transform_id];
   if(!match_transform(transform, words, word_count, captures)) return;
-  slot = (uint8_t)
-      ((state->memory_head + state->memory_count) % ELIZA_MEMORY_SLOTS);
-  state->memory_kind[slot] = kind;
+  capture_length = capture_text_length(words, normalized, &captures[2]);
+  record_size = ELIZA_MEMORY_HEADER_BYTES + capture_length + 1U;
+  if(record_size > state->memory_capacity - state->memory_used) return;
+  record = state->memory + state->memory_used;
+  record[0] = kind;
+  record[1] = (uint8_t) capture_length;
+  record[2] = (uint8_t) (capture_length >> 8U);
   copy_capture(words, normalized, &captures[2],
-               state->memory[slot], sizeof(state->memory[slot]));
-  ++state->memory_count;
+               (char*) record + ELIZA_MEMORY_HEADER_BYTES,
+               capture_length + 1U);
+  state->memory_used += record_size;
 }
 
 static void recall_memory(eliza_state* state, char* output,
                           size_t output_size) {
-  const uint8_t slot = state->memory_head;
-  const uint8_t transform_id =
-      eliza_script_memory_transforms[state->memory_kind[slot]];
-  const ElizaTransformData* transform =
-      &eliza_script_transforms[transform_id];
-  const uint16_t offset =
-      eliza_script_reassembly_offsets[transform->first_reassembly];
-  const unsigned char* data = eliza_script_reassemblies + offset;
+  size_t index;
+  size_t capture_length;
+  size_t record_size;
+  uint8_t transform_id;
+  const ElizaTransformData* transform;
+  uint16_t offset;
+  const unsigned char* data;
+  if(state->memory == NULL || state->memory_used > state->memory_capacity ||
+     state->memory_used < ELIZA_MEMORY_HEADER_BYTES + 1U ||
+     state->memory[0] >= sizeof(eliza_script_memory_transforms)) {
+    state->memory_used = 0;
+    output[0] = 0;
+    return;
+  }
+  capture_length =
+      (size_t) state->memory[1] | ((size_t) state->memory[2] << 8U);
+  record_size = ELIZA_MEMORY_HEADER_BYTES + capture_length + 1U;
+  if(record_size > state->memory_used) {
+    state->memory_used = 0;
+    output[0] = 0;
+    return;
+  }
+  transform_id = eliza_script_memory_transforms[state->memory[0]];
+  if(transform_id == ELIZA_NO_ID ||
+     transform_id >= ELIZA_SCRIPT_TRANSFORM_COUNT) {
+    state->memory_used = 0;
+    output[0] = 0;
+    return;
+  }
+  transform = &eliza_script_transforms[transform_id];
+  offset = eliza_script_reassembly_offsets[transform->first_reassembly];
+  data = eliza_script_reassemblies + offset;
   if(*data++ == REASSEMBLY_TEXT)
-    assemble_memory(data, state->memory[slot], output, output_size);
+    assemble_memory(data,
+                    (const char*) state->memory + ELIZA_MEMORY_HEADER_BYTES,
+                    capture_length, output, output_size);
   else
     output[0] = 0;
-  state->memory_head =
-      (uint8_t) ((state->memory_head + 1U) % ELIZA_MEMORY_SLOTS);
-  --state->memory_count;
+  for(index = record_size; index < state->memory_used; ++index)
+    state->memory[index - record_size] = state->memory[index];
+  state->memory_used -= record_size;
 }
 
 static const char* nomatch_message(uint8_t limit) {
@@ -626,21 +727,24 @@ static const char* nomatch_message(uint8_t limit) {
   }
 }
 
-void eliza_init(eliza_state* state) {
+void eliza_init(eliza_state* state, uint8_t* memory,
+                size_t memory_capacity) {
   size_t index;
   if(state == NULL) return;
   for(index = 0; index < sizeof(*state); ++index)
     ((uint8_t*) state)[index] = 0;
   state->limit = 1;
+  state->memory = memory;
+  state->memory_capacity = memory != NULL ? memory_capacity : 0;
 }
 
 int eliza_is_goodbye(const char* input) {
   char normalized[ELIZA_INPUT_BYTES];
   ElizaToken words[ELIZA_MAX_WORDS];
   ElizaToken compact[2];
-  uint8_t count = parse_input(input, normalized, words);
+  uint16_t count = parse_input(input, normalized, words, 0);
   uint8_t used = 0;
-  uint8_t index;
+  uint16_t index;
   for(index = 0; index < count && used < 2; ++index)
     if(words[index].word != TOKEN_DELIMITER) compact[used++] = words[index];
   for(; index < count; ++index)
@@ -660,25 +764,24 @@ void eliza_reply(eliza_state* state, const char* input,
   char normalized[ELIZA_INPUT_BYTES];
   ElizaToken words[ELIZA_MAX_WORDS];
   uint8_t stack[ELIZA_MAX_WORDS];
-  uint8_t word_count;
-  uint8_t stack_count;
-  uint8_t steps = 0;
+  uint16_t word_count;
+  uint16_t stack_count;
 
   if(output == NULL || output_size == 0) return;
   output[0] = 0;
   if(state == NULL) return;
 
-  word_count = parse_input(input, normalized, words);
+  word_count = parse_input(input, normalized, words, 1);
   state->limit = (uint8_t) (state->limit % 4U + 1U);
   scan_keywords(words, &word_count, stack, &stack_count);
 
   if(stack_count == 0 && state->limit == 4 &&
-     state->memory_count != 0) {
+     state->memory_used != 0) {
     recall_memory(state, output, output_size);
     return;
   }
 
-  while(stack_count != 0 && steps++ < 64U) {
+  while(stack_count != 0) {
     const uint8_t rule_id = stack_pop_front(stack, &stack_count);
     uint8_t link_rule = ELIZA_NO_ID;
     enum action result;

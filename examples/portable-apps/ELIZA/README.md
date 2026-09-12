@@ -9,9 +9,17 @@ recovered IBM 7094 Hollerith memory hash.
 The original DOCTOR S-expression is checked in as `doctor-1966.txt`. The
 offline generator compiles it to bytecode so the device does not spend APP
 space on a general MAD-SLIP list processor or script editor; this changes the
-representation, not the DOCTOR rules or their runtime behavior. Within the
-device bounds of 95 input bytes, 191 reply bytes and sixteen pending memories,
-responses follow the reference implementation exactly.
+representation, not the DOCTOR rules or their runtime behavior.
+
+Memories are kept as variable-length FIFO records in the resident 8192-byte
+WORKSPACE arena, mirroring the original dynamically sized SLIP `MYLIST`.
+There is no separate record-count limit: only the total encoded byte size
+matters (the stress test retains and recalls 256 ordinary memories in order).
+The calculator editor accepts 511 input bytes. The 1151-byte reply buffer is
+sized above the worst word-substitution expansion plus the longest fixed
+DOCTOR reassembly for an accepted input, so replies are not truncated. These
+byte ceilings come from the MK61S memory and stack budgets, not from
+Weizenbaum's source.
 
 The script and expected transcripts come from Anthony Hay's CC0 ELIZA
 recreation, revision `0d34ebc234090a417755afe8fe4a31f75e2e55bf`:
@@ -30,7 +38,8 @@ Text uses direct multi-tap SMS entry:
 The APP deliberately calls the resident editor so its cursor, timing and
 LCD1602 horizontal viewport are identical to BASIC and FOCAL.  Consequently it
 needs a firmware/System APP set exposing `MK61_SERVICE_CAP_EDITOR` (the normal
-configuration with loadable BASIC or FOCAL).
+configuration with loadable BASIC or FOCAL). It also leases the standard
+`MK61_SERVICE_CAP_MEMORY` WORKSPACE arena for the duration of the conversation.
 
 On the 192x64 display, the two opening help cards use the resident compact
 Pixel font and clearly boxed key labels.  Older or character-only firmware
@@ -57,4 +66,5 @@ sample C5 layout it is installed as `/app/ELIZA.APP`.
 The host test contains the complete conversation printed in the January 1966
 CACM paper plus the reference implementation's comprehensive DOCTOR coverage
 transcript. Development was also checked differentially against that reference
-on deterministic mixed-keyword conversations.
+on deterministic mixed-keyword conversations, a 510-character input and a
+256-memory FIFO stress session.
