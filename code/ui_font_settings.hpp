@@ -5,7 +5,8 @@
 
 // One byte, independent of the calculator's fixed-cell font profile. The
 // Family and size share one byte. Legacy family 2 (Roboto) migrates to Pixel;
-// family 3 selects the replaceable UI12/UI14/UI16 FMK family.
+// family 3 selects an FMK from Fonts/. Its stable filename key is persisted in
+// the UC1609 v6 settings record without enlarging this hot one-byte value.
 struct UiFontSettings {
   static constexpr u8 FAMILY_MASK = 0x03;
   static constexpr u8 SIZE_MASK = 0x0C;

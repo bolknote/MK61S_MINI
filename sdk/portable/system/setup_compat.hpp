@@ -5,7 +5,8 @@
 #include "display_profile.hpp"
 namespace lcd_display {
 inline TextProfile normalizeSettingsTextProfile(TextProfile profile) {
-  return portable_system::call(MK61_SYS_SETUP, MK61_SETUP_FEATURES) & 2
+  return portable_system::call(MK61_SYS_SETUP, MK61_SETUP_FEATURES) &
+         MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE
       ? normalizeGraphicalTextProfile(profile) : presetGraphicalTextProfile(profile);
 }
 }

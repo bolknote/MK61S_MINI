@@ -12,9 +12,14 @@ static constexpr u8 VERSION_1 = 1;
 static constexpr u8 VERSION_2 = 2;
 static constexpr u8 VERSION_3 = 3;
 static constexpr u8 VERSION = 4;
-// Only UC1609 emits v5. Other displays keep their established v3/v4 wire
+// Only UC1609 emits v5/v6. Other displays keep their established v3/v4 wire
 // format; byte 13 has a distinct meaning selected by the record version.
 static constexpr u8 VERSION_5 = 5;
+// UC1609 v6 persists a catalog font by a stable 32-bit filename key.  The key
+// occupies the four text-profile bytes only while an external UI font is
+// selected; UC1609's calculator face is fixed and its UI has independent
+// metrics. Built-in UI selections retain the ordinary text-profile layout.
+static constexpr u8 VERSION_6 = 6;
 static constexpr u8 COMMIT_MARKER = 0xA5;
 static constexpr usize COMMIT_INDEX = 15;
 
@@ -32,6 +37,7 @@ static constexpr usize IDX_TEXT_ROWS = 9;
 static constexpr usize IDX_TEXT_WIDTH = 10;
 static constexpr usize IDX_TEXT_HEIGHT = 11;
 static constexpr usize IDX_TEXT_GAP = 12;
+static constexpr usize IDX_UI_FONT_KEY = 9;
 static constexpr usize IDX_OLED = 13;
 static constexpr usize IDX_UI_FONT = 13;
 static constexpr usize IDX_CRC = 14;
@@ -50,6 +56,8 @@ struct RecordData {
   bool oled_stored;
   u8 ui_font;
   bool ui_font_stored;
+  u32 ui_font_key;
+  bool ui_font_key_stored;
 };
 
 enum class RecordStatus : u8 {
@@ -91,7 +99,8 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
     if(record[IDX_V1_CRC] != checksum(record, IDX_V1_CRC)) return RecordStatus::INVALID;
   } else if(version == VERSION_2) {
     if(record[IDX_CRC] != checksum(record, IDX_CRC)) return RecordStatus::INVALID;
-  } else if(version == VERSION_3 || version == VERSION || version == VERSION_5) {
+  } else if(version == VERSION_3 || version == VERSION ||
+            version == VERSION_5 || version == VERSION_6) {
     if(record[COMMIT_INDEX] != COMMIT_MARKER) return RecordStatus::INVALID;
     if(record[IDX_CRC] != checksum(record, IDX_CRC)) return RecordStatus::INVALID;
   } else {
@@ -112,8 +121,12 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
   decoded.oled_stored = false;
   decoded.ui_font = 0xFF;
   decoded.ui_font_stored = false;
+  decoded.ui_font_key = 0;
+  decoded.ui_font_key_stored = false;
 
-  if(version >= VERSION_2 &&
+  const bool v6_external_ui = version == VERSION_6 &&
+      (record[IDX_UI_FONT] & 0x03U) == 3U;
+  if(version >= VERSION_2 && !v6_external_ui &&
      record[IDX_TEXT_ROWS] != 0xFF &&
      record[IDX_TEXT_WIDTH] != 0xFF &&
      record[IDX_TEXT_HEIGHT] != 0xFF &&
@@ -129,9 +142,19 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
     decoded.oled = record[IDX_OLED];
     decoded.oled_stored = true;
   }
-  if(version == VERSION_5 && record[IDX_UI_FONT] != 0xFF) {
+  if((version == VERSION_5 || version == VERSION_6) &&
+     record[IDX_UI_FONT] != 0xFF) {
     decoded.ui_font = record[IDX_UI_FONT];
     decoded.ui_font_stored = true;
+  }
+  if(v6_external_ui) {
+    decoded.ui_font_key = (u32) record[IDX_UI_FONT_KEY] |
+        ((u32) record[IDX_UI_FONT_KEY + 1] << 8) |
+        ((u32) record[IDX_UI_FONT_KEY + 2] << 16) |
+        ((u32) record[IDX_UI_FONT_KEY + 3] << 24);
+    decoded.ui_font_key_stored = decoded.ui_font_key != 0 &&
+                                 decoded.ui_font_key != 0xFFFFFFFFUL;
+    if(!decoded.ui_font_key_stored) decoded.ui_font_key = 0;
   }
 
   out = decoded;
@@ -149,13 +172,25 @@ inline void encode_uncommitted(const RecordData& data, u8 record[RECORD_SIZE]) {
   // record. This avoids making A00/A02/UC1609 settings unreadable by an older
   // firmware merely because WS0010 added one optional byte to the shared
   // journal format.
-  record[IDX_VERSION] = data.ui_font_stored ? VERSION_5 :
+  record[IDX_VERSION] = data.ui_font_stored ? VERSION_6 :
     (data.oled_stored ? VERSION : VERSION_3);
   record[IDX_GRADE] = data.grade;
   record[IDX_COUNTER] = data.counter;
   record[IDX_FLAGS] = data.flags;
   record[IDX_SOUND] = data.sound;
-  if(data.text_profile_stored) {
+  const bool external_ui = data.ui_font_stored &&
+      (data.ui_font & 0x03U) == 3U;
+  if(external_ui) {
+    // An external v5 selection has no filename key. Keep all four bytes erased
+    // so v6 decodes key=none and can use the legacy UI12/14/16 migration path;
+    // never reinterpret its old text-profile bytes as a filename hash.
+    if(data.ui_font_key_stored) {
+      record[IDX_UI_FONT_KEY] = (u8) data.ui_font_key;
+      record[IDX_UI_FONT_KEY + 1] = (u8) (data.ui_font_key >> 8);
+      record[IDX_UI_FONT_KEY + 2] = (u8) (data.ui_font_key >> 16);
+      record[IDX_UI_FONT_KEY + 3] = (u8) (data.ui_font_key >> 24);
+    }
+  } else if(data.text_profile_stored) {
     record[IDX_TEXT_ROWS] = data.text_rows;
     record[IDX_TEXT_WIDTH] = data.text_width;
     record[IDX_TEXT_HEIGHT] = data.text_height;

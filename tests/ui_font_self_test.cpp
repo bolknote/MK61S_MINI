@@ -1,4 +1,5 @@
 #include "ui_font.hpp"
+#include "ui_font_catalog.hpp"
 
 #include <cassert>
 #include <cstdio>
@@ -71,9 +72,41 @@ void dumpFace(ui_font::Face face, unsigned id) {
   }
 }
 
+void checkCatalogIdentityAndHeader(void) {
+  assert(ui_font_catalog::name_equal("Fonts", "fonts"));
+  assert(!ui_font_catalog::name_equal("Font", "Fonts"));
+  assert(ui_font_catalog::name_compare("Alpha-12", "beta-12") < 0);
+  assert(ui_font_catalog::name_compare("same", "Same") != 0);
+  assert(ui_font_catalog::name_key("DejaVu-14") ==
+         ui_font_catalog::name_key("DEJAVU-14"));
+  assert(ui_font_catalog::name_key("DejaVu-14") !=
+         ui_font_catalog::name_key("DejaVu-16"));
+
+  u8 header[fmk::HEADER_SIZE] = {};
+  std::memcpy(header, "FMK1", 4);
+  header[5] = 12;
+  header[6] = 14;
+  header[7] = 0xD2;
+  header[8] = 1;
+  header[10] = 1;
+  header[12] = (u8) sizeof(header);
+  u8 height = 0;
+  assert(ui_font_catalog::inspect_header(header, sizeof(header),
+                                         sizeof(header), height));
+  assert(height == 14);
+  header[6] = 13;
+  assert(!ui_font_catalog::inspect_header(header, sizeof(header),
+                                          sizeof(header), height));
+  header[6] = 14;
+  header[12]++;
+  assert(!ui_font_catalog::inspect_header(header, sizeof(header),
+                                          sizeof(header), height));
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
+  checkCatalogIdentityAndHeader();
   const bool dump = argc == 2 && std::strcmp(argv[1], "--dump") == 0;
   unsigned id = 0;
   for (const ui_font::Size size : {ui_font::Size::PX12, ui_font::Size::PX14,

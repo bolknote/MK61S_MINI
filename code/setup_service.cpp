@@ -6,6 +6,7 @@
 #include "menu.hpp"
 #include "lcd_ru.hpp"
 #include "crash_dump.hpp"
+#include "development.hpp"
 #include <string.h>
 
 namespace setup_ui {
@@ -33,13 +34,18 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
   switch(operation) {
     case MK61_SETUP_VERSION: return 1;
     case MK61_SETUP_FEATURES:
-      return (MK61_HAS_GRAPHICAL_TEXT_SETTINGS ? 1U : 0U) |
-             (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? 2U : 0U)
+      return (MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+                 ? (u32) MK61_SETUP_FEATURE_TEXT_PROFILE : 0U) |
+             (MK61_ENABLE_EXTENDED_FONT_SETTINGS
+                 ? (u32) MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE : 0U)
 #if MK61_PROPORTIONAL_UI_FONTS
-             | 4U | (main_lcd().usbScreenActive() ? 0U : 8U)
+             | (u32) MK61_SETUP_FEATURE_UI_FONT |
+             (main_lcd().usbScreenActive()
+                 ? 0U : (u32) MK61_SETUP_FEATURE_UI_TEXT_MODE) |
+             (u32) MK61_SETUP_FEATURE_UI_FONT_CATALOG
 #endif
 #if MK61_FIXED_CALCULATOR_FACE
-             | 16U
+             | (u32) MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE
 #endif
              ;
     case MK61_SETUP_HARDWARE: {
@@ -110,6 +116,85 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
            library_mk61::ui_font_size() == in.size) return 1;
         if(!library_mk61::set_ui_font(in.family, in.size)) return 0;
         library_mk61::mark_settings_dirty();
+      }
+      return 1;
+#else
+      return 0;
+#endif
+    case MK61_SETUP_UI_FONT_COUNT:
+#if MK61_PROPORTIONAL_UI_FONTS
+      return program_store_ui_font_count();
+#else
+      return 0;
+#endif
+    case MK61_SETUP_UI_FONT_ITEM:
+#if MK61_PROPORTIONAL_UI_FONTS
+      if(!payload || a > 0xFFFFU) return 0;
+      {
+        ProgramStoreUiFont item = {};
+        if(!program_store_ui_font_at((u16) a, item)) return 0;
+        auto& out = *(mk61_setup_ui_font_item*) payload;
+        memset(&out, 0, sizeof(out));
+        out.key = item.key;
+        out.size = item.height;
+        memcpy(out.name, item.name, sizeof(out.name));
+        out.name[sizeof(out.name) - 1] = 0;
+      }
+      return 1;
+#else
+      return 0;
+#endif
+    case MK61_SETUP_UI_FONT_CURRENT:
+#if MK61_PROPORTIONAL_UI_FONTS
+      if(!payload || library_mk61::ui_font_family() != 3) return 0;
+      {
+        auto& out = *(mk61_setup_ui_font_item*) payload;
+        memset(&out, 0, sizeof(out));
+        const u32 key = library_mk61::ui_font_key();
+        ProgramStoreUiFont item = {};
+        if(key != 0) {
+          if(!program_store_describe_ui_font(key, item)) return 0;
+          out.key = item.key;
+          out.size = item.height;
+          memcpy(out.name, item.name, sizeof(out.name));
+        } else {
+          out.size = library_mk61::ui_font_size();
+          const char* legacy = out.size == 12 ? "UI12" :
+              (out.size == 16 ? "UI16" : "UI14");
+          strncpy(out.name, legacy, sizeof(out.name) - 1);
+        }
+        out.name[sizeof(out.name) - 1] = 0;
+      }
+      return 1;
+#else
+      return 0;
+#endif
+    case MK61_SETUP_UI_FONT_APPLY_ITEM:
+#if MK61_PROPORTIONAL_UI_FONTS
+      {
+        ProgramStoreUiFont item = {};
+        if(a == 0 || !program_store_describe_ui_font(a, item)) return 0;
+        if(library_mk61::ui_font_family() == 3 &&
+           library_mk61::ui_font_key() == a) return 1;
+        if(!library_mk61::set_ui_font(3, item.height, a)) return 0;
+        library_mk61::mark_settings_dirty();
+      }
+      return 1;
+#else
+      return 0;
+#endif
+    case MK61_SETUP_UI_FONT_STEP:
+#if MK61_PROPORTIONAL_UI_FONTS
+      if(!payload || (b != 1U && b != 0xFFFFFFFFUL)) return 0;
+      {
+        ProgramStoreUiFont item = {};
+        if(!program_store_step_ui_font(a, b == 1U ? 1 : -1, item)) return 0;
+        auto& out = *(mk61_setup_ui_font_item*) payload;
+        memset(&out, 0, sizeof(out));
+        out.key = item.key;
+        out.size = item.height;
+        memcpy(out.name, item.name, sizeof(out.name));
+        out.name[sizeof(out.name) - 1] = 0;
       }
       return 1;
 #else

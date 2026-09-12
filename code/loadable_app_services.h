@@ -92,7 +92,18 @@ enum mk61_setup_operation {
   MK61_SETUP_LCD_CHAR, MK61_SETUP_FONT_RESTORE, MK61_SETUP_TEXT,
   MK61_SETUP_PHASE, MK61_SETUP_FEATURES,
   MK61_SETUP_UI_FONT_READ, MK61_SETUP_UI_FONT_APPLY,
-  MK61_SETUP_TEXT_MODE
+  MK61_SETUP_TEXT_MODE,
+  MK61_SETUP_UI_FONT_COUNT, MK61_SETUP_UI_FONT_ITEM,
+  MK61_SETUP_UI_FONT_CURRENT, MK61_SETUP_UI_FONT_APPLY_ITEM,
+  MK61_SETUP_UI_FONT_STEP
+};
+enum mk61_setup_feature {
+  MK61_SETUP_FEATURE_TEXT_PROFILE = 1u << 0,
+  MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE = 1u << 1,
+  MK61_SETUP_FEATURE_UI_FONT = 1u << 2,
+  MK61_SETUP_FEATURE_UI_TEXT_MODE = 1u << 3,
+  MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE = 1u << 4,
+  MK61_SETUP_FEATURE_UI_FONT_CATALOG = 1u << 5
 };
 typedef struct mk61_setup_datetime {
   uint32_t year, month, day, hour, minute, second;
@@ -105,6 +116,11 @@ typedef struct mk61_setup_hardware {
 } mk61_setup_hardware;
 typedef struct mk61_setup_profile { uint8_t rows, width, height, gap; } mk61_setup_profile;
 typedef struct mk61_setup_ui_font { uint8_t family, size; } mk61_setup_ui_font;
+typedef struct mk61_setup_ui_font_item {
+  uint32_t key;
+  uint8_t size, reserved[3];
+  char name[32];
+} mk61_setup_ui_font_item;
 
 typedef struct mk61_service_file {
   uint32_t id, parent, size, type, kind;

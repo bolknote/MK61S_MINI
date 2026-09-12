@@ -23,6 +23,9 @@ namespace {
 bool russian = false;
 bool ui_fonts_available = false;
 bool ui_text_mode_available = false;
+bool ui_font_catalog_available = false;
+u32 selected_ui_font_key = 0;
+std::vector<mk61_setup_ui_font_item> ui_font_catalog;
 lcd_display::TextProfile settings = lcd_display::textProfile5x8();
 std::vector<std::string> calls;
 std::vector<u32> phases;
@@ -179,6 +182,45 @@ static void test_ui_font_capabilities() {
   ui_fonts_available = ui_text_mode_available = false;
 }
 
+static void test_ui_font_catalog() {
+  ui_fonts_available = ui_text_mode_available = ui_font_catalog_available = true;
+  ui_font_catalog = {
+    {0x11111111U, 12, {0, 0, 0}, "Alpha-12"},
+    {0x22222222U, 14, {0, 0, 0}, "DejaVu-14"}
+  };
+  surface.ui_font = {0, 14};
+  selected_ui_font_key = 0;
+
+  UiFontChoice choice = readUiFontChoice();
+  assert(uiFontCatalogAvailable());
+  assert(service(MK61_SETUP_UI_FONT_COUNT) == 2);
+  assert(uiFontFieldCount(choice) == 1);
+
+  assert(stepUiFontChoice(choice, 1));
+  assert(choice.setting.family == 1 && choice.setting.size == 14);
+  assert(stepUiFontChoice(choice, 1));
+  assert(choice.setting.family == 3 && choice.setting.size == 12);
+  assert(choice.external.key == 0x11111111U);
+  assert(std::strcmp(choice.external.name, "Alpha-12") == 0);
+  assert(uiFontFieldCount(choice) == 1);
+  assert(stepUiFontChoice(choice, 1));
+  assert(choice.external.key == 0x22222222U && choice.setting.size == 14);
+  assert(stepUiFontChoice(choice, 1));
+  assert(choice.setting.family == 0 && selected_ui_font_key == 0);
+  assert(stepUiFontChoice(choice, -1));
+  assert(choice.external.key == 0x22222222U);
+
+  char line[64];
+  formatUiFontLine(line, sizeof(line), 0, choice);
+  assert(std::strcmp(line, "UI font:DejaVu-14") == 0);
+
+  ui_font_catalog.clear();
+  ui_font_catalog_available = false;
+  selected_ui_font_key = 0;
+  surface = Surface{};
+  ui_fonts_available = ui_text_mode_available = false;
+}
+
 static void test_ui_font_layout() {
   const auto saved_settings = settings;
   ui_fonts_available = ui_text_mode_available = true;
@@ -187,7 +229,7 @@ static void test_ui_font_layout() {
     for(u8 calculator_rows : {2, 4, 10}) {
       for(u8 family : {0, 1, 3}) {
         for(u8 size : {12, 14, 16}) {
-          const mk61_setup_ui_font font = {family, size};
+          const UiFontChoice font = {{family, size}, {}};
           assert(uiFontFieldCount(font) == (family == 0 ? 1U : 2U));
           for(u8 active = 0; active < uiFontFieldCount(font); ++active) {
             surface.profile = {calculator_rows, 10,
@@ -195,7 +237,7 @@ static void test_ui_font_layout() {
             const auto calculator_profile = surface.profile;
             surface.external = true;
             surface.ui_text_context = false; // Every redraw must opt in itself.
-            surface.ui_font = font;
+            surface.ui_font = font.setting;
             for(auto& line : surface.lines) line = "stale calculator text";
             calls.clear();
             phases.clear();
@@ -255,11 +297,11 @@ static void test_ui_font_layout() {
   assert(stepUiFontSize(12, -1) == 16);
   assert(stepUiFontSize(16, -1) == 14);
   assert(stepUiFontSize(14, -1) == 12);
-  assert(stepUiFontFamily(0, 1) == 1);
-  assert(stepUiFontFamily(1, 1) == 3);
-  assert(stepUiFontFamily(3, 1) == 0);
-  assert(stepUiFontFamily(0, -1) == 3);
-  assert(stepUiFontFamily(3, -1) == 1);
+  assert(stepLegacyUiFontFamily(0, 1) == 1);
+  assert(stepLegacyUiFontFamily(1, 1) == 3);
+  assert(stepLegacyUiFontFamily(3, 1) == 0);
+  assert(stepLegacyUiFontFamily(0, -1) == 3);
+  assert(stepLegacyUiFontFamily(3, -1) == 1);
   // Restore the recording surface for independent calculator-profile tests.
   surface = Surface{};
   russian = false;
@@ -271,6 +313,7 @@ static void test_ui_font_layout() {
 int main() {
   test_font_settings_key_dispatch();
   test_ui_font_capabilities();
+  test_ui_font_catalog();
   test_ui_font_layout();
   using namespace lcd_display;
   auto profile = textProfile5x8();

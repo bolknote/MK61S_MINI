@@ -434,7 +434,10 @@ void setup() {
   // otherwise idle workspace immediately after boot.
 
  // Запуск эмулятора MK61
-  GRDLabel.print(load_grade_switch()); // считаем состояние переключателя ГРД отобразим градусную меру
+  // Здесь только восстанавливаем значение. Не печатаем его отдельным
+  // текстовым кадром: на UC1609 такой кадр после заставки успевал показать
+  // маленький `0` до первого обновления сегментного индикатора.
+  (void) load_grade_switch();
 
   YZ_ZT = true;
   angle_save.schedule(millis(), ANGLE_SAVE_UPDATE_MS);
@@ -445,6 +448,10 @@ void setup() {
 
   core_61::enable();
   entropy_pool::configure_calculator(library_mk61::random_mode_is_mk61s());
+  // setup() обязан передать экран калькулятору сам. Ожидание первого шага или
+  // нажатия оставляло на дисплее текстовый shadow заставки; принудительный
+  // redraw атомарно включает fixed calculator face и рисует исходный ноль.
+  lcd_std_display_redraw();
   sound_startup();
   sound_poll();
   idle_signal_reset();

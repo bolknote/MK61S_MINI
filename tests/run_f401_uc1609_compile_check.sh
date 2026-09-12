@@ -105,8 +105,9 @@ test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
   "$compile_path/mk61s-M.ino.bin"
 
 # Merely fitting below 256 KiB is not a release criterion: sealing appends a
-# footer and future linker fluctuations must not break the public build. Keep
-# the same 8 KiB resident reserve as the modular F401 release contract.
+# footer and future linker fluctuations must not break the public build. Use
+# the explicit 7-KiB UC1609 floor from the release contract; character-display
+# F401 products keep their independent 8-KiB floor.
 sealed_size="$(wc -c < "$compile_path/mk61s-M.ino.bin" | tr -d '[:space:]')"
 [[ "$sealed_size" =~ ^[0-9]+$ ]] || fail "invalid sealed BIN size: $sealed_size"
 flash_headroom=$((flash_capacity - sealed_size))

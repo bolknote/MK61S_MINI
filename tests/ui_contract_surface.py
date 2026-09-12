@@ -45,7 +45,69 @@ def main() -> None:
     pieces.append(body(root / "setup_service.cpp", "static u32 apply_font_profile("))
     pieces.append("""u32 service(u32 op, u32 a, u32 b, void* p) {
       if(op == MK61_SETUP_FONT_APPLY) return apply_font_profile(p);
-      if(op == MK61_SETUP_FEATURES) return 1 | (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? 2 : 0) | (ui_fonts_available ? 4 : 0) | (ui_text_mode_available ? 8 : 0);
+      if(op == MK61_SETUP_FEATURES) return MK61_SETUP_FEATURE_TEXT_PROFILE |
+          (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE : 0) |
+          (ui_fonts_available ? MK61_SETUP_FEATURE_UI_FONT : 0) |
+          (ui_text_mode_available ? MK61_SETUP_FEATURE_UI_TEXT_MODE : 0) |
+          (ui_font_catalog_available ? MK61_SETUP_FEATURE_UI_FONT_CATALOG : 0);
+      if(op == MK61_SETUP_UI_FONT_READ) {
+        if(!p || !ui_fonts_available) return 0;
+        *(mk61_setup_ui_font*) p = surface.ui_font;
+        return 1;
+      }
+      if(op == MK61_SETUP_UI_FONT_APPLY) {
+        if(!p || !ui_fonts_available) return 0;
+        const mk61_setup_ui_font next = *(const mk61_setup_ui_font*) p;
+        if(next.family > 3 || (next.size != 12 && next.size != 14 && next.size != 16)) return 0;
+        surface.ui_font = next;
+        selected_ui_font_key = 0;
+        return 1;
+      }
+      if(op == MK61_SETUP_UI_FONT_COUNT)
+        return ui_font_catalog_available ? (u32) ui_font_catalog.size() : 0;
+      if(op == MK61_SETUP_UI_FONT_ITEM) {
+        if(!p || !ui_font_catalog_available || a >= ui_font_catalog.size()) return 0;
+        *(mk61_setup_ui_font_item*) p = ui_font_catalog[a];
+        return 1;
+      }
+      if(op == MK61_SETUP_UI_FONT_CURRENT) {
+        if(!p || !ui_font_catalog_available || surface.ui_font.family != 3) return 0;
+        for(const auto& item : ui_font_catalog) {
+          if(item.key == selected_ui_font_key) {
+            *(mk61_setup_ui_font_item*) p = item;
+            return 1;
+          }
+        }
+        return 0;
+      }
+      if(op == MK61_SETUP_UI_FONT_APPLY_ITEM) {
+        if(!ui_font_catalog_available) return 0;
+        for(const auto& item : ui_font_catalog) {
+          if(item.key == a) {
+            surface.ui_font = {3, item.size};
+            selected_ui_font_key = item.key;
+            return 1;
+          }
+        }
+        return 0;
+      }
+      if(op == MK61_SETUP_UI_FONT_STEP) {
+        if(!p || !ui_font_catalog_available ||
+           (b != 1U && b != 0xFFFFFFFFUL) || ui_font_catalog.empty()) return 0;
+        isize index = b == 1U ? 0 : (isize) ui_font_catalog.size() - 1;
+        if(a != 0) {
+          index = -1;
+          for(usize current = 0; current < ui_font_catalog.size(); ++current) {
+            if(ui_font_catalog[current].key == a) {
+              index = (isize) current + (b == 1U ? 1 : -1);
+              break;
+            }
+          }
+        }
+        if(index < 0 || (usize) index >= ui_font_catalog.size()) return 0;
+        *(mk61_setup_ui_font_item*) p = ui_font_catalog[(usize) index];
+        return 1;
+      }
       if(op == MK61_SETUP_TEXT_MODE) {
         if(!ui_text_mode_available || a > 1) return 0;
         surface.ui_text_context = a != 0;
@@ -61,7 +123,8 @@ def main() -> None:
       if(op == MK61_SETUP_PHASE) { crash_dump::update_runtime(crash_dump::RUNTIME_MENU, 0x464E0000UL | a, millis()); return 1; }
       assert(false); return 0;
     }""")
-    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepUiFontFamily(", "static u8 stepUiFontSize(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
+    pieces.append(body(menu, "struct UiFontChoice", True))
+    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static bool uiFontCatalogAvailable(", "static mk61_setup_ui_font readUiFont(", "static UiFontChoice readUiFontChoice(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepLegacyUiFontFamily(", "static u8 stepUiFontSize(", "static bool uiFontCatalogStep(", "static bool applyBuiltinUiFont(", "static bool applyCatalogUiFont(", "static bool stepUiFontChoice(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
         pieces.append(body(menu, marker))
     pieces.append(body(root / "development.cpp", "static u16 ui_editor_window_start("))
     settings_source = (root / "menu.cpp").read_text()

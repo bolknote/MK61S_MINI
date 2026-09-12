@@ -24,6 +24,20 @@ _Static_assert(offsetof(mk61_setup_hardware, rtc_source) == 36, "hardware text b
 _Static_assert(sizeof(mk61_setup_profile) == 4, "font profile layout");
 _Static_assert(MK61_SETUP_UI_FONT_READ == 14 && MK61_SETUP_UI_FONT_APPLY == 15 &&
                MK61_SETUP_TEXT_MODE == 16, "append-only SETUP font operations");
+_Static_assert(MK61_SETUP_UI_FONT_COUNT == 17 && MK61_SETUP_UI_FONT_ITEM == 18 &&
+               MK61_SETUP_UI_FONT_CURRENT == 19 &&
+               MK61_SETUP_UI_FONT_APPLY_ITEM == 20 &&
+               MK61_SETUP_UI_FONT_STEP == 21,
+               "append-only SETUP font catalog operations");
+_Static_assert(sizeof(mk61_setup_ui_font_item) == 40,
+               "UI font catalog item wire layout");
+_Static_assert(MK61_SETUP_FEATURE_TEXT_PROFILE == 1 &&
+               MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE == 2 &&
+               MK61_SETUP_FEATURE_UI_FONT == 4 &&
+               MK61_SETUP_FEATURE_UI_TEXT_MODE == 8 &&
+               MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE == 16 &&
+               MK61_SETUP_FEATURE_UI_FONT_CATALOG == 32,
+               "append-only SETUP feature bits");
 _Static_assert(MK61_SYS_EDITOR_KEY == 24 && MK61_SYS_SETUP == 25, "append-only System operations");
 _Static_assert(MK61_SERVICE_CAPABILITIES == 26, "public service capability query");
 _Static_assert(MK61_SERVICE_UI_FONT == 27, "append-only proportional font operation");

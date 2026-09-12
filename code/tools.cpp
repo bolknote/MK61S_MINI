@@ -398,6 +398,7 @@ struct PersistentSettings {
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
   u8 ui_font;
+  u32 ui_font_key;
 #endif
   lcd_display::TextProfile text_profile;
   bool text_profile_stored;
@@ -413,6 +414,7 @@ static PersistentSettings persistent_settings = {
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
   UiFontSettings::DEFAULT_PRESET,
+  0,
 #endif
   lcd_display::defaultSettingsTextProfile(),
   false
@@ -433,6 +435,7 @@ static void reset_persistent_settings_cache(void) {
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
   persistent_settings.ui_font = UiFontSettings::DEFAULT_PRESET;
+  persistent_settings.ui_font_key = 0;
 #endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
@@ -454,6 +457,8 @@ static void apply_settings_record(const settings_journal::RecordData& record) {
 #if MK61_PROPORTIONAL_UI_FONTS
   persistent_settings.ui_font = record.ui_font_stored
     ? normalize_ui_font_settings(record.ui_font).raw : UiFontSettings::DEFAULT_PRESET;
+  persistent_settings.ui_font_key = record.ui_font_key_stored
+    ? record.ui_font_key : 0;
 #endif
   persistent_settings.text_profile_stored = false;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
@@ -514,6 +519,7 @@ static void import_legacy_settings(void) {
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
   persistent_settings.ui_font = UiFontSettings::DEFAULT_PRESET;
+  persistent_settings.ui_font_key = 0;
 #endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
@@ -540,8 +546,8 @@ static void load_persistent_settings(void) {
 
   settings_journal::Scanner scanner(
     settings_size,
-#if defined(MK61_DISPLAY_UC1609)
-    settings_journal::VERSION_5
+#if MK61_PROPORTIONAL_UI_FONTS
+    settings_journal::VERSION_6
 #elif defined(MK61_OLED1602_WS0010)
     settings_journal::VERSION
 #else
@@ -608,6 +614,8 @@ static bool write_persistent_settings(void) {
 #if MK61_PROPORTIONAL_UI_FONTS
   data.ui_font = normalize_ui_font_settings(persistent_settings.ui_font).raw;
   data.ui_font_stored = true;
+  data.ui_font_key = persistent_settings.ui_font_key;
+  data.ui_font_key_stored = data.ui_font_key != 0;
 #endif
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   data.text_profile_stored = persistent_settings.text_profile_stored;
@@ -696,6 +704,15 @@ UiFontSettings read_ui_font_settings(void) {
 #endif
 }
 
+u32 read_ui_font_key(void) {
+#if MK61_PROPORTIONAL_UI_FONTS
+  load_persistent_settings();
+  return persistent_settings.ui_font_key;
+#else
+  return 0;
+#endif
+}
+
 void store_oled_settings(OledSettings settings) {
 #if defined(MK61_OLED1602_WS0010)
   load_persistent_settings();
@@ -749,7 +766,8 @@ bool store_settings_snapshot(
   SoundSettings sound,
   const lcd_display::TextProfile* text_profile,
   const OledSettings* oled_settings,
-  const UiFontSettings* ui_font_settings
+  const UiFontSettings* ui_font_settings,
+  const u32* ui_font_key
 ) {
   load_persistent_settings();
   flags = normalize_settings_flags(flags.raw);
@@ -801,9 +819,16 @@ bool store_settings_snapshot(
       persistent_settings.ui_font = raw;
       persistent_settings_needs_save = true;
     }
+    const u32 key = ((raw & UiFontSettings::FAMILY_MASK) == 3U &&
+                     ui_font_key != NULL) ? *ui_font_key : 0;
+    if(persistent_settings.ui_font_key != key) {
+      persistent_settings.ui_font_key = key;
+      persistent_settings_needs_save = true;
+    }
   }
 #else
   (void) ui_font_settings;
+  (void) ui_font_key;
 #endif
 
   return write_persistent_settings();

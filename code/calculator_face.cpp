@@ -41,12 +41,6 @@ enum Segment : u8 {
   SEG_G = 1U << 6,
 };
 
-struct Indicator {
-  u16 cells[12];
-  u16 dots;
-  bool leading_dot;
-};
-
 // Twelve physical positions use the whole 192-pixel glass.  A 16-pixel pitch
 // leaves five clear columns between 11-pixel digits, while the extra gap keeps
 // the two-digit exponent visually separate.  The last vertical segment ends
@@ -57,17 +51,21 @@ static constexpr i16 EXPONENT_FIRST_SLOT = 9;
 static constexpr i16 EXPONENT_GAP = 2;
 
 u8 segments(u16 token) {
+  static constexpr u8 DIGITS[10] = {
+    SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,
+    SEG_B | SEG_C,
+    SEG_A | SEG_B | SEG_D | SEG_E | SEG_G,
+    SEG_A | SEG_B | SEG_C | SEG_D | SEG_G,
+    SEG_B | SEG_C | SEG_F | SEG_G,
+    SEG_A | SEG_C | SEG_D | SEG_F | SEG_G,
+    SEG_A | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G,
+    SEG_A | SEG_B | SEG_C,
+    SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G,
+    SEG_A | SEG_B | SEG_C | SEG_D | SEG_F | SEG_G,
+  };
+  if(token >= '0' && token <= '9') return DIGITS[token - '0'];
   switch(token) {
-    case '0': case 'O': return SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F;
-    case '1': return SEG_B | SEG_C;
-    case '2': return SEG_A | SEG_B | SEG_D | SEG_E | SEG_G;
-    case '3': return SEG_A | SEG_B | SEG_C | SEG_D | SEG_G;
-    case '4': return SEG_B | SEG_C | SEG_F | SEG_G;
-    case '5': return SEG_A | SEG_C | SEG_D | SEG_F | SEG_G;
-    case '6': return SEG_A | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G;
-    case '7': return SEG_A | SEG_B | SEG_C;
-    case '8': return SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G;
-    case '9': return SEG_A | SEG_B | SEG_C | SEG_D | SEG_F | SEG_G;
+    case 'O': return DIGITS[0];
     case '-': return SEG_G;
     case 'L': return SEG_D | SEG_E | SEG_F;
     case 'C': return SEG_A | SEG_D | SEG_E | SEG_F;
@@ -77,75 +75,91 @@ u8 segments(u16 token) {
   }
 }
 
-void horizontal(PageCanvas& canvas, i16 x, i16 y) {
-  // The ИВ-2 drawings show a long narrow segment with chamfered ends.  Three
-  // raster rows retain that silhouette on UC1609 without turning it into a
-  // heavy rounded UI glyph.
-  canvas.hline(x + 2, y - 1, 6);
-  canvas.hline(x + 1, y, 8);
-  canvas.hline(x + 2, y + 1, 6);
+void horizontalPage(u8* out, i16 x, u8 edge, u8 body) {
+  out[x + 1] |= edge;
+  for(u8 col = 2; col < 8; ++col) out[x + col] |= body;
+  out[x + 8] |= edge;
 }
 
-void vertical(PageCanvas& canvas, i16 x, i16 y, bool right) {
-  // A real vertical segment is about one sixth of the digit width.  Keep its
-  // two-pixel body perfectly straight; only the one-pixel caps point inward.
-  // Mirroring those caps avoids the false downward lean of the first draft.
-  const i16 cap_x = x + (right ? 0 : 1);
-  canvas.pixel(cap_x, y);
-  for(i16 row = 1; row < 10; ++row) canvas.hline(x, y + row, 2);
-  canvas.pixel(cap_x, y + 10);
-}
-
-void drawSegments(PageCanvas& canvas, i16 x, u8 mask) {
-  // 11x35 pixels is much closer to the photographed ИВ-2 proportions than
-  // the former 11x39 face while retaining twelve fixed positions on 192 px.
-  static constexpr i16 TOP = 19;
-  if(mask & SEG_A) horizontal(canvas, x, TOP);
-  if(mask & SEG_G) horizontal(canvas, x, TOP + 16);
-  if(mask & SEG_D) horizontal(canvas, x, TOP + 32);
-  if(mask & SEG_F) vertical(canvas, x, TOP + 3, false);
-  if(mask & SEG_B) vertical(canvas, x + 9, TOP + 3, true);
-  if(mask & SEG_E) vertical(canvas, x, TOP + 19, false);
-  if(mask & SEG_C) vertical(canvas, x + 9, TOP + 19, true);
-}
-
-void drawArrow(PageCanvas& canvas, i16 x) {
-  const i16 y = 36;
-  canvas.hline(x + 1, y - 1, 7);
-  canvas.hline(x + 1, y, 9);
-  canvas.hline(x + 1, y + 1, 7);
-  for(i16 n = 0; n < 4; ++n) {
-    canvas.pixel(x + 6 + n, y - 4 + n);
-    canvas.pixel(x + 6 + n, y + 4 - n);
+// The fixed geometry is emitted directly in UC1609 page bytes.  This is both
+// faster and markedly smaller than clipping every constituent pixel against
+// the current page, which matters on the 256-KiB F401 without changing one
+// pixel of the reviewed ИВ-2-style face.
+void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask) {
+  switch(page) {
+    case 2:
+      if(mask & SEG_A) horizontalPage(out, x, 0x08, 0x1C);
+      if(mask & SEG_F) { out[x] |= 0x80; out[x + 1] |= 0xC0; }
+      if(mask & SEG_B) { out[x + 9] |= 0xC0; out[x + 10] |= 0x80; }
+      break;
+    case 3:
+      if(mask & SEG_F) { out[x] = 0xFF; out[x + 1] = 0xFF; }
+      if(mask & SEG_B) { out[x + 9] = 0xFF; out[x + 10] = 0xFF; }
+      break;
+    case 4:
+      if(mask & SEG_F) out[x + 1] |= 0x01;
+      if(mask & SEG_B) out[x + 9] |= 0x01;
+      if(mask & SEG_G) horizontalPage(out, x, 0x08, 0x1C);
+      if(mask & SEG_E) { out[x] |= 0x80; out[x + 1] |= 0xC0; }
+      if(mask & SEG_C) { out[x + 9] |= 0xC0; out[x + 10] |= 0x80; }
+      break;
+    case 5:
+      if(mask & SEG_E) { out[x] = 0xFF; out[x + 1] = 0xFF; }
+      if(mask & SEG_C) { out[x + 9] = 0xFF; out[x + 10] = 0xFF; }
+      break;
+    case 6:
+      if(mask & SEG_E) out[x + 1] |= 0x01;
+      if(mask & SEG_C) out[x + 9] |= 0x01;
+      if(mask & SEG_D) horizontalPage(out, x, 0x08, 0x1C);
+      break;
+    default:
+      break;
   }
 }
 
-void drawDigit(PageCanvas& canvas, i16 x, u16 token, bool dot) {
-  if(token == display_symbol::uc1609::RT_ARROW) drawArrow(canvas, x);
-  else drawSegments(canvas, x, segments(token));
-  if(dot) {
-    // A VFD decimal point belongs to the digit on its left.  It never takes a
-    // thirteenth text cell and therefore cannot move the exponent.
-    canvas.pixel(x + 11, 51);
-    canvas.pixel(x + 12, 51);
-    canvas.pixel(x + 11, 52);
-    canvas.pixel(x + 12, 52);
+void drawArrowPage(u8* out, u8 page, i16 x) {
+  static constexpr u8 PAGE4[10] = {
+    0x00, 0x38, 0x38, 0x38, 0x38, 0x38, 0x39, 0xBA, 0x54, 0x38
+  };
+  if(page == 4) {
+    for(u8 col = 0; col < sizeof(PAGE4); ++col) out[x + col] |= PAGE4[col];
+  } else if(page == 5) {
+    out[x + 6] |= 0x01;
   }
 }
 
-Indicator readIndicator(const text_screen::Grid& grid) {
-  Indicator result = {{' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '}, 0, false};
+i16 digitLeft(u8 slot) {
+  return DIGIT_LEFT + (i16) slot * DIGIT_PITCH +
+      (slot >= EXPONENT_FIRST_SLOT ? EXPONENT_GAP : 0);
+}
+
+void drawDigitPage(u8* out, u8 page, i16 x, u16 token) {
+  if(token == display_symbol::uc1609::RT_ARROW) drawArrowPage(out, page, x);
+  else drawSegmentsPage(out, page, x, segments(token));
+}
+
+void drawDecimalPage(u8* out, u8 page, i16 x) {
+  if(page != 6) return;
+  out[x + 11] |= 0x18;
+  out[x + 12] |= 0x18;
+}
+
+void __attribute__((noinline)) drawIndicatorPage(
+    u8* out, u8 page, const text_screen::Grid& grid) {
   u8 slot = 0;
   for(u8 col = 0; col < grid.cols() && slot < 12; ++col) {
     const u16 token = grid.cell(col, 1);
     if(token == '.') {
-      if(slot == 0) result.leading_dot = true;
-      else result.dots |= (u16) (1U << (slot - 1U));
-      continue;
+      if(slot == 0) {
+        if(page == 6) { out[0] |= 0x18; out[1] |= 0x18; }
+      } else {
+        drawDecimalPage(out, page, digitLeft((u8) (slot - 1U)));
+      }
+    } else {
+      drawDigitPage(out, page, digitLeft(slot), token);
+      ++slot;
     }
-    result.cells[slot++] = token;
   }
-  return result;
 }
 
 void drawSmallGlyph(PageCanvas& canvas, u16 token, i16 x, i16 y) {
@@ -186,28 +200,14 @@ void drawService(PageCanvas& canvas, const text_screen::Grid& grid) {
   drawServiceField(canvas, grid, 10, 6, 113, 78);
 }
 
-void render(PageCanvas& canvas, const text_screen::Grid& grid) {
-  drawService(canvas, grid);
-  const Indicator indicator = readIndicator(grid);
-  for(u8 slot = 0; slot < 12; ++slot) {
-    const i16 x = DIGIT_LEFT + (i16) slot * DIGIT_PITCH +
-                  (slot >= EXPONENT_FIRST_SLOT ? EXPONENT_GAP : 0);
-    drawDigit(canvas, x, indicator.cells[slot],
-              (indicator.dots & ((u16) 1U << slot)) != 0);
-  }
-  if(indicator.leading_dot) {
-    canvas.pixel(0, 51); canvas.pixel(1, 51);
-    canvas.pixel(0, 52); canvas.pixel(1, 52);
-  }
-}
-
 } // namespace
 
 void renderPage(const text_screen::Grid& grid, u8 page, u8 out[WIDTH]) {
   if(out == NULL || page >= PAGE_COUNT) return;
   memset(out, 0, WIDTH);
   PageCanvas canvas(page, out);
-  render(canvas, grid);
+  if(page < 2) drawService(canvas, grid);
+  if(page >= 2 && page <= 6) drawIndicatorPage(out, page, grid);
 }
 
 void renderFrame(const text_screen::Grid& grid, u8 out[FRAME_BYTES]) {

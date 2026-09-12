@@ -242,6 +242,7 @@ void store_sound_settings(SoundSettings settings);
 OledSettings read_oled_settings(void);
 void store_oled_settings(OledSettings settings);
 UiFontSettings read_ui_font_settings(void);
+u32 read_ui_font_key(void);
 bool read_display_text_profile(lcd_display::TextProfile& out);
 void store_display_text_profile(lcd_display::TextProfile profile);
 bool store_settings_snapshot(
@@ -249,7 +250,8 @@ bool store_settings_snapshot(
   SoundSettings sound,
   const lcd_display::TextProfile* text_profile,
   const OledSettings* oled_settings = NULL,
-  const UiFontSettings* ui_font_settings = NULL
+  const UiFontSettings* ui_font_settings = NULL,
+  const u32* ui_font_key = NULL
 );
 
 inline AngleUnit load_grade_switch(void) {

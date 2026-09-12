@@ -97,14 +97,14 @@ void test_ui_font_settings_are_independent_and_bounded(void) {
   assert(make_ui_font_settings(1, 13).raw == UiFontSettings::DEFAULT_PRESET);
 }
 
-void test_v5_ui_font_commit_and_legacy_migration(void) {
+void test_v6_ui_font_commit_and_legacy_migration(void) {
   auto data = fixture(11);
   data.oled_stored = false;
   data.ui_font = make_ui_font_settings(2, 12).raw;
   data.ui_font_stored = true;
   u8 record[settings_journal::RECORD_SIZE];
   settings_journal::encode_uncommitted(data, record);
-  assert(record[settings_journal::IDX_VERSION] == settings_journal::VERSION_5);
+  assert(record[settings_journal::IDX_VERSION] == settings_journal::VERSION_6);
   assert(record[settings_journal::IDX_UI_FONT] == data.ui_font);
   settings_journal::RecordData decoded = {};
   assert(settings_journal::decode(record, decoded) == settings_journal::RecordStatus::INVALID);
@@ -125,7 +125,7 @@ void test_v5_ui_font_commit_and_legacy_migration(void) {
   settings_journal::encode_uncommitted(fixture(10), previous);
   commit(previous);
   settings_journal::Scanner scanner(settings_journal::RECORD_SIZE * 3,
-                                     settings_journal::VERSION_5);
+                                     settings_journal::VERSION_6);
   scanner.consume(previous);
   assert(scanner.migration_needed());
   assert(!scanner.latest().ui_font_stored);
@@ -134,11 +134,85 @@ void test_v5_ui_font_commit_and_legacy_migration(void) {
   assert(scanner.latest().ui_font_stored);
   record[settings_journal::COMMIT_INDEX] = 0xFF;
   settings_journal::Scanner interrupted(settings_journal::RECORD_SIZE * 3,
-                                         settings_journal::VERSION_5);
+                                         settings_journal::VERSION_6);
   interrupted.consume(previous);
   interrupted.consume(record);
   assert(interrupted.has_value() && interrupted.latest().counter == 10);
   assert(!interrupted.latest().ui_font_stored && interrupted.needs_reclaim());
+}
+
+void test_v6_external_ui_font_key(void) {
+  auto data = fixture(12);
+  data.oled_stored = false;
+  data.ui_font = make_ui_font_settings(3, 14).raw;
+  data.ui_font_stored = true;
+  data.ui_font_key = 0x1234ABCDUL;
+  data.ui_font_key_stored = true;
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(data, record);
+  assert(record[settings_journal::IDX_VERSION] == settings_journal::VERSION_6);
+  assert(record[settings_journal::IDX_UI_FONT_KEY] == 0xCD);
+  assert(record[settings_journal::IDX_UI_FONT_KEY + 1] == 0xAB);
+  assert(record[settings_journal::IDX_UI_FONT_KEY + 2] == 0x34);
+  assert(record[settings_journal::IDX_UI_FONT_KEY + 3] == 0x12);
+  commit(record);
+
+  settings_journal::RecordData decoded = {};
+  assert(settings_journal::decode(record, decoded) ==
+         settings_journal::RecordStatus::VALID);
+  assert(decoded.ui_font_stored && decoded.ui_font == data.ui_font);
+  assert(decoded.ui_font_key_stored && decoded.ui_font_key == data.ui_font_key);
+  assert(!decoded.text_profile_stored);
+}
+
+void test_v5_ui_font_is_still_readable(void) {
+  auto data = fixture(13);
+  data.oled_stored = false;
+  data.ui_font = make_ui_font_settings(3, 12).raw;
+  data.ui_font_stored = true;
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(data, record);
+  record[settings_journal::IDX_VERSION] = settings_journal::VERSION_5;
+  record[settings_journal::IDX_TEXT_ROWS] = data.text_rows;
+  record[settings_journal::IDX_TEXT_WIDTH] = data.text_width;
+  record[settings_journal::IDX_TEXT_HEIGHT] = data.text_height;
+  record[settings_journal::IDX_TEXT_GAP] = data.text_gap;
+  record[settings_journal::IDX_CRC] =
+      settings_journal::checksum(record, settings_journal::IDX_CRC);
+  commit(record);
+
+  settings_journal::RecordData decoded = {};
+  u8 version = 0;
+  assert(settings_journal::decode(record, decoded, &version) ==
+         settings_journal::RecordStatus::VALID);
+  assert(version == settings_journal::VERSION_5);
+  assert(decoded.ui_font_stored && decoded.ui_font == data.ui_font);
+  assert(!decoded.ui_font_key_stored && decoded.ui_font_key == 0);
+  assert(decoded.text_profile_stored);
+}
+
+void test_v6_legacy_external_does_not_forge_a_filename_key(void) {
+  auto data = fixture(14);
+  data.oled_stored = false;
+  data.ui_font = make_ui_font_settings(3, 16).raw;
+  data.ui_font_stored = true;
+  data.ui_font_key = 0;
+  data.ui_font_key_stored = false;
+  data.text_profile_stored = true;
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(data, record);
+  for(usize index = settings_journal::IDX_UI_FONT_KEY;
+      index < settings_journal::IDX_UI_FONT_KEY + 4; ++index) {
+    assert(record[index] == 0xFF);
+  }
+  commit(record);
+
+  settings_journal::RecordData decoded = {};
+  assert(settings_journal::decode(record, decoded) ==
+         settings_journal::RecordStatus::VALID);
+  assert(decoded.ui_font_stored);
+  assert(!decoded.ui_font_key_stored && decoded.ui_font_key == 0);
+  assert(!decoded.text_profile_stored);
 }
 
 void test_profiles_without_oled_keep_v3(void) {
@@ -249,7 +323,10 @@ void test_erased_detection_checks_entire_record(void) {
 int main(void) {
   test_v4_commit_and_corruption();
   test_ui_font_settings_are_independent_and_bounded();
-  test_v5_ui_font_commit_and_legacy_migration();
+  test_v6_ui_font_commit_and_legacy_migration();
+  test_v6_external_ui_font_key();
+  test_v5_ui_font_is_still_readable();
+  test_v6_legacy_external_does_not_forge_a_filename_key();
   test_legacy_v3_compatibility();
   test_profiles_without_oled_keep_v3();
   test_legacy_v2_compatibility();

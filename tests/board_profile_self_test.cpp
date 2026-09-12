@@ -166,6 +166,8 @@ int main(void) {
                 "startup model name must occupy exactly 16 characters");
 
 #if defined(MK61_DISPLAY_UC1609)
+  static_assert(MK61_FIXED_CALCULATOR_FACE == 1,
+                "every UC1609 profile must use the fixed calculator face");
   #if defined(STM32F411xE) && defined(MK61_BOARD_CLASSIC_V3)
     static_assert(MK61_ENABLE_SPI1_ARBITER == 1 && MK61_ENABLE_SPI1_DMA == 1,
                   "qualified F411 Classic V3 UC1609 must use shared SPI1 DMA");
@@ -182,6 +184,8 @@ int main(void) {
                   "unqualified UC1609 profiles must retain shallow idle");
   #endif
 #else
+  static_assert(MK61_FIXED_CALCULATOR_FACE == 0,
+                "character displays must not include the UC1609 face");
   static_assert(MK61_ENABLE_SPI1_ARBITER == 1 && MK61_ENABLE_SPI1_DMA == 1,
                 "mini must enable the accepted SPI1 arbiter and DMA path");
 #endif

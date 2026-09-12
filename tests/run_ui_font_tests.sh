@@ -41,7 +41,9 @@ clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
   -c "$root/code/calculator_face.cpp" \
   -o "$font_test_dir/f401-calculator-face.o"
 if nm "$font_test_dir/f401-calculator-face.o" | grep -q 'calculator_face'; then
-  echo "Unexpected calculator-face symbols in F401/UC1609 build" >&2
+  :
+else
+  echo "Missing calculator-face symbols in F401/UC1609 build" >&2
   exit 1
 fi
-echo "A00/A02, WS0010 and F401/UC1609 exclusions passed"
+echo "A00/A02 and WS0010 UI-font exclusions; F401/UC1609 calculator face passed"

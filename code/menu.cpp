@@ -62,6 +62,7 @@ static lcd_display::TextProfile display_text_profile_state = lcd_display::defaul
 static u8 display_rows_state = lcd_display::defaultSettingsTextProfile().rows;
 #if MK61_PROPORTIONAL_UI_FONTS
 static UiFontSettings ui_font_state;
+static u32 ui_font_key_state = 0;
 #endif
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
 static RandomMode random_mode_state = RandomMode::MK61;
@@ -540,7 +541,7 @@ bool  store_settings_state(void) {
                                  &oled_settings);
 #elif MK61_PROPORTIONAL_UI_FONTS
   return store_settings_snapshot(flags, sound_settings, stored_profile,
-                                 NULL, &ui_font_state);
+                                 NULL, &ui_font_state, &ui_font_key_state);
 #else
   return store_settings_snapshot(flags, sound_settings, stored_profile);
 #endif
@@ -598,7 +599,8 @@ void  load_settings_state(void) {
   set_sound_volume(sound_settings.bits.volume);
 #if MK61_PROPORTIONAL_UI_FONTS
   const UiFontSettings ui_font = read_ui_font_settings();
-  if(!set_ui_font(ui_font.family(), ui_font.size())) {
+  const u32 ui_key = read_ui_font_key();
+  if(!set_ui_font(ui_font.family(), ui_font.size(), ui_key)) {
     // A missing/corrupt external family must never strand the settings UI.
     // Keep the same requested size and fall back to the resident Pixel face.
     (void) set_ui_font(1, ui_font.size());
@@ -627,20 +629,36 @@ u8 ui_font_size(void) {
 #endif
 }
 
-bool set_ui_font(u8 family, u8 size) {
+u32 ui_font_key(void) {
 #if MK61_PROPORTIONAL_UI_FONTS
-  const UiFontSettings next = make_ui_font_settings(family, size);
+  return ui_font_key_state;
+#else
+  return 0;
+#endif
+}
+
+bool set_ui_font(u8 family, u8 size, u32 key) {
+#if MK61_PROPORTIONAL_UI_FONTS
+  UiFontSettings next = make_ui_font_settings(family, size);
   if(next.family() == 3) {
-    if(!program_store_apply_ui_font(next.size())) return false;
+    u8 actual_height = next.size();
+    const bool applied = key != 0
+        ? program_store_apply_ui_font(key, actual_height)
+        : program_store_apply_legacy_ui_font(next.size());
+    if(!applied) return false;
+    next = make_ui_font_settings(3, actual_height);
   } else {
     program_store_clear_ui_font();
+    key = 0;
   }
   ui_font_state = next;
+  ui_font_key_state = key;
   main_lcd().setUiFont(next.family(), next.size());
   return true;
 #else
   (void) family;
   (void) size;
+  (void) key;
   return false;
 #endif
 }

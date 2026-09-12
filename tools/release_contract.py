@@ -258,8 +258,14 @@ def validate_contract(raw: Any) -> None:
             integer(budgets["markdown_app_max"],
                     f"{where}.budgets.markdown_app_max", minimum=1)
         if case["mcu"] == "f401" and case["product"]:
-            require(flash_headroom >= 8192,
-                    f"{where}: F401 product needs at least 8192 B headroom")
+            # The resident UC1609 backend includes the fixed twelve-position
+            # calculator face. Character displays retain the original 8-KiB
+            # floor; the graphical product has its own explicit 7-KiB floor.
+            minimum = 7168 if case["profile"] in {
+                "classic-v2", "classic-v3", "40th"
+            } else 8192
+            require(flash_headroom >= minimum,
+                    f"{where}: F401 product needs at least {minimum} B headroom")
 
     required_groups = {
         "f411-release", "f411-stop", "f401-arduino",

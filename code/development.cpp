@@ -19,6 +19,7 @@
 #include "storage_path.hpp"
 #include "text_editor.hpp"
 #include "tools.hpp"
+#include "ui_font_catalog.hpp"
 #include "utf8_view.hpp"
 
 #include <stdio.h>
@@ -51,6 +52,9 @@ enum class AppliedFontRole : u8 { TEXT, UI };
 static u16 applied_font_id = program_store::INVALID_ID;
 static AppliedFontRole applied_font_role = AppliedFontRole::TEXT;
 static u8 applied_ui_height = 0;
+#if MK61_PROPORTIONAL_UI_FONTS
+static u32 applied_ui_key = 0;
+#endif
 static bool applied_font_suspended = false;
 #endif
 
@@ -300,6 +304,103 @@ static bool root_entry_by_type_name(program_store::ProgramType type,
     }
   }
   return false;
+}
+
+static bool ui_font_directory(u16& out_id) {
+  const int count = program_store::child_count(program_store::ROOT_ID);
+  for(int index = 0; index < count; ++index) {
+    program_store::Entry entry;
+    if(program_store::child(program_store::ROOT_ID, index, entry) &&
+       entry.kind == program_store::NodeKind::DIRECTORY &&
+       ui_font_catalog::name_equal(entry.name,
+                                   ui_font_catalog::DIRECTORY_NAME)) {
+      out_id = entry.id;
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool ui_font_candidate(const program_store::Entry& entry,
+                              u8& out_height) {
+  if(entry.kind != program_store::NodeKind::FILE ||
+     entry.type != program_store::ProgramType::FONT ||
+     entry.data_len < fmk::HEADER_SIZE ||
+     entry.data_len > program_store::MAX_FONT_SIZE) return false;
+  u8 header[fmk::HEADER_SIZE];
+  u16 actual = 0;
+  return program_store::read_range_id(entry.id, 0, header, sizeof(header),
+                                      &actual) &&
+      actual == sizeof(header) &&
+      ui_font_catalog::inspect_header(header, sizeof(header), entry.data_len,
+                                      out_height);
+}
+
+static bool next_ui_font_entry(u16 directory_id, const char* after,
+                               program_store::Entry& out_entry,
+                               u8& out_height) {
+  bool found = false;
+  const int count = program_store::child_count(directory_id);
+  for(int index = 0; index < count; ++index) {
+    program_store::Entry entry;
+    u8 height = 0;
+    if(!program_store::child(directory_id, index, entry) ||
+       !ui_font_candidate(entry, height) ||
+       (after != NULL &&
+        ui_font_catalog::name_compare(entry.name, after) <= 0)) continue;
+    if(!found ||
+       ui_font_catalog::name_compare(entry.name, out_entry.name) < 0) {
+      out_entry = entry;
+      out_height = height;
+      found = true;
+    }
+  }
+  return found;
+}
+
+static bool ui_font_entry_at(u16 index, program_store::Entry& out_entry,
+                             u8& out_height) {
+  u16 directory_id = program_store::INVALID_ID;
+  if(!ui_font_directory(directory_id)) return false;
+  char after[program_store::NAME_SIZE] = {};
+  const char* cursor = NULL;
+  for(u16 rank = 0; rank <= index; ++rank) {
+    program_store::Entry entry;
+    u8 height = 0;
+    if(!next_ui_font_entry(directory_id, cursor, entry, height)) return false;
+    if(rank == index) {
+      out_entry = entry;
+      out_height = height;
+      return true;
+    }
+    memcpy(after, entry.name, sizeof(after));
+    after[sizeof(after) - 1] = 0;
+    cursor = after;
+  }
+  return false;
+}
+
+static bool ui_font_entry_by_key(u32 key, program_store::Entry& out_entry,
+                                 u8& out_height) {
+  if(key == 0 || key == 0xFFFFFFFFUL) return false;
+  u16 directory_id = program_store::INVALID_ID;
+  if(!ui_font_directory(directory_id)) return false;
+  bool found = false;
+  const int count = program_store::child_count(directory_id);
+  for(int index = 0; index < count; ++index) {
+    program_store::Entry entry;
+    u8 height = 0;
+    if(!program_store::child(directory_id, index, entry) ||
+       !ui_font_candidate(entry, height) ||
+       ui_font_catalog::name_key(entry.name) != key) continue;
+    // Treat the astronomically unlikely hash collision as an invalid saved
+    // choice instead of silently loading a different face.
+    if(found) return false;
+    out_entry = entry;
+    out_height = height;
+    found = true;
+  }
+  return found;
 }
 #endif
 
@@ -909,6 +1010,9 @@ static bool apply_font_entry_once(const program_store::Entry& entry,
   applied_font_id = entry.id;
   applied_font_role = role;
   applied_ui_height = role == AppliedFontRole::UI ? expected_height : 0;
+#if MK61_PROPORTIONAL_UI_FONTS
+  if(role == AppliedFontRole::TEXT) applied_ui_key = 0;
+#endif
   applied_font_suspended = false;
   if(role == AppliedFontRole::TEXT) {
     library_mk61::set_display_text_profile(main_lcd().textProfile());
@@ -2312,7 +2416,108 @@ static const char* ui_font_entry_name(u8 size) {
   return size == 12 ? "UI12" : (size == 16 ? "UI16" : "UI14");
 }
 
-bool program_store_apply_ui_font(u8 size) {
+static void describe_ui_font(const program_store::Entry& entry, u8 height,
+                             ProgramStoreUiFont& out) {
+  out.key = ui_font_catalog::name_key(entry.name);
+  out.height = height;
+  memcpy(out.name, entry.name, sizeof(out.name));
+  out.name[sizeof(out.name) - 1] = 0;
+}
+
+u16 program_store_ui_font_count(void) {
+  u16 directory_id = program_store::INVALID_ID;
+  if(!ui_font_directory(directory_id)) return 0;
+  u16 result = 0;
+  const int count = program_store::child_count(directory_id);
+  for(int index = 0; index < count && result != 0xFFFFU; ++index) {
+    program_store::Entry entry;
+    u8 height = 0;
+    if(program_store::child(directory_id, index, entry) &&
+       ui_font_candidate(entry, height)) ++result;
+  }
+  return result;
+}
+
+bool program_store_ui_font_at(u16 index, ProgramStoreUiFont& out) {
+  program_store::Entry entry;
+  u8 height = 0;
+  if(!ui_font_entry_at(index, entry, height)) return false;
+  describe_ui_font(entry, height, out);
+  return true;
+}
+
+bool program_store_describe_ui_font(u32 key, ProgramStoreUiFont& out) {
+  program_store::Entry entry;
+  u8 height = 0;
+  if(!ui_font_entry_by_key(key, entry, height)) return false;
+  describe_ui_font(entry, height, out);
+  return true;
+}
+
+bool program_store_step_ui_font(u32 key, i8 delta, ProgramStoreUiFont& out) {
+  if(delta != -1 && delta != 1) return false;
+  u16 directory_id = program_store::INVALID_ID;
+  if(!ui_font_directory(directory_id)) return false;
+
+  program_store::Entry current = {};
+  u8 current_height = 0;
+  const char* current_name = NULL;
+  if(key != 0) {
+    if(!ui_font_entry_by_key(key, current, current_height)) return false;
+    current_name = current.name;
+  }
+
+  bool found = false;
+  program_store::Entry selected = {};
+  u8 selected_height = 0;
+  const int count = program_store::child_count(directory_id);
+  for(int index = 0; index < count; ++index) {
+    program_store::Entry entry;
+    u8 height = 0;
+    if(!program_store::child(directory_id, index, entry) ||
+       !ui_font_candidate(entry, height)) continue;
+    if(current_name != NULL) {
+      const int side = ui_font_catalog::name_compare(entry.name, current_name);
+      if((delta > 0 && side <= 0) || (delta < 0 && side >= 0)) continue;
+    }
+    if(!found) {
+      selected = entry;
+      selected_height = height;
+      found = true;
+      continue;
+    }
+    const int order = ui_font_catalog::name_compare(entry.name, selected.name);
+    if((delta > 0 && order < 0) || (delta < 0 && order > 0)) {
+      selected = entry;
+      selected_height = height;
+    }
+  }
+  if(!found) return false;
+  describe_ui_font(selected, selected_height, out);
+  return true;
+}
+
+bool program_store_apply_ui_font(u32 key, u8& out_height) {
+  program_store::Entry entry;
+  u8 height = 0;
+  if(!ui_font_entry_by_key(key, entry, height)) return false;
+  const u16 old_id = applied_font_id;
+  const AppliedFontRole old_role = applied_font_role;
+  const u8 old_height = applied_ui_height;
+  const u32 old_key = applied_ui_key;
+  if(apply_font_entry_once(entry, AppliedFontRole::UI, height)) {
+    applied_ui_key = key;
+    out_height = height;
+    return true;
+  }
+  if(!main_lcd().externalFontActive() &&
+     restore_applied_font(old_id, old_role, old_height)) {
+    applied_ui_key = old_key;
+  }
+  return false;
+}
+
+bool program_store_apply_legacy_ui_font(u8 size) {
   if(size != 12 && size != 14 && size != 16) return false;
   program_store::Entry entry;
   if(!root_entry_by_type_name(program_store::ProgramType::FONT,
@@ -2320,9 +2525,14 @@ bool program_store_apply_ui_font(u8 size) {
   const u16 old_id = applied_font_id;
   const AppliedFontRole old_role = applied_font_role;
   const u8 old_height = applied_ui_height;
-  if(apply_font_entry_once(entry, AppliedFontRole::UI, size)) return true;
-  if(!main_lcd().externalFontActive()) {
-    (void) restore_applied_font(old_id, old_role, old_height);
+  const u32 old_key = applied_ui_key;
+  if(apply_font_entry_once(entry, AppliedFontRole::UI, size)) {
+    applied_ui_key = 0;
+    return true;
+  }
+  if(!main_lcd().externalFontActive() &&
+     restore_applied_font(old_id, old_role, old_height)) {
+    applied_ui_key = old_key;
   }
   return false;
 }
@@ -2333,6 +2543,7 @@ void program_store_clear_ui_font(void) {
   applied_font_id = program_store::INVALID_ID;
   applied_font_role = AppliedFontRole::TEXT;
   applied_ui_height = 0;
+  applied_ui_key = 0;
   applied_font_suspended = false;
 }
 #endif
@@ -2354,9 +2565,30 @@ void program_store_restore_font_after_usb(void) {
   if(!applied_font_suspended) return;
   applied_font_suspended = false;
   program_store::Entry entry;
-  if(!program_store::entry_by_id(applied_font_id, entry) ||
-     entry.type != program_store::ProgramType::FONT ||
-     !apply_font_entry_once(entry, applied_font_role, applied_ui_height)) {
+  bool restored = false;
+#if MK61_PROPORTIONAL_UI_FONTS
+  if(applied_font_role == AppliedFontRole::UI && applied_ui_key != 0) {
+    u8 height = 0;
+    restored = ui_font_entry_by_key(applied_ui_key, entry, height) &&
+        height == applied_ui_height &&
+        apply_font_entry_once(entry, applied_font_role, height);
+  } else
+#endif
+  {
+    restored = program_store::entry_by_id(applied_font_id, entry) &&
+        entry.type == program_store::ProgramType::FONT &&
+        apply_font_entry_once(entry, applied_font_role, applied_ui_height);
+#if MK61_PROPORTIONAL_UI_FONTS
+    if(!restored && applied_font_role == AppliedFontRole::UI &&
+       applied_ui_key == 0) {
+      restored = root_entry_by_type_name(program_store::ProgramType::FONT,
+                                         ui_font_entry_name(applied_ui_height),
+                                         entry) &&
+          apply_font_entry_once(entry, applied_font_role, applied_ui_height);
+    }
+#endif
+  }
+  if(!restored) {
     const AppliedFontRole failed_role = applied_font_role;
 #if MK61_PROPORTIONAL_UI_FONTS
     const u8 failed_height = applied_ui_height;
@@ -2364,6 +2596,9 @@ void program_store_restore_font_after_usb(void) {
     applied_font_id = program_store::INVALID_ID;
     applied_font_role = AppliedFontRole::TEXT;
     applied_ui_height = 0;
+#if MK61_PROPORTIONAL_UI_FONTS
+    applied_ui_key = 0;
+#endif
     main_lcd().useBuiltinFont();
     if(failed_role == AppliedFontRole::UI) {
 #if MK61_PROPORTIONAL_UI_FONTS

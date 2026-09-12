@@ -6,10 +6,11 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCES = ROOT / "tools/.fmk-font/ui-atlases"
+SOURCES = ROOT / "tools/.fmk-font"
 FILES = {
-    "licenses/ui-fonts/LICENSE-Ark-Pixel.txt": "LICENSE-Ark-Pixel.txt",
-    "licenses/ui-fonts/FONT-SOURCES.md": "README.md",
+    "licenses/ui-fonts/LICENSE-Ark-Pixel.txt": "ui-atlases/LICENSE-Ark-Pixel.txt",
+    "licenses/ui-fonts/LICENSE-DejaVu.txt": "external-fonts/LICENSE-DejaVu.txt",
+    "licenses/ui-fonts/FONT-SOURCES.md": "ui-atlases/README.md",
 }
 
 

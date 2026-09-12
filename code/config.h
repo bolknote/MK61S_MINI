@@ -486,9 +486,12 @@
   #define MK61_UI_FONT_CLIENT 0
 #endif
 
-// The dedicated 192x64 calculator face follows the same F411-only policy.
+// The dedicated calculator face is a property of the 192x64 UC1609 display,
+// not of the STM32 model. It streams one page through the existing render
+// buffer and has no proportional-font tables or second framebuffer, so the
+// F401 build can use the same presentation without a RAM penalty.
 #ifndef MK61_FIXED_CALCULATOR_FACE
-  #if defined(MK61_DISPLAY_UC1609) && defined(ARDUINO_BLACKPILL_F411CE)
+  #if defined(MK61_DISPLAY_UC1609)
     #define MK61_FIXED_CALCULATOR_FACE 1
   #else
     #define MK61_FIXED_CALCULATOR_FACE 0

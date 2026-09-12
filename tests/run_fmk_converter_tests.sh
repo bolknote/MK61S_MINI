@@ -41,6 +41,23 @@ clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
   --height 8 --encoding cp1251 >/dev/null
 python3 "$root/tests/font_preview_bitmap_self_test.py" "$preview_json"
 
+# The reviewed-atlas packer must preserve already-approved pixels and emit an
+# ordinary, fully validated FMK1 file. Its --check mode is the reproducibility
+# gate used by maintainers of ready-made UI fonts.
+atlas_fmk="$work/atlas.fmk"
+python3 "$root/tools/build_fmk_from_ui_atlas.py" \
+  "$root/tests/data/fmk_ui_atlas.json" "$atlas_fmk" >/dev/null
+python3 "$root/tools/build_fmk_from_ui_atlas.py" \
+  "$root/tests/data/fmk_ui_atlas.json" "$atlas_fmk" --check >/dev/null
+"$root/tests/run_display_font_tests.sh" "$atlas_fmk" >/dev/null
+
+# Shipping examples are executable assets rather than illustrative blobs:
+# keep every checked-in package readable by the same firmware parser.
+for ready_font in "$root"/programs/Fonts/*.FMK; do
+  test -f "$ready_font"
+  "$root/tests/run_display_font_tests.sh" "$ready_font" >/dev/null
+done
+
 # Keep the old 1536-byte target as the converter default, but prove that an
 # explicitly targeted F411 package can use the whole existing 8 KiB BULK
 # arena. The generated BDF is deterministic and needs no host font package.

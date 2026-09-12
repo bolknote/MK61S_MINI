@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "family": "MK61 test atlas",
+  "height": 12,
+  "ascent": 10,
+  "descent": 2,
+  "ppem": 10,
+  "glyphs": [
+    {
+      "codepoint": 32,
+      "width": 1,
+      "height": 1,
+      "bearing_x": 0,
+      "bearing_y": 1,
+      "safe_bearing_x": 0,
+      "native_advance": 3,
+      "advance": 3,
+      "rows": ["0"]
+    },
+    {
+      "codepoint": 63,
+      "width": 3,
+      "height": 7,
+      "bearing_x": 0,
+      "bearing_y": 7,
+      "safe_bearing_x": 0,
+      "native_advance": 4,
+      "advance": 4,
+      "rows": ["110", "001", "001", "010", "010", "000", "010"]
+    },
+    {
+      "codepoint": 65,
+      "width": 5,
+      "height": 7,
+      "bearing_x": 0,
+      "bearing_y": 7,
+      "safe_bearing_x": 0,
+      "native_advance": 6,
+      "advance": 6,
+      "rows": ["01110", "10001", "10001", "11111", "10001", "10001", "10001"]
+    }
+  ]
+}

@@ -349,7 +349,7 @@
       "defines": [],
       "product": true,
       "publish": false,
-      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 8192, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 5120},
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 7168, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 5120},
       "expect": {"usb_suspend": false, "ws0010_graphics": null}
     },
     {
@@ -394,7 +394,7 @@
       "features": {"focal": 1, "basic": 1, "wbmp": 0, "markdown": 1, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
       "product": true,
       "publish": true,
-      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 8192, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 12288}
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 7168, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 12288}
     },
     {
       "id": "f401-capability-a00-usb",

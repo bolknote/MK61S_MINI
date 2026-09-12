@@ -84,7 +84,10 @@ class ReleaseContractTest(unittest.TestCase):
         for case in release_contract.cases_in_group(
                 self.contract, "f401-product"):
             self.assertTrue(case["product"])
-            self.assertEqual(case["budgets"]["flash_min_headroom"], 8192)
+            expected = 7168 if case["profile"] in {
+                "classic-v2", "classic-v3", "40th"
+            } else 8192
+            self.assertEqual(case["budgets"]["flash_min_headroom"], expected)
             self.assertEqual(case["budgets"]["ram_limit"], 52428)
         for case in release_contract.cases_in_group(
                 self.contract, "f401-capability"):
@@ -120,6 +123,14 @@ class ReleaseContractTest(unittest.TestCase):
         target["budgets"]["flash_min_headroom"] = 512
         with self.assertRaisesRegex(release_contract.ContractError,
                                     "at least 8192"):
+            release_contract.validate_contract(weak)
+
+        weak = copy.deepcopy(self.contract)
+        target = next(case for case in weak["cases"]
+                      if case["id"] == "f401-product-classic-v3")
+        target["budgets"]["flash_min_headroom"] = 512
+        with self.assertRaisesRegex(release_contract.ContractError,
+                                    "at least 7168"):
             release_contract.validate_contract(weak)
 
         incomplete = copy.deepcopy(self.contract)
