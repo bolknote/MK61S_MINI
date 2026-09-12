@@ -1827,6 +1827,7 @@ static bool tb_run_program(int program_index) {
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return false;
+  main_lcd().endUiText();
 #endif
   if(program_index < 0 || program_index >= TB_PROGRAM_COUNT || !programs[program_index].used) {
     tb_error("HOW?");

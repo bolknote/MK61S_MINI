@@ -287,6 +287,12 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
 }
 
 inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive() && x == 0 && width == LCD_WIDTH) {
+    main_lcd().printUiLine(y, text);
+    return;
+  }
+#endif
   MK61DisplayUpdate update(main_lcd());
   font_map_t map = {};
   scan_text(map, text, width);
@@ -298,6 +304,12 @@ inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {
 inline void print_window(const char* const* lines, u8 count) {
   MK61DisplayUpdate update(main_lcd());
   if(count > main_lcd().rows()) count = main_lcd().rows();
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    for(u8 row = 0; row < count; ++row) main_lcd().printUiLine(row, lines[row]);
+    return;
+  }
+#endif
   font_map_t map = {};
   for(u8 row = 0; row < count; row++) {
     scan_text(map, lines[row], LCD_WIDTH);
@@ -317,6 +329,13 @@ inline void print_lines(const char* text0, const char* text1) {
 
 inline void print_menu_window(char mark0, const char* text0, char mark1, const char* text1) {
   MK61DisplayUpdate update(main_lcd());
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    main_lcd().printUiLine(0, text0, mark0);
+    main_lcd().printUiLine(1, text1, mark1);
+    return;
+  }
+#endif
   font_map_t map = {};
   scan_text(map, text0, LCD_WIDTH - 1);
   scan_text(map, text1, LCD_WIDTH - 1);
@@ -333,6 +352,12 @@ inline void print_menu_window(char mark0, const char* text0, char mark1, const c
 
 inline void print_menu_line(u8 y, char mark, const char* text) {
   MK61DisplayUpdate update(main_lcd());
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    main_lcd().printUiLine(y, text, mark);
+    return;
+  }
+#endif
   font_map_t map = {};
   scan_text(map, text, LCD_WIDTH - 1);
   load_custom_font(map);

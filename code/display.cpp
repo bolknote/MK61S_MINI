@@ -2252,7 +2252,10 @@ MK61Display::MK61Display(void)
     top_right_overlay_width(0),
     top_right_overlay_height(0),
     top_right_overlay_clear_border(0),
-    top_right_overlay_visible(false)
+    top_right_overlay_visible(false),
+    ui_font_state(4),
+    ui_row_gutters(0),
+    ui_row_tails(0)
 #if MK61_ENABLE_USB_SCREEN
     , usb_surface(render_buffer),
     usb_screen_active(false),
@@ -2443,7 +2446,9 @@ void MK61Display::applyTextProfile(lcd_display::TextProfile profile, bool exact_
   if(next.rows == active_profile.rows &&
      next.glyph_width == active_profile.glyph_width &&
      next.glyph_height == active_profile.glyph_height &&
-     next.line_gap == active_profile.line_gap) return;
+     next.line_gap == active_profile.line_gap &&
+     grid.rows() == (uiTextActive() ? 4 : next.rows) &&
+     grid.cols() == (uiTextActive() ? 40 : lcd_display::COLS)) return;
 
   active_profile = next;
   clearShadow();
@@ -2888,7 +2893,9 @@ void MK61Display::writeCodepoint(u16 codepoint) {
 }
 
 void MK61Display::clearShadow(void) {
-  grid.reset(active_profile.rows);
+  grid.reset(uiTextActive() ? 4 : active_profile.rows, uiTextActive() ? 40 : lcd_display::COLS);
+  ui_row_gutters = 0;
+  ui_row_tails = 0;
 }
 
 void MK61Display::clearPhysicalScreen(void) {
@@ -2971,12 +2978,13 @@ u8 MK61Display::sanitizeRows(u8 rows) {
 }
 
 u8 MK61Display::rowTop(u8 row) const {
+  if(uiTextActive()) return (u8) (1U + row * (uiFontSize() + 2U));
   return (u8) ((u16) row * (active_profile.glyph_height + active_profile.line_gap));
 }
 
 u8 MK61Display::rowPitch(u8 row) const {
   const u8 top = rowTop(row);
-  const u8 pitch = active_profile.glyph_height + active_profile.line_gap;
+  const u8 pitch = uiTextActive() ? uiFontSize() + 2U : active_profile.glyph_height + active_profile.line_gap;
   if(row + 1 >= grid.rows()) return lcd_display::PIXEL_HEIGHT - top;
   return (top + pitch > lcd_display::PIXEL_HEIGHT) ? (lcd_display::PIXEL_HEIGHT - top) : pitch;
 }
@@ -3169,6 +3177,11 @@ void MK61Display::renderPageRun(u8 page, u8 first_col, u8 count) {
   if(page >= RENDER_PAGE_COUNT || count == 0 ||
      first_col >= lcd_display::COLS ||
      count > lcd_display::COLS - first_col) return;
+
+  if(uiTextActive()) {
+    renderUiPage(page, first_col, count);
+    return;
+  }
 
   const u8 run_width = count * lcd_display::CELL_WIDTH;
   const u8 page_y = page * RENDER_PAGE_HEIGHT;
@@ -3435,6 +3448,14 @@ void MK61Display::leaveUsbScreen(void) {
   cursor_blink_phase = restore_cursor_blink;
   cursor_next_blink_ms = restore_cursor_blink
                        ? millis() + CURSOR_BLINK_MS : 0;
+  if(uiTextActive()) {
+    // USB Screen has a fixed-cell surface, not the proportional UI layout.
+    // The mode revision above asks the foreground owner to redraw its content;
+    // discard the incompatible seed before exposing the physical display.
+    clearShadow();
+    cursor_underline = cursor_blink = cursor_blink_phase = false;
+    cursor_next_blink_ms = 0;
+  }
   markScreenDirty();
 #endif
   setPhysicalScreenEnabled(true);

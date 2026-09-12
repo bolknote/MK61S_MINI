@@ -40,6 +40,7 @@
   #include "builtin_font.hpp"
   #include "fmk_font.hpp"
   #include "text_screen.hpp"
+  #include "ui_font.hpp"
 #endif
 
 #if MK61_ENABLE_USB_SCREEN
@@ -192,6 +193,36 @@ class MK61Display : public Print {
     void setRows(u8 rows);
     void setTextProfile(lcd_display::TextProfile profile);
     lcd_display::TextProfile textProfile(void) const;
+#if defined(MK61_DISPLAY_UC1609)
+    // An opt-in UI role. The calculator profile and external font are retained.
+    void setUiFont(u8 family, u8 size);
+    u8 uiFontFamily(void) const { return ui_font_state & 3U; }
+    u8 uiFontSize(void) const { return (ui_font_state & 4U) ? 14U : 12U; }
+    bool uiFontEnabled(void) const { return uiFontFamily() != 0; }
+    bool uiTextContext(void) const { return (ui_font_state & 8U) != 0; }
+    bool uiTextActive(void) const {
+      return uiTextContext() && uiFontEnabled() && !preview_profile_active && !usbScreenActive();
+    }
+    void beginUiText(void);
+    void endUiText(void);
+    ui_font::Face uiFontFace(void) const {
+      return {uiFontFamily() == 2 ? ui_font::Family::ROBOTO : ui_font::Family::DEJAVU,
+              uiFontSize() == 14 ? ui_font::Size::PX14 : ui_font::Size::PX12};
+    }
+    // Replaces a whole row, clips by advance, and adds an ellipsis when needed.
+    // Optional marker and right-hand type icon occupy fixed, separate gutters.
+    void printUiLine(u8 row, const char* text, char marker = 0, u16 trailing = 0);
+    u16 measureUiText(const char* text) const;
+#else
+    void setUiFont(u8, u8) {}
+    u8 uiFontFamily(void) const { return 0; }
+    u8 uiFontSize(void) const { return 14; }
+    bool uiFontEnabled(void) const { return false; }
+    bool uiTextContext(void) const { return false; }
+    bool uiTextActive(void) const { return false; }
+    void beginUiText(void) {}
+    void endUiText(void) {}
+#endif
     void setCursor(u8 x, u8 y);
     void cursorOn(void);
     void cursorOff(void);
@@ -470,6 +501,9 @@ class MK61Display : public Print {
     u8 top_right_overlay_height;
     u8 top_right_overlay_clear_border;
     bool top_right_overlay_visible;
+    u8 ui_font_state;
+    u8 ui_row_gutters;
+    u8 ui_row_tails;
 
     void clearShadow(void);
     void clearPhysicalScreen(void);
@@ -502,6 +536,8 @@ class MK61Display : public Print {
     const fmk::Face* selectedFont(void) const;
     builtin_font::FaceId fallbackFont(void) const;
     bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
+    void renderUiPage(u8 page, u8 first_col, u8 count);
+    u8 uiAdvance(u16 codepoint, bool custom) const;
 #endif
 #if MK61_ENABLE_USB_SCREEN
 #if defined(MK61_DISPLAY_LCD1602)
@@ -523,6 +559,22 @@ class MK61Display : public Print {
     static usb_screen::TextProfile usbTextProfile(
       lcd_display::TextProfile profile);
 #endif
+};
+
+class MK61DisplayTextScope {
+  public:
+    explicit MK61DisplayTextScope(MK61Display& display, bool ui = true)
+        : display_(display), previous_(display.uiTextContext()) {
+      if(ui) display_.beginUiText(); else display_.endUiText();
+    }
+    ~MK61DisplayTextScope() {
+      if(previous_) display_.beginUiText(); else display_.endUiText();
+    }
+    MK61DisplayTextScope(const MK61DisplayTextScope&) = delete;
+    MK61DisplayTextScope& operator=(const MK61DisplayTextScope&) = delete;
+  private:
+    MK61Display& display_;
+    bool previous_;
 };
 
 class MK61DisplayUpdate {

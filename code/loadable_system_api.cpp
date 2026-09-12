@@ -14,6 +14,9 @@
 #include "text_editor.hpp"
 #include "mk61_ref.hpp"
 #include "setup_service.hpp"
+#if defined(MK61_DISPLAY_UC1609)
+#include "ui_font_service.hpp"
+#endif
 #if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
 #include "loadable_system_editor.hpp"
 #endif
@@ -67,6 +70,7 @@ static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
   MK61Display& lcd = main_lcd();
   switch(operation) {
     case MK61_SYS_DISPLAY_CLEAR: lcd.clear(); break;
+    case MK61_SYS_DISPLAY_END_UI_TEXT: lcd.endUiText(); break;
     case MK61_SYS_DISPLAY_CURSOR: lcd.setCursor((u8) b, (u8) c); break;
     case MK61_SYS_DISPLAY_WRITE: lcd.write((u8) b); break;
     case MK61_SYS_DISPLAY_PRINT: if(payload) lcd.print((const char*) payload); break;
@@ -122,7 +126,15 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #if MK61_MARKDOWN_VIEWER_IS_LOADABLE && MK61_MARKDOWN_USES_WBMP
           | MK61_SERVICE_CAP_FONT
 #endif
+#if defined(MK61_DISPLAY_UC1609)
+          | MK61_SERVICE_CAP_UI_FONT
+#endif
           ;
+#if defined(MK61_DISPLAY_UC1609)
+    case MK61_SERVICE_UI_FONT:
+      return ui_font_service::call(main_lcd().uiFontFamily(), main_lcd().uiFontSize(),
+                                   a, b, c, payload);
+#endif
     case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
     case MK61_SYS_DISPLAY: return display_call(a, b, c, payload);
     case MK61_SYS_KEYBOARD: return key_call(a, b);

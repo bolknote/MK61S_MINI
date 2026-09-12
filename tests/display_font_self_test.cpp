@@ -289,6 +289,125 @@ static void test_text_grid_skips_unchanged_cells(void) {
   assert(!grid.cellIsCustom(4, 0));
 }
 
+static void test_text_grid_wide_rows(void) {
+  // The UI reuses the old 16x10 grid storage, including its two flag maps.
+  static_assert(sizeof(text_screen::Grid) <= 364, "Grid must not add a UI buffer");
+  text_screen::Grid grid;
+  grid.reset(4, 40);
+  assert(grid.rows() == 4 && grid.cols() == 40);
+  for(u16 cell = 0; cell < 160; cell++) {
+    assert(grid.writeCodepoint((u16) (0x0410 + cell)));
+  }
+  for(u8 row = 0; row < 4; row++) {
+    assert(grid.dirtyMask(row) == 0xFFFF);
+    for(u8 col = 0; col < 40; col++) {
+      assert(grid.cell(col, row) == 0x0410 + row * 40 + col);
+      assert(!grid.cellIsCustom(col, row));
+    }
+  }
+  // The last row wraps to its own beginning, just like the original grid.
+  assert(grid.cursorX() == 0 && grid.cursorY() == 3);
+  grid.setCursor(255, 255);
+  assert(grid.cursorX() == 39 && grid.cursorY() == 3);
+  grid.newline();
+  assert(grid.cursorX() == 0 && grid.cursorY() == 3);
+
+  grid.clearColumns(0xFFFF);
+  assert(!grid.anyDirty());
+  const u8 boundary_columns[] = {15, 16, 31, 32, 39};
+  for(u8 col : boundary_columns) {
+    grid.setCursor(col, 1);
+    assert(grid.writeByte(3));
+  }
+  for(u8 col = 0; col < 40; col++) {
+    const bool expected = col == 15 || col == 16 || col == 31 || col == 32 || col == 39;
+    assert(grid.cellIsCustom(col, 1) == expected);
+    assert(!grid.cellIsCustom(col, 0));
+    assert(!grid.cellIsCustom(col, 2));
+  }
+  grid.clearColumns(0xFFFE);
+  assert(grid.dirtyMask(1) == 0xFFFF);
+  assert(grid.dirtyMask(0) == 0 && grid.dirtyMask(2) == 0);
+  grid.clearDirty(1);
+  assert(!grid.anyDirty());
+  grid.setCursor(32, 1);
+  assert(!grid.writeByte(3));
+  assert(!grid.anyDirty());
+  assert(grid.markCustomSlot(3));
+  assert(grid.dirtyMask(1) == 0xFFFF);
+  assert(!grid.markCustomSlot(4));
+  grid.clearDirty(1);
+  grid.setCursor(32, 1);
+  assert(grid.writeCodepoint(3));
+  assert(!grid.cellIsCustom(32, 1) && grid.cellIsCustom(31, 1));
+
+  grid.reset(10);
+  assert(grid.rows() == 10 && grid.cols() == 16);
+  assert(!grid.anyDirty());
+  for(u8 row = 0; row < 10; row++) {
+    for(u8 col = 0; col < 16; col++) {
+      assert(grid.cell(col, row) == ' ');
+      assert(!grid.cellIsCustom(col, row));
+    }
+  }
+  grid.setCursor(15, 9);
+  assert(grid.writeByte(7));
+  assert(grid.cursorX() == 0 && grid.cursorY() == 9);
+  assert(grid.dirtyMask(9) == 0x8000);
+  grid.clearColumns(0x8000);
+  assert(!grid.anyDirty());
+}
+
+static void test_text_grid_geometry_bounds(void) {
+  text_screen::Grid grid;
+  grid.reset(0, 0);
+  assert(grid.rows() == 1 && grid.cols() == 1);
+  grid.setCursor(255, 255);
+  assert(grid.cursorX() == 0 && grid.cursorY() == 0);
+  assert(grid.writeCodepoint('A'));
+  assert(grid.cell(0, 0) == 'A');
+  assert(grid.dirtyMask(0) == 1);
+  assert(grid.cell(1, 0) == ' ' && grid.cell(0, 1) == ' ');
+  grid.markCell(255, 255);
+  grid.clearDirty(255);
+  assert(grid.dirtyMask(255) == 0);
+
+  grid.reset(255, 255);
+  assert(grid.rows() == 1 && grid.cols() == 160);
+  for(u16 col = 0; col < 160; col++) assert(grid.writeByte(2));
+  assert(grid.cellIsCustom(159, 0));
+  assert(grid.cursorX() == 0 && grid.cursorY() == 0);
+  grid.clearDirty(0);
+  assert(!grid.anyDirty());
+
+  // Adjacent rows can share one flag byte. Clearing either must preserve
+  // the other's dirty/custom bits even when the width exceeds sixteen.
+  grid.reset(10, 17);
+  assert(grid.rows() == 9 && grid.cols() == 17);
+  grid.setCursor(16, 0);
+  assert(grid.writeByte(4));
+  assert(grid.writeByte(5));
+  assert(grid.cellIsCustom(16, 0) && grid.cellIsCustom(0, 1));
+  grid.clearDirty(0);
+  assert(grid.dirtyMask(0) == 0 && grid.dirtyMask(1) == 0xFFFF);
+  grid.clearDirty(1);
+  assert(!grid.anyDirty());
+  assert(grid.markCustomSlot(4));
+  assert(grid.dirtyMask(0) == 0xFFFF && grid.dirtyMask(1) == 0);
+  grid.clearDirty(0);
+  assert(grid.markCustomSlot(5));
+  assert(grid.dirtyMask(0) == 0 && grid.dirtyMask(1) == 0xFFFF);
+
+  grid.reset(2, 15);
+  grid.markAll();
+  grid.clearColumns(0x4001);
+  assert(grid.dirtyMask(0) == 0x3FFE && grid.dirtyMask(1) == 0x3FFE);
+  grid.clearDirty(0);
+  assert(grid.dirtyMask(0) == 0 && grid.dirtyMask(1) == 0x3FFE);
+  grid.clear();
+  assert(!grid.anyDirty());
+}
+
 static void test_page_damage(void) {
   u16 masks[8] = {};
   assert(!page_damage::any(masks, 8));
@@ -362,6 +481,8 @@ int main(int argc, char** argv) {
   test_supplemental_cyrillic_glyphs();
   test_text_grid();
   test_text_grid_skips_unchanged_cells();
+  test_text_grid_wide_rows();
+  test_text_grid_geometry_bounds();
   test_page_damage();
   test_uc1609_buffer_geometry();
   if(argc > 1) validate_external_font(argv[1], argc > 2 && strcmp(argv[2], "--require-ink") == 0);

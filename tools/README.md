@@ -11,6 +11,10 @@
   с автоматическим выбором ZX0 или BCJ + ZX0; инструкция в
   [`sdk/portable/README.md`](../sdk/portable/README.md);
 - `build_fmk_font.sh` — конвертер шрифтов FMK;
+- `generate_ui_fonts.py` — воспроизводимая сборка встроенных пропорциональных
+  шрифтов UC1609 из проверенных растров; `--check` проверяет актуальность таблиц.
+- `font_preview_study.py` — сравнение реальных монохромных растров шрифтов
+  на компьютере; [инструкция](.fmk-font/README-preview.md).
 - `build_mk61_module_pack.sh` — низкоуровневый ZX0-упаковщик APP.
 - `seal-firmware.sh`, `seal-firmware.ps1` — post-link запечатывание и
   независимая проверка CRC/content ID resident BIN для release-сборщиков.

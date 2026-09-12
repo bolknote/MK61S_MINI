@@ -114,6 +114,7 @@ class MK61Display {
   void beginUpdate();
   void endUpdate();
   void endShiftedViewport();
+  void endUiText();
   u8 cols() const { return (u8) portable_system::app->display_columns(); }
   u8 rows() const { return (u8) portable_system::app->display_rows(); }
   bool supportsFullscreenBitmap() const;

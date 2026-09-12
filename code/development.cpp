@@ -102,6 +102,9 @@ static char type_marker(program_store::ProgramType type) {
 }
 
 static void print_line(u8 row, const char* text) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) { main_lcd().printUiLine(row, text); return; }
+#endif
   main_lcd().setCursor(0, row);
   u8 used = 0;
   while(text != NULL && used < lcd_display::COLS && text[used] != 0) {
@@ -159,6 +162,9 @@ static bool explorer_time_reached(u32 now, u32 target) {
 }
 
 static u8 explorer_type_col(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) return 39;
+#endif
   const u8 cols = main_lcd().cols();
   return cols > 0 ? (u8) (cols - 1) : 0;
 }
@@ -377,7 +383,36 @@ static int previous_matching_index(u16 directory_id, int active,
   return active;
 }
 
+#if defined(MK61_DISPLAY_UC1609)
+// Keep the insertion point inside the viewport, not merely the beginning of
+// the name. Bound every temporary by C5's filename capacity and move only at
+// UTF-8 boundaries. The spare right margin includes the caret's next glyph.
+static u16 ui_editor_window_start(const char* text, u16 length, u16 cursor) {
+  if(text == NULL) return 0;
+  if(length >= program_store::NAME_SIZE) length = program_store::NAME_SIZE - 1;
+  if(cursor > length) cursor = length;
+  char prefix[program_store::NAME_SIZE];
+  u16 start = 0;
+  while(start < cursor) {
+    const u16 count = (u16) (cursor - start);
+    memcpy(prefix, text + start, count);
+    prefix[count] = 0;
+    if(main_lcd().measureUiText(prefix) <= 160) break;
+    start = utf8_view::next_offset((const u8*) text, length, start);
+  }
+  return start;
+}
+#endif
+
 static void draw_search_header(const char* search_text) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    const u16 length = (u16) text_editor::bounded_length(search_text, program_store::NAME_SIZE - 1);
+    const u16 start = ui_editor_window_start(search_text, length, length);
+    main_lcd().printUiLine(0, search_text + start, '?');
+    return;
+  }
+#endif
   char line[18];
   snprintf(line, sizeof(line), "?%s", search_text);
   print_line(0, line);
@@ -385,6 +420,15 @@ static void draw_search_header(const char* search_text) {
 
 static void draw_search_cursor(const char* search_text) {
   const usize len = text_editor::bounded_length(search_text, program_store::NAME_SIZE);
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    const u16 start = ui_editor_window_start(search_text, (u16) len, (u16) len);
+    const u16 characters = utf8_view::codepoint_count(search_text + start, (u16) (len - start));
+    main_lcd().setCursor((u8) (1U + characters), 0);
+    main_lcd().cursorOn();
+    return;
+  }
+#endif
   const u8 cursor_col = (len + 1 < lcd_display::COLS) ? (u8) (len + 1) : (u8) (lcd_display::COLS - 1);
   main_lcd().setCursor(cursor_col, 0);
   main_lcd().cursorOn();
@@ -399,6 +443,9 @@ static void explorer_scroll_reset(ExplorerScroll& scroll) {
 }
 
 static u8 explorer_name_width(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) return 176; // 192 - two 2px margins - type gutter.
+#endif
   const u8 type_col = explorer_type_col();
   return type_col > EXPLORER_NAME_COL ? (u8) (type_col - EXPLORER_NAME_COL) : 0;
 }
@@ -410,10 +457,25 @@ static u8 explorer_name_len(const char* name) {
 }
 
 static bool explorer_name_overflows(const char* name, u8 width) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) return main_lcd().measureUiText(name) > width;
+#endif
   return width != 0 && explorer_name_len(name) > width;
 }
 
 static u8 explorer_scroll_max_offset(const char* name, u8 width) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    const u16 bytes = (u16) text_editor::bounded_length(name, program_store::NAME_SIZE);
+    u16 offset = 0;
+    u8 skipped = 0;
+    while(offset < bytes && main_lcd().measureUiText(name + offset) > width) {
+      offset = utf8_view::next_offset((const u8*) name, bytes, offset);
+      ++skipped;
+    }
+    return skipped;
+  }
+#endif
   const u8 len = explorer_name_len(name);
   return (width != 0 && len > width) ? (u8) (len - width) : 0;
 }
@@ -506,6 +568,14 @@ static void draw_explorer_name(const lcd_ru::font_map_t& map,
 static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
                               const program_store::Entry& entry,
                               u8 scroll_offset) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    const u16 offset = utf8_view::byte_offset(entry.name, scroll_offset, program_store::NAME_SIZE - 1);
+    main_lcd().printUiLine(row, entry.name + offset, 0,
+        (u8) (entry.kind == program_store::NodeKind::DIRECTORY ? '/' : type_marker(entry.type)));
+    return;
+  }
+#endif
   draw_explorer_name(map, entry.name, row, scroll_offset);
   main_lcd().setCursor(explorer_type_col(), row);
   main_lcd().write((u8) (entry.kind == program_store::NodeKind::DIRECTORY
@@ -516,6 +586,7 @@ static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
 static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
                          const char* search_text = NULL,
                          u8* cursor_row_out = NULL) {
+  main_lcd().beginUiText();
   if(cursor_row_out != NULL) *cursor_row_out = EXPLORER_NO_CURSOR_ROW;
   explorer_cursor_off();
 
@@ -848,10 +919,14 @@ static bool view_entry(const program_store::Entry& entry) {
   }
 
   if(entry.type == program_store::ProgramType::FONT) {
+    MK61DisplayTextScope text_scope(main_lcd(), false);
     setup_ui::preview(entry.name, data, len);
     return true;
   }
 
+  // Raw source/state/text views retain their 16-column layout. Markdown has
+  // its own measured layout above, and is intentionally not in this scope.
+  MK61DisplayTextScope text_scope(main_lcd(), false);
   u16 top_line = 0;
   while(true) {
     const u8 display_rows = main_lcd().rows();
@@ -911,6 +986,17 @@ static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
   const u16 byte_len = (u16) strlen(name);
   if(cursor > byte_len) cursor = byte_len;
   const u16 cursor_chars = utf8_view::codepoint_count(name, cursor);
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    const u16 start = ui_editor_window_start(name, byte_len, cursor);
+    const u16 skipped = utf8_view::codepoint_count(name, start);
+    main_lcd().printUiLine(0, title);
+    main_lcd().printUiLine(1, name + start, '>');
+    main_lcd().setCursor((u8) (1U + cursor_chars - skipped), 1);
+    main_lcd().cursorOn();
+    return;
+  }
+#endif
   const u16 window = cursor_chars > lcd_display::COLS - 2
       ? (u16) (cursor_chars - (lcd_display::COLS - 2)) : 0;
   char line[program_store::NAME_SIZE + 2];
@@ -1259,6 +1345,14 @@ static char dialog_item_marker(const DialogItem& item) {
 
 static void draw_dialog_row(const lcd_ru::font_map_t& map, u8 row,
                             const DialogItem& item, u8 scroll_offset) {
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    const char* name = dialog_item_name(item);
+    main_lcd().printUiLine(row, name + utf8_view::byte_offset(name, scroll_offset),
+                          0, (u8) dialog_item_marker(item));
+    return;
+  }
+#endif
   draw_explorer_name(map, dialog_item_name(item), row, scroll_offset);
   main_lcd().setCursor(explorer_type_col(), row);
   main_lcd().write((u8) dialog_item_marker(item));
@@ -1335,6 +1429,7 @@ static ProgramStoreFileDialogResult run_storage_dialog(
     DialogMode mode, program_store::ProgramType type, u16 start_directory,
     bool allow_new, u16 forbidden_tree, program_store::Entry& out_entry,
     u16& out_directory) {
+  MK61DisplayTextScope text_scope(main_lcd());
   u16 directory_id = start_directory;
   if(directory_id != program_store::ROOT_ID) {
     program_store::Entry directory;
@@ -1629,6 +1724,7 @@ static const char* item_menu_text(ItemMenuAction action, bool ru) {
 }
 
 static void draw_item_menu(const program_store::Entry& entry, int active) {
+  main_lcd().beginUiText();
   ItemMenuAction actions[ITEM_MENU_ACTION_CAPACITY];
   const int count = item_menu_actions(entry, actions,
                                       ITEM_MENU_ACTION_CAPACITY);
@@ -1640,6 +1736,17 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
 
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
+
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    for(int row = 0; row < visible; ++row) {
+      const int index = top + row;
+      main_lcd().printUiLine((u8) row, item_menu_text(actions[index], library_mk61::language_is_ru()),
+                            active == index ? '>' : ' ');
+    }
+    return;
+  }
+#endif
 
   if(library_mk61::language_is_ru()) {
     const int index0 = top;
@@ -1674,12 +1781,14 @@ static bool run_entry(const program_store::Entry& entry) {
       entry.type == program_store::ProgramType::IMAGE1 ||
       entry.type == program_store::ProgramType::CHIP8 ||
       entry.type == program_store::ProgramType::MARKDOWN;
-  const bool ok = entry.type == program_store::ProgramType::FONT
-    ? apply_font_entry(entry)
-    : file_handler
-      ? (file_result = file_handlers::open(entry)) ==
-            loadable_module::FileOpenResult::OK
-      : OpenStoredEntry(entry);
+  bool ok;
+  if(entry.type == program_store::ProgramType::FONT) ok = apply_font_entry(entry);
+  else if(file_handler) {
+    ok = (file_result = file_handlers::open(entry)) == loadable_module::FileOpenResult::OK;
+  } else {
+    MK61DisplayTextScope text_scope(main_lcd(), false);
+    ok = OpenStoredEntry(entry);
+  }
   if(!ok) {
     if(file_handler &&
        file_result == loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
@@ -1702,7 +1811,12 @@ static bool run_directory_autoexec(u16 directory_id) {
 }
 
 static bool load_mk61_entry(const program_store::Entry& entry) {
-  if(!entry_can_load(entry) || !LoadProgram(entry.id)) {
+  bool loaded = false;
+  if(entry_can_load(entry)) {
+    MK61DisplayTextScope text_scope(main_lcd(), false);
+    loaded = LoadProgram(entry.id);
+  }
+  if(!loaded) {
     show_message("Load error", "Ошибка чтения", entry.name, entry.name);
     delay(900);
     return false;
@@ -1714,19 +1828,22 @@ static bool load_mk61_entry(const program_store::Entry& entry) {
 
 static void edit_entry(const program_store::Entry& entry) {
   bool ok = false;
-  switch(entry.type) {
+  {
+    MK61DisplayTextScope text_scope(main_lcd(), false);
+    switch(entry.type) {
 #if MK61_ENABLE_FOCAL
-    case program_store::ProgramType::FOCAL:
-      ok = EditFocalProgram(entry.id);
-      break;
+      case program_store::ProgramType::FOCAL:
+        ok = EditFocalProgram(entry.id);
+        break;
 #endif
 #if MK61_ENABLE_TINYBASIC
-    case program_store::ProgramType::TINYBASIC:
-      ok = EditTinyBasicProgram(entry.id);
-      break;
+      case program_store::ProgramType::TINYBASIC:
+        ok = EditTinyBasicProgram(entry.id);
+        break;
 #endif
-    default:
-      break;
+      default:
+        break;
+    }
   }
   if(!ok) {
     show_message("Edit error", "Ошибка правки", entry.name, entry.name);
@@ -1943,6 +2060,7 @@ bool program_store_choose_save_target(program_store::ProgramType type,
 }
 
 bool program_store_explorer_select(void) {
+  MK61DisplayTextScope text_scope(main_lcd());
   u16 directory_id = program_store::ROOT_ID;
   int active = 0;
   ExplorerSearch search;

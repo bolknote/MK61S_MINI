@@ -25,7 +25,8 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_MATH = 1U << 7,
   MK61_SERVICE_CAP_RUNTIME = 1U << 8,
   MK61_SERVICE_CAP_SETUP = 1U << 9,
-  MK61_SERVICE_CAP_FORMAT = 1U << 10
+  MK61_SERVICE_CAP_FORMAT = 1U << 10,
+  MK61_SERVICE_CAP_UI_FONT = 1U << 11
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -56,7 +57,8 @@ enum mk61_service_operation {
   MK61_SERVICE_TEXT_ROWS, MK61_SERVICE_EDITOR_DRAW, MK61_SERVICE_EDITOR_SCROLL,
   MK61_SERVICE_MENU, MK61_SERVICE_FONT, MK61_SERVICE_REF_READ, MK61_SERVICE_REF_WRITE,
   MK61_SERVICE_FILE_EXISTS, MK61_SERVICE_EDITOR_KEY, MK61_SERVICE_SETUP,
-  MK61_SERVICE_CAPABILITIES
+  MK61_SERVICE_CAPABILITIES,
+  MK61_SERVICE_UI_FONT
 };
 enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_CLEAR, MK61_SERVICE_DISPLAY_CURSOR, MK61_SERVICE_DISPLAY_WRITE,
@@ -65,7 +67,10 @@ enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_FLUSH, MK61_SERVICE_DISPLAY_BEGIN_UPDATE,
   MK61_SERVICE_DISPLAY_END_UPDATE, MK61_SERVICE_DISPLAY_END_VIEWPORT,
   MK61_SERVICE_DISPLAY_GRAPHICS, MK61_SERVICE_DISPLAY_WIDTH, MK61_SERVICE_DISPLAY_HEIGHT,
-  MK61_SERVICE_DISPLAY_GRAPHICS_MODE
+  MK61_SERVICE_DISPLAY_GRAPHICS_MODE,
+  // Explicitly select the established cell renderer before language output.
+  // Old residents safely ignore this append-only operation (they have no UI role).
+  MK61_SERVICE_DISPLAY_END_UI_TEXT
 };
 enum mk61_service_keyboard_operation {
   MK61_SERVICE_KEY_POLL, MK61_SERVICE_KEY_GET, MK61_SERVICE_KEY_WAIT,
@@ -85,7 +90,8 @@ enum mk61_setup_operation {
   MK61_SETUP_RTC_WRITE, MK61_SETUP_RTC_CALIBRATION, MK61_SETUP_FONT_READ,
   MK61_SETUP_FONT_APPLY, MK61_SETUP_FONT_PREVIEW, MK61_SETUP_FONT_PREVIEW_END,
   MK61_SETUP_LCD_CHAR, MK61_SETUP_FONT_RESTORE, MK61_SETUP_TEXT,
-  MK61_SETUP_PHASE, MK61_SETUP_FEATURES
+  MK61_SETUP_PHASE, MK61_SETUP_FEATURES,
+  MK61_SETUP_UI_FONT_READ, MK61_SETUP_UI_FONT_APPLY
 };
 typedef struct mk61_setup_datetime {
   uint32_t year, month, day, hour, minute, second;
@@ -97,6 +103,7 @@ typedef struct mk61_setup_hardware {
   char rtc_source[4], display[16];
 } mk61_setup_hardware;
 typedef struct mk61_setup_profile { uint8_t rows, width, height, gap; } mk61_setup_profile;
+typedef struct mk61_setup_ui_font { uint8_t family, size; } mk61_setup_ui_font;
 
 typedef struct mk61_service_file {
   uint32_t id, parent, size, type, kind;
@@ -134,6 +141,23 @@ typedef struct mk61_service_glyph {
   uint32_t width, height;
   uint8_t pixels[8]; /* canonical row-major MSB, at most 8x8 */
 } mk61_service_glyph;
+
+/* Optional UC1609 font service, append-only operation 27. Query capability
+ * before use: old hosts return no capability and retain the monospaced UI.
+ * call(UI_FONT, INFO/GLYPH, codepoint, sizeof(payload), &payload).
+ * INFO returns 1 even when family=0 (disabled). GLYPH takes family/size as
+ * inputs so one document keeps consistent metrics if settings change later.
+ * All outputs contain values/bytes only, never resident Flash pointers. */
+enum mk61_service_ui_font_operation { MK61_UI_FONT_INFO, MK61_UI_FONT_GLYPH };
+typedef struct mk61_service_ui_font_info {
+  uint8_t family, size, ascent, descent, line_gap, reserved;
+} mk61_service_ui_font_info;
+typedef struct mk61_service_ui_glyph {
+  uint8_t family, size, width, height, bearing_x;
+  int8_t bearing_y;
+  uint8_t advance, fallback;
+  uint8_t pixels[32]; /* row-major MSB, ceil(width/8) bytes/row, at most 16x16 */
+} mk61_service_ui_glyph;
 
 typedef struct mk61_service_edit_hook {
   char* source;

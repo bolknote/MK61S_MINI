@@ -3,6 +3,13 @@
 
 Only hardware/C5 and workspace backing are mocked. The resident's actual
 arithmetic, printf, font decoder and editor key handler execute as ARM code.
+
+Use test-only residents built with MK61_MATH_BACKEND=0 (LIBM). This model does
+not initialize the calculator core or implement STM32 bit-band peripherals;
+CORE transcendental functions are covered separately by run_mk_math_tests.sh.
+Product builds may continue to use MK61_MATH_BACKEND=1.
+--ui-only qualifies UI on exact product residents without the transcendental
+probe; all display, editor, settings, ABI and ordinary arithmetic checks remain.
 """
 import argparse
 import binascii
@@ -32,6 +39,24 @@ class Elf:
         found = [v for k,v in self.symbols.items() if name in k]
         assert len(found) == 1, (name, found)
         return found[0]
+    def require_libm_math(self, path):
+        # This is the CORE implementation's MatrixKey evaluator, including
+        # GCC/LTO clone suffixes. Checking symbols avoids hard-coded addresses
+        # and does not require running any firmware in Unicorn first.
+        if any('10eval_unaryEdRKNS_9MatrixKeyE' in name for name in self.symbols):
+            raise ValueError(
+                f'{path}: MK61_MATH_BACKEND=1 (CORE) is unsupported by this '
+                'ARM fixture: the calculator core and STM32 bit-band are not '
+                'modeled. Build test-only residents with MK61_MATH_BACKEND=0 '
+                '(LIBM); run tests/run_mk_math_tests.sh for real CORE math. '
+                'Do not change the product configuration.')
+        # Fail closed if a stripped or otherwise incompatible ELF does not
+        # positively identify the math implementation exercised by this suite.
+        required = {'sin', 'cos', 'sqrt', 'exp', 'log'}
+        if not required.issubset(self.symbols):
+            raise ValueError(
+                f'{path}: cannot confirm LIBM math in the resident ELF; '
+                'provide an unstripped test-only MK61_MATH_BACKEND=0 build.')
     def load(self, uc):
         for s in self.sections:
             if s[2] & 2 and s[5]:
@@ -47,6 +72,28 @@ def preview_font():
     return bytes(data)
 
 
+def ui_font_oracle(family, size, text):
+    """Reference first paragraph using the reviewed native source pixels."""
+    font_dir = ROOT / 'tools/.fmk-font/ui-atlases'
+    name = 'roboto' if family == 2 else 'dejavu'
+    atlas = json.loads((font_dir / f'{name}-{size}.json').read_text())
+    glyphs = {g['codepoint']: g for g in atlas['glyphs']}
+    fallback = json.loads((font_dir / f'dejavu-{size}.json').read_text())
+    fallback = {g['codepoint']: g for g in fallback['glyphs']}
+    frame = bytearray(1536)
+    x = 2
+    for character in text:
+        glyph = glyphs.get(ord(character), fallback.get(ord(character), glyphs[ord('?')]))
+        top = 2 + atlas['ascent'] - glyph['bearing_y']
+        for y, row in enumerate(glyph['rows']):
+            for gx, pixel in enumerate(row):
+                if pixel == '1':
+                    px, py = x + glyph['safe_bearing_x'] + gx, top + y
+                    frame[(py // 8) * 192 + px] |= 1 << (py % 8)
+        x += glyph['advance']
+    return bytes(frame)
+
+
 class Machine:
     def __init__(self, resident, graphics, address_index=0):
         self.address_index = address_index
@@ -56,6 +103,13 @@ class Machine:
         self.uc.reg_write(UC_ARM_REG_C1_C0_2, 0xF00000)
         self.uc.reg_write(UC_ARM_REG_FPEXC, 0x40000000)
         elf = Elf(resident); elf.load(self.uc)
+        # setup() normally binds this pointer after the GPIO-dependent LCD
+        # constructor. No panel is constructed in this peripheral model, but
+        # the real UI-font dispatcher still evaluates its trivial preference
+        # getters before serializing GLYPH from the request's own family/size.
+        # Bind actual zeroed ELF storage, without guessing a C++ field offset;
+        # INFO/current preferences continue to be mocked in system().
+        self.put(elf.symbol('main_lcd_pointer'), elf.symbol('mk61_lcd_storage'))
         self.input = elf.symbol('__mk61_dynamic_begin')
         self.pool_begin = (self.input + 2048 + 31) & ~31
         self.pool_end = elf.symbol('__mk61_dynamic_end')
@@ -84,6 +138,9 @@ class Machine:
         self.calibration = 123
         self.profile = bytes((6, 5, 8, 2))
         self.extended = False
+        self.ui_fonts = False
+        self.ui_font = bytes((0, 14))
+        self.ui_ends = 0
         self.font_restores = 0
     def words(self, address, count):
         return struct.unpack('<'+'I'*count, self.uc.mem_read(address, count*4))
@@ -108,7 +165,7 @@ class Machine:
         result = None
         if address == (self.syscall & ~1):
             payload = self.words(uc.reg_read(UC_ARM_REG_SP),1)[0]
-            if a in (20,24,26):
+            if a in (20,24,26) or (a == 27 and b == 1):
                 self.key_calls += a == 24
                 return  # Execute the real resident font/editor/capability dispatcher.
             self.trace.append((a,b,c,d))
@@ -152,6 +209,7 @@ class Machine:
             if a == 3: self.lines.append(self.string(p))
             if a == 2: self.lines.append(chr(b))
             if a == 10: self.viewport_ends += 1
+            if a == 15: self.ui_ends += 1
             return {6:1,11:self.graphics,12:192 if self.graphics else 0,13:64 if self.graphics else 0,14:self.graphics}.get(a,0)
         if op == 2:
             if a in (0,1,2):
@@ -212,6 +270,17 @@ class Machine:
             self.uc.mem_write(p,struct.pack('<d',self.refs.get((a,b),0))); return 1
         if op == 22: self.refs[a,b] = struct.unpack('<d',self.uc.mem_read(p,8))[0]; return 1
         if op == 23: return any(x[:2] == (a,self.string(p)) for x in self.files.values())
+        if op == 27:
+            # Only the current hardware preference is mocked. The GLYPH case
+            # executes the actual resident font service in ARM code above.
+            assert a == 0 and c == 6
+            family, size = self.ui_font
+            if not self.graphics or not family:
+                self.uc.mem_write(p, bytes(6))
+            else:
+                ascent = 11 if size == 14 else 10
+                self.uc.mem_write(p, bytes((family, size, ascent, size - ascent, 2, 0)))
+            return 1
         if op == 25:
             if a == 0: return 1
             if a == 1:
@@ -230,7 +299,16 @@ class Machine:
             if a == 10: self.font_restores += 1; return 1
             if a == 11: self.lines.append(self.string(p)); return 1
             if a == 12: return 1
-            if a == 13: return int(self.graphics) | (2 if self.extended else 0)
+            if a == 13:
+                return int(self.graphics) | (2 if self.extended else 0) | (4 if self.ui_fonts else 0)
+            if a == 14:
+                assert self.ui_fonts
+                self.uc.mem_write(p, self.ui_font); return 1
+            if a == 15:
+                assert self.ui_fonts
+                value = bytes(self.uc.mem_read(p, 2))
+                assert value[0] <= 2 and value[1] in (12, 14), value
+                self.ui_font = value; return 1
         raise AssertionError(('unexpected system operation',op,a,b,c))
     def load(self, package):
         self.kind, variants, self.image_size, self.entry, self.crc = package
@@ -269,8 +347,20 @@ def main():
     parser.add_argument('--apps-dir',type=Path,required=True)
     parser.add_argument('--expect-public-services',action='store_true',
                         help='verify new adapters require the common API')
+    parser.add_argument('--ui-only', action='store_true',
+                        help='qualify UI on product residents without the '
+                             'transcendental probe; CORE math is tested separately')
     args=parser.parse_args()
     assert len(args.resident_elf) == 2, 'classic graphics, then mini character resident'
+    if args.ui_only:
+        print('UI qualification (transcendental math separately covered by '
+              'core host suite)', flush=True)
+    else:
+        for resident in args.resident_elf:
+            try:
+                Elf(resident).require_libm_math(resident)
+            except ValueError as error:
+                parser.error(str(error))
     with tempfile.TemporaryDirectory(prefix='mk61-system-arm-') as temp:
         reader=Path(temp)/'reader'
         run(['c++','-std=c++17','-O2','-DMK61_ENABLE_PORTABLE_APPS=1','-I'+str(ROOT/'code'),ROOT/'tests/portable_app_format_self_test.cpp',ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
@@ -303,14 +393,25 @@ def main():
                     assert m.call(0,m.sys,m.api,m.crc) == 5
                     m.uc.mem_write(m.api+6,struct.pack('<H',api_size))
                 assert m.call(0x102,m.source('1.10 S A=2+3*4\n1.20 S .R0=A\n1.30 P 100000000\n1.40 P A/3\n1.50 E')) == 1, m.lines
+                ui_ends = m.ui_ends
                 assert m.call(0x104,0) == 0
+                assert m.ui_ends > ui_ends, 'FOCAL must request monospaced output before running'
                 assert m.refs[4,0] == 14, m.refs
                 assert any('1E+8' in x for x in m.lines), m.lines
                 assert any('4.6666667' in x for x in m.lines), m.lines
                 m.load(packages['tinybasic'])
                 m.keys=[m.mapping[39]]
-                m.files[42]=(3,'BTEST',b'10 LET A=6*7\n20 LET .R1=A\n30 .R2=SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))\n40 PRINT A/3\n50 END\n')
+                # CORE execution requires peripherals absent from this model.
+                # UI qualification still exercises the real parser, register
+                # writes and ordinary ARM arithmetic, without claiming to test
+                # the separately covered transcendental implementation.
+                expression = (b'2+4' if args.ui_only else
+                              b'SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))')
+                m.files[42]=(3,'BTEST',b'10 LET A=6*7\n20 LET .R1=A\n30 .R2=' +
+                             expression + b'\n40 PRINT A/3\n50 END\n')
+                ui_ends = m.ui_ends
                 assert m.call(0x206,42) == 1, (m.lines, m.refs, m.trace[-25:])
+                assert m.ui_ends > ui_ends, 'BASIC must request monospaced output before running'
                 assert m.refs[4,1] == 42,m.refs
                 assert abs(m.refs[4,2]-6) < 1e-6,m.refs
                 m.address_index = (m.address_index + 1) % 3
@@ -335,6 +436,31 @@ def main():
                 m.load(packages['markdown-viewer']);m.files[43]=(10,'README',b'# Test\n\nHello **world**.\n');m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
                 assert m.call(2,0,43)==0
                 assert m.frames if m.graphics else any('Hello' in x for x in m.lines)
+                if m.graphics:
+                    inline_frames = {}
+                    code_frame = None
+                    for family, size in ((1, 12), (1, 14), (2, 12), (2, 14)):
+                        m.ui_font = bytes((family, size))
+                        text = 'Wi Ёж ←→'
+                        m.files[43] = (10, 'README', (text + '\n').encode())
+                        m.keys = [m.mapping[39]]; m.frames = []
+                        assert m.call(2, 0, 43) == 0
+                        assert m.frames == [ui_font_oracle(family, size, text)], (family, size)
+                        # Code blocks remain identical across all UI choices.
+                        m.files[43] = (10, 'README', b'```\nWi\n```\n')
+                        m.keys = [m.mapping[39]]; m.frames = []
+                        assert m.call(2, 0, 43) == 0
+                        if code_frame is None: code_frame = m.frames
+                        assert m.frames == code_frame
+                        # Inline code aligns to the selected baseline but is
+                        # the same fixed-cell raster for either font family.
+                        m.files[43] = (10, 'README', b'`WWii`\n')
+                        m.keys = [m.mapping[39]]; m.frames = []
+                        assert m.call(2, 0, 43) == 0
+                        if size not in inline_frames: inline_frames[size] = m.frames
+                        assert m.frames == inline_frames[size]
+                    m.ui_font = bytes((0, 14))
+                    m.files[43] = (10, 'README', b'# Test\n\nHello **world**.\n')
                 m.load(packages['markdown-text']); m.lines=[]
                 m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
                 assert m.call(2,0,43)==0
@@ -362,6 +488,21 @@ def main():
                     assert m.call(0x403)==0
                     assert m.profile == (bytes((7,5,8,1)) if extended and m.graphics else
                                          bytes((7,5,9,0)) if m.graphics else bytes((6,5,8,2))),m.profile
+                if m.graphics:
+                    # Two optional UI fields travel through the C service;
+                    # changing them must not replace the calculator profile.
+                    for extended in (False, True):
+                        m.ui_fonts = True; m.extended = extended
+                        m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
+                        fields = 4 if extended else 1
+                        for family, size in ((1, 12), (2, 14), (0, 12)):
+                            m.keys = ([m.mapping[38]] * fields +
+                                      [m.mapping[37], m.mapping[38],
+                                       m.mapping[37], m.mapping[39]])
+                            assert m.call(0x403) == 0
+                            assert m.ui_font == bytes((family, size)), m.ui_font
+                            assert m.profile == bytes((6, 5, 8, 2)), m.profile
+                    m.ui_fonts = False
                 m.keys=[m.mapping[39]]
                 pointer=m.source('bad font'); m.lines=[]
                 assert m.call(0x404,pointer,pointer,8)==0

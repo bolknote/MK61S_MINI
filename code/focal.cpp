@@ -2398,6 +2398,9 @@ FocalRunStatus RunFocal(int FocalN) {
 #ifndef FOCAL_HOST_TEST
   FocalWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return FocalRunStatus::UNAVAILABLE;
+  // Numeric/program output keeps the calculator's fixed-cell font even when
+  // execution starts from a proportional menu inside a portable System APP.
+  main_lcd().endUiText();
 #endif
   if(!compile_program_slot(FocalN)) return FocalRunStatus::COMPILE_ERROR;
   focal_trace_int("RUN slot=", FocalN);

@@ -666,6 +666,9 @@ try {
     Remove-GeneratedBundleFiles $outputBundle $residentName
     Copy-Item -LiteralPath $residentBin `
         -Destination (Join-Path $outputBundle $residentName)
+    Invoke-GccTool $python @(
+        (Join-Path $script:ProjectRoot 'tools/.fmk-font/package_ui_font_licenses.py'),
+        '--bundle', $outputBundle)
     if ([IO.Directory]::Exists((Join-Path $stage 'System'))) {
         Copy-Item -LiteralPath (Join-Path $stage 'System') `
             -Destination $outputBundle -Recurse

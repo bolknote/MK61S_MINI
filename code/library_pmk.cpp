@@ -239,6 +239,7 @@ typedef bool (*SelectTextProvider)(usize index, char* text, usize capacity);
 
 static int select_texts(usize count, const char* text, usize stride, i8& selector,
                         SelectTextProvider provider = NULL) {
+  MK61DisplayTextScope text_scope(main_lcd());
   do {
     const int display_rows = main_lcd().rows();
     const int visible_count = ((int) count < display_rows) ? (int) count : display_rows;
@@ -250,6 +251,19 @@ static int select_texts(usize count, const char* text, usize stride, i8& selecto
     {
       MK61DisplayUpdate update(main_lcd());
       for(int i=0; i < visible_count; i++) {
+#if defined(MK61_DISPLAY_UC1609)
+        if(main_lcd().uiTextActive()) {
+          const int index = up + i;
+          char generated[program_store::NAME_SIZE] = {};
+          const char* label = text;
+          if(provider) {
+            (void) provider((usize) index, generated, sizeof(generated));
+            label = generated;
+          } else if(text) label = text + (usize) index * stride;
+          main_lcd().printUiLine((u8) i, label, selector == index ? '>' : ' ');
+          continue;
+        }
+#endif
         main_lcd().setCursor(0,i);
         const int real_index = i + up;
         if(selector == real_index) {
@@ -268,6 +282,9 @@ static int select_texts(usize count, const char* text, usize stride, i8& selecto
         }
       }
       for(int i=visible_count; i < display_rows; i++) {
+#if defined(MK61_DISPLAY_UC1609)
+        if(main_lcd().uiTextActive()) { main_lcd().printUiLine((u8) i, ""); continue; }
+#endif
         main_lcd().setCursor(0, i);
         for(int x=0; x < (int) lcd_display::COLS; x++) main_lcd().write((u8) ' ');
       }

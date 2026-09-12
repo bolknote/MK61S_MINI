@@ -717,6 +717,7 @@ build_custom_app() {
 }
 
 cp "$resident_bin" "$bundle_stage/$firmware_name"
+python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" --bundle "$bundle_stage"
 if [ "$portable_apps" -eq 1 ]; then
   build_module setup System/SETUP.APP setup MK61_BUILD_SETUP_MODULE "$sketch_dir" - setup_ui.cpp setup_module_entry.cpp
   python3 "$root/tools/.mk61-app/build_terminal_help.py" --resident-elf "$resident_elf" --output-dir "$bundle_stage/System"

@@ -6,6 +6,7 @@
 #include "early_dfu.hpp"
 #include "mk61emu_core.h"
 #include "oled_settings.hpp"
+#include "ui_font_settings.hpp"
 #include "program_store.hpp"
 
 #include "debug.h"
@@ -240,13 +241,15 @@ SoundSettings read_sound_settings(void);
 void store_sound_settings(SoundSettings settings);
 OledSettings read_oled_settings(void);
 void store_oled_settings(OledSettings settings);
+UiFontSettings read_ui_font_settings(void);
 bool read_display_text_profile(lcd_display::TextProfile& out);
 void store_display_text_profile(lcd_display::TextProfile profile);
 bool store_settings_snapshot(
   SettingsFlags flags,
   SoundSettings sound,
   const lcd_display::TextProfile* text_profile,
-  const OledSettings* oled_settings = NULL
+  const OledSettings* oled_settings = NULL,
+  const UiFontSettings* ui_font_settings = NULL
 );
 
 inline AngleUnit load_grade_switch(void) {

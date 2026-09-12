@@ -78,6 +78,7 @@ void MK61Display::flush() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_FLUSH); }
 void MK61Display::beginUpdate() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_BEGIN_UPDATE); }
 void MK61Display::endUpdate() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_UPDATE); }
 void MK61Display::endShiftedViewport() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_VIEWPORT); }
+void MK61Display::endUiText() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_UI_TEXT); }
 bool MK61Display::supportsFullscreenBitmap() const { return call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_GRAPHICS); }
 u16 MK61Display::fullscreenBitmapWidth() const { return (u16) call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_WIDTH); }
 u16 MK61Display::fullscreenBitmapHeight() const { return (u16) call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_HEIGHT); }

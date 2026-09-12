@@ -34,7 +34,11 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
     case MK61_SETUP_VERSION: return 1;
     case MK61_SETUP_FEATURES:
       return (MK61_HAS_GRAPHICAL_TEXT_SETTINGS ? 1U : 0U) |
-             (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? 2U : 0U);
+             (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? 2U : 0U)
+#if defined(MK61_DISPLAY_UC1609)
+             | 4U
+#endif
+             ;
     case MK61_SETUP_HARDWARE: {
       if(!payload) return 0;
       auto& out = *(mk61_setup_hardware*) payload;
@@ -83,6 +87,30 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       return 1;
     }
     case MK61_SETUP_FONT_APPLY: return apply_font_profile(payload);
+    case MK61_SETUP_UI_FONT_READ:
+#if defined(MK61_DISPLAY_UC1609)
+      if(!payload) return 0;
+      *(mk61_setup_ui_font*) payload = {library_mk61::ui_font_family(),
+                                       library_mk61::ui_font_size()};
+      return 1;
+#else
+      return 0;
+#endif
+    case MK61_SETUP_UI_FONT_APPLY:
+#if defined(MK61_DISPLAY_UC1609)
+      if(!payload) return 0;
+      {
+        const auto& in = *(const mk61_setup_ui_font*) payload;
+        if(in.family > 2 || (in.size != 12 && in.size != 14)) return 0;
+        if(library_mk61::ui_font_family() == in.family &&
+           library_mk61::ui_font_size() == in.size) return 1;
+        library_mk61::set_ui_font(in.family, in.size);
+        library_mk61::mark_settings_dirty();
+      }
+      return 1;
+#else
+      return 0;
+#endif
     case MK61_SETUP_FONT_PREVIEW: return payload && a <= 1536 && main_lcd().setFontPreview((const u8*) payload, (u16) a);
     case MK61_SETUP_FONT_PREVIEW_END: main_lcd().clearFontPreview(); return 1;
     case MK61_SETUP_LCD_CHAR:
@@ -95,6 +123,13 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
     case MK61_SETUP_FONT_RESTORE: lcd_ru::restore_default_font(); return 1;
     case MK61_SETUP_TEXT:
       if(!payload || a >= main_lcd().rows()) return 0;
+#if defined(MK61_DISPLAY_UC1609)
+      if(main_lcd().uiTextActive() && ((b & 0x100U) || b == 0)) {
+        main_lcd().printUiLine((u8) a, (const char*) payload,
+                              (b & 0x100U) ? (char) b : 0);
+        return 1;
+      }
+#endif
       if(b & 0x100U) lcd_ru::print_menu_line((u8) a, (char) b, (const char*) payload);
       else lcd_ru::print_at((u8) b, (u8) a, (const char*) payload, lcd_display::COLS);
       return 1;

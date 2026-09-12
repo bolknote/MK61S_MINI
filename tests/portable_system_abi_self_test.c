@@ -24,3 +24,7 @@ _Static_assert(offsetof(mk61_setup_hardware, rtc_source) == 36, "hardware text b
 _Static_assert(sizeof(mk61_setup_profile) == 4, "font profile layout");
 _Static_assert(MK61_SYS_EDITOR_KEY == 24 && MK61_SYS_SETUP == 25, "append-only System operations");
 _Static_assert(MK61_SERVICE_CAPABILITIES == 26, "public service capability query");
+_Static_assert(MK61_SERVICE_UI_FONT == 27, "append-only proportional font operation");
+_Static_assert(sizeof(mk61_service_ui_font_info) == 6, "UI font metadata wire layout");
+_Static_assert(sizeof(mk61_service_ui_glyph) == 40, "UI glyph wire layout");
+_Static_assert(offsetof(mk61_service_ui_glyph, pixels) == 8, "UI glyph raster offset");

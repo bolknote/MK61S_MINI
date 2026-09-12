@@ -34,6 +34,16 @@ static i32 wait_key_or_display_change(u32 display_mode_revision) {
 
 static constexpr usize HARDWARE_LINE_SIZE = 32;
 
+static void printSetupLines(const char* first, const char* second) {
+  if(service(MK61_SETUP_FEATURES) & 4U) {
+    service(MK61_SETUP_TEXT, 0, 0, (void*) first);
+    service(MK61_SETUP_TEXT, 1, 0, (void*) second);
+  } else {
+    // Character displays must keep the two rows under one CGRAM map.
+    lcd_ru::print_lines(first, second);
+  }
+}
+
 static void build_hardware_lines(
     char lines[hardware_info::LINE_COUNT][HARDWARE_LINE_SIZE],
     const hardware_info::AnalogSnapshot& analog, const mk61_setup_hardware& snapshot) {
@@ -69,7 +79,7 @@ static void draw_hardware_lines(
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
 
-  if(library_mk61::language_is_ru()) {
+  if(library_mk61::language_is_ru() && !(service(MK61_SETUP_FEATURES) & 4U)) {
     const char* window[hardware_info::LINE_COUNT];
     for(u8 row = 0; row < visible; row++) {
       window[row] = lines[offset + row];
@@ -79,13 +89,7 @@ static void draw_hardware_lines(
   }
 
   for(u8 row = 0; row < visible; row++) {
-    main_lcd().setCursor(0, row);
-    u8 used = 0;
-    const char* text = lines[offset + row];
-    while(text[used] != 0 && used < lcd_display::COLS) {
-      main_lcd().write((u8) text[used++]);
-    }
-    while(used++ < lcd_display::COLS) main_lcd().write((u8) ' ');
+    service(MK61_SETUP_TEXT, row, 0, (void*) lines[offset + row]);
   }
 }
 
@@ -140,7 +144,7 @@ static void drawDateTimeEditor(const rtc_settings::Editor& editor) {
 
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
-  lcd_ru::print_lines(date_line, time_line);
+  printSetupLines(date_line, time_line);
 
   const usize position = rtc_settings::active_text_position(editor);
   if(position < 10) {
@@ -157,7 +161,7 @@ static void showDateTimeMessage(const char* ru0, const char* en0, const char* ru
   {
     MK61DisplayUpdate update(main_lcd());
     main_lcd().clear();
-    lcd_ru::print_lines(
+    printSetupLines(
       library_mk61::language_is_ru() ? ru0 : en0,
       library_mk61::language_is_ru() ? ru1 : en1);
   }
@@ -223,7 +227,7 @@ static void drawRtcCalibrationEditor(
 
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
-  lcd_ru::print_lines(
+  printSetupLines(
     library_mk61::language_is_ru() ? "Поправка RTC" : "RTC correction",
     value_line);
   main_lcd().setCursor(
@@ -353,6 +357,36 @@ static lcd_display::TextProfile read_profile() {
   service(MK61_SETUP_FONT_READ, 0, 0, &wire);
   return {wire.rows, wire.width, wire.height, wire.gap};
 }
+static u8 calculatorFontFieldCount(void) {
+#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  return (service(MK61_SETUP_FEATURES) & 2U) ? 4 : 1;
+#else
+  return 1;
+#endif
+}
+
+static bool uiFontSettingsAvailable(void) {
+  return (service(MK61_SETUP_FEATURES) & 4U) != 0;
+}
+
+static mk61_setup_ui_font readUiFont(void) {
+  mk61_setup_ui_font value = {0, 14};
+  if(uiFontSettingsAvailable()) service(MK61_SETUP_UI_FONT_READ, 0, 0, &value);
+  return value;
+}
+
+static void formatUiFontLine(char* out, usize size, u8 field,
+                             mk61_setup_ui_font ui_font) {
+  const bool russian = library_mk61::language_is_ru();
+  if(field == 0) {
+    const char* name = ui_font.family == 1 ? "DejaVu" :
+      (ui_font.family == 2 ? "Roboto" : (russian ? "обычн." : "Legacy"));
+    snprintf(out, size, russian ? "Шрифт UI:%s" : "UI font:%s", name);
+  } else {
+    snprintf(out, size, russian ? "Размер UI:%u" : "UI size:%u",
+      (unsigned) ui_font.size);
+  }
+}
 static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::TextProfile profile) {
 #if !MK61_ENABLE_EXTENDED_FONT_SETTINGS
   (void) field;
@@ -416,12 +450,10 @@ static void printFontSetupLine(u8 row, char mark, const char* text) {
   while(used++ < lcd_display::COLS - 1) main_lcd().write((u8) ' ');
 }
 
-static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  const u8 FIELD_COUNT = (service(MK61_SETUP_FEATURES) & 2) ? 4 : 1;
-#else
-  static constexpr u8 FIELD_COUNT = 1;
-#endif
+static void drawFontSetup(u8 active, lcd_display::TextProfile profile,
+                          mk61_setup_ui_font ui_font) {
+  const u8 calculator_fields = calculatorFontFieldCount();
+  const u8 FIELD_COUNT = calculator_fields + (uiFontSettingsAvailable() ? 2 : 0);
   noteFontSetupPhase(FontSetupPhase::DRAW);
   MK61DisplayUpdate update(main_lcd());
   const u8 rows = main_lcd().rows();
@@ -432,7 +464,8 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile) {
   char line[32];
   for(u8 row = 0; row < visible_fields; row++) {
     const u8 field = top + row;
-    formatFontSetupLine(line, sizeof(line), field, profile);
+    if(field < calculator_fields) formatFontSetupLine(line, sizeof(line), field, profile);
+    else formatUiFontLine(line, sizeof(line), (u8) (field - calculator_fields), ui_font);
     printFontSetupLine(row, (field == active) ? '>' : ' ', line);
   }
 
@@ -507,13 +540,13 @@ static i32 waitFontSetupKey(void) {
 bool font(void) {
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   if(!(service(MK61_SETUP_FEATURES) & 1) || !main_lcd().graphicsMode()) return action::MENU_BACK;
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  const u8 FIELD_COUNT = (service(MK61_SETUP_FEATURES) & 2) ? 4 : 1;
-#endif
+  const u8 calculator_fields = calculatorFontFieldCount();
+  const u8 FIELD_COUNT = calculator_fields + (uiFontSettingsAvailable() ? 2 : 0);
   lcd_display::TextProfile profile = read_profile();
+  mk61_setup_ui_font ui_font = readUiFont();
   u8 active = 0;
   profile = lcd_display::normalizeSettingsTextProfile(profile);
-  drawFontSetup(active, profile);
+  drawFontSetup(active, profile, ui_font);
 
   while(true) {
     const i32 key = waitFontSetupKey();
@@ -527,24 +560,28 @@ bool font(void) {
 
     bool redraw = false;
     bool apply = false;
+    i8 delta = 0;
     if(key == KEY_OK_PRESS) {
-#if MK61_ENABLE_EXTENDED_FONT_SETTINGS
       if(FIELD_COUNT > 1) { active = (u8) ((active + 1) % FIELD_COUNT); }
-      else { stepFontSetupProfile(profile, active, 1); apply = true; }
+      else { delta = 1; apply = true; }
       redraw = true;
-#else
-      stepFontSetupProfile(profile, active, 1);
-      redraw = true;
-      apply = true;
-#endif
     } else if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
-      stepFontSetupProfile(profile, active, 1);
+      delta = 1;
       redraw = true;
       apply = true;
     } else if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
-      stepFontSetupProfile(profile, active, -1);
+      delta = -1;
       redraw = true;
       apply = true;
+    }
+
+    if(apply) {
+      if(active < calculator_fields) stepFontSetupProfile(profile, active, delta);
+      else if(active == calculator_fields) {
+        ui_font.family = (u8) ((ui_font.family + (delta > 0 ? 1 : 2)) % 3);
+      } else {
+        ui_font.size = ui_font.size == 14 ? 12 : 14;
+      }
     }
 
     if(redraw) {
@@ -552,8 +589,11 @@ bool font(void) {
       // Смена backing font, геометрии сетки и следующая картинка образуют одну
       // транзакцию: промежуточный кадр со старой ссылкой не существует.
       MK61DisplayUpdate update(main_lcd());
-      if(apply) applyFontSetupProfile(profile);
-      drawFontSetup(active, profile);
+      if(apply) {
+        if(active < calculator_fields) applyFontSetupProfile(profile);
+        else if(!service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &ui_font)) ui_font = readUiFont();
+      }
+      drawFontSetup(active, profile, ui_font);
     }
   }
 #else

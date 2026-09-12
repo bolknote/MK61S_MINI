@@ -396,6 +396,9 @@ struct PersistentSettings {
 #if defined(MK61_OLED1602_WS0010)
   u8 oled;
 #endif
+#if defined(MK61_DISPLAY_UC1609)
+  u8 ui_font;
+#endif
   lcd_display::TextProfile text_profile;
   bool text_profile_stored;
 };
@@ -407,6 +410,9 @@ static PersistentSettings persistent_settings = {
   0xFF,
 #if defined(MK61_OLED1602_WS0010)
   0xFF,
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+  UiFontSettings::DEFAULT_PRESET,
 #endif
   lcd_display::defaultSettingsTextProfile(),
   false
@@ -425,6 +431,9 @@ static void reset_persistent_settings_cache(void) {
 #if defined(MK61_OLED1602_WS0010)
   persistent_settings.oled = 0xFF;
 #endif
+#if defined(MK61_DISPLAY_UC1609)
+  persistent_settings.ui_font = UiFontSettings::DEFAULT_PRESET;
+#endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
   persistent_settings_loaded = true;
@@ -441,6 +450,10 @@ static void apply_settings_record(const settings_journal::RecordData& record) {
   persistent_settings.sound = record.sound;
 #if defined(MK61_OLED1602_WS0010)
   persistent_settings.oled = record.oled_stored ? record.oled : 0xFF;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+  persistent_settings.ui_font = record.ui_font_stored
+    ? normalize_ui_font_settings(record.ui_font).raw : UiFontSettings::DEFAULT_PRESET;
 #endif
   persistent_settings.text_profile_stored = false;
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
@@ -499,6 +512,9 @@ static void import_legacy_settings(void) {
 #if defined(MK61_OLED1602_WS0010)
   persistent_settings.oled = 0xFF;
 #endif
+#if defined(MK61_DISPLAY_UC1609)
+  persistent_settings.ui_font = UiFontSettings::DEFAULT_PRESET;
+#endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
   persistent_settings.text_profile_stored = false;
   persistent_settings_needs_save = true;
@@ -524,7 +540,9 @@ static void load_persistent_settings(void) {
 
   settings_journal::Scanner scanner(
     settings_size,
-#if defined(MK61_OLED1602_WS0010)
+#if defined(MK61_DISPLAY_UC1609)
+    settings_journal::VERSION_5
+#elif defined(MK61_OLED1602_WS0010)
     settings_journal::VERSION
 #else
     settings_journal::VERSION_3
@@ -586,6 +604,10 @@ static bool write_persistent_settings(void) {
 #if defined(MK61_OLED1602_WS0010)
   data.oled = normalize_oled_settings(persistent_settings.oled).raw;
   data.oled_stored = true;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+  data.ui_font = normalize_ui_font_settings(persistent_settings.ui_font).raw;
+  data.ui_font_stored = true;
 #endif
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   data.text_profile_stored = persistent_settings.text_profile_stored;
@@ -665,6 +687,15 @@ OledSettings read_oled_settings(void) {
 #endif
 }
 
+UiFontSettings read_ui_font_settings(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  load_persistent_settings();
+  return normalize_ui_font_settings(persistent_settings.ui_font);
+#else
+  return UiFontSettings();
+#endif
+}
+
 void store_oled_settings(OledSettings settings) {
 #if defined(MK61_OLED1602_WS0010)
   load_persistent_settings();
@@ -717,7 +748,8 @@ bool store_settings_snapshot(
   SettingsFlags flags,
   SoundSettings sound,
   const lcd_display::TextProfile* text_profile,
-  const OledSettings* oled_settings
+  const OledSettings* oled_settings,
+  const UiFontSettings* ui_font_settings
 ) {
   load_persistent_settings();
   flags = normalize_settings_flags(flags.raw);
@@ -760,6 +792,18 @@ bool store_settings_snapshot(
   }
 #else
   (void) oled_settings;
+#endif
+
+#if defined(MK61_DISPLAY_UC1609)
+  if(ui_font_settings != NULL) {
+    const u8 raw = normalize_ui_font_settings(ui_font_settings->raw).raw;
+    if(persistent_settings.ui_font != raw) {
+      persistent_settings.ui_font = raw;
+      persistent_settings_needs_save = true;
+    }
+  }
+#else
+  (void) ui_font_settings;
 #endif
 
   return write_persistent_settings();

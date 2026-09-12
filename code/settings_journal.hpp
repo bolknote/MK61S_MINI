@@ -12,6 +12,9 @@ static constexpr u8 VERSION_1 = 1;
 static constexpr u8 VERSION_2 = 2;
 static constexpr u8 VERSION_3 = 3;
 static constexpr u8 VERSION = 4;
+// Only UC1609 emits v5. Other displays keep their established v3/v4 wire
+// format; byte 13 has a distinct meaning selected by the record version.
+static constexpr u8 VERSION_5 = 5;
 static constexpr u8 COMMIT_MARKER = 0xA5;
 static constexpr usize COMMIT_INDEX = 15;
 
@@ -30,6 +33,7 @@ static constexpr usize IDX_TEXT_WIDTH = 10;
 static constexpr usize IDX_TEXT_HEIGHT = 11;
 static constexpr usize IDX_TEXT_GAP = 12;
 static constexpr usize IDX_OLED = 13;
+static constexpr usize IDX_UI_FONT = 13;
 static constexpr usize IDX_CRC = 14;
 
 struct RecordData {
@@ -44,6 +48,8 @@ struct RecordData {
   bool text_profile_stored;
   u8 oled;
   bool oled_stored;
+  u8 ui_font;
+  bool ui_font_stored;
 };
 
 enum class RecordStatus : u8 {
@@ -85,7 +91,7 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
     if(record[IDX_V1_CRC] != checksum(record, IDX_V1_CRC)) return RecordStatus::INVALID;
   } else if(version == VERSION_2) {
     if(record[IDX_CRC] != checksum(record, IDX_CRC)) return RecordStatus::INVALID;
-  } else if(version == VERSION_3 || version == VERSION) {
+  } else if(version == VERSION_3 || version == VERSION || version == VERSION_5) {
     if(record[COMMIT_INDEX] != COMMIT_MARKER) return RecordStatus::INVALID;
     if(record[IDX_CRC] != checksum(record, IDX_CRC)) return RecordStatus::INVALID;
   } else {
@@ -104,6 +110,8 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
   decoded.text_profile_stored = false;
   decoded.oled = 0xFF;
   decoded.oled_stored = false;
+  decoded.ui_font = 0xFF;
+  decoded.ui_font_stored = false;
 
   if(version >= VERSION_2 &&
      record[IDX_TEXT_ROWS] != 0xFF &&
@@ -117,9 +125,13 @@ inline RecordStatus decode(const u8* record, RecordData& out, u8* decoded_versio
     decoded.text_profile_stored = true;
   }
 
-  if(version >= VERSION && record[IDX_OLED] != 0xFF) {
+  if(version == VERSION && record[IDX_OLED] != 0xFF) {
     decoded.oled = record[IDX_OLED];
     decoded.oled_stored = true;
+  }
+  if(version == VERSION_5 && record[IDX_UI_FONT] != 0xFF) {
+    decoded.ui_font = record[IDX_UI_FONT];
+    decoded.ui_font_stored = true;
   }
 
   out = decoded;
@@ -137,7 +149,8 @@ inline void encode_uncommitted(const RecordData& data, u8 record[RECORD_SIZE]) {
   // record. This avoids making A00/A02/UC1609 settings unreadable by an older
   // firmware merely because WS0010 added one optional byte to the shared
   // journal format.
-  record[IDX_VERSION] = data.oled_stored ? VERSION : VERSION_3;
+  record[IDX_VERSION] = data.ui_font_stored ? VERSION_5 :
+    (data.oled_stored ? VERSION : VERSION_3);
   record[IDX_GRADE] = data.grade;
   record[IDX_COUNTER] = data.counter;
   record[IDX_FLAGS] = data.flags;
@@ -148,7 +161,8 @@ inline void encode_uncommitted(const RecordData& data, u8 record[RECORD_SIZE]) {
     record[IDX_TEXT_HEIGHT] = data.text_height;
     record[IDX_TEXT_GAP] = data.text_gap;
   }
-  record[IDX_OLED] = data.oled_stored ? data.oled : 0xFF;
+  record[IDX_OLED] = data.ui_font_stored ? data.ui_font :
+    (data.oled_stored ? data.oled : 0xFF);
   record[IDX_CRC] = checksum(record, IDX_CRC);
   record[COMMIT_INDEX] = 0xFF;
 }

@@ -73,6 +73,9 @@ namespace library_mk61 {
 #endif
   extern  u8    display_rows(void);
   extern  lcd_display::TextProfile display_text_profile(void);
+  extern  u8    ui_font_family(void);
+  extern  u8    ui_font_size(void);
+  extern  void  set_ui_font(u8 family, u8 size);
   extern  ProgramMemoryMode program_memory_mode(void);
   extern  RandomMode random_mode(void);
   extern  bool  random_mode_is_mk61s(void);
@@ -100,6 +103,12 @@ namespace library_mk61 {
   }
 
   inline void print_localized_at(u8 x, u8 y, const char* ru, const char* en, u8 width = lcd_ru::LCD_WIDTH) {
+#if defined(MK61_DISPLAY_UC1609)
+    if(main_lcd().uiTextActive() && x == 0 && width == lcd_ru::LCD_WIDTH) {
+      main_lcd().printUiLine(y, language_is_ru() ? ru : en);
+      return;
+    }
+#endif
     if(language_is_ru()) {
       lcd_ru::print_at(x, y, ru, width);
       return;

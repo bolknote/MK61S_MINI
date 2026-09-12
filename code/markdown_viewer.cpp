@@ -18,6 +18,7 @@
   #include "shared_scratch.hpp"
   #include "storage_path.hpp"
   #include "wbmp.hpp"
+  #include "markdown_ui_font.hpp"
 #else
   #include "markdown_plain.hpp"
 #endif
@@ -429,6 +430,7 @@ class GraphicLayout {
   u8 viewport_height;
   u16 parent_id;
   markdown_scroll::Probe& scroll_probe;
+  markdown_ui_font::Source ui_font_source;
   bool compact;
   u16 y;
   u16 block_start_y;
@@ -452,6 +454,23 @@ class GraphicLayout {
     const u8 native_advance = face == builtin_font::FaceId::FONT_3X5
         ? 4U : (compact ? 5U : 6U);
     return (u8) (native_advance * scale);
+  }
+
+  bool ui_prose(void) const {
+    return !compact && ui_font_source.enabled() && block.kind != BlockKind::CODE;
+  }
+
+  u8 text_advance(u16 codepoint, u8 glyph_style,
+                  builtin_font::FaceId selected_face, u8 selected_scale) const {
+    if(ui_prose() && selected_face == builtin_font::FaceId::FONT_5X8 &&
+       (glyph_style & STYLE_CODE) == 0) {
+      mk61_service_ui_glyph glyph = {};
+      if(ui_font_source.glyph(codepoint, glyph)) {
+        return markdown_ui_font::Source::advance(glyph,
+          (glyph_style & STYLE_BOLD) != 0, (glyph_style & STYLE_ITALIC) != 0);
+      }
+    }
+    return glyph_advance(selected_face, selected_scale);
   }
 
   void record_anchor(u16 position) {
@@ -518,17 +537,38 @@ class GraphicLayout {
   void draw_glyph(u16 codepoint, u8 glyph_style,
                   i16 x, i16 global_y,
                   builtin_font::FaceId selected_face, u8 selected_scale) {
-    const i16 expected_height = (i16) (
+    const bool prose = ui_prose() && selected_face == builtin_font::FaceId::FONT_5X8;
+    i16 height = prose ? ui_font_source.height() : (i16) (
         (selected_face == builtin_font::FaceId::FONT_3X5 ? 5U : 8U) *
         selected_scale);
-    if(!vertical_span_visible(global_y, expected_height)) return;
+    if(!vertical_span_visible(global_y, height)) return;
 
     builtin_font::Raster raster = {};
-    if(!builtin_font::decode(selected_face, codepoint, raster) &&
-       !builtin_font::decode(selected_face, '?', raster)) return;
-
-    const u8 advance = glyph_advance(selected_face, selected_scale);
-    const i16 height = (i16) raster.height * selected_scale;
+    i16 ink_x = x;
+    i16 ink_y = global_y;
+    u8 advance = glyph_advance(selected_face, selected_scale);
+    if(prose && (glyph_style & STYLE_CODE) == 0) {
+      mk61_service_ui_glyph glyph = {};
+      if(ui_font_source.glyph(codepoint, glyph)) {
+        raster.width = glyph.width;
+        raster.height = glyph.height;
+        memcpy(raster.data, glyph.pixels, sizeof(glyph.pixels));
+        ink_x = (i16) (x + glyph.bearing_x);
+        ink_y = (i16) (global_y + ui_font_source.ascent() - glyph.bearing_y);
+        advance = markdown_ui_font::Source::advance(glyph,
+          (glyph_style & STYLE_BOLD) != 0, (glyph_style & STYLE_ITALIC) != 0);
+      }
+    }
+    if(raster.height == 0) {
+      if(!builtin_font::decode(selected_face, codepoint, raster) &&
+         !builtin_font::decode(selected_face, '?', raster)) return;
+      height = (i16) raster.height * selected_scale;
+      if(prose) {
+        // Inline code stays 5x8 and aligns to the surrounding baseline.
+        ink_y = global_y = (i16) (global_y + ui_font_source.ascent() - 7U);
+        glyph_style &= (u8) ~(STYLE_BOLD | STYLE_ITALIC);
+      }
+    }
     const bool inverse = (glyph_style & STYLE_CODE) != 0;
     if(inverse) fill_rect(x, global_y, advance, height, true);
 
@@ -541,9 +581,9 @@ class GraphicLayout {
                              source_x, source_y)) continue;
         for(u8 sy = 0; sy < selected_scale; sy++) {
           for(u8 sx = 0; sx < selected_scale; sx++) {
-            const i16 px = (i16) (x + italic_shift * selected_scale +
+            const i16 px = (i16) (ink_x + italic_shift * selected_scale +
                                   source_x * selected_scale + sx);
-            const i16 py = (i16) (global_y +
+            const i16 py = (i16) (ink_y +
                                   source_y * selected_scale + sy);
             set_global_pixel(px, py, !inverse);
             if((glyph_style & STYLE_BOLD) != 0) {
@@ -566,9 +606,10 @@ class GraphicLayout {
                   builtin_font::FaceId selected_face =
                       builtin_font::FaceId::FONT_5X8) {
     if(text == nullptr) return;
-    const u8 advance = glyph_advance(selected_face, 1);
     while(*text != 0) {
-      draw_glyph((u8) *text++, glyph_style, x, global_y,
+      const u8 codepoint = (u8) *text++;
+      const u8 advance = text_advance(codepoint, glyph_style, selected_face, 1);
+      draw_glyph(codepoint, glyph_style, x, global_y,
                  selected_face, 1);
       x = (i16) (x + advance);
     }
@@ -590,8 +631,13 @@ class GraphicLayout {
     line_height = 8U;
     line_pitch = compact ? 8U : 10U;
 
+    if(ui_prose()) {
+      line_height = ui_font_source.height();
+      line_pitch = (u8) (line_height + ui_font_source.line_gap());
+    }
+
     if(block.kind == BlockKind::HEADING) {
-      if(block.level == 1) {
+      if(block.level == 1 && !ui_prose()) {
         if(compact) {
           face = builtin_font::FaceId::FONT_5X8;
           line_height = 8;
@@ -622,8 +668,10 @@ class GraphicLayout {
       const u8 indent = compact
           ? (block.level > 3 ? 12U : (u8) (block.level * 4U))
           : (block.level > 3 ? 24U : (u8) (block.level * 8U));
-      const u8 prefix_width = (u8) (
-          prefix_length * glyph_advance(face, scale));
+      u8 prefix_width = 0;
+      for(u8 i = 0; i < prefix_length; i++) {
+        prefix_width = (u8) (prefix_width + text_advance((u8) prefix[i], STYLE_NONE, face, scale));
+      }
       content_x = (u8) (base_margin() + indent + prefix_width);
       available_width = width_from(content_x);
     }
@@ -774,7 +822,7 @@ class GraphicLayout {
     cells[cell_count++] = {
       codepoint,
       effective_style,
-      glyph_advance(face, scale)
+      text_advance(codepoint, effective_style, face, scale)
     };
     cell_width = (u16) (cell_width + cells[cell_count - 1U].advance);
     wrap_if_needed();

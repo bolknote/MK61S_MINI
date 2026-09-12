@@ -1,4 +1,8 @@
 #include "settings_journal.hpp"
+// Arduino defines DEFAULT for the ADC reference mode.
+#define DEFAULT 0
+#include "ui_font_settings.hpp"
+#undef DEFAULT
 
 #include <assert.h>
 #include <stdio.h>
@@ -38,6 +42,7 @@ void test_v4_commit_and_corruption(void) {
   assert(decoded.text_profile_stored);
   assert(decoded.text_rows == 8 && decoded.text_width == 3);
   assert(decoded.oled_stored && decoded.oled == 0x25);
+  assert(!decoded.ui_font_stored && decoded.ui_font == 0xFF);
 
   for(usize index = 0; index < settings_journal::COMMIT_INDEX; index++) {
     u8 corrupted[settings_journal::RECORD_SIZE];
@@ -66,6 +71,70 @@ void test_legacy_v3_compatibility(void) {
   assert(version == settings_journal::VERSION_3);
   assert(decoded.counter == 8);
   assert(!decoded.oled_stored && decoded.oled == 0xFF);
+  assert(!decoded.ui_font_stored && decoded.ui_font == 0xFF);
+}
+
+void test_ui_font_settings_are_independent_and_bounded(void) {
+  for(unsigned raw = 0; raw < 256; ++raw) {
+    const auto value = normalize_ui_font_settings((u8) raw);
+    const bool valid = raw <= 6 && (raw & 3U) <= 2;
+    assert(value.raw == (valid ? raw : UiFontSettings::DEFAULT_PRESET));
+    assert(value.family() <= 2);
+    assert(value.size() == 12 || value.size() == 14);
+  }
+  const u8 sizes[] = {12, 14};
+  for(u8 family = 0; family < 3; ++family) {
+    for(u8 size : sizes) {
+      const auto value = make_ui_font_settings(family, size);
+      assert(value.family() == family && value.size() == size);
+    }
+  }
+  assert(make_ui_font_settings(3, 12).raw == UiFontSettings::DEFAULT_PRESET);
+  assert(make_ui_font_settings(1, 13).raw == UiFontSettings::DEFAULT_PRESET);
+}
+
+void test_v5_ui_font_commit_and_legacy_migration(void) {
+  auto data = fixture(11);
+  data.oled_stored = false;
+  data.ui_font = make_ui_font_settings(2, 12).raw;
+  data.ui_font_stored = true;
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(data, record);
+  assert(record[settings_journal::IDX_VERSION] == settings_journal::VERSION_5);
+  assert(record[settings_journal::IDX_UI_FONT] == data.ui_font);
+  settings_journal::RecordData decoded = {};
+  assert(settings_journal::decode(record, decoded) == settings_journal::RecordStatus::INVALID);
+  commit(record);
+  assert(settings_journal::decode(record, decoded) == settings_journal::RecordStatus::VALID);
+  assert(decoded.ui_font_stored && decoded.ui_font == data.ui_font);
+  assert(!decoded.oled_stored && decoded.oled == 0xFF);
+  assert(decoded.flags == data.flags && decoded.sound == data.sound);
+  assert(decoded.text_rows == 8 && decoded.text_width == 3 &&
+         decoded.text_height == 5 && decoded.text_gap == 1);
+  for(usize index = 0; index < settings_journal::COMMIT_INDEX; ++index) {
+    u8 corrupted[settings_journal::RECORD_SIZE];
+    memcpy(corrupted, record, sizeof(corrupted));
+    corrupted[index] ^= 1;
+    assert(settings_journal::decode(corrupted, decoded) == settings_journal::RecordStatus::INVALID);
+  }
+  u8 previous[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(fixture(10), previous);
+  commit(previous);
+  settings_journal::Scanner scanner(settings_journal::RECORD_SIZE * 3,
+                                     settings_journal::VERSION_5);
+  scanner.consume(previous);
+  assert(scanner.migration_needed());
+  assert(!scanner.latest().ui_font_stored);
+  scanner.consume(record);
+  assert(!scanner.migration_needed());
+  assert(scanner.latest().ui_font_stored);
+  record[settings_journal::COMMIT_INDEX] = 0xFF;
+  settings_journal::Scanner interrupted(settings_journal::RECORD_SIZE * 3,
+                                         settings_journal::VERSION_5);
+  interrupted.consume(previous);
+  interrupted.consume(record);
+  assert(interrupted.has_value() && interrupted.latest().counter == 10);
+  assert(!interrupted.latest().ui_font_stored && interrupted.needs_reclaim());
 }
 
 void test_profiles_without_oled_keep_v3(void) {
@@ -175,6 +244,8 @@ void test_erased_detection_checks_entire_record(void) {
 
 int main(void) {
   test_v4_commit_and_corruption();
+  test_ui_font_settings_are_independent_and_bounded();
+  test_v5_ui_font_commit_and_legacy_migration();
   test_legacy_v3_compatibility();
   test_profiles_without_oled_keep_v3();
   test_legacy_v2_compatibility();

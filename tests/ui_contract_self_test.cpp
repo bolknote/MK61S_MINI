@@ -7,6 +7,7 @@
 #include "markdown_plain.hpp"
 #include "markdown_scroll.hpp"
 #include "ws0010_charset.hpp"
+#include "utf8_view.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -14,8 +15,11 @@
 #include <vector>
 #include "ui_geometry.inc"
 
+namespace program_store { static constexpr usize NAME_SIZE = 32; }
+
 namespace {
 bool russian = false;
+bool ui_fonts_available = false;
 lcd_display::TextProfile settings = lcd_display::textProfile5x8();
 std::vector<std::string> calls;
 std::vector<u32> phases;
@@ -28,6 +32,16 @@ struct Surface {
   void setCursor(u8 x, u8 y) { assert(x == 0 && y < rows()); row = y; lines[row].clear(); }
   void write(u8 byte) { lines[row] += (char) byte; assert(lines[row].size() <= 16); }
   bool externalFontActive() const { return external; }
+  u16 measureUiText(const char* text) const {
+    const u16 length = (u16) std::strlen(text);
+    u16 width = 0;
+    for(u16 offset = 0; offset < length;) {
+      const u8 bytes = utf8_view::sequence_length((const u8*) text, length, offset);
+      width = (u16) (width + (text[offset] == 'i' ? 3 : 13));
+      offset = (u16) (offset + bytes);
+    }
+    return width;
+  }
   void useBuiltinFont() { external = false; calls.emplace_back("drop-external"); }
   void setTextProfile(lcd_display::TextProfile value) {
     assert(!external); profile = value; calls.emplace_back("set-profile");
@@ -81,19 +95,48 @@ int main() {
   assert(four.rows == 4 && four.glyph_width == 10 && four.glyph_height == 16);
   expect("four-line preset name", library_mk61::fontPresetName(four), "10x16");
 
-  drawFontSetup(0, four);
+  drawFontSetup(0, four, {0, 14});
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   expect("font dialog EN", surface.lines[0], ">Rows:4         ");
 #else
   expect("font dialog EN", surface.lines[0], ">Font:10x16     ");
 #endif
   russian = true;
-  drawFontSetup(0, four);
+  drawFontSetup(0, four, {0, 14});
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   expect("font dialog RU", surface.lines[0], ">Строки:4");
 #else
   expect("font dialog RU", surface.lines[0], ">Шрифт:10x16");
 #endif
+
+  // The extra UI fields are capability-gated and leave the existing fixed
+  // calculator profile untouched; both extended and compact menus scroll.
+  ui_fonts_available = true;
+  russian = false;
+  const u8 calculator_fields = calculatorFontFieldCount();
+  drawFontSetup(calculator_fields, four, {1, 14});
+  const u8 family_row = calculator_fields < four.rows ? calculator_fields : four.rows - 1;
+  expect("UI font family EN", surface.lines[family_row], ">UI font:DejaVu ");
+  drawFontSetup((u8) (calculator_fields + 1), four, {1, 12});
+  const u8 size_row = calculator_fields + 1 < four.rows ? calculator_fields + 1 : four.rows - 1;
+  expect("UI font size EN", surface.lines[size_row], ">UI size:12     ");
+  russian = true;
+  drawFontSetup(calculator_fields, four, {2, 14});
+  expect("UI font family RU", surface.lines[family_row], ">Шрифт UI:Roboto");
+  drawFontSetup((u8) (calculator_fields + 1), four, {2, 14});
+  expect("UI font size RU", surface.lines[size_row], ">Размер UI:14");
+  assert(sameTextProfile(surface.profile, four));
+  ui_fonts_available = false;
+
+  const char narrow_name[] = "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
+  const char wide_name[] = "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
+  const char russian_name[] = "ЩЩЩЩЩЩЩЩЩЩЩЩЩЩЩ";
+  assert(ui_editor_window_start(narrow_name, 31, 31) == 0);
+  assert(ui_editor_window_start(wide_name, 31, 31) == 19);
+  assert(ui_editor_window_start(russian_name, 30, 30) == 6);
+  assert(ui_editor_window_start(russian_name, 30, 20) == 0);
+  assert(ui_editor_window_start(nullptr, 0, 0) == 0);
+
   surface.external = true;
   calls.clear(); phases.clear();
   applyFontSetupProfile(four);

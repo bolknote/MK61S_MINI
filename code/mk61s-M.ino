@@ -225,6 +225,7 @@ void reinit_mk61_calculator_state(void) {
 
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
     MK61DisplayUpdate update(main_lcd());
+    main_lcd().endUiText();
     // Меню, просмотрщики и часы могут временно занимать пользовательские
     // символы LCD1602 A00. Перед возвратом к калькулятору восстанавливаем
     // штатную CGRAM, иначе, например, код П (слот 1) рисует чужой глиф.

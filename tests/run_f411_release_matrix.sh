@@ -73,6 +73,9 @@ if [[ -n "$output_dir" ]]; then
   [[ "$firmware_tag" =~ ^[A-Za-z0-9._-]+$ ]] ||
     fail "invalid firmware tag: $firmware_tag"
   mkdir -p "$output_dir"
+  # Standalone BIN releases need the same complete notices as F401 ZIP bundles.
+  python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" \
+    --archive "$output_dir/UI_FONT_LICENSES.zip"
 fi
 
 fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'

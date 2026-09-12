@@ -378,6 +378,11 @@ inline u8 visible_rows(MK61Display& display) {
 }
 
 inline void ensure_cursor_visible(MK61Display& display, const char* source, u16 len, u16 cursor, u16& view_top) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) || \
+    (defined(MK61_DISPLAY_UC1609) && !defined(TEXT_EDITOR_HOST_TEST))
+  // Resolve cell geometry before computing how many source lines fit.
+  display.endUiText();
+#endif
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
   (void) display;
   portable_system::editor(false, source, len, cursor, view_top);
@@ -431,6 +436,11 @@ inline u8 cursor_screen_row(MK61Display& display, const char* source, u16 len, u
 }
 
 inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) || \
+    (defined(MK61_DISPLAY_UC1609) && !defined(TEXT_EDITOR_HOST_TEST))
+  // Code editing is intentionally cell-based, independent of the UI family.
+  display.endUiText();
+#endif
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
   (void) display;
   portable_system::editor(true, source, len, cursor, view_top, sms_cursor);

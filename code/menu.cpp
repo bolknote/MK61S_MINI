@@ -60,6 +60,9 @@ static u8 oled_timeout_state = DEFAULT_OLED_TIMEOUT;
 #endif
 static lcd_display::TextProfile display_text_profile_state = lcd_display::defaultSettingsTextProfile();
 static u8 display_rows_state = lcd_display::defaultSettingsTextProfile().rows;
+#if defined(MK61_DISPLAY_UC1609)
+static UiFontSettings ui_font_state;
+#endif
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
 static RandomMode random_mode_state = RandomMode::MK61;
 static DeferredSave settings_save;
@@ -521,6 +524,9 @@ bool  store_settings_state(void) {
   oled_settings.setTimeout(oled_timeout_state);
   return store_settings_snapshot(flags, sound_settings, stored_profile,
                                  &oled_settings);
+#elif defined(MK61_DISPLAY_UC1609)
+  return store_settings_snapshot(flags, sound_settings, stored_profile,
+                                 NULL, &ui_font_state);
 #else
   return store_settings_snapshot(flags, sound_settings, stored_profile);
 #endif
@@ -576,10 +582,40 @@ void  load_settings_state(void) {
   set_display_rows(lcd_display::DEFAULT_ROWS);
 #endif
   set_sound_volume(sound_settings.bits.volume);
+#if defined(MK61_DISPLAY_UC1609)
+  const UiFontSettings ui_font = read_ui_font_settings();
+  set_ui_font(ui_font.family(), ui_font.size());
+#endif
 #if defined(MK61_OLED1602_WS0010)
   set_oled_timeout(read_oled_settings().timeout());
 #endif
   refresh_menu_text();
+}
+
+u8 ui_font_family(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  return ui_font_state.family();
+#else
+  return 0;
+#endif
+}
+
+u8 ui_font_size(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  return ui_font_state.size();
+#else
+  return 14;
+#endif
+}
+
+void set_ui_font(u8 family, u8 size) {
+#if defined(MK61_DISPLAY_UC1609)
+  ui_font_state = make_ui_font_settings(family, size);
+  main_lcd().setUiFont(ui_font_state.family(), ui_font_state.size());
+#else
+  (void) family;
+  (void) size;
+#endif
 }
 
 SpeedMode speed_mode(void) {
@@ -685,7 +721,14 @@ static void CycleSoundVolumeUp(void) {
 
 bool SetDateTime(void) { return setup_ui::date_time(); }
 bool SetRtcCalibration(void) { return setup_ui::calibration(); }
-bool FontSetup(void) { return setup_ui::font(); }
+bool FontSetup(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  // This screen previews the calculator's fixed-cell font. The independent
+  // UI selection takes effect when returning to menus and the file browser.
+  MK61DisplayTextScope text_scope(main_lcd(), false);
+#endif
+  return setup_ui::font();
+}
 
 bool settings_select(void) {
   library_mk61::refresh_menu_text();
@@ -1073,12 +1116,25 @@ bool class_menu::handle_settings_adjustment(i32 key) {
 
 void class_menu::draw(void) {
   MK61DisplayUpdate update(main_lcd());
+  main_lcd().beginUiText();
   const int size_menu_window = main_lcd().rows();
   const int visible_count = (MENU_PUNCT_COUNT < size_menu_window) ? MENU_PUNCT_COUNT : size_menu_window;
   const int max_up = MENU_PUNCT_COUNT - visible_count;
   const int delta = (active_punct + 1) - visible_count;
   int up = (delta <= 0)? 0 : delta;
   if(up > max_up) up = max_up;
+
+#if defined(MK61_DISPLAY_UC1609)
+  if(main_lcd().uiTextActive()) {
+    for(int row = 0; row < size_menu_window; ++row) {
+      const int index = up + row;
+      main_lcd().printUiLine((u8) row, row < visible_count ? puncts[index]->text : "",
+                            row < visible_count && index == active_punct ? '>' : ' ');
+    }
+    previous_up = up;
+    return;
+  }
+#endif
 
   if(library_mk61::language_is_ru()) {
     if(visible_count == 2) {
@@ -1149,6 +1205,7 @@ i32 class_menu::wait_key(void) {
 }
 
 bool class_menu::select(void) {
+  MK61DisplayTextScope text_scope(main_lcd());
   main_lcd().clear();
   do{
     draw();
@@ -1181,6 +1238,7 @@ bool class_menu::select(void) {
 }
 
 i32 class_menu::select(i32 key) {
+  main_lcd().beginUiText();
   main_lcd().clear();
   dbgln(MENU, "select entry");
 
