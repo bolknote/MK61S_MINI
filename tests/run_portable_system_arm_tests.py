@@ -484,7 +484,7 @@ def main():
                 assert m.call(0x402)==0 and m.calibration==-123,m.calibration
                 for extended in (False,True):
                     m.extended=extended; m.profile=bytes((6,5,8,2))
-                    m.keys=[m.mapping[37],m.mapping[39]]
+                    m.keys=[m.mapping[41],m.mapping[39]]
                     assert m.call(0x403)==0
                     assert m.profile == (bytes((7,5,8,1)) if extended and m.graphics else
                                          bytes((7,5,9,0)) if m.graphics else bytes((6,5,8,2))),m.profile
@@ -495,10 +495,28 @@ def main():
                         m.ui_fonts = True; m.extended = extended
                         m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
                         fields = 4 if extended else 1
+                        left, right, ok, esc, shg_left, shg_right = m.mapping[36:42]
+                        # Ordinary arrows navigate without applying any values,
+                        # including at either end of the compact/extended form.
+                        before = len(m.trace)
+                        m.keys = [left] * 2 + [right] * (fields + 3) + [left] * (fields + 3) + [esc]
+                        assert m.call(0x403) == 0
+                        assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
+                        assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
+                        # The right boundary stays on size; left returns to
+                        # family. SHG changes only that field, in both directions.
+                        m.keys = [right] * (fields + 3) + [shg_right, left, shg_left, esc]
+                        assert m.call(0x403) == 0
+                        assert m.ui_font == bytes((2, 12)) and m.profile == bytes((6, 5, 8, 2))
+                        # The left boundary stays on the calculator field.
+                        m.keys = [left, left, shg_right, esc]
+                        assert m.call(0x403) == 0
+                        assert m.profile == (bytes((7, 5, 8, 1)) if extended else bytes((7, 5, 9, 0)))
+                        assert m.ui_font == bytes((2, 12))
+                        m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
                         for family, size in ((1, 12), (2, 14), (0, 12)):
-                            m.keys = ([m.mapping[38]] * fields +
-                                      [m.mapping[37], m.mapping[38],
-                                       m.mapping[37], m.mapping[39]])
+                            m.keys = ([ok] * fields +
+                                      [shg_right, ok, shg_right, esc])
                             assert m.call(0x403) == 0
                             assert m.ui_font == bytes((family, size)), m.ui_font
                             assert m.profile == bytes((6, 5, 8, 2)), m.profile

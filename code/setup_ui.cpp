@@ -565,11 +565,15 @@ bool font(void) {
       if(FIELD_COUNT > 1) { active = (u8) ((active + 1) % FIELD_COUNT); }
       else { delta = 1; apply = true; }
       redraw = true;
-    } else if(key == KEY_RIGHT_PRESS || key == KEY_SHG_RIGHT_PRESS) {
+    } else if(key == KEY_RIGHT_PRESS) {
+      if(active + 1 < FIELD_COUNT) { ++active; redraw = true; }
+    } else if(key == KEY_LEFT_PRESS) {
+      if(active > 0) { --active; redraw = true; }
+    } else if(key == KEY_SHG_RIGHT_PRESS) {
       delta = 1;
       redraw = true;
       apply = true;
-    } else if(key == KEY_LEFT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+    } else if(key == KEY_SHG_LEFT_PRESS) {
       delta = -1;
       redraw = true;
       apply = true;

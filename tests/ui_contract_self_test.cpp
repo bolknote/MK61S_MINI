@@ -8,6 +8,8 @@
 #include "markdown_scroll.hpp"
 #include "ws0010_charset.hpp"
 #include "utf8_view.hpp"
+#include "keyboard_core.hpp"
+#include "keyboard_layout.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -72,6 +74,69 @@ void mark_settings_dirty() { calls.emplace_back("save-settings"); }
 }
 #include "ui_menu.inc"
 
+// Compile the real parent-menu adjustment handler against recording actions.
+// Ordinary arrows must reach the menu's navigation dispatcher unconsumed.
+constexpr i32 KEY_LEFT_PRESS = keyboard_layout::ACTIVE.left;
+constexpr i32 KEY_RIGHT_PRESS = keyboard_layout::ACTIVE.right;
+constexpr i32 KEY_SHG_LEFT_PRESS = keyboard_layout::ACTIVE.shg_left;
+constexpr i32 KEY_SHG_RIGHT_PRESS = keyboard_layout::ACTIVE.shg_right;
+constexpr i32 KEY_OK_PRESS = keyboard_layout::ACTIVE.ok;
+constexpr i32 KEY_ESC_PRESS = keyboard_layout::ACTIVE.esc;
+namespace library_mk61 { int* SETTINGS_MENU[1] = {}; }
+class class_menu {
+public:
+  int** puncts = library_mk61::SETTINGS_MENU;
+  u8 active_punct = library_mk61::SETTINGS_DISPLAY_ROWS;
+  void draw() { calls.emplace_back("draw-menu"); }
+  bool handle_settings_adjustment(i32 key);
+};
+void CycleSoundVolumeUp() { assert(false); }
+void StepSoundVolume(i8) { assert(false); }
+void TurnSpeed() { assert(false); }
+void StepSpeedMode(i8) { assert(false); }
+void TurnProgramMemory() { assert(false); }
+void StepProgramMemoryMode(i8) { assert(false); }
+void TurnRandomMode() { assert(false); }
+void StepRandomMode(i8) { assert(false); }
+void TurnLanguage() { assert(false); }
+void TurnIdleSignal() { assert(false); }
+void FontSetup() { calls.emplace_back("open-font"); }
+namespace setup_ui {
+void step_font(i8 delta) {
+  assert(delta == -1 || delta == 1);
+  calls.emplace_back(delta > 0 ? "font-next" : "font-previous");
+}
+}
+#include "ui_settings_adjustment.inc"
+
+static void test_font_settings_key_dispatch() {
+  class_menu menu;
+  calls.clear();
+  for(i32 key : {KEY_LEFT_PRESS, KEY_RIGHT_PRESS, KEY_ESC_PRESS, -1,
+                 KEY_SHG_LEFT_PRESS | keyboard_core::RELEASE_MASK,
+                 KEY_SHG_RIGHT_PRESS | keyboard_core::RELEASE_MASK}) {
+    assert(!menu.handle_settings_adjustment(key));
+    assert(calls.empty());
+    assert(menu.active_punct == library_mk61::SETTINGS_DISPLAY_ROWS);
+  }
+  assert(menu.handle_settings_adjustment(KEY_SHG_RIGHT_PRESS));
+  assert((calls == std::vector<std::string>{"font-next", "draw-menu"}));
+  calls.clear();
+  assert(menu.handle_settings_adjustment(KEY_SHG_LEFT_PRESS));
+  assert((calls == std::vector<std::string>{"font-previous", "draw-menu"}));
+  calls.clear();
+  assert(menu.handle_settings_adjustment(KEY_OK_PRESS));
+  assert((calls == std::vector<std::string>{"open-font"}));
+
+  calls.clear();
+  menu.puncts = nullptr;
+  for(i32 key : {KEY_LEFT_PRESS, KEY_RIGHT_PRESS, KEY_SHG_LEFT_PRESS,
+                 KEY_SHG_RIGHT_PRESS, KEY_OK_PRESS}) {
+    assert(!menu.handle_settings_adjustment(key));
+    assert(calls.empty());
+  }
+}
+
 static void expect(const char* scenario, const std::string& actual, const std::string& expected) {
   if(actual != expected) {
     std::fprintf(stderr, "%s\nEXPECTED: [%s]\nACTUAL:   [%s]\n", scenario, expected.c_str(), actual.c_str());
@@ -80,6 +145,7 @@ static void expect(const char* scenario, const std::string& actual, const std::s
 }
 
 int main() {
+  test_font_settings_key_dispatch();
   using namespace lcd_display;
   auto profile = textProfile5x8();
   const u8 expected_rows[] = {6, 7, 10, 4};
@@ -187,5 +253,5 @@ int main() {
     assert(ws0010_charset::unicodeToByte(point, cell));
     assert(point == ws0010_charset::canonicalForByte(cell));
   }
-  std::puts("UI contracts: four rows/font confirmation/splash/clock/USB/Markdown/mixed WS0010 PASS");
+  std::puts("UI contracts: four rows/font keys/font confirmation/splash/clock/USB/Markdown/mixed WS0010 PASS");
 }

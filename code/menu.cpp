@@ -1102,8 +1102,8 @@ bool class_menu::handle_settings_adjustment(i32 key) {
         return true;
       }
 
-      if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS || key == KEY_RIGHT_PRESS || key == KEY_LEFT_PRESS) {
-        setup_ui::step_font((key == KEY_SHG_LEFT_PRESS || key == KEY_LEFT_PRESS) ? -1 : 1);
+      if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
+        setup_ui::step_font(key == KEY_SHG_LEFT_PRESS ? -1 : 1);
         draw();
         return true;
       }
