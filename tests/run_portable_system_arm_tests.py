@@ -140,6 +140,12 @@ class Machine:
         self.extended = False
         self.ui_fonts = False
         self.ui_font = bytes((0, 14))
+        self.ui_text = False
+        self.live_ui = True
+        self.legacy_rows = 4
+        self.setup_rows, self.setup_views = {}, []
+        self.revision = 1
+        self.drop_live_ui_on_wait = False
         self.ui_ends = 0
         self.font_restores = 0
     def words(self, address, count):
@@ -183,7 +189,8 @@ class Machine:
             elif name == 'service': self.clock += 2; self.services += 1
             elif name == 'delay_ms': self.clock += a
             elif name == 'display_columns': result = 16
-            elif name == 'display_rows': result = 4 if self.graphics else 2
+            elif name == 'display_rows':
+                result = (4 if self.ui_text and self.ui_font[0] else self.legacy_rows) if self.graphics else 2
             elif name == 'display_clear': self.lines = []; result = 1
             elif name == 'display_write_utf8':
                 self.lines.append(bytes(uc.mem_read(c,d)).decode('utf8')); result = 1
@@ -193,7 +200,7 @@ class Machine:
             elif name == 'graphics_available': result = self.graphics
             elif name == 'graphics_width': result = 192 if self.graphics else 0
             elif name == 'graphics_height': result = 64 if self.graphics else 0
-            elif name == 'graphics_revision': result = 1
+            elif name == 'graphics_revision': result = self.revision
             elif name == 'graphics_begin': self.begins += 1; result = self.graphics
             elif name == 'graphics_end': self.ends += 1
             elif name == 'graphics_present':
@@ -206,10 +213,11 @@ class Machine:
             uc.reg_write(UC_ARM_REG_PC, uc.reg_read(UC_ARM_REG_LR))
     def system(self, op, a, b, c, p):
         if op == 1:
+            if a == 0: self.setup_rows = {}
             if a == 3: self.lines.append(self.string(p))
             if a == 2: self.lines.append(chr(b))
             if a == 10: self.viewport_ends += 1
-            if a == 15: self.ui_ends += 1
+            if a == 15: self.ui_ends += 1; self.ui_text = False
             return {6:1,11:self.graphics,12:192 if self.graphics else 0,13:64 if self.graphics else 0,14:self.graphics}.get(a,0)
         if op == 2:
             if a in (0,1,2):
@@ -297,10 +305,20 @@ class Machine:
             if a == 7: return self.graphics
             if a in (8,9): return 1
             if a == 10: self.font_restores += 1; return 1
-            if a == 11: self.lines.append(self.string(p)); return 1
-            if a == 12: return 1
+            if a == 11:
+                text = self.string(p)
+                self.lines.append(text)
+                self.setup_rows[b] = ((chr(c & 255) if c & 256 else '') + text)
+                return 1
+            if a == 12:
+                if b == 2:
+                    self.setup_views.append((self.ui_text, self.ui_font, dict(self.setup_rows)))
+                    if self.drop_live_ui_on_wait:
+                        self.live_ui = False; self.revision += 1
+                        self.drop_live_ui_on_wait = False
+                return 1
             if a == 13:
-                return int(self.graphics) | (2 if self.extended else 0) | (4 if self.ui_fonts else 0)
+                return int(self.graphics) | (2 if self.extended else 0) | (4 if self.ui_fonts else 0) | (8 if self.ui_fonts and self.live_ui else 0)
             if a == 14:
                 assert self.ui_fonts
                 self.uc.mem_write(p, self.ui_font); return 1
@@ -309,6 +327,10 @@ class Machine:
                 value = bytes(self.uc.mem_read(p, 2))
                 assert value[0] <= 2 and value[1] in (12, 14), value
                 self.ui_font = value; return 1
+            if a == 16:
+                assert b in (0, 1)
+                if b and not self.live_ui: return 0
+                self.ui_text = bool(b); return 1
         raise AssertionError(('unexpected system operation',op,a,b,c))
     def load(self, package):
         self.kind, variants, self.image_size, self.entry, self.crc = package
@@ -489,37 +511,52 @@ def main():
                     assert m.profile == (bytes((7,5,8,1)) if extended and m.graphics else
                                          bytes((7,5,9,0)) if m.graphics else bytes((6,5,8,2))),m.profile
                 if m.graphics:
-                    # Two optional UI fields travel through the C service;
-                    # changing them must not replace the calculator profile.
+                    # Family is first, its size is next, and the calculator
+                    # has a separate mono subdialog; every live view has a sample.
                     for extended in (False, True):
                         m.ui_fonts = True; m.extended = extended
                         m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
-                        fields = 4 if extended else 1
                         left, right, ok, esc, shg_left, shg_right = m.mapping[36:42]
-                        # Ordinary arrows navigate without applying any values,
-                        # including at either end of the compact/extended form.
                         before = len(m.trace)
-                        m.keys = [left] * 2 + [right] * (fields + 3) + [left] * (fields + 3) + [esc]
+                        m.keys = [left] * 2 + [right] * 5 + [left] * 5 + [esc]
                         assert m.call(0x403) == 0
                         assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
                         assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
-                        # The right boundary stays on size; left returns to
-                        # family. SHG changes only that field, in both directions.
-                        m.keys = [right] * (fields + 3) + [shg_right, left, shg_left, esc]
-                        assert m.call(0x403) == 0
-                        assert m.ui_font == bytes((2, 12)) and m.profile == bytes((6, 5, 8, 2))
-                        # The left boundary stays on the calculator field.
-                        m.keys = [left, left, shg_right, esc]
-                        assert m.call(0x403) == 0
-                        assert m.profile == (bytes((7, 5, 8, 1)) if extended else bytes((7, 5, 9, 0)))
-                        assert m.ui_font == bytes((2, 12))
-                        m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
-                        for family, size in ((1, 12), (2, 14), (0, 12)):
-                            m.keys = ([ok] * fields +
-                                      [shg_right, ok, shg_right, esc])
+                        for family, size in ((1, 12), (2, 14), (0, 14)):
+                            m.keys = [shg_right] + ([ok, shg_right] if family else []) + [esc]
+                            m.setup_views = []
                             assert m.call(0x403) == 0
                             assert m.ui_font == bytes((family, size)), m.ui_font
                             assert m.profile == bytes((6, 5, 8, 2)), m.profile
+                            role, face, rows = m.setup_views[-1]
+                            assert role and face == m.ui_font
+                            assert 'UI font:' in rows[0] and rows[3] == 'Aa Bb Wi 123', rows
+                            assert ('UI size:' in rows[1]) == bool(family), rows
+                        # Two-row external geometry still keeps sample+option;
+                        # arrows don't turn its absent Legacy size into a value.
+                        m.legacy_rows = 2; m.keys = [right, shg_right, esc]
+                        m.setup_views = []; before = len(m.trace)
+                        assert m.call(0x403) == 0
+                        assert m.setup_views[-1][2] == {0: '>Calculator...', 1: 'Aa Bb Wi 123'}
+                        assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
+                        m.legacy_rows = 4; m.ui_font = bytes((2, 12))
+                        # Enter calculator separately, adjust it, ESC returns to
+                        # the same Roboto preview; a second ESC exits the chooser.
+                        m.keys = [right, right, ok, shg_right, esc, esc]
+                        m.setup_views = []
+                        assert m.call(0x403) == 0
+                        assert m.profile == (bytes((7, 5, 8, 1)) if extended else bytes((7, 5, 9, 0)))
+                        assert m.ui_font == bytes((2, 12))
+                        assert any(not view[0] for view in m.setup_views)
+                        assert m.setup_views[-1][0] and m.setup_views[-1][2][3] == 'Aa Bb Wi 123'
+                    # A display revision change to the monospaced USB backend
+                    # leaves the live chooser safely without applying settings.
+                    m.setup_views = []; m.drop_live_ui_on_wait = True; m.keys = [esc]
+                    before = len(m.trace)
+                    assert m.call(0x403) == 0 and not m.live_ui
+                    assert m.setup_views[0][0] and not m.setup_views[-1][0]
+                    assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
+                    m.live_ui = True
                     m.ui_fonts = False
                 m.keys=[m.mapping[39]]
                 pointer=m.source('bad font'); m.lines=[]

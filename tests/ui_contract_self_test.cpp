@@ -22,15 +22,36 @@ namespace program_store { static constexpr usize NAME_SIZE = 32; }
 namespace {
 bool russian = false;
 bool ui_fonts_available = false;
+bool ui_text_mode_available = false;
 lcd_display::TextProfile settings = lcd_display::textProfile5x8();
 std::vector<std::string> calls;
 std::vector<u32> phases;
 struct Surface {
   bool external = false;
+  bool ui_text_context = false;
+  mk61_setup_ui_font ui_font = {0, 14};
   lcd_display::TextProfile profile = lcd_display::textProfile10x16();
   std::string lines[10];
+  bool line_ui_context[10] = {};
+  bool line_ui_active[10] = {};
+  mk61_setup_ui_font line_fonts[10] = {};
   u8 row = 0;
-  u8 rows() const { return profile.rows; }
+  bool uiTextActive() const { return ui_text_context && ui_font.family != 0; }
+  u8 rows() const { return uiTextActive() ? 4 : profile.rows; }
+  void clear() {
+    for(auto& line : lines) line.clear();
+    std::memset(line_ui_context, 0, sizeof(line_ui_context));
+    std::memset(line_ui_active, 0, sizeof(line_ui_active));
+    std::memset(line_fonts, 0, sizeof(line_fonts));
+    calls.emplace_back("clear");
+  }
+  void recordLine(u8 y, char mark, const char* text) {
+    assert(y < rows());
+    lines[y] = (mark ? std::string(1, mark) : "") + text;
+    line_ui_context[y] = ui_text_context;
+    line_ui_active[y] = uiTextActive();
+    line_fonts[y] = ui_font;
+  }
   void setCursor(u8 x, u8 y) { assert(x == 0 && y < rows()); row = y; lines[row].clear(); }
   void write(u8 byte) { lines[row] += (char) byte; assert(lines[row].size() <= 16); }
   bool externalFontActive() const { return external; }
@@ -119,12 +140,12 @@ static void test_font_settings_key_dispatch() {
     assert(calls.empty());
     assert(menu.active_punct == library_mk61::SETTINGS_DISPLAY_ROWS);
   }
-  assert(menu.handle_settings_adjustment(KEY_SHG_RIGHT_PRESS));
-  assert((calls == std::vector<std::string>{"font-next", "draw-menu"}));
-  calls.clear();
-  assert(menu.handle_settings_adjustment(KEY_SHG_LEFT_PRESS));
-  assert((calls == std::vector<std::string>{"font-previous", "draw-menu"}));
-  calls.clear();
+  // UC1609 has a Fonts submenu: neither shifted arrow may silently adjust
+  // the separate calculator profile from its parent menu entry.
+  assert(!menu.handle_settings_adjustment(KEY_SHG_RIGHT_PRESS));
+  assert(calls.empty());
+  assert(!menu.handle_settings_adjustment(KEY_SHG_LEFT_PRESS));
+  assert(calls.empty());
   assert(menu.handle_settings_adjustment(KEY_OK_PRESS));
   assert((calls == std::vector<std::string>{"open-font"}));
 
@@ -144,8 +165,102 @@ static void expect(const char* scenario, const std::string& actual, const std::s
   }
 }
 
+static void test_ui_font_capabilities() {
+  for(bool family_service : {false, true}) {
+    for(bool text_mode_service : {false, true}) {
+      ui_fonts_available = family_service;
+      ui_text_mode_available = text_mode_service;
+      assert(uiFontSettingsAvailable() == (family_service && text_mode_service));
+    }
+  }
+  ui_fonts_available = ui_text_mode_available = false;
+}
+
+static void test_ui_font_layout() {
+  const auto saved_settings = settings;
+  ui_fonts_available = ui_text_mode_available = true;
+  for(bool ru : {false, true}) {
+    russian = ru;
+    for(u8 calculator_rows : {2, 4, 10}) {
+      for(u8 family : {0, 1, 2}) {
+        for(u8 size : {12, 14}) {
+          const mk61_setup_ui_font font = {family, size};
+          assert(uiFontFieldCount(font) == (family == 0 ? 2 : 3));
+          for(u8 active = 0; active < uiFontFieldCount(font); ++active) {
+            surface.profile = {calculator_rows, 10,
+                               (u8) (calculator_rows == 2 ? 32 : 5), 0};
+            const auto calculator_profile = surface.profile;
+            surface.external = true;
+            surface.ui_text_context = false; // Every redraw must opt in itself.
+            surface.ui_font = font;
+            for(auto& line : surface.lines) line = "stale calculator text";
+            calls.clear();
+            phases.clear();
+            drawUiFontSetup(active, font);
+
+            const u8 rows = family == 0 ? calculator_rows : 4;
+            assert(surface.rows() == rows);
+            assert(surface.ui_text_context);
+            assert(surface.uiTextActive() == (family != 0));
+            assert(surface.external);
+            assert(std::memcmp(&surface.profile, &calculator_profile,
+                               sizeof(calculator_profile)) == 0);
+            assert(std::memcmp(&settings, &saved_settings, sizeof(settings)) == 0);
+            assert((phases == std::vector<u32>{0x464E0001}));
+            assert(calls.size() >= 3);
+            assert(calls[0] == "text-mode-ui" && calls[1] == "clear");
+            for(usize i = 2; i < calls.size(); ++i) assert(calls[i] == "text");
+
+            const char* family_line = ru
+              ? (family == 0 ? "Шрифт UI:обычн." :
+                 family == 1 ? "Шрифт UI:DejaVu" : "Шрифт UI:Roboto")
+              : (family == 0 ? "UI font:Legacy" :
+                 family == 1 ? "UI font:DejaVu" : "UI font:Roboto");
+            const char* size_line = ru
+              ? (size == 12 ? "Размер UI:12" : "Размер UI:14")
+              : (size == 12 ? "UI size:12" : "UI size:14");
+            const char* calculator_line = ru ? "Калькулятор..." : "Calculator...";
+            std::string expected[10];
+            if(rows == 2) {
+              // The real installed FMK geometry wins over normalized settings:
+              // one selected option above one permanent live sample.
+              assert(family == 0);
+              expected[0] = std::string(">") + (active == 0 ? family_line : calculator_line);
+            } else {
+              expected[0] = std::string(1, active == 0 ? '>' : ' ') + family_line;
+              if(family == 0) {
+                expected[1] = std::string(1, active == 1 ? '>' : ' ') + calculator_line;
+              } else {
+                expected[1] = std::string(1, active == 1 ? '>' : ' ') + size_line;
+                expected[2] = std::string(1, active == 2 ? '>' : ' ') + calculator_line;
+              }
+            }
+            expected[rows - 1] = ru ? "Аа Бб Wi 123" : "Aa Bb Wi 123";
+            for(u8 row = 0; row < 10; ++row) {
+              expect("live UI chooser layout", surface.lines[row], expected[row]);
+              if(expected[row].empty()) continue;
+              assert(surface.line_ui_context[row]);
+              assert(surface.line_ui_active[row] == (family != 0));
+              assert(surface.line_fonts[row].family == family);
+              assert(surface.line_fonts[row].size == size);
+            }
+          }
+        }
+      }
+    }
+  }
+  // Restore the recording surface for independent calculator-profile tests.
+  surface = Surface{};
+  russian = false;
+  ui_fonts_available = ui_text_mode_available = false;
+  calls.clear();
+  phases.clear();
+}
+
 int main() {
   test_font_settings_key_dispatch();
+  test_ui_font_capabilities();
+  test_ui_font_layout();
   using namespace lcd_display;
   auto profile = textProfile5x8();
   const u8 expected_rows[] = {6, 7, 10, 4};
@@ -161,38 +276,23 @@ int main() {
   assert(four.rows == 4 && four.glyph_width == 10 && four.glyph_height == 16);
   expect("four-line preset name", library_mk61::fontPresetName(four), "10x16");
 
-  drawFontSetup(0, four, {0, 14});
+  drawCalculatorFontSetup(0, four);
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   expect("font dialog EN", surface.lines[0], ">Rows:4         ");
 #else
   expect("font dialog EN", surface.lines[0], ">Font:10x16     ");
 #endif
   russian = true;
-  drawFontSetup(0, four, {0, 14});
+  drawCalculatorFontSetup(0, four);
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
   expect("font dialog RU", surface.lines[0], ">Строки:4");
 #else
   expect("font dialog RU", surface.lines[0], ">Шрифт:10x16");
 #endif
 
-  // The extra UI fields are capability-gated and leave the existing fixed
-  // calculator profile untouched; both extended and compact menus scroll.
-  ui_fonts_available = true;
-  russian = false;
-  const u8 calculator_fields = calculatorFontFieldCount();
-  drawFontSetup(calculator_fields, four, {1, 14});
-  const u8 family_row = calculator_fields < four.rows ? calculator_fields : four.rows - 1;
-  expect("UI font family EN", surface.lines[family_row], ">UI font:DejaVu ");
-  drawFontSetup((u8) (calculator_fields + 1), four, {1, 12});
-  const u8 size_row = calculator_fields + 1 < four.rows ? calculator_fields + 1 : four.rows - 1;
-  expect("UI font size EN", surface.lines[size_row], ">UI size:12     ");
-  russian = true;
-  drawFontSetup(calculator_fields, four, {2, 14});
-  expect("UI font family RU", surface.lines[family_row], ">Шрифт UI:Roboto");
-  drawFontSetup((u8) (calculator_fields + 1), four, {2, 14});
-  expect("UI font size RU", surface.lines[size_row], ">Размер UI:14");
+  // The calculator dialog remains the old fixed-cell layout, independently
+  // of the new family-first UI chooser.
   assert(sameTextProfile(surface.profile, four));
-  ui_fonts_available = false;
 
   const char narrow_name[] = "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
   const char wide_name[] = "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
@@ -253,5 +353,5 @@ int main() {
     assert(ws0010_charset::unicodeToByte(point, cell));
     assert(point == ws0010_charset::canonicalForByte(cell));
   }
-  std::puts("UI contracts: four rows/font keys/font confirmation/splash/clock/USB/Markdown/mixed WS0010 PASS");
+  std::puts("UI contracts: live family/size/sample, calculator font keys/confirmation, splash/clock/USB/Markdown/mixed WS0010 PASS");
 }

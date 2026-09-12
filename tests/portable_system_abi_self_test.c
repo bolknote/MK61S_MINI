@@ -22,6 +22,8 @@ _Static_assert(sizeof(mk61_setup_datetime) == 24, "RTC wire layout");
 _Static_assert(sizeof(mk61_setup_hardware) == 56, "hardware snapshot layout");
 _Static_assert(offsetof(mk61_setup_hardware, rtc_source) == 36, "hardware text boundary");
 _Static_assert(sizeof(mk61_setup_profile) == 4, "font profile layout");
+_Static_assert(MK61_SETUP_UI_FONT_READ == 14 && MK61_SETUP_UI_FONT_APPLY == 15 &&
+               MK61_SETUP_TEXT_MODE == 16, "append-only SETUP font operations");
 _Static_assert(MK61_SYS_EDITOR_KEY == 24 && MK61_SYS_SETUP == 25, "append-only System operations");
 _Static_assert(MK61_SERVICE_CAPABILITIES == 26, "public service capability query");
 _Static_assert(MK61_SERVICE_UI_FONT == 27, "append-only proportional font operation");

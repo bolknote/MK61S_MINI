@@ -184,6 +184,34 @@ void test_preview_of_same_calculator_profile() {
   ui_display_test::scratch_size = 0;
 }
 
+void test_live_ui_font_sample() {
+  MK61Display display;
+  display.begin();
+  const auto calculator = lcd_display::textProfile3x5();
+  display.setTextProfile(calculator);
+  // The chooser renders its sample on the last UI row, including an unchanged
+  // selection. Use the real paged renderer, not a mock of printUiLine().
+  const u8 faces[][2] = {{1, 12}, {1, 14}, {2, 12}, {2, 14}, {2, 14}};
+  static constexpr u16 sample[] = {0x0410, 0x0430, ' ', 0x0411, 0x0431,
+                                 ' ', 'W', 'i', ' ', '1', '2', '3'};
+  Frame previous{};
+  for(unsigned i = 0; i < sizeof(faces) / sizeof(faces[0]); ++i) {
+    display.setUiFont(faces[i][0], faces[i][1]);
+    display.beginUiText();
+    display.clear();
+    display.printUiLine(3, "Аа Бб Wi 123");
+    Frame expected{};
+    referenceText(expected, display.uiFontFace(), sample, 3);
+    expectFrame(expected);
+    assert(sameProfile(display.textProfile(), calculator));
+    if(i > 0 && i < 4) assert(ui_display_test::frame != previous);
+    if(i == 4) assert(ui_display_test::frame == previous);
+    previous = ui_display_test::frame;
+  }
+  display.setUiFont(0, 14);
+  assert(!display.uiTextActive() && display.rows() == 10);
+}
+
 void test_invalid_custom_slot_uses_ui_fallback() {
   MK61Display display;
   startUi(display);
@@ -436,6 +464,7 @@ int main() {
   allocation_forbidden = true;
   test_profile_and_scope();
   test_preview_of_same_calculator_profile();
+  test_live_ui_font_sample();
   test_invalid_custom_slot_uses_ui_fallback();
   test_external_calculator_font_is_isolated_from_ui();
   test_mixed_text_and_page_parity();

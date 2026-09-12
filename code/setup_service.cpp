@@ -36,7 +36,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       return (MK61_HAS_GRAPHICAL_TEXT_SETTINGS ? 1U : 0U) |
              (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? 2U : 0U)
 #if defined(MK61_DISPLAY_UC1609)
-             | 4U
+             | 4U | (main_lcd().usbScreenActive() ? 0U : 8U)
 #endif
              ;
     case MK61_SETUP_HARDWARE: {
@@ -107,6 +107,15 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
         library_mk61::set_ui_font(in.family, in.size);
         library_mk61::mark_settings_dirty();
       }
+      return 1;
+#else
+      return 0;
+#endif
+    case MK61_SETUP_TEXT_MODE:
+#if defined(MK61_DISPLAY_UC1609)
+      if(a > 1 || (a == 1 && main_lcd().usbScreenActive())) return 0;
+      // Rendering context only: this does not change or save font settings.
+      if(a) main_lcd().beginUiText(); else main_lcd().endUiText();
       return 1;
 #else
       return 0;

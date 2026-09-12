@@ -77,8 +77,13 @@ struct MutablePunct {
 static MutablePunct VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Volume 10      "};
 static MutablePunct RU_VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Громкость 10"};
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+#if defined(MK61_DISPLAY_UC1609)
+static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Fonts...       "};
+static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Шрифты..."};
+#else
 static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Font 5x8       "};
 static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Шрифт 5x8"};
+#endif
 #endif
 
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
@@ -97,6 +102,7 @@ static bool sameTextProfile(lcd_display::TextProfile left, lcd_display::TextProf
     left.line_gap == right.line_gap;
 }
 
+#if !defined(MK61_DISPLAY_UC1609)
 static const char* fontPresetName(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, lcd_display::textProfile10x16())) return "10x16";
@@ -104,6 +110,7 @@ static const char* fontPresetName(lcd_display::TextProfile profile) {
   if(sameTextProfile(profile, lcd_display::textProfile5x9())) return "5x9";
   return "5x8";
 }
+#endif
 
 static u8 display_rows_mode(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
@@ -448,16 +455,24 @@ static t_punct* oled_timeout_punct(void) {
 
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 static void format_display_rows_text(void) {
+#if defined(MK61_DISPLAY_UC1609)
+  int used = snprintf(ROWS_punct.text, sizeof(ROWS_punct.text), "Fonts...");
+#else
   int used = snprintf(ROWS_punct.text, sizeof(ROWS_punct.text), "Font %s",
     fontPresetName(display_text_profile_state));
+#endif
   if(used < 0) used = 0;
   if(used > 15) used = 15;
   while(used < 15) ROWS_punct.text[used++] = ' ';
   ROWS_punct.text[used] = 0;
   ROWS_punct.size = 15;
 
+#if defined(MK61_DISPLAY_UC1609)
+  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "Шрифты...");
+#else
   snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "Шрифт %s",
     fontPresetName(display_text_profile_state));
+#endif
   RU_ROWS_punct.size = 15;
 }
 #endif
@@ -723,9 +738,9 @@ bool SetDateTime(void) { return setup_ui::date_time(); }
 bool SetRtcCalibration(void) { return setup_ui::calibration(); }
 bool FontSetup(void) {
 #if defined(MK61_DISPLAY_UC1609)
-  // This screen previews the calculator's fixed-cell font. The independent
-  // UI selection takes effect when returning to menus and the file browser.
-  MK61DisplayTextScope text_scope(main_lcd(), false);
+  // Start with the live UI font; restore the caller's text context on exit.
+  // The independent calculator subdialog temporarily selects fixed-cell text.
+  MK61DisplayTextScope text_scope(main_lcd());
 #endif
   return setup_ui::font();
 }
@@ -1102,11 +1117,13 @@ bool class_menu::handle_settings_adjustment(i32 key) {
         return true;
       }
 
+#if !defined(MK61_DISPLAY_UC1609)
       if(key == KEY_SHG_RIGHT_PRESS || key == KEY_SHG_LEFT_PRESS) {
         setup_ui::step_font(key == KEY_SHG_LEFT_PRESS ? -1 : 1);
         draw();
         return true;
       }
+#endif
       break;
 #endif
   }

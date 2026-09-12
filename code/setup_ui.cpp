@@ -366,7 +366,8 @@ static u8 calculatorFontFieldCount(void) {
 }
 
 static bool uiFontSettingsAvailable(void) {
-  return (service(MK61_SETUP_FEATURES) & 4U) != 0;
+  // An older resident or USB Screen cannot provide a live UI-font surface.
+  return (service(MK61_SETUP_FEATURES) & 12U) == 12U;
 }
 
 static mk61_setup_ui_font readUiFont(void) {
@@ -450,10 +451,8 @@ static void printFontSetupLine(u8 row, char mark, const char* text) {
   while(used++ < lcd_display::COLS - 1) main_lcd().write((u8) ' ');
 }
 
-static void drawFontSetup(u8 active, lcd_display::TextProfile profile,
-                          mk61_setup_ui_font ui_font) {
-  const u8 calculator_fields = calculatorFontFieldCount();
-  const u8 FIELD_COUNT = calculator_fields + (uiFontSettingsAvailable() ? 2 : 0);
+static void drawCalculatorFontSetup(u8 active, lcd_display::TextProfile profile) {
+  const u8 FIELD_COUNT = calculatorFontFieldCount();
   noteFontSetupPhase(FontSetupPhase::DRAW);
   MK61DisplayUpdate update(main_lcd());
   const u8 rows = main_lcd().rows();
@@ -464,8 +463,7 @@ static void drawFontSetup(u8 active, lcd_display::TextProfile profile,
   char line[32];
   for(u8 row = 0; row < visible_fields; row++) {
     const u8 field = top + row;
-    if(field < calculator_fields) formatFontSetupLine(line, sizeof(line), field, profile);
-    else formatUiFontLine(line, sizeof(line), (u8) (field - calculator_fields), ui_font);
+    formatFontSetupLine(line, sizeof(line), field, profile);
     printFontSetupLine(row, (field == active) ? '>' : ' ', line);
   }
 
@@ -524,32 +522,24 @@ static void stepFontSetupProfile(lcd_display::TextProfile& profile, u8 field, i8
 #endif
 }
 
-static i32 waitFontSetupKey(void) {
+static i32 waitFontSetupKey(u32 revision) {
   noteFontSetupPhase(FontSetupPhase::WAIT_KEY);
-  do {
-    idle_main_process();
-    const i32 scan_code = kbd::poll_event().code();
-    if(scan_code >= 0 && scan_code < (i32) key_state::RELEASED) {
-      kbd::handoff(kbd::Event(scan_code));
-      return scan_code;
-    }
-  } while(true);
+  return wait_key_or_display_change(revision);
 }
 #endif
 
-bool font(void) {
+static bool calculatorFontSetup(void) {
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   if(!(service(MK61_SETUP_FEATURES) & 1) || !main_lcd().graphicsMode()) return action::MENU_BACK;
-  const u8 calculator_fields = calculatorFontFieldCount();
-  const u8 FIELD_COUNT = calculator_fields + (uiFontSettingsAvailable() ? 2 : 0);
+  const u8 FIELD_COUNT = calculatorFontFieldCount();
   lcd_display::TextProfile profile = read_profile();
-  mk61_setup_ui_font ui_font = readUiFont();
   u8 active = 0;
   profile = lcd_display::normalizeSettingsTextProfile(profile);
-  drawFontSetup(active, profile, ui_font);
+  main_lcd().endUiText();
+  drawCalculatorFontSetup(active, profile);
 
   while(true) {
-    const i32 key = waitFontSetupKey();
+    const i32 key = waitFontSetupKey(main_lcd().displayModeRevision());
     noteFontSetupPhase(FontSetupPhase::KEY_RECEIVED);
     if(key == KEY_ESC_PRESS) {
       noteFontSetupPhase(FontSetupPhase::LEAVE);
@@ -561,7 +551,9 @@ bool font(void) {
     bool redraw = false;
     bool apply = false;
     i8 delta = 0;
-    if(key == KEY_OK_PRESS) {
+    if(key == DISPLAY_MODE_CHANGED) {
+      redraw = true;
+    } else if(key == KEY_OK_PRESS) {
       if(FIELD_COUNT > 1) { active = (u8) ((active + 1) % FIELD_COUNT); }
       else { delta = 1; apply = true; }
       redraw = true;
@@ -579,29 +571,101 @@ bool font(void) {
       apply = true;
     }
 
-    if(apply) {
-      if(active < calculator_fields) stepFontSetupProfile(profile, active, delta);
-      else if(active == calculator_fields) {
-        ui_font.family = (u8) ((ui_font.family + (delta > 0 ? 1 : 2)) % 3);
-      } else {
-        ui_font.size = ui_font.size == 14 ? 12 : 14;
-      }
-    }
+    if(apply) stepFontSetupProfile(profile, active, delta);
 
     if(redraw) {
       profile = lcd_display::normalizeSettingsTextProfile(profile);
       // Смена backing font, геометрии сетки и следующая картинка образуют одну
       // транзакцию: промежуточный кадр со старой ссылкой не существует.
       MK61DisplayUpdate update(main_lcd());
-      if(apply) {
-        if(active < calculator_fields) applyFontSetupProfile(profile);
-        else if(!service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &ui_font)) ui_font = readUiFont();
-      }
-      drawFontSetup(active, profile, ui_font);
+      if(apply) applyFontSetupProfile(profile);
+      drawCalculatorFontSetup(active, profile);
     }
   }
 #else
   return action::MENU_BACK;
+#endif
+}
+
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+static u8 uiFontFieldCount(mk61_setup_ui_font ui_font) {
+  // Legacy uses the calculator's fixed-cell geometry, not the 12/14px rasters.
+  return ui_font.family == 0 ? 2 : 3;
+}
+
+static void drawUiFontSetup(u8 active, mk61_setup_ui_font ui_font) {
+  noteFontSetupPhase(FontSetupPhase::DRAW);
+  MK61DisplayUpdate update(main_lcd());
+  service(MK61_SETUP_TEXT_MODE, 1);
+  main_lcd().clear();
+  const u8 rows = main_lcd().rows();
+  if(rows == 0) return;
+  const u8 fields = uiFontFieldCount(ui_font);
+  // Even a two-row external FMK keeps a live sample below the active option.
+  const u8 available = rows > 1 ? (u8) (rows - 1) : 1;
+  const u8 visible = available < fields ? available : fields;
+  const u8 top = active < visible ? 0 : (u8) (active + 1 - visible);
+  char line[32];
+  for(u8 row = 0; row < visible; ++row) {
+    const u8 field = top + row;
+    if(field + 1 == fields) {
+      snprintf(line, sizeof(line), "%s", library_mk61::language_is_ru()
+          ? "Калькулятор..." : "Calculator...");
+    } else {
+      formatUiFontLine(line, sizeof(line), field, ui_font);
+    }
+    service(MK61_SETUP_TEXT, row, 0x100U | (field == active ? '>' : ' '), line);
+  }
+  if(rows > 1) {
+    service(MK61_SETUP_TEXT, rows - 1, 0, (void*) (library_mk61::language_is_ru()
+        ? "Аа Бб Wi 123" : "Aa Bb Wi 123"));
+  }
+}
+#endif
+
+bool font(void) {
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+  if(!uiFontSettingsAvailable()) return calculatorFontSetup();
+  mk61_setup_ui_font ui_font = readUiFont();
+  u8 active = 0;
+  drawUiFontSetup(active, ui_font);
+  while(true) {
+    const i32 key = waitFontSetupKey(main_lcd().displayModeRevision());
+    noteFontSetupPhase(FontSetupPhase::KEY_RECEIVED);
+    if(key == KEY_ESC_PRESS) {
+      noteFontSetupPhase(FontSetupPhase::LEAVE);
+      lcd_ru::restore_default_font();
+      return action::MENU_BACK;
+    }
+    // USB Screen is monospaced. Never show a misleading proportional preview
+    // there; mode changes also require a fresh row budget and complete frame.
+    if(!uiFontSettingsAvailable()) return calculatorFontSetup();
+    const u8 fields = uiFontFieldCount(ui_font);
+    if(key == KEY_OK_PRESS && active + 1 == fields) {
+      calculatorFontSetup();
+      if(!uiFontSettingsAvailable()) return action::MENU_BACK;
+    } else if(key == KEY_OK_PRESS || key == KEY_RIGHT_PRESS) {
+      if(active + 1 < fields) ++active;
+    } else if(key == KEY_LEFT_PRESS) {
+      if(active > 0) --active;
+    } else if((key == KEY_SHG_LEFT_PRESS || key == KEY_SHG_RIGHT_PRESS) &&
+              active + 1 < fields) {
+      if(active == 0) {
+        ui_font.family = (u8) ((ui_font.family + (key == KEY_SHG_RIGHT_PRESS ? 1 : 2)) % 3);
+      } else {
+        ui_font.size = ui_font.size == 14 ? 12 : 14;
+      }
+      MK61DisplayUpdate update(main_lcd());
+      if(!service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &ui_font)) ui_font = readUiFont();
+      drawUiFontSetup(active, ui_font);
+      continue;
+    } else if(key != DISPLAY_MODE_CHANGED) {
+      continue;
+    }
+    drawUiFontSetup(active, ui_font);
+  }
+#else
+  return calculatorFontSetup();
 #endif
 }
 
