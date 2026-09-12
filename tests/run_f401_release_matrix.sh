@@ -107,11 +107,14 @@ PY
       done
       for flag in \
           '-DMK61_REQUIRE_RESIDENT_CRC=1' \
+          '-DMK61_PORTABLE_UI_FONTS=0' \
           "-DMK61_MATH_BACKEND=$math_backend" \
           "-DMK61_ENABLE_LTO=$lto"; do
         grep -Fq -- "$flag" "$bundle_root/build.flags" ||
           fail "missing build flag for $artifact: $flag"
       done
+      [[ ! -e "$bundle_root/licenses/ui-fonts" ]] ||
+        fail "F401 bundle unexpectedly contains proportional-font notices"
       local markdown_limit markdown_size
       markdown_limit="$(python3 "$contract" case --id "$case_id" --format json |
         python3 -c 'import json,sys; print(json.load(sys.stdin)["budgets"]["markdown_app_max"])')"

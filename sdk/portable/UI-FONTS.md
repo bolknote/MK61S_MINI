@@ -5,7 +5,8 @@ advertises `MK61_SERVICE_CAP_UI_FONT` in the unchanged common service table.
 The added operation is `MK61_SERVICE_UI_FONT` (27); existing operation numbers,
 ABI version and the common table's binary layout are unchanged.
 
-Clients **first check the capability**, then call:
+The resident service is compiled only for F411/UC1609. Clients **first check
+the capability**, then call:
 
 ```c
 mk61_service_ui_font_info info = {0};
@@ -13,7 +14,10 @@ services->call(MK61_SERVICE_UI_FONT, MK61_UI_FONT_INFO, 0,
                sizeof(info), &info);
 ```
 
-`family=0` means the legacy UI is selected, `1` is DejaVu Sans and `2` is Roboto.
+`family=0` means the fixed 5x8 monospaced UI (shown as `Mono`), `1` is DejaVu
+Sans and `2` is Roboto. Family 0 ignores the stored 12/14 size. On F411/UC1609
+calculator digits use a separate fixed twelve-position renderer and never
+consume this font service; F401 keeps its compact calculator renderer.
 Size is the full 12- or 14-pixel glyph envelope, not FreeType ppem. The record
 also supplies ascent, descent and a two-pixel interline gap. On unsupported
 hosts, or when any service/metadata check fails, retain the monospaced path.
@@ -34,7 +38,8 @@ characters become `?`; missing Roboto arrows use same-size DejaVu and set
 
 ## Markdown client
 
-The built-in viewer and portable `MARKDOWN.APP` use one shared source adapter.
+The F411 built-in viewer and a portable `MARKDOWN.APP` built with the optional
+client use one shared source adapter.
 Each layout pass snapshots the current font preference. Both measurement and
 drawing use the same advances; bold adds one column and italic reserves the
 maximum actual row shear, preventing adjacent letters from colliding.
@@ -72,37 +77,22 @@ mode avoids inflating production F401 Flash limits just to fit a LIBM fixture.
 
 These are software checks, not a substitute for physical readability testing.
 
-## Explicit F401 UC1609 APP budget
+## F401 exclusion contract
 
-The UC1609 `f401-product-classic-v3` packed Markdown allowance becomes **13 KiB
-(13312 bytes)** for this new feature. This changes only the external-storage
-APP container ceiling, not the resident Flash/RAM, stack-frame or loader
-allocation limits. The character-display 4096-byte Markdown budgets are
-unchanged.
+Official F401 bundles invoke `build_portable_app.py --no-ui-fonts`. This
+removes the service bridge, proportional measurement/drawing branches and live
+font chooser from `MARKDOWN.APP` and `SETUP.APP`; it is not merely a run-time
+fallback. The resident, APP files and bundle therefore contain neither the
+new presentation feature nor DejaVu/Roboto notices. F401 keeps the original
+monospaced layout and the original 12 KiB packed Markdown ceiling.
 
-Measured with the pinned ARM GCC 14.2.1 toolchain:
+Measured with pinned ARM GCC 14.2.1, the disabled build is 12172 bytes packed
+and 15312 bytes unpacked for `MARKDOWN.APP`, with 12 bytes of BSS. `SETUP.APP`
+is 6782 bytes packed and 9284 bytes unpacked, also with 12 bytes of BSS. The
+enabled portable variants are retained for F411 and cross-resident development.
+A third-party board-neutral system APP may use the default client and will
+safely fall back on an older host, or explicitly request the same compact build
+with `--no-ui-fonts`.
 
-| Artifact | Before | With shared font renderer | Difference |
-|---|---:|---:|---:|
-| Packed `MARKDOWN.APP` | 12169 | 12669 | +500 bytes |
-| Unpacked image | 15312 | 16016 | +704 bytes |
-| APP BSS | 12 | 12 | 0 |
-| APP image + BSS | 15324 | 16028 | +704 bytes |
-
-The first implementation duplicated the glyph draw loop (12872-byte APP).
-It was reduced to one canonical row-padded raster renderer, keeping bounds
-checks and style-aware wrapping, rather than deleting functionality to fit
-the old ceiling's 119-byte headroom. The new ceiling has 643 bytes spare.
-
-The measured F401 linker interval was `0x20007048..0x2000E700`: after aligning
-the pool start to 32 bytes, 30368 bytes are available before heap/temporary
-allocations. This APP reserves `align32(16028)=16032` bytes, leaving 14336
-bytes for other dynamic allocations (12288 after a separate 2048-byte input
-buffer). This is not a promise that all of those bytes remain free at runtime:
-the existing shared-memory allocator rejects a load that would overlap a live
-buffer or heap. The 6 KiB stack reserve plus 256-byte guard above the pool is
-unchanged. Standalone APP stack analysis passed (maximum recorded frame 752
-bytes). Final matrix reports remain authoritative for each exact resident.
-
-Release packaging includes the complete DejaVu/Roboto notices inside F401
-bundles and as `UI_FONT_LICENSES.zip` beside standalone F411 BIN files.
+Complete DejaVu/Roboto notices are shipped in `UI_FONT_LICENSES.zip` beside
+the standalone F411 binaries that actually contain the raster tables.

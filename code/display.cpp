@@ -5,6 +5,9 @@
 #if defined(MK61_DISPLAY_UC1609)
   #include "shared_scratch.hpp"
 #endif
+#if MK61_FIXED_CALCULATOR_FACE
+  #include "calculator_face.hpp"
+#endif
 
 #include <string.h>
 
@@ -1676,7 +1679,12 @@ bool MK61Display::externalFontActive(void) const { return false; }
 bool MK61Display::suspendExternalFontForUsb(void) { return true; }
 bool MK61Display::beginFullscreenBitmap(void) {
 #if MK61_ENABLE_USB_SCREEN
-  if(usb_screen_active) return usb_surface.beginFullscreenBitmap();
+  if(usb_screen_active) {
+#if MK61_FIXED_CALCULATOR_FACE
+    ui_font_state &= (u8) ~16U;
+#endif
+    return usb_surface.beginFullscreenBitmap();
+  }
 #endif
 #if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
   return beginWs0010Graphics();
@@ -2252,10 +2260,14 @@ MK61Display::MK61Display(void)
     top_right_overlay_width(0),
     top_right_overlay_height(0),
     top_right_overlay_clear_border(0),
-    top_right_overlay_visible(false),
-    ui_font_state(4),
-    ui_row_gutters(0),
+    top_right_overlay_visible(false)
+#if MK61_PROPORTIONAL_UI_FONTS || MK61_FIXED_CALCULATOR_FACE
+    , ui_font_state(4)
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS
+    , ui_row_gutters(0),
     ui_row_tails(0)
+#endif
 #if MK61_ENABLE_USB_SCREEN
     , usb_surface(render_buffer),
     usb_screen_active(false),
@@ -2313,6 +2325,9 @@ bool MK61Display::resumeDeepIdle(void) {
 #endif
 
 void MK61Display::clear(void) {
+#if MK61_FIXED_CALCULATOR_FACE
+  ui_font_state &= (u8) ~16U;
+#endif
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) {
     usb_surface.clear();
@@ -2341,6 +2356,30 @@ void MK61Display::flush(void) {
 #endif
   updateCursorBlink();
   if(!dirty && !screen_dirty && !grid.anyDirty()) return;
+
+#if MK61_FIXED_CALCULATOR_FACE
+  if(calculatorFaceActive()) {
+    // The calculator is one semantic object, not sixteen independent text
+    // cells.  A full 1536-byte redraw keeps digit spacing, decimal points and
+    // service zones atomic and remains smaller than a single USB packet train.
+    for(u8 row = 0; row < grid.rows(); ++row) grid.clearDirty(row);
+    page_damage::clear(extra_dirty_page_cols, RENDER_PAGE_COUNT);
+    screen_dirty = false;
+    const u8 saved_width = render_width;
+    render_width = lcd_display::PIXEL_WIDTH;
+    for(u8 page = 0; page < RENDER_PAGE_COUNT; ++page) {
+      calculator_face::renderPage(grid, page, render_buffer);
+      drawTopRightOverlay(0, lcd_display::COLS,
+                          (u8) (page * RENDER_PAGE_HEIGHT));
+      lcd.LCDBuffer(0, (u8) (page * RENDER_PAGE_HEIGHT),
+                    lcd_display::PIXEL_WIDTH, RENDER_PAGE_HEIGHT,
+                    render_buffer);
+    }
+    render_width = saved_width;
+    dirty = false;
+    return;
+  }
+#endif
 
   u16 page_masks[RENDER_PAGE_COUNT];
   memcpy(page_masks, extra_dirty_page_cols, sizeof(page_masks));
@@ -2412,7 +2451,7 @@ void MK61Display::setRows(u8 rows) {
   if(usb_screen_active) {
     usb_screen::TextProfile profile = usb_surface.textProfile();
     if(rows >= 10) profile = usb_screen::profile3x5();
-    else if(rows == 7) profile = usb_screen::profile5x9();
+    else if(rows == 7) profile = usb_screen::profile5x8();
     else profile = usb_screen::profile5x8();
     usb_surface.setTextProfile(profile);
     usb_surface.flush(millis());
@@ -2894,8 +2933,10 @@ void MK61Display::writeCodepoint(u16 codepoint) {
 
 void MK61Display::clearShadow(void) {
   grid.reset(uiTextActive() ? 4 : active_profile.rows, uiTextActive() ? 40 : lcd_display::COLS);
+#if MK61_PROPORTIONAL_UI_FONTS
   ui_row_gutters = 0;
   ui_row_tails = 0;
+#endif
 }
 
 void MK61Display::clearPhysicalScreen(void) {
@@ -2922,6 +2963,9 @@ bool MK61Display::beginFullscreenBitmap(void) {
 #endif
 #if MK61_ANY_FULLSCREEN_FILE
   if(!initialized) return false;
+#if MK61_FIXED_CALCULATOR_FACE
+  ui_font_state &= (u8) ~16U;
+#endif
   cursor_underline = false;
   cursor_blink = false;
   cursor_blink_phase = false;
@@ -2978,13 +3022,18 @@ u8 MK61Display::sanitizeRows(u8 rows) {
 }
 
 u8 MK61Display::rowTop(u8 row) const {
-  if(uiTextActive()) return (u8) (1U + row * (uiFontSize() + 2U));
+  if(uiTextActive()) {
+    const u8 pitch = uiFontEnabled() ? (u8) (uiFontSize() + 2U) : 16U;
+    return (u8) (1U + row * pitch);
+  }
   return (u8) ((u16) row * (active_profile.glyph_height + active_profile.line_gap));
 }
 
 u8 MK61Display::rowPitch(u8 row) const {
   const u8 top = rowTop(row);
-  const u8 pitch = uiTextActive() ? uiFontSize() + 2U : active_profile.glyph_height + active_profile.line_gap;
+  const u8 pitch = uiTextActive()
+      ? (uiFontEnabled() ? (u8) (uiFontSize() + 2U) : 16U)
+      : (u8) (active_profile.glyph_height + active_profile.line_gap);
   if(row + 1 >= grid.rows()) return lcd_display::PIXEL_HEIGHT - top;
   return (top + pitch > lcd_display::PIXEL_HEIGHT) ? (lcd_display::PIXEL_HEIGHT - top) : pitch;
 }
@@ -3178,10 +3227,12 @@ void MK61Display::renderPageRun(u8 page, u8 first_col, u8 count) {
      first_col >= lcd_display::COLS ||
      count > lcd_display::COLS - first_col) return;
 
+#if MK61_PROPORTIONAL_UI_FONTS
   if(uiTextActive()) {
     renderUiPage(page, first_col, count);
     return;
   }
+#endif
 
   const u8 run_width = count * lcd_display::CELL_WIDTH;
   const u8 page_y = page * RENDER_PAGE_HEIGHT;
@@ -3315,6 +3366,9 @@ bool MK61Display::enterUsbScreen(void) {
   usb_surface.setFont(selectedFont());
   usb_surface.seedText(grid, custom_glyphs, custom_valid,
                        cursor_underline, cursor_blink, millis());
+#if MK61_FIXED_CALCULATOR_FACE
+  if(calculatorFaceActive()) usb_surface.beginCalculatorFace();
+#endif
   if(top_right_overlay_visible) {
     usb_surface.showTopRightOverlay(top_right_overlay_rows,
                                     top_right_overlay_width,
@@ -3387,6 +3441,9 @@ void MK61Display::leaveUsbScreen(void) {
   const u8 restore_cursor_y = usb_surface.cursorY();
   const bool restore_cursor_underline = usb_surface.cursorUnderline();
   const bool restore_cursor_blink = usb_surface.cursorBlink();
+#if MK61_FIXED_CALCULATOR_FACE
+  const bool restore_calculator_face = usb_surface.calculatorFaceActive();
+#endif
   active_profile = {restore_profile.rows, restore_profile.glyph_width,
                     restore_profile.glyph_height, restore_profile.line_gap};
   grid.reset(active_profile.rows);
@@ -3443,6 +3500,10 @@ void MK61Display::leaveUsbScreen(void) {
   if(restore_cursor_underline) cursorOn();
   if(restore_cursor_blink) blinkOn();
 #else
+#if MK61_FIXED_CALCULATOR_FACE
+  if(restore_calculator_face) ui_font_state |= 16U;
+  else ui_font_state &= (u8) ~16U;
+#endif
   cursor_underline = restore_cursor_underline;
   cursor_blink = restore_cursor_blink;
   cursor_blink_phase = restore_cursor_blink;

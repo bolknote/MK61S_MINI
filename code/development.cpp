@@ -102,7 +102,7 @@ static char type_marker(program_store::ProgramType type) {
 }
 
 static void print_line(u8 row, const char* text) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) { main_lcd().printUiLine(row, text); return; }
 #endif
   main_lcd().setCursor(0, row);
@@ -162,7 +162,7 @@ static bool explorer_time_reached(u32 now, u32 target) {
 }
 
 static u8 explorer_type_col(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) return 39;
 #endif
   const u8 cols = main_lcd().cols();
@@ -383,7 +383,7 @@ static int previous_matching_index(u16 directory_id, int active,
   return active;
 }
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
 // Keep the insertion point inside the viewport, not merely the beginning of
 // the name. Bound every temporary by C5's filename capacity and move only at
 // UTF-8 boundaries. The spare right margin includes the caret's next glyph.
@@ -405,7 +405,7 @@ static u16 ui_editor_window_start(const char* text, u16 length, u16 cursor) {
 #endif
 
 static void draw_search_header(const char* search_text) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const u16 length = (u16) text_editor::bounded_length(search_text, program_store::NAME_SIZE - 1);
     const u16 start = ui_editor_window_start(search_text, length, length);
@@ -420,7 +420,7 @@ static void draw_search_header(const char* search_text) {
 
 static void draw_search_cursor(const char* search_text) {
   const usize len = text_editor::bounded_length(search_text, program_store::NAME_SIZE);
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const u16 start = ui_editor_window_start(search_text, (u16) len, (u16) len);
     const u16 characters = utf8_view::codepoint_count(search_text + start, (u16) (len - start));
@@ -443,7 +443,7 @@ static void explorer_scroll_reset(ExplorerScroll& scroll) {
 }
 
 static u8 explorer_name_width(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) return 176; // 192 - two 2px margins - type gutter.
 #endif
   const u8 type_col = explorer_type_col();
@@ -457,14 +457,14 @@ static u8 explorer_name_len(const char* name) {
 }
 
 static bool explorer_name_overflows(const char* name, u8 width) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) return main_lcd().measureUiText(name) > width;
 #endif
   return width != 0 && explorer_name_len(name) > width;
 }
 
 static u8 explorer_scroll_max_offset(const char* name, u8 width) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const u16 bytes = (u16) text_editor::bounded_length(name, program_store::NAME_SIZE);
     u16 offset = 0;
@@ -568,7 +568,7 @@ static void draw_explorer_name(const lcd_ru::font_map_t& map,
 static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
                               const program_store::Entry& entry,
                               u8 scroll_offset) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const u16 offset = utf8_view::byte_offset(entry.name, scroll_offset, program_store::NAME_SIZE - 1);
     main_lcd().printUiLine(row, entry.name + offset, 0,
@@ -986,7 +986,7 @@ static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
   const u16 byte_len = (u16) strlen(name);
   if(cursor > byte_len) cursor = byte_len;
   const u16 cursor_chars = utf8_view::codepoint_count(name, cursor);
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const u16 start = ui_editor_window_start(name, byte_len, cursor);
     const u16 skipped = utf8_view::codepoint_count(name, start);
@@ -1345,7 +1345,7 @@ static char dialog_item_marker(const DialogItem& item) {
 
 static void draw_dialog_row(const lcd_ru::font_map_t& map, u8 row,
                             const DialogItem& item, u8 scroll_offset) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const char* name = dialog_item_name(item);
     main_lcd().printUiLine(row, name + utf8_view::byte_offset(name, scroll_offset),
@@ -1737,7 +1737,7 @@ static void draw_item_menu(const program_store::Entry& entry, int active) {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     for(int row = 0; row < visible; ++row) {
       const int index = top + row;

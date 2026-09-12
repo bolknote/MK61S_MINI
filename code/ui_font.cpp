@@ -1,7 +1,8 @@
-#include "ui_font.hpp"
 #include "config.h"
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
+
+#include "ui_font.hpp"
 
 namespace ui_font {
 namespace {

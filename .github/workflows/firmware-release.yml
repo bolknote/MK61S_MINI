@@ -127,9 +127,7 @@ jobs:
             'System/CHIP8.APP',
             'System/SETUP.APP',
             'System/HELP0.TXT',
-            'System/HELP1.TXT',
-            'licenses/ui-fonts/LICENSE-DejaVu.txt',
-            'licenses/ui-fonts/LICENSE-Roboto.txt'
+            'System/HELP1.TXT'
           ) | ForEach-Object {
             $path = Join-Path $bundle $_
             if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
@@ -235,4 +233,4 @@ jobs:
             firmware/*.bin firmware/*.zip firmware/SHA256SUMS.txt \
             --target "$GITHUB_SHA" \
             --title "Firmware ${GITHUB_SHA::7}" \
-            --notes "Automated firmware build for ${GITHUB_SHA}. UI font license notices accompany standalone binaries in UI_FONT_LICENSES.zip and are included inside F401 bundles."
+            --notes "Automated firmware build for ${GITHUB_SHA}. UI font license notices accompany the F411 binaries in UI_FONT_LICENSES.zip."

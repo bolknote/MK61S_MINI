@@ -1,4 +1,6 @@
 #include "display.hpp"
+#include "calculator_face.hpp"
+#include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
 #include "shared_scratch.hpp"
 #include <cassert>
@@ -92,6 +94,19 @@ void referenceBuiltin(Frame& frame, ui_font::Face face, u16 cp,
   }
 }
 
+void referenceMono(Frame& frame, u16 cp, int pen, u8 row) {
+  builtin_font::Raster raster{};
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, cp, raster));
+  const int top = 1 + row * 16 + 4;
+  for(u8 y = 0; y < raster.height; ++y) {
+    for(u8 x = 0; x < raster.width; ++x) {
+      if(fmk::bitmapPixel(raster.data, raster.width, x, y)) {
+        putPixel(frame, pen + x, top + y);
+      }
+    }
+  }
+}
+
 template<std::size_t N>
 void referenceText(Frame& frame, ui_font::Face face, const u16 (&text)[N],
                     u8 row, int left = 2, int right = 190) {
@@ -145,7 +160,8 @@ void test_profile_and_scope() {
     assert(display.uiFontFamily() == 2 && display.uiFontSize() == 14);
     assert(sameProfile(display.textProfile(), calculator));
     display.setUiFont(0, 14);
-    assert(!display.uiTextActive() && display.rows() == 10);
+    assert(display.uiTextActive() && display.rows() == 4);
+    assert(sameProfile(display.textProfile(), calculator));
     display.setUiFont(1, 14);
     assert(display.uiTextActive() && display.rows() == 4);
   }
@@ -189,8 +205,8 @@ void test_live_ui_font_sample() {
   display.begin();
   const auto calculator = lcd_display::textProfile3x5();
   display.setTextProfile(calculator);
-  // The chooser renders its sample on the last UI row, including an unchanged
-  // selection. Use the real paged renderer, not a mock of printUiLine().
+  // The chooser renders its sample on the last UI row, aligned to the text
+  // after the menu gutter. Use the real paged renderer, not a mock.
   const u8 faces[][2] = {{1, 12}, {1, 14}, {2, 12}, {2, 14}, {2, 14}};
   static constexpr u16 sample[] = {0x0410, 0x0430, ' ', 0x0411, 0x0431,
                                  ' ', 'W', 'i', ' ', '1', '2', '3'};
@@ -199,9 +215,9 @@ void test_live_ui_font_sample() {
     display.setUiFont(faces[i][0], faces[i][1]);
     display.beginUiText();
     display.clear();
-    display.printUiLine(3, "Аа Бб Wi 123");
+    display.printUiLine(3, "Аа Бб Wi 123", ' ');
     Frame expected{};
-    referenceText(expected, display.uiFontFace(), sample, 3);
+    referenceText(expected, display.uiFontFace(), sample, 3, 14);
     expectFrame(expected);
     assert(sameProfile(display.textProfile(), calculator));
     if(i > 0 && i < 4) assert(ui_display_test::frame != previous);
@@ -209,7 +225,135 @@ void test_live_ui_font_sample() {
     previous = ui_display_test::frame;
   }
   display.setUiFont(0, 14);
-  assert(!display.uiTextActive() && display.rows() == 10);
+  assert(display.uiTextActive() && display.rows() == 4);
+}
+
+void test_mono_ui_is_fixed_and_independent() {
+  MK61Display display;
+  startUi(display, 0, 14);
+  display.printUiLine(0, "Аа Wi");
+  Frame expected{};
+  const u16 text[] = {0x0410, 0x0430, ' ', 'W', 'i'};
+  int pen = 2;
+  for(u16 cp : text) {
+    referenceMono(expected, cp, pen, 0);
+    pen += 6;
+  }
+  expectFrame(expected);
+  const Frame at_14 = ui_display_test::frame;
+  display.setUiFont(0, 12);
+  display.printUiLine(0, "Аа Wi");
+  expectFrame(expected);
+  assert(ui_display_test::frame == at_14);
+  assert(display.measureUiText("WWW") == display.measureUiText("iii"));
+}
+
+void writeGridLine(text_screen::Grid& grid, u8 row, u8 column,
+                   const char* text) {
+  grid.setCursor(column, row);
+  while(*text) grid.writeCodepoint((u8) *text++);
+}
+
+void writeDisplayLine(MK61Display& display, u8 row, u8 column,
+                      const char* text) {
+  display.setCursor(column, row);
+  while(*text) display.writeCodepoint((u8) *text++);
+}
+
+bool framePixel(const Frame& frame, unsigned x, unsigned y) {
+  return (frame[y / 8U * 192U + x] & (1U << (y & 7U))) != 0;
+}
+
+void test_fixed_calculator_face() {
+  text_screen::Grid model;
+  model.reset(6);
+  writeGridLine(model, 0, 0, "RUN");
+  model.setCursor(6, 0);
+  model.writeCodepoint(display_symbol::uc1609::CYR_GHE);
+  model.writeCodepoint('P');
+  model.writeCodepoint(display_symbol::uc1609::CYR_DE);
+  writeGridLine(model, 0, 10, "F SIN");
+  writeGridLine(model, 1, 0, "-12.34567 -09");
+  Frame expected{};
+  calculator_face::renderFrame(model, expected.data());
+
+  MK61Display display;
+  display.begin();
+  ui_display_test::reset();
+  {
+    MK61DisplayUpdate update(display);
+    display.clear();
+    writeDisplayLine(display, 0, 0, "RUN");
+    display.setCursor(6, 0);
+    display.writeCodepoint(display_symbol::uc1609::CYR_GHE);
+    display.writeCodepoint('P');
+    display.writeCodepoint(display_symbol::uc1609::CYR_DE);
+    writeDisplayLine(display, 0, 10, "F SIN");
+    writeDisplayLine(display, 1, 0, "-12.34567 -09");
+    display.beginCalculatorFace();
+  }
+  assert(display.calculatorFaceActive());
+  assert(ui_display_test::transfers == 8);
+  expectFrame(expected);
+
+  // The decimal point belongs to slot 2 and slot 3 starts at its fixed x=46.
+  assert(framePixel(expected, 43, 55) && framePixel(expected, 44, 56));
+  assert(framePixel(expected, 48, 17));
+  // The exponent sign starts after the deliberately wider VFD group gap.
+  assert(framePixel(expected, 139, 35) && !framePixel(expected, 132, 35));
+
+  // Vertical segments stay on one axis.  The former VFD approximation moved
+  // their lower halves sideways and made otherwise straight digits look bent.
+  text_screen::Grid one;
+  one.reset(6);
+  writeGridLine(one, 1, 0, "1");
+  Frame straight{};
+  calculator_face::renderFrame(one, straight.data());
+  assert(framePixel(straight, 11, 25));
+  assert(framePixel(straight, 12, 25));
+  assert(framePixel(straight, 13, 25));
+  assert(framePixel(straight, 11, 29));
+  assert(framePixel(straight, 12, 29));
+  assert(framePixel(straight, 13, 29));
+  assert(!framePixel(straight, 10, 29));
+  assert(!framePixel(straight, 14, 29));
+
+  text_screen::Grid without_dot;
+  without_dot.reset(6);
+  writeGridLine(without_dot, 1, 0, "-1234567 -09");
+  text_screen::Grid with_dot;
+  with_dot.reset(6);
+  writeGridLine(with_dot, 1, 0, "-12.34567 -09");
+  Frame plain{};
+  Frame dotted{};
+  calculator_face::renderFrame(without_dot, plain.data());
+  calculator_face::renderFrame(with_dot, dotted.data());
+  unsigned changed_bits = 0;
+  for(unsigned i = 0; i < plain.size(); ++i) {
+    u8 bits = (u8) (plain[i] ^ dotted[i]);
+    while(bits) { changed_bits += bits & 1U; bits >>= 1U; }
+  }
+  assert(changed_bits == 4);
+
+#if MK61_ENABLE_USB_SCREEN
+  assert(display.enterUsbScreen());
+  assert(display.usbScreenActive() && display.calculatorFaceActive());
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
+                     expected.size()) == 0);
+  display.setCursor(12, 1);
+  display.writeCodepoint('8');
+  model.setCursor(12, 1);
+  model.writeCodepoint('8');
+  calculator_face::renderFrame(model, expected.data());
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
+                     expected.size()) == 0);
+  display.leaveUsbScreen();
+  assert(display.calculatorFaceActive());
+  expectFrame(expected);
+#endif
+
+  display.clear();
+  assert(!display.calculatorFaceActive());
 }
 
 void test_invalid_custom_slot_uses_ui_fallback() {
@@ -465,6 +609,8 @@ int main() {
   test_profile_and_scope();
   test_preview_of_same_calculator_profile();
   test_live_ui_font_sample();
+  test_mono_ui_is_fixed_and_independent();
+  test_fixed_calculator_face();
   test_invalid_custom_slot_uses_ui_fallback();
   test_external_calculator_font_is_isolated_from_ui();
   test_mixed_text_and_page_parity();

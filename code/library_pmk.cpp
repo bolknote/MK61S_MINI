@@ -251,7 +251,7 @@ static int select_texts(usize count, const char* text, usize stride, i8& selecto
     {
       MK61DisplayUpdate update(main_lcd());
       for(int i=0; i < visible_count; i++) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
         if(main_lcd().uiTextActive()) {
           const int index = up + i;
           char generated[program_store::NAME_SIZE] = {};
@@ -282,7 +282,7 @@ static int select_texts(usize count, const char* text, usize stride, i8& selecto
         }
       }
       for(int i=visible_count; i < display_rows; i++) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
         if(main_lcd().uiTextActive()) { main_lcd().printUiLine((u8) i, ""); continue; }
 #endif
         main_lcd().setCursor(0, i);

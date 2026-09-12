@@ -247,6 +247,12 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
 void mk61_display_refresh(void) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::DISPLAY_UPDATE);
   MK61DisplayUpdate update(main_lcd());
+#if MK61_FIXED_CALCULATOR_FACE
+  // The core still writes its canonical two-row model.  UC1609 presents that
+  // model as a fixed twelve-position VFD face, independent of menu/font
+  // settings and external FMK files.
+  main_lcd().beginCalculatorFace();
+#endif
   // Обновление дисплея МК61, если изменилась информация на экране
     if(!core_61::update_indicator(&display_text[0], display_symbols)) {
       if(core_61::edit_program) { // калькулятор в режиме редактирования программы МК61 (ПРГ)

@@ -585,7 +585,9 @@ build_module() {
   module_out="$work/module-$module_id"
   mkdir -p "$module_build" "$module_out"
   if [ "$portable_apps" -eq 1 ] && [ "$module_kind" != app ]; then
-    portable_options=()
+    # F401 has no resident proportional-font service.  Omit the client and its
+    # alternate Markdown layout from every first-party APP as well.
+    portable_options=(--no-ui-fonts)
     if [ "$module_kind" = markdown-viewer ] && [ "$compiled_graphics" -eq 0 ]; then
       portable_options+=(--text-only)
     fi
@@ -717,7 +719,6 @@ build_custom_app() {
 }
 
 cp "$resident_bin" "$bundle_stage/$firmware_name"
-python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" --bundle "$bundle_stage"
 if [ "$portable_apps" -eq 1 ]; then
   build_module setup System/SETUP.APP setup MK61_BUILD_SETUP_MODULE "$sketch_dir" - setup_ui.cpp setup_module_entry.cpp
   python3 "$root/tools/.mk61-app/build_terminal_help.py" --resident-elf "$resident_elf" --output-dir "$bundle_stage/System"
@@ -770,8 +771,14 @@ fi
 if [ -d "$bundle_dir/Apps" ]; then
   rm -rf "$bundle_dir/Apps"
 fi
+if [ -d "$bundle_dir/licenses/ui-fonts" ]; then
+  rm -rf "$bundle_dir/licenses/ui-fonts"
+fi
+if [ -d "$bundle_dir/licenses" ]; then
+  rmdir "$bundle_dir/licenses" 2>/dev/null || true
+fi
 cp -R "$bundle_stage/." "$bundle_dir/"
-printf '%s\n' "$compile_flags" > "$bundle_dir/build.flags"
+printf '%s -DMK61_PORTABLE_UI_FONTS=0\n' "$compile_flags" > "$bundle_dir/build.flags"
 {
   printf 'format 1\n'
   for index in "${!custom_app_names[@]}"; do

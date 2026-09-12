@@ -2,6 +2,7 @@
 
 namespace text_screen {
 
+#if MK61_PROPORTIONAL_UI_FONTS
 namespace {
 
 bool flag(const u8* bits, usize index) {
@@ -15,6 +16,7 @@ void setFlag(u8* bits, usize index, bool value) {
 }
 
 } // namespace
+#endif
 
 FontGeometry sanitizeFontGeometry(FontGeometry geometry) {
   geometry.rows = geometry.rows < 4 ? 4 : (geometry.rows > MAX_ROWS ? MAX_ROWS : geometry.rows);
@@ -41,6 +43,7 @@ FontGeometry fitFontToDisplay(u8 width, u8 height, u8 line_gap) {
   return sanitizeFontGeometry(result);
 }
 
+#if MK61_PROPORTIONAL_UI_FONTS
 Grid::Grid(void) : cells{0}, custom_cells{0}, dirty_cells{0},
     row_count(1), column_count(COLS), cursor_x(0), cursor_y(0) {
   clear();
@@ -200,5 +203,125 @@ bool Grid::anyDirty(void) const {
   }
   return false;
 }
+
+#else
+
+Grid::Grid(void) : cells{{0}}, custom_cols{0}, dirty_cols{0},
+    row_count(1), cursor_x(0), cursor_y(0) {
+  clear();
+}
+
+void Grid::reset(u8 rows, u8 cols) {
+  (void) cols;
+  row_count = rows < 1 ? 1 : (rows > MAX_ROWS ? MAX_ROWS : rows);
+  clear();
+}
+
+void Grid::clear(void) {
+  for(u8 row = 0; row < MAX_ROWS; row++) {
+    for(u8 col = 0; col < COLS; col++) cells[row][col] = ' ';
+    custom_cols[row] = 0;
+    dirty_cols[row] = 0;
+  }
+  cursor_x = 0;
+  cursor_y = 0;
+}
+
+void Grid::setCursor(u8 x, u8 y) {
+  cursor_x = x < COLS ? x : (u8) (COLS - 1);
+  cursor_y = y < row_count ? y : (u8) (row_count - 1);
+}
+
+void Grid::newline(void) {
+  if(cursor_y + 1 < row_count) cursor_y++;
+  cursor_x = 0;
+}
+
+void Grid::advance(void) {
+  if(cursor_x + 1 < COLS) {
+    cursor_x++;
+    return;
+  }
+  cursor_x = 0;
+  if(cursor_y + 1 < row_count) cursor_y++;
+}
+
+bool Grid::writeCodepoint(u16 codepoint) {
+  const u16 bit = (u16) 1U << cursor_x;
+  const bool changed = cells[cursor_y][cursor_x] != codepoint ||
+                       (custom_cols[cursor_y] & bit) != 0;
+  if(changed) {
+    cells[cursor_y][cursor_x] = codepoint;
+    custom_cols[cursor_y] &= (u16) ~bit;
+    markCell(cursor_x, cursor_y);
+  }
+  advance();
+  return changed;
+}
+
+bool Grid::writeByte(u8 value) {
+  if(value >= 8) return writeCodepoint(value);
+  const u16 bit = (u16) 1U << cursor_x;
+  const bool changed = cells[cursor_y][cursor_x] != value ||
+                       (custom_cols[cursor_y] & bit) == 0;
+  if(changed) {
+    cells[cursor_y][cursor_x] = value;
+    custom_cols[cursor_y] |= bit;
+    markCell(cursor_x, cursor_y);
+  }
+  advance();
+  return changed;
+}
+
+u16 Grid::cell(u8 x, u8 y) const {
+  return (x < COLS && y < row_count) ? cells[y][x] : (u16) ' ';
+}
+
+bool Grid::cellIsCustom(u8 x, u8 y) const {
+  return x < COLS && y < row_count &&
+         (custom_cols[y] & ((u16) 1U << x)) != 0;
+}
+
+void Grid::markCell(u8 x, u8 y) {
+  if(x < COLS && y < row_count) dirty_cols[y] |= (u16) 1U << x;
+}
+
+void Grid::markAll(void) {
+  for(u8 row = 0; row < row_count; row++) dirty_cols[row] = 0xFFFF;
+}
+
+bool Grid::markCustomSlot(u8 slot) {
+  bool found = false;
+  for(u8 row = 0; row < row_count; row++) {
+    for(u8 col = 0; col < COLS; col++) {
+      if(cellIsCustom(col, row) && cells[row][col] == (slot & 7)) {
+        markCell(col, row);
+        found = true;
+      }
+    }
+  }
+  return found;
+}
+
+u16 Grid::dirtyMask(u8 row) const {
+  return row < row_count ? dirty_cols[row] : 0;
+}
+
+void Grid::clearDirty(u8 row) {
+  if(row < row_count) dirty_cols[row] = 0;
+}
+
+void Grid::clearColumns(u16 mask) {
+  for(u8 row = 0; row < row_count; row++) dirty_cols[row] &= (u16) ~mask;
+}
+
+bool Grid::anyDirty(void) const {
+  for(u8 row = 0; row < row_count; row++) {
+    if(dirty_cols[row] != 0) return true;
+  }
+  return false;
+}
+
+#endif
 
 } // пространство имён text_screen

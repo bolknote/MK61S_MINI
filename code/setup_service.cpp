@@ -35,8 +35,11 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
     case MK61_SETUP_FEATURES:
       return (MK61_HAS_GRAPHICAL_TEXT_SETTINGS ? 1U : 0U) |
              (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? 2U : 0U)
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
              | 4U | (main_lcd().usbScreenActive() ? 0U : 8U)
+#endif
+#if MK61_FIXED_CALCULATOR_FACE
+             | 16U
 #endif
              ;
     case MK61_SETUP_HARDWARE: {
@@ -88,7 +91,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
     }
     case MK61_SETUP_FONT_APPLY: return apply_font_profile(payload);
     case MK61_SETUP_UI_FONT_READ:
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
       if(!payload) return 0;
       *(mk61_setup_ui_font*) payload = {library_mk61::ui_font_family(),
                                        library_mk61::ui_font_size()};
@@ -97,7 +100,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       return 0;
 #endif
     case MK61_SETUP_UI_FONT_APPLY:
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
       if(!payload) return 0;
       {
         const auto& in = *(const mk61_setup_ui_font*) payload;
@@ -112,7 +115,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       return 0;
 #endif
     case MK61_SETUP_TEXT_MODE:
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
       if(a > 1 || (a == 1 && main_lcd().usbScreenActive())) return 0;
       // Rendering context only: this does not change or save font settings.
       if(a) main_lcd().beginUiText(); else main_lcd().endUiText();
@@ -132,7 +135,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
     case MK61_SETUP_FONT_RESTORE: lcd_ru::restore_default_font(); return 1;
     case MK61_SETUP_TEXT:
       if(!payload || a >= main_lcd().rows()) return 0;
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
       if(main_lcd().uiTextActive() && ((b & 0x100U) || b == 0)) {
         main_lcd().printUiLine((u8) a, (const char*) payload,
                               (b & 0x100U) ? (char) b : 0);

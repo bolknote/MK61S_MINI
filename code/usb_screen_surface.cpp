@@ -1,6 +1,9 @@
 #include "usb_screen_surface.hpp"
 
 #include "display_symbols.hpp"
+#if MK61_FIXED_CALCULATOR_FACE
+#include "calculator_face.hpp"
+#endif
 
 #include <string.h>
 
@@ -40,6 +43,9 @@ Surface::Surface(u8* framebuffer)
     active_(false),
     dirty_(false),
     fullscreen_bitmap_active_(false),
+#if MK61_FIXED_CALCULATOR_FACE
+    calculator_face_active_(false),
+#endif
     update_depth_(0),
     cursor_underline_(false),
     cursor_blink_(false),
@@ -59,6 +65,9 @@ void Surface::begin(TextProfile profile) {
   active_ = true;
   update_depth_ = 0;
   fullscreen_bitmap_active_ = false;
+#if MK61_FIXED_CALCULATOR_FACE
+  calculator_face_active_ = false;
+#endif
   cursor_underline_ = false;
   cursor_blink_ = false;
   cursor_blink_phase_ = false;
@@ -82,6 +91,9 @@ void Surface::end(void) {
   active_ = false;
   dirty_ = false;
   fullscreen_bitmap_active_ = false;
+#if MK61_FIXED_CALCULATOR_FACE
+  calculator_face_active_ = false;
+#endif
   update_depth_ = 0;
   cursor_underline_ = false;
   cursor_blink_ = false;
@@ -96,6 +108,9 @@ void Surface::markDirty(void) {
 
 void Surface::clear(void) {
   if(!active_) return;
+#if MK61_FIXED_CALCULATOR_FACE
+  calculator_face_active_ = false;
+#endif
   grid_.reset(profile_.rows);
   grid_.markAll();
   cursor_underline_ = false;
@@ -199,6 +214,18 @@ void Surface::writeCodepoint(u16 codepoint) {
   if(content_changed || (cursorVisible() && cursor_changed)) markDirty();
 }
 
+#if MK61_FIXED_CALCULATOR_FACE
+void Surface::beginCalculatorFace(void) {
+  if(!active_ || calculator_face_active_) return;
+  calculator_face_active_ = true;
+  cursor_underline_ = false;
+  cursor_blink_ = false;
+  cursor_blink_phase_ = false;
+  cursor_next_blink_ms_ = 0;
+  markDirty();
+}
+#endif
+
 void Surface::seedText(const text_screen::Grid& source,
                        const u8 custom_glyphs[CUSTOM_GLYPHS][8],
                        const bool custom_valid[CUSTOM_GLYPHS],
@@ -288,6 +315,9 @@ void Surface::setFont(const fmk::Face* font) {
 
 bool Surface::beginFullscreenBitmap(void) {
   if(!active_) return false;
+#if MK61_FIXED_CALCULATOR_FACE
+  calculator_face_active_ = false;
+#endif
   fullscreen_bitmap_active_ = true;
   cursor_underline_ = false;
   cursor_blink_ = false;
@@ -528,6 +558,13 @@ void Surface::drawOverlay(void) {
 }
 
 void Surface::render(void) {
+#if MK61_FIXED_CALCULATOR_FACE
+  if(calculator_face_active_) {
+    calculator_face::renderFrame(grid_, framebuffer_);
+    drawOverlay();
+    return;
+  }
+#endif
   clearPixels();
   for(u8 row = 0; row < grid_.rows(); row++) {
     for(u8 col = 0; col < COLS; col++) {

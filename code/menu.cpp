@@ -60,7 +60,7 @@ static u8 oled_timeout_state = DEFAULT_OLED_TIMEOUT;
 #endif
 static lcd_display::TextProfile display_text_profile_state = lcd_display::defaultSettingsTextProfile();
 static u8 display_rows_state = lcd_display::defaultSettingsTextProfile().rows;
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
 static UiFontSettings ui_font_state;
 #endif
 static ProgramMemoryMode memory_mode = ProgramMemoryMode::AUTO;
@@ -107,14 +107,12 @@ static const char* fontPresetName(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, lcd_display::textProfile10x16())) return "10x16";
   if(sameTextProfile(profile, lcd_display::textProfile3x5())) return "3x5";
-  if(sameTextProfile(profile, lcd_display::textProfile5x9())) return "5x9";
   return "5x8";
 }
 #endif
 
 static u8 display_rows_mode(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
-  if(sameTextProfile(profile, lcd_display::textProfile5x9())) return 1;
   if(sameTextProfile(profile, lcd_display::textProfile10x16())) return 2;
   if(sameTextProfile(profile, lcd_display::textProfile3x5())) return 3;
   return 0;
@@ -123,7 +121,8 @@ static u8 display_rows_mode(lcd_display::TextProfile profile) {
 static u8 display_rows_from_mode(u8 mode) {
   switch(mode) {
     case 1:
-      return lcd_display::FONT_5X9_ROWS;
+      // Reserved legacy value: migrate the removed 5x9 preset to 5x8.
+      return lcd_display::FONT_5X8_ROWS;
     case 2:
       return lcd_display::FONT_10X16_ROWS;
     case 3:
@@ -539,7 +538,7 @@ bool  store_settings_state(void) {
   oled_settings.setTimeout(oled_timeout_state);
   return store_settings_snapshot(flags, sound_settings, stored_profile,
                                  &oled_settings);
-#elif defined(MK61_DISPLAY_UC1609)
+#elif MK61_PROPORTIONAL_UI_FONTS
   return store_settings_snapshot(flags, sound_settings, stored_profile,
                                  NULL, &ui_font_state);
 #else
@@ -597,7 +596,7 @@ void  load_settings_state(void) {
   set_display_rows(lcd_display::DEFAULT_ROWS);
 #endif
   set_sound_volume(sound_settings.bits.volume);
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   const UiFontSettings ui_font = read_ui_font_settings();
   set_ui_font(ui_font.family(), ui_font.size());
 #endif
@@ -608,7 +607,7 @@ void  load_settings_state(void) {
 }
 
 u8 ui_font_family(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   return ui_font_state.family();
 #else
   return 0;
@@ -616,7 +615,7 @@ u8 ui_font_family(void) {
 }
 
 u8 ui_font_size(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   return ui_font_state.size();
 #else
   return 14;
@@ -624,7 +623,7 @@ u8 ui_font_size(void) {
 }
 
 void set_ui_font(u8 family, u8 size) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   ui_font_state = make_ui_font_settings(family, size);
   main_lcd().setUiFont(ui_font_state.family(), ui_font_state.size());
 #else

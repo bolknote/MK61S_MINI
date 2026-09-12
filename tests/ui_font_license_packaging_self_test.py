@@ -31,10 +31,15 @@ class PackagingTest(unittest.TestCase):
                     self.assertEqual((bundle / name).read_bytes(), expected)
                     self.assertEqual(reader.read(name), expected)
 
-    def test_all_release_builders_include_notices(self):
-        for name in ("tools/build_f401_bundle.sh", "tools/.mk61-gcc/build.ps1",
-                     "tests/run_f411_release_matrix.sh"):
-            self.assertIn("tools/.fmk-font/package_ui_font_licenses.py", (ROOT / name).read_text())
+    def test_f411_release_builders_include_notices(self):
+        self.assertIn("tools/.fmk-font/package_ui_font_licenses.py",
+                      (ROOT / "tests/run_f411_release_matrix.sh").read_text())
+        for name in ("tools/build_f401_bundle.sh", "tools/.mk61-gcc/build.ps1"):
+            self.assertNotIn("tools/.fmk-font/package_ui_font_licenses.py",
+                             (ROOT / name).read_text())
+            self.assertIn("MK61_PORTABLE_UI_FONTS=0", (ROOT / name).read_text())
+        self.assertIn("--no-ui-fonts",
+                      (ROOT / "system_apps/.tool/build.ps1").read_text())
         workflow = (ROOT / ".github/workflows/firmware-release.yml").read_text()
         self.assertIn("test -s firmware/UI_FONT_LICENSES.zip", workflow)
         self.assertIn("firmware/*.zip", workflow)

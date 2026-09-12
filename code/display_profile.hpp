@@ -15,7 +15,6 @@ struct TextProfile {
 // сохраняла выбранный шрифт USB-экрана между сеансами.
 static constexpr u8 FONT_10X16_ROWS = 4;
 static constexpr u8 FONT_5X8_ROWS = 6;
-static constexpr u8 FONT_5X9_ROWS = 7;
 static constexpr u8 FONT_3X5_ROWS = 10;
 static constexpr u8 MIN_ROWS = 4;
 static constexpr u8 COMPACT_ROWS = 8;
@@ -45,10 +44,6 @@ static constexpr TextProfile textProfile10x16(void) {
   return {FONT_10X16_ROWS, 10, 16, 0};
 }
 
-static constexpr TextProfile textProfile5x9(void) {
-  return {FONT_5X9_ROWS, 5, 9, 0};
-}
-
 static constexpr TextProfile textProfile3x5(void) {
   return {FONT_3X5_ROWS, 3, 5, 1};
 }
@@ -60,20 +55,24 @@ static inline bool isTextProfile3x5(TextProfile profile) {
 static constexpr TextProfile defaultGraphicalTextProfileForRows(u8 rows) {
   if(rows <= FONT_10X16_ROWS) return textProfile10x16();
   if(rows <= FONT_5X8_ROWS) return textProfile5x8();
-  if(rows == FONT_5X9_ROWS) return textProfile5x9();
   return textProfile3x5();
 }
 
 static inline TextProfile presetGraphicalTextProfile(TextProfile profile) {
+  // 7x5x9 was a historical preset with cramped baselines.  Treat persisted
+  // copies as 5x8 rather than resurrecting it in a new build.
+  if(profile.rows == 7 && profile.glyph_width == 5 &&
+     profile.glyph_height == 9 && profile.line_gap == 0) return textProfile5x8();
   if(profile.rows <= FONT_10X16_ROWS || profile.glyph_width >= 10 ||
      profile.glyph_height >= 16) return textProfile10x16();
   if(profile.glyph_width <= 3 || profile.rows >= FONT_3X5_ROWS) return textProfile3x5();
-  if(profile.glyph_height >= 9 || profile.rows == FONT_5X9_ROWS) return textProfile5x9();
   return textProfile5x8();
 }
 
 static inline TextProfile normalizeGraphicalTextProfile(TextProfile profile) {
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  if(profile.rows == 7 && profile.glyph_width == 5 &&
+     profile.glyph_height == 9 && profile.line_gap == 0) return textProfile5x8();
   profile.rows = clamp_u8(profile.rows, MIN_ROWS, GRAPHICS_MAX_ROWS);
   profile.glyph_width = clamp_u8(profile.glyph_width, 3, 10);
 

@@ -14,7 +14,7 @@
 #include "text_editor.hpp"
 #include "mk61_ref.hpp"
 #include "setup_service.hpp"
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_font_service.hpp"
 #endif
 #if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
@@ -126,11 +126,11 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #if MK61_MARKDOWN_VIEWER_IS_LOADABLE && MK61_MARKDOWN_USES_WBMP
           | MK61_SERVICE_CAP_FONT
 #endif
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
           | MK61_SERVICE_CAP_UI_FONT
 #endif
           ;
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
     case MK61_SERVICE_UI_FONT:
       return ui_font_service::call(main_lcd().uiFontFamily(), main_lcd().uiFontSize(),
                                    a, b, c, payload);

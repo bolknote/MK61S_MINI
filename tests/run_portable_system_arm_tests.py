@@ -509,10 +509,10 @@ def main():
                     m.keys=[m.mapping[41],m.mapping[39]]
                     assert m.call(0x403)==0
                     assert m.profile == (bytes((7,5,8,1)) if extended and m.graphics else
-                                         bytes((7,5,9,0)) if m.graphics else bytes((6,5,8,2))),m.profile
+                                         bytes((10,3,5,1)) if m.graphics else bytes((6,5,8,2))),m.profile
                 if m.graphics:
-                    # Family is first, its size is next, and the calculator
-                    # has a separate mono subdialog; every live view has a sample.
+                    # Family is first. OK changes a value and ordinary arrows
+                    # navigate. Calculator geometry is no longer configurable.
                     for extended in (False, True):
                         m.ui_fonts = True; m.extended = extended
                         m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
@@ -522,39 +522,49 @@ def main():
                         assert m.call(0x403) == 0
                         assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
                         assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
-                        for family, size in ((1, 12), (2, 14), (0, 14)):
-                            m.keys = [shg_right] + ([ok, shg_right] if family else []) + [esc]
+                        transitions = ((1, 12, [ok, right, ok, esc]),
+                                       (2, 14, [ok, right, ok, esc]),
+                                       (0, 14, [ok, esc]))
+                        for family, size, keys in transitions:
+                            m.keys = keys
                             m.setup_views = []
                             assert m.call(0x403) == 0
                             assert m.ui_font == bytes((family, size)), m.ui_font
                             assert m.profile == bytes((6, 5, 8, 2)), m.profile
                             role, face, rows = m.setup_views[-1]
                             assert role and face == m.ui_font
-                            assert 'UI font:' in rows[0] and rows[3] == 'Aa Bb Wi 123', rows
+                            assert 'UI font:' in rows[0] and rows[3] == ' Aa Bb Wi 123', rows
                             assert ('UI size:' in rows[1]) == bool(family), rows
-                        # Two-row external geometry still keeps sample+option;
-                        # arrows don't turn its absent Legacy size into a value.
-                        m.legacy_rows = 2; m.keys = [right, shg_right, esc]
+                            assert not any('Calculator' in line for line in rows.values()), rows
+                        # Even a stale two-row calculator profile cannot change
+                        # the four-row UI or reopen calculator font controls.
+                        m.profile = bytes((6, 5, 8, 2))
+                        m.legacy_rows = 2; m.keys = [right, ok, esc]
                         m.setup_views = []; before = len(m.trace)
                         assert m.call(0x403) == 0
-                        assert m.setup_views[-1][2] == {0: '>Calculator...', 1: 'Aa Bb Wi 123'}
+                        assert m.profile == bytes((6, 5, 8, 2))
+                        assert m.ui_font == bytes((1, 14))
+                        fixed_rows = m.setup_views[-1][2]
+                        assert fixed_rows[0].startswith('>UI font:')
+                        assert fixed_rows[3] == ' Aa Bb Wi 123'
                         assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
-                        m.legacy_rows = 4; m.ui_font = bytes((2, 12))
-                        # Enter calculator separately, adjust it, ESC returns to
-                        # the same Roboto preview; a second ESC exits the chooser.
-                        m.keys = [right, right, ok, shg_right, esc, esc]
+                        m.legacy_rows = 4; m.ui_font = bytes((2, 12)); m.profile = bytes((6, 5, 8, 2))
+                        # Proportional mode shows only size. OK advances it and
+                        # shifted-left reverses it without opening another view.
+                        m.keys = [right, ok, shg_left, esc]
                         m.setup_views = []
                         assert m.call(0x403) == 0
-                        assert m.profile == (bytes((7, 5, 8, 1)) if extended else bytes((7, 5, 9, 0)))
+                        assert m.profile == bytes((6, 5, 8, 2))
                         assert m.ui_font == bytes((2, 12))
-                        assert any(not view[0] for view in m.setup_views)
-                        assert m.setup_views[-1][0] and m.setup_views[-1][2][3] == 'Aa Bb Wi 123'
+                        assert any(view[1] == bytes((2, 14)) for view in m.setup_views)
+                        assert all(view[0] for view in m.setup_views)
+                        assert m.setup_views[-1][2][3] == ' Aa Bb Wi 123'
                     # A display revision change to the monospaced USB backend
                     # leaves the live chooser safely without applying settings.
                     m.setup_views = []; m.drop_live_ui_on_wait = True; m.keys = [esc]
                     before = len(m.trace)
                     assert m.call(0x403) == 0 and not m.live_ui
-                    assert m.setup_views[0][0] and not m.setup_views[-1][0]
+                    assert m.setup_views[0][0]
                     assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
                     m.live_ui = True
                     m.ui_fonts = False

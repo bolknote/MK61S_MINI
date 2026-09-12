@@ -1,6 +1,7 @@
 #ifndef MK61_USB_SCREEN_SURFACE_HPP
 #define MK61_USB_SCREEN_SURFACE_HPP
 
+#include "config.h"
 #include "builtin_font.hpp"
 #include "fmk_font.hpp"
 #include "rust_types.h"
@@ -24,7 +25,6 @@ struct TextProfile {
 };
 
 constexpr TextProfile profile5x8(void) { return {6, 5, 8, 2}; }
-constexpr TextProfile profile5x9(void) { return {7, 5, 9, 0}; }
 constexpr TextProfile profile3x5(void) { return {10, 3, 5, 1}; }
 
 TextProfile normalizeProfile(TextProfile profile);
@@ -64,6 +64,13 @@ class Surface {
     void blinkOff(void);
     void writeByte(u8 value);
     void writeCodepoint(u16 codepoint);
+
+#if MK61_FIXED_CALCULATOR_FACE
+    // Mirrors the physical UC1609 calculator face pixel-for-pixel.  It is a
+    // normal renderer role, not a modal fullscreen owner.
+    void beginCalculatorFace(void);
+    bool calculatorFaceActive(void) const { return calculator_face_active_; }
+#endif
 
     // Восстанавливает только что запущенную USB-поверхность из логического
     // состояния графического дисплея. Благодаря этому смена подсистемы проходит
@@ -108,6 +115,9 @@ class Surface {
     bool active_;
     bool dirty_;
     bool fullscreen_bitmap_active_;
+#if MK61_FIXED_CALCULATOR_FACE
+    bool calculator_face_active_;
+#endif
     usize update_depth_;
     bool cursor_underline_;
     bool cursor_blink_;

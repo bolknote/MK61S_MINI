@@ -396,7 +396,7 @@ struct PersistentSettings {
 #if defined(MK61_OLED1602_WS0010)
   u8 oled;
 #endif
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   u8 ui_font;
 #endif
   lcd_display::TextProfile text_profile;
@@ -411,7 +411,7 @@ static PersistentSettings persistent_settings = {
 #if defined(MK61_OLED1602_WS0010)
   0xFF,
 #endif
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   UiFontSettings::DEFAULT_PRESET,
 #endif
   lcd_display::defaultSettingsTextProfile(),
@@ -431,7 +431,7 @@ static void reset_persistent_settings_cache(void) {
 #if defined(MK61_OLED1602_WS0010)
   persistent_settings.oled = 0xFF;
 #endif
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   persistent_settings.ui_font = UiFontSettings::DEFAULT_PRESET;
 #endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
@@ -451,7 +451,7 @@ static void apply_settings_record(const settings_journal::RecordData& record) {
 #if defined(MK61_OLED1602_WS0010)
   persistent_settings.oled = record.oled_stored ? record.oled : 0xFF;
 #endif
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   persistent_settings.ui_font = record.ui_font_stored
     ? normalize_ui_font_settings(record.ui_font).raw : UiFontSettings::DEFAULT_PRESET;
 #endif
@@ -512,7 +512,7 @@ static void import_legacy_settings(void) {
 #if defined(MK61_OLED1602_WS0010)
   persistent_settings.oled = 0xFF;
 #endif
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   persistent_settings.ui_font = UiFontSettings::DEFAULT_PRESET;
 #endif
   persistent_settings.text_profile = lcd_display::defaultSettingsTextProfile();
@@ -605,7 +605,7 @@ static bool write_persistent_settings(void) {
   data.oled = normalize_oled_settings(persistent_settings.oled).raw;
   data.oled_stored = true;
 #endif
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   data.ui_font = normalize_ui_font_settings(persistent_settings.ui_font).raw;
   data.ui_font_stored = true;
 #endif
@@ -688,7 +688,7 @@ OledSettings read_oled_settings(void) {
 }
 
 UiFontSettings read_ui_font_settings(void) {
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   load_persistent_settings();
   return normalize_ui_font_settings(persistent_settings.ui_font);
 #else
@@ -794,7 +794,7 @@ bool store_settings_snapshot(
   (void) oled_settings;
 #endif
 
-#if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
   if(ui_font_settings != NULL) {
     const u8 raw = normalize_ui_font_settings(ui_font_settings->raw).raw;
     if(persistent_settings.ui_font != raw) {

@@ -15,6 +15,11 @@
 #include <stdio.h>
 extern void idle_main_process(void);
 namespace setup_ui {
+#if MK61_UI_FONT_CLIENT
+  #define MK61_SETUP_UI_FONT_CHOOSER 1
+#else
+  #define MK61_SETUP_UI_FONT_CHOOSER 0
+#endif
 static constexpr i32 DISPLAY_MODE_CHANGED = -2;
 
 static i32 wait_key_or_display_change(u32 display_mode_revision) {
@@ -35,13 +40,15 @@ static i32 wait_key_or_display_change(u32 display_mode_revision) {
 static constexpr usize HARDWARE_LINE_SIZE = 32;
 
 static void printSetupLines(const char* first, const char* second) {
+#if MK61_SETUP_UI_FONT_CHOOSER
   if(service(MK61_SETUP_FEATURES) & 4U) {
     service(MK61_SETUP_TEXT, 0, 0, (void*) first);
     service(MK61_SETUP_TEXT, 1, 0, (void*) second);
-  } else {
-    // Character displays must keep the two rows under one CGRAM map.
-    lcd_ru::print_lines(first, second);
+    return;
   }
+#endif
+  // Character displays and F401/UC1609 keep the established fixed-cell path.
+  lcd_ru::print_lines(first, second);
 }
 
 static void build_hardware_lines(
@@ -322,20 +329,17 @@ static const char* fontPresetName(lcd_display::TextProfile profile) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
   if(sameTextProfile(profile, lcd_display::textProfile10x16())) return "10x16";
   if(sameTextProfile(profile, lcd_display::textProfile3x5())) return "3x5";
-  if(sameTextProfile(profile, lcd_display::textProfile5x9())) return "5x9";
   return "5x8";
 }
 
 static lcd_display::TextProfile nextFontPreset(lcd_display::TextProfile profile, i8 delta) {
   profile = lcd_display::normalizeSettingsTextProfile(profile);
-  const u8 current = sameTextProfile(profile, lcd_display::textProfile5x9()) ? 1 :
-    (sameTextProfile(profile, lcd_display::textProfile3x5()) ? 2 :
-      (sameTextProfile(profile, lcd_display::textProfile10x16()) ? 3 : 0));
-  const u8 next = (u8) ((current + (delta > 0 ? 1 : 3)) % 4);
+  const u8 current = sameTextProfile(profile, lcd_display::textProfile3x5()) ? 1 :
+      (sameTextProfile(profile, lcd_display::textProfile10x16()) ? 2 : 0);
+  const u8 next = (u8) ((current + (delta > 0 ? 1 : 2)) % 3);
   switch(next) {
-    case 1: return lcd_display::textProfile5x9();
-    case 2: return lcd_display::textProfile3x5();
-    case 3: return lcd_display::textProfile10x16();
+    case 1: return lcd_display::textProfile3x5();
+    case 2: return lcd_display::textProfile10x16();
     default: return lcd_display::textProfile5x8();
   }
 }
@@ -365,9 +369,14 @@ static u8 calculatorFontFieldCount(void) {
 #endif
 }
 
+#if MK61_SETUP_UI_FONT_CHOOSER
 static bool uiFontSettingsAvailable(void) {
   // An older resident or USB Screen cannot provide a live UI-font surface.
   return (service(MK61_SETUP_FEATURES) & 12U) == 12U;
+}
+
+static bool uiFontServiceAvailable(void) {
+  return (service(MK61_SETUP_FEATURES) & 4U) != 0;
 }
 
 static mk61_setup_ui_font readUiFont(void) {
@@ -381,13 +390,14 @@ static void formatUiFontLine(char* out, usize size, u8 field,
   const bool russian = library_mk61::language_is_ru();
   if(field == 0) {
     const char* name = ui_font.family == 1 ? "DejaVu" :
-      (ui_font.family == 2 ? "Roboto" : (russian ? "обычн." : "Legacy"));
+      (ui_font.family == 2 ? "Roboto" : (russian ? "моно" : "Mono"));
     snprintf(out, size, russian ? "Шрифт UI:%s" : "UI font:%s", name);
   } else {
     snprintf(out, size, russian ? "Размер UI:%u" : "UI size:%u",
       (unsigned) ui_font.size);
   }
 }
+#endif
 static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::TextProfile profile) {
 #if !MK61_ENABLE_EXTENDED_FONT_SETTINGS
   (void) field;
@@ -587,10 +597,11 @@ static bool calculatorFontSetup(void) {
 #endif
 }
 
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+#if MK61_SETUP_UI_FONT_CHOOSER
 static u8 uiFontFieldCount(mk61_setup_ui_font ui_font) {
-  // Legacy uses the calculator's fixed-cell geometry, not the 12/14px rasters.
-  return ui_font.family == 0 ? 2 : 3;
+  // Calculator digits have a separate fixed face.  This dialog controls only
+  // the UI: Mono has no size choice, proportional families have 12/14 px.
+  return ui_font.family == 0 ? 1U : 2U;
 }
 
 static void drawUiFontSetup(u8 active, mk61_setup_ui_font ui_font) {
@@ -608,24 +619,27 @@ static void drawUiFontSetup(u8 active, mk61_setup_ui_font ui_font) {
   char line[32];
   for(u8 row = 0; row < visible; ++row) {
     const u8 field = top + row;
-    if(field + 1 == fields) {
-      snprintf(line, sizeof(line), "%s", library_mk61::language_is_ru()
-          ? "Калькулятор..." : "Calculator...");
-    } else {
-      formatUiFontLine(line, sizeof(line), field, ui_font);
-    }
+    formatUiFontLine(line, sizeof(line), field, ui_font);
     service(MK61_SETUP_TEXT, row, 0x100U | (field == active ? '>' : ' '), line);
   }
   if(rows > 1) {
-    service(MK61_SETUP_TEXT, rows - 1, 0, (void*) (library_mk61::language_is_ru()
+    // A space marker reserves the same gutter as every menu row, so the live
+    // sample aligns with the labels instead of protruding into their margin.
+    service(MK61_SETUP_TEXT, rows - 1, 0x100U | ' ', (void*) (library_mk61::language_is_ru()
         ? "Аа Бб Wi 123" : "Aa Bb Wi 123"));
   }
 }
 #endif
 
 bool font(void) {
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
-  if(!uiFontSettingsAvailable()) return calculatorFontSetup();
+#if MK61_SETUP_UI_FONT_CHOOSER
+  if(!uiFontSettingsAvailable()) {
+    // F411/UC1609's calculator face is fixed, so USB Screen must not expose
+    // the obsolete calculator-profile editor. F401 and old residents retain
+    // the established fixed-cell editor.
+    return uiFontServiceAvailable() ? action::MENU_BACK
+                                    : calculatorFontSetup();
+  }
   mk61_setup_ui_font ui_font = readUiFont();
   u8 active = 0;
   drawUiFontSetup(active, ui_font);
@@ -639,24 +653,32 @@ bool font(void) {
     }
     // USB Screen is monospaced. Never show a misleading proportional preview
     // there; mode changes also require a fresh row budget and complete frame.
-    if(!uiFontSettingsAvailable()) return calculatorFontSetup();
+    if(!uiFontSettingsAvailable()) {
+      return uiFontServiceAvailable() ? action::MENU_BACK
+                                      : calculatorFontSetup();
+    }
     const u8 fields = uiFontFieldCount(ui_font);
-    if(key == KEY_OK_PRESS && active + 1 == fields) {
-      calculatorFontSetup();
-      if(!uiFontSettingsAvailable()) return action::MENU_BACK;
-    } else if(key == KEY_OK_PRESS || key == KEY_RIGHT_PRESS) {
+    if(key == KEY_RIGHT_PRESS) {
       if(active + 1 < fields) ++active;
     } else if(key == KEY_LEFT_PRESS) {
       if(active > 0) --active;
-    } else if((key == KEY_SHG_LEFT_PRESS || key == KEY_SHG_RIGHT_PRESS) &&
-              active + 1 < fields) {
+    } else if(key == KEY_OK_PRESS || key == KEY_SHG_LEFT_PRESS ||
+              key == KEY_SHG_RIGHT_PRESS) {
+      const i8 delta = key == KEY_SHG_LEFT_PRESS ? -1 : 1;
+      bool apply_ui = false;
       if(active == 0) {
-        ui_font.family = (u8) ((ui_font.family + (key == KEY_SHG_RIGHT_PRESS ? 1 : 2)) % 3);
+        ui_font.family = (u8) ((ui_font.family + (delta > 0 ? 1 : 2)) % 3);
+        apply_ui = true;
       } else {
         ui_font.size = ui_font.size == 14 ? 12 : 14;
+        apply_ui = true;
       }
       MK61DisplayUpdate update(main_lcd());
-      if(!service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &ui_font)) ui_font = readUiFont();
+      if(apply_ui && !service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &ui_font)) {
+        ui_font = readUiFont();
+      }
+      const u8 next_fields = uiFontFieldCount(ui_font);
+      if(active >= next_fields) active = (u8) (next_fields - 1U);
       drawUiFontSetup(active, ui_font);
       continue;
     } else if(key != DISPLAY_MODE_CHANGED) {

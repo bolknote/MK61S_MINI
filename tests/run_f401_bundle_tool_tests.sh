@@ -173,12 +173,14 @@ bundle="$work/output/mk61s-M-mini-v3-lcd1602-a00-f401"
 mkdir -p "$bundle"
 mkdir -p "$bundle/System"
 mkdir -p "$bundle/Apps"
+mkdir -p "$bundle/licenses/ui-fonts"
 printf 'stale' > "$bundle/System/FOCAL.APP"
 printf 'stale' > "$bundle/System/BASIC.APP"
 printf 'stale' > "$bundle/System/WBMP.APP"
 printf 'stale' > "$bundle/System/MARKDOWN.APP"
 printf 'stale' > "$bundle/System/CHIP8.APP"
 printf 'stale' > "$bundle/Apps/STALE.APP"
+printf 'stale' > "$bundle/licenses/ui-fonts/LICENSE-DejaVu.txt"
 
 MK61_ARDUINO_CLI="$fake_cli" \
 MK61_TEST_RESIDENT_FIXTURE="$work/resident-fixture" \
@@ -204,6 +206,8 @@ grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
 grep -q -- '-DMK61_ENABLE_MARKDOWN_VIEWER=0' "$bundle/build.flags"
 grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
 grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$bundle/build.flags"
+grep -q -- '-DMK61_PORTABLE_UI_FONTS=0' "$bundle/build.flags"
+test ! -e "$bundle/licenses/ui-fonts"
 "$root/tools/seal-firmware.sh" check --max-size 262144 \
   "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin" >/dev/null
 grep -q '^format 1$' "$bundle/build.apps"

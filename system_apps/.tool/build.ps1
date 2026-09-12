@@ -18,6 +18,9 @@ param(
     [string]$Graphics = '1',
 
     [ValidateSet('0', '1')]
+    [string]$UiFonts = '1',
+
+    [ValidateSet('0', '1')]
     [string]$Focal = '1',
 
     [ValidateSet('0', '1')]
@@ -418,6 +421,9 @@ function Build-SystemApp {
             '--arm-toolchain-bin', [IO.Path]::GetDirectoryName($script:Compiler),
             '--packer', $script:ModulePacker,
             '--output-dir', $moduleDir)
+        if ($UiFonts -eq '0') {
+            $arguments += '--no-ui-fonts'
+        }
         if ($Graphics -eq '0' -and $App.PackerKind -eq 'markdown-viewer') {
             $arguments += '--text-only'
         }

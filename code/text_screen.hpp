@@ -1,6 +1,7 @@
 #ifndef TEXT_SCREEN_HPP
 #define TEXT_SCREEN_HPP
 
+#include "config.h"
 #include "rust_types.h"
 
 namespace text_screen {
@@ -36,7 +37,13 @@ class Grid {
     bool writeByte(u8 value);
 
     u8 rows(void) const { return row_count; }
-    u8 cols(void) const { return column_count; }
+    u8 cols(void) const {
+#if MK61_PROPORTIONAL_UI_FONTS
+      return column_count;
+#else
+      return COLS;
+#endif
+    }
     u8 cursorX(void) const { return cursor_x; }
     u8 cursorY(void) const { return cursor_y; }
     u16 cell(u8 x, u8 y) const;
@@ -53,16 +60,26 @@ class Grid {
     bool anyDirty(void) const;
 
   private:
+#if MK61_PROPORTIONAL_UI_FONTS
     u16 cells[CELL_CAPACITY];
     u8 custom_cells[FLAG_BYTES];
     u8 dirty_cells[FLAG_BYTES];
+#else
+    u16 cells[MAX_ROWS][COLS];
+    u16 custom_cols[MAX_ROWS];
+    u16 dirty_cols[MAX_ROWS];
+#endif
     u8 row_count;
+#if MK61_PROPORTIONAL_UI_FONTS
     u8 column_count;
+#endif
     u8 cursor_x;
     u8 cursor_y;
 
     void advance(void);
+#if MK61_PROPORTIONAL_UI_FONTS
     usize index(u8 x, u8 y) const { return (usize) y * column_count + x; }
+#endif
 };
 
 } // пространство имён text_screen

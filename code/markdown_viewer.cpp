@@ -18,7 +18,9 @@
   #include "shared_scratch.hpp"
   #include "storage_path.hpp"
   #include "wbmp.hpp"
-  #include "markdown_ui_font.hpp"
+  #if MK61_UI_FONT_CLIENT
+    #include "markdown_ui_font.hpp"
+  #endif
 #else
   #include "markdown_plain.hpp"
 #endif
@@ -430,7 +432,9 @@ class GraphicLayout {
   u8 viewport_height;
   u16 parent_id;
   markdown_scroll::Probe& scroll_probe;
+#if MK61_UI_FONT_CLIENT
   markdown_ui_font::Source ui_font_source;
+#endif
   bool compact;
   u16 y;
   u16 block_start_y;
@@ -456,12 +460,15 @@ class GraphicLayout {
     return (u8) (native_advance * scale);
   }
 
+#if MK61_UI_FONT_CLIENT
   bool ui_prose(void) const {
     return !compact && ui_font_source.enabled() && block.kind != BlockKind::CODE;
   }
+#endif
 
   u8 text_advance(u16 codepoint, u8 glyph_style,
                   builtin_font::FaceId selected_face, u8 selected_scale) const {
+#if MK61_UI_FONT_CLIENT
     if(ui_prose() && selected_face == builtin_font::FaceId::FONT_5X8 &&
        (glyph_style & STYLE_CODE) == 0) {
       mk61_service_ui_glyph glyph = {};
@@ -470,6 +477,10 @@ class GraphicLayout {
           (glyph_style & STYLE_BOLD) != 0, (glyph_style & STYLE_ITALIC) != 0);
       }
     }
+#else
+    (void) codepoint;
+    (void) glyph_style;
+#endif
     return glyph_advance(selected_face, selected_scale);
   }
 
@@ -537,6 +548,7 @@ class GraphicLayout {
   void draw_glyph(u16 codepoint, u8 glyph_style,
                   i16 x, i16 global_y,
                   builtin_font::FaceId selected_face, u8 selected_scale) {
+#if MK61_UI_FONT_CLIENT
     const bool prose = ui_prose() && selected_face == builtin_font::FaceId::FONT_5X8;
     i16 height = prose ? ui_font_source.height() : (i16) (
         (selected_face == builtin_font::FaceId::FONT_3X5 ? 5U : 8U) *
@@ -569,6 +581,19 @@ class GraphicLayout {
         glyph_style &= (u8) ~(STYLE_BOLD | STYLE_ITALIC);
       }
     }
+#else
+    const i16 expected_height = (i16) (
+        (selected_face == builtin_font::FaceId::FONT_3X5 ? 5U : 8U) *
+        selected_scale);
+    if(!vertical_span_visible(global_y, expected_height)) return;
+
+    builtin_font::Raster raster = {};
+    if(!builtin_font::decode(selected_face, codepoint, raster) &&
+       !builtin_font::decode(selected_face, '?', raster)) return;
+
+    const u8 advance = glyph_advance(selected_face, selected_scale);
+    const i16 height = (i16) raster.height * selected_scale;
+#endif
     const bool inverse = (glyph_style & STYLE_CODE) != 0;
     if(inverse) fill_rect(x, global_y, advance, height, true);
 
@@ -581,10 +606,17 @@ class GraphicLayout {
                              source_x, source_y)) continue;
         for(u8 sy = 0; sy < selected_scale; sy++) {
           for(u8 sx = 0; sx < selected_scale; sx++) {
+#if MK61_UI_FONT_CLIENT
             const i16 px = (i16) (ink_x + italic_shift * selected_scale +
                                   source_x * selected_scale + sx);
             const i16 py = (i16) (ink_y +
                                   source_y * selected_scale + sy);
+#else
+            const i16 px = (i16) (x + italic_shift * selected_scale +
+                                  source_x * selected_scale + sx);
+            const i16 py = (i16) (global_y +
+                                  source_y * selected_scale + sy);
+#endif
             set_global_pixel(px, py, !inverse);
             if((glyph_style & STYLE_BOLD) != 0) {
               set_global_pixel((i16) (px + 1), py, !inverse);
@@ -631,13 +663,19 @@ class GraphicLayout {
     line_height = 8U;
     line_pitch = compact ? 8U : 10U;
 
+#if MK61_UI_FONT_CLIENT
     if(ui_prose()) {
       line_height = ui_font_source.height();
       line_pitch = (u8) (line_height + ui_font_source.line_gap());
     }
+#endif
 
     if(block.kind == BlockKind::HEADING) {
+#if MK61_UI_FONT_CLIENT
       if(block.level == 1 && !ui_prose()) {
+#else
+      if(block.level == 1) {
+#endif
         if(compact) {
           face = builtin_font::FaceId::FONT_5X8;
           line_height = 8;

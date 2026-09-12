@@ -36,7 +36,7 @@ struct Surface {
   bool line_ui_active[10] = {};
   mk61_setup_ui_font line_fonts[10] = {};
   u8 row = 0;
-  bool uiTextActive() const { return ui_text_context && ui_font.family != 0; }
+  bool uiTextActive() const { return ui_text_context; }
   u8 rows() const { return uiTextActive() ? 4 : profile.rows; }
   void clear() {
     for(auto& line : lines) line.clear();
@@ -185,7 +185,7 @@ static void test_ui_font_layout() {
       for(u8 family : {0, 1, 2}) {
         for(u8 size : {12, 14}) {
           const mk61_setup_ui_font font = {family, size};
-          assert(uiFontFieldCount(font) == (family == 0 ? 2 : 3));
+          assert(uiFontFieldCount(font) == (family == 0 ? 1U : 2U));
           for(u8 active = 0; active < uiFontFieldCount(font); ++active) {
             surface.profile = {calculator_rows, 10,
                                (u8) (calculator_rows == 2 ? 32 : 5), 0};
@@ -198,10 +198,10 @@ static void test_ui_font_layout() {
             phases.clear();
             drawUiFontSetup(active, font);
 
-            const u8 rows = family == 0 ? calculator_rows : 4;
+            const u8 rows = 4;
             assert(surface.rows() == rows);
             assert(surface.ui_text_context);
-            assert(surface.uiTextActive() == (family != 0));
+            assert(surface.uiTextActive());
             assert(surface.external);
             assert(std::memcmp(&surface.profile, &calculator_profile,
                                sizeof(calculator_profile)) == 0);
@@ -212,35 +212,31 @@ static void test_ui_font_layout() {
             for(usize i = 2; i < calls.size(); ++i) assert(calls[i] == "text");
 
             const char* family_line = ru
-              ? (family == 0 ? "Шрифт UI:обычн." :
+              ? (family == 0 ? "Шрифт UI:моно" :
                  family == 1 ? "Шрифт UI:DejaVu" : "Шрифт UI:Roboto")
-              : (family == 0 ? "UI font:Legacy" :
+              : (family == 0 ? "UI font:Mono" :
                  family == 1 ? "UI font:DejaVu" : "UI font:Roboto");
             const char* size_line = ru
               ? (size == 12 ? "Размер UI:12" : "Размер UI:14")
               : (size == 12 ? "UI size:12" : "UI size:14");
-            const char* calculator_line = ru ? "Калькулятор..." : "Calculator...";
             std::string expected[10];
-            if(rows == 2) {
-              // The real installed FMK geometry wins over normalized settings:
-              // one selected option above one permanent live sample.
-              assert(family == 0);
-              expected[0] = std::string(">") + (active == 0 ? family_line : calculator_line);
-            } else {
-              expected[0] = std::string(1, active == 0 ? '>' : ' ') + family_line;
-              if(family == 0) {
-                expected[1] = std::string(1, active == 1 ? '>' : ' ') + calculator_line;
-              } else {
-                expected[1] = std::string(1, active == 1 ? '>' : ' ') + size_line;
-                expected[2] = std::string(1, active == 2 ? '>' : ' ') + calculator_line;
-              }
+            const u8 fields = uiFontFieldCount(font);
+            const u8 available = rows > 1 ? (u8) (rows - 1) : 1;
+            const u8 visible = available < fields ? available : fields;
+            const u8 top = active < visible ? 0 : (u8) (active + 1 - visible);
+            for(u8 row = 0; row < visible; ++row) {
+              const u8 field = (u8) (top + row);
+              char value[32];
+              if(field == 0) snprintf(value, sizeof(value), "%s", family_line);
+              else snprintf(value, sizeof(value), "%s", size_line);
+              expected[row] = std::string(1, field == active ? '>' : ' ') + value;
             }
-            expected[rows - 1] = ru ? "Аа Бб Wi 123" : "Aa Bb Wi 123";
+            expected[rows - 1] = ru ? " Аа Бб Wi 123" : " Aa Bb Wi 123";
             for(u8 row = 0; row < 10; ++row) {
               expect("live UI chooser layout", surface.lines[row], expected[row]);
               if(expected[row].empty()) continue;
               assert(surface.line_ui_context[row]);
-              assert(surface.line_ui_active[row] == (family != 0));
+              assert(surface.line_ui_active[row]);
               assert(surface.line_fonts[row].family == family);
               assert(surface.line_fonts[row].size == size);
             }
@@ -263,7 +259,7 @@ int main() {
   test_ui_font_layout();
   using namespace lcd_display;
   auto profile = textProfile5x8();
-  const u8 expected_rows[] = {6, 7, 10, 4};
+  const u8 expected_rows[] = {6, 10, 4};
   for(u8 rows : expected_rows) {
     assert(profile.rows == rows);
     assert((u16) profile.rows * profile.glyph_height + (profile.rows - 1) * profile.line_gap <= 64);
@@ -290,8 +286,7 @@ int main() {
   expect("font dialog RU", surface.lines[0], ">Шрифт:10x16");
 #endif
 
-  // The calculator dialog remains the old fixed-cell layout, independently
-  // of the new family-first UI chooser.
+  // The fallback dialog remains available to residents without live UI text.
   assert(sameTextProfile(surface.profile, four));
 
   const char narrow_name[] = "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
@@ -353,5 +348,5 @@ int main() {
     assert(ws0010_charset::unicodeToByte(point, cell));
     assert(point == ws0010_charset::canonicalForByte(cell));
   }
-  std::puts("UI contracts: live family/size/sample, calculator font keys/confirmation, splash/clock/USB/Markdown/mixed WS0010 PASS");
+  std::puts("UI contracts: unified font values/sample alignment, splash/clock/USB/Markdown/mixed WS0010 PASS");
 }

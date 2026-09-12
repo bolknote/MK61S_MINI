@@ -12,6 +12,7 @@ for mode in builtin portable; do
   if [[ "$mode" == portable ]]; then mode_flags=(-DMK61_BUILD_PORTABLE_SYSTEM); fi
   clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
     "${sanitizer_flags[@]}" "${mode_flags[@]}" -DARDUINO=100 -DMK61_DISPLAY_UC1609 \
+    -DMK61_PROPORTIONAL_UI_FONTS=1 \
     -I"$root/code" -I"$root/tests/mk_math_shim" \
     "$root/tests/markdown_ui_font_self_test.cpp" "$root/code/ui_font.cpp" \
     -o "$font_bridge_dir/$mode"

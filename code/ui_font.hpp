@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 
-// Optional UC1609 UI faces. The calculator's cell font remains independent.
-// Storage and implementation are compiled only for MK61_DISPLAY_UC1609.
+// Optional F411/UC1609 UI faces. The calculator face remains independent.
+// Storage and implementation are compiled only with
+// MK61_PROPORTIONAL_UI_FONTS=1; official F401 builds set it to zero.
 namespace ui_font {
 
 enum class Family : uint8_t { DEJAVU, ROBOTO };

@@ -1,8 +1,9 @@
 #ifndef MK61_MARKDOWN_UI_FONT_HPP
 #define MK61_MARKDOWN_UI_FONT_HPP
 
+#include "config.h"
 #include "loadable_app_services.h"
-#if defined(MK61_DISPLAY_UC1609) && !defined(MK61_BUILD_PORTABLE_SYSTEM)
+#if MK61_UI_FONT_CLIENT && !defined(MK61_BUILD_PORTABLE_SYSTEM)
 #include "ui_font_service.hpp"
 #endif
 
@@ -11,13 +12,13 @@ namespace markdown_ui_font {
 class Source {
  public:
   Source() : info{} {
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && MK61_PORTABLE_UI_FONTS
     if(portable_system::api != nullptr &&
        (portable_system::call(MK61_SERVICE_CAPABILITIES) & MK61_SERVICE_CAP_UI_FONT)) {
       if(!portable_system::call(MK61_SERVICE_UI_FONT, MK61_UI_FONT_INFO,
                                 0, sizeof(info), &info)) info = {};
     }
-#elif defined(MK61_DISPLAY_UC1609)
+#elif MK61_UI_FONT_CLIENT
     ui_font_service::call(main_lcd().uiFontFamily(), main_lcd().uiFontSize(),
                          MK61_UI_FONT_INFO, 0, sizeof(info), &info);
 #endif
@@ -35,10 +36,10 @@ class Source {
     out.family = info.family;
     out.size = info.size;
     bool ok = false;
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && MK61_PORTABLE_UI_FONTS
     ok = portable_system::call(MK61_SERVICE_UI_FONT, MK61_UI_FONT_GLYPH,
                                codepoint, sizeof(out), &out) != 0;
-#elif defined(MK61_DISPLAY_UC1609)
+#elif MK61_UI_FONT_CLIENT
     ok = ui_font_service::call(info.family, info.size, MK61_UI_FONT_GLYPH,
                                codepoint, sizeof(out), &out) != 0;
 #else

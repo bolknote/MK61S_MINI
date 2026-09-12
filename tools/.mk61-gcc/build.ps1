@@ -293,6 +293,15 @@ function Remove-GeneratedBundleFiles {
             Remove-Item -LiteralPath $path -Force
         }
     }
+    $uiFontLicenses = Join-Path $Directory 'licenses/ui-fonts'
+    if ([IO.Directory]::Exists($uiFontLicenses)) {
+        Remove-Item -LiteralPath $uiFontLicenses -Recurse -Force
+    }
+    $licenses = Join-Path $Directory 'licenses'
+    if ([IO.Directory]::Exists($licenses) -and
+        @(Get-ChildItem -LiteralPath $licenses -Force).Count -eq 0) {
+        Remove-Item -LiteralPath $licenses -Force
+    }
     $system = Join-Path $Directory 'System'
     foreach ($name in @(
         'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'HELP0.TXT', 'HELP1.TXT'
@@ -645,6 +654,7 @@ try {
             '-Markdown', $Markdown,
             '-Chip8', $Chip8,
             '-Graphics', $(if ($wbmpGraphics) { '1' } else { '0' }),
+            '-UiFonts', '0',
             '-PortableApps', $PortableApps)
     }
 
@@ -666,9 +676,6 @@ try {
     Remove-GeneratedBundleFiles $outputBundle $residentName
     Copy-Item -LiteralPath $residentBin `
         -Destination (Join-Path $outputBundle $residentName)
-    Invoke-GccTool $python @(
-        (Join-Path $script:ProjectRoot 'tools/.fmk-font/package_ui_font_licenses.py'),
-        '--bundle', $outputBundle)
     if ([IO.Directory]::Exists((Join-Path $stage 'System'))) {
         Copy-Item -LiteralPath (Join-Path $stage 'System') `
             -Destination $outputBundle -Recurse
@@ -690,6 +697,7 @@ try {
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
     $flagValues.Add("-DMK61_ENABLE_PORTABLE_APPS=$PortableApps")
+    $flagValues.Add('-DMK61_PORTABLE_UI_FONTS=0')
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
     $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
     [IO.File]::WriteAllText(

@@ -40,7 +40,9 @@
   #include "builtin_font.hpp"
   #include "fmk_font.hpp"
   #include "text_screen.hpp"
+#if MK61_PROPORTIONAL_UI_FONTS
   #include "ui_font.hpp"
+#endif
 #endif
 
 #if MK61_ENABLE_USB_SCREEN
@@ -193,15 +195,15 @@ class MK61Display : public Print {
     void setRows(u8 rows);
     void setTextProfile(lcd_display::TextProfile profile);
     lcd_display::TextProfile textProfile(void) const;
-#if defined(MK61_DISPLAY_UC1609)
-    // An opt-in UI role. The calculator profile and external font are retained.
+#if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
+    // Family 0 is the fixed 5x8 UI; families 1/2 are proportional.
     void setUiFont(u8 family, u8 size);
     u8 uiFontFamily(void) const { return ui_font_state & 3U; }
     u8 uiFontSize(void) const { return (ui_font_state & 4U) ? 14U : 12U; }
     bool uiFontEnabled(void) const { return uiFontFamily() != 0; }
     bool uiTextContext(void) const { return (ui_font_state & 8U) != 0; }
     bool uiTextActive(void) const {
-      return uiTextContext() && uiFontEnabled() && !preview_profile_active && !usbScreenActive();
+      return uiTextContext() && !preview_profile_active && !usbScreenActive();
     }
     void beginUiText(void);
     void endUiText(void);
@@ -222,6 +224,18 @@ class MK61Display : public Print {
     bool uiTextActive(void) const { return false; }
     void beginUiText(void) {}
     void endUiText(void) {}
+    void printUiLine(u8, const char*, char = 0, u16 = 0) {}
+    u16 measureUiText(const char*) const { return 0; }
+#endif
+#if MK61_FIXED_CALCULATOR_FACE
+    // Independent of the menu face and intentionally not configurable.
+    void beginCalculatorFace(void);
+    bool calculatorFaceActive(void) const {
+      return (ui_font_state & 16U) != 0;
+    }
+#else
+    void beginCalculatorFace(void) {}
+    bool calculatorFaceActive(void) const { return false; }
 #endif
     void setCursor(u8 x, u8 y);
     void cursorOn(void);
@@ -501,9 +515,13 @@ class MK61Display : public Print {
     u8 top_right_overlay_height;
     u8 top_right_overlay_clear_border;
     bool top_right_overlay_visible;
+#if MK61_PROPORTIONAL_UI_FONTS || MK61_FIXED_CALCULATOR_FACE
     u8 ui_font_state;
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS
     u8 ui_row_gutters;
     u8 ui_row_tails;
+#endif
 
     void clearShadow(void);
     void clearPhysicalScreen(void);
@@ -536,8 +554,10 @@ class MK61Display : public Print {
     const fmk::Face* selectedFont(void) const;
     builtin_font::FaceId fallbackFont(void) const;
     bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
+#if MK61_PROPORTIONAL_UI_FONTS
     void renderUiPage(u8 page, u8 first_col, u8 count);
     u8 uiAdvance(u16 codepoint, bool custom) const;
+#endif
 #endif
 #if MK61_ENABLE_USB_SCREEN
 #if defined(MK61_DISPLAY_LCD1602)

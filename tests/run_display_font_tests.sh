@@ -13,6 +13,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO=100 \
   -DMK61_DISPLAY_UC1609 \
+  -DMK61_PROPORTIONAL_UI_FONTS=1 \
   -I"$root/code" \
   -I"$root/tests/mk_math_shim" \
   "$root/tests/display_font_self_test.cpp" \

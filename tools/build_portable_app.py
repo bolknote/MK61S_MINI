@@ -38,6 +38,8 @@ def build(args: argparse.Namespace) -> dict:
     system = SYSTEM_MODULES.get(args.system)
     if args.text_only and args.system != "markdown-viewer":
         raise ValueError("--text-only applies to markdown-viewer")
+    if args.no_ui_fonts and not system:
+        raise ValueError("--no-ui-fonts applies to system APPs")
     if system and args.source:
         raise ValueError("--system selects its own sources")
     if system and args.shared_runtime:
@@ -106,6 +108,8 @@ def build(args: argparse.Namespace) -> dict:
         if system and cpp:
             support += ["-DMK61_BUILD_PORTABLE_SYSTEM", "-DMK61_BUILD_" + system[1] + "_MODULE",
                         "-include", str(ROOT / "sdk/portable/system/system_compat.hpp")]
+            if args.no_ui_fonts:
+                support += ["-DMK61_PORTABLE_UI_FONTS=0"]
             if args.text_only:
                 support += ["-DMK61_PORTABLE_TEXT_ONLY=1"]
         command = [tool("g++" if cpp else "gcc"), *flags, *support, *language, *include_flags,
@@ -189,6 +193,8 @@ def main() -> None:
                         help="use resident ARM EABI/string helpers; require runtime service at startup")
     parser.add_argument("--text-only", action="store_true",
                         help="compact Markdown without graphical rendering or WBMP")
+    parser.add_argument("--no-ui-fonts", action="store_true",
+                        help="omit the optional proportional UI client from a system APP")
     parser.add_argument("--include", type=Path, action="append", default=[])
     parser.add_argument("--library", type=Path, action="append", default=[])
     parser.add_argument("--output-dir", type=Path, required=True)

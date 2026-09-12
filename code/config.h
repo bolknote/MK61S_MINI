@@ -427,6 +427,58 @@
   #define MK61_DISPLAY_LCD1602
 #endif
 
+// Proportional UI fonts are an optional presentation layer for the roomier
+// F411/UC1609 target. F401 deliberately keeps the established monospaced UI:
+// its product budget is reserved for calculator functionality, not font
+// rasters and a second layout engine. Numeric overrides remain available for
+// host tests.
+#ifndef MK61_PROPORTIONAL_UI_FONTS
+  #if defined(MK61_DISPLAY_UC1609) && defined(ARDUINO_BLACKPILL_F411CE)
+    #define MK61_PROPORTIONAL_UI_FONTS 1
+  #else
+    #define MK61_PROPORTIONAL_UI_FONTS 0
+  #endif
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS != 0 && MK61_PROPORTIONAL_UI_FONTS != 1
+  #error "MK61_PROPORTIONAL_UI_FONTS must be 0 or 1"
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS && !defined(MK61_DISPLAY_UC1609)
+  #error "proportional UI fonts require UC1609"
+#endif
+
+// Portable system modules are board-neutral by default, so their optional UI
+// client needs an explicit build switch.  F411 releases leave it enabled and
+// obtain glyphs from the resident service; the F401 bundle builder sets it to
+// zero so even the bridge and proportional layout are absent from its APPs.
+#ifndef MK61_PORTABLE_UI_FONTS
+  #define MK61_PORTABLE_UI_FONTS 1
+#endif
+#if MK61_PORTABLE_UI_FONTS != 0 && MK61_PORTABLE_UI_FONTS != 1
+  #error "MK61_PORTABLE_UI_FONTS must be 0 or 1"
+#endif
+
+#if MK61_PROPORTIONAL_UI_FONTS || \
+    (defined(MK61_BUILD_PORTABLE_SYSTEM) && MK61_PORTABLE_UI_FONTS)
+  #define MK61_UI_FONT_CLIENT 1
+#else
+  #define MK61_UI_FONT_CLIENT 0
+#endif
+
+// The dedicated 192x64 calculator face follows the same F411-only policy.
+#ifndef MK61_FIXED_CALCULATOR_FACE
+  #if defined(MK61_DISPLAY_UC1609) && defined(ARDUINO_BLACKPILL_F411CE)
+    #define MK61_FIXED_CALCULATOR_FACE 1
+  #else
+    #define MK61_FIXED_CALCULATOR_FACE 0
+  #endif
+#endif
+#if MK61_FIXED_CALCULATOR_FACE != 0 && MK61_FIXED_CALCULATOR_FACE != 1
+  #error "MK61_FIXED_CALCULATOR_FACE must be 0 or 1"
+#endif
+#if MK61_FIXED_CALCULATOR_FACE && !defined(MK61_DISPLAY_UC1609)
+  #error "fixed calculator face requires UC1609"
+#endif
+
 // Read benchmarks are service diagnostics, not calculator functionality.
 // Keep them on normal builds and on the F411 qualification board, but do not
 // spend the last internal-Flash reserve of the F401/UC1609 release on a command

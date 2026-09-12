@@ -1,6 +1,7 @@
 #include "config.h"
 #if defined(MK61_DISPLAY_UC1609)
 #include "display.hpp"
+#if MK61_PROPORTIONAL_UI_FONTS
 #include "display_symbols.hpp"
 #include "utf8_view.hpp"
 #include <string.h>
@@ -33,7 +34,13 @@ u16 nextCodepoint(const char* text, u16 length, u16& offset) {
 
 void MK61Display::setUiFont(u8 family, u8 size) {
   if(family > 2) family = 0;
-  const u8 next = (u8) ((ui_font_state & 8U) | family | (size == 12 ? 0U : 4U));
+#if MK61_FIXED_CALCULATOR_FACE
+  const u8 preserved = ui_font_state & 24U;
+#else
+  const u8 preserved = ui_font_state & 8U;
+#endif
+  const u8 next = (u8) (preserved | family |
+                        (size == 12 ? 0U : 4U));
   if(next == ui_font_state) return;
   ui_font_state = next;
   if(uiTextContext() && !usbScreenActive()) clear();
@@ -50,9 +57,37 @@ void MK61Display::endUiText(void) {
   ui_font_state &= (u8) ~8U;
   if(was_active != uiTextActive()) clear();
 }
+#endif
 
+#if MK61_FIXED_CALCULATOR_FACE
+void MK61Display::beginCalculatorFace(void) {
+  if(uiTextContext()) endUiText();
+  if(calculatorFaceActive()) {
+#if MK61_ENABLE_USB_SCREEN
+    if(usbScreenActive()) usb_surface.beginCalculatorFace();
+#endif
+    return;
+  }
+  ui_font_state |= 16U;
+  cursor_underline = false;
+  cursor_blink = false;
+  cursor_blink_phase = false;
+  cursor_next_blink_ms = 0;
+#if MK61_ENABLE_USB_SCREEN
+  if(usbScreenActive()) {
+    usb_surface.beginCalculatorFace();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
+  markScreenDirty();
+}
+#endif
+
+#if MK61_PROPORTIONAL_UI_FONTS
 u8 MK61Display::uiAdvance(u16 codepoint, bool custom) const {
   if(custom) return 6;
+  if(!uiFontEnabled()) return 6;
   const u16 unicode = display_symbol::uc1609::unicodeCodepoint(codepoint);
   if(ui_font::supports(uiFontFace(), unicode)) return ui_font::glyph(uiFontFace(), unicode).advance;
   // Legacy private tokens (folder, calculator signs) keep their existing art.
@@ -132,9 +167,14 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   memset(render_buffer, 0, run_width);
   const auto face = uiFontFace();
   const auto metrics = ui_font::metrics(face);
+  const bool mono = !uiFontEnabled();
+  const u8 text_height = mono ? 8U : metrics.height;
   for(u8 row = 0; row < grid.rows(); ++row) {
     const i16 top = rowTop(row);
-    if(top >= page_y + RENDER_PAGE_HEIGHT || top + metrics.height <= page_y) continue;
+    const i16 mono_top = top + 4;
+    const i16 text_top = mono ? mono_top : top;
+    if(text_top >= page_y + RENDER_PAGE_HEIGHT ||
+       text_top + text_height <= page_y) continue;
     const bool gutter = (ui_row_gutters & (1U << row)) != 0;
     const bool tail = (ui_row_tails & (1U << row)) != 0;
     i16 pen = UI_MARGIN;
@@ -148,7 +188,7 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
       const bool custom = grid.cellIsCustom(col, row);
       const u8 advance = gutter && col == 0 ? UI_GUTTER : uiAdvance(cp, custom);
       const u16 unicode = display_symbol::uc1609::unicodeCodepoint(cp);
-      const bool proportional = !custom &&
+      const bool proportional = !mono && !custom &&
           (ui_font::supports(face, unicode) || builtin_font::rows5x8(cp) == nullptr);
       const auto glyph = ui_font::glyph(face, unicode);
       builtin_font::Raster fallback = {};
@@ -164,7 +204,8 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
       const u8 width = proportional ? glyph.width : fallback.width;
       const u8 height = proportional ? glyph.height : fallback.height;
       const i16 left = pen + (proportional ? glyph.bearing_x : 0);
-      const i16 glyph_top = top + metrics.ascent - (proportional ? glyph.bearing_y : 8);
+      const i16 glyph_top = mono ? mono_top
+          : top + metrics.ascent - (proportional ? glyph.bearing_y : 8);
       for(u8 y = 0; y < height; ++y) {
         const i16 py = glyph_top + y - page_y;
         if(py < 0 || py >= RENDER_PAGE_HEIGHT) continue;
@@ -180,8 +221,8 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
         const i16 cursor_width = advance > 1 ? advance - 1U : 1U;
         if(cursor_blink && cursor_blink_phase) {
           // Invert, not erase: the selected character remains recognizable.
-          for(i16 y = 0; y < metrics.height; ++y) {
-            const i16 py = top + y - page_y;
+          for(i16 y = 0; y < text_height; ++y) {
+            const i16 py = text_top + y - page_y;
             if(py < 0 || py >= RENDER_PAGE_HEIGHT) continue;
             for(i16 x = 0; x < cursor_width && pen + x < right; ++x) {
               const i16 px = pen + x - run_left;
@@ -189,7 +230,9 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
             }
           }
         } else if(cursor_underline) {
-          fillRenderRect(pen - run_left, top + metrics.height - 1U - page_y, cursor_width, 1, true);
+          fillRenderRect(pen - run_left,
+                         text_top + text_height - 1U - page_y,
+                         cursor_width, 1, true);
         }
       }
       pen += advance;
@@ -199,4 +242,5 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   lcd.LCDBuffer((u8) run_left, (u8) page_y, run_width, RENDER_PAGE_HEIGHT, render_buffer);
   render_width = saved_width;
 }
+#endif
 #endif
