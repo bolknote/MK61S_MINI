@@ -2486,8 +2486,13 @@ void MK61Display::applyTextProfile(lcd_display::TextProfile profile, bool exact_
      next.glyph_width == active_profile.glyph_width &&
      next.glyph_height == active_profile.glyph_height &&
      next.line_gap == active_profile.line_gap &&
-     grid.rows() == (uiTextActive() ? 4 : next.rows) &&
-     grid.cols() == (uiTextActive() ? 40 : lcd_display::COLS)) return;
+#if MK61_PROPORTIONAL_UI_FONTS
+     grid.rows() == (uiTextActive() ? uiRows() : next.rows) &&
+     grid.cols() == (uiTextActive() ? uiCols() : lcd_display::COLS)
+#else
+     grid.rows() == next.rows && grid.cols() == lcd_display::COLS
+#endif
+    ) return;
 
   active_profile = next;
   clearShadow();
@@ -2932,7 +2937,12 @@ void MK61Display::writeCodepoint(u16 codepoint) {
 }
 
 void MK61Display::clearShadow(void) {
-  grid.reset(uiTextActive() ? 4 : active_profile.rows, uiTextActive() ? 40 : lcd_display::COLS);
+#if MK61_PROPORTIONAL_UI_FONTS
+  grid.reset(uiTextActive() ? uiRows() : active_profile.rows,
+             uiTextActive() ? uiCols() : lcd_display::COLS);
+#else
+  grid.reset(active_profile.rows, lcd_display::COLS);
+#endif
 #if MK61_PROPORTIONAL_UI_FONTS
   ui_row_gutters = 0;
   ui_row_tails = 0;
@@ -3022,18 +3032,26 @@ u8 MK61Display::sanitizeRows(u8 rows) {
 }
 
 u8 MK61Display::rowTop(u8 row) const {
+#if MK61_PROPORTIONAL_UI_FONTS
   if(uiTextActive()) {
-    const u8 pitch = uiFontEnabled() ? (u8) (uiFontSize() + 2U) : 16U;
-    return (u8) (1U + row * pitch);
+    if(!uiFontEnabled()) return (u8) (1U + row * 16U);
+    const auto metrics = ui_font::metrics(uiFontFace());
+    return (u8) (uiTop() + row * (metrics.height + metrics.line_gap));
   }
+#endif
   return (u8) ((u16) row * (active_profile.glyph_height + active_profile.line_gap));
 }
 
 u8 MK61Display::rowPitch(u8 row) const {
   const u8 top = rowTop(row);
+#if MK61_PROPORTIONAL_UI_FONTS
   const u8 pitch = uiTextActive()
-      ? (uiFontEnabled() ? (u8) (uiFontSize() + 2U) : 16U)
+      ? (uiFontEnabled()
+          ? (u8) (ui_font::metrics(uiFontFace()).height + uiLineGap()) : 16U)
       : (u8) (active_profile.glyph_height + active_profile.line_gap);
+#else
+  const u8 pitch = (u8) (active_profile.glyph_height + active_profile.line_gap);
+#endif
   if(row + 1 >= grid.rows()) return lcd_display::PIXEL_HEIGHT - top;
   return (top + pitch > lcd_display::PIXEL_HEIGHT) ? (lcd_display::PIXEL_HEIGHT - top) : pitch;
 }

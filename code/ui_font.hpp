@@ -9,7 +9,7 @@
 namespace ui_font {
 
 enum class Family : uint8_t { DEJAVU, ROBOTO };
-enum class Size : uint8_t { PX12, PX14 };
+enum class Size : uint8_t { PX12, PX14, PX16 };
 
 struct Face {
   Family family;

@@ -77,12 +77,12 @@ void test_legacy_v3_compatibility(void) {
 void test_ui_font_settings_are_independent_and_bounded(void) {
   for(unsigned raw = 0; raw < 256; ++raw) {
     const auto value = normalize_ui_font_settings((u8) raw);
-    const bool valid = raw <= 6 && (raw & 3U) <= 2;
+    const bool valid = raw <= 10 && (raw & 3U) <= 2;
     assert(value.raw == (valid ? raw : UiFontSettings::DEFAULT_PRESET));
     assert(value.family() <= 2);
-    assert(value.size() == 12 || value.size() == 14);
+    assert(value.size() == 12 || value.size() == 14 || value.size() == 16);
   }
-  const u8 sizes[] = {12, 14};
+  const u8 sizes[] = {12, 14, 16};
   for(u8 family = 0; family < 3; ++family) {
     for(u8 size : sizes) {
       const auto value = make_ui_font_settings(family, size);

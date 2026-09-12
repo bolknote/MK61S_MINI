@@ -17,7 +17,9 @@ def main():
     actual = subprocess.check_output([sys.argv[1], "--dump"], text=True).splitlines()
     assert len(actual) == len(repertoire) * len(atlases)
     compared_pixels = 0
-    for line, (face, cp) in zip(actual, ((i, cp) for i in range(4) for cp in repertoire)):
+    for line, (face, cp) in zip(
+            actual, ((i, cp) for i in range(len(atlases)) for cp in repertoire),
+            strict=True):
         fields = line.split()
         assert len(fields) == 9
         values = list(map(int, fields[:8]))
@@ -25,7 +27,7 @@ def main():
         expected = atlases[face]["by_codepoint"].get(cp)
         fallback = expected is None
         if fallback:
-            expected = atlases[face & 1]["by_codepoint"][cp]
+            expected = atlases[face - 3]["by_codepoint"][cp]
         assert values[2:] == [expected["width"], expected["height"],
                               expected["safe_bearing_x"], expected["bearing_y"],
                               expected["advance"], int(fallback)]

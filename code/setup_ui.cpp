@@ -600,8 +600,15 @@ static bool calculatorFontSetup(void) {
 #if MK61_SETUP_UI_FONT_CHOOSER
 static u8 uiFontFieldCount(mk61_setup_ui_font ui_font) {
   // Calculator digits have a separate fixed face.  This dialog controls only
-  // the UI: Mono has no size choice, proportional families have 12/14 px.
+  // the UI: Mono has no size choice, proportional families have 12/14/16 px.
   return ui_font.family == 0 ? 1U : 2U;
+}
+
+static u8 stepUiFontSize(u8 size, i8 delta) {
+  static constexpr u8 sizes[] = {12, 14, 16};
+  u8 index = size == 12 ? 0U : (size == 16 ? 2U : 1U);
+  index = (u8) ((index + (delta < 0 ? 2U : 1U)) % 3U);
+  return sizes[index];
 }
 
 static void drawUiFontSetup(u8 active, mk61_setup_ui_font ui_font) {
@@ -670,7 +677,7 @@ bool font(void) {
         ui_font.family = (u8) ((ui_font.family + (delta > 0 ? 1 : 2)) % 3);
         apply_ui = true;
       } else {
-        ui_font.size = ui_font.size == 14 ? 12 : 14;
+        ui_font.size = stepUiFontSize(ui_font.size, delta);
         apply_ui = true;
       }
       MK61DisplayUpdate update(main_lcd());

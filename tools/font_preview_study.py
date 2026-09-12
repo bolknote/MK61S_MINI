@@ -85,12 +85,15 @@ def ellipsize(font, text, width, prose=False):
     return text + suffix
 
 
-def frame(font, scene, gap=2, inverse=False):
+def frame(font, scene, gap=None, inverse=False):
     image = Image.new("1", (192, 64))
     prose = scene == "manual"
-    top, x = (0, 0) if font.fixed else (1, 2)
+    if gap is None:
+        gap = 1 if not font.fixed and font.height == 12 else 2
     pitch = font.height + gap
-    count = (64 - top + gap) // pitch
+    count = (64 + gap) // pitch
+    occupied = count * font.height + max(0, count - 1) * gap
+    top, x = (0, 0) if font.fixed else ((64 - occupied) // 2, 2)
     lines = wrap(font, SAMPLES[scene][0], 192 - 2*x, prose) if prose else SAMPLES[scene]
     displayed, truncated = [], 0
     list_scene = scene in ("menu", "english", "settings", "files")
@@ -156,7 +159,7 @@ def main():
     builtin = Font(builtin_path, fixed=True)
     fonts = {}
     for name, path in (("roboto", args.roboto), ("dejavu", args.dejavu)):
-        for height in (8, 10, 12, 14):
+        for height in (8, 10, 12, 14, 16):
             output = atlas_dir / f"{name}-{height}.json"
             subprocess.run([str(args.exporter), str(path), str(output), "--height", str(height)], check=True)
             fonts[f"{name}-{height}"] = Font(output)
@@ -184,11 +187,11 @@ def main():
 
     # A contact sheet: identical menu and stress scenes, enlarged only by integer factors.
     label_font = ImageFont.truetype(str(args.dejavu), 20)
-    sheet = Image.new("RGB", (1224, 1100), "#eef1ed")
+    sheet = Image.new("RGB", (1224, 1357), "#eef1ed")
     draw = ImageDraw.Draw(sheet)
     draw.text((20, 12), "UC1609 / 192 x 64 / 1-bit / 3x nearest-neighbour", font=label_font, fill="#182b29")
     for col, family in enumerate(("roboto", "dejavu")):
-        for row, height in enumerate((8, 10, 12, 14)):
+        for row, height in enumerate((8, 10, 12, 14, 16)):
             font = fonts[f"{family}-{height}"]
             x, y = 20 + 612*col, 58 + row*257
             text = f"{font.atlas['family']} | {font.height}px ink / {font.atlas['ppem']}ppem / gap 2"
@@ -198,7 +201,7 @@ def main():
             sheet.paste(colored(image, 3), (x, y+34))
     sheet.save(args.out / "comparison-menu.png")
     for col, family in enumerate(("roboto", "dejavu")):
-        for row, height in enumerate((8, 10, 12, 14)):
+        for row, height in enumerate((8, 10, 12, 14, 16)):
             image, _ = frame(fonts[f"{family}-{height}"], "stress")
             sheet.paste(colored(image, 3), (20+612*col, 92+row*257))
     sheet.save(args.out / "comparison-cyrillic.png")

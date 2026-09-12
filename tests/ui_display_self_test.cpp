@@ -65,13 +65,28 @@ void putPixel(Frame& frame, int x, int y) {
   frame[(unsigned) y / 8U * 192U + (unsigned) x] |= (u8) (1U << (y & 7));
 }
 
+u8 referenceUiRows(ui_font::Face face) {
+  const auto metrics = ui_font::metrics(face);
+  return (u8) ((64U + metrics.line_gap) /
+               (metrics.height + metrics.line_gap));
+}
+
+u8 referenceUiTop(ui_font::Face face) {
+  const auto metrics = ui_font::metrics(face);
+  const u8 rows = referenceUiRows(face);
+  const unsigned occupied = rows * metrics.height +
+      (rows - 1U) * metrics.line_gap;
+  return (u8) ((64U - occupied) / 2U);
+}
+
 // Independent full-frame reference: no page iteration, damage map or Grid.
 // It uses the same atlas bytes so the comparison concerns display layout.
 void referenceGlyph(Frame& frame, ui_font::Face face, u16 cp,
                      int pen, u8 row, int right = 190) {
   const auto metrics = ui_font::metrics(face);
   const auto glyph = ui_font::glyph(face, cp);
-  const int top = 1 + row * (metrics.height + metrics.line_gap) + metrics.ascent - glyph.bearing_y;
+  const int top = referenceUiTop(face) +
+      row * (metrics.height + metrics.line_gap) + metrics.ascent - glyph.bearing_y;
   for(u8 y = 0; y < glyph.height; ++y) {
     for(u8 x = 0; x < glyph.width; ++x) {
       const int px = pen + glyph.bearing_x + x;
@@ -86,7 +101,8 @@ void referenceBuiltin(Frame& frame, ui_font::Face face, u16 cp,
   builtin_font::Raster raster{};
   assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, cp, raster));
   const auto metrics = ui_font::metrics(face);
-  const int top = 1 + row * (metrics.height + metrics.line_gap) + metrics.ascent - 8;
+  const int top = referenceUiTop(face) +
+      row * (metrics.height + metrics.line_gap) + metrics.ascent - 8;
   for(u8 y = 0; y < raster.height; ++y) {
     for(u8 x = 0; x < raster.width; ++x) {
       if(fmk::bitmapPixel(raster.data, raster.width, x, y)) putPixel(frame, pen + x, top + y);
@@ -133,7 +149,8 @@ void startUi(MK61Display& display, u8 family = 1, u8 size = 14) {
   display.begin();
   display.setUiFont(family, size);
   display.beginUiText();
-  assert(display.uiTextActive() && display.rows() == 4);
+  const u8 expected_rows = family == 0 ? 4U : referenceUiRows(display.uiFontFace());
+  assert(display.uiTextActive() && display.rows() == expected_rows);
 }
 
 void test_profile_and_scope() {
@@ -145,7 +162,7 @@ void test_profile_and_scope() {
   display.setUiFont(1, 12);
   {
     MK61DisplayTextScope ui(display);
-    assert(display.uiTextActive() && display.rows() == 4);
+    assert(display.uiTextActive() && display.rows() == 5);
     assert(sameProfile(display.textProfile(), calculator));
     display.printUiLine(0, "Меню");
     {
@@ -155,15 +172,18 @@ void test_profile_and_scope() {
       display.writeCodepoint('5');
       assert(display.cursorX() == 0 && display.cursorY() == 9);
     }
-    assert(display.uiTextActive() && display.rows() == 4);
+    assert(display.uiTextActive() && display.rows() == 5);
     display.setUiFont(2, 14);
-    assert(display.uiFontFamily() == 2 && display.uiFontSize() == 14);
+    assert(display.uiFontFamily() == 2 && display.uiFontSize() == 14 &&
+           display.rows() == 4);
     assert(sameProfile(display.textProfile(), calculator));
     display.setUiFont(0, 14);
     assert(display.uiTextActive() && display.rows() == 4);
     assert(sameProfile(display.textProfile(), calculator));
     display.setUiFont(1, 14);
     assert(display.uiTextActive() && display.rows() == 4);
+    display.setUiFont(1, 16);
+    assert(display.uiTextActive() && display.rows() == 3);
   }
   assert(!display.uiTextActive() && display.rows() == 10);
   assert(sameProfile(display.textProfile(), calculator));
@@ -207,7 +227,8 @@ void test_live_ui_font_sample() {
   display.setTextProfile(calculator);
   // The chooser renders its sample on the last UI row, aligned to the text
   // after the menu gutter. Use the real paged renderer, not a mock.
-  const u8 faces[][2] = {{1, 12}, {1, 14}, {2, 12}, {2, 14}, {2, 14}};
+  const u8 faces[][2] = {{1, 12}, {1, 14}, {1, 16},
+                         {2, 12}, {2, 14}, {2, 16}, {2, 16}};
   static constexpr u16 sample[] = {0x0410, 0x0430, ' ', 0x0411, 0x0431,
                                  ' ', 'W', 'i', ' ', '1', '2', '3'};
   Frame previous{};
@@ -215,13 +236,14 @@ void test_live_ui_font_sample() {
     display.setUiFont(faces[i][0], faces[i][1]);
     display.beginUiText();
     display.clear();
-    display.printUiLine(3, "Аа Бб Wi 123", ' ');
+    const u8 sample_row = (u8) (display.rows() - 1U);
+    display.printUiLine(sample_row, "Аа Бб Wi 123", ' ');
     Frame expected{};
-    referenceText(expected, display.uiFontFace(), sample, 3, 14);
+    referenceText(expected, display.uiFontFace(), sample, sample_row, 14);
     expectFrame(expected);
     assert(sameProfile(display.textProfile(), calculator));
-    if(i > 0 && i < 4) assert(ui_display_test::frame != previous);
-    if(i == 4) assert(ui_display_test::frame == previous);
+    if(i > 0 && i < 6) assert(ui_display_test::frame != previous);
+    if(i == 6) assert(ui_display_test::frame == previous);
     previous = ui_display_test::frame;
   }
   display.setUiFont(0, 14);
@@ -424,11 +446,11 @@ void test_external_calculator_font_is_isolated_from_ui() {
 void test_mixed_text_and_page_parity() {
   static constexpr u16 mixed[] = {'A', 0x0416, 'i', 0x0451, ' ', 'W', '9', 0x0443};
   for(u8 family = 1; family <= 2; ++family) {
-    for(u8 size : {12, 14}) {
+    for(u8 size : {12, 14, 16}) {
       MK61Display display;
       startUi(display, family, size);
       Frame expected{};
-      for(u8 row = 0; row < 4; ++row) {
+      for(u8 row = 0; row < display.rows(); ++row) {
         display.printUiLine(row, "AЖiё W9у");
         referenceText(expected, display.uiFontFace(), mixed, row);
       }
@@ -439,9 +461,9 @@ void test_mixed_text_and_page_parity() {
       assert(display.measureUiText("WWW") > display.measureUiText("iii"));
 
       // Incremental writes invalidate only intersecting pages. They must
-      // produce the same pixels as whole-row replacement on all four rows.
+      // produce the same pixels as whole-row replacement on every visible row.
       display.clear();
-      for(u8 row = 0; row < 4; ++row) {
+      for(u8 row = 0; row < display.rows(); ++row) {
         display.setCursor(0, row);
         for(u16 cp : mixed) display.writeCodepoint(cp);
       }
@@ -483,7 +505,7 @@ void test_short_replacement_and_gutters() {
 
 void test_ellipsis_and_invalid_utf8() {
   for(u8 family = 1; family <= 2; ++family) {
-    for(u8 size : {12, 14}) {
+    for(u8 size : {12, 14, 16}) {
       MK61Display display;
       startUi(display, family, size);
       char text[101];
@@ -495,7 +517,8 @@ void test_ellipsis_and_invalid_utf8() {
         const unsigned advance = ui_font::glyph(face, letter).advance;
         const unsigned ellipsis = ui_font::glyph(face, 0x2026).advance;
         unsigned count = (188U - ellipsis) / advance;
-        if(count > 39) count = 39;
+        const unsigned token_limit = size == 12 ? 31U : 39U;
+        if(count > token_limit) count = token_limit;
         Frame expected{};
         int pen = 2;
         for(unsigned glyph = 0; glyph < count; ++glyph) {

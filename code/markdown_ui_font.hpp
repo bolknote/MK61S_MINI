@@ -73,8 +73,9 @@ class Source {
   mk61_service_ui_font_info info;
   bool valid() const {
     return (info.family == 1 || info.family == 2) &&
-      (info.size == 12 || info.size == 14) &&
-      info.ascent + info.descent == info.size && info.ascent > 0 && info.line_gap == 2;
+      (info.size == 12 || info.size == 14 || info.size == 16) &&
+      info.ascent + info.descent == info.size && info.ascent > 0 &&
+      info.line_gap == (info.size == 12 ? 1 : 2);
   }
 };
 

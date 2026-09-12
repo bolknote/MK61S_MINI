@@ -15,11 +15,12 @@ services->call(MK61_SERVICE_UI_FONT, MK61_UI_FONT_INFO, 0,
 ```
 
 `family=0` means the fixed 5x8 monospaced UI (shown as `Mono`), `1` is DejaVu
-Sans and `2` is Roboto. Family 0 ignores the stored 12/14 size. On F411/UC1609
+Sans and `2` is Roboto. Family 0 ignores the stored 12/14/16 size. On F411/UC1609
 calculator digits use a separate fixed twelve-position renderer and never
 consume this font service; F401 keeps its compact calculator renderer.
-Size is the full 12- or 14-pixel glyph envelope, not FreeType ppem. The record
-also supplies ascent, descent and a two-pixel interline gap. On unsupported
+Size is the full 12-, 14- or 16-pixel glyph envelope, not FreeType ppem. The
+record also supplies ascent, descent and the selected interline gap: one pixel
+for 12 px and two pixels for 14/16 px. On unsupported
 hosts, or when any service/metadata check fails, retain the monospaced path.
 
 For a glyph, initialize `mk61_service_ui_glyph.family` and `.size` from this
@@ -57,7 +58,7 @@ Checks:
   every glyph and emphasis combination, snapshot stability, old-host fallback,
   invalid records and bounds; optional `MK61_TEST_SANITIZERS=1`.
 - `tests/run_portable_system_arm_tests.py`: real ARM resident raster calls,
-  exact final Markdown framebuffers for four font choices, Cyrillic, arrow
+  exact final Markdown framebuffers for all six font choices, Cyrillic, arrow
   fallback, and unchanged monospaced code blocks/inline code.
 
 The full ARM suite requires unstripped **test-only** residents built with

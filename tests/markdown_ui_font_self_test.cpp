@@ -43,11 +43,12 @@ int main() {
   static_assert(MK61_SERVICE_CAPABILITIES == 26 && MK61_SERVICE_UI_FONT == 27,
                 "existing operation numbers must not move");
   for(uint8_t f : {1, 2}) {
-    for(uint8_t s : {12, 14}) {
+    for(uint8_t s : {12, 14, 16}) {
       family = f;
       size = s;
       const markdown_ui_font::Source source;
-      assert(source.enabled() && source.height() == s && source.line_gap() == 2);
+      assert(source.enabled() && source.height() == s &&
+             source.line_gap() == (s == 12 ? 1 : 2));
       for(unsigned cp = 0; cp <= 0xFFFF; cp++) {
         if(!ui_font::supports(ui_font_service::face(f, s), cp)) continue;
         mk61_service_ui_glyph glyph = {};

@@ -190,7 +190,14 @@ class Machine:
             elif name == 'delay_ms': self.clock += a
             elif name == 'display_columns': result = 16
             elif name == 'display_rows':
-                result = (4 if self.ui_text and self.ui_font[0] else self.legacy_rows) if self.graphics else 2
+                if not self.graphics:
+                    result = 2
+                elif not self.ui_text:
+                    result = self.legacy_rows
+                elif not self.ui_font[0]:
+                    result = 4
+                else:
+                    result = 5 if self.ui_font[1] == 12 else (3 if self.ui_font[1] == 16 else 4)
             elif name == 'display_clear': self.lines = []; result = 1
             elif name == 'display_write_utf8':
                 self.lines.append(bytes(uc.mem_read(c,d)).decode('utf8')); result = 1
@@ -286,8 +293,9 @@ class Machine:
             if not self.graphics or not family:
                 self.uc.mem_write(p, bytes(6))
             else:
-                ascent = 11 if size == 14 else 10
-                self.uc.mem_write(p, bytes((family, size, ascent, size - ascent, 2, 0)))
+                ascent = 13 if size == 16 else (11 if size == 14 else 10)
+                gap = 1 if size == 12 else 2
+                self.uc.mem_write(p, bytes((family, size, ascent, size - ascent, gap, 0)))
             return 1
         if op == 25:
             if a == 0: return 1
@@ -325,7 +333,7 @@ class Machine:
             if a == 15:
                 assert self.ui_fonts
                 value = bytes(self.uc.mem_read(p, 2))
-                assert value[0] <= 2 and value[1] in (12, 14), value
+                assert value[0] <= 2 and value[1] in (12, 14, 16), value
                 self.ui_font = value; return 1
             if a == 16:
                 assert b in (0, 1)
@@ -461,7 +469,8 @@ def main():
                 if m.graphics:
                     inline_frames = {}
                     code_frame = None
-                    for family, size in ((1, 12), (1, 14), (2, 12), (2, 14)):
+                    for family, size in ((1, 12), (1, 14), (1, 16),
+                                         (2, 12), (2, 14), (2, 16)):
                         m.ui_font = bytes((family, size))
                         text = 'Wi Ёж ←→'
                         m.files[43] = (10, 'README', (text + '\n').encode())
@@ -522,9 +531,9 @@ def main():
                         assert m.call(0x403) == 0
                         assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
                         assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
-                        transitions = ((1, 12, [ok, right, ok, esc]),
-                                       (2, 14, [ok, right, ok, esc]),
-                                       (0, 14, [ok, esc]))
+                        transitions = ((1, 16, [ok, right, ok, esc]),
+                                       (2, 12, [ok, right, ok, esc]),
+                                       (0, 12, [ok, esc]))
                         for family, size, keys in transitions:
                             m.keys = keys
                             m.setup_views = []
@@ -533,20 +542,21 @@ def main():
                             assert m.profile == bytes((6, 5, 8, 2)), m.profile
                             role, face, rows = m.setup_views[-1]
                             assert role and face == m.ui_font
-                            assert 'UI font:' in rows[0] and rows[3] == ' Aa Bb Wi 123', rows
+                            sample_row = 4 if size == 12 and family else (2 if size == 16 and family else 3)
+                            assert 'UI font:' in rows[0] and rows[sample_row] == ' Aa Bb Wi 123', rows
                             assert ('UI size:' in rows[1]) == bool(family), rows
                             assert not any('Calculator' in line for line in rows.values()), rows
                         # Even a stale two-row calculator profile cannot change
-                        # the four-row UI or reopen calculator font controls.
+                        # the font-dependent UI geometry or reopen calculator font controls.
                         m.profile = bytes((6, 5, 8, 2))
                         m.legacy_rows = 2; m.keys = [right, ok, esc]
                         m.setup_views = []; before = len(m.trace)
                         assert m.call(0x403) == 0
                         assert m.profile == bytes((6, 5, 8, 2))
-                        assert m.ui_font == bytes((1, 14))
+                        assert m.ui_font == bytes((1, 12))
                         fixed_rows = m.setup_views[-1][2]
                         assert fixed_rows[0].startswith('>UI font:')
-                        assert fixed_rows[3] == ' Aa Bb Wi 123'
+                        assert fixed_rows[4] == ' Aa Bb Wi 123'
                         assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
                         m.legacy_rows = 4; m.ui_font = bytes((2, 12)); m.profile = bytes((6, 5, 8, 2))
                         # Proportional mode shows only size. OK advances it and
@@ -558,7 +568,7 @@ def main():
                         assert m.ui_font == bytes((2, 12))
                         assert any(view[1] == bytes((2, 14)) for view in m.setup_views)
                         assert all(view[0] for view in m.setup_views)
-                        assert m.setup_views[-1][2][3] == ' Aa Bb Wi 123'
+                        assert m.setup_views[-1][2][4] == ' Aa Bb Wi 123'
                     # A display revision change to the monospaced USB backend
                     # leaves the live chooser safely without applying settings.
                     m.setup_views = []; m.drop_live_ui_on_wait = True; m.keys = [esc]

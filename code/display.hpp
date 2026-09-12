@@ -199,7 +199,9 @@ class MK61Display : public Print {
     // Family 0 is the fixed 5x8 UI; families 1/2 are proportional.
     void setUiFont(u8 family, u8 size);
     u8 uiFontFamily(void) const { return ui_font_state & 3U; }
-    u8 uiFontSize(void) const { return (ui_font_state & 4U) ? 14U : 12U; }
+    u8 uiFontSize(void) const {
+      return (ui_font_state & 32U) ? 16U : ((ui_font_state & 4U) ? 14U : 12U);
+    }
     bool uiFontEnabled(void) const { return uiFontFamily() != 0; }
     bool uiTextContext(void) const { return (ui_font_state & 8U) != 0; }
     bool uiTextActive(void) const {
@@ -209,7 +211,8 @@ class MK61Display : public Print {
     void endUiText(void);
     ui_font::Face uiFontFace(void) const {
       return {uiFontFamily() == 2 ? ui_font::Family::ROBOTO : ui_font::Family::DEJAVU,
-              uiFontSize() == 14 ? ui_font::Size::PX14 : ui_font::Size::PX12};
+              uiFontSize() == 16 ? ui_font::Size::PX16
+                  : uiFontSize() == 14 ? ui_font::Size::PX14 : ui_font::Size::PX12};
     }
     // Replaces a whole row, clips by advance, and adds an ellipsis when needed.
     // Optional marker and right-hand type icon occupy fixed, separate gutters.
@@ -557,6 +560,10 @@ class MK61Display : public Print {
 #if MK61_PROPORTIONAL_UI_FONTS
     void renderUiPage(u8 page, u8 first_col, u8 count);
     u8 uiAdvance(u16 codepoint, bool custom) const;
+    u8 uiRows(void) const;
+    u8 uiCols(void) const;
+    u8 uiTop(void) const;
+    u8 uiLineGap(void) const;
 #endif
 #endif
 #if MK61_ENABLE_USB_SCREEN

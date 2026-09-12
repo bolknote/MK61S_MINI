@@ -8,13 +8,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ATLAS_DIR = ROOT / "tools/.fmk-font/ui-atlases"
-NAMES = ("dejavu-12", "dejavu-14", "roboto-12", "roboto-14")
+NAMES = ("dejavu-12", "dejavu-14", "dejavu-16",
+         "roboto-12", "roboto-14", "roboto-16")
 SOURCE_HASHES = {
     "dejavu-12": "e98720dfdc9fecb4954b536912c720ec6934d0a8b9c05cf88c33bdb16a6438f5",
     "dejavu-14": "604c5750eb369d380790710ddc6290b44bcb13acd70d46d331d3d14258defa34",
+    "dejavu-16": "bb5e3a6f0e4502dadfd5da86bcbd9f34c7e8ba93675f6e1ff00a498ab79921b1",
     "roboto-12": "0d7c0a7966f280d3211a14f8442968dcc22c9ead70e14f5ca187bf771387a0c3",
     "roboto-14": "89e7a33561ed37659d58da7027f8e75025ee368f1d491eac90781e5c2666d17a",
+    "roboto-16": "fcb310da83adc4b1ecaaf17bb1597a37e9d1229fb441288a1b64b5e7a439baf5",
 }
+LINE_GAPS = {12: 1, 14: 2, 16: 2}
 
 
 def require(condition, message):
@@ -29,7 +33,8 @@ def load_atlases(directory=ATLAS_DIR):
         require(hashlib.sha256(raw).hexdigest() == SOURCE_HASHES[name],
                 f"{name}: reviewed source SHA-256 changed")
         atlas = json.loads(raw)
-        require(atlas["schema"] == 1 and atlas["height"] == int(name[-2:]),
+        require(atlas["schema"] == 1 and
+                atlas["height"] == int(name.rsplit("-", 1)[1]),
                 f"{name}: unexpected metrics")
         require(atlas["height"] == atlas["ascent"] + atlas["descent"],
                 f"{name}: inconsistent line box")
@@ -59,8 +64,8 @@ def load_atlases(directory=ATLAS_DIR):
                 f"{name}: inconsistent missing characters")
         if name.startswith("dejavu"):
             require(not atlas["missing"], "DejaVu must cover fallback repertoire")
-    for i in (2, 3):
-        require(all(result[i][key] == result[i - 2][key]
+    for i in (3, 4, 5):
+        require(all(result[i][key] == result[i - 3][key]
                     for key in ("height", "ascent", "descent")),
                 "fallback baseline differs")
     return result, repertoire
@@ -113,9 +118,10 @@ def generate(directory=ATLAS_DIR):
     lines.append("static const FaceData FACES[] = {")
     for name, atlas in zip(NAMES, atlases):
         symbol = name.upper().replace("-", "_")
-        lines.append("  {%s_RECORDS, %s_BITMAP, {%d, %d, %d, 2, %d}}," % (
-            symbol, symbol, atlas["height"], atlas["ascent"], atlas["descent"], atlas["ppem"]))
-    lines.extend(("};", f"// Packed bitmap bytes (all four faces): {bitmap_bytes}.", ""))
+        lines.append("  {%s_RECORDS, %s_BITMAP, {%d, %d, %d, %d, %d}}," % (
+            symbol, symbol, atlas["height"], atlas["ascent"], atlas["descent"],
+            LINE_GAPS[atlas["height"]], atlas["ppem"]))
+    lines.extend(("};", f"// Packed bitmap bytes (all {len(NAMES)} faces): {bitmap_bytes}.", ""))
     return "\n".join(lines)
 
 
@@ -127,7 +133,7 @@ def main():
     expected = generate()
     if args.check:
         require(args.output.read_text() == expected, "generated UI font data is stale")
-        print("UI font data matches all four reviewed atlases")
+        print(f"UI font data matches all {len(NAMES)} reviewed atlases")
     else:
         args.output.write_text(expected)
         print(f"Generated {args.output}")

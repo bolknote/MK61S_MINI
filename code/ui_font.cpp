@@ -25,8 +25,10 @@ struct FaceData {
 #include "ui_font_data.inc"
 
 unsigned faceIndex(Face face) {
-  const unsigned family = face.family == Family::ROBOTO ? 2U : 0U;
-  return family + (face.size == Size::PX14 ? 1U : 0U);
+  const unsigned family = face.family == Family::ROBOTO ? 3U : 0U;
+  const unsigned size = face.size == Size::PX16 ? 2U
+                      : face.size == Size::PX14 ? 1U : 0U;
+  return family + size;
 }
 
 int glyphIndex(uint32_t codepoint) {
@@ -62,7 +64,7 @@ Glyph glyph(Face face, uint32_t codepoint) {
   bool fallback = index < 0;
   if (index < 0) index = '?' - ' ';
   if (FACES[selected].records[index].offset == MISSING_OFFSET) {
-    selected &= 1U; // matching-size DejaVu; baseline and line height coincide
+    selected -= 3U; // matching-size DejaVu; baseline and line height coincide
     fallback = true;
   }
   const GlyphRecord& record = FACES[selected].records[index];

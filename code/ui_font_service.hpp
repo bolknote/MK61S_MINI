@@ -11,12 +11,14 @@ static_assert(sizeof(mk61_service_ui_glyph) == 40, "UI glyph wire layout");
 static_assert(sizeof(mk61_service_ui_font_info) == 6, "UI font wire layout");
 
 inline bool valid_choice(uint8_t family, uint8_t size) {
-  return (family == 1 || family == 2) && (size == 12 || size == 14);
+  return (family == 1 || family == 2) &&
+         (size == 12 || size == 14 || size == 16);
 }
 
 inline ui_font::Face face(uint8_t family, uint8_t size) {
   return {family == 2 ? ui_font::Family::ROBOTO : ui_font::Family::DEJAVU,
-          size == 14 ? ui_font::Size::PX14 : ui_font::Size::PX12};
+          size == 16 ? ui_font::Size::PX16
+                     : size == 14 ? ui_font::Size::PX14 : ui_font::Size::PX12};
 }
 
 // Pure, bounded serializer shared by resident dispatch and host contract tests.

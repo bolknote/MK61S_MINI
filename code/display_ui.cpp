@@ -7,8 +7,7 @@
 #include <string.h>
 
 namespace {
-constexpr u8 UI_ROWS = 4;
-constexpr u8 UI_COLS = 40;
+constexpr u8 UI_MAX_COLS = 40;
 constexpr u8 UI_MARGIN = 2;
 constexpr u8 UI_GUTTER = 12;
 
@@ -34,22 +33,52 @@ u16 nextCodepoint(const char* text, u16 length, u16& offset) {
 
 void MK61Display::setUiFont(u8 family, u8 size) {
   if(family > 2) family = 0;
+  if(size != 12 && size != 14 && size != 16) size = 14;
 #if MK61_FIXED_CALCULATOR_FACE
   const u8 preserved = ui_font_state & 24U;
 #else
   const u8 preserved = ui_font_state & 8U;
 #endif
-  const u8 next = (u8) (preserved | family |
-                        (size == 12 ? 0U : 4U));
+  const u8 size_bits = size == 16 ? 32U : (size == 14 ? 4U : 0U);
+  const u8 next = (u8) (preserved | family | size_bits);
   if(next == ui_font_state) return;
   ui_font_state = next;
   if(uiTextContext() && !usbScreenActive()) clear();
 }
 
+u8 MK61Display::uiLineGap(void) const {
+  return uiFontEnabled() ? ui_font::metrics(uiFontFace()).line_gap : 8U;
+}
+
+u8 MK61Display::uiRows(void) const {
+  if(!uiFontEnabled()) return 4U;
+  const auto metrics = ui_font::metrics(uiFontFace());
+  const u8 pitch = (u8) (metrics.height + metrics.line_gap);
+  const u8 rows = pitch ? (u8) ((lcd_display::PIXEL_HEIGHT + metrics.line_gap) / pitch) : 1U;
+  return rows ? rows : 1U;
+}
+
+u8 MK61Display::uiCols(void) const {
+  const u8 capacity_cols = (u8) (text_screen::CELL_CAPACITY / uiRows());
+  return capacity_cols < UI_MAX_COLS ? capacity_cols : UI_MAX_COLS;
+}
+
+u8 MK61Display::uiTop(void) const {
+  if(!uiFontEnabled()) return 1U;
+  const auto metrics = ui_font::metrics(uiFontFace());
+  const u8 rows = uiRows();
+  const u16 occupied = (u16) rows * metrics.height +
+      (u16) (rows - 1U) * metrics.line_gap;
+  return occupied < lcd_display::PIXEL_HEIGHT
+      ? (u8) ((lcd_display::PIXEL_HEIGHT - occupied) / 2U) : 0U;
+}
+
 void MK61Display::beginUiText(void) {
   const bool was_active = uiTextActive();
   ui_font_state |= 8U;
-  if(was_active != uiTextActive() || (uiTextActive() && grid.cols() != UI_COLS)) clear();
+  if(was_active != uiTextActive() ||
+     (uiTextActive() &&
+      (grid.rows() != uiRows() || grid.cols() != uiCols()))) clear();
 }
 
 void MK61Display::endUiText(void) {
@@ -104,22 +133,25 @@ u16 MK61Display::measureUiText(const char* text) const {
 }
 
 void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailing) {
-  if(!uiTextActive() || row >= UI_ROWS) return;
+  if(!uiTextActive() || row >= grid.rows()) return;
   MK61DisplayUpdate update(*this);
+  const u8 cols = grid.cols();
   const u8 row_bit = (u8) (1U << row);
   if(marker) ui_row_gutters |= row_bit;
   else ui_row_gutters &= (u8) ~row_bit;
   if(trailing) ui_row_tails |= row_bit;
   else ui_row_tails &= (u8) ~row_bit;
   // The same 160-token storage as the calculator grid, not a second cache.
+  // Five-row 12 px mode therefore uses 32 codepoints per row; wider faces
+  // keep the reviewed 40-codepoint cap.
   grid.setCursor(0, row);
-  for(u8 col = 0; col < UI_COLS; ++col) grid.writeCodepoint(' ');
+  for(u8 col = 0; col < cols; ++col) grid.writeCodepoint(' ');
   u8 col = marker ? 1U : 0U;
   if(marker) {
     grid.setCursor(0, row);
     grid.writeCodepoint((u8) marker);
   }
-  const u8 end_col = trailing ? UI_COLS - 1U : UI_COLS;
+  const u8 end_col = trailing ? cols - 1U : cols;
   const u16 width = lcd_display::PIXEL_WIDTH - 2U*UI_MARGIN -
       (marker ? UI_GUTTER : 0U) - (trailing ? UI_GUTTER : 0U);
   u16 length = textLength(text);
@@ -149,7 +181,7 @@ void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailin
     grid.writeCodepoint(0x2026);
   }
   if(trailing) {
-    grid.setCursor(UI_COLS - 1U, row);
+    grid.setCursor(cols - 1U, row);
     grid.writeCodepoint(trailing);
   }
   grid.setCursor(0, row);
@@ -179,7 +211,7 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
     const bool tail = (ui_row_tails & (1U << row)) != 0;
     i16 pen = UI_MARGIN;
     for(u8 col = 0; col < grid.cols(); ++col) {
-      const bool tail_cell = tail && col == UI_COLS - 1U;
+      const bool tail_cell = tail && col == grid.cols() - 1U;
       if(tail_cell) pen = lcd_display::PIXEL_WIDTH - UI_MARGIN - UI_GUTTER;
       const i16 right = tail && !tail_cell
           ? lcd_display::PIXEL_WIDTH - UI_MARGIN - UI_GUTTER

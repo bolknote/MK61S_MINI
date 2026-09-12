@@ -37,7 +37,10 @@ struct Surface {
   mk61_setup_ui_font line_fonts[10] = {};
   u8 row = 0;
   bool uiTextActive() const { return ui_text_context; }
-  u8 rows() const { return uiTextActive() ? 4 : profile.rows; }
+  u8 rows() const {
+    if(!uiTextActive() || ui_font.family == 0) return uiTextActive() ? 4 : profile.rows;
+    return ui_font.size == 12 ? 5 : (ui_font.size == 16 ? 3 : 4);
+  }
   void clear() {
     for(auto& line : lines) line.clear();
     std::memset(line_ui_context, 0, sizeof(line_ui_context));
@@ -183,7 +186,7 @@ static void test_ui_font_layout() {
     russian = ru;
     for(u8 calculator_rows : {2, 4, 10}) {
       for(u8 family : {0, 1, 2}) {
-        for(u8 size : {12, 14}) {
+        for(u8 size : {12, 14, 16}) {
           const mk61_setup_ui_font font = {family, size};
           assert(uiFontFieldCount(font) == (family == 0 ? 1U : 2U));
           for(u8 active = 0; active < uiFontFieldCount(font); ++active) {
@@ -198,7 +201,8 @@ static void test_ui_font_layout() {
             phases.clear();
             drawUiFontSetup(active, font);
 
-            const u8 rows = 4;
+            const u8 rows = family == 0 ? 4U :
+                (size == 12 ? 5U : (size == 16 ? 3U : 4U));
             assert(surface.rows() == rows);
             assert(surface.ui_text_context);
             assert(surface.uiTextActive());
@@ -216,9 +220,9 @@ static void test_ui_font_layout() {
                  family == 1 ? "Шрифт UI:DejaVu" : "Шрифт UI:Roboto")
               : (family == 0 ? "UI font:Mono" :
                  family == 1 ? "UI font:DejaVu" : "UI font:Roboto");
-            const char* size_line = ru
-              ? (size == 12 ? "Размер UI:12" : "Размер UI:14")
-              : (size == 12 ? "UI size:12" : "UI size:14");
+            char size_line[24];
+            snprintf(size_line, sizeof(size_line), ru ? "Размер UI:%u" : "UI size:%u",
+                     (unsigned) size);
             std::string expected[10];
             const u8 fields = uiFontFieldCount(font);
             const u8 available = rows > 1 ? (u8) (rows - 1) : 1;
@@ -245,6 +249,12 @@ static void test_ui_font_layout() {
       }
     }
   }
+  assert(stepUiFontSize(12, 1) == 14);
+  assert(stepUiFontSize(14, 1) == 16);
+  assert(stepUiFontSize(16, 1) == 12);
+  assert(stepUiFontSize(12, -1) == 16);
+  assert(stepUiFontSize(16, -1) == 14);
+  assert(stepUiFontSize(14, -1) == 12);
   // Restore the recording surface for independent calculator-profile tests.
   surface = Surface{};
   russian = false;
