@@ -68,6 +68,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 **Поддерживаемые команды каталога `tools`:**
 [Markdown](tools/README.md)
 
+**Готовые игры, примеры, пользовательские APP и CHIP-8 ROM для C5:**
+[каталог `programs`](programs/README.md)
+
 **Технические форматы:**<br>
 [Формат внутреннего хранилища и USB FAT12](doc/src/MK61s-mini-Storage.md)
 

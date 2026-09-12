@@ -25,6 +25,10 @@ LCD1602 horizontal viewport are identical to BASIC and FOCAL.  Consequently it
 needs a firmware/System APP set exposing `MK61_SERVICE_CAP_EDITOR` (the normal
 configuration with loadable BASIC or FOCAL).
 
+On the 192x64 display, the two opening help cards use the resident compact
+Pixel font and clearly boxed key labels.  Older or character-only firmware
+automatically receives the fixed-grid text version instead.
+
 ## Build and test
 
 ```sh
@@ -34,6 +38,9 @@ python3 tools/build_portable_app.py --name ELIZA \
   --source examples/portable-apps/ELIZA/main.c \
   --source examples/portable-apps/ELIZA/eliza_engine.c \
   --output-dir .build/portable-apps/eliza
+
+cp .build/portable-apps/eliza/ELIZA.APP programs/app/ELIZA.APP
 ```
 
-Install `.build/portable-apps/eliza/ELIZA.APP` anywhere under `/Apps` in C5.
+The ready-to-copy result is `programs/app/ELIZA.APP`.  On the repository's
+sample C5 layout it is installed as `/app/ELIZA.APP`.

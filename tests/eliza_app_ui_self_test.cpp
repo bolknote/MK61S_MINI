@@ -41,7 +41,11 @@ static std::vector<int32_t> input_keys;
 static size_t input_key_index;
 static uint32_t clock_ms;
 static std::vector<std::string> display_lines;
+static std::vector<std::vector<uint8_t>> graphic_frames;
 static unsigned editor_draws;
+static unsigned graphics_begins;
+static unsigned graphics_ends;
+static bool expose_ui_font;
 
 static uint32_t mock_millis(void) { return clock_ms++; }
 static void mock_service(void) {}
@@ -58,10 +62,51 @@ static uint32_t mock_display_write(uint32_t column, uint32_t row,
   return 1;
 }
 
+static int32_t mock_key_wait(void) {
+  assert(input_key_index < input_keys.size());
+  return input_keys[input_key_index++];
+}
+
+static uint32_t mock_graphics_available(void) { return 1; }
+static uint32_t mock_graphics_width(void) { return HELP_WIDTH; }
+static uint32_t mock_graphics_height(void) { return HELP_HEIGHT; }
+static uint32_t mock_graphics_begin(void) {
+  ++graphics_begins;
+  return 1;
+}
+static uint32_t mock_graphics_present(const uint8_t* pixels, uint32_t size) {
+  assert(size == HELP_FRAME_BYTES);
+  graphic_frames.emplace_back(pixels, pixels + size);
+  return 1;
+}
+static void mock_graphics_end(void) { ++graphics_ends; }
+
 static uint32_t mock_call(uint32_t operation, uint32_t a, uint32_t b,
                           uint32_t c, void* payload) {
   (void) b;
   (void) c;
+  if(operation == MK61_SERVICE_CAPABILITIES) {
+    return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_EDITOR |
+        (expose_ui_font ? MK61_SERVICE_CAP_UI_FONT : 0U);
+  }
+  if(operation == MK61_SERVICE_UI_FONT) {
+    mk61_service_ui_glyph* glyph =
+        static_cast<mk61_service_ui_glyph*>(payload);
+    assert(expose_ui_font);
+    assert(a == MK61_UI_FONT_GLYPH);
+    assert(b <= 0x7fU);
+    assert(c == sizeof(*glyph));
+    assert(glyph->family == HELP_FONT_FAMILY);
+    assert(glyph->size == HELP_FONT_SIZE);
+    glyph->bearing_x = 0;
+    glyph->bearing_y = 5;
+    glyph->advance = b == ' ' ? 3 : 4;
+    glyph->width = b == ' ' ? 0 : 3;
+    glyph->height = b == ' ' ? 0 : 5;
+    for(unsigned row = 0; row < glyph->height; ++row)
+      glyph->pixels[row] = 0xe0;
+    return 1;
+  }
   if(operation == MK61_SERVICE_KEYBOARD) {
     if(a == MK61_SERVICE_KEY_SCAN) return 1;
     if(a == MK61_SERVICE_KEY_GET) {
@@ -119,6 +164,10 @@ static void reset_mocks(void) {
   clock_ms = 10;
   editor_draws = 0;
   display_lines.clear();
+  graphic_frames.clear();
+  graphics_begins = 0;
+  graphics_ends = 0;
+  expose_ui_font = true;
 }
 
 static void push_digit(unsigned digit, unsigned taps) {
@@ -169,12 +218,109 @@ static void test_page_wrapping(void) {
   assert(*rest == 0);
 }
 
+static void expect_page(const char* text,
+                        const char* const expected[6]) {
+  const char* rest;
+  reset_mocks();
+  rest = draw_page(text, 16, 6);
+  assert(*rest == 0);
+  assert(display_lines.size() == 6);
+  for(size_t row = 0; row < 6; ++row) {
+    assert(display_lines[row] == expected[row]);
+    assert(display_lines[row].size() <= 16);
+  }
+}
+
+static void test_help_layout(void) {
+  static const char* const key_lines[6] = {
+    "ELIZA SMS KEYS", "1:PQRS   2:TUV", "3:WXYZ   4:GHI",
+    "5:JKL    6:MNO", "7:SPACE  8:ABC", "9:DEF  OK:NEXT"
+  };
+  static const char* const control_lines[6] = {
+    "HOW TO TYPE", "SAME KEY=CYCLE", "0=ACCEPT LETTER",
+    "CX=ERASE", "OK=SEND ESC=EXIT", "OK: NEXT"
+  };
+  expect_page(key_help, key_lines);
+  expect_page(control_help, control_lines);
+}
+
+static void test_pages_require_ok(void) {
+  reset_mocks();
+  input_keys = {MK61_APP_KEY_DIGIT_1, MK61_APP_KEY_OK};
+  assert(show_pages("READY", 16, 6) == 1);
+  assert(input_key_index == input_keys.size());
+
+  reset_mocks();
+  input_keys = {MK61_APP_KEY_ESC};
+  assert(show_pages("READY", 16, 6) == 0);
+}
+
+static bool frame_pixel(const std::vector<uint8_t>& frame,
+                        unsigned x, unsigned y) {
+  return (frame[(y / 8) * HELP_WIDTH + x] & (1U << (y & 7))) != 0;
+}
+
+static void test_graphic_help(void) {
+  reset_mocks();
+  input_keys = {MK61_APP_KEY_DIGIT_1, MK61_APP_KEY_OK, MK61_APP_KEY_OK};
+  assert(show_graphic_intro(&app_services) == HELP_DONE);
+  assert(input_key_index == input_keys.size());
+  assert(graphics_begins == 1);
+  assert(graphics_ends == 1);
+  assert(graphic_frames.size() == 2);
+  for(unsigned x = 3; x < HELP_WIDTH - 3; ++x) {
+    assert(frame_pixel(graphic_frames[0], x, 13));
+    assert(frame_pixel(graphic_frames[1], x, 13));
+  }
+  assert(frame_pixel(graphic_frames[0], 4, 28));
+  assert(frame_pixel(graphic_frames[0], 4, 39));
+  assert(frame_pixel(graphic_frames[1], 10, 40));
+  assert(frame_pixel(graphic_frames[1], 10, 51));
+
+  reset_mocks();
+  input_keys = {MK61_APP_KEY_OK, MK61_APP_KEY_ESC};
+  assert(show_graphic_intro(&app_services) == HELP_EXIT);
+  assert(graphic_frames.size() == 2);
+  assert(graphics_begins == 1);
+  assert(graphics_ends == 1);
+
+  reset_mocks();
+  expose_ui_font = false;
+  assert(show_graphic_intro(&app_services) == HELP_UNAVAILABLE);
+  assert(graphic_frames.empty());
+  assert(graphics_begins == 0);
+  assert(graphics_ends == 0);
+}
+
+static void test_frame_clipping(void) {
+  help_clear();
+  help_set_pixel(-1, 0);
+  help_set_pixel(0, -1);
+  help_set_pixel(HELP_WIDTH, 0);
+  help_set_pixel(0, HELP_HEIGHT);
+  for(unsigned index = 0; index < HELP_FRAME_BYTES; ++index)
+    assert(help_frame[index] == 0);
+  help_set_pixel(HELP_WIDTH - 1, HELP_HEIGHT - 1);
+  assert(help_frame[HELP_FRAME_BYTES - 1] == 0x80);
+}
+
 int main(void) {
   app_api.millis_ms = mock_millis;
   app_api.service = mock_service;
   app_api.delay_ms = mock_delay;
   app_api.display_clear = mock_display_clear;
   app_api.display_write_utf8 = mock_display_write;
+  app_api.key_wait = mock_key_wait;
+  app_api.magic = MK61_APP_API_MAGIC;
+  app_api.version = MK61_APP_API_VERSION;
+  app_api.struct_size = sizeof(app_api);
+  app_api.capabilities = MK61_APP_CAP_GRAPHICS;
+  app_api.graphics_available = mock_graphics_available;
+  app_api.graphics_width = mock_graphics_width;
+  app_api.graphics_height = mock_graphics_height;
+  app_api.graphics_begin = mock_graphics_begin;
+  app_api.graphics_present = mock_graphics_present;
+  app_api.graphics_end = mock_graphics_end;
   mk61_api = &app_api;
   app_services.keyboard_mapping = &app_keys;
   app_services.call = mock_call;
@@ -182,6 +328,10 @@ int main(void) {
   test_direct_sms_entry();
   test_space_and_backspace();
   test_page_wrapping();
+  test_help_layout();
+  test_pages_require_ok();
+  test_graphic_help();
+  test_frame_clipping();
   puts("eliza APP UI tests passed");
   return 0;
 }

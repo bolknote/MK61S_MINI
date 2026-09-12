@@ -71,7 +71,7 @@ ROM воспроизводимо собирается локальным асс�
 
 ```sh
 python3 examples/chip8/ECHO-8/assemble.py \
-  examples/chip8/ECHO-8/echo8.asm games/echo8.ch8
+  examples/chip8/ECHO-8/echo8.asm programs/CHIP8/echo8.ch8
 tests/run_chip8_tests.sh
 ```
 

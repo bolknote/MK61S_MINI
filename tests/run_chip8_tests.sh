@@ -18,7 +18,9 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
 
 python3 "$root/examples/chip8/ECHO-8/assemble.py" \
   "$root/examples/chip8/ECHO-8/echo8.asm" "$echo8_out" >/dev/null
-cmp "$echo8_out" "$root/games/echo8.ch8"
+cmp "$echo8_out" "$root/programs/CHIP8/echo8.ch8"
 
-"$out" "$root/games/br8kout.ch8" "$root/games/fuse.ch8" \
-  "$root/games/space-invaders.ch8" "$root/games/echo8.ch8"
+"$out" "$root/programs/CHIP8/br8kout.ch8" \
+  "$root/programs/CHIP8/fuse.ch8" \
+  "$root/programs/CHIP8/space-invaders.ch8" \
+  "$root/programs/CHIP8/echo8.ch8"
