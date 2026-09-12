@@ -1,66 +1,65 @@
-# MK61 game files
+# Игры MK61
 
-Copy these `.m61` files to the MK61S USB disk.
+Каждая игра МК-61 находится в отдельной папке: `autoexec.m61`,
+`manual.md` и иллюстрации `.wbmp`. Скопируйте нужную папку целиком в `games`
+на USB-диске MK61S. Вход в неё через Проводник открывает памятку;
+`LEFT`/`RIGHT` листают, `OK` или `ESC` закрывает её и запускает программу.
 
-Historical game scenarios begin with `reinit`. This restores the original
-built-in loader's clean-register guarantee without changing ordinary
-user-created `.m61` files, which may intentionally use the current registers.
-New scenarios can initialize a register from an independent hardware-seeded
-stream with `R0= random`, or reproduce non-decimal calculator tetrads exactly
-with `R0= raw <12 hex tetrads>`.
+На графическом экране памятка содержит картинки; LCD1602 показывает текст
+и подписи к изображениям. Отдельный WBMP можно открыть из Проводника;
+изображения выше экрана доступны с прокруткой. Тексты помещаются в 1536 байт,
+каждое изображение — в 1600 байт.
 
-## File catalogue and provenance
+## Каталог
 
-The table records where every bundled game or image came from. When the exact
-external publication is not present in the file or repository history, that is
-stated explicitly instead of guessing an author or source.
-
-| File | Contents | Provenance |
+| Папка | Игра и памятка | Иллюстрация |
 | --- | --- | --- |
-| `Bumblebee Fly.m61` | Full MK-61 **Bumblebee Fly** game and its register setup | Extracted from the `mk61_games` and `mk61_game_setups` arrays inherited from the original [UN7FGO/MK61S_MINI](https://github.com/UN7FGO/MK61S_MINI) firmware when this fork moved its built-in games to `.m61` files. The upstream code did not record the original listing or author. |
-| `Bumblebee.m61` | Small calculator-driven animation for the 16x2 display | Written specifically for this repository when M61 `print` and `trap` support was added. It is a new display-oriented example inspired by, but not copied from, the full `Bumblebee Fly.m61` bytecode. |
-| `Chase HQ.m61` | 105-step MK-61 driving game with setup commands | Converted for this repository from Konstantin Sergeev's 1993 [Chase H.Q. listing](https://lordbss.narod.ru/pmk83.html). |
-| `Fox Hunting.m61` | MK-61 logic game | Extracted from the embedded game library inherited from [UN7FGO/MK61S_MINI](https://github.com/UN7FGO/MK61S_MINI). The upstream code did not record the original listing or author. |
-| `Infinity Story.m61` | MK-61 exploration game, called `Infinity store` in the old firmware menu | Extracted from the embedded game library inherited from [UN7FGO/MK61S_MINI](https://github.com/UN7FGO/MK61S_MINI). The upstream code did not record the original listing or author. |
-| `Lunolet 1.m61` | **Lunolet-1** spacecraft manoeuvring and landing simulator | Extracted from the embedded game library inherited from [UN7FGO/MK61S_MINI](https://github.com/UN7FGO/MK61S_MINI). The game is the classic `Lunolet-1` from the Soviet calculator-program series; the exact transcription used by the upstream firmware was not attributed there. |
-| `Mult Lunolet.m61` | MK-61 program imported under the supplied **Mult Lunolet** name | Supplied locally by the project maintainer. No author, publication, or upstream URL is embedded in the file or recorded in Git history. |
-| `Naval Battle.m61` | MK-61 naval battle game | Extracted from the embedded game library inherited from [UN7FGO/MK61S_MINI](https://github.com/UN7FGO/MK61S_MINI). The upstream code did not record the original listing or author. |
-| `Pogonya/` | Sergei Shinkevich's **Погоня** with an auto-starting illustrated Markdown manual | The program listing and line art were taken from the project maintainer's scan of `КЛИП/ЭКСПРЕСС №08/Экспресс №8 - 1.jpg` (`Экспресс`, No. 8, 1991). The scan's inconsistent start line and initial coordinates were checked against the tested [Lord_BSS transcription](https://lordbss.narod.ru/pmk47.html); the packaged game uses `БП 25`, `R3=49.50` and `R5=52.5`. |
-| `Samurai.m61` | MK-61 game with its register setup | Added as an `.m61` file during the built-in-library-to-filesystem migration in this repository. No earlier in-tree copy, external listing, or author attribution is recorded. |
-| `Wumpus.m61` | MK-61 **Wumpus** game with generated initial state | First added to this fork's embedded game library and then exported to `.m61`. The external listing or author used for that port was not recorded. |
-| `br8kout.ch8` | **Br8kout** CHIP-8 ROM by SharpenedSpoon, 199 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
-| `echo8.ch8` | **ECHO-8**, a 2039-byte first-person story game | Original game written for this repository. Its plot, code and graphics were created locally in collaboration with Codex rather than copied from an external ROM. The source and build notes live under [`examples/chip8/ECHO-8`](../examples/chip8/ECHO-8/). |
-| `fuse.ch8` | **Fuse** CHIP-8 ROM by John Earnest, 424 bytes | Downloaded unchanged from the [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). |
-| `space-invaders.ch8` | **Space Invaders v0.9** CHIP-8 ROM by David Winter, 1283 bytes | Taken unchanged from the [Zophar public-domain CHIP-8 Games Pack](https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html). |
-| `pacman-120x28.wbmp` | Original 120x28 monochrome Pac-Man scene for testing the WBMP viewer | Original artwork by the MK61S_MINI project author, drawn specifically for this project in collaboration with Codex. It was not copied from an external image. |
+| `Lunolet 1` | [Лунолёт-1](<Lunolet 1/manual.md>) — взлёт и мягкая посадка | Корабль и схема тяги, «ТМ», 1985 №6 |
+| `Bumblebee Fly` | [Полёт шмеля](<Bumblebee Fly/manual.md>) — полёт по дому | Разрез и план дома, «ТМ», 1988 №3 |
+| `Infinity Story` | [Бесконечная история](<Infinity Story/manual.md>) — путешествие по Фантазии | Фрагмент журнальной карты, «ТМ», 1988 №1 |
+| `Fox Hunting` | [Охота на лис](<Fox Hunting/manual.md>) — пеленгация девяти лис | Историческая схема, «Наука и жизнь», 1990 №10 |
+| `Naval Battle` | [Морской бой](<Naval Battle/manual.md>) — поединок с ПМК | Новая схема поля с однопалубными кораблями |
+| `Wumpus` | [Вампус](Wumpus/manual.md) — охота в пещере | Рисунок из The Best of Creative Computing, 1976, и схема переходов |
+| `Chase HQ` | [Chase H.Q.](<Chase HQ/manual.md>) — погоня за Ferrari | Новая схема дороги и обозначений |
+| `Samurai` | [Самурай](Samurai/manual.md) — спасение принцессы Лу | Новая схема символов и управления |
+| `Mult Lunolet` | [Космический мультфильм](<Mult Lunolet/manual.md>) — возвращение с Луны | Новая схема маршрута L → C → 3 |
+| `Bumblebee` | [Шмель](Bumblebee/manual.md) — символьная анимация 16×2 | Схема двух направлений по кадрам M61 |
+| `Pogonya` | [Погоня](Pogonya/manual.md) — поиск мафиози в городе | Рисунки из «Экспресса», 1991 №8 |
 
-## Auto-starting folder package
+Авторство, ссылки на публикации, происхождение картинок и отличия конкретных
+листингов записаны в [SOURCES.markdown](SOURCES.markdown). Полноразмерные
+фрагменты иллюстраций и исходники новых схем — в
+[doc/game-artwork](../doc/game-artwork/); этот каталог на калькулятор не копируется.
 
-Copy the whole [`Pogonya`](Pogonya/) directory to the `games` directory on the
-MK61S C5 disk. Entering it in Explorer runs `autoexec.m61`. The script first
-opens `manual.md`; `LEFT` and `RIGHT` turn pages, and `ESC` or `OK` closes the
-viewer. The script then loads the 105 program steps, initializes the game and
-performs `БП 25 С/П`.
+## Перед запуском
 
-The graphics build shows the two WBMP illustrations. An alphanumeric display
-shows the same manual as plain text with image alt text.
+Для «Полёта шмеля» заранее выберите `ГРД`; для «Вампуса» — `Р`;
+для «Самурая» `Р` выбирает Чёрного Ветра, а `ГРД`/`Г` — других героев.
+Выбирать режим нужно на экране калькулятора до открытия папки:
+внутри просмотрщика Markdown угловые клавиши не меняют режим.
 
-## Bumblebee display example
+У динамических игр и мультфильма сначала используйте обычную скорость
+эмуляции (`CLASSIC`): ускорение сокращает время для чтения мерцающих кадров
+и двухфазного управления шмелём.
 
-`Bumblebee.m61` is a small calculator-driven animation for the 16x2 display.
-The script selects `Г` on startup, and the bee `-0008` flies to the right;
-switch to `Р` and `8000-` flies to the left. The middle `ГРД` position is not
-used.
-Hitting either wall produces the calculator's `ЕГГОГ` error.
+К прежнему содержимому каждого `.m61` добавлена только первая строка
+`open manual.md`; байты программ, регистры, подготовительные программы и
+команды запуска сохранены. Старые отдельные `.m61` перенесены в
+`<папка>/autoexec.m61`. Для новой попытки повторно войдите в папку, если в
+памятке не указан другой способ.
 
-All movement, wall checks, angle-mode detection (`272`, `F cos`), and cursor
-coordinates are calculated by the MK-61 bytecode. The M61 layer blanks and
-owns the display, then two traps publish the right- and left-facing frames
-every 300 ms. The current coordinate is encoded as the exponent of `10^R0`,
-so `{X:e}` can be used directly as the ANSI column.
+Исторические сценарии начинают подготовку с `reinit`, сохраняя гарантию
+чистых регистров старого встроенного загрузчика. Эта команда сохраняет
+внешний режим углов. У демонстрации `Bumblebee` прежний запуск без `reinit`.
 
-`Bumblebee Fly.m61` is the earlier full MK-61 program port. It is kept as a
-separate game and is not replaced by `Bumblebee.m61`.
+В прежних загрузчиках `Wumpus` и `Bumblebee` есть физические scan-code
+`kbd E` и `kbd 04`, рассчитанные на mini/40TH. На Classic заранее выберите
+`Р` для Wumpus и `Г` для Bumblebee. Эти команды и различия раскладок здесь
+не изменялись. Во время полёта шмеля `Р` разворачивает `8000-` влево,
+`Г` — `-0008` вправо; кадр удерживается командой `wait 200`.
+
+`pacman-120x28.wbmp` — самостоятельная тестовая картинка, а не игра.
+CHIP-8 ROM ниже остаются отдельными `.ch8`: эта упаковка относится к МК-61.
 
 ## CHIP-8 ROMs
 
