@@ -29,10 +29,16 @@ u16 nextCodepoint(const char* text, u16 length, u16& offset) {
   offset = (u16) (offset + count);
   return value;
 }
+
+bool legacyUiToken(u16 codepoint) {
+  return codepoint >= display_symbol::uc1609::GE &&
+      codepoint <= display_symbol::uc1609::CYR_CHE;
+}
 }
 
 void MK61Display::setUiFont(u8 family, u8 size) {
-  if(family > 2) family = 0;
+  if(family == 2) family = 1; // migrate the retired Roboto setting
+  if(family > 3) family = 0;
   if(size != 12 && size != 14 && size != 16) size = 14;
 #if MK61_FIXED_CALCULATOR_FACE
   const u8 preserved = ui_font_state & 24U;
@@ -47,14 +53,28 @@ void MK61Display::setUiFont(u8 family, u8 size) {
 }
 
 u8 MK61Display::uiLineGap(void) const {
+  if(uiFontFamily() == 3) {
+    if(const fmk::Face* external = externalUiFont()) {
+      return external->metrics().line_gap;
+    }
+  }
   return uiFontEnabled() ? ui_font::metrics(uiFontFace()).line_gap : 8U;
 }
 
 u8 MK61Display::uiRows(void) const {
   if(!uiFontEnabled()) return 4U;
-  const auto metrics = ui_font::metrics(uiFontFace());
-  const u8 pitch = (u8) (metrics.height + metrics.line_gap);
-  const u8 rows = pitch ? (u8) ((lcd_display::PIXEL_HEIGHT + metrics.line_gap) / pitch) : 1U;
+  u8 height = 0;
+  u8 line_gap = 0;
+  if(uiFontFamily() == 3 && externalUiFont() != NULL) {
+    height = externalUiFont()->metrics().height;
+    line_gap = externalUiFont()->metrics().line_gap;
+  } else {
+    const auto metrics = ui_font::metrics(uiFontFace());
+    height = metrics.height;
+    line_gap = metrics.line_gap;
+  }
+  const u8 pitch = (u8) (height + line_gap);
+  const u8 rows = pitch ? (u8) ((lcd_display::PIXEL_HEIGHT + line_gap) / pitch) : 1U;
   return rows ? rows : 1U;
 }
 
@@ -65,10 +85,19 @@ u8 MK61Display::uiCols(void) const {
 
 u8 MK61Display::uiTop(void) const {
   if(!uiFontEnabled()) return 1U;
-  const auto metrics = ui_font::metrics(uiFontFace());
+  u8 height = 0;
+  u8 line_gap = 0;
+  if(uiFontFamily() == 3 && externalUiFont() != NULL) {
+    height = externalUiFont()->metrics().height;
+    line_gap = externalUiFont()->metrics().line_gap;
+  } else {
+    const auto metrics = ui_font::metrics(uiFontFace());
+    height = metrics.height;
+    line_gap = metrics.line_gap;
+  }
   const u8 rows = uiRows();
-  const u16 occupied = (u16) rows * metrics.height +
-      (u16) (rows - 1U) * metrics.line_gap;
+  const u16 occupied = (u16) rows * height +
+      (u16) (rows - 1U) * line_gap;
   return occupied < lcd_display::PIXEL_HEIGHT
       ? (u8) ((lcd_display::PIXEL_HEIGHT - occupied) / 2U) : 0U;
 }
@@ -118,6 +147,15 @@ u8 MK61Display::uiAdvance(u16 codepoint, bool custom) const {
   if(custom) return 6;
   if(!uiFontEnabled()) return 6;
   const u16 unicode = display_symbol::uc1609::unicodeCodepoint(codepoint);
+  if(uiFontFamily() == 3) {
+    if(const fmk::Face* external = externalUiFont()) {
+      fmk::Glyph glyph;
+      if(external->glyph(unicode, glyph)) return glyph.advance;
+      if(legacyUiToken(codepoint)) return 6;
+      if(external->glyph('?', glyph)) return glyph.advance;
+      return 6;
+    }
+  }
   if(ui_font::supports(uiFontFace(), unicode)) return ui_font::glyph(uiFontFace(), unicode).advance;
   // Legacy private tokens (folder, calculator signs) keep their existing art.
   if(builtin_font::rows5x8(codepoint) != nullptr) return 6;
@@ -198,9 +236,13 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   render_width = run_width;
   memset(render_buffer, 0, run_width);
   const auto face = uiFontFace();
-  const auto metrics = ui_font::metrics(face);
+  const auto builtin_metrics = ui_font::metrics(face);
+  const fmk::Face* const external = uiFontFamily() == 3
+      ? externalUiFont() : NULL;
+  const u8 face_height = external ? external->metrics().height
+                                  : builtin_metrics.height;
   const bool mono = !uiFontEnabled();
-  const u8 text_height = mono ? 8U : metrics.height;
+  const u8 text_height = mono ? 8U : face_height;
   for(u8 row = 0; row < grid.rows(); ++row) {
     const i16 top = rowTop(row);
     const i16 mono_top = top + 4;
@@ -218,10 +260,26 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
           : lcd_display::PIXEL_WIDTH - UI_MARGIN;
       const u16 cp = grid.cell(col, row);
       const bool custom = grid.cellIsCustom(col, row);
-      const u8 advance = gutter && col == 0 ? UI_GUTTER : uiAdvance(cp, custom);
       const u16 unicode = display_symbol::uc1609::unicodeCodepoint(cp);
-      const bool proportional = !mono && !custom &&
-          (ui_font::supports(face, unicode) || builtin_font::rows5x8(cp) == nullptr);
+      fmk::Glyph external_glyph = {};
+      u8 external_bitmap[fmk::MAX_BITMAP_SIZE] = {};
+      bool use_external = external != NULL && !custom &&
+          external->glyph(unicode, external_glyph);
+      if(!use_external && external != NULL && !custom &&
+         !legacyUiToken(cp)) {
+        use_external = external->glyph('?', external_glyph);
+      }
+      use_external = use_external &&
+          external->decode(external_glyph, external_bitmap,
+                           sizeof(external_bitmap));
+      // The FMK lookup walks its compact variable-length record stream. Reuse
+      // the glyph found for rendering instead of repeating that walk merely
+      // to obtain its advance.
+      const u8 advance = gutter && col == 0 ? UI_GUTTER
+          : (use_external ? external_glyph.advance : uiAdvance(cp, custom));
+      const bool proportional = external == NULL && !mono && !custom &&
+          (ui_font::supports(face, unicode) ||
+           builtin_font::rows5x8(cp) == nullptr);
       const auto glyph = ui_font::glyph(face, unicode);
       builtin_font::Raster fallback = {};
       if(!proportional) {
@@ -233,18 +291,24 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
                                custom ? (u16) '?' : cp, fallback);
         }
       }
-      const u8 width = proportional ? glyph.width : fallback.width;
-      const u8 height = proportional ? glyph.height : fallback.height;
+      const u8 width = use_external ? external_glyph.width
+          : (proportional ? glyph.width : fallback.width);
+      const u8 height = use_external ? external_glyph.height
+          : (proportional ? glyph.height : fallback.height);
       const i16 left = pen + (proportional ? glyph.bearing_x : 0);
-      const i16 glyph_top = mono ? mono_top
-          : top + metrics.ascent - (proportional ? glyph.bearing_y : 8);
+      const i16 glyph_top = use_external ? top : (mono ? mono_top
+          : top + builtin_metrics.ascent -
+              (proportional ? glyph.bearing_y : 8));
       for(u8 y = 0; y < height; ++y) {
         const i16 py = glyph_top + y - page_y;
         if(py < 0 || py >= RENDER_PAGE_HEIGHT) continue;
         for(u8 x = 0; x < width; ++x) {
           if(left + x >= right) break;
-          if(proportional ? ui_font::pixel(glyph, x, y)
-                          : fmk::bitmapPixel(fallback.data, width, x, y)) {
+          const bool pixel = use_external
+              ? fmk::bitmapPixel(external_bitmap, width, x, y)
+              : (proportional ? ui_font::pixel(glyph, x, y)
+                              : fmk::bitmapPixel(fallback.data, width, x, y));
+          if(pixel) {
             setRenderPixel(left + x - run_left, py);
           }
         }

@@ -8,17 +8,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ATLAS_DIR = ROOT / "tools/.fmk-font/ui-atlases"
-NAMES = ("dejavu-12", "dejavu-14", "dejavu-16",
-         "roboto-12", "roboto-14", "roboto-16")
+NAMES = ("pixel-12", "pixel-14", "pixel-16")
+EXPECTED_HEIGHTS = {"pixel-12": 12, "pixel-14": 14, "pixel-16": 17}
 SOURCE_HASHES = {
-    "dejavu-12": "e98720dfdc9fecb4954b536912c720ec6934d0a8b9c05cf88c33bdb16a6438f5",
-    "dejavu-14": "604c5750eb369d380790710ddc6290b44bcb13acd70d46d331d3d14258defa34",
-    "dejavu-16": "bb5e3a6f0e4502dadfd5da86bcbd9f34c7e8ba93675f6e1ff00a498ab79921b1",
-    "roboto-12": "0d7c0a7966f280d3211a14f8442968dcc22c9ead70e14f5ca187bf771387a0c3",
-    "roboto-14": "89e7a33561ed37659d58da7027f8e75025ee368f1d491eac90781e5c2666d17a",
-    "roboto-16": "fcb310da83adc4b1ecaaf17bb1597a37e9d1229fb441288a1b64b5e7a439baf5",
+    "pixel-12": "67741710e4d63c1cdda6129bae7c0942ee0a8ae05e61e8bca0af273c10c88584",
+    "pixel-14": "e12017456c29b40d6c560609e021d40ce6c5ca6b5c44772e41a714111c8d9f50",
+    "pixel-16": "de535e79b99b916e6e89fa9fbfc4fafab74aa96d8d719ace2705b89409820366",
 }
-LINE_GAPS = {12: 1, 14: 2, 16: 2}
+LINE_GAPS = {12: 1, 14: 2, 17: 2}
 
 
 def require(condition, message):
@@ -34,7 +31,7 @@ def load_atlases(directory=ATLAS_DIR):
                 f"{name}: reviewed source SHA-256 changed")
         atlas = json.loads(raw)
         require(atlas["schema"] == 1 and
-                atlas["height"] == int(name.rsplit("-", 1)[1]),
+                atlas["height"] == EXPECTED_HEIGHTS[name],
                 f"{name}: unexpected metrics")
         require(atlas["height"] == atlas["ascent"] + atlas["descent"],
                 f"{name}: inconsistent line box")
@@ -54,7 +51,7 @@ def load_atlases(directory=ATLAS_DIR):
                 f"{name}/{cp}: malformed raster")
         atlas["by_codepoint"] = glyphs
         result.append(atlas)
-    repertoire = sorted(result[0]["by_codepoint"])
+    repertoire = sorted(set(result[0]["by_codepoint"]) | set(result[0]["missing"]))
     require(len(repertoire) == 169 and repertoire[:95] == list(range(32, 127)),
             "unexpected repertoire")
     for name, atlas in zip(NAMES, result):
@@ -62,12 +59,8 @@ def load_atlases(directory=ATLAS_DIR):
         require(actual <= set(repertoire) and
                 set(repertoire) - actual == set(atlas["missing"]),
                 f"{name}: inconsistent missing characters")
-        if name.startswith("dejavu"):
-            require(not atlas["missing"], "DejaVu must cover fallback repertoire")
-    for i in (3, 4, 5):
-        require(all(result[i][key] == result[i - 3][key]
-                    for key in ("height", "ascent", "descent")),
-                "fallback baseline differs")
+        require(set(atlas["missing"]) == {0x2264, 0x2265},
+                f"{name}: only ≤/≥ may use the explicit ASCII fallback")
     return result, repertoire
 
 

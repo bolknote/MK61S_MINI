@@ -185,7 +185,7 @@ static void test_ui_font_layout() {
   for(bool ru : {false, true}) {
     russian = ru;
     for(u8 calculator_rows : {2, 4, 10}) {
-      for(u8 family : {0, 1, 2}) {
+      for(u8 family : {0, 1, 3}) {
         for(u8 size : {12, 14, 16}) {
           const mk61_setup_ui_font font = {family, size};
           assert(uiFontFieldCount(font) == (family == 0 ? 1U : 2U));
@@ -216,10 +216,10 @@ static void test_ui_font_layout() {
             for(usize i = 2; i < calls.size(); ++i) assert(calls[i] == "text");
 
             const char* family_line = ru
-              ? (family == 0 ? "Шрифт UI:моно" :
-                 family == 1 ? "Шрифт UI:DejaVu" : "Шрифт UI:Roboto")
-              : (family == 0 ? "UI font:Mono" :
-                 family == 1 ? "UI font:DejaVu" : "UI font:Roboto");
+              ? (family == 0 ? "Шрифт UI:5x8" :
+                 (family == 3 ? "Шрифт UI:FMK" : "Шрифт UI:Pixel"))
+              : (family == 0 ? "UI font:5x8" :
+                 (family == 3 ? "UI font:FMK" : "UI font:Pixel"));
             char size_line[24];
             snprintf(size_line, sizeof(size_line), ru ? "Размер UI:%u" : "UI size:%u",
                      (unsigned) size);
@@ -255,6 +255,11 @@ static void test_ui_font_layout() {
   assert(stepUiFontSize(12, -1) == 16);
   assert(stepUiFontSize(16, -1) == 14);
   assert(stepUiFontSize(14, -1) == 12);
+  assert(stepUiFontFamily(0, 1) == 1);
+  assert(stepUiFontFamily(1, 1) == 3);
+  assert(stepUiFontFamily(3, 1) == 0);
+  assert(stepUiFontFamily(0, -1) == 3);
+  assert(stepUiFontFamily(3, -1) == 1);
   // Restore the recording surface for independent calculator-profile tests.
   surface = Surface{};
   russian = false;

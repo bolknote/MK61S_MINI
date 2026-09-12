@@ -47,13 +47,17 @@ static u16 current_mk61_entry_id = program_store::INVALID_ID;
 static u16 current_mk61_directory_id = program_store::ROOT_ID;
 
 #if defined(MK61_DISPLAY_UC1609)
+enum class AppliedFontRole : u8 { TEXT, UI };
 static u16 applied_font_id = program_store::INVALID_ID;
+static AppliedFontRole applied_font_role = AppliedFontRole::TEXT;
+static u8 applied_ui_height = 0;
 static bool applied_font_suspended = false;
 #endif
 
 static_assert(shared_scratch::SIZE >= program_store::MAX_IMAGE1_SIZE,
               "shared scratch too small for explorer view");
-static_assert(fmk::MAX_FILE_SIZE == program_store::MAX_FONT_SIZE, "font parser and storage limits must match");
+static_assert(program_store::MAX_FONT_SIZE <= fmk::MAX_FILE_SIZE,
+              "storage must not accept fonts the parser cannot validate");
 
 enum class ItemMenuAction : u8 {
   LOAD,
@@ -279,6 +283,25 @@ static bool entry_by_type_name(program_store::ProgramType type, const char* name
   }
   return false;
 }
+
+#if MK61_PROPORTIONAL_UI_FONTS
+static bool root_entry_by_type_name(program_store::ProgramType type,
+                                    const char* name,
+                                    program_store::Entry& out) {
+  if(name == NULL || name[0] == 0) return false;
+  const int count = program_store::child_count(program_store::ROOT_ID);
+  for(int index = 0; index < count; ++index) {
+    program_store::Entry entry;
+    if(!program_store::child(program_store::ROOT_ID, index, entry)) continue;
+    if(entry.kind == program_store::NodeKind::FILE && entry.type == type &&
+       strncmp(entry.name, name, program_store::NAME_SIZE) == 0) {
+      out = entry;
+      return true;
+    }
+  }
+  return false;
+}
+#endif
 
 static char ascii_upper(char ch) {
   return (ch >= 'a' && ch <= 'z') ? (char) (ch - 'a' + 'A') : ch;
@@ -850,22 +873,89 @@ static void show_graphics_unavailable() {
   show_message("Graphics", "Графика", "unavailable", "недоступна");
 }
 
+#if defined(MK61_DISPLAY_UC1609)
+struct StoredFontSource {
+  u16 id;
+};
+
+static bool read_stored_font(void* context, u8* output, u16 size) {
+  const auto* source = static_cast<const StoredFontSource*>(context);
+  u16 actual = 0;
+  return source != NULL && output != NULL &&
+      program_store::read_id(source->id, output, size, &actual) &&
+      actual == size;
+}
+
+static bool apply_font_entry_once(const program_store::Entry& entry,
+                                  AppliedFontRole role,
+                                  u8 expected_height) {
+  if(entry.kind != program_store::NodeKind::FILE ||
+     entry.type != program_store::ProgramType::FONT ||
+     entry.data_len < fmk::HEADER_SIZE ||
+     entry.data_len > program_store::MAX_FONT_SIZE) return false;
+  StoredFontSource source = {entry.id};
+  const bool replaced_text_font = role == AppliedFontRole::UI &&
+      main_lcd().externalTextFontActive();
+  const bool installed = role == AppliedFontRole::UI
+#if MK61_PROPORTIONAL_UI_FONTS
+      ? main_lcd().installUiFontFromReader(entry.data_len, expected_height,
+                                           read_stored_font, &source)
+#else
+      ? false
+#endif
+      : main_lcd().installFontFromReader(entry.data_len,
+                                         read_stored_font, &source);
+  if(!installed) return false;
+  applied_font_id = entry.id;
+  applied_font_role = role;
+  applied_ui_height = role == AppliedFontRole::UI ? expected_height : 0;
+  applied_font_suspended = false;
+  if(role == AppliedFontRole::TEXT) {
+    library_mk61::set_display_text_profile(main_lcd().textProfile());
+    library_mk61::refresh_menu_text();
+    library_mk61::defer_settings_state_save();
+  } else if(replaced_text_font) {
+    // UI and generic text FMK share BULK. Replacing the latter also replaces
+    // its geometry; do not leave a stale external profile in settings.
+    library_mk61::set_display_text_profile(main_lcd().textProfile());
+    library_mk61::refresh_menu_text();
+    library_mk61::mark_settings_dirty();
+  }
+  return true;
+}
+
+static bool restore_applied_font(u16 id, AppliedFontRole role,
+                                 u8 expected_height) {
+  program_store::Entry old_entry;
+  return id != program_store::INVALID_ID &&
+      program_store::entry_by_id(id, old_entry) &&
+      apply_font_entry_once(old_entry, role, expected_height);
+}
+#endif
+
 static bool apply_font_entry(const program_store::Entry& entry) {
 #if !defined(MK61_DISPLAY_UC1609)
   (void) entry;
   return false;
 #else
-  shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_FONT_SIZE);
-  if(!scratch.ok()) return false;
-  u16 len = 0;
-  if(!read_entry_data(entry, scratch.data(), scratch.size(), len)) return false;
-  if(!main_lcd().installFont(scratch.data(), len)) return false;
-  applied_font_id = entry.id;
-  applied_font_suspended = false;
-  library_mk61::set_display_text_profile(main_lcd().textProfile());
-  library_mk61::refresh_menu_text();
-  library_mk61::defer_settings_state_save();
-  return true;
+  const u16 old_id = applied_font_id;
+  const AppliedFontRole old_role = applied_font_role;
+  const u8 old_height = applied_ui_height;
+  if(apply_font_entry_once(entry, AppliedFontRole::TEXT, 0)) {
+#if MK61_PROPORTIONAL_UI_FONTS
+    if(old_role == AppliedFontRole::UI) {
+      // A single arena cannot retain two FMKs. An explicit Run of a generic
+      // font wins, while the UI moves to its guaranteed resident fallback.
+      (void) library_mk61::set_ui_font(1, old_height);
+      library_mk61::mark_settings_dirty();
+    }
+#endif
+    return true;
+  }
+  if(!main_lcd().externalFontActive()) {
+    (void) restore_applied_font(old_id, old_role, old_height);
+  }
+  return false;
 #endif
 }
 
@@ -901,6 +991,18 @@ static bool view_entry(const program_store::Entry& entry) {
     show_message(en, ru, entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;
+  }
+
+  // The generic explorer preview intentionally lives in the compact SCRATCH
+  // arena. F411 UI packages may be much larger and are previewed safely by
+  // the Fonts settings screen, which streams them into the shared BULK arena.
+  // Report that workflow explicitly instead of misdiagnosing a valid file as
+  // an I/O failure merely because it cannot fit in this modal preview buffer.
+  if(entry.type == program_store::ProgramType::FONT &&
+     entry.data_len > shared_scratch::SIZE) {
+    show_message("Use Fonts menu", "Меню Шрифты", entry.name, entry.name);
+    (void) wait_explorer_key(false);
+    return true;
   }
 
   shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_MK61_TEXT_SIZE);
@@ -2205,6 +2307,36 @@ bool program_store_apply_font(const char* name) {
   return program_store_apply_font(entry);
 }
 
+#if MK61_PROPORTIONAL_UI_FONTS
+static const char* ui_font_entry_name(u8 size) {
+  return size == 12 ? "UI12" : (size == 16 ? "UI16" : "UI14");
+}
+
+bool program_store_apply_ui_font(u8 size) {
+  if(size != 12 && size != 14 && size != 16) return false;
+  program_store::Entry entry;
+  if(!root_entry_by_type_name(program_store::ProgramType::FONT,
+                              ui_font_entry_name(size), entry)) return false;
+  const u16 old_id = applied_font_id;
+  const AppliedFontRole old_role = applied_font_role;
+  const u8 old_height = applied_ui_height;
+  if(apply_font_entry_once(entry, AppliedFontRole::UI, size)) return true;
+  if(!main_lcd().externalFontActive()) {
+    (void) restore_applied_font(old_id, old_role, old_height);
+  }
+  return false;
+}
+
+void program_store_clear_ui_font(void) {
+  if(applied_font_role != AppliedFontRole::UI) return;
+  main_lcd().clearExternalUiFont();
+  applied_font_id = program_store::INVALID_ID;
+  applied_font_role = AppliedFontRole::TEXT;
+  applied_ui_height = 0;
+  applied_font_suspended = false;
+}
+#endif
+
 bool program_store_suspend_font_for_usb(void) {
 #if defined(MK61_DISPLAY_UC1609)
   if(!main_lcd().externalFontActive()) {
@@ -2224,10 +2356,24 @@ void program_store_restore_font_after_usb(void) {
   program_store::Entry entry;
   if(!program_store::entry_by_id(applied_font_id, entry) ||
      entry.type != program_store::ProgramType::FONT ||
-     !apply_font_entry(entry)) {
+     !apply_font_entry_once(entry, applied_font_role, applied_ui_height)) {
+    const AppliedFontRole failed_role = applied_font_role;
+#if MK61_PROPORTIONAL_UI_FONTS
+    const u8 failed_height = applied_ui_height;
+#endif
     applied_font_id = program_store::INVALID_ID;
+    applied_font_role = AppliedFontRole::TEXT;
+    applied_ui_height = 0;
     main_lcd().useBuiltinFont();
-    library_mk61::set_display_text_profile(main_lcd().textProfile());
+    if(failed_role == AppliedFontRole::UI) {
+#if MK61_PROPORTIONAL_UI_FONTS
+      (void) library_mk61::set_ui_font(
+          1, failed_height == 12 || failed_height == 16 ? failed_height : 14);
+      library_mk61::mark_settings_dirty();
+#endif
+    } else {
+      library_mk61::set_display_text_profile(main_lcd().textProfile());
+    }
   }
 #endif
 }

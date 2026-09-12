@@ -1,6 +1,7 @@
 #ifndef DEVELOPMENT_HPP
 #define DEVELOPMENT_HPP
 
+#include "config.h"
 #include "program_store.hpp"
 
 bool development_select(void);
@@ -29,6 +30,12 @@ bool program_store_view_entry(const program_store::Entry& entry);
 bool program_store_view_entry(program_store::ProgramType type, const char* name);
 bool program_store_apply_font(const program_store::Entry& entry);
 bool program_store_apply_font(const char* name);
+#if MK61_PROPORTIONAL_UI_FONTS
+// One replaceable external UI family is made of UI12.FMK, UI14.FMK and
+// UI16.FMK. The selected size is loaded directly from C5 into shared BULK.
+bool program_store_apply_ui_font(u8 size);
+void program_store_clear_ui_font(void);
+#endif
 bool program_store_suspend_font_for_usb(void);
 void program_store_restore_font_after_usb(void);
 

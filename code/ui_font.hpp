@@ -8,7 +8,7 @@
 // MK61_PROPORTIONAL_UI_FONTS=1; official F401 builds set it to zero.
 namespace ui_font {
 
-enum class Family : uint8_t { DEJAVU, ROBOTO };
+enum class Family : uint8_t { PIXEL };
 enum class Size : uint8_t { PX12, PX14, PX16 };
 
 struct Face {
@@ -35,10 +35,10 @@ struct Glyph {
   bool fallback;
 };
 
-// Invalid enum values normalize to DejaVu Sans / 12 pixels.
+// Invalid enum values normalize to Ark Pixel / 12 pixels.
 Metrics metrics(Face face);
-// Includes the matching-size DejaVu fallback for missing Roboto arrows.
-// False means glyph() substitutes '?'.
+// The reviewed repertoire includes ASCII, Russian, UI symbols and explicit
+// ASCII-shaped fallbacks for ≤/≥. False means glyph() substitutes '?'.
 bool supports(Face face, uint32_t codepoint);
 Glyph glyph(Face face, uint32_t codepoint);
 

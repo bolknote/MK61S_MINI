@@ -7,7 +7,11 @@ namespace fmk {
 
 static constexpr usize HEADER_SIZE = 16;
 static constexpr usize RANGE_SIZE = 3;
-static constexpr usize MAX_FILE_SIZE = 1536;
+// FMK1 stores its length in 16 bits, but the current largest resident arena is
+// 8 KiB.  Individual products may impose a smaller storage/runtime limit
+// (notably F401); keeping the parser limit independent lets F411 use that
+// already allocated arena for richer external UI faces.
+static constexpr usize MAX_FILE_SIZE = 8192;
 static constexpr u8 MAX_GLYPH_WIDTH = 16;
 static constexpr u8 MAX_GLYPH_HEIGHT = 32;
 static constexpr usize MAX_BITMAP_SIZE =

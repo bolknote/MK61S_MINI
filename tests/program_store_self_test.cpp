@@ -169,6 +169,52 @@ static void test_chip8_type_roundtrip_and_quota(void) {
   assert(rom.data_len == program_store::MAX_CHIP8_SIZE);
 }
 
+static void test_large_font_roundtrip_on_f411(void) {
+  if(program_store::MAX_FONT_SIZE <= program_store::MAX_IMAGE1_SIZE) return;
+  fresh(512U * 1024U);
+  static u8 source[program_store::MAX_FONT_SIZE];
+  static u8 recovered[program_store::MAX_FONT_SIZE];
+  u32 state = 0x7E57F00DUL;
+  for(u16 index = 0; index < sizeof(source); ++index) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    source[index] = (u8) state;
+  }
+
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::FONT, "UI16", source, sizeof(source), &id));
+  u16 stored_len = 0;
+  bool large = false;
+  bool packed = true;
+  assert(program_store::test_file_storage_info(
+      id, stored_len, large, packed));
+  assert(large && !packed && stored_len == sizeof(source));
+
+  u16 recovered_len = 0;
+  assert(program_store::read_id(
+      id, recovered, sizeof(recovered), &recovered_len));
+  assert(recovered_len == sizeof(source));
+  assert(memcmp(recovered, source, sizeof(source)) == 0);
+
+  program_store::init();
+  assert(program_store::ready());
+  Entry font = {};
+  assert(program_store::entry_by_id(id, font));
+  assert(font.type == ProgramType::FONT);
+  assert(font.data_len == sizeof(source));
+  assert(program_store::read_id(
+      id, recovered, sizeof(recovered), &recovered_len));
+  assert(memcmp(recovered, source, sizeof(source)) == 0);
+
+  assert(!program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::FONT, "TOOBIG", source,
+      (u16) (program_store::MAX_FONT_SIZE + 1U)));
+}
+
 static void test_markdown_type_roundtrip_without_catalog_migration(void) {
   fresh();
   static const u8 source[] =
@@ -2579,6 +2625,7 @@ int main(void) {
   test_roundtrip_ranges_and_noop();
   test_image_type_roundtrip_and_quota();
   test_chip8_type_roundtrip_and_quota();
+  test_large_font_roundtrip_on_f411();
   test_markdown_type_roundtrip_without_catalog_migration();
   test_transparent_small_zx0_records();
   test_compression_policy_and_large_to_small_choice();

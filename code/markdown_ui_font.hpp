@@ -20,13 +20,14 @@ class Source {
     }
 #elif MK61_UI_FONT_CLIENT
     ui_font_service::call(main_lcd().uiFontFamily(), main_lcd().uiFontSize(),
-                         MK61_UI_FONT_INFO, 0, sizeof(info), &info);
+                         MK61_UI_FONT_INFO, 0, sizeof(info), &info,
+                         main_lcd().externalUiFont());
 #endif
     if(!valid()) info = {};
   }
 
   bool enabled() const { return info.family != 0; }
-  uint8_t height() const { return info.size; }
+  uint8_t height() const { return info.height ? info.height : info.size; }
   uint8_t ascent() const { return info.ascent; }
   uint8_t line_gap() const { return info.line_gap; }
 
@@ -41,13 +42,14 @@ class Source {
                                codepoint, sizeof(out), &out) != 0;
 #elif MK61_UI_FONT_CLIENT
     ok = ui_font_service::call(info.family, info.size, MK61_UI_FONT_GLYPH,
-                               codepoint, sizeof(out), &out) != 0;
+                               codepoint, sizeof(out), &out,
+                               main_lcd().externalUiFont()) != 0;
 #else
     (void) codepoint;
 #endif
     // A portable module validates the wire data before indexing its bitmap.
     return ok && out.family == info.family && out.size == info.size &&
-      out.width > 0 && out.width <= 16 && out.height > 0 && out.height <= info.size &&
+      out.width > 0 && out.width <= 16 && out.height > 0 && out.height <= height() &&
       out.bearing_x <= 16 && out.advance <= 32 &&
       out.advance > out.bearing_x + out.width &&
       info.ascent >= out.bearing_y &&
@@ -72,10 +74,12 @@ class Source {
  private:
   mk61_service_ui_font_info info;
   bool valid() const {
-    return (info.family == 1 || info.family == 2) &&
+    const uint8_t line_height = info.height ? info.height : info.size;
+    return (info.family == 1 || info.family == 2 || info.family == 3) &&
       (info.size == 12 || info.size == 14 || info.size == 16) &&
-      info.ascent + info.descent == info.size && info.ascent > 0 &&
-      info.line_gap == (info.size == 12 ? 1 : 2);
+      line_height >= info.size && line_height <= 17 &&
+      info.ascent + info.descent == line_height && info.ascent > 0 &&
+      info.line_gap <= 4;
   }
 };
 

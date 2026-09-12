@@ -25,10 +25,10 @@ struct FaceData {
 #include "ui_font_data.inc"
 
 unsigned faceIndex(Face face) {
-  const unsigned family = face.family == Family::ROBOTO ? 3U : 0U;
+  (void) face.family;
   const unsigned size = face.size == Size::PX16 ? 2U
                       : face.size == Size::PX14 ? 1U : 0U;
-  return family + size;
+  return size;
 }
 
 int glyphIndex(uint32_t codepoint) {
@@ -54,17 +54,19 @@ Metrics metrics(Face face) {
 }
 
 bool supports(Face, uint32_t codepoint) {
-  // DejaVu covers the entire common repertoire and backs Roboto's omissions.
   return glyphIndex(codepoint) >= 0;
 }
 
 Glyph glyph(Face face, uint32_t codepoint) {
-  unsigned selected = faceIndex(face);
+  const unsigned selected = faceIndex(face);
   int index = glyphIndex(codepoint);
   bool fallback = index < 0;
   if (index < 0) index = '?' - ' ';
   if (FACES[selected].records[index].offset == MISSING_OFFSET) {
-    selected -= 3U; // matching-size DejaVu; baseline and line height coincide
+    // Ark deliberately omits ≤/≥. Preserve their direction with the matching
+    // ASCII comparison sign instead of carrying a second font for two glyphs.
+    index = codepoint == 0x2264U ? '<' - ' '
+          : codepoint == 0x2265U ? '>' - ' ' : '?' - ' ';
     fallback = true;
   }
   const GlyphRecord& record = FACES[selected].records[index];

@@ -10,7 +10,14 @@ namespace program_store {
 static constexpr usize NAME_SIZE = 32;
 // Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
+// F401 keeps the established compact limit. F411 already owns an 8 KiB
+// exclusive BULK arena, so a resident FMK may use it without adding RAM.
+#if defined(STM32F401xC) || defined(STM32F401xE) || \
+    defined(ARDUINO_BLACKPILL_F401CC)
 static constexpr u16 MAX_FONT_SIZE = 1536;
+#else
+static constexpr u16 MAX_FONT_SIZE = 8192;
+#endif
 // 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
 // гарантированно помещаются в минимальный 2-КиБ FAT-кластер C5.
 static constexpr u16 MAX_IMAGE1_SIZE = 1600;

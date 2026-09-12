@@ -66,6 +66,21 @@ struct RasterError : std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+enum class InputEncoding { UNICODE, CP1251 };
+
+constexpr std::uint32_t NO_CHARCODE = 0xffffffffU;
+
+std::uint32_t input_charcode(std::uint32_t codepoint, InputEncoding encoding) {
+  if (encoding == InputEncoding::UNICODE) return codepoint;
+  if (codepoint >= 0x20U && codepoint <= 0x7eU) return codepoint;
+  if (codepoint >= 0x410U && codepoint <= 0x44fU) return codepoint - 0x410U + 0xc0U;
+  if (codepoint == 0xb0U) return 0xb0U;
+  // RAWIN Crox declares duplicate 0xa8/0xb8 encodings for unrelated Latin
+  // glyphs and contains no dedicated Ё/ё bitmaps. Treat them as missing so a
+  // deliberate fallback can supply them instead of silently drawing garbage.
+  return NO_CHARCODE;
+}
+
 std::vector<std::uint32_t> requested_characters() {
   std::vector<std::uint32_t> characters;
   for (std::uint32_t cp = 0x20; cp <= 0x7e; ++cp) characters.push_back(cp);
@@ -87,15 +102,51 @@ int round_26_6(FT_Pos value) {
   return static_cast<int>((value + 32) / 64);
 }
 
-Atlas rasterize(FT_Face face, int ppem, const std::vector<std::uint32_t>& characters,
-                bool capture_rows = true) {
-  if (FT_Set_Pixel_Sizes(face, 0, static_cast<FT_UInt>(ppem)) != 0) {
-    throw RasterError("cannot select native pixel size " + std::to_string(ppem));
+void trim_empty_bitmap_border(Glyph& glyph) {
+  int left = glyph.width;
+  int right = -1;
+  int top = glyph.height;
+  int bottom = -1;
+  for (int y = 0; y < glyph.height; ++y) {
+    for (int x = 0; x < glyph.width; ++x) {
+      if (glyph.rows[static_cast<std::size_t>(y)][static_cast<std::size_t>(x)] != '1') continue;
+      left = std::min(left, x);
+      right = std::max(right, x);
+      top = std::min(top, y);
+      bottom = std::max(bottom, y);
+    }
   }
+  if (right < left || bottom < top) {
+    // Keep a single zero bit so firmware records never need a special empty
+    // bitmap representation. The source advance remains authoritative.
+    glyph.width = glyph.height = 1;
+    glyph.bearing_x = 0;
+    glyph.bearing_y = 1;
+    glyph.rows.assign(1, "0");
+    return;
+  }
+  std::vector<std::string> cropped;
+  cropped.reserve(static_cast<std::size_t>(bottom - top + 1));
+  for (int y = top; y <= bottom; ++y) {
+    cropped.push_back(glyph.rows[static_cast<std::size_t>(y)].substr(
+        static_cast<std::size_t>(left), static_cast<std::size_t>(right - left + 1)));
+  }
+  glyph.bearing_x += left;
+  glyph.bearing_y -= top;
+  glyph.width = right - left + 1;
+  glyph.height = bottom - top + 1;
+  glyph.rows = std::move(cropped);
+}
+
+Atlas rasterize_selected(FT_Face face, int ppem,
+                         const std::vector<std::uint32_t>& characters,
+                         InputEncoding encoding, bool trim_bitmap,
+                         bool capture_rows = true) {
   Atlas atlas;
   atlas.ppem = ppem;
   for (const std::uint32_t cp : characters) {
-    const FT_UInt index = FT_Get_Char_Index(face, cp);
+    const std::uint32_t charcode = input_charcode(cp, encoding);
+    const FT_UInt index = charcode == NO_CHARCODE ? 0 : FT_Get_Char_Index(face, charcode);
     if (index == 0) {
       atlas.missing.push_back(cp);
       continue;
@@ -118,24 +169,13 @@ Atlas rasterize(FT_Face face, int ppem, const std::vector<std::uint32_t>& charac
     glyph.bearing_x = slot->bitmap_left;
     glyph.bearing_y = slot->bitmap_top;
     glyph.native_advance = round_26_6(slot->advance.x);
-    // Shift a negative left overhang inside its own pen interval. Preserve a
-    // positive left bearing. The safe interval ends with one blank column;
-    // therefore any pair of glyphs remains separated without kerning state.
-    const int shift = std::max(0, -glyph.bearing_x);
-    glyph.safe_bearing_x = glyph.bearing_x + shift;
-    glyph.advance = std::max(1, glyph.native_advance + shift);
-    if (glyph.width != 0 && glyph.height != 0) {
-      glyph.advance = std::max(glyph.advance, glyph.safe_bearing_x + glyph.width + 1);
-      atlas.ascent = std::max(atlas.ascent, glyph.bearing_y);
-      atlas.descent = std::max(atlas.descent, glyph.height - glyph.bearing_y);
-    }
     const auto pitch = static_cast<std::ptrdiff_t>(bitmap.pitch);
     const std::size_t stride = static_cast<std::size_t>(pitch < 0 ? -pitch : pitch);
     if (stride < (static_cast<std::size_t>(glyph.width) + 7U) / 8U ||
         (glyph.width != 0 && glyph.height != 0 && bitmap.buffer == nullptr)) {
       throw std::runtime_error("invalid monochrome bitmap storage");
     }
-    for (int y = 0; capture_rows && y < glyph.height; ++y) {
+    for (int y = 0; (capture_rows || trim_bitmap) && y < glyph.height; ++y) {
       std::string row(static_cast<std::size_t>(glyph.width), '0');
       // FreeType pitch is the signed offset for stepping DOWN one row, even
       // for an upward-flow bitmap whose first row lives at a higher address.
@@ -148,9 +188,42 @@ Atlas rasterize(FT_Face face, int ppem, const std::vector<std::uint32_t>& charac
       }
       glyph.rows.push_back(std::move(row));
     }
+    if (trim_bitmap) trim_empty_bitmap_border(glyph);
+    if (!capture_rows) glyph.rows.clear();
+    // Shift a negative left overhang inside its own pen interval. Preserve a
+    // positive left bearing. Do this after optional cropping: bearings and
+    // the envelope must describe visible pixels, not a BDF-wide padded box.
+    const int shift = std::max(0, -glyph.bearing_x);
+    glyph.safe_bearing_x = glyph.bearing_x + shift;
+    glyph.advance = std::max(1, glyph.native_advance + shift);
+    if (glyph.width != 0 && glyph.height != 0) {
+      glyph.advance = std::max(glyph.advance, glyph.safe_bearing_x + glyph.width + 1);
+      atlas.ascent = std::max(atlas.ascent, glyph.bearing_y);
+      atlas.descent = std::max(atlas.descent, glyph.height - glyph.bearing_y);
+    }
     atlas.glyphs.push_back(std::move(glyph));
   }
   return atlas;
+}
+
+Atlas rasterize_scalable(FT_Face face, int ppem,
+                         const std::vector<std::uint32_t>& characters,
+                         InputEncoding encoding, bool capture_rows = true) {
+  if (FT_Set_Pixel_Sizes(face, 0, static_cast<FT_UInt>(ppem)) != 0) {
+    throw RasterError("cannot select native pixel size " + std::to_string(ppem));
+  }
+  return rasterize_selected(face, ppem, characters, encoding, false, capture_rows);
+}
+
+Atlas rasterize_strike(FT_Face face, int strike,
+                       const std::vector<std::uint32_t>& characters,
+                       InputEncoding encoding, bool capture_rows = true) {
+  if (strike < 0 || strike >= face->num_fixed_sizes || FT_Select_Size(face, strike) != 0) {
+    throw RasterError("cannot select bitmap strike " + std::to_string(strike));
+  }
+  const FT_Pos y_ppem = face->available_sizes[strike].y_ppem;
+  const int ppem = y_ppem > 0 ? round_26_6(y_ppem) : face->available_sizes[strike].height;
+  return rasterize_selected(face, ppem, characters, encoding, true, capture_rows);
 }
 
 #ifdef FONT_PREVIEW_BUILTIN
@@ -284,9 +357,12 @@ void write_json(const char* path, const std::string& family, const std::string& 
 int main(int argc, char** argv) {
   try {
     if (argc == 2 && std::string(argv[1]) == "--help") {
-      std::cout << "usage: font_preview INPUT.ttf OUTPUT.json --height N\n"
+      std::cout << "usage: font_preview INPUT OUTPUT.json --height N"
+                   " [--encoding unicode|cp1251]\n"
                    "       font_preview --builtin OUTPUT.json (FONT_PREVIEW_BUILTIN build)\n"
-                   "N is the full glyph envelope (7..20 pixels), not point size.\n";
+                   "INPUT may be scalable or a native bitmap font. N is the full\n"
+                   "glyph envelope (7..20 pixels), not point size. Bitmap strikes\n"
+                   "are never scaled; empty BDF padding is cropped.\n";
       return 0;
     }
 #ifdef FONT_PREVIEW_BUILTIN
@@ -300,8 +376,10 @@ int main(int argc, char** argv) {
       return 0;
     }
 #endif
-    if (argc != 5 || std::string(argv[3]) != "--height") {
-      throw std::runtime_error("usage: font_preview INPUT.ttf OUTPUT.json --height N");
+    if ((argc != 5 && argc != 7) || std::string(argv[3]) != "--height" ||
+        (argc == 7 && std::string(argv[5]) != "--encoding")) {
+      throw std::runtime_error(
+          "usage: font_preview INPUT OUTPUT.json --height N [--encoding unicode|cp1251]");
     }
     std::size_t parsed = 0;
     const std::string height_text = argv[4];
@@ -309,37 +387,67 @@ int main(int argc, char** argv) {
     if (parsed != height_text.size() || target_height < 7 || target_height > 20) {
       throw std::runtime_error("height must be an integer from 7 through 20");
     }
+    InputEncoding encoding = InputEncoding::UNICODE;
+    if (argc == 7) {
+      const std::string value = argv[6];
+      if (value == "cp1251") encoding = InputEncoding::CP1251;
+      else if (value != "unicode") throw std::runtime_error("encoding must be unicode or cp1251");
+    }
     Library library;
     Face font(library.value, argv[1]);
-    if (!FT_IS_SCALABLE(font.value)) throw std::runtime_error("a scalable font is required");
-    if (FT_Select_Charmap(font.value, FT_ENCODING_UNICODE) != 0) {
-      throw std::runtime_error("font has no Unicode character map");
+    if (encoding == InputEncoding::UNICODE) {
+      if (FT_Select_Charmap(font.value, FT_ENCODING_UNICODE) != 0) {
+        throw std::runtime_error("font has no Unicode character map");
+      }
+    } else if (font.value->charmap == nullptr && font.value->num_charmaps > 0 &&
+               FT_Set_Charmap(font.value, font.value->charmaps[0]) != 0) {
+      throw std::runtime_error("cannot select raw CP1251 character map");
     }
     const auto characters = requested_characters();
     Atlas best;
     std::vector<int> rejected_ppem;
-    // Enumerate integer sizes because hinted ink heights need not grow by one
-    // every ppem. A deliberately generous bound is checked, never accepted as
-    // an artificial maximum for an unusual face with very small glyphs.
-    const int search_limit = target_height * 16;
-    for (int ppem = 1; ppem <= search_limit; ++ppem) {
-      try {
-        Atlas candidate = rasterize(font.value, ppem, characters, false);
-        const int ink_height = candidate.ascent + candidate.descent;
-        if (ink_height > 0 && ink_height <= target_height) best = std::move(candidate);
-      } catch (const RasterError& error) {
-        rejected_ppem.push_back(ppem);
-        std::cerr << "skipping unsupported size: " << error.what() << '\n';
+    int best_strike = -1;
+    std::string rasterizer;
+    if (FT_IS_SCALABLE(font.value)) {
+      // Enumerate integer sizes because hinted ink heights need not grow by one
+      // every ppem. A deliberately generous bound is checked, never accepted as
+      // an artificial maximum for an unusual face with very small glyphs.
+      const int search_limit = target_height * 16;
+      for (int ppem = 1; ppem <= search_limit; ++ppem) {
+        try {
+          Atlas candidate = rasterize_scalable(font.value, ppem, characters, encoding, false);
+          const int ink_height = candidate.ascent + candidate.descent;
+          if (ink_height > 0 && ink_height <= target_height) best = std::move(candidate);
+        } catch (const RasterError& error) {
+          rejected_ppem.push_back(ppem);
+          std::cerr << "skipping unsupported size: " << error.what() << '\n';
+        }
       }
+      if (best.ppem == 0) throw std::runtime_error("no native integer size fits requested height");
+      if (best.ppem == search_limit) throw std::runtime_error("font exceeds bounded size search");
+      best = rasterize_scalable(font.value, best.ppem, characters, encoding);
+      rasterizer = "FreeType native FT_LOAD_TARGET_MONO";
+    } else {
+      for (int strike = 0; strike < font.value->num_fixed_sizes; ++strike) {
+        Atlas candidate = rasterize_strike(font.value, strike, characters, encoding, false);
+        const int ink_height = candidate.ascent + candidate.descent;
+        if (ink_height > 0 && ink_height <= target_height &&
+            (best_strike < 0 || ink_height > best.ascent + best.descent)) {
+          best = std::move(candidate);
+          best_strike = strike;
+        }
+      }
+      if (best_strike < 0) {
+        throw std::runtime_error("no unscaled bitmap strike fits requested height");
+      }
+      best = rasterize_strike(font.value, best_strike, characters, encoding);
+      rasterizer = "FreeType native bitmap strike; empty border cropped";
     }
-    if (best.ppem == 0) throw std::runtime_error("no native integer size fits requested height");
-    if (best.ppem == search_limit) throw std::runtime_error("font exceeds bounded size search");
-    best = rasterize(font.value, best.ppem, characters);
     best.rejected_ppem = std::move(rejected_ppem);
     validate(best, target_height);
     write_json(argv[2], font.value->family_name == nullptr ? "" : font.value->family_name,
                font.value->style_name == nullptr ? "" : font.value->style_name,
-               "FreeType native FT_LOAD_TARGET_MONO", best, target_height);
+               rasterizer, best, target_height);
     std::cout << "ppem=" << best.ppem << " ink=" << best.ascent << '+' << best.descent
               << " glyphs=" << best.glyphs.size() << " missing=" << best.missing.size()
               << " spacing=verified\n";

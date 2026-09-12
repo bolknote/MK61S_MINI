@@ -10,6 +10,45 @@ uint8_t size = 12;
 bool capability = true;
 bool corrupt = false;
 unsigned glyph_calls = 0;
+const fmk::Face* external_face = nullptr;
+
+void put_msb_bit(uint8_t* bytes, size_t& bit, bool value) {
+  if(value) bytes[bit / 8U] |= (uint8_t) (0x80U >> (bit & 7U));
+  ++bit;
+}
+
+void make_external_ui_font(uint8_t (&font)[41]) {
+  std::memset(font, 0, sizeof(font));
+  std::memcpy(font, "FMK1", 4);
+  font[4] = fmk::FLAG_MONOSPACED;
+  font[5] = 3;
+  font[6] = 12;
+  font[7] = 0x31;
+  font[8] = 4;
+  font[10] = 2;
+  font[12] = (uint8_t) sizeof(font);
+  font[16] = ' ';
+  font[19] = '?';
+  font[21] = 2;
+  size_t bit = 22U * 8U;
+  for(uint8_t glyph = 0; glyph < 4; ++glyph) {
+    put_msb_bit(font, bit, false);
+    for(uint8_t y = 0; y < 12; ++y) {
+      for(uint8_t x = 0; x < 3; ++x) {
+        const bool pixel = glyph == 0 ? false :
+            (glyph == 1 ? (y == 0 || (x == 2 && y < 4) ||
+                           (x == 1 && (y == 4 || y == 7))) :
+             glyph == 2 ? (y == 0 || y == 6 || x == 0 || x == 2) :
+             ((x == 1 && y == 0) ||
+              ((x == 0 || x == 2) && y > 0) || y == 5));
+        put_msb_bit(font, bit, pixel);
+      }
+    }
+  }
+  const uint16_t crc = fmk::checksum(font, sizeof(font));
+  font[14] = (uint8_t) crc;
+  font[15] = (uint8_t) (crc >> 8);
+}
 }
 
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
@@ -21,7 +60,8 @@ uint32_t call(uint32_t op, uint32_t a = 0, uint32_t b = 0,
   if(op == MK61_SERVICE_CAPABILITIES) return capability ? MK61_SERVICE_CAP_UI_FONT : 0;
   assert(op == MK61_SERVICE_UI_FONT);
   if(a == MK61_UI_FONT_GLYPH) ++glyph_calls;
-  const uint32_t result = ui_font_service::call(family, size, a, b, c, payload);
+  const uint32_t result = ui_font_service::call(
+      family, size, a, b, c, payload, external_face);
   if(corrupt && result && a == MK61_UI_FONT_GLYPH) {
     static_cast<mk61_service_ui_glyph*>(payload)->height = 255;
   }
@@ -33,6 +73,7 @@ class MockDisplay {
  public:
   uint8_t uiFontFamily() const { return family; }
   uint8_t uiFontSize() const { return size; }
+  const fmk::Face* externalUiFont() const { return external_face; }
 };
 MockDisplay& main_lcd() { static MockDisplay display; return display; }
 #endif
@@ -47,7 +88,8 @@ int main() {
       family = f;
       size = s;
       const markdown_ui_font::Source source;
-      assert(source.enabled() && source.height() == s &&
+      const uint8_t expected_height = s == 16 ? 17 : s;
+      assert(source.enabled() && source.height() == expected_height &&
              source.line_gap() == (s == 12 ? 1 : 2));
       for(unsigned cp = 0; cp <= 0xFFFF; cp++) {
         if(!ui_font::supports(ui_font_service::face(f, s), cp)) continue;
@@ -82,6 +124,25 @@ int main() {
       assert(snapshot.family == f && snapshot.size == s);
     }
   }
+
+  uint8_t external_bytes[41];
+  make_external_ui_font(external_bytes);
+  fmk::Face external;
+  assert(external.open(external_bytes, sizeof(external_bytes)));
+  external_face = &external;
+  family = 3;
+  size = 12;
+  const markdown_ui_font::Source external_source;
+  assert(external_source.enabled() && external_source.height() == 12 &&
+         external_source.ascent() == 12 && external_source.line_gap() == 1);
+  mk61_service_ui_glyph external_glyph = {};
+  assert(external_source.glyph('A', external_glyph));
+  assert(external_glyph.family == 3 && external_glyph.size == 12 &&
+         external_glyph.width == 3 && external_glyph.height == 12 &&
+         external_glyph.advance == 4 && !external_glyph.fallback);
+  assert(external_source.glyph(0x2603, external_glyph) &&
+         external_glyph.fallback);
+  external_face = nullptr;
   family = 0;
   const markdown_ui_font::Source disabled;
   assert(!disabled.enabled());

@@ -1206,6 +1206,63 @@ static void test_chip8_over_quota_is_rejected(void) {
   expect_rejected_pending_recovered();
 }
 
+static void test_f411_large_font_import_is_streamed(void) {
+  if(program_store::MAX_FONT_SIZE <= program_store::MAX_IMAGE1_SIZE) return;
+  fresh();
+  virtual_fat::end_session();
+  alignas(4) static u8 display_cache[8192];
+  assert(virtual_fat::set_external_cache(display_cache,
+                                         sizeof(display_cache)));
+  assert(virtual_fat::reset_session());
+  const Layout fs = layout();
+  const u16 first_cluster = 225;
+  const u32 size = program_store::MAX_FONT_SIZE;
+  const u32 cluster_size =
+      (u32) fs.sectors_per_cluster * virtual_fat::SECTOR_SIZE;
+  const u8 cluster_count = (u8) ((size + cluster_size - 1U) / cluster_size);
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  for(u8 index = 0; index < cluster_count; ++index) {
+    set_fat12_value(
+        fat, (u16) (first_cluster + index),
+        index + 1U < cluster_count
+            ? (u16) (first_cluster + index + 1U) : 0xFFF);
+  }
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'U','I','1','6',' ',' ',' ',' ','F','M','K'};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "UI16.FMK", short_name, false,
+      first_cluster, size);
+  root[slot * 32] = 0;
+
+  std::vector<u8> expected(size);
+  u32 state = 0x1602F411UL;
+  for(u32 offset = 0; offset < size; ++offset) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    expected[offset] = (u8) state;
+  }
+  assert(virtual_fat::write_cached_sectors(
+      cluster_lba(fs, first_cluster), expected.data(),
+      (u16) (expected.size() / virtual_fat::SECTOR_SIZE)));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  expect_flush();
+
+  const u16 id = (u16) (first_cluster - 2U);
+  program_store::Entry font = {};
+  assert(program_store::entry_by_id(id, font));
+  assert(font.type == program_store::ProgramType::FONT);
+  assert(strcmp(font.name, "UI16") == 0);
+  assert(font.data_len == size);
+  expect_large_file(id, expected);
+}
+
 static void expect_large_file(u16 id, const std::vector<u8>& expected) {
   std::vector<u8> actual(expected.size());
   u16 length = 0;
@@ -1687,6 +1744,7 @@ int main(void) {
   test_wbmp_short_name_alias();
   test_chip8_import_uses_full_quota_and_large_zx0();
   test_chip8_over_quota_is_rejected();
+  test_f411_large_font_import_is_streamed();
   test_app_import_is_streamed_across_fat_chain();
 #if MK61_ANY_LOADABLE_MODULE
   test_invalid_app_preflight_preserves_existing_tree();

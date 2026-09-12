@@ -37,3 +37,29 @@ for backend in software stm32; do
 
   "$out-$backend"
 done
+
+# The normal matrix above intentionally models the 64 KiB F401 product.  One
+# additional native build exercises F411's 8 KiB FMK quota and its multi-sector
+# C5 representation; otherwise a parser-only size increase could pass CI while
+# USB imports of a real large font still fail on hardware.
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" \
+  -include "$root/tests/program_store_shim/program_store_test_shim.h" \
+  -I"$root/tests/program_store_shim" \
+  -I"$root/code" \
+  "$root/tests/program_store_self_test.cpp" \
+  "$root/code/explorer_autoexec.cpp" \
+  "$root/code/loadable_module_system_app.cpp" \
+  "$root/code/loadable_module_format.cpp" \
+  "$root/code/program_store.cpp" \
+  "$root/code/shared_memory.cpp" \
+  "$root/code/storage_geometry.cpp" \
+  "$root/code/storage_path.cpp" \
+  "$root/code/shared_scratch.cpp" \
+  "$root/code/exclusive_buffer.cpp" \
+  "$root/code/workspace_swap.cpp" \
+  "$root/code/zx0.cpp" \
+  "$root/code/zx0_encode.cpp" \
+  -o "$out-f411-font"
+
+"$out-f411-font"

@@ -325,7 +325,7 @@ lcd_display::TextProfile display_text_profile(void) {
 void set_display_text_profile(lcd_display::TextProfile profile) {
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 #if defined(MK61_DISPLAY_UC1609)
-  display_text_profile_state = main_lcd().externalFontActive()
+  display_text_profile_state = main_lcd().externalTextFontActive()
     ? profile
     : lcd_display::normalizeSettingsTextProfile(profile);
 #else
@@ -598,7 +598,12 @@ void  load_settings_state(void) {
   set_sound_volume(sound_settings.bits.volume);
 #if MK61_PROPORTIONAL_UI_FONTS
   const UiFontSettings ui_font = read_ui_font_settings();
-  set_ui_font(ui_font.family(), ui_font.size());
+  if(!set_ui_font(ui_font.family(), ui_font.size())) {
+    // A missing/corrupt external family must never strand the settings UI.
+    // Keep the same requested size and fall back to the resident Pixel face.
+    (void) set_ui_font(1, ui_font.size());
+    mark_settings_dirty();
+  }
 #endif
 #if defined(MK61_OLED1602_WS0010)
   set_oled_timeout(read_oled_settings().timeout());
@@ -622,13 +627,21 @@ u8 ui_font_size(void) {
 #endif
 }
 
-void set_ui_font(u8 family, u8 size) {
+bool set_ui_font(u8 family, u8 size) {
 #if MK61_PROPORTIONAL_UI_FONTS
-  ui_font_state = make_ui_font_settings(family, size);
-  main_lcd().setUiFont(ui_font_state.family(), ui_font_state.size());
+  const UiFontSettings next = make_ui_font_settings(family, size);
+  if(next.family() == 3) {
+    if(!program_store_apply_ui_font(next.size())) return false;
+  } else {
+    program_store_clear_ui_font();
+  }
+  ui_font_state = next;
+  main_lcd().setUiFont(next.family(), next.size());
+  return true;
 #else
   (void) family;
   (void) size;
+  return false;
 #endif
 }
 

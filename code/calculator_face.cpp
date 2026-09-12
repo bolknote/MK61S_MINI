@@ -69,31 +69,35 @@ u8 segments(u16 token) {
 }
 
 void horizontal(PageCanvas& canvas, i16 x, i16 y) {
-  // Bevelled three-pixel stroke: close to a VFD segment, but still crisp on
-  // the native 192x64 monochrome matrix.
+  // The ИВ-2 drawings show a long narrow segment with chamfered ends.  Three
+  // raster rows retain that silhouette on UC1609 without turning it into a
+  // heavy rounded UI glyph.
   canvas.hline(x + 2, y - 1, 6);
   canvas.hline(x + 1, y, 8);
   canvas.hline(x + 2, y + 1, 6);
 }
 
-void vertical(PageCanvas& canvas, i16 x, i16 y) {
-  // The original indicator has straight, symmetric vertical strokes.  Keep
-  // the three-pixel body on one axis and bevel only its two end caps; shifting
-  // the lower half makes every digit look broken rather than VFD-like.
-  canvas.pixel(x + 1, y);
-  for(i16 row = 1; row < 12; ++row) canvas.hline(x, y + row, 3);
-  canvas.pixel(x + 1, y + 12);
+void vertical(PageCanvas& canvas, i16 x, i16 y, bool right) {
+  // A real vertical segment is about one sixth of the digit width.  Keep its
+  // two-pixel body perfectly straight; only the one-pixel caps point inward.
+  // Mirroring those caps avoids the false downward lean of the first draft.
+  const i16 cap_x = x + (right ? 0 : 1);
+  canvas.pixel(cap_x, y);
+  for(i16 row = 1; row < 10; ++row) canvas.hline(x, y + row, 2);
+  canvas.pixel(cap_x, y + 10);
 }
 
 void drawSegments(PageCanvas& canvas, i16 x, u8 mask) {
-  static constexpr i16 TOP = 18;
+  // 11x35 pixels is much closer to the photographed ИВ-2 proportions than
+  // the former 11x39 face while retaining twelve fixed positions on 192 px.
+  static constexpr i16 TOP = 19;
   if(mask & SEG_A) horizontal(canvas, x, TOP);
-  if(mask & SEG_G) horizontal(canvas, x, TOP + 18);
-  if(mask & SEG_D) horizontal(canvas, x, TOP + 36);
-  if(mask & SEG_F) vertical(canvas, x, TOP + 3);
-  if(mask & SEG_B) vertical(canvas, x + 7, TOP + 3);
-  if(mask & SEG_E) vertical(canvas, x, TOP + 21);
-  if(mask & SEG_C) vertical(canvas, x + 7, TOP + 21);
+  if(mask & SEG_G) horizontal(canvas, x, TOP + 16);
+  if(mask & SEG_D) horizontal(canvas, x, TOP + 32);
+  if(mask & SEG_F) vertical(canvas, x, TOP + 3, false);
+  if(mask & SEG_B) vertical(canvas, x + 9, TOP + 3, true);
+  if(mask & SEG_E) vertical(canvas, x, TOP + 19, false);
+  if(mask & SEG_C) vertical(canvas, x + 9, TOP + 19, true);
 }
 
 void drawArrow(PageCanvas& canvas, i16 x) {
@@ -113,10 +117,10 @@ void drawDigit(PageCanvas& canvas, i16 x, u16 token, bool dot) {
   if(dot) {
     // A VFD decimal point belongs to the digit on its left.  It never takes a
     // thirteenth text cell and therefore cannot move the exponent.
-    canvas.pixel(x + 11, 55);
-    canvas.pixel(x + 12, 55);
-    canvas.pixel(x + 11, 56);
-    canvas.pixel(x + 12, 56);
+    canvas.pixel(x + 11, 51);
+    canvas.pixel(x + 12, 51);
+    canvas.pixel(x + 11, 52);
+    canvas.pixel(x + 12, 52);
   }
 }
 
@@ -182,8 +186,8 @@ void render(PageCanvas& canvas, const text_screen::Grid& grid) {
               (indicator.dots & ((u16) 1U << slot)) != 0);
   }
   if(indicator.leading_dot) {
-    canvas.pixel(2, 55); canvas.pixel(3, 55);
-    canvas.pixel(2, 56); canvas.pixel(3, 56);
+    canvas.pixel(2, 51); canvas.pixel(3, 51);
+    canvas.pixel(2, 52); canvas.pixel(3, 52);
   }
 }
 

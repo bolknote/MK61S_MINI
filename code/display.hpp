@@ -196,7 +196,7 @@ class MK61Display : public Print {
     void setTextProfile(lcd_display::TextProfile profile);
     lcd_display::TextProfile textProfile(void) const;
 #if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
-    // Family 0 is the fixed 5x8 UI; families 1/2 are proportional.
+    // Family 0 is the fixed 5x8 UI; family 1 is native Ark Pixel.
     void setUiFont(u8 family, u8 size);
     u8 uiFontFamily(void) const { return ui_font_state & 3U; }
     u8 uiFontSize(void) const {
@@ -210,7 +210,7 @@ class MK61Display : public Print {
     void beginUiText(void);
     void endUiText(void);
     ui_font::Face uiFontFace(void) const {
-      return {uiFontFamily() == 2 ? ui_font::Family::ROBOTO : ui_font::Family::DEJAVU,
+      return {ui_font::Family::PIXEL,
               uiFontSize() == 16 ? ui_font::Size::PX16
                   : uiFontSize() == 14 ? ui_font::Size::PX14 : ui_font::Size::PX12};
     }
@@ -280,11 +280,21 @@ class MK61Display : public Print {
                              u8 clear_border);
     void hideTopRightOverlay(void);
     void writeCodepoint(u16 codepoint);
+    using FontReader = bool (*)(void* context, u8* output, u16 size);
     bool installFont(const u8* data, u16 size);
+    bool installFontFromReader(u16 size, FontReader reader, void* context);
+#if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
+    bool installUiFont(const u8* data, u16 size, u8 expected_height);
+    bool installUiFontFromReader(u16 size, u8 expected_height,
+                                 FontReader reader, void* context);
+    void clearExternalUiFont(void);
+    const fmk::Face* externalUiFont(void) const;
+#endif
     bool setFontPreview(const u8* data, u16 size);
     void clearFontPreview(void);
     void useBuiltinFont(void);
     bool externalFontActive(void) const;
+    bool externalTextFontActive(void) const;
     bool suspendExternalFontForUsb(void);
     // Modal-пара подавляет фоновые flush во время просмотра WBMP.
     // Сам showFullscreenBitmap остаётся пригоден для одноразового DFU-сплеша.
@@ -496,7 +506,12 @@ class MK61Display : public Print {
       READY,
       SUSPENDED
     };
+    enum class ActiveFontRole : u8 {
+      TEXT,
+      UI
+    };
     ActiveFontState active_font_state;
+    ActiveFontRole active_font_role;
     bool initialized;
 #if MK61_ANY_FULLSCREEN_FILE
     bool fullscreen_bitmap_active;
@@ -554,6 +569,9 @@ class MK61Display : public Print {
     void renderPageRun(u8 page, u8 first_col, u8 count);
     void applyTextProfile(lcd_display::TextProfile profile, bool exact_geometry = false);
     lcd_display::TextProfile recommendedProfile(const fmk::Metrics& metrics) const;
+    bool installFontFromReaderImpl(u16 size, u8 expected_height,
+                                   FontReader reader, void* context,
+                                   ActiveFontRole role);
     const fmk::Face* selectedFont(void) const;
     builtin_font::FaceId fallbackFont(void) const;
     bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;

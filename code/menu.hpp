@@ -75,7 +75,7 @@ namespace library_mk61 {
   extern  lcd_display::TextProfile display_text_profile(void);
   extern  u8    ui_font_family(void);
   extern  u8    ui_font_size(void);
-  extern  void  set_ui_font(u8 family, u8 size);
+  extern  bool  set_ui_font(u8 family, u8 size);
   extern  ProgramMemoryMode program_memory_mode(void);
   extern  RandomMode random_mode(void);
   extern  bool  random_mode_is_mk61s(void);

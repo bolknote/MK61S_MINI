@@ -104,11 +104,11 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       if(!payload) return 0;
       {
         const auto& in = *(const mk61_setup_ui_font*) payload;
-        if(in.family > 2 ||
+        if(in.family > 3 ||
            (in.size != 12 && in.size != 14 && in.size != 16)) return 0;
         if(library_mk61::ui_font_family() == in.family &&
            library_mk61::ui_font_size() == in.size) return 1;
-        library_mk61::set_ui_font(in.family, in.size);
+        if(!library_mk61::set_ui_font(in.family, in.size)) return 0;
         library_mk61::mark_settings_dirty();
       }
       return 1;

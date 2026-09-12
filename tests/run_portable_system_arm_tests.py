@@ -74,16 +74,17 @@ def preview_font():
 
 def ui_font_oracle(family, size, text):
     """Reference first paragraph using the reviewed native source pixels."""
+    del family  # wire family 2 remains a compatibility alias for Pixel
     font_dir = ROOT / 'tools/.fmk-font/ui-atlases'
-    name = 'roboto' if family == 2 else 'dejavu'
-    atlas = json.loads((font_dir / f'{name}-{size}.json').read_text())
+    atlas = json.loads((font_dir / f'pixel-{size}.json').read_text())
     glyphs = {g['codepoint']: g for g in atlas['glyphs']}
-    fallback = json.loads((font_dir / f'dejavu-{size}.json').read_text())
-    fallback = {g['codepoint']: g for g in fallback['glyphs']}
     frame = bytearray(1536)
     x = 2
     for character in text:
-        glyph = glyphs.get(ord(character), fallback.get(ord(character), glyphs[ord('?')]))
+        cp = ord(character)
+        glyph = glyphs.get(cp)
+        if glyph is None:
+            glyph = glyphs[ord('<') if cp == 0x2264 else ord('>') if cp == 0x2265 else ord('?')]
         top = 2 + atlas['ascent'] - glyph['bearing_y']
         for y, row in enumerate(glyph['rows']):
             for gx, pixel in enumerate(row):
@@ -293,9 +294,10 @@ class Machine:
             if not self.graphics or not family:
                 self.uc.mem_write(p, bytes(6))
             else:
-                ascent = 13 if size == 16 else (11 if size == 14 else 10)
+                ascent = 14 if size == 16 else (12 if size == 14 else 10)
+                height = 17 if size == 16 else size
                 gap = 1 if size == 12 else 2
-                self.uc.mem_write(p, bytes((family, size, ascent, size - ascent, gap, 0)))
+                self.uc.mem_write(p, bytes((family, size, ascent, height - ascent, gap, height)))
             return 1
         if op == 25:
             if a == 0: return 1
@@ -532,8 +534,8 @@ def main():
                         assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
                         assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
                         transitions = ((1, 16, [ok, right, ok, esc]),
-                                       (2, 12, [ok, right, ok, esc]),
-                                       (0, 12, [ok, esc]))
+                                       (0, 16, [ok, esc]),
+                                       (1, 12, [ok, right, ok, esc]))
                         for family, size, keys in transitions:
                             m.keys = keys
                             m.setup_views = []

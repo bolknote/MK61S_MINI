@@ -389,8 +389,8 @@ static void formatUiFontLine(char* out, usize size, u8 field,
                              mk61_setup_ui_font ui_font) {
   const bool russian = library_mk61::language_is_ru();
   if(field == 0) {
-    const char* name = ui_font.family == 1 ? "DejaVu" :
-      (ui_font.family == 2 ? "Roboto" : (russian ? "моно" : "Mono"));
+    const char* name = ui_font.family == 3 ? "FMK" :
+      (ui_font.family ? "Pixel" : "5x8");
     snprintf(out, size, russian ? "Шрифт UI:%s" : "UI font:%s", name);
   } else {
     snprintf(out, size, russian ? "Размер UI:%u" : "UI size:%u",
@@ -600,8 +600,16 @@ static bool calculatorFontSetup(void) {
 #if MK61_SETUP_UI_FONT_CHOOSER
 static u8 uiFontFieldCount(mk61_setup_ui_font ui_font) {
   // Calculator digits have a separate fixed face.  This dialog controls only
-  // the UI: Mono has no size choice, proportional families have 12/14/16 px.
+  // the UI: the legacy 5x8 raster is one exact face; Pixel and the replaceable
+  // FMK family have 12/14/16 px faces.
   return ui_font.family == 0 ? 1U : 2U;
+}
+
+static u8 stepUiFontFamily(u8 family, i8 delta) {
+  static constexpr u8 families[] = {0, 1, 3};
+  u8 index = family == 1 ? 1U : (family == 3 ? 2U : 0U);
+  index = (u8) ((index + (delta < 0 ? 2U : 1U)) % 3U);
+  return families[index];
 }
 
 static u8 stepUiFontSize(u8 size, i8 delta) {
@@ -619,7 +627,8 @@ static void drawUiFontSetup(u8 active, mk61_setup_ui_font ui_font) {
   const u8 rows = main_lcd().rows();
   if(rows == 0) return;
   const u8 fields = uiFontFieldCount(ui_font);
-  // Even a two-row external FMK keeps a live sample below the active option.
+  // Every accepted external UI FMK leaves at least three visible rows, so a
+  // live sample always fits below the one or two option rows.
   const u8 available = rows > 1 ? (u8) (rows - 1) : 1;
   const u8 visible = available < fields ? available : fields;
   const u8 top = active < visible ? 0 : (u8) (active + 1 - visible);
@@ -674,7 +683,7 @@ bool font(void) {
       const i8 delta = key == KEY_SHG_LEFT_PRESS ? -1 : 1;
       bool apply_ui = false;
       if(active == 0) {
-        ui_font.family = (u8) ((ui_font.family + (delta > 0 ? 1 : 2)) % 3);
+        ui_font.family = stepUiFontFamily(ui_font.family, delta);
         apply_ui = true;
       } else {
         ui_font.size = stepUiFontSize(ui_font.size, delta);

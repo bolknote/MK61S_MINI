@@ -180,7 +180,7 @@ printf 'stale' > "$bundle/System/WBMP.APP"
 printf 'stale' > "$bundle/System/MARKDOWN.APP"
 printf 'stale' > "$bundle/System/CHIP8.APP"
 printf 'stale' > "$bundle/Apps/STALE.APP"
-printf 'stale' > "$bundle/licenses/ui-fonts/LICENSE-DejaVu.txt"
+printf 'stale' > "$bundle/licenses/ui-fonts/LICENSE-Ark-Pixel.txt"
 
 MK61_ARDUINO_CLI="$fake_cli" \
 MK61_TEST_RESIDENT_FIXTURE="$work/resident-fixture" \

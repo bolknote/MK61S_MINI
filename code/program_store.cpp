@@ -3399,7 +3399,8 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   const bool zx0 = compression_choice == CompressionChoice::ZX0;
   const u16 stored_len = zx0 ? compression_plan.stored_len : data_len;
   const bool large =
-      (type == ProgramType::APP || type == ProgramType::CHIP8) &&
+      (type == ProgramType::APP || type == ProgramType::CHIP8 ||
+       (MAX_FONT_SIZE > MAX_IMAGE1_SIZE && type == ProgramType::FONT)) &&
       stored_len > MAX_IMAGE1_SIZE;
 
   u32 address = 0;

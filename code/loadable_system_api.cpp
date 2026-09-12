@@ -133,7 +133,8 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #if MK61_PROPORTIONAL_UI_FONTS
     case MK61_SERVICE_UI_FONT:
       return ui_font_service::call(main_lcd().uiFontFamily(), main_lcd().uiFontSize(),
-                                   a, b, c, payload);
+                                   a, b, c, payload,
+                                   main_lcd().externalUiFont());
 #endif
     case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
     case MK61_SYS_DISPLAY: return display_call(a, b, c, payload);

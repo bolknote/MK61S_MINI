@@ -148,10 +148,12 @@ typedef struct mk61_service_glyph {
  * call(UI_FONT, INFO/GLYPH, codepoint, sizeof(payload), &payload).
  * INFO returns 1 even when family=0 (disabled). GLYPH takes family/size as
  * inputs so one document keeps consistent metrics if settings change later.
+ * Families: 1=resident Pixel, 2=legacy Pixel alias, 3=active external FMK.
  * All outputs contain values/bytes only, never resident Flash pointers. */
 enum mk61_service_ui_font_operation { MK61_UI_FONT_INFO, MK61_UI_FONT_GLYPH };
 typedef struct mk61_service_ui_font_info {
-  uint8_t family, size, ascent, descent, line_gap, reserved;
+  /* height is the real line envelope; zero from an older resident means size. */
+  uint8_t family, size, ascent, descent, line_gap, height;
 } mk61_service_ui_font_info;
 typedef struct mk61_service_ui_glyph {
   uint8_t family, size, width, height, bearing_x;

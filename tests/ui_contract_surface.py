@@ -61,7 +61,7 @@ def main() -> None:
       if(op == MK61_SETUP_PHASE) { crash_dump::update_runtime(crash_dump::RUNTIME_MENU, 0x464E0000UL | a, millis()); return 1; }
       assert(false); return 0;
     }""")
-    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepUiFontSize(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
+    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepUiFontFamily(", "static u8 stepUiFontSize(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
         pieces.append(body(menu, marker))
     pieces.append(body(root / "development.cpp", "static u16 ui_editor_window_start("))
     settings_source = (root / "menu.cpp").read_text()

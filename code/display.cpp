@@ -1638,6 +1638,10 @@ void MK61Display::writeCodepoint(u16 codepoint) {
 }
 
 bool MK61Display::installFont(const u8*, u16) { return false; }
+bool MK61Display::installFontFromReader(u16, FontReader, void*) {
+  return false;
+}
+bool MK61Display::externalTextFontActive(void) const { return false; }
 bool MK61Display::setFontPreview(const u8* data, u16 size) {
 #if MK61_ENABLE_USB_SCREEN
   if(!usb_screen_active || data == NULL || size == 0 ||
@@ -2241,6 +2245,7 @@ MK61Display::MK61Display(void)
     active_font(),
     preview_font(),
     active_font_state(ActiveFontState::BUILTIN),
+    active_font_role(ActiveFontRole::TEXT),
     initialized(false),
 #if MK61_ANY_FULLSCREEN_FILE
     fullscreen_bitmap_active(false),
@@ -2733,43 +2738,133 @@ lcd_display::TextProfile MK61Display::recommendedProfile(const fmk::Metrics& met
   return {geometry.rows, geometry.width, geometry.height, geometry.line_gap};
 }
 
-bool MK61Display::installFont(const u8* data, u16 size) {
-  if(data == NULL || size == 0 || size > fmk::MAX_FILE_SIZE) return false;
-  fmk::Face source;
-  if(!source.open(data, size)) return false;
-  if(!exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT, fmk::MAX_FILE_SIZE)) return false;
+namespace {
+struct MemoryFontSource {
+  const u8* data;
+  u16 size;
+};
+
+bool readMemoryFont(void* context, u8* output, u16 size) {
+  const auto* source = static_cast<const MemoryFontSource*>(context);
+  if(source == NULL || source->data == NULL || output == NULL ||
+     source->size != size) return false;
+  memmove(output, source->data, size);
+  return true;
+}
+
+bool validUiFace(const fmk::Face& face, u8 expected_height) {
+  if(!face.valid() ||
+     (expected_height != 12 && expected_height != 14 &&
+      expected_height != 16)) return false;
+  const fmk::Metrics& metrics = face.metrics();
+  if(metrics.height != expected_height || metrics.height > 16 ||
+     metrics.line_gap > 4) return false;
+  const u8 pitch = (u8) (metrics.height + metrics.line_gap);
+  if(pitch == 0 ||
+     (lcd_display::PIXEL_HEIGHT + metrics.line_gap) / pitch < 3) return false;
+  // A missing space would turn every cleared grid cell into '?'.  Requiring
+  // both structural glyphs also guarantees a deterministic fallback for any
+  // Unicode character the package does not contain.
+  fmk::Glyph space = {};
+  fmk::Glyph fallback = {};
+  return face.glyph(' ', space) && face.glyph('?', fallback) &&
+      space.advance > 0 && space.advance <= 16 &&
+      fallback.advance >= fallback.width && fallback.advance <= 16;
+}
+}
+
+bool MK61Display::installFontFromReaderImpl(
+    u16 size, u8 expected_height, FontReader reader, void* context,
+    ActiveFontRole role) {
+  if(size < fmk::HEADER_SIZE || size > exclusive_buffer::SIZE ||
+     size > fmk::MAX_FILE_SIZE || reader == NULL) return false;
+  if(!exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT,
+                                exclusive_buffer::SIZE)) return false;
   u8* const font_data = exclusive_buffer::data(exclusive_buffer::Owner::DISPLAY_FONT);
   if(font_data == NULL) {
     exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
     return false;
   }
 
-  // Ни flush(), ни фоновый клиент не должны увидеть Face, пока его backing
-  // storage заменяется. Сначала делаем старые представления недостижимыми,
-  // затем копируем и только после полной повторной валидации публикуем новое.
+  // Neither flush nor a background client may observe a Face while its
+  // backing bytes are replaced. The C5 reader writes directly into BULK, so
+  // even an 8 KiB F411 font needs no equally large scratch copy.
   MK61DisplayUpdate update(*this);
+  const ActiveFontState previous_state = active_font_state;
+  const ActiveFontRole previous_role = active_font_role;
   active_font_state = ActiveFontState::BUILTIN;
   active_font.reset();
   preview_font.reset();
   preview_profile_active = false;
-  memmove(font_data, data, size);
-  if(!active_font.open(font_data, size)) {
+  if(!reader(context, font_data, size) ||
+     !active_font.open(font_data, size) ||
+     (role == ActiveFontRole::UI &&
+      !validUiFace(active_font, expected_height))) {
     active_font_state = ActiveFontState::BUILTIN;
+    active_font_role = ActiveFontRole::TEXT;
+    active_font.reset();
     exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
-    applyTextProfile(lcd_display::defaultTextProfileForRows(
-        lcd_display::DEFAULT_ROWS));
+    if(previous_state != ActiveFontState::BUILTIN &&
+       previous_role == ActiveFontRole::TEXT) {
+      applyTextProfile(lcd_display::defaultTextProfileForRows(
+          lcd_display::DEFAULT_ROWS));
+    }
+#if MK61_ENABLE_USB_SCREEN
+    if(usb_screen_active) usb_surface.setFont(NULL);
+#endif
     markAllDirty();
     return false;
   }
 
+  active_font_role = role;
   active_font_state = ActiveFontState::READY;
-  applyTextProfile(recommendedProfile(active_font.metrics()), true);
+  if(role == ActiveFontRole::TEXT) {
+    applyTextProfile(recommendedProfile(active_font.metrics()), true);
+  } else if(previous_state != ActiveFontState::BUILTIN &&
+            previous_role == ActiveFontRole::TEXT) {
+    applyTextProfile(lcd_display::defaultTextProfileForRows(
+        lcd_display::DEFAULT_ROWS));
+  }
 #if MK61_ENABLE_USB_SCREEN
-  if(usb_screen_active) usb_surface.setFont(&active_font);
+  if(usb_screen_active) usb_surface.setFont(selectedFont());
 #endif
   markAllDirty();
   return true;
 }
+
+bool MK61Display::installFont(const u8* data, u16 size) {
+  fmk::Face source;
+  if(data == NULL || !source.open(data, size) ||
+     size > exclusive_buffer::SIZE) return false;
+  MemoryFontSource memory = {data, size};
+  return installFontFromReaderImpl(size, 0, readMemoryFont, &memory,
+                                   ActiveFontRole::TEXT);
+}
+
+bool MK61Display::installFontFromReader(u16 size, FontReader reader,
+                                        void* context) {
+  return installFontFromReaderImpl(size, 0, reader, context,
+                                   ActiveFontRole::TEXT);
+}
+
+#if MK61_PROPORTIONAL_UI_FONTS
+bool MK61Display::installUiFont(const u8* data, u16 size,
+                                u8 expected_height) {
+  fmk::Face source;
+  if(data == NULL || !source.open(data, size) ||
+     size > exclusive_buffer::SIZE ||
+     !validUiFace(source, expected_height)) return false;
+  MemoryFontSource memory = {data, size};
+  return installFontFromReaderImpl(size, expected_height, readMemoryFont,
+                                   &memory, ActiveFontRole::UI);
+}
+
+bool MK61Display::installUiFontFromReader(
+    u16 size, u8 expected_height, FontReader reader, void* context) {
+  return installFontFromReaderImpl(size, expected_height, reader, context,
+                                   ActiveFontRole::UI);
+}
+#endif
 
 bool MK61Display::setFontPreview(const u8* data, u16 size) {
   if(data == NULL || size == 0 || size > fmk::MAX_FILE_SIZE) return false;
@@ -2816,6 +2911,7 @@ void MK61Display::useBuiltinFont(void) {
   const bool restore_profile = preview_profile_active;
   const lcd_display::TextProfile saved_profile = preview_saved_profile;
   const ActiveFontState previous_state = active_font_state;
+  const ActiveFontRole previous_role = active_font_role;
   const bool had_active_font = previous_state != ActiveFontState::BUILTIN;
   const bool changed = had_active_font || preview_font.valid() ||
                        preview_profile_active;
@@ -2823,6 +2919,7 @@ void MK61Display::useBuiltinFont(void) {
   // Сначала запрещаем выбор Face и обнуляем его указатель. Только после этого
   // backing arena может перейти USB-кэшу, swap или компрессору.
   active_font_state = ActiveFontState::BUILTIN;
+  active_font_role = ActiveFontRole::TEXT;
   preview_profile_active = false;
   active_font.reset();
   preview_font.reset();
@@ -2834,7 +2931,10 @@ void MK61Display::useBuiltinFont(void) {
          exclusive_buffer::Owner::DISPLAY_FONT) {
     exclusive_buffer::release(exclusive_buffer::Owner::DISPLAY_FONT);
   }
-  if(had_active_font) applyTextProfile(lcd_display::defaultTextProfileForRows(lcd_display::DEFAULT_ROWS));
+  if(had_active_font && previous_role == ActiveFontRole::TEXT) {
+    applyTextProfile(lcd_display::defaultTextProfileForRows(
+        lcd_display::DEFAULT_ROWS));
+  }
   else if(restore_profile) applyTextProfile(saved_profile, true);
   if(changed) markAllDirty();
 }
@@ -2847,6 +2947,22 @@ bool MK61Display::externalFontActive(void) const {
          shared_memory::contains(shared_memory::Arena::BULK,
                                  active_font.data(), active_font.size());
 }
+
+bool MK61Display::externalTextFontActive(void) const {
+  return active_font_role == ActiveFontRole::TEXT && externalFontActive();
+}
+
+#if MK61_PROPORTIONAL_UI_FONTS
+const fmk::Face* MK61Display::externalUiFont(void) const {
+  return active_font_role == ActiveFontRole::UI && externalFontActive()
+      ? &active_font : NULL;
+}
+
+void MK61Display::clearExternalUiFont(void) {
+  if(active_font_role == ActiveFontRole::UI &&
+     active_font_state != ActiveFontState::BUILTIN) useBuiltinFont();
+}
+#endif
 
 bool MK61Display::suspendExternalFontForUsb(void) {
   if(preview_font.valid() || preview_profile_active) return false;
@@ -2869,7 +2985,7 @@ const fmk::Face* MK61Display::selectedFont(void) const {
                              preview_font.data(), preview_font.size())) {
     return &preview_font;
   }
-  return externalFontActive() ? &active_font : NULL;
+  return externalTextFontActive() ? &active_font : NULL;
 }
 
 builtin_font::FaceId MK61Display::fallbackFont(void) const {

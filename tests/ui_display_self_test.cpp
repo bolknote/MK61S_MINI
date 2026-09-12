@@ -110,6 +110,75 @@ void referenceBuiltin(Frame& frame, ui_font::Face face, u16 cp,
   }
 }
 
+void putMsbBit(u8* bytes, usize& bit, bool value) {
+  if(value) bytes[bit / 8U] |= (u8) (0x80U >> (bit & 7U));
+  ++bit;
+}
+
+// Minimal, valid FMK1 UI face: space plus '?'..'A', mono 3x12 with a four-pixel
+// advance.  It is built without heap allocation so the display test keeps
+// enforcing the firmware's allocation-free rendering contract.
+void makeExternalUiFont(u8 (&font)[41]) {
+  std::memset(font, 0, sizeof(font));
+  std::memcpy(font, "FMK1", 4);
+  font[4] = fmk::FLAG_MONOSPACED;
+  font[5] = 3;
+  font[6] = 12;
+  font[7] = 0x31; // advance=4, line gap=1
+  font[8] = 4;
+  font[10] = 2;
+  font[12] = (u8) sizeof(font);
+  font[16] = ' ';
+  font[18] = 0;
+  font[19] = '?';
+  font[21] = 2; // '?', '@', 'A'
+  usize bit = 22U * 8U;
+  for(u8 glyph = 0; glyph < 4; ++glyph) {
+    putMsbBit(font, bit, false); // raw bitmap
+    for(u8 y = 0; y < 12; ++y) {
+      for(u8 x = 0; x < 3; ++x) {
+        bool pixel = false;
+        if(glyph == 1) { // '?'
+          pixel = y == 0 || (x == 2 && y < 4) ||
+              (x == 1 && (y == 4 || y == 7));
+        } else if(glyph == 2) { // '@'
+          pixel = y == 0 || y == 6 || x == 0 || x == 2;
+        } else if(glyph == 3) { // 'A'
+          pixel = (x == 1 && y == 0) ||
+              ((x == 0 || x == 2) && y > 0) || y == 5;
+        }
+        putMsbBit(font, bit, pixel);
+      }
+    }
+  }
+  assert(bit <= sizeof(font) * 8U && bit > (sizeof(font) - 1U) * 8U);
+  const u16 crc = fmk::checksum(font, sizeof(font));
+  font[14] = (u8) crc;
+  font[15] = (u8) (crc >> 8);
+}
+
+void referenceExternal(Frame& frame, const fmk::Face& face, u16 cp,
+                       int pen, u8 row, int right = 190) {
+  fmk::Glyph glyph = {};
+  if(!face.glyph(cp, glyph)) assert(face.glyph('?', glyph));
+  u8 bitmap[fmk::MAX_BITMAP_SIZE] = {};
+  assert(face.decode(glyph, bitmap, sizeof(bitmap)));
+  const auto& metrics = face.metrics();
+  const u8 rows = (u8) ((64U + metrics.line_gap) /
+                        (metrics.height + metrics.line_gap));
+  const unsigned occupied = rows * metrics.height +
+      (rows - 1U) * metrics.line_gap;
+  const int top = (64U - occupied) / 2U +
+      row * (metrics.height + metrics.line_gap);
+  for(u8 y = 0; y < glyph.height; ++y) {
+    for(u8 x = 0; x < glyph.width; ++x) {
+      if(pen + x < right && fmk::bitmapPixel(bitmap, glyph.width, x, y)) {
+        putPixel(frame, pen + x, top + y);
+      }
+    }
+  }
+}
+
 void referenceMono(Frame& frame, u16 cp, int pen, u8 row) {
   builtin_font::Raster raster{};
   assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, cp, raster));
@@ -174,7 +243,9 @@ void test_profile_and_scope() {
     }
     assert(display.uiTextActive() && display.rows() == 5);
     display.setUiFont(2, 14);
-    assert(display.uiFontFamily() == 2 && display.uiFontSize() == 14 &&
+    // A persisted/portable legacy Roboto value is migrated to Pixel at the
+    // display boundary, so no stale third family can leak back into the UI.
+    assert(display.uiFontFamily() == 1 && display.uiFontSize() == 14 &&
            display.rows() == 4);
     assert(sameProfile(display.textProfile(), calculator));
     display.setUiFont(0, 14);
@@ -227,8 +298,7 @@ void test_live_ui_font_sample() {
   display.setTextProfile(calculator);
   // The chooser renders its sample on the last UI row, aligned to the text
   // after the menu gutter. Use the real paged renderer, not a mock.
-  const u8 faces[][2] = {{1, 12}, {1, 14}, {1, 16},
-                         {2, 12}, {2, 14}, {2, 16}, {2, 16}};
+  const u8 faces[][2] = {{1, 12}, {1, 14}, {1, 16}, {2, 16}, {1, 16}};
   static constexpr u16 sample[] = {0x0410, 0x0430, ' ', 0x0411, 0x0431,
                                  ' ', 'W', 'i', ' ', '1', '2', '3'};
   Frame previous{};
@@ -242,8 +312,8 @@ void test_live_ui_font_sample() {
     referenceText(expected, display.uiFontFace(), sample, sample_row, 14);
     expectFrame(expected);
     assert(sameProfile(display.textProfile(), calculator));
-    if(i > 0 && i < 6) assert(ui_display_test::frame != previous);
-    if(i == 6) assert(ui_display_test::frame == previous);
+    if(i > 0 && i < 3) assert(ui_display_test::frame != previous);
+    if(i >= 3) assert(ui_display_test::frame == previous);
     previous = ui_display_test::frame;
   }
   display.setUiFont(0, 14);
@@ -319,26 +389,24 @@ void test_fixed_calculator_face() {
   expectFrame(expected);
 
   // The decimal point belongs to slot 2 and slot 3 starts at its fixed x=46.
-  assert(framePixel(expected, 43, 55) && framePixel(expected, 44, 56));
-  assert(framePixel(expected, 48, 17));
+  assert(framePixel(expected, 43, 51) && framePixel(expected, 44, 52));
+  assert(framePixel(expected, 48, 18));
   // The exponent sign starts after the deliberately wider VFD group gap.
   assert(framePixel(expected, 139, 35) && !framePixel(expected, 132, 35));
 
-  // Vertical segments stay on one axis.  The former VFD approximation moved
-  // their lower halves sideways and made otherwise straight digits look bent.
+  // The narrow vertical body stays on one axis. Only its one-pixel caps are
+  // chamfered; the former approximation moved whole halves sideways.
   text_screen::Grid one;
   one.reset(6);
   writeGridLine(one, 1, 0, "1");
   Frame straight{};
   calculator_face::renderFrame(one, straight.data());
-  assert(framePixel(straight, 11, 25));
-  assert(framePixel(straight, 12, 25));
   assert(framePixel(straight, 13, 25));
-  assert(framePixel(straight, 11, 29));
-  assert(framePixel(straight, 12, 29));
+  assert(framePixel(straight, 14, 25));
   assert(framePixel(straight, 13, 29));
-  assert(!framePixel(straight, 10, 29));
-  assert(!framePixel(straight, 14, 29));
+  assert(framePixel(straight, 14, 29));
+  assert(!framePixel(straight, 12, 29));
+  assert(!framePixel(straight, 15, 29));
 
   text_screen::Grid without_dot;
   without_dot.reset(6);
@@ -443,32 +511,85 @@ void test_external_calculator_font_is_isolated_from_ui() {
   ui_display_test::bulk_size = 0;
 }
 
+void test_external_ui_font_layout_fallback_and_lifetime() {
+  u8 font[41];
+  makeExternalUiFont(font);
+  fmk::Face source;
+  assert(source.open(font, sizeof(font)));
+  u8 bulk[fmk::MAX_FILE_SIZE]{};
+  ui_display_test::bulk_bytes = bulk;
+  ui_display_test::bulk_size = sizeof(bulk);
+
+  MK61Display display;
+  ui_display_test::reset();
+  display.begin();
+  // A wrong size is rejected before it can evict an already active face.
+  assert(!display.installUiFont(font, sizeof(font), 14));
+  assert(!display.externalFontActive() && !ui_display_test::bulk_owned);
+  assert(display.installUiFont(font, sizeof(font), 12));
+  assert(display.externalFontActive() && display.externalUiFont() != nullptr);
+  display.setUiFont(3, 12);
+  display.beginUiText();
+  assert(display.uiTextActive() && display.rows() == 5);
+  assert(display.measureUiText("AA") == 8);
+
+  // U+2603 is absent and has no legacy icon, so the FMK '?' is used. A
+  // private right-arrow token deliberately keeps its familiar resident art.
+  display.printUiLine(0, "A\xE2\x98\x83");
+  display.setCursor(0, 1);
+  display.writeCodepoint(display_symbol::uc1609::RT_ARROW);
+  display.writeCodepoint('A');
+  Frame expected{};
+  referenceExternal(expected, *display.externalUiFont(), 'A', 2, 0);
+  referenceExternal(expected, *display.externalUiFont(), '?', 6, 0);
+  referenceBuiltin(expected, display.uiFontFace(),
+                   display_symbol::uc1609::RT_ARROW, 2, 1);
+  referenceExternal(expected, *display.externalUiFont(), 'A', 8, 1);
+  expectFrame(expected);
+
+  // Calculator rendering stays its own fixed face even while an external UI
+  // family owns BULK.
+  display.beginCalculatorFace();
+  display.clear();
+  writeDisplayLine(display, 1, 0, "1.");
+  display.beginCalculatorFace();
+  text_screen::Grid model;
+  model.reset(6);
+  writeGridLine(model, 1, 0, "1.");
+  calculator_face::renderFrame(model, expected.data());
+  expectFrame(expected);
+
+  display.clearExternalUiFont();
+  assert(!display.externalFontActive() && display.externalUiFont() == nullptr &&
+         !ui_display_test::bulk_owned);
+  ui_display_test::bulk_bytes = nullptr;
+  ui_display_test::bulk_size = 0;
+}
+
 void test_mixed_text_and_page_parity() {
   static constexpr u16 mixed[] = {'A', 0x0416, 'i', 0x0451, ' ', 'W', '9', 0x0443};
-  for(u8 family = 1; family <= 2; ++family) {
-    for(u8 size : {12, 14, 16}) {
-      MK61Display display;
-      startUi(display, family, size);
-      Frame expected{};
-      for(u8 row = 0; row < display.rows(); ++row) {
-        display.printUiLine(row, "AЖiё W9у");
-        referenceText(expected, display.uiFontFace(), mixed, row);
-      }
-      expectFrame(expected);
-      u16 advance = 0;
-      for(u16 cp : mixed) advance = (u16) (advance + ui_font::glyph(display.uiFontFace(), cp).advance);
-      assert(display.measureUiText("AЖiё W9у") == advance);
-      assert(display.measureUiText("WWW") > display.measureUiText("iii"));
-
-      // Incremental writes invalidate only intersecting pages. They must
-      // produce the same pixels as whole-row replacement on every visible row.
-      display.clear();
-      for(u8 row = 0; row < display.rows(); ++row) {
-        display.setCursor(0, row);
-        for(u16 cp : mixed) display.writeCodepoint(cp);
-      }
-      expectFrame(expected);
+  for(u8 size : {12, 14, 16}) {
+    MK61Display display;
+    startUi(display, 1, size);
+    Frame expected{};
+    for(u8 row = 0; row < display.rows(); ++row) {
+      display.printUiLine(row, "AЖiё W9у");
+      referenceText(expected, display.uiFontFace(), mixed, row);
     }
+    expectFrame(expected);
+    u16 advance = 0;
+    for(u16 cp : mixed) advance = (u16) (advance + ui_font::glyph(display.uiFontFace(), cp).advance);
+    assert(display.measureUiText("AЖiё W9у") == advance);
+    assert(display.measureUiText("WWW") > display.measureUiText("iii"));
+
+    // Incremental writes invalidate only intersecting pages. They must
+    // produce the same pixels as whole-row replacement on every visible row.
+    display.clear();
+    for(u8 row = 0; row < display.rows(); ++row) {
+      display.setCursor(0, row);
+      for(u16 cp : mixed) display.writeCodepoint(cp);
+    }
+    expectFrame(expected);
   }
 }
 
@@ -504,37 +625,35 @@ void test_short_replacement_and_gutters() {
 }
 
 void test_ellipsis_and_invalid_utf8() {
-  for(u8 family = 1; family <= 2; ++family) {
-    for(u8 size : {12, 14, 16}) {
-      MK61Display display;
-      startUi(display, family, size);
-      char text[101];
-      for(char letter : {'W', 'i'}) {
-        std::memset(text, letter, sizeof(text) - 1);
-        text[sizeof(text) - 1] = 0;
-        display.printUiLine(0, text);
-        const auto face = display.uiFontFace();
-        const unsigned advance = ui_font::glyph(face, letter).advance;
-        const unsigned ellipsis = ui_font::glyph(face, 0x2026).advance;
-        unsigned count = (188U - ellipsis) / advance;
-        const unsigned token_limit = size == 12 ? 31U : 39U;
-        if(count > token_limit) count = token_limit;
-        Frame expected{};
-        int pen = 2;
-        for(unsigned glyph = 0; glyph < count; ++glyph) {
-          referenceGlyph(expected, face, letter, pen, 0);
-          pen += advance;
-        }
-        referenceGlyph(expected, face, 0x2026, pen, 0);
-        expectFrame(expected);
-      }
-      display.printUiLine(0, "\xC0\xAF\xF0\x9F\x98\x80");
+  for(u8 size : {12, 14, 16}) {
+    MK61Display display;
+    startUi(display, 1, size);
+    char text[101];
+    for(char letter : {'W', 'i'}) {
+      std::memset(text, letter, sizeof(text) - 1);
+      text[sizeof(text) - 1] = 0;
+      display.printUiLine(0, text);
+      const auto face = display.uiFontFace();
+      const unsigned advance = ui_font::glyph(face, letter).advance;
+      const unsigned ellipsis = ui_font::glyph(face, 0x2026).advance;
+      unsigned count = (188U - ellipsis) / advance;
+      const unsigned token_limit = size == 12 ? 31U : 39U;
+      if(count > token_limit) count = token_limit;
       Frame expected{};
-      static constexpr u16 invalid[] = {'?', '?', '?'};
-      referenceText(expected, display.uiFontFace(), invalid, 0);
+      int pen = 2;
+      for(unsigned glyph = 0; glyph < count; ++glyph) {
+        referenceGlyph(expected, face, letter, pen, 0);
+        pen += advance;
+      }
+      referenceGlyph(expected, face, 0x2026, pen, 0);
       expectFrame(expected);
-      assert(display.measureUiText("\xC0\xAF\xF0\x9F\x98\x80") == display.measureUiText("???"));
     }
+    display.printUiLine(0, "\xC0\xAF\xF0\x9F\x98\x80");
+    Frame expected{};
+    static constexpr u16 invalid[] = {'?', '?', '?'};
+    referenceText(expected, display.uiFontFace(), invalid, 0);
+    expectFrame(expected);
+    assert(display.measureUiText("\xC0\xAF\xF0\x9F\x98\x80") == display.measureUiText("???"));
   }
 }
 
@@ -636,6 +755,7 @@ int main() {
   test_fixed_calculator_face();
   test_invalid_custom_slot_uses_ui_fallback();
   test_external_calculator_font_is_isolated_from_ui();
+  test_external_ui_font_layout_fallback_and_lifetime();
   test_mixed_text_and_page_parity();
   test_short_replacement_and_gutters();
   test_ellipsis_and_invalid_utf8();

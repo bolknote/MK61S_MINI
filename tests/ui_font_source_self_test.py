@@ -27,7 +27,8 @@ def main():
         expected = atlases[face]["by_codepoint"].get(cp)
         fallback = expected is None
         if fallback:
-            expected = atlases[face - 3]["by_codepoint"][cp]
+            alias = ord('<') if cp == 0x2264 else ord('>') if cp == 0x2265 else ord('?')
+            expected = atlases[face]["by_codepoint"][alias]
         assert values[2:] == [expected["width"], expected["height"],
                               expected["safe_bearing_x"], expected["bearing_y"],
                               expected["advance"], int(fallback)]

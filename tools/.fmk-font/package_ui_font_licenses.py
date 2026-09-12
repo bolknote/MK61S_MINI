@@ -8,8 +8,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "tools/.fmk-font/ui-atlases"
 FILES = {
-    "licenses/ui-fonts/LICENSE-DejaVu.txt": "LICENSE-DejaVu.txt",
-    "licenses/ui-fonts/LICENSE-Roboto.txt": "LICENSE-Roboto.txt",
+    "licenses/ui-fonts/LICENSE-Ark-Pixel.txt": "LICENSE-Ark-Pixel.txt",
     "licenses/ui-fonts/FONT-SOURCES.md": "README.md",
 }
 

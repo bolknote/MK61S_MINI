@@ -16,7 +16,8 @@
 namespace {
 
 constexpr std::size_t HEADER_SIZE = 16;
-constexpr std::size_t MAX_FILE_SIZE = 1536;
+constexpr std::size_t DEFAULT_MAX_FILE_SIZE = 1536;
+constexpr std::size_t MAX_FILE_SIZE = 8192;
 constexpr std::uint8_t FLAG_MONOSPACED = 0x01;
 
 enum class Compression { AUTO, NONE, RLE };
@@ -33,6 +34,7 @@ struct Options {
   int line_gap = -1;
   bool proportional = false;
   Compression compression = Compression::AUTO;
+  std::size_t max_file_size = DEFAULT_MAX_FILE_SIZE;
 };
 
 struct GlyphBitmap {
@@ -106,7 +108,8 @@ class BitWriter {
       "  --threshold N           explicit coverage cutoff 0..255; omitted adapts 128 to downscale\n"
       "  --line-gap N            suggested line gap 0..15; default follows cell height\n"
       "  --proportional          write per-glyph 4-bit width and advance\n"
-      "  --compression MODE      auto, none, or rle\n");
+      "  --compression MODE      auto, none, or rle\n"
+      "  --max-file-size N       target limit, 1536 by default; F411 supports 8192\n");
   std::exit(message == nullptr ? 0 : 2);
 }
 
@@ -149,6 +152,14 @@ Options parse_options(int argc, char** argv) {
     }
     else if (option == "--line-gap") options.line_gap = parse_int(value(), "line gap");
     else if (option == "--proportional") options.proportional = true;
+    else if (option == "--max-file-size") {
+      const int limit = parse_int(value(), "maximum file size");
+      if (limit < static_cast<int>(HEADER_SIZE) ||
+          limit > static_cast<int>(MAX_FILE_SIZE)) {
+        throw std::runtime_error("maximum file size must be 16..8192");
+      }
+      options.max_file_size = static_cast<std::size_t>(limit);
+    }
     else if (option == "--compression") {
       const std::string mode = value();
       if (mode == "auto") options.compression = Compression::AUTO;
@@ -502,7 +513,9 @@ std::vector<std::uint8_t> encode_font(std::vector<GlyphBitmap> glyphs, const Opt
     if (write_bitmap(writer, glyph.bits, options.compression)) ++rle_count;
     else ++raw_count;
   }
-  if (writer.data.size() > MAX_FILE_SIZE) throw std::runtime_error("encoded font exceeds the 1536-byte firmware limit");
+  if (writer.data.size() > options.max_file_size) {
+    throw std::runtime_error("encoded font exceeds the selected firmware limit");
+  }
   put_le16(writer.data, 12, static_cast<std::uint16_t>(writer.data.size()));
   put_le16(writer.data, 14, crc16(writer.data));
   return writer.data;

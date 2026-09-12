@@ -9,12 +9,12 @@ namespace {
 
 void checkFace(ui_font::Face face) {
   const ui_font::Metrics m = ui_font::metrics(face);
-  const unsigned height = face.size == ui_font::Size::PX16 ? 16U
+  const unsigned height = face.size == ui_font::Size::PX16 ? 17U
                         : face.size == ui_font::Size::PX14 ? 14U : 12U;
   assert(m.height == height);
   assert(m.ascent + m.descent == m.height);
   assert(m.line_gap == (height == 12 ? 1 : 2));
-  assert(m.ppem == (height == 16 ? 14 : (height == 14 ? 11 : 10)));
+  assert(m.ppem == (height == 17 ? 16 : (height == 14 ? 12 : 10)));
   unsigned supported = 0;
   for (unsigned cp = 0; cp <= 0xFFFF; ++cp) {
     if (!ui_font::supports(face, cp)) continue;
@@ -29,12 +29,10 @@ void checkFace(ui_font::Face face) {
     assert(!ui_font::pixel(g, g.width, 0));
     assert(!ui_font::pixel(g, 0, g.height));
     assert(!ui_font::pixel(g, 255, 255));
-    const bool arrowFallback = face.family == ui_font::Family::ROBOTO &&
-      (cp == 0x2190 || cp == 0x2192);
-    assert(g.fallback == arrowFallback);
-    if (arrowFallback) {
-      const ui_font::Glyph reference = ui_font::glyph(
-        {ui_font::Family::DEJAVU, face.size}, cp);
+    const bool comparisonFallback = cp == 0x2264 || cp == 0x2265;
+    assert(g.fallback == comparisonFallback);
+    if (comparisonFallback) {
+      const ui_font::Glyph reference = ui_font::glyph(face, cp == 0x2264 ? '<' : '>');
       assert(g.bitmap == reference.bitmap && g.advance == reference.advance);
     }
     if (cp == ' ') {
@@ -78,19 +76,17 @@ void dumpFace(ui_font::Face face, unsigned id) {
 int main(int argc, char** argv) {
   const bool dump = argc == 2 && std::strcmp(argv[1], "--dump") == 0;
   unsigned id = 0;
-  for (const ui_font::Family family : {ui_font::Family::DEJAVU, ui_font::Family::ROBOTO}) {
-    for (const ui_font::Size size : {ui_font::Size::PX12, ui_font::Size::PX14,
-                                     ui_font::Size::PX16}) {
-      const ui_font::Face face = {family, size};
-      checkFace(face);
-      if (dump) dumpFace(face, id);
-      ++id;
-    }
+  for (const ui_font::Size size : {ui_font::Size::PX12, ui_font::Size::PX14,
+                                   ui_font::Size::PX16}) {
+    const ui_font::Face face = {ui_font::Family::PIXEL, size};
+    checkFace(face);
+    if (dump) dumpFace(face, id);
+    ++id;
   }
   const ui_font::Face invalid = {static_cast<ui_font::Family>(255),
                                  static_cast<ui_font::Size>(255)};
-  const ui_font::Face normal = {ui_font::Family::DEJAVU, ui_font::Size::PX12};
+  const ui_font::Face normal = {ui_font::Family::PIXEL, ui_font::Size::PX12};
   assert(ui_font::metrics(invalid).height == 12);
   assert(ui_font::glyph(invalid, 'W').bitmap == ui_font::glyph(normal, 'W').bitmap);
-  if (!dump) std::puts("UI font tests passed: six faces, 1014 glyphs, bounds and fallbacks");
+  if (!dump) std::puts("UI font tests passed: three faces, 507 glyphs, bounds and fallbacks");
 }
