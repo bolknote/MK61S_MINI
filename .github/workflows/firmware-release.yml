@@ -193,6 +193,11 @@ jobs:
           MK61_FIRMWARE_TAG="${GITHUB_SHA::7}" \
             tests/run_f411_release_matrix.sh
 
+      - name: Verify STM32F411 mixed O3 compatibility
+        run: |
+          MK61_F411_O3_BUILD_ROOT="$RUNNER_TEMP/f411-o3" \
+            tests/run_f411_o3_compile_check.sh
+
       - name: Compile-check F401 Classic V3 UC1609 through Arduino
         run: |
           MK61_F401_UC1609_BUILD_ROOT="$RUNNER_TEMP/f401-arduino-uc1609" \

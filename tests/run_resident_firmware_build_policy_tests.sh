@@ -24,6 +24,7 @@ require_order() {
 }
 
 f411_matrix="$root/tests/run_f411_release_matrix.sh"
+f411_o3_check="$root/tests/run_f411_o3_compile_check.sh"
 f401_check="$root/tests/run_f401_uc1609_compile_check.sh"
 f401_bundle="$root/tools/build_f401_bundle.sh"
 firmware_sh="$root/tools/.mk61-firmware/mk61-firmware.sh"
@@ -36,7 +37,7 @@ board_hook_ps="$root/tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-ap
 board_install_sh="$root/tools/.mk61-arduino-board/install.sh"
 board_install_ps="$root/tools/.mk61-arduino-board/install.ps1"
 
-for file in "$f411_matrix" "$f401_check" "$f401_bundle" \
+for file in "$f411_matrix" "$f411_o3_check" "$f401_check" "$f401_bundle" \
     "$firmware_sh" "$firmware_ps" "$gcc_cmake" "$gcc_ps" "$board" \
     "$board_hook_sh" "$board_hook_ps" "$board_install_sh" \
     "$board_install_ps"; do
@@ -48,6 +49,10 @@ require_text "$f411_matrix" 'seal-firmware.sh" seal --max-size "$flash_capacity"
 require_text "$f411_matrix" 'seal-firmware.sh" check --max-size "$flash_capacity"'
 require_text "$f411_matrix" 'cases --group f411-release --format tsv'
 require_text "$f411_matrix" 'analyze_stack_usage.py'
+require_text "$f411_o3_check" 'opt=o3std'
+require_text "$f411_o3_check" 'MK61_REQUIRE_MIXED_OPTIMIZATION=1'
+require_text "$f411_o3_check" 'analyze_stack_usage.py'
+require_text "$f411_o3_check" 'minimum_headroom=65536'
 require_text "$f401_check" 'MK61_REQUIRE_RESIDENT_CRC=1'
 require_text "$f401_check" 'seal-firmware.sh" seal --max-size "$flash_capacity"'
 require_text "$f401_check" 'usb=CDCgen,opt=$optimization'

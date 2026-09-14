@@ -35,6 +35,13 @@
   #include "workspace_swap.hpp"
 #endif
 
+// config.h compacts cold firmware when the Arduino menu requests a global
+// -O2/-O3 build.  This translation unit is the measured hot path, so restore
+// the original command-line optimization here.
+#if MK61_MIXED_OPTIMIZATION
+  #pragma GCC reset_options
+#endif
+
 #if MK61_CORE_PACKED_AMK
   #define MK61_PACKED_AMK_PARAMETERS \
       , u8 selected_amk, u32 selected_microinstruction

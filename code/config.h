@@ -1,6 +1,7 @@
 #ifndef CONFIG
 #define CONFIG
 
+#include "firmware_optimization.hpp"
 #include "Arduino.h"
 #include "rust_types.h"
 #include "portable_app_config.h"

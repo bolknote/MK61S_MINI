@@ -25,6 +25,10 @@ MK61_FIRMWARE_OUTPUT_DIR="$firmware_output" \
 MK61_FIRMWARE_TAG=preflight \
   "$root/tests/run_f411_release_matrix.sh"
 
+printf '\n=== F411 mixed O3 compatibility ===\n'
+MK61_F411_O3_BUILD_ROOT="$preflight_root/f411-o3" \
+  "$root/tests/run_f411_o3_compile_check.sh"
+
 printf '\n=== F411 USB-preserving STOP production images ===\n'
 MK61_F411_USB_SUSPEND_BUILD_ROOT="$preflight_root/f411-usb-suspend" \
   "$root/tests/run_f411_usb_suspend_compile_check.sh"
