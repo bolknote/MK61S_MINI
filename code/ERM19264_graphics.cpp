@@ -591,7 +591,7 @@ LCD_Return_Codes_e ERM19264_graphics::drawChar(int16_t x, int16_t y, unsigned ch
     {
            	switch (_FontNumber) {
 #ifdef UC1609_Font_One
-				case UC1609Font_Default : line = pFontDefaultptr[((character - _CurrentFontoffset) * _CurrentFontWidth) + i]; break;
+				case UC1609Font_Default : line = UC_Font_One[((character - _CurrentFontoffset) * _CurrentFontWidth) + i]; break;
 #endif 
 #ifdef UC1609_Font_Two
 				case UC1609Font_Thick : line = pFontThickptr[((character  - _CurrentFontoffset) * _CurrentFontWidth) + i]; break;

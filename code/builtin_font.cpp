@@ -17,41 +17,77 @@ struct Glyph5x8 {
   u8 rows[8];
 };
 
+#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
+  #define MK61_BUILTIN_FULL_CYRILLIC 1
+#else
+  #define MK61_BUILTIN_FULL_CYRILLIC 0
+#endif
+
+// Character displays already contain most or all of the Russian alphabet in
+// CGROM.  Keep only the A00 omissions in firmware; A02 and WS0010 need no
+// standard Russian CGRAM copies at all.  Graphics backends still need every
+// raster, including lowercase.
+#if MK61_BUILTIN_FULL_CYRILLIC || \
+    (!defined(MK61_LCD1602_A02) && !defined(MK61_OLED1602_WS0010))
+  #define MK61_BUILTIN_HAS_STANDARD_CYRILLIC 1
+#else
+  #define MK61_BUILTIN_HAS_STANDARD_CYRILLIC 0
+#endif
+
+#if MK61_BUILTIN_HAS_STANDARD_CYRILLIC
 static const Glyph5x8 CYRILLIC[] = {
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x0410, {0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b00000}},
+#endif
   {0x0411, {0b11111, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x0412, {0b11110, 0b10001, 0b10001, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}},
+#endif
   {0x0413, {0b11111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000}},
   {0x0414, {0b00110, 0b01010, 0b01010, 0b01010, 0b01010, 0b01010, 0b11111, 0b10001}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x0415, {0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b11111, 0b00000}},
   {0x0401, {0b01010, 0b00000, 0b11111, 0b10000, 0b11110, 0b10000, 0b11111, 0b00000}},
+#endif
   {0x0416, {0b10101, 0b10101, 0b01110, 0b00100, 0b01110, 0b10101, 0b10101, 0b00000}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x0417, {0b11110, 0b00001, 0b00001, 0b01110, 0b00001, 0b00001, 0b11110, 0b00000}},
+#endif
   {0x0418, {0b10001, 0b10001, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b00000}},
   {0x0419, {0b01010, 0b00100, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b00000}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x041A, {0b10001, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010, 0b10001, 0b00000}},
+#endif
   {0x041B, {0b00111, 0b01001, 0b01001, 0b01001, 0b01001, 0b01001, 0b10001, 0b00000}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x041C, {0b10001, 0b11011, 0b10101, 0b10101, 0b10001, 0b10001, 0b10001, 0b00000}},
   {0x041D, {0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b00000}},
   {0x041E, {0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000}},
+#endif
   {0x041F, {0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x0420, {0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000, 0b00000}},
   {0x0421, {0b01111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b01111, 0b00000}},
   {0x0422, {0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000}},
+#endif
   {0x0423, {0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b11110, 0b00000}},
   {0x0424, {0b00100, 0b01110, 0b10101, 0b10101, 0b10101, 0b01110, 0b00100, 0b00000}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x0425, {0b10001, 0b10001, 0b01010, 0b00100, 0b01010, 0b10001, 0b10001, 0b00000}},
+#endif
   {0x0426, {0b10010, 0b10010, 0b10010, 0b10010, 0b10010, 0b11111, 0b00001, 0b00000}},
   {0x0427, {0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b00001, 0b00000}},
   {0x0428, {0b10101, 0b10101, 0b10101, 0b10101, 0b10101, 0b10101, 0b11111, 0b00000}},
   {0x0429, {0b10101, 0b10101, 0b10101, 0b10101, 0b10101, 0b11111, 0b00001, 0b00000}},
   {0x042A, {0b11000, 0b01000, 0b01000, 0b01110, 0b01001, 0b01001, 0b01110, 0b00000}},
   {0x042B, {0b10001, 0b10001, 0b10001, 0b11101, 0b10011, 0b10011, 0b11101, 0b00000}},
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x042C, {0b10000, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}},
+#endif
   {0x042D, {0b11110, 0b00001, 0b00001, 0b01111, 0b00001, 0b00001, 0b11110, 0b00000}},
   {0x042E, {0b10010, 0b10101, 0b10101, 0b11101, 0b10101, 0b10101, 0b10010, 0b00000}},
   {0x042F, {0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b10001, 0b00000}},
-#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
+#if MK61_BUILTIN_FULL_CYRILLIC
   {0x0430, {0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000}},
   {0x0431, {0b00111, 0b01000, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110, 0b00000}},
   {0x0432, {0b00000, 0b11110, 0b10001, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}},
@@ -87,22 +123,26 @@ static const Glyph5x8 CYRILLIC[] = {
   {0x044F, {0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b00000}}
 #endif
 };
+#endif
 
 // The WS0010 FT=10 ROM contains the complete Russian alphabet, but not the
 // Ukrainian/Belarusian additions below.  They live in Flash and can be leased
-// into the same eight CGRAM cells as any other non-ROM Unicode glyph.  Keeping
-// both cases explicit avoids substituting visually similar Latin letters.
+// into the same eight CGRAM cells as any other non-ROM Unicode glyph.  WS0010
+// and graphics preserve both cases; A00/A02 uppercase their two-line output,
+// so their lowercase copies would be unreachable.
 static const Glyph5x8 CYRILLIC_SUPPLEMENTAL[] = {
   {0x0404, {0b01110, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b01110, 0b00000}}, // Є
-  {0x0454, {0b00000, 0b01110, 0b10000, 0b11110, 0b10000, 0b10000, 0b01110, 0b00000}}, // є
   {0x0406, {0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // І
-  {0x0456, {0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // і
   {0x0407, {0b01010, 0b00000, 0b01110, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // Ї
-  {0x0457, {0b01010, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // ї
   {0x0490, {0b00001, 0b11111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000}}, // Ґ
-  {0x0491, {0b00001, 0b01111, 0b01000, 0b01000, 0b01000, 0b01000, 0b01000, 0b00000}}, // ґ
   {0x040E, {0b01010, 0b00100, 0b10001, 0b10001, 0b01111, 0b00001, 0b11110, 0b00000}}, // Ў
+#if MK61_BUILTIN_FULL_CYRILLIC || defined(MK61_OLED1602_WS0010)
+  {0x0454, {0b00000, 0b01110, 0b10000, 0b11110, 0b10000, 0b10000, 0b01110, 0b00000}}, // є
+  {0x0456, {0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // і
+  {0x0457, {0b01010, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // ї
+  {0x0491, {0b00001, 0b01111, 0b01000, 0b01000, 0b01000, 0b01000, 0b01000, 0b00000}}, // ґ
   {0x045E, {0b01010, 0b00100, 0b10001, 0b10001, 0b01111, 0b00001, 0b11110, 0b00000}}, // ў
+#endif
 };
 
 static const Glyph5x8 SPECIAL_5X8[] = {
@@ -150,9 +190,11 @@ static bool decodeRows5x8(const u8* rows, Raster& out) {
 const u8* rows5x8(u16 codepoint) {
   if(const u8* rows = specialRows5x8(codepoint)) return rows;
   codepoint = aliasedCodepoint(codepoint);
+#if MK61_BUILTIN_HAS_STANDARD_CYRILLIC
   for(usize i = 0; i < sizeof(CYRILLIC) / sizeof(CYRILLIC[0]); i++) {
     if(CYRILLIC[i].codepoint == codepoint) return CYRILLIC[i].rows;
   }
+#endif
   for(usize i = 0;
       i < sizeof(CYRILLIC_SUPPLEMENTAL) / sizeof(CYRILLIC_SUPPLEMENTAL[0]);
       i++) {
@@ -204,7 +246,7 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   }
 
   if(codepoint > 0x7E) return false;
-  const unsigned char* columns = &pFontDefaultptr[(usize) codepoint * 5];
+  const unsigned char* columns = &UC_Font_One[(usize) codepoint * 5];
   for(u8 x = 0; x < out.width; x++) {
     for(u8 y = 0; y < out.height; y++) {
       if((columns[x] & ((u8) 1 << y)) != 0) setPixel(out, x, y);
@@ -215,3 +257,6 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
 }
 
 } // пространство имён builtin_font
+
+#undef MK61_BUILTIN_HAS_STANDARD_CYRILLIC
+#undef MK61_BUILTIN_FULL_CYRILLIC

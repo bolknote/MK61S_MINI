@@ -211,43 +211,14 @@ class LCD_GRD_Label {
     }
 };
 
-const u8 ROUND_ARROW_bit[8] = {
-  0b11110,
-  0b01101,
-  0b10101,
-  0b10001,
-  0b10101,
-  0b10110,
-  0b01111,
-  0b00000
-};
-
-const u8 Alpha[9] = {
-  0b11111,
-  0b11011,
-  0b10101,
-  0b11101,
-  0b11001,
-  0b10101,
-  0b11001,
-  0b11111
-};
-
-const u8 Symbol[9] = {
-  0b11111,
-  0b11111,
-  0b11111,
-  0b11011,
-  0b11011,
-  0b10101,
-  0b10101,
-  0b11111
-};
-
 class class_LCD_fonts {
   private:
-   const u8 fonts[9 * 8] = {
-    //const u8 GE_bit[8] = {
+   // One immutable, profile-specific CGRAM image.  Keeping glyphs as object
+   // members used to make every short-lived loader object 96 bytes large; the
+   // old common table also retained characters which A02/WS0010 never load.
+#if defined(MK61_OLED1602_WS0010)
+   inline static constexpr u8 fixed_glyphs[8][8] = {
+    { // greater-or-equal
       0b00100,
       0b00010,
       0b00001,
@@ -255,62 +226,9 @@ class class_LCD_fonts {
       0b00100,
       0b01001,
       0b00010,
-      0b00100,
-    //const u8 P_ru[8] = {
-      0b11111,
-      0b10001,
-      0b10001,
-      0b10001,
-      0b10001,
-      0b10001,
-      0b10001,
-      0b00000,
-    //const u8 B_ru[8] = {
-      0b11111,
-      0b10000,
-      0b10000,
-      0b11110,
-      0b10001,
-      0b10001,
-      0b11110,
-      0b00000,
-    //const u8 D_ru[8] = {
-      0b00110,
-      0b01010,
-      0b01010,
-      0b01010,
-      0b01010,
-      0b01010,
-      0b11111,
-      0b10001,
-    //const u8 I_ru[8] = {
-      0b10001,
-      0b10001,
-      0b10001,
-      0b10011,
-      0b10101,
-      0b11001,
-      0b10001,
-      0b00000,
-    //const u8 G_ru[8] = {
-      0b11111,
-      0b10000,
-      0b10000,
-      0b10000,
-      0b10000,
-      0b10000,
-      0b00000,
-      0b00000,
-    //const u8 POWSQR_bit[8] = {
-      0b11100,
-      0b00100,
-      0b01100,
-      0b10000,
-      0b11100,
-      0b00000,
-      0b00000,
-      0b00000,
-    //const u8 POWY_bit[8] = {
+      0b00100
+    },
+    { // y superscript
       0b10100,
       0b10100,
       0b01100,
@@ -318,8 +236,9 @@ class class_LCD_fonts {
       0b11000,
       0b00000,
       0b00000,
-      0b00000,
-    //const u8 XOR_bit[8] = {
+      0b00000
+    },
+    { // xor
       0b01110,
       0b10101,
       0b10101,
@@ -328,8 +247,8 @@ class class_LCD_fonts {
       0b10101,
       0b01110,
       0b00000
-};
-    const u8 not_equal_bit[8] = {
+    },
+    { // not equal
       0b00001,
       0b00010,
       0b11111,
@@ -338,8 +257,8 @@ class class_LCD_fonts {
       0b01000,
       0b10000,
       0b00000
-    };
-    const u8 sqrt_bit[8] = {
+    },
+    { // square root
       0b00001,
       0b00010,
       0b00010,
@@ -348,8 +267,18 @@ class class_LCD_fonts {
       0b00000,
       0b00000,
       0b00000
-    };
-    const u8 pow_x_bit[8] = {
+    },
+    { // cycle arrow
+      0b11110,
+      0b01101,
+      0b10101,
+      0b10001,
+      0b10101,
+      0b10110,
+      0b01111,
+      0b00000
+    },
+    { // x superscript
       0b00000,
       0b00000,
       0b01010,
@@ -358,37 +287,81 @@ class class_LCD_fonts {
       0b00000,
       0b00000,
       0b00000
-    };
-//    const u8* fonts = {&GE_bit, &P_ru, &B_ru, &D_ru, &I_ru, &G_ru, POWSQR_bit, &POWY_bit, &XOR_bit};
+    },
+    { // 2 superscript
+      0b11100,
+      0b00100,
+      0b01100,
+      0b10000,
+      0b11100,
+      0b00000,
+      0b00000,
+      0b00000
+    }
+   };
+   static_assert(ws0010_charset::cgram::GREATER_OR_EQUAL == 0 &&
+                 ws0010_charset::cgram::POWER_Y == 1 &&
+                 ws0010_charset::cgram::XOR == 2 &&
+                 ws0010_charset::cgram::NOT_EQUAL == 3 &&
+                 ws0010_charset::cgram::SQUARE_ROOT == 4 &&
+                 ws0010_charset::cgram::CYCLE_ARROW == 5 &&
+                 ws0010_charset::cgram::POWER_X == 6 &&
+                 ws0010_charset::cgram::POWER_2 == 7,
+                 "WS0010 CGRAM image must follow the fixed slot policy");
+#elif defined(MK61_LCD1602_A02)
+   inline static constexpr u8 fixed_glyphs[7][8] = {
+    {0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01001, 0b00010, 0b00100},
+    {0b10100, 0b10100, 0b01100, 0b00100, 0b11000, 0b00000, 0b00000, 0b00000},
+    {0b01110, 0b10101, 0b10101, 0b11111, 0b10101, 0b10101, 0b01110, 0b00000},
+    {0b00001, 0b00010, 0b11111, 0b00100, 0b11111, 0b01000, 0b10000, 0b00000},
+    {0b00001, 0b00010, 0b00010, 0b10100, 0b01000, 0b00000, 0b00000, 0b00000},
+    {0b11110, 0b01101, 0b10101, 0b10001, 0b10101, 0b10110, 0b01111, 0b00000},
+    {0b00000, 0b00000, 0b01010, 0b00100, 0b01010, 0b00000, 0b00000, 0b00000}
+   };
+#elif !defined(MK61_DISPLAY_UC1609)
+   inline static constexpr u8 fixed_glyphs[9][8] = {
+    {0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01001, 0b00010, 0b00100}, // greater-or-equal
+    {0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000}, // П
+    {0b11111, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}, // Б
+    {0b00110, 0b01010, 0b01010, 0b01010, 0b01010, 0b01010, 0b11111, 0b10001}, // Д
+    {0b10001, 0b10001, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b00000}, // И
+    {0b11111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000, 0b00000}, // Г
+    {
+      0b11100,
+      0b00100,
+      0b01100,
+      0b10000,
+      0b11100,
+      0b00000,
+      0b00000,
+      0b00000
+    }, // 2 superscript
+    {
+      0b10100,
+      0b10100,
+      0b01100,
+      0b00100,
+      0b11000,
+      0b00000,
+      0b00000,
+      0b00000
+    }, // y superscript
+    {
+      0b01110,
+      0b10101,
+      0b10101,
+      0b11111,
+      0b10101,
+      0b10101,
+      0b01110,
+      0b00000
+    } // xor
+   };
+#endif
   public:
 #if defined(MK61_OLED1602_WS0010)
     void loadWs0010Slot(u8 slot) const {
-      switch(slot) {
-        case ws0010_charset::cgram::GREATER_OR_EQUAL:
-          main_lcd().createChar(slot, (uint8_t*) &fonts[0]);
-          break;
-        case ws0010_charset::cgram::POWER_Y:
-          main_lcd().createChar(slot, (uint8_t*) &fonts[7 * 8]);
-          break;
-        case ws0010_charset::cgram::XOR:
-          main_lcd().createChar(slot, (uint8_t*) &fonts[8 * 8]);
-          break;
-        case ws0010_charset::cgram::NOT_EQUAL:
-          main_lcd().createChar(slot, (uint8_t*) &not_equal_bit[0]);
-          break;
-        case ws0010_charset::cgram::SQUARE_ROOT:
-          main_lcd().createChar(slot, (uint8_t*) &sqrt_bit[0]);
-          break;
-        case ws0010_charset::cgram::CYCLE_ARROW:
-          main_lcd().createChar(slot, (uint8_t*) &ROUND_ARROW_bit[0]);
-          break;
-        case ws0010_charset::cgram::POWER_X:
-          main_lcd().createChar(slot, (uint8_t*) &pow_x_bit[0]);
-          break;
-        case ws0010_charset::cgram::POWER_2:
-          main_lcd().createChar(slot, (uint8_t*) &fonts[6 * 8]);
-          break;
-      }
+      if(slot < 8) main_lcd().createChar(slot, (uint8_t*) fixed_glyphs[slot]);
     }
 #endif
 
@@ -396,42 +369,31 @@ class class_LCD_fonts {
       #if defined(MK61_DISPLAY_UC1609)
         main_lcd().clearCustomChars();
         return;
-      #endif
+#else
       if(main_lcd().graphicsMode()) {
         main_lcd().clearCustomChars();
         return;
       }
-      u32 ascii=0;
       #if defined(MK61_LCD1602_A02) || defined(MK61_OLED1602_WS0010)
 #if defined(MK61_OLED1602_WS0010)
         for(u8 slot = 0; slot < 8; slot++) loadWs0010Slot(slot);
 #else
-        main_lcd().createChar(GE, (uint8_t*) &fonts[0]);
-        main_lcd().createChar(LCD_CHAR_POWY, (uint8_t*) &fonts[7 * 8]);
-        main_lcd().createChar(LCD_CHAR_XOR, (uint8_t*) &fonts[8 * 8]);
-        main_lcd().createChar(LCD_NOT_EQU_CHAR, (uint8_t*) &not_equal_bit[0]);
-        main_lcd().createChar(LCD_SQRT_CHAR, (uint8_t*) &sqrt_bit[0]);
-        main_lcd().createChar(LCD_CYC_ARROW, (uint8_t*) &ROUND_ARROW_bit[0]);
-        main_lcd().createChar(LCD_POW_X_CHAR, (uint8_t*) &pow_x_bit[0]);
+        for(u8 slot = 0; slot < 7; slot++) {
+          main_lcd().createChar(slot, (uint8_t*) fixed_glyphs[slot]);
+        }
 #endif
         return;
-      #endif
-      for(int i=0; i < 9 * 8; i += 8) {
-        main_lcd().createChar(ascii++, (uint8_t*) &fonts[i]);
+      #else
+      for(u8 slot = 0; slot < 9; slot++) {
+        main_lcd().createChar(slot, (uint8_t*) fixed_glyphs[slot]);
       }
+      #endif
+#endif
     }
 
-    void load(int offset, int nChar) const {
-      #if defined(MK61_DISPLAY_UC1609)
-        main_lcd().clearCustomChars();
-        return;
-      #endif
-      if(main_lcd().graphicsMode()) {
-        main_lcd().clearCustomChars();
-        return;
-      }
-      main_lcd().createChar(nChar, (uint8_t*) &fonts[offset]);
-    }
 };
+
+static_assert(sizeof(class_LCD_fonts) == 1,
+              "LCD font loader must not own copies of glyph tables");
 
 #endif

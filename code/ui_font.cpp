@@ -36,15 +36,16 @@ int glyphIndex(uint32_t codepoint) {
   if (codepoint >= 0x20U && codepoint <= 0x7EU) {
     return static_cast<int>(codepoint - 0x20U);
   }
-  unsigned first = 95;
-  unsigned last = GLYPH_COUNT;
+  unsigned first = 0;
+  unsigned last = NON_ASCII_GLYPH_COUNT;
   while (first < last) {
     const unsigned middle = first + (last - first) / 2;
-    if (CODEPOINTS[middle] < codepoint) first = middle + 1;
+    if (NON_ASCII_CODEPOINTS[middle] < codepoint) first = middle + 1;
     else last = middle;
   }
-  return first < GLYPH_COUNT && CODEPOINTS[first] == codepoint
-    ? static_cast<int>(first) : -1;
+  return first < NON_ASCII_GLYPH_COUNT &&
+         NON_ASCII_CODEPOINTS[first] == codepoint
+    ? static_cast<int>(ASCII_GLYPH_COUNT + first) : -1;
 }
 
 } // namespace
