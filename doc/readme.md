@@ -1,11 +1,11 @@
 # Документация проекта
 
 Редактируемые исходники находятся в `src/`. Каждый `src/NAME.md` собирается
-в отдельный `NAME.pdf` в этом каталоге. PDF из таблицы ниже пересобраны
-06.09.2026 из текущих Markdown-исходников.
+в отдельный `NAME.pdf` в этом каталоге.
 
 | Руководство | Исходник | PDF |
 | --- | --- | --- |
+| Первый APP: Hello World на C и Rust | [Markdown](src/MK61s-mini-APP-Quickstart.md) | [PDF](MK61s-mini-APP-Quickstart.pdf) |
 | Написание самостоятельных APP на C/C++ (ABI 4) | [Markdown](src/MK61s-mini-APP-Programming.md) | [PDF](MK61s-mini-APP-Programming.pdf) |
 | Прежняя manifest-сборка APP (ABI 2) | [Markdown](src/MK61s-mini-APP.md) | [PDF](MK61s-mini-APP.pdf) |
 | F401 и System APP в Arduino IDE | [Markdown](src/MK61s-mini-Arduino-IDE.md) | [PDF](MK61s-mini-Arduino-IDE.pdf) |

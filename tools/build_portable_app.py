@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a standalone relocatable APP using ARM GCC; no resident ELF/BIN.
+"""Build a standalone relocatable C, C++ or Rust APP; no resident ELF/BIN.
 
 Examples and the ABI contract are in sdk/portable/README.md.
 """
@@ -94,14 +94,50 @@ def build(args: argparse.Namespace) -> dict:
     include_flags = ["-I" + str(x.resolve()) for x in includes]
     objects = []
     compile_commands = []
+    rust_compiler = None
     for index, source in enumerate(sources):
-        if source.suffix not in (".c", ".cpp", ".S") or not source.is_file():
-            raise ValueError(f"expected an existing .c, .cpp or .S source: {source}")
+        if source.suffix not in (".c", ".cpp", ".rs", ".S") or not source.is_file():
+            raise ValueError(f"expected an existing .c, .cpp, .rs or .S source: {source}")
+        obj = out / f"{index}-{source.name}.o"
+        if source.suffix == ".rs":
+            if rust_compiler is None:
+                rust_compiler = args.rustc
+                if rust_compiler is None:
+                    found = shutil.which("rustc")
+                    if found is None:
+                        raise ValueError("Rust source requires rustc on PATH")
+                    rust_compiler = Path(found)
+                else:
+                    rust_compiler = rust_compiler.resolve()
+                if not rust_compiler.is_file():
+                    raise ValueError(f"Rust compiler is missing: {rust_compiler}")
+            command = [rust_compiler, "--edition", "2021",
+                       "--target", "thumbv7em-none-eabihf",
+                       "--crate-type", "lib", "--emit", "obj",
+                       "--crate-name", f"mk61_app_{index}",
+                       "-C", "opt-level=s", "-C", "panic=abort",
+                       "-C", "relocation-model=static",
+                       # APP relocation records support word pointers. This is
+                       # LLVM's equivalent of ARM GCC -mword-relocations.
+                       "-C", "target-feature=+no-movt",
+                       source, "-o", obj]
+            try:
+                run(command)
+            except ValueError as exc:
+                if "can't find crate for `core`" in str(exc):
+                    raise ValueError(
+                        "Rust target thumbv7em-none-eabihf is missing; run "
+                        "rustup target add thumbv7em-none-eabihf"
+                    ) from exc
+                raise
+            compile_commands.append({"directory": str(ROOT), "file": str(source),
+                                     "arguments": [str(x) for x in command]})
+            objects.append(obj)
+            continue
         cpp = source.suffix == ".cpp"
         language = (["-std=c++17", "-fno-exceptions", "-fno-rtti",
                      "-fno-threadsafe-statics", "-fno-use-cxa-atexit"] if cpp
                     else ["-std=c11"] if source.suffix == ".c" else [])
-        obj = out / f"{index}-{source.name}.o"
         # GCC can synthesize memset/memcpy after LTO's symbol pruning.
         # Keep their freestanding definitions in a normal object.
         support = ["-fno-lto"] if source == ROOT / "sdk/portable/memory.c" else []
@@ -179,6 +215,8 @@ def build(args: argparse.Namespace) -> dict:
               "compression": "ZX0+BCJ" if image_flags & 2 else "ZX0",
               "resident_imports": 0,
               "compiler": run([tool("gcc"), "--version"]).splitlines()[0]}
+    if rust_compiler is not None:
+        report["rust_compiler"] = run([rust_compiler, "--version"]).strip()
     (out / (args.name + ".json")).write_text(json.dumps(report, indent=2) + "\n")
     return report
 
@@ -199,6 +237,8 @@ def main() -> None:
     parser.add_argument("--library", type=Path, action="append", default=[])
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--arm-toolchain-bin", type=Path)
+    parser.add_argument("--rustc", type=Path,
+                        help="rustc executable; required only for .rs sources if not on PATH")
     parser.add_argument("--packer", type=Path)
     parser.add_argument("--handled-magic")
     args = parser.parse_args()

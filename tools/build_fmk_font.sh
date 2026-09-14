@@ -3,9 +3,10 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 source="$root/tools/.fmk-font/fmk_font.cpp"
+codec="$root/code/utf8_codec.hpp"
 output=${MK61_FMK_FONT_BIN:-"$root/.build/tools/fmk_font"}
 
-if [[ ! -x "$output" || "$source" -nt "$output" ]]; then
+if [[ ! -x "$output" || "$source" -nt "$output" || "$codec" -nt "$output" ]]; then
   if ! pkg-config --exists freetype2; then
     echo "FreeType development files are required (pkg-config freetype2)." >&2
     exit 1

@@ -7,7 +7,7 @@
 - `mk61-arduino-board.cmd` — установка платы `MK61s F401 + APP` в Arduino IDE;
 - `mkc.cmd` — двухпанельный файловый менеджер устройства;
 - `build_f401_bundle.sh` — legacy-сборка custom manifest APP и payload ZX0;
-- `build_portable_app.py` — C/C++ SDK и сборщик всех System APP: самостоятельный ABI 4
+- `build_portable_app.py` — C/C++/Rust SDK и сборщик всех System APP: самостоятельный ABI 4
   с автоматическим выбором ZX0 или BCJ + ZX0; инструкция в
   [`sdk/portable/README.md`](../sdk/portable/README.md);
 - `build_fmk_font.sh` — конвертер шрифтов FMK;
@@ -32,7 +32,8 @@
   словарь объяснений не занимает Flash микроконтроллера.
 
 Как написать и собрать своё приложение:
-[руководство по C/C++ APP](../doc/src/MK61s-mini-APP-Programming.md).
+[короткий Hello World на C и Rust](../doc/src/MK61s-mini-APP-Quickstart.md) и
+[полное руководство по C/C++ APP](../doc/src/MK61s-mini-APP-Programming.md).
 
 Полный локальный выпуск проверяется `tests/run_release_preflight.sh`. GitHub
 Actions вызывает те же repository-owned матрицы. При добавлении профиля или

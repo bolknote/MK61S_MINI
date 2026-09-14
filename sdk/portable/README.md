@@ -6,8 +6,8 @@ APP](../../doc/src/MK61s-mini-APP-Programming.md). Этот README описыв�
 сопоставлены в [отчёте ABI 4](RELOCATION-RESULTS.md).
 Предыдущее сравнение ABI 2/3 сохранено в [SIZE-COMPARISON.md](SIZE-COMPARISON.md).
 
-SDK собирает обычный `int main(void)` на C или C++ в `.APP` без resident ELF,
-BIN и `--just-symbols`. Один полученный файл запускается на разных
+SDK собирает обычный `int main(void)` на C/C++ или `extern "C" fn main()` на
+Rust в `.APP` без resident ELF, BIN и `--just-symbols`. Один файл запускается на разных
 прошивках с включённым ABI 4 и совместимой таблицей API. Прямой сборщик
 поддерживает F401; ниже также описано аппаратное испытание на F411.
 Первый перенесённый
@@ -33,11 +33,21 @@ python3 tools/build_portable_app.py --name WBMP \
   --output-dir .build/portable-apps/wbmp
 ```
 
+Для Rust дополнительно нужен `rustup`. Установите целевую библиотеку и
+соберите готовый `#![no_std]` пример:
+
+```sh
+rustup target add thumbv7em-none-eabihf
+python3 tools/build_portable_app.py --name HELLO_RS \
+  --source examples/portable-apps/HELLO-RUST/main.rs \
+  --output-dir .build/portable-apps/hello-rust
+```
+
 На Windows используйте `python` и запишите команду в одну строку либо
 примените продолжение строки вашей оболочки. Для сборки упаковщика нужен
 PowerShell 5.1+; принимается также готовый `--packer PATH`.
 
-`--source` принимает несколько `.c`/`.cpp`; `--include` добавляет каталог
+`--source` принимает `.c`, `.cpp`, `.rs` и `.S`; `--include` добавляет каталог
 заголовков, `--library` — статическую ARM-библиотеку. Библиотеки должны быть
 собраны для Cortex-M4 Thumb, hard-float `fpv4-sp-d16`. SDK добавляет startup,
 `memcpy`, `memmove`, `memset`, `memcmp` и нужные функции `libgcc`.
