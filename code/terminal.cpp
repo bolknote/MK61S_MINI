@@ -97,19 +97,19 @@ static bool terminal_arg_end(const char* p) {
   return p == NULL || *p == 0 || *p == '\r' || *p == '\n';
 }
 
-static bool terminal_parse_slot_arg(const char* args, usize& slot_out) {
+static bool terminal_parse_quick_number(const char* args, usize& number_out) {
   args = terminal_skip_spaces(args);
   if(args == NULL || *args < '0' || *args > '9') return false;
 
-  usize slot = 0;
+  usize number = 0;
   const char* p = args;
   while(*p >= '0' && *p <= '9') {
-    slot = slot * 10 + (usize) (*p - '0');
-    if(slot > MAX_SLOT_FOR_PROGRAM) return false;
+    number = number * 10 + (usize) (*p - '0');
+    if(number > MAX_SLOT_FOR_PROGRAM) return false;
     p++;
   }
   if(!terminal_arg_end(p)) return false;
-  slot_out = slot;
+  number_out = number;
   return true;
 }
 
@@ -3437,26 +3437,6 @@ bool class_terminal::Assembler(void) {
       return true;
     }
 
-void  class_terminal::flash_map_list(void) {
-      Serial.print("     0  1  2  3  4  5  6  7  8  9\r\n0 - ");
-      usize slot = 0;
-      do { // пробежим все слоты от 0 до 99
-        if(IsOccupied(slot))
-          Serial.print("[X]");
-        else
-          Serial.print("[ ]");
-
-        if(++slot == 100) break;
-
-        if((slot % 10) == 0) {
-          Serial.println();
-          Serial.print(slot / 10);
-          Serial.print(" - ");
-        }
-      } while(true);
-      Serial.println();
-    }
-
 terminal_protocol::Result class_terminal::command_to_kbd(bool script_mode) {
       usize code_61 = 0;
       const usize command_count = terminal_keys::COUNT;
@@ -3846,18 +3826,16 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 MK61Emu_ClearCodePage();
                 Serial.println("Code page cleared!");
                 break;
-              case CMD_DEL_SLOT:
-                ok = DeleteSlot(nSlot);
-                if(!ok) Serial.println("Delete failed (no such file?)");
-                break;
               case CMD_SAVE:
                 ok = pending_save_name[0] != 0
                     ? StoreProgram(pending_save_parent_id, pending_save_name)
                     : Store(nSlot);
                 if(!ok) Serial.println("Failed save attempt!");
                 break;
-              case CMD_ERASE_STORAGE:
-                ok = clear_storage();
+              case CMD_FORMAT_STORAGE:
+                ok = program_store::format();
+                if(ok) current_directory = program_store::ROOT_ID;
+                Serial.println(ok ? "C5 formatted." : "C5 format failed!");
                 break;
               default:
                 ok = false;
@@ -4084,9 +4062,17 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               Dump1302();
             break;
           case  CMD_CLEAR:
-          case  CMD_ERASE_STORAGE:
               pending_confirmation_cmd = command_id;
               Serial.println("Enter Y/y to confirm the operation!");
+            break;
+          case  CMD_FORMAT_STORAGE:
+              if(!terminal_core::at_end(command_args())) {
+                Serial.println("Usage: format");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              pending_confirmation_cmd = command_id;
+              Serial.println("Enter Y/y to confirm formatting all C5 files!");
             break;
           case  CMD_CMD: {
               const terminal_protocol::Result result = command_to_kbd(script_mode);
@@ -4113,11 +4099,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             break;
           case  CMD_SAVE: {
               const char* args = command_args();
-              usize slot = 0;
+              usize number = 0;
               pending_save_name[0] = 0;
               pending_save_parent_id = program_store::ROOT_ID;
-              if(terminal_parse_slot_arg(args, slot)) {
-                nSlot = (isize) slot;
+              if(terminal_parse_quick_number(args, number)) {
+                nSlot = (isize) number;
               } else {
                 storage_path::FileTarget target = {};
                 const storage_path::Status status = storage_path::file_target(
@@ -4125,7 +4111,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                     target);
                 if(status != storage_path::Status::OK) {
                   terminal_path_error("save", status);
-                  Serial.println("Usage: save <slot|path[.m61]>");
+                  Serial.println("Usage: save <number|path[.m61]>");
                   recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
@@ -4139,11 +4125,12 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             break;
           case  CMD_LOAD: {
               const char* args = command_args();
-              usize slot = 0;
-              if(terminal_parse_slot_arg(args, slot)) {
-                // В скрипте слот выполняется вложенно (Load() отменил бы сценарий).
+              usize number = 0;
+              if(terminal_parse_quick_number(args, number)) {
+                // В скрипте числовой файл выполняется вложенно
+                // (Load() отменил бы сценарий).
                 if(script_mode) return script_action(terminal_protocol::ResultKind::LOAD_SLOT, args);
-                if(!Load(slot)) {
+                if(!Load(number)) {
                   Serial.println("Failed load attempt!");
                   recive_pos = 0;
                   return terminal_protocol::Result::error();
@@ -4156,7 +4143,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                     entry);
                 if(status != storage_path::Status::OK) {
                   terminal_path_error("load", status);
-                  Serial.println("Usage: load <slot|path[.m61]>");
+                  Serial.println("Usage: load <number|path[.m61]>");
                   recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
@@ -4222,9 +4209,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             break;
           case  CMD_HOUT:
               PutHexString();
-            break;
-          case  CMD_SMAP:
-              flash_map_list();
             break;
           case  CMD_VFAT_LOG: {
               if(!terminal_vfat_log(command_args())) {
@@ -4450,7 +4434,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               if(!program_store::ready()) {
                 if(program_store::mount_status() ==
                    program_store::MountStatus::REPAIR_REQUIRED) {
-                  Serial.println("C5: catalog damaged; run sera to format");
+                  Serial.println("C5: catalog damaged; run format or use Erase FLASH menu");
                   Serial.println("Files were not modified");
                 } else {
                   Serial.println("C5: unavailable");
@@ -4619,63 +4603,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-            break;
-          case  CMD_DIR: {
-              char slot_name[SIZEOF_SLOT_NAME];
-              for(usize i=0; i < 100; i++) {
-                if(IsOccupied(i)) {
-                  Serial.print(i); Serial.print(". ");
-                  terminal_println_utf8(ReadSlotName(i, (char*) &slot_name[0]));
-                }
-              }
-            }
-            break;
-          case  CMD_DEL_SLOT: {
-              if(!flash_is_ok) {
-                Serial.println("Error: spiflash chip is not installed!");
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
-              }
-              usize slot = 0;
-              if(!terminal_core::parse_single_unsigned(command_args(), 10, 99, slot)) {
-                Serial.println("Usage: sdel <0..99>");
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
-              }
-              nSlot = (isize) slot;
-              Serial.print("\n\rDelete slot #"); Serial.println(nSlot);
-              if(!IsOccupied(nSlot)) {
-                Serial.println("Warning: slot is already empty.");
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
-              }
-              pending_confirmation_cmd = CMD_DEL_SLOT;
-              Serial.println("Enter Y/y to confirm the operation!");
-            }
-            break;
-          case  CMD_RENAME: {
-              const char* args = command_args();
-              usize slot = 0;
-              if(!terminal_core::parse_unsigned(args, 10, 99, slot)) {
-                Serial.println("Usage: snm <0..99> <name>");
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
-              }
-              char slot_name[SIZEOF_SLOT_NAME];
-              if(!terminal_copy_arg(slot_name, sizeof(slot_name), args)) {
-                Serial.println("Name must contain 1..31 UTF-8 bytes.");
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
-              }
-              Serial.print("Rename slot N"); Serial.print(slot); Serial.print(" to ");
-              terminal_println_utf8(slot_name);
-              if(!Rename(slot, slot_name)) {
-                Serial.println("Rename failed (missing slot or duplicate name).");
-                ErrorReaction();
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
-              }
-            }
             break;
           case  CMD_HIN:
           case  CMD_SET_CODE:

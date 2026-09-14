@@ -321,7 +321,7 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_FS_STAT));
   assert(!terminal_command_allowed_in_script(CMD_FS_GET));
   assert(!terminal_command_allowed_in_script(CMD_FS_PUT));
-  assert(!terminal_command_allowed_in_script(CMD_ERASE_STORAGE));
+  assert(!terminal_command_allowed_in_script(CMD_FORMAT_STORAGE));
   assert(!terminal_command_allowed_in_script(CMD_DATE));
   assert(!terminal_command_allowed_in_script(CMD_USB_SCREEN));
   assert(!terminal_command_allowed_in_script(CMD_CRASH));

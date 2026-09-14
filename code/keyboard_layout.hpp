@@ -25,7 +25,7 @@ static constexpr Mapping CLASSIC = {
   0, 5, 10, 15, 1, 6, 11, 16, 2, 3,
   {4, 9, 8, 7, 14, 13, 12, 19, 18, 17},
   20, 21, 22, 23, 25, 26, 28, 27, 24, 29,
-  30, 31, 32, 35, 34, 33, 38, 36, 37, 39, 27, 28
+  30, 31, 32, 35, 33, 34, 38, 36, 37, 39, 27, 28
 };
 
 // Плата 40TH использует ту же физическую матрицу 5x8, что и mk61s-mini.
@@ -45,6 +45,8 @@ static_assert(MINI.k != MINI.right, "mini K and Right must be distinct");
 static_assert(MINI.alpha != MINI.ok, "mini F and OK must be distinct");
 static_assert(CLASSIC.k != CLASSIC.right, "classic K and Right must be distinct");
 static_assert(CLASSIC.alpha != CLASSIC.ok, "classic F and OK must be distinct");
+static_assert(CLASSIC.save == 33 && CLASSIC.load == 34,
+              "classic SAVE/LOAD must match the physical key labels");
 static_assert(FORTIETH.k != FORTIETH.right, "40TH K and Right must be distinct");
 static_assert(FORTIETH.alpha != FORTIETH.ok, "40TH F and OK must be distinct");
 

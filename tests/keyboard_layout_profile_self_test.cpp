@@ -51,6 +51,14 @@ void test_digit_and_sms_layout(void) {
 void test_editor_controls_are_unambiguous(void) {
   assert(KEY_K != (u32) KEY_RIGHT);
   assert(KEY_ALPHA != KEY_OK);
+  assert(KEY_SAVE != KEY_LOAD);
+#if defined(MK61_KEYBOARD_CLASSIC)
+  assert(KEY_SAVE == 33);
+  assert(KEY_LOAD == 34);
+#else
+  assert(KEY_SAVE == 36);
+  assert(KEY_LOAD == 35);
+#endif
 }
 
 void test_k_punctuation_layout(void) {

@@ -72,6 +72,13 @@ void main() {
     expect(definition.keyForAction('down').label, 'ШГ→');
   });
 
+  test('Classic SAVE and LOAD match the physical panel', () {
+    final definition = KeyboardDefinition.forLayout(MkKeyboardLayout.classic);
+
+    expect(definition.scanCodeFor('save'), 33);
+    expect(definition.scanCodeFor('load'), 34);
+  });
+
   test('A00 key faces include the printed shifted and alphabet legends', () {
     final definition = KeyboardDefinition.forLayout(MkKeyboardLayout.mini);
 

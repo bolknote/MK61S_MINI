@@ -323,8 +323,6 @@ class class_terminal {
 
     bool Assembler(void);
 
-    void  flash_map_list(void);
-
     terminal_protocol::Result command_to_kbd(bool script_mode);
 
     bool scancode_to_kbd(i32& out);

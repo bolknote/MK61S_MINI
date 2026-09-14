@@ -54,5 +54,10 @@ int main() {
   assert(terminal_catalog::lookup((const u8*) "set$1234") == CMD_SET_CODE);
   assert(terminal_catalog::lookup((const u8*) "R") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "se") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "smap") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "sdir") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "snm") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "sdel") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "sera") == CMD_UNKNOWN);
   std::puts("terminal catalog/help/lookup characterization: PASS");
 }

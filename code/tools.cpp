@@ -848,18 +848,6 @@ void store_grade_switch(AngleUnit angle_unit) {
   write_persistent_settings();
 }
 
-bool erase_slot_old(usize nSlot) {
-  if(nSlot > MAX_SLOT_FOR_PROGRAM) return false;
-  char name[8];
-  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
-  return !program_store::exists(program_store::ProgramType::MK61, name) ||
-         program_store::remove(program_store::ProgramType::MK61, name);
-}
-
-bool erase_slot(usize nSlot) {
-  return erase_slot_old(nSlot);
-}
-
 usize seek_program_END(u8* code_page) {
   const isize program_steps = (isize) core_61::program_steps();
   isize lastCommand = program_steps;
@@ -994,31 +982,6 @@ inline bool check_empty_program(void) {
     return true;
   }
   return false;
-}
-
-char* ReadSlotName(usize nSlot, char* slot_name) {
-  char name[8];
-  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
-  if(!program_store::exists(program_store::ProgramType::MK61, name)) return NULL;
-  bounded_string::copy(slot_name, SIZEOF_SLOT_NAME, name);
-  return slot_name;
-}
-
-bool clear_storage(void) {
-  return program_store::format();
-}
-
-bool Rename(usize nSlot, char* slot_name) {
-  char old_name[8];
-  snprintf(old_name, sizeof(old_name), "%u", (unsigned) nSlot);
-  return program_store::rename(program_store::ProgramType::MK61, old_name, slot_name);
-}
-
-bool DeleteSlot(usize nSlot) {
-  if(nSlot > MAX_SLOT_FOR_PROGRAM) return false;
-  char name[8];
-  snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
-  return program_store::remove(program_store::ProgramType::MK61, name);
 }
 
 bool StoreProgram(const char* name) {

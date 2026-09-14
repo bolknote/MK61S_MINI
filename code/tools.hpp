@@ -14,12 +14,8 @@
 #include <stdio.h>
 
 static constexpr usize FLASH_SECTOR_SIZE    = 4096;
-static constexpr u8    SLOT_OCCUPIED        = 0x55;
-static constexpr usize OFFSET_FLAG_OCCUPIED = 0;
 static constexpr usize OFFSET_MK61_PROGRAMM = 1;
 static constexpr usize OFFSET_AFTER_PROGRAM = OFFSET_MK61_PROGRAMM + core_61::MAX_PROGRAM_STEP;
-static constexpr usize OFFSET_SLOT_NAME     = 384;
-static constexpr usize SIZEOF_SLOT_NAME     = program_store::NAME_SIZE;
 static constexpr isize MAX_SLOT_FOR_PROGRAM = 99;
 static constexpr isize BLOCK_SIZE           = (core_61::MAX_PROGRAM_STEP + 1) / 13;
 
@@ -125,8 +121,6 @@ extern  bool  Confirmation(void);
 
 extern  bool  flash_is_ok;
 extern  isize calc_address(usize nSlot);
-extern  char* ReadSlotName(usize nSlot, char* slot_name);
-extern  bool  Rename(usize nSlot, char* slot_name);
 extern  bool  Store(void);
 extern  bool  Store(usize nSlot);
 extern  bool  StoreProgram(const char* name);
@@ -143,9 +137,6 @@ extern  bool  OpenStoredFile(u16 cwd, const char* args);
 extern  bool  OpenStoredFile(const char* args);
 extern  u8    load_word(isize segment_address, isize offset);
 extern  bool  EraseFlash(void);
-extern  bool  clear_storage(void);
-extern  bool  erase_slot(usize nSlot);
-extern  bool  DeleteSlot(usize nSlot);
 extern  void  init_external_flash(void);
 extern  void  construct_external_flash(void);
 
@@ -154,12 +145,6 @@ extern  void  insert_cmd_in_program(usize into_step, usize opcode);
 extern  bool  program_needs_expanded_memory(const u8* code_page, usize code_len);
 extern  void  apply_program_memory_auto(const u8* code_page, usize code_len, bool preserve_program, bool force_expanded = false);
 extern  void  ensure_program_memory_for_write(usize linear_addr, u8 opcode);
-
-inline bool IsOccupied(usize nSlot) {
-   char name[8];
-   snprintf(name, sizeof(name), "%u", (unsigned) nSlot);
-   return program_store::exists(program_store::ProgramType::MK61, name);
-}
 
 inline void ErrorReaction(void) {
   sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
