@@ -70,7 +70,7 @@ for callback in alarm_a_callback alarm_b_callback; do
   }
   callback_disassembly="$($objdump_tool -d --disassemble="$symbol_name" "$elf")"
   if printf '%s\n' "$callback_disassembly" |
-      grep -Eq $'\t(?:bl|blx)(?:\.|\t|[[:space:]])'; then
+      grep -Eq $'\t(bl|blx)(\\.|[[:space:]])'; then
     echo "RTC callback must only publish an atomic event bit: $callback" >&2
     exit 1
   fi
