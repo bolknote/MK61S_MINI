@@ -3,7 +3,7 @@
 #include "display.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "display_symbols.hpp"
-#include "utf8_view.hpp"
+#include "utf8_codec.hpp"
 #include <string.h>
 
 namespace {
@@ -19,15 +19,12 @@ u16 textLength(const char* text) {
 
 u16 nextCodepoint(const char* text, u16 length, u16& offset) {
   const auto* bytes = (const u8*) text;
-  const u8 count = utf8_view::sequence_length(bytes, length, offset);
-  if(count == 0) return '?';
-  const u8 first = bytes[offset];
-  u16 value = first < 0x80 ? first : '?';
-  if(count == 2) value = (u16) (((first & 0x1FU) << 6) | (bytes[offset + 1U] & 0x3FU));
-  if(count == 3) value = (u16) (((first & 0x0FU) << 12) |
-      ((bytes[offset + 1U] & 0x3FU) << 6) | (bytes[offset + 2U] & 0x3FU));
-  offset = (u16) (offset + count);
-  return value;
+  const utf8_codec::Decoded decoded =
+      utf8_codec::decode(bytes + offset, (usize) (length - offset));
+  if(decoded.size == 0) return '?';
+  offset = (u16) (offset + decoded.size);
+  return decoded.valid && decoded.codepoint <= 0xFFFFU
+      ? (u16) decoded.codepoint : (u16) '?';
 }
 
 bool legacyUiToken(u16 codepoint) {

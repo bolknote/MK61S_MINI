@@ -2,6 +2,7 @@
 #define MK61_TERMINAL_ENCODING_HPP
 
 #include "rust_types.h"
+#include "utf8_codec.hpp"
 
 namespace terminal_encoding {
 
@@ -15,12 +16,6 @@ enum class ParseResult : u8 { QUERY, SET, INVALID };
 struct Bytes {
   u8 data[4];
   u8 size;
-};
-
-struct Decoded {
-  u32 codepoint;
-  u8 size;
-  bool valid;
 };
 
 using ByteWriter = bool (*)(u8 byte, void* context);
@@ -112,35 +107,6 @@ inline Bytes encode_utf8(u32 codepoint) {
   return result;
 }
 
-inline Decoded decode_utf8(const u8* text, usize length) {
-  if(text == nullptr || length == 0) return {0xFFFD, 0, false};
-  const u8 first = text[0];
-  if(first < 0x80) return {first, 1, true};
-
-  u8 size = 0;
-  u32 codepoint = 0;
-  u32 minimum = 0;
-  if(first >= 0xC2 && first <= 0xDF) {
-    size = 2; codepoint = first & 0x1F; minimum = 0x80;
-  } else if(first >= 0xE0 && first <= 0xEF) {
-    size = 3; codepoint = first & 0x0F; minimum = 0x800;
-  } else if(first >= 0xF0 && first <= 0xF4) {
-    size = 4; codepoint = first & 0x07; minimum = 0x10000;
-  } else {
-    return {0xFFFD, 1, false};
-  }
-  if(size > length) return {0xFFFD, 1, false};
-  for(u8 index = 1; index < size; index++) {
-    if((text[index] & 0xC0) != 0x80) return {0xFFFD, 1, false};
-    codepoint = (codepoint << 6) | (text[index] & 0x3F);
-  }
-  if(codepoint < minimum || codepoint > 0x10FFFF ||
-     (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
-    return {0xFFFD, 1, false};
-  }
-  return {codepoint, size, true};
-}
-
 inline bool emit(const Bytes& bytes, ByteWriter writer, void* context) {
   if(writer == nullptr) return false;
   for(u8 index = 0; index < bytes.size; index++) {
@@ -182,7 +148,8 @@ inline bool write_utf8(const u8* text, usize length, Mode mode,
   }
 
   for(usize offset = 0; offset < length;) {
-    const Decoded decoded = decode_utf8(text + offset, length - offset);
+    const utf8_codec::Decoded decoded =
+        utf8_codec::decode(text + offset, length - offset);
     u8 byte = '?';
     if(decoded.valid) (void) codepoint_to_cp1251(decoded.codepoint, byte);
     if(!writer(byte, context)) return false;

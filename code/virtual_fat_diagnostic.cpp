@@ -1,4 +1,5 @@
 #include "virtual_fat_diagnostic.hpp"
+#include "utf8_codec.hpp"
 #include <stdio.h>
 #include <string.h>
 
@@ -10,21 +11,9 @@ static void copy_subject(Diagnostic& value, const char* text) {
   usize out = 0;
   while(*text != 0) {
     const u8 lead = (u8) text[0];
-    usize width = lead < 0x80 ? 1 : lead >= 0xC2 && lead <= 0xDF ? 2
-        : lead >= 0xE0 && lead <= 0xEF ? 3
-        : lead >= 0xF0 && lead <= 0xF4 ? 4 : 0;
-    bool valid = width != 0;
-    for(usize i = 1; valid && i < width; ++i) {
-      const u8 byte = (u8) text[i];
-      valid = (byte & 0xC0) == 0x80;
-      if(i == 1) {
-        valid = valid && !(lead == 0xE0 && byte < 0xA0) &&
-            !(lead == 0xED && byte >= 0xA0) &&
-            !(lead == 0xF0 && byte < 0x90) &&
-            !(lead == 0xF4 && byte >= 0x90);
-      }
-    }
-    if(!valid) width = 1;
+    const utf8_codec::Decoded decoded = utf8_codec::decode_cstring(text);
+    const bool valid = decoded.valid;
+    const usize width = decoded.size == 0 ? 1U : decoded.size;
     if(out + width >= sizeof(value.subject)) {
       value.flags |= SUBJECT_TRUNCATED;
       break;

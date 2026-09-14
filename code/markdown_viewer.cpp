@@ -8,6 +8,7 @@
 #include "keyboard.h"
 #include "language_workspace.hpp"
 #include "lcd_ru.hpp"
+#include "utf8_codec.hpp"
 #include "utf8_view.hpp"
 
 #if MK61_MARKDOWN_USES_WBMP
@@ -868,24 +869,13 @@ class GraphicLayout {
 
   static u16 decode_utf8(const u8* data, u16 length,
                          u16 offset, u16& next) {
-    next = utf8_view::next_offset(data, length, offset);
-    if(next <= offset) {
-      next = (u16) (offset + 1U);
-      return '?';
-    }
-    const u8 bytes = (u8) (next - offset);
-    if(bytes == 1) return data[offset] >= 0x20 || data[offset] == '\t'
-        ? data[offset] : (u16) '?';
-    if(bytes == 2) {
-      return (u16) (((data[offset] & 0x1FU) << 6) |
-                    (data[offset + 1] & 0x3FU));
-    }
-    if(bytes == 3) {
-      return (u16) (((data[offset] & 0x0FU) << 12) |
-                    ((data[offset + 1] & 0x3FU) << 6) |
-                    (data[offset + 2] & 0x3FU));
-    }
-    return '?';
+    const utf8_codec::Decoded decoded =
+        utf8_codec::decode(data + offset, (usize) (length - offset));
+    const u8 size = decoded.size == 0 ? 1U : decoded.size;
+    next = (u16) (offset + size);
+    if(!decoded.valid || decoded.codepoint > 0xFFFFU ||
+       (decoded.codepoint < 0x20U && decoded.codepoint != '\t')) return '?';
+    return (u16) decoded.codepoint;
   }
 
   void append_text(const u8* text, u16 length) {

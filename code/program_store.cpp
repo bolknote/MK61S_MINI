@@ -13,6 +13,7 @@
 #include "shared_scratch.hpp"
 #include "spi_nor_flash.hpp"
 #include "tools.hpp"
+#include "utf8_codec.hpp"
 #include "workspace_swap.hpp"
 #include "zx0.hpp"
 
@@ -459,36 +460,10 @@ static char ascii_upper(char value) {
 static bool valid_utf8(const char* text, usize len) {
   usize offset = 0;
   while(offset < len) {
-    const u8 first = (u8) text[offset];
-    u8 continuation = 0;
-    u32 codepoint = 0;
-    if(first < 0x80) {
-      offset++;
-      continue;
-    } else if((first & 0xE0) == 0xC0) {
-      continuation = 1;
-      codepoint = first & 0x1F;
-    } else if((first & 0xF0) == 0xE0) {
-      continuation = 2;
-      codepoint = first & 0x0F;
-    } else if((first & 0xF8) == 0xF0) {
-      continuation = 3;
-      codepoint = first & 0x07;
-    } else {
-      return false;
-    }
-    if(offset + continuation >= len) return false;
-    for(u8 i = 1; i <= continuation; i++) {
-      const u8 next = (u8) text[offset + i];
-      if((next & 0xC0) != 0x80) return false;
-      codepoint = (codepoint << 6) | (next & 0x3F);
-    }
-    if((continuation == 1 && codepoint < 0x80) ||
-       (continuation == 2 && codepoint < 0x800) ||
-       (continuation == 3 && codepoint < 0x10000) ||
-       codepoint > 0x10FFFF ||
-       (codepoint >= 0xD800 && codepoint <= 0xDFFF)) return false;
-    offset += (usize) continuation + 1;
+    const utf8_codec::Decoded decoded = utf8_codec::decode(
+        (const u8*) text + offset, len - offset);
+    if(!decoded.valid) return false;
+    offset += decoded.size;
   }
   return true;
 }

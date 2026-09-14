@@ -13,6 +13,7 @@
 #include "lcd_ru.hpp"
 #include "ledcontrol.h"
 #include "runtime_safety.hpp"
+#include "utf8_codec.hpp"
 #include "program_store.hpp"
 #include "tools.hpp"
 
@@ -60,31 +61,12 @@ static u32 api_display_clear(void) {
 static bool valid_utf8(const u8* text, u32 size) {
   u32 offset = 0;
   while(offset < size) {
-    const u8 first = text[offset++];
-    if(first == 0) return false;
-    if(first < 0x80) continue;
-    if((first & 0xE0) == 0xC0) {
-      if(offset >= size || (text[offset] & 0xC0) != 0x80) return false;
-      const u16 codepoint =
-          (u16) (((first & 0x1F) << 6) | (text[offset] & 0x3F));
-      if(codepoint < 0x80) return false;
-      offset++;
-      continue;
-    }
-    if((first & 0xF0) == 0xE0) {
-      if(offset + 1 >= size || (text[offset] & 0xC0) != 0x80 ||
-         (text[offset + 1] & 0xC0) != 0x80) return false;
-      const u16 codepoint =
-          (u16) (((first & 0x0F) << 12) |
-                 ((text[offset] & 0x3F) << 6) |
-                 (text[offset + 1] & 0x3F));
-      if(codepoint < 0x800 ||
-         (codepoint >= 0xD800 && codepoint <= 0xDFFF)) return false;
-      offset += 2;
-      continue;
-    }
+    const utf8_codec::Decoded decoded =
+        utf8_codec::decode(text + offset, (usize) (size - offset));
     // Текстовый API v1 принимает только BMP: именно его умеют оба дисплея.
-    return false;
+    if(!decoded.valid || decoded.codepoint == 0 ||
+       decoded.codepoint > 0xFFFFU) return false;
+    offset += decoded.size;
   }
   return true;
 }

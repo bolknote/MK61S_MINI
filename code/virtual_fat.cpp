@@ -10,6 +10,7 @@
 #endif
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
+#include "utf8_codec.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -289,36 +290,13 @@ static bool utf8_to_utf16(const char* input, u16* output, u16 capacity,
   output_len = 0;
   if(input == NULL) return false;
   const u8* source = (const u8*) input;
-  while(*source != 0) {
-    u32 codepoint = 0;
-    u8 count = 0;
-    if(source[0] < 0x80) {
-      codepoint = source[0];
-      count = 1;
-    } else if((source[0] & 0xE0) == 0xC0 &&
-              (source[1] & 0xC0) == 0x80) {
-      codepoint = ((u32) (source[0] & 0x1F) << 6) | (source[1] & 0x3F);
-      count = 2;
-      if(codepoint < 0x80) return false;
-    } else if((source[0] & 0xF0) == 0xE0 &&
-              (source[1] & 0xC0) == 0x80 &&
-              (source[2] & 0xC0) == 0x80) {
-      codepoint = ((u32) (source[0] & 0x0F) << 12) |
-                  ((u32) (source[1] & 0x3F) << 6) | (source[2] & 0x3F);
-      count = 3;
-      if(codepoint < 0x800 || (codepoint >= 0xD800 && codepoint <= 0xDFFF)) return false;
-    } else if((source[0] & 0xF8) == 0xF0 &&
-              (source[1] & 0xC0) == 0x80 &&
-              (source[2] & 0xC0) == 0x80 &&
-              (source[3] & 0xC0) == 0x80) {
-      codepoint = ((u32) (source[0] & 0x07) << 18) |
-                  ((u32) (source[1] & 0x3F) << 12) |
-                  ((u32) (source[2] & 0x3F) << 6) | (source[3] & 0x3F);
-      count = 4;
-      if(codepoint < 0x10000 || codepoint > 0x10FFFF) return false;
-    } else {
-      return false;
-    }
+  const usize input_len = strlen(input);
+  usize offset = 0;
+  while(offset < input_len) {
+    const utf8_codec::Decoded decoded =
+        utf8_codec::decode(source + offset, input_len - offset);
+    if(!decoded.valid) return false;
+    u32 codepoint = decoded.codepoint;
     if(codepoint <= 0xFFFF) {
       if(output_len >= capacity) return false;
       output[output_len++] = (u16) codepoint;
@@ -328,7 +306,7 @@ static bool utf8_to_utf16(const char* input, u16* output, u16 capacity,
       output[output_len++] = (u16) (0xD800 | (codepoint >> 10));
       output[output_len++] = (u16) (0xDC00 | (codepoint & 0x3FF));
     }
-    source += count;
+    offset += decoded.size;
   }
   return true;
 }

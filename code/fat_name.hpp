@@ -1,7 +1,7 @@
 #ifndef FAT_NAME_HPP
 #define FAT_NAME_HPP
 
-#include "rust_types.h"
+#include "utf8_codec.hpp"
 
 namespace fat_name {
 namespace detail {
@@ -57,40 +57,10 @@ inline u32 fold(u32 codepoint) {
 }
 
 inline u32 next(const char*& text) {
-  const u8 first = (u8) *text++;
-  if(first < 0x80) return first;
-
-  u8 continuation = 0;
-  u32 codepoint = 0;
-  u32 minimum = 0;
-  if(first >= 0xC2 && first <= 0xDF) {
-    continuation = 1;
-    codepoint = first & 0x1F;
-    minimum = 0x80;
-  } else if(first >= 0xE0 && first <= 0xEF) {
-    continuation = 2;
-    codepoint = first & 0x0F;
-    minimum = 0x800;
-  } else if(first >= 0xF0 && first <= 0xF4) {
-    continuation = 3;
-    codepoint = first & 0x07;
-    minimum = 0x10000;
-  } else {
-    return 0x110000UL + first;
-  }
-
-  const char* cursor = text;
-  for(u8 index = 0; index < continuation; index++) {
-    const u8 byte = (u8) *cursor++;
-    if((byte & 0xC0) != 0x80) return 0x110000UL + first;
-    codepoint = (codepoint << 6) | (byte & 0x3F);
-  }
-  if(codepoint < minimum || codepoint > 0x10FFFFUL ||
-     (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
-    return 0x110000UL + first;
-  }
-  text = cursor;
-  return codepoint;
+  const u8 first = (u8) *text;
+  const utf8_codec::Decoded decoded = utf8_codec::decode_cstring(text);
+  if(decoded.size != 0) text += decoded.size;
+  return decoded.valid ? decoded.codepoint : 0x110000UL + first;
 }
 
 } // пространство имён detail

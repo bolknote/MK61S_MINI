@@ -5,6 +5,7 @@
 #include "lcd_charset.hpp"
 #include "builtin_font.hpp"
 #include "cgram_window_plan.hpp"
+#include "utf8_codec.hpp"
 #if defined(MK61_OLED1602_WS0010)
   #include "ws0010_charset.hpp"
 #endif
@@ -33,24 +34,11 @@ inline u16 display_codepoint(u16 codepoint) {
 }
 
 inline u16 read_utf8(const char*& text) {
-  const u8 first = (u8) *text++;
-  if(first < 0x80) return first;
-
-  if((first & 0xE0) == 0xC0) {
-    const u8 second = (u8) *text;
-    if(second != 0) text++;
-    return (u16) (((first & 0x1F) << 6) | (second & 0x3F));
-  }
-
-  if((first & 0xF0) == 0xE0) {
-    const u8 second = (u8) *text;
-    if(second != 0) text++;
-    const u8 third = (u8) *text;
-    if(third != 0) text++;
-    return (u16) (((first & 0x0F) << 12) | ((second & 0x3F) << 6) | (third & 0x3F));
-  }
-
-  return '?';
+  const utf8_codec::Decoded decoded = utf8_codec::decode_cstring(text);
+  if(decoded.size == 0) return 0;
+  text += decoded.size;
+  return decoded.valid && decoded.codepoint <= 0xFFFFU
+      ? (u16) decoded.codepoint : (u16) '?';
 }
 
 inline bool a02_rom_char(u16 codepoint, u8& out) {
