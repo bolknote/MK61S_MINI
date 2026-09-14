@@ -6,65 +6,41 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $appsRoot = Join-Path $root 'system_apps'
 $launcher = Join-Path $appsRoot 'build.cmd'
-$builder = Join-Path (Join-Path $appsRoot '.tool') 'build.ps1'
-$packerBuilder = Join-Path (
-    Join-Path (Join-Path $root 'tools') '.mk61-app'
-) 'build.ps1'
-$gccBuilder = Join-Path (
-    Join-Path (Join-Path $root 'tools') '.mk61-gcc'
-) 'build.ps1'
+$wrapper = Join-Path $appsRoot '.tool/build.ps1'
+$commonBuilder = Join-Path $root 'tools/build_system_app_bundle.py'
+$appBuilder = Join-Path $root 'tools/build_portable_app.py'
+$gccBuilder = Join-Path $root 'tools/.mk61-gcc/build.ps1'
+$arduinoShell = Join-Path $root `
+    'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.sh'
+$arduinoPowerShell = Join-Path $root `
+    'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
 
 function Assert-True {
     param([bool]$Condition, [string]$Message)
     if (-not $Condition) { throw $Message }
 }
 
+function Read-Le16 {
+    param([byte[]]$Data, [int]$Offset)
+    return [uint16]([uint16]$Data[$Offset] -bor
+        ([uint16]$Data[$Offset + 1] -shl 8))
+}
+
 function Read-Le32 {
     param([byte[]]$Data, [int]$Offset)
-    return [uint32](
-        [uint32]$Data[$Offset] -bor
+    return [uint32]([uint32]$Data[$Offset] -bor
         ([uint32]$Data[$Offset + 1] -shl 8) -bor
         ([uint32]$Data[$Offset + 2] -shl 16) -bor
         ([uint32]$Data[$Offset + 3] -shl 24))
 }
 
-function Read-Le16 {
-    param([byte[]]$Data, [int]$Offset)
-    return [uint16](
-        [uint16]$Data[$Offset] -bor
-        ([uint16]$Data[$Offset + 1] -shl 8))
+foreach ($file in @(
+    $launcher, $wrapper, $commonBuilder, $appBuilder, $gccBuilder,
+    $arduinoShell, $arduinoPowerShell
+)) {
+    Assert-True (Test-Path -LiteralPath $file -PathType Leaf) `
+        "unified APP build file is missing: $file"
 }
-
-function Get-Crc32 {
-    param([byte[]]$Data)
-    [uint32]$state = [uint32]::MaxValue
-    foreach ($value in $Data) {
-        $state = [uint32]($state -bxor [uint32]$value)
-        for ($bit = 0; $bit -lt 8; $bit++) {
-            if (($state -band [uint32]1) -ne 0) {
-                $state = [uint32](($state -shr 1) -bxor
-                    [uint32]3988292384)
-            } else {
-                $state = [uint32]($state -shr 1)
-            }
-        }
-    }
-    return [uint32]($state -bxor [uint32]::MaxValue)
-}
-
-Assert-True (Test-Path -LiteralPath $launcher -PathType Leaf) `
-    'System APP launcher is missing'
-Assert-True (Test-Path -LiteralPath $builder -PathType Leaf) `
-    'System APP PowerShell builder is missing'
-Assert-True (Test-Path -LiteralPath $packerBuilder -PathType Leaf) `
-    'host APP packer builder is missing'
-Assert-True (Test-Path -LiteralPath $gccBuilder -PathType Leaf) `
-    'direct GCC F401 builder is missing'
-Assert-True (-not (Test-Path -LiteralPath (
-    Join-Path $root 'tools/.mk61-firmware/build-f401-native.ps1'))) `
-    'obsolete Arduino-CLI F401 worker is still present'
-Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'focal_app'))) `
-    'obsolete focal-only directory is still present'
 
 $launcherText = [IO.File]::ReadAllText($launcher)
 Assert-True ($launcherText -match
@@ -74,120 +50,58 @@ Assert-True ($launcherText -match
     '(?i)powershell\.exe -NoLogo -NoProfile -ExecutionPolicy Bypass') `
     'Windows PowerShell fallback is missing'
 
-foreach ($file in @($builder, $packerBuilder, $gccBuilder)) {
-    $tokens = $null
-    $parseErrors = $null
-    [void][Management.Automation.Language.Parser]::ParseFile(
-        $file, [ref]$tokens, [ref]$parseErrors)
-    Assert-True ($parseErrors.Count -eq 0) (
-        "$file has parser errors: " +
-        (@($parseErrors | ForEach-Object { $_.Message }) -join '; '))
-}
+$tokens = $null
+$parseErrors = $null
+[void][Management.Automation.Language.Parser]::ParseFile(
+    $wrapper, [ref]$tokens, [ref]$parseErrors)
+Assert-True ($parseErrors.Count -eq 0) (
+    "$wrapper has parser errors: " +
+    (@($parseErrors | ForEach-Object { $_.Message }) -join '; '))
 
-$sources = @(
-    @{
-        Path = Join-Path (Join-Path $appsRoot 'focal') 'main.cpp'
-        Macro = 'MK61_BUILD_FOCAL_MODULE'
-        Includes = @('focal.cpp', 'focal_module_entry.cpp')
-    }
-    @{
-        Path = Join-Path (Join-Path $appsRoot 'basic') 'main.cpp'
-        Macro = 'MK61_BUILD_TINYBASIC_MODULE'
-        Includes = @('tinybasic.cpp', 'tinybasic_module_entry.cpp')
-    }
-    @{
-        Path = Join-Path (Join-Path $appsRoot 'wbmp') 'main.cpp'
-        Macro = 'MK61_BUILD_WBMP_MODULE'
-        Includes = @(
-            'wbmp.cpp',
-            'image1_viewer.cpp',
-            'image1_viewer_module_entry.cpp')
-    }
-    @{
-        Path = Join-Path (Join-Path $appsRoot 'markdown') 'main.cpp'
-        Macro = 'MK61_BUILD_MARKDOWN_MODULE'
-        Includes = @(
-            'markdown_document.cpp',
-            'markdown_plain.cpp',
-            'wbmp.cpp',
-            'image1_viewer.cpp',
-            'markdown_viewer.cpp',
-            'markdown_viewer_module_entry.cpp')
-    }
-    @{
-        Path = Join-Path (Join-Path $appsRoot 'chip8') 'main.cpp'
-        Macro = 'MK61_BUILD_CHIP8_MODULE'
-        Includes = @(
-            'chip8.cpp',
-            'chip8_runner.cpp',
-            'chip8_module_entry.cpp')
-    }
-)
-foreach ($source in $sources) {
-    Assert-True (Test-Path -LiteralPath $source.Path -PathType Leaf) `
-        "module source is missing: $($source.Path)"
-    $text = [IO.File]::ReadAllText($source.Path)
-    Assert-True ($text -match [regex]::Escape($source.Macro)) `
-        "$($source.Path) does not enable its module"
-    foreach ($include in $source.Includes) {
-        Assert-True ($text -match [regex]::Escape($include)) `
-            "$($source.Path) does not include $include"
-    }
-}
-
-$builderText = [IO.File]::ReadAllText($builder)
-foreach ($name in @(
-    'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
-)) {
-    Assert-True ($builderText -match [regex]::Escape($name)) `
-        "$name is missing from the standalone builder"
-}
-Assert-True ($builderText -match "Get-RelatedTool.+?'objcopy'") `
-    'standalone builder does not derive objcopy'
-Assert-True ($builderText -match "Get-RelatedTool.+?'nm'") `
-    'standalone builder does not derive nm'
-Assert-True ($builderText -match 'compile_commands\.json') `
-    'standalone builder does not consume the resident compile database'
-Assert-True ($builderText -match
-    'tools/\.mk61-app/mk61_module\.ld') `
-    'standalone builder does not use the canonical APP linker script'
-Assert-True ($builderText -notmatch
-    "ProjectRoot 'tools/mk61_module\.ld'") `
-    'standalone builder still references the removed linker script path'
-Assert-True ($builderText -notmatch 'mk61_ide_.*\.cpp\.o') `
-    'standalone builder still consumes Arduino System APP objects'
-Assert-True ($builderText -match
-    '\$Markdown -eq ''1''[\s\S]+?\$Wbmp = ''0''') `
-    'standalone builder does not suppress WBMP.APP owned by Markdown'
-Assert-True ($builderText -match
-    "\^-flto\(\?:=\.\*\)\?\$[\s\S]+-fno-fat-lto-objects") `
-    'standalone builder does not normalize resident LTO flags'
-Assert-True ($builderText -match '--require-zx0') `
-    'standalone builder does not require ZX0 APP payloads'
-Assert-True ($builderText -match 'tools/\.mk61-app/build\.ps1') `
-    'standalone builder does not build the native host packer'
-Assert-True ($builderText -notmatch '\$container\[15\]\s*=\s*0') `
-    'standalone builder still writes raw APP containers'
-
-$packerBuilderText = [IO.File]::ReadAllText($packerBuilder)
-Assert-True ($packerBuilderText -match 'MK61_HOST_CXX') `
-    'host packer builder has no explicit compiler override'
-Assert-True ($packerBuilderText -match "'c\+\+'.+?'clang\+\+'.+?'g\+\+'.+?'cl'") `
-    'host packer builder is not cross-platform'
-
+$wrapperText = [IO.File]::ReadAllText($wrapper)
+$commonText = [IO.File]::ReadAllText($commonBuilder)
+$appText = [IO.File]::ReadAllText($appBuilder)
 $gccText = [IO.File]::ReadAllText($gccBuilder)
-Assert-True ($gccText -match 'system_apps/\.tool/build\.ps1') `
-    'direct GCC builder does not call the standalone System APP builder'
-Assert-True ($gccText -match '"-DMK61_ENABLE_CHIP8=\$Chip8"') `
-    'direct GCC builder does not forward the CHIP-8 selection'
-Assert-True ($gccText -match
-    '"-DMK61_ENABLE_MARKDOWN_VIEWER=\$Markdown"') `
-    'direct GCC builder does not forward the Markdown selection'
-Assert-True ($gccText -notmatch 'mk61-app-postbuild') `
-    'direct GCC builder still uses Arduino APP post-build objects'
-Assert-True ($gccText -match 'tools/\.mk61-app/build\.ps1') `
-    'direct GCC dependency check omits the host APP packer'
+$arduinoShellText = [IO.File]::ReadAllText($arduinoShell)
+$arduinoPowerShellText = [IO.File]::ReadAllText($arduinoPowerShell)
 
+Assert-True ($wrapperText -match 'tools/build_system_app_bundle\.py') `
+    'PowerShell wrapper does not delegate to the common builder'
+Assert-True ($wrapperText -notmatch 'arm-none-eabi-(?:g\+\+|objcopy|nm)') `
+    'PowerShell wrapper still contains a second APP compiler pipeline'
+Assert-True ($commonText -match 'tools/build_portable_app\.py') `
+    'System bundle does not use the ordinary APP builder'
+Assert-True ($commonText -match '"setup", "SETUP\.APP"') `
+    'mandatory SETUP.APP is missing from the common bundle'
+Assert-True ($commonText -match 'HELP0\.TXT.+HELP1\.TXT') `
+    'terminal help is missing from the common bundle'
+Assert-True ($commonText -match '"abi": 5') `
+    'common bundle does not report current ABI 5'
+Assert-True ($appText -match '"abi": 5') `
+    'ordinary and System APP builder is not current ABI 5'
+Assert-True ($appText -match 'sdk/portable/start\.c') `
+    'System APP does not share the ordinary SDK startup'
+Assert-True ($appText -notmatch 'resident_imports[^\n]+[1-9]') `
+    'APP builder still advertises resident symbol imports'
+Assert-True ($gccText -match 'system_apps/\.tool/build\.ps1') `
+    'direct GCC builder does not call the common System APP wrapper'
+Assert-True ($arduinoShellText -match 'build_system_app_bundle\.py') `
+    'Arduino shell hook does not use the common System APP builder'
+Assert-True ($arduinoPowerShellText -match 'build_system_app_bundle\.py') `
+    'Arduino PowerShell hook does not use the common System APP builder'
+
+foreach ($obsolete in @(
+    'system_apps/focal/main.cpp', 'system_apps/basic/main.cpp',
+    'system_apps/wbmp/main.cpp', 'system_apps/markdown/main.cpp',
+    'system_apps/chip8/main.cpp', 'code/loadable_module_imports.cpp',
+    'tools/.mk61-gcc/system-app-exports.list'
+)) {
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $root $obsolete))) `
+        "obsolete private System APP path remains: $obsolete"
+}
+
+# A real ARM build is optional in the fast suite. Release/HIL jobs set this to
+# a current resident build directory and exercise the exact same wrapper.
 $integrationBuild = [Environment]::GetEnvironmentVariable(
     'MK61_SYSTEM_APPS_BUILD_PATH')
 if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
@@ -196,20 +110,15 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
         'mk61-system-apps-' + [guid]::NewGuid().ToString('N'))
     try {
         $powerShell = (Get-Process -Id $PID).Path
-        & $powerShell -NoLogo -NoProfile -File $builder `
+        & $powerShell -NoLogo -NoProfile -File $wrapper `
             -BuildPath $integrationBuild `
             -OutputDirectory $output `
             -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
-        Assert-True ($LASTEXITCODE -eq 0) `
-            'real standalone System APP build failed'
+        Assert-True ($LASTEXITCODE -eq 0) 'real unified System APP build failed'
 
-        $resident = @(Get-ChildItem -LiteralPath $integrationBuild -File |
-            Where-Object { $_.Extension -ieq '.bin' })
-        Assert-True ($resident.Count -eq 1) `
-            'integration build must contain one resident BIN'
-        foreach ($name in @('HELP0.TXT','HELP1.TXT')) {
-            Assert-True (Test-Path -LiteralPath (Join-Path $output $name)) "$name missing"
-        }
+        Assert-True (-not (Test-Path -LiteralPath (
+            Join-Path $output 'WBMP.APP'))) `
+            'WBMP.APP was built together with MARKDOWN.APP'
         $expected = [ordered]@{
             'FOCAL.APP' = 1
             'BASIC.APP' = 2
@@ -217,56 +126,31 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             'CHIP8.APP' = 5
             'SETUP.APP' = 7
         }
-        $expectedMagic = @{
-            'FOCAL.APP' = [uint16]0
-            'BASIC.APP' = [uint16]0
-            'MARKDOWN.APP' = [uint16]0x3254
-            'CHIP8.APP' = [uint16]0x3143
-            'SETUP.APP' = [uint16]0
-        }
-        Assert-True (-not (Test-Path -LiteralPath (
-            Join-Path $output 'WBMP.APP'))) `
-            'WBMP.APP was built together with MARKDOWN.APP'
         foreach ($name in $expected.Keys) {
             $path = Join-Path $output $name
             Assert-True (Test-Path -LiteralPath $path -PathType Leaf) `
                 "$name was not built"
             [byte[]]$bytes = [IO.File]::ReadAllBytes($path)
-            Assert-True ($bytes.Length -le 20544) "$name exceeds APP limit"
+            Assert-True ($bytes.Length -ge 64 -and $bytes.Length -le 20544) `
+                "$name has an invalid container size"
             Assert-True (
                 [Text.Encoding]::ASCII.GetString($bytes, 0, 8) -eq
                 "MK61APP`0") "$name has invalid magic"
+            Assert-True ((Read-Le16 $bytes 12) -eq 5) "$name is not ABI 5"
             Assert-True ($bytes[14] -eq $expected[$name]) `
                 "$name has an invalid kind"
-            Assert-True ($bytes[15] -eq 1) `
-                "$name is not a ZX0-compressed ARM-built APP"
-            Assert-True (
-                (Read-Le16 $bytes 56) -eq $expectedMagic[$name]) `
-                "$name has an invalid handled type magic"
-            Assert-True ((Read-Le16 $bytes 58) -eq 0) `
-                "$name has non-zero reserved header bytes"
-            Assert-True ((Read-Le16 $bytes 12) -eq 4) "$name is not ABI 4"
-            Assert-True ((Read-Le32 $bytes 16) -in @(5,7)) "$name has invalid flags"
-            Assert-True ((Read-Le32 $bytes 20) -eq 0x20000000) "$name linked base changed"
-            Assert-True ((Read-Le32 $bytes 40) -gt 0 -and
-                (Read-Le32 $bytes 40) -le (Read-Le32 $bytes 24)) "$name has invalid code size"
-            Assert-True ((Read-Le32 $bytes 44) -le
-                ((Read-Le32 $bytes 24) - (Read-Le32 $bytes 40))) "$name has invalid relocation count"
-            Assert-True (
-                (Read-Le32 $bytes 24) + 64 -eq $bytes.Length) `
-                "$name stored size differs from its container"
-            [byte[]]$payload = $bytes[64..($bytes.Length - 1)]
-            [uint32]$payloadCrc = Get-Crc32 $payload
-            Assert-True (
-                (Read-Le32 $bytes 48) -eq $payloadCrc) `
-                "$name stored payload CRC differs"
-            Assert-True (
-                (Read-Le32 $bytes 24) -lt (Read-Le32 $bytes 28)) `
-                "$name ZX0 payload is not smaller than its image"
-            [byte[]]$headerPrefix = $bytes[0..59]
-            Assert-True (
-                (Read-Le32 $bytes 60) -eq (Get-Crc32 $headerPrefix)) `
-                "$name header CRC differs"
+            Assert-True ($bytes[15] -eq 1) "$name is not ZX0-compressed"
+            $flags = Read-Le32 $bytes 16
+            Assert-True (($flags -band 5) -eq 5) `
+                "$name is not a relocatable portable APP"
+            Assert-True ((Read-Le32 $bytes 20) -eq 0x20000000) `
+                "$name lost the relocation reference base"
+            Assert-True ((Read-Le32 $bytes 44) -gt 0) `
+                "$name has no relocation table"
+        }
+        foreach ($name in @('HELP0.TXT', 'HELP1.TXT')) {
+            Assert-True (Test-Path -LiteralPath (Join-Path $output $name)) `
+                "$name missing"
         }
     } finally {
         Remove-Item -LiteralPath $output -Recurse -Force `

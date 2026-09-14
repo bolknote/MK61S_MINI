@@ -53,10 +53,8 @@ grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
 grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
-grep -q -- '-DMK61_ENABLE_USER_APPS={build.mk61_user_apps}' \
-  "$target/boards.txt"
-grep -q '^mk61_f401_app.menu.mk61_user_apps.disabled.build.mk61_user_apps=0$' \
-  "$target/boards.txt"
+grep -q -- '-DMK61_ENABLE_LOADABLE_MODULES=1' "$target/boards.txt"
+! grep -q 'mk61_user_apps' "$target/boards.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"
@@ -68,16 +66,12 @@ if "$hook" check-profile --platform mini-v3 --display uc1609 \
   exit 1
 fi
 
-grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
-  "$root/code/mk61_ide_focal_app.cpp"
-grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
-  "$root/code/mk61_ide_basic_app.cpp"
-grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
-  "$root/code/mk61_ide_wbmp_app.cpp"
-grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
-  "$root/code/mk61_ide_markdown_app.cpp"
-grep -q 'MK61_ARDUINO_IDE_SYSTEM_APPS' \
-  "$root/code/mk61_ide_chip8_app.cpp"
+grep -q 'build_system_app_bundle.py' "$hook"
+grep -q 'build_system_app_bundle.py' \
+  "$platform/tools/mk61-app-postbuild.ps1"
+for obsolete in focal basic wbmp markdown chip8; do
+  test ! -e "$root/code/mk61_ide_${obsolete}_app.cpp"
+done
 grep -q 'mk61_arduino_sketch_anchor' "$root/code/code.ino"
 
 if command -v pwsh >/dev/null 2>&1; then
@@ -131,7 +125,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     file="$bundle/System/$app"
     test -s "$file"
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
-    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 4
+    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 5
     test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 1
     test "$(od -An -tx1 -N8 "$file" | tr -d '[:space:]')" = \
       4d4b363141505000
@@ -163,7 +157,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
     test "$(od -An -tu1 -j14 -N1 "$file" | tr -d '[:space:]')" = \
       "$expected_kind"
-    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 4
+    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 5
     test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 1
   done
   for resource in HELP0.TXT HELP1.TXT; do cmp "$direct_system/$resource" "$bundle/System/$resource"; done

@@ -35,9 +35,10 @@
   #include "workspace_swap.hpp"
 #endif
 
-// config.h compacts cold firmware when the Arduino menu requests a global
-// -O2/-O3 build.  This translation unit is the measured hot path, so restore
-// the original command-line optimization here.
+// F411 compatibility builds compact cold firmware when the Arduino menu asks
+// for global -O2/-O3.  This translation unit is their measured hot path, so
+// restore the command-line optimization here.  F401 production instead keeps
+// global -Os+LTO and uses MK61_F401_HOT_O3 on only the loops proven below.
 #if MK61_MIXED_OPTIMIZATION
   #pragma GCC reset_options
 #endif
@@ -103,7 +104,7 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
     mtick_t signal_I, usize J_signal_I
     MK61_PACKED_AMK_PARAMETERS);
 #if MK61_CORE_MERGED_TICK
-static void __attribute__((noinline, aligned(16)))
+static void MK61_F401_HOT_O3 __attribute__((noinline, aligned(16)))
 IK130X_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3);
 #if MK61_CORE_NATIVE_HOT_PATHS
 static void __attribute__((noinline, aligned(16)))
@@ -2345,7 +2346,7 @@ static void arm_external_random_seed(
   }
 }
 
-void cycle(void) {
+void MK61_F401_HOT_O3 cycle(void) {
   mtick_t signal_I;
   const int MAX_CYCLE = (sergey_anvarov_hack_enable)? 280 : 560;
   const u8* active_end_ring_m = &ringM[core_61::ring_size()];
@@ -3021,7 +3022,7 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
 }
 
 #if MK61_CORE_MERGED_TICK
-static void __attribute__((noinline, aligned(16)))
+static void MK61_F401_HOT_O3 __attribute__((noinline, aligned(16)))
 IK130X_Tick_All(
     mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
 #if MK61_CORE_PACKED_AMK

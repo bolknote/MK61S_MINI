@@ -39,11 +39,11 @@ int main(void) {
   assert(f411.guard_end == 0x2001C000UL);
   assert(f411.sram_execute_never);
 
-  const Layout portable = with_app_overlay(f411, 8);
+  const Layout portable = with_app_execution(f411, 8);
   assert(portable.valid && portable.required_regions == 8);
   assert(portable.sram_execute_never && portable.guard_base == f411.guard_base);
-  assert(!with_app_overlay(f411, 7).valid);
-  assert(with_app_overlay(f401, 2).required_regions == 2);
+  assert(!with_app_execution(f411, 7).valid);
+  assert(with_app_execution(f401, 2).required_regions == 2);
   // Decode actual MPU base/size/SRD at every minimum-size (32-byte) block
   // of SRAM, for every possible rounded APP size. Include globals and stack.
   u8 maximum_regions = 0;

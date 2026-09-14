@@ -1,4 +1,6 @@
-/* Отдельный модуль связан прямо для массива mk61_module_overlay resident ELF. */
+/* APP линкуется в виртуальном окне 20 KiB. Загрузчик переносит
+ * образ в любой подходящий блок общей динамической SRAM; это не
+ * физический адрес и не резерв в resident ELF. */
 ENTRY(mk61_module_entry)
 
 MEMORY
@@ -49,6 +51,6 @@ SECTIONS
 }
 
 ASSERT(__module_memory_end <= ORIGIN(MODULE) + LENGTH(MODULE),
-       "MK61 module does not fit the SRAM overlay")
+       "MK61 APP exceeds the 20 KiB image limit")
 ASSERT(__module_initializers_start == __module_initializers_end,
        "MK61 module has unsupported global constructors/destructors")

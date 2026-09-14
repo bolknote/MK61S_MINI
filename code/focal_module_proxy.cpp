@@ -44,9 +44,9 @@ bool CompileFocal(const char* program) {
 }
 
 void InitFocal(void) {
-  u32 result = 0;
-  (void) loadable_module::invoke(loadable_module::Kind::FOCAL,
-      loadable_module::Command::INITIALIZE, result);
+  // INITIALIZE belongs to the loader lifecycle and is issued exactly once
+  // after a decode. Merely ensure that the cached FOCAL image is active.
+  (void) loadable_module::status(loadable_module::Kind::FOCAL);
 }
 
 bool FocalIsReady(void) {

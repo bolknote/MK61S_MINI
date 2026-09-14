@@ -69,7 +69,7 @@ printf '%s\n' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=0' \
   'MK61_ENABLE_USB_SCREEN=0' \
-  'MK61_ENABLE_USER_APPS=1' \
+  'MK61_ENABLE_LOADABLE_MODULES=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1' \
   'MK61_USER_EXPLORER_SHORTCUT=0' \
   'MK61_MATH_BACKEND=1' > "$config_file"
@@ -153,10 +153,10 @@ grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' <<< "$config"
 grep -q '^MK61_ENABLE_CHIP8=0$' <<< "$config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
-grep -q '^MK61_ENABLE_USER_APPS=1$' <<< "$config"
+grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' <<< "$config"
 grep -q '^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$' <<< "$config"
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$config"
-grep -q -- 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_FOCAL=0 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_ENABLE_USER_APPS=1 .*MK61_MATH_BACKEND=1 .*HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0$' <<< "$config"
+grep -q -- 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_FOCAL=0 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_ENABLE_LOADABLE_MODULES=1 .*MK61_MATH_BACKEND=1 .*HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0$' <<< "$config"
 grep -q '^PLATFORM=classic-v3$' "$config_file"
 grep -q '^SCREEN=uc1609$' "$config_file"
 grep -q '^MCU=f411$' "$config_file"
@@ -186,7 +186,8 @@ grep -q '^MK61_ENABLE_FOCAL=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_CHIP8=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' "$legacy_config"
-grep -q '^MK61_ENABLE_USER_APPS=0$' "$legacy_config"
+grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' "$legacy_config"
+! grep -q '^MK61_ENABLE_USER_APPS=' "$legacy_config"
 
 install_config="$installer_root/install.conf"
 install_output="$installer_root/output"
@@ -203,7 +204,7 @@ printf '%s\n' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=1' \
   'MK61_ENABLE_USB_SCREEN=1' \
-  'MK61_ENABLE_USER_APPS=0' \
+  'MK61_ENABLE_LOADABLE_MODULES=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0' \
   'MK61_USER_EXPLORER_SHORTCUT=1' \
   'MK61_MATH_BACKEND=0' > "$install_config"
@@ -211,6 +212,7 @@ install_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" --show-config)
 grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$install_selection"
 install_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$install_selection")
 printf '%s\n' "$install_flags" > "$bundle/build.flags"
+printf 'format 1\nabi 5\n' > "$bundle/build.apps"
 printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 printf 'focal-app\n' > "$bundle/System/FOCAL.APP"
 printf 'markdown-app\n' > "$bundle/System/MARKDOWN.APP"
@@ -257,16 +259,20 @@ test ! -e "$install_mount/System/MARKDOWN.APP"
 test ! -e "$install_mount/System/CHIP8.APP"
 grep -q '^keep-me$' "$install_mount/System/KEEP.APP"
 
-set +e
+f411_bundle="$install_output/mk61s-M-mini-v3-lcd1602-a00-f411"
+mkdir -p "$f411_bundle/System"
+f411_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" \
+  --mcu f411 --profile mini-v3-a00 --show-config)
+f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$f411_selection")
+printf '%s\n' "$f411_flags" > "$f411_bundle/build.flags"
+printf 'format 1\nabi 5\n' > "$f411_bundle/build.apps"
+printf 'resident-f411\n' > "$f411_bundle/mk61s-M-mini-v3-lcd1602-a00-f411.bin"
+for resource in SETUP.APP HELP0.TXT HELP1.TXT; do
+  printf 'f411-resource\n' > "$f411_bundle/System/$resource"
+done
 MK61_CONFIG_FILE="$install_config" MK61_OUTPUT_DIR="$install_output" \
   MK61_C5_MOUNT="$install_mount" "$tool" \
-  --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null 2>&1
-f411_install_status=$?
-set -e
-if [[ "$f411_install_status" -ne 1 ]]; then
-  printf 'F411 APP installation returned %d, expected 1\n' \
-    "$f411_install_status" >&2
-  exit 1
-fi
+  --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
+cmp "$f411_bundle/System/SETUP.APP" "$install_mount/System/SETUP.APP"
 
 printf 'firmware_tool_tests: ok\n'

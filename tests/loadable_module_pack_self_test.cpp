@@ -31,12 +31,7 @@ static void write_file(const char* path, const std::vector<u8>& bytes) {
   assert(fclose(output) == 0);
 }
 
-static void generate_fixtures(const char* resident_path,
-                              const char* image_path) {
-  std::vector<u8> resident(4097);
-  for(usize index = 0; index < resident.size(); index++) {
-    resident[index] = (u8) (index * 29U + 7U);
-  }
+static void generate_fixture(const char* image_path) {
   std::vector<u8> block(113);
   for(usize index = 0; index < block.size(); index++) {
     block[index] = (u8) (index * 13U + index / 7U);
@@ -45,7 +40,6 @@ static void generate_fixtures(const char* resident_path,
   for(usize index = 0; index < image.size(); index++) {
     image[index] = block[index % block.size()];
   }
-  write_file(resident_path, resident);
   write_file(image_path, image);
 }
 
@@ -66,13 +60,13 @@ static bool read_vector(void* context, u32 offset, u8* output, usize size) {
 } // namespace
 
 int main(int argc, char** argv) {
-  assert(argc == 4 || argc == 5);
+  assert(argc == 3 || argc == 4);
   if(strcmp(argv[1], "--generate") == 0) {
-    assert(argc == 4);
-    generate_fixtures(argv[2], argv[3]);
+    assert(argc == 3);
+    generate_fixture(argv[2]);
     return 0;
   }
-  const char* expected_type = argc == 5 ? argv[4] : "focal";
+  const char* expected_type = argc == 4 ? argv[3] : "focal";
   const Kind expected_kind =
       strcmp(expected_type, "app") == 0 ? Kind::APPLICATION :
       strcmp(expected_type, "chip8") == 0 ? Kind::CHIP8 :
@@ -85,7 +79,6 @@ int main(int argc, char** argv) {
               ? (u16) ('T' | ((u16) '2' << 8)) : 0;
   const std::vector<u8> module = read_file(argv[1]);
   const std::vector<u8> expected = read_file(argv[2]);
-  const std::vector<u8> resident = read_file(argv[3]);
   assert(module.size() >= HEADER_SIZE);
   Header header = {};
   assert(memcmp(module.data(), "MK61APP", 7) == 0);
@@ -93,21 +86,22 @@ int main(int argc, char** argv) {
                        expected_kind, header) ==
          HeaderStatus::OK);
   assert(header.compression == Compression::ZX0);
+  assert(header.flags == (MK61_PORTABLE_APP_FLAG |
+                          MK61_APP_RELOCATABLE_FLAG));
+  assert(header.load_address == MK61_PORTABLE_APP_ADDRESS);
   assert(header.image_size == expected.size());
   assert(header.memory_size == expected.size() + 512);
-  assert(header.resident_size == resident.size());
-  assert(header.resident_crc32 == crc32(resident.data(), resident.size()));
+  assert(header.code_stored_size == header.stored_size);
+  assert(header.relocation_count == 0);
   assert(header.handled_type_magic == expected_magic);
   assert(module.size() == HEADER_SIZE + header.stored_size);
 
   VectorReader source = {&module, HEADER_SIZE};
   const Reader reader = {&source, read_vector};
-  std::vector<u8> decoded(header.image_size);
-  DecodeResult result = {};
-  assert(decode_payload(reader, header.compression, header.stored_size,
-                        decoded.data(), header.image_size, result));
-  assert(result.stored_crc32 == header.stored_crc32);
-  assert(result.image_crc32 == header.image_crc32);
+  std::vector<u8> decoded(header.memory_size, 0xCD);
+  assert(decode_image(header, reader, decoded.data(),
+                      header.load_address));
+  decoded.resize(header.image_size);
   assert(decoded == expected);
   printf("loadable_module_pack_self_test: ok\n");
   return 0;

@@ -23,8 +23,8 @@
   #error "MK61_DWT_CORE_DETAIL must be 0 or 1"
 #endif
 
-// System APP исполняется из отдельного SRAM overlay и не должен тянуть в него
-// resident-состояние профилировщика или дополнительные импорты.
+// APP исполняется из динамически выделенного блока SRAM и не должен тянуть в
+// образ resident-состояние профилировщика или дополнительные импорты.
 #if defined(MK61_BUILD_FOCAL_MODULE) || \
     defined(MK61_BUILD_TINYBASIC_MODULE) || \
     defined(MK61_BUILD_WBMP_MODULE) || \

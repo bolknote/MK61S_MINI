@@ -14,6 +14,8 @@ command -v "$arduino_cli" >/dev/null 2>&1 ||
   fail "arduino-cli is not installed: $arduino_cli"
 command -v python3 >/dev/null 2>&1 ||
   fail "python3 is required for the stack-usage release gate"
+command -v c++ >/dev/null 2>&1 ||
+  fail "a host C++17 compiler is required for the APP packer"
 python3 "$contract" validate >/dev/null ||
   fail 'release contract is invalid'
 expected_cli_version="$(python3 "$contract" toolchain --field arduino_cli)"
@@ -73,7 +75,8 @@ if [[ -n "$output_dir" ]]; then
   [[ "$firmware_tag" =~ ^[A-Za-z0-9._-]+$ ]] ||
     fail "invalid firmware tag: $firmware_tag"
   mkdir -p "$output_dir"
-  # Standalone BIN releases need the same complete notices as F401 ZIP bundles.
+  command -v zip >/dev/null 2>&1 || fail 'zip is required for release bundles'
+  # Published F411 bundles need the same complete notices as F401 bundles.
   python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" \
     --archive "$output_dir/UI_FONT_LICENSES.zip"
 fi
@@ -84,10 +87,105 @@ fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMeth
 # the plan-hard baseline, so it had no safe growth margin and was not a viable
 # release configuration even before new features were added.
 fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
-strict_flags='-DMK61_REQUIRE_RESIDENT_CRC=1 -Werror -Wno-error=cpp'
+strict_flags='-DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -Werror -Wno-error=cpp'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 variant_index=0
 variant_count="$(python3 "$contract" cases --group f411-release --format count)"
+
+layout_properties="$matrix_root/layout.properties"
+"$arduino_cli" compile --fqbn "$fqbn" \
+  --build-path "$matrix_root/properties-layout" \
+  --show-properties=expanded "$sketch" > "$layout_properties"
+variant_path="$(sed -n 's/^build\.variant\.path=//p' "$layout_properties" | tr -d '\r')"
+ld_name="$(sed -n 's/^build\.ldscript=//p' "$layout_properties" | tr -d '\r')"
+[[ -n "$variant_path" && -n "$ld_name" && -f "$variant_path/$ld_name" ]] ||
+  fail 'cannot resolve the STM32F411 linker script'
+portable_linker="$matrix_root/mk61-portable.ld"
+python3 "$root/tools/.mk61-gcc/portable-layout.py" \
+  "$variant_path/$ld_name" "$portable_linker"
+
+define_value() {
+  local flags="$1" macro="$2" value="$3" token
+  for token in $flags; do
+    case "$token" in
+      -D"$macro"=*) value="${token#*=}" ;;
+    esac
+  done
+  printf '%s' "$value"
+}
+
+package_system_apps() {
+  local profile="$1" board_flags="$2" artifact_name="$3" build_path="$4"
+  local expect_ws0010_graphics="$5"
+  local focal basic markdown wbmp chip8 usb graphics ui_fonts bundle_name bundle
+  focal="$(define_value "$board_flags" MK61_ENABLE_FOCAL 1)"
+  basic="$(define_value "$board_flags" MK61_ENABLE_TINYBASIC 1)"
+  markdown="$(define_value "$board_flags" MK61_ENABLE_MARKDOWN_VIEWER 1)"
+  chip8="$(define_value "$board_flags" MK61_ENABLE_CHIP8 0)"
+  usb="$(define_value "$board_flags" MK61_ENABLE_USB_SCREEN 0)"
+  graphics="$usb"
+  ui_fonts=0
+  case "$profile" in
+    classic-v2|classic-v3|40th) graphics=1; ui_fonts=1 ;;
+    mini-v3-ws0010)
+      if [[ "$expect_ws0010_graphics" == 1 ]]; then graphics=1; fi
+      ;;
+  esac
+  wbmp="$(define_value "$board_flags" MK61_ENABLE_WBMP_VIEWER \
+    "$([[ "$graphics" == 1 && "$markdown" == 0 ]] && printf 1 || printf 0)")"
+  bundle_name="${artifact_name}-${firmware_tag}"
+  bundle="$output_dir/$bundle_name"
+  rm -rf "$bundle"
+  mkdir -p "$bundle/System"
+  python3 "$root/tools/build_system_app_bundle.py" \
+    --resident-elf "$build_path/mk61s-M.ino.elf" \
+    --compile-commands "$build_path/compile_commands.json" \
+    --output-dir "$bundle/System" \
+    --graphics "$graphics" --ui-fonts "$ui_fonts" \
+    --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
+    --markdown "$markdown" --chip8 "$chip8"
+  cp "$build_path/mk61s-M.ino.bin" "$bundle/$bundle_name.bin"
+  printf '%s\n' "$board_flags $platform_ram_flags $strict_flags" > "$bundle/build.flags"
+  printf 'format 1\nabi 5\n' > "$bundle/build.apps"
+  local expected=(SETUP.APP)
+  [[ "$focal" == 0 ]] || expected+=(FOCAL.APP)
+  [[ "$basic" == 0 ]] || expected+=(BASIC.APP)
+  [[ "$wbmp" == 0 || "$markdown" == 1 ]] || expected+=(WBMP.APP)
+  [[ "$markdown" == 0 ]] || expected+=(MARKDOWN.APP)
+  [[ "$chip8" == 0 ]] || expected+=(CHIP8.APP)
+  local file wanted expected_file
+  for file in "${expected[@]}" HELP0.TXT HELP1.TXT; do
+    [[ -s "$bundle/System/$file" ]] ||
+      fail "missing product artifact: $bundle_name/System/$file"
+  done
+  for file in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP; do
+    wanted=0
+    for expected_file in "${expected[@]}"; do
+      [[ "$file" != "$expected_file" ]] || wanted=1
+    done
+    [[ "$wanted" == 1 || ! -e "$bundle/System/$file" ]] ||
+      fail "disabled APP was packaged: $bundle_name/System/$file"
+  done
+  for file in "${expected[@]}"; do
+    python3 - "$bundle/System/$file" <<'PY'
+from pathlib import Path
+import struct
+import sys
+
+data = Path(sys.argv[1]).read_bytes()
+assert len(data) >= 64 and data[:8] == b"MK61APP\0", "APP header"
+assert struct.unpack_from("<H", data, 12)[0] == 5, "APP must use ABI 5"
+assert struct.unpack_from("<I", data, 16)[0] in (5, 7), "relocatable flags"
+assert struct.unpack_from("<I", data, 20)[0] == 0x20000000, "virtual link base"
+stored = struct.unpack_from("<I", data, 24)[0]
+memory = struct.unpack_from("<I", data, 32)[0]
+code_size, relocations = struct.unpack_from("<II", data, 40)
+assert len(data) == 64 + stored and memory <= 20 * 1024, "container size"
+assert 0 < code_size <= stored and relocations <= stored - code_size, "relocation tail"
+PY
+  done
+  (cd "$output_dir" && zip -qr "$bundle_name.zip" "$bundle_name")
+}
 
 compile_variant() {
   local case_id="$1"
@@ -120,7 +218,7 @@ compile_variant() {
     --build-path "$build_path" \
     --build-property "compiler.cpp.extra_flags=$compile_flags" \
     --build-property "compiler.c.extra_flags=$platform_ram_flags" \
-    --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected" \
+    --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker" \
     "$sketch" 2>&1 | tee "$compile_log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}
@@ -170,6 +268,8 @@ compile_variant() {
     --output-prefix "$build_path/resource-report"
   "$root/tests/check_global_constructors.sh" \
     "$build_path/mk61s-M.ino.elf"
+  python3 "$root/tests/check_app_memory_elf.py" \
+    "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_early_dfu_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_power_monitor_elf.sh" \
@@ -195,6 +295,8 @@ compile_variant() {
   if [[ -n "$output_dir" && "$publish" == 1 ]]; then
     cp "$build_path/mk61s-M.ino.bin" \
       "$output_dir/${artifact_name}-${firmware_tag}.bin"
+    package_system_apps "$profile" "$board_flags" "$artifact_name" \
+      "$build_path" "$expect_ws0010_graphics"
   fi
 }
 

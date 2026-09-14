@@ -59,6 +59,17 @@ enum mk61_app_key {
   MK61_APP_KEY_RAW_BASE = 0x100
 };
 
+/* INITIALIZE argument2 and mk61_app_kind use these stable wire values. */
+enum mk61_app_kind {
+  MK61_APP_KIND_FOCAL = 1,
+  MK61_APP_KIND_TINYBASIC,
+  MK61_APP_KIND_WBMP_VIEWER,
+  MK61_APP_KIND_APPLICATION,
+  MK61_APP_KIND_CHIP8,
+  MK61_APP_KIND_MARKDOWN_VIEWER,
+  MK61_APP_KIND_SETUP
+};
+
 typedef struct mk61_app_api {
   uint32_t magic;
   uint16_t version;

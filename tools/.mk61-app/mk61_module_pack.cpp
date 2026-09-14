@@ -27,7 +27,6 @@ static constexpr int ZX0_MAX_OFFSET = 32640;
 struct Options {
   Kind kind = Kind::FOCAL;
   bool kind_set = false;
-  std::filesystem::path resident;
   std::filesystem::path image;
   std::filesystem::path relocations;
   std::filesystem::path output;
@@ -38,27 +37,21 @@ struct Options {
   bool memory_size_set = false;
   bool entry_offset_set = false;
   bool load_address_set = false;
-  bool require_zx0 = false;
-  bool portable = false;
 };
 
 [[noreturn]] void usage(const char* message = nullptr) {
   if(message != nullptr) std::fprintf(stderr, "error: %s\n\n", message);
   std::fprintf(stderr,
-      "usage: mk61_module_pack --kind KIND (--resident FILE | --portable) --image FILE\n"
-      "       --memory-size N --entry-offset N --load-address N\n"
-      "       --output FILE [--handled-magic XX] [--require-zx0]\n"
+      "usage: mk61_module_pack --kind KIND --image FILE --relocations FILE\n"
+      "       --memory-size N --entry-offset N --output FILE\n"
+      "       [--handled-magic XX]\n"
       "  --kind KIND          app, focal, tinybasic, wbmp-viewer,\n"
       "                       markdown-viewer, chip8, or setup\n"
-      "  --resident FILE      exact resident firmware .bin\n"
-      "  --portable           standalone; best of ZX0 / BCJ+ZX0\n"
-      "  --relocations FILE   add compact relocation table (ABI 4; otherwise ABI 3)\n"
+      "  --relocations FILE   compact relocation table (current ABI)\n"
       "  --image FILE         linked SRAM image without its .bss tail\n"
       "  --memory-size N      image plus zero-filled .bss\n"
       "  --entry-offset N     module entry offset from the load address\n"
-      "  --load-address N     linked SRAM base (portable: 0x20000000)\n"
       "  --handled-magic XX   two-byte C5 type magic handled by FILE_OPEN\n"
-      "  --require-zx0        reject an uncompressed result\n"
       "  --output FILE        resulting .APP container\n");
   std::exit(message == nullptr ? 0 : 2);
 }
@@ -107,13 +100,9 @@ Options parse_options(int argc, char** argv) {
   for(int index = 1; index < argc; index++) {
     const std::string option = argv[index];
     if(option == "--help" || option == "-h") usage();
-    if(option == "--require-zx0") {
-      options.require_zx0 = true;
-      continue;
-    }
+    // Accepted as a no-op for scripts written for ABI 4. All output is now
+    // relocatable and there is no legacy alternative.
     if(option == "--portable") {
-      options.portable = true;
-      options.require_zx0 = true;
       continue;
     }
     if(index + 1 >= argc) usage(("missing value for " + option).c_str());
@@ -121,8 +110,6 @@ Options parse_options(int argc, char** argv) {
     if(option == "--kind") {
       options.kind = parse_kind(value);
       options.kind_set = true;
-    } else if(option == "--resident") {
-      options.resident = value;
     } else if(option == "--relocations") {
       options.relocations = value;
     } else if(option == "--image") {
@@ -134,7 +121,10 @@ Options parse_options(int argc, char** argv) {
       options.entry_offset = parse_u32(value, "entry offset");
       options.entry_offset_set = true;
     } else if(option == "--load-address") {
-      options.load_address = parse_u32(value, "load address");
+      const u32 address = parse_u32(value, "load address");
+      if(address != MK61_PORTABLE_APP_ADDRESS)
+        usage("current APP ABI has a fixed virtual link base");
+      options.load_address = address;
       options.load_address_set = true;
     } else if(option == "--handled-magic") {
       options.handled_type_magic = parse_type_magic(value);
@@ -144,18 +134,11 @@ Options parse_options(int argc, char** argv) {
       usage(("unknown option: " + option).c_str());
     }
   }
-  if(!options.portable && !options.relocations.empty()) usage("relocations require --portable");
-  if(options.portable) {
-    if(!options.resident.empty() ||
-       (options.load_address_set &&
-        options.load_address != MK61_PORTABLE_APP_ADDRESS)) {
-      usage("portable APP requires no resident and fixed SRAM");
-    }
+  if(!options.load_address_set) {
     options.load_address = MK61_PORTABLE_APP_ADDRESS;
     options.load_address_set = true;
   }
-  if(!options.kind_set || (!options.portable && options.resident.empty()) ||
-     options.image.empty() ||
+  if(!options.kind_set || options.image.empty() || options.relocations.empty() ||
      options.output.empty() || !options.memory_size_set ||
      !options.entry_offset_set || !options.load_address_set) {
     usage("all required options must be specified");
@@ -246,16 +229,10 @@ u32 slot_size(Kind kind) {
       ? loadable_module::MAX_CONTAINER_SIZE : 0;
 }
 
-std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
-                     const std::vector<u8>& image) {
-  if(!options.portable && (resident.empty() ||
-     resident.size() > loadable_module::MAX_RESIDENT_SIZE)) {
-    throw std::runtime_error(
-        "resident image size is outside the supported range");
-  }
+std::vector<u8> pack(const Options& options, const std::vector<u8>& image) {
   if(image.empty() || image.size() > options.memory_size ||
-     options.memory_size > loadable_module::OVERLAY_SIZE) {
-    throw std::runtime_error("module image does not fit the SRAM overlay");
+     options.memory_size > loadable_module::APP_MAX_MEMORY_SIZE) {
+    throw std::runtime_error("module exceeds the 20 KiB APP image limit");
   }
   if(options.entry_offset >= image.size() ||
      (options.entry_offset & 1U) != 0) {
@@ -264,7 +241,7 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
   }
   if(options.load_address < loadable_module::SRAM_FIRST_ADDRESS ||
      options.load_address > loadable_module::SRAM_LAST_ADDRESS -
-                                loadable_module::OVERLAY_SIZE ||
+                                loadable_module::APP_MAX_MEMORY_SIZE ||
      (options.load_address & 7U) != 0) {
     throw std::runtime_error(
         "load address is outside aligned STM32F401/F411 SRAM");
@@ -272,40 +249,32 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
 
   std::vector<u8> stored = zx0_encode_optimal(image);
   verify_zx0(stored, image);
-  u32 flags = options.portable ? MK61_PORTABLE_APP_FLAG : 0;
-  if(options.portable) {
-    std::vector<u8> filtered = image;
-    arm_thumb_bcj::transform(filtered.data(), (u32) filtered.size(), true);
-    std::vector<u8> candidate = zx0_encode_optimal(filtered);
-    verify_zx0(candidate, filtered);
-    arm_thumb_bcj::transform(filtered.data(), (u32) filtered.size(), false);
-    if(filtered != image) throw std::runtime_error("BCJ round-trip failed");
-    // Same header size; ties keep the plain stream and skip the inverse pass.
-    std::printf("ZX0 candidates: plain=%zu BCJ=%zu; selected=%s\n",
-                stored.size(), candidate.size(),
-                candidate.size() < stored.size() ? "BCJ" : "plain");
-    if(candidate.size() < stored.size()) {
-      stored.swap(candidate);
-      flags |= MK61_APP_ARM_THUMB_BCJ_FLAG;
-    }
+  u32 flags = MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG;
+  std::vector<u8> filtered = image;
+  arm_thumb_bcj::transform(filtered.data(), (u32) filtered.size(), true);
+  std::vector<u8> candidate = zx0_encode_optimal(filtered);
+  verify_zx0(candidate, filtered);
+  arm_thumb_bcj::transform(filtered.data(), (u32) filtered.size(), false);
+  if(filtered != image) throw std::runtime_error("BCJ round-trip failed");
+  // Same header size; ties keep the plain stream and skip the inverse pass.
+  std::printf("ZX0 candidates: plain=%zu BCJ=%zu; selected=%s\n",
+              stored.size(), candidate.size(),
+              candidate.size() < stored.size() ? "BCJ" : "plain");
+  if(candidate.size() < stored.size()) {
+    stored.swap(candidate);
+    flags |= MK61_APP_ARM_THUMB_BCJ_FLAG;
   }
   Compression compression = Compression::ZX0;
-  if(!options.require_zx0 && stored.size() >= image.size()) {
-    stored = image;
-    compression = Compression::NONE;
-  }
 
   const u32 code_stored_size = (u32) stored.size();
   u32 relocation_count = 0;
-  if(!options.relocations.empty()) {
-    // Empty tables are valid for position-independent images.
-    std::ifstream file(options.relocations, std::ios::binary);
-    if(!file) throw std::runtime_error("cannot read relocation table");
-    const std::vector<u8> table((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    for(u8 byte : table) if(!(byte & 128U)) ++relocation_count;
-    stored.insert(stored.end(), table.begin(), table.end());
-    flags |= MK61_APP_RELOCATABLE_FLAG;
-  }
+  // Empty tables are valid for position-independent images.
+  std::ifstream file(options.relocations, std::ios::binary);
+  if(!file) throw std::runtime_error("cannot read relocation table");
+  const std::vector<u8> table((std::istreambuf_iterator<char>(file)),
+                              std::istreambuf_iterator<char>());
+  for(u8 byte : table) if(!(byte & 128U)) ++relocation_count;
+  stored.insert(stored.end(), table.begin(), table.end());
   const u32 limit = slot_size(options.kind);
   if(stored.size() + loadable_module::HEADER_SIZE > limit) {
     throw std::runtime_error(
@@ -323,13 +292,8 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
   header.image_size = (u32) image.size();
   header.memory_size = options.memory_size;
   header.entry_offset = options.entry_offset;
-  header.resident_size = (u32) resident.size();
-  header.resident_crc32 =
-      loadable_module::crc32(resident.data(), resident.size());
-  if(flags & MK61_APP_RELOCATABLE_FLAG) {
-    header.code_stored_size = code_stored_size;
-    header.relocation_count = relocation_count;
-  }
+  header.code_stored_size = code_stored_size;
+  header.relocation_count = relocation_count;
   header.stored_crc32 =
       loadable_module::crc32(stored.data(), stored.size());
   header.image_crc32 =
@@ -360,10 +324,8 @@ std::vector<u8> pack(const Options& options, const std::vector<u8>& resident,
 int main(int argc, char** argv) {
   try {
     const Options options = parse_options(argc, argv);
-    const std::vector<u8> resident = options.portable
-        ? std::vector<u8>{} : read_file(options.resident);
     const std::vector<u8> image = read_file(options.image);
-    const std::vector<u8> module = pack(options, resident, image);
+    const std::vector<u8> module = pack(options, image);
     write_file(options.output, module);
     const double ratio =
         (double) (module.size() - loadable_module::HEADER_SIZE) /

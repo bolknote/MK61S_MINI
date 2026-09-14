@@ -203,7 +203,8 @@ u16 vfat_stage_count(void);
 void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all(void);
 void vfat_stage_clear(void);
-// Полный индекс staging живёт в общей APP/USB overlay-арене. USB-сеанс
+// Полный staging-индекс живёт в нижней части общей динамической APP/USB SRAM.
+// USB-сеанс
 // блокирует её от вытеснения; терминальный upload перед проверкой APP сужает
 // индекс до собственного малого буфера и освобождает окно декодеру модуля.
 bool vfat_stage_lock(void);

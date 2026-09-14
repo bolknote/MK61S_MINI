@@ -5,7 +5,7 @@
 #include "portable_app_config.h"
 
 // Один диспетчер управляет рабочими аренами прошивки. WORKSPACE/SCRATCH/BULK
-// остаются раздельными, поскольку используются одновременно. В ABI 4 APP и
+// остаются раздельными, поскольку используются одновременно. В ABI 5 APP и
 // OVERLAY разделяют свободную RAM с системной кучей. Общими являются правила
 // владения, проверка контекста, поколение lease, вытеснение и диагностика.
 namespace shared_memory {
@@ -15,24 +15,10 @@ static constexpr usize SCRATCH_SIZE = 1600;
 static constexpr usize STAGE_INDEX_SIZE = 384U * sizeof(u32);
 static constexpr usize APP_MAX_SIZE = 20U * 1024U;
 
-// ABI 4 uses the free linker range, shared with the C heap and staging.
-// Only the explicit legacy build retains a fixed-address APP window.
-#define MK61_SHARED_MEMORY_DYNAMIC MK61_ENABLE_PORTABLE_APPS
-#if MK61_ENABLE_USER_APPS || \
-    (defined(MK61_ENABLE_LOADABLE_MODULES) && MK61_ENABLE_LOADABLE_MODULES) || \
-    (!defined(MK61_ENABLE_LOADABLE_MODULES) && defined(ARDUINO_BLACKPILL_F401CC))
-  #define MK61_SHARED_MEMORY_APP_ENABLED 1
-#else
-  #define MK61_SHARED_MEMORY_APP_ENABLED 0
-#endif
-
-#if !MK61_SHARED_MEMORY_DYNAMIC
-  #if MK61_SHARED_MEMORY_APP_ENABLED
-static constexpr usize OVERLAY_SIZE = APP_MAX_SIZE;
-  #else
-static constexpr usize OVERLAY_SIZE = STAGE_INDEX_SIZE;
-  #endif
-#endif
+// The current ABI always uses the free linker range shared with the C heap and
+// staging. There is no fixed-address compatibility window or reserved array.
+#define MK61_SHARED_MEMORY_APP_ENABLED 1
+#define MK61_SHARED_MEMORY_DYNAMIC 1
 
 #if defined(STM32F401xC) || defined(STM32F401xE)
 static constexpr usize BULK_SIZE = 1536;

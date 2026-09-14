@@ -32,10 +32,10 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
   memset(&header, 0, sizeof(header));
   if(source.read == nullptr || source.size < HEADER_SIZE ||
      source.size > MAX_CONTAINER_SIZE) return StoreStatus::WRONG_FILE_SIZE;
-  shared_memory::Lease module_overlay;
-  if(!module_overlay.acquire_cache(
+  shared_memory::Lease app_validation_buffer;
+  if(!app_validation_buffer.acquire_cache(
        shared_memory::Arena::OVERLAY,
-       shared_memory::Owner::LOADABLE_MODULE, OVERLAY_SIZE)) {
+       shared_memory::Owner::LOADABLE_MODULE, APP_MAX_MEMORY_SIZE)) {
     return StoreStatus::UNAVAILABLE;
   }
   u8 marker = 0;

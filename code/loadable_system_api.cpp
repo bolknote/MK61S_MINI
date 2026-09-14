@@ -1,6 +1,6 @@
 #include "config.h"
 
-#if MK61_ENABLE_PORTABLE_APPS && MK61_ANY_LOADABLE_MODULE
+#if MK61_ANY_LOADABLE_MODULE
 #include "loadable_system_api.hpp"
 #include "loadable_app_api.hpp"
 #include "loadable_module_format.hpp"
@@ -14,12 +14,12 @@
 #include "text_editor.hpp"
 #include "mk61_ref.hpp"
 #include "setup_service.hpp"
+#include "builtin_font.hpp"
+#include "mk_math.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_font_service.hpp"
 #endif
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
 #include "loadable_system_editor.hpp"
-#endif
 #include <new>
 #include <string.h>
 #include <stdio.h>
@@ -33,10 +33,7 @@ static_assert(sizeof(shared_scratch::Lease) <= MK61_SYSTEM_LEASE_BYTES,
               "increase the versioned opaque lease storage");
 static_assert(alignof(mk61_system_lease) >= alignof(language_workspace::Lease),
               "opaque lease alignment");
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
-static u32 language_image_crc[2];
-#endif
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
+static u32 workspace_image_crc[(u8) Kind::SETUP + 1U];
 #define MK61_RUNTIME(name) extern "C" void service_##name() asm(#name);
 #include "loadable_system_runtime.def"
 #undef MK61_RUNTIME
@@ -45,7 +42,6 @@ static const mk61_system_runtime_function runtime[] = {
 #include "loadable_system_runtime.def"
 #undef MK61_RUNTIME
 };
-#endif
 
 static language_workspace::Owner owner(u32 kind) {
   switch((Kind) kind) {
@@ -118,12 +114,11 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
   switch(operation) {
     case MK61_SERVICE_CAPABILITIES:
       return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES |
-          MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_SETUP | MK61_SERVICE_CAP_FORMAT
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
-          | MK61_SERVICE_CAP_DIALOGS | MK61_SERVICE_CAP_EDITOR |
-          MK61_SERVICE_CAP_REGISTERS | MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME
-#endif
-#if MK61_MARKDOWN_VIEWER_IS_LOADABLE && MK61_MARKDOWN_USES_WBMP
+          MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_SETUP |
+          MK61_SERVICE_CAP_FORMAT | MK61_SERVICE_CAP_DIALOGS |
+          MK61_SERVICE_CAP_EDITOR | MK61_SERVICE_CAP_REGISTERS |
+          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME
+#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
           | MK61_SERVICE_CAP_FONT
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
@@ -181,12 +176,10 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
         auto* lease = new(out.opaque) language_workspace::Lease(owner(b), c);
         if(!lease->ok()) { lease->~Lease(); return 0; }
         out.data = (u8*) lease->data(); out.size = lease->size(); out.fresh = lease->fresh();
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
-        if(b == (u32) Kind::FOCAL || b == (u32) Kind::TINYBASIC) {
-          u32& stamp = language_image_crc[b - 1U];
+        if(b > 0 && b <= (u32) Kind::SETUP) {
+          u32& stamp = workspace_image_crc[b];
           if(stamp != out.image_crc) { out.fresh = 1; stamp = out.image_crc; }
         }
-#endif
       } else if(a == 1 && (b == (u32) Kind::MARKDOWN_VIEWER || b == (u32) Kind::WBMP_VIEWER ||
                            b == (u32) Kind::APPLICATION)) {
         auto* lease = new(out.opaque) shared_scratch::Lease(
@@ -222,7 +215,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       }
       return 1;
     }
-#if MK61_MARKDOWN_VIEWER_IS_LOADABLE && MK61_MARKDOWN_USES_WBMP
+#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
     case MK61_SYS_FONT: {
       if(!payload || a > 1 || b > 0xFFFFU) return 0;
       builtin_font::Raster glyph = {};
@@ -235,7 +228,6 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     }
 #endif
 
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
     case MK61_SYS_FILE_CHOOSE: {
       if(!payload || b > 0xFFFFU) return 0;
       auto& out = *(mk61_system_choice*) payload;
@@ -292,7 +284,6 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       return operation == MK61_SYS_REF_READ ? mk61_ref::read(ref, *(double*) payload)
                                            : mk61_ref::write(ref, *(double*) payload);
     }
-#endif
     default: return 0;
   }
 }
@@ -312,7 +303,6 @@ static u32 system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
 }
 
 static double system_math(u32 operation, double x, double y) {
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
   switch(operation) {
     case MK61_SYS_SIN: return mk_math::sin(x);
     case MK61_SYS_COS: return mk_math::cos(x);
@@ -326,9 +316,6 @@ static double system_math(u32 operation, double x, double y) {
     case MK61_SYS_SQRT: return mk_math::sqrt(x);
     case MK61_SYS_POW: return mk_math::pow(x, y);
   }
-#else
-  (void) operation; (void) x; (void) y;
-#endif
   return 0;
 }
 
@@ -338,22 +325,18 @@ static int system_format(char* output, u32 size, const char* format, va_list arg
 
 } // namespace
 
-const mk61_system_api& system_api() {
-  static const mk61_system_api api = {
+const mk61_app_services& app_services() {
+  static const mk61_app_services api = {
       MK61_SYSTEM_API_MAGIC, MK61_SYSTEM_API_VERSION, sizeof(mk61_system_api),
       &keyboard_layout::ACTIVE, system_call, system_math, system_format,
-#if MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE
       runtime
-#else
-      nullptr
-#endif
   };
   return api;
 }
 
 const void* query_service(uint32_t service_id, uint32_t version) {
   return service_id == MK61_APP_SERVICE_COMMON && version == MK61_APP_SERVICES_VERSION
-      ? &system_api() : nullptr;
+      ? &app_services() : nullptr;
 }
 
 } // namespace loadable_module

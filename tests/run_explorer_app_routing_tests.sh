@@ -15,12 +15,12 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
-for user_apps in 0 1; do
+for loader in 0 1; do
   clang++ "${flags[@]}" \
-    -DMK61_ENABLE_USER_APPS="$user_apps" \
+    -DMK61_APP_RUNTIME_AVAILABLE="$loader" \
     "$root/tests/explorer_app_routing_self_test.cpp" \
-    -o "$work/explorer-app-$user_apps"
-  "$work/explorer-app-$user_apps"
+    -o "$work/explorer-app-$loader"
+  "$work/explorer-app-$loader"
 done
 
 echo "explorer APP routing tests passed"

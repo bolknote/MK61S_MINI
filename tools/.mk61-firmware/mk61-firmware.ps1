@@ -85,7 +85,6 @@ $script:State = [ordered]@{
     EnableMarkdown = 1
     EnableChip8 = 0
     EnableUsbScreen = 0
-    EnableUserApps = 0
     EnableFonts = 0
     EnableExplorer = 1
     EnableCoreMath = 0
@@ -194,7 +193,7 @@ function Test-Mcu { param([string]$Id) return $Id -eq 'f411' -or $Id -eq 'f401' 
 function Get-McuLabel {
     param([string]$Id)
     switch ($Id) {
-        'f411' { return 'STM32F411CE · 512 KiB Flash' }
+        'f411' { return 'STM32F411CE · 512 KiB Flash · APP в C5' }
         'f401' { return 'STM32F401CC · 256 KiB Flash · APP в C5' }
     }
     return 'не выбран'
@@ -218,17 +217,14 @@ function Get-ProfileArtifactName {
 
 function Get-ProfileBundleDir {
     param([string]$Profile)
-    $name = Get-ProfileArtifactName $Profile 'f401'
+    $name = Get-ProfileArtifactName $Profile $script:State.Mcu
     return Join-Path $script:OutputDir $name.Substring(0, $name.Length - 4)
 }
 
 function Get-ProfileArtifactPath {
     param([string]$Profile)
     $name = Get-ProfileArtifactName $Profile $script:State.Mcu
-    if ($script:State.Mcu -eq 'f401') {
-        return Join-Path (Get-ProfileBundleDir $Profile) $name
-    }
-    return Join-Path $script:OutputDir $name
+    return Join-Path (Get-ProfileBundleDir $Profile) $name
 }
 
 function Test-HardwareCompatible {
@@ -293,7 +289,7 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "-DMK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "-DMK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
-        "-DMK61_ENABLE_USER_APPS=$($script:State.EnableUserApps)"
+        "-DMK61_ENABLE_LOADABLE_MODULES=1"
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "-DMK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "-DMK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
@@ -313,14 +309,14 @@ function Get-Checkbox {
 }
 
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP APP  {3} Markdown+WBMP  {4} CHIP-8  {5} USB  {6} user APP  {7} шрифты  {8} USER  {9} CORE math' -f
+    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP APP  {3} Markdown+WBMP  {4} CHIP-8  {5} USB  {6} APP ABI 5  {7} шрифты  {8} USER  {9} CORE math' -f
         (Get-Checkbox $script:State.EnableFocal),
         (Get-Checkbox $script:State.EnableTinyBasic),
         (Get-Checkbox $script:State.EnableWbmp),
         (Get-Checkbox $script:State.EnableMarkdown),
         (Get-Checkbox $script:State.EnableChip8),
         (Get-Checkbox $script:State.EnableUsbScreen),
-        (Get-Checkbox $script:State.EnableUserApps),
+        $script:Glyphs.CheckOn,
         (Get-Checkbox $script:State.EnableFonts),
         (Get-Checkbox $script:State.EnableExplorer),
         (Get-Checkbox $script:State.EnableCoreMath))
@@ -339,7 +335,7 @@ function Get-CompileOptionsDetails {
         "$(Get-Checkbox $script:State.EnableMarkdown) Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
         "$(Get-Checkbox $script:State.EnableChip8) CHIP-8 (MK61_ENABLE_CHIP8)"
         "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
-        "$(Get-Checkbox $script:State.EnableUserApps) пользовательские APP (MK61_ENABLE_USER_APPS)"
+        "$($script:Glyphs.CheckOn) единый APP runtime ABI 5 (MK61_ENABLE_LOADABLE_MODULES)"
         "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
         "$(Get-Checkbox $script:State.EnableExplorer) USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)"
         $mathText
@@ -373,7 +369,7 @@ function Save-Config {
         "MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "MK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
-        "MK61_ENABLE_USER_APPS=$($script:State.EnableUserApps)"
+        'MK61_ENABLE_LOADABLE_MODULES=1'
         "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "MK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
@@ -421,7 +417,8 @@ function Load-Config {
             'MK61_ENABLE_MARKDOWN_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableMarkdown = [int]$value } }
             'MK61_ENABLE_CHIP8' { if (Test-BooleanValue $value) { $script:State.EnableChip8 = [int]$value } }
             'MK61_ENABLE_USB_SCREEN' { if (Test-BooleanValue $value) { $script:State.EnableUsbScreen = [int]$value } }
-            'MK61_ENABLE_USER_APPS' { if (Test-BooleanValue $value) { $script:State.EnableUserApps = [int]$value } }
+            'MK61_ENABLE_LOADABLE_MODULES' { }
+            'MK61_ENABLE_USER_APPS' { } # legacy setting: APP runtime is always enabled
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
             'MK61_USER_EXPLORER_SHORTCUT' { if (Test-BooleanValue $value) { $script:State.EnableExplorer = [int]$value } }
             'MK61_MATH_BACKEND' { if (Test-BooleanValue $value) { $script:State.EnableCoreMath = [int]$value } }
@@ -1104,11 +1101,8 @@ function Test-ArduinoLibrariesReady {
 }
 
 function Test-SystemAppsEnabled {
-    return $script:State.EnableFocal -eq 1 -or
-        $script:State.EnableTinyBasic -eq 1 -or
-        $script:State.EnableWbmp -eq 1 -or
-        $script:State.EnableMarkdown -eq 1 -or
-        $script:State.EnableChip8 -eq 1
+    # SETUP and terminal help are mandatory parts of every ABI 5 bundle.
+    return $true
 }
 
 function Test-AnyAppsRequested {
@@ -1185,7 +1179,6 @@ function Get-F401GccOptionArguments {
         '-Markdown', [string]$script:State.EnableMarkdown,
         '-Chip8', [string]$script:State.EnableChip8,
         '-UsbScreen', [string]$script:State.EnableUsbScreen,
-        '-UserApps', [string]$script:State.EnableUserApps,
         '-ExtendedFontSettings', [string]$script:State.EnableFonts,
         '-UserExplorer', [string]$script:State.EnableExplorer,
         '-MathBackend', [string]$script:State.EnableCoreMath)
@@ -1250,10 +1243,11 @@ function Test-BuildDependenciesReady {
         return Test-F401HostToolsReady
     }
     $pythonReady = $script:State.Mcu -ne 'f411' -or
-        $script:State.EnableUserApps -eq 0 -or
         $null -ne (Get-Python3Command)
+    $hostCompilerReady = $script:State.Mcu -ne 'f411' -or
+        (Test-CommandAvailable 'c++')
     return (Test-ArduinoCoreReady) -and (Test-ArduinoLibrariesReady) -and
-        (Test-F401HostToolsReady) -and $pythonReady
+        (Test-F401HostToolsReady) -and $pythonReady -and $hostCompilerReady
 }
 
 function Get-DependencyReport {
@@ -1298,13 +1292,17 @@ function Get-DependencyReport {
             $lines.Add(
                 'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
         }
-        if ($script:State.Mcu -eq 'f411' -and
-            $script:State.EnableUserApps -eq 1) {
+        if ($script:State.Mcu -eq 'f411') {
             $python = Get-Python3Command
             if ($null -ne $python) {
-                $lines.Add("Python 3 (APP linker): $($python.Executable)")
+                $lines.Add("Python 3 (APP builder): $($python.Executable)")
             } else {
-                $lines.Add('Python 3 (APP linker): НЕ НАЙДЕН')
+                $lines.Add('Python 3 (APP builder): НЕ НАЙДЕН')
+            }
+            if (Test-CommandAvailable 'c++') {
+                $lines.Add('Host C++17 compiler: найден')
+            } else {
+                $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для APP/ZX0)')
             }
         }
         if ($script:State.Mcu -eq 'f401' -and
@@ -1818,7 +1816,7 @@ function Choose-Mcu {
     $items = @(
         [pscustomobject]@{
             Tag = 'f411'
-            Label = 'STM32F411CE · 512 KiB Flash'
+            Label = 'STM32F411CE · 512 KiB Flash · APP в C5'
             State = if ($script:State.Mcu -eq 'f411') { 'on' } else { 'off' }
         }
         [pscustomobject]@{
@@ -1828,7 +1826,7 @@ function Choose-Mcu {
         }
     )
     $chosen = Show-RadioList 'Контроллер' `
-        'F411 хранит системные компоненты в прошивке. F401 собирает resident и согласованные System APP для C5:' $items
+        'Оба контроллера собирают resident и согласованные ABI 5 System APP для C5:' $items
     if ([string]::IsNullOrEmpty($chosen)) { return $false }
     $script:State.Mcu = $chosen
     Save-Config
@@ -1864,7 +1862,6 @@ function Choose-CompileOptions {
         [pscustomobject]@{ Tag = 'markdown'; Label = 'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER'; State = if ($script:State.EnableMarkdown) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'chip8'; Label = 'CHIP-8 · MK61_ENABLE_CHIP8'; State = if ($script:State.EnableChip8) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'usb_screen'; Label = 'USB-экран · MK61_ENABLE_USB_SCREEN'; State = if ($script:State.EnableUsbScreen) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'user_apps'; Label = 'Пользовательские APP · MK61_ENABLE_USER_APPS'; State = if ($script:State.EnableUserApps) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'fonts'; Label = 'Расширенные настройки шрифта'; State = if ($script:State.EnableFonts) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'explorer'; Label = 'Клавиша USER открывает Explorer'; State = if ($script:State.EnableExplorer) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'core_math'; Label = 'Математика CORE вместо libm'; State = if ($script:State.EnableCoreMath) { 'on' } else { 'off' } }
@@ -1878,7 +1875,6 @@ function Choose-CompileOptions {
     $script:State.EnableMarkdown = [int]($result.Values -contains 'markdown')
     $script:State.EnableChip8 = [int]($result.Values -contains 'chip8')
     $script:State.EnableUsbScreen = [int]($result.Values -contains 'usb_screen')
-    $script:State.EnableUserApps = [int]($result.Values -contains 'user_apps')
     $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
     $script:State.EnableExplorer = [int]($result.Values -contains 'explorer')
     $script:State.EnableCoreMath = [int]($result.Values -contains 'core_math')
@@ -1956,7 +1952,7 @@ function Invoke-F401CustomBundleBuild {
         MK61_ENABLE_MARKDOWN_VIEWER = [string]$script:State.EnableMarkdown
         MK61_ENABLE_CHIP8 = [string]$script:State.EnableChip8
         MK61_ENABLE_USB_SCREEN = [string]$script:State.EnableUsbScreen
-        MK61_ENABLE_USER_APPS = [string]$script:State.EnableUserApps
+        MK61_ENABLE_LOADABLE_MODULES = '1'
         MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
         MK61_USER_EXPLORER_SHORTCUT = [string]$script:State.EnableExplorer
         MK61_MATH_BACKEND = [string]$script:State.EnableCoreMath
@@ -2013,6 +2009,36 @@ function Invoke-F401BundleBuild {
         return Invoke-F401CustomBundleBuild $Profile
     }
     return Invoke-F401GccBundleBuild $Profile
+}
+
+function Invoke-SystemAppBundleBuild {
+    param([string]$Profile, [string]$BuildDirectory, [string]$Bundle)
+    $python = Get-Python3Command
+    if ($null -eq $python) {
+        Write-LastLog 'Python 3 is required to build ABI 5 System APP.' -Append
+        return $false
+    }
+    $graphics = if ($Profile -in @(
+            'classic-v2', 'classic-v3', '40th', 'mini-v3-ws0010') -or
+            $script:State.EnableUsbScreen -eq 1) { '1' } else { '0' }
+    $uiFonts = if ($Profile -in @(
+            'classic-v2', 'classic-v3', '40th')) { '1' } else { '0' }
+    $arguments = [string[]](
+        @($python.PrefixArguments) + @(
+            (Join-Path $script:ProjectRoot 'tools/build_system_app_bundle.py'),
+            '--resident-elf', (Join-Path $BuildDirectory 'mk61s-M.ino.elf'),
+            '--compile-commands', (Join-Path $BuildDirectory 'compile_commands.json'),
+            '--output-dir', (Join-Path $Bundle 'System'),
+            '--graphics', $graphics,
+            '--ui-fonts', $uiFonts,
+            '--focal', [string]$script:State.EnableFocal,
+            '--basic', [string]$script:State.EnableTinyBasic,
+            '--wbmp', [string]$script:State.EnableWbmp,
+            '--markdown', [string]$script:State.EnableMarkdown,
+            '--chip8', [string]$script:State.EnableChip8))
+    return Invoke-ExternalWithProgress 'System APP' `
+        'Собираю единый ABI 5 комплект' $script:LastLog 'indeterminate' `
+        $python.Executable $arguments -Append
 }
 
 function Build-Selected {
@@ -2074,6 +2100,8 @@ function Build-Selected {
         [void](New-Item -ItemType Directory -Force -Path $sketchDir)
         [void](New-Item -ItemType Directory -Force -Path $buildDir)
         [void](New-Item -ItemType Directory -Force -Path $script:OutputDir)
+        [void](New-Item -ItemType Directory -Force -Path (
+            Get-ProfileBundleDir $profile))
         Copy-Item -Path (Join-Path $script:ProjectRoot 'code/*') -Destination $sketchDir -Recurse -Force
     } catch {
         Write-LastLog $_.Exception.Message
@@ -2083,8 +2111,7 @@ function Build-Selected {
     }
 
     $residentLinkFlags = '-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-    if ($script:State.EnableUserApps -eq 1) {
-        $python = Get-Python3Command
+    $python = Get-Python3Command
         if ($null -eq $python) {
             Write-LastLog 'Python 3 is required to prepare the F411 APP linker script.'
             if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
@@ -2136,7 +2163,6 @@ function Build-Selected {
         }
         $linkerFlagPath = $portableLinker.Replace('\', '/')
         $residentLinkFlags += " -Wl,--default-script=$linkerFlagPath"
-    }
 
     $arguments = @(
         'compile', '--fqbn', $script:FqbnF411,
@@ -2181,11 +2207,22 @@ function Build-Selected {
         return $false
     }
 
+    $bundle = Get-ProfileBundleDir $profile
+    if (-not (Invoke-SystemAppBundleBuild $profile $buildDir $bundle)) {
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки System APP' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+
     try {
         Copy-Item -LiteralPath $sourceArtifact -Destination "$artifact.tmp" -Force
         Move-Item -LiteralPath "$artifact.tmp" -Destination $artifact -Force
-        [IO.File]::WriteAllText("$artifact.flags.tmp", $flags + [Environment]::NewLine, $script:Utf8NoBom)
-        Move-Item -LiteralPath "$artifact.flags.tmp" -Destination "$artifact.flags" -Force
+        $flagsPath = Join-Path $bundle 'build.flags'
+        $appsPath = Join-Path $bundle 'build.apps'
+        [IO.File]::WriteAllText("$flagsPath.tmp", $flags + [Environment]::NewLine, $script:Utf8NoBom)
+        Move-Item -LiteralPath "$flagsPath.tmp" -Destination $flagsPath -Force
+        [IO.File]::WriteAllText("$appsPath.tmp", "format 1`nabi 5`n", $script:Utf8NoBom)
+        Move-Item -LiteralPath "$appsPath.tmp" -Destination $appsPath -Force
     } catch {
         Write-LastLog $_.Exception.Message -Append
         if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
@@ -2195,29 +2232,39 @@ function Build-Selected {
 
     $size = (Get-Item -LiteralPath $artifact).Length
     if ($script:State.Interactive) {
-        Show-Message 'Сборка завершена' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nФайл: $artifact`nРазмер: $size байт"
+        Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nПосле прошивки выполните пункт «Шаг 2 · Установить System APP»."
     } else {
-        [Console]::WriteLine("Built: $artifact ($size bytes)")
+        [Console]::WriteLine("Built $($script:State.Mcu.ToUpperInvariant()) bundle: $bundle")
+        [Console]::WriteLine("Resident: $artifact ($size bytes)")
+        [Console]::WriteLine('Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.')
     }
     return $true
 }
 
-function Test-F401BundleReady {
+function Test-SystemBundleReady {
     $profile = $script:State.Profile
     $bundle = Get-ProfileBundleDir $profile
     $artifact = Get-ProfileArtifactPath $profile
     $flagsFile = Join-Path $bundle 'build.flags'
+    $appsFile = Join-Path $bundle 'build.apps'
     if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
         -not (Test-Path -LiteralPath $flagsFile -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $appsFile -PathType Leaf) -or
         (Get-Item -LiteralPath $artifact).Length -eq 0) {
-        Write-LastLog "F401 bundle is missing. Build the selected profile first: $bundle"
+        Write-LastLog "Bundle is missing. Build the selected profile first: $bundle"
+        return $false
+    }
+    $appMetadata = @([IO.File]::ReadAllLines($appsFile))
+    if ($appMetadata.Count -lt 2 -or $appMetadata[0] -ne 'format 1' -or
+        $appMetadata[1] -ne 'abi 5') {
+        Write-LastLog 'Bundle APP metadata is not current ABI 5.'
         return $false
     }
     $lines = [IO.File]::ReadAllLines($flagsFile)
     $actual = if ($lines.Count -gt 0) { $lines[0] } else { '' }
     $expected = Get-AllCompileFlags $profile
     if ($actual -ne $expected) {
-        Write-LastLog 'F401 bundle flags do not match the current selection. Rebuild it first.'
+        Write-LastLog 'Bundle flags do not match the current selection. Rebuild it first.'
         return $false
     }
     $source = Join-Path $bundle 'System'
@@ -2225,7 +2272,7 @@ function Test-F401BundleReady {
         $path = Join-Path $source $app
         if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
             (Get-Item -LiteralPath $path).Length -eq 0) {
-            Write-LastLog "F401 bundle is incomplete: $path is missing."
+            Write-LastLog "Bundle is incomplete: $path is missing."
             return $false
         }
     }
@@ -2316,15 +2363,9 @@ function Copy-SystemAppVerified {
 
 function Install-SystemApps {
     if (-not (Ensure-HardwareProfile)) { return $false }
-    if ($script:State.Mcu -ne 'f401') {
-        $message = 'Второй шаг нужен только для STM32F401CC. На F411 системные компоненты находятся во внутренней Flash.'
-        if ($script:State.Interactive) { Show-Message 'System APP' $message }
-        else { [Console]::Error.WriteLine('Error: --install-apps is only valid for --mcu f401.') }
-        return $false
-    }
-    if (-not (Test-F401BundleReady)) {
+    if (-not (Test-SystemBundleReady)) {
         if ($script:State.Interactive) {
-            Show-Message 'Комплект не готов' "Комплект F401 отсутствует, неполон или собран с другими ключами.`n`nСначала выполните «Только собрать» либо «Собрать и прошить»."
+            Show-Message 'Комплект не готов' "Комплект отсутствует, неполон или собран с другими ключами.`n`nСначала выполните «Только собрать» либо «Собрать и прошить»."
         } else {
             Show-LastLogTail 20
         }
@@ -2493,9 +2534,9 @@ function Upload-Selected {
     if (Invoke-ExternalWithProgress 'Загрузка прошивки' 'Записываю и перезапускаю STM32' `
         $script:LastLog 'measured' $upload.Executable $upload.Arguments) {
         $script:State.DeviceStatus = 'прошивка загружена; устройство перезапущено'
-        if ($script:State.Mcu -eq 'f401' -and (Test-SystemAppsEnabled)) {
+        if (Test-SystemAppsEnabled) {
             if ($script:State.Interactive) {
-                Show-Message 'Шаг 1 завершён' "Resident-прошивка F401 загружена.`n`nДождитесь запуска MK61s, откройте на нём Меню → USB-диск и выполните пункт «Шаг 2 · Установить System APP»."
+                Show-Message 'Шаг 1 завершён' "Resident-прошивка $($script:State.Mcu.ToUpperInvariant()) загружена.`n`nДождитесь запуска MK61s, откройте на нём Меню → USB-диск и выполните пункт «Шаг 2 · Установить System APP»."
             } else {
                 [Console]::WriteLine("Uploaded resident: $artifact")
                 [Console]::WriteLine('Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.')
@@ -2529,7 +2570,7 @@ function Show-Config {
     [Console]::WriteLine("MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)")
     [Console]::WriteLine("MK61_ENABLE_CHIP8=$($script:State.EnableChip8)")
     [Console]::WriteLine("MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)")
-    [Console]::WriteLine("MK61_ENABLE_USER_APPS=$($script:State.EnableUserApps)")
+    [Console]::WriteLine('MK61_ENABLE_LOADABLE_MODULES=1')
     [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")
     [Console]::WriteLine("MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)")
     [Console]::WriteLine("MK61_MATH_BACKEND=$($script:State.EnableCoreMath)")
@@ -2545,20 +2586,14 @@ function Show-Profiles {
 }
 
 function Get-MainMenuItems {
-    $uploadLabel = if ($script:State.Mcu -eq 'f401') {
-        "$($script:Glyphs.MenuUpload) Шаг 1 · Собрать и прошить"
-    } else {
-        "$($script:Glyphs.MenuUpload) Собрать и прошить"
-    }
+    $uploadLabel = "$($script:Glyphs.MenuUpload) Шаг 1 · Собрать и прошить"
     $items = @(
         [pscustomobject]@{ Tag = 'upload'; Label = $uploadLabel }
         [pscustomobject]@{ Tag = 'build'; Label = "$($script:Glyphs.MenuBuild) Только собрать" }
     )
-    if ($script:State.Mcu -eq 'f401') {
-        $items += [pscustomobject]@{
-            Tag = 'install_apps'
-            Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP"
-        }
+    $items += [pscustomobject]@{
+        Tag = 'install_apps'
+        Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP"
     }
     $items += @(
         [pscustomobject]@{ Tag = 'mcu'; Label = "$($script:Glyphs.MenuChoice) Контроллер" }
@@ -2622,7 +2657,7 @@ Usage:
   tools\mk61-firmware.cmd
   tools\mk61-firmware.cmd --mcu MCU --profile ID --build
   tools\mk61-firmware.cmd --mcu MCU --profile ID --upload
-  tools\mk61-firmware.cmd --mcu f401 --profile ID --install-apps
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --install-apps
   tools\mk61-firmware.cmd --detect
   tools\mk61-firmware.cmd --setup
   tools\mk61-firmware.cmd --list-profiles
@@ -2634,7 +2669,7 @@ Profiles:
   classic-v2, classic-v3, 40th
 
 MCU:
-  f411 (512 KiB Flash) or f401 (256 KiB Flash + System APP)
+  f411 (512 KiB Flash) or f401 (256 KiB Flash); both use /System APP
 
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,

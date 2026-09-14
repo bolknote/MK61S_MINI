@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the shipped ABI 4 RAM layout and newlib allocator binding."""
+"""Check the ABI 5 shared dynamic-RAM range and newlib allocator binding."""
 import argparse
 import struct
 from pathlib import Path

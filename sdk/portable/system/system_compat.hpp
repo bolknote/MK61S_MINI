@@ -1,8 +1,9 @@
 #ifndef MK61_PORTABLE_SYSTEM_COMPAT_HPP
 #define MK61_PORTABLE_SYSTEM_COMPAT_HPP
 
-/* Adapter for the existing System APP sources. These names describe local
- * facades only; every crossing into resident uses loadable_system_api.h. */
+/* Adapter for the existing built-in feature sources. A canonical System APP
+ * uses exactly the same public mk61_app_api/services and SDK startup as every
+ * other APP; these facades only avoid rewriting the feature implementation. */
 #define CONFIG
 #define CLASS_KEYBOARD
 #define LCD_FONT_PACK
@@ -42,6 +43,7 @@
 #define MK61_MATH_BACKEND 1
 
 #include "rust_types.h"
+#include "mk61_app.h"
 #include "loadable_system_api.h"
 #include "keyboard_core.hpp"
 #include "keyboard_layout.hpp"
@@ -54,7 +56,8 @@ namespace portable_system {
 extern const mk61_system_api* api;
 extern const mk61_app_api* app;
 extern u32 image_crc;
-bool bind(u32 system_address, u32 app_address, u32 crc);
+extern u32 kind;
+bool bind(const mk61_app_api* app_api, u32 crc, u32 app_kind);
 inline u32 call(u32 operation, u32 a = 0, u32 b = 0, u32 c = 0, void* data = nullptr) {
   return api->call(operation, a, b, c, data);
 }

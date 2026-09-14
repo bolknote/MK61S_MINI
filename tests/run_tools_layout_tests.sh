@@ -14,6 +14,7 @@ expected="$(
     build_fmk_from_ui_atlas.py \
     build_mk61_module_pack.sh \
     build_portable_app.py \
+    build_system_app_bundle.py \
     build-gcc.cmd \
     font_preview_study.py \
     generate_eliza_doctor.py \

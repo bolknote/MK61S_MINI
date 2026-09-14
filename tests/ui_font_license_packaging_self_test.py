@@ -38,8 +38,10 @@ class PackagingTest(unittest.TestCase):
             self.assertNotIn("tools/.fmk-font/package_ui_font_licenses.py",
                              (ROOT / name).read_text())
             self.assertIn("MK61_PORTABLE_UI_FONTS=0", (ROOT / name).read_text())
+        wrapper = (ROOT / "system_apps/.tool/build.ps1").read_text()
+        self.assertIn("'--ui-fonts', $UiFonts", wrapper)
         self.assertIn("--no-ui-fonts",
-                      (ROOT / "system_apps/.tool/build.ps1").read_text())
+                      (ROOT / "tools/build_portable_app.py").read_text())
         workflow = (ROOT / ".github/workflows/firmware-release.yml").read_text()
         self.assertIn("test -s firmware/UI_FONT_LICENSES.zip", workflow)
         self.assertIn("firmware/*.zip", workflow)

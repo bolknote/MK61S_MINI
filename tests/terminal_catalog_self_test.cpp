@@ -25,11 +25,18 @@ int main() {
   for(usize i = 0; i < count; ++i) {
     const auto actual = terminal_catalog::at(i);
     const auto& expected = legacy_commands[i];
+    const bool description_differs =
+#if MK61_SETUP_IS_LOADABLE
+        actual.desc != nullptr;
+#else
+        std::strcmp(actual.desc, expected.desc) != 0;
+#endif
     if(std::strcmp(actual.name, expected.name) || actual.id != expected.id ||
-       std::strcmp(actual.desc, expected.desc)) {
+       description_differs) {
       std::fprintf(stderr, "catalog[%zu]: expected %s / %u / %s; got %s / %u / %s\n",
                    (size_t) i, expected.name, expected.id, expected.desc,
-                   actual.name, actual.id, actual.desc);
+                   actual.name, actual.id,
+                   actual.desc ? actual.desc : "<external help>");
       return 1;
     }
     // Both frontends strip the physical line terminator before dispatch.
@@ -59,5 +66,8 @@ int main() {
   assert(terminal_catalog::lookup((const u8*) "snm") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "sdel") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "sera") == CMD_UNKNOWN);
+#if MK61_SETUP_IS_LOADABLE
+  assert(std::strlen(terminal_catalog::help_signature()) == 9);
+#endif
   std::puts("terminal catalog/help/lookup characterization: PASS");
 }

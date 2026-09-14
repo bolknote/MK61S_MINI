@@ -41,7 +41,9 @@ bool CompileTinyBasic(char* program) {
 }
 
 void InitTinyBasic(void) {
-  call_void(loadable_module::Command::INITIALIZE);
+  // INITIALIZE belongs to the loader lifecycle and is issued exactly once
+  // after a decode. Merely ensure that the cached BASIC image is active.
+  (void) loadable_module::status(loadable_module::Kind::TINYBASIC);
 }
 
 bool TinyBasicIsReady(void) {

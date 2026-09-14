@@ -49,7 +49,7 @@ cp -R "$root/code/." "$sketch/"
 # the exact linked artifact.
 fqbn="STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=$optimization"
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-strict_flags="$board_flags -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
+strict_flags="$board_flags -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 $platform_ram_flags -Werror -Wno-error=cpp"
 
 set +e
 "$arduino_cli" compile \

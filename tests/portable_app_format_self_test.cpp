@@ -60,22 +60,23 @@ static void header_checks() {
   Header header{};
   header.kind = Kind::APPLICATION;
   header.compression = Compression::ZX0;
-  header.flags = MK61_PORTABLE_APP_FLAG;
+  header.flags = MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG;
   header.load_address = MK61_PORTABLE_APP_ADDRESS;
   header.stored_size = 12; header.image_size = 32; header.memory_size = 40;
+  header.code_stored_size = 12;
   u8 encoded[HEADER_SIZE];
   assert(encode_header(header, MAX_CONTAINER_SIZE, encoded));
-  assert(encoded[12] == MK61_PORTABLE_APP_ABI);
+  assert(encoded[12] == MK61_CURRENT_APP_ABI);
   Header decoded{};
   assert(decode_header(encoded, MAX_CONTAINER_SIZE, decoded) == HeaderStatus::OK);
-  assert(decoded.resident_size == 0 && decoded.resident_crc32 == 0);
+  assert(decoded.code_stored_size == 12 && decoded.relocation_count == 0);
   for(u8 index = 0; index < KIND_COUNT; ++index) {
     Header system = header; system.kind = kind_at(index);
     assert(encode_header(system, MAX_CONTAINER_SIZE, encoded));
     assert(decode_header(encoded, MAX_CONTAINER_SIZE, system.kind, decoded) == HeaderStatus::OK);
-    assert(decoded.kind == system.kind && decoded.flags == MK61_PORTABLE_APP_FLAG);
+    assert(decoded.kind == system.kind && decoded.flags == header.flags);
   }
-  for(u32 flags : {0U, 2U, 4U, 5U, 7U, 0xFFFFFFFFU}) {
+  for(u32 flags : {0U, 1U, 2U, 3U, 4U, 6U, 0xFFFFFFFFU}) {
     Header bad = header; bad.flags = flags;
     assert(!encode_header(bad, MAX_CONTAINER_SIZE, encoded));
   }
@@ -85,11 +86,11 @@ static void header_checks() {
     Header bad = header;
     switch(field) {
       case 0: bad.load_address += 8; break;
-      case 1: bad.resident_size = 1; break;
-      case 2: bad.resident_crc32 = 1; break;
+      case 1: bad.code_stored_size = 0; break;
+      case 2: bad.code_stored_size = bad.stored_size + 1; break;
       case 3: bad.kind = (Kind) 0xFF; break;
       case 4: bad.compression = Compression::NONE; break;
-      case 5: bad.memory_size = OVERLAY_SIZE + 1; break;
+      case 5: bad.memory_size = APP_MAX_MEMORY_SIZE + 1; break;
       case 6: bad.entry_offset = bad.image_size; break;
     }
     assert(!encode_header(bad, MAX_CONTAINER_SIZE, encoded));

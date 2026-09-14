@@ -94,7 +94,7 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
       return file_handlers::open(entry) ==
              loadable_module::FileOpenResult::OK;
     case program_store::ProgramType::APP:
-#if MK61_ENABLE_USER_APPS
+#if MK61_APP_RUNTIME_AVAILABLE
       {
         u32 result = 0;
         return loadable_module::run_app(entry.id, result) ==

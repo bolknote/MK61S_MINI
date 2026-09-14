@@ -54,6 +54,7 @@ require_text "$f411_o3_check" 'MK61_REQUIRE_MIXED_OPTIMIZATION=1'
 require_text "$f411_o3_check" 'analyze_stack_usage.py'
 require_text "$f411_o3_check" 'minimum_headroom=65536'
 require_text "$f401_check" 'MK61_REQUIRE_RESIDENT_CRC=1'
+require_text "$f401_check" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'
 require_text "$f401_check" 'seal-firmware.sh" seal --max-size "$flash_capacity"'
 require_text "$f401_check" 'usb=CDCgen,opt=$optimization'
 require_text "$f401_check" 'cases --group f401-arduino --format tsv'
@@ -62,13 +63,18 @@ require_text "$f401_check" 'analyze_stack_usage.py'
 require_text "$f411_matrix" 'check_rtc_alarm_elf.sh'
 
 require_text "$f401_bundle" 'MK61_REQUIRE_RESIDENT_CRC=1'
+require_text "$f401_bundle" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'
 require_text "$f401_bundle" 'seal-firmware.sh" seal --max-size 262144'
 require_text "$f401_bundle" 'analyze_stack_usage.py'
-require_text "$f401_bundle" '-flto -fipa-pta'
 require_text "$f401_bundle" 'opt=oslto'
-require_text "$f401_bundle" '--export-dynamic-symbol-list='
-require_text "$f401_bundle" 'system-app-exports.list'
-require_order "$f401_bundle" 'seal-firmware.sh" seal' 'build_module focal'
+require_text "$f401_bundle" 'MK61_ENABLE_LOADABLE_MODULES=1'
+require_text "$f401_bundle" 'portable-layout.py'
+require_text "$f401_bundle" 'build_system_app_bundle.py'
+if grep -Fq -- '--export-dynamic-symbol-list=' "$f401_bundle" ||
+   grep -Fq -- 'system-app-exports.list' "$f401_bundle"; then
+  fail 'F401 bundle still exposes resident C++ symbols to System APP'
+fi
+require_order "$f401_bundle" 'seal-firmware.sh" seal' 'build_system_app_bundle.py'
 
 require_text "$firmware_sh" "RESIDENT_RELEASE_FLAGS='-DMK61_REQUIRE_RESIDENT_CRC=1'"
 require_text "$firmware_sh" 'seal-firmware.sh" seal --max-size 524288'
@@ -77,13 +83,16 @@ require_text "$firmware_ps" "'tools/seal-firmware.ps1'"
 require_text "$firmware_ps" "'-InputFile', \$sourceArtifact, '-MaxSize', '524288'"
 
 require_text "$gcc_cmake" 'MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}'
+require_text "$gcc_cmake" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'
 require_text "$gcc_cmake" 'analyze_stack_usage.py'
 require_text "$gcc_ps" "'-DMK61_REQUIRE_RESIDENT_CRC=1'"
 require_text "$gcc_ps" "'tools/seal-firmware.ps1'"
 require_order "$gcc_ps" "'seal'," "'System APP builder'"
 require_text "$gcc_ps" "'--change-addresses', '0x08000000'"
-require_text "$root/system_apps/.tool/build.ps1" 'check_stack_usage.py'
-require_text "$root/system_apps/.tool/build.ps1" "'-fipa-pta'"
+require_text "$root/system_apps/.tool/build.ps1" 'build_system_app_bundle.py'
+require_text "$root/tools/build_system_app_bundle.py" 'build_portable_app.py'
+require_text "$root/tools/build_portable_app.py" 'analyze_stack_usage.py'
+require_text "$root/tools/build_portable_app.py" '"-fipa-pta"'
 
 require_text "$board" 'MK61_REQUIRE_RESIDENT_CRC=1'
 require_text "$board_hook_sh" 'seal_resident "$resident_bin"'

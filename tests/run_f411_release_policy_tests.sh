@@ -65,6 +65,13 @@ grep -Fq 'minimum_headroom=65536' "$o3_build"
 grep -Fq '#include "firmware_optimization.hpp"' "$config"
 grep -Fq '#pragma GCC optimize ("Os")' "$mixed_policy"
 grep -Fq '#pragma GCC reset_options' "$hot_core"
+grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3' "$mixed_policy"
+grep -Fq 'MK61_F401_HOT_O3 __attribute__((optimize("O3")))' "$mixed_policy"
+grep -Fq 'MK61_F401_HOT_O3 cycle(void)' "$hot_core"
+grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
+  "$root/tests/run_f401_uc1609_compile_check.sh"
+grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
+  "$root/tools/.mk61-gcc/CMakeLists.txt"
 
 # Production STOP is selected by expected behavior in the manifest, not by a
 # second board-definition ladder in shell.

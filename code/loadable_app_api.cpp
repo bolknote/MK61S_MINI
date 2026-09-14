@@ -279,11 +279,7 @@ static const Api API = {
   api_graphics_present,
   api_graphics_end,
   api_key_pressed,
-#if MK61_ENABLE_PORTABLE_APPS
   loadable_module::query_service
-#else
-  nullptr
-#endif
 };
 
 } // namespace

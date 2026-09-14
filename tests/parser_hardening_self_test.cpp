@@ -70,10 +70,11 @@ void app_case(const std::vector<u8>& bytes, u32 slot_size) {
   if(!read_bytes((void*) &bytes, 0, encoded, HEADER_SIZE)) return;
   Header header{};
   if(decode_header(encoded, slot_size, header) != HeaderStatus::OK) return;
-  assert(header.memory_size <= OVERLAY_SIZE);
+  assert(header.memory_size <= APP_MAX_MEMORY_SIZE);
   assert(header.image_size <= header.memory_size);
   assert(header.entry_offset < header.image_size && (header.entry_offset & 1U) == 0);
-  assert(header.load_address >= SRAM_FIRST_ADDRESS && header.load_address <= SRAM_LAST_ADDRESS - OVERLAY_SIZE);
+  assert(header.load_address >= SRAM_FIRST_ADDRESS &&
+         header.load_address <= SRAM_LAST_ADDRESS - APP_MAX_MEMORY_SIZE);
   u8 canonical[HEADER_SIZE];
   assert(encode_header(header, slot_size, canonical));
   assert(std::memcmp(encoded, canonical, HEADER_SIZE) == 0);
@@ -122,15 +123,17 @@ int main() {
     }
   }
   Header header{};
-  header.kind = Kind::APPLICATION; header.compression = Compression::NONE;
-  header.load_address = SRAM_FIRST_ADDRESS + 0x8000;
-  header.stored_size = source.size(); header.image_size = source.size();
+  header.kind = Kind::APPLICATION; header.compression = Compression::ZX0;
+  header.stored_size = packed.size(); header.image_size = source.size();
   header.memory_size = source.size(); header.entry_offset = 0;
-  header.resident_size = 65536; header.resident_crc32 = 0x12345678;
-  header.image_crc32 = header.stored_crc32 = crc32(source.data(), source.size());
-  std::vector<u8> app(HEADER_SIZE + source.size());
+  header.flags = MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG;
+  header.load_address = MK61_PORTABLE_APP_ADDRESS;
+  header.code_stored_size = packed.size(); header.relocation_count = 0;
+  header.stored_crc32 = crc32(packed.data(), packed.size());
+  header.image_crc32 = crc32(source.data(), source.size());
+  std::vector<u8> app(HEADER_SIZE + packed.size());
   assert(encode_header(header, MAX_CONTAINER_SIZE, app.data()));
-  std::copy(source.begin(), source.end(), app.begin()+HEADER_SIZE);
+  std::copy(packed.begin(), packed.end(), app.begin()+HEADER_SIZE);
   auto check_app = [&](const std::vector<u8>& data) {
     for(u32 slot : {0U, 63U, 64U, 191U, 192U, MAX_CONTAINER_SIZE, 0xFFFFFFFFU}) {
       app_case(data, slot); ++app_cases;

@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-# Собирает комплект для STM32F401CC: resident и независимые System APP ABI 4.
-# Явный MK61_ENABLE_PORTABLE_APPS=0 сохраняет прежнюю привязку ABI 2 к ELF/BIN
-# для manifest-приложений. Оба пути используют size-LTO.
+# Собирает комплект для STM32F401CC: resident и независимые APP текущего ABI.
+# System — только набор канонических ролей того же общего загрузчика.
 
 set -euo pipefail
 
@@ -21,8 +20,6 @@ enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
 math_backend=${MK61_MATH_BACKEND:-0}
-enable_user_apps=${MK61_ENABLE_USER_APPS:-0}
-portable_apps=${MK61_ENABLE_PORTABLE_APPS:-1}
 check_app_manifests=0
 app_manifests=()
 custom_app_names=()
@@ -34,9 +31,7 @@ custom_app_magics=()
 custom_app_manifest_paths=()
 
 fqbn_resident='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
-fqbn_module='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-system_app_exports="$root/tools/.mk61-gcc/system-app-exports.list"
 
 usage() {
   cat <<'EOF'
@@ -58,8 +53,7 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_FOCAL, MK61_ENABLE_TINYBASIC, MK61_ENABLE_WBMP_VIEWER,
   MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
-  MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND, MK61_ENABLE_USER_APPS,
-  MK61_ENABLE_PORTABLE_APPS
+  MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
   MK61_ENABLE_MARKDOWN_VIEWER=0.
 
@@ -67,9 +61,7 @@ Other overrides:
   MK61_ARDUINO_CLI, MK61_F401_BUILD_ROOT, MK61_OUTPUT_DIR,
   MK61_APP_MANIFESTS (colon-separated manifest paths)
 
-Portable ABI 4 is the default. Manifest APPs require
-MK61_ENABLE_USER_APPS=1 and MK61_ENABLE_PORTABLE_APPS=0; use
-tools/build_portable_app.py for new C APPs.
+Every generated APP uses the current relocatable ABI and the same public API.
 EOF
 }
 
@@ -248,10 +240,10 @@ parse_app_manifest() {
         fi
         if [ "$directive" = source ]; then
           case "$value" in
-            *.cpp) ;;
+            *.c|*.cc|*.cpp|*.cxx|*.rs|*.S|*.s) ;;
             *)
               manifest_error "$requested:$line_number" \
-                "source must have the .cpp extension"
+                "source must be C, C++, Rust or assembler"
               return 1
               ;;
           esac
@@ -408,8 +400,7 @@ fi
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$enable_markdown" "$enable_chip8" \
              "$enable_usb_screen" "$enable_extended_font" \
-             "$enable_user_explorer" "$math_backend" \
-             "$enable_user_apps" "$portable_apps"; do
+             "$enable_user_explorer" "$math_backend"; do
   boolean_valid "$value" || {
     printf 'Error: all MK61 feature values must be 0 or 1.\n' >&2
     exit 2
@@ -427,28 +418,7 @@ if [ "$compiled_graphics" -eq 0 ] &&
   printf 'Error: WBMP/CHIP-8 requires UC1609 or MK61_ENABLE_USB_SCREEN=1.\n' >&2
   exit 2
 fi
-custom_app_count=${#custom_app_names[@]}
-if [ "$custom_app_count" -gt 0 ] && [ "$portable_apps" -eq 1 ]; then
-  printf 'Error: manifest APPs use ABI 2; set MK61_ENABLE_PORTABLE_APPS=0 or rebuild with tools/build_portable_app.py for ABI 4.\n' >&2
-  exit 2
-fi
-if [ "$custom_app_count" -gt 0 ] && [ "$enable_user_apps" -ne 1 ]; then
-  printf 'Error: manifest APPs require MK61_ENABLE_USER_APPS=1.\n' >&2
-  exit 2
-fi
-any_module=$((portable_apps | enable_focal | enable_tinybasic | enable_wbmp |
-              enable_markdown | enable_chip8 |
-              enable_user_apps | (custom_app_count > 0)))
-
 resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-if [ "$any_module" -eq 1 ] && { [ "$portable_apps" -eq 0 ] || [ "$custom_app_count" -gt 0 ]; }; then
-  [ -f "$system_app_exports" ] || {
-    printf 'Error: System APP LTO export list is missing: %s\n' \
-      "$system_app_exports" >&2
-    exit 1
-  }
-  resident_link_flags="$resident_link_flags -Wl,--export-dynamic-symbol-list=$system_app_exports"
-fi
 
 command -v "$arduino_cli" >/dev/null 2>&1 || {
   printf 'Error: arduino-cli is not installed.\n' >&2
@@ -473,8 +443,9 @@ compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
-compile_flags="$compile_flags -DMK61_ENABLE_USER_APPS=$enable_user_apps"
+compile_flags="$compile_flags -DMK61_ENABLE_LOADABLE_MODULES=1"
 compile_flags="$compile_flags -DMK61_REQUIRE_RESIDENT_CRC=1"
+compile_flags="$compile_flags -DMK61_REQUIRE_F401_SELECTIVE_O3=1"
 compile_flags="$compile_flags $platform_ram_flags"
 
 mkdir -p "$build_root" "$output_root"
@@ -490,17 +461,14 @@ bundle_stage="$work/bundle"
 mkdir -p "$sketch_dir" "$resident_build" "$bundle_stage"
 cp -R "$root/code/." "$sketch_dir/"
 
-compile_flags="$compile_flags -DMK61_ENABLE_PORTABLE_APPS=$portable_apps"
-if [ "$portable_apps" -eq 1 ]; then
-  "$arduino_cli" compile --fqbn "$fqbn_resident" \
-    --build-path "$work/properties-layout" --show-properties=expanded \
-    "$sketch_dir" > "$work/layout.properties"
-  variant_path=$(sed -n 's/^build\.variant\.path=//p' "$work/layout.properties" | tr -d '\r')
-  ld_name=$(sed -n 's/^build\.ldscript=//p' "$work/layout.properties" | tr -d '\r')
-  python3 "$root/tools/.mk61-gcc/portable-layout.py" \
-    "$variant_path/$ld_name" "$resident_build/mk61-portable.ld"
-  resident_link_flags="$resident_link_flags -Wl,--default-script=$resident_build/mk61-portable.ld"
-fi
+"$arduino_cli" compile --fqbn "$fqbn_resident" \
+  --build-path "$work/properties-layout" --show-properties=expanded \
+  "$sketch_dir" > "$work/layout.properties"
+variant_path=$(sed -n 's/^build\.variant\.path=//p' "$work/layout.properties" | tr -d '\r')
+ld_name=$(sed -n 's/^build\.ldscript=//p' "$work/layout.properties" | tr -d '\r')
+python3 "$root/tools/.mk61-gcc/portable-layout.py" \
+  "$variant_path/$ld_name" "$resident_build/mk61-portable.ld"
+resident_link_flags="$resident_link_flags -Wl,--default-script=$resident_build/mk61-portable.ld"
 
 printf 'Building F401 resident firmware (%s)…\n' "$profile"
 "$arduino_cli" compile \
@@ -525,171 +493,18 @@ fi
 "$root/tools/seal-firmware.sh" check --max-size 262144 "$resident_bin"
 
 compiler=
-objcopy=
-size_tool=
-nm_tool=
-overlay_hex=
-if [ "$any_module" -eq 1 ]; then
-  # Получаем имена инструментов из раскрытых properties выбранного STM32 Core,
-  # не привязываясь к каталогу Arduino15 конкретной ОС или пользователя.
-  properties_build="$work/properties"
-  properties_file="$work/properties.txt"
-  mkdir -p "$properties_build"
-  "$arduino_cli" compile \
-    --fqbn "$fqbn_module" \
-    --build-path "$properties_build" \
-    --show-properties=expanded \
-    "$sketch_dir" > "$properties_file"
-  compiler_path=$(sed -n 's/^compiler\.path=//p' "$properties_file" | head -n 1)
-  compiler_cpp=$(sed -n 's/^compiler\.cpp\.cmd=//p' "$properties_file" | head -n 1)
-  objcopy_cmd=$(sed -n 's/^compiler\.objcopy\.cmd=//p' "$properties_file" | head -n 1)
-  size_cmd=$(sed -n 's/^compiler\.size\.cmd=//p' "$properties_file" | head -n 1)
-  compiler_path=${compiler_path%$'\r'}
-  compiler_cpp=${compiler_cpp%$'\r'}
-  objcopy_cmd=${objcopy_cmd%$'\r'}
-  size_cmd=${size_cmd%$'\r'}
-  if [ -z "$compiler_path" ] || [ -z "$compiler_cpp" ] || \
-     [ -z "$objcopy_cmd" ] || [ -z "$size_cmd" ]; then
-    printf 'Error: cannot discover the STM32 compiler tools.\n' >&2
-    exit 1
-  fi
-
-  compiler=$(normalize_host_path "$compiler_path$compiler_cpp")
-  objcopy=$(normalize_host_path "$compiler_path$objcopy_cmd")
-  size_tool=$(normalize_host_path "$compiler_path$size_cmd")
-  nm_tool=$(normalize_host_path "${compiler_path}${compiler_cpp%g++}nm")
-  for tool in "$compiler" "$objcopy" "$size_tool" "$nm_tool"; do
-    [ -x "$tool" ] || {
-      printf 'Error: required STM32 tool is missing: %s\n' "$tool" >&2
-      exit 1
-    }
-  done
-
-  if [ "$portable_apps" -eq 0 ]; then
-    overlay_hex=$("$nm_tool" -g --defined-only "$resident_elf" | tr -d '\r' |
-      awk '$3 == "mk61_module_overlay" && !found { print $1; found=1 }')
-    if [ -z "$overlay_hex" ]; then
-      printf 'Error: legacy resident ELF has no mk61_module_overlay symbol.\n' >&2
-      exit 1
-    fi
-  fi
+compiler_path=$(sed -n 's/^compiler\.path=//p' "$work/layout.properties" | head -n 1)
+compiler_cpp=$(sed -n 's/^compiler\.cpp\.cmd=//p' "$work/layout.properties" | head -n 1)
+compiler_path=${compiler_path%$'\r'}
+compiler_cpp=${compiler_cpp%$'\r'}
+if [ -z "$compiler_path" ] || [ -z "$compiler_cpp" ]; then
+  printf 'Error: cannot resolve the STM32 ARM compiler from Arduino properties.\n' >&2
+  exit 1
 fi
-
-symbol_hex() {
-  "$nm_tool" -g --defined-only "$1" | tr -d '\r' |
-    awk -v wanted="$2" '$3 == wanted && !found { print $1; found=1 }
-      END { if(!found) exit 1 }'
-}
-
-build_module() {
-  module_id=$1
-  module_file=$2
-  module_kind=$3
-  module_macro=$4
-  module_sketch=$5
-  module_magic=$6
-  shift 6
-
-  module_build="$work/build-$module_id"
-  module_out="$work/module-$module_id"
-  mkdir -p "$module_build" "$module_out"
-  if [ "$portable_apps" -eq 1 ] && [ "$module_kind" != app ]; then
-    # F401 has no resident proportional-font service.  Omit the client and its
-    # alternate Markdown layout from every first-party APP as well.
-    portable_options=(--no-ui-fonts)
-    if [ "$module_kind" = markdown-viewer ] && [ "$compiled_graphics" -eq 0 ]; then
-      portable_options+=(--text-only)
-    fi
-    python3 "$root/tools/build_portable_app.py" --system "$module_kind" \
-      --arm-toolchain-bin "$(dirname "$compiler")" --output-dir "$module_out" "${portable_options[@]}"
-    mkdir -p "$(dirname "$bundle_stage/$module_file")"
-    cp "$module_out/$(basename "$module_file")" "$bundle_stage/$module_file"
-    return
-  fi
-  printf 'Building %s APP with -Os -flto…\n' "$module_id"
-  module_compile_flags=$compile_flags
-  if [ "$module_macro" != - ]; then
-    module_compile_flags="$module_compile_flags -D$module_macro"
-  fi
-  "$arduino_cli" compile \
-    --fqbn "$fqbn_module" \
-    --build-path "$module_build" \
-    --build-property "compiler.cpp.extra_flags=$module_compile_flags" \
-    "$module_sketch"
-
-  stack_source_args=()
-  for source_name in "$@"; do
-    stack_source_args+=(--source "$module_build/sketch/$source_name")
-  done
-  python3 "$root/tests/analyze_stack_usage.py" \
-    --compile-commands "$module_build/compile_commands.json" \
-    "${stack_source_args[@]}" --top 3
-
-  objects=()
-  for source_name in "$@"; do
-    object="$module_build/sketch/$source_name.o"
-    [ -s "$object" ] || {
-      printf 'Error: APP object was not produced: %s\n' "$object" >&2
-      return 1
-    }
-    objects+=("$object")
-  done
-
-  module_elf="$module_out/$module_id.elf"
-  module_map="$module_out/$module_id.map"
-  "$compiler" \
-    -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb \
-    -Os -flto -fipa-pta -nostartfiles -nostdlib \
-    -Wl,--gc-sections \
-    -Wl,--just-symbols="$resident_elf" \
-    -Wl,--defsym=MK61_MODULE_ORIGIN=0x$overlay_hex \
-    -Wl,-T,"$root/tools/.mk61-app/mk61_module.ld" \
-    -Wl,-Map,"$module_map" \
-    "${objects[@]}" -o "$module_elf"
-
-  unexpected_sections=$("$size_tool" -A "$module_elf" | tr -d '\r' |
-    awk '$1 ~ /^\./ && $1 != ".module_image" &&
-         $1 != ".module_bss" && ($2 + 0) != 0 { print $1 }')
-  if [ -n "$unexpected_sections" ]; then
-    printf 'Error: %s has unpacked ELF sections: %s\n' \
-      "$module_id" "$unexpected_sections" >&2
-    return 1
-  fi
-
-  image_start_hex=$(symbol_hex "$module_elf" __module_image_start)
-  memory_end_hex=$(symbol_hex "$module_elf" __module_memory_end)
-  entry_hex=$(symbol_hex "$module_elf" mk61_module_entry)
-  image_start=$((0x$image_start_hex))
-  memory_end=$((0x$memory_end_hex))
-  entry_address=$((0x$entry_hex))
-  memory_size=$((memory_end - image_start))
-  entry_offset=$((entry_address - image_start))
-  if [ "$memory_size" -le 0 ] || [ "$memory_size" -gt 20480 ] || \
-     [ "$entry_offset" -lt 0 ]; then
-    printf 'Error: invalid APP SRAM layout for %s.\n' "$module_id" >&2
-    return 1
-  fi
-
-  module_image="$module_out/$module_id.bin"
-  "$objcopy" -O binary -j .module_image "$module_elf" "$module_image"
-  module_target="$bundle_stage/$module_file"
-  mkdir -p "$(dirname "$module_target")"
-  module_magic_args=()
-  if [ "$module_magic" != - ]; then
-    module_magic_args=(--handled-magic "$module_magic")
-  fi
-  MK61_MODULE_PACK_BIN="$work/mk61_module_pack" \
-    "$root/tools/build_mk61_module_pack.sh" \
-    --kind "$module_kind" \
-    --resident "$resident_bin" \
-    --image "$module_image" \
-    --memory-size "$memory_size" \
-    --entry-offset "$entry_offset" \
-    --load-address "0x$overlay_hex" \
-    "${module_magic_args[@]}" \
-    --require-zx0 \
-    --output "$module_target"
-  "$size_tool" -A "$module_elf"
+compiler=$(normalize_host_path "$compiler_path$compiler_cpp")
+[ -x "$compiler" ] || {
+  printf 'Error: required STM32 compiler is missing: %s\n' "$compiler" >&2
+  exit 1
 }
 
 build_custom_app() {
@@ -697,66 +512,29 @@ build_custom_app() {
   custom_name=${custom_app_names[$custom_index]}
   custom_id="${custom_app_ids[$custom_index]}-$custom_index"
   custom_dir=${custom_app_dirs[$custom_index]}
-  custom_sketch="$work/sketch-app-$custom_id/mk61s-M"
-  custom_source_root="$custom_sketch/src/mk61_app"
-  mkdir -p "$custom_sketch" "$custom_source_root"
-  cp "$root/tools/.mk61-app/loadable_app_template/mk61s-M.ino" \
-    "$custom_sketch/"
-  cp "$root/code/loadable_app_api.hpp" \
-     "$root/code/loadable_app_api.h" \
-     "$root/code/loadable_module_abi.hpp" \
-     "$root/code/rust_types.h" \
-     "$custom_sketch/"
-
-  custom_all_files="${custom_app_sources[$custom_index]}"
-  if [ -n "${custom_app_files[$custom_index]}" ]; then
-    custom_all_files="$custom_all_files ${custom_app_files[$custom_index]}"
-  fi
-  for relative in $custom_all_files; do
-    target="$custom_source_root/$relative"
-    mkdir -p "$(dirname "$target")"
-    cp "$custom_dir/$relative" "$target"
-  done
-
-  custom_objects=()
+  custom_out="$work/module-app-$custom_id"
+  custom_args=(--name "$custom_name" --arm-toolchain-bin "$(dirname "$compiler")"
+               --output-dir "$custom_out" --include "$custom_dir")
   for relative in ${custom_app_sources[$custom_index]}; do
-    custom_objects+=("src/mk61_app/$relative")
+    custom_args+=(--source "$custom_dir/$relative")
   done
-  build_module "app-$custom_id" "Apps/$custom_name.APP" app - \
-    "$custom_sketch" "${custom_app_magics[$custom_index]}" \
-    "${custom_objects[@]}"
+  if [ "${custom_app_magics[$custom_index]}" != - ]; then
+    custom_args+=(--handled-magic "${custom_app_magics[$custom_index]}")
+  fi
+  python3 "$root/tools/build_portable_app.py" "${custom_args[@]}"
+  mkdir -p "$bundle_stage/Apps"
+  cp "$custom_out/$custom_name.APP" "$bundle_stage/Apps/$custom_name.APP"
 }
 
 cp "$resident_bin" "$bundle_stage/$firmware_name"
-if [ "$portable_apps" -eq 1 ]; then
-  build_module setup System/SETUP.APP setup MK61_BUILD_SETUP_MODULE "$sketch_dir" - setup_ui.cpp setup_module_entry.cpp
-  python3 "$root/tools/.mk61-app/build_terminal_help.py" --resident-elf "$resident_elf" --output-dir "$bundle_stage/System"
-fi
-if [ "$enable_focal" -eq 1 ]; then
-  build_module focal System/FOCAL.APP focal MK61_BUILD_FOCAL_MODULE \
-    "$sketch_dir" - \
-    focal.cpp focal_module_entry.cpp
-fi
-if [ "$enable_tinybasic" -eq 1 ]; then
-  build_module tinybasic System/BASIC.APP tinybasic MK61_BUILD_TINYBASIC_MODULE \
-    "$sketch_dir" - \
-    tinybasic.cpp tinybasic_module_entry.cpp
-fi
-if [ "$enable_wbmp" -eq 1 ]; then
-  build_module wbmp System/WBMP.APP wbmp-viewer MK61_BUILD_WBMP_MODULE \
-    "$sketch_dir" I1 wbmp.cpp image1_viewer.cpp \
-    image1_viewer_module_entry.cpp
-fi
-if [ "$enable_markdown" -eq 1 ]; then
-  build_module markdown System/MARKDOWN.APP markdown-viewer \
-    MK61_BUILD_MARKDOWN_MODULE "$sketch_dir" T2 \
-    markdown_document.cpp markdown_plain.cpp wbmp.cpp image1_viewer.cpp \
-    markdown_viewer.cpp markdown_viewer_module_entry.cpp
-fi
-if [ "$enable_chip8" -eq 1 ]; then
-  build_module chip8 System/CHIP8.APP chip8 MK61_BUILD_CHIP8_MODULE \
-    "$sketch_dir" C1 chip8.cpp chip8_runner.cpp chip8_module_entry.cpp
-fi
+python3 "$root/tools/build_system_app_bundle.py" \
+  --resident-elf "$resident_elf" \
+  --arm-toolchain-bin "$(dirname "$compiler")" \
+  --output-dir "$bundle_stage/System" \
+  --graphics "$compiled_graphics" --ui-fonts 0 \
+  --focal "$enable_focal" --basic "$enable_tinybasic" \
+  --wbmp "$enable_wbmp" --markdown "$enable_markdown" \
+  --chip8 "$enable_chip8"
 for index in "${!custom_app_names[@]}"; do
   build_custom_app "$index"
 done
@@ -790,6 +568,7 @@ cp -R "$bundle_stage/." "$bundle_dir/"
 printf '%s -DMK61_PORTABLE_UI_FONTS=0\n' "$compile_flags" > "$bundle_dir/build.flags"
 {
   printf 'format 1\n'
+  printf 'abi 5\n'
   for index in "${!custom_app_names[@]}"; do
     printf 'app Apps/%s.APP\n' "${custom_app_names[$index]}"
   done

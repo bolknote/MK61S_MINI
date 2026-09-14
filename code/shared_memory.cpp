@@ -12,7 +12,6 @@ alignas(8) static u8 scratch_storage[SCRATCH_SIZE];
 alignas(8) static u8 bulk_storage[BULK_SIZE];
 #endif
 
-#if MK61_SHARED_MEMORY_DYNAMIC
 #if defined(ARDUINO_ARCH_STM32)
 extern "C" u8 __mk61_dynamic_begin, __mk61_dynamic_end;
 static uintptr_t region_begin(void) { return (uintptr_t) &__mk61_dynamic_begin; }
@@ -29,34 +28,14 @@ static uintptr_t region_end(void) { return (uintptr_t) simulated_ram + sizeof(si
 #endif
 static uintptr_t heap_cursor;
 static constexpr usize APP_ALIGNMENT = 32; // ARMv7-M MPU minimum region
-#else
-// Fixed-address modules remain available only in the explicit legacy build.
-extern "C" {
-#if defined(__ELF__)
-__attribute__((used, aligned(8), section(".bss.mk61_module_overlay")))
-#else
-__attribute__((used, aligned(8)))
-#endif
-u8 mk61_module_overlay[OVERLAY_SIZE];
-}
-static constexpr usize APP_ALIGNMENT = 8;
-#endif
 
 static uintptr_t pool_begin(void) {
-#if MK61_SHARED_MEMORY_DYNAMIC
   if(heap_cursor == 0) heap_cursor = region_begin();
   return (heap_cursor + 7U) & ~(uintptr_t) 7U;
-#else
-  return (uintptr_t) mk61_module_overlay;
-#endif
 }
 
 static uintptr_t pool_end(void) {
-#if MK61_SHARED_MEMORY_DYNAMIC
   return region_end();
-#else
-  return (uintptr_t) mk61_module_overlay + OVERLAY_SIZE;
-#endif
 }
 
 static usize pool_size(void) { return pool_end() - pool_begin(); }
@@ -174,14 +153,8 @@ static ArenaState arenas[] = {
 #else
   MK61_ARENA_STATE(nullptr, BULK_SIZE, false),
 #endif
-#if MK61_SHARED_MEMORY_DYNAMIC
   MK61_ARENA_STATE(nullptr, 0, true),
   MK61_ARENA_STATE(nullptr, 0, MK61_SHARED_MEMORY_APP_ENABLED)
-#else
-  MK61_ARENA_STATE(mk61_module_overlay, OVERLAY_SIZE, true),
-  MK61_ARENA_STATE(MK61_SHARED_MEMORY_APP_ENABLED ? mk61_module_overlay + OVERLAY_SIZE : nullptr,
-                  0, MK61_SHARED_MEMORY_APP_ENABLED)
-#endif
 };
 
 #undef MK61_ARENA_STATE
@@ -209,9 +182,7 @@ static bool transition_in_progress(void) {
 }
 
 static ArenaState* state(Arena arena) {
-#if MK61_SHARED_MEMORY_DYNAMIC
   if(arenas[(usize) Arena::OVERLAY].memory == nullptr) refresh_pool();
-#endif
   const usize index = (usize) arena;
   return index < (usize) Arena::COUNT ? &arenas[index] : nullptr;
 }
@@ -264,7 +235,6 @@ static void clear_resident(ArenaState& arena) {
 
 } // namespace
 
-#if MK61_SHARED_MEMORY_DYNAMIC
 void* adjust_heap(i32 increment) {
   ArenaState& prefix = *state(Arena::OVERLAY);
   const ArenaState& app = *state(Arena::APP);
@@ -283,7 +253,6 @@ void* adjust_heap(i32 increment) {
   refresh_pool();
   return (void*) previous;
 }
-#endif
 
 OwnerPolicy owner_policy(Owner owner) {
   const usize index = (usize) owner;
@@ -419,9 +388,7 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
       // Loading a movable APP never discards a live lower buffer, even an
       // evictable cache. Its existing address and contents remain stable.
       if(
-#if MK61_SHARED_MEMORY_DYNAMIC
          next_arena == Arena::APP ||
-#endif
          !detail_try_reclaim(peer_id)) {
         increment(opportunistic ? arena->cache_deferrals : arena->busy_failures);
         return false;
@@ -686,13 +653,9 @@ Snapshot snapshot(Arena arena) {
 
 bool validate_invariants(void) {
   (void) state(Arena::OVERLAY);
-#if MK61_SHARED_MEMORY_DYNAMIC
   if(region_begin() > heap_cursor || pool_begin() > pool_end() ||
      (pool_end() & (APP_ALIGNMENT - 1U)) != 0) return false;
   const usize physical_size = region_end() - region_begin();
-#else
-  const usize physical_size = OVERLAY_SIZE;
-#endif
   usize reclaiming_count = 0;
   for(usize index = 0; index < (usize) Arena::COUNT; index++) {
     const Arena arena_id = (Arena) index;
@@ -786,7 +749,7 @@ const char* owner_name(Owner owner) {
 
 } // namespace shared_memory
 
-#if MK61_SHARED_MEMORY_DYNAMIC && defined(ARDUINO_ARCH_STM32)
+#if defined(ARDUINO_ARCH_STM32)
 #include <errno.h>
 #undef errno
 extern int errno;

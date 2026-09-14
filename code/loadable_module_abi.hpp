@@ -12,10 +12,13 @@ using Entry = u32 (*)(u32 command, u32 argument0, u32 argument1,
                       u32 argument2, u32 argument3);
 
 enum class Command : u32 {
+  // Unified ABI 5 startup for every Kind:
+  // argument0 = const mk61_app_api*, argument1 = image CRC,
+  // argument2 = Kind, argument3 = 0.
   INITIALIZE = 0,
   APPLICATION_RUN = 1,
   // Универсальный запуск файла зарегистрированного типа:
-  // argument0 — Api* для APPLICATION либо 0 для System APP,
+  // argument0 — тот же mk61_app_api* для любого APP,
   // argument1 — стабильный C5 file id.
   FILE_OPEN = 2,
 

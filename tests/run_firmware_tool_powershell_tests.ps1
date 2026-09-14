@@ -88,7 +88,7 @@ try {
         'MK61_ENABLE_MARKDOWN_VIEWER=1'
         'MK61_ENABLE_CHIP8=0'
         'MK61_ENABLE_USB_SCREEN=0'
-        'MK61_ENABLE_USER_APPS=1'
+        'MK61_ENABLE_LOADABLE_MODULES=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1'
         'MK61_USER_EXPLORER_SHORTCUT=0'
         'MK61_MATH_BACKEND=1'
@@ -107,7 +107,8 @@ try {
     Assert-True ($configText -match '(?m)^MK61_ENABLE_MARKDOWN_VIEWER=1$') 'Markdown flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_CHIP8=0$') 'CHIP-8 flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_USB_SCREEN=0$') 'USB Screen flag was not preserved'
-    Assert-True ($configText -match '(?m)^MK61_ENABLE_USER_APPS=1$') 'user APP flag was not preserved'
+    Assert-True ($configText -match '(?m)^MK61_ENABLE_LOADABLE_MODULES=1$') `
+        'unified APP runtime is not enabled'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$') 'font flag was not preserved'
     Assert-True ($configText -match 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1') 'compile flags differ'
     Assert-True ($configText -match 'HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0') 'platform RAM flags differ'
@@ -141,7 +142,7 @@ try {
         'MK61_ENABLE_MARKDOWN_VIEWER=1'
         'MK61_ENABLE_CHIP8=1'
         'MK61_ENABLE_USB_SCREEN=1'
-        'MK61_ENABLE_USER_APPS=0'
+        'MK61_ENABLE_LOADABLE_MODULES=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
         'MK61_USER_EXPLORER_SHORTCUT=1'
         'MK61_MATH_BACKEND=0'
@@ -156,6 +157,7 @@ try {
     $flagLine = @($installSelection.Output | Where-Object { $_ -like 'COMPILE_FLAGS=*' })[0]
     $flags = $flagLine.Substring('COMPILE_FLAGS='.Length)
     [IO.File]::WriteAllText((Join-Path $bundle 'build.flags'), $flags + [Environment]::NewLine)
+    [IO.File]::WriteAllText((Join-Path $bundle 'build.apps'), "format 1`nabi 5`n")
     [IO.File]::WriteAllText((Join-Path $bundle 'mk61s-M-mini-v3-lcd1602-a00-f401.bin'), "resident-f401`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'MARKDOWN.APP'), "markdown-app`n")
@@ -201,7 +203,7 @@ try {
         'MK61_ENABLE_MARKDOWN_VIEWER=0'
         'MK61_ENABLE_CHIP8=0'
         'MK61_ENABLE_USB_SCREEN=0'
-        'MK61_ENABLE_USER_APPS=0'
+        'MK61_ENABLE_LOADABLE_MODULES=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
         'MK61_USER_EXPLORER_SHORTCUT=1'
         'MK61_MATH_BACKEND=0'
@@ -222,8 +224,32 @@ try {
     }
     Assert-True (([IO.File]::ReadAllText((Join-Path $targetSystem 'KEEP.APP')).Trim() -eq 'keep-me')) 'all-disabled synchronization changed unrelated APP'
 
-    $f411Install = Invoke-Tool @('--mcu','f411','--profile','mini-v3-a00','--install-apps')
-    Assert-True ($f411Install.ExitCode -eq 1) 'F411 accepted --install-apps'
+    $f411Bundle = Join-Path $outputRoot 'mk61s-M-mini-v3-lcd1602-a00-f411'
+    $f411System = Join-Path $f411Bundle 'System'
+    [void](New-Item -ItemType Directory -Force -Path $f411System)
+    $f411Selection = Invoke-Tool @('--mcu','f411','--profile','mini-v3-a00','--show-config')
+    $f411FlagLine = @($f411Selection.Output |
+        Where-Object { $_ -like 'COMPILE_FLAGS=*' })[0]
+    [IO.File]::WriteAllText(
+        (Join-Path $f411Bundle 'build.flags'),
+        $f411FlagLine.Substring('COMPILE_FLAGS='.Length) + [Environment]::NewLine)
+    [IO.File]::WriteAllText(
+        (Join-Path $f411Bundle 'build.apps'), "format 1`nabi 5`n")
+    [IO.File]::WriteAllText(
+        (Join-Path $f411Bundle 'mk61s-M-mini-v3-lcd1602-a00-f411.bin'),
+        "resident-f411`n")
+    foreach ($resource in @('SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+        [IO.File]::WriteAllText(
+            (Join-Path $f411System $resource), "f411-resource`n")
+    }
+    $f411Install = Invoke-Tool @(
+        '--mcu','f411','--profile','mini-v3-a00','--install-apps')
+    Assert-True ($f411Install.ExitCode -eq 0) `
+        'F411 did not install its ABI 5 System APP bundle'
+    $installedSetup = [IO.File]::ReadAllText(
+        (Join-Path $targetSystem 'SETUP.APP')).Trim()
+    Assert-True ($installedSetup -eq 'f411-resource') `
+        'F411 System APP bundle was not installed'
 } finally {
     $env:MK61_CONFIG_FILE = $oldConfig
     $env:MK61_BUILD_ROOT = $oldBuild
@@ -241,7 +267,6 @@ try {
     Assert-True ($script:State.EnableUsbScreen -eq 0) 'USB Screen must be disabled by default'
     Assert-True ($script:State.EnableMarkdown -eq 1) 'Markdown must be enabled by default'
     Assert-True ($script:State.EnableChip8 -eq 0) 'CHIP-8 must be disabled by default'
-    Assert-True ($script:State.EnableUserApps -eq 0) 'user APP runtime must be disabled by default'
     Assert-True ($script:State.Mcu -eq 'f411') 'F411 must be the default MCU'
     Assert-True ((Get-ProfileArtifactName 'mini-v3-a00' 'f401') -eq 'mk61s-M-mini-v3-lcd1602-a00-f401.bin') 'F401 artifact name differs'
     Assert-True ($script:TextWidth -ge 74) 'default TUI is too narrow for the compile-option summary'
@@ -253,15 +278,18 @@ try {
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_MARKDOWN_VIEWER') 'Markdown is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_CHIP8') 'CHIP-8 is missing from Windows option details'
-    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USER_APPS') 'user APP runtime is missing from Windows option details'
+    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_LOADABLE_MODULES') `
+        'unified APP runtime is missing from Windows option details'
     $script:State.EnableWbmp = 1
     $script:State.EnableMarkdown = 1
     Normalize-ViewerSelection
     Assert-True ($script:State.EnableWbmp -eq 0) `
         'Markdown did not suppress the standalone WBMP viewer'
     $f411MenuItems = @(Get-MainMenuItems)
-    Assert-True ('install_apps' -notin @($f411MenuItems.Tag)) 'F411 main menu still shows the F401 System APP action'
-    Assert-True (($f411MenuItems[2].Tag -eq 'mcu') -and ($f411MenuItems[3].Tag -eq 'platform')) 'F411 main-menu order differs'
+    Assert-True ('install_apps' -in @($f411MenuItems.Tag)) `
+        'F411 main menu is missing the shared System APP action'
+    Assert-True (($f411MenuItems[2].Tag -eq 'install_apps') -and
+        ($f411MenuItems[3].Tag -eq 'mcu')) 'F411 main-menu order differs'
     $menuItems = @(
         [pscustomobject]@{ Tag = 'upload' }
         [pscustomobject]@{ Tag = 'platform' }
@@ -288,7 +316,8 @@ try {
     $oldManifests = $env:MK61_APP_MANIFESTS
     try {
         $env:MK61_APP_MANIFESTS = $null
-        Assert-True (-not (Test-AnyAppsRequested)) 'empty F401 build unexpectedly requests APP tools'
+        Assert-True (Test-AnyAppsRequested) `
+            'mandatory SETUP/help did not request the APP tools'
         Assert-True (-not (Test-CustomAppsRequested)) 'empty F401 build unexpectedly requests custom APP tools'
         function Invoke-F401GccPreflight {
             return [pscustomobject]@{ ExitCode = 0; Output = 'ready' }

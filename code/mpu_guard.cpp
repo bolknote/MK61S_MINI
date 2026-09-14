@@ -4,15 +4,15 @@
 #include "mpu_guard_policy.hpp"
 #include "stack_watermark.hpp"
 
-#if MK61_MPU_GUARD_SUPPORTED && defined(STM32F411xE) && MK61_ENABLE_PORTABLE_APPS && \
+#if MK61_MPU_GUARD_SUPPORTED && defined(STM32F411xE) && \
     MK61_ENABLE_LOADABLE_MODULES
-  #define MK61_MPU_APP_OVERLAY 1
+  #define MK61_MPU_APP_REGION 1
   #include "loadable_module_format.hpp"
-  static_assert(loadable_module::OVERLAY_SIZE == 20U * 1024U,
+  static_assert(loadable_module::APP_MAX_MEMORY_SIZE == 20U * 1024U,
                 "MPU APP region budget must cover the maximum APP size");
 #else
   // F401 already permits SRAM execution; do not ship an unused MPU region.
-  #define MK61_MPU_APP_OVERLAY 0
+  #define MK61_MPU_APP_REGION 0
 #endif
 
 #if MK61_MPU_GUARD_SUPPORTED
@@ -84,8 +84,8 @@ bool initialize(void) {
   active_layout = mpu_guard_policy::make_layout(
       ACTIVE_PROFILE, (u32) (usize) &_end, initial_msp,
       available_region_count);
-#if MK61_MPU_APP_OVERLAY
-  active_layout = mpu_guard_policy::with_app_overlay(
+#if MK61_MPU_APP_REGION
+  active_layout = mpu_guard_policy::with_app_execution(
       active_layout, available_region_count);
 #endif
   lowest_msp = initial_msp;
@@ -103,7 +103,7 @@ bool initialize(void) {
       configure_region(region++, active_layout.ram_start,
                        active_layout.ram_end - active_layout.ram_start,
                        SRAM_XN_ATTRIBUTES);
-#if MK61_MPU_APP_OVERLAY
+#if MK61_MPU_APP_REGION
       // The verified loader fills these slots later. Null/stack guards keep
       // higher priority than every executable APP region.
       region += mpu_guard_policy::APP_REGION_COUNT;
@@ -147,12 +147,12 @@ bool initialize(void) {
 }
 
 bool set_app_execution(const void* address, usize size) {
-#if MK61_MPU_APP_OVERLAY
+#if MK61_MPU_APP_REGION
   const u32 begin = (u32) (usize) address;
   const u32 end = active_layout.guard_base;
   if(size != 0 && (!hardware_enabled || !active_layout.valid ||
      begin < active_layout.static_end || begin > end ||
-     size != end - begin || size > loadable_module::OVERLAY_SIZE ||
+     size != end - begin || size > loadable_module::APP_MAX_MEMORY_SIZE ||
      ((begin | size) & 31U) != 0)) return false;
   // Validate the complete plan before changing the live MPU.
   u8 count = 0;

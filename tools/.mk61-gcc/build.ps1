@@ -38,12 +38,6 @@ param(
     [string]$MathBackend = '0',
 
     [ValidateSet('0', '1')]
-    [string]$UserApps = '0',
-
-    [ValidateSet('0', '1')]
-    [string]$PortableApps = '1',
-
-    [ValidateSet('0', '1')]
     [string]$Lto = '1',
 
     [string]$CorePath,
@@ -97,8 +91,6 @@ Firmware options:
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1
-  -UserApps 0|1     run user-supplied APP files; default 0
-  -PortableApps 0|1 standalone APP ABI 4; default 1 (0: legacy ABI 2)
   -Lto 0|1          default 1
 
 Paths:
@@ -383,15 +375,9 @@ try {
         Stop-GccBuild (
             '-Ws0010Graphics 1 requires profile mini-v3-ws0010')
     }
-    $systemRequested = $PortableApps -eq '1' -or $Focal -eq '1' -or $Basic -eq '1' -or
-        $Wbmp -eq '1' -or $Markdown -eq '1' -or $Chip8 -eq '1'
+    $systemRequested = $true
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
     if ($null -ne $releaseCaseInfo) {
-        if ($UserApps -ne '0') {
-            Stop-GccBuild (
-                'release-contract cases require -UserApps 0; build an ' +
-                'uncontracted developer bundle to enable user APP execution')
-        }
         $actualFeatures = @{
             focal = $Focal
             basic = $Basic
@@ -581,8 +567,6 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
-        "-DMK61_ENABLE_USER_APPS=$UserApps",
-        "-DMK61_ENABLE_PORTABLE_APPS=$PortableApps",
         '-DMK61_REQUIRE_RESIDENT_CRC=1',
         "-DMK61_ENABLE_LTO=$Lto",
         "-DMK61_FLASH_MIN_HEADROOM=$flashHeadroom",
@@ -655,7 +639,6 @@ try {
             '-File', $systemBuilder,
             '-BuildPath', $buildDirectory,
             '-ResidentElf', $residentElf,
-            '-ResidentBin', $residentBin,
             '-CompileCommands', $compileCommands,
             '-OutputDirectory', (Join-Path $stage 'System'),
             '-Focal', $Focal,
@@ -664,8 +647,7 @@ try {
             '-Markdown', $Markdown,
             '-Chip8', $Chip8,
             '-Graphics', $(if ($wbmpGraphics) { '1' } else { '0' }),
-            '-UiFonts', '0',
-            '-PortableApps', $PortableApps)
+            '-UiFonts', '0')
     }
 
     $bundle = [string]$profileInfo.Bundle
@@ -706,10 +688,10 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
-    $flagValues.Add("-DMK61_ENABLE_USER_APPS=$UserApps")
-    $flagValues.Add("-DMK61_ENABLE_PORTABLE_APPS=$PortableApps")
+    $flagValues.Add('-DMK61_ENABLE_LOADABLE_MODULES=1')
     $flagValues.Add('-DMK61_PORTABLE_UI_FONTS=0')
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
+    $flagValues.Add('-DMK61_REQUIRE_F401_SELECTIVE_O3=1')
     $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
     [IO.File]::WriteAllText(
         (Join-Path $outputBundle 'build.flags'),
@@ -717,7 +699,8 @@ try {
         $script:Utf8NoBom)
     [IO.File]::WriteAllText(
         (Join-Path $outputBundle 'build.apps'),
-        'format 1' + [Environment]::NewLine,
+        'format 1' + [Environment]::NewLine +
+            'abi 5' + [Environment]::NewLine,
         $script:Utf8NoBom)
 
     [Console]::WriteLine('')
@@ -725,9 +708,8 @@ try {
     [Console]::WriteLine("  $outputBundle")
     [Console]::WriteLine("  resident: $residentName")
     if ($systemRequested) {
-        [Console]::WriteLine($(if ($PortableApps -eq '1') {
-            '  System APP: standalone ABI 4, ZX0/BCJ + relocations'
-        } else { '  System APP: legacy ABI 2, matched to this resident' }))
+        [Console]::WriteLine(
+            '  APP: unified standalone ABI 5, ZX0/BCJ + relocations')
     }
 } catch {
     [Console]::Error.WriteLine($_.Exception.Message)

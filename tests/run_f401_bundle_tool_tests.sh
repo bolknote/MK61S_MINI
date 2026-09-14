@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Keep the original ABI 2 mock-tool regression; ABI 3 is exercised with ARM GCC.
-export MK61_ENABLE_PORTABLE_APPS=0
-
 root="$(cd "$(dirname "$0")/.." && pwd)"
 tool="$root/tools/build_f401_bundle.sh"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-f401-bundle-test.XXXXXX")"
@@ -30,22 +27,6 @@ printf '%s\n' '#pragma once' > "$app_dir/include/demo.hpp"
   --app-manifest "$app_dir/app.mk61" > "$work/app-check.log"
 grep -q '^Validated APP manifests: 1$' "$work/app-check.log"
 grep -q '^Apps/DEMO.APP <- ' "$work/app-check.log"
-set +e
-MK61_ENABLE_PORTABLE_APPS=1 MK61_ENABLE_USER_APPS=1 \
-  "$tool" --app-manifest "$app_dir/app.mk61" \
-  > "$work/manifest-abi-mismatch.log" 2>&1
-status=$?
-set -e
-test "$status" -eq 2
-grep -q 'manifest APPs use ABI 2' "$work/manifest-abi-mismatch.log"
-set +e
-MK61_ENABLE_USER_APPS=0 "$tool" --app-manifest "$app_dir/app.mk61" \
-  > "$work/manifest-runtime-disabled.log" 2>&1
-status=$?
-set -e
-test "$status" -eq 2
-grep -q 'require MK61_ENABLE_USER_APPS=1' \
-  "$work/manifest-runtime-disabled.log"
 MK61_APP_MANIFESTS="$app_dir/app.mk61" \
   "$tool" --check-app-manifests > "$work/app-env-check.log"
 grep -q '^Validated APP manifests: 1$' "$work/app-env-check.log"
@@ -128,98 +109,16 @@ status=$?
 set -e
 test "$status" -eq 2
 
-# При выключенных ключах сборщик не должен требовать overlay/toolchain и не
-# должен оставлять старые системные APP в комплекте. Arduino CLI здесь заменён
-# минимальной моделью только resident-сборки.
-cxx="${CXX:-clang++}"
-"$cxx" -std=c++17 -Wall -Wextra -Werror -pedantic \
-  -I"$root/code" "$root/tests/resident_firmware_fixture.cpp" \
-  -o "$work/resident-fixture"
-fake_cli="$work/arduino-cli"
-cat > "$fake_cli" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-case "${1:-}" in
-  version)
-    printf 'arduino-cli Version: 1.2.2\n'
-    exit 0
-    ;;
-  core)
-    if [ "${2:-}" = list ]; then
-      printf 'STMicroelectronics:stm32 2.12.0 2.12.0 STM32 MCU based boards\n'
-      exit 0
-    fi
-    ;;
-  lib)
-    if [ "${2:-}" = list ]; then
-      printf 'LiquidCrystal 1.0.7 -\nSTM32duino RTC 1.9.0 -\n'
-      exit 0
-    fi
-    ;;
-esac
-build_path=
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --build-path) build_path=$2; shift 2 ;;
-    *) shift ;;
-  esac
-done
-[ -n "$build_path" ]
-mkdir -p "$build_path"
-mkdir -p "$build_path/sketch"
-stack_source="$build_path/sketch/stack-fixture.cpp"
-stack_object="$build_path/stack-fixture.cpp.o"
-printf 'int mk61_stack_fixture(void) { return 0; }\n' > "$stack_source"
-printf '[{"directory":"%s","file":"%s","arguments":["c++","-c","%s","-o","%s"]}]\n' \
-  "$PWD" "$stack_source" "$stack_source" "$stack_object" \
-  > "$build_path/compile_commands.json"
-printf 'resident-elf' > "$build_path/mk61s-M.ino.elf"
-"$MK61_TEST_RESIDENT_FIXTURE" "$build_path/mk61s-M.ino.bin"
-EOF
-chmod +x "$fake_cli"
-
-bundle="$work/output/mk61s-M-mini-v3-lcd1602-a00-f401"
-mkdir -p "$bundle"
-mkdir -p "$bundle/System"
-mkdir -p "$bundle/Apps"
-mkdir -p "$bundle/licenses/ui-fonts"
-printf 'stale' > "$bundle/System/FOCAL.APP"
-printf 'stale' > "$bundle/System/BASIC.APP"
-printf 'stale' > "$bundle/System/WBMP.APP"
-printf 'stale' > "$bundle/System/MARKDOWN.APP"
-printf 'stale' > "$bundle/System/CHIP8.APP"
-printf 'stale' > "$bundle/Apps/STALE.APP"
-printf 'stale' > "$bundle/licenses/ui-fonts/LICENSE-Ark-Pixel.txt"
-
-MK61_ARDUINO_CLI="$fake_cli" \
-MK61_TEST_RESIDENT_FIXTURE="$work/resident-fixture" \
-MK61_F401_BUILD_ROOT="$work/build" \
-MK61_OUTPUT_DIR="$work/output" \
-MK61_ENABLE_FOCAL=0 \
-MK61_ENABLE_TINYBASIC=0 \
-MK61_ENABLE_WBMP_VIEWER=0 \
-MK61_ENABLE_MARKDOWN_VIEWER=0 \
-MK61_ENABLE_CHIP8=0 \
-  "$tool" --profile mini-v3-a00 > "$work/output.log"
-
-test -s "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
-test -s "$bundle/build.flags"
-test -s "$bundle/build.apps"
-test ! -e "$bundle/System/FOCAL.APP"
-test ! -e "$bundle/System/BASIC.APP"
-test ! -e "$bundle/System/WBMP.APP"
-test ! -e "$bundle/System/MARKDOWN.APP"
-test ! -e "$bundle/System/CHIP8.APP"
-test ! -e "$bundle/Apps/STALE.APP"
-grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
-grep -q -- '-DMK61_ENABLE_MARKDOWN_VIEWER=0' "$bundle/build.flags"
-grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
-grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$bundle/build.flags"
-grep -q -- '-DMK61_PORTABLE_UI_FONTS=0' "$bundle/build.flags"
-test ! -e "$bundle/licenses/ui-fonts"
-"$root/tools/seal-firmware.sh" check --max-size 262144 \
-  "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin" >/dev/null
-grep -q '^format 1$' "$bundle/build.apps"
-grep -q 'Built F401 bundle:' "$work/output.log"
+# Полная ARM-сборка проходит в release matrix. Здесь фиксируем политику
+# общего ABI, не подменяя новый обязательный SETUP.APP старым «пустым» путём.
+grep -Fq 'MK61_ENABLE_LOADABLE_MODULES=1' "$tool"
+grep -Fq 'tools/build_system_app_bundle.py' "$tool"
+grep -Fq 'tools/build_portable_app.py' "$tool"
+grep -Fq "printf 'abi 5" "$tool"
+if grep -Fq 'MK61_ENABLE_USER_APPS' "$tool" ||
+   grep -Fq 'MK61_ENABLE_PORTABLE_APPS' "$tool"; then
+  echo 'F401 builder still contains a second/legacy APP runtime' >&2
+  exit 1
+fi
 
 printf 'f401_bundle_tool_tests: ok\n'

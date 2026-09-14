@@ -42,76 +42,69 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/zx0.cpp" \
   -o "$out"
 
-"$out" --generate "$work/resident.bin" "$work/image.bin"
+"$out" --generate "$work/image.bin"
+: > "$work/empty.rel"
 
 if "$packer" \
     --kind app \
-    --resident "$work/resident.bin" \
     --image "$work/image.bin" \
+    --relocations "$work/empty.rel" \
     --memory-size 10512 \
     --entry-offset 0 \
-    --output "$work/missing-address.app" >/dev/null 2>&1; then
-  printf 'packer unexpectedly accepted an APP without --load-address\n' >&2
+    --load-address 0x20001000 \
+    --output "$work/wrong-address.app" >/dev/null 2>&1; then
+  printf 'packer unexpectedly accepted a non-virtual load address\n' >&2
   exit 1
 fi
 
 "$packer" \
   --kind focal \
-  --resident "$work/resident.bin" \
   --image "$work/image.bin" \
+  --relocations "$work/empty.rel" \
   --memory-size 10512 \
   --entry-offset 0 \
-  --load-address 0x2000B000 \
-  --require-zx0 \
   --output "$work/focal.app"
 
-"$out" "$work/focal.app" "$work/image.bin" "$work/resident.bin"
+"$out" "$work/focal.app" "$work/image.bin"
 
 "$packer" \
   --kind app \
-  --resident "$work/resident.bin" \
   --image "$work/image.bin" \
+  --relocations "$work/empty.rel" \
   --memory-size 10512 \
   --entry-offset 0 \
-  --load-address 0x2000B000 \
-  --require-zx0 \
   --output "$work/demo.app"
 
-"$out" "$work/demo.app" "$work/image.bin" "$work/resident.bin" app
+"$out" "$work/demo.app" "$work/image.bin" app
 
 "$packer" \
   --kind chip8 \
-  --resident "$work/resident.bin" \
   --image "$work/image.bin" \
+  --relocations "$work/empty.rel" \
   --memory-size 10512 \
   --entry-offset 0 \
-  --load-address 0x2000B000 \
   --handled-magic C1 \
-  --require-zx0 \
   --output "$work/chip8.app"
 
-"$out" "$work/chip8.app" "$work/image.bin" "$work/resident.bin" chip8
+"$out" "$work/chip8.app" "$work/image.bin" chip8
 
 "$packer" \
   --kind markdown-viewer \
-  --resident "$work/resident.bin" \
   --image "$work/image.bin" \
+  --relocations "$work/empty.rel" \
   --memory-size 10512 \
   --entry-offset 0 \
-  --load-address 0x2000B000 \
   --handled-magic T2 \
-  --require-zx0 \
   --output "$work/markdown.app"
 
-"$out" "$work/markdown.app" "$work/image.bin" "$work/resident.bin" markdown
+"$out" "$work/markdown.app" "$work/image.bin" markdown
 
 if "$packer" \
     --kind chip8 \
-    --resident "$work/resident.bin" \
     --image "$work/image.bin" \
+    --relocations "$work/empty.rel" \
     --memory-size 10512 \
     --entry-offset 0 \
-    --load-address 0x2000B000 \
     --handled-magic '!1' \
     --output "$work/invalid-magic.app" >/dev/null 2>&1; then
   printf 'packer unexpectedly accepted non-alphanumeric handled magic\n' >&2

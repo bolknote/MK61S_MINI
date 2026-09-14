@@ -489,10 +489,11 @@ def resource_report(contract: dict[str, Any], case_id: str, elf: Path,
     if ".data" in section_sizes and ".bss" in section_sizes:
         static_ram = (section_sizes[".data"] + section_sizes[".bss"]
                       + section_sizes.get(".noinit", 0))
-        reserved_ram = section_sizes.get("._user_heap_stack", 0)
+        linker_minimum = section_sizes.get("._user_heap_stack", 0)
         summary["static_ram"] = static_ram
-        summary["linked_ram"] = static_ram + reserved_ram
-        summary["linked_reserve"] = reserved_ram
+        summary["linker_checked_ram"] = static_ram + linker_minimum
+        summary["linker_heap_stack_minimum"] = linker_minimum
+        summary["fixed_app_reserve"] = 0
     symbols = parse_symbols(run_tool([
         str(nm_tool), "-S", "--size-sort", "--radix=d", "-C", str(elf)
     ]))

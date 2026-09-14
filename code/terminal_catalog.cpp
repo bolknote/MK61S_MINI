@@ -27,7 +27,14 @@ static_assert(sizeof(Entry) == 4, "command catalog Flash contract");
 #if MK61_SETUP_IS_LOADABLE
 // ELF metadata for the host bundle builder; the linker marks it non-allocating.
 // The signature is constant-folded; the resource never occupies MCU Flash/RAM.
-__attribute__((used, section(".mk61_help"))) static constexpr char help_text[] =
+#if defined(__ELF__)
+#define MK61_HELP_METADATA __attribute__((used, section(".mk61_help")))
+#else
+// Native tests use Mach-O/PE section syntax, so only the firmware ELF needs
+// the named metadata section. help_signature() still keeps this host copy.
+#define MK61_HELP_METADATA __attribute__((used))
+#endif
+MK61_HELP_METADATA static constexpr char help_text[] =
 #define COMMAND(name, id, desc) "  " name "\t" desc "\n"
 #include "terminal_commands.inc"
 #undef COMMAND
@@ -45,6 +52,7 @@ constexpr HelpTag make_help_tag() {
 }
 static constexpr HelpTag help_tag = make_help_tag();
 const char* help_signature() { return help_tag.text; }
+#undef MK61_HELP_METADATA
 #endif
 static constexpr char command_text[] =
 #if MK61_SETUP_IS_LOADABLE

@@ -6,16 +6,15 @@
 
 namespace loadable_module {
 
-// Container/image limit, not a reserved SRAM window. ABI 4 receives a block
-// at the top of free RAM. Fixed ABI 2/3 files require the legacy firmware.
+// Container/image limit, not a reserved SRAM window. The current ABI receives
+// a block at the top of free RAM; fixed-address formats are not executable.
 static constexpr u32 SRAM_FIRST_ADDRESS = 0x20000000UL;
 static constexpr u32 SRAM_LAST_ADDRESS = 0x20020000UL;
-static constexpr u32 OVERLAY_SIZE = 20U * 1024U;
+static constexpr u32 APP_MAX_MEMORY_SIZE = 20U * 1024U;
 static constexpr u16 HEADER_SIZE = 64;
-static constexpr u32 MAX_CONTAINER_SIZE = OVERLAY_SIZE + HEADER_SIZE;
+static constexpr u32 MAX_CONTAINER_SIZE = APP_MAX_MEMORY_SIZE + HEADER_SIZE;
 static constexpr u16 FORMAT_VERSION = 1;
-static constexpr u16 ABI_VERSION = 2;
-static constexpr u32 MAX_RESIDENT_SIZE = 512U * 1024U;
+static constexpr u16 ABI_VERSION = MK61_CURRENT_APP_ABI;
 
 enum class Kind : u8 {
   FOCAL = 1,
@@ -46,10 +45,10 @@ struct Header {
   u32 image_size;
   u32 memory_size;
   u32 entry_offset;
-  // ABI 2: resident binding. ABI 3: zero. ABI 4: compressed image length
-  // and number of word relocations in the following delta-coded table.
-  union { u32 resident_size; u32 code_stored_size; };
-  union { u32 resident_crc32; u32 relocation_count; };
+  // Compressed image length and number of word relocations in the following
+  // delta-coded table. Both fields are mandatory in the current ABI.
+  u32 code_stored_size;
+  u32 relocation_count;
   u32 stored_crc32;
   u32 image_crc32;
   // Ноль означает обычный APP. Ненулевой двухбайтовый magic C5 объявляет
@@ -112,11 +111,7 @@ bool decode_image(const Header& header, const Reader& reader,
 
 bool decode_payload(const Reader& reader, Compression compression,
                     u32 stored_size, u8* output, u32 image_size,
-                    DecodeResult& result
-#if MK61_ENABLE_PORTABLE_APPS
-                    , u32 flags = 0
-#endif
-                    );
+                    DecodeResult& result, u32 flags = 0);
 
 } // namespace loadable_module
 

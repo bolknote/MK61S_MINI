@@ -49,7 +49,8 @@ int main(void) {
   assert(!mk61_app_get_services(&api, 0));
   api.query_service = query;
   assert(!mk61_app_get_services(NULL, 0));
-  assert(!query(0xFFFFFFFFU, 1) && !query(MK61_APP_SERVICE_COMMON, 2));
+  assert(!query(0xFFFFFFFFU, MK61_APP_SERVICES_VERSION) &&
+         !query(MK61_APP_SERVICE_COMMON, MK61_APP_SERVICES_VERSION + 1U));
   assert(!mk61_app_get_services(&api, 0));
   services.magic = MK61_APP_SERVICES_MAGIC;
   services.version = MK61_APP_SERVICES_VERSION;

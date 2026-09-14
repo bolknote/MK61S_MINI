@@ -56,8 +56,8 @@ inline RuntimeStatus invoke(Kind kind, Command command, u32& result) {
   return invoke(kind, command, 0, 0, 0, 0, result);
 }
 
-// Проверяет обычный C5-файл .APP до атомарной замены: заголовок, привязку к
-// resident, CRC сжатого потока, корректность распаковки и CRC SRAM-образа.
+// Проверяет любой C5-файл .APP до атомарной замены: заголовок, привязку к
+// ABI, CRC сжатого потока, корректность распаковки и CRC SRAM-образа.
 StoreStatus validate_app(const ModuleSource& source, Header& header);
 
 } // namespace loadable_module

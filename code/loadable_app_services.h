@@ -5,10 +5,10 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
-/* Optional public services, obtained through mk61_app_api.query_service.
- * Wire layouts and numbers retain the former System API v1 prefix. */
+/* Public extended services, obtained through mk61_app_api.query_service.
+ * Canonical System APP and ordinary APP use this exact same table. */
 #define MK61_APP_SERVICES_MAGIC 0x31535953UL
-#define MK61_APP_SERVICES_VERSION 1U
+#define MK61_APP_SERVICES_VERSION 2U
 #define MK61_SERVICE_MAX_ROWS 10U
 #define MK61_SERVICE_LEASE_BYTES 32U
 
@@ -31,7 +31,9 @@ enum mk61_service_capability {
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
 };
-/* Application owner; the other values are reserved for legacy adapters. */
+/* The owner argument of MEMORY_ACQUIRE/MEMORY_DATA is an mk61_app_kind.
+ * Most ordinary APP pass mk61_app_current_kind; this alias is convenient for
+ * APP that can only ever be launched as APPLICATION. */
 #define MK61_SERVICE_OWNER_APP 4U
 
 #define MK61_SERVICE_ROOT_ID 0xFFFFU

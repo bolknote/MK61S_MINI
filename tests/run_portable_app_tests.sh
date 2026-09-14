@@ -10,19 +10,15 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
   cflags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
-clang++ "${flags[@]}" -DMK61_ENABLE_PORTABLE_APPS=1 \
+clang++ "${flags[@]}" \
   "$root/tests/portable_app_format_self_test.cpp" \
   "$root/code/loadable_module_format.cpp" "$root/code/zx0.cpp" \
   -o "$work/format"
 "$work/format"
-clang++ "${flags[@]}" \
-  "$root/tests/portable_app_format_self_test.cpp" \
-  "$root/code/loadable_module_format.cpp" "$root/code/zx0.cpp" \
-  -o "$work/legacy-format"
 MK61_MODULE_PACK_BIN="$work/packer" bash "$root/tools/build_mk61_module_pack.sh" \
   --help >/dev/null
 python3 "$root/tests/portable_app_package_self_test.py" \
-  "$work/packer" "$work/format" "$work/legacy-format"
+  "$work/packer" "$work/format"
 clang++ "${flags[@]}" -I"$root/sdk/portable/include" \
   "$root/tests/portable_wbmp_self_test.cpp" \
   "$root/examples/portable-apps/WBMP/viewer.cpp" "$root/code/wbmp.cpp" \
@@ -44,3 +40,11 @@ clang --target=arm-none-eabi -mcpu=cortex-m4 -mthumb \
   -std=c11 -Wall -Wextra -Werror -ffreestanding -fno-builtin \
   -I"$root/code" -I"$root/sdk/portable/include" \
   -c "$root/examples/portable-apps/HELLO/main.c" -o "$work/hello.o"
+# Keep the no_std Rust facade buildable even on hosts which have not installed
+# the optional Cortex-M Rust target. A real APP build additionally exercises
+# its 32-bit size/offset assertions.
+if command -v rustc >/dev/null 2>&1; then
+  rustc --edition 2021 --crate-type lib --emit metadata \
+    "$root/examples/portable-apps/HELLO-RUST/main.rs" \
+    -o "$work/hello-rust.rmeta"
+fi

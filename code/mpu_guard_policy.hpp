@@ -36,7 +36,7 @@ static constexpr Profile F411_PROFILE = {
 // immediately below F411's guard. No executable padding outside its lease.
 static constexpr u8 APP_REGION_COUNT = 5;
 
-constexpr Layout with_app_overlay(Layout layout, u8 available_regions) {
+constexpr Layout with_app_execution(Layout layout, u8 available_regions) {
   if(layout.sram_execute_never) {
     layout.required_regions += APP_REGION_COUNT;
     layout.valid = layout.valid && available_regions >= layout.required_regions;

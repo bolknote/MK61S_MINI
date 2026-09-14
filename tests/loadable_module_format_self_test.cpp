@@ -8,7 +8,7 @@ using namespace loadable_module;
 
 namespace {
 
-static constexpr u32 VALID_LOAD_ADDRESS = 0x2000B000UL;
+static constexpr u32 VALID_LOAD_ADDRESS = MK61_PORTABLE_APP_ADDRESS;
 
 struct MemoryReader {
   const u8* data;
@@ -28,13 +28,14 @@ static Header valid_header(void) {
   Header header = {};
   header.kind = Kind::FOCAL;
   header.compression = Compression::ZX0;
+  header.flags = MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG;
   header.load_address = VALID_LOAD_ADDRESS;
-  header.stored_size = 1234;
+  header.stored_size = 1233;
   header.image_size = 4096;
   header.memory_size = 4608;
   header.entry_offset = 24;
-  header.resident_size = 177777;
-  header.resident_crc32 = 0x11223344UL;
+  header.code_stored_size = 1232;
+  header.relocation_count = 1;
   header.stored_crc32 = 0x55667788UL;
   header.image_crc32 = 0xAABBCCDDUL;
   header.handled_type_magic = 0x3143; // ASCII C1, little-endian on disk
@@ -96,8 +97,8 @@ static void test_header_round_trip(void) {
   assert(decoded.image_size == source.image_size);
   assert(decoded.memory_size == source.memory_size);
   assert(decoded.entry_offset == source.entry_offset);
-  assert(decoded.resident_size == source.resident_size);
-  assert(decoded.resident_crc32 == source.resident_crc32);
+  assert(decoded.code_stored_size == source.code_stored_size);
+  assert(decoded.relocation_count == source.relocation_count);
   assert(decoded.stored_crc32 == source.stored_crc32);
   assert(decoded.image_crc32 == source.image_crc32);
   assert(decoded.handled_type_magic == source.handled_type_magic);
@@ -138,7 +139,7 @@ static void test_header_rejects_incompatible_images(void) {
   header.entry_offset = 25;
   assert(!encode_header(header, 16U * 1024U, bytes));
   header = valid_header();
-  header.memory_size = OVERLAY_SIZE + 1;
+  header.memory_size = APP_MAX_MEMORY_SIZE + 1;
   assert(!encode_header(header, 16U * 1024U, bytes));
 }
 

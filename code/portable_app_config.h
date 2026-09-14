@@ -1,30 +1,24 @@
 #ifndef MK61_PORTABLE_APP_CONFIG_H
 #define MK61_PORTABLE_APP_CONFIG_H
 
-/* Running user-supplied APP files is an explicit firmware capability.  F401
- * may still use the same loader for canonical System APP while this remains
- * disabled. */
-#ifndef MK61_ENABLE_USER_APPS
-#define MK61_ENABLE_USER_APPS 0
-#endif
-#if MK61_ENABLE_USER_APPS != 0 && MK61_ENABLE_USER_APPS != 1
-#error "MK61_ENABLE_USER_APPS must be 0 or 1"
+/* There is no separate "user APP" permission. If the common loader is in the
+ * firmware, APPLICATION is available with the same ABI, services, cache and
+ * execution policy as canonical System APP. */
+#ifdef MK61_ENABLE_USER_APPS
+#error "MK61_ENABLE_USER_APPS was removed; use MK61_ENABLE_LOADABLE_MODULES"
 #endif
 
-/* Bundle builders enable ABI 4 and export free-RAM linker bounds. This is
- * the virtual link base, never a reservation or a physical load address.
- * A generic user-APP build selects ABI 4 automatically; the F401 builders
- * set this independently because their System APP also use the portable ABI. */
-#ifndef MK61_ENABLE_PORTABLE_APPS
-#define MK61_ENABLE_PORTABLE_APPS MK61_ENABLE_USER_APPS
-#endif
-#if MK61_ENABLE_PORTABLE_APPS != 0 && MK61_ENABLE_PORTABLE_APPS != 1
-#error "MK61_ENABLE_PORTABLE_APPS must be 0 or 1"
+/* There is one executable format. Stale switches fail loudly instead of
+ * silently selecting a second loader or fixed-address image. */
+#ifdef MK61_ENABLE_PORTABLE_APPS
+#error "MK61_ENABLE_PORTABLE_APPS was removed; ABI 5 is mandatory"
 #endif
 
 #define MK61_PORTABLE_APP_ADDRESS 0x20000000UL
-#define MK61_PORTABLE_APP_ABI 3U
-#define MK61_RELOCATABLE_APP_ABI 4U
+/* ABI 5 unifies System and ordinary APP startup: INITIALIZE always receives
+ * mk61_app_api*, image CRC and Kind.  ABI 2/3/4 are deliberately rejected. */
+#define MK61_CURRENT_APP_ABI 5U
+#define MK61_RELOCATABLE_APP_ABI MK61_CURRENT_APP_ABI
 #define MK61_APP_RELOCATABLE_FLAG 4U
 #define MK61_PORTABLE_APP_FLAG 1U
 #define MK61_APP_ARM_THUMB_BCJ_FLAG 2U

@@ -52,7 +52,7 @@ def resident_api(path):
             if name.startswith("_ZN12loadable_app12_GLOBAL__N_1L3APIE"):
                 source = sections[index]
                 start = source[4] + value - source[3]
-                assert size >= 104
+                assert size >= 108
                 api_address, api = value, data[start:start + size]
     assert "mk61_module_overlay" not in symbols, "fixed APP reserve returned"
     assert BASE <= symbols["_sdata"] <= symbols["_edata"] <= symbols["_sbss"]
@@ -167,17 +167,18 @@ class Machine:
         uc.reg_write(UC_ARM_REG_R0, result & 0xFFFFFFFF)
         uc.reg_write(UC_ARM_REG_PC, uc.reg_read(UC_ARM_REG_LR))
 
-    def call(self, command, argument=0):
+    def call(self, command, argument0=0, argument1=0, argument2=0,
+             argument3=0):
         uc, sp = self.uc, 0x2001FFF0
         saved = (UC_ARM_REG_R4, UC_ARM_REG_R5, UC_ARM_REG_R6, UC_ARM_REG_R7,
                  UC_ARM_REG_R8, UC_ARM_REG_R9, UC_ARM_REG_R10, UC_ARM_REG_R11)
         for index, register in enumerate(saved):
             uc.reg_write(register, 0x31410000 + index)
         for register, value in ((UC_ARM_REG_SP, sp), (UC_ARM_REG_LR, self.stop | 1),
-                (UC_ARM_REG_R0, command), (UC_ARM_REG_R1, self.api_address),
-                (UC_ARM_REG_R2, argument), (UC_ARM_REG_R3, 0)):
+                (UC_ARM_REG_R0, command), (UC_ARM_REG_R1, argument0),
+                (UC_ARM_REG_R2, argument1), (UC_ARM_REG_R3, argument2)):
             uc.reg_write(register, value)
-        uc.mem_write(sp, bytes(4))  # Fifth entry argument, per AAPCS.
+        uc.mem_write(sp, struct.pack("<I", argument3))
         uc.emu_start(self.base + self.entry + 1, self.stop, timeout=10_000_000, count=10_000_000)
         assert uc.reg_read(UC_ARM_REG_PC) == self.stop, "APP failed to return"
         assert uc.reg_read(UC_ARM_REG_SP) == sp
@@ -202,7 +203,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="mk61-arm-app-") as directory:
         work = Path(directory)
         reader = work / "reader"
-        run(["c++", "-std=c++17", "-O2", "-DMK61_ENABLE_PORTABLE_APPS=1",
+        run(["c++", "-std=c++17", "-O2",
              "-I" + str(ROOT / "code"), ROOT / "tests/portable_app_format_self_test.cpp",
              ROOT / "code/loadable_module_format.cpp", ROOT / "code/zx0.cpp", "-o", reader])
         for name in ("HELLO", "WBMP", "RELOC"):
@@ -221,6 +222,7 @@ def main():
             run([reader, app, memory])
             packed, decoded = app.read_bytes(), memory.read_bytes()
             image_size, _, entry = struct.unpack_from("<III", packed, 28)
+            image_crc = struct.unpack_from("<I", packed, 52)[0]
             assert decoded[:image_size] == (work / name / (name + ".bin")).read_bytes()
             assert decoded[image_size:] == bytes(len(decoded) - image_size)
             reserved = (len(decoded) + 31) & ~31
@@ -230,12 +232,14 @@ def main():
                 for api_address, api in apis:
                     machine = Machine(api_address, api)
                     for launch in range(2):
+                        # Each decode models an eviction/reload and starts with
+                        # pristine .data/.bss; repeated commands below do not.
                         machine.load(relocated, image_size, entry, address)
-                        assert machine.call(0) == 0
+                        assert machine.call(0, api_address, image_crc, 4) == 0
                         if name == "HELLO":
                             assert machine.call(1) == 0
                             assert machine.text == ["HELLO C APP"]
-                            assert machine.call(1) == 1  # Negative control: dirty .data/.bss.
+                            assert machine.call(1) == 1  # Cached launch keeps APP globals.
                         elif name == "RELOC":
                             assert machine.call(1) == 0
                         else:
@@ -244,7 +248,7 @@ def main():
                             machine.keys = [16, 16, 16, 15, 20] if launch == 0 else [18, 18, 17, 19]
                             expected = ([oracle(width, height, x) for x in (0, 8, 16, 8)] if launch == 0
                                         else [oracle(width, height, 0, y) for y in (0, 16, 0)])
-                            result = machine.call(2, 42)
+                            result = machine.call(2, api_address, 42)
                             if not struct.unpack_from('<I', api, 8)[0] & (1 << 6):
                                 assert result == 2 and not machine.frames and machine.begins == 0
                                 continue  # A character-only resident has no graphics capability.
@@ -254,7 +258,7 @@ def main():
                     # Startup refuses an old, truncated API before invoking callbacks.
                     machine.load(relocated, image_size, entry, address)
                     machine.uc.mem_write(api_address + 6, struct.pack("<H", 64))
-                    assert machine.call(0) == 5
+                    assert machine.call(0, api_address, image_crc, 4) == 5
             print(f"{name}: same {len(packed)}-byte APP ran with {len(apis)} resident API tables; "
                   "startup, pixels/globals, register and memory guards PASS")
 

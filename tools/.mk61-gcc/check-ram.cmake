@@ -26,7 +26,7 @@ endif()
 set(_mk61_data "")
 set(_mk61_bss "")
 set(_mk61_noinit "")
-set(_mk61_reserved "")
+set(_mk61_linker_minimum "")
 string(REPLACE "\r\n" "\n" _mk61_size_output "${_mk61_size_output}")
 string(REPLACE "\n" ";" _mk61_size_lines "${_mk61_size_output}")
 foreach(_mk61_line IN LISTS _mk61_size_lines)
@@ -37,27 +37,32 @@ foreach(_mk61_line IN LISTS _mk61_size_lines)
   elseif(_mk61_line MATCHES "^\\.noinit[ \t]+([0-9]+)")
     set(_mk61_noinit "${CMAKE_MATCH_1}")
   elseif(_mk61_line MATCHES "^\\._user_heap_stack[ \t]+([0-9]+)")
-    set(_mk61_reserved "${CMAKE_MATCH_1}")
+    set(_mk61_linker_minimum "${CMAKE_MATCH_1}")
   endif()
 endforeach()
 
-foreach(_mk61_required IN ITEMS data bss noinit reserved)
+foreach(_mk61_required IN ITEMS data bss noinit)
   if("${_mk61_${_mk61_required}}" STREQUAL "")
     message(FATAL_ERROR
       "section .${_mk61_required} is missing from size output:\n${_mk61_size_output}")
   endif()
 endforeach()
+if("${_mk61_linker_minimum}" STREQUAL "")
+  message(FATAL_ERROR
+    "section ._user_heap_stack is missing from size output:\n${_mk61_size_output}")
+endif()
 
 math(EXPR _mk61_globals
   "${_mk61_data} + ${_mk61_bss} + ${_mk61_noinit}")
-math(EXPR _mk61_linked
-  "${_mk61_globals} + ${_mk61_reserved}")
-math(EXPR _mk61_free_after_reserve
-  "${MK61_RAM_CAPACITY} - ${_mk61_linked}")
+math(EXPR _mk61_linker_checked
+  "${_mk61_globals} + ${_mk61_linker_minimum}")
+math(EXPR _mk61_free_after_linker_minimum
+  "${MK61_RAM_CAPACITY} - ${_mk61_linker_checked}")
 
 message(STATUS
   "MK61 RAM: globals ${_mk61_globals}/${MK61_RAM_CAPACITY}, "
-  "linked reserve ${_mk61_reserved}, free after reserve ${_mk61_free_after_reserve}")
+  "linker heap/stack minimum ${_mk61_linker_minimum}, "
+  "free after that check ${_mk61_free_after_linker_minimum}; APP reserve 0")
 
 if(_mk61_globals GREATER MK61_GLOBAL_RAM_LIMIT)
   math(EXPR _mk61_over "${_mk61_globals} - ${MK61_GLOBAL_RAM_LIMIT}")

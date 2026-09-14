@@ -1,11 +1,8 @@
 #include "loadable_module_runtime.hpp"
 
-#if MK61_ANY_LOADABLE_MODULE
-
 #include "Arduino.h"
 #include "loadable_app_api.hpp"
 #include "loadable_system_api.hpp"
-#define MK61_PORTABLE_SYSTEM_ENABLED (MK61_ENABLE_PORTABLE_APPS && (MK61_FOCAL_IS_LOADABLE || MK61_TINYBASIC_IS_LOADABLE || MK61_WBMP_VIEWER_IS_LOADABLE || MK61_MARKDOWN_VIEWER_IS_LOADABLE || MK61_CHIP8_IS_LOADABLE || MK61_SETUP_IS_LOADABLE))
 #include "loadable_module_system_app.hpp"
 #include "program_store.hpp"
 #include "shared_memory.hpp"
@@ -21,22 +18,7 @@ namespace {
 static_assert(program_store::MAX_APP_FILE_SIZE == MAX_CONTAINER_SIZE,
               "C5 and APP container limits must match");
 
-static constexpr u32 INTERNAL_FLASH_ADDRESS = 0x08000000UL;
-
-extern "C" {
-#if !MK61_ENABLE_PORTABLE_APPS
-extern u8 mk61_module_overlay[];
-
-// STM32 linker script кладёт начальные значения .data сразу после основной
-// Flash-части образа. Эта тройка даёт точный размер того же непрерывного .bin,
-// который получает упаковщик, без доверия полю resident_size из файла модуля.
-extern u8 _sidata;
-extern u8 _sdata;
-extern u8 _edata;
-#endif
-}
-
-static_assert(shared_memory::APP_MAX_SIZE == OVERLAY_SIZE,
+static_assert(shared_memory::APP_MAX_SIZE == APP_MAX_MEMORY_SIZE,
               "allocator and APP format limits differ");
 
 static Kind g_active_kind = (Kind) 0;
@@ -44,40 +26,22 @@ static Header g_active_header;
 static Entry g_active_entry;
 static u16 g_active_file_id = program_store::INVALID_ID;
 static u8 g_call_depth;
-#if !MK61_ENABLE_PORTABLE_APPS
-static u32 g_cached_resident_size;
-static u32 g_cached_resident_crc;
-#endif
-static shared_memory::Lease g_overlay_lease;
+static shared_memory::Lease g_app_cache;
 
-extern "C" void mk61_module_keep_imports(void);
-
-#if !MK61_ENABLE_PORTABLE_APPS
-static u32 resident_image_size(void) {
-  const usize data_size = (usize) &_edata - (usize) &_sdata;
-  const usize data_load_end = (usize) &_sidata + data_size;
-  return data_load_end >= INTERNAL_FLASH_ADDRESS
-      ? (u32) (data_load_end - INTERNAL_FLASH_ADDRESS) : 0;
-}
-#endif
+static_assert((u8) Kind::FOCAL == MK61_APP_KIND_FOCAL &&
+              (u8) Kind::TINYBASIC == MK61_APP_KIND_TINYBASIC &&
+              (u8) Kind::WBMP_VIEWER == MK61_APP_KIND_WBMP_VIEWER &&
+              (u8) Kind::APPLICATION == MK61_APP_KIND_APPLICATION &&
+              (u8) Kind::CHIP8 == MK61_APP_KIND_CHIP8 &&
+              (u8) Kind::MARKDOWN_VIEWER == MK61_APP_KIND_MARKDOWN_VIEWER &&
+              (u8) Kind::SETUP == MK61_APP_KIND_SETUP,
+              "public APP kinds must match the container ABI");
 
 static bool resident_matches(const Header& header) {
-#if MK61_ENABLE_PORTABLE_APPS
-  // Fixed-address ABI 2/3 cannot coexist with ordinary globals at their old
-  // destination. Reject before acquiring memory or writing any payload.
+  // Only the current relocatable ABI can coexist with ordinary globals and
+  // the dynamic heap. Reject before acquiring memory or writing any payload.
   return (header.flags & (MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG)) ==
          (MK61_PORTABLE_APP_FLAG | MK61_APP_RELOCATABLE_FLAG);
-#else
-  if(header.load_address != (u32) (usize) mk61_module_overlay) return false;
-  const u32 resident_size = resident_image_size();
-  if(resident_size == 0 || header.resident_size != resident_size) return false;
-  if(resident_size == g_cached_resident_size)
-    return header.resident_crc32 == g_cached_resident_crc;
-  const u8* resident = (const u8*) INTERNAL_FLASH_ADDRESS;
-  g_cached_resident_size = resident_size;
-  g_cached_resident_crc = crc32(resident, resident_size);
-  return header.resident_crc32 == g_cached_resident_crc;
-#endif
 }
 
 struct AppPayloadContext {
@@ -146,15 +110,15 @@ static bool same_header(const Header& left, const Header& right) {
          left.image_size == right.image_size &&
          left.memory_size == right.memory_size &&
          left.entry_offset == right.entry_offset &&
-         left.resident_size == right.resident_size &&
-         left.resident_crc32 == right.resident_crc32 &&
+         left.code_stored_size == right.code_stored_size &&
+         left.relocation_count == right.relocation_count &&
          left.stored_crc32 == right.stored_crc32 &&
          left.image_crc32 == right.image_crc32 &&
          left.handled_type_magic == right.handled_type_magic;
 }
 
 static bool same_active_image(Kind kind, u16 file_id, const Header& header) {
-  return g_overlay_lease.ok() && g_active_entry != nullptr &&
+  return g_app_cache.ok() && g_active_entry != nullptr &&
          g_active_kind == kind &&
          g_active_file_id == file_id &&
          same_header(g_active_header, header);
@@ -169,45 +133,34 @@ static void clear_active_metadata(void) {
 static void invalidate_active(void) {
   (void) mpu_guard::set_app_execution(nullptr, 0);
   clear_active_metadata();
-  g_overlay_lease.reset();
+  g_app_cache.reset();
 }
 
-static shared_memory::EvictionDecision prepare_overlay_eviction(void) {
+static shared_memory::EvictionDecision prepare_app_eviction(void) {
   if(g_call_depth != 0) return shared_memory::EvictionDecision::KEEP;
   (void) mpu_guard::set_app_execution(nullptr, 0);
   clear_active_metadata();
   return shared_memory::EvictionDecision::RELEASE;
 }
 
-static u8* acquire_module_overlay(const Header& header) {
-  if(g_overlay_lease.ok()) return g_overlay_lease.data();
-#if MK61_ENABLE_PORTABLE_APPS
-  const bool movable = (header.flags & MK61_APP_RELOCATABLE_FLAG) != 0;
-#else
-  (void) header;
-  const bool movable = false;
-#endif
-  if(!g_overlay_lease.acquire_cache(
-       movable ? shared_memory::Arena::APP : shared_memory::Arena::OVERLAY,
-       shared_memory::Owner::LOADABLE_MODULE, movable ? header.memory_size : OVERLAY_SIZE)) return nullptr;
-  if(!g_overlay_lease.set_evictable(prepare_overlay_eviction)) {
-    g_overlay_lease.reset();
+static u8* acquire_app_memory(const Header& header) {
+  if(g_app_cache.ok()) return g_app_cache.data();
+  if(!g_app_cache.acquire_cache(
+       shared_memory::Arena::APP, shared_memory::Owner::LOADABLE_MODULE,
+       header.memory_size)) return nullptr;
+  if(!g_app_cache.set_evictable(prepare_app_eviction)) {
+    g_app_cache.reset();
     return nullptr;
   }
-  return g_overlay_lease.data();
+  return g_app_cache.data();
 }
 
-static u32 entry_api_argument(Kind kind) {
-#if MK61_PORTABLE_SYSTEM_ENABLED
-  if(kind != Kind::APPLICATION && (g_active_header.flags & MK61_PORTABLE_APP_FLAG) != 0)
-    return (u32) (usize) &system_api();
-#endif
-  return kind == Kind::APPLICATION
-      ? (u32) (usize) &loadable_app::resident_api() : 0;
+static u32 entry_api_argument(void) {
+  return (u32) (usize) &loadable_app::resident_api();
 }
 
-static bool decode_checked(const Header& header, const Reader& reader, u8* overlay) {
-  return decode_image(header, reader, overlay, (u32) (usize) overlay);
+static bool decode_checked(const Header& header, const Reader& reader, u8* image) {
+  return decode_image(header, reader, image, (u32) (usize) image);
 }
 
 static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
@@ -215,25 +168,23 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   if(!resident_matches(header)) {
     return RuntimeStatus::INCOMPATIBLE_FIRMWARE;
   }
-  if(same_active_image(kind, file_id, header)
-#if MK61_ENABLE_PORTABLE_APPS
-     && ((header.flags & MK61_PORTABLE_APP_FLAG) == 0 || kind != Kind::APPLICATION)
-#endif
-     ) return RuntimeStatus::OK;
+  // Every APP is an opportunistic cache. Reopening the same inode/header
+  // preserves its globals until another arena owner evicts the image.
+  if(same_active_image(kind, file_id, header)) return RuntimeStatus::OK;
   if(g_call_depth != 0) return RuntimeStatus::BUSY;
 
   invalidate_active();
-  u8* const overlay = acquire_module_overlay(header);
-  if(overlay == nullptr) return RuntimeStatus::BUSY;
-  if(!decode_checked(header, reader, overlay)) {
-    memset(overlay, 0, g_overlay_lease.size());
+  u8* const image = acquire_app_memory(header);
+  if(image == nullptr) return RuntimeStatus::BUSY;
+  if(!decode_checked(header, reader, image)) {
+    memset(image, 0, g_app_cache.size());
     invalidate_active();
     return RuntimeStatus::CORRUPT_MODULE;
   }
-  memset(overlay + header.image_size, 0,
+  memset(image + header.image_size, 0,
          header.memory_size - header.image_size);
-  if(!mpu_guard::set_app_execution(overlay,
-        shared_memory::capacity(g_overlay_lease.arena()))) {
+  if(!mpu_guard::set_app_execution(image,
+        shared_memory::capacity(g_app_cache.arena()))) {
     invalidate_active();
     return RuntimeStatus::INVALID_MODULE;
   }
@@ -242,69 +193,52 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   g_active_kind = kind;
   g_active_header = header;
   g_active_file_id = file_id;
-  g_active_entry = (Entry) (usize) ((usize) overlay + header.entry_offset + 1U);
+  g_active_entry = (Entry) (usize) ((usize) image + header.entry_offset + 1U);
 
   g_call_depth++;
   const u32 initialized = g_active_entry((u32) Command::INITIALIZE,
-                                         entry_api_argument(kind),
-#if MK61_PORTABLE_SYSTEM_ENABLED
-                                         kind != Kind::APPLICATION && (header.flags & MK61_PORTABLE_APP_FLAG) != 0
-                                             ? (u32) (usize) &loadable_app::resident_api() : 0,
+                                         entry_api_argument(),
                                          header.image_crc32,
-#else
-                                         0, 0,
-#endif
+                                         (u32) kind,
                                          0);
   g_call_depth--;
-#if MK61_ENABLE_PORTABLE_APPS
-  if((header.flags & MK61_PORTABLE_APP_FLAG) != 0 && initialized != 0) {
+  if(initialized != 0) {
     invalidate_active();
     return RuntimeStatus::INVALID_MODULE;
   }
-#else
-  (void) initialized;
-#endif
   return RuntimeStatus::OK;
 }
 
-static RuntimeStatus load(Kind kind) {
-  mk61_module_keep_imports();
+static RuntimeStatus load_entry(Kind kind, const program_store::Entry& app) {
+  Header header = {};
+  const StoreStatus header_status = read_app_header(app, kind, header);
+  if(header_status == StoreStatus::IO_ERROR) return RuntimeStatus::IO_ERROR;
+  if(header_status != StoreStatus::OK) return RuntimeStatus::INVALID_MODULE;
+  AppPayloadContext context = {app.id, app.data_len};
+  const Reader reader = {&context, read_app_payload};
+  return activate(kind, app.id, header, reader);
+}
+
+// APPLICATION is merely the non-canonical case: System kinds resolve their
+// fixed /System name, while APPLICATION supplies the selected C5 inode. From
+// this point onward validation, decoding, initialization, API and cache are
+// identical.
+static RuntimeStatus load(Kind kind,
+                          u16 file_id = program_store::INVALID_ID) {
   if(!enabled(kind)) return RuntimeStatus::DISABLED;
   if(!program_store::ready() || !flash_is_ok) {
     return RuntimeStatus::UNAVAILABLE;
   }
 
   program_store::Entry app = {};
-  if(find_system_app(kind, app)) {
-    Header header = {};
-    const StoreStatus header_status = read_app_header(app, kind, header);
-    if(header_status == StoreStatus::IO_ERROR) return RuntimeStatus::IO_ERROR;
-    if(header_status != StoreStatus::OK) return RuntimeStatus::INVALID_MODULE;
-    AppPayloadContext context = {app.id, app.data_len};
-    const Reader reader = {&context, read_app_payload};
-    return activate(kind, app.id, header, reader);
-  }
-  return RuntimeStatus::INVALID_MODULE;
-}
-
-static RuntimeStatus load_application(u16 file_id) {
-  mk61_module_keep_imports();
-  if(!enabled(Kind::APPLICATION)) return RuntimeStatus::DISABLED;
-  if(!program_store::ready() || !flash_is_ok) {
-    return RuntimeStatus::UNAVAILABLE;
-  }
-  program_store::Entry app = {};
-  if(!program_store::entry_by_id(file_id, app)) {
+  const bool found = kind == Kind::APPLICATION
+      ? file_id != program_store::INVALID_ID &&
+        program_store::entry_by_id(file_id, app)
+      : find_system_app(kind, app);
+  if(!found) {
     return RuntimeStatus::INVALID_MODULE;
   }
-  Header header = {};
-  const StoreStatus header_status =
-      read_app_header(app, Kind::APPLICATION, header);
-  if(header_status == StoreStatus::IO_ERROR) return RuntimeStatus::IO_ERROR;
-  if(header_status != StoreStatus::OK) return RuntimeStatus::INVALID_MODULE;
-  AppPayloadContext context = {app.id, app.data_len};
-  const Reader reader = {&context, read_app_payload};
-  return activate(Kind::APPLICATION, app.id, header, reader);
+  return load_entry(kind, app);
 }
 
 } // namespace
@@ -318,7 +252,7 @@ bool enabled(Kind kind) {
     case Kind::CHIP8: return MK61_CHIP8_IS_LOADABLE != 0;
     case Kind::MARKDOWN_VIEWER:
       return MK61_MARKDOWN_VIEWER_IS_LOADABLE != 0;
-    case Kind::APPLICATION: return MK61_ENABLE_USER_APPS != 0;
+    case Kind::APPLICATION: return MK61_ENABLE_LOADABLE_MODULES != 0;
   }
   return false;
 }
@@ -353,12 +287,10 @@ RuntimeStatus invoke(Kind kind, Command command,
     return RuntimeStatus::INVALID_MODULE;
   }
   g_call_depth++;
-#if MK61_PORTABLE_SYSTEM_ENABLED
   // The portable wire protocol carries an inode, never a resident C++ Entry.
   if(command == Command::WBMP_VIEW_ENTRY && argument1 != 0 &&
      (g_active_header.flags & MK61_PORTABLE_APP_FLAG) != 0)
     argument1 = ((const program_store::Entry*) (usize) argument1)->id;
-#endif
   result = g_active_entry((u32) command, argument0, argument1,
                           argument2, argument3);
   g_call_depth--;
@@ -367,14 +299,14 @@ RuntimeStatus invoke(Kind kind, Command command,
 
 RuntimeStatus run_app(u16 file_id, u32& result) {
   result = 0;
-  const RuntimeStatus loaded = load_application(file_id);
+  const RuntimeStatus loaded = load(Kind::APPLICATION, file_id);
   if(loaded != RuntimeStatus::OK) return loaded;
   if(g_active_entry == nullptr || g_active_kind != Kind::APPLICATION) {
     return RuntimeStatus::INVALID_MODULE;
   }
   g_call_depth++;
   result = g_active_entry((u32) Command::APPLICATION_RUN,
-                          entry_api_argument(Kind::APPLICATION), 0, 0, 0);
+                          entry_api_argument(), 0, 0, 0);
   g_call_depth--;
   return RuntimeStatus::OK;
 }
@@ -403,7 +335,6 @@ bool find_file_handler(u16 type_magic, FileHandler& handler) {
     }
   }
 
-#if MK61_ENABLE_USER_APPS
   const int count = program_store::count(program_store::ProgramType::APP);
   bool found = false;
   for(int index = 0; index < count; index++) {
@@ -422,19 +353,12 @@ bool find_file_handler(u16 type_magic, FileHandler& handler) {
     found = true;
   }
   return found;
-#else
-  return false;
-#endif
 }
 
 RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result) {
   result = 0;
   RuntimeStatus loaded = RuntimeStatus::INVALID_MODULE;
-  if(handler.kind == Kind::APPLICATION) {
-    loaded = load_application(handler.module_file_id);
-  } else {
-    loaded = load(handler.kind);
-  }
+  loaded = load(handler.kind, handler.module_file_id);
   if(loaded != RuntimeStatus::OK) return loaded;
   if(g_active_entry == nullptr || g_active_kind != handler.kind) {
     return RuntimeStatus::INVALID_MODULE;
@@ -442,8 +366,7 @@ RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result) {
   g_call_depth++;
   result = g_active_entry(
       (u32) Command::FILE_OPEN,
-      handler.kind == Kind::APPLICATION
-          ? entry_api_argument(Kind::APPLICATION) : 0,
+      entry_api_argument(),
       file_id, 0, 0);
   g_call_depth--;
   return RuntimeStatus::OK;
@@ -451,7 +374,6 @@ RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result) {
 
 StoreStatus validate_app(const ModuleSource& source, Header& header) {
   memset(&header, 0, sizeof(header));
-  mk61_module_keep_imports();
   if(!program_store::ready() || g_call_depth != 0 ||
      source.read == nullptr || source.size < HEADER_SIZE ||
      source.size > MAX_CONTAINER_SIZE) return StoreStatus::UNAVAILABLE;
@@ -470,12 +392,12 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
   }
 
   invalidate_active();
-  u8* const overlay = acquire_module_overlay(header);
-  if(overlay == nullptr) return StoreStatus::UNAVAILABLE;
+  u8* const image = acquire_app_memory(header);
+  if(image == nullptr) return StoreStatus::UNAVAILABLE;
   InstallPayloadSource payload_context = {&source};
   const Reader payload_reader = {&payload_context, read_install_payload};
-  if(!decode_checked(header, payload_reader, overlay)) {
-    memset(overlay, 0, g_overlay_lease.size());
+  if(!decode_checked(header, payload_reader, image)) {
+    memset(image, 0, g_app_cache.size());
     invalidate_active();
     return StoreStatus::BAD_STORED_CRC;
   }
@@ -484,34 +406,3 @@ StoreStatus validate_app(const ModuleSource& source, Header& header) {
 }
 
 } // namespace loadable_module
-
-#else
-
-namespace loadable_module {
-
-bool enabled(Kind) { return false; }
-RuntimeStatus status(Kind) { return RuntimeStatus::DISABLED; }
-const char* status_text(RuntimeStatus) { return "disabled"; }
-RuntimeStatus invoke(Kind, Command, u32, u32, u32, u32, u32& result) {
-  result = 0;
-  return RuntimeStatus::DISABLED;
-}
-RuntimeStatus run_app(u16, u32& result) {
-  result = 0;
-  return RuntimeStatus::DISABLED;
-}
-bool find_file_handler(u16, FileHandler& handler) {
-  handler = {(Kind) 0, 0, 0};
-  return false;
-}
-RuntimeStatus open_file(const FileHandler&, u16, u32& result) {
-  result = 0;
-  return RuntimeStatus::DISABLED;
-}
-StoreStatus validate_app(const ModuleSource&, Header&) {
-  return StoreStatus::UNAVAILABLE;
-}
-
-} // namespace loadable_module
-
-#endif

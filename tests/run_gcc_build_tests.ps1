@@ -10,8 +10,6 @@ $cmakeProject = Join-Path $root 'tools/.mk61-gcc/CMakeLists.txt'
 $ramCheck = Join-Path $root 'tools/.mk61-gcc/check-ram.cmake'
 $flashCheck = Join-Path $root 'tools/.mk61-gcc/check-flash.cmake'
 $toolchain = Join-Path $root 'tools/.mk61-gcc/arm-none-eabi.cmake'
-$systemAppExports = Join-Path $root `
-    'tools/.mk61-gcc/system-app-exports.list'
 $firmwareMain = Join-Path $root 'tools/.mk61-gcc/firmware_main.cpp.in'
 $firmwarePowerShell = Join-Path $root `
     'tools/.mk61-firmware/mk61-firmware.ps1'
@@ -50,7 +48,6 @@ foreach ($file in @(
     $ramCheck,
     $flashCheck,
     $toolchain,
-    $systemAppExports,
     $firmwareMain,
     $firmwarePowerShell,
     $firmwareShell,
@@ -97,8 +94,8 @@ Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
 Assert-True ($helpText -match '-Ws0010Graphics 0\|1') `
     'help does not expose isolated WS0010 graphics qualification'
-Assert-True ($helpText -match '-UserApps 0\|1.+default 0') `
-    'help does not expose opt-in user APP execution'
+Assert-True ($helpText -notmatch '-UserApps') `
+    'help still exposes the removed user-APP permission switch'
 
 $invalid = Invoke-Backend @(
     '-Profile', 'mini-v3-a00',
@@ -124,7 +121,6 @@ $backendText = [IO.File]::ReadAllText($backend)
 $cmakeText = [IO.File]::ReadAllText($cmakeProject)
 $ramCheckText = [IO.File]::ReadAllText($ramCheck)
 $toolchainText = [IO.File]::ReadAllText($toolchain)
-$systemAppExportsText = [IO.File]::ReadAllText($systemAppExports)
 $firmwareMainText = [IO.File]::ReadAllText($firmwareMain)
 $firmwarePowerShellText = [IO.File]::ReadAllText($firmwarePowerShell)
 $firmwareShellText = [IO.File]::ReadAllText($firmwareShell)
@@ -160,8 +156,8 @@ Assert-True ($cmakeText -match
 Assert-True ($cmakeText -match '-P "\$\{CMAKE_CURRENT_SOURCE_DIR\}/check-flash\.cmake"') `
     'canonical F401 build does not invoke the shared Flash budget gate'
 Assert-True ($cmakeText -match
-    '(?s)elseif\(MK61_ENABLE_LTO\).*?target_link_options\(resident PRIVATE -ffunction-sections -fdata-sections\)') `
-    'per-function/data GC must be limited to LTO without System APP imports'
+    '(?s)if\(MK61_ENABLE_LTO\).*?target_link_options\(resident PRIVATE -ffunction-sections -fdata-sections\)') `
+    'LTO build does not retain per-function/data garbage collection'
 Assert-True ($cmakeText -match 'HAL_UART_MODULE_ONLY') `
     'canonical F401 build still retains the unused hardware UART state'
 Assert-True ($cmakeText -match 'USBD_CLASS_USER_STRING_DESC=0') `
@@ -172,19 +168,18 @@ foreach ($section in @('_mk61_data', '_mk61_bss', '_mk61_noinit')) {
 }
 Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
     'CMake build does not forward the Markdown selection'
-Assert-True ($cmakeText -match 'MK61_ENABLE_USER_APPS') `
-    'CMake build does not forward the user APP selection'
+Assert-True ($cmakeText -match 'MK61_ENABLE_LOADABLE_MODULES=1') `
+    'CMake build does not enable the unified APP runtime'
 Assert-True ($cmakeText -match 'MK61_WS0010_GRAPHICS_100X16') `
     'CMake build does not forward WS0010 graphics qualification'
 Assert-True ($cmakeText -match
     'overall_settings\(OPTIMIZATION s LTO\)') `
     'CMake build does not enable GNU Arm LTO'
-Assert-True ($cmakeText -match
-    '--export-dynamic-symbol-list=\$\{_mk61_system_app_exports\}') `
-    'LTO build does not preserve the System APP ABI'
-Assert-True ($systemAppExportsText -match
-    '_ZN18language_workspace4dataENS_5OwnerE;') `
-    'System APP LTO export list is incomplete'
+Assert-True ($cmakeText -notmatch '--export-dynamic-symbol-list') `
+    'resident still exports C++ symbols to a private System APP ABI'
+Assert-True (-not (Test-Path -LiteralPath (
+    Join-Path $root 'tools/.mk61-gcc/system-app-exports.list'))) `
+    'obsolete resident symbol export list is still present'
 Assert-True ($cmakeText -match
     'STM32 Arduino Core \$\{MK61_CORE_VERSION\} is required') `
     'CMake build does not consume the selected STM32 Core version'
@@ -196,8 +191,8 @@ Assert-True ($firmwarePowerShellText -match
     'Invoke-F401GccBundleBuild') `
     'PowerShell firmware frontend does not use the direct GCC backend'
 Assert-True ($firmwarePowerShellText -match
-    "'-UserApps', \[string\]\`$script:State\.EnableUserApps") `
-    'PowerShell firmware frontend does not forward the user APP selection'
+    'MK61_ENABLE_LOADABLE_MODULES=1') `
+    'PowerShell firmware frontend does not enable the unified APP runtime'
 Assert-True ($firmwarePowerShellText -match
     'portable-layout\.py[\s\S]+--default-script=') `
     'PowerShell F411 frontend does not prepare the portable APP linker'
@@ -205,8 +200,8 @@ Assert-True ($firmwareShellText -match
     'tools/build-gcc\.cmd[\s\S]+-BuildRoot') `
     'macOS/Linux firmware frontend does not use the direct GCC backend'
 Assert-True ($firmwareShellText -match
-    '-UserApps "\$ENABLE_USER_APPS"') `
-    'macOS/Linux firmware frontend does not forward the user APP selection'
+    'MK61_ENABLE_LOADABLE_MODULES=1') `
+    'macOS/Linux firmware frontend does not enable the unified APP runtime'
 Assert-True ($firmwareShellText -match
     'portable-layout\.py[\s\S]+--default-script=') `
     'macOS/Linux F411 frontend does not prepare the portable APP linker'
@@ -226,7 +221,7 @@ foreach ($setting in @(
     'MK61_ENABLE_MARKDOWN_VIEWER=1',
     'MK61_ENABLE_CHIP8=1',
     'MK61_ENABLE_USB_SCREEN=1',
-    'MK61_ENABLE_USER_APPS=0',
+    'MK61_ENABLE_LOADABLE_MODULES=1',
     'MK61_MATH_BACKEND=1',
     'System/FOCAL.APP',
     'System/BASIC.APP',

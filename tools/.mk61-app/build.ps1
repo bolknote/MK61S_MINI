@@ -124,14 +124,12 @@ if ($rebuild) {
             if ($msvcStyle) {
                 $arguments = @(
                     '/nologo', '/std:c++17', '/O2', '/W3', '/EHsc', '/TP',
-                    '/DMK61_ENABLE_PORTABLE_APPS=1',
                     "/I$(Join-Path $script:ProjectRoot 'code')"
                 ) + $compileSources + @("/Fe$temporary")
             } else {
                 $arguments = @(
                     '-x', 'c++', '-std=c++17', '-O2',
                     '-Wall', '-Wextra', '-Werror',
-                    '-DMK61_ENABLE_PORTABLE_APPS=1',
                     "-I$(Join-Path $script:ProjectRoot 'code')"
                 ) + $compileSources + @('-o', $temporary)
             }

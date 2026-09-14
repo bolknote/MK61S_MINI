@@ -98,7 +98,7 @@ from pathlib import Path
 import struct
 import sys
 data = Path(sys.argv[1]).read_bytes()
-assert struct.unpack_from('<H', data, 12)[0] == 4, 'System APP must use ABI 4'
+assert struct.unpack_from('<H', data, 12)[0] == 5, 'System APP must use ABI 5'
 assert struct.unpack_from('<I', data, 16)[0] in (5, 7), 'relocatable flags'
 assert struct.unpack_from('<I', data, 20)[0] == 0x20000000, 'virtual link base'
 code_size, relocations = struct.unpack_from('<II', data, 40)
@@ -107,8 +107,9 @@ PY
       done
       for flag in \
           '-DMK61_REQUIRE_RESIDENT_CRC=1' \
+          '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' \
           '-DMK61_PORTABLE_UI_FONTS=0' \
-          '-DMK61_ENABLE_USER_APPS=0' \
+          '-DMK61_ENABLE_LOADABLE_MODULES=1' \
           "-DMK61_MATH_BACKEND=$math_backend" \
           "-DMK61_ENABLE_LTO=$lto"; do
         grep -Fq -- "$flag" "$bundle_root/build.flags" ||

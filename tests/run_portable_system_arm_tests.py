@@ -116,8 +116,8 @@ class Machine:
         self.pool_end = elf.symbol('__mk61_dynamic_end')
         self.stack_top = elf.symbol('_estack') - 16
         self.api = elf.symbol('_ZN12loadable_app12_GLOBAL__N_1L3APIE')
-        self.sys = elf.symbol('_ZZN15loadable_module10system_apiEvE3api')
-        assert struct.unpack('<IHH', self.uc.mem_read(self.sys, 8)) == (0x31535953, 1, 28)
+        self.sys = elf.symbol('_ZZN15loadable_module12app_servicesEvE3api')
+        assert struct.unpack('<IHH', self.uc.mem_read(self.sys, 8)) == (0x31535953, 2, 28)
         self.mapping, self.syscall, _, _, _ = self.words(self.sys+8, 5)
         self.mapping = list(self.uc.mem_read(self.mapping, 42))
         self.workspace = elf.symbol('17workspace_storageE')
@@ -348,7 +348,10 @@ class Machine:
         self.uc.mem_write(self.pool_begin,b'\xCD'*(self.pool_end-self.pool_begin))
         self.uc.mem_write(self.base,self.image)
         self.uc.ctl_remove_cache(self.pool_begin, self.pool_end)
-        assert self.call(0,self.sys,self.api,self.crc) == 0
+        kinds = {'focal': 1, 'tinybasic': 2, 'wbmp-viewer': 3,
+                 'chip8': 5, 'markdown-viewer': 6,
+                 'markdown-text': 6, 'setup': 7}
+        assert self.call(0,self.api,self.crc,kinds[self.kind]) == 0
     def call(self, command, a=0, b=0, c=0, d=0):
         uc,sp = self.uc,self.stack_top
         saved = [UC_ARM_REG_R4,UC_ARM_REG_R5,UC_ARM_REG_R6,UC_ARM_REG_R7,UC_ARM_REG_R8,UC_ARM_REG_R9,UC_ARM_REG_R10,UC_ARM_REG_R11]
@@ -395,7 +398,7 @@ def main():
                 parser.error(str(error))
     with tempfile.TemporaryDirectory(prefix='mk61-system-arm-') as temp:
         reader=Path(temp)/'reader'
-        run(['c++','-std=c++17','-O2','-DMK61_ENABLE_PORTABLE_APPS=1','-I'+str(ROOT/'code'),ROOT/'tests/portable_app_format_self_test.cpp',ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
+        run(['c++','-std=c++17','-O2','-I'+str(ROOT/'code'),ROOT/'tests/portable_app_format_self_test.cpp',ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
         for index,resident in enumerate(args.resident_elf):
             elf=Elf(resident)
             low=(elf.symbol('__mk61_dynamic_begin')+2048+31)&~31
@@ -417,12 +420,12 @@ def main():
                 m=Machine(resident,index==0,address_index)
                 m.load(packages['focal'])
                 if args.expect_public_services:
-                    # A poison legacy pointer proves the new adapter uses
-                    # query_service; a truncated public table must be refused.
-                    assert m.call(0,1,m.api,m.crc) == 0
+                    # Every kind binds through the same public API. A
+                    # truncated base table must be refused before a service call.
+                    assert m.call(0,m.api,m.crc,1) == 0
                     api_size = m.words(m.api+4,1)[0] >> 16
                     m.uc.mem_write(m.api+6,struct.pack('<H',104))
-                    assert m.call(0,m.sys,m.api,m.crc) == 5
+                    assert m.call(0,m.api,m.crc,1) == 5
                     m.uc.mem_write(m.api+6,struct.pack('<H',api_size))
                 assert m.call(0x102,m.source('1.10 S A=2+3*4\n1.20 S .R0=A\n1.30 P 100000000\n1.40 P A/3\n1.50 E')) == 1, m.lines
                 ui_ends = m.ui_ends
@@ -500,10 +503,10 @@ def main():
                 assert any('Hello' in line for line in m.lines), m.lines
                 m.load(packages['chip8']);m.files[44]=(9,'LOOP',bytes.fromhex('00e01200'));m.chip_exit=True;m.services=0
                 assert m.call(2,0,44)==(0 if m.graphics else 2)
-                # An old/truncated System API is refused before callbacks run.
+                # A truncated public service table is refused before callbacks run.
                 before=len(m.trace)
                 m.uc.mem_write(m.sys+6,struct.pack('<H',24))
-                assert m.call(0,m.sys,m.api,m.crc) == 5
+                assert m.call(0,m.api,m.crc,5) == 5
                 assert len(m.trace) == before
                 m.uc.mem_write(m.sys+6,struct.pack('<H',28))
                 m.load(packages['setup']); m.lines=[]; m.keys=[m.mapping[37],m.mapping[39]]

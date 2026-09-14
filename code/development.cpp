@@ -1879,7 +1879,7 @@ static bool entry_can_run(const program_store::Entry& entry) {
     case program_store::ProgramType::TINYBASIC:
       return true;
 #endif
-#if MK61_ENABLE_USER_APPS
+#if MK61_APP_RUNTIME_AVAILABLE
     case program_store::ProgramType::APP:
       return true;
 #endif

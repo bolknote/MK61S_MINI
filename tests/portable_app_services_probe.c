@@ -15,7 +15,8 @@ int main(void) {
       MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_FORMAT | MK61_SERVICE_CAP_EDITOR);
   if(!s) return MK61_APP_RUNTIME_ERROR;
   if(mk61_api->query_service(0xFFFFFFFFU, 1) ||
-      mk61_api->query_service(MK61_APP_SERVICE_COMMON, 2)) return 10;
+      mk61_api->query_service(MK61_APP_SERVICE_COMMON,
+                              MK61_APP_SERVICES_VERSION + 1U)) return 10;
   if(a/b != 3.5 || a*b+a-b != 19.0 ||
       numerator / denominator != UINT64_C(13523386262513302) ||
       numerator % denominator != 26) return 11;

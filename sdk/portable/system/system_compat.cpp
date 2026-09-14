@@ -10,15 +10,14 @@ namespace portable_system {
 const mk61_system_api* api;
 const mk61_app_api* app;
 u32 image_crc;
-bool bind(u32 system_address, u32 app_address, u32 crc) {
-  (void) system_address;
-  const auto* base = (const mk61_app_api*) (usize) app_address;
+u32 kind;
+bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
   // Every newly built APP obtains services through the current public API.
   const auto* sys = mk61_app_get_services(base, 0);
   const u32 required = MK61_APP_CAP_TIME | MK61_APP_CAP_FILES;
   if(!sys || !sys->keyboard_mapping || !sys->math || !sys->format ||
       (base->capabilities & required) != required) return false;
-  api = sys; app = base; image_crc = crc;
+  api = sys; app = base; image_crc = crc; kind = app_kind;
 #if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE)
   if(!sys->runtime) return false;
   for(u32 i = 0; i < MK61_RUNTIME_COUNT; ++i) if(!sys->runtime[i]) return false;
@@ -156,14 +155,21 @@ bool program_store_choose_save_target(program_store::ProgramType type, u16 paren
 }
 namespace language_workspace {
 Lease::Lease(Owner owner, usize size) : lease_{} {
+  (void) owner;
   lease_.image_crc = portable_system::image_crc;
-  call(MK61_SYS_MEMORY_ACQUIRE, 0, (u32) owner, size, &lease_);
+  call(MK61_SYS_MEMORY_ACQUIRE, 0, portable_system::kind, size, &lease_);
 }
 Lease::~Lease() { if(ok()) call(MK61_SYS_MEMORY_RELEASE, 0, 0, 0, &lease_); }
-void* data(Owner owner) { return (void*) (usize) call(MK61_SYS_MEMORY_DATA, (u32) owner); }
+void* data(Owner owner) {
+  (void) owner;
+  return (void*) (usize) call(MK61_SYS_MEMORY_DATA, portable_system::kind);
+}
 }
 namespace shared_scratch {
-Lease::Lease(Owner owner, usize size) : lease_{} { call(MK61_SYS_MEMORY_ACQUIRE, 1, (u32) owner, size, &lease_); }
+Lease::Lease(Owner owner, usize size) : lease_{} {
+  (void) owner;
+  call(MK61_SYS_MEMORY_ACQUIRE, 1, portable_system::kind, size, &lease_);
+}
 Lease::~Lease() { reset(); }
 void Lease::reset() { if(ok()) call(MK61_SYS_MEMORY_RELEASE, 1, 0, 0, &lease_); }
 }

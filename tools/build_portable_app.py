@@ -69,7 +69,8 @@ def build(args: argparse.Namespace) -> dict:
 
     out = args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    sources = ([ROOT / "sdk/portable/system/system_compat.cpp",
+    sources = ([ROOT / "sdk/portable/start.c",
+                ROOT / "sdk/portable/system/system_compat.cpp",
                 *[ROOT / "code" / x for x in system[2]]] if system else
                [ROOT / "sdk/portable/start.c", *[x.resolve() for x in args.source]])
     if args.system == "setup":
@@ -189,7 +190,10 @@ def build(args: argparse.Namespace) -> dict:
     if packer is None:
         packer = ROOT / (".build/tools/mk61_module_pack" + suffix)
         if os.name == "nt":
-            run(["powershell", "-NoProfile", "-File",
+            powershell = shutil.which("pwsh") or shutil.which("powershell")
+            if powershell is None:
+                raise ValueError("PowerShell is required to build the APP packer")
+            run([powershell, "-NoProfile", "-File",
                  ROOT / "tools/.mk61-app/build.ps1", "-OutputPath", packer])
         else:
             run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
@@ -197,18 +201,17 @@ def build(args: argparse.Namespace) -> dict:
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
     offsets, table = extract(elf, base, image.stat().st_size, memory_size)
-    if not args.fixed_address:
-        relocations = out / (args.name + ".rel")
-        relocations.write_bytes(table)
-        command += ["--relocations", relocations]
+    relocations = out / (args.name + ".rel")
+    relocations.write_bytes(table)
+    command += ["--relocations", relocations]
     handled_magic = args.handled_magic or (system[3] if system else None)
     if handled_magic:
         command += ["--handled-magic", handled_magic]
     print(run(command), end="")
     image_flags = struct.unpack_from("<I", app.read_bytes(), 16)[0]
-    report = {"name": args.name, "abi": 3 if args.fixed_address else 4, "load_address": base,
-              "relocations": 0 if args.fixed_address else len(offsets),
-              "relocation_bytes": 0 if args.fixed_address else len(table),
+    report = {"name": args.name, "abi": 5, "load_address": base,
+              "relocations": len(offsets),
+              "relocation_bytes": len(table),
               "entry_offset": entry_offset, "image_bytes": image.stat().st_size,
               "bss_bytes": memory_size - image.stat().st_size,
               "memory_bytes": memory_size, "app_bytes": app.stat().st_size,
@@ -224,7 +227,6 @@ def build(args: argparse.Namespace) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--name")
-    parser.add_argument("--fixed-address", action="store_true", help="emit legacy portable ABI 3")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)
     parser.add_argument("--shared-runtime", action="store_true",

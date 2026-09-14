@@ -55,7 +55,6 @@ ENABLE_WBMP_VIEWER=0
 ENABLE_MARKDOWN_VIEWER=1
 ENABLE_CHIP8=0
 ENABLE_USB_SCREEN=0
-ENABLE_USER_APPS=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
 ENABLE_USER_EXPLORER=1
 ENABLE_CORE_MATH=0
@@ -125,14 +124,14 @@ Usage:
   tools/mk61-firmware.cmd                         interactive menu
   tools/mk61-firmware.cmd --mcu MCU --profile ID --build
   tools/mk61-firmware.cmd --mcu MCU --profile ID --upload
-  tools/mk61-firmware.cmd --mcu f401 --profile ID --install-apps
+  tools/mk61-firmware.cmd --mcu MCU --profile ID --install-apps
   tools/mk61-firmware.cmd --detect                detect MK61s/STM32 DFU
   tools/mk61-firmware.cmd --setup                 install pinned Arduino dependencies
   tools/mk61-firmware.cmd --list-profiles         print supported profiles
   tools/mk61-firmware.cmd --show-config           print saved selection and flags
 
 Options:
-  --mcu MCU       f411 (512 KiB Flash) or f401 (256 KiB Flash + System APP)
+  --mcu MCU       f411 (512 KiB Flash) or f401 (256 KiB Flash); both use /System APP
   --profile ID    mini-v3-a00, mini-v3-a02, mini-v3-ws0010,
                   mini-v2-a00, mini-v2-a02,
                   classic-v2, classic-v3, or 40th
@@ -155,7 +154,7 @@ mcu_valid() {
 
 mcu_label() {
   case "${1:-}" in
-    f411) printf '%s' 'STM32F411CE · 512 KiB Flash' ;;
+    f411) printf '%s' 'STM32F411CE · 512 KiB Flash · APP в C5' ;;
     f401) printf '%s' 'STM32F401CC · 256 KiB Flash · APP в C5' ;;
     *) printf '%s' 'не выбран' ;;
   esac
@@ -302,18 +301,14 @@ profile_artifact_name() {
 
 profile_bundle_dir() {
   local artifact
-  artifact=$(profile_artifact_name "$1" f401) || return 1
+  artifact=$(profile_artifact_name "$1" "$MCU") || return 1
   printf '%s/%s' "$OUTPUT_DIR" "${artifact%.bin}"
 }
 
 profile_artifact_path() {
   local artifact
   artifact=$(profile_artifact_name "$1" "$MCU") || return 1
-  if [ "$MCU" = f401 ]; then
-    printf '%s/%s' "$(profile_bundle_dir "$1")" "$artifact"
-  else
-    printf '%s/%s' "$OUTPUT_DIR" "$artifact"
-  fi
+  printf '%s/%s' "$(profile_bundle_dir "$1")" "$artifact"
 }
 
 list_profiles() {
@@ -1283,9 +1278,6 @@ load_config() {
       MK61_ENABLE_USB_SCREEN)
         boolean_valid "$value" && ENABLE_USB_SCREEN=$value
         ;;
-      MK61_ENABLE_USER_APPS)
-        boolean_valid "$value" && ENABLE_USER_APPS=$value
-        ;;
       MK61_ENABLE_EXTENDED_FONT_SETTINGS)
         boolean_valid "$value" && ENABLE_EXTENDED_FONT_SETTINGS=$value
         ;;
@@ -1333,7 +1325,10 @@ save_config() {
     printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
     printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
     printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
-    printf 'MK61_ENABLE_USER_APPS=%s\n' "$ENABLE_USER_APPS"
+    # This is part of the firmware format contract, not a user-selectable
+    # permission.  Persist it so Bash and PowerShell configs describe the
+    # same always-on ABI 5 runtime and stale USER_APPS lines disappear.
+    printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
     printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
     printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
     printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
@@ -1376,7 +1371,7 @@ compile_option_flags() {
     " -DMK61_ENABLE_MARKDOWN_VIEWER=$ENABLE_MARKDOWN_VIEWER" \
     " -DMK61_ENABLE_CHIP8=$ENABLE_CHIP8" \
     " -DMK61_ENABLE_USB_SCREEN=$ENABLE_USB_SCREEN" \
-    " -DMK61_ENABLE_USER_APPS=$ENABLE_USER_APPS" \
+    " -DMK61_ENABLE_LOADABLE_MODULES=1" \
     " -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ENABLE_EXTENDED_FONT_SETTINGS" \
     " -DMK61_USER_EXPLORER_SHORTCUT=$ENABLE_USER_EXPLORER" \
     " -DMK61_MATH_BACKEND=$ENABLE_CORE_MATH"
@@ -1390,14 +1385,13 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL  %s TinyBASIC  %s WBMP APP  %s Markdown+WBMP  %s CHIP-8  %s USB  %s user APP  %s шрифты  %s USER  %s CORE math' \
+  printf '%s FOCAL  %s TinyBASIC  %s WBMP APP  %s Markdown+WBMP  %s CHIP-8  %s USB  %s шрифты  %s USER  %s CORE math' \
     "$(checkbox_marker "$ENABLE_FOCAL")" \
     "$(checkbox_marker "$ENABLE_TINYBASIC")" \
     "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")" \
     "$(checkbox_marker "$ENABLE_CHIP8")" \
     "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
-    "$(checkbox_marker "$ENABLE_USER_APPS")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")" \
     "$(checkbox_marker "$ENABLE_CORE_MATH")"
@@ -1412,8 +1406,7 @@ compile_options_details() {
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")"
   printf '%s CHIP-8 (MK61_ENABLE_CHIP8)\n' "$(checkbox_marker "$ENABLE_CHIP8")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
-  printf '%s пользовательские APP (MK61_ENABLE_USER_APPS)\n' \
-    "$(checkbox_marker "$ENABLE_USER_APPS")"
+  printf '☑ единый APP runtime ABI 5 (MK61_ENABLE_LOADABLE_MODULES=1)\n'
   printf '%s расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)\n' \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
   printf '%s USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)\n' \
@@ -1439,7 +1432,7 @@ show_config() {
   printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
   printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
   printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
-  printf 'MK61_ENABLE_USER_APPS=%s\n' "$ENABLE_USER_APPS"
+  printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
   printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
   printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
   printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
@@ -1453,8 +1446,8 @@ show_config() {
 choose_mcu() {
   local chosen
   chosen=$(ui_radiolist 'Контроллер' \
-    'F411 хранит системные компоненты в прошивке. F401 собирает resident и согласованные System APP для C5:' \
-    f411 'STM32F411CE · 512 KiB Flash' "$(mcu_state f411)" \
+    'Оба контроллера собирают resident и согласованные ABI 5 System APP для C5:' \
+    f411 'STM32F411CE · 512 KiB Flash · APP в C5' "$(mcu_state f411)" \
     f401 'STM32F401CC · 256 KiB Flash · APP в C5' "$(mcu_state f401)") || return 1
   MCU=$chosen
   save_config
@@ -1531,7 +1524,6 @@ choose_compile_options() {
     markdown   'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER' "$(option_state "$ENABLE_MARKDOWN_VIEWER")" \
     chip8      'CHIP-8 · MK61_ENABLE_CHIP8' "$(option_state "$ENABLE_CHIP8")" \
     usb_screen 'USB-экран · MK61_ENABLE_USB_SCREEN' "$(option_state "$ENABLE_USB_SCREEN")" \
-    user_apps  'Пользовательские APP · MK61_ENABLE_USER_APPS' "$(option_state "$ENABLE_USER_APPS")" \
     fonts      'Расширенные настройки шрифта' "$(option_state "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     explorer   'Клавиша USER открывает Explorer' "$(option_state "$ENABLE_USER_EXPLORER")" \
     core_math  'Математика CORE вместо libm' "$(option_state "$ENABLE_CORE_MATH")") || return 1
@@ -1542,7 +1534,6 @@ choose_compile_options() {
   ENABLE_MARKDOWN_VIEWER=0
   ENABLE_CHIP8=0
   ENABLE_USB_SCREEN=0
-  ENABLE_USER_APPS=0
   ENABLE_EXTENDED_FONT_SETTINGS=0
   ENABLE_USER_EXPLORER=0
   ENABLE_CORE_MATH=0
@@ -1554,7 +1545,6 @@ choose_compile_options() {
       markdown) ENABLE_MARKDOWN_VIEWER=1 ;;
       chip8) ENABLE_CHIP8=1 ;;
       usb_screen) ENABLE_USB_SCREEN=1 ;;
-      user_apps) ENABLE_USER_APPS=1 ;;
       fonts) ENABLE_EXTENDED_FONT_SETTINGS=1 ;;
       explorer) ENABLE_USER_EXPLORER=1 ;;
       core_math) ENABLE_CORE_MATH=1 ;;
@@ -1578,8 +1568,8 @@ arduino_libraries_ready() {
   printf '%s\n' "$libraries" | grep -Eq '^STM32duino RTC[[:space:]]+1\.9\.0([[:space:]]|$)' || return 1
 }
 
-f401_system_apps_enabled() {
-  # SETUP and HELP are part of every portable F401 bundle.
+system_apps_enabled() {
+  # SETUP and HELP are part of every current-ABI bundle.
   return 0
 }
 
@@ -1593,7 +1583,6 @@ f401_gcc_arguments() {
     -Markdown "$ENABLE_MARKDOWN_VIEWER" \
     -Chip8 "$ENABLE_CHIP8" \
     -UsbScreen "$ENABLE_USB_SCREEN" \
-    -UserApps "$ENABLE_USER_APPS" \
     -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
     -UserExplorer "$ENABLE_USER_EXPLORER" \
     -MathBackend "$ENABLE_CORE_MATH"
@@ -1625,8 +1614,7 @@ build_dependencies_ready() {
     return
   fi
   arduino_core_ready && arduino_libraries_ready && f401_host_tools_ready && \
-    { [ "$MCU" != f411 ] || [ "$ENABLE_USER_APPS" -eq 0 ] || \
-      command_available python3; }
+    { [ "$MCU" != f411 ] || { command_available python3 && command_available c++; }; }
 }
 
 dependency_report() {
@@ -1653,11 +1641,16 @@ dependency_report() {
     else
       printf 'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0\n'
     fi
-    if [ "$MCU" = f411 ] && [ "$ENABLE_USER_APPS" -eq 1 ]; then
+    if [ "$MCU" = f411 ]; then
       if command_available python3; then
-        printf 'Python 3 (APP linker): %s\n' "$(command -v python3)"
+        printf 'Python 3 (APP builder): %s\n' "$(command -v python3)"
       else
-        printf 'Python 3 (APP linker): НЕ НАЙДЕН\n'
+        printf 'Python 3 (APP builder): НЕ НАЙДЕН\n'
+      fi
+      if command_available c++; then
+        printf 'Host C++17 compiler: %s\n' "$(command -v c++)"
+      else
+        printf 'Host C++17 compiler: НЕ НАЙДЕН (нужен для APP/ZX0)\n'
       fi
     fi
     if [ "$MCU" = f401 ]; then
@@ -1919,22 +1912,58 @@ detect_device() {
   return 1
 }
 
+system_bundle_graphics() {
+  case "$1" in
+    classic-v2|classic-v3|40th|mini-v3-ws0010) printf '%s' 1 ;;
+    *) printf '%s' "$ENABLE_USB_SCREEN" ;;
+  esac
+}
+
+system_bundle_ui_fonts() {
+  case "$1" in
+    classic-v2|classic-v3|40th) printf '%s' 1 ;;
+    *) printf '%s' 0 ;;
+  esac
+}
+
+build_system_app_bundle() {
+  local profile=$1 build_dir=$2 bundle=$3
+  local resident_elf="$build_dir/mk61s-M.ino.elf"
+  local compile_commands="$build_dir/compile_commands.json"
+  [ -s "$resident_elf" ] && [ -s "$compile_commands" ] || {
+    printf 'Resident ELF or compile database is missing in %s.\n' "$build_dir" >&2
+    return 1
+  }
+  mkdir -p "$bundle/System" || return 1
+  python3 "$PROJECT_ROOT/tools/build_system_app_bundle.py" \
+    --resident-elf "$resident_elf" \
+    --compile-commands "$compile_commands" \
+    --output-dir "$bundle/System" \
+    --graphics "$(system_bundle_graphics "$profile")" \
+    --ui-fonts "$(system_bundle_ui_fonts "$profile")" \
+    --focal "$ENABLE_FOCAL" \
+    --basic "$ENABLE_TINYBASIC" \
+    --wbmp "$ENABLE_WBMP_VIEWER" \
+    --markdown "$ENABLE_MARKDOWN_VIEWER" \
+    --chip8 "$ENABLE_CHIP8"
+}
+
 prepare_and_compile_f411_worker() {
   local profile=$1
   local sketch_dir="$BUILD_ROOT/sketch/$profile/mk61s-M"
-  local build_dir flags signature artifact source_artifact resident_link_flags
+  local build_dir flags signature artifact bundle source_artifact resident_link_flags
   flags=$(all_compile_flags "$profile") || return 1
   signature=$(printf '%s\n' "$flags" | cksum | awk '{print $1}')
   build_dir="$BUILD_ROOT/build/$profile-$signature"
-  artifact="$OUTPUT_DIR/$(profile_artifact_name "$profile" f411)"
+  bundle=$(profile_bundle_dir "$profile") || return 1
+  artifact="$bundle/$(profile_artifact_name "$profile" f411)"
 
   rm -rf "$BUILD_ROOT/sketch/$profile"
   mkdir -p "$sketch_dir" "$build_dir" "$OUTPUT_DIR" || return 1
   cp -R "$PROJECT_ROOT/code/." "$sketch_dir/" || return 1
 
   resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-  if [ "$ENABLE_USER_APPS" -eq 1 ]; then
-    local layout_properties variant_path ld_name portable_linker
+  local layout_properties variant_path ld_name portable_linker
     layout_properties=$("$ARDUINO_CLI" compile \
       --fqbn "$FQBN_F411" \
       --build-path "$build_dir/properties-layout" \
@@ -1952,8 +1981,7 @@ prepare_and_compile_f411_worker() {
     portable_linker="$build_dir/mk61-portable.ld"
     python3 "$PROJECT_ROOT/tools/.mk61-gcc/portable-layout.py" \
       "$variant_path/$ld_name" "$portable_linker" || return 1
-    resident_link_flags="$resident_link_flags -Wl,--default-script=$portable_linker"
-  fi
+  resident_link_flags="$resident_link_flags -Wl,--default-script=$portable_linker"
 
   "$ARDUINO_CLI" compile \
     --fqbn "$FQBN_F411" \
@@ -1972,10 +2000,14 @@ prepare_and_compile_f411_worker() {
     "$source_artifact" || return 1
   "$PROJECT_ROOT/tools/seal-firmware.sh" check --max-size 524288 \
     "$source_artifact" || return 1
+  build_system_app_bundle "$profile" "$build_dir" "$bundle" || return 1
+  mkdir -p "$bundle" || return 1
   cp "$source_artifact" "$artifact.tmp" || return 1
   mv "$artifact.tmp" "$artifact" || return 1
-  printf '%s\n' "$flags" > "$artifact.flags.tmp" || return 1
-  mv "$artifact.flags.tmp" "$artifact.flags"
+  printf '%s\n' "$flags" > "$bundle/build.flags.tmp" || return 1
+  mv "$bundle/build.flags.tmp" "$bundle/build.flags" || return 1
+  printf 'format 1\nabi 5\n' > "$bundle/build.apps.tmp" || return 1
+  mv "$bundle/build.apps.tmp" "$bundle/build.apps"
 }
 
 prepare_and_compile_f401_worker() {
@@ -1998,7 +2030,6 @@ prepare_and_compile_f401_worker() {
     MK61_ENABLE_MARKDOWN_VIEWER="$ENABLE_MARKDOWN_VIEWER" \
     MK61_ENABLE_CHIP8="$ENABLE_CHIP8" \
     MK61_ENABLE_USB_SCREEN="$ENABLE_USB_SCREEN" \
-    MK61_ENABLE_USER_APPS="$ENABLE_USER_APPS" \
     MK61_ENABLE_EXTENDED_FONT_SETTINGS="$ENABLE_EXTENDED_FONT_SETTINGS" \
     MK61_USER_EXPLORER_SHORTCUT="$ENABLE_USER_EXPLORER" \
     MK61_MATH_BACKEND="$ENABLE_CORE_MATH" \
@@ -2069,14 +2100,13 @@ build_selected() {
       return 1
     fi
     size=$(wc -c < "$artifact" | tr -d '[:space:]')
-    if [ "$MCU" = f401 ]; then
-      bundle=$(profile_bundle_dir "$PROFILE")
-      system_apps="$bundle/System"
-      app_names=$(expected_system_app_names)
-      app_count=$(printf '%s\n' "$app_names" | sed '/^$/d' | wc -l | tr -d '[:space:]')
-      if [ "$INTERACTIVE" -eq 1 ]; then
-        if [ "$app_count" -gt 0 ]; then
-          ui_msg 'Комплект F401 собран' "Профиль: $(profile_label "$PROFILE")
+    bundle=$(profile_bundle_dir "$PROFILE")
+    system_apps="$bundle/System"
+    app_names=$(expected_system_app_names)
+    app_count=$(printf '%s\n' "$app_names" | sed '/^$/d' | wc -l | tr -d '[:space:]')
+    if [ "$INTERACTIVE" -eq 1 ]; then
+      if [ "$app_count" -gt 0 ]; then
+        ui_msg 'Комплект собран' "Профиль: $(profile_label "$PROFILE")
 
 $(compile_options_details)
 
@@ -2087,8 +2117,8 @@ System APP:
 $app_names
 
 После прошивки выполните пункт «Шаг 2 · Установить System APP»."
-        else
-          ui_msg 'Комплект F401 собран' "Профиль: $(profile_label "$PROFILE")
+      else
+        ui_msg 'Комплект собран' "Профиль: $(profile_label "$PROFILE")
 
 $(compile_options_details)
 
@@ -2098,28 +2128,16 @@ Resident: $artifact
 
 Все System APP выключены. На чистом C5 второй шаг не требуется;
 если там остались прежние системные APP, второй шаг удалит только их."
-        fi
-      else
-        printf 'Built F401 bundle: %s\n' "$bundle"
-        printf 'Resident: %s (%s bytes)\n' "$artifact" "$size"
-        if [ "$app_count" -gt 0 ]; then
-          printf 'System APP:\n%s\n' "$app_names"
-          printf 'Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.\n'
-        else
-          printf 'All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.\n'
-        fi
       fi
-      return 0
-    fi
-    if [ "$INTERACTIVE" -eq 1 ]; then
-      ui_msg 'Сборка завершена' "Профиль: $(profile_label "$PROFILE")
-
-$(compile_options_details)
-
-Файл: $artifact
-Размер: $size байт"
     else
-      printf 'Built: %s (%s bytes)\n' "$artifact" "$size"
+      printf 'Built %s bundle: %s\n' "$(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]')" "$bundle"
+      printf 'Resident: %s (%s bytes)\n' "$artifact" "$size"
+      if [ "$app_count" -gt 0 ]; then
+        printf 'System APP:\n%s\n' "$app_names"
+        printf 'Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.\n'
+      else
+        printf 'All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.\n'
+      fi
     fi
     return 0
   fi
@@ -2130,26 +2148,30 @@ $(compile_options_details)
   return 1
 }
 
-validate_f401_bundle() {
-  local bundle artifact flags_file actual_flags expected_flags source app
+validate_system_bundle() {
+  local bundle artifact flags_file apps_file actual_flags expected_flags source app
   bundle=$(profile_bundle_dir "$PROFILE") || return 1
   artifact=$(profile_artifact_path "$PROFILE") || return 1
   flags_file="$bundle/build.flags"
+  apps_file="$bundle/build.apps"
   source="$bundle/System"
-  if [ ! -s "$artifact" ] || [ ! -r "$flags_file" ]; then
-    printf 'F401 bundle is missing. Build the selected profile first: %s\n' \
+  if [ ! -s "$artifact" ] || [ ! -r "$flags_file" ] ||
+      [ "$(sed -n '1p' "$apps_file" 2>/dev/null)" != 'format 1' ] ||
+      [ "$(sed -n '2p' "$apps_file" 2>/dev/null)" != 'abi 5' ]; then
+    printf '%s bundle is missing. Build the selected profile first: %s\n' \
+      "$(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]')" \
       "$bundle" >&2
     return 1
   fi
   IFS= read -r actual_flags < "$flags_file" || actual_flags=
   expected_flags=$(all_compile_flags "$PROFILE") || return 1
   if [ "$actual_flags" != "$expected_flags" ]; then
-    printf 'F401 bundle flags do not match the current selection. Rebuild it first.\n' >&2
+    printf 'Bundle flags do not match the current selection. Rebuild it first.\n' >&2
     return 1
   fi
   for app in $(expected_system_app_names); do
     if [ ! -s "$source/$app" ]; then
-      printf 'F401 bundle is incomplete: %s is missing.\n' "$source/$app" >&2
+      printf 'Bundle is incomplete: %s is missing.\n' "$source/$app" >&2
       return 1
     fi
   done
@@ -2216,17 +2238,9 @@ copy_system_apps_worker() {
 
 install_system_apps() {
   ensure_hardware_profile || return 1
-  if [ "$MCU" != f401 ]; then
+  if ! validate_system_bundle; then
     if [ "$INTERACTIVE" -eq 1 ]; then
-      ui_msg 'System APP' 'Второй шаг нужен только для STM32F401CC. На F411 системные компоненты находятся во внутренней Flash.'
-    else
-      printf 'Error: --install-apps is only valid for --mcu f401.\n' >&2
-    fi
-    return 1
-  fi
-  if ! validate_f401_bundle; then
-    if [ "$INTERACTIVE" -eq 1 ]; then
-      ui_msg 'Комплект не готов' "Комплект F401 отсутствует, неполон или собран с другими ключами.
+      ui_msg 'Комплект не готов' "Комплект отсутствует, неполон или собран с другими ключами.
 
 Сначала выполните «Только собрать» либо «Собрать и прошить»."
     fi
@@ -2268,13 +2282,13 @@ install_system_apps() {
   fi
 
   app_names=$(expected_system_app_names)
-  if f401_system_apps_enabled; then
+  if system_apps_enabled; then
     DEVICE_STATUS='System APP синхронизированы и проверены'
   else
     DEVICE_STATUS='System APP удалены по выключенным ключам'
   fi
   if [ "$INTERACTIVE" -eq 1 ]; then
-    if f401_system_apps_enabled; then
+    if system_apps_enabled; then
       ui_msg 'Шаг 2 завершён' "В каталоге $mount/System синхронизированы и побайтно проверены:
 $app_names
 
@@ -2286,7 +2300,7 @@ $app_names
 Теперь можно выйти из режима USB-диска клавишей ESC на MK61s."
     fi
   else
-    if f401_system_apps_enabled; then
+    if system_apps_enabled; then
       printf 'Synchronized and verified in %s/System:\n%s\n' "$mount" "$app_names"
     else
       printf 'Removed disabled canonical System APP from %s/System.\n' "$mount"
@@ -2368,9 +2382,9 @@ $(compile_options_details)
   if run_with_progress 'Загрузка прошивки' 'Записываю и перезапускаю STM32' \
       "$LAST_LOG" measured upload_worker "$artifact"; then
     DEVICE_STATUS='прошивка загружена; устройство перезапущено'
-    if [ "$MCU" = f401 ] && f401_system_apps_enabled; then
+    if system_apps_enabled; then
       if [ "$INTERACTIVE" -eq 1 ]; then
-        ui_msg 'Шаг 1 завершён' "Resident-прошивка F401 загружена.
+        ui_msg 'Шаг 1 завершён' "Resident-прошивка $(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]') загружена.
 
 Дождитесь запуска MK61s, откройте на нём Меню → USB-диск и выполните пункт «Шаг 2 · Установить System APP»."
       else
@@ -2410,20 +2424,14 @@ interactive_main() {
     platform_text=$(platform_label "$HARDWARE_PLATFORM")
     screen_text=$(screen_label "$SCREEN_KIND")
     target_text=$(mcu_label "$MCU")
-    if [ "$MCU" = f401 ]; then
-      upload_label='▲ Шаг 1 · Собрать и прошить'
-    else
-      upload_label='▲ Собрать и прошить'
-    fi
+    upload_label='▲ Шаг 1 · Собрать и прошить'
     menu_items=(
       upload "$upload_label"
       build '⚒ Только собрать'
     )
-    if [ "$MCU" = f401 ]; then
-      menu_items+=(
-        install_apps '↓ Шаг 2 · Установить System APP'
-      )
-    fi
+    menu_items+=(
+      install_apps '↓ Шаг 2 · Установить System APP'
+    )
     menu_items+=(
       mcu      '◉ Контроллер'
       platform '◉ Платформа'
