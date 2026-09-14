@@ -7,6 +7,7 @@
 #include "markdown_plain.hpp"
 #include "markdown_scroll.hpp"
 #include "ws0010_charset.hpp"
+#include "disasm_line.hpp"
 #include "utf8_view.hpp"
 #include "keyboard_core.hpp"
 #include "keyboard_layout.hpp"
@@ -164,6 +165,17 @@ static void test_font_settings_key_dispatch() {
   }
 }
 
+static void test_disassembler_shorter_mnemonic_clears_tail() {
+  char display_cells[disasm_line::WIDTH] = {'K', 'x', '!', '=', '0'};
+  disasm_line::Buffer update;
+  disasm_line::assign(update, "acos");
+
+  // Model Print::print(const char*): only bytes before NUL reach the LCD.
+  for(usize i = 0; update[i] != 0; ++i) display_cells[i] = update[i];
+  assert(std::memcmp(display_cells, "acos ", disasm_line::WIDTH) == 0);
+  assert(update[disasm_line::WIDTH] == 0);
+}
+
 static void expect(const char* scenario, const std::string& actual, const std::string& expected) {
   if(actual != expected) {
     std::fprintf(stderr, "%s\nEXPECTED: [%s]\nACTUAL:   [%s]\n", scenario, expected.c_str(), actual.c_str());
@@ -311,6 +323,7 @@ static void test_ui_font_layout() {
 }
 
 int main() {
+  test_disassembler_shorter_mnemonic_clears_tail();
   test_font_settings_key_dispatch();
   test_ui_font_capabilities();
   test_ui_font_catalog();

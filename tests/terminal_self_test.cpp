@@ -2,6 +2,7 @@
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
 #include "terminal_line_editor.hpp"
+#include "terminal_encoding.hpp"
 #include "terminal_output.hpp"
 #include "mk61_register_init.hpp"
 #include "m61_print.hpp"
@@ -325,6 +326,7 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_CRASH));
   assert(!terminal_command_allowed_in_script(CMD_WATCHDOG));
   assert(!terminal_command_allowed_in_script(CMD_IDENTITY));
+  assert(!terminal_command_allowed_in_script(CMD_ENCODING));
   assert(!terminal_command_allowed_in_script(CMD_BENCHMARK));
   assert(!terminal_command_allowed_in_script(CMD_ALARM));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
@@ -343,6 +345,7 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_trap(CMD_CRASH));
   assert(!terminal_command_allowed_in_trap(CMD_WATCHDOG));
   assert(terminal_command_allowed_in_trap(CMD_IDENTITY));
+  assert(!terminal_command_allowed_in_trap(CMD_ENCODING));
   assert(!terminal_command_allowed_in_trap(CMD_BENCHMARK));
   assert(!terminal_command_allowed_in_trap(CMD_ALARM));
 }
@@ -354,6 +357,61 @@ struct PrintCapture {
 static bool capture_print_byte(u8 value, void* user_data) {
   static_cast<PrintCapture*>(user_data)->bytes.push_back(value);
   return true;
+}
+
+static std::string transcode_cp1251(const std::vector<u8>& source,
+                                    terminal_encoding::Mode mode) {
+  PrintCapture capture;
+  assert(terminal_encoding::write_cp1251(
+      source.data(), source.size(), mode, capture_print_byte, &capture));
+  return std::string(capture.bytes.begin(), capture.bytes.end());
+}
+
+static std::string transcode_utf8(const std::string& source,
+                                 terminal_encoding::Mode mode) {
+  PrintCapture capture;
+  assert(terminal_encoding::write_utf8(
+      (const u8*) source.data(), source.size(), mode,
+      capture_print_byte, &capture));
+  return std::string(capture.bytes.begin(), capture.bytes.end());
+}
+
+static void test_terminal_encoding_is_explicit_and_reversible(void) {
+  using terminal_encoding::Mode;
+  using terminal_encoding::ParseResult;
+  Mode mode = Mode::CP1251;
+  assert(terminal_encoding::parse("", mode) == ParseResult::QUERY);
+  assert(terminal_encoding::parse("  \r", mode) == ParseResult::QUERY);
+  assert(terminal_encoding::parse("utf-8", mode) == ParseResult::SET);
+  assert(mode == Mode::UTF8);
+  assert(terminal_encoding::parse("utf8\t", mode) == ParseResult::SET);
+  assert(mode == Mode::UTF8);
+  assert(terminal_encoding::parse("cp1251", mode) == ParseResult::SET);
+  assert(mode == Mode::CP1251);
+  assert(terminal_encoding::parse("UTF-8", mode) == ParseResult::INVALID);
+  assert(terminal_encoding::parse("cp1251 extra", mode) ==
+         ParseResult::INVALID);
+
+  const std::vector<u8> classic = {
+      'K', 0xCF, '-', '>', 'X', '9', ' ', 0xC3}; // KП->X9 Г
+  const std::string utf8Text = "KП->X9 Г";
+  assert(transcode_cp1251(classic, Mode::CP1251) ==
+         std::string(classic.begin(), classic.end()));
+  assert(transcode_cp1251(classic, Mode::UTF8) == utf8Text);
+  assert(transcode_utf8(utf8Text, Mode::UTF8) == utf8Text);
+  assert(transcode_utf8(utf8Text, Mode::CP1251) ==
+         std::string(classic.begin(), classic.end()));
+  assert(transcode_utf8("Ёё €", Mode::CP1251) ==
+         std::string("\xA8\xB8 ?", 4));
+  assert(transcode_utf8("МК-61 ≠", Mode::CP1251) ==
+         std::string("\xCC\xCA-61 ?", 7));
+
+  const terminal_encoding::Bytes input =
+      terminal_encoding::input_byte(0xCF, Mode::CP1251);
+  assert(input.size == 2 && input.data[0] == 0xD0 && input.data[1] == 0x9F);
+  const terminal_encoding::Bytes raw =
+      terminal_encoding::input_byte(0xCF, Mode::UTF8);
+  assert(raw.size == 1 && raw.data[0] == 0xCF);
 }
 
 static bool capture_print_value(const m61_print::ValueRef& value,
@@ -825,6 +883,7 @@ int main(void) {
   test_register_initializer_parser_is_atomic();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_script_allowlist_is_explicit();
+  test_terminal_encoding_is_explicit_and_reversible();
   test_m61_print_escapes_and_interpolation();
   test_m61_print_display_controls_are_unquoted();
   test_m61_print_rejects_malformed_input_atomically();

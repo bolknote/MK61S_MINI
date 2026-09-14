@@ -2,6 +2,9 @@
 static constexpr TerminalCommand legacy_commands[] = {
   { "ver",     CMD_VERSION,       "firmware version" },
   { "identity",CMD_IDENTITY,      "stable device/build identity" },
+#if MK61_ENABLE_TERMINAL_ENCODING
+  { "encoding",CMD_ENCODING,      "encoding [utf-8|cp1251] - terminal text encoding" },
+#endif
   { "date",    CMD_DATE,          "date [ms|YYYY-MM-DD HH:MM:SS] - read/set clock" },
 #if MK61_ENABLE_RTC_ALARM_TERMINAL
   { "alarm",   CMD_ALARM,         "RTC Alarm A/B status, daily or one-shot" },

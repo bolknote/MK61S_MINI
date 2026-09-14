@@ -1,6 +1,9 @@
 // Immutable command catalog; included only by terminal_catalog.cpp.
 COMMAND("ver", CMD_VERSION, "firmware version")
 COMMAND("identity", CMD_IDENTITY, "stable device/build identity")
+#if MK61_ENABLE_TERMINAL_ENCODING
+COMMAND("encoding", CMD_ENCODING, "encoding [utf-8|cp1251] - terminal text encoding")
+#endif
 COMMAND("date", CMD_DATE, "date [ms|YYYY-MM-DD HH:MM:SS] - read/set clock")
 #if MK61_ENABLE_RTC_ALARM_TERMINAL
 COMMAND("alarm", CMD_ALARM, "RTC Alarm A/B status, daily or one-shot")

@@ -45,6 +45,9 @@
 #include "terminal_file_transfer.hpp"
 #include "terminal_line_editor.hpp"
 #include "terminal_output.hpp"
+#if MK61_ENABLE_TERMINAL_ENCODING
+  #include "terminal_encoding.hpp"
+#endif
 #include "terminal_protocol.hpp"
 #include "usb_screen.hpp"
 #include "utf8_view.hpp"
@@ -129,6 +132,78 @@ static bool terminal_single_token(const char* args, char* out,
          terminal_core::at_end(cursor);
 }
 
+#if MK61_ENABLE_TERMINAL_ENCODING
+// One physical CDC stream is shared by the interactive terminal and M61
+// scripts, therefore encoding is a connection property rather than duplicated
+// state in both class_terminal instances.  Human terminals start in CP1251;
+// machine clients explicitly request UTF-8 when they connect.
+static terminal_encoding::Mode terminal_text_encoding =
+    terminal_encoding::Mode::CP1251;
+
+static bool terminal_serial_write_byte(u8 byte, void*) {
+  return Serial.write(byte) == 1;
+}
+
+static void terminal_write_cp1251(const char* text) {
+  (void) terminal_encoding::write_cp1251(
+      text, terminal_text_encoding, terminal_serial_write_byte, nullptr);
+}
+
+static void terminal_write_utf8(const char* text) {
+  (void) terminal_encoding::write_utf8(
+      text, terminal_text_encoding, terminal_serial_write_byte, nullptr);
+}
+
+static void terminal_write_utf8(const u8* text, usize length) {
+  (void) terminal_encoding::write_utf8(
+      text, length, terminal_text_encoding, terminal_serial_write_byte,
+      nullptr);
+}
+
+static void terminal_println_cp1251(const char* text) {
+  terminal_write_cp1251(text);
+  Serial.println();
+}
+
+static void terminal_println_utf8(const char* text) {
+  terminal_write_utf8(text);
+  Serial.println();
+}
+
+static terminal_protocol::Result terminal_exec_encoding(const char* args) {
+  terminal_encoding::Mode requested = terminal_text_encoding;
+  const terminal_encoding::ParseResult parsed =
+      terminal_encoding::parse(args, requested);
+  if(parsed == terminal_encoding::ParseResult::INVALID) {
+    Serial.println("Usage: encoding <utf-8|cp1251>");
+    return terminal_protocol::Result::error();
+  }
+  if(parsed == terminal_encoding::ParseResult::SET) {
+    terminal_text_encoding = requested;
+  }
+  // The acknowledgement is deliberately ASCII-only: it remains readable
+  // while a host switches its decoder in either direction.
+  Serial.print("encoding ");
+  Serial.println(terminal_encoding::name(terminal_text_encoding));
+  return terminal_protocol::Result::ok();
+}
+#else
+// The constrained F401/UC1609 build keeps the historic wire representation:
+// mnemonics/registers are CP1251 and filesystem text is UTF-8.  These wrappers
+// keep all call sites identical without pulling a transcoder into Flash.
+static void terminal_write_cp1251(const char* text) { Serial.print(text); }
+static void terminal_write_utf8(const char* text) { Serial.print(text); }
+static void terminal_write_utf8(const u8* text, usize length) {
+  Serial.write(text, length);
+}
+static void terminal_println_cp1251(const char* text) {
+  Serial.println(text);
+}
+static void terminal_println_utf8(const char* text) {
+  Serial.println(text);
+}
+#endif
+
 static void terminal_path_error(const char* operation,
                                 storage_path::Status status) {
   Serial.print(operation);
@@ -161,13 +236,13 @@ static void terminal_print_fs_entry(const program_store::Entry& entry) {
   }
   if(entry.kind == program_store::NodeKind::DIRECTORY) {
     Serial.print("d\t");
-    Serial.print(name);
+    terminal_write_utf8(name);
     Serial.println('/');
   } else {
     Serial.print("f\t");
     Serial.print(entry.data_len);
     Serial.print(" B\t");
-    Serial.println(name);
+    terminal_println_utf8(name);
   }
 }
 
@@ -184,7 +259,7 @@ static void terminal_print_hex_u32(u32 value) {
 }
 
 
-const char ISA_61[] =
+static constexpr char ISA_61[] =
 "0,1,2,3,4,5,6,7,8,9,dot,neg,pow10,clr,push,preX,\
 add,sub,mul,div,swap,e10,exp,lg,ln,asin,acos,atg,sin,cos,tg,?,\
 pi,sqrt,sqr,rec,pow,rot,toM,?,?,?,toMS,?,?,?,?,?,\
@@ -199,23 +274,71 @@ call[0],call[1],call[2],call[3],call[4],call[5],call[6],call[7],call[8],call[9],
 sto[0],sto[1],sto[2],sto[3],sto[4],sto[5],sto[6],sto[7],sto[8],sto[9],sto[A],sto[B],sto[C],sto[D],sto[E],?,\
 jme[0],jme[1],jme[2],jme[3],jme[4],jme[5],jme[6],jme[7],jme[8],jme[9],jme[A],jme[B],jme[C],jme[D],jme[E],?,\
 ld[0],ld[1],ld[2],ld[3],ld[4],ld[5],ld[6],ld[7],ld[8],ld[9],ld[A],ld[B],ld[C],ld[D],ld[E],?,\
-jnz[0],jnz[1],jnz[2],jnz[3],jnz[R4],jnz[5],jnz[6],jnz[7],jnz[8],jnz[9],jnz[A],jnz[B],jnz[C],jnz[D],jnz[E]";
+jnz[0],jnz[1],jnz[2],jnz[3],jnz[R4],jnz[5],jnz[6],jnz[7],jnz[8],jnz[9],jnz[A],jnz[B],jnz[C],jnz[D],jnz[E],?";
 
 
-static const char ISA_CLASSIC_61[] =
-"0,1,2,3,4,5,6,7,8,9,.,/-/,В\317,CX,B^,Bx,+,-,*,:,XY,F10^x,Fe^x,Flg,Fln,Fasin,Facos,Fatg,Fsin,Fcos,Ftg,?,\
+static constexpr char ISA_CLASSIC_61[] =
+"0,1,2,3,4,5,6,7,8,9,.,/-/,\302\317,CX,B^,Bx,+,-,*,:,XY,F10^x,Fe^x,Flg,Fln,Fasin,Facos,Fatg,Fsin,Fcos,Ftg,?,\
 \317\xE8,V\"\"\",Fx^2,F1/x,Fx^y,(),Ko->',?,?,?,Ko->'\",?,?,?,?,?,Ko<-'\",|x|,3H,Ko<-',K[x],K{x},Kmax,K^,Kv,K(+),\310HB,C\327,?,Ko->'\",?,?,\
 X->\3170,X->\3171,X->\3172,X->\3173,X->\3174,X->\3175,X->\3176,X->\3177,X->\3178,X->\3179,X->\317A,X->\317B,X->\317C,X->\317\304,X->\317E,?,\
-C/\317,\301/\317,B/O,\317/\317,HO\317,?,?,Fx\2070,FL2,Fx>=0,FL3,FL1,Fx<0,FL0,Fx=0,?,\
+C/\317,\301/\317,B/O,\317/\317,HO\317,?,?,Fx!=0,FL2,Fx>=0,FL3,FL1,Fx<0,FL0,Fx=0,?,\
 \317->X0,\317->X1,\317->X2,\317->X3,\317->X4,\317->X5,\317->X6,\317->X7,\317->X8,\317->X9,\317->XA,\317->XB,\317->XC,\317->X\xC4,\317->XE,?,\
-Kx\2070 0,Kx\2070 1,Kx\2070 2,Kx\2070 3,Kx\2070 4,Kx\2070 5,Kx\2070 6,Kx\2070 7,Kx\2070 8,Kx\2070 9,Kx\2070 A,Kx\2070 B,Kx\2070 C,Kx\2070 \304,Kx\2070 E,?,\
+Kx!=0 0,Kx!=0 1,Kx!=0 2,Kx!=0 3,Kx!=0 4,Kx!=0 5,Kx!=0 6,Kx!=0 7,Kx!=0 8,Kx!=0 9,Kx!=0 A,Kx!=0 B,Kx!=0 C,Kx!=0 \304,Kx!=0 E,?,\
 K\301\3170,K\301\3171,K\301\3172,K\301\3173,K\301\3174,K\301\3175,K\301\3176,K\301\3177,K\301\3178,K\301\3179,K\301\317A,K\301\317B,K\301\317C,K\301\317\304,K\301\317E,?,\
 Kx>=0 0,Kx>=0 1,Kx>=0 2,Kx>=0 3,Kx>=0 4,Kx>=0 5,Kx>=0 6,Kx>=0 7,Kx>=0 8,Kx>=0 9,Kx>=0 A,Kx>=0 B,Kx>=0 C,Kx>=0 \304,Kx>=0 E,?,\
-К\317\3170,К\317\3171,К\317\3172,К\317\3173,К\317\3174,К\317\3175,К\317\3176,К\317\3177,К\317\3178,К\317\3179,К\317\317A,К\317\317B,К\317\317C,К\317\317\304,К\317\317E,?,\
+\312\317\3170,\312\317\3171,\312\317\3172,\312\317\3173,\312\317\3174,\312\317\3175,\312\317\3176,\312\317\3177,\312\317\3178,\312\317\3179,\312\317\317A,\312\317\317B,\312\317\317C,\312\317\317\304,\312\317\317E,?,\
 KX->\3170,KX->\3171,KX->\3172,KX->\3173,KX->\3174,KX->\3175,KX->\3176,KX->\3177,KX->\3178,KX->\3179,KX->\317A,KX->\317B,KX->\317C,KX->\317\304,KX->\317E,?,\
 Kx<0 0,Kx<0 1,Kx<0 2,Kx<0 3,Kx<0 4,Kx<0 5,Kx<0 6,Kx<0 7,Kx<0 8,Kx<0 9,Kx<0 A,Kx<0 B,Kx<0 C,Kx<0 \304,Kx<0 E,?,\
-K\317->X0,K\317->X1,K\317->X2,K\317->X3,K\317->X4,K\317->X5,K\317->X6,K\317->X7,K\317->X8,K\317->XA,K\317->XB,K\317->XC,K\317->X\304,K\317->XE,?,\
+K\317->X0,K\317->X1,K\317->X2,K\317->X3,K\317->X4,K\317->X5,K\317->X6,K\317->X7,K\317->X8,K\317->X9,K\317->XA,K\317->XB,K\317->XC,K\317->X\304,K\317->XE,?,\
 Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=0 B,Kx=0 C,Kx=0 \304,Kx=0 E,?";
+
+template<usize N>
+constexpr usize terminal_mnemonic_count(const char (&table)[N]) {
+  usize count = 1;
+  for(usize index = 0; index + 1 < N; index++) {
+    if(table[index] == ',') count++;
+  }
+  return count;
+}
+
+template<usize N>
+constexpr usize terminal_mnemonic_max_length(const char (&table)[N]) {
+  usize longest = 0;
+  usize current = 0;
+  for(usize index = 0; index < N; index++) {
+    if(table[index] == ',' || table[index] == 0) {
+      if(current > longest) longest = current;
+      current = 0;
+    } else {
+      current++;
+    }
+  }
+  return longest;
+}
+
+constexpr bool terminal_mnemonic_equals(const char* table, usize opcode,
+                                        const char* expected) {
+  while(opcode != 0) {
+    if(*table == 0) return false;
+    if(*table++ == ',') opcode--;
+  }
+  while(*expected != 0 && *table == *expected) {
+    table++;
+    expected++;
+  }
+  return *expected == 0 && (*table == ',' || *table == 0);
+}
+
+static_assert(terminal_mnemonic_count(ISA_61) == terminal_keys::COUNT,
+              "assembler mnemonic table must cover opcodes 00..EF");
+static_assert(terminal_mnemonic_count(ISA_CLASSIC_61) ==
+                  terminal_keys::COUNT,
+              "classic mnemonic table must cover opcodes 00..EF");
+static_assert(terminal_mnemonic_max_length(ISA_CLASSIC_61) <= 8,
+              "increase MAX_LEN_CLASSIC_MNEMO");
+static_assert(terminal_mnemonic_equals(
+                  ISA_CLASSIC_61, 0xD9, "K\317->X9"),
+              "opcode D9 must retain the P9 register mnemonic");
 
 #if MK61_DWT_PROFILER_SUPPORTED && MK61_ENABLE_PROFILE_SAVE
 class class_terminal::ProfileReportBuilder {
@@ -327,7 +450,7 @@ void class_terminal::history_print(void) {
         Serial.print("  ");
         Serial.print(i + 1);
         Serial.print(": ");
-        Serial.write(line, hist_length[slot]);
+        terminal_write_utf8(line, hist_length[slot]);
         Serial.println();
       }
     }
@@ -336,7 +459,7 @@ void class_terminal::print_prompt(void) {
       char path[64];
       if(storage_path::format_directory(current_directory, path,
                                         sizeof(path)) ==
-         storage_path::Status::OK) Serial.print(path);
+         storage_path::Status::OK) terminal_write_utf8(path);
       else Serial.print("...");
       Serial.print("> ");
     }
@@ -358,7 +481,7 @@ usize class_terminal::input_columns(usize begin, usize end) const {
 void class_terminal::redraw_input_line(void) {
       Serial.write('\r');
       print_prompt();
-      Serial.write(input_buffer, recive_pos);
+      terminal_write_utf8(input_buffer, recive_pos);
       Serial.print("\x1B[K");
       move_terminal_cursor('D', input_columns(input_cursor, recive_pos));
     }
@@ -2240,13 +2363,13 @@ void class_terminal::dump_mk61_code_page(void) {
 
 char* class_terminal::ISA_61_code(u8 opcode, char* text) {
       isize comma_count = opcode;
-      isize i = 0;
+      usize i = 0;
 
       for(u8 symbol : ISA_61) {
         if(symbol == 0) break;
         if(symbol == ',') {
           comma_count--;
-        } else if(comma_count == 0)
+        } else if(comma_count == 0 && i < MAX_LEN_CLASSIC_MNEMO)
           text[i++] = symbol;
       }
       text[i] = 0;
@@ -2255,14 +2378,14 @@ char* class_terminal::ISA_61_code(u8 opcode, char* text) {
 
 char* class_terminal::ISA_CLASSIC_61_code(u8 opcode, char* text) {
       isize comma_count = opcode;
-      isize i = 0;
+      usize i = 0;
 
       for(const char* p = ISA_CLASSIC_61; *p != 0; p++) {
         const u8 symbol = (u8) *p;
         if(symbol == 0) break;
         if(symbol == ',') {
           comma_count--;
-        } else if(comma_count == 0)
+        } else if(comma_count == 0 && i < MAX_LEN_CLASSIC_MNEMO)
           text[i++] = symbol;
       }
       text[i] = 0;
@@ -3014,7 +3137,7 @@ void class_terminal::DumpRegisters(void) {
         Serial.print(" = ");
         MK61Emu_ReadRegister(i, buffer, terminal_symbols);
         //Serial.write((char*) &buffer[0], 3); //Serial.write(buffer[1]); Serial.write('.');
-        Serial.println((char*) &buffer);
+        terminal_println_cp1251((char*) &buffer);
       }
 
       Serial.print("IP: "); Serial.println(core_61::get_IP());
@@ -3076,6 +3199,9 @@ void  class_terminal::init(void) {
       current_directory = program_store::ROOT_ID;
       reset_command_state();
       reset_line_editor();
+#if MK61_ENABLE_TERMINAL_ENCODING
+      terminal_text_encoding = terminal_encoding::Mode::CP1251;
+#endif
       Serial.begin(115200);
 #if defined(USBCON) && defined(USBD_USE_CDC)
       // Сохраняем паузу для стартового баннера, не пропуская вслепую запрос
@@ -3101,11 +3227,11 @@ void  class_terminal::echo_mk61_stack(void) {
       char cvalue[15];
       cvalue[14] = 0;
 
-      Serial.print("X1 = "); Serial.println(read_stack_register(stack::X1, cvalue, terminal_symbols));
-      Serial.print("T  = "); Serial.println(read_stack_register(stack::T, cvalue, terminal_symbols));
-      Serial.print("Z  = "); Serial.println(read_stack_register(stack::Z, cvalue, terminal_symbols));
-      Serial.print("Y  = "); Serial.println(read_stack_register(stack::Y, cvalue, terminal_symbols));
-      Serial.print("X  = "); Serial.println(read_stack_register(stack::X, cvalue, terminal_symbols));
+      Serial.print("X1 = "); terminal_println_cp1251(read_stack_register(stack::X1, cvalue, terminal_symbols));
+      Serial.print("T  = "); terminal_println_cp1251(read_stack_register(stack::T, cvalue, terminal_symbols));
+      Serial.print("Z  = "); terminal_println_cp1251(read_stack_register(stack::Z, cvalue, terminal_symbols));
+      Serial.print("Y  = "); terminal_println_cp1251(read_stack_register(stack::Y, cvalue, terminal_symbols));
+      Serial.print("X  = "); terminal_println_cp1251(read_stack_register(stack::X, cvalue, terminal_symbols));
       Serial.print("IP =  "); Serial.println(core_61::get_IP());
     }
 
@@ -3153,7 +3279,7 @@ void class_terminal::pub_mk61_code_page(void) {
               Serial_write_hex(code);
               for(usize cnt_space=2; cnt_space < MAX_LEN_CLASSIC_MNEMO + 2; cnt_space++) Serial.print(' ');
             } else {
-              Serial.print(ISA_CLASSIC_61_code(code, &op[0]));
+              terminal_write_cp1251(ISA_CLASSIC_61_code(code, &op[0]));
               for(usize ln=strlen(op); ln < MAX_LEN_CLASSIC_MNEMO; ln++) Serial.write(' ');
               Serial.print("  ");
             }
@@ -3164,7 +3290,7 @@ void class_terminal::pub_mk61_code_page(void) {
     }
 
 void  class_terminal::lasm_mk61_code_page(mnemo_type type) {
-      char op[7+1];
+      char op[MAX_LEN_CLASSIC_MNEMO+1];
       u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
 
       core_61::get_code_page(&code_page[0]);
@@ -3184,12 +3310,14 @@ void  class_terminal::lasm_mk61_code_page(mnemo_type type) {
                 Serial.print("      ");
               } else {
                 const char* mnemo = (type == mnemo_type::ISA_CLASSIC)? ISA_CLASSIC_61_code(code, &op[0]) : ISA_61_code(code, &op[0]);
-                Serial.print(mnemo);
+                if(type == mnemo_type::ISA_CLASSIC) terminal_write_cp1251(mnemo);
+                else Serial.print(mnemo);
                 for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
               }
             } else {
               const char* mnemo = (type == mnemo_type::ISA_CLASSIC)? ISA_CLASSIC_61_code(code, &op[0]) : ISA_61_code(code, &op[0]);
-              Serial.print(mnemo);
+              if(type == mnemo_type::ISA_CLASSIC) terminal_write_cp1251(mnemo);
+              else Serial.print(mnemo);
               for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
             }
             if ( core_61::len_code_command(code) == 2 ) {
@@ -3759,13 +3887,13 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
         dbgln(MINI, "command id ", (int) command_id);
         if(script_mode && !terminal_command_allowed_in_script(command_id)) {
           Serial.print("Command is not allowed in M61 scripts: ");
-          Serial.println((const char*) input_buffer);
+          terminal_println_utf8((const char*) input_buffer);
           recive_pos = 0;
           return terminal_protocol::Result::error();
         }
         if(trap_mode && !terminal_command_allowed_in_trap(command_id)) {
           Serial.print("Command is not allowed in an M61 trap handler: ");
-          Serial.println((const char*) input_buffer);
+          terminal_println_utf8((const char*) input_buffer);
           recive_pos = 0;
           return terminal_protocol::Result::error();
         }
@@ -3781,6 +3909,14 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               recive_pos = 0;
               return result;
             }
+#if MK61_ENABLE_TERMINAL_ENCODING
+          case CMD_ENCODING: {
+              const terminal_protocol::Result result =
+                  terminal_exec_encoding(command_args());
+              recive_pos = 0;
+              return result;
+            }
+#endif
 #if MK61_ENABLE_READ_BENCHMARKS
           case CMD_BENCHMARK: {
               const terminal_protocol::Result result = exec_benchmark();
@@ -4111,7 +4247,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              Serial.println(path);
+              terminal_println_utf8(path);
             }
             break;
           case CMD_FS_CD: {
@@ -4488,7 +4624,8 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               char slot_name[SIZEOF_SLOT_NAME];
               for(usize i=0; i < 100; i++) {
                 if(IsOccupied(i)) {
-                  Serial.print(i); Serial.print(". "); Serial.println(ReadSlotName(i, (char*) &slot_name[0]));
+                  Serial.print(i); Serial.print(". ");
+                  terminal_println_utf8(ReadSlotName(i, (char*) &slot_name[0]));
                 }
               }
             }
@@ -4530,7 +4667,8 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              Serial.print("Rename slot N"); Serial.print(slot); Serial.print(" to "); Serial.println(slot_name);
+              Serial.print("Rename slot N"); Serial.print(slot); Serial.print(" to ");
+              terminal_println_utf8(slot_name);
               if(!Rename(slot, slot_name)) {
                 Serial.println("Rename failed (missing slot or duplicate name).");
                 ErrorReaction();
@@ -4609,7 +4747,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           default:
               if(input_buffer[0] != 0) {
                 Serial.print("Unknown command: ");
-                Serial.println((const char*) input_buffer);
+                terminal_println_utf8((const char*) input_buffer);
               }
               recive_pos = 0;
               return terminal_protocol::Result::error();
@@ -4688,9 +4826,39 @@ class_terminal::InputResult class_terminal::input_handler(u8 rx_char) {
       // Управляющие символы, кроме табуляции, не буферизуем.
       if(rx_char < 0x20 && rx_char != '\t') return {-1, false};
 
-      if(input_can_append() && editor_insert(rx_char)) {
-        // editor_insert() выводит обычное эхо либо перерисовывает хвост строки.
-      } else if(!input_overflow) {
+#if MK61_ENABLE_TERMINAL_ENCODING
+      bool inserted = false;
+      if(terminal_text_encoding == terminal_encoding::Mode::CP1251 &&
+         rx_char >= 0x80) {
+        // Store a canonical UTF-8 command line even when Tera Term sends one
+        // CP1251 byte.  This keeps filenames compatible with C5 and lets the
+        // existing Unicode-aware cursor move over one visible character.
+        const terminal_encoding::Bytes canonical =
+            terminal_encoding::input_byte(rx_char, terminal_text_encoding);
+        if(recive_pos + canonical.size <= terminal_core::MAX_INPUT_TEXT) {
+          const bool at_end = input_cursor == recive_pos;
+          inserted = true;
+          for(u8 index = 0; index < canonical.size; index++) {
+            if(!terminal_line_editor::insert_byte(
+                   input_buffer, recive_pos, input_cursor, MAX_INPUT_CHAR,
+                   canonical.data[index])) {
+              inserted = false;
+              break;
+            }
+          }
+          if(inserted) {
+            if(at_end) terminal_write_utf8(canonical.data, canonical.size);
+            else redraw_input_line();
+          }
+        }
+      } else if(input_can_append()) {
+        inserted = editor_insert(rx_char);
+      }
+#else
+      const bool inserted = input_can_append() && editor_insert(rx_char);
+#endif
+
+      if(!inserted && !input_overflow) {
         input_overflow = true; // сигнал занятости - один раз на строку
         sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
       }

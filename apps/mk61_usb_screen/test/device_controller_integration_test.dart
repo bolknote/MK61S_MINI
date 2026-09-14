@@ -171,7 +171,10 @@ Future<DeviceController> _openController(_FakeSerialTransport transport) async {
   expect(transport.openedBaudRate, 115200);
   expect(controller.state, DeviceConnectionState.waitingForOffer);
   expect(controller.stateLabel, 'Включение USB Screen');
-  expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');
+  expect(
+    utf8.decode(transport.connection.hostTerminalBytes),
+    'encoding utf-8\ruscreen\r',
+  );
   return controller;
 }
 
@@ -226,7 +229,10 @@ void main() {
 
       expect(controller.terminalAvailable, isTrue);
       expect(controller.sendTerminalLine('ver'), isTrue);
-      expect(utf8.decode(connection.hostTerminalBytes), 'uscreen\rver\r');
+      expect(
+        utf8.decode(connection.hostTerminalBytes),
+        'encoding utf-8\ruscreen\rver\r',
+      );
       connection.sendDeviceTerminal('ver\r\nMK61> ');
       expect(controller.terminalText, contains('ver'));
       expect(controller.terminalText, contains('MK61> '));
@@ -442,7 +448,10 @@ void main() {
     final connection = transport.connection;
 
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    expect(utf8.decode(connection.hostTerminalBytes), 'uscreen\ruscreen\r');
+    expect(
+      utf8.decode(connection.hostTerminalBytes),
+      'encoding utf-8\ruscreen\ruscreen\r',
+    );
 
     _attach(controller, connection);
     final bytesAfterAttach = connection.hostTerminalBytes.length;
@@ -608,7 +617,10 @@ void main() {
       // дескрипторов которой нет в автоматическом списке разрешённых.
       await controller.connectSelected();
       expect(transport.openCount, 1);
-      expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');
+      expect(
+        utf8.decode(transport.connection.hostTerminalBytes),
+        'encoding utf-8\ruscreen\r',
+      );
     },
   );
 

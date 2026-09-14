@@ -30,8 +30,11 @@ class DeviceController extends ChangeNotifier {
   static const _fallbackHeartbeatTimeout = Duration(milliseconds: 3500);
   static const _terminalLogLimit = 64 * 1024;
   static const _terminalCommandByteLimit = 238;
+  static final Uint8List _selectUtf8Command = Uint8List.fromList(
+    ascii.encode('encoding utf-8\r'),
+  );
   static final Uint8List _activateUsbScreenCommand = Uint8List.fromList(
-    utf8.encode('uscreen\r'),
+    ascii.encode('uscreen\r'),
   );
 
   final MkStreamParser _parser = MkStreamParser();
@@ -327,6 +330,11 @@ class DeviceController extends ChangeNotifier {
         },
         cancelOnError: false,
       );
+      // Firmware defaults to CP1251 for PuTTY/Tera Term users.  The desktop
+      // client is Unicode-native, so negotiate UTF-8 before any terminal text
+      // can accompany the binary USB Screen handshake.  Old firmware treats
+      // this as an unknown ASCII command and still receives `uscreen` next.
+      if (!_writeBytes(_selectUtf8Command)) return;
       if (_allowAutomaticActivation &&
           _state == DeviceConnectionState.waitingForOffer) {
         _startActivationRetries();

@@ -634,6 +634,20 @@ function Read-SerialLine {
     }
 }
 
+function Set-RemoteUtf8Encoding {
+    if (-not (Send-RemoteLine 'encoding utf-8')) { return $false }
+    # Remove the echo and acknowledgement before the first `ls`.  Legacy
+    # firmware answers Unknown command and remains usable for ASCII transfers.
+    for ($attempt = 0; $attempt -lt 12; $attempt++) {
+        if (-not (Read-SerialLine 1000)) { return $true }
+        if ($script:SerialLine -eq 'encoding utf-8' -or
+            $script:SerialLine -match '^Unknown command: encoding') {
+            return $true
+        }
+    }
+    return $true
+}
+
 function Wait-RemoteMarker {
     param([string]$Prefix, [int]$TimeoutMilliseconds = 5000)
     $script:MarkerLine = ''
@@ -3001,6 +3015,10 @@ function Invoke-MkcApplication {
     if (-not (Start-Monitor)) {
         if ([string]::IsNullOrWhiteSpace($script:StatusText)) { throw "не удалось открыть $($script:Port)" }
         throw $script:StatusText
+    }
+    if ([string]::IsNullOrEmpty($script:MockRoot) -and
+        -not (Set-RemoteUtf8Encoding)) {
+        throw 'не удалось выбрать UTF-8 терминала'
     }
     Enter-MkcTui
     Refresh-Panels

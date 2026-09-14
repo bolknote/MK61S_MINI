@@ -2,6 +2,7 @@
 #define DISASSEMBLER
 
 #include "config.h"
+#include "disasm_line.hpp"
 #include "lcd_gui.hpp"
 #include "mk61emu_core.h"
 #include "rust_types.h"
@@ -9,8 +10,6 @@
 #include "debug.h"
 
 extern  class_calc_config   config;
-
-const int LEN_DISASM_LINE = 5;
 
 inline void disasm_store_u16_le(char* buffer, u16 value) {
   buffer[0] = (char) (value & 0xFFu);
@@ -107,7 +106,7 @@ class class_disassm_mk61 {
       return (code < 0x3A)? code : (code == 0x3D)? D_RUS : code + 7;
     }
 
-    inline bool is_update(char* buffer) {
+    inline bool is_update(disasm_line::Buffer& buffer) {
       if(lcd_enable) {
         const u8 IP_mk61 = core_61::get_IP(); //MK61Emu_get_IP();
 
@@ -118,9 +117,7 @@ class class_disassm_mk61 {
 
           cache_IP_mk61 = IP_mk61;
 
-          /*memset(buffer, ' ', LEN_DISASM_LINE); buffer[LEN_DISASM_LINE] = 0;*/
-          disasm_store_u32_le(buffer, 0);
-          disasm_store_u16_le(buffer + 4, 0);
+          disasm_line::clear(buffer);
           // дизассемблируем с адреса IP_mk61     DISP [___ ___ ___]
           const u8 addr = IP_mk61 - 1;
           if(addr < core_61::program_steps()) {
@@ -196,17 +193,19 @@ class class_disassm_mk61 {
     constexpr class_disassm_mk61(void)
       : lcd_enable(false), cache_IP_mk61((u8) -1) {}
     inline void  print(void) {
-      char disasm[LEN_DISASM_LINE+1];
+      disasm_line::Buffer disasm;
 
       MK61DisplayUpdate update(main_lcd());
-      if(is_update(&disasm[0])) { // Включен режим отображения дизассемблера МК61
+      if(is_update(disasm)) { // Включен режим отображения дизассемблера МК61
         main_lcd().setCursor(X, Y); main_lcd().print(disasm);
       }
     }
 
     void  print(const char* text) {
+      disasm_line::Buffer line;
+      disasm_line::assign(line, text);
       MK61DisplayUpdate update(main_lcd());
-      main_lcd().setCursor(X, Y); main_lcd().print(text);
+      main_lcd().setCursor(X, Y); main_lcd().print(line);
     }
 
     void  print_hex(int num) const {
@@ -224,15 +223,13 @@ class class_disassm_mk61 {
     void  disable(void) {
       dbgln(DISASM, "disassembler OFF!");
       lcd_enable = false;
-      MK61DisplayUpdate update(main_lcd());
-      main_lcd().setCursor(X, Y); main_lcd().print("      ");
+      print("");
     }
 
     void  disable(const char* text) {
       dbgln(DISASM, "disassembler OFF!");
       lcd_enable = false;
-      MK61DisplayUpdate update(main_lcd());
-      main_lcd().setCursor(X, Y); main_lcd().print(text);
+      print(text);
     }
 
     bool  turn_on_off(void) {

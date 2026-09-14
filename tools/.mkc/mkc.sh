@@ -623,6 +623,22 @@ serial_read_line() {
   return 0
 }
 
+select_utf8_terminal_encoding() {
+  local attempts=0
+  remote_send 'encoding utf-8' || return 1
+  # Drain the command echo and acknowledgement so they cannot be mistaken for
+  # the first directory listing.  An older firmware reports Unknown command;
+  # that response is consumed as a backward-compatible fallback.
+  while [ "$attempts" -lt 12 ]; do
+    serial_read_line 1 || return 0
+    case "$SERIAL_LINE" in
+      'encoding utf-8'|Unknown\ command:\ encoding*) return 0 ;;
+    esac
+    attempts=$((attempts + 1))
+  done
+  return 0
+}
+
 wait_for_marker() {
   local wanted=$1 attempts=0
   MARKER_LINE=
@@ -3339,6 +3355,9 @@ main() {
     fi
   fi
   start_monitor || die "не удалось открыть ${PORT:-устройство}"
+  if [ -z "$MOCK_ROOT" ]; then
+    select_utf8_terminal_encoding || die 'не удалось выбрать UTF-8 терминала'
+  fi
 
   TTY_SAVED=$(stty -g <&9) || die 'не удалось настроить терминал'
   # Оставляем сигналы (Ctrl-C), но отключаем extended input: иначе Ctrl-O

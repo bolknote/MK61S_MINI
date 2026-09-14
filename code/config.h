@@ -551,6 +551,25 @@
   #error "MK61_ENABLE_PROFILE_SAVE must be 0 or 1"
 #endif
 
+// Human serial terminals traditionally use the one-byte CP1251 stream, while
+// Unicode-native clients may negotiate UTF-8 with `encoding utf-8`.  The
+// converter is deliberately omitted from the resident F401/UC1609 image: that
+// profile has only a few bytes above its mandatory sealed-Flash reserve and
+// already emits the requested CP1251 natively.  Machine clients tolerate the
+// resulting Unknown-command reply and keep using the legacy UTF-8 filesystem
+// protocol.  An explicit build flag remains available for laboratory images.
+#ifndef MK61_ENABLE_TERMINAL_ENCODING
+  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
+    #define MK61_ENABLE_TERMINAL_ENCODING 0
+  #else
+    #define MK61_ENABLE_TERMINAL_ENCODING 1
+  #endif
+#endif
+#if MK61_ENABLE_TERMINAL_ENCODING != 0 && \
+    MK61_ENABLE_TERMINAL_ENCODING != 1
+  #error "MK61_ENABLE_TERMINAL_ENCODING must be 0 or 1"
+#endif
+
 // Alarm scheduling is user-visible functionality, not a laboratory report.
 // Keep the same command/API on F401 and F411; the constrained F401 release is
 // built with size-LTO and retains its sealed-image reserve that way.
