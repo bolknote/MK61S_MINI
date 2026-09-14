@@ -65,6 +65,16 @@ class PdfBuildTests(unittest.TestCase):
         last = next(i for i, text in enumerate(pages) if "int last_line;" in text)
         self.assertEqual(first, last)
 
+    def test_explicit_page_break(self):
+        pdf = self.render(
+            "# First page\n\nBefore.\n\n"
+            "<!-- pagebreak -->\n\n"
+            "# Second page\n\nAfter.\n"
+        )
+        self.assertEqual(len(pdf.pages), 2)
+        self.assertIn("Before.", pdf.pages[0].extract_text())
+        self.assertIn("After.", pdf.pages[1].extract_text())
+
     def test_image_and_caption_stay_on_one_page(self):
         with tempfile.TemporaryDirectory(prefix="mk61-doc-image-") as work:
             directory = Path(work)

@@ -21,6 +21,7 @@ from reportlab.platypus import (
     ListFlowable,
     ListItem,
     Paragraph,
+    PageBreak,
     Preformatted,
     SimpleDocTemplate,
     Spacer,
@@ -260,6 +261,11 @@ def build_story(markdown: str, source_dir: Path, styles, render_inline=inline) -
 
         if not line:
             flush_blocks()
+            continue
+
+        if line == "<!-- pagebreak -->":
+            flush_blocks()
+            story.append(PageBreak())
             continue
 
         if add_image(line, source_dir, story, styles):

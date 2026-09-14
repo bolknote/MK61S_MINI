@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "../../code/utf8_codec.hpp"
+
 namespace {
 
 constexpr std::size_t HEADER_SIZE = 16;
@@ -190,22 +192,16 @@ std::uint16_t parse_codepoint(std::string value) {
 
 void add_utf8(std::set<std::uint16_t>& output, const std::string& text) {
   for (std::size_t index = 0; index < text.size();) {
-    const auto first = static_cast<std::uint8_t>(text[index++]);
-    std::uint32_t codepoint = 0;
-    unsigned continuation = 0;
-    if (first < 0x80) codepoint = first;
-    else if ((first & 0xE0) == 0xC0) { codepoint = first & 0x1F; continuation = 1; }
-    else if ((first & 0xF0) == 0xE0) { codepoint = first & 0x0F; continuation = 2; }
-    else if ((first & 0xF8) == 0xF0) { codepoint = first & 0x07; continuation = 3; }
-    else throw std::runtime_error("invalid UTF-8 in --chars");
-    if (index + continuation > text.size()) throw std::runtime_error("truncated UTF-8 in --chars");
-    for (unsigned i = 0; i < continuation; ++i) {
-      const auto byte = static_cast<std::uint8_t>(text[index++]);
-      if ((byte & 0xC0) != 0x80) throw std::runtime_error("invalid UTF-8 continuation");
-      codepoint = (codepoint << 6) | (byte & 0x3F);
+    const std::size_t remaining = text.size() - index;
+    const utf8_codec::Decoded decoded = utf8_codec::decode(
+        reinterpret_cast<const u8*>(text.data() + index),
+        static_cast<usize>(std::min<std::size_t>(remaining, 4U)));
+    if (!decoded.valid) throw std::runtime_error("invalid UTF-8 in --chars");
+    if (decoded.codepoint > 0xFFFFU) {
+      throw std::runtime_error("FMK1 v1 stores BMP codepoints only");
     }
-    if (codepoint > 0xFFFF) throw std::runtime_error("FMK1 v1 stores BMP codepoints only");
-    output.insert(static_cast<std::uint16_t>(codepoint));
+    output.insert(static_cast<std::uint16_t>(decoded.codepoint));
+    index += decoded.size;
   }
 }
 
