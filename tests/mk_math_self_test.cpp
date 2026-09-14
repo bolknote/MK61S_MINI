@@ -268,7 +268,7 @@ static void press_matrix(MatrixKey key) {
   }
 }
 
-// Повторяет library_pmk::hidden_press_key(), которая рассчитывает на очистку
+// Повторяет hidden_press_key() из calculator_control.cpp, которая рассчитывает на очистку
 // эмулируемой матрицы в core_61::step(), а не на вызов SetKeyPress(0, 0).
 static void press_matrix_without_explicit_release(MatrixKey key) {
   core_61::clear_displayed();

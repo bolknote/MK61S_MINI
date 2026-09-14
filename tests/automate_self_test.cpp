@@ -1,4 +1,5 @@
 #include "../code/rust_types.h"
+#include "../code/run_measurement.hpp"
 
 #include <assert.h>
 #include <stdio.h>
@@ -19,6 +20,8 @@ static int queued_key = -1;
 static int key_on_full_scan = -1;
 static bool cancel_during_service;
 static int service_count;
+static int measurement_show_count;
+static u32 shown_measurement_ms;
 
 u32 millis(void) { return fake_millis; }
 void sound(int, usize, usize, u8) { sound_count++; }
@@ -111,7 +114,13 @@ void service_m61_controls(void) {
   if(cancel_during_service) m61_text::script_active = false;
 }
 
-static t_time_ms runtime_ms;
+namespace run_measurement {
+void show_and_wait(u32 elapsed_ms) {
+  measurement_show_count++;
+  shown_measurement_ms = elapsed_ms;
+}
+}
+
 static u8 ext61_program[105];
 static constexpr i32 COUNT_EXT_COMMAND = 7;
 static struct {
@@ -132,6 +141,9 @@ static void reset_fakes(void) {
   key_on_full_scan = -1;
   cancel_during_service = false;
   service_count = 0;
+  measurement_show_count = 0;
+  shown_measurement_ms = 0;
+  run_measurement::cancel();
   library_mk61::turbo = false;
   core_61::running = true;
   core_61::boundary_yielded = false;
@@ -140,7 +152,6 @@ static void reset_fakes(void) {
   core_61::step_count = 0;
   m61_text::script_active = true;
   m61_text::suspended = false;
-  runtime_ms = 100;
   mk61_sending_keycode = MK61_REQUEST_BASE_LOOP;
 }
 
@@ -195,11 +206,44 @@ static void test_m61_cancel_stays_silent(void) {
   assert(delivered_key_count == 0);
 }
 
+static void test_one_shot_measurement_reports_only_the_armed_run(void) {
+  reset_fakes();
+  run_measurement::arm_next();
+  assert(run_measurement::state() == run_measurement::State::ARMED);
+  event_start_prg_mk61();
+  assert(run_measurement::state() == run_measurement::State::RUNNING);
+
+  fake_millis = 1423;
+  core_61::step_action = core_61::StepAction::STOP;
+  run_program_steps();
+  assert(measurement_show_count == 1);
+  assert(shown_measurement_ms == 423);
+  assert(run_measurement::state() == run_measurement::State::IDLE);
+
+  core_61::running = true;
+  event_start_prg_mk61();
+  fake_millis = 2000;
+  run_program_steps();
+  assert(measurement_show_count == 1);
+}
+
+static void test_measurement_elapsed_time_wraps_safely(void) {
+  reset_fakes();
+  run_measurement::arm_next();
+  assert(run_measurement::program_started(0xFFFFFFF0U));
+  u32 elapsed = 0;
+  assert(run_measurement::program_stopped(0x00000010U, elapsed));
+  assert(elapsed == 32U);
+  assert(!run_measurement::program_stopped(20U, elapsed));
+}
+
 int main(void) {
   test_m61_normal_stop_keeps_stop_signal();
   test_m61_run_delivers_regular_calculator_key();
   test_suspended_trap_only_scans_controls();
   test_m61_cancel_stays_silent();
+  test_one_shot_measurement_reports_only_the_armed_run();
+  test_measurement_elapsed_time_wraps_safely();
   printf("automate_self_test: ok\n");
   return 0;
 }

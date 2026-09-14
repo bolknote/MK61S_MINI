@@ -3,7 +3,6 @@
 
 #include  "keyboard.h"
 #include  "tools.hpp"
-#include  "library_pmk.hpp"
 #include  "lcd_ru.hpp"
 
 namespace action {
@@ -36,8 +35,6 @@ struct  t_punct {
     char          text[];
 };
 
-extern bool mk61_library_select(void);
-extern bool mk61_games_select(void);
 extern bool settings_select(void);
 extern bool TurnSoundVolume(void);
 extern bool TurnSpeed(void);
@@ -57,7 +54,7 @@ extern bool FontSetup(void);
 extern bool ResetDevice(void);
 
 namespace library_mk61 {
-  static constexpr int MAIN_MENU_COUNT = 10;
+  static constexpr int MAIN_MENU_COUNT = 9;
   extern  const int       COUNT_PUNCTS;
   extern  t_punct*        MENU[MAIN_MENU_COUNT];
 

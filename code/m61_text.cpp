@@ -3,17 +3,19 @@
 #include "bounded_string.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
+#include "run_measurement.hpp"
 #include "stm32_sram_bit_band.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
 
 #ifndef M61_TEXT_HOST_TEST
 #include "Arduino.h"
-#include "library_pmk.hpp"
+#include "calculator_control.hpp"
 #include "storage_path.hpp"
 #include "tools.hpp"
 #else
 bool OpenStoredFile(const char* args);
+void hidden_return_to_program_start(void);
 void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
 void reinit_mk61_calculator_state(void);
@@ -514,6 +516,7 @@ static void stop_runner(void) {
 }
 
 void cancel(void) {
+  run_measurement::cancel();
   stop_runner();
   clear_error();
 }
@@ -528,6 +531,7 @@ static void fail_script(const char* message, u16 line) {
   last_error_info.line = line;
   bounded_string::copy(last_error_info.message,
                        message == NULL ? "unknown error" : message);
+  run_measurement::cancel();
   stop_runner();
   has_error = true;
 #ifndef M61_TEXT_HOST_TEST
@@ -1128,6 +1132,7 @@ static bool start_current_program(void) {
     if(trap_is_active(address) && address >= steps) return false;
   }
   runner_state = RunnerState::WAIT_RUN_STOP;
+  (void) run_measurement::program_started(runner_millis());
   // Взводим исполнитель до последнего скрытого шага С/П: один шаг ядра может
   // дойти до первого кода программы, особенно в турбо-сборках.
   hidden_start_loaded_program();
@@ -1427,6 +1432,14 @@ static bool execute_script_line(const char* raw_line) {
       if(goto_label(result.args)) return true;
       line_error_message = "label not found or invalid";
       return false;
+    case terminal_protocol::ResultKind::MEASURE_NEXT_RUN:
+      if(trap_context_valid()) {
+        line_error_message = "measure is not allowed in a trap handler";
+        return false;
+      }
+      hidden_return_to_program_start();
+      run_measurement::arm_next();
+      return true;
     case terminal_protocol::ResultKind::WAIT:
       if(result.key <= 0 || result.key > 60000) {
         line_error_message = "invalid wait duration";
@@ -1444,6 +1457,7 @@ static bool execute_script_line(const char* raw_line) {
       }
       clear_active_handlers();
       display_claimed = false;
+      run_measurement::cancel();
       reinit_mk61_calculator_state();
       return true;
     case terminal_protocol::ResultKind::ERROR:
@@ -1523,6 +1537,7 @@ static bool load_frame(const ScriptFrame& frame) {
     save_active_traps(next.active_traps);
     save_active_binds(next.active_bind_opcodes);
   }
+  run_measurement::cancel();
   if(active()) stop_runner();
   clear_error();
 

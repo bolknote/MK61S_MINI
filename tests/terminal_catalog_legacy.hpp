@@ -30,6 +30,7 @@ static constexpr TerminalCommand legacy_commands[] = {
   { "beep",    CMD_BEEP,          "beep <Hz>,<ms>[,...] - sound pattern" },
   { "if",      CMD_IF,            "if <reg><op><val> <cmd> - conditional" },
   { "print",   CMD_PRINT,          "print \"text {X}\"|off|on - M61 display" },
+  { "measure", CMD_MEASURE,        "measure next calculator run and show milliseconds" },
   { "wait",    CMD_WAIT,           "wait <1..60000> - pause M61 script (ms)" },
   { "ret",     CMD_RET,            "return from an M61 script/trap" },
   { "reinit",  CMD_REINIT,         "clear calculator state and M61 handlers" },

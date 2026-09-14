@@ -10,7 +10,9 @@ fi
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
+  -DRUN_MEASUREMENT_HOST_TEST \
   "$root/tests/automate_self_test.cpp" \
+  "$root/code/run_measurement.cpp" \
   -o "$out"
 
 "$out"

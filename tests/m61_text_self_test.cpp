@@ -1,6 +1,7 @@
 #include "m61_text.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
+#include "run_measurement.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
 
@@ -39,6 +40,7 @@ static u32 command_sequence = 0;
 static int context_saves = 0;
 static int context_restores = 0;
 static int reinit_count = 0;
+static int hidden_rewind_count = 0;
 static AngleUnit host_angle_unit = DEGREE;
 static AngleUnit saved_context_angle = DEGREE;
 static u32 fake_millis = 0;
@@ -210,6 +212,10 @@ void hidden_start_loaded_program(void) {
   m_IK1302.comma = core_61::COMMA_RUN_POSITION;
 }
 
+void hidden_return_to_program_start(void) {
+  hidden_rewind_count++;
+}
+
 void MK61Emu_ClearCodePage(void) {
   clear_count++;
 }
@@ -247,6 +253,10 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
     return terminal_protocol::Result::wait(500);
   }
   if(std::strcmp(line, "bad") == 0) return terminal_protocol::Result::error();
+  if(std::strcmp(line, "measure") == 0) {
+    return terminal_protocol::Result::action(
+        terminal_protocol::ResultKind::MEASURE_NEXT_RUN, "");
+  }
   if(std::strcmp(line, "run") == 0) return terminal_protocol::Result::action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
   if(std::strncmp(line, "run :", 5) == 0) {
     return terminal_protocol::Result::action(terminal_protocol::ResultKind::GOTO_LABEL, line + 5);
@@ -283,6 +293,7 @@ static void reset_host(void) {
   context_saves = 0;
   context_restores = 0;
   reinit_count = 0;
+  hidden_rewind_count = 0;
   host_angle_unit = DEGREE;
   saved_context_angle = DEGREE;
   fake_millis = 0;
@@ -433,6 +444,61 @@ static void test_run_waits_and_reports_later_failure(void) {
   const m61_text::Error error = require_error();
   assert(std::strcmp(error.script, "WAIT") == 0);
   assert(error.line == 2);
+}
+
+static void test_measure_arms_next_manual_run_after_script_finishes(void) {
+  reset_host();
+  add_script("FACTORIAL", "measure\n");
+  assert(m61_text::load_program("FACTORIAL"));
+  assert(!m61_text::active());
+  assert(hidden_rewind_count == 1);
+  assert(run_measurement::state() == run_measurement::State::ARMED);
+
+  assert(run_measurement::program_started(100U));
+  u32 elapsed = 0;
+  assert(run_measurement::program_stopped(325U, elapsed));
+  assert(elapsed == 225U);
+  assert(run_measurement::state() == run_measurement::State::IDLE);
+}
+
+static void test_measure_preceding_run_starts_at_the_run_boundary(void) {
+  reset_host();
+  fake_millis = 700U;
+  add_script("AUTO", "measure\nrun\nret\n");
+  assert(m61_text::load_program("AUTO"));
+  assert(m61_text::active());
+  assert(hidden_rewind_count == 1);
+  assert(run_measurement::state() == run_measurement::State::RUNNING);
+
+  fake_millis = 950U;
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(!m61_text::active());
+  u32 elapsed = 0;
+  assert(run_measurement::program_stopped(fake_millis, elapsed));
+  assert(elapsed == 250U);
+}
+
+static void test_measure_is_cancelled_by_new_root_error_cancel_and_reinit(void) {
+  reset_host();
+  add_script("ARM", "measure\n");
+  add_script("PLAIN", "ok\n");
+  assert(m61_text::load_program("ARM"));
+  assert(run_measurement::state() == run_measurement::State::ARMED);
+  assert(m61_text::load_program("PLAIN"));
+  assert(run_measurement::state() == run_measurement::State::IDLE);
+
+  assert(m61_text::load_program("ARM"));
+  m61_text::cancel();
+  assert(run_measurement::state() == run_measurement::State::IDLE);
+
+  add_script("FAIL_AFTER_ARM", "measure\nbad\n");
+  assert(!m61_text::load_program("FAIL_AFTER_ARM"));
+  assert(run_measurement::state() == run_measurement::State::IDLE);
+
+  add_script("REINIT_AFTER_ARM", "measure\nreinit\n");
+  assert(m61_text::load_program("REINIT_AFTER_ARM"));
+  assert(run_measurement::state() == run_measurement::State::IDLE);
 }
 
 static void test_print_owns_display_until_root_script_finishes(void) {
@@ -1090,6 +1156,9 @@ int main(void) {
   test_indexed_loop_is_budgeted_and_uses_block_reads();
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
+  test_measure_arms_next_manual_run_after_script_finishes();
+  test_measure_preceding_run_starts_at_the_run_boundary();
+  test_measure_is_cancelled_by_new_root_error_cancel_and_reinit();
   test_print_owns_display_until_root_script_finishes();
   test_print_off_and_on_control_display_ownership();
   test_trap_wait_holds_snapshot_and_resumes_at_deadline();

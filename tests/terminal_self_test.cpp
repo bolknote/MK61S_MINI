@@ -305,6 +305,7 @@ static void test_script_allowlist_is_explicit(void) {
   assert(terminal_command_allowed_in_script(CMD_REG_SET));
   assert(terminal_command_allowed_in_script(CMD_IF));
   assert(terminal_command_allowed_in_script(CMD_PRINT));
+  assert(terminal_command_allowed_in_script(CMD_MEASURE));
   assert(terminal_command_allowed_in_script(CMD_WAIT));
   assert(terminal_command_allowed_in_script(CMD_RET));
   assert(terminal_command_allowed_in_script(CMD_REINIT));
@@ -332,6 +333,7 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
 
   assert(terminal_command_allowed_in_trap(CMD_PRINT));
+  assert(!terminal_command_allowed_in_trap(CMD_MEASURE));
   assert(terminal_command_allowed_in_trap(CMD_WAIT));
   assert(terminal_command_allowed_in_trap(CMD_RET));
   assert(terminal_command_allowed_in_trap(CMD_IF));

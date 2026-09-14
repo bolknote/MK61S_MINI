@@ -43,7 +43,7 @@ const char CORE_SYMBOLS[16] = {
 
 void press(const MatrixKey& key) {
   core_61::clear_displayed();
-  // Фаза удержания, повторяющая hidden_press_key() из library_pmk.cpp.
+  // Фаза удержания, повторяющая hidden_press_key() из calculator_control.cpp.
   for(int i = 0; i < 4; i++) {
     MK61Emu_SetKeyPress(key.x, key.y);
     core_61::step();

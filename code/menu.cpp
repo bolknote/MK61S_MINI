@@ -16,7 +16,6 @@
 #include "usb_screen.hpp"
 #include "usb_mass_storage.hpp"
 
-extern t_time_ms runtime_ms;
 extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
 extern bool usb_start_mass_storage_mode(void);
@@ -28,8 +27,7 @@ static constexpr int MENU_DFU      = 0;
 static constexpr int MENU_USB_DISK = 1;
 static constexpr int MENU_SETTINGS = 2;
 static constexpr int MENU_EXPLORER = 3;
-static constexpr int MENU_LIBRARY  = 4;
-static constexpr int MENU_DEVELOP  = 5;
+static constexpr int MENU_DEVELOP  = 4;
 static constexpr int MENU_RESET    = MENU_DEVELOP + 1;
 static constexpr int MENU_ERASE    = MENU_RESET + 1;
 static constexpr int MENU_INFO     = MENU_ERASE + 1;
@@ -141,24 +139,20 @@ static void set_speed_mode_state(SpeedMode mode) {
 }
 
 bool  InfoData(void) {
+  main_lcd().clear();
   if(language_is_ru()) {
     char line0[24];
-    char line1[24];
     snprintf(line0, sizeof(line0), "СЧ:%u УГ:%u%s",
       (unsigned) read_counter_switch(),
       (unsigned) ((u8) read_grade_switch()),
       flash_is_ok ? " ФЛ" : "");
-    snprintf(line1, sizeof(line1), "ВР:%lu МС", (unsigned long) runtime_ms);
-    lcd_ru::print_lines(line0, line1);
+    lcd_ru::print_lines(line0, "");
   } else {
     MK61DisplayUpdate update(main_lcd());
-    main_lcd().clear();
     main_lcd().setCursor(0,0);
     main_lcd().print("cnt:"); main_lcd().print(read_counter_switch());
     main_lcd().print(" sw:"); main_lcd().print((u8) read_grade_switch());
     if(flash_is_ok) main_lcd().print(" W25");
-    main_lcd().setCursor(0,1);
-    main_lcd().print("run "); main_lcd().print(runtime_ms); main_lcd().print(" ms");
   }
   kbd::get_key_wait();
   return false;
@@ -169,7 +163,6 @@ bool HardwareInfo(void) { return setup_ui::hardware(); }
 const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
 const t_punct USB_DISK_punct      = {.size = 8,  .action = (menu_action) &UsbDiskMode,          .text = "USB Disk"};
 const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
-const t_punct LIB_61_punct        = {.size = 12, .action = &mk61_library_select,                .text = "MK61 library"};
 const t_punct EXPLORER_punct      = {.size = 8,  .action = &program_store_explorer_select,      .text = "Explorer"};
 const t_punct DEVELOPMENT_punct   = {.size = 11, .action = &development_select,                 .text = "Development"};
 const t_punct RESET_punct         = {.size = 12, .action = &ResetDevice,                        .text = "Reset device"};
@@ -208,7 +201,6 @@ const t_punct RU_OLED_TIMEOUT_30M_punct = {.size = 15, .action = (menu_action) &
 const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
 const t_punct RU_USB_DISK_punct   = {.size = 15, .action = (menu_action) &UsbDiskMode,          .text = "USB-диск"};
 const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
-const t_punct RU_LIB_61_punct     = {.size = 15, .action = &mk61_library_select,                .text = "Библиотека"};
 const t_punct RU_EXPLORER_punct   = {.size = 15, .action = &program_store_explorer_select,      .text = "Проводник"};
 const t_punct RU_DEVELOPMENT_punct= {.size = 15, .action = &development_select,                 .text = "Разработка"};
 const t_punct RU_RESET_punct      = {.size = 15, .action = &ResetDevice,                        .text = "Сброс"};
@@ -233,7 +225,6 @@ t_punct* MENU[] = {
       (t_punct*) &USB_DISK_punct,
       (t_punct*) &SETTINGS_punct,
       (t_punct*) &EXPLORER_punct,
-      (t_punct*) &LIB_61_punct,
       (t_punct*) &DEVELOPMENT_punct,
       (t_punct*) &RESET_punct,
       (t_punct*) &ERASE_punct,
@@ -486,7 +477,6 @@ void refresh_menu_text(void) {
   MENU[MENU_DFU]      = (t_punct*) (russian_language ? &RU_DFU_mode_punct : &DFU_mode_punct);
   MENU[MENU_SETTINGS] = (t_punct*) (russian_language ? &RU_SETTINGS_punct : &SETTINGS_punct);
   MENU[MENU_USB_DISK] = (t_punct*) (russian_language ? &RU_USB_DISK_punct : &USB_DISK_punct);
-  MENU[MENU_LIBRARY]  = (t_punct*) (russian_language ? &RU_LIB_61_punct : &LIB_61_punct);
   MENU[MENU_EXPLORER] = (t_punct*) (russian_language ? &RU_EXPLORER_punct : &EXPLORER_punct);
   MENU[MENU_DEVELOP]  = (t_punct*) (russian_language ? &RU_DEVELOPMENT_punct : &DEVELOPMENT_punct);
   MENU[MENU_RESET]    = (t_punct*) (russian_language ? &RU_RESET_punct : &RESET_punct);
@@ -1009,22 +999,6 @@ bool TurnRandomMode(void) {
 static void StepRandomMode(i8 delta) {
   (void) delta;
   ApplyRandomMode(library_mk61::random_mode_is_mk61s() ? RandomMode::MK61 : RandomMode::MK61S);
-}
-
-bool  mk61_library_select(void) {
-  const int n = select_program();
-  if(n < 0) return action::MENU_BACK;
-
-  if(!load_program(n)) return action::MENU_BACK;
-  return action::MENU_EXIT;
-}
-
-bool  mk61_games_select(void) {
-  const int n = select_game();
-  if(n < 0) return action::MENU_BACK;
-
-  if(!load_game(n)) return action::MENU_BACK;
-  return action::MENU_EXIT;
 }
 
 bool class_menu::handle_settings_adjustment(i32 key) {

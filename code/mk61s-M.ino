@@ -6,6 +6,8 @@ class_calc_config config;
 #include "rust_types.h"
 #include "keyboard.h"
 #include "m61_text.hpp"
+#include "calculator_control.hpp"
+#include "run_measurement.hpp"
 
 using namespace kbd;
 
@@ -66,8 +68,6 @@ class_disassm_mk61 disassembler;
 
 static constexpr t_time_ms  ANGLE_SAVE_UPDATE_MS   =   3000;  // Время (мс) для запуска процесса сохранения переключателя угловых единиц Р-ГРД-Г
 static constexpr t_time_ms  IDLE_SIGNAL_DELAY_MS   = 300000;  // 5 минут до сигнала бездействия
-
-t_time_ms   runtime_ms; // время работы программы в ms
 
 static  t_time_ms   idle_signal_at;
 static  DeferredSave angle_save;
@@ -207,6 +207,7 @@ void reset_ext_program_state(void) {
 #include  "automate.hpp"
 
 void reinit_mk61_calculator_state(void) {
+  run_measurement::cancel();
   classic_timer::synchronize(false);
   const AngleUnit selected_angle = MK61Emu_GetAngleUnit();
   reset_ext_program_state();
@@ -424,9 +425,6 @@ void setup() {
   const class_LCD_fonts lcd_fonts;
   lcd_fonts.load();
   main_lcd().clear();
-
- // Система ззагрузки программ
-  init_library();
 
   // FOCAL/TinyBASIC initialize their complete runtime on the first fresh
   // workspace acquisition. Eagerly touching both here would leave one
