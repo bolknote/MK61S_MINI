@@ -444,6 +444,7 @@ compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_exten
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
 compile_flags="$compile_flags -DMK61_ENABLE_LOADABLE_MODULES=1"
+compile_flags="$compile_flags -DMK61_F401_PRODUCT_BUILD=1"
 compile_flags="$compile_flags -DMK61_REQUIRE_RESIDENT_CRC=1"
 compile_flags="$compile_flags -DMK61_REQUIRE_F401_SELECTIVE_O3=1"
 compile_flags="$compile_flags $platform_ram_flags"

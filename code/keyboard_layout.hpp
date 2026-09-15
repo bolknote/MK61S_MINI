@@ -14,14 +14,14 @@ using Mapping = mk61_system_keyboard;
 static_assert(sizeof(Mapping) == 42,
               "keyboard mapping must remain a compact scan-code table");
 
-static constexpr Mapping MINI = {
+inline constexpr Mapping MINI = {
   0, 1, 2, 3, 5, 6, 7, 8, 10, 15,
   {20, 21, 16, 11, 22, 17, 12, 23, 18, 13},
   25, 26, 27, 28, 30, 31, 32, 33, 37, 38,
   4, 9, 14, 19, 36, 35, 34, 24, 29, 39, 32, 33
 };
 
-static constexpr Mapping CLASSIC = {
+inline constexpr Mapping CLASSIC = {
   0, 5, 10, 15, 1, 6, 11, 16, 2, 3,
   {4, 9, 8, 7, 14, 13, 12, 19, 18, 17},
   20, 21, 22, 23, 25, 26, 28, 27, 24, 29,
@@ -31,14 +31,14 @@ static constexpr Mapping CLASSIC = {
 // Плата 40TH использует ту же физическую матрицу 5x8, что и mk61s-mini.
 // Для преобразования клавиш калькулятора также применяется таблица mini
 // из cross_hal.cpp.
-static constexpr Mapping FORTIETH = MINI;
+inline constexpr Mapping FORTIETH = MINI;
 
 #if defined(MK61_KEYBOARD_CLASSIC)
-static constexpr Mapping ACTIVE = CLASSIC;
+inline constexpr Mapping ACTIVE = CLASSIC;
 #elif defined(MK61_KEYBOARD_40TH)
-static constexpr Mapping ACTIVE = FORTIETH;
+inline constexpr Mapping ACTIVE = FORTIETH;
 #else
-static constexpr Mapping ACTIVE = MINI;
+inline constexpr Mapping ACTIVE = MINI;
 #endif
 
 static_assert(MINI.k != MINI.right, "mini K and Right must be distinct");

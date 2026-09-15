@@ -106,6 +106,7 @@ assert 0 < code_size <= len(data) - 64 and relocations <= (len(data) - 64 - code
 PY
       done
       for flag in \
+          '-DMK61_F401_PRODUCT_BUILD=1' \
           '-DMK61_REQUIRE_RESIDENT_CRC=1' \
           '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' \
           '-DMK61_PORTABLE_UI_FONTS=0' \

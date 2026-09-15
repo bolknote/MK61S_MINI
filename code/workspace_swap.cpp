@@ -8,6 +8,32 @@
 #include <type_traits>
 
 namespace workspace_swap {
+
+#if !MK61_SHARED_MEMORY_BULK_ENABLED
+
+bool acquire(shared_memory::Owner owner, usize required, AcquireMode mode,
+             shared_memory::Lease& destination) {
+  if(mode != AcquireMode::REQUIRED &&
+     mode != AcquireMode::OPPORTUNISTIC) return false;
+  return mode == AcquireMode::OPPORTUNISTIC
+      ? destination.acquire_cache(
+            shared_memory::Arena::WORKSPACE, owner, required)
+      : destination.acquire(
+            shared_memory::Arena::WORKSPACE, owner, required);
+}
+
+Statistics statistics(void) {
+  Statistics result = {};
+  result.enabled = false;
+  return result;
+}
+
+void reset_statistics(void) {}
+
+void discard(void) {}
+
+#else
+
 namespace {
 
 static constexpr u32 MAGIC = 0x31505753UL; // "SWP1"
@@ -603,5 +629,7 @@ void reset_statistics(void) {
 void discard(void) {
   release_image();
 }
+
+#endif
 
 } // namespace workspace_swap

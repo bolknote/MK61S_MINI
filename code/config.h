@@ -26,10 +26,25 @@
 //#define DEBUG
 //#define DEBUG_M61
 
+// Public F401 artifacts are intentionally lean: service-only profilers and
+// verbose storage diagnostics belong in qualification images.  Developer and
+// ordinary Arduino builds keep the diagnostics unless their build explicitly
+// selects the product profile.
+#ifndef MK61_F401_PRODUCT_BUILD
+  #define MK61_F401_PRODUCT_BUILD 0
+#endif
+#if MK61_F401_PRODUCT_BUILD != 0 && MK61_F401_PRODUCT_BUILD != 1
+  #error "MK61_F401_PRODUCT_BUILD must be 0 or 1"
+#endif
+
 // DWT CYCCNT-профилировщик не собирает данные до команды `prof start`.
 // Значение 0 полностью удаляет точки измерения и терминальную команду.
 #ifndef MK61_ENABLE_DWT_PROFILER
-  #define MK61_ENABLE_DWT_PROFILER 1
+  #if MK61_F401_PRODUCT_BUILD
+    #define MK61_ENABLE_DWT_PROFILER 0
+  #else
+    #define MK61_ENABLE_DWT_PROFILER 1
+  #endif
 #endif
 #if MK61_ENABLE_DWT_PROFILER != 0 && MK61_ENABLE_DWT_PROFILER != 1
   #error "MK61_ENABLE_DWT_PROFILER must be 0 or 1"
@@ -475,12 +490,10 @@
 #endif
 
 // Read benchmarks are service diagnostics, not calculator functionality.
-// Keep them on normal builds and on the F411 qualification board, but do not
-// spend the last internal-Flash reserve of the F401/UC1609 release on a command
-// that is used only while characterising storage performance.  An explicit
-// build flag always wins, so a laboratory F401 image can still enable it.
+// Product F401 artifacts omit them; qualification and developer builds keep
+// them. An explicit feature flag always wins.
 #ifndef MK61_ENABLE_READ_BENCHMARKS
-  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
+  #if MK61_F401_PRODUCT_BUILD
     #define MK61_ENABLE_READ_BENCHMARKS 0
   #else
     #define MK61_ENABLE_READ_BENCHMARKS 1
@@ -490,12 +503,10 @@
   #error "MK61_ENABLE_READ_BENCHMARKS must be 0 or 1"
 #endif
 
-// Raw ADC fields are a service report; the user-facing Hardware menu keeps
-// VDD/MCU temperature/honest battery state on every target.  The constrained
-// F401/UC1609 release omits only this duplicate terminal rendering to retain
-// the mandatory sealed-Flash reserve.  Laboratory builds may override it.
+// Raw ADC fields duplicate the user-facing Hardware report. Product F401
+// artifacts omit only this terminal formatter; qualification images retain it.
 #ifndef MK61_ENABLE_ANALOG_REPORT
-  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
+  #if MK61_F401_PRODUCT_BUILD
     #define MK61_ENABLE_ANALOG_REPORT 0
   #else
     #define MK61_ENABLE_ANALOG_REPORT 1
@@ -505,13 +516,11 @@
   #error "MK61_ENABLE_ANALOG_REPORT must be 0 or 1"
 #endif
 
-// Serial `prof` remains available on every supported STM32. Only the second,
-// file-oriented formatter behind `prof save` is omitted from the constrained
-// F401/UC1609 resident image: it duplicates the same statistics in a large
-// textual builder and is not calculator functionality. F411 and the modular
-// F401 character-display profiles retain the export command.
+// The file-oriented `prof save` formatter is useful on a qualification image,
+// but duplicates the interactive profiler output. Product F401 artifacts omit
+// it together with the profiler itself.
 #ifndef MK61_ENABLE_PROFILE_SAVE
-  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
+  #if MK61_F401_PRODUCT_BUILD
     #define MK61_ENABLE_PROFILE_SAVE 0
   #else
     #define MK61_ENABLE_PROFILE_SAVE 1
@@ -522,18 +531,10 @@
 #endif
 
 // Human serial terminals traditionally use the one-byte CP1251 stream, while
-// Unicode-native clients may negotiate UTF-8 with `encoding utf-8`.  The
-// converter is deliberately omitted from the resident F401/UC1609 image: that
-// profile has only a few bytes above its mandatory sealed-Flash reserve and
-// already emits the requested CP1251 natively.  Machine clients tolerate the
-// resulting Unknown-command reply and keep using the legacy UTF-8 filesystem
-// protocol.  An explicit build flag remains available for laboratory images.
+// Unicode-native clients may negotiate UTF-8 with `encoding utf-8`. This is a
+// user-visible compatibility feature and remains present in product images.
 #ifndef MK61_ENABLE_TERMINAL_ENCODING
-  #if defined(ARDUINO_BLACKPILL_F401CC) && defined(MK61_DISPLAY_UC1609)
-    #define MK61_ENABLE_TERMINAL_ENCODING 0
-  #else
-    #define MK61_ENABLE_TERMINAL_ENCODING 1
-  #endif
+  #define MK61_ENABLE_TERMINAL_ENCODING 1
 #endif
 #if MK61_ENABLE_TERMINAL_ENCODING != 0 && \
     MK61_ENABLE_TERMINAL_ENCODING != 1

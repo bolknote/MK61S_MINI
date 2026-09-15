@@ -377,6 +377,8 @@ try {
     }
     $systemRequested = $true
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
+    $productBuild = if ($null -ne $releaseCaseInfo -and
+            [int]$releaseCaseInfo.product -eq 1) { '1' } else { '0' }
     if ($null -ne $releaseCaseInfo) {
         $actualFeatures = @{
             focal = $Focal
@@ -567,6 +569,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
+        "-DMK61_F401_PRODUCT_BUILD=$productBuild",
         '-DMK61_REQUIRE_RESIDENT_CRC=1',
         "-DMK61_ENABLE_LTO=$Lto",
         "-DMK61_FLASH_MIN_HEADROOM=$flashHeadroom",
@@ -688,6 +691,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
+    $flagValues.Add("-DMK61_F401_PRODUCT_BUILD=$productBuild")
     $flagValues.Add('-DMK61_ENABLE_LOADABLE_MODULES=1')
     $flagValues.Add('-DMK61_PORTABLE_UI_FONTS=0')
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
