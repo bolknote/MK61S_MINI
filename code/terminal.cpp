@@ -43,6 +43,7 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
+#include "terminal_front_coding.hpp"
 #include "terminal_line_editor.hpp"
 #include "terminal_output.hpp"
 #if MK61_ENABLE_TERMINAL_ENCODING
@@ -188,8 +189,8 @@ static terminal_protocol::Result terminal_exec_encoding(const char* args) {
   return terminal_protocol::Result::ok();
 }
 #else
-// The constrained F401/UC1609 build keeps the historic wire representation:
-// mnemonics/registers are CP1251 and filesystem text is UTF-8.  These wrappers
+// An explicitly reduced build may keep the historic wire representation:
+// mnemonics/registers are CP1251 and filesystem text is UTF-8. These wrappers
 // keep all call sites identical without pulling a transcoder into Flash.
 static void terminal_write_cp1251(const char* text) { Serial.print(text); }
 static void terminal_write_utf8(const char* text) { Serial.print(text); }
@@ -339,6 +340,86 @@ static_assert(terminal_mnemonic_max_length(ISA_CLASSIC_61) <= 8,
 static_assert(terminal_mnemonic_equals(
                   ISA_CLASSIC_61, 0xD9, "K\317->X9"),
               "opcode D9 must retain the P9 register mnemonic");
+
+#if MK61_F401_PRODUCT_BUILD
+// Consecutive mnemonic families share long prefixes (sto[0]..sto[E],
+// Kx>=0 0..E, ...). Store only the common-prefix length plus each suffix in
+// product F401 images. The canonical CSV strings above remain the single
+// editable source and are consumed entirely at compile time.
+static_assert(terminal_front_coding::source_valid(ISA_61) &&
+              terminal_front_coding::source_valid(ISA_CLASSIC_61),
+              "front-coded mnemonic source contains a control byte");
+static_assert(terminal_mnemonic_max_length(ISA_61) <
+                  terminal_front_coding::END &&
+              terminal_mnemonic_max_length(ISA_CLASSIC_61) <
+                  terminal_front_coding::END,
+              "front-coded mnemonic prefix does not fit its marker byte");
+
+static constexpr auto ISA_61_FRONT = terminal_front_coding::encode<
+    terminal_front_coding::encoded_size(ISA_61)>(ISA_61);
+static constexpr auto ISA_CLASSIC_61_FRONT = terminal_front_coding::encode<
+    terminal_front_coding::encoded_size(ISA_CLASSIC_61)>(ISA_CLASSIC_61);
+#endif
+
+enum class TerminalMnemonicKind : u8 {
+  ISA,
+  CLASSIC
+};
+
+class TerminalMnemonicTable {
+  public:
+    explicit TerminalMnemonicTable(TerminalMnemonicKind kind)
+#if MK61_F401_PRODUCT_BUILD
+      : scratch_(shared_scratch::Owner::TERMINAL_TRANSFER,
+                 kind == TerminalMnemonicKind::CLASSIC
+                     ? sizeof(ISA_CLASSIC_61) : sizeof(ISA_61)),
+        table_(nullptr) {
+      if(!scratch_.ok()) return;
+      const bool classic = kind == TerminalMnemonicKind::CLASSIC;
+      const u8* const packed = classic
+          ? ISA_CLASSIC_61_FRONT.bytes : ISA_61_FRONT.bytes;
+      const usize packed_size = classic
+          ? sizeof(ISA_CLASSIC_61_FRONT.bytes)
+          : sizeof(ISA_61_FRONT.bytes);
+      const usize decoded_size = classic
+          ? sizeof(ISA_CLASSIC_61) : sizeof(ISA_61);
+      if(terminal_front_coding::decode(
+           packed, packed_size, (char*) scratch_.data(), decoded_size)) {
+        table_ = (const char*) scratch_.data();
+      }
+    }
+#else
+      : table_(kind == TerminalMnemonicKind::CLASSIC
+                   ? ISA_CLASSIC_61 : ISA_61) {}
+#endif
+
+    bool ok(void) const { return table_ != nullptr; }
+    const char* data(void) const { return table_; }
+
+  private:
+#if MK61_F401_PRODUCT_BUILD
+    shared_scratch::Lease scratch_;
+#endif
+    const char* table_;
+};
+
+static char* terminal_mnemonic_code(const char* table, u8 opcode,
+                                    char* text) {
+  if(text == nullptr) return nullptr;
+  usize output = 0;
+  if(table != nullptr) {
+    isize remaining = opcode;
+    for(const u8* p = (const u8*) table; *p != 0; p++) {
+      if(*p == ',') {
+        remaining--;
+      } else if(remaining == 0 && output < 8U) {
+        text[output++] = (char) *p;
+      }
+    }
+  }
+  text[output] = 0;
+  return text;
+}
 
 #if MK61_DWT_PROFILER_SUPPORTED && MK61_ENABLE_PROFILE_SAVE
 class class_terminal::ProfileReportBuilder {
@@ -2362,34 +2443,13 @@ void class_terminal::dump_mk61_code_page(void) {
     }
 
 char* class_terminal::ISA_61_code(u8 opcode, char* text) {
-      isize comma_count = opcode;
-      usize i = 0;
-
-      for(u8 symbol : ISA_61) {
-        if(symbol == 0) break;
-        if(symbol == ',') {
-          comma_count--;
-        } else if(comma_count == 0 && i < MAX_LEN_CLASSIC_MNEMO)
-          text[i++] = symbol;
-      }
-      text[i] = 0;
-      return text;
+      TerminalMnemonicTable table(TerminalMnemonicKind::ISA);
+      return terminal_mnemonic_code(table.data(), opcode, text);
     }
 
 char* class_terminal::ISA_CLASSIC_61_code(u8 opcode, char* text) {
-      isize comma_count = opcode;
-      usize i = 0;
-
-      for(const char* p = ISA_CLASSIC_61; *p != 0; p++) {
-        const u8 symbol = (u8) *p;
-        if(symbol == 0) break;
-        if(symbol == ',') {
-          comma_count--;
-        } else if(comma_count == 0 && i < MAX_LEN_CLASSIC_MNEMO)
-          text[i++] = symbol;
-      }
-      text[i] = 0;
-      return text;
+      TerminalMnemonicTable table(TerminalMnemonicKind::CLASSIC);
+      return terminal_mnemonic_code(table.data(), opcode, text);
     }
 
 void class_terminal::output_version(void) {
@@ -3239,14 +3299,21 @@ void  class_terminal::echo_ISA_61(void) {
       static constexpr isize COLUMN_COUNT = 4;
       static constexpr usize COLUMN_SIZE  = 10;
 
+      TerminalMnemonicTable table(TerminalMnemonicKind::ISA);
+      if(!table.ok()) {
+        Serial.println("Mnemonic workspace busy");
+        return;
+      }
+      const char* const isa = table.data();
+
       u8 opcode = 0;
       usize begin = 0;
       isize column = COLUMN_COUNT;
       // Вывод в 4 колонки, в формате opcode - инструкция
-      for(usize i=0; i < sizeof(ISA_61); i++) {
-        if(ISA_61[i] == ',' || ISA_61[i] == 0) { // обнаружен разделитель команд или окончание массива
+      for(usize i = 0;; i++) {
+        if(isa[i] == ',' || isa[i] == 0) { // обнаружен разделитель команд или окончание массива
           const isize len = i - begin;
-          Serial_write_hex(opcode); Serial.write(' '); Serial.write(&ISA_61[begin], len);
+          Serial_write_hex(opcode); Serial.write(' '); Serial.write(&isa[begin], len);
           if(column-- <= 0) { // завершим вывод строки, все 4 колонки выведены
             Serial.println();
             column = COLUMN_COUNT;
@@ -3255,11 +3322,17 @@ void  class_terminal::echo_ISA_61(void) {
           }
           begin = i + 1;
           opcode++;
+          if(isa[i] == 0) break;
         }
       }
     }
 
 void class_terminal::pub_mk61_code_page(void) {
+      TerminalMnemonicTable table(TerminalMnemonicKind::CLASSIC);
+      if(!table.ok()) {
+        Serial.println("Mnemonic workspace busy");
+        return;
+      }
       char op[MAX_LEN_CLASSIC_MNEMO+1];
       u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
       core_61::get_code_page(&code_page[0]);
@@ -3279,7 +3352,8 @@ void class_terminal::pub_mk61_code_page(void) {
               Serial_write_hex(code);
               for(usize cnt_space=2; cnt_space < MAX_LEN_CLASSIC_MNEMO + 2; cnt_space++) Serial.print(' ');
             } else {
-              terminal_write_cp1251(ISA_CLASSIC_61_code(code, &op[0]));
+              terminal_write_cp1251(terminal_mnemonic_code(
+                  table.data(), code, &op[0]));
               for(usize ln=strlen(op); ln < MAX_LEN_CLASSIC_MNEMO; ln++) Serial.write(' ');
               Serial.print("  ");
             }
@@ -3290,6 +3364,13 @@ void class_terminal::pub_mk61_code_page(void) {
     }
 
 void  class_terminal::lasm_mk61_code_page(mnemo_type type) {
+      TerminalMnemonicTable table(
+          type == mnemo_type::ISA_CLASSIC
+              ? TerminalMnemonicKind::CLASSIC : TerminalMnemonicKind::ISA);
+      if(!table.ok()) {
+        Serial.println("Mnemonic workspace busy");
+        return;
+      }
       char op[MAX_LEN_CLASSIC_MNEMO+1];
       u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
 
@@ -3309,13 +3390,15 @@ void  class_terminal::lasm_mk61_code_page(mnemo_type type) {
               if (core_61::len_code_command(code_page[j-1]) == 2) {
                 Serial.print("      ");
               } else {
-                const char* mnemo = (type == mnemo_type::ISA_CLASSIC)? ISA_CLASSIC_61_code(code, &op[0]) : ISA_61_code(code, &op[0]);
+                const char* mnemo = terminal_mnemonic_code(
+                    table.data(), code, &op[0]);
                 if(type == mnemo_type::ISA_CLASSIC) terminal_write_cp1251(mnemo);
                 else Serial.print(mnemo);
                 for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
               }
             } else {
-              const char* mnemo = (type == mnemo_type::ISA_CLASSIC)? ISA_CLASSIC_61_code(code, &op[0]) : ISA_61_code(code, &op[0]);
+              const char* mnemo = terminal_mnemonic_code(
+                  table.data(), code, &op[0]);
               if(type == mnemo_type::ISA_CLASSIC) terminal_write_cp1251(mnemo);
               else Serial.print(mnemo);
               for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
@@ -3404,8 +3487,13 @@ void  class_terminal::PutHexString(void) {
     }
 
 bool class_terminal::Assembler(void) {
+      TerminalMnemonicTable table(TerminalMnemonicKind::ISA);
+      if(!table.ok()) {
+        Serial.println("Mnemonic workspace busy");
+        return false;
+      }
       const terminal_core::Assembly assembly = terminal_core::parse_assembly(
-        command_args(), AT, ISA_61, core_61::MAX_PROGRAM_STEP);
+        command_args(), AT, table.data(), core_61::MAX_PROGRAM_STEP);
       if(assembly.error != terminal_core::AssemblyError::NONE) {
         ErrorReaction();
         switch(assembly.error) {

@@ -41,13 +41,16 @@ MK61_HELP_METADATA static constexpr char help_text[] =
 "  R<r>=   R<r>= <number|random|raw 12hex> - write register\n"
 "  set$    set$<addr> <hex> - write program memory\n";
 static_assert(sizeof(help_text) - 1 <= 2800, "increase HELP page count in reader and builder");
-struct HelpTag { char text[9]; };
+// Eight hexadecimal digits plus the line delimiter form the on-disk tag. Keep
+// an explicit NUL because help_signature() is also a public C-string API.
+struct HelpTag { char text[10]; };
 constexpr HelpTag make_help_tag() {
   u32 hash = 2166136261U;
   for(usize i = 0; i < sizeof(help_text) - 1; ++i) hash = (hash ^ (u8) help_text[i]) * 16777619U;
   HelpTag result = {};
   for(unsigned i = 0; i < 8; ++i) result.text[i] = "0123456789abcdef"[(hash >> (28 - 4 * i)) & 15];
   result.text[8] = '\n';
+  result.text[9] = 0;
   return result;
 }
 static constexpr HelpTag help_tag = make_help_tag();

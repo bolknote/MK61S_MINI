@@ -27,12 +27,12 @@ for screen in 0 1; do
   "${out}_catalog"
 done
 
-# The constrained resident profile deliberately has no transcoder command;
-# characterize that catalog too so its compile-time index and help remain in
-# lockstep with the conditional legacy fixture.
+# Product F401 omits service-only diagnostic commands but retains the public
+# encoding selector. Characterize that exact conditional catalog as well.
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO_BLACKPILL_F401CC -DMK61_DISPLAY_UC1609 \
+  -DMK61_F401_PRODUCT_BUILD=1 \
   -I"$root/tests/mk_math_shim" -I"$root/code" \
   "$root/tests/terminal_catalog_self_test.cpp" \
   "$root/code/terminal_catalog.cpp" -o "${out}_catalog_f401"
