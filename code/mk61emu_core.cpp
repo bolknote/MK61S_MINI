@@ -1428,9 +1428,47 @@ static  const   u8  IK1306_DCW[68] = {
   0x02, 0x02, 0x00, 0x00
 };
 
-// ПЗУ микропрограмм ИК1302 (3*3*128 - микропрограмм) для увеличения производительности и отказа от умножения на 9
-//  с 10 шага до 16 шага "раздуто" нулями, как незначащими адресами микропрограмм (стало 2048 байт)
-static const u8  IK1302_AND_AMK[((3 * 3) + 7) * 128] = {
+// The historical source spells each nine-byte microprogram as a 16-byte row
+// so it remains auditable against the original ROM transcription. Only the
+// meaningful nine bytes are emitted in Flash; the hot SRAM cache expands them
+// back to a 16-byte stride, retaining the measured shift-only fast path.
+static constexpr usize AND_AMK_BODY_COUNT = 128;
+static constexpr usize AND_AMK_PACKED_STRIDE = 9;
+static constexpr usize AND_AMK_RUNTIME_STRIDE = 16;
+static constexpr usize AND_AMK_PACKED_SIZE =
+    AND_AMK_BODY_COUNT * AND_AMK_PACKED_STRIDE;
+static constexpr usize AND_AMK_RUNTIME_SIZE =
+    AND_AMK_BODY_COUNT * AND_AMK_RUNTIME_STRIDE;
+
+struct PackedAndAmkTable {
+  u8 bytes[AND_AMK_PACKED_SIZE];
+};
+
+constexpr bool and_amk_padding_is_zero(
+    const u8 (&source)[AND_AMK_RUNTIME_SIZE]) {
+  for(usize body = 0; body < AND_AMK_BODY_COUNT; body++) {
+    for(usize column = AND_AMK_PACKED_STRIDE;
+        column < AND_AMK_RUNTIME_STRIDE; column++) {
+      if(source[body * AND_AMK_RUNTIME_STRIDE + column] != 0) return false;
+    }
+  }
+  return true;
+}
+
+constexpr PackedAndAmkTable pack_and_amk_table(
+    const u8 (&source)[AND_AMK_RUNTIME_SIZE]) {
+  PackedAndAmkTable result = {};
+  for(usize body = 0; body < AND_AMK_BODY_COUNT; body++) {
+    for(usize column = 0; column < AND_AMK_PACKED_STRIDE; column++) {
+      result.bytes[body * AND_AMK_PACKED_STRIDE + column] =
+          source[body * AND_AMK_RUNTIME_STRIDE + column];
+    }
+  }
+  return result;
+}
+
+// ПЗУ микропрограмм ИК1302 (3*3*128 микропрограмм).
+static constexpr u8 IK1302_AND_AMK_EXPANDED[AND_AMK_RUNTIME_SIZE] = {
 // 1     2     3     4     5     6     7     8     9   [ 10    11    12    13    14    15    16 ]
   0x00, 0x00, 0x00, 0x10, 0x03, 0x1D, 0x00, 0x07, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x10, 0x03, 0x1C, 0x0B, 0x07, 0x0C, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1561,8 +1599,12 @@ static const u8  IK1302_AND_AMK[((3 * 3) + 7) * 128] = {
   0x1D, 0x04, 0x08, 0x36, 0x00, 0x08, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x03, 0x1E, 0x0F, 0x26, 0x0A, 0x02, 0x26, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+static_assert(and_amk_padding_is_zero(IK1302_AND_AMK_EXPANDED),
+              "IK1302 AND_AMK padding contains data");
+static constexpr PackedAndAmkTable IK1302_AND_AMK_STORAGE =
+    pack_and_amk_table(IK1302_AND_AMK_EXPANDED);
 
-static const u8  IK1303_AND_AMK[((3 * 3) + 7) * 128] = {
+static constexpr u8 IK1303_AND_AMK_EXPANDED[AND_AMK_RUNTIME_SIZE] = {
 // 1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16  
   0x2C, 0x23, 0x00, 0x2C, 0x23, 0x00, 0x2C, 0x23, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x31, 0x32, 0x00, 0x31, 0x32, 0x12, 0x31, 0x32, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1693,8 +1735,12 @@ static const u8  IK1303_AND_AMK[((3 * 3) + 7) * 128] = {
   0x10, 0x25, 0x05, 0x06, 0x3C, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x06, 0x0C, 0x0C, 0x00, 0x00, 0x12, 0x24, 0x1D, 0x1D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 
 };
+static_assert(and_amk_padding_is_zero(IK1303_AND_AMK_EXPANDED),
+              "IK1303 AND_AMK padding contains data");
+static constexpr PackedAndAmkTable IK1303_AND_AMK_STORAGE =
+    pack_and_amk_table(IK1303_AND_AMK_EXPANDED);
 
-static const u8  IK1306_AND_AMK[((3 * 3) + 7) * 128] = {
+static constexpr u8 IK1306_AND_AMK_EXPANDED[AND_AMK_RUNTIME_SIZE] = {
 // 1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16  
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0x2C, 0x2A, 0x27, 0x13, 0x2B, 0x27, 0x13, 0x2B, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -1825,6 +1871,14 @@ static const u8  IK1306_AND_AMK[((3 * 3) + 7) * 128] = {
   0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 
 };
+static_assert(and_amk_padding_is_zero(IK1306_AND_AMK_EXPANDED),
+              "IK1306 AND_AMK padding contains data");
+static constexpr PackedAndAmkTable IK1306_AND_AMK_STORAGE =
+    pack_and_amk_table(IK1306_AND_AMK_EXPANDED);
+
+#define IK1302_AND_AMK IK1302_AND_AMK_STORAGE.bytes
+#define IK1303_AND_AMK IK1303_AND_AMK_STORAGE.bytes
+#define IK1306_AND_AMK IK1306_AND_AMK_STORAGE.bytes
 
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 1
 struct alignas(8) CoreHotTables {
@@ -1836,9 +1890,9 @@ struct alignas(8) CoreHotTables {
   u8 ik1303_dcw[68];
   u8 ik1306_dcw[68];
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
-  u8 ik1302_and_amk[sizeof(IK1302_AND_AMK)];
-  u8 ik1303_and_amk[sizeof(IK1303_AND_AMK)];
-  u8 ik1306_and_amk[sizeof(IK1306_AND_AMK)];
+  u8 ik1302_and_amk[AND_AMK_RUNTIME_SIZE];
+  u8 ik1303_and_amk[AND_AMK_RUNTIME_SIZE];
+  u8 ik1306_and_amk[AND_AMK_RUNTIME_SIZE];
 #endif
 };
 
@@ -1870,6 +1924,22 @@ static void copy_core_hot_table(void* destination, const void* source,
   memcpy(destination, source, size);
 }
 
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline, noclone))
+#else
+__attribute__((noinline))
+#endif
+static void expand_core_hot_and_amk(u8* destination, const u8* source) {
+  memset(destination, 0, AND_AMK_RUNTIME_SIZE);
+  for(usize body = 0; body < AND_AMK_BODY_COUNT; body++) {
+    memcpy(destination + body * AND_AMK_RUNTIME_STRIDE,
+           source + body * AND_AMK_PACKED_STRIDE,
+           AND_AMK_PACKED_STRIDE);
+  }
+}
+#endif
+
 static const microinstruction_t* ik1302_microinstructions_active =
     ROM.IK1302.microinstructions;
 static const microinstruction_t* ik1303_microinstructions_active =
@@ -1893,13 +1963,16 @@ static const u8* ik1306_dcw_active = IK1306_DCW;
 static const u8* ik1302_and_amk_active = IK1302_AND_AMK;
 static const u8* ik1303_and_amk_active = IK1303_AND_AMK;
 static const u8* ik1306_and_amk_active = IK1306_AND_AMK;
+static usize and_amk_active_stride = AND_AMK_PACKED_STRIDE;
 #define IK1302_AND_AMK_ACTIVE ik1302_and_amk_active
 #define IK1303_AND_AMK_ACTIVE ik1303_and_amk_active
 #define IK1306_AND_AMK_ACTIVE ik1306_and_amk_active
+#define AND_AMK_ACTIVE_STRIDE and_amk_active_stride
 #else
 #define IK1302_AND_AMK_ACTIVE IK1302_AND_AMK
 #define IK1303_AND_AMK_ACTIVE IK1303_AND_AMK
 #define IK1306_AND_AMK_ACTIVE IK1306_AND_AMK
+#define AND_AMK_ACTIVE_STRIDE AND_AMK_PACKED_STRIDE
 #endif
 
 static bool pointer_offset(const u8* pointer, const u8* base,
@@ -1912,13 +1985,25 @@ static bool pointer_offset(const u8* pointer, const u8* base,
   return true;
 }
 
+static bool and_amk_pointer_body(const u8* pointer, const u8* base,
+                                 usize stride, usize& body) {
+  usize offset = 0;
+  if(!pointer_offset(
+       pointer, base, AND_AMK_BODY_COUNT * stride, offset) ||
+     offset % stride != 0) return false;
+  body = offset / stride;
+  return true;
+}
+
 static const u8* rebase_and_amk_pointer(
     const u8* pointer, const u8* flash_base, const u8* ram_base,
-    const u8* target_base, usize size) {
-  usize offset = 0;
-  if(pointer_offset(pointer, flash_base, size, offset) ||
-     pointer_offset(pointer, ram_base, size, offset)) {
-    return target_base + offset;
+    const u8* target_base, usize target_stride) {
+  usize body = 0;
+  if(and_amk_pointer_body(
+       pointer, flash_base, AND_AMK_PACKED_STRIDE, body) ||
+     and_amk_pointer_body(
+       pointer, ram_base, AND_AMK_RUNTIME_STRIDE, body)) {
+    return target_base + body * target_stride;
   }
   return pointer;
 }
@@ -1947,27 +2032,30 @@ static void select_core_hot_table_view(bool use_workspace) {
   const u8* const next1302 = use_ram ? ram1302 : IK1302_AND_AMK;
   const u8* const next1303 = use_ram ? ram1303 : IK1303_AND_AMK;
   const u8* const next1306 = use_ram ? ram1306 : IK1306_AND_AMK;
+  const usize next_stride = use_ram
+      ? AND_AMK_RUNTIME_STRIDE : AND_AMK_PACKED_STRIDE;
   m_IK1302.pAND_AMK = rebase_and_amk_pointer(
       m_IK1302.pAND_AMK, IK1302_AND_AMK, ram1302, next1302,
-      sizeof(IK1302_AND_AMK));
+      next_stride);
   m_IK1302.pAND_AMK1 = rebase_and_amk_pointer(
       m_IK1302.pAND_AMK1, IK1302_AND_AMK, ram1302, next1302,
-      sizeof(IK1302_AND_AMK));
+      next_stride);
   m_IK1303.pAND_AMK = rebase_and_amk_pointer(
       m_IK1303.pAND_AMK, IK1303_AND_AMK, ram1303, next1303,
-      sizeof(IK1303_AND_AMK));
+      next_stride);
   m_IK1303.pAND_AMK1 = rebase_and_amk_pointer(
       m_IK1303.pAND_AMK1, IK1303_AND_AMK, ram1303, next1303,
-      sizeof(IK1303_AND_AMK));
+      next_stride);
   m_IK1306.pAND_AMK = rebase_and_amk_pointer(
       m_IK1306.pAND_AMK, IK1306_AND_AMK, ram1306, next1306,
-      sizeof(IK1306_AND_AMK));
+      next_stride);
   m_IK1306.pAND_AMK1 = rebase_and_amk_pointer(
       m_IK1306.pAND_AMK1, IK1306_AND_AMK, ram1306, next1306,
-      sizeof(IK1306_AND_AMK));
+      next_stride);
   ik1302_and_amk_active = next1302;
   ik1303_and_amk_active = next1303;
   ik1306_and_amk_active = next1306;
+  and_amk_active_stride = next_stride;
 #endif
   core_hot_tables_cached = use_ram;
 }
@@ -2009,15 +2097,9 @@ static bool ensure_core_hot_tables(void) {
     copy_core_hot_table(
         tables->ik1306_dcw, IK1306_DCW, sizeof(tables->ik1306_dcw));
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
-    copy_core_hot_table(
-        tables->ik1302_and_amk, IK1302_AND_AMK,
-        sizeof(tables->ik1302_and_amk));
-    copy_core_hot_table(
-        tables->ik1303_and_amk, IK1303_AND_AMK,
-        sizeof(tables->ik1303_and_amk));
-    copy_core_hot_table(
-        tables->ik1306_and_amk, IK1306_AND_AMK,
-        sizeof(tables->ik1306_and_amk));
+    expand_core_hot_and_amk(tables->ik1302_and_amk, IK1302_AND_AMK);
+    expand_core_hot_and_amk(tables->ik1303_and_amk, IK1303_AND_AMK);
+    expand_core_hot_and_amk(tables->ik1306_and_amk, IK1306_AND_AMK);
 #endif
     increment_hot_table_counter(core_hot_table_loads);
   }
@@ -2053,6 +2135,7 @@ static inline bool core_hot_tables_view_cached(void) {
 #define IK1302_AND_AMK_ACTIVE IK1302_AND_AMK
 #define IK1303_AND_AMK_ACTIVE IK1303_AND_AMK
 #define IK1306_AND_AMK_ACTIVE IK1306_AND_AMK
+#define AND_AMK_ACTIVE_STRIDE AND_AMK_PACKED_STRIDE
 
 static inline void init_core_hot_tables(void) {}
 static inline bool ensure_core_hot_tables(void) { return false; }
@@ -2060,6 +2143,10 @@ static inline void select_core_hot_table_view(bool) {}
 static inline void prepare_core_hot_tables_for_step(void) {}
 static inline bool core_hot_tables_view_cached(void) { return false; }
 #endif
+
+static inline const u8* and_amk_body(const u8* base, usize body) {
+  return base + body * AND_AMK_ACTIVE_STRIDE;
+}
 
 // TODO: удалить static
 #if MK61_DWT_CORE_DETAIL_SUPPORTED
@@ -2251,8 +2338,10 @@ inline bool __attribute__((always_inline)) IK1302_GoZero(
     const usize uI_hi = uI >> 16;
 
 
-    m_IK1302.pAND_AMK = &IK1302_AND_AMK_ACTIVE[(uI & 0xFF) * 16 /*MUL9((uint8_t) uI)*/];               // получаем из 1-ого байта команды адрес микропрограммы-1
-    m_IK1302.pAND_AMK1 = &IK1302_AND_AMK_ACTIVE[((uI>>8) & 0xFF) * 16 /*MUL9( (((uint16_t) uI) >> 8) )*/];  // получаем из 2-ого байта команды адрес микропрограммы-2
+    m_IK1302.pAND_AMK = and_amk_body(
+        IK1302_AND_AMK_ACTIVE, uI & 0xFFU);
+    m_IK1302.pAND_AMK1 = and_amk_body(
+        IK1302_AND_AMK_ACTIVE, (uI >> 8) & 0xFFU);
 
     m_IK1302.MOD = (uint8_t) (uI >> 24);                                              // получаем из 4-ого байта команды модификатор
     m_IK1302.flag_FC = uI_hi & 0x000000FC;
@@ -2272,8 +2361,10 @@ inline  usize __attribute__((always_inline))  IK1303_GoZero(void) {
     profile_instruction(core_61::RomChip::IK1303, uI);
     const usize uI_hi = uI >> 16;
 
-    m_IK1303.pAND_AMK = &IK1303_AND_AMK_ACTIVE[(uI & 0xFF) * 16 /* MUL9((uint8_t) uI) */];
-    m_IK1303.pAND_AMK1 = &IK1303_AND_AMK_ACTIVE[((uI>>8) & 0xFF) * 16/* MUL9((((uint16_t) uI) >> 8)) */];
+    m_IK1303.pAND_AMK = and_amk_body(
+        IK1303_AND_AMK_ACTIVE, uI & 0xFFU);
+    m_IK1303.pAND_AMK1 = and_amk_body(
+        IK1303_AND_AMK_ACTIVE, (uI >> 8) & 0xFFU);
 
     m_IK1303.MOD = (uint8_t) (uI >> 24);
     m_IK1303.flag_FC = uI_hi & 0x000000FC;
@@ -2291,8 +2382,10 @@ inline instruction_t __attribute__((always_inline)) IK1306_GoZero(void) {
     uint32_t uI = ROM.IK1306.instructions[command];
     profile_instruction(core_61::RomChip::IK1306, uI);
 
-    m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[(uI & 0xFF) * 16/*MUL9((uint8_t) uI)*/];
-    m_IK1306.pAND_AMK1 = &IK1306_AND_AMK_ACTIVE[((uI>>8) & 0xFF) * 16/*MUL9((((uint16_t) uI) >> 8))*/];
+    m_IK1306.pAND_AMK = and_amk_body(
+        IK1306_AND_AMK_ACTIVE, uI & 0xFFU);
+    m_IK1306.pAND_AMK1 = and_amk_body(
+        IK1306_AND_AMK_ACTIVE, (uI >> 8) & 0xFFU);
 
     m_IK1306.MOD = (uint8_t) (uI >> 24);
 
@@ -2485,25 +2578,31 @@ void MK61_F401_HOT_O3 cycle(void) {
           if (IK1302_uI_hi > 0x1f)  { // рассматриваем 3-й байт команды
               m_IK1302.R[37] = IK1302_uI_hi & 0xf;   // signal == 36
               m_IK1302.R[40] = IK1302_uI_hi >> 4;    // signal == 36
-              m_IK1302.pAND_AMK  = &IK1302_AND_AMK_ACTIVE[0x5F * 16 /*0x5f * 9 */];
+              m_IK1302.pAND_AMK = and_amk_body(
+                  IK1302_AND_AMK_ACTIVE, 0x5FU);
           } else  {
-              m_IK1302.pAND_AMK  = &IK1302_AND_AMK_ACTIVE[IK1302_uI_hi * 16 /*MUL9(IK1302_uI_hi)*/];  // получаем из 3-ого байта команды адрес микропрограммы-3
+              m_IK1302.pAND_AMK = and_amk_body(
+                  IK1302_AND_AMK_ACTIVE, IK1302_uI_hi);
           }
 
           if (IK1303_uI_hi > 0x1f)  {
               m_IK1303.R[37] = IK1303_uI_hi & 0xf;   // signal == 36
               m_IK1303.R[40] = IK1303_uI_hi >> 4;    // signal == 36
-              m_IK1303.pAND_AMK  = &IK1303_AND_AMK_ACTIVE[0x5f * 16];// * 9];
+              m_IK1303.pAND_AMK = and_amk_body(
+                  IK1303_AND_AMK_ACTIVE, 0x5FU);
           } else  {
-               m_IK1303.pAND_AMK  = &IK1303_AND_AMK_ACTIVE[IK1303_uI_hi * 16];//MUL9(IK1303_uI_hi)];
+               m_IK1303.pAND_AMK = and_amk_body(
+                   IK1303_AND_AMK_ACTIVE, IK1303_uI_hi);
           }
 
           if (IK1306_uI_hi > 0x1f)  {
               m_IK1306.R[37] = IK1306_uI_hi & 0xf;   // signal == 36
               m_IK1306.R[40] = IK1306_uI_hi >> 4;    // signal == 36
-              m_IK1306.pAND_AMK  = &IK1306_AND_AMK_ACTIVE[0x5f * 16];// * 9];
+              m_IK1306.pAND_AMK = and_amk_body(
+                  IK1306_AND_AMK_ACTIVE, 0x5FU);
           } else  {
-               m_IK1306.pAND_AMK  = &IK1306_AND_AMK_ACTIVE[IK1306_uI_hi * 16];//MUL9(IK1306_uI_hi)];
+               m_IK1306.pAND_AMK = and_amk_body(
+                   IK1306_AND_AMK_ACTIVE, IK1306_uI_hi);
           }
 
 #if MK61_CORE_NATIVE_HOT_PATHS
@@ -3508,6 +3607,32 @@ static bool snapshot_offset(const u8* pointer, const u8* base,
   return true;
 }
 
+// Context ABI keeps the historical expanded (body * 16) offset even when the
+// active fallback table is packed in Flash with a nine-byte stride.
+static bool snapshot_and_amk_offset(const u8* pointer, const u8* base,
+                                    u16& output) {
+  if(pointer == nullptr || base == nullptr) return false;
+  const uintptr_t address = (uintptr_t) pointer;
+  const uintptr_t begin = (uintptr_t) base;
+  if(address < begin) return false;
+  const usize physical_offset = (usize) (address - begin);
+  if(physical_offset >= AND_AMK_BODY_COUNT * AND_AMK_ACTIVE_STRIDE ||
+     physical_offset % AND_AMK_ACTIVE_STRIDE != 0) return false;
+  output = (u16) ((physical_offset / AND_AMK_ACTIVE_STRIDE) *
+                  AND_AMK_RUNTIME_STRIDE);
+  return true;
+}
+
+static bool valid_and_amk_snapshot_offset(u16 offset) {
+  return offset < AND_AMK_RUNTIME_SIZE &&
+         offset % AND_AMK_RUNTIME_STRIDE == 0;
+}
+
+static const u8* restore_and_amk_pointer(const u8* base, u16 offset) {
+  return base + (offset / AND_AMK_RUNTIME_STRIDE) *
+                AND_AMK_ACTIVE_STRIDE;
+}
+
 static bool save_ik1302(PackedIK1302& output) {
   output.AMK = m_IK1302.AMK;
   output.key_y = m_IK1302.key_y;
@@ -3526,10 +3651,12 @@ static bool save_ik1302(PackedIK1302& output) {
                       output.registers) &&
          pack_nibbles(m_IK1302.ST, sizeof(m_IK1302.ST),
                       output.registers + sizeof(m_IK1302.R) / 2U) &&
-         snapshot_offset(m_IK1302.pAND_AMK1, IK1302_AND_AMK_ACTIVE,
-                         sizeof(IK1302_AND_AMK), output.p_and_amk1) &&
-         snapshot_offset(m_IK1302.pAND_AMK, IK1302_AND_AMK_ACTIVE,
-                         sizeof(IK1302_AND_AMK), output.p_and_amk) &&
+         snapshot_and_amk_offset(
+             m_IK1302.pAND_AMK1, IK1302_AND_AMK_ACTIVE,
+             output.p_and_amk1) &&
+         snapshot_and_amk_offset(
+             m_IK1302.pAND_AMK, IK1302_AND_AMK_ACTIVE,
+             output.p_and_amk) &&
          snapshot_offset(m_IK1302.pM, ringM, sizeof(ringM), output.p_m);
 }
 
@@ -3551,10 +3678,12 @@ static bool save_ik1303(PackedIK1303& output) {
          pack_nibbles(m_IK1303.ST, sizeof(m_IK1303.ST),
                       output.registers + sizeof(m_IK1303.R) / 2U) &&
          snapshot_offset(m_IK1303.pM, ringM, sizeof(ringM), output.p_m) &&
-         snapshot_offset(m_IK1303.pAND_AMK, IK1303_AND_AMK_ACTIVE,
-                         sizeof(IK1303_AND_AMK), output.p_and_amk) &&
-         snapshot_offset(m_IK1303.pAND_AMK1, IK1303_AND_AMK_ACTIVE,
-                         sizeof(IK1303_AND_AMK), output.p_and_amk1);
+         snapshot_and_amk_offset(
+             m_IK1303.pAND_AMK, IK1303_AND_AMK_ACTIVE,
+             output.p_and_amk) &&
+         snapshot_and_amk_offset(
+             m_IK1303.pAND_AMK1, IK1303_AND_AMK_ACTIVE,
+             output.p_and_amk1);
 }
 
 static bool save_ik1306(PackedIK1306& output) {
@@ -3570,10 +3699,12 @@ static bool save_ik1306(PackedIK1306& output) {
                       output.registers) &&
          pack_nibbles(m_IK1306.ST, sizeof(m_IK1306.ST),
                       output.registers + sizeof(m_IK1306.R) / 2U) &&
-         snapshot_offset(m_IK1306.pAND_AMK1, IK1306_AND_AMK_ACTIVE,
-                         sizeof(IK1306_AND_AMK), output.p_and_amk1) &&
-         snapshot_offset(m_IK1306.pAND_AMK, IK1306_AND_AMK_ACTIVE,
-                         sizeof(IK1306_AND_AMK), output.p_and_amk) &&
+         snapshot_and_amk_offset(
+             m_IK1306.pAND_AMK1, IK1306_AND_AMK_ACTIVE,
+             output.p_and_amk1) &&
+         snapshot_and_amk_offset(
+             m_IK1306.pAND_AMK, IK1306_AND_AMK_ACTIVE,
+             output.p_and_amk) &&
          snapshot_offset(m_IK1306.pM, ringM, sizeof(ringM), output.p_m);
 }
 
@@ -3588,12 +3719,12 @@ static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
          snapshot.ik1302.p_m < sizeof(ringM) &&
          snapshot.ik1303.p_m < sizeof(ringM) &&
          snapshot.ik1306.p_m < sizeof(ringM) &&
-         snapshot.ik1302.p_and_amk < sizeof(IK1302_AND_AMK) &&
-         snapshot.ik1302.p_and_amk1 < sizeof(IK1302_AND_AMK) &&
-         snapshot.ik1303.p_and_amk < sizeof(IK1303_AND_AMK) &&
-         snapshot.ik1303.p_and_amk1 < sizeof(IK1303_AND_AMK) &&
-         snapshot.ik1306.p_and_amk < sizeof(IK1306_AND_AMK) &&
-         snapshot.ik1306.p_and_amk1 < sizeof(IK1306_AND_AMK) &&
+         valid_and_amk_snapshot_offset(snapshot.ik1302.p_and_amk) &&
+         valid_and_amk_snapshot_offset(snapshot.ik1302.p_and_amk1) &&
+         valid_and_amk_snapshot_offset(snapshot.ik1303.p_and_amk) &&
+         valid_and_amk_snapshot_offset(snapshot.ik1303.p_and_amk1) &&
+         valid_and_amk_snapshot_offset(snapshot.ik1306.p_and_amk) &&
+         valid_and_amk_snapshot_offset(snapshot.ik1306.p_and_amk1) &&
          (snapshot.active_command.active_and_jump_operand >> 1) <=
              core_61::MAX_PROGRAM_STEP &&
          snapshot.active_command.source <=
@@ -3620,8 +3751,10 @@ static void restore_ik1302(const PackedIK1302& input) {
   unpack_nibbles(input.registers, sizeof(m_IK1302.R), m_IK1302.R);
   unpack_nibbles(input.registers + sizeof(m_IK1302.R) / 2U,
                  sizeof(m_IK1302.ST), m_IK1302.ST);
-  m_IK1302.pAND_AMK1 = IK1302_AND_AMK_ACTIVE + input.p_and_amk1;
-  m_IK1302.pAND_AMK = IK1302_AND_AMK_ACTIVE + input.p_and_amk;
+  m_IK1302.pAND_AMK1 = restore_and_amk_pointer(
+      IK1302_AND_AMK_ACTIVE, input.p_and_amk1);
+  m_IK1302.pAND_AMK = restore_and_amk_pointer(
+      IK1302_AND_AMK_ACTIVE, input.p_and_amk);
   m_IK1302.pM = ringM + input.p_m;
 }
 
@@ -3642,8 +3775,10 @@ static void restore_ik1303(const PackedIK1303& input) {
   unpack_nibbles(input.registers + sizeof(m_IK1303.R) / 2U,
                  sizeof(m_IK1303.ST), m_IK1303.ST);
   m_IK1303.pM = ringM + input.p_m;
-  m_IK1303.pAND_AMK = IK1303_AND_AMK_ACTIVE + input.p_and_amk;
-  m_IK1303.pAND_AMK1 = IK1303_AND_AMK_ACTIVE + input.p_and_amk1;
+  m_IK1303.pAND_AMK = restore_and_amk_pointer(
+      IK1303_AND_AMK_ACTIVE, input.p_and_amk);
+  m_IK1303.pAND_AMK1 = restore_and_amk_pointer(
+      IK1303_AND_AMK_ACTIVE, input.p_and_amk1);
 }
 
 static void restore_ik1306(const PackedIK1306& input) {
@@ -3658,8 +3793,10 @@ static void restore_ik1306(const PackedIK1306& input) {
   unpack_nibbles(input.registers, sizeof(m_IK1306.R), m_IK1306.R);
   unpack_nibbles(input.registers + sizeof(m_IK1306.R) / 2U,
                  sizeof(m_IK1306.ST), m_IK1306.ST);
-  m_IK1306.pAND_AMK1 = IK1306_AND_AMK_ACTIVE + input.p_and_amk1;
-  m_IK1306.pAND_AMK = IK1306_AND_AMK_ACTIVE + input.p_and_amk;
+  m_IK1306.pAND_AMK1 = restore_and_amk_pointer(
+      IK1306_AND_AMK_ACTIVE, input.p_and_amk1);
+  m_IK1306.pAND_AMK = restore_and_amk_pointer(
+      IK1306_AND_AMK_ACTIVE, input.p_and_amk);
   m_IK1306.pM = ringM + input.p_m;
 }
 

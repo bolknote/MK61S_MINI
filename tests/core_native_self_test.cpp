@@ -96,7 +96,8 @@ static void check_bodies(bool expanded) {
         m_IK1306.R[i] = (i + pattern * 5) & 15;
         m_IK1306.ST[i] = (15 - i * 3 + pattern) & 15;
       }
-      m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[bodies[body] * 16];
+      m_IK1306.pAND_AMK = and_amk_body(
+          IK1306_AND_AMK_ACTIVE, bodies[body]);
       m_IK1306.MOD = pattern;
       m_IK1306.T = pattern & 1;
       m_IK1306.flag_FC = (pattern >> 1) & 1;
@@ -177,7 +178,8 @@ static void check_wait_timing(bool expanded) {
         for(unsigned incoming = 0; incoming < 16; ++incoming)
           for(unsigned mod : {0U, 1U}) {
             restore(clean);
-            m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[0x40 * 16];
+            m_IK1306.pAND_AMK = and_amk_body(
+                IK1306_AND_AMK_ACTIVE, 0x40U);
             m_IK1306.MOD = mod;
             m_IK1306.pM[position] = initial;
             m_IK1306.R[36] = 1;
@@ -193,7 +195,8 @@ static void check_wait_timing(bool expanded) {
             // A whole waiting command leaves ASP=01 until S reports a wake.
             m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[0];
             decoder_body(1);
-            m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[6 * 16];
+            m_IK1306.pAND_AMK = and_amk_body(
+                IK1306_AND_AMK_ACTIVE, 6U);
             decoder_body(2);
             const State end = snapshot();
 
@@ -219,7 +222,8 @@ static void check_wait_timing(bool expanded) {
             }
             m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[0];
             native_body(1);
-            m_IK1306.pAND_AMK = &IK1306_AND_AMK_ACTIVE[6 * 16];
+            m_IK1306.pAND_AMK = and_amk_body(
+                IK1306_AND_AMK_ACTIVE, 6U);
             native_body(2);
             require(same(end, snapshot()), "wait left a different next ROM address");
             if(position == 22) {
