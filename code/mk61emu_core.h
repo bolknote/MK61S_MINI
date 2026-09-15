@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include "rust_types.h"
 #include <stdbool.h>
+#include "firmware_optimization.hpp"
 
 #ifndef MK61_CORE_BODY_PROFILE
   #define MK61_CORE_BODY_PROFILE 0
@@ -34,14 +35,6 @@
 #ifndef MK61_CORE_PACKED_AMK
   #define MK61_CORE_PACKED_AMK 0
 #endif
-#ifndef MK61_CORE_NATIVE_HOT_PATHS
-  #if defined(STM32F411xE) && defined(__OPTIMIZE_SIZE__)
-    #define MK61_CORE_NATIVE_HOT_PATHS 1
-  #else
-    #define MK61_CORE_NATIVE_HOT_PATHS 0
-  #endif
-#endif
-
 static  constexpr usize MK61_NOP= 0x54; // NOP
 static  constexpr u8 MK61_EXCHANGE_DATA_WITH_MS = 0x55U;    // К 1 / К ПВ
 static  constexpr u8 MK61_EXCHANGE_PROGRAM_WITH_MS = 0x56U; // К 2 / К ОД

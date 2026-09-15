@@ -857,22 +857,6 @@
   #error "MK61_CORE_BODY_PROFILE must be 0 or 1"
 #endif
 
-// AOT shortcuts for measured microprogram bodies whose complete effect is
-// known in closed form. Size-optimised F411 builds have room for the small
-// dispatcher and are the initial target. O3/LTO, F401 and host builds keep the
-// bit-serial reference by default. Any build can select either implementation
-// explicitly; the LTO release profile is already close to the Flash limit.
-#ifndef MK61_CORE_NATIVE_HOT_PATHS
-  #if defined(STM32F411xE) && defined(__OPTIMIZE_SIZE__)
-    #define MK61_CORE_NATIVE_HOT_PATHS 1
-  #else
-    #define MK61_CORE_NATIVE_HOT_PATHS 0
-  #endif
-#endif
-#if MK61_CORE_NATIVE_HOT_PATHS != 0 && MK61_CORE_NATIVE_HOT_PATHS != 1
-  #error "MK61_CORE_NATIVE_HOT_PATHS must be 0 or 1"
-#endif
-
 #if defined(TERMINAL) || defined(DEBUG)
  //#warning Serial module included!
 #endif

@@ -39,7 +39,7 @@
 // F401 has only 256 KiB of internal Flash.  A global -O3 build does not fit,
 // while applying -O3 to the complete emulator translation unit leaves too
 // little release reserve.  Its production profile therefore stays at
-// -Os+LTO and promotes only the two measured execution-loop functions.
+// -Os+LTO and promotes only explicitly marked execution-loop functions.
 #ifndef MK61_F401_SELECTIVE_O3
   #if (defined(STM32F401xC) || defined(STM32F401xE)) && \
       defined(__GNUC__) && !defined(__clang__) && \
@@ -65,10 +65,53 @@
   #error "this build requires the F401 -Os plus selective -O3 policy"
 #endif
 
-#if MK61_F401_SELECTIVE_O3
-  #define MK61_F401_HOT_O3 __attribute__((optimize("O3")))
+// F411 release images have enough Flash to optimise the measured execution
+// loops for speed while leaving the rest of the firmware at -Os. Global
+// -O2/-O3 builds already restore their command-line optimisation for the whole
+// emulator translation unit through MK61_MIXED_OPTIMIZATION.
+#ifndef MK61_F411_SELECTIVE_O3
+  #if defined(STM32F411xE) && defined(__GNUC__) && !defined(__clang__) && \
+      defined(__OPTIMIZE__) && defined(__OPTIMIZE_SIZE__)
+    #define MK61_F411_SELECTIVE_O3 1
+  #else
+    #define MK61_F411_SELECTIVE_O3 0
+  #endif
+#endif
+#if MK61_F411_SELECTIVE_O3 != 0 && MK61_F411_SELECTIVE_O3 != 1
+  #error "MK61_F411_SELECTIVE_O3 must be 0 or 1"
+#endif
+
+#ifndef MK61_REQUIRE_F411_SELECTIVE_O3
+  #define MK61_REQUIRE_F411_SELECTIVE_O3 0
+#endif
+#if MK61_REQUIRE_F411_SELECTIVE_O3 != 0 && \
+    MK61_REQUIRE_F411_SELECTIVE_O3 != 1
+  #error "MK61_REQUIRE_F411_SELECTIVE_O3 must be 0 or 1"
+#endif
+#if MK61_REQUIRE_F411_SELECTIVE_O3 && !MK61_F411_SELECTIVE_O3
+  #error "this build requires the F411 -Os plus selective -O3 policy"
+#endif
+
+#if MK61_F401_SELECTIVE_O3 || MK61_F411_SELECTIVE_O3
+  #define MK61_CORE_HOT_O3 __attribute__((optimize("O3")))
 #else
-  #define MK61_F401_HOT_O3
+  #define MK61_CORE_HOT_O3
+#endif
+
+// Closed-form IK1306 paths are qualified on F411. Keep them in both the
+// canonical -Os release and the mixed global -O2/-O3 compatibility build.
+// Other targets retain the compact bit-serial reference unless requested
+// explicitly by a laboratory build.
+#ifndef MK61_CORE_NATIVE_HOT_PATHS
+  #if defined(STM32F411xE) && \
+      (defined(__OPTIMIZE_SIZE__) || MK61_MIXED_OPTIMIZATION)
+    #define MK61_CORE_NATIVE_HOT_PATHS 1
+  #else
+    #define MK61_CORE_NATIVE_HOT_PATHS 0
+  #endif
+#endif
+#if MK61_CORE_NATIVE_HOT_PATHS != 0 && MK61_CORE_NATIVE_HOT_PATHS != 1
+  #error "MK61_CORE_NATIVE_HOT_PATHS must be 0 or 1"
 #endif
 
 #endif
