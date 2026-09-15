@@ -2,7 +2,9 @@
 
 namespace dfu_splash {
 
-const u8 BITMAP[BYTE_COUNT] = {
+namespace {
+
+static constexpr u8 SOURCE_BITMAP[BYTE_COUNT] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x40, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x40, 0x80, 0x00, 0x00, 0x00,
@@ -101,6 +103,126 @@ const u8 BITMAP[BYTE_COUNT] = {
     0x0E, 0x09, 0x0A, 0x0B, 0x0B, 0x09, 0x0E, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-static_assert(sizeof(BITMAP) == BYTE_COUNT, "DFU bitmap byte count must match its geometry");
+static_assert(sizeof(SOURCE_BITMAP) == BYTE_COUNT,
+              "DFU bitmap byte count must match its geometry");
+
+// Tiny LZSS dialect tailored to immutable bitmaps.  Each group starts with a
+// control byte (least-significant bit first): zero means one literal byte, one
+// means a two-byte (distance - 1, length - 3) match.  Both fields cover 1..256
+// and 3..258 respectively.  Forward copying deliberately permits overlapping
+// matches, just like memmove from the already decoded prefix.
+struct Match {
+  usize distance;
+  usize length;
+};
+
+template<usize N>
+constexpr Match longest_match(const u8 (&source)[N], usize position) {
+  Match best = {};
+  const usize max_distance = position < 256U ? position : 256U;
+  const usize remaining = N - position;
+  const usize max_length = remaining < 258U ? remaining : 258U;
+  for(usize distance = 1; distance <= max_distance; distance++) {
+    usize length = 0;
+    while(length < max_length &&
+          source[position + length] ==
+              source[position + length - distance]) length++;
+    if(length > best.length) best = {distance, length};
+  }
+  if(best.length < 3U) return {};
+  return best;
+}
+
+template<usize N>
+constexpr usize encoded_size(const u8 (&source)[N]) {
+  usize position = 0;
+  usize result = 0;
+  while(position < N) {
+    result++; // control byte
+    for(u8 bit = 0; bit < 8U && position < N; bit++) {
+      const Match match = longest_match(source, position);
+      if(match.length >= 3U) {
+        result += 2U;
+        position += match.length;
+      } else {
+        result++;
+        position++;
+      }
+    }
+  }
+  return result;
+}
+
+template<usize N>
+struct PackedBytes {
+  u8 data[N];
+};
+
+template<usize PackedSize, usize N>
+constexpr PackedBytes<PackedSize> encode(const u8 (&source)[N]) {
+  PackedBytes<PackedSize> packed = {};
+  usize input = 0;
+  usize output = 0;
+  while(input < N) {
+    const usize control_index = output++;
+    u8 control = 0;
+    for(u8 bit = 0; bit < 8U && input < N; bit++) {
+      const Match match = longest_match(source, input);
+      if(match.length >= 3U) {
+        control |= (u8) (1U << bit);
+        packed.data[output++] = (u8) (match.distance - 1U);
+        packed.data[output++] = (u8) (match.length - 3U);
+        input += match.length;
+      } else {
+        packed.data[output++] = source[input++];
+      }
+    }
+    packed.data[control_index] = control;
+  }
+  return packed;
+}
+
+static constexpr usize PACKED_BYTE_COUNT = encoded_size(SOURCE_BITMAP);
+static constexpr auto PACKED_BITMAP =
+    encode<PACKED_BYTE_COUNT>(SOURCE_BITMAP);
+
+static_assert(PACKED_BYTE_COUNT == 523U,
+              "DFU splash compression result changed unexpectedly");
+static_assert(sizeof(PACKED_BITMAP.data) == PACKED_BYTE_COUNT,
+              "DFU splash packed storage has padding");
+
+} // безымянное пространство имён
+
+bool decode(u8* bitmap, usize capacity) {
+  if(bitmap == nullptr || capacity < BYTE_COUNT) return false;
+
+  usize input = 0;
+  usize output = 0;
+  while(output < BYTE_COUNT) {
+    if(input >= PACKED_BYTE_COUNT) return false;
+    const u8 control = PACKED_BITMAP.data[input++];
+    for(u8 bit = 0; bit < 8U && output < BYTE_COUNT; bit++) {
+      if((control & (u8) (1U << bit)) == 0) {
+        if(input >= PACKED_BYTE_COUNT) return false;
+        bitmap[output++] = PACKED_BITMAP.data[input++];
+        continue;
+      }
+
+      if(input + 2U > PACKED_BYTE_COUNT) return false;
+      const usize distance = (usize) PACKED_BITMAP.data[input++] + 1U;
+      const usize length = (usize) PACKED_BITMAP.data[input++] + 3U;
+      if(distance > output || length > BYTE_COUNT - output) return false;
+      for(usize copied = 0; copied < length; copied++) {
+        bitmap[output] = bitmap[output - distance];
+        output++;
+      }
+    }
+  }
+  return input == PACKED_BYTE_COUNT;
+}
+
+usize packed_byte_count(void) {
+  return PACKED_BYTE_COUNT;
+}
 
 } // пространство имён dfu_splash

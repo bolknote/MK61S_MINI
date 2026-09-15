@@ -201,7 +201,10 @@ static void Show_DFU_splash(void) {
                 "DFU bitmap width must match UC1609 panel");
   static_assert(dfu_splash::HEIGHT == lcd_display::PIXEL_HEIGHT,
                 "DFU bitmap height must match UC1609 panel");
-  if(main_lcd().showFullscreenBitmap(dfu_splash::BITMAP, dfu_splash::BYTE_COUNT)) return;
+  shared_scratch::Lease bitmap(shared_scratch::Owner::IMAGE_VIEWER,
+                               dfu_splash::BYTE_COUNT);
+  if(bitmap.ok() && dfu_splash::decode(bitmap.data(), bitmap.size()) &&
+     main_lcd().showFullscreenBitmap(bitmap.data(), dfu_splash::BYTE_COUNT)) return;
 #endif
 
   main_lcd().clear();
