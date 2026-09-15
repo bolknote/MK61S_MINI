@@ -97,12 +97,14 @@ inline void scan_m61_runtime_keyboard(void) {
 }
 
 inline void run_program_steps(void) {
-  const usize step_count = library_mk61::speed_is_turbo() ? cfg::TURBO_MK61_BATCH_STEPS : 1;
+  const usize step_count = library_mk61::speed_is_max()
+      ? cfg::MAXIMUM_MK61_BATCH_STEPS
+      : 1;
 
   for(usize i = 0; i < step_count; i++) {
       core_61::step();
 
-      // Во время M61 программа калькулятора может выполнять целый turbo-пакет
+      // Во время M61 программа калькулятора может выполнять целый пакет MAXIMUM
       // между проходами loop(). Пока калькулятор работает, опрашиваем всю
       // матрицу: любая его клавиша должна штатно остановить программу. В
       // замороженной trap-сцене остаются только Р/Г/ГРД и ESC.
@@ -118,7 +120,7 @@ inline void run_program_steps(void) {
       }
 
       // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
-      // делать следующий турбо-шаг или передавать клавишу до сохранения контекста скриптом.
+      // делать следующий быстрый шаг или передавать клавишу до сохранения контекста скриптом.
       if(core_61::program_boundary_yielded()) return;
   }
 

@@ -71,6 +71,28 @@ struct SettingsFlags {
 
 static_assert(sizeof(SettingsFlags) == 1, "SettingsFlags must fit one EEPROM byte");
 
+namespace speed_mode_storage {
+  // These values are persisted in SettingsFlags and therefore form a storage
+  // contract. Value 2 used to mean TURBO; both former fast modes now migrate
+  // to the single, fastest MAXIMUM mode.
+  static constexpr u8 CLASSIC = 0;
+  static constexpr u8 MAXIMUM = 1;
+  static constexpr u8 LEGACY_TURBO = 2;
+
+  constexpr u8 normalize(u8 stored) {
+    return stored == CLASSIC ? CLASSIC : MAXIMUM;
+  }
+
+  static_assert(normalize(CLASSIC) == CLASSIC,
+                "CLASSIC settings must remain CLASSIC");
+  static_assert(normalize(MAXIMUM) == MAXIMUM,
+                "MAXIMUM settings must remain MAXIMUM");
+  static_assert(normalize(LEGACY_TURBO) == MAXIMUM,
+                "legacy TURBO settings must migrate to MAXIMUM");
+  static_assert(normalize(3) == MAXIMUM,
+                "invalid fast settings must fail safe to MAXIMUM");
+}
+
 struct SoundSettings {
   union {
     u8 raw;
@@ -206,7 +228,8 @@ u8 read_counter_switch(void);
 inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
   SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
   if(raw_flags == 0xFF || flags.bits.program_memory_mode > 2) flags.bits.program_memory_mode = 2;
-  if(raw_flags == 0xFF || flags.bits.speed_mode > 2) flags.bits.speed_mode = 1;
+  flags.bits.speed_mode = speed_mode_storage::normalize(
+      raw_flags == 0xFF ? speed_mode_storage::MAXIMUM : flags.bits.speed_mode);
   if(raw_flags == 0xFF) flags.bits.display_rows_8 = 0;
   flags.bits.random_mode_mk61s = flags.bits.random_mode_mk61s ? 1 : 0;
   return flags;

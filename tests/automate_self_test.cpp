@@ -40,14 +40,14 @@ struct FakeConfig {
 } config = {false};
 
 namespace library_mk61 {
-static bool turbo;
-bool speed_is_turbo(void) { return turbo; }
+static bool maximum;
+bool speed_is_max(void) { return maximum; }
 bool speed_is_classic(void) { return false; }
 u8 sound_volume(void) { return 10; }
 }
 
 namespace cfg {
-static constexpr usize TURBO_MK61_BATCH_STEPS = 4;
+static constexpr usize MAXIMUM_MK61_BATCH_STEPS = 4;
 }
 
 namespace classic_timer {
@@ -144,7 +144,7 @@ static void reset_fakes(void) {
   measurement_show_count = 0;
   shown_measurement_ms = 0;
   run_measurement::cancel();
-  library_mk61::turbo = false;
+  library_mk61::maximum = false;
   core_61::running = true;
   core_61::boundary_yielded = false;
   core_61::displayed = true;
@@ -206,6 +206,16 @@ static void test_m61_cancel_stays_silent(void) {
   assert(delivered_key_count == 0);
 }
 
+static void test_maximum_mode_runs_the_fast_batch(void) {
+  reset_fakes();
+  library_mk61::maximum = true;
+  m61_text::script_active = false;
+
+  run_program_steps();
+
+  assert(core_61::step_count == (int) cfg::MAXIMUM_MK61_BATCH_STEPS);
+}
+
 static void test_one_shot_measurement_reports_only_the_armed_run(void) {
   reset_fakes();
   run_measurement::arm_next();
@@ -242,6 +252,7 @@ int main(void) {
   test_m61_run_delivers_regular_calculator_key();
   test_suspended_trap_only_scans_controls();
   test_m61_cancel_stays_silent();
+  test_maximum_mode_runs_the_fast_batch();
   test_one_shot_measurement_reports_only_the_armed_run();
   test_measurement_elapsed_time_wraps_safely();
   printf("automate_self_test: ok\n");

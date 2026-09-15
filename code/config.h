@@ -995,9 +995,9 @@ namespace cfg {
 static constexpr u32    CLASSIC_MK61_PERIOD_NUMERATOR = 15;
 static constexpr u32    CLASSIC_MK61_PERIOD_DENOMINATOR = 13;
 static constexpr u32    CLASSIC_MK61_PERIOD_US =  1153846;
-static constexpr usize  TURBO_MK61_BATCH_STEPS =       16;   // Сколько шагов ядра делать за один проход RUN-обвязки в режиме TURBO
-static constexpr t_time_ms TURBO_LCD_UPDATE_MS =      120;   // Минимальная пауза между обновлениями LCD в TURBO RUN
-static constexpr usize  TURBO_SERIAL_POLL_LOOPS =       4;   // Как часто опрашивать терминал в TURBO RUN
+static constexpr usize  MAXIMUM_MK61_BATCH_STEPS =     16;   // Сколько шагов ядра делать за один проход RUN-обвязки в режиме MAXIMUM
+static constexpr t_time_ms MAXIMUM_LCD_UPDATE_MS =    120;   // Минимальная пауза между обновлениями LCD в MAXIMUM RUN
+static constexpr usize  MAXIMUM_SERIAL_POLL_LOOPS =     4;   // Как часто опрашивать терминал в MAXIMUM RUN
 
 }
 

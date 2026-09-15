@@ -167,9 +167,8 @@ const t_punct EXPLORER_punct      = {.size = 8,  .action = &program_store_explor
 const t_punct DEVELOPMENT_punct   = {.size = 11, .action = &development_select,                 .text = "Development"};
 const t_punct RESET_punct         = {.size = 12, .action = &ResetDevice,                        .text = "Reset device"};
 const t_punct ERASE_punct         = {.size = 12, .action = (menu_action) &EraseFlash,           .text = "Erase FLASH!"};
-const t_punct SPEED_LOW_punct     = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
-const t_punct SPEED_HIGH_punct    = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
-const t_punct SPEED_TURBO_punct   = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed TURBO    "};
+const t_punct SPEED_CLASSIC_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
+const t_punct SPEED_MAXIMUM_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
 const t_punct MEMORY_105_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 105     "};
 const t_punct MEMORY_112_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 112+F   "};
 const t_punct MEMORY_AUTO_punct   = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory Auto    "};
@@ -205,9 +204,8 @@ const t_punct RU_EXPLORER_punct   = {.size = 15, .action = &program_store_explor
 const t_punct RU_DEVELOPMENT_punct= {.size = 15, .action = &development_select,                 .text = "Разработка"};
 const t_punct RU_RESET_punct      = {.size = 15, .action = &ResetDevice,                        .text = "Сброс"};
 const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "Стереть FLASH"};
-const t_punct RU_SPEED_LOW_punct  = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость норма"};
-const t_punct RU_SPEED_HIGH_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость макс"};
-const t_punct RU_SPEED_TURBO_punct= {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Скорость турбо"};
+const t_punct RU_SPEED_CLASSIC_punct = {.size = 15, .action = (menu_action) &TurnSpeed,         .text = "Скорость норма"};
+const t_punct RU_SPEED_MAXIMUM_punct = {.size = 15, .action = (menu_action) &TurnSpeed,         .text = "Скорость макс"};
 const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 105ШГ"};
 const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 112ШГ+ПF"};
 const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память АВТО"};
@@ -239,7 +237,7 @@ extern const int COUNT_PUNCTS = sizeof(MENU) / sizeof(MENU[0]);
 t_punct* SETTINGS_MENU[] = {
       (t_punct*) &VOLUME_punct,
       (t_punct*) &IDLE_SIGNAL_ON_punct,
-      (t_punct*) &SPEED_HIGH_punct,
+      (t_punct*) &SPEED_MAXIMUM_punct,
       (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &RANDOM_MK61_punct,
       (t_punct*) &DATE_TIME_punct,
@@ -388,15 +386,10 @@ static t_punct* memory_punct(void) {
 }
 
 static t_punct* speed_punct(void) {
-  switch(speed_mode_state) {
-    case SpeedMode::CLASSIC:
-      return (t_punct*) (russian_language ? &RU_SPEED_LOW_punct : &SPEED_LOW_punct);
-    case SpeedMode::TURBO:
-      return (t_punct*) (russian_language ? &RU_SPEED_TURBO_punct : &SPEED_TURBO_punct);
-    case SpeedMode::MAXIMUM:
-    default:
-      return (t_punct*) (russian_language ? &RU_SPEED_HIGH_punct : &SPEED_HIGH_punct);
+  if(speed_is_classic()) {
+    return (t_punct*) (russian_language ? &RU_SPEED_CLASSIC_punct : &SPEED_CLASSIC_punct);
   }
+  return (t_punct*) (russian_language ? &RU_SPEED_MAXIMUM_punct : &SPEED_MAXIMUM_punct);
 }
 
 static t_punct* random_punct(void) {
@@ -566,7 +559,9 @@ void  load_settings_state(void) {
   memory_mode = (stored_memory <= (u8) ProgramMemoryMode::AUTO) ? (ProgramMemoryMode) stored_memory : ProgramMemoryMode::AUTO;
   set_program_memory_state(memory_mode == ProgramMemoryMode::EXPANDED_112);
   const u8 stored_speed = flags.bits.speed_mode;
-  set_speed_mode_state((stored_speed <= (u8) SpeedMode::TURBO) ? (SpeedMode) stored_speed : SpeedMode::MAXIMUM);
+  set_speed_mode_state(stored_speed == speed_mode_storage::CLASSIC
+      ? SpeedMode::CLASSIC
+      : SpeedMode::MAXIMUM);
   set_random_mode_state(flags.bits.random_mode_mk61s ? RandomMode::MK61S : RandomMode::MK61);
   set_idle_signal_state(flags.bits.idle_signal_off == 0);
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
@@ -662,11 +657,7 @@ bool  speed_is_classic(void) {
 }
 
 bool  speed_is_max(void) {
-  return speed_mode_state != SpeedMode::CLASSIC;
-}
-
-bool  speed_is_turbo(void) {
-  return speed_mode_state == SpeedMode::TURBO;
+  return speed_mode_state == SpeedMode::MAXIMUM;
 }
 
 } // пространство имён library_mk61
@@ -679,17 +670,9 @@ bool ResetDevice(void) {
 }
 
 bool   TurnSpeed(void) {
-  switch(library_mk61::speed_mode()) {
-    case SpeedMode::MAXIMUM:
-      library_mk61::set_speed_mode_state(SpeedMode::CLASSIC);
-      break;
-    case SpeedMode::CLASSIC:
-      library_mk61::set_speed_mode_state(SpeedMode::TURBO);
-      break;
-    case SpeedMode::TURBO:
-      library_mk61::set_speed_mode_state(SpeedMode::MAXIMUM);
-      break;
-  }
+  library_mk61::set_speed_mode_state(library_mk61::speed_is_classic()
+      ? SpeedMode::MAXIMUM
+      : SpeedMode::CLASSIC);
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
 
@@ -697,20 +680,10 @@ bool   TurnSpeed(void) {
 }
 
 static void StepSpeedMode(i8 delta) {
-  SpeedMode next_mode = library_mk61::speed_mode();
-  switch(library_mk61::speed_mode()) {
-    case SpeedMode::CLASSIC:
-      next_mode = (delta > 0) ? SpeedMode::MAXIMUM : SpeedMode::TURBO;
-      break;
-    case SpeedMode::MAXIMUM:
-      next_mode = (delta > 0) ? SpeedMode::TURBO : SpeedMode::CLASSIC;
-      break;
-    case SpeedMode::TURBO:
-      next_mode = (delta > 0) ? SpeedMode::CLASSIC : SpeedMode::MAXIMUM;
-      break;
-  }
-
-  library_mk61::set_speed_mode_state(next_mode);
+  (void) delta;
+  library_mk61::set_speed_mode_state(library_mk61::speed_is_classic()
+      ? SpeedMode::MAXIMUM
+      : SpeedMode::CLASSIC);
   library_mk61::refresh_menu_text();
   library_mk61::mark_settings_dirty();
 }

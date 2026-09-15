@@ -75,8 +75,8 @@ static  DeferredSave angle_save;
 static  bool        YZ_ZT;
 static  bool        lcd_hooked;
 static  bool        need_draw_lock_message;
-static  bool        turbo_display_dirty;
-static  t_time_ms   turbo_next_lcd_update;
+static  bool        calculator_display_dirty;
+static  t_time_ms   maximum_next_lcd_update;
 //static  bool        mk61_edit_program;
 
 extern const char terminal_symbols[16] = {
@@ -221,7 +221,7 @@ void reinit_mk61_calculator_state(void) {
   core_61::enable();
   MK61Emu_SetAngleUnit(selected_angle);
   display_text[0] = (char) -1;
-  turbo_display_dirty = true;
+  calculator_display_dirty = true;
 }
 
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
@@ -578,7 +578,7 @@ inline void mk61_process(void) {
   mk61_automate();
   if(core_61::is_displayed()) {
       core_61::clear_displayed();
-      turbo_display_dirty = true;
+      calculator_display_dirty = true;
   }
 
   if(m61_text::display_owned()) {
@@ -587,23 +587,23 @@ inline void mk61_process(void) {
       // индикатора отбрасываются; обработчики ловушек публикуют выбранные кадры
       // через print.
       m61_display_was_owned = true;
-      turbo_display_dirty = false;
+      calculator_display_dirty = false;
       return;
   }
   if(m61_display_was_owned) {
       m61_display_was_owned = false;
       display_text[0] = (char) -1;
-      turbo_display_dirty = true;
+      calculator_display_dirty = true;
   }
 
-  if(!turbo_display_dirty) return;
-  if(core_61::is_RUN() && library_mk61::speed_is_turbo()) {
+  if(!calculator_display_dirty) return;
+  if(core_61::is_RUN() && library_mk61::speed_is_max()) {
       const t_time_ms now = millis();
-      if(!runtime_safety::time_reached(now, turbo_next_lcd_update)) return;
-      turbo_next_lcd_update = now + cfg::TURBO_LCD_UPDATE_MS;
+      if(!runtime_safety::time_reached(now, maximum_next_lcd_update)) return;
+      maximum_next_lcd_update = now + cfg::MAXIMUM_LCD_UPDATE_MS;
   }
 
-  turbo_display_dirty = false;
+  calculator_display_dirty = false;
   if(!lcd_hooked) mk61_display_refresh();
 }
 
@@ -844,7 +844,7 @@ void   mk61_baseloop_hook(i32 key) {
         }
 
         mk61_process();
-      } else {        // Режим работы по программе (СЧЕТ) задержка устанавливается в меню Speed CLASSIC/MAXIMAL
+      } else {        // В режиме СЧЁТ CLASSIC использует таймер, MAXIMUM идёт пакетами без задержки.
         if(!library_mk61::speed_is_classic() || classic_timer::take_step()) {
           mk61_process();
         }
@@ -856,16 +856,16 @@ void   mk61_baseloop_hook(i32 key) {
 static bool terminal_service_in_progress;
 
 static bool terminal_poll_due(void) {
-  static u8 turbo_serial_poll_divider;
-  const bool turbo_run = core_61::is_RUN() && library_mk61::speed_is_turbo();
-  if(!turbo_run) {
-    turbo_serial_poll_divider = 0;
+  static u8 maximum_serial_poll_divider;
+  const bool maximum_run = core_61::is_RUN() && library_mk61::speed_is_max();
+  if(!maximum_run) {
+    maximum_serial_poll_divider = 0;
     return true;
   }
-  const bool due = turbo_serial_poll_divider == 0;
-  turbo_serial_poll_divider++;
-  if(turbo_serial_poll_divider >= cfg::TURBO_SERIAL_POLL_LOOPS) {
-    turbo_serial_poll_divider = 0;
+  const bool due = maximum_serial_poll_divider == 0;
+  maximum_serial_poll_divider++;
+  if(maximum_serial_poll_divider >= cfg::MAXIMUM_SERIAL_POLL_LOOPS) {
+    maximum_serial_poll_divider = 0;
   }
   return due;
 }

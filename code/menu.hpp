@@ -19,9 +19,8 @@ enum class ProgramMemoryMode : u8 {
 };
 
 enum class SpeedMode : u8 {
-  CLASSIC,
-  MAXIMUM,
-  TURBO
+  CLASSIC = speed_mode_storage::CLASSIC,
+  MAXIMUM = speed_mode_storage::MAXIMUM
 };
 
 enum class RandomMode : u8 {
@@ -94,7 +93,6 @@ namespace library_mk61 {
   extern  SpeedMode speed_mode(void);
   extern  bool  speed_is_classic(void);
   extern  bool  speed_is_max(void);
-  extern  bool  speed_is_turbo(void);
 
   inline const char* text(const char* en, const char* ru) {
     return language_is_ru() ? ru : en;

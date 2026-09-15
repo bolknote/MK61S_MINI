@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = {
     "menu": ["DFU прошивка", "USB-диск", "Настройки", "Проводник", "Библиотека", "Разработка"],
     "english": ["DFU mode enable", "USB Disk", "Settings", "Explorer", "MK61 library", "Development"],
-    "settings": ["Громкость 10", "Скорость турбо", "Память 112ШГ+ПF", "К СЧ MK61s", "Поправка RTC", "Дата и время"],
+    "settings": ["Громкость 10", "Скорость макс", "Память 112ШГ+ПF", "К СЧ MK61s", "Поправка RTC", "Дата и время"],
     "files": ["manual.md", "autoexec.m61", "Infinity Story.m61", "Bumblebee Fly.m61", "Fox Hunting.m61", "space-invaders.ch8"],
     "manual": ["Вы - полицейский. Найдите машину мафиози в городе из домов и дорог и остановите её. Короткое нажатие LEFT или RIGHT прокручивает инструкцию на строку."],
     "stress": ["ЙЁДЦЩруф ЖШMW il1 0O", "ЙЁДЦЩруф ЖШMW il1 0O", "USB-диск: Ёжик.m61", "Память 112ШГ+ПF", "AVATAR, ТАУ, Ёлка; руду", "12.09.2026 21:05"],

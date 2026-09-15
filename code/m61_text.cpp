@@ -1134,7 +1134,7 @@ static bool start_current_program(void) {
   runner_state = RunnerState::WAIT_RUN_STOP;
   (void) run_measurement::program_started(runner_millis());
   // Взводим исполнитель до последнего скрытого шага С/П: один шаг ядра может
-  // дойти до первого кода программы, особенно в турбо-сборках.
+  // дойти до первого кода программы, особенно в режиме MAXIMUM.
   hidden_start_loaded_program();
   return true;
 }
