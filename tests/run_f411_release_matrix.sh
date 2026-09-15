@@ -87,7 +87,7 @@ fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMeth
 # the plan-hard baseline, so it had no safe growth margin and was not a viable
 # release configuration even before new features were added.
 fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
-strict_flags='-DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -Werror -Wno-error=cpp'
+strict_flags='-DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F411_SELECTIVE_O3=1 -Werror -Wno-error=cpp'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 variant_index=0
 variant_count="$(python3 "$contract" cases --group f411-release --format count)"
@@ -271,6 +271,8 @@ compile_variant() {
   python3 "$root/tests/check_app_memory_elf.py" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_early_dfu_elf.sh" \
+    "$build_path/mk61s-M.ino.elf"
+  "$root/tests/check_core_native_hot_paths_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_power_monitor_elf.sh" \
     "$build_path/mk61s-M.ino.elf"

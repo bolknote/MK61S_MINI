@@ -54,6 +54,8 @@ grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
 grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
 grep -q -- '-DMK61_ENABLE_LOADABLE_MODULES=1' "$target/boards.txt"
+grep -q -- '-DMK61_F401_PRODUCT_BUILD=1' "$target/boards.txt"
+grep -q -- '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' "$target/boards.txt"
 ! grep -q 'mk61_user_apps' "$target/boards.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
@@ -113,14 +115,10 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v3-lcd1602-a00-f401"
   resident="$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
-  module_root="$work/build/mk61-system-apps/mk61s-M-mini-v3-lcd1602-a00-f401/modules"
+  resident_elf="$work/build/code.ino.elf"
   test -s "$resident"
-  grep -q 'mk61_module_entry' "$module_root/focal/FOCAL.map"
-  grep -q 'mk61_module_entry' "$module_root/basic/BASIC.map"
-  grep -q 'mk61_module_entry' \
-    "$module_root/markdown/MARKDOWN.map"
-  grep -q 'image1_viewer' "$module_root/markdown/MARKDOWN.map"
-  grep -q 'mk61_module_entry' "$module_root/chip8/CHIP8.map"
+  test -s "$resident_elf"
+  "$root/tests/check_core_native_hot_paths_elf.sh" --disabled "$resident_elf"
   for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP SETUP.APP; do
     file="$bundle/System/$app"
     test -s "$file"
@@ -142,7 +140,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     "$root/system_apps/.tool/build.ps1" \
     -BuildPath "$work/build" \
     -OutputDirectory "$direct_system" \
-    -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
+    -UiFonts 0 -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
   for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP SETUP.APP; do
     file="$direct_system/$app"
     cmp "$file" "$bundle/System/$app"

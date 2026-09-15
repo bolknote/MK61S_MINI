@@ -9,6 +9,7 @@ f401_matrix="$root/tests/run_f401_release_matrix.sh"
 budgets="$root/tests/release_ram_budgets.sh"
 ram_check="$root/tests/check_release_ws0010_ram.sh"
 preflight="$root/tests/run_release_preflight.sh"
+core_check="$root/tests/check_core_native_hot_paths_elf.sh"
 workflow="$root/.github/workflows/firmware-release.yml"
 contract="$root/tools/release_contract.py"
 mixed_policy="$root/code/firmware_optimization.hpp"
@@ -16,7 +17,7 @@ config="$root/code/config.h"
 hot_core="$root/code/mk61emu_core.cpp"
 
 for script in "$matrix" "$o3_build" "$usb_build" "$f401_matrix" "$budgets" \
-    "$ram_check" "$preflight"; do
+    "$ram_check" "$preflight" "$core_check"; do
   bash -n "$script"
 done
 python3 "$contract" validate >/dev/null
@@ -66,12 +67,26 @@ grep -Fq '#include "firmware_optimization.hpp"' "$config"
 grep -Fq '#pragma GCC optimize ("Os")' "$mixed_policy"
 grep -Fq '#pragma GCC reset_options' "$hot_core"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3' "$mixed_policy"
-grep -Fq 'MK61_F401_HOT_O3 __attribute__((optimize("O3")))' "$mixed_policy"
-grep -Fq 'MK61_F401_HOT_O3 cycle(void)' "$hot_core"
+grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3' "$mixed_policy"
+grep -Fq 'MK61_CORE_HOT_O3 __attribute__((optimize("O3")))' "$mixed_policy"
+grep -Fq 'MK61_CORE_HOT_O3 cycle(void)' "$hot_core"
+grep -Fq 'MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))' \
+  "$hot_core"
+grep -Fq '#ifndef MK61_F401_PRODUCT_BUILD' "$config"
+grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$matrix"
+grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$usb_build"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
   "$root/tests/run_f401_uc1609_compile_check.sh"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
   "$root/tools/.mk61-gcc/CMakeLists.txt"
+grep -Fq 'MK61_F401_PRODUCT_BUILD=$product' \
+  "$root/tests/run_f401_uc1609_compile_check.sh"
+grep -Fq 'check_core_native_hot_paths_elf.sh" --disabled "$elf"' \
+  "$f401_matrix"
+grep -Fq 'check_core_native_hot_paths_elf.sh' "$matrix"
+grep -Fq 'check_core_native_hot_paths_elf.sh' "$o3_build"
+grep -Fq 'portable-layout.py' "$o3_build"
+grep -Fq 'portable-layout.py' "$usb_build"
 
 # Production STOP is selected by expected behavior in the manifest, not by a
 # second board-definition ladder in shell.

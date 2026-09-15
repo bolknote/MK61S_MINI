@@ -40,6 +40,18 @@ cp -R "$root/code/." "$sketch/"
 fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=o3std'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 strict_flags='-DMK61_BOARD_CLASSIC_V3 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_MIXED_OPTIMIZATION=1 -Werror -Wno-error=cpp'
+layout_properties="$build_root/layout.properties"
+"$arduino_cli" compile --fqbn "$fqbn" \
+  --build-path "$build_root/properties-layout" \
+  --show-properties=expanded "$sketch" > "$layout_properties"
+variant_path="$(sed -n 's/^build\.variant\.path=//p' "$layout_properties" | tr -d '\r')"
+ld_name="$(sed -n 's/^build\.ldscript=//p' "$layout_properties" | tr -d '\r')"
+[[ -n "$variant_path" && -n "$ld_name" && -f "$variant_path/$ld_name" ]] ||
+  fail 'cannot resolve the STM32F411 linker script'
+portable_linker="$build_root/mk61-portable.ld"
+python3 "$root/tools/.mk61-gcc/portable-layout.py" \
+  "$variant_path/$ld_name" "$portable_linker"
+resident_link_flags="-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker"
 
 set +e
 "$arduino_cli" compile \
@@ -48,7 +60,7 @@ set +e
   --build-path "$compile_path" \
   --build-property "compiler.cpp.extra_flags=$strict_flags $platform_ram_flags" \
   --build-property "compiler.c.extra_flags=$platform_ram_flags" \
-  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected" \
+  --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
   "$sketch" 2>&1 | tee "$compile_log"
 pipeline_status=("${PIPESTATUS[@]}")
 compile_status=${pipeline_status[0]}
@@ -76,6 +88,11 @@ python3 "$root/tests/analyze_stack_usage.py" \
   --summary-json "$compile_path/stack-usage.json"
 
 test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
+test -s "$compile_path/mk61s-M.ino.elf" || fail 'missing ELF'
+python3 "$root/tests/check_app_memory_elf.py" \
+  "$compile_path/mk61s-M.ino.elf"
+"$root/tests/check_core_native_hot_paths_elf.sh" \
+  "$compile_path/mk61s-M.ino.elf"
 "$root/tools/seal-firmware.sh" seal --max-size 524288 \
   "$compile_path/mk61s-M.ino.bin"
 "$root/tools/seal-firmware.sh" check --max-size 524288 \

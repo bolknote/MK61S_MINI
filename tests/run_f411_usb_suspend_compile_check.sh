@@ -35,7 +35,19 @@ cp -R "$root/code/." "$sketch/"
 
 fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-wrap_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
+strict_optimization_flags='-DMK61_REQUIRE_F411_SELECTIVE_O3=1'
+layout_properties="$build_root/layout.properties"
+"$arduino_cli" compile --fqbn "$fqbn" \
+  --build-path "$build_root/properties-layout" \
+  --show-properties=expanded "$sketch" > "$layout_properties"
+variant_path="$(sed -n 's/^build\.variant\.path=//p' "$layout_properties" | tr -d '\r')"
+ld_name="$(sed -n 's/^build\.ldscript=//p' "$layout_properties" | tr -d '\r')"
+[[ -n "$variant_path" && -n "$ld_name" && -f "$variant_path/$ld_name" ]] ||
+  fail 'cannot resolve the STM32F411 linker script'
+portable_linker="$build_root/mk61-portable.ld"
+python3 "$root/tools/.mk61-gcc/portable-layout.py" \
+  "$variant_path/$ld_name" "$portable_linker"
+wrap_flags="-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker"
 
 compile_profile() {
   local case_id="$1"
@@ -50,7 +62,7 @@ compile_profile() {
   local compile_path="$build_root/build-$name"
   local compile_log="$compile_path/compile.log"
   local stack_summary="$compile_path/stack-usage.json"
-  local strict_flags="$board_flags -DMK61_REQUIRE_RESIDENT_CRC=1 $platform_ram_flags -Werror -Wno-error=cpp"
+  local strict_flags="$board_flags -DMK61_REQUIRE_RESIDENT_CRC=1 $strict_optimization_flags $platform_ram_flags -Werror -Wno-error=cpp"
   mkdir -p "$compile_path"
 
   printf '\nF411 USB suspend production profile: %s\n' "$name"
@@ -123,10 +135,12 @@ compile_profile() {
     --stack-summary "$stack_summary" \
     --output-prefix "$compile_path/resource-report"
   "$root/tests/check_global_constructors.sh" "$elf"
+  python3 "$root/tests/check_app_memory_elf.py" "$elf"
   "$root/tests/check_early_dfu_elf.sh" "$elf"
   "$root/tests/check_power_monitor_elf.sh" "$elf"
   "$root/tests/check_rtc_alarm_elf.sh" "$elf"
   "$root/tests/check_usb_suspend_elf.sh" "$elf"
+  "$root/tests/check_core_native_hot_paths_elf.sh" "$elf"
 }
 
 profile_count="$(python3 "$contract" cases --group f411-stop --format count)"

@@ -17,7 +17,7 @@ command -v python3 >/dev/null 2>&1 ||
 IFS=$'\t' read -r \
   case_id profile optimization board_flags _artifact flash_capacity \
   minimum_flash_headroom ram_capacity ram_limit stack_frame_limit \
-  _product _publish _usb_suspend _ws0010_graphics _features \
+  product _publish _usb_suspend _ws0010_graphics _features \
   <<<"$(python3 "$contract" cases --group f401-arduino --format tsv)"
 
 temporary_root=0
@@ -49,7 +49,19 @@ cp -R "$root/code/." "$sketch/"
 # the exact linked artifact.
 fqbn="STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=$optimization"
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-strict_flags="$board_flags -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 $platform_ram_flags -Werror -Wno-error=cpp"
+strict_flags="$board_flags -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=$product -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 $platform_ram_flags -Werror -Wno-error=cpp"
+layout_properties="$build_root/layout.properties"
+"$arduino_cli" compile --fqbn "$fqbn" \
+  --build-path "$build_root/properties-layout" \
+  --show-properties=expanded "$sketch" > "$layout_properties"
+variant_path="$(sed -n 's/^build\.variant\.path=//p' "$layout_properties" | tr -d '\r')"
+ld_name="$(sed -n 's/^build\.ldscript=//p' "$layout_properties" | tr -d '\r')"
+[[ -n "$variant_path" && -n "$ld_name" && -f "$variant_path/$ld_name" ]] ||
+  fail 'cannot resolve the STM32F401 linker script'
+portable_linker="$build_root/mk61-portable.ld"
+python3 "$root/tools/.mk61-gcc/portable-layout.py" \
+  "$variant_path/$ld_name" "$portable_linker"
+resident_link_flags="-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker"
 
 set +e
 "$arduino_cli" compile \
@@ -58,7 +70,7 @@ set +e
   --build-path "$compile_path" \
   --build-property "compiler.cpp.extra_flags=$strict_flags" \
   --build-property "compiler.c.extra_flags=$platform_ram_flags" \
-  --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected" \
+  --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
   "$sketch" 2>&1 | tee "$compile_log"
 pipeline_status=("${PIPESTATUS[@]}")
 compile_status=${pipeline_status[0]}
@@ -124,8 +136,8 @@ python3 "$contract" resource-report \
   --stack-summary "$compile_path/stack-usage.json" \
   --output-prefix "$compile_path/resource-report"
 
-# This constrained production profile deliberately omits only the laboratory
-# read benchmark; the command remains available on F411 qualification builds.
+# This constrained production profile deliberately omits laboratory-only
+# benchmarks and profilers; they remain available in qualification builds.
 if grep -aFq 'Usage: bench' "$compile_path/mk61s-M.ino.elf"; then
   fail 'read benchmark unexpectedly present in constrained F401 image'
 fi
@@ -135,8 +147,8 @@ fi
 if grep -aFq 'PROF saved ' "$compile_path/mk61s-M.ino.elf"; then
   fail 'profile file exporter unexpectedly present in constrained F401 image'
 fi
-if ! grep -aFq 'PROF state=' "$compile_path/mk61s-M.ino.elf"; then
-  fail 'live profiler unexpectedly missing from constrained F401 image'
+if grep -aFq 'PROF state=' "$compile_path/mk61s-M.ino.elf"; then
+  fail 'live profiler unexpectedly present in constrained F401 image'
 fi
 if ! grep -aFq 'RTC ALARM' "$compile_path/mk61s-M.ino.elf"; then
   fail 'RTC alarm command unexpectedly missing from constrained F401 image'
@@ -150,6 +162,8 @@ fi
 "$root/tests/check_rtc_alarm_elf.sh" \
   "$compile_path/mk61s-M.ino.elf"
 "$root/tests/check_usb_suspend_elf.sh" --disabled \
+  "$compile_path/mk61s-M.ino.elf"
+"$root/tests/check_core_native_hot_paths_elf.sh" --disabled \
   "$compile_path/mk61s-M.ino.elf"
 
 printf '\nF401 Classic V3 UC1609 Arduino compile check: OK\n'
