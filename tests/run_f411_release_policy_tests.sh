@@ -72,7 +72,7 @@ grep -Fq 'MK61_CORE_HOT_O3 __attribute__((optimize("O3")))' "$mixed_policy"
 grep -Fq 'MK61_CORE_HOT_O3 cycle(void)' "$hot_core"
 grep -Fq 'MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))' \
   "$hot_core"
-grep -Fq '#ifndef MK61_F401_PRODUCT_BUILD' "$config"
+grep -Fq '#ifndef MK61_F401_PRODUCT_BUILD' "$mixed_policy"
 grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$matrix"
 grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$usb_build"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
@@ -81,6 +81,7 @@ grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
   "$root/tools/.mk61-gcc/CMakeLists.txt"
 grep -Fq 'MK61_F401_PRODUCT_BUILD=$product' \
   "$root/tests/run_f401_uc1609_compile_check.sh"
+grep -Fq 'check_core_native_hot_paths_elf.sh" "$elf"' "$f401_matrix"
 grep -Fq 'check_core_native_hot_paths_elf.sh" --disabled "$elf"' \
   "$f401_matrix"
 grep -Fq 'check_core_native_hot_paths_elf.sh' "$matrix"

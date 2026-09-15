@@ -34,6 +34,12 @@ clang++ -Os "${common[@]}" -DREVISION_V3 -DSTM32F401xC \
   -o "$out-f401-generic-core"
 "$out-f401-generic-core"
 
+clang++ -Os "${common[@]}" -DREVISION_V3 -DSTM32F401xC \
+  -DMK61_F401_PRODUCT_BUILD=1 \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_NATIVE_HOT_PATHS \
+  -o "$out-f401-product-native-core"
+"$out-f401-product-native-core"
+
 clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
   -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_LOADABLE_MODULES \
   -DMK61_CONFIG_EXPECT_PORTABLE_SYSTEM_APPS \

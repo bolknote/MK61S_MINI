@@ -118,7 +118,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   resident_elf="$work/build/code.ino.elf"
   test -s "$resident"
   test -s "$resident_elf"
-  "$root/tests/check_core_native_hot_paths_elf.sh" --disabled "$resident_elf"
+  "$root/tests/check_core_native_hot_paths_elf.sh" "$resident_elf"
   for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP SETUP.APP; do
     file="$bundle/System/$app"
     test -s "$file"

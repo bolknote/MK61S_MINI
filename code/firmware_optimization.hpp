@@ -1,6 +1,17 @@
 #ifndef MK61_FIRMWARE_OPTIMIZATION_HPP
 #define MK61_FIRMWARE_OPTIMIZATION_HPP
 
+// Public F401 artifacts are intentionally lean: service-only profilers and
+// verbose storage diagnostics belong in qualification images. Keep the flag
+// here because the core header must choose the same product policy even when
+// it is included before config.h.
+#ifndef MK61_F401_PRODUCT_BUILD
+  #define MK61_F401_PRODUCT_BUILD 0
+#endif
+#if MK61_F401_PRODUCT_BUILD != 0 && MK61_F401_PRODUCT_BUILD != 1
+  #error "MK61_F401_PRODUCT_BUILD must be 0 or 1"
+#endif
+
 // Applying -O2/-O3 to the entire firmware makes GCC clone and unroll cold
 // parsers, menus and diagnostic formatters.  Those copies cannot accelerate
 // calculator execution and can overflow even the 512-KiB F411 Flash.  Keep
@@ -100,11 +111,13 @@
 
 // Closed-form IK1306 paths are qualified on F411. Keep them in both the
 // canonical -Os release and the mixed global -O2/-O3 compatibility build.
-// Other targets retain the compact bit-serial reference unless requested
-// explicitly by a laboratory build.
+// F401 product images now have enough Flash for the same path; capability
+// images retain the compact decoder because their worst case is nearly full.
 #ifndef MK61_CORE_NATIVE_HOT_PATHS
-  #if defined(STM32F411xE) && \
-      (defined(__OPTIMIZE_SIZE__) || MK61_MIXED_OPTIMIZATION)
+  #if (defined(STM32F411xE) && \
+       (defined(__OPTIMIZE_SIZE__) || MK61_MIXED_OPTIMIZATION)) || \
+      ((defined(STM32F401xC) || defined(STM32F401xE)) && \
+       defined(__OPTIMIZE_SIZE__) && MK61_F401_PRODUCT_BUILD)
     #define MK61_CORE_NATIVE_HOT_PATHS 1
   #else
     #define MK61_CORE_NATIVE_HOT_PATHS 0

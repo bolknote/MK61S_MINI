@@ -26,17 +26,6 @@
 //#define DEBUG
 //#define DEBUG_M61
 
-// Public F401 artifacts are intentionally lean: service-only profilers and
-// verbose storage diagnostics belong in qualification images.  Developer and
-// ordinary Arduino builds keep the diagnostics unless their build explicitly
-// selects the product profile.
-#ifndef MK61_F401_PRODUCT_BUILD
-  #define MK61_F401_PRODUCT_BUILD 0
-#endif
-#if MK61_F401_PRODUCT_BUILD != 0 && MK61_F401_PRODUCT_BUILD != 1
-  #error "MK61_F401_PRODUCT_BUILD must be 0 or 1"
-#endif
-
 // DWT CYCCNT-профилировщик не собирает данные до команды `prof start`.
 // Значение 0 полностью удаляет точки измерения и терминальную команду.
 #ifndef MK61_ENABLE_DWT_PROFILER

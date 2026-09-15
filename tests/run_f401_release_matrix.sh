@@ -70,7 +70,11 @@ build_group() {
     python3 "$root/tests/check_app_memory_elf.py" "$elf"
     "$root/tests/check_early_dfu_elf.sh" "$elf"
     "$root/tests/check_usb_suspend_elf.sh" --disabled "$elf"
-    "$root/tests/check_core_native_hot_paths_elf.sh" --disabled "$elf"
+    if [[ "$product" == 1 ]]; then
+      "$root/tests/check_core_native_hot_paths_elf.sh" "$elf"
+    else
+      "$root/tests/check_core_native_hot_paths_elf.sh" --disabled "$elf"
+    fi
     if [[ "$profile" == mini-v3-ws0010 ]]; then
       "$root/tests/check_ws0010_graphics_elf.sh" --disabled "$elf"
     fi

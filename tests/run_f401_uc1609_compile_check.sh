@@ -163,7 +163,7 @@ fi
   "$compile_path/mk61s-M.ino.elf"
 "$root/tests/check_usb_suspend_elf.sh" --disabled \
   "$compile_path/mk61s-M.ino.elf"
-"$root/tests/check_core_native_hot_paths_elf.sh" --disabled \
+"$root/tests/check_core_native_hot_paths_elf.sh" \
   "$compile_path/mk61s-M.ino.elf"
 
 printf '\nF401 Classic V3 UC1609 Arduino compile check: OK\n'
