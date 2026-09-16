@@ -739,7 +739,7 @@ static u8 tb_lookup_word(const TbWord& word, const u8* table) {
     bool matches = word.dotted
         ? word.length >= min_abbrev && word.length <= full_len
         : word.length == full_len;
-    for(usize i = 0; matches && i < word.length; i++) {
+    for(u8 i = 0; matches && i < word.length; i++) {
       matches = tb_upper(word.begin[i]) == (char) table[i];
     }
     if(matches) return result;
@@ -748,24 +748,43 @@ static u8 tb_lookup_word(const TbWord& word, const u8* table) {
   return 0;
 }
 
-static bool tb_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref& ref, bool require_available = true) {
+static bool tb_parse_mk_ref_token(const char*& p, const char* end,
+                                  mk61_ref::Ref& ref) {
   p = tb_skip_spaces(p);
   if(p >= end || *p != '.') return false;
   const char* cursor = p + 1;
   if(cursor >= end || !tb_is_alpha(*cursor)) return false;
-
-  char name[4];
-  u8 len = 0;
-  while(cursor < end && (tb_is_alpha(*cursor) || tb_is_digit(*cursor))) {
-    if(len < sizeof(name) - 1) name[len++] = tb_upper(*cursor);
-    cursor++;
+  const char first = tb_upper(*cursor++);
+  ref.reg = 0;
+  if(first == 'R') {
+    if(cursor >= end) return false;
+    const char digit = tb_upper(*cursor++);
+    ref.reg = (u8) (digit - '0');
+    if(ref.reg > 9) {
+      ref.reg = (u8) (digit - 'A' + 10);
+      if(ref.reg < 10 || ref.reg > 15) return false;
+    }
+    ref.kind = mk61_ref::Kind::R;
+  } else {
+    if(first == 'T') ref.kind = mk61_ref::Kind::T;
+    else if(first >= 'X' && first <= 'Z') {
+      ref.kind = (mk61_ref::Kind) (first - 'X');
+    } else return false;
   }
-  name[len] = 0;
-
-  if(!mk61_ref::parse_name(name, ref)) return false;
-  if(require_available && ref.kind == mk61_ref::Kind::R && !mk61_ref::register_available(ref.reg)) return false;
+  if(cursor < end && (tb_is_alpha(*cursor) || tb_is_digit(*cursor))) {
+    return false;
+  }
   p = cursor;
   return true;
+}
+
+static bool tb_read_mk_ref(const mk61_ref::Ref& ref, double& value) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST)
+  return portable_system::call(
+      MK61_SYS_REF_READ, (u32) ref.kind, ref.reg, 0, &value);
+#else
+  return mk61_ref::read(ref, value);
+#endif
 }
 
 static bool tb_eval_expr_range(const char* begin, const char* end,
@@ -797,7 +816,9 @@ static bool tb_parse_target_token(const char*& p, const char* end, TbTarget& tar
 
   mk61_ref::Ref ref;
   if(*p == '.') {
-    if(!tb_parse_mk_ref_token(p, end, ref, require_available)) return false;
+    if(!tb_parse_mk_ref_token(p, end, ref)) return false;
+    if(require_available && ref.kind == mk61_ref::Kind::R && ref.reg == 15 &&
+       !mk61_ref::register_available(15)) return false;
     target.kind = TbTargetKind::MK_REF;
     target.index = -1;
     target.mk_ref = ref;
@@ -940,25 +961,24 @@ static double tb_trig_from_radians(double value) {
 static double tb_apply_math_function(TbFunction function, double value) {
 #if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST)
   // The portable module already obtains all transcendental operations from
-  // one resident entry point.  Keep a compact operation/angle table instead
-  // of emitting a separate indirect-call sequence for every BASIC function.
-  static const u8 operations[] = {
-    (u8) (MK61_SYS_SIN   | 0x40),
-    (u8) (MK61_SYS_COS   | 0x40),
-    (u8) (MK61_SYS_TAN   | 0x40),
-    (u8) (MK61_SYS_ASIN  | 0x80),
-    (u8) (MK61_SYS_ACOS  | 0x80),
-    (u8) (MK61_SYS_ATAN  | 0x80),
-    (u8) MK61_SYS_LN,
-    (u8) MK61_SYS_LOG10,
-    (u8) MK61_SYS_EXP,
-    (u8) MK61_SYS_SQRT
-  };
-  const u8 index = (u8) function - (u8) TbFunction::SIN;
-  const u8 operation = operations[index];
-  if(operation & 0x40) value = tb_trig_to_radians(value);
-  value = portable_system::api->math(operation & 0x3F, value, 0.0);
-  return (operation & 0x80) ? tb_trig_from_radians(value) : value;
+  // one resident entry point.  TbFunction keeps the same order as that API.
+  static_assert(
+      (u8) TbFunction::SIN  - (u8) TbFunction::SIN == MK61_SYS_SIN &&
+      (u8) TbFunction::COS  - (u8) TbFunction::SIN == MK61_SYS_COS &&
+      (u8) TbFunction::TG   - (u8) TbFunction::SIN == MK61_SYS_TAN &&
+      (u8) TbFunction::ASIN - (u8) TbFunction::SIN == MK61_SYS_ASIN &&
+      (u8) TbFunction::ACOS - (u8) TbFunction::SIN == MK61_SYS_ACOS &&
+      (u8) TbFunction::ATG  - (u8) TbFunction::SIN == MK61_SYS_ATAN &&
+      (u8) TbFunction::LN   - (u8) TbFunction::SIN == MK61_SYS_LN &&
+      (u8) TbFunction::LG   - (u8) TbFunction::SIN == MK61_SYS_LOG10 &&
+      (u8) TbFunction::EXP  - (u8) TbFunction::SIN == MK61_SYS_EXP &&
+      (u8) TbFunction::SQRT - (u8) TbFunction::SIN == MK61_SYS_SQRT,
+      "Tiny BASIC math functions must follow the resident API order");
+  const u8 operation = (u8) function - (u8) TbFunction::SIN;
+  if(operation < 3) value = tb_trig_to_radians(value);
+  value = portable_system::api->math(operation, value, 0.0);
+  return operation >= 3 && operation < 6
+      ? tb_trig_from_radians(value) : value;
 #else
   switch(function) {
     case TbFunction::SIN:  return mk_math::sin(tb_trig_to_radians(value));
@@ -1033,11 +1053,11 @@ static const u8 TB_BINARY_WORDS[] = {
 class TbExprParser {
   public:
     TbExprParser(const char* begin, const char* end, bool evaluate = true)
-      : p(begin), end(end), ok(true), evaluate(evaluate), depth(0) {}
+      : p(begin), end(end), depth(0), evaluate(evaluate) {}
 
     bool eval(double& out) {
       out = parse_binary(0);
-      if(!ok) return false;
+      if(depth < 0) return false;
       if(evaluate && !mk_math::is_finite(out)) return false;
       return true;
     }
@@ -1047,13 +1067,12 @@ class TbExprParser {
   private:
     const char* p;
     const char* end;
-    bool ok;
+    i8 depth;
     bool evaluate;
-    u8 depth;
 
     bool enter(void) {
-      if(depth >= TB_EXPR_DEPTH) {
-        ok = false;
+      if(depth < 0 || depth >= TB_EXPR_DEPTH) {
+        depth = -1;
         return false;
       }
       depth++;
@@ -1077,11 +1096,12 @@ class TbExprParser {
       return false;
     }
 
-    bool match_word(const char* word) {
-      TbWord token;
-      if(!tb_read_word(p, token, end) || token.dotted ||
-         !tb_word_matches(token, word, 0)) return false;
-      p = token.end;
+    bool match_not(void) {
+      skip();
+      if(end - p < 3 || tb_upper(p[0]) != 'N' ||
+         tb_upper(p[1]) != 'O' || tb_upper(p[2]) != 'T') return false;
+      if(end - p > 3 && (tb_is_alpha(p[3]) || p[3] == '.')) return false;
+      p += 3;
       return true;
     }
 
@@ -1142,14 +1162,14 @@ class TbExprParser {
         case TbBinaryOp::NONE:
           break;
       }
-      ok = false;
+      depth = -1;
       return 0.0;
     }
 
     double parse_binary(u8 level) {
       if(level >= 3) return parse_prefix(false);
       double left = parse_binary((u8) (level + 1));
-      while(ok) {
+      while(depth >= 0) {
         TbBinaryOp operation;
         if(!match_binary(level, operation)) break;
         const double right = parse_binary((u8) (level + 1));
@@ -1166,7 +1186,7 @@ class TbExprParser {
       } else if(match_char('-')) {
         value = parse_prefix(power_operand);
         if(evaluate) value = -value;
-      } else if(match_word("NOT")) {
+      } else if(match_not()) {
         value = parse_prefix(power_operand);
         if(evaluate) value = value == 0.0 ? 1.0 : 0.0;
       } else {
@@ -1178,7 +1198,7 @@ class TbExprParser {
 
     double parse_power(void) {
       double left = parse_primary();
-      while(ok && match_char('^')) {
+      while(depth >= 0 && match_char('^')) {
         const double right = parse_prefix(true);
         if(evaluate) left = mk_math::pow(left, right);
       }
@@ -1195,26 +1215,26 @@ class TbExprParser {
     double parse_primary_inner(void) {
       skip();
       if(p >= end) {
-        ok = false;
+        depth = -1;
         return 0.0;
       }
 
       if(match_char('(')) {
         const double value = parse_binary(0);
-        if(!match_char(')')) ok = false;
+        if(!match_char(')')) depth = -1;
         return value;
       }
 
       if(*p == '.' && p + 1 < end && tb_is_alpha(*(p + 1))) {
         mk61_ref::Ref ref;
-        if(!tb_parse_mk_ref_token(p, end, ref, evaluate)) {
-          ok = false;
+        if(!tb_parse_mk_ref_token(p, end, ref)) {
+          depth = -1;
           return 0.0;
         }
         if(!evaluate) return 0.0;
         double value = 0.0;
-        if(!mk61_ref::read(ref, value)) {
-          ok = false;
+        if(!tb_read_mk_ref(ref, value)) {
+          depth = -1;
           return 0.0;
         }
         return value;
@@ -1223,23 +1243,23 @@ class TbExprParser {
       if(*p == '@') {
         p++;
         if(!match_char('(')) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
         const double index_value = parse_binary(0);
         if(!match_char(')')) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
         if(!evaluate) return 0.0;
         int index = 0;
         if(!tinybasic_array_index(index_value, index)) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
         double* const array = tinybasic_array_data();
         if(array == NULL) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
         return array[index];
@@ -1249,18 +1269,18 @@ class TbExprParser {
         const char* after = NULL;
         double value = 0.0;
         if(!tb_parse_number_text(p, value, after) || after > end) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
         p = after;
-        if(evaluate && !mk_math::is_finite(value)) ok = false;
+        if(evaluate && !mk_math::is_finite(value)) depth = -1;
         return evaluate ? value : 0.0;
       }
 
       if(tb_is_alpha(*p)) {
         TbWord function;
         if(!tb_read_word(p, function, end)) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
         p = function.end;
@@ -1280,12 +1300,12 @@ class TbExprParser {
           return evaluate ? 3.14159265358979323846 : 0.0;
         }
         if(function_id == TbFunction::NONE) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
 
         if(!match_char('(')) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
 
@@ -1293,17 +1313,13 @@ class TbExprParser {
           skip();
           if(match_char(')')) return evaluate ? tb_next_random() : 0.0;
           const double max_value = parse_binary(0);
-          if(!match_char(')')) ok = false;
+          if(!match_char(')')) depth = -1;
           if(!evaluate) return 0.0;
-          if(!mk_math::is_finite(max_value)) {
-            ok = false;
+          if(!(max_value >= 1.0 && max_value <= DBL_MAX)) {
+            depth = -1;
             return 0.0;
           }
           const double limit = mk_math::floor(max_value);
-          if(limit < 1.0) {
-            ok = false;
-            return 0.0;
-          }
           return 1.0 + mk_math::floor(tb_next_random() * limit);
         }
 
@@ -1315,12 +1331,12 @@ class TbExprParser {
           has_b = true;
         }
         if(!match_char(')')) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
 
         if((function_id == TbFunction::MAX) != has_b) {
-          ok = false;
+          depth = -1;
           return 0.0;
         }
         if(!evaluate) {
@@ -1336,7 +1352,9 @@ class TbExprParser {
           case TbFunction::ABS:   return mk_math::fabs(a);
           case TbFunction::INT:   return mk_math::floor(a);
           case TbFunction::FRAC:  return mk_math::frac(a);
-          case TbFunction::ROUND: return mk_math::round_half(a);
+          case TbFunction::ROUND:
+            return a >= 0.0 ? mk_math::floor(a + 0.5)
+                            : -mk_math::floor(-a + 0.5);
           case TbFunction::SGN:
             return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
           case TbFunction::MAX:   return (a > b) ? a : b;
@@ -1358,7 +1376,7 @@ class TbExprParser {
         }
       }
 
-      ok = false;
+      depth = -1;
       return 0.0;
     }
 };

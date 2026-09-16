@@ -212,7 +212,10 @@ static void test_expression_semantics(void) {
     "120 L=2^-2^3\n"
     "130 M=3<=3\n"
     "140 N=3>=4\n"
-    "150 O=3#4\n",
+    "150 O=3#4\n"
+    "160 P=ROUND(-1.4)\n"
+    "170 Q=ROUND(-.5)\n"
+    "180 R=ROUND(.5)\n",
     "EXPR");
   assert(slot >= 0);
   assert(TinyBasicTestRunResult(slot));
@@ -231,6 +234,9 @@ static void test_expression_semantics(void) {
   assert(std::fabs(TinyBasicTestNumber("M") - 1.0) < 0.000001);
   assert(std::fabs(TinyBasicTestNumber("N")) < 0.000001);
   assert(std::fabs(TinyBasicTestNumber("O") - 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("P") + 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("Q") + 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("R") - 1.0) < 0.000001);
 
   TinyBasicTestReset();
   assert(!TinyBasicTestCompile("10 A=SIN(0,123)\n"));
@@ -298,6 +304,12 @@ static void test_runtime_math_errors_are_safe(void) {
   assert(TinyBasicTestRunResult(slot));
   assert(TinyBasicTestNumber("A") >= 1.0);
   assert(TinyBasicTestNumber("A") <= 1E100);
+
+  TinyBasicTestReset();
+  slot = TinyBasicTestAddProgram("10 A=RND(SQRT(-1))\n", "NANRND");
+  assert(slot >= 0);
+  assert(!TinyBasicTestRunResult(slot));
+  assert(std::strcmp(TinyBasicTestError(), "HOW?") == 0);
 
   TinyBasicTestReset();
   slot = TinyBasicTestAddProgram("10 GOTO SQRT(-1)\n", "NANGOTO");
@@ -465,11 +477,11 @@ static void test_trig_angle_modes(void) {
 static void test_mk_register_references(void) {
   TinyBasicTestReset();
   const int slot = TinyBasicTestAddProgram(
-    "10 .X=42\n"
-    "20 A=.X+1\n"
+    "10 .x=42\n"
+    "20 A=.x+1\n"
     "30 LET .R0=A\n"
-    "40 LET .RE=.R0+2\n"
-    "50 PRINT .RE\n",
+    "40 LET .re=.R0+2\n"
+    "50 PRINT .re\n",
     "MKREF");
   assert(slot >= 0);
   TinyBasicTestRun(slot);
@@ -478,6 +490,13 @@ static void test_mk_register_references(void) {
   assert(std::fabs(TinyBasicTestMkRegister(0) - 43.0) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(14) - 45.0) < 0.000001);
   assert(std::strncmp(TinyBasicTestLcdLine(0), "45", 2) == 0);
+
+  TinyBasicTestReset();
+  assert(!TinyBasicTestCompile("10 .R00=1\n"));
+  TinyBasicTestReset();
+  assert(!TinyBasicTestCompile("10 A=.RZ\n"));
+  TinyBasicTestReset();
+  assert(!TinyBasicTestCompile("10 .XX=1\n"));
 }
 
 static void test_mk_reference_rejects_unrepresentable_values(void) {
