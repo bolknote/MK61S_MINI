@@ -47,6 +47,21 @@ static void test_compile_and_print(void) {
   assert(std::strncmp(TinyBasicTestLcdLine(0), "2.8", 3) == 0);
 }
 
+static void test_line_index_orders_source_and_rejects_duplicates(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "30 END\n"
+    "20 A=A+1\n"
+    "10 A=1\n",
+    "ORDER");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 2.0) < 0.000001);
+
+  TinyBasicTestReset();
+  assert(!TinyBasicTestCompile("10 A=1\n10 A=2\n"));
+}
+
 static void test_if_and_goto(void) {
   TinyBasicTestReset();
   const int slot = TinyBasicTestAddProgram(
@@ -221,6 +236,7 @@ static void test_expression_semantics(void) {
   assert(!TinyBasicTestCompile("10 A=SIN(0,123)\n"));
   assert(!TinyBasicTestCompile("10 A=MAX(1)\n"));
   assert(!TinyBasicTestCompile("10 A=MAX(1,2,3)\n"));
+  assert(!TinyBasicTestCompile("10 A=PI.\n"));
 }
 
 static void test_zero_trip_for(void) {
@@ -643,6 +659,7 @@ static void test_expanded_tinybasic_limits(void) {
 
 int main(void) {
   test_compile_and_print();
+  test_line_index_orders_source_and_rejects_duplicates();
   test_format_number();
   test_mk_math_dispatch();
   test_trig_angle_modes();
