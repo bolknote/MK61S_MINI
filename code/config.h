@@ -332,6 +332,11 @@
 // не получает APP-артефакта.
 #define MK61_FOCAL_IS_LOADABLE (MK61_ENABLE_FOCAL)
 #define MK61_TINYBASIC_IS_LOADABLE (MK61_ENABLE_TINYBASIC)
+// NUMBER_IO нужен штатным языковым APP. Сборка без обоих языков сохраняет
+// номера ABI-операций, но не объявляет capability и не держит реализацию в
+// резидентной Flash.
+#define MK61_NUMBER_IO_SERVICE_ENABLED \
+  (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
   (MK61_STANDALONE_WBMP_VIEWER_ENABLED)
 #define MK61_MARKDOWN_VIEWER_IS_LOADABLE \

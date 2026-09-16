@@ -75,6 +75,9 @@ int main(void) {
   static_assert(MK61_FOCAL_IS_LOADABLE == MK61_ENABLE_FOCAL &&
                 MK61_TINYBASIC_IS_LOADABLE == MK61_ENABLE_TINYBASIC,
                 "enabled language runtimes must use the common APP ABI");
+  static_assert(MK61_NUMBER_IO_SERVICE_ENABLED ==
+                    (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC),
+                "NUMBER_IO must follow the packaged language APP set");
   static_assert(MK61_WBMP_VIEWER_IS_LOADABLE ==
                     MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
                 MK61_MARKDOWN_VIEWER_IS_LOADABLE ==
@@ -92,6 +95,8 @@ int main(void) {
                 !MK61_MARKDOWN_VIEWER_IS_LOADABLE &&
                 !MK61_CHIP8_IS_LOADABLE,
                 "disabled features must not leave optional System APP");
+  static_assert(!MK61_NUMBER_IO_SERVICE_ENABLED,
+                "a language-free build must not retain NUMBER_IO");
 #endif
 #if defined(MK61_CONFIG_EXPECT_PORTABLE_SYSTEM_APPS)
   static_assert(MK61_SETUP_IS_LOADABLE == 1,
