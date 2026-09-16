@@ -774,7 +774,8 @@ function Get-UnsupportedReason {
             $base = $name.Substring(0, $name.Length - 4); $limit = 20544; $minimum = 64
         }
         elseif ($lower.EndsWith('.state.txt')) { $base = $name.Substring(0, $name.Length - 10) }
-        elseif ($lower -match '\.(m61|foc|tbi|txt|fmk)$') { $base = $name.Substring(0, $name.Length - 4) }
+        elseif ($lower -match '\.(m61|foc|txt|fmk)$') { $base = $name.Substring(0, $name.Length - 4) }
+        elseif ($lower.EndsWith('.tbi')) { $base = $name.Substring(0, $name.Length - 4); $limit = 3584 }
         elseif ($lower.EndsWith('.md')) { $base = $name.Substring(0, $name.Length - 3) }
         elseif ($lower.EndsWith('.wbmp')) { $base = $name.Substring(0, $name.Length - 5); $limit = 1600 }
         elseif ($lower.EndsWith('.ch8')) { $base = $name.Substring(0, $name.Length - 4); $limit = 3584; $minimum = 1 }
@@ -2222,8 +2223,9 @@ function Save-Editor {
         if (-not (Write-EditorFile $temporary)) { return $false }
         try { $size = (Get-Item -LiteralPath $temporary).Length }
         catch { $script:EditorError = $_.Exception.Message; return $false }
-        if ($size -gt 1536) {
-            $script:EditorError = "Файл занимает $size байт; максимум MK61s — 1536"
+        $limit = if ($script:EditorName.EndsWith('.tbi', [StringComparison]::OrdinalIgnoreCase)) { 3584 } else { 1536 }
+        if ($size -gt $limit) {
+            $script:EditorError = "Файл занимает $size байт; максимум MK61s — $limit"
             return $false
         }
         $script:StatusText = "Сохраняю $($script:EditorName)…"

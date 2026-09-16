@@ -21,6 +21,8 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
 #if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE)
   if(!sys->runtime) return false;
   for(u32 i = 0; i < MK61_RUNTIME_COUNT; ++i) if(!sys->runtime[i]) return false;
+  if((sys->call(MK61_SERVICE_CAPABILITIES, 0, 0, 0, nullptr) &
+      MK61_SERVICE_CAP_NUMBER_IO) == 0) return false;
   mk61_system_runtime = sys->runtime;
 #endif
   return true;
@@ -32,6 +34,19 @@ void editor(bool draw, const char* source, u16 len, u16 cursor, u16& top, bool s
   mk61_system_editor request = {source, len, cursor, top, sms};
   call(draw ? MK61_SYS_EDITOR_DRAW : MK61_SYS_EDITOR_SCROLL, 0, 0, 0, &request);
   top = (u16) request.top;
+}
+bool format_number(double value, u8 significant_digits,
+                   char* output, usize capacity) {
+  mk61_system_number_format request = {
+      value, output, (u32) capacity, significant_digits};
+  return call(MK61_SYS_NUMBER_FORMAT, 0, 0, 0, &request) != 0;
+}
+bool parse_number(const char* input, double& value, const char*& end) {
+  mk61_system_number_parse request = {0.0, input, 0};
+  if(call(MK61_SYS_NUMBER_PARSE, 0, 0, 0, &request) == 0) return false;
+  value = request.value;
+  end = input + request.consumed;
+  return true;
 }
 }
 using portable_system::call;

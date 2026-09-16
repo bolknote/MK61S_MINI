@@ -2868,6 +2868,9 @@ terminal_protocol::Result class_terminal::exec_alarm(void) {
 
 #endif
 u16 class_terminal::file_capacity(program_store::ProgramType type) {
+      if(type == program_store::ProgramType::TINYBASIC) {
+        return program_store::MAX_TINYBASIC_TEXT_SIZE;
+      }
       if(type == program_store::ProgramType::IMAGE1) {
         return program_store::MAX_IMAGE1_SIZE;
       }

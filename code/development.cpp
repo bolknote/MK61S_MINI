@@ -13,6 +13,7 @@
 #include "keyboard.h"
 #include "lcd_gui.hpp"
 #include "lcd_ru.hpp"
+#include "language_workspace.hpp"
 #include "menu.hpp"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
@@ -1109,16 +1110,30 @@ static bool view_entry(const program_store::Entry& entry) {
     return true;
   }
 
-  shared_scratch::Lease scratch(shared_scratch::Owner::EXPLORER_VIEW, program_store::MAX_MK61_TEXT_SIZE);
-  if(!scratch.ok()) {
+  shared_scratch::Lease scratch;
+  language_workspace::Lease workspace;
+  u8* data = NULL;
+  usize capacity = 0;
+  if(entry.type == program_store::ProgramType::TINYBASIC &&
+     entry.data_len > shared_scratch::SIZE) {
+    if(workspace.acquire(language_workspace::Owner::APPLICATION,
+                         program_store::MAX_TINYBASIC_TEXT_SIZE)) {
+      data = (u8*) workspace.data();
+      capacity = workspace.size();
+    }
+  } else if(scratch.acquire(shared_scratch::Owner::EXPLORER_VIEW,
+                            program_store::MAX_MK61_TEXT_SIZE)) {
+    data = scratch.data();
+    capacity = scratch.size();
+  }
+  if(data == NULL) {
     show_message("Busy", "Занято", entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;
   }
 
-  u8* data = scratch.data();
   u16 len = 0;
-  if(!read_entry_data(entry, data, scratch.size(), len)) {
+  if(!read_entry_data(entry, data, capacity, len)) {
     show_message("Read error", "Ошибка чтения", entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;

@@ -55,6 +55,7 @@ pub const SERVICE_CAP_RUNTIME: u32 = 1 << 8;
 pub const SERVICE_CAP_SETUP: u32 = 1 << 9;
 pub const SERVICE_CAP_FORMAT: u32 = 1 << 10;
 pub const SERVICE_CAP_UI_FONT: u32 = 1 << 11;
+pub const SERVICE_CAP_NUMBER_IO: u32 = 1 << 12;
 
 pub const SERVICE_DISPLAY: u32 = 1;
 pub const SERVICE_KEYBOARD: u32 = 2;
@@ -83,6 +84,9 @@ pub const SERVICE_EDITOR_KEY: u32 = 24;
 pub const SERVICE_SETUP: u32 = 25;
 pub const SERVICE_CAPABILITIES: u32 = 26;
 pub const SERVICE_UI_FONT: u32 = 27;
+pub const SERVICE_NUMBER_FORMAT: u32 = 28;
+pub const SERVICE_NUMBER_PARSE: u32 = 29;
+pub const SERVICE_REF_PARSE: u32 = 30;
 
 pub type Millis = unsafe extern "C" fn() -> u32;
 pub type Service = unsafe extern "C" fn();
@@ -175,6 +179,28 @@ pub struct ServiceKeyboard {
     pub esc: u8,
     pub shg_left: u8,
     pub shg_right: u8,
+}
+
+#[repr(C)]
+pub struct ServiceNumberFormat {
+    pub value: f64,
+    pub output: *mut u8,
+    pub capacity: u32,
+    pub significant_digits: u32,
+}
+
+#[repr(C)]
+pub struct ServiceNumberParse {
+    pub value: f64,
+    pub input: *const u8,
+    pub consumed: u32,
+}
+
+#[repr(C)]
+pub struct ServiceRefParse {
+    pub name: [u8; 4],
+    pub kind: u32,
+    pub reg: u32,
 }
 
 #[repr(C)]

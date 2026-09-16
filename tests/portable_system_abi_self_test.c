@@ -17,7 +17,7 @@ _Static_assert(offsetof(mk61_system_lease, image_crc) == 44, "workspace schema k
 _Static_assert(sizeof(mk61_system_menu_item) == 12, "menu wire layout");
 _Static_assert(sizeof(mk61_system_edit_hook) == 32, "editor callback wire layout");
 _Static_assert(sizeof(mk61_system_edit_key) == 124, "editor state wire layout");
-_Static_assert(MK61_RUNTIME_COUNT == 22, "runtime service slots are append-only");
+_Static_assert(MK61_RUNTIME_COUNT == 26, "runtime service slots are append-only");
 _Static_assert(sizeof(mk61_setup_datetime) == 24, "RTC wire layout");
 _Static_assert(sizeof(mk61_setup_hardware) == 56, "hardware snapshot layout");
 _Static_assert(offsetof(mk61_setup_hardware, rtc_source) == 36, "hardware text boundary");
@@ -41,6 +41,23 @@ _Static_assert(MK61_SETUP_FEATURE_TEXT_PROFILE == 1 &&
 _Static_assert(MK61_SYS_EDITOR_KEY == 24 && MK61_SYS_SETUP == 25, "append-only System operations");
 _Static_assert(MK61_SERVICE_CAPABILITIES == 26, "public service capability query");
 _Static_assert(MK61_SERVICE_UI_FONT == 27, "append-only proportional font operation");
+_Static_assert(MK61_SERVICE_NUMBER_FORMAT == 28,
+               "append-only number-format operation");
+_Static_assert(sizeof(mk61_service_number_format) == 24,
+               "number-format wire layout");
+_Static_assert(offsetof(mk61_service_number_format, output) == 8,
+               "number-format output pointer");
+_Static_assert(MK61_SERVICE_NUMBER_PARSE == 29,
+               "append-only number-parse operation");
+_Static_assert(sizeof(mk61_service_number_parse) == 16,
+               "number-parse wire layout");
+_Static_assert(offsetof(mk61_service_number_parse, input) == 8 &&
+               offsetof(mk61_service_number_parse, consumed) == 12,
+               "number-parse result layout");
+_Static_assert(MK61_SERVICE_REF_PARSE == 30,
+               "append-only register-reference parser");
+_Static_assert(sizeof(mk61_service_ref_parse) == 12,
+               "register-reference parser wire layout");
 _Static_assert(sizeof(mk61_service_ui_font_info) == 6, "UI font metadata wire layout");
 _Static_assert(sizeof(mk61_service_ui_glyph) == 40, "UI glyph wire layout");
 _Static_assert(offsetof(mk61_service_ui_glyph, pixels) == 8, "UI glyph raster offset");

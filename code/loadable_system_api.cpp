@@ -16,6 +16,7 @@
 #include "setup_service.hpp"
 #include "builtin_font.hpp"
 #include "mk_math.hpp"
+#include "number_format.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_font_service.hpp"
 #endif
@@ -117,7 +118,8 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_SETUP |
           MK61_SERVICE_CAP_FORMAT | MK61_SERVICE_CAP_DIALOGS |
           MK61_SERVICE_CAP_EDITOR | MK61_SERVICE_CAP_REGISTERS |
-          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME
+          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME |
+          MK61_SERVICE_CAP_NUMBER_IO
 #if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
           | MK61_SERVICE_CAP_FONT
 #endif
@@ -215,6 +217,26 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       }
       return 1;
     }
+    case MK61_SYS_NUMBER_FORMAT: {
+      if(!payload) return 0;
+      auto& request = *(mk61_system_number_format*) payload;
+      if(request.significant_digits == 0 ||
+         request.significant_digits > 14) return 0;
+      return number_format::general(
+          request.value, (u8) request.significant_digits,
+          request.output, request.capacity);
+    }
+    case MK61_SYS_NUMBER_PARSE: {
+      if(!payload) return 0;
+      auto& request = *(mk61_system_number_parse*) payload;
+      if(!request.input) return 0;
+      const char* end = nullptr;
+      const double value = mk_math::strtod(request.input, &end);
+      if(end == request.input) return 0;
+      request.value = value;
+      request.consumed = (u32) (end - request.input);
+      return 1;
+    }
 #if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
     case MK61_SYS_FONT: {
       if(!payload || a > 1 || b > 0xFFFFU) return 0;
@@ -283,6 +305,15 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       const mk61_ref::Ref ref = {(mk61_ref::Kind) a, (u8) b};
       return operation == MK61_SYS_REF_READ ? mk61_ref::read(ref, *(double*) payload)
                                            : mk61_ref::write(ref, *(double*) payload);
+    }
+    case MK61_SYS_REF_PARSE: {
+      if(!payload) return 0;
+      auto& request = *(mk61_system_ref_parse*) payload;
+      mk61_ref::Ref ref;
+      if(!mk61_ref::parse_name(request.name, ref)) return 0;
+      request.kind = (u32) ref.kind;
+      request.reg = ref.reg;
+      return 1;
     }
     default: return 0;
   }

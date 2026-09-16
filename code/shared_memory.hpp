@@ -52,7 +52,7 @@ constexpr u8 arena_mask(Arena arena) {
 
 namespace snapshot_schema {
 static constexpr u8 FOCAL_RUNTIME = 1;
-static constexpr u8 TINYBASIC_RUNTIME = 1;
+static constexpr u8 TINYBASIC_RUNTIME = 2;
 } // namespace snapshot_schema
 
 // Owner един для всех арен. Один логический компонент может одновременно

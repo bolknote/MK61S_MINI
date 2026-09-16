@@ -75,7 +75,8 @@ def build(args: argparse.Namespace) -> dict:
                [ROOT / "sdk/portable/start.c", *[x.resolve() for x in args.source]])
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
-    sources += [ROOT / "sdk/portable/memory.c"]
+    if args.system not in ("focal", "tinybasic"):
+        sources += [ROOT / "sdk/portable/memory.c"]
     if args.system in ("focal", "tinybasic"):
         sources += [ROOT / "sdk/portable/system/runtime.S", ROOT / "sdk/portable/system/editor.cpp"]
     if args.shared_runtime:

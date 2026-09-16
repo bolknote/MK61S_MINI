@@ -871,6 +871,28 @@ static void test_roundtrip_ranges_and_noop(void) {
   expect_text(id, source, sizeof(source));
 }
 
+static void test_tinybasic_expanded_source_quota(void) {
+  fresh();
+  static u8 source[program_store::MAX_TINYBASIC_TEXT_SIZE + 1U];
+  static u8 restored[program_store::MAX_TINYBASIC_TEXT_SIZE];
+  for(u16 index = 0; index < sizeof(source); index++) {
+    source[index] = (u8) (index * 29U + index / 7U);
+  }
+
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::TINYBASIC, "LARGE", source,
+      program_store::MAX_TINYBASIC_TEXT_SIZE, &id));
+  u16 length = 0;
+  assert(program_store::read_id(id, restored, sizeof(restored), &length));
+  assert(length == sizeof(restored));
+  assert(memcmp(source, restored, sizeof(restored)) == 0);
+  assert(!program_store::write_file(
+      program_store::ROOT_ID, id, ProgramType::TINYBASIC, "LARGE",
+      source, program_store::MAX_TINYBASIC_TEXT_SIZE + 1U));
+}
+
 static void test_arbitrary_nested_directories(void) {
   fresh();
   u16 projects = 0;
@@ -2623,6 +2645,7 @@ static void test_two_hundred_apps_have_no_fixed_slot_limit(void) {
 int main(void) {
   test_dynamic_geometry_and_lazy_format();
   test_roundtrip_ranges_and_noop();
+  test_tinybasic_expanded_source_quota();
   test_image_type_roundtrip_and_quota();
   test_chip8_type_roundtrip_and_quota();
   test_large_font_roundtrip_on_f411();

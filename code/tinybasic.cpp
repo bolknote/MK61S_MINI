@@ -166,6 +166,7 @@ namespace library_mk61 {
 #endif
 
 #include "bounded_string.hpp"
+#include "number_format.hpp"
 
 #include <type_traits>
 
@@ -203,20 +204,25 @@ static constexpr int TB_PROGRAM_COUNT = 1;
 #endif
 static_assert(TB_PROGRAM_COUNT > 0 && TB_PROGRAM_COUNT <= 127,
               "TinyBASIC source index must fit signed byte snapshot field");
-static constexpr int TB_SOURCE_SIZE = 1537;
+static constexpr int TB_SOURCE_SIZE = 3585;
 static constexpr int TB_NAME_SIZE = 32;
 #ifndef TINYBASIC_HOST_TEST
-static_assert(TB_SOURCE_SIZE == program_store::MAX_MK61_TEXT_SIZE + 1,
+static_assert(TB_SOURCE_SIZE == program_store::MAX_TINYBASIC_TEXT_SIZE + 1,
               "Tiny BASIC editor quota must match the filesystem quota");
 static_assert(TB_NAME_SIZE == program_store::NAME_SIZE,
               "Tiny BASIC names must match the filesystem quota");
 #endif
-static constexpr int TB_MAX_LINES = 96;
+static constexpr int TB_MAX_LINES = 192;
 static constexpr int TB_PRINT_BUFFER_SIZE = 96;
-static constexpr int TB_CALL_DEPTH = 8;
-static constexpr int TB_FOR_DEPTH = 8;
-static constexpr int TB_EXPR_DEPTH = 64;
+static constexpr int TB_CALL_DEPTH = 16;
+static constexpr int TB_FOR_DEPTH = 16;
+static constexpr int TB_EXPR_DEPTH = 96;
 static constexpr int TB_COMMAND_DEPTH = 16;
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+static constexpr i32 TB_EDITOR_BACKSPACE_KEY = -1;
+#else
+static constexpr i32 TB_EDITOR_BACKSPACE_KEY = KEY_CX;
+#endif
 
 enum class TbFlowKind : u8 {
   NEXT,
@@ -241,6 +247,28 @@ enum class TbCommand : u8 {
   CMD_STOP
 };
 
+enum class TbFunction : u8 {
+  NONE,
+  SIZE,
+  RND,
+  SIN,
+  COS,
+  TG,
+  ASIN,
+  ACOS,
+  ATG,
+  LN,
+  LG,
+  EXP,
+  SQRT,
+  ABS,
+  INT,
+  FRAC,
+  ROUND,
+  SGN,
+  MAX
+};
+
 struct TbLine {
   i16 number;
   u16 offset;
@@ -248,8 +276,6 @@ struct TbLine {
 };
 
 struct TbAst {
-  bool ok;
-  char error[17];
   i8 source_program;
   TbLine lines[TB_MAX_LINES];
   i16 line_count;
@@ -273,30 +299,40 @@ struct TbFlow {
 struct TbForFrame {
   int var_index;
   double limit;
+  double step;
   i16 return_pc;
+  u16 return_offset;
+};
+
+struct TbReturnFrame {
+  i16 pc;
+  u16 offset;
 };
 
 struct TbRunState {
-  i16 call_stack[TB_CALL_DEPTH];
+  TbReturnFrame call_stack[TB_CALL_DEPTH];
   i8 call_sp;
   TbForFrame for_stack[TB_FOR_DEPTH];
   i8 for_sp;
 };
 
 struct TbWord {
-  char text[12];
+  const char* begin;
+  u8 length;
   bool dotted;
   const char* end;
 };
 
 enum class TbTargetKind : u8 {
   VAR,
-  MK_REF
+  MK_REF,
+  ARRAY
 };
 
 struct TbTarget {
   TbTargetKind kind;
   int var_index;
+  int array_index;
   mk61_ref::Ref mk_ref;
 };
 
@@ -327,24 +363,39 @@ static void tinybasic_reset_runtime(TinyBasicRuntime& runtime) {
     runtime.programs[i].store_id = TB_INVALID_STORE_ID;
     runtime.programs[i].parent_id = TB_ROOT_STORE_ID;
   }
-  runtime.tb_ast.ok = true;
   runtime.tb_ast.source_program = -1;
   runtime.NextTinyBasic = -1;
 }
 
 #ifdef TINYBASIC_HOST_TEST
 static TinyBasicRuntime tinybasic_runtime_storage;
+static double tinybasic_array_storage[384];
 static TinyBasicRuntime& tinybasic_runtime(void) {
   return tinybasic_runtime_storage;
+}
+static double* tinybasic_array_data(void) {
+  return tinybasic_array_storage;
+}
+static usize tinybasic_array_capacity(void) {
+  return sizeof(tinybasic_array_storage) / sizeof(tinybasic_array_storage[0]);
 }
 #else
 static_assert(sizeof(TinyBasicRuntime) <= language_workspace::SIZE, "TinyBASIC runtime does not fit language workspace");
 
+static constexpr usize tinybasic_array_offset(void) {
+  return (sizeof(TinyBasicRuntime) + alignof(double) - 1U) &
+         ~(alignof(double) - 1U);
+}
+static_assert(tinybasic_array_offset() + 128U * sizeof(double) <=
+                  language_workspace::SIZE,
+              "TinyBASIC workspace must retain a useful PATB array");
+
 class TinyBasicWorkspaceScope {
   public:
     TinyBasicWorkspaceScope(void)
-      : lease(language_workspace::Owner::TINYBASIC, sizeof(TinyBasicRuntime)) {
+      : lease(language_workspace::Owner::TINYBASIC, language_workspace::SIZE) {
       if(!lease.ok() || !lease.fresh()) return;
+      memset(lease.data(), 0, lease.size());
       TinyBasicRuntime* runtime = (TinyBasicRuntime*) lease.data();
       tinybasic_reset_runtime(*runtime);
     }
@@ -360,6 +411,18 @@ static TinyBasicRuntime& tinybasic_runtime(void) {
   if(memory == NULL) __builtin_trap();
   return *((TinyBasicRuntime*) memory);
 }
+
+static double* tinybasic_array_data(void) {
+  u8* memory = (u8*) language_workspace::data(
+      language_workspace::Owner::TINYBASIC);
+  return memory == NULL
+      ? NULL : (double*) (memory + tinybasic_array_offset());
+}
+
+static usize tinybasic_array_capacity(void) {
+  return (language_workspace::SIZE - tinybasic_array_offset()) /
+         sizeof(double);
+}
 #endif
 
 #define programs         (tinybasic_runtime().programs)
@@ -370,19 +433,53 @@ static TinyBasicRuntime& tinybasic_runtime(void) {
 #define tb_pending_print (tinybasic_runtime().tb_pending_print)
 #define tb_print_row     (tinybasic_runtime().tb_print_row)
 
+static void tinybasic_clear_array(void) {
+  double* const array = tinybasic_array_data();
+  if(array != NULL) {
+    memset(array, 0, tinybasic_array_capacity() * sizeof(array[0]));
+  }
+}
+
+// PATB exposes SIZE in compatibility bytes and permits @(0)..@(SIZE/2).
+// The source quota and the array have separate physical storage here, but the
+// reported capacity still shrinks as the source grows, preserving the original
+// observable contract without sacrificing floating-point array values.
+static usize tinybasic_array_max_index(void) {
+  const usize capacity = tinybasic_array_capacity();
+  if(capacity == 0) return 0;
+  usize source_len = 0;
+  if(tb_ast.source_program >= 0 && tb_ast.source_program < TB_PROGRAM_COUNT) {
+    source_len = programs[(int) tb_ast.source_program].source_len;
+  } else if(NextTinyBasic >= 0 && NextTinyBasic < TB_PROGRAM_COUNT &&
+            programs[(int) NextTinyBasic].used) {
+    source_len = programs[(int) NextTinyBasic].source_len;
+  }
+  const usize unused_source = source_len < (usize) (TB_SOURCE_SIZE - 1)
+      ? (usize) (TB_SOURCE_SIZE - 1) - source_len : 0;
+  const usize source_limited = unused_source / 2U;
+  const usize physical_max = capacity - 1U;
+  return source_limited < physical_max ? source_limited : physical_max;
+}
+
+static double tinybasic_size_value(void) {
+  return (double) (tinybasic_array_max_index() * 2U);
+}
+
+static bool tinybasic_array_index(double value, int& index) {
+  if(!mk_math::is_finite(value) || value < 0.0) return false;
+  const double rounded = mk_math::floor(value + 0.5);
+  if(mk_math::fabs(value - rounded) > 0.0000001 ||
+     rounded > (double) tinybasic_array_max_index()) return false;
+  index = (int) rounded;
+  return true;
+}
+
 #ifdef TINYBASIC_HOST_TEST
 static u32 tb_random_state = 0x3B6B120EUL;
 static double tb_host_input_value = 0.0;
+static char tb_host_input_expression[128];
 static int tb_host_wait_count = 0;
 #endif
-
-static const char* tinybasic_plain_key_text(i32 key_code) {
-  return text_editor::plain_text_for_key(key_code);
-}
-
-static const char* tinybasic_kshift_text(i32 key_code) {
-  return text_editor::kshift_text_for_key(key_code);
-}
 
 static char tb_upper(char ch) {
   if(ch >= 'a' && ch <= 'z') return (char) (ch - 'a' + 'A');
@@ -400,6 +497,26 @@ static bool tb_is_digit(char ch) {
 static bool tb_is_alpha(char ch) {
   ch = tb_upper(ch);
   return ch >= 'A' && ch <= 'Z';
+}
+
+static text_editor::KeyResult tinybasic_handle_editor_key(
+    text_editor::Buffer& editor, const char* ok_insert_text,
+    i32 key_code, u32 now) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  return text_editor::portable_handle_default_key(
+      editor, ok_insert_text, key_code, now);
+#else
+  static const text_editor::KeyMap keys = {
+    (i32) KEY_LEFT, KEY_LEFT_PRESS, (i32) KEY_RIGHT, KEY_RIGHT_PRESS,
+    (i32) KEY_OK, KEY_OK_PRESS, (i32) KEY_ESC, KEY_ESC_PRESS,
+    KEY_SHG_LEFT_PRESS, KEY_SHG_RIGHT_PRESS, (i32) KEY_K, KEY_ALPHA, (i32) KEY_PP
+  };
+  static const text_editor::Hooks hooks = {NULL, NULL, NULL, NULL, NULL};
+  const text_editor::Options options = {
+    ok_insert_text, true, true, true, true, TB_EDITOR_BACKSPACE_KEY
+  };
+  return text_editor::handle_key(editor, keys, hooks, options, key_code, now);
+#endif
 }
 
 static bool tb_streq(const char* a, const char* b) {
@@ -449,20 +566,29 @@ static void tb_message_i18n(const char* en0, const char* ru0, const char* en1, c
   (void) ru1;
 }
 
-static const char* tb_error_ru_text(const char* error) {
-  if(tb_streq(error, "WHAT?")) return "ЧТО?";
-  if(tb_streq(error, "HOW?")) return "КАК?";
-  if(tb_streq(error, "SORRY")) return "НЕТ МЕСТА";
-  return "ОШИБКА";
-}
+enum class TbError : u8 { WHAT, HOW, SORRY };
 
-static bool tb_error(const char* error) {
-  tb_copy_text(tb_last_error, sizeof(tb_last_error), error);
-  tb_copy_text(tb_ast.error, sizeof(tb_ast.error), error);
-  tb_ast.ok = false;
-  tb_message_i18n(error, tb_error_ru_text(error), "TinyBASIC", "TinyBASIC");
+static bool tb_error_code(TbError error) {
+  const char* en = "SORRY";
+  const char* ru = "НЕТ МЕСТА";
+  if(error == TbError::WHAT) {
+    en = "WHAT?";
+    ru = "ЧТО?";
+  } else if(error == TbError::HOW) {
+    en = "HOW?";
+    ru = "КАК?";
+  }
+  tb_copy_text(tb_last_error, sizeof(tb_last_error), en);
+  tb_message_i18n(en, ru, "TinyBASIC", "TinyBASIC");
   return false;
 }
+
+// The interpreter has exactly the three canonical Palo Alto errors.  Mapping
+// their literal first byte here keeps every call site readable while avoiding
+// dozens of repeated literal-address loads in the ARM module.
+#define tb_error(message) tb_error_code( \
+    (message)[0] == 'W' ? TbError::WHAT : \
+    (message)[0] == 'H' ? TbError::HOW : TbError::SORRY)
 
 static void tb_display_line(u8 row, const char* text) {
   MK61DisplayUpdate update(main_lcd());
@@ -472,113 +598,29 @@ static void tb_display_line(u8 row, const char* text) {
   if(text != NULL) main_lcd().print(text);
 }
 
-static void tb_append_char(char*& out, char* end, char ch) {
-  if(out < end) *out++ = ch;
-}
-
-static void tb_append_uint(char*& out, char* end, unsigned long long value) {
-  char digits[24];
-  u8 count = 0;
-  do {
-    digits[count++] = (char) ('0' + (value % 10ULL));
-    value /= 10ULL;
-  } while(value > 0 && count < sizeof(digits));
-  while(count > 0) tb_append_char(out, end, digits[--count]);
-}
-
-static void tb_format_fixed(double value, int decimals, char* out, usize size) {
-  if(size == 0) return;
-  if(decimals < 0) decimals = 0;
-  if(decimals > 13) decimals = 13; // Для 10 значащих цифр при exp10 = -4 нужны 13 знаков после запятой
-
-  const bool negative = value < 0.0;
-  double abs_value = negative ? -value : value;
-  unsigned long long scale = 1ULL;
-  for(int i = 0; i < decimals; i++) scale *= 10ULL;
-
-  const unsigned long long scaled = (unsigned long long) (abs_value * (double) scale + 0.5);
-  const unsigned long long integer = scaled / scale;
-  unsigned long long fraction = (scale == 0ULL) ? 0ULL : (scaled % scale);
-
-  char temp[40];
-  char* cursor = temp;
-  char* end = temp + sizeof(temp) - 1;
-  if(negative && scaled != 0ULL) tb_append_char(cursor, end, '-');
-  tb_append_uint(cursor, end, integer);
-  if(decimals > 0) {
-    tb_append_char(cursor, end, '.');
-    char fractional[14];
-    for(int i = decimals - 1; i >= 0; i--) {
-      fractional[i] = (char) ('0' + (fraction % 10ULL));
-      fraction /= 10ULL;
-    }
-    for(int i = 0; i < decimals; i++) tb_append_char(cursor, end, fractional[i]);
-    while(cursor > temp && *(cursor - 1) == '0') cursor--;
-    if(cursor > temp && *(cursor - 1) == '.') cursor--;
-  }
-  *cursor = 0;
-  tb_copy_text(out, size, temp);
-}
-
-// TinyBASIC выводит числа с 10 значащими цифрами, как применявшийся ранее
-// формат "%.10g". Прошивка компонуется с newlib-nano без поддержки чисел
-// с плавающей точкой в printf (без "-u _printf_float"), из-за чего snprintf
-// молча пропускает значения %g. Поэтому число форматируется вручную, как в FOCAL.
 static void tb_format_number(double value, char* out, usize size) {
-  if(size == 0) return;
-  if(mk_math::is_nan(value)) {
-    tb_copy_text(out, size, "NAN");
-    return;
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST)
+  if(!portable_system::format_number(value, 10, out, size) && size != 0) {
+    out[0] = 0;
   }
-  if(mk_math::is_inf(value)) {
-    tb_copy_text(out, size, value < 0.0 ? "-INF" : "INF");
-    return;
-  }
-  if(value == 0.0) {
-    tb_copy_text(out, size, "0");
-    return;
-  }
+#else
+  (void) number_format::general(value, 10, out, size);
+#endif
+}
 
-  const double abs_value = mk_math::fabs(value);
-  int exp10 = mk_math::log10_floor(abs_value);
-  if(exp10 >= 10 || exp10 < -4) { // Вне диапазона [-4, точность) формат %g переходит к экспоненциальной записи
-    char mantissa[24];
-    double scaled = abs_value;
-    if(exp10 >= 0) scaled /= mk_math::pow10_int(exp10);
-    else {
-      for(int i = 0; i < -exp10; i++) scaled *= 10.0;
-    }
-    tb_format_fixed(scaled, 9, mantissa, sizeof(mantissa));
-    if(mantissa[0] == '1' && mantissa[1] == '0') { // После округления мантисса переполнилась до 10.0
-      exp10++;
-      tb_format_fixed(1.0, 9, mantissa, sizeof(mantissa));
-    }
-    char temp[40];
-    char* cursor = temp;
-    char* end = temp + sizeof(temp) - 1;
-    if(value < 0.0) tb_append_char(cursor, end, '-');
-    for(const char* m = mantissa; *m != 0; m++) tb_append_char(cursor, end, *m);
-    tb_append_char(cursor, end, 'E');
-    if(exp10 < 0) {
-      tb_append_char(cursor, end, '-');
-      tb_append_uint(cursor, end, (unsigned long long) -exp10);
-    } else {
-      tb_append_char(cursor, end, '+');
-      tb_append_uint(cursor, end, (unsigned long long) exp10);
-    }
-    *cursor = 0;
-    tb_copy_text(out, size, temp);
-    return;
-  }
-
-  int decimals = 9 - exp10;
-  if(decimals < 0) decimals = 0;
-  tb_format_fixed(value, decimals, out, size);
+static bool tb_parse_number_text(const char* text, double& value,
+                                 const char*& end) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST)
+  return portable_system::parse_number(text, value, end);
+#else
+  end = NULL;
+  value = mk_math::strtod(text, &end);
+  return end != text;
+#endif
 }
 
 static void tb_ast_reset(TbAst& ast) {
   memset(&ast, 0, sizeof(ast));
-  ast.ok = true;
   ast.source_program = -1;
 }
 
@@ -602,28 +644,93 @@ static TbFlow tb_flow(TbFlowKind kind, i16 pc, u16 offset = 0) {
   return flow;
 }
 
-static bool tb_read_word(const char* p, TbWord& out) {
+static bool tb_read_word(const char* p, TbWord& out,
+                         const char* limit = NULL) {
   p = tb_skip_spaces(p);
-  if(!tb_is_alpha(*p)) return false;
+  if((limit != NULL && p >= limit) || !tb_is_alpha(*p)) return false;
+  const char* const begin = p;
   u8 len = 0;
-  while(tb_is_alpha(*p) && len < sizeof(out.text) - 1) out.text[len++] = tb_upper(*p++);
-  while(tb_is_alpha(*p)) p++;
-  out.dotted = *p == '.';
+  while((limit == NULL || p < limit) && tb_is_alpha(*p)) {
+    if(len != 0xFF) len++;
+    p++;
+  }
+  out.begin = begin;
+  out.length = len;
+  out.dotted = (limit == NULL || p < limit) && *p == '.';
   if(out.dotted) p++;
-  out.text[len] = 0;
   out.end = p;
   return len > 0;
 }
 
 static bool tb_word_matches(const TbWord& word, const char* full, u8 min_abbrev) {
-  const usize word_len = strlen(word.text);
   const usize full_len = strlen(full);
-  if(!word.dotted) return word_len == full_len && tb_streq(word.text, full);
-  if(word_len < min_abbrev || word_len > full_len) return false;
-  for(usize i = 0; i < word_len; i++) {
-    if(word.text[i] != full[i]) return false;
+  if(!word.dotted && word.length != full_len) return false;
+  if(word.dotted && (word.length < min_abbrev || word.length > full_len)) {
+    return false;
+  }
+  for(usize i = 0; i < word.length; i++) {
+    if(tb_upper(word.begin[i]) != full[i]) return false;
   }
   return true;
+}
+
+// Each record is: result id, packed minimum abbreviation/full length, bytes.
+// Both lengths fit four bits; a zero result id terminates the table.
+static const u8 TB_COMMAND_WORDS[] = {
+  (u8) TbCommand::CMD_REM,    0x33, 'R', 'E', 'M',
+  (u8) TbCommand::CMD_REM,    0x36, 'R', 'E', 'M', 'A', 'R', 'K',
+  (u8) TbCommand::CMD_LET,    0x13, 'L', 'E', 'T',
+  (u8) TbCommand::CMD_PRINT,  0x15, 'P', 'R', 'I', 'N', 'T',
+  (u8) TbCommand::CMD_INPUT,  0x25, 'I', 'N', 'P', 'U', 'T',
+  (u8) TbCommand::CMD_IF,     0x12, 'I', 'F',
+  (u8) TbCommand::CMD_GOTO,   0x14, 'G', 'O', 'T', 'O',
+  (u8) TbCommand::CMD_GOSUB,  0x35, 'G', 'O', 'S', 'U', 'B',
+  (u8) TbCommand::CMD_RETURN, 0x16, 'R', 'E', 'T', 'U', 'R', 'N',
+  (u8) TbCommand::CMD_FOR,    0x13, 'F', 'O', 'R',
+  (u8) TbCommand::CMD_NEXT,   0x14, 'N', 'E', 'X', 'T',
+  (u8) TbCommand::CMD_END,    0x13, 'E', 'N', 'D',
+  (u8) TbCommand::CMD_STOP,   0x14, 'S', 'T', 'O', 'P',
+  0
+};
+
+static const u8 TB_FUNCTION_WORDS[] = {
+  (u8) TbFunction::SIZE,  0x14, 'S', 'I', 'Z', 'E',
+  (u8) TbFunction::RND,   0x13, 'R', 'N', 'D',
+  (u8) TbFunction::SIN,   0x23, 'S', 'I', 'N',
+  (u8) TbFunction::COS,   0x13, 'C', 'O', 'S',
+  (u8) TbFunction::TG,    0x12, 'T', 'G',
+  (u8) TbFunction::ASIN,  0x24, 'A', 'S', 'I', 'N',
+  (u8) TbFunction::ACOS,  0x24, 'A', 'C', 'O', 'S',
+  (u8) TbFunction::ATG,   0x23, 'A', 'T', 'G',
+  (u8) TbFunction::LN,    0x22, 'L', 'N',
+  (u8) TbFunction::LG,    0x22, 'L', 'G',
+  (u8) TbFunction::EXP,   0x13, 'E', 'X', 'P',
+  (u8) TbFunction::SQRT,  0x24, 'S', 'Q', 'R', 'T',
+  (u8) TbFunction::ABS,   0x13, 'A', 'B', 'S',
+  (u8) TbFunction::INT,   0x13, 'I', 'N', 'T',
+  (u8) TbFunction::FRAC,  0x14, 'F', 'R', 'A', 'C',
+  (u8) TbFunction::ROUND, 0x25, 'R', 'O', 'U', 'N', 'D',
+  (u8) TbFunction::SGN,   0x23, 'S', 'G', 'N',
+  (u8) TbFunction::MAX,   0x13, 'M', 'A', 'X',
+  0
+};
+
+static u8 tb_lookup_word(const TbWord& word, const u8* table) {
+  while(*table != 0) {
+    const u8 result = *table++;
+    const u8 lengths = *table++;
+    const u8 min_abbrev = lengths >> 4;
+    const u8 full_len = lengths & 0x0F;
+    bool matches = word.dotted
+        ? word.length >= min_abbrev && word.length <= full_len
+        : word.length == full_len;
+    for(usize i = 0; matches && i < word.length; i++) {
+      matches = tb_upper(word.begin[i]) == (char) table[i];
+    }
+    if(matches) return result;
+    table += full_len;
+  }
+  return 0;
 }
 
 static bool tb_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref& ref, bool require_available = true) {
@@ -646,15 +753,40 @@ static bool tb_parse_mk_ref_token(const char*& p, const char* end, mk61_ref::Ref
   return true;
 }
 
+static bool tb_eval_expr_range(const char* begin, const char* end,
+                               double& value, const char** out_pos,
+                               bool evaluate);
+
 static bool tb_parse_target_token(const char*& p, const char* end, TbTarget& target, bool require_available = true) {
   p = tb_skip_spaces(p);
   if(p >= end) return false;
+
+  if(*p == '@') {
+    const char* cursor = tb_skip_spaces(p + 1);
+    if(cursor >= end || *cursor != '(') return false;
+    cursor++;
+    double index_value = 0.0;
+    const char* after_index = NULL;
+    if(!tb_eval_expr_range(cursor, end, index_value, &after_index,
+                           require_available)) return false;
+    after_index = tb_skip_spaces(after_index);
+    if(after_index >= end || *after_index != ')') return false;
+    target.kind = TbTargetKind::ARRAY;
+    target.var_index = -1;
+    target.array_index = 0;
+    target.mk_ref = {mk61_ref::Kind::X, 0};
+    if(require_available &&
+       !tinybasic_array_index(index_value, target.array_index)) return false;
+    p = after_index + 1;
+    return true;
+  }
 
   mk61_ref::Ref ref;
   if(*p == '.') {
     if(!tb_parse_mk_ref_token(p, end, ref, require_available)) return false;
     target.kind = TbTargetKind::MK_REF;
     target.var_index = -1;
+    target.array_index = -1;
     target.mk_ref = ref;
     return true;
   }
@@ -664,6 +796,7 @@ static bool tb_parse_target_token(const char*& p, const char* end, TbTarget& tar
   if(var < 0 || var >= 26) return false;
   target.kind = TbTargetKind::VAR;
   target.var_index = var;
+  target.array_index = -1;
   target.mk_ref = {mk61_ref::Kind::X, 0};
   return true;
 }
@@ -673,25 +806,22 @@ static bool tb_write_target(const TbTarget& target, double value) {
     tb_vars[target.var_index] = value;
     return true;
   }
+  if(target.kind == TbTargetKind::ARRAY) {
+    double* const array = tinybasic_array_data();
+    if(array == NULL || target.array_index < 0 ||
+       (usize) target.array_index >= tinybasic_array_capacity()) return false;
+    array[target.array_index] = value;
+    return true;
+  }
   return mk61_ref::write(target.mk_ref, value);
 }
 
 static bool tb_parse_command_word(const char*& p, TbCommand& command) {
   TbWord word;
   if(!tb_read_word(p, word)) return false;
-  if(tb_word_matches(word, "REM", 3) || tb_word_matches(word, "REMARK", 3)) command = TbCommand::CMD_REM;
-  else if(tb_word_matches(word, "LET", 1)) command = TbCommand::CMD_LET;
-  else if(tb_word_matches(word, "PRINT", 1)) command = TbCommand::CMD_PRINT;
-  else if(tb_word_matches(word, "INPUT", 2)) command = TbCommand::CMD_INPUT;
-  else if(tb_word_matches(word, "IF", 1)) command = TbCommand::CMD_IF;
-  else if(tb_word_matches(word, "GOTO", 1)) command = TbCommand::CMD_GOTO;
-  else if(tb_word_matches(word, "GOSUB", 3)) command = TbCommand::CMD_GOSUB;
-  else if(tb_word_matches(word, "RETURN", 1)) command = TbCommand::CMD_RETURN;
-  else if(tb_word_matches(word, "FOR", 1)) command = TbCommand::CMD_FOR;
-  else if(tb_word_matches(word, "NEXT", 1)) command = TbCommand::CMD_NEXT;
-  else if(tb_word_matches(word, "END", 1)) command = TbCommand::CMD_END;
-  else if(tb_word_matches(word, "STOP", 1)) command = TbCommand::CMD_STOP;
-  else return false;
+  const u8 result = tb_lookup_word(word, TB_COMMAND_WORDS);
+  if(result == 0) return false;
+  command = (TbCommand) result;
   p = word.end;
   return true;
 }
@@ -723,6 +853,58 @@ static const char* tb_find_top_level(const char* begin, const char* end, char ta
   return NULL;
 }
 
+static bool tb_looks_like_command_start(const char* begin, const char* end) {
+  const char* cursor = tb_skip_spaces(begin);
+  if(cursor >= end) return false;
+  const char* saved = cursor;
+  TbCommand command = TbCommand::CMD_NONE;
+  if(tb_parse_command_word(cursor, command)) return true;
+  cursor = saved;
+  TbTarget target;
+  if(!tb_parse_target_token(cursor, end, target, false)) return false;
+  cursor = tb_skip_spaces(cursor);
+  return cursor < end && *cursor == '=';
+}
+
+static bool tb_command_has_semicolon_items(TbCommand command) {
+  return command == TbCommand::CMD_PRINT ||
+         command == TbCommand::CMD_INPUT;
+}
+
+// PATB uses ';' between commands.  The MK-61 dialect already used ';' as the
+// compact PRINT/INPUT item separator, so within those two commands it remains
+// an item separator unless the following text is recognisably another command
+// or assignment.  ':' is always accepted as the existing unambiguous extension.
+static const char* tb_find_command_end(const char* begin, const char* end,
+                                       bool semicolon_may_be_item) {
+  int depth = 0;
+  char quote = 0;
+  for(const char* p = begin; p < end; p++) {
+    if(quote != 0) {
+      if(*p == quote) quote = 0;
+      continue;
+    }
+    if(*p == '"' || *p == '\'') {
+      quote = *p;
+      continue;
+    }
+    if(*p == '(') {
+      depth++;
+      continue;
+    }
+    if(*p == ')' && depth > 0) {
+      depth--;
+      continue;
+    }
+    if(depth != 0) continue;
+    if(*p == ':') return p;
+    if(*p == ';' &&
+       (!semicolon_may_be_item ||
+        tb_looks_like_command_start(p + 1, end))) return p;
+  }
+  return end;
+}
+
 static double tb_trig_to_radians(double value) {
   const AngleUnit unit = read_grade_switch();
   if(unit == DEGREE) return value * 3.14159265358979323846 / 180.0;
@@ -737,6 +919,45 @@ static double tb_trig_from_radians(double value) {
   return value;
 }
 
+static double tb_apply_math_function(TbFunction function, double value) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST)
+  // The portable module already obtains all transcendental operations from
+  // one resident entry point.  Keep a compact operation/angle table instead
+  // of emitting a separate indirect-call sequence for every BASIC function.
+  static const u8 operations[] = {
+    (u8) (MK61_SYS_SIN   | 0x40),
+    (u8) (MK61_SYS_COS   | 0x40),
+    (u8) (MK61_SYS_TAN   | 0x40),
+    (u8) (MK61_SYS_ASIN  | 0x80),
+    (u8) (MK61_SYS_ACOS  | 0x80),
+    (u8) (MK61_SYS_ATAN  | 0x80),
+    (u8) MK61_SYS_LN,
+    (u8) MK61_SYS_LOG10,
+    (u8) MK61_SYS_EXP,
+    (u8) MK61_SYS_SQRT
+  };
+  const u8 index = (u8) function - (u8) TbFunction::SIN;
+  const u8 operation = operations[index];
+  if(operation & 0x40) value = tb_trig_to_radians(value);
+  value = portable_system::api->math(operation & 0x3F, value, 0.0);
+  return (operation & 0x80) ? tb_trig_from_radians(value) : value;
+#else
+  switch(function) {
+    case TbFunction::SIN:  return mk_math::sin(tb_trig_to_radians(value));
+    case TbFunction::COS:  return mk_math::cos(tb_trig_to_radians(value));
+    case TbFunction::TG:   return mk_math::tan(tb_trig_to_radians(value));
+    case TbFunction::ASIN: return tb_trig_from_radians(mk_math::asin(value));
+    case TbFunction::ACOS: return tb_trig_from_radians(mk_math::acos(value));
+    case TbFunction::ATG:  return tb_trig_from_radians(mk_math::atan(value));
+    case TbFunction::LN:   return mk_math::ln(value);
+    case TbFunction::LG:   return mk_math::log10(value);
+    case TbFunction::EXP:  return mk_math::exp(value);
+    case TbFunction::SQRT: return mk_math::sqrt(value);
+    default:               return 0.0;
+  }
+#endif
+}
+
 static double tb_next_random(void) {
 #ifdef TINYBASIC_HOST_TEST
   tb_random_state = tb_random_state * 25173UL + 13849UL;
@@ -746,13 +967,52 @@ static double tb_next_random(void) {
 #endif
 }
 
+enum class TbBinaryOp : u8 {
+  NONE,
+  NOT_EQUAL,
+  LESS_EQUAL,
+  GREATER_EQUAL,
+  LESS,
+  GREATER,
+  EQUAL,
+  ADD,
+  SUBTRACT,
+  OR,
+  XOR,
+  MULTIPLY,
+  DIVIDE,
+  MOD,
+  AND
+};
+
+// Record layout: operation, packed precedence/length, spelling.
+// Longer comparison spellings precede their one-character prefixes.
+static const u8 TB_BINARY_WORDS[] = {
+  (u8) TbBinaryOp::NOT_EQUAL,     0x02, '<', '>',
+  (u8) TbBinaryOp::NOT_EQUAL,     0x01, '#',
+  (u8) TbBinaryOp::LESS_EQUAL,    0x02, '<', '=',
+  (u8) TbBinaryOp::GREATER_EQUAL, 0x02, '>', '=',
+  (u8) TbBinaryOp::LESS,          0x01, '<',
+  (u8) TbBinaryOp::GREATER,       0x01, '>',
+  (u8) TbBinaryOp::EQUAL,         0x01, '=',
+  (u8) TbBinaryOp::ADD,           0x11, '+',
+  (u8) TbBinaryOp::SUBTRACT,      0x11, '-',
+  (u8) TbBinaryOp::OR,            0x12, 'O', 'R',
+  (u8) TbBinaryOp::XOR,           0x13, 'X', 'O', 'R',
+  (u8) TbBinaryOp::MULTIPLY,      0x21, '*',
+  (u8) TbBinaryOp::DIVIDE,        0x21, '/',
+  (u8) TbBinaryOp::MOD,           0x23, 'M', 'O', 'D',
+  (u8) TbBinaryOp::AND,           0x23, 'A', 'N', 'D',
+  0
+};
+
 class TbExprParser {
   public:
     TbExprParser(const char* begin, const char* end, bool evaluate = true)
       : p(begin), end(end), ok(true), evaluate(evaluate), depth(0) {}
 
     bool eval(double& out) {
-      out = parse_compare();
+      out = parse_binary(0);
       if(!ok) return false;
       if(evaluate && !mk_math::is_finite(out)) return false;
       return true;
@@ -794,145 +1054,108 @@ class TbExprParser {
     }
 
     bool match_word(const char* word) {
-      skip();
-      const usize len = strlen(word);
-      if((usize) (end - p) < len) return false;
-      for(usize i = 0; i < len; i++) {
-        if(tb_upper(p[i]) != word[i]) return false;
-      }
-      if(p + len < end && tb_is_alpha(p[len])) return false;
-      p += len;
+      TbWord token;
+      if(!tb_read_word(p, token, end) || token.dotted ||
+         !tb_word_matches(token, word, 0)) return false;
+      p = token.end;
       return true;
     }
 
-    double parse_compare(void) {
-      double left = parse_add();
-      while(ok) {
-        skip();
-        if(p >= end) break;
-        if(p + 1 < end && p[0] == '<' && p[1] == '>') {
-          p += 2;
-          const double right = parse_add();
-          left = evaluate ? ((left != right) ? 1.0 : 0.0) : 0.0;
-        } else if(p + 1 < end && p[0] == '<' && p[1] == '=') {
-          p += 2;
-          const double right = parse_add();
-          left = evaluate ? ((left <= right) ? 1.0 : 0.0) : 0.0;
-        } else if(p + 1 < end && p[0] == '>' && p[1] == '=') {
-          p += 2;
-          const double right = parse_add();
-          left = evaluate ? ((left >= right) ? 1.0 : 0.0) : 0.0;
-        } else if(*p == '<') {
-          p++;
-          const double right = parse_add();
-          left = evaluate ? ((left < right) ? 1.0 : 0.0) : 0.0;
-        } else if(*p == '>') {
-          p++;
-          const double right = parse_add();
-          left = evaluate ? ((left > right) ? 1.0 : 0.0) : 0.0;
-        } else if(*p == '=') {
-          p++;
-          const double right = parse_add();
-          left = evaluate ? ((left == right) ? 1.0 : 0.0) : 0.0;
-        } else {
-          break;
+    bool match_binary(u8 level, TbBinaryOp& operation) {
+      skip();
+      const u8* item = TB_BINARY_WORDS;
+      while(*item != 0) {
+        const TbBinaryOp candidate = (TbBinaryOp) *item++;
+        const u8 level_length = *item++;
+        const u8 candidate_level = level_length >> 4;
+        const u8 length = level_length & 0x0F;
+        bool matches = candidate_level == level &&
+                       (usize) (end - p) >= length;
+        for(u8 i = 0; matches && i < length; i++) {
+          matches = tb_upper(p[i]) == (char) item[i];
         }
+        if(matches && tb_is_alpha((char) item[0]) &&
+           p + length < end && tb_is_alpha(p[length])) {
+          matches = false;
+        }
+        if(matches) {
+          p += length;
+          operation = candidate;
+          return true;
+        }
+        item += length;
       }
-      return left;
+      operation = TbBinaryOp::NONE;
+      return false;
     }
 
-    double parse_add(void) {
-      double left = parse_mul();
-      while(ok) {
-        if(match_char('+')) {
-          const double right = parse_mul();
-          if(evaluate) left += right;
-        } else if(match_char('-')) {
-          const double right = parse_mul();
-          if(evaluate) left -= right;
-        } else if(match_word("OR")) {
-          const double right = parse_mul();
-          left = evaluate ? ((left != 0.0 || right != 0.0) ? 1.0 : 0.0) : 0.0;
-        } else if(match_word("XOR")) {
-          const double right = parse_mul();
-          const bool a = left != 0.0;
-          const bool b = right != 0.0;
-          left = evaluate ? ((a != b) ? 1.0 : 0.0) : 0.0;
-        } else break;
-      }
-      return left;
-    }
-
-    double parse_mul(void) {
-      double left = parse_unary();
-      while(ok) {
-        if(match_char('*')) {
-          const double right = parse_unary();
-          if(evaluate) left *= right;
-        } else if(match_char('/')) {
-          const double right = parse_unary();
-          if(evaluate) {
-            if(right == 0.0) ok = false;
-            else left /= right;
+    double apply_binary(TbBinaryOp operation, double left, double right) {
+      if(!evaluate) return 0.0;
+      switch(operation) {
+        case TbBinaryOp::NOT_EQUAL:     return left != right ? 1.0 : 0.0;
+        case TbBinaryOp::LESS_EQUAL:    return left <= right ? 1.0 : 0.0;
+        case TbBinaryOp::GREATER_EQUAL: return left >= right ? 1.0 : 0.0;
+        case TbBinaryOp::LESS:          return left < right ? 1.0 : 0.0;
+        case TbBinaryOp::GREATER:       return left > right ? 1.0 : 0.0;
+        case TbBinaryOp::EQUAL:         return left == right ? 1.0 : 0.0;
+        case TbBinaryOp::ADD:           return left + right;
+        case TbBinaryOp::SUBTRACT:      return left - right;
+        case TbBinaryOp::OR:
+          return left != 0.0 || right != 0.0 ? 1.0 : 0.0;
+        case TbBinaryOp::XOR:
+          return (left != 0.0) != (right != 0.0) ? 1.0 : 0.0;
+        case TbBinaryOp::MULTIPLY:      return left * right;
+        case TbBinaryOp::DIVIDE:
+          if(right != 0.0) return left / right;
+          break;
+        case TbBinaryOp::MOD:
+          if(right != 0.0) {
+            return left - mk_math::floor(left / right) * right;
           }
-        } else if(match_word("MOD")) {
-          const double right = parse_unary();
-          if(evaluate) {
-            if(right == 0.0) ok = false;
-            else left = left - mk_math::floor(left / right) * right;
-          }
-        } else if(match_word("AND")) {
-          const double right = parse_unary();
-          left = evaluate ? ((left != 0.0 && right != 0.0) ? 1.0 : 0.0) : 0.0;
-        } else break;
+          break;
+        case TbBinaryOp::AND:
+          return left != 0.0 && right != 0.0 ? 1.0 : 0.0;
+        case TbBinaryOp::NONE:
+          break;
+      }
+      ok = false;
+      return 0.0;
+    }
+
+    double parse_binary(u8 level) {
+      if(level >= 3) return parse_prefix(false);
+      double left = parse_binary((u8) (level + 1));
+      while(ok) {
+        TbBinaryOp operation;
+        if(!match_binary(level, operation)) break;
+        const double right = parse_binary((u8) (level + 1));
+        left = apply_binary(operation, left, right);
       }
       return left;
     }
 
-    double parse_unary(void) {
+    __attribute__((noinline)) double parse_prefix(bool power_operand) {
       if(!enter()) return 0.0;
-      const double value = parse_unary_inner();
+      double value = 0.0;
+      if(match_char('+')) {
+        value = parse_prefix(power_operand);
+      } else if(match_char('-')) {
+        value = parse_prefix(power_operand);
+        if(evaluate) value = -value;
+      } else if(match_word("NOT")) {
+        value = parse_prefix(power_operand);
+        if(evaluate) value = value == 0.0 ? 1.0 : 0.0;
+      } else {
+        value = power_operand ? parse_primary() : parse_power();
+      }
       leave();
       return value;
-    }
-
-    double parse_unary_inner(void) {
-      if(match_char('+')) return parse_unary();
-      if(match_char('-')) {
-        const double value = parse_unary();
-        return evaluate ? -value : 0.0;
-      }
-      if(match_word("NOT")) {
-        const double value = parse_unary();
-        return evaluate ? ((value == 0.0) ? 1.0 : 0.0) : 0.0;
-      }
-      return parse_power();
-    }
-
-    double parse_power_operand(void) {
-      if(!enter()) return 0.0;
-      const double value = parse_power_operand_inner();
-      leave();
-      return value;
-    }
-
-    double parse_power_operand_inner(void) {
-      if(match_char('+')) return parse_power_operand();
-      if(match_char('-')) {
-        const double value = parse_power_operand();
-        return evaluate ? -value : 0.0;
-      }
-      if(match_word("NOT")) {
-        const double value = parse_power_operand();
-        return evaluate ? ((value == 0.0) ? 1.0 : 0.0) : 0.0;
-      }
-      return parse_primary();
     }
 
     double parse_power(void) {
       double left = parse_primary();
       while(ok && match_char('^')) {
-        const double right = parse_power_operand();
+        const double right = parse_prefix(true);
         if(evaluate) left = mk_math::pow(left, right);
       }
       return left;
@@ -953,7 +1176,7 @@ class TbExprParser {
       }
 
       if(match_char('(')) {
-        const double value = parse_compare();
+        const double value = parse_binary(0);
         if(!match_char(')')) ok = false;
         return value;
       }
@@ -973,10 +1196,35 @@ class TbExprParser {
         return value;
       }
 
+      if(*p == '@') {
+        p++;
+        if(!match_char('(')) {
+          ok = false;
+          return 0.0;
+        }
+        const double index_value = parse_binary(0);
+        if(!match_char(')')) {
+          ok = false;
+          return 0.0;
+        }
+        if(!evaluate) return 0.0;
+        int index = 0;
+        if(!tinybasic_array_index(index_value, index)) {
+          ok = false;
+          return 0.0;
+        }
+        double* const array = tinybasic_array_data();
+        if(array == NULL) {
+          ok = false;
+          return 0.0;
+        }
+        return array[index];
+      }
+
       if(tb_is_digit(*p) || *p == '.') {
         const char* after = NULL;
-        const double value = mk_math::strtod(p, &after);
-        if(after == p || after > end) {
+        double value = 0.0;
+        if(!tb_parse_number_text(p, value, after) || after > end) {
           ok = false;
           return 0.0;
         }
@@ -986,24 +1234,41 @@ class TbExprParser {
       }
 
       if(tb_is_alpha(*p)) {
-        char word[12];
-        u8 len = 0;
-        while(p < end && tb_is_alpha(*p) && len < sizeof(word) - 1) word[len++] = tb_upper(*p++);
-        while(p < end && tb_is_alpha(*p)) p++;
-        word[len] = 0;
+        TbWord function;
+        if(!tb_read_word(p, function, end)) {
+          ok = false;
+          return 0.0;
+        }
+        p = function.end;
 
-        if(len == 1 && word[0] >= 'A' && word[0] <= 'Z') return evaluate ? tb_vars[word[0] - 'A'] : 0.0;
-        if(tb_streq(word, "PI")) return evaluate ? 3.14159265358979323846 : 0.0;
+        if(!function.dotted && function.length == 1) {
+          const char variable = tb_upper(*function.begin);
+          if(variable >= 'A' && variable <= 'Z') {
+            return evaluate ? tb_vars[variable - 'A'] : 0.0;
+          }
+        }
+        if(!function.dotted && tb_word_matches(function, "PI", 2)) {
+          return evaluate ? 3.14159265358979323846 : 0.0;
+        }
+        const TbFunction function_id =
+            (TbFunction) tb_lookup_word(function, TB_FUNCTION_WORDS);
+        if(function_id == TbFunction::SIZE) {
+          return evaluate ? tinybasic_size_value() : 0.0;
+        }
+        if(function_id == TbFunction::NONE) {
+          ok = false;
+          return 0.0;
+        }
 
         if(!match_char('(')) {
           ok = false;
           return 0.0;
         }
 
-        if(tb_streq(word, "RND")) {
+        if(function_id == TbFunction::RND) {
           skip();
           if(match_char(')')) return evaluate ? tb_next_random() : 0.0;
-          const double max_value = parse_compare();
+          const double max_value = parse_binary(0);
           if(!match_char(')')) ok = false;
           if(!evaluate) return 0.0;
           if(!mk_math::is_finite(max_value)) {
@@ -1018,11 +1283,11 @@ class TbExprParser {
           return 1.0 + mk_math::floor(tb_next_random() * limit);
         }
 
-        const double a = parse_compare();
+        const double a = parse_binary(0);
         double b = 0.0;
         bool has_b = false;
         if(match_char(',')) {
-          b = parse_compare();
+          b = parse_binary(0);
           has_b = true;
         }
         if(!match_char(')')) {
@@ -1030,37 +1295,42 @@ class TbExprParser {
           return 0.0;
         }
 
-        const bool is_max = tb_streq(word, "MAX");
-        if(is_max != has_b) {
+        if((function_id == TbFunction::MAX) != has_b) {
           ok = false;
           return 0.0;
         }
         if(!evaluate) {
-          if(is_max || tb_streq(word, "SIN") || tb_streq(word, "COS") || tb_streq(word, "TG") ||
-             tb_streq(word, "ASIN") || tb_streq(word, "ACOS") || tb_streq(word, "ATG") ||
-             tb_streq(word, "LN") || tb_streq(word, "LG") || tb_streq(word, "EXP") ||
-             tb_streq(word, "SQRT") || tb_streq(word, "ABS") || tb_streq(word, "INT") ||
-             tb_streq(word, "FRAC") || tb_streq(word, "ROUND") || tb_streq(word, "SGN")) return 0.0;
-          ok = false;
           return 0.0;
         }
 
-        if(tb_streq(word, "SIN")) return mk_math::sin(tb_trig_to_radians(a));
-        if(tb_streq(word, "COS")) return mk_math::cos(tb_trig_to_radians(a));
-        if(tb_streq(word, "TG")) return mk_math::tan(tb_trig_to_radians(a));
-        if(tb_streq(word, "ASIN")) return tb_trig_from_radians(mk_math::asin(a));
-        if(tb_streq(word, "ACOS")) return tb_trig_from_radians(mk_math::acos(a));
-        if(tb_streq(word, "ATG")) return tb_trig_from_radians(mk_math::atan(a));
-        if(tb_streq(word, "LN")) return mk_math::ln(a);
-        if(tb_streq(word, "LG")) return mk_math::log10(a);
-        if(tb_streq(word, "EXP")) return mk_math::exp(a);
-        if(tb_streq(word, "SQRT")) return mk_math::sqrt(a);
-        if(tb_streq(word, "ABS")) return mk_math::fabs(a);
-        if(tb_streq(word, "INT")) return mk_math::floor(a);
-        if(tb_streq(word, "FRAC")) return mk_math::frac(a);
-        if(tb_streq(word, "ROUND")) return mk_math::round_half(a);
-        if(tb_streq(word, "SGN")) return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
-        if(is_max) return (a > b) ? a : b;
+        if(function_id >= TbFunction::SIN &&
+           function_id <= TbFunction::SQRT) {
+          return tb_apply_math_function(function_id, a);
+        }
+
+        switch(function_id) {
+          case TbFunction::ABS:   return mk_math::fabs(a);
+          case TbFunction::INT:   return mk_math::floor(a);
+          case TbFunction::FRAC:  return mk_math::frac(a);
+          case TbFunction::ROUND: return mk_math::round_half(a);
+          case TbFunction::SGN:
+            return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
+          case TbFunction::MAX:   return (a > b) ? a : b;
+          case TbFunction::NONE:
+          case TbFunction::SIZE:
+          case TbFunction::RND:
+          case TbFunction::SIN:
+          case TbFunction::COS:
+          case TbFunction::TG:
+          case TbFunction::ASIN:
+          case TbFunction::ACOS:
+          case TbFunction::ATG:
+          case TbFunction::LN:
+          case TbFunction::LG:
+          case TbFunction::EXP:
+          case TbFunction::SQRT:
+            break;
+        }
       }
 
       ok = false;
@@ -1082,193 +1352,8 @@ static bool tb_validate_expr_range(const char* begin, const char* end, const cha
   return tb_eval_expr_range(begin, end, ignored, out_pos, false);
 }
 
-static bool tb_validate_assignment(const char* begin, const char* end) {
-  const char* p = tb_skip_spaces(begin);
-  TbTarget target;
-  if(!tb_parse_target_token(p, end, target, false)) return false;
-  p = tb_skip_spaces(p);
-  if(p >= end || *p != '=') return false;
-  p++;
-
-  if(target.kind == TbTargetKind::MK_REF) return tb_validate_expr_range(p, end);
-
-  int var = target.var_index;
-  while(true) {
-    const char* item_end = tb_find_top_level(p, end, ',');
-    if(item_end == NULL) item_end = end;
-    if(var < 0 || var >= 26 || !tb_validate_expr_range(p, item_end)) return false;
-    var++;
-    if(item_end >= end) return true;
-    p = item_end + 1;
-  }
-}
-
-static bool tb_validate_print(const char* begin, const char* end) {
-  const char* p = tb_skip_spaces(begin);
-  if(p >= end) return true;
-
-  while(p < end) {
-    p = tb_skip_spaces(p);
-    if(p >= end) return false;
-    if(*p == '"' || *p == '\'') {
-      const char quote = *p++;
-      while(p < end && *p != quote) p++;
-      if(p >= end) return false;
-      p++;
-    } else {
-      const char* comma = tb_find_top_level(p, end, ',');
-      const char* semi = tb_find_top_level(p, end, ';');
-      const char* item_end = end;
-      if(comma != NULL && comma < item_end) item_end = comma;
-      if(semi != NULL && semi < item_end) item_end = semi;
-      if(!tb_validate_expr_range(p, item_end)) return false;
-      p = item_end;
-    }
-
-    p = tb_skip_spaces(p);
-    if(p >= end) return true;
-    if(*p != ',' && *p != ';') return false;
-    p++;
-    if(tb_skip_spaces(p) >= end) return true;
-  }
-  return true;
-}
-
-static bool tb_validate_input(const char* begin, const char* end) {
-  const char* p = tb_skip_spaces(begin);
-  bool has_target = false;
-  bool need_item = true;
-  while(p < end) {
-    p = tb_skip_spaces(p);
-    if(p >= end) break;
-    need_item = false;
-    if(*p == '"' || *p == '\'') {
-      const char quote = *p++;
-      while(p < end && *p != quote) p++;
-      if(p >= end) return false;
-      p++;
-    } else {
-      TbTarget target;
-      if(!tb_parse_target_token(p, end, target, false)) return false;
-      has_target = true;
-    }
-
-    p = tb_skip_spaces(p);
-    if(p >= end) break;
-    if(*p != ',' && *p != ';') return false;
-    p++;
-    need_item = true;
-  }
-  return has_target && !need_item;
-}
-
-static bool tb_validate_for(const char* begin, const char* end) {
-  const char* p = tb_skip_spaces(begin);
-  if(p >= end || !tb_is_alpha(*p)) return false;
-  p++;
-  p = tb_skip_spaces(p);
-  if(p >= end || *p != '=') return false;
-  p++;
-  const char* after_start = NULL;
-  if(!tb_validate_expr_range(p, end, &after_start)) return false;
-  p = after_start;
-  if(!tb_consume_word(p, "TO", 1)) return false;
-  return tb_validate_expr_range(p, end);
-}
-
-static bool tb_validate_next(const char* begin, const char* end) {
-  const char* p = tb_skip_spaces(begin);
-  if(p >= end || !tb_is_alpha(*p)) return false;
-  p++;
-  return tb_skip_spaces(p) >= end;
-}
-
-static bool tb_validate_command_list(const char* begin, const char* end, u8 depth = 0);
-
-static bool tb_validate_one(const char*& cursor, const char* end, u8 depth) {
-  cursor = tb_skip_spaces(cursor);
-  if(cursor >= end) return false;
-
-  const char* command_start = cursor;
-  TbCommand command = TbCommand::CMD_NONE;
-  const bool has_command = tb_parse_command_word(cursor, command);
-  if(!has_command) {
-    cursor = command_start;
-    const char* segment_end = tb_find_top_level(cursor, end, ':');
-    if(segment_end == NULL) segment_end = end;
-    if(!tb_validate_assignment(cursor, segment_end)) return false;
-    if(segment_end < end && segment_end + 1 >= end) return false;
-    cursor = (segment_end < end) ? segment_end + 1 : segment_end;
-    return true;
-  }
-
-  if(command == TbCommand::CMD_REM) {
-    cursor = end;
-    return true;
-  }
-
-  if(command == TbCommand::CMD_IF) {
-    if(depth >= TB_COMMAND_DEPTH) return false;
-    const char* after_expr = NULL;
-    if(!tb_validate_expr_range(cursor, end, &after_expr)) return false;
-    cursor = after_expr;
-    (void) tb_consume_word(cursor, "THEN", 1);
-    cursor = tb_skip_spaces(cursor);
-    if(cursor >= end || !tb_validate_command_list(cursor, end, (u8) (depth + 1))) return false;
-    cursor = end;
-    return true;
-  }
-
-  const char* segment_end = tb_find_top_level(cursor, end, ':');
-  if(segment_end == NULL) segment_end = end;
-  bool terminal = false;
-  switch(command) {
-    case TbCommand::CMD_LET:
-      if(!tb_validate_assignment(cursor, segment_end)) return false;
-      break;
-    case TbCommand::CMD_PRINT:
-      if(!tb_validate_print(cursor, segment_end)) return false;
-      break;
-    case TbCommand::CMD_INPUT:
-      if(!tb_validate_input(cursor, segment_end)) return false;
-      break;
-    case TbCommand::CMD_GOTO:
-    case TbCommand::CMD_GOSUB:
-      if(!tb_validate_expr_range(cursor, segment_end)) return false;
-      terminal = true;
-      break;
-    case TbCommand::CMD_RETURN:
-    case TbCommand::CMD_END:
-    case TbCommand::CMD_STOP:
-      if(tb_skip_spaces(cursor) < segment_end) return false;
-      terminal = true;
-      break;
-    case TbCommand::CMD_FOR:
-      if(!tb_validate_for(cursor, segment_end)) return false;
-      terminal = true;
-      break;
-    case TbCommand::CMD_NEXT:
-      if(!tb_validate_next(cursor, segment_end)) return false;
-      break;
-    case TbCommand::CMD_REM:
-    case TbCommand::CMD_IF:
-    case TbCommand::CMD_NONE:
-      return false;
-  }
-
-  if(terminal && segment_end < end) return false;
-  if(segment_end < end && segment_end + 1 >= end) return false;
-  cursor = (segment_end < end) ? segment_end + 1 : segment_end;
-  return true;
-}
-
-static bool tb_validate_command_list(const char* begin, const char* end, u8 depth) {
-  const char* cursor = begin;
-  while(cursor < end) {
-    if(!tb_validate_one(cursor, end, depth)) return false;
-  }
-  return true;
-}
+static bool tb_validate_command_list(const char* begin, const char* end,
+                                     u8 depth = 0);
 
 static bool tb_parse_line_number(const char*& p, i16& number) {
   p = tb_skip_spaces(p);
@@ -1333,7 +1418,6 @@ static bool tb_compile_source(const char* source, TbAst& ast) {
   for(i16 i = 1; i < ast.line_count; i++) {
     if(ast.lines[i - 1].number == ast.lines[i].number) return tb_error("WHAT?");
   }
-  ast.ok = true;
   tb_last_error[0] = 0;
   return true;
 }
@@ -1394,120 +1478,168 @@ static bool tb_append_print_separator(char sep) {
 static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
 #ifdef TINYBASIC_HOST_TEST
   (void) prompt;
+  if(tb_host_input_expression[0] != 0) {
+    const char* const end = tb_host_input_expression +
+                            strlen(tb_host_input_expression);
+    return tb_eval_expr_range(tb_host_input_expression, end, value);
+  }
   value = tb_host_input_value;
   return true;
 #else
-  char buffer[17];
+  char buffer[65];
   memset(buffer, 0, sizeof(buffer));
-  u16 len = 0;
-  bool alpha_shift = false;
+  text_editor::Buffer editor = {
+    buffer, sizeof(buffer), 0, 0, 0, text_editor::Shift::NONE,
+    {false, -1, 0, 0}
+  };
   while(true) {
+    const u32 now = millis();
+    if(text_editor::sms_expired(editor.sms, now)) {
+      text_editor::sms_reset(editor.sms);
+    }
     tb_message_i18n(prompt, prompt, buffer, buffer);
     const i32 key = kbd::get_key_wait();
-    if(key == KEY_ALPHA) {
-      alpha_shift = true;
-      continue;
-    }
-    const bool alpha_key = alpha_shift || kbd::is_key_pressed(KEY_ALPHA);
-    alpha_shift = false;
-    if(key == KEY_ESC || key == KEY_ESC_PRESS) return false;
-    if(key == KEY_OK || key == KEY_OK_PRESS) {
-      const char* endptr = NULL;
-      const double parsed = mk_math::strtod(buffer, &endptr);
-      if(endptr != buffer && *tb_skip_spaces(endptr) == 0 && mk_math::is_finite(parsed)) {
-        value = parsed;
+    if(editor.shift == text_editor::Shift::NONE &&
+       (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
+    if(editor.shift == text_editor::Shift::NONE &&
+       (key == KEY_OK || key == KEY_OK_PRESS)) {
+      if(editor.len != 0 &&
+         tb_eval_expr_range(buffer, buffer + editor.len, value)) {
         return true;
       }
       tb_message_i18n("WHAT?", "ЧТО?", "number", "число");
       delay(500);
+      buffer[0] = 0;
+      editor.len = editor.cursor = editor.view_top = 0;
+      editor.shift = text_editor::Shift::NONE;
+      text_editor::sms_reset(editor.sms);
       continue;
     }
-    if(key == KEY_CX) {
-      text_editor::apply_single_line_cx(buffer, len, sizeof(buffer), alpha_key);
-      continue;
-    }
-    if(key >= 0 && key < 40) {
-      const char* text = tinybasic_plain_key_text(key);
-      if(text == NULL || text[1] != 0) continue;
-      const char ch = text[0];
-      if((ch >= '0' && ch <= '9') || ch == '.' || ch == '-' || ch == '+') {
-        if(len < sizeof(buffer) - 1) {
-          buffer[len++] = ch;
-          buffer[len] = 0;
-        }
-      }
-    }
+    (void) tinybasic_handle_editor_key(editor, "", key, now);
   }
 #endif
 }
 
-static bool tb_execute_command_list(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow, u8 depth = 0);
+static bool tb_process_command_list(const char* begin, const char* end,
+                                    i16 current_pc, TbRunState* state,
+                                    TbFlow* flow, u8 depth, bool execute);
 
-static bool tb_execute_assignment(const char* begin, const char* end) {
+static bool tb_process_assignment(const char* begin, const char* end,
+                                  bool execute) {
   const char* p = tb_skip_spaces(begin);
   TbTarget target;
-  if(!tb_parse_target_token(p, end, target)) return tb_error("WHAT?");
-  p = tb_skip_spaces(p);
-  if(*p != '=') return tb_error("WHAT?");
-  p++;
-
-  if(target.kind == TbTargetKind::MK_REF) {
-    double value = 0.0;
-    if(!tb_eval_expr_range(p, end, value)) return tb_error("HOW?");
-    if(!tb_write_target(target, value)) return tb_error("HOW?");
-    return true;
+  if(!tb_parse_target_token(p, end, target, execute)) {
+    return tb_error("WHAT?");
   }
-
-  int var = target.var_index;
+  p = tb_skip_spaces(p);
+  if(p >= end || *p != '=') return tb_error("WHAT?");
+  p++;
   while(true) {
     const char* item_end = tb_find_top_level(p, end, ',');
     if(item_end == NULL) item_end = end;
     double value = 0.0;
-    if(!tb_eval_expr_range(p, item_end, value)) return tb_error("HOW?");
-    if(var < 0 || var >= 26) return tb_error("HOW?");
-    tb_vars[var++] = value;
+    if(!tb_eval_expr_range(p, item_end, value, NULL, execute)) {
+      return tb_error("HOW?");
+    }
+    if(execute && !tb_write_target(target, value)) return tb_error("HOW?");
     if(item_end >= end) break;
     p = item_end + 1;
+
+    const char* explicit_cursor = p;
+    TbTarget explicit_target;
+    if(tb_parse_target_token(explicit_cursor, end, explicit_target, execute)) {
+      explicit_cursor = tb_skip_spaces(explicit_cursor);
+      if(explicit_cursor < end && *explicit_cursor == '=') {
+        target = explicit_target;
+        p = explicit_cursor + 1;
+        continue;
+      }
+    }
+
+    if(target.kind != TbTargetKind::VAR || target.var_index + 1 >= 26) {
+      return tb_error("HOW?");
+    }
+    target.var_index++;
   }
   return true;
 }
 
-static bool tb_execute_print(const char* begin, const char* end) {
+static bool tb_process_print(const char* begin, const char* end,
+                             bool execute) {
   const char* p = begin;
   char trailing_sep = 0;
+  // MK-61 keeps its compact display-friendly default.  PATB's historical
+  // eight-column layout is available explicitly with PRINT #8,... .
+  int field_width = 0;
   if(tb_skip_spaces(p) >= end) {
-    tb_flush_print();
+    if(execute) tb_flush_print();
     return true;
   }
 
   while(p < end) {
     p = tb_skip_spaces(p);
     if(p >= end) break;
+    if(*p == ',' || *p == ';') {
+      trailing_sep = *p++;
+      if(execute && trailing_sep == ',' && !tb_append_print(" ")) {
+        return tb_error("SORRY");
+      }
+      continue;
+    }
+    bool item_was_format = false;
     if(*p == '"' || *p == '\'') {
       const char quote = *p++;
       const char* text_begin = p;
       while(p < end && *p != quote) p++;
       if(p >= end) return tb_error("WHAT?");
-      if(!tb_append_print_range(text_begin, p)) return tb_error("SORRY");
+      if(execute && !tb_append_print_range(text_begin, p)) {
+        return tb_error("SORRY");
+      }
       p++;
+    } else if(*p == '^') {
+      p++;
+      if(p >= end || !tb_is_alpha(*p)) return tb_error("WHAT?");
+      const char control = (char) (tb_upper(*p++) ^ 0x40);
+      if(execute && !tb_append_print_range(&control, &control + 1)) {
+        return tb_error("SORRY");
+      }
     } else {
       const char* comma = tb_find_top_level(p, end, ',');
       const char* semi = tb_find_top_level(p, end, ';');
       const char* item_end = end;
       if(comma != NULL && comma < item_end) item_end = comma;
       if(semi != NULL && semi < item_end) item_end = semi;
+      const bool format = *p == '#';
+      item_was_format = format;
+      if(format) p++;
       double value = 0.0;
-      if(!tb_eval_expr_range(p, item_end, value)) return tb_error("HOW?");
-      char number[24];
-      tb_format_number(value, number, sizeof(number));
-      if(!tb_append_print(number)) return tb_error("SORRY");
+      if(!tb_eval_expr_range(p, item_end, value, NULL, execute)) {
+        return tb_error("HOW?");
+      }
+      if(execute && format) {
+        const double rounded = mk_math::floor(value + 0.5);
+        if(value < 0.0 || value > 63.0 ||
+           mk_math::fabs(value - rounded) > 0.0000001) {
+          return tb_error("HOW?");
+        }
+        field_width = (int) rounded;
+      } else if(execute) {
+        char number[24];
+        tb_format_number(value, number, sizeof(number));
+        const int number_len = (int) strlen(number);
+        for(int spaces = field_width - number_len; spaces > 0; spaces--) {
+          if(!tb_append_print(" ")) return tb_error("SORRY");
+        }
+        if(!tb_append_print(number)) return tb_error("SORRY");
+      }
       p = item_end;
     }
 
     p = tb_skip_spaces(p);
     if(p < end && (*p == ',' || *p == ';')) {
       trailing_sep = *p++;
-      if(!tb_append_print_separator(trailing_sep)) return tb_error("SORRY");
+      if(execute && !item_was_format &&
+         !tb_append_print_separator(trailing_sep)) return tb_error("SORRY");
       continue;
     }
     if(p < end) return tb_error("WHAT?");
@@ -1515,48 +1647,94 @@ static bool tb_execute_print(const char* begin, const char* end) {
     break;
   }
 
-  if(trailing_sep == 0) tb_flush_print();
+  if(execute && trailing_sep == 0) tb_flush_print();
   return true;
 }
 
-static bool tb_execute_input(const char* begin, const char* end, i16 current_pc, TbFlow& flow) {
+static bool tb_process_input(const char* begin, const char* end,
+                             i16 current_pc, TbFlow* flow,
+                             bool execute) {
   const char* p = begin;
   char prompt[17] = ":";
+  bool custom_prompt = false;
+  bool has_target = false;
   while(p < end) {
     p = tb_skip_spaces(p);
     if(p >= end) break;
+    bool prompt_item = false;
     if(*p == '"' || *p == '\'') {
+      prompt_item = true;
       const char quote = *p++;
       const char* text_begin = p;
       while(p < end && *p != quote) p++;
       if(p >= end) return tb_error("WHAT?");
-      tb_copy_range(prompt, sizeof(prompt), text_begin, p);
-      p++;
-    } else {
-      TbTarget target;
-      if(!tb_parse_target_token(p, end, target)) return tb_error("WHAT?");
-      double value = 0.0;
-      if(!tb_read_number_from_keyboard(prompt, value)) {
-        tb_pending_print[0] = 0;
-        tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
-        flow = tb_flow(TbFlowKind::STOP, current_pc);
-        return true;
+      if(execute) {
+        const usize used = custom_prompt ? strlen(prompt) : 0;
+        if(!custom_prompt) prompt[0] = 0;
+        tb_copy_range(prompt + used, sizeof(prompt) - used, text_begin, p);
+        custom_prompt = true;
       }
-      if(!tb_write_target(target, value)) return tb_error("HOW?");
-      prompt[0] = ':';
-      prompt[1] = 0;
+      p++;
+    } else if(*p == '^') {
+      prompt_item = true;
+      p++;
+      if(p >= end || !tb_is_alpha(*p)) return tb_error("WHAT?");
+      const char control = (char) (tb_upper(*p++) ^ 0x40);
+      if(execute) {
+        const usize used = custom_prompt ? strlen(prompt) : 0;
+        if(!custom_prompt) prompt[0] = 0;
+        if(used + 1 < sizeof(prompt)) {
+          prompt[used] = control;
+          prompt[used + 1] = 0;
+        }
+        custom_prompt = true;
+      }
+    } else {
+      const char* const target_begin = p;
+      TbTarget target;
+      if(!tb_parse_target_token(p, end, target, execute)) {
+        return tb_error("WHAT?");
+      }
+      has_target = true;
+      if(execute && !custom_prompt) {
+        const usize target_len = (usize) (p - target_begin);
+        const usize copy_len = target_len < sizeof(prompt) - 2
+            ? target_len : sizeof(prompt) - 2;
+        memcpy(prompt, target_begin, copy_len);
+        prompt[copy_len] = ':';
+        prompt[copy_len + 1] = 0;
+      }
+      if(execute) {
+        double value = 0.0;
+        if(!tb_read_number_from_keyboard(prompt, value)) {
+          tb_pending_print[0] = 0;
+          tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
+          *flow = tb_flow(TbFlowKind::STOP, current_pc);
+          return true;
+        }
+        if(!tb_write_target(target, value)) return tb_error("HOW?");
+        prompt[0] = ':';
+        prompt[1] = 0;
+        custom_prompt = false;
+      }
     }
 
     p = tb_skip_spaces(p);
     if(p < end) {
-      if(*p != ',' && *p != ';') return tb_error("WHAT?");
-      p++;
+      if(*p == ',' || *p == ';') p++;
+      else if(!prompt_item ||
+              (*p != '@' && *p != '.' && !tb_is_alpha(*p))) {
+        return tb_error("WHAT?");
+      }
     }
   }
-  return true;
+  return has_target;
 }
 
-static bool tb_execute_goto_like(const char* begin, const char* end, TbFlow& flow, bool gosub, i16 current_pc, TbRunState& state) {
+static bool tb_execute_goto_like(const char* begin, const char* end,
+                                 TbFlow& flow, bool gosub,
+                                 const TbReturnFrame& continuation,
+                                 TbRunState& state) {
   double value = 0.0;
   if(!tb_eval_expr_range(begin, end, value)) return tb_error("HOW?");
   const int number = tb_line_number_from_value(value);
@@ -1564,7 +1742,7 @@ static bool tb_execute_goto_like(const char* begin, const char* end, TbFlow& flo
   if(pc < 0) return tb_error("HOW?");
   if(gosub) {
     if(state.call_sp + 1 >= TB_CALL_DEPTH) return tb_error("HOW?");
-    state.call_stack[++state.call_sp] = (i16) (current_pc + 1);
+    state.call_stack[++state.call_sp] = continuation;
   }
   flow = tb_flow(TbFlowKind::JUMP, (i16) pc);
   return true;
@@ -1578,7 +1756,9 @@ struct TbLoopSearch {
   const char* after;
 };
 
-static bool tb_scan_loop_events(const char* begin, const char* end, TbLoopSearch& search, u8 command_depth = 0) {
+__attribute__((noinline)) static bool tb_scan_loop_events(
+    const char* begin, const char* end, TbLoopSearch& search,
+    u8 command_depth = 0) {
   const char* cursor = begin;
   while(cursor < end && !search.found) {
     cursor = tb_skip_spaces(cursor);
@@ -1587,8 +1767,8 @@ static bool tb_scan_loop_events(const char* begin, const char* end, TbLoopSearch
     TbCommand command = TbCommand::CMD_NONE;
     if(!tb_parse_command_word(cursor, command)) {
       cursor = command_start;
-      const char* segment_end = tb_find_top_level(cursor, end, ':');
-      cursor = (segment_end == NULL) ? end : segment_end + 1;
+      const char* segment_end = tb_find_command_end(cursor, end, false);
+      cursor = (segment_end < end) ? segment_end + 1 : segment_end;
       continue;
     }
     if(command == TbCommand::CMD_REM) return true;
@@ -1601,8 +1781,8 @@ static bool tb_scan_loop_events(const char* begin, const char* end, TbLoopSearch
       return tb_scan_loop_events(cursor, end, search, (u8) (command_depth + 1));
     }
 
-    const char* segment_end = tb_find_top_level(cursor, end, ':');
-    if(segment_end == NULL) segment_end = end;
+    const char* segment_end = tb_find_command_end(
+        cursor, end, tb_command_has_semicolon_items(command));
     if(command == TbCommand::CMD_FOR || command == TbCommand::CMD_NEXT) {
       const char* var = tb_skip_spaces(cursor);
       if(var >= segment_end || !tb_is_alpha(*var)) return false;
@@ -1624,17 +1804,24 @@ static bool tb_scan_loop_events(const char* begin, const char* end, TbLoopSearch
   return true;
 }
 
-static bool tb_find_after_matching_next(i16 current_pc, int var_index, i16& target_pc, u16& target_offset) {
+__attribute__((noinline)) static bool tb_find_after_matching_next(
+    i16 start_pc, u16 start_offset, int var_index, i16& target_pc,
+    u16& target_offset) {
   TbLoopSearch search;
   memset(&search, 0, sizeof(search));
   search.target_var = var_index;
   const char* const source = tb_compiled_source(tb_ast);
   if(source == NULL) return tb_error("HOW?");
-  for(i16 pc = (i16) (current_pc + 1); pc < tb_ast.line_count; pc++) {
+  for(i16 pc = start_pc; pc < tb_ast.line_count; pc++) {
     const TbLine& line = tb_ast.lines[pc];
     const char* line_begin = source + line.offset;
     const char* line_end = line_begin + line.len;
-    if(!tb_scan_loop_events(line_begin, line_end, search)) return false;
+    const char* scan_begin = line_begin;
+    if(pc == start_pc) {
+      if(start_offset > line.len) return false;
+      scan_begin += start_offset;
+    }
+    if(!tb_scan_loop_events(scan_begin, line_end, search)) return false;
     if(search.found) {
       if(search.after < line_end) {
         target_pc = pc;
@@ -1649,57 +1836,98 @@ static bool tb_find_after_matching_next(i16 current_pc, int var_index, i16& targ
   return false;
 }
 
-static bool tb_execute_for(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow) {
+static bool tb_process_for(const char* begin, const char* end,
+                           const TbReturnFrame& continuation,
+                           TbRunState* state, TbFlow* flow,
+                           bool execute) {
   const char* p = tb_skip_spaces(begin);
-  if(!tb_is_alpha(*p)) return tb_error("WHAT?");
+  if(p >= end || !tb_is_alpha(*p)) return tb_error("WHAT?");
   const int var = tb_upper(*p++) - 'A';
   p = tb_skip_spaces(p);
-  if(*p != '=') return tb_error("WHAT?");
+  if(p >= end || *p != '=') return tb_error("WHAT?");
   p++;
   const char* after_start = NULL;
   double start_value = 0.0;
-  if(!tb_eval_expr_range(p, end, start_value, &after_start)) return tb_error("HOW?");
+  if(!tb_eval_expr_range(p, end, start_value, &after_start, execute)) {
+    return tb_error("HOW?");
+  }
   p = after_start;
   if(!tb_consume_word(p, "TO", 1)) return tb_error("WHAT?");
   double limit = 0.0;
-  if(!tb_eval_expr_range(p, end, limit)) return tb_error("HOW?");
+  const char* after_limit = NULL;
+  if(!tb_eval_expr_range(p, end, limit, &after_limit, execute)) {
+    return tb_error("HOW?");
+  }
+  p = tb_skip_spaces(after_limit);
+  double step = 1.0;
+  if(p < end) {
+    if(!tb_consume_word(p, "STEP", 1) ||
+       !tb_eval_expr_range(p, end, step, NULL, execute)) {
+      return tb_error("HOW?");
+    }
+  }
+  if(!execute) return true;
   tb_vars[var] = start_value;
-  if(start_value > limit) {
+  const bool outside = step < 0.0 ? start_value < limit : start_value > limit;
+  if(outside) {
     i16 target_pc = -1;
     u16 target_offset = 0;
-    if(!tb_find_after_matching_next(current_pc, var, target_pc, target_offset)) return tb_error("HOW?");
-    flow = tb_flow(TbFlowKind::JUMP, target_pc, target_offset);
+    if(!tb_find_after_matching_next(continuation.pc, continuation.offset,
+                                    var, target_pc, target_offset)) {
+      return tb_error("HOW?");
+    }
+    *flow = tb_flow(TbFlowKind::JUMP, target_pc, target_offset);
     return true;
   }
-  if(state.for_sp + 1 >= TB_FOR_DEPTH) return tb_error("HOW?");
-  TbForFrame& frame = state.for_stack[++state.for_sp];
+
+  for(i8 index = state->for_sp; index >= 0; index--) {
+    if(state->for_stack[index].var_index == var) {
+      state->for_sp = (i8) (index - 1);
+      break;
+    }
+  }
+  if(state->for_sp + 1 >= TB_FOR_DEPTH) return tb_error("HOW?");
+  TbForFrame& frame = state->for_stack[++state->for_sp];
   frame.var_index = var;
   frame.limit = limit;
-  frame.return_pc = (i16) (current_pc + 1);
+  frame.step = step;
+  frame.return_pc = continuation.pc;
+  frame.return_offset = continuation.offset;
   return true;
 }
 
-static bool tb_execute_next(const char* begin, const char* end, TbRunState& state, TbFlow& flow) {
+static bool tb_process_next(const char* begin, const char* end,
+                            TbRunState* state, TbFlow* flow,
+                            bool execute) {
   const char* p = tb_skip_spaces(begin);
-  if(!tb_is_alpha(*p)) return tb_error("WHAT?");
+  if(p >= end || !tb_is_alpha(*p)) return tb_error("WHAT?");
   const int var = tb_upper(*p++) - 'A';
   p = tb_skip_spaces(p);
   if(p < end) return tb_error("WHAT?");
-  if(state.for_sp < 0) return tb_error("HOW?");
-  TbForFrame& frame = state.for_stack[state.for_sp];
-  if(frame.var_index != var) return tb_error("HOW?");
-  tb_vars[var] += 1.0;
-  if(tb_vars[var] <= frame.limit) {
-    flow = tb_flow(TbFlowKind::JUMP, frame.return_pc);
+  if(!execute) return true;
+  while(state->for_sp >= 0 &&
+        state->for_stack[state->for_sp].var_index != var) {
+    state->for_sp--;
+  }
+  if(state->for_sp < 0) return tb_error("HOW?");
+  TbForFrame& frame = state->for_stack[state->for_sp];
+  tb_vars[var] += frame.step;
+  const bool inside = frame.step < 0.0
+      ? tb_vars[var] >= frame.limit : tb_vars[var] <= frame.limit;
+  if(inside) {
+    *flow = tb_flow(TbFlowKind::JUMP, frame.return_pc,
+                    frame.return_offset);
   } else {
-    state.for_sp--;
+    state->for_sp--;
   }
   return true;
 }
 
-static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow, u8 depth) {
+static bool tb_process_one(const char*& cursor, const char* end,
+                           i16 current_pc, TbRunState* state,
+                           TbFlow* flow, u8 depth, bool execute) {
   cursor = tb_skip_spaces(cursor);
-  if(cursor >= end) return true;
+  if(cursor >= end) return false;
 
   const char* command_start = cursor;
   TbCommand command = TbCommand::CMD_NONE;
@@ -1707,9 +1935,8 @@ static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc,
 
   if(!has_command) {
     cursor = command_start;
-    const char* segment_end = tb_find_top_level(cursor, end, ':');
-    if(segment_end == NULL) segment_end = end;
-    if(!tb_execute_assignment(cursor, segment_end)) return false;
+    const char* segment_end = tb_find_command_end(cursor, end, false);
+    if(!tb_process_assignment(cursor, segment_end, execute)) return false;
     cursor = (segment_end < end) ? segment_end + 1 : segment_end;
     return true;
   }
@@ -1723,52 +1950,91 @@ static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc,
     if(depth >= TB_COMMAND_DEPTH) return tb_error("HOW?");
     double condition = 0.0;
     const char* after_expr = NULL;
-    if(!tb_eval_expr_range(cursor, end, condition, &after_expr)) return tb_error("HOW?");
+    if(!tb_eval_expr_range(cursor, end, condition, &after_expr, execute)) {
+      return tb_error("HOW?");
+    }
     cursor = after_expr;
     (void) tb_consume_word(cursor, "THEN", 1);
-    if(condition != 0.0) {
-      if(!tb_execute_command_list(cursor, end, current_pc, state, flow, (u8) (depth + 1))) return false;
+    cursor = tb_skip_spaces(cursor);
+    if(cursor >= end) return tb_error("WHAT?");
+    if(!execute || condition != 0.0) {
+      if(!tb_process_command_list(cursor, end, current_pc, state, flow,
+                                  (u8) (depth + 1), execute)) return false;
     }
     cursor = end;
     return true;
   }
 
-  const char* segment_end = tb_find_top_level(cursor, end, ':');
-  if(segment_end == NULL) segment_end = end;
+  const char* segment_end = tb_find_command_end(
+      cursor, end, tb_command_has_semicolon_items(command));
+  TbReturnFrame continuation = {(i16) (current_pc + 1), 0};
+  if(execute && segment_end < end && tb_skip_spaces(segment_end + 1) < end) {
+    const char* const source = tb_compiled_source(tb_ast);
+    if(source == NULL) return tb_error("HOW?");
+    const char* const line_begin = source + tb_ast.lines[current_pc].offset;
+    continuation.pc = current_pc;
+    continuation.offset = (u16) (segment_end + 1 - line_begin);
+  }
+
+  const bool terminal = command == TbCommand::CMD_GOTO ||
+      command == TbCommand::CMD_RETURN || command == TbCommand::CMD_END ||
+      command == TbCommand::CMD_STOP;
+  if(terminal && segment_end < end) return tb_error("WHAT?");
 
   switch(command) {
     case TbCommand::CMD_LET:
-      if(!tb_execute_assignment(cursor, segment_end)) return false;
+      if(!tb_process_assignment(cursor, segment_end, execute)) return false;
       break;
     case TbCommand::CMD_PRINT:
-      if(!tb_execute_print(cursor, segment_end)) return false;
+      if(!tb_process_print(cursor, segment_end, execute)) return false;
       break;
     case TbCommand::CMD_INPUT:
-      if(!tb_execute_input(cursor, segment_end, current_pc, flow)) return false;
+      if(!tb_process_input(cursor, segment_end, current_pc, flow, execute)) {
+        return false;
+      }
       break;
     case TbCommand::CMD_GOTO:
-      if(!tb_execute_goto_like(cursor, segment_end, flow, false, current_pc, state)) return false;
+      if(!execute) {
+        if(!tb_validate_expr_range(cursor, segment_end)) return false;
+        break;
+      }
+      if(!tb_execute_goto_like(cursor, segment_end, *flow, false,
+                               continuation, *state)) return false;
       cursor = end;
       return true;
     case TbCommand::CMD_GOSUB:
-      if(!tb_execute_goto_like(cursor, segment_end, flow, true, current_pc, state)) return false;
+      if(!execute) {
+        if(!tb_validate_expr_range(cursor, segment_end)) return false;
+        break;
+      }
+      if(!tb_execute_goto_like(cursor, segment_end, *flow, true,
+                               continuation, *state)) return false;
       cursor = end;
       return true;
     case TbCommand::CMD_RETURN:
-      if(state.call_sp < 0) return tb_error("HOW?");
-      flow = tb_flow(TbFlowKind::JUMP, state.call_stack[state.call_sp--]);
+      if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
+      if(!execute) break;
+      if(state->call_sp < 0) return tb_error("HOW?");
+      *flow = tb_flow(TbFlowKind::JUMP,
+                      state->call_stack[state->call_sp].pc,
+                      state->call_stack[state->call_sp].offset);
+      state->call_sp--;
       cursor = end;
       return true;
     case TbCommand::CMD_FOR:
-      if(!tb_execute_for(cursor, segment_end, current_pc, state, flow)) return false;
-      cursor = end;
-      return true;
+      if(!tb_process_for(cursor, segment_end, continuation, state, flow,
+                         execute)) return false;
+      break;
     case TbCommand::CMD_NEXT:
-      if(!tb_execute_next(cursor, segment_end, state, flow)) return false;
+      if(!tb_process_next(cursor, segment_end, state, flow, execute)) {
+        return false;
+      }
       break;
     case TbCommand::CMD_END:
     case TbCommand::CMD_STOP:
-      flow = tb_flow(TbFlowKind::STOP, current_pc);
+      if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
+      if(!execute) break;
+      *flow = tb_flow(TbFlowKind::STOP, current_pc);
       cursor = end;
       return true;
     case TbCommand::CMD_REM:
@@ -1781,15 +2047,29 @@ static bool tb_execute_one(const char*& cursor, const char* end, i16 current_pc,
   return true;
 }
 
-static bool tb_execute_command_list(const char* begin, const char* end, i16 current_pc, TbRunState& state, TbFlow& flow, u8 depth) {
+static bool tb_process_command_list(const char* begin, const char* end,
+                                    i16 current_pc, TbRunState* state,
+                                    TbFlow* flow, u8 depth, bool execute) {
   const char* cursor = begin;
-  while(cursor < end && flow.kind == TbFlowKind::NEXT) {
-    if(!tb_execute_one(cursor, end, current_pc, state, flow, depth)) {
-      flow = tb_flow(TbFlowKind::ERROR, current_pc);
+  while(cursor < end && (!execute || flow->kind == TbFlowKind::NEXT)) {
+    if(!tb_process_one(cursor, end, current_pc, state, flow, depth, execute)) {
+      if(execute) *flow = tb_flow(TbFlowKind::ERROR, current_pc);
       return false;
     }
   }
   return true;
+}
+
+static bool tb_validate_command_list(const char* begin, const char* end,
+                                     u8 depth) {
+  return tb_process_command_list(begin, end, -1, NULL, NULL, depth, false);
+}
+
+static bool tb_execute_command_list(const char* begin, const char* end,
+                                    i16 current_pc, TbRunState& state,
+                                    TbFlow& flow, u8 depth = 0) {
+  return tb_process_command_list(begin, end, current_pc, &state, &flow,
+                                 depth, true);
 }
 
 static bool tb_runtime_interrupted(void) {
@@ -1921,19 +2201,17 @@ static int load_tinybasic_program_from_store(const program_store::Entry& entry) 
   if(entry.kind != program_store::NodeKind::FILE ||
      entry.type != program_store::ProgramType::TINYBASIC ||
      !tb_store_name_is_valid(entry.name)) return -1;
-  char source[TB_SOURCE_SIZE];
-  memset(source, 0, sizeof(source));
-  u16 len = 0;
-  if(!program_store::read_id(entry.id, (u8*) source,
-                             TB_SOURCE_SIZE - 1, &len)) return -1;
-  source[len] = 0;
   const int slot = tb_alloc_program_slot(entry.name);
-  tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
-  programs[slot].source_len = (u16) strlen(programs[slot].source);
-  tb_copy_text(programs[slot].name, sizeof(programs[slot].name), entry.name);
-  programs[slot].store_id = entry.id;
-  programs[slot].parent_id = entry.parent_id;
-  programs[slot].used = true;
+  TbProgram& program = programs[slot];
+  u16 len = 0;
+  if(!program_store::read_id(entry.id, (u8*) program.source,
+                             TB_SOURCE_SIZE - 1, &len)) return -1;
+  program.source[len] = 0;
+  program.source_len = len;
+  tb_copy_text(program.name, sizeof(program.name), entry.name);
+  program.store_id = entry.id;
+  program.parent_id = entry.parent_id;
+  program.used = true;
   NextTinyBasic = (i8) slot;
   return slot;
 }
@@ -1981,8 +2259,10 @@ void InitTinyBasic(void) {
   if(!workspace_scope.ok()) return;
 #endif
   tinybasic_reset_runtime(tinybasic_runtime());
+  tinybasic_clear_array();
 #ifdef TINYBASIC_HOST_TEST
   tb_random_state = 0x3B6B120EUL;
+  tb_host_input_expression[0] = 0;
   tinybasic_host_angle_unit = RADIAN;
   tb_host_wait_count = 0;
 #endif
@@ -2076,67 +2356,6 @@ bool TinyBASIC_library_select(void) {
   }
   return true;
 }
-
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
-static const text_editor::KeyMap& portable_editor_keys() {
-#endif
-static const text_editor::KeyMap TB_EDITOR_KEYS = {
-  (i32) KEY_LEFT,
-  KEY_LEFT_PRESS,
-  (i32) KEY_RIGHT,
-  KEY_RIGHT_PRESS,
-  (i32) KEY_OK,
-  KEY_OK_PRESS,
-  (i32) KEY_ESC,
-  KEY_ESC_PRESS,
-  KEY_SHG_LEFT_PRESS,
-  KEY_SHG_RIGHT_PRESS,
-  (i32) KEY_K,
-  KEY_ALPHA,
-  (i32) KEY_PP
-};
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
-  return TB_EDITOR_KEYS;
-}
-#define TB_EDITOR_KEYS portable_editor_keys()
-#endif
-
-static const char* tinybasic_editor_insert_text_hook(text_editor::Shift shift, i32 key_code, const char*, u16, void*) {
-  if(key_code < 0 || key_code >= 40) return NULL;
-  switch(shift) {
-    case text_editor::Shift::NONE:
-      return tinybasic_plain_key_text(key_code);
-    case text_editor::Shift::ALPHA:
-      return NULL;
-    case text_editor::Shift::K:
-      return tinybasic_kshift_text(key_code);
-  }
-  return NULL;
-}
-
-static const text_editor::Hooks TB_EDITOR_HOOKS = {
-  &tinybasic_editor_insert_text_hook,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-};
-
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
-static const text_editor::Options& portable_editor_options() {
-#endif
-static const text_editor::Options TB_EDITOR_OPTIONS = {
-  "\n",
-  true,
-  true,
-  true,
-  KEY_CX
-};
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
-  return TB_EDITOR_OPTIONS;
-}
-#define TB_EDITOR_OPTIONS portable_editor_options()
-#endif
 
 static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
   text_editor::draw(main_lcd(), source, len, cursor, view_top, sms_cursor);
@@ -2279,7 +2498,7 @@ static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
       continue;
     }
     if(shift == text_editor::Shift::K) {
-      const char* punctuation = tinybasic_kshift_text(key);
+      const char* punctuation = text_editor::kshift_text_for_key(key);
       text_editor::sms_reset(sms);
       if(punctuation != NULL && punctuation[0] != 0 && punctuation[1] == 0) {
         tb_name_insert_char(name, len, cursor, punctuation[0]);
@@ -2306,8 +2525,7 @@ static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
 static bool store_edited_program(int slot, char* source, const char* store_name,
                                  u16 target_parent = TB_ROOT_STORE_ID) {
   if(slot < 0 || slot > TB_PROGRAM_COUNT) return tb_error("SORRY");
-  TbAst validation_ast;
-  if(!tb_compile_source(source, validation_ast)) return false;
+  if(!tb_compile_source(source, tb_ast)) return false;
 
   char old_name[TB_NAME_SIZE] = "";
   u16 store_id = TB_INVALID_STORE_ID;
@@ -2363,12 +2581,49 @@ static bool store_edited_program(int slot, char* source, const char* store_name,
 
 static void EditTinyBasicSlot(int slot,
                               u16 new_parent = TB_ROOT_STORE_ID) {
-  char source[TB_SOURCE_SIZE];
-  memset(source, 0, sizeof(source));
-  if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(source, sizeof(source), programs[slot].source);
+  if(slot < 0 || slot > TB_PROGRAM_COUNT) return;
+  const bool new_program = slot == TB_PROGRAM_COUNT;
+  if(new_program) {
+    const int free_slot = find_free_program();
+    slot = free_slot >= 0 ? free_slot
+        : ((NextTinyBasic >= 0 && NextTinyBasic < TB_PROGRAM_COUNT)
+            ? NextTinyBasic : 0);
+  }
+  if(slot < 0 || slot >= TB_PROGRAM_COUNT) return;
 
-  text_editor::Buffer editor;
-  text_editor::init(editor, source, TB_SOURCE_SIZE);
+  const bool original_used = programs[slot].used;
+  const u16 original_id = programs[slot].store_id;
+#ifdef TINYBASIC_HOST_TEST
+  (void) original_id;
+#endif
+  if(new_program) {
+    programs[slot].source[0] = 0;
+    programs[slot].source_len = 0;
+    programs[slot].name[0] = 0;
+    programs[slot].store_id = TB_INVALID_STORE_ID;
+    programs[slot].parent_id = new_parent;
+    programs[slot].used = false;
+  }
+  char* const source = programs[slot].source;
+
+  const auto restore_original = [&]() {
+#ifndef TINYBASIC_HOST_TEST
+    if(original_used && original_id != TB_INVALID_STORE_ID) {
+      (void) load_tinybasic_program_from_store(original_id);
+      return;
+    }
+#endif
+    if(!original_used) {
+      memset(&programs[slot], 0, sizeof(programs[slot]));
+      programs[slot].store_id = TB_INVALID_STORE_ID;
+      programs[slot].parent_id = TB_ROOT_STORE_ID;
+    }
+  };
+
+  text_editor::Buffer editor = {
+    source, TB_SOURCE_SIZE, programs[slot].source_len, 0, 0,
+    text_editor::Shift::NONE, {false, -1, 0, 0}
+  };
 #if (defined(MK61_DISPLAY_LCD1602) && !defined(TINYBASIC_HOST_TEST)) || defined(MK61_BUILD_PORTABLE_SYSTEM)
   text_editor::DisplaySession display_session(main_lcd());
 #endif
@@ -2406,13 +2661,9 @@ static void EditTinyBasicSlot(int slot,
       delay(1);
       continue;
     }
-    if(key_code == KEY_CX &&
-        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
-      text_editor::sms_reset(editor.sms);
-      text_editor::clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
-      editor.shift = text_editor::Shift::NONE;
-      dirty = true;
-      continue;
+    if(key_code == KEY_CX && editor.shift != text_editor::Shift::ALPHA &&
+       kbd::is_key_pressed(KEY_ALPHA)) {
+      editor.shift = text_editor::Shift::ALPHA;
     }
     if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
         (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
@@ -2421,14 +2672,18 @@ static void EditTinyBasicSlot(int slot,
       dirty = true;
       continue;
     }
-    const text_editor::KeyResult result = text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, key_code, now);
+    const text_editor::KeyResult result =
+        tinybasic_handle_editor_key(editor, "\n", key_code, now);
     dirty = result != text_editor::KeyResult::NONE;
     if(result == text_editor::KeyResult::SAVE) {
 #ifndef TINYBASIC_HOST_TEST
       kbd::handoff(kbd::Event(key_code));
 #endif
       main_lcd().cursorOff();
-      if(!tb_confirm_save()) return;
+      if(!tb_confirm_save()) {
+        restore_original();
+        return;
+      }
       char name[TB_NAME_SIZE];
       memset(name, 0, sizeof(name));
       if(slot >= 0 && slot < TB_PROGRAM_COUNT && programs[slot].used) tb_copy_text(name, sizeof(name), programs[slot].name);
@@ -2541,6 +2796,7 @@ static bool TinyBASIC_edit_menu(void) {
 
 static bool TinyBASIC_clear_data(void) {
   memset(tb_vars, 0, sizeof(tb_vars));
+  tinybasic_clear_array();
   tb_message_i18n("TinyBASIC data", "Данные", "cleared", "очищены");
   delay(700);
   return true;
@@ -2618,6 +2874,12 @@ extern "C" int TinyBasicTestAddProgram(const char* source, const char* name) {
 
 extern "C" void TinyBasicTestSetInput(double value) {
   tb_host_input_value = value;
+  tb_host_input_expression[0] = 0;
+}
+
+extern "C" void TinyBasicTestSetInputExpression(const char* expression) {
+  tb_copy_text(tb_host_input_expression,
+               sizeof(tb_host_input_expression), expression);
 }
 
 extern "C" void TinyBasicTestRun(int slot) {
@@ -2689,12 +2951,9 @@ extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out,
   for(int i = 0; i < count; i++) {
     const u32 now = millis();
     const i32 key_code = keys[i];
-    if(key_code == KEY_CX &&
-        (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
-      text_editor::sms_reset(editor.sms);
-      text_editor::clear_current_line(editor.source, editor.len, editor.cursor, editor.capacity);
-      editor.shift = text_editor::Shift::NONE;
-      continue;
+    if(key_code == KEY_CX && editor.shift != text_editor::Shift::ALPHA &&
+       kbd::is_key_pressed(KEY_ALPHA)) {
+      editor.shift = text_editor::Shift::ALPHA;
     }
     if((key_code == KEY_LEFT || key_code == KEY_LEFT_PRESS) &&
         (editor.shift == text_editor::Shift::ALPHA || kbd::is_key_pressed(KEY_ALPHA))) {
@@ -2702,7 +2961,7 @@ extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out,
       editor.shift = text_editor::Shift::NONE;
       continue;
     }
-    text_editor::handle_key(editor, TB_EDITOR_KEYS, TB_EDITOR_HOOKS, TB_EDITOR_OPTIONS, key_code, now);
+    tinybasic_handle_editor_key(editor, "\n", key_code, now);
   }
   bounded_string::copy(out, (usize) size, source);
 }

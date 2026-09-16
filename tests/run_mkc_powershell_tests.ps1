@@ -60,6 +60,8 @@ $navigation = Join-Path $tempRoot 'navigation'
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'app-limits/SMALL.APP'), [byte[]]::new(63))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/EMPTY.CH8'), [byte[]]::new(0))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/HUGE.CH8'), [byte[]]::new(3585))
+[IO.File]::WriteAllBytes((Join-Path $local 'large.tbi'), [byte[]]::new(1537))
+[IO.File]::WriteAllBytes((Join-Path $local 'huge.tbi'), [byte[]]::new(3585))
 [IO.File]::WriteAllText((Join-Path $tempRoot 'editor/local.txt'), "alpha`r`nbeta`r`n",
     [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/bom.txt'),
@@ -88,6 +90,10 @@ try {
     Assert-True ($smallApp.ExitCode -eq 1 -and ($smallApp.Output -join '') -match '^unsupported: слишком маленький:') 'PowerShell classifier accepted undersized APP'
     $largeApp = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'app-limits/HUGE.APP'))
     Assert-True ($largeApp.ExitCode -eq 1 -and ($largeApp.Output -join '') -match '^unsupported: слишком большой:') 'PowerShell classifier accepted oversized APP'
+    $largeTinyBasic = Invoke-MkcTool @('--classify', (Join-Path $local 'large.tbi'))
+    Assert-True ($largeTinyBasic.ExitCode -eq 0 -and ($largeTinyBasic.Output -join '') -eq 'supported') 'PowerShell classifier rejected expanded TinyBASIC source'
+    $hugeTinyBasic = Invoke-MkcTool @('--classify', (Join-Path $local 'huge.tbi'))
+    Assert-True ($hugeTinyBasic.ExitCode -eq 1 -and ($hugeTinyBasic.Output -join '') -match '^unsupported: слишком большой:') 'PowerShell classifier accepted oversized TinyBASIC source'
     $emptyChip8 = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'chip8-limits/EMPTY.CH8'))
     Assert-True ($emptyChip8.ExitCode -eq 1 -and ($emptyChip8.Output -join '') -match '^unsupported: слишком маленький:') 'PowerShell classifier accepted empty CHIP-8 ROM'
     $largeChip8 = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'chip8-limits/HUGE.CH8'))
@@ -328,6 +334,16 @@ try {
     Assert-True (-not (Save-Editor)) 'PowerShell editor uploaded more than 1536 text bytes'
     Assert-True ($script:EditorError -match 'максимум MK61s — 1536') 'PowerShell editor size error is unclear'
     Assert-True ([IO.File]::ReadAllText((Join-Path $device 'edit.txt')) -eq "remotechanged`n") 'Rejected PowerShell editor save changed the device file'
+    $script:EditorLines = [Collections.Generic.List[string]]::new()
+    $script:EditorLines.Add(('x' * 2000))
+    $script:EditorName = 'edit.tbi'
+    $script:EditorRemoteTarget = '/edit.tbi'
+    Assert-True (Save-Editor) 'PowerShell editor rejected expanded TinyBASIC source'
+    Assert-True ((Get-Item (Join-Path $device 'edit.tbi')).Length -gt 1536) 'PowerShell editor truncated expanded TinyBASIC source'
+    $script:EditorLines = [Collections.Generic.List[string]]::new()
+    $script:EditorLines.Add(('x' * 3585))
+    Assert-True (-not (Save-Editor)) 'PowerShell editor uploaded more than 3584 TinyBASIC bytes'
+    Assert-True ($script:EditorError -match 'максимум MK61s — 3584') 'PowerShell TinyBASIC editor size error is unclear'
     Assert-True (-not (Initialize-EditorFromFile (Join-Path $tempRoot 'editor/control.txt') 'control.txt')) 'PowerShell editor accepted terminal control bytes'
 
     Assert-True (Send-RemoteFile (Join-Path $local 'demo.foc') '/demo.foc') 'mock upload failed'

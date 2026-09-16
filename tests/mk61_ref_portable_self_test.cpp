@@ -12,6 +12,13 @@ static constexpr u32 MK61_SYS_SETTINGS = 1;
 static constexpr u32 MK61_SYS_REGISTER_F = 2;
 static constexpr u32 MK61_SYS_REF_READ = 3;
 static constexpr u32 MK61_SYS_REF_WRITE = 4;
+static constexpr u32 MK61_SYS_REF_PARSE = 5;
+
+struct mk61_system_ref_parse {
+  char name[4];
+  u32 kind;
+  u32 reg;
+};
 
 namespace portable_system {
 u32 call(u32 operation, u32 a = 0, u32 b = 0, u32 c = 0,
@@ -42,11 +49,23 @@ u32 call(u32 operation, u32 a, u32 b, u32, void* data) {
     captured_number = *static_cast<double*>(data);
     return 1;
   }
+  if(operation == MK61_SYS_REF_PARSE) {
+    auto* request = static_cast<mk61_system_ref_parse*>(data);
+    if(request == nullptr || request->name[0] != 'R' ||
+       request->name[1] != 'E' || request->name[2] != 0) return 0;
+    request->kind = 4;
+    request->reg = 14;
+    return 1;
+  }
   return 0;
 }
 }
 
 int main(void) {
+  mk61_ref::Ref parsed = {};
+  assert(mk61_ref::parse_name("RE", parsed));
+  assert(parsed.kind == mk61_ref::Kind::R && parsed.reg == 14);
+
   const mk61_ref::Ref r3 = {mk61_ref::Kind::R, 3};
   assert(mk61_ref::write_fraction7(r3, 1234));
   assert(captured_operation == MK61_SYS_REF_WRITE);

@@ -258,8 +258,12 @@ unsupported_reason() {
         minimum=64
         ;;
       *.state.txt) base=${name:0:$(( ${#name} - 10 ))} ;;
-      *.m61|*.foc|*.tbi|*.txt|*.fmk)
+      *.m61|*.foc|*.txt|*.fmk)
         base=${name:0:$(( ${#name} - 4 ))}
+        ;;
+      *.tbi)
+        base=${name:0:$(( ${#name} - 4 ))}
+        limit=3584
         ;;
       *.md)
         base=${name:0:$(( ${#name} - 3 ))}
@@ -2530,7 +2534,7 @@ editor_write_file() {
 }
 
 editor_save() {
-  local temp size directory
+  local temp size directory limit=1536
   EDITOR_ERROR=
   if [ "$EDITOR_PANEL" = L ]; then
     directory=${EDITOR_SOURCE%/*}
@@ -2557,8 +2561,11 @@ editor_save() {
         return 1
         ;;
     esac
-    if [ "$size" -gt 1536 ]; then
-      EDITOR_ERROR="Файл занимает $size байт; максимум MK61s — 1536"
+    case "$(lowercase "$EDITOR_NAME")" in
+      *.tbi) limit=3584 ;;
+    esac
+    if [ "$size" -gt "$limit" ]; then
+      EDITOR_ERROR="Файл занимает $size байт; максимум MK61s — $limit"
       return 1
     fi
     STATUS_TEXT="Сохраняю ${EDITOR_NAME}…"

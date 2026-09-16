@@ -20,7 +20,8 @@ printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 printf '\000\340\240\000' > "$work/local/game.ch8"
 dd if=/dev/zero of="$work/local/large.tbi" bs=1 count=1537 2>/dev/null
-dd if=/dev/zero of="$work/preflight-bad/large.tbi" bs=1 count=1537 2>/dev/null
+dd if=/dev/zero of="$work/local/huge.tbi" bs=1 count=3585 2>/dev/null
+dd if=/dev/zero of="$work/preflight-bad/large.tbi" bs=1 count=3585 2>/dev/null
 dd if=/dev/zero of="$work/local/chunked.m61" bs=1 count=100 2>/dev/null
 dd if=/dev/zero of="$work/local/FOCAL.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/local/DEMO.APP" bs=1 count=64 2>/dev/null
@@ -55,9 +56,10 @@ case "$("$root/tools/mkc.cmd" --classify "$work/app-limits/HUGE.APP" || true)" i
   'unsupported: слишком большой:'*) ;;
   *) echo 'mkc: oversized APP was accepted' >&2; exit 1 ;;
 esac
-case "$("$root/tools/mkc.cmd" --classify "$work/local/large.tbi" || true)" in
+test "$("$root/tools/mkc.cmd" --classify "$work/local/large.tbi")" = supported
+case "$("$root/tools/mkc.cmd" --classify "$work/local/huge.tbi" || true)" in
   'unsupported: слишком большой:'*) ;;
-  *) echo 'mkc: oversized file was accepted' >&2; exit 1 ;;
+  *) echo 'mkc: oversized TinyBASIC file was accepted' >&2; exit 1 ;;
 esac
 case "$("$root/tools/mkc.cmd" --classify "$work/chip8-limits/EMPTY.CH8" || true)" in
   'unsupported: слишком маленький:'*) ;;
@@ -239,6 +241,20 @@ case "$EDITOR_ERROR" in *'максимум MK61s — 1536'*) ;;
   *) echo "mkc: unclear editor size error: $EDITOR_ERROR" >&2; exit 1 ;;
 esac
 test "$(cat "$work/device/edit.txt")" = remotechanged
+
+EDITOR_LINES=("$(awk 'BEGIN { for(i = 0; i < 2000; i++) printf "x" }')")
+EDITOR_NAME=edit.tbi
+EDITOR_REMOTE_TARGET=/edit.tbi
+editor_save
+test "$(wc -c < "$work/device/edit.tbi" | tr -d '[:space:]')" -gt 1536
+EDITOR_LINES=("$(awk 'BEGIN { for(i = 0; i < 3585; i++) printf "x" }')")
+if editor_save; then
+  echo 'mkc: TinyBASIC editor uploaded more than 3584 bytes' >&2
+  exit 1
+fi
+case "$EDITOR_ERROR" in *'максимум MK61s — 3584'*) ;;
+  *) echo "mkc: unclear TinyBASIC editor size error: $EDITOR_ERROR" >&2; exit 1 ;;
+esac
 
 if editor_load_file "$work/editor/control.txt" control.txt; then
   echo 'mkc: editor accepted terminal control bytes' >&2

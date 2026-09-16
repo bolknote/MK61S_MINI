@@ -78,6 +78,7 @@ struct Options {
   bool sms_enabled;
   bool alpha_digit_symbols;
   bool alpha_cx_clear_line;
+  bool default_insert_text;
   i32 backspace_key;
 };
 
@@ -88,6 +89,7 @@ enum class KeyResult : u8 {
 };
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
 KeyResult portable_handle_key(Buffer&, const KeyMap&, const Hooks&, const Options&, i32, u32);
+KeyResult portable_handle_default_key(Buffer&, const char* ok_insert_text, i32, u32);
 #endif
 
 #if (defined(MK61_DISPLAY_LCD1602) && !defined(TEXT_EDITOR_HOST_TEST)) || \
@@ -116,6 +118,7 @@ inline const Options& default_options(void) {
     true,
     true,
     true,
+    false,
     keyboard_layout::active().cx
   };
   return options;
@@ -714,6 +717,9 @@ inline KeyResult handle_key(Buffer& editor, const KeyMap& keys, const Hooks& hoo
     const char* text = NULL;
     if(hooks.insert_text_for_key != NULL) {
       text = hooks.insert_text_for_key(editor.shift, key_code, editor.source, editor.cursor, hooks.context);
+    } else if(options.default_insert_text) {
+      if(editor.shift == Shift::NONE) text = plain_text_for_key(key_code);
+      else if(editor.shift == Shift::K) text = kshift_text_for_key(key_code);
     }
     insert_text(editor.source, editor.len, editor.cursor, editor.capacity, text);
   }

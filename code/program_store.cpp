@@ -131,6 +131,11 @@ static_assert(LARGE_DESCRIPTOR_SIZE < 128,
 static_assert((usize) MAX_MK61_TEXT_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
               "two maximum C5 records must fit one erase sector");
+static_assert((usize) MAX_TINYBASIC_TEXT_SIZE + NAME_SIZE +
+                  RECORD_HEADER_SIZE <=
+                  storage_geometry::PHYSICAL_SECTOR_SIZE -
+                      DATA_SECTOR_HEADER_SIZE,
+              "maximum TinyBASIC source must fit one C5 data sector");
 static_assert((usize) MAX_IMAGE1_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
               "two maximum C5 image records must fit one erase sector");
@@ -518,6 +523,7 @@ static bool supported_type(ProgramType type) {
 }
 
 static u16 maximum_data_len(ProgramType type) {
+  if(type == ProgramType::TINYBASIC) return MAX_TINYBASIC_TEXT_SIZE;
   if(type == ProgramType::FONT) return MAX_FONT_SIZE;
   if(type == ProgramType::IMAGE1) return MAX_IMAGE1_SIZE;
   if(type == ProgramType::CHIP8) return MAX_CHIP8_SIZE;

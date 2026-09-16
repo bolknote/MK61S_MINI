@@ -26,7 +26,8 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_RUNTIME = 1U << 8,
   MK61_SERVICE_CAP_SETUP = 1U << 9,
   MK61_SERVICE_CAP_FORMAT = 1U << 10,
-  MK61_SERVICE_CAP_UI_FONT = 1U << 11
+  MK61_SERVICE_CAP_UI_FONT = 1U << 11,
+  MK61_SERVICE_CAP_NUMBER_IO = 1U << 12
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -60,7 +61,10 @@ enum mk61_service_operation {
   MK61_SERVICE_MENU, MK61_SERVICE_FONT, MK61_SERVICE_REF_READ, MK61_SERVICE_REF_WRITE,
   MK61_SERVICE_FILE_EXISTS, MK61_SERVICE_EDITOR_KEY, MK61_SERVICE_SETUP,
   MK61_SERVICE_CAPABILITIES,
-  MK61_SERVICE_UI_FONT
+  MK61_SERVICE_UI_FONT,
+  MK61_SERVICE_NUMBER_FORMAT,
+  MK61_SERVICE_NUMBER_PARSE,
+  MK61_SERVICE_REF_PARSE
 };
 enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_CLEAR, MK61_SERVICE_DISPLAY_CURSOR, MK61_SERVICE_DISPLAY_WRITE,
@@ -151,6 +155,20 @@ typedef struct mk61_service_editor {
   const char* source;
   uint32_t length, cursor, top, sms;
 } mk61_service_editor;
+typedef struct mk61_service_number_format {
+  double value;
+  char* output;
+  uint32_t capacity, significant_digits;
+} mk61_service_number_format;
+typedef struct mk61_service_number_parse {
+  double value;
+  const char* input;
+  uint32_t consumed;
+} mk61_service_number_parse;
+typedef struct mk61_service_ref_parse {
+  char name[4];
+  uint32_t kind, reg;
+} mk61_service_ref_parse;
 typedef struct mk61_service_menu_item {
   const char* text;
   bool (*action)(void);
@@ -196,7 +214,8 @@ typedef struct mk61_service_edit_key {
   int32_t sms_key;
   int32_t keys[13]; /* left/press, right/press, ok/press, esc/press, step L/R, K, alpha, PP */
   const char* ok_text;
-  uint32_t options; /* SMS=1, alpha symbols=2, alpha clear line=4 */
+  uint32_t options; /* SMS=1, alpha symbols=2, alpha clear line=4, default text=8,
+                       resident key map=16 */
   int32_t backspace_key, key;
   uint32_t now, hook_mask;
   uint32_t (*hook)(uint32_t operation, mk61_service_edit_hook* event);

@@ -44,6 +44,21 @@ inline int hex_digit(char symbol) {
 }
 
 inline bool parse_name(const char* name, Ref& out) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  if(name == NULL || name[0] == 0) return false;
+  mk61_system_ref_parse request = {};
+  u8 length = 0;
+  while(length < 3 && name[length] != 0) {
+    request.name[length] = name[length];
+    length++;
+  }
+  if(length == 3 && name[3] != 0) return false;
+  if(!portable_system::call(MK61_SYS_REF_PARSE, 0, 0, 0, &request) ||
+     request.kind > (u32) Kind::R || request.reg > 15) return false;
+  out.kind = (Kind) request.kind;
+  out.reg = (u8) request.reg;
+  return true;
+#else
   if(name == NULL || name[0] == 0) return false;
   if(streq(name, "X")) {
     out.kind = Kind::X;
@@ -74,6 +89,7 @@ inline bool parse_name(const char* name, Ref& out) {
     }
   }
   return false;
+#endif
 }
 
 inline bool register_available(u8 reg) {

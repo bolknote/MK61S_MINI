@@ -177,6 +177,7 @@ namespace library_mk61 {
 
 #include "bounded_string.hpp"
 #include "mk_math.hpp"
+#include "number_format.hpp"
 
 #include <type_traits>
 #ifdef FOCAL_HOST_TEST
@@ -600,99 +601,25 @@ static void focal_copy_text(char* dst, usize dst_size, const char* src) {
   bounded_string::copy(dst, dst_size, src);
 }
 
-static void focal_append_char(char*& out, char* end, char ch) {
-  if(out < end) *out++ = ch;
-}
-
-static void focal_append_uint(char*& out, char* end, unsigned long long value) {
-  char digits[24];
-  u8 count = 0;
-  do {
-    digits[count++] = (char) ('0' + (value % 10ULL));
-    value /= 10ULL;
-  } while(value > 0 && count < sizeof(digits));
-  while(count > 0) focal_append_char(out, end, digits[--count]);
-}
-
-static void focal_format_fixed(double value, int decimals, char* out, usize size) {
-  if(size == 0) return;
-  if(decimals < 0) decimals = 0;
-  if(decimals > 12) decimals = 12;
-
-  const bool negative = value < 0.0;
-  double abs_value = negative ? -value : value;
-  unsigned long long scale = 1ULL;
-  for(int i = 0; i < decimals; i++) scale *= 10ULL;
-
-  const unsigned long long scaled = (unsigned long long) (abs_value * (double) scale + 0.5);
-  const unsigned long long integer = scaled / scale;
-  unsigned long long fraction = (scale == 0ULL) ? 0ULL : (scaled % scale);
-
-  char temp[40];
-  char* cursor = temp;
-  char* end = temp + sizeof(temp) - 1;
-  if(negative && scaled != 0ULL) focal_append_char(cursor, end, '-');
-  focal_append_uint(cursor, end, integer);
-  if(decimals > 0) {
-    focal_append_char(cursor, end, '.');
-    char fractional[13];
-    for(int i = decimals - 1; i >= 0; i--) {
-      fractional[i] = (char) ('0' + (fraction % 10ULL));
-      fraction /= 10ULL;
-    }
-    for(int i = 0; i < decimals; i++) focal_append_char(cursor, end, fractional[i]);
-    while(cursor > temp && *(cursor - 1) == '0') cursor--;
-    if(cursor > temp && *(cursor - 1) == '.') cursor--;
-  }
-  *cursor = 0;
-  focal_copy_text(out, size, temp);
-}
-
 static void focal_format_number(double value, char* out, usize size) {
-  if(size == 0) return;
-  if(mk_math::is_nan(value)) {
-    focal_copy_text(out, size, "NAN");
-    return;
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(FOCAL_HOST_TEST)
+  if(!portable_system::format_number(value, 8, out, size) && size != 0) {
+    out[0] = 0;
   }
-  if(mk_math::is_inf(value)) {
-    focal_copy_text(out, size, value < 0.0 ? "-INF" : "INF");
-    return;
-  }
-  if(value == 0.0) {
-    focal_copy_text(out, size, "0");
-    return;
-  }
+#else
+  (void) number_format::general(value, 8, out, size);
+#endif
+}
 
-  const double abs_value = mk_math::fabs(value);
-  int exp10 = mk_math::log10_floor(abs_value);
-  if(exp10 >= 8 || exp10 < -4) {
-    char mantissa[24];
-    double scaled = value / mk_math::pow10_int(exp10);
-    focal_format_fixed(scaled, 7, mantissa, sizeof(mantissa));
-    if(mantissa[0] == '1' && mantissa[1] == '0') {
-      exp10++;
-      focal_format_fixed(value < 0.0 ? -1.0 : 1.0, 7, mantissa, sizeof(mantissa));
-    }
-    char temp[32];
-    focal_copy_text(temp, sizeof(temp), mantissa);
-    strncat(temp, "E", sizeof(temp) - strlen(temp) - 1);
-    char* cursor = temp + strlen(temp);
-    char* end = temp + sizeof(temp) - 1;
-    if(exp10 < 0) {
-      focal_append_char(cursor, end, '-');
-      focal_append_uint(cursor, end, (unsigned long long) -exp10);
-    } else {
-      focal_append_char(cursor, end, '+');
-      focal_append_uint(cursor, end, (unsigned long long) exp10);
-    }
-    *cursor = 0;
-    focal_copy_text(out, size, temp);
-    return;
-  }
-
-  int decimals = 7 - exp10;
-  if(decimals < 0) decimals = 0;
-  focal_format_fixed(value, decimals, out, size);
+static bool focal_parse_number_text(const char* text, double& value,
+                                    const char*& end) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(FOCAL_HOST_TEST)
+  return portable_system::parse_number(text, value, end);
+#else
+  end = NULL;
+  value = mk_math::strtod(text, &end);
+  return end != text;
+#endif
 }
 
 static void focal_copy_trim(char* dst, usize dst_size, const char* begin, const char* end) {
@@ -1170,8 +1097,8 @@ static double expr_parse_primary(ExprParser& parser) {
   }
 
   const char* after = NULL;
-  const double value = mk_math::strtod(parser.p, &after);
-  if(after != NULL && after > parser.p && after <= parser.end) {
+  double value = 0.0;
+  if(focal_parse_number_text(parser.p, value, after) && after <= parser.end) {
     parser.p = after;
     return expr_checked(parser, value);
   }
@@ -1555,8 +1482,8 @@ enum class FocalInputResult : u8 {
 static bool focal_parse_input_number(const char* text, double& value) {
   if(text == NULL || text[0] == 0) return false;
   const char* end = NULL;
-  value = mk_math::strtod(text, &end);
-  return end != NULL && end > text && *end == 0 && !mk_math::is_nan(value) && !mk_math::is_inf(value);
+  return focal_parse_number_text(text, value, end) && *end == 0 &&
+      !mk_math::is_nan(value) && !mk_math::is_inf(value);
 }
 
 static FocalInputResult focal_read_number_from_keyboard(const char* target_name, double& value) {
@@ -2762,8 +2689,8 @@ static bool focal_segment_is_simple(const char* begin, const char* end) {
   char buffer[FOCAL_EXPR_BUFFER_SIZE];
   focal_copy_trim(buffer, sizeof(buffer), begin, end);
   const char* after = NULL;
-  mk_math::strtod(buffer, &after);
-  return after != NULL && *after == 0;
+  double ignored = 0.0;
+  return focal_parse_number_text(buffer, ignored, after) && *after == 0;
 }
 
 static bool focal_editor_apply_expr_macro(char* source, u16& len, u16& cursor, u16 capacity, i32 key_code) {

@@ -159,16 +159,25 @@ static uint32_t mock_call(uint32_t operation, uint32_t a, uint32_t b,
        request->sms_deadline}
     };
     const int32_t* key = request->keys;
-    const text_editor::KeyMap key_map = {
+    const text_editor::KeyMap request_key_map = {
       key[0], key[1], key[2], key[3], key[4], key[5], key[6],
       key[7], key[8], key[9], key[10], key[11], key[12]
     };
+    const keyboard_layout::Mapping& mapping = keyboard_layout::active();
+    const text_editor::KeyMap resident_key_map = {
+      mapping.left, mapping.left, mapping.right, mapping.right,
+      mapping.ok, mapping.ok, mapping.esc, mapping.esc,
+      mapping.shg_left, mapping.shg_right, mapping.k, mapping.alpha, mapping.pp
+    };
+    const text_editor::KeyMap& key_map =
+        (request->options & 16U) != 0 ? resident_key_map : request_key_map;
     const text_editor::Hooks hooks = {NULL, NULL, NULL, NULL, NULL};
     const text_editor::Options options = {
       request->ok_text,
       (request->options & 1U) != 0,
       (request->options & 2U) != 0,
       (request->options & 4U) != 0,
+      (request->options & 8U) != 0,
       request->backspace_key
     };
     const text_editor::KeyResult result = text_editor::handle_key(

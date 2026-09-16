@@ -65,9 +65,12 @@
 #define MK61_SYS_MEMORY_RELEASE MK61_SERVICE_MEMORY_RELEASE
 #define MK61_SYS_MENU MK61_SERVICE_MENU
 #define MK61_SYS_MICROS MK61_SERVICE_MICROS
+#define MK61_SYS_NUMBER_FORMAT MK61_SERVICE_NUMBER_FORMAT
+#define MK61_SYS_NUMBER_PARSE MK61_SERVICE_NUMBER_PARSE
 #define MK61_SYS_POW MK61_SERVICE_POW
 #define MK61_SYS_RANDOM MK61_SERVICE_RANDOM
 #define MK61_SYS_REF_READ MK61_SERVICE_REF_READ
+#define MK61_SYS_REF_PARSE MK61_SERVICE_REF_PARSE
 #define MK61_SYS_REF_WRITE MK61_SERVICE_REF_WRITE
 #define MK61_SYS_REGISTER_F MK61_SERVICE_REGISTER_F
 #define MK61_SYS_SETTINGS MK61_SERVICE_SETTINGS
@@ -91,6 +94,9 @@
 #define mk61_system_lease mk61_service_lease
 #define mk61_system_math_operation mk61_service_math_operation
 #define mk61_system_menu_item mk61_service_menu_item
+#define mk61_system_number_format mk61_service_number_format
+#define mk61_system_number_parse mk61_service_number_parse
+#define mk61_system_ref_parse mk61_service_ref_parse
 #define mk61_system_operation mk61_service_operation
 #define mk61_system_runtime_function mk61_service_runtime_function
 #define mk61_system_runtime_slot mk61_service_runtime_slot

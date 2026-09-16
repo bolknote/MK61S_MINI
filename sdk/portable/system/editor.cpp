@@ -33,13 +33,42 @@ KeyResult portable_handle_key(Buffer& editor, const KeyMap& keys, const Hooks& h
        keys.ok, keys.ok_press, keys.esc, keys.esc_press, keys.shg_left_press,
        keys.shg_right_press, keys.k, keys.alpha, keys.pp},
       options.ok_insert_text, (u32) (options.sms_enabled | options.alpha_digit_symbols << 1 |
-          options.alpha_cx_clear_line << 2), options.backspace_key, key, now,
+          options.alpha_cx_clear_line << 2 | options.default_insert_text << 3),
+      options.backspace_key, key, now,
       (u32) ((hooks.insert_text_for_key != nullptr) | (hooks.apply_alpha_macro != nullptr) << 1 |
           (hooks.move_cursor_horizontal != nullptr) << 2 | (hooks.backspace != nullptr) << 3),
       call_hook, (void*) &hooks};
   const u32 result = portable_system::call(MK61_SYS_EDITOR_KEY, 0, 0, 0, &request);
   editor.len = (u16) request.length; editor.cursor = (u16) request.cursor;
   editor.view_top = (u16) request.top; editor.shift = (Shift) request.shift;
+  editor.sms = {request.sms_active != 0, request.sms_key, (u8) request.sms_index,
+                request.sms_deadline};
+  return (KeyResult) result;
+}
+
+KeyResult portable_handle_default_key(Buffer& editor, const char* ok_insert_text,
+                                       i32 key, u32 now) {
+  mk61_system_edit_key request = {};
+  request.source = editor.source;
+  request.capacity = editor.capacity;
+  request.length = editor.len;
+  request.cursor = editor.cursor;
+  request.top = editor.view_top;
+  request.shift = (u32) editor.shift;
+  request.sms_active = editor.sms.active;
+  request.sms_index = editor.sms.index;
+  request.sms_deadline = editor.sms.deadline_ms;
+  request.sms_key = editor.sms.key_code;
+  request.ok_text = ok_insert_text;
+  request.options = 31U;
+  request.backspace_key = -1;
+  request.key = key;
+  request.now = now;
+  const u32 result = portable_system::call(MK61_SYS_EDITOR_KEY, 0, 0, 0, &request);
+  editor.len = (u16) request.length;
+  editor.cursor = (u16) request.cursor;
+  editor.view_top = (u16) request.top;
+  editor.shift = (Shift) request.shift;
   editor.sms = {request.sms_active != 0, request.sms_key, (u8) request.sms_index,
                 request.sms_deadline};
   return (KeyResult) result;

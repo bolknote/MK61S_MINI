@@ -270,6 +270,9 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
 }
 
 static u16 maximum_file_size(program_store::ProgramType type) {
+  if(type == program_store::ProgramType::TINYBASIC) {
+    return program_store::MAX_TINYBASIC_TEXT_SIZE;
+  }
   if(type == program_store::ProgramType::FONT) {
     return program_store::MAX_FONT_SIZE;
   }

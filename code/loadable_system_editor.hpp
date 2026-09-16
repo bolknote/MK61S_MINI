@@ -27,6 +27,18 @@ static bool backspace(char* source, u16& len, u16& cursor, u16 capacity, void* c
   const bool result = request.hook(MK61_EDIT_BACKSPACE, &event);
   len = (u16) event.length; cursor = (u16) event.cursor; return result;
 }
+static text_editor::KeyMap key_map(const mk61_system_edit_key& request) {
+  if((request.options & 16) != 0) {
+    const keyboard_layout::Mapping& mapping = keyboard_layout::active();
+    return {mapping.left, mapping.left, mapping.right, mapping.right,
+        mapping.ok, mapping.ok, mapping.esc, mapping.esc,
+        mapping.shg_left, mapping.shg_right, mapping.k, mapping.alpha,
+        mapping.pp};
+  }
+  const i32* k = request.keys;
+  return {k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7], k[8], k[9],
+      k[10], k[11], k[12]};
+}
 static u32 handle(mk61_system_edit_key& request) {
   if(request.capacity > 0xFFFFU || request.length > 0xFFFFU ||
       request.cursor > 0xFFFFU || request.top > 0xFFFFU || request.shift > 2 ||
@@ -35,15 +47,15 @@ static u32 handle(mk61_system_edit_key& request) {
       (u16) request.length, (u16) request.cursor, (u16) request.top,
       (text_editor::Shift) request.shift,
       {request.sms_active != 0, request.sms_key, (u8) request.sms_index, request.sms_deadline}};
-  const i32* k = request.keys;
-  const text_editor::KeyMap keys = {k[0], k[1], k[2], k[3], k[4], k[5], k[6],
-                                    k[7], k[8], k[9], k[10], k[11], k[12]};
+  const text_editor::KeyMap keys = key_map(request);
   const text_editor::Hooks hooks = {request.hook_mask & 1 ? insert : nullptr,
       request.hook_mask & 2 ? alpha : nullptr, request.hook_mask & 4 ? move : nullptr,
       request.hook_mask & 8 ? backspace : nullptr, &request};
   const text_editor::Options options = {request.ok_text,
       (request.options & 1) != 0, (request.options & 2) != 0,
-      (request.options & 4) != 0, request.backspace_key};
+      (request.options & 4) != 0, (request.options & 8) != 0,
+      (request.options & 16) != 0 ? keyboard_layout::active().cx
+                                  : request.backspace_key};
   const u32 result = (u32) text_editor::handle_key(editor, keys, hooks, options, request.key, request.now);
   request.length = editor.len; request.cursor = editor.cursor; request.top = editor.view_top;
   request.shift = (u32) editor.shift; request.sms_active = editor.sms.active;

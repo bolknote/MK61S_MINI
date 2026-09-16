@@ -63,6 +63,9 @@ inline u32 call(u32 operation, u32 a = 0, u32 b = 0, u32 c = 0, void* data = nul
 }
 void text_rows(const char* const* rows, u32 count);
 void editor(bool draw, const char* source, u16 len, u16 cursor, u16& top, bool sms = false);
+bool format_number(double value, u8 significant_digits,
+                   char* output, usize capacity);
+bool parse_number(const char* input, double& value, const char*& end);
 }
 
 extern "C" u32 millis();
@@ -166,7 +169,8 @@ AngleUnit read_grade_switch();
 
 namespace program_store {
 static constexpr usize NAME_SIZE = 32;
-static constexpr u16 MAX_MK61_TEXT_SIZE = 1536, MAX_IMAGE1_SIZE = 1600, MAX_CHIP8_SIZE = 3584;
+static constexpr u16 MAX_MK61_TEXT_SIZE = 1536, MAX_TINYBASIC_TEXT_SIZE = 3584,
+                     MAX_IMAGE1_SIZE = 1600, MAX_CHIP8_SIZE = 3584;
 static constexpr u16 ROOT_ID = 0xFFFF, INVALID_ID = 0xFFFF;
 enum class ProgramType : u8 { MK61 = 0, FOCAL = 2, TINYBASIC = 3, TEXT = 4,
   MK61_STATE = 5, FONT = 6, IMAGE1 = 7, APP = 8, CHIP8 = 9, MARKDOWN = 10 };
@@ -190,7 +194,7 @@ bool program_store_choose_save_target(program_store::ProgramType type, u16 paren
     char* name, usize capacity, u16& new_parent);
 
 namespace shared_memory { namespace snapshot_schema {
-static constexpr u8 FOCAL_RUNTIME = 1, TINYBASIC_RUNTIME = 1;
+static constexpr u8 FOCAL_RUNTIME = 1, TINYBASIC_RUNTIME = 2;
 } }
 namespace language_workspace {
 static constexpr usize SIZE = 8192;

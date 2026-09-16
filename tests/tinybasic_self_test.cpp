@@ -9,6 +9,7 @@ extern "C" bool TinyBasicTestCompile(const char* source);
 extern "C" const char* TinyBasicTestError(void);
 extern "C" int TinyBasicTestAddProgram(const char* source, const char* name);
 extern "C" void TinyBasicTestSetInput(double value);
+extern "C" void TinyBasicTestSetInputExpression(const char* expression);
 extern "C" void TinyBasicTestRun(int slot);
 extern "C" double TinyBasicTestNumber(const char* name);
 extern "C" double TinyBasicTestMkX(void);
@@ -126,12 +127,12 @@ static void test_compile_rejects_invalid_statements(void) {
   assert(!TinyBasicTestCompile("10 INPUT \"PROMPT ONLY\"\n"));
   assert(!TinyBasicTestCompile(
     "10 A=------------------------------------------------------------------------"
-    "--------1\n"));
+    "----------------------------------------1\n"));
   assert(!TinyBasicTestCompile(
     "10 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 "
     "IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 IF 1 A=1\n"));
 
-  char oversized[1600];
+  char oversized[3700];
   std::memset(oversized, 'X', sizeof(oversized));
   std::memcpy(oversized, "10 REM ", 7);
   oversized[sizeof(oversized) - 1] = 0;
@@ -185,7 +186,18 @@ static void test_expression_semantics(void) {
     "10 A=-2^2\n"
     "20 B=2^3^2\n"
     "30 C=ROUND(-1.5)\n"
-    "40 D=ROUND(1.5)\n",
+    "40 D=ROUND(1.5)\n"
+    "50 E=2+3*4\n"
+    "60 F=(2+3)*4\n"
+    "70 G=5 MOD 2\n"
+    "80 H=1 OR 0 AND 0\n"
+    "90 I=0 OR 1 AND 0\n"
+    "100 J=2+3=5\n"
+    "110 K=1<2<1\n"
+    "120 L=2^-2^3\n"
+    "130 M=3<=3\n"
+    "140 N=3>=4\n"
+    "150 O=3#4\n",
     "EXPR");
   assert(slot >= 0);
   assert(TinyBasicTestRunResult(slot));
@@ -193,6 +205,17 @@ static void test_expression_semantics(void) {
   assert(std::fabs(TinyBasicTestNumber("B") - 64.0) < 0.000001);
   assert(std::fabs(TinyBasicTestNumber("C") + 2.0) < 0.000001);
   assert(std::fabs(TinyBasicTestNumber("D") - 2.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("E") - 14.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("F") - 20.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("G") - 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("H") - 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("I")) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("J") - 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("K")) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("L") - 0.015625) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("M") - 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("N")) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("O") - 1.0) < 0.000001);
 
   TinyBasicTestReset();
   assert(!TinyBasicTestCompile("10 A=SIN(0,123)\n"));
@@ -486,6 +509,138 @@ static void test_mk_rf_requires_expanded_mode(void) {
   assert(std::fabs(TinyBasicTestNumber("A") + 7.0) < 0.000001);
 }
 
+static void test_palo_alto_arrays_size_and_assignment_lists(void) {
+  TinyBasicTestReset();
+  assert(TinyBasicTestCompile("10 LET A=4,B=5\n"));
+  assert(TinyBasicTestCompile("10 @(0)=9\n"));
+  assert(TinyBasicTestCompile("10 A=@(0)\n"));
+  assert(TinyBasicTestCompile("10 A=SIZE\n"));
+  assert(TinyBasicTestCompile("10 A=S.\n"));
+  assert(TinyBasicTestCompile("10 A=A.(-3)\n"));
+  assert(TinyBasicTestCompile("10 A=SIN.(0)\n"));
+  assert(TinyBasicTestCompile("10 A=1#2\n"));
+  const int slot = TinyBasicTestAddProgram(
+    "10 LET A=4,B=5,@(0)=A+B,@(1)=@(0)*2\n"
+    "20 C=@(1)\n"
+    "30 D=SIZE\n"
+    "40 E=S.\n"
+    "50 F=A.(-3)\n"
+    "60 G=SIN.(0)\n"
+    "70 H=1#2\n",
+    "PATBARRAY");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("C") - 18.0) < 0.000001);
+  assert(TinyBasicTestNumber("D") >= 2.0);
+  assert(TinyBasicTestNumber("D") == TinyBasicTestNumber("E"));
+  assert(std::fabs(TinyBasicTestNumber("F") - 3.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("G")) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("H") - 1.0) < 0.000001);
+}
+
+static void test_palo_alto_step_semicolon_and_gosub_resume(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+    "10 S=0;FOR I=3 TO 1 STEP -1;S=S+I;NEXT I;GOSUB 100;S=S+10;END\n"
+    "100 S=S+1;RETURN\n",
+    "PATBFLOW");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("S") - 17.0) < 0.000001);
+
+  TinyBasicTestReset();
+  const int unwind = TinyBasicTestAddProgram(
+    "10 FOR I=1 TO 2;FOR J=1 TO 2;NEXT I;S=S+1\n",
+    "NEXTUNWIND");
+  assert(unwind >= 0);
+  assert(TinyBasicTestRunResult(unwind));
+  assert(std::fabs(TinyBasicTestNumber("S") - 1.0) < 0.000001);
+
+  TinyBasicTestReset();
+  const int negative_skip = TinyBasicTestAddProgram(
+    "10 S=1;FOR I=1 TO 3 STEP -1;S=99;NEXT I;S=S+1\n",
+    "NEGSZ");
+  assert(negative_skip >= 0);
+  assert(TinyBasicTestRunResult(negative_skip));
+  assert(std::fabs(TinyBasicTestNumber("S") - 2.0) < 0.000001);
+}
+
+static void test_palo_alto_print_format_and_input_expression(void) {
+  TinyBasicTestReset();
+  TinyBasicTestSetInputExpression("2+3*4");
+  const int slot = TinyBasicTestAddProgram(
+    "10 INPUT 'VALUE?'A\n"
+    "20 PRINT #6,A\n",
+    "PATBIO");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 14.0) < 0.000001);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "    14", 6) == 0);
+}
+
+static void test_expanded_tinybasic_limits(void) {
+  TinyBasicTestReset();
+  char source[3400];
+  std::size_t used = 0;
+  for(int line = 1; line <= 120; line++) {
+    const int written = std::snprintf(
+        source + used, sizeof(source) - used,
+        "%d REM ABCDEFGH\n", line * 10);
+    assert(written > 0 && (std::size_t) written < sizeof(source) - used);
+    used += (std::size_t) written;
+  }
+  assert(used > 1536 && used < sizeof(source));
+  assert(TinyBasicTestCompile(source));
+
+  TinyBasicTestReset();
+  const int nested = TinyBasicTestAddProgram(
+    "10 FOR A=1 TO 1\n"
+    "20 FOR B=1 TO 1\n"
+    "30 FOR C=1 TO 1\n"
+    "40 FOR D=1 TO 1\n"
+    "50 FOR E=1 TO 1\n"
+    "60 FOR F=1 TO 1\n"
+    "70 FOR G=1 TO 1\n"
+    "80 FOR H=1 TO 1\n"
+    "90 FOR I=1 TO 1\n"
+    "100 FOR J=1 TO 1\n"
+    "110 FOR K=1 TO 1\n"
+    "120 FOR L=1 TO 1\n"
+    "130 S=1\n"
+    "140 NEXT L\n150 NEXT K\n160 NEXT J\n170 NEXT I\n"
+    "180 NEXT H\n190 NEXT G\n200 NEXT F\n210 NEXT E\n"
+    "220 NEXT D\n230 NEXT C\n240 NEXT B\n250 NEXT A\n",
+    "DEEPFOR");
+  assert(nested >= 0);
+  assert(TinyBasicTestRunResult(nested));
+  assert(std::fabs(TinyBasicTestNumber("S") - 1.0) < 0.000001);
+
+  TinyBasicTestReset();
+  const int deep_gosub = TinyBasicTestAddProgram(
+    "10 GOSUB 100\n20 END\n"
+    "100 A=A+1;GOSUB 110;RETURN\n"
+    "110 A=A+1;GOSUB 120;RETURN\n"
+    "120 A=A+1;GOSUB 130;RETURN\n"
+    "130 A=A+1;GOSUB 140;RETURN\n"
+    "140 A=A+1;GOSUB 150;RETURN\n"
+    "150 A=A+1;GOSUB 160;RETURN\n"
+    "160 A=A+1;GOSUB 170;RETURN\n"
+    "170 A=A+1;GOSUB 180;RETURN\n"
+    "180 A=A+1;GOSUB 190;RETURN\n"
+    "190 A=A+1;GOSUB 200;RETURN\n"
+    "200 A=A+1;GOSUB 210;RETURN\n"
+    "210 A=A+1;RETURN\n",
+    "DEEPGOSUB");
+  assert(deep_gosub >= 0);
+  assert(TinyBasicTestRunResult(deep_gosub));
+  assert(std::fabs(TinyBasicTestNumber("A") - 12.0) < 0.000001);
+
+  TinyBasicTestReset();
+  assert(TinyBasicTestCompile(
+    "10 A=------------------------------------------------------------------------"
+    "--------1\n"));
+}
+
 int main(void) {
   test_compile_and_print();
   test_format_number();
@@ -495,6 +650,10 @@ int main(void) {
   test_mk_reference_rejects_unrepresentable_values();
   test_input_mk_stack_reference();
   test_mk_rf_requires_expanded_mode();
+  test_palo_alto_arrays_size_and_assignment_lists();
+  test_palo_alto_step_semicolon_and_gosub_resume();
+  test_palo_alto_print_format_and_input_expression();
+  test_expanded_tinybasic_limits();
   test_if_and_goto();
   test_gosub();
   test_for_next();

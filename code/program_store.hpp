@@ -10,6 +10,11 @@ namespace program_store {
 static constexpr usize NAME_SIZE = 32;
 // Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
+// TinyBASIC shares one 4-KiB C5 data sector with its record header and name.
+// 3584 bytes leave enough room for that metadata while more than doubling the
+// original editor quota.  FOCAL and ordinary text files keep their established
+// 1536-byte limit so their scratch-buffer contracts do not change.
+static constexpr u16 MAX_TINYBASIC_TEXT_SIZE = 3584;
 // F401 keeps the established compact limit. F411 already owns an 8 KiB
 // exclusive BULK arena, so a resident FMK may use it without adding RAM.
 #if defined(STM32F401xC) || defined(STM32F401xE) || \
