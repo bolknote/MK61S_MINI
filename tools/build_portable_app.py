@@ -25,6 +25,13 @@ SYSTEM_MODULES = {
     "chip8": ("CHIP8", "CHIP8", ["chip8.cpp", "chip8_runner.cpp", "chip8_module_entry.cpp"], "C1"),
 }
 
+# These ceilings protect intentionally compact system interpreters from silent
+# code-size regressions.  memory_bytes is the complete loaded image plus BSS;
+# the editor/runtime workspace leased by the firmware is accounted separately.
+SYSTEM_SIZE_BUDGETS = {
+    "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
+}
+
 
 def run(command: list[str | Path]) -> str:
     result = subprocess.run([str(x) for x in command], text=True,
@@ -32,6 +39,17 @@ def run(command: list[str | Path]) -> str:
     if result.returncode:
         raise ValueError(result.stdout + result.stderr)
     return result.stdout
+
+
+def enforce_system_size_budget(system: str | None, report: dict) -> None:
+    budget = SYSTEM_SIZE_BUDGETS.get(system)
+    if budget is None:
+        return
+    exceeded = [f"{field}={report[field]} > {limit}"
+                for field, limit in budget.items()
+                if report[field] > limit]
+    if exceeded:
+        raise ValueError(f"{system} size budget exceeded: " + ", ".join(exceeded))
 
 
 def build(args: argparse.Namespace) -> dict:
@@ -222,6 +240,7 @@ def build(args: argparse.Namespace) -> dict:
     if rust_compiler is not None:
         report["rust_compiler"] = run([rust_compiler, "--version"]).strip()
     (out / (args.name + ".json")).write_text(json.dumps(report, indent=2) + "\n")
+    enforce_system_size_budget(args.system, report)
     return report
 
 

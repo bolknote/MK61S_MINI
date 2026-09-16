@@ -88,6 +88,20 @@ static void test_compile_rejects_basic_aliases(void) {
   CHECK(!FocalTestCompile("01.10 TYPE A\n01.20 E"));
 }
 
+static void test_compile_sorts_and_rejects_duplicate_lines(void) {
+  FocalTestReset();
+  const int slot = add_program(
+      "2.10 S A=9\n"
+      "1.20 E\n"
+      "1.10 S A=3");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("A"), 3.0);
+
+  FocalTestReset();
+  CHECK(!FocalTestCompile("1.10 S A=1\n1.10 E"));
+  CHECK(std::strcmp(FocalTestError(), "LINE?") == 0);
+}
+
 static void test_compile_rejects_truncation_and_malformed_statements(void) {
   FocalTestReset();
   std::string expanded;
@@ -283,6 +297,17 @@ static void test_mk_math_dispatch_and_format(void) {
   FocalTestRun(slot);
   CHECK_NEAR(FocalTestNumber("A"), 6.0); // 0 + 1 + 4 + 1
   CHECK_STARTS(FocalTestLcdLine(0), "1E+8");
+
+  FocalTestReset();
+  const int all_functions = add_program(
+      "1.10 S A=TG(0)+ASIN(0)+ACOS(1)+ATG(0)\n"
+      "1.20 S B=LG(100)+FRAC(-1.25)+ROUND(-1.5)+SGN(-2)\n"
+      "1.30 S C=PI\n"
+      "1.40 E");
+  CHECK(FocalTestRunStatus(all_functions) == (int) FocalRunStatus::COMPLETED);
+  CHECK_NEAR(FocalTestNumber("A"), 0.0);
+  CHECK_NEAR(FocalTestNumber("B"), -0.25);
+  CHECK_NEAR(FocalTestNumber("C"), 3.14159265358979323846);
 }
 
 static void test_math_errors_tiny_values_and_for_progress(void) {
@@ -395,6 +420,15 @@ static void test_editor_expression_macros(void) {
   const int sine[] = {keys.k, keys.digit[3], keys.digit[3], keys.alpha, keys.digit[7]};
   FocalTestEditSequence(sine, (int) (sizeof(sine) / sizeof(sine[0])), out, sizeof(out));
   CHECK(std::strcmp(out, "SIN(X)") == 0);
+
+  const int partial_number[] = {
+      keys.k, keys.digit[3], keys.digit[3], keys.add,
+      keys.digit[1], keys.digit[2], keys.left, keys.alpha, keys.mul};
+  FocalTestEditSequence(partial_number,
+                        (int) (sizeof(partial_number) /
+                               sizeof(partial_number[0])),
+                        out, sizeof(out));
+  CHECK(std::strcmp(out, "(X+1)^22") == 0);
 
   struct MacroCase {
     int key;
@@ -751,6 +785,7 @@ static void test_editor_line_navigation(void) {
 
 int main(void) {
   test_compile_rejects_basic_aliases();
+  test_compile_sorts_and_rejects_duplicate_lines();
   test_compile_rejects_truncation_and_malformed_statements();
   test_arithmetic_and_print();
   test_print_newline();
