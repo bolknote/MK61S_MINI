@@ -8,7 +8,13 @@ namespace text_screen {
 
 static constexpr u8 COLS = 16;
 static constexpr u8 MAX_ROWS = 10;
+#if MK61_PROPORTIONAL_UI_FONTS
+static constexpr u8 MAX_COLS = 40;
+static constexpr usize CELL_CAPACITY = (usize) MAX_COLS * MAX_ROWS;
+#else
+static constexpr u8 MAX_COLS = COLS;
 static constexpr usize CELL_CAPACITY = (usize) COLS * MAX_ROWS;
+#endif
 static constexpr usize FLAG_BYTES = (CELL_CAPACITY + 7U) / 8U;
 
 struct FontGeometry {
@@ -25,8 +31,9 @@ class Grid {
   public:
     Grid(void);
 
-    // Rows and columns share the same 160-token backing store. Excess rows
-    // are clipped to capacity after columns have been normalised.
+    // Rows and columns share one bounded backing store. Graphical builds keep
+    // enough tokens for the narrowest supported 40x10 text face; character
+    // displays retain the original 16x10 allocation.
     void reset(u8 rows, u8 cols = COLS);
     void clear(void);
     void setCursor(u8 x, u8 y);

@@ -3,6 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_tinybasic_self_test"
+python3 "$root/tests/high_noon_package_self_test.py" "$root"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
@@ -38,4 +39,8 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/tinybasic.cpp" \
   -o "$out"
 
-"$out"
+"$out" \
+  "$root/programs/games/High Noon/intro.tbi" \
+  "$root/programs/games/High Noon/player.tbi" \
+  "$root/programs/games/High Noon/bart.tbi" \
+  "$root/programs/games/High Noon/reward.tbi"

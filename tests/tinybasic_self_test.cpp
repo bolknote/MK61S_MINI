@@ -10,6 +10,8 @@ extern "C" const char* TinyBasicTestError(void);
 extern "C" int TinyBasicTestAddProgram(const char* source, const char* name);
 extern "C" void TinyBasicTestSetInput(double value);
 extern "C" void TinyBasicTestSetInputExpression(const char* expression);
+extern "C" void TinyBasicTestSetInputs(const double* values, int count);
+extern "C" const char* TinyBasicTestLastPrompt(void);
 extern "C" void TinyBasicTestRun(int slot);
 extern "C" double TinyBasicTestNumber(const char* name);
 extern "C" double TinyBasicTestMkX(void);
@@ -19,6 +21,7 @@ extern "C" void TinyBasicTestSetAngleMode(int mode);
 extern "C" const char* TinyBasicTestLcdLine(int row);
 extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out, int size);
 extern "C" void TinyBasicTestSetAlphaHeld(bool held);
+extern "C" void TinyBasicTestSetPauseEsc(bool enabled);
 extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size);
 extern "C" bool TinyBasicTestRunResult(int slot);
 extern "C" void TinyBasicTestClearData(void);
@@ -254,8 +257,9 @@ static void test_loadfont_order_results_and_restore(void) {
   TinyBasicTestSetFontResult("HighNoon", 1);
   TinyBasicTestSetFontResult("Broken", -1);
   const int slot = TinyBasicTestAddProgram(
-    "10 A=LOADFONT(\"Missing\",\"HighNoon\")\n"
-    "20 B=LOADFONT()\n"
+    "5 D=COLS:E=ROWS\n"
+    "10 A=LOADFONT(\"Missing\",\"HighNoon\"):F=COLS\n"
+    "20 B=LOADFONT():G=COLS\n"
     "30 C=LOADFONT(\"Missing\",\"Broken\")\n",
     "FONTS");
   assert(slot >= 0);
@@ -265,6 +269,10 @@ static void test_loadfont_order_results_and_restore(void) {
   assert(std::fabs(TinyBasicTestNumber("A") - 2.0) < 0.000001);
   assert(std::fabs(TinyBasicTestNumber("B") - 1.0) < 0.000001);
   assert(std::fabs(TinyBasicTestNumber("C") + 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("D") - 16.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("E") - 8.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("F") - 40.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("G") - 16.0) < 0.000001);
   assert(TinyBasicTestFontLoadCount() == 4);
   // One explicit LOADFONT() plus the unconditional run-scope cleanup.
   assert(TinyBasicTestFontRestoreCount() == 2);
@@ -315,6 +323,30 @@ static void test_loadfont_order_results_and_restore(void) {
   assert(!TinyBasicTestCompile("10 A=LOADFONT(\"\")\n"));
   assert(!TinyBasicTestCompile("10 A=LOADFONT(\"A\",)\n"));
   assert(!TinyBasicTestCompile("10 A=LOADFONT(\"A\"\n"));
+  assert(TinyBasicTestCompile("10 A=COLS:B=ROWS\n"));
+  assert(!TinyBasicTestCompile("10 A=COLS()\n"));
+}
+
+static void test_cls_and_pause(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+      "10 PRINT \"OLD\"\n"
+      "20 PRINT \"STALE\"\n"
+      "30 CLS\n"
+      "40 PRINT \"NEW\"\n"
+      "50 PAUSE\n"
+      "60 A=1\n",
+      "SCREEN");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "NEW", 3) == 0);
+  assert(TinyBasicTestLcdLine(1)[0] == ' ');
+  assert(std::fabs(TinyBasicTestNumber("A") - 1.0) < 0.000001);
+
+  TinyBasicTestReset();
+  assert(TinyBasicTestCompile("10 C.\n20 PAU.\n"));
+  assert(!TinyBasicTestCompile("10 CLS 1\n"));
+  assert(!TinyBasicTestCompile("10 PAUSE 1\n"));
 }
 
 static void test_zero_trip_for(void) {
@@ -748,7 +780,76 @@ static void test_expanded_tinybasic_limits(void) {
     "--------1\n"));
 }
 
-int main(void) {
+static int add_shipping_program(const char* path, const char* name) {
+  FILE* file = std::fopen(path, "rb");
+  assert(file != nullptr);
+  char source[3585];
+  const size_t size = std::fread(source, 1, sizeof(source), file);
+  assert(!std::ferror(file));
+  assert(std::fgetc(file) == EOF);
+  std::fclose(file);
+  assert(size <= 3584);
+  source[size] = 0;
+  assert(TinyBasicTestCompile(source));
+  const int slot = TinyBasicTestAddProgram(source, name);
+  assert(slot >= 0);
+  return slot;
+}
+
+static void test_high_noon_package(int argc, char** argv) {
+  assert(argc == 5);
+  TinyBasicTestReset();
+  (void) add_shipping_program(argv[1], "INTRO");
+  (void) add_shipping_program(argv[2], "PLAYER");
+  (void) add_shipping_program(argv[3], "BART");
+  (void) add_shipping_program(argv[4], "REWARD");
+  TinyBasicTestSetFontResult("HighNoon", 1);
+
+  const double no_instructions[] = {0};
+  TinyBasicTestSetInputs(no_instructions, 1);
+  assert(RunTinyBasicProgram("INTRO"));
+  assert(std::strcmp(TinyBasicTestLastPrompt(),
+                     "DO YOU WANT INSTRUCTIONS? 1 YES 0 NO") == 0);
+  assert(std::fabs(TinyBasicTestMkRegister(0) - 100.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(2)) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(3)) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(4)) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(14) - 1.0) < 0.000001);
+
+  const double advance[] = {1, 10};
+  TinyBasicTestSetInputs(advance, 2);
+  assert(RunTinyBasicProgram("PLAYER"));
+  assert(std::fabs(TinyBasicTestMkRegister(0) - 90.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(1) - 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(14) - 2.0) < 0.000001);
+
+  assert(RunTinyBasicProgram("BART"));
+  assert(std::fabs(TinyBasicTestMkRegister(14) - 1.0) < 0.000001);
+  assert(TinyBasicTestMkRegister(0) <= 90.0 ||
+         TinyBasicTestMkRegister(3) == 1.0);
+
+  const double surrender[] = {5, 1};
+  TinyBasicTestSetInputs(surrender, 2);
+  assert(RunTinyBasicProgram("PLAYER"));
+  assert(std::fabs(TinyBasicTestMkRegister(1) - 5.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestMkRegister(14) - 99.0) < 0.000001);
+
+  assert(RunTinyBasicProgram("REWARD"));
+  assert(std::fabs(TinyBasicTestMkRegister(14) - 99.0) < 0.000001);
+
+  const double stand[] = {2};
+  TinyBasicTestSetInputs(stand, 1);
+  TinyBasicTestSetPauseEsc(true);
+  assert(RunTinyBasicProgram("PLAYER"));
+  TinyBasicTestSetPauseEsc(false);
+  assert(std::fabs(TinyBasicTestMkRegister(14) - 99.0) < 0.000001);
+  assert(std::strcmp(TinyBasicTestCurrentFont(), "Original") == 0);
+  assert(TinyBasicTestFontLoadCount() == 6);
+  assert(TinyBasicTestFontRestoreCount() == 6);
+  assert(TinyBasicTestWaitCount() == 0);
+}
+
+int main(int argc, char** argv) {
   test_compile_and_print();
   test_line_index_orders_source_and_rejects_duplicates();
   test_format_number();
@@ -772,6 +873,7 @@ int main(void) {
   test_boolean_truth_table();
   test_expression_semantics();
   test_loadfont_order_results_and_restore();
+  test_cls_and_pause();
   test_zero_trip_for();
   test_print_syntax_and_spacing();
   test_runtime_math_errors_are_safe();
@@ -781,6 +883,7 @@ int main(void) {
   test_editor_has_no_operator_macros();
   test_editor_cx_backspace_and_f_cx_clear_line();
   test_editor_pp_is_space();
+  if(argc > 1) test_high_noon_package(argc, argv);
   std::printf("tinybasic_self_test: ok\n");
   return 0;
 }

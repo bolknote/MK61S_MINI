@@ -2,6 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+python3 "$root/tools/generate_highnoon_font.py" --check >/dev/null
 if ! pkg-config --exists freetype2; then
   echo "fmk_converter_test: skipped (FreeType unavailable)"
   exit 0

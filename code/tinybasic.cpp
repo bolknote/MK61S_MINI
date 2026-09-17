@@ -72,7 +72,9 @@ namespace mk61_ref {
 class MK61Display {
   public:
     static constexpr u8 MAX_ROWS = 8;
-    MK61Display(void) : x(0), y(0), row_count(MAX_ROWS) { clear(); }
+    MK61Display(void) : x(0), y(0), row_count(MAX_ROWS), reported_cols(16) {
+      clear();
+    }
     void clear(void) {
       memset(lines, ' ', sizeof(lines));
       for(int row = 0; row < MAX_ROWS; row++) lines[row][16] = 0;
@@ -95,6 +97,8 @@ class MK61Display {
       while(*text != 0) write((u8) *text++);
     }
     void print(char value) { write((u8) value); }
+    u8 cols(void) const { return reported_cols; }
+    void setReportedCols(u8 cols) { reported_cols = cols; }
     u8 rows(void) const { return row_count; }
     void setRows(u8 rows) { row_count = (rows < 1) ? 1 : ((rows > MAX_ROWS) ? MAX_ROWS : rows); }
     const char* line(u8 row) const { return lines[(row < MAX_ROWS) ? row : 0]; }
@@ -102,6 +106,7 @@ class MK61Display {
     u8 x;
     u8 y;
     u8 row_count;
+    u8 reported_cols;
     char lines[MAX_ROWS][17];
 };
 
@@ -117,9 +122,10 @@ enum class key_state {PRESSED=0, RELEASED=0x40};
 
 namespace kbd {
   static bool host_alpha_pressed;
+  static bool host_wait_esc;
   isize scan(void) { return 0; }
   i32 get_key(key_state) { return -1; }
-  i32 get_key_wait(void) { return KEY_OK; }
+  i32 get_key_wait(void) { return host_wait_esc ? KEY_ESC : KEY_OK; }
   bool is_key_pressed(i32 key_code) { return key_code == KEY_ALPHA && host_alpha_pressed; }
 }
 
@@ -213,6 +219,7 @@ static u8 tb_host_font_rule_count;
 static char tb_host_font_current[32] = "Original";
 static char tb_host_font_original[32] = "Original";
 static bool tb_host_font_session_active;
+static u8 tb_host_font_original_cols = 16;
 static int tb_host_font_load_count;
 static int tb_host_font_restore_count;
 
@@ -222,6 +229,7 @@ static i32 tb_text_font_begin(void) {
                        sizeof(tb_host_font_original),
                        tb_host_font_current);
   tb_host_font_session_active = true;
+  tb_host_font_original_cols = main_lcd().cols();
   return TB_FONT_OK;
 }
 
@@ -234,6 +242,7 @@ static i32 tb_text_font_load(const char* name) {
     if(result == TB_FONT_OK) {
       bounded_string::copy(tb_host_font_current,
                            sizeof(tb_host_font_current), name);
+      main_lcd().setReportedCols(40);
     }
     return result;
   }
@@ -246,6 +255,7 @@ static i32 tb_text_font_restore(void) {
   bounded_string::copy(tb_host_font_current,
                        sizeof(tb_host_font_current),
                        tb_host_font_original);
+  main_lcd().setReportedCols(tb_host_font_original_cols);
   return TB_FONT_OK;
 }
 
@@ -360,6 +370,8 @@ enum class TbCommand : u8 {
   CMD_RETURN,
   CMD_FOR,
   CMD_NEXT,
+  CMD_CLS,
+  CMD_PAUSE,
   CMD_END
 };
 
@@ -372,6 +384,8 @@ static constexpr u8 TB_COMMAND_TERMINAL = 0x40;
 enum class TbFunction : u8 {
   NONE,
   SIZE,
+  COLS,
+  ROWS,
   PI,
   RND,
   SIN,
@@ -576,6 +590,11 @@ static usize tinybasic_array_capacity(void) {
 #define tb_pending_print (tinybasic_runtime().tb_pending_print)
 #define tb_print_row     (tinybasic_runtime().tb_print_row)
 
+// PAUSE already provides the acknowledgement that the generic runner normally
+// requests after a program. Keep it only while no later screen/input activity
+// has made another final acknowledgement useful.
+static bool tb_pause_is_final = false;
+
 static void tinybasic_clear_array(void) {
   double* const array = tinybasic_array_data();
   if(array != NULL) {
@@ -615,6 +634,10 @@ static bool tinybasic_array_index(double value, int& index) {
 static u32 tb_random_state = 0x3B6B120EUL;
 static double tb_host_input_value = 0.0;
 static char tb_host_input_expression[128];
+static double tb_host_input_values[16];
+static u8 tb_host_input_count = 0;
+static u8 tb_host_input_index = 0;
+static char tb_host_last_prompt[TB_PRINT_BUFFER_SIZE];
 static int tb_host_wait_count = 0;
 #endif
 
@@ -706,6 +729,7 @@ static void tb_message_i18n(const char* en0, const char* ru0, const char* en1, c
 enum class TbError : u8 { WHAT, HOW, SORRY };
 
 static bool tb_error_code(TbError error) {
+  tb_pause_is_final = false;
   const char* en = "SORRY";
   const char* ru = "НЕТ МЕСТА";
   if(error == TbError::WHAT) {
@@ -730,9 +754,24 @@ static bool tb_error_code(TbError error) {
 static void tb_display_line(u8 row, const char* text) {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().setCursor(0, row);
-  for(u8 i = 0; i < 16; i++) main_lcd().write((u8) ' ');
+  for(u8 i = 0; i < main_lcd().cols(); i++) {
+    main_lcd().write((u8) ' ');
+  }
   main_lcd().setCursor(0, row);
   if(text != NULL) main_lcd().print(text);
+}
+
+static void tb_clear_output(void) {
+  tb_pause_is_final = false;
+  main_lcd().clear();
+  tb_pending_print[0] = 0;
+  tb_print_row = 0;
+}
+
+static bool tb_pause(void) {
+  const i32 key = kbd::get_key_wait();
+  tb_pause_is_final = true;
+  return key != KEY_ESC && key != KEY_ESC_PRESS;
 }
 
 static void tb_format_number(double value, char* out, usize size) {
@@ -817,6 +856,8 @@ static const u8 TB_COMMAND_WORDS[] = {
                               0x16, 'R', 'E', 'T', 'U', 'R', 'N',
   (u8) TbCommand::CMD_FOR,    0x13, 'F', 'O', 'R',
   (u8) TbCommand::CMD_NEXT,   0x14, 'N', 'E', 'X', 'T',
+  (u8) TbCommand::CMD_CLS,    0x13, 'C', 'L', 'S',
+  (u8) TbCommand::CMD_PAUSE,  0x35, 'P', 'A', 'U', 'S', 'E',
   (u8) TbCommand::CMD_END | TB_COMMAND_TERMINAL,
                               0x13, 'E', 'N', 'D',
   (u8) TbCommand::CMD_END | TB_COMMAND_TERMINAL,
@@ -826,6 +867,8 @@ static const u8 TB_COMMAND_WORDS[] = {
 
 static const u8 TB_FUNCTION_WORDS[] = {
   (u8) TbFunction::SIZE,  0x14, 'S', 'I', 'Z', 'E',
+  (u8) TbFunction::COLS,  0xF4, 'C', 'O', 'L', 'S',
+  (u8) TbFunction::ROWS,  0xF4, 'R', 'O', 'W', 'S',
   (u8) TbFunction::PI,    0xF2, 'P', 'I',
   (u8) TbFunction::RND,   0x13, 'R', 'N', 'D',
   (u8) TbFunction::SIN,   0x23, 'S', 'I', 'N',
@@ -1334,7 +1377,14 @@ class TbExprParser {
     double parse_loadfont(void) {
       skip();
       if(match_char(')')) {
-        return evaluate ? (double) tb_text_font_restore() : 0.0;
+        if(!evaluate) return 0.0;
+        const i32 restored = tb_text_font_restore();
+        if(restored == TB_FONT_OK) {
+          tb_pause_is_final = false;
+          tb_pending_print[0] = 0;
+          tb_print_row = 0;
+        }
+        return (double) restored;
       }
 
       u16 candidate_index = 0;
@@ -1365,6 +1415,9 @@ class TbExprParser {
           if(attempt == TB_FONT_OK) {
             result = (i32) candidate_index;
             selected = true;
+            tb_pause_is_final = false;
+            tb_pending_print[0] = 0;
+            tb_print_row = 0;
           } else if(attempt == TB_FONT_INVALID) {
             result = TB_FONT_INVALID;
           } else if(attempt == TB_FONT_UNSUPPORTED ||
@@ -1471,6 +1524,12 @@ class TbExprParser {
         if(function_id == TbFunction::SIZE) {
           return evaluate ? tinybasic_size_value() : 0.0;
         }
+        if(function_id == TbFunction::COLS) {
+          return evaluate ? (double) main_lcd().cols() : 0.0;
+        }
+        if(function_id == TbFunction::ROWS) {
+          return evaluate ? (double) main_lcd().rows() : 0.0;
+        }
         if(function_id == TbFunction::PI) {
           return evaluate ? 3.14159265358979323846 : 0.0;
         }
@@ -1540,6 +1599,8 @@ class TbExprParser {
           case TbFunction::LOADFONT:
           case TbFunction::NONE:
           case TbFunction::SIZE:
+          case TbFunction::COLS:
+          case TbFunction::ROWS:
           case TbFunction::PI:
           case TbFunction::RND:
           case TbFunction::SIN:
@@ -1695,12 +1756,17 @@ static bool tb_append_print_separator(char sep) {
 }
 
 static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
+  tb_pause_is_final = false;
 #ifdef TINYBASIC_HOST_TEST
-  (void) prompt;
+  tb_copy_text(tb_host_last_prompt, sizeof(tb_host_last_prompt), prompt);
   if(tb_host_input_expression[0] != 0) {
     const char* const end = tb_host_input_expression +
                             strlen(tb_host_input_expression);
     return tb_eval_expr_range(tb_host_input_expression, end, value);
+  }
+  if(tb_host_input_index < tb_host_input_count) {
+    value = tb_host_input_values[tb_host_input_index++];
+    return true;
   }
   value = tb_host_input_value;
   return true;
@@ -1784,6 +1850,7 @@ static bool tb_process_assignment(const char* begin, const char* end,
 
 static bool tb_process_print(const char* begin, const char* end,
                              bool execute) {
+  if(execute) tb_pause_is_final = false;
   const char* p = begin;
   char trailing_sep = 0;
   // MK-61 keeps its compact display-friendly default.  PATB's historical
@@ -1866,7 +1933,10 @@ static bool tb_process_input(const char* begin, const char* end,
                              i16 current_pc, TbFlow* flow,
                              bool execute) {
   const char* p = begin;
-  char prompt[17] = ":";
+  char prompt[TB_PRINT_BUFFER_SIZE] = ":";
+  const usize display_prompt_size = (usize) main_lcd().cols() + 1U;
+  const usize prompt_size = display_prompt_size < sizeof(prompt)
+      ? display_prompt_size : sizeof(prompt);
   bool custom_prompt = false;
   bool has_target = false;
   while(p < end) {
@@ -1881,7 +1951,7 @@ static bool tb_process_input(const char* begin, const char* end,
       if(execute) {
         const usize used = custom_prompt ? strlen(prompt) : 0;
         if(!custom_prompt) prompt[0] = 0;
-        tb_copy_range(prompt + used, sizeof(prompt) - used,
+        tb_copy_range(prompt + used, prompt_size - used,
                       text_item.begin, text_item.end);
         custom_prompt = true;
       }
@@ -1889,7 +1959,7 @@ static bool tb_process_input(const char* begin, const char* end,
       if(execute) {
         const usize used = custom_prompt ? strlen(prompt) : 0;
         if(!custom_prompt) prompt[0] = 0;
-        if(used + 1 < sizeof(prompt)) {
+        if(used + 1 < prompt_size) {
           prompt[used] = text_item.control;
           prompt[used + 1] = 0;
         }
@@ -1904,8 +1974,8 @@ static bool tb_process_input(const char* begin, const char* end,
       has_target = true;
       if(execute && !custom_prompt) {
         const usize target_len = (usize) (p - target_begin);
-        const usize copy_len = target_len < sizeof(prompt) - 2
-            ? target_len : sizeof(prompt) - 2;
+        const usize copy_len = target_len < prompt_size - 2
+            ? target_len : prompt_size - 2;
         memcpy(prompt, target_begin, copy_len);
         prompt[copy_len] = ':';
         prompt[copy_len + 1] = 0;
@@ -2241,6 +2311,18 @@ static bool tb_process_one(TbCommandContext& context) {
         return false;
       }
       break;
+    case TbCommand::CMD_CLS:
+      if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
+      if(execute) tb_clear_output();
+      break;
+    case TbCommand::CMD_PAUSE:
+      if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
+      if(execute && !tb_pause()) {
+        *flow = tb_flow(TbFlowKind::STOP, current_pc);
+        cursor = end;
+        return true;
+      }
+      break;
     case TbCommand::CMD_END:
       if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
       if(!execute) break;
@@ -2319,7 +2401,12 @@ static void tinybasic_wait_after_run(void) {
 static void tinybasic_wait_after_run(void) { tb_host_wait_count++; }
 #endif
 
+static void tinybasic_finish_wait(void) {
+  if(!tb_pause_is_final) tinybasic_wait_after_run();
+}
+
 static bool tb_run_program(int program_index) {
+  tb_pause_is_final = false;
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return false;
@@ -2479,6 +2566,9 @@ void InitTinyBasic(void) {
 #ifdef TINYBASIC_HOST_TEST
   tb_random_state = 0x3B6B120EUL;
   tb_host_input_expression[0] = 0;
+  tb_host_input_count = 0;
+  tb_host_input_index = 0;
+  tb_host_last_prompt[0] = 0;
   tinybasic_host_angle_unit = RADIAN;
   tb_host_wait_count = 0;
 #endif
@@ -2569,7 +2659,7 @@ bool TinyBASIC_library_select(void) {
   const int program = select_tinybasic_program(false);
   if(program >= 0) {
     (void) tb_run_program(program);
-    tinybasic_wait_after_run();
+    tinybasic_finish_wait();
   }
   return true;
 }
@@ -2985,7 +3075,7 @@ bool RunTinyBasicProgram(const char* name) {
 #endif
   if(slot < 0) return false;
   const bool ok = tb_run_program(slot);
-  tinybasic_wait_after_run();
+  tinybasic_finish_wait();
   return ok;
 }
 
@@ -2999,7 +3089,7 @@ bool RunTinyBasicProgram(u16 id) {
 #endif
   if(slot < 0) return false;
   const bool ok = tb_run_program(slot);
-  tinybasic_wait_after_run();
+  tinybasic_finish_wait();
   return ok;
 }
 
@@ -3058,6 +3148,7 @@ extern "C" void TinyBasicTestReset(void) {
 #ifdef TINYBASIC_HOST_TEST
   mk61_ref::host_reset();
   kbd::host_alpha_pressed = false;
+  kbd::host_wait_esc = false;
   tb_host_font_rule_count = 0;
   tb_host_font_session_active = false;
   tb_host_font_load_count = 0;
@@ -3074,6 +3165,14 @@ extern "C" void TinyBasicTestSetAlphaHeld(bool held) {
   kbd::host_alpha_pressed = held;
 #else
   (void) held;
+#endif
+}
+
+extern "C" void TinyBasicTestSetPauseEsc(bool enabled) {
+#ifdef TINYBASIC_HOST_TEST
+  kbd::host_wait_esc = enabled;
+#else
+  (void) enabled;
 #endif
 }
 
@@ -3100,11 +3199,33 @@ extern "C" int TinyBasicTestAddProgram(const char* source, const char* name) {
 extern "C" void TinyBasicTestSetInput(double value) {
   tb_host_input_value = value;
   tb_host_input_expression[0] = 0;
+  tb_host_input_count = 0;
+  tb_host_input_index = 0;
 }
 
 extern "C" void TinyBasicTestSetInputExpression(const char* expression) {
+  tb_host_input_count = 0;
+  tb_host_input_index = 0;
   tb_copy_text(tb_host_input_expression,
                sizeof(tb_host_input_expression), expression);
+}
+
+extern "C" void TinyBasicTestSetInputs(const double* values, int count) {
+  tb_host_input_count = 0;
+  tb_host_input_index = 0;
+  tb_host_input_expression[0] = 0;
+  if(values == NULL || count <= 0) return;
+  const int capacity = (int) (sizeof(tb_host_input_values) /
+                              sizeof(tb_host_input_values[0]));
+  if(count > capacity) count = capacity;
+  for(int index = 0; index < count; ++index) {
+    tb_host_input_values[index] = values[index];
+  }
+  tb_host_input_count = (u8) count;
+}
+
+extern "C" const char* TinyBasicTestLastPrompt(void) {
+  return tb_host_last_prompt;
 }
 
 extern "C" void TinyBasicTestRun(int slot) {

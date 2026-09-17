@@ -65,6 +65,9 @@ struct AppliedFontSnapshot {
   u8 ui_height;
 #if MK61_PROPORTIONAL_UI_FONTS
   u32 ui_key;
+  u8 ui_family;
+  u8 ui_size;
+  bool ui_context;
 #endif
   lcd_display::TextProfile text_profile;
   bool external;
@@ -1075,6 +1078,9 @@ static bool capture_applied_font(AppliedFontSnapshot& out) {
   out.ui_height = applied_ui_height;
 #if MK61_PROPORTIONAL_UI_FONTS
   out.ui_key = applied_ui_key;
+  out.ui_family = main_lcd().uiFontFamily();
+  out.ui_size = main_lcd().uiFontSize();
+  out.ui_context = main_lcd().uiTextContext();
 #endif
   out.text_profile = main_lcd().textProfile();
   out.external = main_lcd().externalFontActive();
@@ -1087,6 +1093,12 @@ static bool capture_applied_font(AppliedFontSnapshot& out) {
 }
 
 static bool restore_applied_font(const AppliedFontSnapshot& saved) {
+#if MK61_PROPORTIONAL_UI_FONTS
+  // Stop the proportional renderer before replacing the bytes backing its
+  // current Face. The saved context is re-entered only after the old face and
+  // its exact settings are valid again.
+  main_lcd().endUiText();
+#endif
   bool restored = true;
   if(saved.external) {
     restored = restore_applied_font(saved.id, saved.role, saved.ui_height,
@@ -1104,6 +1116,8 @@ static bool restore_applied_font(const AppliedFontSnapshot& saved) {
   if(!restored) return false;
 #if MK61_PROPORTIONAL_UI_FONTS
   applied_ui_key = saved.ui_key;
+  main_lcd().setUiFont(saved.ui_family, saved.ui_size);
+  if(saved.ui_context) main_lcd().beginUiText();
 #endif
   main_lcd().restoreTextProfile(saved.text_profile);
   return true;
@@ -2573,8 +2587,22 @@ i32 program_store_text_font_load(const char* name) {
   AppliedFontSnapshot previous;
   if(!capture_applied_font(previous)) return -3;
   bool read_failed = false;
-  if(apply_font_entry_once(entry, AppliedFontRole::TEXT, 0, false,
-                           &read_failed)) return 1;
+#if MK61_PROPORTIONAL_UI_FONTS
+  const AppliedFontRole runtime_role = AppliedFontRole::UI;
+#else
+  const AppliedFontRole runtime_role = AppliedFontRole::TEXT;
+#endif
+  if(apply_font_entry_once(entry, runtime_role, 0, false, &read_failed)) {
+#if MK61_PROPORTIONAL_UI_FONTS
+    // A runtime face is a flowing graphical text surface, not a 16-cell
+    // calculator font. Family 3 selects the just-installed FMK; its own
+    // metrics, rather than this nominal size, determine rows and advances.
+    applied_ui_key = 0;
+    main_lcd().setUiFont(3, 12);
+    main_lcd().beginUiText();
+#endif
+    return 1;
+  }
 
   // installFontFromReader() must invalidate its old Face before replacing the
   // shared bytes. Re-read that old C5 entry so a bad candidate is atomic from
@@ -2612,6 +2640,10 @@ i32 program_store_text_font_end(void) {
     applied_ui_height = 0;
 #if MK61_PROPORTIONAL_UI_FONTS
     applied_ui_key = 0;
+    main_lcd().setUiFont(text_font_session.original.ui_family,
+                         text_font_session.original.ui_size);
+    if(text_font_session.original.ui_context) main_lcd().beginUiText();
+    else main_lcd().endUiText();
 #endif
     applied_font_suspended = false;
     main_lcd().restoreTextProfile(

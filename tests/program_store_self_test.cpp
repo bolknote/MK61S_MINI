@@ -1075,7 +1075,7 @@ static void test_paths_and_recursive_tree_operations(void) {
   assert(by_id(archive).kind == NodeKind::DIRECTORY);
 }
 
-static void test_explorer_autoexec_is_a_direct_m61_child(void) {
+static void test_explorer_autoexec_is_a_direct_script_child(void) {
   fresh();
   u16 app = program_store::INVALID_ID;
   u16 nested = program_store::INVALID_ID;
@@ -1100,6 +1100,28 @@ static void test_explorer_autoexec_is_a_direct_m61_child(void) {
   assert(found.id == autoexec_id);
   assert(found.parent_id == app);
   assert(found.type == ProgramType::MK61);
+
+  // TinyBASIC folders auto-start too, while M61 remains the deterministic
+  // priority when a folder happens to contain both files.
+  u16 basic = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      nested, 25, ProgramType::TINYBASIC, "autoexec", SCRIPT,
+      (u16) (sizeof(SCRIPT) - 1U), &basic));
+  assert(explorer_autoexec::find(nested, found));
+  assert(found.id == basic);
+  assert(found.parent_id == nested);
+  assert(found.type == ProgramType::TINYBASIC);
+
+  u16 nested_m61 = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      nested, 26, ProgramType::MK61, "autoexec", SCRIPT,
+      (u16) (sizeof(SCRIPT) - 1U), &nested_m61));
+  assert(explorer_autoexec::find(nested, found));
+  assert(found.id == nested_m61);
+  assert(found.type == ProgramType::MK61);
+
+  assert(program_store::remove_tree(nested_m61));
+  assert(program_store::remove_tree(basic));
   assert(!explorer_autoexec::find(nested, found));
   assert(!explorer_autoexec::find(other, found));
   assert(!explorer_autoexec::find(0x7FFEU, found));
@@ -2658,7 +2680,7 @@ int main(void) {
   test_zx0_replacement_power_cuts();
   test_arbitrary_nested_directories();
   test_paths_and_recursive_tree_operations();
-  test_explorer_autoexec_is_a_direct_m61_child();
+  test_explorer_autoexec_is_a_direct_script_child();
   test_system_apps_are_resolved_only_from_system_directory();
   test_directory_depth_limit_includes_moved_subtrees();
   test_names_and_exact_preferred_ids();

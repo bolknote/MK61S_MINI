@@ -157,6 +157,39 @@ void makeExternalUiFont(u8 (&font)[41]) {
   font[15] = (u8) (crc >> 8);
 }
 
+// The game face deliberately uses the smallest supported geometry. Four
+// glyph records are exactly two bytes each at 3x5 (raw flag + 15 pixels).
+void makeExternalRuntimeFont(u8 (&font)[30]) {
+  std::memset(font, 0, sizeof(font));
+  std::memcpy(font, "FMK1", 4);
+  font[4] = fmk::FLAG_MONOSPACED;
+  font[5] = 3;
+  font[6] = 5;
+  font[7] = 0x31; // advance=4, line gap=1
+  font[8] = 4;
+  font[10] = 2;
+  font[12] = (u8) sizeof(font);
+  font[16] = ' ';
+  font[18] = 0;
+  font[19] = '?';
+  font[21] = 2; // '?', '@', 'A'
+  usize bit = 22U * 8U;
+  for(u8 glyph = 0; glyph < 4; ++glyph) {
+    putMsbBit(font, bit, false);
+    for(u8 y = 0; y < 5; ++y) {
+      for(u8 x = 0; x < 3; ++x) {
+        const bool pixel = glyph != 0 &&
+            (y == 0 || y == 4 || x == 0 || x == 2);
+        putMsbBit(font, bit, pixel);
+      }
+    }
+  }
+  assert(bit == sizeof(font) * 8U);
+  const u16 crc = fmk::checksum(font, sizeof(font));
+  font[14] = (u8) crc;
+  font[15] = (u8) (crc >> 8);
+}
+
 void referenceExternal(Frame& frame, const fmk::Face& face, u16 cp,
                        int pen, u8 row, int right = 190) {
   fmk::Glyph glyph = {};
@@ -589,6 +622,33 @@ void test_external_ui_font_layout_fallback_and_lifetime() {
   ui_display_test::bulk_size = 0;
 }
 
+void test_runtime_font_uses_full_40_by_10_grid() {
+  u8 font[30];
+  makeExternalRuntimeFont(font);
+  u8 bulk[fmk::MAX_FILE_SIZE]{};
+  ui_display_test::bulk_bytes = bulk;
+  ui_display_test::bulk_size = sizeof(bulk);
+
+  MK61Display display;
+  ui_display_test::reset();
+  display.begin();
+  assert(display.installUiFont(font, sizeof(font), 0));
+  display.setUiFont(3, 12);
+  display.beginUiText();
+  assert(display.rows() == 10 && display.cols() == 40);
+
+  // Row nine proves the gutter/tail damage maps also cover all ten rows.
+  display.printUiLine(9, "A", ' ', 'A');
+  Frame expected{};
+  referenceExternal(expected, *display.externalUiFont(), 'A', 14, 9);
+  referenceExternal(expected, *display.externalUiFont(), 'A', 178, 9);
+  expectFrame(expected);
+
+  display.clearExternalUiFont();
+  ui_display_test::bulk_bytes = nullptr;
+  ui_display_test::bulk_size = 0;
+}
+
 void test_mixed_text_and_page_parity() {
   static constexpr u16 mixed[] = {'A', 0x0416, 'i', 0x0451, ' ', 'W', '9', 0x0443};
   for(u8 size : {12, 14, 16}) {
@@ -660,7 +720,7 @@ void test_ellipsis_and_invalid_utf8() {
       const unsigned advance = ui_font::glyph(face, letter).advance;
       const unsigned ellipsis = ui_font::glyph(face, 0x2026).advance;
       unsigned count = (188U - ellipsis) / advance;
-      const unsigned token_limit = size == 12 ? 31U : 39U;
+      const unsigned token_limit = display.cols() - 1U;
       if(count > token_limit) count = token_limit;
       Frame expected{};
       int pen = 2;
@@ -769,7 +829,8 @@ void test_usb_return_to_ui_geometry() {
 }
 
 int main() {
-  static_assert(sizeof(text_screen::Grid) <= 364, "UI must reuse the existing grid");
+  static_assert(sizeof(text_screen::Grid) <= 920,
+                "UI must keep one bounded 40x10 grid");
   allocation_forbidden = true;
   test_profile_and_scope();
   test_preview_of_same_calculator_profile();
@@ -779,6 +840,7 @@ int main() {
   test_invalid_custom_slot_uses_ui_fallback();
   test_external_calculator_font_is_isolated_from_ui();
   test_external_ui_font_layout_fallback_and_lifetime();
+  test_runtime_font_uses_full_40_by_10_grid();
   test_mixed_text_and_page_parity();
   test_short_replacement_and_gutters();
   test_ellipsis_and_invalid_utf8();

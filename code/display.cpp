@@ -2768,15 +2768,18 @@ bool readMemoryFont(void* context, u8* output, u16 size) {
 }
 
 bool validUiFace(const fmk::Face& face, u8 expected_height) {
+  const bool runtime_face = expected_height == 0;
   if(!face.valid() ||
-     (expected_height != 12 && expected_height != 14 &&
+     (!runtime_face && expected_height != 12 && expected_height != 14 &&
       expected_height != 16)) return false;
   const fmk::Metrics& metrics = face.metrics();
-  if(metrics.height != expected_height || metrics.height > 16 ||
-     metrics.line_gap > 4) return false;
+  if((!runtime_face && metrics.height != expected_height) ||
+     metrics.height > 16 || metrics.line_gap > (runtime_face ? 15 : 4)) {
+    return false;
+  }
   const u8 pitch = (u8) (metrics.height + metrics.line_gap);
-  if(pitch == 0 ||
-     (lcd_display::PIXEL_HEIGHT + metrics.line_gap) / pitch < 3) return false;
+  if(pitch == 0 || (!runtime_face &&
+     (lcd_display::PIXEL_HEIGHT + metrics.line_gap) / pitch < 3)) return false;
   // A missing space would turn every cleared grid cell into '?'.  Requiring
   // both structural glyphs also guarantees a deterministic fallback for any
   // Unicode character the package does not contain.
@@ -3166,8 +3169,7 @@ u8 MK61Display::rowTop(u8 row) const {
 #if MK61_PROPORTIONAL_UI_FONTS
   if(uiTextActive()) {
     if(!uiFontEnabled()) return (u8) (1U + row * 16U);
-    const auto metrics = ui_font::metrics(uiFontFace());
-    return (u8) (uiTop() + row * (metrics.height + metrics.line_gap));
+    return (u8) (uiTop() + row * (uiHeight() + uiLineGap()));
   }
 #endif
   return (u8) ((u16) row * (active_profile.glyph_height + active_profile.line_gap));
@@ -3178,7 +3180,7 @@ u8 MK61Display::rowPitch(u8 row) const {
 #if MK61_PROPORTIONAL_UI_FONTS
   const u8 pitch = uiTextActive()
       ? (uiFontEnabled()
-          ? (u8) (ui_font::metrics(uiFontFace()).height + uiLineGap()) : 16U)
+          ? (u8) (uiHeight() + uiLineGap()) : 16U)
       : (u8) (active_profile.glyph_height + active_profile.line_gap);
 #else
   const u8 pitch = (u8) (active_profile.glyph_height + active_profile.line_gap);

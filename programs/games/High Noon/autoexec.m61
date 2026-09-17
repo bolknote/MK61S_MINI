@@ -1,0 +1,17 @@
+reinit
+open intro.tbi
+:dispatch
+if re==1 run :player
+if re==2 run :bart
+if re==3 run :bart
+if re==80 run :reward
+ret
+:player
+open player.tbi
+run :dispatch
+:bart
+open bart.tbi
+run :dispatch
+:reward
+open reward.tbi
+run :dispatch

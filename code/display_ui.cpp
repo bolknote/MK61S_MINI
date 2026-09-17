@@ -7,7 +7,6 @@
 #include <string.h>
 
 namespace {
-constexpr u8 UI_MAX_COLS = 40;
 constexpr u8 UI_MARGIN = 2;
 constexpr u8 UI_GUTTER = 12;
 
@@ -58,18 +57,19 @@ u8 MK61Display::uiLineGap(void) const {
   return uiFontEnabled() ? ui_font::metrics(uiFontFace()).line_gap : 8U;
 }
 
+u8 MK61Display::uiHeight(void) const {
+  if(uiFontFamily() == 3) {
+    if(const fmk::Face* external = externalUiFont()) {
+      return external->metrics().height;
+    }
+  }
+  return uiFontEnabled() ? ui_font::metrics(uiFontFace()).height : 8U;
+}
+
 u8 MK61Display::uiRows(void) const {
   if(!uiFontEnabled()) return 4U;
-  u8 height = 0;
-  u8 line_gap = 0;
-  if(uiFontFamily() == 3 && externalUiFont() != NULL) {
-    height = externalUiFont()->metrics().height;
-    line_gap = externalUiFont()->metrics().line_gap;
-  } else {
-    const auto metrics = ui_font::metrics(uiFontFace());
-    height = metrics.height;
-    line_gap = metrics.line_gap;
-  }
+  const u8 height = uiHeight();
+  const u8 line_gap = uiLineGap();
   const u8 pitch = (u8) (height + line_gap);
   const u8 rows = pitch ? (u8) ((lcd_display::PIXEL_HEIGHT + line_gap) / pitch) : 1U;
   return rows ? rows : 1U;
@@ -77,21 +77,14 @@ u8 MK61Display::uiRows(void) const {
 
 u8 MK61Display::uiCols(void) const {
   const u8 capacity_cols = (u8) (text_screen::CELL_CAPACITY / uiRows());
-  return capacity_cols < UI_MAX_COLS ? capacity_cols : UI_MAX_COLS;
+  return capacity_cols < text_screen::MAX_COLS
+      ? capacity_cols : text_screen::MAX_COLS;
 }
 
 u8 MK61Display::uiTop(void) const {
   if(!uiFontEnabled()) return 1U;
-  u8 height = 0;
-  u8 line_gap = 0;
-  if(uiFontFamily() == 3 && externalUiFont() != NULL) {
-    height = externalUiFont()->metrics().height;
-    line_gap = externalUiFont()->metrics().line_gap;
-  } else {
-    const auto metrics = ui_font::metrics(uiFontFace());
-    height = metrics.height;
-    line_gap = metrics.line_gap;
-  }
+  const u8 height = uiHeight();
+  const u8 line_gap = uiLineGap();
   const u8 rows = uiRows();
   const u16 occupied = (u16) rows * height +
       (u16) (rows - 1U) * line_gap;
@@ -171,14 +164,13 @@ void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailin
   if(!uiTextActive() || row >= grid.rows()) return;
   MK61DisplayUpdate update(*this);
   const u8 cols = grid.cols();
-  const u8 row_bit = (u8) (1U << row);
+  const u16 row_bit = (u16) (1U << row);
   if(marker) ui_row_gutters |= row_bit;
-  else ui_row_gutters &= (u8) ~row_bit;
+  else ui_row_gutters &= (u16) ~row_bit;
   if(trailing) ui_row_tails |= row_bit;
-  else ui_row_tails &= (u8) ~row_bit;
-  // The same 160-token storage as the calculator grid, not a second cache.
-  // Five-row 12 px mode therefore uses 32 codepoints per row; wider faces
-  // keep the reviewed 40-codepoint cap.
+  else ui_row_tails &= (u16) ~row_bit;
+  // One bounded text grid is shared by all graphical text modes. Narrow
+  // runtime faces may use the complete 40x10 grid without another cache.
   grid.setCursor(0, row);
   for(u8 col = 0; col < cols; ++col) grid.writeCodepoint(' ');
   u8 col = marker ? 1U : 0U;

@@ -290,8 +290,9 @@ static void test_text_grid_skips_unchanged_cells(void) {
 }
 
 static void test_text_grid_wide_rows(void) {
-  // The UI reuses the old 16x10 grid storage, including its two flag maps.
-  static_assert(sizeof(text_screen::Grid) <= 364, "Grid must not add a UI buffer");
+  // One grid serves both the calculator and the narrow 40x10 game face.
+  static_assert(sizeof(text_screen::Grid) <= 920,
+                "Grid must remain one bounded display buffer");
   text_screen::Grid grid;
   grid.reset(4, 40);
   assert(grid.rows() == 4 && grid.cols() == 40);
@@ -373,17 +374,17 @@ static void test_text_grid_geometry_bounds(void) {
   assert(grid.dirtyMask(255) == 0);
 
   grid.reset(255, 255);
-  assert(grid.rows() == 1 && grid.cols() == 160);
-  for(u16 col = 0; col < 160; col++) assert(grid.writeByte(2));
-  assert(grid.cellIsCustom(159, 0));
-  assert(grid.cursorX() == 0 && grid.cursorY() == 0);
-  grid.clearDirty(0);
+  assert(grid.rows() == 10 && grid.cols() == 40);
+  for(u16 cell = 0; cell < 400; cell++) assert(grid.writeByte(2));
+  assert(grid.cellIsCustom(39, 9));
+  assert(grid.cursorX() == 0 && grid.cursorY() == 9);
+  for(u8 row = 0; row < grid.rows(); row++) grid.clearDirty(row);
   assert(!grid.anyDirty());
 
   // Adjacent rows can share one flag byte. Clearing either must preserve
   // the other's dirty/custom bits even when the width exceeds sixteen.
   grid.reset(10, 17);
-  assert(grid.rows() == 9 && grid.cols() == 17);
+  assert(grid.rows() == 10 && grid.cols() == 17);
   grid.setCursor(16, 0);
   assert(grid.writeByte(4));
   assert(grid.writeByte(5));

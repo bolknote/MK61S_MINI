@@ -50,7 +50,7 @@ Grid::Grid(void) : cells{0}, custom_cells{0}, dirty_cells{0},
 }
 
 void Grid::reset(u8 rows, u8 cols) {
-  column_count = cols < 1 ? 1 : (cols > CELL_CAPACITY ? (u8) CELL_CAPACITY : cols);
+  column_count = cols < 1 ? 1 : (cols > MAX_COLS ? MAX_COLS : cols);
   row_count = rows < 1 ? 1 : (rows > MAX_ROWS ? MAX_ROWS : rows);
   const u8 max_rows = (u8) (CELL_CAPACITY / column_count);
   if(row_count > max_rows) row_count = max_rows;

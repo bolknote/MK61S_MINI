@@ -349,7 +349,16 @@ class MK61Display : public Print {
     bool busyFlagObserved(void) const;
     bool busyFlagFaulted(void) const;
     u32 busyFlagTimeouts(void) const;
-    u8 cols(void) const { return lcd_display::COLS; }
+    u8 cols(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return lcd_display::COLS;
+#endif
+#if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
+      return grid.cols();
+#else
+      return lcd_display::COLS;
+#endif
+    }
     u8 cursorX(void) const {
 #if MK61_ENABLE_USB_SCREEN
       if(usb_screen_active) return usb_surface.cursorX();
@@ -540,8 +549,8 @@ class MK61Display : public Print {
     u8 ui_font_state;
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
-    u8 ui_row_gutters;
-    u8 ui_row_tails;
+    u16 ui_row_gutters;
+    u16 ui_row_tails;
 #endif
 
     void clearShadow(void);
@@ -584,6 +593,7 @@ class MK61Display : public Print {
     u8 uiRows(void) const;
     u8 uiCols(void) const;
     u8 uiTop(void) const;
+    u8 uiHeight(void) const;
     u8 uiLineGap(void) const;
 #endif
 #endif
