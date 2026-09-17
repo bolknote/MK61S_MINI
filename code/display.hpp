@@ -194,6 +194,9 @@ class MK61Display : public Print {
     void endUpdate(void);
     void setRows(u8 rows);
     void setTextProfile(lcd_display::TextProfile profile);
+    // Runtime-owned restoration path for a previously observed geometry.
+    // User settings still pass through setTextProfile() and its preset policy.
+    void restoreTextProfile(lcd_display::TextProfile profile);
     lcd_display::TextProfile textProfile(void) const;
 #if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
     // Family 0 is the fixed 5x8 UI; family 1 is native Ark Pixel.

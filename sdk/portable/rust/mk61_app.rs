@@ -56,6 +56,7 @@ pub const SERVICE_CAP_SETUP: u32 = 1 << 9;
 pub const SERVICE_CAP_FORMAT: u32 = 1 << 10;
 pub const SERVICE_CAP_UI_FONT: u32 = 1 << 11;
 pub const SERVICE_CAP_NUMBER_IO: u32 = 1 << 12;
+pub const SERVICE_CAP_TEXT_FONT: u32 = 1 << 13;
 
 pub const SERVICE_DISPLAY: u32 = 1;
 pub const SERVICE_KEYBOARD: u32 = 2;
@@ -87,6 +88,17 @@ pub const SERVICE_UI_FONT: u32 = 27;
 pub const SERVICE_NUMBER_FORMAT: u32 = 28;
 pub const SERVICE_NUMBER_PARSE: u32 = 29;
 pub const SERVICE_REF_PARSE: u32 = 30;
+pub const SERVICE_TEXT_FONT: u32 = 31;
+
+pub const TEXT_FONT_BEGIN: u32 = 0;
+pub const TEXT_FONT_LOAD: u32 = 1;
+pub const TEXT_FONT_RESTORE: u32 = 2;
+pub const TEXT_FONT_END: u32 = 3;
+pub const TEXT_FONT_NOT_FOUND: i32 = 0;
+pub const TEXT_FONT_OK: i32 = 1;
+pub const TEXT_FONT_INVALID: i32 = -1;
+pub const TEXT_FONT_UNSUPPORTED: i32 = -2;
+pub const TEXT_FONT_UNAVAILABLE: i32 = -3;
 
 pub type Millis = unsafe extern "C" fn() -> u32;
 pub type Service = unsafe extern "C" fn();

@@ -27,7 +27,8 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_SETUP = 1U << 9,
   MK61_SERVICE_CAP_FORMAT = 1U << 10,
   MK61_SERVICE_CAP_UI_FONT = 1U << 11,
-  MK61_SERVICE_CAP_NUMBER_IO = 1U << 12
+  MK61_SERVICE_CAP_NUMBER_IO = 1U << 12,
+  MK61_SERVICE_CAP_TEXT_FONT = 1U << 13
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -64,7 +65,8 @@ enum mk61_service_operation {
   MK61_SERVICE_UI_FONT,
   MK61_SERVICE_NUMBER_FORMAT,
   MK61_SERVICE_NUMBER_PARSE,
-  MK61_SERVICE_REF_PARSE
+  MK61_SERVICE_REF_PARSE,
+  MK61_SERVICE_TEXT_FONT
 };
 enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_CLEAR, MK61_SERVICE_DISPLAY_CURSOR, MK61_SERVICE_DISPLAY_WRITE,
@@ -89,6 +91,25 @@ enum mk61_service_setting { MK61_SERVICE_LANGUAGE, MK61_SERVICE_VOLUME,
 enum mk61_service_math_operation { MK61_SERVICE_SIN, MK61_SERVICE_COS, MK61_SERVICE_TAN,
   MK61_SERVICE_ASIN, MK61_SERVICE_ACOS, MK61_SERVICE_ATAN, MK61_SERVICE_LN, MK61_SERVICE_LOG10,
   MK61_SERVICE_EXP, MK61_SERVICE_SQRT, MK61_SERVICE_POW };
+
+/* Temporary external text-font session, append-only operation 31.
+ * BEGIN snapshots the resident display font. LOAD receives a zero-terminated
+ * Fonts/<name>.FMK stem in payload and replaces the text face atomically.
+ * RESTORE returns to the snapshot while keeping the session open; END restores
+ * it and closes the session. Signed results are transported in call()'s u32. */
+enum mk61_service_text_font_operation {
+  MK61_TEXT_FONT_BEGIN,
+  MK61_TEXT_FONT_LOAD,
+  MK61_TEXT_FONT_RESTORE,
+  MK61_TEXT_FONT_END
+};
+enum mk61_service_text_font_result {
+  MK61_TEXT_FONT_NOT_FOUND = 0,
+  MK61_TEXT_FONT_OK = 1,
+  MK61_TEXT_FONT_INVALID = -1,
+  MK61_TEXT_FONT_UNSUPPORTED = -2,
+  MK61_TEXT_FONT_UNAVAILABLE = -3
+};
 
 /* SETUP service v1. Explicit C fields, no native C++ layouts. */
 enum mk61_setup_operation {

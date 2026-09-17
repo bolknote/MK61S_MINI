@@ -24,6 +24,10 @@ extern "C" bool TinyBasicTestRunResult(int slot);
 extern "C" void TinyBasicTestClearData(void);
 extern "C" int TinyBasicTestWaitCount(void);
 extern "C" bool TinyBasicTestStoreEdited(int slot, char* source, const char* name);
+extern "C" void TinyBasicTestSetFontResult(const char* name, int result);
+extern "C" const char* TinyBasicTestCurrentFont(void);
+extern "C" int TinyBasicTestFontLoadCount(void);
+extern "C" int TinyBasicTestFontRestoreCount(void);
 bool RunTinyBasicProgram(const char* name);
 
 static constexpr int KEY_K = 37;
@@ -243,6 +247,74 @@ static void test_expression_semantics(void) {
   assert(!TinyBasicTestCompile("10 A=MAX(1)\n"));
   assert(!TinyBasicTestCompile("10 A=MAX(1,2,3)\n"));
   assert(!TinyBasicTestCompile("10 A=PI.\n"));
+}
+
+static void test_loadfont_order_results_and_restore(void) {
+  TinyBasicTestReset();
+  TinyBasicTestSetFontResult("HighNoon", 1);
+  TinyBasicTestSetFontResult("Broken", -1);
+  const int slot = TinyBasicTestAddProgram(
+    "10 A=LOADFONT(\"Missing\",\"HighNoon\")\n"
+    "20 B=LOADFONT()\n"
+    "30 C=LOADFONT(\"Missing\",\"Broken\")\n",
+    "FONTS");
+  assert(slot >= 0);
+  // Compilation validates string arguments but must not touch the display.
+  assert(TinyBasicTestFontLoadCount() == 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::fabs(TinyBasicTestNumber("A") - 2.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("B") - 1.0) < 0.000001);
+  assert(std::fabs(TinyBasicTestNumber("C") + 1.0) < 0.000001);
+  assert(TinyBasicTestFontLoadCount() == 4);
+  // One explicit LOADFONT() plus the unconditional run-scope cleanup.
+  assert(TinyBasicTestFontRestoreCount() == 2);
+  assert(std::strcmp(TinyBasicTestCurrentFont(), "Original") == 0);
+
+  TinyBasicTestReset();
+  TinyBasicTestSetFontResult("Busy", -3);
+  TinyBasicTestSetFontResult("Later", 1);
+  const int busy = TinyBasicTestAddProgram(
+      "10 A=LOADFONT(\"Busy\",\"Later\")\n", "FONTBUSY");
+  assert(busy >= 0);
+  assert(TinyBasicTestRunResult(busy));
+  assert(std::fabs(TinyBasicTestNumber("A") + 3.0) < 0.000001);
+  assert(TinyBasicTestFontLoadCount() == 1);
+  assert(std::strcmp(TinyBasicTestCurrentFont(), "Original") == 0);
+
+  TinyBasicTestReset();
+  const int missing = TinyBasicTestAddProgram(
+      "10 A=LOADFONT(\"Absent1\",\"Absent2\")\n", "FONTMISS");
+  assert(missing >= 0);
+  assert(TinyBasicTestRunResult(missing));
+  assert(std::fabs(TinyBasicTestNumber("A")) < 0.000001);
+  assert(TinyBasicTestFontLoadCount() == 2);
+
+  TinyBasicTestReset();
+  TinyBasicTestSetFontResult("Unsupported", -2);
+  TinyBasicTestSetFontResult("Later", 1);
+  const int unsupported = TinyBasicTestAddProgram(
+      "10 A=LOADFONT(\"Unsupported\",\"Later\")\n", "FONTNOHW");
+  assert(unsupported >= 0);
+  assert(TinyBasicTestRunResult(unsupported));
+  assert(std::fabs(TinyBasicTestNumber("A") + 2.0) < 0.000001);
+  assert(TinyBasicTestFontLoadCount() == 1);
+
+  TinyBasicTestReset();
+  TinyBasicTestSetFontResult("HighNoon", 1);
+  const int error = TinyBasicTestAddProgram(
+      "10 A=LOADFONT(\"HighNoon\")\n20 B=1/0\n", "FONTERR");
+  assert(error >= 0);
+  assert(!TinyBasicTestRunResult(error));
+  assert(std::strcmp(TinyBasicTestCurrentFont(), "Original") == 0);
+  assert(TinyBasicTestFontRestoreCount() == 1);
+
+  TinyBasicTestReset();
+  assert(TinyBasicTestCompile("10 A=LOADFONT()\n"));
+  assert(TinyBasicTestCompile("10 A=LOAD.(\"A\",'B')\n"));
+  assert(!TinyBasicTestCompile("10 A=LOADFONT(1)\n"));
+  assert(!TinyBasicTestCompile("10 A=LOADFONT(\"\")\n"));
+  assert(!TinyBasicTestCompile("10 A=LOADFONT(\"A\",)\n"));
+  assert(!TinyBasicTestCompile("10 A=LOADFONT(\"A\"\n"));
 }
 
 static void test_zero_trip_for(void) {
@@ -699,6 +771,7 @@ int main(void) {
   test_keyword_abbreviations();
   test_boolean_truth_table();
   test_expression_semantics();
+  test_loadfont_order_results_and_restore();
   test_zero_trip_for();
   test_print_syntax_and_spacing();
   test_runtime_math_errors_are_safe();

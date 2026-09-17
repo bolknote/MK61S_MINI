@@ -1219,6 +1219,10 @@ void MK61Display::setTextProfile(lcd_display::TextProfile profile) {
 #endif
 }
 
+void MK61Display::restoreTextProfile(lcd_display::TextProfile profile) {
+  setTextProfile(profile);
+}
+
 lcd_display::TextProfile MK61Display::textProfile(void) const {
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) {
@@ -2517,6 +2521,17 @@ void MK61Display::setTextProfile(lcd_display::TextProfile profile) {
   }
 #endif
   applyTextProfile(profile);
+}
+
+void MK61Display::restoreTextProfile(lcd_display::TextProfile profile) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usb_screen_active) {
+    usb_surface.setTextProfile(usbTextProfile(profile));
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
+  applyTextProfile(profile, true);
 }
 
 lcd_display::TextProfile MK61Display::textProfile(void) const {

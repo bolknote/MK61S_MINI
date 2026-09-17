@@ -58,6 +58,18 @@ _Static_assert(MK61_SERVICE_REF_PARSE == 30,
                "append-only register-reference parser");
 _Static_assert(sizeof(mk61_service_ref_parse) == 12,
                "register-reference parser wire layout");
+_Static_assert(MK61_SERVICE_TEXT_FONT == 31,
+               "append-only temporary text-font service");
+_Static_assert(MK61_SERVICE_CAP_TEXT_FONT == (1U << 13),
+               "append-only text-font capability");
+_Static_assert(MK61_TEXT_FONT_BEGIN == 0 && MK61_TEXT_FONT_LOAD == 1 &&
+               MK61_TEXT_FONT_RESTORE == 2 && MK61_TEXT_FONT_END == 3,
+               "text-font operation wire values");
+_Static_assert(MK61_TEXT_FONT_NOT_FOUND == 0 && MK61_TEXT_FONT_OK == 1 &&
+               MK61_TEXT_FONT_INVALID == -1 &&
+               MK61_TEXT_FONT_UNSUPPORTED == -2 &&
+               MK61_TEXT_FONT_UNAVAILABLE == -3,
+               "text-font signed result values");
 _Static_assert(sizeof(mk61_service_ui_font_info) == 6, "UI font metadata wire layout");
 _Static_assert(sizeof(mk61_service_ui_glyph) == 40, "UI glyph wire layout");
 _Static_assert(offsetof(mk61_service_ui_glyph, pixels) == 8, "UI glyph raster offset");

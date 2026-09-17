@@ -79,6 +79,11 @@
 #define MK61_SYS_SQRT MK61_SERVICE_SQRT
 #define MK61_SYS_TAN MK61_SERVICE_TAN
 #define MK61_SYS_TEXT_ROWS MK61_SERVICE_TEXT_ROWS
+#define MK61_SYS_TEXT_FONT MK61_SERVICE_TEXT_FONT
+#define MK61_SYS_TEXT_FONT_BEGIN MK61_TEXT_FONT_BEGIN
+#define MK61_SYS_TEXT_FONT_LOAD MK61_TEXT_FONT_LOAD
+#define MK61_SYS_TEXT_FONT_RESTORE MK61_TEXT_FONT_RESTORE
+#define MK61_SYS_TEXT_FONT_END MK61_TEXT_FONT_END
 #define MK61_SYS_VOLUME MK61_SERVICE_VOLUME
 #define mk61_system_api mk61_app_services
 #define mk61_system_choice mk61_service_choice
@@ -102,6 +107,8 @@
 #define mk61_system_runtime_slot mk61_service_runtime_slot
 #define mk61_system_save_target mk61_service_save_target
 #define mk61_system_setting mk61_service_setting
+#define mk61_system_text_font_operation mk61_service_text_font_operation
+#define mk61_system_text_font_result mk61_service_text_font_result
 #define mk61_system_write mk61_service_write
 
 #endif

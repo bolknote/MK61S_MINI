@@ -4,6 +4,7 @@
 #include "bounded_string.hpp"
 #include "config.h"
 #include "explorer_autoexec.hpp"
+#include "exclusive_buffer.hpp"
 #include "file_handlers.hpp"
 #include "cross_hal.h"
 #include "focal.hpp"
@@ -57,6 +58,24 @@ static u8 applied_ui_height = 0;
 static u32 applied_ui_key = 0;
 #endif
 static bool applied_font_suspended = false;
+
+struct AppliedFontSnapshot {
+  u16 id;
+  AppliedFontRole role;
+  u8 ui_height;
+#if MK61_PROPORTIONAL_UI_FONTS
+  u32 ui_key;
+#endif
+  lcd_display::TextProfile text_profile;
+  bool external;
+};
+
+struct TextFontSession {
+  bool active;
+  AppliedFontSnapshot original;
+};
+
+static TextFontSession text_font_session = {};
 #endif
 
 static_assert(shared_scratch::SIZE >= program_store::MAX_IMAGE1_SIZE,
@@ -306,7 +325,9 @@ static bool root_entry_by_type_name(program_store::ProgramType type,
   }
   return false;
 }
+#endif
 
+#if defined(MK61_DISPLAY_UC1609)
 static bool ui_font_directory(u16& out_id) {
   const int count = program_store::child_count(program_store::ROOT_ID);
   for(int index = 0; index < count; ++index) {
@@ -321,7 +342,9 @@ static bool ui_font_directory(u16& out_id) {
   }
   return false;
 }
+#endif
 
+#if MK61_PROPORTIONAL_UI_FONTS
 static bool ui_font_candidate(const program_store::Entry& entry,
                               u8& out_height) {
   if(entry.kind != program_store::NodeKind::FILE ||
@@ -978,24 +1001,29 @@ static void show_graphics_unavailable() {
 #if defined(MK61_DISPLAY_UC1609)
 struct StoredFontSource {
   u16 id;
+  bool read_failed;
 };
 
 static bool read_stored_font(void* context, u8* output, u16 size) {
-  const auto* source = static_cast<const StoredFontSource*>(context);
+  auto* source = static_cast<StoredFontSource*>(context);
   u16 actual = 0;
-  return source != NULL && output != NULL &&
-      program_store::read_id(source->id, output, size, &actual) &&
+  if(source == NULL || output == NULL) return false;
+  const bool ok = program_store::read_id(source->id, output, size, &actual) &&
       actual == size;
+  source->read_failed = !ok;
+  return ok;
 }
 
 static bool apply_font_entry_once(const program_store::Entry& entry,
                                   AppliedFontRole role,
-                                  u8 expected_height) {
+                                  u8 expected_height,
+                                  bool persist_settings = true,
+                                  bool* read_failed = NULL) {
   if(entry.kind != program_store::NodeKind::FILE ||
      entry.type != program_store::ProgramType::FONT ||
      entry.data_len < fmk::HEADER_SIZE ||
      entry.data_len > program_store::MAX_FONT_SIZE) return false;
-  StoredFontSource source = {entry.id};
+  StoredFontSource source = {entry.id, false};
   const bool replaced_text_font = role == AppliedFontRole::UI &&
       main_lcd().externalTextFontActive();
   const bool installed = role == AppliedFontRole::UI
@@ -1007,6 +1035,7 @@ static bool apply_font_entry_once(const program_store::Entry& entry,
 #endif
       : main_lcd().installFontFromReader(entry.data_len,
                                          read_stored_font, &source);
+  if(read_failed != NULL) *read_failed = source.read_failed;
   if(!installed) return false;
   applied_font_id = entry.id;
   applied_font_role = role;
@@ -1015,11 +1044,11 @@ static bool apply_font_entry_once(const program_store::Entry& entry,
   if(role == AppliedFontRole::TEXT) applied_ui_key = 0;
 #endif
   applied_font_suspended = false;
-  if(role == AppliedFontRole::TEXT) {
+  if(persist_settings && role == AppliedFontRole::TEXT) {
     library_mk61::set_display_text_profile(main_lcd().textProfile());
     library_mk61::refresh_menu_text();
     library_mk61::defer_settings_state_save();
-  } else if(replaced_text_font) {
+  } else if(persist_settings && replaced_text_font) {
     // UI and generic text FMK share BULK. Replacing the latter also replaces
     // its geometry; do not leave a stale external profile in settings.
     library_mk61::set_display_text_profile(main_lcd().textProfile());
@@ -1030,11 +1059,99 @@ static bool apply_font_entry_once(const program_store::Entry& entry,
 }
 
 static bool restore_applied_font(u16 id, AppliedFontRole role,
-                                 u8 expected_height) {
+                                 u8 expected_height,
+                                 bool persist_settings = true) {
   program_store::Entry old_entry;
   return id != program_store::INVALID_ID &&
       program_store::entry_by_id(id, old_entry) &&
-      apply_font_entry_once(old_entry, role, expected_height);
+      apply_font_entry_once(old_entry, role, expected_height,
+                            persist_settings);
+}
+
+static bool capture_applied_font(AppliedFontSnapshot& out) {
+  if(applied_font_suspended) return false;
+  out.id = applied_font_id;
+  out.role = applied_font_role;
+  out.ui_height = applied_ui_height;
+#if MK61_PROPORTIONAL_UI_FONTS
+  out.ui_key = applied_ui_key;
+#endif
+  out.text_profile = main_lcd().textProfile();
+  out.external = main_lcd().externalFontActive();
+  if(!out.external) return true;
+  program_store::Entry entry;
+  return out.id != program_store::INVALID_ID &&
+      program_store::entry_by_id(out.id, entry) &&
+      entry.kind == program_store::NodeKind::FILE &&
+      entry.type == program_store::ProgramType::FONT;
+}
+
+static bool restore_applied_font(const AppliedFontSnapshot& saved) {
+  bool restored = true;
+  if(saved.external) {
+    restored = restore_applied_font(saved.id, saved.role, saved.ui_height,
+                                    false);
+  } else {
+    main_lcd().useBuiltinFont();
+    applied_font_id = program_store::INVALID_ID;
+    applied_font_role = AppliedFontRole::TEXT;
+    applied_ui_height = 0;
+#if MK61_PROPORTIONAL_UI_FONTS
+    applied_ui_key = 0;
+#endif
+    applied_font_suspended = false;
+  }
+  if(!restored) return false;
+#if MK61_PROPORTIONAL_UI_FONTS
+  applied_ui_key = saved.ui_key;
+#endif
+  main_lcd().restoreTextProfile(saved.text_profile);
+  return true;
+}
+
+static bool font_catalog_entry(const char* name,
+                               program_store::Entry& out) {
+  if(name == NULL || name[0] == 0) return false;
+  u16 directory = program_store::INVALID_ID;
+  if(!ui_font_directory(directory)) return false;
+  const int count = program_store::child_count(directory);
+  for(int index = 0; index < count; ++index) {
+    program_store::Entry entry;
+    if(program_store::child(directory, index, entry) &&
+       entry.kind == program_store::NodeKind::FILE &&
+       entry.type == program_store::ProgramType::FONT &&
+       ui_font_catalog::name_equal(entry.name, name)) {
+      out = entry;
+      return true;
+    }
+  }
+  return false;
+}
+
+enum class TextFontPreflight : i8 { UNAVAILABLE = -3, INVALID = -1, OK = 1 };
+
+static TextFontPreflight preflight_text_font(
+    const program_store::Entry& entry) {
+  if(entry.data_len < fmk::HEADER_SIZE ||
+     entry.data_len > program_store::MAX_FONT_SIZE ||
+     entry.data_len > fmk::MAX_FILE_SIZE) return TextFontPreflight::INVALID;
+  u8 header[fmk::HEADER_SIZE];
+  u16 actual = 0;
+  if(!program_store::read_range_id(entry.id, 0, header, sizeof(header),
+                                   &actual)) {
+    return TextFontPreflight::UNAVAILABLE;
+  }
+  if(actual != sizeof(header)) return TextFontPreflight::INVALID;
+  const u16 declared_size = (u16) header[12] | ((u16) header[13] << 8);
+  const bool plausible = header[0] == 'F' && header[1] == 'M' &&
+      header[2] == 'K' && header[3] == '1' &&
+      (header[4] & (u8) ~fmk::FLAG_MONOSPACED) == 0 &&
+      header[5] != 0 && header[5] <= fmk::MAX_GLYPH_WIDTH &&
+      header[6] != 0 && header[6] <= fmk::MAX_GLYPH_HEIGHT &&
+      (((u16) header[8] | ((u16) header[9] << 8)) != 0) &&
+      header[10] != 0 && header[11] == 0 &&
+      declared_size == entry.data_len;
+  return plausible ? TextFontPreflight::OK : TextFontPreflight::INVALID;
 }
 #endif
 
@@ -2424,6 +2541,85 @@ bool program_store_apply_font(const char* name) {
   program_store::Entry entry;
   if(!entry_by_type_name(program_store::ProgramType::FONT, name, entry)) return false;
   return program_store_apply_font(entry);
+}
+
+i32 program_store_text_font_begin(void) {
+#if !defined(MK61_DISPLAY_UC1609)
+  return -2;
+#else
+  if(text_font_session.active || !program_store::ready() ||
+     !capture_applied_font(text_font_session.original)) return -3;
+  text_font_session.active = true;
+  return 1;
+#endif
+}
+
+i32 program_store_text_font_load(const char* name) {
+#if !defined(MK61_DISPLAY_UC1609)
+  (void) name;
+  return -2;
+#else
+  if(!text_font_session.active || !program_store::ready() ||
+     name == NULL || name[0] == 0) return -3;
+  program_store::Entry entry;
+  if(!font_catalog_entry(name, entry)) return 0;
+  const TextFontPreflight preflight = preflight_text_font(entry);
+  if(preflight != TextFontPreflight::OK) return (i32) preflight;
+
+  const exclusive_buffer::Owner owner = exclusive_buffer::current_owner();
+  if(owner != exclusive_buffer::Owner::NONE &&
+     owner != exclusive_buffer::Owner::DISPLAY_FONT) return -3;
+
+  AppliedFontSnapshot previous;
+  if(!capture_applied_font(previous)) return -3;
+  bool read_failed = false;
+  if(apply_font_entry_once(entry, AppliedFontRole::TEXT, 0, false,
+                           &read_failed)) return 1;
+
+  // installFontFromReader() must invalidate its old Face before replacing the
+  // shared bytes. Re-read that old C5 entry so a bad candidate is atomic from
+  // the language program's point of view.
+  if(!restore_applied_font(previous)) return -3;
+  return read_failed ? -3 : -1;
+#endif
+}
+
+i32 program_store_text_font_restore(void) {
+#if !defined(MK61_DISPLAY_UC1609)
+  return -2;
+#else
+  if(!text_font_session.active) return -3;
+  AppliedFontSnapshot previous;
+  if(!capture_applied_font(previous)) return -3;
+  if(restore_applied_font(text_font_session.original)) return 1;
+  (void) restore_applied_font(previous);
+  return -3;
+#endif
+}
+
+i32 program_store_text_font_end(void) {
+#if !defined(MK61_DISPLAY_UC1609)
+  return -2;
+#else
+  if(!text_font_session.active) return -3;
+  const i32 result = program_store_text_font_restore();
+  if(result != 1) {
+    // Never leak the BASIC override into the caller even if the original C5
+    // file disappeared or became unreadable during the run.
+    main_lcd().useBuiltinFont();
+    applied_font_id = program_store::INVALID_ID;
+    applied_font_role = AppliedFontRole::TEXT;
+    applied_ui_height = 0;
+#if MK61_PROPORTIONAL_UI_FONTS
+    applied_ui_key = 0;
+#endif
+    applied_font_suspended = false;
+    main_lcd().restoreTextProfile(
+        text_font_session.original.text_profile);
+  }
+  text_font_session.active = false;
+  return result;
+#endif
 }
 
 #if MK61_PROPORTIONAL_UI_FONTS

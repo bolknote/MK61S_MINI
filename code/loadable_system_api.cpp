@@ -130,12 +130,30 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #if MK61_PROPORTIONAL_UI_FONTS
           | MK61_SERVICE_CAP_UI_FONT
 #endif
+#if defined(MK61_DISPLAY_UC1609)
+          | MK61_SERVICE_CAP_TEXT_FONT
+#endif
           ;
 #if MK61_PROPORTIONAL_UI_FONTS
     case MK61_SERVICE_UI_FONT:
       return ui_font_service::call(main_lcd().uiFontFamily(), main_lcd().uiFontSize(),
                                    a, b, c, payload,
                                    main_lcd().externalUiFont());
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+    case MK61_SERVICE_TEXT_FONT:
+      switch(a) {
+        case MK61_TEXT_FONT_BEGIN:
+          return (u32) program_store_text_font_begin();
+        case MK61_TEXT_FONT_LOAD:
+          return (u32) program_store_text_font_load((const char*) payload);
+        case MK61_TEXT_FONT_RESTORE:
+          return (u32) program_store_text_font_restore();
+        case MK61_TEXT_FONT_END:
+          return (u32) program_store_text_font_end();
+        default:
+          return (u32) MK61_TEXT_FONT_INVALID;
+      }
 #endif
     case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
     case MK61_SYS_DISPLAY: return display_call(a, b, c, payload);
