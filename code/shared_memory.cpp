@@ -3,6 +3,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(ARDUINO_ARCH_STM32)
+#include "mpu_guard_policy.hpp"
+#endif
+
 namespace shared_memory {
 namespace {
 
@@ -13,9 +17,58 @@ alignas(8) static u8 bulk_storage[BULK_SIZE];
 #endif
 
 #if defined(ARDUINO_ARCH_STM32)
-extern "C" u8 __mk61_dynamic_begin, __mk61_dynamic_end;
-static uintptr_t region_begin(void) { return (uintptr_t) &__mk61_dynamic_begin; }
-static uintptr_t region_end(void) { return (uintptr_t) &__mk61_dynamic_end; }
+extern "C" {
+extern u8 _end;
+// Official release builders export the exact free-RAM interval.  A sketch
+// built directly with the stock STM32 Arduino board uses the Core linker
+// script instead, so these two optional symbols legitimately resolve to 0.
+extern u8 __mk61_dynamic_begin __attribute__((weak));
+extern u8 __mk61_dynamic_end __attribute__((weak));
+}
+
+#if defined(STM32F411xE)
+static constexpr mpu_guard_policy::Profile ACTIVE_RAM_PROFILE =
+    mpu_guard_policy::F411_PROFILE;
+#elif defined(STM32F401xC) || defined(STM32F401xE)
+static constexpr mpu_guard_policy::Profile ACTIVE_RAM_PROFILE =
+    mpu_guard_policy::F401_PROFILE;
+#else
+#error "dynamic shared memory supports only STM32F401/F411"
+#endif
+
+static uintptr_t exported_region_begin(void) {
+  return (uintptr_t) &__mk61_dynamic_begin;
+}
+
+static uintptr_t exported_region_end(void) {
+  return (uintptr_t) &__mk61_dynamic_end;
+}
+
+static bool exported_region_available(void) {
+  const uintptr_t begin = exported_region_begin();
+  const uintptr_t end = exported_region_end();
+  return begin != 0 && end > begin;
+}
+
+static uintptr_t fallback_region_end(void) {
+  return ACTIVE_RAM_PROFILE.ram_start + ACTIVE_RAM_PROFILE.ram_size -
+      ACTIVE_RAM_PROFILE.stack_budget - ACTIVE_RAM_PROFILE.guard_size;
+}
+
+static uintptr_t region_begin(void) {
+  if(exported_region_available()) return exported_region_begin();
+  const uintptr_t begin = ((uintptr_t) &_end + 7U) & ~(uintptr_t) 7U;
+  const uintptr_t end = fallback_region_end();
+  // A stock linker has no ASSERT protecting this interval.  Fail closed if a
+  // development configuration consumes the guarded RAM instead of allowing
+  // unsigned pool-size wraparound.
+  return begin <= end ? begin : end;
+}
+
+static uintptr_t region_end(void) {
+  return exported_region_available()
+      ? exported_region_end() : fallback_region_end();
+}
 #else
 // Host tests exercise the same allocator against simulated SRAM. This array
 // is never part of an STM32 firmware image.

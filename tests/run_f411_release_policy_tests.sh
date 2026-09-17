@@ -4,6 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 matrix="$root/tests/run_f411_release_matrix.sh"
 o3_build="$root/tests/run_f411_o3_compile_check.sh"
+stock_linker_build="$root/tests/run_stock_linker_compile_check.sh"
 usb_build="$root/tests/run_f411_usb_suspend_compile_check.sh"
 f401_matrix="$root/tests/run_f401_release_matrix.sh"
 budgets="$root/tests/release_ram_budgets.sh"
@@ -16,7 +17,7 @@ mixed_policy="$root/code/firmware_optimization.hpp"
 config="$root/code/config.h"
 hot_core="$root/code/mk61emu_core.cpp"
 
-for script in "$matrix" "$o3_build" "$usb_build" "$f401_matrix" "$budgets" \
+for script in "$matrix" "$o3_build" "$stock_linker_build" "$usb_build" "$f401_matrix" "$budgets" \
     "$ram_check" "$preflight" "$core_check"; do
   bash -n "$script"
 done
@@ -63,6 +64,10 @@ fi
 grep -Fq 'usb=CDCgen,opt=o3std' "$o3_build"
 grep -Fq 'MK61_REQUIRE_MIXED_OPTIMIZATION=1' "$o3_build"
 grep -Fq 'minimum_headroom=65536' "$o3_build"
+grep -Fq 'BLACKPILL_F401CC' "$stock_linker_build"
+grep -Fq 'BLACKPILL_F411CE' "$stock_linker_build"
+grep -Fq 'opt=oslto' "$stock_linker_build"
+grep -Fq '__mk61_dynamic_begin/end references under LTO' "$stock_linker_build"
 grep -Fq '#include "firmware_optimization.hpp"' "$config"
 grep -Fq '#pragma GCC optimize ("Os")' "$mixed_policy"
 grep -Fq '#pragma GCC reset_options' "$hot_core"
@@ -121,6 +126,8 @@ grep -Fq 'run_f401_release_matrix.sh' "$preflight"
 grep -Fq 'run_f401_release_matrix.sh' "$workflow"
 grep -Fq 'run_f411_o3_compile_check.sh' "$preflight"
 grep -Fq 'run_f411_o3_compile_check.sh' "$workflow"
+grep -Fq 'run_stock_linker_compile_check.sh' "$preflight"
+grep -Fq 'run_stock_linker_compile_check.sh' "$workflow"
 if grep -Fq 'check_ws0010_ram.sh' "$preflight" ||
    grep -Fq 'check_ws0010_ram.sh' "$workflow"; then
   printf 'release entry points bypass the shared F401 matrix\n' >&2

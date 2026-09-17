@@ -292,6 +292,9 @@ Assert-True (([regex]::Matches(
 Assert-True ($dependencyInstallerText -match
     'release-contract\.json[\s\S]+toolchain\.libraries') `
     'dependency installer has a second hard-coded library list'
+Assert-True ($dependencyInstallerText -match
+    'Attempts[\s\S]+Start-Sleep[\s\S]+core'', ''install''[\s\S]+-Attempts 4') `
+    'dependency installer does not retry transient package-server failures'
 $f401Job = [regex]::Match(
     $releaseWorkflowText,
     '(?ms)^  f401-gcc-platforms:\r?\n(?<body>.*?)(?=^  build-release:)')

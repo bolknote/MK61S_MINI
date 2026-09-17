@@ -198,6 +198,11 @@ jobs:
           MK61_F411_O3_BUILD_ROOT="$RUNNER_TEMP/f411-o3" \
             tests/run_f411_o3_compile_check.sh
 
+      - name: Verify direct Arduino stock-linker compatibility
+        run: |
+          MK61_STOCK_LINKER_BUILD_ROOT="$RUNNER_TEMP/stock-linker" \
+            tests/run_stock_linker_compile_check.sh
+
       - name: Compile-check F401 Classic V3 UC1609 through Arduino
         run: |
           MK61_F401_UC1609_BUILD_ROOT="$RUNNER_TEMP/f401-arduino-uc1609" \

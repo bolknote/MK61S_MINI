@@ -29,6 +29,10 @@ printf '\n=== F411 mixed O3 compatibility ===\n'
 MK61_F411_O3_BUILD_ROOT="$preflight_root/f411-o3" \
   "$root/tests/run_f411_o3_compile_check.sh"
 
+printf '\n=== Generic STM32F4 stock linker + LTO ===\n'
+MK61_STOCK_LINKER_BUILD_ROOT="$preflight_root/stock-linker" \
+  "$root/tests/run_stock_linker_compile_check.sh"
+
 printf '\n=== F411 USB-preserving STOP production images ===\n'
 MK61_F411_USB_SUSPEND_BUILD_ROOT="$preflight_root/f411-usb-suspend" \
   "$root/tests/run_f411_usb_suspend_compile_check.sh"
