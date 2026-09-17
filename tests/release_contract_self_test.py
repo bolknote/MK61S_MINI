@@ -53,6 +53,7 @@ class ReleaseContractTest(unittest.TestCase):
                 "f401-product-a00",
                 "f401-product-ws0010",
                 "f401-product-mini-v2-a00",
+                "f401-product-classic-v2",
                 "f401-product-classic-v3",
             ],
             "f401-capability": [

@@ -798,25 +798,12 @@ bool UsbDiskMode(void) {
   }
 
   draw_usb_disk_status("USB-диск", "USB Disk", "ESC выход", "ESC exit");
-  const u32 host_configuration_deadline = millis() + 15000U;
-  bool host_was_configured = false;
-  bool host_configuration_timeout = false;
   while(true) {
     idle_main_process();
-    if(usb_mass_storage::host_configured()) host_was_configured = true;
     // Safe host eject already includes SYNCHRONIZE CACHE.  Return CDC
     // automatically after the SCSI command completes instead of leaving an
     // ejected, inaccessible disk on screen until a physical ESC is pressed.
     if(usb_mass_storage::host_ejected()) break;
-    // A locked macOS host may enumerate VID/PID but intentionally withhold
-    // SET_CONFIGURATION. Do not strand the calculator forever in an MSC mode
-    // that no host can use; once configured, ordinary long sessions remain
-    // unlimited and can still be ended by eject or ESC.
-    if(!host_was_configured &&
-       (i32) (millis() - host_configuration_deadline) >= 0) {
-      host_configuration_timeout = true;
-      break;
-    }
     const i32 key = kbd::poll_event().code();
 
     if(key == KEY_ESC_PRESS) {
@@ -826,11 +813,7 @@ bool UsbDiskMode(void) {
   }
 
   const bool clean_exit = usb_start_terminal_mode();
-  if(host_configuration_timeout) {
-    draw_usb_disk_status("Хост не готов", "Host timeout",
-                         "USB заблок.", "USB blocked");
-    delay(900);
-  } else if(!clean_exit) {
+  if(!clean_exit) {
     char error_code[10];
     virtual_fat::format_error_code(virtual_fat::diagnostic().code, error_code);
     draw_usb_disk_status(error_code, error_code,

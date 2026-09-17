@@ -4,6 +4,15 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_msc_scsi_safety_self_test"
 policy_out="${TMPDIR:-/tmp}/mk61_msc_memory_policy_self_test"
+
+# USBD_MSC_Init runs while SET_CONFIGURATION is handled in the USB interrupt.
+# Heap growth is intentionally forbidden there by shared_memory::_sbrk, so a
+# reintroduced stock allocation would make EP0 stall and the disk disappear.
+if grep -Eq 'USBD_(malloc|free)[[:space:]]*\(' "$root/code/usbd_msc.c"; then
+  echo "MSC class must not allocate or free heap memory in USB context" >&2
+  exit 1
+fi
+
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)

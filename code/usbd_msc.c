@@ -135,6 +135,15 @@ USBD_ClassTypeDef  USBD_MSC =
 #endif /* USE_USBD_COMPOSITE */
 };
 
+/* SET_CONFIGURATION invokes USBD_MSC_Init() from the USB interrupt.  The
+ * firmware heap deliberately refuses to grow in interrupt context, and the
+ * stock heap-allocation path therefore made EP0 stall before MSC could become
+ * configured.  There is only one mutually-exclusive MSC instance in the
+ * calculator, so keep its BOT state in static storage instead of touching the
+ * general-purpose heap from an interrupt. */
+static USBD_MSC_BOT_HandleTypeDef USBD_MSC_BOT_Handle;
+static USBD_HandleTypeDef *USBD_MSC_BOT_HandleOwner;
+
 /* USB Mass storage device Configuration Descriptor */
 #ifndef USE_USBD_COMPOSITE
 /* USB Mass storage device Configuration Descriptor */
@@ -236,7 +245,13 @@ static void USBD_MSC_ReleaseHandle(USBD_HandleTypeDef *pdev)
   }
   if (pdev->pClassDataCmsit[pdev->classId] != NULL)
   {
-    (void)USBD_free(pdev->pClassDataCmsit[pdev->classId]);
+    if ((pdev->pClassDataCmsit[pdev->classId] == (void *)&USBD_MSC_BOT_Handle) &&
+        (USBD_MSC_BOT_HandleOwner == pdev))
+    {
+      (void)USBD_memset(&USBD_MSC_BOT_Handle, 0,
+                        sizeof(USBD_MSC_BOT_Handle));
+      USBD_MSC_BOT_HandleOwner = NULL;
+    }
     pdev->pClassDataCmsit[pdev->classId] = NULL;
   }
   pdev->pClassData = NULL;
@@ -281,21 +296,16 @@ uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
   {
     return (uint8_t)USBD_FAIL;
   }
-  if (pdev->pClassDataCmsit[pdev->classId] != NULL)
+  if ((pdev->pClassDataCmsit[pdev->classId] != NULL) ||
+      (USBD_MSC_BOT_HandleOwner != NULL))
   {
     return (uint8_t)USBD_FAIL;
   }
 
-  hmsc = (USBD_MSC_BOT_HandleTypeDef *)USBD_malloc(sizeof(USBD_MSC_BOT_HandleTypeDef));
-
-  if (hmsc == NULL)
-  {
-    pdev->pClassDataCmsit[pdev->classId] = NULL;
-    pdev->pClassData = NULL;
-    return (uint8_t)USBD_EMEM;
-  }
+  hmsc = &USBD_MSC_BOT_Handle;
 
   (void)USBD_memset(hmsc, 0, sizeof(USBD_MSC_BOT_HandleTypeDef));
+  USBD_MSC_BOT_HandleOwner = pdev;
   hmsc->max_lun = (uint32_t)max_lun;
 
   pdev->pClassDataCmsit[pdev->classId] = (void *)hmsc;
