@@ -1755,6 +1755,64 @@ static bool tb_append_print_separator(char sep) {
   return true;
 }
 
+#ifndef TINYBASIC_HOST_TEST
+static void tb_input_message(const char* prompt, const char* value) {
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
+
+  const u8 cols = main_lcd().cols();
+  const u8 rows = main_lcd().rows();
+  if(cols == 0 || rows == 0) return;
+
+  // Keep one row for the editable value.  A long question is split over the
+  // remaining rows instead of being destroyed at the old 16-character LCD
+  // boundary.  If a two-line character display cannot hold the whole prompt,
+  // its actionable tail (normally the choices) is more useful than its start.
+  const u8 prompt_rows = rows > 1 ? (u8) (rows - 1U) : 0U;
+  const usize prompt_capacity = (usize) prompt_rows * cols;
+  const usize prompt_length = prompt != NULL ? strlen(prompt) : 0U;
+  const char* visible = prompt != NULL ? prompt : "";
+  usize visible_length = prompt_length;
+  if(visible_length > prompt_capacity) {
+    visible += visible_length - prompt_capacity;
+    visible_length = prompt_capacity;
+    usize partial = 0;
+    while(partial < visible_length && visible[partial] != ' ') partial++;
+    if(partial < visible_length) {
+      while(partial < visible_length && visible[partial] == ' ') partial++;
+      visible += partial;
+      visible_length -= partial;
+    }
+  }
+
+  u8 row = 0;
+  usize offset = 0;
+  while(row < prompt_rows && offset < visible_length) {
+    const usize remaining = visible_length - offset;
+    usize count = remaining < cols ? remaining : cols;
+    if(remaining > cols) {
+      usize break_at = count;
+      while(break_at != 0 && visible[offset + break_at] != ' ') {
+        break_at--;
+      }
+      if(break_at != 0) count = break_at;
+    }
+    char line[TB_PRINT_BUFFER_SIZE];
+    tb_copy_range(line, sizeof(line), visible + offset,
+                  visible + offset + count);
+    main_lcd().setCursor(0, row++);
+    main_lcd().print(line);
+    offset += count;
+    while(offset < visible_length && visible[offset] == ' ') offset++;
+  }
+
+  const u8 input_row = rows > 1 ? row : 0U;
+  main_lcd().setCursor(0, input_row);
+  main_lcd().print("> ");
+  if(value != NULL) main_lcd().print(value);
+}
+#endif
+
 static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
   tb_pause_is_final = false;
 #ifdef TINYBASIC_HOST_TEST
@@ -1782,7 +1840,7 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
     if(text_editor::sms_expired(editor.sms, now)) {
       text_editor::sms_reset(editor.sms);
     }
-    tb_message_i18n(prompt, prompt, buffer, buffer);
+    tb_input_message(prompt, buffer);
     const i32 key = kbd::get_key_wait();
     if(editor.shift == text_editor::Shift::NONE &&
        (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
@@ -1934,9 +1992,7 @@ static bool tb_process_input(const char* begin, const char* end,
                              bool execute) {
   const char* p = begin;
   char prompt[TB_PRINT_BUFFER_SIZE] = ":";
-  const usize display_prompt_size = (usize) main_lcd().cols() + 1U;
-  const usize prompt_size = display_prompt_size < sizeof(prompt)
-      ? display_prompt_size : sizeof(prompt);
+  const usize prompt_size = sizeof(prompt);
   bool custom_prompt = false;
   bool has_target = false;
   while(p < end) {

@@ -124,6 +124,19 @@ static void test_input(void) {
   TinyBasicTestRun(slot);
   assert(std::fabs(TinyBasicTestNumber("A") - 7.0) < 0.000001);
   assert(std::strncmp(TinyBasicTestLcdLine(0), "14", 2) == 0);
+
+  // Prompt storage is independent of the current viewport width.  The device
+  // renderer can wrap it over several graphical rows; truncating it here used
+  // to turn High Noon's first question into just "DO YOU WANT INST".
+  TinyBasicTestReset();
+  TinyBasicTestSetInput(0.0);
+  const char* const question = "DO YOU WANT INSTRUCTIONS? 1 YES 0 NO";
+  const int long_prompt = TinyBasicTestAddProgram(
+    "10 INPUT \"DO YOU WANT INSTRUCTIONS? 1 YES 0 NO\", A\n",
+    "LONGIN");
+  assert(long_prompt >= 0);
+  assert(TinyBasicTestRunResult(long_prompt));
+  assert(std::strcmp(TinyBasicTestLastPrompt(), question) == 0);
 }
 
 static void test_bad_expression_tail(void) {
