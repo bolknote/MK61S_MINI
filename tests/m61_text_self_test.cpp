@@ -61,6 +61,8 @@ static bool font_session_active = false;
 static int font_begin_count = 0;
 static int font_restore_count = 0;
 static int font_end_count = 0;
+static bool stop_nested_open = false;
+static int calculator_redraw_count = 0;
 
 namespace program_store {
 
@@ -281,6 +283,15 @@ bool OpenStoredFile(const char* name) {
   return m61_text::open_program(name);
 }
 
+u8 m61_text_host_open_file(const char* name) {
+  if(stop_nested_open && std::strcmp(name, "STOPPED") == 0) return 1;
+  return OpenStoredFile(name) ? 0 : 2;
+}
+
+void lcd_std_display_redraw(void) {
+  calculator_redraw_count++;
+}
+
 namespace terminal_script {
 
 void reset(void) {}
@@ -353,11 +364,39 @@ static void reset_host(void) {
   font_begin_count = 0;
   font_restore_count = 0;
   font_end_count = 0;
+  stop_nested_open = false;
+  calculator_redraw_count = 0;
   m_IK1302.comma = 0;
 }
 
+static void add_script(
+    const char* name, const std::string& source,
+    u16 parent_id = program_store::ROOT_ID);
+
+static void test_nested_interpreter_esc_cancels_scenario_silently(void) {
+  reset_host();
+  font_rules.push_back({"HighNoon", program_store::ROOT_ID, 1});
+  stop_nested_open = true;
+  add_script("GAME",
+             "loadfont HighNoon\n"
+             "open STOPPED\n"
+             "bad\n");
+
+  assert(m61_text::load_program("GAME"));
+  assert(!m61_text::active());
+  assert(!font_session_active);
+  assert(font_begin_count == 1);
+  assert(font_end_count == 1);
+  assert(font_restore_count == 1);
+  assert(calculator_redraw_count == 1);
+  assert(executed_lines.size() == 1);
+  assert(executed_lines[0] == "open STOPPED");
+  m61_text::Error error = {};
+  assert(!m61_text::last_error(error));
+}
+
 static void add_script(const char* name, const std::string& source,
-                       u16 parent_id = program_store::ROOT_ID) {
+                       u16 parent_id) {
   scripts.push_back({name, source, parent_id});
 }
 
@@ -1262,6 +1301,7 @@ static void test_ret_returns_from_nested_script_and_ends_root(void) {
 }
 
 int main(void) {
+  test_nested_interpreter_esc_cancels_scenario_silently();
   test_loadfont_is_m61_scoped_and_uses_script_directory();
   test_loadfont_default_and_all_exit_paths_restore();
   test_loadfont_failures_are_reported_by_m61();

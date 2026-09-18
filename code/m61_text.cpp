@@ -13,9 +13,13 @@
 #include "calculator_control.hpp"
 #include "development.hpp"
 #include "storage_path.hpp"
+#include "tinybasic.hpp"
 #include "tools.hpp"
 #else
 bool OpenStoredFile(const char* args);
+// Test seam for all three outcomes of a synchronous nested file launch:
+// 0 = opened, 1 = stopped by ESC, 2 = failed.
+u8 m61_text_host_open_file(const char* args);
 void hidden_return_to_program_start(void);
 void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
@@ -27,6 +31,8 @@ i32 program_store_text_font_load_from(const char* name,
 i32 program_store_text_font_restore(void);
 i32 program_store_text_font_end(void);
 #endif
+
+void lcd_std_display_redraw(void);
 
 #include <stdio.h>
 #include <string.h>
@@ -1321,7 +1327,32 @@ static bool enter_pending_trap(void) {
   return true;
 }
 
-static bool open_referenced_file(const char* path) {
+enum class ReferencedOpenResult : u8 {
+  OPENED = 0,
+  STOPPED = 1,
+  FAILED = 2
+};
+
+#ifndef M61_TEXT_HOST_TEST
+static ReferencedOpenResult open_referenced_entry(
+    const program_store::Entry& entry) {
+  if(entry.type == program_store::ProgramType::TINYBASIC) {
+    const TinyBasicRunStatus status = RunTinyBasicProgramStatus(
+        entry.id, TinyBasicRunMode::M61_SCENARIO);
+    if(status == TinyBasicRunStatus::COMPLETED) {
+      return ReferencedOpenResult::OPENED;
+    }
+    if(status == TinyBasicRunStatus::STOPPED) {
+      return ReferencedOpenResult::STOPPED;
+    }
+    return ReferencedOpenResult::FAILED;
+  }
+  return OpenStoredEntry(entry) ? ReferencedOpenResult::OPENED
+                                : ReferencedOpenResult::FAILED;
+}
+#endif
+
+static ReferencedOpenResult open_referenced_file(const char* path) {
 #ifndef M61_TEXT_HOST_TEST
   u16 cwd = program_store::ROOT_ID;
   if(script_id != program_store::INVALID_ID) {
@@ -1332,18 +1363,20 @@ static bool open_referenced_file(const char* path) {
   program_store::Entry entry;
   if(storage_path::resolve_file(cwd, path, entry) ==
      storage_path::Status::OK) {
-    return OpenStoredEntry(entry);
+    return open_referenced_entry(entry);
   }
   // Совместимость со старыми сценариями без каталогов: простое имя, которого
   // нет рядом с вызывающим сценарием, всё ещё может обозначать файл в корне.
   // Для явно относительных путей переход к несвязанному объекту запрещён.
-  return cwd != program_store::ROOT_ID && strchr(path, '/') == NULL &&
-         strchr(path, '\\') == NULL &&
-         storage_path::resolve_file(program_store::ROOT_ID, path, entry) ==
-             storage_path::Status::OK &&
-         OpenStoredEntry(entry);
+  if(cwd != program_store::ROOT_ID && strchr(path, '/') == NULL &&
+     strchr(path, '\\') == NULL &&
+     storage_path::resolve_file(program_store::ROOT_ID, path, entry) ==
+         storage_path::Status::OK) {
+    return open_referenced_entry(entry);
+  }
+  return ReferencedOpenResult::FAILED;
 #else
-  return OpenStoredFile(path);
+  return (ReferencedOpenResult) m61_text_host_open_file(path);
 #endif
 }
 
@@ -1522,7 +1555,20 @@ static bool execute_script_line(const char* raw_line) {
           : "active trap address is outside current program memory";
       return false;
     case terminal_protocol::ResultKind::OPEN_FILE:
-      if(open_referenced_file(result.args)) return true;
+      switch(open_referenced_file(result.args)) {
+        case ReferencedOpenResult::OPENED:
+          return true;
+        case ReferencedOpenResult::STOPPED:
+          // ESC inside a nested interpreter belongs to the M61 scenario as a
+          // whole. stop_runner() closes the scoped font session first; only
+          // then redraw the ordinary calculator face. This path deliberately
+          // has no error overlay and no second acknowledgement wait.
+          cancel();
+          lcd_std_display_redraw();
+          return true;
+        case ReferencedOpenResult::FAILED:
+          break;
+      }
       line_error_message = "cannot open referenced file";
       return false;
     case terminal_protocol::ResultKind::LOAD_SLOT:
