@@ -2361,6 +2361,12 @@ void MK61Display::flush(void) {
   }
 #endif
   if(!initialized) return;
+#if MK61_ENABLE_USB_SCREEN
+  // If AF lost arbitration while leaving USB Screen, keep the physical state
+  // false and retry on later foreground epochs. Never discard the dirty frame
+  // until the controller has actually accepted display-on.
+  if(!physical_screen_enabled && !setPhysicalScreenEnabled(true)) return;
+#endif
 #if MK61_ANY_FULLSCREEN_FILE
   if(fullscreen_bitmap_active) return;
 #endif
@@ -3519,9 +3525,12 @@ bool MK61Display::enterUsbScreen(void) {
   if(seed_cursor_underline) usb_surface.cursorOn();
   if(seed_cursor_blink) usb_surface.blinkOn(millis());
 #endif
+  // Do not acknowledge ATTACH until the physical controller has accepted AE.
+  // On failure the protocol remains in WAITING_FOR_HOST; the next OFFER/ATTACH
+  // exchange is the deferred, externally observable retry.
+  if(!setPhysicalScreenEnabled(false)) return false;
   usb_screen_active = true;
   display_mode_revision++;
-  setPhysicalScreenEnabled(false);
   usb_surface.flush(millis());
   return true;
 }
@@ -3639,13 +3648,16 @@ void MK61Display::leaveUsbScreen(void) {
   }
   markScreenDirty();
 #endif
-  setPhysicalScreenEnabled(true);
+  // A failed AF leaves physical_screen_enabled false. markScreenDirty() above
+  // may already have retried once; otherwise a later regular flush retries it
+  // before attempting to draw the restored logical frame.
+  (void) setPhysicalScreenEnabled(true);
 }
 
-void MK61Display::setPhysicalScreenEnabled(bool enabled) {
-  if(physical_screen_enabled == enabled) return;
-  physical_screen_enabled = enabled;
+bool MK61Display::setPhysicalScreenEnabled(bool enabled) {
+  if(physical_screen_enabled == enabled) return true;
 #if defined(MK61_DISPLAY_LCD1602)
+  physical_screen_enabled = enabled;
   const bool visible = enabled
 #if defined(MK61_OLED1602_WS0010)
                     && oled_protection_state.awake()
@@ -3659,8 +3671,11 @@ void MK61Display::setPhysicalScreenEnabled(bool enabled) {
 #else
   sendDisplayControl();
 #endif
+  return true;
 #else
-  if(initialized) lcd.LCDEnable(enabled ? 1 : 0);
+  if(initialized && !lcd.LCDEnable(enabled ? 1 : 0)) return false;
+  physical_screen_enabled = enabled;
+  return true;
 #endif
 }
 

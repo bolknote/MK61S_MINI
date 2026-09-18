@@ -830,6 +830,37 @@ void test_partial_page_overlay_restoration() {
 }
 
 #if MK61_ENABLE_USB_SCREEN
+void test_usb_waits_for_physical_display_ack() {
+  MK61Display display;
+  startUi(display);
+
+  // A failed AE must neither publish USB Screen as active nor poison the
+  // logical physical-screen state. A later ATTACH can retry cleanly.
+  ui_display_test::sleep_failures_remaining = 1;
+  assert(!display.enterUsbScreen());
+  assert(!display.usbScreenActive());
+  assert(!ui_display_test::sleeping);
+  assert(ui_display_test::sleep_calls == 1);
+  assert(display.deepIdleReady());
+
+  assert(display.enterUsbScreen());
+  assert(display.usbScreenActive());
+  assert(ui_display_test::sleeping);
+  assert(ui_display_test::sleep_calls == 2);
+
+  // AF is also acknowledged. If the first wake attempt fails, leave the
+  // restored frame dirty and retry from the next regular display flush.
+  ui_display_test::sleep_failures_remaining = 2;
+  display.leaveUsbScreen();
+  assert(!display.usbScreenActive());
+  assert(ui_display_test::sleeping);
+  assert(ui_display_test::sleep_calls == 4);
+  display.flush();
+  assert(!ui_display_test::sleeping);
+  assert(ui_display_test::sleep_calls == 5);
+  assert(display.deepIdleReady());
+}
+
 void test_usb_return_to_ui_geometry() {
   MK61Display display;
   startUi(display);
@@ -872,6 +903,7 @@ int main() {
   test_cursor_and_stop_redraw();
   test_partial_page_overlay_restoration();
 #if MK61_ENABLE_USB_SCREEN
+  test_usb_waits_for_physical_display_ack();
   test_usb_return_to_ui_geometry();
 #endif
   allocation_forbidden = false;

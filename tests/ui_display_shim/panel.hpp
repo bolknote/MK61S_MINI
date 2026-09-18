@@ -14,14 +14,30 @@ using Frame = std::array<uint8_t, 192U * 8U>;
 inline Frame frame{};
 inline unsigned transfers = 0;
 inline bool sleeping = false;
-inline void reset() { frame.fill(0); transfers = 0; sleeping = false; }
+inline unsigned sleep_calls = 0;
+inline unsigned sleep_failures_remaining = 0;
+inline void reset() {
+  frame.fill(0);
+  transfers = 0;
+  sleeping = false;
+  sleep_calls = 0;
+  sleep_failures_remaining = 0;
+}
 }
 class ERM19264_UC1609 {
  public:
   ERM19264_UC1609(int16_t, int16_t, int8_t, int8_t, int8_t) {}
   void LCDbegin(uint8_t, uint8_t) {}
-  bool LCDSetSleep(bool value) { ui_display_test::sleeping = value; return true; }
-  void LCDEnable(uint8_t) {}
+  bool LCDSetSleep(bool value) {
+    ++ui_display_test::sleep_calls;
+    if(ui_display_test::sleep_failures_remaining != 0) {
+      --ui_display_test::sleep_failures_remaining;
+      return false;
+    }
+    ui_display_test::sleeping = value;
+    return true;
+  }
+  bool LCDEnable(uint8_t enabled) { return LCDSetSleep(enabled == 0); }
   void LCDBuffer(int16_t x, int16_t y, uint8_t width, uint8_t height,
                  uint8_t* pixels) {
     assert(x >= 0 && y >= 0 && x + width <= 192 && y + height <= 64);

@@ -14,7 +14,7 @@
 #include "uc1609_safety.hpp"
 
 ERM19264_UC1609::BusTransaction::BusTransaction(
-	ERM19264_UC1609& display)
+	ERM19264_UC1609& display, bool retryable)
 	: hardware_(display.isHardwareSPI()), ready_(false)
 {
 	if (!hardware_)
@@ -22,7 +22,10 @@ ERM19264_UC1609::BusTransaction::BusTransaction(
 		ready_ = true;
 		return;
 	}
-	if (!spi1_bus::acquire(spi1_arbiter::Owner::DISPLAY_CLIENT)) {return;}
+	const bool acquired = retryable
+		? spi1_bus::try_acquire(spi1_arbiter::Owner::DISPLAY_CLIENT)
+		: spi1_bus::acquire(spi1_arbiter::Owner::DISPLAY_CLIENT);
+	if (!acquired) {return;}
 #ifdef SPI_HAS_TRANSACTION
 	SPI.beginTransaction(
 		SPISettings(UC_SPI_FREQ, UC_SPI_DIRECTION, UC_SPI_UC1609_MODE));
@@ -200,14 +203,15 @@ void ERM19264_UC1609::LCDReset ()
 /*!
 	@brief Powerdown procedure for LCD see datasheet P40
 */
-void ERM19264_UC1609::LCDPowerDown(void)
+bool ERM19264_UC1609::LCDPowerDown(void)
 {
 	LCDReset ();
-	LCDEnable(0);
+	const bool disabled = LCDEnable(0);
 	// On shared SPI1, stopping the peripheral here would also tear down the
 	// external NOR client. Preserve the legacy behaviour only when no common
 	// ownership boundary is active.
 	if(isHardwareSPI() && !spi1_bus::enabled()) {SPI.end();}
+	return disabled;
 }
 
 
@@ -215,9 +219,9 @@ void ERM19264_UC1609::LCDPowerDown(void)
 	 @brief Turns On Display
 	 @param bits  1  display on , 0 display off
 */
-void ERM19264_UC1609::LCDEnable (uint8_t bits)
+bool ERM19264_UC1609::LCDEnable (uint8_t bits)
 {
-	(void) LCDSetSleep((bits & 0x01U) == 0U);
+	return LCDSetSleep((bits & 0x01U) == 0U);
 }
 
 /*!
@@ -227,7 +231,10 @@ void ERM19264_UC1609::LCDEnable (uint8_t bits)
 */
 bool ERM19264_UC1609::LCDSetSleep(bool sleep)
 {
-	BusTransaction transaction(*this);
+	// AE/AF is a state transition, not framebuffer data. If flash currently
+	// owns SPI1, preserve its valid lease and let the display owner retry later
+	// instead of latching the shared arbiter in ERROR.
+	BusTransaction transaction(*this, true);
 	if (!transaction.ready()) {return false;}
 	UC1609_CS_SetLow;
 	send_command(UC1609_DISPLAY_ON, sleep ? 0x00U : 0x01U);

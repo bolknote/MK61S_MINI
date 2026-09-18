@@ -169,16 +169,24 @@ static void test_contention_fails_closed(void) {
   assert(SPI.begin_transaction_calls == 0);
   assert(arduino_test::pin_writes.empty());
   state = spi1_bus::statistics();
-  assert(state.state == spi1_arbiter::State::ERROR);
+  assert(state.state == spi1_arbiter::State::ACTIVE);
+  assert(state.owner == spi1_arbiter::Owner::FLASH_CLIENT);
+  assert(state.last_result == spi1_arbiter::Result::BUSY);
   assert(state.contentions == 3);
-  assert(spi1_bus::recover());
+  assert(spi1_bus::release(spi1_arbiter::Owner::FLASH_CLIENT));
+
+  SPI.clear();
+  assert(lcd.LCDSetSleep(true));
+  assert(SPI.transfers.size() == 1);
+  const uint8_t display_off[] = {0xAE};
+  assert_bytes(SPI.transfers[0], display_off, sizeof(display_off));
 }
 
 static void test_power_down_keeps_shared_spi_alive(void) {
   ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
 
   SPI.clear();
-  lcd.LCDPowerDown();
+  assert(lcd.LCDPowerDown());
 
   assert(SPI.end_calls == 0);
   assert(SPI.transfers.size() == 1);
@@ -189,14 +197,14 @@ static void test_display_sleep_retains_controller_state(void) {
   ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
 
   SPI.clear();
-  assert(lcd.LCDSetSleep(true));
+  assert(lcd.LCDEnable(0));
   assert(SPI.transfers.size() == 1);
   const uint8_t display_off[] = {0xAE};
   assert_bytes(SPI.transfers[0], display_off, sizeof(display_off));
   assert_balanced_hardware_transaction();
 
   SPI.clear();
-  assert(lcd.LCDSetSleep(false));
+  assert(lcd.LCDEnable(1));
   assert(SPI.transfers.size() == 1);
   const uint8_t display_on[] = {0xAF};
   assert_bytes(SPI.transfers[0], display_on, sizeof(display_on));

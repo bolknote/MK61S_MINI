@@ -124,7 +124,10 @@ class ERM19264_UC1609 : public ERM19264_graphics {
 
     void LCDbegin(uint8_t VbiasPot = UC1609_DEFAULT_GN_PM , uint8_t AddressSet =UC1609_ADDRESS_SET);
     void LCDinit(void);
-    void LCDEnable(uint8_t on);
+    // Returns true only after the display on/off command has completed while
+    // owning the shared SPI bus. Callers must not publish the new power state
+    // when this returns false.
+    bool LCDEnable(uint8_t on);
     // Enter/leave the controller's documented display-off sleep without a
     // hardware reset. Control registers and display RAM remain retained.
     // Returns false when the shared SPI1 bus could not be acquired.
@@ -138,7 +141,7 @@ class ERM19264_UC1609 : public ERM19264_graphics {
     void LCDscroll(uint8_t bits);
     void LCDReset(void);
     LCD_Return_Codes_e LCDBitmap(int16_t x, int16_t y, uint8_t w, uint8_t h, const uint8_t* data);
-    void LCDPowerDown(void);
+    bool LCDPowerDown(void);
     
     uint16_t LCDLibVerNumGet(void);
     uint16_t LCDHighFreqDelayGet(void);
@@ -150,7 +153,8 @@ class ERM19264_UC1609 : public ERM19264_graphics {
   private:
 	class BusTransaction {
 	  public:
-		explicit BusTransaction(ERM19264_UC1609& display);
+		explicit BusTransaction(ERM19264_UC1609& display,
+		                        bool retryable = false);
 		~BusTransaction();
 		BusTransaction(const BusTransaction&) = delete;
 		BusTransaction& operator=(const BusTransaction&) = delete;

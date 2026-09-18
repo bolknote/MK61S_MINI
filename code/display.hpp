@@ -610,7 +610,7 @@ class MK61Display : public Print {
     bool usb_preview_font_active;
 #endif
 
-    void setPhysicalScreenEnabled(bool enabled);
+    bool setPhysicalScreenEnabled(bool enabled);
     static usb_screen::TextProfile usbTextProfile(
       lcd_display::TextProfile profile);
 #endif
