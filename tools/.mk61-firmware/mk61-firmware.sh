@@ -69,6 +69,7 @@ INTERACTIVE=0
 ACTIVE_PID=
 DFU_CMD=()
 NATIVE_SCREEN_ACTIVE=0
+NATIVE_STTY_STATE=
 NATIVE_COLS=80
 NATIVE_ROWS=24
 NATIVE_WIDTH=78
@@ -380,6 +381,15 @@ native_screen_enter() {
   [ "$UI_KIND" = native ] || return
   [ "$NATIVE_SCREEN_ACTIVE" -eq 0 ] || return
   native_term_size
+  if [ -t 0 ]; then
+    NATIVE_STTY_STATE=$(stty -g 2>/dev/null) || NATIVE_STTY_STATE=
+    if [ -n "$NATIVE_STTY_STATE" ]; then
+      # Keep the terminal quiet for the whole TUI session, including device
+      # discovery and builds. Otherwise arrows pressed between two `read`
+      # calls are echoed by the tty driver as literal ^[[A/^[[B text.
+      stty -echo -icanon min 1 time 0 2>/dev/null || NATIVE_STTY_STATE=
+    fi
+  fi
   printf '\033[?1049h\033[?25l%s\033[2J\033[H' "$C_OUTSIDE" >&2
   NATIVE_SCREEN_ACTIVE=1
 }
@@ -388,6 +398,10 @@ native_screen_leave() {
   [ "$NATIVE_SCREEN_ACTIVE" -eq 1 ] || return 0
   printf '\033[0m\033[?25h\033[?1049l' >&2
   NATIVE_SCREEN_ACTIVE=0
+  if [ -n "$NATIVE_STTY_STATE" ]; then
+    stty "$NATIVE_STTY_STATE" 2>/dev/null || true
+    NATIVE_STTY_STATE=
+  fi
 }
 
 native_clear() {
