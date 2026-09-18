@@ -7,6 +7,15 @@
 #include "crash_dump.hpp"
 #include "debug.h"
 #include "power_monitor.hpp"
+#include "stm32f4_platform_resources.hpp"
+
+#if MK61_STM32F4_RESOURCE_MAP_SUPPORTED && defined(TIM5) && \
+    defined(TIM_OR_TI4_RMP) && defined(TIM_OR_TI4_RMP_0) && \
+    defined(TIM_CCMR2_CC4S_0) && defined(TIM_CCMR2_IC4PSC)
+  #define MK61_RTC_TIM5_LSI_CAPTURE 1
+#else
+  #define MK61_RTC_TIM5_LSI_CAPTURE 0
+#endif
 
 namespace rtc_clock {
 namespace {
@@ -44,6 +53,14 @@ static constexpr u32 LSE_TIMEOUT_MS = LSE_STARTUP_TIMEOUT;
 static constexpr u32 LSE_TIMEOUT_MS = 5000;
 #endif
 static constexpr u32 LSE_STOP_TIMEOUT_MS = 100;
+static constexpr u32 LSI_START_TIMEOUT_MS = 100;
+static constexpr u32 LSI_CAPTURE_TIMEOUT_MS = 50;
+static constexpr u32 LSI_CAPTURE_DIVIDER = 8;
+static constexpr u32 LSI_CAPTURE_INTERVALS = 16;
+static constexpr u32 LSI_CAPTURE_CYCLES =
+    LSI_CAPTURE_DIVIDER * LSI_CAPTURE_INTERVALS;
+static constexpr u32 LSI_MIN_PLAUSIBLE_HZ = 10000;
+static constexpr u32 LSI_MAX_PLAUSIBLE_HZ = 60000;
 
 STM32RTC& hardware_rtc(void) {
   return STM32RTC::getInstance();
@@ -377,6 +394,164 @@ bool wait_for_lse_flag(bool ready, u32 timeout_ms) {
   return true;
 }
 
+bool start_lsi_for_measurement(void) {
+  __HAL_RCC_LSI_ENABLE();
+  const u32 started_ms = millis();
+  while(__HAL_RCC_GET_FLAG(RCC_FLAG_LSIRDY) == RESET) {
+    if((u32) (millis() - started_ms) >= LSI_START_TIMEOUT_MS) {
+      return false;
+    }
+    yield();
+  }
+  return true;
+}
+
+#if MK61_RTC_TIM5_LSI_CAPTURE
+
+struct Tim5State {
+  bool clock_was_enabled;
+  u32 cr1;
+  u32 cr2;
+  u32 smcr;
+  u32 dier;
+  u32 sr;
+  u32 ccmr1;
+  u32 ccmr2;
+  u32 ccer;
+  u32 cnt;
+  u32 psc;
+  u32 arr;
+  u32 ccr1;
+  u32 ccr2;
+  u32 ccr3;
+  u32 ccr4;
+  u32 dcr;
+  u32 dmar;
+  u32 option_register;
+};
+
+Tim5State save_tim5_state(void) {
+  Tim5State state = {};
+  state.clock_was_enabled = __HAL_RCC_TIM5_IS_CLK_ENABLED();
+  if(!state.clock_was_enabled) __HAL_RCC_TIM5_CLK_ENABLE();
+  state.cr1 = TIM5->CR1;
+  state.cr2 = TIM5->CR2;
+  state.smcr = TIM5->SMCR;
+  state.dier = TIM5->DIER;
+  state.sr = TIM5->SR;
+  state.ccmr1 = TIM5->CCMR1;
+  state.ccmr2 = TIM5->CCMR2;
+  state.ccer = TIM5->CCER;
+  state.cnt = TIM5->CNT;
+  state.psc = TIM5->PSC;
+  state.arr = TIM5->ARR;
+  state.ccr1 = TIM5->CCR1;
+  state.ccr2 = TIM5->CCR2;
+  state.ccr3 = TIM5->CCR3;
+  state.ccr4 = TIM5->CCR4;
+  state.dcr = TIM5->DCR;
+  state.dmar = TIM5->DMAR;
+  state.option_register = TIM5->OR;
+  return state;
+}
+
+void restore_tim5_state(const Tim5State& state) {
+  TIM5->CR1 = 0;
+  TIM5->DIER = 0;
+  TIM5->CCER = 0;
+  TIM5->CR2 = state.cr2;
+  TIM5->SMCR = state.smcr;
+  TIM5->CCMR1 = state.ccmr1;
+  TIM5->CCMR2 = state.ccmr2;
+  TIM5->CNT = state.cnt;
+  TIM5->PSC = state.psc;
+  TIM5->ARR = state.arr;
+  TIM5->CCR1 = state.ccr1;
+  TIM5->CCR2 = state.ccr2;
+  TIM5->CCR3 = state.ccr3;
+  TIM5->CCR4 = state.ccr4;
+  TIM5->DCR = state.dcr;
+  TIM5->DMAR = state.dmar;
+  TIM5->OR = state.option_register;
+  TIM5->SR = state.sr;
+  TIM5->DIER = state.dier;
+  TIM5->CCER = state.ccer;
+  TIM5->CR1 = state.cr1;
+  if(!state.clock_was_enabled) __HAL_RCC_TIM5_CLK_DISABLE();
+}
+
+bool measure_lsi_with_tim5(u32& frequency_hz) {
+  const Tim5State saved = save_tim5_state();
+  const u32 timer_clock_hz =
+      stm32f4_platform_resources::apb1_timer_clock_hz();
+
+  TIM5->CR1 = 0;
+  TIM5->CR2 = 0;
+  TIM5->SMCR = 0;
+  TIM5->DIER = 0;
+  TIM5->CCER = 0;
+  TIM5->CCMR1 = 0;
+  TIM5->CCMR2 = TIM_CCMR2_CC4S_0 | TIM_CCMR2_IC4PSC;
+  TIM5->PSC = 0;
+  TIM5->ARR = 0xFFFFFFFFUL;
+  TIM5->CNT = 0;
+  TIM5->OR = (saved.option_register & ~TIM_OR_TI4_RMP) |
+             TIM_OR_TI4_RMP_0;
+  TIM5->CCER = TIM_CCER_CC4E;
+  TIM5->EGR = TIM_EGR_UG;
+  TIM5->SR = 0;
+  TIM5->CR1 = TIM_CR1_CEN;
+
+  const u32 started_ms = millis();
+  u32 first_capture = 0;
+  u32 last_capture = 0;
+  bool captured = true;
+  for(u32 index = 0; index <= LSI_CAPTURE_INTERVALS; index++) {
+    while((TIM5->SR & TIM_SR_CC4IF) == 0) {
+      if((u32) (millis() - started_ms) >= LSI_CAPTURE_TIMEOUT_MS) {
+        captured = false;
+        break;
+      }
+    }
+    if(!captured) break;
+
+    const u32 status = TIM5->SR;
+    const u32 value = TIM5->CCR4;
+    TIM5->SR = 0;
+    if((status & TIM_SR_CC4OF) != 0) {
+      captured = false;
+      break;
+    }
+    if(index == 0) first_capture = value;
+    last_capture = value;
+  }
+
+  TIM5->CR1 = 0;
+  const u32 timer_ticks = last_capture - first_capture;
+  restore_tim5_state(saved);
+  if(!captured ||
+     !captured_frequency_hz(timer_clock_hz, LSI_CAPTURE_CYCLES,
+                            timer_ticks, frequency_hz)) {
+    return false;
+  }
+  return frequency_hz >= LSI_MIN_PLAUSIBLE_HZ &&
+         frequency_hz <= LSI_MAX_PLAUSIBLE_HZ;
+}
+
+#endif
+
+bool measured_lsi_prescalers(Prescalers& prescalers, u32& frequency_hz) {
+  if(!start_lsi_for_measurement()) return false;
+#if MK61_RTC_TIM5_LSI_CAPTURE
+  return measure_lsi_with_tim5(frequency_hz) &&
+         prescalers_for_frequency(frequency_hz, prescalers);
+#else
+  (void) prescalers;
+  (void) frequency_hz;
+  return false;
+#endif
+}
+
 bool lse_gpio_is_released(void) {
   return (RCC->BDCR & RCC_BDCR_LSEON) == 0 &&
          __HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) == RESET;
@@ -441,14 +616,49 @@ bool start_lse_without_fatal_handler(void) {
   return true;
 }
 
-void begin_with_clock_source(ClockSource source,
-                             const PreservedBackupState& backup) {
+bool apply_measured_prescalers(const Prescalers& prescalers) {
+  RTC_HandleTypeDef* const handle = rtc_handle();
+  const u32 desired =
+      ((u32) prescalers.asynchronous << RTC_PRER_PREDIV_A_Pos) |
+      prescalers.synchronous;
+  const u32 mask = RTC_PRER_PREDIV_A | RTC_PRER_PREDIV_S;
+  handle->Init.AsynchPrediv = prescalers.asynchronous;
+  handle->Init.SynchPrediv = prescalers.synchronous;
+  if((handle->Instance->PRER & mask) == desired) return true;
+
+  // STM32RTC intentionally leaves PRER untouched when an already initialized
+  // RTC keeps the same source.  Update only PRER in RTC init mode so the
+  // retained calendar, alarms and backup registers survive a normal reboot.
+  __HAL_RTC_WRITEPROTECTION_DISABLE(handle);
+  HAL_StatusTypeDef status = RTC_EnterInitMode(handle);
+  if(status == HAL_OK) {
+    handle->Instance->PRER = desired;
+  }
+  const HAL_StatusTypeDef exit_status = RTC_ExitInitMode(handle);
+  if(status == HAL_OK) status = exit_status;
+  __HAL_RTC_WRITEPROTECTION_ENABLE(handle);
+  return status == HAL_OK &&
+         (handle->Instance->PRER & mask) == desired;
+}
+
+bool begin_with_clock_source(ClockSource source,
+                             const PreservedBackupState& backup,
+                             const Prescalers* measured_prescalers) {
   STM32RTC& rtc = hardware_rtc();
-  rtc.setClockSource(source == ClockSource::LSE
-      ? STM32RTC::LSE_CLOCK
-      : STM32RTC::LSI_CLOCK);
+  if(source == ClockSource::LSI && measured_prescalers != nullptr) {
+    rtc.setClockSource(STM32RTC::LSI_CLOCK,
+                       measured_prescalers->asynchronous,
+                       measured_prescalers->synchronous);
+  } else {
+    rtc.setClockSource(source == ClockSource::LSE
+        ? STM32RTC::LSE_CLOCK
+        : STM32RTC::LSI_CLOCK);
+  }
   rtc.begin();
+  const bool prescalers_applied = measured_prescalers == nullptr ||
+      apply_measured_prescalers(*measured_prescalers);
   restore_backup_state(backup);
+  return prescalers_applied;
 }
 
 } // анонимное пространство имён
@@ -470,7 +680,17 @@ void init(void) {
   const ClockSource source =
       select_clock_source(MK61_RTC_LSE_AVAILABLE, lse_ready);
   const PreservedBackupState backup = preserve_backup_state();
-  begin_with_clock_source(source, backup);
+  Prescalers measured_prescalers = {};
+  u32 measured_lsi_hz = 0;
+  const bool lsi_measured = source == ClockSource::LSI &&
+      measured_lsi_prescalers(measured_prescalers, measured_lsi_hz);
+  if(source == ClockSource::LSI && !lsi_measured) {
+    dbgln(SPIROM, "RTC init: WARNING, LSI measurement failed");
+  }
+  if(!begin_with_clock_source(source, backup,
+       lsi_measured ? &measured_prescalers : nullptr)) {
+    dbgln(SPIROM, "RTC init: WARNING, measured prescalers were not applied");
+  }
   if(!MK61_RTC_LSE_AVAILABLE && !lse_gpio_is_released() &&
      !disable_retained_lse_for_gpio()) {
     dbgln(SPIROM, "RTC init: WARNING, LSE returned after selecting LSI");
@@ -480,6 +700,11 @@ void init(void) {
   }
   initialized = true;
   initialize_metadata(backup);
+  if(lsi_measured) {
+    dbgln(SPIROM, "RTC init: LSI ", (isize) measured_lsi_hz,
+          " Hz, prediv A=", (isize) measured_prescalers.asynchronous,
+          ", S=", (isize) measured_prescalers.synchronous);
+  }
   dbgln(SPIROM, "RTC init: ready, clock ",
         source == ClockSource::LSE ? "LSE" : "LSI");
 }

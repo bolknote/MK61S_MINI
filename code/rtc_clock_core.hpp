@@ -86,6 +86,67 @@ constexpr bool retained_lse_must_be_disabled(bool lse_available,
   return !lse_available && lse_enabled;
 }
 
+static constexpr u32 RTC_PREDIV_ASYNC_MAX = 0x7FU;
+static constexpr u32 RTC_PREDIV_SYNC_MAX = 0x7FFFU;
+
+struct Prescalers {
+  u16 asynchronous;
+  u16 synchronous;
+};
+
+// Convert a capture span to the measured source frequency.  Using the span
+// between distant captures instead of one LSI period keeps timer quantization
+// well below the accuracy of the high-speed reference clock.
+inline bool captured_frequency_hz(u32 timer_clock_hz, u32 source_cycles,
+                                  u32 timer_ticks, u32& out) {
+  if(timer_clock_hz == 0 || source_cycles == 0 || timer_ticks == 0) {
+    return false;
+  }
+  const u64 numerator = (u64) timer_clock_hz * source_cycles;
+  const u64 rounded = (numerator + timer_ticks / 2U) / timer_ticks;
+  if(rounded == 0 || rounded > 0xFFFFFFFFULL) return false;
+  out = (u32) rounded;
+  return true;
+}
+
+// Find the legal two-stage divider whose product is closest to the measured
+// source frequency.  Equal-error candidates prefer the larger asynchronous
+// divider because ST recommends it for lower RTC power consumption.
+inline bool prescalers_for_frequency(u32 source_hz, Prescalers& out) {
+  static constexpr u32 ASYNC_FACTOR_MAX = RTC_PREDIV_ASYNC_MAX + 1U;
+  static constexpr u32 SYNC_FACTOR_MAX = RTC_PREDIV_SYNC_MAX + 1U;
+  if(source_hz == 0 ||
+     source_hz > ASYNC_FACTOR_MAX * SYNC_FACTOR_MAX) {
+    return false;
+  }
+
+  u32 best_error = 0xFFFFFFFFUL;
+  u32 best_async_factor = 0;
+  u32 best_sync_factor = 0;
+  for(u32 async_factor = 1; async_factor <= ASYNC_FACTOR_MAX;
+      async_factor++) {
+    u32 sync_factor =
+        (source_hz + async_factor / 2U) / async_factor;
+    if(sync_factor == 0) sync_factor = 1;
+    if(sync_factor > SYNC_FACTOR_MAX) continue;
+
+    const u32 divider = async_factor * sync_factor;
+    const u32 error = divider > source_hz
+        ? divider - source_hz : source_hz - divider;
+    if(error < best_error ||
+       (error == best_error && async_factor > best_async_factor)) {
+      best_error = error;
+      best_async_factor = async_factor;
+      best_sync_factor = sync_factor;
+    }
+  }
+
+  if(best_async_factor == 0) return false;
+  out = {(u16) (best_async_factor - 1U),
+         (u16) (best_sync_factor - 1U)};
+  return true;
+}
+
 struct DateTime {
   u16 year;
   u8 month;

@@ -655,6 +655,45 @@ static void test_rtc_datetime_parser_and_formatter(void) {
   assert(!rtc_clock::retained_lse_must_be_disabled(true, false));
   assert(!rtc_clock::retained_lse_must_be_disabled(true, true));
 
+  u32 measured_hz = 0;
+  assert(rtc_clock::captured_frequency_hz(
+      84000000U, 128U, 336000U, measured_hz));
+  assert(measured_hz == 32000U);
+  assert(rtc_clock::captured_frequency_hz(
+      100000000U, 128U, 400000U, measured_hz));
+  assert(measured_hz == 32000U);
+  assert(!rtc_clock::captured_frequency_hz(0, 128U, 336000U, measured_hz));
+  assert(!rtc_clock::captured_frequency_hz(
+      84000000U, 0, 336000U, measured_hz));
+  assert(!rtc_clock::captured_frequency_hz(
+      84000000U, 128U, 0, measured_hz));
+
+  rtc_clock::Prescalers prescalers = {};
+  assert(rtc_clock::prescalers_for_frequency(32000U, prescalers));
+  assert(prescalers.asynchronous == 127U);
+  assert(prescalers.synchronous == 249U);
+  assert(rtc_clock::prescalers_for_frequency(32768U, prescalers));
+  assert(prescalers.asynchronous == 127U);
+  assert(prescalers.synchronous == 255U);
+  assert(rtc_clock::prescalers_for_frequency(31600U, prescalers));
+  assert((u32) (prescalers.asynchronous + 1U) *
+      (prescalers.synchronous + 1U) == 31600U);
+  assert(rtc_clock::prescalers_for_frequency(32769U, prescalers));
+  assert((u32) (prescalers.asynchronous + 1U) *
+      (prescalers.synchronous + 1U) == 32769U);
+  for(u32 frequency = 10000U; frequency <= 60000U; frequency++) {
+    assert(rtc_clock::prescalers_for_frequency(frequency, prescalers));
+    assert(prescalers.asynchronous <= rtc_clock::RTC_PREDIV_ASYNC_MAX);
+    assert(prescalers.synchronous <= rtc_clock::RTC_PREDIV_SYNC_MAX);
+    const u32 divider = (u32) (prescalers.asynchronous + 1U) *
+        (prescalers.synchronous + 1U);
+    const u32 error = divider > frequency
+        ? divider - frequency : frequency - divider;
+    assert(error <= 1U);
+  }
+  assert(!rtc_clock::prescalers_for_frequency(0, prescalers));
+  assert(!rtc_clock::prescalers_for_frequency(4194305U, prescalers));
+
   rtc_clock::SmoothCalibration calibration = {};
   assert(rtc_clock::smooth_calibration_for_ppm(0, calibration));
   assert(!calibration.plus_512_pulses && calibration.minus_pulses == 0);
