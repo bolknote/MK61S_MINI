@@ -93,6 +93,8 @@ python3 "$root/tests/check_app_memory_elf.py" \
   "$compile_path/mk61s-M.ino.elf"
 "$root/tests/check_core_native_hot_paths_elf.sh" \
   "$compile_path/mk61s-M.ino.elf"
+"$root/tests/check_no_resident_fmk_decoder_elf.sh" \
+  "$compile_path/mk61s-M.ino.elf"
 "$root/tools/seal-firmware.sh" seal --max-size 524288 \
   "$compile_path/mk61s-M.ino.bin"
 "$root/tools/seal-firmware.sh" check --max-size 524288 \

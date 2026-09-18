@@ -29,8 +29,18 @@ _Static_assert(MK61_SETUP_UI_FONT_COUNT == 17 && MK61_SETUP_UI_FONT_ITEM == 18 &
                MK61_SETUP_UI_FONT_APPLY_ITEM == 20 &&
                MK61_SETUP_UI_FONT_STEP == 21,
                "append-only SETUP font catalog operations");
+_Static_assert(MK61_SETUP_PREPARED_FONT_INSTALL == 22 &&
+               MK61_SETUP_UI_FONT_SOURCE == 23,
+               "append-only SETUP font compiler operations");
+_Static_assert(MK61_SETUP_API_VERSION == 2,
+               "SETUP compiler handoff requires service v2");
 _Static_assert(sizeof(mk61_setup_ui_font_item) == 40,
                "UI font catalog item wire layout");
+_Static_assert(sizeof(mk61_setup_prepared_font) == 20 &&
+               offsetof(mk61_setup_prepared_font, role) == 16,
+               "prepared-font handoff wire layout");
+_Static_assert(sizeof(mk61_setup_ui_font_source) == 8,
+               "UI font source wire layout");
 _Static_assert(MK61_SETUP_FEATURE_TEXT_PROFILE == 1 &&
                MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE == 2 &&
                MK61_SETUP_FEATURE_UI_FONT == 4 &&

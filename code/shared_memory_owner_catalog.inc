@@ -66,3 +66,5 @@ MK61_SHARED_MEMORY_OWNER(VFAT_STAGE, "vfat-stage",
 MK61_SHARED_MEMORY_OWNER(APPLICATION, "app",
                          (arena_mask(Arena::WORKSPACE) | arena_mask(Arena::SCRATCH)),
                          0, 0, 0, 0)
+MK61_SHARED_MEMORY_OWNER(SETUP, "setup", arena_mask(Arena::WORKSPACE),
+                         0, 0, 0, 0)

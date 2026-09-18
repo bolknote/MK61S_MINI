@@ -50,7 +50,7 @@ void MK61Display::setUiFont(u8 family, u8 size) {
 
 u8 MK61Display::uiLineGap(void) const {
   if(uiFontFamily() == 3) {
-    if(const fmk::Face* external = externalUiFont()) {
+    if(const prepared_font::Face* external = externalUiFont()) {
       return external->metrics().line_gap;
     }
   }
@@ -59,7 +59,7 @@ u8 MK61Display::uiLineGap(void) const {
 
 u8 MK61Display::uiHeight(void) const {
   if(uiFontFamily() == 3) {
-    if(const fmk::Face* external = externalUiFont()) {
+    if(const prepared_font::Face* external = externalUiFont()) {
       return external->metrics().height;
     }
   }
@@ -138,8 +138,8 @@ u8 MK61Display::uiAdvance(u16 codepoint, bool custom) const {
   if(!uiFontEnabled()) return 6;
   const u16 unicode = display_symbol::uc1609::unicodeCodepoint(codepoint);
   if(uiFontFamily() == 3) {
-    if(const fmk::Face* external = externalUiFont()) {
-      fmk::Glyph glyph;
+    if(const prepared_font::Face* external = externalUiFont()) {
+      prepared_font::Glyph glyph;
       if(external->glyph(unicode, glyph)) return glyph.advance;
       if(legacyUiToken(codepoint)) return 6;
       if(external->glyph('?', glyph)) return glyph.advance;
@@ -226,7 +226,7 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   memset(render_buffer, 0, run_width);
   const auto face = uiFontFace();
   const auto builtin_metrics = ui_font::metrics(face);
-  const fmk::Face* const external = uiFontFamily() == 3
+  const prepared_font::Face* const external = uiFontFamily() == 3
       ? externalUiFont() : NULL;
   const u8 face_height = external ? external->metrics().height
                                   : builtin_metrics.height;
@@ -250,7 +250,7 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
       const u16 cp = grid.cell(col, row);
       const bool custom = grid.cellIsCustom(col, row);
       const u16 unicode = display_symbol::uc1609::unicodeCodepoint(cp);
-      fmk::Glyph external_glyph = {};
+      prepared_font::Glyph external_glyph = {};
       u8 external_bitmap[fmk::MAX_BITMAP_SIZE] = {};
       bool use_external = external != NULL && !custom &&
           external->glyph(unicode, external_glyph);
@@ -261,9 +261,8 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
       use_external = use_external &&
           external->decode(external_glyph, external_bitmap,
                            sizeof(external_bitmap));
-      // The FMK lookup walks its compact variable-length record stream. Reuse
-      // the glyph found for rendering instead of repeating that walk merely
-      // to obtain its advance.
+      // PFK1 provides indexed metrics and a ready raster; reuse the resolved
+      // glyph for its advance as well as rendering.
       const u8 advance = gutter && col == 0 ? UI_GUTTER
           : (use_external ? external_glyph.advance : uiAdvance(cp, custom));
       const bool proportional = external == NULL && !mono && !custom &&

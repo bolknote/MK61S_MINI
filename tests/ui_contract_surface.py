@@ -108,6 +108,20 @@ def main() -> None:
         *(mk61_setup_ui_font_item*) p = ui_font_catalog[(usize) index];
         return 1;
       }
+      if(op == MK61_SETUP_UI_FONT_SOURCE) {
+        if(!p || !ui_font_catalog_available) return 0;
+        for(usize index = 0; index < ui_font_catalog.size(); ++index) {
+          const auto& item = ui_font_catalog[index];
+          if(item.key == a) {
+            auto& out = *(mk61_setup_ui_font_source*) p;
+            out = {};
+            out.id = (u32) index + 1U;
+            out.size = item.size;
+            return 1;
+          }
+        }
+        return 0;
+      }
       if(op == MK61_SETUP_TEXT_MODE) {
         if(!ui_text_mode_available || a > 1) return 0;
         surface.ui_text_context = a != 0;

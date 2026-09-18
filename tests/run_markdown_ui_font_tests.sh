@@ -15,7 +15,8 @@ for mode in builtin portable; do
     -DMK61_PROPORTIONAL_UI_FONTS=1 \
     -I"$root/code" -I"$root/tests/mk_math_shim" \
     "$root/tests/markdown_ui_font_self_test.cpp" "$root/code/ui_font.cpp" \
-    "$root/code/fmk_font.cpp" \
+    "$root/code/fmk_font.cpp" "$root/code/fmk_prepare.cpp" \
+    "$root/code/prepared_font.cpp" \
     -o "$font_bridge_dir/$mode"
   "$font_bridge_dir/$mode"
 done

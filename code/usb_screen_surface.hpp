@@ -3,7 +3,7 @@
 
 #include "config.h"
 #include "builtin_font.hpp"
-#include "fmk_font.hpp"
+#include "prepared_font.hpp"
 #include "rust_types.h"
 #include "text_screen.hpp"
 
@@ -88,7 +88,7 @@ class Surface {
     bool copyCustomChar(u8 slot, u8 glyph[8]) const;
     bool readCell(u8 x, u8 y, u16& value, bool& custom) const;
 
-    void setFont(const fmk::Face* font);
+    void setFont(const prepared_font::Face* font);
 
     bool beginFullscreenBitmap(void);
     bool showFullscreenBitmap(const u8* bitmap, usize size);
@@ -110,7 +110,7 @@ class Surface {
     text_screen::Grid grid_;
     u8 custom_glyphs_[CUSTOM_GLYPHS][8];
     bool custom_valid_[CUSTOM_GLYPHS];
-    const fmk::Face* font_;
+    const prepared_font::Face* font_;
     TextProfile profile_;
     bool active_;
     bool dirty_;

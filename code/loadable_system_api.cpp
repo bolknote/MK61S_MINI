@@ -54,6 +54,7 @@ static language_workspace::Owner owner(u32 kind) {
     case Kind::MARKDOWN_VIEWER: return language_workspace::Owner::MARKDOWN_VIEWER;
     case Kind::CHIP8: return language_workspace::Owner::CHIP8;
     case Kind::APPLICATION: return language_workspace::Owner::APPLICATION;
+    case Kind::SETUP: return language_workspace::Owner::SETUP;
     default: return language_workspace::Owner::NONE;
   }
 }

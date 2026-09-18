@@ -19,6 +19,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/builtin_font.cpp" \
   "$root/code/ERM19264_graphics_font.cpp" \
   "$root/code/fmk_font.cpp" \
+  "$root/code/prepared_font.cpp" \
   "$root/code/text_screen.cpp" \
   -o "$out"
 

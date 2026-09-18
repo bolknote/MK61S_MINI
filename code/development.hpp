@@ -31,9 +31,15 @@ bool program_store_view_entry(program_store::ProgramType type, const char* name)
 bool program_store_apply_font(const program_store::Entry& entry);
 bool program_store_apply_font(const char* name);
 
+// SETUP.APP is the sole FMK parser. It hands a validated PFK1 image back
+// through this resident boundary; source_id remains the restoration identity.
+i32 program_store_install_prepared_font(
+    u16 source_id, const u8* data, u16 size, u8 role, u8 expected_height,
+    u32 ui_key, u8 flags);
+
 // A temporary language-runtime override of the generic graphical text font.
-// The session owns no second font-sized buffer: failed replacements reload the
-// previous C5 entry before returning, and END always restores the BEGIN state.
+// SETUP prepares replacements in its workspace, so invalid candidates leave
+// the current face intact; END restores the C5 identity captured by BEGIN.
 i32 program_store_text_font_begin(void);
 i32 program_store_text_font_load(const char* name);
 i32 program_store_text_font_load_from(const char* name,
@@ -54,6 +60,7 @@ struct ProgramStoreUiFont {
 u16 program_store_ui_font_count(void);
 bool program_store_ui_font_at(u16 index, ProgramStoreUiFont& out);
 bool program_store_describe_ui_font(u32 key, ProgramStoreUiFont& out);
+bool program_store_ui_font_source(u32 key, u16& out_id, u8& out_height);
 // key=0 selects the first/last face. Otherwise returns the alphabetical
 // neighbour of that exact (collision-checked) face in one bounded scan.
 bool program_store_step_ui_font(u32 key, i8 delta, ProgramStoreUiFont& out);

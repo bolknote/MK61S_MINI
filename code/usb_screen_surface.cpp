@@ -304,7 +304,7 @@ bool Surface::readCell(u8 x, u8 y, u16& value, bool& custom) const {
   return true;
 }
 
-void Surface::setFont(const fmk::Face* font) {
+void Surface::setFont(const prepared_font::Face* font) {
   if(font_ == font) return;
   font_ = font;
   if(active_) {
@@ -488,7 +488,7 @@ bool Surface::resolveToken(u16 value, bool custom,
   }
 
   if(font_ != NULL) {
-    fmk::Glyph glyph;
+    prepared_font::Glyph glyph;
     const u16 unicode = display_symbol::uc1609::unicodeCodepoint(value);
     if(font_->glyph(unicode, glyph) ||
        (unicode != value && font_->glyph(value, glyph))) {

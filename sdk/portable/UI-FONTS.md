@@ -47,10 +47,11 @@ matching the existing FMK/builtin raster. Draw at
 `(pen_x+bearing_x, baseline_y-bearing_y)` and advance by `advance`.
 Validate returned dimensions/metrics before indexing any bitmap. Unknown
 characters become `?`; Ark's missing ≤/≥ deliberately use `<`/`>` and set
-`fallback=1`. An FMK record is row-padded by the resident decoder and reports
-`bearing_x=0`, `bearing_y=height`; its per-glyph `advance` is preserved. A valid
-UI package contains both space and `?`, has a maximum 16x16 cell and a line gap
-of at most four pixels.
+`fallback=1`. SETUP.APP validates FMK and compiles it once into the resident's
+row-padded runtime image; the glyph service reports `bearing_x=0`,
+`bearing_y=height` and preserves the FMK per-glyph `advance`. A valid UI package
+contains both space and `?`, has a maximum 16x16 cell and a line gap of at most
+four pixels.
 
 ## Markdown client
 
@@ -63,14 +64,16 @@ Code blocks retain the existing monospaced font; inline code stays 5x8 and is
 baseline-aligned without synthetic slant/bold stretching. The small OLED and
 character-only paths keep their previous layout.
 
-The guaranteed Pixel tables remain solely in resident Flash; an external FMK
-lives in the already allocated BULK arena. The APP contains the bridge
+The guaranteed Pixel tables remain solely in resident Flash. FMK parsing,
+CRC/RLE validation and conversion live in `SETUP.APP`; the resident contains
+only the indexed PFK1 runtime reader. At steady state the prepared image alone
+lives in the already allocated BULK arena. The Markdown APP contains the bridge
 and text layout, not duplicate font tables or a heap glyph cache. The bounded
-glyph record is temporary stack storage. USB storage temporarily revokes the
-FMK arena; after unmount the resident resolves the file by its persisted,
-case-insensitive filename key, reloads and revalidates it before the service
-exposes family 3 again. A missing, renamed, colliding or invalid selection
-fails closed to the resident Pixel face.
+glyph record is temporary stack storage. USB storage temporarily revokes BULK;
+after unmount the resident resolves the file by its persisted, case-insensitive
+filename key and asks SETUP.APP to rebuild it before the service exposes family
+3 again. A missing, renamed, colliding or invalid selection fails closed to the
+resident Pixel face.
 
 Checks:
 
@@ -110,7 +113,7 @@ fall back on a host without the capability, or explicitly request the compact
 variant with `--no-ui-fonts`.
 
 With pinned xPack ARM GCC 14.2.1 the F401 Classic V2 qualification build uses
-249796 bytes of resident Flash (12348 bytes free) and produces a 12740-byte
+249452 bytes of resident Flash (12692 bytes free) and produces a 12740-byte
 `MARKDOWN.APP`. The UC1609 APP ceiling is 13312 bytes; character-display
 release cases retain their smaller independent ceilings.
 

@@ -8,6 +8,9 @@
 #include "rtc_clock.hpp"
 #include "rtc_settings_core.hpp"
 #include "fmk_font.hpp"
+#include "language_workspace.hpp"
+#include "prepared_font.hpp"
+#include "setup_font_compiler.hpp"
 #include "setup_service.hpp"
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
 #include "setup_compat.hpp"
@@ -669,8 +672,15 @@ static bool applyBuiltinUiFont(UiFontChoice& choice, u8 family) {
 
 static bool applyCatalogUiFont(UiFontChoice& choice,
                                const mk61_setup_ui_font_item& item) {
-  if(item.key == 0 || !service(MK61_SETUP_UI_FONT_APPLY_ITEM, item.key))
-    return false;
+  mk61_setup_ui_font_source source = {};
+  if(item.key == 0 ||
+     !service(MK61_SETUP_UI_FONT_SOURCE, item.key, 0, &source) ||
+     source.id > 0xFFFFU || source.size != item.size) return false;
+  const u8 flags = MK61_PREPARED_FONT_PERSIST |
+                   MK61_PREPARED_FONT_SELECT_UI;
+  if(setup_font_compiler::install((u16) source.id,
+         MK61_PREPARED_FONT_UI, source.size, item.key, flags) !=
+     MK61_TEXT_FONT_OK) return false;
   choice = readUiFontChoice();
   return true;
 }
@@ -842,7 +852,15 @@ void preview(const char* name, const u8* data, u16 len) {
   }
 
   if(main_lcd().graphicsMode()) {
-    if(!service(MK61_SETUP_FONT_PREVIEW, len, 0, (void*) data)) {
+    language_workspace::Lease workspace(language_workspace::Owner::SETUP,
+                                         language_workspace::SIZE);
+    usize prepared_size = 0;
+    if(!workspace.ok() ||
+       !fmk::prepare(face, static_cast<u8*>(workspace.data()),
+                     workspace.size(), prepared_size) ||
+       prepared_size > 0xFFFFU ||
+       !service(MK61_SETUP_FONT_PREVIEW, (u32) prepared_size, 0,
+                workspace.data())) {
       show_message("Preview error", "Ошибка просмотра", name, name);
       wait_preview_key();
       return;

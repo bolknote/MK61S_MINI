@@ -14,7 +14,8 @@ enum class Owner : u8 {
   CHIP8 = (u8) shared_memory::Owner::CHIP8,
   USB_DISK = (u8) shared_memory::Owner::USB_DISK,
   TERMINAL_TRANSFER = (u8) shared_memory::Owner::TERMINAL_TRANSFER,
-  APPLICATION = (u8) shared_memory::Owner::APPLICATION
+  APPLICATION = (u8) shared_memory::Owner::APPLICATION,
+  SETUP = (u8) shared_memory::Owner::SETUP
 };
 
 static constexpr usize SIZE = shared_memory::WORKSPACE_SIZE;

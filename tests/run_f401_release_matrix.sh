@@ -75,6 +75,7 @@ build_group() {
     else
       "$root/tests/check_core_native_hot_paths_elf.sh" --disabled "$elf"
     fi
+    "$root/tests/check_no_resident_fmk_decoder_elf.sh" "$elf"
     if [[ "$profile" == mini-v3-ws0010 ]]; then
       "$root/tests/check_ws0010_graphics_elf.sh" --disabled "$elf"
     fi

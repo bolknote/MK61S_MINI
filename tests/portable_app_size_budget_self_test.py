@@ -16,6 +16,8 @@ SPEC.loader.exec_module(BUILDER)
 BUILDER.enforce_system_size_budget(
     "focal", {"app_bytes": 12_000, "memory_bytes": 17_000})
 BUILDER.enforce_system_size_budget(
+    "setup", {"app_bytes": 10_000, "memory_bytes": 20_480})
+BUILDER.enforce_system_size_budget(
     "tinybasic", {"app_bytes": 99_999, "memory_bytes": 99_999})
 
 try:

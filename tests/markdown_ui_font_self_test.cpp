@@ -1,4 +1,5 @@
 #include "ui_font_service.hpp"
+#include "fmk_font.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -10,7 +11,7 @@ uint8_t size = 12;
 bool capability = true;
 bool corrupt = false;
 unsigned glyph_calls = 0;
-const fmk::Face* external_face = nullptr;
+const prepared_font::Face* external_face = nullptr;
 
 void put_msb_bit(uint8_t* bytes, size_t& bit, bool value) {
   if(value) bytes[bit / 8U] |= (uint8_t) (0x80U >> (bit & 7U));
@@ -73,7 +74,7 @@ class MockDisplay {
  public:
   uint8_t uiFontFamily() const { return family; }
   uint8_t uiFontSize() const { return size; }
-  const fmk::Face* externalUiFont() const { return external_face; }
+  const prepared_font::Face* externalUiFont() const { return external_face; }
 };
 MockDisplay& main_lcd() { static MockDisplay display; return display; }
 #endif
@@ -127,8 +128,14 @@ int main() {
 
   uint8_t external_bytes[41];
   make_external_ui_font(external_bytes);
-  fmk::Face external;
-  assert(external.open(external_bytes, sizeof(external_bytes)));
+  fmk::Face source;
+  assert(source.open(external_bytes, sizeof(external_bytes)));
+  uint8_t prepared_bytes[prepared_font::MAX_IMAGE_SIZE] = {};
+  usize prepared_size = 0;
+  assert(fmk::prepare(source, prepared_bytes, sizeof(prepared_bytes),
+                      prepared_size));
+  prepared_font::Face external;
+  assert(external.open(prepared_bytes, prepared_size));
   external_face = &external;
   family = 3;
   size = 12;

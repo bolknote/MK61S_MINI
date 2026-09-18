@@ -100,6 +100,20 @@ void set_display_text_profile(lcd_display::TextProfile value) { settings = value
 void refresh_menu_text() { calls.emplace_back("refresh-menu"); }
 void mark_settings_dirty() { calls.emplace_back("save-settings"); }
 }
+namespace setup_font_compiler {
+i32 install(u16, u8 role, u8 expected_height, u32 ui_key, u8 flags) {
+  assert(role == MK61_PREPARED_FONT_UI);
+  assert((flags & MK61_PREPARED_FONT_SELECT_UI) != 0);
+  for(const auto& item : ui_font_catalog) {
+    if(item.key == ui_key && item.size == expected_height) {
+      surface.ui_font = {3, expected_height};
+      selected_ui_font_key = ui_key;
+      return MK61_TEXT_FONT_OK;
+    }
+  }
+  return MK61_TEXT_FONT_INVALID;
+}
+}
 #include "ui_menu.inc"
 
 // Compile the real parent-menu adjustment handler against recording actions.

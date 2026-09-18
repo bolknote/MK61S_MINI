@@ -24,6 +24,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
   "$root/code/ui_font.cpp" "$root/code/text_screen.cpp" \
   "$root/code/usb_screen_surface.cpp" \
   "$root/code/builtin_font.cpp" "$root/code/fmk_font.cpp" \
+  "$root/code/fmk_prepare.cpp" "$root/code/prepared_font.cpp" \
   "$root/code/ERM19264_graphics_font.cpp" -o "$out"
 "$out"
 done

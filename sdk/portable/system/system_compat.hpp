@@ -199,7 +199,7 @@ static constexpr u8 FOCAL_RUNTIME = 1, TINYBASIC_RUNTIME = 2;
 namespace language_workspace {
 static constexpr usize SIZE = 8192;
 enum class Owner : u8 { NONE = 0, FOCAL = 1, TINYBASIC = 2,
-  IMAGE_VIEWER = 3, CHIP8 = 5, MARKDOWN_VIEWER = 6 };
+  IMAGE_VIEWER = 3, CHIP8 = 5, MARKDOWN_VIEWER = 6, SETUP = 7 };
 class Lease {
  public:
   Lease(Owner owner, usize size);

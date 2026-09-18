@@ -7,10 +7,9 @@ namespace fmk {
 
 static constexpr usize HEADER_SIZE = 16;
 static constexpr usize RANGE_SIZE = 3;
-// FMK1 stores its length in 16 bits, but the current largest resident arena is
-// 8 KiB.  Individual products may impose a smaller storage/runtime limit
-// (notably F401); keeping the parser limit independent lets F411 use that
-// already allocated arena for richer external UI faces.
+// FMK1 stores its length in 16 bits, but the current largest SETUP workspace
+// and prepared-font BULK arena are 8 KiB. Individual products may impose a
+// smaller storage/runtime limit (notably F401).
 static constexpr usize MAX_FILE_SIZE = 8192;
 static constexpr u8 MAX_GLYPH_WIDTH = 16;
 static constexpr u8 MAX_GLYPH_HEIGHT = 32;
@@ -51,6 +50,8 @@ class Face {
     bool glyph(u16 codepoint, Glyph& out) const;
     bool glyphAt(u16 index, Glyph& out) const;
     bool decode(const Glyph& glyph, u8* bitmap, usize capacity) const;
+    u8 rangeCount(void) const { return range_count; }
+    bool rangeAt(u8 index, u16& start, u16& count) const;
 
   private:
     const u8* bytes;
@@ -68,6 +69,9 @@ u16 checksum(const u8* data, usize size);
 bool bitmapPixel(const u8* bitmap, u8 width, u8 x, u8 y);
 bool scaleToLcd5x8(const Face& face, const Glyph& glyph, u8 rows[8]);
 u8 selectPreviewGlyphs(const Face& face, Glyph out[8]);
+// Compiles FMK1 into the internal, uncompressed PFK1 runtime image.  This is
+// linked into SETUP.APP and host tools, never needed by the resident renderer.
+bool prepare(const Face& face, u8* output, usize capacity, usize& output_size);
 
 } // пространство имён fmk
 

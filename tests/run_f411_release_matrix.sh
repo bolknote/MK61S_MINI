@@ -274,6 +274,8 @@ compile_variant() {
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_core_native_hot_paths_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
+  "$root/tests/check_no_resident_fmk_decoder_elf.sh" \
+    "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_power_monitor_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_rtc_alarm_elf.sh" \

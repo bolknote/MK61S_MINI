@@ -16,7 +16,8 @@ static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
 // 1536-byte limit so their scratch-buffer contracts do not change.
 static constexpr u16 MAX_TINYBASIC_TEXT_SIZE = 3584;
 // F401 keeps the established compact limit. F411 already owns an 8 KiB
-// exclusive BULK arena, so a resident FMK may use it without adding RAM.
+// exclusive BULK arena, so the prepared runtime font may use it without
+// adding another persistent RAM allocation.
 #if defined(STM32F401xC) || defined(STM32F401xE) || \
     defined(ARDUINO_BLACKPILL_F401CC)
 static constexpr u16 MAX_FONT_SIZE = 1536;

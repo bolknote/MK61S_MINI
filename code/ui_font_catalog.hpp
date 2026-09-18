@@ -65,8 +65,8 @@ inline u16 read_le16(const u8* bytes) {
 }
 
 // Cheap catalog preflight. Full ranges, bitstream and CRC are deliberately
-// checked only by fmk::Face when the user applies the file; enumerating a menu
-// must not seize the shared 8-KiB font/USB arena for every entry.
+// checked by SETUP.APP when the user applies the file; enumerating a menu must
+// not seize the shared 8-KiB font/USB arena for every entry.
 inline bool inspect_header(const u8* header, usize header_size,
                            u16 file_size, u8& height) {
   if(header == nullptr || header_size < fmk::HEADER_SIZE ||

@@ -295,6 +295,14 @@ bool Face::glyphAt(u16 index, Glyph& out) const {
   return recordAt(index, out);
 }
 
+bool Face::rangeAt(u8 index, u16& start, u16& count) const {
+  if(!valid() || index >= range_count) return false;
+  const u8* range = bytes + HEADER_SIZE + (usize) index * RANGE_SIZE;
+  start = readLe16(range);
+  count = (u16) range[2] + 1U;
+  return true;
+}
+
 bool Face::decode(const Glyph& glyph, u8* bitmap, usize capacity) const {
   if(!valid() || glyph.index >= face_metrics.glyph_count) return false;
   BitReader reader(bytes, byte_count, glyph.record_bit_offset);

@@ -23,6 +23,8 @@ void operator delete[](void* value, std::size_t) noexcept { std::free(value); }
 namespace ui_display_test {
 const u8* scratch_bytes = nullptr;
 usize scratch_size = 0;
+const u8* workspace_bytes = nullptr;
+usize workspace_size = 0;
 u8* bulk_bytes = nullptr;
 usize bulk_size = 0;
 bool bulk_owned = false;
@@ -42,13 +44,21 @@ namespace shared_scratch {
 Owner current_owner() { return ui_display_test::scratch_bytes ? Owner::EXPLORER_VIEW : Owner::NONE; }
 }
 namespace shared_memory {
+Owner active_owner(Arena arena) {
+  return arena == Arena::WORKSPACE && ui_display_test::workspace_bytes
+      ? Owner::SETUP : Owner::NONE;
+}
 bool contains(Arena arena, const void* pointer, usize size) {
   if(arena == Arena::BULK) {
     return ui_display_test::bulk_owned && pointer == ui_display_test::bulk_bytes &&
         size <= ui_display_test::bulk_size;
   }
+  if(arena == Arena::WORKSPACE) {
+    return pointer == ui_display_test::workspace_bytes &&
+        size <= ui_display_test::workspace_size;
+  }
   return arena == Arena::SCRATCH && pointer == ui_display_test::scratch_bytes &&
-      size <= ui_display_test::scratch_size;
+         size <= ui_display_test::scratch_size;
 }
 }
 
@@ -190,9 +200,9 @@ void makeExternalRuntimeFont(u8 (&font)[30]) {
   font[15] = (u8) (crc >> 8);
 }
 
-void referenceExternal(Frame& frame, const fmk::Face& face, u16 cp,
+void referenceExternal(Frame& frame, const prepared_font::Face& face, u16 cp,
                        int pen, u8 row, int right = 190) {
-  fmk::Glyph glyph = {};
+  prepared_font::Glyph glyph = {};
   if(!face.glyph(cp, glyph)) assert(face.glyph('?', glyph));
   u8 bitmap[fmk::MAX_BITMAP_SIZE] = {};
   assert(face.decode(glyph, bitmap, sizeof(bitmap)));
@@ -210,6 +220,15 @@ void referenceExternal(Frame& frame, const fmk::Face& face, u16 cp,
       }
     }
   }
+}
+
+template<usize N>
+usize prepareFont(const u8 (&source)[N], u8* output, usize capacity) {
+  fmk::Face face;
+  assert(face.open(source, N));
+  usize size = 0;
+  assert(fmk::prepare(face, output, capacity, size));
+  return size;
 }
 
 void referenceMono(Frame& frame, u16 cp, int pen, u8 row) {
@@ -300,15 +319,17 @@ void test_preview_of_same_calculator_profile() {
   const u16 crc = fmk::checksum(font, sizeof(font));
   font[14] = (u8) crc;
   font[15] = (u8) (crc >> 8);
-  ui_display_test::scratch_bytes = font;
-  ui_display_test::scratch_size = sizeof(font);
+  u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
+  const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
+  ui_display_test::workspace_bytes = prepared;
+  ui_display_test::workspace_size = prepared_size;
   MK61Display display;
   startUi(display);
   display.endUiText();
   display.setTextProfile(lcd_display::textProfile3x5());
   display.beginUiText();
   assert(display.rows() == 4);
-  assert(display.setFontPreview(font, sizeof(font)));
+  assert(display.setFontPreview(prepared, (u16) prepared_size));
   assert(!display.uiTextActive() && display.rows() == 10);
   display.setCursor(15, 9);
   display.writeCodepoint('A');
@@ -320,8 +341,8 @@ void test_preview_of_same_calculator_profile() {
   static constexpr u16 text[] = {'A'};
   referenceText(expected, display.uiFontFace(), text, 0);
   expectFrame(expected);
-  ui_display_test::scratch_bytes = nullptr;
-  ui_display_test::scratch_size = 0;
+  ui_display_test::workspace_bytes = nullptr;
+  ui_display_test::workspace_size = 0;
 }
 
 void test_live_ui_font_sample() {
@@ -530,12 +551,14 @@ void test_external_calculator_font_is_isolated_from_ui() {
   const u16 crc = fmk::checksum(font, sizeof(font));
   font[14] = (u8) crc;
   font[15] = (u8) (crc >> 8);
-  u8 bulk[fmk::MAX_FILE_SIZE]{};
+  u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
+  const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
+  u8 bulk[prepared_font::MAX_IMAGE_SIZE]{};
   ui_display_test::bulk_bytes = bulk;
   ui_display_test::bulk_size = sizeof(bulk);
   MK61Display display;
   startUi(display);
-  assert(display.installFont(font, sizeof(font)));
+  assert(display.installPreparedFont(prepared, (u16) prepared_size));
   assert(display.externalFontActive() && display.uiTextActive());
   display.printUiLine(0, "A");
   Frame expected{};
@@ -570,9 +593,9 @@ void test_external_calculator_font_is_isolated_from_ui() {
 void test_external_ui_font_layout_fallback_and_lifetime() {
   u8 font[41];
   makeExternalUiFont(font);
-  fmk::Face source;
-  assert(source.open(font, sizeof(font)));
-  u8 bulk[fmk::MAX_FILE_SIZE]{};
+  u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
+  const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
+  u8 bulk[prepared_font::MAX_IMAGE_SIZE]{};
   ui_display_test::bulk_bytes = bulk;
   ui_display_test::bulk_size = sizeof(bulk);
 
@@ -580,9 +603,9 @@ void test_external_ui_font_layout_fallback_and_lifetime() {
   ui_display_test::reset();
   display.begin();
   // A wrong size is rejected before it can evict an already active face.
-  assert(!display.installUiFont(font, sizeof(font), 14));
+  assert(!display.installPreparedUiFont(prepared, (u16) prepared_size, 14));
   assert(!display.externalFontActive() && !ui_display_test::bulk_owned);
-  assert(display.installUiFont(font, sizeof(font), 12));
+  assert(display.installPreparedUiFont(prepared, (u16) prepared_size, 12));
   assert(display.externalFontActive() && display.externalUiFont() != nullptr);
   display.setUiFont(3, 12);
   display.beginUiText();
@@ -625,14 +648,16 @@ void test_external_ui_font_layout_fallback_and_lifetime() {
 void test_runtime_font_uses_full_40_by_10_grid() {
   u8 font[30];
   makeExternalRuntimeFont(font);
-  u8 bulk[fmk::MAX_FILE_SIZE]{};
+  u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
+  const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
+  u8 bulk[prepared_font::MAX_IMAGE_SIZE]{};
   ui_display_test::bulk_bytes = bulk;
   ui_display_test::bulk_size = sizeof(bulk);
 
   MK61Display display;
   ui_display_test::reset();
   display.begin();
-  assert(display.installUiFont(font, sizeof(font), 0));
+  assert(display.installPreparedUiFont(prepared, (u16) prepared_size, 0));
   display.setUiFont(3, 12);
   display.beginUiText();
   assert(display.rows() == 10 && display.cols() == 40);

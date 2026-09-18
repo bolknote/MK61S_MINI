@@ -7,6 +7,8 @@
 #include "lcd_ru.hpp"
 #include "crash_dump.hpp"
 #include "development.hpp"
+#include "prepared_font.hpp"
+#include "shared_memory.hpp"
 #include <string.h>
 
 namespace setup_ui {
@@ -32,7 +34,7 @@ static u32 apply_font_profile(void* payload) {
 
 u32 service(u32 operation, u32 a, u32 b, void* payload) {
   switch(operation) {
-    case MK61_SETUP_VERSION: return 1;
+    case MK61_SETUP_VERSION: return MK61_SETUP_API_VERSION;
     case MK61_SETUP_FEATURES:
       return (MK61_HAS_GRAPHICAL_TEXT_SETTINGS
                  ? (u32) MK61_SETUP_FEATURE_TEXT_PROFILE : 0U) |
@@ -200,6 +202,39 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
 #else
       return 0;
 #endif
+    case MK61_SETUP_UI_FONT_SOURCE:
+#if MK61_PROPORTIONAL_UI_FONTS
+      if(!payload) return 0;
+      {
+        u16 id = program_store::INVALID_ID;
+        u8 height = 0;
+        if(!program_store_ui_font_source(a, id, height)) return 0;
+        auto& out = *(mk61_setup_ui_font_source*) payload;
+        out = {};
+        out.id = id;
+        out.size = height;
+      }
+      return 1;
+#else
+      return 0;
+#endif
+    case MK61_SETUP_PREPARED_FONT_INSTALL:
+      if(!payload) return (u32) (i32) MK61_TEXT_FONT_INVALID;
+      {
+        const auto& request = *(const mk61_setup_prepared_font*) payload;
+        if(request.size > 0xFFFFU || request.source_id > 0xFFFFU ||
+           request.data == nullptr ||
+           shared_memory::active_owner(shared_memory::Arena::WORKSPACE) !=
+               shared_memory::Owner::SETUP ||
+           !shared_memory::contains(shared_memory::Arena::WORKSPACE,
+                                    request.data, request.size)) {
+          return (u32) (i32) MK61_TEXT_FONT_INVALID;
+        }
+        return (u32) program_store_install_prepared_font(
+            (u16) request.source_id, request.data, (u16) request.size,
+            request.role, request.expected_height, request.ui_key,
+            request.flags);
+      }
     case MK61_SETUP_TEXT_MODE:
 #if MK61_PROPORTIONAL_UI_FONTS
       if(a > 1 || (a == 1 && main_lcd().usbScreenActive())) return 0;
@@ -209,7 +244,9 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
 #else
       return 0;
 #endif
-    case MK61_SETUP_FONT_PREVIEW: return payload && a <= 1536 && main_lcd().setFontPreview((const u8*) payload, (u16) a);
+    case MK61_SETUP_FONT_PREVIEW:
+      return payload && a <= prepared_font::MAX_IMAGE_SIZE && a <= 0xFFFFU &&
+          main_lcd().setFontPreview((const u8*) payload, (u16) a);
     case MK61_SETUP_FONT_PREVIEW_END: main_lcd().clearFontPreview(); return 1;
     case MK61_SETUP_LCD_CHAR:
 #if defined(MK61_DISPLAY_LCD1602)

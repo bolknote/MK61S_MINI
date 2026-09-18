@@ -648,6 +648,23 @@ bool set_ui_font(u8 family, u8 size, u32 key) {
 #endif
 }
 
+bool adopt_external_ui_font(u8 size, u32 key) {
+#if MK61_PROPORTIONAL_UI_FONTS
+  const UiFontSettings next = make_ui_font_settings(3, size);
+  const auto* face = main_lcd().externalUiFont();
+  if(key == 0 || face == nullptr || !face->valid() ||
+     face->metrics().height != next.size()) return false;
+  ui_font_state = next;
+  ui_font_key_state = key;
+  main_lcd().setUiFont(3, next.size());
+  return true;
+#else
+  (void) size;
+  (void) key;
+  return false;
+#endif
+}
+
 SpeedMode speed_mode(void) {
   return speed_mode_state;
 }

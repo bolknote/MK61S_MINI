@@ -38,7 +38,7 @@
 #else
   #include "ERM19264_UC1609.h"
   #include "builtin_font.hpp"
-  #include "fmk_font.hpp"
+  #include "prepared_font.hpp"
   #include "text_screen.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
   #include "ui_font.hpp"
@@ -283,15 +283,12 @@ class MK61Display : public Print {
                              u8 clear_border);
     void hideTopRightOverlay(void);
     void writeCodepoint(u16 codepoint);
-    using FontReader = bool (*)(void* context, u8* output, u16 size);
-    bool installFont(const u8* data, u16 size);
-    bool installFontFromReader(u16 size, FontReader reader, void* context);
+    bool installPreparedFont(const u8* data, u16 size);
 #if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
-    bool installUiFont(const u8* data, u16 size, u8 expected_height);
-    bool installUiFontFromReader(u16 size, u8 expected_height,
-                                 FontReader reader, void* context);
+    bool installPreparedUiFont(const u8* data, u16 size,
+                               u8 expected_height);
     void clearExternalUiFont(void);
-    const fmk::Face* externalUiFont(void) const;
+    const prepared_font::Face* externalUiFont(void) const;
 #endif
     bool setFontPreview(const u8* data, u16 size);
     void clearFontPreview(void);
@@ -511,8 +508,8 @@ class MK61Display : public Print {
     text_screen::Grid grid;
     uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
     bool custom_valid[CUSTOM_GLYPHS];
-    fmk::Face active_font;
-    fmk::Face preview_font;
+    prepared_font::Face active_font;
+    prepared_font::Face preview_font;
     enum class ActiveFontState : u8 {
       BUILTIN,
       READY,
@@ -580,11 +577,11 @@ class MK61Display : public Print {
     void updateCursorBlink(void);
     void renderPageRun(u8 page, u8 first_col, u8 count);
     void applyTextProfile(lcd_display::TextProfile profile, bool exact_geometry = false);
-    lcd_display::TextProfile recommendedProfile(const fmk::Metrics& metrics) const;
-    bool installFontFromReaderImpl(u16 size, u8 expected_height,
-                                   FontReader reader, void* context,
-                                   ActiveFontRole role);
-    const fmk::Face* selectedFont(void) const;
+    lcd_display::TextProfile recommendedProfile(
+      const prepared_font::Metrics& metrics) const;
+    bool installPreparedFontImpl(const u8* data, u16 size,
+                                 u8 expected_height, ActiveFontRole role);
+    const prepared_font::Face* selectedFont(void) const;
     builtin_font::FaceId fallbackFont(void) const;
     bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
 #if MK61_PROPORTIONAL_UI_FONTS
@@ -608,7 +605,7 @@ class MK61Display : public Print {
     u32 display_mode_revision;
     bool physical_screen_enabled;
 #if defined(MK61_DISPLAY_LCD1602)
-    fmk::Face usb_preview_font;
+    prepared_font::Face usb_preview_font;
     usb_screen::TextProfile usb_preview_saved_profile;
     bool usb_preview_font_active;
 #endif

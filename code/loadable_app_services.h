@@ -94,11 +94,13 @@ enum mk61_service_math_operation { MK61_SERVICE_SIN, MK61_SERVICE_COS, MK61_SERV
 
 /* Temporary external text-font session, append-only operation 31.
  * BEGIN snapshots the resident display font. LOAD receives a zero-terminated
- * Fonts/<name>.FMK stem in payload and replaces the text face atomically.
- * RESTORE returns to the snapshot while keeping the session open; END restores
- * it and closes the session. ACTIVATE re-enters the already loaded runtime
- * face after a language selected its ordinary text renderer. Signed results
- * are transported in call()'s u32. */
+ * Fonts/<name>.FMK stem; resident M61 orchestration asks SETUP.APP to compile
+ * it, then replaces the text face atomically. RESTORE returns to the snapshot
+ * while keeping the session open; END restores it and closes the session.
+ * ACTIVATE re-enters the already loaded runtime face after a language selected
+ * its ordinary renderer. A running APP must only use ACTIVATE: it cannot load
+ * SETUP.APP into the APP arena that it already occupies. Signed results are
+ * transported in call()'s u32. */
 enum mk61_service_text_font_operation {
   MK61_TEXT_FONT_BEGIN,
   MK61_TEXT_FONT_LOAD,
@@ -114,7 +116,9 @@ enum mk61_service_text_font_result {
   MK61_TEXT_FONT_UNAVAILABLE = -3
 };
 
-/* SETUP service v1. Explicit C fields, no native C++ layouts. */
+/* SETUP service v2. Explicit C fields, no native C++ layouts.  Version 2
+ * makes FMK compilation an explicit SETUP.APP -> resident transaction. */
+enum { MK61_SETUP_API_VERSION = 2 };
 enum mk61_setup_operation {
   MK61_SETUP_VERSION, MK61_SETUP_HARDWARE, MK61_SETUP_RTC_READ,
   MK61_SETUP_RTC_WRITE, MK61_SETUP_RTC_CALIBRATION, MK61_SETUP_FONT_READ,
@@ -125,7 +129,11 @@ enum mk61_setup_operation {
   MK61_SETUP_TEXT_MODE,
   MK61_SETUP_UI_FONT_COUNT, MK61_SETUP_UI_FONT_ITEM,
   MK61_SETUP_UI_FONT_CURRENT, MK61_SETUP_UI_FONT_APPLY_ITEM,
-  MK61_SETUP_UI_FONT_STEP
+  MK61_SETUP_UI_FONT_STEP,
+  /* SETUP.APP -> resident handoff for a fully compiled RAM font. */
+  MK61_SETUP_PREPARED_FONT_INSTALL,
+  /* Resolve a catalog key without recursively invoking SETUP.APP. */
+  MK61_SETUP_UI_FONT_SOURCE
 };
 enum mk61_setup_feature {
   MK61_SETUP_FEATURE_TEXT_PROFILE = 1u << 0,
@@ -151,6 +159,23 @@ typedef struct mk61_setup_ui_font_item {
   uint8_t size, reserved[3];
   char name[32];
 } mk61_setup_ui_font_item;
+enum mk61_setup_prepared_font_role {
+  MK61_PREPARED_FONT_TEXT = 0,
+  MK61_PREPARED_FONT_UI = 1
+};
+enum mk61_setup_prepared_font_flag {
+  MK61_PREPARED_FONT_PERSIST = 1u << 0,
+  MK61_PREPARED_FONT_SELECT_UI = 1u << 1
+};
+typedef struct mk61_setup_prepared_font {
+  const uint8_t* data;
+  uint32_t size, source_id, ui_key;
+  uint8_t role, expected_height, flags, reserved;
+} mk61_setup_prepared_font;
+typedef struct mk61_setup_ui_font_source {
+  uint32_t id;
+  uint8_t size, reserved[3];
+} mk61_setup_ui_font_source;
 
 typedef struct mk61_service_file {
   uint32_t id, parent, size, type, kind;

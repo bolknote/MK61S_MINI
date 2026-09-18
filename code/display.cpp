@@ -1641,23 +1641,24 @@ void MK61Display::writeCodepoint(u16 codepoint) {
 #endif
 }
 
-bool MK61Display::installFont(const u8*, u16) { return false; }
-bool MK61Display::installFontFromReader(u16, FontReader, void*) {
-  return false;
-}
+bool MK61Display::installPreparedFont(const u8*, u16) { return false; }
 bool MK61Display::externalTextFontActive(void) const { return false; }
 bool MK61Display::setFontPreview(const u8* data, u16 size) {
 #if MK61_ENABLE_USB_SCREEN
   if(!usb_screen_active || data == NULL || size == 0 ||
-     size > fmk::MAX_FILE_SIZE) return false;
-  fmk::Face candidate;
+     size > prepared_font::MAX_IMAGE_SIZE ||
+     shared_memory::active_owner(shared_memory::Arena::WORKSPACE) !=
+         shared_memory::Owner::SETUP ||
+     !shared_memory::contains(shared_memory::Arena::WORKSPACE,
+                              data, size)) return false;
+  prepared_font::Face candidate;
   if(!candidate.open(data, size) || !usb_preview_font.open(data, size)) {
     return false;
   }
   if(!usb_preview_font_active) {
     usb_preview_saved_profile = usb_surface.textProfile();
   }
-  const fmk::Metrics& metrics = usb_preview_font.metrics();
+  const prepared_font::Metrics& metrics = usb_preview_font.metrics();
   const text_screen::FontGeometry geometry = text_screen::fitFontToDisplay(
     metrics.max_width, metrics.height, metrics.line_gap);
   usb_surface.setTextProfile({geometry.rows, geometry.width,
@@ -2747,32 +2748,20 @@ void MK61Display::hideTopRightOverlay(void) {
   if(update_depth == 0) flush();
 }
 
-lcd_display::TextProfile MK61Display::recommendedProfile(const fmk::Metrics& metrics) const {
+lcd_display::TextProfile MK61Display::recommendedProfile(
+    const prepared_font::Metrics& metrics) const {
   const text_screen::FontGeometry geometry =
     text_screen::fitFontToDisplay(metrics.max_width, metrics.height, metrics.line_gap);
   return {geometry.rows, geometry.width, geometry.height, geometry.line_gap};
 }
 
 namespace {
-struct MemoryFontSource {
-  const u8* data;
-  u16 size;
-};
-
-bool readMemoryFont(void* context, u8* output, u16 size) {
-  const auto* source = static_cast<const MemoryFontSource*>(context);
-  if(source == NULL || source->data == NULL || output == NULL ||
-     source->size != size) return false;
-  memmove(output, source->data, size);
-  return true;
-}
-
-bool validUiFace(const fmk::Face& face, u8 expected_height) {
+bool validUiFace(const prepared_font::Face& face, u8 expected_height) {
   const bool runtime_face = expected_height == 0;
   if(!face.valid() ||
      (!runtime_face && expected_height != 12 && expected_height != 14 &&
       expected_height != 16)) return false;
-  const fmk::Metrics& metrics = face.metrics();
+  const prepared_font::Metrics& metrics = face.metrics();
   if((!runtime_face && metrics.height != expected_height) ||
      metrics.height > 16 || metrics.line_gap > (runtime_face ? 15 : 4)) {
     return false;
@@ -2783,19 +2772,22 @@ bool validUiFace(const fmk::Face& face, u8 expected_height) {
   // A missing space would turn every cleared grid cell into '?'.  Requiring
   // both structural glyphs also guarantees a deterministic fallback for any
   // Unicode character the package does not contain.
-  fmk::Glyph space = {};
-  fmk::Glyph fallback = {};
+  prepared_font::Glyph space = {};
+  prepared_font::Glyph fallback = {};
   return face.glyph(' ', space) && face.glyph('?', fallback) &&
       space.advance > 0 && space.advance <= 16 &&
       fallback.advance >= fallback.width && fallback.advance <= 16;
 }
 }
 
-bool MK61Display::installFontFromReaderImpl(
-    u16 size, u8 expected_height, FontReader reader, void* context,
-    ActiveFontRole role) {
-  if(size < fmk::HEADER_SIZE || size > exclusive_buffer::SIZE ||
-     size > fmk::MAX_FILE_SIZE || reader == NULL) return false;
+bool MK61Display::installPreparedFontImpl(
+    const u8* data, u16 size, u8 expected_height, ActiveFontRole role) {
+  prepared_font::Face candidate;
+  if(data == NULL || size < prepared_font::HEADER_SIZE ||
+     size > exclusive_buffer::SIZE ||
+     size > prepared_font::MAX_IMAGE_SIZE || !candidate.open(data, size) ||
+     (role == ActiveFontRole::UI &&
+      !validUiFace(candidate, expected_height))) return false;
   if(!exclusive_buffer::acquire(exclusive_buffer::Owner::DISPLAY_FONT,
                                 exclusive_buffer::SIZE)) return false;
   u8* const font_data = exclusive_buffer::data(exclusive_buffer::Owner::DISPLAY_FONT);
@@ -2804,9 +2796,9 @@ bool MK61Display::installFontFromReaderImpl(
     return false;
   }
 
-  // Neither flush nor a background client may observe a Face while its
-  // backing bytes are replaced. The C5 reader writes directly into BULK, so
-  // even an 8 KiB F411 font needs no equally large scratch copy.
+  // The complete candidate was validated outside BULK.  No flush or
+  // background client can observe the old Face while its backing bytes are
+  // atomically replaced by the prepared image.
   MK61DisplayUpdate update(*this);
   const ActiveFontState previous_state = active_font_state;
   const ActiveFontRole previous_role = active_font_role;
@@ -2814,10 +2806,8 @@ bool MK61Display::installFontFromReaderImpl(
   active_font.reset();
   preview_font.reset();
   preview_profile_active = false;
-  if(!reader(context, font_data, size) ||
-     !active_font.open(font_data, size) ||
-     (role == ActiveFontRole::UI &&
-      !validUiFace(active_font, expected_height))) {
+  memmove(font_data, data, size);
+  if(!active_font.open(font_data, size)) {
     active_font_state = ActiveFontState::BUILTIN;
     active_font_role = ActiveFontRole::TEXT;
     active_font.reset();
@@ -2850,53 +2840,32 @@ bool MK61Display::installFontFromReaderImpl(
   return true;
 }
 
-bool MK61Display::installFont(const u8* data, u16 size) {
-  fmk::Face source;
-  if(data == NULL || !source.open(data, size) ||
-     size > exclusive_buffer::SIZE) return false;
-  MemoryFontSource memory = {data, size};
-  return installFontFromReaderImpl(size, 0, readMemoryFont, &memory,
-                                   ActiveFontRole::TEXT);
-}
-
-bool MK61Display::installFontFromReader(u16 size, FontReader reader,
-                                        void* context) {
-  return installFontFromReaderImpl(size, 0, reader, context,
-                                   ActiveFontRole::TEXT);
+bool MK61Display::installPreparedFont(const u8* data, u16 size) {
+  return installPreparedFontImpl(data, size, 0, ActiveFontRole::TEXT);
 }
 
 #if MK61_PROPORTIONAL_UI_FONTS
-bool MK61Display::installUiFont(const u8* data, u16 size,
-                                u8 expected_height) {
-  fmk::Face source;
-  if(data == NULL || !source.open(data, size) ||
-     size > exclusive_buffer::SIZE ||
-     !validUiFace(source, expected_height)) return false;
-  MemoryFontSource memory = {data, size};
-  return installFontFromReaderImpl(size, expected_height, readMemoryFont,
-                                   &memory, ActiveFontRole::UI);
-}
-
-bool MK61Display::installUiFontFromReader(
-    u16 size, u8 expected_height, FontReader reader, void* context) {
-  return installFontFromReaderImpl(size, expected_height, reader, context,
-                                   ActiveFontRole::UI);
+bool MK61Display::installPreparedUiFont(const u8* data, u16 size,
+                                        u8 expected_height) {
+  return installPreparedFontImpl(data, size, expected_height,
+                                 ActiveFontRole::UI);
 }
 #endif
 
 bool MK61Display::setFontPreview(const u8* data, u16 size) {
-  if(data == NULL || size == 0 || size > fmk::MAX_FILE_SIZE) return false;
+  if(data == NULL || size == 0 ||
+     size > prepared_font::MAX_IMAGE_SIZE) return false;
   // preview_font не владеет копией: этот контракт должен быть подкреплён
   // живой арендой проводника, а не только комментарием у вызывающего кода.
-  if(shared_scratch::current_owner() !=
-         shared_scratch::Owner::EXPLORER_VIEW ||
-     !shared_memory::contains(shared_memory::Arena::SCRATCH,
+  if(shared_memory::active_owner(shared_memory::Arena::WORKSPACE) !=
+         shared_memory::Owner::SETUP ||
+     !shared_memory::contains(shared_memory::Arena::WORKSPACE,
                               data, size)) return false;
-  fmk::Face candidate;
+  prepared_font::Face candidate;
   if(!candidate.open(data, size)) return false;
   MK61DisplayUpdate update(*this);
-  // Проводник удерживает аренду shared-scratch до clearFontPreview().
-  // Сохраняем представление этих байтов, чтобы не делать вторую копию на 1536 байт.
+  // SETUP.APP keeps its workspace lease alive until clearFontPreview().
+  // Store only the view, avoiding a second full-size copy.
   if(!preview_font.open(data, size)) return false;
   if(!preview_profile_active) {
     preview_saved_profile = active_profile;
@@ -2971,7 +2940,7 @@ bool MK61Display::externalTextFontActive(void) const {
 }
 
 #if MK61_PROPORTIONAL_UI_FONTS
-const fmk::Face* MK61Display::externalUiFont(void) const {
+const prepared_font::Face* MK61Display::externalUiFont(void) const {
   return active_font_role == ActiveFontRole::UI && externalFontActive()
       ? &active_font : NULL;
 }
@@ -2995,11 +2964,11 @@ bool MK61Display::suspendExternalFontForUsb(void) {
   return true;
 }
 
-const fmk::Face* MK61Display::selectedFont(void) const {
+const prepared_font::Face* MK61Display::selectedFont(void) const {
   if(preview_font.valid() &&
-     shared_scratch::current_owner() ==
-         shared_scratch::Owner::EXPLORER_VIEW &&
-     shared_memory::contains(shared_memory::Arena::SCRATCH,
+     shared_memory::active_owner(shared_memory::Arena::WORKSPACE) ==
+         shared_memory::Owner::SETUP &&
+     shared_memory::contains(shared_memory::Arena::WORKSPACE,
                              preview_font.data(), preview_font.size())) {
     return &preview_font;
   }
@@ -3007,7 +2976,7 @@ const fmk::Face* MK61Display::selectedFont(void) const {
 }
 
 builtin_font::FaceId MK61Display::fallbackFont(void) const {
-  if(const fmk::Face* font = selectedFont()) {
+  if(const prepared_font::Face* font = selectedFont()) {
     return builtin_font::closest(font->metrics().max_width, font->metrics().height);
   }
   return lcd_display::isTextProfile3x5(active_profile)
@@ -3034,8 +3003,8 @@ bool MK61Display::resolveToken(u16 value, bool custom, builtin_font::Raster& ras
     value = '?';
   }
 
-  if(const fmk::Face* font = selectedFont()) {
-    fmk::Glyph glyph;
+  if(const prepared_font::Face* font = selectedFont()) {
+    prepared_font::Glyph glyph;
     u16 font_value = value;
 #if defined(MK61_DISPLAY_UC1609)
     font_value = display_symbol::uc1609::unicodeCodepoint(value);

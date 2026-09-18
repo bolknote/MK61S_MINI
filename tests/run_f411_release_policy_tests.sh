@@ -11,6 +11,7 @@ budgets="$root/tests/release_ram_budgets.sh"
 ram_check="$root/tests/check_release_ws0010_ram.sh"
 preflight="$root/tests/run_release_preflight.sh"
 core_check="$root/tests/check_core_native_hot_paths_elf.sh"
+font_decoder_check="$root/tests/check_no_resident_fmk_decoder_elf.sh"
 workflow="$root/.github/workflows/firmware-release.yml"
 contract="$root/tools/release_contract.py"
 mixed_policy="$root/code/firmware_optimization.hpp"
@@ -18,7 +19,7 @@ config="$root/code/config.h"
 hot_core="$root/code/mk61emu_core.cpp"
 
 for script in "$matrix" "$o3_build" "$stock_linker_build" "$usb_build" "$f401_matrix" "$budgets" \
-    "$ram_check" "$preflight" "$core_check"; do
+    "$ram_check" "$preflight" "$core_check" "$font_decoder_check"; do
   bash -n "$script"
 done
 python3 "$contract" validate >/dev/null
@@ -93,6 +94,9 @@ grep -Fq 'check_core_native_hot_paths_elf.sh" --disabled "$elf"' \
   "$f401_matrix"
 grep -Fq 'check_core_native_hot_paths_elf.sh' "$matrix"
 grep -Fq 'check_core_native_hot_paths_elf.sh' "$o3_build"
+grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$f401_matrix"
+grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$matrix"
+grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$o3_build"
 grep -Fq 'portable-layout.py' "$o3_build"
 grep -Fq 'portable-layout.py' "$usb_build"
 

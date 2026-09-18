@@ -17,7 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools/.mk61-app"))
 from app_relocations import extract
 SYSTEM_MODULES = {
-    "setup": ("SETUP", "SETUP", ["setup_ui.cpp", "setup_module_entry.cpp", "fmk_font.cpp"], None),
+    "setup": ("SETUP", "SETUP", ["setup_ui.cpp", "setup_module_entry.cpp",
+        "setup_font_compiler.cpp", "fmk_font.cpp", "fmk_prepare.cpp",
+        "prepared_font.cpp"], None),
     "focal": ("FOCAL", "FOCAL", ["focal.cpp", "focal_module_entry.cpp"], None),
     "tinybasic": ("BASIC", "TINYBASIC", ["tinybasic.cpp", "tinybasic_module_entry.cpp"], None),
     "wbmp-viewer": ("WBMP", "WBMP", ["image1_viewer.cpp", "image1_viewer_module_entry.cpp", "wbmp.cpp"], "I1"),
@@ -29,6 +31,9 @@ SYSTEM_MODULES = {
 # code-size regressions.  memory_bytes is the complete loaded image plus BSS;
 # the editor/runtime workspace leased by the firmware is accounted separately.
 SYSTEM_SIZE_BUDGETS = {
+    # SETUP owns all FMK validation and compilation.  Keep enough headroom in
+    # the 20-KiB APP arena for that decoder plus its full 8-KiB source buffer.
+    "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
 }
 

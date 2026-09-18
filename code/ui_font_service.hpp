@@ -2,7 +2,7 @@
 #define MK61_UI_FONT_SERVICE_HPP
 
 #include "loadable_app_services.h"
-#include "fmk_font.hpp"
+#include "prepared_font.hpp"
 #include "ui_font.hpp"
 #include <string.h>
 
@@ -11,14 +11,14 @@ namespace ui_font_service {
 static_assert(sizeof(mk61_service_ui_glyph) == 40, "UI glyph wire layout");
 static_assert(sizeof(mk61_service_ui_font_info) == 6, "UI font wire layout");
 
-inline bool valid_external(const fmk::Face* external, uint8_t size) {
+inline bool valid_external(const prepared_font::Face* external, uint8_t size) {
   return external != nullptr && external->valid() &&
       external->metrics().height == size && size <= 16 &&
       external->metrics().line_gap <= 4;
 }
 
 inline bool valid_choice(uint8_t family, uint8_t size,
-                         const fmk::Face* external = nullptr) {
+                         const prepared_font::Face* external = nullptr) {
   return (size == 12 || size == 14 || size == 16) &&
       ((family == 1 || family == 2) ||
        (family == 3 && valid_external(external, size)));
@@ -35,7 +35,7 @@ inline ui_font::Face face(uint8_t family, uint8_t size) {
 // Malformed requests leave their output untouched.
 inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
                      uint32_t codepoint, uint32_t capacity, void* payload,
-                     const fmk::Face* external = nullptr) {
+                     const prepared_font::Face* external = nullptr) {
   if(payload == nullptr) return 0;
   if(operation == MK61_UI_FONT_INFO) {
     if(capacity != sizeof(mk61_service_ui_font_info)) return 0;
@@ -57,7 +57,7 @@ inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
   auto& out = *static_cast<mk61_service_ui_glyph*>(payload);
   if(!valid_choice(out.family, out.size, external)) return 0;
   if(out.family == 3) {
-    fmk::Glyph glyph = {};
+    prepared_font::Glyph glyph = {};
     bool fallback = false;
     if(codepoint > 0xFFFFU ||
        !external->glyph(static_cast<uint16_t>(codepoint), glyph)) {
