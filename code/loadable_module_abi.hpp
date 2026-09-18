@@ -43,6 +43,9 @@ enum class Command : u32 {
   TINYBASIC_EDIT,
   TINYBASIC_EDIT_NAME,
   TINYBASIC_EDIT_ID,
+  // argument0 = stable C5 file id, argument1 = TinyBasicRunMode.
+  // Returns TinyBasicRunStatus; appended to preserve older command numbers.
+  TINYBASIC_RUN_ID_STATUS,
 
   WBMP_VIEW = 0x300,
   WBMP_VIEW_ENTRY,

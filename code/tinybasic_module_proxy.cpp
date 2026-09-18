@@ -25,6 +25,20 @@ static void call_void(loadable_module::Command command, u32 argument0 = 0) {
                                  argument0, 0, 0, 0, result);
 }
 
+static TinyBasicRunStatus call_status(loadable_module::Command command,
+                                      u32 argument0, u32 argument1) {
+  u32 result = 0;
+  if(loadable_module::invoke(loadable_module::Kind::TINYBASIC, command,
+                             argument0, argument1, 0, 0, result) !=
+     loadable_module::RuntimeStatus::OK) {
+    return TinyBasicRunStatus::UNAVAILABLE;
+  }
+  if(result > (u32) TinyBasicRunStatus::NOT_FOUND) {
+    return TinyBasicRunStatus::UNAVAILABLE;
+  }
+  return (TinyBasicRunStatus) result;
+}
+
 } // namespace
 
 bool TinyBASIC_library_select(void) {
@@ -61,6 +75,12 @@ bool RunTinyBasicProgram(const char* name) {
 
 bool RunTinyBasicProgram(u16 id) {
   return call_bool(loadable_module::Command::TINYBASIC_RUN_ID, id);
+}
+
+TinyBasicRunStatus RunTinyBasicProgramStatus(u16 id,
+                                              TinyBasicRunMode mode) {
+  return call_status(loadable_module::Command::TINYBASIC_RUN_ID_STATUS,
+                     id, (u32) mode);
 }
 
 void EditTinyBasic(void) {

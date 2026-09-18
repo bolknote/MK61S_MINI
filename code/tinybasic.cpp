@@ -6,6 +6,7 @@
   #define TinyBasicIsReady mk61_module_tinybasic_is_ready
   #define RunTinyBasic mk61_module_run_tinybasic
   #define RunTinyBasicProgram mk61_module_run_tinybasic_program
+  #define RunTinyBasicProgramStatus mk61_module_run_tinybasic_program_status
   #define EditTinyBasic mk61_module_edit_tinybasic
   #define EditTinyBasicProgram mk61_module_edit_tinybasic_program
 #endif
@@ -249,6 +250,7 @@ enum class TbFlowKind : u8 {
   NEXT,
   JUMP,
   STOP,
+  INTERRUPTED,
   ERROR
 };
 
@@ -487,6 +489,23 @@ static usize tinybasic_array_capacity(void) {
 // requests after a program. Keep it only while no later screen/input activity
 // has made another final acknowledgement useful.
 static bool tb_pause_is_final = false;
+static TinyBasicRunMode tb_run_mode = TinyBasicRunMode::INTERACTIVE;
+
+class TinyBasicRunModeScope {
+  public:
+    explicit TinyBasicRunModeScope(TinyBasicRunMode mode)
+        : previous(tb_run_mode) {
+      tb_run_mode = mode;
+    }
+    ~TinyBasicRunModeScope(void) { tb_run_mode = previous; }
+
+  private:
+    TinyBasicRunMode previous;
+};
+
+static bool tb_runs_inside_m61(void) {
+  return tb_run_mode == TinyBasicRunMode::M61_SCENARIO;
+}
 
 static void tinybasic_clear_array(void) {
   double* const array = tinybasic_array_data();
@@ -665,6 +684,18 @@ static bool tb_pause(void) {
   const i32 key = kbd::get_key_wait();
   tb_pause_is_final = true;
   return key != KEY_ESC && key != KEY_ESC_PRESS;
+}
+
+static void tb_report_interrupted(void) {
+#ifndef TINYBASIC_HOST_TEST
+  // Consume the complete ESC gesture.  Otherwise its release (or a queued
+  // debounced press after the immediate edge) can leak into the calculator
+  // and open its menu immediately after the scenario has been cancelled.
+  kbd::handoff(kbd::Event(KEY_ESC_PRESS));
+#endif
+  if(!tb_runs_inside_m61()) {
+    tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
+  }
 }
 
 static void tb_format_number(double value, char* out, usize size) {
@@ -1860,8 +1891,9 @@ static bool tb_process_input(const char* begin, const char* end,
         double value = 0.0;
         if(!tb_read_number_from_keyboard(prompt, value)) {
           tb_pending_print[0] = 0;
-          tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
-          *flow = tb_flow(TbFlowKind::STOP, current_pc);
+          tb_report_interrupted();
+          *flow = tb_flow(tb_runs_inside_m61()
+              ? TbFlowKind::INTERRUPTED : TbFlowKind::STOP, current_pc);
           return true;
         }
         if(!tb_write_target(target, value)) return tb_error("HOW?");
@@ -2194,7 +2226,14 @@ static bool tb_process_one(TbCommandContext& context) {
     case TbCommand::CMD_PAUSE:
       if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
       if(execute && !tb_pause()) {
-        *flow = tb_flow(TbFlowKind::STOP, current_pc);
+        if(tb_runs_inside_m61()) {
+          tb_report_interrupted();
+          *flow = tb_flow(TbFlowKind::INTERRUPTED, current_pc);
+        } else {
+          // Historical interactive behaviour: ESC dismisses PAUSE and ends
+          // this TinyBASIC run without replacing the program's last screen.
+          *flow = tb_flow(TbFlowKind::STOP, current_pc);
+        }
         cursor = end;
         return true;
       }
@@ -2251,8 +2290,7 @@ static bool tb_runtime_interrupted(void) {
   idle_main_process();
   kbd::scan();
   if(kbd::take_immediate_press(KEY_ESC) || kbd::last_key() == KEY_ESC_PRESS) {
-    kbd::handoff(kbd::Event(KEY_ESC_PRESS));
-    tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
+    tb_report_interrupted();
     return true;
   }
 #endif
@@ -2281,20 +2319,25 @@ static void tinybasic_finish_wait(void) {
   if(!tb_pause_is_final) tinybasic_wait_after_run();
 }
 
-static bool tb_run_program(int program_index) {
+static TinyBasicRunStatus tb_run_program(
+    int program_index,
+    TinyBasicRunMode mode = TinyBasicRunMode::INTERACTIVE) {
+  TinyBasicRunModeScope mode_scope(mode);
   tb_pause_is_final = false;
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
-  if(!workspace_scope.ok()) return false;
+  if(!workspace_scope.ok()) return TinyBasicRunStatus::UNAVAILABLE;
   main_lcd().endUiText();
   tb_activate_inherited_text_font();
 #endif
   if(program_index < 0 || program_index >= TB_PROGRAM_COUNT ||
      !tb_program_used(programs[program_index])) {
     tb_error("HOW?");
-    return false;
+    return TinyBasicRunStatus::NOT_FOUND;
   }
-  if(!tb_compile_source(programs[program_index].source, tb_ast)) return false;
+  if(!tb_compile_source(programs[program_index].source, tb_ast)) {
+    return TinyBasicRunStatus::COMPILE_ERROR;
+  }
   const char* const source = programs[program_index].source;
 
   main_lcd().clear();
@@ -2334,11 +2377,16 @@ static bool tb_run_program(int program_index) {
       pc = flow.pc;
       entry_offset = flow.offset;
     }
-    else break;
+    else {
+      if(flow.kind == TbFlowKind::INTERRUPTED) interrupted = true;
+      break;
+    }
   }
   if(succeeded && !interrupted && tb_pending_print[0] != 0) tb_flush_print();
   else if(!succeeded || interrupted) tb_pending_print[0] = 0;
-  return succeeded;
+  if(interrupted) return TinyBasicRunStatus::STOPPED;
+  return succeeded ? TinyBasicRunStatus::COMPLETED
+                   : TinyBasicRunStatus::RUNTIME_ERROR;
 }
 
 void RunTinyBasic(int program_index) {
@@ -2950,9 +2998,10 @@ bool RunTinyBasicProgram(const char* name) {
   const int slot = find_program_by_name(name);
 #endif
   if(slot < 0) return false;
-  const bool ok = tb_run_program(slot);
+  const TinyBasicRunStatus status = tb_run_program(slot);
   tinybasic_finish_wait();
-  return ok;
+  return status == TinyBasicRunStatus::COMPLETED ||
+         status == TinyBasicRunStatus::STOPPED;
 }
 
 bool RunTinyBasicProgram(u16 id) {
@@ -2964,9 +3013,25 @@ bool RunTinyBasicProgram(u16 id) {
   const int slot = id < TB_PROGRAM_COUNT ? (int) id : -1;
 #endif
   if(slot < 0) return false;
-  const bool ok = tb_run_program(slot);
+  const TinyBasicRunStatus status = tb_run_program(slot);
   tinybasic_finish_wait();
-  return ok;
+  return status == TinyBasicRunStatus::COMPLETED ||
+         status == TinyBasicRunStatus::STOPPED;
+}
+
+TinyBasicRunStatus RunTinyBasicProgramStatus(u16 id,
+                                              TinyBasicRunMode mode) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope workspace_scope;
+  if(!workspace_scope.ok()) return TinyBasicRunStatus::UNAVAILABLE;
+  const int slot = load_tinybasic_program_from_store(id);
+#else
+  const int slot = id < TB_PROGRAM_COUNT ? (int) id : -1;
+#endif
+  if(slot < 0) return TinyBasicRunStatus::NOT_FOUND;
+  const TinyBasicRunStatus status = tb_run_program(slot, mode);
+  if(mode == TinyBasicRunMode::INTERACTIVE) tinybasic_finish_wait();
+  return status;
 }
 
 static bool TinyBASIC_run_menu(void) {
@@ -3105,7 +3170,7 @@ extern "C" void TinyBasicTestRun(int slot) {
 
 extern "C" bool TinyBasicTestRunResult(int slot) {
   main_lcd().clear();
-  return tb_run_program(slot);
+  return TinyBasicRunSucceeded(tb_run_program(slot));
 }
 
 extern "C" void TinyBasicTestClearData(void) {

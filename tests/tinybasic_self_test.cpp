@@ -4,6 +4,8 @@
 #include <cstring>
 #include <limits>
 
+#include "tinybasic.hpp"
+
 extern "C" void TinyBasicTestReset(void);
 extern "C" bool TinyBasicTestCompile(const char* source);
 extern "C" const char* TinyBasicTestError(void);
@@ -28,8 +30,6 @@ extern "C" void TinyBasicTestClearData(void);
 extern "C" int TinyBasicTestWaitCount(void);
 extern "C" bool TinyBasicTestStoreEdited(int slot, char* source, const char* name);
 extern "C" void TinyBasicTestSetGeometry(int cols, int rows);
-bool RunTinyBasicProgram(const char* name);
-
 static constexpr int KEY_K = 37;
 static constexpr int KEY_OK = 29;
 static constexpr int KEY_CX = 0;
@@ -389,6 +389,25 @@ static void test_run_api_reports_runtime_failure(void) {
   assert(!RunTinyBasicProgram("FAILAPI"));
   assert(std::strcmp(TinyBasicTestError(), "HOW?") == 0);
   assert(TinyBasicTestWaitCount() == 1);
+}
+
+static void test_m61_mode_esc_at_pause_is_silent_stop(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+      "10 PRINT \"GAME\"\n"
+      "20 PAUSE\n"
+      "30 A=1\n",
+      "M61ESC");
+  assert(slot >= 0);
+  TinyBasicTestSetPauseEsc(true);
+  const TinyBasicRunStatus status = RunTinyBasicProgramStatus(
+      (u16) slot, TinyBasicRunMode::M61_SCENARIO);
+  TinyBasicTestSetPauseEsc(false);
+
+  assert(status == TinyBasicRunStatus::STOPPED);
+  assert(std::fabs(TinyBasicTestNumber("A")) < 0.000001);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "GAME", 4) == 0);
+  assert(TinyBasicTestWaitCount() == 0);
 }
 
 static void test_failed_edit_keeps_previous_program(void) {
@@ -811,6 +830,7 @@ int main(int argc, char** argv) {
   test_runtime_math_errors_are_safe();
   test_variables_persist_until_clear();
   test_run_api_reports_runtime_failure();
+  test_m61_mode_esc_at_pause_is_silent_stop();
   test_failed_edit_keeps_previous_program();
   test_editor_has_no_operator_macros();
   test_editor_cx_backspace_and_f_cx_clear_line();

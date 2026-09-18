@@ -7,6 +7,7 @@
 #define TinyBasicIsReady mk61_module_tinybasic_is_ready
 #define RunTinyBasic mk61_module_run_tinybasic
 #define RunTinyBasicProgram mk61_module_run_tinybasic_program
+#define RunTinyBasicProgramStatus mk61_module_run_tinybasic_program_status
 #define EditTinyBasic mk61_module_edit_tinybasic
 #define EditTinyBasicProgram mk61_module_edit_tinybasic_program
 
@@ -23,7 +24,7 @@ extern "C" u32 mk61_app_initialize(const mk61_app_api* api,
 
 extern "C" u32 mk61_app_command(u32 raw_command, u32 argument0,
                                  u32 argument1, u32 argument2, u32) {
-  (void) argument1; (void) argument2;
+  (void) argument2;
   const loadable_module::Command command =
       (loadable_module::Command) raw_command;
   switch(command) {
@@ -47,6 +48,9 @@ extern "C" u32 mk61_app_command(u32 raw_command, u32 argument0,
       return EditTinyBasicProgram((const char*) argument0);
     case loadable_module::Command::TINYBASIC_EDIT_ID:
       return EditTinyBasicProgram((u16) argument0);
+    case loadable_module::Command::TINYBASIC_RUN_ID_STATUS:
+      return (u32) RunTinyBasicProgramStatus(
+          (u16) argument0, (TinyBasicRunMode) argument1);
     default:
       return 0;
   }
