@@ -30,12 +30,12 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
 - Library Manager: `LiquidCrystal` версии `1.0.7`;
 - Library Manager: `STM32duino RTC` версии `1.9.0`.
 
-Отдельный `arduino-cli` не требуется. Дополнительно нужны Python 3.10+
-и нативный C++17-компилятор для ZX0-упаковщика. На Windows не нужны Bash
-и отдельный `dfu-util`: сборка использует PowerShell и ARM-инструменты
-STM32 Core. PowerShell сначала проверяет штатный Windows launcher `py -3`,
-затем `python.exe` и `python3.exe`; пустые Windows Store App Execution Alias
-игнорируются. Для Upload через DFU STM32 Core использует собственный
+Отдельный `arduino-cli` не требуется. Дополнительно нужен Python 3.10+.
+На Windows не нужны нативный C++-компилятор, Bash и отдельный `dfu-util`:
+сборка использует PowerShell, ARM-инструменты STM32 Core и встроенный
+Python-паковщик APP. PowerShell сначала проверяет штатный Windows launcher
+`py -3`, затем `python.exe` и `python3.exe`; пустые Windows Store App Execution
+Alias игнорируются. Для Upload через DFU STM32 Core использует собственный
 STM32CubeProgrammer recipe.
 
 ## Установка платы
@@ -192,4 +192,5 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `exceeds the 20 KiB APP image limit` | Выбранный APP вырос сверх лимита одного образа; это не постоянный резерв SRAM и не ошибка DFU. |
 | `app/firmware mismatch` | Старый ABI 2/3/4 нужно пересобрать; для ABI 5 проверьте версию публичных сервисов. |
 | `python3.exe failed with exit code 9009` | Повторно установите свежий пакет платы; новая PowerShell-ветка проверяет `py -3`/`python.exe` и не выбирает пустой Windows Store alias. Если Python действительно отсутствует, установите Python 3.10+ и перезапустите IDE. |
+| `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются Python-скриптом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
 | Upload не находит устройство | Перевести STM32F401 в системный DFU и повторить Upload. |

@@ -211,17 +211,17 @@ def build(args: argparse.Namespace) -> dict:
     app = out / (args.name + ".APP")
     run([tool("objcopy"), "-O", "binary", "-j", ".module_image", elf, image])
     packer = args.packer
-    if packer is None:
-        packer = ROOT / (".build/tools/mk61_module_pack" + suffix)
-        if os.name == "nt":
-            powershell = shutil.which("pwsh") or shutil.which("powershell")
-            if powershell is None:
-                raise ValueError("PowerShell is required to build the APP packer")
-            run([powershell, "-NoProfile", "-File",
-                 ROOT / "tools/.mk61-app/build.ps1", "-OutputPath", packer])
-        else:
+    if packer is None and os.name == "nt":
+        # Arduino's ARM GCC cannot produce a host Windows executable and the
+        # IDE does not install MSVC/LLVM.  Use the dependency-free Python
+        # packer instead of requiring a second C++ toolchain from end users.
+        command = [sys.executable, ROOT / "tools/.mk61-app/mk61_module_pack.py"]
+    else:
+        if packer is None:
+            packer = ROOT / (".build/tools/mk61_module_pack" + suffix)
             run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
-    command = [packer, "--portable", "--kind", args.system or "app", "--image", image,
+        command = [packer]
+    command += ["--portable", "--kind", args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
     offsets, table = extract(elf, base, image.stat().st_size, memory_size)

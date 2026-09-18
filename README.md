@@ -254,10 +254,10 @@ F401, A00/A02, mini V2, Classic V2 и 40th продолжают использо
 напрямую через `dfu-util`.
 
 Оба порта `mk61-firmware` вызывают один F401-бэкенд `tools/build-gcc.cmd`.
-Нативный host-компилятор C++17 нужен для ZX0-упаковки штатных APP. Bash
-дополнительно требуется только при заданном `MK61_APP_MANIFESTS`: этот
-совместимый путь использует `tools/build_f401_bundle.sh` для пользовательских
-APP.
+На macOS/Linux нативный host-компилятор C++17 нужен для ZX0-упаковки штатных
+APP; Windows использует Python-паковщик. Bash дополнительно требуется только
+при заданном `MK61_APP_MANIFESTS`: этот совместимый путь использует
+`tools/build_f401_bundle.sh` для пользовательских APP.
 
 Есть и неинтерактивный режим:
 
@@ -386,11 +386,12 @@ tools\mk61-arduino-board.cmd
 resident; после его запуска каталог `System` из того же результата нужно
 скопировать в корень диска `MK61S C5`.
 
-IDE-вариант использует ARM-инструменты установленного STM32 Core, Python
-3.10+ и нативный C++17-компилятор для упаковщика. На macOS/Linux post-build
-запускается через системный shell, на Windows — через встроенный PowerShell,
-который проверяет `py -3`, `python.exe` и `python3.exe`, не принимая пустой
-Windows Store alias за установленный Python.
+IDE-вариант использует ARM-инструменты установленного STM32 Core и Python
+3.10+. На macOS/Linux post-build запускается через системный shell и применяет
+нативный C++17-паковщик. На Windows отдельные Visual Studio, LLVM или MinGW не
+нужны: тот же ABI 5 и ZX0 формирует встроенный Python-паковщик. PowerShell
+проверяет `py -3`, `python.exe` и `python3.exe`, не принимая пустой Windows
+Store alias за установленный Python.
 Как и GCC-путь, он создаёт самостоятельные APP ABI 5 с ZX0 или BCJ + ZX0.
 `build_f401_bundle.sh` также умеет добавлять пользовательские manifest APP,
 но упаковывает их в тот же ABI 5.
@@ -411,10 +412,10 @@ tools\build-gcc.cmd -Profile mini-v3-a00
 а те напрямую запускают `arm-none-eabi-gcc/g++` из установленного пакета STM32
 Core. От Arduino-инсталляции используются только файлы STM32 Core `2.12.0`,
 его GNU Arm toolchain и CMSIS, а также библиотеки `LiquidCrystal 1.0.7` и
-`STM32duino RTC 1.9.0`. В `PATH` дополнительно нужны CMake 3.21 или новее,
-Ninja и нативный C++17-компилятор (`c++`, `clang++`, `g++` либо MSVC) для
-ZX0-паковщика; путь можно задать в `MK61_HOST_CXX`. На Windows подходит
-встроенный Windows PowerShell 5.1, а на macOS/Linux нужен `pwsh`.
+`STM32duino RTC 1.9.0`. В `PATH` дополнительно нужны CMake 3.21 или новее и
+Ninja. На macOS/Linux для ZX0-паковщика нужен нативный C++17-компилятор
+(`c++`, `clang++` или `g++`; путь задаётся в `MK61_HOST_CXX`) и `pwsh`.
+На Windows хватает встроенного Windows PowerShell 5.1 и Python 3.10+.
 
 По умолчанию создаются `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`. Например,
 комплект для mini V3 с Markdown, WBMP и CHIP-8 через USB собирается так:
@@ -476,7 +477,8 @@ tools/
 диагностического запуска оболочка по-прежнему ожидает полный каталог
 сборки: resident `.elf`, `.bin` и `compile_commands.json`. Последний
 задаёт компилятор; адреса resident в APP не импортируются.
-Нужны также Python 3.10+ и нативный C++17-компилятор для ZX0-паковщика:
+Нужен также Python 3.10+; нативный C++17-компилятор для ZX0-паковщика нужен
+только на macOS/Linux:
 
 ```bat
 system_apps\build.cmd ^

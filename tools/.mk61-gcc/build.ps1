@@ -106,8 +106,9 @@ Other:
   -Check             validate dependencies without building
   -Help
 
-Required in PATH: CMake 3.21 or newer, Ninja, and a host C++17 compiler
-when at least one System APP is enabled.
+Required in PATH: CMake 3.21 or newer and Ninja. When at least one System APP
+is enabled, macOS/Linux also requires a host C++17 compiler; Windows uses the
+Python APP packer.
 Required versions are read from tools/release-contract.json.
 
 Environment overrides:
