@@ -375,8 +375,11 @@
 //  LIBM (умолчание) — трансцендентные функции через <math.h>.
 //  CORE             — вычисление на ядре МК-61; убирает libm из прошивки
 //                     ценой ~8 значащих цифр и меньшей скорости.
+//  FLOAT            — float-функции libm: быстрее CORE и компактнее LIBM,
+//                     около 7 значащих десятичных цифр.
 #define MK61_MATH_BACKEND_LIBM 0
 #define MK61_MATH_BACKEND_CORE 1
+#define MK61_MATH_BACKEND_FLOAT 2
 #ifndef MK61_MATH_BACKEND
   #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
 #endif

@@ -316,6 +316,17 @@ int main(void) {
   assert(language_workspace::resident_owner() == Owner::NONE);
   assert(shared_scratch::current_owner() == shared_scratch::Owner::NONE);
   {
+    // SETUP.APP compiles FMK fonts in the same workspace facade as the
+    // language runtimes.  Keep this explicit: a newly appended owner must
+    // not be silently translated to NONE by the compatibility adapter.
+    language_workspace::Lease setup(Owner::SETUP, 128);
+    assert(setup.ok() && setup.fresh());
+    assert(language_workspace::active_owner() == Owner::SETUP);
+    assert(language_workspace::data(Owner::SETUP) == setup.data());
+  }
+  assert(language_workspace::active_owner() == Owner::NONE);
+  assert(language_workspace::resident_owner() == Owner::NONE);
+  {
     language_workspace::Lease next_app(Owner::APPLICATION, 128);
     assert(next_app.ok() && next_app.fresh() && ((u8*) next_app.data())[0] == 0);
   }
