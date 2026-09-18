@@ -1747,10 +1747,14 @@ function Invoke-MonitorExchange {
         [void]$process.Start()
         $stdout = $process.StandardOutput.ReadToEndAsync()
         $stderr = $process.StandardError.ReadToEndAsync()
-        Start-Sleep -Milliseconds 150
+        # Opening USB CDC may reset the resident. Its startup path can wait
+        # up to 1.8 s for the host before printing the banner and serving `ver`.
+        Start-Sleep -Milliseconds 350
         $process.StandardInput.WriteLine($Command)
         $process.StandardInput.Flush()
-        Start-Sleep -Milliseconds 1000
+        # Keep the monitor alive long enough to receive the startup banner and
+        # the command response before closing its input.
+        Start-Sleep -Milliseconds 2500
         $process.StandardInput.Close()
         if (-not $process.WaitForExit(4000)) { $process.Kill() }
         $process.WaitForExit()

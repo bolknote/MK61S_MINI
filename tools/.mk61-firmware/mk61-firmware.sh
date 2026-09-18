@@ -1898,13 +1898,47 @@ list_cdc_ports() {
 }
 
 monitor_exchange() {
-  local port=$1
-  local command=$2
-  {
-    sleep 0.15
-    printf '%s\r\n' "$command"
-    sleep 1
-  } | "$ARDUINO_CLI" monitor --quiet --port "$port" --config baudrate=115200 2>&1
+  local port=$1 command=$2 monitor_dir monitor_pid line response= attempts=0
+  monitor_dir=$(mktemp -d "${TMPDIR:-/tmp}/mk61-firmware-monitor.XXXXXX") || return 1
+  if ! mkfifo "$monitor_dir/in" "$monitor_dir/out"; then
+    rm -rf "$monitor_dir"
+    return 1
+  fi
+  exec 5<>"$monitor_dir/in" || {
+    rm -rf "$monitor_dir"
+    return 1
+  }
+  exec 6<>"$monitor_dir/out" || {
+    exec 5>&-
+    rm -rf "$monitor_dir"
+    return 1
+  }
+
+  "$ARDUINO_CLI" monitor --quiet --port "$port" --config baudrate=115200 \
+    <&5 >&6 2>"$monitor_dir/error.log" &
+  monitor_pid=$!
+  # Opening USB CDC may reset the resident. Its startup path can wait up to
+  # 1.8 s for the host before printing the banner and serving `ver`.
+  sleep 0.35
+  if kill -0 "$monitor_pid" 2>/dev/null; then
+    printf '%s\r' "$command" >&5
+    # Keep the monitor alive while the resident finishes startup and return
+    # both the banner and the command response. This mirrors MKC's persistent
+    # monitor instead of closing a one-shot pipeline too early.
+    while [ "$attempts" -lt 4 ]; do
+      if IFS= read -r -t 1 line <&6; then
+        response="${response}${line}"$'\n'
+      else
+        attempts=$((attempts + 1))
+      fi
+    done
+  fi
+  exec 5>&-
+  exec 6>&-
+  kill "$monitor_pid" 2>/dev/null || true
+  wait "$monitor_pid" 2>/dev/null || true
+  rm -rf "$monitor_dir"
+  printf '%s' "$response"
 }
 
 recognize_profile_from_version() {
