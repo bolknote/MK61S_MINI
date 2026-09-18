@@ -2565,12 +2565,9 @@ i32 program_store_text_font_begin(void) {
 #endif
 }
 
+#if defined(MK61_DISPLAY_UC1609)
 static i32 program_store_text_font_load_entry(
     const program_store::Entry& entry) {
-#if !defined(MK61_DISPLAY_UC1609)
-  (void) entry;
-  return -2;
-#else
   const TextFontPreflight preflight = preflight_text_font(entry);
   if(preflight != TextFontPreflight::OK) return (i32) preflight;
 
@@ -2604,8 +2601,8 @@ static i32 program_store_text_font_load_entry(
   // the language program's point of view.
   if(!restore_applied_font(previous)) return -3;
   return read_failed ? -3 : -1;
-#endif
 }
+#endif
 
 i32 program_store_text_font_load(const char* name) {
 #if !defined(MK61_DISPLAY_UC1609)
