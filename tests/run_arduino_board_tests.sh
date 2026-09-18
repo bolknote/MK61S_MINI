@@ -98,6 +98,41 @@ if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display oled1602-ws0010 -Sketch "$root/code"
+
+  # A Windows Store App Execution Alias is visible to Get-Command but exits
+  # with 9009.  The PowerShell hook must use the working `py -3` launcher
+  # instead and preserve its prefix argument for both probing and execution.
+  launcher_dir="$work/python-launcher"
+  launcher_log="$work/python-launcher.log"
+  launcher_build="$work/python-launcher-build"
+  mkdir -p "$launcher_dir" "$launcher_build"
+  for alias in python python3; do
+    printf '%s\n' '#!/usr/bin/env bash' 'exit 73' > "$launcher_dir/$alias"
+    chmod +x "$launcher_dir/$alias"
+  done
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'printf "%s\\n" "$*" >> "$MK61_TEST_PY_LOG"' \
+    'test "$1" = -3 || exit 74' \
+    'shift' \
+    'exec "$MK61_TEST_REAL_PYTHON" "$@"' > "$launcher_dir/py"
+  chmod +x "$launcher_dir/py"
+  printf '%s\n' \
+    'SECTIONS' \
+    '{' \
+    '  PROVIDE ( _end = . );' \
+    '    *(.bss)' \
+    '}' > "$work/variant.ld"
+  MK61_TEST_PY_LOG="$launcher_log" \
+  MK61_TEST_REAL_PYTHON="$(command -v python3)" \
+  PATH="$launcher_dir:$PATH" \
+    pwsh -NoLogo -NoProfile -File \
+      "$platform/tools/mk61-app-postbuild.ps1" check-profile \
+      -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
+      -BuildPath "$launcher_build" -VariantLd "$work/variant.ld"
+  test -s "$launcher_build/mk61-portable.ld"
+  grep -q '^-3 --version$' "$launcher_log"
+  grep -q '^-3 .*portable-layout.py ' "$launcher_log"
 fi
 
 if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then

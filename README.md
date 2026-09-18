@@ -388,7 +388,9 @@ resident; после его запуска каталог `System` из того
 
 IDE-вариант использует ARM-инструменты установленного STM32 Core, Python
 3.10+ и нативный C++17-компилятор для упаковщика. На macOS/Linux post-build
-запускается через системный shell, на Windows — через встроенный PowerShell.
+запускается через системный shell, на Windows — через встроенный PowerShell,
+который проверяет `py -3`, `python.exe` и `python3.exe`, не принимая пустой
+Windows Store alias за установленный Python.
 Как и GCC-путь, он создаёт самостоятельные APP ABI 5 с ZX0 или BCJ + ZX0.
 `build_f401_bundle.sh` также умеет добавлять пользовательские manifest APP,
 но упаковывает их в тот же ABI 5.

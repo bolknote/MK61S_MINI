@@ -28,12 +28,48 @@ function Stop-Mk61Build {
 }
 
 function Get-Python {
-    foreach ($name in @('python3', 'python')) {
-        $found = Get-Command $name -CommandType Application `
+    # Windows commonly exposes python.exe/python3.exe App Execution Aliases
+    # even when Python is not installed.  Get-Command sees those stubs, but
+    # starting one fails with exit code 9009.  Probe every candidate before
+    # using it and support the standard Windows Python launcher (`py -3`).
+    $candidates = @(
+        [pscustomobject]@{
+            Executable = 'py'
+            PrefixArguments = [string[]]@('-3')
+        },
+        [pscustomobject]@{
+            Executable = 'python'
+            PrefixArguments = [string[]]@()
+        },
+        [pscustomobject]@{
+            Executable = 'python3'
+            PrefixArguments = [string[]]@()
+        }
+    )
+    foreach ($candidate in $candidates) {
+        $found = Get-Command $candidate.Executable -CommandType Application `
             -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($null -ne $found) { return $found.Source }
+        if ($null -eq $found) { continue }
+        try {
+            $output = & $found.Source @($candidate.PrefixArguments) `
+                '--version' 2>&1 | Out-String
+            $exitCode = $LASTEXITCODE
+        } catch {
+            continue
+        }
+        $version = [regex]::Match(
+            [string]$output, '(?m)^Python 3\.(\d+)(?:\.\d+)?')
+        if ($exitCode -eq 0 -and $version.Success -and
+            [int]$version.Groups[1].Value -ge 10) {
+            return [pscustomobject]@{
+                Executable = $found.Source
+                PrefixArguments = [string[]]$candidate.PrefixArguments
+            }
+        }
     }
-    Stop-Mk61Build 'Python 3 is required for APP builds'
+    Stop-Mk61Build (
+        'Python 3.10+ is required for APP builds. On Windows install it ' +
+        'from python.org or with winget; the py -3 launcher is supported.')
 }
 
 function Test-Mk61Profile {
@@ -64,6 +100,13 @@ function Invoke-Mk61Tool {
     }
 }
 
+function Invoke-Mk61Python {
+    param([Parameter(Mandatory = $true)][string[]]$Arguments)
+    $python = Get-Python
+    Invoke-Mk61Tool $python.Executable `
+        (@($python.PrefixArguments) + $Arguments)
+}
+
 function Check-Mk61Profile {
     if (-not (Test-Mk61Profile $Platform $Display)) {
         Stop-Mk61Build "incompatible platform/display pair: $Platform + $Display"
@@ -75,7 +118,7 @@ function Check-Mk61Profile {
     }
     if (-not [string]::IsNullOrWhiteSpace($VariantLd)) {
         [IO.Directory]::CreateDirectory($BuildPath) | Out-Null
-        Invoke-Mk61Tool (Get-Python) @(
+        Invoke-Mk61Python @(
             (Join-Path $Sketch '../tools/.mk61-gcc/portable-layout.py'),
             $VariantLd, (Join-Path $BuildPath 'mk61-portable.ld'))
     }
@@ -137,7 +180,7 @@ function Build-Mk61Bundle {
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609|MK61_ENABLE_USB_SCREEN=1|MK61_WS0010_GRAPHICS_100X16=1') { '1' } else { '0' }
     $uiFonts = if ($CompileFlags -match
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609') { '1' } else { '0' }
-    Invoke-Mk61Tool (Get-Python) @(
+    Invoke-Mk61Python @(
         (Join-Path $Sketch '../tools/build_system_app_bundle.py'),
         '--resident-elf', $residentElf,
         '--arm-toolchain-bin', [IO.Path]::GetDirectoryName($Compiler),
@@ -171,7 +214,7 @@ function Build-Mk61Bundle {
         Remove-Item -LiteralPath $licenses -Force
     }
     if ($uiFonts -eq '1') {
-        Invoke-Mk61Tool (Get-Python) @(
+        Invoke-Mk61Python @(
             (Join-Path $Sketch `
                 '../tools/.fmk-font/package_ui_font_licenses.py'),
             '--bundle', $output)

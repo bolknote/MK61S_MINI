@@ -1,6 +1,6 @@
 # MK61s F401 + APP в Arduino IDE
 
-Версия документа: 06.09.2026
+Версия документа: 18.09.2026
 
 Эта инструкция собирает через обычные кнопки Arduino IDE согласованный
 комплект для STM32F401CC. Ниже показан полный пример mini с включёнными
@@ -33,7 +33,9 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
 Отдельный `arduino-cli` не требуется. Дополнительно нужны Python 3.10+
 и нативный C++17-компилятор для ZX0-упаковщика. На Windows не нужны Bash
 и отдельный `dfu-util`: сборка использует PowerShell и ARM-инструменты
-STM32 Core. Для Upload через DFU STM32 Core использует собственный
+STM32 Core. PowerShell сначала проверяет штатный Windows launcher `py -3`,
+затем `python.exe` и `python3.exe`; пустые Windows Store App Execution Alias
+игнорируются. Для Upload через DFU STM32 Core использует собственный
 STM32CubeProgrammer recipe.
 
 ## Установка платы
@@ -189,4 +191,5 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `WBMP/CHIP-8 requires UC1609 or USB Screen` | Включить USB-экран для mini либо выключить графические APP. |
 | `exceeds the 20 KiB APP image limit` | Выбранный APP вырос сверх лимита одного образа; это не постоянный резерв SRAM и не ошибка DFU. |
 | `app/firmware mismatch` | Старый ABI 2/3/4 нужно пересобрать; для ABI 5 проверьте версию публичных сервисов. |
+| `python3.exe failed with exit code 9009` | Повторно установите свежий пакет платы; новая PowerShell-ветка проверяет `py -3`/`python.exe` и не выбирает пустой Windows Store alias. Если Python действительно отсутствует, установите Python 3.10+ и перезапустите IDE. |
 | Upload не находит устройство | Перевести STM32F401 в системный DFU и повторить Upload. |
