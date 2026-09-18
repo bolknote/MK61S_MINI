@@ -42,13 +42,21 @@ compile_case() {
   local label=$1 part=$2 maximum_size=$3
   local path="$build_root/$label" log="$build_root/$label.log"
   local fqbn="STMicroelectronics:stm32:GenF4:pnum=$part,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto"
+  local case_flags="$common_flags"
+  # The 256-KiB F401 can carry the complete UC1609 proportional UI only with
+  # its shipping policy, which removes service-only diagnostics.  Keep the
+  # stock-linker probe representative of that public image while F411 still
+  # exercises the unrestricted developer configuration below.
+  if [[ "$label" == F401 ]]; then
+    case_flags="$case_flags -DMK61_F401_PRODUCT_BUILD=1"
+  fi
   mkdir -p "$path"
   set +e
   "$arduino_cli" compile \
     --warnings all \
     --fqbn "$fqbn" \
     --build-path "$path" \
-    --build-property "compiler.cpp.extra_flags=$common_flags $platform_flags" \
+    --build-property "compiler.cpp.extra_flags=$case_flags $platform_flags" \
     --build-property "compiler.c.extra_flags=$platform_flags" \
     "$sketch" 2>&1 | tee "$log"
   local pipeline_status=("${PIPESTATUS[@]}")
