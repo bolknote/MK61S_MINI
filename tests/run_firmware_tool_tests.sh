@@ -76,7 +76,20 @@ printf '%s\n' \
 
 if command -v expect >/dev/null 2>&1; then
   cp "$config_file" "$pty_config"
-  MK61_CONFIG_FILE="$pty_config" MK61_TEST_LAUNCHER="$launcher" expect <<'EXPECT'
+  detect_config="$installer_root/detect.conf"
+  detect_log="$installer_root/detect.tty"
+  fake_dfu="$installer_root/dfu-util"
+  fake_arduino="$installer_root/arduino-cli"
+  sed "s#^DFU_UTIL_PATH=.*#DFU_UTIL_PATH=$fake_dfu#" \
+    "$config_file" > "$detect_config"
+  printf '%s\n' '#!/bin/sh' 'sleep 0.2' 'exit 0' > "$fake_dfu"
+  printf '%s\n' '#!/bin/sh' 'sleep 0.3' \
+    'printf '\''{"detected_ports":[]}'\''"\n"' > "$fake_arduino"
+  chmod +x "$fake_dfu" "$fake_arduino"
+  MK61_CONFIG_FILE="$pty_config" MK61_TEST_LAUNCHER="$launcher" \
+  MK61_TEST_DETECT_CONFIG="$detect_config" \
+  MK61_TEST_DETECT_LOG="$detect_log" \
+  MK61_TEST_ARDUINO_CLI="$fake_arduino" expect <<'EXPECT'
 set timeout 3
 set env(TERM) xterm-256color
 log_user 0
@@ -139,7 +152,42 @@ expect {
     exit 1
   }
 }
+
+# Keys pressed while detection owns the foreground used to be echoed by the
+# tty as literal ^[[B/^[[A and remained painted over the menu.
+set env(MK61_CONFIG_FILE) $env(MK61_TEST_DETECT_CONFIG)
+set env(MK61_ARDUINO_CLI) $env(MK61_TEST_ARDUINO_CLI)
+log_file -noappend $env(MK61_TEST_DETECT_LOG)
+spawn $env(MK61_TEST_LAUNCHER)
+after 900
+send -- "8"
+after 100
+send -- "\033OB\033OA"
+after 1200
+send -- q
+set timeout 1
+expect {
+  eof {}
+  timeout {
+    # On a heavily loaded runner the first q can legitimately close the
+    # detection result dialog; a second q must then close the main menu.
+    send -- q
+    set timeout 2
+    expect {
+      eof {}
+      timeout {
+        send_user "firmware menu did not exit after device-detection key burst\n"
+        exit 1
+      }
+    }
+  }
+}
+log_file
 EXPECT
+  if grep -Eq '\^\[\[[AB]' "$detect_log"; then
+    printf 'arrow escape sequence was echoed during device detection\n' >&2
+    exit 1
+  fi
 fi
 
 config=$(MK61_CONFIG_FILE="$config_file" "$tool" --show-config)
