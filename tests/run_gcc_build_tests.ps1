@@ -92,6 +92,8 @@ Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
     'help does not expose the Markdown System APP'
 Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
+Assert-True ($helpText -match '-MathBackend 0\|1\|2\s+LIBM \| CORE \| FLOAT') `
+    'help does not expose all math backends'
 Assert-True ($helpText -match '-Ws0010Graphics 0\|1') `
     'help does not expose isolated WS0010 graphics qualification'
 Assert-True ($helpText -notmatch '-UserApps') `
@@ -269,7 +271,7 @@ Assert-True ($allWorkflowText -notmatch
     'a workflow still uses upload-artifact before its Node.js 24 release'
 Assert-True (([regex]::Matches(
     $releaseWorkflowText,
-    'uses:\s+\./\.github/actions/setup-arduino-cli')).Count -eq 2) `
+    'uses:\s+\./\.github/actions/setup-arduino-cli')).Count -eq 3) `
     'release workflow does not consistently use the local Arduino CLI setup'
 Assert-True ($releaseWorkflowText -notmatch 'ARDUINO_CLI_VERSION') `
     'release workflow duplicates the Arduino CLI contract version'
@@ -287,7 +289,7 @@ Assert-True ($arduinoSetupScriptText -match
     'local Arduino CLI setup does not verify its downloaded archive'
 Assert-True (([regex]::Matches(
     $releaseWorkflowText,
-    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 2) `
+    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 3) `
     'release jobs do not share the repository-owned dependency installer'
 Assert-True ($dependencyInstallerText -match
     'release-contract\.json[\s\S]+toolchain\.libraries') `
