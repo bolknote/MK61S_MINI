@@ -121,7 +121,8 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_SETUP |
           MK61_SERVICE_CAP_FORMAT | MK61_SERVICE_CAP_DIALOGS |
           MK61_SERVICE_CAP_EDITOR | MK61_SERVICE_CAP_REGISTERS |
-          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME
+          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME |
+          MK61_SERVICE_CAP_FLOAT_CONVERT
 #if MK61_NUMBER_IO_SERVICE_ENABLED
           | MK61_SERVICE_CAP_NUMBER_IO
 #endif
@@ -172,6 +173,22 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
         case MK61_SYS_REGISTER_F: return core_61::expanded_program_is_on();
       }
       return 0;
+    case MK61_SYS_FLOAT_CONVERT: {
+      if(!payload) return 0;
+      auto& request = *(mk61_system_float_convert*) payload;
+      if(a == MK61_SYS_FLOAT_FROM_DOUBLE) {
+        const float value = (float) request.value;
+        memcpy(&request.bits, &value, sizeof(value));
+        return 1;
+      }
+      if(a == MK61_SYS_DOUBLE_FROM_FLOAT) {
+        float value = 0.0f;
+        memcpy(&value, &request.bits, sizeof(value));
+        request.value = (double) value;
+        return 1;
+      }
+      return 0;
+    }
     case MK61_SYS_FILE_COUNT: return (u32) program_store::count((program_store::ProgramType) a);
     case MK61_SYS_FILE_ENTRY: {
       if(!payload) return 0;

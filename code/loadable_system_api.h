@@ -44,6 +44,9 @@
 #define MK61_SYS_FILE_SAVE_TARGET MK61_SERVICE_FILE_SAVE_TARGET
 #define MK61_SYS_FILE_WRITE MK61_SERVICE_FILE_WRITE
 #define MK61_SYS_FONT MK61_SERVICE_FONT
+#define MK61_SYS_FLOAT_CONVERT MK61_SERVICE_FLOAT_CONVERT
+#define MK61_SYS_FLOAT_FROM_DOUBLE MK61_FLOAT_FROM_DOUBLE
+#define MK61_SYS_DOUBLE_FROM_FLOAT MK61_DOUBLE_FROM_FLOAT
 #define MK61_SYS_KEYBOARD MK61_SERVICE_KEYBOARD
 #define MK61_SYS_KEY_ANY MK61_SERVICE_KEY_ANY
 #define MK61_SYS_KEY_CLEAR_HOLD MK61_SERVICE_KEY_CLEAR_HOLD
@@ -88,6 +91,7 @@
 #define MK61_SYS_VOLUME MK61_SERVICE_VOLUME
 #define mk61_system_api mk61_app_services
 #define mk61_system_choice mk61_service_choice
+#define mk61_system_float_convert mk61_service_float_convert
 #define mk61_system_display_operation mk61_service_display_operation
 #define mk61_system_edit_hook mk61_service_edit_hook
 #define mk61_system_edit_hook_operation mk61_service_edit_hook_operation

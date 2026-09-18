@@ -28,7 +28,8 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_FORMAT = 1U << 10,
   MK61_SERVICE_CAP_UI_FONT = 1U << 11,
   MK61_SERVICE_CAP_NUMBER_IO = 1U << 12,
-  MK61_SERVICE_CAP_TEXT_FONT = 1U << 13
+  MK61_SERVICE_CAP_TEXT_FONT = 1U << 13,
+  MK61_SERVICE_CAP_FLOAT_CONVERT = 1U << 14
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -66,8 +67,17 @@ enum mk61_service_operation {
   MK61_SERVICE_NUMBER_FORMAT,
   MK61_SERVICE_NUMBER_PARSE,
   MK61_SERVICE_REF_PARSE,
-  MK61_SERVICE_TEXT_FONT
+  MK61_SERVICE_TEXT_FONT,
+  MK61_SERVICE_FLOAT_CONVERT
 };
+enum mk61_service_float_convert_operation {
+  MK61_FLOAT_FROM_DOUBLE,
+  MK61_DOUBLE_FROM_FLOAT
+};
+typedef struct mk61_service_float_convert {
+  double value;
+  uint32_t bits;
+} mk61_service_float_convert;
 enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_CLEAR, MK61_SERVICE_DISPLAY_CURSOR, MK61_SERVICE_DISPLAY_WRITE,
   MK61_SERVICE_DISPLAY_PRINT, MK61_SERVICE_DISPLAY_CURSOR_ON,

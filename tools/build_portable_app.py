@@ -63,6 +63,8 @@ def build(args: argparse.Namespace) -> dict:
         raise ValueError("--text-only applies to markdown-viewer")
     if args.no_ui_fonts and not system:
         raise ValueError("--no-ui-fonts applies to system APPs")
+    if args.local_float_math and args.system not in ("focal", "tinybasic"):
+        raise ValueError("--local-float-math applies only to FOCAL or TinyBASIC")
     if system and args.source:
         raise ValueError("--system selects its own sources")
     if system and args.shared_runtime:
@@ -169,6 +171,8 @@ def build(args: argparse.Namespace) -> dict:
         if system and cpp:
             support += ["-DMK61_BUILD_PORTABLE_SYSTEM", "-DMK61_BUILD_" + system[1] + "_MODULE",
                         "-include", str(ROOT / "sdk/portable/system/system_compat.hpp")]
+            if args.local_float_math:
+                support += ["-DMK61_APP_LOCAL_FLOAT_MATH=1"]
             if args.no_ui_fonts:
                 support += ["-DMK61_PORTABLE_UI_FONTS=0"]
             if args.text_only:
@@ -194,7 +198,8 @@ def build(args: argparse.Namespace) -> dict:
          "-Wl,--gc-sections,--emit-relocs", "-Wl,--defsym=MK61_MODULE_ORIGIN=0x20000000",
          "-Wl,-T," + str(ROOT / "tools/.mk61-app/mk61_module.ld"),
          "-Wl,-Map," + str(out / (args.name + ".map")),
-         *objects, *args.library, *(["-lc"] if system else []), "-lgcc", "-o", elf])
+         *objects, *args.library, *(["-lm"] if args.local_float_math else []),
+         *(["-lc"] if system else []), "-lgcc", "-o", elf])
     if run([tool("nm"), "--undefined-only", elf]).strip():
         raise ValueError("APP has unresolved imports")
     symbols = {}
@@ -260,6 +265,8 @@ def main() -> None:
                         help="compact Markdown without graphical rendering or WBMP")
     parser.add_argument("--no-ui-fonts", action="store_true",
                         help="omit the optional proportional UI client from a system APP")
+    parser.add_argument("--local-float-math", action="store_true",
+                        help="link local single-precision libm into FOCAL or TinyBASIC")
     parser.add_argument("--include", type=Path, action="append", default=[])
     parser.add_argument("--library", type=Path, action="append", default=[])
     parser.add_argument("--output-dir", type=Path, required=True)

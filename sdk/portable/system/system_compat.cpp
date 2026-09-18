@@ -2,6 +2,7 @@
 #include "storage_path.hpp"
 #include "builtin_font.hpp"
 #include "mk_math.hpp"
+#include <math.h>
 #include <stdio.h>
 
 extern "C" { const mk61_system_runtime_function* mk61_system_runtime; }
@@ -21,8 +22,12 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
 #if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE)
   if(!sys->runtime) return false;
   for(u32 i = 0; i < MK61_RUNTIME_COUNT; ++i) if(!sys->runtime[i]) return false;
+  u32 required_services = MK61_SERVICE_CAP_NUMBER_IO;
+#if MK61_APP_LOCAL_FLOAT_MATH
+  required_services |= MK61_SERVICE_CAP_FLOAT_CONVERT;
+#endif
   if((sys->call(MK61_SERVICE_CAPABILITIES, 0, 0, 0, nullptr) &
-      MK61_SERVICE_CAP_NUMBER_IO) == 0) return false;
+      required_services) != required_services) return false;
   mk61_system_runtime = sys->runtime;
 #endif
   return true;
@@ -204,6 +209,38 @@ bool bitmapPixel(const u8* bitmap, u8 width, u8 x, u8 y) {
 }
 #endif
 namespace mk_math {
+#if MK61_APP_LOCAL_FLOAT_MATH
+namespace {
+float local_float(double value) {
+  mk61_system_float_convert request = {value, 0};
+  portable_system::call(MK61_SYS_FLOAT_CONVERT,
+                        MK61_SYS_FLOAT_FROM_DOUBLE, 0, 0, &request);
+  float result = 0.0f;
+  memcpy(&result, &request.bits, sizeof(result));
+  return result;
+}
+double local_double(float value) {
+  mk61_system_float_convert request = {0.0, 0};
+  memcpy(&request.bits, &value, sizeof(value));
+  portable_system::call(MK61_SYS_FLOAT_CONVERT,
+                        MK61_SYS_DOUBLE_FROM_FLOAT, 0, 0, &request);
+  return request.value;
+}
+}
+double sin(double x) { return local_double(::sinf(local_float(x))); }
+double cos(double x) { return local_double(::cosf(local_float(x))); }
+double tan(double x) { return local_double(::tanf(local_float(x))); }
+double asin(double x) { return local_double(::asinf(local_float(x))); }
+double acos(double x) { return local_double(::acosf(local_float(x))); }
+double atan(double x) { return local_double(::atanf(local_float(x))); }
+double ln(double x) { return local_double(::logf(local_float(x))); }
+double log10(double x) { return local_double(::log10f(local_float(x))); }
+double exp(double x) { return local_double(::expf(local_float(x))); }
+double sqrt(double x) { return local_double(::sqrtf(local_float(x))); }
+double pow(double x, double y) {
+  return local_double(::powf(local_float(x), local_float(y)));
+}
+#else
 double sin(double x) { return portable_system::api->math(MK61_SYS_SIN, x, 0); }
 double cos(double x) { return portable_system::api->math(MK61_SYS_COS, x, 0); }
 double tan(double x) { return portable_system::api->math(MK61_SYS_TAN, x, 0); }
@@ -215,6 +252,7 @@ double log10(double x) { return portable_system::api->math(MK61_SYS_LOG10, x, 0)
 double exp(double x) { return portable_system::api->math(MK61_SYS_EXP, x, 0); }
 double sqrt(double x) { return portable_system::api->math(MK61_SYS_SQRT, x, 0); }
 double pow(double x, double y) { return portable_system::api->math(MK61_SYS_POW, x, y); }
+#endif
 }
 extern "C" int snprintf(char* output, size_t size, const char* format, ...) {
   va_list args; va_start(args, format);
