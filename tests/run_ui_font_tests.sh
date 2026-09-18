@@ -30,7 +30,12 @@ for variant in lcd ws0010 f401-uc1609; do
     -DARDUINO=100 "${variant_flags[@]}" \
     -I"$root/code" -I"$root/tests/mk_math_shim" \
     -c "$root/code/ui_font.cpp" -o "$font_test_dir/$variant.o"
-  if nm "$font_test_dir/$variant.o" | grep -q 'ui_font'; then
+  if [[ "$variant" == f401-uc1609 ]]; then
+    if ! nm "$font_test_dir/$variant.o" | grep -q 'ui_font'; then
+      echo "Missing UI font symbols in $variant build" >&2
+      exit 1
+    fi
+  elif nm "$font_test_dir/$variant.o" | grep -q 'ui_font'; then
     echo "Unexpected UI font symbols in $variant build" >&2
     exit 1
   fi
@@ -46,4 +51,4 @@ else
   echo "Missing calculator-face symbols in F401/UC1609 build" >&2
   exit 1
 fi
-echo "A00/A02 and WS0010 UI-font exclusions; F401/UC1609 calculator face passed"
+echo "A00/A02 and WS0010 exclusions; F401/UC1609 UI and calculator faces passed"

@@ -5,7 +5,7 @@ advertises `MK61_SERVICE_CAP_UI_FONT` in the unchanged common service table.
 The added operation is `MK61_SERVICE_UI_FONT` (27); existing operation numbers,
 ABI version and the common table's binary layout are unchanged.
 
-The resident service is compiled only for F411/UC1609. Clients **first check
+The resident service is compiled for F401 and F411 UC1609 profiles. Clients **first check
 the capability**, then call:
 
 ```c
@@ -22,9 +22,9 @@ FMK UI face selected from a direct child `Fonts/*.FMK`; the C5 filename is its
 user-visible name. Legacy root files `UI12.FMK`, `UI14.FMK` and `UI16.FMK`
 remain a migration fallback for an old saved selection but are not the catalog.
 Family 0 ignores the stored 12/14/16 size. On every UC1609 configuration,
-including F401, calculator digits use a separate fixed twelve-position
-renderer and never consume this font service. Proportional UI fonts themselves
-remain F411-only.
+calculator digits use a separate fixed twelve-position renderer and never
+consume this font service. The same proportional UI implementation is used on
+F401 and F411.
 Size is the stable UI selection, not a request to scale outlines. It chooses
 native Ark strikes 10/12/16 px whose complete Russian line envelopes are
 12/14/17 px. For family 3 it reports the selected file's intrinsic 12/14/16
@@ -54,7 +54,7 @@ of at most four pixels.
 
 ## Markdown client
 
-The F411 built-in viewer and a portable `MARKDOWN.APP` built with the optional
+The UC1609 built-in viewer and a portable `MARKDOWN.APP` built with the optional
 client use one shared source adapter.
 Each layout pass snapshots the current font preference. Both measurement and
 drawing use the same advances; bold adds one column and italic reserves the
@@ -64,7 +64,7 @@ baseline-aligned without synthetic slant/bold stretching. The small OLED and
 character-only paths keep their previous layout.
 
 The guaranteed Pixel tables remain solely in resident Flash; an external FMK
-lives in the already allocated F411 BULK arena. The APP contains the bridge
+lives in the already allocated BULK arena. The APP contains the bridge
 and text layout, not duplicate font tables or a heap glyph cache. The bounded
 glyph record is temporary stack storage. USB storage temporarily revokes the
 FMK arena; after unmount the resident resolves the file by its persisted,
@@ -99,22 +99,22 @@ mode avoids inflating production F401 Flash limits just to fit a LIBM fixture.
 
 These are software checks, not a substitute for physical readability testing.
 
-## F401 exclusion contract
+## F401 bundle contract
 
-Official F401 bundles invoke `build_portable_app.py --no-ui-fonts`. This
-removes the service bridge, proportional measurement/drawing branches and live
-font chooser from `MARKDOWN.APP` and `SETUP.APP`; it is not merely a run-time
-fallback. The resident, APP files and bundle therefore contain neither the
-new presentation feature nor Ark Pixel notices. F401 keeps the original
-monospaced layout and the original 12 KiB packed Markdown ceiling.
+Official F401 Classic V2, Classic V3 and 40th bundles enable the same UI-font
+client in `MARKDOWN.APP` and `SETUP.APP` as F411 UC1609 builds. Character-only
+F401 profiles keep the compact `--no-ui-fonts` APP variants; enabling the USB
+screen on such a profile does not add a physical UC1609 font service. A
+third-party board-neutral System APP may keep the default client and safely
+fall back on a host without the capability, or explicitly request the compact
+variant with `--no-ui-fonts`.
 
-Measured with pinned ARM GCC 14.2.1, the disabled build is 12172 bytes packed
-and 15312 bytes unpacked for `MARKDOWN.APP`, with 12 bytes of BSS. `SETUP.APP`
-is 6782 bytes packed and 9284 bytes unpacked, also with 12 bytes of BSS. The
-enabled portable variants are retained for F411 and cross-resident development.
-A third-party board-neutral system APP may use the default client and will
-safely fall back on an older host, or explicitly request the same compact build
-with `--no-ui-fonts`.
+With pinned xPack ARM GCC 14.2.1 the F401 Classic V2 qualification build uses
+249796 bytes of resident Flash (12348 bytes free) and produces a 12740-byte
+`MARKDOWN.APP`. The UC1609 APP ceiling is 13312 bytes; character-display
+release cases retain their smaller independent ceilings.
 
-The complete Ark Pixel notice is shipped in `UI_FONT_LICENSES.zip` beside
-the standalone F411 binaries that actually contain the raster tables.
+Every F401 UC1609 directory bundle contains the complete Ark Pixel and DejaVu
+notices under `licenses/ui-fonts`. The complete notices are also shipped in
+`UI_FONT_LICENSES.zip` beside standalone F411 binaries that contain the raster
+tables.

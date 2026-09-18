@@ -36,7 +36,10 @@ bool program_store_apply_font(const char* name);
 // previous C5 entry before returning, and END always restores the BEGIN state.
 i32 program_store_text_font_begin(void);
 i32 program_store_text_font_load(const char* name);
+i32 program_store_text_font_load_from(const char* name,
+                                      u16 preferred_directory);
 i32 program_store_text_font_restore(void);
+i32 program_store_text_font_activate(void);
 i32 program_store_text_font_end(void);
 #if MK61_PROPORTIONAL_UI_FONTS
 struct ProgramStoreUiFont {

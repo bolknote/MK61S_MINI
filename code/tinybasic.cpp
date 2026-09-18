@@ -203,125 +203,19 @@ using namespace kbd;
 extern void idle_main_process(void);
 #endif
 
-static constexpr i32 TB_FONT_NOT_FOUND = 0;
-static constexpr i32 TB_FONT_OK = 1;
-static constexpr i32 TB_FONT_INVALID = -1;
-static constexpr i32 TB_FONT_UNSUPPORTED = -2;
-static constexpr i32 TB_FONT_UNAVAILABLE = -3;
-
-#ifdef TINYBASIC_HOST_TEST
-struct TbHostFontRule {
-  char name[32];
-  i32 result;
-};
-static TbHostFontRule tb_host_font_rules[4];
-static u8 tb_host_font_rule_count;
-static char tb_host_font_current[32] = "Original";
-static char tb_host_font_original[32] = "Original";
-static bool tb_host_font_session_active;
-static u8 tb_host_font_original_cols = 16;
-static int tb_host_font_load_count;
-static int tb_host_font_restore_count;
-
-static i32 tb_text_font_begin(void) {
-  if(tb_host_font_session_active) return TB_FONT_UNAVAILABLE;
-  bounded_string::copy(tb_host_font_original,
-                       sizeof(tb_host_font_original),
-                       tb_host_font_current);
-  tb_host_font_session_active = true;
-  tb_host_font_original_cols = main_lcd().cols();
-  return TB_FONT_OK;
-}
-
-static i32 tb_text_font_load(const char* name) {
-  if(!tb_host_font_session_active) return TB_FONT_UNAVAILABLE;
-  tb_host_font_load_count++;
-  for(u8 index = 0; index < tb_host_font_rule_count; ++index) {
-    if(strcmp(tb_host_font_rules[index].name, name) != 0) continue;
-    const i32 result = tb_host_font_rules[index].result;
-    if(result == TB_FONT_OK) {
-      bounded_string::copy(tb_host_font_current,
-                           sizeof(tb_host_font_current), name);
-      main_lcd().setReportedCols(40);
-    }
-    return result;
+#ifndef TINYBASIC_HOST_TEST
+static void tb_activate_inherited_text_font(void) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  if((portable_system::call(MK61_SERVICE_CAPABILITIES) &
+      MK61_SERVICE_CAP_TEXT_FONT) != 0) {
+    (void) portable_system::call(
+        MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_ACTIVATE);
   }
-  return TB_FONT_NOT_FOUND;
-}
-
-static i32 tb_text_font_restore(void) {
-  if(!tb_host_font_session_active) return TB_FONT_UNAVAILABLE;
-  tb_host_font_restore_count++;
-  bounded_string::copy(tb_host_font_current,
-                       sizeof(tb_host_font_current),
-                       tb_host_font_original);
-  main_lcd().setReportedCols(tb_host_font_original_cols);
-  return TB_FONT_OK;
-}
-
-static i32 tb_text_font_end(void) {
-  const i32 result = tb_text_font_restore();
-  tb_host_font_session_active = false;
-  return result;
-}
-#elif defined(MK61_BUILD_PORTABLE_SYSTEM)
-static bool tb_text_font_supported(void) {
-  return (portable_system::call(MK61_SERVICE_CAPABILITIES) &
-          MK61_SERVICE_CAP_TEXT_FONT) != 0;
-}
-
-static i32 tb_text_font_begin(void) {
-  return tb_text_font_supported()
-      ? (i32) portable_system::call(
-            MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_BEGIN)
-      : TB_FONT_UNSUPPORTED;
-}
-
-static i32 tb_text_font_load(const char* name) {
-  return tb_text_font_supported()
-      ? (i32) portable_system::call(
-            MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_LOAD, 0, 0,
-            (void*) name)
-      : TB_FONT_UNSUPPORTED;
-}
-
-static i32 tb_text_font_restore(void) {
-  return tb_text_font_supported()
-      ? (i32) portable_system::call(
-            MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_RESTORE)
-      : TB_FONT_UNSUPPORTED;
-}
-
-static i32 tb_text_font_end(void) {
-  return tb_text_font_supported()
-      ? (i32) portable_system::call(
-            MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_END)
-      : TB_FONT_UNSUPPORTED;
-}
 #else
-static i32 tb_text_font_begin(void) {
-  return program_store_text_font_begin();
-}
-static i32 tb_text_font_load(const char* name) {
-  return program_store_text_font_load(name);
-}
-static i32 tb_text_font_restore(void) {
-  return program_store_text_font_restore();
-}
-static i32 tb_text_font_end(void) {
-  return program_store_text_font_end();
+  (void) program_store_text_font_activate();
+#endif
 }
 #endif
-
-class TinyBasicFontSession {
-  public:
-    TinyBasicFontSession(void) : active(tb_text_font_begin() == TB_FONT_OK) {}
-    ~TinyBasicFontSession(void) {
-      if(active) (void) tb_text_font_end();
-    }
-  private:
-    bool active;
-};
 
 #ifdef TINYBASIC_HOST_TEST
 static constexpr int TB_PROGRAM_COUNT = 8;
@@ -403,8 +297,7 @@ enum class TbFunction : u8 {
   FRAC,
   ROUND,
   SGN,
-  MAX,
-  LOADFONT
+  MAX
 };
 
 struct TbLine {
@@ -887,8 +780,6 @@ static const u8 TB_FUNCTION_WORDS[] = {
   (u8) TbFunction::ROUND, 0x25, 'R', 'O', 'U', 'N', 'D',
   (u8) TbFunction::SGN,   0x23, 'S', 'G', 'N',
   (u8) TbFunction::MAX,   0x13, 'M', 'A', 'X',
-  (u8) TbFunction::LOADFONT,
-                            0x48, 'L', 'O', 'A', 'D', 'F', 'O', 'N', 'T',
   0
 };
 
@@ -1374,72 +1265,6 @@ class TbExprParser {
       return value;
     }
 
-    double parse_loadfont(void) {
-      skip();
-      if(match_char(')')) {
-        if(!evaluate) return 0.0;
-        const i32 restored = tb_text_font_restore();
-        if(restored == TB_FONT_OK) {
-          tb_pause_is_final = false;
-          tb_pending_print[0] = 0;
-          tb_print_row = 0;
-        }
-        return (double) restored;
-      }
-
-      u16 candidate_index = 0;
-      i32 result = TB_FONT_NOT_FOUND;
-      bool selected = false;
-      bool stopped = false;
-      while(depth >= 0) {
-        skip();
-        if(p >= end || (*p != '"' && *p != '\'')) {
-          depth = -1;
-          return 0.0;
-        }
-        const char quote = *p++;
-        const char* const name_begin = p;
-        while(p < end && *p != quote) p++;
-        const usize name_length = (usize) (p - name_begin);
-        if(p >= end || name_length == 0 || name_length >= 32) {
-          depth = -1;
-          return 0.0;
-        }
-
-        char name[32];
-        tb_copy_range(name, sizeof(name), name_begin, p);
-        p++;
-        candidate_index++;
-        if(evaluate && !selected && !stopped) {
-          const i32 attempt = tb_text_font_load(name);
-          if(attempt == TB_FONT_OK) {
-            result = (i32) candidate_index;
-            selected = true;
-            tb_pause_is_final = false;
-            tb_pending_print[0] = 0;
-            tb_print_row = 0;
-          } else if(attempt == TB_FONT_INVALID) {
-            result = TB_FONT_INVALID;
-          } else if(attempt == TB_FONT_UNSUPPORTED ||
-                    attempt == TB_FONT_UNAVAILABLE) {
-            result = attempt;
-            stopped = true;
-          } else if(attempt != TB_FONT_NOT_FOUND) {
-            result = TB_FONT_UNAVAILABLE;
-            stopped = true;
-          }
-        }
-
-        skip();
-        if(match_char(')')) break;
-        if(!match_char(',')) {
-          depth = -1;
-          return 0.0;
-        }
-      }
-      return evaluate ? (double) result : 0.0;
-    }
-
     double parse_primary_inner(void) {
       skip();
       if(p >= end) {
@@ -1543,10 +1368,6 @@ class TbExprParser {
           return 0.0;
         }
 
-        if(function_id == TbFunction::LOADFONT) {
-          return parse_loadfont();
-        }
-
         if(function_id == TbFunction::RND) {
           skip();
           if(match_char(')')) return evaluate ? tb_next_random() : 0.0;
@@ -1596,7 +1417,6 @@ class TbExprParser {
           case TbFunction::SGN:
             return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
           case TbFunction::MAX:   return (a > b) ? a : b;
-          case TbFunction::LOADFONT:
           case TbFunction::NONE:
           case TbFunction::SIZE:
           case TbFunction::COLS:
@@ -2467,8 +2287,8 @@ static bool tb_run_program(int program_index) {
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return false;
   main_lcd().endUiText();
+  tb_activate_inherited_text_font();
 #endif
-  TinyBasicFontSession font_session;
   if(program_index < 0 || program_index >= TB_PROGRAM_COUNT ||
      !tb_program_used(programs[program_index])) {
     tb_error("HOW?");
@@ -3205,14 +3025,8 @@ extern "C" void TinyBasicTestReset(void) {
   mk61_ref::host_reset();
   kbd::host_alpha_pressed = false;
   kbd::host_wait_esc = false;
-  tb_host_font_rule_count = 0;
-  tb_host_font_session_active = false;
-  tb_host_font_load_count = 0;
-  tb_host_font_restore_count = 0;
-  bounded_string::copy(tb_host_font_current,
-                       sizeof(tb_host_font_current), "Original");
-  bounded_string::copy(tb_host_font_original,
-                       sizeof(tb_host_font_original), "Original");
+  main_lcd().setReportedCols(16);
+  main_lcd().setRows(MK61Display::MAX_ROWS);
 #endif
 }
 
@@ -3310,41 +3124,15 @@ extern "C" bool TinyBasicTestStoreEdited(int slot, char* source, const char* nam
   return store_edited_program(slot, source, name);
 }
 
-extern "C" void TinyBasicTestSetFontResult(const char* name, int result) {
+extern "C" void TinyBasicTestSetGeometry(int cols, int rows) {
 #ifdef TINYBASIC_HOST_TEST
-  if(name == NULL || name[0] == 0 ||
-     tb_host_font_rule_count >=
-         sizeof(tb_host_font_rules) / sizeof(tb_host_font_rules[0])) return;
-  TbHostFontRule& rule = tb_host_font_rules[tb_host_font_rule_count++];
-  bounded_string::copy(rule.name, sizeof(rule.name), name);
-  rule.result = (i32) result;
+  main_lcd().setReportedCols(
+      (u8) (cols < 1 ? 1 : (cols > 255 ? 255 : cols)));
+  main_lcd().setRows(
+      (u8) (rows < 1 ? 1 : (rows > 255 ? 255 : rows)));
 #else
-  (void) name;
-  (void) result;
-#endif
-}
-
-extern "C" const char* TinyBasicTestCurrentFont(void) {
-#ifdef TINYBASIC_HOST_TEST
-  return tb_host_font_current;
-#else
-  return "";
-#endif
-}
-
-extern "C" int TinyBasicTestFontLoadCount(void) {
-#ifdef TINYBASIC_HOST_TEST
-  return tb_host_font_load_count;
-#else
-  return 0;
-#endif
-}
-
-extern "C" int TinyBasicTestFontRestoreCount(void) {
-#ifdef TINYBASIC_HOST_TEST
-  return tb_host_font_restore_count;
-#else
-  return 0;
+  (void) cols;
+  (void) rows;
 #endif
 }
 

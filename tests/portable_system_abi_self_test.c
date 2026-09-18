@@ -63,7 +63,8 @@ _Static_assert(MK61_SERVICE_TEXT_FONT == 31,
 _Static_assert(MK61_SERVICE_CAP_TEXT_FONT == (1U << 13),
                "append-only text-font capability");
 _Static_assert(MK61_TEXT_FONT_BEGIN == 0 && MK61_TEXT_FONT_LOAD == 1 &&
-               MK61_TEXT_FONT_RESTORE == 2 && MK61_TEXT_FONT_END == 3,
+               MK61_TEXT_FONT_RESTORE == 2 && MK61_TEXT_FONT_END == 3 &&
+               MK61_TEXT_FONT_ACTIVATE == 4,
                "text-font operation wire values");
 _Static_assert(MK61_TEXT_FONT_NOT_FOUND == 0 && MK61_TEXT_FONT_OK == 1 &&
                MK61_TEXT_FONT_INVALID == -1 &&

@@ -26,11 +26,16 @@ game = root / "programs" / "games" / "High Noon"
 parts = [game / name for name in ("intro.tbi", "player.tbi", "bart.tbi", "reward.tbi")]
 driver = game / "autoexec.m61"
 manual = game / "manual.md"
+font = game / "HighNoon.FMK"
 
 require(driver.is_file(), "High Noon autoexec.m61 is missing")
 require(driver.stat().st_size <= 1536, "High Noon M61 dispatcher exceeds 1536 bytes")
 require(manual.is_file() and manual.stat().st_size <= 1536,
         "High Noon manual exceeds the Markdown quota")
+require(font.is_file(), "High Noon local FMK is missing")
+require(font.read_bytes()[:4] == b"FMK1", "High Noon local FMK is invalid")
+require(not (root / "programs" / "Fonts" / "HighNoon.FMK").exists(),
+        "High Noon FMK must not be duplicated in the global Fonts directory")
 for path in parts:
     require(path.is_file(), f"High Noon part is missing: {path.name}")
     data = path.read_bytes()
@@ -41,6 +46,7 @@ for path in parts:
 driver_text = driver.read_text(encoding="utf-8")
 for line in (
     "reinit",
+    "loadfont HighNoon",
     "open intro.tbi",
     "if re==1 run :player",
     "if re==2 run :bart",
@@ -51,6 +57,8 @@ for line in (
     "open reward.tbi",
 ):
     require(line in driver_text, f"High Noon dispatcher lost: {line}")
+require("LOADFONT" not in "".join(path.read_text(encoding="utf-8") for path in parts).upper(),
+        "High Noon must select its font in M61, not TinyBASIC")
 
 # These are the complete player-visible string literals of HIGHNOON.F90.
 # Whitespace is ignored because the 192x64 display needs deterministic 40-cell

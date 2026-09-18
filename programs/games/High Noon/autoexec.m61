@@ -1,4 +1,5 @@
 reinit
+loadfont HighNoon
 open intro.tbi
 :dispatch
 if re==1 run :player

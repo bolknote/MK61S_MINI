@@ -46,6 +46,21 @@ static AngleUnit saved_context_angle = DEGREE;
 static u32 fake_millis = 0;
 static std::vector<std::string> executed_lines;
 static std::vector<bool> executed_in_trap;
+struct HostFontRule {
+  std::string name;
+  u16 directory;
+  i32 result;
+};
+struct HostFontAttempt {
+  std::string name;
+  u16 directory;
+};
+static std::vector<HostFontRule> font_rules;
+static std::vector<HostFontAttempt> font_attempts;
+static bool font_session_active = false;
+static int font_begin_count = 0;
+static int font_restore_count = 0;
+static int font_end_count = 0;
 
 namespace program_store {
 
@@ -229,6 +244,39 @@ u32 m61_text_host_millis(void) {
   return fake_millis;
 }
 
+i32 program_store_text_font_begin(void) {
+  font_begin_count++;
+  if(font_session_active) return -3;
+  font_session_active = true;
+  return 1;
+}
+
+i32 program_store_text_font_load_from(const char* name,
+                                      u16 preferred_directory) {
+  if(!font_session_active || name == nullptr || name[0] == 0) return -3;
+  font_attempts.push_back({name, preferred_directory});
+  for(const HostFontRule& rule : font_rules) {
+    if(rule.name == name && rule.directory == preferred_directory) {
+      return rule.result;
+    }
+  }
+  return 0;
+}
+
+i32 program_store_text_font_restore(void) {
+  if(!font_session_active) return -3;
+  font_restore_count++;
+  return 1;
+}
+
+i32 program_store_text_font_end(void) {
+  if(!font_session_active) return -3;
+  font_restore_count++;
+  font_end_count++;
+  font_session_active = false;
+  return 1;
+}
+
 bool OpenStoredFile(const char* name) {
   return m61_text::open_program(name);
 }
@@ -299,6 +347,12 @@ static void reset_host(void) {
   fake_millis = 0;
   executed_lines.clear();
   executed_in_trap.clear();
+  font_rules.clear();
+  font_attempts.clear();
+  font_session_active = false;
+  font_begin_count = 0;
+  font_restore_count = 0;
+  font_end_count = 0;
   m_IK1302.comma = 0;
 }
 
@@ -352,6 +406,65 @@ static u8 fire_mk61_command(
     }
   }
   return before.replacement_opcode;
+}
+
+static void test_loadfont_is_m61_scoped_and_uses_script_directory(void) {
+  reset_host();
+  font_rules.push_back({"HighNoon", 17, 1});
+  add_script("FONT", "loadfont Missing HighNoon\nok\n", 17);
+
+  assert(m61_text::load_program("FONT"));
+  assert(!m61_text::active());
+  assert(font_begin_count == 1);
+  assert(font_attempts.size() == 2);
+  assert(font_attempts[0].name == "Missing" &&
+         font_attempts[0].directory == 17);
+  assert(font_attempts[1].name == "HighNoon" &&
+         font_attempts[1].directory == 17);
+  assert(font_end_count == 1);
+  assert(font_restore_count == 1);
+  assert(!font_session_active);
+  assert(executed_lines.size() == 1 && executed_lines[0] == "ok");
+}
+
+static void test_loadfont_default_and_all_exit_paths_restore(void) {
+  reset_host();
+  font_rules.push_back({"High Noon", program_store::ROOT_ID, 1});
+  add_script("DEFAULT",
+             "loadfont \"High Noon\"\n"
+             "loadfont\n"
+             "bad\n");
+  assert(!m61_text::load_program("DEFAULT"));
+  assert(font_begin_count == 1);
+  assert(font_restore_count == 2); // explicit default plus final END
+  assert(font_end_count == 1);
+  assert(!font_session_active);
+
+  reset_host();
+  font_rules.push_back({"Loop", program_store::ROOT_ID, 1});
+  add_script("CANCEL", "loadfont Loop\n:again\nrun :again\n");
+  assert(m61_text::load_program("CANCEL"));
+  assert(m61_text::active());
+  m61_text::cancel();
+  assert(font_end_count == 1);
+  assert(!font_session_active);
+}
+
+static void test_loadfont_failures_are_reported_by_m61(void) {
+  reset_host();
+  add_script("MISSING", "loadfont Missing AlsoMissing\n");
+  assert(!m61_text::load_program("MISSING"));
+  m61_text::Error error = require_error();
+  assert(error.line == 1);
+  assert(std::strcmp(error.message, "font not found") == 0);
+  assert(font_end_count == 1);
+
+  reset_host();
+  add_script("SYNTAX", "loadfont \"unterminated\n");
+  assert(!m61_text::load_program("SYNTAX"));
+  error = require_error();
+  assert(std::strstr(error.message, "invalid loadfont syntax") != nullptr);
+  assert(font_end_count == 1);
 }
 
 static void test_command_failure_reports_script_and_line(void) {
@@ -1149,6 +1262,9 @@ static void test_ret_returns_from_nested_script_and_ends_root(void) {
 }
 
 int main(void) {
+  test_loadfont_is_m61_scoped_and_uses_script_directory();
+  test_loadfont_default_and_all_exit_paths_restore();
+  test_loadfont_failures_are_reported_by_m61();
   test_command_failure_reports_script_and_line();
   test_long_missing_name_is_truncated_to_error_capacity();
   test_duplicate_and_oversized_labels_fail_before_execution();

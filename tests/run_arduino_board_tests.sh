@@ -57,6 +57,11 @@ grep -q -- '-DMK61_ENABLE_LOADABLE_MODULES=1' "$target/boards.txt"
 grep -q -- '-DMK61_F401_PRODUCT_BUILD=1' "$target/boards.txt"
 grep -q -- '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' "$target/boards.txt"
 ! grep -q 'mk61_user_apps' "$target/boards.txt"
+core_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.core=' \
+  "$target/boards.txt" | cut -d: -f1)"
+libm_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.libm=' \
+  "$target/boards.txt" | cut -d: -f1)"
+test "$core_math_line" -lt "$libm_math_line"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"
@@ -70,6 +75,9 @@ fi
 
 grep -q 'build_system_app_bundle.py' "$hook"
 grep -q 'build_system_app_bundle.py' \
+  "$platform/tools/mk61-app-postbuild.ps1"
+grep -q 'package_ui_font_licenses.py' "$hook"
+grep -q 'package_ui_font_licenses.py' \
   "$platform/tools/mk61-app-postbuild.ps1"
 for obsolete in focal basic wbmp markdown chip8; do
   test ! -e "$root/code/mk61_ide_${obsolete}_app.cpp"
@@ -197,6 +205,10 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   test ! -e "$classic_bundle/System/WBMP.APP"
   test -s "$classic_bundle/System/MARKDOWN.APP"
   test -s "$classic_bundle/System/CHIP8.APP"
+  grep -q -- '-DMK61_PORTABLE_UI_FONTS=1' "$classic_bundle/build.flags"
+  for notice in LICENSE-Ark-Pixel.txt LICENSE-DejaVu.txt FONT-SOURCES.md; do
+    test -s "$classic_bundle/licenses/ui-fonts/$notice"
+  done
 
   mkdir -p "$work/build-classic-wbmp"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \

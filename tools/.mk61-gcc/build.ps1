@@ -240,6 +240,7 @@ function Get-ProfileInfo {
         Bundle = [string]$selected.artifacts.f401
         Flags = @($selected.defines | ForEach-Object { "-D$_" })
         Graphics = [bool]$selected.graphics
+        UiFonts = [bool]$selected.graphics
     }
 }
 
@@ -351,6 +352,7 @@ try {
     $ws0010Bitmap = $Profile -eq 'mini-v3-ws0010' -and
         $Ws0010Graphics -eq '1'
     $fullGraphics = $profileInfo.Graphics -or $UsbScreen -eq '1'
+    $uiFonts = if ($profileInfo.UiFonts) { '1' } else { '0' }
     $wbmpGraphics = $fullGraphics -or $ws0010Bitmap
     if ($Wbmp -eq 'auto') {
         $Wbmp = if ($wbmpGraphics -and $Markdown -ne '1') {
@@ -650,7 +652,7 @@ try {
             '-Markdown', $Markdown,
             '-Chip8', $Chip8,
             '-Graphics', $(if ($wbmpGraphics) { '1' } else { '0' }),
-            '-UiFonts', '0')
+            '-UiFonts', $uiFonts)
     }
 
     $bundle = [string]$profileInfo.Bundle
@@ -675,6 +677,12 @@ try {
         Copy-Item -LiteralPath (Join-Path $stage 'System') `
             -Destination $outputBundle -Recurse
     }
+    if ($uiFonts -eq '1') {
+        Invoke-GccTool $python @(
+            (Join-Path $script:ProjectRoot `
+                'tools/.fmk-font/package_ui_font_licenses.py'),
+            '--bundle', $outputBundle)
+    }
 
     $flagValues = New-Object 'System.Collections.Generic.List[string]'
     foreach ($flag in $profileInfo.Flags) {
@@ -693,7 +701,7 @@ try {
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
     $flagValues.Add("-DMK61_F401_PRODUCT_BUILD=$productBuild")
     $flagValues.Add('-DMK61_ENABLE_LOADABLE_MODULES=1')
-    $flagValues.Add('-DMK61_PORTABLE_UI_FONTS=0')
+    $flagValues.Add("-DMK61_PORTABLE_UI_FONTS=$uiFonts")
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
     $flagValues.Add('-DMK61_REQUIRE_F401_SELECTIVE_O3=1')
     $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")

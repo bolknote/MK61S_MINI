@@ -428,13 +428,11 @@
   #define MK61_DISPLAY_LCD1602
 #endif
 
-// Proportional UI fonts are an optional presentation layer for the roomier
-// F411/UC1609 target. F401 deliberately keeps the established monospaced UI:
-// its product budget is reserved for calculator functionality, not font
-// rasters and a second layout engine. Numeric overrides remain available for
-// host tests.
+// Proportional UI fonts belong to the UC1609 display profile, independently
+// of whether it is driven by an F401 or F411.  Numeric overrides remain
+// available for focused host/size tests.
 #ifndef MK61_PROPORTIONAL_UI_FONTS
-  #if defined(MK61_DISPLAY_UC1609) && defined(ARDUINO_BLACKPILL_F411CE)
+  #if defined(MK61_DISPLAY_UC1609)
     #define MK61_PROPORTIONAL_UI_FONTS 1
   #else
     #define MK61_PROPORTIONAL_UI_FONTS 0
@@ -448,9 +446,8 @@
 #endif
 
 // Portable system modules are board-neutral by default, so their optional UI
-// client needs an explicit build switch.  F411 releases leave it enabled and
-// obtain glyphs from the resident service; the F401 bundle builder sets it to
-// zero so even the bridge and proportional layout are absent from its APPs.
+// client needs an explicit build switch. UC1609 release bundles enable it and
+// obtain glyphs from the resident service; character-display bundles omit it.
 #ifndef MK61_PORTABLE_UI_FONTS
   #define MK61_PORTABLE_UI_FONTS 1
 #endif

@@ -82,6 +82,10 @@ build_group() {
     if [[ "$publish" == 1 ]]; then
       local bundle_root="$output_dir/$artifact"
       local resident="$bundle_root/$artifact.bin"
+      local expected_ui_fonts=0
+      case "$profile" in
+        classic-v2|classic-v3|40th) expected_ui_fonts=1 ;;
+      esac
       [[ -s "$resident" ]] || fail "missing product BIN: $resident"
       "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
         "$resident"
@@ -114,15 +118,22 @@ PY
           '-DMK61_F401_PRODUCT_BUILD=1' \
           '-DMK61_REQUIRE_RESIDENT_CRC=1' \
           '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' \
-          '-DMK61_PORTABLE_UI_FONTS=0' \
+          "-DMK61_PORTABLE_UI_FONTS=$expected_ui_fonts" \
           '-DMK61_ENABLE_LOADABLE_MODULES=1' \
           "-DMK61_MATH_BACKEND=$math_backend" \
           "-DMK61_ENABLE_LTO=$lto"; do
         grep -Fq -- "$flag" "$bundle_root/build.flags" ||
           fail "missing build flag for $artifact: $flag"
       done
-      [[ ! -e "$bundle_root/licenses/ui-fonts" ]] ||
-        fail "F401 bundle unexpectedly contains proportional-font notices"
+      if [[ "$expected_ui_fonts" == 1 ]]; then
+        for notice in LICENSE-Ark-Pixel.txt LICENSE-DejaVu.txt FONT-SOURCES.md; do
+          [[ -s "$bundle_root/licenses/ui-fonts/$notice" ]] ||
+            fail "missing UI font notice for $artifact: $notice"
+        done
+      else
+        [[ ! -e "$bundle_root/licenses/ui-fonts" ]] ||
+          fail "non-UC1609 bundle unexpectedly contains UI font notices"
+      fi
       local markdown_limit markdown_size
       markdown_limit="$(python3 "$contract" case --id "$case_id" --format json |
         python3 -c 'import json,sys; print(json.load(sys.stdin)["budgets"]["markdown_app_max"])')"

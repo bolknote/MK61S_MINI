@@ -96,12 +96,15 @@ enum mk61_service_math_operation { MK61_SERVICE_SIN, MK61_SERVICE_COS, MK61_SERV
  * BEGIN snapshots the resident display font. LOAD receives a zero-terminated
  * Fonts/<name>.FMK stem in payload and replaces the text face atomically.
  * RESTORE returns to the snapshot while keeping the session open; END restores
- * it and closes the session. Signed results are transported in call()'s u32. */
+ * it and closes the session. ACTIVATE re-enters the already loaded runtime
+ * face after a language selected its ordinary text renderer. Signed results
+ * are transported in call()'s u32. */
 enum mk61_service_text_font_operation {
   MK61_TEXT_FONT_BEGIN,
   MK61_TEXT_FONT_LOAD,
   MK61_TEXT_FONT_RESTORE,
-  MK61_TEXT_FONT_END
+  MK61_TEXT_FONT_END,
+  MK61_TEXT_FONT_ACTIVATE
 };
 enum mk61_service_text_font_result {
   MK61_TEXT_FONT_NOT_FOUND = 0,

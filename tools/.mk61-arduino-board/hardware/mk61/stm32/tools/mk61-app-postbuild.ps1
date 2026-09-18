@@ -135,12 +135,14 @@ function Build-Mk61Bundle {
 
     $graphics = if ($CompileFlags -match
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609|MK61_ENABLE_USB_SCREEN=1|MK61_WS0010_GRAPHICS_100X16=1') { '1' } else { '0' }
+    $uiFonts = if ($CompileFlags -match
+        'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609') { '1' } else { '0' }
     Invoke-Mk61Tool (Get-Python) @(
         (Join-Path $Sketch '../tools/build_system_app_bundle.py'),
         '--resident-elf', $residentElf,
         '--arm-toolchain-bin', [IO.Path]::GetDirectoryName($Compiler),
         '--output-dir', (Join-Path $script:Stage 'System'),
-        '--graphics', $graphics, '--ui-fonts', '0',
+        '--graphics', $graphics, '--ui-fonts', $uiFonts,
         '--focal', $Focal, '--basic', $Basic, '--wbmp', $Wbmp,
         '--markdown', $Markdown, '--chip8', $Chip8)
 
@@ -159,9 +161,25 @@ function Build-Mk61Bundle {
             Remove-Item -LiteralPath $target -Force
         }
     }
+    $uiFontLicenses = Join-Path $output 'licenses/ui-fonts'
+    if ([IO.Directory]::Exists($uiFontLicenses)) {
+        Remove-Item -LiteralPath $uiFontLicenses -Recurse -Force
+    }
+    $licenses = Join-Path $output 'licenses'
+    if ([IO.Directory]::Exists($licenses) -and
+        @(Get-ChildItem -LiteralPath $licenses -Force).Count -eq 0) {
+        Remove-Item -LiteralPath $licenses -Force
+    }
+    if ($uiFonts -eq '1') {
+        Invoke-Mk61Tool (Get-Python) @(
+            (Join-Path $Sketch `
+                '../tools/.fmk-font/package_ui_font_licenses.py'),
+            '--bundle', $output)
+    }
     $utf8 = New-Object Text.UTF8Encoding($false)
     [IO.File]::WriteAllText((Join-Path $output 'build.flags'),
-        $CompileFlags + [Environment]::NewLine, $utf8)
+        $CompileFlags + " -DMK61_PORTABLE_UI_FONTS=$uiFonts" +
+            [Environment]::NewLine, $utf8)
     [IO.File]::WriteAllText((Join-Path $output 'build.apps'),
         'format 1' + [Environment]::NewLine +
             'abi 5' + [Environment]::NewLine, $utf8)

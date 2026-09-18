@@ -31,13 +31,22 @@ class PackagingTest(unittest.TestCase):
                     self.assertEqual((bundle / name).read_bytes(), expected)
                     self.assertEqual(reader.read(name), expected)
 
-    def test_f411_release_builders_include_notices(self):
+    def test_release_builders_include_notices(self):
         self.assertIn("tools/.fmk-font/package_ui_font_licenses.py",
                       (ROOT / "tests/run_f411_release_matrix.sh").read_text())
         for name in ("tools/build_f401_bundle.sh", "tools/.mk61-gcc/build.ps1"):
-            self.assertNotIn("tools/.fmk-font/package_ui_font_licenses.py",
-                             (ROOT / name).read_text())
-            self.assertIn("MK61_PORTABLE_UI_FONTS=0", (ROOT / name).read_text())
+            text = (ROOT / name).read_text()
+            self.assertIn("tools/.fmk-font/package_ui_font_licenses.py", text)
+            self.assertIn("MK61_PORTABLE_UI_FONTS=", text)
+        for name in (
+            "tools/.mk61-arduino-board/hardware/mk61/stm32/tools/"
+            "mk61-app-postbuild.sh",
+            "tools/.mk61-arduino-board/hardware/mk61/stm32/tools/"
+            "mk61-app-postbuild.ps1",
+        ):
+            text = (ROOT / name).read_text()
+            self.assertIn("package_ui_font_licenses.py", text)
+            self.assertIn("MK61_PORTABLE_UI_FONTS=", text)
         wrapper = (ROOT / "system_apps/.tool/build.ps1").read_text()
         self.assertIn("'--ui-fonts', $UiFonts", wrapper)
         self.assertIn("--no-ui-fonts",

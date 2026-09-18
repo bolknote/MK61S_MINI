@@ -191,9 +191,10 @@ Chris Gaylo, Syosset High School, 12 сентября 1970 года. За осн
 Для поля 40×10 изменены только переносы и пагинация. Поскольку TinyBASIC не
 имеет строкового `INPUT`, ответы yes/no вводятся числами `1/0`.
 
-`HighNoon.FMK` генерируется `tools/generate_highnoon_font.py` из ASCII-части
-встроенного 3×5 Matrix Font by Tricks, Public Domain. Это обычный FMK1-файл,
-который игра временно загружает через `LOADFONT`.
+Лежащий в каталоге игры `HighNoon.FMK` генерируется
+`tools/generate_highnoon_font.py` из ASCII-части встроенного 3×5 Matrix Font
+by Tricks, Public Domain. Это обычный FMK1-файл, который `autoexec.m61`
+временно загружает командой `loadfont`.
 
 ## Техническая подготовка изображений
 

@@ -111,7 +111,7 @@ build_bundle() {
   mkdir -p "$stage/System"
   cp "$resident_bin" "$stage/$bundle.bin"
 
-  local graphics=0
+  local graphics=0 ui_fonts=0
   if [[ "$compile_flags" == *MK61_BOARD_CLASSIC* ]] ||
      [[ "$compile_flags" == *MK61_BOARD_40TH* ]] ||
      [[ "$compile_flags" == *DISPLAY_UC1609* ]] ||
@@ -119,10 +119,16 @@ build_bundle() {
      [[ "$compile_flags" == *MK61_WS0010_GRAPHICS_100X16=1* ]]; then
     graphics=1
   fi
+  if [[ "$compile_flags" == *MK61_BOARD_CLASSIC* ]] ||
+     [[ "$compile_flags" == *MK61_BOARD_40TH* ]] ||
+     [[ "$compile_flags" == *DISPLAY_UC1609* ]]; then
+    ui_fonts=1
+  fi
   python3 "$sketch/../tools/build_system_app_bundle.py" \
     --resident-elf "$resident_elf" \
     --arm-toolchain-bin "$(dirname "$compiler")" \
-    --output-dir "$stage/System" --graphics "$graphics" --ui-fonts 0 \
+    --output-dir "$stage/System" --graphics "$graphics" \
+    --ui-fonts "$ui_fonts" \
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
     --markdown "$markdown" --chip8 "$chip8"
 
@@ -139,7 +145,16 @@ build_bundle() {
       rm -f "$output/System/$canonical"
     fi
   done
-  printf '%s\n' "$compile_flags" > "$output/build.flags"
+  rm -rf "$output/licenses/ui-fonts"
+  if [ -d "$output/licenses" ]; then
+    rmdir "$output/licenses" 2>/dev/null || true
+  fi
+  if [ "$ui_fonts" -eq 1 ]; then
+    python3 "$sketch/../tools/.fmk-font/package_ui_font_licenses.py" \
+      --bundle "$output"
+  fi
+  printf '%s -DMK61_PORTABLE_UI_FONTS=%s\n' \
+    "$compile_flags" "$ui_fonts" > "$output/build.flags"
   printf 'format 1\nabi 5\n' > "$output/build.apps"
   printf '\nMK61s F401 unified ABI 5 bundle built by Arduino IDE:\n  %s\n' "$output"
   printf 'After Upload, copy the generated System directory to /System on MK61S C5.\n\n'

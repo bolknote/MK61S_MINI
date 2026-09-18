@@ -75,6 +75,7 @@ struct AppliedFontSnapshot {
 
 struct TextFontSession {
   bool active;
+  bool override_loaded;
   AppliedFontSnapshot original;
 };
 
@@ -1123,23 +1124,18 @@ static bool restore_applied_font(const AppliedFontSnapshot& saved) {
   return true;
 }
 
+static bool font_leaf_name(const char* name) {
+  return name != NULL && name[0] != 0 &&
+      strchr(name, '/') == NULL && strchr(name, '\\') == NULL;
+}
+
 static bool font_catalog_entry(const char* name,
                                program_store::Entry& out) {
-  if(name == NULL || name[0] == 0) return false;
+  if(!font_leaf_name(name)) return false;
   u16 directory = program_store::INVALID_ID;
   if(!ui_font_directory(directory)) return false;
-  const int count = program_store::child_count(directory);
-  for(int index = 0; index < count; ++index) {
-    program_store::Entry entry;
-    if(program_store::child(directory, index, entry) &&
-       entry.kind == program_store::NodeKind::FILE &&
-       entry.type == program_store::ProgramType::FONT &&
-       ui_font_catalog::name_equal(entry.name, name)) {
-      out = entry;
-      return true;
-    }
-  }
-  return false;
+  return storage_path::resolve_file(directory, name,
+      program_store::ProgramType::FONT, out) == storage_path::Status::OK;
 }
 
 enum class TextFontPreflight : i8 { UNAVAILABLE = -3, INVALID = -1, OK = 1 };
@@ -2564,19 +2560,17 @@ i32 program_store_text_font_begin(void) {
   if(text_font_session.active || !program_store::ready() ||
      !capture_applied_font(text_font_session.original)) return -3;
   text_font_session.active = true;
+  text_font_session.override_loaded = false;
   return 1;
 #endif
 }
 
-i32 program_store_text_font_load(const char* name) {
+static i32 program_store_text_font_load_entry(
+    const program_store::Entry& entry) {
 #if !defined(MK61_DISPLAY_UC1609)
-  (void) name;
+  (void) entry;
   return -2;
 #else
-  if(!text_font_session.active || !program_store::ready() ||
-     name == NULL || name[0] == 0) return -3;
-  program_store::Entry entry;
-  if(!font_catalog_entry(name, entry)) return 0;
   const TextFontPreflight preflight = preflight_text_font(entry);
   if(preflight != TextFontPreflight::OK) return (i32) preflight;
 
@@ -2601,6 +2595,7 @@ i32 program_store_text_font_load(const char* name) {
     main_lcd().setUiFont(3, 12);
     main_lcd().beginUiText();
 #endif
+    text_font_session.override_loaded = true;
     return 1;
   }
 
@@ -2612,6 +2607,41 @@ i32 program_store_text_font_load(const char* name) {
 #endif
 }
 
+i32 program_store_text_font_load(const char* name) {
+#if !defined(MK61_DISPLAY_UC1609)
+  (void) name;
+  return -2;
+#else
+  if(!text_font_session.active || !program_store::ready() ||
+     name == NULL || name[0] == 0) return -3;
+  program_store::Entry entry;
+  if(!font_catalog_entry(name, entry)) return 0;
+  return program_store_text_font_load_entry(entry);
+#endif
+}
+
+i32 program_store_text_font_load_from(const char* name,
+                                      u16 preferred_directory) {
+#if !defined(MK61_DISPLAY_UC1609)
+  (void) name;
+  (void) preferred_directory;
+  return -2;
+#else
+  if(!text_font_session.active || !program_store::ready() ||
+     name == NULL || name[0] == 0) return -3;
+  program_store::Entry entry;
+  const storage_path::Status local = storage_path::resolve_file(
+      preferred_directory, name, program_store::ProgramType::FONT, entry);
+  if(local == storage_path::Status::OK) {
+    return program_store_text_font_load_entry(entry);
+  }
+  if(local != storage_path::Status::NOT_FOUND) return -1;
+  if(!font_leaf_name(name)) return 0;
+  if(!font_catalog_entry(name, entry)) return 0;
+  return program_store_text_font_load_entry(entry);
+#endif
+}
+
 i32 program_store_text_font_restore(void) {
 #if !defined(MK61_DISPLAY_UC1609)
   return -2;
@@ -2619,9 +2649,30 @@ i32 program_store_text_font_restore(void) {
   if(!text_font_session.active) return -3;
   AppliedFontSnapshot previous;
   if(!capture_applied_font(previous)) return -3;
-  if(restore_applied_font(text_font_session.original)) return 1;
+  if(restore_applied_font(text_font_session.original)) {
+    text_font_session.override_loaded = false;
+    return 1;
+  }
   (void) restore_applied_font(previous);
   return -3;
+#endif
+}
+
+i32 program_store_text_font_activate(void) {
+#if !defined(MK61_DISPLAY_UC1609)
+  return -2;
+#else
+  if(!text_font_session.active || !text_font_session.override_loaded) {
+    return -3;
+  }
+#if MK61_PROPORTIONAL_UI_FONTS
+  if(applied_font_role != AppliedFontRole::UI ||
+     applied_font_id == program_store::INVALID_ID ||
+     !main_lcd().externalFontActive()) return -3;
+  main_lcd().setUiFont(3, 12);
+  main_lcd().beginUiText();
+#endif
+  return 1;
 #endif
 }
 
@@ -2632,8 +2683,8 @@ i32 program_store_text_font_end(void) {
   if(!text_font_session.active) return -3;
   const i32 result = program_store_text_font_restore();
   if(result != 1) {
-    // Never leak the BASIC override into the caller even if the original C5
-    // file disappeared or became unreadable during the run.
+    // Never leak a language-runtime override into the caller even if the
+    // original C5 file disappeared or became unreadable during the run.
     main_lcd().useBuiltinFont();
     applied_font_id = program_store::INVALID_ID;
     applied_font_role = AppliedFontRole::TEXT;
@@ -2650,6 +2701,7 @@ i32 program_store_text_font_end(void) {
         text_font_session.original.text_profile);
   }
   text_font_session.active = false;
+  text_font_session.override_loaded = false;
   return result;
 #endif
 }

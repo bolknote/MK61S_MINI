@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "code/ERM19264_graphics_font.cpp"
-DEFAULT_OUTPUT = ROOT / "programs/Fonts/HighNoon.FMK"
+DEFAULT_OUTPUT = ROOT / "programs/games/High Noon/HighNoon.FMK"
 HEADER_SIZE = 16
 
 

@@ -124,7 +124,7 @@ mk61_f401_app.menu.mk61_explorer.enabled.build.mk61_explorer=1
 mk61_f401_app.menu.mk61_explorer.disabled=Выключен
 mk61_f401_app.menu.mk61_explorer.disabled.build.mk61_explorer=0
 
-mk61_f401_app.menu.mk61_math.libm=libm
-mk61_f401_app.menu.mk61_math.libm.build.mk61_math=0
 mk61_f401_app.menu.mk61_math.core=CORE
 mk61_f401_app.menu.mk61_math.core.build.mk61_math=1
+mk61_f401_app.menu.mk61_math.libm=libm
+mk61_f401_app.menu.mk61_math.libm.build.mk61_math=0

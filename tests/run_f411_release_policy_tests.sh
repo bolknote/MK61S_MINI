@@ -37,7 +37,7 @@ require_equal f411_release_case_count \
 require_equal f411_stop_case_count \
   "$(python3 "$contract" cases --group f411-stop --format count)" 2
 require_equal f401_product_case_count \
-  "$(python3 "$contract" cases --group f401-product --format count)" 4
+  "$(python3 "$contract" cases --group f401-product --format count)" 5
 require_equal f401_capability_case_count \
   "$(python3 "$contract" cases --group f401-capability --format count)" 4
 

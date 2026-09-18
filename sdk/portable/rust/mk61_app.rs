@@ -94,6 +94,7 @@ pub const TEXT_FONT_BEGIN: u32 = 0;
 pub const TEXT_FONT_LOAD: u32 = 1;
 pub const TEXT_FONT_RESTORE: u32 = 2;
 pub const TEXT_FONT_END: u32 = 3;
+pub const TEXT_FONT_ACTIVATE: u32 = 4;
 pub const TEXT_FONT_NOT_FOUND: i32 = 0;
 pub const TEXT_FONT_OK: i32 = 1;
 pub const TEXT_FONT_INVALID: i32 = -1;

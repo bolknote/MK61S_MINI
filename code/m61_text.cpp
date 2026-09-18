@@ -11,6 +11,7 @@
 #ifndef M61_TEXT_HOST_TEST
 #include "Arduino.h"
 #include "calculator_control.hpp"
+#include "development.hpp"
 #include "storage_path.hpp"
 #include "tools.hpp"
 #else
@@ -20,6 +21,11 @@ void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
 void reinit_mk61_calculator_state(void);
 u32 m61_text_host_millis(void);
+i32 program_store_text_font_begin(void);
+i32 program_store_text_font_load_from(const char* name,
+                                      u16 preferred_directory);
+i32 program_store_text_font_restore(void);
+i32 program_store_text_font_end(void);
 #endif
 
 #include <stdio.h>
@@ -131,6 +137,7 @@ static u32 pending_bind_sequence = 0;
 static bool bind_handler_active = false;
 static bool boundary_hook_installed = false;
 static bool display_claimed = false;
+static bool text_font_session_active = false;
 static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
@@ -499,7 +506,14 @@ static void clear_bind_runtime(void) {
   bind_handler_active = false;
 }
 
+static void close_text_font_session(void) {
+  if(!text_font_session_active) return;
+  (void) program_store_text_font_end();
+  text_font_session_active = false;
+}
+
 static void stop_runner(void) {
+  close_text_font_session();
   clear_trap_runtime(true);
   clear_bind_runtime();
   clear_bind_hooks();
@@ -1323,6 +1337,76 @@ static bool open_referenced_file(const char* path) {
 #endif
 }
 
+static bool loadfont_arguments(const char* line, const char*& args) {
+  static const char keyword[] = "loadfont";
+  const char* p = skip_spaces(line);
+  const usize length = sizeof(keyword) - 1U;
+  if(strncmp(p, keyword, length) != 0 ||
+     (!is_space(p[length]) && !is_line_end(p[length]))) return false;
+  args = skip_spaces(p + length);
+  return true;
+}
+
+static u16 current_script_directory(void) {
+  program_store::Entry entry;
+  return script_id != program_store::INVALID_ID &&
+      program_store::entry_by_id(script_id, entry)
+      ? entry.parent_id : program_store::ROOT_ID;
+}
+
+static bool execute_loadfont(const char* args) {
+  if(token_ends(args)) {
+    if(!text_font_session_active) return true;
+    if(program_store_text_font_restore() == 1) return true;
+    line_error_message = "cannot restore default font";
+    return false;
+  }
+
+  if(!text_font_session_active) {
+    const i32 begin = program_store_text_font_begin();
+    if(begin != 1) {
+      line_error_message = begin == -2
+          ? "loadfont requires UC1609"
+          : "font service is unavailable";
+      return false;
+    }
+    text_font_session_active = true;
+  }
+
+  const u16 directory = current_script_directory();
+  bool selected = false;
+  bool stopped = false;
+  i32 result = 0;
+  const char* cursor = args;
+  while(!terminal_core::at_end(cursor)) {
+    char name[program_store::NAME_SIZE + 16U];
+    if(!terminal_core::parse_token(cursor, name, sizeof(name))) {
+      line_error_message =
+          "invalid loadfont syntax (use names separated by spaces)";
+      return false;
+    }
+    if(selected || stopped) continue;
+    const i32 attempt = program_store_text_font_load_from(name, directory);
+    if(attempt == 1) {
+      selected = true;
+    } else if(attempt == -1) {
+      result = -1;
+    } else if(attempt == -2 || attempt == -3) {
+      result = attempt;
+      stopped = true;
+    } else if(attempt != 0) {
+      result = -3;
+      stopped = true;
+    }
+  }
+  if(selected) return true;
+  if(result == -1) line_error_message = "font file is invalid";
+  else if(result == -2) line_error_message = "loadfont requires UC1609";
+  else if(result == -3) line_error_message = "font service is unavailable";
+  else line_error_message = "font not found";
+  return false;
+}
+
 static void clear_frame_handlers(ScriptFrame& frame) {
   memset(frame.active_traps, 0, sizeof(frame.active_traps));
   memset(frame.active_bind_opcodes, INVALID_BIND_OPCODE,
@@ -1385,6 +1469,9 @@ static bool execute_script_line(const char* raw_line) {
   const char* line = skip_spaces(raw_line);
   if(is_line_end(*line)) return true;
   if(*line == ':') return true; // Метка — точка перехода, сама по себе ничего не делает
+
+  const char* font_args = NULL;
+  if(loadfont_arguments(line, font_args)) return execute_loadfont(font_args);
 
   ParsedTrap parsed_trap = {};
   const TrapParse trap_result = parse_trap(line, parsed_trap);

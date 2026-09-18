@@ -410,8 +410,14 @@ if [ "$enable_markdown" -eq 1 ]; then
   enable_wbmp=0
 fi
 case "$profile" in
-  classic-v2|classic-v3|40th) compiled_graphics=1 ;;
-  *) compiled_graphics=$enable_usb_screen ;;
+  classic-v2|classic-v3|40th)
+    compiled_graphics=1
+    ui_fonts=1
+    ;;
+  *)
+    compiled_graphics=$enable_usb_screen
+    ui_fonts=0
+    ;;
 esac
 if [ "$compiled_graphics" -eq 0 ] &&
    { [ "$enable_wbmp" -eq 1 ] || [ "$enable_chip8" -eq 1 ]; }; then
@@ -532,7 +538,7 @@ python3 "$root/tools/build_system_app_bundle.py" \
   --resident-elf "$resident_elf" \
   --arm-toolchain-bin "$(dirname "$compiler")" \
   --output-dir "$bundle_stage/System" \
-  --graphics "$compiled_graphics" --ui-fonts 0 \
+  --graphics "$compiled_graphics" --ui-fonts "$ui_fonts" \
   --focal "$enable_focal" --basic "$enable_tinybasic" \
   --wbmp "$enable_wbmp" --markdown "$enable_markdown" \
   --chip8 "$enable_chip8"
@@ -566,7 +572,12 @@ if [ -d "$bundle_dir/licenses" ]; then
   rmdir "$bundle_dir/licenses" 2>/dev/null || true
 fi
 cp -R "$bundle_stage/." "$bundle_dir/"
-printf '%s -DMK61_PORTABLE_UI_FONTS=0\n' "$compile_flags" > "$bundle_dir/build.flags"
+if [ "$ui_fonts" -eq 1 ]; then
+  python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" \
+    --bundle "$bundle_dir"
+fi
+printf '%s -DMK61_PORTABLE_UI_FONTS=%s\n' \
+  "$compile_flags" "$ui_fonts" > "$bundle_dir/build.flags"
 {
   printf 'format 1\n'
   printf 'abi 5\n'

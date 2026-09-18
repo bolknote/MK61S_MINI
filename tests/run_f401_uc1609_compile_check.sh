@@ -43,10 +43,10 @@ compile_log="$build_root/compile.log"
 mkdir -p "$sketch" "$compile_path"
 cp -R "$root/code/." "$sketch/"
 
-# Size-LTO is part of the constrained production profile, not an optional
-# experiment: it preserves the same alarm functionality as F411 while keeping
-# the sealed-image safety reserve. Strict warnings and ELF gates still run on
-# the exact linked artifact.
+# Size-LTO and CORE math are part of the constrained production profile, not
+# optional experiments: together they preserve the same calculator behavior as
+# F411 while keeping the sealed-image safety reserve. Strict warnings and ELF
+# gates still run on the exact linked artifact.
 fqbn="STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=$optimization"
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 strict_flags="$board_flags -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=$product -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 $platform_ram_flags -Werror -Wno-error=cpp"

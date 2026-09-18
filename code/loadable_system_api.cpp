@@ -151,6 +151,8 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           return (u32) program_store_text_font_restore();
         case MK61_TEXT_FONT_END:
           return (u32) program_store_text_font_end();
+        case MK61_TEXT_FONT_ACTIVATE:
+          return (u32) program_store_text_font_activate();
         default:
           return (u32) MK61_TEXT_FONT_INVALID;
       }
