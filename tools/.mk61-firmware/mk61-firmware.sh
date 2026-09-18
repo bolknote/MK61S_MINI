@@ -57,7 +57,7 @@ ENABLE_CHIP8=0
 ENABLE_USB_SCREEN=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
 ENABLE_USER_EXPLORER=1
-ENABLE_CORE_MATH=0
+MATH_BACKEND=0
 DEVICE_STATUS='не проверялось'
 DFU_UTIL_PATH=
 DFU_STATUS='не найден'
@@ -459,11 +459,13 @@ native_text_style() {
 
 native_box_text() {
   local text=$1
-  local line style
-  while IFS= read -r line || [ -n "$line" ]; do
-    style=$(native_text_style "$line")
-    native_box_line "$line" "$style"
-  done < <(printf '%s\n' "$text" | fold -s -w "$NATIVE_TEXT_WIDTH")
+  local source line style
+  while IFS= read -r source || [ -n "$source" ]; do
+    style=$(native_text_style "$source")
+    while IFS= read -r line || [ -n "$line" ]; do
+      native_box_line "$line" "$style"
+    done < <(printf '%s\n' "$source" | fold -s -w "$NATIVE_TEXT_WIDTH")
+  done < <(printf '%s\n' "$text")
 }
 
 native_wrapped_line_count() {
@@ -1218,6 +1220,11 @@ boolean_valid() {
   return 1
 }
 
+math_backend_valid() {
+  case "${1:-}" in 0|1|2) return 0 ;; esac
+  return 1
+}
+
 normalize_viewer_selection() {
   if [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ]; then
     ENABLE_WBMP_VIEWER=0
@@ -1285,7 +1292,7 @@ load_config() {
         boolean_valid "$value" && ENABLE_USER_EXPLORER=$value
         ;;
       MK61_MATH_BACKEND)
-        boolean_valid "$value" && ENABLE_CORE_MATH=$value
+        math_backend_valid "$value" && MATH_BACKEND=$value
         ;;
     esac
   done < "$CONFIG_FILE"
@@ -1331,7 +1338,7 @@ save_config() {
     printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
     printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
     printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
-    printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
+    printf 'MK61_MATH_BACKEND=%s\n' "$MATH_BACKEND"
   } > "$temporary" || return 1
   mv "$temporary" "$CONFIG_FILE"
 }
@@ -1342,6 +1349,18 @@ checkbox_marker() {
 
 option_state() {
   if [ "$1" -eq 1 ]; then printf 'on'; else printf 'off'; fi
+}
+
+math_option_state() {
+  if [ "$MATH_BACKEND" -eq "$1" ]; then printf 'on'; else printf 'off'; fi
+}
+
+math_backend_label() {
+  case "$MATH_BACKEND" in
+    0) printf 'LIBM' ;;
+    1) printf 'CORE' ;;
+    2) printf 'FLOAT' ;;
+  esac
 }
 
 platform_state() {
@@ -1374,7 +1393,7 @@ compile_option_flags() {
     " -DMK61_ENABLE_LOADABLE_MODULES=1" \
     " -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ENABLE_EXTENDED_FONT_SETTINGS" \
     " -DMK61_USER_EXPLORER_SHORTCUT=$ENABLE_USER_EXPLORER" \
-    " -DMK61_MATH_BACKEND=$ENABLE_CORE_MATH"
+    " -DMK61_MATH_BACKEND=$MATH_BACKEND"
 }
 
 all_compile_flags() {
@@ -1385,7 +1404,7 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL  %s TinyBASIC  %s WBMP APP  %s Markdown+WBMP  %s CHIP-8  %s USB  %s шрифты  %s USER  %s CORE math' \
+  printf '%s FOCAL · %s BASIC · %s WBMP · %s MD · %s CHIP-8 · %s USB · %s FONT · %s USER · MATH %s' \
     "$(checkbox_marker "$ENABLE_FOCAL")" \
     "$(checkbox_marker "$ENABLE_TINYBASIC")" \
     "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
@@ -1394,7 +1413,7 @@ compile_options_summary() {
     "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")" \
-    "$(checkbox_marker "$ENABLE_CORE_MATH")"
+    "$(math_backend_label)"
 }
 
 compile_options_details() {
@@ -1411,11 +1430,8 @@ compile_options_details() {
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
   printf '%s USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)\n' \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")"
-  if [ "$ENABLE_CORE_MATH" -eq 1 ]; then
-    printf '☑ CORE math (MK61_MATH_BACKEND=1)\n'
-  else
-    printf '☐ CORE math (MK61_MATH_BACKEND=0, libm)\n'
-  fi
+  printf 'Математика: %s (MK61_MATH_BACKEND=%s)\n' \
+    "$(math_backend_label)" "$MATH_BACKEND"
 }
 
 show_config() {
@@ -1435,7 +1451,7 @@ show_config() {
   printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
   printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
   printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
-  printf 'MK61_MATH_BACKEND=%s\n' "$ENABLE_CORE_MATH"
+  printf 'MK61_MATH_BACKEND=%s\n' "$MATH_BACKEND"
   if profile_valid "$PROFILE"; then
     printf 'COMPILE_FLAGS=%s\n' "$(all_compile_flags "$PROFILE")"
   else
@@ -1515,7 +1531,7 @@ ensure_hardware_profile() {
 }
 
 choose_compile_options() {
-  local chosen tag
+  local chosen tag math_choice
   chosen=$(ui_checklist 'Ключи компиляции' \
     'Markdown включает просмотр T2 и I1; отдельный WBMP viewer используется только без Markdown:' \
     focal      'FOCAL · MK61_ENABLE_FOCAL' "$(option_state "$ENABLE_FOCAL")" \
@@ -1525,8 +1541,13 @@ choose_compile_options() {
     chip8      'CHIP-8 · MK61_ENABLE_CHIP8' "$(option_state "$ENABLE_CHIP8")" \
     usb_screen 'USB-экран · MK61_ENABLE_USB_SCREEN' "$(option_state "$ENABLE_USB_SCREEN")" \
     fonts      'Расширенные настройки шрифта' "$(option_state "$ENABLE_EXTENDED_FONT_SETTINGS")" \
-    explorer   'Клавиша USER открывает Explorer' "$(option_state "$ENABLE_USER_EXPLORER")" \
-    core_math  'Математика CORE вместо libm' "$(option_state "$ENABLE_CORE_MATH")") || return 1
+    explorer   'Клавиша USER открывает Explorer' "$(option_state "$ENABLE_USER_EXPLORER")") || return 1
+
+  math_choice=$(ui_radiolist 'Математика' \
+    'Выберите точность и размер математической библиотеки:' \
+    core  'CORE · ядро МК-61, около 8 цифр' "$(math_option_state 1)" \
+    float 'FLOAT · быстрая float-libm, около 7 цифр' "$(math_option_state 2)" \
+    libm  'LIBM · полная double-точность, больше Flash' "$(math_option_state 0)") || return 1
 
   ENABLE_FOCAL=0
   ENABLE_TINYBASIC=0
@@ -1536,7 +1557,6 @@ choose_compile_options() {
   ENABLE_USB_SCREEN=0
   ENABLE_EXTENDED_FONT_SETTINGS=0
   ENABLE_USER_EXPLORER=0
-  ENABLE_CORE_MATH=0
   while IFS= read -r tag; do
     case "$tag" in
       focal) ENABLE_FOCAL=1 ;;
@@ -1547,9 +1567,13 @@ choose_compile_options() {
       usb_screen) ENABLE_USB_SCREEN=1 ;;
       fonts) ENABLE_EXTENDED_FONT_SETTINGS=1 ;;
       explorer) ENABLE_USER_EXPLORER=1 ;;
-      core_math) ENABLE_CORE_MATH=1 ;;
     esac
   done < <(printf '%s\n' "$chosen")
+  case "$math_choice" in
+    libm) MATH_BACKEND=0 ;;
+    core) MATH_BACKEND=1 ;;
+    float) MATH_BACKEND=2 ;;
+  esac
   normalize_viewer_selection
   save_config
 }
@@ -1585,7 +1609,7 @@ f401_gcc_arguments() {
     -UsbScreen "$ENABLE_USB_SCREEN" \
     -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
     -UserExplorer "$ENABLE_USER_EXPLORER" \
-    -MathBackend "$ENABLE_CORE_MATH"
+    -MathBackend "$MATH_BACKEND"
 }
 
 f401_gcc_preflight() {
@@ -1978,7 +2002,11 @@ prepare_and_compile_f411_worker() {
         printf 'Cannot resolve the STM32F411 linker script from Arduino build properties.\n' >&2
         return 1
       }
-    portable_linker="$build_dir/mk61-portable.ld"
+    # arduino-cli may clean --build-path before the real compile.  Keep the
+    # generated linker script outside that directory so the following link
+    # step cannot delete its own input.
+    mkdir -p "$BUILD_ROOT/linker" || return 1
+    portable_linker="$BUILD_ROOT/linker/$profile-$signature.ld"
     python3 "$PROJECT_ROOT/tools/.mk61-gcc/portable-layout.py" \
       "$variant_path/$ld_name" "$portable_linker" || return 1
   resident_link_flags="$resident_link_flags -Wl,--default-script=$portable_linker"
@@ -2032,7 +2060,7 @@ prepare_and_compile_f401_worker() {
     MK61_ENABLE_USB_SCREEN="$ENABLE_USB_SCREEN" \
     MK61_ENABLE_EXTENDED_FONT_SETTINGS="$ENABLE_EXTENDED_FONT_SETTINGS" \
     MK61_USER_EXPLORER_SHORTCUT="$ENABLE_USER_EXPLORER" \
-    MK61_MATH_BACKEND="$ENABLE_CORE_MATH" \
+    MK61_MATH_BACKEND="$MATH_BACKEND" \
     "$PROJECT_ROOT/tools/build_f401_bundle.sh" \
       --profile "$profile" \
       --output-dir "$OUTPUT_DIR" \

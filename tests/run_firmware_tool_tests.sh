@@ -84,7 +84,7 @@ log_user 0
 spawn $env(MK61_TEST_LAUNCHER)
 after 900
 expect {
-  "CORE math" {}
+  "MATH CORE" {}
   timeout {
     send_user "compile-option summary wrapped at 80 columns\n"
     exit 1

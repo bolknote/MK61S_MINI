@@ -59,9 +59,12 @@ grep -q -- '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' "$target/boards.txt"
 ! grep -q 'mk61_user_apps' "$target/boards.txt"
 core_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.core=' \
   "$target/boards.txt" | cut -d: -f1)"
+float_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.float=' \
+  "$target/boards.txt" | cut -d: -f1)"
 libm_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.libm=' \
   "$target/boards.txt" | cut -d: -f1)"
-test "$core_math_line" -lt "$libm_math_line"
+test "$core_math_line" -lt "$float_math_line"
+test "$float_math_line" -lt "$libm_math_line"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"

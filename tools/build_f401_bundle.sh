@@ -53,7 +53,8 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_FOCAL, MK61_ENABLE_TINYBASIC, MK61_ENABLE_WBMP_VIEWER,
   MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
-  MK61_USER_EXPLORER_SHORTCUT, MK61_MATH_BACKEND
+  MK61_USER_EXPLORER_SHORTCUT
+Math backend: MK61_MATH_BACKEND=0 (LIBM), 1 (CORE), or 2 (FLOAT).
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
   MK61_ENABLE_MARKDOWN_VIEWER=0.
 
@@ -400,12 +401,19 @@ fi
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$enable_markdown" "$enable_chip8" \
              "$enable_usb_screen" "$enable_extended_font" \
-             "$enable_user_explorer" "$math_backend"; do
+             "$enable_user_explorer"; do
   boolean_valid "$value" || {
     printf 'Error: all MK61 feature values must be 0 or 1.\n' >&2
     exit 2
   }
 done
+case "$math_backend" in
+  0|1|2) ;;
+  *)
+    printf 'Error: MK61_MATH_BACKEND must be 0, 1, or 2.\n' >&2
+    exit 2
+    ;;
+esac
 if [ "$enable_markdown" -eq 1 ]; then
   enable_wbmp=0
 fi

@@ -87,7 +87,7 @@ $script:State = [ordered]@{
     EnableUsbScreen = 0
     EnableFonts = 0
     EnableExplorer = 1
-    EnableCoreMath = 0
+    MathBackend = 0
     DeviceStatus = 'не проверялось'
     DfuPath = ''
     CubeProgrammerPath = ''
@@ -292,7 +292,7 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_LOADABLE_MODULES=1"
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "-DMK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
-        "-DMK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
+        "-DMK61_MATH_BACKEND=$($script:State.MathBackend)"
     ) -join ' '
 }
 
@@ -309,25 +309,28 @@ function Get-Checkbox {
 }
 
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL  {1} TinyBASIC  {2} WBMP APP  {3} Markdown+WBMP  {4} CHIP-8  {5} USB  {6} APP ABI 5  {7} шрифты  {8} USER  {9} CORE math' -f
+    return ('{0} FOCAL · {1} BASIC · {2} WBMP · {3} MD · {4} CHIP-8 · {5} USB · {6} FONT · {7} USER · MATH {8}' -f
         (Get-Checkbox $script:State.EnableFocal),
         (Get-Checkbox $script:State.EnableTinyBasic),
         (Get-Checkbox $script:State.EnableWbmp),
         (Get-Checkbox $script:State.EnableMarkdown),
         (Get-Checkbox $script:State.EnableChip8),
         (Get-Checkbox $script:State.EnableUsbScreen),
-        $script:Glyphs.CheckOn,
         (Get-Checkbox $script:State.EnableFonts),
         (Get-Checkbox $script:State.EnableExplorer),
-        (Get-Checkbox $script:State.EnableCoreMath))
+        (Get-MathBackendLabel))
+}
+
+function Get-MathBackendLabel {
+    switch ($script:State.MathBackend) {
+        0 { return 'LIBM' }
+        1 { return 'CORE' }
+        2 { return 'FLOAT' }
+    }
 }
 
 function Get-CompileOptionsDetails {
-    $mathText = if ($script:State.EnableCoreMath -eq 1) {
-        "$($script:Glyphs.CheckOn) CORE math (MK61_MATH_BACKEND=1)"
-    } else {
-        "$($script:Glyphs.CheckOff) CORE math (MK61_MATH_BACKEND=0, libm)"
-    }
+    $mathText = "Математика: $(Get-MathBackendLabel) (MK61_MATH_BACKEND=$($script:State.MathBackend))"
     return @(
         "$(Get-Checkbox $script:State.EnableFocal) FOCAL (MK61_ENABLE_FOCAL)"
         "$(Get-Checkbox $script:State.EnableTinyBasic) TinyBASIC (MK61_ENABLE_TINYBASIC)"
@@ -343,6 +346,7 @@ function Get-CompileOptionsDetails {
 }
 
 function Test-BooleanValue { param([string]$Value) return $Value -eq '0' -or $Value -eq '1' }
+function Test-MathBackendValue { param([string]$Value) return $Value -match '^[012]$' }
 
 function Normalize-ViewerSelection {
     if ($script:State.EnableMarkdown -eq 1) {
@@ -372,7 +376,7 @@ function Save-Config {
         'MK61_ENABLE_LOADABLE_MODULES=1'
         "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
-        "MK61_MATH_BACKEND=$($script:State.EnableCoreMath)"
+        "MK61_MATH_BACKEND=$($script:State.MathBackend)"
     )
     [IO.File]::WriteAllLines($temporary, $lines, $script:Utf8NoBom)
     Move-Item -LiteralPath $temporary -Destination $script:ConfigFile -Force
@@ -421,7 +425,7 @@ function Load-Config {
             'MK61_ENABLE_USER_APPS' { } # legacy setting: APP runtime is always enabled
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
             'MK61_USER_EXPLORER_SHORTCUT' { if (Test-BooleanValue $value) { $script:State.EnableExplorer = [int]$value } }
-            'MK61_MATH_BACKEND' { if (Test-BooleanValue $value) { $script:State.EnableCoreMath = [int]$value } }
+            'MK61_MATH_BACKEND' { if (Test-MathBackendValue $value) { $script:State.MathBackend = [int]$value } }
         }
     }
 
@@ -600,11 +604,17 @@ function Split-WrappedText {
 
 function Write-BoxText {
     param([int]$StartRow, [string]$Text)
-    $lines = @(Split-WrappedText $Text $script:TextWidth)
-    for ($index = 0; $index -lt $lines.Count; $index++) {
-        Write-BoxLine ($StartRow + $index) $lines[$index] (Get-TextStyle $lines[$index])
+    $rendered = New-Object 'System.Collections.Generic.List[object]'
+    foreach ($sourceLine in [regex]::Split([string]$Text, "\r?\n")) {
+        $style = Get-TextStyle $sourceLine
+        foreach ($line in @(Split-WrappedText $sourceLine $script:TextWidth)) {
+            $rendered.Add([pscustomobject]@{ Text = $line; Style = $style })
+        }
     }
-    return $lines.Count
+    for ($index = 0; $index -lt $rendered.Count; $index++) {
+        Write-BoxLine ($StartRow + $index) $rendered[$index].Text $rendered[$index].Style
+    }
+    return $rendered.Count
 }
 
 function Get-MenuStyle {
@@ -1181,7 +1191,7 @@ function Get-F401GccOptionArguments {
         '-UsbScreen', [string]$script:State.EnableUsbScreen,
         '-ExtendedFontSettings', [string]$script:State.EnableFonts,
         '-UserExplorer', [string]$script:State.EnableExplorer,
-        '-MathBackend', [string]$script:State.EnableCoreMath)
+        '-MathBackend', [string]$script:State.MathBackend)
 }
 
 function Get-F401GccPowerShellArguments {
@@ -1864,11 +1874,17 @@ function Choose-CompileOptions {
         [pscustomobject]@{ Tag = 'usb_screen'; Label = 'USB-экран · MK61_ENABLE_USB_SCREEN'; State = if ($script:State.EnableUsbScreen) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'fonts'; Label = 'Расширенные настройки шрифта'; State = if ($script:State.EnableFonts) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'explorer'; Label = 'Клавиша USER открывает Explorer'; State = if ($script:State.EnableExplorer) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'core_math'; Label = 'Математика CORE вместо libm'; State = if ($script:State.EnableCoreMath) { 'on' } else { 'off' } }
     )
     $result = Show-Checklist 'Ключи компиляции' `
         'Markdown включает просмотр T2 и I1; отдельный WBMP viewer используется только без Markdown:' $items
     if ($result.Cancelled) { return $false }
+    $mathItems = @(
+        [pscustomobject]@{ Tag = 'core'; Label = 'CORE · ядро МК-61, около 8 цифр'; State = if ($script:State.MathBackend -eq 1) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'float'; Label = 'FLOAT · быстрая float-libm, около 7 цифр'; State = if ($script:State.MathBackend -eq 2) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'libm'; Label = 'LIBM · полная double-точность, больше Flash'; State = if ($script:State.MathBackend -eq 0) { 'on' } else { 'off' } }
+    )
+    $mathChoice = Show-RadioList 'Математика' 'Выберите точность и размер математической библиотеки:' $mathItems
+    if ($null -eq $mathChoice) { return $false }
     $script:State.EnableFocal = [int]($result.Values -contains 'focal')
     $script:State.EnableTinyBasic = [int]($result.Values -contains 'tinybasic')
     $script:State.EnableWbmp = [int]($result.Values -contains 'wbmp')
@@ -1877,7 +1893,7 @@ function Choose-CompileOptions {
     $script:State.EnableUsbScreen = [int]($result.Values -contains 'usb_screen')
     $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
     $script:State.EnableExplorer = [int]($result.Values -contains 'explorer')
-    $script:State.EnableCoreMath = [int]($result.Values -contains 'core_math')
+    $script:State.MathBackend = switch ($mathChoice) { 'libm' { 0 } 'core' { 1 } 'float' { 2 } }
     Normalize-ViewerSelection
     Save-Config
     return $true
@@ -1955,7 +1971,7 @@ function Invoke-F401CustomBundleBuild {
         MK61_ENABLE_LOADABLE_MODULES = '1'
         MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
         MK61_USER_EXPLORER_SHORTCUT = [string]$script:State.EnableExplorer
-        MK61_MATH_BACKEND = [string]$script:State.EnableCoreMath
+        MK61_MATH_BACKEND = [string]$script:State.MathBackend
     }
     $previous = @{}
     foreach ($name in $values.Keys) {
@@ -2573,7 +2589,7 @@ function Show-Config {
     [Console]::WriteLine('MK61_ENABLE_LOADABLE_MODULES=1')
     [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")
     [Console]::WriteLine("MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)")
-    [Console]::WriteLine("MK61_MATH_BACKEND=$($script:State.EnableCoreMath)")
+    [Console]::WriteLine("MK61_MATH_BACKEND=$($script:State.MathBackend)")
     $flags = if (Test-Profile $script:State.Profile) { Get-AllCompileFlags $script:State.Profile }
         else { Get-CompileOptionFlags }
     [Console]::WriteLine("COMPILE_FLAGS=$flags")

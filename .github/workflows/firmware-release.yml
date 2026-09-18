@@ -53,18 +53,6 @@ jobs:
         shell: pwsh
         run: tools/install_arduino_dependencies.ps1
 
-      - name: Compile-check Arduino APP board on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          & ./tools/mk61-arduino-board.cmd
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-app-board'
-          & arduino-cli compile `
-            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
-            --build-path $buildPath code
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
       - name: Write full F401 build configuration
         shell: pwsh
         run: |
@@ -175,11 +163,67 @@ jobs:
             throw 'WBMP.APP must be folded into MARKDOWN.APP'
           }
 
+  arduino-ide-windows:
+    name: Windows Arduino IDE recipe (no host C++)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Arduino CLI
+        uses: ./.github/actions/setup-arduino-cli
+
+      - name: Install pinned STM32 packages
+        shell: pwsh
+        run: tools/install_arduino_dependencies.ps1
+
+      - name: Install MK61 Arduino board
+        shell: pwsh
+        run: |
+          & ./tools/mk61-arduino-board.cmd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
+      # recipes. Deliberately poison MK61_HOST_CXX: this proves that a normal
+      # Windows IDE installation needs only Python, not Visual Studio/MinGW.
+      - name: Compile F401 FLOAT firmware through the Arduino IDE recipe
+        shell: pwsh
+        run: |
+          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
+          if (Test-Path -LiteralPath $env:MK61_HOST_CXX) {
+            throw 'The negative host-compiler sentinel unexpectedly exists'
+          }
+          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-ide-f401-float'
+          & arduino-cli compile `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=float' `
+            --build-path $buildPath code
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          foreach ($name in @('code.ino.elf', 'code.ino.bin')) {
+            $artifact = Join-Path $buildPath $name
+            if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+                (Get-Item -LiteralPath $artifact).Length -eq 0) {
+              throw "Arduino IDE recipe did not produce $name"
+            }
+          }
+          $setup = Get-ChildItem -LiteralPath binary -Filter SETUP.APP -File `
+            -Recurse | Select-Object -First 1
+          if ($null -eq $setup -or $setup.Length -le 64) {
+            throw 'Arduino IDE recipe did not package System/SETUP.APP'
+          }
+          [byte[]]$container = [IO.File]::ReadAllBytes($setup.FullName)
+          if ($container[15] -ne 1 -or
+              [BitConverter]::ToUInt16($container, 12) -ne 5) {
+            throw 'SETUP.APP is not a packed ABI 5 application'
+          }
+
   build-release:
     name: Build firmware
     needs:
       - host-tests
       - f401-gcc-platforms
+      - arduino-ide-windows
     runs-on: ubuntu-latest
     permissions:
       contents: write

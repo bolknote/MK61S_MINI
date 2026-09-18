@@ -65,7 +65,6 @@ foreach(_mk61_bool
     MK61_WS0010_GRAPHICS_100X16
     MK61_ENABLE_EXTENDED_FONT_SETTINGS
     MK61_USER_EXPLORER_SHORTCUT
-    MK61_MATH_BACKEND
     MK61_F401_PRODUCT_BUILD
     MK61_REQUIRE_RESIDENT_CRC
     MK61_ENABLE_LTO)
@@ -76,6 +75,11 @@ foreach(_mk61_bool
     message(FATAL_ERROR "${_mk61_bool} must be 0 or 1")
   endif()
 endforeach()
+
+if(NOT DEFINED MK61_MATH_BACKEND OR
+   NOT "${MK61_MATH_BACKEND}" MATCHES "^[012]$")
+  message(FATAL_ERROR "MK61_MATH_BACKEND must be 0, 1, or 2")
+endif()
 
 execute_process(
   COMMAND "${Python3_EXECUTABLE}"
