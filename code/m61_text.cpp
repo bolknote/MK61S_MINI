@@ -31,6 +31,12 @@ i32 program_store_text_font_end(void);
 #include <stdio.h>
 #include <string.h>
 
+#if defined(M61_TEXT_HOST_TEST) || defined(MK61_DISPLAY_UC1609)
+  #define M61_TEXT_FONT_COMMAND 1
+#else
+  #define M61_TEXT_FONT_COMMAND 0
+#endif
+
 namespace m61_text {
 
 static constexpr u16 MAX_LINE_SIZE = (u16) terminal_core::MAX_INPUT_TEXT;
@@ -137,7 +143,9 @@ static u32 pending_bind_sequence = 0;
 static bool bind_handler_active = false;
 static bool boundary_hook_installed = false;
 static bool display_claimed = false;
+#if M61_TEXT_FONT_COMMAND
 static bool text_font_session_active = false;
+#endif
 static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
@@ -507,9 +515,11 @@ static void clear_bind_runtime(void) {
 }
 
 static void close_text_font_session(void) {
+#if M61_TEXT_FONT_COMMAND
   if(!text_font_session_active) return;
   (void) program_store_text_font_end();
   text_font_session_active = false;
+#endif
 }
 
 static void stop_runner(void) {
@@ -1337,6 +1347,7 @@ static bool open_referenced_file(const char* path) {
 #endif
 }
 
+#if M61_TEXT_FONT_COMMAND
 static bool loadfont_arguments(const char* line, const char*& args) {
   static const char keyword[] = "loadfont";
   const char* p = skip_spaces(line);
@@ -1406,6 +1417,7 @@ static bool execute_loadfont(const char* args) {
   else line_error_message = "font not found";
   return false;
 }
+#endif
 
 static void clear_frame_handlers(ScriptFrame& frame) {
   memset(frame.active_traps, 0, sizeof(frame.active_traps));
@@ -1470,8 +1482,10 @@ static bool execute_script_line(const char* raw_line) {
   if(is_line_end(*line)) return true;
   if(*line == ':') return true; // Метка — точка перехода, сама по себе ничего не делает
 
+#if M61_TEXT_FONT_COMMAND
   const char* font_args = NULL;
   if(loadfont_arguments(line, font_args)) return execute_loadfont(font_args);
+#endif
 
   ParsedTrap parsed_trap = {};
   const TrapParse trap_result = parse_trap(line, parsed_trap);
