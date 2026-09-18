@@ -133,6 +133,25 @@ if command -v pwsh >/dev/null 2>&1; then
   test -s "$launcher_build/mk61-portable.ld"
   grep -q '^-3 --version$' "$launcher_log"
   grep -q '^-3 .*portable-layout.py ' "$launcher_log"
+
+  # STM32's Windows platform passes compiler.cpp.cmd without `.exe`, even
+  # though the packaged executable has that suffix.  Exercise the resolver
+  # without requiring a Windows host or a complete firmware build.
+  compiler_stub="$work/arm-none-eabi-g++.exe"
+  : > "$compiler_stub"
+  MK61_TEST_HOOK="$platform/tools/mk61-app-postbuild.ps1" \
+  MK61_TEST_SKETCH="$root/code" \
+  MK61_TEST_COMPILER="${compiler_stub%.exe}" \
+    pwsh -NoLogo -NoProfile -Command '
+      . $env:MK61_TEST_HOOK check-profile `
+          -Platform mini-v3 -Display lcd1602-a00 `
+          -Sketch $env:MK61_TEST_SKETCH
+      $resolved = Resolve-Mk61Executable $env:MK61_TEST_COMPILER
+      $expected = [IO.Path]::GetFullPath($env:MK61_TEST_COMPILER + ".exe")
+      if ($resolved -ne $expected) {
+          throw "extensionless ARM compiler did not resolve: $resolved"
+      }
+    '
 fi
 
 if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then

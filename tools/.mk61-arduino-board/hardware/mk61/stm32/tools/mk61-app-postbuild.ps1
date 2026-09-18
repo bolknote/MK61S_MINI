@@ -89,6 +89,25 @@ function Test-RequiredFile {
     }
 }
 
+function Resolve-Mk61Executable {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $null }
+
+    # Arduino's STM32 platform describes compiler.cpp.cmd without the Windows
+    # .exe suffix.  The command recipes resolve it through PATHEXT, whereas a
+    # direct File.Exists check does not.  Accept the exact path first, then
+    # the executable form used by the Windows toolchain package.
+    foreach ($candidate in @($Path, "$Path.exe")) {
+        if ([IO.File]::Exists($candidate)) {
+            return [IO.Path]::GetFullPath($candidate)
+        }
+    }
+    $found = Get-Command $Path -CommandType Application `
+        -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -ne $found) { return $found.Source }
+    return $null
+}
+
 function Invoke-Mk61Tool {
     param([Parameter(Mandatory = $true)][string]$Path,
           [Parameter(Mandatory = $true)][string[]]$Arguments)
@@ -125,7 +144,11 @@ function Check-Mk61Profile {
 }
 
 function Build-Mk61Bundle {
-    Test-RequiredFile $Compiler 'ARM compiler'
+    $requestedCompiler = $Compiler
+    $Compiler = Resolve-Mk61Executable $requestedCompiler
+    if ([string]::IsNullOrWhiteSpace($Compiler)) {
+        Stop-Mk61Build "ARM compiler not found: $requestedCompiler"
+    }
     if ([string]::IsNullOrWhiteSpace($BuildPath) -or
         -not [IO.Directory]::Exists($BuildPath)) {
         Stop-Mk61Build 'Arduino build path was not found'

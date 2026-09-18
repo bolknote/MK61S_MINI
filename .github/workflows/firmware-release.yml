@@ -53,6 +53,18 @@ jobs:
         shell: pwsh
         run: tools/install_arduino_dependencies.ps1
 
+      - name: Compile-check Arduino APP board on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & ./tools/mk61-arduino-board.cmd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-app-board'
+          & arduino-cli compile `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
+            --build-path $buildPath code
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Write full F401 build configuration
         shell: pwsh
         run: |
