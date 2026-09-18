@@ -23,6 +23,10 @@ bool acquire(spi1_arbiter::Owner owner) {
   return bus_arbiter.acquire(owner) == spi1_arbiter::Result::ACQUIRED;
 }
 
+bool try_acquire(spi1_arbiter::Owner owner) {
+  return bus_arbiter.try_acquire(owner) == spi1_arbiter::Result::ACQUIRED;
+}
+
 bool release(spi1_arbiter::Owner owner) {
   return bus_arbiter.release(owner) == spi1_arbiter::Result::RELEASED;
 }

@@ -62,6 +62,25 @@ static void test_contention_latches_error(void) {
   assert(arbiter.release(Owner::DISPLAY_CLIENT) == Result::RELEASED);
 }
 
+static void test_retryable_contention_preserves_foreign_lease(void) {
+  Arbiter arbiter;
+  assert(arbiter.acquire(Owner::FLASH_CLIENT) == Result::ACQUIRED);
+  assert(arbiter.try_acquire(Owner::DISPLAY_CLIENT) == Result::BUSY);
+
+  Snapshot state = arbiter.snapshot();
+  assert(state.state == State::ACTIVE);
+  assert(state.owner == Owner::FLASH_CLIENT);
+  assert(state.last_result == Result::BUSY);
+  assert(state.last_fault == Result::NONE);
+  assert(state.contentions == 1);
+  assert(state.failures == 0);
+
+  assert(arbiter.release(Owner::FLASH_CLIENT) == Result::RELEASED);
+  assert(arbiter.try_acquire(Owner::DISPLAY_CLIENT) == Result::ACQUIRED);
+  assert(arbiter.release(Owner::DISPLAY_CLIENT) == Result::RELEASED);
+  assert_idle(arbiter);
+}
+
 static void test_double_acquire_and_release(void) {
   Arbiter arbiter;
   assert(arbiter.acquire(Owner::FLASH_CLIENT) == Result::ACQUIRED);
@@ -144,6 +163,7 @@ static void test_diagnostics_saturate_and_state_remains_reusable(void) {
 int main(void) {
   test_normal_flash_and_display_leases();
   test_contention_latches_error();
+  test_retryable_contention_preserves_foreign_lease();
   test_double_acquire_and_release();
   test_wrong_and_invalid_owner();
   test_recovery_cannot_cancel_valid_lease();

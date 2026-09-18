@@ -27,6 +27,7 @@ enum class Result : u8 {
   NOT_ACTIVE,
   WRONG_OWNER,
   INVALID_OWNER,
+  BUSY,
   ERROR_LATCHED,
   NOT_IN_ERROR
 };
@@ -62,6 +63,7 @@ inline const char* result_name(Result result) {
     case Result::NOT_ACTIVE: return "not-active";
     case Result::WRONG_OWNER: return "wrong-owner";
     case Result::INVALID_OWNER: return "invalid-owner";
+    case Result::BUSY: return "busy";
     case Result::ERROR_LATCHED: return "error-latched";
     case Result::NOT_IN_ERROR: return "not-in-error";
   }
@@ -111,6 +113,33 @@ class Arbiter {
         }
         increment(contentions_);
         return fail(Result::CONTENTION);
+      }
+
+      owner_ = requested_owner;
+      state_ = State::ACTIVE;
+      increment(acquisitions_);
+      last_result_ = Result::ACQUIRED;
+      return last_result_;
+    }
+
+    // Retryable acquisition for commands whose caller can safely defer work.
+    // A foreign active owner is reported as BUSY without corrupting that
+    // owner's lease or latching ERROR. Invalid owners, recursive acquisition
+    // and an already-latched protocol error remain hard failures.
+    Result try_acquire(Owner requested_owner) {
+      if(state_ == State::ERROR) return reject_while_error();
+      if(!valid_owner(requested_owner)) {
+        increment(invalid_owners_);
+        return fail(Result::INVALID_OWNER);
+      }
+      if(state_ == State::ACTIVE) {
+        if(owner_ == requested_owner) {
+          increment(double_acquires_);
+          return fail(Result::DOUBLE_ACQUIRE);
+        }
+        increment(contentions_);
+        last_result_ = Result::BUSY;
+        return last_result_;
       }
 
       owner_ = requested_owner;

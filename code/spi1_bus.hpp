@@ -18,6 +18,7 @@ namespace spi1_bus {
 #if MK61_ENABLE_SPI1_ARBITER
 
 bool acquire(spi1_arbiter::Owner owner);
+bool try_acquire(spi1_arbiter::Owner owner);
 bool release(spi1_arbiter::Owner owner);
 bool recover(void);
 spi1_arbiter::Snapshot statistics(void);
@@ -29,6 +30,7 @@ bool enabled(void);
 // The disabled path deliberately has no global object or out-of-line call.
 // Clients compile to their original direct begin/endTransaction sequence.
 inline bool acquire(spi1_arbiter::Owner) { return true; }
+inline bool try_acquire(spi1_arbiter::Owner) { return true; }
 inline bool release(spi1_arbiter::Owner) { return true; }
 inline bool recover(void) { return false; }
 inline spi1_arbiter::Snapshot statistics(void) {

@@ -47,11 +47,24 @@ int main(void) {
   assert(state.rejected_while_error == 1);
   assert(state.recoveries == 1);
   assert(!spi1_bus::recover());
+
+  assert(spi1_bus::acquire(Owner::FLASH_CLIENT));
+  assert(!spi1_bus::try_acquire(Owner::DISPLAY_CLIENT));
+  state = spi1_bus::statistics();
+  assert(state.state == State::ACTIVE);
+  assert(state.owner == Owner::FLASH_CLIENT);
+  assert(state.last_result == Result::BUSY);
+  assert(state.failures == 1);
+  assert(state.contentions == 2);
+  assert(spi1_bus::release(Owner::FLASH_CLIENT));
+  assert(spi1_bus::try_acquire(Owner::DISPLAY_CLIENT));
+  assert(spi1_bus::release(Owner::DISPLAY_CLIENT));
 #else
   assert(!spi1_bus::enabled());
   assert(std::strcmp(spi1_bus::backend_name(), "direct") == 0);
   assert_empty_snapshot(spi1_bus::statistics());
   assert(spi1_bus::acquire(Owner::FLASH_CLIENT));
+  assert(spi1_bus::try_acquire(Owner::DISPLAY_CLIENT));
   assert(spi1_bus::release(Owner::FLASH_CLIENT));
   assert_empty_snapshot(spi1_bus::statistics());
   assert(!spi1_bus::recover());
