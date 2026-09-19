@@ -225,11 +225,27 @@ static void test_fullscreen_and_overlay(void) {
   assert(copied_width == 3 && copied_height == 2 && copied_border == 1);
   assert(copied_overlay[0] == overlay[0] &&
          copied_overlay[1] == overlay[1]);
+
+  // Clearing/redrawing the calculator text surface must not erase the
+  // independently-owned clock overlay.  This is also how the physical
+  // UC1609 backend behaves during the redraw that follows USB ATTACH.
+  surface.clear();
+  surface.flush(3);
+  assert(surface.copyTopRightOverlay(copied_overlay, copied_width,
+                                     copied_height, copied_border));
+  assert(copied_width == 3 && copied_height == 2 && copied_border == 1);
+  assert(copied_overlay[0] == overlay[0] &&
+         copied_overlay[1] == overlay[1]);
+  assert(pixel(surface, 188, 1));
+  assert(!pixel(surface, 189, 1));
+  assert(pixel(surface, 190, 1));
+  assert(pixel(surface, 189, 2));
+
   surface.hideTopRightOverlay();
   assert(!surface.copyTopRightOverlay(copied_overlay, copied_width,
                                       copied_height, copied_border));
   assert(copied_width == 0 && copied_height == 0 && copied_border == 0);
-  surface.flush(3);
+  surface.flush(4);
   assert(!pixel(surface, 188, 1));
 }
 

@@ -140,11 +140,12 @@ void Surface::clear(void) {
   cursor_blink_ = false;
   cursor_blink_phase_ = false;
   cursor_next_blink_ms_ = 0;
-  overlay_visible_ = false;
-  overlay_width_ = 0;
-  overlay_height_ = 0;
-  overlay_clear_border_ = 0;
-  memset(overlay_rows_, 0, sizeof(overlay_rows_));
+  // The top-right clock is an overlay owned independently from the text
+  // surface.  The physical UC1609 clear() deliberately preserves it, so the
+  // USB mirror must do the same.  Otherwise the calculator redraw performed
+  // immediately after ATTACH erases the mirrored clock while rtc_idle_clock
+  // still considers that same minute visible and therefore does not repaint
+  // it until the minute changes.
 #if MK61_PROPORTIONAL_UI_FONTS
   ui_row_gutters_ = 0;
   ui_row_tails_ = 0;
