@@ -9,21 +9,11 @@
 #include <cstring>
 
 namespace terminal_catalog {
-// ====== Диспетчер команд: имя -> id через CRC-8 индекс ======
-// Первое слово строки хешируется CRC-8 (полином 0x31) и служит входом в
-// 128-байтный индекс, построенный на этапе компиляции. Совпадение хеша
-// обязательно подтверждается сравнением полного имени: иначе опечатка с тем же
-// CRC молча выполнила бы чужую команду (среди команд есть опасные dfu и format).
-// Коллизии хешей разрешаются линейным пробированием при построении индекса,
-// поэтому переименовывать команды при совпадении CRC не требуется.
-
-
 // Единственный источник истины: имя <-> id <-> описание для help.
 // Добавление команды: строка здесь + case в execute().
-// No pointers/padding per entry: F401 stores one text pool and four bytes
-// per command. Offsets are constructed and range-checked at compile time.
-struct Entry { u16 offset; u8 id; u8 name_size; };
-static_assert(sizeof(Entry) == 4, "command catalog Flash contract");
+// Команды вводит человек, поэтому линейный проход по компактному пулу строк
+// быстрее терминала на несколько порядков. Он заодно убирает из F401
+// 128-байтный хеш-индекс и таблицу смещений с выравниванием.
 #if MK61_SETUP_IS_LOADABLE
 // ELF metadata for the host bundle builder; the linker marks it non-allocating.
 // The signature is constant-folded; the resource never occupies MCU Flash/RAM.
@@ -72,99 +62,46 @@ static constexpr usize TERMINAL_COMMAND_COUNT = 0
 #include "terminal_commands.inc"
 #undef COMMAND
 ;
-struct Entries { Entry values[TERMINAL_COMMAND_COUNT]; };
-constexpr Entries make_entries() {
-  Entries result{{
-#define COMMAND(name, id, desc) {0, id, sizeof(name) - 1},
+static constexpr u8 command_ids[TERMINAL_COMMAND_COUNT] = {
+#define COMMAND(name, id, desc) id,
 #include "terminal_commands.inc"
 #undef COMMAND
-  }};
-  usize offset = 0;
-  for(usize i = 0; i < TERMINAL_COMMAND_COUNT; ++i) {
-    result.values[i].offset = (u16) offset;
-    offset += result.values[i].name_size + 1;
+};
+
+constexpr TerminalCommand entry(usize index) {
+  const char* name = command_text;
+  for(usize current = 0; current < index; ++current) {
+    while(*name++ != 0) {}
 #if !MK61_SETUP_IS_LOADABLE
-    while(command_text[offset++] != 0) {}
+    while(*name++ != 0) {}
 #endif
   }
-  return result;
-}
-static constexpr Entries entries = make_entries();
-constexpr TerminalCommand entry(usize index) {
-  const auto& value = entries.values[index];
-  const char* name = command_text + value.offset;
-  return {name, value.id,
+  const char* next = name;
+  while(*next++ != 0) {}
+  return {name, command_ids[index],
 #if MK61_SETUP_IS_LOADABLE
     nullptr
 #else
-    name + value.name_size + 1
+    next
 #endif
   };
 }
 
-
-constexpr u8 terminal_crc8(const char* str, usize len) {
-  u8 crc = 0;
-  for(usize i = 0; i < len; i++) {
-    crc ^= (u8) str[i];
-    for(u8 bit = 0; bit < 8; bit++) crc = (crc & 0x80) ? (u8) ((crc << 1) ^ 0x31) : (u8) (crc << 1);
-  }
-  return crc;
-}
-
-constexpr usize terminal_name_len(const char* s) {
-  usize len = 0;
-  while(s[len] != 0) len++;
-  return len;
-}
-
-struct TerminalCommandIndex {
-  u8 slot[128];  // 1 + номер в terminal_commands; 0 - пусто
-};
-
-static_assert(TERMINAL_COMMAND_COUNT < 128, "command index must have an empty slot");
-
-constexpr TerminalCommandIndex make_terminal_command_index(void) {
-  TerminalCommandIndex index = {};
-  for(usize n = 0; n < TERMINAL_COMMAND_COUNT; n++) {
-    const char* name = entry(n).name;
-    usize probe = terminal_crc8(name, terminal_name_len(name)) & 0x7F;
-    while(index.slot[probe] != 0) probe = (probe + 1) & 0x7F;
-    index.slot[probe] = (u8) (n + 1);
-  }
-  return index;
-}
-static constexpr TerminalCommandIndex terminal_command_index = make_terminal_command_index();
-
-// Доказательство на этапе компиляции: каждая команда таблицы достижима через
-// индекс и разрешается именно в свой id. Ловит и переполнение кластера
-// пробирования, и случайный дубль имени - прошивка с недостижимой командой
-// просто не соберётся.
-constexpr bool terminal_index_resolves_all(void) {
-  for(usize n = 0; n < TERMINAL_COMMAND_COUNT; n++) {
-    const char* name = entry(n).name;
-    const usize len = terminal_name_len(name);
-    usize probe = terminal_crc8(name, len) & 0x7F;
-    bool resolved = false;
-    while(true) {
-      const u8 slot = terminal_command_index.slot[probe];
-      if(slot == 0) break; // пустая ячейка - имя в индексе не найдено
-      const TerminalCommand cmd = entry(slot - 1);
-      bool equal = true;
-      for(usize i = 0; i <= len; i++) {
-        if(cmd.name[i] != name[i]) { equal = false; break; }
+constexpr bool terminal_names_are_unique(void) {
+  for(usize left = 0; left < TERMINAL_COMMAND_COUNT; ++left) {
+    const TerminalCommand a = entry(left);
+    for(usize right = left + 1; right < TERMINAL_COMMAND_COUNT; ++right) {
+      const TerminalCommand b = entry(right);
+      usize offset = 0;
+      while(a.name[offset] == b.name[offset] && a.name[offset] != 0) {
+        ++offset;
       }
-      if(equal) {
-        resolved = (slot == n + 1); // Reject duplicate names even with equal id.
-        break;
-      }
-      probe = (probe + 1) & 0x7F;
+      if(a.name[offset] == b.name[offset]) return false;
     }
-    if(!resolved) return false;
   }
   return true;
 }
-static_assert(terminal_index_resolves_all(), "terminal command index: a command is unreachable (CRC cluster or duplicate name)");
+static_assert(terminal_names_are_unique(), "terminal command name is duplicated");
 
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 u8 lookup(const u8* line) {
@@ -177,14 +114,17 @@ u8 lookup(const u8* line) {
   if(len == 3 && line[0] == 'R' && line[2] == '=' && terminal_core::is_space((char) line[3])) return CMD_REG_SET; // R0= <значение>
   if(len >= 4 && line[0] == 's' && line[1] == 'e' && line[2] == 't' && line[3] == '$') return CMD_SET_CODE;  // set$<hex>
 
-  usize probe = terminal_crc8((const char*) line, len) & 0x7F;
-  while(true) {
-    const u8 slot = terminal_command_index.slot[probe];
-    if(slot == 0) return CMD_UNKNOWN;
-    const TerminalCommand cmd = entry(slot - 1);
-    if(strncmp((const char*) line, cmd.name, len) == 0 && cmd.name[len] == 0) return cmd.id;
-    probe = (probe + 1) & 0x7F;
+  const char* name = command_text;
+  for(usize index = 0; index < TERMINAL_COMMAND_COUNT; ++index) {
+    if(strncmp((const char*) line, name, len) == 0 && name[len] == 0) {
+      return command_ids[index];
+    }
+    while(*name++ != 0) {}
+#if !MK61_SETUP_IS_LOADABLE
+    while(*name++ != 0) {}
+#endif
   }
+  return CMD_UNKNOWN;
 }
 
 usize count() { return TERMINAL_COMMAND_COUNT; }

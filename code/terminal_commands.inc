@@ -99,7 +99,7 @@ COMMAND("mpu", CMD_MPU, "mpu [status|test <guard|null|exec>]")
 COMMAND("mpu", CMD_MPU, "mpu [status]")
   #endif
 #endif
-COMMAND("mem", CMD_MEMORY, "shared SRAM arenas [reset]")
+COMMAND("mem", CMD_MEMORY, "compact shared SRAM report")
 COMMAND("display", CMD_DISPLAY, "display status|reinit|on|off|test NAME: text/alphabet/symbols/map/ddram/row/cgram/zero/clear/home/cursor/entry/autoshift/sleep/graphics/graphics-read/restore")
 COMMAND("rst", CMD_RESET, "rst [now] - reboot; plain rst confirms on device")
 COMMAND("dfu", CMD_DFU, "dfu [status] - enter/report ROM DFU")

@@ -1023,96 +1023,52 @@ terminal_protocol::Result class_terminal::exec_watchdog(void) {
     }
 
 #endif
+namespace {
+
+// `mem` is a machine-readable diagnostic, so keep one printer loop instead of
+// instantiating Print::print at every field. The CSV is also easy to paste into
+// a spreadsheet when investigating a device.
+[[gnu::cold, gnu::noinline]]
+void print_memory_value(u32 value) {
+  Serial.write(',');
+  Serial.print(value);
+}
+
+[[gnu::cold, gnu::noinline]]
+void print_memory_text(const char* value) {
+  Serial.write(',');
+  Serial.print(value);
+}
+
+} // namespace
+
 void class_terminal::print_memory_snapshot(shared_memory::Arena arena) {
       const shared_memory::Snapshot memory = shared_memory::snapshot(arena);
-      terminal_output::field(Serial, "MEM ", shared_memory::arena_name(arena));
-      terminal_output::field(Serial, " enabled=", memory.enabled ? 1 : 0);
-      terminal_output::field(Serial, " capacity=", memory.capacity);
-      terminal_output::field(Serial, " high=", memory.high_water);
-      terminal_output::field(Serial, " resident_size=", memory.resident_size);
-      terminal_output::field(Serial, " epoch=", memory.resident_epoch);
-      terminal_output::field(
-          Serial, " active=", shared_memory::owner_name(memory.active_owner));
-      terminal_output::field(
-          Serial, " resident=", shared_memory::owner_name(memory.resident_owner));
-      terminal_output::field(Serial, " depth=", memory.active_depth);
-      terminal_output::field(Serial, " max_depth=", memory.max_depth);
-      terminal_output::field(Serial, " acquire=", memory.acquisitions);
-      terminal_output::field(Serial, " nested=", memory.nested_acquisitions);
-      terminal_output::field(Serial, " release=", memory.releases);
-      terminal_output::field(Serial, " busy=", memory.busy_failures);
-      terminal_output::field(Serial, " cache_defer=", memory.cache_deferrals);
-      terminal_output::field(Serial, " invalid=", memory.invalid_failures);
-      terminal_output::field(Serial, " switches=", memory.owner_switches);
-      terminal_output::field(Serial, " clears=", memory.clears);
-      terminal_output::field(Serial, " clear_bytes=", memory.cleared_bytes);
-      terminal_output::field(Serial, " reclaim=", memory.reclaims);
-      Serial.write('/');
-      Serial.print(memory.reclaim_attempts);
-      terminal_output::line(Serial, " reclaim_fail=", memory.reclaim_failures);
+      Serial.print("A,");
+      Serial.print(shared_memory::arena_name(arena));
+      print_memory_text(shared_memory::owner_name(memory.active_owner));
+      print_memory_text(shared_memory::owner_name(memory.resident_owner));
+      print_memory_value((u32) memory.capacity);
+      print_memory_value((u32) memory.resident_size);
+      print_memory_value((u32) memory.high_water);
+      print_memory_value(memory.busy_failures + memory.invalid_failures);
+      Serial.println();
     }
 
 terminal_protocol::Result class_terminal::exec_memory(void) {
       const char* args = terminal_skip_spaces(command_args());
       if(!terminal_core::at_end(args)) {
-        char action[8];
-        const char* cursor = args;
-        if(!terminal_core::parse_token(cursor, action, sizeof(action)) ||
-           strcmp(action, "reset") != 0 ||
-           !terminal_core::at_end(cursor)) {
-          Serial.println("Usage: mem [reset]");
-          return terminal_protocol::Result::error();
-        }
-        shared_memory::reset_statistics();
-        core_61::reset_hot_table_cache_statistics();
-        workspace_swap::reset_statistics();
-        mk61_crc32::reset_arbitration_statistics();
-        Serial.println("MEM reset");
-        return terminal_protocol::Result::ok();
+        Serial.println("Usage: mem");
+        return terminal_protocol::Result::error();
       }
+      // MEM2 arena row: A,name,active,resident,capacity,resident,high,failures.
+      Serial.println("MEM2");
       for(usize index = 0; index < (usize) shared_memory::Arena::COUNT;
           index++) {
         print_memory_snapshot((shared_memory::Arena) index);
       }
-      terminal_output::line(
-          Serial, "MEM invariant=", shared_memory::validate_invariants() ? "ok" : "BROKEN");
-      const core_61::HotTableCacheSnapshot core_cache =
-          core_61::hot_table_cache_statistics();
-      terminal_output::field(Serial, "MEM core-cache enabled=", core_cache.enabled ? 1 : 0);
-      terminal_output::field(Serial, " level=", core_cache.level);
-      terminal_output::field(Serial, " cached=", core_cache.cached ? 1 : 0);
-      terminal_output::field(Serial, " bytes=", core_cache.bytes);
-      terminal_output::field(Serial, " loads=", core_cache.loads);
-      terminal_output::field(Serial, " evictions=", core_cache.evictions);
-      terminal_output::line(Serial, " flash_steps=", core_cache.flash_steps);
-      const workspace_swap::Statistics swap =
-          workspace_swap::statistics();
-      terminal_output::field(Serial, "MEM swap enabled=", swap.enabled ? 1 : 0);
-      terminal_output::field(Serial, " valid=", swap.valid ? 1 : 0);
-      terminal_output::field(Serial, " owner=", shared_memory::owner_name(swap.owner));
-      terminal_output::field(Serial, " schema=", swap.schema);
-      terminal_output::field(Serial, " codec=", swap.compressed ? "zx0" : "raw");
-      terminal_output::field(Serial, " bytes=", swap.stored_size);
-      Serial.write('/');
-      Serial.print(swap.raw_size);
-      terminal_output::field(Serial, " capture=", swap.captures);
-      Serial.write('/');
-      Serial.print(swap.capture_attempts);
-      terminal_output::field(Serial, " restore=", swap.restores);
-      terminal_output::field(Serial, " exchange=", swap.exchanges);
-      Serial.write('/');
-      Serial.print(swap.exchange_attempts);
-      terminal_output::field(Serial, " exchange_fallback=", swap.exchange_fallbacks);
-      terminal_output::field(Serial, " evict=", swap.evictions);
-      terminal_output::field(Serial, " busy=", swap.busy_failures);
-      terminal_output::field(Serial, " encode_fail=", swap.encode_failures);
-      terminal_output::line(Serial, " integrity_fail=", swap.integrity_failures);
-      const mk61_crc32::ArbitrationSnapshot crc =
-          mk61_crc32::arbitration_statistics();
-      terminal_output::field(Serial, "MEM crc-hw supported=", crc.supported ? 1 : 0);
-      terminal_output::field(Serial, " busy=", crc.busy ? 1 : 0);
-      terminal_output::field(Serial, " acquire=", crc.hardware_acquisitions);
-      terminal_output::line(Serial, " fallback=", crc.software_fallbacks);
+      Serial.print("I,");
+      Serial.println(shared_memory::validate_invariants() ? 1 : 0);
       return terminal_protocol::Result::ok();
     }
 
