@@ -70,7 +70,7 @@ seal_resident() {
 
 build_bundle() {
   local compiler= build_path_arg= sketch= project= bundle=
-  local focal= basic= wbmp= markdown= chip8= compile_flags=
+  local focal= basic= wbmp= markdown= chip8= local_float_math= compile_flags=
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --compiler) require_value "$@"; compiler=$2; shift 2 ;;
@@ -83,6 +83,7 @@ build_bundle() {
       --wbmp) require_value "$@"; wbmp=$2; shift 2 ;;
       --markdown) require_value "$@"; markdown=$2; shift 2 ;;
       --chip8) require_value "$@"; chip8=$2; shift 2 ;;
+      --local-float-math) require_value "$@"; local_float_math=$2; shift 2 ;;
       --compile-flags) require_value "$@"; compile_flags=$2; shift 2 ;;
       *) die "unknown build option: $1" ;;
     esac
@@ -92,11 +93,15 @@ build_bundle() {
   [ -d "$build_path_arg" ] || die 'Arduino build path was not found'
   [ -n "$project" ] && [ -n "$bundle" ] ||
     die 'Arduino project or bundle name is missing'
-  case "$focal:$basic:$wbmp:$markdown:$chip8" in
-    [01]:[01]:[01]:[01]:[01]) ;;
+  case "$focal:$basic:$wbmp:$markdown:$chip8:$local_float_math" in
+    [01]:[01]:[01]:[01]:[01]:[01]) ;;
     *) die 'System APP selections must be 0 or 1' ;;
   esac
   if [ "$markdown" -eq 1 ]; then wbmp=0; fi
+  if [ "$local_float_math" -eq 1 ] &&
+     [[ "$compile_flags" != *MK61_MATH_BACKEND=1* ]]; then
+    die 'local APP float math requires resident CORE math'
+  fi
 
   build_path=$build_path_arg
   local resident_elf="$build_path/$project.elf"
@@ -130,7 +135,8 @@ build_bundle() {
     --output-dir "$stage/System" --graphics "$graphics" \
     --ui-fonts "$ui_fonts" \
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
-    --markdown "$markdown" --chip8 "$chip8"
+    --markdown "$markdown" --chip8 "$chip8" \
+    --local-float-math "$local_float_math"
 
   local output_root output canonical
   output_root="$(cd "$sketch/.." && pwd)/binary"
@@ -153,8 +159,8 @@ build_bundle() {
     python3 "$sketch/../tools/.fmk-font/package_ui_font_licenses.py" \
       --bundle "$output"
   fi
-  printf '%s -DMK61_PORTABLE_UI_FONTS=%s\n' \
-    "$compile_flags" "$ui_fonts" > "$output/build.flags"
+  printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
+    "$compile_flags" "$ui_fonts" "$local_float_math" > "$output/build.flags"
   printf 'format 1\nabi 5\n' > "$output/build.apps"
   printf '\nMK61s F401 unified ABI 5 bundle built by Arduino IDE:\n  %s\n' "$output"
   printf 'After Upload, copy the generated System directory to /System on MK61S C5.\n\n'

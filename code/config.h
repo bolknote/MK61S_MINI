@@ -384,6 +384,16 @@
   #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
 #endif
 
+// FOCAL/BASIC APP may carry a bounded single-precision libm subset while the
+// resident keeps CORE math. Only that matched build needs the ABI conversion
+// bridge; ordinary CORE builds must not pay for it in the tight F401 Flash.
+#ifndef MK61_APP_LOCAL_FLOAT_MATH
+  #define MK61_APP_LOCAL_FLOAT_MATH 0
+#endif
+#if MK61_APP_LOCAL_FLOAT_MATH != 0 && MK61_APP_LOCAL_FLOAT_MATH != 1
+  #error "MK61_APP_LOCAL_FLOAT_MATH must be 0 or 1"
+#endif
+
 // Короткое нажатие [USER] открывает Проводник. Поставьте 0, чтобы оставить
 // [USER] только для удержания стека и функций режима ПРГ.
 #ifndef MK61_USER_EXPLORER_SHORTCUT

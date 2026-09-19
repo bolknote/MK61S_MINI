@@ -20,6 +20,7 @@ enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
 math_backend=${MK61_MATH_BACKEND:-0}
+app_local_float=${MK61_APP_LOCAL_FLOAT_MATH:-0}
 check_app_manifests=0
 app_manifests=()
 custom_app_names=()
@@ -55,6 +56,7 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
   MK61_USER_EXPLORER_SHORTCUT
 Math backend: MK61_MATH_BACKEND=0 (LIBM), 1 (CORE), or 2 (FLOAT).
+APP math: MK61_APP_LOCAL_FLOAT_MATH=1 links local float ln/lg/exp/sqrt into FOCAL/BASIC.
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
   MK61_ENABLE_MARKDOWN_VIEWER=0.
 
@@ -401,7 +403,7 @@ fi
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$enable_markdown" "$enable_chip8" \
              "$enable_usb_screen" "$enable_extended_font" \
-             "$enable_user_explorer"; do
+             "$enable_user_explorer" "$app_local_float"; do
   boolean_valid "$value" || {
     printf 'Error: all MK61 feature values must be 0 or 1.\n' >&2
     exit 2
@@ -414,6 +416,10 @@ case "$math_backend" in
     exit 2
     ;;
 esac
+if [ "$app_local_float" -eq 1 ] && [ "$math_backend" -ne 1 ]; then
+  printf 'Error: MK61_APP_LOCAL_FLOAT_MATH=1 requires MK61_MATH_BACKEND=1 (CORE).\n' >&2
+  exit 2
+fi
 if [ "$enable_markdown" -eq 1 ]; then
   enable_wbmp=0
 fi
@@ -457,6 +463,7 @@ compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
+compile_flags="$compile_flags -DMK61_APP_LOCAL_FLOAT_MATH=$app_local_float"
 compile_flags="$compile_flags -DMK61_ENABLE_LOADABLE_MODULES=1"
 compile_flags="$compile_flags -DMK61_F401_PRODUCT_BUILD=1"
 compile_flags="$compile_flags -DMK61_REQUIRE_RESIDENT_CRC=1"
@@ -549,7 +556,7 @@ python3 "$root/tools/build_system_app_bundle.py" \
   --graphics "$compiled_graphics" --ui-fonts "$ui_fonts" \
   --focal "$enable_focal" --basic "$enable_tinybasic" \
   --wbmp "$enable_wbmp" --markdown "$enable_markdown" \
-  --chip8 "$enable_chip8"
+  --chip8 "$enable_chip8" --local-float-math "$app_local_float"
 for index in "${!custom_app_names[@]}"; do
   build_custom_app "$index"
 done
@@ -584,8 +591,8 @@ if [ "$ui_fonts" -eq 1 ]; then
   python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" \
     --bundle "$bundle_dir"
 fi
-printf '%s -DMK61_PORTABLE_UI_FONTS=%s\n' \
-  "$compile_flags" "$ui_fonts" > "$bundle_dir/build.flags"
+printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
+  "$compile_flags" "$ui_fonts" "$app_local_float" > "$bundle_dir/build.flags"
 {
   printf 'format 1\n'
   printf 'abi 5\n'

@@ -114,6 +114,7 @@ test "$status" -eq 2
 grep -Fq 'MK61_ENABLE_LOADABLE_MODULES=1' "$tool"
 grep -Fq 'tools/build_system_app_bundle.py' "$tool"
 grep -Fq 'tools/build_portable_app.py' "$tool"
+grep -Fq 'MK61_APP_LOCAL_FLOAT_MATH' "$tool"
 grep -Fq "printf 'abi 5" "$tool"
 if grep -Fq 'MK61_ENABLE_USER_APPS' "$tool" ||
    grep -Fq 'MK61_ENABLE_PORTABLE_APPS' "$tool"; then

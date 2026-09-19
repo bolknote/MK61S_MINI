@@ -194,6 +194,14 @@ ABI 5 — единственный исполняемый формат. Исто
 Пример [SERVICES](../../examples/portable-apps/SERVICES/main.c) собирается
 обычным `--source`, в том числе с `--shared-runtime`.
 
+F401 может собирать FOCAL и TinyBASIC с `--local-float-math`. Такой APP
+использует локальные `logf`, `log10f`, `expf` и `sqrtf`, а перевод значений
+между ABI `double` и локальным `float` делает сервис
+`MK61_SERVICE_FLOAT_CONVERT`. Тригонометрия и `pow` остаются обращениями к
+resident math API: включение всей newlib float-математики превышает размер
+20-КиБ APP-арены. Этот режим требует capability
+`MK61_SERVICE_CAP_FLOAT_CONVERT` и resident с CORE math.
+
 ## Ограничения SDK
 
 Это freestanding C/C++ для микроконтроллера. Здесь ещё нет полного libc,

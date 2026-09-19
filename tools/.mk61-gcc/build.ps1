@@ -38,6 +38,9 @@ param(
     [string]$MathBackend = '0',
 
     [ValidateSet('0', '1')]
+    [string]$LocalFloatMath = '0',
+
+    [ValidateSet('0', '1')]
     [string]$Lto = '1',
 
     [string]$CorePath,
@@ -91,6 +94,7 @@ Firmware options:
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
   -MathBackend 0|1|2  LIBM | CORE | FLOAT
+  -LocalFloatMath 0|1 local float ln/lg/exp/sqrt in FOCAL/BASIC APP
   -Lto 0|1          default 1
 
 Paths:
@@ -378,6 +382,9 @@ try {
         Stop-GccBuild (
             '-Ws0010Graphics 1 requires profile mini-v3-ws0010')
     }
+    if ($LocalFloatMath -eq '1' -and $MathBackend -ne '1') {
+        Stop-GccBuild '-LocalFloatMath 1 requires -MathBackend 1 (CORE)'
+    }
     $systemRequested = $true
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
     $productBuild = if ($null -ne $releaseCaseInfo -and
@@ -572,6 +579,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
         "-DMK61_MATH_BACKEND=$MathBackend",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=$LocalFloatMath",
         "-DMK61_F401_PRODUCT_BUILD=$productBuild",
         '-DMK61_REQUIRE_RESIDENT_CRC=1',
         "-DMK61_ENABLE_LTO=$Lto",
@@ -652,6 +660,7 @@ try {
             '-Wbmp', $Wbmp,
             '-Markdown', $Markdown,
             '-Chip8', $Chip8,
+            '-LocalFloatMath', $LocalFloatMath,
             '-Graphics', $(if ($wbmpGraphics) { '1' } else { '0' }),
             '-UiFonts', $uiFonts)
     }
@@ -700,6 +709,7 @@ try {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
     $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
     $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
+    $flagValues.Add("-DMK61_APP_LOCAL_FLOAT_MATH=$LocalFloatMath")
     $flagValues.Add("-DMK61_F401_PRODUCT_BUILD=$productBuild")
     $flagValues.Add('-DMK61_ENABLE_LOADABLE_MODULES=1')
     $flagValues.Add("-DMK61_PORTABLE_UI_FONTS=$uiFonts")

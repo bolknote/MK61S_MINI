@@ -16,6 +16,7 @@ param(
     [string]$Wbmp,
     [string]$Markdown,
     [string]$Chip8,
+    [string]$LocalFloatMath,
     [string]$CompileFlags
 )
 
@@ -159,10 +160,14 @@ function Build-Mk61Bundle {
     }
     if ($Focal -notmatch '^[01]$' -or $Basic -notmatch '^[01]$' -or
         $Wbmp -notmatch '^[01]$' -or $Markdown -notmatch '^[01]$' -or
-        $Chip8 -notmatch '^[01]$') {
+        $Chip8 -notmatch '^[01]$' -or $LocalFloatMath -notmatch '^[01]$') {
         Stop-Mk61Build 'System APP selections must be 0 or 1'
     }
     if ($Markdown -eq '1') { $Wbmp = '0' }
+    if ($LocalFloatMath -eq '1' -and
+        $CompileFlags -notmatch 'MK61_MATH_BACKEND=1') {
+        Stop-Mk61Build 'local APP float math requires resident CORE math'
+    }
 
     $build = [IO.Path]::GetFullPath($BuildPath)
     $residentElf = Join-Path $build "$Project.elf"
@@ -210,7 +215,8 @@ function Build-Mk61Bundle {
         '--output-dir', (Join-Path $script:Stage 'System'),
         '--graphics', $graphics, '--ui-fonts', $uiFonts,
         '--focal', $Focal, '--basic', $Basic, '--wbmp', $Wbmp,
-        '--markdown', $Markdown, '--chip8', $Chip8)
+        '--markdown', $Markdown, '--chip8', $Chip8,
+        '--local-float-math', $LocalFloatMath)
 
     $output = Join-Path ([IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))) $Bundle
     $outputSystem = Join-Path $output 'System'
@@ -245,6 +251,7 @@ function Build-Mk61Bundle {
     $utf8 = New-Object Text.UTF8Encoding($false)
     [IO.File]::WriteAllText((Join-Path $output 'build.flags'),
         $CompileFlags + " -DMK61_PORTABLE_UI_FONTS=$uiFonts" +
+            " -DMK61_APP_LOCAL_FLOAT_MATH=$LocalFloatMath" +
             [Environment]::NewLine, $utf8)
     [IO.File]::WriteAllText((Join-Path $output 'build.apps'),
         'format 1' + [Environment]::NewLine +

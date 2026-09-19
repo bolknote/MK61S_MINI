@@ -94,6 +94,8 @@ Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
 Assert-True ($helpText -match '-MathBackend 0\|1\|2\s+LIBM \| CORE \| FLOAT') `
     'help does not expose all math backends'
+Assert-True ($helpText -match '-LocalFloatMath 0\|1\s+local float ln/lg/exp/sqrt') `
+    'help does not expose selective local APP float math'
 Assert-True ($helpText -match '-Ws0010Graphics 0\|1') `
     'help does not expose isolated WS0010 graphics qualification'
 Assert-True ($helpText -notmatch '-UserApps') `
@@ -118,6 +120,16 @@ Assert-True ($invalidWsGraphics.ExitCode -eq 1) `
 Assert-True (($invalidWsGraphics.Output -join "`n") -match
     'requires profile mini-v3-ws0010') `
     'invalid WS0010 graphics selection has no useful diagnostic'
+
+$invalidLocalFloat = Invoke-Backend @(
+    '-Profile', 'mini-v3-a00',
+    '-MathBackend', '0',
+    '-LocalFloatMath', '1')
+Assert-True ($invalidLocalFloat.ExitCode -eq 1) `
+    'local APP float math was accepted without resident CORE math'
+Assert-True (($invalidLocalFloat.Output -join "`n") -match
+    'requires -MathBackend 1') `
+    'invalid local APP float selection has no useful diagnostic'
 
 $backendText = [IO.File]::ReadAllText($backend)
 $cmakeText = [IO.File]::ReadAllText($cmakeProject)
@@ -172,6 +184,9 @@ Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
     'CMake build does not forward the Markdown selection'
 Assert-True ($cmakeText -match 'MK61_ENABLE_LOADABLE_MODULES=1') `
     'CMake build does not enable the unified APP runtime'
+Assert-True ($cmakeText -match
+    'MK61_APP_LOCAL_FLOAT_MATH=\$\{MK61_APP_LOCAL_FLOAT_MATH\}') `
+    'CMake build does not condition the resident float bridge'
 Assert-True ($cmakeText -match 'MK61_WS0010_GRAPHICS_100X16') `
     'CMake build does not forward WS0010 graphics qualification'
 Assert-True ($cmakeText -match

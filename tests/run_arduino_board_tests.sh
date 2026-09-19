@@ -56,15 +56,29 @@ grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
 grep -q -- '-DMK61_ENABLE_LOADABLE_MODULES=1' "$target/boards.txt"
 grep -q -- '-DMK61_F401_PRODUCT_BUILD=1' "$target/boards.txt"
 grep -q -- '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' "$target/boards.txt"
+grep -q -- '-DMK61_APP_LOCAL_FLOAT_MATH={build.mk61_app_math}' \
+  "$target/boards.txt"
 ! grep -q 'mk61_user_apps' "$target/boards.txt"
 core_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.core=' \
+  "$target/boards.txt" | cut -d: -f1)"
+core_app_float_math_line="$(grep -n \
+  '^mk61_f401_app\.menu\.mk61_math\.core_app_float=' \
   "$target/boards.txt" | cut -d: -f1)"
 float_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.float=' \
   "$target/boards.txt" | cut -d: -f1)"
 libm_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.libm=' \
   "$target/boards.txt" | cut -d: -f1)"
-test "$core_math_line" -lt "$float_math_line"
+test "$core_math_line" -lt "$core_app_float_math_line"
+test "$core_app_float_math_line" -lt "$float_math_line"
 test "$float_math_line" -lt "$libm_math_line"
+grep -q '^mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_math=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_app_math=1$' \
+  "$target/boards.txt"
+grep -q -- '--local-float-math "{build.mk61_app_math}"' \
+  "$target/platform.txt"
+grep -q -- '-LocalFloatMath "{build.mk61_app_math}"' \
+  "$target/platform.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"

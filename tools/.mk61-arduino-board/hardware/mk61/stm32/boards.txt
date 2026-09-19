@@ -44,7 +44,7 @@ mk61_f401_app.upload.tool=stm32CubeProg
 
 # Values from the independent menus are joined here so Arduino IDE builds the
 # same resident profile as tools/mk61-firmware.cmd.
-mk61_f401_app.build.st_extra_flags=-D{build.product_line} {build.enable_usb} {build.xSerial} {build.bootloader_flags} -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 {build.mk61_platform_flags} {build.mk61_display_flags} -DMK61_ENABLE_FOCAL={build.mk61_focal} -DMK61_ENABLE_TINYBASIC={build.mk61_basic} -DMK61_ENABLE_WBMP_VIEWER={build.mk61_wbmp} -DMK61_ENABLE_MARKDOWN_VIEWER={build.mk61_markdown} -DMK61_ENABLE_CHIP8={build.mk61_chip8} -DMK61_ENABLE_USB_SCREEN={build.mk61_usb_screen} -DMK61_ENABLE_EXTENDED_FONT_SETTINGS={build.mk61_font_settings} -DMK61_USER_EXPLORER_SHORTCUT={build.mk61_explorer} -DMK61_MATH_BACKEND={build.mk61_math}
+mk61_f401_app.build.st_extra_flags=-D{build.product_line} {build.enable_usb} {build.xSerial} {build.bootloader_flags} -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 {build.mk61_platform_flags} {build.mk61_display_flags} -DMK61_ENABLE_FOCAL={build.mk61_focal} -DMK61_ENABLE_TINYBASIC={build.mk61_basic} -DMK61_ENABLE_WBMP_VIEWER={build.mk61_wbmp} -DMK61_ENABLE_MARKDOWN_VIEWER={build.mk61_markdown} -DMK61_ENABLE_CHIP8={build.mk61_chip8} -DMK61_ENABLE_USB_SCREEN={build.mk61_usb_screen} -DMK61_ENABLE_EXTENDED_FONT_SETTINGS={build.mk61_font_settings} -DMK61_USER_EXPLORER_SHORTCUT={build.mk61_explorer} -DMK61_MATH_BACKEND={build.mk61_math} -DMK61_APP_LOCAL_FLOAT_MATH={build.mk61_app_math}
 
 # Platform and display stay separate.  The pre-build hook rejects incompatible
 # pairs before the compiler starts.
@@ -126,7 +126,13 @@ mk61_f401_app.menu.mk61_explorer.disabled.build.mk61_explorer=0
 
 mk61_f401_app.menu.mk61_math.core=CORE
 mk61_f401_app.menu.mk61_math.core.build.mk61_math=1
+mk61_f401_app.menu.mk61_math.core.build.mk61_app_math=0
+mk61_f401_app.menu.mk61_math.core_app_float=CORE + APP FLOAT
+mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_math=1
+mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_app_math=1
 mk61_f401_app.menu.mk61_math.float=FLOAT
 mk61_f401_app.menu.mk61_math.float.build.mk61_math=2
+mk61_f401_app.menu.mk61_math.float.build.mk61_app_math=0
 mk61_f401_app.menu.mk61_math.libm=libm
 mk61_f401_app.menu.mk61_math.libm.build.mk61_math=0
+mk61_f401_app.menu.mk61_math.libm.build.mk61_app_math=0
