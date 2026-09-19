@@ -187,16 +187,17 @@ jobs:
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
       # recipes. Deliberately poison MK61_HOST_CXX: this proves that a normal
       # Windows IDE installation needs only Python, not Visual Studio/MinGW.
-      - name: Compile F401 CORE plus APP FLOAT through the Arduino IDE recipe
+      - name: Compile complete F401 mini V2 bundle through the Arduino IDE recipe
         shell: pwsh
         run: |
           $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
           if (Test-Path -LiteralPath $env:MK61_HOST_CXX) {
             throw 'The negative host-compiler sentinel unexpectedly exists'
           }
-          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-ide-f401-hybrid'
+          $bundleName = 'mk61s-M-mini-v2-lcd1602-a00-f401'
+          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-ide-f401-mini-v2'
           & arduino-cli compile `
-            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core_app_float' `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
             --build-path $buildPath code
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -207,15 +208,65 @@ jobs:
               throw "Arduino IDE recipe did not produce $name"
             }
           }
-          $setup = Get-ChildItem -LiteralPath binary -Filter SETUP.APP -File `
-            -Recurse | Select-Object -First 1
-          if ($null -eq $setup -or $setup.Length -le 64) {
-            throw 'Arduino IDE recipe did not package System/SETUP.APP'
+
+          $bundle = Join-Path $env:GITHUB_WORKSPACE "binary/$bundleName"
+          foreach ($name in @(
+            "$bundleName.bin",
+            'build.flags',
+            'build.apps',
+            'System/HELP0.TXT',
+            'System/HELP1.TXT'
+          )) {
+            $artifact = Join-Path $bundle $name
+            if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+                (Get-Item -LiteralPath $artifact).Length -eq 0) {
+              throw "Arduino IDE V2 bundle did not produce $name"
+            }
           }
-          [byte[]]$container = [IO.File]::ReadAllBytes($setup.FullName)
-          if ($container[15] -ne 1 -or
-              [BitConverter]::ToUInt16($container, 12) -ne 5) {
-            throw 'SETUP.APP is not a packed ABI 5 application'
+
+          $expectedKinds = @{
+            'FOCAL.APP' = 1
+            'BASIC.APP' = 2
+            'MARKDOWN.APP' = 6
+            'SETUP.APP' = 7
+          }
+          foreach ($entry in $expectedKinds.GetEnumerator()) {
+            $artifact = Join-Path $bundle "System/$($entry.Key)"
+            if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) {
+              throw "Arduino IDE V2 bundle did not produce System/$($entry.Key)"
+            }
+            [byte[]]$container = [IO.File]::ReadAllBytes($artifact)
+            if ($container.Length -le 64 -or $container.Length -gt 20544 -or
+                [Text.Encoding]::ASCII.GetString($container, 0, 7) -ne 'MK61APP' -or
+                $container[7] -ne 0 -or
+                [BitConverter]::ToUInt16($container, 12) -ne 5 -or
+                $container[14] -ne $entry.Value -or $container[15] -ne 1) {
+              throw "System/$($entry.Key) is not the expected packed ABI 5 APP"
+            }
+          }
+
+          foreach ($name in @('WBMP.APP', 'CHIP8.APP')) {
+            if (Test-Path -LiteralPath (Join-Path $bundle "System/$name")) {
+              throw "Arduino IDE V2 bundle contains disabled System/$name"
+            }
+          }
+
+          $flags = Get-Content -LiteralPath (Join-Path $bundle 'build.flags') -Raw
+          foreach ($required in @(
+            '-DREVISION_V2',
+            '-DMK61_ENABLE_LOADABLE_MODULES=1',
+            '-DMK61_ENABLE_FOCAL=1',
+            '-DMK61_ENABLE_TINYBASIC=1',
+            '-DMK61_ENABLE_WBMP_VIEWER=0',
+            '-DMK61_ENABLE_MARKDOWN_VIEWER=1',
+            '-DMK61_ENABLE_CHIP8=0',
+            '-DMK61_MATH_BACKEND=1',
+            '-DMK61_APP_LOCAL_FLOAT_MATH=0',
+            '-DMK61_PORTABLE_UI_FONTS=0'
+          )) {
+            if (-not $flags.Contains($required)) {
+              throw "Arduino IDE V2 bundle is missing build flag: $required"
+            }
           }
 
   build-release:

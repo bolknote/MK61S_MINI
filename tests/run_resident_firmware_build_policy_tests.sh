@@ -36,11 +36,12 @@ board_hook_sh="$root/tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-ap
 board_hook_ps="$root/tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1"
 board_install_sh="$root/tools/.mk61-arduino-board/install.sh"
 board_install_ps="$root/tools/.mk61-arduino-board/install.ps1"
+release_workflow="$root/.github/workflows/firmware-release.yml"
 
 for file in "$f411_matrix" "$f411_o3_check" "$f401_check" "$f401_bundle" \
     "$firmware_sh" "$firmware_ps" "$gcc_cmake" "$gcc_ps" "$board" \
     "$board_hook_sh" "$board_hook_ps" "$board_install_sh" \
-    "$board_install_ps"; do
+    "$board_install_ps" "$release_workflow"; do
   test -s "$file" || fail "missing build path: $file"
 done
 
@@ -105,5 +106,28 @@ for installer in "$board_install_sh" "$board_install_ps"; do
   require_text "$installer" 'rust_types.h'
   require_text "$installer" 'seal-firmware.ps1'
 done
+
+arduino_ide_job="$(sed -n \
+  '/^  arduino-ide-windows:/,/^  build-release:/p' "$release_workflow")"
+for required in \
+    'mk61_platform=mini_v2,mk61_display=lcd_a00' \
+    'mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown' \
+    "'FOCAL.APP' = 1" \
+    "'BASIC.APP' = 2" \
+    "'MARKDOWN.APP' = 6" \
+    "'SETUP.APP' = 7" \
+    'System/HELP0.TXT' \
+    'System/HELP1.TXT' \
+    '-DREVISION_V2' \
+    '-DMK61_ENABLE_FOCAL=1' \
+    '-DMK61_ENABLE_TINYBASIC=1' \
+    '-DMK61_ENABLE_MARKDOWN_VIEWER=1'; do
+  printf '%s\n' "$arduino_ide_job" | grep -Fq -- "$required" ||
+    fail "Windows Arduino IDE V2 job is missing: $required"
+done
+if printf '%s\n' "$arduino_ide_job" |
+    grep -Fq -- 'mk61_documents=disabled'; then
+  fail 'Windows Arduino IDE V2 job disables the document APP'
+fi
 
 printf 'resident_firmware_build_policy_tests: ok\n'
