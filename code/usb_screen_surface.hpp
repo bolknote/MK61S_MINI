@@ -51,8 +51,10 @@ class Surface {
     void flush(t_time_ms now);
 
     void setTextProfile(TextProfile profile);
+    void setTextLayout(TextProfile profile, u8 cols);
     TextProfile textProfile(void) const { return profile_; }
     u8 rows(void) const { return grid_.rows(); }
+    u8 cols(void) const { return grid_.cols(); }
     u8 cursorX(void) const { return grid_.cursorX(); }
     u8 cursorY(void) const { return grid_.cursorY(); }
     bool cursorUnderline(void) const { return cursor_underline_; }
@@ -140,10 +142,12 @@ class Surface {
     u8 rowTop(u8 row) const;
     u8 rowPitch(u8 row) const;
     u8 glyphHeight(u8 row) const;
+    u8 textTop(void) const;
     bool resolveToken(u16 value, bool custom,
                       builtin_font::Raster& raster) const;
-    void drawGlyph(u8 cell_x, u8 row, const builtin_font::Raster& raster);
-    void drawCursor(u8 cell_x, u8 row, bool block);
+    void drawGlyph(u8 cell_x, u8 cell_width, u8 row,
+                   const builtin_font::Raster& raster);
+    void drawCursor(u8 cell_x, u8 cell_width, u8 row, bool block);
     void drawOverlay(void);
 };
 

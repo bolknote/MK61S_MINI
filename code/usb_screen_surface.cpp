@@ -57,7 +57,7 @@ Surface::Surface(u8* framebuffer)
     overlay_height_(0),
     overlay_clear_border_(0),
     overlay_visible_(false) {
-  grid_.reset(profile_.rows);
+  grid_.reset(profile_.rows, grid_.cols());
 }
 
 void Surface::begin(TextProfile profile) {
@@ -111,7 +111,7 @@ void Surface::clear(void) {
 #if MK61_FIXED_CALCULATOR_FACE
   calculator_face_active_ = false;
 #endif
-  grid_.reset(profile_.rows);
+  grid_.reset(profile_.rows, grid_.cols());
   grid_.markAll();
   cursor_underline_ = false;
   cursor_blink_ = false;
@@ -134,14 +134,23 @@ void Surface::endUpdate(void) {
 }
 
 void Surface::setTextProfile(TextProfile profile) {
+  setTextLayout(profile, COLS);
+}
+
+void Surface::setTextLayout(TextProfile profile, u8 cols) {
   if(!active_) return;
   const TextProfile next = normalizeProfile(profile);
   if(next.rows == profile_.rows &&
      next.glyph_width == profile_.glyph_width &&
      next.glyph_height == profile_.glyph_height &&
-     next.line_gap == profile_.line_gap) return;
+     next.line_gap == profile_.line_gap && cols == grid_.cols()) return;
   profile_ = next;
-  clear();
+  grid_.reset(profile_.rows, cols);
+  cursor_underline_ = false;
+  cursor_blink_ = false;
+  cursor_blink_phase_ = false;
+  cursor_next_blink_ms_ = 0;
+  markDirty();
 }
 
 void Surface::setCursor(u8 x, u8 y) {
@@ -233,7 +242,7 @@ void Surface::seedText(const text_screen::Grid& source,
                        t_time_ms now) {
   if(!active_ || custom_glyphs == NULL || custom_valid == NULL) return;
 
-  grid_.reset(profile_.rows);
+  grid_.reset(profile_.rows, source.cols());
   memset(custom_glyphs_, 0, sizeof(custom_glyphs_));
   memset(custom_valid_, 0, sizeof(custom_valid_));
   for(u8 slot = 0; slot < CUSTOM_GLYPHS; slot++) {
@@ -245,9 +254,11 @@ void Surface::seedText(const text_screen::Grid& source,
 
   const u8 rows = source.rows() < grid_.rows()
                 ? source.rows() : grid_.rows();
+  const u8 cols = source.cols() < grid_.cols()
+                ? source.cols() : grid_.cols();
   for(u8 row = 0; row < rows; row++) {
     grid_.setCursor(0, row);
-    for(u8 col = 0; col < COLS; col++) {
+    for(u8 col = 0; col < cols; col++) {
       const u16 value = source.cell(col, row);
       if(source.cellIsCustom(col, row) && value < CUSTOM_GLYPHS &&
          custom_valid_[value]) {
@@ -298,7 +309,7 @@ bool Surface::copyCustomChar(u8 slot, u8 glyph[8]) const {
 }
 
 bool Surface::readCell(u8 x, u8 y, u16& value, bool& custom) const {
-  if(!active_ || x >= COLS || y >= grid_.rows()) return false;
+  if(!active_ || x >= grid_.cols() || y >= grid_.rows()) return false;
   value = grid_.cell(x, y);
   custom = grid_.cellIsCustom(x, y);
   return true;
@@ -452,7 +463,16 @@ void Surface::fillRect(i16 x, i16 y, i16 width, i16 height,
 }
 
 u8 Surface::rowTop(u8 row) const {
-  return (u8) ((u16) row * (profile_.glyph_height + profile_.line_gap));
+  return (u8) (textTop() +
+      (u16) row * (profile_.glyph_height + profile_.line_gap));
+}
+
+u8 Surface::textTop(void) const {
+  if(grid_.cols() <= COLS) return 0;
+  const u8 rows = grid_.rows();
+  const u16 occupied = (u16) rows * profile_.glyph_height +
+      (rows > 0 ? (u16) (rows - 1U) * profile_.line_gap : 0U);
+  return occupied < HEIGHT ? (u8) ((HEIGHT - occupied) / 2U) : 0U;
 }
 
 u8 Surface::rowPitch(u8 row) const {
@@ -506,7 +526,7 @@ bool Surface::resolveToken(u16 value, bool custom,
   return value != '?' && builtin_font::decode(fallback, '?', raster);
 }
 
-void Surface::drawGlyph(u8 cell_x, u8 row,
+void Surface::drawGlyph(u8 cell_x, u8 cell_width, u8 row,
                         const builtin_font::Raster& raster) {
   const u8 height = glyphHeight(row);
   const u8 max_width = clamp(profile_.glyph_width, 1, 10);
@@ -515,7 +535,7 @@ void Surface::drawGlyph(u8 cell_x, u8 row,
     return;
   }
 
-  const u8 left = (u8) (cell_x + (CELL_WIDTH - width) / 2U);
+  const u8 left = (u8) (cell_x + (cell_width - width) / 2U);
   const u8 top = rowTop(row);
   for(u8 dest_y = 0; dest_y < height; dest_y++) {
     const u8 source_y = (u8) (((u16) dest_y * raster.height) / height);
@@ -528,11 +548,11 @@ void Surface::drawGlyph(u8 cell_x, u8 row,
   }
 }
 
-void Surface::drawCursor(u8 cell_x, u8 row, bool block) {
+void Surface::drawCursor(u8 cell_x, u8 cell_width, u8 row, bool block) {
   const u8 width = clamp(profile_.glyph_width, 1, 10);
   const u8 height = glyphHeight(row);
   if(width == 0 || height == 0) return;
-  const u8 left = (u8) (cell_x + (CELL_WIDTH - width) / 2U);
+  const u8 left = (u8) (cell_x + (cell_width - width) / 2U);
   const u8 top = rowTop(row);
   if(block) fillRect(left, top, width, height, true);
   else fillRect(left, top + height - 1, width, 1, true);
@@ -566,15 +586,26 @@ void Surface::render(void) {
   }
 #endif
   clearPixels();
+  const bool wide_text = grid_.cols() > COLS;
+  u8 cell_width = CELL_WIDTH;
+  if(wide_text) {
+    cell_width = font_ != NULL && font_->metrics().monospaced
+        ? font_->metrics().default_advance
+        : (u8) (WIDTH / grid_.cols());
+    if(cell_width == 0) cell_width = 1;
+  }
+  const u8 left_margin = wide_text ? 2U : 0U;
   for(u8 row = 0; row < grid_.rows(); row++) {
-    for(u8 col = 0; col < COLS; col++) {
+    for(u8 col = 0; col < grid_.cols(); col++) {
+      const u16 cell_x = (u16) left_margin + (u16) col * cell_width;
+      if(cell_x >= WIDTH) break;
       builtin_font::Raster raster = {};
       if(resolveToken(grid_.cell(col, row), grid_.cellIsCustom(col, row),
                       raster)) {
-        drawGlyph((u8) (col * CELL_WIDTH), row, raster);
+        drawGlyph((u8) cell_x, cell_width, row, raster);
       }
       if(row == grid_.cursorY() && col == grid_.cursorX() && cursorVisible()) {
-        drawCursor((u8) (col * CELL_WIDTH), row,
+        drawCursor((u8) cell_x, cell_width, row,
                    cursor_blink_ && cursor_blink_phase_);
       }
     }

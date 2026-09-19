@@ -348,7 +348,7 @@ class MK61Display : public Print {
     u32 busyFlagTimeouts(void) const;
     u8 cols(void) const {
 #if MK61_ENABLE_USB_SCREEN
-      if(usb_screen_active) return lcd_display::COLS;
+      if(usb_screen_active) return usb_surface.cols();
 #endif
 #if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
       return grid.cols();

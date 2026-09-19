@@ -93,6 +93,20 @@ u8 MK61Display::uiTop(void) const {
 }
 
 void MK61Display::beginUiText(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usbScreenActive()) {
+    ui_font_state |= 8U;
+    if(const prepared_font::Face* external = externalUiFont()) {
+      const prepared_font::Metrics& metrics = external->metrics();
+      usb_surface.setFont(external);
+      usb_surface.setTextLayout(
+          {uiRows(), metrics.max_width, metrics.height, metrics.line_gap},
+          uiCols());
+    }
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   const bool was_active = uiTextActive();
   ui_font_state |= 8U;
   if(was_active != uiTextActive() ||
@@ -101,6 +115,18 @@ void MK61Display::beginUiText(void) {
 }
 
 void MK61Display::endUiText(void) {
+#if MK61_ENABLE_USB_SCREEN
+  if(usbScreenActive()) {
+    ui_font_state &= (u8) ~8U;
+    usb_surface.setFont(selectedFont());
+    usb_surface.setTextLayout(
+        {active_profile.rows, active_profile.glyph_width,
+         active_profile.glyph_height, active_profile.line_gap},
+        lcd_display::COLS);
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
   const bool was_active = uiTextActive();
   ui_font_state &= (u8) ~8U;
   if(was_active != uiTextActive()) clear();

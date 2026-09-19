@@ -23,6 +23,38 @@ static usize ink(const usb_screen::Surface& surface) {
   return count;
 }
 
+static void putLe16(u8* target, u16 value) {
+  target[0] = (u8) value;
+  target[1] = (u8) (value >> 8);
+}
+
+static prepared_font::Face narrowFont(u8 (&data)[28]) {
+  memset(data, 0, sizeof(data));
+  memcpy(data, "PFK1", 4);
+  data[4] = prepared_font::FLAG_MONOSPACED;
+  data[5] = 3;
+  data[6] = 5;
+  data[7] = 4;
+  data[8] = 1;
+  data[9] = 1;
+  putLe16(data + 10, 1);
+  putLe16(data + 12, 23);
+  putLe16(data + 14, 23);
+  putLe16(data + 16, sizeof(data));
+  putLe16(data + 20, 'A');
+  data[22] = 0;
+  data[23] = 0x40;
+  data[24] = 0xA0;
+  data[25] = 0xE0;
+  data[26] = 0xA0;
+  data[27] = 0xA0;
+  putLe16(data + prepared_font::CRC_OFFSET,
+          prepared_font::checksum(data, sizeof(data)));
+  prepared_font::Face face;
+  assert(face.open(data, sizeof(data)));
+  return face;
+}
+
 static void test_profiles(void) {
   const usb_screen::TextProfile huge =
     usb_screen::normalizeProfile({255, 255, 255, 255});
@@ -75,6 +107,29 @@ static void test_text_unicode_and_cursor(void) {
   const u32 blink_before = surface.revision();
   surface.flush(510);
   assert(surface.revision() > blink_before);
+}
+
+static void test_wide_external_font_layout(void) {
+  u8 font_data[28] = {};
+  prepared_font::Face font = narrowFont(font_data);
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
+  surface.begin(usb_screen::profile3x5());
+  surface.setFont(&font);
+  surface.setTextLayout(usb_screen::profile3x5(), 40);
+  assert(surface.cols() == 40);
+  assert(surface.rows() == 10);
+  surface.setCursor(39, 0);
+  surface.writeByte('A');
+  surface.flush(0);
+  bool last_cell_visible = false;
+  for(u16 x = 158; x <= 160; ++x) {
+    for(u8 y = 2; y <= 6; ++y) {
+      last_cell_visible = last_cell_visible || pixel(surface, x, y);
+    }
+  }
+  assert(last_cell_visible);
+  assert(!pixel(surface, 191, 0));
 }
 
 static void test_custom_glyph(void) {
@@ -243,6 +298,7 @@ static void test_noop_updates_do_not_render(void) {
 int main(void) {
   test_profiles();
   test_text_unicode_and_cursor();
+  test_wide_external_font_layout();
   test_custom_glyph();
   test_backend_switch_seed_and_session_reset();
   test_fullscreen_and_overlay();

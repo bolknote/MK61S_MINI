@@ -3483,13 +3483,31 @@ bool MK61Display::enterUsbScreen(void) {
   const bool seed_cursor_underline =
     (display_control & LCD_CURSORON) != 0;
   const bool seed_cursor_blink = (display_control & LCD_BLINKON) != 0;
-  const usb_screen::TextProfile profile = usbTextProfile(usb_text_profile);
+  usb_screen::TextProfile profile = usbTextProfile(usb_text_profile);
 #else
-  const usb_screen::TextProfile profile = usbTextProfile(active_profile);
+  usb_screen::TextProfile profile = usbTextProfile(active_profile);
+#endif
+  u8 usb_columns = lcd_display::COLS;
+#if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
+  const prepared_font::Face* usb_font = selectedFont();
+  if(uiTextContext()) {
+    if(const prepared_font::Face* external = externalUiFont()) {
+      const prepared_font::Metrics& metrics = external->metrics();
+      profile = {uiRows(), metrics.max_width, metrics.height,
+                 metrics.line_gap};
+      usb_columns = uiCols();
+      usb_font = external;
+    }
+  }
 #endif
   usb_surface.begin(profile);
+  usb_surface.setTextLayout(profile, usb_columns);
 #if defined(MK61_DISPLAY_UC1609)
+#if MK61_PROPORTIONAL_UI_FONTS
+  usb_surface.setFont(usb_font);
+#else
   usb_surface.setFont(selectedFont());
+#endif
   usb_surface.seedText(grid, custom_glyphs, custom_valid,
                        cursor_underline, cursor_blink, millis());
 #if MK61_FIXED_CALCULATOR_FACE

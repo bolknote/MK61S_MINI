@@ -12,6 +12,9 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO=100 \
   -DMK61_ENABLE_USB_SCREEN=1 \
+  -DMK61_DISPLAY_UC1609=1 \
+  -DMK61_PROPORTIONAL_UI_FONTS=1 \
+  -DMK61_FIXED_CALCULATOR_FACE=0 \
   -I"$root/code" \
   -I"$root/tests/mk_math_shim" \
   "$root/tests/usb_screen_surface_self_test.cpp" \
