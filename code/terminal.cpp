@@ -4735,16 +4735,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
             break;
-          case CMD_MEASURE:
-              if(!script_mode || trap_mode ||
-                 !terminal_core::at_end(command_args())) {
-                Serial.println("Usage in M61: measure");
-                recive_pos = 0;
-                return terminal_protocol::Result::error();
-              }
-              recive_pos = 0;
-              return script_action(
-                  terminal_protocol::ResultKind::MEASURE_NEXT_RUN, "");
           case CMD_WAIT: {
               usize milliseconds = 0;
               if(!script_mode ||

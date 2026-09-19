@@ -66,6 +66,7 @@ int main() {
   assert(terminal_catalog::lookup((const u8*) "snm") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "sdel") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "sera") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "measure") == CMD_UNKNOWN);
 #if MK61_SETUP_IS_LOADABLE
   assert(std::strlen(terminal_catalog::help_signature()) == 9);
 #endif

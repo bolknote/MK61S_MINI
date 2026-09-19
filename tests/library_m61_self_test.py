@@ -42,13 +42,13 @@ def parse(path: Path) -> tuple[list[str], bytes]:
     text = raw.decode("ascii")
     lines = text.splitlines()
     assert lines and lines[0] == "reinit", f"{path.name}: must start cleanly"
-    assert lines[-1] == "measure", f"{path.name}: must arm one-shot timing"
+    assert "measure" not in lines, f"{path.name}: obsolete timing command remains"
     assert all(len(line) <= 239 for line in lines), f"{path.name}: line too long"
 
     initializers = []
     program = bytearray()
     saw_hin = False
-    for line in lines[1:-1]:
+    for line in lines[1:]:
         if line.startswith("R"):
             assert not saw_hin, f"{path.name}: register setup must precede code"
             initializers.append(line)

@@ -357,7 +357,6 @@ static void test_script_allowlist_is_explicit(void) {
   assert(terminal_command_allowed_in_script(CMD_REG_SET));
   assert(terminal_command_allowed_in_script(CMD_IF));
   assert(terminal_command_allowed_in_script(CMD_PRINT));
-  assert(terminal_command_allowed_in_script(CMD_MEASURE));
   assert(terminal_command_allowed_in_script(CMD_WAIT));
   assert(terminal_command_allowed_in_script(CMD_RET));
   assert(terminal_command_allowed_in_script(CMD_REINIT));
@@ -385,7 +384,6 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
 
   assert(terminal_command_allowed_in_trap(CMD_PRINT));
-  assert(!terminal_command_allowed_in_trap(CMD_MEASURE));
   assert(terminal_command_allowed_in_trap(CMD_WAIT));
   assert(terminal_command_allowed_in_trap(CMD_RET));
   assert(terminal_command_allowed_in_trap(CMD_IF));
@@ -947,15 +945,18 @@ static void test_rtc_idle_clock_glyphs_and_slots(void) {
 
   u32 graphic[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT] = {};
   assert(rtc_idle_clock::build_graphic_clock(0, 0, graphic));
-  const u32 digits =
-    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_HOUR_TENS_X) |
-    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_HOUR_UNITS_X) |
-    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_MINUTE_TENS_X) |
-    ((u32) 0x0F << rtc_idle_clock::GRAPHIC_CLOCK_MINUTE_UNITS_X);
-  const u32 colon = (u32) 0x03 << rtc_idle_clock::GRAPHIC_CLOCK_COLON_X;
+  static constexpr u8 ZERO_ROWS[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT] = {
+    0x0E, 0x11, 0x19, 0x15, 0x13, 0x11, 0x0E
+  };
   for(u8 y = 0; y < rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT; y++) {
-    const bool colon_row = y == 2 || y == 3 || y == 6 || y == 7;
-    assert(graphic[y] == (digits | (colon_row ? colon : 0)));
+    const u32 digits =
+      ((u32) ZERO_ROWS[y] << rtc_idle_clock::GRAPHIC_CLOCK_HOUR_TENS_X) |
+      ((u32) ZERO_ROWS[y] << rtc_idle_clock::GRAPHIC_CLOCK_HOUR_UNITS_X) |
+      ((u32) ZERO_ROWS[y] << rtc_idle_clock::GRAPHIC_CLOCK_MINUTE_TENS_X) |
+      ((u32) ZERO_ROWS[y] << rtc_idle_clock::GRAPHIC_CLOCK_MINUTE_UNITS_X);
+    const u32 colon = (y == 2 || y == 4)
+      ? (u32) 1U << rtc_idle_clock::GRAPHIC_CLOCK_COLON_X : 0;
+    assert(graphic[y] == (digits | colon));
     assert((graphic[y] >> rtc_idle_clock::GRAPHIC_CLOCK_WIDTH) == 0);
   }
   assert(!rtc_idle_clock::build_graphic_clock(24, 0, graphic));

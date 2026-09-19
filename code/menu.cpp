@@ -16,6 +16,7 @@
 #include "usb_screen.hpp"
 #include "usb_mass_storage.hpp"
 
+extern t_time_ms runtime_ms;
 extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
 extern bool usb_start_mass_storage_mode(void);
@@ -139,20 +140,24 @@ static void set_speed_mode_state(SpeedMode mode) {
 }
 
 bool  InfoData(void) {
-  main_lcd().clear();
   if(language_is_ru()) {
     char line0[24];
+    char line1[24];
     snprintf(line0, sizeof(line0), "СЧ:%u УГ:%u%s",
       (unsigned) read_counter_switch(),
       (unsigned) ((u8) read_grade_switch()),
       flash_is_ok ? " ФЛ" : "");
-    lcd_ru::print_lines(line0, "");
+    snprintf(line1, sizeof(line1), "ВР:%lu МС", (unsigned long) runtime_ms);
+    lcd_ru::print_lines(line0, line1);
   } else {
     MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     main_lcd().setCursor(0,0);
     main_lcd().print("cnt:"); main_lcd().print(read_counter_switch());
     main_lcd().print(" sw:"); main_lcd().print((u8) read_grade_switch());
     if(flash_is_ok) main_lcd().print(" W25");
+    main_lcd().setCursor(0,1);
+    main_lcd().print("run "); main_lcd().print(runtime_ms); main_lcd().print(" ms");
   }
   kbd::get_key_wait();
   return false;

@@ -1,5 +1,4 @@
 #include "../code/rust_types.h"
-#include "../code/run_measurement.hpp"
 
 #include <assert.h>
 #include <stdio.h>
@@ -20,8 +19,7 @@ static int queued_key = -1;
 static int key_on_full_scan = -1;
 static bool cancel_during_service;
 static int service_count;
-static int measurement_show_count;
-static u32 shown_measurement_ms;
+t_time_ms runtime_ms;
 
 u32 millis(void) { return fake_millis; }
 void sound(int, usize, usize, u8) { sound_count++; }
@@ -114,13 +112,6 @@ void service_m61_controls(void) {
   if(cancel_during_service) m61_text::script_active = false;
 }
 
-namespace run_measurement {
-void show_and_wait(u32 elapsed_ms) {
-  measurement_show_count++;
-  shown_measurement_ms = elapsed_ms;
-}
-}
-
 static u8 ext61_program[105];
 static constexpr i32 COUNT_EXT_COMMAND = 7;
 static struct {
@@ -141,9 +132,7 @@ static void reset_fakes(void) {
   key_on_full_scan = -1;
   cancel_during_service = false;
   service_count = 0;
-  measurement_show_count = 0;
-  shown_measurement_ms = 0;
-  run_measurement::cancel();
+  runtime_ms = 0;
   library_mk61::maximum = false;
   core_61::running = true;
   core_61::boundary_yielded = false;
@@ -216,35 +205,32 @@ static void test_maximum_mode_runs_the_fast_batch(void) {
   assert(core_61::step_count == (int) cfg::MAXIMUM_MK61_BATCH_STEPS);
 }
 
-static void test_one_shot_measurement_reports_only_the_armed_run(void) {
+static void test_every_run_updates_last_runtime(void) {
   reset_fakes();
-  run_measurement::arm_next();
-  assert(run_measurement::state() == run_measurement::State::ARMED);
   event_start_prg_mk61();
-  assert(run_measurement::state() == run_measurement::State::RUNNING);
+  assert(runtime_ms == 1000U);
 
   fake_millis = 1423;
   core_61::step_action = core_61::StepAction::STOP;
   run_program_steps();
-  assert(measurement_show_count == 1);
-  assert(shown_measurement_ms == 423);
-  assert(run_measurement::state() == run_measurement::State::IDLE);
+  assert(runtime_ms == 423U);
 
   core_61::running = true;
-  event_start_prg_mk61();
+  core_61::step_action = core_61::StepAction::STOP;
   fake_millis = 2000;
+  event_start_prg_mk61();
+  fake_millis = 2017;
   run_program_steps();
-  assert(measurement_show_count == 1);
+  assert(runtime_ms == 17U);
 }
 
-static void test_measurement_elapsed_time_wraps_safely(void) {
+static void test_runtime_elapsed_time_wraps_safely(void) {
   reset_fakes();
-  run_measurement::arm_next();
-  assert(run_measurement::program_started(0xFFFFFFF0U));
-  u32 elapsed = 0;
-  assert(run_measurement::program_stopped(0x00000010U, elapsed));
-  assert(elapsed == 32U);
-  assert(!run_measurement::program_stopped(20U, elapsed));
+  fake_millis = 0xFFFFFFF0U;
+  event_start_prg_mk61();
+  fake_millis = 0x00000010U;
+  event_stop_in_prg_mk61();
+  assert(runtime_ms == 32U);
 }
 
 int main(void) {
@@ -253,8 +239,8 @@ int main(void) {
   test_suspended_trap_only_scans_controls();
   test_m61_cancel_stays_silent();
   test_maximum_mode_runs_the_fast_batch();
-  test_one_shot_measurement_reports_only_the_armed_run();
-  test_measurement_elapsed_time_wraps_safely();
+  test_every_run_updates_last_runtime();
+  test_runtime_elapsed_time_wraps_safely();
   printf("automate_self_test: ok\n");
   return 0;
 }

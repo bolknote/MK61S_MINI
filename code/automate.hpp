@@ -1,16 +1,7 @@
-#include "run_measurement.hpp"
-
 static constexpr usize hz_STOP_SIGNAL  =   200;  // Hz
 static constexpr usize ms_STOP_SIGNAL  =   850;  // ms
 
-#ifdef DEBUG_MEASURE
-static t_time_ms debug_runtime_started_at;
-#endif
-
 inline  void  return_auto_mode(void) { // возвращение в режим АВТ
-    u32 measured_ms = 0;
-    const bool show_measurement =
-        run_measurement::program_stopped(millis(), measured_ms);
     sound(PIN_BUZZER, hz_STOP_SIGNAL, ms_STOP_SIGNAL, library_mk61::sound_volume());
     MnemoLabel.enable();
     if(!config.disassm) disassembler.disable(); // если дизассемблер включен в конфигурации "ВСЕГДА" то выключение ненужно
@@ -23,7 +14,6 @@ inline  void  return_auto_mode(void) { // возвращение в режим �
         main_lcd().write(letter);
       }
     #endif
-    if(show_measurement) run_measurement::show_and_wait(measured_ms);
 }
 
 /* СОБЫТИЯ автомата конечных состояний МК-61 */
@@ -37,14 +27,15 @@ inline bool mk61_calculator_is_idle(void) {
 
 inline  void  event_stop_in_prg_mk61(void) {
   classic_timer::synchronize(false);
+  runtime_ms = millis() - runtime_ms;
   #ifdef DEBUG_MEASURE
-    const t_time_ms debug_runtime_ms = millis() - debug_runtime_started_at;
     char mk61_display[14];
     core_61::update_indicator(&mk61_display[0], terminal_symbols);
-    dbgln(MEASURE, "time elapsed (ms): ", debug_runtime_ms, " : ", mk61_display);
+    dbgln(MEASURE, "time elapsed (ms): ", runtime_ms, " : ", mk61_display);
   #endif
 
-  dbgln(MINI, "PRG: STOP classic_period_us = ",
+  dbgln(MINI, "PRG: STOP dt = ", runtime_ms,
+        " classic_period_us = ",
         classic_timer::configured_period_us());
   
   // >>>>>> Расширение системы команд МК-61 по режиму старт/стоп  <<<<<<<
@@ -70,15 +61,12 @@ inline  void  event_stop_in_prg_mk61(void) {
 }
 
 inline void  event_start_prg_mk61(void) {
-  const t_time_ms now = millis();
-  dbgln(MINI, "PRG: first step classic_period_us = ",
+  dbgln(MINI, "PRG: first step dt = ", runtime_ms,
+        " classic_period_us = ",
         classic_timer::configured_period_us());
   MnemoLabel.disable();
   disassembler.disable("RUN");
-  #ifdef DEBUG_MEASURE
-    debug_runtime_started_at = now;
-  #endif
-  (void) run_measurement::program_started(now);
+  runtime_ms = millis();
   classic_timer::synchronize(library_mk61::speed_is_classic());
 }
 
