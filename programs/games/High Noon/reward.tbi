@@ -9,7 +9,7 @@
 200 C.:P."****************************************"
 210 P."**************"
 220 P."CHECK NO. ";INT(1000*D);" AUG. ";INT(10+10*D);" TH. 1889"
-230 P."CASHIER'S RECEIT---BANK OF DODsGE CITY"
+230 P."CASHIER'S RECEIPT---BANK OF DODGE CITY"
 240 P."PAY TO THE BEARER ON DEMAND"
 250 P."THE SUM OF"
 260 P."TWENTY THOUSAND DOLLARS-------------"

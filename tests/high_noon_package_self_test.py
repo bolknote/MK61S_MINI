@@ -60,9 +60,10 @@ for line in (
 require("LOADFONT" not in "".join(path.read_text(encoding="utf-8") for path in parts).upper(),
         "High Noon must select its font in M61, not TinyBASIC")
 
-# These are the complete player-visible string literals of HIGHNOON.F90.
+# These are the complete player-visible string literals of the corrected port.
 # Whitespace is ignored because the 192x64 display needs deterministic 40-cell
-# wrapping and page breaks; wording, punctuation and even upstream typos stay.
+# wrapping and page breaks. Historical wording stays, but spelling mistakes are
+# corrected even when they were already present in the 1970 listing.
 required_text = (
     "H I G H  N O O N",
     "----------------",
@@ -72,10 +73,10 @@ required_text = (
     "WHILE YOU ARE WALKING DOWN A DUSTY, DESERTED SIDE STREET,",
     "BLACK BART EMERGES FROM A SALOON ONE HUNDRED PACES AWAY. BY",
     "AGREEMENT, YOU EACH HAVE FOUR CARTRIDGES IN YOUR SIX-GUNS.",
-    "YOUR MARKSMANSHIP EQUALS HIS. AT THE START OF THE WALKM NEI-",
+    "YOUR MARKSMANSHIP EQUALS HIS. AT THE START OF THE WALK, NEI-",
     "THER OF YOU CAN POSSIBLY HIT THE OTHER, AND AT THE END OF",
     "THE WALK, NEITHER CAN MISS. THE CLOSER YOU GET, THE BETTER",
-    "YOUR CHANCES OF HITTING BART, BUT HE ALSO HAS BETER CHANCES",
+    "YOUR CHANCES OF HITTING BART, BUT HE ALSO HAS BETTER CHANCES",
     "OF HITTING YOU.",
     "DO YOU STILL WANT TO CONTINUE?",
     "THE MOVES ARE AS FOLLOWS:",
@@ -103,7 +104,7 @@ required_text = (
     "CHECK NO.",
     "AUG.",
     "TH. 1889",
-    "CASHIER'S RECEIT---BANK OF DODsGE CITY",
+    "CASHIER'S RECEIPT---BANK OF DODGE CITY",
     "PAY TO THE BEARER ON DEMAND",
     "THE SUM OF",
     "TWENTY THOUSAND DOLLARS-------------------$20,000",
@@ -133,7 +134,7 @@ required_text = (
     "CATCH HIM",
     "BLACK BART FIRES",
     "SHELLS.......",
-    "HE GOT YOU RIGHT IN THE BACK. THATS WHAT YOU DESERVE",
+    "HE GOT YOU RIGHT IN THE BACK. THAT'S WHAT YOU DESERVE",
     "FOR RUNNING",
     "BLACK BART UNLOADED HIS GUN, ONCE IN YOUR BACK",
     "TIMES IN YOUR A**. NOW YOU CAN'T EVEN REST IN",
@@ -143,12 +144,11 @@ required_text = (
     "GRAZED BART IN THE RIGHT ARM",
     "HE'S HIT IN THE LEFT SHOULDER, FORCING HIM TO USE HIS RIGHT",
     "HAND TO SHOOT WITH",
-    "THAT WAS YOUR LAST SHOT, YOU MISSED",
     "BUT BART GOT YOU IN THE RIGHT SHIN.",
-    "THAT TRICK JUST SAVED YOUT LIFE. BART'S BULLET",
+    "THAT TRICK JUST SAVED YOUR LIFE. BART'S BULLET",
     "WAS STOPPED BY THE WOOD SIDES OF THE TROUGH.",
     "THOUGH BART GOT YOU ON THE LEFT SIDE OF YOUR JAW.",
-    "BURT MUST HAVE JERKED THE TRIGGER",
+    "BART MUST HAVE JERKED THE TRIGGER",
     "NOBODY CAN WALK THAT FAST",
     "NONE OF THIS NEGATIVE STUFF PARTNER, ONLY POSITIVE NUMBERS",
     "BART JUST HI-TAILED IT OUT OF TOWN RATHER THAN FACE YOU WITH-",
@@ -162,6 +162,10 @@ for phrase in required_text:
     needle = compact(phrase)
     require(any(needle in payload for payload in payloads),
             f"High Noon lost upstream text: {phrase}")
+
+all_game_text = "\n".join(path.read_text(encoding="utf-8") for path in parts)
+for stale in ("WALKM", "BETER", "RECEIT", "DODsGE", "THATS", "YOUT", "BURT"):
+    require(stale not in all_game_text, f"High Noon restored misspelling: {stale}")
 
 player = (game / "player.tbi").read_text(encoding="utf-8")
 bart = (game / "bart.tbi").read_text(encoding="utf-8")
@@ -180,5 +184,22 @@ for fragment in (
     ".R0=X:.R2=C:.R3=P",
 ):
     require(fragment in bart, f"High Noon Bart logic lost: {fragment}")
+
+# These paths exist in the 1970 listing but cannot affect a game. Keep them in
+# the archival FORTRAN port, not in the size-constrained executable port.
+for dead in (
+    'THAT WAS YOUR LAST SHOT, YOU MISSED',
+    '1800 IF P=2 G.1940',
+    '1810 IF P=3 G.1960',
+    '1870 P."THAT WAS YOUR LAST SHOT, YOU MISSED"',
+    '1880 N=2:G.7000',
+):
+    require(dead not in all_game_text, f"High Noon restored dead path: {dead}")
+require("IF P>4 G.1070" not in bart,
+        "High Noon restored the impossible P>4 branch inside P<=4 firing")
+require(player.count("IF T>3") == 1,
+        "High Noon must contain only one T>3 watering-trough check")
+require("IF X<0 X=0" in player, "High Noon player distance can become negative")
+require("IF Z>X Z=X" in bart, "High Noon Bart distance can become negative")
 
 print("high_noon_package_self_test: ok")
