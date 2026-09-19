@@ -10,17 +10,16 @@ static constexpr u8 GLYPH_ROWS = 8;
 static constexpr u8 CUSTOM_SLOT_COUNT = 8;
 static constexpr u8 CLOCK_GLYPH_COUNT = 3;
 static constexpr u8 INVALID_SLOT = 0xFF;
-static constexpr u8 GRAPHIC_CLOCK_SCALE = 2;
-static constexpr u8 GRAPHIC_CLOCK_DIGIT_WIDTH = 2 * GRAPHIC_CLOCK_SCALE;
-static constexpr u8 GRAPHIC_CLOCK_HEIGHT = DIGIT_ROWS * GRAPHIC_CLOCK_SCALE;
-static constexpr u8 GRAPHIC_CLOCK_GAP = GRAPHIC_CLOCK_SCALE;
+static constexpr u8 GRAPHIC_CLOCK_DIGIT_WIDTH = 5;
+static constexpr u8 GRAPHIC_CLOCK_HEIGHT = 7;
+static constexpr u8 GRAPHIC_CLOCK_GAP = 1;
 static constexpr u8 GRAPHIC_CLOCK_HOUR_TENS_X = 0;
 static constexpr u8 GRAPHIC_CLOCK_HOUR_UNITS_X =
   GRAPHIC_CLOCK_HOUR_TENS_X + GRAPHIC_CLOCK_DIGIT_WIDTH + GRAPHIC_CLOCK_GAP;
 static constexpr u8 GRAPHIC_CLOCK_COLON_X =
   GRAPHIC_CLOCK_HOUR_UNITS_X + GRAPHIC_CLOCK_DIGIT_WIDTH + GRAPHIC_CLOCK_GAP;
 static constexpr u8 GRAPHIC_CLOCK_MINUTE_TENS_X =
-  GRAPHIC_CLOCK_COLON_X + GRAPHIC_CLOCK_SCALE + GRAPHIC_CLOCK_GAP;
+  GRAPHIC_CLOCK_COLON_X + 1 + GRAPHIC_CLOCK_GAP;
 static constexpr u8 GRAPHIC_CLOCK_MINUTE_UNITS_X =
   GRAPHIC_CLOCK_MINUTE_TENS_X + GRAPHIC_CLOCK_DIGIT_WIDTH + GRAPHIC_CLOCK_GAP;
 static constexpr u8 GRAPHIC_CLOCK_WIDTH =
@@ -42,6 +41,22 @@ static constexpr u8 DIGITS[10][DIGIT_ROWS] = {
   {0b11, 0b01, 0b01, 0b01, 0b01}, // 7
   {0b11, 0b11, 0b00, 0b11, 0b11}, // 8
   {0b11, 0b11, 0b01, 0b01, 0b11}  // 9
+};
+
+// Тонкие цифры совпадают с растром штатного шрифта 5x8 графического экрана.
+// Последняя строка того шрифта пустая, поэтому часы занимают ровно 5x7 и
+// аккуратно помещаются над разделительной линией поля текущей команды.
+static constexpr u8 GRAPHIC_DIGIT_COLUMNS[10][GRAPHIC_CLOCK_DIGIT_WIDTH] = {
+  {0x3E, 0x51, 0x49, 0x45, 0x3E}, // 0
+  {0x00, 0x42, 0x7F, 0x40, 0x00}, // 1
+  {0x72, 0x49, 0x49, 0x49, 0x46}, // 2
+  {0x21, 0x41, 0x49, 0x4D, 0x33}, // 3
+  {0x18, 0x14, 0x12, 0x7F, 0x10}, // 4
+  {0x27, 0x45, 0x45, 0x45, 0x39}, // 5
+  {0x3C, 0x4A, 0x49, 0x49, 0x31}, // 6
+  {0x41, 0x21, 0x11, 0x09, 0x07}, // 7
+  {0x36, 0x49, 0x49, 0x49, 0x36}, // 8
+  {0x46, 0x49, 0x49, 0x29, 0x1E}  // 9
 };
 
 struct Slots {
@@ -94,16 +109,11 @@ inline bool build_pair_glyph(u8 value, u8 out[GLYPH_ROWS]) {
 
 inline void draw_graphic_digit(u8 digit, u8 left,
                                u32 out[GRAPHIC_CLOCK_HEIGHT]) {
-  for(u8 source_y = 0; source_y < DIGIT_ROWS; source_y++) {
-    for(u8 source_x = 0; source_x < 2; source_x++) {
-      const u8 source_mask = (u8) 1U << (1U - source_x);
-      if((DIGITS[digit][source_y] & source_mask) == 0) continue;
-      for(u8 scale_y = 0; scale_y < GRAPHIC_CLOCK_SCALE; scale_y++) {
-        const u8 y = source_y * GRAPHIC_CLOCK_SCALE + scale_y;
-        for(u8 scale_x = 0; scale_x < GRAPHIC_CLOCK_SCALE; scale_x++) {
-          const u8 x = left + source_x * GRAPHIC_CLOCK_SCALE + scale_x;
-          out[y] |= (u32) 1U << x;
-        }
+  for(u8 x = 0; x < GRAPHIC_CLOCK_DIGIT_WIDTH; x++) {
+    const u8 column = GRAPHIC_DIGIT_COLUMNS[digit][x];
+    for(u8 y = 0; y < GRAPHIC_CLOCK_HEIGHT; y++) {
+      if((column & ((u8) 1U << y)) != 0) {
+        out[y] |= (u32) 1U << (left + x);
       }
     }
   }
@@ -119,14 +129,8 @@ inline bool build_graphic_clock(u8 hour, u8 minute,
   draw_graphic_digit(minute / 10, GRAPHIC_CLOCK_MINUTE_TENS_X, out);
   draw_graphic_digit(minute % 10, GRAPHIC_CLOCK_MINUTE_UNITS_X, out);
 
-  for(u8 dot = 0; dot < 2; dot++) {
-    const u8 top = (u8) ((dot == 0 ? 1 : 3) * GRAPHIC_CLOCK_SCALE);
-    for(u8 y = 0; y < GRAPHIC_CLOCK_SCALE; y++) {
-      for(u8 x = 0; x < GRAPHIC_CLOCK_SCALE; x++) {
-        out[top + y] |= (u32) 1U << (GRAPHIC_CLOCK_COLON_X + x);
-      }
-    }
-  }
+  out[2] |= (u32) 1U << GRAPHIC_CLOCK_COLON_X;
+  out[4] |= (u32) 1U << GRAPHIC_CLOCK_COLON_X;
   return true;
 }
 

@@ -1107,6 +1107,7 @@ void  loop() {
   const bool calculator_idle =
       calculator_context &&
       mk61_calculator_is_idle() &&
+      !MnemoLabel.command_input_pending() &&
       kbd::last_key() < 0 &&
       !kbd::any_key_pressed();
   rtc_idle_clock::poll(main_lcd(), calculator_context, calculator_idle);

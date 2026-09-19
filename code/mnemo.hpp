@@ -24,6 +24,10 @@ class key_mnenonic {
     constexpr key_mnenonic(void)
       : mnemo_buffer{}, on(true), mnemo_pos(0), last_key(0) {}
 
+    bool command_input_pending(void) const {
+      return on && mnemo_pos != 0;
+    }
+
     void    clear_mnemo(void) {
       mnemo_pos = 0;
       memset(mnemo_buffer, 0, sizeof(mnemo_buffer));

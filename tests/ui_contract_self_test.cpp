@@ -403,6 +403,11 @@ int main() {
   u32 clock[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT];
   assert(rtc_idle_clock::build_graphic_clock(23, 59, clock));
   for(u32 row : clock) assert(row >> rtc_idle_clock::GRAPHIC_CLOCK_WIDTH == 0);
+  assert(rtc_idle_clock::GRAPHIC_CLOCK_WIDTH == 25);
+  assert(rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT == 7);
+  assert((clock[2] & ((u32) 1U << rtc_idle_clock::GRAPHIC_CLOCK_COLON_X)) != 0);
+  assert((clock[4] & ((u32) 1U << rtc_idle_clock::GRAPHIC_CLOCK_COLON_X)) != 0);
+  assert((clock[0] & ((u32) 1U << rtc_idle_clock::GRAPHIC_CLOCK_COLON_X)) == 0);
 
   // Final splash cells are stable independently of the selected text profile.
   const char title[] = "0123456789ABCDEF";

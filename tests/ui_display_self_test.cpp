@@ -2,6 +2,7 @@
 #include "calculator_face.hpp"
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
+#include "rtc_idle_clock_core.hpp"
 #include "shared_scratch.hpp"
 #include <cassert>
 #include <cstdlib>
@@ -440,6 +441,41 @@ void test_fixed_calculator_face() {
   }
   assert(display.calculatorFaceActive());
   assert(ui_display_test::transfers == 8);
+  expectFrame(expected);
+
+  // В покое часы занимают правое поле текущей команды. Скрытие обязано
+  // восстановить исходную мнемонику пиксель-в-пиксель и на новом фиксированном
+  // лице калькулятора, а не только в обычном текстовом UI.
+  const Frame without_clock = expected;
+  u32 clock[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT] = {};
+  assert(rtc_idle_clock::build_graphic_clock(12, 34, clock));
+  assert(display.showTopRightOverlay(
+      clock, rtc_idle_clock::GRAPHIC_CLOCK_WIDTH,
+      rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT,
+      rtc_idle_clock::GRAPHIC_CLOCK_CLEAR_BORDER));
+  const unsigned clock_total_width = rtc_idle_clock::GRAPHIC_CLOCK_WIDTH +
+      rtc_idle_clock::GRAPHIC_CLOCK_CLEAR_BORDER * 2U;
+  const unsigned clock_total_height = rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT +
+      rtc_idle_clock::GRAPHIC_CLOCK_CLEAR_BORDER * 2U;
+  const unsigned clock_left = 192U - clock_total_width;
+  expected = without_clock;
+  for(unsigned y = 0; y < clock_total_height; ++y) {
+    for(unsigned x = clock_left; x < 192U; ++x) {
+      expected[y / 8U * 192U + x] &= (u8) ~(1U << (y & 7U));
+    }
+  }
+  for(unsigned y = 0; y < rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT; ++y) {
+    for(unsigned x = 0; x < rtc_idle_clock::GRAPHIC_CLOCK_WIDTH; ++x) {
+      if((clock[y] & ((u32) 1U << x)) != 0) {
+        putPixel(expected,
+                 (int) (clock_left + rtc_idle_clock::GRAPHIC_CLOCK_CLEAR_BORDER + x),
+                 (int) (rtc_idle_clock::GRAPHIC_CLOCK_CLEAR_BORDER + y));
+      }
+    }
+  }
+  expectFrame(expected);
+  display.hideTopRightOverlay();
+  expected = without_clock;
   expectFrame(expected);
 
   // Twelve 16-pixel cells occupy the full 192-pixel glass. The decimal point
