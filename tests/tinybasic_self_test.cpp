@@ -790,6 +790,10 @@ static void test_high_noon_package(int argc, char** argv) {
 
   assert(RunTinyBasicProgram("REWARD"));
   assert(std::fabs(TinyBasicTestMkRegister(14) - 99.0) < 0.000001);
+  // Both receipt borders are generated from the live viewport width.  The
+  // final FOR/NEXT leaves I at COLS+1; a fixed 40+14-character decoration
+  // would not exercise the runtime geometry at all.
+  assert(std::fabs(TinyBasicTestNumber("I") - 48.0) < 0.000001);
 
   const double stand[] = {2};
   TinyBasicTestSetInputs(stand, 1);

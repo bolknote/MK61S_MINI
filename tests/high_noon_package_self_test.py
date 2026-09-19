@@ -139,12 +139,12 @@ required_text = (
     "БУДЬТЕ УВЕРЕНЫ: ОН БОЛЬШЕ НИКОГДА НЕ ПОКАЖЕТСЯ В ЭТОМ ГОРОДЕ.",
     "КАК МЭР ДОДЖ-СИТИ ОТ ИМЕНИ ВСЕХ ГОРОЖАН БЛАГОДАРЮ ВАС И ВРУЧАЮ",
     "НАГРАДУ ЗА УБИЙСТВО ЧЁРНОГО БАРТА: ЧЕК НА 20 000 ДОЛЛАРОВ.",
-    "******************************************************",
     "ЧЕК НОМЕР",
     "АВГУСТА 1889",
     "КВИТАНЦИЯ КАССИРА - БАНК ДОДЖ-СИТИ",
     "ВЫПЛАТИТЬ ПРЕДЪЯВИТЕЛЮ",
-    "ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ-------------------$20,000",
+    "ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ",
+    "$20,000",
     "НЕ ТРАТЬТЕ ВСЁ СРАЗУ.",
     "КРИС ГАЙЛО, 1970",
 )
@@ -170,6 +170,16 @@ unsupported = sorted({ord(char) for char in all_literals}
 require(not unsupported,
         "High Noon text is missing FMK glyph "
         + (f"U+{unsupported[0]:04X}" if unsupported else ""))
+
+reward = (game / "reward.tbi").read_text(encoding="utf-8")
+require(reward.count("GOSUB 8000") == 2,
+        "High Noon receipt must draw both borders through one width-aware routine")
+require("8000 FOR I=1 TO COLS" in reward and '8010 P."*";' in reward,
+        "High Noon receipt border must follow the active font viewport width")
+require(not re.search(r'"\*{2,}"', reward),
+        "High Noon receipt restored a hard-coded split border")
+require("265 FOR I=1 TO COLS-30" in reward,
+        "High Noon receipt amount line must fill the active viewport")
 for stale in ("WALKM", "BETER", "RECEIT", "DODsGE", "THATS", "YOUT", "BURT"):
     require(stale not in all_game_text, f"High Noon restored misspelling: {stale}")
 for path in parts:
