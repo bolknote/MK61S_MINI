@@ -180,9 +180,15 @@ inline double strtod(const char* s, const char** endptr) {
     effective_exp -= step;
   }
   while(effective_exp < 0 && value != 0.0) {
-    const int step = effective_exp < -308 ? -308 : effective_exp;
-    value *= pow10_int(step);
-    effective_exp -= step;
+    const int magnitude = effective_exp < -308 ? 308 : -effective_exp;
+    // Scale decimal mantissas by an integer power of ten.  Multiplying by
+    // pow10_int(-magnitude) compounds the binary approximation of 0.1: for
+    // example, "1.0000000" became 1.0000000000000002 while "1" stayed
+    // exactly 1.  Register conditions such as `if re==1` consequently failed.
+    // Division also gives equivalent decimal spellings the same correctly
+    // rounded binary value and retains chunked underflow handling.
+    value /= pow10_int(magnitude);
+    effective_exp += magnitude;
   }
   if(neg) value = -value;
   if(endptr) *endptr = p;

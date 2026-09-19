@@ -33,6 +33,30 @@ inline bool rebind_script_argument(const char* source, usize source_length,
   return true;
 }
 
+// `if` executes its tail by moving that nested command to the beginning of
+// the terminal input buffer.  Results such as GOTO_LABEL retain a pointer into
+// the moved text.  Translate that pointer back to the corresponding offset in
+// the original conditional line before execute_script_line() rebinds it to
+// the persistent source string.  Calls compose, so nested `if ... if ...`
+// commands restore one prefix at a time.
+inline bool restore_conditional_argument_offset(
+    const u8* transient, usize capacity, usize tail_offset,
+    usize tail_length, const char*& argument) {
+  if(transient == nullptr || argument == nullptr || capacity == 0) return false;
+  const uintptr_t argument_address = (uintptr_t) argument;
+  const uintptr_t transient_address = (uintptr_t) transient;
+  if(argument_address < transient_address ||
+     argument_address >= transient_address + capacity) return true;
+  const usize nested_offset =
+      (usize) (argument_address - transient_address);
+  if(nested_offset > tail_length ||
+     tail_offset >= capacity - nested_offset) {
+    return false;
+  }
+  argument = (const char*) transient + tail_offset + nested_offset;
+  return true;
+}
+
 inline bool is_space(char c) {
   return c == ' ' || c == '\t';
 }

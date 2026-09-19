@@ -917,6 +917,12 @@ static void test_pure_helpers(void) {
   check_near("atof sci", mk_math::atof("-1.5e3"), -1500.0, 1e-9);
   check_near("atof huge int", mk_math::atof("123456789012345678901"), 1.2345678901234568e20, 1e-15);
   check_near("atof leading 0", mk_math::atof("0.00000000000000000000125"), 1.25e-21, 1e-15);
+  check_true("atof equivalent register one",
+             mk_math::atof("1.0000000e+00") == mk_math::atof("1"));
+  check_true("atof equivalent register fraction",
+             mk_math::atof("0.1000000e+00") == mk_math::atof("0.1"));
+  check_true("atof equivalent register eighty",
+             mk_math::atof("8.0000000e+01") == mk_math::atof("80"));
   check_true("atof overflow", mk_math::is_inf(mk_math::atof("1e999999")));
   check_true("atof underflow", mk_math::atof("1e-999999") == 0.0);
   check_true("atof zero huge", mk_math::atof("0e999999") == 0.0);

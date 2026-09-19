@@ -3875,11 +3875,18 @@ terminal_protocol::Result class_terminal::exec_if(bool script_mode, bool trap_mo
       }
 
       // Условие истинно: остаток строки выполняется как обычная команда.
+      const usize tail_offset = (usize) (tail - (const char*) input_buffer);
       const usize tail_len = strlen(tail);
       memmove(input_buffer, tail, tail_len);
       input_buffer[tail_len] = CR; // контракт execute(): последний символ CR
       recive_pos = tail_len + 1;
-      return execute(script_mode, trap_mode);
+      terminal_protocol::Result result = execute(script_mode, trap_mode);
+      if(!terminal_core::restore_conditional_argument_offset(
+           input_buffer, MAX_INPUT_CHAR, tail_offset, tail_len,
+           result.args)) {
+        return terminal_protocol::Result::error();
+      }
+      return result;
     }
 
 terminal_protocol::Result class_terminal::execute(bool script_mode,

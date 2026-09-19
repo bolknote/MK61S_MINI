@@ -109,6 +109,34 @@ static void test_script_argument_rebinds_without_copy(void) {
       source, std::strlen(source), transient, sizeof(transient), argument));
 }
 
+static void test_conditional_argument_restores_original_offset(void) {
+  const char source[] = "if re==1 run :player";
+  u8 transient[terminal_core::INPUT_CAPACITY] = {};
+  std::memcpy(transient, source, sizeof(source));
+
+  const char* tail = std::strstr((const char*) transient, "run :player");
+  assert(tail != nullptr);
+  const usize tail_offset =
+      (usize) (tail - (const char*) transient);
+  const usize tail_length = std::strlen(tail);
+  std::memmove(transient, tail, tail_length);
+
+  // `run :label` returns the name after the colon from the shifted command.
+  const char* argument = (const char*) transient + 5;
+  assert(terminal_core::restore_conditional_argument_offset(
+      transient, sizeof(transient), tail_offset, tail_length, argument));
+  assert(argument == (const char*) transient + 14);
+  assert(terminal_core::rebind_script_argument(
+      source, std::strlen(source), transient, sizeof(transient), argument));
+  assert(std::strcmp(argument, "player") == 0);
+
+  const char literal[] = "";
+  argument = literal;
+  assert(terminal_core::restore_conditional_argument_offset(
+      transient, sizeof(transient), tail_offset, tail_length, argument));
+  assert(argument == literal);
+}
+
 static terminal_line_editor::Key decode_editor_sequence(const char* sequence) {
   terminal_line_editor::EscapeDecoder decoder;
   terminal_line_editor::Key key = terminal_line_editor::Key::NONE;
@@ -938,6 +966,7 @@ int main(void) {
   test_diagnostic_field_preserves_print_protocol();
   test_input_capacity_reserves_terminator();
   test_script_argument_rebinds_without_copy();
+  test_conditional_argument_restores_original_offset();
   test_terminal_escape_decoder();
   test_terminal_line_editing();
   test_terminal_line_editing_is_utf8_aware();
