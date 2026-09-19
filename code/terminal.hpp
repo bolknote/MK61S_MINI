@@ -153,10 +153,6 @@ class class_terminal {
     terminal_protocol::Result exec_watchdog(void);
 #endif
 
-    static void print_memory_snapshot(shared_memory::Arena arena);
-
-    terminal_protocol::Result exec_memory(void);
-
     static void print_display_status(void);
 
     static void print_display_usage(void);

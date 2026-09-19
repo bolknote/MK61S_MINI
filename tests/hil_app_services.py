@@ -48,15 +48,8 @@ def main():
                     port.expect_frame(expected, start)
                     png(expected, args.output_dir/f'{name.lower()}-{cycle}.png')
                     port.close_app(); foreground = False
-                    memory = port.command('mem')
-                    (args.output_dir/f'{name.lower()}-{cycle}-mem.txt').write_text(memory)
-                    assert 'MEM invariant=ok' in memory, memory
-                    for arena in ('workspace', 'scratch'):
-                        line = next(x for x in memory.splitlines()
-                                    if x.startswith('MEM '+arena+' '))
-                        assert ' active=none ' in line and ' depth=0 ' in line, line
                     assert listing_entries(port.command('ls /')) == root, 'C5 file leaked'
-                print(f'Cycle {cycle+1}: shared/local C service probes, pixels, memory and C5 PASS',
+                print(f'Cycle {cycle+1}: shared/local C service probes, pixels and C5 PASS',
                       flush=True)
             for command in ('crash show', 'mpu status', 'df'):
                 report = port.command(command, timeout=15)

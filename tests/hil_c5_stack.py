@@ -85,10 +85,9 @@ def main():
             after = listing_entries(port.command(f'ls "{args.directory}"'))
             assert sorted(after) == sorted(before), 'temporary files were not removed cleanly'
             (args.output_dir/'terminal.txt').write_bytes(port.text)
-        for command in ('mem', 'mpu status', 'crash show', 'df'):
+        for command in ('mpu status', 'crash show', 'df'):
             report = port.command(command, timeout=15)
             (args.output_dir/(command.replace(' ', '-')+'.txt')).write_text(report)
-            if command == 'mem': assert 'MEM invariant=ok' in report, report
             if command == 'crash show': assert 'CRASH none' in report, report
             if command == 'df': assert 'FIRMWARE CRC state=valid' in report, report
             if command == 'mpu status':

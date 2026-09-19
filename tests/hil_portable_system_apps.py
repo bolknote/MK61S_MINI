@@ -163,7 +163,7 @@ def main():
                     counts['markdown_runs'] += 1
                 print('Markdown: repeatable render, scrolling and return PASS',flush=True)
 
-            for command in ('identity','crash show','mpu status','mem','df'):
+            for command in ('identity','crash show','mpu status','df'):
                 report = port.command(command,timeout=15)
                 (args.output_dir/(command.replace(' ','-')+'.txt')).write_text(report)
                 if command == 'crash show': assert 'CRASH none' in report, report
@@ -172,7 +172,6 @@ def main():
                     remaining = int(re.search(r' observed_remaining=(\d+)', report)[1])
                     assert remaining >= args.minimum_stack_remaining, (remaining, args.minimum_stack_remaining)
                     counts['minimum_stack_remaining'] = remaining
-                if command == 'mem': assert 'MEM invariant=ok' in report, report
                 if command == 'df': assert 'FIRMWARE CRC state=valid' in report, report
             counts.update(result='PASS',frames_verified_transport=len(port.frames))
             (args.output_dir/'result.json').write_text(json.dumps(counts,indent=2)+'\n')

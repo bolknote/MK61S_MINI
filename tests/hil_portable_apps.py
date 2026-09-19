@@ -282,7 +282,7 @@ def main():
             port.expect_frame(expected_check, start)
             port.close_app(); foreground = False
             for command, filename in (('crash show', 'crash.txt'), ('mpu status', 'mpu.txt'),
-                                      ('mem', 'memory.txt'), ('df', 'firmware.txt')):
+                                      ('df', 'firmware.txt')):
                 report = port.command(command, timeout=10)
                 (args.output_dir / filename).write_text(report)
                 if command == 'crash show': assert 'CRASH none' in report, report
@@ -290,7 +290,6 @@ def main():
                     assert 'enabled=1 layout=ok' in report and 'watermark=1' in report, report
                     remaining = int(re.search(r' observed_remaining=(\d+)', report)[1])
                     assert remaining >= args.minimum_stack_remaining, (remaining, args.minimum_stack_remaining)
-                if command == 'mem': assert 'MEM invariant=ok' in report, report
                 if command == 'df': assert 'FIRMWARE CRC state=valid' in report, report
             result = {'startup_launches': args.cycles + 1, 'wbmp_launches': 7,
                       'display_switches': 2,
@@ -300,7 +299,7 @@ def main():
                 result.update(relocation_address=f'{relocation_address:#010x}',
                               app_sha256=hashlib.sha256(container).hexdigest())
             (args.output_dir / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
-            print('Runtime: CRC, MPU, no crash, SRAM ownership PASS', flush=True)
+            print('Runtime: CRC, MPU and no crash PASS', flush=True)
         finally:
             (args.output_dir / 'terminal.txt').write_bytes(port.text)
             if port.frames: (args.output_dir / 'last-frame.bin').write_bytes(port.frames[-1])

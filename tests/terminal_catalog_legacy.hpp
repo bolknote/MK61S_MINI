@@ -100,7 +100,6 @@ static constexpr TerminalCommand legacy_commands[] = {
   { "mpu",     CMD_MPU,           "mpu [status]" },
   #endif
 #endif
-  { "mem",     CMD_MEMORY,        "compact shared SRAM report" },
   { "display", CMD_DISPLAY,       "display status/test/reinit/on/off" },
   { "rst",     CMD_RESET,         "rst [now] - reboot; plain rst confirms on device" },
   { "dfu",     CMD_DFU,           "dfu [status] - enter/report ROM DFU" },

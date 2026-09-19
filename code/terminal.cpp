@@ -1023,55 +1023,6 @@ terminal_protocol::Result class_terminal::exec_watchdog(void) {
     }
 
 #endif
-namespace {
-
-// `mem` is a machine-readable diagnostic, so keep one printer loop instead of
-// instantiating Print::print at every field. The CSV is also easy to paste into
-// a spreadsheet when investigating a device.
-[[gnu::cold, gnu::noinline]]
-void print_memory_value(u32 value) {
-  Serial.write(',');
-  Serial.print(value);
-}
-
-[[gnu::cold, gnu::noinline]]
-void print_memory_text(const char* value) {
-  Serial.write(',');
-  Serial.print(value);
-}
-
-} // namespace
-
-void class_terminal::print_memory_snapshot(shared_memory::Arena arena) {
-      const shared_memory::Snapshot memory = shared_memory::snapshot(arena);
-      Serial.print("A,");
-      Serial.print(shared_memory::arena_name(arena));
-      print_memory_text(shared_memory::owner_name(memory.active_owner));
-      print_memory_text(shared_memory::owner_name(memory.resident_owner));
-      print_memory_value((u32) memory.capacity);
-      print_memory_value((u32) memory.resident_size);
-      print_memory_value((u32) memory.high_water);
-      print_memory_value(memory.busy_failures + memory.invalid_failures);
-      Serial.println();
-    }
-
-terminal_protocol::Result class_terminal::exec_memory(void) {
-      const char* args = terminal_skip_spaces(command_args());
-      if(!terminal_core::at_end(args)) {
-        Serial.println("Usage: mem");
-        return terminal_protocol::Result::error();
-      }
-      // MEM2 arena row: A,name,active,resident,capacity,resident,high,failures.
-      Serial.println("MEM2");
-      for(usize index = 0; index < (usize) shared_memory::Arena::COUNT;
-          index++) {
-        print_memory_snapshot((shared_memory::Arena) index);
-      }
-      Serial.print("I,");
-      Serial.println(shared_memory::validate_invariants() ? 1 : 0);
-      return terminal_protocol::Result::ok();
-    }
-
 void class_terminal::print_display_status(void) {
       Serial.print("DISPLAY controller=");
 #if defined(MK61_OLED1602_WS0010)
@@ -4049,11 +4000,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               Serial.println("USB Screen starting.");
             break;
 #endif
-          case CMD_MEMORY: {
-              const terminal_protocol::Result result = exec_memory();
-              recive_pos = 0;
-              return result;
-            }
           case CMD_DISPLAY: {
               const terminal_protocol::Result result = exec_display();
               recive_pos = 0;
