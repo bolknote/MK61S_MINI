@@ -61,23 +61,18 @@ require("LOADFONT" not in "".join(path.read_text(encoding="utf-8") for path in p
         "High Noon must select its font in M61, not TinyBASIC")
 
 # These are the complete player-visible string literals of the corrected port.
-# Whitespace is ignored because the 192x64 display needs deterministic 40-cell
+# Whitespace is ignored because the 192x64 display needs deterministic 47-cell
 # wrapping and page breaks. Historical wording stays, but spelling mistakes are
 # corrected even when they were already present in the 1970 listing.
 required_text = (
     "H I G H  N O O N",
     "----------------",
     "DO YOU WANT INSTRUCTIONS?",
-    "YOU HAVE BEEN CHALLENGED TO A SHOWDOWN BY BLACK BART, ONE OF",
-    "THE MEANEST DESPERADOES WEST OF THE ALLEGHENY MOUNTAINS.",
-    "WHILE YOU ARE WALKING DOWN A DUSTY, DESERTED SIDE STREET,",
-    "BLACK BART EMERGES FROM A SALOON ONE HUNDRED PACES AWAY. BY",
-    "AGREEMENT, YOU EACH HAVE FOUR CARTRIDGES IN YOUR SIX-GUNS.",
-    "YOUR MARKSMANSHIP EQUALS HIS. AT THE START OF THE WALK, NEI-",
-    "THER OF YOU CAN POSSIBLY HIT THE OTHER, AND AT THE END OF",
-    "THE WALK, NEITHER CAN MISS. THE CLOSER YOU GET, THE BETTER",
-    "YOUR CHANCES OF HITTING BART, BUT HE ALSO HAS BETTER CHANCES",
-    "OF HITTING YOU.",
+    "YOU HAVE BEEN CHALLENGED TO A SHOWDOWN BY BLACK BART, ONE OF THE MEANEST DESPERADOES WEST OF THE ALLEGHENY MOUNTAINS.",
+    "WHILE YOU ARE WALKING DOWN A DUSTY, DESERTED SIDE STREET, BLACK BART EMERGES FROM A SALOON ONE HUNDRED PACES AWAY.",
+    "BY AGREEMENT, YOU EACH HAVE FOUR CARTRIDGES IN YOUR SIX-GUNS. YOUR MARKSMANSHIP EQUALS HIS.",
+    "AT THE START OF THE WALK, NEITHER OF YOU CAN POSSIBLY HIT THE OTHER, AND AT THE END OF THE WALK, NEITHER CAN MISS.",
+    "THE CLOSER YOU GET, THE BETTER YOUR CHANCES OF HITTING BART, BUT HE ALSO HAS BETTER CHANCES OF HITTING YOU.",
     "DO YOU STILL WANT TO CONTINUE?",
     "THE MOVES ARE AS FOLLOWS:",
     "*M O V E S*",
@@ -151,9 +146,7 @@ required_text = (
     "BART MUST HAVE JERKED THE TRIGGER",
     "NOBODY CAN WALK THAT FAST",
     "NONE OF THIS NEGATIVE STUFF PARTNER, ONLY POSITIVE NUMBERS",
-    "BART JUST HI-TAILED IT OUT OF TOWN RATHER THAN FACE YOU WITH-",
-    "OUT A LOADED GUN. YOU CAN REST ASSURED THAT BART WON'T EVER",
-    "SHOW HIS FACE AROUND THIS TOWN AGAIN.",
+    "BART JUST HI-TAILED IT OUT OF TOWN RATHER THAN FACE YOU WITHOUT A LOADED GUN. YOU CAN REST ASSURED THAT BART WON'T EVER SHOW HIS FACE AROUND THIS TOWN AGAIN.",
     "HOW MANY WATERING TROUGHS DO YOU THINK ARE ON THIS STREET",
     "C.G. INC.",
 )
@@ -166,6 +159,11 @@ for phrase in required_text:
 all_game_text = "\n".join(path.read_text(encoding="utf-8") for path in parts)
 for stale in ("WALKM", "BETER", "RECEIT", "DODsGE", "THATS", "YOUT", "BURT"):
     require(stale not in all_game_text, f"High Noon restored misspelling: {stale}")
+for path in parts:
+    for line_number, source_line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        for literal in re.findall(r'"([^"]*)"', source_line):
+            require(len(literal) <= 47,
+                    f"{path.name}:{line_number} exceeds the 47-cell High Noon viewport")
 
 player = (game / "player.tbi").read_text(encoding="utf-8")
 bart = (game / "bart.tbi").read_text(encoding="utf-8")

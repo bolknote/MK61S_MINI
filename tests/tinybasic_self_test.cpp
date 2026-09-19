@@ -757,7 +757,7 @@ static void test_high_noon_package(int argc, char** argv) {
   (void) add_shipping_program(argv[2], "PLAYER");
   (void) add_shipping_program(argv[3], "BART");
   (void) add_shipping_program(argv[4], "REWARD");
-  TinyBasicTestSetGeometry(40, 8);
+  TinyBasicTestSetGeometry(47, 10);
 
   const double no_instructions[] = {0};
   TinyBasicTestSetInputs(no_instructions, 1);
