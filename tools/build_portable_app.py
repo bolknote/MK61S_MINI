@@ -40,6 +40,16 @@ LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
     "tinybasic": {"app_bytes": 12_000, "memory_bytes": 17_500},
 }
+# The dependency-free Windows packer deliberately uses a bounded greedy ZX0
+# parser: Arduino IDE users must not need MSVC/MinGW just to build APP files.
+# It produces the same decoded image but a somewhat larger C5 file than the
+# desktop optimal parser.  Keep separate measured ceilings for that storage
+# representation while retaining the same memory_bytes limits above.
+GREEDY_APP_SIZE_BUDGETS = {
+    (False, "focal"): 13_500,
+    (True, "focal"): 15_100,
+    (True, "tinybasic"): 13_000,
+}
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
 
 
@@ -52,11 +62,17 @@ def run(command: list[str | Path]) -> str:
 
 
 def enforce_system_size_budget(system: str | None, report: dict,
-                               local_float_math: bool = False) -> None:
+                               local_float_math: bool = False,
+                               greedy_packer: bool = False) -> None:
     budgets = LOCAL_FLOAT_SIZE_BUDGETS if local_float_math else SYSTEM_SIZE_BUDGETS
     budget = budgets.get(system)
     if budget is None:
         return
+    budget = dict(budget)
+    if greedy_packer:
+        greedy_limit = GREEDY_APP_SIZE_BUDGETS.get((local_float_math, system))
+        if greedy_limit is not None:
+            budget["app_bytes"] = greedy_limit
     exceeded = [f"{field}={report[field]} > {limit}"
                 for field, limit in budget.items()
                 if report[field] > limit]
@@ -228,15 +244,20 @@ def build(args: argparse.Namespace) -> dict:
     app = out / (args.name + ".APP")
     run([tool("objcopy"), "-O", "binary", "-j", ".module_image", elf, image])
     packer = args.packer
+    python_packer = (ROOT / "tools/.mk61-app/mk61_module_pack.py").resolve()
+    greedy_packer = False
     if packer is None and os.name == "nt":
         # Arduino's ARM GCC cannot produce a host Windows executable and the
         # IDE does not install MSVC/LLVM.  Use the dependency-free Python
         # packer instead of requiring a second C++ toolchain from end users.
-        command = [sys.executable, ROOT / "tools/.mk61-app/mk61_module_pack.py"]
+        command = [sys.executable, python_packer]
+        greedy_packer = True
     else:
         if packer is None:
             packer = ROOT / (".build/tools/mk61_module_pack" + suffix)
             run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
+        elif packer.resolve() == python_packer:
+            greedy_packer = True
         command = [packer]
     command += ["--portable", "--kind", args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
@@ -257,6 +278,7 @@ def build(args: argparse.Namespace) -> dict:
               "bss_bytes": memory_size - image.stat().st_size,
               "memory_bytes": memory_size, "app_bytes": app.stat().st_size,
               "compression": "ZX0+BCJ" if image_flags & 2 else "ZX0",
+              "zx0_parser": "greedy" if greedy_packer else "optimal",
               "resident_imports": 0,
               "compiler": run([tool("gcc"), "--version"]).splitlines()[0]}
     if args.local_float_math:
@@ -267,7 +289,8 @@ def build(args: argparse.Namespace) -> dict:
     if rust_compiler is not None:
         report["rust_compiler"] = run([rust_compiler, "--version"]).strip()
     (out / (args.name + ".json")).write_text(json.dumps(report, indent=2) + "\n")
-    enforce_system_size_budget(args.system, report, args.local_float_math)
+    enforce_system_size_budget(args.system, report, args.local_float_math,
+                               greedy_packer)
     return report
 
 

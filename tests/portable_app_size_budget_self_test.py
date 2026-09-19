@@ -23,6 +23,12 @@ BUILDER.enforce_system_size_budget(
     "focal", {"app_bytes": 14_000, "memory_bytes": 20_000}, True)
 BUILDER.enforce_system_size_budget(
     "tinybasic", {"app_bytes": 12_000, "memory_bytes": 17_500}, True)
+BUILDER.enforce_system_size_budget(
+    "focal", {"app_bytes": 13_500, "memory_bytes": 17_000}, False, True)
+BUILDER.enforce_system_size_budget(
+    "focal", {"app_bytes": 15_100, "memory_bytes": 20_000}, True, True)
+BUILDER.enforce_system_size_budget(
+    "tinybasic", {"app_bytes": 13_000, "memory_bytes": 17_500}, True, True)
 
 try:
     BUILDER.enforce_system_size_budget(
@@ -43,5 +49,25 @@ except ValueError as error:
     assert "memory_bytes=20001 > 20000" in message
 else:
     raise AssertionError("oversize local-FLOAT FOCAL APP was accepted")
+
+try:
+    BUILDER.enforce_system_size_budget(
+        "focal", {"app_bytes": 13_501, "memory_bytes": 17_001}, False, True)
+except ValueError as error:
+    message = str(error)
+    assert "app_bytes=13501 > 13500" in message
+    assert "memory_bytes=17001 > 17000" in message
+else:
+    raise AssertionError("oversize greedy-packed FOCAL APP was accepted")
+
+try:
+    BUILDER.enforce_system_size_budget(
+        "tinybasic", {"app_bytes": 13_001, "memory_bytes": 17_501}, True, True)
+except ValueError as error:
+    message = str(error)
+    assert "app_bytes=13001 > 13000" in message
+    assert "memory_bytes=17501 > 17500" in message
+else:
+    raise AssertionError("oversize greedy-packed hybrid BASIC.APP was accepted")
 
 print("portable APP size budget tests: OK")
