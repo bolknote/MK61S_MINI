@@ -77,8 +77,22 @@ u8 MK61Display::uiRows(void) const {
 
 u8 MK61Display::uiCols(void) const {
   const u8 capacity_cols = (u8) (text_screen::CELL_CAPACITY / uiRows());
-  return capacity_cols < text_screen::MAX_COLS
-      ? capacity_cols : text_screen::MAX_COLS;
+  u8 pixel_cols = text_screen::MAX_COLS;
+  if(uiFontFamily() == 3) {
+    if(const prepared_font::Face* external = externalUiFont()) {
+      const prepared_font::Metrics& metrics = external->metrics();
+      // A proportional line has no single character count: printUiLine()
+      // measures every glyph in pixels.  COLS is meaningful for BASIC and
+      // other cell-oriented clients only when the selected face is mono.
+      if(metrics.monospaced && metrics.default_advance != 0) {
+        const u8 usable = lcd_display::PIXEL_WIDTH - 2U * UI_MARGIN;
+        pixel_cols = (u8) (usable / metrics.default_advance);
+        if(pixel_cols == 0) pixel_cols = 1;
+      }
+    }
+  }
+  if(pixel_cols > text_screen::MAX_COLS) pixel_cols = text_screen::MAX_COLS;
+  return capacity_cols < pixel_cols ? capacity_cols : pixel_cols;
 }
 
 u8 MK61Display::uiTop(void) const {

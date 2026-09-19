@@ -290,8 +290,9 @@ static void test_text_grid_skips_unchanged_cells(void) {
 }
 
 static void test_text_grid_wide_rows(void) {
-  // One grid serves both the calculator and the narrow 40x10 game face.
-  static_assert(sizeof(text_screen::Grid) <= 920,
+  // One bounded grid serves the calculator and runtime faces of several
+  // advances; the active face still chooses its actual visible column count.
+  static_assert(sizeof(text_screen::Grid) <= 1500,
                 "Grid must remain one bounded display buffer");
   text_screen::Grid grid;
   grid.reset(4, 40);
@@ -374,9 +375,9 @@ static void test_text_grid_geometry_bounds(void) {
   assert(grid.dirtyMask(255) == 0);
 
   grid.reset(255, 255);
-  assert(grid.rows() == 10 && grid.cols() == 40);
-  for(u16 cell = 0; cell < 400; cell++) assert(grid.writeByte(2));
-  assert(grid.cellIsCustom(39, 9));
+  assert(grid.rows() == 10 && grid.cols() == 64);
+  for(u16 cell = 0; cell < 640; cell++) assert(grid.writeByte(2));
+  assert(grid.cellIsCustom(63, 9));
   assert(grid.cursorX() == 0 && grid.cursorY() == 9);
   for(u8 row = 0; row < grid.rows(); row++) grid.clearDirty(row);
   assert(!grid.anyDirty());

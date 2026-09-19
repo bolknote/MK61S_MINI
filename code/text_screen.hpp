@@ -9,7 +9,10 @@ namespace text_screen {
 static constexpr u8 COLS = 16;
 static constexpr u8 MAX_ROWS = 10;
 #if MK61_PROPORTIONAL_UI_FONTS
-static constexpr u8 MAX_COLS = 40;
+// Runtime FMK faces derive their visible column count from their advance.
+// Sixty-four cells cover every practical 192-pixel text face down to a
+// three-pixel advance without making the grid depend on one particular font.
+static constexpr u8 MAX_COLS = 64;
 static constexpr usize CELL_CAPACITY = (usize) MAX_COLS * MAX_ROWS;
 #else
 static constexpr u8 MAX_COLS = COLS;
