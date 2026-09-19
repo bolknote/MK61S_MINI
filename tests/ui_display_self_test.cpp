@@ -881,6 +881,53 @@ void test_usb_return_to_ui_geometry() {
   referenceText(expected, display.uiFontFace(), text, 0);
   expectFrame(expected);
 }
+
+void test_usb_calculator_to_runtime_font_switches_renderer() {
+  u8 font[30];
+  makeExternalRuntimeFont(font);
+  u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
+  const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
+  u8 bulk[prepared_font::MAX_IMAGE_SIZE] = {};
+  ui_display_test::bulk_bytes = bulk;
+  ui_display_test::bulk_size = sizeof(bulk);
+
+  MK61Display display;
+  ui_display_test::reset();
+  display.begin();
+  display.clear();
+  display.setCursor(0, 1);
+  display.writeCodepoint('5');
+  display.beginCalculatorFace();
+  assert(display.enterUsbScreen());
+  assert(display.usbScreenActive() && display.calculatorFaceActive());
+
+  // This is the exact High Noon transition: LOADFONT installs a 3x5 runtime
+  // face while USB Screen currently mirrors the fixed calculator renderer.
+  assert(display.installPreparedUiFont(prepared, (u16) prepared_size, 0));
+  display.setUiFont(3, 12);
+  display.beginUiText();
+  assert(!display.calculatorFaceActive());
+  assert(display.rows() == 10 && display.cols() == 40);
+  display.clear();
+  display.setCursor(0, 0);
+  display.writeCodepoint('A');
+
+  const u8* frame = display.usbScreenFramebuffer();
+  assert(frame != nullptr);
+  bool first_glyph_visible = false;
+  for(u8 y = 2; y < 7; ++y) {
+    for(u8 x = 2; x < 5; ++x) {
+      first_glyph_visible = first_glyph_visible ||
+          (frame[(usize) (y / 8U) * 192U + x] & (u8) (1U << (y & 7U)));
+    }
+  }
+  assert(first_glyph_visible);
+
+  display.leaveUsbScreen();
+  display.clearExternalUiFont();
+  ui_display_test::bulk_bytes = nullptr;
+  ui_display_test::bulk_size = 0;
+}
 #endif
 }
 
@@ -905,6 +952,7 @@ int main() {
 #if MK61_ENABLE_USB_SCREEN
   test_usb_waits_for_physical_display_ack();
   test_usb_return_to_ui_geometry();
+  test_usb_calculator_to_runtime_font_switches_renderer();
 #endif
   allocation_forbidden = false;
   std::puts("ui_display_self_test: ok");

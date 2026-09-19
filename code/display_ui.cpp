@@ -95,7 +95,18 @@ u8 MK61Display::uiTop(void) const {
 void MK61Display::beginUiText(void) {
 #if MK61_ENABLE_USB_SCREEN
   if(usbScreenActive()) {
+    const bool was_context = uiTextContext();
     ui_font_state |= 8U;
+#if MK61_FIXED_CALCULATOR_FACE
+    // USB Screen has its own calculator-face renderer.  Merely changing the
+    // text geometry does not disable that renderer, so subsequent writes can
+    // update the hidden text grid while every transmitted frame still shows
+    // the old calculator face.  Entering UI text is the same mode boundary as
+    // the physical clear() path below: discard the calculator presentation
+    // before the menu or a runtime FMK starts drawing.
+    ui_font_state &= (u8) ~16U;
+#endif
+    if(!was_context) usb_surface.clear();
     if(const prepared_font::Face* external = externalUiFont()) {
       const prepared_font::Metrics& metrics = external->metrics();
       usb_surface.setFont(external);
