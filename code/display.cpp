@@ -3461,21 +3461,6 @@ static const char* displayUtf8Next(const char* cursor, const char* end) {
   return decoded.size != 0 ? cursor + decoded.size : cursor + 1;
 }
 
-static u16 displayCellWidth(const char* begin, const char* end) {
-  u16 width = 0;
-  while(begin < end && width != 0xFFFFU) {
-    begin = displayUtf8Next(begin, end);
-    width++;
-  }
-  return width;
-}
-
-static u16 displayTextWidth(MK61Display& display, const char* begin,
-                            const char* end, bool pixels) {
-  if(pixels) return display.measureUiText(begin, (u16) (end - begin));
-  return displayCellWidth(begin, end);
-}
-
 static DisplayWrappedLine displayNextWrappedLine(
     MK61Display& display, const char* begin, const char* end,
     u16 limit, u8 cell_limit, bool pixels) {
@@ -3485,11 +3470,14 @@ static DisplayWrappedLine displayNextWrappedLine(
   const char* cursor = begin;
   const char* fitted = begin;
   const char* last_space = NULL;
+  u16 width = 0;
+  u16 cells = 0;
   while(cursor < end) {
     const char* const next = displayUtf8Next(cursor, end);
     const bool separator = *cursor == ' ' || *cursor == '\t';
-    if(displayTextWidth(display, begin, next, pixels) > limit ||
-       displayCellWidth(begin, next) > cell_limit) {
+    const u16 advance = pixels
+        ? display.measureUiText(cursor, (u16) (next - cursor)) : 1U;
+    if((u32) width + advance > limit || cells >= cell_limit) {
       if(separator && fitted > begin) {
         line.end = fitted;
         line.next = next;
@@ -3504,6 +3492,8 @@ static DisplayWrappedLine displayNextWrappedLine(
             (*line.next == ' ' || *line.next == '\t')) line.next++;
       return line;
     }
+    width = (u16) (width + advance);
+    cells++;
     fitted = next;
     if(separator) last_space = cursor;
     cursor = next;
@@ -3549,6 +3539,7 @@ static void displayReplaceUtf8Line(MK61Display& display, u8 row,
 
 } // namespace
 
+__attribute__((noinline))
 u8 MK61Display::printWrappedText(const char* text, u16 length, u8 first_row,
                                  u8 max_rows, bool tail, bool empty_line) {
   if(text == NULL || first_row >= rows() || max_rows == 0) return 0;
