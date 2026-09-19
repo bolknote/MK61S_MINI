@@ -35,6 +35,9 @@ require(manual.is_file() and manual.stat().st_size <= 1536,
 require(font.is_file(), "High Noon local FMK is missing")
 font_data = font.read_bytes()
 require(font_data[:4] == b"FMK1", "High Noon local FMK is invalid")
+require(font_data[4] == 0, "High Noon Russian FMK must be proportional")
+require(font_data[5:8] == bytes((5, 5, 0x31)),
+        "High Noon Russian FMK has unexpected geometry")
 require(int.from_bytes(font_data[8:10], "little") == 65,
         "High Noon Russian FMK has an unexpected glyph count")
 require(font_data[10] == 3, "High Noon Russian FMK must have three ranges")
@@ -45,6 +48,39 @@ font_ranges = tuple(
 )
 require(font_ranges == ((0x20, 0x20), (0x0401, 1), (0x0410, 0x20)),
         "High Noon FMK must contain symbols/digits and Russian uppercase only")
+
+# The letters most easily confused in a 3x5 cell must retain their wider
+# records.  Decode just the per-glyph metrics; the common FMK tests validate
+# every bitmap and CRC in full.
+bit = (16 + 3 * font_data[10]) * 8
+font_widths = {}
+font_advances = {}
+
+
+def read_font_bits(count: int) -> int:
+    global bit
+    value = 0
+    for _ in range(count):
+        value = (value << 1) | ((font_data[bit // 8] >>
+                                 (7 - bit % 8)) & 1)
+        bit += 1
+    return value
+
+
+for first, count in font_ranges:
+    for codepoint in range(first, first + count):
+        width = read_font_bits(4) + 1
+        advance = read_font_bits(4) + 1
+        font_widths[codepoint] = width
+        font_advances[codepoint] = advance
+        require(advance == width + 1,
+                f"High Noon FMK U+{codepoint:04X} lost its one-pixel gap")
+        mode = read_font_bits(1)
+        require(mode == 0, "High Noon generator unexpectedly emitted RLE")
+        bit += width * 5
+for letter in "ДЖИЙЛМФШЩЫЮЯ":
+    require(font_widths[ord(letter)] == 5,
+            f"High Noon Russian {letter} must use its readable wide glyph")
 require(not (root / "programs" / "Fonts" / "HighNoon.FMK").exists(),
         "High Noon FMK must not be duplicated in the global Fonts directory")
 for path in parts:
@@ -171,6 +207,12 @@ require(not unsupported,
         "High Noon text is missing FMK glyph "
         + (f"U+{unsupported[0]:04X}" if unsupported else ""))
 
+intro = (game / "intro.tbi").read_text(encoding="utf-8")
+require("130 IF D=0 G.600" in intro,
+        "High Noon answer 0 must skip every instruction page")
+require("590 PAU." in intro and "610 .RE=1:E." in intro,
+        "High Noon instruction pause must not delay the 0 branch")
+
 reward = (game / "reward.tbi").read_text(encoding="utf-8")
 require(reward.count("GOSUB 8000") == 2,
         "High Noon receipt must draw both borders through one width-aware routine")
@@ -178,8 +220,12 @@ require("8000 FOR I=1 TO COLS" in reward and '8010 P."*";' in reward,
         "High Noon receipt border must follow the active font viewport width")
 require(not re.search(r'"\*{2,}"', reward),
         "High Noon receipt restored a hard-coded split border")
-require("265 FOR I=1 TO COLS-30" in reward,
+require("265 FOR I=1 TO COLS-34" in reward,
         "High Noon receipt amount line must fill the active viewport")
+amount = "ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ" + "-" * (47 - 34) + "$20,000"
+amount_width = sum(font_advances[ord(char)] for char in amount)
+require(amount_width <= 188,
+        "High Noon receipt amount must fit the 188-pixel text viewport")
 for stale in ("WALKM", "BETER", "RECEIT", "DODsGE", "THATS", "YOUT", "BURT"):
     require(stale not in all_game_text, f"High Noon restored misspelling: {stale}")
 for path in parts:

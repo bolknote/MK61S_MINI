@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the compact public-domain 3x5 Russian face used by High Noon."""
+"""Build the compact proportional Russian face used by High Noon."""
 
 from __future__ import annotations
 
@@ -12,6 +12,42 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "code/ERM19264_graphics_font.cpp"
 DEFAULT_OUTPUT = ROOT / "programs/games/High Noon/HighNoon.FMK"
 HEADER_SIZE = 16
+
+
+def art(*rows: str) -> tuple[int, list[int]]:
+    """Convert a readable left-to-right bitmap into the resident row format."""
+    if not rows or any(len(row) != len(rows[0]) for row in rows):
+        raise ValueError("inconsistent glyph art")
+    width = len(rows[0])
+    if len(rows) != 5 or width < 1 or width > 5:
+        raise ValueError("High Noon glyphs must be 1..5 by 5 pixels")
+    encoded: list[int] = []
+    for row in rows:
+        if any(pixel not in ".#" for pixel in row):
+            raise ValueError("glyph art accepts only '.' and '#'")
+        encoded.append(sum(1 << x for x, pixel in enumerate(row)
+                           if pixel == "#"))
+    return width, encoded
+
+
+# Three columns are enough for most capitals, but not for letters whose
+# identity depends on several vertical strokes or a diagonal.  These hand
+# fitted forms keep the ten-row game layout while making Russian words read as
+# Russian instead of look-alike Latin/garbled text.
+WIDE_GLYPHS: dict[int, tuple[int, list[int]]] = {
+    ord("Д"): art("..#..", ".#.#.", ".#.#.", "#####", "#...#"),
+    ord("Ж"): art("#.#.#", "#.#.#", ".###.", "#.#.#", "#.#.#"),
+    ord("И"): art("#...#", "#..##", "#.#.#", "##..#", "#...#"),
+    ord("Й"): art(".#.#.", "#...#", "#..##", "#.#.#", "##..#"),
+    ord("Л"): art("..#..", ".#.#.", ".#.#.", "#...#", "#...#"),
+    ord("М"): art("#...#", "##.##", "#.#.#", "#...#", "#...#"),
+    ord("Ф"): art("..#..", ".###.", "#.#.#", ".###.", "..#.."),
+    ord("Ш"): art("#.#.#", "#.#.#", "#.#.#", "#.#.#", "#####"),
+    ord("Щ"): art("#.#.#", "#.#.#", "#.#.#", "#####", "....#"),
+    ord("Ы"): art("#...#", "#...#", "###.#", "#.#.#", "###.#"),
+    ord("Ю"): art("#.###", "#.#.#", "###.#", "#.#.#", "#.###"),
+    ord("Я"): art(".####", "#...#", ".####", "..#.#", ".#..#"),
+}
 
 
 class BitWriter:
@@ -106,10 +142,10 @@ def encode() -> bytes:
     glyph_count = len(codepoints)
     prefix = bytearray(HEADER_SIZE)
     prefix[:4] = b"FMK1"
-    prefix[4] = 1       # monospaced
-    prefix[5] = 3       # bitmap width
+    prefix[4] = 0       # proportional: individual width and advance follow
+    prefix[5] = 5       # maximum bitmap width
     prefix[6] = 5       # bitmap height
-    prefix[7] = 0x31    # four-pixel advance, one-pixel line gap
+    prefix[7] = 0x31    # nominal four-pixel advance, one-pixel line gap
     put_le16(prefix, 8, glyph_count)
     prefix[10] = len(ranges)
     for first, count in ranges:
@@ -117,10 +153,14 @@ def encode() -> bytes:
 
     writer = BitWriter(prefix)
     for codepoint in codepoints:
+        width, rows = WIDE_GLYPHS.get(codepoint, (3, glyphs[codepoint]))
+        advance = width + 1
+        writer.write(width - 1, 4)
+        writer.write(advance - 1, 4)
         writer.write(0, 1)  # raw bitmap
-        for row in glyphs[codepoint]:
+        for row in rows:
             # The resident table numbers its leftmost pixel as bit zero.
-            for x in range(3):
+            for x in range(width):
                 writer.write((row >> x) & 1, 1)
 
     put_le16(writer.data, 12, len(writer.data))
@@ -141,7 +181,7 @@ def main() -> None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_bytes(expected)
     print(f"{args.output}: {len(expected)} bytes, "
-          f"{len(source_codepoints())} glyphs, mono 3x5")
+          f"{len(source_codepoints())} glyphs, proportional 3-5x5")
 
 
 def source_codepoints() -> tuple[int, ...]:
