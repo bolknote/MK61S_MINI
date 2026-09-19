@@ -35,6 +35,10 @@ def art(*rows: str) -> tuple[int, list[int]]:
 # fitted forms keep the ten-row game layout while making Russian words read as
 # Russian instead of look-alike Latin/garbled text.
 WIDE_GLYPHS: dict[int, tuple[int, list[int]]] = {
+    # The source 3x5 dollar is only a zig-zag around one vertical pixel and
+    # does not read as currency on the UC1609.  Keep the centre stroke through
+    # a wider S-shaped outline so "$20,000" remains recognizable.
+    ord("$"): art(".###.", "#.#..", ".###.", "..#.#", ".###."),
     ord("Д"): art("..#..", ".#.#.", ".#.#.", "#####", "#...#"),
     ord("Ж"): art("#.#.#", "#.#.#", ".###.", "#.#.#", "#.#.#"),
     ord("И"): art("#...#", "#..##", "#.#.#", "##..#", "#...#"),

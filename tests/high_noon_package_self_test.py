@@ -55,6 +55,7 @@ require(font_ranges == ((0x20, 0x20), (0x0401, 1), (0x0410, 0x20)),
 bit = (16 + 3 * font_data[10]) * 8
 font_widths = {}
 font_advances = {}
+font_bitmaps = {}
 
 
 def read_font_bits(count: int) -> int:
@@ -77,7 +78,11 @@ for first, count in font_ranges:
                 f"High Noon FMK U+{codepoint:04X} lost its one-pixel gap")
         mode = read_font_bits(1)
         require(mode == 0, "High Noon generator unexpectedly emitted RLE")
-        bit += width * 5
+        font_bitmaps[codepoint] = tuple(read_font_bits(width) for _ in range(5))
+require(font_widths[ord("$")] == 5,
+        "High Noon dollar must use its readable wide glyph")
+require(font_bitmaps[ord("$")] == (0b01110, 0b10100, 0b01110, 0b00101, 0b01110),
+        "High Noon dollar bitmap is no longer recognizable")
 for letter in "ДЖИЙЛМФШЩЫЮЯ":
     require(font_widths[ord(letter)] == 5,
             f"High Noon Russian {letter} must use its readable wide glyph")
