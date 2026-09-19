@@ -291,7 +291,10 @@ try {
     Assert-True ($script:Glyphs.Selector -eq '>') 'Windows selector is not conhost-safe'
     Assert-True ($script:Glyphs.CheckOff -eq '[ ]' -and $script:Glyphs.CheckOn -eq '[x]') 'Windows checkbox glyphs are ambiguous'
     Assert-True ($script:Glyphs.RadioOff -eq '( )' -and $script:Glyphs.RadioOn -eq '(*)') 'Windows radio glyphs are ambiguous'
+    Assert-True ($script:Glyphs.MenuNext -eq '>') 'Windows submenu marker is not conhost-safe'
     Assert-True ((Get-Checkbox 0) -eq '[ ]' -and (Get-Checkbox 1) -eq '[x]') 'Windows option summary still uses unsupported checkbox glyphs'
+    Assert-True ((Get-MathBackendLabelFor 1 1) -eq 'CORE + APP FLOAT') `
+        'staged math selection has the wrong label'
     Assert-True ((Get-CompileOptionsDetails) -notmatch '[☐☑]') 'Windows option details still contain unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_MARKDOWN_VIEWER') 'Markdown is missing from Windows option details'

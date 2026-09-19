@@ -59,6 +59,7 @@ function Initialize-TuiGlyphs {
             CheckOff = '[ ]'; CheckOn = '[x]'
             MenuUpload = '^'; MenuBuild = '#'; MenuChoice = 'o'; MenuOptions = '[x]'
             MenuDetect = '?'; MenuCheck = '+'; MenuInstall = 'v'; MenuLog = '='; MenuQuit = 'x'
+            MenuNext = '>'
         }
     } else {
         $script:Glyphs = @{
@@ -66,6 +67,7 @@ function Initialize-TuiGlyphs {
             CheckOff = '☐'; CheckOn = '☑'
             MenuUpload = '▲'; MenuBuild = '⚒'; MenuChoice = '◉'; MenuOptions = '☑'
             MenuDetect = '⌕'; MenuCheck = '✓'; MenuInstall = '↓'; MenuLog = '≡'; MenuQuit = '×'
+            MenuNext = '›'
         }
     }
 }
@@ -1911,7 +1913,7 @@ function Choose-CompileOptions {
             [pscustomobject]@{ Tag = 'usb_screen'; Label = "$(Get-Checkbox $usbScreen) USB-экран" }
             [pscustomobject]@{ Tag = 'fonts'; Label = "$(Get-Checkbox $fonts) Расширенные настройки шрифта" }
             [pscustomobject]@{ Tag = 'explorer'; Label = "$(Get-Checkbox $explorer) Клавиша USER открывает Explorer" }
-            [pscustomobject]@{ Tag = 'math'; Label = "$($script:Glyphs.MenuChoice) Математика: $(Get-MathBackendLabelFor $mathBackend $appLocalFloat)  >" }
+            [pscustomobject]@{ Tag = 'math'; Label = "$($script:Glyphs.MenuChoice) Математика: $(Get-MathBackendLabelFor $mathBackend $appLocalFloat)  $($script:Glyphs.MenuNext)" }
             [pscustomobject]@{ Tag = 'save'; Label = "$($script:Glyphs.MenuCheck) Сохранить и вернуться" }
         )
         $choice = Show-Menu 'Ключи компиляции' `

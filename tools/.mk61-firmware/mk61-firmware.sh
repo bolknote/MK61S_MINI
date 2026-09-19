@@ -1374,14 +1374,6 @@ checkbox_marker() {
   if [ "$1" -eq 1 ]; then printf '☑'; else printf '☐'; fi
 }
 
-option_state() {
-  if [ "$1" -eq 1 ]; then printf 'on'; else printf 'off'; fi
-}
-
-math_option_state() {
-  math_option_state_for "$1" "$MATH_BACKEND" "$APP_LOCAL_FLOAT"
-}
-
 math_option_state_for() {
   local choice=$1
   local backend=$2
