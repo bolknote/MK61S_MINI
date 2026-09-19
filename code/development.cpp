@@ -194,9 +194,6 @@ static bool explorer_time_reached(u32 now, u32 target) {
 }
 
 static u8 explorer_type_col(void) {
-#if MK61_PROPORTIONAL_UI_FONTS
-  if(main_lcd().uiTextActive()) return 39;
-#endif
   const u8 cols = main_lcd().cols();
   return cols > 0 ? (u8) (cols - 1) : 0;
 }

@@ -208,7 +208,10 @@ class MK61Display : public Print {
     bool uiFontEnabled(void) const { return uiFontFamily() != 0; }
     bool uiTextContext(void) const { return (ui_font_state & 8U) != 0; }
     bool uiTextActive(void) const {
-      return uiTextContext() && !preview_profile_active && !usbScreenActive();
+      // This is a logical foreground mode, not a physical-controller state.
+      // USB Screen has its own pixel surface but must preserve the same
+      // proportional layout and therefore remains an active UI target.
+      return uiTextContext() && !preview_profile_active;
     }
     void beginUiText(void);
     void endUiText(void);

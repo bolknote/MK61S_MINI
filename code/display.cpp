@@ -3491,13 +3491,12 @@ bool MK61Display::enterUsbScreen(void) {
 #if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
   const prepared_font::Face* usb_font = selectedFont();
   if(uiTextContext()) {
-    if(const prepared_font::Face* external = externalUiFont()) {
-      const prepared_font::Metrics& metrics = external->metrics();
-      profile = {uiRows(), metrics.max_width, metrics.height,
-                 metrics.line_gap};
-      usb_columns = uiCols();
-      usb_font = external;
-    }
+    const prepared_font::Face* external = externalUiFont();
+    const u8 width = external != NULL ? external->metrics().max_width
+        : (uiFontEnabled() ? 10U : 5U);
+    profile = {uiRows(), width, uiHeight(), uiLineGap()};
+    usb_columns = uiCols();
+    usb_font = external;
   }
 #endif
   usb_surface.begin(profile);
@@ -3505,11 +3504,21 @@ bool MK61Display::enterUsbScreen(void) {
 #if defined(MK61_DISPLAY_UC1609)
 #if MK61_PROPORTIONAL_UI_FONTS
   usb_surface.setFont(usb_font);
+  usb_surface.setUiTextStyle(uiTextContext(), uiFontEnabled(), uiFontFace());
 #else
   usb_surface.setFont(selectedFont());
 #endif
   usb_surface.seedText(grid, custom_glyphs, custom_valid,
                        cursor_underline, cursor_blink, millis());
+#if MK61_PROPORTIONAL_UI_FONTS
+  if(uiTextContext()) {
+    for(u8 row = 0; row < usb_surface.rows(); ++row) {
+      const u16 bit = (u16) 1U << row;
+      usb_surface.setUiLineDecorations(
+          row, (ui_row_gutters & bit) != 0, (ui_row_tails & bit) != 0);
+    }
+  }
+#endif
 #if MK61_FIXED_CALCULATOR_FACE
   if(calculatorFaceActive()) usb_surface.beginCalculatorFace();
 #endif
@@ -3591,9 +3600,20 @@ void MK61Display::leaveUsbScreen(void) {
 #if MK61_FIXED_CALCULATOR_FACE
   const bool restore_calculator_face = usb_surface.calculatorFaceActive();
 #endif
-  active_profile = {restore_profile.rows, restore_profile.glyph_width,
-                    restore_profile.glyph_height, restore_profile.line_gap};
+#if MK61_PROPORTIONAL_UI_FONTS
+  const bool restore_ui_text = uiTextContext();
+  if(!restore_ui_text)
+#endif
+  {
+    active_profile = {restore_profile.rows, restore_profile.glyph_width,
+                      restore_profile.glyph_height, restore_profile.line_gap};
+  }
+#if MK61_PROPORTIONAL_UI_FONTS
+  grid.reset(restore_ui_text ? uiRows() : active_profile.rows,
+             restore_ui_text ? uiCols() : lcd_display::COLS);
+#else
   grid.reset(active_profile.rows);
+#endif
   for(u8 slot = 0; slot < CUSTOM_GLYPHS; slot++) {
     custom_valid[slot] = usb_surface.copyCustomChar(slot,
                                                     custom_glyphs[slot]);
@@ -3602,7 +3622,7 @@ void MK61Display::leaveUsbScreen(void) {
   }
   for(u8 row = 0; row < grid.rows(); row++) {
     grid.setCursor(0, row);
-    for(u8 col = 0; col < lcd_display::COLS; col++) {
+    for(u8 col = 0; col < grid.cols(); col++) {
       u16 token = ' ';
       bool custom = false;
       (void) usb_surface.readCell(col, row, token, custom);
@@ -3657,9 +3677,9 @@ void MK61Display::leaveUsbScreen(void) {
   cursor_next_blink_ms = restore_cursor_blink
                        ? millis() + CURSOR_BLINK_MS : 0;
   if(uiTextActive()) {
-    // USB Screen has a fixed-cell surface, not the proportional UI layout.
-    // The mode revision above asks the foreground owner to redraw its content;
-    // discard the incompatible seed before exposing the physical display.
+    // The foreground owner redraws after the mode revision. Discard the
+    // temporary USB grid before exposing the controller so that its native
+    // damage map and proportional row decorations start from one epoch.
     clearShadow();
     cursor_underline = cursor_blink = cursor_blink_phase = false;
     cursor_next_blink_ms = 0;

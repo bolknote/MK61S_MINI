@@ -1,6 +1,9 @@
 #include "usb_screen_surface.hpp"
 
 #include "display_symbols.hpp"
+#if MK61_PROPORTIONAL_UI_FONTS
+#include "ui_text_renderer.hpp"
+#endif
 #if MK61_FIXED_CALCULATOR_FACE
 #include "calculator_face.hpp"
 #endif
@@ -56,7 +59,15 @@ Surface::Surface(u8* framebuffer)
     overlay_width_(0),
     overlay_height_(0),
     overlay_clear_border_(0),
-    overlay_visible_(false) {
+    overlay_visible_(false)
+#if MK61_PROPORTIONAL_UI_FONTS
+    , ui_text_active_(false),
+    ui_font_enabled_(false),
+    ui_face_{ui_font::Family::PIXEL, ui_font::Size::PX12},
+    ui_row_gutters_(0),
+    ui_row_tails_(0)
+#endif
+    {
   grid_.reset(profile_.rows, grid_.cols());
 }
 
@@ -76,6 +87,12 @@ void Surface::begin(TextProfile profile) {
   overlay_width_ = 0;
   overlay_height_ = 0;
   overlay_clear_border_ = 0;
+#if MK61_PROPORTIONAL_UI_FONTS
+  ui_text_active_ = false;
+  ui_font_enabled_ = false;
+  ui_row_gutters_ = 0;
+  ui_row_tails_ = 0;
+#endif
   memset(overlay_rows_, 0, sizeof(overlay_rows_));
   memset(custom_glyphs_, 0, sizeof(custom_glyphs_));
   memset(custom_valid_, 0, sizeof(custom_valid_));
@@ -100,6 +117,12 @@ void Surface::end(void) {
   cursor_blink_phase_ = false;
   cursor_next_blink_ms_ = 0;
   font_ = NULL;
+#if MK61_PROPORTIONAL_UI_FONTS
+  ui_text_active_ = false;
+  ui_font_enabled_ = false;
+  ui_row_gutters_ = 0;
+  ui_row_tails_ = 0;
+#endif
 }
 
 void Surface::markDirty(void) {
@@ -122,6 +145,10 @@ void Surface::clear(void) {
   overlay_height_ = 0;
   overlay_clear_border_ = 0;
   memset(overlay_rows_, 0, sizeof(overlay_rows_));
+#if MK61_PROPORTIONAL_UI_FONTS
+  ui_row_gutters_ = 0;
+  ui_row_tails_ = 0;
+#endif
   markDirty();
 }
 
@@ -146,6 +173,10 @@ void Surface::setTextLayout(TextProfile profile, u8 cols) {
      next.line_gap == profile_.line_gap && cols == grid_.cols()) return;
   profile_ = next;
   grid_.reset(profile_.rows, cols);
+#if MK61_PROPORTIONAL_UI_FONTS
+  ui_row_gutters_ = 0;
+  ui_row_tails_ = 0;
+#endif
   cursor_underline_ = false;
   cursor_blink_ = false;
   cursor_blink_phase_ = false;
@@ -323,6 +354,37 @@ void Surface::setFont(const prepared_font::Face* font) {
     markDirty();
   }
 }
+
+#if MK61_PROPORTIONAL_UI_FONTS
+void Surface::setUiTextStyle(bool active, bool font_enabled,
+                             ui_font::Face face) {
+  if(ui_text_active_ == active && ui_font_enabled_ == font_enabled &&
+     ui_face_.family == face.family && ui_face_.size == face.size) return;
+  ui_text_active_ = active;
+  ui_font_enabled_ = font_enabled;
+  ui_face_ = face;
+  ui_row_gutters_ = 0;
+  ui_row_tails_ = 0;
+  grid_.markAll();
+  markDirty();
+}
+
+void Surface::setUiLineDecorations(u8 row, bool leading_gutter,
+                                   bool trailing_gutter) {
+  if(row >= grid_.rows()) return;
+  const u16 bit = (u16) 1U << row;
+  const u16 old_gutters = ui_row_gutters_;
+  const u16 old_tails = ui_row_tails_;
+  if(leading_gutter) ui_row_gutters_ |= bit;
+  else ui_row_gutters_ &= (u16) ~bit;
+  if(trailing_gutter) ui_row_tails_ |= bit;
+  else ui_row_tails_ &= (u16) ~bit;
+  if(old_gutters != ui_row_gutters_ || old_tails != ui_row_tails_) {
+    grid_.markCell(0, row);
+    markDirty();
+  }
+}
+#endif
 
 bool Surface::beginFullscreenBitmap(void) {
   if(!active_) return false;
@@ -585,6 +647,12 @@ void Surface::render(void) {
     return;
   }
 #endif
+#if MK61_PROPORTIONAL_UI_FONTS
+  if(ui_text_active_) {
+    renderUi();
+    return;
+  }
+#endif
   clearPixels();
   const bool wide_text = grid_.cols() > COLS;
   u8 cell_width = CELL_WIDTH;
@@ -612,5 +680,21 @@ void Surface::render(void) {
   }
   drawOverlay();
 }
+
+#if MK61_PROPORTIONAL_UI_FONTS
+void Surface::renderUi(void) {
+  const ui_text_renderer::Style style = {
+    ui_font_enabled_, ui_face_, font_, custom_glyphs_, custom_valid_,
+    ui_row_gutters_, ui_row_tails_, grid_.cursorX(), grid_.cursorY(),
+    cursor_underline_, cursor_blink_ && cursor_blink_phase_
+  };
+  for(u8 page = 0; page < PAGE_COUNT; ++page) {
+    ui_text_renderer::renderPage(
+        grid_, style, page, 0, 16,
+        framebuffer_ + (usize) page * WIDTH);
+  }
+  drawOverlay();
+}
+#endif
 
 } // пространство имён usb_screen

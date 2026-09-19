@@ -876,6 +876,36 @@ void test_cursor_and_stop_redraw() {
   assert(display.deepIdleReady());
 }
 
+void test_cursor_blinks_on_trailing_ui_marker() {
+  MK61Display display;
+  startUi(display);
+  display.printUiLine(0, "Programs", 0, '/');
+  const Frame no_cursor = ui_display_test::frame;
+  assert(display.cols() > 40);
+
+  display.setCursor((u8) (display.cols() - 1U), 0);
+  display.blinkOn();
+  const Frame with_cursor = ui_display_test::frame;
+  assert(with_cursor != no_cursor);
+
+  // The proportional trailing gutter starts at x=178.  The selected-row
+  // cursor must blink there, not at the obsolete logical column 39 whose
+  // accumulated proportional advance is already outside the panel.
+  bool changed_in_trailing_gutter = false;
+  for(unsigned y = 0; y < 16; ++y) {
+    for(unsigned x = 178; x < 190; ++x) {
+      const u8 bit = (u8) (1U << (y & 7U));
+      const unsigned offset = y / 8U * 192U + x;
+      if(((with_cursor[offset] ^ no_cursor[offset]) & bit) != 0) {
+        changed_in_trailing_gutter = true;
+      }
+    }
+  }
+  assert(changed_in_trailing_gutter);
+  display.blinkOff();
+  expectFrame(no_cursor);
+}
+
 void test_partial_page_overlay_restoration() {
   MK61Display display;
   startUi(display);
@@ -936,9 +966,20 @@ void test_usb_return_to_ui_geometry() {
   startUi(display);
   const auto calculator = display.textProfile();
   display.printUiLine(0, "ABCD");
+  Frame expected{};
+  static constexpr u16 text[] = {'A', 'B', 'C', 'D'};
+  referenceText(expected, display.uiFontFace(), text, 0);
   assert(display.enterUsbScreen());
-  assert(display.usbScreenActive() && !display.uiTextActive());
+  assert(display.usbScreenActive() && display.uiTextActive());
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
+                     expected.size()) == 0);
   assert(!display.deepIdleReady());
+  display.printUiLine(0, "Wiii");
+  expected.fill(0);
+  static constexpr u16 narrow[] = {'W', 'i', 'i', 'i'};
+  referenceText(expected, display.uiFontFace(), narrow, 0);
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
+                     expected.size()) == 0);
   display.clear();
   display.writeCodepoint('5');
   display.leaveUsbScreen();
@@ -946,8 +987,7 @@ void test_usb_return_to_ui_geometry() {
   assert(display.rows() == 4);
   assert(sameProfile(display.textProfile(), calculator));
   display.printUiLine(0, "ABCD");
-  Frame expected{};
-  static constexpr u16 text[] = {'A', 'B', 'C', 'D'};
+  expected.fill(0);
   referenceText(expected, display.uiFontFace(), text, 0);
   expectFrame(expected);
 }
@@ -1019,6 +1059,7 @@ int main() {
   test_short_replacement_and_gutters();
   test_ellipsis_and_invalid_utf8();
   test_cursor_and_stop_redraw();
+  test_cursor_blinks_on_trailing_ui_marker();
   test_partial_page_overlay_restoration();
 #if MK61_ENABLE_USB_SCREEN
   test_usb_waits_for_physical_display_ack();

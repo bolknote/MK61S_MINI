@@ -6,6 +6,9 @@
 #include "prepared_font.hpp"
 #include "rust_types.h"
 #include "text_screen.hpp"
+#if MK61_PROPORTIONAL_UI_FONTS
+#include "ui_font.hpp"
+#endif
 
 namespace usb_screen {
 
@@ -91,6 +94,15 @@ class Surface {
     bool readCell(u8 x, u8 y, u16& value, bool& custom) const;
 
     void setFont(const prepared_font::Face* font);
+#if MK61_PROPORTIONAL_UI_FONTS
+    // The UC1609 menu is laid out by per-glyph advances.  USB Screen receives
+    // the finished bitmap, so its firmware-side surface must use the same
+    // layout instead of falling back to fixed character cells.
+    void setUiTextStyle(bool active, bool font_enabled, ui_font::Face face);
+    void setUiLineDecorations(u8 row, bool leading_gutter,
+                              bool trailing_gutter);
+    bool uiTextActive(void) const { return ui_text_active_; }
+#endif
 
     bool beginFullscreenBitmap(void);
     bool showFullscreenBitmap(const u8* bitmap, usize size);
@@ -131,6 +143,13 @@ class Surface {
     u8 overlay_height_;
     u8 overlay_clear_border_;
     bool overlay_visible_;
+#if MK61_PROPORTIONAL_UI_FONTS
+    bool ui_text_active_;
+    bool ui_font_enabled_;
+    ui_font::Face ui_face_;
+    u16 ui_row_gutters_;
+    u16 ui_row_tails_;
+#endif
 
     void markDirty(void);
     bool cursorVisible(void) const;
@@ -149,6 +168,9 @@ class Surface {
                    const builtin_font::Raster& raster);
     void drawCursor(u8 cell_x, u8 cell_width, u8 row, bool block);
     void drawOverlay(void);
+#if MK61_PROPORTIONAL_UI_FONTS
+    void renderUi(void);
+#endif
 };
 
 } // пространство имён usb_screen

@@ -20,6 +20,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
   -I"$root/tests/ui_display_shim" -I"$root/code" \
   "$root/tests/ui_display_self_test.cpp" \
   "$root/code/display.cpp" "$root/code/display_ui.cpp" \
+  "$root/code/ui_text_renderer.cpp" \
   "$root/code/calculator_face.cpp" \
   "$root/code/ui_font.cpp" "$root/code/text_screen.cpp" \
   "$root/code/usb_screen_surface.cpp" \

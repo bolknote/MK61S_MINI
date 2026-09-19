@@ -19,6 +19,8 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/tests/mk_math_shim" \
   "$root/tests/usb_screen_surface_self_test.cpp" \
   "$root/code/usb_screen_surface.cpp" \
+  "$root/code/ui_text_renderer.cpp" \
+  "$root/code/ui_font.cpp" \
   "$root/code/builtin_font.cpp" \
   "$root/code/ERM19264_graphics_font.cpp" \
   "$root/code/fmk_font.cpp" \

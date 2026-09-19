@@ -3,6 +3,7 @@
 #include "display.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "display_symbols.hpp"
+#include "ui_text_renderer.hpp"
 #include "utf8_codec.hpp"
 #include <string.h>
 
@@ -45,7 +46,21 @@ void MK61Display::setUiFont(u8 family, u8 size) {
   const u8 next = (u8) (preserved | family | size_bits);
   if(next == ui_font_state) return;
   ui_font_state = next;
-  if(uiTextContext() && !usbScreenActive()) clear();
+#if MK61_ENABLE_USB_SCREEN
+  if(usbScreenActive() && uiTextContext()) {
+    const prepared_font::Face* external = externalUiFont();
+    const u8 width = external != NULL ? external->metrics().max_width
+        : (uiFontEnabled() ? 10U : 5U);
+    usb_surface.setFont(external);
+    usb_surface.setTextLayout(
+        {uiRows(), width, uiHeight(), uiLineGap()}, uiCols());
+    usb_surface.setUiTextStyle(true, uiFontEnabled(), uiFontFace());
+    usb_surface.clear();
+    usb_surface.flush(millis());
+    return;
+  }
+#endif
+  if(uiTextContext()) clear();
 }
 
 u8 MK61Display::uiLineGap(void) const {
@@ -120,14 +135,14 @@ void MK61Display::beginUiText(void) {
     // before the menu or a runtime FMK starts drawing.
     ui_font_state &= (u8) ~16U;
 #endif
+    const prepared_font::Face* external = externalUiFont();
+    const u8 width = external != NULL ? external->metrics().max_width
+        : (uiFontEnabled() ? 10U : 5U);
+    usb_surface.setFont(external);
+    usb_surface.setTextLayout(
+        {uiRows(), width, uiHeight(), uiLineGap()}, uiCols());
+    usb_surface.setUiTextStyle(true, uiFontEnabled(), uiFontFace());
     if(!was_context) usb_surface.clear();
-    if(const prepared_font::Face* external = externalUiFont()) {
-      const prepared_font::Metrics& metrics = external->metrics();
-      usb_surface.setFont(external);
-      usb_surface.setTextLayout(
-          {uiRows(), metrics.max_width, metrics.height, metrics.line_gap},
-          uiCols());
-    }
     usb_surface.flush(millis());
     return;
   }
@@ -142,12 +157,15 @@ void MK61Display::beginUiText(void) {
 void MK61Display::endUiText(void) {
 #if MK61_ENABLE_USB_SCREEN
   if(usbScreenActive()) {
+    const bool was_context = uiTextContext();
     ui_font_state &= (u8) ~8U;
+    usb_surface.setUiTextStyle(false, false, uiFontFace());
     usb_surface.setFont(selectedFont());
     usb_surface.setTextLayout(
         {active_profile.rows, active_profile.glyph_width,
          active_profile.glyph_height, active_profile.line_gap},
         lcd_display::COLS);
+    if(was_context) usb_surface.clear();
     usb_surface.flush(millis());
     return;
   }
@@ -212,7 +230,62 @@ u16 MK61Display::measureUiText(const char* text) const {
 }
 
 void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailing) {
-  if(!uiTextActive() || row >= grid.rows()) return;
+  if(!uiTextActive()) return;
+#if MK61_ENABLE_USB_SCREEN
+  if(usbScreenActive()) {
+    if(row >= usb_surface.rows()) return;
+    MK61DisplayUpdate update(*this);
+    const u8 cols = usb_surface.cols();
+    if(cols == 0) return;
+    usb_surface.setUiLineDecorations(row, marker != 0, trailing != 0);
+    usb_surface.setCursor(0, row);
+    for(u8 col = 0; col < cols; ++col) usb_surface.writeCodepoint(' ');
+    u8 col = marker ? 1U : 0U;
+    if(marker) {
+      usb_surface.setCursor(0, row);
+      usb_surface.writeCodepoint((u8) marker);
+    }
+    const u8 end_col = trailing ? cols - 1U : cols;
+    const u16 width = lcd_display::PIXEL_WIDTH - 2U*UI_MARGIN -
+        (marker ? UI_GUTTER : 0U) - (trailing ? UI_GUTTER : 0U);
+    u16 length = textLength(text);
+    while(length && text[length - 1U] == ' ') --length;
+    u16 offset = 0;
+    u16 used = 0;
+    bool clipped = false;
+    usb_surface.setCursor(col, row);
+    while(offset < length && col < end_col) {
+      const u16 cp = nextCodepoint(text, length, offset);
+      const u8 advance = uiAdvance(cp, false);
+      if(used + advance > width) { clipped = true; break; }
+      usb_surface.writeCodepoint(cp);
+      used = (u16) (used + advance);
+      ++col;
+    }
+    if(clipped || offset < length) {
+      const u8 advance = uiAdvance(0x2026, false);
+      const u8 first = marker ? 1U : 0U;
+      while(col > first && (col >= end_col || used + advance > width)) {
+        --col;
+        u16 previous = ' ';
+        bool custom = false;
+        (void) usb_surface.readCell(col, row, previous, custom);
+        used = (u16) (used - uiAdvance(previous, custom));
+        usb_surface.setCursor(col, row);
+        usb_surface.writeCodepoint(' ');
+      }
+      usb_surface.setCursor(col, row);
+      usb_surface.writeCodepoint(0x2026);
+    }
+    if(trailing) {
+      usb_surface.setCursor(cols - 1U, row);
+      usb_surface.writeCodepoint(trailing);
+    }
+    usb_surface.setCursor(0, row);
+    return;
+  }
+#endif
+  if(row >= grid.rows()) return;
   MK61DisplayUpdate update(*this);
   const u8 cols = grid.cols();
   const u16 row_bit = (u16) (1U << row);
@@ -270,111 +343,22 @@ void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailin
 
 void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   const u8 run_width = count * lcd_display::CELL_WIDTH;
-  const i16 run_left = first_col * lcd_display::CELL_WIDTH;
   const i16 page_y = page * RENDER_PAGE_HEIGHT;
   const u8 saved_width = render_width;
   render_width = run_width;
-  memset(render_buffer, 0, run_width);
-  const auto face = uiFontFace();
-  const auto builtin_metrics = ui_font::metrics(face);
   const prepared_font::Face* const external = uiFontFamily() == 3
       ? externalUiFont() : NULL;
-  const u8 face_height = external ? external->metrics().height
-                                  : builtin_metrics.height;
-  const bool mono = !uiFontEnabled();
-  const u8 text_height = mono ? 8U : face_height;
-  for(u8 row = 0; row < grid.rows(); ++row) {
-    const i16 top = rowTop(row);
-    const i16 mono_top = top + 4;
-    const i16 text_top = mono ? mono_top : top;
-    if(text_top >= page_y + RENDER_PAGE_HEIGHT ||
-       text_top + text_height <= page_y) continue;
-    const bool gutter = (ui_row_gutters & (1U << row)) != 0;
-    const bool tail = (ui_row_tails & (1U << row)) != 0;
-    i16 pen = UI_MARGIN;
-    for(u8 col = 0; col < grid.cols(); ++col) {
-      const bool tail_cell = tail && col == grid.cols() - 1U;
-      if(tail_cell) pen = lcd_display::PIXEL_WIDTH - UI_MARGIN - UI_GUTTER;
-      const i16 right = tail && !tail_cell
-          ? lcd_display::PIXEL_WIDTH - UI_MARGIN - UI_GUTTER
-          : lcd_display::PIXEL_WIDTH - UI_MARGIN;
-      const u16 cp = grid.cell(col, row);
-      const bool custom = grid.cellIsCustom(col, row);
-      const u16 unicode = display_symbol::uc1609::unicodeCodepoint(cp);
-      prepared_font::Glyph external_glyph = {};
-      u8 external_bitmap[fmk::MAX_BITMAP_SIZE] = {};
-      bool use_external = external != NULL && !custom &&
-          external->glyph(unicode, external_glyph);
-      if(!use_external && external != NULL && !custom &&
-         !legacyUiToken(cp)) {
-        use_external = external->glyph('?', external_glyph);
-      }
-      use_external = use_external &&
-          external->decode(external_glyph, external_bitmap,
-                           sizeof(external_bitmap));
-      // PFK1 provides indexed metrics and a ready raster; reuse the resolved
-      // glyph for its advance as well as rendering.
-      const u8 advance = gutter && col == 0 ? UI_GUTTER
-          : (use_external ? external_glyph.advance : uiAdvance(cp, custom));
-      const bool proportional = external == NULL && !mono && !custom &&
-          (ui_font::supports(face, unicode) ||
-           builtin_font::rows5x8(cp) == nullptr);
-      const auto glyph = ui_font::glyph(face, unicode);
-      builtin_font::Raster fallback = {};
-      if(!proportional) {
-        // UI icons do not inherit the user's calculator FMK face/geometry.
-        if(custom && cp < CUSTOM_GLYPHS && custom_valid[cp]) {
-          resolveToken(cp, true, fallback);
-        } else {
-          builtin_font::decode(builtin_font::FaceId::FONT_5X8,
-                               custom ? (u16) '?' : cp, fallback);
-        }
-      }
-      const u8 width = use_external ? external_glyph.width
-          : (proportional ? glyph.width : fallback.width);
-      const u8 height = use_external ? external_glyph.height
-          : (proportional ? glyph.height : fallback.height);
-      const i16 left = pen + (proportional ? glyph.bearing_x : 0);
-      const i16 glyph_top = use_external ? top : (mono ? mono_top
-          : top + builtin_metrics.ascent -
-              (proportional ? glyph.bearing_y : 8));
-      for(u8 y = 0; y < height; ++y) {
-        const i16 py = glyph_top + y - page_y;
-        if(py < 0 || py >= RENDER_PAGE_HEIGHT) continue;
-        for(u8 x = 0; x < width; ++x) {
-          if(left + x >= right) break;
-          const bool pixel = use_external
-              ? fmk::bitmapPixel(external_bitmap, width, x, y)
-              : (proportional ? ui_font::pixel(glyph, x, y)
-                              : fmk::bitmapPixel(fallback.data, width, x, y));
-          if(pixel) {
-            setRenderPixel(left + x - run_left, py);
-          }
-        }
-      }
-      if(row == grid.cursorY() && col == grid.cursorX() && cursorOverlayVisible()) {
-        const i16 cursor_width = advance > 1 ? advance - 1U : 1U;
-        if(cursor_blink && cursor_blink_phase) {
-          // Invert, not erase: the selected character remains recognizable.
-          for(i16 y = 0; y < text_height; ++y) {
-            const i16 py = text_top + y - page_y;
-            if(py < 0 || py >= RENDER_PAGE_HEIGHT) continue;
-            for(i16 x = 0; x < cursor_width && pen + x < right; ++x) {
-              const i16 px = pen + x - run_left;
-              if(px >= 0 && px < run_width) render_buffer[px] ^= (u8) (1U << py);
-            }
-          }
-        } else if(cursor_underline) {
-          fillRenderRect(pen - run_left,
-                         text_top + text_height - 1U - page_y,
-                         cursor_width, 1, true);
-        }
-      }
-      pen += advance;
-    }
-  }
+  const ui_text_renderer::Style style = {
+    uiFontEnabled(), uiFontFace(), external,
+    custom_glyphs, custom_valid, ui_row_gutters, ui_row_tails,
+    grid.cursorX(), grid.cursorY(), cursor_underline,
+    cursor_blink && cursor_blink_phase
+  };
+  ui_text_renderer::renderPage(
+      grid, style, page, first_col, count, render_buffer);
   drawTopRightOverlay(first_col, count, (u8) page_y);
-  lcd.LCDBuffer((u8) run_left, (u8) page_y, run_width, RENDER_PAGE_HEIGHT, render_buffer);
+  lcd.LCDBuffer((u8) (first_col * lcd_display::CELL_WIDTH),
+                (u8) page_y, run_width, RENDER_PAGE_HEIGHT, render_buffer);
   render_width = saved_width;
 }
 #endif
