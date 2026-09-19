@@ -763,7 +763,7 @@ static void test_high_noon_package(int argc, char** argv) {
   TinyBasicTestSetInputs(no_instructions, 1);
   assert(RunTinyBasicProgram("INTRO"));
   assert(std::strcmp(TinyBasicTestLastPrompt(),
-                     "DO YOU WANT INSTRUCTIONS? 1 YES 0 NO") == 0);
+                     "ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ") == 0);
   assert(std::fabs(TinyBasicTestMkRegister(0) - 100.0) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(2)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(3)) < 0.000001);

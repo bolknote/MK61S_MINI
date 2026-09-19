@@ -1,20 +1,20 @@
 30 IF COLS<40 G.9000
 100 D=RND():C.
-110 P."AS MAYOR OF DODGE CITY, AND ON BEHALF OF ITS"
-120 P."CITIZENS, I EXTEND TO YOU OUR THANKS, AND"
-130 P."PRESENT YOU WITH THIS REWARD, A CHECK FOR"
-140 P."$20,000, FOR KILLING BLACK BART.":PAU.
+110 P."КАК МЭР ДОДЖ-СИТИ ОТ ИМЕНИ ВСЕХ"
+120 P."ГОРОЖАН БЛАГОДАРЮ ВАС И ВРУЧАЮ"
+130 P."НАГРАДУ ЗА УБИЙСТВО ЧЁРНОГО БАРТА:"
+140 P."ЧЕК НА 20 000 ДОЛЛАРОВ.":PAU.
 200 C.:P."****************************************"
 210 P."**************"
-220 P."CHECK NO. ";INT(1000*D);" AUG. ";INT(10+10*D);" TH. 1889"
-230 P."CASHIER'S RECEIPT---BANK OF DODGE CITY"
-240 P."PAY TO THE BEARER ON DEMAND"
-250 P."THE SUM OF"
-260 P."TWENTY THOUSAND DOLLARS-------------"
+220 P."ЧЕК НОМЕР ";INT(1000*D);" ОТ ";INT(10+10*D);" АВГУСТА 1889"
+230 P."КВИТАНЦИЯ КАССИРА - БАНК ДОДЖ-СИТИ"
+240 P."ВЫПЛАТИТЬ ПРЕДЪЯВИТЕЛЮ"
+250 P."СУММУ"
+260 P."ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ-------------"
 270 P."------$20,000"
 280 P."****************************************"
 290 P."**************":PAU.
-300 C.:P."DON'T SPEND IT ALL IN ONE PLACE."
-310 P.:P."C.G. INC.":.RE=99:PAU.:E.
-9000 C.:P."HIGH NOON CANNOT CONTINUE"
+300 C.:P."НЕ ТРАТЬТЕ ВСЁ СРАЗУ."
+310 P.:P."КРИС ГАЙЛО, 1970":.RE=99:PAU.:E.
+9000 C.:P."ИГРА НЕ МОЖЕТ ПРОДОЛЖАТЬСЯ"
 9010 .RE=99:PAU.:E.

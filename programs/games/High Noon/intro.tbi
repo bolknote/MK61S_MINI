@@ -1,38 +1,36 @@
 30 IF COLS<40 G.9000
 40 .RE=99
-100 C.:P."H I G H  N O O N"
-110 P."----------------"
-120 IN."DO YOU WANT INSTRUCTIONS? 1 YES 0 NO",D
+100 C.:P."Р О В Н О  В  П О Л Д Е Н Ь"
+110 P."---------------------------"
+120 IN."ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ",D
 130 IF D=0 G.500
-200 C.:P."YOU HAVE BEEN CHALLENGED TO A SHOWDOWN BY BLACK"
-210 P."BART, ONE OF THE MEANEST DESPERADOES WEST OF"
-220 P."THE ALLEGHENY MOUNTAINS."
-230 P."WHILE YOU ARE WALKING DOWN A DUSTY, DESERTED"
-240 P."SIDE STREET, BLACK BART EMERGES FROM A SALOON"
-250 P."ONE HUNDRED PACES AWAY.":PAU.
-280 C.:P."BY AGREEMENT, YOU EACH HAVE FOUR CARTRIDGES IN"
-290 P."YOUR SIX-GUNS. YOUR MARKSMANSHIP EQUALS HIS."
-300 P."AT THE START OF THE WALK, NEITHER OF YOU CAN"
-310 P."POSSIBLY HIT THE OTHER, AND AT THE END OF THE"
-320 P."WALK, NEITHER CAN MISS.":PAU.
-350 C.:P."THE CLOSER YOU GET, THE BETTER YOUR CHANCES OF"
-360 P."HITTING BART, BUT HE ALSO HAS BETTER CHANCES OF"
-380 P."HITTING YOU."
-390 IN."DO YOU STILL WANT TO CONTINUE? 1/0",A
+200 C.:P."ЧЁРНЫЙ БАРТ ВЫЗВАЛ ВАС НА ДУЭЛЬ."
+210 P."ЭТО ОДИН ИЗ САМЫХ ОПАСНЫХ БАНДИТОВ"
+220 P."К ЗАПАДУ ОТ АЛЛЕГАНСКИХ ГОР."
+230 P."ВЫ ИДЁТЕ ПО ПЫЛЬНОЙ ПУСТЫННОЙ УЛИЦЕ."
+240 P."ИЗ САЛУНА ВЫХОДИТ ЧЁРНЫЙ БАРТ."
+250 P."МЕЖДУ ВАМИ СТО ШАГОВ.":PAU.
+280 C.:P."У КАЖДОГО ПО ЧЕТЫРЕ ПАТРОНА В РЕВОЛЬВЕРЕ."
+290 P."СТРЕЛЯЕТЕ ВЫ ОДИНАКОВО МЕТКО."
+300 P."В НАЧАЛЕ ПУТИ НИКТО НЕ МОЖЕТ ПОПАСТЬ,"
+310 P."НО В КОНЦЕ УЖЕ НИКТО НЕ ПРОМАХНЁТСЯ.":PAU.
+350 C.:P."ЧЕМ ВЫ БЛИЖЕ, ТЕМ ВЫШЕ ВАШИ ШАНСЫ"
+360 P."ПОПАСТЬ В БАРТА. НО И ЕГО ШАНСЫ РАСТУТ."
+390 IN."ПРОДОЛЖИТЬ? 1 ДА 0 НЕТ",A
 400 IF A=0 G.800
-500 C.:P."THE MOVES ARE AS FOLLOWS:"
-510 P."*M O V E S*"
+500 C.:P."ВАШИ ВОЗМОЖНЫЕ ХОДЫ:"
+510 P."* Х О Д Ы *"
 520 P."==========="
-530 P."1. ADVANCE"
-540 P."2. STAND STILL"
-550 P."3. FIRE"
-560 P."4. JUMP BEHIND THE WATERING TROUGH"
-570 P."5. GIVE UP"
-580 P."6. TURN TAIL AND RUN"
+530 P."1. ИДТИ ВПЕРЁД"
+540 P."2. СТОЯТЬ НА МЕСТЕ"
+550 P."3. СТРЕЛЯТЬ"
+560 P."4. СПРЯТАТЬСЯ ЗА КОНСКОЙ ПОИЛКОЙ"
+570 P."5. СДАТЬСЯ"
+580 P."6. ПОВЕРНУТЬСЯ И БЕЖАТЬ"
 600 .R0=100:.R1=0:.R2=0:.R3=0:.R4=0
 610 PAU.:.RE=1:E.
-800 C.:P."GREENHORN."
-810 P.:P."C.G. INC.":.RE=99:PAU.:E.
-9000 C.:P."HIGH NOON NEEDS UC1609"
-9010 P."AND LOCAL HIGHNOON.FMK"
+800 C.:P."ТРУС."
+810 P.:P."КРИС ГАЙЛО, 1970":.RE=99:PAU.:E.
+9000 C.:P."НУЖЕН ГРАФИЧЕСКИЙ ЭКРАН"
+9010 P."И ЛОКАЛЬНЫЙ ШРИФТ ИГРЫ"
 9020 .RE=99:PAU.:E.

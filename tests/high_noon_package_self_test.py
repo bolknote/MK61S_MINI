@@ -33,7 +33,18 @@ require(driver.stat().st_size <= 1536, "High Noon M61 dispatcher exceeds 1536 by
 require(manual.is_file() and manual.stat().st_size <= 1536,
         "High Noon manual exceeds the Markdown quota")
 require(font.is_file(), "High Noon local FMK is missing")
-require(font.read_bytes()[:4] == b"FMK1", "High Noon local FMK is invalid")
+font_data = font.read_bytes()
+require(font_data[:4] == b"FMK1", "High Noon local FMK is invalid")
+require(int.from_bytes(font_data[8:10], "little") == 65,
+        "High Noon Russian FMK has an unexpected glyph count")
+require(font_data[10] == 3, "High Noon Russian FMK must have three ranges")
+font_ranges = tuple(
+    (int.from_bytes(font_data[16 + offset:18 + offset], "little"),
+     font_data[18 + offset] + 1)
+    for offset in range(0, 9, 3)
+)
+require(font_ranges == ((0x20, 0x20), (0x0401, 1), (0x0410, 0x20)),
+        "High Noon FMK must contain symbols/digits and Russian uppercase only")
 require(not (root / "programs" / "Fonts" / "HighNoon.FMK").exists(),
         "High Noon FMK must not be duplicated in the global Fonts directory")
 for path in parts:
@@ -60,95 +71,82 @@ for line in (
 require("LOADFONT" not in "".join(path.read_text(encoding="utf-8") for path in parts).upper(),
         "High Noon must select its font in M61, not TinyBASIC")
 
-# These are the complete player-visible string literals of the corrected port.
-# Whitespace is ignored because the 192x64 display needs deterministic 47-cell
-# wrapping and page breaks. Historical wording stays, but spelling mistakes are
-# corrected even when they were already present in the 1970 listing.
+# These phrases cover every scene of the complete Russian translation.
+# Whitespace is ignored because its deterministic 47-cell page layout may
+# split one sentence across adjacent PRINT statements.
 required_text = (
-    "H I G H  N O O N",
+    "Р О В Н О  В  П О Л Д Е Н Ь",
     "----------------",
-    "DO YOU WANT INSTRUCTIONS?",
-    "YOU HAVE BEEN CHALLENGED TO A SHOWDOWN BY BLACK BART, ONE OF THE MEANEST DESPERADOES WEST OF THE ALLEGHENY MOUNTAINS.",
-    "WHILE YOU ARE WALKING DOWN A DUSTY, DESERTED SIDE STREET, BLACK BART EMERGES FROM A SALOON ONE HUNDRED PACES AWAY.",
-    "BY AGREEMENT, YOU EACH HAVE FOUR CARTRIDGES IN YOUR SIX-GUNS. YOUR MARKSMANSHIP EQUALS HIS.",
-    "AT THE START OF THE WALK, NEITHER OF YOU CAN POSSIBLY HIT THE OTHER, AND AT THE END OF THE WALK, NEITHER CAN MISS.",
-    "THE CLOSER YOU GET, THE BETTER YOUR CHANCES OF HITTING BART, BUT HE ALSO HAS BETTER CHANCES OF HITTING YOU.",
-    "DO YOU STILL WANT TO CONTINUE?",
-    "THE MOVES ARE AS FOLLOWS:",
-    "*M O V E S*",
+    "ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ",
+    "ЧЁРНЫЙ БАРТ ВЫЗВАЛ ВАС НА ДУЭЛЬ.",
+    "ЭТО ОДИН ИЗ САМЫХ ОПАСНЫХ БАНДИТОВ К ЗАПАДУ ОТ АЛЛЕГАНСКИХ ГОР.",
+    "ВЫ ИДЁТЕ ПО ПЫЛЬНОЙ ПУСТЫННОЙ УЛИЦЕ. ИЗ САЛУНА ВЫХОДИТ ЧЁРНЫЙ БАРТ.",
+    "МЕЖДУ ВАМИ СТО ШАГОВ.",
+    "У КАЖДОГО ПО ЧЕТЫРЕ ПАТРОНА В РЕВОЛЬВЕРЕ. СТРЕЛЯЕТЕ ВЫ ОДИНАКОВО МЕТКО.",
+    "В НАЧАЛЕ ПУТИ НИКТО НЕ МОЖЕТ ПОПАСТЬ, НО В КОНЦЕ УЖЕ НИКТО НЕ ПРОМАХНЁТСЯ.",
+    "ЧЕМ ВЫ БЛИЖЕ, ТЕМ ВЫШЕ ВАШИ ШАНСЫ ПОПАСТЬ В БАРТА. НО И ЕГО ШАНСЫ РАСТУТ.",
+    "ПРОДОЛЖИТЬ? 1 ДА 0 НЕТ",
+    "ВАШИ ВОЗМОЖНЫЕ ХОДЫ:",
+    "* Х О Д Ы *",
     "===========",
-    "1. ADVANCE",
-    "2. STAND STILL",
-    "3. FIRE",
-    "4. JUMP BEHIND THE WATERING TROUGH",
-    "5. GIVE UP",
-    "6. TURN TAIL AND RUN",
-    "WHAT IS YOUR STRATEGY?",
-    "HOW MANY PACES DO YOU ADVANCE:",
-    "YOU ARE NOW",
-    "PACES APART.",
-    "NICE GOING, ACE, YOU'VE RUN OUT OF SHELLS.",
-    "NOW BART WON'T SHOOT UNTIL YOU TOUCH NOSES.",
-    "YOU BETTER THINK OF SOMETHING FAST. (LIKE RUN)",
-    "WHAT A LOUSY SHOT.",
-    "WHAT A SHOT, YOU GOT BLACK BART RIGHT BETWEEN THE EYES.",
-    "AS MAYOR OF DODGE CITY, AND ON BEHALF OF ITS CITIZENS,",
-    "I EXTEND TO YOU OUR THANKS, AND PRESENT YOU WITH THIS",
-    "REWARD, A CHECK FOR $20,000, FOR KILLING BLACK BART.",
+    "1. ИДТИ ВПЕРЁД",
+    "2. СТОЯТЬ НА МЕСТЕ",
+    "3. СТРЕЛЯТЬ",
+    "4. СПРЯТАТЬСЯ ЗА КОНСКОЙ ПОИЛКОЙ",
+    "5. СДАТЬСЯ",
+    "6. ПОВЕРНУТЬСЯ И БЕЖАТЬ",
+    "ВАША СТРАТЕГИЯ?",
+    "СКОЛЬКО ШАГОВ ПРОЙТИ:",
+    "С ТАКИМ ЗНАНИЕМ ПРАВИЛ ДОЛГО НЕ ПРОЖИВЁТЕ.",
+    "ТАК БЫСТРО НЕ ХОДЯТ.",
+    "НАЗАД НЕЛЬЗЯ, ПАРТНЁР. НУЖНО ПОЛОЖИТЕЛЬНОЕ ЧИСЛО.",
+    "ВЫ СТАЛИ ПРЕКРАСНОЙ НЕПОДВИЖНОЙ МИШЕНЬЮ.",
+    "БРАВО! ПАТРОНЫ КОНЧИЛИСЬ.",
+    "БАРТ НЕ СТРЕЛЯЕТ, ПОКА ВЫ НЕ СТОЛКНЁТЕСЬ НОС К НОСУ. СКОРЕЕ БЕГИТЕ!",
+    "ПЛОХОЙ ВЫСТРЕЛ.",
+    "ВЫ СБИЛИ БАРТА С ТОЛКУ.",
+    "СКОЛЬКО, ПО-ВАШЕМУ, НА ЭТОЙ УЛИЦЕ КОНСКИХ ПОИЛОК?",
+    "БАРТ СОГЛАСЕН. УСЛОВИЕ ТАКОВО:",
+    "ОН НЕ СТРЕЛЯЕТ, ЕСЛИ ВЫ УЕДЕТЕ ПЕРВЫМ ДИЛИЖАНСОМ И БОЛЬШЕ НЕ ВЕРНЁТЕСЬ.",
+    "СОГЛАСНЫ? 1 ДА 0 НЕТ",
+    "ОЧЕНЬ МУДРОЕ РЕШЕНИЕ.",
+    "НУ ЧТО Ж, ВЕРНЁМСЯ К ДУЭЛИ.",
+    "КАК ДАЛЕКО ВЫ УБЕЖАЛИ?",
+    "ОН УДРАЛ ТАК БЫСТРО, ЧТО ДАЖЕ СОБАКИ ЕГО НЕ ДОГНАЛИ.",
+    "ЧЁРНЫЙ БАРТ ВЫСТРЕЛИЛ",
+    "ОН ПОПАЛ ВАМ ПРЯМО В СПИНУ. ТАК ВАМ И НАДО ЗА БЕГСТВО.",
+    "ЧЁРНЫЙ БАРТ РАЗРЯДИЛ РЕВОЛЬВЕР:",
+    "ОДИН РАЗ В СПИНУ И ЕЩЁ",
+    "В ЗАД. ТЕПЕРЬ И ПОКОЯ НЕ ВИДАТЬ.",
+    "ВАМ ПОВЕЗЛО: У БАРТА НЕТ ПАТРОНОВ.",
+    "ОН МОЖЕТ ТОЛЬКО БРОСИТЬ В ВАС РЕВОЛЬВЕР.",
+    "ВООБЩЕ-ТО ВЫ УЖЕ ДОЛЖНЫ БЫТЬ МЕРТВЫ.",
+    "ВОТ ЭТО ВЫСТРЕЛ! ВЫ ПОПАЛИ БАРТУ ПРЯМО МЕЖДУ ГЛАЗ.",
+    "ПУЛЯ ЗАДЕЛА БАРТА ЗА ПРАВУЮ РУКУ.",
+    "ВЫ РАНИЛИ ЕГО В ЛЕВОЕ ПЛЕЧО. ТЕПЕРЬ ОН СТРЕЛЯЕТ ПРАВОЙ РУКОЙ.",
+    "БАРТ ПРОШЁЛ",
+    "ВАШ ШАНС: У БАРТА КОНЧИЛИСЬ ПАТРОНЫ.",
+    "БАРТ СТРЕЛЯЕТ . . . . . .",
+    "МИМО . . . .",
+    "ВАМ ПОВЕЗЛО. ПУЛЯ ПРОЛЕТЕЛА В САНТИМЕТРЕ ОТ ВАШЕЙ ГОЛОВЫ.",
+    "БАРТ ПРОСТРЕЛИЛ ВАМ СЕРДЦЕ. ВЫ УМЕРЛИ, ТАК И НЕ СНЯВ САПОГ.",
+    "БАРТ ПОПАЛ ВАМ В ПРАВУЮ ГОЛЕНЬ.",
+    "ЭТА УЛОВКА СПАСЛА ВАМ ЖИЗНЬ.",
+    "ПУЛЮ БАРТА ОСТАНОВИЛА ДЕРЕВЯННАЯ СТЕНКА ПОИЛКИ.",
+    "НО БАРТ ПОПАЛ ВАМ В ЛЕВУЮ СТОРОНУ ЧЕЛЮСТИ.",
+    "ДОЛЖНО БЫТЬ, БАРТ ДЁРНУЛ ЗА СПУСК.",
+    "БАРТ УДРАЛ ИЗ ГОРОДА, ЛИШЬ БЫ НЕ ВСТРЕЧАТЬСЯ С ВАМИ С ПУСТЫМ РЕВОЛЬВЕРОМ.",
+    "БУДЬТЕ УВЕРЕНЫ: ОН БОЛЬШЕ НИКОГДА НЕ ПОКАЖЕТСЯ В ЭТОМ ГОРОДЕ.",
+    "КАК МЭР ДОДЖ-СИТИ ОТ ИМЕНИ ВСЕХ ГОРОЖАН БЛАГОДАРЮ ВАС И ВРУЧАЮ",
+    "НАГРАДУ ЗА УБИЙСТВО ЧЁРНОГО БАРТА: ЧЕК НА 20 000 ДОЛЛАРОВ.",
     "******************************************************",
-    "CHECK NO.",
-    "AUG.",
-    "TH. 1889",
-    "CASHIER'S RECEIPT---BANK OF DODGE CITY",
-    "PAY TO THE BEARER ON DEMAND",
-    "THE SUM OF",
-    "TWENTY THOUSAND DOLLARS-------------------$20,000",
-    "DON'T SPEND IT ALL IN ONE PLACE.",
-    "BLACK BART MOVES",
-    "NOW IS YOUR CHANCE, BART IS OUT OF SHELLS",
-    "BART FIRES . . . . . .",
-    "A MISS . . . .",
-    "WHEW, WERE YOU LUCKY. THAT BULLET JUST MISSED YOUR HEAD.",
-    "BART SHOT YOU RIGHT THROUGH THE HEART THAT TIME.",
-    "YOU WENT KICKIN' WITH YOUR BOOTS ON.",
-    "YOU SURE AREN'T GOING TO LIVE VERY LONG IF YOU CAN'T EVEN",
-    "FOLLOW DIRECTIONS",
-    "GREENHORN.",
-    "THAT MOVE MADE YOU A PERFECT STATIONARY TARGET",
-    "NOT A BAD MANEUVER, YOU THREW BART'S STRATEGY OFF",
-    "YOU NOW HAVE",
-    "SHELLS TO BART'S",
-    "SHELLS.",
-    "BLACK BART ACCEPTS. THE CONDITIONS ARE THAT HE WON'T SHOOT YOU",
-    "IF YOU TAKE THE FIRST STAGE OUT OF TOWN AND NEVER COME BACK",
-    "AGREED?",
-    "A VERY WISE DECISION.",
-    "OH WELL, BACK TO THE SHOWDOWN",
-    "HOW FAR DID YOU RUN?",
-    "MAN, DID HE RUN. HE RAN SO FAST EVEN DOGS COULDN'T",
-    "CATCH HIM",
-    "BLACK BART FIRES",
-    "SHELLS.......",
-    "HE GOT YOU RIGHT IN THE BACK. THAT'S WHAT YOU DESERVE",
-    "FOR RUNNING",
-    "BLACK BART UNLOADED HIS GUN, ONCE IN YOUR BACK",
-    "TIMES IN YOUR A**. NOW YOU CAN'T EVEN REST IN",
-    "PEACE.",
-    "YOU WERE LUCKY, BART CAN ONLY THROW HIS GUN AT YOU, HE",
-    "DOESN'T HAVE ANY SHELLS LEFT. YOU SHOULD REALLY BE DEAD.",
-    "GRAZED BART IN THE RIGHT ARM",
-    "HE'S HIT IN THE LEFT SHOULDER, FORCING HIM TO USE HIS RIGHT",
-    "HAND TO SHOOT WITH",
-    "BUT BART GOT YOU IN THE RIGHT SHIN.",
-    "THAT TRICK JUST SAVED YOUR LIFE. BART'S BULLET",
-    "WAS STOPPED BY THE WOOD SIDES OF THE TROUGH.",
-    "THOUGH BART GOT YOU ON THE LEFT SIDE OF YOUR JAW.",
-    "BART MUST HAVE JERKED THE TRIGGER",
-    "NOBODY CAN WALK THAT FAST",
-    "NONE OF THIS NEGATIVE STUFF PARTNER, ONLY POSITIVE NUMBERS",
-    "BART JUST HI-TAILED IT OUT OF TOWN RATHER THAN FACE YOU WITHOUT A LOADED GUN. YOU CAN REST ASSURED THAT BART WON'T EVER SHOW HIS FACE AROUND THIS TOWN AGAIN.",
-    "HOW MANY WATERING TROUGHS DO YOU THINK ARE ON THIS STREET",
-    "C.G. INC.",
+    "ЧЕК НОМЕР",
+    "АВГУСТА 1889",
+    "КВИТАНЦИЯ КАССИРА - БАНК ДОДЖ-СИТИ",
+    "ВЫПЛАТИТЬ ПРЕДЪЯВИТЕЛЮ",
+    "ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ-------------------$20,000",
+    "НЕ ТРАТЬТЕ ВСЁ СРАЗУ.",
+    "КРИС ГАЙЛО, 1970",
 )
 payloads = [quoted_payload(path) for path in parts]
 for phrase in required_text:
@@ -157,6 +155,21 @@ for phrase in required_text:
             f"High Noon lost upstream text: {phrase}")
 
 all_game_text = "\n".join(path.read_text(encoding="utf-8") for path in parts)
+all_literals = "".join(
+    literal
+    for path in parts
+    for literal in re.findall(r'"([^"]*)"', path.read_text(encoding="utf-8"))
+)
+require(not re.search(r"[A-Za-z]", all_literals),
+        "High Noon runtime text must not require Latin glyphs")
+supported_codepoints = (
+    set(range(0x20, 0x40)) | {0x0401} | set(range(0x0410, 0x0430))
+)
+unsupported = sorted({ord(char) for char in all_literals}
+                     - supported_codepoints)
+require(not unsupported,
+        "High Noon text is missing FMK glyph "
+        + (f"U+{unsupported[0]:04X}" if unsupported else ""))
 for stale in ("WALKM", "BETER", "RECEIT", "DODsGE", "THATS", "YOUT", "BURT"):
     require(stale not in all_game_text, f"High Noon restored misspelling: {stale}")
 for path in parts:
