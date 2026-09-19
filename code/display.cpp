@@ -2,6 +2,7 @@
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
 #include "page_damage.hpp"
+#include "utf8_codec.hpp"
 #if defined(MK61_DISPLAY_UC1609)
   #include "shared_scratch.hpp"
 #endif
@@ -2275,7 +2276,8 @@ MK61Display::MK61Display(void)
     , ui_font_state(4)
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
-    , ui_row_gutters(0),
+    , active_ui_font_runtime(false),
+    ui_row_gutters(0),
     ui_row_tails(0)
 #endif
 #if MK61_ENABLE_USB_SCREEN
@@ -2809,6 +2811,9 @@ bool MK61Display::installPreparedFontImpl(
   const ActiveFontState previous_state = active_font_state;
   const ActiveFontRole previous_role = active_font_role;
   active_font_state = ActiveFontState::BUILTIN;
+#if MK61_PROPORTIONAL_UI_FONTS
+  active_ui_font_runtime = false;
+#endif
   active_font.reset();
   preview_font.reset();
   preview_profile_active = false;
@@ -2831,6 +2836,9 @@ bool MK61Display::installPreparedFontImpl(
   }
 
   active_font_role = role;
+#if MK61_PROPORTIONAL_UI_FONTS
+  active_ui_font_runtime = role == ActiveFontRole::UI && expected_height == 0;
+#endif
   active_font_state = ActiveFontState::READY;
   if(role == ActiveFontRole::TEXT) {
     applyTextProfile(recommendedProfile(active_font.metrics()), true);
@@ -2913,6 +2921,9 @@ void MK61Display::useBuiltinFont(void) {
   // backing arena может перейти USB-кэшу, swap или компрессору.
   active_font_state = ActiveFontState::BUILTIN;
   active_font_role = ActiveFontRole::TEXT;
+#if MK61_PROPORTIONAL_UI_FONTS
+  active_ui_font_runtime = false;
+#endif
   preview_profile_active = false;
   active_font.reset();
   preview_font.reset();
@@ -3434,6 +3445,150 @@ void MK61Display::write(uint8_t value) {
 }
 
 #endif
+
+namespace {
+
+struct DisplayWrappedLine {
+  const char* begin;
+  const char* end;
+  const char* next;
+};
+
+static const char* displayUtf8Next(const char* cursor, const char* end) {
+  if(cursor >= end) return end;
+  const utf8_codec::Decoded decoded = utf8_codec::decode(
+      (const u8*) cursor, (usize) (end - cursor));
+  return decoded.size != 0 ? cursor + decoded.size : cursor + 1;
+}
+
+static u16 displayCellWidth(const char* begin, const char* end) {
+  u16 width = 0;
+  while(begin < end && width != 0xFFFFU) {
+    begin = displayUtf8Next(begin, end);
+    width++;
+  }
+  return width;
+}
+
+static u16 displayTextWidth(MK61Display& display, const char* begin,
+                            const char* end, bool pixels) {
+  if(pixels) return display.measureUiText(begin, (u16) (end - begin));
+  return displayCellWidth(begin, end);
+}
+
+static DisplayWrappedLine displayNextWrappedLine(
+    MK61Display& display, const char* begin, const char* end,
+    u16 limit, u8 cell_limit, bool pixels) {
+  DisplayWrappedLine line = {begin, end, end};
+  if(begin >= end) return line;
+
+  const char* cursor = begin;
+  const char* fitted = begin;
+  const char* last_space = NULL;
+  while(cursor < end) {
+    const char* const next = displayUtf8Next(cursor, end);
+    const bool separator = *cursor == ' ' || *cursor == '\t';
+    if(displayTextWidth(display, begin, next, pixels) > limit ||
+       displayCellWidth(begin, next) > cell_limit) {
+      if(separator && fitted > begin) {
+        line.end = fitted;
+        line.next = next;
+      } else if(last_space != NULL && last_space > begin) {
+        line.end = last_space;
+        line.next = last_space;
+      } else {
+        line.end = fitted > begin ? fitted : next;
+        line.next = line.end;
+      }
+      while(line.next < end &&
+            (*line.next == ' ' || *line.next == '\t')) line.next++;
+      return line;
+    }
+    fitted = next;
+    if(separator) last_space = cursor;
+    cursor = next;
+  }
+  return line;
+}
+
+static u16 displayWrappedLineCount(MK61Display& display,
+                                   const char* begin, const char* end,
+                                   u16 limit, u8 cell_limit, bool pixels) {
+  u16 count = 0;
+  while(begin < end) {
+    begin = displayNextWrappedLine(
+        display, begin, end, limit, cell_limit, pixels).next;
+    count++;
+  }
+  return count;
+}
+
+static void displayReplaceUtf8Line(MK61Display& display, u8 row,
+                                   const char* begin, const char* end) {
+  display.setCursor(0, row);
+  for(u8 column = 0; column < display.cols(); ++column) {
+    display.write((u8) ' ');
+  }
+  display.setCursor(0, row);
+  while(begin < end) {
+    const utf8_codec::Decoded decoded = utf8_codec::decode(
+        (const u8*) begin, (usize) (end - begin));
+    if(decoded.size == 0) {
+      display.write((u8) *begin++);
+    } else {
+      if(decoded.valid && decoded.size > 1) {
+        display.writeCodepoint(decoded.codepoint <= 0xFFFFU
+            ? (u16) decoded.codepoint : (u16) '?');
+      } else {
+        display.write((u8) *begin);
+      }
+      begin += decoded.size;
+    }
+  }
+}
+
+} // namespace
+
+u8 MK61Display::printWrappedText(const char* text, u16 length, u8 first_row,
+                                 u8 max_rows, bool tail, bool empty_line) {
+  if(text == NULL || first_row >= rows() || max_rows == 0) return 0;
+  const u8 available = (u8) (rows() - first_row);
+  if(max_rows > available) max_rows = available;
+
+  const u16 pixel_limit = uiTextWidth();
+  const bool pixels = pixel_limit != 0;
+  const u8 cell_limit = cols() != 0 ? cols() : 1U;
+  const u16 limit = pixels ? pixel_limit : cell_limit;
+  const char* cursor = text;
+  const char* const end = text + length;
+  if(cursor == end && !empty_line) return 0;
+
+  if(tail && cursor < end) {
+    u16 skip = displayWrappedLineCount(
+        *this, cursor, end, limit, cell_limit, pixels);
+    skip = skip > max_rows ? (u16) (skip - max_rows) : 0U;
+    while(skip-- != 0 && cursor < end) {
+      cursor = displayNextWrappedLine(
+          *this, cursor, end, limit, cell_limit, pixels).next;
+    }
+  }
+
+  MK61DisplayUpdate update(*this);
+  u8 written = 0;
+  if(cursor == end) {
+    displayReplaceUtf8Line(*this, first_row, cursor, cursor);
+    return 1;
+  }
+  while(cursor < end && written < max_rows) {
+    const DisplayWrappedLine line = displayNextWrappedLine(
+        *this, cursor, end, limit, cell_limit, pixels);
+    displayReplaceUtf8Line(*this, (u8) (first_row + written),
+                           line.begin, line.end);
+    cursor = line.next;
+    written++;
+  }
+  return written;
+}
 
 #if MK61_ENABLE_USB_SCREEN
 

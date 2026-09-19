@@ -76,6 +76,20 @@ static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
     case MK61_SYS_DISPLAY_WRITE_CODEPOINT:
       lcd.writeCodepoint(b <= 0xFFFFU ? (u16) b : (u16) '?');
       break;
+    case MK61_SYS_DISPLAY_FLOW_TEXT: {
+      if(!payload) return 0;
+      const auto& request = *(const mk61_system_text_flow*) payload;
+      const u32 known_flags = MK61_SERVICE_TEXT_FLOW_TAIL |
+                              MK61_SERVICE_TEXT_FLOW_EMPTY_LINE;
+      if(!request.text || request.length > 0xFFFFU ||
+         request.first_row > 0xFFU || request.max_rows > 0xFFU ||
+         (request.flags & ~known_flags) != 0) return 0;
+      return lcd.printWrappedText(
+          request.text, (u16) request.length, (u8) request.first_row,
+          (u8) request.max_rows,
+          (request.flags & MK61_SERVICE_TEXT_FLOW_TAIL) != 0,
+          (request.flags & MK61_SERVICE_TEXT_FLOW_EMPTY_LINE) != 0);
+    }
     case MK61_SYS_DISPLAY_PRINT: if(payload) lcd.print((const char*) payload); break;
     case MK61_SYS_DISPLAY_CURSOR_ON: lcd.cursorOn(); break;
     case MK61_SYS_DISPLAY_CURSOR_OFF: lcd.cursorOff(); break;

@@ -685,8 +685,8 @@ static bool tb_error_code(TbError error) {
     (message)[0] == 'W' ? TbError::WHAT : \
     (message)[0] == 'H' ? TbError::HOW : TbError::SORRY)
 
-static void tb_display_line(u8 row, const char* text) {
-  MK61DisplayUpdate update(main_lcd());
+#ifdef TINYBASIC_HOST_TEST
+static void tb_replace_display_line(u8 row, const char* text) {
   main_lcd().setCursor(0, row);
   for(u8 i = 0; i < main_lcd().cols(); i++) {
     main_lcd().write((u8) ' ');
@@ -694,6 +694,7 @@ static void tb_display_line(u8 row, const char* text) {
   main_lcd().setCursor(0, row);
   tb_print_display_text(text);
 }
+#endif
 
 static void tb_clear_output(void) {
   tb_pause_is_final = false;
@@ -1598,12 +1599,6 @@ static int tb_line_number_from_value(double value) {
   return (int) rounded;
 }
 
-static void tb_flush_print(void) {
-  tb_display_line(tb_print_row, tb_pending_print);
-  tb_pending_print[0] = 0;
-  if(tb_print_row + 1 < main_lcd().rows()) tb_print_row++;
-}
-
 static bool tb_append_print_range(const char* begin, const char* end) {
   const usize used = strlen(tb_pending_print);
   const usize added = (usize) (end - begin);
@@ -1629,7 +1624,7 @@ static bool tb_append_print_separator(char sep) {
   return true;
 }
 
-#ifndef TINYBASIC_HOST_TEST
+#ifdef TINYBASIC_HOST_TEST
 static usize tb_utf8_length(const char* begin, const char* end) {
   usize length = 0;
   while(begin != NULL && begin < end) {
@@ -1653,6 +1648,113 @@ static const char* tb_utf8_advance(const char* begin, const char* end,
   return begin;
 }
 
+struct TbWrappedLine {
+  const char* begin;
+  const char* end;
+  const char* next;
+};
+
+static u16 tb_text_width(const char* begin, const char* end) {
+#ifndef TINYBASIC_HOST_TEST
+  const u16 pixel_width = main_lcd().uiTextWidth();
+  if(pixel_width != 0) {
+    const usize bytes = (usize) (end - begin);
+    return bytes <= 0xFFFFU
+        ? main_lcd().measureUiText(begin, (u16) bytes) : 0xFFFFU;
+  }
+#endif
+  const usize characters = tb_utf8_length(begin, end);
+  return characters < 0xFFFFU ? (u16) characters : 0xFFFFU;
+}
+
+static u16 tb_text_line_width(void) {
+#ifndef TINYBASIC_HOST_TEST
+  const u16 pixels = main_lcd().uiTextWidth();
+  if(pixels != 0) return pixels;
+#endif
+  const u8 cols = main_lcd().cols();
+  return cols != 0 ? cols : 1U;
+}
+
+// One word-wrap implementation serves PRINT and INPUT.  It measures the
+// active runtime FMK in pixels on UC1609 and falls back to Unicode character
+// cells on LCD1602 or an older resident. A word longer than the viewport is
+// split at a codepoint boundary, so the iterator always makes progress.
+static TbWrappedLine tb_next_wrapped_line(const char* begin,
+                                          const char* end) {
+  TbWrappedLine line = {begin, end, end};
+  if(begin >= end) return line;
+
+  const u16 limit = tb_text_line_width();
+  const char* cursor = begin;
+  const char* fitted = begin;
+  const char* last_space = NULL;
+  while(cursor < end) {
+    const char* const next = tb_utf8_advance(cursor, end, 1);
+    const bool separator = tb_is_space(*cursor);
+    if(tb_text_width(begin, next) > limit) {
+      if(separator && fitted > begin) {
+        line.end = fitted;
+        line.next = next;
+      } else if(last_space != NULL && last_space > begin) {
+        line.end = last_space;
+        line.next = last_space;
+      } else {
+        line.end = fitted > begin ? fitted : next;
+        line.next = line.end;
+      }
+      while(line.next < end && tb_is_space(*line.next)) line.next++;
+      return line;
+    }
+    fitted = next;
+    if(separator) last_space = cursor;
+    cursor = next;
+  }
+  return line;
+}
+
+static void tb_copy_wrapped_line(char* output, usize capacity,
+                                 const TbWrappedLine& line) {
+  tb_copy_range(output, capacity, line.begin, line.end);
+}
+#endif
+
+static void tb_flush_print(void) {
+#ifdef TINYBASIC_HOST_TEST
+  MK61DisplayUpdate update(main_lcd());
+  const char* cursor = tb_pending_print;
+  const char* const end = cursor + strlen(cursor);
+  if(cursor == end) {
+    tb_replace_display_line(tb_print_row, "");
+    if(tb_print_row + 1 < main_lcd().rows()) tb_print_row++;
+  } else {
+    while(cursor < end) {
+      const TbWrappedLine line = tb_next_wrapped_line(cursor, end);
+      char text[TB_PRINT_BUFFER_SIZE];
+      tb_copy_wrapped_line(text, sizeof(text), line);
+      tb_replace_display_line(tb_print_row, text);
+      cursor = line.next;
+      if(tb_print_row + 1 < main_lcd().rows()) tb_print_row++;
+      else break;
+    }
+  }
+#else
+  const u8 rows = main_lcd().rows();
+  const u8 available = tb_print_row < rows ? (u8) (rows - tb_print_row) : 0U;
+  const usize bytes = strlen(tb_pending_print);
+  const u8 written = bytes <= 0xFFFFU
+      ? main_lcd().printWrappedText(tb_pending_print, (u16) bytes,
+                                    tb_print_row, available, false, true)
+      : 0U;
+  if(written != 0 && rows != 0) {
+    const u16 next = (u16) tb_print_row + written;
+    tb_print_row = next < rows ? (u8) next : (u8) (rows - 1U);
+  }
+#endif
+  tb_pending_print[0] = 0;
+}
+
+#ifndef TINYBASIC_HOST_TEST
 static void tb_input_message(const char* prompt, const char* value) {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
@@ -1661,50 +1763,18 @@ static void tb_input_message(const char* prompt, const char* value) {
   const u8 rows = main_lcd().rows();
   if(cols == 0 || rows == 0) return;
 
-  // Keep one row for the editable value.  A long question is split over the
-  // remaining rows instead of being destroyed at the old 16-character LCD
-  // boundary.  If a two-line character display cannot hold the whole prompt,
-  // its actionable tail (normally the choices) is more useful than its start.
+  // PRINT and INPUT both delegate word flow to the display owner. INPUT only
+  // asks for the tail because the actionable choices matter most on a 2-row
+  // character panel, and reserves the following row for the editable value.
   const u8 prompt_rows = rows > 1 ? (u8) (rows - 1U) : 0U;
-  const usize prompt_capacity = (usize) prompt_rows * cols;
-  const char* visible = prompt != NULL ? prompt : "";
-  const char* const visible_end = visible + strlen(visible);
-  const usize prompt_length = tb_utf8_length(visible, visible_end);
-  if(prompt_length > prompt_capacity) {
-    visible = tb_utf8_advance(
-        visible, visible_end, prompt_length - prompt_capacity);
-    const char* partial = visible;
-    while(partial < visible_end && *partial != ' ') {
-      partial = tb_utf8_advance(partial, visible_end, 1);
-    }
-    if(partial < visible_end) {
-      while(partial < visible_end && *partial == ' ') partial++;
-      visible = partial;
-    }
-  }
+  const char* const visible = prompt != NULL ? prompt : "";
+  const usize prompt_bytes = strlen(visible);
+  const u8 prompt_lines = prompt_bytes <= 0xFFFFU
+      ? main_lcd().printWrappedText(visible, (u16) prompt_bytes,
+                                    0, prompt_rows, true, false)
+      : 0U;
 
-  u8 row = 0;
-  const char* offset = visible;
-  while(row < prompt_rows && offset < visible_end) {
-    const usize remaining = tb_utf8_length(offset, visible_end);
-    const char* line_end = tb_utf8_advance(
-        offset, visible_end, remaining < cols ? remaining : cols);
-    if(remaining > cols) {
-      const char* break_at = line_end;
-      while(break_at > offset && break_at[-1] != ' ') {
-        break_at--;
-      }
-      if(break_at > offset) line_end = break_at - 1;
-    }
-    char line[TB_PRINT_BUFFER_SIZE];
-    tb_copy_range(line, sizeof(line), offset, line_end);
-    main_lcd().setCursor(0, row++);
-    tb_print_display_text(line);
-    offset = line_end;
-    while(offset < visible_end && *offset == ' ') offset++;
-  }
-
-  const u8 input_row = rows > 1 ? row : 0U;
+  const u8 input_row = rows > 1 ? prompt_lines : 0U;
   main_lcd().setCursor(0, input_row);
   main_lcd().print("> ");
   tb_print_display_text(value);

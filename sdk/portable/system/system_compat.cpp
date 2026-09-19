@@ -99,6 +99,16 @@ void MK61Display::beginUpdate() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_BEGIN_
 void MK61Display::endUpdate() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_UPDATE); }
 void MK61Display::endShiftedViewport() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_VIEWPORT); }
 void MK61Display::endUiText() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_UI_TEXT); }
+u8 MK61Display::printWrappedText(const char* text, u16 length, u8 first_row,
+                                 u8 max_rows, bool tail,
+                                 bool empty_line) {
+  mk61_system_text_flow request = {
+      text, length, first_row, max_rows,
+      (tail ? (u32) MK61_SERVICE_TEXT_FLOW_TAIL : 0U) |
+      (empty_line ? (u32) MK61_SERVICE_TEXT_FLOW_EMPTY_LINE : 0U)};
+  return (u8) call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_FLOW_TEXT,
+                   0, 0, &request);
+}
 bool MK61Display::supportsFullscreenBitmap() const { return call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_GRAPHICS); }
 u16 MK61Display::fullscreenBitmapWidth() const { return (u16) call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_WIDTH); }
 u16 MK61Display::fullscreenBitmapHeight() const { return (u16) call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_HEIGHT); }

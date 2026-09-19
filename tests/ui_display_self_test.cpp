@@ -202,6 +202,45 @@ void makeExternalRuntimeFont(u8 (&font)[30], u8 advance = 4) {
   font[15] = (u8) (crc >> 8);
 }
 
+// Runtime proportional faces retain a nominal advance in their header. It is
+// the cell-oriented COLS contract for BASIC even though rendering uses each
+// glyph's own advance.
+void makeExternalRuntimeProportionalFont(u8 (&font)[33]) {
+  std::memset(font, 0, sizeof(font));
+  std::memcpy(font, "FMK1", 4);
+  font[5] = 3;
+  font[6] = 5;
+  font[7] = 0x31; // nominal advance=4, line gap=1
+  font[8] = 4;
+  font[10] = 2;
+  font[12] = (u8) sizeof(font);
+  font[16] = ' ';
+  font[18] = 0;
+  font[19] = '?';
+  font[21] = 2; // '?', '@', 'A'
+  usize bit = 22U * 8U;
+  for(u8 glyph = 0; glyph < 4; ++glyph) {
+    const u8 width = glyph == 0 ? 1U : 3U;
+    const u8 advance = glyph == 0 ? 2U : 4U;
+    for(i8 shift = 3; shift >= 0; --shift)
+      putMsbBit(font, bit, ((width - 1U) & (1U << shift)) != 0);
+    for(i8 shift = 3; shift >= 0; --shift)
+      putMsbBit(font, bit, ((advance - 1U) & (1U << shift)) != 0);
+    putMsbBit(font, bit, false);
+    for(u8 y = 0; y < 5; ++y) {
+      for(u8 x = 0; x < width; ++x) {
+        const bool pixel = glyph != 0 &&
+            (y == 0 || y == 4 || x == 0 || x + 1U == width);
+        putMsbBit(font, bit, pixel);
+      }
+    }
+  }
+  assert(bit <= sizeof(font) * 8U && bit > (sizeof(font) - 1U) * 8U);
+  const u16 crc = fmk::checksum(font, sizeof(font));
+  font[14] = (u8) crc;
+  font[15] = (u8) (crc >> 8);
+}
+
 void referenceExternal(Frame& frame, const prepared_font::Face& face, u16 cp,
                        int pen, u8 row, int right = 190) {
   prepared_font::Glyph glyph = {};
@@ -744,6 +783,53 @@ void test_runtime_font_columns_follow_advance() {
   ui_display_test::bulk_size = 0;
 }
 
+void test_runtime_proportional_font_keeps_nominal_columns() {
+  u8 font[33];
+  makeExternalRuntimeProportionalFont(font);
+  u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
+  const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
+  u8 bulk[prepared_font::MAX_IMAGE_SIZE]{};
+  ui_display_test::bulk_bytes = bulk;
+  ui_display_test::bulk_size = sizeof(bulk);
+
+  MK61Display display;
+  ui_display_test::reset();
+  display.begin();
+  assert(display.installPreparedUiFont(prepared, (u16) prepared_size, 0));
+  display.setUiFont(3, 12);
+  display.beginUiText();
+  assert(display.rows() == 10);
+  assert(display.cols() == 47); // nominal floor((192 - 2*2) / 4)
+  assert(display.measureUiText("A A") == 10); // 4 + 2 + 4, truly proportional
+  assert(display.uiTextWidth() == 188);
+
+  char wrapped[52];
+  std::memset(wrapped, 'A', 45);
+  wrapped[45] = ' ';
+  std::memset(wrapped + 46, 'A', 5);
+  wrapped[51] = 0;
+  assert(display.printWrappedText(wrapped, 51, 0, 3) == 2);
+  Frame expected{};
+  const prepared_font::Face* const external = display.externalUiFont();
+  assert(external != nullptr);
+  for(u8 column = 0; column < 45; ++column)
+    referenceExternal(expected, *external, 'A', 2 + column * 4, 0);
+  for(u8 column = 0; column < 5; ++column)
+    referenceExternal(expected, *external, 'A', 2 + column * 4, 1);
+  expectFrame(expected);
+
+  display.clear();
+  assert(display.printWrappedText(wrapped, 51, 0, 1, true) == 1);
+  expected.fill(0);
+  for(u8 column = 0; column < 5; ++column)
+    referenceExternal(expected, *external, 'A', 2 + column * 4, 0);
+  expectFrame(expected);
+
+  display.clearExternalUiFont();
+  ui_display_test::bulk_bytes = nullptr;
+  ui_display_test::bulk_size = 0;
+}
+
 void test_mixed_text_and_page_parity() {
   static constexpr u16 mixed[] = {'A', 0x0416, 'i', 0x0451, ' ', 'W', '9', 0x0443};
   for(u8 size : {12, 14, 16}) {
@@ -1055,6 +1141,7 @@ int main() {
   test_external_ui_font_layout_fallback_and_lifetime();
   test_runtime_font_uses_full_47_by_10_grid();
   test_runtime_font_columns_follow_advance();
+  test_runtime_proportional_font_keeps_nominal_columns();
   test_mixed_text_and_page_parity();
   test_short_replacement_and_gutters();
   test_ellipsis_and_invalid_utf8();

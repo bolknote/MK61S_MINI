@@ -325,6 +325,28 @@ static void test_print_syntax_and_spacing(void) {
   assert(std::strncmp(TinyBasicTestLcdLine(0), "A       B", 9) == 0);
 
   TinyBasicTestReset();
+  TinyBasicTestSetGeometry(8, 4);
+  slot = TinyBasicTestAddProgram(
+    "10 PRINT \"ONE TWO THREE FOUR\"\n",
+    "WRAPPRINT");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "ONE TWO", 7) == 0);
+  assert(std::strncmp(TinyBasicTestLcdLine(1), "THREE", 5) == 0);
+  assert(std::strncmp(TinyBasicTestLcdLine(2), "FOUR", 4) == 0);
+
+  TinyBasicTestReset();
+  TinyBasicTestSetGeometry(5, 4);
+  slot = TinyBasicTestAddProgram(
+    "10 PRINT \"ABCDEFGHIJK\"\n",
+    "HARDWRAP");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "ABCDE", 5) == 0);
+  assert(std::strncmp(TinyBasicTestLcdLine(1), "FGHIJ", 5) == 0);
+  assert(TinyBasicTestLcdLine(2)[0] == 'K');
+
+  TinyBasicTestReset();
   char source[160];
   std::strcpy(source, "10 PRINT \"");
   const int prefix = (int) std::strlen(source);
@@ -764,6 +786,10 @@ static void test_high_noon_package(int argc, char** argv) {
   assert(RunTinyBasicProgram("INTRO"));
   assert(std::strcmp(TinyBasicTestLastPrompt(),
                      "ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ") == 0);
+  // The zero branch now reaches the game immediately.  A standalone
+  // interactive run therefore gets the runner's normal final wait; the real
+  // M61 scenario dispatcher starts PLAYER without that acknowledgement.
+  assert(TinyBasicTestWaitCount() == 1);
   assert(std::fabs(TinyBasicTestMkRegister(0) - 100.0) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(2)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(3)) < 0.000001);
@@ -801,7 +827,7 @@ static void test_high_noon_package(int argc, char** argv) {
   assert(RunTinyBasicProgram("PLAYER"));
   TinyBasicTestSetPauseEsc(false);
   assert(std::fabs(TinyBasicTestMkRegister(14) - 99.0) < 0.000001);
-  assert(TinyBasicTestWaitCount() == 0);
+  assert(TinyBasicTestWaitCount() == 1);
 }
 
 int main(int argc, char** argv) {

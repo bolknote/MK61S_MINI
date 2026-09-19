@@ -162,6 +162,9 @@ class MK61Display {
   void endUpdate();
   void endShiftedViewport();
   void endUiText();
+  u8 printWrappedText(const char* text, u16 length, u8 first_row,
+                      u8 max_rows, bool tail = false,
+                      bool empty_line = false);
   u8 cols() const { return (u8) portable_system::app->display_columns(); }
   u8 rows() const { return (u8) portable_system::app->display_rows(); }
   bool supportsFullscreenBitmap() const;

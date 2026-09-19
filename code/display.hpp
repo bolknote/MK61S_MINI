@@ -192,6 +192,12 @@ class MK61Display : public Print {
     void flush(void);
     void beginUpdate(void);
     void endUpdate(void);
+    // UTF-8 word flow shared by language runtimes. It uses the active FMK's
+    // real advances on a graphical UI and Unicode cells on character panels.
+    // Returns the number of rows replaced.
+    u8 printWrappedText(const char* text, u16 length, u8 first_row,
+                        u8 max_rows, bool tail = false,
+                        bool empty_line = false);
     void setRows(u8 rows);
     void setTextProfile(lcd_display::TextProfile profile);
     // Runtime-owned restoration path for a previously observed geometry.
@@ -224,6 +230,10 @@ class MK61Display : public Print {
     // Optional marker and right-hand type icon occupy fixed, separate gutters.
     void printUiLine(u8 row, const char* text, char marker = 0, u16 trailing = 0);
     u16 measureUiText(const char* text) const;
+    u16 measureUiText(const char* text, u16 length) const;
+    // Pixel width available to an undecorated UI row, or zero while the
+    // ordinary fixed-cell renderer owns the foreground.
+    u16 uiTextWidth(void) const;
 #else
     void setUiFont(u8, u8) {}
     u8 uiFontFamily(void) const { return 0; }
@@ -235,6 +245,8 @@ class MK61Display : public Print {
     void endUiText(void) {}
     void printUiLine(u8, const char*, char = 0, u16 = 0) {}
     u16 measureUiText(const char*) const { return 0; }
+    u16 measureUiText(const char*, u16) const { return 0; }
+    u16 uiTextWidth(void) const { return 0; }
 #endif
 #if MK61_FIXED_CALCULATOR_FACE
     // Independent of the menu face and intentionally not configurable.
@@ -549,6 +561,7 @@ class MK61Display : public Print {
     u8 ui_font_state;
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
+    bool active_ui_font_runtime;
     u16 ui_row_gutters;
     u16 ui_row_tails;
 #endif

@@ -32,6 +32,7 @@
 #define MK61_SYS_DISPLAY_WIDTH MK61_SERVICE_DISPLAY_WIDTH
 #define MK61_SYS_DISPLAY_WRITE MK61_SERVICE_DISPLAY_WRITE
 #define MK61_SYS_DISPLAY_WRITE_CODEPOINT MK61_SERVICE_DISPLAY_WRITE_CODEPOINT
+#define MK61_SYS_DISPLAY_FLOW_TEXT MK61_SERVICE_DISPLAY_FLOW_TEXT
 #define MK61_SYS_EDITOR_DRAW MK61_SERVICE_EDITOR_DRAW
 #define MK61_SYS_EDITOR_KEY MK61_SERVICE_EDITOR_KEY
 #define MK61_SYS_EDITOR_SCROLL MK61_SERVICE_EDITOR_SCROLL
@@ -115,6 +116,7 @@
 #define mk61_system_setting mk61_service_setting
 #define mk61_system_text_font_operation mk61_service_text_font_operation
 #define mk61_system_text_font_result mk61_service_text_font_result
+#define mk61_system_text_flow mk61_service_text_flow
 #define mk61_system_write mk61_service_write
 
 #endif

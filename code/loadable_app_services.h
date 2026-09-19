@@ -91,8 +91,19 @@ enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_END_UI_TEXT,
   // Write one Unicode codepoint. Unlike DISPLAY_WRITE this never interprets
   // the value as an MK-61 legacy byte/control token.
-  MK61_SERVICE_DISPLAY_WRITE_CODEPOINT
+  MK61_SERVICE_DISPLAY_WRITE_CODEPOINT,
+  // Resident-owned UTF-8 word flow. Languages hand the complete logical line
+  // to the display owner instead of copying font metrics and wrap policy.
+  MK61_SERVICE_DISPLAY_FLOW_TEXT
 };
+enum mk61_service_text_flow_flag {
+  MK61_SERVICE_TEXT_FLOW_TAIL = 1U,
+  MK61_SERVICE_TEXT_FLOW_EMPTY_LINE = 2U
+};
+typedef struct mk61_service_text_flow {
+  const char* text;
+  uint32_t length, first_row, max_rows, flags;
+} mk61_service_text_flow;
 enum mk61_service_keyboard_operation {
   MK61_SERVICE_KEY_POLL, MK61_SERVICE_KEY_GET, MK61_SERVICE_KEY_WAIT,
   MK61_SERVICE_KEY_PRESSED, MK61_SERVICE_KEY_IMMEDIATE, MK61_SERVICE_KEY_CLEAR_IMMEDIATE,

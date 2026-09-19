@@ -96,10 +96,13 @@ u8 MK61Display::uiCols(void) const {
   if(uiFontFamily() == 3) {
     if(const prepared_font::Face* external = externalUiFont()) {
       const prepared_font::Metrics& metrics = external->metrics();
-      // A proportional line has no single character count: printUiLine()
-      // measures every glyph in pixels.  COLS is meaningful for BASIC and
-      // other cell-oriented clients only when the selected face is mono.
-      if(metrics.monospaced && metrics.default_advance != 0) {
+      // A proportional line has no single physical character count and
+      // printUiLine() still measures every glyph in pixels. Runtime language
+      // clients nevertheless need a stable nominal COLS value for wrapping
+      // and width-aware drawings. Their FMK header supplies that nominal
+      // advance; configurable menu faces keep the larger token grid.
+      if((metrics.monospaced || active_ui_font_runtime) &&
+         metrics.default_advance != 0) {
         const u8 usable = lcd_display::PIXEL_WIDTH - 2U * UI_MARGIN;
         pixel_cols = (u8) (usable / metrics.default_advance);
         if(pixel_cols == 0) pixel_cols = 1;
@@ -222,11 +225,19 @@ u8 MK61Display::uiAdvance(u16 codepoint, bool custom) const {
 }
 
 u16 MK61Display::measureUiText(const char* text) const {
-  const u16 length = textLength(text);
+  return measureUiText(text, textLength(text));
+}
+
+u16 MK61Display::measureUiText(const char* text, u16 length) const {
   u16 offset = 0;
   u32 width = 0;
   while(offset < length && width < 0xFFFFU) width += uiAdvance(nextCodepoint(text, length, offset), false);
   return width > 0xFFFFU ? 0xFFFFU : (u16) width;
+}
+
+u16 MK61Display::uiTextWidth(void) const {
+  return uiTextActive()
+      ? (u16) (lcd_display::PIXEL_WIDTH - 2U * UI_MARGIN) : 0U;
 }
 
 void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailing) {
