@@ -3,10 +3,9 @@
 
 // Единый математический интерфейс для интерпретаторов FOCAL/TinyBASIC.
 //
-// Трансцендентные функции предоставляют три выбираемые реализации:
+// Трансцендентные функции предоставляют две выбираемые реализации:
 //   MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM  -> тонкие обёртки над <math.h>
 //   MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE  -> вычисление на ядре МК-61
-//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_FLOAT -> float-функции из libm
 //
 // Реализация CORE повторно использует уже скомпонованный с прошивкой движок
 // калькулятора, поэтому удаление <math.h> из этого интерфейса исключает libm
@@ -26,16 +25,12 @@
 #ifndef MK61_MATH_BACKEND_CORE
   #define MK61_MATH_BACKEND_CORE 1
 #endif
-#ifndef MK61_MATH_BACKEND_FLOAT
-  #define MK61_MATH_BACKEND_FLOAT 2
-#endif
 #ifndef MK61_MATH_BACKEND
   #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
 #endif
 
 #if MK61_MATH_BACKEND != MK61_MATH_BACKEND_LIBM && \
-    MK61_MATH_BACKEND != MK61_MATH_BACKEND_CORE && \
-    MK61_MATH_BACKEND != MK61_MATH_BACKEND_FLOAT
+    MK61_MATH_BACKEND != MK61_MATH_BACKEND_CORE
   #error "Unsupported MK61_MATH_BACKEND"
 #endif
 
@@ -213,33 +208,11 @@ double exp(double x);
 double sqrt(double x);
 double pow(double base, double exponent);
 
-#else // MK61_MATH_BACKEND_FLOAT или MK61_MATH_BACKEND_LIBM
+#else // MK61_MATH_BACKEND_LIBM
 
 } // пространство имён mk_math
 #include <math.h>
 namespace mk_math {
-
-#if MK61_MATH_BACKEND == MK61_MATH_BACKEND_FLOAT
-
-// Интерфейс языков остаётся double, но тяжёлые трансцендентные вычисления
-// выполняются одинарной точностью аппаратного FPU Cortex-M4F. Это сохраняет
-// привычный диапазон остальных операций и заметно уменьшает F401-прошивку по
-// сравнению с полноценным double libm.
-inline double sin(double x)   { return (double) ::sinf((float) x); }
-inline double cos(double x)   { return (double) ::cosf((float) x); }
-inline double tan(double x)   { return (double) ::tanf((float) x); }
-inline double asin(double x)  { return (double) ::asinf((float) x); }
-inline double acos(double x)  { return (double) ::acosf((float) x); }
-inline double atan(double x)  { return (double) ::atanf((float) x); }
-inline double ln(double x)    { return (double) ::logf((float) x); }
-inline double log10(double x) { return (double) ::log10f((float) x); }
-inline double exp(double x)   { return (double) ::expf((float) x); }
-inline double sqrt(double x)  { return (double) ::sqrtf((float) x); }
-inline double pow(double base, double exponent) {
-  return (double) ::powf((float) base, (float) exponent);
-}
-
-#else // MK61_MATH_BACKEND_LIBM
 
 inline double sin(double x)   { return ::sin(x); }
 inline double cos(double x)   { return ::cos(x); }
@@ -252,8 +225,6 @@ inline double log10(double x) { return ::log10(x); }
 inline double exp(double x)   { return ::exp(x); }
 inline double sqrt(double x)  { return ::sqrt(x); }
 inline double pow(double base, double exponent) { return ::pow(base, exponent); }
-
-#endif
 #endif
 
 } // пространство имён mk_math

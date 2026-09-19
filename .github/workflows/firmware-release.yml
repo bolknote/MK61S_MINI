@@ -187,16 +187,16 @@ jobs:
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
       # recipes. Deliberately poison MK61_HOST_CXX: this proves that a normal
       # Windows IDE installation needs only Python, not Visual Studio/MinGW.
-      - name: Compile F401 FLOAT firmware through the Arduino IDE recipe
+      - name: Compile F401 CORE plus APP FLOAT through the Arduino IDE recipe
         shell: pwsh
         run: |
           $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
           if (Test-Path -LiteralPath $env:MK61_HOST_CXX) {
             throw 'The negative host-compiler sentinel unexpectedly exists'
           }
-          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-ide-f401-float'
+          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-ide-f401-hybrid'
           & arduino-cli compile `
-            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=float' `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v3,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core_app_float' `
             --build-path $buildPath code
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

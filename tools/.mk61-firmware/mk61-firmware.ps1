@@ -88,6 +88,7 @@ $script:State = [ordered]@{
     EnableFonts = 0
     EnableExplorer = 1
     MathBackend = 0
+    AppLocalFloat = 0
     DeviceStatus = 'не проверялось'
     DfuPath = ''
     CubeProgrammerPath = ''
@@ -293,6 +294,7 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "-DMK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "-DMK61_MATH_BACKEND=$($script:State.MathBackend)"
+        "-DMK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat)"
     ) -join ' '
 }
 
@@ -324,13 +326,15 @@ function Get-CompileOptionsSummary {
 function Get-MathBackendLabel {
     switch ($script:State.MathBackend) {
         0 { return 'LIBM' }
-        1 { return 'CORE' }
-        2 { return 'FLOAT' }
+        1 {
+            if ($script:State.AppLocalFloat -eq 1) { return 'CORE + APP FLOAT' }
+            return 'CORE'
+        }
     }
 }
 
 function Get-CompileOptionsDetails {
-    $mathText = "Математика: $(Get-MathBackendLabel) (MK61_MATH_BACKEND=$($script:State.MathBackend))"
+    $mathText = "Математика: $(Get-MathBackendLabel) (MK61_MATH_BACKEND=$($script:State.MathBackend), MK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat))"
     return @(
         "$(Get-Checkbox $script:State.EnableFocal) FOCAL (MK61_ENABLE_FOCAL)"
         "$(Get-Checkbox $script:State.EnableTinyBasic) TinyBASIC (MK61_ENABLE_TINYBASIC)"
@@ -346,7 +350,7 @@ function Get-CompileOptionsDetails {
 }
 
 function Test-BooleanValue { param([string]$Value) return $Value -eq '0' -or $Value -eq '1' }
-function Test-MathBackendValue { param([string]$Value) return $Value -match '^[012]$' }
+function Test-MathBackendValue { param([string]$Value) return $Value -match '^[01]$' }
 
 function Normalize-ViewerSelection {
     if ($script:State.EnableMarkdown -eq 1) {
@@ -354,8 +358,15 @@ function Normalize-ViewerSelection {
     }
 }
 
+function Normalize-MathSelection {
+    if ($script:State.MathBackend -ne 1) {
+        $script:State.AppLocalFloat = 0
+    }
+}
+
 function Save-Config {
     Normalize-ViewerSelection
+    Normalize-MathSelection
     Sync-ProfileFromHardware
     $parent = Split-Path -Parent $script:ConfigFile
     if (-not [string]::IsNullOrEmpty($parent)) { [void](New-Item -ItemType Directory -Force -Path $parent) }
@@ -377,6 +388,7 @@ function Save-Config {
         "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
         "MK61_MATH_BACKEND=$($script:State.MathBackend)"
+        "MK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat)"
     )
     [IO.File]::WriteAllLines($temporary, $lines, $script:Utf8NoBom)
     Move-Item -LiteralPath $temporary -Destination $script:ConfigFile -Force
@@ -426,10 +438,12 @@ function Load-Config {
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
             'MK61_USER_EXPLORER_SHORTCUT' { if (Test-BooleanValue $value) { $script:State.EnableExplorer = [int]$value } }
             'MK61_MATH_BACKEND' { if (Test-MathBackendValue $value) { $script:State.MathBackend = [int]$value } }
+            'MK61_APP_LOCAL_FLOAT_MATH' { if (Test-BooleanValue $value) { $script:State.AppLocalFloat = [int]$value } }
         }
     }
 
     Normalize-ViewerSelection
+    Normalize-MathSelection
     if (-not $script:State.CliMcu) { $script:State.Mcu = $savedMcu }
     if ($script:State.CliProfile) {
         [void](Set-HardwareFromProfile $script:State.Profile)
@@ -1191,7 +1205,8 @@ function Get-F401GccOptionArguments {
         '-UsbScreen', [string]$script:State.EnableUsbScreen,
         '-ExtendedFontSettings', [string]$script:State.EnableFonts,
         '-UserExplorer', [string]$script:State.EnableExplorer,
-        '-MathBackend', [string]$script:State.MathBackend)
+        '-MathBackend', [string]$script:State.MathBackend,
+        '-LocalFloatMath', [string]$script:State.AppLocalFloat)
 }
 
 function Get-F401GccPowerShellArguments {
@@ -1883,8 +1898,8 @@ function Choose-CompileOptions {
         'Markdown включает просмотр T2 и I1; отдельный WBMP viewer используется только без Markdown:' $items
     if ($result.Cancelled) { return $false }
     $mathItems = @(
-        [pscustomobject]@{ Tag = 'core'; Label = 'CORE · ядро МК-61, около 8 цифр'; State = if ($script:State.MathBackend -eq 1) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'float'; Label = 'FLOAT · быстрая float-libm, около 7 цифр'; State = if ($script:State.MathBackend -eq 2) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'core'; Label = 'CORE · ядро МК-61, около 8 цифр'; State = if ($script:State.MathBackend -eq 1 -and $script:State.AppLocalFloat -eq 0) { 'on' } else { 'off' } }
+        [pscustomobject]@{ Tag = 'hybrid'; Label = 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC'; State = if ($script:State.MathBackend -eq 1 -and $script:State.AppLocalFloat -eq 1) { 'on' } else { 'off' } }
         [pscustomobject]@{ Tag = 'libm'; Label = 'LIBM · полная double-точность, больше Flash'; State = if ($script:State.MathBackend -eq 0) { 'on' } else { 'off' } }
     )
     $mathChoice = Show-RadioList 'Математика' 'Выберите точность и размер математической библиотеки:' $mathItems
@@ -1897,7 +1912,8 @@ function Choose-CompileOptions {
     $script:State.EnableUsbScreen = [int]($result.Values -contains 'usb_screen')
     $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
     $script:State.EnableExplorer = [int]($result.Values -contains 'explorer')
-    $script:State.MathBackend = switch ($mathChoice) { 'libm' { 0 } 'core' { 1 } 'float' { 2 } }
+    $script:State.MathBackend = if ($mathChoice -eq 'libm') { 0 } else { 1 }
+    $script:State.AppLocalFloat = if ($mathChoice -eq 'hybrid') { 1 } else { 0 }
     Normalize-ViewerSelection
     Save-Config
     return $true
@@ -1976,6 +1992,7 @@ function Invoke-F401CustomBundleBuild {
         MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
         MK61_USER_EXPLORER_SHORTCUT = [string]$script:State.EnableExplorer
         MK61_MATH_BACKEND = [string]$script:State.MathBackend
+        MK61_APP_LOCAL_FLOAT_MATH = [string]$script:State.AppLocalFloat
     }
     $previous = @{}
     foreach ($name in $values.Keys) {
@@ -2055,7 +2072,8 @@ function Invoke-SystemAppBundleBuild {
             '--basic', [string]$script:State.EnableTinyBasic,
             '--wbmp', [string]$script:State.EnableWbmp,
             '--markdown', [string]$script:State.EnableMarkdown,
-            '--chip8', [string]$script:State.EnableChip8))
+            '--chip8', [string]$script:State.EnableChip8,
+            '--local-float-math', [string]$script:State.AppLocalFloat))
     return Invoke-ExternalWithProgress 'System APP' `
         'Собираю единый ABI 5 комплект' $script:LastLog 'indeterminate' `
         $python.Executable $arguments -Append
@@ -2594,6 +2612,7 @@ function Show-Config {
     [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")
     [Console]::WriteLine("MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)")
     [Console]::WriteLine("MK61_MATH_BACKEND=$($script:State.MathBackend)")
+    [Console]::WriteLine("MK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat)")
     $flags = if (Test-Profile $script:State.Profile) { Get-AllCompileFlags $script:State.Profile }
         else { Get-CompileOptionFlags }
     [Console]::WriteLine("COMPILE_FLAGS=$flags")

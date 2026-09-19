@@ -78,8 +78,8 @@ foreach(_mk61_bool
 endforeach()
 
 if(NOT DEFINED MK61_MATH_BACKEND OR
-   NOT "${MK61_MATH_BACKEND}" MATCHES "^[012]$")
-  message(FATAL_ERROR "MK61_MATH_BACKEND must be 0, 1, or 2")
+   NOT "${MK61_MATH_BACKEND}" MATCHES "^[01]$")
+  message(FATAL_ERROR "MK61_MATH_BACKEND must be 0 or 1")
 endif()
 
 execute_process(

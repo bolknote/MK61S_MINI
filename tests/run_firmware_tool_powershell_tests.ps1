@@ -92,6 +92,7 @@ try {
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1'
         'MK61_USER_EXPLORER_SHORTCUT=0'
         'MK61_MATH_BACKEND=1'
+        'MK61_APP_LOCAL_FLOAT_MATH=0'
     ))
 
     $configResult = Invoke-Tool @('--show-config')
@@ -110,6 +111,7 @@ try {
     Assert-True ($configText -match '(?m)^MK61_ENABLE_LOADABLE_MODULES=1$') `
         'unified APP runtime is not enabled'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$') 'font flag was not preserved'
+    Assert-True ($configText -match '(?m)^MK61_APP_LOCAL_FLOAT_MATH=0$') 'APP math flag was not preserved'
     Assert-True ($configText -match 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_MATH_BACKEND=1') 'compile flags differ'
     Assert-True ($configText -match 'HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0') 'platform RAM flags differ'
 
@@ -117,6 +119,22 @@ try {
     Assert-True (($override.Output -join "`n") -match '(?m)^PROFILE=mini-v3-a00$') 'CLI profile override failed'
     $f401Override = Invoke-Tool @('--mcu','f401','--profile','mini-v3-a00','--show-config')
     Assert-True (($f401Override.Output -join "`n") -match '(?m)^MCU=f401$') 'CLI MCU override failed'
+
+    [IO.File]::WriteAllLines($config, @(
+        'MCU=f401'
+        'PLATFORM=classic-v2'
+        'SCREEN=uc1609'
+        'MK61_MATH_BACKEND=1'
+        'MK61_APP_LOCAL_FLOAT_MATH=1'
+    ))
+    $hybrid = Invoke-Tool @('--show-config')
+    $hybridText = $hybrid.Output -join "`n"
+    Assert-True ($hybridText -match '(?m)^MK61_MATH_BACKEND=1$') `
+        'hybrid did not keep resident CORE'
+    Assert-True ($hybridText -match '(?m)^MK61_APP_LOCAL_FLOAT_MATH=1$') `
+        'hybrid APP float flag was lost'
+    Assert-True ($hybridText -match 'COMPILE_FLAGS=.*MK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=1 ') `
+        'hybrid flags were not forwarded to the resident build'
 
     [IO.File]::WriteAllLines($config, @('PLATFORM=classic-v3','SCREEN=lcd1602-a00'))
     $incompatible = Invoke-Tool @('--show-config')

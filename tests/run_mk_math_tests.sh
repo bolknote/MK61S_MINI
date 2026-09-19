@@ -47,11 +47,3 @@ build_and_run() {
 
 build_and_run flash 0
 build_and_run evictable-sram 2
-
-float_out="${TMPDIR:-/tmp}/mk61_mk_math_float_self_test"
-clang++ -std=c++17 -Wall -Wextra -Werror \
-  -DMK61_MATH_BACKEND=2 \
-  -I"$root/code" \
-  "$root/tests/mk_math_float_self_test.cpp" \
-  -o "$float_out"
-"$float_out"

@@ -55,7 +55,7 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
   MK61_USER_EXPLORER_SHORTCUT
-Math backend: MK61_MATH_BACKEND=0 (LIBM), 1 (CORE), or 2 (FLOAT).
+Math backend: MK61_MATH_BACKEND=0 (LIBM) or 1 (CORE).
 APP math: MK61_APP_LOCAL_FLOAT_MATH=1 links local float ln/lg/exp/sqrt into FOCAL/BASIC.
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
   MK61_ENABLE_MARKDOWN_VIEWER=0.
@@ -410,9 +410,9 @@ for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
   }
 done
 case "$math_backend" in
-  0|1|2) ;;
+  0|1) ;;
   *)
-    printf 'Error: MK61_MATH_BACKEND must be 0, 1, or 2.\n' >&2
+    printf 'Error: MK61_MATH_BACKEND must be 0 or 1.\n' >&2
     exit 2
     ;;
 esac

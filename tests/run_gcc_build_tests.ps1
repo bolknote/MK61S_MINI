@@ -92,7 +92,7 @@ Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
     'help does not expose the Markdown System APP'
 Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
-Assert-True ($helpText -match '-MathBackend 0\|1\|2\s+LIBM \| CORE \| FLOAT') `
+Assert-True ($helpText -match '-MathBackend 0\|1\s+LIBM \| CORE') `
     'help does not expose all math backends'
 Assert-True ($helpText -match '-LocalFloatMath 0\|1\s+local float ln/lg/exp/sqrt') `
     'help does not expose selective local APP float math'

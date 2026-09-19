@@ -220,10 +220,8 @@ def validate_contract(raw: Any) -> None:
             require(set(features) == set(FEATURE_KEYS),
                     f"{where}.features: expected exactly {', '.join(FEATURE_KEYS)}")
             for key, value in features.items():
-                allowed = (0, 1, 2) if key == "math_backend" else (0, 1)
-                expected = "0, 1, or 2" if key == "math_backend" else "0 or 1"
-                require(type(value) is int and value in allowed,
-                        f"{where}.features.{key}: expected {expected}")
+                require(type(value) is int and value in (0, 1),
+                        f"{where}.features.{key}: expected 0 or 1")
 
         artifact = case.get("artifact")
         if artifact is not None:

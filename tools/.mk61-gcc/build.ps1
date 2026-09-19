@@ -34,7 +34,7 @@ param(
     [ValidateSet('0', '1')]
     [string]$UserExplorer = '1',
 
-    [ValidateSet('0', '1', '2')]
+    [ValidateSet('0', '1')]
     [string]$MathBackend = '0',
 
     [ValidateSet('0', '1')]
@@ -93,7 +93,7 @@ Firmware options:
   -Ws0010Graphics 0|1  WEH001602A 100x16 Markdown/WBMP qualification
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
-  -MathBackend 0|1|2  LIBM | CORE | FLOAT
+  -MathBackend 0|1    LIBM | CORE
   -LocalFloatMath 0|1 local float ln/lg/exp/sqrt in FOCAL/BASIC APP
   -Lto 0|1          default 1
 

@@ -72,7 +72,8 @@ printf '%s\n' \
   'MK61_ENABLE_LOADABLE_MODULES=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1' \
   'MK61_USER_EXPLORER_SHORTCUT=0' \
-  'MK61_MATH_BACKEND=1' > "$config_file"
+  'MK61_MATH_BACKEND=1' \
+  'MK61_APP_LOCAL_FLOAT_MATH=0' > "$config_file"
 
 if command -v expect >/dev/null 2>&1; then
   cp "$config_file" "$pty_config"
@@ -204,6 +205,7 @@ grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
 grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' <<< "$config"
 grep -q '^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$' <<< "$config"
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$config"
+grep -q '^MK61_APP_LOCAL_FLOAT_MATH=0$' <<< "$config"
 grep -q -- 'COMPILE_FLAGS=-DMK61_BOARD_CLASSIC_V3 .*MK61_ENABLE_FOCAL=0 .*MK61_ENABLE_USB_SCREEN=0 .*MK61_ENABLE_LOADABLE_MODULES=1 .*MK61_MATH_BACKEND=1 .*HAL_UART_MODULE_ONLY .*USBD_CLASS_USER_STRING_DESC=0$' <<< "$config"
 grep -q '^PLATFORM=classic-v3$' "$config_file"
 grep -q '^SCREEN=uc1609$' "$config_file"
@@ -216,6 +218,20 @@ grep -q -- 'COMPILE_FLAGS=-DMK61_LCD1602_A00 ' <<< "$override"
 f401_override=$(MK61_CONFIG_FILE="$config_file" "$tool" \
   --mcu f401 --profile mini-v3-a00 --show-config)
 grep -q '^MCU=f401$' <<< "$f401_override"
+
+hybrid_config="$legacy_root/hybrid.conf"
+printf '%s\n' \
+  'MCU=f401' \
+  'PLATFORM=classic-v2' \
+  'SCREEN=uc1609' \
+  'MK61_MATH_BACKEND=1' \
+  'MK61_APP_LOCAL_FLOAT_MATH=1' > "$hybrid_config"
+hybrid=$(MK61_CONFIG_FILE="$hybrid_config" "$tool" --show-config)
+grep -q '^MK61_MATH_BACKEND=1$' <<< "$hybrid"
+grep -q '^MK61_APP_LOCAL_FLOAT_MATH=1$' <<< "$hybrid"
+grep -q -- 'COMPILE_FLAGS=.*-DMK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=1 ' <<< "$hybrid"
+grep -q -- "-LocalFloatMath.*State.AppLocalFloat" "$root/tools/.mk61-firmware/mk61-firmware.ps1"
+grep -q -- '-LocalFloatMath "$APP_LOCAL_FLOAT"' "$tool"
 grep -qFx '/.mk61-firmware.conf' "$root/.gitignore"
 
 printf '%s\n' 'PLATFORM=classic-v3' 'SCREEN=lcd1602-a00' > "$config_file"

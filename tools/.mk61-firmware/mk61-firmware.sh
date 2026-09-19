@@ -58,6 +58,7 @@ ENABLE_USB_SCREEN=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
 ENABLE_USER_EXPLORER=1
 MATH_BACKEND=0
+APP_LOCAL_FLOAT=0
 DEVICE_STATUS='не проверялось'
 DFU_UTIL_PATH=
 DFU_STATUS='не найден'
@@ -1235,13 +1236,19 @@ boolean_valid() {
 }
 
 math_backend_valid() {
-  case "${1:-}" in 0|1|2) return 0 ;; esac
+  case "${1:-}" in 0|1) return 0 ;; esac
   return 1
 }
 
 normalize_viewer_selection() {
   if [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ]; then
     ENABLE_WBMP_VIEWER=0
+  fi
+}
+
+normalize_math_selection() {
+  if [ "$MATH_BACKEND" -ne 1 ]; then
+    APP_LOCAL_FLOAT=0
   fi
 }
 
@@ -1308,10 +1315,14 @@ load_config() {
       MK61_MATH_BACKEND)
         math_backend_valid "$value" && MATH_BACKEND=$value
         ;;
+      MK61_APP_LOCAL_FLOAT_MATH)
+        boolean_valid "$value" && APP_LOCAL_FLOAT=$value
+        ;;
     esac
   done < "$CONFIG_FILE"
 
   normalize_viewer_selection
+  normalize_math_selection
   if [ "$CLI_MCU" -eq 0 ]; then MCU=$saved_mcu; fi
   if [ "$CLI_PROFILE" -eq 1 ]; then
     hardware_from_profile "$PROFILE" || true
@@ -1331,6 +1342,7 @@ load_config() {
 
 save_config() {
   normalize_viewer_selection
+  normalize_math_selection
   sync_profile_from_hardware
   local temporary="$CONFIG_FILE.tmp"
   mkdir -p "$(dirname "$CONFIG_FILE")" || return 1
@@ -1353,6 +1365,7 @@ save_config() {
     printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
     printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
     printf 'MK61_MATH_BACKEND=%s\n' "$MATH_BACKEND"
+    printf 'MK61_APP_LOCAL_FLOAT_MATH=%s\n' "$APP_LOCAL_FLOAT"
   } > "$temporary" || return 1
   mv "$temporary" "$CONFIG_FILE"
 }
@@ -1366,14 +1379,24 @@ option_state() {
 }
 
 math_option_state() {
-  if [ "$MATH_BACKEND" -eq "$1" ]; then printf 'on'; else printf 'off'; fi
+  case "$1" in
+    libm) [ "$MATH_BACKEND" -eq 0 ] ;;
+    core) [ "$MATH_BACKEND" -eq 1 ] && [ "$APP_LOCAL_FLOAT" -eq 0 ] ;;
+    hybrid) [ "$MATH_BACKEND" -eq 1 ] && [ "$APP_LOCAL_FLOAT" -eq 1 ] ;;
+    *) return 1 ;;
+  esac && printf 'on' || printf 'off'
 }
 
 math_backend_label() {
   case "$MATH_BACKEND" in
     0) printf 'LIBM' ;;
-    1) printf 'CORE' ;;
-    2) printf 'FLOAT' ;;
+    1)
+      if [ "$APP_LOCAL_FLOAT" -eq 1 ]; then
+        printf 'CORE + APP FLOAT'
+      else
+        printf 'CORE'
+      fi
+      ;;
   esac
 }
 
@@ -1407,7 +1430,8 @@ compile_option_flags() {
     " -DMK61_ENABLE_LOADABLE_MODULES=1" \
     " -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ENABLE_EXTENDED_FONT_SETTINGS" \
     " -DMK61_USER_EXPLORER_SHORTCUT=$ENABLE_USER_EXPLORER" \
-    " -DMK61_MATH_BACKEND=$MATH_BACKEND"
+    " -DMK61_MATH_BACKEND=$MATH_BACKEND" \
+    " -DMK61_APP_LOCAL_FLOAT_MATH=$APP_LOCAL_FLOAT"
 }
 
 all_compile_flags() {
@@ -1444,8 +1468,8 @@ compile_options_details() {
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
   printf '%s USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)\n' \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")"
-  printf 'Математика: %s (MK61_MATH_BACKEND=%s)\n' \
-    "$(math_backend_label)" "$MATH_BACKEND"
+  printf 'Математика: %s (MK61_MATH_BACKEND=%s, MK61_APP_LOCAL_FLOAT_MATH=%s)\n' \
+    "$(math_backend_label)" "$MATH_BACKEND" "$APP_LOCAL_FLOAT"
 }
 
 show_config() {
@@ -1466,6 +1490,7 @@ show_config() {
   printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
   printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
   printf 'MK61_MATH_BACKEND=%s\n' "$MATH_BACKEND"
+  printf 'MK61_APP_LOCAL_FLOAT_MATH=%s\n' "$APP_LOCAL_FLOAT"
   if profile_valid "$PROFILE"; then
     printf 'COMPILE_FLAGS=%s\n' "$(all_compile_flags "$PROFILE")"
   else
@@ -1559,9 +1584,9 @@ choose_compile_options() {
 
   math_choice=$(ui_radiolist 'Математика' \
     'Выберите точность и размер математической библиотеки:' \
-    core  'CORE · ядро МК-61, около 8 цифр' "$(math_option_state 1)" \
-    float 'FLOAT · быстрая float-libm, около 7 цифр' "$(math_option_state 2)" \
-    libm  'LIBM · полная double-точность, больше Flash' "$(math_option_state 0)") || return 1
+    core   'CORE · ядро МК-61, около 8 цифр' "$(math_option_state core)" \
+    hybrid 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC' "$(math_option_state hybrid)" \
+    libm   'LIBM · полная double-точность, больше Flash' "$(math_option_state libm)") || return 1
 
   ENABLE_FOCAL=0
   ENABLE_TINYBASIC=0
@@ -1584,9 +1609,9 @@ choose_compile_options() {
     esac
   done < <(printf '%s\n' "$chosen")
   case "$math_choice" in
-    libm) MATH_BACKEND=0 ;;
-    core) MATH_BACKEND=1 ;;
-    float) MATH_BACKEND=2 ;;
+    libm) MATH_BACKEND=0; APP_LOCAL_FLOAT=0 ;;
+    core) MATH_BACKEND=1; APP_LOCAL_FLOAT=0 ;;
+    hybrid) MATH_BACKEND=1; APP_LOCAL_FLOAT=1 ;;
   esac
   normalize_viewer_selection
   save_config
@@ -1623,7 +1648,8 @@ f401_gcc_arguments() {
     -UsbScreen "$ENABLE_USB_SCREEN" \
     -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
     -UserExplorer "$ENABLE_USER_EXPLORER" \
-    -MathBackend "$MATH_BACKEND"
+    -MathBackend "$MATH_BACKEND" \
+    -LocalFloatMath "$APP_LOCAL_FLOAT"
 }
 
 f401_gcc_preflight() {
@@ -2017,7 +2043,8 @@ build_system_app_bundle() {
     --basic "$ENABLE_TINYBASIC" \
     --wbmp "$ENABLE_WBMP_VIEWER" \
     --markdown "$ENABLE_MARKDOWN_VIEWER" \
-    --chip8 "$ENABLE_CHIP8"
+    --chip8 "$ENABLE_CHIP8" \
+    --local-float-math "$APP_LOCAL_FLOAT"
 }
 
 prepare_and_compile_f411_worker() {
@@ -2109,6 +2136,7 @@ prepare_and_compile_f401_worker() {
     MK61_ENABLE_EXTENDED_FONT_SETTINGS="$ENABLE_EXTENDED_FONT_SETTINGS" \
     MK61_USER_EXPLORER_SHORTCUT="$ENABLE_USER_EXPLORER" \
     MK61_MATH_BACKEND="$MATH_BACKEND" \
+    MK61_APP_LOCAL_FLOAT_MATH="$APP_LOCAL_FLOAT" \
     "$PROJECT_ROOT/tools/build_f401_bundle.sh" \
       --profile "$profile" \
       --output-dir "$OUTPUT_DIR" \
