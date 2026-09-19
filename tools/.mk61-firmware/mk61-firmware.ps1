@@ -324,10 +324,15 @@ function Get-CompileOptionsSummary {
 }
 
 function Get-MathBackendLabel {
-    switch ($script:State.MathBackend) {
+    return (Get-MathBackendLabelFor $script:State.MathBackend $script:State.AppLocalFloat)
+}
+
+function Get-MathBackendLabelFor {
+    param([int]$MathBackend, [int]$AppLocalFloat)
+    switch ($MathBackend) {
         0 { return 'LIBM' }
         1 {
-            if ($script:State.AppLocalFloat -eq 1) { return 'CORE + APP FLOAT' }
+            if ($AppLocalFloat -eq 1) { return 'CORE + APP FLOAT' }
             return 'CORE'
         }
     }
@@ -1884,39 +1889,80 @@ function Choose-Screen {
 }
 
 function Choose-CompileOptions {
-    $items = @(
-        [pscustomobject]@{ Tag = 'focal'; Label = 'FOCAL · MK61_ENABLE_FOCAL'; State = if ($script:State.EnableFocal) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'tinybasic'; Label = 'TinyBASIC · MK61_ENABLE_TINYBASIC'; State = if ($script:State.EnableTinyBasic) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'wbmp'; Label = 'WBMP viewer без Markdown · MK61_ENABLE_WBMP_VIEWER'; State = if ($script:State.EnableWbmp) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'markdown'; Label = 'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER'; State = if ($script:State.EnableMarkdown) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'chip8'; Label = 'CHIP-8 · MK61_ENABLE_CHIP8'; State = if ($script:State.EnableChip8) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'usb_screen'; Label = 'USB-экран · MK61_ENABLE_USB_SCREEN'; State = if ($script:State.EnableUsbScreen) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'fonts'; Label = 'Расширенные настройки шрифта'; State = if ($script:State.EnableFonts) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'explorer'; Label = 'Клавиша USER открывает Explorer'; State = if ($script:State.EnableExplorer) { 'on' } else { 'off' } }
-    )
-    $result = Show-Checklist 'Ключи компиляции' `
-        'Markdown включает просмотр T2 и I1; отдельный WBMP viewer используется только без Markdown:' $items
-    if ($result.Cancelled) { return $false }
-    $mathItems = @(
-        [pscustomobject]@{ Tag = 'core'; Label = 'CORE · ядро МК-61, около 8 цифр'; State = if ($script:State.MathBackend -eq 1 -and $script:State.AppLocalFloat -eq 0) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'hybrid'; Label = 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC'; State = if ($script:State.MathBackend -eq 1 -and $script:State.AppLocalFloat -eq 1) { 'on' } else { 'off' } }
-        [pscustomobject]@{ Tag = 'libm'; Label = 'LIBM · полная double-точность, больше Flash'; State = if ($script:State.MathBackend -eq 0) { 'on' } else { 'off' } }
-    )
-    $mathChoice = Show-RadioList 'Математика' 'Выберите точность и размер математической библиотеки:' $mathItems
-    if ($null -eq $mathChoice) { return $false }
-    $script:State.EnableFocal = [int]($result.Values -contains 'focal')
-    $script:State.EnableTinyBasic = [int]($result.Values -contains 'tinybasic')
-    $script:State.EnableWbmp = [int]($result.Values -contains 'wbmp')
-    $script:State.EnableMarkdown = [int]($result.Values -contains 'markdown')
-    $script:State.EnableChip8 = [int]($result.Values -contains 'chip8')
-    $script:State.EnableUsbScreen = [int]($result.Values -contains 'usb_screen')
-    $script:State.EnableFonts = [int]($result.Values -contains 'fonts')
-    $script:State.EnableExplorer = [int]($result.Values -contains 'explorer')
-    $script:State.MathBackend = if ($mathChoice -eq 'libm') { 0 } else { 1 }
-    $script:State.AppLocalFloat = if ($mathChoice -eq 'hybrid') { 1 } else { 0 }
-    Normalize-ViewerSelection
-    Save-Config
-    return $true
+    [int]$focal = $script:State.EnableFocal
+    [int]$tinyBasic = $script:State.EnableTinyBasic
+    [int]$wbmp = $script:State.EnableWbmp
+    [int]$markdown = $script:State.EnableMarkdown
+    [int]$chip8 = $script:State.EnableChip8
+    [int]$usbScreen = $script:State.EnableUsbScreen
+    [int]$fonts = $script:State.EnableFonts
+    [int]$explorer = $script:State.EnableExplorer
+    [int]$mathBackend = $script:State.MathBackend
+    [int]$appLocalFloat = $script:State.AppLocalFloat
+    $selected = 'focal'
+
+    while ($true) {
+        $items = @(
+            [pscustomobject]@{ Tag = 'focal'; Label = "$(Get-Checkbox $focal) FOCAL · MK61_ENABLE_FOCAL" }
+            [pscustomobject]@{ Tag = 'tinybasic'; Label = "$(Get-Checkbox $tinyBasic) TinyBASIC · MK61_ENABLE_TINYBASIC" }
+            [pscustomobject]@{ Tag = 'wbmp'; Label = "$(Get-Checkbox $wbmp) WBMP viewer без Markdown" }
+            [pscustomobject]@{ Tag = 'markdown'; Label = "$(Get-Checkbox $markdown) Markdown + WBMP viewer" }
+            [pscustomobject]@{ Tag = 'chip8'; Label = "$(Get-Checkbox $chip8) CHIP-8" }
+            [pscustomobject]@{ Tag = 'usb_screen'; Label = "$(Get-Checkbox $usbScreen) USB-экран" }
+            [pscustomobject]@{ Tag = 'fonts'; Label = "$(Get-Checkbox $fonts) Расширенные настройки шрифта" }
+            [pscustomobject]@{ Tag = 'explorer'; Label = "$(Get-Checkbox $explorer) Клавиша USER открывает Explorer" }
+            [pscustomobject]@{ Tag = 'math'; Label = "$($script:Glyphs.MenuChoice) Математика: $(Get-MathBackendLabelFor $mathBackend $appLocalFloat)  >" }
+            [pscustomobject]@{ Tag = 'save'; Label = "$($script:Glyphs.MenuCheck) Сохранить и вернуться" }
+        )
+        $choice = Show-Menu 'Ключи компиляции' `
+            'Enter переключает ключ или открывает вложенное меню. Изменения применяются только пунктом «Сохранить».' `
+            $items $selected
+        if ([string]::IsNullOrEmpty($choice)) { return $false }
+        $selected = $choice
+
+        switch ($choice) {
+            'focal' { $focal = 1 - $focal }
+            'tinybasic' { $tinyBasic = 1 - $tinyBasic }
+            'wbmp' {
+                $wbmp = 1 - $wbmp
+                if ($wbmp -eq 1) { $markdown = 0 }
+            }
+            'markdown' {
+                $markdown = 1 - $markdown
+                if ($markdown -eq 1) { $wbmp = 0 }
+            }
+            'chip8' { $chip8 = 1 - $chip8 }
+            'usb_screen' { $usbScreen = 1 - $usbScreen }
+            'fonts' { $fonts = 1 - $fonts }
+            'explorer' { $explorer = 1 - $explorer }
+            'math' {
+                $mathItems = @(
+                    [pscustomobject]@{ Tag = 'core'; Label = 'CORE · ядро МК-61, около 8 цифр'; State = if ($mathBackend -eq 1 -and $appLocalFloat -eq 0) { 'on' } else { 'off' } }
+                    [pscustomobject]@{ Tag = 'hybrid'; Label = 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC'; State = if ($mathBackend -eq 1 -and $appLocalFloat -eq 1) { 'on' } else { 'off' } }
+                    [pscustomobject]@{ Tag = 'libm'; Label = 'LIBM · полная double-точность, больше Flash'; State = if ($mathBackend -eq 0) { 'on' } else { 'off' } }
+                )
+                $mathChoice = Show-RadioList 'Математика' 'Выберите точность и размер математической библиотеки:' $mathItems
+                if (-not [string]::IsNullOrEmpty($mathChoice)) {
+                    $mathBackend = if ($mathChoice -eq 'libm') { 0 } else { 1 }
+                    $appLocalFloat = if ($mathChoice -eq 'hybrid') { 1 } else { 0 }
+                }
+            }
+            'save' {
+                $script:State.EnableFocal = $focal
+                $script:State.EnableTinyBasic = $tinyBasic
+                $script:State.EnableWbmp = $wbmp
+                $script:State.EnableMarkdown = $markdown
+                $script:State.EnableChip8 = $chip8
+                $script:State.EnableUsbScreen = $usbScreen
+                $script:State.EnableFonts = $fonts
+                $script:State.EnableExplorer = $explorer
+                $script:State.MathBackend = $mathBackend
+                $script:State.AppLocalFloat = $appLocalFloat
+                Save-Config
+                return $true
+            }
+        }
+    }
 }
 
 function Ensure-HardwareProfile {

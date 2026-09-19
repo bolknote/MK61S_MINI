@@ -1379,19 +1379,32 @@ option_state() {
 }
 
 math_option_state() {
-  case "$1" in
-    libm) [ "$MATH_BACKEND" -eq 0 ] ;;
-    core) [ "$MATH_BACKEND" -eq 1 ] && [ "$APP_LOCAL_FLOAT" -eq 0 ] ;;
-    hybrid) [ "$MATH_BACKEND" -eq 1 ] && [ "$APP_LOCAL_FLOAT" -eq 1 ] ;;
+  math_option_state_for "$1" "$MATH_BACKEND" "$APP_LOCAL_FLOAT"
+}
+
+math_option_state_for() {
+  local choice=$1
+  local backend=$2
+  local app_float=$3
+  case "$choice" in
+    libm) [ "$backend" -eq 0 ] ;;
+    core) [ "$backend" -eq 1 ] && [ "$app_float" -eq 0 ] ;;
+    hybrid) [ "$backend" -eq 1 ] && [ "$app_float" -eq 1 ] ;;
     *) return 1 ;;
   esac && printf 'on' || printf 'off'
 }
 
 math_backend_label() {
-  case "$MATH_BACKEND" in
+  math_backend_label_for "$MATH_BACKEND" "$APP_LOCAL_FLOAT"
+}
+
+math_backend_label_for() {
+  local backend=$1
+  local app_float=$2
+  case "$backend" in
     0) printf 'LIBM' ;;
     1)
-      if [ "$APP_LOCAL_FLOAT" -eq 1 ]; then
+      if [ "$app_float" -eq 1 ]; then
         printf 'CORE + APP FLOAT'
       else
         printf 'CORE'
@@ -1570,51 +1583,80 @@ ensure_hardware_profile() {
 }
 
 choose_compile_options() {
-  local chosen tag math_choice
-  chosen=$(ui_checklist 'Ключи компиляции' \
-    'Markdown включает просмотр T2 и I1; отдельный WBMP viewer используется только без Markdown:' \
-    focal      'FOCAL · MK61_ENABLE_FOCAL' "$(option_state "$ENABLE_FOCAL")" \
-    tinybasic  'TinyBASIC · MK61_ENABLE_TINYBASIC' "$(option_state "$ENABLE_TINYBASIC")" \
-    wbmp       'WBMP viewer без Markdown · MK61_ENABLE_WBMP_VIEWER' "$(option_state "$ENABLE_WBMP_VIEWER")" \
-    markdown   'Markdown + WBMP viewer · MK61_ENABLE_MARKDOWN_VIEWER' "$(option_state "$ENABLE_MARKDOWN_VIEWER")" \
-    chip8      'CHIP-8 · MK61_ENABLE_CHIP8' "$(option_state "$ENABLE_CHIP8")" \
-    usb_screen 'USB-экран · MK61_ENABLE_USB_SCREEN' "$(option_state "$ENABLE_USB_SCREEN")" \
-    fonts      'Расширенные настройки шрифта' "$(option_state "$ENABLE_EXTENDED_FONT_SETTINGS")" \
-    explorer   'Клавиша USER открывает Explorer' "$(option_state "$ENABLE_USER_EXPLORER")") || return 1
+  local focal=$ENABLE_FOCAL
+  local tinybasic=$ENABLE_TINYBASIC
+  local wbmp=$ENABLE_WBMP_VIEWER
+  local markdown=$ENABLE_MARKDOWN_VIEWER
+  local chip8=$ENABLE_CHIP8
+  local usb_screen=$ENABLE_USB_SCREEN
+  local fonts=$ENABLE_EXTENDED_FONT_SETTINGS
+  local explorer=$ENABLE_USER_EXPLORER
+  local math_backend=$MATH_BACKEND
+  local app_float=$APP_LOCAL_FLOAT
+  local selection=focal
+  local math_choice
 
-  math_choice=$(ui_radiolist 'Математика' \
-    'Выберите точность и размер математической библиотеки:' \
-    core   'CORE · ядро МК-61, около 8 цифр' "$(math_option_state core)" \
-    hybrid 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC' "$(math_option_state hybrid)" \
-    libm   'LIBM · полная double-точность, больше Flash' "$(math_option_state libm)") || return 1
+  while true; do
+    selection=$(ui_menu 'Ключи компиляции' \
+      'Enter переключает ключ или открывает вложенное меню. Изменения применяются только пунктом «Сохранить».' \
+      "$selection" \
+      focal      "$(checkbox_marker "$focal") FOCAL · MK61_ENABLE_FOCAL" \
+      tinybasic  "$(checkbox_marker "$tinybasic") TinyBASIC · MK61_ENABLE_TINYBASIC" \
+      wbmp       "$(checkbox_marker "$wbmp") WBMP viewer без Markdown" \
+      markdown   "$(checkbox_marker "$markdown") Markdown + WBMP viewer" \
+      chip8      "$(checkbox_marker "$chip8") CHIP-8" \
+      usb_screen "$(checkbox_marker "$usb_screen") USB-экран" \
+      fonts      "$(checkbox_marker "$fonts") Расширенные настройки шрифта" \
+      explorer   "$(checkbox_marker "$explorer") Клавиша USER открывает Explorer" \
+      math       "◉ Математика: $(math_backend_label_for "$math_backend" "$app_float")  ›" \
+      save       '✓ Сохранить и вернуться') || return 1
 
-  ENABLE_FOCAL=0
-  ENABLE_TINYBASIC=0
-  ENABLE_WBMP_VIEWER=0
-  ENABLE_MARKDOWN_VIEWER=0
-  ENABLE_CHIP8=0
-  ENABLE_USB_SCREEN=0
-  ENABLE_EXTENDED_FONT_SETTINGS=0
-  ENABLE_USER_EXPLORER=0
-  while IFS= read -r tag; do
-    case "$tag" in
-      focal) ENABLE_FOCAL=1 ;;
-      tinybasic) ENABLE_TINYBASIC=1 ;;
-      wbmp) ENABLE_WBMP_VIEWER=1 ;;
-      markdown) ENABLE_MARKDOWN_VIEWER=1 ;;
-      chip8) ENABLE_CHIP8=1 ;;
-      usb_screen) ENABLE_USB_SCREEN=1 ;;
-      fonts) ENABLE_EXTENDED_FONT_SETTINGS=1 ;;
-      explorer) ENABLE_USER_EXPLORER=1 ;;
+    case "$selection" in
+      focal) focal=$((1 - focal)) ;;
+      tinybasic) tinybasic=$((1 - tinybasic)) ;;
+      wbmp)
+        wbmp=$((1 - wbmp))
+        [ "$wbmp" -eq 1 ] && markdown=0
+        ;;
+      markdown)
+        markdown=$((1 - markdown))
+        [ "$markdown" -eq 1 ] && wbmp=0
+        ;;
+      chip8) chip8=$((1 - chip8)) ;;
+      usb_screen) usb_screen=$((1 - usb_screen)) ;;
+      fonts) fonts=$((1 - fonts)) ;;
+      explorer) explorer=$((1 - explorer)) ;;
+      math)
+        math_choice=$(ui_radiolist 'Математика' \
+          'Выберите точность и размер математической библиотеки:' \
+          core   'CORE · ядро МК-61, около 8 цифр' \
+            "$(math_option_state_for core "$math_backend" "$app_float")" \
+          hybrid 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC' \
+            "$(math_option_state_for hybrid "$math_backend" "$app_float")" \
+          libm   'LIBM · полная double-точность, больше Flash' \
+            "$(math_option_state_for libm "$math_backend" "$app_float")") || continue
+        case "$math_choice" in
+          libm) math_backend=0; app_float=0 ;;
+          core) math_backend=1; app_float=0 ;;
+          hybrid) math_backend=1; app_float=1 ;;
+        esac
+        ;;
+      save)
+        ENABLE_FOCAL=$focal
+        ENABLE_TINYBASIC=$tinybasic
+        ENABLE_WBMP_VIEWER=$wbmp
+        ENABLE_MARKDOWN_VIEWER=$markdown
+        ENABLE_CHIP8=$chip8
+        ENABLE_USB_SCREEN=$usb_screen
+        ENABLE_EXTENDED_FONT_SETTINGS=$fonts
+        ENABLE_USER_EXPLORER=$explorer
+        MATH_BACKEND=$math_backend
+        APP_LOCAL_FLOAT=$app_float
+        save_config
+        return 0
+        ;;
     esac
-  done < <(printf '%s\n' "$chosen")
-  case "$math_choice" in
-    libm) MATH_BACKEND=0; APP_LOCAL_FLOAT=0 ;;
-    core) MATH_BACKEND=1; APP_LOCAL_FLOAT=0 ;;
-    hybrid) MATH_BACKEND=1; APP_LOCAL_FLOAT=1 ;;
-  esac
-  normalize_viewer_selection
-  save_config
+  done
 }
 
 arduino_core_ready() {
