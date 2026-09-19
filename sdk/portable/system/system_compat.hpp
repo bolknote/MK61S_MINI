@@ -151,6 +151,7 @@ class MK61Display {
   void clear();
   void setCursor(u8 col, u8 row);
   void write(u8 value);
+  void writeCodepoint(u16 value);
   void print(const char* text);
   void print(char value) { write((u8) value); }
   void cursorOn();

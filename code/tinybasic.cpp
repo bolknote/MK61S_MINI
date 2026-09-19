@@ -174,6 +174,7 @@ namespace library_mk61 {
 
 #include "bounded_string.hpp"
 #include "number_format.hpp"
+#include "utf8_codec.hpp"
 
 #include <type_traits>
 
@@ -638,6 +639,27 @@ static void tb_message_i18n(const char* en0, const char* ru0, const char* en1, c
   (void) ru1;
 }
 
+static void tb_print_display_text(const char* text) {
+  if(text == NULL) return;
+#ifdef TINYBASIC_HOST_TEST
+  main_lcd().print(text);
+#else
+  while(*text != 0) {
+    const utf8_codec::Decoded decoded = utf8_codec::decode_cstring(text);
+    if(decoded.size == 0) break;
+    // One-byte values retain TinyBasic's historical raw/control-token path.
+    // Valid multibyte UTF-8 is the Unicode text path used by FMK fonts.
+    if(decoded.valid && decoded.size > 1) {
+      main_lcd().writeCodepoint(decoded.codepoint <= 0xFFFFU
+          ? (u16) decoded.codepoint : (u16) '?');
+    } else {
+      main_lcd().write((u8) *text);
+    }
+    text += decoded.size;
+  }
+#endif
+}
+
 enum class TbError : u8 { WHAT, HOW, SORRY };
 
 static bool tb_error_code(TbError error) {
@@ -670,7 +692,7 @@ static void tb_display_line(u8 row, const char* text) {
     main_lcd().write((u8) ' ');
   }
   main_lcd().setCursor(0, row);
-  if(text != NULL) main_lcd().print(text);
+  tb_print_display_text(text);
 }
 
 static void tb_clear_output(void) {
@@ -1608,6 +1630,29 @@ static bool tb_append_print_separator(char sep) {
 }
 
 #ifndef TINYBASIC_HOST_TEST
+static usize tb_utf8_length(const char* begin, const char* end) {
+  usize length = 0;
+  while(begin != NULL && begin < end) {
+    const utf8_codec::Decoded decoded = utf8_codec::decode(
+        (const u8*) begin, (usize) (end - begin));
+    if(decoded.size == 0) break;
+    begin += decoded.size;
+    length++;
+  }
+  return length;
+}
+
+static const char* tb_utf8_advance(const char* begin, const char* end,
+                                   usize count) {
+  while(begin != NULL && begin < end && count-- != 0) {
+    const utf8_codec::Decoded decoded = utf8_codec::decode(
+        (const u8*) begin, (usize) (end - begin));
+    if(decoded.size == 0) break;
+    begin += decoded.size;
+  }
+  return begin;
+}
+
 static void tb_input_message(const char* prompt, const char* value) {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
@@ -1622,46 +1667,47 @@ static void tb_input_message(const char* prompt, const char* value) {
   // its actionable tail (normally the choices) is more useful than its start.
   const u8 prompt_rows = rows > 1 ? (u8) (rows - 1U) : 0U;
   const usize prompt_capacity = (usize) prompt_rows * cols;
-  const usize prompt_length = prompt != NULL ? strlen(prompt) : 0U;
   const char* visible = prompt != NULL ? prompt : "";
-  usize visible_length = prompt_length;
-  if(visible_length > prompt_capacity) {
-    visible += visible_length - prompt_capacity;
-    visible_length = prompt_capacity;
-    usize partial = 0;
-    while(partial < visible_length && visible[partial] != ' ') partial++;
-    if(partial < visible_length) {
-      while(partial < visible_length && visible[partial] == ' ') partial++;
-      visible += partial;
-      visible_length -= partial;
+  const char* const visible_end = visible + strlen(visible);
+  const usize prompt_length = tb_utf8_length(visible, visible_end);
+  if(prompt_length > prompt_capacity) {
+    visible = tb_utf8_advance(
+        visible, visible_end, prompt_length - prompt_capacity);
+    const char* partial = visible;
+    while(partial < visible_end && *partial != ' ') {
+      partial = tb_utf8_advance(partial, visible_end, 1);
+    }
+    if(partial < visible_end) {
+      while(partial < visible_end && *partial == ' ') partial++;
+      visible = partial;
     }
   }
 
   u8 row = 0;
-  usize offset = 0;
-  while(row < prompt_rows && offset < visible_length) {
-    const usize remaining = visible_length - offset;
-    usize count = remaining < cols ? remaining : cols;
+  const char* offset = visible;
+  while(row < prompt_rows && offset < visible_end) {
+    const usize remaining = tb_utf8_length(offset, visible_end);
+    const char* line_end = tb_utf8_advance(
+        offset, visible_end, remaining < cols ? remaining : cols);
     if(remaining > cols) {
-      usize break_at = count;
-      while(break_at != 0 && visible[offset + break_at] != ' ') {
+      const char* break_at = line_end;
+      while(break_at > offset && break_at[-1] != ' ') {
         break_at--;
       }
-      if(break_at != 0) count = break_at;
+      if(break_at > offset) line_end = break_at - 1;
     }
     char line[TB_PRINT_BUFFER_SIZE];
-    tb_copy_range(line, sizeof(line), visible + offset,
-                  visible + offset + count);
+    tb_copy_range(line, sizeof(line), offset, line_end);
     main_lcd().setCursor(0, row++);
-    main_lcd().print(line);
-    offset += count;
-    while(offset < visible_length && visible[offset] == ' ') offset++;
+    tb_print_display_text(line);
+    offset = line_end;
+    while(offset < visible_end && *offset == ' ') offset++;
   }
 
   const u8 input_row = rows > 1 ? row : 0U;
   main_lcd().setCursor(0, input_row);
   main_lcd().print("> ");
-  if(value != NULL) main_lcd().print(value);
+  tb_print_display_text(value);
 }
 #endif
 

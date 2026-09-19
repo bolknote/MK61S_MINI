@@ -73,6 +73,9 @@ static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
     case MK61_SYS_DISPLAY_END_UI_TEXT: lcd.endUiText(); break;
     case MK61_SYS_DISPLAY_CURSOR: lcd.setCursor((u8) b, (u8) c); break;
     case MK61_SYS_DISPLAY_WRITE: lcd.write((u8) b); break;
+    case MK61_SYS_DISPLAY_WRITE_CODEPOINT:
+      lcd.writeCodepoint(b <= 0xFFFFU ? (u16) b : (u16) '?');
+      break;
     case MK61_SYS_DISPLAY_PRINT: if(payload) lcd.print((const char*) payload); break;
     case MK61_SYS_DISPLAY_CURSOR_ON: lcd.cursorOn(); break;
     case MK61_SYS_DISPLAY_CURSOR_OFF: lcd.cursorOff(); break;

@@ -89,6 +89,7 @@ bool any_key_pressed() { return call(MK61_SYS_KEYBOARD, MK61_SYS_KEY_ANY); }
 void MK61Display::clear() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_CLEAR); }
 void MK61Display::setCursor(u8 x, u8 y) { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_CURSOR, x, y); }
 void MK61Display::write(u8 value) { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_WRITE, value); }
+void MK61Display::writeCodepoint(u16 value) { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_WRITE_CODEPOINT, value); }
 void MK61Display::print(const char* text) { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_PRINT, 0, 0, (void*) text); }
 void MK61Display::cursorOn() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_CURSOR_ON); }
 void MK61Display::cursorOff() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_CURSOR_OFF); }

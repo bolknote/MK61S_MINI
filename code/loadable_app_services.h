@@ -88,7 +88,10 @@ enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_GRAPHICS_MODE,
   // Explicitly select the established cell renderer before language output.
   // Old residents safely ignore this append-only operation (they have no UI role).
-  MK61_SERVICE_DISPLAY_END_UI_TEXT
+  MK61_SERVICE_DISPLAY_END_UI_TEXT,
+  // Write one Unicode codepoint. Unlike DISPLAY_WRITE this never interprets
+  // the value as an MK-61 legacy byte/control token.
+  MK61_SERVICE_DISPLAY_WRITE_CODEPOINT
 };
 enum mk61_service_keyboard_operation {
   MK61_SERVICE_KEY_POLL, MK61_SERVICE_KEY_GET, MK61_SERVICE_KEY_WAIT,
