@@ -39,7 +39,7 @@ common_flags='-DMK61_BOARD_CLASSIC_V2 -DMK61_ENABLE_FOCAL=1 -DMK61_ENABLE_TINYBA
 platform_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 
 compile_case() {
-  local label=$1 part=$2 maximum_size=$3
+  local label=$1 part=$2 maximum_size=$3 minimum_headroom=$4
   local path="$build_root/$label" log="$build_root/$label.log"
   local fqbn="STMicroelectronics:stm32:GenF4:pnum=$part,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto"
   local case_flags="$common_flags"
@@ -72,10 +72,13 @@ compile_case() {
   size="$(wc -c < "$path/mk61s-M.ino.bin" | tr -d '[:space:]')"
   [[ "$size" =~ ^[0-9]+$ && "$size" -le "$maximum_size" ]] ||
     fail "$label BIN size is invalid: $size/$maximum_size"
-  printf '%s stock linker + LTO: %s/%s bytes, no unresolved RAM exports\n' \
-    "$label" "$size" "$maximum_size"
+  local headroom=$((maximum_size - size))
+  ((headroom >= minimum_headroom)) ||
+    fail "$label Flash headroom too small: $headroom < $minimum_headroom bytes"
+  printf '%s stock linker + LTO: %s/%s bytes (%s free, min %s), no unresolved RAM exports\n' \
+    "$label" "$size" "$maximum_size" "$headroom" "$minimum_headroom"
 }
 
-compile_case F401 BLACKPILL_F401CC 262144
-compile_case F411 BLACKPILL_F411CE 524288
+compile_case F401 BLACKPILL_F401CC 262144 2048
+compile_case F411 BLACKPILL_F411CE 524288 0
 printf 'Stock-linker compile check: OK\n'

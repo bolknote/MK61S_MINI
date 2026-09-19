@@ -153,9 +153,11 @@ class class_terminal {
     terminal_protocol::Result exec_watchdog(void);
 #endif
 
+#if MK61_ENABLE_MEMORY_REPORT
     static void print_memory_snapshot(shared_memory::Arena arena);
 
     terminal_protocol::Result exec_memory(void);
+#endif
 
     static void print_display_status(void);
 

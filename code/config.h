@@ -531,6 +531,20 @@
   #error "MK61_ENABLE_PROFILE_SAVE must be 0 or 1"
 #endif
 
+// The `mem` command is a verbose allocator/cache diagnostic.  It does not
+// participate in memory management, so constrained product F401 images omit
+// only its formatter while qualification images retain the report.
+#ifndef MK61_ENABLE_MEMORY_REPORT
+  #if MK61_F401_PRODUCT_BUILD
+    #define MK61_ENABLE_MEMORY_REPORT 0
+  #else
+    #define MK61_ENABLE_MEMORY_REPORT 1
+  #endif
+#endif
+#if MK61_ENABLE_MEMORY_REPORT != 0 && MK61_ENABLE_MEMORY_REPORT != 1
+  #error "MK61_ENABLE_MEMORY_REPORT must be 0 or 1"
+#endif
+
 // Human serial terminals traditionally use the one-byte CP1251 stream, while
 // Unicode-native clients may negotiate UTF-8 with `encoding utf-8`. This is a
 // user-visible compatibility feature and remains present in product images.

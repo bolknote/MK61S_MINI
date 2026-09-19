@@ -1023,6 +1023,7 @@ terminal_protocol::Result class_terminal::exec_watchdog(void) {
     }
 
 #endif
+#if MK61_ENABLE_MEMORY_REPORT
 void class_terminal::print_memory_snapshot(shared_memory::Arena arena) {
       const shared_memory::Snapshot memory = shared_memory::snapshot(arena);
       terminal_output::field(Serial, "MEM ", shared_memory::arena_name(arena));
@@ -1115,6 +1116,7 @@ terminal_protocol::Result class_terminal::exec_memory(void) {
       terminal_output::line(Serial, " fallback=", crc.software_fallbacks);
       return terminal_protocol::Result::ok();
     }
+#endif
 
 void class_terminal::print_display_status(void) {
       Serial.print("DISPLAY controller=");
@@ -4093,11 +4095,13 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               Serial.println("USB Screen starting.");
             break;
 #endif
+#if MK61_ENABLE_MEMORY_REPORT
           case CMD_MEMORY: {
               const terminal_protocol::Result result = exec_memory();
               recive_pos = 0;
               return result;
             }
+#endif
           case CMD_DISPLAY: {
               const terminal_protocol::Result result = exec_display();
               recive_pos = 0;
