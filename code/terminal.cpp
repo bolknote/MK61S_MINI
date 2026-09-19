@@ -1176,12 +1176,7 @@ void class_terminal::print_display_status(void) {
 
 void class_terminal::print_display_usage(void) {
 #if defined(MK61_OLED1602_WS0010)
-#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED && \
-    MK61_WS0010_GRAPHICS_100X16
-      Serial.println("Usage: display [status|reinit|on|off|test <text|alphabet N|symbols|map N|ddram N|row R N|cgram|zero|clear|home|cursor [left|right]|entry|autoshift|sleep|graphics N|graphics-read N|restore>]");
-#else
-      Serial.println("Usage: display [status|reinit|on|off|test <text|alphabet N|symbols|map N|ddram N|row R N|cgram|zero|clear|home|cursor [left|right]|entry|autoshift|sleep|graphics N|restore>]");
-#endif
+      Serial.println("Usage: display [status|reinit|on|off|test ...]; see help");
 #else
       Serial.println("Usage: display [status]");
 #endif
