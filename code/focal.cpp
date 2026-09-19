@@ -104,6 +104,51 @@ class MK61Display {
       print(buffer);
     }
 
+    // Host-side stand-in for the resident display service. Production FOCAL
+    // calls the same method through the portable System API, so language code
+    // never owns the wrapping policy.
+    u8 printWrappedText(const char* text, u16 length, u8 first_row,
+                        u8 max_rows, bool tail = false,
+                        bool empty_line = false) {
+      (void) tail;
+      if(text == NULL || first_row >= row_count || max_rows == 0) return 0;
+      const u8 available = (u8) (row_count - first_row);
+      if(max_rows > available) max_rows = available;
+      if(length == 0) {
+        if(!empty_line) return 0;
+        setCursor(0, first_row);
+        for(u8 column = 0; column < lcd_display::COLS; column++) write(' ');
+        return 1;
+      }
+
+      u16 offset = 0;
+      u8 written = 0;
+      while(offset < length && written < max_rows) {
+        u16 end = (u16) (offset + lcd_display::COLS);
+        if(end > length) end = length;
+        u16 next = end;
+        if(end < length) {
+          u16 separator = end;
+          while(separator > offset && text[separator] != ' ' &&
+                text[separator] != '\t') separator--;
+          if(separator > offset) {
+            end = separator;
+            next = (u16) (separator + 1U);
+            while(next < length &&
+                  (text[next] == ' ' || text[next] == '\t')) next++;
+          }
+        }
+
+        setCursor(0, (u8) (first_row + written));
+        for(u8 column = 0; column < lcd_display::COLS; column++) write(' ');
+        setCursor(0, (u8) (first_row + written));
+        while(offset < end) write((u8) text[offset++]);
+        offset = next;
+        written++;
+      }
+      return written;
+    }
+
     u8 rows(void) const { return row_count; }
     void setRows(u8 rows) { row_count = (rows < 1) ? 1 : ((rows > MAX_ROWS) ? MAX_ROWS : rows); }
     const char* line(u8 row) const { return lines[(row < MAX_ROWS) ? row : 0]; }
@@ -792,14 +837,6 @@ static const char* focal_error_text(FocalError error, bool russian) {
   const char* const text =
       FOCAL_ERROR_TEXTS + FOCAL_ERROR_TEXT_OFFSETS[(u8) error];
   return russian ? text + strlen(text) + 1 : text;
-}
-
-static void focal_display_line(u8 row, const char* text) {
-  MK61DisplayUpdate update(main_lcd());
-  main_lcd().setCursor(0, row);
-  for(u8 i = 0; i < 16; i++) main_lcd().write((u8) ' ');
-  main_lcd().setCursor(0, row);
-  if(text != NULL) main_lcd().print(text);
 }
 
 static void focal_message_i18n(const char* en0, const char* ru0, const char* en1, const char* ru1) {
@@ -1891,8 +1928,8 @@ static void focal_append_print(char* out, usize size, const char* text) {
   focal_append_print_range(out, size, text, text + strlen(text));
 }
 
-static void focal_flush_print_line(char* output, u8 row) {
-  if(output[0] == 0) return;
+static u8 focal_flush_print_line(char* output, u8 row, bool empty_line) {
+  if(output[0] == 0 && !empty_line) return 0;
   #if defined(MK61_FOCAL_TRACE) && !defined(FOCAL_HOST_TEST)
     focal_trace_header();
     Serial.print("PRINT row=");
@@ -1902,8 +1939,15 @@ static void focal_flush_print_line(char* output, u8 row) {
     Serial.println("'");
     Serial.flush();
   #endif
-  focal_display_line(row, output);
+  const u8 rows = main_lcd().rows();
+  const u8 available = row < rows ? (u8) (rows - row) : 0U;
+  const usize bytes = strlen(output);
+  const u8 written = bytes <= 0xFFFFU
+      ? main_lcd().printWrappedText(output, (u16) bytes, row, available,
+                                    false, empty_line)
+      : 0U;
   output[0] = 0;
+  return written;
 }
 
 static __attribute__((noinline)) bool focal_process_print(const char* operand,
@@ -1924,8 +1968,12 @@ static __attribute__((noinline)) bool focal_process_print(const char* operand,
     if(begin == item_end) return focal_error(FocalError::SYNTAX);
     if((item_end - begin) == 1 && *begin == '!') {
       if(execute) {
-        focal_flush_print_line(output, output_row);
-        if(output_row + 1 < main_lcd().rows()) output_row++;
+        const u8 written = focal_flush_print_line(output, output_row, true);
+        const u8 rows = main_lcd().rows();
+        if(written != 0 && rows != 0) {
+          const u16 next = (u16) output_row + written;
+          output_row = next < rows ? (u8) next : (u8) (rows - 1U);
+        }
       }
     } else if(*begin == '"') {
       const char* text_begin = begin + 1;
@@ -1955,7 +2003,7 @@ static __attribute__((noinline)) bool focal_process_print(const char* operand,
     begin = comma + 1;
   }
 
-  if(execute) focal_flush_print_line(output, output_row);
+  if(execute) (void) focal_flush_print_line(output, output_row, false);
   return true;
 }
 

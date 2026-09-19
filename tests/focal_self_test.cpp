@@ -165,6 +165,24 @@ static void test_print_newline(void) {
   CHECK_STARTS(FocalTestLcdLine(1), "9");
 }
 
+static void test_print_uses_display_word_flow(void) {
+  FocalTestReset();
+  const int slot = add_program(
+    "01.10 P \"ALPHA BETA GAMMA DELTA\"\n"
+    "01.20 E");
+  FocalTestRun(slot);
+  CHECK_STARTS(FocalTestLcdLine(0), "ALPHA BETA GAMMA");
+  CHECK_STARTS(FocalTestLcdLine(1), "DELTA");
+
+  FocalTestReset();
+  const int hard = add_program(
+    "01.10 P \"ABCDEFGHIJKLMNOPQRST\"\n"
+    "01.20 E");
+  FocalTestRun(hard);
+  CHECK_STARTS(FocalTestLcdLine(0), "ABCDEFGHIJKLMNOP");
+  CHECK_STARTS(FocalTestLcdLine(1), "QRST");
+}
+
 static void test_ask_leibniz_pi_program(void) {
   FocalTestReset();
   FocalTestSetAskValue(3.0);
@@ -789,6 +807,7 @@ int main(void) {
   test_compile_rejects_truncation_and_malformed_statements();
   test_arithmetic_and_print();
   test_print_newline();
+  test_print_uses_display_word_flow();
   test_ask_leibniz_pi_program();
   test_ask_long_for_loop();
   test_ask_without_target_waits_for_key();
