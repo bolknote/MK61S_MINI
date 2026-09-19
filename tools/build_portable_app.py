@@ -36,6 +36,11 @@ SYSTEM_SIZE_BUDGETS = {
     "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
 }
+LOCAL_FLOAT_SIZE_BUDGETS = {
+    "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
+    "tinybasic": {"app_bytes": 12_000, "memory_bytes": 17_500},
+}
+DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
 
 
 def run(command: list[str | Path]) -> str:
@@ -46,8 +51,10 @@ def run(command: list[str | Path]) -> str:
     return result.stdout
 
 
-def enforce_system_size_budget(system: str | None, report: dict) -> None:
-    budget = SYSTEM_SIZE_BUDGETS.get(system)
+def enforce_system_size_budget(system: str | None, report: dict,
+                               local_float_math: bool = False) -> None:
+    budgets = LOCAL_FLOAT_SIZE_BUDGETS if local_float_math else SYSTEM_SIZE_BUDGETS
+    budget = budgets.get(system)
     if budget is None:
         return
     exceeded = [f"{field}={report[field]} > {limit}"
@@ -172,7 +179,12 @@ def build(args: argparse.Namespace) -> dict:
             support += ["-DMK61_BUILD_PORTABLE_SYSTEM", "-DMK61_BUILD_" + system[1] + "_MODULE",
                         "-include", str(ROOT / "sdk/portable/system/system_compat.hpp")]
             if args.local_float_math:
-                support += ["-DMK61_APP_LOCAL_FLOAT_MATH=1"]
+                local_mask = (args.local_float_math_mask
+                              if args.local_float_math_mask is not None
+                              else DEFAULT_LOCAL_FLOAT_MASK)
+                support += ["-DMK61_APP_LOCAL_FLOAT_MATH=1",
+                            "-DMK61_APP_LOCAL_FLOAT_MATH_MASK=" +
+                            hex(local_mask)]
             if args.no_ui_fonts:
                 support += ["-DMK61_PORTABLE_UI_FONTS=0"]
             if args.text_only:
@@ -247,10 +259,15 @@ def build(args: argparse.Namespace) -> dict:
               "compression": "ZX0+BCJ" if image_flags & 2 else "ZX0",
               "resident_imports": 0,
               "compiler": run([tool("gcc"), "--version"]).splitlines()[0]}
+    if args.local_float_math:
+        report["local_float_math_mask"] = (
+            args.local_float_math_mask
+            if args.local_float_math_mask is not None
+            else DEFAULT_LOCAL_FLOAT_MASK)
     if rust_compiler is not None:
         report["rust_compiler"] = run([rust_compiler, "--version"]).strip()
     (out / (args.name + ".json")).write_text(json.dumps(report, indent=2) + "\n")
-    enforce_system_size_budget(args.system, report)
+    enforce_system_size_budget(args.system, report, args.local_float_math)
     return report
 
 
@@ -267,6 +284,8 @@ def main() -> None:
                         help="omit the optional proportional UI client from a system APP")
     parser.add_argument("--local-float-math", action="store_true",
                         help="link local single-precision libm into FOCAL or TinyBASIC")
+    parser.add_argument("--local-float-math-mask", type=lambda value: int(value, 0),
+                        help=argparse.SUPPRESS)
     parser.add_argument("--include", type=Path, action="append", default=[])
     parser.add_argument("--library", type=Path, action="append", default=[])
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -276,6 +295,11 @@ def main() -> None:
     parser.add_argument("--packer", type=Path)
     parser.add_argument("--handled-magic")
     args = parser.parse_args()
+    if args.local_float_math_mask is not None and not args.local_float_math:
+        parser.error("--local-float-math-mask requires --local-float-math")
+    if args.local_float_math_mask is not None and \
+       args.local_float_math_mask & ~0x7FF:
+        parser.error("--local-float-math-mask must fit 11 operation bits")
     try:
         print(json.dumps(build(args), indent=2))
     except (ValueError, OSError, subprocess.CalledProcessError) as exc:

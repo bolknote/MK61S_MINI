@@ -23,7 +23,7 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
   if(!sys->runtime) return false;
   for(u32 i = 0; i < MK61_RUNTIME_COUNT; ++i) if(!sys->runtime[i]) return false;
   u32 required_services = MK61_SERVICE_CAP_NUMBER_IO;
-#if MK61_APP_LOCAL_FLOAT_MATH
+#if MK61_APP_LOCAL_FLOAT_MATH_MASK
   required_services |= MK61_SERVICE_CAP_FLOAT_CONVERT;
 #endif
   if((sys->call(MK61_SERVICE_CAPABILITIES, 0, 0, 0, nullptr) &
@@ -227,18 +227,27 @@ double local_double(float value) {
   return request.value;
 }
 }
-double sin(double x) { return local_double(::sinf(local_float(x))); }
-double cos(double x) { return local_double(::cosf(local_float(x))); }
-double tan(double x) { return local_double(::tanf(local_float(x))); }
-double asin(double x) { return local_double(::asinf(local_float(x))); }
-double acos(double x) { return local_double(::acosf(local_float(x))); }
-double atan(double x) { return local_double(::atanf(local_float(x))); }
-double ln(double x) { return local_double(::logf(local_float(x))); }
-double log10(double x) { return local_double(::log10f(local_float(x))); }
-double exp(double x) { return local_double(::expf(local_float(x))); }
-double sqrt(double x) { return local_double(::sqrtf(local_float(x))); }
+#define MK61_LOCAL_UNARY(name, bit, operation, function) \
+  double name(double x) { \
+    if constexpr((MK61_APP_LOCAL_FLOAT_MATH_MASK & (bit)) != 0) \
+      return local_double(::function(local_float(x))); \
+    return portable_system::api->math((operation), x, 0.0); \
+  }
+MK61_LOCAL_UNARY(sin,   MK61_APP_FLOAT_SIN,   MK61_SYS_SIN,   sinf)
+MK61_LOCAL_UNARY(cos,   MK61_APP_FLOAT_COS,   MK61_SYS_COS,   cosf)
+MK61_LOCAL_UNARY(tan,   MK61_APP_FLOAT_TAN,   MK61_SYS_TAN,   tanf)
+MK61_LOCAL_UNARY(asin,  MK61_APP_FLOAT_ASIN,  MK61_SYS_ASIN,  asinf)
+MK61_LOCAL_UNARY(acos,  MK61_APP_FLOAT_ACOS,  MK61_SYS_ACOS,  acosf)
+MK61_LOCAL_UNARY(atan,  MK61_APP_FLOAT_ATAN,  MK61_SYS_ATAN,  atanf)
+MK61_LOCAL_UNARY(ln,    MK61_APP_FLOAT_LN,    MK61_SYS_LN,    logf)
+MK61_LOCAL_UNARY(log10, MK61_APP_FLOAT_LOG10, MK61_SYS_LOG10, log10f)
+MK61_LOCAL_UNARY(exp,   MK61_APP_FLOAT_EXP,   MK61_SYS_EXP,   expf)
+MK61_LOCAL_UNARY(sqrt,  MK61_APP_FLOAT_SQRT,  MK61_SYS_SQRT,  sqrtf)
+#undef MK61_LOCAL_UNARY
 double pow(double x, double y) {
-  return local_double(::powf(local_float(x), local_float(y)));
+  if constexpr((MK61_APP_LOCAL_FLOAT_MATH_MASK & MK61_APP_FLOAT_POW) != 0)
+    return local_double(::powf(local_float(x), local_float(y)));
+  return portable_system::api->math(MK61_SYS_POW, x, y);
 }
 #else
 double sin(double x) { return portable_system::api->math(MK61_SYS_SIN, x, 0); }

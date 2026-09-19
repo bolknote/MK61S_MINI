@@ -19,6 +19,10 @@ BUILDER.enforce_system_size_budget(
     "setup", {"app_bytes": 10_000, "memory_bytes": 20_480})
 BUILDER.enforce_system_size_budget(
     "tinybasic", {"app_bytes": 99_999, "memory_bytes": 99_999})
+BUILDER.enforce_system_size_budget(
+    "focal", {"app_bytes": 14_000, "memory_bytes": 20_000}, True)
+BUILDER.enforce_system_size_budget(
+    "tinybasic", {"app_bytes": 12_000, "memory_bytes": 17_500}, True)
 
 try:
     BUILDER.enforce_system_size_budget(
@@ -29,5 +33,15 @@ except ValueError as error:
     assert "memory_bytes=17001 > 17000" in message
 else:
     raise AssertionError("oversize FOCAL APP was accepted")
+
+try:
+    BUILDER.enforce_system_size_budget(
+        "focal", {"app_bytes": 14_001, "memory_bytes": 20_001}, True)
+except ValueError as error:
+    message = str(error)
+    assert "app_bytes=14001 > 14000" in message
+    assert "memory_bytes=20001 > 20000" in message
+else:
+    raise AssertionError("oversize local-FLOAT FOCAL APP was accepted")
 
 print("portable APP size budget tests: OK")

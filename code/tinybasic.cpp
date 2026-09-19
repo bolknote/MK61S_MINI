@@ -1043,7 +1043,8 @@ static double tb_trig_from_radians(double value) {
 }
 
 static double tb_apply_math_function(TbFunction function, double value) {
-#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST)
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST) && \
+    !MK61_APP_LOCAL_FLOAT_MATH
   // The portable module already obtains all transcendental operations from
   // one resident entry point.  TbFunction keeps the same order as that API.
   static_assert(

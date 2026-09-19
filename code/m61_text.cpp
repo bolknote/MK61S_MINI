@@ -1345,6 +1345,23 @@ static ReferencedOpenResult open_referenced_entry(
     if(status == TinyBasicRunStatus::STOPPED) {
       return ReferencedOpenResult::STOPPED;
     }
+    switch(status) {
+      case TinyBasicRunStatus::UNAVAILABLE:
+        line_error_message = "TinyBASIC is unavailable";
+        break;
+      case TinyBasicRunStatus::COMPILE_ERROR:
+        line_error_message = "TinyBASIC compile error";
+        break;
+      case TinyBasicRunStatus::RUNTIME_ERROR:
+        line_error_message = "TinyBASIC runtime error";
+        break;
+      case TinyBasicRunStatus::NOT_FOUND:
+        line_error_message = "TinyBASIC file not found";
+        break;
+      case TinyBasicRunStatus::COMPLETED:
+      case TinyBasicRunStatus::STOPPED:
+        break;
+    }
     return ReferencedOpenResult::FAILED;
   }
   return OpenStoredEntry(entry) ? ReferencedOpenResult::OPENED
@@ -1569,7 +1586,8 @@ static bool execute_script_line(const char* raw_line) {
         case ReferencedOpenResult::FAILED:
           break;
       }
-      line_error_message = "cannot open referenced file";
+      if(line_error_message == NULL)
+        line_error_message = "cannot open referenced file";
       return false;
     case terminal_protocol::ResultKind::LOAD_SLOT:
       if(open_slot(result.args)) return true;

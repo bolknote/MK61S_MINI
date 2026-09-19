@@ -15,6 +15,7 @@ param(
     [ValidateSet('0', '1')][string]$Wbmp = '1',
     [ValidateSet('0', '1')][string]$Markdown = '1',
     [ValidateSet('0', '1')][string]$Chip8 = '1',
+    [ValidateSet('0', '1')][string]$LocalFloatMath = '0',
     [switch]$KeepBuild
 )
 
@@ -77,7 +78,8 @@ try {
         '--basic', $Basic,
         '--wbmp', $Wbmp,
         '--markdown', $Markdown,
-        '--chip8', $Chip8)
+        '--chip8', $Chip8,
+        '--local-float-math', $LocalFloatMath)
     if (-not [string]::IsNullOrWhiteSpace($ModulePacker)) {
         $arguments += @('--packer', [IO.Path]::GetFullPath($ModulePacker))
     }

@@ -77,6 +77,12 @@ Assert-True ($commonText -match 'HELP0\.TXT.+HELP1\.TXT') `
     'terminal help is missing from the common bundle'
 Assert-True ($commonText -match '"abi": 5') `
     'common bundle does not report current ABI 5'
+Assert-True ($wrapperText -match 'LocalFloatMath') `
+    'PowerShell wrapper does not expose local APP float math'
+Assert-True ($commonText -match 'local.float.math') `
+    'common bundle does not forward local APP float math'
+Assert-True ($appText -match 'MK61_APP_LOCAL_FLOAT_MATH_MASK') `
+    'ordinary APP builder does not select the bounded local float subset'
 Assert-True ($appText -match '"abi": 5') `
     'ordinary and System APP builder is not current ABI 5'
 Assert-True ($appText -match 'sdk/portable/start\.c') `

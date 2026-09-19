@@ -57,6 +57,7 @@ pub const SERVICE_CAP_FORMAT: u32 = 1 << 10;
 pub const SERVICE_CAP_UI_FONT: u32 = 1 << 11;
 pub const SERVICE_CAP_NUMBER_IO: u32 = 1 << 12;
 pub const SERVICE_CAP_TEXT_FONT: u32 = 1 << 13;
+pub const SERVICE_CAP_FLOAT_CONVERT: u32 = 1 << 14;
 
 pub const SERVICE_DISPLAY: u32 = 1;
 pub const SERVICE_KEYBOARD: u32 = 2;
@@ -89,6 +90,10 @@ pub const SERVICE_NUMBER_FORMAT: u32 = 28;
 pub const SERVICE_NUMBER_PARSE: u32 = 29;
 pub const SERVICE_REF_PARSE: u32 = 30;
 pub const SERVICE_TEXT_FONT: u32 = 31;
+pub const SERVICE_FLOAT_CONVERT: u32 = 32;
+
+pub const FLOAT_FROM_DOUBLE: u32 = 0;
+pub const DOUBLE_FROM_FLOAT: u32 = 1;
 
 pub const TEXT_FONT_BEGIN: u32 = 0;
 pub const TEXT_FONT_LOAD: u32 = 1;
@@ -214,6 +219,12 @@ pub struct ServiceRefParse {
     pub name: [u8; 4],
     pub kind: u32,
     pub reg: u32,
+}
+
+#[repr(C)]
+pub struct ServiceFloatConvert {
+    pub value: f64,
+    pub bits: u32,
 }
 
 #[repr(C)]

@@ -104,6 +104,8 @@ def build(args: argparse.Namespace) -> dict:
                 command.append("--no-ui-fonts")
             if system == "markdown-viewer" and not args.graphics:
                 command.append("--text-only")
+            if args.local_float_math and system in ("focal", "tinybasic"):
+                command.append("--local-float-math")
             run(command)
             shutil.copy2(work / key / filename, stage / filename)
             built.append(filename)
@@ -131,6 +133,7 @@ def build(args: argparse.Namespace) -> dict:
         "apps": built,
         "graphics": args.graphics,
         "ui_fonts": args.ui_fonts,
+        "local_float_math": args.local_float_math,
     }
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return result
@@ -150,6 +153,7 @@ def main() -> None:
     parser.add_argument("--wbmp", type=boolean, default=True)
     parser.add_argument("--markdown", type=boolean, default=True)
     parser.add_argument("--chip8", type=boolean, default=True)
+    parser.add_argument("--local-float-math", type=boolean, default=False)
     args = parser.parse_args()
     try:
         build(args)

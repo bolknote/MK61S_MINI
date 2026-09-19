@@ -46,6 +46,33 @@
 #if MK61_APP_LOCAL_FLOAT_MATH != 0 && MK61_APP_LOCAL_FLOAT_MATH != 1
 #error "MK61_APP_LOCAL_FLOAT_MATH must be 0 or 1"
 #endif
+#define MK61_APP_FLOAT_SIN   (1U << 0)
+#define MK61_APP_FLOAT_COS   (1U << 1)
+#define MK61_APP_FLOAT_TAN   (1U << 2)
+#define MK61_APP_FLOAT_ASIN  (1U << 3)
+#define MK61_APP_FLOAT_ACOS  (1U << 4)
+#define MK61_APP_FLOAT_ATAN  (1U << 5)
+#define MK61_APP_FLOAT_LN    (1U << 6)
+#define MK61_APP_FLOAT_LOG10 (1U << 7)
+#define MK61_APP_FLOAT_EXP   (1U << 8)
+#define MK61_APP_FLOAT_SQRT  (1U << 9)
+#define MK61_APP_FLOAT_POW   (1U << 10)
+#define MK61_APP_FLOAT_ALL   ((1U << 11) - 1U)
+#ifndef MK61_APP_LOCAL_FLOAT_MATH_MASK
+  #if MK61_APP_LOCAL_FLOAT_MATH
+    /* The compact newlib group that fits together with FOCAL in the 20 KiB
+     * APP arena. Trigonometric functions are substantially larger and keep
+     * using the resident math API. */
+    #define MK61_APP_LOCAL_FLOAT_MATH_MASK \
+      (MK61_APP_FLOAT_LN | MK61_APP_FLOAT_LOG10 | MK61_APP_FLOAT_EXP | \
+       MK61_APP_FLOAT_SQRT)
+  #else
+    #define MK61_APP_LOCAL_FLOAT_MATH_MASK 0U
+  #endif
+#endif
+#if (MK61_APP_LOCAL_FLOAT_MATH_MASK & ~MK61_APP_FLOAT_ALL) != 0
+#error "MK61_APP_LOCAL_FLOAT_MATH_MASK contains an unsupported operation"
+#endif
 #define MK61_MATH_BACKEND 1
 
 #include "rust_types.h"

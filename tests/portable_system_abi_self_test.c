@@ -72,6 +72,15 @@ _Static_assert(MK61_SERVICE_TEXT_FONT == 31,
                "append-only temporary text-font service");
 _Static_assert(MK61_SERVICE_CAP_TEXT_FONT == (1U << 13),
                "append-only text-font capability");
+_Static_assert(MK61_SERVICE_FLOAT_CONVERT == 32,
+               "append-only float-conversion operation");
+_Static_assert(MK61_SERVICE_CAP_FLOAT_CONVERT == (1U << 14),
+               "append-only float-conversion capability");
+_Static_assert(MK61_FLOAT_FROM_DOUBLE == 0 && MK61_DOUBLE_FROM_FLOAT == 1,
+               "float-conversion operation wire values");
+_Static_assert(sizeof(mk61_service_float_convert) == 16 &&
+               offsetof(mk61_service_float_convert, bits) == 8,
+               "float-conversion wire layout");
 _Static_assert(MK61_TEXT_FONT_BEGIN == 0 && MK61_TEXT_FONT_LOAD == 1 &&
                MK61_TEXT_FONT_RESTORE == 2 && MK61_TEXT_FONT_END == 3 &&
                MK61_TEXT_FONT_ACTIVATE == 4,

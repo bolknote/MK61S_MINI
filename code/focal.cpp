@@ -1154,7 +1154,8 @@ static double focal_rnd(void) {
 }
 
 static double focal_apply_math_function(FocalFunction function, double value) {
-#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(FOCAL_HOST_TEST)
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(FOCAL_HOST_TEST) && \
+    !MK61_APP_LOCAL_FLOAT_MATH
   static_assert(
       (u8) FocalFunction::SIN  - (u8) FocalFunction::SIN == MK61_SYS_SIN &&
       (u8) FocalFunction::COS  - (u8) FocalFunction::SIN == MK61_SYS_COS &&

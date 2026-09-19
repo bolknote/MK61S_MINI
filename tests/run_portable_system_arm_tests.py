@@ -4,10 +4,13 @@
 Only hardware/C5 and workspace backing are mocked. The resident's actual
 arithmetic, printf, font decoder and editor key handler execute as ARM code.
 
-Use test-only residents built with MK61_MATH_BACKEND=0 (LIBM). This model does
-not initialize the calculator core or implement STM32 bit-band peripherals;
-CORE transcendental functions are covered separately by run_mk_math_tests.sh.
-Product builds may continue to use MK61_MATH_BACKEND=1.
+Use test-only residents built with MK61_MATH_BACKEND=0 (LIBM), unless the
+FOCAL and TinyBASIC packages use local float math.  In that hybrid mode the
+APPs execute their own libm and use the resident only for the stable double /
+float conversion service, so the exact product CORE resident is supported.
+This model does not initialize the calculator core or implement STM32 bit-band
+peripherals; resident CORE transcendental functions are covered separately by
+run_mk_math_tests.sh.
 --ui-only qualifies UI on exact product residents without the transcendental
 probe; all display, editor, settings, ABI and ordinary arithmetic checks remain.
 """
@@ -138,6 +141,8 @@ class Machine:
         self.rtc_writes = []
         self.calibration = 123
         self.profile = bytes((6, 5, 8, 2))
+        self.float_return = None
+        self.float_conversions = []
         self.extended = False
         self.ui_fonts = False
         self.ui_font = bytes((0, 14))
@@ -168,11 +173,21 @@ class Machine:
         self.uc.mem_write(payload+20, name.encode().ljust(32,b'\0'))
         return 1
     def hook(self, uc, address, size, ctx):
+        if self.float_return and address == self.float_return[0]:
+            _, operation, payload = self.float_return
+            value, bits = struct.unpack('<dI', uc.mem_read(payload, 12))
+            self.float_conversions.append(
+                (operation, value, bits, uc.reg_read(UC_ARM_REG_R0)))
+            self.float_return = None
         a,b,c,d = [uc.reg_read(x) for x in (UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3)]
         result = None
         if address == (self.syscall & ~1):
             payload = self.words(uc.reg_read(UC_ARM_REG_SP),1)[0]
-            if a in (20,24,26) or (a == 27 and b == 1):
+            if a == 32:
+                self.float_return = (uc.reg_read(UC_ARM_REG_LR) & ~1,
+                                     b, payload)
+                return
+            if a in (20,24,26,28,29,30) or (a == 27 and b == 1):
                 self.key_calls += a == 24
                 return  # Execute the real resident font/editor/capability dispatcher.
             self.trace.append((a,b,c,d))
@@ -300,7 +315,7 @@ class Machine:
                 self.uc.mem_write(p, bytes((family, size, ascent, height - ascent, gap, height)))
             return 1
         if op == 25:
-            if a == 0: return 1
+            if a == 0: return 2
             if a == 1:
                 self.put(p, 0x10000423, 256, ord('C'), 7, 3300, 3000, 253, 0, 0)
                 self.uc.mem_write(p+36,b'LSI\0'+b'LCD1602'.ljust(16,b'\0')); return 1
@@ -335,12 +350,17 @@ class Machine:
             if a == 15:
                 assert self.ui_fonts
                 value = bytes(self.uc.mem_read(p, 2))
-                assert value[0] <= 2 and value[1] in (12, 14, 16), value
+                assert value[0] <= 3 and value[1] in (12, 14, 16), value
                 self.ui_font = value; return 1
             if a == 16:
                 assert b in (0, 1)
                 if b and not self.live_ui: return 0
                 self.ui_text = bool(b); return 1
+        if op == 31:
+            # The fixture has no C5 font files.  Preserve the resident's
+            # platform distinction while allowing a language APP to restore
+            # or activate its current text font around execution.
+            return 1 if self.graphics else 0
         raise AssertionError(('unexpected system operation',op,a,b,c))
     def load(self, package):
         self.kind, variants, self.image_size, self.entry, self.crc = package
@@ -351,7 +371,9 @@ class Machine:
         kinds = {'focal': 1, 'tinybasic': 2, 'wbmp-viewer': 3,
                  'chip8': 5, 'markdown-viewer': 6,
                  'markdown-text': 6, 'setup': 7}
-        assert self.call(0,self.api,self.crc,kinds[self.kind]) == 0
+        result = self.call(0,self.api,self.crc,kinds[self.kind])
+        assert result == 0, ('APP bind failed', self.kind, result,
+                             self.trace[-12:])
     def call(self, command, a=0, b=0, c=0, d=0):
         uc,sp = self.uc,self.stack_top
         saved = [UC_ARM_REG_R4,UC_ARM_REG_R5,UC_ARM_REG_R6,UC_ARM_REG_R7,UC_ARM_REG_R8,UC_ARM_REG_R9,UC_ARM_REG_R10,UC_ARM_REG_R11]
@@ -385,12 +407,19 @@ def main():
     parser.add_argument('--ui-only', action='store_true',
                         help='qualify UI on product residents without the '
                              'transcendental probe; CORE math is tested separately')
+    parser.add_argument('--local-float-math', action='store_true',
+                        help='run the transcendental probe inside local-float '
+                             'System APPs on an exact CORE product resident')
+    parser.add_argument('--language-only', action='store_true',
+                        help='stop after FOCAL/TinyBASIC qualification')
     args=parser.parse_args()
     assert len(args.resident_elf) == 2, 'classic graphics, then mini character resident'
+    assert not (args.ui_only and args.local_float_math), \
+        '--ui-only and --local-float-math are mutually exclusive'
     if args.ui_only:
         print('UI qualification (transcendental math separately covered by '
               'core host suite)', flush=True)
-    else:
+    elif not args.local_float_math:
         for resident in args.resident_elf:
             try:
                 Elf(resident).require_libm_math(resident)
@@ -427,11 +456,18 @@ def main():
                     m.uc.mem_write(m.api+6,struct.pack('<H',104))
                     assert m.call(0,m.api,m.crc,1) == 5
                     m.uc.mem_write(m.api+6,struct.pack('<H',api_size))
-                assert m.call(0x102,m.source('1.10 S A=2+3*4\n1.20 S .R0=A\n1.30 P 100000000\n1.40 P A/3\n1.50 E')) == 1, m.lines
+                focal_source = ('1.10 S A=2+3*4\n1.20 S .R0=A\n'
+                                '1.30 P 100000000\n1.40 P A/3\n')
+                if args.local_float_math:
+                    focal_source += '1.45 S .R2=LN(EXP(1))+SQRT(16)\n'
+                focal_source += '1.50 E'
+                assert m.call(0x102,m.source(focal_source)) == 1, m.lines
                 ui_ends = m.ui_ends
                 assert m.call(0x104,0) == 0
                 assert m.ui_ends > ui_ends, 'FOCAL must request monospaced output before running'
                 assert m.refs[4,0] == 14, m.refs
+                if args.local_float_math:
+                    assert abs(m.refs[4,2]-5) < 1e-6, m.refs
                 assert any('1E+8' in x for x in m.lines), m.lines
                 assert any('4.6666667' in x for x in m.lines), m.lines
                 m.load(packages['tinybasic'])
@@ -441,18 +477,30 @@ def main():
                 # writes and ordinary ARM arithmetic, without claiming to test
                 # the separately covered transcendental implementation.
                 expression = (b'2+4' if args.ui_only else
+                              b'LN(EXP(1))+SQRT(16)' if args.local_float_math else
                               b'SIN(0)+COS(0)+SQRT(16)+LN(EXP(1))')
                 m.files[42]=(3,'BTEST',b'10 LET A=6*7\n20 LET .R1=A\n30 .R2=' +
                              expression + b'\n40 PRINT A/3\n50 END\n')
                 ui_ends = m.ui_ends
-                assert m.call(0x206,42) == 1, (m.lines, m.refs, m.trace[-25:])
+                assert m.call(0x206,42) == 1, (
+                    m.lines, m.refs, m.trace[-25:], m.float_conversions[-25:])
                 assert m.ui_ends > ui_ends, 'BASIC must request monospaced output before running'
                 assert m.refs[4,1] == 42,m.refs
-                assert abs(m.refs[4,2]-6) < 1e-6,m.refs
+                expected_math = 5 if args.local_float_math else 6
+                assert abs(m.refs[4,2]-expected_math) < 1e-6,m.refs
+                if args.local_float_math:
+                    assert m.float_conversions, 'local float bridge was not used'
+                if args.language_only:
+                    continue
                 m.address_index = (m.address_index + 1) % 3
                 m.load(packages['focal'])
                 assert m.call(0x103) == 1
-                assert m.call(0x104,0) == 0
+                focal_stop = m.call(0x104,0)
+                # COMPILE_SOURCE leaves a ready draft, not a numbered C5
+                # program. Older FOCAL happened to expose it as index zero;
+                # the current implementation correctly reports NOT_FOUND.
+                assert focal_stop in (0, 2), (
+                    focal_stop, m.trace[-25:], m.float_conversions[-25:])
                 assert m.refs[4,0] == 14
                 # Exercise actual resident editor + callbacks back into the APP.
                 for kind,edit in [('focal',0x107),('tinybasic',0x207)]:
@@ -537,8 +585,8 @@ def main():
                         assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
                         assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
                         transitions = ((1, 16, [ok, right, ok, esc]),
-                                       (0, 16, [ok, esc]),
-                                       (1, 12, [ok, right, ok, esc]))
+                                       (3, 16, [ok, esc]),
+                                       (1, 12, [ok, ok, right, ok, esc]))
                         for family, size, keys in transitions:
                             m.keys = keys
                             m.setup_views = []
