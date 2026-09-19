@@ -89,6 +89,8 @@ def source_glyphs() -> dict[int, list[int]]:
 
 def encode() -> bytes:
     glyphs = source_glyphs()
+    if glyphs.get(0x0401) == glyphs.get(0x0415):
+        raise ValueError("Russian 3x5 Ё must be distinguishable from Е")
     # The translated game renders uppercase Russian only.  Keep the ASCII
     # punctuation/digits needed by its UI, Ё, and А..Я; carrying Latin letters
     # in this local face would just spend disk/BULK space on unreachable art.
