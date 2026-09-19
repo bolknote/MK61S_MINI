@@ -19,6 +19,7 @@
 #include "program_memory_policy.hpp"
 #include "keyboard.h"
 #include "cross_hal.h"
+#include "rtc_idle_clock.hpp"
 #include "sound_driver.hpp"
 #include "tinybasic.hpp"
 #if MK61_ANY_LOADABLE_MODULE
@@ -67,6 +68,12 @@ bool ResolveStoredFile(const char* args, program_store::Entry& entry) {
 // m61-сценариями и проводником. МК61-скрипты уходят в m61_text::open_program,
 // который сам решает — вложенный вызов (изнутри сценария) или свежая загрузка.
 bool OpenStoredEntry(const program_store::Entry& entry) {
+  // Stored content owns the complete foreground surface.  Do not rely on a
+  // physical key press to remove the calculator's idle clock: terminal and
+  // M61 launches have no such press, and the clock is an independent overlay
+  // which intentionally survives ordinary display clear/redraw operations.
+  rtc_idle_clock::hide(main_lcd());
+
   switch(entry.type) {
     case program_store::ProgramType::MK61:
       return m61_text::open_program(entry.id);
