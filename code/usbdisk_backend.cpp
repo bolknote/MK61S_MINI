@@ -4,6 +4,7 @@
 #include "usbdisk_backend.hpp"
 
 #include "device_identity.hpp"
+#include "independent_watchdog.hpp"
 #include "loadable_module_runtime.hpp"
 #include "loadable_system_api.hpp"
 #include "program_store.hpp"
@@ -15,7 +16,7 @@ namespace usbdisk_backend {
 namespace {
 
 static u16 diagnostic_operation_counts[
-    MK61_USBDISK_TRIM_DIRECTORY_EXTENTS + 1U];
+    MK61_USBDISK_STAGE_FORGET + 1U];
 
 static void export_file(const program_store::Entry& entry,
                         mk61_system_file& output) {
@@ -138,7 +139,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
     memset(diagnostic_operation_counts, 0,
            sizeof(diagnostic_operation_counts));
   }
-  const u32 count = operation <= MK61_USBDISK_TRIM_DIRECTORY_EXTENTS
+  const u32 count = operation <= MK61_USBDISK_STAGE_FORGET
       ? ++diagnostic_operation_counts[operation] : 0;
   // Unlock is cleanup after either success or failure.  Recording it as the
   // last operation used to erase the only evidence of the primitive that
@@ -252,6 +253,14 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
           (u16) a, (u16) b);
     case MK61_USBDISK_STAGE_DISCARD_ALL:
       return program_store::vfat_stage_discard_all();
+    case MK61_USBDISK_STAGE_FORGET:
+      if(a > program_store::VFAT_STAGE_KEY_MAX || b > 0xFFFFU ||
+         b > program_store::VFAT_STAGE_KEY_MAX - a + 1U) return 0;
+      program_store::vfat_stage_forget(a, (u16) b);
+      for(u16 offset = 0; offset < (u16) b; ++offset) {
+        if(program_store::vfat_stage_exists(a + offset)) return 0;
+      }
+      return 1;
     case MK61_USBDISK_STAGE_CLEAR:
       program_store::vfat_stage_clear();
       return 1;
@@ -286,6 +295,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
           (u16) request.size, source, request.extents,
           (u8) request.extent_count, &id, request.compression_buffer,
           request.compression_buffer_size, request.contiguous_data);
+      if(ok) independent_watchdog::completed_storage_unit();
       request.out_id = ok
           ? (u32) id
           : 0x80000000UL |

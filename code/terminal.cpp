@@ -4398,7 +4398,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               terminal_output::field(Serial, "Visible: ", stored_visible - directories);
               Serial.print(" files, "); Serial.print(directories);
               terminal_output::field(Serial, " directories, ", used - stored_visible);
-              Serial.println(" directory extents");
+              Serial.println(" hidden extents");
               terminal_output::field(
                   Serial, "FAT12 cluster: ", (u32) program_store::geometry().sectors_per_cluster * 512U);
               Serial.println(" bytes (virtual)");

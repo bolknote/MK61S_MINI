@@ -75,6 +75,14 @@ static bool stage_cache_add(u32 key) {
   return true;
 }
 
+static void stage_cache_remove(u32 key) {
+  const u16 index = stage_lower_bound(key);
+  if(index >= stage_key_count || stage_keys[index] != key) return;
+  memmove(stage_keys + index, stage_keys + index + 1U,
+          (usize) (stage_key_count - index - 1U) * sizeof(stage_keys[0]));
+  --stage_key_count;
+}
+
 static bool refresh_stage_cache() {
   mk61_service_usbdisk_stage_snapshot request = {
       stage_keys, STAGE_CACHE_CAPACITY, 0};
@@ -372,6 +380,19 @@ bool vfat_stage_exists(u32 block) {
 u16 vfat_stage_count() {
   if(stage_keys_valid) return stage_key_count;
   return (u16) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_COUNT);
+}
+void vfat_stage_forget(u32 start_block, u16 blocks) {
+  if(blocks == 0) return;
+  if(!call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_FORGET,
+           start_block, blocks)) {
+    stage_keys_valid = false;
+    return;
+  }
+  if(stage_keys_valid) {
+    for(u16 offset = 0; offset < blocks; ++offset) {
+      stage_cache_remove(start_block + offset);
+    }
+  }
 }
 bool vfat_stage_discard_all() {
   const bool ok = call(MK61_SYS_USBDISK,

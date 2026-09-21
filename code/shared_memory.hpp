@@ -12,7 +12,7 @@ namespace shared_memory {
 
 static constexpr usize WORKSPACE_SIZE = 8192;
 static constexpr usize SCRATCH_SIZE = 1600;
-static constexpr usize STAGE_INDEX_SIZE = 384U * sizeof(u32);
+static constexpr usize STAGE_INDEX_SIZE = 640U * sizeof(u32);
 static constexpr usize APP_MAX_SIZE = 20U * 1024U;
 
 // The current ABI always uses the free linker range shared with the C heap and

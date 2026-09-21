@@ -131,6 +131,12 @@ void foreground_epoch(u32 now_ms) {
 #endif
 }
 
+void completed_storage_unit(void) {
+#if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
+  foreground_epoch(millis());
+#endif
+}
+
 bool running(void) {
 #if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
   return hardware_running;

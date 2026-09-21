@@ -19,6 +19,7 @@
 #include "zx0.hpp"
 
 #if !defined(PROGRAM_STORE_HOST_TEST)
+  #include "independent_watchdog.hpp"
   #include "power_monitor.hpp"
 #endif
 
@@ -73,10 +74,16 @@ static constexpr u16 STAGE_RECORD_SIZE = STAGE_RECORD_HEADER_SIZE + STAGE_DATA_S
 static constexpr u8 STAGE_RECORDS_PER_SECTOR =
     (storage_geometry::PHYSICAL_SECTOR_SIZE - STAGE_SECTOR_HEADER_SIZE) /
     STAGE_RECORD_SIZE;
-static constexpr u16 STAGE_REF_CAPACITY = 384;
-static constexpr u8 STAGE_REF_BITS = 9;
+static constexpr u16 STAGE_REF_CAPACITY = 640;
+static constexpr u8 STAGE_REF_BITS = 10;
 static constexpr u16 STAGE_REF_MASK = (1U << STAGE_REF_BITS) - 1U;
 static constexpr u32 STAGE_KEY_MAX = VFAT_STAGE_KEY_MAX;
+// A 512-KiB C6 volume can lend unused data erase sectors to USB staging.
+// The fixed stage remains the fallback and its last sector remains the COW
+// compaction reserve. All borrowed sectors are identified by their C6S0
+// headers after a reset, so the catalog allocator must never erase them.
+static constexpr u8 STAGE_MAX_SLOTS = 128;
+static constexpr u8 STAGE_MIN_FREE_DATA_SECTORS = 20;
 static constexpr u8 GC_SCAN_WINDOW = 32;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
@@ -100,8 +107,8 @@ static constexpr u8 LEGACY_LARGE_DESCRIPTOR_VERSION = 1;
 static constexpr u8 LARGE_DESCRIPTOR_VERSION = 2;
 
 static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C6 stage must pack seven sectors");
-static_assert(STAGE_KEY_MAX == (0xFFFFFFFFUL >> STAGE_REF_BITS),
-              "public C6 stage key range must match packed references");
+static_assert(STAGE_KEY_MAX == 0x007FFFFFUL,
+              "C6 stage keys must remain readable across firmware updates");
 static_assert(44 + WAL_MAX_UPDATES *
                   (2 + storage_geometry::INODE_BYTES) <=
                   IMAGE1_WAL_COUNT_OFFSET,
@@ -212,11 +219,21 @@ static u16 g_stage_ref_count;
 static shared_memory::Lease g_stage_overlay_lease;
 static bool g_stage_locked;
 static bool g_stage_external;
+#if !defined(PROGRAM_STORE_HOST_TEST)
+static bool g_usb_file_import_progress;
+#endif
 static WriteFailure g_last_write_failure = WriteFailure::NONE;
 static WriteFailureDetail g_last_write_failure_detail =
     WriteFailureDetail::NONE;
-static u8 g_stage_used[storage_geometry::STAGE_TARGET_SECTORS];
-static u8 g_stage_sealed[storage_geometry::STAGE_TARGET_SECTORS];
+static u8 g_stage_used[STAGE_MAX_SLOTS];
+static u8 g_stage_sealed[STAGE_MAX_SLOTS];
+static u32 g_stage_physical[STAGE_MAX_SLOTS];
+static u8 g_stage_slot_count;
+static bool g_stage_recovery_ok;
+// Preserve the original 23-bit key range despite the ten-bit record reference.
+// A side bitmap is indexed by physical record reference, not by index position,
+// so it also survives narrowing the index for APP validation.
+static u8 g_stage_key_high[(STAGE_REF_MASK + 8U) / 8U];
 static u16 g_stage_generation;
 static u16 g_free_hint;
 // Сектора незавершённой COW-записи ещё не достижимы из каталога, но сборщик
@@ -227,7 +244,7 @@ static u16 g_verified_large_id = NONE;
 static u32 g_verified_large_generation;
 static u8 g_verified_large_block = 0xFF;
 
-static_assert((u16) storage_geometry::STAGE_TARGET_SECTORS *
+static_assert((u16) STAGE_MAX_SLOTS *
                   STAGE_RECORDS_PER_SECTOR <= STAGE_REF_MASK,
               "C6 stage references must fit in the packed index");
 static_assert((usize) STAGE_REF_CAPACITY * sizeof(u32) <=
@@ -299,6 +316,11 @@ static bool write_bytes(u32 address, const u8* data, usize len) {
   if(flash_is_ok && data != NULL) {
     const bool ok = flash_device().writeByteArray(address, (u8*) data, len);
     disk_led_poll();
+#if !defined(PROGRAM_STORE_HOST_TEST)
+    if(ok && g_usb_file_import_progress) {
+      independent_watchdog::completed_storage_unit();
+    }
+#endif
     return ok;
   }
 #else
@@ -313,6 +335,11 @@ static bool write_byte(u32 address, u8 value) {
   if(flash_is_ok) {
     const bool ok = flash_device().writeByte(address, value);
     disk_led_poll();
+#if !defined(PROGRAM_STORE_HOST_TEST)
+    if(ok && g_usb_file_import_progress) {
+      independent_watchdog::completed_storage_unit();
+    }
+#endif
     return ok;
   }
 #else
@@ -337,6 +364,11 @@ static bool erase_sector(u32 sector) {
   }
   led::control();
   g_table_cache_address = EMPTY_ADDRESS;
+#if !defined(PROGRAM_STORE_HOST_TEST)
+  if(g_usb_file_import_progress) {
+    independent_watchdog::completed_storage_unit();
+  }
+#endif
   return true;
 #else
   (void) sector;
@@ -775,7 +807,7 @@ static CatalogMeta decode_meta(const u8* record, u16 image_count_offset) {
   return meta;
 }
 
-static bool checkpoint(void);
+static bool checkpoint(bool empty_table = false);
 static bool load_catalog(void);
 
 static u8 new_overlay_slots(const Transaction& transaction) {
@@ -873,7 +905,7 @@ static void encode_catalog_header(u8* header, u32 generation, u32 table_crc) {
                                  CATALOG_HEADER_CRC_OFFSET, 5));
 }
 
-static bool checkpoint(void) {
+static bool checkpoint(bool empty_table) {
   const u8 destination = (u8) (g_active_bank ^ 1U);
   for(u16 sector = 0; sector < g_geometry.catalog_bank_sectors; sector++) {
     if(!erase_sector(bank_sector(destination) + sector)) return false;
@@ -885,8 +917,8 @@ static bool checkpoint(void) {
   u32 destination_address = table_address(destination);
   mk61_crc32::Context crc;
   for(u16 id = 0; id < g_geometry.max_nodes; id++) {
-    Inode inode;
-    if(!get_inode(id, inode)) return false;
+    Inode inode = empty_inode();
+    if(!empty_table && !get_inode(id, inode)) return false;
     serialize_inode(inode, disk_inode);
     u8 copied = 0;
     while(copied < sizeof(disk_inode)) {
@@ -1253,6 +1285,18 @@ static bool data_sector_in_range(u32 sector) {
          sector < g_geometry.data_first_sector + g_geometry.data_sector_count;
 }
 
+static bool borrowed_stage_sector(u32 sector) {
+  if(!data_sector_in_range(sector) ||
+     g_geometry.physical_sectors > 128) return false;
+  u8 header[STAGE_SECTOR_HEADER_SIZE];
+  // A failed read must not turn an unknown sector into an erase candidate.
+  if(!read_bytes(sector_address(sector), header, sizeof(header))) return true;
+  return memcmp(header, "C6S0", 4) == 0 &&
+         header[4] == PHYSICAL_FORMAT_VERSION &&
+         header[5] == STATE_ACTIVE &&
+         get_le32(header, 8) == g_format_epoch;
+}
+
 static bool read_large_descriptor(u16 id, const Inode& inode,
                                   LargeDescriptor& descriptor);
 
@@ -1352,6 +1396,7 @@ static bool select_reclaimable_sector(u32& out) {
       const u32 sector = first +
           (start - first + base + slot) % count;
       if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
+         borrowed_stage_sector(sector) ||
          (live_mask & (1UL << slot)) != 0) continue;
       if(!initialize_data_sector(sector)) continue;
       out = sector;
@@ -1367,58 +1412,67 @@ static bool select_gc_victim(u32& out) {
   const u32 count = g_geometry.data_sector_count;
   const u32 start = data_sector_in_range(g_meta.gc_cursor)
       ? g_meta.gc_cursor : first;
-  const u8 window = (u8) (count < GC_SCAN_WINDOW ? count : GC_SCAN_WINDOW);
-  u16 live_bytes[GC_SCAN_WINDOW] = {};
+  for(u32 base = 0; base < count; base += GC_SCAN_WINDOW) {
+    const u8 window = (u8) ((count - base < GC_SCAN_WINDOW)
+        ? count - base : GC_SCAN_WINDOW);
+    u16 live_bytes[GC_SCAN_WINDOW] = {};
 
-  for(u8 index = 0; index < g_large_write_sector_count; index++) {
-    const u32 sector = g_large_write_sectors[index];
-    if(!data_sector_in_range(sector)) continue;
-    const u32 relative = (sector - first + count - (start - first)) % count;
-    if(relative < window) live_bytes[relative] = 0xFFFF;
-  }
-  for(u16 id = 0; id < g_geometry.max_nodes; id++) {
-    Inode inode;
-    if(!get_inode(id, inode) || !visible_inode(inode)) continue;
-    if(inode.address < EXTENT_ADDRESS) {
-      const u32 sector = inode.address /
-          storage_geometry::PHYSICAL_SECTOR_SIZE;
-      if(data_sector_in_range(sector)) {
-        const u32 relative =
-            (sector - first + count - (start - first)) % count;
-        if(relative < window) {
-          const u32 sum = (u32) live_bytes[relative] + inode.record_len;
-          live_bytes[relative] = sum > 0xFFFFU ? 0xFFFFU : (u16) sum;
+    for(u8 index = 0; index < g_large_write_sector_count; index++) {
+      const u32 sector = g_large_write_sectors[index];
+      if(!data_sector_in_range(sector)) continue;
+      const u32 relative = (sector - first + count - (start - first)) % count;
+      if(relative >= base && relative < base + window) {
+        live_bytes[relative - base] = 0xFFFF;
+      }
+    }
+    for(u16 id = 0; id < g_geometry.max_nodes; id++) {
+      Inode inode;
+      if(!get_inode(id, inode) || !visible_inode(inode)) continue;
+      if(inode.address < EXTENT_ADDRESS) {
+        const u32 sector = inode.address /
+            storage_geometry::PHYSICAL_SECTOR_SIZE;
+        if(data_sector_in_range(sector)) {
+          const u32 relative =
+              (sector - first + count - (start - first)) % count;
+          if(relative >= base && relative < base + window) {
+            const u8 slot = (u8) (relative - base);
+            const u32 sum = (u32) live_bytes[slot] + inode.record_len;
+            live_bytes[slot] = sum > 0xFFFFU ? 0xFFFFU : (u16) sum;
+          }
+        }
+      }
+      if(large_file_inode(inode)) {
+        LargeDescriptor descriptor = {};
+        if(!read_large_descriptor(id, inode, descriptor)) continue;
+        for(u8 block = 0; block < descriptor.block_count; block++) {
+          const u32 sector = descriptor.sectors[block];
+          if(!data_sector_in_range(sector)) continue;
+          const u32 relative =
+              (sector - first + count - (start - first)) % count;
+          if(relative >= base && relative < base + window) {
+            live_bytes[relative - base] = 0xFFFF;
+          }
         }
       }
     }
-    if(large_file_inode(inode)) {
-      LargeDescriptor descriptor = {};
-      if(!read_large_descriptor(id, inode, descriptor)) continue;
-      for(u8 block = 0; block < descriptor.block_count; block++) {
-        const u32 sector = descriptor.sectors[block];
-        if(!data_sector_in_range(sector)) continue;
-        const u32 relative =
-            (sector - first + count - (start - first)) % count;
-        if(relative < window) live_bytes[relative] = 0xFFFF;
+
+    u16 best_bytes = 0xFFFF;
+    u32 best = EMPTY_ADDRESS;
+    for(u8 slot = 0; slot < window; slot++) {
+      const u32 sector = first + (start - first + base + slot) % count;
+      if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
+         borrowed_stage_sector(sector)) continue;
+      if(live_bytes[slot] != 0xFFFF && live_bytes[slot] < best_bytes) {
+        best_bytes = live_bytes[slot];
+        best = sector;
       }
     }
-  }
-
-  u16 best_bytes = 0xFFFF;
-  u32 best = EMPTY_ADDRESS;
-  for(u8 slot = 0; slot < window; slot++) {
-    const u32 sector = first + (start - first + slot) % count;
-    if(sector == g_meta.current_sector || sector == g_meta.reserve_sector) {
-      continue;
-    }
-    if(live_bytes[slot] != 0xFFFF && live_bytes[slot] < best_bytes) {
-      best_bytes = live_bytes[slot];
-      best = sector;
+    if(best != EMPTY_ADDRESS) {
+      out = best;
+      return true;
     }
   }
-  if(best == EMPTY_ADDRESS) return false;
-  out = best;
-  return true;
+  return false;
 }
 
 static bool commit_meta_only(const CatalogMeta& meta) {
@@ -1430,6 +1484,7 @@ static bool commit_meta_only(const CatalogMeta& meta) {
 
 static bool garbage_collect(void) {
   if(!data_sector_in_range(g_meta.reserve_sector) ||
+     borrowed_stage_sector(g_meta.reserve_sector) ||
      sector_has_live_inode(g_meta.reserve_sector)) {
     u32 replacement = EMPTY_ADDRESS;
     if(!select_reclaimable_sector(replacement)) return false;
@@ -2590,8 +2645,10 @@ static bool format_internal(bool erase_settings,
   // checkpoint() сама стирает и публикует новый активный банк. Другой банк
   // привязан к эпохе и будет стёрт, когда снова станет приёмником COW, поэтому
   // предварительное стирание обоих банков здесь лишь утраивало работу с
-  // каталогом при первом запуске на W25Q128 ёмкостью 16 МиБ.
-  if(!checkpoint()) return false;
+  // каталогом при первом запуске на W25Q128 ёмкостью 16 МиБ. Старую таблицу
+  // при форматировании читать нельзя: она может содержать сотни orphan inode
+  // и даже относиться к другой геометрии. Создаём явно пустую таблицу.
+  if(!checkpoint(true)) return false;
   // Заголовки staging также содержат эпоху форматирования. Старые или чужие
   // секторы после форматирования игнорируются и стираются лениво перед первой записью.
   if(saved_settings_address != EMPTY_ADDRESS) {
@@ -2907,6 +2964,7 @@ static bool select_large_sector(u32& output) {
   for(u32 offset = 0; offset < count; offset++) {
     const u32 sector = first + (start - first + offset) % count;
     if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
+       borrowed_stage_sector(sector) ||
        sector_has_live_inode(sector)) continue;
     if(!erase_sector(sector)) continue;
     output = sector;
@@ -3310,6 +3368,15 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             u8* compression_buffer,
                             usize compression_buffer_size,
                             const u8* contiguous_data) {
+#if !defined(PROGRAM_STORE_HOST_TEST)
+  struct ImportProgressScope {
+    bool previous;
+    ImportProgressScope() : previous(g_usb_file_import_progress) {
+      if(g_stage_locked) g_usb_file_import_progress = true;
+    }
+    ~ImportProgressScope() { g_usb_file_import_progress = previous; }
+  } import_progress;
+#endif
   g_last_write_failure = WriteFailure::ARGUMENTS;
   g_last_write_failure_detail = WriteFailureDetail::NONE;
   DiskActivity activity;
@@ -4190,7 +4257,7 @@ bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len) {
 namespace {
 
 static u32 stage_sector_address(u16 sector) {
-  return sector_address(g_geometry.stage_first_sector + sector);
+  return sector_address(g_stage_physical[sector]);
 }
 
 static u32 stage_record_address(u16 ref) {
@@ -4203,7 +4270,13 @@ static u32 stage_record_address(u16 ref) {
 }
 
 static u32 pack_stage_index(u32 key, u16 ref) {
-  return (key << STAGE_REF_BITS) | ref;
+  const u8 mask = (u8) (1U << (ref & 7U));
+  if((key & 0x00400000UL) != 0) {
+    g_stage_key_high[ref >> 3] |= mask;
+  } else {
+    g_stage_key_high[ref >> 3] &= (u8) ~mask;
+  }
+  return ((key & 0x003FFFFFUL) << STAGE_REF_BITS) | ref;
 }
 
 static void forget_stage_index_binding(void) {
@@ -4219,34 +4292,45 @@ static shared_memory::EvictionDecision prepare_stage_index_eviction(void) {
   return shared_memory::EvictionDecision::RELEASE;
 }
 
+static u16 stage_ref_limit(void) {
+  return g_geometry.physical_sectors == 128 ? STAGE_REF_CAPACITY : 384;
+}
+
 static bool bind_full_stage_index(void) {
+  const u16 capacity = stage_ref_limit();
   if(g_stage_overlay_lease.ok()) {
-    return !g_stage_external && g_stage_index != nullptr &&
-           g_stage_index_capacity == STAGE_REF_CAPACITY;
+    if(!g_stage_external && g_stage_index != nullptr &&
+       g_stage_index_capacity == capacity) return true;
+    if(g_stage_locked) return false;
+    g_stage_overlay_lease.reset();
+    forget_stage_index_binding();
   }
   if(g_stage_external ||
      !g_stage_overlay_lease.acquire_cache(
          shared_memory::Arena::OVERLAY,
          shared_memory::Owner::VFAT_STAGE,
-         (usize) STAGE_REF_CAPACITY * sizeof(u32))) return false;
+         (usize) capacity * sizeof(u32))) return false;
   if(!g_stage_overlay_lease.set_evictable(prepare_stage_index_eviction)) {
     g_stage_overlay_lease.reset();
     return false;
   }
   g_stage_index = reinterpret_cast<u32*>(g_stage_overlay_lease.data());
-  g_stage_index_capacity = STAGE_REF_CAPACITY;
+  g_stage_index_capacity = capacity;
   g_stage_ref_count = 0;
   return true;
 }
 
 static bool ensure_stage_index(void) {
-  if(g_stage_index != nullptr) return true;
+  if(g_stage_index != nullptr) return g_stage_recovery_ok;
   vfat_stage_clear();
-  return g_stage_index != nullptr;
+  return g_stage_index != nullptr && g_stage_recovery_ok;
 }
 
 static u32 stage_index_key(u16 index) {
-  return g_stage_index[index] >> STAGE_REF_BITS;
+  const u32 packed = g_stage_index[index];
+  const u16 ref = (u16) (packed & STAGE_REF_MASK);
+  return (packed >> STAGE_REF_BITS) |
+         (((u32) ((g_stage_key_high[ref >> 3] >> (ref & 7U)) & 1U)) << 22);
 }
 
 static u16 stage_index_ref(u16 index) {
@@ -4270,7 +4354,7 @@ static bool stage_sector_header_valid(u16 sector) {
 }
 
 static bool initialize_stage_sector(u16 sector) {
-  if(!erase_sector(g_geometry.stage_first_sector + sector)) return false;
+  if(!erase_sector(g_stage_physical[sector])) return false;
   u8 header[STAGE_SECTOR_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
   memcpy(header, "C6S0", 4);
@@ -4326,9 +4410,12 @@ static u8 stage_sector_live_count(u16 sector) {
   return count;
 }
 
-static u16 normal_stage_sector_count(void) {
-  return g_geometry.stage_sector_count > 1
-      ? (u16) (g_geometry.stage_sector_count - 1) : 0;
+static u16 stage_reserve_slot(void) {
+  return (u16) (g_geometry.stage_sector_count - 1);
+}
+
+static bool normal_stage_slot(u16 sector) {
+  return sector < g_stage_slot_count && sector != stage_reserve_slot();
 }
 
 static bool stage_slot_erased(u16 sector, u8 slot) {
@@ -4340,7 +4427,7 @@ static bool stage_slot_erased(u16 sector, u8 slot) {
 }
 
 static bool append_stage_value(u16 sector, u32 key, const u8* data) {
-  if(sector >= g_geometry.stage_sector_count || data == NULL ||
+  if(sector >= g_stage_slot_count || data == NULL ||
      g_stage_sealed[sector] || g_stage_used[sector] >= STAGE_RECORDS_PER_SECTOR) return false;
   if(!stage_sector_header_valid(sector)) {
     if(stage_sector_has_live(sector) || !initialize_stage_sector(sector)) return false;
@@ -4420,7 +4507,7 @@ static bool copy_live_stage_records(u16 source, u16 destination) {
 }
 
 static bool erase_stage_sector(u16 sector) {
-  if(!erase_sector(g_geometry.stage_first_sector + sector)) return false;
+  if(!erase_sector(g_stage_physical[sector])) return false;
   g_stage_used[sector] = 0;
   g_stage_sealed[sector] = 0;
   return true;
@@ -4430,15 +4517,15 @@ static bool erase_stage_sector(u16 sector) {
 // получают более новое поколение, поэтому при любом сбое питания остаётся хотя
 // бы одна действительная версия каждого промежуточного блока.
 static bool recover_stage_reserve(void) {
-  const u16 normal_count = normal_stage_sector_count();
-  if(normal_count == 0) return false;
-  const u16 reserve = normal_count;
+  if(g_stage_slot_count < 2) return false;
+  const u16 reserve = stage_reserve_slot();
   u8 reserve_live = stage_sector_live_count(reserve);
   if(reserve_live == 0) return true;
 
   // Обычный приёмник уже может содержать первые записи, скопированные обратно
   // до сброса. Завершаем это направление, если свободного хвоста достаточно.
-  for(u16 sector = 0; sector < normal_count; sector++) {
+  for(u16 sector = 0; sector < g_stage_slot_count; sector++) {
+    if(!normal_stage_slot(sector)) continue;
     if(stage_sector_has_live(sector) && !stage_sector_header_valid(sector)) continue;
     if(!stage_sector_header_valid(sector)) {
       if(!initialize_stage_sector(sector)) continue;
@@ -4454,7 +4541,8 @@ static bool recover_stage_reserve(void) {
   // Иначе сброс произошёл при копировании разреженного сектора в резерв.
   // Завершаем копирование, стираем исходный сектор и копируем данные обратно.
   if(!stage_sector_header_valid(reserve) || g_stage_sealed[reserve]) return false;
-  for(u16 victim = 0; victim < normal_count; victim++) {
+  for(u16 victim = 0; victim < g_stage_slot_count; victim++) {
+    if(!normal_stage_slot(victim)) continue;
     const u8 victim_live = stage_sector_live_count(victim);
     if((u16) g_stage_used[reserve] + victim_live > STAGE_RECORDS_PER_SECTOR) continue;
     if(!copy_live_stage_records(victim, reserve) ||
@@ -4468,16 +4556,16 @@ static bool recover_stage_reserve(void) {
 }
 
 static bool compact_stage(u16& out_sector, u8& out_slot) {
-  const u16 normal_count = normal_stage_sector_count();
-  if(normal_count == 0 || !recover_stage_reserve()) return false;
-  const u16 reserve = normal_count;
+  if(g_stage_slot_count < 2 || !recover_stage_reserve()) return false;
+  const u16 reserve = stage_reserve_slot();
   if(!initialize_stage_sector(reserve)) return false;
   g_stage_used[reserve] = 0;
   g_stage_sealed[reserve] = 0;
 
   u16 victim = 0;
   u8 victim_live = 0xFF;
-  for(u16 sector = 0; sector < normal_count; sector++) {
+  for(u16 sector = 0; sector < g_stage_slot_count; sector++) {
+    if(!normal_stage_slot(sector)) continue;
     const u8 live = stage_sector_live_count(sector);
     if(live < victim_live) {
       victim = sector;
@@ -4497,10 +4585,71 @@ static bool compact_stage(u16& out_sector, u8& out_slot) {
   return true;
 }
 
+static void mark_stage_borrow_occupied(u32 (&bits)[4], u32 physical) {
+  if(!data_sector_in_range(physical)) return;
+  const u32 relative = physical - g_geometry.data_first_sector;
+  bits[relative >> 5] |= 1UL << (relative & 31U);
+}
+
+static bool borrow_stage_slot(u16& out_sector, u8& out_slot) {
+  if(g_geometry.physical_sectors != 128 ||
+     g_geometry.data_sector_count > 128 ||
+     g_stage_slot_count >= STAGE_MAX_SLOTS) return false;
+  u32 occupied[4] = {};
+  mark_stage_borrow_occupied(occupied, g_meta.current_sector);
+  mark_stage_borrow_occupied(occupied, g_meta.reserve_sector);
+  for(u8 index = 0; index < g_large_write_sector_count; index++) {
+    mark_stage_borrow_occupied(occupied, g_large_write_sectors[index]);
+  }
+  for(u16 id = 0; id < g_geometry.max_nodes; id++) {
+    Inode inode;
+    if(!get_inode(id, inode) || !visible_inode(inode)) continue;
+    if(inode.address < EXTENT_ADDRESS) {
+      mark_stage_borrow_occupied(
+          occupied, inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE);
+    }
+    if(large_file_inode(inode)) {
+      LargeDescriptor descriptor = {};
+      if(!read_large_descriptor(id, inode, descriptor)) return false;
+      for(u8 block = 0; block < descriptor.block_count; block++) {
+        mark_stage_borrow_occupied(occupied, descriptor.sectors[block]);
+      }
+    }
+  }
+  u32 chosen = EMPTY_ADDRESS;
+  u16 reclaimable = 0;
+  const u32 end = g_geometry.data_first_sector +
+                  g_geometry.data_sector_count;
+  for(u32 physical = g_geometry.data_first_sector; physical < end;
+      physical++) {
+    const u32 relative = physical - g_geometry.data_first_sector;
+    if((occupied[relative >> 5] & (1UL << (relative & 31U))) != 0 ||
+       borrowed_stage_sector(physical)) continue;
+    chosen = physical;
+    reclaimable++;
+  }
+  // The imported C6 files and its COW collector must still have room to
+  // publish the batch after host sync. A borrowed sector is never taken from
+  // live file data, the current writer, or the GC reserve.
+  if(chosen == EMPTY_ADDRESS ||
+     reclaimable <= STAGE_MIN_FREE_DATA_SECTORS) return false;
+  const u16 slot = g_stage_slot_count++;
+  g_stage_physical[slot] = chosen;
+  g_stage_used[slot] = 0;
+  g_stage_sealed[slot] = 0;
+  if(!initialize_stage_sector(slot)) {
+    if(!stage_sector_header_valid(slot)) g_stage_slot_count--;
+    return false;
+  }
+  out_sector = slot;
+  out_slot = 0;
+  return true;
+}
+
 static bool find_stage_slot(u16& out_sector, u8& out_slot) {
   if(!recover_stage_reserve()) return false;
-  const u16 normal_count = normal_stage_sector_count();
-  for(u16 sector = 0; sector < normal_count; sector++) {
+  for(u16 sector = 0; sector < g_stage_slot_count; sector++) {
+    if(!normal_stage_slot(sector)) continue;
     if(g_stage_sealed[sector] || g_stage_used[sector] >= STAGE_RECORDS_PER_SECTOR) continue;
     if(!stage_sector_header_valid(sector)) {
       if(stage_sector_has_live(sector) || !initialize_stage_sector(sector)) continue;
@@ -4516,7 +4665,8 @@ static bool find_stage_slot(u16& out_sector, u8& out_slot) {
     return true;
   }
 
-  for(u16 sector = 0; sector < normal_count; sector++) {
+  for(u16 sector = 0; sector < g_stage_slot_count; sector++) {
+    if(!normal_stage_slot(sector)) continue;
     if(stage_sector_has_live(sector)) continue;
     if(!initialize_stage_sector(sector)) continue;
     g_stage_used[sector] = 0;
@@ -4525,7 +4675,15 @@ static bool find_stage_slot(u16& out_sector, u8& out_slot) {
     out_slot = 0;
     return true;
   }
-  return compact_stage(out_sector, out_slot);
+  // A sector with fewer than seven live records can always be compacted into
+  // the fixed reserve. Do that before borrowing physical space from C6.
+  for(u16 sector = 0; sector < g_stage_slot_count; sector++) {
+    if(normal_stage_slot(sector) &&
+       stage_sector_live_count(sector) < STAGE_RECORDS_PER_SECTOR) {
+      return compact_stage(out_sector, out_slot);
+    }
+  }
+  return borrow_stage_slot(out_sector, out_slot);
 }
 
 } // пространство имён
@@ -4535,15 +4693,38 @@ void vfat_stage_clear(void) {
     g_stage_ref_count = 0;
     return;
   }
+  g_stage_recovery_ok = true;
   g_stage_ref_count = 0;
   g_stage_generation = 0;
   memset(g_stage_used, 0, sizeof(g_stage_used));
   memset(g_stage_sealed, 0, sizeof(g_stage_sealed));
+  memset(g_stage_key_high, 0, sizeof(g_stage_key_high));
   if(!g_ready) return;
 
+  g_stage_slot_count = (u8) g_geometry.stage_sector_count;
+  for(u16 slot = 0; slot < g_stage_slot_count; slot++) {
+    g_stage_physical[slot] = g_geometry.stage_first_sector + slot;
+  }
+  if(g_geometry.physical_sectors == 128) {
+    const u32 end = g_geometry.data_first_sector +
+                    g_geometry.data_sector_count;
+    for(u32 physical = g_geometry.data_first_sector; physical < end;
+        physical++) {
+      if(!borrowed_stage_sector(physical)) continue;
+      if(g_stage_slot_count >= STAGE_MAX_SLOTS) {
+        g_stage_recovery_ok = false;
+        return;
+      }
+      g_stage_physical[g_stage_slot_count++] = physical;
+    }
+  }
+
   u8 payload[STAGE_DATA_SIZE];
-  for(u16 sector = 0; sector < g_geometry.stage_sector_count; sector++) {
-    if(!stage_sector_header_valid(sector)) continue;
+  for(u16 sector = 0; sector < g_stage_slot_count; sector++) {
+    if(!stage_sector_header_valid(sector)) {
+      if(sector >= g_geometry.stage_sector_count) g_stage_recovery_ok = false;
+      continue;
+    }
     for(u8 slot = 0; slot < STAGE_RECORDS_PER_SECTOR; slot++) {
       const u16 ref = (u16) (sector * STAGE_RECORDS_PER_SECTOR + slot + 1);
       u8 raw[STAGE_RECORD_HEADER_SIZE];
@@ -4586,8 +4767,18 @@ void vfat_stage_clear(void) {
                 g_stage_ref_count < g_stage_index_capacity) {
         g_stage_index[g_stage_ref_count] = pack_stage_index(key, ref);
         g_stage_ref_count++;
+      } else {
+        g_stage_recovery_ok = false;
       }
     }
+  }
+  if(g_stage_ref_count == 0 && g_stage_recovery_ok) {
+    bool released = true;
+    for(u16 sector = g_geometry.stage_sector_count;
+        sector < g_stage_slot_count; sector++) {
+      if(!erase_sector(g_stage_physical[sector])) released = false;
+    }
+    if(released) g_stage_slot_count = (u8) g_geometry.stage_sector_count;
   }
 }
 
@@ -4697,13 +4888,21 @@ void vfat_stage_forget(u32 start_block, u16 blocks) {
 }
 
 bool vfat_stage_discard_all(void) {
-  if(!g_ready || !ensure_stage_index()) return false;
+  // A narrowed index contains only the current file's blocks. Discarding it
+  // would strand other acknowledged host writes while freeing their physical
+  // stage sectors. The full index must be restored first.
+  if(!g_ready || g_stage_external || !ensure_stage_index()) return false;
   while(g_stage_ref_count != 0) {
     const u16 index = (u16) (g_stage_ref_count - 1);
     if(!write_byte(stage_record_address(stage_index_ref(index)) + 2,
                    STATE_DELETED)) return false;
     g_stage_ref_count--;
   }
+  for(u16 sector = g_geometry.stage_sector_count;
+      sector < g_stage_slot_count; sector++) {
+    if(!erase_sector(g_stage_physical[sector])) return false;
+  }
+  g_stage_slot_count = (u8) g_geometry.stage_sector_count;
   return true;
 }
 
@@ -4768,7 +4967,8 @@ bool vfat_stage_restore_full(void) {
   forget_stage_index_binding();
   vfat_stage_clear();
   return g_stage_overlay_lease.ok() && g_stage_index != nullptr &&
-         g_stage_index_capacity == STAGE_REF_CAPACITY;
+         g_stage_index_capacity == stage_ref_limit() &&
+         g_stage_recovery_ok;
 }
 
 void vfat_stage_unlock(void) {

@@ -144,6 +144,18 @@ static usize g_commit_compression_buffer_size;
 static u8 g_scratch_cache_slots;
 static u8 g_extra_cache_slots;
 static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
+// On small NOR, macOS AppleDouble entries (._*) must not consume the narrow
+// persistent staging journal. Larger volumes already have enough journal
+// space, and a full FAT12 bitmap would exceed the 20-KiB USBDISK.APP limit.
+static constexpr u16 SIDECAR_FILTER_MAX_NODES = 256;
+static constexpr u16 CLUSTER_MAP_BYTES = SIDECAR_FILTER_MAX_NODES / 8;
+static u8 g_sidecar_clusters[CLUSTER_MAP_BYTES];
+static u8 g_directory_clusters[CLUSTER_MAP_BYTES];
+static u8 g_scan_sidecars[CLUSTER_MAP_BYTES];
+static u8 g_scan_regular[CLUSTER_MAP_BYTES];
+static u8 g_scan_directories[CLUSTER_MAP_BYTES];
+static bool g_sidecar_scan_pending;
+static bool g_sidecar_candidate_seen;
 static constexpr u8 EXPORTED_SIZE_CACHE_ENTRIES = 16;
 struct ExportedSizeCacheEntry {
   u16 id;
@@ -294,6 +306,48 @@ static u16 cluster_limit(void) {
 
 static bool valid_cluster(u16 cluster) {
   return cluster >= FIRST_DATA_CLUSTER && cluster < cluster_limit();
+}
+
+static bool sidecar_filter_enabled(void) {
+  return geometry().max_nodes <= SIDECAR_FILTER_MAX_NODES;
+}
+
+static bool cluster_marked(const u8* map, u16 cluster) {
+  if(!valid_cluster(cluster) || !sidecar_filter_enabled()) return false;
+  const u16 id = (u16) (cluster - FIRST_DATA_CLUSTER);
+  return (map[id >> 3] & (u8) (1U << (id & 7U))) != 0;
+}
+
+static void mark_cluster(u8* map, u16 cluster) {
+  const u16 id = (u16) (cluster - FIRST_DATA_CLUSTER);
+  map[id >> 3] |= (u8) (1U << (id & 7U));
+}
+
+static bool sidecar_data_lba(u32 lba) {
+  if(lba < data_start() || !sidecar_filter_enabled()) return false;
+  const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
+  return id < geometry().max_nodes &&
+         cluster_marked(g_sidecar_clusters, (u16) (id + FIRST_DATA_CLUSTER));
+}
+
+static bool directory_metadata_lba(u32 lba) {
+  if(!sidecar_filter_enabled()) return false;
+  if(lba >= fat_start() && lba < data_start()) return true;
+  if(lba < data_start()) return false;
+  const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
+  return id < geometry().max_nodes &&
+         cluster_marked(g_directory_clusters, (u16) (id + FIRST_DATA_CLUSTER));
+}
+
+static bool contains_sidecar_name(const u8* block) {
+  for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
+    const u8* item = block + (u16) slot * 32U;
+    if(item[0] == '.' && item[1] == '_') return true;
+    if(item[11] == ATTR_LFN && (item[0] & 0x1FU) == 1U &&
+       item[1] == '.' && item[2] == 0 &&
+       item[3] == '_' && item[4] == 0) return true;
+  }
+  return false;
 }
 
 static u16 id_for_cluster(u16 cluster) {
@@ -1378,6 +1432,123 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   return ParseStatus::VALID;
 }
 
+static bool scan_cluster_chain(u8* map, u16 first) {
+  if(!valid_cluster(first)) return true;
+  u16 cluster = first;
+  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
+    if(!valid_cluster(cluster) || cluster_marked(map, cluster)) return true;
+    mark_cluster(map, cluster);
+    u16 next = 0;
+    if(!effective_fat_value(cluster, next)) return false;
+    if(fat_eof(next) || next == FAT12_FREE || next == FAT12_BAD) return true;
+    cluster = next;
+  }
+  return true; // A transient host FAT loop is not a reason to reject WRITE.
+}
+
+static bool scan_host_directory(u16 first_cluster, u8 depth);
+
+static bool scan_host_directory_sector(u32 lba, u8 depth, LfnState& lfn,
+                                       bool& end) {
+  for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
+    const u8* block = nullptr;
+    if(!cached_effective_sector(lba, block)) return false;
+    u8 item[32];
+    memcpy(item, block + slot * 32, sizeof(item));
+    if(item[0] == 0) {
+      end = true;
+      return true;
+    }
+    if(item[11] == ATTR_LFN) {
+      if(item[0] == 0xE5) reset_lfn(lfn);
+      else parse_lfn(item, lfn);
+      continue;
+    }
+    if(item[0] == 0xE5 || (item[11] & ATTR_VOLUME) != 0) {
+      reset_lfn(lfn);
+      continue;
+    }
+    char name[program_store::NAME_SIZE + 16];
+    const bool named = accepted_lfn(lfn, item, name, sizeof(name)) ||
+                       short_name(item, name, sizeof(name));
+    reset_lfn(lfn);
+    if(!named) continue;
+    if((item[11] & ATTR_DIRECTORY) != 0 &&
+       (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)) continue;
+    const u16 cluster = get_le16(item, 26);
+    if((item[11] & ATTR_DIRECTORY) != 0) {
+      if(depth < MAX_DEPTH &&
+         !system_directory(name, item[11]) &&
+         !scan_host_directory(cluster, (u8) (depth + 1))) return false;
+    } else if(host_sidecar_file(name)) {
+      if(!scan_cluster_chain(g_scan_sidecars, cluster)) return false;
+    } else if(!scan_cluster_chain(g_scan_regular, cluster)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool scan_host_directory(u16 first_cluster, u8 depth) {
+  LfnState lfn;
+  reset_lfn(lfn);
+  bool end = false;
+  if(first_cluster == 0) {
+    for(u16 sector = 0; sector < geometry().root_sectors && !end; sector++) {
+      if(!scan_host_directory_sector(root_start() + sector, depth,
+                                     lfn, end)) return false;
+    }
+    return true;
+  }
+  u16 cluster = first_cluster;
+  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
+    if(!valid_cluster(cluster) ||
+       cluster_marked(g_scan_directories, cluster)) return true;
+    mark_cluster(g_scan_directories, cluster);
+    for(u8 sector = 0; sector < geometry().sectors_per_cluster && !end;
+        sector++) {
+      if(!scan_host_directory_sector(cluster_lba(cluster, sector), depth,
+                                     lfn, end)) return false;
+    }
+    if(end) return true;
+    u16 next = 0;
+    if(!effective_fat_value(cluster, next)) return false;
+    if(fat_eof(next) || next == FAT12_FREE || next == FAT12_BAD) return true;
+    cluster = next;
+  }
+  return true;
+}
+
+static bool discard_known_sidecars(void) {
+  if(!g_sidecar_scan_pending || !sidecar_filter_enabled()) return true;
+  memset(g_scan_sidecars, 0, sizeof(g_scan_sidecars));
+  memset(g_scan_regular, 0, sizeof(g_scan_regular));
+  memset(g_scan_directories, 0, sizeof(g_scan_directories));
+  if(!scan_host_directory(0, 0)) return false;
+  for(u16 byte = 0; byte < CLUSTER_MAP_BYTES; byte++) {
+    // A transient host directory may mention a cluster twice. Never discard
+    // data if any ordinary file or directory still refers to that cluster.
+    g_scan_sidecars[byte] &=
+        (u8) ~(g_scan_regular[byte] | g_scan_directories[byte]);
+  }
+  for(u16 id = 0; id < geometry().max_nodes; id++) {
+    const u16 cluster = cluster_for_id(id);
+    if(!cluster_marked(g_scan_sidecars, cluster)) continue;
+    for(u8 sector = 0; sector < geometry().sectors_per_cluster; sector++) {
+      const u32 lba = cluster_lba(cluster, sector);
+      program_store::vfat_stage_forget(lba, 1);
+      if(program_store::vfat_stage_exists(lba)) return false;
+      const int cached = cache_index(lba);
+      if(cached >= 0) session().cache[(u8) cached].state = CACHE_EMPTY;
+    }
+  }
+  memcpy(g_sidecar_clusters, g_scan_sidecars, sizeof(g_sidecar_clusters));
+  memcpy(g_directory_clusters, g_scan_directories,
+         sizeof(g_directory_clusters));
+  g_sidecar_scan_pending = false;
+  return true;
+}
+
 enum class WalkPass : u8 { VALIDATE, APPLY };
 
 static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
@@ -2147,6 +2318,7 @@ static bool cache_write_sector(u32 lba, const u8* data) {
 }
 
 static bool flush_write_cache_internal(void) {
+  if(!discard_known_sidecars()) return false;
   while(true) {
     const int slot = oldest_dirty_cache();
     if(slot < 0) return true;
@@ -2192,7 +2364,8 @@ static bool fast_packet_fits(u32 lba, u16 count) {
   u8 needed = 0;
   for(u16 index = 0; index < count; index++) {
     const u32 current_lba = lba + index;
-    if(current_lba == 0 || cache_index(current_lba) >= 0) continue;
+    if(current_lba == 0 || sidecar_data_lba(current_lba) ||
+       cache_index(current_lba) >= 0) continue;
 
     const u32 key = canonical_lba(current_lba);
     bool already_needed = false;
@@ -2315,9 +2488,15 @@ bool try_write_cached_sectors(u32 lba, const u8* data, u16 count) {
   }
   for(u16 index = 0; index < count; index++) {
     const u32 current_lba = lba + index;
-    if(current_lba != 0) {
-      fast_cache_write_sector(lba, count, current_lba,
-                              data + (u32) index * SECTOR_SIZE);
+    const u8* const block = data + (u32) index * SECTOR_SIZE;
+    const bool candidate = contains_sidecar_name(block);
+    if(candidate && sidecar_filter_enabled()) g_sidecar_candidate_seen = true;
+    if(current_lba != 0 && !sidecar_data_lba(current_lba)) {
+      fast_cache_write_sector(lba, count, current_lba, block);
+    }
+    if((candidate && sidecar_filter_enabled()) || (g_sidecar_candidate_seen &&
+                     current_lba != 0 && directory_metadata_lba(current_lba))) {
+      g_sidecar_scan_pending = true;
     }
   }
   return true;
@@ -2329,11 +2508,18 @@ bool write_cached_sectors(u32 lba, const u8* data, u16 count) {
      (u32) count > sector_count() - lba) return false;
   for(u16 i = 0; i < count; i++) {
     const u32 current_lba = lba + i;
+    const u8* const block = data + (u32) i * SECTOR_SIZE;
+    const bool candidate = contains_sidecar_name(block);
+    if(candidate && sidecar_filter_enabled()) g_sidecar_candidate_seen = true;
     if(current_lba == 0) continue;
-    if(!cache_write_sector(current_lba,
-                           data + (u32) i * SECTOR_SIZE)) return false;
+    if(sidecar_data_lba(current_lba)) continue;
+    if(!cache_write_sector(current_lba, block)) return false;
+    if((candidate && sidecar_filter_enabled()) || (g_sidecar_candidate_seen &&
+                     directory_metadata_lba(current_lba))) {
+      g_sidecar_scan_pending = true;
+    }
   }
-  return true;
+  return discard_known_sidecars();
 }
 
 bool flush_write_cache(void) {
@@ -2474,6 +2660,10 @@ bool reset_session(void) {
   }
   startup_stage(3);
   memset(g_session, 0, sizeof(*g_session));
+  memset(g_sidecar_clusters, 0, sizeof(g_sidecar_clusters));
+  memset(g_directory_clusters, 0, sizeof(g_directory_clusters));
+  g_sidecar_scan_pending = false;
+  g_sidecar_candidate_seen = false;
   startup_stage(4);
   // Persistent staging is a write-ahead journal, not a second filesystem.
   // A reset can follow an unplug or a power loss before the MSC close path had
@@ -2524,6 +2714,10 @@ void end_session(void) {
   g_extra_cache_slots = 0;
   update_cache_slot_count();
   g_session_volume_serial_valid = false;
+  memset(g_sidecar_clusters, 0, sizeof(g_sidecar_clusters));
+  memset(g_directory_clusters, 0, sizeof(g_directory_clusters));
+  g_sidecar_scan_pending = false;
+  g_sidecar_candidate_seen = false;
   clear_exported_size_cache();
   startup_stage(44);
 }

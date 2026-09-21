@@ -114,7 +114,9 @@ enum mk61_service_usbdisk_operation {
   /* One bounded copy replaces hundreds of per-sector presence queries. */
   MK61_USBDISK_STAGE_SNAPSHOT,
   /* Perform one bounded, power-safe directory-tail trim transaction. */
-  MK61_USBDISK_TRIM_DIRECTORY_EXTENTS
+  MK61_USBDISK_TRIM_DIRECTORY_EXTENTS,
+  /* Drop AppleDouble data from the journal as soon as its name is known. */
+  MK61_USBDISK_STAGE_FORGET
 };
 enum mk61_service_usbdisk_trim_result {
   MK61_USBDISK_TRIM_FAILED = 0,

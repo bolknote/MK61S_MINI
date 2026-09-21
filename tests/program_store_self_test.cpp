@@ -2165,7 +2165,8 @@ static void test_stage_journal_survives_reboot_and_churn(void) {
 
 static void test_stage_overlay_lock_and_terminal_narrowing(void) {
   fresh();
-  static constexpr u32 TERMINAL_FIRST = 0x700000UL;
+  static constexpr u32 TERMINAL_FIRST =
+      program_store::VFAT_STAGE_KEY_MAX - 127U;
   u8 terminal_data[program_store::VFAT_STAGE_BLOCK_SIZE];
   u8 unrelated_data[program_store::VFAT_STAGE_BLOCK_SIZE];
   u8 recovered[program_store::VFAT_STAGE_BLOCK_SIZE];
@@ -2234,6 +2235,121 @@ static void test_stage_indexes_large_unique_write_burst(void) {
       assert(recovered[byte] == (u8) (block * 37U + byte));
     }
   }
+}
+
+static u16 borrowed_stage_sector_count(void) {
+  const storage_geometry::Geometry& geometry = program_store::geometry();
+  u16 count = 0;
+  u8 header[16];
+  for(u32 sector = geometry.data_first_sector;
+      sector < geometry.data_first_sector + geometry.data_sector_count;
+      sector++) {
+    assert(flash.readByteArray(sector * SPIFlash::SECTOR_SIZE,
+                               header, sizeof(header)));
+    if(memcmp(header, "C6S0", 4) == 0 && header[5] == 0x7F) count++;
+  }
+  return count;
+}
+
+static void test_small_stage_borrows_free_data_sectors(void) {
+  fresh(512U * 1024U);
+  static const u8 saved[] = {'s', 'a', 'f', 'e'};
+  u16 saved_id = program_store::INVALID_ID;
+  assert(program_store::write_file(program_store::ROOT_ID, 10,
+                                   ProgramType::TEXT, "saved", saved,
+                                   sizeof(saved), &saved_id));
+
+  static constexpr u16 BLOCKS = 300;
+  static constexpr u32 HIGH_KEY =
+      program_store::VFAT_STAGE_KEY_MAX - 127U;
+  u8 data[512] = {};
+  for(u16 index = 0; index < BLOCKS; index++) {
+    memset(data, (u8) index, sizeof(data));
+    data[0] = (u8) (index >> 8);
+    const u32 key = index + 1U == BLOCKS ? HIGH_KEY : 1000U + index;
+    assert(program_store::vfat_stage_write(key, data));
+  }
+  assert(program_store::vfat_stage_count() == BLOCKS);
+  assert(borrowed_stage_sector_count() > 0);
+
+  // The C6 allocator must not erase borrowed sectors while saving files.
+  assert(program_store::vfat_stage_lock());
+  for(u8 index = 0; index < 12; index++) {
+    char name[] = "new00";
+    name[3] = (char) ('0' + index / 10);
+    name[4] = (char) ('0' + index % 10);
+    assert(program_store::write_file(program_store::ROOT_ID,
+                                     (u16) (20 + index), ProgramType::TEXT,
+                                     name, saved, sizeof(saved)));
+  }
+  program_store::vfat_stage_unlock();
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::vfat_stage_count() == BLOCKS);
+  expect_text(saved_id, saved, sizeof(saved));
+  for(u16 index = 0; index < BLOCKS; index++) {
+    const u32 key = index + 1U == BLOCKS ? HIGH_KEY : 1000U + index;
+    assert(program_store::vfat_stage_read(key, data));
+    assert(data[0] == (u8) (index >> 8));
+    assert(data[1] == (u8) index);
+  }
+  assert(program_store::vfat_stage_discard_all());
+  assert(borrowed_stage_sector_count() == 0);
+  program_store::init();
+  assert(program_store::vfat_stage_count() == 0);
+  expect_text(saved_id, saved, sizeof(saved));
+}
+
+static void test_small_stage_borrow_power_cuts(void) {
+  u8 data[512] = {};
+  for(i32 cut = 0; cut < 8; cut++) {
+    fresh(512U * 1024U);
+    for(u16 index = 0; index < 112; index++) {
+      data[0] = (u8) index;
+      assert(program_store::vfat_stage_write(2000U + index, data));
+    }
+    SPIFlash::failAfterOperations(cut);
+    data[0] = 0xEE;
+    const bool committed = program_store::vfat_stage_write(3000, data);
+    SPIFlash::clearFailure();
+    program_store::init();
+    assert(program_store::ready());
+    for(u16 index = 0; index < 112; index++) {
+      assert(program_store::vfat_stage_read(2000U + index, data));
+      assert(data[0] == (u8) index);
+    }
+    const bool visible = program_store::vfat_stage_read(3000, data);
+    if(committed) assert(visible && data[0] == 0xEE);
+    data[0] = 0xEE;
+    assert(program_store::vfat_stage_write(3000, data));
+    program_store::init();
+    assert(program_store::vfat_stage_read(3000, data));
+    assert(data[0] == 0xEE);
+  }
+}
+
+static void test_small_stage_reports_full_without_losing_data(void) {
+  fresh(512U * 1024U);
+  static constexpr u16 BLOCKS = 640;
+  u8 data[512] = {};
+  for(u16 index = 0; index < BLOCKS; index++) {
+    data[0] = (u8) index;
+    data[1] = (u8) (index >> 8);
+    assert(program_store::vfat_stage_write(4000U + index, data));
+  }
+  assert(program_store::vfat_stage_count() == BLOCKS);
+  assert(borrowed_stage_sector_count() > 0);
+  assert(!program_store::vfat_stage_write(4000U + BLOCKS, data));
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::vfat_stage_count() == BLOCKS);
+  for(u16 index = 0; index < BLOCKS; index++) {
+    assert(program_store::vfat_stage_read(4000U + index, data));
+    assert(data[0] == (u8) index);
+    assert(data[1] == (u8) (index >> 8));
+  }
+  assert(program_store::vfat_stage_discard_all());
+  assert(borrowed_stage_sector_count() == 0);
 }
 
 static void test_stage_power_cut_keeps_previous_value(void) {
@@ -2394,6 +2510,37 @@ static void test_reformat_invalidates_stage_and_erases_it_lazily(void) {
   u8 recovered[512] = {};
   assert(program_store::vfat_stage_read(88, recovered));
   assert(memcmp(recovered, new_data, sizeof(recovered)) == 0);
+}
+
+static void test_reformat_discards_all_catalog_nodes(void) {
+  fresh(512U * 1024U);
+  u16 directory = program_store::INVALID_ID;
+  assert(program_store::create_directory(program_store::ROOT_ID,
+                                         "old", 10, &directory));
+  for(u16 id = 11; id < 31; id++) {
+    assert(program_store::allocate_directory_extent(directory, id));
+  }
+  static const u8 payload[] = {'o', 'l', 'd'};
+  assert(program_store::write_file(directory, 31, ProgramType::TEXT,
+                                   "file", payload, sizeof(payload)));
+  assert(program_store::used_nodes() == 22);
+
+  assert(program_store::format());
+  assert(program_store::total_count() == 0);
+  assert(program_store::used_nodes() == 0);
+  assert(program_store::child_count(program_store::ROOT_ID) == 0);
+  Entry stale = {};
+  assert(!program_store::entry_by_id(directory, stale));
+  assert(!program_store::entry_by_id(31, stale));
+
+  program_store::init();
+  assert(program_store::ready());
+  assert(program_store::total_count() == 0);
+  assert(program_store::used_nodes() == 0);
+  assert(program_store::write_file(program_store::ROOT_ID, 10,
+                                   ProgramType::TEXT, "new", payload,
+                                   sizeof(payload)));
+  assert(program_store::used_nodes() == 1);
 }
 
 static void test_settings_reservation_and_capacity_mismatch(void) {
@@ -2945,10 +3092,14 @@ int main(void) {
   test_stage_journal_survives_reboot_and_churn();
   test_stage_overlay_lock_and_terminal_narrowing();
   test_stage_indexes_large_unique_write_burst();
+  test_small_stage_borrows_free_data_sectors();
+  test_small_stage_borrow_power_cuts();
+  test_small_stage_reports_full_without_losing_data();
   test_stage_power_cut_keeps_previous_value();
   test_stage_compacts_when_every_normal_sector_is_live();
   test_stage_compaction_power_cuts_are_recoverable();
   test_reformat_invalidates_stage_and_erases_it_lazily();
+  test_reformat_discards_all_catalog_nodes();
   test_settings_reservation_and_capacity_mismatch();
   test_geometry_migration_preserves_settings();
   test_counterfeit_capacity_is_measured_not_trusted();

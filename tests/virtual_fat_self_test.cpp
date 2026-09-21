@@ -613,6 +613,43 @@ static void test_utf16_name_and_utf8_content_import_as_m8(void) {
   expect_file(id, expected_content_m8, sizeof(expected_content_m8));
 }
 
+static void test_multiple_checkpoints_in_one_mounted_session(void) {
+  fresh(512U * 1024U);
+  const Layout fs = layout();
+  u8 boot[512];
+  assert(virtual_fat::read_sector(0, boot));
+  const u32 mounted_serial = read_le32(boot, 39);
+
+  // A small NOR cannot reserve the entire host bulk copy at once. A valid
+  // prefix must be publishable and its journal reusable without remounting
+  // or changing the FAT volume identity seen by the current host.
+  for(u8 index = 0; index < 5; index++) {
+    const u16 cluster = (u16) (90 + index);
+    u8 fat[512];
+    assert(virtual_fat::read_sector(1, fat));
+    set_fat12_value(fat, cluster, 0xFFF);
+    u8 root[512];
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    char name[8] = "B0.txt";
+    name[1] = (char) ('0' + index);
+    char alias[11] = {'B','0',' ',' ',' ',' ',' ',' ','T','X','T'};
+    alias[1] = name[1];
+    const u8 next = append_ascii_entry(
+        root, (u8) first_free_slot(root), name, alias, false, cluster, 80);
+    if(next < 16) root[(u16) next * 32U] = 0;
+    u8 data[512] = {};
+    memset(data, (int) ('A' + index), 80);
+    assert(virtual_fat::write_sector(cluster_lba(fs, cluster), data));
+    assert(virtual_fat::write_sector(fs.root_start, root));
+    assert(virtual_fat::write_sector(1, fat));
+    expect_flush();
+    assert(program_store::vfat_stage_count() == 0);
+    expect_file((u16) (cluster - 2), data, 80);
+    assert(virtual_fat::read_sector(0, boot));
+    assert(read_le32(boot, 39) == mounted_serial);
+  }
+}
+
 static void test_russian_lfn_sibling_survives_commit_reboot_and_cleanup(void) {
   fresh();
   static const char check_directory_m8[] = {
@@ -1178,6 +1215,33 @@ static void test_full_staging_rejects_next_sector_without_tree_damage(void) {
   expect_file(old_id, old_data, sizeof(old_data));
 }
 
+static void test_small_volume_stages_beyond_fixed_journal(void) {
+  fresh(512U * 1024U);
+  static const u8 saved[] = {'o', 'k'};
+  u16 saved_id = 0;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 60, program_store::ProgramType::TEXT,
+      "saved", saved, sizeof(saved), &saved_id));
+  assert(virtual_fat::reset_session());
+  const Layout fs = layout();
+  const u32 first = cluster_lba(fs, 100);
+  static constexpr u16 BLOCKS = 240;
+  assert(first + BLOCKS < fs.total_sectors);
+  u8 data[512] = {};
+  for(u16 index = 0; index < BLOCKS; index++) {
+    data[0] = (u8) (index + 1U);
+    data[1] = (u8) (index >> 8);
+    assert(virtual_fat::write_sector(first + index, data));
+  }
+  assert(program_store::vfat_stage_count() == BLOCKS);
+  // These sectors are not linked by FAT yet. At explicit sync, the importer
+  // discards them but keeps the existing C6 file intact.
+  assert(virtual_fat::flush_pending_result() ==
+         virtual_fat::CommitResult::OK);
+  assert(program_store::vfat_stage_count() == 0);
+  expect_file(saved_id, saved, sizeof(saved));
+}
+
 static void test_identical_data_writes_do_not_restage(void) {
   fresh();
   const Layout fs = layout();
@@ -1593,6 +1657,84 @@ static void test_finder_appledouble_does_not_abort_batch(void) {
   expect_file(file.id, payload, sizeof(payload));
   program_store::Entry ignored;
   assert(!program_store::entry_by_id((u16) (sidecar_cluster - 2), ignored));
+}
+
+static void test_finder_appledouble_is_discarded_when_named(void) {
+  fresh(512U * 1024U);
+  const Layout fs = layout();
+  const u16 sidecar_first = 100;
+  const u16 sidecar_second = 102;
+  const u16 file_cluster = 101;
+  assert(fs.sectors_per_cluster == 4);
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, sidecar_first, sidecar_second);
+  set_fat12_value(fat, sidecar_second, 0xFFF);
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  assert(virtual_fat::write_sector(1, fat));
+
+  u8 data[512] = {};
+  data[0] = 0xA5;
+  const u32 sidecar_first_lba = cluster_lba(fs, sidecar_first);
+  const u32 sidecar_second_lba = cluster_lba(fs, sidecar_second);
+  assert(virtual_fat::write_sector(sidecar_first_lba, data));
+  assert(virtual_fat::write_sector(sidecar_second_lba, data));
+  assert(program_store::vfat_stage_exists(sidecar_first_lba));
+  assert(program_store::vfat_stage_exists(sidecar_second_lba));
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  u8 slot = (u8) first_free_slot(root);
+  static const char sidecar_short[11] =
+      {'_','G','A','M','E','~','1',' ','M','6','1'};
+  slot = append_ascii_entry(root, slot, "._game.m61", sidecar_short,
+                            false, sidecar_first, 4096);
+  static const char file_short[11] =
+      {'G','A','M','E',' ',' ',' ',' ','M','6','1'};
+  static const u8 payload[] = {'1', '2', '3'};
+  slot = append_ascii_entry(root, slot, "game.m61", file_short,
+                            false, file_cluster, sizeof(payload));
+  root[slot * 32] = 0;
+  assert(virtual_fat::write_sector(fs.root_start, root));
+
+  // Recognition, not eject/commit, must release earlier writes immediately.
+  assert(!program_store::vfat_stage_exists(sidecar_first_lba));
+  assert(!program_store::vfat_stage_exists(sidecar_second_lba));
+  for(u8 sector = 0; sector < fs.sectors_per_cluster; sector++) {
+    assert(virtual_fat::write_sector(sidecar_first_lba + sector, data));
+    assert(virtual_fat::write_sector(sidecar_second_lba + sector, data));
+    assert(!program_store::vfat_stage_exists(sidecar_first_lba + sector));
+    assert(!program_store::vfat_stage_exists(sidecar_second_lba + sector));
+  }
+
+  memcpy(data, payload, sizeof(payload));
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), data));
+  expect_flush();
+  program_store::Entry file;
+  assert(program_store::entry_by_id((u16) (file_cluster - 2), file));
+  expect_file(file.id, payload, sizeof(payload));
+
+  // A later ordinary file may legitimately reuse the former sidecar cluster.
+  // A fresh directory write must revoke the ignore map before its data write.
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char reused_short[11] =
+      {'J','9','9',' ',' ',' ',' ',' ','M','6','1'};
+  slot = append_ascii_entry(root, (u8) first_free_slot(root), "J99.m61",
+                            reused_short, false, sidecar_first, 1);
+  root[slot * 32] = 0;
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, sidecar_first, 0xFFF);
+  assert(virtual_fat::write_sector(1, fat));
+  data[0] = '7';
+  assert(virtual_fat::write_sector(sidecar_first_lba, data));
+  assert(program_store::vfat_stage_exists(sidecar_first_lba));
+  expect_flush();
+  program_store::Entry reused;
+  assert(program_store::entry_by_id((u16) (sidecar_first - 2), reused));
+  static const u8 reused_payload[] = {'7'};
+  expect_file(reused.id, reused_payload, sizeof(reused_payload));
 }
 
 static void test_wbmp_import_uses_its_full_quota(void) {
@@ -2384,6 +2526,7 @@ int main(void) {
   test_empty_text_file_is_a_persistent_fat_object();
   test_m8_text_exports_as_utf16_name_and_utf8_content();
   test_utf16_name_and_utf8_content_import_as_m8();
+  test_multiple_checkpoints_in_one_mounted_session();
   test_russian_lfn_sibling_survives_commit_reboot_and_cleanup();
   test_m8_utf8_expansion_crosses_sector_boundary();
   test_unrepresentable_utf8_is_rejected_without_tree_damage();
@@ -2395,6 +2538,7 @@ int main(void) {
   test_staged_update_is_recovered_before_next_session();
   test_recovery_io_failure_refuses_mount_and_retries();
   test_full_staging_rejects_next_sector_without_tree_damage();
+  test_small_volume_stages_beyond_fixed_journal();
   test_identical_data_writes_do_not_restage();
   test_write_cache_coalesces_and_evicts_lru();
   test_fast_usb_cache_is_atomic_and_defers_spi();
@@ -2405,6 +2549,7 @@ int main(void) {
   test_incomplete_file_preflight_preserves_existing_tree();
   test_flush_result_distinguishes_media_failure();
   test_finder_appledouble_does_not_abort_batch();
+  test_finder_appledouble_is_discarded_when_named();
   test_markdown_import_keeps_t2_type();
   test_wbmp_import_uses_its_full_quota();
   test_wbmp_over_quota_is_rejected();

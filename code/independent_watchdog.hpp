@@ -30,13 +30,13 @@
 
 namespace independent_watchdog {
 
-// 20 s at the nominal 32 kHz LSI. Across the STM32F401/F411 datasheet LSI
-// range the shortest interval is still about 13.6 s, leaving margin above two
-// consecutive 5 s NOR timeout windows. Tightening this requires hardware
-// timing of every supported long operation first.
-static constexpr u32 NOMINAL_TIMEOUT_MS = 20000;
+// Use the full 12-bit reload range: 32.768 s at nominal 32 kHz LSI. At the
+// fastest specified LSI this is still about 22.3 s. A nearly full 512-KiB C6
+// USB import has measured 18.8 s between completed progress checkpoints, so
+// the former nominal 20 s timeout (13.6 s worst-case) was insufficient.
+static constexpr u32 NOMINAL_TIMEOUT_MS = 32768;
 static constexpr u32 PRESCALER = 256;
-static constexpr u32 RELOAD = 2499;
+static constexpr u32 RELOAD = 4095;
 static_assert(RELOAD <= 0x0FFF, "IWDG reload exceeds the 12-bit register");
 
 enum RetainedState : u32 {
@@ -68,9 +68,14 @@ struct Snapshot {
 // Запускается в самом конце setup(), когда все критические подсистемы готовы.
 bool initialize(u32 now_ms);
 
-// Единственная production-точка reload: вызывать после полного завершения
-// foreground idle/service epoch. Из ISR этот API не вызывается.
+// Main-loop reload point: call after a complete foreground idle/service
+// epoch. Never call from an ISR.
 void foreground_epoch(u32 now_ms);
+
+// A USB-disk import may keep the foreground inside one APP call for longer
+// than the IWDG period. Call only after a complete, durable C6 file commit;
+// never from an ISR or from a loop waiting for one operation to finish.
+void completed_storage_unit(void);
 
 bool running(void);
 Snapshot statistics(void);
