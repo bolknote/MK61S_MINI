@@ -74,7 +74,7 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 **Технические форматы:**<br>
 [Формат внутреннего хранилища и USB FAT12](doc/src/MK61s-mini-Storage.md)
 
-[Формат растровых шрифтов FMK1](doc/src/MK61s-mini-FMK.md)
+[Формат растровых шрифтов FMK2](doc/src/MK61s-mini-FMK.md)
 
 [Генератор случайных чисел MK61/MK61s](doc/src/MK61s-mini-Random.md)
 
@@ -621,7 +621,7 @@ F411 собирается теми же закреплёнными
 Virtual FAT и реальное
 устройство `program_store` через модель SPI flash с инъекцией ошибок записи и
 повреждения каталога, определение физической ёмкости с aliasing и ложным
-4-байтным режимом, разбор SFDP/4BAIT, а также FMK1, bit-RLE, графическую
+4-байтным режимом, разбор SFDP/4BAIT, а также FMK2, bit-RLE, графическую
 текстовую модель и конвертацию FreeType-шрифтов, когда FreeType доступен в
 системе.
 
