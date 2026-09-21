@@ -8,6 +8,23 @@
 
 namespace {
 
+void checkUnifiedBitmapLayouts(void) {
+  const uint8_t row_aligned[] = {0x80, 0x40};
+  const uint8_t tight[] = {0x90};
+  const font_glyph::Glyph row = {
+    row_aligned, 2, 2, 0, 2, 3,
+    font_glyph::BitmapLayout::ROW_MSB, false};
+  const font_glyph::Glyph packed = {
+    tight, 2, 2, 0, 2, 3,
+    font_glyph::BitmapLayout::TIGHT_MSB, false};
+  for(uint8_t y = 0; y < 2; ++y) {
+    for(uint8_t x = 0; x < 2; ++x) {
+      assert(font_glyph::pixel(row, x, y) ==
+             font_glyph::pixel(packed, x, y));
+    }
+  }
+}
+
 void checkFace(ui_font::Face face) {
   const ui_font::Metrics m = ui_font::metrics(face);
   const unsigned height = face.size == ui_font::Size::PX16 ? 17U
@@ -27,9 +44,9 @@ void checkFace(ui_font::Face face) {
     assert(g.bearing_x + g.width < g.advance);
     assert(m.ascent >= g.bearing_y);
     assert(static_cast<int>(g.height) - g.bearing_y <= m.descent);
-    assert(!ui_font::pixel(g, g.width, 0));
-    assert(!ui_font::pixel(g, 0, g.height));
-    assert(!ui_font::pixel(g, 255, 255));
+    assert(!font_glyph::pixel(g, g.width, 0));
+    assert(!font_glyph::pixel(g, 0, g.height));
+    assert(!font_glyph::pixel(g, 255, 255));
     const bool comparisonFallback = cp == 0x2264 || cp == 0x2265;
     assert(g.fallback == comparisonFallback);
     if (comparisonFallback) {
@@ -39,7 +56,8 @@ void checkFace(ui_font::Face face) {
     if (cp == ' ') {
       for (unsigned y = 0; y < g.height; ++y) {
         for (unsigned x = 0; x < g.width; ++x) {
-          assert(!ui_font::pixel(g, static_cast<uint8_t>(x), static_cast<uint8_t>(y)));
+          assert(!font_glyph::pixel(g, static_cast<uint8_t>(x),
+                                   static_cast<uint8_t>(y)));
         }
       }
     }
@@ -53,7 +71,7 @@ void checkFace(ui_font::Face face) {
     assert(missing.bitmap == question.bitmap && missing.advance == question.advance);
   }
   const ui_font::Glyph empty = {};
-  assert(!ui_font::pixel(empty, 0, 0));
+  assert(!font_glyph::pixel(empty, 0, 0));
 }
 
 void dumpFace(ui_font::Face face, unsigned id) {
@@ -65,7 +83,7 @@ void dumpFace(ui_font::Face face, unsigned id) {
                 static_cast<unsigned>(g.fallback));
     for (uint8_t y = 0; y < g.height; ++y) {
       for (uint8_t x = 0; x < g.width; ++x) {
-        std::putchar(ui_font::pixel(g, x, y) ? '1' : '0');
+        std::putchar(font_glyph::pixel(g, x, y) ? '1' : '0');
       }
     }
     std::putchar('\n');
@@ -83,7 +101,7 @@ void checkCatalogIdentityAndHeader(void) {
          ui_font_catalog::name_key("DejaVu-16"));
 
   u8 header[fmk::HEADER_SIZE] = {};
-  std::memcpy(header, "FMK1", 4);
+  std::memcpy(header, "FMK2", 4);
   header[5] = 12;
   header[6] = 14;
   header[7] = 0xD2;
@@ -106,6 +124,7 @@ void checkCatalogIdentityAndHeader(void) {
 } // namespace
 
 int main(int argc, char** argv) {
+  checkUnifiedBitmapLayouts();
   checkCatalogIdentityAndHeader();
   const bool dump = argc == 2 && std::strcmp(argv[1], "--dump") == 0;
   unsigned id = 0;

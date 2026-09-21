@@ -18,9 +18,9 @@ void put_msb_bit(uint8_t* bytes, size_t& bit, bool value) {
   ++bit;
 }
 
-void make_external_ui_font(uint8_t (&font)[41]) {
+void make_external_ui_font(uint8_t (&font)[39]) {
   std::memset(font, 0, sizeof(font));
-  std::memcpy(font, "FMK1", 4);
+  std::memcpy(font, "FMK2", 4);
   font[4] = fmk::FLAG_MONOSPACED;
   font[5] = 3;
   font[6] = 12;
@@ -29,9 +29,10 @@ void make_external_ui_font(uint8_t (&font)[41]) {
   font[10] = 2;
   font[12] = (uint8_t) sizeof(font);
   font[16] = ' ';
-  font[19] = '?';
-  font[21] = 2;
-  size_t bit = 22U * 8U;
+  font[17] = 0;
+  font[18] = '?';
+  font[19] = 2;
+  size_t bit = 20U * 8U;
   for(uint8_t glyph = 0; glyph < 4; ++glyph) {
     put_msb_bit(font, bit, false);
     for(uint8_t y = 0; y < 12; ++y) {
@@ -105,7 +106,7 @@ int main() {
               const unsigned shift = italic ? markdown_ui_font::Source::italic_shift(glyph, y) : 0;
               for(uint8_t x = 0; x < glyph.width; x++) {
                 const bool pixel = markdown_ui_font::Source::pixel(glyph, x, y);
-                assert(pixel == ui_font::pixel(native, x, y));
+                assert(pixel == font_glyph::pixel(native, x, y));
                 if(pixel) {
                   // One clear column remains even with both emphasis styles.
                   assert(glyph.bearing_x + x + shift + (bold ? 1U : 0U) + 1U < advance);
@@ -126,7 +127,7 @@ int main() {
     }
   }
 
-  uint8_t external_bytes[41];
+  uint8_t external_bytes[39];
   make_external_ui_font(external_bytes);
   fmk::Face source;
   assert(source.open(external_bytes, sizeof(external_bytes)));

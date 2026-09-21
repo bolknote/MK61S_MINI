@@ -72,15 +72,8 @@ Glyph glyph(Face face, uint32_t codepoint) {
   }
   const GlyphRecord& record = FACES[selected].records[index];
   return {FACES[selected].bitmap + record.offset, record.width, record.height,
-          record.bearing_x, record.bearing_y, record.advance, fallback};
-}
-
-bool pixel(const Glyph& value, uint8_t x, uint8_t y) {
-  if (value.bitmap == nullptr || x >= value.width || y >= value.height) {
-    return false;
-  }
-  const unsigned bit = static_cast<unsigned>(y) * value.width + x;
-  return (value.bitmap[bit / 8U] & (0x80U >> (bit % 8U))) != 0;
+          static_cast<int8_t>(record.bearing_x), record.bearing_y,
+          record.advance, font_glyph::BitmapLayout::TIGHT_MSB, fallback};
 }
 
 } // namespace ui_font

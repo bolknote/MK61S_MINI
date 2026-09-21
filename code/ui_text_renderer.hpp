@@ -32,6 +32,11 @@ struct Style {
   bool cursor_block;
 };
 
+// Measurement and painting deliberately resolve through the same glyph
+// source.  This keeps wrapping, ellipsis placement and pixels in agreement
+// for fixed, proportional and external faces.
+u8 glyphAdvance(const Style& style, u16 value, bool custom = false);
+
 void renderPage(const text_screen::Grid& grid, const Style& style,
                 u8 page, u8 first_col, u8 count, u8* output);
 

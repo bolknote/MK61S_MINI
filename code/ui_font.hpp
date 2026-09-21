@@ -1,6 +1,8 @@
 #ifndef MK61_UI_FONT_HPP
 #define MK61_UI_FONT_HPP
 
+#include "font_glyph.hpp"
+
 #include <stdint.h>
 
 // Optional UC1609 UI faces. The calculator face remains independent.
@@ -24,16 +26,7 @@ struct Metrics {
   uint8_t ppem;
 };
 
-struct Glyph {
-  const uint8_t* bitmap;
-  uint8_t width;
-  uint8_t height;
-  uint8_t bearing_x;
-  int8_t bearing_y;
-  uint8_t advance;
-  // True when another face or '?' supplies the requested character.
-  bool fallback;
-};
+using Glyph = font_glyph::Glyph;
 
 // Invalid enum values normalize to Ark Pixel / 12 pixels.
 Metrics metrics(Face face);
@@ -45,8 +38,7 @@ Glyph glyph(Face face, uint32_t codepoint);
 // Coordinates are relative to the ink bitmap, not the line box. Layout draws
 // at (pen_x + bearing_x, baseline_y - bearing_y), then advances by advance.
 // The generated advance guarantees at least one blank column between glyphs.
-// No raster decode buffer, allocation, interpolation, or mutable cache exists.
-bool pixel(const Glyph& value, uint8_t x, uint8_t y);
+// Read pixels with font_glyph::pixel(); fixed and proportional faces share it.
 
 } // namespace ui_font
 

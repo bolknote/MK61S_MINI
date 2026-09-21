@@ -59,8 +59,7 @@ inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
   if(out.family == 3) {
     prepared_font::Glyph glyph = {};
     bool fallback = false;
-    if(codepoint > 0xFFFFU ||
-       !external->glyph(static_cast<uint16_t>(codepoint), glyph)) {
+    if(!prepared_font::glyphForCodepoint(*external, codepoint, glyph)) {
       fallback = true;
       if(!external->glyph('?', glyph)) return 0;
     }
@@ -95,7 +94,9 @@ inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
   const unsigned stride = (value.width + 7U) / 8U;
   for(uint8_t y = 0; y < value.height; ++y) {
     for(uint8_t x = 0; x < value.width; ++x) {
-      if(ui_font::pixel(value, x, y)) out.pixels[y * stride + x / 8U] |= 0x80U >> (x % 8U);
+      if(font_glyph::pixel(value, x, y)) {
+        out.pixels[y * stride + x / 8U] |= 0x80U >> (x % 8U);
+      }
     }
   }
   return 1;

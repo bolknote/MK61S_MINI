@@ -15,53 +15,127 @@ static constexpr i16 UI_MARGIN = 2;
 static constexpr i16 UI_GUTTER = 12;
 static constexpr u8 CUSTOM_GLYPHS = 8;
 
+struct LineMetrics {
+  u8 height;
+  u8 ascent;
+  u8 line_gap;
+  u8 first_top;
+};
+
+struct ResolvedGlyph {
+  font_glyph::Glyph glyph;
+  u8 bitmap[fmk::MAX_BITMAP_SIZE];
+};
+
 bool legacyToken(u16 value) {
   return value >= display_symbol::uc1609::GE &&
          value <= display_symbol::uc1609::CYR_CHE;
 }
 
-u8 advance(const Style& style, u16 value, bool custom) {
-  if(custom || !style.font_enabled) return 6U;
-  const u16 unicode = display_symbol::uc1609::unicodeCodepoint(value);
+LineMetrics lineMetrics(const Style& style, u8 rows) {
+  if(!style.font_enabled) return {8U, 8U, 8U, 5U};
+
+  u8 height = 0;
+  const u8 ascent = ui_font::metrics(style.face).ascent;
+  u8 line_gap = 0;
   if(style.external != NULL) {
-    prepared_font::Glyph glyph;
-    if(style.external->glyph(unicode, glyph)) return glyph.advance;
-    if(legacyToken(value)) return 6U;
-    if(style.external->glyph('?', glyph)) return glyph.advance;
-    return 6U;
+    const prepared_font::Metrics& metrics = style.external->metrics();
+    height = metrics.height;
+    line_gap = metrics.line_gap;
+  } else {
+    const ui_font::Metrics metrics = ui_font::metrics(style.face);
+    height = metrics.height;
+    line_gap = metrics.line_gap;
   }
-  if(ui_font::supports(style.face, unicode)) {
-    return ui_font::glyph(style.face, unicode).advance;
-  }
-  if(builtin_font::rows5x8(value) != NULL) return 6U;
-  return ui_font::glyph(style.face, '?').advance;
+  const u16 occupied = (u16) rows * height +
+      (rows > 0 ? (u16) (rows - 1U) * line_gap : 0U);
+  const u8 first_top = occupied < 64U
+      ? (u8) ((64U - occupied) / 2U) : 0U;
+  return {height, ascent, line_gap, first_top};
 }
 
-bool fallbackRaster(const Style& style, u16 value, bool custom,
-                    builtin_font::Raster& raster) {
-  memset(raster.data, 0, sizeof(raster.data));
+bool fixedGlyph(const Style& style, u16 value, bool custom, bool pixels,
+                ResolvedGlyph& out) {
+  builtin_font::Raster raster = {};
   if(custom) {
     const u8 slot = (u8) value;
     if(style.custom_glyphs != NULL && style.custom_valid != NULL &&
        slot < CUSTOM_GLYPHS && style.custom_valid[slot]) {
       raster.width = 5;
       raster.height = 8;
-      for(u8 y = 0; y < 8; ++y) {
-        for(u8 x = 0; x < 5; ++x) {
-          if((style.custom_glyphs[slot][y] &
-              ((u8) 1U << (4U - x))) != 0) {
-            raster.data[y] |= (u8) (0x80U >> x);
+      if(pixels) {
+        for(u8 y = 0; y < 8; ++y) {
+          for(u8 x = 0; x < 5; ++x) {
+            if((style.custom_glyphs[slot][y] &
+                ((u8) 1U << (4U - x))) != 0) {
+              raster.data[y] |= (u8) (0x80U >> x);
+            }
           }
         }
       }
-      return true;
+    } else {
+      value = '?';
+      custom = false;
     }
-    value = '?';
   }
-  if(builtin_font::decode(builtin_font::FaceId::FONT_5X8,
-                          value, raster)) return true;
-  return value != '?' && builtin_font::decode(
-      builtin_font::FaceId::FONT_5X8, '?', raster);
+  if(!custom) {
+    raster.width = 5;
+    raster.height = 8;
+    if(pixels &&
+       !builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                             value, raster) &&
+       (value == '?' ||
+        !builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                              '?', raster))) return false;
+  }
+  if(pixels) memcpy(out.bitmap, raster.data, sizeof(out.bitmap));
+  out.glyph = {pixels ? out.bitmap : NULL, raster.width, raster.height,
+               0, 8, 6, font_glyph::BitmapLayout::ROW_MSB, false};
+  return true;
+}
+
+bool externalGlyph(const Style& style, const prepared_font::Glyph& source,
+                   bool fallback, bool pixels, ResolvedGlyph& out) {
+  if(pixels &&
+     !style.external->decode(source, out.bitmap, sizeof(out.bitmap))) {
+    return false;
+  }
+  out.glyph = {pixels ? out.bitmap : NULL, source.width, source.height,
+               0, (i8) ui_font::metrics(style.face).ascent, source.advance,
+               font_glyph::BitmapLayout::ROW_MSB, fallback};
+  return true;
+}
+
+bool resolveGlyph(const Style& style, u16 value, bool custom, bool pixels,
+                  ResolvedGlyph& out) {
+  memset(&out, 0, sizeof(out));
+  if(custom || !style.font_enabled) {
+    return fixedGlyph(style, value, custom, pixels, out);
+  }
+
+  const u16 unicode = display_symbol::uc1609::unicodeCodepoint(value);
+  if(style.external != NULL) {
+    prepared_font::Glyph source = {};
+    if(prepared_font::glyphForCodepoint(*style.external, unicode, source)) {
+      return externalGlyph(style, source, false, pixels, out) ||
+          fixedGlyph(style, '?', false, pixels, out);
+    }
+    if(legacyToken(value)) {
+      return fixedGlyph(style, value, false, pixels, out);
+    }
+    return (style.external->glyph('?', source) &&
+            externalGlyph(style, source, true, pixels, out)) ||
+        fixedGlyph(style, '?', false, pixels, out);
+  }
+
+  // Legacy private tokens with resident 5x8 art keep that art.  Every other
+  // missing character uses the selected proportional face's '?' fallback.
+  if(!ui_font::supports(style.face, unicode) &&
+     builtin_font::rows5x8(value) != NULL) {
+    return fixedGlyph(style, value, false, pixels, out);
+  }
+  out.glyph = ui_font::glyph(style.face, unicode);
+  return true;
 }
 
 void setPixel(u8* output, i16 run_left, i16 run_width,
@@ -80,6 +154,12 @@ void invertPixel(u8* output, i16 run_left, i16 run_width,
 
 } // namespace
 
+u8 glyphAdvance(const Style& style, u16 value, bool custom) {
+  ResolvedGlyph resolved = {};
+  return resolveGlyph(style, value, custom, false, resolved)
+      ? resolved.glyph.advance : 6U;
+}
+
 void renderPage(const text_screen::Grid& grid, const Style& style,
                 u8 page, u8 first_col, u8 count, u8* output) {
   if(output == NULL || page >= 8U || count == 0 || first_col >= 16U ||
@@ -90,26 +170,13 @@ void renderPage(const text_screen::Grid& grid, const Style& style,
   const i16 page_y = (i16) page * PAGE_HEIGHT;
   memset(output, 0, (usize) run_width);
 
-  const ui_font::Metrics builtin_metrics = ui_font::metrics(style.face);
-  const u8 face_height = style.external != NULL
-      ? style.external->metrics().height : builtin_metrics.height;
-  const u8 line_gap = style.external != NULL
-      ? style.external->metrics().line_gap
-      : (style.font_enabled ? builtin_metrics.line_gap : 8U);
-  const bool mono = !style.font_enabled;
-  const u8 text_height = mono ? 8U : face_height;
-  const u16 occupied = (u16) grid.rows() * text_height +
-      (grid.rows() > 0 ? (u16) (grid.rows() - 1U) * line_gap : 0U);
-  const u8 first_top = mono ? 1U
-      : (occupied < 64U ? (u8) ((64U - occupied) / 2U) : 0U);
+  const LineMetrics metrics = lineMetrics(style, grid.rows());
 
   for(u8 row = 0; row < grid.rows(); ++row) {
-    const i16 top = first_top +
-        (i16) row * (text_height + line_gap);
-    const i16 mono_top = top + 4;
-    const i16 text_top = mono ? mono_top : top;
+    const i16 text_top = metrics.first_top +
+        (i16) row * (metrics.height + metrics.line_gap);
     if(text_top >= page_y + PAGE_HEIGHT ||
-       text_top + text_height <= page_y) continue;
+       text_top + metrics.height <= page_y) continue;
     const bool gutter = (style.row_gutters & ((u16) 1U << row)) != 0;
     const bool tail = (style.row_tails & ((u16) 1U << row)) != 0;
     i16 pen = UI_MARGIN;
@@ -122,49 +189,21 @@ void renderPage(const text_screen::Grid& grid, const Style& style,
           : SCREEN_WIDTH - UI_MARGIN;
       const u16 value = grid.cell(col, row);
       const bool custom = grid.cellIsCustom(col, row);
-      const u16 unicode = display_symbol::uc1609::unicodeCodepoint(value);
-
-      prepared_font::Glyph external_glyph = {};
-      u8 external_bitmap[fmk::MAX_BITMAP_SIZE] = {};
-      bool use_external = style.external != NULL && !custom &&
-          style.external->glyph(unicode, external_glyph);
-      if(!use_external && style.external != NULL && !custom &&
-         !legacyToken(value)) {
-        use_external = style.external->glyph('?', external_glyph);
-      }
-      use_external = use_external && style.external->decode(
-          external_glyph, external_bitmap, sizeof(external_bitmap));
-
+      ResolvedGlyph resolved = {};
+      if(!resolveGlyph(style, value, custom, true, resolved)) continue;
+      const font_glyph::Glyph& glyph = resolved.glyph;
       const u8 glyph_advance = gutter && col == 0 ? UI_GUTTER
-          : (use_external ? external_glyph.advance
-                          : advance(style, value, custom));
-      const bool proportional = style.external == NULL && !mono && !custom &&
-          (ui_font::supports(style.face, unicode) ||
-           builtin_font::rows5x8(value) == NULL);
-      const ui_font::Glyph glyph = ui_font::glyph(style.face, unicode);
-      builtin_font::Raster fallback = {};
-      if(!proportional && !use_external) {
-        (void) fallbackRaster(style, value, custom, fallback);
-      }
-      const u8 width = use_external ? external_glyph.width
-          : (proportional ? glyph.width : fallback.width);
-      const u8 height = use_external ? external_glyph.height
-          : (proportional ? glyph.height : fallback.height);
-      const i16 left = pen + (proportional ? glyph.bearing_x : 0);
-      const i16 glyph_top = use_external ? top : (mono ? mono_top
-          : top + builtin_metrics.ascent -
-              (proportional ? glyph.bearing_y : 8));
+          : glyph.advance;
+      const i16 left = pen + glyph.bearing_x;
+      const i16 glyph_top = text_top + metrics.ascent - glyph.bearing_y;
 
-      for(u8 y = 0; y < height; ++y) {
+      for(u8 y = 0; y < glyph.height; ++y) {
         const i16 py = glyph_top + y;
         if(py < page_y || py >= page_y + PAGE_HEIGHT) continue;
-        for(u8 x = 0; x < width && left + x < right; ++x) {
-          const bool ink = use_external
-              ? fmk::bitmapPixel(external_bitmap, width, x, y)
-              : (proportional ? ui_font::pixel(glyph, x, y)
-                              : fmk::bitmapPixel(fallback.data, width, x, y));
-          if(ink) setPixel(output, run_left, run_width,
-                           left + x, page_y, py);
+        for(u8 x = 0; x < glyph.width && left + x < right; ++x) {
+          if(font_glyph::pixel(glyph, x, y)) {
+            setPixel(output, run_left, run_width, left + x, page_y, py);
+          }
         }
       }
 
@@ -173,7 +212,7 @@ void renderPage(const text_screen::Grid& grid, const Style& style,
         const i16 cursor_width = glyph_advance > 1U
             ? glyph_advance - 1U : 1U;
         if(style.cursor_block) {
-          for(i16 y = 0; y < text_height; ++y) {
+          for(i16 y = 0; y < metrics.height; ++y) {
             for(i16 x = 0; x < cursor_width && pen + x < right; ++x) {
               invertPixel(output, run_left, run_width,
                           pen + x, page_y, text_top + y);
@@ -182,7 +221,7 @@ void renderPage(const text_screen::Grid& grid, const Style& style,
         } else {
           for(i16 x = 0; x < cursor_width && pen + x < right; ++x) {
             setPixel(output, run_left, run_width, pen + x, page_y,
-                     text_top + text_height - 1U);
+                     text_top + metrics.height - 1U);
           }
         }
       }

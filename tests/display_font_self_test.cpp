@@ -1,5 +1,6 @@
 #include "builtin_font.hpp"
 #include "display_symbols.hpp"
+#include "ERM19264_graphics_font.h"
 #include "fmk_font.hpp"
 #include "page_damage.hpp"
 #include "text_screen.hpp"
@@ -44,15 +45,15 @@ static void finish_font(std::vector<u8>& bytes) {
 
 static std::vector<u8> mono_fixture(void) {
   std::vector<u8> bytes(fmk::HEADER_SIZE + fmk::RANGE_SIZE, 0);
-  memcpy(bytes.data(), "FMK1", 4);
+  memcpy(bytes.data(), "FMK2", 4);
   bytes[4] = fmk::FLAG_MONOSPACED;
   bytes[5] = 3;
   bytes[6] = 5;
   bytes[7] = (u8) ((4 - 1) << 4) | 1;
   put_le16(bytes, 8, 2);
   bytes[10] = 1;
-  put_le16(bytes, fmk::HEADER_SIZE, 'A');
-  bytes[fmk::HEADER_SIZE + 2] = 1;
+  bytes[fmk::HEADER_SIZE] = 'A';
+  bytes[fmk::HEADER_SIZE + 1] = 1;
 
   BitWriter bits(bytes);
   // A: исходные данные 010 101 111 101 101.
@@ -69,14 +70,14 @@ static std::vector<u8> mono_fixture(void) {
 
 static std::vector<u8> proportional_fixture(void) {
   std::vector<u8> bytes(fmk::HEADER_SIZE + fmk::RANGE_SIZE, 0);
-  memcpy(bytes.data(), "FMK1", 4);
+  memcpy(bytes.data(), "FMK2", 4);
   bytes[5] = 4;
   bytes[6] = 3;
   bytes[7] = (u8) ((4 - 1) << 4);
   put_le16(bytes, 8, 1);
   bytes[10] = 1;
-  put_le16(bytes, fmk::HEADER_SIZE, 'X');
-  bytes[fmk::HEADER_SIZE + 2] = 0;
+  bytes[fmk::HEADER_SIZE] = 'X';
+  bytes[fmk::HEADER_SIZE + 1] = 0;
 
   BitWriter bits(bytes);
   bits.write(1, 4); // ширина 2
@@ -89,6 +90,10 @@ static std::vector<u8> proportional_fixture(void) {
 
 static void test_mono_raw_and_rle(void) {
   const std::vector<u8> bytes = mono_fixture();
+  assert(fmk::plausibleHeader(bytes.data(), bytes.size()));
+  std::vector<u8> old_version = bytes;
+  old_version[3] = '1';
+  assert(!fmk::plausibleHeader(old_version.data(), old_version.size()));
   fmk::Face face;
   assert(face.open(bytes.data(), bytes.size()));
   assert(face.data() == bytes.data());
@@ -171,8 +176,8 @@ static void test_lcd_scaling(void) {
 
   fmk::Glyph preview[8];
   assert(fmk::selectPreviewGlyphs(face, preview) == 8);
-  assert(preview[0].codepoint == 'A');
-  assert(preview[1].codepoint == 'B');
+  assert(preview[0].byte == 'A');
+  assert(preview[1].byte == 'B');
   for(u8 i = 2; i < 8; i++) assert(preview[i].index == preview[i % 2].index);
 }
 
@@ -193,6 +198,17 @@ static void test_uc1609_display_symbol_tokens(void) {
   assert(raster.width == 5 && raster.height == 8);
   assert(builtin_font::decode(builtin_font::FaceId::FONT_3X5, display_symbol::uc1609::CYR_PE, raster));
   assert(raster.width == 3 && raster.height == 5);
+}
+
+static void test_builtin_3x5_is_tightly_packed(void) {
+  const unsigned char* a = font3x5Bitmap('A');
+  const unsigned char* b = font3x5Bitmap('B');
+  assert(a != nullptr && b == a + 2);
+  // A is 111/101/111/101/101 in the source face: 15 row-major bits plus
+  // one zero padding bit, not five padded row bytes.
+  assert(a[0] == 0xF7 && a[1] == 0xDA);
+  assert(font3x5Bitmap(0x0401) != nullptr);
+  assert(font3x5Bitmap(0x0400) == nullptr);
 }
 
 static void test_supplemental_cyrillic_glyphs(void) {
@@ -480,6 +496,7 @@ int main(int argc, char** argv) {
   test_crc_and_padding_are_validated();
   test_lcd_scaling();
   test_uc1609_display_symbol_tokens();
+  test_builtin_3x5_is_tightly_packed();
   test_supplemental_cyrillic_glyphs();
   test_text_grid();
   test_text_grid_skips_unchanged_cells();

@@ -35,7 +35,7 @@ struct Glyph5x8 {
 #endif
 
 #if MK61_BUILTIN_HAS_STANDARD_CYRILLIC
-static const Glyph5x8 CYRILLIC[] = {
+static constexpr Glyph5x8 CYRILLIC[] = {
 #if MK61_BUILTIN_FULL_CYRILLIC
   {0x0410, {0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b00000}},
 #endif
@@ -123,6 +123,60 @@ static const Glyph5x8 CYRILLIC[] = {
   {0x044F, {0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b00000}}
 #endif
 };
+
+#if MK61_BUILTIN_FULL_CYRILLIC
+static constexpr usize STANDARD_CYRILLIC_COUNT =
+    sizeof(CYRILLIC) / sizeof(CYRILLIC[0]);
+static_assert(STANDARD_CYRILLIC_COUNT == 66,
+              "packed 5x8 Cyrillic index contract");
+static_assert(CYRILLIC[6].codepoint == 0x0401 &&
+              CYRILLIC[39].codepoint == 0x0451,
+              "packed 5x8 Cyrillic order");
+
+struct PackedCyrillic5x8 {
+  u8 bytes[STANDARD_CYRILLIC_COUNT * 5] = {};
+
+  constexpr PackedCyrillic5x8() {
+    for(usize index = 0; index < STANDARD_CYRILLIC_COUNT; ++index) {
+      for(u8 y = 0; y < 8; ++y) {
+        for(u8 x = 0; x < 5; ++x) {
+          if((CYRILLIC[index].rows[y] & ((u8) 1U << (4U - x))) == 0) {
+            continue;
+          }
+          const usize bit = (usize) y * 5U + x;
+          bytes[index * 5U + bit / 8U] |= (u8) (0x80U >> (bit & 7U));
+        }
+      }
+    }
+  }
+};
+
+static constexpr PackedCyrillic5x8 PACKED_CYRILLIC_5X8;
+
+static i16 standardCyrillicIndex(u16 codepoint) {
+  if(codepoint >= 0x0410 && codepoint <= 0x0415) {
+    return (i16) (codepoint - 0x0410);
+  }
+  if(codepoint == 0x0401) return 6;
+  if(codepoint >= 0x0416 && codepoint <= 0x042F) {
+    return (i16) (codepoint - 0x0410 + 1U);
+  }
+  if(codepoint >= 0x0430 && codepoint <= 0x0435) {
+    return (i16) (33U + codepoint - 0x0430);
+  }
+  if(codepoint == 0x0451) return 39;
+  if(codepoint >= 0x0436 && codepoint <= 0x044F) {
+    return (i16) (34U + codepoint - 0x0430);
+  }
+  return -1;
+}
+
+static const u8* standardCyrillicBitmap(u16 codepoint) {
+  const i16 index = standardCyrillicIndex(codepoint);
+  return index >= 0
+      ? &PACKED_CYRILLIC_5X8.bytes[(usize) index * 5U] : NULL;
+}
+#endif
 #endif
 
 // The WS0010 FT=10 ROM contains the complete Russian alphabet, but not the
@@ -183,6 +237,23 @@ static bool decodeRows5x8(const u8* rows, Raster& out) {
   }
   return true;
 }
+
+static bool decodeTightBitmap(const u8* bitmap, u8 width, u8 height,
+                              Raster& out) {
+  if(bitmap == NULL) return false;
+  out.width = width;
+  out.height = height;
+  memset(out.data, 0, sizeof(out.data));
+  for(u8 y = 0; y < height; ++y) {
+    for(u8 x = 0; x < width; ++x) {
+      const usize bit = (usize) y * width + x;
+      if((bitmap[bit / 8U] & (0x80U >> (bit & 7U))) != 0) {
+        setPixel(out, x, y);
+      }
+    }
+  }
+  return true;
+}
 #endif
 
 } // анонимное пространство имён
@@ -190,7 +261,7 @@ static bool decodeRows5x8(const u8* rows, Raster& out) {
 const u8* rows5x8(u16 codepoint) {
   if(const u8* rows = specialRows5x8(codepoint)) return rows;
   codepoint = aliasedCodepoint(codepoint);
-#if MK61_BUILTIN_HAS_STANDARD_CYRILLIC
+#if MK61_BUILTIN_HAS_STANDARD_CYRILLIC && !MK61_BUILTIN_FULL_CYRILLIC
   for(usize i = 0; i < sizeof(CYRILLIC) / sizeof(CYRILLIC[0]); i++) {
     if(CYRILLIC[i].codepoint == codepoint) return CYRILLIC[i].rows;
   }
@@ -227,16 +298,7 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   codepoint = aliasedCodepoint(codepoint);
 
   if(face == FaceId::FONT_3X5) {
-    const unsigned char* rows = font3x5Glyph(codepoint);
-    if(rows == NULL) return false;
-    out.width = 3;
-    out.height = 5;
-    for(u8 y = 0; y < out.height; y++) {
-      for(u8 x = 0; x < out.width; x++) {
-        if((rows[y] & ((u8) 1 << x)) != 0) setPixel(out, x, y);
-      }
-    }
-    return true;
+    return decodeTightBitmap(font3x5Bitmap(codepoint), 3, 5, out);
   }
 
   out.width = 5;
@@ -244,6 +306,11 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   if(const u8* rows = rows5x8(codepoint)) {
     return decodeRows5x8(rows, out);
   }
+#if MK61_BUILTIN_FULL_CYRILLIC
+  if(decodeTightBitmap(standardCyrillicBitmap(codepoint), 5, 8, out)) {
+    return true;
+  }
+#endif
 
   if(codepoint > 0x7E) return false;
   const unsigned char* columns = &UC_Font_One[(usize) codepoint * 5];

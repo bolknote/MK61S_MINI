@@ -153,7 +153,7 @@ struct Font3x5Glyph {
 	unsigned char rows[5];
 };
 
-static const unsigned char UC_Font_3x5[] PROGMEM = {
+static constexpr unsigned char UC_Font_3x5[] PROGMEM = {
 	0x04,0x02,0x01,0x02,0x07, 0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,
 	0x05,0x05,0x06,0x04,0x04, 0x02,0x01,0x05,0x04,0x02, 0x05,0x02,0x05,0x00,0x00, 0x01,0x07,0x02,0x07,0x04,
 	0x02,0x00,0x07,0x00,0x02, 0x01,0x01,0x05,0x02,0x00, 0x07,0x05,0x05,0x05,0x00, 0x02,0x07,0x02,0x02,0x02,
@@ -188,7 +188,7 @@ static const unsigned char UC_Font_3x5[] PROGMEM = {
 	0x02,0x02,0x02,0x02,0x02, 0x03,0x02,0x06,0x02,0x03, 0x00,0x04,0x07,0x01,0x00, 0x00,0x00,0x00,0x00,0x00
 };
 
-static const Font3x5Glyph UC_Font_3x5_Extra[] PROGMEM = {
+static constexpr Font3x5Glyph UC_Font_3x5_Extra[] PROGMEM = {
 	{0x0401,{0x05,0x07,0x01,0x03,0x07}}, {0x0410,{0x07,0x05,0x07,0x05,0x05}}, {0x0411,{0x07,0x01,0x03,0x05,0x03}}, {0x0412,{0x03,0x05,0x03,0x05,0x03}},
 	{0x0413,{0x07,0x01,0x01,0x01,0x01}}, {0x0414,{0x02,0x05,0x05,0x07,0x05}}, {0x0415,{0x07,0x01,0x07,0x01,0x07}}, {0x0416,{0x05,0x07,0x02,0x07,0x05}},
 	{0x0417,{0x07,0x04,0x02,0x04,0x07}}, {0x0418,{0x05,0x05,0x05,0x07,0x05}}, {0x0419,{0x07,0x00,0x05,0x05,0x07}}, {0x041A,{0x05,0x05,0x03,0x05,0x05}},
@@ -208,16 +208,56 @@ static const Font3x5Glyph UC_Font_3x5_Extra[] PROGMEM = {
 	{0x044F,{0x00,0x06,0x05,0x06,0x05}}, {0x0451,{0x05,0x06,0x05,0x03,0x06}}
 };
 
-const unsigned char* font3x5Glyph(uint16_t codepoint) {
-	if(codepoint < 128) return &UC_Font_3x5[(uint16_t) codepoint * 5];
+namespace {
 
-	for(uint16_t i = 0; i < sizeof(UC_Font_3x5_Extra) / sizeof(UC_Font_3x5_Extra[0]); i++) {
-		if(UC_Font_3x5_Extra[i].codepoint == codepoint) return UC_Font_3x5_Extra[i].rows;
+static constexpr uint16_t FONT_3X5_ASCII_COUNT = 128;
+static constexpr uint16_t FONT_3X5_EXTRA_COUNT =
+	sizeof(UC_Font_3x5_Extra) / sizeof(UC_Font_3x5_Extra[0]);
+static constexpr uint16_t FONT_3X5_GLYPH_COUNT =
+	FONT_3X5_ASCII_COUNT + FONT_3X5_EXTRA_COUNT;
+
+struct PackedFont3x5 {
+	unsigned char bytes[FONT_3X5_GLYPH_COUNT * 2] = {};
+
+	constexpr void pack(uint16_t index, const unsigned char rows[5]) {
+		for(uint8_t y = 0; y < 5; ++y) {
+			for(uint8_t x = 0; x < 3; ++x) {
+				if((rows[y] & ((uint8_t) 1U << x)) == 0) continue;
+				const uint16_t bit = (uint16_t) y * 3U + x;
+				bytes[index * 2U + bit / 8U] |=
+					(uint8_t) (0x80U >> (bit & 7U));
+			}
+		}
 	}
 
-	if(codepoint >= 0x0430 && codepoint <= 0x044F) return font3x5Glyph((uint16_t) (codepoint - 0x20));
-	if(codepoint == 0x0451) return font3x5Glyph(0x0401);
-	return NULL;
+	constexpr PackedFont3x5() {
+		for(uint16_t index = 0; index < FONT_3X5_ASCII_COUNT; ++index) {
+			pack(index, &UC_Font_3x5[index * 5U]);
+		}
+		for(uint16_t index = 0; index < FONT_3X5_EXTRA_COUNT; ++index) {
+			pack((uint16_t) (FONT_3X5_ASCII_COUNT + index),
+				 UC_Font_3x5_Extra[index].rows);
+		}
+	}
+};
+
+static constexpr PackedFont3x5 PACKED_FONT_3X5;
+
+static int16_t font3x5Index(uint16_t codepoint) {
+	if(codepoint < FONT_3X5_ASCII_COUNT) return (int16_t) codepoint;
+	if(codepoint == 0x0401) return FONT_3X5_ASCII_COUNT;
+	if(codepoint >= 0x0410 && codepoint <= 0x044F) {
+		return (int16_t) (FONT_3X5_ASCII_COUNT + 1U + codepoint - 0x0410U);
+	}
+	if(codepoint == 0x0451) return (int16_t) (FONT_3X5_GLYPH_COUNT - 1U);
+	return -1;
+}
+
+} // namespace
+
+const unsigned char* font3x5Bitmap(uint16_t codepoint) {
+	const int16_t index = font3x5Index(codepoint);
+	return index >= 0 ? &PACKED_FONT_3X5.bytes[(uint16_t) index * 2U] : NULL;
 }
 
 #endif //font one

@@ -2,9 +2,8 @@
 #if defined(MK61_DISPLAY_UC1609)
 #include "display.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
-#include "display_symbols.hpp"
+#include "mk8_codec.hpp"
 #include "ui_text_renderer.hpp"
-#include "utf8_codec.hpp"
 #include <string.h>
 
 namespace {
@@ -18,19 +17,9 @@ u16 textLength(const char* text) {
 }
 
 u16 nextCodepoint(const char* text, u16 length, u16& offset) {
-  const auto* bytes = (const u8*) text;
-  const utf8_codec::Decoded decoded =
-      utf8_codec::decode(bytes + offset, (usize) (length - offset));
-  if(decoded.size == 0) return '?';
-  offset = (u16) (offset + decoded.size);
-  return decoded.valid && decoded.codepoint <= 0xFFFFU
-      ? (u16) decoded.codepoint : (u16) '?';
+  return offset < length ? mk8::codepoint((u8) text[offset++]) : 0;
 }
 
-bool legacyUiToken(u16 codepoint) {
-  return codepoint >= display_symbol::uc1609::GE &&
-      codepoint <= display_symbol::uc1609::CYR_CHE;
-}
 }
 
 void MK61Display::setUiFont(u8 family, u8 size) {
@@ -206,22 +195,14 @@ void MK61Display::beginCalculatorFace(void) {
 
 #if MK61_PROPORTIONAL_UI_FONTS
 u8 MK61Display::uiAdvance(u16 codepoint, bool custom) const {
-  if(custom) return 6;
-  if(!uiFontEnabled()) return 6;
-  const u16 unicode = display_symbol::uc1609::unicodeCodepoint(codepoint);
-  if(uiFontFamily() == 3) {
-    if(const prepared_font::Face* external = externalUiFont()) {
-      prepared_font::Glyph glyph;
-      if(external->glyph(unicode, glyph)) return glyph.advance;
-      if(legacyUiToken(codepoint)) return 6;
-      if(external->glyph('?', glyph)) return glyph.advance;
-      return 6;
-    }
-  }
-  if(ui_font::supports(uiFontFace(), unicode)) return ui_font::glyph(uiFontFace(), unicode).advance;
-  // Legacy private tokens (folder, calculator signs) keep their existing art.
-  if(builtin_font::rows5x8(codepoint) != nullptr) return 6;
-  return ui_font::glyph(uiFontFace(), '?').advance;
+  const ui_text_renderer::Style style = {
+    uiFontEnabled(), uiFontFace(),
+    uiFontFamily() == 3 ? externalUiFont() : NULL,
+    custom_glyphs, custom_valid, ui_row_gutters, ui_row_tails,
+    grid.cursorX(), grid.cursorY(), cursor_underline,
+    cursor_blink && cursor_blink_phase
+  };
+  return ui_text_renderer::glyphAdvance(style, codepoint, custom);
 }
 
 u16 MK61Display::measureUiText(const char* text) const {

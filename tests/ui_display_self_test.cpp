@@ -2,6 +2,9 @@
 #include "calculator_face.hpp"
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
+#include "lcd_ru.hpp"
+#include "mk8_codec.hpp"
+#include "mk8_strings.inc"
 #include "rtc_idle_clock_core.hpp"
 #include "shared_scratch.hpp"
 #include <cassert>
@@ -30,6 +33,8 @@ u8* bulk_bytes = nullptr;
 usize bulk_size = 0;
 bool bulk_owned = false;
 }
+
+MK61Display* main_lcd_pointer = nullptr;
 
 namespace exclusive_buffer {
 bool acquire(Owner owner, usize size) {
@@ -102,7 +107,7 @@ void referenceGlyph(Frame& frame, ui_font::Face face, u16 cp,
     for(u8 x = 0; x < glyph.width; ++x) {
       const int px = pen + glyph.bearing_x + x;
       if(px >= right) continue;
-      if(ui_font::pixel(glyph, x, y)) putPixel(frame, px, top + y);
+      if(font_glyph::pixel(glyph, x, y)) putPixel(frame, px, top + y);
     }
   }
 }
@@ -126,12 +131,12 @@ void putMsbBit(u8* bytes, usize& bit, bool value) {
   ++bit;
 }
 
-// Minimal, valid FMK1 UI face: space plus '?'..'A', mono 3x12 with a four-pixel
+// Minimal, valid FMK2 UI face: space plus '?'..'A', mono 3x12 with a four-pixel
 // advance.  It is built without heap allocation so the display test keeps
 // enforcing the firmware's allocation-free rendering contract.
-void makeExternalUiFont(u8 (&font)[41]) {
+void makeExternalUiFont(u8 (&font)[39]) {
   std::memset(font, 0, sizeof(font));
-  std::memcpy(font, "FMK1", 4);
+  std::memcpy(font, "FMK2", 4);
   font[4] = fmk::FLAG_MONOSPACED;
   font[5] = 3;
   font[6] = 12;
@@ -140,10 +145,10 @@ void makeExternalUiFont(u8 (&font)[41]) {
   font[10] = 2;
   font[12] = (u8) sizeof(font);
   font[16] = ' ';
-  font[18] = 0;
-  font[19] = '?';
-  font[21] = 2; // '?', '@', 'A'
-  usize bit = 22U * 8U;
+  font[17] = 0;
+  font[18] = '?';
+  font[19] = 2; // '?', '@', 'A'
+  usize bit = 20U * 8U;
   for(u8 glyph = 0; glyph < 4; ++glyph) {
     putMsbBit(font, bit, false); // raw bitmap
     for(u8 y = 0; y < 12; ++y) {
@@ -170,9 +175,9 @@ void makeExternalUiFont(u8 (&font)[41]) {
 
 // The game face deliberately uses the smallest supported geometry. Four
 // glyph records are exactly two bytes each at 3x5 (raw flag + 15 pixels).
-void makeExternalRuntimeFont(u8 (&font)[30], u8 advance = 4) {
+void makeExternalRuntimeFont(u8 (&font)[28], u8 advance = 4) {
   std::memset(font, 0, sizeof(font));
-  std::memcpy(font, "FMK1", 4);
+  std::memcpy(font, "FMK2", 4);
   font[4] = fmk::FLAG_MONOSPACED;
   font[5] = 3;
   font[6] = 5;
@@ -182,10 +187,10 @@ void makeExternalRuntimeFont(u8 (&font)[30], u8 advance = 4) {
   font[10] = 2;
   font[12] = (u8) sizeof(font);
   font[16] = ' ';
-  font[18] = 0;
-  font[19] = '?';
-  font[21] = 2; // '?', '@', 'A'
-  usize bit = 22U * 8U;
+  font[17] = 0;
+  font[18] = '?';
+  font[19] = 2; // '?', '@', 'A'
+  usize bit = 20U * 8U;
   for(u8 glyph = 0; glyph < 4; ++glyph) {
     putMsbBit(font, bit, false);
     for(u8 y = 0; y < 5; ++y) {
@@ -205,9 +210,9 @@ void makeExternalRuntimeFont(u8 (&font)[30], u8 advance = 4) {
 // Runtime proportional faces retain a nominal advance in their header. It is
 // the cell-oriented COLS contract for BASIC even though rendering uses each
 // glyph's own advance.
-void makeExternalRuntimeProportionalFont(u8 (&font)[33]) {
+void makeExternalRuntimeProportionalFont(u8 (&font)[31]) {
   std::memset(font, 0, sizeof(font));
-  std::memcpy(font, "FMK1", 4);
+  std::memcpy(font, "FMK2", 4);
   font[5] = 3;
   font[6] = 5;
   font[7] = 0x31; // nominal advance=4, line gap=1
@@ -215,10 +220,10 @@ void makeExternalRuntimeProportionalFont(u8 (&font)[33]) {
   font[10] = 2;
   font[12] = (u8) sizeof(font);
   font[16] = ' ';
-  font[18] = 0;
-  font[19] = '?';
-  font[21] = 2; // '?', '@', 'A'
-  usize bit = 22U * 8U;
+  font[17] = 0;
+  font[18] = '?';
+  font[19] = 2; // '?', '@', 'A'
+  usize bit = 20U * 8U;
   for(u8 glyph = 0; glyph < 4; ++glyph) {
     const u8 width = glyph == 0 ? 1U : 3U;
     const u8 advance = glyph == 0 ? 2U : 4U;
@@ -326,7 +331,7 @@ void test_profile_and_scope() {
     MK61DisplayTextScope ui(display);
     assert(display.uiTextActive() && display.rows() == 5);
     assert(sameProfile(display.textProfile(), calculator));
-    display.printUiLine(0, "Меню");
+    display.printUiLine(0, M8_TEST_MENU);
     {
       MK61DisplayTextScope code(display, false);
       assert(!display.uiTextActive() && display.rows() == 10);
@@ -353,10 +358,28 @@ void test_profile_and_scope() {
   assert(sameProfile(display.textProfile(), calculator));
 }
 
+void test_localized_message_selects_ui_renderer() {
+  MK61Display display;
+  main_lcd_pointer = &display;
+  ui_display_test::reset();
+  display.begin();
+  display.setUiFont(1, 14);
+  display.beginCalculatorFace();
+  assert(!display.uiTextActive());
+
+  lcd_ru::print_lines("USB Disk", "starting...");
+  assert(display.uiTextActive());
+  assert(display.uiFontFamily() == 1);
+
+  lcd_ru::print_fixed_lines("CGRAM", "diagnostic");
+  assert(!display.uiTextActive());
+}
+
 void test_preview_of_same_calculator_profile() {
   // One 3x5 A, same geometry as the calculator's profile. This deliberately
   // exercises the unchanged-profile path while UI mode changes underneath.
-  u8 font[] = {'F','M','K','1',1,3,5,0x31,1,0,1,0,21,0,0,0,'A',0,0,0x2B,0xED};
+  u8 font[] = {'F','M','K','2',1,3,5,0x31,1,0,1,0,20,0,0,0,
+               'A',0,0x2B,0xED};
   const u16 crc = fmk::checksum(font, sizeof(font));
   font[14] = (u8) crc;
   font[15] = (u8) (crc >> 8);
@@ -402,7 +425,7 @@ void test_live_ui_font_sample() {
     display.beginUiText();
     display.clear();
     const u8 sample_row = (u8) (display.rows() - 1U);
-    display.printUiLine(sample_row, "Аа Бб Wi 123", ' ');
+    display.printUiLine(sample_row, M8_TEST_FONT_SAMPLE, ' ');
     Frame expected{};
     referenceText(expected, display.uiFontFace(), sample, sample_row, 14);
     expectFrame(expected);
@@ -418,7 +441,7 @@ void test_live_ui_font_sample() {
 void test_mono_ui_is_fixed_and_independent() {
   MK61Display display;
   startUi(display, 0, 14);
-  display.printUiLine(0, "Аа Wi");
+  display.printUiLine(0, M8_TEST_AA_WI);
   Frame expected{};
   const u16 text[] = {0x0410, 0x0430, ' ', 'W', 'i'};
   int pen = 2;
@@ -429,7 +452,7 @@ void test_mono_ui_is_fixed_and_independent() {
   expectFrame(expected);
   const Frame at_14 = ui_display_test::frame;
   display.setUiFont(0, 12);
-  display.printUiLine(0, "Аа Wi");
+  display.printUiLine(0, M8_TEST_AA_WI);
   expectFrame(expected);
   assert(ui_display_test::frame == at_14);
   assert(display.measureUiText("WWW") == display.measureUiText("iii"));
@@ -620,10 +643,11 @@ void test_invalid_custom_slot_uses_ui_fallback() {
 void test_external_calculator_font_is_isolated_from_ui() {
   // Oversized solid '?' makes inherited calculator metrics visibly wrong.
   // The production FMK parser validates this fixture before installation.
-  u8 font[84] = {'F','M','K','1',1,16,32,0xF0,1,0,1,0,84,0,0,0,'?',0,0};
-  font[19] = 0x7F; // raw bitmap mode bit followed by seven foreground pixels
-  std::memset(font + 20, 0xFF, 63);
-  font[83] = 0x80; // last pixel and zero padding
+  u8 font[83] = {'F','M','K','2',1,16,32,0xF0,1,0,1,0,83,0,0,0,
+                 '?',0};
+  font[18] = 0x7F; // raw bitmap mode bit followed by seven foreground pixels
+  std::memset(font + 19, 0xFF, 63);
+  font[82] = 0x80; // last pixel and zero padding
   const u16 crc = fmk::checksum(font, sizeof(font));
   font[14] = (u8) crc;
   font[15] = (u8) (crc >> 8);
@@ -667,7 +691,7 @@ void test_external_calculator_font_is_isolated_from_ui() {
 }
 
 void test_external_ui_font_layout_fallback_and_lifetime() {
-  u8 font[41];
+  u8 font[39];
   makeExternalUiFont(font);
   u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
   const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
@@ -688,9 +712,11 @@ void test_external_ui_font_layout_fallback_and_lifetime() {
   assert(display.uiTextActive() && display.rows() == 5);
   assert(display.measureUiText("AA") == 8);
 
-  // U+2603 is absent and has no legacy icon, so the FMK '?' is used. A
-  // private right-arrow token deliberately keeps its familiar resident art.
-  display.printUiLine(0, "A\xE2\x98\x83");
+  // Cyrillic А is absent and has no legacy icon in this tiny FMK, so the FMK
+  // '?' is used. A private right-arrow token deliberately keeps its familiar
+  // resident art.
+  static const char absent_m8[] = {'A', (char) 0xC0, 0};
+  display.printUiLine(0, absent_m8);
   display.setCursor(0, 1);
   display.writeCodepoint(display_symbol::uc1609::RT_ARROW);
   display.writeCodepoint('A');
@@ -722,7 +748,7 @@ void test_external_ui_font_layout_fallback_and_lifetime() {
 }
 
 void test_runtime_font_uses_full_47_by_10_grid() {
-  u8 font[30];
+  u8 font[28];
   makeExternalRuntimeFont(font);
   u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
   const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
@@ -761,7 +787,7 @@ void test_runtime_font_uses_full_47_by_10_grid() {
 }
 
 void test_runtime_font_columns_follow_advance() {
-  u8 font[30];
+  u8 font[28];
   makeExternalRuntimeFont(font, 6);
   u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
   const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
@@ -784,7 +810,7 @@ void test_runtime_font_columns_follow_advance() {
 }
 
 void test_runtime_proportional_font_keeps_nominal_columns() {
-  u8 font[33];
+  u8 font[31];
   makeExternalRuntimeProportionalFont(font);
   u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
   const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
@@ -837,13 +863,13 @@ void test_mixed_text_and_page_parity() {
     startUi(display, 1, size);
     Frame expected{};
     for(u8 row = 0; row < display.rows(); ++row) {
-      display.printUiLine(row, "AЖiё W9у");
+      display.printUiLine(row, M8_TEST_MIXED_TEXT);
       referenceText(expected, display.uiFontFace(), mixed, row);
     }
     expectFrame(expected);
     u16 advance = 0;
     for(u16 cp : mixed) advance = (u16) (advance + ui_font::glyph(display.uiFontFace(), cp).advance);
-    assert(display.measureUiText("AЖiё W9у") == advance);
+    assert(display.measureUiText(M8_TEST_MIXED_TEXT) == advance);
     assert(display.measureUiText("WWW") > display.measureUiText("iii"));
 
     // Incremental writes invalidate only intersecting pages. They must
@@ -857,11 +883,31 @@ void test_mixed_text_and_page_parity() {
   }
 }
 
+void test_m8_ui_text_metrics_and_pixels_agree() {
+  for(u8 family : {0, 1}) {
+    MK61Display display;
+    startUi(display, family, 14);
+    u16 expected_width = 0;
+    const char* cursor = M8_SETTINGS;
+    while(*cursor != 0) {
+      const u16 codepoint = mk8::next(cursor);
+      expected_width = (u16) (expected_width + (family == 0 ? 6U :
+          ui_font::glyph(display.uiFontFace(), codepoint).advance));
+    }
+    assert(display.measureUiText(M8_SETTINGS) == expected_width);
+    display.printUiLine(0, M8_SETTINGS);
+    const Frame expected = ui_display_test::frame;
+    display.clear();
+    display.printUiLine(0, M8_SETTINGS);
+    expectFrame(expected);
+  }
+}
+
 void test_short_replacement_and_gutters() {
   MK61Display display;
   startUi(display);
-  display.printUiLine(0, "Очень длинная строка для замены", '>','M');
-  display.printUiLine(1, "Нижняя строка");
+  display.printUiLine(0, M8_TEST_LONG_REPLACEMENT, '>','M');
+  display.printUiLine(1, M8_TEST_LOWER_LINE);
   display.printUiLine(0, "A");
   Frame expected{};
   static constexpr u16 a[] = {'A'};
@@ -888,7 +934,7 @@ void test_short_replacement_and_gutters() {
   }
 }
 
-void test_ellipsis_and_invalid_utf8() {
+void test_ellipsis_and_invalid_m8() {
   for(u8 size : {12, 14, 16}) {
     MK61Display display;
     startUi(display, 1, size);
@@ -912,12 +958,12 @@ void test_ellipsis_and_invalid_utf8() {
       referenceGlyph(expected, face, 0x2026, pen, 0);
       expectFrame(expected);
     }
-    display.printUiLine(0, "\xC0\xAF\xF0\x9F\x98\x80");
+    display.printUiLine(0, "\x01\x7F\x98");
     Frame expected{};
     static constexpr u16 invalid[] = {'?', '?', '?'};
     referenceText(expected, display.uiFontFace(), invalid, 0);
     expectFrame(expected);
-    assert(display.measureUiText("\xC0\xAF\xF0\x9F\x98\x80") == display.measureUiText("???"));
+    assert(display.measureUiText("\x01\x7F\x98") == display.measureUiText("???"));
   }
 }
 
@@ -1079,7 +1125,7 @@ void test_usb_return_to_ui_geometry() {
 }
 
 void test_usb_calculator_to_runtime_font_switches_renderer() {
-  u8 font[30];
+  u8 font[28];
   makeExternalRuntimeFont(font);
   u8 prepared[prepared_font::MAX_IMAGE_SIZE] = {};
   const usize prepared_size = prepareFont(font, prepared, sizeof(prepared));
@@ -1132,6 +1178,7 @@ int main() {
                 "UI must keep one bounded 64x10 grid");
   allocation_forbidden = true;
   test_profile_and_scope();
+  test_localized_message_selects_ui_renderer();
   test_preview_of_same_calculator_profile();
   test_live_ui_font_sample();
   test_mono_ui_is_fixed_and_independent();
@@ -1143,8 +1190,9 @@ int main() {
   test_runtime_font_columns_follow_advance();
   test_runtime_proportional_font_keeps_nominal_columns();
   test_mixed_text_and_page_parity();
+  test_m8_ui_text_metrics_and_pixels_agree();
   test_short_replacement_and_gutters();
-  test_ellipsis_and_invalid_utf8();
+  test_ellipsis_and_invalid_m8();
   test_cursor_and_stop_redraw();
   test_cursor_blinks_on_trailing_ui_marker();
   test_partial_page_overlay_restoration();
