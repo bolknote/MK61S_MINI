@@ -96,7 +96,7 @@ static Result parse_value(const char* begin, usize len, bool expanded,
 
 static Result parse(const char* args, bool expanded, bool emit,
                     WriteByte write_byte, WriteValue write_value,
-                    void* user_data) {
+                    void* user_data, WriteByte write_control) {
   if(args == nullptr) return {Error::EXPECTED_STRING};
   const char* p = skip_spaces(args);
   if(*p != '"') return {Error::EXPECTED_STRING};
@@ -111,26 +111,34 @@ static Result parse(const char* args, bool expanded, bool emit,
     u8 byte = 0;
     if(*p == '\\') {
       p++;
+      bool control = false;
       switch(*p) {
         case '\\': byte = '\\'; p++; break;
         case '"': byte = '"'; p++; break;
-        case 'r': byte = '\r'; p++; break;
-        case 'n': byte = '\n'; p++; break;
-        case 't': byte = '\t'; p++; break;
-        case 'b': byte = '\b'; p++; break;
-        case 'x': {
+        case 'r': byte = '\r'; p++; control = true; break;
+        case 'n': byte = '\n'; p++; control = true; break;
+        case 't': byte = '\t'; p++; control = true; break;
+        case 'b': byte = '\b'; p++; control = true; break;
+        case 'x':
+        case 'm': {
+          const bool legacy_escape = *p == 'x';
           if(p[1] == 0 || p[2] == 0) return {Error::INVALID_ESCAPE};
           const i8 high = hex_digit(p[1]);
           const i8 low = hex_digit(p[2]);
           if(high < 0 || low < 0) return {Error::INVALID_ESCAPE};
           byte = (u8) (((u8) high << 4) | (u8) low);
+          // Existing M61 files use \x1B for ANSI. \m1B is the literal
+          // M8 superscript-y sign; raw M8 source bytes are literal too.
+          control = legacy_escape && byte == 0x1B;
           p += 3;
           break;
         }
         default:
           return {Error::INVALID_ESCAPE};
       }
-      if(emit && (write_byte == nullptr || !write_byte(byte, user_data))) {
+      WriteByte output = control && write_control != nullptr
+          ? write_control : write_byte;
+      if(emit && (output == nullptr || !output(byte, user_data))) {
         return {Error::OUTPUT_FAILED};
       }
       continue;
@@ -176,12 +184,14 @@ static Result parse(const char* args, bool expanded, bool emit,
 
 Result render(const char* args, bool expanded,
               WriteByte write_byte, WriteValue write_value,
-              void* user_data) {
+              void* user_data, WriteByte write_control) {
   // Сначала проверяем всё выражение, чтобы ошибочный суффикс не оставил
   // в терминале частично напечатанное сообщение.
-  const Result validated = parse(args, expanded, false, nullptr, nullptr, nullptr);
+  const Result validated = parse(args, expanded, false, nullptr, nullptr,
+                                 nullptr, nullptr);
   if(!validated.ok()) return validated;
-  return parse(args, expanded, true, write_byte, write_value, user_data);
+  return parse(args, expanded, true, write_byte, write_value,
+               user_data, write_control);
 }
 
 const char* error_message(Error error) {

@@ -1,4 +1,5 @@
 #include "m61_ansi.hpp"
+#include "mk8_codec.hpp"
 
 namespace m61_ansi {
 
@@ -21,8 +22,8 @@ Writer::Writer(u8 cols_value, u8 rows_value, u8 initial_x, u8 initial_y,
       param_index(0) {}
 
 bool Writer::put(u8 x, u8 y, u8 value) {
-  return sink.put_byte != nullptr &&
-         sink.put_byte(x, y, value, sink.user_data);
+  return sink.put_codepoint != nullptr &&
+         sink.put_codepoint(x, y, mk8::codepoint(value), sink.user_data);
 }
 
 bool Writer::putAndAdvance(u8 value) {
@@ -207,6 +208,12 @@ bool Writer::write(u8 value) {
     default:
       return putAndAdvance(value);
   }
+}
+
+bool Writer::writeLiteral(u8 value) {
+  if(parse_state != ParseState::TEXT || value == '\r' || value == '\n' ||
+     value == '\t' || value == '\b') return write(value);
+  return putAndAdvance(value);
 }
 
 } // пространство имён m61_ansi

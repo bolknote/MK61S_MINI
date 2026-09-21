@@ -3546,10 +3546,12 @@ bool class_terminal::parse_if_operand(const char*& p, double& out) {
       return terminal_core::parse_decimal(p, out);
     }
 
-bool class_terminal::screen_put_byte(u8 x, u8 y, u8 value, void* user_data) {
+bool class_terminal::screen_put_codepoint(u8 x, u8 y, u16 codepoint,
+                                          void* user_data) {
       MK61Display& display = *(MK61Display*) user_data;
       display.setCursor(x, y);
-      return display.write(value) == 1;
+      display.writeCodepoint(codepoint);
+      return true;
     }
 
 bool class_terminal::screen_clear(void* user_data) {
@@ -3559,22 +3561,35 @@ bool class_terminal::screen_clear(void* user_data) {
 
 bool class_terminal::print_byte(u8 value, void* user_data) {
       PrintRenderContext& context = *(PrintRenderContext*) user_data;
+      return context.writer->writeLiteral(value);
+    }
+
+bool class_terminal::print_control(u8 value, void* user_data) {
+      PrintRenderContext& context = *(PrintRenderContext*) user_data;
       return context.writer->write(value);
     }
 
 bool class_terminal::print_text(const char* text, PrintRenderContext& context) {
       if(text == nullptr) return false;
       while(*text != 0) {
-        if(!context.writer->write((u8) *text++)) return false;
+        if(!context.writer->writeLiteral((u8) *text++)) return false;
       }
       return true;
     }
+
+// The calculator's ordinary display_symbols use physical controller tokens
+// for Г (different on UC1609/WS0010/A00). M61 print feeds M8 to the ANSI
+// writer, so a register substitution must use the M8 byte for that letter.
+static const char M61_PRINT_SYMBOLS[16] = {
+  'O', '1', '2', '3', '4', '5', '6', '7',
+  '8', '9', '-', 'L', 'C', (char) 0xC3, 'E', ' '
+};
 
 bool class_terminal::print_number_text(const char text[15],
                                   m61_print::ValueFormat format,
                                   PrintRenderContext& context) {
       const auto ascii_digit = [](u8 value) {
-        return value == (u8) display_symbols[0] ? (u8) '0' : value;
+        return value == (u8) M61_PRINT_SYMBOLS[0] ? (u8) '0' : value;
       };
       switch(format) {
         case m61_print::ValueFormat::INDICATOR:
@@ -3595,14 +3610,14 @@ bool class_terminal::print_value(const m61_print::ValueRef& value, void* user_da
       char text[15];
       text[14] = 0;
       if(value.kind == m61_print::ValueKind::REGISTER) {
-        MK61Emu_ReadRegister((int) value.index, text, display_symbols);
+        MK61Emu_ReadRegister((int) value.index, text, M61_PRINT_SYMBOLS);
         return print_number_text(text, value.format, context);
       }
 
       const m61_print::StackValue stack_value =
           (m61_print::StackValue) value.index;
       if(stack_value == m61_print::StackValue::X2) {
-        return print_text(MK61Emu_GetIndicatorStr(display_symbols), context);
+        return print_text(MK61Emu_GetIndicatorStr(M61_PRINT_SYMBOLS), context);
       }
 
       stack reg = stack::X;
@@ -3614,7 +3629,7 @@ bool class_terminal::print_value(const m61_print::ValueRef& value, void* user_da
         case m61_print::StackValue::X1: reg = stack::X1; break;
         case m61_print::StackValue::X2: break;
       }
-      read_stack_register(reg, text, display_symbols);
+      read_stack_register(reg, text, M61_PRINT_SYMBOLS);
       return print_number_text(text, value.format, context);
     }
 
@@ -3639,7 +3654,7 @@ bool class_terminal::exec_print(bool script_mode) {
         return true;
       }
       const m61_ansi::Sink sink = {
-        screen_put_byte, screen_clear, &display
+        screen_put_codepoint, screen_clear, &display
       };
       m61_ansi::Writer writer(
           display.cols(), display.rows(), display.cursorX(), display.cursorY(),
@@ -3648,7 +3663,7 @@ bool class_terminal::exec_print(bool script_mode) {
       MK61DisplayUpdate update(display);
       const m61_print::Result result = m61_print::render(
           command_args(), core_61::expanded_program_is_on(),
-          print_byte, print_value, &context);
+          print_byte, print_value, &context, print_control);
       display.setCursor(writer.cursorX(), writer.cursorY());
       if(result.ok()) {
         if(script_mode) m61_text::claim_display();

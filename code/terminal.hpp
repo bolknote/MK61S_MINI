@@ -353,11 +353,12 @@ class class_terminal {
       m61_ansi::Writer* writer;
     };
 
-    static bool screen_put_byte(u8 x, u8 y, u8 value, void* user_data);
+    static bool screen_put_codepoint(u8 x, u8 y, u16 codepoint, void* user_data);
 
     static bool screen_clear(void* user_data);
 
     static bool print_byte(u8 value, void* user_data);
+    static bool print_control(u8 value, void* user_data);
 
     static bool print_text(const char* text, PrintRenderContext& context);
 

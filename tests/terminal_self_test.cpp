@@ -404,10 +404,16 @@ static void test_script_allowlist_is_explicit(void) {
 
 struct PrintCapture {
   std::vector<u8> bytes;
+  std::vector<u8> controls;
 };
 
 static bool capture_print_byte(u8 value, void* user_data) {
   static_cast<PrintCapture*>(user_data)->bytes.push_back(value);
+  return true;
+}
+
+static bool capture_print_control(u8 value, void* user_data) {
+  static_cast<PrintCapture*>(user_data)->controls.push_back(value);
   return true;
 }
 
@@ -480,6 +486,15 @@ static void test_m61_print_escapes_and_interpolation(void) {
   assert(capture.bytes == std::vector<u8>(expected, expected + sizeof(expected)));
 
   capture.bytes.clear();
+  result = m61_print::render(
+      "\"\\x14\\x1B[2J\\m1B\x1B\"", false,
+      capture_print_byte, capture_print_value, &capture,
+      capture_print_control);
+  assert(result.ok());
+  assert((capture.bytes == std::vector<u8>{0x14, '[', '2', 'J', 0x1B, 0x1B}));
+  assert((capture.controls == std::vector<u8>{0x1B}));
+
+  capture.bytes.clear();
   result = m61_print::render("\"\\x00\"", false,
                              capture_print_byte, capture_print_value, &capture);
   assert(result.ok());
@@ -523,6 +538,7 @@ static void test_m61_print_rejects_malformed_input_atomically(void) {
     "\"unterminated",
     "\"bad \\q\"",
     "\"bad \\x0\"",
+    "\"bad \\m0\"",
     "\"bad {Q}\"",
     "\"bad {RA:q}\"",
     "\"bad {RA:mm}\"",
@@ -549,7 +565,7 @@ static void test_m61_print_rejects_malformed_input_atomically(void) {
 struct FakeM61Screen {
   static constexpr u8 COLS = 16;
   static constexpr u8 ROWS = 6;
-  u8 cells[ROWS][COLS];
+  u16 cells[ROWS][COLS];
   int clear_count;
 
   FakeM61Screen() : cells{{0}}, clear_count(0) {
@@ -559,10 +575,10 @@ struct FakeM61Screen {
   }
 };
 
-static bool fake_screen_put(u8 x, u8 y, u8 value, void* user_data) {
+static bool fake_screen_put(u8 x, u8 y, u16 codepoint, void* user_data) {
   FakeM61Screen& screen = *(FakeM61Screen*) user_data;
   if(x >= FakeM61Screen::COLS || y >= FakeM61Screen::ROWS) return false;
-  screen.cells[y][x] = value;
+  screen.cells[y][x] = codepoint;
   return true;
 }
 
@@ -577,6 +593,14 @@ static bool fake_screen_clear(void* user_data) {
 
 static void write_ansi(m61_ansi::Writer& writer, const char* text) {
   while(*text != 0) assert(writer.write((u8) *text++));
+}
+
+static bool write_m61_literal(u8 value, void* user_data) {
+  return static_cast<m61_ansi::Writer*>(user_data)->writeLiteral(value);
+}
+
+static bool write_m61_control(u8 value, void* user_data) {
+  return static_cast<m61_ansi::Writer*>(user_data)->write(value);
 }
 
 static void test_m61_ansi_writes_only_requested_cells(void) {
@@ -598,7 +622,7 @@ static void test_m61_ansi_writes_only_requested_cells(void) {
   write_ansi(writer, "\x1B[u!");
   assert(screen.cells[1][2] == '@');
   assert(screen.cells[1][3] == '!');
-  assert(screen.cells[5][15] == 0xFF);
+  assert(screen.cells[5][15] == 0x044F);
 
   write_ansi(writer, "\x1B[3;5H\x1B[K");
   assert(screen.cells[2][3] == '#');
@@ -610,6 +634,35 @@ static void test_m61_ansi_writes_only_requested_cells(void) {
   write_ansi(writer, "\x1B[2J");
   assert(screen.clear_count == 1);
   assert(writer.cursorX() == 4 && writer.cursorY() == 2);
+
+  // The M61 print path must decode M8 at the sink, not index the old
+  // UC1609 C0 font directly. The superscript-y byte shares ANSI's ESC value:
+  // raw M8 and \m1B print a glyph; only legacy \x1B starts ANSI.
+  const m61_print::Result printed = m61_print::render(
+      "\"\\x1B[2J\\x1B[3;5H\\x14\\m1B\x1B\"", false,
+      write_m61_literal, nullptr, &writer, write_m61_control);
+  assert(printed.ok());
+  assert(screen.clear_count == 2);
+  assert(screen.cells[2][4] == 0x21BB);
+  assert(screen.cells[2][5] == 0x02B8);
+  assert(screen.cells[2][6] == 0x02B8);
+}
+
+static void test_m61_print_delivers_all_private_m8_codepoints(void) {
+  FakeM61Screen screen;
+  m61_ansi::SavedCursor saved = {};
+  const m61_ansi::Sink sink = {
+    fake_screen_put, fake_screen_clear, &screen
+  };
+  m61_ansi::Writer writer(
+      FakeM61Screen::COLS, FakeM61Screen::ROWS, 0, 0, saved, sink);
+  for(u8 byte = mk8::BYTE_LEFT_ARROW; byte <= mk8::BYTE_RETURN_ARROW; ++byte) {
+    assert(writer.writeLiteral(byte));
+    const u8 index = (u8) (byte - mk8::BYTE_LEFT_ARROW);
+    assert(screen.cells[index / FakeM61Screen::COLS]
+                       [index % FakeM61Screen::COLS] == mk8::codepoint(byte));
+  }
+  assert(screen.clear_count == 0);
 }
 
 static void test_file_transfer_checksum_matches_posix_cksum(void) {
@@ -960,6 +1013,7 @@ int main(void) {
   test_m61_print_display_controls_are_unquoted();
   test_m61_print_rejects_malformed_input_atomically();
   test_m61_ansi_writes_only_requested_cells();
+  test_m61_print_delivers_all_private_m8_codepoints();
   test_file_transfer_checksum_matches_posix_cksum();
   test_file_transfer_hex_codec();
   test_rtc_datetime_parser_and_formatter();

@@ -5,11 +5,11 @@
 
 namespace m61_ansi {
 
-using PutByte = bool (*)(u8 x, u8 y, u8 value, void* user_data);
+using PutCodepoint = bool (*)(u8 x, u8 y, u16 codepoint, void* user_data);
 using ClearScreen = bool (*)(void* user_data);
 
 struct Sink {
-  PutByte put_byte;
+  PutCodepoint put_codepoint;
   ClearScreen clear_screen;
   void* user_data;
 };
@@ -30,6 +30,9 @@ class Writer {
            SavedCursor& saved_cursor, Sink sink);
 
     bool write(u8 value);
+    // A literal M8 byte, including 0x1B (ʸ), never starts an ANSI sequence.
+    // Bytes after an explicit ANSI ESC still complete that sequence.
+    bool writeLiteral(u8 value);
     u8 cursorX(void) const { return cursor_x; }
     u8 cursorY(void) const { return cursor_y; }
 

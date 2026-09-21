@@ -62,12 +62,15 @@ using WriteValue = bool (*)(const ValueRef& value, void* user_data);
 Control parse_control(const char* args);
 
 // Разбирает один заключённый в кавычки аргумент print и выводит его без
-// неявного перевода строки. Заполнители регистров принимают и {R0}..{RF},
+// неявного перевода строки. Обычные байты — M8; старое \x1B включает ANSI,
+// а \m1B принудительно печатает буквальный знак M8 0x1B.
+// Заполнители регистров принимают и {R0}..{RF},
 // и {0}..{F}. Необязательные форматы :m и :e выбирают старшую цифру мантиссы
 // или абсолютное значение порядка.
 Result render(const char* args, bool expanded,
               WriteByte write_byte, WriteValue write_value,
-              void* user_data = nullptr);
+              void* user_data = nullptr,
+              WriteByte write_control = nullptr);
 const char* error_message(Error error);
 
 } // пространство имён m61_print
