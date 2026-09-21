@@ -60,8 +60,8 @@ python3 tools/build_portable_app.py --name ELIZA \
 cp .build/portable-apps/eliza/ELIZA.APP programs/app/ELIZA.APP
 ```
 
-The ready-to-copy result is `programs/app/ELIZA.APP`.  On the repository's
-sample C5 layout it is installed as `/app/ELIZA.APP`.
+The ready-to-copy result is `programs/app/ELIZA.APP`. On C6 it is installed as
+`/app/ELIZA.APP`.
 
 The host test contains the complete conversation printed in the January 1966
 CACM paper plus the reference implementation's comprehensive DOCTOR coverage
