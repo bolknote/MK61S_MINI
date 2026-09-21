@@ -1,6 +1,6 @@
 # Hello World для MK61s mini: пошагово
 
-Версия документа: 14.09.2026. APP ABI 5.
+Версия документа: 20.09.2026. APP ABI 6.
 
 Ниже только практические действия: создать один файл, собрать `HELLO.APP`
 и запустить его на калькуляторе.
@@ -33,7 +33,7 @@ int main(void) {
   if(!mk61_api->display_clear())
     return MK61_APP_RUNTIME_ERROR;
 
-  if(!mk61_api->display_write_utf8(0, 0, text, sizeof(text) - 1))
+  if(!mk61_api->display_write_m8(0, 0, text, sizeof(text) - 1))
     return MK61_APP_RUNTIME_ERROR;
 
   (void) mk61_api->key_wait();
@@ -95,7 +95,7 @@ py -3 tools\build_portable_app.py --name HELLO `
 
 **1.** На калькуляторе откройте `Меню -> USB-диск`.
 
-**2.** На компьютере откройте диск `MK61S C5`.
+**2.** На компьютере откройте диск `MK61S C6`.
 
 **3.** Создайте на нём каталог `Apps`, если его ещё нет.
 
@@ -125,7 +125,7 @@ static const char text[] = "HELLO, MK61S!";
 
 - `tools/build_portable_app.py` не найден: терминал открыт не в корне проекта.
 - `ARM GCC not found`: в Arduino IDE не установлен пакет плат STM32.
-- APP не запускается: обновите прошивку и весь комплект `/System` до ABI 5.
+- APP не запускается: обновите прошивку и весь комплект `/System` до ABI 6.
 
 Для Hello World больше ничего настраивать не требуется. Полное руководство
 по файлам, графике, звуку и памяти находится в
@@ -163,7 +163,7 @@ pub extern "C" fn main() -> i32 {
     let needs = mk61::CAP_TEXT_DISPLAY | mk61::CAP_KEYBOARD;
     if !mk61::api_compatible(needs)
         || !mk61::display_clear()
-        || !mk61::display_write_utf8(0, 0, b"HELLO, MK61S!")
+        || !mk61::display_write_m8(0, 0, b"HELLO, MK61S!")
     {
         return mk61::APP_RUNTIME_ERROR;
     }

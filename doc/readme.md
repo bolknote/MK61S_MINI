@@ -6,7 +6,7 @@
 | Руководство | Исходник | PDF |
 | --- | --- | --- |
 | Первый APP: Hello World на C и Rust | [Markdown](src/MK61s-mini-APP-Quickstart.md) | [PDF](MK61s-mini-APP-Quickstart.pdf) |
-| Написание самостоятельных APP на C/C++ (ABI 5) | [Markdown](src/MK61s-mini-APP-Programming.md) | [PDF](MK61s-mini-APP-Programming.pdf) |
+| Написание самостоятельных APP на C/C++ (ABI 6) | [Markdown](src/MK61s-mini-APP-Programming.md) | [PDF](MK61s-mini-APP-Programming.pdf) |
 | Формат, установка и manifest APP | [Markdown](src/MK61s-mini-APP.md) | [PDF](MK61s-mini-APP.pdf) |
 | F401 и System APP в Arduino IDE | [Markdown](src/MK61s-mini-Arduino-IDE.md) | [PDF](MK61s-mini-Arduino-IDE.pdf) |
 | Терминал | [Markdown](src/MK61s-mini-Terminal.md) | [PDF](MK61s-mini-Terminal.pdf) |
@@ -14,7 +14,7 @@
 | Аппаратные платформы и профили | [Markdown](src/MK61s-mini-Hardware.md) | [PDF](MK61s-mini-Hardware.pdf) |
 | OLED1602 WEH001602A/WS0010 | [Markdown](src/MK61s-mini-WS0010.md) | [PDF](MK61s-mini-WS0010.pdf) |
 | USB-экран и desktop-клиент | [Markdown](src/MK61s-mini-USB-Screen.md) | [PDF](MK61s-mini-USB-Screen.pdf) |
-| Хранилище C5 и USB FAT12 | [Markdown](src/MK61s-mini-Storage.md) | [PDF](MK61s-mini-Storage.pdf) |
+| Хранилище C6 и USB FAT12 | [Markdown](src/MK61s-mini-Storage.md) | [PDF](MK61s-mini-Storage.pdf) |
 | Часы RTC | [Markdown](src/MK61s-mini-RTC.md) | [PDF](MK61s-mini-RTC.pdf) |
 | FOCAL | [Markdown](src/MK61s-mini-FOCAL.md) | [PDF](MK61s-mini-FOCAL.pdf) |
 | TinyBASIC | [Markdown](src/MK61s-mini-TinyBASIC.md) | [PDF](MK61s-mini-TinyBASIC.pdf) |

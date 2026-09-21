@@ -18,7 +18,7 @@ services->call(MK61_SERVICE_UI_FONT, MK61_UI_FONT_INFO, 0,
 native Ark Pixel proportional UI. Legacy wire value `2` remains an alias for
 Ark Pixel so an already-built APP cannot lose font service after an update; it
 is no longer offered by the settings screen. `family=3` is the active external
-FMK UI face selected from a direct child `Fonts/*.FMK`; the C5 filename is its
+FMK UI face selected from a direct child `Fonts/*.FMK`; the C6 filename is its
 user-visible name. Legacy root files `UI12.FMK`, `UI14.FMK` and `UI16.FMK`
 remain a migration fallback for an old saved selection but are not the catalog.
 Family 0 ignores the stored 12/14/16 size. On every UC1609 configuration,

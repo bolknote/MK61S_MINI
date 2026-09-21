@@ -1,7 +1,8 @@
 # MK61s System APP
 
-FOCAL, BASIC, WBMP, Markdown, CHIP-8 и SETUP собираются в те же перемещаемые
-контейнеры ABI 5, что и обычные APPLICATION. У них общий SDK startup, публичные
+FOCAL, BASIC, WBMP, Markdown, CHIP-8, SETUP и USBDISK собираются в те же
+перемещаемые контейнеры ABI 6, что и обычные APPLICATION. У них общий
+SDK startup, публичные
 таблицы API и сервисов, проверка контейнера, релокации, динамическое размещение,
 MPU и вытесняемый кэш. Единственная особенность System APP — каноническое имя
 в `/System` и отдельный `Kind`, по которому resident находит нужную роль.
@@ -14,7 +15,7 @@ python3 tools/build_portable_app.py --system focal \
 ```
 
 Значения `--system`: `focal`, `tinybasic`, `wbmp-viewer`, `markdown-viewer`,
-`chip8`, `setup`. Для компактного Markdown на символьном экране добавьте
+`chip8`, `setup`, `usbdisk`. Для компактного Markdown на символьном экране добавьте
 `--text-only`. Графический Markdown также открывает WBMP; в таком комплекте
 отдельный `WBMP.APP` не нужен. CHIP-8 требует графического экрана.
 
@@ -28,15 +29,16 @@ python3 tools/build_system_app_bundle.py \
   --graphics 1 --focal 1 --basic 1 --wbmp 1 --markdown 1 --chip8 0
 ```
 
-Он всегда собирает обязательный `SETUP.APP`, извлекает из служебной INFO-секции
+Он всегда собирает обязательные `SETUP.APP` и `USBDISK.APP`,
+извлекает из служебной INFO-секции
 resident согласованные `HELP0.TXT` и `HELP1.TXT`, добавляет включённые роли и
 атомарно заменяет только принадлежащие ему канонические файлы. Оболочка
 `system_apps/build.cmd` делегирует этому же коду; GCC, Arduino и
 `mk61-firmware` не имеют собственных реализаций упаковки System APP.
 
 Имена остаются стабильными: `/System/FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
-`MARKDOWN.APP`, `CHIP8.APP`, `SETUP.APP`. После прошивки resident скопируйте
-весь каталог `/System` из того же комплекта. ABI 2/3/4 намеренно не
+`MARKDOWN.APP`, `CHIP8.APP`, `SETUP.APP`, `USBDISK.APP`. После прошивки resident скопируйте
+весь каталог `/System` из того же комплекта. ABI 2/3/4/5 намеренно не
 исполняются; старые APP нужно один раз пересобрать.
 
 В заголовке `load_address=0x20000000` — только виртуальная база линковки для
@@ -47,7 +49,7 @@ resident согласованные `HELP0.TXT` и `HELP1.TXT`, добавляе
 вытеснить, после чего память немедленно возвращается общему пулу.
 
 API использует C-структуры с явными размерами полей. Базовые функции находятся
-в `mk61_app_api`; C5, редактор, диалоги, настройки, математика, runtime helpers,
+в `mk61_app_api`; C6, редактор, диалоги, настройки, математика, runtime helpers,
 workspace и scratch доступны любому APP через публичный `query_service`.
 Системного закрытого API нет. Состояние языков хранится в отдельном workspace
 и потому не зависит от адреса или вытеснения исполняемого образа.

@@ -9,7 +9,7 @@
 - `build_f401_bundle.sh` — F401-комплект с System и custom manifest APP;
 - `build_system_app_bundle.py` — общий для F401/F411/Arduino сборщик
   канонического каталога `/System`;
-- `build_portable_app.py` — C/C++/Rust SDK и сборщик всех видов APP: единый ABI 5
+- `build_portable_app.py` — C/C++/Rust SDK и сборщик всех видов APP: единый ABI 6
   с автоматическим выбором ZX0 или BCJ + ZX0; инструкция в
   [`sdk/portable/README.md`](../sdk/portable/README.md);
 - `build_fmk_font.sh` — конвертер шрифтов FMK;
