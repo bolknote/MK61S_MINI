@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Exercise ELF help export and the production print_help with failing C5 reads."""
+"""Exercise M8 help export and the production print_help with failing C6 reads."""
 import importlib.util
+import json
 import os
 from pathlib import Path
 import struct
@@ -24,6 +25,14 @@ def elf_metadata(content, flags=0):
 
 
 class HelpTest(unittest.TestCase):
+    def test_translated_catalog_keeps_diagnostics(self):
+        descriptions = json.loads((ROOT/'code/mk8_strings.json').read_text(encoding='utf-8'))
+        self.assertIn('graphics-read/restore', descriptions['TH_DISPLAY'])
+        self.assertIn('сторожевой таймер', descriptions['TH_WDOG'])
+        self.assertIn('защита памяти', descriptions['TH_MPU'])
+        self.assertIn('сбои', descriptions['TH_CRASH'])
+        self.assertEqual(descriptions['TH_AVAILABLE'], 'Доступные команды:')
+
     def test_export(self):
         # M8 is single-byte; the exporter prefers the previous complete line.
         body = b'A'*1300 + b'\n' + b'B'*98 + bytes([0xff]) + b'C'*1200
