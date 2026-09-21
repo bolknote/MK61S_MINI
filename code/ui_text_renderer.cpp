@@ -5,6 +5,7 @@
 #include "builtin_font.hpp"
 #include "display_symbols.hpp"
 #include "fmk_font.hpp"
+#include "mk8_codec.hpp"
 
 #include <string.h>
 
@@ -30,6 +31,12 @@ struct ResolvedGlyph {
 bool legacyToken(u16 value) {
   return value >= display_symbol::uc1609::GE &&
          value <= display_symbol::uc1609::CYR_CHE;
+}
+
+bool privateM8Symbol(u16 codepoint) {
+  u8 byte = 0;
+  return mk8::from_codepoint(codepoint, byte) &&
+      byte >= mk8::BYTE_LEFT_ARROW && byte <= mk8::BYTE_RETURN_ARROW;
 }
 
 LineMetrics lineMetrics(const Style& style, u8 rows) {
@@ -123,18 +130,27 @@ bool resolveGlyph(const Style& style, u16 value, bool custom, bool pixels,
     if(legacyToken(value)) {
       return fixedGlyph(style, value, false, pixels, out);
     }
+    if(privateM8Symbol(unicode)) {
+      return fixedGlyph(style, unicode, false, pixels, out);
+    }
     return (style.external->glyph('?', source) &&
             externalGlyph(style, source, true, pixels, out)) ||
         fixedGlyph(style, '?', false, pixels, out);
   }
 
-  // Legacy private tokens with resident 5x8 art keep that art.  Every other
+  // A private M8 sign must not turn into '?' or an ASCII approximation when
+  // the proportional atlas has no exact raster for it.
+  const ui_font::Glyph glyph = ui_font::glyph(style.face, unicode);
+  if(glyph.fallback && privateM8Symbol(unicode)) {
+    return fixedGlyph(style, unicode, false, pixels, out);
+  }
+  // Legacy private tokens with resident 5x8 art keep that art. Every other
   // missing character uses the selected proportional face's '?' fallback.
-  if(!ui_font::supports(style.face, unicode) &&
+  if(glyph.fallback &&
      builtin_font::rows5x8(value) != NULL) {
     return fixedGlyph(style, value, false, pixels, out);
   }
-  out.glyph = ui_font::glyph(style.face, unicode);
+  out.glyph = glyph;
   return true;
 }
 

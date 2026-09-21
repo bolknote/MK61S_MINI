@@ -749,6 +749,19 @@ void test_external_ui_font_layout_fallback_and_lifetime() {
   referenceBuiltin(expected, display.uiFontFace(),
                    display_symbol::uc1609::RT_ARROW, 2, 1);
   referenceExternal(expected, *display.externalUiFont(), 'A', 8, 1);
+  for(u8 row = 2; row < 4; ++row) {
+    const u8 count = row == 2 ? 16U : 2U;
+    char private_symbols[17] = {};
+    for(u8 col = 0; col < count; ++col) {
+      const u8 byte = (u8) (mk8::BYTE_LEFT_ARROW +
+          (row - 2U) * 16U + col);
+      private_symbols[col] = (char) byte;
+      referenceBuiltin(expected, display.uiFontFace(), mk8::codepoint(byte),
+                       2 + col * 6, row);
+    }
+    display.printUiLine(row, private_symbols);
+    assert(display.measureUiText(private_symbols) == count * 6U);
+  }
   expectFrame(expected);
 
   // Calculator rendering stays its own fixed face even while an external UI
@@ -922,6 +935,35 @@ void test_m8_ui_text_metrics_and_pixels_agree() {
     const Frame expected = ui_display_test::frame;
     display.clear();
     display.printUiLine(0, M8_SETTINGS);
+    expectFrame(expected);
+  }
+}
+
+void test_all_private_m8_symbols_in_pixel_ui() {
+  for(u8 size : {12, 14, 16}) {
+    MK61Display display;
+    startUi(display, 1, size);
+    Frame expected{};
+    for(u8 row = 0; row < 2; ++row) {
+      const u8 count = row == 0 ? 16U : 2U;
+      char text[17] = {};
+      int pen = 2;
+      for(u8 col = 0; col < count; ++col) {
+        const u8 byte = (u8) (mk8::BYTE_LEFT_ARROW + row * 16U + col);
+        const u16 codepoint = mk8::codepoint(byte);
+        text[col] = (char) byte;
+        const ui_font::Glyph glyph = ui_font::glyph(display.uiFontFace(), codepoint);
+        if(glyph.fallback) {
+          referenceBuiltin(expected, display.uiFontFace(), codepoint, pen, row);
+          pen += 6;
+        } else {
+          referenceGlyph(expected, display.uiFontFace(), codepoint, pen, row);
+          pen += glyph.advance;
+        }
+      }
+      display.printUiLine(row, text);
+      assert(display.measureUiText(text) == pen - 2);
+    }
     expectFrame(expected);
   }
 }
@@ -1214,6 +1256,7 @@ int main() {
   test_runtime_proportional_font_keeps_nominal_columns();
   test_mixed_text_and_page_parity();
   test_m8_ui_text_metrics_and_pixels_agree();
+  test_all_private_m8_symbols_in_pixel_ui();
   test_short_replacement_and_gutters();
   test_ellipsis_and_invalid_m8();
   test_cursor_and_stop_redraw();
