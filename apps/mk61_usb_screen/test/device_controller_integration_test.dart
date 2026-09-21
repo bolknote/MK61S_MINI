@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mk61_usb_screen/device/cp1251.dart';
 import 'package:mk61_usb_screen/device/device_controller.dart';
 import 'package:mk61_usb_screen/device/keyboard_definition.dart';
 import 'package:mk61_usb_screen/device/serial_transport.dart';
@@ -76,7 +77,7 @@ class _FakeSerialConnection implements DeviceSerialConnection {
   }
 
   void sendDeviceTerminal(String text) {
-    _input.add(Uint8List.fromList(utf8.encode(text)));
+    _input.add(encodeCp1251(text));
   }
 
   void sendDeviceTerminalBytes(List<int> bytes) {
@@ -173,7 +174,7 @@ Future<DeviceController> _openController(_FakeSerialTransport transport) async {
   expect(controller.stateLabel, 'Включение USB Screen');
   expect(
     utf8.decode(transport.connection.hostTerminalBytes),
-    'encoding utf-8\ruscreen\r',
+    'uscreen\r',
   );
   return controller;
 }
@@ -231,11 +232,21 @@ void main() {
       expect(controller.sendTerminalLine('ver'), isTrue);
       expect(
         utf8.decode(connection.hostTerminalBytes),
-        'encoding utf-8\ruscreen\rver\r',
+        'uscreen\rver\r',
       );
       connection.sendDeviceTerminal('ver\r\nMK61> ');
       expect(controller.terminalText, contains('ver'));
       expect(controller.terminalText, contains('MK61> '));
+      connection.sendDeviceTerminal('Привет\r\n');
+      expect(controller.terminalText, contains('Привет'));
+      final beforeRussianCommand = connection.hostTerminalBytes.length;
+      expect(controller.sendTerminalLine('open "Моя игра"'), isTrue);
+      expect(
+        decodeCp1251(
+          connection.hostTerminalBytes.sublist(beforeRussianCommand),
+        ),
+        'open "Моя игра"\r',
+      );
       controller.clearTerminal();
       connection.sendDeviceTerminal('abc\b \bD\rXY\r\n');
       expect(controller.terminalText, 'XYD\n');
@@ -361,7 +372,7 @@ void main() {
     expect(controller.terminalText, 'ABC');
 
     controller.clearTerminal();
-    connection.sendDeviceTerminalBytes([0x41, 0xff, 0x42]);
+    connection.sendDeviceTerminalBytes([0x41, 0x98, 0x42]);
     expect(controller.terminalText, 'A\uFFFDB');
   });
 
@@ -450,7 +461,7 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 450));
     expect(
       utf8.decode(connection.hostTerminalBytes),
-      'encoding utf-8\ruscreen\ruscreen\r',
+      'uscreen\ruscreen\r',
     );
 
     _attach(controller, connection);
@@ -619,7 +630,7 @@ void main() {
       expect(transport.openCount, 1);
       expect(
         utf8.decode(transport.connection.hostTerminalBytes),
-        'encoding utf-8\ruscreen\r',
+        'uscreen\r',
       );
     },
   );
