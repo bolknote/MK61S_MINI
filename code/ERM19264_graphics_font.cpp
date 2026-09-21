@@ -208,13 +208,27 @@ static constexpr Font3x5Glyph UC_Font_3x5_Extra[] PROGMEM = {
 	{0x044F,{0x00,0x06,0x05,0x06,0x05}}, {0x0451,{0x05,0x06,0x05,0x03,0x06}}
 };
 
+// M8 signs without a usable drawing in the original 3x5 control range.
+// UC_Font_3x5 rows use bit 0 for the leftmost pixel.
+static constexpr Font3x5Glyph UC_Font_3x5_M8_Extra[] PROGMEM = {
+	{0x2193,{0x02,0x02,0x02,0x07,0x02}}, // ↓
+	{0x21BB,{0x06,0x05,0x01,0x05,0x07}}, // ↻; legacy 0x05 is a rectangle
+	{0x2264,{0x04,0x02,0x01,0x02,0x07}}, // ≤
+	{0x2265,{0x01,0x02,0x04,0x02,0x07}}, // ≥
+	{0x00D7,{0x00,0x05,0x02,0x05,0x00}}, // ×
+	{0x207B,{0x07,0x00,0x00,0x00,0x00}}, // ⁻
+	{0x21B5,{0x04,0x04,0x04,0x07,0x02}}  // ↵
+};
+
 namespace {
 
 static constexpr uint16_t FONT_3X5_ASCII_COUNT = 128;
 static constexpr uint16_t FONT_3X5_EXTRA_COUNT =
 	sizeof(UC_Font_3x5_Extra) / sizeof(UC_Font_3x5_Extra[0]);
+static constexpr uint16_t FONT_3X5_M8_EXTRA_COUNT =
+	sizeof(UC_Font_3x5_M8_Extra) / sizeof(UC_Font_3x5_M8_Extra[0]);
 static constexpr uint16_t FONT_3X5_GLYPH_COUNT =
-	FONT_3X5_ASCII_COUNT + FONT_3X5_EXTRA_COUNT;
+	FONT_3X5_ASCII_COUNT + FONT_3X5_EXTRA_COUNT + FONT_3X5_M8_EXTRA_COUNT;
 
 struct PackedFont3x5 {
 	unsigned char bytes[FONT_3X5_GLYPH_COUNT * 2] = {};
@@ -238,6 +252,10 @@ struct PackedFont3x5 {
 			pack((uint16_t) (FONT_3X5_ASCII_COUNT + index),
 				 UC_Font_3x5_Extra[index].rows);
 		}
+		for(uint16_t index = 0; index < FONT_3X5_M8_EXTRA_COUNT; ++index) {
+			pack((uint16_t) (FONT_3X5_ASCII_COUNT + FONT_3X5_EXTRA_COUNT + index),
+				 UC_Font_3x5_M8_Extra[index].rows);
+		}
 	}
 };
 
@@ -249,7 +267,29 @@ static int16_t font3x5Index(uint16_t codepoint) {
 	if(codepoint >= 0x0410 && codepoint <= 0x044F) {
 		return (int16_t) (FONT_3X5_ASCII_COUNT + 1U + codepoint - 0x0410U);
 	}
-	if(codepoint == 0x0451) return (int16_t) (FONT_3X5_GLYPH_COUNT - 1U);
+	if(codepoint == 0x0451) {
+		return (int16_t) (FONT_3X5_ASCII_COUNT + FONT_3X5_EXTRA_COUNT - 1U);
+	}
+	// The source font's private control indices are not M8 byte positions.
+	switch(codepoint) {
+		case 0x2190: return 0x0D; // ←
+		case 0x2192: return 0x0C; // →
+		case 0x2191: return 0x0B; // ↑
+		case 0x03C0: return 0x0A; // π
+		case 0x221A: return 0x09; // √
+		case 0x2260: return 0x07; // ≠
+		case 0x00F7: return 0x08; // ÷
+		case 0x00B2: return 0x15; // ²
+		case 0x02B8: return 0x16; // ʸ
+		case 0x02E3: return 0x06; // ˣ
+		case 0x22BB: return 0x17; // ⊻
+		default: break;
+	}
+	for(uint16_t index = 0; index < FONT_3X5_M8_EXTRA_COUNT; ++index) {
+		if(UC_Font_3x5_M8_Extra[index].codepoint == codepoint) {
+			return (int16_t) (FONT_3X5_ASCII_COUNT + FONT_3X5_EXTRA_COUNT + index);
+		}
+	}
 	return -1;
 }
 

@@ -203,8 +203,9 @@ static const Glyph5x8 CYRILLIC_SUPPLEMENTAL[] = {
 // original UC1609 font has several of these drawings at unrelated C0 byte
 // positions, so indexing that font with an M8 byte would display the wrong
 // symbol. Keep the semantic Unicode mapping here for every private M8 sign.
-// Existing shapes are transcribed from UC_Font_One; the missing comparisons,
-// multiplication, superscript minus and return arrow have dedicated rasters.
+// Existing shapes are transcribed from UC_Font_One, except for its 0x05
+// "cycle arrow", which is actually a rectangle. Missing signs have dedicated
+// rasters as well.
 static const Glyph5x8 SPECIAL_5X8[] = {
   {0x2190, {0b00010, 0b00100, 0b01000, 0b11111, 0b01000, 0b00100, 0b00010, 0}}, // ←
   {0x2192, {0b01000, 0b00100, 0b00010, 0b11111, 0b00010, 0b00100, 0b01000, 0}}, // →
@@ -212,7 +213,7 @@ static const Glyph5x8 SPECIAL_5X8[] = {
   {0x2193, {0, 0b00100, 0b00100, 0b00100, 0b10101, 0b01110, 0b00100, 0}}, // ↓
   {0x03C0, {0, 0b11111, 0b01010, 0b01010, 0b01010, 0b01010, 0b10011, 0}}, // π
   {0x221A, {0, 0b00111, 0b00100, 0b00100, 0b00100, 0b10100, 0b01000, 0}}, // √
-  {0x21BB, {0, 0b11110, 0b10010, 0b10010, 0b10010, 0b10010, 0b11110, 0}}, // ↻
+  {0x21BB, {0b00110, 0b01001, 0b10000, 0b10000, 0b10001, 0b01001, 0b00111, 0}}, // ↻
   {0x2260, {0b00001, 0b00010, 0b11111, 0b00100, 0b11111, 0b01000, 0b10000, 0}}, // ≠
   {0x2264, {0, 0b00010, 0b00100, 0b01000, 0b00100, 0b00010, 0b11111, 0}}, // ≤
   {0x2265, {0, 0b01000, 0b00100, 0b00010, 0b00100, 0b01000, 0b11111, 0}}, // ≥
@@ -318,12 +319,15 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   return false;
 #else
   memset(out.data, 0, sizeof(out.data));
-  if(decodeRows5x8(specialRows5x8(codepoint), out)) return true;
-  codepoint = aliasedCodepoint(codepoint);
-
   if(face == FaceId::FONT_3X5) {
+    // The legacy ≥ token formerly returned a 5x8 bitmap even in 3x5 mode.
+    if(codepoint == display_symbol::uc1609::GE) codepoint = 0x2265;
+    codepoint = aliasedCodepoint(codepoint);
     return decodeTightBitmap(font3x5Bitmap(codepoint), 3, 5, out);
   }
+
+  if(decodeRows5x8(specialRows5x8(codepoint), out)) return true;
+  codepoint = aliasedCodepoint(codepoint);
 
   out.width = 5;
   out.height = 8;

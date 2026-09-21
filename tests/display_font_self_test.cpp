@@ -212,6 +212,45 @@ static void test_builtin_3x5_is_tightly_packed(void) {
   assert(font3x5Bitmap(0x0400) == nullptr);
 }
 
+static void test_m8_special_3x5_glyphs(void) {
+  static constexpr i8 legacy_slot[] = {
+    0x0D, 0x0C, 0x0B, -1, 0x0A, 0x09, -1, 0x07,
+    -1, -1, -1, 0x08, 0x15, 0x16, 0x06, 0x17, -1, -1
+  };
+  static_assert(sizeof(legacy_slot) ==
+                sizeof(mk8::PRIVATE_CODEPOINTS) /
+                    sizeof(mk8::PRIVATE_CODEPOINTS[0]),
+                "all private M8 signs need a 3x5 glyph");
+  const u8* question = font3x5Bitmap('?');
+  assert(question != nullptr);
+  for(u8 index = 0; index < sizeof(legacy_slot); ++index) {
+    const u16 codepoint = mk8::codepoint(
+        (u8) (mk8::BYTE_LEFT_ARROW + index));
+    const u8* bitmap = font3x5Bitmap(codepoint);
+    assert(bitmap != nullptr);
+    assert((bitmap[0] | bitmap[1]) != 0);
+    assert(memcmp(bitmap, question, 2) != 0);
+    if(legacy_slot[index] >= 0) {
+      assert(memcmp(bitmap, font3x5Bitmap((u16) legacy_slot[index]), 2) == 0);
+    }
+    builtin_font::Raster raster = {};
+    assert(builtin_font::decode(builtin_font::FaceId::FONT_3X5,
+                                codepoint, raster));
+    assert(raster.width == 3 && raster.height == 5);
+    for(u8 y = 0; y < 5; ++y) {
+      for(u8 x = 0; x < 3; ++x) {
+        const usize bit = (usize) y * 3U + x;
+        const bool packed_pixel =
+            (bitmap[bit / 8U] & ((u8) 0x80U >> (bit & 7U))) != 0;
+        const bool raster_pixel =
+            (raster.data[y] & ((u8) 0x80U >> x)) != 0;
+        assert(packed_pixel == raster_pixel);
+      }
+    }
+  }
+  assert(memcmp(font3x5Bitmap(0x21BB), font3x5Bitmap(0x05), 2) != 0);
+}
+
 static void test_supplemental_cyrillic_glyphs(void) {
   static constexpr u16 codepoints[] = {
     0x0404, 0x0454, 0x0406, 0x0456, 0x0407,
@@ -235,7 +274,7 @@ static void test_m8_special_5x8_glyphs(void) {
   // These old controller-font slots contain the same drawing but have
   // different byte numbers from M8. The remaining signs have new rasters.
   static constexpr i8 legacy_slot[] = {
-    0x0D, 0x0C, 0x0B, 0x19, 0x0A, 0x09, 0x05, 0x07,
+    0x0D, 0x0C, 0x0B, 0x19, 0x0A, 0x09, -1, 0x07,
     -1, -1, -1, 0x08, 0x15, 0x16, 0x06, 0x17, -1, -1
   };
   static_assert(sizeof(legacy_slot) ==
@@ -269,6 +308,8 @@ static void test_m8_special_5x8_glyphs(void) {
     assert(memcmp(raster.data, question.data, sizeof(raster.data)) != 0);
   }
   assert(builtin_font::rows5x8(0x2264)[6] == 0b11111); // ≤ underline
+  assert(builtin_font::rows5x8(0x21BB)[2] == 0b10000); // ↻ is open
+  assert(builtin_font::rows5x8(0x21BB)[6] == 0b00111); // ↻ arrow tip
   assert(builtin_font::rows5x8(0x00D7)[3] == 0b00100); // × centre
   assert(builtin_font::rows5x8(0x207B)[1] == 0b01110); // ⁻ raised
   assert(builtin_font::rows5x8(0x21B5)[4] == 0b11110); // ↵ hook
@@ -544,6 +585,7 @@ int main(int argc, char** argv) {
   test_lcd_scaling();
   test_uc1609_display_symbol_tokens();
   test_builtin_3x5_is_tightly_packed();
+  test_m8_special_3x5_glyphs();
   test_supplemental_cyrillic_glyphs();
   test_m8_special_5x8_glyphs();
   test_text_grid();
