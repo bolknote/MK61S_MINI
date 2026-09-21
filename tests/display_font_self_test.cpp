@@ -2,6 +2,7 @@
 #include "display_symbols.hpp"
 #include "ERM19264_graphics_font.h"
 #include "fmk_font.hpp"
+#include "mk8_codec.hpp"
 #include "page_damage.hpp"
 #include "text_screen.hpp"
 #include "uc1609_safety.hpp"
@@ -225,6 +226,52 @@ static void test_supplemental_cyrillic_glyphs(void) {
     // WS0010 5x8 mode reserves row 7 for its hardware cursor.
     assert(rows[7] == 0);
   }
+}
+
+static void test_m8_special_5x8_glyphs(void) {
+  builtin_font::Raster question = {};
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                              '?', question));
+  // These old controller-font slots contain the same drawing but have
+  // different byte numbers from M8. The remaining signs have new rasters.
+  static constexpr i8 legacy_slot[] = {
+    0x0D, 0x0C, 0x0B, 0x19, 0x0A, 0x09, 0x05, 0x07,
+    -1, -1, -1, 0x08, 0x15, 0x16, 0x06, 0x17, -1, -1
+  };
+  static_assert(sizeof(legacy_slot) ==
+                sizeof(mk8::PRIVATE_CODEPOINTS) /
+                    sizeof(mk8::PRIVATE_CODEPOINTS[0]),
+                "every private M8 sign must have a raster");
+  for(u8 index = 0; index < sizeof(legacy_slot); ++index) {
+    const u16 codepoint = mk8::codepoint(
+        (u8) (mk8::BYTE_LEFT_ARROW + index));
+    const u8* rows = builtin_font::rows5x8(codepoint);
+    assert(rows != nullptr);
+    bool has_ink = false;
+    for(u8 y = 0; y < 7; ++y) {
+      has_ink = has_ink || rows[y] != 0;
+      if(legacy_slot[index] >= 0) {
+        u8 expected = 0;
+        const unsigned char* columns =
+            &UC_Font_One[(usize) legacy_slot[index] * 5U];
+        for(u8 x = 0; x < 5; ++x) {
+          if((columns[x] & ((u8) 1U << y)) != 0)
+            expected |= (u8) 1U << (4U - x);
+        }
+        assert(rows[y] == expected);
+      }
+    }
+    assert(has_ink && rows[7] == 0);
+    builtin_font::Raster raster = {};
+    assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                                codepoint, raster));
+    assert(raster.width == 5 && raster.height == 8);
+    assert(memcmp(raster.data, question.data, sizeof(raster.data)) != 0);
+  }
+  assert(builtin_font::rows5x8(0x2264)[6] == 0b11111); // ≤ underline
+  assert(builtin_font::rows5x8(0x00D7)[3] == 0b00100); // × centre
+  assert(builtin_font::rows5x8(0x207B)[1] == 0b01110); // ⁻ raised
+  assert(builtin_font::rows5x8(0x21B5)[4] == 0b11110); // ↵ hook
 }
 
 static void test_text_grid(void) {
@@ -498,6 +545,7 @@ int main(int argc, char** argv) {
   test_uc1609_display_symbol_tokens();
   test_builtin_3x5_is_tightly_packed();
   test_supplemental_cyrillic_glyphs();
+  test_m8_special_5x8_glyphs();
   test_text_grid();
   test_text_grid_skips_unchanged_cells();
   test_text_grid_wide_rows();

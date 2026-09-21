@@ -199,7 +199,31 @@ static const Glyph5x8 CYRILLIC_SUPPLEMENTAL[] = {
 #endif
 };
 
+// M8 text is decoded to Unicode before reaching the display grid. The
+// original UC1609 font has several of these drawings at unrelated C0 byte
+// positions, so indexing that font with an M8 byte would display the wrong
+// symbol. Keep the semantic Unicode mapping here for every private M8 sign.
+// Existing shapes are transcribed from UC_Font_One; the missing comparisons,
+// multiplication, superscript minus and return arrow have dedicated rasters.
 static const Glyph5x8 SPECIAL_5X8[] = {
+  {0x2190, {0b00010, 0b00100, 0b01000, 0b11111, 0b01000, 0b00100, 0b00010, 0}}, // ←
+  {0x2192, {0b01000, 0b00100, 0b00010, 0b11111, 0b00010, 0b00100, 0b01000, 0}}, // →
+  {0x2191, {0b00100, 0b01110, 0b10101, 0b00100, 0b00100, 0b00100, 0b00100, 0}}, // ↑
+  {0x2193, {0, 0b00100, 0b00100, 0b00100, 0b10101, 0b01110, 0b00100, 0}}, // ↓
+  {0x03C0, {0, 0b11111, 0b01010, 0b01010, 0b01010, 0b01010, 0b10011, 0}}, // π
+  {0x221A, {0, 0b00111, 0b00100, 0b00100, 0b00100, 0b10100, 0b01000, 0}}, // √
+  {0x21BB, {0, 0b11110, 0b10010, 0b10010, 0b10010, 0b10010, 0b11110, 0}}, // ↻
+  {0x2260, {0b00001, 0b00010, 0b11111, 0b00100, 0b11111, 0b01000, 0b10000, 0}}, // ≠
+  {0x2264, {0, 0b00010, 0b00100, 0b01000, 0b00100, 0b00010, 0b11111, 0}}, // ≤
+  {0x2265, {0, 0b01000, 0b00100, 0b00010, 0b00100, 0b01000, 0b11111, 0}}, // ≥
+  {0x00D7, {0, 0b10001, 0b01010, 0b00100, 0b01010, 0b10001, 0, 0}}, // ×
+  {0x00F7, {0, 0, 0b00100, 0, 0b11111, 0, 0b00100, 0}}, // ÷
+  {0x00B2, {0b11100, 0b00100, 0b01100, 0b10000, 0b11100, 0, 0, 0}}, // ²
+  {0x02B8, {0b10100, 0b10100, 0b01100, 0b00100, 0b11000, 0, 0, 0}}, // ʸ
+  {0x02E3, {0b10100, 0b10100, 0b01000, 0b10100, 0b10100, 0, 0, 0}}, // ˣ
+  {0x22BB, {0b01110, 0b10101, 0b10101, 0b11111, 0b10101, 0b10101, 0b01110, 0}}, // ⊻
+  {0x207B, {0, 0b01110, 0, 0, 0, 0, 0, 0}}, // ⁻
+  {0x21B5, {0b00010, 0b00010, 0b00010, 0b01010, 0b11110, 0b01000, 0, 0}}, // ↵
   {display_symbol::uc1609::GE, {0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01001, 0b00010, 0b00100}}
 };
 
