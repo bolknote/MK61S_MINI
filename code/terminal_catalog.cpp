@@ -31,7 +31,8 @@ MK61_HELP_METADATA static constexpr char help_text[] =
 #undef COMMAND
 "  R<r>=   " M8_TH_REG_SET "\n"
 "  set$    " M8_TH_SET_CODE "\n";
-static_assert(sizeof(help_text) - 1 <= 2800, "increase HELP page count in reader and builder");
+// Two 1536-byte TEXT files, each prefixed by the 9-byte help signature.
+static_assert(sizeof(help_text) - 1 <= 3054, "increase HELP page count in reader and builder");
 // Eight hexadecimal digits plus the line delimiter form the on-disk tag. Keep
 // an explicit NUL because help_signature() is also a public C-string API.
 struct HelpTag { char text[10]; };

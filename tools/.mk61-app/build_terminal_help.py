@@ -5,6 +5,10 @@ import json
 import struct
 from pathlib import Path
 
+HELP_FILE_LIMIT = 1536  # program_store::MAX_MK61_TEXT_SIZE
+HELP_TAG_LENGTH = 9
+HELP_BODY_LIMIT = 2 * (HELP_FILE_LIMIT - HELP_TAG_LENGTH)
+
 
 def build(elf, output):
     data = elf.read_bytes()
@@ -29,22 +33,25 @@ def build(elf, output):
                    and not 0x0e <= byte <= 0x1f)]
     if invalid:
         raise ValueError(f'invalid M8 help byte: 0x{invalid[0]:02x}')
-    if len(content) > 2800:
+    if len(content) > HELP_BODY_LIMIT:
         raise ValueError('help exceeds two pages')
     checksum = 2166136261
     for byte in content:
         checksum = ((checksum ^ byte) * 16777619) & 0xffffffff
     tag = f'{checksum:08x}\n'.encode('ascii')
-    split = min(1400, len(content))
+    page_body_limit = HELP_FILE_LIMIT - len(tag)
+    split = min(page_body_limit, len(content))
     # M8 is single-byte. Prefer a line boundary so neither file begins in the
     # middle of a command description, but an exceptionally long line still
     # has a deterministic hard split.
     if split < len(content):
         line = content.rfind(b'\n', 0, split + 1)
-        if line >= 0 and len(content) - (line + 1) <= 1527:
+        if line >= 0 and len(content) - (line + 1) <= page_body_limit:
             split = line + 1
     output.mkdir(parents=True, exist_ok=True)
     for page, part in enumerate((content[:split], content[split:])):
+        if len(tag) + len(part) > HELP_FILE_LIMIT:
+            raise ValueError('help page exceeds TEXT file limit')
         (output / f'HELP{page}.TXT').write_bytes(tag + part)
     return {'bytes': len(content), 'tag': tag.decode().strip()}
 

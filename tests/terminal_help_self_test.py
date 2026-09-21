@@ -47,8 +47,14 @@ class HelpTest(unittest.TestCase):
             self.assertEqual(len(pages[0]), 1310)
             for page in pages:
                 self.assertLessEqual(len(page), 1536)
+            # Both TEXT files may be filled up to the actual 1536-byte limit.
+            elf.write_bytes(elf_metadata(b'x'*export.HELP_BODY_LIMIT+b'\0'))
+            export.build(elf, root)
+            for page in (0, 1):
+                self.assertEqual(len((root/f'HELP{page}.TXT').read_bytes()), export.HELP_FILE_LIMIT)
             for content,flags in ((body+b'\0',2), (b'missing terminator',0),
-                                  (b'x\0y\0',0), (b'x'*2801+b'\0',0), (b'\x98\0',0)):
+                                  (b'x\0y\0',0), (b'x'*(export.HELP_BODY_LIMIT+1)+b'\0',0),
+                                  (b'\x98\0',0)):
                 elf.write_bytes(elf_metadata(content,flags))
                 with self.assertRaises(ValueError): export.build(elf, root)
 
