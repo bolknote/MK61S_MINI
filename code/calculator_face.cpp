@@ -41,12 +41,17 @@ enum Segment : u8 {
   SEG_G = 1U << 6,
 };
 
-// kimstik's 16x32 strike: twelve physical cells exactly occupy the 192-pixel
-// glass. The full 32-pixel source raster is centred in the 48-pixel calculator
-// area below the two status pages.
-// Source: https://gist.github.com/kimstik/9210d1a34c91c30b42ed4cb134e908e0
+// The supplied 16x35r strike: twelve 16-pixel cells exactly occupy the
+// 192-pixel glass. Its 35 rows fit below the two status pages (y=24..58).
+// Authors: klmstlk and SuraTech58 (Dmitry). BSD-2-Clause.
+// The header's FONT_STEP=27 is for standalone text; the calculator's fixed
+// twelve-place display requires a 16-pixel pitch, without scaling the raster.
 static constexpr i16 DIGIT_TOP = 24;
 static constexpr i16 DIGIT_PITCH = 16;
+static constexpr u8 DIGIT_HEIGHT = 35;
+static constexpr u8 DIGIT_COUNT = 12;
+static_assert(DIGIT_COUNT * DIGIT_PITCH == WIDTH, "calculator digits must fill the glass");
+static_assert(DIGIT_TOP + DIGIT_HEIGHT <= HEIGHT, "calculator digits must fit vertically");
 
 u8 segments(u16 token) {
   static constexpr u8 DIGITS[10] = {
@@ -78,35 +83,27 @@ u8 segments(u16 token) {
   }
 }
 
-// Pixel-exact segment rows from kimstik/mk61_font16x32.h. Source bits are
-// MSB-left, one u16 per 16-pixel row; the eighth plane is the decimal point.
-static constexpr u16 GIST_SEGMENT_ROWS[8][32] = {
-  { 0x07F0,0x0FE0,0x0FC0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-  { 0,0,0x0006,0x0006,0x000E,0x001E,0x001C,0x001C,
-    0x001C,0x003C,0x001C,0x0008,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0x0018,0x0038,0x0070,0x0070,0x00F0,0x00F0,0x00F0,0x00E0,
-    0x0060,0x0060,0,0,0,0,0,0 },
-  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0xE000,0xFE00,0x7F00,0x3F00,0,0,0,0,0 },
-  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x2000,
-    0x7000,0x7000,0x7000,0x7000,0xF000,0,0,0,0,0,0,0,0,0,0,0 },
-  { 0,0,0,0,0,0x1E00,0x1C00,0x1C00,0x1C00,0x3800,0x2000,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-  { 0,0,0,0,0,0,0,0,0,0,0,0,0x07E0,0x0FE0,0x0FC0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0x0003,0x0003,0x0003,0x0007,0x0007,0x0007 },
+// Pixel-exact segment rows from the supplied mk61_font16x35r.h. MSB is the
+// leftmost pixel; the eighth plane is the decimal point. Keep segment planes
+// rather than eleven precomposed glyphs so E, Г, L, C and minus share them.
+static constexpr u16 SEGMENT_ROWS[8][DIGIT_HEIGHT] = {
+  { 0x07E0,0x0FE0,0x1FC0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0x0002,0x0006,0x000E,0x000E,0x001E,0x001E,0x001C,0x003C,0x003C,0x001C,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0008,0x0018,0x0070,0x0070,0x00F0,0x00F0,0x00F0,0x00E0,0x00E0,0x0060,0x0060,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xE000,0xFE00,0xFE00,0x7F00,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x6000,0x7000,0xF000,0xF000,0xE000,0xE000,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0x1C00,0x3C00,0x3C00,0x3C00,0x3800,0x7000,0x4000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0x07C0,0x1FE0,0x0FC0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0003,0x0003,0x0003,0x0007,0x0007,0x0007,0x0007 },
 };
 
 void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
-  for(u8 row = 0; row < 32; ++row) {
+  for(u8 row = 0; row < DIGIT_HEIGHT; ++row) {
     const i16 y = DIGIT_TOP + row;
     if((u8) (y / PAGE_HEIGHT) != page) continue;
-    u16 pixels = dot ? GIST_SEGMENT_ROWS[7][row] : 0;
+    u16 pixels = dot ? SEGMENT_ROWS[7][row] : 0;
     for(u8 segment = 0; segment < 7; ++segment) {
-      if(mask & (1U << segment)) pixels |= GIST_SEGMENT_ROWS[segment][row];
+      if(mask & (1U << segment)) pixels |= SEGMENT_ROWS[segment][row];
     }
     const u8 page_bit = (u8) (1U << (y & 7));
     for(u8 col = 0; col < 16; ++col) {
@@ -142,7 +139,7 @@ void drawDecimalPage(u8* out, u8 page, i16 x) {
 void __attribute__((noinline)) drawIndicatorPage(
     u8* out, u8 page, const text_screen::Grid& grid) {
   u8 slot = 0;
-  for(u8 col = 0; col < grid.cols() && slot < 12; ++col) {
+  for(u8 col = 0; col < grid.cols(); ++col) {
     const u16 token = grid.cell(col, 1);
     if(token == '.') {
       if(slot == 0) {
@@ -151,6 +148,7 @@ void __attribute__((noinline)) drawIndicatorPage(
         drawDecimalPage(out, page, digitLeft((u8) (slot - 1U)));
       }
     } else {
+      if(slot == DIGIT_COUNT) break;
       drawDigitPage(out, page, digitLeft(slot), token);
       ++slot;
     }
@@ -202,7 +200,10 @@ void renderPage(const text_screen::Grid& grid, u8 page, u8 out[WIDTH]) {
   memset(out, 0, WIDTH);
   PageCanvas canvas(page, out);
   if(page < 2) drawService(canvas, grid);
-  if(page >= 2 && page <= 6) drawIndicatorPage(out, page, grid);
+  if(page >= DIGIT_TOP / PAGE_HEIGHT &&
+     page < (DIGIT_TOP + DIGIT_HEIGHT + PAGE_HEIGHT - 1) / PAGE_HEIGHT) {
+    drawIndicatorPage(out, page, grid);
+  }
 }
 
 void renderFrame(const text_screen::Grid& grid, u8 out[FRAME_BYTES]) {

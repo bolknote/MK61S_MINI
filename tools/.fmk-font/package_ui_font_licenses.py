@@ -10,6 +10,7 @@ SOURCES = ROOT / "tools/.fmk-font"
 FILES = {
     "licenses/ui-fonts/LICENSE-Ark-Pixel.txt": "ui-atlases/LICENSE-Ark-Pixel.txt",
     "licenses/ui-fonts/LICENSE-DejaVu.txt": "external-fonts/LICENSE-DejaVu.txt",
+    "licenses/ui-fonts/LICENSE-MK61-16x35r.txt": "ui-atlases/LICENSE-MK61-16x35r.txt",
     "licenses/ui-fonts/FONT-SOURCES.md": "ui-atlases/README.md",
 }
 

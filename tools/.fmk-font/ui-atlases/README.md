@@ -60,3 +60,16 @@ packaged beside firmware containing the converted subset.
 
 Only F411/UC1609 firmware compiles these tables. A00/A02, WS0010 and all F401
 builds contain no proportional UI tables and allocate no RAM for them.
+
+## Calculator segment raster
+
+The fixed calculator face on UC1609 uses the contributor-supplied
+`mk61_font16x35r.h` segment raster, unchanged at 16 by 35 pixels. Twelve
+16-pixel cells fit the 192-pixel panel; the raster occupies rows 24 through 58
+of its 64 rows. The source header's standalone 27-pixel advance is not used in
+this fixed twelve-place display. This face is independent of the selectable UI
+fonts above and is compiled for both F401 and F411 UC1609 builds.
+
+The contributors are klmstlk and SuraTech58 (Dmitry). The license is
+BSD-2-Clause. Its terms and this attribution are shipped in
+`LICENSE-MK61-16x35r.txt`.
