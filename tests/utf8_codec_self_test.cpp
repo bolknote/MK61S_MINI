@@ -1,3 +1,5 @@
+#include "mk8_codec.hpp"
+#include "mk8_strings.inc"
 #include "utf8_codec.hpp"
 #include "utf8_view.hpp"
 
@@ -91,12 +93,91 @@ void test_navigation_uses_the_same_decoder(void) {
   assert(emoji.valid && emoji.size == 4 && emoji.codepoint == 0x1F600);
 }
 
+void test_mk8_compact_firmware_text(void) {
+  const char* settings = M8_SETTINGS;
+  static const u16 expected[] = {
+      0x041D, 0x0430, 0x0441, 0x0442, 0x0440,
+      0x043E, 0x0439, 0x043A, 0x0438}; // Настройки
+  for(u16 codepoint : expected) assert(mk8::next(settings) == codepoint);
+  assert(*settings == 0);
+
+  static const char symbols[] = {
+      (char) mk8::BYTE_LEFT_ARROW,
+      (char) mk8::BYTE_RIGHT_ARROW,
+      (char) mk8::BYTE_UP_ARROW,
+      (char) mk8::BYTE_DOWN_ARROW,
+      (char) mk8::BYTE_PI,
+      (char) mk8::BYTE_SQRT,
+      (char) mk8::BYTE_CYCLE_ARROW,
+      (char) mk8::BYTE_NOT_EQUAL,
+      (char) mk8::BYTE_LESS_EQUAL,
+      (char) mk8::BYTE_GREATER_EQUAL,
+      (char) mk8::BYTE_MULTIPLY,
+      (char) mk8::BYTE_DIVIDE,
+      (char) mk8::BYTE_POWER_2,
+      (char) mk8::BYTE_POWER_Y,
+      (char) mk8::BYTE_POWER_X,
+      (char) mk8::BYTE_XOR,
+      (char) mk8::BYTE_POWER_MINUS,
+      (char) mk8::BYTE_RETURN_ARROW,
+      (char) 0x85,
+      (char) 0xB0, 0};
+  const u16 symbol_codepoints[] = {
+      0x2190, 0x2192, 0x2191, 0x2193, 0x03C0, 0x221A,
+      0x21BB, 0x2260, 0x2264, 0x2265, 0x00D7, 0x00F7,
+      0x00B2, 0x02B8, 0x02E3, 0x22BB, 0x207B, 0x21B5,
+      0x2026, 0x00B0};
+  const char* cursor = symbols;
+  for(u16 codepoint : symbol_codepoints) {
+    assert(mk8::next(cursor) == codepoint);
+  }
+  assert(*cursor == 0);
+  assert(mk8::codepoint(0xA8) == 0x0401);
+  assert(mk8::codepoint(0xB8) == 0x0451);
+  assert(mk8::codepoint(0xC0) == 0x0410);
+  assert(mk8::codepoint(0xFF) == 0x044F);
+  assert(mk8::codepoint(0x84) == 0x201E);
+  assert(mk8::codepoint(0x1F) == 0x21B5);
+}
+
+void test_every_m8_byte_round_trips_at_external_boundaries(void) {
+  for(u16 value = 1; value <= 0xFFU; ++value) {
+    const u8 byte = (u8) value;
+    const bool expected_valid = byte == '\t' || byte == '\n' || byte == '\r' ||
+        (byte >= mk8::BYTE_LEFT_ARROW && byte != 0x7FU && byte != 0x98U);
+    assert(mk8::valid_byte(byte) == expected_valid);
+    if(!expected_valid) continue;
+
+    const mk8::Utf8Bytes utf8 = mk8::utf8(byte);
+    u8 decoded = 0;
+    usize decoded_size = 0;
+    assert(mk8::from_utf8(utf8.data, utf8.size, &decoded, 1, decoded_size));
+    assert(decoded_size == 1 && decoded == byte);
+
+    u16 utf16 = 0;
+    usize utf16_size = 0;
+    assert(mk8::to_utf16(&byte, 1, &utf16, 1, utf16_size));
+    assert(utf16_size == 1 && utf16 == mk8::codepoint(byte));
+    decoded = 0;
+    decoded_size = 0;
+    assert(mk8::from_utf16(&utf16, 1, &decoded, 1, decoded_size));
+    assert(decoded_size == 1 && decoded == byte);
+  }
+
+  const u16 surrogate = 0xD800U;
+  u8 output = 0;
+  usize output_size = 0;
+  assert(!mk8::from_utf16(&surrogate, 1, &output, 1, output_size));
+}
+
 } // namespace
 
 int main(void) {
   test_scalar_boundaries();
   test_malformed_input();
   test_navigation_uses_the_same_decoder();
+  test_mk8_compact_firmware_text();
+  test_every_m8_byte_round_trips_at_external_boundaries();
   puts("utf8_codec_self_test: ok");
   return 0;
 }
