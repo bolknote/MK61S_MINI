@@ -13,7 +13,7 @@ namespace setup_font_compiler {
 namespace {
 
 // FMK is transient input.  Keeping it in SETUP.APP BSS leaves the shared
-// workspace available for the complete PFK1 candidate, so the resident can
+// workspace available for the complete PFK2 candidate, so the resident can
 // validate and install atomically without overwriting the active font first.
 alignas(8) static u8 source[prepared_font::MAX_IMAGE_SIZE];
 

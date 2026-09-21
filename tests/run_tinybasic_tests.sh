@@ -3,6 +3,8 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_tinybasic_self_test"
+work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-tinybasic-m8.XXXXXX")"
+trap 'rm -rf "$work"' EXIT HUP INT TERM
 python3 "$root/tests/high_noon_package_self_test.py" "$root"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
@@ -39,8 +41,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/tinybasic.cpp" \
   -o "$out"
 
-"$out" \
-  "$root/programs/games/High Noon/intro.tbi" \
-  "$root/programs/games/High Noon/player.tbi" \
-  "$root/programs/games/High Noon/bart.tbi" \
-  "$root/programs/games/High Noon/reward.tbi"
+for part in intro player bart reward; do
+  python3 "$root/tools/m8_codec.py" encode \
+    "$root/programs/games/High Noon/$part.tbi" "$work/$part.tbi"
+done
+
+"$out" "$work/intro.tbi" "$work/player.tbi" "$work/bart.tbi" \
+  "$work/reward.tbi"

@@ -46,7 +46,7 @@ bool prepare(const Face& face, u8* output, usize capacity,
   const usize total = bitmap_offset + bitmap_size;
   if(total > 0xFFFFU) return false;
   memset(output, 0, total);
-  output[0] = 'P'; output[1] = 'F'; output[2] = 'K'; output[3] = '1';
+  output[0] = 'P'; output[1] = 'F'; output[2] = 'K'; output[3] = '2';
   output[4] = metrics.monospaced ? prepared_font::FLAG_MONOSPACED : 0;
   output[5] = metrics.max_width;
   output[6] = metrics.height;
@@ -59,14 +59,14 @@ bool prepare(const Face& face, u8* output, usize capacity,
   writeLe16(output + 16, (u16) total);
 
   for(u8 index = 0; index < ranges; ++index) {
-    u16 start = 0;
+    u8 start = 0;
     u16 count = 0;
     if(!face.rangeAt(index, start, count) || count == 0 || count > 256U)
       return false;
     u8* range = output + prepared_font::HEADER_SIZE +
         (usize) index * prepared_font::RANGE_SIZE;
-    writeLe16(range, start);
-    range[2] = (u8) (count - 1U);
+    range[0] = start;
+    range[1] = (u8) (count - 1U);
   }
 
   usize bitmap_cursor = 0;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract C5 help resources from non-allocating resident ELF metadata."""
+"""Extract C6/M8 help resources from non-allocating resident ELF metadata."""
 import argparse
 import json
 import struct
@@ -23,7 +23,12 @@ def build(elf, output):
     if not content.endswith(b'\0') or b'\0' in content[:-1]:
         raise ValueError('invalid help metadata')
     content = content[:-1]
-    content.decode('utf-8')
+    invalid = [byte for byte in content
+               if byte in (0, 0x7f, 0x98)
+               or (byte < 0x20 and byte not in (9, 10, 13)
+                   and not 0x0e <= byte <= 0x1f)]
+    if invalid:
+        raise ValueError(f'invalid M8 help byte: 0x{invalid[0]:02x}')
     if len(content) > 2800:
         raise ValueError('help exceeds two pages')
     checksum = 2166136261
@@ -31,8 +36,13 @@ def build(elf, output):
         checksum = ((checksum ^ byte) * 16777619) & 0xffffffff
     tag = f'{checksum:08x}\n'.encode('ascii')
     split = min(1400, len(content))
-    while split < len(content) and content[split] & 0xc0 == 0x80:
-        split -= 1
+    # M8 is single-byte. Prefer a line boundary so neither file begins in the
+    # middle of a command description, but an exceptionally long line still
+    # has a deterministic hard split.
+    if split < len(content):
+        line = content.rfind(b'\n', 0, split + 1)
+        if line >= 0 and len(content) - (line + 1) <= 1527:
+            split = line + 1
     output.mkdir(parents=True, exist_ok=True)
     for page, part in enumerate((content[:split], content[split:])):
         (output / f'HELP{page}.TXT').write_bytes(tag + part)

@@ -5,5 +5,5 @@ int main(void) {
   if(!mk61_app_api_compatible(mk61_api, sizeof(*mk61_api),
                             MK61_APP_CAP_TEXT_DISPLAY)) return 1;
   mk61_api->display_clear();
-  return mk61_api->display_write_utf8(0, 0, text, sizeof(text) - 1) ? 0 : 1;
+  return mk61_api->display_write_m8(0, 0, text, sizeof(text) - 1) ? 0 : 1;
 }

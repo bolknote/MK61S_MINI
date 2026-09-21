@@ -2,9 +2,6 @@
 static constexpr TerminalCommand legacy_commands[] = {
   { "ver",     CMD_VERSION,       "firmware version" },
   { "identity",CMD_IDENTITY,      "stable device/build identity" },
-#if MK61_ENABLE_TERMINAL_ENCODING
-  { "encoding",CMD_ENCODING,      "encoding [utf-8|cp1251] - terminal text encoding" },
-#endif
   { "date",    CMD_DATE,          "date [ms|YYYY-MM-DD HH:MM:SS] - read/set clock" },
 #if MK61_ENABLE_RTC_ALARM_TERMINAL
   { "alarm",   CMD_ALARM,         "RTC Alarm A/B status, daily or one-shot" },
@@ -56,6 +53,7 @@ static constexpr TerminalCommand legacy_commands[] = {
   { "format",  CMD_FORMAT_STORAGE,"format C5 storage (Y/y)" },
   { "clr",     CMD_CLEAR,         "clear program memory (Y/y)" },
   { "vlog",    CMD_VFAT_LOG,      "USB import diagnostic [clear]" },
+  { "usbdisk", CMD_USB_DISK,      "start USB Disk mode until safe eject" },
   { "fsls",    CMD_FS_LIST,       "alias for ls" },
   { "fsrm",    CMD_FS_REMOVE,     "alias for rm" },
   { "fsstat",  CMD_FS_STAT,       "alias for df" },

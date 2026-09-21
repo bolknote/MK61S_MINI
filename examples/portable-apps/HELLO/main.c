@@ -12,5 +12,5 @@ int main(void) {
                             MK61_APP_CAP_TEXT_DISPLAY)) return 2;
   static const char text[] = "HELLO C APP";
   mk61_api->display_clear();
-  return mk61_api->display_write_utf8(0, 0, text, sizeof(text) - 1) ? 0 : 3;
+  return mk61_api->display_write_m8(0, 0, text, sizeof(text) - 1) ? 0 : 3;
 }

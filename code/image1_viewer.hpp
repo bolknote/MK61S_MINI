@@ -22,7 +22,7 @@ Result view(MK61Display& display, const u8* data, u16 size,
             wbmp::Status* image_status = NULL);
 
 // Единый вход для Проводника, терминала и языков: файл один раз проверяется и
-// считывается из C5 в общий scratch, после чего декодирование не обращается к
+// считывается из C6 в общий scratch, после чего декодирование не обращается к
 // SPI NOR в горячем цикле.
 Result view_entry(MK61Display& display, const program_store::Entry& entry,
                   wbmp::Status* image_status = NULL);

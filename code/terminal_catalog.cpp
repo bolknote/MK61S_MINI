@@ -6,6 +6,7 @@
 #include "crash_dump.hpp"
 #include "independent_watchdog.hpp"
 #include "mpu_guard.hpp"
+#include "mk8_strings.inc"
 #include <cstring>
 
 namespace terminal_catalog {
@@ -28,8 +29,8 @@ MK61_HELP_METADATA static constexpr char help_text[] =
 #define COMMAND(name, id, desc) "  " name "\t" desc "\n"
 #include "terminal_commands.inc"
 #undef COMMAND
-"  R<r>=   R<r>= <number|random|raw 12hex> - write register\n"
-"  set$    set$<addr> <hex> - write program memory\n";
+"  R<r>=   " M8_TH_REG_SET "\n"
+"  set$    " M8_TH_SET_CODE "\n";
 static_assert(sizeof(help_text) - 1 <= 2800, "increase HELP page count in reader and builder");
 // Eight hexadecimal digits plus the line delimiter form the on-disk tag. Keep
 // an explicit NUL because help_signature() is also a public C-string API.

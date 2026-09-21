@@ -173,8 +173,9 @@ namespace library_mk61 {
 #endif
 
 #include "bounded_string.hpp"
+#include "mk8_codec.hpp"
+#include "mk8_strings.inc"
 #include "number_format.hpp"
-#include "utf8_codec.hpp"
 
 #include <type_traits>
 
@@ -626,10 +627,9 @@ static void tb_message_i18n(const char* en0, const char* ru0, const char* en1, c
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
 #ifndef TINYBASIC_HOST_TEST
-  if(tinybasic_language_is_ru()) {
-    lcd_ru::print_lines(ru0, ru1);
-    return;
-  }
+  lcd_ru::print_lines(tinybasic_language_is_ru() ? ru0 : en0,
+                      tinybasic_language_is_ru() ? ru1 : en1);
+  return;
 #endif
   main_lcd().setCursor(0, 0);
   main_lcd().print(en0);
@@ -644,19 +644,7 @@ static void tb_print_display_text(const char* text) {
 #ifdef TINYBASIC_HOST_TEST
   main_lcd().print(text);
 #else
-  while(*text != 0) {
-    const utf8_codec::Decoded decoded = utf8_codec::decode_cstring(text);
-    if(decoded.size == 0) break;
-    // One-byte values retain TinyBasic's historical raw/control-token path.
-    // Valid multibyte UTF-8 is the Unicode text path used by FMK fonts.
-    if(decoded.valid && decoded.size > 1) {
-      main_lcd().writeCodepoint(decoded.codepoint <= 0xFFFFU
-          ? (u16) decoded.codepoint : (u16) '?');
-    } else {
-      main_lcd().write((u8) *text);
-    }
-    text += decoded.size;
-  }
+  while(*text != 0) main_lcd().writeCodepoint(mk8::codepoint((u8) *text++));
 #endif
 }
 
@@ -665,13 +653,13 @@ enum class TbError : u8 { WHAT, HOW, SORRY };
 static bool tb_error_code(TbError error) {
   tb_pause_is_final = false;
   const char* en = "SORRY";
-  const char* ru = "НЕТ МЕСТА";
+  const char* ru = M8_TB_NO_SPACE;
   if(error == TbError::WHAT) {
     en = "WHAT?";
-    ru = "ЧТО?";
+    ru = M8_TB_WHAT;
   } else if(error == TbError::HOW) {
     en = "HOW?";
-    ru = "КАК?";
+    ru = M8_TB_HOW;
   }
   tb_copy_text(tb_last_error, sizeof(tb_last_error), en);
   tb_message_i18n(en, ru, "TinyBASIC", "TinyBASIC");
@@ -717,7 +705,7 @@ static void tb_report_interrupted(void) {
   kbd::handoff(kbd::Event(KEY_ESC_PRESS));
 #endif
   if(!tb_runs_inside_m61()) {
-    tb_message_i18n("TinyBASIC stop", "TinyBASIC стоп", "ESC", "ESC");
+    tb_message_i18n("TinyBASIC stop", M8_TB_STOP, "ESC", "ESC");
   }
 }
 
@@ -1625,27 +1613,15 @@ static bool tb_append_print_separator(char sep) {
 }
 
 #ifdef TINYBASIC_HOST_TEST
-static usize tb_utf8_length(const char* begin, const char* end) {
-  usize length = 0;
-  while(begin != NULL && begin < end) {
-    const utf8_codec::Decoded decoded = utf8_codec::decode(
-        (const u8*) begin, (usize) (end - begin));
-    if(decoded.size == 0) break;
-    begin += decoded.size;
-    length++;
-  }
-  return length;
+static usize tb_text_length(const char* begin, const char* end) {
+  return begin != NULL && begin < end ? (usize) (end - begin) : 0;
 }
 
-static const char* tb_utf8_advance(const char* begin, const char* end,
-                                   usize count) {
-  while(begin != NULL && begin < end && count-- != 0) {
-    const utf8_codec::Decoded decoded = utf8_codec::decode(
-        (const u8*) begin, (usize) (end - begin));
-    if(decoded.size == 0) break;
-    begin += decoded.size;
-  }
-  return begin;
+static const char* tb_text_advance(const char* begin, const char* end,
+                                  usize count) {
+  if(begin == NULL || begin >= end) return begin;
+  const usize available = (usize) (end - begin);
+  return begin + (count < available ? count : available);
 }
 
 struct TbWrappedLine {
@@ -1663,7 +1639,7 @@ static u16 tb_text_width(const char* begin, const char* end) {
         ? main_lcd().measureUiText(begin, (u16) bytes) : 0xFFFFU;
   }
 #endif
-  const usize characters = tb_utf8_length(begin, end);
+  const usize characters = tb_text_length(begin, end);
   return characters < 0xFFFFU ? (u16) characters : 0xFFFFU;
 }
 
@@ -1690,7 +1666,7 @@ static TbWrappedLine tb_next_wrapped_line(const char* begin,
   const char* fitted = begin;
   const char* last_space = NULL;
   while(cursor < end) {
-    const char* const next = tb_utf8_advance(cursor, end, 1);
+    const char* const next = tb_text_advance(cursor, end, 1);
     const bool separator = tb_is_space(*cursor);
     if(tb_text_width(begin, next) > limit) {
       if(separator && fitted > begin) {
@@ -1818,7 +1794,7 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
          tb_eval_expr_range(buffer, buffer + editor.len, value)) {
         return true;
       }
-      tb_message_i18n("WHAT?", "ЧТО?", "number", "число");
+      tb_message_i18n("WHAT?", M8_TB_WHAT, "number", M8_TB_NUMBER);
       delay(500);
       buffer[0] = 0;
       editor.len = editor.cursor = editor.view_top = 0;
@@ -2619,7 +2595,7 @@ void InitTinyBasic(void) {
 #ifndef TINYBASIC_HOST_TEST
   const int stored_count = program_store::count(program_store::ProgramType::TINYBASIC);
   if(allow_new && active == stored_count) {
-    tb_message_i18n("TinyBASIC", "TinyBASIC", ">NEW", ">НОВАЯ");
+    tb_message_i18n("TinyBASIC", "TinyBASIC", ">NEW", M8_NEW_PROGRAM);
     return;
   }
   program_store::Entry entry;
@@ -2629,7 +2605,7 @@ void InitTinyBasic(void) {
     tb_message_i18n("TinyBASIC", "TinyBASIC", line1, line1);
     return;
   }
-  tb_message_i18n("TinyBASIC", "TinyBASIC", ">EMPTY", ">ПУСТО");
+  tb_message_i18n("TinyBASIC", "TinyBASIC", ">EMPTY", M8_EMPTY_PROGRAM);
 #else
   char line1[17];
   if(allow_new && active == TB_PROGRAM_COUNT) tb_copy_text(line1, sizeof(line1), ">NEW");
@@ -2710,7 +2686,8 @@ static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 v
 }
 
 static bool tb_confirm_save(void) {
-  tb_message_i18n("Save TinyBASIC?", "Сохранить?", "OK=yes ESC=no", "OK=да ESC=нет");
+  tb_message_i18n("Save TinyBASIC?", M8_SAVE_QUESTION,
+                  "OK=yes ESC=no", M8_CONFIRM_SAVE);
   while(true) {
     const i32 key = kbd::get_key_wait();
     if(key == KEY_OK || key == KEY_OK_PRESS) return true;
@@ -2737,7 +2714,7 @@ static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
   }
   while(pos < lcd_display::COLS) line[pos++] = ' ';
   line[lcd_display::COLS] = 0;
-  tb_message_i18n("TinyBASIC name", "Имя", line, line);
+  tb_message_i18n("TinyBASIC name", M8_TB_NAME, line, line);
 
   MK61DisplayUpdate update(main_lcd());
   const u8 cursor_col = (u8) (1 + cursor - window);
@@ -2921,7 +2898,8 @@ static bool store_edited_program(int slot, char* source, const char* store_name,
   programs[slot].parent_id = parent_id;
   NextTinyBasic = (i8) slot;
   if(!tb_compile_source(programs[slot].source, tb_ast)) return false;
-  tb_message_i18n("TinyBASIC ready", "TinyBASIC готов", programs[slot].name, programs[slot].name);
+  tb_message_i18n("TinyBASIC ready", M8_TB_READY,
+                  programs[slot].name, programs[slot].name);
   delay(700);
   return true;
 }
@@ -3163,7 +3141,7 @@ static bool TinyBASIC_edit_menu(void) {
 static bool TinyBASIC_clear_data(void) {
   memset(tb_vars, 0, sizeof(tb_vars));
   tinybasic_clear_array();
-  tb_message_i18n("TinyBASIC data", "Данные", "cleared", "очищены");
+  tb_message_i18n("TinyBASIC data", M8_DATA, "cleared", M8_CLEARED);
   delay(700);
   return true;
 }
@@ -3173,9 +3151,9 @@ static constexpr t_punct TB_RUN_PUNCT   = {.size = 10, .action = &TinyBASIC_run_
 static constexpr t_punct TB_CLEAR_PUNCT = {.size = 10, .action = &TinyBASIC_clear_data, .text = "Clear DATA"};
 
 #ifndef TINYBASIC_HOST_TEST
-static constexpr t_punct RU_TB_EDIT_PUNCT  = {.size = 15, .action = &TinyBASIC_edit_menu,  .text = "Правка"};
-static constexpr t_punct RU_TB_RUN_PUNCT   = {.size = 15, .action = &TinyBASIC_run_menu,   .text = "Запуск"};
-static constexpr t_punct RU_TB_CLEAR_PUNCT = {.size = 15, .action = &TinyBASIC_clear_data, .text = "Сброс данных"};
+static constexpr t_punct RU_TB_EDIT_PUNCT  = {.size = 15, .action = &TinyBASIC_edit_menu,  .text = M8_EDIT};
+static constexpr t_punct RU_TB_RUN_PUNCT   = {.size = 15, .action = &TinyBASIC_run_menu,   .text = M8_RUN};
+static constexpr t_punct RU_TB_CLEAR_PUNCT = {.size = 15, .action = &TinyBASIC_clear_data, .text = M8_CLEAR_DATA};
 #endif
 
 bool TinyBASIC_menu_select(void) {

@@ -32,6 +32,7 @@
   #include "manual_lifetime.hpp"
 #endif
 #include "menu.hpp"
+#include "mk8_strings.inc"
 #include "debug.h"
 #include "dfu_splash.hpp"
 #include "early_dfu.hpp"
@@ -215,7 +216,8 @@ static void Show_DFU_splash(void) {
 #endif
 
   main_lcd().clear();
-  library_mk61::print_localized_at(0, 0, "Прошивка DFU", " DFU flash mode!");
+  library_mk61::print_localized_at(0, 0, M8_DFU_MODE_MESSAGE,
+                                   " DFU flash mode!");
 }
 
 #if !MK61_EARLY_DFU_SUPPORTED
@@ -269,7 +271,8 @@ bool  Confirmation(void) {
 
   {
     MK61DisplayUpdate update(main_lcd());
-    library_mk61::print_localized_at(0, 0, "OK подтверд", "press OK confirm");
+    library_mk61::print_localized_at(0, 0, M8_CONFIRM_OK,
+                                     "press OK confirm");
   }
   i32 key = kbd::get_key_wait();
   lcd_std_display_redraw();
@@ -547,7 +550,7 @@ static void load_persistent_settings(void) {
   persistent_settings_write_blocked = false;
 
   // Сектор настроек имеет собственный защитный маркер и остаётся пригодным,
-  // когда действительный указатель C5 подключён, но оба банка файлового каталога
+  // когда действительный указатель C6 подключён, но оба банка файлового каталога
   // требуют восстановления.
   if(!flash_is_ok || settings_size == 0) {
     import_legacy_settings();
@@ -905,7 +908,7 @@ void init_external_flash(void) {
   // Инициализация SPI
   SPI.begin();
  
-  // Обнаружение через JEDEC/SFDP; для неизвестных микросхем C5 проверяет границы.
+  // Обнаружение через JEDEC/SFDP; для неизвестных микросхем C6 проверяет границы.
   flash_is_ok = external_flash().begin();
   #ifdef DEBUG_SPIFLASH
     if(flash_is_ok) {
@@ -920,17 +923,20 @@ void init_external_flash(void) {
   #endif
   if(!flash_is_ok) return;
 
-  dbgln(SPIROM, "C5 init: start");
+  dbgln(SPIROM, "C6 init: start");
   program_store::init();
   #ifdef DEBUG_SPIFLASH
     if(program_store::ready()) {
-      Serial.print("C5 init: ready, measured capacity: ");
+      Serial.print("C6 init: ready, measured capacity: ");
       Serial.print(external_flash().getCapacity()); Serial.println(" bytes");
     } else if(program_store::mount_status() ==
+              program_store::MountStatus::FORMAT_REQUIRED) {
+      Serial.println("C5 init: legacy volume; explicit format required");
+    } else if(program_store::mount_status() ==
               program_store::MountStatus::REPAIR_REQUIRED) {
-      Serial.println("C5 init: catalogs damaged; explicit format required");
+      Serial.println("C6 init: catalogs damaged; explicit format required");
     } else {
-      Serial.println("C5 init: failed");
+      Serial.println("C6 init: failed");
     }
   #endif
 }
@@ -972,7 +978,7 @@ bool Load(void) {
   {
     MK61DisplayUpdate update(main_lcd());
     main_lcd().clear();
-    library_mk61::print_localized_at(0, 0, "ЧТ ", "Load ", 5);
+    library_mk61::print_localized_at(0, 0, M8_LOAD_ABBR, "Load ", 5);
     address = calc_address();
   }
   if(address < 0) return false; // Ошибка
@@ -986,7 +992,8 @@ inline bool check_empty_program(void) {
   const usize program_steps = core_61::program_steps();
   for(usize i=0; i < program_steps; i++) all_to_or |= (usize) core_61::get_code(/*mk61s.*/core_61::get_ring_address(i));
   if(all_to_or == 0) {
-    library_mk61::print_localized_at(0, 0, "Нет программ", "No program...");
+    library_mk61::print_localized_at(0, 0, M8_NO_PROGRAMS,
+                                     "No program...");
     sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
     delay_with_sound_poll(1500);
     return true;
@@ -1032,7 +1039,8 @@ bool Store(void) {
   isize address;
   {
     MK61DisplayUpdate update(main_lcd());
-    library_mk61::print_localized_at(0, 0, "ПИС ", "Save ", 5); //main_lcd().setCursor(7, 0);
+    library_mk61::print_localized_at(0, 0, M8_SAVE_ABBR,
+                                     "Save ", 5); //main_lcd().setCursor(7, 0);
     address = calc_address();
   }
   if(address < 0) return false; // Ошибка

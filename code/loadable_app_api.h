@@ -67,7 +67,8 @@ enum mk61_app_kind {
   MK61_APP_KIND_APPLICATION,
   MK61_APP_KIND_CHIP8,
   MK61_APP_KIND_MARKDOWN_VIEWER,
-  MK61_APP_KIND_SETUP
+  MK61_APP_KIND_SETUP,
+  MK61_APP_KIND_USBDISK
 };
 
 typedef struct mk61_app_api {
@@ -83,8 +84,9 @@ typedef struct mk61_app_api {
   uint32_t (*display_columns)(void);
   uint32_t (*display_rows)(void);
   uint32_t (*display_clear)(void);
-  uint32_t (*display_write_utf8)(uint32_t column, uint32_t row,
-                            const char* text, uint32_t byte_length);
+  /* Text is always M8, the same single-byte encoding used by C6. */
+  uint32_t (*display_write_m8)(uint32_t column, uint32_t row,
+                              const char* text, uint32_t byte_length);
 
   int32_t (*key_poll)(void);
   int32_t (*key_wait)(void);

@@ -43,7 +43,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
 python3 "$root/tests/font_preview_bitmap_self_test.py" "$preview_json"
 
 # The reviewed-atlas packer must preserve already-approved pixels and emit an
-# ordinary, fully validated FMK1 file. Its --check mode is the reproducibility
+# ordinary, fully validated FMK2 file. Its --check mode is the reproducibility
 # gate used by maintainers of ready-made UI fonts.
 atlas_fmk="$work/atlas.fmk"
 python3 "$root/tools/build_fmk_from_ui_atlas.py" \

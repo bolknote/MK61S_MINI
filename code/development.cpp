@@ -16,13 +16,14 @@
 #include "lcd_ru.hpp"
 #include "language_workspace.hpp"
 #include "menu.hpp"
+#include "mk8_strings.inc"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
 #include "storage_path.hpp"
 #include "text_editor.hpp"
 #include "tools.hpp"
 #include "ui_font_catalog.hpp"
-#include "utf8_view.hpp"
+#include "m8_view.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -534,8 +535,8 @@ static int previous_matching_index(u16 directory_id, int active,
 
 #if MK61_PROPORTIONAL_UI_FONTS
 // Keep the insertion point inside the viewport, not merely the beginning of
-// the name. Bound every temporary by C5's filename capacity and move only at
-// UTF-8 boundaries. The spare right margin includes the caret's next glyph.
+// the name. Bound every temporary by C6's filename capacity and move only at
+// M8 character boundaries. The spare right margin includes the caret's next glyph.
 static u16 ui_editor_window_start(const char* text, u16 length, u16 cursor) {
   if(text == NULL) return 0;
   if(length >= program_store::NAME_SIZE) length = program_store::NAME_SIZE - 1;
@@ -547,7 +548,7 @@ static u16 ui_editor_window_start(const char* text, u16 length, u16 cursor) {
     memcpy(prefix, text + start, count);
     prefix[count] = 0;
     if(main_lcd().measureUiText(prefix) <= 160) break;
-    start = utf8_view::next_offset((const u8*) text, length, start);
+    start = m8_view::next_offset((const u8*) text, length, start);
   }
   return start;
 }
@@ -572,7 +573,7 @@ static void draw_search_cursor(const char* search_text) {
 #if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const u16 start = ui_editor_window_start(search_text, (u16) len, (u16) len);
-    const u16 characters = utf8_view::codepoint_count(search_text + start, (u16) (len - start));
+    const u16 characters = m8_view::codepoint_count(search_text + start, (u16) (len - start));
     main_lcd().setCursor((u8) (1U + characters), 0);
     main_lcd().cursorOn();
     return;
@@ -600,7 +601,7 @@ static u8 explorer_name_width(void) {
 }
 
 static u8 explorer_name_len(const char* name) {
-  const usize len = utf8_view::codepoint_count(name,
+  const usize len = m8_view::codepoint_count(name,
                                                program_store::NAME_SIZE - 1);
   return len > 255 ? 255 : (u8) len;
 }
@@ -619,7 +620,7 @@ static u8 explorer_scroll_max_offset(const char* name, u8 width) {
     u16 offset = 0;
     u8 skipped = 0;
     while(offset < bytes && main_lcd().measureUiText(name + offset) > width) {
-      offset = utf8_view::next_offset((const u8*) name, bytes, offset);
+      offset = m8_view::next_offset((const u8*) name, bytes, offset);
       ++skipped;
     }
     return skipped;
@@ -689,10 +690,10 @@ static void explorer_name_window(const char* name, u8 offset, u8 width,
   if(offset > codepoints) offset = codepoints;
   const bool marker = mark_overflow && offset == 0 && codepoints > width;
   const u8 text_width = marker && width > 0 ? (u8) (width - 1) : width;
-  u16 source = utf8_view::byte_offset(name, offset, byte_len);
+  u16 source = m8_view::byte_offset(name, offset, byte_len);
   usize target = 0;
   for(u8 used = 0; used < text_width && source < byte_len; used++) {
-    const u16 next = utf8_view::next_offset((const u8*) name, byte_len,
+    const u16 next = m8_view::next_offset((const u8*) name, byte_len,
                                             source);
     const u16 bytes = next > source ? (u16) (next - source) : 1;
     if(target + bytes >= capacity) break;
@@ -719,7 +720,7 @@ static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
                               u8 scroll_offset) {
 #if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
-    const u16 offset = utf8_view::byte_offset(entry.name, scroll_offset, program_store::NAME_SIZE - 1);
+    const u16 offset = m8_view::byte_offset(entry.name, scroll_offset, program_store::NAME_SIZE - 1);
     main_lcd().printUiLine(row, entry.name + offset, 0,
         (u8) (entry.kind == program_store::NodeKind::DIRECTORY ? '/' : type_marker(entry.type)));
     return;
@@ -747,8 +748,9 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
     explorer_scroll_reset(scroll);
     print_localized_line(0,
                          directory_id == program_store::ROOT_ID ? "FS is empty" : "Folder empty",
-                         directory_id == program_store::ROOT_ID ? "ФС пуста" : "Папка пуста");
-    print_localized_line(1, "OK: new folder", "OK: нов. папка");
+                         directory_id == program_store::ROOT_ID
+                             ? M8_EMPTY_FILESYSTEM : M8_EMPTY_FOLDER);
+    print_localized_line(1, "OK: new folder", M8_NEW_FOLDER_HINT);
     return 0;
   }
 
@@ -768,7 +770,7 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
     : count;
   if(visible_count <= 0) {
     explorer_scroll_reset(scroll);
-    print_localized_line((u8) first_row, "No match", "Нет совпад.");
+    print_localized_line((u8) first_row, "No match", M8_NO_MATCH);
     for(int row = first_row + 1; row < display_rows; row++) print_line((u8) row, "");
     if(filtered) draw_search_cursor(search_text);
     return 0;
@@ -867,7 +869,7 @@ static u16 consume_line_break(const u8* data, u16 len, u16 offset) {
 }
 
 static u16 next_text_char_offset(const u8* data, u16 len, u16 offset) {
-  return utf8_view::next_offset(data, len, offset);
+  return m8_view::next_offset(data, len, offset);
 }
 
 static u16 next_visual_line_offset(const u8* data, u16 len, u16 offset) {
@@ -985,18 +987,15 @@ static void draw_file_view(const program_store::Entry& entry, const u8* data, u1
 static void show_message(const char* en0, const char* ru0, const char* en1 = "", const char* ru1 = "") {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
-  if(library_mk61::language_is_ru()) {
-    // Both rows must share one LCD1602 CGRAM map. Loading the rows
-    // independently can replace custom Cyrillic glyphs used by row 0.
-    lcd_ru::print_lines(ru0, ru1);
-  } else {
-    print_line(0, en0);
-    print_line(1, en1);
-  }
+  // Both rows must share one LCD1602 CGRAM map.  On UC1609 the same entry
+  // point also guarantees that a modal message uses the selected UI face.
+  lcd_ru::print_lines(library_mk61::language_is_ru() ? ru0 : en0,
+                      library_mk61::language_is_ru() ? ru1 : en1);
 }
 
 static void show_graphics_unavailable() {
-  show_message("Graphics", "Графика", "unavailable", "недоступна");
+  show_message("Graphics", M8_GRAPHICS,
+               "unavailable", M8_NOT_AVAILABLE);
 }
 
 #if defined(MK61_DISPLAY_UC1609)
@@ -1109,16 +1108,8 @@ static TextFontPreflight preflight_text_font(
     return TextFontPreflight::UNAVAILABLE;
   }
   if(actual != sizeof(header)) return TextFontPreflight::INVALID;
-  const u16 declared_size = (u16) header[12] | ((u16) header[13] << 8);
-  const bool plausible = header[0] == 'F' && header[1] == 'M' &&
-      header[2] == 'K' && header[3] == '1' &&
-      (header[4] & (u8) ~fmk::FLAG_MONOSPACED) == 0 &&
-      header[5] != 0 && header[5] <= fmk::MAX_GLYPH_WIDTH &&
-      header[6] != 0 && header[6] <= fmk::MAX_GLYPH_HEIGHT &&
-      (((u16) header[8] | ((u16) header[9] << 8)) != 0) &&
-      header[10] != 0 && header[11] == 0 &&
-      declared_size == entry.data_len;
-  return plausible ? TextFontPreflight::OK : TextFontPreflight::INVALID;
+  return fmk::plausibleHeader(header, entry.data_len)
+      ? TextFontPreflight::OK : TextFontPreflight::INVALID;
 }
 #endif
 
@@ -1158,19 +1149,19 @@ static bool view_entry(const program_store::Entry& entry) {
     const bool markdown =
         entry.type == program_store::ProgramType::MARKDOWN;
     const char* en = markdown ? "Markdown error" : "Image error";
-    const char* ru = markdown ? "Ошибка Markdown" : "Ошибка картинки";
+    const char* ru = markdown ? M8_ERROR_MARKDOWN : M8_ERROR_IMAGE;
     if(result == loadable_module::FileOpenResult::BUSY) {
       en = "Busy";
-      ru = "Занято";
+      ru = M8_BUSY;
     } else if(result == loadable_module::FileOpenResult::IO_ERROR) {
       en = "Read error";
-      ru = "Ошибка чтения";
+      ru = M8_ERROR_READ;
     } else if(result == loadable_module::FileOpenResult::INVALID_FILE) {
       en = markdown ? "Invalid Markdown" : "Invalid WBMP";
-      ru = markdown ? "Неверный Markdown" : "Неверный WBMP";
+      ru = markdown ? M8_BAD_MARKDOWN : M8_BAD_WBMP;
     } else if(result == loadable_module::FileOpenResult::RUNTIME_ERROR) {
       en = "Display error";
-      ru = "Ошибка экрана";
+      ru = M8_ERROR_SCREEN;
     } else if(result ==
               loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
       show_graphics_unavailable();
@@ -1189,7 +1180,8 @@ static bool view_entry(const program_store::Entry& entry) {
   // an I/O failure merely because it cannot fit in this modal preview buffer.
   if(entry.type == program_store::ProgramType::FONT &&
      entry.data_len > shared_scratch::SIZE) {
-    show_message("Use Fonts menu", "Меню Шрифты", entry.name, entry.name);
+    show_message("Use Fonts menu", M8_FONTS_MENU,
+                 entry.name, entry.name);
     (void) wait_explorer_key(false);
     return true;
   }
@@ -1211,14 +1203,14 @@ static bool view_entry(const program_store::Entry& entry) {
     capacity = scratch.size();
   }
   if(data == NULL) {
-    show_message("Busy", "Занято", entry.name, entry.name);
+    show_message("Busy", M8_BUSY, entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;
   }
 
   u16 len = 0;
   if(!read_entry_data(entry, data, capacity, len)) {
-    show_message("Read error", "Ошибка чтения", entry.name, entry.name);
+    show_message("Read error", M8_ERROR_READ, entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;
   }
@@ -1258,7 +1250,8 @@ static bool confirm_delete(const program_store::Entry& entry) {
                     program_store::child_count(entry.id) != 0;
   while(true) {
     show_message(tree ? "Delete tree?" : "Delete?",
-                 tree ? "Удалить всё?" : "Удалить?", entry.name, entry.name);
+                 tree ? M8_REMOVE_ALL : M8_REMOVE_ONE,
+                 entry.name, entry.name);
     const i32 key = wait_explorer_key(false);
     if(key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_OK) return true;
@@ -1271,7 +1264,9 @@ static void delete_entry(const program_store::Entry& entry) {
 
   u16 removed = 0;
   const bool ok = program_store::remove_tree(entry.id, &removed);
-  show_message(ok ? "Deleted" : "Delete error", ok ? "Удалено" : "Ошибка", entry.name, entry.name);
+  show_message(ok ? "Deleted" : "Delete error",
+               ok ? M8_REMOVED : M8_ERROR,
+               entry.name, entry.name);
   delay(700);
 }
 
@@ -1279,22 +1274,22 @@ static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
   const char* en = "Rename";
-  const char* ru = "Новое имя";
+  const char* ru = M8_NEW_NAME;
   if(prompt == NamePrompt::NEW_DIRECTORY) {
     en = "New folder";
-    ru = "Новая папка";
+    ru = M8_ITEM_NEW_DIRECTORY;
   } else if(prompt == NamePrompt::SAVE) {
     en = "File name";
-    ru = "Имя файла";
+    ru = M8_NEW_FILE_NAME;
   }
   const char* title = library_mk61::language_is_ru() ? ru : en;
   const u16 byte_len = (u16) strlen(name);
   if(cursor > byte_len) cursor = byte_len;
-  const u16 cursor_chars = utf8_view::codepoint_count(name, cursor);
+  const u16 cursor_chars = m8_view::codepoint_count(name, cursor);
 #if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const u16 start = ui_editor_window_start(name, byte_len, cursor);
-    const u16 skipped = utf8_view::codepoint_count(name, start);
+    const u16 skipped = m8_view::codepoint_count(name, start);
     main_lcd().printUiLine(0, title);
     main_lcd().printUiLine(1, name + start, '>');
     main_lcd().setCursor((u8) (1U + cursor_chars - skipped), 1);
@@ -1326,13 +1321,13 @@ static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
 
 static bool name_move_left(const char* name, u16 len, u16& cursor) {
   if(name == NULL || cursor == 0 || cursor > len) return false;
-  cursor = utf8_view::previous_offset((const u8*) name, len, cursor);
+  cursor = m8_view::previous_offset((const u8*) name, len, cursor);
   return true;
 }
 
 static bool name_move_right(const char* name, u16 len, u16& cursor) {
   if(name == NULL || cursor >= len) return false;
-  const u16 next = utf8_view::next_offset((const u8*) name, len, cursor);
+  const u16 next = m8_view::next_offset((const u8*) name, len, cursor);
   cursor = next > cursor ? next : (u16) (cursor + 1);
   return true;
 }
@@ -1341,7 +1336,7 @@ static bool name_backspace(char* name, u16& len, u16& cursor) {
   if(name == NULL || cursor == 0 || cursor > len || name[len] != 0) {
     return false;
   }
-  const u16 previous = utf8_view::previous_offset((const u8*) name, len,
+  const u16 previous = m8_view::previous_offset((const u8*) name, len,
                                                   cursor);
   memmove(name + previous, name + cursor, len - cursor + 1);
   len = (u16) (len - (cursor - previous));
@@ -1502,7 +1497,8 @@ static bool rename_entry(const program_store::Entry& entry) {
   if(strncmp(name, entry.name, program_store::NAME_SIZE) == 0) return true;
 
   const bool ok = program_store::move_rename(entry.id, entry.parent_id, name);
-  show_message(ok ? "Renamed" : "Rename error", ok ? "Переимен." : "Ошибка", name, name);
+  show_message(ok ? "Renamed" : "Rename error",
+               ok ? M8_RENAMED : M8_ERROR, name, name);
   delay(700);
   return ok;
 }
@@ -1517,7 +1513,7 @@ static bool create_directory(u16 parent_id) {
     if(program_store::child(parent_id, i, child) &&
        child.kind == program_store::NodeKind::DIRECTORY &&
        strncmp(child.name, name, program_store::NAME_SIZE) == 0) {
-      show_message("Name exists", "Уже есть", name, name);
+      show_message("Name exists", M8_NAME_EXISTS, name, name);
       delay(900);
       return false;
     }
@@ -1528,7 +1524,7 @@ static bool create_directory(u16 parent_id) {
                                                     program_store::INVALID_ID,
                                                     &id);
   show_message(ok ? "Folder created" : "Create error",
-               ok ? "Папка создана" : "Ошибка",
+               ok ? M8_CREATED_FOLDER : M8_ERROR,
                name, name);
   delay(700);
   return ok;
@@ -1544,7 +1540,8 @@ static bool move_entry(const program_store::Entry& entry) {
   const bool ok = program_store::move_rename(entry.id, destination,
                                              entry.name);
   show_message(ok ? "Moved" : "Move error",
-               ok ? "Перемещено" : "Ошибка", entry.name, entry.name);
+               ok ? M8_MOVED : M8_ERROR,
+               entry.name, entry.name);
   delay(700);
   return ok;
 }
@@ -1626,11 +1623,11 @@ static bool dialog_item_at(u16 directory_id, DialogMode mode,
 static const char* dialog_item_name(const DialogItem& item) {
   switch(item.kind) {
     case DialogItemKind::THIS_DIRECTORY:
-      return library_mk61::text("This folder", "Эта папка");
+      return library_mk61::text("This folder", M8_THIS_FOLDER);
     case DialogItemKind::NEW_FILE:
-      return library_mk61::text("New file", "Новый файл");
+      return library_mk61::text("New file", M8_NEW_FILE);
     case DialogItemKind::NEW_DIRECTORY:
-      return library_mk61::text("New folder", "Новая папка");
+      return library_mk61::text("New folder", M8_ITEM_NEW_DIRECTORY);
     case DialogItemKind::ENTRY: return item.entry.name;
   }
   return "?";
@@ -1653,7 +1650,7 @@ static void draw_dialog_row(const lcd_ru::font_map_t& map, u8 row,
 #if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
     const char* name = dialog_item_name(item);
-    main_lcd().printUiLine(row, name + utf8_view::byte_offset(name, scroll_offset),
+    main_lcd().printUiLine(row, name + m8_view::byte_offset(name, scroll_offset),
                           0, (u8) dialog_item_marker(item));
     return;
   }
@@ -1674,8 +1671,8 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
   main_lcd().clear();
   if(count <= 0) {
     explorer_scroll_reset(scroll);
-    print_localized_line(0, "Folder empty", "Папка пуста");
-    print_localized_line(1, "ESC: parent", "ESC: наверх");
+    print_localized_line(0, "Folder empty", M8_EMPTY_FOLDER);
+    print_localized_line(1, "ESC: parent", M8_PARENT_HINT);
     return 0;
   }
 
@@ -2013,21 +2010,21 @@ static int item_menu_actions(const program_store::Entry& entry, ItemMenuAction* 
 static const char* item_menu_text(ItemMenuAction action, bool ru) {
   switch(action) {
     case ItemMenuAction::LOAD:
-      return ru ? "Загрузить" : "Load";
+      return ru ? M8_ITEM_LOAD : "Load";
     case ItemMenuAction::RUN:
-      return ru ? "Запуск" : "Run";
+      return ru ? M8_ITEM_RUN : "Run";
     case ItemMenuAction::VIEW:
-      return ru ? "Просмотр" : "View";
+      return ru ? M8_ITEM_VIEW : "View";
     case ItemMenuAction::EDIT:
-      return ru ? "Редактировать" : "Edit";
+      return ru ? M8_ITEM_EDIT : "Edit";
     case ItemMenuAction::NEW_DIRECTORY:
-      return ru ? "Новая папка" : "New folder";
+      return ru ? M8_ITEM_NEW_DIRECTORY : "New folder";
     case ItemMenuAction::RENAME:
-      return ru ? "Переименовать" : "Rename";
+      return ru ? M8_ITEM_RENAME : "Rename";
     case ItemMenuAction::MOVE:
-      return ru ? "Переместить" : "Move";
+      return ru ? M8_ITEM_MOVE : "Move";
     case ItemMenuAction::DELETE:
-      return ru ? "Удалить" : "Delete";
+      return ru ? M8_ITEM_DELETE : "Delete";
   }
   return "";
 }
@@ -2103,11 +2100,12 @@ static bool run_entry(const program_store::Entry& entry) {
        file_result == loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
       show_graphics_unavailable();
     } else {
-      show_message("Run error", "Ошибка запуска", entry.name, entry.name);
+      show_message("Run error", M8_ERROR_RUN, entry.name, entry.name);
     }
     delay(900);
   } else if(entry.type == program_store::ProgramType::FONT) {
-    show_message("Font applied", "Шрифт применен", entry.name, entry.name);
+    show_message("Font applied", M8_FONT_APPLIED,
+                 entry.name, entry.name);
     delay(700);
   }
   return ok;
@@ -2126,7 +2124,7 @@ static bool load_mk61_entry(const program_store::Entry& entry) {
     loaded = LoadProgram(entry.id);
   }
   if(!loaded) {
-    show_message("Load error", "Ошибка чтения", entry.name, entry.name);
+    show_message("Load error", M8_ERROR_READ, entry.name, entry.name);
     delay(900);
     return false;
   }
@@ -2155,7 +2153,7 @@ static void edit_entry(const program_store::Entry& entry) {
     }
   }
   if(!ok) {
-    show_message("Edit error", "Ошибка правки", entry.name, entry.name);
+    show_message("Edit error", M8_ERROR_EDIT, entry.name, entry.name);
     delay(900);
   }
 }
@@ -2254,7 +2252,7 @@ static bool m61_save_action(void) {
     return action::MENU_BACK;
   }
   if(!StoreProgram(directory, name)) {
-    show_message("Save error", "Ошибка записи", name, name);
+    show_message("Save error", M8_ERROR_WRITE, name, name);
     delay(900);
     return action::MENU_BACK;
   }
@@ -2268,7 +2266,7 @@ static bool m61_save_action(void) {
     current_mk61_entry_id = program_store::INVALID_ID;
   }
   current_mk61_directory_id = directory;
-  show_message("Program saved", "Программа сохр.", name, name);
+  show_message("Program saved", M8_PROGRAM_SAVED, name, name);
   delay(700);
   return action::MENU_EXIT;
 }
@@ -2278,9 +2276,9 @@ static constexpr t_punct M61_LOAD_PUNCT = {
 static constexpr t_punct M61_SAVE_PUNCT = {
     .size = 13, .action = &m61_save_action, .text = "Save M61 file"};
 static constexpr t_punct RU_M61_LOAD_PUNCT = {
-    .size = 15, .action = &m61_load_action, .text = "Открыть МК-61"};
+    .size = 15, .action = &m61_load_action, .text = M8_OPEN_MK61};
 static constexpr t_punct RU_M61_SAVE_PUNCT = {
-    .size = 15, .action = &m61_save_action, .text = "Сохранить МК-61"};
+    .size = 15, .action = &m61_save_action, .text = M8_SAVE_MK61};
 
 static bool m61_storage_action(void) {
   t_punct* items[] = {
@@ -2294,20 +2292,20 @@ static bool m61_storage_action(void) {
 }
 
 static constexpr t_punct EXPLORER_PUNCT = {.size = 8, .action = &explorer_action, .text = "Explorer"};
-static constexpr t_punct RU_EXPLORER_PUNCT = {.size = 15, .action = &explorer_action, .text = "Проводник"};
+static constexpr t_punct RU_EXPLORER_PUNCT = {.size = 15, .action = &explorer_action, .text = M8_EXPLORER};
 static constexpr t_punct M61_STORAGE_PUNCT = {.size = 9, .action = &m61_storage_action, .text = "M61 files"};
-static constexpr t_punct RU_M61_STORAGE_PUNCT = {.size = 15, .action = &m61_storage_action, .text = "Файлы МК-61"};
+static constexpr t_punct RU_M61_STORAGE_PUNCT = {.size = 15, .action = &m61_storage_action, .text = M8_FILES_MK61};
 
 #if MK61_ENABLE_USB_SCREEN
 static constexpr t_punct USB_SCREEN_DEV_PUNCT = {
     .size = 10, .action = &UsbScreenMode, .text = "USB Screen"};
 static constexpr t_punct RU_USB_SCREEN_DEV_PUNCT = {
-    .size = 15, .action = &UsbScreenMode, .text = "USB-экран"};
+    .size = 15, .action = &UsbScreenMode, .text = M8_USB_SCREEN};
 #endif
 
 #if MK61_ENABLE_FOCAL
 static constexpr t_punct FOCAL_DEV_PUNCT = {.size = 11, .action = &focal_action, .text = "FOCAL tools"};
-static constexpr t_punct RU_FOCAL_DEV_PUNCT = {.size = 15, .action = &focal_action, .text = "ФОКАЛ"};
+static constexpr t_punct RU_FOCAL_DEV_PUNCT = {.size = 15, .action = &focal_action, .text = M8_FOCAL};
 #endif
 
 #if MK61_ENABLE_TINYBASIC
@@ -2360,7 +2358,8 @@ bool program_store_choose_save_target(program_store::ProgramType type,
       return false;
     }
     if(program_store::basename_valid(candidate)) break;
-    show_message("Invalid name", "Ошибка имени", candidate, candidate);
+    show_message("Invalid name", M8_ERROR_NAME,
+                 candidate, candidate);
     delay(900);
   }
   memcpy(name, candidate, strlen(candidate) + 1);
@@ -2592,7 +2591,7 @@ i32 program_store_install_prepared_font(
       library_mk61::refresh_menu_text();
       library_mk61::defer_settings_state_save();
     } else if(replaced_text_font) {
-      // UI and generic text PFK1 share BULK. Replacing the latter also
+      // UI and generic text PFK2 share BULK. Replacing the latter also
       // replaces its geometry; do not retain a stale text profile.
       library_mk61::set_display_text_profile(main_lcd().textProfile());
       library_mk61::refresh_menu_text();
@@ -2649,8 +2648,8 @@ static i32 program_store_text_font_load_entry(
   }
 
   // SETUP compiles into its own workspace and the resident validates the
-  // complete PFK1 image before touching BULK, so a rejected replacement
-  // leaves the active face intact and needs no second C5 read.
+  // complete PFK2 image before touching BULK, so a rejected replacement
+  // leaves the active face intact and needs no second C6 read.
   return read_failed ? -3 : -1;
 }
 #endif
@@ -2732,7 +2731,7 @@ i32 program_store_text_font_end(void) {
   const i32 result = program_store_text_font_restore();
   if(result != 1) {
     // Never leak a language-runtime override into the caller even if the
-    // original C5 file disappeared or became unreadable during the run.
+    // original C6 file disappeared or became unreadable during the run.
     main_lcd().useBuiltinFont();
     applied_font_id = program_store::INVALID_ID;
     applied_font_role = AppliedFontRole::TEXT;

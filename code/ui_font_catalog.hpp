@@ -42,7 +42,7 @@ inline int name_compare(const char* left, const char* right) {
   }
 }
 
-// Stable across C5 reformatting and catalog reordering.  Zero and erased
+// Stable across C6 reformatting and catalog reordering. Zero and erased
 // Flash are excluded so the settings journal can reserve both as "no file".
 inline u32 name_key(const char* name) {
   u32 hash = 2166136261UL; // FNV-1a, ASCII case-insensitive like VFAT.
@@ -72,7 +72,7 @@ inline bool inspect_header(const u8* header, usize header_size,
   if(header == nullptr || header_size < fmk::HEADER_SIZE ||
      file_size < fmk::HEADER_SIZE || file_size > fmk::MAX_FILE_SIZE ||
      header[0] != 'F' || header[1] != 'M' ||
-     header[2] != 'K' || header[3] != '1' ||
+     header[2] != 'K' || header[3] != '2' ||
      (header[4] & (u8) ~fmk::FLAG_MONOSPACED) != 0 ||
      header[5] == 0 || header[5] > fmk::MAX_GLYPH_WIDTH ||
      !supported_height(header[6]) ||

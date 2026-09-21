@@ -1,4 +1,5 @@
 #include "fmk_font.hpp"
+#include "mk8_codec.hpp"
 
 #include <string.h>
 
@@ -7,6 +8,11 @@ namespace fmk {
 namespace {
 
 static constexpr u8 CRC_OFFSET = 14;
+
+static bool fontByteValid(u8 value) {
+  return mk8::valid_byte(value) && value != '\t' && value != '\n' &&
+         value != '\r';
+}
 
 static u16 readLe16(const u8* data) {
   return (u16) data[0] | ((u16) data[1] << 8);
@@ -170,7 +176,7 @@ u16 checksum(const u8* data, usize size) {
 bool Face::open(const u8* data, usize size) {
   reset();
   if(data == NULL || size < HEADER_SIZE || size > MAX_FILE_SIZE) return false;
-  if(data[0] != 'F' || data[1] != 'M' || data[2] != 'K' || data[3] != '1') return false;
+  if(data[0] != 'F' || data[1] != 'M' || data[2] != 'K' || data[3] != '2') return false;
   if((data[4] & (u8) ~FLAG_MONOSPACED) != 0) return false;
 
   Metrics metrics = {
@@ -197,11 +203,14 @@ bool Face::open(const u8* data, usize size) {
   u32 previous_end = 0;
   for(u8 i = 0; i < ranges; i++) {
     const u8* range = data + HEADER_SIZE + (usize) i * RANGE_SIZE;
-    const u16 start = readLe16(range);
-    const u16 count = (u16) range[2] + 1;
+    const u16 start = range[0];
+    const u16 count = (u16) range[1] + 1;
     if(i != 0 && start < previous_end) return false;
     previous_end = (u32) start + count;
-    if(previous_end > 0x10000UL) return false;
+    if(previous_end > 0x100UL) return false;
+    for(u16 value = start; value < previous_end; ++value) {
+      if(!fontByteValid((u8) value)) return false;
+    }
     glyphs_in_ranges += count;
     if(glyphs_in_ranges > metrics.glyph_count) return false;
   }
@@ -233,15 +242,15 @@ bool Face::open(const u8* data, usize size) {
   return true;
 }
 
-bool Face::glyphIndex(u16 codepoint, u16& index) const {
+bool Face::glyphIndex(u8 byte, u16& index) const {
   if(!valid()) return false;
   u16 first_index = 0;
   for(u8 i = 0; i < range_count; i++) {
     const u8* range = bytes + HEADER_SIZE + (usize) i * RANGE_SIZE;
-    const u16 start = readLe16(range);
-    const u16 count = (u16) range[2] + 1;
-    if(codepoint >= start && (u32) codepoint < (u32) start + count) {
-      index = (u16) (first_index + codepoint - start);
+    const u16 start = range[0];
+    const u16 count = (u16) range[1] + 1;
+    if(byte >= start && (u16) byte < start + count) {
+      index = (u16) (first_index + byte - start);
       return true;
     }
     first_index = (u16) (first_index + count);
@@ -249,15 +258,15 @@ bool Face::glyphIndex(u16 codepoint, u16& index) const {
   return false;
 }
 
-bool Face::codepointAt(u16 index, u16& codepoint) const {
+bool Face::byteAt(u16 index, u8& byte) const {
   if(!valid() || index >= face_metrics.glyph_count) return false;
   u16 first_index = 0;
   for(u8 i = 0; i < range_count; i++) {
     const u8* range = bytes + HEADER_SIZE + (usize) i * RANGE_SIZE;
-    const u16 start = readLe16(range);
-    const u16 count = (u16) range[2] + 1;
+    const u16 start = range[0];
+    const u16 count = (u16) range[1] + 1;
     if(index < first_index + count) {
-      codepoint = (u16) (start + index - first_index);
+      byte = (u8) (start + index - first_index);
       return true;
     }
     first_index = (u16) (first_index + count);
@@ -279,27 +288,27 @@ bool Face::recordAt(u16 index, Glyph& out) const {
       out.width = width;
       out.height = face_metrics.height;
       out.advance = advance;
-      return codepointAt(index, out.codepoint);
+      return byteAt(index, out.byte);
     }
     if(!skipBitmap(reader, (u16) width * face_metrics.height)) return false;
   }
   return false;
 }
 
-bool Face::glyph(u16 codepoint, Glyph& out) const {
+bool Face::glyph(u8 byte, Glyph& out) const {
   u16 index = 0;
-  return glyphIndex(codepoint, index) && recordAt(index, out);
+  return glyphIndex(byte, index) && recordAt(index, out);
 }
 
 bool Face::glyphAt(u16 index, Glyph& out) const {
   return recordAt(index, out);
 }
 
-bool Face::rangeAt(u8 index, u16& start, u16& count) const {
+bool Face::rangeAt(u8 index, u8& start, u16& count) const {
   if(!valid() || index >= range_count) return false;
   const u8* range = bytes + HEADER_SIZE + (usize) index * RANGE_SIZE;
-  start = readLe16(range);
-  count = (u16) range[2] + 1U;
+  start = range[0];
+  count = (u16) range[1] + 1U;
   return true;
 }
 
@@ -336,7 +345,7 @@ bool scaleToLcd5x8(const Face& face, const Glyph& glyph, u8 rows[8]) {
 
 u8 selectPreviewGlyphs(const Face& face, Glyph out[8]) {
   if(!face.valid() || out == NULL) return 0;
-  static const u16 preferred[8] = {'0', '1', '2', '3', 'A', 'B', 'C', 'D'};
+  static const u8 preferred[8] = {'0', '1', '2', '3', 'A', 'B', 'C', 'D'};
   u8 count = 0;
   for(u8 i = 0; i < 8; i++) {
     Glyph glyph;

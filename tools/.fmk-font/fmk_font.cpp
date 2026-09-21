@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "../../code/utf8_codec.hpp"
+#include "../../code/mk8_codec.hpp"
 
 namespace {
 
@@ -41,6 +41,7 @@ struct Options {
 
 struct GlyphBitmap {
   std::uint16_t codepoint;
+  std::uint8_t byte;
   std::uint8_t width;
   std::uint8_t advance;
   std::vector<std::uint8_t> bits;
@@ -128,7 +129,7 @@ void parse_cell(const std::string& value, int& width, int& height) {
   width = parse_int(value.substr(0, separator), "cell width");
   height = parse_int(value.substr(separator + 1), "cell height");
   if (width < 1 || width > 16 || height < 1 || height > 32) {
-    throw std::runtime_error("FMK1 supports cells from 1x1 through 16x32");
+    throw std::runtime_error("FMK2 supports cells from 1x1 through 16x32");
   }
 }
 
@@ -198,7 +199,7 @@ void add_utf8(std::set<std::uint16_t>& output, const std::string& text) {
         static_cast<usize>(std::min<std::size_t>(remaining, 4U)));
     if (!decoded.valid) throw std::runtime_error("invalid UTF-8 in --chars");
     if (decoded.codepoint > 0xFFFFU) {
-      throw std::runtime_error("FMK1 v1 stores BMP codepoints only");
+      throw std::runtime_error("FMK2 source characters must be in the BMP");
     }
     output.insert(static_cast<std::uint16_t>(decoded.codepoint));
     index += decoded.size;
@@ -341,6 +342,16 @@ std::vector<GlyphBitmap> render_glyphs(FT_Face face, const Options& options,
 
   std::vector<GlyphBitmap> result;
   for (const std::uint16_t codepoint : available) {
+    u8 m8_byte = 0;
+    if (!mk8::from_codepoint(codepoint, m8_byte) ||
+        !mk8::valid_byte(m8_byte) || m8_byte == '\t' ||
+        m8_byte == '\n' || m8_byte == '\r') {
+      char message[96];
+      std::snprintf(message, sizeof(message),
+                    "U+%04X is not representable as an FMK2 M8 glyph",
+                    codepoint);
+      throw std::runtime_error(message);
+    }
     if (FT_Load_Char(face, codepoint, FT_LOAD_RENDER) != 0) continue;
     const FT_GlyphSlot glyph = face->glyph;
     std::vector<std::uint8_t> source(static_cast<std::size_t>(source_width) * source_height, 0);
@@ -397,7 +408,9 @@ std::vector<GlyphBitmap> render_glyphs(FT_Face face, const Options& options,
       }
       advance = std::min(16, glyph_width + 1);
     }
-    result.push_back({codepoint, static_cast<std::uint8_t>(glyph_width), static_cast<std::uint8_t>(advance), std::move(pixels)});
+    result.push_back({codepoint, m8_byte,
+                      static_cast<std::uint8_t>(glyph_width),
+                      static_cast<std::uint8_t>(advance), std::move(pixels)});
   }
   return result;
 }
@@ -465,27 +478,32 @@ void put_le16(std::vector<std::uint8_t>& output, std::size_t offset, std::uint16
   output[offset + 1] = static_cast<std::uint8_t>(value >> 8);
 }
 
-std::vector<std::pair<std::uint16_t, std::uint16_t>> make_ranges(const std::vector<GlyphBitmap>& glyphs) {
-  std::vector<std::pair<std::uint16_t, std::uint16_t>> ranges;
-  std::uint16_t start = glyphs.front().codepoint;
-  std::uint16_t previous = start;
+std::vector<std::pair<std::uint8_t, std::uint16_t>> make_ranges(const std::vector<GlyphBitmap>& glyphs) {
+  std::vector<std::pair<std::uint8_t, std::uint16_t>> ranges;
+  std::uint8_t start = glyphs.front().byte;
+  std::uint8_t previous = start;
   std::uint16_t count = 1;
   for (std::size_t index = 1; index < glyphs.size(); ++index) {
-    if (glyphs[index].codepoint == previous + 1 && count < 256) ++count;
-    else { ranges.push_back({start, count}); start = glyphs[index].codepoint; count = 1; }
-    previous = glyphs[index].codepoint;
+    if (glyphs[index].byte == static_cast<unsigned>(previous) + 1U && count < 256) ++count;
+    else { ranges.push_back({start, count}); start = glyphs[index].byte; count = 1; }
+    previous = glyphs[index].byte;
   }
   ranges.push_back({start, count});
-  if (ranges.size() > 255) throw std::runtime_error("FMK1 v1 supports at most 255 codepoint ranges");
+  if (ranges.size() > 255) throw std::runtime_error("FMK2 supports at most 255 M8 ranges");
   return ranges;
 }
 
 std::vector<std::uint8_t> encode_font(std::vector<GlyphBitmap> glyphs, const Options& options,
                                       int& raw_count, int& rle_count) {
-  std::sort(glyphs.begin(), glyphs.end(), [](const auto& left, const auto& right) { return left.codepoint < right.codepoint; });
+  std::sort(glyphs.begin(), glyphs.end(), [](const auto& left, const auto& right) { return left.byte < right.byte; });
+  for (std::size_t index = 1; index < glyphs.size(); ++index) {
+    if (glyphs[index - 1].byte == glyphs[index].byte) {
+      throw std::runtime_error("two Unicode characters map to the same M8 byte");
+    }
+  }
   const auto ranges = make_ranges(glyphs);
   std::vector<std::uint8_t> prefix(HEADER_SIZE, 0);
-  std::memcpy(prefix.data(), "FMK1", 4);
+  std::memcpy(prefix.data(), "FMK2", 4);
   prefix[4] = options.proportional ? 0 : FLAG_MONOSPACED;
   prefix[5] = static_cast<std::uint8_t>(options.width);
   prefix[6] = static_cast<std::uint8_t>(options.height);
@@ -493,8 +511,7 @@ std::vector<std::uint8_t> encode_font(std::vector<GlyphBitmap> glyphs, const Opt
   put_le16(prefix, 8, static_cast<std::uint16_t>(glyphs.size()));
   prefix[10] = static_cast<std::uint8_t>(ranges.size());
   for (const auto [start, count] : ranges) {
-    prefix.push_back(static_cast<std::uint8_t>(start));
-    prefix.push_back(static_cast<std::uint8_t>(start >> 8));
+    prefix.push_back(start);
     prefix.push_back(static_cast<std::uint8_t>(count - 1));
   }
 

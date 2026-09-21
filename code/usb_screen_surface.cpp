@@ -573,8 +573,7 @@ bool Surface::resolveToken(u16 value, bool custom,
   if(font_ != NULL) {
     prepared_font::Glyph glyph;
     const u16 unicode = display_symbol::uc1609::unicodeCodepoint(value);
-    if(font_->glyph(unicode, glyph) ||
-       (unicode != value && font_->glyph(value, glyph))) {
+    if(prepared_font::glyphForCodepoint(*font_, unicode, glyph)) {
       raster.width = glyph.width;
       raster.height = glyph.height;
       if(font_->decode(glyph, raster.data, sizeof(raster.data))) return true;

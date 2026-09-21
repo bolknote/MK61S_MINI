@@ -3,14 +3,14 @@
 
 #include "rust_types.h"
 
-// Internal, RAM-only representation of an installed FMK font.  FMK remains
-// the compact interchange format on C5; SETUP.APP expands it once into PFK1.
+// Internal, RAM-only representation of an installed FMK font. FMK2 remains
+// the compact interchange format on C6; SETUP.APP expands it once into PFK2.
 // The resident renderer then performs only a range lookup, one indexed record
 // read and a bounded bitmap copy.
 namespace prepared_font {
 
 static constexpr usize HEADER_SIZE = 20;
-static constexpr usize RANGE_SIZE = 3;
+static constexpr usize RANGE_SIZE = 2;
 static constexpr usize GLYPH_RECORD_SIZE = 3;
 static constexpr usize CRC_OFFSET = 18;
 static constexpr usize MAX_IMAGE_SIZE = 8192;
@@ -31,7 +31,7 @@ struct Metrics {
 };
 
 struct Glyph {
-  u16 codepoint;
+  u8 byte;
   u16 index;
   u16 bitmap_offset;
   u8 width;
@@ -50,7 +50,7 @@ class Face {
   usize size(void) const { return byte_count_; }
   const Metrics& metrics(void) const { return metrics_; }
 
-  bool glyph(u16 codepoint, Glyph& out) const;
+  bool glyph(u8 byte, Glyph& out) const;
   bool glyphAt(u16 index, Glyph& out) const;
   bool decode(const Glyph& glyph, u8* bitmap, usize capacity) const;
 
@@ -62,12 +62,13 @@ class Face {
   u16 bitmap_offset_;
   Metrics metrics_;
 
-  bool glyphIndex(u16 codepoint, u16& index) const;
-  bool codepointAt(u16 index, u16& codepoint) const;
+  bool glyphIndex(u8 byte, u16& index) const;
+  bool byteAt(u16 index, u8& byte) const;
   bool recordAt(u16 index, Glyph& out) const;
 };
 
 u16 checksum(const u8* data, usize size);
+bool glyphForCodepoint(const Face& face, u32 codepoint, Glyph& out);
 
 } // namespace prepared_font
 

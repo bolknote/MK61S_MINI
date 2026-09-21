@@ -28,9 +28,9 @@ static void putLe16(u8* target, u16 value) {
   target[1] = (u8) (value >> 8);
 }
 
-static prepared_font::Face narrowFont(u8 (&data)[28]) {
+static prepared_font::Face narrowFont(u8 (&data)[27]) {
   memset(data, 0, sizeof(data));
-  memcpy(data, "PFK1", 4);
+  memcpy(data, "PFK2", 4);
   data[4] = prepared_font::FLAG_MONOSPACED;
   data[5] = 3;
   data[6] = 5;
@@ -38,16 +38,16 @@ static prepared_font::Face narrowFont(u8 (&data)[28]) {
   data[8] = 1;
   data[9] = 1;
   putLe16(data + 10, 1);
-  putLe16(data + 12, 23);
-  putLe16(data + 14, 23);
+  putLe16(data + 12, 22);
+  putLe16(data + 14, 22);
   putLe16(data + 16, sizeof(data));
-  putLe16(data + 20, 'A');
-  data[22] = 0;
-  data[23] = 0x40;
-  data[24] = 0xA0;
-  data[25] = 0xE0;
+  data[20] = 'A';
+  data[21] = 0;
+  data[22] = 0x40;
+  data[23] = 0xA0;
+  data[24] = 0xE0;
+  data[25] = 0xA0;
   data[26] = 0xA0;
-  data[27] = 0xA0;
   putLe16(data + prepared_font::CRC_OFFSET,
           prepared_font::checksum(data, sizeof(data)));
   prepared_font::Face face;
@@ -110,7 +110,7 @@ static void test_text_unicode_and_cursor(void) {
 }
 
 static void test_wide_external_font_layout(void) {
-  u8 font_data[28] = {};
+  u8 font_data[27] = {};
   prepared_font::Face font = narrowFont(font_data);
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
   usb_screen::Surface surface(framebuffer);

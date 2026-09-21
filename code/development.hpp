@@ -31,7 +31,7 @@ bool program_store_view_entry(program_store::ProgramType type, const char* name)
 bool program_store_apply_font(const program_store::Entry& entry);
 bool program_store_apply_font(const char* name);
 
-// SETUP.APP is the sole FMK parser. It hands a validated PFK1 image back
+// SETUP.APP is the sole FMK parser. It hands a validated PFK2 image back
 // through this resident boundary; source_id remains the restoration identity.
 i32 program_store_install_prepared_font(
     u16 source_id, const u8* data, u16 size, u8 role, u8 expected_height,
@@ -39,7 +39,7 @@ i32 program_store_install_prepared_font(
 
 // A temporary language-runtime override of the generic graphical text font.
 // SETUP prepares replacements in its workspace, so invalid candidates leave
-// the current face intact; END restores the C5 identity captured by BEGIN.
+// the current face intact; END restores the C6 identity captured by BEGIN.
 i32 program_store_text_font_begin(void);
 i32 program_store_text_font_load(const char* name);
 i32 program_store_text_font_load_from(const char* name,
@@ -55,8 +55,8 @@ struct ProgramStoreUiFont {
 };
 
 // Every valid Fonts/*.FMK file is one selectable face. The filename (without
-// .FMK, as stored by C5) is its UI name; the raster height comes from FMK.
-// The stable filename key survives catalog reordering and C5 reformatting.
+// .FMK, as stored by C6) is its UI name; the raster height comes from FMK.
+// The stable filename key survives catalog reordering and C6 reformatting.
 u16 program_store_ui_font_count(void);
 bool program_store_ui_font_at(u16 index, ProgramStoreUiFont& out);
 bool program_store_describe_ui_font(u32 key, ProgramStoreUiFont& out);

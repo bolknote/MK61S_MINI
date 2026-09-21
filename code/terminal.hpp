@@ -26,7 +26,6 @@ static constexpr usize MAX_INPUT_CHAR = terminal_core::INPUT_CAPACITY;
 
 class class_terminal {
   private:
-    enum class mnemo_type {ISA_61, ISA_CLASSIC};
     static constexpr usize MAX_LEN_CLASSIC_MNEMO = 8; // максимальная длинна классической инструкции
 
     isize   AT;
@@ -54,7 +53,7 @@ class class_terminal {
         (program_store::MAX_APP_FILE_SIZE +
          program_store::VFAT_STAGE_BLOCK_SIZE - 1U) /
         program_store::VFAT_STAGE_BLOCK_SIZE;
-    // Диапазон терминального C5-upload отделён от USB LBA.
+    // Диапазон терминального C6-upload отделён от USB LBA.
     static constexpr u32 FILE_UPLOAD_STAGE_FIRST_KEY =
         program_store::VFAT_STAGE_KEY_MAX - 127U;
     static constexpr usize FILE_UPLOAD_WORKSPACE_SIZE =
@@ -217,10 +216,6 @@ class class_terminal {
 
     void dump_mk61_code_page(void);
 
-    char* ISA_61_code(u8 opcode, char* text);
-
-    char* ISA_CLASSIC_61_code(u8 opcode, char* text);
-
     void output_version(void);
 
     terminal_protocol::Result exec_identity(void);
@@ -311,7 +306,7 @@ class class_terminal {
 
     void pub_mk61_code_page(void);
 
-    void  lasm_mk61_code_page(mnemo_type type);
+    void  lasm_mk61_code_page(void);
 
     bool GetHexString(const char* args);
 

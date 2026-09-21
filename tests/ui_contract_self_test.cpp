@@ -8,7 +8,8 @@
 #include "markdown_scroll.hpp"
 #include "ws0010_charset.hpp"
 #include "disasm_line.hpp"
-#include "utf8_view.hpp"
+#include "m8_view.hpp"
+#include "mk8_strings.inc"
 #include "keyboard_core.hpp"
 #include "keyboard_layout.hpp"
 #include <cassert>
@@ -66,9 +67,8 @@ struct Surface {
     const u16 length = (u16) std::strlen(text);
     u16 width = 0;
     for(u16 offset = 0; offset < length;) {
-      const u8 bytes = utf8_view::sequence_length((const u8*) text, length, offset);
       width = (u16) (width + (text[offset] == 'i' ? 3 : 13));
-      offset = (u16) (offset + bytes);
+      offset = m8_view::next_offset((const u8*) text, length, offset);
     }
     return width;
   }
@@ -283,13 +283,15 @@ static void test_ui_font_layout() {
             assert(calls[0] == "text-mode-ui" && calls[1] == "clear");
             for(usize i = 2; i < calls.size(); ++i) assert(calls[i] == "text");
 
-            const char* family_line = ru
-              ? (family == 0 ? "Шрифт UI:5x8" :
-                 (family == 3 ? "Шрифт UI:FMK" : "Шрифт UI:Pixel"))
-              : (family == 0 ? "UI font:5x8" :
-                 (family == 3 ? "UI font:FMK" : "UI font:Pixel"));
+            const char* family_name = family == 0 ? "5x8" :
+                (family == 3 ? "FMK" : "Pixel");
+            char family_line[32];
+            snprintf(family_line, sizeof(family_line),
+                     ru ? M8_SETUP_UI_FONT_FORMAT : "UI font:%s",
+                     family_name);
             char size_line[24];
-            snprintf(size_line, sizeof(size_line), ru ? "Размер UI:%u" : "UI size:%u",
+            snprintf(size_line, sizeof(size_line),
+                     ru ? M8_SETUP_UI_SIZE_FORMAT : "UI size:%u",
                      (unsigned) size);
             std::string expected[10];
             const u8 fields = uiFontFieldCount(font);
@@ -303,7 +305,9 @@ static void test_ui_font_layout() {
               else snprintf(value, sizeof(value), "%s", size_line);
               expected[row] = std::string(1, field == active ? '>' : ' ') + value;
             }
-            expected[rows - 1] = ru ? " Аа Бб Wi 123" : " Aa Bb Wi 123";
+            expected[rows - 1] = ru
+                ? std::string(" ") + M8_SETUP_SAMPLE_UI
+                : " Aa Bb Wi 123";
             for(u8 row = 0; row < 10; ++row) {
               expect("live UI chooser layout", surface.lines[row], expected[row]);
               if(expected[row].empty()) continue;
@@ -365,22 +369,28 @@ int main() {
 #endif
   russian = true;
   drawCalculatorFontSetup(0, four);
+  char russian_font_line[32];
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  expect("font dialog RU", surface.lines[0], ">Строки:4");
+  snprintf(russian_font_line, sizeof(russian_font_line), M8_SETUP_ROWS_FORMAT,
+           4U);
 #else
-  expect("font dialog RU", surface.lines[0], ">Шрифт:10x16");
+  snprintf(russian_font_line, sizeof(russian_font_line),
+           M8_SETUP_FONT_NAME_FORMAT, "10x16");
 #endif
+  expect("font dialog RU", surface.lines[0],
+         std::string(">") + russian_font_line);
 
   // The fallback dialog remains available to residents without live UI text.
   assert(sameTextProfile(surface.profile, four));
 
   const char narrow_name[] = "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
   const char wide_name[] = "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
-  const char russian_name[] = "ЩЩЩЩЩЩЩЩЩЩЩЩЩЩЩ";
+  const char russian_name[] =
+      "\331\331\331\331\331\331\331\331\331\331\331\331\331\331\331";
   assert(ui_editor_window_start(narrow_name, 31, 31) == 0);
   assert(ui_editor_window_start(wide_name, 31, 31) == 19);
-  assert(ui_editor_window_start(russian_name, 30, 30) == 6);
-  assert(ui_editor_window_start(russian_name, 30, 20) == 0);
+  assert(ui_editor_window_start(russian_name, 15, 15) == 3);
+  assert(ui_editor_window_start(russian_name, 15, 10) == 0);
   assert(ui_editor_window_start(nullptr, 0, 0) == 0);
 
   surface.external = true;
@@ -417,7 +427,9 @@ int main() {
   assert(startup_splash::escapeMaySkip(startup_splash::EscapePolicy::ALLOW_SKIP));
   assert(!startup_splash::escapeMaySkip(startup_splash::EscapePolicy::IGNORE));
 
-  const char markdown[] = "# Заголовок\n\nEnglish **русский**\n";
+  const char markdown[] =
+      "# \307\340\343\356\353\356\342\356\352\n\n"
+      "English **\360\363\361\361\352\350\351**\n";
   u8 document[512]; u16 size = 0, text_size = 0;
   assert(markdown::compile((const u8*) markdown, sizeof(markdown)-1, document, sizeof(document), size) == markdown::Status::OK);
   markdown::Reader reader(document, size);
@@ -426,7 +438,9 @@ int main() {
   assert(event.kind == markdown::EventKind::BLOCK_BEGIN && event.block.kind == markdown::BlockKind::HEADING && event.block.level == 1);
   char text[128];
   assert(markdown_plain::convert((const u8*) markdown, sizeof(markdown)-1, text, sizeof(text), text_size) == markdown_plain::Status::OK);
-  expect("Markdown header/text", text, "Заголовок\n\nEnglish русский");
+  expect("Markdown header/text", text,
+         "\307\340\343\356\353\356\342\356\352\n\n"
+         "English \360\363\361\361\352\350\351");
   markdown_scroll::Probe probe(48, 64, 8);
   for(u16 y : {0,16,32,48,64,80,96}) probe.note(y);
   auto scroll = probe.finish(112);

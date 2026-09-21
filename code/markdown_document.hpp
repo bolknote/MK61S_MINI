@@ -7,7 +7,7 @@ namespace markdown {
 
 // A compiled document is a compact, bounded event stream. Text is copied into
 // the stream, so the source buffer may be released before linked images are
-// opened from C5.
+// opened from C6.
 static constexpr u16 MAX_SOURCE_SIZE = 1536;
 static constexpr u16 MAX_COMPILED_SIZE = 6144;
 static constexpr u8 MAX_INLINE_DEPTH = 8;

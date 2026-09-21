@@ -192,7 +192,7 @@ class MK61Display : public Print {
     void flush(void);
     void beginUpdate(void);
     void endUpdate(void);
-    // UTF-8 word flow shared by language runtimes. It uses the active FMK's
+    // M8 word flow shared by language runtimes. It uses the active FMK's
     // real advances on a graphical UI and Unicode cells on character panels.
     // Returns the number of rows replaced.
     u8 printWrappedText(const char* text, u16 length, u8 first_row,

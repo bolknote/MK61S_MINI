@@ -1,104 +1,102 @@
 // Immutable command catalog; included only by terminal_catalog.cpp.
-COMMAND("ver", CMD_VERSION, "firmware version")
-COMMAND("identity", CMD_IDENTITY, "stable device/build identity")
-#if MK61_ENABLE_TERMINAL_ENCODING
-COMMAND("encoding", CMD_ENCODING, "encoding [utf-8|cp1251] - terminal text encoding")
-#endif
-COMMAND("date", CMD_DATE, "date [ms|YYYY-MM-DD HH:MM:SS] - read/set clock")
+COMMAND("ver", CMD_VERSION, M8_TH_VER)
+COMMAND("identity", CMD_IDENTITY, M8_TH_IDENTITY)
+COMMAND("date", CMD_DATE, M8_TH_DATE)
 #if MK61_ENABLE_RTC_ALARM_TERMINAL
-COMMAND("alarm", CMD_ALARM, "RTC Alarm A/B status, daily or one-shot")
+COMMAND("alarm", CMD_ALARM, M8_TH_ALARM)
 #endif
-COMMAND("help", CMD_HELP, "this list")
-COMMAND("history", CMD_HISTORY, "recent command lines")
-COMMAND("list", CMD_LIST, "program memory in hex, vertical")
-COMMAND("dump", CMD_DUMP, "program memory in hex, horizontal")
-COMMAND("pub", CMD_PUB, "program listing in publication format")
-COMMAND("lasm", CMD_LASM, "disassemble program memory")
-COMMAND("isa", CMD_ISA, "list of assembler mnemonics")
-COMMAND("asm", CMD_ASM, "asm [TA] <mnemonics> - assemble line")
-COMMAND("ins", CMD_INS, "ins <step> <opcode> - insert into program")
-COMMAND("hin", CMD_HIN, "hin <addr> <hex> - write program memory")
-COMMAND("hout", CMD_HOUT, "program memory as hin lines")
-COMMAND("reg", CMD_REG_DUMP, "dump R0..RE registers")
-COMMAND("stk", CMD_STACK, "dump stack X,Y,Z,T,X1")
-COMMAND("poke", CMD_POKE, "poke <X|Y|Z|T> <1.25e02> - write stack")
-COMMAND("1302", CMD_1302, "dump K145IK1302 R register")
-COMMAND("ring", CMD_RING, "dump ring M memory")
-COMMAND("kbd", CMD_KBD, "kbd <hex scancode> - press key")
-COMMAND("led", CMD_LED, "led <0|1>[,ms,0|1,...] - LED pattern")
-COMMAND("beep", CMD_BEEP, "beep <Hz>,<ms>[,...] - sound pattern")
-COMMAND("if", CMD_IF, "if <reg><op><val> <cmd> - conditional")
-COMMAND("print", CMD_PRINT, "print \"text {X}\"|off|on - M61 display")
-COMMAND("wait", CMD_WAIT, "wait <1..60000> - pause M61 script (ms)")
-COMMAND("ret", CMD_RET, "return from an M61 script/trap")
-COMMAND("reinit", CMD_REINIT, "clear calculator state and M61 handlers")
-COMMAND("cmd", CMD_CMD, "cmd <hex opcode> - press keys of opcode")
-COMMAND("run", CMD_RUN, "run [name] - run program / stored file")
-COMMAND("open", CMD_OPEN, "open <name> - run stored file")
-COMMAND("save", CMD_SAVE, "save <number|path.m61> - store program (Y/y)")
-COMMAND("load", CMD_LOAD, "load <number|path.m61> - load program")
-COMMAND("pwd", CMD_FS_PWD, "print current storage directory")
-COMMAND("cd", CMD_FS_CD, "cd [path] - change storage directory")
-COMMAND("ls", CMD_FS_LIST, "ls [path] - list one storage directory")
-COMMAND("dir", CMD_FS_LIST, "alias for ls")
-COMMAND("mkdir", CMD_FS_MKDIR, "mkdir [-p] <path> - create directories")
-COMMAND("mv", CMD_FS_MOVE, "mv <source> <destination>")
-COMMAND("rm", CMD_FS_REMOVE, "rm [-r] <path> - remove file or tree")
-COMMAND("del", CMD_FS_REMOVE, "alias for rm")
-COMMAND("rmdir", CMD_FS_RMDIR, "rmdir <path> - remove empty directory")
-COMMAND("df", CMD_FS_STAT, "show C5 capacity and node quota")
+COMMAND("help", CMD_HELP, M8_TH_HELP)
+COMMAND("history", CMD_HISTORY, M8_TH_HISTORY)
+COMMAND("list", CMD_LIST, M8_TH_LIST)
+COMMAND("dump", CMD_DUMP, M8_TH_DUMP)
+COMMAND("pub", CMD_PUB, M8_TH_PUB)
+COMMAND("lasm", CMD_LASM, M8_TH_LASM)
+COMMAND("isa", CMD_ISA, M8_TH_ISA)
+COMMAND("asm", CMD_ASM, M8_TH_ASM)
+COMMAND("ins", CMD_INS, M8_TH_INS)
+COMMAND("hin", CMD_HIN, M8_TH_HIN)
+COMMAND("hout", CMD_HOUT, M8_TH_HOUT)
+COMMAND("reg", CMD_REG_DUMP, M8_TH_REG)
+COMMAND("stk", CMD_STACK, M8_TH_STACK)
+COMMAND("poke", CMD_POKE, M8_TH_POKE)
+COMMAND("1302", CMD_1302, M8_TH_1302)
+COMMAND("ring", CMD_RING, M8_TH_RING)
+COMMAND("kbd", CMD_KBD, M8_TH_KBD)
+COMMAND("led", CMD_LED, M8_TH_LED)
+COMMAND("beep", CMD_BEEP, M8_TH_BEEP)
+COMMAND("if", CMD_IF, M8_TH_IF)
+COMMAND("print", CMD_PRINT, M8_TH_PRINT)
+COMMAND("wait", CMD_WAIT, M8_TH_WAIT)
+COMMAND("ret", CMD_RET, M8_TH_RET)
+COMMAND("reinit", CMD_REINIT, M8_TH_REINIT)
+COMMAND("cmd", CMD_CMD, M8_TH_CMD)
+COMMAND("run", CMD_RUN, M8_TH_RUN)
+COMMAND("open", CMD_OPEN, M8_TH_OPEN)
+COMMAND("save", CMD_SAVE, M8_TH_SAVE)
+COMMAND("load", CMD_LOAD, M8_TH_LOAD)
+COMMAND("pwd", CMD_FS_PWD, M8_TH_PWD)
+COMMAND("cd", CMD_FS_CD, M8_TH_CD)
+COMMAND("ls", CMD_FS_LIST, M8_TH_LS)
+COMMAND("dir", CMD_FS_LIST, M8_TH_DIR)
+COMMAND("mkdir", CMD_FS_MKDIR, M8_TH_MKDIR)
+COMMAND("mv", CMD_FS_MOVE, M8_TH_MV)
+COMMAND("rm", CMD_FS_REMOVE, M8_TH_RM)
+COMMAND("del", CMD_FS_REMOVE, M8_TH_DEL)
+COMMAND("rmdir", CMD_FS_RMDIR, M8_TH_RMDIR)
+COMMAND("df", CMD_FS_STAT, M8_TH_DF)
 #if MK61_ENABLE_READ_BENCHMARKS
-COMMAND("bench", CMD_BENCHMARK, "read-only C5 benchmark")
+COMMAND("bench", CMD_BENCHMARK, M8_TH_BENCH)
 #endif
-COMMAND("fsget", CMD_FS_GET, "fsget <path> - machine file download")
-COMMAND("fsput", CMD_FS_PUT, "fsput begin|data|end|cancel - machine upload")
-COMMAND("format", CMD_FORMAT_STORAGE, "format C5 storage (Y/y)")
-COMMAND("clr", CMD_CLEAR, "clear program memory (Y/y)")
-COMMAND("vlog", CMD_VFAT_LOG, "USB import diagnostic [clear]")
-COMMAND("fsls", CMD_FS_LIST, "alias for ls")
-COMMAND("fsrm", CMD_FS_REMOVE, "alias for rm")
-COMMAND("fsstat", CMD_FS_STAT, "alias for df")
-COMMAND("fsclean", CMD_FS_CLEAN, "remove all zero-length store entries")
-COMMAND("disa", CMD_DISASM, "toggle disassembler on display")
+COMMAND("fsget", CMD_FS_GET, M8_TH_FSGET)
+COMMAND("fsput", CMD_FS_PUT, M8_TH_FSPUT)
+COMMAND("format", CMD_FORMAT_STORAGE, M8_TH_FORMAT)
+COMMAND("clr", CMD_CLEAR, M8_TH_CLR)
+COMMAND("vlog", CMD_VFAT_LOG, M8_TH_VLOG)
+COMMAND("usbdisk", CMD_USB_DISK, M8_TH_USBDISK)
+COMMAND("fsls", CMD_FS_LIST, M8_TH_LS)
+COMMAND("fsrm", CMD_FS_REMOVE, M8_TH_RM)
+COMMAND("fsstat", CMD_FS_STAT, M8_TH_DF)
+COMMAND("fsclean", CMD_FS_CLEAN, M8_TH_FSCLEAN)
+COMMAND("disa", CMD_DISASM, M8_TH_DISA)
 #if MK61_ENABLE_USB_SCREEN
-COMMAND("uscreen", CMD_USB_SCREEN, "start USB Screen mode")
+COMMAND("uscreen", CMD_USB_SCREEN, M8_TH_USCREEN)
 #endif
 #if MK61_DWT_PROFILER_SUPPORTED
   #if MK61_DEEP_IDLE_SUPPORTED
     #if MK61_ENABLE_PROFILE_SAVE
-COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core|deep <1..5> [cycles]|save]")
+COMMAND("prof", CMD_PROFILE, M8_TH_PROF_DEEP_SAVE)
     #else
-COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core|deep <1..5> [cycles]]")
+COMMAND("prof", CMD_PROFILE, M8_TH_PROF_DEEP)
     #endif
   #else
     #if MK61_ENABLE_PROFILE_SAVE
-COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core [steps]|save [path.txt]]")
+COMMAND("prof", CMD_PROFILE, M8_TH_PROF_CORE_SAVE)
     #else
-COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core [steps]]")
+COMMAND("prof", CMD_PROFILE, M8_TH_PROF_CORE)
     #endif
   #endif
 #endif
 #if MK61_CRASH_DUMP_SUPPORTED
   #if MK61_ENABLE_FAULT_INJECTION
-COMMAND("crash", CMD_CRASH, "crash [show|clear|save [path.txt]|test <fault>]")
+COMMAND("crash", CMD_CRASH, M8_TH_CRASH_TEST)
   #else
-COMMAND("crash", CMD_CRASH, "crash [show|clear|save [path.txt]]")
+COMMAND("crash", CMD_CRASH, M8_TH_CRASH)
   #endif
 #endif
 #if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
   #if MK61_ENABLE_WATCHDOG_TEST
-COMMAND("wdog", CMD_WATCHDOG, "wdog [status|test <starve|hang>]")
+COMMAND("wdog", CMD_WATCHDOG, M8_TH_WDOG_TEST)
   #else
-COMMAND("wdog", CMD_WATCHDOG, "wdog [status]")
+COMMAND("wdog", CMD_WATCHDOG, M8_TH_WDOG)
   #endif
 #endif
 #if MK61_MPU_GUARD_SUPPORTED
   #if MK61_ENABLE_MPU_TEST
-COMMAND("mpu", CMD_MPU, "mpu [status|test <guard|null|exec>]")
+COMMAND("mpu", CMD_MPU, M8_TH_MPU_TEST)
   #else
-COMMAND("mpu", CMD_MPU, "mpu [status]")
+COMMAND("mpu", CMD_MPU, M8_TH_MPU)
   #endif
 #endif
-COMMAND("display", CMD_DISPLAY, "display status|reinit|on|off|test NAME: text/alphabet/symbols/map/ddram/row/cgram/zero/clear/home/cursor/entry/autoshift/sleep/graphics/graphics-read/restore")
-COMMAND("rst", CMD_RESET, "rst [now] - reboot; plain rst confirms on device")
-COMMAND("dfu", CMD_DFU, "dfu [status] - enter/report ROM DFU")
+COMMAND("display", CMD_DISPLAY, M8_TH_DISPLAY)
+COMMAND("rst", CMD_RESET, M8_TH_RST)
+COMMAND("dfu", CMD_DFU, M8_TH_DFU)

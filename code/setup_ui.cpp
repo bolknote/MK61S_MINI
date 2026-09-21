@@ -9,6 +9,7 @@
 #include "rtc_settings_core.hpp"
 #include "fmk_font.hpp"
 #include "language_workspace.hpp"
+#include "mk8_strings.inc"
 #include "prepared_font.hpp"
 #include "setup_font_compiler.hpp"
 #include "setup_service.hpp"
@@ -50,7 +51,8 @@ static void printSetupLines(const char* first, const char* second) {
     return;
   }
 #endif
-  // Character displays and F401/UC1609 keep the established fixed-cell path.
+  // Character displays retain their CGROM/CGRAM path; graphical firmware
+  // enters the selected proportional UI face inside print_lines().
   lcd_ru::print_lines(first, second);
 }
 
@@ -150,8 +152,10 @@ static void drawDateTimeEditor(const rtc_settings::Editor& editor) {
   const bool russian = library_mk61::language_is_ru();
   char date_line[32];
   char time_line[32];
-  snprintf(date_line, sizeof(date_line), russian ? "Дата %.10s" : "Date %.10s", editor.text);
-  snprintf(time_line, sizeof(time_line), russian ? "Время %.8s" : "Time %.8s", editor.text + 11);
+  snprintf(date_line, sizeof(date_line),
+           russian ? M8_SETUP_DATE_FORMAT : "Date %.10s", editor.text);
+  snprintf(time_line, sizeof(time_line),
+           russian ? M8_SETUP_TIME_FORMAT : "Time %.8s", editor.text + 11);
 
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
@@ -216,16 +220,18 @@ bool date_time(void) {
 
     rtc_clock::DateTime value = {};
     if(!rtc_settings::value(editor, value)) {
-      showDateTimeMessage("Неверная дата", "Invalid date", "или время", "or time", 900);
+      showDateTimeMessage(M8_INVALID_DATE, "Invalid date",
+                          M8_INVALID_TIME, "or time", 900);
       continue;
     }
     wire = {value.year, value.month, value.day, value.hour, value.minute, value.second};
     if(!service(MK61_SETUP_RTC_WRITE, 0, 0, &wire)) {
-      showDateTimeMessage("Ошибка RTC", "RTC error", "Не сохранено", "Not saved", 900);
+      showDateTimeMessage(M8_ERROR_RTC, "RTC error",
+                          M8_NOT_SAVED, "Not saved", 900);
       continue;
     }
 
-    showDateTimeMessage("Дата и время", "Date and time", "сохранены", "saved", 650);
+    showDateTimeMessage(M8_DATE_TIME, "Date and time", M8_SAVED, "saved", 650);
     lcd_ru::restore_default_font();
     return action::MENU_BACK;
   }
@@ -239,7 +245,7 @@ static void drawRtcCalibrationEditor(
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
   printSetupLines(
-    library_mk61::language_is_ru() ? "Поправка RTC" : "RTC correction",
+    library_mk61::language_is_ru() ? M8_RTC_CORRECTION : "RTC correction",
     value_line);
   main_lcd().setCursor(
     (u8) rtc_settings::active_text_position(editor), 1);
@@ -288,18 +294,18 @@ bool calibration(void) {
     i16 ppm = 0;
     if(!rtc_settings::value(editor, ppm)) {
       showDateTimeMessage(
-        "Диапазон RTC", "RTC range", "-487...+488 ppm",
+        M8_RTC_RANGE, "RTC range", "-487...+488 ppm",
         "-487...+488 ppm", 900);
       continue;
     }
     if(!service(MK61_SETUP_RTC_CALIBRATION, 1, (u32) (i32) ppm)) {
       showDateTimeMessage(
-        "Ошибка RTC", "RTC error", "Не сохранено", "Not saved", 900);
+        M8_ERROR_RTC, "RTC error", M8_NOT_SAVED, "Not saved", 900);
       continue;
     }
 
     showDateTimeMessage(
-      "Поправка RTC", "RTC correction", "сохранена", "saved", 650);
+      M8_RTC_CORRECTION, "RTC correction", M8_SAVED_ONE, "saved", 650);
     lcd_ru::restore_default_font();
     return action::MENU_BACK;
   }
@@ -376,7 +382,7 @@ static u8 calculatorFontFieldCount(void) {
 
 #if MK61_SETUP_UI_FONT_CHOOSER
 static bool uiFontSettingsAvailable(void) {
-  // An older resident or USB Screen cannot provide a live UI-font surface.
+  // Older residents may lack the live UI-font rendering service.
   const u32 required = MK61_SETUP_FEATURE_UI_FONT |
                        MK61_SETUP_FEATURE_UI_TEXT_MODE;
   return (service(MK61_SETUP_FEATURES) & required) == required;
@@ -420,9 +426,9 @@ static void formatUiFontLine(char* out, usize size, u8 field,
         choice.external.name[0] != 0 ? choice.external.name :
       (choice.setting.family == 3 ? "FMK" :
        (choice.setting.family ? "Pixel" : "5x8"));
-    snprintf(out, size, russian ? "Шрифт UI:%s" : "UI font:%s", name);
+    snprintf(out, size, russian ? M8_SETUP_UI_FONT_FORMAT : "UI font:%s", name);
   } else {
-    snprintf(out, size, russian ? "Размер UI:%u" : "UI size:%u",
+    snprintf(out, size, russian ? M8_SETUP_UI_SIZE_FORMAT : "UI size:%u",
       (unsigned) choice.setting.size);
   }
 }
@@ -430,29 +436,30 @@ static void formatUiFontLine(char* out, usize size, u8 field,
 static void formatFontSetupLine(char* out, usize size, u8 field, lcd_display::TextProfile profile) {
 #if !MK61_ENABLE_EXTENDED_FONT_SETTINGS
   (void) field;
-  snprintf(out, size, library_mk61::language_is_ru() ? "Шрифт:%s" : "Font:%s",
+  snprintf(out, size, library_mk61::language_is_ru() ? M8_SETUP_FONT_NAME_FORMAT : "Font:%s",
     fontPresetName(profile));
   return;
 #else
   if(!(service(MK61_SETUP_FEATURES) &
        MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE)) {
-    snprintf(out, size, library_mk61::language_is_ru() ? "Шрифт:%s" : "Font:%s", fontPresetName(profile));
+    snprintf(out, size, library_mk61::language_is_ru() ? M8_SETUP_FONT_NAME_FORMAT : "Font:%s", fontPresetName(profile));
     return;
   }
   if(library_mk61::language_is_ru()) {
     switch(field) {
       case 0:
-        snprintf(out, size, "Строки:%u", (unsigned) profile.rows);
+        snprintf(out, size, M8_SETUP_ROWS_FORMAT, (unsigned) profile.rows);
         break;
       case 1:
-        snprintf(out, size, "Шрифт:%ux%u", (unsigned) profile.glyph_width, (unsigned) profile.glyph_height);
+        snprintf(out, size, M8_SETUP_FONT_SIZE_FORMAT,
+                 (unsigned) profile.glyph_width, (unsigned) profile.glyph_height);
         break;
       case 2:
-        snprintf(out, size, "Интервал:%u", (unsigned) profile.line_gap);
+        snprintf(out, size, M8_SETUP_GAP_FORMAT, (unsigned) profile.line_gap);
         break;
       case 3:
       default:
-        snprintf(out, size, "Ширина:%u", (unsigned) profile.glyph_width);
+        snprintf(out, size, M8_SETUP_WIDTH_FORMAT, (unsigned) profile.glyph_width);
         break;
     }
     return;
@@ -509,7 +516,8 @@ static void drawCalculatorFontSetup(u8 active, lcd_display::TextProfile profile)
 
   for(u8 row = visible_fields; row < rows; row++) {
     if(row == visible_fields) {
-      printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "Образец 123АБВ" : "Sample 123ABC");
+      printFontSetupLine(row, ' ', library_mk61::language_is_ru()
+          ? M8_SETUP_SAMPLE : "Sample 123ABC");
     } else {
       printFontSetupLine(row, ' ', library_mk61::language_is_ru() ? "0123456789+-*/" : "0123456789+-*/");
     }
@@ -719,7 +727,7 @@ static void drawUiFontSetup(u8 active, const UiFontChoice& choice) {
   const u8 available = rows > 1 ? (u8) (rows - 1) : 1;
   const u8 visible = available < fields ? available : fields;
   const u8 top = active < visible ? 0 : (u8) (active + 1 - visible);
-  // A complete 31-byte C5 name plus the localized label fits. Pixel clipping
+  // A complete 31-byte C6 name plus the localized label fits. Pixel clipping
   // and ellipsis belong to printUiLine(), not to snprintf's byte boundary.
   char line[64];
   for(u8 row = 0; row < visible; ++row) {
@@ -731,7 +739,7 @@ static void drawUiFontSetup(u8 active, const UiFontChoice& choice) {
     // A space marker reserves the same gutter as every menu row, so the live
     // sample aligns with the labels instead of protruding into their margin.
     service(MK61_SETUP_TEXT, rows - 1, 0x100U | ' ', (void*) (library_mk61::language_is_ru()
-        ? "Аа Бб Wi 123" : "Aa Bb Wi 123"));
+        ? M8_SETUP_SAMPLE_UI : "Aa Bb Wi 123"));
   }
 }
 #endif
@@ -739,9 +747,9 @@ static void drawUiFontSetup(u8 active, const UiFontChoice& choice) {
 bool font(void) {
 #if MK61_SETUP_UI_FONT_CHOOSER
   if(!uiFontSettingsAvailable()) {
-    // UC1609's calculator face is fixed, so USB Screen must not expose
-    // the obsolete calculator-profile editor. F401 and old residents retain
-    // the established fixed-cell editor.
+    // UC1609's calculator face is fixed, so a resident which exposes the
+    // UI-font service without its rendering context must not fall back to the
+    // obsolete calculator-profile editor. Old residents retain that editor.
     return uiFontServiceAvailable() ? action::MENU_BACK
                                     : calculatorFontSetup();
   }
@@ -756,8 +764,7 @@ bool font(void) {
       lcd_ru::restore_default_font();
       return action::MENU_BACK;
     }
-    // USB Screen is monospaced. Never show a misleading proportional preview
-    // there; mode changes also require a fresh row budget and complete frame.
+    // A host/display-mode change requires a fresh row budget and full redraw.
     if(!uiFontSettingsAvailable()) {
       return uiFontServiceAvailable() ? action::MENU_BACK
                                       : calculatorFontSetup();
@@ -832,7 +839,7 @@ static i32 wait_preview_key() {
 }
 static void draw_font_preview_header(const char* name, const fmk::Face& face) {
   char header[24];
-  snprintf(header, sizeof(header), "f1 %ux%u %.12s",
+  snprintf(header, sizeof(header), "f2 %ux%u %.12s",
     (unsigned) face.metrics().max_width, (unsigned) face.metrics().height,
     name);
   print_line(0, header);
@@ -841,12 +848,13 @@ static void draw_font_preview_header(const char* name, const fmk::Face& face) {
 void preview(const char* name, const u8* data, u16 len) {
   fmk::Face face;
   if(!face.open(data, len)) {
-    show_message("Bad font", "Ошибка шрифта", name, name);
+    show_message("Bad font", M8_ERROR_FONT, name, name);
     wait_preview_key();
     return;
   }
   if(!main_lcd().graphicsMode() && !face.metrics().monospaced) {
-    show_message("Proportional", "Пропорциональный", "Not supported", "Не поддержан");
+    show_message("Proportional", M8_SETUP_PROPORTIONAL,
+                 "Not supported", M8_SETUP_NOT_SUPPORTED);
     wait_preview_key();
     return;
   }
@@ -861,7 +869,7 @@ void preview(const char* name, const u8* data, u16 len) {
        prepared_size > 0xFFFFU ||
        !service(MK61_SETUP_FONT_PREVIEW, (u32) prepared_size, 0,
                 workspace.data())) {
-      show_message("Preview error", "Ошибка просмотра", name, name);
+      show_message("Preview error", M8_ERROR_VIEW, name, name);
       wait_preview_key();
       return;
     }
@@ -873,8 +881,10 @@ void preview(const char* name, const u8* data, u16 len) {
       if(main_lcd().rows() > 1) print_line(1, "0123456789+-*/");
       if(main_lcd().rows() > 2) print_line(2, "ABCDEFGHIJKLMNO");
       if(main_lcd().rows() > 3) print_line(3, "abcdefghijklmno");
-      if(main_lcd().rows() > 4) lcd_ru::print_at(0, 4, "АБВГДЕЖЗИЙКЛМНО", lcd_display::COLS);
-      if(main_lcd().rows() > 5) lcd_ru::print_at(0, 5, "абвгдежзийклмно", lcd_display::COLS);
+      if(main_lcd().rows() > 4) lcd_ru::print_at(
+          0, 4, M8_SETUP_UPPERCASE, lcd_display::COLS);
+      if(main_lcd().rows() > 5) lcd_ru::print_at(
+          0, 5, M8_SETUP_LOWERCASE, lcd_display::COLS);
       for(u8 row = 6; row < main_lcd().rows(); row++) print_line(row, "");
     }
     wait_preview_key();
@@ -886,7 +896,7 @@ void preview(const char* name, const u8* data, u16 len) {
 #if defined(MK61_DISPLAY_LCD1602) || defined(MK61_BUILD_PORTABLE_SYSTEM)
   fmk::Glyph glyphs[8];
   if(fmk::selectPreviewGlyphs(face, glyphs) != 8) {
-    show_message("No glyphs", "Нет символов", name, name);
+    show_message("No glyphs", M8_SETUP_NO_GLYPHS, name, name);
     wait_preview_key();
     return;
   }
@@ -894,7 +904,7 @@ void preview(const char* name, const u8* data, u16 len) {
   u8 rows[8][8];
   for(u8 slot = 0; slot < 8; slot++) {
     if(!fmk::scaleToLcd5x8(face, glyphs[slot], rows[slot])) {
-      show_message("Preview error", "Ошибка просмотра", name, name);
+      show_message("Preview error", M8_ERROR_VIEW, name, name);
       wait_preview_key();
       return;
     }
@@ -913,7 +923,7 @@ void preview(const char* name, const u8* data, u16 len) {
   lcd_ru::restore_default_font();
   main_lcd().clear();
 #else
-  show_message("Preview error", "Ошибка просмотра", name, name);
+  show_message("Preview error", M8_ERROR_VIEW, name, name);
   wait_preview_key();
 #endif
 }

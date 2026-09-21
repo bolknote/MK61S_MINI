@@ -13,7 +13,7 @@
 #include "lcd_ru.hpp"
 #include "ledcontrol.h"
 #include "runtime_safety.hpp"
-#include "utf8_codec.hpp"
+#include "mk8_codec.hpp"
 #include "program_store.hpp"
 #include "tools.hpp"
 
@@ -58,24 +58,11 @@ static u32 api_display_clear(void) {
   return 1;
 }
 
-static bool valid_utf8(const u8* text, u32 size) {
-  u32 offset = 0;
-  while(offset < size) {
-    const utf8_codec::Decoded decoded =
-        utf8_codec::decode(text + offset, (usize) (size - offset));
-    // Текстовый API v1 принимает только BMP: именно его умеют оба дисплея.
-    if(!decoded.valid || decoded.codepoint == 0 ||
-       decoded.codepoint > 0xFFFFU) return false;
-    offset += decoded.size;
-  }
-  return true;
-}
-
-static u32 api_display_write_utf8(u32 column, u32 row,
-                                  const char* text, u32 byte_length) {
+static u32 api_display_write_m8(u32 column, u32 row,
+                                const char* text, u32 byte_length) {
   if(text == nullptr || byte_length > MAX_TEXT_BYTES ||
      column >= main_lcd().cols() || row >= main_lcd().rows() ||
-     !valid_utf8((const u8*) text, byte_length)) return 0;
+     !mk8::text_valid((const u8*) text, byte_length)) return 0;
   char buffer[MAX_TEXT_BYTES + 1];
   if(byte_length != 0) memcpy(buffer, text, byte_length);
   buffer[byte_length] = 0;
@@ -262,7 +249,7 @@ static const Api API = {
   api_display_columns,
   api_display_rows,
   api_display_clear,
-  api_display_write_utf8,
+  api_display_write_m8,
   api_key_poll,
   api_key_wait,
   api_led_set,

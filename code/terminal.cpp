@@ -14,6 +14,7 @@
 #include "lcd_ru.hpp"
 #include "ledcontrol.h"
 #include "mk_math.hpp"
+#include "mk8_strings.inc"
 #include "mk61_ref.hpp"
 #include "mk61_register_init.hpp"
 #include "entropy_pool.hpp"
@@ -46,12 +47,10 @@
 #include "terminal_front_coding.hpp"
 #include "terminal_line_editor.hpp"
 #include "terminal_output.hpp"
-#if MK61_ENABLE_TERMINAL_ENCODING
-  #include "terminal_encoding.hpp"
-#endif
+#include "terminal_encoding.hpp"
 #include "terminal_protocol.hpp"
 #include "usb_screen.hpp"
-#include "utf8_view.hpp"
+#include "usb_mass_storage.hpp"
 #include "rtc_clock.hpp"
 #include "dwt_profiler.hpp"
 #include "classic_timer.hpp"
@@ -62,6 +61,7 @@
 #include "deep_idle.hpp"
 #include "usb_cdc_rx_guard.hpp"
 #include "usb_power.hpp"
+#include "menu.hpp"
 #if MK61_ENABLE_SPI1_ARBITER
   #include "spi1_bus.hpp"
 #endif
@@ -133,32 +133,22 @@ static bool terminal_single_token(const char* args, char* out,
          terminal_core::at_end(cursor);
 }
 
-#if MK61_ENABLE_TERMINAL_ENCODING
-// One physical CDC stream is shared by the interactive terminal and M61
-// scripts, therefore encoding is a connection property rather than duplicated
-// state in both class_terminal instances.  Human terminals start in CP1251;
-// machine clients explicitly request UTF-8 when they connect.
-static terminal_encoding::Mode terminal_text_encoding =
-    terminal_encoding::Mode::CP1251;
-
 static bool terminal_serial_write_byte(u8 byte, void*) {
   return Serial.write(byte) == 1;
 }
 
 static void terminal_write_cp1251(const char* text) {
-  (void) terminal_encoding::write_cp1251(
-      text, terminal_text_encoding, terminal_serial_write_byte, nullptr);
+  Serial.print(text);
 }
 
-static void terminal_write_utf8(const char* text) {
-  (void) terminal_encoding::write_utf8(
-      text, terminal_text_encoding, terminal_serial_write_byte, nullptr);
+static void terminal_write_m8(const char* text) {
+  (void) terminal_encoding::write_m8(
+      text, terminal_serial_write_byte, nullptr);
 }
 
-static void terminal_write_utf8(const u8* text, usize length) {
-  (void) terminal_encoding::write_utf8(
-      text, length, terminal_text_encoding, terminal_serial_write_byte,
-      nullptr);
+static void terminal_write_m8(const u8* text, usize length) {
+  (void) terminal_encoding::write_m8(
+      text, length, terminal_serial_write_byte, nullptr);
 }
 
 static void terminal_println_cp1251(const char* text) {
@@ -166,44 +156,10 @@ static void terminal_println_cp1251(const char* text) {
   Serial.println();
 }
 
-static void terminal_println_utf8(const char* text) {
-  terminal_write_utf8(text);
+static void terminal_println_m8(const char* text) {
+  terminal_write_m8(text);
   Serial.println();
 }
-
-static terminal_protocol::Result terminal_exec_encoding(const char* args) {
-  terminal_encoding::Mode requested = terminal_text_encoding;
-  const terminal_encoding::ParseResult parsed =
-      terminal_encoding::parse(args, requested);
-  if(parsed == terminal_encoding::ParseResult::INVALID) {
-    Serial.println("Usage: encoding <utf-8|cp1251>");
-    return terminal_protocol::Result::error();
-  }
-  if(parsed == terminal_encoding::ParseResult::SET) {
-    terminal_text_encoding = requested;
-  }
-  // The acknowledgement is deliberately ASCII-only: it remains readable
-  // while a host switches its decoder in either direction.
-  Serial.print("encoding ");
-  Serial.println(terminal_encoding::name(terminal_text_encoding));
-  return terminal_protocol::Result::ok();
-}
-#else
-// An explicitly reduced build may keep the historic wire representation:
-// mnemonics/registers are CP1251 and filesystem text is UTF-8. These wrappers
-// keep all call sites identical without pulling a transcoder into Flash.
-static void terminal_write_cp1251(const char* text) { Serial.print(text); }
-static void terminal_write_utf8(const char* text) { Serial.print(text); }
-static void terminal_write_utf8(const u8* text, usize length) {
-  Serial.write(text, length);
-}
-static void terminal_println_cp1251(const char* text) {
-  Serial.println(text);
-}
-static void terminal_println_utf8(const char* text) {
-  Serial.println(text);
-}
-#endif
 
 static void terminal_path_error(const char* operation,
                                 storage_path::Status status) {
@@ -221,11 +177,16 @@ static bool terminal_vfat_log(const char* args) {
       return false;
     }
     virtual_fat::clear_diagnostic();
+    usb_mass_storage::clear_startup_diagnostic();
   }
   char line[virtual_fat::DIAGNOSTIC_LINE_SIZE];
   const auto& diagnostic = virtual_fat::diagnostic();
   if(!virtual_fat::format_diagnostic(diagnostic, line, sizeof(line))) return false;
   Serial.println(line);
+  const usb_mass_storage::StartupDiagnostic startup =
+      usb_mass_storage::startup_diagnostic();
+  terminal_output::field(Serial, "MSC startup valid=", startup.valid ? 1 : 0);
+  terminal_output::line(Serial, " stage=", startup.valid ? startup.stage : 0);
   return true;
 }
 
@@ -237,13 +198,13 @@ static void terminal_print_fs_entry(const program_store::Entry& entry) {
   }
   if(entry.kind == program_store::NodeKind::DIRECTORY) {
     Serial.print("d\t");
-    terminal_write_utf8(name);
+    terminal_write_m8(name);
     Serial.println('/');
   } else {
     Serial.print("f\t");
     Serial.print(entry.data_len);
     Serial.print(" B\t");
-    terminal_println_utf8(name);
+    terminal_println_m8(name);
   }
 }
 
@@ -260,25 +221,10 @@ static void terminal_print_hex_u32(u32 value) {
 }
 
 
+// Единственная таблица терминала повторяет обозначения советского
+// справочника. Русские буквы уже записаны байтами M8/CP1251, а знаки, которых
+// нет в CP1251, представлены однозначными ASCII-последовательностями.
 static constexpr char ISA_61[] =
-"0,1,2,3,4,5,6,7,8,9,dot,neg,pow10,clr,push,preX,\
-add,sub,mul,div,swap,e10,exp,lg,ln,asin,acos,atg,sin,cos,tg,?,\
-pi,sqrt,sqr,rec,pow,rot,toM,?,?,?,toMS,?,?,?,?,?,\
-inMS,mod,sgn,inM,int,frc,max,and,or,xor,not,rnd,?,?,?,?,\
-sto0,sto1,sto2,sto3,sto4,sto5,sto6,sto7,sto8,sto9,stoA,stoB,stoC,stoD,stoE,?,\
-hlt,jmp,ret,call,nop,?,?,jz,rpt2,jl,rpt3,rpt1,jme,rpt0,jnz,?,\
-ld0,ld1,ld2,ld3,ld4,ld5,ld6,ld7,ld8,ld9,ldA,ldB,ldC,ldD,ldE,?,\
-jz[0],jz[1],jz[2],jz[3],jz[4],jz[5],jz[6],jz[7],jz[8],jz[9],jz[A],jz[B],jz[C],jz[D],jz[E],?,\
-jmp[0],jmp[1],jmp[2],jmp[3],jmp[4],jmp[5],jmp[6],jmp[7],jmp[8],jmp[9],jmp[A],jmp[B],jmp[C],jmp[D],jmp[E],?,\
-jlz[0],jlz[1],jlz[2],jlz[3],jlz[4],jlz[5],jlz[6],jlz[7],jlz[8],jlz[9],jlz[A],jlz[B],jlz[C],jlz[D],jlz[E],?,\
-call[0],call[1],call[2],call[3],call[4],call[5],call[6],call[7],call[8],call[9],call[A],call[B],call[C],call[D],call[E],?,\
-sto[0],sto[1],sto[2],sto[3],sto[4],sto[5],sto[6],sto[7],sto[8],sto[9],sto[A],sto[B],sto[C],sto[D],sto[E],?,\
-jme[0],jme[1],jme[2],jme[3],jme[4],jme[5],jme[6],jme[7],jme[8],jme[9],jme[A],jme[B],jme[C],jme[D],jme[E],?,\
-ld[0],ld[1],ld[2],ld[3],ld[4],ld[5],ld[6],ld[7],ld[8],ld[9],ld[A],ld[B],ld[C],ld[D],ld[E],?,\
-jnz[0],jnz[1],jnz[2],jnz[3],jnz[R4],jnz[5],jnz[6],jnz[7],jnz[8],jnz[9],jnz[A],jnz[B],jnz[C],jnz[D],jnz[E],?";
-
-
-static constexpr char ISA_CLASSIC_61[] =
 "0,1,2,3,4,5,6,7,8,9,.,/-/,\302\317,CX,B^,Bx,+,-,*,:,XY,F10^x,Fe^x,Flg,Fln,Fasin,Facos,Fatg,Fsin,Fcos,Ftg,?,\
 \317\xE8,V\"\"\",Fx^2,F1/x,Fx^y,(),Ko->',?,?,?,Ko->'\",?,?,?,?,?,Ko<-'\",|x|,3H,Ko<-',K[x],K{x},Kmax,K^,Kv,K(+),\310HB,C\327,?,Ko->'\",?,?,\
 X->\3170,X->\3171,X->\3172,X->\3173,X->\3174,X->\3175,X->\3176,X->\3177,X->\3178,X->\3179,X->\317A,X->\317B,X->\317C,X->\317\304,X->\317E,?,\
@@ -331,14 +277,11 @@ constexpr bool terminal_mnemonic_equals(const char* table, usize opcode,
 }
 
 static_assert(terminal_mnemonic_count(ISA_61) == terminal_keys::COUNT,
-              "assembler mnemonic table must cover opcodes 00..EF");
-static_assert(terminal_mnemonic_count(ISA_CLASSIC_61) ==
-                  terminal_keys::COUNT,
-              "classic mnemonic table must cover opcodes 00..EF");
-static_assert(terminal_mnemonic_max_length(ISA_CLASSIC_61) <= 8,
+              "mnemonic table must cover opcodes 00..EF");
+static_assert(terminal_mnemonic_max_length(ISA_61) <= 8,
               "increase MAX_LEN_CLASSIC_MNEMO");
 static_assert(terminal_mnemonic_equals(
-                  ISA_CLASSIC_61, 0xD9, "K\317->X9"),
+                  ISA_61, 0xD9, "K\317->X9"),
               "opcode D9 must retain the P9 register mnemonic");
 
 #if MK61_F401_PRODUCT_BUILD
@@ -346,51 +289,32 @@ static_assert(terminal_mnemonic_equals(
 // Kx>=0 0..E, ...). Store only the common-prefix length plus each suffix in
 // product F401 images. The canonical CSV strings above remain the single
 // editable source and are consumed entirely at compile time.
-static_assert(terminal_front_coding::source_valid(ISA_61) &&
-              terminal_front_coding::source_valid(ISA_CLASSIC_61),
+static_assert(terminal_front_coding::source_valid(ISA_61),
               "front-coded mnemonic source contains a control byte");
 static_assert(terminal_mnemonic_max_length(ISA_61) <
-                  terminal_front_coding::END &&
-              terminal_mnemonic_max_length(ISA_CLASSIC_61) <
                   terminal_front_coding::END,
               "front-coded mnemonic prefix does not fit its marker byte");
 
 static constexpr auto ISA_61_FRONT = terminal_front_coding::encode<
     terminal_front_coding::encoded_size(ISA_61)>(ISA_61);
-static constexpr auto ISA_CLASSIC_61_FRONT = terminal_front_coding::encode<
-    terminal_front_coding::encoded_size(ISA_CLASSIC_61)>(ISA_CLASSIC_61);
 #endif
-
-enum class TerminalMnemonicKind : u8 {
-  ISA,
-  CLASSIC
-};
 
 class TerminalMnemonicTable {
   public:
-    explicit TerminalMnemonicTable(TerminalMnemonicKind kind)
+    TerminalMnemonicTable(void)
 #if MK61_F401_PRODUCT_BUILD
       : scratch_(shared_scratch::Owner::TERMINAL_TRANSFER,
-                 kind == TerminalMnemonicKind::CLASSIC
-                     ? sizeof(ISA_CLASSIC_61) : sizeof(ISA_61)),
+                 sizeof(ISA_61)),
         table_(nullptr) {
       if(!scratch_.ok()) return;
-      const bool classic = kind == TerminalMnemonicKind::CLASSIC;
-      const u8* const packed = classic
-          ? ISA_CLASSIC_61_FRONT.bytes : ISA_61_FRONT.bytes;
-      const usize packed_size = classic
-          ? sizeof(ISA_CLASSIC_61_FRONT.bytes)
-          : sizeof(ISA_61_FRONT.bytes);
-      const usize decoded_size = classic
-          ? sizeof(ISA_CLASSIC_61) : sizeof(ISA_61);
       if(terminal_front_coding::decode(
-           packed, packed_size, (char*) scratch_.data(), decoded_size)) {
+           ISA_61_FRONT.bytes, sizeof(ISA_61_FRONT.bytes),
+           (char*) scratch_.data(), sizeof(ISA_61))) {
         table_ = (const char*) scratch_.data();
       }
     }
 #else
-      : table_(kind == TerminalMnemonicKind::CLASSIC
-                   ? ISA_CLASSIC_61 : ISA_61) {}
+      : table_(ISA_61) {}
 #endif
 
     bool ok(void) const { return table_ != nullptr; }
@@ -531,7 +455,7 @@ void class_terminal::history_print(void) {
         Serial.print("  ");
         Serial.print(i + 1);
         Serial.print(": ");
-        terminal_write_utf8(line, hist_length[slot]);
+        terminal_write_m8(line, hist_length[slot]);
         Serial.println();
       }
     }
@@ -540,7 +464,7 @@ void class_terminal::print_prompt(void) {
       char path[64];
       if(storage_path::format_directory(current_directory, path,
                                         sizeof(path)) ==
-         storage_path::Status::OK) terminal_write_utf8(path);
+         storage_path::Status::OK) terminal_write_m8(path);
       else Serial.print("...");
       Serial.print("> ");
     }
@@ -555,14 +479,13 @@ void class_terminal::move_terminal_cursor(char direction, usize columns) {
 
 usize class_terminal::input_columns(usize begin, usize end) const {
       if(begin >= end || end > recive_pos) return 0;
-      return utf8_view::codepoint_count(
-          (const char*) input_buffer + begin, (u16) (end - begin));
+      return end - begin;
     }
 
 void class_terminal::redraw_input_line(void) {
       Serial.write('\r');
       print_prompt();
-      terminal_write_utf8(input_buffer, recive_pos);
+      terminal_write_m8(input_buffer, recive_pos);
       Serial.print("\x1B[K");
       move_terminal_cursor('D', input_columns(input_cursor, recive_pos));
     }
@@ -675,7 +598,7 @@ void class_terminal::print_help(void) {
             program_store::read_range_id(pages[page].id, 0, tag, sizeof(tag), &count) &&
             count == sizeof(tag) && memcmp(tag, terminal_catalog::help_signature(), sizeof(tag)) == 0;
       }
-      Serial.println("Available commands:");
+      terminal_println_m8(M8_TH_AVAILABLE);
       if(available) {
         u8 buffer[64];
         for(const auto& page : pages) {
@@ -684,9 +607,9 @@ void class_terminal::print_help(void) {
                 ? page.data_len - offset : sizeof(buffer));
             u16 count = 0;
             if(!program_store::read_range_id(page.id, offset, buffer, wanted, &count) || count != wanted) {
-              Serial.println("HELP read error"); return;
+              terminal_println_m8(M8_TH_READ_ERROR); return;
             }
-            Serial.write(buffer, count); offset += count;
+            terminal_write_m8(buffer, count); offset += count;
           }
         }
         return;
@@ -694,21 +617,22 @@ void class_terminal::print_help(void) {
       for(usize i = 0; i < terminal_catalog::count(); ++i) {
         Serial.print(terminal_catalog::at(i).name); Serial.write(' ');
       }
-      Serial.println("\nInstall matching /System/HELP0.TXT and HELP1.TXT");
+      Serial.println();
+      terminal_println_m8(M8_TH_INSTALL);
       Serial.println("fsls /System; fsput begin /System/<file> <size> <crc32>; fsput data <offset> <hex>; fsput end");
 #else
 
-      Serial.println("Available commands:");
+      terminal_println_m8(M8_TH_AVAILABLE);
       for(usize i = 0; i < terminal_catalog::count(); i++) {
         const auto command = terminal_catalog::at(i);
         if(command.desc == NULL) continue;
         Serial.print("  ");
         Serial.print(command.name);
         for(usize pad = strlen(command.name); pad < 8; pad++) Serial.write(' ');
-        Serial.println(command.desc);
+        terminal_println_m8(command.desc);
       }
-      Serial.println("  R<r>=   R<r>= <number|random|raw 12hex> - write register");
-      Serial.println("  set$    set$<addr> <hex> - write program memory");
+      Serial.print("  R<r>=   "); terminal_println_m8(M8_TH_REG_SET);
+      Serial.print("  set$    "); terminal_println_m8(M8_TH_SET_CODE);
 #endif
     }
 
@@ -1141,11 +1065,12 @@ void class_terminal::display_test_alphabet(u8 page) {
       if(page == 3) {
         // FT=10 has no Ukrainian І/Ї/Є/Ґ. These eight glyphs exercise the
         // allocation-free CGRAM planner at its exact capacity.
-        lcd_ru::print_lines("ІіЇїЄєҐґ", "CGRAM Unicode");
+        lcd_ru::print_fixed_lines("ІіЇїЄєҐґ", "CGRAM Unicode");
         return;
       }
       if(page == 4) {
-        lcd_ru::print_lines("Ўў Belarus", "USB + Русский");
+        lcd_ru::print_fixed_lines(M8_TERMINAL_BELARUS,
+                                  M8_TERMINAL_USB_RUSSIAN);
         return;
       }
 
@@ -2069,7 +1994,7 @@ terminal_protocol::Result class_terminal::save_profile_report(const char* path) 
         return terminal_protocol::Result::error();
       }
 
-      // Фиксируем непротиворечивый снимок: сама запись C5 больше не меняет
+      // Фиксируем непротиворечивый снимок: сама запись C6 больше не меняет
       // счётчики flash.write и прочих профилируемых участков.
       dwt_profiler::stop();
       shared_scratch::Lease scratch(
@@ -2342,16 +2267,6 @@ void class_terminal::dump_mk61_code_page(void) {
         }
         Serial.println();
       } while (j < program_steps);
-    }
-
-char* class_terminal::ISA_61_code(u8 opcode, char* text) {
-      TerminalMnemonicTable table(TerminalMnemonicKind::ISA);
-      return terminal_mnemonic_code(table.data(), opcode, text);
-    }
-
-char* class_terminal::ISA_CLASSIC_61_code(u8 opcode, char* text) {
-      TerminalMnemonicTable table(TerminalMnemonicKind::CLASSIC);
-      return terminal_mnemonic_code(table.data(), opcode, text);
     }
 
 void class_terminal::output_version(void) {
@@ -2944,7 +2859,13 @@ terminal_protocol::Result class_terminal::exec_fs_put(void) {
             language_workspace::Owner::TERMINAL_TRANSFER,
             FILE_UPLOAD_WORKSPACE_SIZE);
         if(!workspace.ok()) return file_transfer_error("PUT_BUSY");
-        if(!program_store::vfat_stage_lock()) {
+        // fsput borrows the persistent VFAT stage as its upload buffer.  A
+        // surviving MSC journal belongs to an older exported catalog and
+        // must not outlive this new local mutation.  Discard it before the
+        // upload takes the stage lock; once locked, write_file_from_source()
+        // correctly preserves the current fsput blocks until commit.
+        if(!program_store::vfat_stage_discard_all() ||
+           !program_store::vfat_stage_lock()) {
           return file_transfer_error("PUT_BUSY");
         }
         memset(workspace.data(), 0, program_store::VFAT_STAGE_BLOCK_SIZE);
@@ -3164,9 +3085,6 @@ void  class_terminal::init(void) {
       current_directory = program_store::ROOT_ID;
       reset_command_state();
       reset_line_editor();
-#if MK61_ENABLE_TERMINAL_ENCODING
-      terminal_text_encoding = terminal_encoding::Mode::CP1251;
-#endif
       Serial.begin(115200);
 #if defined(USBCON) && defined(USBD_USE_CDC)
       // Сохраняем паузу для стартового баннера, не пропуская вслепую запрос
@@ -3204,7 +3122,7 @@ void  class_terminal::echo_ISA_61(void) {
       static constexpr isize COLUMN_COUNT = 4;
       static constexpr usize COLUMN_SIZE  = 10;
 
-      TerminalMnemonicTable table(TerminalMnemonicKind::ISA);
+      TerminalMnemonicTable table;
       if(!table.ok()) {
         Serial.println("Mnemonic workspace busy");
         return;
@@ -3218,7 +3136,8 @@ void  class_terminal::echo_ISA_61(void) {
       for(usize i = 0;; i++) {
         if(isa[i] == ',' || isa[i] == 0) { // обнаружен разделитель команд или окончание массива
           const isize len = i - begin;
-          Serial_write_hex(opcode); Serial.write(' '); Serial.write(&isa[begin], len);
+          Serial_write_hex(opcode); Serial.write(' ');
+          terminal_write_m8((const u8*) &isa[begin], (usize) len);
           if(column-- <= 0) { // завершим вывод строки, все 4 колонки выведены
             Serial.println();
             column = COLUMN_COUNT;
@@ -3233,7 +3152,7 @@ void  class_terminal::echo_ISA_61(void) {
     }
 
 void class_terminal::pub_mk61_code_page(void) {
-      TerminalMnemonicTable table(TerminalMnemonicKind::CLASSIC);
+      TerminalMnemonicTable table;
       if(!table.ok()) {
         Serial.println("Mnemonic workspace busy");
         return;
@@ -3257,7 +3176,7 @@ void class_terminal::pub_mk61_code_page(void) {
               Serial_write_hex(code);
               for(usize cnt_space=2; cnt_space < MAX_LEN_CLASSIC_MNEMO + 2; cnt_space++) Serial.print(' ');
             } else {
-              terminal_write_cp1251(terminal_mnemonic_code(
+              terminal_write_m8(terminal_mnemonic_code(
                   table.data(), code, &op[0]));
               for(usize ln=strlen(op); ln < MAX_LEN_CLASSIC_MNEMO; ln++) Serial.write(' ');
               Serial.print("  ");
@@ -3268,10 +3187,8 @@ void class_terminal::pub_mk61_code_page(void) {
       }
     }
 
-void  class_terminal::lasm_mk61_code_page(mnemo_type type) {
-      TerminalMnemonicTable table(
-          type == mnemo_type::ISA_CLASSIC
-              ? TerminalMnemonicKind::CLASSIC : TerminalMnemonicKind::ISA);
+void  class_terminal::lasm_mk61_code_page(void) {
+      TerminalMnemonicTable table;
       if(!table.ok()) {
         Serial.println("Mnemonic workspace busy");
         return;
@@ -3297,15 +3214,13 @@ void  class_terminal::lasm_mk61_code_page(mnemo_type type) {
               } else {
                 const char* mnemo = terminal_mnemonic_code(
                     table.data(), code, &op[0]);
-                if(type == mnemo_type::ISA_CLASSIC) terminal_write_cp1251(mnemo);
-                else Serial.print(mnemo);
+                terminal_write_m8(mnemo);
                 for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
               }
             } else {
               const char* mnemo = terminal_mnemonic_code(
                   table.data(), code, &op[0]);
-              if(type == mnemo_type::ISA_CLASSIC) terminal_write_cp1251(mnemo);
-              else Serial.print(mnemo);
+              terminal_write_m8(mnemo);
               for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
             }
             if ( core_61::len_code_command(code) == 2 ) {
@@ -3392,7 +3307,7 @@ void  class_terminal::PutHexString(void) {
     }
 
 bool class_terminal::Assembler(void) {
-      TerminalMnemonicTable table(TerminalMnemonicKind::ISA);
+      TerminalMnemonicTable table;
       if(!table.ok()) {
         Serial.println("Mnemonic workspace busy");
         return false;
@@ -3835,7 +3750,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               case CMD_FORMAT_STORAGE:
                 ok = program_store::format();
                 if(ok) current_directory = program_store::ROOT_ID;
-                Serial.println(ok ? "C5 formatted." : "C5 format failed!");
+                Serial.println(ok ? "C6 formatted." : "C6 format failed!");
                 break;
               default:
                 ok = false;
@@ -3865,13 +3780,13 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
         dbgln(MINI, "command id ", (int) command_id);
         if(script_mode && !terminal_command_allowed_in_script(command_id)) {
           Serial.print("Command is not allowed in M61 scripts: ");
-          terminal_println_utf8((const char*) input_buffer);
+          terminal_println_m8((const char*) input_buffer);
           recive_pos = 0;
           return terminal_protocol::Result::error();
         }
         if(trap_mode && !terminal_command_allowed_in_trap(command_id)) {
           Serial.print("Command is not allowed in an M61 trap handler: ");
-          terminal_println_utf8((const char*) input_buffer);
+          terminal_println_m8((const char*) input_buffer);
           recive_pos = 0;
           return terminal_protocol::Result::error();
         }
@@ -3887,14 +3802,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               recive_pos = 0;
               return result;
             }
-#if MK61_ENABLE_TERMINAL_ENCODING
-          case CMD_ENCODING: {
-              const terminal_protocol::Result result =
-                  terminal_exec_encoding(command_args());
-              recive_pos = 0;
-              return result;
-            }
-#endif
 #if MK61_ENABLE_READ_BENCHMARKS
           case CMD_BENCHMARK: {
               const terminal_protocol::Result result = exec_benchmark();
@@ -3985,6 +3892,37 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recive_pos = 0;
                 return terminal_protocol::Result::ok();
               }
+          case CMD_USB_DISK:
+              if(!terminal_core::at_end(command_args())) {
+                Serial.println("Usage: usbdisk");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              // The acknowledgement must leave the CDC endpoint before the
+              // device re-enumerates as MSC.  On safe host eject the shared
+              // menu lifecycle restores CDC and this command returns.
+              Serial.println("USB Disk starting.");
+              Serial.flush();
+              delay(20);
+              {
+                const u32 terminal_generation = usb_terminal_generation();
+                if(!UsbDiskModeUnattended()) {
+                  usb_mass_storage::note_startup_stage(730U);
+                  // If CDC was actually stopped, this invocation belongs to
+                  // a dead USB generation.  Writing through it after the new
+                  // CDC device has started can fill a queue which has no
+                  // matching host endpoint and wedge the foreground forever.
+                  // The new terminal session and the physical screen already
+                  // report the failure; only a pre-handoff failure can safely
+                  // answer on the original connection.
+                  if(usb_terminal_generation() == terminal_generation) {
+                    Serial.println("USB Disk is unavailable; see vlog.");
+                  }
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+              }
+            break;
 #if MK61_ENABLE_USB_SCREEN
           case  CMD_USB_SCREEN:
               if(!terminal_core::at_end(command_args())) {
@@ -4067,7 +4005,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
               pending_confirmation_cmd = command_id;
-              Serial.println("Enter Y/y to confirm formatting all C5 files!");
+              Serial.println("Enter Y/y to confirm formatting all C6 files!");
             break;
           case  CMD_CMD: {
               const terminal_protocol::Result result = command_to_kbd(script_mode);
@@ -4183,7 +4121,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             Serial.println();
             break;
           case  CMD_LASM:
-              lasm_mk61_code_page(mnemo_type::ISA_61);
+              lasm_mk61_code_page();
             break;
           case  CMD_INS: {
               const char* args = command_args();
@@ -4226,7 +4164,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              terminal_println_utf8(path);
+              terminal_println_m8(path);
             }
             break;
           case CMD_FS_CD: {
@@ -4428,11 +4366,15 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               }
               if(!program_store::ready()) {
                 if(program_store::mount_status() ==
-                   program_store::MountStatus::REPAIR_REQUIRED) {
-                  Serial.println("C5: catalog damaged; run format or use Erase FLASH menu");
+                   program_store::MountStatus::FORMAT_REQUIRED) {
+                  Serial.println("C5: legacy volume; run format to create C6");
+                  Serial.println("Files were not modified");
+                } else if(program_store::mount_status() ==
+                          program_store::MountStatus::REPAIR_REQUIRED) {
+                  Serial.println("C6: catalog damaged; run format or use Erase FLASH menu");
                   Serial.println("Files were not modified");
                 } else {
-                  Serial.println("C5: unavailable");
+                  Serial.println("C6: unavailable");
                 }
                 break;
               }
@@ -4669,7 +4611,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           default:
               if(input_buffer[0] != 0) {
                 Serial.print("Unknown command: ");
-                terminal_println_utf8((const char*) input_buffer);
+                terminal_println_m8((const char*) input_buffer);
               }
               recive_pos = 0;
               return terminal_protocol::Result::error();
@@ -4717,9 +4659,14 @@ class_terminal::InputResult class_terminal::input_handler(u8 rx_char) {
         hist_nav = -1;
 
         input_buffer[recive_pos++] = CR; // контракт execute(): последний символ CR
+        const u32 terminal_generation = usb_terminal_generation();
         const terminal_protocol::Result result = execute();
         input_cursor = 0;
-        print_prompt();
+        // execute() may synchronously replace CDC with MSC and later create a
+        // fresh CDC device.  The prompt for the old command must never be
+        // written into that new USB generation; terminal.init() owns its
+        // banner/prompt and future input starts a clean transaction there.
+        if(usb_terminal_generation() == terminal_generation) print_prompt();
         return {
           result.kind == terminal_protocol::ResultKind::KEY ? result.key : -1,
           true,
@@ -4748,37 +4695,8 @@ class_terminal::InputResult class_terminal::input_handler(u8 rx_char) {
       // Управляющие символы, кроме табуляции, не буферизуем.
       if(rx_char < 0x20 && rx_char != '\t') return {-1, false};
 
-#if MK61_ENABLE_TERMINAL_ENCODING
-      bool inserted = false;
-      if(terminal_text_encoding == terminal_encoding::Mode::CP1251 &&
-         rx_char >= 0x80) {
-        // Store a canonical UTF-8 command line even when Tera Term sends one
-        // CP1251 byte.  This keeps filenames compatible with C5 and lets the
-        // existing Unicode-aware cursor move over one visible character.
-        const terminal_encoding::Bytes canonical =
-            terminal_encoding::input_byte(rx_char, terminal_text_encoding);
-        if(recive_pos + canonical.size <= terminal_core::MAX_INPUT_TEXT) {
-          const bool at_end = input_cursor == recive_pos;
-          inserted = true;
-          for(u8 index = 0; index < canonical.size; index++) {
-            if(!terminal_line_editor::insert_byte(
-                   input_buffer, recive_pos, input_cursor, MAX_INPUT_CHAR,
-                   canonical.data[index])) {
-              inserted = false;
-              break;
-            }
-          }
-          if(inserted) {
-            if(at_end) terminal_write_utf8(canonical.data, canonical.size);
-            else redraw_input_line();
-          }
-        }
-      } else if(input_can_append()) {
-        inserted = editor_insert(rx_char);
-      }
-#else
-      const bool inserted = input_can_append() && editor_insert(rx_char);
-#endif
+      const bool inserted = input_can_append() &&
+          editor_insert(terminal_encoding::input_byte(rx_char));
 
       if(!inserted && !input_overflow) {
         input_overflow = true; // сигнал занятости - один раз на строку

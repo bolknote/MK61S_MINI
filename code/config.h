@@ -298,7 +298,7 @@
   #error "MK61_ENABLE_WBMP_VIEWER requires UC1609, USB Screen, or WS0010 100x16 graphics"
 #endif
 
-// Консоль CHIP-8 выключена по умолчанию. C1 — двухбайтовый magic типа C5;
+// Консоль CHIP-8 выключена по умолчанию. C1 — двухбайтовый magic типа C6;
 // .ch8 хранит стандартный сырой ROM без дополнительного заголовка.
 #ifndef MK61_ENABLE_CHIP8
   #define MK61_ENABLE_CHIP8 0
@@ -343,6 +343,7 @@
   (MK61_ENABLE_MARKDOWN_VIEWER)
 #define MK61_CHIP8_IS_LOADABLE (MK61_ENABLE_CHIP8)
 #define MK61_SETUP_IS_LOADABLE 1
+#define MK61_USBDISK_IS_LOADABLE 1
 #define MK61_ANY_LOADABLE_MODULE 1
 #define MK61_APP_RUNTIME_AVAILABLE 1
 
@@ -529,17 +530,6 @@
 #endif
 #if MK61_ENABLE_PROFILE_SAVE != 0 && MK61_ENABLE_PROFILE_SAVE != 1
   #error "MK61_ENABLE_PROFILE_SAVE must be 0 or 1"
-#endif
-
-// Human serial terminals traditionally use the one-byte CP1251 stream, while
-// Unicode-native clients may negotiate UTF-8 with `encoding utf-8`. This is a
-// user-visible compatibility feature and remains present in product images.
-#ifndef MK61_ENABLE_TERMINAL_ENCODING
-  #define MK61_ENABLE_TERMINAL_ENCODING 1
-#endif
-#if MK61_ENABLE_TERMINAL_ENCODING != 0 && \
-    MK61_ENABLE_TERMINAL_ENCODING != 1
-  #error "MK61_ENABLE_TERMINAL_ENCODING must be 0 or 1"
 #endif
 
 // Alarm scheduling is user-visible functionality, not a laboratory report.
@@ -767,14 +757,14 @@
 #endif
 #ifndef MK61_SPI1_DMA_THRESHOLD
   // HIL A/B on F411/W25Q128: 64-byte transfers amortize DMA setup and reduce
-  // latency for small C5 records; shorter command/address traffic stays polling.
+  // latency for small C6 records; shorter command/address traffic stays polling.
   #define MK61_SPI1_DMA_THRESHOLD 64
 #endif
 #if MK61_SPI1_DMA_THRESHOLD < 1 || MK61_SPI1_DMA_THRESHOLD > 65535
   #error "MK61_SPI1_DMA_THRESHOLD must be in 1..65535"
 #endif
 
-// Small C5 records and ZX0 input are consumed incrementally. 512 bytes won the
+// Small C6 records and ZX0 input are consumed incrementally. 512 bytes won the
 // 64/128/256/512 HIL matrix and remains a stack-local buffer, so static RAM is
 // unchanged. Keep the compile-time tuning point for repeatable qualification.
 #ifndef MK61_PROGRAM_STORE_READ_CHUNK

@@ -286,7 +286,7 @@ static const char* draw_page(const char* text, uint32_t columns, uint32_t rows) 
     while(take != 0 && text[take - 1] == ' ') --take;
     for(index = 0; index < take; ++index) line[index] = text[index];
     line[take] = 0;
-    if(take != 0) mk61_api->display_write_utf8(0, row, line, take);
+    if(take != 0) mk61_api->display_write_m8(0, row, line, take);
 
     text += available == columns && take == last_space ? last_space : available;
     text = skip_separators(text);

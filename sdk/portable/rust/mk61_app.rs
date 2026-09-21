@@ -10,7 +10,7 @@ use core::ffi::c_void;
 use core::mem::size_of;
 use core::ptr::null_mut;
 
-pub const APP_ABI: u16 = 5;
+pub const APP_ABI: u16 = 6;
 pub const API_MAGIC: u32 = 0x3150_5041;
 pub const API_VERSION: u16 = 1;
 pub const MAX_TEXT_BYTES: u32 = 63;
@@ -138,7 +138,7 @@ pub struct AppApi {
     pub display_columns: Option<Dimension>,
     pub display_rows: Option<Dimension>,
     pub display_clear: Option<Clear>,
-    pub display_write_utf8: Option<Write>,
+    pub display_write_m8: Option<Write>,
     pub key_poll: Option<KeyPoll>,
     pub key_wait: Option<KeyWait>,
     pub led_set: Option<LedSet>,
@@ -323,8 +323,8 @@ pub fn display_clear() -> bool {
     unsafe { callback() != 0 }
 }
 
-pub fn display_write_utf8(column: u32, row: u32, text: &[u8]) -> bool {
-    let Some(callback) = api().and_then(|value| value.display_write_utf8) else {
+pub fn display_write_m8(column: u32, row: u32, text: &[u8]) -> bool {
+    let Some(callback) = api().and_then(|value| value.display_write_m8) else {
         return false;
     };
     unsafe { callback(column, row, text.as_ptr(), text.len() as u32) != 0 }

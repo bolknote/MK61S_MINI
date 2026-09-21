@@ -2,8 +2,6 @@
 #define TERMINAL_LINE_EDITOR_HPP
 
 #include "rust_types.h"
-#include "utf8_view.hpp"
-
 #include <string.h>
 
 namespace terminal_line_editor {
@@ -135,14 +133,13 @@ inline bool valid(const u8* data, usize length, usize cursor,
 
 inline bool move_left(const u8* data, usize length, usize& cursor) {
   if(!valid(data, length, cursor, length + 1) || cursor == 0) return false;
-  cursor = utf8_view::previous_offset(data, (u16) length, (u16) cursor);
+  --cursor;
   return true;
 }
 
 inline bool move_right(const u8* data, usize length, usize& cursor) {
   if(!valid(data, length, cursor, length + 1) || cursor >= length) return false;
-  const usize next = utf8_view::next_offset(data, (u16) length, (u16) cursor);
-  cursor = next > cursor && next <= length ? next : cursor + 1;
+  ++cursor;
   return true;
 }
 
@@ -158,12 +155,9 @@ inline bool insert_byte(u8* data, usize& length, usize& cursor,
 inline bool backspace(u8* data, usize& length, usize& cursor,
                       usize capacity) {
   if(!valid(data, length, cursor, capacity) || cursor == 0) return false;
-  const usize previous = utf8_view::previous_offset(
-      data, (u16) length, (u16) cursor);
-  const usize removed = cursor - previous;
-  memmove(data + previous, data + cursor, length - cursor);
-  length -= removed;
-  cursor = previous;
+  memmove(data + cursor - 1, data + cursor, length - cursor);
+  --length;
+  --cursor;
   data[length] = 0;
   return true;
 }
@@ -171,10 +165,8 @@ inline bool backspace(u8* data, usize& length, usize& cursor,
 inline bool delete_forward(u8* data, usize& length, usize cursor,
                            usize capacity) {
   if(!valid(data, length, cursor, capacity) || cursor >= length) return false;
-  usize next = utf8_view::next_offset(data, (u16) length, (u16) cursor);
-  if(next <= cursor || next > length) next = cursor + 1;
-  memmove(data + cursor, data + next, length - next);
-  length -= next - cursor;
+  memmove(data + cursor, data + cursor + 1, length - cursor - 1);
+  --length;
   data[length] = 0;
   return true;
 }

@@ -7,6 +7,8 @@ import argparse
 import re
 from pathlib import Path
 
+from m8_codec import encode as encode_m8
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "code/ERM19264_graphics_font.cpp"
@@ -88,7 +90,7 @@ def crc16(data: bytes) -> int:
 def source_glyphs() -> dict[int, list[int]]:
     text = SOURCE.read_text(encoding="utf-8")
     match = re.search(
-        r"static const unsigned char UC_Font_3x5\[\].*?=\s*\{(.*?)\n\};",
+        r"static const(?:expr)? unsigned char UC_Font_3x5\[\].*?=\s*\{(.*?)\n\};",
         text,
         flags=re.DOTALL,
     )
@@ -105,7 +107,7 @@ def source_glyphs() -> dict[int, list[int]]:
     }
 
     extra = re.search(
-        r"static const Font3x5Glyph UC_Font_3x5_Extra\[\].*?=\s*\{"
+        r"static const(?:expr)? Font3x5Glyph UC_Font_3x5_Extra\[\].*?=\s*\{"
         r"(.*?)\n\};",
         text,
         flags=re.DOTALL,
@@ -134,18 +136,26 @@ def encode() -> bytes:
     # The translated game renders uppercase Russian only.  Keep the ASCII
     # punctuation/digits needed by its UI, Ё, and А..Я; carrying Latin letters
     # in this local face would just spend disk/BULK space on unreachable art.
-    ranges = ((0x20, 0x20), (0x0401, 1), (0x0410, 0x20))
-    codepoints = [
-        codepoint
-        for first, count in ranges
-        for codepoint in range(first, first + count)
-    ]
+    codepoints = list(source_codepoints())
     missing = [codepoint for codepoint in codepoints if codepoint not in glyphs]
     if missing:
         raise ValueError(f"missing source glyph U+{missing[0]:04X}")
-    glyph_count = len(codepoints)
+    encoded = sorted((encode_m8(chr(codepoint))[0], codepoint)
+                     for codepoint in codepoints)
+    ranges: list[tuple[int, int]] = []
+    start = previous = encoded[0][0]
+    count = 1
+    for byte, _ in encoded[1:]:
+        if byte == previous + 1:
+            count += 1
+        else:
+            ranges.append((start, count))
+            start, count = byte, 1
+        previous = byte
+    ranges.append((start, count))
+    glyph_count = len(encoded)
     prefix = bytearray(HEADER_SIZE)
-    prefix[:4] = b"FMK1"
+    prefix[:4] = b"FMK2"
     prefix[4] = 0       # proportional: individual width and advance follow
     prefix[5] = 5       # maximum bitmap width
     prefix[6] = 5       # bitmap height
@@ -153,10 +163,10 @@ def encode() -> bytes:
     put_le16(prefix, 8, glyph_count)
     prefix[10] = len(ranges)
     for first, count in ranges:
-        prefix += bytes((first & 0xFF, first >> 8, count - 1))
+        prefix += bytes((first, count - 1))
 
     writer = BitWriter(prefix)
-    for codepoint in codepoints:
+    for _, codepoint in encoded:
         width, rows = WIDE_GLYPHS.get(codepoint, (3, glyphs[codepoint]))
         advance = width + 1
         writer.write(width - 1, 4)

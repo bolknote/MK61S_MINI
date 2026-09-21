@@ -22,6 +22,9 @@ def require(condition: bool, message: str) -> None:
 
 
 root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(root / "tools"))
+from m8_codec import encode as encode_m8
+
 game = root / "programs" / "games" / "High Noon"
 parts = [game / name for name in ("intro.tbi", "player.tbi", "bart.tbi", "reward.tbi")]
 driver = game / "autoexec.m61"
@@ -34,7 +37,7 @@ require(manual.is_file() and manual.stat().st_size <= 1536,
         "High Noon manual exceeds the Markdown quota")
 require(font.is_file(), "High Noon local FMK is missing")
 font_data = font.read_bytes()
-require(font_data[:4] == b"FMK1", "High Noon local FMK is invalid")
+require(font_data[:4] == b"FMK2", "High Noon local FMK is invalid")
 require(font_data[4] == 0, "High Noon Russian FMK must be proportional")
 require(font_data[5:8] == bytes((5, 5, 0x31)),
         "High Noon Russian FMK has unexpected geometry")
@@ -42,17 +45,16 @@ require(int.from_bytes(font_data[8:10], "little") == 65,
         "High Noon Russian FMK has an unexpected glyph count")
 require(font_data[10] == 3, "High Noon Russian FMK must have three ranges")
 font_ranges = tuple(
-    (int.from_bytes(font_data[16 + offset:18 + offset], "little"),
-     font_data[18 + offset] + 1)
-    for offset in range(0, 9, 3)
+    (font_data[16 + offset], font_data[17 + offset] + 1)
+    for offset in range(0, 6, 2)
 )
-require(font_ranges == ((0x20, 0x20), (0x0401, 1), (0x0410, 0x20)),
+require(font_ranges == ((0x20, 0x20), (0xA8, 1), (0xC0, 0x20)),
         "High Noon FMK must contain symbols/digits and Russian uppercase only")
 
 # The letters most easily confused in a 3x5 cell must retain their wider
 # records.  Decode just the per-glyph metrics; the common FMK tests validate
 # every bitmap and CRC in full.
-bit = (16 + 3 * font_data[10]) * 8
+bit = (16 + 2 * font_data[10]) * 8
 font_widths = {}
 font_advances = {}
 font_bitmaps = {}
@@ -84,7 +86,7 @@ require(font_widths[ord("$")] == 5,
 require(font_bitmaps[ord("$")] == (0b01110, 0b10100, 0b01110, 0b00101, 0b01110),
         "High Noon dollar bitmap is no longer recognizable")
 for letter in "ДЖИЙЛМФШЩЫЮЯ":
-    require(font_widths[ord(letter)] == 5,
+    require(font_widths[encode_m8(letter)[0]] == 5,
             f"High Noon Russian {letter} must use its readable wide glyph")
 require(not (root / "programs" / "Fonts" / "HighNoon.FMK").exists(),
         "High Noon FMK must not be duplicated in the global Fonts directory")
@@ -228,7 +230,7 @@ require(not re.search(r'"\*{2,}"', reward),
 require("265 FOR I=1 TO COLS-34" in reward,
         "High Noon receipt amount line must fill the active viewport")
 amount = "ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ" + "-" * (47 - 34) + "$20,000"
-amount_width = sum(font_advances[ord(char)] for char in amount)
+amount_width = sum(font_advances[encode_m8(char)[0]] for char in amount)
 require(amount_width <= 188,
         "High Noon receipt amount must fit the 188-pixel text viewport")
 for stale in ("WALKM", "BETER", "RECEIT", "DODsGE", "THATS", "YOUT", "BURT"):

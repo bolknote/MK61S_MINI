@@ -203,25 +203,25 @@ static void test_terminal_line_editing(void) {
   assert(length == 4 && cursor == 2);
 }
 
-static void test_terminal_line_editing_is_utf8_aware(void) {
-  u8 text[8] = {'A', 0xD0, 0x91, 'C', 0}; // A, Cyrillic Be, C
-  usize length = 4;
-  usize cursor = 4;
+static void test_terminal_line_editing_is_single_byte_m8(void) {
+  u8 text[8] = {'A', 0xC1, 'C', 0}; // A, Cyrillic Be, C
+  usize length = 3;
+  usize cursor = 3;
 
   assert(terminal_line_editor::move_left(text, length, cursor));
-  assert(cursor == 3);
+  assert(cursor == 2);
   assert(terminal_line_editor::move_left(text, length, cursor));
   assert(cursor == 1);
   assert(terminal_line_editor::move_right(text, length, cursor));
-  assert(cursor == 3);
+  assert(cursor == 2);
   assert(terminal_line_editor::backspace(
       text, length, cursor, sizeof(text)));
   assert(std::strcmp((const char*) text, "AC") == 0);
   assert(length == 2 && cursor == 1);
 
-  const u8 original[] = {'A', 0xD0, 0x91, 'C', 0};
+  const u8 original[] = {'A', 0xC1, 'C', 0};
   std::memcpy(text, original, sizeof(original));
-  length = 4;
+  length = 3;
   cursor = 1;
   assert(terminal_line_editor::delete_forward(
       text, length, cursor, sizeof(text)));
@@ -375,10 +375,10 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_script(CMD_FORMAT_STORAGE));
   assert(!terminal_command_allowed_in_script(CMD_DATE));
   assert(!terminal_command_allowed_in_script(CMD_USB_SCREEN));
+  assert(!terminal_command_allowed_in_script(CMD_USB_DISK));
   assert(!terminal_command_allowed_in_script(CMD_CRASH));
   assert(!terminal_command_allowed_in_script(CMD_WATCHDOG));
   assert(!terminal_command_allowed_in_script(CMD_IDENTITY));
-  assert(!terminal_command_allowed_in_script(CMD_ENCODING));
   assert(!terminal_command_allowed_in_script(CMD_BENCHMARK));
   assert(!terminal_command_allowed_in_script(CMD_ALARM));
   assert(!terminal_command_allowed_in_script(CMD_UNKNOWN));
@@ -397,9 +397,9 @@ static void test_script_allowlist_is_explicit(void) {
   assert(!terminal_command_allowed_in_trap(CMD_CRASH));
   assert(!terminal_command_allowed_in_trap(CMD_WATCHDOG));
   assert(terminal_command_allowed_in_trap(CMD_IDENTITY));
-  assert(!terminal_command_allowed_in_trap(CMD_ENCODING));
   assert(!terminal_command_allowed_in_trap(CMD_BENCHMARK));
   assert(!terminal_command_allowed_in_trap(CMD_ALARM));
+  assert(!terminal_command_allowed_in_trap(CMD_USB_DISK));
 }
 
 struct PrintCapture {
@@ -411,59 +411,35 @@ static bool capture_print_byte(u8 value, void* user_data) {
   return true;
 }
 
-static std::string transcode_cp1251(const std::vector<u8>& source,
-                                    terminal_encoding::Mode mode) {
+static std::string terminal_bytes(const char* source) {
   PrintCapture capture;
-  assert(terminal_encoding::write_cp1251(
-      source.data(), source.size(), mode, capture_print_byte, &capture));
+  assert(terminal_encoding::write_m8(
+      source, capture_print_byte, &capture));
   return std::string(capture.bytes.begin(), capture.bytes.end());
 }
 
-static std::string transcode_utf8(const std::string& source,
-                                 terminal_encoding::Mode mode) {
-  PrintCapture capture;
-  assert(terminal_encoding::write_utf8(
-      (const u8*) source.data(), source.size(), mode,
-      capture_print_byte, &capture));
-  return std::string(capture.bytes.begin(), capture.bytes.end());
-}
+static void test_terminal_wire_is_fixed_cp1251(void) {
+  static const char compact[] = {
+      (char) 0xCC, (char) 0xCA, '-', '6', '1', ' ',
+      (char) mk8::BYTE_RIGHT_ARROW, ' ', (char) 0x85, ' ',
+      (char) 0xB0, 0};
+  assert(terminal_bytes(compact) ==
+         std::string("\xCC\xCA-61 -> \x85 \xB0", 12));
 
-static void test_terminal_encoding_is_explicit_and_reversible(void) {
-  using terminal_encoding::Mode;
-  using terminal_encoding::ParseResult;
-  Mode mode = Mode::CP1251;
-  assert(terminal_encoding::parse("", mode) == ParseResult::QUERY);
-  assert(terminal_encoding::parse("  \r", mode) == ParseResult::QUERY);
-  assert(terminal_encoding::parse("utf-8", mode) == ParseResult::SET);
-  assert(mode == Mode::UTF8);
-  assert(terminal_encoding::parse("utf8\t", mode) == ParseResult::SET);
-  assert(mode == Mode::UTF8);
-  assert(terminal_encoding::parse("cp1251", mode) == ParseResult::SET);
-  assert(mode == Mode::CP1251);
-  assert(terminal_encoding::parse("UTF-8", mode) == ParseResult::INVALID);
-  assert(terminal_encoding::parse("cp1251 extra", mode) ==
-         ParseResult::INVALID);
-
-  const std::vector<u8> classic = {
-      'K', 0xCF, '-', '>', 'X', '9', ' ', 0xC3}; // KП->X9 Г
-  const std::string utf8Text = "KП->X9 Г";
-  assert(transcode_cp1251(classic, Mode::CP1251) ==
-         std::string(classic.begin(), classic.end()));
-  assert(transcode_cp1251(classic, Mode::UTF8) == utf8Text);
-  assert(transcode_utf8(utf8Text, Mode::UTF8) == utf8Text);
-  assert(transcode_utf8(utf8Text, Mode::CP1251) ==
-         std::string(classic.begin(), classic.end()));
-  assert(transcode_utf8("Ёё €", Mode::CP1251) ==
-         std::string("\xA8\xB8 ?", 4));
-  assert(transcode_utf8("МК-61 ≠", Mode::CP1251) ==
-         std::string("\xCC\xCA-61 ?", 7));
-
-  const terminal_encoding::Bytes input =
-      terminal_encoding::input_byte(0xCF, Mode::CP1251);
-  assert(input.size == 2 && input.data[0] == 0xD0 && input.data[1] == 0x9F);
-  const terminal_encoding::Bytes raw =
-      terminal_encoding::input_byte(0xCF, Mode::UTF8);
-  assert(raw.size == 1 && raw.data[0] == 0xCF);
+  static const char private_symbols[] = {
+      (char) mk8::BYTE_LEFT_ARROW, ' ',
+      (char) mk8::BYTE_UP_ARROW, ' ',
+      (char) mk8::BYTE_DOWN_ARROW, ' ',
+      (char) mk8::BYTE_PI, ' ',
+      (char) mk8::BYTE_SQRT, ' ',
+      (char) mk8::BYTE_CYCLE_ARROW, ' ',
+      (char) mk8::BYTE_NOT_EQUAL, ' ',
+      (char) mk8::BYTE_LESS_EQUAL, ' ',
+      (char) mk8::BYTE_GREATER_EQUAL, 0};
+  assert(terminal_bytes(private_symbols) ==
+         "<- ^ v pi sqrt ~> != <= >=");
+  assert(terminal_encoding::input_byte(0xCF) == 0xCF);
+  assert(terminal_encoding::input_byte(0x98) == '?');
 }
 
 static bool capture_print_value(const m61_print::ValueRef& value,
@@ -970,7 +946,7 @@ int main(void) {
   test_conditional_argument_restores_original_offset();
   test_terminal_escape_decoder();
   test_terminal_line_editing();
-  test_terminal_line_editing_is_utf8_aware();
+  test_terminal_line_editing_is_single_byte_m8();
   test_bounded_unsigned_parser();
   test_confirmation_is_a_complete_token();
   test_quoted_path_tokens();
@@ -979,7 +955,7 @@ int main(void) {
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_terminal_mnemonic_front_coding();
   test_script_allowlist_is_explicit();
-  test_terminal_encoding_is_explicit_and_reversible();
+  test_terminal_wire_is_fixed_cp1251();
   test_m61_print_escapes_and_interpolation();
   test_m61_print_display_controls_are_unquoted();
   test_m61_print_rejects_malformed_input_atomically();

@@ -1,8 +1,8 @@
 #include "display.hpp"
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
+#include "mk8_codec.hpp"
 #include "page_damage.hpp"
-#include "utf8_codec.hpp"
 #if defined(MK61_DISPLAY_UC1609)
   #include "shared_scratch.hpp"
 #endif
@@ -3026,7 +3026,7 @@ bool MK61Display::resolveToken(u16 value, bool custom, builtin_font::Raster& ras
 #if defined(MK61_DISPLAY_UC1609)
     font_value = display_symbol::uc1609::unicodeCodepoint(value);
 #endif
-    if(font->glyph(font_value, glyph) || (font_value != value && font->glyph(value, glyph))) {
+    if(prepared_font::glyphForCodepoint(*font, font_value, glyph)) {
       raster.width = glyph.width;
       raster.height = glyph.height;
       if(font->decode(glyph, raster.data, sizeof(raster.data))) return true;
@@ -3454,11 +3454,8 @@ struct DisplayWrappedLine {
   const char* next;
 };
 
-static const char* displayUtf8Next(const char* cursor, const char* end) {
-  if(cursor >= end) return end;
-  const utf8_codec::Decoded decoded = utf8_codec::decode(
-      (const u8*) cursor, (usize) (end - cursor));
-  return decoded.size != 0 ? cursor + decoded.size : cursor + 1;
+static const char* displayM8Next(const char* cursor, const char* end) {
+  return cursor < end ? cursor + 1 : end;
 }
 
 static DisplayWrappedLine displayNextWrappedLine(
@@ -3473,7 +3470,7 @@ static DisplayWrappedLine displayNextWrappedLine(
   u16 width = 0;
   u16 cells = 0;
   while(cursor < end) {
-    const char* const next = displayUtf8Next(cursor, end);
+    const char* const next = displayM8Next(cursor, end);
     const bool separator = *cursor == ' ' || *cursor == '\t';
     const u16 advance = pixels
         ? display.measureUiText(cursor, (u16) (next - cursor)) : 1U;
@@ -3513,28 +3510,14 @@ static u16 displayWrappedLineCount(MK61Display& display,
   return count;
 }
 
-static void displayReplaceUtf8Line(MK61Display& display, u8 row,
-                                   const char* begin, const char* end) {
+static void displayReplaceM8Line(MK61Display& display, u8 row,
+                                 const char* begin, const char* end) {
   display.setCursor(0, row);
   for(u8 column = 0; column < display.cols(); ++column) {
     display.write((u8) ' ');
   }
   display.setCursor(0, row);
-  while(begin < end) {
-    const utf8_codec::Decoded decoded = utf8_codec::decode(
-        (const u8*) begin, (usize) (end - begin));
-    if(decoded.size == 0) {
-      display.write((u8) *begin++);
-    } else {
-      if(decoded.valid && decoded.size > 1) {
-        display.writeCodepoint(decoded.codepoint <= 0xFFFFU
-            ? (u16) decoded.codepoint : (u16) '?');
-      } else {
-        display.write((u8) *begin);
-      }
-      begin += decoded.size;
-    }
-  }
+  while(begin < end) display.writeCodepoint(mk8::codepoint((u8) *begin++));
 }
 
 } // namespace
@@ -3567,14 +3550,14 @@ u8 MK61Display::printWrappedText(const char* text, u16 length, u8 first_row,
   MK61DisplayUpdate update(*this);
   u8 written = 0;
   if(cursor == end) {
-    displayReplaceUtf8Line(*this, first_row, cursor, cursor);
+    displayReplaceM8Line(*this, first_row, cursor, cursor);
     return 1;
   }
   while(cursor < end && written < max_rows) {
     const DisplayWrappedLine line = displayNextWrappedLine(
         *this, cursor, end, limit, cell_limit, pixels);
-    displayReplaceUtf8Line(*this, (u8) (first_row + written),
-                           line.begin, line.end);
+    displayReplaceM8Line(*this, (u8) (first_row + written),
+                         line.begin, line.end);
     cursor = line.next;
     written++;
   }

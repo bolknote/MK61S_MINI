@@ -42,8 +42,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
                  ? (u32) MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE : 0U)
 #if MK61_PROPORTIONAL_UI_FONTS
              | (u32) MK61_SETUP_FEATURE_UI_FONT |
-             (main_lcd().usbScreenActive()
-                 ? 0U : (u32) MK61_SETUP_FEATURE_UI_TEXT_MODE) |
+             (u32) MK61_SETUP_FEATURE_UI_TEXT_MODE |
              (u32) MK61_SETUP_FEATURE_UI_FONT_CATALOG
 #endif
 #if MK61_FIXED_CALCULATOR_FACE
@@ -237,7 +236,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       }
     case MK61_SETUP_TEXT_MODE:
 #if MK61_PROPORTIONAL_UI_FONTS
-      if(a > 1 || (a == 1 && main_lcd().usbScreenActive())) return 0;
+      if(a > 1) return 0;
       // Rendering context only: this does not change or save font settings.
       if(a) main_lcd().beginUiText(); else main_lcd().endUiText();
       return 1;

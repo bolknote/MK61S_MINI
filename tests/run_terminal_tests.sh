@@ -27,8 +27,8 @@ for screen in 0 1; do
   "${out}_catalog"
 done
 
-# Product F401 omits service-only diagnostic commands but retains the public
-# encoding selector. Characterize that exact conditional catalog as well.
+# Product F401 omits service-only diagnostic commands. Characterize that exact
+# conditional catalog as well.
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO_BLACKPILL_F401CC -DMK61_DISPLAY_UC1609 \

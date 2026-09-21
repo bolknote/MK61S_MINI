@@ -3,15 +3,19 @@
 #include <iostream>
 
 #include "hardware_info.hpp"
+#include "mk8_codec.hpp"
 
-static usize utf8_width(const char* text) {
-  usize width = 0;
-  for(const unsigned char* cursor =
-        reinterpret_cast<const unsigned char*>(text);
-      *cursor != 0; cursor++) {
-    if((*cursor & 0xC0U) != 0x80U) width++;
-  }
-  return width;
+static usize text_width(const char* text) {
+  return std::strlen(text);
+}
+
+static bool m8_equals(const char* actual, const char* expected_utf8) {
+  u8 decoded[96];
+  usize size = 0;
+  if(!mk8::to_utf8((const u8*) actual, std::strlen(actual), decoded,
+                    sizeof(decoded) - 1U, size)) return false;
+  decoded[size] = 0;
+  return std::strcmp((const char*) decoded, expected_utf8) == 0;
 }
 
 static void test_device_identity(void) {
@@ -136,8 +140,8 @@ static void test_line_formatting(void) {
     hardware_info::decode_device_identity(0x10000423U, 256, 'C');
   assert(hardware_info::format_device_line(
     line, sizeof(line), true, f401xc));
-  assert(std::strcmp(line, "ЧИП:STM32F401CC") == 0);
-  assert(utf8_width(line) == 15);
+  assert(m8_equals(line, "ЧИП:STM32F401CC"));
+  assert(text_width(line) == 15);
 
   const hardware_info::DeviceIdentity unspecified_package =
     hardware_info::decode_device_identity(0x10000423U, 256);
@@ -156,7 +160,7 @@ static void test_line_formatting(void) {
   assert(std::strcmp(line, "Chip:ID 0x999") == 0);
   assert(hardware_info::format_memory_line(
     line, sizeof(line), true, unknown));
-  assert(std::strcmp(line, "ОЗУ:? ПЗУ:512") == 0);
+  assert(m8_equals(line, "ОЗУ:? ПЗУ:512"));
 
   const hardware_info::DeviceIdentity missing_flash =
     hardware_info::decode_device_identity(0x10000431U, 0);
@@ -166,8 +170,8 @@ static void test_line_formatting(void) {
 
   assert(hardware_info::format_vdda_line(
     line, sizeof(line), true, {true, 3300}));
-  assert(std::strcmp(line, "Питание:3,30 В") == 0);
-  assert(utf8_width(line) == 14);
+  assert(m8_equals(line, "Питание:3,30 В"));
+  assert(text_width(line) == 14);
 
   assert(hardware_info::format_vdda_line(
     line, sizeof(line), false, {false, 0}));
@@ -175,7 +179,7 @@ static void test_line_formatting(void) {
 
   assert(hardware_info::format_temperature_line(
     line, sizeof(line), true, {true, 293}));
-  assert(std::strcmp(line, "МК:29,3 C") == 0);
+  assert(m8_equals(line, "МК:29,3 C"));
 
   assert(hardware_info::format_temperature_line(
     line, sizeof(line), false, {true, -55}));
@@ -188,8 +192,8 @@ static void test_line_formatting(void) {
   };
   assert(hardware_info::format_battery_line(
     line, sizeof(line), true, unknown_battery));
-  assert(std::strcmp(line, "Батарея:неизв.") == 0);
-  assert(utf8_width(line) == 14);
+  assert(m8_equals(line, "Батарея:неизв."));
+  assert(text_width(line) == 14);
 
   const hardware_info::BatteryStatus present = {
     hardware_info::BatteryPresence::PRESENT,
@@ -211,33 +215,33 @@ static void test_line_formatting(void) {
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), true, "LCD1602A00"));
-  assert(std::strcmp(line, "Экран:LCD1602A00") == 0);
-  assert(utf8_width(line) == 16);
+  assert(m8_equals(line, "Экран:LCD1602A00"));
+  assert(text_width(line) == 16);
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), false, "LCD1602A02"));
   assert(std::strcmp(line, "Disp:LCD1602A02") == 0);
-  assert(utf8_width(line) == 15);
+  assert(text_width(line) == 15);
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), true, "UC1609"));
-  assert(std::strcmp(line, "Экран:UC1609") == 0);
-  assert(utf8_width(line) == 12);
+  assert(m8_equals(line, "Экран:UC1609"));
+  assert(text_width(line) == 12);
 
   assert(hardware_info::format_display_line(
     line, sizeof(line), true, "WS0010"));
-  assert(std::strcmp(line, "Экран:WS0010") == 0);
-  assert(utf8_width(line) == 12);
+  assert(m8_equals(line, "Экран:WS0010"));
+  assert(text_width(line) == 12);
 
   assert(hardware_info::format_generator_line(
     line, sizeof(line), true, "LSE"));
-  assert(std::strcmp(line, "Генератор:LSE") == 0);
-  assert(utf8_width(line) == 13);
+  assert(m8_equals(line, "Генератор:LSE"));
+  assert(text_width(line) == 13);
 
   assert(hardware_info::format_generator_line(
     line, sizeof(line), false, "LSI"));
   assert(std::strcmp(line, "Generator:LSI") == 0);
-  assert(utf8_width(line) == 13);
+  assert(text_width(line) == 13);
 
   char short_line[8];
   assert(!hardware_info::format_display_line(

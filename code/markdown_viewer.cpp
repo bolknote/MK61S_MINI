@@ -8,8 +8,8 @@
 #include "keyboard.h"
 #include "language_workspace.hpp"
 #include "lcd_ru.hpp"
-#include "utf8_codec.hpp"
-#include "utf8_view.hpp"
+#include "m8_view.hpp"
+#include "mk8_codec.hpp"
 
 #if MK61_MARKDOWN_USES_WBMP
   #include "builtin_font.hpp"
@@ -166,7 +166,7 @@ static PlainLine plain_line(const u8* data, u16 len, u16 offset) {
   u8 used = 0;
   while(cursor < len && data[cursor] != '\n' && data[cursor] != '\r' &&
         used < lcd_display::COLS) {
-    const u16 next = utf8_view::next_offset(data, len, cursor);
+    const u16 next = m8_view::next_offset(data, len, cursor);
     if(next <= cursor) break;
     if(next == cursor + 1U && plain_space(data[cursor])) {
       last_space = cursor;
@@ -867,22 +867,21 @@ class GraphicLayout {
     wrap_if_needed();
   }
 
-  static u16 decode_utf8(const u8* data, u16 length,
-                         u16 offset, u16& next) {
-    const utf8_codec::Decoded decoded =
-        utf8_codec::decode(data + offset, (usize) (length - offset));
-    const u8 size = decoded.size == 0 ? 1U : decoded.size;
-    next = (u16) (offset + size);
-    if(!decoded.valid || decoded.codepoint > 0xFFFFU ||
-       (decoded.codepoint < 0x20U && decoded.codepoint != '\t')) return '?';
-    return (u16) decoded.codepoint;
+  static u16 decode_m8(const u8* data, u16 length,
+                       u16 offset, u16& next) {
+    if(data == nullptr || offset >= length) {
+      next = length;
+      return '?';
+    }
+    next = (u16) (offset + 1U);
+    return mk8::valid_byte(data[offset]) ? mk8::codepoint(data[offset]) : '?';
   }
 
   void append_text(const u8* text, u16 length) {
     u16 offset = 0;
     while(offset < length) {
       u16 next = offset;
-      const u16 codepoint = decode_utf8(text, length, offset, next);
+      const u16 codepoint = decode_m8(text, length, offset, next);
       append_codepoint(codepoint);
       offset = next;
     }
@@ -941,7 +940,7 @@ class GraphicLayout {
     u16 offset = 0;
     while(offset < length && x + 4 <= max_x) {
       u16 next = offset;
-      const u16 codepoint = decode_utf8(label, length, offset, next);
+      const u16 codepoint = decode_m8(label, length, offset, next);
       draw_glyph(codepoint, STYLE_NONE, x, (i16) (y + 3U),
                  builtin_font::FaceId::FONT_3X5, 1);
       x = (i16) (x + 4);

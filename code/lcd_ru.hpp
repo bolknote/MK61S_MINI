@@ -5,7 +5,7 @@
 #include "lcd_charset.hpp"
 #include "builtin_font.hpp"
 #include "cgram_window_plan.hpp"
-#include "utf8_codec.hpp"
+#include "mk8_codec.hpp"
 #if defined(MK61_OLED1602_WS0010)
   #include "ws0010_charset.hpp"
 #endif
@@ -33,12 +33,8 @@ inline u16 display_codepoint(u16 codepoint) {
 #endif
 }
 
-inline u16 read_utf8(const char*& text) {
-  const utf8_codec::Decoded decoded = utf8_codec::decode_cstring(text);
-  if(decoded.size == 0) return 0;
-  text += decoded.size;
-  return decoded.valid && decoded.codepoint <= 0xFFFFU
-      ? (u16) decoded.codepoint : (u16) '?';
+inline u16 read_text(const char*& text) {
+  return mk8::next(text);
 }
 
 inline bool a02_rom_char(u16 codepoint, u8& out) {
@@ -202,7 +198,7 @@ inline void add_custom(font_map_t& map, u16 codepoint) {
 
 inline void scan_text(font_map_t& map, const char* text, u8 width) {
   for(u8 used = 0; *text != 0 && used < width; used++) {
-    add_custom(map, read_utf8(text));
+    add_custom(map, read_text(text));
   }
 }
 
@@ -245,7 +241,7 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
 #endif
   u8 used = 0;
   while(*text != 0 && used < width) {
-    const u16 raw_codepoint = read_utf8(text);
+    const u16 raw_codepoint = read_text(text);
 #if defined(MK61_DISPLAY_UC1609)
     main_lcd().writeCodepoint(raw_codepoint);
 #else
@@ -311,6 +307,19 @@ inline void print_window(const char* const* lines, u8 count) {
 }
 
 inline void print_lines(const char* text0, const char* text1) {
+  // A two-line message is a UI surface, not calculator output.  Enter the
+  // selected graphical UI face here so callers cannot accidentally inherit
+  // the fixed-cell calculator renderer.  Character displays implement this
+  // as a no-op and continue to use their CGROM/CGRAM path below.
+  main_lcd().beginUiText();
+  const char* lines[] = {text0, text1};
+  print_window(lines, 2);
+}
+
+inline void print_fixed_lines(const char* text0, const char* text1) {
+  // Explicit escape hatch for controller/font diagnostics which exercise
+  // physical fixed cells and CGRAM by design.
+  main_lcd().endUiText();
   const char* lines[] = {text0, text1};
   print_window(lines, 2);
 }

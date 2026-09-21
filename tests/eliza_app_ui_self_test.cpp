@@ -377,7 +377,7 @@ int main(void) {
   app_api.display_columns = mock_display_columns;
   app_api.display_rows = mock_display_rows;
   app_api.display_clear = mock_display_clear;
-  app_api.display_write_utf8 = mock_display_write;
+  app_api.display_write_m8 = mock_display_write;
   app_api.key_wait = mock_key_wait;
   app_api.magic = MK61_APP_API_MAGIC;
   app_api.version = MK61_APP_API_VERSION;

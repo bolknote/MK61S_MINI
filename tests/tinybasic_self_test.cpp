@@ -3,7 +3,9 @@
 #include <cstdio>
 #include <cstring>
 #include <limits>
+#include <string>
 
+#include "mk8_codec.hpp"
 #include "tinybasic.hpp"
 
 extern "C" void TinyBasicTestReset(void);
@@ -38,6 +40,16 @@ static constexpr int KEY_LEFT = 34;
 static constexpr int KEY_ALPHA = 38;
 static constexpr int KEY_RADIAN = 14;
 static constexpr int KEY_RET = 31;
+
+static std::string expected_m8(const char* utf8) {
+  const usize input_size = std::strlen(utf8);
+  std::string result(input_size, '\0');
+  usize output_size = 0;
+  assert(mk8::from_utf8((const u8*) utf8, input_size,
+                        (u8*) result.data(), result.size(), output_size));
+  result.resize(output_size);
+  return result;
+}
 
 static void test_compile_and_print(void) {
   TinyBasicTestReset();
@@ -784,8 +796,8 @@ static void test_high_noon_package(int argc, char** argv) {
   const double no_instructions[] = {0};
   TinyBasicTestSetInputs(no_instructions, 1);
   assert(RunTinyBasicProgram("INTRO"));
-  assert(std::strcmp(TinyBasicTestLastPrompt(),
-                     "ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ") == 0);
+  assert(std::string(TinyBasicTestLastPrompt()) ==
+         expected_m8("ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ"));
   // The zero branch now reaches the game immediately.  A standalone
   // interactive run therefore gets the runner's normal final wait; the real
   // M61 scenario dispatcher starts PLAYER without that acknowledgement.

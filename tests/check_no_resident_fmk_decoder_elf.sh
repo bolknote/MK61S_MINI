@@ -33,10 +33,10 @@ find_arm_tool() {
 nm_tool="$(find_arm_tool "${ARM_NONE_EABI_NM:-}" arm-none-eabi-nm)"
 symbols="$($nm_tool -C --defined-only "$elf")"
 
-# FMK1 is the compressed interchange format on C5.  Its parser, bit reader,
+# FMK2 is the compressed M8 interchange format on C6. Its parser, bit reader,
 # CRC and RLE decoder belong exclusively to SETUP.APP.  The resident may keep
 # bitmapPixel(): it is a format-neutral row-padded raster helper shared by the
-# PFK1 renderer and costs far less than another copy under a new namespace.
+# PFK2 renderer and costs far less than another copy under a new namespace.
 unexpected="$({ grep -F 'fmk::' <<<"$symbols" || true; } |
   grep -Fv 'fmk::bitmapPixel(' || true)"
 if [[ -n "$unexpected" ]]; then
@@ -45,4 +45,15 @@ if [[ -n "$unexpected" ]]; then
   exit 1
 fi
 
-echo 'resident FMK decoder ELF check: OK'
+# FAT12 directory synthesis, LFN conversion and the transactional import plan
+# belong to USBDISK.APP. The resident keeps only the pinned command proxy.
+fat_unexpected="$({ grep -E \
+  'virtual_fat::.*(render_node_dirent|walk_directory|parse_lfn|apply_file|process_node|prune_tree|ensure_all_directory_extents)' \
+  <<<"$symbols" || true; })"
+if [[ -n "$fat_unexpected" ]]; then
+  printf 'resident USBDISK ELF check: FAT/LFN implementation leaked into resident:\n%s\n' \
+    "$fat_unexpected" >&2
+  exit 1
+fi
+
+echo 'resident FMK/USBDISK payload ELF check: OK'

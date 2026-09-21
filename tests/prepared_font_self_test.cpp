@@ -48,7 +48,7 @@ usize verify(const char* path, bool must_fit_f401) {
     prepared_font::Glyph prepared_glyph = {};
     assert(source.glyphAt(index, source_glyph));
     assert(prepared.glyphAt(index, prepared_glyph));
-    assert(source_glyph.codepoint == prepared_glyph.codepoint &&
+    assert(source_glyph.byte == prepared_glyph.byte &&
            source_glyph.index == prepared_glyph.index &&
            source_glyph.width == prepared_glyph.width &&
            source_glyph.height == prepared_glyph.height &&
@@ -62,7 +62,7 @@ usize verify(const char* path, bool must_fit_f401) {
                         source_glyph.height;
     assert(std::memcmp(source_bitmap, prepared_bitmap, bytes) == 0);
     prepared_font::Glyph lookup = {};
-    assert(prepared.glyph(source_glyph.codepoint, lookup));
+    assert(prepared.glyph(source_glyph.byte, lookup));
     assert(lookup.index == index);
   }
 

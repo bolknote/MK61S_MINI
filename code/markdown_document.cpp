@@ -93,7 +93,7 @@ class Writer {
     if(data == nullptr && length != 0) return fail();
     for(u16 index = 0; index < length; index++) {
       u8 value = data[index];
-      // The stream can carry arbitrary UTF-8, but source control characters
+      // The stream can carry arbitrary M8, but source control characters
       // other than tab are not useful on either display.
       if(value < 0x20 && value != '\t') value = '?';
       if(!text_byte(value)) return false;

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Pack a reviewed native bitmap atlas into a proportional FMK1 file.
+"""Pack a reviewed native bitmap atlas into a proportional M8 FMK2 file.
 
 The atlas format is emitted by tools/.fmk-font/font_preview.cpp. Bearings are
-baked into the FMK bitmap because FMK1 deliberately keeps its on-device glyph
+baked into the FMK bitmap because FMK2 deliberately keeps its on-device glyph
 record to width, advance and pixels only. No scaling or hinting happens here.
 """
 
@@ -12,6 +12,8 @@ import argparse
 import json
 from pathlib import Path
 from typing import Iterable
+
+from m8_codec import encode as encode_m8
 
 HEADER_SIZE = 16
 MAX_FILE_SIZE = 8192
@@ -64,7 +66,7 @@ def ranges(codepoints: Iterable[int]) -> list[tuple[int, int]]:
         previous = codepoint
     result.append((start, count))
     if len(result) > 255:
-        raise ValueError("FMK1 supports at most 255 codepoint ranges")
+        raise ValueError("FMK2 supports at most 255 M8 ranges")
     return result
 
 
@@ -81,7 +83,7 @@ def glyph_canvas(glyph: dict, ascent: int, font_height: int) -> tuple[int, int, 
         raise ValueError(f"glyph U+{int(glyph['codepoint']):04X} escapes the line envelope")
     width = max(1, left + source_width)
     if width > 16 or advance < width or advance > 16:
-        raise ValueError(f"glyph U+{int(glyph['codepoint']):04X} exceeds FMK1 metrics")
+        raise ValueError(f"glyph U+{int(glyph['codepoint']):04X} exceeds FMK2 metrics")
     pixels = [0] * (width * font_height)
     for y, row in enumerate(rows):
         if len(row) != source_width or any(pixel not in "01" for pixel in row):
@@ -103,7 +105,7 @@ def encode(atlas: dict, line_gap: int) -> bytes:
     if line_gap < 0 or line_gap > 4 or (64 + line_gap) // (height + line_gap) < 3:
         raise ValueError("line gap does not leave three UC1609 rows")
 
-    source = sorted(atlas["glyphs"], key=lambda glyph: int(glyph["codepoint"]))
+    source = list(atlas["glyphs"])
     codepoints = [int(glyph["codepoint"]) for glyph in source]
     if len(codepoints) != len(set(codepoints)) or any(cp < 0 or cp > 0xFFFF for cp in codepoints):
         raise ValueError("glyph codepoints must be unique Unicode BMP values")
@@ -111,16 +113,28 @@ def encode(atlas: dict, line_gap: int) -> bytes:
         raise ValueError("UI FMK requires space and question-mark glyphs")
 
     prepared = []
+    seen_m8: set[int] = set()
     max_width = max_advance = 0
     for glyph in source:
+        codepoint = int(glyph["codepoint"])
+        try:
+            encoded = encode_m8(chr(codepoint))
+        except UnicodeEncodeError as error:
+            raise ValueError(
+                f"glyph U+{codepoint:04X} is not representable in M8"
+            ) from error
+        if len(encoded) != 1 or encoded[0] in seen_m8:
+            raise ValueError(f"duplicate/invalid M8 glyph for U+{codepoint:04X}")
+        seen_m8.add(encoded[0])
         width, advance, pixels = glyph_canvas(glyph, ascent, height)
-        prepared.append((width, advance, pixels))
+        prepared.append((encoded[0], width, advance, pixels))
         max_width = max(max_width, width)
         max_advance = max(max_advance, advance)
 
-    groups = ranges(codepoints)
+    prepared.sort(key=lambda glyph: glyph[0])
+    groups = ranges(glyph[0] for glyph in prepared)
     prefix = bytearray(HEADER_SIZE)
-    prefix[:4] = b"FMK1"
+    prefix[:4] = b"FMK2"
     prefix[4] = 0  # proportional
     prefix[5] = max_width
     prefix[6] = height
@@ -128,10 +142,10 @@ def encode(atlas: dict, line_gap: int) -> bytes:
     put_le16(prefix, 8, len(prepared))
     prefix[10] = len(groups)
     for start, count in groups:
-        prefix += bytes((start & 0xFF, start >> 8, count - 1))
+        prefix += bytes((start, count - 1))
 
     writer = BitWriter(prefix)
-    for width, advance, pixels in prepared:
+    for _, width, advance, pixels in prepared:
         writer.write(width - 1, 4)
         writer.write(advance - 1, 4)
         writer.write(0, 1)  # raw bitmap: reviewed pixels stay bit-exact

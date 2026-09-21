@@ -1,4 +1,5 @@
 #include "prepared_font.hpp"
+#include "mk8_codec.hpp"
 
 #include <string.h>
 
@@ -11,6 +12,11 @@ static u16 readLe16(const u8* data) {
 
 static usize bitmapBytes(u8 width, u8 height) {
   return (usize) ((width + 7U) / 8U) * height;
+}
+
+static bool fontByteValid(u8 value) {
+  return mk8::valid_byte(value) && value != '\t' && value != '\n' &&
+         value != '\r';
 }
 
 } // namespace
@@ -43,7 +49,7 @@ u16 checksum(const u8* data, usize size) {
 bool Face::open(const u8* data, usize size) {
   reset();
   if(data == nullptr || size < HEADER_SIZE || size > MAX_IMAGE_SIZE ||
-     data[0] != 'P' || data[1] != 'F' || data[2] != 'K' || data[3] != '1' ||
+     data[0] != 'P' || data[1] != 'F' || data[2] != 'K' || data[3] != '2' ||
      (data[4] & (u8) ~FLAG_MONOSPACED) != 0) return false;
 
   const Metrics candidate = {
@@ -74,11 +80,14 @@ bool Face::open(const u8* data, usize size) {
   u32 previous_end = 0;
   for(u8 i = 0; i < ranges; ++i) {
     const u8* range = data + HEADER_SIZE + (usize) i * RANGE_SIZE;
-    const u16 start = readLe16(range);
-    const u16 count = (u16) range[2] + 1U;
+    const u16 start = range[0];
+    const u16 count = (u16) range[1] + 1U;
     if((i != 0 && start < previous_end) ||
-       (u32) start + count > 0x10000UL) return false;
-    previous_end = (u32) start + count;
+       start + count > 0x100U) return false;
+    previous_end = start + count;
+    for(u16 value = start; value < previous_end; ++value) {
+      if(!fontByteValid((u8) value)) return false;
+    }
     glyphs_in_ranges += count;
     if(glyphs_in_ranges > candidate.glyph_count) return false;
   }
@@ -112,15 +121,15 @@ bool Face::open(const u8* data, usize size) {
   return true;
 }
 
-bool Face::glyphIndex(u16 codepoint, u16& index) const {
+bool Face::glyphIndex(u8 byte, u16& index) const {
   if(!valid()) return false;
   u16 first = 0;
   for(u8 i = 0; i < range_count_; ++i) {
     const u8* range = bytes_ + HEADER_SIZE + (usize) i * RANGE_SIZE;
-    const u16 start = readLe16(range);
-    const u16 count = (u16) range[2] + 1U;
-    if(codepoint >= start && (u32) codepoint < (u32) start + count) {
-      index = (u16) (first + codepoint - start);
+    const u16 start = range[0];
+    const u16 count = (u16) range[1] + 1U;
+    if(byte >= start && (u16) byte < start + count) {
+      index = (u16) (first + byte - start);
       return true;
     }
     first = (u16) (first + count);
@@ -128,15 +137,15 @@ bool Face::glyphIndex(u16 codepoint, u16& index) const {
   return false;
 }
 
-bool Face::codepointAt(u16 index, u16& codepoint) const {
+bool Face::byteAt(u16 index, u8& byte) const {
   if(!valid() || index >= metrics_.glyph_count) return false;
   u16 first = 0;
   for(u8 i = 0; i < range_count_; ++i) {
     const u8* range = bytes_ + HEADER_SIZE + (usize) i * RANGE_SIZE;
-    const u16 start = readLe16(range);
-    const u16 count = (u16) range[2] + 1U;
+    const u16 start = range[0];
+    const u16 count = (u16) range[1] + 1U;
     if(index < first + count) {
-      codepoint = (u16) (start + index - first);
+      byte = (u8) (start + index - first);
       return true;
     }
     first = (u16) (first + count);
@@ -170,16 +179,16 @@ bool Face::recordAt(u16 index, Glyph& out) const {
   return true;
 }
 
-bool Face::glyph(u16 codepoint, Glyph& out) const {
+bool Face::glyph(u8 byte, Glyph& out) const {
   u16 index = 0;
-  if(!glyphIndex(codepoint, index) || !recordAt(index, out)) return false;
+  if(!glyphIndex(byte, index) || !recordAt(index, out)) return false;
   // glyphIndex already resolved this range; do not scan it a second time.
-  out.codepoint = codepoint;
+  out.byte = byte;
   return true;
 }
 
 bool Face::glyphAt(u16 index, Glyph& out) const {
-  return recordAt(index, out) && codepointAt(index, out.codepoint);
+  return recordAt(index, out) && byteAt(index, out.byte);
 }
 
 bool Face::decode(const Glyph& glyph, u8* bitmap, usize capacity) const {
@@ -192,6 +201,11 @@ bool Face::decode(const Glyph& glyph, u8* bitmap, usize capacity) const {
   if(required > capacity) return false;
   memcpy(bitmap, bytes_ + glyph.bitmap_offset, required);
   return true;
+}
+
+bool glyphForCodepoint(const Face& face, u32 codepoint, Glyph& out) {
+  u8 byte = 0;
+  return mk8::from_codepoint(codepoint, byte) && face.glyph(byte, out);
 }
 
 } // namespace prepared_font

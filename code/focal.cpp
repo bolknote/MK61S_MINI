@@ -221,6 +221,7 @@ namespace library_mk61 {
 #endif
 
 #include "bounded_string.hpp"
+#include "mk8_strings.inc"
 #include "mk_math.hpp"
 #include "number_format.hpp"
 
@@ -798,18 +799,18 @@ static bool focal_language_is_ru(void) {
 // Scanning this cold error path costs less flash than a pointer table and also
 // removes a relocation/string argument from every error site.
 static constexpr char FOCAL_ERROR_TEXTS[] =
-  "LINE?\0СТРОКА?\0"
-  "SYNTAX?\0СИНТАКСИС?\0"
-  "VAR?\0ПЕРЕМ?\0"
-  "FUNC?\0ФУНК?\0"
-  "FOR?\0ЦИКЛ?\0"
-  "FULL?\0НЕТ МЕСТА\0"
-  "RETURN?\0ВОЗВРАТ?\0"
-  "STACK?\0СТЕК?\0"
-  "MATH?\0МАТ?\0"
-  "MK?\0МК?\0"
-  "NAME?\0ИМЯ?\0"
-  "SLOT?\0СЛОТ?\0";
+  "LINE?\0" M8_FOCAL_ERROR_LINE "\0"
+  "SYNTAX?\0" M8_FOCAL_ERROR_SYNTAX "\0"
+  "VAR?\0" M8_FOCAL_ERROR_VAR "\0"
+  "FUNC?\0" M8_FOCAL_ERROR_FUNC "\0"
+  "FOR?\0" M8_FOCAL_ERROR_FOR "\0"
+  "FULL?\0" M8_FOCAL_ERROR_FULL "\0"
+  "RETURN?\0" M8_FOCAL_ERROR_RETURN "\0"
+  "STACK?\0" M8_FOCAL_ERROR_STACK "\0"
+  "MATH?\0" M8_FOCAL_ERROR_MATH "\0"
+  "MK?\0" M8_FOCAL_ERROR_MK "\0"
+  "NAME?\0" M8_FOCAL_ERROR_NAME "\0"
+  "SLOT?\0" M8_FOCAL_ERROR_SLOT "\0";
 
 static constexpr u8 focal_error_text_offset(u8 index) {
   usize offset = 0;
@@ -847,10 +848,9 @@ static void focal_message_i18n(const char* en0, const char* ru0, const char* en1
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
 #ifndef FOCAL_HOST_TEST
-  if(focal_language_is_ru()) {
-    lcd_ru::print_lines(ru0, ru1);
-    return;
-  }
+  lcd_ru::print_lines(focal_language_is_ru() ? ru0 : en0,
+                      focal_language_is_ru() ? ru1 : en1);
+  return;
 #endif
   main_lcd().setCursor(0, 0);
   main_lcd().print(en0);
@@ -863,12 +863,12 @@ static bool focal_error(FocalError error) {
   focal_trace_string("ERROR ", english);
   focal_copy_text(focal_last_error, sizeof(focal_last_error), english);
   focal_message_i18n(english, focal_error_text(error, true),
-                     "FOCAL", "ФОКАЛ");
+                     "FOCAL", M8_FOCAL);
   return false;
 }
 
 static void focal_show_stopped(void) {
-  focal_message_i18n("FOCAL stopped", "ФОКАЛ стоп", "ESC", "ESC");
+  focal_message_i18n("FOCAL stopped", M8_FOCAL_STOP, "ESC", "ESC");
 }
 
 static bool focal_runtime_interrupted(void) {
@@ -1708,7 +1708,8 @@ static FocalInputResult focal_read_number_from_keyboard(const char* target_name,
   memset(buffer, 0, sizeof(buffer));
   u16 len = 0;
   bool alpha_shift = false;
-  snprintf(prompt, sizeof(prompt), focal_language_is_ru() ? "ВВОД %s" : "ASK %s", target_name);
+  snprintf(prompt, sizeof(prompt),
+           focal_language_is_ru() ? M8_INPUT_FORMAT : "ASK %s", target_name);
   while(true) {
     focal_message_i18n(prompt, prompt, buffer, buffer);
     const i32 key = kbd::get_key_wait();
@@ -1730,7 +1731,8 @@ static FocalInputResult focal_read_number_from_keyboard(const char* target_name,
     if(key == KEY_ESC || key == KEY_ESC_PRESS) return FocalInputResult::CANCELLED;
     if(key == KEY_OK || key == KEY_OK_PRESS) {
       if(focal_parse_input_number(buffer, value)) return FocalInputResult::VALUE;
-      focal_message_i18n("Invalid number", "Неверное число", "Try again", "Повторите");
+      focal_message_i18n("Invalid number", M8_INVALID_NUMBER,
+                         "Try again", M8_TRY_AGAIN);
       delay(600);
       continue;
     }
@@ -1759,7 +1761,7 @@ static bool focal_wait_for_key(void) {
   focal_host_ask_wait_count++;
   return !focal_host_ask_cancelled;
 #else
-  focal_message_i18n("ASK", "ВВОД", "Press any key", "Любая клавиша");
+  focal_message_i18n("ASK", M8_INPUT, "Press any key", M8_PRESS_ANY_KEY);
   const i32 key = kbd::get_key_wait();
   return key != KEY_ESC && key != KEY_ESC_PRESS;
 #endif
@@ -2457,7 +2459,7 @@ static void focal_display_program_name(const char* name, char* out, usize size) 
       }
     }
     if(digits_only) {
-      snprintf(out, size, "ФОКАЛ%s", name + 5);
+      snprintf(out, size, M8_FOCAL_FORMAT, name + 5);
       return;
     }
   }
@@ -2473,7 +2475,8 @@ static void display_focal_ok(const FocalProgram& program) {
   char top_ru[32];
   snprintf(top_en, sizeof(top_en), "FOCAL: %u lines",
            (unsigned) (u8) focal_ast.line_count);
-  snprintf(top_ru, sizeof(top_ru), "ФОКАЛ готов: %d", (int) focal_ast.line_count);
+  snprintf(top_ru, sizeof(top_ru), M8_FOCAL_READY_FORMAT,
+           (int) focal_ast.line_count);
   char display_name[24];
   focal_display_program_name(program.name, display_name, sizeof(display_name));
   focal_message_i18n(top_en, top_ru, display_name, display_name);
@@ -2483,7 +2486,8 @@ static void display_focal_ok(const FocalProgram& program) {
 static void display_focal_saved(const FocalProgram& program) {
   char display_name[24];
   focal_display_program_name(program.name, display_name, sizeof(display_name));
-  focal_message_i18n("FOCAL saved", "ФОКАЛ сохранен", display_name, display_name);
+  focal_message_i18n("FOCAL saved", M8_FOCAL_SAVED,
+                     display_name, display_name);
   delay(700);
 }
 
@@ -2636,7 +2640,8 @@ void InitFocal(void) {
 #ifndef FOCAL_HOST_TEST
   const int stored_count = program_store::count(program_store::ProgramType::FOCAL);
   if(allow_new && active == stored_count) {
-    focal_message_i18n("FOCAL program", "Программа", ">NEW", ">НОВАЯ");
+    focal_message_i18n("FOCAL program", M8_PROGRAM,
+                       ">NEW", M8_NEW_PROGRAM);
     return;
   }
 
@@ -2648,18 +2653,19 @@ void InitFocal(void) {
     focal_display_program_name(entry.name, display_name, sizeof(display_name));
     snprintf(line1, sizeof(line1), ">%s", entry.name);
     snprintf(ru_line1, sizeof(ru_line1), ">%s", display_name);
-    focal_message_i18n("FOCAL program", "Программа", line1, ru_line1);
+    focal_message_i18n("FOCAL program", M8_PROGRAM, line1, ru_line1);
     return;
   }
 
-  focal_message_i18n("FOCAL program", "Программа", ">EMPTY", ">ПУСТО");
+  focal_message_i18n("FOCAL program", M8_PROGRAM,
+                     ">EMPTY", M8_EMPTY_PROGRAM);
   (void) allow_new;
 #else
   char line1[17];
   char ru_line1[17];
   if(allow_new && active == FOCAL_PROGRAM_COUNT) {
     focal_copy_text(line1, sizeof(line1), ">NEW");
-    focal_copy_text(ru_line1, sizeof(ru_line1), ">НОВАЯ");
+    focal_copy_text(ru_line1, sizeof(ru_line1), M8_NEW_PROGRAM);
   } else if(active >= 0 && active < FOCAL_PROGRAM_COUNT && programs[active].used) {
     char display_name[24];
     focal_display_program_name(programs[active].name, display_name, sizeof(display_name));
@@ -2667,9 +2673,9 @@ void InitFocal(void) {
     snprintf(ru_line1, sizeof(ru_line1), ">%s", display_name);
   } else {
     focal_copy_text(line1, sizeof(line1), ">EMPTY");
-    focal_copy_text(ru_line1, sizeof(ru_line1), ">ПУСТО");
+    focal_copy_text(ru_line1, sizeof(ru_line1), M8_EMPTY_PROGRAM);
   }
-  focal_message_i18n("FOCAL program", "Программа", line1, ru_line1);
+  focal_message_i18n("FOCAL program", M8_PROGRAM, line1, ru_line1);
 #endif
 }
 
@@ -2697,7 +2703,8 @@ static int select_focal_program(bool allow_new, u16* new_parent = NULL) {
   }
   if(active < 0) active = allow_new ? FOCAL_PROGRAM_COUNT : -1;
   if(active < 0) {
-    focal_message_i18n("FOCAL is empty", "ФОКАЛ пуст", "Press any key", "Любая клавиша");
+    focal_message_i18n("FOCAL is empty", M8_FOCAL_EMPTY,
+                       "Press any key", M8_PRESS_ANY_KEY);
     kbd::get_key_wait();
     return -1;
   }
@@ -3111,7 +3118,8 @@ static const text_editor::Hooks FOCAL_EDITOR_HOOKS = {
 };
 
 static bool focal_confirm_save(void) {
-  focal_message_i18n("Save FOCAL?", "Сохранить?", "OK=yes ESC=no", "OK=да ESC=нет");
+  focal_message_i18n("Save FOCAL?", M8_SAVE_QUESTION,
+                     "OK=yes ESC=no", M8_CONFIRM_SAVE);
   while(true) {
     const i32 key = kbd::get_key_wait();
     if(key == KEY_OK || key == KEY_OK_PRESS) return true;
@@ -3132,7 +3140,7 @@ static void draw_focal_name_editor(const char* name, u16 cursor, bool sms_cursor
   }
   while(pos < lcd_display::COLS) line[pos++] = ' ';
   line[lcd_display::COLS] = 0;
-  focal_message_i18n("FOCAL name", "Имя ФОКАЛ", line, line);
+  focal_message_i18n("FOCAL name", M8_FOCAL_NAME, line, line);
   MK61DisplayUpdate update(main_lcd());
   const u8 cursor_col = (u8) (1 + cursor - window);
   main_lcd().setCursor(cursor_col, 1);
@@ -3484,7 +3492,7 @@ bool EditFocalProgram(u16 id) {
 
 static bool FOCAL_clear_data(void) {
   focal_clear_vars();
-  focal_message_i18n("FOCAL data", "Данные", "cleared", "очищены");
+  focal_message_i18n("FOCAL data", M8_DATA, "cleared", M8_CLEARED);
   delay(700);
   return true;
 }
@@ -3503,9 +3511,9 @@ static constexpr t_punct FOCAL_RUN_PUNCT   = {.size = 9,  .action = &FOCAL_run_m
 static constexpr t_punct FOCAL_CLEAR_PUNCT = {.size = 10, .action = &FOCAL_clear_data, .text = "Clear DATA"};
 
 #ifndef FOCAL_HOST_TEST
-static constexpr t_punct RU_FOCAL_EDIT_PUNCT  = {.size = 15, .action = &FOCAL_edit_menu,  .text = "Правка"};
-static constexpr t_punct RU_FOCAL_RUN_PUNCT   = {.size = 15, .action = &FOCAL_run_menu,   .text = "Запуск"};
-static constexpr t_punct RU_FOCAL_CLEAR_PUNCT = {.size = 15, .action = &FOCAL_clear_data, .text = "Сброс данных"};
+static constexpr t_punct RU_FOCAL_EDIT_PUNCT  = {.size = 15, .action = &FOCAL_edit_menu,  .text = M8_EDIT};
+static constexpr t_punct RU_FOCAL_RUN_PUNCT   = {.size = 15, .action = &FOCAL_run_menu,   .text = M8_RUN};
+static constexpr t_punct RU_FOCAL_CLEAR_PUNCT = {.size = 15, .action = &FOCAL_clear_data, .text = M8_CLEAR_DATA};
 #endif
 
 bool FOCAL_menu_select(void) {

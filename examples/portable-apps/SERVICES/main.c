@@ -14,7 +14,7 @@ int main(void) {
                                       "sqrt(3^2+4^2)=%d", (int) distance);
   if(length < 0 || (uint32_t) length >= sizeof(text)) return MK61_APP_RUNTIME_ERROR;
   mk61_api->display_clear();
-  mk61_api->display_write_utf8(0, 0, text, (uint32_t) length);
+  mk61_api->display_write_m8(0, 0, text, (uint32_t) length);
   mk61_api->key_wait();
   return MK61_APP_OK;
 }

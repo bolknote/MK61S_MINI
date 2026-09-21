@@ -25,8 +25,8 @@ def elf_metadata(content, flags=0):
 
 class HelpTest(unittest.TestCase):
     def test_export(self):
-        # The 1400-byte boundary cuts a multibyte character unless adjusted.
-        body = ('A'*1399 + 'я' + 'B'*1200).encode()
+        # M8 is single-byte; the exporter prefers the previous complete line.
+        body = b'A'*1300 + b'\n' + b'B'*98 + bytes([0xff]) + b'C'*1200
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); elf = root/'resident.elf'
             elf.write_bytes(elf_metadata(body+b'\0'))
@@ -35,10 +35,11 @@ class HelpTest(unittest.TestCase):
             self.assertEqual(pages[0][9:]+pages[1][9:], body)
             self.assertEqual(pages[0][:9], pages[1][:9])
             self.assertEqual(pages[0][:9], (result['tag']+'\n').encode())
+            self.assertEqual(len(pages[0]), 1310)
             for page in pages:
-                page.decode('utf8'); self.assertLessEqual(len(page), 1536)
+                self.assertLessEqual(len(page), 1536)
             for content,flags in ((body+b'\0',2), (b'missing terminator',0),
-                                  (b'x\0y\0',0), (b'x'*2801+b'\0',0), (b'\xff\0',0)):
+                                  (b'x\0y\0',0), (b'x'*2801+b'\0',0), (b'\x98\0',0)):
                 elf.write_bytes(elf_metadata(content,flags))
                 with self.assertRaises(ValueError): export.build(elf, root)
 
@@ -54,15 +55,19 @@ class HelpTest(unittest.TestCase):
 #include <vector>
 using u8=uint8_t; using u16=uint16_t; using usize=size_t;
 #define MK61_SETUP_IS_LOADABLE 1
+#include "mk8_strings.inc"
 static std::vector<std::string> files;
 static bool busy=false, fail_body=false;
 struct Output {
   std::string text;
   void print(const char* s) { text+=s; }
   void println(const char* s) { text+=s; text+='\n'; }
+  void println() { text+='\n'; }
   void write(char c) { text+=c; }
   void write(const u8* p, usize n) { text.append((const char*)p,n); }
 } Serial;
+static void terminal_write_m8(const u8* text, usize size) { Serial.write(text,size); }
+static void terminal_println_m8(const char* text) { Serial.println(text); }
 namespace program_store {
 constexpr u16 ROOT_ID=0;
 enum class ProgramType { TEXT };
@@ -101,8 +106,8 @@ int main() {
     if(mode==2) files[1][0]='0';
     if(mode==3) files[1]="short";
     terminal.print_help();
-    if(mode==0) assert(Serial.text=="Available commands:\nfirst page\nsecond page\n");
-    else if(mode==5) assert(Serial.text=="Available commands:\nHELP read error\n");
+    if(mode==0) assert(Serial.text==std::string(M8_TH_AVAILABLE)+"\nfirst page\nsecond page\n");
+    else if(mode==5) assert(Serial.text==std::string(M8_TH_AVAILABLE)+"\n"+M8_TH_READ_ERROR+"\n");
     else {
       assert(Serial.text.find("help dfu fsput ")!=std::string::npos);
       assert(Serial.text.find("fsput begin /System/<file> <size> <crc32>")!=std::string::npos);
@@ -115,7 +120,8 @@ int main() {
             root=Path(temp); cpp=root/'test.cpp'; exe=root/'test'
             cpp.write_text(prelude+source[start:end]+checks)
             flags=['-fsanitize=address,undefined','-fno-omit-frame-pointer'] if os.getenv('MK61_TEST_SANITIZERS')=='1' else []
-            subprocess.run(['clang++','-std=c++17','-Wall','-Wextra','-Werror',*flags,str(cpp),'-o',str(exe)],check=True)
+            subprocess.run(['clang++','-std=c++17','-Wall','-Wextra','-Werror',*flags,
+                            '-I',str(ROOT/'code'),str(cpp),'-o',str(exe)],check=True)
             subprocess.run([str(exe)],check=True)
 
 if __name__=='__main__': unittest.main()
