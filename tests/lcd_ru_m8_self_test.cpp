@@ -17,6 +17,9 @@ int main() {
     const bool fixed = lcd_ru::fixed_cgram_char(codepoint, fixed_slot);
     assert(in_rom || fixed || lcd_ru::slot_for(single_map, codepoint) >= 0);
     assert(!single_map.overflow);
+    u8 fallback = '?';
+    assert(lcd_ru::fallback_char(codepoint, fallback));
+    assert(fallback >= 0x20 && fallback <= 0x7E && fallback != '?');
   }
 
   const char text[] = {

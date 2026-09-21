@@ -154,6 +154,30 @@ inline bool fixed_cgram_char(u16 codepoint, u8& slot) {
 
 inline bool fallback_char(u16 codepoint, u8& out) {
   codepoint = display_codepoint(codepoint);
+  // A character panel has only eight CGRAM cells. When a complete window
+  // needs more distinct custom signs, keep M8 controls readable in one ASCII
+  // cell rather than replacing their meaning with '?'.
+  switch(codepoint) {
+    case 0x2190: out = '<'; return true; // ←
+    case 0x2192: out = '>'; return true; // →
+    case 0x2191: out = '^'; return true; // ↑
+    case 0x2193: out = 'v'; return true; // ↓
+    case 0x03C0: out = 'P'; return true; // π
+    case 0x221A: out = 'V'; return true; // √
+    case 0x21BB: out = '@'; return true; // ↻
+    case 0x2260: out = '!'; return true; // ≠
+    case 0x2264: out = '<'; return true; // ≤
+    case 0x2265: out = '>'; return true; // ≥
+    case 0x00D7: out = 'x'; return true; // ×
+    case 0x00F7: out = '/'; return true; // ÷
+    case 0x00B2: out = '2'; return true; // ²
+    case 0x02B8: out = 'y'; return true; // ʸ
+    case 0x02E3: out = 'x'; return true; // ˣ
+    case 0x22BB: out = '^'; return true; // ⊻
+    case 0x207B: out = '-'; return true; // ⁻
+    case 0x21B5: out = '<'; return true; // ↵
+    default: break;
+  }
   if(codepoint == 0x0427) {
     out = '4'; // Ч: допустимо, только когда уже используются все 8 пользовательских символов.
     return true;
