@@ -177,6 +177,34 @@ if command -v pwsh >/dev/null 2>&1; then
           throw "extensionless ARM compiler did not resolve: $resolved"
       }
     '
+
+  # A second build can find an existing bundle under Dropbox.  Remove only
+  # our generated UI-font notices; retaining the parent avoids a race with
+  # sync-client files appearing while an empty directory is being deleted.
+  license_bundle="$work/license-bundle"
+  mkdir -p "$license_bundle/licenses/ui-fonts"
+  printf 'old notice\n' > "$license_bundle/licenses/ui-fonts/old.txt"
+  MK61_TEST_HOOK="$platform/tools/mk61-app-postbuild.ps1" \
+  MK61_TEST_SKETCH="$root/code" \
+  MK61_TEST_BUNDLE="$license_bundle" \
+    pwsh -NoLogo -NoProfile -Command '
+      . $env:MK61_TEST_HOOK check-profile `
+          -Platform mini-v3 -Display lcd1602-a00 `
+          -Sketch $env:MK61_TEST_SKETCH
+      Remove-Mk61BundledUiFontLicenses -Output $env:MK61_TEST_BUNDLE
+    '
+  test -d "$license_bundle/licenses"
+  test ! -e "$license_bundle/licenses/ui-fonts"
+  MK61_TEST_HOOK="$platform/tools/mk61-app-postbuild.ps1" \
+  MK61_TEST_SKETCH="$root/code" \
+  MK61_TEST_BUNDLE="$license_bundle" \
+    pwsh -NoLogo -NoProfile -Command '
+      . $env:MK61_TEST_HOOK check-profile `
+          -Platform mini-v3 -Display lcd1602-a00 `
+          -Sketch $env:MK61_TEST_SKETCH
+      Remove-Mk61BundledUiFontLicenses -Output $env:MK61_TEST_BUNDLE
+    '
+  test -d "$license_bundle/licenses"
 fi
 
 if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then

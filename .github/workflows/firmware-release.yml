@@ -185,6 +185,31 @@ jobs:
           & ./tools/mk61-arduino-board.cmd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Verify Windows font-license cleanup preserves its parent
+        shell: pwsh
+        run: |
+          $env:MK61_TEST_HOOK = Join-Path $env:GITHUB_WORKSPACE `
+            'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
+          $env:MK61_TEST_SKETCH = Join-Path $env:GITHUB_WORKSPACE 'code'
+          $env:MK61_TEST_BUNDLE = Join-Path $env:RUNNER_TEMP 'mk61-license-cleanup'
+          $oldNotices = Join-Path $env:MK61_TEST_BUNDLE 'licenses/ui-fonts'
+          [IO.Directory]::CreateDirectory($oldNotices) | Out-Null
+          [IO.File]::WriteAllText((Join-Path $oldNotices 'old.txt'), 'old')
+          $check = @'
+          . $env:MK61_TEST_HOOK check-profile -Platform mini-v3 `
+              -Display lcd1602-a00 -Sketch $env:MK61_TEST_SKETCH
+          Remove-Mk61BundledUiFontLicenses -Output $env:MK61_TEST_BUNDLE
+          Remove-Mk61BundledUiFontLicenses -Output $env:MK61_TEST_BUNDLE
+          if (-not [IO.Directory]::Exists((Join-Path $env:MK61_TEST_BUNDLE 'licenses'))) {
+              throw 'Font-license cleanup deleted the parent directory'
+          }
+          if ([IO.Directory]::Exists((Join-Path $env:MK61_TEST_BUNDLE 'licenses/ui-fonts'))) {
+              throw 'Font-license cleanup kept stale generated notices'
+          }
+          '@
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command $check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
       # recipes. Deliberately poison MK61_HOST_CXX: this proves that a normal
       # Windows IDE installation needs only Python, not Visual Studio/MinGW.

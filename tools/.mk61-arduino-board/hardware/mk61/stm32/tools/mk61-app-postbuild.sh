@@ -152,9 +152,6 @@ build_bundle() {
     fi
   done
   rm -rf "$output/licenses/ui-fonts"
-  if [ -d "$output/licenses" ]; then
-    rmdir "$output/licenses" 2>/dev/null || true
-  fi
   if [ "$ui_fonts" -eq 1 ]; then
     python3 "$sketch/../tools/.fmk-font/package_ui_font_licenses.py" \
       --bundle "$output"

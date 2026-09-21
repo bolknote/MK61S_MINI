@@ -127,6 +127,18 @@ function Invoke-Mk61Python {
         (@($python.PrefixArguments) + $Arguments)
 }
 
+function Remove-Mk61BundledUiFontLicenses {
+    param([Parameter(Mandatory = $true)][string]$Output)
+    $uiFontLicenses = Join-Path $Output 'licenses/ui-fonts'
+    if ([IO.Directory]::Exists($uiFontLicenses)) {
+        Remove-Item -LiteralPath $uiFontLicenses -Recurse -Force
+    }
+    # Leave the parent directory in place.  Removing an empty `licenses`
+    # directory is unnecessary (the packager can reuse it) and can fail on
+    # Windows when a sync client creates a file between the emptiness check
+    # and Remove-Item.
+}
+
 function Check-Mk61Profile {
     if (-not (Test-Mk61Profile $Platform $Display)) {
         Stop-Mk61Build "incompatible platform/display pair: $Platform + $Display"
@@ -234,15 +246,7 @@ function Build-Mk61Bundle {
             Remove-Item -LiteralPath $target -Force
         }
     }
-    $uiFontLicenses = Join-Path $output 'licenses/ui-fonts'
-    if ([IO.Directory]::Exists($uiFontLicenses)) {
-        Remove-Item -LiteralPath $uiFontLicenses -Recurse -Force
-    }
-    $licenses = Join-Path $output 'licenses'
-    if ([IO.Directory]::Exists($licenses) -and
-        @(Get-ChildItem -LiteralPath $licenses -Force).Count -eq 0) {
-        Remove-Item -LiteralPath $licenses -Force
-    }
+    Remove-Mk61BundledUiFontLicenses -Output $output
     if ($uiFonts -eq '1') {
         Invoke-Mk61Python @(
             (Join-Path $Sketch `
