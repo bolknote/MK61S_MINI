@@ -202,24 +202,29 @@ inline void scan_text(font_map_t& map, const char* text, u8 width) {
   }
 }
 
-inline void load_custom_font(const font_map_t& map) {
+inline void load_custom_font(MK61Display& display, const font_map_t& map) {
 #if defined(MK61_DISPLAY_UC1609)
+  (void) display;
   (void) map;
 #else
-  if(main_lcd().graphicsMode()) return;
+  if(display.graphicsMode()) return;
 #if defined(MK61_OLED1602_WS0010)
   const class_LCD_fonts default_fonts;
   for(u8 slot = 0; slot < CUSTOM_GLYPHS; slot++) {
     if((map.reserved_mask & ((u8) 1u << slot)) != 0) {
-      default_fonts.loadWs0010Slot(slot);
+      default_fonts.loadWs0010Slot(slot, display);
     }
   }
 #endif
   for(u8 i = 0; i < map.count; i++) {
-    main_lcd().createChar(map.slots[i],
-                          (uint8_t*) glyph_for(map.codepoints[i]));
+    display.createChar(map.slots[i],
+                       (uint8_t*) glyph_for(map.codepoints[i]));
   }
 #endif
+}
+
+inline void load_custom_font(const font_map_t& map) {
+  load_custom_font(main_lcd(), map);
 }
 
 inline void restore_default_font(void) {
@@ -235,7 +240,8 @@ inline void restore_default_font(void) {
 #endif
 }
 
-inline void write_text(const font_map_t& map, const char* text, u8 width) {
+inline void write_text(MK61Display& display, const font_map_t& map,
+                       const char* text, u8 width) {
 #if defined(MK61_DISPLAY_UC1609)
   (void) map;
 #endif
@@ -243,23 +249,23 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
   while(*text != 0 && used < width) {
     const u16 raw_codepoint = read_text(text);
 #if defined(MK61_DISPLAY_UC1609)
-    main_lcd().writeCodepoint(raw_codepoint);
+    display.writeCodepoint(raw_codepoint);
 #else
-    if(main_lcd().graphicsMode()) {
-      main_lcd().writeCodepoint(raw_codepoint);
+    if(display.graphicsMode()) {
+      display.writeCodepoint(raw_codepoint);
     } else {
       const u16 codepoint = display_codepoint(raw_codepoint);
       u8 out;
       if(rom_char(codepoint, out)) {
-        main_lcd().write(out);
+        display.write(out);
       } else {
         const i8 slot = slot_for(map, codepoint);
         if(slot >= 0) {
-          main_lcd().write((u8) slot);
+          display.write((u8) slot);
         } else if(fallback_char(codepoint, out)) {
-          main_lcd().write(out);
+          display.write(out);
         } else {
-          main_lcd().write((u8) '?');
+          display.write((u8) '?');
         }
       }
     }
@@ -267,7 +273,11 @@ inline void write_text(const font_map_t& map, const char* text, u8 width) {
     used++;
   }
 
-  while(used++ < width) main_lcd().write((u8) ' ');
+  while(used++ < width) display.write((u8) ' ');
+}
+
+inline void write_text(const font_map_t& map, const char* text, u8 width) {
+  write_text(main_lcd(), map, text, width);
 }
 
 inline void print_at(u8 x, u8 y, const char* text, u8 width = LCD_WIDTH) {

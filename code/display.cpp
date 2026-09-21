@@ -14,6 +14,7 @@
 
 #if defined(MK61_DISPLAY_LCD1602)
 
+#include "lcd_ru.hpp"
 #include "lcd1602_shifted_viewport.hpp"
 #include "lcd_6800_4bit_bus.hpp"
 #include "lcd_charset.hpp"
@@ -3546,6 +3547,41 @@ u8 MK61Display::printWrappedText(const char* text, u16 length, u8 first_row,
           *this, cursor, end, limit, cell_limit, pixels).next;
     }
   }
+
+#if defined(MK61_DISPLAY_LCD1602)
+  // A physical character LCD needs one CGRAM plan for the whole wrapped
+  // window. Writing each decoded Unicode sign via writeCodepoint() would
+  // bypass the Russian ROM map and turn every non-ROM M8 sign into '?'.
+  if(!graphicsMode()) {
+    char lines[lcd_display::ROWS][lcd_display::COLS + 1U] = {};
+    u8 written = 0;
+    if(cursor == end) {
+      written = 1;
+    } else {
+      while(cursor < end && written < max_rows) {
+        const DisplayWrappedLine line = displayNextWrappedLine(
+            *this, cursor, end, limit, cell_limit, pixels);
+        const usize size = (usize) (line.end - line.begin);
+        if(size > lcd_display::COLS) break;
+        memcpy(lines[written], line.begin, size);
+        cursor = line.next;
+        written++;
+      }
+    }
+
+    lcd_ru::font_map_t map = {};
+    for(u8 row = 0; row < written; ++row) {
+      lcd_ru::scan_text(map, lines[row], cols());
+    }
+    MK61DisplayUpdate update(*this);
+    lcd_ru::load_custom_font(*this, map);
+    for(u8 row = 0; row < written; ++row) {
+      setCursor(0, (u8) (first_row + row));
+      lcd_ru::write_text(*this, map, lines[row], cols());
+    }
+    return written;
+  }
+#endif
 
   MK61DisplayUpdate update(*this);
   u8 written = 0;

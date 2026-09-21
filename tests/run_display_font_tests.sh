@@ -5,6 +5,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_display_font_self_test"
 ws0010_out="${TMPDIR:-/tmp}/mk61_ws0010_markdown_font_self_test"
 profile_out="${TMPDIR:-/tmp}/mk61_builtin_font_profile_self_test"
+lcd_ru_out="${TMPDIR:-/tmp}/mk61_lcd_ru_m8_self_test"
 prepared_out="${TMPDIR:-/tmp}/mk61_prepared_font_self_test"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
@@ -72,4 +73,17 @@ for profile in a00 a02 ws0010; do
     "$root/code/builtin_font.cpp" \
     -o "$profile_out"
   "$profile_out"
+
+  clang++ -std=c++17 -Wall -Wextra -Werror \
+    "${sanitizer_flags[@]}" \
+    -DCONFIG -DARDUINO=100 \
+    "${profile_flags[@]}" \
+    -include "$root/tests/ui_display_shim/panel.hpp" \
+    -I"$root/code" \
+    -I"$root/tests/ui_display_shim" \
+    -I"$root/tests/mk_math_shim" \
+    "$root/tests/lcd_ru_m8_self_test.cpp" \
+    "$root/code/builtin_font.cpp" \
+    -o "$lcd_ru_out"
+  "$lcd_ru_out"
 done

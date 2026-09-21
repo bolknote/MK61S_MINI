@@ -269,13 +269,13 @@ class class_LCD_fonts {
       0b00000
     },
     { // cycle arrow
-      0b11110,
-      0b01101,
-      0b10101,
+      0b00110,
+      0b01001,
+      0b10000,
+      0b10000,
       0b10001,
-      0b10101,
-      0b10110,
-      0b01111,
+      0b01001,
+      0b00111,
       0b00000
     },
     { // x superscript
@@ -315,7 +315,7 @@ class class_LCD_fonts {
     {0b01110, 0b10101, 0b10101, 0b11111, 0b10101, 0b10101, 0b01110, 0b00000},
     {0b00001, 0b00010, 0b11111, 0b00100, 0b11111, 0b01000, 0b10000, 0b00000},
     {0b00001, 0b00010, 0b00010, 0b10100, 0b01000, 0b00000, 0b00000, 0b00000},
-    {0b11110, 0b01101, 0b10101, 0b10001, 0b10101, 0b10110, 0b01111, 0b00000},
+    {0b00110, 0b01001, 0b10000, 0b10000, 0b10001, 0b01001, 0b00111, 0b00000},
     {0b00000, 0b00000, 0b01010, 0b00100, 0b01010, 0b00000, 0b00000, 0b00000}
    };
 #elif !defined(MK61_DISPLAY_UC1609)
@@ -360,8 +360,11 @@ class class_LCD_fonts {
 #endif
   public:
 #if defined(MK61_OLED1602_WS0010)
+    void loadWs0010Slot(u8 slot, MK61Display& display) const {
+      if(slot < 8) display.createChar(slot, (uint8_t*) fixed_glyphs[slot]);
+    }
     void loadWs0010Slot(u8 slot) const {
-      if(slot < 8) main_lcd().createChar(slot, (uint8_t*) fixed_glyphs[slot]);
+      loadWs0010Slot(slot, main_lcd());
     }
 #endif
 
