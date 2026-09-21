@@ -27,6 +27,16 @@ for screen in 0 1; do
   "${out}_catalog"
 done
 
+# F411 with USB Screen enables the largest help catalog. Keep its two-page
+# budget covered by fast host tests, before the full release matrix runs.
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" \
+  -DSTM32F411xE -DMK61_ENABLE_USB_SCREEN=1 \
+  -I"$root/tests/mk_math_shim" -I"$root/code" \
+  "$root/tests/terminal_catalog_self_test.cpp" \
+  "$root/code/terminal_catalog.cpp" -o "${out}_catalog_f411_usb_screen"
+"${out}_catalog_f411_usb_screen"
+
 # Product F401 omits service-only diagnostic commands. Characterize that exact
 # conditional catalog as well.
 clang++ -std=c++17 -Wall -Wextra -Werror \
