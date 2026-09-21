@@ -6,9 +6,14 @@ import os
 from pathlib import Path
 import struct
 import subprocess
+import sys
 import tempfile
 import unittest
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'tools'))
+import build_system_app_bundle as bundle
+from m8_codec import encode as encode_m8
+from hil_c6_system_bootstrap import bundle_payload
 spec = importlib.util.spec_from_file_location('help_export', ROOT/'tools/.mk61-app/build_terminal_help.py')
 export = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(export)
@@ -57,6 +62,26 @@ class HelpTest(unittest.TestCase):
                                   (b'\x98\0',0)):
                 elf.write_bytes(elf_metadata(content,flags))
                 with self.assertRaises(ValueError): export.build(elf, root)
+
+    def test_usb_bundle_text_round_trips_through_m8(self):
+        # The ELF extractor emits internal M8, while the USB FAT boundary must
+        # receive UTF-8; terminal fsput needs the original M8 bytes again.
+        body = b'A'*1500 + b'\n' + encode_m8('Привет →') + b'B'*100
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            elf = root/'resident.elf'
+            elf.write_bytes(elf_metadata(body+b'\0'))
+            export.build(elf, root)
+            internal = [(root/f'HELP{i}.TXT').read_bytes() for i in (0, 1)]
+            self.assertTrue(internal[1])
+            bundle.prepare_usb_text_resources(root)
+            for page in (0, 1):
+                name = f'HELP{page}.TXT'
+                host = (root/name).read_bytes()
+                self.assertEqual(encode_m8(host.decode('utf-8')), internal[page])
+                self.assertEqual(bundle_payload(root, name), internal[page])
+            self.assertIn('Привет →'.encode('utf-8'),
+                          (root/'HELP1.TXT').read_bytes())
 
     def test_reader(self):
         source = (ROOT/'code/terminal.cpp').read_text()

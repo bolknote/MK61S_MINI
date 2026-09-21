@@ -11,6 +11,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from m8_codec import decode as decode_m8
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = (
@@ -56,6 +58,15 @@ def boolean(value: str) -> bool:
     if value not in ("0", "1"):
         raise argparse.ArgumentTypeError("expected 0 or 1")
     return value == "1"
+
+
+def prepare_usb_text_resources(stage: Path) -> None:
+    # The ELF metadata is M8 because C6 and the terminal use M8 internally.
+    # /System in a distribution bundle is copied through the USB FAT volume,
+    # whose text-file boundary is UTF-8. C6 converts it back to M8 on eject.
+    for name in ("HELP0.TXT", "HELP1.TXT"):
+        path = stage / name
+        path.write_bytes(decode_m8(path.read_bytes()).encode("utf-8"))
 
 
 def build(args: argparse.Namespace) -> dict:
@@ -114,6 +125,7 @@ def build(args: argparse.Namespace) -> dict:
 
         run([sys.executable, ROOT / "tools/.mk61-app/build_terminal_help.py",
              "--resident-elf", resident, "--output-dir", stage])
+        prepare_usb_text_resources(stage)
         built += ["HELP0.TXT", "HELP1.TXT"]
 
         # Replace only files owned by this builder. Other /System files, if

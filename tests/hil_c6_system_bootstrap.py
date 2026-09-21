@@ -12,6 +12,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import re
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+from m8_codec import encode as encode_m8
 
 from hil_multi_device_identity import parse_identity, require_unchanged
 from hil_rtc_alarm import Port
@@ -32,6 +36,14 @@ CANONICAL_FILES = (
     "MARKDOWN.APP",
 )
 CHUNK_SIZE = 48
+
+
+def bundle_payload(bundle: Path, name: str) -> bytes:
+    payload = (bundle / name).read_bytes()
+    if name in ("HELP0.TXT", "HELP1.TXT"):
+        # Bundle text is UTF-8 for USB MSC; fsput bypasses USB conversion.
+        return encode_m8(payload.decode("utf-8"))
+    return payload
 
 
 def write_file(port: Port, remote_path: str, payload: bytes) -> None:
@@ -115,7 +127,7 @@ def main() -> int:
             )
 
         for name in CANONICAL_FILES:
-            payload = (args.bundle / name).read_bytes()
+            payload = bundle_payload(args.bundle, name)
             target = f"/System/{name}"
             print(f"upload {name}: {len(payload)} bytes", flush=True)
             write_file(port, target, payload)
