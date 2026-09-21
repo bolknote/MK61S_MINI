@@ -20,9 +20,12 @@ formerly reserved in its six-byte INFO record; new clients accept zero there
 from older residents and then use the legacy `size` value.
 
 The repertoire is ASCII, Russian including Ё/ё, degree, four arrows, ellipsis
-and ≤/≥. Ark contains every glyph except ≤/≥; firmware deliberately aliases
-those two to the corresponding ASCII comparison signs and marks the result as
-a fallback. Unknown characters still become `?`.
+and ≤/≥. Ark does not draw ≤/≥, so the low-level atlas API marks those two
+ASCII comparisons as fallbacks. The display renderer replaces that fallback
+with an exact resident 5×8 sign. The same resident fallback covers the other
+12 private M8 symbols absent from Ark; they may look smaller than native Ark
+letters but never become `?`. Unrelated unsupported characters still become
+`?`.
 
 ## Reproduction
 

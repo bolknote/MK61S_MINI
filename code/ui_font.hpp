@@ -31,7 +31,8 @@ using Glyph = font_glyph::Glyph;
 // Invalid enum values normalize to Ark Pixel / 12 pixels.
 Metrics metrics(Face face);
 // The reviewed repertoire includes ASCII, Russian, UI symbols and explicit
-// ASCII-shaped fallbacks for ≤/≥. False means glyph() substitutes '?'.
+// The raw atlas uses ASCII-shaped fallbacks for ≤/≥. The display renderer
+// substitutes exact 5x8 signs for private M8 codepoints with this flag.
 bool supports(Face face, uint32_t codepoint);
 Glyph glyph(Face face, uint32_t codepoint);
 
