@@ -41,16 +41,25 @@ enum Segment : u8 {
   SEG_G = 1U << 6,
 };
 
-// The supplied 16x35r strike: twelve 16-pixel cells exactly occupy the
-// 192-pixel glass. Its 35 rows fit below the two status pages (y=24..58).
+// The supplied 16x35r strike has a 27-pixel advance. Twelve places need a
+// 16-pixel advance on the 192-pixel glass, so scale BOTH coordinates by
+// 16/27. The source bitmap itself remains unchanged; its proportions and
+// intended glyph-to-advance ratio are retained as closely as pixels allow.
 // Authors: klmstlk and SuraTech58 (Dmitry). BSD-2-Clause.
-// The header's FONT_STEP=27 is for standalone text; the calculator's fixed
-// twelve-place display requires a 16-pixel pitch, without scaling the raster.
-static constexpr i16 DIGIT_TOP = 24;
 static constexpr i16 DIGIT_PITCH = 16;
-static constexpr u8 DIGIT_HEIGHT = 35;
+static constexpr u8 SOURCE_STEP = 27;
+static constexpr u8 SOURCE_WIDTH = 16;
+static constexpr u8 SOURCE_HEIGHT = 35;
+static constexpr u8 DIGIT_WIDTH = 1 +
+    ((SOURCE_WIDTH - 1) * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP;
+static constexpr u8 DIGIT_HEIGHT = 1 +
+    ((SOURCE_HEIGHT - 1) * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP;
+static constexpr u8 DIGIT_INSET = (DIGIT_PITCH - DIGIT_WIDTH) / 2;
+static constexpr i16 DIGIT_TOP = 24 + (SOURCE_HEIGHT - DIGIT_HEIGHT) / 2;
 static constexpr u8 DIGIT_COUNT = 12;
 static_assert(DIGIT_COUNT * DIGIT_PITCH == WIDTH, "calculator digits must fill the glass");
+static_assert(DIGIT_WIDTH == 10 && DIGIT_HEIGHT == 21,
+              "16x35r must keep its 27-pixel advance proportions");
 static_assert(DIGIT_TOP + DIGIT_HEIGHT <= HEIGHT, "calculator digits must fit vertically");
 
 u8 segments(u16 token) {
@@ -86,7 +95,7 @@ u8 segments(u16 token) {
 // Pixel-exact segment rows from the supplied mk61_font16x35r.h. MSB is the
 // leftmost pixel; the eighth plane is the decimal point. Keep segment planes
 // rather than eleven precomposed glyphs so E, Г, L, C and minus share them.
-static constexpr u16 SEGMENT_ROWS[8][DIGIT_HEIGHT] = {
+static constexpr u16 SEGMENT_ROWS[8][SOURCE_HEIGHT] = {
   { 0x07E0,0x0FE0,0x1FC0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
   { 0,0,0x0002,0x0006,0x000E,0x000E,0x001E,0x001E,0x001C,0x003C,0x003C,0x001C,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
   { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0008,0x0018,0x0070,0x0070,0x00F0,0x00F0,0x00F0,0x00E0,0x00E0,0x0060,0x0060,0,0,0,0,0,0,0 },
@@ -98,16 +107,21 @@ static constexpr u16 SEGMENT_ROWS[8][DIGIT_HEIGHT] = {
 };
 
 void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
-  for(u8 row = 0; row < DIGIT_HEIGHT; ++row) {
-    const i16 y = DIGIT_TOP + row;
+  for(u8 row = 0; row < SOURCE_HEIGHT; ++row) {
+    const i16 y = DIGIT_TOP +
+        (row * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP;
     if((u8) (y / PAGE_HEIGHT) != page) continue;
     u16 pixels = dot ? SEGMENT_ROWS[7][row] : 0;
     for(u8 segment = 0; segment < 7; ++segment) {
       if(mask & (1U << segment)) pixels |= SEGMENT_ROWS[segment][row];
     }
     const u8 page_bit = (u8) (1U << (y & 7));
-    for(u8 col = 0; col < 16; ++col) {
-      if(pixels & ((u16) 0x8000U >> col)) out[x + col] |= page_bit;
+    for(u8 col = 0; col < SOURCE_WIDTH; ++col) {
+      if(pixels & ((u16) 0x8000U >> col)) {
+        const u8 scaled_col = (u8)
+            ((col * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP);
+        out[x + DIGIT_INSET + scaled_col] |= page_bit;
+      }
     }
   }
 }
@@ -116,6 +130,7 @@ void drawArrowPage(u8* out, u8 page, i16 x) {
   static constexpr u8 PAGE4[10] = {
     0x00, 0x38, 0x38, 0x38, 0x38, 0x38, 0x39, 0xBA, 0x54, 0x38
   };
+  x += (DIGIT_PITCH - sizeof(PAGE4)) / 2;
   if(page == 4) {
     for(u8 col = 0; col < sizeof(PAGE4); ++col) out[x + col] |= PAGE4[col];
   } else if(page == 5) {

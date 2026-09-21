@@ -64,11 +64,15 @@ builds contain no proportional UI tables and allocate no RAM for them.
 ## Calculator segment raster
 
 The fixed calculator face on UC1609 uses the contributor-supplied
-`mk61_font16x35r.h` segment raster, unchanged at 16 by 35 pixels. Twelve
-16-pixel cells fit the 192-pixel panel; the raster occupies rows 24 through 58
-of its 64 rows. The source header's standalone 27-pixel advance is not used in
-this fixed twelve-place display. This face is independent of the selectable UI
-fonts above and is compiled for both F401 and F411 UC1609 builds.
+`mk61_font16x35r.h` segment raster, retaining the original 16 by 35 masks
+unchanged in the source.
+The source specifies a 27-pixel advance, which cannot fit twelve places on a
+192-pixel panel. The renderer therefore scales both coordinates by 16/27,
+giving a roughly 10 by 21 pixel glyph within each 16-pixel cell. This keeps
+the source proportions and its intended glyph-to-advance ratio, while all
+twelve places and the rightmost decimal point remain visible. This face is
+independent of the selectable UI fonts above and is compiled for both F401
+and F411 UC1609 builds.
 
 The contributors are klmstlk and SuraTech58 (Dmitry). The license is
 BSD-2-Clause. Its terms and this attribution are shipped in

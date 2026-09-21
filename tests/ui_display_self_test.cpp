@@ -541,12 +541,12 @@ void test_fixed_calculator_face() {
   expected = without_clock;
   expectFrame(expected);
 
-  // Twelve 16-pixel cells occupy the full 192-pixel glass. The 35-pixel
-  // strike ends at y=58, including the decimal point on the last page.
-  // Slot 2 owns the point, slot 3 begins at x=48, the exponent sign at x=144.
-  assert(framePixel(expected, 46, 52) && framePixel(expected, 45, 58));
-  assert(framePixel(expected, 53, 24));
-  assert(framePixel(expected, 149, 37) && !framePixel(expected, 148, 37));
+  // The original 16x35 pixels and 27-pixel advance are scaled together by
+  // 16/27. Twelve cells still fit, but each glyph is 10x21 with a six-pixel
+  // gap; the rightmost decimal point remains inside the glass.
+  assert(framePixel(expected, 43, 48) && framePixel(expected, 43, 51));
+  assert(framePixel(expected, 54, 31));
+  assert(framePixel(expected, 149, 39) && !framePixel(expected, 148, 39));
 
   // Preserve the asymmetric chamfers and widening of the supplied raster;
   // replacing it with a generic straight seven-segment face is a regression.
@@ -555,20 +555,15 @@ void test_fixed_calculator_face() {
   writeGridLine(one, 1, 0, "1");
   Frame straight{};
   calculator_face::renderFrame(one, straight.data());
-  assert(framePixel(straight, 14, 26));
-  assert(!framePixel(straight, 13, 26));
-  assert(!framePixel(straight, 15, 26));
-  assert(framePixel(straight, 13, 27));
-  assert(framePixel(straight, 14, 27));
-  assert(!framePixel(straight, 12, 27));
-  assert(framePixel(straight, 12, 29));
-  assert(framePixel(straight, 14, 29));
-  assert(!framePixel(straight, 11, 29));
-  assert(!framePixel(straight, 15, 29));
-  assert(framePixel(straight, 9, 44));
-  assert(framePixel(straight, 11, 44));
-  assert(!framePixel(straight, 8, 44));
-  assert(!framePixel(straight, 12, 44));
+  assert(framePixel(straight, 11, 32));
+  assert(!framePixel(straight, 10, 32));
+  assert(framePixel(straight, 10, 34));
+  assert(framePixel(straight, 11, 34));
+  assert(!framePixel(straight, 9, 34));
+  assert(framePixel(straight, 8, 43));
+  assert(framePixel(straight, 10, 43));
+  assert(!framePixel(straight, 7, 43));
+  assert(!framePixel(straight, 11, 43));
 
   // Г and L are full-height derivatives of E. In particular, Г must retain
   // E's lower-left segment and L must retain its upper-left segment.
@@ -580,12 +575,12 @@ void test_fixed_calculator_face() {
   letters.writeCodepoint('L');
   Frame letter_frame{};
   calculator_face::renderFrame(letters, letter_frame.data());
-  assert(framePixel(letter_frame, 16 + 5, 24));  // Г: top
-  assert(framePixel(letter_frame, 16 + 0, 44));  // Г: lower stem
-  assert(!framePixel(letter_frame, 16 + 0, 47)); // Г: no bottom
-  assert(!framePixel(letter_frame, 32 + 5, 24)); // L: no top
-  assert(framePixel(letter_frame, 32 + 3, 29));  // L: upper stem
-  assert(framePixel(letter_frame, 32 + 0, 49));  // L: bottom
+  assert(framePixel(letter_frame, 16 + 6, 31));  // Г: top
+  assert(framePixel(letter_frame, 16 + 3, 43));  // Г: lower stem
+  assert(!framePixel(letter_frame, 16 + 3, 46)); // Г: no bottom
+  assert(!framePixel(letter_frame, 32 + 6, 31)); // L: no top
+  assert(framePixel(letter_frame, 32 + 4, 35));  // L: upper stem
+  assert(framePixel(letter_frame, 32 + 3, 46));  // L: bottom
 
   text_screen::Grid without_dot;
   without_dot.reset(6);
@@ -602,7 +597,7 @@ void test_fixed_calculator_face() {
     u8 bits = (u8) (plain[i] ^ dotted[i]);
     while(bits) { changed_bits += bits & 1U; bits >>= 1U; }
   }
-  assert(changed_bits == 18);
+  assert(changed_bits == 8);
 
   // A decimal after the twelfth (rightmost) digit still belongs to that
   // digit, and its last pixel must fit exactly inside the 192x64 framebuffer.
@@ -611,10 +606,22 @@ void test_fixed_calculator_face() {
   writeGridLine(rightmost, 1, 0, "012345678901.");
   Frame rightmost_frame{};
   calculator_face::renderFrame(rightmost, rightmost_frame.data());
-  assert(framePixel(rightmost_frame, 176 + 14, 26));
-  assert(framePixel(rightmost_frame, 191, 58));
+  assert(framePixel(rightmost_frame, 176 + 11, 32));
+  assert(framePixel(rightmost_frame, 188, 51));
   for(unsigned x = 0; x < 192; ++x) {
-    assert(!framePixel(rightmost_frame, x, 59));
+    assert(!framePixel(rightmost_frame, x, 52));
+  }
+  for(unsigned slot = 0; slot < 12; ++slot) {
+    for(unsigned x = slot * 16; x < slot * 16 + 3; ++x) {
+      for(unsigned y = 31; y <= 51; ++y) {
+        assert(!framePixel(rightmost_frame, x, y));
+      }
+    }
+    for(unsigned x = slot * 16 + 13; x < slot * 16 + 16; ++x) {
+      for(unsigned y = 31; y <= 51; ++y) {
+        assert(!framePixel(rightmost_frame, x, y));
+      }
+    }
   }
 
 #if MK61_ENABLE_USB_SCREEN
