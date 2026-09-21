@@ -1635,12 +1635,10 @@ void MK61Display::writeCodepoint(u16 codepoint) {
     return;
   }
 #endif
-#if defined(MK61_OLED1602_WS0010)
-  u8 value = 0;
-  write(ws0010_charset::unicodeToByte(codepoint, value) ? value : (u8) '?');
-#else
-  write(codepoint <= 0xFF ? (u8) codepoint : (u8) '?');
-#endif
+  u8 value = '?';
+  if(!lcd_ru::rom_char(codepoint, value) &&
+     !lcd_ru::fallback_char(codepoint, value)) value = '?';
+  write(value);
 }
 
 bool MK61Display::installPreparedFont(const u8*, u16) { return false; }
