@@ -24,7 +24,8 @@ class SPIFlash {
     }
 
     bool readByteArray(uint32_t address, uint8_t* out, size_t len) const {
-      if(out == NULL || address > actual_capacity || len > actual_capacity - address) return false;
+      if(out == NULL || address > actual_capacity || len > actual_capacity - address ||
+         failsRead()) return false;
       read_operations++;
       read_bytes += len;
       memcpy(out, storage + address, len);
@@ -103,7 +104,7 @@ class SPIFlash {
     }
 
     bool rawRead(uint32_t address, uint8_t* out, size_t len) const {
-      if(out == NULL || actual_capacity == 0) return false;
+      if(out == NULL || actual_capacity == 0 || failsRead()) return false;
       read_operations++;
       read_bytes += len;
       for(size_t i = 0; i < len; i++) out[i] = storage[(address + (uint32_t) i) % actual_capacity];
@@ -138,6 +139,10 @@ class SPIFlash {
       fail_after_operations = successful_operations;
     }
 
+    static void failReadsAfterOperations(int32_t successful_operations) {
+      fail_reads_after_operations = successful_operations;
+    }
+
     static void failRange(uint32_t begin, uint32_t end) {
       fail_begin = begin;
       fail_end = end;
@@ -147,6 +152,7 @@ class SPIFlash {
       fail_begin = MAX_CAPACITY;
       fail_end = MAX_CAPACITY;
       fail_after_operations = -1;
+      fail_reads_after_operations = -1;
     }
 
     static void corrupt(uint32_t address, uint8_t value) {
@@ -154,6 +160,13 @@ class SPIFlash {
     }
 
   private:
+    static bool failsRead(void) {
+      if(fail_reads_after_operations < 0) return false;
+      if(fail_reads_after_operations == 0) return true;
+      fail_reads_after_operations--;
+      return false;
+    }
+
     static bool fails(uint32_t address, size_t len) {
       const uint32_t end = address + (uint32_t) len;
       if(address < fail_end && end > fail_begin) return true;
@@ -176,6 +189,7 @@ class SPIFlash {
     static inline uint32_t read_operations;
     static inline uint64_t read_bytes;
     static inline int32_t fail_after_operations = -1;
+    static inline int32_t fail_reads_after_operations = -1;
 };
 
 #endif

@@ -304,6 +304,12 @@ bool vfat_stage_restore_full(void);
 void vfat_stage_unlock(void);
 
 #if defined(PROGRAM_STORE_HOST_TEST)
+struct StageIndexStats {
+  u64 lookups;
+  u64 probes;
+};
+void test_reset_stage_index_stats(void);
+StageIndexStats test_stage_index_stats(void);
 bool test_file_storage_info(u16 id, u16& stored_len,
                             bool& large, bool& zx0);
 bool test_file_record_location(u16 id, u32& sector, u16& record_len);

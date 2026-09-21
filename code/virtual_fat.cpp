@@ -107,10 +107,10 @@ struct FileChain {
 enum CacheState : u8 {
   CACHE_EMPTY = 0,
   CACHE_CLEAN = 1,
-  CACHE_DIRTY = 2,
-  // Принято напрямую из USB без чтения SPI. Сравнение с постоянными данными
-  // намеренно отложено до вытеснения или синхронизации.
-  CACHE_UNCHECKED = 3
+  // Новое значение ещё не сравнивалось с постоянными данными: пакет пришёл
+  // напрямую из USB либо перезаписал грязный слот. Проверим при вытеснении
+  // или синхронизации.
+  CACHE_UNCHECKED = 2
 };
 
 struct CacheEntry {
@@ -1077,15 +1077,13 @@ static bool read_persistent_sector(u32 lba, u8* output) {
 static bool persist_cache_slot(u8 slot) {
   SessionState& state = session();
   CacheEntry& entry = state.cache[slot];
-  if(entry.state != CACHE_DIRTY && entry.state != CACHE_UNCHECKED) return true;
-  if(entry.state == CACHE_UNCHECKED) {
-    u8 persistent[SECTOR_SIZE];
-    if(!read_persistent_sector(entry.lba, persistent)) return false;
-    if(memcmp(persistent, cache_bytes(slot), SECTOR_SIZE) == 0) {
-      entry.state = CACHE_CLEAN;
-      touch_cache(slot);
-      return true;
-    }
+  if(entry.state != CACHE_UNCHECKED) return true;
+  u8 persistent[SECTOR_SIZE];
+  if(!read_persistent_sector(entry.lba, persistent)) return false;
+  if(memcmp(persistent, cache_bytes(slot), SECTOR_SIZE) == 0) {
+    entry.state = CACHE_CLEAN;
+    touch_cache(slot);
+    return true;
   }
   if(!program_store::vfat_stage_write(entry.lba, cache_bytes(slot))) return false;
   entry.state = CACHE_CLEAN;
@@ -1110,7 +1108,7 @@ static int oldest_dirty_cache(void) {
   int oldest = -1;
   for(u8 slot = 0; slot < g_cache_slots; slot++) {
     const CacheState cache_state = state.cache[slot].state;
-    if(cache_state != CACHE_DIRTY && cache_state != CACHE_UNCHECKED) continue;
+    if(cache_state != CACHE_UNCHECKED) continue;
     if(oldest < 0 || state.cache[slot].age < state.cache[(u8) oldest].age) {
       oldest = slot;
     }
@@ -2262,61 +2260,6 @@ class ScopedCommitScratch {
     u8 saved_extra_slots_;
 };
 
-static bool cache_write_sector(u32 lba, const u8* data) {
-  const u32 key = canonical_lba(lba);
-  int found = cache_index(key);
-  u8 slot = 0;
-  if(found >= 0) {
-    slot = (u8) found;
-  } else {
-    if(!prepare_cache_slot(slot)) return false;
-    CacheEntry& entry = session().cache[slot];
-    if(!read_persistent_sector(lba, cache_bytes(slot))) {
-      entry.state = CACHE_EMPTY;
-      return false;
-    }
-    entry.lba = key;
-    entry.state = CACHE_CLEAN;
-  }
-
-  SessionState& state = session();
-  CacheEntry& entry = state.cache[slot];
-  u8* const bytes = cache_bytes(slot);
-  if(memcmp(bytes, data, SECTOR_SIZE) == 0) {
-    touch_cache(slot);
-    return true;
-  }
-
-  if(entry.state == CACHE_UNCHECKED) {
-    // Быстрая запись USB ещё не читала постоянный сектор. Сохраняем этот факт
-    // при перезаписях: синхронизация или вытеснение сравнит только итоговые байты.
-    memcpy(bytes, data, SECTOR_SIZE);
-    touch_cache(slot);
-    return true;
-  }
-
-  if(entry.state == CACHE_DIRTY) {
-    // Хост может вернуть грязный блок к постоянному значению. Перечитываем его,
-    // прежде чем решать, нужно ли этому слоту добавление записи в NOR.
-    if(!read_persistent_sector(lba, bytes)) {
-      // Оставляем последние байты хоста грязными для восстановления повтором или синхронизацией.
-      memcpy(bytes, data, SECTOR_SIZE);
-      touch_cache(slot);
-      return false;
-    }
-    if(memcmp(bytes, data, SECTOR_SIZE) == 0) {
-      entry.state = CACHE_CLEAN;
-      touch_cache(slot);
-      return true;
-    }
-  }
-
-  memcpy(bytes, data, SECTOR_SIZE);
-  entry.state = CACHE_DIRTY;
-  touch_cache(slot);
-  return true;
-}
-
 static bool flush_write_cache_internal(void) {
   if(!discard_known_sidecars()) return false;
   while(true) {
@@ -2327,11 +2270,12 @@ static bool flush_write_cache_internal(void) {
 }
 
 static bool packet_contains_key(u32 lba, u16 count, u32 key) {
-  for(u16 index = 0; index < count; index++) {
-    const u32 current_lba = lba + index;
-    if(current_lba != 0 && canonical_lba(current_lba) == key) return true;
-  }
-  return false;
+  if(key >= lba && key - lba < count) return true;
+  const u32 fat = fat_start();
+  const u32 fat_sectors = geometry().fat_sectors;
+  if(key < fat || key - fat >= fat_sectors) return false;
+  const u32 mirror = key + fat_sectors;
+  return mirror >= lba && mirror - lba < count;
 }
 
 static int fast_reusable_cache_slot(u32 lba, u16 count) {
@@ -2379,6 +2323,68 @@ static bool fast_packet_fits(u32 lba, u16 count) {
     if(!already_needed && ++needed > reusable) return false;
   }
   return true;
+}
+
+static bool reserve_packet_cache_slots(u32 lba, u16 count) {
+  // До первого изменения пакета освободим все нужные слоты. Если запись
+  // вытесняемого старого сектора в журнал откажет, новый пакет останется
+  // целиком непринятым, а уже подтверждённые старые данные — в RAM или NOR.
+  u8 needed = 0;
+  for(u16 index = 0; index < count; index++) {
+    const u32 current_lba = lba + index;
+    if(current_lba == 0 || sidecar_data_lba(current_lba) ||
+       cache_index(current_lba) >= 0) continue;
+    const u32 key = canonical_lba(current_lba);
+    // Только вторая копия FAT может совпасть с более ранним LBA пакета.
+    if(key < current_lba && key >= lba) continue;
+    needed++;
+  }
+
+  SessionState& state = session();
+  for(u8 slot = 0; slot < g_cache_slots; slot++) {
+    if(state.cache[slot].state == CACHE_EMPTY && needed != 0) needed--;
+  }
+  while(needed != 0) {
+    int victim = -1;
+    for(u8 slot = 0; slot < g_cache_slots; slot++) {
+      const CacheEntry& entry = state.cache[slot];
+      if(entry.state == CACHE_EMPTY ||
+         packet_contains_key(lba, count, entry.lba)) continue;
+      if(entry.state == CACHE_CLEAN) {
+        victim = slot;
+        break; // Любой чистый слот дешевле вытеснения грязного.
+      }
+      if(victim < 0 || entry.age < state.cache[(u8) victim].age) victim = slot;
+    }
+    if(victim < 0 || !persist_cache_slot((u8) victim)) return false;
+    state.cache[(u8) victim].state = CACHE_EMPTY;
+    needed--;
+  }
+  return true;
+}
+
+static void write_reserved_packet_sector(u32 lba, const u8* data) {
+  int found = cache_index(lba);
+  if(found < 0) {
+    for(u8 slot = 0; slot < g_cache_slots; slot++) {
+      if(session().cache[slot].state == CACHE_EMPTY) {
+        found = slot;
+        break;
+      }
+    }
+    if(found < 0) __builtin_trap(); // reserve_packet_cache_slots() гарантирует слот.
+    CacheEntry& entry = session().cache[(u8) found];
+    entry.lba = canonical_lba(lba);
+    memcpy(cache_bytes((u8) found), data, SECTOR_SIZE);
+    entry.state = CACHE_UNCHECKED;
+  } else {
+    u8* const bytes = cache_bytes((u8) found);
+    if(memcmp(bytes, data, SECTOR_SIZE) != 0) {
+      memcpy(bytes, data, SECTOR_SIZE);
+      session().cache[(u8) found].state = CACHE_UNCHECKED;
+    }
+  }
+  touch_cache((u8) found);
 }
 
 static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
@@ -2472,7 +2478,7 @@ u8 dirty_cache_sectors(void) {
   u8 count = 0;
   for(u8 slot = 0; slot < g_cache_slots; slot++) {
     const CacheState state = g_session->cache[slot].state;
-    if(state == CACHE_DIRTY || state == CACHE_UNCHECKED) count++;
+    if(state == CACHE_UNCHECKED) count++;
   }
   return count;
 }
@@ -2505,7 +2511,13 @@ bool try_write_cached_sectors(u32 lba, const u8* data, u16 count) {
 bool write_cached_sectors(u32 lba, const u8* data, u16 count) {
   if((data == NULL && count != 0) || !program_store::ready() ||
      !ensure_session() || lba > sector_count() ||
-     (u32) count > sector_count() - lba) return false;
+     (u32) count > sector_count() - lba || count > g_cache_slots) return false;
+
+  // Закончим обработку старого пакета до изменения нового. Обычный BOT
+  // пакет не больше cache capacity; его отложенный путь резервирует все
+  // слоты до первого memcpy, как и быстрый путь в USB callback.
+  if(!discard_known_sidecars()) return false;
+  if(!reserve_packet_cache_slots(lba, count)) return false;
   for(u16 i = 0; i < count; i++) {
     const u32 current_lba = lba + i;
     const u8* const block = data + (u32) i * SECTOR_SIZE;
@@ -2513,13 +2525,17 @@ bool write_cached_sectors(u32 lba, const u8* data, u16 count) {
     if(candidate && sidecar_filter_enabled()) g_sidecar_candidate_seen = true;
     if(current_lba == 0) continue;
     if(sidecar_data_lba(current_lba)) continue;
-    if(!cache_write_sector(current_lba, block)) return false;
+    write_reserved_packet_sector(current_lba, block);
     if((candidate && sidecar_filter_enabled()) || (g_sidecar_candidate_seen &&
                      directory_metadata_lba(current_lba))) {
       g_sidecar_scan_pending = true;
     }
   }
-  return discard_known_sidecars();
+  // Это write-back cache (SCSI WCE=1): если последующая фильтрация sidecar
+  // встретила временный сбой I/O, пакет уже принят. Оставляем scan_pending и
+  // возвращаем ошибку при sync/eject, если повторная попытка тоже не удалась.
+  (void) discard_known_sidecars();
+  return true;
 }
 
 bool flush_write_cache(void) {

@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <chrono>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <vector>
 
@@ -1279,9 +1281,12 @@ static void test_write_cache_coalesces_and_evicts_lru(void) {
   assert(virtual_fat::read_sector(first_lba, readback));
   assert(memcmp(readback, data, sizeof(data)) == 0);
 
-  // Возврат к постоянному нулевому блоку полностью отменяет грязную запись.
+  // Возврат к постоянному нулевому блоку отменяет грязную запись при flush:
+  // повторная запись не рискует затереть уже принятые байты чтением NOR.
   memset(data, 0, sizeof(data));
   assert(virtual_fat::write_cached_sectors(first_lba, data, 1));
+  assert(virtual_fat::dirty_cache_sectors() == 1);
+  assert(virtual_fat::flush_write_cache());
   assert(virtual_fat::dirty_cache_sectors() == 0);
   assert(program_store::vfat_stage_count() == 0);
 
@@ -1304,6 +1309,213 @@ static void test_write_cache_coalesces_and_evicts_lru(void) {
   assert(virtual_fat::flush_write_cache());
   assert(virtual_fat::dirty_cache_sectors() == 0);
   assert(program_store::vfat_stage_count() == (u16) capacity + 1);
+}
+
+static void test_dirty_rewrite_defers_failed_comparison_until_sync(void) {
+  fresh();
+  const Layout fs = layout();
+  const u32 lba = cluster_lba(fs, 300);
+  u8 persisted[512] = {0x11};
+  u8 previous[512] = {0x22};
+  u8 newest[512] = {0x33};
+  u8 readback[512] = {};
+
+  // The first value is in persistent staging; the second was acknowledged to
+  // the host but is still dirty in RAM. Rewriting it must not read NOR or
+  // report a failed packet after replacing those already acknowledged bytes.
+  assert(virtual_fat::write_sector(lba, persisted));
+  assert(virtual_fat::write_cached_sectors(lba, previous, 1));
+  SPIFlash::failReadsAfterOperations(0);
+  assert(virtual_fat::write_cached_sectors(lba, newest, 1));
+  assert(!virtual_fat::flush_write_cache());
+  SPIFlash::clearFailure();
+
+  assert(virtual_fat::read_sector(lba, readback));
+  assert(memcmp(readback, newest, sizeof(readback)) == 0);
+  assert(virtual_fat::flush_write_cache());
+  assert(program_store::vfat_stage_read(lba, readback));
+  assert(memcmp(readback, newest, sizeof(readback)) == 0);
+}
+
+static void test_failed_deferred_packet_is_not_partially_accepted(void) {
+  bool saw_failure_after_first_eviction = false;
+  for(i32 fail_after = 0; fail_after < 10; fail_after++) {
+    fresh();
+    const Layout fs = layout();
+    const u32 first_lba = cluster_lba(fs, 600);
+    const u8 capacity = virtual_fat::write_cache_capacity();
+    u8 data[512] = {};
+    u8 readback[512] = {};
+    for(u8 index = 0; index < capacity; index++) {
+      data[0] = (u8) (index + 1);
+      assert(virtual_fat::write_cached_sectors(first_lba + index, data, 1));
+    }
+
+    u8 packet[2 * 512] = {};
+    packet[0] = 0xA1;
+    packet[512] = 0xA2;
+    SPIFlash::failAfterOperations(fail_after);
+    const bool accepted = virtual_fat::write_cached_sectors(
+        first_lba + capacity, packet, 2);
+    SPIFlash::clearFailure();
+    if(accepted) {
+      assert(program_store::vfat_stage_count() == 2);
+      for(u8 index = 0; index < 2; index++) {
+        assert(virtual_fat::read_sector(first_lba + capacity + index,
+                                        readback));
+        assert(readback[0] == packet[(u16) index * 512U]);
+      }
+      continue;
+    }
+    if(program_store::vfat_stage_count() == 1) {
+      saw_failure_after_first_eviction = true;
+    }
+
+    // Even if eviction of an older acknowledged sector reached staging, the
+    // rejected packet itself must not have modified either of its sectors.
+    for(u8 index = 0; index < 2; index++) {
+      assert(virtual_fat::read_sector(first_lba + capacity + index, readback));
+      assert(readback[0] == 0);
+      assert(virtual_fat::read_sector(first_lba + index, readback));
+      assert(readback[0] == (u8) (index + 1));
+    }
+    assert(virtual_fat::write_cached_sectors(first_lba + capacity,
+                                             packet, 2));
+    assert(virtual_fat::flush_write_cache());
+    for(u8 index = 0; index < 2; index++) {
+      assert(virtual_fat::read_sector(first_lba + capacity + index, readback));
+      assert(readback[0] == packet[(u16) index * 512U]);
+      assert(virtual_fat::read_sector(first_lba + index, readback));
+      assert(readback[0] == (u8) (index + 1));
+    }
+  }
+  assert(saw_failure_after_first_eviction);
+}
+
+static void test_failed_packet_preflight_read_keeps_old_dirty_sector(void) {
+  fresh();
+  const Layout fs = layout();
+  const u32 first_lba = cluster_lba(fs, 600);
+  const u8 capacity = virtual_fat::write_cache_capacity();
+  u8 persisted[512] = {0x10};
+  u8 dirty[512] = {0x20};
+  u8 readback[512] = {};
+  assert(virtual_fat::write_sector(first_lba, persisted));
+  assert(virtual_fat::try_write_cached_sectors(first_lba, dirty, 1));
+  for(u8 index = 1; index < capacity; index++) {
+    dirty[0] = (u8) (index + 1);
+    assert(virtual_fat::try_write_cached_sectors(first_lba + index,
+                                                 dirty, 1));
+  }
+
+  u8 packet[2 * 512] = {};
+  packet[0] = 0xA1;
+  packet[512] = 0xA2;
+  SPIFlash::failReadsAfterOperations(0);
+  assert(!virtual_fat::write_cached_sectors(first_lba + capacity,
+                                            packet, 2));
+  SPIFlash::clearFailure();
+
+  assert(virtual_fat::read_sector(first_lba, readback));
+  assert(readback[0] == 0x20);
+  for(u8 index = 0; index < 2; index++) {
+    assert(virtual_fat::read_sector(first_lba + capacity + index, readback));
+    assert(readback[0] == 0);
+  }
+}
+
+static void test_packet_larger_than_cache_is_rejected_whole(void) {
+  fresh();
+  const Layout fs = layout();
+  const u32 first_lba = cluster_lba(fs, 600);
+  const u16 count = (u16) virtual_fat::write_cache_capacity() + 1U;
+  std::vector<u8> packet((usize) count * 512U, 0xA5);
+  u8 readback[512] = {};
+  assert(!virtual_fat::write_cached_sectors(first_lba, packet.data(), count));
+  assert(virtual_fat::dirty_cache_sectors() == 0);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::read_sector(first_lba, readback));
+  assert(readback[0] == 0);
+  assert(virtual_fat::read_sector(first_lba + count - 1U, readback));
+  assert(readback[0] == 0);
+}
+
+static void test_deferred_packet_acceptance_does_not_touch_flash(void) {
+  fresh();
+  const Layout fs = layout();
+  const u32 lba = cluster_lba(fs, 600);
+  u8 packet[2 * 512] = {};
+  packet[0] = 0x41;
+  packet[512] = 0x42;
+  SPIFlash::resetOperationCounts();
+  SPIFlash::failReadsAfterOperations(0);
+  assert(virtual_fat::write_cached_sectors(lba, packet, 2));
+  SPIFlash::clearFailure();
+  assert(SPIFlash::readOperations() == 0);
+  assert(SPIFlash::mutationOperations() == 0);
+  assert(program_store::vfat_stage_count() == 0);
+  u8 readback[512] = {};
+  for(u8 index = 0; index < 2; index++) {
+    assert(virtual_fat::read_sector(lba + index, readback));
+    assert(readback[0] == packet[(u16) index * 512U]);
+  }
+}
+
+static void test_packet_with_both_fat_copies_reserves_unique_keys(void) {
+  fresh(512U * 1024U);
+  const Layout fs = layout();
+  const u8 capacity = virtual_fat::write_cache_capacity();
+  const u16 count = (u16) (2U * fs.fat_sectors);
+  assert(count <= capacity);
+  const u32 data_lba = cluster_lba(fs, 100);
+  u8 data[512] = {};
+  for(u8 index = 0; index < capacity; index++) {
+    data[0] = (u8) (index + 1U);
+    assert(virtual_fat::write_cached_sectors(data_lba + index, data, 1));
+  }
+
+  std::vector<u8> packet((usize) count * 512U, 0);
+  for(u16 index = 0; index < fs.fat_sectors; index++) {
+    packet[(usize) index * 512U] = (u8) (0xA0U + index);
+    packet[(usize) (index + fs.fat_sectors) * 512U] =
+        (u8) (0xB0U + index);
+  }
+  assert(virtual_fat::write_cached_sectors(1, packet.data(), count));
+  // Both physical FAT copies refer to one canonical key per FAT sector.
+  assert(program_store::vfat_stage_count() == fs.fat_sectors);
+  u8 readback[512] = {};
+  for(u16 index = 0; index < fs.fat_sectors; index++) {
+    assert(virtual_fat::read_sector(1U + index, readback));
+    assert(readback[0] == (u8) (0xB0U + index));
+    assert(virtual_fat::read_sector(1U + fs.fat_sectors + index, readback));
+    assert(readback[0] == (u8) (0xB0U + index));
+  }
+}
+
+static void test_sidecar_scan_failure_is_reported_at_sync(void) {
+  fresh(512U * 1024U);
+  const Layout fs = layout();
+  u8 fat[512] = {};
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, 100, 0xFFF);
+  assert(program_store::vfat_stage_write(1, fat));
+
+  u8 root[512] = {};
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  // Keep the directory in RAM so only the later sidecar scan reads NOR.
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  static const char sidecar_short[11] =
+      {'_','G','A','M','E','~','1',' ','M','6','1'};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "._game.m61", sidecar_short,
+      false, 100, 1);
+  root[(u16) slot * 32U] = 0;
+
+  SPIFlash::failReadsAfterOperations(0);
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(!virtual_fat::flush_write_cache());
+  SPIFlash::clearFailure();
+  assert(virtual_fat::flush_write_cache());
 }
 
 static void test_fast_usb_cache_is_atomic_and_defers_spi(void) {
@@ -1369,6 +1581,7 @@ static void test_fast_usb_cache_is_atomic_and_defers_spi(void) {
   const Layout reserved_fs = layout();
   const u32 reserved_lba = cluster_lba(reserved_fs, 700);
   assert(virtual_fat::write_cached_sectors(reserved_lba + 15, zero, 1));
+  assert(virtual_fat::flush_write_cache());
   assert(virtual_fat::dirty_cache_sectors() == 0);
   for(u8 index = 0; index < 15; index++) {
     extra[0] = (u8) (index + 1);
@@ -2511,11 +2724,64 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
   expect_rejected_pending_recovered();
 }
 
+static void benchmark_stage_index(void) {
+  static constexpr u16 BLOCKS = 384;
+  static constexpr u32 LOOKUPS = 100000;
+  fresh(16U * 1024U * 1024U);
+  u8 data[512] = {};
+  program_store::test_reset_stage_index_stats();
+  SPIFlash::resetOperationCounts();
+  const u64 programmed_before = SPIFlash::programmedBytes();
+  const auto write_start = std::chrono::steady_clock::now();
+  for(u16 block = 0; block < BLOCKS; block++) {
+    data[0] = (u8) block;
+    data[1] = (u8) (block >> 8);
+    assert(program_store::vfat_stage_write(0x20000UL + block, data));
+  }
+  const auto write_end = std::chrono::steady_clock::now();
+  const program_store::StageIndexStats write_stats =
+      program_store::test_stage_index_stats();
+  const u32 write_reads = SPIFlash::readOperations();
+  const u32 write_mutations = SPIFlash::mutationOperations();
+  const u64 write_bytes = SPIFlash::programmedBytes() - programmed_before;
+
+  program_store::test_reset_stage_index_stats();
+  u32 found = 0;
+  const auto lookup_start = std::chrono::steady_clock::now();
+  for(u32 index = 0; index < LOOKUPS; index++) {
+    if(program_store::vfat_stage_exists(0x20000UL + index % BLOCKS)) found++;
+  }
+  const auto lookup_end = std::chrono::steady_clock::now();
+  const program_store::StageIndexStats lookup_stats =
+      program_store::test_stage_index_stats();
+  assert(found == LOOKUPS);
+  const double write_ms =
+      std::chrono::duration<double, std::milli>(write_end - write_start).count();
+  const double lookup_ms =
+      std::chrono::duration<double, std::milli>(lookup_end - lookup_start).count();
+  printf("stage-index host benchmark: %u unique writes %.3f ms, "
+         "%llu lookups/%llu probes, %u flash reads, %u mutations, "
+         "%llu programmed bytes\n",
+         (unsigned) BLOCKS, write_ms,
+         (unsigned long long) write_stats.lookups,
+         (unsigned long long) write_stats.probes, write_reads,
+         write_mutations, (unsigned long long) write_bytes);
+  printf("stage-index host benchmark: %u hits %.3f ms, "
+         "%llu probes (%.1f/hit)\n",
+         LOOKUPS, lookup_ms, (unsigned long long) lookup_stats.probes,
+         (double) lookup_stats.probes / LOOKUPS);
+  virtual_fat::end_session();
+}
+
 } // безымянное пространство имён
 
 #include "vfat_mutation_cases.hpp"
 
 int main(void) {
+  if(getenv("MK61_STAGE_BENCHMARK") != nullptr) {
+    benchmark_stage_index();
+    return 0;
+  }
   test_diagnostic_contract();
   test_boot_sector_volume_serial_fallback();
   test_volume_serial_tracks_persistent_media_revision();
@@ -2541,6 +2807,13 @@ int main(void) {
   test_small_volume_stages_beyond_fixed_journal();
   test_identical_data_writes_do_not_restage();
   test_write_cache_coalesces_and_evicts_lru();
+  test_failed_deferred_packet_is_not_partially_accepted();
+  test_failed_packet_preflight_read_keeps_old_dirty_sector();
+  test_packet_larger_than_cache_is_rejected_whole();
+  test_deferred_packet_acceptance_does_not_touch_flash();
+  test_packet_with_both_fat_copies_reserves_unique_keys();
+  test_dirty_rewrite_defers_failed_comparison_until_sync();
+  test_sidecar_scan_failure_is_reported_at_sync();
   test_fast_usb_cache_is_atomic_and_defers_spi();
   test_optional_display_cache_span();
   test_metadata_only_recovery_does_not_redecode_unchanged_text();

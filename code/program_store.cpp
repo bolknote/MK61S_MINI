@@ -216,6 +216,9 @@ static u8 g_disk_led_poll_divider;
 static u32* g_stage_index;
 static u16 g_stage_index_capacity;
 static u16 g_stage_ref_count;
+#if defined(PROGRAM_STORE_HOST_TEST)
+static StageIndexStats g_stage_index_stats;
+#endif
 static shared_memory::Lease g_stage_overlay_lease;
 static bool g_stage_locked;
 static bool g_stage_external;
@@ -4339,7 +4342,13 @@ static u16 stage_index_ref(u16 index) {
 
 static int stage_ref_index(u32 key) {
   if(g_stage_index == nullptr) return -1;
+#if defined(PROGRAM_STORE_HOST_TEST)
+  g_stage_index_stats.lookups++;
+#endif
   for(u16 i = 0; i < g_stage_ref_count; i++) {
+#if defined(PROGRAM_STORE_HOST_TEST)
+    g_stage_index_stats.probes++;
+#endif
     if(stage_index_key(i) == key) return i;
   }
   return -1;
@@ -4783,6 +4792,14 @@ void vfat_stage_clear(void) {
 }
 
 #if defined(PROGRAM_STORE_HOST_TEST)
+void test_reset_stage_index_stats(void) {
+  g_stage_index_stats = {};
+}
+
+StageIndexStats test_stage_index_stats(void) {
+  return g_stage_index_stats;
+}
+
 bool test_file_storage_info(u16 id, u16& stored_len,
                             bool& large, bool& zx0) {
   Inode inode;
