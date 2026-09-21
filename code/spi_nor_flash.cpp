@@ -122,7 +122,7 @@ bool SpiNorFlash::diagnostics(Diagnostics& out) {
   if(handle->Instance == SPI1) {
     out.peripheral_clock_hz = HAL_RCC_GetPCLK2Freq();
   } else {
-    // На mini V3 C5 всегда находится на SPI1. Не угадываем APB неизвестного
+    // На mini V3 C6 всегда находится на SPI1. Не угадываем APB неизвестного
     // экземпляра: остальные поля JEDEC остаются валидны, частота — unknown.
     return true;
   }
@@ -324,7 +324,7 @@ bool SpiNorFlash::begin(u32 fallback_capacity) {
     return false;
   }
   // Для чтения указателя нужен только нулевой сектор. Затем достоверную ёмкость
-  // выберет физическая проверка или действительный указатель C5.
+  // выберет физическая проверка или действительный указатель C6.
   capacity_ = MIN_CAPACITY;
   return rawPrepare(MIN_CAPACITY);
 }
@@ -420,7 +420,7 @@ bool SpiNorFlash::verifyBytes(u32 address, const u8* expected, usize len) {
   if(expected == NULL || !waitReady(5000)) return false;
 
   // Удерживаем выбор микросхемы активным на протяжении всего сравнения.
-  // Полусекторный буфер экономит 256 байт в глубокой цепочке APP -> C5 -> NOR;
+  // Полусекторный буфер экономит 256 байт в глубокой цепочке APP -> C6 -> NOR;
   // все байты проверяются в одном READ, обычный сектор требует двух передач HAL.
   u8 recovered[256];
   if(!select()) return false;

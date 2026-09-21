@@ -10,7 +10,7 @@ namespace program_store {
 static constexpr usize NAME_SIZE = 32;
 // Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
-// TinyBASIC shares one 4-KiB C5 data sector with its record header and name.
+// TinyBASIC shares one 4-KiB C6 data sector with its record header and name.
 // 3584 bytes leave enough room for that metadata while more than doubling the
 // original editor quota.  FOCAL and ordinary text files keep their established
 // 1536-byte limit so their scratch-buffer contracts do not change.
@@ -25,7 +25,7 @@ static constexpr u16 MAX_FONT_SIZE = 1536;
 static constexpr u16 MAX_FONT_SIZE = 8192;
 #endif
 // 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
-// гарантированно помещаются в минимальный 2-КиБ FAT-кластер C5.
+// гарантированно помещаются в минимальный 2-КиБ FAT-кластер C6.
 static constexpr u16 MAX_IMAGE1_SIZE = 1600;
 // CHIP-8 загружает программы с адреса 0x200 в 4-КиБ память, поэтому
 // классический ROM занимает не более 4096 - 0x200 = 3584 байт.
@@ -36,7 +36,7 @@ static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
 // Верхняя граница служебных продолжений FAT у одного максимального APP
 // вычисляется для минимального допустимого 2-КиБ кластера. На штатной W25Q128
 // с кластером 4 КиБ реально используются только пять. Это не лимит количества
-// APP: файлов может быть столько, сколько помещается в C5 и каталогах.
+// APP: файлов может быть столько, сколько помещается в C6 и каталогах.
 static constexpr u16 MIN_FAT_CLUSTER_SIZE =
     (u16) storage_geometry::MIN_SECTORS_PER_CLUSTER *
     storage_geometry::LOGICAL_SECTOR_SIZE;
@@ -56,12 +56,30 @@ enum class ProgramType : u8 {
   // Значение 1 принадлежало удалённому BASIC и намеренно не используется
   // повторно: старые каталоги должны оставаться однозначными.
   CHIP8 = 9,
-  // T2: UTF-8 Markdown. Тип сканируется по inode и не расширяет сохранённый
-  // массив счётчиков каталога, поэтому существующие тома C5 не мигрируют.
+  // T2: Markdown в M8. Тип сканируется по inode и не расширяет сохранённый
+  // массив счётчиков каталога.
   MARKDOWN = 10
 };
 
-// Единая политика прозрачного C5 ZX0. FONT включится здесь только вместе с
+constexpr bool text_content(ProgramType type) {
+  switch(type) {
+    case ProgramType::MK61:
+    case ProgramType::FOCAL:
+    case ProgramType::TINYBASIC:
+    case ProgramType::TEXT:
+    case ProgramType::MK61_STATE:
+    case ProgramType::MARKDOWN:
+      return true;
+    case ProgramType::FONT:
+    case ProgramType::IMAGE1:
+    case ProgramType::APP:
+    case ProgramType::CHIP8:
+      return false;
+  }
+  return false;
+}
+
+// Единая политика прозрачного C6 ZX0. FONT включится здесь только вместе с
 // переходом на raw-only FMK2; APP имеет собственное сжатие контейнера.
 constexpr bool transparent_compression_enabled(ProgramType type) {
   switch(type) {
@@ -119,9 +137,46 @@ struct FileSource {
   bool (*read)(void* context, u32 offset, u8* output, usize size);
 };
 
+// Last broad phase in which write_file_from_source() failed.  This is
+// diagnostic state only; callers must still use the boolean return value.
+// Keeping the phase in the resident storage layer lets loadable importers
+// report an actionable C6 failure without widening the stable APP ABI.
+enum class WriteFailure : u8 {
+  NONE = 0,
+  ARGUMENTS = 1,
+  VISIBLE_SIZE = 2,
+  EXTENT_SHAPE = 3,
+  PREFERRED_ID = 4,
+  NAME_COLLISION = 5,
+  EXTENT_SELECTION = 6,
+  COMPRESSION = 7,
+  RECORD = 8,
+  CATALOG = 9,
+  COMMIT = 10
+};
+
+// Fine-grained reason inside the broad write phase.  Values are transported
+// in spare bits of the existing USBDISK request result, so this does not widen
+// the stable resident/APP ABI.
+enum class WriteFailureDetail : u8 {
+  NONE = 0,
+  TARGET_VISIBLE_NAME = 1,
+  PARENT = 2,
+  CHILD_CATALOG = 3,
+  CHILD_NAME = 4,
+  CHILD_VISIBLE_NAME = 5,
+  ROOT_EXISTING_CAPACITY = 6,
+  COLLISION = 7,
+  CHAIN = 8,
+  ROOT_TARGET_CAPACITY = 9,
+  REPLACED_NAME = 10,
+  REPLACED_EXTENTS = 11
+};
+
 enum class MountStatus : u8 {
   UNAVAILABLE = 0,
   READY,
+  FORMAT_REQUIRED,
   REPAIR_REQUIRED
 };
 
@@ -131,6 +186,11 @@ bool refresh(void);
 bool ready(void);
 MountStatus mount_status(void);
 const storage_geometry::Geometry& geometry(void);
+// Persistent revision of the logical USB view. It changes both when the C6
+// catalog commits and when a host write reaches the staging journal, including
+// a write later rejected or discarded. Hosts may use it to invalidate stale
+// FAT metadata after a disconnected transaction.
+u32 media_revision(void);
 u16 max_nodes(void);
 u16 used_nodes(void);
 bool basename_valid(const char* name);
@@ -167,9 +227,9 @@ bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
                 const char* name, const u8* data, u16 data_len,
                 u16* out_id = nullptr);
 // Для RAW большой файл пишется потоково. Для ZX0 вызывающий может передать
-// свободный compression_buffer и непрерывный contiguous_data; иначе C5
+// свободный compression_buffer и непрерывный contiguous_data; иначе C6
 // использует доступные shared/exclusive buffers либо безопасно оставляет RAW.
-// fat_extents задаёт идентификаторы последующих FAT-кластеров; при NULL C5
+// fat_extents задаёт идентификаторы последующих FAT-кластеров; при NULL C6
 // выбирает свободные узлы самостоятельно.
 bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
@@ -180,13 +240,32 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             u8* compression_buffer = nullptr,
                             usize compression_buffer_size = 0,
                             const u8* contiguous_data = nullptr);
+WriteFailure last_write_failure(void);
+WriteFailureDetail last_write_failure_detail(void);
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
 bool remove_id(u16 id);
 bool remove_tree(u16 id, u16* removed = nullptr);
 bool move_rename(u16 id, u16 new_parent_id, const char* new_name);
+// Освобождает нечитаемый FILE inode, который host уже перепрофилировал под
+// новый узел, только если старый inode доказанно не входит в дерево от ROOT_ID.
+// Связанный файл с повреждённой записью имени остаётся нетронутым.
+bool release_unreachable_file(u16 id);
 bool allocate_directory_extent(u16 directory_id, u16 preferred_id);
 bool release_directory_extent(u16 extent_id);
+enum class DirectoryTrimResult : u8 {
+  FAILED = 0,
+  COMPLETE = 1,
+  MORE = 2
+};
+// Removes at most one WAL batch from the tail.  A caller that lives across an
+// APP boundary can service the foreground/watchdog between MORE results.
+DirectoryTrimResult trim_directory_extents_step(u16 directory_id,
+                                                u16 keep_count);
+// Atomically removes directory extents from the tail in bounded WAL batches,
+// retaining exactly keep_count extents.  This is used to canonicalize host FAT
+// directory preallocation without one catalog transaction per empty cluster.
+bool trim_directory_extents(u16 directory_id, u16 keep_count);
 bool first_extent(u16 directory_id, u16& out_id);
 bool next_extent(u16 id, u16& out_id);
 bool extent_info(u16 extent_id, u16& directory_id, u16& next_id);
@@ -206,6 +285,7 @@ bool vfat_stage_write(u32 block, const u8* data);
 bool vfat_stage_read(u32 block, u8* data);
 bool vfat_stage_exists(u32 block);
 u16 vfat_stage_count(void);
+bool vfat_stage_snapshot(u32* keys, u16 capacity, u16& count);
 void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all(void);
 void vfat_stage_clear(void);
@@ -224,11 +304,10 @@ bool vfat_stage_restore_full(void);
 void vfat_stage_unlock(void);
 
 #if defined(PROGRAM_STORE_HOST_TEST)
-// Создаёт на томе настоящий каталог/локаторы C5 v5 для проверки миграции v6.
-bool test_rewrite_catalog_as_v5(void);
 bool test_file_storage_info(u16 id, u16& stored_len,
                             bool& large, bool& zx0);
 bool test_file_record_location(u16 id, u32& sector, u16& record_len);
+bool test_make_unreadable_orphan_file(u16 id);
 #endif
 
 bool write_mk61(const char* name, const u8* code, u16 code_len);

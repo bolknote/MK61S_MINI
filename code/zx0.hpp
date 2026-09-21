@@ -66,7 +66,7 @@ bool decode(const Input& input, u32 source_size,
             u8* output, u32 capacity, u32& written);
 
 // Проверяет и распаковывает весь логический поток, сохраняя только заданный
-// диапазон. window служит кольцевым словарём; для потоков C5 достаточно
+// диапазон. window служит кольцевым словарём; для потоков C6 достаточно
 // 256 байт, так как встроенный упаковщик не создаёт больших offset.
 bool decode_range(const Input& input, u32 source_size, u32 logical_size,
                   u32 range_offset, u8* output, u32 range_size,

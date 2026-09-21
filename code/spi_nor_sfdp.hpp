@@ -67,7 +67,7 @@ inline bool parse_basic(const u8* table, u8 dwords,
 
   if(dwords >= 11) {
     const u8 page_exponent = (u8) ((read_le32(table + 40) >> 4) & 0x0F);
-    // Фрагменты меньше физической страницы всегда безопасны. C5 намеренно
+    // Фрагменты меньше физической страницы всегда безопасны. C6 намеренно
     // ограничивает фрагмент 256 байтами, даже если устройство сообщает
     // о странице большего размера.
     if(page_exponent < 8) output.page_size = (u16) 1U << page_exponent;

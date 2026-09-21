@@ -9,11 +9,12 @@
 #include "exclusive_buffer.hpp"
 #include "flash_capacity_probe.hpp"
 #include "ledcontrol.h"
+#include "mk8_codec.hpp"
 #include "shared_memory.hpp"
 #include "shared_scratch.hpp"
 #include "spi_nor_flash.hpp"
+#include "storage_name.hpp"
 #include "tools.hpp"
-#include "utf8_codec.hpp"
 #include "workspace_swap.hpp"
 #include "zx0.hpp"
 
@@ -36,14 +37,11 @@ static SpiNorFlash& flash_device(void) { return external_flash(); }
 namespace program_store {
 namespace {
 
-// Локатор, сектор данных, settings guard и staging сохраняют версию 5:
-// их физический формат не меняется. Каталог версии 6 блокирует откат на старую
-// прошивку: она увидит знакомый локатор, но не станет монтировать незнакомые
-// inode больших файлов и перейдёт в безопасный REPAIR_REQUIRED.
-static constexpr u8 PHYSICAL_FORMAT_VERSION = 5;
-static constexpr u8 LEGACY_CATALOG_VERSION = 5;
+// C6 — первый формат, в котором имена и текстовые данные безусловно хранятся
+// в M8. Физические сигнатуры отличаются от C5, поэтому старая прошивка не
+// сможет принять новый том, а новая никогда не мигрирует C5 исподтишка.
+static constexpr u8 PHYSICAL_FORMAT_VERSION = 6;
 static constexpr u8 CATALOG_VERSION = 6;
-static constexpr u8 LOCATOR_STORE_VERSION_OFFSET = 7;
 static constexpr u8 STATE_WRITING = 0xFF;
 static constexpr u8 STATE_ACTIVE = 0x7F;
 static constexpr u8 STATE_DELETED = 0x3F;
@@ -61,11 +59,7 @@ static constexpr u16 CATALOG_HEADER_CRC_OFFSET = 72;
 static constexpr u8 LEGACY_TYPE_COUNT = 6;
 static constexpr u8 TYPE_COUNT = 7;
 static constexpr u16 IMAGE1_HEADER_COUNT_OFFSET = 64;
-static constexpr u16 LEGACY_WAL_RECORD_SIZE = 256;
-static constexpr u8 LEGACY_WAL_MAX_UPDATES = 9;
-static constexpr u16 LEGACY_IMAGE1_WAL_COUNT_OFFSET = 242;
-static constexpr u16 LEGACY_WAL_CRC_OFFSET = 244;
-// Каталог v6 публикует за одну COW-транзакцию основной inode, служебные
+// Каталог C6 публикует за одну COW-транзакцию основной inode, служебные
 // FAT-extents максимального APP и изменения двух родительских списков.
 static constexpr u16 WAL_RECORD_SIZE = 512;
 static constexpr u8 WAL_MAX_UPDATES = 16;
@@ -105,40 +99,33 @@ static constexpr u16 LARGE_DESCRIPTOR_SIZE =
 static constexpr u8 LEGACY_LARGE_DESCRIPTOR_VERSION = 1;
 static constexpr u8 LARGE_DESCRIPTOR_VERSION = 2;
 
-static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C5 stage must pack seven sectors");
+static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C6 stage must pack seven sectors");
 static_assert(STAGE_KEY_MAX == (0xFFFFFFFFUL >> STAGE_REF_BITS),
-              "public C5 stage key range must match packed references");
+              "public C6 stage key range must match packed references");
 static_assert(44 + WAL_MAX_UPDATES *
                   (2 + storage_geometry::INODE_BYTES) <=
                   IMAGE1_WAL_COUNT_OFFSET,
               "inode updates overlap the v6 WAL tail");
 static_assert(IMAGE1_WAL_COUNT_OFFSET + sizeof(u16) <= WAL_CRC_OFFSET,
               "image counter overlaps the WAL CRC");
-static_assert(LEGACY_IMAGE1_WAL_COUNT_OFFSET ==
-                  44 + LEGACY_WAL_MAX_UPDATES *
-                      (2 + storage_geometry::INODE_BYTES),
-              "v5 WAL geometry changed");
-static_assert(LEGACY_IMAGE1_WAL_COUNT_OFFSET + sizeof(u16) <=
-                  LEGACY_WAL_CRC_OFFSET,
-              "v5 image counter overlaps its WAL CRC");
 static_assert(IMAGE1_HEADER_COUNT_OFFSET + sizeof(u16) <=
                   CATALOG_HEADER_CRC_OFFSET,
               "image counter overlaps the catalog-header CRC");
 static_assert(LARGE_BLOCK_COUNT == 6,
-              "maximum APP should occupy exactly six C5 large blocks");
+              "maximum APP should occupy exactly six C6 large blocks");
 static_assert(LARGE_DESCRIPTOR_SIZE < 128,
-              "large-file descriptor must remain a small C5 record");
+              "large-file descriptor must remain a small C6 record");
 static_assert((usize) MAX_MK61_TEXT_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
-              "two maximum C5 records must fit one erase sector");
+              "two maximum C6 records must fit one erase sector");
 static_assert((usize) MAX_TINYBASIC_TEXT_SIZE + NAME_SIZE +
                   RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE -
                       DATA_SECTOR_HEADER_SIZE,
-              "maximum TinyBASIC source must fit one C5 data sector");
+              "maximum TinyBASIC source must fit one C6 data sector");
 static_assert((usize) MAX_IMAGE1_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
-              "two maximum C5 image records must fit one erase sector");
+              "two maximum C6 image records must fit one erase sector");
 
 static bool compute_geometry(u32 capacity,
                              storage_geometry::Geometry& geometry) {
@@ -159,7 +146,7 @@ struct Inode {
 };
 
 static_assert(sizeof(Inode) == storage_geometry::INODE_BYTES,
-              "C5 inode RAM and disk representation must stay compact");
+              "C6 inode RAM and disk representation must stay compact");
 
 struct LargeDescriptor {
   u32 sectors[LARGE_BLOCK_COUNT];
@@ -197,9 +184,7 @@ static storage_geometry::Geometry g_geometry;
 static bool g_ready;
 static MountStatus g_mount_status;
 static u32 g_format_epoch;
-static u8 g_locator_store_version;
 static u8 g_locator_matching_copies;
-static u8 g_catalog_write_version = CATALOG_VERSION;
 static u8 g_active_bank;
 static u32 g_catalog_generation;
 static u32 g_wal_sequence;
@@ -227,6 +212,9 @@ static u16 g_stage_ref_count;
 static shared_memory::Lease g_stage_overlay_lease;
 static bool g_stage_locked;
 static bool g_stage_external;
+static WriteFailure g_last_write_failure = WriteFailure::NONE;
+static WriteFailureDetail g_last_write_failure_detail =
+    WriteFailureDetail::NONE;
 static u8 g_stage_used[storage_geometry::STAGE_TARGET_SECTORS];
 static u8 g_stage_sealed[storage_geometry::STAGE_TARGET_SECTORS];
 static u16 g_stage_generation;
@@ -241,10 +229,10 @@ static u8 g_verified_large_block = 0xFF;
 
 static_assert((u16) storage_geometry::STAGE_TARGET_SECTORS *
                   STAGE_RECORDS_PER_SECTOR <= STAGE_REF_MASK,
-              "C5 stage references must fit in the packed index");
+              "C6 stage references must fit in the packed index");
 static_assert((usize) STAGE_REF_CAPACITY * sizeof(u32) <=
                   shared_memory::STAGE_INDEX_SIZE,
-              "full C5 staging index does not fit the shared overlay");
+              "full C6 staging index does not fit the shared overlay");
 
 static int g_flat_cache_index = -1;
 static u16 g_flat_cache_id;
@@ -255,7 +243,7 @@ static u16 g_child_cache_id = NONE;
 #ifdef DEBUG_SPIFLASH
 static void capacity_probe_debug(u32 candidate, bool complete,
                                  bool distinct) {
-  Serial.print("C5 probe candidate: ");
+  Serial.print("C6 probe candidate: ");
   Serial.print(candidate);
   if(!complete) {
     Serial.println(" bytes, testing...");
@@ -419,13 +407,14 @@ static bool crc32_flash_software(u32 address, u32 len, u32& output) {
 
 static void encode_settings_guard(u8* guard, u32 capacity) {
   memset(guard, 0xFF, SETTINGS_GUARD_SIZE);
-  memcpy(guard, "C5SG", 4);
+  memcpy(guard, "C6SG", 4);
   guard[4] = PHYSICAL_FORMAT_VERSION;
   put_le32(guard, 8, capacity);
   put_le32(guard, 12, mk61_crc32::calculate(guard, 12));
 }
 
-static bool settings_guard_valid(const storage_geometry::Geometry& geometry) {
+static bool settings_guard_valid_for(const storage_geometry::Geometry& geometry,
+                                     const char* magic, u8 version) {
   u8 guard[SETTINGS_GUARD_SIZE];
 #ifdef SPI_FLASH
   const u32 address = sector_address(geometry.settings_sector) +
@@ -434,12 +423,24 @@ static bool settings_guard_valid(const storage_geometry::Geometry& geometry) {
      !flash_device().rawRead(address, guard, sizeof(guard))) return false;
 #else
   (void) geometry;
+  (void) magic;
+  (void) version;
   return false;
 #endif
-  return memcmp(guard, "C5SG", 4) == 0 &&
-         guard[4] == PHYSICAL_FORMAT_VERSION &&
+  return memcmp(guard, magic, 4) == 0 &&
+         guard[4] == version &&
          get_le32(guard, 8) == geometry.capacity_bytes &&
          get_le32(guard, 12) == mk61_crc32::calculate(guard, 12);
+}
+
+static bool settings_guard_valid(const storage_geometry::Geometry& geometry) {
+  return settings_guard_valid_for(
+      geometry, "C6SG", PHYSICAL_FORMAT_VERSION);
+}
+
+static bool legacy_c5_settings_guard_valid(
+    const storage_geometry::Geometry& geometry) {
+  return settings_guard_valid_for(geometry, "C5SG", 5);
 }
 
 static bool write_settings_guard(void) {
@@ -459,45 +460,8 @@ static u16 hash_name(const char* name) {
   return hash;
 }
 
-static char ascii_upper(char value) {
-  return value >= 'a' && value <= 'z' ? (char) (value - 'a' + 'A') : value;
-}
-
-static bool valid_utf8(const char* text, usize len) {
-  usize offset = 0;
-  while(offset < len) {
-    const utf8_codec::Decoded decoded = utf8_codec::decode(
-        (const u8*) text + offset, len - offset);
-    if(!decoded.valid) return false;
-    offset += decoded.size;
-  }
-  return true;
-}
-
-static bool reserved_dos_name(const char* name, usize len) {
-  usize base_len = 0;
-  while(base_len < len && name[base_len] != '.') base_len++;
-  char base[5] = {};
-  if(base_len == 0 || base_len >= sizeof(base)) return false;
-  for(usize i = 0; i < base_len; i++) base[i] = ascii_upper(name[i]);
-  if(strcmp(base, "CON") == 0 || strcmp(base, "PRN") == 0 ||
-     strcmp(base, "AUX") == 0 || strcmp(base, "NUL") == 0) return true;
-  return base_len == 4 && (memcmp(base, "COM", 3) == 0 ||
-                           memcmp(base, "LPT", 3) == 0) &&
-         base[3] >= '1' && base[3] <= '9';
-}
-
 static bool valid_name(const char* name) {
-  if(name == NULL || name[0] == 0 || strcmp(name, ".") == 0 ||
-     strcmp(name, "..") == 0) return false;
-  usize len = 0;
-  while(name[len] != 0) {
-    const u8 value = (u8) name[len];
-    if(value < 0x20 || strchr("<>:\"/\\|?*", value) != NULL) return false;
-    if(++len >= NAME_SIZE) return false;
-  }
-  return name[len - 1] != ' ' && name[len - 1] != '.' &&
-         valid_utf8(name, len) && !reserved_dos_name(name, len);
+  return storage_name::valid_basename(name, NAME_SIZE);
 }
 
 static int type_index(ProgramType type) {
@@ -554,7 +518,7 @@ static const char* magic_for_type(ProgramType type) {
     case ProgramType::TINYBASIC: return "B2";
     case ProgramType::TEXT: return "T1";
     case ProgramType::MK61_STATE: return "M2";
-    case ProgramType::FONT: return "f1";
+    case ProgramType::FONT: return "f2";
     case ProgramType::IMAGE1: return "I1";
     case ProgramType::APP: return "A1";
     case ProgramType::CHIP8: return "C1";
@@ -775,26 +739,6 @@ static u32 normalized_record_crc(u8* record, u16 size, u16 crc_offset, u8 state_
   return crc;
 }
 
-static u16 wal_record_size(u8 catalog_version) {
-  return catalog_version == LEGACY_CATALOG_VERSION
-      ? LEGACY_WAL_RECORD_SIZE : WAL_RECORD_SIZE;
-}
-
-static u8 wal_max_updates(u8 catalog_version) {
-  return catalog_version == LEGACY_CATALOG_VERSION
-      ? LEGACY_WAL_MAX_UPDATES : WAL_MAX_UPDATES;
-}
-
-static u16 wal_image_count_offset(u8 catalog_version) {
-  return catalog_version == LEGACY_CATALOG_VERSION
-      ? LEGACY_IMAGE1_WAL_COUNT_OFFSET : IMAGE1_WAL_COUNT_OFFSET;
-}
-
-static u16 wal_crc_offset(u8 catalog_version) {
-  return catalog_version == LEGACY_CATALOG_VERSION
-      ? LEGACY_WAL_CRC_OFFSET : WAL_CRC_OFFSET;
-}
-
 static void encode_meta(u8* record, const CatalogMeta& meta,
                         u16 image_count_offset) {
   put_le16(record, 10, meta.root_head);
@@ -848,21 +792,16 @@ static u8 new_overlay_slots(const Transaction& transaction) {
 // the catalog. This separate call also prevents LTO from merging the frames.
 __attribute__((noinline))
 static bool append_transaction_record(const Transaction& transaction) {
-  const u16 record_size = wal_record_size(g_catalog_write_version);
-  const u16 image_count_offset =
-      wal_image_count_offset(g_catalog_write_version);
-  const u16 crc_offset = wal_crc_offset(g_catalog_write_version);
-
   u8 record[WAL_RECORD_SIZE];
-  memset(record, 0xFF, record_size);
+  memset(record, 0xFF, sizeof(record));
   record[0] = 'W';
-  record[1] = '5';
-  record[2] = g_catalog_write_version;
+  record[1] = '6';
+  record[2] = CATALOG_VERSION;
   record[3] = STATE_WRITING;
   const u32 next_sequence = g_wal_sequence + 1;
   put_le32(record, 4, next_sequence);
   record[8] = transaction.count;
-  encode_meta(record, transaction.meta, image_count_offset);
+  encode_meta(record, transaction.meta, IMAGE1_WAL_COUNT_OFFSET);
   u16 offset = 44;
   for(u8 i = 0; i < transaction.count; i++) {
     put_le16(record, offset, transaction.updates[i].id);
@@ -870,12 +809,12 @@ static bool append_transaction_record(const Transaction& transaction) {
     offset = (u16) (offset + 2 + storage_geometry::INODE_BYTES);
   }
   const u32 crc =
-      normalized_record_crc(record, record_size, crc_offset, 3);
-  put_le32(record, crc_offset, crc);
+      normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3);
+  put_le32(record, WAL_CRC_OFFSET, crc);
 
   const u32 address =
-      wal_address(g_active_bank) + (u32) g_wal_records * record_size;
-  if(!write_bytes(address, record, record_size) ||
+      wal_address(g_active_bank) + (u32) g_wal_records * WAL_RECORD_SIZE;
+  if(!write_bytes(address, record, sizeof(record)) ||
      !write_byte(address + 3, STATE_ACTIVE)) {
     g_wal_sealed = true;
     (void) load_catalog();
@@ -893,11 +832,9 @@ static bool append_transaction_record(const Transaction& transaction) {
 }
 
 static bool append_transaction(const Transaction& transaction) {
-  const u16 record_size = wal_record_size(g_catalog_write_version);
-  const u8 maximum_updates = wal_max_updates(g_catalog_write_version);
-  if(transaction.count > maximum_updates) return false;
+  if(transaction.count > WAL_MAX_UPDATES) return false;
   const u8 records_per_bank = (u8) ((u32) storage_geometry::CATALOG_WAL_SECTORS *
-      storage_geometry::PHYSICAL_SECTOR_SIZE / record_size);
+      storage_geometry::PHYSICAL_SECTOR_SIZE / WAL_RECORD_SIZE);
   if(g_wal_sealed || g_wal_records >= records_per_bank ||
      g_overlay_count + new_overlay_slots(transaction) > OVERLAY_CAPACITY) {
     if(!checkpoint()) {
@@ -911,11 +848,8 @@ static bool append_transaction(const Transaction& transaction) {
 
 static void encode_catalog_header(u8* header, u32 generation, u32 table_crc) {
   memset(header, 0xFF, CATALOG_HEADER_SIZE);
-  header[0] = 'C';
-  header[1] = '5';
-  header[2] = 'C';
-  header[3] = 'T';
-  header[4] = g_catalog_write_version;
+  memcpy(header, "C6CT", 4);
+  header[4] = CATALOG_VERSION;
   header[5] = STATE_WRITING;
   header[6] = CATALOG_HEADER_SIZE;
   put_le32(header, 8, generation);
@@ -993,11 +927,11 @@ static bool checkpoint(void) {
   return true;
 }
 
-static bool decode_catalog_header(u8 bank, u8 catalog_version, u8* header,
+static bool decode_catalog_header(u8 bank, u8* header,
                                   u32& generation, u32& wal_sequence,
                                   CatalogMeta& meta) {
   if(!read_bytes(sector_address(bank_sector(bank)), header, CATALOG_HEADER_SIZE)) return false;
-  if(memcmp(header, "C5CT", 4) != 0 || header[4] != catalog_version ||
+  if(memcmp(header, "C6CT", 4) != 0 || header[4] != CATALOG_VERSION ||
      header[5] != STATE_ACTIVE || header[6] != CATALOG_HEADER_SIZE ||
      get_le32(header, 12) != g_format_epoch ||
      get_le16(header, 16) != g_geometry.max_nodes) return false;
@@ -1031,28 +965,24 @@ static bool generation_newer(u32 left, u32 right) {
   return (i32) (left - right) > 0;
 }
 
-static bool replay_wal(u8 catalog_version) {
-  const u16 record_size = wal_record_size(catalog_version);
-  const u8 maximum_updates = wal_max_updates(catalog_version);
-  const u16 image_count_offset = wal_image_count_offset(catalog_version);
-  const u16 crc_offset = wal_crc_offset(catalog_version);
+static bool replay_wal(void) {
   const u8 records_per_bank = (u8) ((u32) storage_geometry::CATALOG_WAL_SECTORS *
-      storage_geometry::PHYSICAL_SECTOR_SIZE / record_size);
+      storage_geometry::PHYSICAL_SECTOR_SIZE / WAL_RECORD_SIZE);
   g_wal_records = 0;
   g_wal_sealed = false;
   for(u8 record_index = 0; record_index < records_per_bank; record_index++) {
     u8 record[WAL_RECORD_SIZE];
     if(!read_bytes(wal_address(g_active_bank) +
-                       (u32) record_index * record_size,
-                   record, record_size)) return false;
+                       (u32) record_index * WAL_RECORD_SIZE,
+                   record, sizeof(record))) return false;
     bool erased = true;
     for(u8 i = 0; i < 8; i++) if(record[i] != 0xFF) erased = false;
     if(erased) break;
-    if(record[0] != 'W' || record[1] != '5' ||
-       record[2] != catalog_version ||
-       record[3] != STATE_ACTIVE || record[8] > maximum_updates ||
-       normalized_record_crc(record, record_size, crc_offset, 3) !=
-           get_le32(record, crc_offset)) {
+    if(record[0] != 'W' || record[1] != '6' ||
+       record[2] != CATALOG_VERSION ||
+       record[3] != STATE_ACTIVE || record[8] > WAL_MAX_UPDATES ||
+       normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3) !=
+           get_le32(record, WAL_CRC_OFFSET)) {
       g_wal_sealed = true;
       break;
     }
@@ -1069,14 +999,14 @@ static bool replay_wal(u8 catalog_version) {
       if(!overlay_set(id, deserialize_inode(record + offset + 2))) return false;
       offset = (u16) (offset + 2 + storage_geometry::INODE_BYTES);
     }
-    g_meta = decode_meta(record, image_count_offset);
+    g_meta = decode_meta(record, IMAGE1_WAL_COUNT_OFFSET);
     g_wal_sequence = sequence;
     g_wal_records++;
   }
   return true;
 }
 
-static bool load_catalog_version(u8 catalog_version) {
+static bool load_catalog(void) {
   u8 header_a[CATALOG_HEADER_SIZE];
   u8 header_b[CATALOG_HEADER_SIZE];
   u32 generation_a = 0;
@@ -1085,9 +1015,9 @@ static bool load_catalog_version(u8 catalog_version) {
   u32 sequence_b = 0;
   CatalogMeta meta_a;
   CatalogMeta meta_b;
-  const bool valid_a = decode_catalog_header(0, catalog_version, header_a,
+  const bool valid_a = decode_catalog_header(0, header_a,
                                              generation_a, sequence_a, meta_a);
-  const bool valid_b = decode_catalog_header(1, catalog_version, header_b,
+  const bool valid_b = decode_catalog_header(1, header_b,
                                              generation_b, sequence_b, meta_b);
   if(!valid_a && !valid_b) return false;
 
@@ -1104,21 +1034,13 @@ static bool load_catalog_version(u8 catalog_version) {
   }
   g_overlay_count = 0;
   g_table_cache_address = EMPTY_ADDRESS;
-  return replay_wal(catalog_version);
+  return replay_wal();
 }
 
-static bool load_catalog(void) {
-  return load_catalog_version(CATALOG_VERSION);
-}
-
-static void encode_locator(u8* locator,
-                           u8 store_version = CATALOG_VERSION) {
+static void encode_locator(u8* locator) {
   memset(locator, 0xFF, LOCATOR_SIZE);
-  memcpy(locator, "C5FS", 4);
+  memcpy(locator, "C6FS", 4);
   locator[4] = PHYSICAL_FORMAT_VERSION;
-  if(store_version != LEGACY_CATALOG_VERSION) {
-    locator[LOCATOR_STORE_VERSION_OFFSET] = store_version;
-  }
   locator[5] = STATE_WRITING;
   locator[6] = LOCATOR_SIZE;
   put_le32(locator, 8, g_geometry.capacity_bytes);
@@ -1146,19 +1068,15 @@ static void encode_locator(u8* locator,
   put_le32(locator, 68, normalized_record_crc(locator, LOCATOR_SIZE, 68, 5));
 }
 
-static bool locator_matches(const u8* locator,
-                            storage_geometry::Geometry& geometry,
-                            u32& epoch, u32& probe_upper, u32& jedec_id,
-                            u8& store_version) {
-  if(memcmp(locator, "C5FS", 4) != 0 ||
-     locator[4] != PHYSICAL_FORMAT_VERSION ||
+static bool locator_matches_format(const u8* locator, const char* magic,
+                                   u8 format_version,
+                                   storage_geometry::Geometry& geometry,
+                                   u32& epoch, u32& probe_upper,
+                                   u32& jedec_id) {
+  if(memcmp(locator, magic, 4) != 0 ||
+     locator[4] != format_version ||
      locator[5] != STATE_ACTIVE || locator[6] != LOCATOR_SIZE ||
      normalized_record_crc((u8*) locator, LOCATOR_SIZE, 68, 5) != get_le32(locator, 68)) return false;
-  store_version = locator[LOCATOR_STORE_VERSION_OFFSET] == 0xFF
-      ? LEGACY_CATALOG_VERSION
-      : locator[LOCATOR_STORE_VERSION_OFFSET];
-  if(store_version != LEGACY_CATALOG_VERSION &&
-     store_version != CATALOG_VERSION) return false;
   if(!compute_geometry(get_le32(locator, 8), geometry)) return false;
   if(geometry.max_nodes != get_le16(locator, 16) ||
      geometry.sectors_per_cluster != locator[18] ||
@@ -1179,7 +1097,7 @@ static bool locator_matches(const u8* locator,
   return epoch != 0;
 }
 
-// Обновление прошивки может намеренно изменить вычисляемую геометрию C5/FAT,
+// Обновление прошивки может намеренно изменить вычисляемую геометрию C6/FAT,
 // хотя физическая микросхема и сектор настроек не меняются. Старый каталог при
 // этом смонтировать нельзя, но повторять разрушающую проверку ёмкости и стирать
 // настройки было бы излишне и неожиданно. Этот ограниченный декодер доверяет
@@ -1194,7 +1112,7 @@ static bool load_capacity_for_reformat(void) {
   const u32 jedec_id = flash_device().getJEDECID();
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
-       memcmp(locator, "C5FS", 4) != 0 ||
+       memcmp(locator, "C6FS", 4) != 0 ||
        locator[4] != PHYSICAL_FORMAT_VERSION ||
        locator[5] != STATE_ACTIVE || locator[6] != LOCATOR_SIZE ||
        normalized_record_crc(locator, LOCATOR_SIZE, 68, 5) !=
@@ -1222,7 +1140,6 @@ static bool load_locator(void) {
   u32 epoch = 0;
   u32 stored_probe_upper = 0;
   u32 stored_jedec_id = 0;
-  u8 stored_version = 0;
 #ifdef SPI_FLASH
   const u32 probe_upper = flash_device().capacityProbeUpper();
   const u32 jedec_id = flash_device().getJEDECID();
@@ -1233,23 +1150,21 @@ static bool load_locator(void) {
   bool found = false;
   storage_geometry::Geometry selected_geometry = {};
   u32 selected_epoch = 0;
-  u8 selected_version = 0;
   u8 selected_copies = 0;
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator))) continue;
-    if(!locator_matches(locator, geometry, epoch, stored_probe_upper,
-                        stored_jedec_id, stored_version)) continue;
+    if(!locator_matches_format(locator, "C6FS", PHYSICAL_FORMAT_VERSION,
+                               geometry, epoch, stored_probe_upper,
+                               stored_jedec_id)) continue;
     if(stored_jedec_id != jedec_id || stored_probe_upper != probe_upper ||
        !flash_device().setCapacity(geometry.capacity_bytes) ||
        !settings_guard_valid(geometry)) continue;
-    if(!found || stored_version > selected_version) {
+    if(!found) {
       selected_geometry = geometry;
       selected_epoch = epoch;
-      selected_version = stored_version;
       selected_copies = 1;
       found = true;
-    } else if(stored_version == selected_version &&
-              epoch == selected_epoch &&
+    } else if(epoch == selected_epoch &&
               geometry.capacity_bytes == selected_geometry.capacity_bytes) {
       selected_copies++;
     }
@@ -1257,51 +1172,64 @@ static bool load_locator(void) {
   if(!found) return false;
   g_geometry = selected_geometry;
   g_format_epoch = selected_epoch;
-  g_locator_store_version = selected_version;
   g_locator_matching_copies = selected_copies;
   return true;
 }
 
-static bool write_locators_version(u8 store_version) {
+// C5 распознаётся только для безопасного отказа. Ни каталог, ни записи, ни
+// staging старого тома новая прошивка не читает и не переписывает.
+static bool load_legacy_c5_locator(void) {
   u8 locator[LOCATOR_SIZE];
-  encode_locator(locator, store_version);
+  storage_geometry::Geometry geometry;
+  u32 epoch = 0;
+  u32 stored_probe_upper = 0;
+  u32 stored_jedec_id = 0;
+#ifdef SPI_FLASH
+  const u32 probe_upper = flash_device().capacityProbeUpper();
+  const u32 jedec_id = flash_device().getJEDECID();
+#else
+  const u32 probe_upper = 0;
+  const u32 jedec_id = 0;
+#endif
+  for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
+    if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
+       !locator_matches_format(locator, "C5FS", 5, geometry, epoch,
+                               stored_probe_upper, stored_jedec_id) ||
+       stored_jedec_id != jedec_id || stored_probe_upper != probe_upper ||
+       !flash_device().setCapacity(geometry.capacity_bytes)) {
+      continue;
+    }
+    g_geometry = geometry;
+    g_format_epoch = epoch;
+    g_locator_matching_copies = 0;
+    return true;
+  }
+  return false;
+}
+
+static bool write_locators(void) {
+  u8 locator[LOCATOR_SIZE];
+  encode_locator(locator);
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!erase_sector(copy)) return false;
     const u32 address = sector_address(copy);
     if(!write_bytes(address, locator, sizeof(locator)) ||
        !write_byte(address + 5, STATE_ACTIVE)) return false;
   }
-  g_locator_store_version = store_version;
   g_locator_matching_copies = storage_geometry::LOCATOR_SECTORS;
   return true;
 }
 
-static bool write_locators(void) {
-  return write_locators_version(CATALOG_VERSION);
-}
-
-static bool load_or_migrate_catalog(void) {
-  if(load_catalog_version(CATALOG_VERSION)) {
-    if(g_locator_store_version == CATALOG_VERSION) {
-      return g_locator_matching_copies == storage_geometry::LOCATOR_SECTORS ||
-             write_locators();
-    }
-    // Один новый банк мог пережить прерванную миграцию. Переписываем второй,
-    // затем публикуем версию в обоих локаторах.
-    return checkpoint() && write_locators();
-  }
-  if(g_locator_store_version != LEGACY_CATALOG_VERSION ||
-     !load_catalog_version(LEGACY_CATALOG_VERSION)) return false;
-
-  // Таблица inode не изменилась. Два COW-checkpoint переводят по одному банку
-  // каталога, не трогая ни записи файлов, ни staging, ни settings.
-  return checkpoint() && checkpoint() && write_locators();
+static bool load_catalog_and_repair_locators(void) {
+  return load_catalog() &&
+         (g_locator_matching_copies == storage_geometry::LOCATOR_SECTORS ||
+          write_locators());
 }
 
 static bool data_sector_header_valid(u32 sector) {
   u8 header[DATA_SECTOR_HEADER_SIZE];
   if(!read_bytes(sector_address(sector), header, sizeof(header))) return false;
-  return memcmp(header, "C5D0", 4) == 0 &&
+  return memcmp(header, "C6D0", 4) == 0 &&
          header[4] == PHYSICAL_FORMAT_VERSION &&
          header[5] == STATE_ACTIVE && get_le32(header, 8) == g_format_epoch;
 }
@@ -1310,7 +1238,7 @@ static bool initialize_data_sector(u32 sector) {
   if(!erase_sector(sector)) return false;
   u8 header[DATA_SECTOR_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
-  memcpy(header, "C5D0", 4);
+  memcpy(header, "C6D0", 4);
   header[4] = PHYSICAL_FORMAT_VERSION;
   header[5] = STATE_WRITING;
   put_le32(header, 8, g_format_epoch);
@@ -1610,6 +1538,27 @@ static bool source_valid(const FileSource& source, u16 data_len) {
   return data_len == 0 || source.read != NULL;
 }
 
+static bool visible_file_size(ProgramType type, const FileSource& source,
+                              u16 data_len, u32& output) {
+  output = data_len;
+  if(!text_content(type)) return true;
+  output = 0;
+  u8 bytes[64];
+  u16 offset = 0;
+  while(offset < data_len) {
+    const u16 remaining = (u16) (data_len - offset);
+    const u16 count = remaining < (u16) sizeof(bytes)
+        ? remaining : (u16) sizeof(bytes);
+    if(!source.read(source.context, offset, bytes, count)) return false;
+    for(u16 index = 0; index < count; ++index) {
+      if(!mk8::valid_byte(bytes[index])) return false;
+      output += mk8::utf8(bytes[index]).size;
+    }
+    offset = (u16) (offset + count);
+  }
+  return true;
+}
+
 class CompressionBuffer {
   public:
     CompressionBuffer(u8* supplied, usize supplied_size)
@@ -1859,7 +1808,7 @@ static bool append_record_source(NodeKind kind, ProgramType type, u16 id,
   u8 header[RECORD_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
   header[0] = 'R';
-  header[1] = '5';
+  header[1] = '6';
   header[2] = STATE_WRITING;
   header[3] = (u8) kind;
   put_le16(header, 4, id);
@@ -1959,7 +1908,7 @@ static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
   u8 header[RECORD_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
   header[0] = 'R';
-  header[1] = '5';
+  header[1] = '6';
   header[2] = STATE_WRITING;
   header[3] = (u8) NodeKind::FILE;
   put_le16(header, 4, id);
@@ -1996,7 +1945,7 @@ static bool read_record_header(const Inode& inode, u16 expected_id, u8* header) 
           : zx0_file_inode(inode)
               ? stored_len != 0 && stored_len < inode.data_len
               : stored_len == inode.data_len;
-  return header[0] == 'R' && header[1] == '5' && header[2] == STATE_ACTIVE &&
+  return header[0] == 'R' && header[1] == '6' && header[2] == STATE_ACTIVE &&
          header[3] == (u8) inode_kind(inode) && get_le16(header, 4) == expected_id &&
          get_le16(header, 6) == inode.parent_id && length_valid &&
          header[10] != 0 && header[10] < NAME_SIZE &&
@@ -2088,7 +2037,7 @@ static void encode_large_descriptor(const LargeDescriptor& descriptor,
   size = (u16) (LARGE_DESCRIPTOR_HEADER_SIZE +
                 (u16) descriptor.block_count * sizeof(u32));
   memset(output, 0xFF, LARGE_DESCRIPTOR_SIZE);
-  memcpy(output, "C5L0", 4);
+  memcpy(output, "C6L0", 4);
   output[4] = descriptor.version;
   output[5] = descriptor.block_count;
   put_le16(output, 6, LARGE_DESCRIPTOR_HEADER_SIZE);
@@ -2107,7 +2056,7 @@ static bool decode_large_descriptor(const u8* input, u16 size,
                                     LargeDescriptor& descriptor) {
   memset(&descriptor, 0, sizeof(descriptor));
   if(input == NULL || size < LARGE_DESCRIPTOR_HEADER_SIZE ||
-     memcmp(input, "C5L0", 4) != 0 ||
+     memcmp(input, "C6L0", 4) != 0 ||
      (input[4] != LEGACY_LARGE_DESCRIPTOR_VERSION &&
       input[4] != LARGE_DESCRIPTOR_VERSION) ||
      get_le16(input, 6) != LARGE_DESCRIPTOR_HEADER_SIZE) return false;
@@ -2172,7 +2121,7 @@ static bool large_block_header(u32 sector, u16 id,
      !read_bytes(sector_address(sector), header,
                  LARGE_BLOCK_HEADER_SIZE)) return false;
   const u16 data_len = large_block_length(descriptor, block_index);
-  return memcmp(header, "C5B0", 4) == 0 &&
+  return memcmp(header, "C6B0", 4) == 0 &&
          header[4] == descriptor.version &&
          header[5] == STATE_ACTIVE &&
          get_le16(header, 6) == LARGE_BLOCK_HEADER_SIZE &&
@@ -2510,47 +2459,61 @@ static bool fat_visible_name(NodeKind kind, ProgramType type,
   return extension[extension_length] == 0;
 }
 
-static bool fat_name_available(u16 parent_id, NodeKind kind,
-                               ProgramType type, const char* name,
-                               u16 ignore_id) {
+static WriteFailureDetail fat_name_available(u16 parent_id, NodeKind kind,
+                                             ProgramType type,
+                                             const char* name,
+                                             u16 ignore_id) {
   char wanted[NAME_SIZE + 16];
-  if(!fat_visible_name(kind, type, name, wanted)) return false;
+  if(!fat_visible_name(kind, type, name, wanted)) {
+    return WriteFailureDetail::TARGET_VISIBLE_NAME;
+  }
   u16 root_slots = storage_geometry::ROOT_SYSTEM_DIRENTS;
   u16 id = parent_id == ROOT_ID ? g_meta.root_head : NONE;
   if(parent_id != ROOT_ID) {
     Inode parent;
     if(!get_inode(parent_id, parent) || inode_kind(parent) != NodeKind::DIRECTORY) {
-      return false;
+      return WriteFailureDetail::PARENT;
     }
     id = parent.first_child;
   }
   for(u16 guard = 0; id != NONE && guard < g_geometry.max_nodes; guard++) {
     Inode inode;
     if(!get_inode(id, inode) || !visible_inode(inode) ||
-       inode.parent_id != parent_id) return false;
+       inode.parent_id != parent_id) {
+      return WriteFailureDetail::CHILD_CATALOG;
+    }
     if(id != ignore_id) {
       char stored[NAME_SIZE];
       char visible[NAME_SIZE + 16];
-      if(!read_inode_name(id, inode, stored)) return false;
+      if(!read_inode_name(id, inode, stored)) {
+        return WriteFailureDetail::CHILD_NAME;
+      }
       if(!fat_visible_name(inode_kind(inode), inode_type(inode), stored,
-                           visible)) return false;
+                           visible)) {
+        return WriteFailureDetail::CHILD_VISIBLE_NAME;
+      }
       if(parent_id == ROOT_ID) {
         const u16 slots = fat_name::dirent_count(visible);
         if(slots == 0 || slots > g_geometry.root_entries ||
            root_slots > g_geometry.root_entries - slots) {
-          return false;
+          return WriteFailureDetail::ROOT_EXISTING_CAPACITY;
         }
         root_slots = (u16) (root_slots + slots);
       }
-      if(fat_name::equal(wanted, visible)) return false;
+      if(fat_name::equal(wanted, visible)) {
+        return WriteFailureDetail::COLLISION;
+      }
     }
     id = inode.next_sibling;
   }
-  if(id != NONE) return false;
-  if(parent_id != ROOT_ID) return true;
+  if(id != NONE) return WriteFailureDetail::CHAIN;
+  if(parent_id != ROOT_ID) return WriteFailureDetail::NONE;
   const u16 wanted_slots = fat_name::dirent_count(wanted);
-  return wanted_slots != 0 && wanted_slots <= g_geometry.root_entries &&
-         root_slots <= g_geometry.root_entries - wanted_slots;
+  if(wanted_slots == 0 || wanted_slots > g_geometry.root_entries ||
+     root_slots > g_geometry.root_entries - wanted_slots) {
+    return WriteFailureDetail::ROOT_TARGET_CAPACITY;
+  }
+  return WriteFailureDetail::NONE;
 }
 
 static bool find_global_file(ProgramType type, const char* name, u16& out) {
@@ -2568,14 +2531,38 @@ static bool find_global_file(ProgramType type, const char* name, u16& out) {
   return false;
 }
 
-static bool format_internal(bool erase_settings) {
+static bool copy_flash_range(u32 source, u32 destination, u16 size) {
+  u8 buffer[64];
+  u16 offset = 0;
+  while(offset < size) {
+    const u16 remaining = (u16) (size - offset);
+    const u16 count = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
+    if(!read_bytes(source + offset, buffer, count) ||
+       !write_bytes(destination + offset, buffer, count)) return false;
+    offset = (u16) (offset + count);
+  }
+  return true;
+}
+
+static bool save_legacy_settings(u32& scratch_address) {
+  if(g_geometry.stage_sector_count == 0) return false;
+  const u32 scratch_sector = g_geometry.stage_first_sector;
+  if(!erase_sector(scratch_sector)) return false;
+  scratch_address = sector_address(scratch_sector);
+  return copy_flash_range(
+      sector_address(g_geometry.settings_sector), scratch_address,
+      SETTINGS_JOURNAL_SIZE);
+}
+
+static bool format_internal(bool erase_settings,
+                            u32 saved_settings_address = EMPTY_ADDRESS) {
 #ifdef SPI_FLASH
   const u32 capacity = flash_device().getCapacity();
 #else
   const u32 capacity = 0;
 #endif
   if(!compute_geometry(capacity, g_geometry)) return false;
-  g_format_epoch = 0xC5F50001UL ^ capacity ^ millis();
+  g_format_epoch = 0xC6F60001UL ^ capacity ^ millis();
   if(g_format_epoch == 0 || g_format_epoch == 0xFFFFFFFFUL) g_format_epoch ^= 0x13579BDFUL;
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
@@ -2586,9 +2573,7 @@ static bool format_internal(bool erase_settings) {
   g_wal_sealed = false;
   g_overlay_count = 0;
   g_free_hint = 0;
-  g_locator_store_version = 0;
   g_locator_matching_copies = 0;
-  g_catalog_write_version = CATALOG_VERSION;
   g_large_write_sector_count = 0;
   g_verified_large_id = NONE;
   g_verified_large_generation = 0;
@@ -2609,7 +2594,13 @@ static bool format_internal(bool erase_settings) {
   if(!checkpoint()) return false;
   // Заголовки staging также содержат эпоху форматирования. Старые или чужие
   // секторы после форматирования игнорируются и стираются лениво перед первой записью.
-  if(erase_settings) {
+  if(saved_settings_address != EMPTY_ADDRESS) {
+    if(!erase_sector(g_geometry.settings_sector) ||
+       !copy_flash_range(saved_settings_address,
+                         sector_address(g_geometry.settings_sector),
+                         SETTINGS_JOURNAL_SIZE) ||
+       !write_settings_guard()) return false;
+  } else if(erase_settings) {
     if(!erase_sector(g_geometry.settings_sector) || !write_settings_guard()) return false;
   } else if(!settings_guard_valid(g_geometry)) {
     return false;
@@ -2631,14 +2622,29 @@ void init(void) {
   g_free_hint = 0;
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
-  dbgln(SPIROM, "C5 locator: scan");
-  if(!load_locator()) {
-    dbgln(SPIROM, "C5 locator: absent or incompatible");
+  dbgln(SPIROM, "C6 locator: scan");
+  if(load_locator()) {
+    if(!load_catalog_and_repair_locators()) {
+      dbgln(SPIROM, "C6 catalog: both banks invalid");
+      // Действительный локатор доказывает, что это существующий том C6. Потеря
+      // обоих банков каталога не должна выглядеть как первое использование:
+      // сохраняем каждый байт до явного запроса пользователя на форматирование.
+      g_mount_status = MountStatus::REPAIR_REQUIRED;
+    } else {
+      dbgln(SPIROM, "C6 catalog: ready");
+      g_ready = true;
+      g_mount_status = MountStatus::READY;
+    }
+  } else if(load_legacy_c5_locator()) {
+    dbgln(SPIROM, "C5 volume: explicit format required");
+    g_mount_status = MountStatus::FORMAT_REQUIRED;
+  } else {
+    dbgln(SPIROM, "C6 locator: absent or incompatible");
     const bool preserve_settings = load_capacity_for_reformat();
     u32 capacity = 0;
 #ifdef SPI_FLASH
     if(!preserve_settings) {
-      dbgln(SPIROM, "C5 capacity probe: start");
+      dbgln(SPIROM, "C6 capacity probe: start");
 #ifdef DEBUG_SPIFLASH
       const flash_capacity_probe::ProbeProgress progress =
           capacity_probe_debug;
@@ -2648,32 +2654,22 @@ void init(void) {
       if(!flash_capacity_probe::detect(
              flash_device(), flash_device().capacityProbeUpper(), capacity, progress) ||
          !flash_device().setCapacity(capacity)) {
-        dbgln(SPIROM, "C5 capacity probe: failed");
+        dbgln(SPIROM, "C6 capacity probe: failed");
         return;
       }
     }
 #endif
     if(!preserve_settings) {
-      dbgln(SPIROM, "C5 capacity probe: ", (isize) capacity, " bytes");
+      dbgln(SPIROM, "C6 capacity probe: ", (isize) capacity, " bytes");
     } else {
-      dbgln(SPIROM, "C5 geometry migration: preserve settings");
+      dbgln(SPIROM, "C6 geometry migration: preserve settings");
     }
-    dbgln(SPIROM, "C5 format: start");
+    dbgln(SPIROM, "C6 format: start");
     if(!format_internal(!preserve_settings)) {
-      dbgln(SPIROM, "C5 format: failed");
+      dbgln(SPIROM, "C6 format: failed");
       return;
     }
-    dbgln(SPIROM, "C5 format: complete");
-  } else if(!load_or_migrate_catalog()) {
-    dbgln(SPIROM, "C5 catalog: both banks invalid");
-    // Действительный локатор доказывает, что это существующий том C5. Потеря
-    // обоих банков каталога не должна выглядеть как первое использование:
-    // сохраняем каждый байт до явного запроса пользователя на форматирование.
-    g_mount_status = MountStatus::REPAIR_REQUIRED;
-  } else {
-    dbgln(SPIROM, "C5 catalog: ready");
-    g_ready = true;
-    g_mount_status = MountStatus::READY;
+    dbgln(SPIROM, "C6 format: complete");
   }
   if(g_ready) {
     (void) sweep_orphan_file_extents();
@@ -2683,7 +2679,17 @@ void init(void) {
 
 bool format(void) {
   DiskActivity activity;
-  return flash_is_ok && format_internal(false) && (vfat_stage_clear(), true);
+  if(!flash_is_ok) return false;
+  if(g_mount_status == MountStatus::FORMAT_REQUIRED) {
+    u32 saved_settings = EMPTY_ADDRESS;
+    const bool preserve_settings = legacy_c5_settings_guard_valid(g_geometry);
+    if(preserve_settings && !save_legacy_settings(saved_settings)) return false;
+    if(!format_internal(!preserve_settings, saved_settings)) return false;
+  } else if(!format_internal(false)) {
+    return false;
+  }
+  vfat_stage_clear();
+  return true;
 }
 
 bool refresh(void) {
@@ -2692,6 +2698,18 @@ bool refresh(void) {
 }
 
 bool ready(void) { return g_ready; }
+
+u32 media_revision(void) {
+  if(!g_ready) return 0;
+  // Compact both persistent counters into a well-distributed change token.
+  // FAT only compares identity; it does not impose ordering on this value.
+  u32 revision = g_catalog_generation;
+  revision ^= g_wal_sequence + 0x9E3779B9UL +
+              (revision << 6) + (revision >> 2);
+  revision ^= (u32) g_stage_generation + 0x9E3779B9UL +
+              (revision << 6) + (revision >> 2);
+  return revision;
+}
 
 MountStatus mount_status(void) { return g_mount_status; }
 
@@ -2712,12 +2730,14 @@ u16 used_nodes(void) {
 bool basename_valid(const char* name) { return valid_name(name); }
 
 u32 settings_address(void) {
-  return (g_ready || g_mount_status == MountStatus::REPAIR_REQUIRED)
+  return (g_ready || g_mount_status == MountStatus::FORMAT_REQUIRED ||
+          g_mount_status == MountStatus::REPAIR_REQUIRED)
       ? sector_address(g_geometry.settings_sector) : 0;
 }
 
 u16 settings_size(void) {
-  return (g_ready || g_mount_status == MountStatus::REPAIR_REQUIRED)
+  return (g_ready || g_mount_status == MountStatus::FORMAT_REQUIRED ||
+          g_mount_status == MountStatus::REPAIR_REQUIRED)
       ? SETTINGS_JOURNAL_SIZE : 0;
 }
 
@@ -2897,7 +2917,7 @@ static bool select_large_sector(u32& output) {
 }
 
 // Keep large-file work buffers out of the caller's small-file/encoder paths.
-// GCC otherwise inlines them and reserves their stack for every C5 write.
+// GCC otherwise inlines them and reserves their stack for every C6 write.
 __attribute__((noinline))
 static bool program_large_source(u16 id, const FileSource& source,
                                  u16 data_len,
@@ -2945,7 +2965,7 @@ static bool program_large_source(u16 id, const FileSource& source,
 
     u8 header[LARGE_BLOCK_HEADER_SIZE];
     memset(header, 0xFF, sizeof(header));
-    memcpy(header, "C5B0", 4);
+    memcpy(header, "C6B0", 4);
     header[4] = descriptor.version;
     header[5] = STATE_WRITING;
     put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
@@ -3019,7 +3039,7 @@ static bool finish_large_zx0_output(LargeZx0Output& output) {
     const u16 block_len = large_block_length(*output.descriptor, block);
     u8 header[LARGE_BLOCK_HEADER_SIZE];
     memset(header, 0xFF, sizeof(header));
-    memcpy(header, "C5B0", 4);
+    memcpy(header, "C6B0", 4);
     header[4] = output.descriptor->version;
     header[5] = STATE_WRITING;
     put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
@@ -3214,10 +3234,21 @@ static bool sweep_orphan_file_extents(void) {
   return true;
 }
 
+static bool prepare_local_catalog_mutation(void) {
+  // During MSC recovery the locked journal is the transaction being applied.
+  // Outside that session, however, any surviving FAT stage describes an
+  // older exported catalog.  A local/UI/terminal mutation establishes a new
+  // authoritative C6 state, so discard that stale stage before changing the
+  // catalog.  The stage records are invalidated one byte at a time and remain
+  // power-loss safe; a later retry simply finishes the discard.
+  return g_stage_locked || vfat_stage_discard_all();
+}
+
 bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
                       u16* out_id) {
   DiskActivity activity;
-  if(!g_ready || !valid_name(name) || !parent_valid(parent_id)) return false;
+  if(!g_ready || !prepare_local_catalog_mutation() ||
+     !valid_name(name) || !parent_valid(parent_id)) return false;
   u8 depth = 0;
   if(!directory_child_depth(parent_id, depth)) return false;
   u16 named_id = NONE;
@@ -3241,8 +3272,9 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
     if(out_id != NULL) *out_id = named_id;
     return true;
   }
-  if(!fat_name_available(parent_id, NodeKind::DIRECTORY,
-                         ProgramType::MK61, name, preferred_id)) return false;
+  if(fat_name_available(parent_id, NodeKind::DIRECTORY,
+                        ProgramType::MK61, name, preferred_id) !=
+     WriteFailureDetail::NONE) return false;
   u16 id = NONE;
   if(!find_free_id(preferred_id, id)) return false;
   u32 address = 0;
@@ -3278,7 +3310,10 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             u8* compression_buffer,
                             usize compression_buffer_size,
                             const u8* contiguous_data) {
+  g_last_write_failure = WriteFailure::ARGUMENTS;
+  g_last_write_failure_detail = WriteFailureDetail::NONE;
   DiskActivity activity;
+  if(!g_ready || !prepare_local_catalog_mutation()) return false;
   LargeWriteGuard large_guard;
   // The compression plan is consumed before the catalog transaction starts.
   union {
@@ -3288,14 +3323,18 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   write_workspace.compression[0] = 0; // Start the trivial array's lifetime.
   auto& fallback_workspace = write_workspace.compression;
   const u16 max_data_len = maximum_data_len(type);
-  if(!g_ready || !supported_type(type) || !valid_name(name) || !parent_valid(parent_id) ||
+  if(!supported_type(type) || !valid_name(name) || !parent_valid(parent_id) ||
      (type == ProgramType::CHIP8 && data_len == 0) ||
      data_len > max_data_len ||
      !source_valid(source, data_len)) return false;
+  g_last_write_failure = WriteFailure::VISIBLE_SIZE;
+  u32 fat_visible_size = 0;
+  if(!visible_file_size(type, source, data_len, fat_visible_size)) return false;
+  g_last_write_failure = WriteFailure::EXTENT_SHAPE;
   const u32 cluster_bytes =
       (u32) g_geometry.sectors_per_cluster * VFAT_STAGE_BLOCK_SIZE;
-  const u8 required_clusters = data_len == 0 ? 1 : (u8) (
-      ((u32) data_len + cluster_bytes - 1U) / cluster_bytes);
+  const u8 required_clusters = fat_visible_size == 0 ? 1 : (u8) (
+      (fat_visible_size + cluster_bytes - 1U) / cluster_bytes);
   const u8 required_extents = (u8) (required_clusters - 1U);
   if(required_extents > MAX_FAT_EXTENTS_PER_FILE ||
      (fat_extents == NULL && fat_extent_count != 0) ||
@@ -3303,6 +3342,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
     return false;
   }
 
+  g_last_write_failure = WriteFailure::PREFERRED_ID;
   u16 named_id = NONE;
   const bool named = find_child_id(parent_id, NodeKind::FILE, type, name,
                                    named_id);
@@ -3310,6 +3350,11 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   Inode old_inode = empty_inode();
   bool replacing = false;
   if(preferred_id < g_geometry.max_nodes) {
+    // FAT can only present an occupied FILE id as free when its persistent
+    // record is unreadable.  If a host then allocates that exact cluster,
+    // reclaim the stale inode here, behind the established storage ABI.  The
+    // helper refuses to touch anything still linked from ROOT_ID.
+    if(!release_unreachable_file(preferred_id)) return false;
     if(!get_inode(preferred_id, old_inode)) return false;
     if(inode_used(old_inode)) {
       if(inode_kind(old_inode) != NodeKind::FILE ||
@@ -3327,36 +3372,47 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   } else if(!find_free_id(INVALID_ID, id)) {
     return false;
   }
-  if(!fat_name_available(parent_id, NodeKind::FILE, type, name, id)) {
+  g_last_write_failure = WriteFailure::NAME_COLLISION;
+  g_last_write_failure_detail = fat_name_available(
+      parent_id, NodeKind::FILE, type, name, id);
+  if(g_last_write_failure_detail != WriteFailureDetail::NONE) {
     return false;
   }
 
   char old_name[NAME_SIZE] = {};
   if(replacing) {
-    if(!read_inode_name(id, old_inode, old_name)) return false;
+    if(!read_inode_name(id, old_inode, old_name)) {
+      g_last_write_failure_detail = WriteFailureDetail::REPLACED_NAME;
+      return false;
+    }
     bool same_extents = fat_extents == NULL;
     if(fat_extents != NULL && inode_kind(old_inode) == NodeKind::FILE) {
       u16 current[MAX_FAT_EXTENTS_PER_FILE];
       u8 current_count = 0;
-      same_extents = collect_file_extents(id, old_inode, current,
-                                          current_count) &&
-                     current_count == fat_extent_count &&
-                     memcmp(current, fat_extents,
-                            (usize) current_count * sizeof(current[0])) == 0;
+      if(!collect_file_extents(id, old_inode, current, current_count)) {
+        g_last_write_failure_detail = WriteFailureDetail::REPLACED_EXTENTS;
+        return false;
+      }
+      same_extents = current_count == fat_extent_count &&
+          memcmp(current, fat_extents,
+                 (usize) current_count * sizeof(current[0])) == 0;
     }
     if(old_inode.parent_id == parent_id && inode_type(old_inode) == type &&
        strcmp(old_name, name) == 0 && same_extents &&
        payload_equals_source(id, old_inode, name, source, data_len)) {
+      g_last_write_failure = WriteFailure::NONE;
       if(out_id != NULL) *out_id = id;
       return true;
     }
   }
 
+  g_last_write_failure = WriteFailure::EXTENT_SELECTION;
   u16 extent_ids[MAX_FAT_EXTENTS_PER_FILE] = {};
   if(!choose_file_extents(id, old_inode, replacing,
                           required_extents, fat_extents,
                           fat_extent_count, extent_ids)) return false;
 
+  g_last_write_failure = WriteFailure::COMPRESSION;
   CompressionBuffer compression(compression_buffer,
                                 compression_buffer_size);
   shared_memory::Lease compression_workspace;
@@ -3385,6 +3441,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
        (MAX_FONT_SIZE > MAX_IMAGE1_SIZE && type == ProgramType::FONT)) &&
       stored_len > MAX_IMAGE1_SIZE;
 
+  g_last_write_failure = WriteFailure::RECORD;
   u32 address = 0;
   u16 record_len = 0;
   LargeDescriptor descriptor = {};
@@ -3432,6 +3489,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
     inode.prev_sibling = NONE;
   }
 
+  g_last_write_failure = WriteFailure::CATALOG;
   write_workspace.transaction.count = 0; // Start Transaction's lifetime.
   Transaction& transaction = write_workspace.transaction;
   txn_begin(transaction);
@@ -3470,12 +3528,19 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
       }
     }
   }
+  g_last_write_failure = WriteFailure::COMMIT;
   if(!append_transaction(transaction)) return false;
+  g_last_write_failure = WriteFailure::NONE;
   g_verified_large_id = NONE;
   g_verified_large_block = 0xFF;
   (void) sweep_orphan_file_extents();
   if(out_id != NULL) *out_id = id;
   return true;
+}
+
+WriteFailure last_write_failure(void) { return g_last_write_failure; }
+WriteFailureDetail last_write_failure_detail(void) {
+  return g_last_write_failure_detail;
 }
 
 bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
@@ -3554,7 +3619,7 @@ bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_l
 
 bool remove_id(u16 id) {
   DiskActivity activity;
-  if(!g_ready) return false;
+  if(!g_ready || !prepare_local_catalog_mutation()) return false;
   Inode inode;
   if(!get_inode(id, inode) || !visible_inode(inode)) return false;
   if(inode_kind(inode) == NodeKind::DIRECTORY && inode.first_child != NONE) return false;
@@ -3593,7 +3658,8 @@ bool remove_id(u16 id) {
 bool remove_tree(u16 id, u16* removed) {
   DiskActivity activity;
   if(removed != NULL) *removed = 0;
-  if(!g_ready || id >= g_geometry.max_nodes) return false;
+  if(!g_ready || !prepare_local_catalog_mutation() ||
+     id >= g_geometry.max_nodes) return false;
   Inode root;
   if(!get_inode(id, root) || !visible_inode(root)) return false;
 
@@ -3628,9 +3694,95 @@ bool remove(ProgramType type, const char* name) {
   return find_global_file(type, name, id) && remove_id(id);
 }
 
+enum class Reachability : u8 {
+  INVALID = 0,
+  UNREACHABLE,
+  REACHABLE
+};
+
+static Reachability node_reachability(u16 id, const Inode& initial) {
+  u16 current = id;
+  Inode inode = initial;
+  for(u8 depth = 0; depth <= MAX_DIRECTORY_DEPTH; depth++) {
+    const u16 parent_id = inode.parent_id;
+    u16 sibling = NONE;
+    if(parent_id == ROOT_ID) {
+      sibling = g_meta.root_head;
+    } else {
+      Inode parent;
+      if(parent_id >= g_geometry.max_nodes ||
+         !get_inode(parent_id, parent) || !visible_inode(parent) ||
+         inode_kind(parent) != NodeKind::DIRECTORY) {
+        return Reachability::INVALID;
+      }
+      sibling = parent.first_child;
+    }
+
+    u16 previous = NONE;
+    bool found = false;
+    for(u16 guard = 0; sibling != NONE && guard < g_geometry.max_nodes;
+        guard++) {
+      if(sibling >= g_geometry.max_nodes) return Reachability::INVALID;
+      Inode child;
+      if(!get_inode(sibling, child) || !visible_inode(child) ||
+         child.parent_id != parent_id || child.prev_sibling != previous) {
+        return Reachability::INVALID;
+      }
+      if(sibling == current) {
+        found = true;
+        break;
+      }
+      previous = sibling;
+      sibling = child.next_sibling;
+    }
+    if(!found) {
+      return sibling == NONE ? Reachability::UNREACHABLE
+                             : Reachability::INVALID;
+    }
+    if(parent_id == ROOT_ID) return Reachability::REACHABLE;
+    current = parent_id;
+    if(!get_inode(current, inode)) return Reachability::INVALID;
+  }
+  return Reachability::INVALID;
+}
+
+bool release_unreachable_file(u16 id) {
+  DiskActivity activity;
+  if(!g_ready || id >= g_geometry.max_nodes ||
+     !prepare_local_catalog_mutation()) return false;
+  Inode inode;
+  if(!get_inode(id, inode)) return false;
+  if(!inode_used(inode) || inode_kind(inode) != NodeKind::FILE) return true;
+  // A readable FILE is represented as allocated in the base FAT and needs no
+  // repair here.  Besides narrowing the recovery to the inconsistency that
+  // can actually be advertised as a free cluster, this keeps PREPARE linear:
+  // ordinary imports do not rescan sibling chains for every existing file.
+  char name[NAME_SIZE];
+  if(read_inode_name(id, inode, name)) return true;
+  const Reachability reachability = node_reachability(id, inode);
+  if(reachability == Reachability::REACHABLE) return true;
+  if(reachability != Reachability::UNREACHABLE) return false;
+
+  Transaction transaction;
+  txn_begin(transaction);
+  if(transaction.meta.total_count != 0) transaction.meta.total_count--;
+  const int type = type_index(inode_type(inode));
+  if(type >= 0 && transaction.meta.type_count[type] != 0) {
+    transaction.meta.type_count[type]--;
+  }
+  if(!txn_set(transaction, id, empty_inode()) ||
+     !append_transaction(transaction)) return false;
+  g_verified_large_id = NONE;
+  g_verified_large_block = 0xFF;
+  if(!sweep_orphan_file_extents()) return false;
+  if(g_free_hint >= g_geometry.max_nodes || id < g_free_hint) g_free_hint = id;
+  return true;
+}
+
 bool move_rename(u16 id, u16 new_parent_id, const char* new_name) {
   DiskActivity activity;
-  if(!g_ready || !valid_name(new_name) || !parent_valid(new_parent_id)) return false;
+  if(!g_ready || !prepare_local_catalog_mutation() ||
+     !valid_name(new_name) || !parent_valid(new_parent_id)) return false;
   Inode inode;
   if(!get_inode(id, inode) || !visible_inode(inode)) return false;
   if(inode_kind(inode) == NodeKind::DIRECTORY) {
@@ -3648,8 +3800,8 @@ bool move_rename(u16 id, u16 new_parent_id, const char* new_name) {
     }
     if(ancestor != ROOT_ID) return false;
   }
-  if(!fat_name_available(new_parent_id, inode_kind(inode), inode_type(inode),
-                         new_name, id)) return false;
+  if(fat_name_available(new_parent_id, inode_kind(inode), inode_type(inode),
+                        new_name, id) != WriteFailureDetail::NONE) return false;
 
   shared_scratch::Lease scratch;
   u8 descriptor[LARGE_DESCRIPTOR_SIZE];
@@ -3708,7 +3860,8 @@ bool rename(ProgramType type, const char* old_name, const char* new_name) {
 bool allocate_directory_extent(u16 directory_id, u16 preferred_id) {
   DiskActivity activity;
   Inode directory;
-  if(!g_ready || !get_inode(directory_id, directory) ||
+  if(!g_ready || !prepare_local_catalog_mutation() ||
+     !get_inode(directory_id, directory) ||
      inode_kind(directory) != NodeKind::DIRECTORY) return false;
   u16 id = NONE;
   if(!find_free_id(preferred_id, id)) return false;
@@ -3752,20 +3905,35 @@ bool allocate_directory_extent(u16 directory_id, u16 preferred_id) {
 bool release_directory_extent(u16 extent_id) {
   DiskActivity activity;
   Inode extent;
-  if(!g_ready || !get_inode(extent_id, extent) ||
-     inode_kind(extent) != NodeKind::DIRECTORY_EXTENT || extent.next_sibling != NONE) return false;
+  if(!g_ready || !prepare_local_catalog_mutation() ||
+     !get_inode(extent_id, extent) ||
+     inode_kind(extent) != NodeKind::DIRECTORY_EXTENT) return false;
   Inode directory;
-  if(!get_inode(extent.parent_id, directory) || inode_kind(directory) != NodeKind::DIRECTORY) return false;
+  if(!get_inode(extent.parent_id, directory) ||
+     inode_kind(directory) != NodeKind::DIRECTORY) return false;
   Transaction transaction;
   txn_begin(transaction);
   if(extent.prev_sibling == NONE) {
-    directory.data_len = NONE;
+    if(directory.data_len != extent_id) return false;
+    directory.data_len = extent.next_sibling;
     if(!txn_set(transaction, extent.parent_id, directory)) return false;
   } else {
     Inode previous;
-    if(!txn_get(transaction, extent.prev_sibling, previous)) return false;
-    previous.next_sibling = NONE;
+    if(!txn_get(transaction, extent.prev_sibling, previous) ||
+       inode_kind(previous) != NodeKind::DIRECTORY_EXTENT ||
+       previous.parent_id != extent.parent_id ||
+       previous.next_sibling != extent_id) return false;
+    previous.next_sibling = extent.next_sibling;
     if(!txn_set(transaction, extent.prev_sibling, previous)) return false;
+  }
+  if(extent.next_sibling != NONE) {
+    Inode next;
+    if(!txn_get(transaction, extent.next_sibling, next) ||
+       inode_kind(next) != NodeKind::DIRECTORY_EXTENT ||
+       next.parent_id != extent.parent_id ||
+       next.prev_sibling != extent_id) return false;
+    next.prev_sibling = extent.prev_sibling;
+    if(!txn_set(transaction, extent.next_sibling, next)) return false;
   }
   if(!txn_set(transaction, extent_id, empty_inode()) ||
      !append_transaction(transaction)) return false;
@@ -3773,6 +3941,114 @@ bool release_directory_extent(u16 extent_id) {
     g_free_hint = extent_id;
   }
   return true;
+}
+
+DirectoryTrimResult trim_directory_extents_step(u16 directory_id,
+                                                u16 keep_count) {
+  DiskActivity activity;
+  Inode directory;
+  if(!g_ready || !prepare_local_catalog_mutation() ||
+     !get_inode(directory_id, directory) ||
+     inode_kind(directory) != NodeKind::DIRECTORY) {
+    return DirectoryTrimResult::FAILED;
+  }
+
+  u16 have = 0;
+  u16 current = directory.data_len;
+  u16 previous = NONE;
+  while(current != NONE && have < g_geometry.max_nodes) {
+    Inode extent;
+    if(!get_inode(current, extent) ||
+       inode_kind(extent) != NodeKind::DIRECTORY_EXTENT ||
+       extent.parent_id != directory_id ||
+       extent.prev_sibling != previous) return DirectoryTrimResult::FAILED;
+    previous = current;
+    current = extent.next_sibling;
+    ++have;
+  }
+  if(current != NONE || keep_count > have) return DirectoryTrimResult::FAILED;
+  if(have == keep_count) return DirectoryTrimResult::COMPLETE;
+
+  // One step is exactly one WAL record: one updated link plus at most fifteen
+  // cleared tail nodes. Removing from the tail keeps every intermediate
+  // catalog state reachable and power-loss safe. The APP-facing adapter calls
+  // this repeatedly and services the foreground between steps.
+  static constexpr u8 MAX_TRIM_PER_TRANSACTION = WAL_MAX_UPDATES - 1U;
+  const u16 excess = (u16) (have - keep_count);
+  const u8 remove_count = (u8) (
+      excess < MAX_TRIM_PER_TRANSACTION ? excess : MAX_TRIM_PER_TRANSACTION);
+  const u16 kept = (u16) (have - remove_count);
+
+  if(!get_inode(directory_id, directory) ||
+     inode_kind(directory) != NodeKind::DIRECTORY) {
+    return DirectoryTrimResult::FAILED;
+  }
+  u16 predecessor = NONE;
+  current = directory.data_len;
+  previous = NONE;
+  for(u16 index = 0; index < kept; ++index) {
+    Inode extent;
+    if(current == NONE || !get_inode(current, extent) ||
+       inode_kind(extent) != NodeKind::DIRECTORY_EXTENT ||
+       extent.parent_id != directory_id ||
+       extent.prev_sibling != previous) return DirectoryTrimResult::FAILED;
+    previous = current;
+    predecessor = current;
+    current = extent.next_sibling;
+  }
+
+  Transaction transaction;
+  txn_begin(transaction);
+  if(predecessor == NONE) {
+    directory.data_len = NONE;
+    if(!txn_set(transaction, directory_id, directory)) {
+      return DirectoryTrimResult::FAILED;
+    }
+  } else {
+    Inode kept_tail;
+    if(!txn_get(transaction, predecessor, kept_tail) ||
+       inode_kind(kept_tail) != NodeKind::DIRECTORY_EXTENT ||
+       kept_tail.parent_id != directory_id) return DirectoryTrimResult::FAILED;
+    kept_tail.next_sibling = NONE;
+    if(!txn_set(transaction, predecessor, kept_tail)) {
+      return DirectoryTrimResult::FAILED;
+    }
+  }
+
+  u16 first_freed = NONE;
+  for(u8 index = 0; index < remove_count; ++index) {
+    Inode extent;
+    if(current == NONE || !txn_get(transaction, current, extent) ||
+       inode_kind(extent) != NodeKind::DIRECTORY_EXTENT ||
+       extent.parent_id != directory_id ||
+       extent.prev_sibling != previous) return DirectoryTrimResult::FAILED;
+    const u16 freed = current;
+    previous = current;
+    current = extent.next_sibling;
+    if(!txn_set(transaction, freed, empty_inode())) {
+      return DirectoryTrimResult::FAILED;
+    }
+    if(first_freed == NONE || freed < first_freed) first_freed = freed;
+  }
+  if(current != NONE || !append_transaction(transaction)) {
+    return DirectoryTrimResult::FAILED;
+  }
+  if(first_freed != NONE &&
+     (g_free_hint >= g_geometry.max_nodes || first_freed < g_free_hint)) {
+    g_free_hint = first_freed;
+  }
+  return kept == keep_count
+      ? DirectoryTrimResult::COMPLETE : DirectoryTrimResult::MORE;
+}
+
+bool trim_directory_extents(u16 directory_id, u16 keep_count) {
+  for(u16 guard = 0; guard <= g_geometry.max_nodes; ++guard) {
+    const DirectoryTrimResult result =
+        trim_directory_extents_step(directory_id, keep_count);
+    if(result == DirectoryTrimResult::COMPLETE) return true;
+    if(result != DirectoryTrimResult::MORE) return false;
+  }
+  return false;
 }
 
 bool first_extent(u16 directory_id, u16& out_id) {
@@ -3808,7 +4084,8 @@ bool extent_info(u16 extent_id, u16& directory_id, u16& next_id) {
 bool release_file_extent(u16 extent_id) {
   DiskActivity activity;
   Inode extent;
-  if(!g_ready || !get_inode(extent_id, extent) ||
+  if(!g_ready || !prepare_local_catalog_mutation() ||
+     !get_inode(extent_id, extent) ||
      inode_kind(extent) != NodeKind::FILE_EXTENT) return false;
   const u16 file_id = extent.parent_id;
   Inode file;
@@ -3987,7 +4264,7 @@ static int stage_ref_index(u32 key) {
 static bool stage_sector_header_valid(u16 sector) {
   u8 header[STAGE_SECTOR_HEADER_SIZE];
   if(!read_bytes(stage_sector_address(sector), header, sizeof(header))) return false;
-  return memcmp(header, "C5S0", 4) == 0 &&
+  return memcmp(header, "C6S0", 4) == 0 &&
          header[4] == PHYSICAL_FORMAT_VERSION &&
          header[5] == STATE_ACTIVE && get_le32(header, 8) == g_format_epoch;
 }
@@ -3996,7 +4273,7 @@ static bool initialize_stage_sector(u16 sector) {
   if(!erase_sector(g_geometry.stage_first_sector + sector)) return false;
   u8 header[STAGE_SECTOR_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
-  memcpy(header, "C5S0", 4);
+  memcpy(header, "C6S0", 4);
   header[4] = PHYSICAL_FORMAT_VERSION;
   header[5] = STATE_WRITING;
   put_le32(header, 8, g_format_epoch);
@@ -4018,7 +4295,7 @@ static bool read_stage_record(u16 ref, u32& key, u16& generation,
                               u32& crc, u8& state) {
   u8 header[STAGE_RECORD_HEADER_SIZE];
   if(!read_bytes(stage_record_address(ref), header, sizeof(header))) return false;
-  if(header[0] != 'S' || header[1] != '5') return false;
+  if(header[0] != 'S' || header[1] != '6') return false;
   state = header[2];
   key = get_le32(header, 4);
   generation = get_le16(header, 8);
@@ -4083,7 +4360,7 @@ static bool append_stage_value(u16 sector, u32 key, const u8* data) {
   u8 record[STAGE_RECORD_SIZE];
   memset(record, 0xFF, STAGE_RECORD_HEADER_SIZE);
   record[0] = 'S';
-  record[1] = '5';
+  record[1] = '6';
   // Полная запись программируется одним проверяемым потоком. Восстановление
   // принимает только записи ACTIVE с совпадающей CRC данных, поэтому отключение
   // питания во время программирования любой страницы NOR не заменит старую версию.
@@ -4275,7 +4552,7 @@ void vfat_stage_clear(void) {
       for(u8 i = 0; i < sizeof(raw); i++) if(raw[i] != 0xFF) erased = false;
       if(erased) break;
       g_stage_used[sector] = (u8) (slot + 1);
-      if(raw[0] != 'S' || raw[1] != '5') {
+      if(raw[0] != 'S' || raw[1] != '6') {
         g_stage_sealed[sector] = 1;
         continue;
       }
@@ -4315,23 +4592,6 @@ void vfat_stage_clear(void) {
 }
 
 #if defined(PROGRAM_STORE_HOST_TEST)
-bool test_rewrite_catalog_as_v5(void) {
-  if(!g_ready) return false;
-  g_catalog_write_version = LEGACY_CATALOG_VERSION;
-  bool ok = checkpoint() && checkpoint();
-  if(ok) {
-    // Оставляем активную 256-байтовую WAL-запись v5, чтобы тест миграции
-    // проверял не только checkpoint, но и старый журнал.
-    Transaction transaction;
-    txn_begin(transaction);
-    transaction.meta.data_sequence++;
-    ok = append_transaction(transaction);
-  }
-  if(ok) ok = write_locators_version(LEGACY_CATALOG_VERSION);
-  g_catalog_write_version = CATALOG_VERSION;
-  return ok;
-}
-
 bool test_file_storage_info(u16 id, u16& stored_len,
                             bool& large, bool& zx0) {
   Inode inode;
@@ -4360,6 +4620,19 @@ bool test_file_record_location(u16 id, u32& sector, u16& record_len) {
   record_len = inode.record_len;
   return true;
 }
+
+bool test_make_unreadable_orphan_file(u16 id) {
+  Inode inode;
+  if(!g_ready || !get_inode(id, inode) ||
+     inode_kind(inode) != NodeKind::FILE) return false;
+  Transaction transaction;
+  txn_begin(transaction);
+  if(!unlink_node(transaction, id, inode)) return false;
+  inode.name_hash ^= 1U;
+  if(!txn_set(transaction, id, inode)) return false;
+  return append_transaction(transaction);
+}
+
 #endif
 
 bool vfat_stage_write(u32 block, const u8* data) {
@@ -4397,6 +4670,17 @@ bool vfat_stage_exists(u32 block) {
 
 u16 vfat_stage_count(void) {
   return g_ready && g_stage_index != nullptr ? g_stage_ref_count : 0;
+}
+
+bool vfat_stage_snapshot(u32* keys, u16 capacity, u16& count) {
+  count = 0;
+  if(!g_ready || keys == nullptr || !ensure_stage_index() ||
+     capacity < g_stage_ref_count) return false;
+  for(u16 index = 0; index < g_stage_ref_count; ++index) {
+    keys[index] = stage_index_key(index);
+  }
+  count = g_stage_ref_count;
+  return true;
 }
 
 void vfat_stage_forget(u32 start_block, u16 blocks) {

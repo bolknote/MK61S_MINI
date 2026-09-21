@@ -6,7 +6,7 @@
 
 namespace storage_path {
 
-// Видимое имя FAT состоит из 31-байтового базового имени C5, самого длинного
+// Видимое имя FAT состоит из 31-байтового базового имени C6, самого длинного
 // создаваемого расширения (".state.txt") и завершающего нуля.
 static constexpr usize VISIBLE_NAME_SIZE = program_store::NAME_SIZE + 16;
 
@@ -49,7 +49,7 @@ Status resolve_file(u16 cwd, const char* path,
                     program_store::Entry& out);
 
 // Разбирает путь до последнего компонента, не предъявляя требований к его
-// расширению. Нужен для корневых псевдофайлов, которые не являются inode C5.
+// расширению. Нужен для корневых псевдофайлов, которые не являются inode C6.
 Status split_parent(u16 cwd, const char* path, u16& out_parent,
                     char* leaf, usize leaf_capacity);
 

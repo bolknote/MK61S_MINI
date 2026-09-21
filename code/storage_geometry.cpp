@@ -102,7 +102,7 @@ bool compute(u32 capacity_bytes, Geometry& out) {
     if(overhead + 4 >= physical_sectors) return false;
     data_sectors = physical_sectors - overhead;
 
-    // Исходная запись C5 максимального размера немного больше 1,5 КиБ, поэтому
+    // Исходная запись C6 максимального размера немного больше 1,5 КиБ, поэтому
     // в сектор стирания помещаются ровно две. Оставляем вне квоты два сектора,
     // чтобы запись и GC продвигались даже при худшем размере каждого файла.
     const u32 physical_limit = (data_sectors - 2) * 2;
