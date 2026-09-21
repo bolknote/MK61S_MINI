@@ -190,23 +190,23 @@ after 900
 send -- "8"
 after 100
 send -- "\033OB\033OA"
-after 1200
+set timeout 8
+expect {
+  "Enter или Esc закрыть" {}
+  timeout {
+    send_user "device-detection result dialog did not appear\n"
+    exit 1
+  }
+}
+send -- "\033"
+expect "Устройство: устройство не найдено"
 send -- q
-set timeout 1
+set timeout 3
 expect {
   eof {}
   timeout {
-    # On a heavily loaded runner the first q can legitimately close the
-    # detection result dialog; a second q must then close the main menu.
-    send -- q
-    set timeout 2
-    expect {
-      eof {}
-      timeout {
-        send_user "firmware menu did not exit after device-detection key burst\n"
-        exit 1
-      }
-    }
+    send_user "firmware menu did not exit after device-detection key burst\n"
+    exit 1
   }
 }
 log_file
