@@ -11,6 +11,15 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
   cflags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
+clang "${cflags[@]}" -fno-builtin \
+  -Dstrlen=mk61_test_strlen -Dstrcmp=mk61_test_strcmp \
+  -Dstrchr=mk61_test_strchr \
+  -Dmemcpy=mk61_test_memcpy -Dmemset=mk61_test_memset \
+  -Dmemmove=mk61_test_memmove -Dmemcmp=mk61_test_memcmp \
+  -c "$root/sdk/portable/memory.c" -o "$work/memory.o"
+clang "${cflags[@]}" "$root/tests/portable_memory_self_test.c" \
+  "$work/memory.o" -o "$work/memory"
+"$work/memory"
 clang++ "${flags[@]}" \
   "$root/tests/portable_app_format_self_test.cpp" \
   "$root/code/loadable_module_format.cpp" "$root/code/zx0.cpp" \

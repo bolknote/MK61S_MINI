@@ -32,3 +32,27 @@ int memcmp(const void* left, const void* right, size_t size) {
     if(a[i] != b[i]) return a[i] < b[i] ? -1 : 1;
   return 0;
 }
+
+/* Newlib's Cortex-M string routines are optimized for throughput and pull
+ * substantially more code into the 20-KiB system APPs. Keep the few string
+ * operations they use here with standard bytewise semantics. */
+size_t strlen(const char* text) {
+  const char* end = text;
+  while(*end != 0) ++end;
+  return (size_t) (end - text);
+}
+
+int strcmp(const char* left, const char* right) {
+  const unsigned char* a = (const unsigned char*) left;
+  const unsigned char* b = (const unsigned char*) right;
+  while(*a != 0 && *a == *b) { ++a; ++b; }
+  return (int) *a - (int) *b;
+}
+
+char* strchr(const char* text, int character) {
+  const unsigned char wanted = (unsigned char) character;
+  do {
+    if((unsigned char) *text == wanted) return (char*) text;
+  } while(*text++ != 0);
+  return NULL;
+}
