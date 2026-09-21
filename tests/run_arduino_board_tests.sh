@@ -95,6 +95,12 @@ fi
 grep -q 'build_system_app_bundle.py' "$hook"
 grep -q 'build_system_app_bundle.py' \
   "$platform/tools/mk61-app-postbuild.ps1"
+grep -Fq 'SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT' "$hook"
+grep -Fq "'SETUP.APP', 'USBDISK.APP'," \
+  "$platform/tools/mk61-app-postbuild.ps1"
+grep -Fq "printf 'format 1\\nabi 6\\n'" "$hook"
+grep -Fq "'abi 6' + [Environment]::NewLine" \
+  "$platform/tools/mk61-app-postbuild.ps1"
 grep -q 'package_ui_font_licenses.py' "$hook"
 grep -q 'package_ui_font_licenses.py' \
   "$platform/tools/mk61-app-postbuild.ps1"
@@ -198,6 +204,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   resident="$bundle/mk61s-M-mini-v2-lcd1602-a00-f401.bin"
   resident_elf="$work/build/code.ino.elf"
   test -s "$resident"
+  grep -qx 'abi 6' "$bundle/build.apps"
   test -s "$resident_elf"
   "$root/tests/check_core_native_hot_paths_elf.sh" "$resident_elf"
   "$root/tests/check_no_resident_fmk_decoder_elf.sh" "$resident_elf"

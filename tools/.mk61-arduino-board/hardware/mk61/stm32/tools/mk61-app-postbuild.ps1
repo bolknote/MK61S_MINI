@@ -224,7 +224,8 @@ function Build-Mk61Bundle {
     Copy-Item -LiteralPath (Join-Path $script:Stage "$Bundle.bin") `
         -Destination (Join-Path $output "$Bundle.bin") -Force
     foreach ($canonical in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP',
-            'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+            'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP',
+            'HELP0.TXT', 'HELP1.TXT')) {
         $source = Join-Path (Join-Path $script:Stage 'System') $canonical
         $target = Join-Path $outputSystem $canonical
         if ([IO.File]::Exists($source)) {
@@ -255,7 +256,7 @@ function Build-Mk61Bundle {
             [Environment]::NewLine, $utf8)
     [IO.File]::WriteAllText((Join-Path $output 'build.apps'),
         'format 1' + [Environment]::NewLine +
-            'abi 5' + [Environment]::NewLine, $utf8)
+            'abi 6' + [Environment]::NewLine, $utf8)
     Write-Host ''
     Write-Host 'MK61s F401 unified ABI 6 bundle built by Arduino IDE:'
     Write-Host "  $output"

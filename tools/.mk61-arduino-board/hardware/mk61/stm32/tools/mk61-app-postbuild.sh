@@ -144,7 +144,7 @@ build_bundle() {
   mkdir -p "$output/System"
   cp "$stage/$bundle.bin" "$output/$bundle.bin"
   for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP \
-                   SETUP.APP HELP0.TXT HELP1.TXT; do
+                   SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
     if [ -f "$stage/System/$canonical" ]; then
       cp "$stage/System/$canonical" "$output/System/$canonical"
     else
@@ -161,7 +161,7 @@ build_bundle() {
   fi
   printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
     "$compile_flags" "$ui_fonts" "$local_float_math" > "$output/build.flags"
-  printf 'format 1\nabi 5\n' > "$output/build.apps"
+  printf 'format 1\nabi 6\n' > "$output/build.apps"
   printf '\nMK61s F401 unified ABI 6 bundle built by Arduino IDE:\n  %s\n' "$output"
   printf 'After Upload, copy the generated System directory to /System on MK61S C6.\n\n'
 }
