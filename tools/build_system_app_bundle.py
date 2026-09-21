@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = (
     "FOCAL.APP", "BASIC.APP", "WBMP.APP", "MARKDOWN.APP", "CHIP8.APP",
-    "SETUP.APP", "HELP0.TXT", "HELP1.TXT",
+    "SETUP.APP", "USBDISK.APP", "HELP0.TXT", "HELP1.TXT",
 )
 MODULES = (
     ("setup", "SETUP.APP", "setup"),
@@ -24,6 +24,7 @@ MODULES = (
     ("wbmp", "WBMP.APP", "wbmp-viewer"),
     ("markdown", "MARKDOWN.APP", "markdown-viewer"),
     ("chip8", "CHIP8.APP", "chip8"),
+    ("usbdisk", "USBDISK.APP", "usbdisk"),
 )
 
 
@@ -83,6 +84,7 @@ def build(args: argparse.Namespace) -> dict:
         "wbmp": args.wbmp and not args.markdown,
         "markdown": args.markdown,
         "chip8": args.chip8,
+        "usbdisk": True,
     }
     built: list[str] = []
     with tempfile.TemporaryDirectory(prefix="mk61-system-app-") as temporary:
@@ -127,7 +129,7 @@ def build(args: argparse.Namespace) -> dict:
                 destination.unlink()
 
     result = {
-        "abi": 5,
+        "abi": 6,
         "resident": str(resident),
         "output": str(output),
         "apps": built,

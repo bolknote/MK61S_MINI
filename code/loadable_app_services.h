@@ -29,7 +29,9 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_UI_FONT = 1U << 11,
   MK61_SERVICE_CAP_NUMBER_IO = 1U << 12,
   MK61_SERVICE_CAP_TEXT_FONT = 1U << 13,
-  MK61_SERVICE_CAP_FLOAT_CONVERT = 1U << 14
+  MK61_SERVICE_CAP_FLOAT_CONVERT = 1U << 14,
+  /* Private storage primitives used only by the canonical USBDISK.APP. */
+  MK61_SERVICE_CAP_USBDISK = 1U << 15
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -68,8 +70,106 @@ enum mk61_service_operation {
   MK61_SERVICE_NUMBER_PARSE,
   MK61_SERVICE_REF_PARSE,
   MK61_SERVICE_TEXT_FONT,
-  MK61_SERVICE_FLOAT_CONVERT
+  MK61_SERVICE_FLOAT_CONVERT,
+  MK61_SERVICE_USBDISK
 };
+
+/* Narrow resident C6 backend for USBDISK.APP. FAT, LFN, conversion and commit
+ * policy remain in the APP; these operations only expose atomic store facts
+ * and mutations which cannot be implemented outside the resident driver. */
+enum mk61_service_usbdisk_operation {
+  MK61_USBDISK_READY,
+  MK61_USBDISK_GEOMETRY,
+  MK61_USBDISK_MAX_NODES,
+  MK61_USBDISK_CHILD_COUNT,
+  MK61_USBDISK_CHILD,
+  MK61_USBDISK_CREATE_DIRECTORY,
+  MK61_USBDISK_MOVE_RENAME,
+  MK61_USBDISK_ALLOCATE_DIRECTORY_EXTENT,
+  MK61_USBDISK_RELEASE_DIRECTORY_EXTENT,
+  MK61_USBDISK_FIRST_DIRECTORY_EXTENT,
+  MK61_USBDISK_NEXT_DIRECTORY_EXTENT,
+  MK61_USBDISK_DIRECTORY_EXTENT_INFO,
+  MK61_USBDISK_FIRST_FILE_EXTENT,
+  MK61_USBDISK_NEXT_FILE_EXTENT,
+  MK61_USBDISK_FILE_EXTENT_INFO,
+  MK61_USBDISK_RELEASE_FILE_EXTENT,
+  MK61_USBDISK_STAGE_WRITE,
+  MK61_USBDISK_STAGE_READ,
+  MK61_USBDISK_STAGE_EXISTS,
+  MK61_USBDISK_STAGE_COUNT,
+  MK61_USBDISK_STAGE_DISCARD_ALL,
+  MK61_USBDISK_STAGE_CLEAR,
+  MK61_USBDISK_STAGE_LOCK,
+  MK61_USBDISK_STAGE_NARROW_MATCHING,
+  MK61_USBDISK_STAGE_RESTORE_FULL,
+  MK61_USBDISK_STAGE_UNLOCK,
+  MK61_USBDISK_WRITE_FILE_SOURCE,
+  MK61_USBDISK_VALIDATE_APP,
+  MK61_USBDISK_MAX_FILE_SIZE,
+  MK61_USBDISK_VOLUME_SERIAL,
+  MK61_USBDISK_MEDIA_REVISION,
+  /* Diagnostic breadcrumb emitted by USBDISK.APP during MSC startup. */
+  MK61_USBDISK_STARTUP_STAGE,
+  /* One bounded copy replaces hundreds of per-sector presence queries. */
+  MK61_USBDISK_STAGE_SNAPSHOT,
+  /* Perform one bounded, power-safe directory-tail trim transaction. */
+  MK61_USBDISK_TRIM_DIRECTORY_EXTENTS
+};
+enum mk61_service_usbdisk_trim_result {
+  MK61_USBDISK_TRIM_FAILED = 0,
+  MK61_USBDISK_TRIM_COMPLETE = 1,
+  MK61_USBDISK_TRIM_MORE = 2
+};
+typedef struct mk61_service_usbdisk_geometry {
+  uint32_t capacity_bytes, physical_sectors;
+  uint32_t locator_a_sector, locator_b_sector;
+  uint32_t catalog_a_sector, catalog_b_sector;
+  uint16_t catalog_table_sectors, catalog_bank_sectors;
+  uint32_t data_first_sector, data_sector_count, stage_first_sector;
+  uint16_t stage_sector_count;
+  uint32_t settings_sector;
+  uint16_t max_nodes;
+  uint8_t sectors_per_cluster;
+  uint16_t fat_sectors, root_entries, root_sectors;
+  uint32_t logical_sectors;
+} mk61_service_usbdisk_geometry;
+typedef struct mk61_service_usbdisk_name {
+  uint32_t id, parent, preferred, out_id;
+  const char* name;
+} mk61_service_usbdisk_name;
+typedef struct mk61_service_usbdisk_extent {
+  uint32_t id, owner, next, cluster_index;
+} mk61_service_usbdisk_extent;
+typedef int (*mk61_service_usbdisk_reader)(void* context, uint32_t offset,
+                                          uint8_t* output, uint32_t size);
+typedef int (*mk61_service_usbdisk_key_filter)(void* context, uint32_t key);
+typedef struct mk61_service_usbdisk_source {
+  uint32_t parent, preferred, type, size, out_id, extent_count;
+  const char* name;
+  void* context;
+  mk61_service_usbdisk_reader read;
+  const uint16_t* extents;
+  uint8_t* compression_buffer;
+  uint32_t compression_buffer_size;
+  const uint8_t* contiguous_data;
+} mk61_service_usbdisk_source;
+typedef struct mk61_service_usbdisk_stage_filter {
+  void* context;
+  mk61_service_usbdisk_key_filter include;
+  uint32_t* index_storage;
+  uint32_t index_capacity;
+} mk61_service_usbdisk_stage_filter;
+typedef struct mk61_service_usbdisk_stage_snapshot {
+  uint32_t* keys;
+  uint32_t capacity;
+  uint32_t count;
+} mk61_service_usbdisk_stage_snapshot;
+typedef struct mk61_service_usbdisk_app_validation {
+  void* context;
+  mk61_service_usbdisk_reader read;
+  uint32_t size, status;
+} mk61_service_usbdisk_app_validation;
 enum mk61_service_float_convert_operation {
   MK61_FLOAT_FROM_DOUBLE,
   MK61_DOUBLE_FROM_FLOAT
@@ -89,10 +189,9 @@ enum mk61_service_display_operation {
   // Explicitly select the established cell renderer before language output.
   // Old residents safely ignore this append-only operation (they have no UI role).
   MK61_SERVICE_DISPLAY_END_UI_TEXT,
-  // Write one Unicode codepoint. Unlike DISPLAY_WRITE this never interprets
-  // the value as an MK-61 legacy byte/control token.
+  // Draw one explicit glyph codepoint. Text itself is always passed as M8.
   MK61_SERVICE_DISPLAY_WRITE_CODEPOINT,
-  // Resident-owned UTF-8 word flow. Languages hand the complete logical line
+  // Resident-owned M8 word flow. Languages hand the complete logical line
   // to the display owner instead of copying font metrics and wrap policy.
   MK61_SERVICE_DISPLAY_FLOW_TEXT
 };

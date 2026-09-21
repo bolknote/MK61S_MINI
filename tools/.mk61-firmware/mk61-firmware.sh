@@ -142,7 +142,7 @@ Options:
 
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_BUILD_ROOT, MK61_OUTPUT_DIR,
-  MK61_CONFIG_FILE, MK61_C5_MOUNT, MK61_APP_MANIFESTS, MK61_UI,
+  MK61_CONFIG_FILE, MK61_C6_MOUNT, MK61_APP_MANIFESTS, MK61_UI,
   MK61_COLOR (always, auto, or never)
 
 Interactive selections are stored in .mk61-firmware.conf (git-ignored).
@@ -156,8 +156,8 @@ mcu_valid() {
 
 mcu_label() {
   case "${1:-}" in
-    f411) printf '%s' 'STM32F411CE · 512 KiB Flash · APP в C5' ;;
-    f401) printf '%s' 'STM32F401CC · 256 KiB Flash · APP в C5' ;;
+    f411) printf '%s' 'STM32F411CE · 512 KiB Flash · APP в C6' ;;
+    f401) printf '%s' 'STM32F401CC · 256 KiB Flash · APP в C6' ;;
     *) printf '%s' 'не выбран' ;;
   esac
 }
@@ -1360,7 +1360,7 @@ save_config() {
     printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
     # This is part of the firmware format contract, not a user-selectable
     # permission.  Persist it so Bash and PowerShell configs describe the
-    # same always-on ABI 5 runtime and stale USER_APPS lines disappear.
+    # same always-on ABI 6 runtime and stale USER_APPS lines disappear.
     printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
     printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
     printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
@@ -1468,7 +1468,7 @@ compile_options_details() {
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")"
   printf '%s CHIP-8 (MK61_ENABLE_CHIP8)\n' "$(checkbox_marker "$ENABLE_CHIP8")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
-  printf '☑ единый APP runtime ABI 5 (MK61_ENABLE_LOADABLE_MODULES=1)\n'
+  printf '☑ единый APP runtime ABI 6 (MK61_ENABLE_LOADABLE_MODULES=1)\n'
   printf '%s расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)\n' \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
   printf '%s USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)\n' \
@@ -1506,9 +1506,9 @@ show_config() {
 choose_mcu() {
   local chosen
   chosen=$(ui_radiolist 'Контроллер' \
-    'Оба контроллера собирают resident и согласованные ABI 5 System APP для C5:' \
-    f411 'STM32F411CE · 512 KiB Flash · APP в C5' "$(mcu_state f411)" \
-    f401 'STM32F401CC · 256 KiB Flash · APP в C5' "$(mcu_state f401)") || return 1
+    'Оба контроллера собирают resident и согласованные ABI 6 System APP для C6:' \
+    f411 'STM32F411CE · 512 KiB Flash · APP в C6' "$(mcu_state f411)" \
+    f401 'STM32F401CC · 256 KiB Flash · APP в C6' "$(mcu_state f401)") || return 1
   MCU=$chosen
   save_config
 }
@@ -1683,7 +1683,8 @@ f401_gcc_arguments() {
     -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
     -UserExplorer "$ENABLE_USER_EXPLORER" \
     -MathBackend "$MATH_BACKEND" \
-    -LocalFloatMath "$APP_LOCAL_FLOAT"
+    -LocalFloatMath "$APP_LOCAL_FLOAT" \
+    -ProductBuild 1
 }
 
 f401_gcc_preflight() {
@@ -2143,7 +2144,7 @@ prepare_and_compile_f411_worker() {
   mv "$artifact.tmp" "$artifact" || return 1
   printf '%s\n' "$flags" > "$bundle/build.flags.tmp" || return 1
   mv "$bundle/build.flags.tmp" "$bundle/build.flags" || return 1
-  printf 'format 1\nabi 5\n' > "$bundle/build.apps.tmp" || return 1
+  printf 'format 1\nabi 6\n' > "$bundle/build.apps.tmp" || return 1
   mv "$bundle/build.apps.tmp" "$bundle/build.apps"
 }
 
@@ -2186,7 +2187,7 @@ prepare_and_compile_worker() {
 }
 
 expected_system_app_names() {
-  printf '%s\n' SETUP.APP HELP0.TXT HELP1.TXT
+  printf '%s\n' SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT
   [ "$ENABLE_FOCAL" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && printf '%s\n' BASIC.APP
   [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
@@ -2197,7 +2198,7 @@ expected_system_app_names() {
 }
 
 all_system_app_names() {
-  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP HELP0.TXT HELP1.TXT
+  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT
 }
 
 system_app_enabled() {
@@ -2210,7 +2211,7 @@ system_app_enabled() {
       ;;
     MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] ;;
     CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] ;;
-    SETUP.APP|HELP0.TXT|HELP1.TXT) return 0 ;;
+    SETUP.APP|USBDISK.APP|HELP0.TXT|HELP1.TXT) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -2264,7 +2265,7 @@ $(compile_options_details)
 Resident: $artifact
 Размер resident: $size байт
 
-Все System APP выключены. На чистом C5 второй шаг не требуется;
+Все System APP выключены. На чистом C6 второй шаг не требуется;
 если там остались прежние системные APP, второй шаг удалит только их."
       fi
     else
@@ -2295,7 +2296,7 @@ validate_system_bundle() {
   source="$bundle/System"
   if [ ! -s "$artifact" ] || [ ! -r "$flags_file" ] ||
       [ "$(sed -n '1p' "$apps_file" 2>/dev/null)" != 'format 1' ] ||
-      [ "$(sed -n '2p' "$apps_file" 2>/dev/null)" != 'abi 5' ]; then
+      [ "$(sed -n '2p' "$apps_file" 2>/dev/null)" != 'abi 6' ]; then
     printf '%s bundle is missing. Build the selected profile first: %s\n' \
       "$(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]')" \
       "$bundle" >&2
@@ -2315,19 +2316,21 @@ validate_system_bundle() {
   done
 }
 
-find_c5_mount() {
+find_c6_mount() {
   local candidate user_name=${USER:-}
-  if [ -n "${MK61_C5_MOUNT:-}" ]; then
-    [ -d "$MK61_C5_MOUNT" ] || return 1
-    printf '%s' "$MK61_C5_MOUNT"
+  # MK61_C5_MOUNT remains a compatibility alias for existing automation.
+  local override=${MK61_C6_MOUNT:-${MK61_C5_MOUNT:-}}
+  if [ -n "$override" ]; then
+    [ -d "$override" ] || return 1
+    printf '%s' "$override"
     return 0
   fi
   for candidate in \
-      '/Volumes/MK61S C5' \
-      "${user_name:+/media/$user_name/MK61S C5}" \
-      "${user_name:+/run/media/$user_name/MK61S C5}" \
-      '/media/MK61S C5' \
-      '/mnt/MK61S C5'; do
+      '/Volumes/MK61S C6' \
+      "${user_name:+/media/$user_name/MK61S C6}" \
+      "${user_name:+/run/media/$user_name/MK61S C6}" \
+      '/media/MK61S C6' \
+      '/mnt/MK61S C6'; do
     [ -n "$candidate" ] && [ -d "$candidate" ] || continue
     printf '%s' "$candidate"
     return 0
@@ -2335,14 +2338,14 @@ find_c5_mount() {
   return 1
 }
 
-wait_for_c5_mount_worker() {
+wait_for_c6_mount_worker() {
   local attempts=120
   while [ "$attempts" -gt 0 ]; do
-    if find_c5_mount >/dev/null; then return 0; fi
+    if find_c6_mount >/dev/null; then return 0; fi
     attempts=$((attempts - 1))
     sleep 0.5
   done
-  printf 'USB disk "MK61S C5" was not found within 60 seconds.\n' >&2
+  printf 'USB disk "MK61S C6" was not found within 60 seconds.\n' >&2
   return 1
 }
 
@@ -2390,15 +2393,15 @@ install_system_apps() {
 На калькуляторе откройте Меню → USB-диск.
 Не нажимайте ESC до сообщения об успешной проверке файлов.
 
-После подтверждения инструмент будет ждать диск «MK61S C5» 60 секунд.'
+После подтверждения инструмент будет ждать диск «MK61S C6» 60 секунд.'
   if [ "$INTERACTIVE" -eq 1 ]; then
     ui_msg 'Шаг 2 · System APP' "$instructions"
   else
     printf '%s\n' "$instructions"
   fi
 
-  if ! run_with_progress 'USB-диск C5' 'Жду MK61S C5' "$LAST_LOG" \
-      indeterminate wait_for_c5_mount_worker; then
+  if ! run_with_progress 'USB-диск C6' 'Жду MK61S C6' "$LAST_LOG" \
+      indeterminate wait_for_c6_mount_worker; then
     if [ "$INTERACTIVE" -eq 1 ]; then ui_log 'USB-диск не найден' "$LAST_LOG"
     else tail -n 20 "$LAST_LOG" >&2
     fi
@@ -2406,7 +2409,7 @@ install_system_apps() {
   fi
 
   local mount source app_names
-  mount=$(find_c5_mount) || {
+  mount=$(find_c6_mount) || {
     printf 'USB disk disappeared before copying.\n' >&2
     return 1
   }
@@ -2433,7 +2436,7 @@ $app_names
 Теперь можно выйти из режима USB-диска клавишей ESC на MK61s."
     else
       ui_msg 'Шаг 2 завершён' "Из каталога $mount/System удалены выключенные канонические System APP.
-Другие файлы C5 не изменялись.
+Другие файлы C6 не изменялись.
 
 Теперь можно выйти из режима USB-диска клавишей ESC на MK61s."
     fi

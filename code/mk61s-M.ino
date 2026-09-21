@@ -42,6 +42,8 @@ using namespace kbd;
 #include "focal.hpp"
 #include "tinybasic.hpp"
 #include "usb_mass_storage.hpp"
+#include "usb_mode_handoff.hpp"
+#include "virtual_fat.hpp"
 #include "usb_power.hpp"
 #include "usb_screen.hpp"
 
@@ -139,7 +141,7 @@ static void persist_retained_crash_dump(void) {
   if(length == 0) return;
 
   char name[16];
-  // ProgramType::TEXT сам добавляет .txt в виртуальном каталоге C5.
+  // ProgramType::TEXT сам добавляет .txt в виртуальном каталоге C6.
   snprintf(name, sizeof(name), "CRASH%lu",
            (unsigned long) (record.sequence & 3U));
   if(!program_store::write_file(
@@ -156,26 +158,66 @@ static void persist_retained_crash_dump(void) {
 #endif
 }
 
+// CDC and MSC share one USB device.  The terminal needs its initial start at
+// boot and a restart only after Serial.end() has actually handed that device
+// to MSC.  A preparation failure leaves CDC alive; starting it again from its
+// own command handler wedges the endpoint while the tty node remains present.
+static usb_mode_handoff::TerminalLifecycle usb_terminal_lifecycle;
+static constexpr u32 USB_CLASS_DISCONNECT_SETTLE_MS = 250U;
+
+u32 usb_terminal_generation(void) {
+  return usb_terminal_lifecycle.generation();
+}
+
 bool usb_start_mass_storage_mode(void) {
   usb_screen::cancel();
+  usb_mass_storage::note_startup_stage(700U);
+  if(!program_store_suspend_font_for_usb()) {
+    virtual_fat::report_startup_failure(9, "font-suspend");
+    return false;
+  }
+  usb_mass_storage::note_startup_stage(701U);
+  // APP decoding, C6 recovery and cache acquisition can be comparatively
+  // expensive and can fail.  Keep CDC alive throughout that phase so failure
+  // remains observable and recoverable; only the actual USB class handoff is
+  // allowed to happen after Serial.end().
+  if(!usb_mass_storage::prepare()) {
+    usb_mass_storage::note_startup_stage(702U);
+    return false;
+  }
+  usb_mass_storage::note_startup_stage(703U);
+
   #if defined(SERIAL_OUTPUT) && defined(USBCON) && defined(USBD_USE_CDC)
     Serial.end();
-    delay(50);
+    usb_terminal_lifecycle.cdc_stopped();
+    // A short logical stop is not enough on every host.  Keep the pull-up
+    // absent long enough for macOS to retire the CDC interface before the
+    // same peripheral reappears with the MSC descriptor.
+    delay(USB_CLASS_DISCONNECT_SETTLE_MS);
   #endif
-
-  if(!program_store_suspend_font_for_usb()) return false;
   return usb_mass_storage::init();
 }
 
 bool usb_start_terminal_mode(void) {
+  usb_mass_storage::note_startup_stage(710U);
   const bool clean_exit = usb_mass_storage::deinit();
+  usb_mass_storage::note_startup_stage(711U);
   program_store_restore_font_after_usb();
-  delay(50);
+  usb_mass_storage::note_startup_stage(712U);
+  const bool start_terminal =
+      usb_terminal_lifecycle.consume_start_required();
 
   #ifdef SERIAL_OUTPUT
-    terminal.init();
-    dbgln(MINI, FIRMWARE_VER);
+    if(start_terminal) {
+      // The reverse class switch needs the same observable disconnect.  In
+      // particular, do not let the new CDC endpoint inherit a still-live tty
+      // node from the preceding MSC generation.
+      delay(USB_CLASS_DISCONNECT_SETTLE_MS);
+      terminal.init();
+      dbgln(MINI, FIRMWARE_VER);
+    }
   #endif
+  usb_mass_storage::note_startup_stage(713U);
   return clean_exit;
 }
 
@@ -312,7 +354,7 @@ void setup() {
   crash_dump::initialize();
   dwt_profiler::initialize();
   // Сверхранний ESC уже был обработан из .preinit_array. Проверка resident
-  // идёт до дисплея, C5, USB и watchdog; повреждённый release образ может
+  // идёт до дисплея, C6, USB и watchdog; повреждённый release образ может
   // только оставить компактный breadcrumb и уйти через тот же ROM DFU путь.
   resident_firmware::enforce_or_dfu();
   power_monitor::initialize();

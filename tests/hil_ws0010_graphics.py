@@ -4,7 +4,7 @@
 The target is selected by its CDC path and optionally its canonical public ID.
 Every iteration writes one bounded GDRAM pattern, verifies exclusive graphics
 ownership, and returns through the full character-controller recovery path.
-The test never changes resident firmware or C5 contents.
+The test never changes resident firmware or C6 contents.
 """
 
 from __future__ import annotations

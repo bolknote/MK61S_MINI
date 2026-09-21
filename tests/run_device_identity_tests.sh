@@ -17,9 +17,8 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
 
 "$out"
 
-# CDC and MSC must expose the same UID-derived serial.  A fixed MSC serial
-# makes two simultaneously connected calculators indistinguishable to host
-# caches and defeats the identity/topology safeguards in the HIL runner.
+# CDC and MSC are two modes of one physical device. Both must expose the same
+# stable UID-derived serial, while the FAT volume serial identifies C6 media.
 grep -q 'device_identity::format_stm32duino_usb_serial' \
   "$root/code/usb_mass_storage.cpp"
 if grep -q 'static const u8 serial_desc' "$root/code/usb_mass_storage.cpp"; then

@@ -28,7 +28,13 @@ static constexpr u16 IMAGE_CRC_OFFSET = 52;
 static constexpr u16 HANDLED_TYPE_MAGIC_OFFSET = 56;
 static constexpr u16 RESERVED_OFFSET = 58;
 static constexpr u16 HEADER_CRC_OFFSET = 60;
-static constexpr usize INPUT_BUFFER_SIZE = 64;
+// C6 stores APP containers without a second compression layer, but a large
+// APP still spans several NOR sectors.  Every Reader call has to resolve and
+// validate the C6 large-file metadata, so 64-byte refills turned a 12 KiB
+// system APP into almost two hundred full storage lookups on real hardware.
+// One native program-store read chunk keeps the streaming decoder bounded on
+// F401 while reducing that fixed I/O overhead eightfold.
+static constexpr usize INPUT_BUFFER_SIZE = 512;
 
 static u16 get_le16(const u8* data, u16 offset) {
   return (u16) (data[offset] | ((u16) data[offset + 1] << 8));
@@ -166,7 +172,8 @@ static bool magic_valid(const u8* input) {
 bool valid_kind(Kind kind) {
   return kind == Kind::FOCAL || kind == Kind::TINYBASIC ||
          kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION ||
-         kind == Kind::CHIP8 || kind == Kind::MARKDOWN_VIEWER || kind == Kind::SETUP;
+         kind == Kind::CHIP8 || kind == Kind::MARKDOWN_VIEWER ||
+         kind == Kind::SETUP || kind == Kind::USBDISK;
 }
 
 bool valid_compression(Compression compression) {
@@ -182,6 +189,7 @@ Kind kind_at(u8 index) {
     case 3: return Kind::CHIP8;
     case 4: return Kind::MARKDOWN_VIEWER;
     case 5: return Kind::SETUP;
+    case 6: return Kind::USBDISK;
   }
   return (Kind) 0;
 }
@@ -198,6 +206,7 @@ const char* file_name(Kind kind) {
     case Kind::CHIP8: return "CHIP8.APP";
     case Kind::MARKDOWN_VIEWER: return "MARKDOWN.APP";
     case Kind::SETUP: return "SETUP.APP";
+    case Kind::USBDISK: return "USBDISK.APP";
     case Kind::APPLICATION: break;
   }
   return nullptr;

@@ -92,6 +92,8 @@ Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
     'help does not expose the Markdown System APP'
 Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
+Assert-True ($helpText -match '-ProductBuild 0\|1') `
+    'help does not expose the constrained product-resident policy'
 Assert-True ($helpText -match '-MathBackend 0\|1\s+LIBM \| CORE') `
     'help does not expose all math backends'
 Assert-True ($helpText -match '-LocalFloatMath 0\|1\s+local float ln/lg/exp/sqrt') `
@@ -208,6 +210,9 @@ Assert-True ($firmwarePowerShellText -match
     'Invoke-F401GccBundleBuild') `
     'PowerShell firmware frontend does not use the direct GCC backend'
 Assert-True ($firmwarePowerShellText -match
+    "'-ProductBuild', '1'") `
+    'PowerShell firmware frontend does not request the F401 product policy'
+Assert-True ($firmwarePowerShellText -match
     'MK61_ENABLE_LOADABLE_MODULES=1') `
     'PowerShell firmware frontend does not enable the unified APP runtime'
 Assert-True ($firmwarePowerShellText -match
@@ -216,6 +221,8 @@ Assert-True ($firmwarePowerShellText -match
 Assert-True ($firmwareShellText -match
     'tools/build-gcc\.cmd[\s\S]+-BuildRoot') `
     'macOS/Linux firmware frontend does not use the direct GCC backend'
+Assert-True ($firmwareShellText -match '-ProductBuild 1') `
+    'macOS/Linux firmware frontend does not request the F401 product policy'
 Assert-True ($firmwareShellText -match
     'MK61_ENABLE_LOADABLE_MODULES=1') `
     'macOS/Linux firmware frontend does not enable the unified APP runtime'
@@ -246,6 +253,7 @@ foreach ($setting in @(
     'System/MARKDOWN.APP',
     'System/CHIP8.APP',
     'System/SETUP.APP',
+    'System/USBDISK.APP',
     'System/HELP0.TXT',
     'System/HELP1.TXT'
 )) {

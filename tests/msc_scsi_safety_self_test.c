@@ -139,6 +139,26 @@ static void test_explicit_eject_detection(void)
   assert(msc_scsi_is_eject(0x1BU, 0x01U) == 0U);
   assert(msc_scsi_is_eject(0x1BU, 0x03U) == 0U);
   assert(msc_scsi_is_eject(0x35U, 0x02U) == 0U);
+
+  uint8_t latched = 0U;
+  /* An accepted eject is observable even before its deferred cache commit
+     completes; otherwise a rejected commit strands the device in MSC. */
+  latched = msc_scsi_update_eject_latch(latched, 0x1BU, 0x02U, 1U);
+  assert(latched == 1U);
+  /* A following ALLOW MEDIUM REMOVAL must not erase the event before the
+     foreground loop observes it. */
+  latched = msc_scsi_update_eject_latch(latched, 0x1EU, 0x00U, 1U);
+  assert(latched == 1U);
+  assert(msc_scsi_update_eject_latch(0U, 0x1BU, 0x02U, 0U) == 0U);
+  assert(msc_scsi_update_eject_latch(1U, 0x1BU, 0x00U, 1U) == 1U);
+  assert(msc_scsi_update_eject_latch(1U, 0x1BU, 0x01U, 1U) == 0U);
+  assert(msc_scsi_update_eject_latch(1U, 0x1BU, 0x03U, 1U) == 0U);
+
+  assert(msc_scsi_eject_ready(0U, 0U, 0U) == 0U);
+  assert(msc_scsi_eject_ready(1U, 0U, 1U) == 0U);
+  assert(msc_scsi_eject_ready(0U, 1U, 1U) == 0U);
+  assert(msc_scsi_eject_ready(1U, 0U, 0U) != 0U);
+  assert(msc_scsi_eject_ready(0U, 1U, 0U) != 0U);
 }
 
 static uint32_t random_state = 0x61F4A7C3U;

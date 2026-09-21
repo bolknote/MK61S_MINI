@@ -16,6 +16,9 @@
 #include "setup_service.hpp"
 #include "builtin_font.hpp"
 #include "mk_math.hpp"
+#include "mk8_codec.hpp"
+#include "usbdisk_backend.hpp"
+#include "usb_mass_storage.hpp"
 #if MK61_NUMBER_IO_SERVICE_ENABLED
 #include "number_format.hpp"
 #endif
@@ -36,7 +39,7 @@ static_assert(sizeof(shared_scratch::Lease) <= MK61_SYSTEM_LEASE_BYTES,
               "increase the versioned opaque lease storage");
 static_assert(alignof(mk61_system_lease) >= alignof(language_workspace::Lease),
               "opaque lease alignment");
-static u32 workspace_image_crc[(u8) Kind::SETUP + 1U];
+static u32 workspace_image_crc[(u8) Kind::USBDISK + 1U];
 #define MK61_RUNTIME(name) extern "C" void service_##name() asm(#name);
 #include "loadable_system_runtime.def"
 #undef MK61_RUNTIME
@@ -55,6 +58,7 @@ static language_workspace::Owner owner(u32 kind) {
     case Kind::CHIP8: return language_workspace::Owner::CHIP8;
     case Kind::APPLICATION: return language_workspace::Owner::APPLICATION;
     case Kind::SETUP: return language_workspace::Owner::SETUP;
+    case Kind::USBDISK: return language_workspace::Owner::USB_DISK;
     default: return language_workspace::Owner::NONE;
   }
 }
@@ -66,13 +70,45 @@ static void export_file(const program_store::Entry& entry, mk61_system_file& out
   memcpy(out.name, entry.name, sizeof(out.name));
 }
 
+static bool bounded_m8(const char* text, usize maximum, usize& length) {
+  if(!text) return false;
+  length = strnlen(text, maximum);
+  return length < maximum && mk8::text_valid((const u8*) text, length);
+}
+
+static bool display_write_m8_byte(MK61Display& lcd, u8 value) {
+  // Slots 0..7 are the established raw CGRAM preview interface. Every other
+  // byte is text and therefore follows ABI 6 M8 semantics.
+  if(value < lcd_ru::CUSTOM_GLYPHS) {
+    lcd.write(value);
+    return true;
+  }
+  if(!mk8::valid_byte(value)) return false;
+  const u16 codepoint = mk8::codepoint(value);
+#if defined(MK61_DISPLAY_LCD1602) && !defined(MK61_DISPLAY_UC1609)
+  if(!lcd.graphicsMode()) {
+    u8 native = 0;
+    if(lcd_ru::rom_char(codepoint, native) ||
+       lcd_ru::fallback_char(codepoint, native)) {
+      lcd.write(native);
+    } else {
+      lcd.write((u8) '?');
+    }
+    return true;
+  }
+#endif
+  lcd.writeCodepoint(codepoint);
+  return true;
+}
+
 static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
   MK61Display& lcd = main_lcd();
   switch(operation) {
     case MK61_SYS_DISPLAY_CLEAR: lcd.clear(); break;
     case MK61_SYS_DISPLAY_END_UI_TEXT: lcd.endUiText(); break;
     case MK61_SYS_DISPLAY_CURSOR: lcd.setCursor((u8) b, (u8) c); break;
-    case MK61_SYS_DISPLAY_WRITE: lcd.write((u8) b); break;
+    case MK61_SYS_DISPLAY_WRITE:
+      return b <= 0xFFU && display_write_m8_byte(lcd, (u8) b);
     case MK61_SYS_DISPLAY_WRITE_CODEPOINT:
       lcd.writeCodepoint(b <= 0xFFFFU ? (u16) b : (u16) '?');
       break;
@@ -83,14 +119,23 @@ static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
                               MK61_SERVICE_TEXT_FLOW_EMPTY_LINE;
       if(!request.text || request.length > 0xFFFFU ||
          request.first_row > 0xFFU || request.max_rows > 0xFFU ||
-         (request.flags & ~known_flags) != 0) return 0;
+         (request.flags & ~known_flags) != 0 ||
+         !mk8::text_valid((const u8*) request.text, request.length)) return 0;
       return lcd.printWrappedText(
           request.text, (u16) request.length, (u8) request.first_row,
           (u8) request.max_rows,
           (request.flags & MK61_SERVICE_TEXT_FLOW_TAIL) != 0,
           (request.flags & MK61_SERVICE_TEXT_FLOW_EMPTY_LINE) != 0);
     }
-    case MK61_SYS_DISPLAY_PRINT: if(payload) lcd.print((const char*) payload); break;
+    case MK61_SYS_DISPLAY_PRINT: {
+      usize length = 0;
+      const char* text = (const char*) payload;
+      if(!bounded_m8(text, 0x10000U, length)) return 0;
+      for(usize index = 0; index < length; ++index) {
+        if(!display_write_m8_byte(lcd, (u8) text[index])) return 0;
+      }
+      break;
+    }
     case MK61_SYS_DISPLAY_CURSOR_ON: lcd.cursorOn(); break;
     case MK61_SYS_DISPLAY_CURSOR_OFF: lcd.cursorOff(); break;
     case MK61_SYS_DISPLAY_SUPPORTS_CURSOR: return lcd.supportsCursor();
@@ -138,7 +183,8 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_SETUP |
           MK61_SERVICE_CAP_FORMAT | MK61_SERVICE_CAP_DIALOGS |
           MK61_SERVICE_CAP_EDITOR | MK61_SERVICE_CAP_REGISTERS |
-          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME
+          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME |
+          MK61_SERVICE_CAP_USBDISK
 #if MK61_APP_LOCAL_FLOAT_MATH
           | MK61_SERVICE_CAP_FLOAT_CONVERT
 #endif
@@ -179,6 +225,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       }
 #endif
     case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
+    case MK61_SYS_USBDISK: return usbdisk_backend::call(a, b, c, 0, payload);
     case MK61_SYS_DISPLAY: return display_call(a, b, c, payload);
     case MK61_SYS_KEYBOARD: return key_call(a, b);
     case MK61_SYS_MICROS: return micros();
@@ -234,26 +281,34 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     case MK61_SYS_FILE_EXISTS:
       return program_store::exists((program_store::ProgramType) a, (const char*) payload);
     case MK61_SYS_MEMORY_ACQUIRE: {
+      usb_mass_storage::note_startup_stage(200U);
       if(!payload || owner(b) == language_workspace::Owner::NONE) return 0;
       auto& out = *(mk61_system_lease*) payload;
       out.data = nullptr; out.size = 0; out.fresh = 0;
       if(a == 0) {
+        usb_mass_storage::note_startup_stage(201U);
         auto* lease = new(out.opaque) language_workspace::Lease(owner(b), c);
+        usb_mass_storage::note_startup_stage(202U);
         if(!lease->ok()) { lease->~Lease(); return 0; }
         out.data = (u8*) lease->data(); out.size = lease->size(); out.fresh = lease->fresh();
-        if(b > 0 && b <= (u32) Kind::SETUP) {
+        if(b > 0 && b <= (u32) Kind::USBDISK) {
+          usb_mass_storage::note_startup_stage(203U);
           u32& stamp = workspace_image_crc[b];
           if(stamp != out.image_crc) { out.fresh = 1; stamp = out.image_crc; }
         }
-      } else if(a == 1 && (b == (u32) Kind::MARKDOWN_VIEWER || b == (u32) Kind::WBMP_VIEWER ||
-                           b == (u32) Kind::APPLICATION)) {
+      } else if(a == 1 && (b == (u32) Kind::MARKDOWN_VIEWER ||
+                           b == (u32) Kind::WBMP_VIEWER ||
+                           b == (u32) Kind::APPLICATION ||
+                           b == (u32) Kind::USBDISK)) {
         auto* lease = new(out.opaque) shared_scratch::Lease(
             b == (u32) Kind::APPLICATION ? shared_scratch::Owner::APPLICATION :
+            b == (u32) Kind::USBDISK ? shared_scratch::Owner::USB_CACHE :
             b == (u32) Kind::MARKDOWN_VIEWER ? shared_scratch::Owner::MARKDOWN_VIEWER
                                            : shared_scratch::Owner::IMAGE_VIEWER, c);
         if(!lease->ok()) { lease->~Lease(); return 0; }
         out.data = lease->data(); out.size = lease->size();
       } else return 0;
+      usb_mass_storage::note_startup_stage(204U);
       return 1;
     }
     case MK61_SYS_MEMORY_RELEASE: {
@@ -271,7 +326,11 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       const char* const* lines = (const char* const*) payload;
       lcd_ru::font_map_t map = {};
       const u32 count = a < main_lcd().rows() ? a : main_lcd().rows();
-      for(u32 row = 0; row < count; ++row) lcd_ru::scan_text(map, lines[row], lcd_display::COLS);
+      for(u32 row = 0; row < count; ++row) {
+        usize length = 0;
+        if(!bounded_m8(lines[row], 0x100U, length)) return 0;
+        lcd_ru::scan_text(map, lines[row], lcd_display::COLS);
+      }
       MK61DisplayUpdate update(main_lcd());
       main_lcd().clear(); lcd_ru::load_custom_font(map);
       for(u32 row = 0; row < count; ++row) {
@@ -337,7 +396,9 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     case MK61_SYS_EDITOR_SCROLL: {
       if(!payload) return 0;
       auto& editor = *(mk61_system_editor*) payload;
-      if(editor.length > 0xFFFFU || editor.cursor > editor.length || editor.top > 0xFFFFU) return 0;
+      if(editor.length > 0xFFFFU || editor.cursor > editor.length ||
+         editor.top > 0xFFFFU ||
+         !mk8::text_valid((const u8*) editor.source, editor.length)) return 0;
       if(operation == MK61_SYS_EDITOR_DRAW) {
         text_editor::draw(main_lcd(), editor.source, (u16) editor.length,
                            (u16) editor.cursor, (u16) editor.top, editor.sms != 0);
@@ -358,7 +419,10 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       t_punct* items[4];
       for(u32 i = 0; i < a; ++i) {
         items[i] = (t_punct*) storage[i];
-        const usize size = strnlen(source[i].text, 31);
+        const usize size = strnlen(source[i].text, 32);
+        if(size > 31 || !mk8::text_valid((const u8*) source[i].text, size)) {
+          return 0;
+        }
         items[i]->size = (u8) source[i].display_size; items[i]->action = source[i].action;
         memcpy(items[i]->text, source[i].text, size); items[i]->text[size] = 0;
       }
@@ -386,7 +450,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
   }
 }
 
-// File writes already have a deep C5 call chain. Dispatch them before reserving
+// File writes already have a deep C6 call chain. Dispatch them before reserving
 // the unrelated menu, editor and font buffers in other_system_call.
 static u32 system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   if(operation != MK61_SYS_FILE_WRITE)

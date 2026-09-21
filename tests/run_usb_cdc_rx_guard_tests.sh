@@ -12,6 +12,14 @@ out="${TMPDIR:-/tmp}/mk61_usb_cdc_rx_guard_self_test"
 
 "$out"
 
+handoff_out="${TMPDIR:-/tmp}/mk61_usb_mode_handoff_self_test"
+"${CXX:-c++}" -std=c++17 -Wall -Wextra -Werror -pedantic \
+  -I"$root/code" \
+  "$root/tests/usb_mode_handoff_self_test.cpp" \
+  -o "$handoff_out"
+
+"$handoff_out"
+
 linker_flag='--wrap=USBD_CDC_ClearBuffer'
 for builder in \
   "$root/tools/.mk61-firmware/mk61-firmware.sh" \

@@ -136,6 +136,7 @@ uint8_t MSC_BOT_Init(USBD_HandleTypeDef *pdev)
   hmsc->scsi_sense_tail = 0U;
   hmsc->scsi_sense_head = 0U;
   hmsc->scsi_medium_state = SCSI_MEDIUM_UNLOCKED;
+  hmsc->host_eject_latched = 0U;
 
   if (storage->Init(0U) != USBD_MSC_STORAGE_OK)
   {

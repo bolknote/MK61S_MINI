@@ -283,7 +283,7 @@ grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' "$legacy_config"
 
 install_config="$installer_root/install.conf"
 install_output="$installer_root/output"
-install_mount="$installer_root/MK61S C5"
+install_mount="$installer_root/MK61S C6"
 bundle="$install_output/mk61s-M-mini-v3-lcd1602-a00-f401"
 mkdir -p "$bundle/System" "$install_mount/System"
 printf '%s\n' \
@@ -304,12 +304,12 @@ install_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" --show-config)
 grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$install_selection"
 install_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$install_selection")
 printf '%s\n' "$install_flags" > "$bundle/build.flags"
-printf 'format 1\nabi 5\n' > "$bundle/build.apps"
+printf 'format 1\nabi 6\n' > "$bundle/build.apps"
 printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 printf 'focal-app\n' > "$bundle/System/FOCAL.APP"
 printf 'markdown-app\n' > "$bundle/System/MARKDOWN.APP"
 printf 'chip8-app\n' > "$bundle/System/CHIP8.APP"
-for resource in SETUP.APP HELP0.TXT HELP1.TXT; do
+for resource in SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
   printf 'service-resource\n' > "$bundle/System/$resource"
 done
 printf 'keep-me\n' > "$install_mount/System/KEEP.APP"
@@ -317,7 +317,7 @@ printf 'stale-basic\n' > "$install_mount/System/BASIC.APP"
 printf 'stale-wbmp\n' > "$install_mount/System/WBMP.APP"
 
 install_result=$(MK61_CONFIG_FILE="$install_config" \
-  MK61_OUTPUT_DIR="$install_output" MK61_C5_MOUNT="$install_mount" \
+  MK61_OUTPUT_DIR="$install_output" MK61_C6_MOUNT="$install_mount" \
   "$tool" --install-apps)
 grep -q 'Меню → USB-диск' <<< "$install_result"
 grep -q 'Synchronized and verified' <<< "$install_result"
@@ -338,10 +338,10 @@ disabled_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" --show-config)
 disabled_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$disabled_selection")
 printf '%s\n' "$disabled_flags" > "$bundle/build.flags"
 disabled_result=$(MK61_CONFIG_FILE="$install_config" \
-  MK61_OUTPUT_DIR="$install_output" MK61_C5_MOUNT="$install_mount" \
+  MK61_OUTPUT_DIR="$install_output" MK61_C6_MOUNT="$install_mount" \
   "$tool" --install-apps)
 grep -q 'Synchronized and verified' <<< "$disabled_result"
-for resource in SETUP.APP HELP0.TXT HELP1.TXT; do
+for resource in SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
   cmp "$bundle/System/$resource" "$install_mount/System/$resource"
 done
 test ! -e "$install_mount/System/FOCAL.APP"
@@ -357,14 +357,15 @@ f411_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" \
   --mcu f411 --profile mini-v3-a00 --show-config)
 f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$f411_selection")
 printf '%s\n' "$f411_flags" > "$f411_bundle/build.flags"
-printf 'format 1\nabi 5\n' > "$f411_bundle/build.apps"
+printf 'format 1\nabi 6\n' > "$f411_bundle/build.apps"
 printf 'resident-f411\n' > "$f411_bundle/mk61s-M-mini-v3-lcd1602-a00-f411.bin"
-for resource in SETUP.APP HELP0.TXT HELP1.TXT; do
+for resource in SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
   printf 'f411-resource\n' > "$f411_bundle/System/$resource"
 done
 MK61_CONFIG_FILE="$install_config" MK61_OUTPUT_DIR="$install_output" \
-  MK61_C5_MOUNT="$install_mount" "$tool" \
+  MK61_C6_MOUNT="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 cmp "$f411_bundle/System/SETUP.APP" "$install_mount/System/SETUP.APP"
+cmp "$f411_bundle/System/USBDISK.APP" "$install_mount/System/USBDISK.APP"
 
 printf 'firmware_tool_tests: ok\n'

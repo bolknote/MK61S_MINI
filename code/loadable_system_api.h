@@ -91,6 +91,7 @@
 #define MK61_SYS_TEXT_FONT_END MK61_TEXT_FONT_END
 #define MK61_SYS_TEXT_FONT_ACTIVATE MK61_TEXT_FONT_ACTIVATE
 #define MK61_SYS_VOLUME MK61_SERVICE_VOLUME
+#define MK61_SYS_USBDISK MK61_SERVICE_USBDISK
 #define mk61_system_api mk61_app_services
 #define mk61_system_choice mk61_service_choice
 #define mk61_system_float_convert mk61_service_float_convert
@@ -118,5 +119,11 @@
 #define mk61_system_text_font_result mk61_service_text_font_result
 #define mk61_system_text_flow mk61_service_text_flow
 #define mk61_system_write mk61_service_write
+#define mk61_system_usbdisk_geometry mk61_service_usbdisk_geometry
+#define mk61_system_usbdisk_name mk61_service_usbdisk_name
+#define mk61_system_usbdisk_extent mk61_service_usbdisk_extent
+#define mk61_system_usbdisk_source mk61_service_usbdisk_source
+#define mk61_system_usbdisk_stage_filter mk61_service_usbdisk_stage_filter
+#define mk61_system_usbdisk_app_validation mk61_service_usbdisk_app_validation
 
 #endif

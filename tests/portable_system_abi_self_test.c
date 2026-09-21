@@ -89,6 +89,35 @@ _Static_assert(MK61_FLOAT_FROM_DOUBLE == 0 && MK61_DOUBLE_FROM_FLOAT == 1,
 _Static_assert(sizeof(mk61_service_float_convert) == 16 &&
                offsetof(mk61_service_float_convert, bits) == 8,
                "float-conversion wire layout");
+_Static_assert(MK61_SERVICE_USBDISK == 33 &&
+               MK61_SERVICE_CAP_USBDISK == (1U << 15),
+               "append-only private USBDISK service");
+_Static_assert(sizeof(mk61_service_usbdisk_geometry) == 64 &&
+               offsetof(mk61_service_usbdisk_geometry, logical_sectors) == 60,
+               "USBDISK geometry wire layout");
+_Static_assert(sizeof(mk61_service_usbdisk_name) == 20 &&
+               offsetof(mk61_service_usbdisk_name, name) == 16,
+               "USBDISK name wire layout");
+_Static_assert(sizeof(mk61_service_usbdisk_extent) == 16,
+               "USBDISK extent wire layout");
+_Static_assert(sizeof(mk61_service_usbdisk_source) == 52 &&
+               offsetof(mk61_service_usbdisk_source, contiguous_data) == 48,
+               "USBDISK source wire layout");
+_Static_assert(sizeof(mk61_service_usbdisk_stage_filter) == 16 &&
+               sizeof(mk61_service_usbdisk_app_validation) == 16,
+               "USBDISK callback wire layouts");
+_Static_assert(sizeof(mk61_service_usbdisk_stage_snapshot) == 12 &&
+               offsetof(mk61_service_usbdisk_stage_snapshot, count) == 8,
+               "USBDISK stage snapshot wire layout");
+_Static_assert(MK61_USBDISK_STAGE_SNAPSHOT ==
+                   MK61_USBDISK_STARTUP_STAGE + 1 &&
+               MK61_USBDISK_TRIM_DIRECTORY_EXTENTS ==
+                   MK61_USBDISK_STAGE_SNAPSHOT + 1,
+               "USBDISK operations are append-only");
+_Static_assert(MK61_USBDISK_TRIM_FAILED == 0 &&
+               MK61_USBDISK_TRIM_COMPLETE == 1 &&
+               MK61_USBDISK_TRIM_MORE == 2,
+               "USBDISK trim result wire values");
 _Static_assert(MK61_TEXT_FONT_BEGIN == 0 && MK61_TEXT_FONT_LOAD == 1 &&
                MK61_TEXT_FONT_RESTORE == 2 && MK61_TEXT_FONT_END == 3 &&
                MK61_TEXT_FONT_ACTIVATE == 4,

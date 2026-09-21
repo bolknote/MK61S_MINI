@@ -3,6 +3,7 @@
 #include "menu.hpp"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
+#include "mk8_strings.inc"
 #include "development.hpp"
 #include "focal.hpp"
 #include "hardware_info.hpp"
@@ -75,14 +76,14 @@ struct MutablePunct {
 };
 
 static MutablePunct VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Volume 10      "};
-static MutablePunct RU_VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = "Громкость 10"};
+static MutablePunct RU_VOLUME_punct = {.size = 15, .action = (menu_action) &TurnSoundVolume, .text = M8_VOLUME_10};
 #if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
 #if defined(MK61_DISPLAY_UC1609)
 static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Fonts...       "};
-static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Шрифты..."};
+static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = M8_FONTS};
 #else
 static MutablePunct ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Font 5x8       "};
-static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = "Шрифт 5x8"};
+static MutablePunct RU_ROWS_punct = {.size = 15, .action = (menu_action) &FontSetup, .text = M8_FONT_FIXED};
 #endif
 #endif
 
@@ -140,24 +141,25 @@ static void set_speed_mode_state(SpeedMode mode) {
 }
 
 bool  InfoData(void) {
+  char line0[24];
+  char line1[24];
   if(language_is_ru()) {
-    char line0[24];
-    char line1[24];
-    snprintf(line0, sizeof(line0), "СЧ:%u УГ:%u%s",
+    snprintf(line0, sizeof(line0), M8_INFO_SWITCHES_FORMAT,
       (unsigned) read_counter_switch(),
       (unsigned) ((u8) read_grade_switch()),
-      flash_is_ok ? " ФЛ" : "");
-    snprintf(line1, sizeof(line1), "ВР:%lu МС", (unsigned long) runtime_ms);
-    lcd_ru::print_lines(line0, line1);
+      flash_is_ok ? M8_FLASH_SUFFIX : "");
+    snprintf(line1, sizeof(line1), M8_INFO_RUNTIME_FORMAT, (unsigned long) runtime_ms);
   } else {
+    snprintf(line0, sizeof(line0), "cnt:%u sw:%u%s",
+      (unsigned) read_counter_switch(),
+      (unsigned) ((u8) read_grade_switch()),
+      flash_is_ok ? " W25" : "");
+    snprintf(line1, sizeof(line1), "run %lu ms", (unsigned long) runtime_ms);
+  }
+  {
     MK61DisplayUpdate update(main_lcd());
     main_lcd().clear();
-    main_lcd().setCursor(0,0);
-    main_lcd().print("cnt:"); main_lcd().print(read_counter_switch());
-    main_lcd().print(" sw:"); main_lcd().print((u8) read_grade_switch());
-    if(flash_is_ok) main_lcd().print(" W25");
-    main_lcd().setCursor(0,1);
-    main_lcd().print("run "); main_lcd().print(runtime_ms); main_lcd().print(" ms");
+    lcd_ru::print_lines(line0, line1);
   }
   kbd::get_key_wait();
   return false;
@@ -182,7 +184,7 @@ const t_punct RANDOM_MK61S_punct  = {.size = 15, .action = (menu_action) &TurnRa
 const t_punct DATE_TIME_punct      = {.size = 11, .action = (menu_action) &SetDateTime,          .text = "Date & time"};
 const t_punct RTC_CALIBRATION_punct = {.size = 14, .action = (menu_action) &SetRtcCalibration,   .text = "RTC correction"};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
-const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Язык рус"};
+const t_punct LANGUAGE_RU_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = M8_LANGUAGE_RUSSIAN};
 const t_punct IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep OFF "};
 const t_punct IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep ON  "};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
@@ -196,32 +198,32 @@ const t_punct OLED_TIMEOUT_OFF_punct = {.size = 15, .action = (menu_action) &Tur
 const t_punct OLED_TIMEOUT_5M_punct  = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 5m  "};
 const t_punct OLED_TIMEOUT_15M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 15m "};
 const t_punct OLED_TIMEOUT_30M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 30m "};
-const t_punct RU_OLED_TIMEOUT_OFF_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон выкл"};
-const t_punct RU_OLED_TIMEOUT_5M_punct  = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон 5 мин"};
-const t_punct RU_OLED_TIMEOUT_15M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон 15мин"};
-const t_punct RU_OLED_TIMEOUT_30M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED сон 30мин"};
+const t_punct RU_OLED_TIMEOUT_OFF_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = M8_OLED_SLEEP_OFF};
+const t_punct RU_OLED_TIMEOUT_5M_punct  = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = M8_OLED_SLEEP_5};
+const t_punct RU_OLED_TIMEOUT_15M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = M8_OLED_SLEEP_15};
+const t_punct RU_OLED_TIMEOUT_30M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = M8_OLED_SLEEP_30};
 #endif
 
-const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU прошивка"};
-const t_punct RU_USB_DISK_punct   = {.size = 15, .action = (menu_action) &UsbDiskMode,          .text = "USB-диск"};
-const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = "Настройки"};
-const t_punct RU_EXPLORER_punct   = {.size = 15, .action = &program_store_explorer_select,      .text = "Проводник"};
-const t_punct RU_DEVELOPMENT_punct= {.size = 15, .action = &development_select,                 .text = "Разработка"};
-const t_punct RU_RESET_punct      = {.size = 15, .action = &ResetDevice,                        .text = "Сброс"};
-const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = "Стереть FLASH"};
-const t_punct RU_SPEED_CLASSIC_punct = {.size = 15, .action = (menu_action) &TurnSpeed,         .text = "Скорость норма"};
-const t_punct RU_SPEED_MAXIMUM_punct = {.size = 15, .action = (menu_action) &TurnSpeed,         .text = "Скорость макс"};
-const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 105ШГ"};
-const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память 112ШГ+ПF"};
-const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Память АВТО"};
-const t_punct RU_RANDOM_MK61_punct= {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "К СЧ MK61"};
-const t_punct RU_RANDOM_MK61S_punct={.size = 15, .action = (menu_action) &TurnRandomMode,       .text = "К СЧ MK61s"};
-const t_punct RU_DATE_TIME_punct   = {.size = 15, .action = (menu_action) &SetDateTime,          .text = "Дата и время"};
-const t_punct RU_RTC_CALIBRATION_punct = {.size = 15, .action = (menu_action) &SetRtcCalibration, .text = "Поправка RTC"};
-const t_punct RU_IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук выкл"};
-const t_punct RU_IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = "5 мин звук вкл"};
-const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = "Информация"};
-const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = "Плата"};
+const t_punct RU_DFU_mode_punct   = {.size = 15, .action = (menu_action) &DFU_enable,           .text = M8_DFU_FIRMWARE};
+const t_punct RU_USB_DISK_punct   = {.size = 15, .action = (menu_action) &UsbDiskMode,          .text = M8_USB_DISK};
+const t_punct RU_SETTINGS_punct   = {.size = 15, .action = &settings_select,                    .text = M8_SETTINGS};
+const t_punct RU_EXPLORER_punct   = {.size = 15, .action = &program_store_explorer_select,      .text = M8_EXPLORER};
+const t_punct RU_DEVELOPMENT_punct= {.size = 15, .action = &development_select,                 .text = M8_DEVELOPMENT};
+const t_punct RU_RESET_punct      = {.size = 15, .action = &ResetDevice,                        .text = M8_RESET};
+const t_punct RU_ERASE_punct      = {.size = 15, .action = (menu_action) &EraseFlash,           .text = M8_FLASH_ERASE};
+const t_punct RU_SPEED_CLASSIC_punct = {.size = 15, .action = (menu_action) &TurnSpeed,         .text = M8_SPEED_CLASSIC};
+const t_punct RU_SPEED_MAXIMUM_punct = {.size = 15, .action = (menu_action) &TurnSpeed,         .text = M8_SPEED_MAXIMUM};
+const t_punct RU_MEMORY_105_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = M8_MEMORY_105};
+const t_punct RU_MEMORY_112_punct = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = M8_MEMORY_112};
+const t_punct RU_MEMORY_AUTO_punct= {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = M8_MEMORY_AUTO};
+const t_punct RU_RANDOM_MK61_punct= {.size = 15, .action = (menu_action) &TurnRandomMode,       .text = M8_RANDOM_MK61};
+const t_punct RU_RANDOM_MK61S_punct={.size = 15, .action = (menu_action) &TurnRandomMode,       .text = M8_RANDOM_MK61S};
+const t_punct RU_DATE_TIME_punct   = {.size = 15, .action = (menu_action) &SetDateTime,          .text = M8_DATE_TIME};
+const t_punct RU_RTC_CALIBRATION_punct = {.size = 15, .action = (menu_action) &SetRtcCalibration, .text = M8_RTC_CORRECTION};
+const t_punct RU_IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = M8_IDLE_SOUND_OFF};
+const t_punct RU_IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,  .text = M8_IDLE_SOUND_ON};
+const t_punct RU_FLASH_punct      = {.size = 15, .action = (menu_action) &InfoData,             .text = M8_FLASH_INFO};
+const t_punct RU_HARDWARE_punct   = {.size = 15, .action = (menu_action) &HardwareInfo,         .text = M8_HARDWARE};
 
 t_punct* MENU[] = {
       (t_punct*) &DFU_mode_punct,
@@ -423,7 +425,7 @@ static void format_volume_text(void) {
   VOLUME_punct.text[used] = 0;
   VOLUME_punct.size = 15;
 
-  snprintf(RU_VOLUME_punct.text, sizeof(RU_VOLUME_punct.text), "Громкость %u", (unsigned) sound_volume_state);
+  snprintf(RU_VOLUME_punct.text, sizeof(RU_VOLUME_punct.text), M8_VOLUME_FORMAT, (unsigned) sound_volume_state);
   RU_VOLUME_punct.size = 15;
 }
 
@@ -457,9 +459,9 @@ static void format_display_rows_text(void) {
   ROWS_punct.size = 15;
 
 #if defined(MK61_DISPLAY_UC1609)
-  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "Шрифты...");
+  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), M8_FONTS);
 #else
-  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "Шрифт %s",
+  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), M8_FONT_FORMAT,
     fontPresetName(display_text_profile_state));
 #endif
   RU_ROWS_punct.size = 15;
@@ -780,52 +782,98 @@ bool   TurnLanguage(void) {
 }
 
 static void draw_usb_disk_status(const char* ru0, const char* en0, const char* ru1, const char* en1) {
-  if(library_mk61::language_is_ru()) {
-    {
-      MK61DisplayUpdate update(main_lcd());
-      main_lcd().clear();
-    }
-    lcd_ru::print_lines(ru0, ru1);
-    return;
-  }
-
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
-  main_lcd().setCursor(0, 0);
-  main_lcd().print(en0);
-  main_lcd().setCursor(0, 1);
-  main_lcd().print(en1);
+  lcd_ru::print_lines(library_mk61::language_is_ru() ? ru0 : en0,
+                      library_mk61::language_is_ru() ? ru1 : en1);
 }
 
-bool UsbDiskMode(void) {
-  draw_usb_disk_status("USB-диск", "USB Disk", "запуск...", "starting...");
+static constexpr u32 USB_HOST_CONFIGURATION_TIMEOUT_MS = 15000U;
+static constexpr u32 USB_HOST_LOST_TIMEOUT_MS = 3000U;
+
+static bool usb_disk_mode(bool wait_for_key_on_error) {
+  draw_usb_disk_status(M8_USB_DISK, "USB Disk", M8_RUNNING, "starting...");
   library_mk61::flush_settings_state();
-  if(!program_store::refresh()) {
+  // C6 is mounted once during normal boot and its in-memory catalog remains
+  // authoritative until the MSC session starts.  Remounting here used to run
+  // catalog repair and clear persistent FAT staging immediately before the
+  // USB-disk APP performed its own recovery.  Apart from duplicating a slow
+  // flash scan, that could strand the device before CDC was handed over to
+  // MSC.  Refresh is only the recovery path for an unexpectedly unmounted
+  // store; virtual_fat::reset_session() performs the USB-specific recovery.
+  if(!program_store::ready() && !program_store::refresh()) {
     if(program_store::mount_status() ==
-       program_store::MountStatus::REPAIR_REQUIRED) {
-      draw_usb_disk_status("ФС повреждена", "FS damaged",
-                           "нужен формат", "format needed");
+       program_store::MountStatus::FORMAT_REQUIRED) {
+      draw_usb_disk_status(M8_C5_VOLUME_FOUND, "C5 volume found",
+                           M8_FORMAT_NEEDED, "format needed");
+    } else if(program_store::mount_status() ==
+              program_store::MountStatus::REPAIR_REQUIRED) {
+      draw_usb_disk_status(M8_FS_DAMAGED, "FS damaged",
+                           M8_FORMAT_NEEDED, "format needed");
     } else {
-      draw_usb_disk_status("Ошибка ФС", "FS error", "ESC", "ESC");
+      draw_usb_disk_status(M8_ERROR_FILESYSTEM, "FS error", "ESC", "ESC");
     }
-    kbd::get_key_wait();
+    if(wait_for_key_on_error) kbd::get_key_wait();
+    lcd_ru::restore_default_font();
     return action::MENU_BACK;
   }
-  (void) program_store::purge_empty();
+  // Empty files are valid C6/FAT objects.  Cleaning them implicitly here
+  // both destroyed user data and performed another full catalog walk before
+  // the APP could report a startup stage.  The explicit `fsclean` terminal
+  // command remains available for legacy stores that need that operation.
   if(!usb_start_mass_storage_mode()) {
+    usb_mass_storage::note_startup_stage(720U);
+    // deinit()/APP eviction performs its own finalization and can otherwise
+    // replace the first startup failure with an empty APP diagnostic.  Keep
+    // the exact cause promised by `vlog` across the return to CDC.
+    const virtual_fat::Diagnostic startup_failure =
+        virtual_fat::diagnostic();
     usb_start_terminal_mode();
-    draw_usb_disk_status("Ошибка USB", "USB error", "ESC", "ESC");
-    kbd::get_key_wait();
+    usb_mass_storage::note_startup_stage(721U);
+    if(startup_failure.code != virtual_fat::ErrorCode::NONE) {
+      virtual_fat::restore_diagnostic(startup_failure);
+    }
+    draw_usb_disk_status(M8_ERROR_USB, "USB error", "ESC", "ESC");
+    usb_mass_storage::note_startup_stage(722U);
+    if(wait_for_key_on_error) kbd::get_key_wait();
+    lcd_ru::restore_default_font();
     return action::MENU_BACK;
   }
 
-  draw_usb_disk_status("USB-диск", "USB Disk", "ESC выход", "ESC exit");
+  draw_usb_disk_status(M8_USB_DISK, "USB Disk", M8_USB_EXIT, "ESC exit");
+  const u32 host_wait_started = millis();
+  u32 host_last_configured = host_wait_started;
+  bool host_was_configured = false;
+  bool host_configuration_timed_out = false;
+  bool host_connection_lost = false;
   while(true) {
     idle_main_process();
     // Safe host eject already includes SYNCHRONIZE CACHE.  Return CDC
     // automatically after the SCSI command completes instead of leaving an
     // ejected, inaccessible disk on screen until a physical ESC is pressed.
     if(usb_mass_storage::host_ejected()) break;
+    const u32 now = millis();
+    if(usb_mass_storage::host_configured()) {
+      host_was_configured = true;
+      host_last_configured = now;
+    } else if(!host_was_configured &&
+              (u32) (now - host_wait_started) >=
+                  USB_HOST_CONFIGURATION_TIMEOUT_MS) {
+      // A successful USBD_Start() is not sufficient: a broken re-enumeration
+      // used to leave both CDC and MSC absent forever while the foreground
+      // kept feeding the watchdog.  Return to CDC deterministically so vlog
+      // can explain the failed transition and another attempt remains safe.
+      host_configuration_timed_out = true;
+      break;
+    } else if(host_was_configured &&
+              (u32) (now - host_last_configured) >=
+                  USB_HOST_LOST_TIMEOUT_MS) {
+      // A host can configure the class and then reject it before a disk is
+      // published.  That is not a usable session and must not strand the
+      // calculator in an invisible, watchdog-fed foreground loop.
+      host_connection_lost = true;
+      break;
+    }
     const i32 key = kbd::poll_event().code();
 
     if(key == KEY_ESC_PRESS) {
@@ -835,22 +883,36 @@ bool UsbDiskMode(void) {
   }
 
   const bool clean_exit = usb_start_terminal_mode();
+  if(host_configuration_timed_out || host_connection_lost) {
+    virtual_fat::report_startup_failure(
+        host_configuration_timed_out ? 19U : 20U,
+        host_configuration_timed_out ? "host-config" : "host-lost");
+    draw_usb_disk_status(M8_ERROR_USB, "USB error",
+                         M8_USB_DETAILS, "details: vlog");
+    if(wait_for_key_on_error) kbd::get_key_wait();
+    lcd_ru::restore_default_font();
+    return action::MENU_BACK;
+  }
   if(!clean_exit) {
     char error_code[10];
     virtual_fat::format_error_code(virtual_fat::diagnostic().code, error_code);
     draw_usb_disk_status(error_code, error_code,
-                         "подробно: vlog", "details: vlog");
+                         M8_USB_DETAILS, "details: vlog");
     delay(900);
   }
   lcd_ru::restore_default_font();
   return action::MENU_EXIT;
 }
 
+bool UsbDiskMode(void) { return usb_disk_mode(true); }
+
+bool UsbDiskModeUnattended(void) { return usb_disk_mode(false); }
+
 bool UsbScreenMode(void) {
-  draw_usb_disk_status("USB-экран", "USB Screen",
-                       "ждём приложение", "start desktop app");
+  draw_usb_disk_status(M8_USB_SCREEN, "USB Screen",
+                       M8_USB_WAIT, "start desktop app");
   if(!usb_screen::start()) {
-    draw_usb_disk_status("Ошибка USB", "USB error", "ESC", "ESC");
+    draw_usb_disk_status(M8_ERROR_USB, "USB error", "ESC", "ESC");
     kbd::get_key_wait();
     return action::MENU_BACK;
   }

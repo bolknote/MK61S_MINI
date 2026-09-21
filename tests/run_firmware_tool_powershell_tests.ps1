@@ -73,7 +73,7 @@ $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("mk61-powershell-tests-" + [gu
 $oldConfig = $env:MK61_CONFIG_FILE
 $oldBuild = $env:MK61_BUILD_ROOT
 $oldOutput = $env:MK61_OUTPUT_DIR
-$oldMount = $env:MK61_C5_MOUNT
+$oldMount = $env:MK61_C6_MOUNT
 try {
     $config = Join-Path $tempRoot 'settings.conf'
     $env:MK61_CONFIG_FILE = $config
@@ -144,7 +144,7 @@ try {
     Assert-True ($incompatibleText -match '(?m)^PROFILE=$') 'incompatible pair produced a profile'
 
     $outputRoot = Join-Path $tempRoot 'output'
-    $mountRoot = Join-Path $tempRoot 'MK61S C5'
+    $mountRoot = Join-Path $tempRoot 'MK61S C6'
     $bundle = Join-Path $outputRoot 'mk61s-M-mini-v3-lcd1602-a00-f401'
     $sourceSystem = Join-Path $bundle 'System'
     $targetSystem = Join-Path $mountRoot 'System'
@@ -166,7 +166,7 @@ try {
         'MK61_MATH_BACKEND=0'
     ))
     $env:MK61_OUTPUT_DIR = $outputRoot
-    $env:MK61_C5_MOUNT = $mountRoot
+    $env:MK61_C6_MOUNT = $mountRoot
     $installSelection = Invoke-Tool @('--show-config')
     Assert-True (
         ($installSelection.Output -join "`n") -match
@@ -175,12 +175,12 @@ try {
     $flagLine = @($installSelection.Output | Where-Object { $_ -like 'COMPILE_FLAGS=*' })[0]
     $flags = $flagLine.Substring('COMPILE_FLAGS='.Length)
     [IO.File]::WriteAllText((Join-Path $bundle 'build.flags'), $flags + [Environment]::NewLine)
-    [IO.File]::WriteAllText((Join-Path $bundle 'build.apps'), "format 1`nabi 5`n")
+    [IO.File]::WriteAllText((Join-Path $bundle 'build.apps'), "format 1`nabi 6`n")
     [IO.File]::WriteAllText((Join-Path $bundle 'mk61s-M-mini-v3-lcd1602-a00-f401.bin'), "resident-f401`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'MARKDOWN.APP'), "markdown-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-app`n")
-    foreach ($resource in @('SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+    foreach ($resource in @('SETUP.APP', 'USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')) {
         [IO.File]::WriteAllText((Join-Path $sourceSystem $resource), "service-resource`n")
     }
     [IO.File]::WriteAllText((Join-Path $targetSystem 'KEEP.APP'), "keep-me`n")
@@ -252,27 +252,31 @@ try {
         (Join-Path $f411Bundle 'build.flags'),
         $f411FlagLine.Substring('COMPILE_FLAGS='.Length) + [Environment]::NewLine)
     [IO.File]::WriteAllText(
-        (Join-Path $f411Bundle 'build.apps'), "format 1`nabi 5`n")
+        (Join-Path $f411Bundle 'build.apps'), "format 1`nabi 6`n")
     [IO.File]::WriteAllText(
         (Join-Path $f411Bundle 'mk61s-M-mini-v3-lcd1602-a00-f411.bin'),
         "resident-f411`n")
-    foreach ($resource in @('SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+    foreach ($resource in @('SETUP.APP', 'USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')) {
         [IO.File]::WriteAllText(
             (Join-Path $f411System $resource), "f411-resource`n")
     }
     $f411Install = Invoke-Tool @(
         '--mcu','f411','--profile','mini-v3-a00','--install-apps')
     Assert-True ($f411Install.ExitCode -eq 0) `
-        'F411 did not install its ABI 5 System APP bundle'
+        'F411 did not install its ABI 6 System APP bundle'
     $installedSetup = [IO.File]::ReadAllText(
         (Join-Path $targetSystem 'SETUP.APP')).Trim()
     Assert-True ($installedSetup -eq 'f411-resource') `
         'F411 System APP bundle was not installed'
+    $installedUsbDisk = [IO.File]::ReadAllText(
+        (Join-Path $targetSystem 'USBDISK.APP')).Trim()
+    Assert-True ($installedUsbDisk -eq 'f411-resource') `
+        'F411 USBDISK.APP was not installed'
 } finally {
     $env:MK61_CONFIG_FILE = $oldConfig
     $env:MK61_BUILD_ROOT = $oldBuild
     $env:MK61_OUTPUT_DIR = $oldOutput
-    $env:MK61_C5_MOUNT = $oldMount
+    $env:MK61_C6_MOUNT = $oldMount
     Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 

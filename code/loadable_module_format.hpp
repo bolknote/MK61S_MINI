@@ -23,12 +23,13 @@ enum class Kind : u8 {
   APPLICATION = 4,
   CHIP8 = 5,
   MARKDOWN_VIEWER = 6,
-  SETUP = 7
+  SETUP = 7,
+  USBDISK = 8
 };
 
 // Только системные APP имеют канонические имена. Пользовательских APPLICATION
-// может быть сколько угодно, и их имена задаются самим файлом в C5.
-static constexpr u8 KIND_COUNT = 6;
+// может быть сколько угодно, и их M8-имена задаются самим файлом в C6.
+static constexpr u8 KIND_COUNT = 7;
 static constexpr char SYSTEM_DIRECTORY_NAME[] = "System";
 
 enum class Compression : u8 {
@@ -51,7 +52,7 @@ struct Header {
   u32 relocation_count;
   u32 stored_crc32;
   u32 image_crc32;
-  // Ноль означает обычный APP. Ненулевой двухбайтовый magic C5 объявляет
+  // Ноль означает обычный APP. Ненулевой двухбайтовый magic C6 объявляет
   // основной тип FILE_OPEN. Графический системный MARKDOWN.APP дополнительно
   // принимает I1 как известный resident alias, не меняя формат заголовка.
   u16 handled_type_magic;

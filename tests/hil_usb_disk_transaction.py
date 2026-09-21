@@ -8,12 +8,12 @@ it is the sole new whole disk and its read-only metadata also identifies a
 small, removable, writable USB MK61S medium.  No raw-device operation or
 format command exists in this runner.
 
-The test creates one unique 8.3 text file, fsyncs it, asks macOS to eject the
-exact selected disk, verifies automatic MSC->CDC recovery and reads the bytes
-back through C5/CDC, then repeats the read after a warm reset to prove the
-import survived. Finally it removes only that
-reserved file through the terminal and requires the original root listing to
-be restored.
+The test creates one unique Russian long-name UTF-8 text file, fsyncs it, asks
+macOS to eject the exact selected disk, verifies automatic MSC->CDC recovery
+and reads the corresponding M8 bytes back through C6/CDC.  After a warm reset
+it exports that M8 file through MSC again and requires the original UTF-8 name
+and content. Finally it removes only that reserved file through the terminal
+and requires the original root listing to be restored.
 """
 
 from __future__ import annotations
@@ -34,22 +34,23 @@ from hil_multi_device_identity import (
     parse_identity,
     request_transition,
     require_unchanged,
-    wait_absent,
     wait_for_identity,
 )
 from hil_rtc_alarm import Port
+
+TOOLS = Path(__file__).resolve().parents[1] / "tools"
+sys.path.insert(0, str(TOOLS))
+from m8_codec import decode as decode_m8, encode as encode_m8  # noqa: E402
 
 
 STM32_VID = 0x0483
 CDC_PID = 0x5740
 MSC_PID = 0x6161
+DFU_PID = 0xDF11
 MAX_SAFE_MSC_BYTES = 32 * 1024 * 1024
 MIN_SAFE_MSC_BYTES = 32 * 1024
 
-MENU_KEYS = {
-    "mini-v3-ws0010": (0x27, 0x18, 0x1D),
-    "classic-v3-uc1609": (0x27, 0x24, 0x25),
-}
+USB_DISK_PROFILES = {"mini-v3-ws0010", "classic-v3-uc1609"}
 
 
 def parse_vfat_diagnostic(report: str) -> dict[str, Any] | None:
@@ -75,7 +76,7 @@ def parse_vfat_diagnostic(report: str) -> dict[str, Any] | None:
     if actual > 0xFFFFFFFF or limit > 0xFFFFFFFF:
         raise AssertionError("VFAT context outside uint32")
     try:
-        subject = bytes.fromhex(match[6]).decode("utf-8")
+        subject = decode_m8(bytes.fromhex(match[6]))
     except (ValueError, UnicodeError) as error:
         raise AssertionError("invalid VFAT subject") from error
     return dict(code=code, phase=phase, flags=flags,
@@ -116,6 +117,13 @@ def usb_tree() -> dict[str, Any]:
     if not isinstance(tree, dict):
         raise AssertionError("IOUSB plist root is not a dictionary")
     return tree
+
+
+def system_root() -> dict[str, Any]:
+    root = read_plist(["ioreg", "-a", "-n", "Root", "-d", "1"])
+    if not isinstance(root, dict):
+        raise AssertionError("IORegistry root is not a dictionary")
+    return root
 
 
 def walk_nodes(value: Any) -> Iterable[dict[str, Any]]:
@@ -170,6 +178,28 @@ def find_msc_node(
             f"ambiguous MK61S MSC nodes at location 0x{location_id:08X}"
         )
     return matches[0] if matches else None
+
+
+def describe_msc_nodes(tree: dict[str, Any]) -> str:
+    nodes = [
+        node for node in walk_nodes(tree)
+        if node.get("idVendor") == STM32_VID
+        and node.get("idProduct") in (MSC_PID, DFU_PID)
+    ]
+    if not nodes:
+        return "MSC USB node not present"
+    return "MSC candidates=" + repr([
+        {
+            "pid": f"0x{int(node.get('idProduct', 0)):04X}",
+            "serial": usb_serial(node),
+            "location": (
+                f"0x{int(node['locationID']):08X}"
+                if isinstance(node.get("locationID"), int) else "?"
+            ),
+            "configuration": node.get("kUSBCurrentConfiguration"),
+        }
+        for node in nodes
+    ])
 
 
 def msc_configured(node: dict[str, Any]) -> bool:
@@ -252,7 +282,7 @@ def posix_cksum(payload: bytes) -> int:
 
 
 def require_file_contents(report: str, expected: bytes) -> None:
-    """Verify C5 bytes, not merely a directory entry or the host's cache."""
+    """Verify C6 bytes, not merely a directory entry or the host's cache."""
     markers = [line for line in report.splitlines() if line.startswith("@MKC:")]
     checksum = posix_cksum(expected)
     if (
@@ -260,18 +290,18 @@ def require_file_contents(report: str, expected: bytes) -> None:
         or markers[0] != f"@MKC:GET {len(expected)} {checksum}"
         or markers[-1] != f"@MKC:END {len(expected)} {checksum}"
     ):
-        raise AssertionError(f"invalid C5 file readback framing/checksum:\n{report}")
+        raise AssertionError(f"invalid C6 file readback framing/checksum:\n{report}")
     received = bytearray()
     for line in markers[1:-1]:
         match = re.fullmatch(r"@MKC:DATA ([0-9]+) ([0-9A-Fa-f]+)", line)
         if not match or int(match.group(1)) != len(received):
-            raise AssertionError(f"invalid C5 file readback chunk: {line!r}")
+            raise AssertionError(f"invalid C6 file readback chunk: {line!r}")
         encoded = match.group(2)
         if len(encoded) % 2 or len(received) + len(encoded) // 2 > len(expected):
-            raise AssertionError(f"invalid C5 file readback size: {line!r}")
+            raise AssertionError(f"invalid C6 file readback size: {line!r}")
         received.extend(bytes.fromhex(encoded))
     if received != expected:
-        raise AssertionError("C5 file readback differs from the written fixture")
+        raise AssertionError("C6 file readback differs from the written fixture")
 
 
 def wait_for_msc_disk(
@@ -298,12 +328,11 @@ def wait_for_msc_disk(
         tree = usb_tree()
         node = find_msc_node(tree, location_id, expected_usb_serial)
         if node is None:
-            note("MSC USB node not present")
+            note(describe_msc_nodes(tree))
             time.sleep(0.10)
             continue
         if not msc_configured(node):
-            state = "locked" if console_locked(tree) else "unlocked"
-            note(f"MSC enumerated but not configured (console={state})")
+            note("MSC enumerated but not configured")
             time.sleep(0.10)
             continue
         current = whole_disks()
@@ -340,8 +369,7 @@ def ensure_mounted(identifier: str, info: dict[str, Any]) -> Path:
 
 
 def enter_usb_disk(target: Target) -> None:
-    keys = MENU_KEYS.get(target.identity.profile)
-    if keys is None:
+    if target.identity.profile not in USB_DISK_PROFILES:
         raise AssertionError(
             f"unsupported USB Disk menu profile: {target.identity.profile}"
         )
@@ -349,13 +377,15 @@ def enter_usb_disk(target: Target) -> None:
         require_unchanged(
             target.identity, parse_identity(port.command("identity"))
         )
-        for key in keys[:-1]:
-            port.command(f"kbd {key:02X}")
-            time.sleep(0.15)
         port.drain()
-        port.write_line(f"kbd {keys[-1]:02X}")
-        time.sleep(0.35)
-    wait_absent(target.path, 5.0)
+        # Do not wait for a terminal prompt: a successful command tears CDC
+        # down and blocks until the host safely ejects the MSC volume.
+        port.write_line("usbdisk")
+        time.sleep(0.2)
+    # Do not use the BSD tty pathname as the class-transition oracle.  macOS
+    # can retain that pathname while the physical device disconnects and
+    # re-enumerates at the same topology location.  wait_for_msc_disk() below
+    # verifies the actual VID/PID, serial, location and newly-created disk.
 
 
 def reconnect(target: Target, timeout: float) -> None:
@@ -390,31 +420,30 @@ def main() -> int:
             f"wrong board: expected {args.public_id.upper()}, "
             f"got {identity.public}"
         )
-    if identity.profile not in MENU_KEYS:
+    if identity.profile not in USB_DISK_PROFILES:
         raise AssertionError(f"unsupported profile: {identity.profile}")
     target = Target(args.port, identity)
 
-    tree = usb_tree()
-    if console_locked(tree):
-        # A locked console is not proof that USB Restricted Mode will reject
-        # this accessory: previously authorised devices can still configure.
-        # Do not change host security policy. The actual MSC configuration,
-        # UID/topology and block-device gates below remain authoritative.
-        print(
-            "USB note: console reports locked; checking actual MSC access "
-            "without changing host security settings",
-            flush=True,
+    if console_locked(system_root()):
+        raise AssertionError(
+            "Mac console is locked; loginwindow may reject or auto-eject the "
+            "temporary USB disk. Unlock the Mac before this HIL test."
         )
+    tree = usb_tree()
     location_id = find_cdc_location(tree, identity)
     baseline = whole_disks()
-    fixture_name = f"HIL{identity.short[-4:]}.TXT"
+    fixture_name = f"Проверка-{identity.short[-4:]}.txt"
+    host_payload = (
+        f"Проверка USB {identity.public}: Ёжик, стрелка →, число 123.\n"
+    ).encode("utf-8")
+    m8_payload = encode_m8(host_payload.decode("utf-8"))
     if any(line.casefold().endswith(fixture_name.casefold())
            for line in initial_entries):
         raise AssertionError(
             f"reserved fixture already exists; refusing overwrite: {fixture_name}"
         )
 
-    # Reset gives the top-level menu a known active index without changing C5.
+    # Reset gives the top-level menu a known active index without changing C6.
     request_transition(target, "rst now", timeout=5.0)
     reconnect(target, args.reconnect_timeout)
     enter_usb_disk(target)
@@ -426,16 +455,19 @@ def main() -> int:
             location_id, identity.usb, baseline, args.msc_timeout
         )
         mount = ensure_mounted(disk_identifier, info)
+        print(
+            "USB volume: "
+            f"uuid={info.get('VolumeUUID', '')} "
+            f"mount={mount}",
+            flush=True,
+        )
         fixture = mount / fixture_name
-        payload = (
-            f"MK61 USB transactional HIL {identity.public}\n"
-        ).encode("ascii")
         with fixture.open("xb") as output:
-            output.write(payload)
+            output.write(host_payload)
             output.flush()
             os.fsync(output.fileno())
         fixture_created = True
-        if fixture.read_bytes() != payload:
+        if fixture.read_bytes() != host_payload:
             raise AssertionError("host readback differs from written fixture")
 
         eject = run_text(
@@ -454,8 +486,8 @@ def main() -> int:
                 f"committed fixture is not visible after eject:\n{imported}"
             )
         require_file_contents(
-            terminal_report(target, f"fsget /{fixture_name}", timeout=10.0),
-            payload,
+            terminal_report(target, f'fsget "/{fixture_name}"', timeout=10.0),
+            m8_payload,
         )
         vlog = terminal_report(target, "vlog", timeout=10.0)
         diagnostic = parse_vfat_diagnostic(vlog)
@@ -473,11 +505,36 @@ def main() -> int:
                 f"fixture did not survive reset:\n{after_reset}"
             )
         require_file_contents(
-            terminal_report(target, f"fsget /{fixture_name}", timeout=10.0),
-            payload,
+            terminal_report(target, f'fsget "/{fixture_name}"', timeout=10.0),
+            m8_payload,
         )
 
-        removed = terminal_report(target, f"rm /{fixture_name}", timeout=10.0)
+        # Re-export the persisted M8 object. This is the reverse half of the
+        # conversion contract: C6 M8 name/content must become UTF-16 LFN and
+        # UTF-8 file bytes without loss.
+        baseline = whole_disks()
+        enter_usb_disk(target)
+        disk_identifier, info = wait_for_msc_disk(
+            location_id, identity.usb, baseline, args.msc_timeout
+        )
+        mount = ensure_mounted(disk_identifier, info)
+        exported = mount / fixture_name
+        if not exported.is_file():
+            raise AssertionError(
+                f"Russian LFN was not exported: {fixture_name}"
+            )
+        if exported.read_bytes() != host_payload:
+            raise AssertionError("M8-to-UTF-8 export changed text bytes")
+        eject = run_text(
+            ["diskutil", "eject", disk_identifier], timeout=30.0
+        )
+        print(eject.strip())
+        disk_identifier = ""
+        reconnect(target, args.reconnect_timeout)
+
+        removed = terminal_report(
+            target, f'rm "/{fixture_name}"', timeout=10.0
+        )
         if "Removed 1 entry." not in removed:
             raise AssertionError(f"could not remove HIL fixture:\n{removed}")
         fixture_created = False
@@ -498,8 +555,9 @@ def main() -> int:
             f"public={identity.public} profile={identity.profile} "
             f"build={identity.build} "
             f"location=0x{location_id:08X} fixture={fixture_name} "
-            f"bytes={len(payload)} c5_readback=2/2 "
-            "copy=1 eject=1 cdc=1 reset=1 cleanup=1",
+            f"utf8={len(host_payload)} m8={len(m8_payload)} "
+            "c6_readback=2/2 lfn=1 import=1 export=1 "
+            "eject=2 cdc=2 reset=1 cleanup=1",
             flush=True,
         )
         return 0
@@ -513,7 +571,7 @@ def main() -> int:
             try:
                 reconnect(target, args.reconnect_timeout)
                 terminal_report(
-                    target, f"rm /{fixture_name}", timeout=10.0
+                    target, f'rm "/{fixture_name}"', timeout=10.0
                 )
             except (AssertionError, OSError, TimeoutError):
                 pass

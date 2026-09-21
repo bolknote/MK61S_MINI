@@ -201,11 +201,11 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   test -s "$resident_elf"
   "$root/tests/check_core_native_hot_paths_elf.sh" "$resident_elf"
   "$root/tests/check_no_resident_fmk_decoder_elf.sh" "$resident_elf"
-  for app in FOCAL.APP BASIC.APP MARKDOWN.APP SETUP.APP; do
+  for app in FOCAL.APP BASIC.APP MARKDOWN.APP SETUP.APP USBDISK.APP; do
     file="$bundle/System/$app"
     test -s "$file"
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
-    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 5
+    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 6
     test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 1
     test "$(od -An -tx1 -N8 "$file" | tr -d '[:space:]')" = \
       4d4b363141505000
@@ -222,7 +222,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     -BuildPath "$work/build" \
     -OutputDirectory "$direct_system" \
     -Graphics 0 -UiFonts 0 -Focal 1 -Basic 1 -Wbmp 0 -Markdown 1 -Chip8 0
-  for app in FOCAL.APP BASIC.APP MARKDOWN.APP SETUP.APP; do
+  for app in FOCAL.APP BASIC.APP MARKDOWN.APP SETUP.APP USBDISK.APP; do
     file="$direct_system/$app"
     cmp "$file" "$bundle/System/$app"
     case "$app" in
@@ -230,12 +230,13 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
       BASIC.APP) expected_kind=2 ;;
       MARKDOWN.APP) expected_kind=6 ;;
       SETUP.APP) expected_kind=7 ;;
+      USBDISK.APP) expected_kind=8 ;;
     esac
     test -s "$file"
     test "$(wc -c < "$file" | tr -d '[:space:]')" -le 20544
     test "$(od -An -tu1 -j14 -N1 "$file" | tr -d '[:space:]')" = \
       "$expected_kind"
-    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 5
+    test "$(od -An -tu1 -j12 -N1 "$file" | tr -d '[:space:]')" = 6
     test "$(od -An -tu1 -j15 -N1 "$file" | tr -d '[:space:]')" = 1
   done
   for resource in HELP0.TXT HELP1.TXT; do cmp "$direct_system/$resource" "$bundle/System/$resource"; done
@@ -248,7 +249,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
     --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-all-options" "$shell_sketchbook/sketches/code"
-  for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP SETUP.APP; do
+  for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP SETUP.APP \
+      USBDISK.APP; do
     test -s "$bundle/System/$app"
     test "$(wc -c < "$bundle/System/$app" | tr -d '[:space:]')" -le 20544
   done
@@ -259,7 +261,9 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
     --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-disabled" "$shell_sketchbook/sketches/code"
-  for resource in SETUP.APP HELP0.TXT HELP1.TXT; do test -s "$bundle/System/$resource"; done
+  for resource in SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
+    test -s "$bundle/System/$resource"
+  done
   for app in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP; do test ! -e "$bundle/System/$app"; done
   grep -q -- '-DMK61_ENABLE_FOCAL=0' "$bundle/build.flags"
   grep -q -- '-DMK61_ENABLE_TINYBASIC=0' "$bundle/build.flags"

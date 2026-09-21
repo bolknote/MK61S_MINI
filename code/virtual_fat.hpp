@@ -46,6 +46,13 @@ void end_session(void);
 // or explicitly by "vlog clear". No diagnostic is persisted to Flash.
 const Diagnostic& diagnostic(void);
 void clear_diagnostic(void);
+// Records a resident-side failure which happened before the FAT session could
+// expose its own detailed diagnostic (font/cache/APP/USB initialization).
+void report_startup_failure(u32 stage, const char* subject);
+// Internal session bridge: USBDISK.APP has ordinary volatile BSS, whereas the
+// public diagnostic must survive APP eviction until a successful import or an
+// explicit clear. The resident proxy restores its retained value on reload.
+void restore_diagnostic(const Diagnostic& value);
 
 } // пространство имён virtual_fat
 

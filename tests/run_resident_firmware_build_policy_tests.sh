@@ -116,6 +116,7 @@ for required in \
     "'BASIC.APP' = 2" \
     "'MARKDOWN.APP' = 6" \
     "'SETUP.APP' = 7" \
+    "'USBDISK.APP' = 8" \
     'System/HELP0.TXT' \
     'System/HELP1.TXT' \
     '-DREVISION_V2' \

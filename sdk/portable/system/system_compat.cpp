@@ -186,11 +186,22 @@ bool program_store_choose_save_target(program_store::ProgramType type, u16 paren
 }
 namespace language_workspace {
 Lease::Lease(Owner owner, usize size) : lease_{} {
-  (void) owner;
-  lease_.image_crc = portable_system::image_crc;
-  call(MK61_SYS_MEMORY_ACQUIRE, 0, portable_system::kind, size, &lease_);
+  (void) acquire(owner, size);
 }
-Lease::~Lease() { if(ok()) call(MK61_SYS_MEMORY_RELEASE, 0, 0, 0, &lease_); }
+#if !defined(MK61_BUILD_USBDISK_MODULE)
+Lease::~Lease() { reset(); }
+#endif
+bool Lease::acquire(Owner owner, usize size) {
+  (void) owner;
+  if(ok()) return size <= lease_.size;
+  lease_ = {};
+  lease_.image_crc = portable_system::image_crc;
+  return call(MK61_SYS_MEMORY_ACQUIRE, 0, portable_system::kind,
+              size, &lease_) != 0;
+}
+void Lease::reset() {
+  if(ok()) call(MK61_SYS_MEMORY_RELEASE, 0, 0, 0, &lease_);
+}
 void* data(Owner owner) {
   (void) owner;
   return (void*) (usize) call(MK61_SYS_MEMORY_DATA, portable_system::kind);
@@ -198,11 +209,19 @@ void* data(Owner owner) {
 }
 namespace shared_scratch {
 Lease::Lease(Owner owner, usize size) : lease_{} {
-  (void) owner;
-  call(MK61_SYS_MEMORY_ACQUIRE, 1, portable_system::kind, size, &lease_);
+  (void) acquire(owner, size);
 }
+#if !defined(MK61_BUILD_USBDISK_MODULE)
 Lease::~Lease() { reset(); }
+#endif
 void Lease::reset() { if(ok()) call(MK61_SYS_MEMORY_RELEASE, 1, 0, 0, &lease_); }
+bool Lease::acquire(Owner owner, usize size) {
+  (void) owner;
+  if(ok()) return size <= lease_.size;
+  lease_ = {};
+  return call(MK61_SYS_MEMORY_ACQUIRE, 1, portable_system::kind,
+              size, &lease_) != 0;
+}
 }
 namespace builtin_font {
 bool decode(FaceId face, u16 codepoint, Raster& out) {

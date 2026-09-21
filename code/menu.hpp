@@ -41,6 +41,14 @@ extern bool TurnLanguage(void);
 extern bool TurnProgramMemory(void);
 extern bool TurnRandomMode(void);
 extern bool UsbDiskMode(void);
+// The terminal/HIL entry uses the same lifecycle as the menu action, but an
+// initialization error must return to CDC instead of waiting for a physical
+// key that an unattended host cannot press.
+extern bool UsbDiskModeUnattended(void);
+// Changes exactly when CDC was stopped for a real USB class handoff.  A
+// command that spans that boundary must not write its trailing prompt through
+// the destroyed terminal generation.
+extern u32 usb_terminal_generation(void);
 extern bool UsbScreenMode(void);
 extern bool TurnIdleSignal(void);
 #if defined(MK61_OLED1602_WS0010)
@@ -102,7 +110,11 @@ namespace library_mk61 {
 
   inline void print_localized_at(u8 x, u8 y, const char* ru, const char* en, u8 width = lcd_ru::LCD_WIDTH) {
 #if defined(MK61_DISPLAY_UC1609)
-    if(main_lcd().uiTextActive() && x == 0 && width == lcd_ru::LCD_WIDTH) {
+    if(x == 0 && width == lcd_ru::LCD_WIDTH) {
+      // Full-width localized messages are UI rows.  Entering the selected
+      // renderer here prevents calculator/fixed-cell state from leaking into
+      // confirmation, error and boot-status screens.
+      main_lcd().beginUiText();
       main_lcd().printUiLine(y, language_is_ru() ? ru : en);
       return;
     }

@@ -231,6 +231,46 @@ static inline uint8_t msc_scsi_is_eject(uint8_t opcode,
                    ((start_stop_flags & 0x03U) == 0x02U));
 }
 
+/* Keep an accepted eject observable by the foreground loop.  Hosts may
+   issue ALLOW MEDIUM REMOVAL immediately after START STOP UNIT; that command
+   changes the middleware's scsi_medium_state back to UNLOCKED and otherwise
+   turns eject detection into a timing race.  Eject is latched before its
+   deferred SYNCHRONIZE CACHE begins so a failed commit can still leave MSC
+   and report the error over CDC.  Only an accepted START/LOAD command begins
+   a new medium session and clears the latch. */
+static inline uint8_t msc_scsi_update_eject_latch(
+    uint8_t current, uint8_t opcode, uint8_t start_stop_flags,
+    uint8_t command_accepted)
+{
+  uint8_t action;
+  if ((command_accepted == 0U) ||
+      (opcode != MSC_SCSI_START_STOP_UNIT))
+  {
+    return current;
+  }
+  action = (uint8_t)(start_stop_flags & 0x03U);
+  if (action == 0x02U)
+  {
+    return 1U;
+  }
+  if ((action == 0x01U) || (action == 0x03U))
+  {
+    return 0U;
+  }
+  return current;
+}
+
+/* The accepted request is deliberately visible before the deferred commit,
+   but class teardown is safe only after that command has left the main-loop
+   queue.  A failed commit is still ready to close: CDC is where its retained
+   diagnostic can be inspected and the next session can retry it. */
+static inline uint8_t msc_scsi_eject_ready(
+    uint8_t eject_latched, uint8_t medium_ejected, uint8_t sync_pending)
+{
+  return (uint8_t)((sync_pending == 0U) &&
+                   ((eject_latched != 0U) || (medium_ejected != 0U)));
+}
+
 static inline uint8_t msc_scsi_ring_next(uint8_t index, uint8_t depth)
 {
   if (depth == 0U || index >= depth)

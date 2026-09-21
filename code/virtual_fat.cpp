@@ -1,22 +1,47 @@
 #include "virtual_fat.hpp"
 
+#if defined(ARDUINO_ARCH_STM32) && !defined(MK61_BUILD_USBDISK_MODULE)
+
+#include "virtual_fat_proxy.inc"
+
+#else
+
 #include "bounded_string.hpp"
 #include "config.h"
 #include "device_identity.hpp"
 #include "fat_name.hpp"
 #include "language_workspace.hpp"
+#include "mk8_codec.hpp"
 #if MK61_ANY_LOADABLE_MODULE
   #include "loadable_module_runtime.hpp"
 #endif
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
-#include "utf8_codec.hpp"
+#include "storage_name.hpp"
 
 #include <stdio.h>
 #include <string.h>
 
+#if defined(MK61_BUILD_USBDISK_MODULE)
+extern "C" void mk61_usbdisk_startup_stage(u32 stage);
+extern "C" bool mk61_usbdisk_startup_timed_out(void);
+extern "C" u32 mk61_usbdisk_startup_timeout_elapsed(void);
+extern "C" u32 mk61_usbdisk_startup_timeout_limit(void);
+extern "C" void mk61_usbdisk_restart_startup_budget(void);
+extern "C" u8* mk61_usbdisk_empty_stage_scratch(u32 size);
+extern void idle_main_process();
+#endif
+
 namespace virtual_fat {
 namespace {
+
+#if defined(MK61_BUILD_USBDISK_MODULE)
+static void startup_stage(u32 stage) {
+  mk61_usbdisk_startup_stage(stage);
+}
+#else
+static void startup_stage(u32) {}
+#endif
 
 static constexpr u8 FAT_COUNT = 2;
 static constexpr u16 RESERVED_SECTORS = 1;
@@ -70,11 +95,11 @@ struct ParsedNode {
   u8 attributes;
 };
 
-static constexpr u8 MAX_C5_FILE_CLUSTERS =
+static constexpr u8 MAX_C6_FILE_CLUSTERS =
     program_store::MAX_FAT_EXTENTS_PER_FILE + 1U;
 
 struct FileChain {
-  u16 clusters[MAX_C5_FILE_CLUSTERS];
+  u16 clusters[MAX_C6_FILE_CLUSTERS];
   u16 size;
   u8 cluster_count;
 };
@@ -102,9 +127,9 @@ struct SessionState {
 };
 
 static_assert(sizeof(SessionState) <= language_workspace::SIZE,
-              "C5 FAT session and write-back cache must fit the shared 8 KiB workspace");
+              "C6 FAT session and write-back cache must fit the shared 8 KiB workspace");
 static_assert(sizeof(SessionState) >= PRIMARY_CACHE_SLOTS * SECTOR_SIZE,
-              "C5 FAT cache geometry unexpectedly changed");
+              "C6 FAT cache geometry unexpectedly changed");
 static_assert(SCRATCH_CACHE_SLOTS == 3,
               "shared scratch should lend exactly three USB sectors");
 static_assert(shared_scratch::SIZE >= program_store::MAX_IMAGE1_SIZE,
@@ -119,7 +144,112 @@ static usize g_commit_compression_buffer_size;
 static u8 g_scratch_cache_slots;
 static u8 g_extra_cache_slots;
 static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
+static constexpr u8 EXPORTED_SIZE_CACHE_ENTRIES = 16;
+struct ExportedSizeCacheEntry {
+  u16 id;
+  u16 internal_size;
+  u16 visible_size;
+  u8 type;
+  u8 valid;
+};
+static ExportedSizeCacheEntry
+    g_exported_size_cache[EXPORTED_SIZE_CACHE_ENTRIES];
+static u8 g_exported_size_cache_next;
+static constexpr u8 DIRECTORY_CURSOR_COUNT = 8;
+struct DirectoryRenderCursor {
+  u16 parent_id;
+  u8 root;
+  u8 valid;
+  u32 next_first_slot;
+  u32 child_slot;
+  u32 age;
+  i32 child_index;
+};
+static DirectoryRenderCursor g_directory_cursors[DIRECTORY_CURSOR_COUNT];
+static u32 g_directory_cursor_clock;
+
+static void reset_directory_cursors() {
+  memset(g_directory_cursors, 0, sizeof(g_directory_cursors));
+  g_directory_cursor_clock = 0;
+}
+
+static bool resume_directory_cursor(u16 parent_id, bool root, u32 first_slot,
+                                    u32& child_slot, int& child_index) {
+  for(auto& cursor : g_directory_cursors) {
+    if(!cursor.valid || cursor.parent_id != parent_id ||
+       cursor.root != (u8) root || cursor.next_first_slot != first_slot) {
+      continue;
+    }
+    cursor.age = ++g_directory_cursor_clock;
+    child_slot = cursor.child_slot;
+    child_index = cursor.child_index;
+    return true;
+  }
+  return false;
+}
+
+static void save_directory_cursor(u16 parent_id, bool root,
+                                  u32 next_first_slot, u32 child_slot,
+                                  int child_index) {
+  DirectoryRenderCursor* selected = nullptr;
+  for(auto& cursor : g_directory_cursors) {
+    if(cursor.valid && cursor.parent_id == parent_id &&
+       cursor.root == (u8) root) {
+      selected = &cursor;
+      break;
+    }
+    if(!cursor.valid || selected == nullptr || cursor.age < selected->age) {
+      selected = &cursor;
+    }
+  }
+  if(selected == nullptr) return;
+  selected->parent_id = parent_id;
+  selected->root = root;
+  selected->valid = 1;
+  selected->next_first_slot = next_first_slot;
+  selected->child_slot = child_slot;
+  selected->child_index = child_index;
+  selected->age = ++g_directory_cursor_clock;
+}
+#if defined(MK61_BUILD_USBDISK_MODULE)
+static bool g_startup_recovery;
+static u8 g_startup_recovery_reads;
+
+class ScopedStartupRecovery {
+ public:
+  ScopedStartupRecovery() {
+    g_startup_recovery = true;
+    g_startup_recovery_reads = 0;
+  }
+  ~ScopedStartupRecovery() { g_startup_recovery = false; }
+};
+
+static void service_startup_recovery() {
+  if(!g_startup_recovery || ++g_startup_recovery_reads < 8U) return;
+  g_startup_recovery_reads = 0;
+  // A persistent FAT transaction can require hundreds of SPI reads before
+  // USB is started. Cooperate with the resident foreground loop so its sole
+  // watchdog epoch continues to run; USB service is still inactive here and
+  // therefore cannot re-enter this APP command.
+  idle_main_process();
+}
+#else
+class ScopedStartupRecovery {};
+static void service_startup_recovery() {}
+#endif
 static DiagnosticState g_error;
+static u32 g_session_volume_serial;
+static bool g_session_volume_serial_valid;
+
+static void record_startup_timeout() {
+#if defined(MK61_BUILD_USBDISK_MODULE)
+  if(mk61_usbdisk_startup_timed_out()) {
+    g_error.fail(ErrorCode::RECOVERY_TIMEOUT, Phase::SESSION,
+                 mk61_usbdisk_startup_timeout_elapsed(),
+                 mk61_usbdisk_startup_timeout_limit(), nullptr, true);
+  }
+#endif
+}
 
 static bool ensure_session(void) {
   if(g_session_lease.ok() && g_session != NULL) return true;
@@ -269,9 +399,14 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
   return false;
 }
 
-static u16 maximum_file_size(program_store::ProgramType type) {
+static u32 maximum_file_size(program_store::ProgramType type) {
+#if defined(MK61_BUILD_USBDISK_MODULE)
+  const u32 internal = portable_system::call(
+      MK61_SYS_USBDISK, MK61_USBDISK_MAX_FILE_SIZE, (u32) type);
+  return program_store::text_content(type) ? internal * 3U : internal;
+#else
   if(type == program_store::ProgramType::TINYBASIC) {
-    return program_store::MAX_TINYBASIC_TEXT_SIZE;
+    return (u32) program_store::MAX_TINYBASIC_TEXT_SIZE * 3U;
   }
   if(type == program_store::ProgramType::FONT) {
     return program_store::MAX_FONT_SIZE;
@@ -285,76 +420,188 @@ static u16 maximum_file_size(program_store::ProgramType type) {
   if(type == program_store::ProgramType::APP) {
     return program_store::MAX_APP_FILE_SIZE;
   }
-  return program_store::MAX_MK61_TEXT_SIZE;
+  const u32 internal = program_store::MAX_MK61_TEXT_SIZE;
+  return program_store::text_content(type) ? internal * 3U : internal;
+#endif
 }
 
-static bool utf8_to_utf16(const char* input, u16* output, u16 capacity,
-                          u16& output_len) {
-  output_len = 0;
-  if(input == NULL) return false;
-  const u8* source = (const u8*) input;
-  const usize input_len = strlen(input);
-  usize offset = 0;
-  while(offset < input_len) {
-    const utf8_codec::Decoded decoded =
-        utf8_codec::decode(source + offset, input_len - offset);
-    if(!decoded.valid) return false;
-    u32 codepoint = decoded.codepoint;
-    if(codepoint <= 0xFFFF) {
-      if(output_len >= capacity) return false;
-      output[output_len++] = (u16) codepoint;
-    } else {
-      if(output_len + 2 > capacity) return false;
-      codepoint -= 0x10000;
-      output[output_len++] = (u16) (0xD800 | (codepoint >> 10));
-      output[output_len++] = (u16) (0xDC00 | (codepoint & 0x3FF));
+static void clear_exported_size_cache(void) {
+  memset(g_exported_size_cache, 0, sizeof(g_exported_size_cache));
+  g_exported_size_cache_next = 0;
+}
+
+static bool cached_exported_size(const program_store::Entry& entry,
+                                 u32& output) {
+  for(const auto& cached : g_exported_size_cache) {
+    if(cached.valid && cached.id == entry.id &&
+       cached.internal_size == entry.data_len &&
+       cached.type == (u8) entry.type) {
+      output = cached.visible_size;
+      return true;
     }
-    offset += decoded.size;
   }
-  return true;
+  return false;
 }
 
-static bool append_utf8(u32 codepoint, char* output, u16 capacity, u16& len) {
-  u8 bytes = codepoint < 0x80 ? 1 : codepoint < 0x800 ? 2 :
-             codepoint < 0x10000 ? 3 : 4;
-  if((u16) (len + bytes) >= capacity) return false;
-  if(bytes == 1) {
-    output[len++] = (char) codepoint;
-  } else if(bytes == 2) {
-    output[len++] = (char) (0xC0 | (codepoint >> 6));
-    output[len++] = (char) (0x80 | (codepoint & 0x3F));
-  } else if(bytes == 3) {
-    output[len++] = (char) (0xE0 | (codepoint >> 12));
-    output[len++] = (char) (0x80 | ((codepoint >> 6) & 0x3F));
-    output[len++] = (char) (0x80 | (codepoint & 0x3F));
-  } else {
-    output[len++] = (char) (0xF0 | (codepoint >> 18));
-    output[len++] = (char) (0x80 | ((codepoint >> 12) & 0x3F));
-    output[len++] = (char) (0x80 | ((codepoint >> 6) & 0x3F));
-    output[len++] = (char) (0x80 | (codepoint & 0x3F));
-  }
-  return true;
+static void cache_exported_size(const program_store::Entry& entry,
+                                u32 size) {
+  if(size > 0xFFFFU) return;
+  ExportedSizeCacheEntry& cached =
+      g_exported_size_cache[g_exported_size_cache_next];
+  cached.id = entry.id;
+  cached.internal_size = entry.data_len;
+  cached.visible_size = (u16) size;
+  cached.type = (u8) entry.type;
+  cached.valid = 1;
+  g_exported_size_cache_next = (u8) (
+      (g_exported_size_cache_next + 1U) % EXPORTED_SIZE_CACHE_ENTRIES);
 }
 
-static bool utf16_to_utf8(const u16* input, u16 input_len, char* output,
-                          u16 capacity) {
-  u16 len = 0;
-  for(u16 i = 0; i < input_len; i++) {
-    u32 codepoint = input[i];
-    if(codepoint == 0 || codepoint == 0xFFFF) break;
-    if(codepoint >= 0xD800 && codepoint <= 0xDBFF) {
-      if(i + 1 >= input_len || input[i + 1] < 0xDC00 ||
-         input[i + 1] > 0xDFFF) return false;
-      codepoint = 0x10000 + (((u32) codepoint - 0xD800) << 10) +
-                  ((u32) input[++i] - 0xDC00);
-    } else if(codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
+static u8* whole_text_scratch(u16 size) {
+  // During a commit the UC1609 framebuffer is already detached from the
+  // display and lent to the USB-disk module.  Prefer that full 8 KiB span:
+  // the persistent staging journal is normally non-empty at this point, so
+  // its smaller key-index scratch cannot be borrowed.  Materializing a text
+  // file once avoids restarting ZX0 decompression for every 64-byte range.
+  if(g_commit_compression_buffer != NULL &&
+     size <= g_commit_compression_buffer_size) {
+    return g_commit_compression_buffer;
+  }
+#if defined(MK61_BUILD_USBDISK_MODULE)
+  // With an empty persistent journal its 1.5 KiB sorted-key array is idle.
+  // Reuse it for one complete ordinary M8 text file instead of repeatedly
+  // restarting ZX0 decompression for every 64-byte range. TinyBasic sources
+  // larger than this buffer retain the bounded streaming fallback below.
+  return mk61_usbdisk_empty_stage_scratch(size);
+#else
+  (void) size;
+  return nullptr;
+#endif
+}
+
+static bool exported_file_size(const program_store::Entry& entry,
+                               u32& output) {
+  output = entry.data_len;
+  if(!program_store::text_content(entry.type)) return true;
+  if(cached_exported_size(entry, output)) return true;
+  output = 0;
+  if(u8* const complete = whole_text_scratch(entry.data_len)) {
+    u16 copied = 0;
+    if(!program_store::read_range_id(entry.id, 0, complete, entry.data_len,
+                                     &copied) || copied != entry.data_len) {
       return false;
     }
-    if(!append_utf8(codepoint, output, capacity, len)) return false;
+    for(u16 index = 0; index < copied; ++index) {
+      if(!mk8::valid_byte(complete[index])) return false;
+      output += mk8::utf8(complete[index]).size;
+    }
+    cache_exported_size(entry, output);
+    return true;
   }
-  if(len >= capacity) return false;
-  output[len] = 0;
-  return len != 0;
+  u8 bytes[64];
+  u16 offset = 0;
+  while(offset < entry.data_len) {
+    const u16 remaining = (u16) (entry.data_len - offset);
+    const u16 wanted = remaining < (u16) sizeof(bytes)
+        ? remaining : (u16) sizeof(bytes);
+    u16 copied = 0;
+    if(!program_store::read_range_id(entry.id, offset, bytes, wanted,
+                                     &copied) || copied != wanted) return false;
+    for(u16 index = 0; index < copied; ++index) {
+      if(!mk8::valid_byte(bytes[index])) return false;
+      output += mk8::utf8(bytes[index]).size;
+    }
+    offset = (u16) (offset + copied);
+  }
+  cache_exported_size(entry, output);
+  return true;
+}
+
+static bool read_exported_range(const program_store::Entry& entry,
+                                u32 external_offset, u8* output,
+                                u16 capacity, u16& copied) {
+  copied = 0;
+  if(output == NULL && capacity != 0) return false;
+  if(!program_store::text_content(entry.type)) {
+    if(external_offset >= entry.data_len) return true;
+    const u16 wanted = (u16) (((u32) entry.data_len - external_offset < capacity)
+        ? (u32) entry.data_len - external_offset : capacity);
+    return program_store::read_range_id(
+        entry.id, (u16) external_offset, output, wanted, &copied);
+  }
+
+  u32 external_position = 0;
+  const u32 external_end = external_offset + capacity;
+  if(u8* const complete = whole_text_scratch(entry.data_len)) {
+    u16 received = 0;
+    if(!program_store::read_range_id(entry.id, 0, complete, entry.data_len,
+                                     &received) || received != entry.data_len) {
+      return false;
+    }
+    for(u16 index = 0; index < received; ++index) {
+      if(!mk8::valid_byte(complete[index])) return false;
+      const mk8::Utf8Bytes encoded = mk8::utf8(complete[index]);
+      for(u8 part = 0; part < encoded.size; ++part, ++external_position) {
+        if(external_position >= external_offset &&
+           external_position < external_end) {
+          output[copied++] = encoded.data[part];
+        }
+      }
+      if(external_position >= external_end) break;
+    }
+    return true;
+  }
+  u8 bytes[64];
+  u16 internal_offset = 0;
+  while(internal_offset < entry.data_len && external_position < external_end) {
+    const u16 remaining = (u16) (entry.data_len - internal_offset);
+    const u16 wanted = remaining < (u16) sizeof(bytes)
+        ? remaining : (u16) sizeof(bytes);
+    u16 received = 0;
+    if(!program_store::read_range_id(entry.id, internal_offset, bytes, wanted,
+                                     &received) || received != wanted) return false;
+    for(u16 index = 0; index < received; ++index) {
+      if(!mk8::valid_byte(bytes[index])) return false;
+      const mk8::Utf8Bytes encoded = mk8::utf8(bytes[index]);
+      for(u8 part = 0; part < encoded.size; ++part, ++external_position) {
+        if(external_position >= external_offset &&
+           external_position < external_end) {
+          output[copied++] = encoded.data[part];
+        }
+      }
+      if(external_position >= external_end) break;
+    }
+    internal_offset = (u16) (internal_offset + received);
+  }
+  return true;
+}
+
+static bool m8_to_utf16(const char* input, u16* output, u16 capacity,
+                        u16& output_len) {
+  output_len = 0;
+  if(input == NULL) return false;
+  usize converted = 0;
+  const usize input_len = strlen(input);
+  if(!mk8::to_utf16((const u8*) input, input_len, output, capacity,
+                    converted) || converted > 0xFFFFU) return false;
+  output_len = (u16) converted;
+  return true;
+}
+
+static bool utf16_to_m8(const u16* input, u16 input_len, char* output,
+                        u16 capacity) {
+  if(input == NULL || output == NULL || capacity == 0) return false;
+  u16 units = 0;
+  while(units < input_len && input[units] != 0 && input[units] != 0xFFFFU) {
+    ++units;
+  }
+  usize converted = 0;
+  if(!mk8::from_utf16(input, units, (u8*) output, capacity - 1U,
+                      converted) || converted == 0 || converted >= capacity) {
+    return false;
+  }
+  output[converted] = 0;
+  return true;
 }
 
 static void full_name(const program_store::Entry& entry, char* output,
@@ -411,7 +658,7 @@ static bool render_node_dirent(const program_store::Entry& entry, u8 offset,
   u16 units[MAX_LFN_UNITS];
   u16 unit_count = 0;
   full_name(entry, name, sizeof(name));
-  if(!utf8_to_utf16(name, units, MAX_LFN_UNITS, unit_count)) return false;
+  if(!m8_to_utf16(name, units, MAX_LFN_UNITS, unit_count)) return false;
   const u8 lfn_count = (u8) ((unit_count + 12) / 13);
   u8 alias[11];
   short_alias(entry, alias);
@@ -441,8 +688,10 @@ static bool render_node_dirent(const program_store::Entry& entry, u8 offset,
   put_le16(item, 22, 0);
   put_le16(item, 24, (u16) (((2026 - 1980) << 9) | (7 << 5) | 19));
   put_le16(item, 26, cluster_for_id(entry.id));
-  put_le32(item, 28, entry.kind == program_store::NodeKind::FILE
-                          ? entry.data_len : 0);
+  u32 visible_size = 0;
+  if(entry.kind == program_store::NodeKind::FILE &&
+     !exported_file_size(entry, visible_size)) return false;
+  put_le32(item, 28, visible_size);
   return true;
 }
 
@@ -453,7 +702,7 @@ static bool render_no_index_dirent(u8 offset, u8* item) {
   };
   u16 units[MAX_LFN_UNITS];
   u16 unit_count = 0;
-  if(!utf8_to_utf16(name, units, MAX_LFN_UNITS, unit_count)) return false;
+  if(!m8_to_utf16(name, units, MAX_LFN_UNITS, unit_count)) return false;
   const u8 lfn_count = (u8) ((unit_count + 12) / 13);
   if(offset < lfn_count) {
     const u8 sequence = (u8) (lfn_count - offset);
@@ -485,7 +734,7 @@ static void boot_sector(u8* output) {
   output[0] = 0xEB;
   output[1] = 0x3C;
   output[2] = 0x90;
-  memcpy(output + 3, "MK61C5  ", 8);
+  memcpy(output + 3, "MK61C6  ", 8);
   put_le16(output, 11, SECTOR_SIZE);
   output[13] = geometry().sectors_per_cluster;
   put_le16(output, 14, RESERVED_SECTORS);
@@ -504,7 +753,7 @@ static void boot_sector(u8* output) {
   output[36] = 0x80;
   output[38] = 0x29;
   put_le32(output, 39, volume_serial());
-  memcpy(output + 43, "MK61S C5   ", 11);
+  memcpy(output + 43, "MK61S C6   ", 11);
   memcpy(output + 54, "FAT12   ", 8);
   output[510] = 0x55;
   output[511] = 0xAA;
@@ -578,10 +827,11 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
                             bool root) {
   memset(output, 0, SECTOR_SIZE);
   const u32 last_slot = first_slot + SECTOR_SIZE / 32;
-  u32 cursor = 0;
+  u32 cursor = root ? storage_geometry::ROOT_SYSTEM_DIRENTS : 2U;
+  int first_child = 0;
   if(root) {
     if(first_slot == 0) {
-      memcpy(output, "MK61S C5   ", 11);
+      memcpy(output, "MK61S C6   ", 11);
       output[11] = ATTR_VOLUME;
       for(u8 offset = 0;
           offset + 1 < storage_geometry::ROOT_SYSTEM_DIRENTS;
@@ -591,7 +841,6 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
         }
       }
     }
-    cursor = storage_geometry::ROOT_SYSTEM_DIRENTS;
   } else {
     if(first_slot == 0) {
       memcpy(output, ".          ", 11);
@@ -604,15 +853,18 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
       put_le16(output + 32, 26, directory.parent_id == program_store::ROOT_ID
                                    ? 0 : cluster_for_id(directory.parent_id));
     }
-    cursor = 2;
   }
 
+  (void) resume_directory_cursor(parent_id, root, first_slot,
+                                 cursor, first_child);
+
   const int children = program_store::child_count(parent_id);
-  for(int index = 0; index < children; index++) {
+  for(int index = first_child; index < children; index++) {
     program_store::Entry entry;
     if(!program_store::child(parent_id, index, entry)) return false;
     const u8 count = node_dirent_count(entry);
     if(count == 0) return false;
+    const u32 node_slot = cursor;
     for(u8 offset = 0; offset < count; offset++) {
       const u32 slot = cursor + offset;
       if(slot >= first_slot && slot < last_slot &&
@@ -621,10 +873,15 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
     }
     cursor += count;
     if(cursor >= last_slot && cursor > first_slot) {
-      // Записи после этой точки не могут влиять на запрошенный сектор.
-      if(cursor >= last_slot) break;
+      // If an LFN spans the sector boundary, the next sector must revisit the
+      // same child to render the tail. Otherwise resume at the following one.
+      save_directory_cursor(parent_id, root, last_slot,
+                            cursor > last_slot ? node_slot : cursor,
+                            cursor > last_slot ? index : index + 1);
+      return true;
     }
   }
+  save_directory_cursor(parent_id, root, last_slot, cursor, children);
   return true;
 }
 
@@ -660,11 +917,13 @@ static bool data_sector_base(u32 offset, u8* output) {
   program_store::Entry entry;
   if(program_store::entry_by_id(id, entry)) {
     if(entry.kind == program_store::NodeKind::FILE) {
-      const u16 file_offset = (u16) sector * SECTOR_SIZE;
-      if(file_offset >= entry.data_len) return true;
+      const u32 file_offset = (u32) sector * SECTOR_SIZE;
+      u32 visible_size = 0;
+      if(!exported_file_size(entry, visible_size)) return false;
+      if(file_offset >= visible_size) return true;
       u16 copied = 0;
-      return program_store::read_range_id(id, file_offset, output, SECTOR_SIZE,
-                                          &copied);
+      return read_exported_range(entry, file_offset, output, SECTOR_SIZE,
+                                 copied);
     }
   }
   u16 file_id = 0;
@@ -676,10 +935,11 @@ static bool data_sector_base(u32 offset, u8* output) {
     (void) file_next;
     const u32 file_offset =
         ((u32) file_cluster * sectors_per_cluster + sector) * SECTOR_SIZE;
-    if(file_offset >= entry.data_len) return true;
+    u32 visible_size = 0;
+    if(!exported_file_size(entry, visible_size)) return false;
+    if(file_offset >= visible_size) return true;
     u16 copied = 0;
-    return program_store::read_range_id(
-        file_id, (u16) file_offset, output, SECTOR_SIZE, &copied);
+    return read_exported_range(entry, file_offset, output, SECTOR_SIZE, copied);
   }
   u16 directory_id = 0;
   u16 segment = 0;
@@ -752,6 +1012,7 @@ static void touch_cache(u8 slot) {
 }
 
 static bool read_persistent_sector(u32 lba, u8* output) {
+  service_startup_recovery();
   const u32 key = canonical_lba(lba);
   if(key != 0 && program_store::vfat_stage_exists(key)) {
     return program_store::vfat_stage_read(key, output);
@@ -911,9 +1172,9 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
   const u32 required = parsed.data_len == 0 ? 1 :
       ((u32) parsed.data_len + cluster_bytes - 1U) / cluster_bytes;
-  if(required == 0 || required > MAX_C5_FILE_CLUSTERS) {
+  if(required == 0 || required > MAX_C6_FILE_CLUSTERS) {
     return g_error.fail(ErrorCode::CLUSTER_LIMIT, Phase::CHAIN,
-                        required, MAX_C5_FILE_CLUSTERS, parsed.name);
+                        required, MAX_C6_FILE_CLUSTERS, parsed.name);
   }
   chain.cluster_count = (u8) required;
   u16 cluster = cluster_for_id(parsed.id);
@@ -1010,7 +1271,7 @@ static bool accepted_lfn(const LfnState& lfn, const u8* short_item,
      lfn.next_sequence != 0 || short_checksum(short_item) != lfn.checksum) return false;
   const u8 mask = (u8) ((1U << lfn.expected) - 1U);
   return (lfn.seen_mask & mask) == mask &&
-         utf16_to_utf8(lfn.name, (u16) lfn.expected * 13, output, capacity);
+         utf16_to_m8(lfn.name, (u16) lfn.expected * 13, output, capacity);
 }
 
 static bool short_name(const u8* item, char* output, u16 capacity) {
@@ -1046,7 +1307,7 @@ static bool system_directory(const char* name, u8 attributes) {
 static bool host_sidecar_file(const char* name) {
   // Finder хранит расширенные атрибуты и ветви ресурсов в файлах AppleDouble.
   // Их суффикс намеренно повторяет настоящий файл (например, "._game.m61"),
-  // поэтому импорт C5 по расширению должен отклонить их до того, как примет
+  // поэтому импорт C6 по расширению должен отклонить их до того, как примет
   // многокилобайтный блок метаданных за исходник калькулятора.
   return name[0] == '.' && name[1] == '_';
 }
@@ -1076,6 +1337,10 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
                     (u32) strlen(name), program_store::NAME_SIZE - 1, name);
       return ParseStatus::INVALID;
     }
+    if(!storage_name::valid_basename(name, program_store::NAME_SIZE)) {
+      g_error.fail(ErrorCode::NAME, Phase::ENTRY, 0, 0, name);
+      return ParseStatus::INVALID;
+    }
     bounded_string::copy(parsed.name, name);
     parsed.id = id_for_cluster(cluster);
     parsed.data_len = 0;
@@ -1087,9 +1352,13 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   if(host_sidecar_file(name) || !parse_file_name(name, parsed.type)) {
     return ParseStatus::SKIP;
   }
+  if(!storage_name::valid_basename(name, program_store::NAME_SIZE)) {
+    g_error.fail(ErrorCode::NAME, Phase::ENTRY, 0, 0, name);
+    return ParseStatus::INVALID;
+  }
   // Неподдерживаемые файлы хоста намеренно игнорируются независимо от размера.
-  // Квоту данных C5 применяем лишь после выбора известного расширения калькулятора.
-  const u16 size_limit = maximum_file_size(parsed.type);
+  // Квоту данных C6 применяем лишь после выбора известного расширения калькулятора.
+  const u32 size_limit = maximum_file_size(parsed.type);
   if(parsed.type == program_store::ProgramType::CHIP8 && size == 0) {
     g_error.fail(ErrorCode::EMPTY_FILE, Phase::ENTRY, 0, 1, name);
     return ParseStatus::INVALID;
@@ -1111,7 +1380,6 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
 
 enum class WalkPass : u8 { VALIDATE, APPLY };
 
-static bool reconcile_directory_chain(u16 directory_id);
 static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
                            u8 depth, WalkPass pass);
 
@@ -1146,6 +1414,69 @@ static bool read_file_chain_source(void* context, u32 offset,
   return true;
 }
 
+static bool decode_chain_m8(const FileChain& chain, u32& utf8_offset,
+                            u8& output) {
+  if(utf8_offset >= chain.size) return false;
+  u8 encoded[4] = {};
+  const usize available = chain.size - utf8_offset < sizeof(encoded)
+      ? (usize) (chain.size - utf8_offset) : sizeof(encoded);
+  if(!read_file_chain_source((void*) &chain, utf8_offset,
+                             encoded, available)) return false;
+  const utf8_codec::Decoded decoded = utf8_codec::decode(encoded, available);
+  if(!decoded.valid || decoded.size == 0 ||
+     !mk8::from_codepoint(decoded.codepoint, output) ||
+     !mk8::valid_byte(output)) return false;
+  utf8_offset += decoded.size;
+  return true;
+}
+
+static bool validate_text_chain(const FileChain& chain, u16 limit,
+                                u16& m8_size) {
+  m8_size = 0;
+  u32 offset = 0;
+  while(offset < chain.size) {
+    u8 byte = 0;
+    if(!decode_chain_m8(chain, offset, byte) || m8_size == limit) return false;
+    ++m8_size;
+  }
+  return true;
+}
+
+struct ImportedTextSource {
+  const FileChain* chain;
+  u32 utf8_offset;
+  u16 m8_offset;
+  u16 size;
+};
+
+static bool seek_imported_text(ImportedTextSource& source, u16 wanted) {
+  if(wanted > source.size) return false;
+  if(wanted < source.m8_offset) {
+    source.utf8_offset = 0;
+    source.m8_offset = 0;
+  }
+  while(source.m8_offset < wanted) {
+    u8 byte = 0;
+    if(!decode_chain_m8(*source.chain, source.utf8_offset, byte)) return false;
+    ++source.m8_offset;
+  }
+  return true;
+}
+
+static bool read_imported_text(void* context, u32 offset,
+                               u8* output, usize size) {
+  ImportedTextSource& source = *(ImportedTextSource*) context;
+  if(output == NULL || offset > source.size || size > source.size - offset ||
+     offset > 0xFFFFU || !seek_imported_text(source, (u16) offset)) return false;
+  while(size-- != 0) {
+    if(!decode_chain_m8(*source.chain, source.utf8_offset, *output++)) {
+      return false;
+    }
+    ++source.m8_offset;
+  }
+  return true;
+}
+
 static bool base_file_cluster(u16 cluster, u16& file_id,
                               u8& cluster_index) {
   const u16 id = id_for_cluster(cluster);
@@ -1162,7 +1493,8 @@ static bool base_file_cluster(u16 cluster, u16& file_id,
 
 static bool file_chain_complete(const FileChain& chain,
                                 bool current_exists, u16 current_id,
-                                u16 current_size, bool& any_staged) {
+                                u32 current_size, const char* subject,
+                                bool& any_staged) {
   any_staged = false;
   const u32 cluster_bytes =
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
@@ -1186,7 +1518,7 @@ static bool file_chain_complete(const FileChain& chain,
          ((u32) old_cluster * geometry().sectors_per_cluster + sector) *
              SECTOR_SIZE >= current_size) {
         return g_error.fail(ErrorCode::FILE_DATA, Phase::VALIDATE,
-                            lba, current_size);
+                            lba, current_size, subject);
       }
     }
     remaining -= in_cluster;
@@ -1264,31 +1596,51 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
   program_store::Entry current;
   const bool exists = program_store::entry_by_id(parsed.id, current) &&
                       current.kind == program_store::NodeKind::FILE;
+  u32 current_visible_size = 0;
+  if(exists && !exported_file_size(current, current_visible_size)) return false;
   bool any_staged = false;
   if(!file_chain_complete(chain, exists, parsed.id,
-                          exists ? current.data_len : 0, any_staged)) {
+                          exists ? current_visible_size : 0,
+                          parsed.name, any_staged)) {
     return false;
   }
-  const bool baseline_compatible = exists && current.type == parsed.type &&
-                                   current.data_len == parsed.data_len;
-  if(baseline_compatible && !any_staged &&
-     file_chain_matches(chain, parsed.id)) {
+  const bool content_unchanged =
+      exists && current.type == parsed.type &&
+      current_visible_size == parsed.data_len && !any_staged &&
+      file_chain_matches(chain, parsed.id);
+  if(content_unchanged) {
     if(current.parent_id == parent_id && strcmp(current.name, parsed.name) == 0) {
       return true;
     }
-    return program_store::move_rename(parsed.id, parent_id, parsed.name);
+    if(program_store::move_rename(parsed.id, parent_id, parsed.name)) {
+      return true;
+    }
+    return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
+                        parsed.id, 1U, parsed.name, true);
+  }
+
+  u16 internal_size = parsed.data_len;
+  ImportedTextSource text_source = {&chain, 0, 0, 0};
+  program_store::FileSource source = {&chain, read_file_chain_source};
+  if(program_store::text_content(parsed.type)) {
+    const u16 limit = parsed.type == program_store::ProgramType::TINYBASIC
+        ? program_store::MAX_TINYBASIC_TEXT_SIZE
+        : program_store::MAX_MK61_TEXT_SIZE;
+    if(!validate_text_chain(chain, limit, internal_size)) {
+      return g_error.fail(ErrorCode::TEXT_ENCODING, Phase::APPLY,
+                          parsed.data_len, limit, parsed.name);
+    }
+    text_source.size = internal_size;
+    source = {&text_source, read_imported_text};
   }
   u16 extents[program_store::MAX_FAT_EXTENTS_PER_FILE] = {};
   for(u8 index = 1; index < chain.cluster_count; index++) {
     extents[index - 1] = id_for_cluster(chain.clusters[index]);
   }
-  const program_store::FileSource source = {
-    &chain, read_file_chain_source
-  };
-  if(parsed.data_len != 0 &&
+  if(internal_size != 0 &&
      program_store::transparent_compression_enabled(parsed.type)) {
     const u8 source_slots = (u8) (
-        ((u32) parsed.data_len + SECTOR_SIZE - 1U) / SECTOR_SIZE);
+        ((u32) internal_size + SECTOR_SIZE - 1U) / SECTOR_SIZE);
     if(source_slots < PRIMARY_CACHE_SLOTS) {
       const u8 saved_cache_slots = g_cache_slots;
       const u8 workspace_slots =
@@ -1297,14 +1649,15 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
       g_cache_slots = workspace_slots;
       u8* const bytes = session().cache_data[workspace_slots];
       const bool loaded =
-          read_file_chain_source(&chain, 0, bytes, parsed.data_len);
+          source.read(source.context, 0, bytes, internal_size);
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_slots = 0;
       if(!loaded) {
         g_cache_slots = saved_cache_slots;
-        return false;
+        return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
+                            parsed.id, 2U, parsed.name, true);
       }
-      MaterializedFile materialized = {bytes, parsed.data_len};
+      MaterializedFile materialized = {bytes, internal_size};
       const program_store::FileSource memory_source = {
         &materialized, read_materialized_file
       };
@@ -1317,20 +1670,41 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
               ? g_commit_compression_buffer_size
               : (usize) workspace_slots * SECTOR_SIZE;
       const bool written = program_store::write_file_from_source(
-          parent_id, parsed.id, parsed.type, parsed.name, parsed.data_len,
+          parent_id, parsed.id, parsed.type, parsed.name, internal_size,
           memory_source, chain.cluster_count > 1 ? extents : NULL,
           (u8) (chain.cluster_count - 1U), NULL,
           compression_buffer, compression_buffer_size, bytes);
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_slots = saved_cache_slots;
-      return written;
+      if(written) return true;
+      u32 detail = 3U;
+      u16 owner = 0;
+      u16 next = 0;
+      u8 cluster_index = 0;
+      if(program_store::file_extent_info(parsed.id, owner,
+                                         cluster_index, next)) {
+        detail |= 0x10000000UL | ((u32) owner << 8);
+      } else if(program_store::extent_info(parsed.id, owner, next)) {
+        detail |= 0x20000000UL | ((u32) owner << 8);
+      } else if(program_store::entry_by_id(parsed.id, current)) {
+        detail |= 0x30000000UL | ((u32) current.kind << 20) |
+                  ((u32) current.type << 8);
+      }
+      detail |= (u32) program_store::last_write_failure_detail() << 16;
+      detail |= (u32) program_store::last_write_failure() << 24;
+      return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
+                          parsed.id, detail, parsed.name, true);
     }
   }
-  return program_store::write_file_from_source(
-      parent_id, parsed.id, parsed.type, parsed.name, parsed.data_len, source,
+  if(program_store::write_file_from_source(
+      parent_id, parsed.id, parsed.type, parsed.name, internal_size, source,
       chain.cluster_count > 1 ? extents : NULL,
       (u8) (chain.cluster_count - 1U), NULL,
-      g_commit_compression_buffer, g_commit_compression_buffer_size);
+      g_commit_compression_buffer, g_commit_compression_buffer_size)) {
+    return true;
+  }
+  return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
+                      parsed.id, 4U, parsed.name, true);
 }
 
 static bool process_node(u16 parent_id, const ParsedNode& parsed,
@@ -1361,23 +1735,45 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
       const bool exists =
           program_store::entry_by_id(parsed.id, current) &&
           current.kind == program_store::NodeKind::FILE;
+      u32 current_visible_size = 0;
+      if(exists && !exported_file_size(current, current_visible_size)) {
+        return g_error.fail(ErrorCode::FILE_READ, Phase::VALIDATE,
+                            parsed.id, current.data_len, parsed.name, true);
+      }
       bool any_staged = false;
       if(!file_chain_complete(chain, exists, parsed.id,
-                              exists ? current.data_len : 0, any_staged)) {
+                              exists ? current_visible_size : 0,
+                              parsed.name, any_staged)) {
         return g_error.fail(ErrorCode::FILE_DATA, Phase::VALIDATE,
                             cluster_for_id(parsed.id), parsed.data_len, parsed.name);
+      }
+      // A chain without staged sectors whose visible bytes still map exactly
+      // to the same C6 file cannot have changed.  Its stored M8 text and APP
+      // payload were validated when they entered C6, so decoding them again
+      // only makes metadata-only host traffic needlessly expensive.  Rename
+      // and move handling remains in APPLY.
+      const bool content_unchanged =
+          exists && current.type == parsed.type &&
+          current_visible_size == parsed.data_len && !any_staged &&
+          file_chain_matches(chain, parsed.id);
+      if(content_unchanged) return true;
+      if(program_store::text_content(parsed.type)) {
+        const u16 limit = parsed.type == program_store::ProgramType::TINYBASIC
+            ? program_store::MAX_TINYBASIC_TEXT_SIZE
+            : program_store::MAX_MK61_TEXT_SIZE;
+        u16 internal_size = 0;
+        if(!validate_text_chain(chain, limit, internal_size)) {
+          return g_error.fail(ErrorCode::TEXT_ENCODING, Phase::VALIDATE,
+                              parsed.data_len, limit, parsed.name);
+        }
       }
 #if MK61_ANY_LOADABLE_MODULE
       // Уже опубликованный APP может стать несовместимым после обновления
       // resident-прошивки. Пока его байты и FAT-цепочка не меняются, он не
       // должен блокировать удаление, переименование или копирование остальных
       // файлов. Новое и изменённое содержимое по-прежнему полностью
-      // распаковывается и проверяется до первой мутации дерева C5.
-      const bool content_unchanged =
-          exists && current.type == parsed.type &&
-          current.data_len == parsed.data_len && !any_staged &&
-          file_chain_matches(chain, parsed.id);
-      if(!content_unchanged && !validate_app_chain(parsed, chain)) return false;
+      // распаковывается и проверяется до первой мутации дерева C6.
+      if(!validate_app_chain(parsed, chain)) return false;
 #endif
       return true;
     }
@@ -1386,8 +1782,17 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
   }
 
   if(parsed.directory) {
-    if(!program_store::create_directory(parent_id, parsed.name, parsed.id, NULL) ||
-       !reconcile_directory_chain(parsed.id)) return false;
+    // Directory clusters are only a transport representation.  A host may
+    // preallocate a very long, empty tail (macOS commonly does this) after the
+    // first 0x00 end marker.  Persisting that tail would consume one C6 node
+    // per unused FAT cluster.  Import the live entries first; the final
+    // ensure_all_directory_extents() pass materializes only the clusters that
+    // those entries actually require.
+    if(!program_store::create_directory(parent_id, parsed.name, parsed.id,
+                                        NULL)) {
+      return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
+                          parsed.id, 5U, parsed.name, true);
+    }
     return walk_directory(parsed.id, false, cluster_for_id(parsed.id),
                           (u8) (depth + 1), pass);
   }
@@ -1464,6 +1869,10 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
         if(end) break;
       }
     }
+    // FAT specifies 0x00 as the end of all directory entries, not merely the
+    // current sector.  Any clusters after it are allocation slack and must not
+    // become persistent C6 directory extents.
+    if(end) return true;
     u16 next = 0;
     if(!effective_fat_value(cluster, next)) {
       return g_error.fail(ErrorCode::FAT_READ, Phase::CHAIN,
@@ -1502,32 +1911,7 @@ static bool directory_chain_matches(u16 directory_id) {
 }
 
 static bool release_all_extents(u16 directory_id) {
-  for(;;) {
-    u16 extent = 0;
-    if(!program_store::first_extent(directory_id, extent)) return true;
-    for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
-      u16 next = 0;
-      if(!program_store::next_extent(extent, next)) break;
-      extent = next;
-    }
-    if(!program_store::release_directory_extent(extent)) return false;
-  }
-}
-
-static bool reconcile_directory_chain(u16 directory_id) {
-  if(directory_chain_matches(directory_id)) return true;
-  if(!release_all_extents(directory_id)) return false;
-  u16 cluster = cluster_for_id(directory_id);
-  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
-    u16 next = 0;
-    if(!effective_fat_value(cluster, next)) return false;
-    if(fat_eof(next)) return true;
-    if(!valid_cluster(next) ||
-       !program_store::allocate_directory_extent(directory_id,
-                                                  id_for_cluster(next))) return false;
-    cluster = next;
-  }
-  return false;
+  return program_store::trim_directory_extents(directory_id, 0);
 }
 
 static bool release_mismatched_extent_chains(u16 parent_id, u8 depth = 0) {
@@ -1545,16 +1929,28 @@ static bool release_mismatched_extent_chains(u16 parent_id, u8 depth = 0) {
   return true;
 }
 
-static bool release_repurposed_file_extents(void) {
+static bool release_repurposed_extents(void) {
   for(u16 id = 0; id < program_store::max_nodes(); id++) {
     const DesiredKind wanted = desired_kind(id);
     if(wanted != DESIRED_FILE && wanted != DESIRED_DIRECTORY) continue;
-    u16 file_id = 0;
+    u16 owner = 0;
     u16 next = 0;
     u8 cluster_index = 0;
     if(program_store::file_extent_info(
-           id, file_id, cluster_index, next) &&
-       !program_store::release_file_extent(id)) return false;
+           id, owner, cluster_index, next)) {
+      if(!program_store::release_file_extent(id)) return false;
+      continue;
+    }
+    // A host is allowed to reuse allocation slack after the first 0x00
+    // directory marker.  Older firmware persisted that entire preallocated
+    // FAT tail as C6 directory extents.  If a later, interrupted host
+    // transaction already points a live file or directory at one of those
+    // clusters, free that exact extent before APPLY claims its stable id.
+    // release_directory_extent() relinks both neighbours in one WAL record,
+    // so this remains power-loss safe even when the reused node is in the
+    // middle of a legacy tail.
+    if(program_store::extent_info(id, owner, next) &&
+       !program_store::release_directory_extent(id)) return false;
   }
   return true;
 }
@@ -1600,11 +1996,16 @@ static u32 directory_required_slots(u16 directory_id) {
 }
 
 static bool ensure_directory_extents(u16 directory_id) {
+  startup_stage(20);
   const u32 slots = directory_required_slots(directory_id);
   if(slots == 0) return false;
-  const u32 per_cluster = (u32) geometry().sectors_per_cluster *
-                          (SECTOR_SIZE / 32);
+  startup_stage(21);
+  const u8 sectors_per_cluster = geometry().sectors_per_cluster;
+  startup_stage(100U + sectors_per_cluster);
+  const u32 per_cluster = (u32) sectors_per_cluster * (SECTOR_SIZE / 32);
+  if(per_cluster == 0) return false;
   const u16 wanted = (u16) ((slots + per_cluster - 1) / per_cluster);
+  startup_stage(22);
   u16 have = 1;
   u16 extent = 0;
   if(program_store::first_extent(directory_id, extent)) {
@@ -1612,19 +2013,17 @@ static bool ensure_directory_extents(u16 directory_id) {
       have++;
     } while(program_store::next_extent(extent, extent));
   }
+  startup_stage(23);
   while(have < wanted) {
     if(!program_store::allocate_directory_extent(directory_id,
                                                  program_store::INVALID_ID)) return false;
     have++;
   }
-  while(have > wanted) {
-    if(!program_store::first_extent(directory_id, extent)) return false;
-    for(u16 guard = 1; guard + 1 < have; guard++) {
-      if(!program_store::next_extent(extent, extent)) return false;
-    }
-    if(!program_store::release_directory_extent(extent)) return false;
-    have--;
-  }
+  startup_stage(24);
+  if(have > wanted &&
+     !program_store::trim_directory_extents(directory_id,
+                                            (u16) (wanted - 1U))) return false;
+  startup_stage(25);
   return true;
 }
 
@@ -1643,6 +2042,8 @@ static bool ensure_all_directory_extents(u16 parent_id = program_store::ROOT_ID,
 }
 
 static void invalidate_clean_cache(void) {
+  reset_directory_cursors();
+  clear_exported_size_cache();
   if(g_session == NULL) return;
   for(u8 slot = 0; slot < g_cache_slots; slot++) {
     if(g_session->cache[slot].state == CACHE_CLEAN) {
@@ -1658,7 +2059,7 @@ class ScopedCommitScratch {
       // К моменту создания этой защиты каждый грязный байт уже находится в
       // устойчивом к сбою питания журнале staging. Чистые записи кеша можно
       // удалить, чтобы VFAT_COMMIT занял shared_scratch, а
-      // внешний кеш временно стал workspace упаковщика C5.
+      // внешний кеш временно стал workspace упаковщика C6.
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_scratch.reset();
       g_scratch_cache_slots = 0;
@@ -1844,11 +2245,20 @@ u32 sector_count(void) {
 }
 
 u32 volume_serial(void) {
-  const u32 capacity =
-      program_store::ready() ? geometry().capacity_bytes : 0;
-  const u32 legacy_volume_serial = 0xC5000000UL ^ capacity;
-  return device_identity::fat_volume_serial(
+  if(g_session_volume_serial_valid) return g_session_volume_serial;
+  u32 capacity = 0;
+  if(program_store::ready()) {
+    const storage_geometry::Geometry& current_geometry = geometry();
+    startup_stage(30);
+    capacity = current_geometry.capacity_bytes;
+    startup_stage(31);
+  }
+  const u32 legacy_volume_serial = 0xC6000000UL ^ capacity;
+  startup_stage(32);
+  const u32 stable = device_identity::fat_volume_serial(
       device_identity::read(), legacy_volume_serial);
+  startup_stage(33);
+  return stable ^ program_store::media_revision();
 }
 
 bool read_sector(u32 lba, u8* output) {
@@ -1944,6 +2354,7 @@ bool write_sectors(u32 lba, const u8* data, u16 count) {
 CommitResult flush_pending_result(void) {
   g_error.begin_attempt();
   if(!program_store::ready() || !ensure_session()) {
+    record_startup_timeout();
     g_error.fail(ErrorCode::STORAGE_UNAVAILABLE, Phase::SESSION,
                   0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
@@ -1953,44 +2364,66 @@ CommitResult flush_pending_result(void) {
                   dirty_cache_sectors(), g_cache_slots, nullptr, true);
     return CommitResult::IO_FAILED;
   }
-  if(program_store::vfat_stage_count() == 0) {
+  const u16 staged_before = program_store::vfat_stage_count();
+  if(staged_before == 0) {
     return CommitResult::OK;
   }
+  startup_stage(50);
   ScopedCommitScratch commit_scratch;
   memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
   invalidate_clean_cache();
+  startup_stage(51);
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::VALIDATE)) {
+    // Preserve the classification made by validation itself.  A slow but
+    // deterministic incomplete host transaction is safe to roll back even
+    // when the startup deadline expires at the same instant.  Previously
+    // record_startup_timeout() added RETRYABLE to that already-recorded
+    // FILE_DATA error, turning a disposable partial FAT journal into a
+    // permanent mount blocker.
+    const bool retryable = (g_error.value.flags & RETRYABLE) != 0;
+    if(retryable) record_startup_timeout();
     g_error.fail(ErrorCode::VALIDATE, Phase::VALIDATE);
-    return (g_error.value.flags & RETRYABLE) != 0
-        ? CommitResult::IO_FAILED : CommitResult::REJECTED;
+    return retryable ? CommitResult::IO_FAILED : CommitResult::REJECTED;
   }
-  if(!release_repurposed_file_extents() ||
+  startup_stage(52);
+  if(!release_repurposed_extents() ||
      !release_mismatched_extent_chains(program_store::ROOT_ID) ||
      !prune_tree(program_store::ROOT_ID, false)) {
+    record_startup_timeout();
     g_error.fail(ErrorCode::PREPARE, Phase::PREPARE, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+  startup_stage(53);
   invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::APPLY)) {
+    record_startup_timeout();
     g_error.fail(ErrorCode::APPLY, Phase::APPLY, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+  startup_stage(54);
   if(!prune_tree(program_store::ROOT_ID, true)) {
+    record_startup_timeout();
     g_error.fail(ErrorCode::PRUNE, Phase::COMMIT, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+  startup_stage(55);
   if(!program_store::vfat_stage_discard_all()) {
+    record_startup_timeout();
     g_error.fail(ErrorCode::STAGE_DISCARD, Phase::COMMIT, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+  startup_stage(56);
   invalidate_clean_cache();
   if(!ensure_all_directory_extents()) {
+    record_startup_timeout();
     g_error.fail(ErrorCode::DIRECTORY_EXTENTS, Phase::COMMIT, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+  startup_stage(57);
   clear_diagnostic();
+  startup_stage(58);
   return CommitResult::OK;
 }
 
@@ -2001,6 +2434,13 @@ bool flush_pending(void) {
 CommitResult finalize_pending_result(void) {
   const CommitResult result = flush_pending_result();
   if(result != CommitResult::REJECTED) return result;
+#if defined(MK61_BUILD_USBDISK_MODULE)
+  // Validation may legitimately consume the whole startup budget before it
+  // proves that the journal is deterministic garbage.  Give the bounded,
+  // power-safe rollback its own budget; otherwise the ABI guard rejects the
+  // very discard operation required to recover on the next mount.
+  mk61_usbdisk_restart_startup_budget();
+#endif
   if(program_store::ready() && ensure_session() &&
      program_store::vfat_stage_discard_all()) {
     memset(session().cache, 0, sizeof(session().cache));
@@ -2015,34 +2455,91 @@ bool finalize_pending(void) {
 }
 
 bool reset_session(void) {
-  if(!program_store::ready() || !ensure_session()) return false;
+  ScopedStartupRecovery recovery;
+  (void) recovery;
+  reset_directory_cursors();
+  clear_exported_size_cache();
+  startup_stage(1);
+  g_session_volume_serial_valid = false;
+  if(!program_store::ready() || !ensure_session()) {
+    record_startup_timeout();
+    return false;
+  }
+  startup_stage(2);
   if(!g_cache_scratch.ok()) {
     g_scratch_cache_slots = g_cache_scratch.acquire(
       shared_scratch::Owner::USB_CACHE, shared_scratch::SIZE
     ) ? SCRATCH_CACHE_SLOTS : 0;
     update_cache_slot_count();
   }
+  startup_stage(3);
   memset(g_session, 0, sizeof(*g_session));
-  program_store::vfat_stage_clear();
-  if(program_store::vfat_stage_count() == 0 && !ensure_all_directory_extents()) {
+  startup_stage(4);
+  // Persistent staging is a write-ahead journal, not a second filesystem.
+  // A reset can follow an unplug or a power loss before the MSC close path had
+  // a chance to finalize it. Reconcile that journal before exposing any FAT
+  // sector to the next host session: a complete transaction is committed, a
+  // deterministic invalid/partial one is rolled back, and a retryable media
+  // failure keeps the journal for the next recovery attempt and refuses mount.
+  if(program_store::vfat_stage_count() != 0 &&
+     finalize_pending_result() == CommitResult::IO_FAILED) {
     return false;
   }
+  startup_stage(45);
+  const u16 remaining_stage = program_store::vfat_stage_count();
+  startup_stage(46);
+  startup_stage(5);
+  if(remaining_stage != 0) {
+    return g_error.fail(ErrorCode::STAGE_DISCARD, Phase::SESSION,
+                        remaining_stage, 0, nullptr, true);
+  }
+  if(!ensure_all_directory_extents()) {
+    record_startup_timeout();
+    return g_error.fail(ErrorCode::DIRECTORY_EXTENTS, Phase::SESSION,
+                        0, 0, nullptr, true);
+  }
+  startup_stage(6);
+  // Freeze the identity for this mounted session. Host writes advance the
+  // persistent staging generation, but a FAT volume must never change serial
+  // while it is mounted. The next session observes the new revision and makes
+  // macOS discard directory sectors cached from an interrupted transaction.
+  g_session_volume_serial = volume_serial();
+  g_session_volume_serial_valid = true;
+  startup_stage(7);
   invalidate_clean_cache();
   return true;
 }
 
 void end_session(void) {
+  startup_stage(40);
   g_cache_scratch.reset();
+  startup_stage(41);
   g_session = NULL;
   g_session_lease.reset();
+  startup_stage(42);
   program_store::vfat_stage_unlock();
+  startup_stage(43);
   g_extra_cache = NULL;
   g_scratch_cache_slots = 0;
   g_extra_cache_slots = 0;
   update_cache_slot_count();
+  g_session_volume_serial_valid = false;
+  clear_exported_size_cache();
+  startup_stage(44);
 }
 
 const Diagnostic& diagnostic(void) { return g_error.value; }
 void clear_diagnostic(void) { g_error.clear(); }
+void report_startup_failure(u32 stage, const char* subject) {
+  g_error.begin_attempt();
+  g_error.fail(ErrorCode::STORAGE_UNAVAILABLE, Phase::SESSION,
+               stage, 0, subject, true);
+}
+void restore_diagnostic(const Diagnostic& value) {
+  g_error.value = value;
+  g_error.recorded = false;
+}
 
 } // пространство имён virtual_fat
+
+#endif

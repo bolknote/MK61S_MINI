@@ -162,8 +162,8 @@ build_bundle() {
   printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
     "$compile_flags" "$ui_fonts" "$local_float_math" > "$output/build.flags"
   printf 'format 1\nabi 5\n' > "$output/build.apps"
-  printf '\nMK61s F401 unified ABI 5 bundle built by Arduino IDE:\n  %s\n' "$output"
-  printf 'After Upload, copy the generated System directory to /System on MK61S C5.\n\n'
+  printf '\nMK61s F401 unified ABI 6 bundle built by Arduino IDE:\n  %s\n' "$output"
+  printf 'After Upload, copy the generated System directory to /System on MK61S C6.\n\n'
 }
 
 [ "$#" -gt 0 ] || die 'missing command'

@@ -16,11 +16,12 @@ enum class ErrorCode : u16 {
   DUPLICATE_CLUSTER = 1212, KIND_CHANGE = 1213,
   FILE_CHAIN = 1214, DIRECTORY_CHAIN = 1215, EXTENT_CHAIN = 1216,
   DEPTH = 1217, FILE_DATA = 1218, CLUSTER_LIMIT = 1219,
-  EMPTY_FILE = 1220, FILE_TOO_LARGE = 1221,
+  EMPTY_FILE = 1220, FILE_TOO_LARGE = 1221, TEXT_ENCODING = 1222,
   STORAGE_UNAVAILABLE = 1230, CACHE_WRITE = 1231, FAT_READ = 1232,
   ROOT_READ = 1233, DIRECTORY_READ = 1234, FILE_READ = 1235,
   PREPARE = 1240, APPLY = 1241, PRUNE = 1242,
   STAGE_DISCARD = 1243, DIRECTORY_EXTENTS = 1244,
+  RECOVERY_TIMEOUT = 1245,
   APP_STAGE = 1250, APP_STAGE_RESTORE = 1251, APP_INVALID = 1252,
   VALIDATE = 1253
 };
@@ -38,7 +39,7 @@ struct Diagnostic {
   u8 flags;
   u32 actual;
   u32 limit;
-  char subject[16]; // Safe UTF-8 prefix, always terminated; never a full path.
+  char subject[16]; // Safe M8 prefix, always terminated; never a full path.
 };
 static_assert(sizeof(Diagnostic) == 28, "VFAT diagnostic RAM contract");
 static_assert(std::is_trivially_copyable<Diagnostic>::value,

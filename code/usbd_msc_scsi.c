@@ -698,9 +698,17 @@ static int8_t SCSI_StartStopUnit(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t 
   if ((params[4] & 0x3U) == 0x1U) /* START=1 */
   {
     hmsc->scsi_medium_state = SCSI_MEDIUM_UNLOCKED;
+    hmsc->host_eject_latched = msc_scsi_update_eject_latch(
+        hmsc->host_eject_latched, SCSI_START_STOP_UNIT, params[4], 1U);
   }
   else if ((params[4] & 0x3U) == 0x2U) /* START=0 and LOEJ Load Eject=1 */
   {
+    /* Remember the accepted host request before the potentially deferred
+       cache commit.  If that commit is rejected or hits an I/O error, the
+       foreground must still tear MSC down and return to CDC so the retained
+       diagnostic is observable instead of stranding an ejected device. */
+    hmsc->host_eject_latched = msc_scsi_update_eject_latch(
+        hmsc->host_eject_latched, SCSI_START_STOP_UNIT, params[4], 1U);
     sync_status = SCSI_SynchronizeCache(pdev, lun, params);
     if (sync_status != 0) return sync_status;
     hmsc->scsi_medium_state = SCSI_MEDIUM_EJECTED;
@@ -708,6 +716,8 @@ static int8_t SCSI_StartStopUnit(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t 
   else if ((params[4] & 0x3U) == 0x3U) /* START=1 and LOEJ Load Eject=1 */
   {
     hmsc->scsi_medium_state = SCSI_MEDIUM_UNLOCKED;
+    hmsc->host_eject_latched = msc_scsi_update_eject_latch(
+        hmsc->host_eject_latched, SCSI_START_STOP_UNIT, params[4], 1U);
   }
   else if ((params[4] & 0x3U) == 0x0U) /* START=0 */
   {
@@ -1377,6 +1387,8 @@ int8_t SCSI_CompleteSync(USBD_HandleTypeDef *pdev, uint8_t success)
 
   if (success != 0U)
   {
+    hmsc->host_eject_latched = msc_scsi_update_eject_latch(
+        hmsc->host_eject_latched, hmsc->cbw.CB[0], hmsc->cbw.CB[4], 1U);
     if (msc_scsi_is_eject(hmsc->cbw.CB[0], hmsc->cbw.CB[4]) != 0U)
     {
       hmsc->scsi_medium_state = SCSI_MEDIUM_EJECTED;

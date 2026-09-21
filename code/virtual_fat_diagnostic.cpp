@@ -1,5 +1,5 @@
 #include "virtual_fat_diagnostic.hpp"
-#include "utf8_codec.hpp"
+#include "mk8_codec.hpp"
 #include <stdio.h>
 #include <string.h>
 
@@ -10,21 +10,16 @@ static void copy_subject(Diagnostic& value, const char* text) {
   if(text == nullptr) return;
   usize out = 0;
   while(*text != 0) {
-    const u8 lead = (u8) text[0];
-    const utf8_codec::Decoded decoded = utf8_codec::decode_cstring(text);
-    const bool valid = decoded.valid;
-    const usize width = decoded.size == 0 ? 1U : decoded.size;
-    if(out + width >= sizeof(value.subject)) {
+    const u8 byte = (u8) *text++;
+    if(out + 1U >= sizeof(value.subject)) {
       value.flags |= SUBJECT_TRUNCATED;
       break;
     }
-    if(!valid || lead < 0x20 || lead == 0x7F || lead == '/' || lead == '\\') {
+    if(!mk8::valid_byte(byte) || byte < 0x20 ||
+       byte == '/' || byte == '\\') {
       value.subject[out++] = '?';
-      ++text;
     } else {
-      memcpy(value.subject + out, text, width);
-      out += width;
-      text += width;
+      value.subject[out++] = (char) byte;
     }
   }
   value.subject[out] = 0;

@@ -49,7 +49,8 @@ clang --target=arm-none-eabi -mcpu=cortex-m4 -mthumb \
 # Keep the no_std Rust facade buildable even on hosts which have not installed
 # the optional Cortex-M Rust target. A real APP build additionally exercises
 # its 32-bit size/offset assertions.
-if command -v rustc >/dev/null 2>&1; then
+if command -v rustc >/dev/null 2>&1 &&
+   rustc --edition 2021 --version >/dev/null 2>&1; then
   rustc --edition 2021 --crate-type lib --emit metadata \
     "$root/examples/portable-apps/HELLO-RUST/main.rs" \
     -o "$work/hello-rust.rmeta"

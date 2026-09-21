@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dependency-free ABI 5 APP packer used when no native host C++ exists.
+"""Dependency-free ABI 6 APP packer used when no native host C++ exists.
 
 The ZX0 stream writer follows the v2 format by Einar Saukas.  The greedy
 parser is intentionally implemented in Python so Arduino IDE on Windows only
@@ -34,6 +34,7 @@ KINDS = {
     "chip8": 5,
     "markdown-viewer": 6,
     "setup": 7,
+    "usbdisk": 8,
 }
 
 
@@ -347,7 +348,7 @@ def pack(args: argparse.Namespace) -> bytes:
     header = bytearray(HEADER_SIZE)
     header[:8] = b"MK61APP\0"
     struct.pack_into("<HHHBBIIIIIIIIIIH", header, 8,
-                     1, HEADER_SIZE, 5, KINDS[args.kind], 1, flags,
+                     1, HEADER_SIZE, 6, KINDS[args.kind], 1, flags,
                      args.load_address, len(stored), len(image), memory_size,
                      args.entry_offset, len(code), relocation_count,
                      zlib.crc32(stored), zlib.crc32(image),

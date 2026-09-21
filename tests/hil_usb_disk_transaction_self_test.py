@@ -48,13 +48,16 @@ class UsbDiskTransactionTest(unittest.TestCase):
                              "\r\n" + prose + "\r\n/> "),
                              dict(code=1221, phase=3, flags=0, actual=7492,
                                   limit=1536, subject="README"))
+        russian = ("VFAT v=1 code=1201 phase=3 flags=0 actual=0 "
+                   "limit=0 subject=CFF0E8ECE5F0")
+        self.assertEqual(parse_vfat_diagnostic(russian)["subject"], "Пример")
         self.assertIsNone(parse_vfat_diagnostic(
             "Trace is empty (build with MK61_VFAT_TRACE)."))
         for malformed in (machine.replace("v=1", "v=2"),
                           machine.replace("phase=3", "phase=9"),
                           machine.replace("7492", "4294967296"),
                           machine.replace("524541444D45", "F"),
-                          machine.replace("524541444D45", "FF"),
+                          machine.replace("524541444D45", "98"),
                           machine + " extra=1", machine + "\n" + machine):
             with self.subTest(malformed=malformed), self.assertRaises(AssertionError):
                 parse_vfat_diagnostic(malformed)
@@ -99,6 +102,10 @@ class UsbDiskTransactionTest(unittest.TestCase):
         }
         location = find_cdc_location(tree, IDENTITY)
         self.assertEqual(location, 0x100000)
+        tree["IORegistryEntryChildren"][0] = usb_node(
+            MSC_PID, IDENTITY.usb + "89ABCDEF", location
+        )
+        self.assertIsNone(find_msc_node(tree, location, IDENTITY.usb))
         tree["IORegistryEntryChildren"][0] = usb_node(
             MSC_PID, IDENTITY.usb, location
         )

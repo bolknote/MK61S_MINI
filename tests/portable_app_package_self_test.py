@@ -28,7 +28,7 @@ def relocation_checks(args, work):
                '--relocations', table, '--output', app]
     run(command)
     good = app.read_bytes()
-    assert struct.unpack_from('<H', good, 12)[0] == 5 and good[16] & 4
+    assert struct.unpack_from('<H', good, 12)[0] == 6 and good[16] & 4
     for address in (base, base + 8, base + 1024, base + 20480 - memory_size):
         run([args.reader, app, memory, hex(address)])
         expected = original + bytes(32)
@@ -108,7 +108,7 @@ def main():
                     "plain": plain < bcj}[choice], report
             packed = app.read_bytes()
             assert len(packed) == 64 + min(plain, bcj)
-            assert packed[12:16] == bytes((5, 0, 4, 1))  # ABI, kind, ZX0
+            assert packed[12:16] == bytes((6, 0, 4, 1))  # ABI, kind, ZX0
             assert struct.unpack_from("<III", packed, 16) == (
                 7 if bcj < plain else 5, 0x20000000, min(plain, bcj))
             assert struct.unpack_from("<II", packed, 40) == (
@@ -141,6 +141,7 @@ def main():
             reject(damaged)
         # Valid header CRC must not let invalid ABI/flags/bounds through.
         for offset, value, width in ((12, 2, 2), (12, 3, 2), (12, 4, 2),
+                (12, 5, 2),
                 (16, 0, 4), (16, 1, 4), (16, 2, 4), (16, 3, 4),
                 (16, 4, 4), (16, 6, 4), (16, 0x80000005, 4),
                 (20, 0x20000008, 4),
@@ -155,7 +156,7 @@ def main():
         struct.pack_into("<I", trailing, 60, zlib.crc32(trailing[:60]))
         reject(trailing)
         relocation_checks(args, work)
-    print("APP ABI 5 packages: BCJ/plain/tie, BSS, relocation and corruption PASS")
+    print("APP ABI 6 packages: BCJ/plain/tie, BSS, relocation and corruption PASS")
 
 
 if __name__ == "__main__":

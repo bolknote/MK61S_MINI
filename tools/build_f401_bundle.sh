@@ -203,7 +203,7 @@ parse_app_manifest() {
         esac
         if [ "${#value}" -gt 31 ]; then
           manifest_error "$requested:$line_number" \
-            "name exceeds the 31-byte C5 basename limit"
+            "name exceeds the 31-byte C6 basename limit"
           return 1
         fi
         folded=$(printf '%s' "$value" | tr '[:lower:]' '[:upper:]')
@@ -570,6 +570,7 @@ rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/BASIC.APP" "$bundle_dir/System/WBMP.APP" \
       "$bundle_dir/System/MARKDOWN.APP" \
       "$bundle_dir/System/CHIP8.APP" "$bundle_dir/System/SETUP.APP" \
+      "$bundle_dir/System/USBDISK.APP" \
       "$bundle_dir/System/HELP0.TXT" "$bundle_dir/System/HELP1.TXT" \
       "$bundle_dir/$firmware_name" "$bundle_dir/build.apps"
 if [ -d "$bundle_dir/System" ]; then
@@ -595,7 +596,7 @@ printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
   "$compile_flags" "$ui_fonts" "$app_local_float" > "$bundle_dir/build.flags"
 {
   printf 'format 1\n'
-  printf 'abi 5\n'
+  printf 'abi 6\n'
   for index in "${!custom_app_names[@]}"; do
     printf 'app Apps/%s.APP\n' "${custom_app_names[$index]}"
   done

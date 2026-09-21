@@ -146,8 +146,8 @@ package_system_apps() {
     --markdown "$markdown" --chip8 "$chip8"
   cp "$build_path/mk61s-M.ino.bin" "$bundle/$bundle_name.bin"
   printf '%s\n' "$board_flags $platform_ram_flags $strict_flags" > "$bundle/build.flags"
-  printf 'format 1\nabi 5\n' > "$bundle/build.apps"
-  local expected=(SETUP.APP)
+  printf 'format 1\nabi 6\n' > "$bundle/build.apps"
+  local expected=(SETUP.APP USBDISK.APP)
   [[ "$focal" == 0 ]] || expected+=(FOCAL.APP)
   [[ "$basic" == 0 ]] || expected+=(BASIC.APP)
   [[ "$wbmp" == 0 || "$markdown" == 1 ]] || expected+=(WBMP.APP)
@@ -158,7 +158,8 @@ package_system_apps() {
     [[ -s "$bundle/System/$file" ]] ||
       fail "missing product artifact: $bundle_name/System/$file"
   done
-  for file in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP; do
+  for file in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP \
+      USBDISK.APP; do
     wanted=0
     for expected_file in "${expected[@]}"; do
       [[ "$file" != "$expected_file" ]] || wanted=1
@@ -174,7 +175,7 @@ import sys
 
 data = Path(sys.argv[1]).read_bytes()
 assert len(data) >= 64 and data[:8] == b"MK61APP\0", "APP header"
-assert struct.unpack_from("<H", data, 12)[0] == 5, "APP must use ABI 5"
+assert struct.unpack_from("<H", data, 12)[0] == 6, "APP must use ABI 6"
 assert struct.unpack_from("<I", data, 16)[0] in (5, 7), "relocatable flags"
 assert struct.unpack_from("<I", data, 20)[0] == 0x20000000, "virtual link base"
 stored = struct.unpack_from("<I", data, 24)[0]

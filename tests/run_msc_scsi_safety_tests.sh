@@ -13,6 +13,15 @@ if grep -Eq 'USBD_(malloc|free)[[:space:]]*\(' "$root/code/usbd_msc.c"; then
   exit 1
 fi
 
+# A virtual-medium refresh is handled transactionally before MSC starts.  Do
+# not inject a synthetic UNIT ATTENTION during enumeration: some hosts abandon
+# this tiny removable device before they have issued REQUEST SENSE.
+if grep -q 'scsi_unit_attention' \
+    "$root/code/usbd_msc_bot.c" "$root/code/usbd_msc_scsi.c"; then
+  echo "MSC enumeration must not inject synthetic UNIT ATTENTION" >&2
+  exit 1
+fi
+
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)

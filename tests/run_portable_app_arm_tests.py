@@ -19,7 +19,7 @@ from unicorn.arm_const import (UC_ARM_REG_LR, UC_ARM_REG_PC, UC_ARM_REG_SP,
 ROOT = Path(__file__).resolve().parents[1]
 BASE, OVERLAY = 0x20000000, 20480
 CALLBACKS = ("millis_ms service delay_ms display_columns display_rows "
-    "display_clear display_write_utf8 key_poll key_wait led_set led_blink "
+    "display_clear display_write_m8 key_poll key_wait led_set led_blink "
     "beep sound_stop file_size file_read graphics_available graphics_width "
     "graphics_height graphics_revision graphics_begin graphics_present "
     "graphics_end key_pressed").split()
@@ -158,7 +158,7 @@ class Machine:
             assert a == 10
         elif name == "display_clear":
             result = 1
-        elif name == "display_write_utf8":
+        elif name == "display_write_m8":
             assert a == b == 0 and d <= 63
             self.text.append(bytes(uc.mem_read(c, d)).decode())
             result = 1

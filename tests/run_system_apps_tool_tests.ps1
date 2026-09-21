@@ -73,18 +73,20 @@ Assert-True ($commonText -match 'tools/build_portable_app\.py') `
     'System bundle does not use the ordinary APP builder'
 Assert-True ($commonText -match '"setup", "SETUP\.APP"') `
     'mandatory SETUP.APP is missing from the common bundle'
+Assert-True ($commonText -match '"usbdisk", "USBDISK\.APP"') `
+    'mandatory USBDISK.APP is missing from the common bundle'
 Assert-True ($commonText -match 'HELP0\.TXT.+HELP1\.TXT') `
     'terminal help is missing from the common bundle'
-Assert-True ($commonText -match '"abi": 5') `
-    'common bundle does not report current ABI 5'
+Assert-True ($commonText -match '"abi": 6') `
+    'common bundle does not report current ABI 6'
 Assert-True ($wrapperText -match 'LocalFloatMath') `
     'PowerShell wrapper does not expose local APP float math'
 Assert-True ($commonText -match 'local.float.math') `
     'common bundle does not forward local APP float math'
 Assert-True ($appText -match 'MK61_APP_LOCAL_FLOAT_MATH_MASK') `
     'ordinary APP builder does not select the bounded local float subset'
-Assert-True ($appText -match '"abi": 5') `
-    'ordinary and System APP builder is not current ABI 5'
+Assert-True ($appText -match '"abi": 6') `
+    'ordinary and System APP builder is not current ABI 6'
 Assert-True ($appText -match 'sdk/portable/start\.c') `
     'System APP does not share the ordinary SDK startup'
 Assert-True ($appText -notmatch 'resident_imports[^\n]+[1-9]') `
@@ -131,6 +133,7 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             'MARKDOWN.APP' = 6
             'CHIP8.APP' = 5
             'SETUP.APP' = 7
+            'USBDISK.APP' = 8
         }
         foreach ($name in $expected.Keys) {
             $path = Join-Path $output $name
@@ -142,7 +145,7 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             Assert-True (
                 [Text.Encoding]::ASCII.GetString($bytes, 0, 8) -eq
                 "MK61APP`0") "$name has invalid magic"
-            Assert-True ((Read-Le16 $bytes 12) -eq 5) "$name is not ABI 5"
+            Assert-True ((Read-Le16 $bytes 12) -eq 6) "$name is not ABI 6"
             Assert-True ($bytes[14] -eq $expected[$name]) `
                 "$name has an invalid kind"
             Assert-True ($bytes[15] -eq 1) "$name is not ZX0-compressed"

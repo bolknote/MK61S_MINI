@@ -10,6 +10,20 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$script:Utf8Strict = New-Object System.Text.UTF8Encoding($false, $true)
+try {
+    [Text.Encoding]::RegisterProvider([Text.CodePagesEncodingProvider]::Instance)
+} catch {}
+$script:Cp1251 = [Text.Encoding]::GetEncoding(
+    1251, [Text.EncoderFallback]::ExceptionFallback,
+    [Text.DecoderFallback]::ReplacementFallback)
+$script:Cp1251Strict = [Text.Encoding]::GetEncoding(
+    1251, [Text.EncoderFallback]::ExceptionFallback,
+    [Text.DecoderFallback]::ExceptionFallback)
+$script:M8PrivateCodepoints = [int[]](
+    0x2190, 0x2192, 0x2191, 0x2193, 0x03C0, 0x221A,
+    0x21BB, 0x2260, 0x2264, 0x2265, 0x00D7, 0x00F7,
+    0x00B2, 0x02B8, 0x02E3, 0x22BB, 0x207B, 0x21B5)
 $script:Escape = [char]27
 try {
     [Console]::InputEncoding = [Text.Encoding]::UTF8
@@ -440,7 +454,7 @@ function New-ConfiguredSerialPort {
     $serial.DtrEnable = $true
     $serial.RtsEnable = $false
     $serial.NewLine = "`n"
-    $serial.Encoding = $script:Utf8NoBom
+    $serial.Encoding = $script:Cp1251
     $serial.ReadTimeout = 8000
     $serial.WriteTimeout = 2000
     return $serial
@@ -539,7 +553,8 @@ function Start-Monitor {
     $info.RedirectStandardOutput = $true
     $info.RedirectStandardError = $true
     try {
-        $info.StandardOutputEncoding = [Text.Encoding]::UTF8
+        $info.StandardInputEncoding = $script:Cp1251
+        $info.StandardOutputEncoding = $script:Cp1251
         $info.StandardErrorEncoding = [Text.Encoding]::UTF8
     } catch {}
     $script:Monitor = New-Object Diagnostics.Process
@@ -632,20 +647,6 @@ function Read-SerialLine {
         $script:MonitorReadTask = $null
         return $false
     }
-}
-
-function Set-RemoteUtf8Encoding {
-    if (-not (Send-RemoteLine 'encoding utf-8')) { return $false }
-    # Remove the echo and acknowledgement before the first `ls`.  Legacy
-    # firmware answers Unknown command and remains usable for ASCII transfers.
-    for ($attempt = 0; $attempt -lt 12; $attempt++) {
-        if (-not (Read-SerialLine 1000)) { return $true }
-        if ($script:SerialLine -eq 'encoding utf-8' -or
-            $script:SerialLine -match '^Unknown command: encoding') {
-            return $true
-        }
-    }
-    return $true
 }
 
 function Wait-RemoteMarker {
@@ -745,6 +746,94 @@ function Get-PosixChecksum {
     return Get-PosixChecksumBytes ([IO.File]::ReadAllBytes($Path))
 }
 
+function Test-M8Byte {
+    param([int]$Byte)
+    if ($Byte -eq 0 -or $Byte -eq 0x7F -or $Byte -eq 0x98) { return $false }
+    if ($Byte -in @(9,10,13)) { return $true }
+    if ($Byte -ge 0x0E -and $Byte -le 0x1F) { return $true }
+    return $Byte -ge 0x20 -and $Byte -le 0xFF
+}
+
+function ConvertTo-M8Bytes {
+    param([string]$Text)
+    $result = [Collections.Generic.List[byte]]::new()
+    for ($index = 0; $index -lt $Text.Length; $index++) {
+        $unit = [int]$Text[$index]
+        if ([char]::IsHighSurrogate($Text[$index])) {
+            if ($index + 1 -ge $Text.Length -or
+                -not [char]::IsLowSurrogate($Text[$index + 1])) {
+                throw 'Некорректная суррогатная пара Unicode'
+            }
+            $codepoint = [char]::ConvertToUtf32($Text[$index], $Text[$index + 1])
+            $index++
+        } elseif ([char]::IsLowSurrogate($Text[$index])) {
+            throw 'Некорректная суррогатная пара Unicode'
+        } else { $codepoint = $unit }
+
+        $privateIndex = [Array]::IndexOf($script:M8PrivateCodepoints, [int]$codepoint)
+        if ($privateIndex -ge 0) {
+            $result.Add([byte](0x0E + $privateIndex))
+            continue
+        }
+        if ($codepoint -gt 0xFFFF) {
+            throw ('Символ U+{0:X} не представим в M8' -f $codepoint)
+        }
+        [byte[]]$encoded = $script:Cp1251Strict.GetBytes([string][char]$codepoint)
+        if ($encoded.Length -ne 1 -or -not (Test-M8Byte $encoded[0])) {
+            throw ('Символ U+{0:X4} не представим в M8' -f $codepoint)
+        }
+        $result.Add($encoded[0])
+    }
+    return $result.ToArray()
+}
+
+function ConvertFrom-M8Bytes {
+    param([byte[]]$Bytes)
+    $text = [Text.StringBuilder]::new()
+    foreach ($byte in $Bytes) {
+        if (-not (Test-M8Byte $byte)) {
+            throw ('Недопустимый байт M8 0x{0:X2}' -f $byte)
+        }
+        if ($byte -ge 0x0E -and $byte -le 0x1F) {
+            [void]$text.Append([char]::ConvertFromUtf32(
+                $script:M8PrivateCodepoints[$byte - 0x0E]))
+        } else {
+            [void]$text.Append($script:Cp1251Strict.GetString([byte[]]@($byte)))
+        }
+    }
+    return $text.ToString()
+}
+
+function Test-M8TextPath {
+    param([string]$Path)
+    $lower = $Path.ToLowerInvariant()
+    return $lower.EndsWith('.state.txt') -or $lower.EndsWith('.m61') -or
+        $lower.EndsWith('.foc') -or $lower.EndsWith('.tbi') -or
+        $lower.EndsWith('.txt') -or $lower.EndsWith('.md') -or
+        $lower.EndsWith('.t1') -or $lower.EndsWith('.m2')
+}
+
+function Get-M8UploadBytes {
+    param([string]$Source, [string]$RemotePath)
+    [byte[]]$raw = [IO.File]::ReadAllBytes($Source)
+    if (-not (Test-M8TextPath $RemotePath)) { return $raw }
+    $text = $script:Utf8Strict.GetString($raw)
+    if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) {
+        $text = $text.Substring(1)
+    }
+    return [byte[]](ConvertTo-M8Bytes $text)
+}
+
+function Write-M8Download {
+    param([byte[]]$Bytes, [string]$RemotePath, [string]$Destination)
+    if (Test-M8TextPath $RemotePath) {
+        $text = ConvertFrom-M8Bytes $Bytes
+        [IO.File]::WriteAllText($Destination, $text, $script:Utf8NoBom)
+    } else {
+        [IO.File]::WriteAllBytes($Destination, $Bytes)
+    }
+}
+
 function Get-UnsupportedReason {
     param([string]$Path, [string]$Kind = '')
     $name = Split-Path -Leaf $Path
@@ -783,13 +872,19 @@ function Get-UnsupportedReason {
         elseif ($lower.EndsWith('.wbm')) { $base = $name.Substring(0, $name.Length - 4); $limit = 1600 }
         else { return 'формат не поддерживается' }
     }
-    $bytes = [Text.Encoding]::UTF8.GetByteCount($base)
-    if ($bytes -lt 1 -or $bytes -gt 31) { return 'basename должен занимать 1–31 байт UTF-8' }
+    try { $bytes = (ConvertTo-M8Bytes $base).Length }
+    catch { return 'basename содержит символ вне M8' }
+    if ($bytes -lt 1 -or $bytes -gt 31) { return 'basename должен занимать 1–31 байт M8' }
     if ($base.ToUpperInvariant() -match '^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$') {
         return 'зарезервированное имя DOS'
     }
     if ($Kind -eq 'f') {
-        try { $size = (Get-Item -LiteralPath $Path -Force).Length } catch { return 'не удалось прочитать размер' }
+        try {
+            if (Test-M8TextPath $name) {
+                [byte[]]$encoded = Get-M8UploadBytes $Path $name
+                $size = $encoded.Length
+            } else { $size = (Get-Item -LiteralPath $Path -Force).Length }
+        } catch { return 'текст содержит символ вне M8 или неверный UTF-8' }
         if ($size -lt $minimum) { return "слишком маленький: $size байт, минимум $minimum" }
         if ($size -gt $limit) { return "слишком большой: $size байт, максимум $limit" }
     }
@@ -945,17 +1040,20 @@ function Convert-BytesToHex {
 
 function Send-RemoteFile {
     param([string]$Source, [string]$Destination)
+    try { [byte[]]$bytes = Get-M8UploadBytes $Source $Destination }
+    catch {
+        $script:StatusText = 'Текст содержит неверный UTF-8 или символ вне M8'
+        return $false
+    }
     if (-not [string]::IsNullOrEmpty($script:MockRoot)) {
         try {
-            Copy-Item -LiteralPath $Source -Destination (Get-MockPath $Destination) -Force
+            [IO.File]::WriteAllBytes((Get-MockPath $Destination), $bytes)
             return $true
         } catch {
             $script:StatusText = "Не удалось записать $Destination"
             return $false
         }
     }
-    try { [byte[]]$bytes = [IO.File]::ReadAllBytes($Source) }
-    catch { $script:StatusText = "Не удалось прочитать $Source"; return $false }
     $size = $bytes.Length
     $crc = Get-PosixChecksumBytes $bytes
     $begin = 'fsput begin {0} {1} {2}' -f (Format-RemoteQuotedPath $Destination), $size, $crc
@@ -987,7 +1085,8 @@ function Receive-RemoteFile {
     param([string]$Source, [string]$Destination)
     if (-not [string]::IsNullOrEmpty($script:MockRoot)) {
         try {
-            Copy-Item -LiteralPath (Get-MockPath $Source) -Destination $Destination -Force
+            [byte[]]$bytes = [IO.File]::ReadAllBytes((Get-MockPath $Source))
+            Write-M8Download $bytes $Source $Destination
             return $true
         } catch {
             $script:StatusText = "Не удалось прочитать $Source"
@@ -1040,7 +1139,7 @@ function Receive-RemoteFile {
         $script:StatusText = 'Ошибка контрольной суммы fsget'
         return $false
     }
-    try { [IO.File]::WriteAllBytes($Destination, $result) }
+    try { Write-M8Download $result $Source $Destination }
     catch { $script:StatusText = "Не удалось записать $Destination"; return $false }
     return $true
 }
@@ -1911,7 +2010,12 @@ function Invoke-RemoteCaptureCommand {
         }
         return [pscustomobject]@{ Success = $true; Lines = $lines.ToArray() }
     }
-    if ([Text.Encoding]::UTF8.GetByteCount($Command) -gt 96) {
+    try { $commandBytes = $script:Cp1251.GetByteCount($Command) }
+    catch {
+        $script:StatusText = 'Команда содержит символ вне CP1251'
+        return [pscustomobject]@{ Success = $false; Lines = @($script:StatusText) }
+    }
+    if ($commandBytes -gt 96) {
         $script:StatusText = 'Команда MK61s длиннее безопасных 96 байт'
         return [pscustomobject]@{ Success = $false; Lines = @($script:StatusText) }
     }
@@ -2221,8 +2325,13 @@ function Save-Editor {
     } else {
         $temporary = Join-Path $script:SessionDir 'editor-upload.tmp'
         if (-not (Write-EditorFile $temporary)) { return $false }
-        try { $size = (Get-Item -LiteralPath $temporary).Length }
-        catch { $script:EditorError = $_.Exception.Message; return $false }
+        try {
+            [byte[]]$encoded = Get-M8UploadBytes $temporary $script:EditorRemoteTarget
+            $size = $encoded.Length
+        } catch {
+            $script:EditorError = 'Текст содержит символ вне M8'
+            return $false
+        }
         $limit = if ($script:EditorName.EndsWith('.tbi', [StringComparison]::OrdinalIgnoreCase)) { 3584 } else { 1536 }
         if ($size -gt $limit) {
             $script:EditorError = "Файл занимает $size байт; максимум MK61s — $limit"
@@ -3017,10 +3126,6 @@ function Invoke-MkcApplication {
     if (-not (Start-Monitor)) {
         if ([string]::IsNullOrWhiteSpace($script:StatusText)) { throw "не удалось открыть $($script:Port)" }
         throw $script:StatusText
-    }
-    if ([string]::IsNullOrEmpty($script:MockRoot) -and
-        -not (Set-RemoteUtf8Encoding)) {
-        throw 'не удалось выбрать UTF-8 терминала'
     }
     Enter-MkcTui
     Refresh-Panels

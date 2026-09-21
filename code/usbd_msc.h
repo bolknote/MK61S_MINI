@@ -101,6 +101,7 @@ typedef struct
   uint8_t                  scsi_sense_head;
   uint8_t                  scsi_sense_tail;
   uint8_t                  scsi_medium_state;
+  uint8_t                  host_eject_latched;
 
   uint16_t                 scsi_blk_size;
   uint32_t                 scsi_blk_nbr;

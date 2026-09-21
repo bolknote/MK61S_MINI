@@ -127,6 +127,7 @@ jobs:
             'System/MARKDOWN.APP',
             'System/CHIP8.APP',
             'System/SETUP.APP',
+            'System/USBDISK.APP',
             'System/HELP0.TXT',
             'System/HELP1.TXT'
           ) | ForEach-Object {
@@ -140,9 +141,9 @@ jobs:
               if ($container.Length -le 64 -or $container[15] -ne 1) {
                 throw "F401 APP is not packed with ZX0: $_"
               }
-              if ([BitConverter]::ToUInt16($container, 12) -ne 5 -or
+              if ([BitConverter]::ToUInt16($container, 12) -ne 6 -or
                   [BitConverter]::ToUInt32($container, 16) -notin @(5, 7)) {
-                throw "F401 APP is not current relocatable ABI 5: $_"
+                throw "F401 APP is not current relocatable ABI 6: $_"
               }
             }
           }
@@ -229,6 +230,7 @@ jobs:
             'BASIC.APP' = 2
             'MARKDOWN.APP' = 6
             'SETUP.APP' = 7
+            'USBDISK.APP' = 8
           }
           foreach ($entry in $expectedKinds.GetEnumerator()) {
             $artifact = Join-Path $bundle "System/$($entry.Key)"
@@ -239,9 +241,9 @@ jobs:
             if ($container.Length -le 64 -or $container.Length -gt 20544 -or
                 [Text.Encoding]::ASCII.GetString($container, 0, 7) -ne 'MK61APP' -or
                 $container[7] -ne 0 -or
-                [BitConverter]::ToUInt16($container, 12) -ne 5 -or
+                [BitConverter]::ToUInt16($container, 12) -ne 6 -or
                 $container[14] -ne $entry.Value -or $container[15] -ne 1) {
-              throw "System/$($entry.Key) is not the expected packed ABI 5 APP"
+              throw "System/$($entry.Key) is not the expected packed ABI 6 APP"
             }
           }
 

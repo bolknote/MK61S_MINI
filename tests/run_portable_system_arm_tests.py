@@ -66,9 +66,9 @@ class Elf:
                 uc.mem_write(s[3], bytes(s[5]) if s[1] == 8 else self.data[s[4]:s[4]+s[5]])
 
 def preview_font():
-    # FMK1, eight 3x5 monospaced glyphs A..H, literal pixel records.
-    data = bytearray(b'FMK1' + bytes((1,3,5,0x31)) + struct.pack('<H',8) + bytes((1,0,0,0,0,0)))
-    data += struct.pack('<HB',ord('A'),7)
+    # FMK2, eight 3x5 monospaced M8 glyphs A..H, literal pixel records.
+    data = bytearray(b'FMK2' + bytes((1,3,5,0x31)) + struct.pack('<H',8) + bytes((1,0,0,0,0,0)))
+    data += bytes((ord('A'), 7))
     data += bytes.fromhex('2bed') * 8  # Literal bit followed by 15 pixel bits.
     struct.pack_into('<H',data,12,len(data))
     struct.pack_into('<H',data,14,binascii.crc_hqx(data,0xffff))
@@ -215,8 +215,8 @@ class Machine:
                 else:
                     result = 5 if self.ui_font[1] == 12 else (3 if self.ui_font[1] == 16 else 4)
             elif name == 'display_clear': self.lines = []; result = 1
-            elif name == 'display_write_utf8':
-                self.lines.append(bytes(uc.mem_read(c,d)).decode('utf8')); result = 1
+            elif name == 'display_write_m8':
+                self.lines.append(bytes(uc.mem_read(c,d)).decode('cp1251')); result = 1
             elif name in ('key_poll','key_wait'):
                 assert self.keys, 'user APP keyboard underflow'
                 result = self.keys.pop(0)
@@ -640,7 +640,7 @@ def main():
                 m.uc.mem_write(pointer,font); m.keys=[m.mapping[39]]; m.lines=[]
                 trace_start=len(m.trace)
                 assert m.call(0x404,m.source('TEST'),pointer,len(font))==0
-                assert 'f1 3x5 TEST' in ''.join(m.lines),m.lines
+                assert 'f2 3x5 TEST' in ''.join(m.lines),m.lines
                 operations=[x[1] for x in m.trace[trace_start:] if x[0]==25]
                 if m.graphics:
                     assert 7 in operations and 8 in operations

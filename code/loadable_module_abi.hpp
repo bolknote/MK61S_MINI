@@ -12,14 +12,14 @@ using Entry = u32 (*)(u32 command, u32 argument0, u32 argument1,
                       u32 argument2, u32 argument3);
 
 enum class Command : u32 {
-  // Unified ABI 5 startup for every Kind:
+  // Unified ABI 6 startup for every Kind; all text pointers contain M8:
   // argument0 = const mk61_app_api*, argument1 = image CRC,
   // argument2 = Kind, argument3 = 0.
   INITIALIZE = 0,
   APPLICATION_RUN = 1,
   // Универсальный запуск файла зарегистрированного типа:
   // argument0 — тот же mk61_app_api* для любого APP,
-  // argument1 — стабильный C5 file id.
+  // argument1 — стабильный C6 file id.
   FILE_OPEN = 2,
 
   FOCAL_LIBRARY_SELECT = 0x100,
@@ -43,7 +43,7 @@ enum class Command : u32 {
   TINYBASIC_EDIT,
   TINYBASIC_EDIT_NAME,
   TINYBASIC_EDIT_ID,
-  // argument0 = stable C5 file id, argument1 = TinyBasicRunMode.
+  // argument0 = stable C6 file id, argument1 = TinyBasicRunMode.
   // Returns TinyBasicRunStatus; appended to preserve older command numbers.
   TINYBASIC_RUN_ID_STATUS,
 
@@ -52,7 +52,27 @@ enum class Command : u32 {
 
   SETUP_HARDWARE = 0x400,
   SETUP_DATE_TIME, SETUP_CALIBRATION, SETUP_FONT, SETUP_PREVIEW,
-  SETUP_FONT_STEP, SETUP_FONT_COMPILE
+  SETUP_FONT_STEP, SETUP_FONT_COMPILE,
+
+  // USBDISK.APP is pinned for the complete MSC session. Pointer-bearing
+  // commands are issued only by usb_mass_storage::service(), never an IRQ.
+  USBDISK_SECTOR_COUNT = 0x500,
+  USBDISK_SET_EXTERNAL_CACHE,
+  USBDISK_RESET_SESSION,
+  USBDISK_END_SESSION,
+  USBDISK_READ_SECTORS,
+  USBDISK_WRITE_CACHED_SECTORS,
+  USBDISK_WRITE_SECTORS,
+  USBDISK_FLUSH_WRITE_CACHE,
+  USBDISK_FLUSH_PENDING,
+  USBDISK_FINALIZE_PENDING,
+  USBDISK_DIRTY_CACHE_SECTORS,
+  USBDISK_WRITE_CACHE_CAPACITY,
+  USBDISK_DIAGNOSTIC,
+  USBDISK_CLEAR_DIAGNOSTIC,
+  // argument0 = const virtual_fat::Diagnostic*, argument1 = sizeof(value).
+  // Restores the resident-retained report after this APP was evicted.
+  USBDISK_RESTORE_DIAGNOSTIC
 };
 
 // Общий результат FILE_OPEN позволяет проводнику одинаково показывать ошибки

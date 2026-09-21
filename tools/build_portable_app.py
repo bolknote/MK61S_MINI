@@ -25,6 +25,8 @@ SYSTEM_MODULES = {
     "wbmp-viewer": ("WBMP", "WBMP", ["image1_viewer.cpp", "image1_viewer_module_entry.cpp", "wbmp.cpp"], "I1"),
     "markdown-viewer": ("MARKDOWN", "MARKDOWN", ["markdown_document.cpp", "markdown_plain.cpp", "markdown_viewer.cpp", "markdown_viewer_module_entry.cpp", "image1_viewer.cpp", "wbmp.cpp"], "T2"),
     "chip8": ("CHIP8", "CHIP8", ["chip8.cpp", "chip8_runner.cpp", "chip8_module_entry.cpp"], "C1"),
+    "usbdisk": ("USBDISK", "USBDISK", ["virtual_fat.cpp",
+        "virtual_fat_diagnostic.cpp", "usbdisk_module_entry.cpp"], None),
 }
 
 # These ceilings protect intentionally compact system interpreters from silent
@@ -42,7 +44,7 @@ LOCAL_FLOAT_SIZE_BUDGETS = {
 }
 # The dependency-free Windows packer deliberately uses a bounded greedy ZX0
 # parser: Arduino IDE users must not need MSVC/MinGW just to build APP files.
-# It produces the same decoded image but a somewhat larger C5 file than the
+# It produces the same decoded image but a somewhat larger C6 file than the
 # desktop optimal parser.  Keep separate measured ceilings for that storage
 # representation while retaining the same memory_bytes limits above.
 GREEDY_APP_SIZE_BUDGETS = {
@@ -100,7 +102,7 @@ def build(args: argparse.Namespace) -> dict:
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,30}", args.name):
         raise ValueError("name must be an ASCII APP basename (1..31 characters)")
     if re.fullmatch(r"CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]", args.name, re.I):
-        raise ValueError("name is reserved by C5 and Windows")
+        raise ValueError("name is reserved by C6 and Windows")
     tool_dir = args.arm_toolchain_bin
     if tool_dir is None:
         gcc = shutil.which("arm-none-eabi-gcc")
@@ -123,6 +125,8 @@ def build(args: argparse.Namespace) -> dict:
                [ROOT / "sdk/portable/start.c", *[x.resolve() for x in args.source]])
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
+    if args.system == "usbdisk":
+        sources += [ROOT / "sdk/portable/system/usbdisk_compat.cpp"]
     if args.system not in ("focal", "tinybasic"):
         sources += [ROOT / "sdk/portable/memory.c"]
     if args.system in ("focal", "tinybasic"):
@@ -254,7 +258,9 @@ def build(args: argparse.Namespace) -> dict:
         greedy_packer = True
     else:
         if packer is None:
-            packer = ROOT / (".build/tools/mk61_module_pack" + suffix)
+            configured = os.environ.get("MK61_MODULE_PACK_BIN")
+            packer = (Path(configured).expanduser() if configured else
+                      ROOT / (".build/tools/mk61_module_pack" + suffix))
             run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
         elif packer.resolve() == python_packer:
             greedy_packer = True
@@ -271,7 +277,7 @@ def build(args: argparse.Namespace) -> dict:
         command += ["--handled-magic", handled_magic]
     print(run(command), end="")
     image_flags = struct.unpack_from("<I", app.read_bytes(), 16)[0]
-    report = {"name": args.name, "abi": 5, "load_address": base,
+    report = {"name": args.name, "abi": 6, "load_address": base,
               "relocations": len(offsets),
               "relocation_bytes": len(table),
               "entry_offset": entry_offset, "image_bytes": image.stat().st_size,

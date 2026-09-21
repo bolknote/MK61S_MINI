@@ -257,9 +257,9 @@ function Build-Mk61Bundle {
         'format 1' + [Environment]::NewLine +
             'abi 5' + [Environment]::NewLine, $utf8)
     Write-Host ''
-    Write-Host 'MK61s F401 unified ABI 5 bundle built by Arduino IDE:'
+    Write-Host 'MK61s F401 unified ABI 6 bundle built by Arduino IDE:'
     Write-Host "  $output"
-    Write-Host 'After Upload, copy the generated System directory to /System on MK61S C5.'
+    Write-Host 'After Upload, copy the generated System directory to /System on MK61S C6.'
     Write-Host ''
 }
 

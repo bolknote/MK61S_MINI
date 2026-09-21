@@ -48,6 +48,11 @@ RuntimeStatus invoke(Kind kind, Command command,
                      u32 argument0, u32 argument1,
                      u32 argument2, u32 argument3,
                      u32& result);
+// A pinned System APP cannot be replaced or evicted until the matching
+// unpin(). This is used by long-lived hardware sessions such as MSC.
+RuntimeStatus pin(Kind kind);
+bool unpin(Kind kind);
+bool pinned(Kind kind);
 RuntimeStatus run_app(u16 file_id, u32& result);
 bool find_file_handler(u16 type_magic, FileHandler& handler);
 RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result);
@@ -56,7 +61,7 @@ inline RuntimeStatus invoke(Kind kind, Command command, u32& result) {
   return invoke(kind, command, 0, 0, 0, 0, result);
 }
 
-// Проверяет любой C5-файл .APP до атомарной замены: заголовок, привязку к
+// Проверяет любой C6-файл .APP до атомарной замены: заголовок, привязку к
 // ABI, CRC сжатого потока, корректность распаковки и CRC SRAM-образа.
 StoreStatus validate_app(const ModuleSource& source, Header& header);
 

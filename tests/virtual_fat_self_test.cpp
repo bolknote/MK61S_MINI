@@ -120,7 +120,61 @@ static void test_boot_sector_volume_serial_fallback(void) {
   u8 boot[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(0, boot));
   assert(read_le32(boot, 39) ==
-         (0xC5000000UL ^ SPIFlash::DEFAULT_CAPACITY));
+         ((0xC6000000UL ^ SPIFlash::DEFAULT_CAPACITY) ^
+          program_store::media_revision()));
+}
+
+static void test_volume_serial_tracks_persistent_media_revision(void) {
+  fresh();
+  u8 boot[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(0, boot));
+  const u32 initial = read_le32(boot, 39);
+
+  // A catalog mutation must not change the identity of an already mounted
+  // FAT volume, but the following session must see a new identity.
+  static const u8 payload[] = {'o', 'k'};
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 60, program_store::ProgramType::TEXT,
+      "revision", payload, sizeof(payload), &id));
+  assert(virtual_fat::read_sector(0, boot));
+  assert(read_le32(boot, 39) == initial);
+  assert(virtual_fat::reset_session());
+  assert(virtual_fat::read_sector(0, boot));
+  const u32 after_catalog = read_le32(boot, 39);
+  assert(after_catalog != initial);
+
+  // Even a host sector later rejected or discarded advances the persistent
+  // staging generation. This is what invalidates stale macOS directory cache
+  // after an interrupted transaction.
+  u8 staged[virtual_fat::SECTOR_SIZE] = {};
+  assert(program_store::vfat_stage_write(123, staged));
+  assert(virtual_fat::read_sector(0, boot));
+  assert(read_le32(boot, 39) == after_catalog);
+  assert(virtual_fat::reset_session());
+  assert(virtual_fat::read_sector(0, boot));
+  assert(read_le32(boot, 39) != after_catalog);
+}
+
+static void test_session_start_reuses_the_locked_stage_index(void) {
+  fresh();
+  virtual_fat::end_session();
+
+  // Leave a sizeable deleted journal tail.  Its in-memory index is already
+  // authoritative; starting another session must lock and reuse that index,
+  // not reread every old record from SPI Flash.
+  u8 sector[virtual_fat::SECTOR_SIZE] = {};
+  for(u16 index = 0; index < 24; ++index) {
+    const u32 key = 100U + index;
+    sector[0] = (u8) index;
+    assert(program_store::vfat_stage_write(key, sector));
+    program_store::vfat_stage_forget(key, 1);
+  }
+  assert(program_store::vfat_stage_count() == 0);
+
+  SPIFlash::resetOperationCounts();
+  assert(virtual_fat::reset_session());
+  assert(SPIFlash::readOperations() <= 4U);
 }
 
 static u16 fat12_value(u16 cluster) {
@@ -178,28 +232,51 @@ static u16 read_lfn_char(const u8* item, u8 index) {
   return read_le16(item, offsets[index]);
 }
 
-static u8 append_ascii_entry(u8* directory, u8 slot, const char* name,
-                             const char short_name[11], bool is_directory,
-                             u16 cluster, u32 size) {
-  assert(strlen(name) <= 13 && slot + 2 < 16);
-  u8* lfn = directory + (u16) slot * 32;
-  memset(lfn, 0xFF, 32);
-  lfn[0] = 0x41;
-  lfn[11] = 0x0F;
-  lfn[12] = 0;
-  lfn[13] = short_checksum((const u8*) short_name);
-  write_le16(lfn, 26, 0);
-  const u8 len = (u8) strlen(name);
-  for(u8 i = 0; i < 13; i++) {
-    write_lfn_char(lfn, i, i < len ? (u8) name[i] : i == len ? 0 : 0xFFFF);
+static u8 append_utf16_entry(u8* directory, u8 slot, const u16* name,
+                             u8 name_len, const char short_name[11],
+                             bool is_directory, u16 cluster, u32 size) {
+  const u8 lfn_count = (u8) ((name_len + 12U) / 13U);
+  assert(name != nullptr && name_len != 0 && lfn_count <= 8 &&
+         slot + lfn_count + 1U < 16U);
+  const u8 checksum = short_checksum((const u8*) short_name);
+  for(u8 offset = 0; offset < lfn_count; ++offset) {
+    const u8 sequence = (u8) (lfn_count - offset);
+    u8* lfn = directory + (u16) (slot + offset) * 32U;
+    memset(lfn, 0xFF, 32);
+    lfn[0] = sequence;
+    if(sequence == lfn_count) lfn[0] |= 0x40;
+    lfn[11] = 0x0F;
+    lfn[12] = 0;
+    lfn[13] = checksum;
+    write_le16(lfn, 26, 0);
+    const u16 base = (u16) (sequence - 1U) * 13U;
+    for(u8 index = 0; index < 13; ++index) {
+      const u16 source = (u16) (base + index);
+      write_lfn_char(lfn, index,
+                     source < name_len ? name[source] :
+                     source == name_len ? 0 : 0xFFFF);
+    }
   }
-  u8* item = lfn + 32;
+  u8* item = directory + (u16) (slot + lfn_count) * 32U;
   memset(item, 0, 32);
   memcpy(item, short_name, 11);
   item[11] = is_directory ? 0x10 : 0x20;
   write_le16(item, 26, cluster);
   write_le32(item, 28, size);
-  return (u8) (slot + 2);
+  return (u8) (slot + lfn_count + 1U);
+}
+
+static u8 append_ascii_entry(u8* directory, u8 slot, const char* name,
+                             const char short_name[11], bool is_directory,
+                             u16 cluster, u32 size) {
+  const usize length = strlen(name);
+  assert(length <= 13);
+  u16 utf16[13] = {};
+  for(usize index = 0; index < length; index++) {
+    utf16[index] = (u8) name[index];
+  }
+  return append_utf16_entry(directory, slot, utf16, (u8) length,
+                            short_name, is_directory, cluster, size);
 }
 
 #if MK61_ANY_LOADABLE_MODULE
@@ -287,17 +364,24 @@ static void test_diagnostic_contract(void) {
   assert(strcmp(line, "VFAT v=1 code=1233 phase=5 flags=1 actual=4275878552 limit=15 subject=") == 0);
   state.clear();
   assert(state.value.code == ErrorCode::NONE && state.value.flags == 0);
-  state.fail(ErrorCode::NAME_TOO_LONG, Phase::ENTRY, 20, 15,
-              "12345678901234Ж");
-  assert(strcmp(state.value.subject, "12345678901234") == 0);
+  static const char too_long_m8[] = "123456789012345\306";
+  state.fail(ErrorCode::NAME_TOO_LONG, Phase::ENTRY, 20, 15, too_long_m8);
+  assert(strcmp(state.value.subject, "123456789012345") == 0);
   assert(state.value.flags == SUBJECT_TRUNCATED);
   state.clear();
-  state.fail(ErrorCode::NAME, Phase::ENTRY, 0, 0, "A\n/\\\xFF\xF0\x90");
-  assert(strcmp(state.value.subject, "A??????") == 0);
+  static const char unsafe_m8[] = {'A', '\n', '/', '\\', 0x7F,
+                                   (char) 0x98, 0};
+  state.fail(ErrorCode::NAME, Phase::ENTRY, 0, 0, unsafe_m8);
+  assert(strcmp(state.value.subject, "A?????") == 0);
   state.clear();
+  char repeated_m8[17];
+  memset(repeated_m8, 0xDF, 16); // Я
+  repeated_m8[16] = 0;
   state.fail(ErrorCode::NAME, Phase::ENTRY, UINT32_MAX, UINT32_MAX,
-              "ЯЯЯЯЯЯЯЯ");
-  assert(strcmp(state.value.subject, "ЯЯЯЯЯЯЯ") == 0);
+             repeated_m8);
+  assert(memcmp(state.value.subject, repeated_m8, 15) == 0 &&
+         state.value.subject[15] == 0);
+  assert(state.value.flags == SUBJECT_TRUNCATED);
   assert(format_diagnostic(state.value, line, sizeof(line)));
   const usize length = strlen(line);
   // Every insufficient output capacity stays terminated and inside its bound.
@@ -309,6 +393,12 @@ static void test_diagnostic_contract(void) {
     assert(bounded[size] == '#');
   }
   assert(!format_diagnostic(state.value, nullptr, 0));
+
+  const Diagnostic retained = state.value;
+  clear_diagnostic();
+  assert(diagnostic().code == ErrorCode::NONE);
+  restore_diagnostic(retained);
+  assert(memcmp(&diagnostic(), &retained, sizeof(retained)) == 0);
 }
 
 static void test_dynamic_fat12_bpb(void) {
@@ -393,6 +483,326 @@ static void test_stable_clusters_and_nested_reads(void) {
   assert(sector[0] == '.' && sector[32] == '.');
 }
 
+static void test_empty_text_file_is_a_persistent_fat_object(void) {
+  fresh();
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 18, program_store::ProgramType::TEXT,
+      "empty", nullptr, 0, &id));
+  assert(id == 18);
+
+  // Starting a FAT session must expose, not silently purge, an intentional
+  // zero-length file.  Empty text files are useful placeholders and are
+  // valid both in C6 and FAT12.
+  assert(virtual_fat::reset_session());
+  const Layout fs = layout();
+  u8 root[512] = {};
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const u16 expected_cluster = (u16) (id + 2U);
+  const u8* short_entry = nullptr;
+  for(u8 slot = 0; slot < 16; ++slot) {
+    const u8* item = root + (u16) slot * 32U;
+    if(item[11] != 0x0F && read_le16(item, 26) == expected_cluster) {
+      short_entry = item;
+      break;
+    }
+  }
+  assert(short_entry != nullptr);
+  assert(read_le32(short_entry, 28) == 0);
+
+  virtual_fat::end_session();
+  program_store::init();
+  assert(program_store::ready());
+  program_store::Entry entry = {};
+  assert(program_store::entry_by_id(id, entry));
+  assert(entry.type == program_store::ProgramType::TEXT);
+  assert(entry.data_len == 0);
+}
+
+static void test_m8_text_exports_as_utf16_name_and_utf8_content(void) {
+  fresh();
+  static const char name_m8[] = {
+    (char) 0xCF, (char) 0xF0, (char) 0xE8,
+    (char) 0xE2, (char) 0xE5, (char) 0xF2, 0
+  }; // Привет
+  static const u8 content_m8[] = {
+    0xD1, 0xF2, 0xF0, 0xEE, 0xEA, 0xE0, ' ', 0x0F, ' ',
+    0xE4, 0xEE, 0xEC, '\n'
+  }; // Строка -> дом, где 0x0F — частный символ M8 «->».
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 30, program_store::ProgramType::TEXT,
+      name_m8, content_m8, sizeof(content_m8), &id));
+  assert(id == 30 && virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const u8* short_entry = nullptr;
+  u8 short_slot = 0;
+  for(u8 slot = 0; slot < 16; slot++) {
+    const u8* item = root + (u16) slot * 32U;
+    if(item[11] != 0x0F && read_le16(item, 26) == id + 2U) {
+      short_entry = item;
+      short_slot = slot;
+      break;
+    }
+  }
+  assert(short_entry != nullptr && short_slot != 0);
+  static const u16 expected_name[] = {
+    0x041F, 0x0440, 0x0438, 0x0432, 0x0435, 0x0442,
+    '.', 't', 'x', 't'
+  };
+  const u8* lfn = root + (u16) (short_slot - 1U) * 32U;
+  assert(lfn[11] == 0x0F);
+  for(u8 index = 0; index < sizeof(expected_name) / sizeof(expected_name[0]);
+      index++) {
+    assert(read_lfn_char(lfn, index) == expected_name[index]);
+  }
+  assert(read_lfn_char(lfn, sizeof(expected_name) / sizeof(expected_name[0])) ==
+         0);
+
+  static const char expected_utf8[] = u8"Строка → дом\n";
+  assert(read_le32(short_entry, 28) == sizeof(expected_utf8) - 1U);
+  u8 sector[512] = {};
+  assert(virtual_fat::read_sector(cluster_lba(fs, (u16) (id + 2U)),
+                                  sector));
+  assert(memcmp(sector, expected_utf8, sizeof(expected_utf8) - 1U) == 0);
+}
+
+static void test_utf16_name_and_utf8_content_import_as_m8(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 120;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const u16 name_utf16[] = {
+    0x0420, 0x0443, 0x0441, 0x0441, 0x043A, 0x0438, 0x0439,
+    '.', 't', 'x', 't'
+  }; // Русский.txt
+  static const char short_name[11] =
+      {'R','U','S','S','I','A','~','1','T','X','T'};
+  static const char content_utf8[] = u8"Ёжик → дом\n";
+  const u8 next = append_utf16_entry(
+      root, (u8) first_free_slot(root), name_utf16,
+      sizeof(name_utf16) / sizeof(name_utf16[0]), short_name, false,
+      file_cluster, sizeof(content_utf8) - 1U);
+  root[(u16) next * 32U] = 0;
+  u8 data[512] = {};
+  memcpy(data, content_utf8, sizeof(content_utf8) - 1U);
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), data));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  expect_flush();
+
+  const u16 id = (u16) (file_cluster - 2U);
+  program_store::Entry entry = {};
+  assert(program_store::entry_by_id(id, entry));
+  static const char expected_name_m8[] = {
+    (char) 0xD0, (char) 0xF3, (char) 0xF1, (char) 0xF1,
+    (char) 0xEA, (char) 0xE8, (char) 0xE9, 0
+  };
+  assert(strcmp(entry.name, expected_name_m8) == 0);
+  static const u8 expected_content_m8[] = {
+    0xA8, 0xE6, 0xE8, 0xEA, ' ', 0x0F, ' ', 0xE4, 0xEE, 0xEC, '\n'
+  };
+  expect_file(id, expected_content_m8, sizeof(expected_content_m8));
+}
+
+static void test_russian_lfn_sibling_survives_commit_reboot_and_cleanup(void) {
+  fresh();
+  static const char check_directory_m8[] = {
+    (char) 0xCF, (char) 0xF0, (char) 0xEE, (char) 0xE2,
+    (char) 0xE5, (char) 0xF0, (char) 0xEA, (char) 0xE0, 0
+  }; // Проверка
+  u16 check_directory_id = program_store::INVALID_ID;
+  u16 system_directory_id = program_store::INVALID_ID;
+  assert(program_store::create_directory(
+      program_store::ROOT_ID, check_directory_m8, 60,
+      &check_directory_id));
+  assert(program_store::create_directory(
+      program_store::ROOT_ID, "System", 61, &system_directory_id));
+  assert(check_directory_id == 60 && system_directory_id == 61);
+
+  // Exact field regression: C6 had a FILE inode at id 4 whose record name
+  // was unreadable and whose sibling link no longer reached the root.  FAT
+  // therefore exported cluster 6 as free; macOS reused it for the fixture,
+  // while APPLY still interpreted inode 4 as a replacement and failed with
+  // NAME_COLLISION/REPLACED_NAME.  A host allocation may reclaim this orphan,
+  // but must not disturb either neighbouring root directory.
+  static const u8 stale[] = {'o', 'l', 'd'};
+  u16 stale_id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 4, program_store::ProgramType::TEXT,
+      "stale", stale, sizeof(stale), &stale_id));
+  assert(stale_id == 4);
+  assert(program_store::test_make_unreadable_orphan_file(stale_id));
+  program_store::Entry stale_entry = {};
+  assert(!program_store::entry_by_id(stale_id, stale_entry));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  static constexpr u16 FILE_CLUSTER = 6;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, FILE_CLUSTER, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const u16 name_utf16[] = {
+    0x041F, 0x0440, 0x043E, 0x0432, 0x0435, 0x0440, 0x043A, 0x0430,
+    '-', '7', '6', '2', '3', '.', 't', 'x', 't'
+  }; // Проверка-7623.txt
+  static const char short_name[11] =
+      {'P','R','O','V','E','R','~','1','T','X','T'};
+  static const char content_utf8[] =
+      u8"Проверка USB AEB505B6E0067623: Ёжик, стрелка →, число 123.\n";
+  const u8 next = append_utf16_entry(
+      root, (u8) first_free_slot(root), name_utf16,
+      sizeof(name_utf16) / sizeof(name_utf16[0]), short_name, false,
+      FILE_CLUSTER, sizeof(content_utf8) - 1U);
+  root[(u16) next * 32U] = 0;
+  u8 data[512] = {};
+  memcpy(data, content_utf8, sizeof(content_utf8) - 1U);
+  assert(virtual_fat::write_cached_sectors(
+      cluster_lba(fs, FILE_CLUSTER), data, 1));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  expect_flush();
+
+  static constexpr u16 FILE_ID = FILE_CLUSTER - 2U;
+  program_store::Entry file = {};
+  assert(program_store::entry_by_id(FILE_ID, file));
+  static const char expected_name_m8[] = {
+    (char) 0xCF, (char) 0xF0, (char) 0xEE, (char) 0xE2,
+    (char) 0xE5, (char) 0xF0, (char) 0xEA, (char) 0xE0,
+    '-', '7', '6', '2', '3', 0
+  };
+  assert(file.parent_id == program_store::ROOT_ID);
+  assert(file.type == program_store::ProgramType::TEXT);
+  assert(strcmp(file.name, expected_name_m8) == 0);
+  static const u8 expected_content_m8[] = {
+    0xCF, 0xF0, 0xEE, 0xE2, 0xE5, 0xF0, 0xEA, 0xE0,
+    ' ', 'U', 'S', 'B', ' ', 'A', 'E', 'B', '5', '0', '5', 'B', '6',
+    'E', '0', '0', '6', '7', '6', '2', '3', ':', ' ', 0xA8, 0xE6,
+    0xE8, 0xEA, ',', ' ', 0xF1, 0xF2, 0xF0, 0xE5, 0xEB, 0xEA, 0xE0,
+    ' ', 0x0F, ',', ' ', 0xF7, 0xE8, 0xF1, 0xEB, 0xEE, ' ', '1', '2',
+    '3', '.', '\n'
+  };
+  expect_file(FILE_ID, expected_content_m8, sizeof(expected_content_m8));
+
+  // Reboot and re-export prove that C6 contains the committed M8 object,
+  // rather than merely leaving a readable copy in the current FAT overlay.
+  virtual_fat::end_session();
+  program_store::init();
+  assert(program_store::ready());
+  assert(virtual_fat::reset_session());
+  assert(program_store::entry_by_id(FILE_ID, file));
+  expect_file(FILE_ID, expected_content_m8, sizeof(expected_content_m8));
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  int short_slot = -1;
+  for(u8 slot = 0; slot < 16; ++slot) {
+    const u8* item = root + (u16) slot * 32U;
+    if(item[11] != 0x0F && read_le16(item, 26) == FILE_CLUSTER) {
+      short_slot = slot;
+      break;
+    }
+  }
+  assert(short_slot >= 2);
+  const u8* lfn_last = root + (u16) (short_slot - 2) * 32U;
+  const u8* lfn_first = root + (u16) (short_slot - 1) * 32U;
+  assert(lfn_last[0] == 0x42 && lfn_first[0] == 0x01);
+  assert(read_lfn_char(lfn_last, 0) == '.' &&
+         read_lfn_char(lfn_last, 1) == 't' &&
+         read_lfn_char(lfn_last, 2) == 'x' &&
+         read_lfn_char(lfn_last, 3) == 't');
+  assert(read_lfn_char(lfn_first, 0) == 0x041F);
+
+  // The HIL removes only its reserved fixture.  The similarly named user
+  // directory and the System directory must remain untouched.
+  virtual_fat::end_session();
+  assert(program_store::remove_id(FILE_ID));
+  program_store::init();
+  assert(program_store::ready());
+  assert(virtual_fat::reset_session());
+  assert(!program_store::entry_by_id(FILE_ID, file));
+  program_store::Entry directory = {};
+  assert(program_store::entry_by_id(check_directory_id, directory));
+  assert(directory.kind == program_store::NodeKind::DIRECTORY);
+  assert(strcmp(directory.name, check_directory_m8) == 0);
+  assert(program_store::entry_by_id(system_directory_id, directory));
+  assert(directory.kind == program_store::NodeKind::DIRECTORY);
+  assert(strcmp(directory.name, "System") == 0);
+}
+
+static void test_m8_utf8_expansion_crosses_sector_boundary(void) {
+  fresh();
+  u8 source[300];
+  memset(source, 0xDF, sizeof(source)); // Я: один байт M8, два байта UTF-8.
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 40, program_store::ProgramType::TEXT,
+      "wide", source, sizeof(source), &id));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const u8* short_entry = nullptr;
+  for(u8 slot = 0; slot < 16; slot++) {
+    const u8* item = root + (u16) slot * 32U;
+    if(item[11] != 0x0F && read_le16(item, 26) == id + 2U) {
+      short_entry = item;
+      break;
+    }
+  }
+  assert(short_entry != nullptr && read_le32(short_entry, 28) == 600U);
+  u8 first[512];
+  u8 second[512];
+  assert(virtual_fat::read_sector(cluster_lba(fs, (u16) (id + 2U)), first));
+  assert(virtual_fat::read_sector(cluster_lba(fs, (u16) (id + 2U), 1),
+                                  second));
+  for(u16 offset = 0; offset < 600U; offset += 2U) {
+    const u8* sector = offset < 512U ? first : second;
+    const u16 local = offset < 512U ? offset : (u16) (offset - 512U);
+    assert(sector[local] == 0xD0 && sector[local + 1U] == 0xAF);
+  }
+}
+
+static void test_unrepresentable_utf8_is_rejected_without_tree_damage(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 121;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'E','M','O','J','I',' ',' ',' ','T','X','T'};
+  static const u8 invalid_m8_text[] = {
+    'o', 'k', ' ', 0xF0, 0x9F, 0x98, 0x80 // U+1F600 is not in M8.
+  };
+  const u8 next = append_ascii_entry(
+      root, (u8) first_free_slot(root), "emoji.txt", short_name, false,
+      file_cluster, sizeof(invalid_m8_text));
+  root[(u16) next * 32U] = 0;
+  u8 data[512] = {};
+  memcpy(data, invalid_m8_text, sizeof(invalid_m8_text));
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), data));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  assert(!virtual_fat::finalize_pending());
+  assert(virtual_fat::diagnostic().code ==
+         virtual_fat::ErrorCode::TEXT_ENCODING);
+  assert(program_store::total_count() == 0);
+  expect_rejected_pending_recovered();
+}
+
 static void test_directory_extents_grow_without_flat_catalog_scan(void) {
   fresh();
   u16 directory = 0;
@@ -415,6 +825,185 @@ static void test_directory_extents_grow_without_flat_catalog_scan(void) {
   u16 next = 0;
   assert(program_store::extent_info((u16) (extent_cluster - 2), owner, next));
   assert(owner == directory && next == program_store::INVALID_ID);
+}
+
+static void test_preallocated_directory_tail_is_canonicalized(void) {
+  // macOS may reserve a large FAT chain for a directory even though the first
+  // 0x00 entry terminates its live contents in the first cluster. Importing
+  // that empty tail as C6 directory extents wastes nearly the entire node
+  // table on a 512-KiB device and turns recovery into hundreds of catalog
+  // transactions. The committed C6 tree must retain only live directory
+  // storage.
+  fresh(512U * 1024U);
+  const Layout fs = layout();
+  const u16 directory_cluster = 20;
+  const u16 tail_last_cluster = 170;
+  const u16 file_cluster = 180;
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  for(u16 cluster = directory_cluster; cluster < tail_last_cluster; ++cluster) {
+    set_fat12_value(fat, cluster, (u16) (cluster + 1U));
+  }
+  set_fat12_value(fat, tail_last_cluster, 0xFFF);
+  set_fat12_value(fat, file_cluster, 0xFFF);
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  int slot = first_free_slot(root);
+  assert(slot == storage_geometry::ROOT_SYSTEM_DIRENTS);
+  static const char directory_short[11] = {
+    'F','O','L','D','E','R','~','1',' ',' ',' '
+  };
+  slot = append_ascii_entry(root, (u8) slot, "Folder", directory_short,
+                            true, directory_cluster, 0);
+  root[(u16) slot * 32U] = 0;
+
+  u8 directory[512];
+  dot_entries(directory, directory_cluster, 0);
+  static const char file_short[11] = {
+    'N','O','T','E','~','1',' ',' ','T','X','T'
+  };
+  static const u8 payload[] = "preallocated directory tail\n";
+  slot = append_ascii_entry(directory, 2, "note.txt", file_short, false,
+                            file_cluster, sizeof(payload) - 1U);
+  directory[(u16) slot * 32U] = 0;
+  u8 file_data[512] = {};
+  memcpy(file_data, payload, sizeof(payload) - 1U);
+
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), file_data));
+  assert(virtual_fat::write_sector(cluster_lba(fs, directory_cluster),
+                                   directory));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  SPIFlash::resetOperationCounts();
+  expect_flush();
+
+  const u16 directory_id = (u16) (directory_cluster - 2U);
+  const u16 file_id = (u16) (file_cluster - 2U);
+  u16 extent = program_store::INVALID_ID;
+  assert(!program_store::first_extent(directory_id, extent));
+  expect_file(file_id, payload, sizeof(payload) - 1U);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(SPIFlash::mutationOperations() < 96U);
+  assert(virtual_fat::reset_session());
+}
+
+static void test_legacy_preallocated_directory_tail_is_trimmed_in_batches(void) {
+  // Model the state left by older firmware after it had already materialized
+  // the host's preallocated chain.  Recovery must heal it without performing
+  // one WAL transaction for every obsolete extent.
+  fresh(512U * 1024U);
+  const Layout fs = layout();
+  const u16 directory_cluster = 20;
+  const u16 tail_last_cluster = 170;
+  const u16 file_cluster = 180;
+  const u16 directory_id = (u16) (directory_cluster - 2U);
+  assert(program_store::create_directory(program_store::ROOT_ID, "Folder",
+                                         directory_id, nullptr));
+  for(u16 cluster = (u16) (directory_cluster + 1U);
+      cluster <= tail_last_cluster; ++cluster) {
+    assert(program_store::allocate_directory_extent(
+        directory_id, (u16) (cluster - 2U)));
+  }
+
+  u16 extent = program_store::INVALID_ID;
+  u16 extent_count = 0;
+  if(program_store::first_extent(directory_id, extent)) {
+    do {
+      ++extent_count;
+    } while(program_store::next_extent(extent, extent));
+  }
+  assert(extent_count == tail_last_cluster - directory_cluster);
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  u8 directory[512];
+  assert(virtual_fat::read_sector(cluster_lba(fs, directory_cluster),
+                                  directory));
+  static const char file_short[11] = {
+    'N','O','T','E','~','1',' ',' ','T','X','T'
+  };
+  static const u8 payload[] = "repair old directory extents\n";
+  const u8 slot = append_ascii_entry(directory, 2, "note.txt", file_short,
+                                     false, file_cluster,
+                                     sizeof(payload) - 1U);
+  directory[(u16) slot * 32U] = 0;
+  u8 file_data[512] = {};
+  memcpy(file_data, payload, sizeof(payload) - 1U);
+
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), file_data));
+  assert(virtual_fat::write_sector(cluster_lba(fs, directory_cluster),
+                                   directory));
+  assert(virtual_fat::write_sector(1, fat));
+  SPIFlash::resetOperationCounts();
+  expect_flush();
+
+  assert(!program_store::first_extent(directory_id, extent));
+  expect_file((u16) (file_cluster - 2U), payload, sizeof(payload) - 1U);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(SPIFlash::mutationOperations() < 96U);
+  assert(virtual_fat::reset_session());
+}
+
+static void test_live_file_reuses_legacy_directory_slack(void) {
+  // Reproduce an interrupted host transaction in which the new root dirent
+  // and file bytes reached the persistent stage, but the FAT update detaching
+  // that cluster from an old preallocated directory tail did not.  The first
+  // 0x00 in the directory makes the tail allocation slack, so recovery may
+  // atomically repurpose its C6 node without losing any live directory data.
+  fresh(512U * 1024U);
+  const Layout fs = layout();
+  const u16 directory_id = 20;
+  const u16 slack_id = 42;
+  const u16 directory_cluster = (u16) (directory_id + 2U);
+  const u16 file_cluster = (u16) (slack_id + 2U);
+  assert(program_store::create_directory(program_store::ROOT_ID, "Folder",
+                                         directory_id, nullptr));
+  assert(program_store::allocate_directory_extent(directory_id, slack_id));
+  // Drop sectors cached before the direct C6 setup.  Do not call
+  // reset_session(): its normal canonicalization would correctly trim the
+  // deliberately constructed legacy slack before the recovery test begins.
+  virtual_fat::end_session();
+  assert(fat12_value(directory_cluster) == file_cluster);
+  assert(fat12_value(file_cluster) >= 0xFF8);
+  u8 staged_fat[512];
+  assert(virtual_fat::read_sector(1, staged_fat));
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  const int free_slot = first_free_slot(root);
+  assert(free_slot >= (int) storage_geometry::ROOT_SYSTEM_DIRENTS);
+  static const char file_short[11] = {
+    'R','E','C','O','V','E','~','1','T','X','T'
+  };
+  static const u8 payload[] = "recovered directory slack\n";
+  const u8 next_slot = append_ascii_entry(
+      root, (u8) free_slot, "Recovered.txt", file_short, false,
+      file_cluster, sizeof(payload) - 1U);
+  root[(u16) next_slot * 32U] = 0;
+  u8 file_data[512] = {};
+  memcpy(file_data, payload, sizeof(payload) - 1U);
+
+  assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), file_data));
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  // The interrupted host did write its FAT sector, but it still contains the
+  // old directory-tail link.  Store that unchanged sector explicitly: the
+  // production journal may contain host writes whose final bytes equal the
+  // currently exported sector after an earlier catalog mutation.
+  assert(program_store::vfat_stage_write(1, staged_fat));
+  assert(fat12_value(file_cluster) >= 0xFF8);
+  assert(virtual_fat::flush_write_cache());
+  virtual_fat::end_session();
+  assert(fat12_value(file_cluster) >= 0xFF8);
+  expect_flush();
+
+  u16 extent = program_store::INVALID_ID;
+  assert(!program_store::first_extent(directory_id, extent));
+  expect_file(slack_id, payload, sizeof(payload) - 1U);
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::reset_session());
 }
 
 static void stage_host_tree(void) {
@@ -500,7 +1089,7 @@ static void test_host_creates_arbitrary_nested_tree(void) {
   expect_file(file.id, payload, sizeof(payload) - 1);
 }
 
-static void test_staged_update_survives_session_reset(void) {
+static void test_staged_update_is_recovered_before_next_session(void) {
   fresh();
   const u8 old_data[] = "old";
   u16 id = 0;
@@ -516,8 +1105,38 @@ static void test_staged_update_survives_session_reset(void) {
   virtual_fat::end_session();
   program_store::init();
   assert(virtual_fat::reset_session());
-  assert(program_store::vfat_stage_count() == 1);
-  expect_flush();
+  assert(program_store::vfat_stage_count() == 0);
+  expect_file(id, (const u8*) "new", 3);
+}
+
+static void test_recovery_io_failure_refuses_mount_and_retries(void) {
+  fresh();
+  const u8 old_data[] = "old";
+  u16 id = 0;
+  assert(program_store::write_file(program_store::ROOT_ID, 50,
+                                   program_store::ProgramType::TEXT,
+                                   "journal", old_data, sizeof(old_data) - 1,
+                                   &id));
+  assert(virtual_fat::reset_session());
+  const Layout fs = layout();
+  u8 updated[512] = {};
+  memcpy(updated, "new", 3);
+  assert(virtual_fat::write_sector(cluster_lba(fs, (u16) (id + 2)), updated));
+  virtual_fat::end_session();
+  program_store::init();
+
+  // A real media failure must never expose the staged overlay as a mounted
+  // volume or throw it away. The normal USB caller closes this failed session;
+  // a later attempt retries the same durable journal.
+  SPIFlash::failAfterOperations(0);
+  assert(!virtual_fat::reset_session());
+  assert((virtual_fat::diagnostic().flags & virtual_fat::RETRYABLE) != 0);
+  assert(program_store::vfat_stage_count() != 0);
+  SPIFlash::clearFailure();
+  virtual_fat::end_session();
+  program_store::init();
+  assert(virtual_fat::reset_session());
+  assert(program_store::vfat_stage_count() == 0);
   expect_file(id, (const u8*) "new", 3);
 }
 
@@ -548,15 +1167,13 @@ static void test_full_staging_rejects_next_sector_without_tree_damage(void) {
   assert(program_store::vfat_stage_count() == CAPACITY);
 
   // Не подтверждённый 385-й сектор остаётся только в исчезающем RAM-кэше.
-  // После reboot журнал первых 384 секторов цел, а их неиспользуемые данные
-  // можно безопасно отбросить без публикации изменений дерева.
+  // После reboot журнал первых 384 секторов цел, но новый сеанс сначала
+  // согласует его с основным деревом. Неиспользуемые данные отбрасываются до
+  // того, как новый host увидит FAT, поэтому они не становятся фантомами.
   virtual_fat::end_session();
   program_store::init();
   assert(program_store::ready());
   assert(virtual_fat::reset_session());
-  assert(program_store::vfat_stage_count() == CAPACITY);
-  expect_file(old_id, old_data, sizeof(old_data));
-  expect_flush();
   assert(program_store::vfat_stage_count() == 0);
   expect_file(old_id, old_data, sizeof(old_data));
 }
@@ -731,6 +1348,43 @@ static void test_optional_display_cache_span(void) {
   assert(virtual_fat::write_cache_capacity() == 32);
 }
 
+static void test_metadata_only_recovery_does_not_redecode_unchanged_text(void) {
+  fresh();
+  static u8 source[program_store::MAX_TINYBASIC_TEXT_SIZE];
+  for(u16 index = 0; index < sizeof(source); index++) {
+    source[index] = (u8) (index % 41U == 40U ? '\n' : 'A' + index % 7U);
+  }
+  u16 id = program_store::INVALID_ID;
+  assert(program_store::write_file(
+      program_store::ROOT_ID, 80, program_store::ProgramType::TINYBASIC,
+      "large-source", source, sizeof(source), &id));
+  assert(virtual_fat::reset_session());
+
+  const Layout fs = layout();
+  u8 root[virtual_fat::SECTOR_SIZE];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  virtual_fat::end_session();
+
+  // Model the harmless root-directory sector which macOS commonly leaves in
+  // the durable journal.  Recovery must verify the FAT mapping, but it must
+  // not stream-decode every byte of an unchanged compressed source again.
+  assert(program_store::vfat_stage_write(fs.root_start, root));
+  assert(program_store::vfat_stage_count() == 1);
+  alignas(4) static u8 display_cache[8192];
+  assert(virtual_fat::set_external_cache(display_cache,
+                                         sizeof(display_cache)));
+  SPIFlash::resetOperationCounts();
+  assert(virtual_fat::reset_session());
+  assert(SPIFlash::readOperations() <= 256U);
+  assert(program_store::vfat_stage_count() == 0);
+  static u8 restored[program_store::MAX_TINYBASIC_TEXT_SIZE];
+  u16 restored_size = 0;
+  assert(program_store::read_id(id, restored, sizeof(restored),
+                                &restored_size));
+  assert(restored_size == sizeof(source));
+  assert(memcmp(restored, source, sizeof(source)) == 0);
+}
+
 static void run_usb_commit_zx0_workspace_test(usize external_size,
                                                bool managed_bulk = false) {
   fresh();
@@ -871,6 +1525,7 @@ static void test_incomplete_file_preflight_preserves_existing_tree(void) {
   assert(virtual_fat::diagnostic().phase == virtual_fat::Phase::VALIDATE);
   assert(virtual_fat::diagnostic().actual == cluster_lba(fs, new_cluster));
   assert(virtual_fat::diagnostic().limit == 0);
+  assert(strcmp(virtual_fat::diagnostic().subject, "new") == 0);
   assert(program_store::vfat_stage_count() != 0);
 
   program_store::Entry kept = {};
@@ -920,7 +1575,7 @@ static void test_finder_appledouble_does_not_abort_batch(void) {
                             false, sidecar_cluster, 4096);
   static const char file_short[11] =
       {'G','A','M','E',' ',' ',' ',' ','M','6','1'};
-  static const u8 payload[] = {0x11, 0x22, 0x33};
+  static const u8 payload[] = {'1', '2', '3'};
   slot = append_ascii_entry(root, slot, "game.m61", file_short,
                             false, file_cluster, sizeof(payload));
   root[slot * 32] = 0;
@@ -1061,7 +1716,8 @@ static void test_markdown_over_quota_does_not_poison_next_session(void) {
   assert(!virtual_fat::flush_pending());
   assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_TOO_LARGE);
   assert(virtual_fat::diagnostic().actual == 7492);
-  assert(virtual_fat::diagnostic().limit == 1536);
+  assert(virtual_fat::diagnostic().limit ==
+         (u32) program_store::MAX_MK61_TEXT_SIZE * 3U);
   assert(strcmp(virtual_fat::diagnostic().subject, "README") == 0);
   assert(program_store::total_count() == 0);
   assert(program_store::vfat_stage_count() != 0);
@@ -1070,9 +1726,8 @@ static void test_markdown_over_quota_does_not_poison_next_session(void) {
   program_store::init();
   assert(program_store::ready());
   assert(virtual_fat::reset_session());
-  assert(program_store::vfat_stage_count() != 0);
-  assert(!virtual_fat::finalize_pending());
-  expect_rejected_pending_recovered();
+  assert(program_store::vfat_stage_count() == 0);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_TOO_LARGE);
 
   // A real successful import, unlike a no-op sync, retires the old error.
   write_le32(root + (u16) (slot - 1) * 32, 28, 1);
@@ -1721,17 +2376,30 @@ static void test_malformed_fat_chain_is_rejected_atomically(void) {
 int main(void) {
   test_diagnostic_contract();
   test_boot_sector_volume_serial_fallback();
+  test_volume_serial_tracks_persistent_media_revision();
+  test_session_start_reuses_the_locked_stage_index();
   test_dynamic_fat12_bpb();
   test_macos_no_index_marker();
   test_stable_clusters_and_nested_reads();
+  test_empty_text_file_is_a_persistent_fat_object();
+  test_m8_text_exports_as_utf16_name_and_utf8_content();
+  test_utf16_name_and_utf8_content_import_as_m8();
+  test_russian_lfn_sibling_survives_commit_reboot_and_cleanup();
+  test_m8_utf8_expansion_crosses_sector_boundary();
+  test_unrepresentable_utf8_is_rejected_without_tree_damage();
   test_directory_extents_grow_without_flat_catalog_scan();
+  test_preallocated_directory_tail_is_canonicalized();
+  test_legacy_preallocated_directory_tail_is_trimmed_in_batches();
+  test_live_file_reuses_legacy_directory_slack();
   test_host_creates_arbitrary_nested_tree();
-  test_staged_update_survives_session_reset();
+  test_staged_update_is_recovered_before_next_session();
+  test_recovery_io_failure_refuses_mount_and_retries();
   test_full_staging_rejects_next_sector_without_tree_damage();
   test_identical_data_writes_do_not_restage();
   test_write_cache_coalesces_and_evicts_lru();
   test_fast_usb_cache_is_atomic_and_defers_spi();
   test_optional_display_cache_span();
+  test_metadata_only_recovery_does_not_redecode_unchanged_text();
   test_usb_commit_uses_available_cache_for_zx0();
   test_host_deletes_file_via_directory();
   test_incomplete_file_preflight_preserves_existing_tree();

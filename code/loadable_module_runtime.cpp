@@ -16,7 +16,7 @@ namespace loadable_module {
 namespace {
 
 static_assert(program_store::MAX_APP_FILE_SIZE == MAX_CONTAINER_SIZE,
-              "C5 and APP container limits must match");
+              "C6 and APP container limits must match");
 
 static_assert(shared_memory::APP_MAX_SIZE == APP_MAX_MEMORY_SIZE,
               "allocator and APP format limits differ");
@@ -26,6 +26,8 @@ static Header g_active_header;
 static Entry g_active_entry;
 static u16 g_active_file_id = program_store::INVALID_ID;
 static u8 g_call_depth;
+static u8 g_pin_depth;
+static Kind g_pinned_kind = (Kind) 0;
 static shared_memory::Lease g_app_cache;
 
 static_assert((u8) Kind::FOCAL == MK61_APP_KIND_FOCAL &&
@@ -34,7 +36,8 @@ static_assert((u8) Kind::FOCAL == MK61_APP_KIND_FOCAL &&
               (u8) Kind::APPLICATION == MK61_APP_KIND_APPLICATION &&
               (u8) Kind::CHIP8 == MK61_APP_KIND_CHIP8 &&
               (u8) Kind::MARKDOWN_VIEWER == MK61_APP_KIND_MARKDOWN_VIEWER &&
-              (u8) Kind::SETUP == MK61_APP_KIND_SETUP,
+              (u8) Kind::SETUP == MK61_APP_KIND_SETUP &&
+              (u8) Kind::USBDISK == MK61_APP_KIND_USBDISK,
               "public APP kinds must match the container ABI");
 
 static bool resident_matches(const Header& header) {
@@ -137,7 +140,9 @@ static void invalidate_active(void) {
 }
 
 static shared_memory::EvictionDecision prepare_app_eviction(void) {
-  if(g_call_depth != 0) return shared_memory::EvictionDecision::KEEP;
+  if(g_call_depth != 0 || g_pin_depth != 0) {
+    return shared_memory::EvictionDecision::KEEP;
+  }
   (void) mpu_guard::set_app_execution(nullptr, 0);
   clear_active_metadata();
   return shared_memory::EvictionDecision::RELEASE;
@@ -171,7 +176,7 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   // Every APP is an opportunistic cache. Reopening the same inode/header
   // preserves its globals until another arena owner evicts the image.
   if(same_active_image(kind, file_id, header)) return RuntimeStatus::OK;
-  if(g_call_depth != 0) return RuntimeStatus::BUSY;
+  if(g_call_depth != 0 || g_pin_depth != 0) return RuntimeStatus::BUSY;
 
   invalidate_active();
   u8* const image = acquire_app_memory(header);
@@ -220,7 +225,7 @@ static RuntimeStatus load_entry(Kind kind, const program_store::Entry& app) {
 }
 
 // APPLICATION is merely the non-canonical case: System kinds resolve their
-// fixed /System name, while APPLICATION supplies the selected C5 inode. From
+// fixed /System name, while APPLICATION supplies the selected C6 inode. From
 // this point onward validation, decoding, initialization, API and cache are
 // identical.
 static RuntimeStatus load(Kind kind,
@@ -246,6 +251,7 @@ static RuntimeStatus load(Kind kind,
 bool enabled(Kind kind) {
   switch(kind) {
     case Kind::SETUP: return MK61_SETUP_IS_LOADABLE != 0;
+    case Kind::USBDISK: return MK61_USBDISK_IS_LOADABLE != 0;
     case Kind::FOCAL: return MK61_FOCAL_IS_LOADABLE != 0;
     case Kind::TINYBASIC: return MK61_TINYBASIC_IS_LOADABLE != 0;
     case Kind::WBMP_VIEWER: return MK61_WBMP_VIEWER_IS_LOADABLE != 0;
@@ -295,6 +301,34 @@ RuntimeStatus invoke(Kind kind, Command command,
                           argument2, argument3);
   g_call_depth--;
   return RuntimeStatus::OK;
+}
+
+RuntimeStatus pin(Kind kind) {
+  if(g_pin_depth != 0) {
+    if(g_pinned_kind != kind || g_pin_depth == 0xFFU) {
+      return RuntimeStatus::BUSY;
+    }
+    ++g_pin_depth;
+    return RuntimeStatus::OK;
+  }
+  const RuntimeStatus loaded = load(kind);
+  if(loaded != RuntimeStatus::OK) return loaded;
+  if(g_active_entry == nullptr || g_active_kind != kind) {
+    return RuntimeStatus::INVALID_MODULE;
+  }
+  g_pinned_kind = kind;
+  g_pin_depth = 1;
+  return RuntimeStatus::OK;
+}
+
+bool unpin(Kind kind) {
+  if(g_pin_depth == 0 || g_pinned_kind != kind) return false;
+  if(--g_pin_depth == 0) g_pinned_kind = (Kind) 0;
+  return true;
+}
+
+bool pinned(Kind kind) {
+  return g_pin_depth != 0 && g_pinned_kind == kind;
 }
 
 RuntimeStatus run_app(u16 file_id, u32& result) {

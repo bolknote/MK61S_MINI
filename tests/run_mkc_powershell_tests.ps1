@@ -50,6 +50,8 @@ $navigation = Join-Path $tempRoot 'navigation'
 [void](New-Item -ItemType Directory -Path (Join-Path $navigation '.mkc') -Force)
 [IO.File]::WriteAllText((Join-Path $local 'demo.foc'), "2+2`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'manual.md'), "# Demo`n", [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $local 'Игра.m61'), "Привет → ≤ ↵`n", [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $local 'emoji.txt'), "Ошибка 😀`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'blocked.bin'), 'raw', [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'Good/program.m61'), "001`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $local 'preview.wbmp'), [byte[]](0,0,8,2,15,240))
@@ -60,8 +62,8 @@ $navigation = Join-Path $tempRoot 'navigation'
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'app-limits/SMALL.APP'), [byte[]]::new(63))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/EMPTY.CH8'), [byte[]]::new(0))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/HUGE.CH8'), [byte[]]::new(3585))
-[IO.File]::WriteAllBytes((Join-Path $local 'large.tbi'), [byte[]]::new(1537))
-[IO.File]::WriteAllBytes((Join-Path $local 'huge.tbi'), [byte[]]::new(3585))
+[IO.File]::WriteAllText((Join-Path $local 'large.tbi'), ('x' * 1537), [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $local 'huge.tbi'), ('x' * 3585), [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $tempRoot 'editor/local.txt'), "alpha`r`nbeta`r`n",
     [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/bom.txt'),
@@ -84,6 +86,10 @@ try {
     Assert-True ($app.ExitCode -eq 0 -and ($app.Output -join '') -eq 'supported') 'PowerShell classifier rejected APP'
     $chip8 = Invoke-MkcTool @('--classify', (Join-Path $local 'game.ch8'))
     Assert-True ($chip8.ExitCode -eq 0 -and ($chip8.Output -join '') -eq 'supported') 'PowerShell classifier rejected CHIP-8 ROM'
+    $russian = Invoke-MkcTool @('--classify', (Join-Path $local 'Игра.m61'))
+    Assert-True ($russian.ExitCode -eq 0 -and ($russian.Output -join '') -eq 'supported') 'PowerShell classifier rejected M8 text/name'
+    $emoji = Invoke-MkcTool @('--classify', (Join-Path $local 'emoji.txt'))
+    Assert-True ($emoji.ExitCode -eq 1 -and ($emoji.Output -join '') -match 'unsupported: текст содержит символ вне M8') 'PowerShell classifier accepted unsupported Unicode'
     $unsupported = Invoke-MkcTool @('--classify', (Join-Path $local 'blocked.bin'))
     Assert-True ($unsupported.ExitCode -eq 1 -and ($unsupported.Output -join '') -eq 'unsupported: формат не поддерживается') 'PowerShell classifier accepted .bin'
     $smallApp = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'app-limits/SMALL.APP'))
@@ -349,6 +355,11 @@ try {
     Assert-True (Send-RemoteFile (Join-Path $local 'demo.foc') '/demo.foc') 'mock upload failed'
     Assert-True (Receive-RemoteFile '/demo.foc' (Join-Path $tempRoot 'download.foc')) 'mock download failed'
     Assert-True ([IO.File]::ReadAllText((Join-Path $tempRoot 'download.foc')) -eq "2+2`n") 'mock transfer changed bytes'
+    Assert-True (Send-RemoteFile (Join-Path $local 'Игра.m61') '/Игра.m61') 'M8 mock upload failed'
+    $m8Hex = Convert-BytesToHex ([IO.File]::ReadAllBytes((Join-Path $device 'Игра.m61')))
+    Assert-True ($m8Hex -eq 'CFF0E8E2E5F2200F2016201F0A') 'PowerShell MKC did not encode UTF-8 text as M8'
+    Assert-True (Receive-RemoteFile '/Игра.m61' (Join-Path $tempRoot 'download-russian.m61')) 'M8 mock download failed'
+    Assert-True ([IO.File]::ReadAllText((Join-Path $tempRoot 'download-russian.m61')) -eq "Привет → ≤ ↵`n") 'PowerShell MKC did not decode M8 as UTF-8'
     Assert-True (New-RemoteDirectory '/System') 'mock System mkdir failed'
     Assert-True (Send-RemoteFile (Join-Path $local 'FOCAL.APP') '/System/FOCAL.APP') 'mock system APP upload failed'
     Assert-True (Receive-RemoteFile '/System/FOCAL.APP' (Join-Path $tempRoot 'download.app')) 'mock system APP download failed'

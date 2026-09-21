@@ -15,12 +15,15 @@ expected="$(
     build_mk61_module_pack.sh \
     build_portable_app.py \
     build_system_app_bundle.py \
+    convert_fmk1_to_fmk2.py \
     build-gcc.cmd \
     font_preview_study.py \
     generate_eliza_doctor.py \
     generate_highnoon_font.py \
+    generate_mk8_strings.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
+    m8_codec.py \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \
@@ -46,7 +49,7 @@ test -f "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp"
 test ! -e "$root/tools/fmk_font"
 test ! -e "$root/tools/mk61_module_pack"
 
-# programs/Fonts is copied to the public C5 /Fonts directory. Keep host-side
+# programs/Fonts is copied to the public C6 /Fonts directory. Keep host-side
 # documentation and notices out of the device filesystem: only loadable FMK
 # assets belong here.
 unexpected_font_assets="$(

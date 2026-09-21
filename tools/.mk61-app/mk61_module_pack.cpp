@@ -46,12 +46,12 @@ struct Options {
       "       --memory-size N --entry-offset N --output FILE\n"
       "       [--handled-magic XX]\n"
       "  --kind KIND          app, focal, tinybasic, wbmp-viewer,\n"
-      "                       markdown-viewer, chip8, or setup\n"
+      "                       markdown-viewer, chip8, setup, or usbdisk\n"
       "  --relocations FILE   compact relocation table (current ABI)\n"
       "  --image FILE         linked SRAM image without its .bss tail\n"
       "  --memory-size N      image plus zero-filled .bss\n"
       "  --entry-offset N     module entry offset from the load address\n"
-      "  --handled-magic XX   two-byte C5 type magic handled by FILE_OPEN\n"
+      "  --handled-magic XX   two-byte C6 type magic handled by FILE_OPEN\n"
       "  --output FILE        resulting .APP container\n");
   std::exit(message == nullptr ? 0 : 2);
 }
@@ -72,6 +72,7 @@ u32 parse_u32(const std::string& text, const char* name) {
 
 Kind parse_kind(const std::string& text) {
   if(text == "setup") return Kind::SETUP;
+  if(text == "usbdisk") return Kind::USBDISK;
   if(text == "app") return Kind::APPLICATION;
   if(text == "focal") return Kind::FOCAL;
   if(text == "tinybasic") return Kind::TINYBASIC;

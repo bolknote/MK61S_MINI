@@ -24,6 +24,7 @@ ensure_utf8_locale
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+M8_CODEC="$SCRIPT_DIR/m8_codec.pl"
 ARDUINO_CLI=${MKC_ARDUINO_CLI:-${MK61_ARDUINO_CLI:-arduino-cli}}
 CONFIG_FILE=${MKC_CONFIG_FILE:-"$PROJECT_ROOT/.mkc.conf"}
 
@@ -229,10 +230,32 @@ uppercase() {
   LC_ALL=C printf '%s' "$1" | tr '[:lower:]' '[:upper:]'
 }
 
+is_text_path() {
+  local lower
+  lower=$(lowercase "$1")
+  case "$lower" in
+    *.state.txt|*.m61|*.foc|*.tbi|*.txt|*.md|*.t1|*.m2) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+utf8_to_m8_file() {
+  perl "$M8_CODEC" encode "$1" "$2"
+}
+
+m8_to_utf8_file() {
+  perl "$M8_CODEC" decode "$1" "$2"
+}
+
+utf8_string_to_m8() {
+  perl "$M8_CODEC" encode - -
+}
+
 # Печатает причину несовместимости; пустой вывод означает, что объект можно
 # копировать на калькулятор. Второй аргумент: f, d либо l.
 unsupported_reason() {
   local path=$1 kind=$2 name base lower upper bytes size limit minimum=0
+  local m8_base encoded
   name=${path##*/}
 
   if [ "$kind" = l ]; then
@@ -291,10 +314,14 @@ unsupported_reason() {
     return
   fi
 
-  bytes=$(byte_length "$base")
+  if ! m8_base=$(printf '%s' "$base" | utf8_string_to_m8 2>/dev/null); then
+    printf '%s' 'basename содержит символ вне M8'
+    return
+  fi
+  bytes=$(byte_length "$m8_base")
   case "$bytes" in ''|*[!0-9]*) printf '%s' 'не удалось проверить имя'; return ;; esac
   if [ "$bytes" -lt 1 ] || [ "$bytes" -gt 31 ]; then
-    printf '%s' 'basename должен занимать 1–31 байт UTF-8'
+    printf '%s' 'basename должен занимать 1–31 байт M8'
     return
   fi
   upper=$(uppercase "$base")
@@ -304,7 +331,20 @@ unsupported_reason() {
   esac
 
   if [ "$kind" = f ]; then
-    size=$(wc -c < "$path" 2>/dev/null | tr -d '[:space:]') || size=
+    if is_text_path "$name"; then
+      encoded=$(mktemp "${TMPDIR:-/tmp}/mkc-m8.XXXXXX") || {
+        printf '%s' 'не удалось проверить текст'; return;
+      }
+      if ! utf8_to_m8_file "$path" "$encoded" 2>/dev/null; then
+        rm -f "$encoded"
+        printf '%s' 'текст содержит символ вне M8 или неверный UTF-8'
+        return
+      fi
+      size=$(wc -c < "$encoded" 2>/dev/null | tr -d '[:space:]') || size=
+      rm -f "$encoded"
+    else
+      size=$(wc -c < "$path" 2>/dev/null | tr -d '[:space:]') || size=
+    fi
     case "$size" in ''|*[!0-9]*) printf '%s' 'не удалось прочитать размер'; return ;; esac
     if [ "$size" -lt "$minimum" ]; then
       printf '%s' "слишком маленький: $size байт, минимум $minimum"
@@ -616,7 +656,12 @@ start_monitor() {
 
 remote_send() {
   [ -n "$MONITOR_INPUT_FD" ] || return 1
-  printf '%s\r' "$1" >&7
+  local encoded
+  encoded=$(printf '%s' "$1" | iconv -f UTF-8 -t WINDOWS-1251) || {
+    STATUS_TEXT='Команда содержит символ, которого нет в CP1251'
+    return 1
+  }
+  printf '%s\r' "$encoded" >&7
 }
 
 serial_read_line() {
@@ -624,22 +669,11 @@ serial_read_line() {
   SERIAL_LINE=
   IFS= read -r -t "$timeout" SERIAL_LINE <&8 || return 1
   SERIAL_LINE=${SERIAL_LINE%$'\r'}
-  return 0
-}
-
-select_utf8_terminal_encoding() {
-  local attempts=0
-  remote_send 'encoding utf-8' || return 1
-  # Drain the command echo and acknowledgement so they cannot be mistaken for
-  # the first directory listing.  An older firmware reports Unknown command;
-  # that response is consumed as a backward-compatible fallback.
-  while [ "$attempts" -lt 12 ]; do
-    serial_read_line 1 || return 0
-    case "$SERIAL_LINE" in
-      'encoding utf-8'|Unknown\ command:\ encoding*) return 0 ;;
-    esac
-    attempts=$((attempts + 1))
-  done
+  SERIAL_LINE=$(printf '%s' "$SERIAL_LINE" |
+    iconv -f WINDOWS-1251 -t UTF-8) || {
+      STATUS_TEXT='Калькулятор прислал неверную строку CP1251'
+      return 1
+    }
   return 0
 }
 
@@ -864,20 +898,27 @@ hex_file_to_binary() {
 }
 
 remote_put_file() {
-  local source=$1 destination=$2 size crc hex offset=0 chunk expected
+  local source=$1 destination=$2 payload=$1 size crc hex offset=0 chunk expected
+  if is_text_path "$destination"; then
+    payload="$SESSION_DIR/upload.m8"
+    if ! utf8_to_m8_file "$source" "$payload" 2>/dev/null; then
+      STATUS_TEXT='Текст содержит неверный UTF-8 или символ вне M8'
+      return 1
+    fi
+  fi
   if [ -n "$MOCK_ROOT" ]; then
-    cp "$source" "$(mock_path "$destination")" 2>/dev/null || {
+    cp "$payload" "$(mock_path "$destination")" 2>/dev/null || {
       STATUS_TEXT="Не удалось записать $destination"; return 1;
     }
     return 0
   fi
-  size=$(wc -c < "$source" | tr -d '[:space:]')
-  crc=$(file_checksum "$source") || return 1
+  size=$(wc -c < "$payload" | tr -d '[:space:]')
+  crc=$(file_checksum "$payload") || return 1
   remote_send "fsput begin \"$destination\" $size $crc" || return 1
   wait_for_marker '@MKC:READY ' || return 1
   expected=${MARKER_LINE#@MKC:READY }
   [ "$expected" = "$size" ] || { STATUS_TEXT='Неверный ответ fsput begin'; return 1; }
-  hex=$(file_to_hex "$source") || return 1
+  hex=$(file_to_hex "$payload") || return 1
   while [ "$offset" -lt "$size" ]; do
     chunk=${hex:$((offset * 2)):$((FS_PUT_CHUNK_BYTES * 2))}
     remote_send "fsput data $offset $chunk" || return 1
@@ -897,9 +938,15 @@ remote_get_file() {
   local source=$1 destination=$2 header_size header_crc line rest offset hex
   local received=0 end_size end_crc actual_size actual_crc
   if [ -n "$MOCK_ROOT" ]; then
-    cp "$(mock_path "$source")" "$destination" 2>/dev/null || {
-      STATUS_TEXT="Не удалось прочитать $source"; return 1;
-    }
+    if is_text_path "$source"; then
+      m8_to_utf8_file "$(mock_path "$source")" "$destination" 2>/dev/null || {
+        STATUS_TEXT="Файл $source содержит неверный M8"; return 1;
+      }
+    else
+      cp "$(mock_path "$source")" "$destination" 2>/dev/null || {
+        STATUS_TEXT="Не удалось прочитать $source"; return 1;
+      }
+    fi
     return 0
   fi
   : > "$SESSION_DIR/download.hex"
@@ -942,7 +989,14 @@ remote_get_file() {
   [ "$actual_size" = "$header_size" ] && [ "$actual_crc" = "$header_crc" ] || {
     STATUS_TEXT='Ошибка контрольной суммы fsget'; return 1;
   }
-  cp "$SESSION_DIR/download.bin" "$destination" || return 1
+  if is_text_path "$source"; then
+    m8_to_utf8_file "$SESSION_DIR/download.bin" "$destination" 2>/dev/null || {
+      STATUS_TEXT='Калькулятор прислал текст с неверным M8'
+      return 1
+    }
+  else
+    cp "$SESSION_DIR/download.bin" "$destination" || return 1
+  fi
 }
 
 add_local_entry() {
@@ -2534,7 +2588,7 @@ editor_write_file() {
 }
 
 editor_save() {
-  local temp size directory limit=1536
+  local temp encoded size directory limit=1536
   EDITOR_ERROR=
   if [ "$EDITOR_PANEL" = L ]; then
     directory=${EDITOR_SOURCE%/*}
@@ -2554,7 +2608,12 @@ editor_save() {
   else
     temp="$SESSION_DIR/editor-upload.tmp"
     editor_write_file "$temp" || return 1
-    size=$(wc -c < "$temp" 2>/dev/null | tr -d '[:space:]')
+    encoded="$SESSION_DIR/editor-upload.m8"
+    if ! utf8_to_m8_file "$temp" "$encoded" 2>/dev/null; then
+      EDITOR_ERROR='Текст содержит символ вне M8'
+      return 1
+    fi
+    size=$(wc -c < "$encoded" 2>/dev/null | tr -d '[:space:]')
     case "$size" in
       ''|*[!0-9]*)
         EDITOR_ERROR='Не удалось определить размер результата'
@@ -3361,10 +3420,11 @@ main() {
       die "$SELECT_ERROR"
     fi
   fi
-  start_monitor || die "не удалось открыть ${PORT:-устройство}"
   if [ -z "$MOCK_ROOT" ]; then
-    select_utf8_terminal_encoding || die 'не удалось выбрать UTF-8 терминала'
+    command -v iconv >/dev/null 2>&1 ||
+      die 'для преобразования CP1251 нужен iconv'
   fi
+  start_monitor || die "не удалось открыть ${PORT:-устройство}"
 
   TTY_SAVED=$(stty -g <&9) || die 'не удалось настроить терминал'
   # Оставляем сигналы (Ctrl-C), но отключаем extended input: иначе Ctrl-O

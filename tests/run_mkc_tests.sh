@@ -13,16 +13,18 @@ mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
   "$work/chip8-limits" "$work/navigation/.mkc"
 printf '2+2\n' > "$work/local/demo.foc"
 printf '# Demo\n' > "$work/local/manual.md"
+printf 'Привет → ≤ ↵\n' > "$work/local/Игра.m61"
+printf 'Ошибка 😀\n' > "$work/local/emoji.txt"
 printf '001\n' > "$work/local/Good/program.m61"
 printf 'raw\n' > "$work/local/blocked.bin"
 printf 'raw\n' > "$work/preflight-bad/blocked.bin"
 printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 printf '\000\340\240\000' > "$work/local/game.ch8"
-dd if=/dev/zero of="$work/local/large.tbi" bs=1 count=1537 2>/dev/null
-dd if=/dev/zero of="$work/local/huge.tbi" bs=1 count=3585 2>/dev/null
-dd if=/dev/zero of="$work/preflight-bad/large.tbi" bs=1 count=3585 2>/dev/null
-dd if=/dev/zero of="$work/local/chunked.m61" bs=1 count=100 2>/dev/null
+awk 'BEGIN { for(i = 0; i < 1537; i++) printf "x" }' > "$work/local/large.tbi"
+awk 'BEGIN { for(i = 0; i < 3585; i++) printf "x" }' > "$work/local/huge.tbi"
+awk 'BEGIN { for(i = 0; i < 3585; i++) printf "x" }' > "$work/preflight-bad/large.tbi"
+awk 'BEGIN { for(i = 0; i < 100; i++) printf "x" }' > "$work/local/chunked.m61"
 dd if=/dev/zero of="$work/local/FOCAL.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/local/DEMO.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/app-limits/HUGE.APP" bs=1 count=20545 2>/dev/null
@@ -46,6 +48,11 @@ test "$("$root/tools/mkc.cmd" --classify "$work/local/Good")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/FOCAL.APP")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/DEMO.APP")" = supported
 test "$("$root/tools/mkc.cmd" --classify "$work/local/game.ch8")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/Игра.m61")" = supported
+case "$("$root/tools/mkc.cmd" --classify "$work/local/emoji.txt" || true)" in
+  'unsupported: текст содержит символ вне M8'* ) ;;
+  *) echo 'mkc: text containing emoji was accepted' >&2; exit 1 ;;
+esac
 test "$("$root/tools/mkc.cmd" --classify "$work/local/blocked.bin" || true)" = \
   'unsupported: формат не поддерживается'
 case "$("$root/tools/mkc.cmd" --classify "$work/app-limits/SMALL.APP" || true)" in
@@ -74,6 +81,14 @@ MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/.mkc/mkc.sh
 SESSION_DIR="$work/session"
 MOCK_ROOT="$work/device"
 shopt -s nullglob dotglob
+
+# The terminal wire encoding is fixed.  Reintroducing the historical
+# `encoding utf-8` negotiation leaves its "Unknown command" response queued;
+# the following `ls` then reports a false connection failure.
+if grep -Eq 'encoding[[:space:]]+(utf-8|cp1251)' "$root/tools/.mkc/mkc.sh"; then
+  echo 'mkc: obsolete terminal encoding negotiation was restored' >&2
+  exit 1
+fi
 
 # Автовыбор CDC не доверяет сохранённому/первому порту: каждый кандидат
 # обязан ответить identity handshake. Несколько MK61s требуют selector.
@@ -265,6 +280,11 @@ remote_put_file "$work/local/demo.foc" /demo.foc
 cmp "$work/local/demo.foc" "$work/device/demo.foc"
 remote_get_file /demo.foc "$work/download.foc"
 cmp "$work/local/demo.foc" "$work/download.foc"
+remote_put_file "$work/local/Игра.m61" "/Игра.m61"
+test "$(file_to_hex "$work/device/Игра.m61")" = \
+  'CFF0E8E2E5F2200F2016201F0A'
+remote_get_file "/Игра.m61" "$work/download-russian.m61"
+cmp "$work/local/Игра.m61" "$work/download-russian.m61"
 remote_put_file "$work/local/FOCAL.APP" /System/FOCAL.APP
 remote_get_file /System/FOCAL.APP "$work/download.app"
 cmp "$work/local/FOCAL.APP" "$work/download.app"

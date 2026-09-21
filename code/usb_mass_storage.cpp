@@ -34,11 +34,36 @@ extern uint8_t USBD_StrDesc[USBD_MAX_STR_DESC_SIZ];
 
 namespace usb_mass_storage {
 
+namespace {
+static constexpr u32 STARTUP_DIAGNOSTIC_MAGIC = 0x55534236UL; // "USB6"
+struct StartupBreadcrumb {
+  u32 magic;
+  u32 inverse_magic;
+  u32 stage;
+  u32 inverse_stage;
+};
+__attribute__((used, aligned(8), section(".noinit.mk61_usb_startup")))
+volatile StartupBreadcrumb startup_breadcrumb;
+static bool startup_tracking;
+
+static void mark_startup_stage(u32 stage) {
+  startup_breadcrumb.magic = 0;
+  __DMB();
+  startup_breadcrumb.stage = stage;
+  startup_breadcrumb.inverse_stage = ~stage;
+  startup_breadcrumb.inverse_magic = ~STARTUP_DIAGNOSTIC_MAGIC;
+  __DMB();
+  startup_breadcrumb.magic = STARTUP_DIAGNOSTIC_MAGIC;
+  __DMB();
+}
+} // namespace
+
 static inline USBD_HandleTypeDef* usb_device(void) {
   return &hUSBD_Device_CDC;
 }
 
 static bool initialized = false;
+static bool preparing = false;
 static u8 session_state_value = (u8) usb_disk_session::State::CLOSED;
 static bool device_configured = false;
 
@@ -391,10 +416,11 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
     return USBD_MSC_STORAGE_ERROR;
   }
 
-  // Обычный случай — простое копирование в ОЗУ: один полный пакет BOT размером
-  // 8 КиБ помещается в кэш A00 (два пакета на UC1609), и его можно подтвердить
-  // немедленно. В основной цикл, где доступ к SPI безопасен, передаётся только
-  // нехватка кэша, требующая вытеснения изменённых данных.
+  // Resident builds deliberately return false here: USBDISK.APP must never
+  // run in USB/IRQ context, even when its RAM cache has enough free slots.
+  // The BOT packet remains owned by STM32duino while BUSY is returned, and
+  // service() hands it to the pinned APP from the main loop. Host tests of the
+  // full in-process FAT implementation may still exercise the fast cache path.
   if(virtual_fat::try_write_cached_sectors(block_addr, buf, block_len)) {
     return apply_session_event(
         usb_disk_session::Event::WRITE_ACCEPTED).accepted
@@ -449,7 +475,15 @@ static void release_session_resources(void) {
 }
 
 static void abort_session(void) {
+  // release_session_resources() captures the APP-side diagnostic while
+  // unloading USBDISK.APP.  A resident USB-core failure recorded just before
+  // this call is newer and more specific, so do not let an empty APP report
+  // erase it on the way back to CDC.
+  const virtual_fat::Diagnostic failure = virtual_fat::diagnostic();
   release_session_resources();
+  if(failure.code != virtual_fat::ErrorCode::NONE) {
+    virtual_fat::restore_diagnostic(failure);
+  }
   (void) apply_session_event(usb_disk_session::Event::DISCONNECT);
 }
 
@@ -494,65 +528,116 @@ static virtual_fat::CommitResult finalize_session(void) {
   return result;
 }
 
-bool init(void) {
-  if(is_initialized()) return true;
-  if(!acquire_cache_buffer()) return false;
+class PreparingScope {
+ public:
+  PreparingScope() { preparing = true; }
+  ~PreparingScope() { preparing = false; }
+};
+
+bool prepare(void) {
+  if(is_initialized() ||
+     (session_is_open() && !device_configured)) return true;
+  if(preparing) return false;
+  PreparingScope scope;
+  startup_tracking = true;
+  mark_startup_stage(1);
+  mark_startup_stage(2);
+  if(!acquire_cache_buffer()) {
+    virtual_fat::report_startup_failure(10, "cache-acquire");
+    return false;
+  }
+  mark_startup_stage(3);
   if(session_is_open()) {
-    if(device_configured) {
-      set_initialized(true);
-      if(USBD_Start(usb_device()) == USBD_OK) return true;
-      set_initialized(false);
-      abort_session();
-      return false;
-    }
     abort_session();
   }
 
   reset_deferred_io();
-  if(!configure_cache_buffer() || !virtual_fat::reset_session()) {
+  mark_startup_stage(4);
+  if(!configure_cache_buffer()) {
+    virtual_fat::report_startup_failure(12, "cache-config");
     virtual_fat::end_session();
     release_cache_buffer();
     return false;
   }
+  mark_startup_stage(5);
+  if(!virtual_fat::reset_session()) {
+    if(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::NONE) {
+      virtual_fat::report_startup_failure(13, "session-reset");
+    }
+    virtual_fat::end_session();
+    release_cache_buffer();
+    return false;
+  }
+  mark_startup_stage(6);
   if(!apply_session_event(usb_disk_session::Event::OPEN).accepted) {
+    virtual_fat::report_startup_failure(14, "state-open");
     virtual_fat::end_session();
     release_cache_buffer();
     return false;
   }
+  return true;
+}
 
+bool init(void) {
+  startup_tracking = true;
+  if(is_initialized()) return true;
+  if(session_is_open() && device_configured) {
+    set_initialized(true);
+    if(USBD_Start(usb_device()) == USBD_OK) return true;
+    set_initialized(false);
+    virtual_fat::report_startup_failure(11, "usb-restart");
+    abort_session();
+  }
+  if(!prepare()) return false;
+
+  mark_startup_stage(7);
   if(USBD_Init(usb_device(),
                const_cast<USBD_DescriptorsTypeDef*>(&descriptors), 0) != USBD_OK) {
+    virtual_fat::report_startup_failure(15, "usb-init");
     abort_session();
     return false;
   }
   device_configured = true;
+  mark_startup_stage(8);
   if(USBD_RegisterClass(usb_device(), USBD_MSC_CLASS) != USBD_OK) {
+    virtual_fat::report_startup_failure(16, "usb-class");
     abort_session();
     return false;
   }
+  mark_startup_stage(9);
   if(USBD_MSC_RegisterStorage(
        usb_device(), const_cast<USBD_StorageTypeDef*>(&storage)) != USBD_OK) {
+    virtual_fat::report_startup_failure(17, "usb-storage");
     abort_session();
     return false;
   }
 
   set_initialized(true);
+  mark_startup_stage(10);
   if(USBD_Start(usb_device()) != USBD_OK) {
     set_initialized(false);
+    virtual_fat::report_startup_failure(18, "usb-start");
     abort_session();
     return false;
   }
 
+  // USBD_Start() only arms the peripheral.  It does not prove that the host
+  // has enumerated and configured MSC.  Keep the retained breadcrumb until
+  // that externally observable transition really happens; otherwise a board
+  // stranded between CDC and MSC loses the only useful post-reset evidence.
   return true;
 }
 
 bool deinit(void) {
+  const bool clean_host_eject = host_ejected();
   if(!is_initialized()) {
     if(!session_is_open()) {
       release_cache_buffer();
       return true;
     }
-    return finalize_session() == virtual_fat::CommitResult::OK;
+    const bool ok = finalize_session() == virtual_fat::CommitResult::OK;
+    if(ok && clean_host_eject) clear_startup_diagnostic();
+    return ok;
   }
   // Сначала останавливаем USB: его прерывание работает с той же SPI-флеш-памятью,
   // а одновременный с этим сбросом обратный вызов хранилища повредил бы обе
@@ -577,18 +662,20 @@ bool deinit(void) {
   }
   reset_deferred_io();
   // Сохраняем завершённые транзакции хоста. Детерминированный отказ preflight
-  // откатывается к последнему committed C5, а retryable I/O-ошибка остаётся в
+  // откатывается к последнему committed C6, а retryable I/O-ошибка остаётся в
   // persistent staging. Явное нажатие ESC в любом случае должно остановить MSC:
   // перезапуск того же сбойного BOT-сеанса оставляет в macOS фантомный диск
   // нулевого размера и делает следующее подключение невозможным. Зафиксированные
   // файлы уже сохранены; финальный отказ сообщает о потере batch, но staging
   // для следующего сеанса уже очищен.
   const virtual_fat::CommitResult result = finalize_session();
-  return pending_ok && result == virtual_fat::CommitResult::OK;
+  const bool ok = pending_ok && result == virtual_fat::CommitResult::OK;
+  if(ok && clean_host_eject) clear_startup_diagnostic();
+  return ok;
 }
 
 bool active(void) {
-  return is_initialized();
+  return is_initialized() || preparing;
 }
 
 bool host_configured(void) {
@@ -603,7 +690,14 @@ bool host_ejected(void) {
   const USBD_MSC_BOT_HandleTypeDef* const msc =
       (const USBD_MSC_BOT_HandleTypeDef*)
           device->pClassDataCmsit[device->classId];
-  return msc != NULL && msc->scsi_medium_state == SCSI_MEDIUM_EJECTED;
+  if(msc == NULL) return false;
+  // START STOP UNIT may queue a transactional C6 commit.  The request is
+  // latched before that work begins so failures remain recoverable, but MSC
+  // must not be stopped while the main loop still owns the BOT command.
+  return msc_scsi_eject_ready(
+      msc->host_eject_latched,
+      msc->scsi_medium_state == SCSI_MEDIUM_EJECTED,
+      deferred_sync() != DeferredSyncState::EMPTY) != 0U;
 }
 
 bool deep_idle_quiescent(void) {
@@ -693,6 +787,30 @@ void service(void) {
   }
 }
 
+StartupDiagnostic startup_diagnostic(void) {
+  const u32 magic = startup_breadcrumb.magic;
+  const u32 inverse_magic = startup_breadcrumb.inverse_magic;
+  const u32 stage = startup_breadcrumb.stage;
+  const u32 inverse_stage = startup_breadcrumb.inverse_stage;
+  return {
+    magic == STARTUP_DIAGNOSTIC_MAGIC &&
+        inverse_magic == ~STARTUP_DIAGNOSTIC_MAGIC &&
+        inverse_stage == ~stage,
+    stage
+  };
+}
+
+void clear_startup_diagnostic(void) {
+  startup_tracking = false;
+  startup_breadcrumb.magic = 0;
+  __DMB();
+}
+
+void note_startup_stage(unsigned stage) {
+  if(!startup_tracking) return;
+  mark_startup_stage(stage);
+}
+
 extern "C" u8 MK61_VirtualFatSync(void) {
   if(!is_initialized()) return 1U;
   if(!power_monitor::allow(power_monitor::Operation::MSC_WRITE)) return 1U;
@@ -715,12 +833,16 @@ extern "C" u8 MK61_VirtualFatSync(void) {
 
 namespace usb_mass_storage {
 bool init(void) { return false; }
+bool prepare(void) { return false; }
 bool deinit(void) { return true; }
 bool active(void) { return false; }
 bool host_configured(void) { return false; }
 bool host_ejected(void) { return false; }
 bool deep_idle_quiescent(void) { return true; }
 void service(void) {}
+StartupDiagnostic startup_diagnostic(void) { return {false, 0}; }
+void clear_startup_diagnostic(void) {}
+void note_startup_stage(unsigned) {}
 }
 
 extern "C" u8 MK61_VirtualFatSync(void) { return 1U; }

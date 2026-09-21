@@ -196,8 +196,8 @@ function Test-Mcu { param([string]$Id) return $Id -eq 'f411' -or $Id -eq 'f401' 
 function Get-McuLabel {
     param([string]$Id)
     switch ($Id) {
-        'f411' { return 'STM32F411CE · 512 KiB Flash · APP в C5' }
-        'f401' { return 'STM32F401CC · 256 KiB Flash · APP в C5' }
+        'f411' { return 'STM32F411CE · 512 KiB Flash · APP в C6' }
+        'f401' { return 'STM32F401CC · 256 KiB Flash · APP в C6' }
     }
     return 'не выбран'
 }
@@ -349,7 +349,7 @@ function Get-CompileOptionsDetails {
         "$(Get-Checkbox $script:State.EnableMarkdown) Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
         "$(Get-Checkbox $script:State.EnableChip8) CHIP-8 (MK61_ENABLE_CHIP8)"
         "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
-        "$($script:Glyphs.CheckOn) единый APP runtime ABI 5 (MK61_ENABLE_LOADABLE_MODULES)"
+        "$($script:Glyphs.CheckOn) единый APP runtime ABI 6 (MK61_ENABLE_LOADABLE_MODULES)"
         "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
         "$(Get-Checkbox $script:State.EnableExplorer) USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)"
         $mathText
@@ -1132,7 +1132,7 @@ function Test-ArduinoLibrariesReady {
 }
 
 function Test-SystemAppsEnabled {
-    # SETUP and terminal help are mandatory parts of every ABI 5 bundle.
+    # SETUP, USBDISK and terminal help are mandatory in every ABI 6 bundle.
     return $true
 }
 
@@ -1148,7 +1148,7 @@ function Test-CustomAppsRequested {
 
 function Get-ExpectedSystemAppNames {
     $names = New-Object 'System.Collections.Generic.List[string]'
-    foreach ($name in @('SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
+    foreach ($name in @('SETUP.APP', 'USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
     if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
     if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
     if ($script:State.EnableWbmp -eq 1 -and
@@ -1162,7 +1162,8 @@ function Get-ExpectedSystemAppNames {
 
 function Get-AllSystemAppNames {
     return [string[]]@(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'HELP0.TXT', 'HELP1.TXT')
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
+        'SETUP.APP', 'USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')
 }
 
 function Find-BashExecutable {
@@ -1213,7 +1214,8 @@ function Get-F401GccOptionArguments {
         '-ExtendedFontSettings', [string]$script:State.EnableFonts,
         '-UserExplorer', [string]$script:State.EnableExplorer,
         '-MathBackend', [string]$script:State.MathBackend,
-        '-LocalFloatMath', [string]$script:State.AppLocalFloat)
+        '-LocalFloatMath', [string]$script:State.AppLocalFloat,
+        '-ProductBuild', '1')
 }
 
 function Get-F401GccPowerShellArguments {
@@ -1852,17 +1854,17 @@ function Choose-Mcu {
     $items = @(
         [pscustomobject]@{
             Tag = 'f411'
-            Label = 'STM32F411CE · 512 KiB Flash · APP в C5'
+            Label = 'STM32F411CE · 512 KiB Flash · APP в C6'
             State = if ($script:State.Mcu -eq 'f411') { 'on' } else { 'off' }
         }
         [pscustomobject]@{
             Tag = 'f401'
-            Label = 'STM32F401CC · 256 KiB Flash · APP в C5'
+            Label = 'STM32F401CC · 256 KiB Flash · APP в C6'
             State = if ($script:State.Mcu -eq 'f401') { 'on' } else { 'off' }
         }
     )
     $chosen = Show-RadioList 'Контроллер' `
-        'Оба контроллера собирают resident и согласованные ABI 5 System APP для C5:' $items
+        'Оба контроллера собирают resident и согласованные ABI 6 System APP для C6:' $items
     if ([string]::IsNullOrEmpty($chosen)) { return $false }
     $script:State.Mcu = $chosen
     Save-Config
@@ -2100,7 +2102,7 @@ function Invoke-SystemAppBundleBuild {
     param([string]$Profile, [string]$BuildDirectory, [string]$Bundle)
     $python = Get-Python3Command
     if ($null -eq $python) {
-        Write-LastLog 'Python 3 is required to build ABI 5 System APP.' -Append
+        Write-LastLog 'Python 3 is required to build ABI 6 System APP.' -Append
         return $false
     }
     $graphics = if ($Profile -in @(
@@ -2123,7 +2125,7 @@ function Invoke-SystemAppBundleBuild {
             '--chip8', [string]$script:State.EnableChip8,
             '--local-float-math', [string]$script:State.AppLocalFloat))
     return Invoke-ExternalWithProgress 'System APP' `
-        'Собираю единый ABI 5 комплект' $script:LastLog 'indeterminate' `
+        'Собираю единый ABI 6 комплект' $script:LastLog 'indeterminate' `
         $python.Executable $arguments -Append
 }
 
@@ -2159,7 +2161,7 @@ function Build-Selected {
                 $appText = $apps -join [Environment]::NewLine
                 Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`nSystem APP:`n$appText`n`nПосле прошивки выполните пункт «Шаг 2 · Установить System APP»."
             } else {
-                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nВсе System APP выключены. На чистом C5 второй шаг не требуется; если там остались прежние системные APP, второй шаг удалит только их."
+                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nВсе System APP выключены. На чистом C6 второй шаг не требуется; если там остались прежние системные APP, второй шаг удалит только их."
             }
         } else {
             [Console]::WriteLine("Built F401 bundle: $bundle")
@@ -2307,7 +2309,7 @@ function Build-Selected {
         $appsPath = Join-Path $bundle 'build.apps'
         [IO.File]::WriteAllText("$flagsPath.tmp", $flags + [Environment]::NewLine, $script:Utf8NoBom)
         Move-Item -LiteralPath "$flagsPath.tmp" -Destination $flagsPath -Force
-        [IO.File]::WriteAllText("$appsPath.tmp", "format 1`nabi 5`n", $script:Utf8NoBom)
+        [IO.File]::WriteAllText("$appsPath.tmp", "format 1`nabi 6`n", $script:Utf8NoBom)
         Move-Item -LiteralPath "$appsPath.tmp" -Destination $appsPath -Force
     } catch {
         Write-LastLog $_.Exception.Message -Append
@@ -2342,8 +2344,8 @@ function Test-SystemBundleReady {
     }
     $appMetadata = @([IO.File]::ReadAllLines($appsFile))
     if ($appMetadata.Count -lt 2 -or $appMetadata[0] -ne 'format 1' -or
-        $appMetadata[1] -ne 'abi 5') {
-        Write-LastLog 'Bundle APP metadata is not current ABI 5.'
+        $appMetadata[1] -ne 'abi 6') {
+        Write-LastLog 'Bundle APP metadata is not current ABI 6.'
         return $false
     }
     $lines = [IO.File]::ReadAllLines($flagsFile)
@@ -2365,8 +2367,12 @@ function Test-SystemBundleReady {
     return $true
 }
 
-function Find-C5Mount {
-    $override = [Environment]::GetEnvironmentVariable('MK61_C5_MOUNT')
+function Find-C6Mount {
+    $override = [Environment]::GetEnvironmentVariable('MK61_C6_MOUNT')
+    if ([string]::IsNullOrWhiteSpace($override)) {
+        # Compatibility alias for existing unattended installations.
+        $override = [Environment]::GetEnvironmentVariable('MK61_C5_MOUNT')
+    }
     if (-not [string]::IsNullOrWhiteSpace($override)) {
         if (Test-Path -LiteralPath $override -PathType Container) {
             return (Resolve-Path -LiteralPath $override).Path
@@ -2376,7 +2382,7 @@ function Find-C5Mount {
     if ($script:IsWindowsHost) {
         foreach ($drive in [IO.DriveInfo]::GetDrives()) {
             try {
-                if ($drive.IsReady -and $drive.VolumeLabel -eq 'MK61S C5') {
+                if ($drive.IsReady -and $drive.VolumeLabel -eq 'MK61S C6') {
                     return $drive.RootDirectory.FullName
                 }
             } catch {}
@@ -2384,11 +2390,11 @@ function Find-C5Mount {
     }
     $userName = [Environment]::UserName
     $candidates = @(
-        '/Volumes/MK61S C5'
-        "/media/$userName/MK61S C5"
-        "/run/media/$userName/MK61S C5"
-        '/media/MK61S C5'
-        '/mnt/MK61S C5'
+        '/Volumes/MK61S C6'
+        "/media/$userName/MK61S C6"
+        "/run/media/$userName/MK61S C6"
+        '/media/MK61S C6'
+        '/mnt/MK61S C6'
     )
     foreach ($candidate in $candidates) {
         if (Test-Path -LiteralPath $candidate -PathType Container) {
@@ -2398,19 +2404,19 @@ function Find-C5Mount {
     return ''
 }
 
-function Wait-ForC5Mount {
+function Wait-ForC6Mount {
     param([int]$Seconds = 60)
     $attempts = $Seconds * 2
     for ($attempt = 0; $attempt -lt $attempts; $attempt++) {
-        $mount = Find-C5Mount
+        $mount = Find-C6Mount
         if (-not [string]::IsNullOrEmpty($mount)) { return $mount }
         if ($script:State.Interactive) {
             $percent = [Math]::Min(90, [int](90 * ($attempt + 1) / $attempts))
-            Draw-Progress 'USB-диск C5' 'Жду MK61S C5' $percent
+            Draw-Progress 'USB-диск C6' 'Жду MK61S C6' $percent
         }
         Start-Sleep -Milliseconds 500
     }
-    Write-LastLog "USB disk `"MK61S C5`" was not found within $Seconds seconds."
+    Write-LastLog "USB disk `"MK61S C6`" was not found within $Seconds seconds."
     return ''
 }
 
@@ -2458,10 +2464,10 @@ function Install-SystemApps {
         return $false
     }
 
-    $instructions = "После прошивки дождитесь запуска MK61s.`n`nНа калькуляторе откройте Меню → USB-диск.`nНе нажимайте ESC до сообщения об успешной проверке файлов.`n`nПосле подтверждения инструмент будет ждать диск «MK61S C5» 60 секунд."
+    $instructions = "После прошивки дождитесь запуска MK61s.`n`nНа калькуляторе откройте Меню → USB-диск.`nНе нажимайте ESC до сообщения об успешной проверке файлов.`n`nПосле подтверждения инструмент будет ждать диск «MK61S C6» 60 секунд."
     if ($script:State.Interactive) { Show-Message 'Шаг 2 · System APP' $instructions }
     else { [Console]::WriteLine($instructions) }
-    $mount = Wait-ForC5Mount 60
+    $mount = Wait-ForC6Mount 60
     if ([string]::IsNullOrEmpty($mount)) {
         if ($script:State.Interactive) { Show-Log 'USB-диск не найден' $script:LastLog }
         else { Show-LastLogTail 20 }
@@ -2513,7 +2519,7 @@ function Install-SystemApps {
         if ($apps.Count -gt 0) {
             Show-Message 'Шаг 2 завершён' "В каталоге $target синхронизированы и побайтно проверены:`n$appText`n`nТеперь можно выйти из режима USB-диска клавишей ESC на MK61s."
         } else {
-            Show-Message 'Шаг 2 завершён' "Из каталога $target удалены выключенные канонические System APP.`nДругие файлы C5 не изменялись.`n`nТеперь можно выйти из режима USB-диска клавишей ESC на MK61s."
+            Show-Message 'Шаг 2 завершён' "Из каталога $target удалены выключенные канонические System APP.`nДругие файлы C6 не изменялись.`n`nТеперь можно выйти из режима USB-диска клавишей ESC на MK61s."
         }
     } else {
         if ($apps.Count -gt 0) {
@@ -2760,7 +2766,7 @@ MCU:
 
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,
-  MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_C5_MOUNT, MK61_APP_MANIFESTS,
+  MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_C6_MOUNT, MK61_APP_MANIFESTS,
   MK61_COLOR
 
 The Bash and PowerShell tools share .mk61-firmware.conf.

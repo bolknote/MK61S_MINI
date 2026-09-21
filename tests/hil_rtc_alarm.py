@@ -62,7 +62,7 @@ class Port:
                 return
 
     def write_line(self, text: str) -> None:
-        payload = text.encode("ascii") + b"\r"
+        payload = text.encode("cp1251") + b"\r"
         offset = 0
         while offset < len(payload):
             _, writable, _ = select.select([], [self.fd], [], 1.0)
@@ -82,7 +82,7 @@ class Port:
                 if block:
                     data.extend(block)
                     if PROMPT.search(data):
-                        return data.decode("utf-8", "replace")
+                        return data.decode("cp1251", "replace")
         raise TimeoutError(
             f"terminal prompt timeout on {self.path}: {data!r}"
         )

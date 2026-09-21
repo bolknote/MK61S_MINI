@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise preinstalled portable CHECK/WBMP APPs through the real USB screen.
 
-No firmware or C5 writes. The test temporarily takes the display and sends
+No firmware or C6 writes. The test temporarily takes the display and sends
 virtual keys. CHECK.APP is built from portable_app_hil_check.c; Wide/Tall WBMP
 fixtures use the independent pixel formula below. See sdk/portable/README.md.
 """
@@ -126,7 +126,8 @@ class ScreenPort(Port):
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             self.pump()
-            if PROMPT.search(self.text[start:]): return self.text[start:].decode('utf-8', 'replace')
+            if PROMPT.search(self.text[start:]):
+                return self.text[start:].decode('cp1251', 'replace')
         raise TimeoutError(f'{command}: {self.text[start:]!r}')
 
     def attach(self):

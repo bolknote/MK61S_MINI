@@ -43,6 +43,9 @@ param(
     [ValidateSet('0', '1')]
     [string]$Lto = '1',
 
+    [ValidateSet('0', '1')]
+    [string]$ProductBuild = '0',
+
     [string]$CorePath,
     [string]$ToolchainPath,
     [string]$LibrariesPath,
@@ -96,6 +99,7 @@ Firmware options:
   -MathBackend 0|1    LIBM | CORE
   -LocalFloatMath 0|1 local float ln/lg/exp/sqrt in FOCAL/BASIC APP
   -Lto 0|1          default 1
+  -ProductBuild 0|1 omit qualification-only resident diagnostics; default 0
 
 Paths:
   -CorePath DIR       pinned STM32 Arduino Core
@@ -388,7 +392,7 @@ try {
     $systemRequested = $true
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
     $productBuild = if ($null -ne $releaseCaseInfo -and
-            [int]$releaseCaseInfo.product -eq 1) { '1' } else { '0' }
+            [int]$releaseCaseInfo.product -eq 1) { '1' } else { $ProductBuild }
     if ($null -ne $releaseCaseInfo) {
         $actualFeatures = @{
             focal = $Focal
@@ -732,7 +736,7 @@ try {
     [Console]::WriteLine("  resident: $residentName")
     if ($systemRequested) {
         [Console]::WriteLine(
-            '  APP: unified standalone ABI 5, ZX0/BCJ + relocations')
+            '  APP: unified standalone ABI 6, ZX0/BCJ + relocations')
     }
 } catch {
     [Console]::Error.WriteLine($_.Exception.Message)

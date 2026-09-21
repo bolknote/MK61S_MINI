@@ -9,6 +9,7 @@ if grep -Eq 'g_last_error|g_error_detail|trace_line_at' "$root/code/virtual_fat.
 fi
 out="${TMPDIR:-/tmp}/virtual_fat_self_test"
 module_out="${TMPDIR:-/tmp}/virtual_fat_module_self_test"
+proxy_out="${TMPDIR:-/tmp}/virtual_fat_proxy_self_test"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
@@ -60,3 +61,13 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$module_out"
 
 "$module_out"
+
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" \
+  -include "$root/tests/program_store_shim/program_store_test_shim.h" \
+  -I"$root/tests/program_store_shim" \
+  -I"$root/code" \
+  "$root/tests/virtual_fat_proxy_self_test.cpp" \
+  -o "$proxy_out"
+
+"$proxy_out"
