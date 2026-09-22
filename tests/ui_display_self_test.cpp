@@ -625,15 +625,18 @@ void test_fixed_calculator_face() {
   }
 
   // A raw mask uses the same seven segment planes plus the decimal-point
-  // plane, independently of the text/X2 model underneath.
+  // plane, independently of the text/X2 model underneath. The former sign
+  // position is a full seven-segment cell in this graphical view too.
   u8 raw_masks[12] = {};
+  raw_masks[0] = 0xFF;
   raw_masks[1] = 0x81; // A and point in the second physical position
   calculator_face::setSegmentFrame(raw_masks);
   Frame raw_frame{};
   calculator_face::renderFrame(model, raw_frame.data());
   assert(framePixel(raw_frame, 16 + 6, 31));
   assert(framePixel(raw_frame, 16 + 12, 51));
-  assert(!framePixel(raw_frame, 6, 31));
+  assert(framePixel(raw_frame, 6, 31));
+  assert(framePixel(raw_frame, 12, 51));
   display.invalidateCalculatorFace();
   expectFrame(raw_frame);
   calculator_face::setSegmentFrame(nullptr);

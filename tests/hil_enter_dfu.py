@@ -13,6 +13,8 @@ from hil_rtc_alarm import IDENTITY, Port
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", required=True)
+    parser.add_argument("--public-id", default="")
+    parser.add_argument("--profile", default="")
     args = parser.parse_args()
 
     with Port(args.port) as port:
@@ -20,6 +22,12 @@ def main() -> int:
         match = IDENTITY.search(identity)
         if not match:
             raise AssertionError(f"not an MK61 identity response:\n{identity}")
+        if args.public_id and match.group(1) != args.public_id.upper():
+            raise AssertionError(
+                f"wrong board: expected {args.public_id.upper()}, got {match.group(1)}"
+            )
+        if args.profile and f"profile={args.profile}" not in identity:
+            raise AssertionError(f"wrong profile: expected {args.profile}\n{identity}")
         print(f"device: {match.group(1)} path={args.port}")
         port.drain()
         port.write_line("dfu")

@@ -1143,6 +1143,38 @@ static void test_extended_prefixes(void) {
 
   core_61::enable();
   core_61::clear_extended_program_banks();
+  u8 highest_opcode = 0;
+  check_true("highest absolute address is writable",
+      core_61::write_absolute_program(9999, 0x07) &&
+      core_61::read_absolute_program(9999, highest_opcode) &&
+      highest_opcode == 0x07);
+  core_61::clear_extended_program_banks();
+  check_true("clear releases distant bank storage",
+      core_61::read_absolute_program(9999, highest_opcode) &&
+      highest_opcode == 0x50 &&
+      core_61::write_absolute_program(9999, 0x08));
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  u8 populated_far_banks = 0;
+  for(u16 bank = 1; bank <= 31; ++bank) {
+    if(core_61::write_absolute_program(
+           (u16) (bank * core_61::MAX_PROGRAM_STEP), 0x07))
+      populated_far_banks++;
+  }
+  check_true("32 bank slots include active bank",
+      populated_far_banks == 31 &&
+      !core_61::write_absolute_program(
+          (u16) (32U * core_61::MAX_PROGRAM_STEP), 0x07));
+  const u8 full_pool_jump[] = {0x1F, 0x51, 0x34, 0x72, 0x50};
+  run_program(full_pool_jump, sizeof(full_pool_jump));
+  check_true("full bank pool still runs populated bank",
+      core_61::active_program_bank() == 31 &&
+      !core_61::extended_program_error());
+  check_near("full bank pool result", read_live_x(), 7.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
   u8 edge_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
   for(usize index = 0; index < core_61::MAX_PROGRAM_STEP; ++index)
     edge_page[index] = 0x50;
@@ -1278,6 +1310,24 @@ static void test_extended_prefixes(void) {
   check_true("segment strobe advances", core_61::extended_display_cursor() == 2);
   check_near("segment strobe leaves X", read_live_x(), 7.0, 1e-8);
   check_true("segment command no error", !core_61::extended_program_error());
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const char mask_mantissa[8] = {'2','5','5','0','0','0','0','0'};
+  write_stack_register(stack::X, ' ', mask_mantissa, 2);
+  const u8 sign_segments[] = {0x2F, 0x2A, 0x2F, 0x0E, 0x50};
+  run_program(sign_segments, sizeof(sign_segments));
+  frame = core_61::segment_display_frame();
+  check_true("sign position accepts all eight segment bits",
+      frame != nullptr && frame[0] == 0xFF &&
+      core_61::extended_display_cursor() == 1 &&
+      !core_61::extended_program_error());
+  check_near("sign mask leaves X", read_live_x(), 255.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  set_x_bcd(0x00000007U);
+  run_program(display, sizeof(display));
   core_61::ContextBuffer display_snapshot = {};
   check_true("save segmented display context",
       core_61::save_context(display_snapshot));

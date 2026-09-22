@@ -1090,6 +1090,9 @@ static constexpr usize MK61_NUMERIC_TETRADES = 12U;
 static constexpr usize EXTENDED_BANK_COUNT =
     (core_61::EXTENDED_ADDRESS_LIMIT + core_61::MAX_PROGRAM_STEP - 1U) /
     core_61::MAX_PROGRAM_STEP;
+// Keep the same bounded SRAM footprint on F401 and F411. A slot can hold any
+// one of the 90 addressable banks; the active bank also needs a backing slot.
+static constexpr usize EXTENDED_BANK_SLOT_COUNT = 32;
 static constexpr u8 EXTENDED_RETURN_DEPTH = 64;
 static const char EXTENDED_ASCII_DIGITS[] = "0123456789-LCGE ";
 static const usize indicator_pos[12] =
@@ -1099,6 +1102,7 @@ struct ExtendedProgramState {
   u8* banks[EXTENDED_BANK_COUNT];
   u16 return_addresses[EXTENDED_RETURN_DEPTH];
   u8 active_bank;
+  u8 bank_slots_used;
   u8 return_depth;
   u8 cursor;
   u8 segment_masks[core_61::EXTENDED_DISPLAY_CELLS];
@@ -1112,12 +1116,17 @@ struct ExtendedProgramState {
 };
 
 static ExtendedProgramState extended_program = {};
+// newlib's heap cannot grow while the C6 staging overlay is leased. Program
+// banks are calculator state, so they must not depend on that transient heap.
+static u8 extended_bank_slots[EXTENDED_BANK_SLOT_COUNT]
+                             [core_61::CODE_PAGE_BUFFER_SIZE];
 
 static u8* ensure_extended_bank(u8 bank) {
   if(bank >= EXTENDED_BANK_COUNT) return nullptr;
   if(extended_program.banks[bank] != nullptr) return extended_program.banks[bank];
-  u8* page = (u8*) malloc(core_61::CODE_PAGE_BUFFER_SIZE);
-  if(page == nullptr) return nullptr;
+  if(extended_program.bank_slots_used >= EXTENDED_BANK_SLOT_COUNT)
+    return nullptr;
+  u8* page = extended_bank_slots[extended_program.bank_slots_used++];
   memset(page, 0x50, core_61::MAX_PROGRAM_STEP);
   page[core_61::MAX_PROGRAM_STEP] = 0;
   extended_program.banks[bank] = page;
@@ -1129,15 +1138,11 @@ static bool switch_extended_bank(u8 bank) {
   if(bank == extended_program.active_bank) return true;
   u8* saved = ensure_extended_bank(extended_program.active_bank);
   if(saved == nullptr) return false;
+  u8* incoming = ensure_extended_bank(bank);
+  if(incoming == nullptr) return false;
   // Both operations touch only the program track; data registers and Ms stay
   // live across bank switches.  In particular, K2 exchanges this active bank.
   core_61::get_code_page(saved);
-  u8 incoming[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-  if(extended_program.banks[bank] == nullptr) {
-    memset(incoming, 0x50, core_61::MAX_PROGRAM_STEP);
-  } else {
-    memcpy(incoming, extended_program.banks[bank], core_61::MAX_PROGRAM_STEP);
-  }
   core_61::set_code_page(incoming);
   extended_program.active_bank = bank;
   return true;
@@ -1478,9 +1483,6 @@ static bool write_x_segment(bool advance) {
   u16 mask = 0;
   if(!read_x_unsigned(256, mask)) return false;
   const u8 cursor = extended_program.cursor;
-  // The original indicator has only a minus segment at positions 0 and 9.
-  if((cursor == 0 || cursor == 9) && mask != 0 && mask != 0x40U)
-    return false;
   const bool changed = extended_program.segment_masks[cursor] != (u8) mask;
   extended_program.segment_masks[cursor] = (u8) mask;
   if(advance) extended_program.cursor =
@@ -3782,10 +3784,10 @@ void clear_extended_program_banks(void) {
     set_code_page(bank_zero);
   }
   for(usize index = 0; index < EXTENDED_BANK_COUNT; index++) {
-    free(extended_program.banks[index]);
     extended_program.banks[index] = nullptr;
   }
   extended_program.active_bank = 0;
+  extended_program.bank_slots_used = 0;
   extended_program.return_depth = 0;
 }
 
@@ -3811,6 +3813,11 @@ bool write_absolute_program(u16 address, u8 opcode) {
   if(bank == extended_program.active_bank) {
     MK61Emu_SetCode((int) get_ring_address(offset), opcode);
     return true;
+  }
+  if(extended_program.banks[extended_program.active_bank] == nullptr) {
+    u8* active_page = ensure_extended_bank(extended_program.active_bank);
+    if(active_page == nullptr) return false;
+    get_code_page(active_page);
   }
   u8* page = ensure_extended_bank(bank);
   if(page == nullptr) return false;
