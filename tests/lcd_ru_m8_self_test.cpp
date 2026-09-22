@@ -1,10 +1,36 @@
 #include "lcd_ru.hpp"
 #include "mk8_codec.hpp"
+#include "mk8_literal.hpp"
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
+
+static void check_system_window(const char* top, const char* bottom,
+                                u8 width) {
+  assert(strlen(top) <= width && strlen(bottom) <= width);
+  lcd_ru::font_map_t map = {};
+  lcd_ru::scan_text(map, top, width);
+  lcd_ru::scan_text(map, bottom, width);
+  assert(!map.overflow);
+}
 
 int main() {
+  // The character LCD shows two adjacent menu items at once. Both lines must
+  // fit alongside the selection marker without exhausting its eight CGRAM
+  // slots on either the A00 or A02 controller.
+  check_system_window(M8("Разработка"), M8("Система"), 15);
+  check_system_window(M8("Перезагрузка"), M8("Информация"), 15);
+  check_system_window(M8("Информация"), M8("Плата"), 15);
+  check_system_window(M8("Плата"), M8("Формат диска"), 15);
+  check_system_window(M8("Формат диска"), M8("Полный сброс"), 15);
+  check_system_window(M8("USB-диск уйдёт"),
+                      M8("OK далее ESC нет"), 16);
+  check_system_window(M8("Формат диска?"), M8("OK да ESC нет"), 16);
+  check_system_window(M8("Файлы+настройки"), M8("OK да ESC нет"), 16);
+  check_system_window(M8("Сброс настроек"), M8("Подождите"), 16);
+  check_system_window(M8("Ошибка настроек"), M8("Любая клавиша"), 16);
+
   for(u8 byte = mk8::BYTE_LEFT_ARROW; byte <= mk8::BYTE_RETURN_ARROW;
       ++byte) {
     const char single[] = {(char) byte, 0};

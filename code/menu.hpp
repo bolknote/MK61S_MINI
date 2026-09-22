@@ -59,9 +59,10 @@ extern bool SetDateTime(void);
 extern bool SetRtcCalibration(void);
 extern bool FontSetup(void);
 extern bool ResetDevice(void);
+extern bool system_select(void);
 
 namespace library_mk61 {
-  static constexpr int MAIN_MENU_COUNT = 9;
+  static constexpr int MAIN_MENU_COUNT = 6;
   extern  const int       COUNT_PUNCTS;
   extern  t_punct*        MENU[MAIN_MENU_COUNT];
 

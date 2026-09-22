@@ -1102,33 +1102,73 @@ bool Store(void) {
 
 using namespace action;
 
-bool  EraseFlash(void) {
-  sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
+static_assert(mk8::literal_size("USB-диск уйдёт") <= 17 &&
+              mk8::literal_size("OK далее ESC нет") <= 17 &&
+              mk8::literal_size("Формат диска?") <= 17 &&
+              mk8::literal_size("Файлы+настройки") <= 17 &&
+              mk8::literal_size("OK да ESC нет") <= 17 &&
+              mk8::literal_size("Ошибка настроек") <= 17,
+              "Storage prompts must fit both rows of A00/A02");
+
+static void show_storage_message(const char* ru0, const char* en0,
+                                 const char* ru1, const char* en1) {
   {
     MK61DisplayUpdate update(main_lcd());
-    main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("press OK ERASED!", "OK CTEP FLASH"));
+    main_lcd().clear();
+    lcd_ru::print_lines(library_mk61::language_is_ru() ? ru0 : en0,
+                        library_mk61::language_is_ru() ? ru1 : en1);
   }
-  if(kbd::get_key_wait() != KEY_OK) return action::MENU_BACK;
- // стираем внешний флеш
-  {
-    MK61DisplayUpdate update(main_lcd());
-    main_lcd().clear(); main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("Erase slot ", "CTEP SLOT "));
-  }
+}
+
+static bool confirm_storage_action(const char* ru_action,
+                                   const char* en_action) {
+  // Both C6 operations remove /System/USBDISK.APP. Two deliberate OK presses
+  // keep the consequence visible on a two-row, 16-cell A00/A02 display.
+  show_storage_message(M8("USB-диск уйдёт"), "USB disk lost",
+                       M8("OK далее ESC нет"), "OK next ESC no");
+  if(kbd::get_key_wait() != KEY_OK) return false;
+  show_storage_message(ru_action, en_action,
+                       M8("OK да ESC нет"), "OK yes ESC no");
+  return kbd::get_key_wait() == KEY_OK;
+}
+
+static void show_storage_result(const char* ru, const char* en) {
+  show_storage_message(ru, en, M8("Любая клавиша"), "Press any key");
+  kbd::get_key_wait();
+}
+
+bool FormatDisk(void) {
+  if(!confirm_storage_action(M8("Формат диска?"), "Format disk?"))
+    return action::MENU_BACK;
   if(!program_store::format()) {
-    message_and_waitkey(library_mk61::text("Flash error", "FLASH ERROR"));
+    show_storage_result(M8("Ошибка FLASH"), "Flash error");
     return action::MENU_BACK;
   }
-  {
-    MK61DisplayUpdate update(main_lcd());
-    main_lcd().clear(); main_lcd().setCursor(0, 0); main_lcd().print(library_mk61::text("Erase settings", "CTEP SETUP"));
+  show_storage_result(M8("Диск очищен"), "Disk formatted");
+  return action::MENU_EXIT;
+}
+
+bool EraseFlash(void) {
+  if(!confirm_storage_action(M8("Файлы+настройки"), "Files+settings"))
+    return action::MENU_BACK;
+  sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
+  if(!program_store::format()) {
+    show_storage_result(M8("Ошибка FLASH"), "Flash error");
+    return action::MENU_BACK;
   }
+  show_storage_message(M8("Сброс настроек"), "Reset settings",
+                       M8("Подождите"), "Please wait");
   bool settings_reset_ok = true;
   if(flash_is_ok) settings_reset_ok = program_store::erase_settings();
   reset_persistent_settings_cache();
-  if(settings_reset_ok) write_persistent_settings();
+  if(settings_reset_ok) settings_reset_ok = write_persistent_settings();
   library_mk61::load_settings_state();
   main_lcd().setTextProfile(library_mk61::display_text_profile());
+  if(!settings_reset_ok) {
+    show_storage_result(M8("Ошибка настроек"), "Settings error");
+    return action::MENU_BACK;
+  }
   sound(PIN_BUZZER, 1000, 300, library_mk61::sound_volume());
-  message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
+  show_storage_result(M8("Полный сброс"), "Full reset done");
   return action::MENU_EXIT;
 }

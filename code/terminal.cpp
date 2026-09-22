@@ -4374,7 +4374,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                   Serial.println("Files were not modified");
                 } else if(program_store::mount_status() ==
                           program_store::MountStatus::REPAIR_REQUIRED) {
-                  Serial.println("C6: catalog damaged; run format or use Erase FLASH menu");
+                  Serial.println("C6: catalog damaged; run format or use System > Format disk menu");
                   Serial.println("Files were not modified");
                 } else {
                   Serial.println("C6: unavailable");

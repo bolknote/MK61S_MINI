@@ -30,10 +30,13 @@ static constexpr int MENU_USB_DISK = 1;
 static constexpr int MENU_SETTINGS = 2;
 static constexpr int MENU_EXPLORER = 3;
 static constexpr int MENU_DEVELOP  = 4;
-static constexpr int MENU_RESET    = MENU_DEVELOP + 1;
-static constexpr int MENU_ERASE    = MENU_RESET + 1;
-static constexpr int MENU_INFO     = MENU_ERASE + 1;
-static constexpr int MENU_HW       = MENU_INFO + 1;
+static constexpr int MENU_SYSTEM   = 5;
+
+static constexpr int SYSTEM_RESTART = 0;
+static constexpr int SYSTEM_INFO = 1;
+static constexpr int SYSTEM_HARDWARE = 2;
+static constexpr int SYSTEM_FORMAT = 3;
+static constexpr int SYSTEM_FULL_RESET = 4;
 
 static constexpr int SETTINGS_VOLUME  = 0;
 static constexpr int SETTINGS_IDLE_SIGNAL = 1;
@@ -172,8 +175,10 @@ const t_punct USB_DISK_punct      = {.size = 8,  .action = (menu_action) &UsbDis
 const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
 const t_punct EXPLORER_punct      = {.size = 8,  .action = &program_store_explorer_select,      .text = "Explorer"};
 const t_punct DEVELOPMENT_punct   = {.size = 11, .action = &development_select,                 .text = "Development"};
-const t_punct RESET_punct         = {.size = 12, .action = &ResetDevice,                        .text = "Reset device"};
-const t_punct ERASE_punct         = {.size = 12, .action = (menu_action) &EraseFlash,           .text = "Erase FLASH!"};
+const t_punct SYSTEM_punct        = {.size = 6,  .action = &system_select,                      .text = "System"};
+const t_punct RESET_punct         = {.size = 7,  .action = &ResetDevice,                        .text = "Restart"};
+const t_punct FORMAT_punct        = {.size = 11, .action = &FormatDisk,                         .text = "Format disk"};
+const t_punct ERASE_punct         = {.size = 10, .action = &EraseFlash,                         .text = "Full reset"};
 const t_punct SPEED_CLASSIC_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed CLASSIC  "};
 const t_punct SPEED_MAXIMUM_punct = {.size = 15, .action = (menu_action) &TurnSpeed,            .text = "Speed MAXIMUM  "};
 const t_punct MEMORY_105_punct    = {.size = 15, .action = (menu_action) &TurnProgramMemory,    .text = "Memory 105     "};
@@ -209,8 +214,16 @@ static constexpr auto RU_USB_DISK_punct = M8_PUNCT(15, &UsbDiskMode, "USB-дис
 static constexpr auto RU_SETTINGS_punct = M8_PUNCT(15, &settings_select, "Настройки");
 static constexpr auto RU_EXPLORER_punct = M8_PUNCT(15, &program_store_explorer_select, "Проводник");
 static constexpr auto RU_DEVELOPMENT_punct = M8_PUNCT(15, &development_select, "Разработка");
-static constexpr auto RU_RESET_punct = M8_PUNCT(15, &ResetDevice, "Сброс");
-static constexpr auto RU_ERASE_punct = M8_PUNCT(15, &EraseFlash, "Стереть FLASH");
+static constexpr auto RU_SYSTEM_punct = M8_PUNCT(15, &system_select, "Система");
+static constexpr auto RU_RESET_punct = M8_PUNCT(15, &ResetDevice, "Перезагрузка");
+static constexpr auto RU_FORMAT_punct = M8_PUNCT(15, &FormatDisk, "Формат диска");
+static constexpr auto RU_ERASE_punct = M8_PUNCT(15, &EraseFlash, "Полный сброс");
+// LCD1602 reserves one of its 16 cells for the selection marker.
+static_assert(mk8::literal_size("Система") <= 16 &&
+              mk8::literal_size("Перезагрузка") <= 16 &&
+              mk8::literal_size("Формат диска") <= 16 &&
+              mk8::literal_size("Полный сброс") <= 16,
+              "System menu labels must fit A00/A02 with a cursor");
 static constexpr auto RU_SPEED_CLASSIC_punct = M8_PUNCT(15, &TurnSpeed, "Скорость норма");
 static constexpr auto RU_SPEED_MAXIMUM_punct = M8_PUNCT(15, &TurnSpeed, "Скорость макс");
 static constexpr auto RU_MEMORY_105_punct = M8_PUNCT(15, &TurnProgramMemory, "Память 105ШГ");
@@ -231,15 +244,24 @@ t_punct* MENU[] = {
       (t_punct*) &SETTINGS_punct,
       (t_punct*) &EXPLORER_punct,
       (t_punct*) &DEVELOPMENT_punct,
-      (t_punct*) &RESET_punct,
-      (t_punct*) &ERASE_punct,
-      (t_punct*) &FLASH_punct,
-      (t_punct*) &HARDWARE_punct
+      (t_punct*) &SYSTEM_punct
 };
 
 static_assert(sizeof(MENU) / sizeof(MENU[0]) == MAIN_MENU_COUNT,
               "Main menu count mismatch");
 extern const int COUNT_PUNCTS = sizeof(MENU) / sizeof(MENU[0]);
+
+t_punct* SYSTEM_MENU[] = {
+      (t_punct*) &RESET_punct,
+      (t_punct*) &FLASH_punct,
+      (t_punct*) &HARDWARE_punct,
+      (t_punct*) &FORMAT_punct,
+      (t_punct*) &ERASE_punct
+};
+
+static constexpr int SYSTEM_MENU_COUNT = sizeof(SYSTEM_MENU) / sizeof(SYSTEM_MENU[0]);
+static_assert(SYSTEM_MENU_COUNT == SYSTEM_FULL_RESET + 1,
+              "System menu item count mismatch");
 
 t_punct* SETTINGS_MENU[] = {
       (t_punct*) &VOLUME_punct,
@@ -481,10 +503,13 @@ void refresh_menu_text(void) {
   MENU[MENU_USB_DISK] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_USB_DISK_punct) : &USB_DISK_punct);
   MENU[MENU_EXPLORER] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_EXPLORER_punct) : &EXPLORER_punct);
   MENU[MENU_DEVELOP]  = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_DEVELOPMENT_punct) : &DEVELOPMENT_punct);
-  MENU[MENU_RESET]    = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_RESET_punct) : &RESET_punct);
-  MENU[MENU_ERASE]    = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_ERASE_punct) : &ERASE_punct);
-  MENU[MENU_INFO]     = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_FLASH_punct) : &FLASH_punct);
-  MENU[MENU_HW]       = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_HARDWARE_punct) : &HARDWARE_punct);
+  MENU[MENU_SYSTEM]   = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_SYSTEM_punct) : &SYSTEM_punct);
+
+  SYSTEM_MENU[SYSTEM_RESTART] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_RESET_punct) : &RESET_punct);
+  SYSTEM_MENU[SYSTEM_INFO] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_FLASH_punct) : &FLASH_punct);
+  SYSTEM_MENU[SYSTEM_HARDWARE] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_HARDWARE_punct) : &HARDWARE_punct);
+  SYSTEM_MENU[SYSTEM_FORMAT] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_FORMAT_punct) : &FORMAT_punct);
+  SYSTEM_MENU[SYSTEM_FULL_RESET] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_ERASE_punct) : &ERASE_punct);
 
   SETTINGS_MENU[SETTINGS_VOLUME]   = (t_punct*) (russian_language ? &RU_VOLUME_punct : &VOLUME_punct);
   SETTINGS_MENU[SETTINGS_IDLE_SIGNAL] = idle_signal_punct();
@@ -693,6 +718,13 @@ bool ResetDevice(void) {
   NVIC_SystemReset();
 
   return action::MENU_EXIT;
+}
+
+bool system_select(void) {
+  library_mk61::refresh_menu_text();
+  class_menu system_menu(library_mk61::SYSTEM_MENU,
+                         library_mk61::SYSTEM_MENU_COUNT);
+  return system_menu.select();
 }
 
 bool   TurnSpeed(void) {

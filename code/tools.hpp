@@ -158,6 +158,7 @@ extern  bool  OpenStoredEntry(const program_store::Entry& entry);
 extern  bool  OpenStoredFile(u16 cwd, const char* args);
 extern  bool  OpenStoredFile(const char* args);
 extern  u8    load_word(isize segment_address, isize offset);
+extern  bool  FormatDisk(void);
 extern  bool  EraseFlash(void);
 extern  void  init_external_flash(void);
 extern  void  construct_external_flash(void);
