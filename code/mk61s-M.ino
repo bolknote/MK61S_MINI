@@ -263,6 +263,10 @@ void reinit_mk61_calculator_state(void) {
   need_draw_lock_message = false;
   kbd::clear_hold_key();
   kbd::clear_immediate_presses();
+  // Reinit also discards the ordinary program track. Release every far-bank
+  // slot before the core clears its active track, or the 32-slot pool can stay
+  // exhausted across otherwise clean calculator sessions.
+  core_61::clear_extended_program_banks();
   core_61::enable();
   MK61Emu_SetAngleUnit(selected_angle);
   display_text[0] = (char) -1;

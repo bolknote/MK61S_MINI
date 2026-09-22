@@ -98,6 +98,15 @@ def main() -> int:
         print("32-slot limit and execution of a populated bank: OK")
 
         command(port, "reinit")
+        if "hin 0112 50" not in command(port, "hout 0112 1"):
+            raise AssertionError("reinit kept the old far-bank program")
+        command(port, "hin 9968 0750")
+        command(port, "hin 0000 1F519968")
+        command(port, "run")
+        expect_x(port, 7.0)
+        print("reinit frees all bank slots; bank 89 can be reused: OK")
+
+        command(port, "reinit")
         command(port, "hin 0000 2F2A2F0E50")
         # In AUTO, writing the first 2F switches to expanded memory and
         # reinitializes the core; seed X only after that transition.
