@@ -79,6 +79,20 @@ void checkFace(ui_font::Face face) {
     if (top_run > longest_top_run) longest_top_run = top_run;
   }
   assert(longest_top_run >= 4);
+  // M8 0x1D uses the calculator's circled XOR, not Unicode's underlined V.
+  const ui_font::Glyph xor_glyph = ui_font::glyph(face, 0x22BB);
+  const uint8_t middle = xor_glyph.height / 2;
+  for (uint8_t x = 0; x < xor_glyph.width; ++x) {
+    assert(font_glyph::pixel(xor_glyph, x, middle));
+  }
+  assert(!font_glyph::pixel(xor_glyph, 0, 0));
+  assert(!font_glyph::pixel(xor_glyph, xor_glyph.width - 1, 0));
+  assert(!font_glyph::pixel(xor_glyph, 0, xor_glyph.height - 1));
+  assert(!font_glyph::pixel(xor_glyph, xor_glyph.width - 1,
+                            xor_glyph.height - 1));
+  assert(font_glyph::pixel(xor_glyph, xor_glyph.width / 2, 1));
+  assert(font_glyph::pixel(xor_glyph, xor_glyph.width / 2,
+                           xor_glyph.height - 2));
   for (uint32_t cp : {0U, 0x1FU, 0x7FU, 0xD800U, 0x1F600U, 0xFFFFFFFFU}) {
     assert(!ui_font::supports(face, cp));
     const ui_font::Glyph missing = ui_font::glyph(face, cp);

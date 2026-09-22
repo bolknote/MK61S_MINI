@@ -27,6 +27,8 @@ come directly from the original Ark bitmap strikes. Ark lacks `ʸ`, `ˣ`, `√`,
 face's line envelope. Ark also lacks ≤/≥, so the low-level atlas API marks
 those two as fallbacks and the display renderer uses the exact resident 5×8
 sign. Unrelated unsupported characters still become `?`.
+The `⊻` supplement depicts the calculator's circled XOR, not the underlined
+V of a generic Unicode font.
 
 ## Reproduction
 

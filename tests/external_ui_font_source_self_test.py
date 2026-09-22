@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep the shipped DejaVu FMKs in sync with their reviewed native atlases."""
+"""Keep the shipped DejaVu FMKs in sync with their reviewed atlases."""
 
 import json
 from pathlib import Path
@@ -14,6 +14,10 @@ from m8_codec import SPECIAL_TO_BYTE  # noqa: E402
 
 def main() -> None:
     required = {ord(char) for char in SPECIAL_TO_BYTE}
+    xor_rows = {
+        12: ["01110", "10101", "10101", "11111", "10101", "10101", "01110"],
+        14: ["011110", "101101", "101101", "111111", "101101", "101101", "101101", "011110"],
+    }
     for size, gap in ((12, 1), (14, 2)):
         source = ROOT / f"tools/.fmk-font/external-fonts/dejavu-{size}.json"
         target = ROOT / f"programs/Fonts/DejaVu-{size}.FMK"
@@ -23,8 +27,9 @@ def main() -> None:
         assert required <= glyphs.keys()
         assert all(any("1" in row for row in glyphs[cp]["rows"])
                    for cp in required)
+        assert glyphs[0x22BB]["rows"] == xor_rows[size]
         assert encode(atlas, gap) == target.read_bytes(), target
-    print("DejaVu native M8 rasters and FMK2 packages: ok")
+    print("DejaVu M8 rasters and FMK2 packages: ok")
 
 
 if __name__ == "__main__":
