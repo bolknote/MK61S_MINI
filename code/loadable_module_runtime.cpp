@@ -287,7 +287,12 @@ RuntimeStatus invoke(Kind kind, Command command,
                      u32 argument2, u32 argument3,
                      u32& result) {
   result = 0;
-  const RuntimeStatus loaded = load(kind);
+  // A pinned APP owns its already validated SRAM image until unpin().  In
+  // particular, USB-disk writes may replace /System/USBDISK.APP on C6 while
+  // that very APP is serving the MSC session. Resolving its file again for
+  // each command would reject the still-valid pinned image mid-session.
+  const bool active_pinned = g_pin_depth != 0 && g_pinned_kind == kind;
+  const RuntimeStatus loaded = active_pinned ? RuntimeStatus::OK : load(kind);
   if(loaded != RuntimeStatus::OK) return loaded;
   if(g_active_entry == nullptr || g_active_kind != kind) {
     return RuntimeStatus::INVALID_MODULE;

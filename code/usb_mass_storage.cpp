@@ -515,15 +515,29 @@ static usb_disk_session::Event finalize_event(
 
 static virtual_fat::CommitResult finalize_session(void) {
   if(!apply_session_event(usb_disk_session::Event::CLOSE_REQUEST).accepted) {
+    const u32 failed_state = (u32) current_session_state();
     abort_session();
+    if(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::NONE) {
+      virtual_fat::report_startup_failure(1000U + failed_state, "close-state");
+    }
     return virtual_fat::CommitResult::IO_FAILED;
   }
   const virtual_fat::CommitResult result =
       virtual_fat::finalize_pending_result();
   release_session_resources();
   if(!apply_session_event(finalize_event(result)).accepted) {
+    const u32 failed_state = (u32) current_session_state();
     (void) apply_session_event(usb_disk_session::Event::DISCONNECT);
+    if(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::NONE) {
+      virtual_fat::report_startup_failure(1100U + failed_state, "final-state");
+    }
     return virtual_fat::CommitResult::IO_FAILED;
+  }
+  if(result != virtual_fat::CommitResult::OK &&
+     virtual_fat::diagnostic().code == virtual_fat::ErrorCode::NONE) {
+    virtual_fat::report_startup_failure(
+        result == virtual_fat::CommitResult::REJECTED ? 26U : 27U,
+        "finalize-app");
   }
   return result;
 }
@@ -645,18 +659,24 @@ bool deinit(void) {
   set_initialized(false);
   (void) USBD_Stop(usb_device());
   bool pending_ok = true;
+  u32 pending_failure_stage = 0;
   if(deferred_state() == DeferredWriteState::PENDING) {
     set_deferred_state(DeferredWriteState::PROCESSING);
-    pending_ok =
-      power_monitor::allow(power_monitor::Operation::MSC_WRITE) &&
-      virtual_fat::write_cached_sectors(
+    if(!power_monitor::allow(power_monitor::Operation::MSC_WRITE)) {
+      pending_ok = false;
+      pending_failure_stage = 23U;
+    } else if(!virtual_fat::write_cached_sectors(
         deferred_write.block_addr,
         deferred_write.buffer,
         deferred_write.block_len
-      );
+      )) {
+      pending_ok = false;
+      pending_failure_stage = 24U;
+    }
     if(pending_ok) {
       pending_ok = apply_session_event(
           usb_disk_session::Event::WRITE_ACCEPTED).accepted;
+      if(!pending_ok) pending_failure_stage = 25U;
     }
     set_deferred_state(DeferredWriteState::EMPTY);
   }
@@ -670,6 +690,10 @@ bool deinit(void) {
   // для следующего сеанса уже очищен.
   const virtual_fat::CommitResult result = finalize_session();
   const bool ok = pending_ok && result == virtual_fat::CommitResult::OK;
+  if(!ok && virtual_fat::diagnostic().code == virtual_fat::ErrorCode::NONE) {
+    virtual_fat::report_startup_failure(pending_failure_stage != 0
+        ? pending_failure_stage : 28U, "deinit");
+  }
   if(ok && clean_host_eject) clear_startup_diagnostic();
   return ok;
 }
