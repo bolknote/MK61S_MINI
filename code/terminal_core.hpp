@@ -251,7 +251,12 @@ inline Assembly parse_assembly(const char* args, isize current_address, const ch
     if(is_end(*p)) break;
     const char* token = p;
     while(!is_space(*p) && !is_end(*p)) p++;
-    const isize opcode = find_mnemonic(isa, token, (usize) (p - token));
+    isize opcode = find_mnemonic(isa, token, (usize) (p - token));
+    if(opcode < 0 && p - token == 2) {
+      const int high = digit_value(token[0], 16);
+      const int low = digit_value(token[1], 16);
+      if(high >= 0 && low >= 0) opcode = (isize) ((high << 4) | low);
+    }
     if(opcode < 0 || opcode > 255) {
       result.error = AssemblyError::UNKNOWN_MNEMONIC;
       result.error_at = token;

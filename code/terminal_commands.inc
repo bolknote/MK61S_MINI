@@ -15,7 +15,7 @@ COMMAND("isa", CMD_ISA, "справочник мнемоник ассембле�
 COMMAND("asm", CMD_ASM, "asm [адрес] <мнемоники> — ассемблировать")
 COMMAND("ins", CMD_INS, "ins <шаг> <код> — вставить команду")
 COMMAND("hin", CMD_HIN, "hin <адрес> <hex> — записать память программ")
-COMMAND("hout", CMD_HOUT, "память программ в виде команд hin")
+COMMAND("hout", CMD_HOUT, "hout [адрес число] — память программ в виде команд hin")
 COMMAND("reg", CMD_REG_DUMP, "показать регистры R0…RE")
 COMMAND("stk", CMD_STACK, "показать стек X,Y,Z,T,X1")
 COMMAND("poke", CMD_POKE, "poke <X|Y|Z|T> <число> — записать стек")

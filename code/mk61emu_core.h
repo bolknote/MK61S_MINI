@@ -38,6 +38,8 @@
 static  constexpr usize MK61_NOP= 0x54; // NOP
 static  constexpr u8 MK61_EXCHANGE_DATA_WITH_MS = 0x55U;    // К 1 / К ПВ
 static  constexpr u8 MK61_EXCHANGE_PROGRAM_WITH_MS = 0x56U; // К 2 / К ОД
+static  constexpr u8 MK61_FAR_ADDRESS_PREFIX = 0x1FU;
+static  constexpr u8 MK61_DISPLAY_PREFIX = 0x2FU;
 static  constexpr usize MK61_CLASSIC_PROGRAM_STEPS = 105;
 static  constexpr usize MK61_EXPANDED_PROGRAM_STEPS = MK61_CLASSIC_PROGRAM_STEPS + 7;
 static  constexpr usize MK61_PROGRAM_STEPS_PER_PAGE = 7;
@@ -363,7 +365,7 @@ namespace core_61 {
   // Холодный снимок хранит 4-битные регистры по два в байте, а внутренние
   // указатели — как проверяемые 16-битные смещения. Поэтому его размер одинаков
   // на MCU и host и не заставляет постоянно держать разложенный hot-state.
-  static constexpr usize CONTEXT_BUFFER_SIZE = 672;
+  static constexpr usize CONTEXT_BUFFER_SIZE = 896;
   struct alignas(8) ContextBuffer {
     u8 bytes[CONTEXT_BUFFER_SIZE];
   };
@@ -417,6 +419,26 @@ namespace core_61 {
   //  - дисплейный буфер buffer обновляется только измененным содержимым
   //  - display_symbols - массив набор символов замены знаков индикатора 
   extern    bool  update_indicator(char* buffer, const char* display_symbols);
+
+  // The optional 112-step program mode accepts an absolute 0000..9999
+  // address.  Bank zero is the ordinary calculator program; other 112-byte
+  // banks are allocated only when first written or entered.
+  static constexpr u16 EXTENDED_ADDRESS_LIMIT = 10000;
+  static constexpr u8 EXTENDED_DISPLAY_CELLS = 12;
+  extern u8 active_program_bank(void);
+  extern void clear_extended_program_banks(void);
+  extern bool read_absolute_program(u16 address, u8& opcode);
+  extern bool write_absolute_program(u16 address, u8 opcode);
+
+  // Screen state is independent of the arithmetic X register.  A null frame
+  // means normal numeric rendering; otherwise each byte is A..G plus dot.
+  extern const u8* segment_display_frame(void);
+  extern u32 extended_display_revision(void);
+  extern bool extended_display_auto(void);
+  extern bool extended_display_segmented(void);
+  extern u8 extended_display_cursor(void);
+  extern void publish_x_to_extended_display(void);
+  extern bool extended_program_error(void);
 }
 
 /*

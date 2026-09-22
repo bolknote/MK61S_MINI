@@ -310,7 +310,7 @@ class class_terminal {
 
     bool GetHexString(const char* args);
 
-    void  PutHexString(void);
+    void  PutHexString(const char* args);
 
     bool Assembler(void);
 

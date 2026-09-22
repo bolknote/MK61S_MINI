@@ -325,6 +325,17 @@ static void test_assembler_accepts_final_mnemonic_and_is_atomic_input(void) {
 
   assembly = terminal_core::parse_assembly("0111 1 1", 0, isa, 112);
   assert(assembly.error == terminal_core::AssemblyError::TOO_LONG);
+
+  assembly = terminal_core::parse_assembly("0250 1 add", 0, isa, 10000);
+  assert(assembly.error == terminal_core::AssemblyError::NONE);
+  assert(assembly.address == 250 && assembly.count == 2);
+  assembly = terminal_core::parse_assembly("0000 1F 51 02 50", 0, isa, 10000);
+  assert(assembly.error == terminal_core::AssemblyError::NONE);
+  assert(assembly.address == 0 && assembly.count == 4);
+  assert(assembly.opcodes[0] == 0x1F && assembly.opcodes[1] == 0x51 &&
+         assembly.opcodes[2] == 0x02 && assembly.opcodes[3] == 0x50);
+  assembly = terminal_core::parse_assembly("9999 1 1", 0, isa, 10000);
+  assert(assembly.error == terminal_core::AssemblyError::TOO_LONG);
 }
 
 static void test_terminal_mnemonic_front_coding(void) {

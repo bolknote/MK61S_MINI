@@ -11,6 +11,9 @@ class_calc_config config;
 using namespace kbd;
 
 #include "display.hpp"
+#if MK61_FIXED_CALCULATOR_FACE
+#include "calculator_face.hpp"
+#endif
 #include "manual_lifetime.hpp"
 #include "lcd_gui.hpp"
 #include "mnemo.hpp"
@@ -295,6 +298,13 @@ void mk61_display_refresh(void) {
   // model as a fixed twelve-position VFD face, independent of menu/font
   // settings and external FMK files.
   main_lcd().beginCalculatorFace();
+  calculator_face::setSegmentFrame(core_61::segment_display_frame());
+  static u32 last_rendered_extended_display_revision = ~0UL;
+  const u32 revision = core_61::extended_display_revision();
+  if(revision != last_rendered_extended_display_revision) {
+    last_rendered_extended_display_revision = revision;
+    main_lcd().invalidateCalculatorFace();
+  }
 #endif
   // Обновление дисплея МК61, если изменилась информация на экране
     if(!core_61::update_indicator(&display_text[0], display_symbols)) {
@@ -617,6 +627,14 @@ inline void monitor_switch_angle_unit(t_time_ms now) {
 
 inline void mk61_process(void) {
   static bool m61_display_was_owned = false;
+#if MK61_FIXED_CALCULATOR_FACE
+  static u32 last_extended_display_revision = 0;
+  const u32 display_revision = core_61::extended_display_revision();
+  if(display_revision != last_extended_display_revision) {
+      last_extended_display_revision = display_revision;
+      calculator_display_dirty = true;
+  }
+#endif
   mk61_automate();
   if(core_61::is_displayed()) {
       core_61::clear_displayed();

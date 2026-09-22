@@ -15,6 +15,9 @@ static constexpr u8 PAGE_HEIGHT = 8;
 static constexpr u8 PAGE_COUNT = HEIGHT / PAGE_HEIGHT;
 static constexpr usize FRAME_BYTES = (usize) WIDTH * PAGE_COUNT;
 
+// Null restores the ordinary numeric X2 face.  The pointed-to twelve-byte
+// frame must remain valid until the next call (the core owns it).
+void setSegmentFrame(const u8* masks);
 void renderPage(const text_screen::Grid& grid, u8 page, u8 out[WIDTH]);
 void renderFrame(const text_screen::Grid& grid, u8 out[FRAME_BYTES]);
 

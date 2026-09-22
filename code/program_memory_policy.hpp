@@ -7,9 +7,12 @@ namespace program_memory_policy {
 
 static constexpr u8 STORE_REGISTER_F = 0x4FU;
 static constexpr u8 LOAD_REGISTER_F = 0x6FU;
+static constexpr u8 FAR_ADDRESS_PREFIX = 0x1FU;
+static constexpr u8 DISPLAY_PREFIX = 0x2FU;
 
 constexpr bool opcode_needs_expanded_memory(u8 opcode) {
   return opcode == STORE_REGISTER_F || opcode == LOAD_REGISTER_F ||
+      opcode == FAR_ADDRESS_PREFIX || opcode == DISPLAY_PREFIX ||
       opcode == MK61_EXCHANGE_DATA_WITH_MS ||
       opcode == MK61_EXCHANGE_PROGRAM_WITH_MS;
 }

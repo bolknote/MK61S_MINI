@@ -191,6 +191,17 @@ void MK61Display::beginCalculatorFace(void) {
 #endif
   markScreenDirty();
 }
+
+void MK61Display::invalidateCalculatorFace(void) {
+  if(!calculatorFaceActive()) return;
+#if MK61_ENABLE_USB_SCREEN
+  if(usbScreenActive()) {
+    usb_surface.invalidateCalculatorFace();
+    return;
+  }
+#endif
+  markScreenDirty();
+}
 #endif
 
 #if MK61_PROPORTIONAL_UI_FONTS

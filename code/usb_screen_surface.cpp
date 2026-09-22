@@ -265,6 +265,10 @@ void Surface::beginCalculatorFace(void) {
   cursor_next_blink_ms_ = 0;
   markDirty();
 }
+
+void Surface::invalidateCalculatorFace(void) {
+  if(active_ && calculator_face_active_) markDirty();
+}
 #endif
 
 void Surface::seedText(const text_screen::Grid& source,

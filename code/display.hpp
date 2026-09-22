@@ -251,11 +251,13 @@ class MK61Display : public Print {
 #if MK61_FIXED_CALCULATOR_FACE
     // Independent of the menu face and intentionally not configurable.
     void beginCalculatorFace(void);
+    void invalidateCalculatorFace(void);
     bool calculatorFaceActive(void) const {
       return (ui_font_state & 16U) != 0;
     }
 #else
     void beginCalculatorFace(void) {}
+    void invalidateCalculatorFace(void) {}
     bool calculatorFaceActive(void) const { return false; }
 #endif
     void setCursor(u8 x, u8 y);

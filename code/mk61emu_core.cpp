@@ -1087,6 +1087,407 @@ static void finish_active_mk61_command(void) {
 
 static constexpr usize MK61_TETRADES_PER_PAGE = 14U;
 static constexpr usize MK61_NUMERIC_TETRADES = 12U;
+static constexpr usize EXTENDED_BANK_COUNT =
+    (core_61::EXTENDED_ADDRESS_LIMIT + core_61::MAX_PROGRAM_STEP - 1U) /
+    core_61::MAX_PROGRAM_STEP;
+static constexpr u8 EXTENDED_RETURN_DEPTH = 64;
+static const char EXTENDED_ASCII_DIGITS[] = "0123456789-LCGE ";
+static const usize indicator_pos[12] =
+    {24, 21, 18, 15, 12, 9, 6, 3, 0, 33, 30, 27};
+
+struct ExtendedProgramState {
+  u8* banks[EXTENDED_BANK_COUNT];
+  u16 return_addresses[EXTENDED_RETURN_DEPTH];
+  u8 active_bank;
+  u8 return_depth;
+  u8 cursor;
+  u8 segment_masks[core_61::EXTENDED_DISPLAY_CELLS];
+  u8 held_digits[core_61::EXTENDED_DISPLAY_CELLS];
+  u8 held_comma;
+  bool auto_display;
+  bool segment_display;
+  bool numeric_strobe_pending;
+  bool error;
+  u32 display_revision;
+};
+
+static ExtendedProgramState extended_program = {};
+
+static u8* ensure_extended_bank(u8 bank) {
+  if(bank >= EXTENDED_BANK_COUNT) return nullptr;
+  if(extended_program.banks[bank] != nullptr) return extended_program.banks[bank];
+  u8* page = (u8*) malloc(core_61::CODE_PAGE_BUFFER_SIZE);
+  if(page == nullptr) return nullptr;
+  memset(page, 0x50, core_61::MAX_PROGRAM_STEP);
+  page[core_61::MAX_PROGRAM_STEP] = 0;
+  extended_program.banks[bank] = page;
+  return page;
+}
+
+static bool switch_extended_bank(u8 bank) {
+  if(bank >= EXTENDED_BANK_COUNT) return false;
+  if(bank == extended_program.active_bank) return true;
+  u8* saved = ensure_extended_bank(extended_program.active_bank);
+  if(saved == nullptr) return false;
+  // Both operations touch only the program track; data registers and Ms stay
+  // live across bank switches.  In particular, K2 exchanges this active bank.
+  core_61::get_code_page(saved);
+  u8 incoming[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  if(extended_program.banks[bank] == nullptr) {
+    memset(incoming, 0x50, core_61::MAX_PROGRAM_STEP);
+  } else {
+    memcpy(incoming, extended_program.banks[bank], core_61::MAX_PROGRAM_STEP);
+  }
+  core_61::set_code_page(incoming);
+  extended_program.active_bank = bank;
+  return true;
+}
+
+static bool set_extended_next_pc(u16 absolute) {
+  if(absolute >= core_61::EXTENDED_ADDRESS_LIMIT) return false;
+  const u8 bank = (u8) (absolute / core_61::MAX_PROGRAM_STEP);
+  const u8 offset = (u8) (absolute % core_61::MAX_PROGRAM_STEP);
+  if(!switch_extended_bank(bank)) return false;
+  core_61::set_IP((u8) ((offset + core_61::MAX_PROGRAM_STEP - 1U) %
+                         core_61::MAX_PROGRAM_STEP));
+  return true;
+}
+
+static bool parse_unsigned_mk61_word(const char text[15], u16 limit,
+                                     u16& output) {
+  if(text == nullptr || text[0] == '-') return false;
+  u32 mantissa = 0;
+  for(u8 index = 0; index < 8; index++) {
+    const char digit = text[index == 0 ? 1 : index + 2];
+    if(digit < '0' || digit > '9') return false;
+    mantissa = mantissa * 10U + (u32) (digit - '0');
+  }
+  if(text[12] < '0' || text[12] > '9' ||
+     text[13] < '0' || text[13] > '9') return false;
+  int exponent = (text[12] - '0') * 10 + (text[13] - '0');
+  if(text[11] == '-') exponent = -exponent;
+  else if(text[11] != ' ') return false;
+  if(exponent < 7) {
+    for(int index = exponent; index < 7; index++) {
+      if(mantissa % 10U != 0) return false;
+      mantissa /= 10U;
+    }
+  } else {
+    for(int index = 7; index < exponent; index++) {
+      if(mantissa >= limit || mantissa > (u32) (limit - 1U) / 10U)
+        return false;
+      mantissa *= 10U;
+    }
+  }
+  if(mantissa >= limit) return false;
+  output = (u16) mantissa;
+  return true;
+}
+
+static bool read_x_unsigned(u16 limit, u16& output) {
+  char text[15] = {};
+  read_stack_register(stack::X, text, EXTENDED_ASCII_DIGITS);
+  return parse_unsigned_mk61_word(text, limit, output);
+}
+
+static bool read_register_unsigned(u8 reg, u16 limit, u16& output) {
+  char text[15] = {};
+  MK61Emu_ReadRegister(reg, text, EXTENDED_ASCII_DIGITS);
+  return parse_unsigned_mk61_word(text, limit, output);
+}
+
+static void write_register_unsigned(u8 reg, u16 value) {
+  const usize base = (usize) reg * MK61_MEMORY_PAGE_TETRADES;
+  u8 exponent = 0;
+  u16 scaled = value;
+  while(scaled >= 10U) { scaled /= 10U; exponent++; }
+  char digits[8] = {'0','0','0','0','0','0','0','0'};
+  if(value != 0) {
+    for(int index = (int) exponent; index >= 0; index--) {
+      digits[index] = (char) ('0' + value % 10U);
+      value /= 10U;
+    }
+  }
+  for(u8 index = 0; index < 8; index++)
+    ringM[base + 21U - (usize) index * 3U] = (u8) (digits[index] - '0');
+  ringM[base + 24] = 0;
+  ringM[base + 27] = exponent % 10U;
+  ringM[base + 30] = exponent / 10U;
+  ringM[base + 33] = 0;
+}
+
+static void capture_extended_indicator(void) {
+  for(u8 index = 0; index < core_61::EXTENDED_DISPLAY_CELLS; index++)
+    extended_program.held_digits[index] = m_IK1302.R[indicator_pos[index]];
+  extended_program.held_comma = (u8) m_IK1302.comma;
+}
+
+static bool capture_x_for_numeric_display(void) {
+  char value[15] = {};
+  u8 digits[core_61::EXTENDED_DISPLAY_CELLS] = {};
+  read_stack_register(stack::X, value, EXTENDED_ASCII_DIGITS);
+  if((value[0] != ' ' && value[0] != '-') ||
+     (value[11] != ' ' && value[11] != '-')) return false;
+  digits[0] = value[0] == '-' ? 10U : 15U;
+  for(u8 index = 1; index <= 8; ++index) {
+    const char digit = value[index == 1 ? 1 : index + 1];
+    if(digit < '0' || digit > '9') return false;
+    digits[index] = (u8) (digit - '0');
+  }
+  digits[9] = value[11] == '-' ? 10U : 15U;
+  for(u8 index = 10; index < 12; ++index) {
+    const char digit = value[index + 2];
+    if(digit < '0' || digit > '9') return false;
+    digits[index] = (u8) (digit - '0');
+  }
+  memcpy(extended_program.held_digits, digits, sizeof(digits));
+  extended_program.held_comma = 8; // after the first mantissa digit
+  extended_program.numeric_strobe_pending = true;
+  extended_program.display_revision++;
+  return true;
+}
+
+static bool write_x_segment(bool advance);
+
+static bool read_bcd_absolute_address(u16 address, u16& target) {
+  u8 high = 0;
+  u8 low = 0;
+  if(!core_61::read_absolute_program(address, high) ||
+     !core_61::read_absolute_program((u16) (address + 1U), low) ||
+     (high >> 4) > 9 || (high & 0x0FU) > 9 ||
+     (low >> 4) > 9 || (low & 0x0FU) > 9) return false;
+  target = (u16) ((high >> 4) * 1000U + (high & 0x0FU) * 100U +
+                  (low >> 4) * 10U + (low & 0x0FU));
+  return target < core_61::EXTENDED_ADDRESS_LIMIT;
+}
+
+static bool read_near_address(u8 bank, u8 local, u16& target) {
+  u8 encoded = 0;
+  if(!core_61::read_absolute_program(
+         (u16) (bank * core_61::MAX_PROGRAM_STEP + local), encoded))
+    return false;
+  // The original ROM computes high_nibble*10 + low_nibble; the low nibble is
+  // not checked as BCD.  Thus an ordinary CALL operand 1F means step 25.
+  const u8 offset = (u8) ((encoded >> 4) * 10U + (encoded & 0x0FU));
+  if(offset >= core_61::MAX_PROGRAM_STEP) return false;
+  target = (u16) (bank * core_61::MAX_PROGRAM_STEP + offset);
+  return true;
+}
+
+static bool x_condition(u8 opcode, bool& branch) {
+  char text[15] = {};
+  read_stack_register(stack::X, text, EXTENDED_ASCII_DIGITS);
+  bool zero = true;
+  for(u8 index = 0; index < 8; index++) {
+    const char digit = text[index == 0 ? 1 : index + 2];
+    if(digit < '0' || digit > '9') return false;
+    if(digit != '0') zero = false;
+  }
+  const bool negative = text[0] == '-' && !zero;
+  switch(opcode) {
+    // These MK-61 opcodes continue to the next instruction when their named
+    // predicate holds; the address operand is taken when it does not.
+    case 0x57: case 0x70: branch = zero; return true;
+    case 0x59: case 0x90: branch = negative; return true;
+    case 0x5C: case 0xC0: branch = !negative; return true;
+    case 0x5E: case 0xE0: branch = !zero; return true;
+    default: return false;
+  }
+}
+
+static bool read_indirect_target(u8 reg, u16 limit, u16& target) {
+  if(reg > 0x0FU) return false;
+  u16 value = 0;
+  if(!read_register_unsigned(reg, limit, value)) return false;
+  if(reg <= 3U) {
+    if(value == 0) return false;
+    value--;
+    write_register_unsigned(reg, value);
+  } else if(reg <= 6U) {
+    if(value >= limit - 1U) return false;
+    value++;
+    write_register_unsigned(reg, value);
+  }
+  target = value;
+  return true;
+}
+
+static bool evaluate_far_condition(u8 opcode, bool& branch) {
+  if(opcode == 0x58 || opcode == 0x5A ||
+     opcode == 0x5B || opcode == 0x5D) {
+    const u8 reg = opcode == 0x58 ? 2U :
+                   opcode == 0x5A ? 3U :
+                   opcode == 0x5B ? 1U : 0U;
+    u16 value = 0;
+    if(!read_register_unsigned(reg, core_61::EXTENDED_ADDRESS_LIMIT, value) ||
+       value == 0) return false;
+    if(value == 1U) {
+      branch = false;
+      return true;
+    }
+    value--;
+    write_register_unsigned(reg, value);
+    branch = true;
+    return true;
+  }
+  return x_condition(opcode, branch);
+}
+
+static bool execute_far_prefix(u8 local_address) {
+  const u16 absolute = (u16) (extended_program.active_bank *
+      core_61::MAX_PROGRAM_STEP + local_address);
+  u8 opcode = 0;
+  if(!core_61::read_absolute_program((u16) (absolute + 1U), opcode))
+    return false;
+
+  const bool direct = opcode == 0x51 || opcode == 0x53 ||
+      (opcode >= 0x57 && opcode <= 0x5E);
+  const bool indirect = (opcode >= 0x70 && opcode <= 0xAF) ||
+      (opcode >= 0xC0 && opcode <= 0xCF) ||
+      (opcode >= 0xE0 && opcode <= 0xEF);
+  if(!direct && !indirect) return false;
+  const u16 next = (u16) (absolute + (direct ? 4U : 2U));
+  if(next >= core_61::EXTENDED_ADDRESS_LIMIT) return false;
+  const bool call = opcode == 0x53 || (opcode & 0xF0U) == 0xA0U;
+  if(call && extended_program.return_depth >= EXTENDED_RETURN_DEPTH)
+    return false;
+
+  bool branch = true;
+  if((opcode >= 0x57 && opcode <= 0x5E) ||
+     (opcode >= 0x70 && opcode <= 0x7F) ||
+     (opcode >= 0x90 && opcode <= 0x9F) ||
+     (opcode >= 0xC0 && opcode <= 0xCF) ||
+     (opcode >= 0xE0 && opcode <= 0xEF)) {
+    const u8 condition_opcode = direct ? opcode : (u8) (opcode & 0xF0U);
+    if(!evaluate_far_condition(condition_opcode, branch)) return false;
+  }
+  if(!branch) return set_extended_next_pc(next);
+
+  u16 target = 0;
+  if(direct) {
+    if(!read_bcd_absolute_address((u16) (absolute + 2U), target))
+      return false;
+  } else {
+    if(!read_indirect_target((u8) (opcode & 0x0FU),
+                             core_61::EXTENDED_ADDRESS_LIMIT, target))
+      return false;
+  }
+  if(!set_extended_next_pc(target)) return false;
+  if(call) extended_program.return_addresses[extended_program.return_depth++] =
+      next;
+  return true;
+}
+
+static bool execute_display_prefix(u8 local_address) {
+  const u16 absolute = (u16) (extended_program.active_bank *
+      core_61::MAX_PROGRAM_STEP + local_address);
+  const u16 next = (u16) (absolute + 2U);
+  u8 opcode = 0;
+  if(next >= core_61::EXTENDED_ADDRESS_LIMIT ||
+     !core_61::read_absolute_program((u16) (absolute + 1U), opcode))
+    return false;
+
+  if(opcode <= 0x0BU) {
+    extended_program.cursor = opcode;
+  } else {
+    switch(opcode) {
+      case 0x0D: // Cx: clear the display, not the arithmetic X.
+        memset(extended_program.segment_masks, 0,
+               sizeof(extended_program.segment_masks));
+        memset(extended_program.held_digits, 15,
+               sizeof(extended_program.held_digits));
+        extended_program.held_comma = 0;
+        extended_program.auto_display = false;
+        extended_program.numeric_strobe_pending = false;
+        extended_program.display_revision++;
+        break;
+      case 0x0E: // ENTER: publish X through the selected view.
+        if(extended_program.segment_display) {
+          if(!write_x_segment(true)) return false;
+        } else {
+          if(!capture_x_for_numeric_display()) return false;
+        }
+        break;
+      case 0x25: // Rotate one cell without changing the frame.
+        extended_program.cursor = (u8) ((extended_program.cursor + 1U) %
+            core_61::EXTENDED_DISPLAY_CELLS);
+        break;
+      case 0x50: // C/P: stop automatic X publication.
+        if(extended_program.auto_display) {
+          capture_extended_indicator();
+          extended_program.auto_display = false;
+          extended_program.numeric_strobe_pending = false;
+          extended_program.display_revision++;
+        }
+        break;
+      case 0x52: // В/О: return to automatic X publication.
+        extended_program.auto_display = true;
+        extended_program.numeric_strobe_pending = false;
+        extended_program.display_revision++;
+        break;
+      case 0x2A: // numeric -> segment representation.
+        extended_program.segment_display = true;
+        extended_program.numeric_strobe_pending = false;
+        extended_program.display_revision++;
+        break;
+      case 0x30: // segment -> numeric representation.
+        extended_program.segment_display = false;
+        extended_program.display_revision++;
+        break;
+      default: return false;
+    }
+  }
+  return set_extended_next_pc(next);
+}
+
+static bool execute_virtual_control(u8 local_address, u8 opcode) {
+  const u8 bank = extended_program.active_bank;
+  if(opcode == 0x52) {
+    if(extended_program.return_depth == 0) return false;
+    const u16 destination =
+        extended_program.return_addresses[extended_program.return_depth - 1U];
+    if(!set_extended_next_pc(destination)) return false;
+    extended_program.return_depth--;
+    return true;
+  }
+  if(extended_program.return_depth >= EXTENDED_RETURN_DEPTH) return false;
+  u16 destination = 0;
+  u16 next = 0;
+  if(opcode == 0x53) {
+    const u8 operand = (u8) ((local_address + 1U) %
+                             core_61::MAX_PROGRAM_STEP);
+    if(!read_near_address(bank, operand, destination)) return false;
+    next = (u16) (bank * core_61::MAX_PROGRAM_STEP +
+                  (local_address + 2U) % core_61::MAX_PROGRAM_STEP);
+  } else if((opcode & 0xF0U) == 0xA0U) {
+    u16 offset = 0;
+    if(!read_indirect_target((u8) (opcode & 0x0FU),
+                             core_61::MAX_PROGRAM_STEP, offset)) return false;
+    destination = (u16) (bank * core_61::MAX_PROGRAM_STEP + offset);
+    next = (u16) (bank * core_61::MAX_PROGRAM_STEP +
+                  (local_address + 1U) % core_61::MAX_PROGRAM_STEP);
+  } else {
+    return false;
+  }
+  if(!set_extended_next_pc(destination)) return false;
+  extended_program.return_addresses[extended_program.return_depth++] = next;
+  return true;
+}
+
+static bool write_x_segment(bool advance) {
+  u16 mask = 0;
+  if(!read_x_unsigned(256, mask)) return false;
+  const u8 cursor = extended_program.cursor;
+  // The original indicator has only a minus segment at positions 0 and 9.
+  if((cursor == 0 || cursor == 9) && mask != 0 && mask != 0x40U)
+    return false;
+  const bool changed = extended_program.segment_masks[cursor] != (u8) mask;
+  extended_program.segment_masks[cursor] = (u8) mask;
+  if(advance) extended_program.cursor =
+      (u8) ((cursor + 1U) % core_61::EXTENDED_DISPLAY_CELLS);
+  if(changed) extended_program.display_revision++;
+  return true;
+}
 
 static inline bool extended_ms_command(u8 opcode) {
   return expanded_program_mode &&
@@ -1224,9 +1625,37 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     if(dispatch_mk61_program_boundary(program_address, opcode)) return true;
 
     u8 executed_opcode = opcode;
-    if(has_mk61_command_target(opcode) || extended_ms_command(opcode)) {
+    const bool built_in_extended = expanded_program_mode &&
+        (opcode == MK61_FAR_ADDRESS_PREFIX ||
+         opcode == MK61_DISPLAY_PREFIX || opcode == 0x53U ||
+         (opcode >= 0xA0U && opcode <= 0xAFU) ||
+         (opcode == 0x52U && extended_program.return_depth > 0));
+    if(has_mk61_command_target(opcode) || extended_ms_command(opcode) ||
+       built_in_extended) {
       executed_opcode = begin_mk61_command(
           opcode, core_61::Mk61CommandSource::PROGRAM);
+      const u8 semantic_opcode = active_mk61_command.executed_opcode;
+      if(expanded_program_mode) {
+        bool handled = false;
+        bool success = false;
+        if(semantic_opcode == MK61_FAR_ADDRESS_PREFIX) {
+          handled = true;
+          success = execute_far_prefix(program_address);
+        } else if(semantic_opcode == MK61_DISPLAY_PREFIX) {
+          handled = true;
+          success = execute_display_prefix(program_address);
+        } else if(semantic_opcode == 0x53U ||
+                  (semantic_opcode >= 0xA0U && semantic_opcode <= 0xAFU) ||
+                  (semantic_opcode == 0x52U &&
+                   extended_program.return_depth > 0)) {
+          handled = true;
+          success = execute_virtual_control(program_address, semantic_opcode);
+        }
+        if(handled) {
+          if(!success) extended_program.error = true;
+          executed_opcode = success ? (u8) MK61_NOP : 0x50U;
+        }
+      }
       encode_mk61_opcode(executed_opcode);
     }
     if(core_61::len_code_command(executed_opcode) == 2) {
@@ -3310,8 +3739,6 @@ const char* read_stack_register(stack reg, char cvalue[15], const char* symbols_
 
 //                                           мантисса                  |  порядок
 //                                       0   1   2   3   4  5  6  7  8   9  10  11
-static const usize indicator_pos[12] = {24, 21, 18, 15, 12, 9, 6, 3, 0, 33, 30, 27};
-
 namespace ring_M {
 
 const K745* active_chips(void) {
@@ -3339,6 +3766,56 @@ void set_expanded_program_mode(bool enable) {
 
 usize program_steps(void) {
   return expanded_program_mode ? MAX_PROGRAM_STEP : CLASSIC_PROGRAM_STEP;
+}
+
+u8 active_program_bank(void) {
+  return extended_program.active_bank;
+}
+
+void clear_extended_program_banks(void) {
+  if(extended_program.active_bank != 0) {
+    u8 bank_zero[CODE_PAGE_BUFFER_SIZE] = {};
+    if(extended_program.banks[0] != nullptr)
+      memcpy(bank_zero, extended_program.banks[0], MAX_PROGRAM_STEP);
+    else
+      memset(bank_zero, 0x50, MAX_PROGRAM_STEP);
+    set_code_page(bank_zero);
+  }
+  for(usize index = 0; index < EXTENDED_BANK_COUNT; index++) {
+    free(extended_program.banks[index]);
+    extended_program.banks[index] = nullptr;
+  }
+  extended_program.active_bank = 0;
+  extended_program.return_depth = 0;
+}
+
+bool read_absolute_program(u16 address, u8& opcode) {
+  if(address >= EXTENDED_ADDRESS_LIMIT ||
+     (!expanded_program_mode && address >= CLASSIC_PROGRAM_STEP)) return false;
+  const u8 bank = (u8) (address / MAX_PROGRAM_STEP);
+  const u8 offset = (u8) (address % MAX_PROGRAM_STEP);
+  if(bank == extended_program.active_bank) {
+    opcode = get_code(get_ring_address(offset));
+  } else {
+    const u8* page = extended_program.banks[bank];
+    opcode = page == nullptr ? 0x50U : page[offset];
+  }
+  return true;
+}
+
+bool write_absolute_program(u16 address, u8 opcode) {
+  if(address >= EXTENDED_ADDRESS_LIMIT ||
+     (!expanded_program_mode && address >= CLASSIC_PROGRAM_STEP)) return false;
+  const u8 bank = (u8) (address / MAX_PROGRAM_STEP);
+  const u8 offset = (u8) (address % MAX_PROGRAM_STEP);
+  if(bank == extended_program.active_bank) {
+    MK61Emu_SetCode((int) get_ring_address(offset), opcode);
+    return true;
+  }
+  u8* page = ensure_extended_bank(bank);
+  if(page == nullptr) return false;
+  page[offset] = opcode;
+  return true;
 }
 
 usize ring_size(void) {
@@ -3420,6 +3897,7 @@ void step(void) {
     m_IK1303.key_y = 1;
     m_IK1303.key_x = m_emu.m_angle_unit;
     ::cycle();
+    if(m_IK1302.displayed) publish_x_to_extended_display();
     {
       MK61_PROFILE_SCOPE(dwt_profiler::Point::CORE_STEP_FINISH);
       m_IK1302.key_x = 0;
@@ -3566,6 +4044,15 @@ struct CoreContextSnapshot {
   u8 backstep_comma;
   u8 state_flags;
   u8 call_operand_depth;
+  u16 extended_return_addresses[EXTENDED_RETURN_DEPTH];
+  u32 extended_display_revision;
+  u8 extended_segment_masks[core_61::EXTENDED_DISPLAY_CELLS];
+  u8 extended_held_digits[core_61::EXTENDED_DISPLAY_CELLS];
+  u8 extended_active_bank;
+  u8 extended_return_depth;
+  u8 extended_cursor;
+  u8 extended_held_comma;
+  u8 extended_flags;
 };
 
 static_assert((sizeof(ringM) & 1U) == 0,
@@ -3573,8 +4060,6 @@ static_assert((sizeof(ringM) & 1U) == 0,
 static_assert(sizeof(PackedIK1302) == 100, "IK1302 snapshot layout changed");
 static_assert(sizeof(PackedIK1303) == 88, "IK1303 snapshot layout changed");
 static_assert(sizeof(PackedIK1306) == 80, "IK1306 snapshot layout changed");
-static_assert(sizeof(CoreContextSnapshot) == core_61::CONTEXT_BUFFER_SIZE,
-              "public core context size must match its packed representation");
 static_assert(sizeof(CoreContextSnapshot) <= core_61::CONTEXT_BUFFER_SIZE,
               "core context does not fit the public opaque buffer");
 
@@ -3731,6 +4216,10 @@ static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
              (u8) core_61::Mk61CommandSource::PROGRAM &&
          (snapshot.state_flags & ~CONTEXT_STATE_MASK) == 0 &&
          snapshot.call_operand_depth <= MK61_CALL_OPERAND_DEPTH &&
+         snapshot.extended_active_bank < EXTENDED_BANK_COUNT &&
+         snapshot.extended_return_depth <= EXTENDED_RETURN_DEPTH &&
+         snapshot.extended_cursor < core_61::EXTENDED_DISPLAY_CELLS &&
+         (snapshot.extended_flags & ~0x0FU) == 0 &&
          valid_angle_unit(snapshot.emu.angle_unit);
 }
 
@@ -3865,6 +4354,23 @@ bool save_context(ContextBuffer& out) {
   memcpy(snapshot.call_operand_visits, mk61_call_operand_visits,
          sizeof(snapshot.call_operand_visits));
   snapshot.call_operand_depth = mk61_call_operand_depth;
+  memcpy(snapshot.extended_return_addresses,
+         extended_program.return_addresses,
+         sizeof(snapshot.extended_return_addresses));
+  snapshot.extended_display_revision = extended_program.display_revision;
+  memcpy(snapshot.extended_segment_masks, extended_program.segment_masks,
+         sizeof(snapshot.extended_segment_masks));
+  memcpy(snapshot.extended_held_digits, extended_program.held_digits,
+         sizeof(snapshot.extended_held_digits));
+  snapshot.extended_active_bank = extended_program.active_bank;
+  snapshot.extended_return_depth = extended_program.return_depth;
+  snapshot.extended_cursor = extended_program.cursor;
+  snapshot.extended_held_comma = extended_program.held_comma;
+  snapshot.extended_flags =
+      (extended_program.auto_display ? 0x01U : 0U) |
+      (extended_program.segment_display ? 0x02U : 0U) |
+      (extended_program.error ? 0x04U : 0U) |
+      (extended_program.numeric_strobe_pending ? 0x08U : 0U);
   memset(out.bytes, 0, sizeof(out.bytes));
   memcpy(out.bytes, &snapshot, sizeof(snapshot));
   return true;
@@ -3913,6 +4419,23 @@ bool restore_context(const ContextBuffer& saved) {
   memcpy(mk61_call_operand_visits, snapshot.call_operand_visits,
          sizeof(mk61_call_operand_visits));
   mk61_call_operand_depth = snapshot.call_operand_depth;
+  memcpy(extended_program.return_addresses,
+         snapshot.extended_return_addresses,
+         sizeof(snapshot.extended_return_addresses));
+  extended_program.display_revision = snapshot.extended_display_revision;
+  memcpy(extended_program.segment_masks, snapshot.extended_segment_masks,
+         sizeof(snapshot.extended_segment_masks));
+  memcpy(extended_program.held_digits, snapshot.extended_held_digits,
+         sizeof(snapshot.extended_held_digits));
+  extended_program.active_bank = snapshot.extended_active_bank;
+  extended_program.return_depth = snapshot.extended_return_depth;
+  extended_program.cursor = snapshot.extended_cursor;
+  extended_program.held_comma = snapshot.extended_held_comma;
+  extended_program.auto_display = (snapshot.extended_flags & 0x01U) != 0;
+  extended_program.segment_display = (snapshot.extended_flags & 0x02U) != 0;
+  extended_program.error = (snapshot.extended_flags & 0x04U) != 0;
+  extended_program.numeric_strobe_pending =
+      (snapshot.extended_flags & 0x08U) != 0;
   return true;
 }
 
@@ -3973,10 +4496,25 @@ bool random_seed_enabled(void) {
 }
 
 void enable(void) {
+    if(extended_program.active_bank != 0) {
+      if(u8* page = ensure_extended_bank(extended_program.active_bank))
+        core_61::get_code_page(page);
+    }
+    extended_program.active_bank = 0;
+    extended_program.return_depth = 0;
+    extended_program.cursor = 0;
+    extended_program.auto_display = true;
+    extended_program.segment_display = false;
+    extended_program.numeric_strobe_pending = false;
+    extended_program.error = false;
+    memset(extended_program.segment_masks, 0,
+           sizeof(extended_program.segment_masks));
+    extended_program.display_revision++;
     MK61Emu_Cleanup();
     //MK61Emu_SetAngleUnit(RADIAN);
     core_61::edit_program = false;
     core_61::clear_displayed();
+    capture_extended_indicator();
     backstep_comma_position = core_61::comma_position();
     dbghexln(CORE61," IK1302_AMK $", (isize) &IK1302_AND_AMK_ACTIVE, " IK1302_DCW $", (isize) &IK1302_DCW_ACTIVE, " IK1302_DCWA $", (isize) &IK1302_DCWA_ACTIVE);
     step();
@@ -3987,17 +4525,56 @@ bool  update_indicator(char* buffer, const char* display_symbols) { // возр�
 
   char next[INDICATOR_STRING_LENGTH] = {};
   usize out = 0;
-  const int comma_pos = 10 - (int) m_IK1302.comma;
+  const bool held = expanded_program_mode &&
+      (!extended_program.auto_display ||
+       extended_program.numeric_strobe_pending);
+  const int comma_pos = 10 - (int) (held
+      ? extended_program.held_comma : m_IK1302.comma);
   for(usize i = 0; i < 12; i++) {
     if((int) i == comma_pos && comma_pos < 10) next[out++] = '.';
-    next[out++] = display_symbol(display_symbols, m_IK1302.R[indicator_pos[i]]);
+    const u8 digit = held ? extended_program.held_digits[i]
+                          : m_IK1302.R[indicator_pos[i]];
+    next[out++] = display_symbol(display_symbols, digit);
   }
   next[out] = 0;
 
   bool match = true;
   for(usize i = 0; i <= out; i++) match &= buffer[i] == next[i];
   if(!match) memcpy(buffer, next, out + 1);
+  extended_program.numeric_strobe_pending = false;
   return match;
+}
+
+const u8* segment_display_frame(void) {
+  return expanded_program_mode && extended_program.segment_display
+      ? extended_program.segment_masks : nullptr;
+}
+
+u32 extended_display_revision(void) {
+  return extended_program.display_revision;
+}
+
+bool extended_display_auto(void) {
+  return !expanded_program_mode || extended_program.auto_display;
+}
+
+bool extended_display_segmented(void) {
+  return expanded_program_mode && extended_program.segment_display;
+}
+
+u8 extended_display_cursor(void) {
+  return extended_program.cursor;
+}
+
+void publish_x_to_extended_display(void) {
+  if(expanded_program_mode && extended_program.auto_display &&
+     extended_program.segment_display) {
+    (void) write_x_segment(false);
+  }
+}
+
+bool extended_program_error(void) {
+  return extended_program.error;
 }
 
 void  set_code_page(const uint8_t* page) {
@@ -4163,6 +4740,7 @@ void MK61Emu_SetCode(int addr, uint8_t data) {
 }
 
 void  MK61Emu_ClearCodePage(void) {
+    core_61::clear_extended_program_banks();
     const usize active_ring_size = core_61::ring_size();
     for(usize i = 41; i < active_ring_size; i+=42) {
       MK61Emu_SetCode(i, 0);

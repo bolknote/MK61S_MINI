@@ -624,9 +624,35 @@ void test_fixed_calculator_face() {
     }
   }
 
+  // A raw mask uses the same seven segment planes plus the decimal-point
+  // plane, independently of the text/X2 model underneath.
+  u8 raw_masks[12] = {};
+  raw_masks[1] = 0x81; // A and point in the second physical position
+  calculator_face::setSegmentFrame(raw_masks);
+  Frame raw_frame{};
+  calculator_face::renderFrame(model, raw_frame.data());
+  assert(framePixel(raw_frame, 16 + 6, 31));
+  assert(framePixel(raw_frame, 16 + 12, 51));
+  assert(!framePixel(raw_frame, 6, 31));
+  display.invalidateCalculatorFace();
+  expectFrame(raw_frame);
+  calculator_face::setSegmentFrame(nullptr);
+  display.invalidateCalculatorFace();
+  expectFrame(expected);
+
 #if MK61_ENABLE_USB_SCREEN
   assert(display.enterUsbScreen());
   assert(display.usbScreenActive() && display.calculatorFaceActive());
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
+                     expected.size()) == 0);
+  calculator_face::setSegmentFrame(raw_masks);
+  display.invalidateCalculatorFace();
+  display.flush();
+  assert(std::memcmp(display.usbScreenFramebuffer(), raw_frame.data(),
+                     raw_frame.size()) == 0);
+  calculator_face::setSegmentFrame(nullptr);
+  display.invalidateCalculatorFace();
+  display.flush();
   assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
                      expected.size()) == 0);
   display.setCursor(12, 1);

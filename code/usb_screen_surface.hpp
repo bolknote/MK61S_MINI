@@ -74,6 +74,7 @@ class Surface {
     // Mirrors the physical UC1609 calculator face pixel-for-pixel.  It is a
     // normal renderer role, not a modal fullscreen owner.
     void beginCalculatorFace(void);
+    void invalidateCalculatorFace(void);
     bool calculatorFaceActive(void) const { return calculator_face_active_; }
 #endif
 

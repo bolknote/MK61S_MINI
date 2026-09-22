@@ -12,6 +12,8 @@
 namespace calculator_face {
 namespace {
 
+const u8* segment_frame = nullptr;
+
 class PageCanvas {
  public:
   PageCanvas(u8 page, u8* pixels) : page_(page), pixels_(pixels) {}
@@ -153,6 +155,14 @@ void drawDecimalPage(u8* out, u8 page, i16 x) {
 
 void __attribute__((noinline)) drawIndicatorPage(
     u8* out, u8 page, const text_screen::Grid& grid) {
+  if(segment_frame != nullptr) {
+    for(u8 slot = 0; slot < DIGIT_COUNT; ++slot) {
+      const u8 mask = segment_frame[slot];
+      drawSegmentsPage(out, page, digitLeft(slot), (u8) (mask & 0x7FU),
+                       (mask & 0x80U) != 0);
+    }
+    return;
+  }
   u8 slot = 0;
   for(u8 col = 0; col < grid.cols(); ++col) {
     const u16 token = grid.cell(col, 1);
@@ -209,6 +219,10 @@ void drawService(PageCanvas& canvas, const text_screen::Grid& grid) {
 }
 
 } // namespace
+
+void setSegmentFrame(const u8* masks) {
+  segment_frame = masks;
+}
 
 void renderPage(const text_screen::Grid& grid, u8 page, u8 out[WIDTH]) {
   if(out == NULL || page >= PAGE_COUNT) return;

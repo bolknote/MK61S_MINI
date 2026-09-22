@@ -30,6 +30,12 @@ static void test_extended_only_commands(void) {
 
   code_page[0] = program_memory_policy::LOAD_REGISTER_F;
   assert(needs_expanded(code_page, 1));
+
+  code_page[0] = program_memory_policy::FAR_ADDRESS_PREFIX;
+  assert(needs_expanded(code_page, 1));
+
+  code_page[0] = program_memory_policy::DISPLAY_PREFIX;
+  assert(needs_expanded(code_page, 1));
 }
 
 static void test_exchange_bytes_used_as_operands(void) {
@@ -45,6 +51,12 @@ static void test_exchange_bytes_used_as_operands(void) {
     assert(!needs_expanded(code_page, 2));
 
     code_page[1] = MK61_EXCHANGE_PROGRAM_WITH_MS;
+    assert(!needs_expanded(code_page, 2));
+
+    code_page[1] = program_memory_policy::FAR_ADDRESS_PREFIX;
+    assert(!needs_expanded(code_page, 2));
+
+    code_page[1] = program_memory_policy::DISPLAY_PREFIX;
     assert(!needs_expanded(code_page, 2));
   }
 

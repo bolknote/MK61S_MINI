@@ -1001,6 +1001,341 @@ static void test_authentic_core_smoke(void) {
   check_near("2 ENTER 3 +", read_live_x(), 5.0, 1e-8);
 }
 
+static void test_extended_prefixes(void) {
+  std::printf("expanded far-address and display prefixes:\n");
+  static const u8 prefixes[] = {0x1FU, 0x2FU};
+  for(u8 prefix : prefixes) {
+    core_61::set_expanded_program_mode(false);
+    core_61::enable();
+    const u8 classic[] = {prefix, 0x07, 0x50};
+    run_program(classic, sizeof(classic));
+    check_near("classic prefix remains ROM command", read_live_x(), 7.0, 1e-8);
+    check_true("classic prefix does not select bank",
+        core_61::active_program_bank() == 0 &&
+        !core_61::extended_program_error());
+  }
+  static const u8 native_conditions[] = {0x57, 0x59, 0x5C, 0x5E};
+  for(u8 opcode : native_conditions) {
+    for(u8 index = 0; index < 3; ++index) {
+      core_61::set_expanded_program_mode(false);
+      core_61::enable();
+      if(index == 2) {
+        char minus_one[8] = {'1','0','0','0','0','0','0','0'};
+        write_stack_register(stack::X, '-', minus_one, 0);
+      } else {
+        press_matrix(digit_key(index));
+      }
+      const u8 native_condition[] = {opcode, 0x04, 0x07, 0x50, 0x08, 0x50};
+      run_program(native_condition, sizeof(native_condition));
+      const bool native_branches = core_61::get_IP() == 6;
+      check_true("native condition reference",
+          core_61::is_CALC() &&
+          (native_branches || core_61::get_IP() == 4));
+
+      core_61::set_expanded_program_mode(true);
+      core_61::enable();
+      core_61::clear_extended_program_banks();
+      if(index == 2) {
+        char minus_one[8] = {'1','0','0','0','0','0','0','0'};
+        write_stack_register(stack::X, '-', minus_one, 0);
+      } else {
+        press_matrix(digit_key(index));
+      }
+      check_true("write far condition target",
+          core_61::write_absolute_program(250, 0x50));
+      const u8 far_condition[] = {0x1F, opcode, 0x02, 0x50, 0x50};
+      run_program(far_condition, sizeof(far_condition));
+      check_true("far condition matches ROM",
+          core_61::active_program_bank() == (native_branches ? 2U : 0U) &&
+          !core_61::extended_program_error());
+    }
+  }
+  for(u8 value = 1; value <= 3; ++value) {
+    core_61::set_expanded_program_mode(false);
+    core_61::enable();
+    store_direct(0, value);
+    const u8 native_loop[] = {0x5D, 0x04, 0x07, 0x50, 0x08, 0x50};
+    run_program(native_loop, sizeof(native_loop));
+    const bool native_branches = core_61::get_IP() == 6;
+    core_61::set_expanded_program_mode(true);
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    store_direct(0, value);
+    check_true("write far loop target",
+        core_61::write_absolute_program(250, 0x50));
+    const u8 far_loop[] = {0x1F, 0x5D, 0x02, 0x50, 0x50};
+    run_program(far_loop, sizeof(far_loop));
+    char reg[15] = {};
+    MK61Emu_ReadRegister(0, reg, SYMBOLS);
+    check_true("far FL0 matches ROM branch",
+        core_61::active_program_bank() == (native_branches ? 2U : 0U) &&
+        !core_61::extended_program_error());
+    check_true("far FL0 counter value",
+        reg[1] == (char) ('0' + (value == 1 ? 1 : value - 1)) &&
+        reg[12] == '0' && reg[13] == '0');
+  }
+  core_61::set_expanded_program_mode(true);
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  store_direct(0, 0);
+  const u8 zero_loop[] = {0x1F, 0x5D, 0x02, 0x50, 0x50};
+  run_program(zero_loop, sizeof(zero_loop));
+  check_true("far FL0 zero counter is rejected",
+      core_61::is_CALC() && core_61::extended_program_error());
+  core_61::set_expanded_program_mode(true);
+  static const u8 prefix_operands[] = {0x1FU, 0x2FU};
+  for(u8 operand : prefix_operands) {
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    const u8 target = operand == 0x1FU ? 25U : 35U;
+    ProgramBoundaryProbe probe = {};
+    check_true("operand boundary hook installed",
+        core_61::set_mk61_program_boundary_hook(
+            &program_boundary_probe, &probe));
+    u8 branch_with_prefix_operand[37] = {};
+    for(u8& code : branch_with_prefix_operand) code = 0x50;
+    branch_with_prefix_operand[0] = 0x51;
+    branch_with_prefix_operand[1] = operand;
+    branch_with_prefix_operand[target] = 0x07;
+    run_program(branch_with_prefix_operand, sizeof(branch_with_prefix_operand));
+    check_true("1F/2F operand is not an opcode",
+        probe.calls == 3 &&
+        probe.addresses[0] == 0 && probe.opcodes[0] == 0x51 &&
+        probe.addresses[1] == target && probe.opcodes[1] == 0x07 &&
+        probe.addresses[2] == target + 1U && probe.opcodes[2] == 0x50 &&
+        !core_61::extended_program_error());
+    check_near("operand fall-through result", read_live_x(), 7.0, 1e-8);
+    core_61::clear_mk61_program_boundary_hook();
+
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    u8 call_with_prefix_operand[37] = {};
+    for(u8& code : call_with_prefix_operand) code = 0x50;
+    call_with_prefix_operand[0] = 0x53;
+    call_with_prefix_operand[1] = operand;
+    call_with_prefix_operand[2] = 0x07;
+    call_with_prefix_operand[target] = 0x08;
+    call_with_prefix_operand[target + 1U] = 0x52;
+    probe = {};
+    check_true("CALL operand hook installed",
+        core_61::set_mk61_program_boundary_hook(
+            &program_boundary_probe, &probe));
+    run_program(call_with_prefix_operand, sizeof(call_with_prefix_operand));
+    check_true("1F/2F CALL operand retains ROM address",
+        probe.calls == 5 &&
+        probe.addresses[0] == 0 && probe.opcodes[0] == 0x53 &&
+        probe.addresses[1] == target && probe.opcodes[1] == 0x08 &&
+        probe.addresses[2] == target + 1U && probe.opcodes[2] == 0x52 &&
+        probe.addresses[3] == 2 && probe.opcodes[3] == 0x07 &&
+        probe.addresses[4] == 3 && probe.opcodes[4] == 0x50 &&
+        !core_61::extended_program_error());
+    core_61::clear_mk61_program_boundary_hook();
+  }
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 jump[] = {0x1F, 0x51, 0x02, 0x50, 0x50};
+  check_true("write far bank", core_61::write_absolute_program(250, 0x07) &&
+      core_61::write_absolute_program(251, 0x50));
+  run_program(jump, sizeof(jump));
+  check_true("far jump reaches bank 2", core_61::active_program_bank() == 2);
+  check_near("far jump result", read_live_x(), 7.0, 1e-8);
+  check_true("far jump no error", !core_61::extended_program_error());
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  u8 edge_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  for(usize index = 0; index < core_61::MAX_PROGRAM_STEP; ++index)
+    edge_page[index] = 0x50;
+  edge_page[110] = 0x1F;
+  edge_page[111] = 0x51;
+  core_61::set_code_page(edge_page);
+  check_true("write cross-bank prefix operands",
+      core_61::write_absolute_program(112, 0x02) &&
+      core_61::write_absolute_program(113, 0x50) &&
+      core_61::write_absolute_program(250, 0x07) &&
+      core_61::write_absolute_program(251, 0x50));
+  core_61::set_IP(110);
+  press_matrix({2, 9});
+  for(int index = 0; index < 256 && core_61::is_RUN(); ++index)
+    core_61::step();
+  check_true("far prefix crosses 112-byte boundary",
+      core_61::active_program_bank() == 2 &&
+      !core_61::extended_program_error());
+  check_near("cross-bank far result", read_live_x(), 7.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  check_true("write bank-local K2",
+      core_61::write_absolute_program(224, 0x56) &&
+      core_61::write_absolute_program(225, 0x01));
+  set_ms_program_byte(0, 0x54);
+  set_ms_program_byte(1, 0x50);
+  const u8 bank_exchange[] = {0x1F, 0x51, 0x02, 0x24, 0x50};
+  run_program(bank_exchange, sizeof(bank_exchange));
+  u8 bank_code = 0;
+  u8 root_code = 0;
+  check_true("K2 exchanges current far bank",
+      core_61::active_program_bank() == 2 &&
+      core_61::read_absolute_program(224, bank_code) &&
+      core_61::read_absolute_program(0, root_code) &&
+      bank_code == 0x54 && root_code == 0x1F &&
+      get_ms_program_byte(0) == 0x56);
+
+  core_61::set_expanded_program_mode(true);
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 call[] = {0x1F, 0x53, 0x01, 0x20, 0x50};
+  check_true("write far subroutine", core_61::write_absolute_program(120, 0x07) &&
+      core_61::write_absolute_program(121, 0x52));
+  run_program(call, sizeof(call));
+  check_true("far return reaches bank 0", core_61::active_program_bank() == 0);
+  check_near("far call result", read_live_x(), 7.0, 1e-8);
+  check_true("far call no error", !core_61::extended_program_error());
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  check_true("write mixed near/far calls",
+      core_61::write_absolute_program(112, 0x53) &&
+      core_61::write_absolute_program(113, 0x10) &&
+      core_61::write_absolute_program(114, 0x52) &&
+      core_61::write_absolute_program(122, 0x07) &&
+      core_61::write_absolute_program(123, 0x52));
+  const u8 mixed_calls[] = {0x1F, 0x53, 0x01, 0x12, 0x50};
+  run_program(mixed_calls, sizeof(mixed_calls));
+  check_true("mixed near/far returns unwind",
+      core_61::active_program_bank() == 0 &&
+      !core_61::extended_program_error());
+  check_near("mixed calls result", read_live_x(), 7.0, 1e-8);
+
+  // Ten levels cross more banks than the original calculator's return stack
+  // can hold; every ordinary RET must return after the entire 1F sequence.
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  for(u16 bank = 1; bank <= 10; ++bank) {
+    const u16 address = (u16) (bank * core_61::MAX_PROGRAM_STEP);
+    if(bank == 10) {
+      check_true("write deepest subroutine",
+          core_61::write_absolute_program(address, 0x07) &&
+          core_61::write_absolute_program((u16) (address + 1U), 0x52));
+      continue;
+    }
+    const u16 target = (u16) ((bank + 1U) * core_61::MAX_PROGRAM_STEP);
+    const u8 high = (u8) (((target / 1000U) << 4) | ((target / 100U) % 10U));
+    const u8 low = (u8) ((((target / 10U) % 10U) << 4) | (target % 10U));
+    check_true("write nested far subroutine",
+        core_61::write_absolute_program(address, 0x1F) &&
+        core_61::write_absolute_program((u16) (address + 1U), 0x53) &&
+        core_61::write_absolute_program((u16) (address + 2U), high) &&
+        core_61::write_absolute_program((u16) (address + 3U), low) &&
+        core_61::write_absolute_program((u16) (address + 4U), 0x52));
+  }
+  const u8 deep_call[] = {0x1F, 0x53, 0x01, 0x12, 0x50};
+  run_program(deep_call, sizeof(deep_call));
+  check_true("nested far calls unwind to bank 0",
+      core_61::active_program_bank() == 0 && !core_61::extended_program_error());
+  check_near("nested far call result", read_live_x(), 7.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 conditional[] = {0x1F, 0x57, 0x02, 0x50, 0x50};
+  check_true("write far conditional target",
+      core_61::write_absolute_program(250, 0x50));
+  set_x_bcd(0x00000001U);
+  run_program(conditional, sizeof(conditional));
+  check_true("far x!=0 continues", core_61::active_program_bank() == 0);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  set_x_bcd(0x00000000U);
+  run_program(conditional, sizeof(conditional));
+  check_true("far x!=0 takes operand on zero",
+      core_61::active_program_bank() == 2);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  char address_mantissa[8] = {'2','5','0','0','0','0','0','0'};
+  write_stack_register(stack::X, ' ', address_mantissa, 2);
+  press_matrix({6, 9}); // X -> R
+  press_matrix(digit_key(0));
+  check_near("far indirect register input", read_live_x(), 250.0, 1e-8);
+  check_true("write far indirect target",
+      core_61::write_absolute_program(249, 0x07) &&
+      core_61::write_absolute_program(250, 0x50));
+  const u8 indirect[] = {0x1F, 0x80, 0x50};
+  run_program(indirect, sizeof(indirect));
+  check_true("far indirect reaches bank 2",
+      core_61::active_program_bank() == 2 && !core_61::extended_program_error());
+  check_near("far indirect result", read_live_x(), 7.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  set_x_bcd(0x00000007U);
+  const u8 display[] = {0x2F, 0x01, 0x2F, 0x2A, 0x2F, 0x0E, 0x50};
+  run_program(display, sizeof(display));
+  const u8* frame = core_61::segment_display_frame();
+  check_true("segment mode active", frame != nullptr);
+  check_true("segment strobe stores X", frame != nullptr && frame[1] == 7);
+  check_true("segment strobe advances", core_61::extended_display_cursor() == 2);
+  check_near("segment strobe leaves X", read_live_x(), 7.0, 1e-8);
+  check_true("segment command no error", !core_61::extended_program_error());
+  core_61::ContextBuffer display_snapshot = {};
+  check_true("save segmented display context",
+      core_61::save_context(display_snapshot));
+  core_61::enable();
+  check_true("restore segmented display context",
+      core_61::restore_context(display_snapshot));
+  frame = core_61::segment_display_frame();
+  check_true("segment frame survives context lease",
+      frame != nullptr && frame[1] == 7 &&
+      core_61::extended_display_cursor() == 2);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 automatic[] = {0x2F, 0x01, 0x2F, 0x2A, 0x07, 0x50};
+  run_program(automatic, sizeof(automatic));
+  frame = core_61::segment_display_frame();
+  check_true("segment auto follows X", frame != nullptr && frame[1] == 7);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 held[] = {0x2F, 0x01, 0x2F, 0x2A, 0x2F, 0x50, 0x07, 0x50};
+  run_program(held, sizeof(held));
+  frame = core_61::segment_display_frame();
+  check_true("segment hold ignores later X", frame != nullptr && frame[1] == 0);
+  check_near("hold leaves arithmetic X", read_live_x(), 7.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 numeric_strobe[] = {0x2F, 0x50, 0x07, 0x2F, 0x0E, 0x50};
+  run_program(numeric_strobe, sizeof(numeric_strobe));
+  char indicator[INDICATOR_STRING_LENGTH] = {};
+  (void) core_61::update_indicator(indicator, SYMBOLS);
+  check_true("numeric hold strobe publishes X",
+      !core_61::extended_display_auto() && std::strchr(indicator, '7') != nullptr);
+  check_near("numeric strobe leaves X", read_live_x(), 7.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 clear_segments[] = {
+      0x2F, 0x01, 0x2F, 0x2A, 0x07, 0x2F, 0x0D, 0x50};
+  run_program(clear_segments, sizeof(clear_segments));
+  frame = core_61::segment_display_frame();
+  bool all_blank = frame != nullptr;
+  for(u8 index = 0; frame != nullptr && index < 12; ++index)
+    all_blank &= frame[index] == 0;
+  check_true("segment clear stays blank",
+      all_blank && !core_61::extended_display_auto());
+  check_near("segment clear leaves X", read_live_x(), 7.0, 1e-8);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  const u8 clear_and_resume[] = {
+      0x2F, 0x50, 0x2F, 0x0D, 0x2F, 0x52, 0x07, 0x50};
+  run_program(clear_and_resume, sizeof(clear_and_resume));
+  check_true("numeric display resumes", core_61::extended_display_auto());
+  check_near("resume follows X", read_live_x(), 7.0, 1e-8);
+}
+
 static double first_random(bool enhanced, u32 seed) {
   const MatrixKey key_k = {10, 9};
   const MatrixKey key_bx = {11, 8};
@@ -1641,6 +1976,7 @@ int main(void) {
   test_pure_helpers();
   test_transcendental();
   test_authentic_core_smoke();
+  test_extended_prefixes();
   test_rom_command_hooks();
   test_mk61_command_lengths();
   test_mk61_command_hooks();

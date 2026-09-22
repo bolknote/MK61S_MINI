@@ -3228,6 +3228,10 @@ void  class_terminal::lasm_mk61_code_page(void) {
 bool class_terminal::GetHexString(const char* args) {
       args = terminal_core::skip_spaces(args);
       if(args == NULL) return false;
+      if(strlen(args) < 5U) {
+        Serial.println("Usage: hin <four-digit-address> <hex-bytes>");
+        return false;
+      }
 
       usize address = 0;
       for(usize i = 0; i < 4; i++) {
@@ -3237,7 +3241,10 @@ bool class_terminal::GetHexString(const char* args) {
         }
         address = address * 10 + (usize) (args[i] - '0');
       }
-      if(!terminal_core::is_space(args[4]) || address >= core_61::MAX_PROGRAM_STEP) {
+      const usize limit = library_mk61::program_memory_mode() ==
+          ProgramMemoryMode::CLASSIC_105 ? core_61::CLASSIC_PROGRAM_STEP :
+          core_61::EXTENDED_ADDRESS_LIMIT;
+      if(!terminal_core::is_space(args[4]) || address >= limit) {
         Serial.println("BAD address!");
         return false;
       }
@@ -3248,9 +3255,8 @@ bool class_terminal::GetHexString(const char* args) {
         return false;
       }
 
-      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-      core_61::get_code_page(&code_page[0]);
-      usize write_at = address;
+      u8 bytes[core_61::MAX_PROGRAM_STEP] = {};
+      usize count = 0;
       while(!terminal_core::is_end(*hex) && !terminal_core::is_space(*hex)) {
         const int high = terminal_core::digit_value(hex[0], 16);
         const int low = terminal_core::digit_value(hex[1], 16);
@@ -3258,25 +3264,74 @@ bool class_terminal::GetHexString(const char* args) {
           Serial.println("Hex byte string must contain complete byte pairs.");
           return false;
         }
-        if(write_at >= core_61::MAX_PROGRAM_STEP) {
+        if(address + count >= limit || count >= sizeof(bytes)) {
           Serial.println("Program memory overflow!");
           return false;
         }
-        code_page[write_at++] = (u8) ((high << 4) | low);
+        bytes[count++] = (u8) ((high << 4) | low);
         hex += 2;
       }
-      if(!terminal_core::at_end(hex)) {
+      if(count == 0 || !terminal_core::at_end(hex)) {
         Serial.println("Unexpected text after hex byte string.");
         return false;
       }
 
-      const bool force_expanded = write_at > core_61::CLASSIC_PROGRAM_STEP;
-      apply_program_memory_auto(&code_page[0], core_61::MAX_PROGRAM_STEP, false, force_expanded);
-      core_61::set_code_page(&code_page[0]);
+      u8 bank_zero[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+      for(usize index = 0; index < core_61::MAX_PROGRAM_STEP; ++index)
+        (void) core_61::read_absolute_program((u16) index, bank_zero[index]);
+      for(usize index = 0; index < count; ++index)
+        if(address + index < core_61::MAX_PROGRAM_STEP)
+          bank_zero[address + index] = bytes[index];
+      apply_program_memory_auto(bank_zero, core_61::MAX_PROGRAM_STEP, true,
+          address + count > core_61::MAX_PROGRAM_STEP);
+      for(usize index = 0; index < count; ++index) {
+        if(!core_61::write_absolute_program((u16) (address + index), bytes[index])) {
+          Serial.println("Program bank allocation failed!");
+          return false;
+        }
+      }
       return true;
     }
 
-void  class_terminal::PutHexString(void) {
+void  class_terminal::PutHexString(const char* args) {
+      if(!terminal_core::at_end(args)) {
+        usize address = 0;
+        usize count = 0;
+        const char* cursor = args;
+        if(!terminal_core::parse_unsigned(cursor, 10,
+               core_61::EXTENDED_ADDRESS_LIMIT - 1U, address) ||
+           !terminal_core::parse_unsigned(cursor, 10,
+               core_61::MAX_PROGRAM_STEP, count) || count == 0 ||
+           !terminal_core::at_end(cursor) ||
+           address + count > core_61::EXTENDED_ADDRESS_LIMIT) {
+          Serial.println("Usage: hout <absolute-address> <count>");
+          return;
+        }
+        if(!core_61::expanded_program_is_on() &&
+           address + count > core_61::CLASSIC_PROGRAM_STEP) {
+          Serial.println("Address outside active program memory!");
+          return;
+        }
+        for(usize offset = 0; offset < count; offset += 24) {
+          const usize line_address = address + offset;
+          Serial.print("hin ");
+          for(usize place = 1000; place > 0; place /= 10)
+            Serial.write((char) ('0' + (line_address / place) % 10U));
+          Serial.write(' ');
+          const usize line_count = count - offset < 24 ? count - offset : 24;
+          for(usize index = 0; index < line_count; ++index) {
+            u8 opcode = 0;
+            if(!core_61::read_absolute_program(
+                   (u16) (line_address + index), opcode)) {
+              Serial.println("Address outside active program memory!");
+              return;
+            }
+            Serial_write_hex(opcode);
+          }
+          Serial.println();
+        }
+        return;
+      }
       u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
       core_61::get_code_page(&code_page[0]);
       isize last_cmd_addr = seek_program_END(&code_page[0]);
@@ -3301,7 +3356,10 @@ bool class_terminal::Assembler(void) {
         return false;
       }
       const terminal_core::Assembly assembly = terminal_core::parse_assembly(
-        command_args(), AT, table.data(), core_61::MAX_PROGRAM_STEP);
+        command_args(), AT, table.data(),
+        library_mk61::program_memory_mode() == ProgramMemoryMode::CLASSIC_105
+            ? core_61::CLASSIC_PROGRAM_STEP :
+              core_61::EXTENDED_ADDRESS_LIMIT);
       if(assembly.error != terminal_core::AssemblyError::NONE) {
         ErrorReaction();
         switch(assembly.error) {
@@ -3319,11 +3377,21 @@ bool class_terminal::Assembler(void) {
 
       // Сначала полностью разбираем, затем применяем один раз: ошибочный токен
       // должен оставить программу без изменений.
-      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-      core_61::get_code_page(&code_page[0]);
-      for(usize i = 0; i < assembly.count; i++) code_page[assembly.address + i] = assembly.opcodes[i];
-      apply_program_memory_auto(&code_page[0], core_61::MAX_PROGRAM_STEP, false);
-      core_61::set_code_page(&code_page[0]);
+      u8 bank_zero[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+      for(usize index = 0; index < core_61::MAX_PROGRAM_STEP; ++index)
+        (void) core_61::read_absolute_program((u16) index, bank_zero[index]);
+      for(usize index = 0; index < assembly.count; ++index)
+        if(assembly.address + index < core_61::MAX_PROGRAM_STEP)
+          bank_zero[assembly.address + index] = assembly.opcodes[index];
+      apply_program_memory_auto(bank_zero, core_61::MAX_PROGRAM_STEP, true,
+          assembly.address + assembly.count > core_61::MAX_PROGRAM_STEP);
+      for(usize index = 0; index < assembly.count; ++index) {
+        if(!core_61::write_absolute_program(
+               (u16) (assembly.address + index), assembly.opcodes[index])) {
+          Serial.println("Program bank allocation failed!");
+          return false;
+        }
+      }
       AT = (isize) (assembly.address + assembly.count);
 
       Serial.print("Assembled ");
@@ -4144,7 +4212,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               echo_mk61_stack();
             break;
           case  CMD_HOUT:
-              PutHexString();
+              PutHexString(command_args());
             break;
           case  CMD_VFAT_LOG: {
               if(!terminal_vfat_log(command_args())) {
