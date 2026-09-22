@@ -11,7 +11,7 @@ OUT=ROOT/'programs/games/ELITE'
 def outputs():
     banks,info=create_game().link()
     files={OUT/f'b{b:02d}.m61':f'hin {b*112:04d} {bytes(code).hex().upper()}\n' for b,code in sorted(banks.items())}
-    files[OUT/'autoexec.m61']='reinit\n'+''.join(f'open b{b:02d}.m61\n' for b in sorted(banks))+'run\n'
+    files[OUT/'autoexec.m61']='open manual.md\nreinit\n'+''.join(f'open b{b:02d}.m61\n' for b in sorted(banks))+'run\n'
     files[ROOT/'tools/elite/elite.map.json']=json.dumps(info,indent=2,ensure_ascii=False)+'\n'
     return files
 

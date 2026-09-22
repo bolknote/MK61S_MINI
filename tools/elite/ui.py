@@ -1,4 +1,4 @@
-from assembler import GLYPHS, ALPHABET, screen
+from assembler import GLYPHS, ALPHABET, screen, CALL
 
 def chunks(text):
     f=screen(text)
@@ -44,7 +44,7 @@ def add_ui(a):
         for i,v in enumerate(chunks(text)[:3]):m.set(i,v)
         m.jump('text_end')
     m.label('text_end').set(3,chunks('          СП')[3]).op('ret')
-    m.label('show_message').far(0x53,29*112+78).visit(29,'display').op('ret')
+    m.label('show_message').far(0x53,29*112+CALL).visit(29,'display').op('ret')
 
     m=a.module(19,'format')
     m.label('number_frame').ld('D').st(0).set(1,0).set(2,0).set(3,chunks('          СП')[3]).set('B',9)

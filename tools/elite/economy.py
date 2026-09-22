@@ -1,11 +1,11 @@
-from assembler import GLYPHS
+from assembler import GLYPHS, READ, WRITE
 from ui import show_name, show_number, show_text
 
 def dynamic_get(m,bank,index):
     m.ld(index).st('B').far(0x53,bank*112+63)
 
 def dynamic_put(m,bank,index):
-    m.st('C').ld(index).st('B').far(0x53,bank*112+71)
+    m.st('C').ld(index).st('B').far(0x53,bank*112+WRITE)
 
 def add_economy(a):
     m=a.module(1,'initialization')
@@ -53,18 +53,18 @@ def add_economy(a):
     m.n(99999999).ld(3).op('-').ld(4).op('-').jneg('bad_action')
     m.label('trade_commit').ld(3).ld(7).op('*').ld(4).op('swap','-').st('C').visit(24,'trade_money')
     m.ld(5).ld(7).op('+');dynamic_put(m,25,1)
-    m.ld(6).ld(7).op('-').st('C').ld(1).n(3).op('+').st('B').far(0x53,26*112+71)
+    m.ld(6).ld(7).op('-').st('C').ld(1).n(3).op('+').st('B').far(0x53,26*112+WRITE)
     m.ld(1).n(10).op('+').st('A').op('ret')
 
     m=a.module(8,'station')
-    m.label('station').set(3,5).set(4,6).set(5,24*112+71).set(7,1).set(8,99)
+    m.label('station').set(3,5).set(4,6).set(5,24*112+WRITE).set(7,1).set(8,99)
     m.ld(0).n(50).op('-').jz('service_ready')
     m.ld(0).n(51).op('-').jz('service_hull')
     m.ld(0).n(52).op('-').jz('service_missile')
-    m.set(3,300).set(5,25*112+71).set(7,1000000).set(8,3010420).jump('service_ready')
+    m.set(3,300).set(5,25*112+WRITE).set(7,1000000).set(8,3010420).jump('service_ready')
     m.label('service_hull').set(3,20).set(4,4).set(7,10).jump('service_ready')
-    m.label('service_missile').set(3,60).set(4,7).set(5,25*112+71).set(8,9)
-    m.label('service_ready').ld(4).st('B').ld(5).n(8).op('-').st('E').raw(0x1F,0xAE).st(2)
+    m.label('service_missile').set(3,60).set(4,7).set(5,25*112+WRITE).set(8,9)
+    m.label('service_ready').ld(4).st('B').ld(5).n(WRITE-READ).op('-').st('E').raw(0x1F,0xAE).st(2)
     m.ld(8).op('-').jge('bad_action').ld(2).ld(7).op('+').st(2).ld(8).op('-').jneg('service_pay')
     m.ld(8).st(2)
     m.label('service_pay').call('pay').jneg('bad_action')

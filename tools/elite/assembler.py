@@ -7,6 +7,7 @@ import json
 
 BANK_SIZE = 112
 DATA_BANKS = range(24, 30)
+READ, WRITE, CALL, DATA_END = 63, 70, 76, 82
 GLYPHS = dict(zip('0123456789', [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]))
 GLYPHS.update({' ':0, '-':64, 'A':119, 'b':124, 'C':57, 'd':94,
                'E':121, 'F':113, 'G':61, 'H':118, 'I':6, 'L':56,
@@ -52,9 +53,8 @@ def pack_number(value):
 
 def data_page(values):
     assert len(values) == 9
-    # READ at +63: RB field -> X and RC. WRITE at +71: RC -> field RB.
-    # CALL at +78: callback in RF, with the page visible in R0..R8.
-    access = bytes.fromhex('56 55 DB 4C 55 56 6C 52 56 55 6C BB 55 56 52 56 55 1F AF 55 56 52')
+    # Three entries share the close/return sequence at +67. 55/56 preserve X.
+    access = bytes.fromhex('56 55 DB 4C 55 56 52 56 55 6C BB 51 67 56 55 1F AF 51 67')
     return b''.join(pack_number(x) for x in values) + access
 
 @dataclass
@@ -93,7 +93,7 @@ class Module:
         previous=next((i for i in reversed(self.items) if i.kind!='label'),None)
         arithmetic={0x0B,0x10,0x11,0x12,0x13,0x21,0x22,0x24,0x31,0x34,0x35}
         settle=(previous is not None and previous.kind=='bytes' and
-                len(previous.value)==1 and previous.value[0] in arithmetic)
+                previous.value[-1] in arithmetic)
         self.items.append(Item('branch', opcode, label,settle=settle)); return self
     def call(self, label): return self.branch(0x53, label)
     def jump(self, label): return self.branch(0x51, label)
@@ -103,12 +103,12 @@ class Module:
     def jge(self, label): return self.branch(0x5C, label)
     def far(self, opcode, address): return self.raw(0x1F,opcode,*bcd(address))
     def get(self, bank, field):
-        return self.set('B',field).far(0x53,bank*112+63)
+        return self.set('B',field).far(0x53,bank*112+READ)
     def put(self, bank, field):
-        return self.st('C').set('B',field).far(0x53,bank*112+71)
+        return self.st('C').set('B',field).far(0x53,bank*112+WRITE)
     def putn(self, bank, field, value): return self.n(value).put(bank,field)
     def visit(self, bank, callback):
-        return self.ptr('F',callback).far(0x53,bank*112+78)
+        return self.ptr('F',callback).far(0x53,bank*112+CALL)
     def mod(self, n):
         # Fraction extraction loses low bits on the eight-digit calculator.
         return self.op('enter').n(n).op('/','int').n(n).op('*','-')
@@ -132,7 +132,7 @@ class Assembler:
         labels, placements, bridges, usage = {}, [], [], {}
         preferred={m.bank for m in self.modules}
         free=[(b,0) for b in range(32) if b not in preferred and b not in self.data]
-        free += [(b,85) for b in self.data]
+        free += [(b,DATA_END) for b in self.data]
         for module in self.modules:
             bank, offset = module.bank, 0
             if bank in usage or bank in self.data:
@@ -200,8 +200,8 @@ class Assembler:
             occupied.update(positions)
         for b,values in self.data.items():
             banks.setdefault(b,bytearray([0x50]*112))
-            claim(b*112,85)
-            banks[b][:85]=data_page(values)
+            claim(b*112,DATA_END)
+            banks[b][:DATA_END]=data_page(values)
         for address,target in bridges:
             claim(address,4)
             banks[address//112][address%112:address%112+4]=bytes([0x1F,0x51,*bcd(target)])

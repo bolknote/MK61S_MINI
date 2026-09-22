@@ -22,6 +22,7 @@ def play(commands):
         assert s['input_frame_stable'] and not s['auto_display'] and s['segmented'],s
         assert s['frame'][-2:]==[57,55],s
         assert s['pages'][5][:4]==s['pages'][5][4:8],s
+        assert s['pages'][4][6]==sum(hp>0 for hp in s['pages'][4][:5]),s
     COUNT+=len(states)
     return states
 
@@ -78,6 +79,9 @@ def test_trade_and_station():
     assert s['pages'][0][4]==99 and s['pages'][0][0]==980
     s=play(START+['set 24 0 10000']+[f'input {30+i}' for i in range(6)])[-1]
     assert s['pages'][1][:6]==[1]*6 and s['pages'][1][6]==1010420
+    s=play(START+['set 24 0 99999999','set 25 0 1','input 1','input 40'])
+    number(s[-2],'C',99999999)
+    assert state(s[-2])==state(s[-1])
     print('ELITE: six goods, spread, capacity, money and station services OK',flush=True)
 
 def test_navigation_and_input():
@@ -85,6 +89,10 @@ def test_navigation_and_input():
     number(s[3],'r',1)
     assert s[-1]['pages'][0][1:4]==[3224577,3224577,1]
     assert s[-1]['pages'][0][6]==39 and s[-1]['regs'][9]==1
+    # The second letter changes piracy risk for the same random roll.
+    for destination,mode in ((71,1),(74,2)):
+        s=play(START+['set 24 8 13',f'input {destination}','input 60'])[-1]
+        assert s['regs'][9]==mode,s
     for setup in ([],['input 325'],['input 71','set 24 6 0']):
         s=play(START+setup+['dump','input 60'])
         assert state(s[-2])==state(s[-1]),s[-1]
@@ -118,11 +126,15 @@ def test_pirates_and_results():
     assert state(s[-2])==state(s[-1])
     s=play(encounter()+['set 24 7 90','input 41'])[-1]
     assert s['pages'][3][1]==60 and s['pages'][0][7]==80 and s['pages'][0][5]==53
+    s=play(encounter(extra=['input 53'])+['input 21'])[-1]
+    assert s['pages'][3][1]==30 and s['pages'][0][0]==700
     s=play(encounter()+['input 34']*4)
     assert s[-2]['pages'][0][5]==32 and s[-1]['frame']==screen('SAFE      СП')
     print('ELITE: simultaneous fire, heat, range, missiles, escape, win/loss OK',flush=True)
 
 def test_thargoids():
+    s=play(encounter(3)+['input 81','input 41'])[-1]
+    assert s['pages'][4][0]==9 and s['pages'][0][5]==48
     s=play(encounter(3)+['input 81','input 21','input 82','input 21','input 80','input 22'])
     assert s[3]['frame']==screen('tHArGOId  СП')
     assert s[3]['pages'][4][:7]==[18,18,0,0,0,2,2]
@@ -143,11 +155,20 @@ def test_thargoids():
     print('ELITE: carrier, independent targets, five drones and alien victory OK',flush=True)
 
 def main():
-    for path in (ROOT/'programs/games/ELITE').glob('*.m61'):
+    directory=ROOT/'programs/games/ELITE'
+    banks=sorted(directory.glob('b[0-9][0-9].m61'))
+    assert len(banks)==32
+    expected=['open manual.md','reinit']+[f'open {p.name}' for p in banks]+['run']
+    assert (directory/'autoexec.m61').read_text().splitlines()==expected
+    for path in directory.glob('*.m61'):
         assert path.stat().st_size<=1536
         assert all(len(line)<=239 for line in path.read_text().splitlines())
-    for test in (test_worlds_and_display,test_trade_and_station,test_navigation_and_input,
-                 test_pirates_and_results,test_thargoids):test()
+    for path in directory.glob('*.md'):
+        assert path.stat().st_size<=1536
+    tests=(test_worlds_and_display,test_trade_and_station,test_navigation_and_input,
+           test_pirates_and_results,test_thargoids)
+    for test in tests:
+        if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)
 
 if __name__=='__main__':main()
