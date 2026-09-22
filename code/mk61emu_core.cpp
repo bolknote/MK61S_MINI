@@ -1158,9 +1158,9 @@ static bool set_extended_next_pc(u16 absolute) {
   return true;
 }
 
-static bool parse_unsigned_mk61_word(const char text[15], u16 limit,
-                                     u16& output) {
-  if(text == nullptr || text[0] == '-') return false;
+static bool parse_unsigned_mk61_word(const char text[15], u32 limit,
+                                     u32& output) {
+  if(text == nullptr || text[0] != ' ') return false;
   u32 mantissa = 0;
   for(u8 index = 0; index < 8; index++) {
     const char digit = text[index == 0 ? 1 : index + 2];
@@ -1185,26 +1185,36 @@ static bool parse_unsigned_mk61_word(const char text[15], u16 limit,
     }
   }
   if(mantissa >= limit) return false;
-  output = (u16) mantissa;
+  output = mantissa;
   return true;
 }
 
 static bool read_x_unsigned(u16 limit, u16& output) {
   char text[15] = {};
   read_stack_register(stack::X, text, EXTENDED_ASCII_DIGITS);
-  return parse_unsigned_mk61_word(text, limit, output);
+  u32 value = 0;
+  if(!parse_unsigned_mk61_word(text, limit, value)) return false;
+  output = (u16) value;
+  return true;
 }
 
-static bool read_register_unsigned(u8 reg, u16 limit, u16& output) {
+static bool read_register_unsigned32(u8 reg, u32 limit, u32& output) {
   char text[15] = {};
   MK61Emu_ReadRegister(reg, text, EXTENDED_ASCII_DIGITS);
   return parse_unsigned_mk61_word(text, limit, output);
 }
 
-static void write_register_unsigned(u8 reg, u16 value) {
+static bool read_register_unsigned(u8 reg, u16 limit, u16& output) {
+  u32 value = 0;
+  if(!read_register_unsigned32(reg, limit, value)) return false;
+  output = (u16) value;
+  return true;
+}
+
+static void write_register_unsigned(u8 reg, u32 value) {
   const usize base = (usize) reg * MK61_MEMORY_PAGE_TETRADES;
   u8 exponent = 0;
-  u16 scaled = value;
+  u32 scaled = value;
   while(scaled >= 10U) { scaled /= 10U; exponent++; }
   char digits[8] = {'0','0','0','0','0','0','0','0'};
   if(value != 0) {
@@ -1253,6 +1263,68 @@ static bool capture_x_for_numeric_display(void) {
 }
 
 static bool write_x_segment(bool advance);
+
+// R0..R3 form a software frame buffer: three little-endian mask bytes per
+// exact 24-bit integer. Formatting never publishes an intermediate frame.
+static bool read_packed_segment_frame(u8 frame[core_61::EXTENDED_DISPLAY_CELLS]) {
+  for(u8 reg = 0; reg < 4; ++reg) {
+    u32 word = 0;
+    if(!read_register_unsigned32(reg, 0x1000000U, word)) return false;
+    for(u8 byte = 0; byte < 3; ++byte) {
+      frame[reg * 3U + byte] = (u8) word;
+      word >>= 8;
+    }
+  }
+  return true;
+}
+
+static bool publish_packed_segment_frame(void) {
+  u8 frame[core_61::EXTENDED_DISPLAY_CELLS];
+  if(!read_packed_segment_frame(frame)) return false;
+  if(memcmp(extended_program.segment_masks, frame, sizeof(frame)) != 0) {
+    memcpy(extended_program.segment_masks, frame, sizeof(frame));
+    extended_program.display_revision++;
+  }
+  return true;
+}
+
+static bool format_segment_register(u8 reg, bool hexadecimal) {
+  static const u8 decimal_glyphs[10] =
+      {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
+  u8 frame[core_61::EXTENDED_DISPLAY_CELLS];
+  u8 alphabet[16];
+  u32 value = 0;
+  if(!read_register_unsigned32(reg, hexadecimal ? 0x1000000U : 100000000U,
+                               value) || !read_packed_segment_frame(frame))
+    return false;
+  if(hexadecimal) {
+    u16 address = 0;
+    if(!read_register_unsigned(0x0F, core_61::EXTENDED_ADDRESS_LIMIT - 15U,
+                              address)) return false;
+    for(u8 index = 0; index < 16; ++index)
+      if(!core_61::read_absolute_program((u16) (address + index), alphabet[index]))
+        return false;
+  }
+  const u8 width = hexadecimal ? 6U : 8U;
+  const u8 radix = hexadecimal ? 16U : 10U;
+  for(u8 digit = width; digit != 0; --digit) {
+    const u8 position = (u8) ((extended_program.cursor + digit - 1U) %
+                              core_61::EXTENDED_DISPLAY_CELLS);
+    const u8 index = (u8) (value % radix);
+    frame[position] = hexadecimal ? alphabet[index] : decimal_glyphs[index];
+    value /= radix;
+  }
+  // All operands are validated before the first write, including aliases of
+  // the source register with R0..R3. X and the calculator stack stay intact.
+  for(u8 word = 0; word < 4; ++word) {
+    const u8* masks = &frame[word * 3U];
+    write_register_unsigned(word, (u32) masks[0] | ((u32) masks[1] << 8) |
+                                   ((u32) masks[2] << 16));
+  }
+  extended_program.cursor = (u8) ((extended_program.cursor + width) %
+                                   core_61::EXTENDED_DISPLAY_CELLS);
+  return true;
+}
 
 static bool read_bcd_absolute_address(u16 address, u16& target) {
   u8 high = 0;
@@ -1394,6 +1466,9 @@ static bool execute_display_prefix(u8 local_address) {
 
   if(opcode <= 0x0BU) {
     extended_program.cursor = opcode;
+  } else if((opcode & 0xE0U) == 0x60U) {
+    if(!format_segment_register((u8) (opcode & 0x0FU), (opcode & 0x10U) != 0))
+      return false;
   } else {
     switch(opcode) {
       case 0x0D: // Cx: clear the display, not the arithmetic X.
@@ -1429,6 +1504,9 @@ static bool execute_display_prefix(u8 local_address) {
         extended_program.auto_display = true;
         extended_program.numeric_strobe_pending = false;
         extended_program.display_revision++;
+        break;
+      case 0x53: // Publish all twelve masks from R0..R3 as one frame.
+        if(!publish_packed_segment_frame()) return false;
         break;
       case 0x2A: // numeric -> segment representation.
         extended_program.segment_display = true;

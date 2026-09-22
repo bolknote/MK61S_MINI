@@ -299,12 +299,12 @@ static void store_direct(u8 reg, u32 mantissa) {
   press_matrix(digit_key(reg));
 }
 
-static void set_register_integer(u8 reg, u16 value) {
+static void set_register_integer(u8 reg, u32 value) {
   // R_A..R_F have no single decimal key in the matrix. Seed the public ring
   // layout directly so the same indirect-opcode test covers all 16 registers.
   const usize base = (usize) reg * MK61_MEMORY_PAGE_TETRADES;
   u8 exponent = 0;
-  u16 leading = value;
+  u32 leading = value;
   while(leading >= 10U) { leading /= 10U; exponent++; }
   u8 digits[8] = {};
   for(int index = exponent; index >= 0; --index) {
@@ -1523,6 +1523,108 @@ static void test_extended_opcode_matrix(void) {
   }
 }
 
+static void test_packed_segment_frames(void) {
+  std::printf("packed segment frames and register formatting:\n");
+  core_61::set_expanded_program_mode(true);
+  const u8 publish[] = {0x2F,0x50,0x2F,0x2A,0x2F,0x53,0x50};
+  const u8 publish_again[] = {0x2F,0x53,0x50};
+  const u8 masks[12] = {0,255,128,1,2,4,8,16,32,64,57,55};
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  for(u8 r=0;r<4;++r)
+    set_register_integer(r, masks[r*3] | (u32(masks[r*3+1])<<8) |
+                             (u32(masks[r*3+2])<<16));
+  set_x_bcd(0x00000007U);
+  run_program(publish,sizeof(publish));
+  check_true("packed publish includes dots and sign positions",
+      !core_61::extended_program_error() &&
+      std::memcmp(core_61::segment_display_frame(),masks,12)==0);
+  const u32 revision=core_61::extended_display_revision();
+  run_program(publish_again,sizeof(publish_again));
+  check_true("identical frame does not redraw",
+      revision==core_61::extended_display_revision());
+  check_near("packed publish preserves X",read_live_x(),7,0);
+  set_register_integer(3,0x1000000U);
+  run_program(publish_again,sizeof(publish_again));
+  check_true("invalid last word leaves entire frame intact",
+      core_61::extended_program_error() &&
+      revision==core_61::extended_display_revision() &&
+      std::memcmp(core_61::segment_display_frame(),masks,12)==0);
+
+  // Cover every source register, including aliases of the four destination
+  // words, cursor wrapping, leading zeroes, and the full eight-digit range.
+  const u8 decimal_masks[10]={63,6,91,79,102,109,125,7,127,111};
+  const u32 values[3]={0,1234567,99999999};
+  for(u8 r=0;r<16;++r) for(u32 value:values) {
+    // Aliases must also be valid packed words before formatting.
+    if(r<4 && value>=0x1000000U) continue;
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    for(u8 w=0;w<4;++w)set_register_integer(w,0);
+    set_register_integer(r,value);
+    u8 expected[12]={};
+    if(r<4) for(u8 b=0;b<3;++b)expected[r*3+b]=u8(value>>(8*b));
+    u32 digits=value;
+    for(int i=7;i>=0;--i) {expected[(10+i)%12]=decimal_masks[digits%10];digits/=10;}
+    set_x_bcd(0x00000007U);
+    const u8 format[]={0x2F,0x50,0x2F,0x2A,0x2F,0x0A,0x2F,u8(0x60+r),0x50};
+    run_program(format,sizeof(format));
+    const u8 blank[12]={};
+    check_true("decimal formatting stays off-screen",
+        !core_61::extended_program_error() &&
+        std::memcmp(core_61::segment_display_frame(),blank,12)==0 &&
+        core_61::extended_display_cursor()==6);
+    run_program(publish_again,sizeof(publish_again));
+    check_true("decimal register frame matches independent digits",
+        std::memcmp(core_61::segment_display_frame(),expected,12)==0);
+    check_near("decimal formatting preserves X",read_live_x(),7,0);
+  }
+
+  // A nonstandard alphabet with dots, spanning a program-bank boundary.
+  const u8 alphabet[16]={0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,
+                         0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF};
+  const u32 hex_values[]={0U,0x012345U,0x6789ABU,0xCDEF01U,0xFFFFFFU};
+  for(u32 value:hex_values) {
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    for(u8 w=0;w<4;++w)set_register_integer(w,0);
+    for(u8 i=0;i<16;++i)core_61::write_absolute_program(218+i,alphabet[i]);
+    set_register_integer(0xC,value);set_register_integer(0xF,218);
+    const u8 format[]={0x2F,0x50,0x2F,0x2A,0x2F,0x7C,0x2F,0x53,0x50};
+    run_program(format,sizeof(format));
+    u8 expected[12]={};
+    for(int i=5;i>=0;--i) {expected[i]=alphabet[value%16];value/=16;}
+    check_true("hex frame uses supplied alphabet across banks",
+        !core_61::extended_program_error() &&
+        std::memcmp(core_61::segment_display_frame(),expected,12)==0 &&
+        core_61::extended_display_cursor()==6);
+  }
+
+  // Reject overflow, fractions, signs, malformed BCD and an overrun table
+  // before changing any packed word, cursor, or visible frame.
+  for(u8 bad=0;bad<7;++bad) {
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    for(u8 w=0;w<4;++w)set_register_integer(w,0xFFFFFFU);
+    set_register_integer(0xC,bad==0 ? 0x1000000U : 1);
+    set_register_integer(0xF,bad==1 ? 9985 : 112);
+    const usize base=0xCU*MK61_MEMORY_PAGE_TETRADES;
+    if(bad==2)ringM[base+24]=9; // negative
+    if(bad==3) {ringM[base+27]=1;ringM[base+33]=9;} // 0.1
+    if(bad==4)ringM[base+21]=0xA; // nonnumeric digit
+    if(bad==5) {ringM[base+27]=8;} // decimal 100000000
+    if(bad==6)set_register_integer(3,0x1000000U);
+    const u8 invalid[]={0x2F,0x50,0x2F,0x2A,0x2F,u8(bad==5?0x6C:0x7C),0x50};
+    run_program(invalid,sizeof(invalid));
+    check_true("invalid format fails without a partial write",
+        core_61::extended_program_error() &&
+        read_register_decimal(0)==0xFFFFFFU &&
+        read_register_decimal(1)==0xFFFFFFU &&
+        read_register_decimal(2)==0xFFFFFFU &&
+        core_61::extended_display_cursor()==0);
+  }
+}
+
 static double first_random(bool enhanced, u32 seed) {
   const MatrixKey key_k = {10, 9};
   const MatrixKey key_bx = {11, 8};
@@ -2165,6 +2267,7 @@ int main(void) {
   test_authentic_core_smoke();
   test_extended_prefixes();
   test_extended_opcode_matrix();
+  test_packed_segment_frames();
   test_rom_command_hooks();
   test_mk61_command_lengths();
   test_mk61_command_hooks();
