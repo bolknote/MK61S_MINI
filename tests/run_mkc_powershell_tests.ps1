@@ -82,6 +82,19 @@ try {
     Assert-True ($markdown.ExitCode -eq 0 -and ($markdown.Output -join '') -eq 'supported') 'PowerShell classifier rejected .md'
     $systemApp = Invoke-MkcTool @('--classify', (Join-Path $local 'FOCAL.APP'))
     Assert-True ($systemApp.ExitCode -eq 0 -and ($systemApp.Output -join '') -eq 'supported') 'PowerShell classifier rejected FOCAL.APP'
+    $systemBundle = Join-Path $tempRoot 'system-bundle'
+    [void](New-Item -ItemType Directory -Path $systemBundle)
+    [IO.File]::WriteAllBytes((Join-Path $systemBundle 'USBDISK.APP'), [byte[]]::new(64))
+    [IO.File]::WriteAllText((Join-Path $systemBundle 'HELP0.TXT'), "Помощь`n", [Text.UTF8Encoding]::new($false))
+    $bootstrap = Invoke-MkcTool @('--mock', $device, '--install-system', $systemBundle)
+    Assert-True ($bootstrap.ExitCode -eq 0 -and
+        ($bootstrap.Output -join ' ') -match 'System installation through CDC: OK') `
+        'unattended System bootstrap failed'
+    Assert-True ([IO.File]::Exists((Join-Path $device 'System/USBDISK.APP'))) `
+        'System bootstrap did not install USBDISK.APP'
+    Assert-True ([IO.File]::ReadAllBytes((Join-Path $device 'System/HELP0.TXT')).Length -eq
+        "Помощь`n".Length) `
+        'System bootstrap did not convert HELP0.TXT to M8'
     $app = Invoke-MkcTool @('--classify', (Join-Path $local 'DEMO.APP'))
     Assert-True ($app.ExitCode -eq 0 -and ($app.Output -join '') -eq 'supported') 'PowerShell classifier rejected APP'
     $chip8 = Invoke-MkcTool @('--classify', (Join-Path $local 'game.ch8'))

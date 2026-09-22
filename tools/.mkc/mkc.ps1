@@ -61,6 +61,8 @@ $script:RemotePath = '/'
 $script:MockRoot = ''
 $script:ClassifyOnly = ''
 $script:ListPortsOnly = $false
+$script:InstallSystemDir = ''
+$script:ExpectedProfile = ''
 $script:StatusText = ''
 $script:SessionDir = ''
 $script:Monitor = $null
@@ -117,6 +119,7 @@ Usage:
   tools\mkc.cmd [--port COMx] [--device ID] [--local DIRECTORY]
   tools\mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools\mkc.cmd --classify FILE
+  tools\mkc.cmd --install-system DIRECTORY [--port COMx] [--expect-profile ID]
 
 Keys:
   Tab       switch panel        Enter     open directory
@@ -160,6 +163,14 @@ function Parse-Arguments {
             '--classify' {
                 if (++$i -ge $Arguments.Count) { throw '--classify requires a value' }
                 $script:ClassifyOnly = [string]$Arguments[$i]
+            }
+            '--install-system' {
+                if (++$i -ge $Arguments.Count) { throw '--install-system requires a directory' }
+                $script:InstallSystemDir = [string]$Arguments[$i]
+            }
+            '--expect-profile' {
+                if (++$i -ge $Arguments.Count) { throw '--expect-profile requires an ID' }
+                $script:ExpectedProfile = [string]$Arguments[$i]
             }
             '--list-ports' { $script:ListPortsOnly = $true }
             { $_ -in @('-h','--help','/?') } { Show-Usage | Write-Host; return $false }
@@ -1142,6 +1153,48 @@ function Receive-RemoteFile {
     try { Write-M8Download $result $Source $Destination }
     catch { $script:StatusText = "Не удалось записать $Destination"; return $false }
     return $true
+}
+
+function Install-SystemBundle {
+    param([string]$Directory)
+    $canonical = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP',
+        'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'HELP0.TXT', 'HELP1.TXT')
+    if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
+        throw "нет каталога System: $Directory"
+    }
+    $system = (Resolve-Path -LiteralPath $Directory).Path
+    if (-not (Test-Path -LiteralPath (Join-Path $system 'USBDISK.APP') -PathType Leaf)) {
+        throw "нет обязательного USBDISK.APP в $system"
+    }
+    if (-not [string]::IsNullOrEmpty($script:ExpectedProfile) -and
+        [string]::IsNullOrEmpty($script:MockRoot) -and
+        $script:DetectedProfile -cne $script:ExpectedProfile) {
+        throw "прошивка $($script:DetectedProfile) не соответствует пакету $($script:ExpectedProfile)"
+    }
+    if (-not (New-RemoteDirectory '/System')) {
+        throw "не удалось создать /System: $($script:StatusText)"
+    }
+    foreach ($name in $canonical) {
+        $source = Join-Path $system $name
+        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { continue }
+        $remote = "/System/$name"
+        $readback = Join-Path $script:SessionDir ("verify-$name")
+        if (-not (Send-RemoteFile $source $remote)) {
+            [void](Send-RemoteLine 'fsput cancel')
+            throw "загрузка ${name}: $($script:StatusText)"
+        }
+        if (-not (Receive-RemoteFile $remote $readback)) {
+            throw "проверка ${name}: $($script:StatusText)"
+        }
+        [byte[]]$expected = Get-M8UploadBytes $source $remote
+        [byte[]]$received = Get-M8UploadBytes $readback $remote
+        if (-not [Collections.StructuralComparisons]::StructuralEqualityComparer.Equals(
+                $expected, $received)) {
+            throw "проверка ${name}: содержимое отличается"
+        }
+        [Console]::WriteLine("Installed and verified /System/$name")
+    }
+    [Console]::WriteLine('System installation through CDC: OK')
 }
 
 function Get-LocalParent {
@@ -3092,6 +3145,9 @@ function Invoke-MkcApplication {
         [Console]::WriteLine("unsupported: $reason")
         return 1
     }
+    if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
+        $script:LocalPath = $script:InstallSystemDir
+    }
     if (-not (Test-Path -LiteralPath $script:LocalPath -PathType Container)) {
         throw "нет локального каталога: $($script:LocalPath)"
     }
@@ -3117,6 +3173,9 @@ function Invoke-MkcApplication {
             if ($ports.Count -gt 0) { $script:Port = $ports[0] }
         }
         if ([string]::IsNullOrEmpty($script:Port)) {
+            if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
+                throw 'CDC-порт не найден; укажите --port COMx'
+            }
             $script:Port = Read-Host 'MKC: устройство 0483:5740 не найдено. Укажите COM-порт'
         }
         if ([string]::IsNullOrWhiteSpace($script:Port)) { throw 'порт не указан' }
@@ -3126,6 +3185,10 @@ function Invoke-MkcApplication {
     if (-not (Start-Monitor)) {
         if ([string]::IsNullOrWhiteSpace($script:StatusText)) { throw "не удалось открыть $($script:Port)" }
         throw $script:StatusText
+    }
+    if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
+        Install-SystemBundle $script:InstallSystemDir
+        return 0
     }
     Enter-MkcTui
     Refresh-Panels
