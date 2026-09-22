@@ -1,0 +1,195 @@
+{
+  "labels": {
+    "start": 0,
+    "new_game": 32,
+    "redraw": 70,
+    "main": 76,
+    "not_result": 1460,
+    "combat_input_entry": 1474,
+    "input_invalid": 1482,
+    "bad_action": 1488,
+    "port_input": 1344,
+    "set_view": 1590,
+    "buy": 1593,
+    "sell": 1606,
+    "combat_input": 1620,
+    "show": 1904,
+    "show_price": 1954,
+    "good_prefix": 1965,
+    "show_stat": 1978,
+    "stat_get": 2008,
+    "show_missiles": 1682,
+    "stat_prefix": 1689,
+    "show_hold": 1710,
+    "show_world": 1726,
+    "show_destination": 1735,
+    "draw_name": 1742,
+    "draw_number": 1764,
+    "show_invalid": 1792,
+    "stat_masks": 1813,
+    "display": 224,
+    "display_word": 229,
+    "display_cell": 241,
+    "display_skip": 261,
+    "display_shift": 263,
+    "mod10": 448,
+    "mod16": 460,
+    "mod100": 472,
+    "mod256": 486,
+    "glyph": 500,
+    "frame_put": 512,
+    "factor1": 548,
+    "factor256": 2240,
+    "factor_ready": 2244,
+    "title": 2016,
+    "victory": 2053,
+    "defeat": 2091,
+    "escape": 2352,
+    "invalid": 2379,
+    "pirate": 2408,
+    "thargoid": 2439,
+    "number_frame": 2128,
+    "number_digit": 2148,
+    "name_frame": 2180,
+    "name_digit": 2201,
+    "init_pilot": 112,
+    "init_hold": 150,
+    "sum_hold": 172,
+    "trade_money": 185,
+    "world": 560,
+    "select_world": 598,
+    "init_market": 617,
+    "arrived_pilot": 634,
+    "price": 672,
+    "price_ready": 758,
+    "base_prices": 760,
+    "trade": 784,
+    "sell_checks": 866,
+    "trade_commit": 2581,
+    "station": 896,
+    "service_fuel": 981,
+    "service_hull": 3380,
+    "service_missile": 3429,
+    "pay": 3476,
+    "pay_done": 3500,
+    "cap99": 3501,
+    "cap99_done": 3512,
+    "distance": 1008,
+    "jump": 1120,
+    "alien_contact": 1186,
+    "pirate_contact": 1192,
+    "arrive": 1198,
+    "jump_tick": 1225,
+    "start_contact": 1232,
+    "init_enemy": 1260,
+    "enemy_fields": 1277,
+    "init_drones": 1290,
+    "drones_done": 1321
+  },
+  "banks": {
+    "0": {
+      "module": "kernel",
+      "used": 111
+    },
+    "13": {
+      "module": " / kernel",
+      "used": 37
+    },
+    "12": {
+      "module": "input",
+      "used": 112
+    },
+    "14": {
+      "module": " / input",
+      "used": 54
+    },
+    "17": {
+      "module": "views",
+      "used": 112
+    },
+    "15": {
+      "module": " / views",
+      "used": 109
+    },
+    "16": {
+      "module": " / views",
+      "used": 45
+    },
+    "2": {
+      "module": "display",
+      "used": 81
+    },
+    "3": {
+      "module": "glyphs",
+      "used": 104
+    },
+    "4": {
+      "module": "arithmetic",
+      "used": 110
+    },
+    "20": {
+      "module": " / arithmetic / flight",
+      "used": 55
+    },
+    "18": {
+      "module": "messages",
+      "used": 105
+    },
+    "21": {
+      "module": " / messages",
+      "used": 109
+    },
+    "22": {
+      "module": " / messages",
+      "used": 17
+    },
+    "19": {
+      "module": "format",
+      "used": 106
+    },
+    "1": {
+      "module": "initialization",
+      "used": 81
+    },
+    "5": {
+      "module": "world",
+      "used": 87
+    },
+    "6": {
+      "module": "prices",
+      "used": 112
+    },
+    "7": {
+      "module": "trade",
+      "used": 112
+    },
+    "23": {
+      "module": " / trade",
+      "used": 52
+    },
+    "8": {
+      "module": "station",
+      "used": 112
+    },
+    "30": {
+      "module": " / station",
+      "used": 112
+    },
+    "31": {
+      "module": " / station",
+      "used": 42
+    },
+    "9": {
+      "module": "navigation",
+      "used": 55
+    },
+    "10": {
+      "module": "flight",
+      "used": 112
+    },
+    "11": {
+      "module": "contacts",
+      "used": 90
+    }
+  }
+}
