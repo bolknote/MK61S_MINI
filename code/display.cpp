@@ -2877,7 +2877,7 @@ bool MK61Display::setFontPreview(const u8* data, u16 size) {
   prepared_font::Face candidate;
   if(!candidate.open(data, size)) return false;
   MK61DisplayUpdate update(*this);
-  // SETUP.APP keeps its workspace lease alive until clearFontPreview().
+  // SETUP keeps its workspace lease alive until clearFontPreview().
   // Store only the view, avoiding a second full-size copy.
   if(!preview_font.open(data, size)) return false;
   if(!preview_profile_active) {

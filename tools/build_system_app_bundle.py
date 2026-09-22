@@ -89,7 +89,7 @@ def build(args: argparse.Namespace) -> dict:
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     enabled = {
-        "setup": True,
+        "setup": args.setup,
         "focal": args.focal,
         "basic": args.basic,
         "wbmp": args.wbmp and not args.markdown,
@@ -161,6 +161,8 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--packer", type=Path)
     parser.add_argument("--graphics", type=boolean, default=True)
+    parser.add_argument("--setup", type=boolean, default=True,
+                        help="build SETUP.APP (0 when setup is resident on F411)")
     parser.add_argument("--ui-fonts", type=boolean, default=True)
     parser.add_argument("--focal", type=boolean, default=True)
     parser.add_argument("--basic", type=boolean, default=True)

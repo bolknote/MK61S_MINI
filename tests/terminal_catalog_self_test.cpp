@@ -26,7 +26,7 @@ int main() {
     const auto actual = terminal_catalog::at(i);
     const auto& expected = legacy_commands[i];
     const bool description_differs =
-#if MK61_SETUP_IS_LOADABLE
+#if MK61_TERMINAL_HELP_IS_EXTERNAL
         actual.desc != nullptr;
 #else
         std::strcmp(actual.desc, expected.desc) != 0;
@@ -67,7 +67,7 @@ int main() {
   assert(terminal_catalog::lookup((const u8*) "sdel") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "sera") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "measure") == CMD_UNKNOWN);
-#if MK61_SETUP_IS_LOADABLE
+#if MK61_TERMINAL_HELP_IS_EXTERNAL
   assert(std::strlen(terminal_catalog::help_signature()) == 9);
 #endif
   std::puts("terminal catalog/help/lookup characterization: PASS");

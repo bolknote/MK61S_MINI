@@ -4,7 +4,7 @@
 #include "rust_types.h"
 
 // Internal, RAM-only representation of an installed FMK font. FMK2 remains
-// the compact interchange format on C6; SETUP.APP expands it once into PFK2.
+// the compact interchange format on C6; SETUP expands it once into PFK2.
 // The resident renderer then performs only a range lookup, one indexed record
 // read and a bounded bitmap copy.
 namespace prepared_font {

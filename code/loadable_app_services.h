@@ -219,12 +219,12 @@ enum mk61_service_math_operation { MK61_SERVICE_SIN, MK61_SERVICE_COS, MK61_SERV
 
 /* Temporary external text-font session, append-only operation 31.
  * BEGIN snapshots the resident display font. LOAD receives a zero-terminated
- * Fonts/<name>.FMK stem; resident M61 orchestration asks SETUP.APP to compile
+ * Fonts/<name>.FMK stem; resident M61 orchestration asks SETUP to compile
  * it, then replaces the text face atomically. RESTORE returns to the snapshot
  * while keeping the session open; END restores it and closes the session.
  * ACTIVATE re-enters the already loaded runtime face after a language selected
- * its ordinary renderer. A running APP must only use ACTIVATE: it cannot load
- * SETUP.APP into the APP arena that it already occupies. Signed results are
+ * its ordinary renderer. A running APP must only use ACTIVATE: on F401 it
+ * cannot load SETUP.APP into the APP arena that it already occupies. Signed results are
  * transported in call()'s u32. */
 enum mk61_service_text_font_operation {
   MK61_TEXT_FONT_BEGIN,
@@ -241,8 +241,8 @@ enum mk61_service_text_font_result {
   MK61_TEXT_FONT_UNAVAILABLE = -3
 };
 
-/* SETUP service v2. Explicit C fields, no native C++ layouts.  Version 2
- * makes FMK compilation an explicit SETUP.APP -> resident transaction. */
+/* SETUP service v2. Explicit C fields, no native C++ layouts. Version 2
+ * makes FMK compilation an explicit SETUP -> resident transaction. */
 enum { MK61_SETUP_API_VERSION = 2 };
 enum mk61_setup_operation {
   MK61_SETUP_VERSION, MK61_SETUP_HARDWARE, MK61_SETUP_RTC_READ,
@@ -255,9 +255,9 @@ enum mk61_setup_operation {
   MK61_SETUP_UI_FONT_COUNT, MK61_SETUP_UI_FONT_ITEM,
   MK61_SETUP_UI_FONT_CURRENT, MK61_SETUP_UI_FONT_APPLY_ITEM,
   MK61_SETUP_UI_FONT_STEP,
-  /* SETUP.APP -> resident handoff for a fully compiled RAM font. */
+  /* SETUP -> resident handoff for a fully compiled RAM font. */
   MK61_SETUP_PREPARED_FONT_INSTALL,
-  /* Resolve a catalog key without recursively invoking SETUP.APP. */
+  /* Resolve a catalog key without recursively invoking SETUP. */
   MK61_SETUP_UI_FONT_SOURCE
 };
 enum mk61_setup_feature {

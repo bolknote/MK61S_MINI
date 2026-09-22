@@ -586,7 +586,7 @@ void class_terminal::editor_key(terminal_line_editor::Key key) {
     }
 
 void class_terminal::print_help(void) {
-#if MK61_SETUP_IS_LOADABLE
+#if MK61_TERMINAL_HELP_IS_EXTERNAL
       program_store::Entry pages[2] = {};
       bool available = true;
       char path[] = "/System/HELP0.TXT";

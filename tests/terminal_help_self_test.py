@@ -94,7 +94,7 @@ class HelpTest(unittest.TestCase):
 #include <string>
 #include <vector>
 using u8=uint8_t; using u16=uint16_t; using usize=size_t;
-#define MK61_SETUP_IS_LOADABLE 1
+#define MK61_TERMINAL_HELP_IS_EXTERNAL 1
 #include "mk8_strings.inc"
 static std::vector<std::string> files;
 static bool busy=false, fail_body=false;

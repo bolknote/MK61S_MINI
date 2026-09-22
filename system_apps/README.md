@@ -29,15 +29,17 @@ python3 tools/build_system_app_bundle.py \
   --graphics 1 --focal 1 --basic 1 --wbmp 1 --markdown 1 --chip8 0
 ```
 
-Он всегда собирает обязательные `SETUP.APP` и `USBDISK.APP`,
-извлекает из служебной INFO-секции
-resident согласованные `HELP0.TXT` и `HELP1.TXT`, добавляет включённые роли и
+По умолчанию он собирает `SETUP.APP` и `USBDISK.APP`; для F411 сборщик
+прошивки передаёт `--setup 0`, поскольку SETUP уже встроен в resident.
+Сборщик извлекает из служебной INFO-секции resident согласованные
+`HELP0.TXT` и `HELP1.TXT`, добавляет включённые роли и
 атомарно заменяет только принадлежащие ему канонические файлы. Оболочка
 `system_apps/build.cmd` делегирует этому же коду; GCC, Arduino и
 `mk61-firmware` не имеют собственных реализаций упаковки System APP.
 
 Имена остаются стабильными: `/System/FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
-`MARKDOWN.APP`, `CHIP8.APP`, `SETUP.APP`, `USBDISK.APP`. После прошивки resident скопируйте
+`MARKDOWN.APP`, `CHIP8.APP`, `USBDISK.APP` и (только на F401) `SETUP.APP`.
+После прошивки resident скопируйте
 весь каталог `/System` из того же комплекта. ABI 2/3/4/5 намеренно не
 исполняются; старые APP нужно один раз пересобрать.
 

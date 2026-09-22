@@ -310,10 +310,10 @@
   #error "MK61_ENABLE_CHIP8 requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
 #endif
 
-// Все сборки используют один APP runtime и ABI: FOCAL, TinyBASIC,
-// просмотрщики, CHIP-8, SETUP и обычные APPLICATION отличаются только Kind и
-// способом поиска файла. Отдельного разрешения для «пользовательских» APP и
-// отдельного встроенного варианта System APP больше нет.
+// Все внешние APP используют один runtime и ABI: FOCAL, TinyBASIC,
+// просмотрщики, CHIP-8 и обычные APPLICATION отличаются только Kind и
+// способом поиска файла. SETUP встроен в resident на F411, но остаётся
+// внешним APP на F401.
 #ifndef MK61_ENABLE_LOADABLE_MODULES
   #define MK61_ENABLE_LOADABLE_MODULES 1
 #endif
@@ -322,10 +322,11 @@
 #endif
 
 // Канонические System APP используют тот же загрузчик, startup, API и кэш,
-// что APPLICATION, и всегда вынесены в /System. Старый флаг удалён намеренно:
-// он создавал второй несовместимый способ исполнения одного и того же кода.
+// что APPLICATION. SETUP на F411 встроен в resident: обычная сборка Arduino
+// IDE не запускает post-build для /System, а запаса Flash на F411 достаточно.
+// На F401 он остаётся внешним, чтобы сохранить запас Flash.
 #ifdef MK61_EXTERNALIZE_SYSTEM_APPS
-  #error "MK61_EXTERNALIZE_SYSTEM_APPS was removed; System APP are always external"
+  #error "MK61_EXTERNALIZE_SYSTEM_APPS was removed; SETUP residency is selected by MCU"
 #endif
 
 // Ключ каждого системного компонента остаётся главным: выключенный компонент
@@ -342,7 +343,13 @@
 #define MK61_MARKDOWN_VIEWER_IS_LOADABLE \
   (MK61_ENABLE_MARKDOWN_VIEWER)
 #define MK61_CHIP8_IS_LOADABLE (MK61_ENABLE_CHIP8)
-#define MK61_SETUP_IS_LOADABLE 1
+#if defined(STM32F411xE)
+  #define MK61_SETUP_IS_LOADABLE 0
+#else
+  #define MK61_SETUP_IS_LOADABLE 1
+#endif
+// Терминальная справка остаётся отдельным ресурсом на обеих платформах.
+#define MK61_TERMINAL_HELP_IS_EXTERNAL 1
 #define MK61_USBDISK_IS_LOADABLE 1
 #define MK61_ANY_LOADABLE_MODULE 1
 #define MK61_APP_RUNTIME_AVAILABLE 1

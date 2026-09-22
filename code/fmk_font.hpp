@@ -90,7 +90,7 @@ bool bitmapPixel(const u8* bitmap, u8 width, u8 x, u8 y);
 bool scaleToLcd5x8(const Face& face, const Glyph& glyph, u8 rows[8]);
 u8 selectPreviewGlyphs(const Face& face, Glyph out[8]);
 // Compiles FMK2 into the internal, uncompressed PFK2 runtime image.  This is
-// linked into SETUP.APP and host tools, never needed by the resident renderer.
+// linked into SETUP (APP on F401, resident on F411) and host tools.
 bool prepare(const Face& face, u8* output, usize capacity, usize& output_size);
 
 } // пространство имён fmk

@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+allow_fmk=0
+if [[ "${1:-}" == '--allow-fmk' ]]; then
+  allow_fmk=1
+  shift
+fi
 if [[ $# -ne 1 ]]; then
-  echo "usage: $0 firmware.elf" >&2
+  echo "usage: $0 [--allow-fmk] firmware.elf" >&2
   exit 2
 fi
 
@@ -33,16 +38,16 @@ find_arm_tool() {
 nm_tool="$(find_arm_tool "${ARM_NONE_EABI_NM:-}" arm-none-eabi-nm)"
 symbols="$($nm_tool -C --defined-only "$elf")"
 
-# FMK2 is the compressed M8 interchange format on C6. Its parser, bit reader,
-# CRC and RLE decoder belong exclusively to SETUP.APP.  The resident may keep
-# bitmapPixel(): it is a format-neutral row-padded raster helper shared by the
-# PFK2 renderer and costs far less than another copy under a new namespace.
-unexpected="$({ grep -F 'fmk::' <<<"$symbols" || true; } |
-  grep -Fv 'fmk::bitmapPixel(' || true)"
-if [[ -n "$unexpected" ]]; then
-  printf 'resident FMK decoder ELF check: compressed-font code leaked into resident:\n%s\n' \
-    "$unexpected" >&2
-  exit 1
+# FMK decoding remains outside the tight F401 resident. F411 deliberately
+# embeds SETUP, so its FMK parser is expected in the resident ELF.
+if [[ "$allow_fmk" == 0 ]]; then
+  unexpected="$({ grep -F 'fmk::' <<<"$symbols" || true; } |
+    grep -Fv 'fmk::bitmapPixel(' || true)"
+  if [[ -n "$unexpected" ]]; then
+    printf 'resident FMK decoder ELF check: compressed-font code leaked into resident:\n%s\n' \
+      "$unexpected" >&2
+    exit 1
+  fi
 fi
 
 # FAT12 directory synthesis, LFN conversion and the transactional import plan

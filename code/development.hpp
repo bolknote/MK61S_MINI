@@ -31,8 +31,9 @@ bool program_store_view_entry(program_store::ProgramType type, const char* name)
 bool program_store_apply_font(const program_store::Entry& entry);
 bool program_store_apply_font(const char* name);
 
-// SETUP.APP is the sole FMK parser. It hands a validated PFK2 image back
-// through this resident boundary; source_id remains the restoration identity.
+// SETUP is the sole FMK parser (external APP on F401, resident on F411).
+// It hands a validated PFK2 image through this boundary; source_id remains
+// the restoration identity.
 i32 program_store_install_prepared_font(
     u16 source_id, const u8* data, u16 size, u8 role, u8 expected_height,
     u32 ui_key, u8 flags);

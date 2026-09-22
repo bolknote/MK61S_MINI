@@ -929,5 +929,17 @@ void preview(const char* name, const u8* data, u16 len) {
 }
 
 
+#if !MK61_SETUP_IS_LOADABLE
+i32 compile_font(u16 id, u8 role, u8 expected_height,
+                 u32 ui_key, u8 flags) {
+#if MK61_UI_FONT_CLIENT
+  return setup_font_compiler::install(id, role, expected_height, ui_key, flags);
+#else
+  (void) id; (void) role; (void) expected_height;
+  (void) ui_key; (void) flags;
+  return MK61_TEXT_FONT_UNSUPPORTED;
+#endif
+}
+#endif
 } // namespace setup_ui
 #endif

@@ -15,7 +15,7 @@ namespace terminal_catalog {
 // Команды вводит человек, поэтому линейный проход по компактному пулу строк
 // быстрее терминала на несколько порядков. Он заодно убирает из F401
 // 128-байтный хеш-индекс и таблицу смещений с выравниванием.
-#if MK61_SETUP_IS_LOADABLE
+#if MK61_TERMINAL_HELP_IS_EXTERNAL
 // ELF metadata for the host bundle builder; the linker marks it non-allocating.
 // The signature is constant-folded; the resource never occupies MCU Flash/RAM.
 #if defined(__ELF__)
@@ -50,7 +50,7 @@ const char* help_signature() { return help_tag.text; }
 #undef MK61_HELP_METADATA
 #endif
 static constexpr char command_text[] =
-#if MK61_SETUP_IS_LOADABLE
+#if MK61_TERMINAL_HELP_IS_EXTERNAL
 #define COMMAND(name, id, desc) name "\0"
 #else
 #define COMMAND(name, id, desc) name "\0" desc "\0"
@@ -74,14 +74,14 @@ constexpr TerminalCommand entry(usize index) {
   const char* name = command_text;
   for(usize current = 0; current < index; ++current) {
     while(*name++ != 0) {}
-#if !MK61_SETUP_IS_LOADABLE
+#if !MK61_TERMINAL_HELP_IS_EXTERNAL
     while(*name++ != 0) {}
 #endif
   }
   const char* next = name;
   while(*next++ != 0) {}
   return {name, command_ids[index],
-#if MK61_SETUP_IS_LOADABLE
+#if MK61_TERMINAL_HELP_IS_EXTERNAL
     nullptr
 #else
     next
@@ -122,7 +122,7 @@ u8 lookup(const u8* line) {
       return command_ids[index];
     }
     while(*name++ != 0) {}
-#if !MK61_SETUP_IS_LOADABLE
+#if !MK61_TERMINAL_HELP_IS_EXTERNAL
     while(*name++ != 0) {}
 #endif
   }

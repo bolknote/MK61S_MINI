@@ -140,7 +140,7 @@ WS0010-профиль предназначен для Winstar WEH001602A с ин
 - `.bin` resident-прошивки;
 - только включённые `System/FOCAL.APP`, `System/BASIC.APP`,
   `System/WBMP.APP`, `System/MARKDOWN.APP`, `System/CHIP8.APP`;
-- обязательные `System/SETUP.APP`, `System/USBDISK.APP`,
+- обязательные для этой F401-платы `System/SETUP.APP`, `System/USBDISK.APP`,
   `System/HELP0.TXT` и `System/HELP1.TXT`;
 - `build.flags` с точными compile-time ключами.
 

@@ -87,8 +87,17 @@ int main(void) {
   static_assert(!MK61_FOCAL_IS_BUILTIN && !MK61_TINYBASIC_IS_BUILTIN &&
                 !MK61_WBMP_VIEWER_IS_BUILTIN &&
                 !MK61_MARKDOWN_VIEWER_IS_BUILTIN &&
-                !MK61_CHIP8_IS_BUILTIN && MK61_SETUP_IS_LOADABLE,
-                "profiles must not keep a second resident implementation");
+                !MK61_CHIP8_IS_BUILTIN,
+                "optional languages and viewers must remain external");
+#if defined(STM32F411xE)
+  static_assert(!MK61_SETUP_IS_LOADABLE,
+                "F411 settings must work without SETUP.APP");
+#else
+  static_assert(MK61_SETUP_IS_LOADABLE,
+                "F401 settings must remain external");
+#endif
+  static_assert(MK61_TERMINAL_HELP_IS_EXTERNAL,
+                "terminal help must stay external on both MCU families");
 #if defined(MK61_CONFIG_EXPECT_NO_MODULE_ARTIFACTS)
   static_assert(!MK61_FOCAL_IS_LOADABLE && !MK61_TINYBASIC_IS_LOADABLE &&
                 !MK61_WBMP_VIEWER_IS_LOADABLE &&

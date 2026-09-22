@@ -1132,7 +1132,7 @@ function Test-ArduinoLibrariesReady {
 }
 
 function Test-SystemAppsEnabled {
-    # SETUP, USBDISK and terminal help are mandatory in every ABI 6 bundle.
+    # USBDISK and terminal help are mandatory; F401 also needs SETUP.APP.
     return $true
 }
 
@@ -1148,7 +1148,8 @@ function Test-CustomAppsRequested {
 
 function Get-ExpectedSystemAppNames {
     $names = New-Object 'System.Collections.Generic.List[string]'
-    foreach ($name in @('SETUP.APP', 'USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
+    if ($script:State.Mcu -eq 'f401') { $names.Add('SETUP.APP') }
+    foreach ($name in @('USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
     if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
     if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
     if ($script:State.EnableWbmp -eq 1 -and
@@ -2117,6 +2118,7 @@ function Invoke-SystemAppBundleBuild {
             '--compile-commands', (Join-Path $BuildDirectory 'compile_commands.json'),
             '--output-dir', (Join-Path $Bundle 'System'),
             '--graphics', $graphics,
+            '--setup', $(if ($script:State.Mcu -eq 'f411') { '0' } else { '1' }),
             '--ui-fonts', $uiFonts,
             '--focal', [string]$script:State.EnableFocal,
             '--basic', [string]$script:State.EnableTinyBasic,

@@ -28,13 +28,13 @@ from hil_usb_disk_transaction import (
 
 CANONICAL_FILES = (
     "USBDISK.APP",
-    "SETUP.APP",
     "HELP0.TXT",
     "HELP1.TXT",
     "FOCAL.APP",
     "BASIC.APP",
     "MARKDOWN.APP",
 )
+OPTIONAL_FILES = ("SETUP.APP",)  # resident on F411, external on F401
 CHUNK_SIZE = 48
 
 
@@ -93,6 +93,9 @@ def main() -> int:
                if not (args.bundle / name).is_file()]
     if missing:
         parser.error(f"bundle is missing: {', '.join(missing)}")
+    files = CANONICAL_FILES + tuple(
+        name for name in OPTIONAL_FILES if (args.bundle / name).is_file()
+    )
 
     with Port(args.port) as port:
         identity = parse_identity(port.command("identity"))
@@ -118,7 +121,7 @@ def main() -> int:
             for line in listing_entries(port.command("ls /System", timeout=10))
             if line.startswith("f\t")
         }
-        conflicts = [name for name in CANONICAL_FILES
+        conflicts = [name for name in files
                      if name.casefold() in existing]
         if conflicts and not args.replace:
             raise AssertionError(
@@ -126,7 +129,7 @@ def main() -> int:
                 + ", ".join(conflicts)
             )
 
-        for name in CANONICAL_FILES:
+        for name in files:
             payload = bundle_payload(args.bundle, name)
             target = f"/System/{name}"
             print(f"upload {name}: {len(payload)} bytes", flush=True)
@@ -136,7 +139,7 @@ def main() -> int:
 
         require_unchanged(identity, parse_identity(port.command("identity")))
         listing = port.command("ls /System", timeout=15)
-        for name in CANONICAL_FILES:
+        for name in files:
             if name.casefold() not in listing.casefold():
                 raise AssertionError(f"installed file missing from listing: {name}")
         print("C6 System bootstrap PASS", flush=True)

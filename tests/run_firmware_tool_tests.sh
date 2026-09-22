@@ -359,13 +359,13 @@ f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$f411_selection")
 printf '%s\n' "$f411_flags" > "$f411_bundle/build.flags"
 printf 'format 1\nabi 6\n' > "$f411_bundle/build.apps"
 printf 'resident-f411\n' > "$f411_bundle/mk61s-M-mini-v3-lcd1602-a00-f411.bin"
-for resource in SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
+for resource in USBDISK.APP HELP0.TXT HELP1.TXT; do
   printf 'f411-resource\n' > "$f411_bundle/System/$resource"
 done
 MK61_CONFIG_FILE="$install_config" MK61_OUTPUT_DIR="$install_output" \
   MK61_C6_MOUNT="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
-cmp "$f411_bundle/System/SETUP.APP" "$install_mount/System/SETUP.APP"
+test ! -e "$install_mount/System/SETUP.APP"
 cmp "$f411_bundle/System/USBDISK.APP" "$install_mount/System/USBDISK.APP"
 
 printf 'firmware_tool_tests: ok\n'
