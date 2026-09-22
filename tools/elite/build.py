@@ -10,8 +10,11 @@ OUT=ROOT/'programs/games/ELITE'
 
 def outputs():
     banks,info=create_game().link()
-    files={OUT/f'b{b:02d}.m61':f'hin {b*112:04d} {bytes(code).hex().upper()}\n' for b,code in sorted(banks.items())}
-    files[OUT/'autoexec.m61']='open manual.md\nreinit\n'+''.join(f'open b{b:02d}.m61\n' for b in sorted(banks))+'run\n'
+    lines=[f'hin {b*112:04d} {bytes(code).hex().upper()}\n' for b,code in sorted(banks.items())]
+    # Six full banks fit in C6's 1536-byte M61 file quota (6 * 234 = 1404).
+    parts={OUT/f'part{i//6:02d}.m61':''.join(lines[i:i+6]) for i in range(0,len(lines),6)}
+    files=dict(parts)
+    files[OUT/'autoexec.m61']='open manual.md\nreinit\n'+''.join(f'open {p.name}\n' for p in parts)+'run\n'
     files[ROOT/'tools/elite/elite.map.json']=json.dumps(info,indent=2,ensure_ascii=False)+'\n'
     return files
 
@@ -25,11 +28,11 @@ def main():
         else:
             path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
     expected=set(files)
-    for path in OUT.glob('b[0-9][0-9].m61'):
+    for path in list(OUT.glob('b[0-9][0-9].m61'))+list(OUT.glob('part[0-9][0-9].m61')):
         if path not in expected:
             if args.check:stale.append(str(path.relative_to(ROOT)))
             else:path.unlink()
     if stale:raise SystemExit('Regenerate with tools/elite/build.py: '+', '.join(stale))
-    print(f'ELITE: {len([p for p in files if p.name.startswith("b")])} banks; generated files {"verified" if args.check else "written"}')
+    print(f'ELITE: 32 banks in 6 parts; generated files {"verified" if args.check else "written"}')
 
 if __name__=='__main__':main()

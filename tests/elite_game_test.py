@@ -156,10 +156,12 @@ def test_thargoids():
 
 def main():
     directory=ROOT/'programs/games/ELITE'
-    banks=sorted(directory.glob('b[0-9][0-9].m61'))
-    assert len(banks)==32
-    expected=['open manual.md','reinit']+[f'open {p.name}' for p in banks]+['run']
+    parts=sorted(directory.glob('part[0-9][0-9].m61'))
+    assert len(parts)==6 and not list(directory.glob('b[0-9][0-9].m61'))
+    expected=['open manual.md','reinit']+[f'open {p.name}' for p in parts]+['run']
     assert (directory/'autoexec.m61').read_text().splitlines()==expected
+    addresses=[int(line.split()[1]) for p in parts for line in p.read_text().splitlines()]
+    assert addresses==list(range(0,32*112,112))
     for path in directory.glob('*.m61'):
         assert path.stat().st_size<=1536
         assert all(len(line)<=239 for line in path.read_text().splitlines())

@@ -9,6 +9,8 @@
 #include <iomanip>
 #include "mk61emu_core.h"
 
+unsigned elite_load_game(const char* directory);
+
 static const char symbols[]="0123456789-     ";
 static bool input_frame_stable=true;
 static void press(int x,int y) {
@@ -67,22 +69,17 @@ static void dump(unsigned steps) {
 }
 int main(int argc,char**argv){
   if(argc!=2)return 2;
-  core_61::set_expanded_program_mode(true);core_61::enable();core_61::clear_extended_program_banks();
-  for(int bank=0;bank<32;bank++){
-    char path[1024];std::snprintf(path,sizeof(path),"%s/b%02d.m61",argv[1],bank);
-    std::ifstream f(path);std::string line;
-    while(std::getline(f,line)){
-      std::istringstream in(line);std::string op,hex;int address;
-      if(!(in>>op>>address>>hex)||op!="hin")continue;
-      for(size_t i=0;i<hex.size();i+=2)if(!core_61::write_absolute_program(address+i/2,std::stoul(hex.substr(i,2),nullptr,16)))return 3;
-    }
-  }
-  core_61::set_IP(0);
+  const unsigned initial_steps=elite_load_game(argv[1]);
+  bool initial_pending=true;
   if(std::getenv("ELITE_TRACE"))core_61::set_mk61_program_boundary_hook(trace_boundary);
   std::string line;
   while(std::getline(std::cin,line)){
     std::istringstream in(line);std::string op;in>>op;
     if(op=="set"){int b,f;long long v;in>>b>>f>>v;page_word(b,f,v);continue;}
+    if(initial_pending) {
+      initial_pending=false;
+      if(op=="run" || op=="dump") { dump(initial_steps); continue; }
+    }
     if(op=="input"){
       u8 before[12];std::memcpy(before,core_61::segment_display_frame(),12);
       std::string value;in>>value;press(10,8); // Cx
