@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "rust_types.h"
 
 namespace hardware_info {
@@ -133,9 +133,9 @@ inline bool format_device_line(
     char* out, usize size, bool russian, const DeviceIdentity& identity) {
   if(out == NULL || size == 0) return false;
   const int written = identity.family != NULL
-    ? snprintf(out, size, russian ? M8_HARDWARE_CHIP_FORMAT : "Chip:%s%c%c",
+    ? snprintf(out, size, russian ? M8("ЧИП:%s%c%c") : "Chip:%s%c%c",
         identity.family, identity.pin_count_code, identity.flash_size_code)
-    : snprintf(out, size, russian ? M8_HARDWARE_CHIP_ID_FORMAT : "Chip:ID 0x%03X",
+    : snprintf(out, size, russian ? M8("ЧИП:ID 0x%03X") : "Chip:ID 0x%03X",
         (unsigned) identity.device_id);
   return written >= 0 && (usize) written < size;
 }
@@ -147,19 +147,19 @@ inline bool format_memory_line(
   int written;
   if(identity.ram_kb != 0 && identity.flash_kb != 0) {
     written = snprintf(
-      out, size, russian ? M8_HARDWARE_MEMORY_FORMAT : "RAM:%u ROM:%u",
+      out, size, russian ? M8("ОЗУ:%u ПЗУ:%u") : "RAM:%u ROM:%u",
       (unsigned) identity.ram_kb, (unsigned) identity.flash_kb);
   } else if(identity.ram_kb != 0) {
     written = snprintf(
-      out, size, russian ? M8_HARDWARE_MEMORY_RAM_FORMAT : "RAM:%u ROM:?",
+      out, size, russian ? M8("ОЗУ:%u ПЗУ:?") : "RAM:%u ROM:?",
       (unsigned) identity.ram_kb);
   } else if(identity.flash_kb != 0) {
     written = snprintf(
-      out, size, russian ? M8_HARDWARE_MEMORY_ROM_FORMAT : "RAM:? ROM:%u",
+      out, size, russian ? M8("ОЗУ:? ПЗУ:%u") : "RAM:? ROM:%u",
       (unsigned) identity.flash_kb);
   } else {
     written = snprintf(
-      out, size, russian ? M8_HARDWARE_MEMORY_UNKNOWN : "RAM:? ROM:?");
+      out, size, russian ? M8("ОЗУ:? ПЗУ:?") : "RAM:? ROM:?");
   }
   return written >= 0 && (usize) written < size;
 }
@@ -252,11 +252,11 @@ inline bool format_vdda_line(
   int written;
   if(!reading.valid) {
     written = snprintf(
-      out, size, russian ? M8_HARDWARE_POWER_UNKNOWN : "VDD:--.-- V");
+      out, size, russian ? M8("Питание:--,-- В") : "VDD:--.-- V");
   } else {
     const u16 centivolts = (u16) ((reading.millivolts + 5U) / 10U);
     written = snprintf(
-      out, size, russian ? M8_HARDWARE_POWER_FORMAT : "VDD:%u.%02u V",
+      out, size, russian ? M8("Питание:%u,%02u В") : "VDD:%u.%02u V",
       (unsigned) (centivolts / 100U),
       (unsigned) (centivolts % 100U));
   }
@@ -268,14 +268,14 @@ inline bool format_temperature_line(
   if(out == NULL || size == 0) return false;
   if(!reading.valid) {
     const int written = snprintf(
-      out, size, russian ? M8_HARDWARE_MCU_UNKNOWN : "MCU:--.- C");
+      out, size, russian ? M8("МК:--,- C") : "MCU:--.- C");
     return written >= 0 && (usize) written < size;
   }
 
   const i32 value = reading.decicelsius;
   const u32 magnitude = (u32) (value < 0 ? -value : value);
   const int written = snprintf(
-    out, size, russian ? M8_HARDWARE_MCU_FORMAT : "MCU:%s%lu.%lu C",
+    out, size, russian ? M8("МК:%s%lu,%lu C") : "MCU:%s%lu.%lu C",
     value < 0 ? "-" : "",
     (unsigned long) (magnitude / 10U),
     (unsigned long) (magnitude % 10U));
@@ -291,15 +291,15 @@ inline bool format_battery_line(
     const u16 centivolts =
       (u16) ((status.voltage.millivolts + 5U) / 10U);
     written = snprintf(
-      out, size, russian ? M8_HARDWARE_BATTERY_FORMAT : "Battery:%u.%02u V",
+      out, size, russian ? M8("Батарея:%u,%02u В") : "Battery:%u.%02u V",
       (unsigned) (centivolts / 100U),
       (unsigned) (centivolts % 100U));
   } else if(status.presence == BatteryPresence::ABSENT) {
     written = snprintf(out, size,
-      russian ? M8_HARDWARE_BATTERY_ABSENT : "Battery:absent");
+      russian ? M8("Батарея:нет") : "Battery:absent");
   } else {
     written = snprintf(out, size,
-      russian ? M8_HARDWARE_BATTERY_UNKNOWN : "Battery:unknown");
+      russian ? M8("Батарея:неизв.") : "Battery:unknown");
   }
   return written >= 0 && (usize) written < size;
 }
@@ -315,7 +315,7 @@ inline bool format_display_line(
     char* out, usize size, bool russian, const char* display_type) {
   if(out == NULL || size == 0 || display_type == NULL) return false;
   const int written = snprintf(
-    out, size, russian ? M8_HARDWARE_DISPLAY_FORMAT : "Disp:%s", display_type);
+    out, size, russian ? M8("Экран:%s") : "Disp:%s", display_type);
   return written >= 0 && (usize) written < size;
 }
 
@@ -323,7 +323,7 @@ inline bool format_generator_line(
     char* out, usize size, bool russian, const char* generator_type) {
   if(out == NULL || size == 0 || generator_type == NULL) return false;
   const int written = snprintf(
-    out, size, russian ? M8_HARDWARE_GENERATOR_FORMAT : "Generator:%s",
+    out, size, russian ? M8("Генератор:%s") : "Generator:%s",
     generator_type);
   return written >= 0 && (usize) written < size;
 }

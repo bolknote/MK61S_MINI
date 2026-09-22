@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Exercise M8 help export and the production print_help with failing C6 reads."""
 import importlib.util
-import json
 import os
 from pathlib import Path
 import struct
@@ -31,12 +30,12 @@ def elf_metadata(content, flags=0):
 
 class HelpTest(unittest.TestCase):
     def test_translated_catalog_keeps_diagnostics(self):
-        descriptions = json.loads((ROOT/'code/mk8_strings.json').read_text(encoding='utf-8'))
-        self.assertIn('graphics-read/restore', descriptions['TH_DISPLAY'])
-        self.assertIn('сторожевой таймер', descriptions['TH_WDOG'])
-        self.assertIn('защита памяти', descriptions['TH_MPU'])
-        self.assertIn('сбои', descriptions['TH_CRASH'])
-        self.assertEqual(descriptions['TH_AVAILABLE'], 'Доступные команды:')
+        commands = (ROOT/'code/terminal_commands.inc').read_text(encoding='utf-8')
+        terminal = (ROOT/'code/terminal.cpp').read_text(encoding='utf-8')
+        for description in ('graphics-read/restore', 'сторожевой таймер',
+                            'защита памяти', 'сбои'):
+            self.assertIn(description, commands)
+        self.assertIn('M8("Доступные команды:")', terminal)
 
     def test_export(self):
         # M8 is single-byte; the exporter prefers the previous complete line.
@@ -93,9 +92,8 @@ class HelpTest(unittest.TestCase):
 #include <cstring>
 #include <string>
 #include <vector>
-using u8=uint8_t; using u16=uint16_t; using usize=size_t;
 #define MK61_TERMINAL_HELP_IS_EXTERNAL 1
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 static std::vector<std::string> files;
 static bool busy=false, fail_body=false;
 struct Output {
@@ -146,8 +144,8 @@ int main() {
     if(mode==2) files[1][0]='0';
     if(mode==3) files[1]="short";
     terminal.print_help();
-    if(mode==0) assert(Serial.text==std::string(M8_TH_AVAILABLE)+"\nfirst page\nsecond page\n");
-    else if(mode==5) assert(Serial.text==std::string(M8_TH_AVAILABLE)+"\n"+M8_TH_READ_ERROR+"\n");
+    if(mode==0) assert(Serial.text==std::string(M8("Доступные команды:"))+"\nfirst page\nsecond page\n");
+    else if(mode==5) assert(Serial.text==std::string(M8("Доступные команды:"))+"\n"+M8("Ошибка чтения справки")+"\n");
     else {
       assert(Serial.text.find("help dfu fsput ")!=std::string::npos);
       assert(Serial.text.find("fsput begin /System/<file> <size> <crc32>")!=std::string::npos);

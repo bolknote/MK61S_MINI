@@ -20,7 +20,6 @@ expected="$(
     font_preview_study.py \
     generate_eliza_doctor.py \
     generate_highnoon_font.py \
-    generate_mk8_strings.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
     m8_codec.py \

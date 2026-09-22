@@ -10,8 +10,6 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
-python3 "$root/tools/generate_mk8_strings.py" --check
-
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -I"$root/code" "$root/tests/utf8_codec_self_test.cpp" -o "$out"
 "$out"

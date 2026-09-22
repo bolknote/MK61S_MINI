@@ -1,102 +1,102 @@
 // Immutable command catalog; included only by terminal_catalog.cpp.
-COMMAND("ver", CMD_VERSION, M8_TH_VER)
-COMMAND("identity", CMD_IDENTITY, M8_TH_IDENTITY)
-COMMAND("date", CMD_DATE, M8_TH_DATE)
+COMMAND("ver", CMD_VERSION, "версия прошивки")
+COMMAND("identity", CMD_IDENTITY, "идентификаторы устройства и сборки")
+COMMAND("date", CMD_DATE, "date [ms|ГГГГ-ММ-ДД ЧЧ:ММ:СС] — часы")
 #if MK61_ENABLE_RTC_ALARM_TERMINAL
-COMMAND("alarm", CMD_ALARM, M8_TH_ALARM)
+COMMAND("alarm", CMD_ALARM, "состояние и настройка будильников RTC A/B")
 #endif
-COMMAND("help", CMD_HELP, M8_TH_HELP)
-COMMAND("history", CMD_HISTORY, M8_TH_HISTORY)
-COMMAND("list", CMD_LIST, M8_TH_LIST)
-COMMAND("dump", CMD_DUMP, M8_TH_DUMP)
-COMMAND("pub", CMD_PUB, M8_TH_PUB)
-COMMAND("lasm", CMD_LASM, M8_TH_LASM)
-COMMAND("isa", CMD_ISA, M8_TH_ISA)
-COMMAND("asm", CMD_ASM, M8_TH_ASM)
-COMMAND("ins", CMD_INS, M8_TH_INS)
-COMMAND("hin", CMD_HIN, M8_TH_HIN)
-COMMAND("hout", CMD_HOUT, M8_TH_HOUT)
-COMMAND("reg", CMD_REG_DUMP, M8_TH_REG)
-COMMAND("stk", CMD_STACK, M8_TH_STACK)
-COMMAND("poke", CMD_POKE, M8_TH_POKE)
-COMMAND("1302", CMD_1302, M8_TH_1302)
-COMMAND("ring", CMD_RING, M8_TH_RING)
-COMMAND("kbd", CMD_KBD, M8_TH_KBD)
-COMMAND("led", CMD_LED, M8_TH_LED)
-COMMAND("beep", CMD_BEEP, M8_TH_BEEP)
-COMMAND("if", CMD_IF, M8_TH_IF)
-COMMAND("print", CMD_PRINT, M8_TH_PRINT)
-COMMAND("wait", CMD_WAIT, M8_TH_WAIT)
-COMMAND("ret", CMD_RET, M8_TH_RET)
-COMMAND("reinit", CMD_REINIT, M8_TH_REINIT)
-COMMAND("cmd", CMD_CMD, M8_TH_CMD)
-COMMAND("run", CMD_RUN, M8_TH_RUN)
-COMMAND("open", CMD_OPEN, M8_TH_OPEN)
-COMMAND("save", CMD_SAVE, M8_TH_SAVE)
-COMMAND("load", CMD_LOAD, M8_TH_LOAD)
-COMMAND("pwd", CMD_FS_PWD, M8_TH_PWD)
-COMMAND("cd", CMD_FS_CD, M8_TH_CD)
-COMMAND("ls", CMD_FS_LIST, M8_TH_LS)
-COMMAND("dir", CMD_FS_LIST, M8_TH_DIR)
-COMMAND("mkdir", CMD_FS_MKDIR, M8_TH_MKDIR)
-COMMAND("mv", CMD_FS_MOVE, M8_TH_MV)
-COMMAND("rm", CMD_FS_REMOVE, M8_TH_RM)
-COMMAND("del", CMD_FS_REMOVE, M8_TH_DEL)
-COMMAND("rmdir", CMD_FS_RMDIR, M8_TH_RMDIR)
-COMMAND("df", CMD_FS_STAT, M8_TH_DF)
+COMMAND("help", CMD_HELP, "эта справка")
+COMMAND("history", CMD_HISTORY, "история команд")
+COMMAND("list", CMD_LIST, "память программ: HEX, столбцом")
+COMMAND("dump", CMD_DUMP, "память программ: HEX, строками")
+COMMAND("pub", CMD_PUB, "листинг программы для публикации")
+COMMAND("lasm", CMD_LASM, "дизассемблировать программу")
+COMMAND("isa", CMD_ISA, "справочник мнемоник ассемблера")
+COMMAND("asm", CMD_ASM, "asm [адрес] <мнемоники> — ассемблировать")
+COMMAND("ins", CMD_INS, "ins <шаг> <код> — вставить команду")
+COMMAND("hin", CMD_HIN, "hin <адрес> <hex> — записать память программ")
+COMMAND("hout", CMD_HOUT, "память программ в виде команд hin")
+COMMAND("reg", CMD_REG_DUMP, "показать регистры R0…RE")
+COMMAND("stk", CMD_STACK, "показать стек X,Y,Z,T,X1")
+COMMAND("poke", CMD_POKE, "poke <X|Y|Z|T> <число> — записать стек")
+COMMAND("1302", CMD_1302, "показать регистр R К145ИК1302")
+COMMAND("ring", CMD_RING, "показать кольцевую память M")
+COMMAND("kbd", CMD_KBD, "kbd <сканкод> — нажать клавишу")
+COMMAND("led", CMD_LED, "led <0|1>[,мс,…] — сценарий светодиода")
+COMMAND("beep", CMD_BEEP, "beep <Гц>,<мс>[,…] — звуковой сценарий")
+COMMAND("if", CMD_IF, "if <регистр><условие><число> <команда>")
+COMMAND("print", CMD_PRINT, "print \"текст {X}\"|off|on — экран M61")
+COMMAND("wait", CMD_WAIT, "wait <1..60000> — пауза сценария, мс")
+COMMAND("ret", CMD_RET, "возврат из сценария или ловушки M61")
+COMMAND("reinit", CMD_REINIT, "очистить калькулятор и обработчики M61")
+COMMAND("cmd", CMD_CMD, "cmd <код> — набрать команду клавишами")
+COMMAND("run", CMD_RUN, "run [имя] — запустить программу или файл")
+COMMAND("open", CMD_OPEN, "open <имя> — открыть файл")
+COMMAND("save", CMD_SAVE, "save <номер|путь.m61> — сохранить программу")
+COMMAND("load", CMD_LOAD, "load <номер|путь.m61> — загрузить программу")
+COMMAND("pwd", CMD_FS_PWD, "текущий каталог хранилища")
+COMMAND("cd", CMD_FS_CD, "cd [путь] — сменить каталог")
+COMMAND("ls", CMD_FS_LIST, "ls [путь] — показать каталог")
+COMMAND("dir", CMD_FS_LIST, "то же, что ls")
+COMMAND("mkdir", CMD_FS_MKDIR, "mkdir [-p] <путь> — создать каталоги")
+COMMAND("mv", CMD_FS_MOVE, "mv <откуда> <куда>")
+COMMAND("rm", CMD_FS_REMOVE, "rm [-r] <путь> — удалить файл или дерево")
+COMMAND("del", CMD_FS_REMOVE, "то же, что rm")
+COMMAND("rmdir", CMD_FS_RMDIR, "rmdir <путь> — удалить пустой каталог")
+COMMAND("df", CMD_FS_STAT, "ёмкость C6 и число узлов")
 #if MK61_ENABLE_READ_BENCHMARKS
-COMMAND("bench", CMD_BENCHMARK, M8_TH_BENCH)
+COMMAND("bench", CMD_BENCHMARK, "тест чтения C6 без записи")
 #endif
-COMMAND("fsget", CMD_FS_GET, M8_TH_FSGET)
-COMMAND("fsput", CMD_FS_PUT, M8_TH_FSPUT)
-COMMAND("format", CMD_FORMAT_STORAGE, M8_TH_FORMAT)
-COMMAND("clr", CMD_CLEAR, M8_TH_CLR)
-COMMAND("vlog", CMD_VFAT_LOG, M8_TH_VLOG)
-COMMAND("usbdisk", CMD_USB_DISK, M8_TH_USBDISK)
-COMMAND("fsls", CMD_FS_LIST, M8_TH_LS)
-COMMAND("fsrm", CMD_FS_REMOVE, M8_TH_RM)
-COMMAND("fsstat", CMD_FS_STAT, M8_TH_DF)
-COMMAND("fsclean", CMD_FS_CLEAN, M8_TH_FSCLEAN)
-COMMAND("disa", CMD_DISASM, M8_TH_DISA)
+COMMAND("fsget", CMD_FS_GET, "fsget <путь> — машинное чтение файла")
+COMMAND("fsput", CMD_FS_PUT, "fsput begin|data|end|cancel — загрузка файла")
+COMMAND("format", CMD_FORMAT_STORAGE, "format C6 — форматировать (Y/y)")
+COMMAND("clr", CMD_CLEAR, "очистить память программ (Y/y)")
+COMMAND("vlog", CMD_VFAT_LOG, "диагностика импорта USB [clear]")
+COMMAND("usbdisk", CMD_USB_DISK, "запустить режим USB-диска до безопасного извлечения")
+COMMAND("fsls", CMD_FS_LIST, "ls [путь] — показать каталог")
+COMMAND("fsrm", CMD_FS_REMOVE, "rm [-r] <путь> — удалить файл или дерево")
+COMMAND("fsstat", CMD_FS_STAT, "ёмкость C6 и число узлов")
+COMMAND("fsclean", CMD_FS_CLEAN, "удалить все пустые записи хранилища")
+COMMAND("disa", CMD_DISASM, "включить или выключить дизассемблер")
 #if MK61_ENABLE_USB_SCREEN
-COMMAND("uscreen", CMD_USB_SCREEN, M8_TH_USCREEN)
+COMMAND("uscreen", CMD_USB_SCREEN, "запустить режим USB-экрана")
 #endif
 #if MK61_DWT_PROFILER_SUPPORTED
   #if MK61_DEEP_IDLE_SUPPORTED
     #if MK61_ENABLE_PROFILE_SAVE
-COMMAND("prof", CMD_PROFILE, M8_TH_PROF_DEEP_SAVE)
+COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core|deep <1..5> [циклы]|save] — профиль")
     #else
-COMMAND("prof", CMD_PROFILE, M8_TH_PROF_DEEP)
+COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core|deep <1..5> [циклы]] — профиль")
     #endif
   #else
     #if MK61_ENABLE_PROFILE_SAVE
-COMMAND("prof", CMD_PROFILE, M8_TH_PROF_CORE_SAVE)
+COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core [шаги]|save [путь.txt]] — профиль")
     #else
-COMMAND("prof", CMD_PROFILE, M8_TH_PROF_CORE)
+COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core [шаги]] — профиль")
     #endif
   #endif
 #endif
 #if MK61_CRASH_DUMP_SUPPORTED
   #if MK61_ENABLE_FAULT_INJECTION
-COMMAND("crash", CMD_CRASH, M8_TH_CRASH_TEST)
+COMMAND("crash", CMD_CRASH, "crash [show|clear|save [путь.txt]|test <сбой>] — сбои")
   #else
-COMMAND("crash", CMD_CRASH, M8_TH_CRASH)
+COMMAND("crash", CMD_CRASH, "crash [show|clear|save [путь.txt]] — сбои")
   #endif
 #endif
 #if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
   #if MK61_ENABLE_WATCHDOG_TEST
-COMMAND("wdog", CMD_WATCHDOG, M8_TH_WDOG_TEST)
+COMMAND("wdog", CMD_WATCHDOG, "wdog [status|test <starve|hang>] — сторожевой таймер")
   #else
-COMMAND("wdog", CMD_WATCHDOG, M8_TH_WDOG)
+COMMAND("wdog", CMD_WATCHDOG, "wdog [status] — сторожевой таймер")
   #endif
 #endif
 #if MK61_MPU_GUARD_SUPPORTED
   #if MK61_ENABLE_MPU_TEST
-COMMAND("mpu", CMD_MPU, M8_TH_MPU_TEST)
+COMMAND("mpu", CMD_MPU, "mpu [status|test <guard|null|exec>] — защита памяти")
   #else
-COMMAND("mpu", CMD_MPU, M8_TH_MPU)
+COMMAND("mpu", CMD_MPU, "mpu [status] — защита памяти")
   #endif
 #endif
-COMMAND("display", CMD_DISPLAY, M8_TH_DISPLAY)
-COMMAND("rst", CMD_RESET, M8_TH_RST)
-COMMAND("dfu", CMD_DFU, M8_TH_DFU)
+COMMAND("display", CMD_DISPLAY, "display status|reinit|on|off|test <режим>: text/alphabet/symbols/map/ddram/row/cgram/zero/clear/home/cursor/entry/autoshift/sleep/graphics/graphics-read/restore — экран")
+COMMAND("rst", CMD_RESET, "rst [now] — перезапуск; без now просит подтверждение")
+COMMAND("dfu", CMD_DFU, "dfu [status] — войти в ROM DFU или показать состояние")

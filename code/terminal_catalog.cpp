@@ -6,7 +6,7 @@
 #include "crash_dump.hpp"
 #include "independent_watchdog.hpp"
 #include "mpu_guard.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include <cstring>
 
 namespace terminal_catalog {
@@ -25,12 +25,13 @@ namespace terminal_catalog {
 // the named metadata section. help_signature() still keeps this host copy.
 #define MK61_HELP_METADATA __attribute__((used))
 #endif
-MK61_HELP_METADATA static constexpr char help_text[] =
+static constexpr char help_text_utf8[] =
 #define COMMAND(name, id, desc) "  " name "\t" desc "\n"
 #include "terminal_commands.inc"
 #undef COMMAND
-"  R<r>=   " M8_TH_REG_SET "\n"
-"  set$    " M8_TH_SET_CODE "\n";
+"  R<r>=   " "R<r>= <число|random|raw 12hex> — записать регистр" "\n"
+"  set$    " "set$<адрес> <hex> — записать память программ" "\n";
+MK61_HELP_METADATA static constexpr auto help_text = M8_ARRAY(help_text_utf8);
 // Two 1536-byte TEXT files, each prefixed by the 9-byte help signature.
 static_assert(sizeof(help_text) - 1 <= 3054, "increase HELP page count in reader and builder");
 // Eight hexadecimal digits plus the line delimiter form the on-disk tag. Keep
@@ -49,7 +50,7 @@ static constexpr HelpTag help_tag = make_help_tag();
 const char* help_signature() { return help_tag.text; }
 #undef MK61_HELP_METADATA
 #endif
-static constexpr char command_text[] =
+static constexpr char command_text_utf8[] =
 #if MK61_TERMINAL_HELP_IS_EXTERNAL
 #define COMMAND(name, id, desc) name "\0"
 #else
@@ -58,6 +59,7 @@ static constexpr char command_text[] =
 #include "terminal_commands.inc"
 #undef COMMAND
 ;
+static constexpr auto command_text = M8_ARRAY(command_text_utf8);
 static_assert(sizeof(command_text) <= 65535, "command text exceeds offset range");
 static constexpr usize TERMINAL_COMMAND_COUNT = 0
 #define COMMAND(name, id, desc) + 1
@@ -71,7 +73,7 @@ static constexpr u8 command_ids[TERMINAL_COMMAND_COUNT] = {
 };
 
 constexpr TerminalCommand entry(usize index) {
-  const char* name = command_text;
+  const char* name = command_text.data();
   for(usize current = 0; current < index; ++current) {
     while(*name++ != 0) {}
 #if !MK61_TERMINAL_HELP_IS_EXTERNAL
@@ -116,7 +118,7 @@ u8 lookup(const u8* line) {
   if(len == 3 && line[0] == 'R' && line[2] == '=' && terminal_core::is_space((char) line[3])) return CMD_REG_SET; // R0= <значение>
   if(len >= 4 && line[0] == 's' && line[1] == 'e' && line[2] == 't' && line[3] == '$') return CMD_SET_CODE;  // set$<hex>
 
-  const char* name = command_text;
+  const char* name = command_text.data();
   for(usize index = 0; index < TERMINAL_COMMAND_COUNT; ++index) {
     if(strncmp((const char*) line, name, len) == 0 && name[len] == 0) {
       return command_ids[index];

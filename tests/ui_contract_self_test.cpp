@@ -9,7 +9,7 @@
 #include "ws0010_charset.hpp"
 #include "disasm_line.hpp"
 #include "m8_view.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "keyboard_core.hpp"
 #include "keyboard_layout.hpp"
 #include <cassert>
@@ -287,11 +287,11 @@ static void test_ui_font_layout() {
                 (family == 3 ? "FMK" : "Pixel");
             char family_line[32];
             snprintf(family_line, sizeof(family_line),
-                     ru ? M8_SETUP_UI_FONT_FORMAT : "UI font:%s",
+                     ru ? M8("Шрифт UI:%s") : "UI font:%s",
                      family_name);
             char size_line[24];
             snprintf(size_line, sizeof(size_line),
-                     ru ? M8_SETUP_UI_SIZE_FORMAT : "UI size:%u",
+                     ru ? M8("Размер UI:%u") : "UI size:%u",
                      (unsigned) size);
             std::string expected[10];
             const u8 fields = uiFontFieldCount(font);
@@ -306,7 +306,7 @@ static void test_ui_font_layout() {
               expected[row] = std::string(1, field == active ? '>' : ' ') + value;
             }
             expected[rows - 1] = ru
-                ? std::string(" ") + M8_SETUP_SAMPLE_UI
+                ? std::string(" ") + M8("Аа Бб Wi 123")
                 : " Aa Bb Wi 123";
             for(u8 row = 0; row < 10; ++row) {
               expect("live UI chooser layout", surface.lines[row], expected[row]);
@@ -371,11 +371,11 @@ int main() {
   drawCalculatorFontSetup(0, four);
   char russian_font_line[32];
 #if MK61_ENABLE_EXTENDED_FONT_SETTINGS
-  snprintf(russian_font_line, sizeof(russian_font_line), M8_SETUP_ROWS_FORMAT,
+  snprintf(russian_font_line, sizeof(russian_font_line), M8("Строки:%u"),
            4U);
 #else
   snprintf(russian_font_line, sizeof(russian_font_line),
-           M8_SETUP_FONT_NAME_FORMAT, "10x16");
+           M8("Шрифт:%s"), "10x16");
 #endif
   expect("font dialog RU", surface.lines[0],
          std::string(">") + russian_font_line);

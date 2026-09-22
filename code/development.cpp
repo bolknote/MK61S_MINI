@@ -16,7 +16,7 @@
 #include "lcd_ru.hpp"
 #include "language_workspace.hpp"
 #include "menu.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
 #include "storage_path.hpp"
@@ -749,8 +749,8 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
     print_localized_line(0,
                          directory_id == program_store::ROOT_ID ? "FS is empty" : "Folder empty",
                          directory_id == program_store::ROOT_ID
-                             ? M8_EMPTY_FILESYSTEM : M8_EMPTY_FOLDER);
-    print_localized_line(1, "OK: new folder", M8_NEW_FOLDER_HINT);
+                             ? M8("ФС пуста") : M8("Папка пуста"));
+    print_localized_line(1, "OK: new folder", M8("OK: нов. папка"));
     return 0;
   }
 
@@ -770,7 +770,7 @@ static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
     : count;
   if(visible_count <= 0) {
     explorer_scroll_reset(scroll);
-    print_localized_line((u8) first_row, "No match", M8_NO_MATCH);
+    print_localized_line((u8) first_row, "No match", M8("Нет совпад."));
     for(int row = first_row + 1; row < display_rows; row++) print_line((u8) row, "");
     if(filtered) draw_search_cursor(search_text);
     return 0;
@@ -994,8 +994,8 @@ static void show_message(const char* en0, const char* ru0, const char* en1 = "",
 }
 
 static void show_graphics_unavailable() {
-  show_message("Graphics", M8_GRAPHICS,
-               "unavailable", M8_NOT_AVAILABLE);
+  show_message("Graphics", M8("Графика"),
+               "unavailable", M8("недоступна"));
 }
 
 #if defined(MK61_DISPLAY_UC1609)
@@ -1149,19 +1149,19 @@ static bool view_entry(const program_store::Entry& entry) {
     const bool markdown =
         entry.type == program_store::ProgramType::MARKDOWN;
     const char* en = markdown ? "Markdown error" : "Image error";
-    const char* ru = markdown ? M8_ERROR_MARKDOWN : M8_ERROR_IMAGE;
+    const char* ru = markdown ? M8("Ошибка Markdown") : M8("Ошибка картинки");
     if(result == loadable_module::FileOpenResult::BUSY) {
       en = "Busy";
-      ru = M8_BUSY;
+      ru = M8("Занято");
     } else if(result == loadable_module::FileOpenResult::IO_ERROR) {
       en = "Read error";
-      ru = M8_ERROR_READ;
+      ru = M8("Ошибка чтения");
     } else if(result == loadable_module::FileOpenResult::INVALID_FILE) {
       en = markdown ? "Invalid Markdown" : "Invalid WBMP";
-      ru = markdown ? M8_BAD_MARKDOWN : M8_BAD_WBMP;
+      ru = markdown ? M8("Неверный Markdown") : M8("Неверный WBMP");
     } else if(result == loadable_module::FileOpenResult::RUNTIME_ERROR) {
       en = "Display error";
-      ru = M8_ERROR_SCREEN;
+      ru = M8("Ошибка экрана");
     } else if(result ==
               loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
       show_graphics_unavailable();
@@ -1180,7 +1180,7 @@ static bool view_entry(const program_store::Entry& entry) {
   // an I/O failure merely because it cannot fit in this modal preview buffer.
   if(entry.type == program_store::ProgramType::FONT &&
      entry.data_len > shared_scratch::SIZE) {
-    show_message("Use Fonts menu", M8_FONTS_MENU,
+    show_message("Use Fonts menu", M8("Меню Шрифты"),
                  entry.name, entry.name);
     (void) wait_explorer_key(false);
     return true;
@@ -1203,14 +1203,14 @@ static bool view_entry(const program_store::Entry& entry) {
     capacity = scratch.size();
   }
   if(data == NULL) {
-    show_message("Busy", M8_BUSY, entry.name, entry.name);
+    show_message("Busy", M8("Занято"), entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;
   }
 
   u16 len = 0;
   if(!read_entry_data(entry, data, capacity, len)) {
-    show_message("Read error", M8_ERROR_READ, entry.name, entry.name);
+    show_message("Read error", M8("Ошибка чтения"), entry.name, entry.name);
     (void) wait_explorer_key(false);
     return false;
   }
@@ -1250,7 +1250,7 @@ static bool confirm_delete(const program_store::Entry& entry) {
                     program_store::child_count(entry.id) != 0;
   while(true) {
     show_message(tree ? "Delete tree?" : "Delete?",
-                 tree ? M8_REMOVE_ALL : M8_REMOVE_ONE,
+                 tree ? M8("Удалить всё?") : M8("Удалить?"),
                  entry.name, entry.name);
     const i32 key = wait_explorer_key(false);
     if(key == EXPLORER_KEY_REDRAW) continue;
@@ -1265,7 +1265,7 @@ static void delete_entry(const program_store::Entry& entry) {
   u16 removed = 0;
   const bool ok = program_store::remove_tree(entry.id, &removed);
   show_message(ok ? "Deleted" : "Delete error",
-               ok ? M8_REMOVED : M8_ERROR,
+               ok ? M8("Удалено") : M8("Ошибка"),
                entry.name, entry.name);
   delay(700);
 }
@@ -1274,13 +1274,13 @@ static void draw_name_editor(const char* name, u16 cursor, NamePrompt prompt) {
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
   const char* en = "Rename";
-  const char* ru = M8_NEW_NAME;
+  const char* ru = M8("Новое имя");
   if(prompt == NamePrompt::NEW_DIRECTORY) {
     en = "New folder";
-    ru = M8_ITEM_NEW_DIRECTORY;
+    ru = M8("Новая папка");
   } else if(prompt == NamePrompt::SAVE) {
     en = "File name";
-    ru = M8_NEW_FILE_NAME;
+    ru = M8("Имя файла");
   }
   const char* title = library_mk61::language_is_ru() ? ru : en;
   const u16 byte_len = (u16) strlen(name);
@@ -1498,7 +1498,7 @@ static bool rename_entry(const program_store::Entry& entry) {
 
   const bool ok = program_store::move_rename(entry.id, entry.parent_id, name);
   show_message(ok ? "Renamed" : "Rename error",
-               ok ? M8_RENAMED : M8_ERROR, name, name);
+               ok ? M8("Переимен.") : M8("Ошибка"), name, name);
   delay(700);
   return ok;
 }
@@ -1513,7 +1513,7 @@ static bool create_directory(u16 parent_id) {
     if(program_store::child(parent_id, i, child) &&
        child.kind == program_store::NodeKind::DIRECTORY &&
        strncmp(child.name, name, program_store::NAME_SIZE) == 0) {
-      show_message("Name exists", M8_NAME_EXISTS, name, name);
+      show_message("Name exists", M8("Уже есть"), name, name);
       delay(900);
       return false;
     }
@@ -1524,7 +1524,7 @@ static bool create_directory(u16 parent_id) {
                                                     program_store::INVALID_ID,
                                                     &id);
   show_message(ok ? "Folder created" : "Create error",
-               ok ? M8_CREATED_FOLDER : M8_ERROR,
+               ok ? M8("Папка создана") : M8("Ошибка"),
                name, name);
   delay(700);
   return ok;
@@ -1540,7 +1540,7 @@ static bool move_entry(const program_store::Entry& entry) {
   const bool ok = program_store::move_rename(entry.id, destination,
                                              entry.name);
   show_message(ok ? "Moved" : "Move error",
-               ok ? M8_MOVED : M8_ERROR,
+               ok ? M8("Перемещено") : M8("Ошибка"),
                entry.name, entry.name);
   delay(700);
   return ok;
@@ -1623,11 +1623,11 @@ static bool dialog_item_at(u16 directory_id, DialogMode mode,
 static const char* dialog_item_name(const DialogItem& item) {
   switch(item.kind) {
     case DialogItemKind::THIS_DIRECTORY:
-      return library_mk61::text("This folder", M8_THIS_FOLDER);
+      return library_mk61::text("This folder", M8("Эта папка"));
     case DialogItemKind::NEW_FILE:
-      return library_mk61::text("New file", M8_NEW_FILE);
+      return library_mk61::text("New file", M8("Новый файл"));
     case DialogItemKind::NEW_DIRECTORY:
-      return library_mk61::text("New folder", M8_ITEM_NEW_DIRECTORY);
+      return library_mk61::text("New folder", M8("Новая папка"));
     case DialogItemKind::ENTRY: return item.entry.name;
   }
   return "?";
@@ -1671,8 +1671,8 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
   main_lcd().clear();
   if(count <= 0) {
     explorer_scroll_reset(scroll);
-    print_localized_line(0, "Folder empty", M8_EMPTY_FOLDER);
-    print_localized_line(1, "ESC: parent", M8_PARENT_HINT);
+    print_localized_line(0, "Folder empty", M8("Папка пуста"));
+    print_localized_line(1, "ESC: parent", M8("ESC: наверх"));
     return 0;
   }
 
@@ -2010,21 +2010,21 @@ static int item_menu_actions(const program_store::Entry& entry, ItemMenuAction* 
 static const char* item_menu_text(ItemMenuAction action, bool ru) {
   switch(action) {
     case ItemMenuAction::LOAD:
-      return ru ? M8_ITEM_LOAD : "Load";
+      return ru ? M8("Загрузить") : "Load";
     case ItemMenuAction::RUN:
-      return ru ? M8_ITEM_RUN : "Run";
+      return ru ? M8("Запуск") : "Run";
     case ItemMenuAction::VIEW:
-      return ru ? M8_ITEM_VIEW : "View";
+      return ru ? M8("Просмотр") : "View";
     case ItemMenuAction::EDIT:
-      return ru ? M8_ITEM_EDIT : "Edit";
+      return ru ? M8("Редактировать") : "Edit";
     case ItemMenuAction::NEW_DIRECTORY:
-      return ru ? M8_ITEM_NEW_DIRECTORY : "New folder";
+      return ru ? M8("Новая папка") : "New folder";
     case ItemMenuAction::RENAME:
-      return ru ? M8_ITEM_RENAME : "Rename";
+      return ru ? M8("Переименовать") : "Rename";
     case ItemMenuAction::MOVE:
-      return ru ? M8_ITEM_MOVE : "Move";
+      return ru ? M8("Переместить") : "Move";
     case ItemMenuAction::DELETE:
-      return ru ? M8_ITEM_DELETE : "Delete";
+      return ru ? M8("Удалить") : "Delete";
   }
   return "";
 }
@@ -2100,11 +2100,11 @@ static bool run_entry(const program_store::Entry& entry) {
        file_result == loadable_module::FileOpenResult::UNSUPPORTED_DISPLAY) {
       show_graphics_unavailable();
     } else {
-      show_message("Run error", M8_ERROR_RUN, entry.name, entry.name);
+      show_message("Run error", M8("Ошибка запуска"), entry.name, entry.name);
     }
     delay(900);
   } else if(entry.type == program_store::ProgramType::FONT) {
-    show_message("Font applied", M8_FONT_APPLIED,
+    show_message("Font applied", M8("Шрифт применен"),
                  entry.name, entry.name);
     delay(700);
   }
@@ -2124,7 +2124,7 @@ static bool load_mk61_entry(const program_store::Entry& entry) {
     loaded = LoadProgram(entry.id);
   }
   if(!loaded) {
-    show_message("Load error", M8_ERROR_READ, entry.name, entry.name);
+    show_message("Load error", M8("Ошибка чтения"), entry.name, entry.name);
     delay(900);
     return false;
   }
@@ -2153,7 +2153,7 @@ static void edit_entry(const program_store::Entry& entry) {
     }
   }
   if(!ok) {
-    show_message("Edit error", M8_ERROR_EDIT, entry.name, entry.name);
+    show_message("Edit error", M8("Ошибка правки"), entry.name, entry.name);
     delay(900);
   }
 }
@@ -2252,7 +2252,7 @@ static bool m61_save_action(void) {
     return action::MENU_BACK;
   }
   if(!StoreProgram(directory, name)) {
-    show_message("Save error", M8_ERROR_WRITE, name, name);
+    show_message("Save error", M8("Ошибка записи"), name, name);
     delay(900);
     return action::MENU_BACK;
   }
@@ -2266,7 +2266,7 @@ static bool m61_save_action(void) {
     current_mk61_entry_id = program_store::INVALID_ID;
   }
   current_mk61_directory_id = directory;
-  show_message("Program saved", M8_PROGRAM_SAVED, name, name);
+  show_message("Program saved", M8("Программа сохр."), name, name);
   delay(700);
   return action::MENU_EXIT;
 }
@@ -2275,37 +2275,34 @@ static constexpr t_punct M61_LOAD_PUNCT = {
     .size = 13, .action = &m61_load_action, .text = "Open M61 file"};
 static constexpr t_punct M61_SAVE_PUNCT = {
     .size = 13, .action = &m61_save_action, .text = "Save M61 file"};
-static constexpr t_punct RU_M61_LOAD_PUNCT = {
-    .size = 15, .action = &m61_load_action, .text = M8_OPEN_MK61};
-static constexpr t_punct RU_M61_SAVE_PUNCT = {
-    .size = 15, .action = &m61_save_action, .text = M8_SAVE_MK61};
+static constexpr auto RU_M61_LOAD_PUNCT = M8_PUNCT(15, &m61_load_action, "Открыть МК-61");
+static constexpr auto RU_M61_SAVE_PUNCT = M8_PUNCT(15, &m61_save_action, "Сохранить МК-61");
 
 static bool m61_storage_action(void) {
   t_punct* items[] = {
     (t_punct*) (library_mk61::language_is_ru()
-        ? &RU_M61_LOAD_PUNCT : &M61_LOAD_PUNCT),
+        ? mk8::punct_view<t_punct>(RU_M61_LOAD_PUNCT) : &M61_LOAD_PUNCT),
     (t_punct*) (library_mk61::language_is_ru()
-        ? &RU_M61_SAVE_PUNCT : &M61_SAVE_PUNCT),
+        ? mk8::punct_view<t_punct>(RU_M61_SAVE_PUNCT) : &M61_SAVE_PUNCT),
   };
   class_menu menu(items, sizeof(items) / sizeof(items[0]));
   return menu.select();
 }
 
 static constexpr t_punct EXPLORER_PUNCT = {.size = 8, .action = &explorer_action, .text = "Explorer"};
-static constexpr t_punct RU_EXPLORER_PUNCT = {.size = 15, .action = &explorer_action, .text = M8_EXPLORER};
+static constexpr auto RU_EXPLORER_PUNCT = M8_PUNCT(15, &explorer_action, "Проводник");
 static constexpr t_punct M61_STORAGE_PUNCT = {.size = 9, .action = &m61_storage_action, .text = "M61 files"};
-static constexpr t_punct RU_M61_STORAGE_PUNCT = {.size = 15, .action = &m61_storage_action, .text = M8_FILES_MK61};
+static constexpr auto RU_M61_STORAGE_PUNCT = M8_PUNCT(15, &m61_storage_action, "Файлы МК-61");
 
 #if MK61_ENABLE_USB_SCREEN
 static constexpr t_punct USB_SCREEN_DEV_PUNCT = {
     .size = 10, .action = &UsbScreenMode, .text = "USB Screen"};
-static constexpr t_punct RU_USB_SCREEN_DEV_PUNCT = {
-    .size = 15, .action = &UsbScreenMode, .text = M8_USB_SCREEN};
+static constexpr auto RU_USB_SCREEN_DEV_PUNCT = M8_PUNCT(15, &UsbScreenMode, "USB-экран");
 #endif
 
 #if MK61_ENABLE_FOCAL
 static constexpr t_punct FOCAL_DEV_PUNCT = {.size = 11, .action = &focal_action, .text = "FOCAL tools"};
-static constexpr t_punct RU_FOCAL_DEV_PUNCT = {.size = 15, .action = &focal_action, .text = M8_FOCAL};
+static constexpr auto RU_FOCAL_DEV_PUNCT = M8_PUNCT(15, &focal_action, "ФОКАЛ");
 #endif
 
 #if MK61_ENABLE_TINYBASIC
@@ -2358,7 +2355,7 @@ bool program_store_choose_save_target(program_store::ProgramType type,
       return false;
     }
     if(program_store::basename_valid(candidate)) break;
-    show_message("Invalid name", M8_ERROR_NAME,
+    show_message("Invalid name", M8("Ошибка имени"),
                  candidate, candidate);
     delay(900);
   }
@@ -2964,17 +2961,17 @@ void program_store_restore_font_after_usb(void) {
 
 bool development_select(void) {
   t_punct* items[] = {
-    (t_punct*) (library_mk61::language_is_ru() ? &RU_EXPLORER_PUNCT : &EXPLORER_PUNCT),
-    (t_punct*) (library_mk61::language_is_ru() ? &RU_M61_STORAGE_PUNCT : &M61_STORAGE_PUNCT),
+    (t_punct*) (library_mk61::language_is_ru() ? mk8::punct_view<t_punct>(RU_EXPLORER_PUNCT) : &EXPLORER_PUNCT),
+    (t_punct*) (library_mk61::language_is_ru() ? mk8::punct_view<t_punct>(RU_M61_STORAGE_PUNCT) : &M61_STORAGE_PUNCT),
 #if MK61_ENABLE_FOCAL
-    (t_punct*) (library_mk61::language_is_ru() ? &RU_FOCAL_DEV_PUNCT : &FOCAL_DEV_PUNCT),
+    (t_punct*) (library_mk61::language_is_ru() ? mk8::punct_view<t_punct>(RU_FOCAL_DEV_PUNCT) : &FOCAL_DEV_PUNCT),
 #endif
 #if MK61_ENABLE_TINYBASIC
     (t_punct*) (library_mk61::language_is_ru() ? &RU_TINYBASIC_DEV_PUNCT : &TINYBASIC_DEV_PUNCT),
 #endif
 #if MK61_ENABLE_USB_SCREEN
     (t_punct*) (library_mk61::language_is_ru()
-        ? &RU_USB_SCREEN_DEV_PUNCT : &USB_SCREEN_DEV_PUNCT),
+        ? mk8::punct_view<t_punct>(RU_USB_SCREEN_DEV_PUNCT) : &USB_SCREEN_DEV_PUNCT),
 #endif
   };
 

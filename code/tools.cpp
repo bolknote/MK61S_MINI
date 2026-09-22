@@ -32,7 +32,7 @@
   #include "manual_lifetime.hpp"
 #endif
 #include "menu.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "debug.h"
 #include "dfu_splash.hpp"
 #include "early_dfu.hpp"
@@ -216,7 +216,7 @@ static void Show_DFU_splash(void) {
 #endif
 
   main_lcd().clear();
-  library_mk61::print_localized_at(0, 0, M8_DFU_MODE_MESSAGE,
+  library_mk61::print_localized_at(0, 0, M8("Прошивка DFU"),
                                    " DFU flash mode!");
 }
 
@@ -271,7 +271,7 @@ bool  Confirmation(void) {
 
   {
     MK61DisplayUpdate update(main_lcd());
-    library_mk61::print_localized_at(0, 0, M8_CONFIRM_OK,
+    library_mk61::print_localized_at(0, 0, M8("OK подтверд"),
                                      "press OK confirm");
   }
   i32 key = kbd::get_key_wait();
@@ -978,7 +978,7 @@ bool Load(void) {
   {
     MK61DisplayUpdate update(main_lcd());
     main_lcd().clear();
-    library_mk61::print_localized_at(0, 0, M8_LOAD_ABBR, "Load ", 5);
+    library_mk61::print_localized_at(0, 0, M8("ЧТ "), "Load ", 5);
     address = calc_address();
   }
   if(address < 0) return false; // Ошибка
@@ -992,7 +992,7 @@ inline bool check_empty_program(void) {
   const usize program_steps = core_61::program_steps();
   for(usize i=0; i < program_steps; i++) all_to_or |= (usize) core_61::get_code(/*mk61s.*/core_61::get_ring_address(i));
   if(all_to_or == 0) {
-    library_mk61::print_localized_at(0, 0, M8_NO_PROGRAMS,
+    library_mk61::print_localized_at(0, 0, M8("Нет программ"),
                                      "No program...");
     sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
     delay_with_sound_poll(1500);
@@ -1039,7 +1039,7 @@ bool Store(void) {
   isize address;
   {
     MK61DisplayUpdate update(main_lcd());
-    library_mk61::print_localized_at(0, 0, M8_SAVE_ABBR,
+    library_mk61::print_localized_at(0, 0, M8("ПИС "),
                                      "Save ", 5); //main_lcd().setCursor(7, 0);
     address = calc_address();
   }

@@ -14,7 +14,7 @@
 #include "lcd_ru.hpp"
 #include "ledcontrol.h"
 #include "mk_math.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "mk61_ref.hpp"
 #include "mk61_register_init.hpp"
 #include "entropy_pool.hpp"
@@ -598,7 +598,7 @@ void class_terminal::print_help(void) {
             program_store::read_range_id(pages[page].id, 0, tag, sizeof(tag), &count) &&
             count == sizeof(tag) && memcmp(tag, terminal_catalog::help_signature(), sizeof(tag)) == 0;
       }
-      terminal_println_m8(M8_TH_AVAILABLE);
+      terminal_println_m8(M8("Доступные команды:"));
       if(available) {
         u8 buffer[64];
         for(const auto& page : pages) {
@@ -607,7 +607,7 @@ void class_terminal::print_help(void) {
                 ? page.data_len - offset : sizeof(buffer));
             u16 count = 0;
             if(!program_store::read_range_id(page.id, offset, buffer, wanted, &count) || count != wanted) {
-              terminal_println_m8(M8_TH_READ_ERROR); return;
+              terminal_println_m8(M8("Ошибка чтения справки")); return;
             }
             terminal_write_m8(buffer, count); offset += count;
           }
@@ -618,11 +618,11 @@ void class_terminal::print_help(void) {
         Serial.print(terminal_catalog::at(i).name); Serial.write(' ');
       }
       Serial.println();
-      terminal_println_m8(M8_TH_INSTALL);
+      terminal_println_m8(M8("Установите подходящие /System/HELP0.TXT и HELP1.TXT"));
       Serial.println("fsls /System; fsput begin /System/<file> <size> <crc32>; fsput data <offset> <hex>; fsput end");
 #else
 
-      terminal_println_m8(M8_TH_AVAILABLE);
+      terminal_println_m8(M8("Доступные команды:"));
       for(usize i = 0; i < terminal_catalog::count(); i++) {
         const auto command = terminal_catalog::at(i);
         if(command.desc == NULL) continue;
@@ -631,8 +631,8 @@ void class_terminal::print_help(void) {
         for(usize pad = strlen(command.name); pad < 8; pad++) Serial.write(' ');
         terminal_println_m8(command.desc);
       }
-      Serial.print("  R<r>=   "); terminal_println_m8(M8_TH_REG_SET);
-      Serial.print("  set$    "); terminal_println_m8(M8_TH_SET_CODE);
+      Serial.print("  R<r>=   "); terminal_println_m8(M8("R<r>= <число|random|raw 12hex> — записать регистр"));
+      Serial.print("  set$    "); terminal_println_m8(M8("set$<адрес> <hex> — записать память программ"));
 #endif
     }
 

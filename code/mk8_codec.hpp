@@ -79,7 +79,7 @@ constexpr bool valid_byte(u8 byte) {
   return byte >= 0x20;
 }
 
-inline bool from_codepoint(u32 value, u8& byte) {
+constexpr bool from_codepoint(u32 value, u8& byte) {
   if(value >= 0x20 && value <= 0x7E) {
     byte = (u8) value;
     return true;

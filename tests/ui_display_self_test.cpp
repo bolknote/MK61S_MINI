@@ -4,7 +4,7 @@
 #include "exclusive_buffer.hpp"
 #include "lcd_ru.hpp"
 #include "mk8_codec.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "rtc_idle_clock_core.hpp"
 #include "shared_scratch.hpp"
 #include <cassert>
@@ -331,7 +331,7 @@ void test_profile_and_scope() {
     MK61DisplayTextScope ui(display);
     assert(display.uiTextActive() && display.rows() == 5);
     assert(sameProfile(display.textProfile(), calculator));
-    display.printUiLine(0, M8_TEST_MENU);
+    display.printUiLine(0, M8("Меню"));
     {
       MK61DisplayTextScope code(display, false);
       assert(!display.uiTextActive() && display.rows() == 10);
@@ -425,7 +425,7 @@ void test_live_ui_font_sample() {
     display.beginUiText();
     display.clear();
     const u8 sample_row = (u8) (display.rows() - 1U);
-    display.printUiLine(sample_row, M8_TEST_FONT_SAMPLE, ' ');
+    display.printUiLine(sample_row, M8("Аа Бб Wi 123"), ' ');
     Frame expected{};
     referenceText(expected, display.uiFontFace(), sample, sample_row, 14);
     expectFrame(expected);
@@ -441,7 +441,7 @@ void test_live_ui_font_sample() {
 void test_mono_ui_is_fixed_and_independent() {
   MK61Display display;
   startUi(display, 0, 14);
-  display.printUiLine(0, M8_TEST_AA_WI);
+  display.printUiLine(0, M8("Аа Wi"));
   Frame expected{};
   const u16 text[] = {0x0410, 0x0430, ' ', 'W', 'i'};
   int pen = 2;
@@ -452,7 +452,7 @@ void test_mono_ui_is_fixed_and_independent() {
   expectFrame(expected);
   const Frame at_14 = ui_display_test::frame;
   display.setUiFont(0, 12);
-  display.printUiLine(0, M8_TEST_AA_WI);
+  display.printUiLine(0, M8("Аа Wi"));
   expectFrame(expected);
   assert(ui_display_test::frame == at_14);
   assert(display.measureUiText("WWW") == display.measureUiText("iii"));
@@ -899,13 +899,13 @@ void test_mixed_text_and_page_parity() {
     startUi(display, 1, size);
     Frame expected{};
     for(u8 row = 0; row < display.rows(); ++row) {
-      display.printUiLine(row, M8_TEST_MIXED_TEXT);
+      display.printUiLine(row, M8("AЖiё W9у"));
       referenceText(expected, display.uiFontFace(), mixed, row);
     }
     expectFrame(expected);
     u16 advance = 0;
     for(u16 cp : mixed) advance = (u16) (advance + ui_font::glyph(display.uiFontFace(), cp).advance);
-    assert(display.measureUiText(M8_TEST_MIXED_TEXT) == advance);
+    assert(display.measureUiText(M8("AЖiё W9у")) == advance);
     assert(display.measureUiText("WWW") > display.measureUiText("iii"));
 
     // Incremental writes invalidate only intersecting pages. They must
@@ -924,17 +924,17 @@ void test_m8_ui_text_metrics_and_pixels_agree() {
     MK61Display display;
     startUi(display, family, 14);
     u16 expected_width = 0;
-    const char* cursor = M8_SETTINGS;
+    const char* cursor = M8("Настройки");
     while(*cursor != 0) {
       const u16 codepoint = mk8::next(cursor);
       expected_width = (u16) (expected_width + (family == 0 ? 6U :
           ui_font::glyph(display.uiFontFace(), codepoint).advance));
     }
-    assert(display.measureUiText(M8_SETTINGS) == expected_width);
-    display.printUiLine(0, M8_SETTINGS);
+    assert(display.measureUiText(M8("Настройки")) == expected_width);
+    display.printUiLine(0, M8("Настройки"));
     const Frame expected = ui_display_test::frame;
     display.clear();
-    display.printUiLine(0, M8_SETTINGS);
+    display.printUiLine(0, M8("Настройки"));
     expectFrame(expected);
   }
 }
@@ -971,8 +971,8 @@ void test_all_private_m8_symbols_in_pixel_ui() {
 void test_short_replacement_and_gutters() {
   MK61Display display;
   startUi(display);
-  display.printUiLine(0, M8_TEST_LONG_REPLACEMENT, '>','M');
-  display.printUiLine(1, M8_TEST_LOWER_LINE);
+  display.printUiLine(0, M8("Очень длинная строка для замены"), '>','M');
+  display.printUiLine(1, M8("Нижняя строка"));
   display.printUiLine(0, "A");
   Frame expected{};
   static constexpr u16 a[] = {'A'};

@@ -174,7 +174,7 @@ namespace library_mk61 {
 
 #include "bounded_string.hpp"
 #include "mk8_codec.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "number_format.hpp"
 
 #include <type_traits>
@@ -653,13 +653,13 @@ enum class TbError : u8 { WHAT, HOW, SORRY };
 static bool tb_error_code(TbError error) {
   tb_pause_is_final = false;
   const char* en = "SORRY";
-  const char* ru = M8_TB_NO_SPACE;
+  const char* ru = M8("НЕТ МЕСТА");
   if(error == TbError::WHAT) {
     en = "WHAT?";
-    ru = M8_TB_WHAT;
+    ru = M8("ЧТО?");
   } else if(error == TbError::HOW) {
     en = "HOW?";
-    ru = M8_TB_HOW;
+    ru = M8("КАК?");
   }
   tb_copy_text(tb_last_error, sizeof(tb_last_error), en);
   tb_message_i18n(en, ru, "TinyBASIC", "TinyBASIC");
@@ -705,7 +705,7 @@ static void tb_report_interrupted(void) {
   kbd::handoff(kbd::Event(KEY_ESC_PRESS));
 #endif
   if(!tb_runs_inside_m61()) {
-    tb_message_i18n("TinyBASIC stop", M8_TB_STOP, "ESC", "ESC");
+    tb_message_i18n("TinyBASIC stop", M8("TinyBASIC стоп"), "ESC", "ESC");
   }
 }
 
@@ -1794,7 +1794,7 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
          tb_eval_expr_range(buffer, buffer + editor.len, value)) {
         return true;
       }
-      tb_message_i18n("WHAT?", M8_TB_WHAT, "number", M8_TB_NUMBER);
+      tb_message_i18n("WHAT?", M8("ЧТО?"), "number", M8("число"));
       delay(500);
       buffer[0] = 0;
       editor.len = editor.cursor = editor.view_top = 0;
@@ -2595,7 +2595,7 @@ void InitTinyBasic(void) {
 #ifndef TINYBASIC_HOST_TEST
   const int stored_count = program_store::count(program_store::ProgramType::TINYBASIC);
   if(allow_new && active == stored_count) {
-    tb_message_i18n("TinyBASIC", "TinyBASIC", ">NEW", M8_NEW_PROGRAM);
+    tb_message_i18n("TinyBASIC", "TinyBASIC", ">NEW", M8(">НОВАЯ"));
     return;
   }
   program_store::Entry entry;
@@ -2605,7 +2605,7 @@ void InitTinyBasic(void) {
     tb_message_i18n("TinyBASIC", "TinyBASIC", line1, line1);
     return;
   }
-  tb_message_i18n("TinyBASIC", "TinyBASIC", ">EMPTY", M8_EMPTY_PROGRAM);
+  tb_message_i18n("TinyBASIC", "TinyBASIC", ">EMPTY", M8(">ПУСТО"));
 #else
   char line1[17];
   if(allow_new && active == TB_PROGRAM_COUNT) tb_copy_text(line1, sizeof(line1), ">NEW");
@@ -2686,8 +2686,8 @@ static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 v
 }
 
 static bool tb_confirm_save(void) {
-  tb_message_i18n("Save TinyBASIC?", M8_SAVE_QUESTION,
-                  "OK=yes ESC=no", M8_CONFIRM_SAVE);
+  tb_message_i18n("Save TinyBASIC?", M8("Сохранить?"),
+                  "OK=yes ESC=no", M8("OK=да ESC=нет"));
   while(true) {
     const i32 key = kbd::get_key_wait();
     if(key == KEY_OK || key == KEY_OK_PRESS) return true;
@@ -2714,7 +2714,7 @@ static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
   }
   while(pos < lcd_display::COLS) line[pos++] = ' ';
   line[lcd_display::COLS] = 0;
-  tb_message_i18n("TinyBASIC name", M8_TB_NAME, line, line);
+  tb_message_i18n("TinyBASIC name", M8("Имя"), line, line);
 
   MK61DisplayUpdate update(main_lcd());
   const u8 cursor_col = (u8) (1 + cursor - window);
@@ -2898,7 +2898,7 @@ static bool store_edited_program(int slot, char* source, const char* store_name,
   programs[slot].parent_id = parent_id;
   NextTinyBasic = (i8) slot;
   if(!tb_compile_source(programs[slot].source, tb_ast)) return false;
-  tb_message_i18n("TinyBASIC ready", M8_TB_READY,
+  tb_message_i18n("TinyBASIC ready", M8("TinyBASIC готов"),
                   programs[slot].name, programs[slot].name);
   delay(700);
   return true;
@@ -3141,7 +3141,7 @@ static bool TinyBASIC_edit_menu(void) {
 static bool TinyBASIC_clear_data(void) {
   memset(tb_vars, 0, sizeof(tb_vars));
   tinybasic_clear_array();
-  tb_message_i18n("TinyBASIC data", M8_DATA, "cleared", M8_CLEARED);
+  tb_message_i18n("TinyBASIC data", M8("Данные"), "cleared", M8("очищены"));
   delay(700);
   return true;
 }
@@ -3151,9 +3151,9 @@ static constexpr t_punct TB_RUN_PUNCT   = {.size = 10, .action = &TinyBASIC_run_
 static constexpr t_punct TB_CLEAR_PUNCT = {.size = 10, .action = &TinyBASIC_clear_data, .text = "Clear DATA"};
 
 #ifndef TINYBASIC_HOST_TEST
-static constexpr t_punct RU_TB_EDIT_PUNCT  = {.size = 15, .action = &TinyBASIC_edit_menu,  .text = M8_EDIT};
-static constexpr t_punct RU_TB_RUN_PUNCT   = {.size = 15, .action = &TinyBASIC_run_menu,   .text = M8_RUN};
-static constexpr t_punct RU_TB_CLEAR_PUNCT = {.size = 15, .action = &TinyBASIC_clear_data, .text = M8_CLEAR_DATA};
+static constexpr auto RU_TB_EDIT_PUNCT = M8_PUNCT(15, &TinyBASIC_edit_menu, "Правка");
+static constexpr auto RU_TB_RUN_PUNCT = M8_PUNCT(15, &TinyBASIC_run_menu, "Запуск");
+static constexpr auto RU_TB_CLEAR_PUNCT = M8_PUNCT(15, &TinyBASIC_clear_data, "Сброс данных");
 #endif
 
 bool TinyBASIC_menu_select(void) {
@@ -3163,9 +3163,9 @@ bool TinyBASIC_menu_select(void) {
 #endif
   t_punct* items[] = {
 #ifndef TINYBASIC_HOST_TEST
-    (t_punct*) (tinybasic_language_is_ru() ? &RU_TB_EDIT_PUNCT : &TB_EDIT_PUNCT),
-    (t_punct*) (tinybasic_language_is_ru() ? &RU_TB_RUN_PUNCT : &TB_RUN_PUNCT),
-    (t_punct*) (tinybasic_language_is_ru() ? &RU_TB_CLEAR_PUNCT : &TB_CLEAR_PUNCT)
+    (t_punct*) (tinybasic_language_is_ru() ? mk8::punct_view<t_punct>(RU_TB_EDIT_PUNCT) : &TB_EDIT_PUNCT),
+    (t_punct*) (tinybasic_language_is_ru() ? mk8::punct_view<t_punct>(RU_TB_RUN_PUNCT) : &TB_RUN_PUNCT),
+    (t_punct*) (tinybasic_language_is_ru() ? mk8::punct_view<t_punct>(RU_TB_CLEAR_PUNCT) : &TB_CLEAR_PUNCT)
 #else
     (t_punct*) &TB_EDIT_PUNCT,
     (t_punct*) &TB_RUN_PUNCT,

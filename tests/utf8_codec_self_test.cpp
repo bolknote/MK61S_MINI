@@ -1,10 +1,11 @@
 #include "mk8_codec.hpp"
-#include "mk8_strings.inc"
+#include "mk8_literal.hpp"
 #include "utf8_codec.hpp"
 #include "utf8_view.hpp"
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 namespace {
 
@@ -94,7 +95,23 @@ void test_navigation_uses_the_same_decoder(void) {
 }
 
 void test_mk8_compact_firmware_text(void) {
-  const char* settings = M8_SETTINGS;
+  static_assert(mk8::literal_size("🙂") == 0, "unsupported Unicode is rejected");
+  static_assert(mk8::literal_size("\xC0\xAF") == 0, "overlong UTF-8 is rejected");
+  static_assert(mk8::literal_size("\177") == 0, "invalid M8 controls are rejected");
+  static_assert(sizeof(M8_ARRAY("Настройки")) == 10,
+                "a Cyrillic source literal needs only one byte per letter");
+  static constexpr auto literal = M8_ARRAY("Настройки → Ёё\0дальше");
+  static_assert(sizeof(literal) == 22, "only M8 bytes, including the interior NUL");
+  static_assert(literal[10] == (char) mk8::BYTE_RIGHT_ARROW, "private M8 symbol");
+  static_assert(literal[12] == (char) 0xA8 && literal[13] == (char) 0xB8,
+                "CP1251 exceptions");
+  struct MenuEntry { u8 size; bool (*action)(); char text[16]; };
+  static constexpr auto menu_entry = M8_PUNCT(15, (bool (*)()) nullptr, "Настройки");
+  const MenuEntry* const legacy = mk8::punct_view<MenuEntry>(menu_entry);
+  assert(legacy->size == 15 && strcmp(legacy->text, M8("Настройки")) == 0);
+  assert(strcmp(M8("Настройки"), "\315\340\361\362\360\356\351\352\350") == 0);
+  assert(literal[14] == 0 && literal[15] == (char) 0xE4);
+  const char* settings = M8("Настройки");
   static const u16 expected[] = {
       0x041D, 0x0430, 0x0441, 0x0442, 0x0440,
       0x043E, 0x0439, 0x043A, 0x0438}; // Настройки
