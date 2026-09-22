@@ -10,7 +10,7 @@
   "height": 17,
   "spacing": "safe_bearing_x + advance; at least one blank column; no kerning",
   "rejected_ppem": [],
-  "missing": [8804,8805],
+  "missing": [696,739,8730,8800,8804,8805,8891],
   "glyphs": [
     {"codepoint":32,"width":1,"height":1,"bearing_x":0,"bearing_y":1,"safe_bearing_x":0,"native_advance":7,"advance":7,"rows":["0"]},
     {"codepoint":33,"width":3,"height":11,"bearing_x":1,"bearing_y":11,"safe_bearing_x":1,"native_advance":6,"advance":6,"rows":["010","111","111","111","010","010","010","010","000","000","010"]},
@@ -108,6 +108,10 @@
     {"codepoint":125,"width":4,"height":15,"bearing_x":1,"bearing_y":13,"safe_bearing_x":1,"native_advance":7,"advance":7,"rows":["1100","0010","0010","0010","0010","0010","0010","0001","0010","0010","0010","0010","0010","0010","1100"]},
     {"codepoint":126,"width":7,"height":3,"bearing_x":0,"bearing_y":7,"safe_bearing_x":0,"native_advance":8,"advance":8,"rows":["0110000","1001001","0000110"]},
     {"codepoint":176,"width":4,"height":4,"bearing_x":0,"bearing_y":12,"safe_bearing_x":0,"native_advance":5,"advance":5,"rows":["0110","1001","1001","0110"]},
+    {"codepoint":178,"width":5,"height":7,"bearing_x":0,"bearing_y":13,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["01110","10001","00001","00110","01000","10000","11111"]},
+    {"codepoint":215,"width":5,"height":5,"bearing_x":0,"bearing_y":7,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["10001","01010","00100","01010","10001"]},
+    {"codepoint":247,"width":5,"height":5,"bearing_x":0,"bearing_y":7,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["00100","00000","11111","00000","00100"]},
+    {"codepoint":960,"width":7,"height":8,"bearing_x":0,"bearing_y":8,"safe_bearing_x":0,"native_advance":8,"advance":8,"rows":["1111111","0100010","0100010","0100010","0100010","0100010","0100010","1000011"]},
     {"codepoint":1025,"width":7,"height":13,"bearing_x":0,"bearing_y":13,"safe_bearing_x":0,"native_advance":8,"advance":8,"rows":["0100010","0000000","1111111","1000000","1000000","1000000","1000000","1111110","1000000","1000000","1000000","1000000","1111111"]},
     {"codepoint":1040,"width":7,"height":11,"bearing_x":0,"bearing_y":11,"safe_bearing_x":0,"native_advance":8,"advance":8,"rows":["0001000","0001000","0010100","0010100","0010100","0100010","0100010","0111110","1000001","1000001","1000001"]},
     {"codepoint":1041,"width":7,"height":11,"bearing_x":0,"bearing_y":11,"safe_bearing_x":0,"native_advance":8,"advance":8,"rows":["1111100","1000000","1000000","1000000","1000000","1111100","1000010","1000001","1000001","1000010","1111100"]},
@@ -175,9 +179,12 @@
     {"codepoint":1103,"width":6,"height":8,"bearing_x":0,"bearing_y":8,"safe_bearing_x":0,"native_advance":7,"advance":7,"rows":["011111","100001","100001","100001","011111","001001","010001","100001"]},
     {"codepoint":1105,"width":6,"height":11,"bearing_x":0,"bearing_y":11,"safe_bearing_x":0,"native_advance":7,"advance":7,"rows":["010010","000000","000000","011110","100001","100001","111111","100000","100000","100001","011110"]},
     {"codepoint":8230,"width":8,"height":2,"bearing_x":1,"bearing_y":2,"safe_bearing_x":1,"native_advance":11,"advance":11,"rows":["11011011","11011011"]},
+    {"codepoint":8315,"width":5,"height":1,"bearing_x":0,"bearing_y":10,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["11111"]},
     {"codepoint":8592,"width":13,"height":7,"bearing_x":1,"bearing_y":9,"safe_bearing_x":1,"native_advance":16,"advance":16,"rows":["0001000000000","0010000000000","0100000000000","1111111111111","0100000000000","0010000000000","0001000000000"]},
     {"codepoint":8593,"width":7,"height":13,"bearing_x":4,"bearing_y":12,"safe_bearing_x":4,"native_advance":16,"advance":16,"rows":["0001000","0011100","0101010","1001001","0001000","0001000","0001000","0001000","0001000","0001000","0001000","0001000","0001000"]},
     {"codepoint":8594,"width":13,"height":7,"bearing_x":1,"bearing_y":9,"safe_bearing_x":1,"native_advance":16,"advance":16,"rows":["0000000001000","0000000000100","0000000000010","1111111111111","0000000000010","0000000000100","0000000001000"]},
-    {"codepoint":8595,"width":7,"height":13,"bearing_x":4,"bearing_y":12,"safe_bearing_x":4,"native_advance":16,"advance":16,"rows":["0001000","0001000","0001000","0001000","0001000","0001000","0001000","0001000","0001000","1001001","0101010","0011100","0001000"]}
+    {"codepoint":8595,"width":7,"height":13,"bearing_x":4,"bearing_y":12,"safe_bearing_x":4,"native_advance":16,"advance":16,"rows":["0001000","0001000","0001000","0001000","0001000","0001000","0001000","0001000","0001000","1001001","0101010","0011100","0001000"]},
+    {"codepoint":8629,"width":15,"height":9,"bearing_x":0,"bearing_y":10,"safe_bearing_x":0,"native_advance":16,"advance":16,"rows":["000000000000001","000000000000001","000100000000001","001000000000001","010000000000001","111111111111111","010000000000000","001000000000000","000100000000000"]},
+    {"codepoint":8635,"width":13,"height":13,"bearing_x":1,"bearing_y":12,"safe_bearing_x":1,"native_advance":16,"advance":16,"rows":["1111100000000","0001100001000","0010100000100","0100100000010","0100100000010","1000000000001","1000000000001","1000000000001","0100000000010","0100000000010","0010000000100","0001100011000","0000011100000"]}
   ]
 }

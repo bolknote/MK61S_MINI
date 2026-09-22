@@ -86,7 +86,10 @@ std::vector<std::uint32_t> requested_characters() {
   for (std::uint32_t cp = 0x20; cp <= 0x7e; ++cp) characters.push_back(cp);
   for (std::uint32_t cp = 0x410; cp <= 0x44f; ++cp) characters.push_back(cp);
   for (const std::uint32_t cp : {0x401U, 0x451U, 0xb0U, 0x2190U, 0x2191U,
-                               0x2192U, 0x2193U, 0x2026U, 0x2264U, 0x2265U}) {
+                               0x2192U, 0x2193U, 0x2026U, 0x2264U, 0x2265U,
+                               0x03c0U, 0x221aU, 0x21bbU, 0x2260U,
+                               0x00d7U, 0x00f7U, 0x00b2U, 0x02b8U,
+                               0x02e3U, 0x22bbU, 0x207bU, 0x21b5U}) {
     characters.push_back(cp);
   }
   std::sort(characters.begin(), characters.end());

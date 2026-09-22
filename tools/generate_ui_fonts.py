@@ -11,10 +11,13 @@ ATLAS_DIR = ROOT / "tools/.fmk-font/ui-atlases"
 NAMES = ("pixel-12", "pixel-14", "pixel-16")
 EXPECTED_HEIGHTS = {"pixel-12": 12, "pixel-14": 14, "pixel-16": 17}
 SOURCE_HASHES = {
-    "pixel-12": "67741710e4d63c1cdda6129bae7c0942ee0a8ae05e61e8bca0af273c10c88584",
-    "pixel-14": "e12017456c29b40d6c560609e021d40ce6c5ca6b5c44772e41a714111c8d9f50",
-    "pixel-16": "de535e79b99b916e6e89fa9fbfc4fafab74aa96d8d719ace2705b89409820366",
+    "pixel-12": "3fee5d1cf9d5af61aee234beccaf3e6e0229388717efa1e27c62c0097641912f",
+    "pixel-14": "dd2388475c04d1bba6a03b2b6a7684bae39a36d6cbb41b4d4f7f560a8cbf2f78",
+    "pixel-16": "2f4720dd48f2ce5f6c4c790f5562efc9a1f084e5b52412fab74024f4712b4bda",
 }
+SUPPLEMENT_HASH = "979892a08c06767f7e7c72665c18451877c6f964201104a40ba186080a936c99"
+SUPPLEMENT_CODEPOINTS = {0x02B8, 0x02E3, 0x221A, 0x2260, 0x22BB}
+SOURCE_MISSING = SUPPLEMENT_CODEPOINTS | {0x2264, 0x2265}
 LINE_GAPS = {12: 1, 14: 2, 17: 2}
 
 
@@ -24,6 +27,12 @@ def require(condition, message):
 
 
 def load_atlases(directory=ATLAS_DIR):
+    supplement_raw = (directory / "m8-supplement.json").read_bytes()
+    require(hashlib.sha256(supplement_raw).hexdigest() == SUPPLEMENT_HASH,
+            "M8 supplement: reviewed source SHA-256 changed")
+    supplement = json.loads(supplement_raw)
+    require(supplement["schema"] == 1 and set(supplement["faces"]) == set(NAMES),
+            "M8 supplement: unexpected schema or faces")
     result = []
     for name in NAMES:
         raw = (directory / f"{name}.json").read_bytes()
@@ -37,6 +46,25 @@ def load_atlases(directory=ATLAS_DIR):
                 f"{name}: inconsistent line box")
         glyphs = {glyph["codepoint"]: glyph for glyph in atlas["glyphs"]}
         require(len(glyphs) == len(atlas["glyphs"]), f"{name}: duplicate glyph")
+        require(set(atlas["missing"]) == SOURCE_MISSING,
+                f"{name}: unexpected missing source characters")
+        additions = supplement["faces"][name]
+        require({glyph["codepoint"] for glyph in additions} == SUPPLEMENT_CODEPOINTS and
+                len(additions) == len(SUPPLEMENT_CODEPOINTS),
+                f"{name}: incomplete M8 supplement")
+        for addition in additions:
+            cp, rows = addition["codepoint"], addition["rows"]
+            require(cp not in glyphs and rows and len(set(map(len, rows))) == 1,
+                    f"{name}/{cp}: invalid supplemental raster")
+            width = len(rows[0])
+            advance = width + 1
+            glyphs[cp] = {
+                "codepoint": cp, "width": width, "height": len(rows),
+                "bearing_x": 0, "bearing_y": addition["bearing_y"],
+                "safe_bearing_x": 0, "native_advance": advance,
+                "advance": advance, "rows": rows,
+            }
+        atlas["missing"] = sorted(set(atlas["missing"]) - SUPPLEMENT_CODEPOINTS)
         for cp, glyph in glyphs.items():
             w, h = glyph["width"], glyph["height"]
             x, y = glyph["safe_bearing_x"], glyph["bearing_y"]
@@ -52,7 +80,7 @@ def load_atlases(directory=ATLAS_DIR):
         atlas["by_codepoint"] = glyphs
         result.append(atlas)
     repertoire = sorted(set(result[0]["by_codepoint"]) | set(result[0]["missing"]))
-    require(len(repertoire) == 169 and repertoire[:95] == list(range(32, 127)),
+    require(len(repertoire) == 181 and repertoire[:95] == list(range(32, 127)),
             "unexpected repertoire")
     for name, atlas in zip(NAMES, result):
         actual = set(atlas["by_codepoint"])

@@ -10,7 +10,7 @@
   "height": 12,
   "spacing": "safe_bearing_x + advance; at least one blank column; no kerning",
   "rejected_ppem": [],
-  "missing": [8804,8805],
+  "missing": [696,739,8730,8800,8804,8805,8891],
   "glyphs": [
     {"codepoint":32,"width":1,"height":1,"bearing_x":0,"bearing_y":1,"safe_bearing_x":0,"native_advance":5,"advance":5,"rows":["0"]},
     {"codepoint":33,"width":1,"height":7,"bearing_x":1,"bearing_y":7,"safe_bearing_x":1,"native_advance":4,"advance":4,"rows":["1","1","1","1","1","0","1"]},
@@ -108,6 +108,10 @@
     {"codepoint":125,"width":4,"height":9,"bearing_x":1,"bearing_y":8,"safe_bearing_x":1,"native_advance":7,"advance":7,"rows":["1100","0010","0010","0010","0001","0010","0010","0010","1100"]},
     {"codepoint":126,"width":5,"height":3,"bearing_x":0,"bearing_y":5,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["01000","10101","00010"]},
     {"codepoint":176,"width":3,"height":3,"bearing_x":0,"bearing_y":8,"safe_bearing_x":0,"native_advance":4,"advance":4,"rows":["010","101","010"]},
+    {"codepoint":178,"width":3,"height":5,"bearing_x":0,"bearing_y":8,"safe_bearing_x":0,"native_advance":4,"advance":4,"rows":["110","001","010","100","111"]},
+    {"codepoint":215,"width":5,"height":5,"bearing_x":0,"bearing_y":5,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["10001","01010","00100","01010","10001"]},
+    {"codepoint":247,"width":5,"height":5,"bearing_x":0,"bearing_y":5,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["00100","00000","11111","00000","00100"]},
+    {"codepoint":960,"width":5,"height":5,"bearing_x":0,"bearing_y":5,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["11111","01010","01010","01010","10011"]},
     {"codepoint":1025,"width":5,"height":9,"bearing_x":0,"bearing_y":9,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["01010","00000","11111","10000","10000","11110","10000","10000","11111"]},
     {"codepoint":1040,"width":5,"height":7,"bearing_x":0,"bearing_y":7,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["00100","00100","01010","01010","01110","10001","10001"]},
     {"codepoint":1041,"width":5,"height":7,"bearing_x":0,"bearing_y":7,"safe_bearing_x":0,"native_advance":6,"advance":6,"rows":["11110","10000","10000","11110","10001","10001","11110"]},
@@ -175,9 +179,12 @@
     {"codepoint":1103,"width":4,"height":5,"bearing_x":0,"bearing_y":5,"safe_bearing_x":0,"native_advance":5,"advance":5,"rows":["0111","1001","0111","0101","1001"]},
     {"codepoint":1105,"width":4,"height":7,"bearing_x":0,"bearing_y":7,"safe_bearing_x":0,"native_advance":5,"advance":5,"rows":["0101","0000","0110","1001","1111","1000","0110"]},
     {"codepoint":8230,"width":5,"height":1,"bearing_x":1,"bearing_y":1,"safe_bearing_x":1,"native_advance":8,"advance":8,"rows":["10101"]},
+    {"codepoint":8315,"width":3,"height":1,"bearing_x":0,"bearing_y":6,"safe_bearing_x":0,"native_advance":4,"advance":4,"rows":["111"]},
     {"codepoint":8592,"width":9,"height":5,"bearing_x":0,"bearing_y":6,"safe_bearing_x":0,"native_advance":10,"advance":10,"rows":["001000000","010000000","111111111","010000000","001000000"]},
     {"codepoint":8593,"width":5,"height":9,"bearing_x":2,"bearing_y":8,"safe_bearing_x":2,"native_advance":10,"advance":10,"rows":["00100","01110","10101","00100","00100","00100","00100","00100","00100"]},
     {"codepoint":8594,"width":9,"height":5,"bearing_x":0,"bearing_y":6,"safe_bearing_x":0,"native_advance":10,"advance":10,"rows":["000000100","000000010","111111111","000000010","000000100"]},
-    {"codepoint":8595,"width":5,"height":9,"bearing_x":2,"bearing_y":8,"safe_bearing_x":2,"native_advance":10,"advance":10,"rows":["00100","00100","00100","00100","00100","00100","10101","01110","00100"]}
+    {"codepoint":8595,"width":5,"height":9,"bearing_x":2,"bearing_y":8,"safe_bearing_x":2,"native_advance":10,"advance":10,"rows":["00100","00100","00100","00100","00100","00100","10101","01110","00100"]},
+    {"codepoint":8629,"width":9,"height":6,"bearing_x":0,"bearing_y":6,"safe_bearing_x":0,"native_advance":10,"advance":10,"rows":["000000001","001000001","010000001","111111111","010000000","001000000"]},
+    {"codepoint":8635,"width":7,"height":8,"bearing_x":1,"bearing_y":8,"safe_bearing_x":1,"native_advance":10,"advance":10,"rows":["0111000","0011000","0101010","1000001","1000001","1000001","0100010","0011100"]}
   ]
 }

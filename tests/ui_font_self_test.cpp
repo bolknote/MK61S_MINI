@@ -62,7 +62,23 @@ void checkFace(ui_font::Face face) {
       }
     }
   }
-  assert(supported == 169);
+  assert(supported == 181);
+  for (uint32_t cp : {0x2190U, 0x2192U, 0x2191U, 0x2193U,
+                      0x03C0U, 0x221AU, 0x21BBU, 0x2260U,
+                      0x00D7U, 0x00F7U, 0x00B2U, 0x02B8U,
+                      0x02E3U, 0x22BBU, 0x207BU, 0x21B5U}) {
+    assert(ui_font::supports(face, cp));
+    assert(!ui_font::glyph(face, cp).fallback);
+  }
+  // A bare check mark is not a legible radical at these sizes: keep the bar.
+  const ui_font::Glyph radical = ui_font::glyph(face, 0x221A);
+  unsigned top_run = 0;
+  unsigned longest_top_run = 0;
+  for (uint8_t x = 0; x < radical.width; ++x) {
+    top_run = font_glyph::pixel(radical, x, 0) ? top_run + 1 : 0;
+    if (top_run > longest_top_run) longest_top_run = top_run;
+  }
+  assert(longest_top_run >= 4);
   for (uint32_t cp : {0U, 0x1FU, 0x7FU, 0xD800U, 0x1F600U, 0xFFFFFFFFU}) {
     assert(!ui_font::supports(face, cp));
     const ui_font::Glyph missing = ui_font::glyph(face, cp);
@@ -140,5 +156,5 @@ int main(int argc, char** argv) {
   const ui_font::Face normal = {ui_font::Family::PIXEL, ui_font::Size::PX12};
   assert(ui_font::metrics(invalid).height == 12);
   assert(ui_font::glyph(invalid, 'W').bitmap == ui_font::glyph(normal, 'W').bitmap);
-  if (!dump) std::puts("UI font tests passed: three faces, 507 glyphs, bounds and fallbacks");
+  if (!dump) std::puts("UI font tests passed: three faces, 543 glyphs, bounds and fallbacks");
 }

@@ -13,7 +13,7 @@ def main() -> None:
         "FreeType native bitmap strike; empty border cropped"
     assert (atlas["target_height"], atlas["ppem"]) == (8, 8)
     assert (atlas["ascent"], atlas["descent"], atlas["height"]) == (7, 0, 7)
-    assert len(atlas["missing"]) == 167
+    assert len(atlas["missing"]) == 179
     assert atlas["glyphs"] == [
         {
             "codepoint": 65,
