@@ -159,7 +159,7 @@ inline bool format_memory_line(
       (unsigned) identity.flash_kb);
   } else {
     written = snprintf(
-      out, size, russian ? M8("ОЗУ:? ПЗУ:?") : "RAM:? ROM:?");
+      out, size, "%s", russian ? M8("ОЗУ:? ПЗУ:?") : "RAM:? ROM:?");
   }
   return written >= 0 && (usize) written < size;
 }
@@ -252,7 +252,7 @@ inline bool format_vdda_line(
   int written;
   if(!reading.valid) {
     written = snprintf(
-      out, size, russian ? M8("Питание:--,-- В") : "VDD:--.-- V");
+      out, size, "%s", russian ? M8("Питание:--,-- В") : "VDD:--.-- V");
   } else {
     const u16 centivolts = (u16) ((reading.millivolts + 5U) / 10U);
     written = snprintf(
@@ -268,7 +268,7 @@ inline bool format_temperature_line(
   if(out == NULL || size == 0) return false;
   if(!reading.valid) {
     const int written = snprintf(
-      out, size, russian ? M8("МК:--,- C") : "MCU:--.- C");
+      out, size, "%s", russian ? M8("МК:--,- C") : "MCU:--.- C");
     return written >= 0 && (usize) written < size;
   }
 
@@ -295,10 +295,10 @@ inline bool format_battery_line(
       (unsigned) (centivolts / 100U),
       (unsigned) (centivolts % 100U));
   } else if(status.presence == BatteryPresence::ABSENT) {
-    written = snprintf(out, size,
+    written = snprintf(out, size, "%s",
       russian ? M8("Батарея:нет") : "Battery:absent");
   } else {
-    written = snprintf(out, size,
+    written = snprintf(out, size, "%s",
       russian ? M8("Батарея:неизв.") : "Battery:unknown");
   }
   return written >= 0 && (usize) written < size;

@@ -461,7 +461,7 @@ static void format_display_rows_text(void) {
   ROWS_punct.size = 15;
 
 #if defined(MK61_DISPLAY_UC1609)
-  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), M8("Шрифты..."));
+  snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), "%s", M8("Шрифты..."));
 #else
   snprintf(RU_ROWS_punct.text, sizeof(RU_ROWS_punct.text), M8("Шрифт %s"),
     fontPresetName(display_text_profile_state));
