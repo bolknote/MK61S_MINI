@@ -398,10 +398,12 @@ tools\mk61-arduino-board.cmd
 5. нажмите Verify или Upload.
 
 Обычная кнопка Arduino собирает согласованный каталог в `binary/`: resident
-`.bin`, включённые языки/просмотрщики, `System/SETUP.APP` и справку
-`System/HELP0.TXT`, `HELP1.TXT`. Upload пишет в DFU только
-resident; после его запуска каталог `System` из того же результата нужно
-скопировать в корень диска `MK61S C6`.
+`.bin`, включённые языки/просмотрщики, `System/SETUP.APP`,
+`System/USBDISK.APP` и справку
+`System/HELP0.TXT`, `HELP1.TXT`. На Windows Upload сначала пишет resident
+через DFU, затем через CDC и MKC устанавливает и проверяет System APP из
+этой же сборки; USB-диск открывать не требуется. На macOS/Linux после Upload
+каталог `System` пока копируется отдельно в `/System` диска `MK61S C6`.
 
 IDE-вариант использует ARM-инструменты установленного STM32 Core и Python
 3.10+. На macOS/Linux post-build запускается через системный shell и применяет

@@ -30,6 +30,8 @@ cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
 cmp "$hook" "$target/tools/mk61-app-postbuild.sh"
 cmp "$platform/tools/mk61-app-postbuild.ps1" \
     "$target/tools/mk61-app-postbuild.ps1"
+cmp "$platform/tools/mk61-app-upload.ps1" \
+    "$target/tools/mk61-app-upload.ps1"
 cmp "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
     "$target/tools/mk61_firmware_seal.cpp"
 cmp "$root/code/resident_firmware_format.hpp" \
@@ -56,6 +58,11 @@ grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
   "$target/boards.txt"
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
+grep -q '^tools.stm32CubeProg.upload.pattern.windows=' \
+  "$target/platform.txt"
+grep -q -- '-Profile "{build.mk61_platform_id}-{build.mk61_display_id}"' \
+  "$target/platform.txt"
+grep -q -- '-Port "{serial.port}"' "$target/platform.txt"
 grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
 grep -q -- '-DMK61_ENABLE_LOADABLE_MODULES=1' "$target/boards.txt"
 grep -q -- '-DMK61_F401_PRODUCT_BUILD=1' "$target/boards.txt"
@@ -117,6 +124,41 @@ if command -v pwsh >/dev/null 2>&1; then
     -Check -Sketchbook "$ps_sketchbook" > "$work/check-ps.txt"
   cmp "$platform/boards.txt" \
       "$ps_sketchbook/hardware/mk61/stm32/boards.txt"
+  cmp "$platform/tools/mk61-app-upload.ps1" \
+      "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-upload.ps1"
+  mock_build="$work/mock-build"
+  mock_system="$mock_build/mk61-system-apps/mk61s-M-classic-v2-uc1609-f401/System"
+  mock_device="$work/mock-device"
+  mkdir -p "$mock_system" "$mock_device"
+  printf 'mock APP' > "$mock_system/USBDISK.APP"
+  pwsh -NoLogo -NoProfile -File \
+    "$platform/tools/mk61-app-upload.ps1" \
+    -BuildPath "$mock_build" -Project code.ino \
+    -Bundle mk61s-M-classic-v2-uc1609-f401 \
+    -Profile classic-v2-uc1609 -Sketch "$root/code" \
+    -TestMockDevice "$mock_device" > "$work/mock-upload.txt"
+  cmp "$mock_system/USBDISK.APP" "$mock_device/System/USBDISK.APP"
+  grep -q 'Resident and System APP upload complete' "$work/mock-upload.txt"
+  mv "$mock_system/USBDISK.APP" "$work/missing-usbdisk.app"
+  if pwsh -NoLogo -NoProfile -File \
+      "$platform/tools/mk61-app-upload.ps1" \
+      -BuildPath "$mock_build" -Project code.ino \
+      -Bundle mk61s-M-classic-v2-uc1609-f401 \
+      -Profile classic-v2-uc1609 -Sketch "$root/code" \
+      -TestMockDevice "$mock_device" > "$work/missing-usbdisk.txt" 2>&1; then
+    echo 'Arduino upload accepted a bundle without USBDISK.APP' >&2
+    exit 1
+  fi
+  mv "$work/missing-usbdisk.app" "$mock_system/USBDISK.APP"
+  if pwsh -NoLogo -NoProfile -File \
+      "$platform/tools/mk61-app-upload.ps1" \
+      -BuildPath "$mock_build" -Project code.ino \
+      -Bundle mk61s-M-classic-v2-uc1609-f401 \
+      -Profile mini-v2-lcd1602-a00 -Sketch "$root/code" \
+      -TestMockDevice "$mock_device" > "$work/wrong-profile.txt" 2>&1; then
+    echo 'Arduino upload accepted a mismatched System APP profile' >&2
+    exit 1
+  fi
   pwsh -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code"

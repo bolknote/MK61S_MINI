@@ -264,7 +264,7 @@ function Build-Mk61Bundle {
     Write-Host ''
     Write-Host 'MK61s F401 unified ABI 6 bundle built by Arduino IDE:'
     Write-Host "  $output"
-    Write-Host 'After Upload, copy the generated System directory to /System on MK61S C6.'
+    Write-Host 'Arduino IDE Upload will flash resident and install System APP through CDC.'
     Write-Host ''
 }
 

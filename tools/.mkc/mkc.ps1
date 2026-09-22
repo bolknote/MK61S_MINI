@@ -1194,6 +1194,20 @@ function Install-SystemBundle {
         }
         [Console]::WriteLine("Installed and verified /System/$name")
     }
+    # Keep the canonical set in sync with this exact build. Leave user files
+    # and non-canonical APPs alone.
+    $installed = @(Get-RemoteEntries '/System')
+    foreach ($entry in $installed) {
+        $name = [string]$entry.Name
+        if ($entry.Kind -ne 'f' -or $canonical -cnotcontains $name -or
+            (Test-Path -LiteralPath (Join-Path $system $name) -PathType Leaf)) {
+            continue
+        }
+        if (-not (Remove-RemoteItem "/System/$name")) {
+            throw "удаление старого ${name}: $($script:StatusText)"
+        }
+        [Console]::WriteLine("Removed disabled /System/$name")
+    }
     [Console]::WriteLine('System installation through CDC: OK')
 }
 

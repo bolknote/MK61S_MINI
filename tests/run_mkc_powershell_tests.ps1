@@ -86,12 +86,19 @@ try {
     [void](New-Item -ItemType Directory -Path $systemBundle)
     [IO.File]::WriteAllBytes((Join-Path $systemBundle 'USBDISK.APP'), [byte[]]::new(64))
     [IO.File]::WriteAllText((Join-Path $systemBundle 'HELP0.TXT'), "Помощь`n", [Text.UTF8Encoding]::new($false))
+    [void](New-Item -ItemType Directory -Path (Join-Path $device 'System'))
+    [IO.File]::WriteAllBytes((Join-Path $device 'System/CHIP8.APP'), [byte[]]::new(64))
+    [IO.File]::WriteAllBytes((Join-Path $device 'System/CUSTOM.APP'), [byte[]]::new(64))
     $bootstrap = Invoke-MkcTool @('--mock', $device, '--install-system', $systemBundle)
     Assert-True ($bootstrap.ExitCode -eq 0 -and
         ($bootstrap.Output -join ' ') -match 'System installation through CDC: OK') `
         'unattended System bootstrap failed'
     Assert-True ([IO.File]::Exists((Join-Path $device 'System/USBDISK.APP'))) `
         'System bootstrap did not install USBDISK.APP'
+    Assert-True (-not [IO.File]::Exists((Join-Path $device 'System/CHIP8.APP'))) `
+        'System bootstrap did not remove a disabled canonical APP'
+    Assert-True ([IO.File]::Exists((Join-Path $device 'System/CUSTOM.APP'))) `
+        'System bootstrap removed a user APP'
     Assert-True ([IO.File]::ReadAllBytes((Join-Path $device 'System/HELP0.TXT')).Length -eq
         "Помощь`n".Length) `
         'System bootstrap did not convert HELP0.TXT to M8'
