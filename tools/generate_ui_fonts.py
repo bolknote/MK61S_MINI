@@ -15,9 +15,9 @@ SOURCE_HASHES = {
     "pixel-14": "dd2388475c04d1bba6a03b2b6a7684bae39a36d6cbb41b4d4f7f560a8cbf2f78",
     "pixel-16": "2f4720dd48f2ce5f6c4c790f5562efc9a1f084e5b52412fab74024f4712b4bda",
 }
-SUPPLEMENT_HASH = "f2b3e2e8aa1577e1c338006ff6c8c08ab36b8328fa8b5d063a88f97ba5b881df"
-SUPPLEMENT_CODEPOINTS = {0x02B8, 0x02E3, 0x221A, 0x2260, 0x22BB}
-SOURCE_MISSING = SUPPLEMENT_CODEPOINTS | {0x2264, 0x2265}
+SUPPLEMENT_HASH = "b9a7765b998fc8d486252ce01b3fb6e880df934612599beb66bed888133a6b11"
+SUPPLEMENT_CODEPOINTS = {0x02B8, 0x02E3, 0x221A, 0x2260, 0x2264, 0x2265, 0x22BB}
+SOURCE_MISSING = SUPPLEMENT_CODEPOINTS
 LINE_GAPS = {12: 1, 14: 2, 17: 2}
 
 
@@ -87,8 +87,7 @@ def load_atlases(directory=ATLAS_DIR):
         require(actual <= set(repertoire) and
                 set(repertoire) - actual == set(atlas["missing"]),
                 f"{name}: inconsistent missing characters")
-        require(set(atlas["missing"]) == {0x2264, 0x2265},
-                f"{name}: only ≤/≥ may use the explicit ASCII fallback")
+        require(not atlas["missing"], f"{name}: incomplete M8 repertoire")
     return result, repertoire
 
 

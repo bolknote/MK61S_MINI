@@ -47,12 +47,7 @@ void checkFace(ui_font::Face face) {
     assert(!font_glyph::pixel(g, g.width, 0));
     assert(!font_glyph::pixel(g, 0, g.height));
     assert(!font_glyph::pixel(g, 255, 255));
-    const bool comparisonFallback = cp == 0x2264 || cp == 0x2265;
-    assert(g.fallback == comparisonFallback);
-    if (comparisonFallback) {
-      const ui_font::Glyph reference = ui_font::glyph(face, cp == 0x2264 ? '<' : '>');
-      assert(g.bitmap == reference.bitmap && g.advance == reference.advance);
-    }
+    assert(!g.fallback);
     if (cp == ' ') {
       for (unsigned y = 0; y < g.height; ++y) {
         for (unsigned x = 0; x < g.width; ++x) {
@@ -66,7 +61,8 @@ void checkFace(ui_font::Face face) {
   for (uint32_t cp : {0x2190U, 0x2192U, 0x2191U, 0x2193U,
                       0x03C0U, 0x221AU, 0x21BBU, 0x2260U,
                       0x00D7U, 0x00F7U, 0x00B2U, 0x02B8U,
-                      0x02E3U, 0x22BBU, 0x207BU, 0x21B5U}) {
+                      0x02E3U, 0x22BBU, 0x207BU, 0x21B5U,
+                      0x2264U, 0x2265U}) {
     assert(ui_font::supports(face, cp));
     assert(!ui_font::glyph(face, cp).fallback);
   }
@@ -79,6 +75,19 @@ void checkFace(ui_font::Face face) {
     if (top_run > longest_top_run) longest_top_run = top_run;
   }
   assert(longest_top_run >= 4);
+  // Both comparison signs must include a detached equals bar and be mirrors.
+  const ui_font::Glyph le = ui_font::glyph(face, 0x2264);
+  const ui_font::Glyph ge = ui_font::glyph(face, 0x2265);
+  assert(le.width == ge.width && le.height == ge.height);
+  assert(le.height >= 7);
+  for (uint8_t y = 0; y < le.height; ++y) {
+    for (uint8_t x = 0; x < le.width; ++x) {
+      assert(font_glyph::pixel(le, x, y) ==
+             font_glyph::pixel(ge, le.width - 1 - x, y));
+      if (y == le.height - 2) assert(!font_glyph::pixel(le, x, y));
+      if (y == le.height - 1) assert(font_glyph::pixel(le, x, y));
+    }
+  }
   // M8 0x1D uses the calculator's circled XOR, not Unicode's underlined V.
   const ui_font::Glyph xor_glyph = ui_font::glyph(face, 0x22BB);
   const uint8_t middle = xor_glyph.height / 2;

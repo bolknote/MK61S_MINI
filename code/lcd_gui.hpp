@@ -219,14 +219,14 @@ class class_LCD_fonts {
 #if defined(MK61_OLED1602_WS0010)
    inline static constexpr u8 fixed_glyphs[8][8] = {
     { // greater-or-equal
+      0b11000,
       0b00100,
-      0b00010,
-      0b00001,
-      0b00010,
+      0b00011,
       0b00100,
-      0b01001,
-      0b00010,
-      0b00100
+      0b11000,
+      0b00000,
+      0b11111,
+      0b00000
     },
     { // y superscript
       0b10100,
@@ -310,7 +310,7 @@ class class_LCD_fonts {
                  "WS0010 CGRAM image must follow the fixed slot policy");
 #elif defined(MK61_LCD1602_A02)
    inline static constexpr u8 fixed_glyphs[7][8] = {
-    {0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01001, 0b00010, 0b00100},
+    {0b11000, 0b00100, 0b00011, 0b00100, 0b11000, 0, 0b11111, 0},
     {0b10100, 0b10100, 0b01100, 0b00100, 0b11000, 0b00000, 0b00000, 0b00000},
     {0b01110, 0b10101, 0b10101, 0b11111, 0b10101, 0b10101, 0b01110, 0b00000},
     {0b00001, 0b00010, 0b11111, 0b00100, 0b11111, 0b01000, 0b10000, 0b00000},
@@ -320,7 +320,7 @@ class class_LCD_fonts {
    };
 #elif !defined(MK61_DISPLAY_UC1609)
    inline static constexpr u8 fixed_glyphs[9][8] = {
-    {0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01001, 0b00010, 0b00100}, // greater-or-equal
+    {0b11000, 0b00100, 0b00011, 0b00100, 0b11000, 0, 0b11111, 0}, // greater-or-equal
     {0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000}, // П
     {0b11111, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000}, // Б
     {0b00110, 0b01010, 0b01010, 0b01010, 0b01010, 0b01010, 0b11111, 0b10001}, // Д

@@ -81,13 +81,20 @@ def ui_font_oracle(family, size, text):
     font_dir = ROOT / 'tools/.fmk-font/ui-atlases'
     atlas = json.loads((font_dir / f'pixel-{size}.json').read_text())
     glyphs = {g['codepoint']: g for g in atlas['glyphs']}
+    supplement = json.loads((font_dir / 'm8-supplement.json').read_text())
+    for addition in supplement['faces'][f'pixel-{size}']:
+        glyphs[addition['codepoint']] = {
+            **addition,
+            'safe_bearing_x': 0,
+            'advance': len(addition['rows'][0]) + 1,
+        }
     frame = bytearray(1536)
     x = 2
     for character in text:
         cp = ord(character)
         glyph = glyphs.get(cp)
         if glyph is None:
-            glyph = glyphs[ord('<') if cp == 0x2264 else ord('>') if cp == 0x2265 else ord('?')]
+            glyph = glyphs[ord('?')]
         top = 2 + atlas['ascent'] - glyph['bearing_y']
         for y, row in enumerate(glyph['rows']):
             for gx, pixel in enumerate(row):

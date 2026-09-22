@@ -190,8 +190,8 @@
     {"codepoint":8635,"width":6,"height":6,"bearing_x":1,"bearing_y":7,"safe_bearing_x":1,"native_advance":8,"advance":8,"rows":["111000","011001","101001","100001","100001","011110"]},
     {"codepoint":8730,"width":6,"height":8,"bearing_x":0,"bearing_y":8,"safe_bearing_x":0,"native_advance":6,"advance":7,"rows":["000001","000010","000010","000100","010100","010100","011000","001000"]},
     {"codepoint":8800,"width":6,"height":7,"bearing_x":1,"bearing_y":7,"safe_bearing_x":1,"native_advance":8,"advance":8,"rows":["000010","000010","111111","001000","111111","010000","100000"]},
-    {"codepoint":8804,"width":6,"height":6,"bearing_x":1,"bearing_y":6,"safe_bearing_x":1,"native_advance":8,"advance":8,"rows":["000011","111100","111100","000011","000000","111111"]},
-    {"codepoint":8805,"width":6,"height":6,"bearing_x":1,"bearing_y":6,"safe_bearing_x":1,"native_advance":8,"advance":8,"rows":["110000","001111","001111","110000","000000","111111"]},
+    {"codepoint":8804,"width":6,"height":7,"bearing_x":1,"bearing_y":7,"safe_bearing_x":1,"native_advance":8,"advance":8,"rows":["000011","001100","110000","001100","000011","000000","111111"]},
+    {"codepoint":8805,"width":6,"height":7,"bearing_x":1,"bearing_y":7,"safe_bearing_x":1,"native_advance":8,"advance":8,"rows":["110000","001100","000011","001100","110000","000000","111111"]},
     {"codepoint":8891,"width":5,"height":7,"bearing_x":1,"bearing_y":7,"safe_bearing_x":1,"native_advance":7,"advance":7,"rows":["01110","10101","10101","11111","10101","10101","01110"]}
   ]
 }

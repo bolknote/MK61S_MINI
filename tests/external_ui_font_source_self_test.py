@@ -28,6 +28,13 @@ def main() -> None:
         assert all(any("1" in row for row in glyphs[cp]["rows"])
                    for cp in required)
         assert glyphs[0x22BB]["rows"] == xor_rows[size]
+        left = glyphs[0x2264]
+        right = glyphs[0x2265]
+        assert left["height"] == right["height"]
+        assert left["width"] == right["width"]
+        assert left["rows"][-2] == "0" * left["width"]
+        assert left["rows"][-1] == "1" * left["width"]
+        assert right["rows"] == [row[::-1] for row in left["rows"]]
         assert encode(atlas, gap) == target.read_bytes(), target
     print("DejaVu M8 rasters and FMK2 packages: ok")
 

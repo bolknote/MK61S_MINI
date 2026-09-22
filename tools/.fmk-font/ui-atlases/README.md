@@ -1,7 +1,7 @@
 # Reviewed UC1609 UI rasters
 
 These three proportional faces use native bitmap strikes from Ark Pixel Font
-2026.09.01. Five additional M8 mathematical signs are original hand-drawn
+2026.09.01. Seven additional M8 mathematical signs are original hand-drawn
 pixel glyphs in `m8-supplement.json`. No outline hinting, antialiasing or
 resampling happens on the device.
 
@@ -23,10 +23,9 @@ from older residents and then use the legacy `size` value.
 The repertoire has 181 entries: ASCII, Russian including Ё/ё, degree, four
 arrows, ellipsis, ≤/≥ and twelve more private M8 signs. Seven of those twelve
 come directly from the original Ark bitmap strikes. Ark lacks `ʸ`, `ˣ`, `√`,
-`≠` and `⊻`; their original supplemental rasters are drawn to match each
-face's line envelope. Ark also lacks ≤/≥, so the low-level atlas API marks
-those two as fallbacks and the display renderer uses the exact resident 5×8
-sign. Unrelated unsupported characters still become `?`.
+`≠`, `≤`, `≥` and `⊻`; their supplemental rasters are drawn to match each
+face's line envelope. The two comparisons are mirrored chevrons with a
+separate equals bar, not ASCII fallbacks. Unsupported characters become `?`.
 The `⊻` supplement depicts the calculator's circled XOR, not the underlined
 V of a generic Unicode font.
 
@@ -47,7 +46,7 @@ bash tests/run_ui_font_tests.sh
 
 The exporter selects the fixed bitmap strike, crops only all-zero BDF padding,
 and preserves the source pixels, baseline and advances. The seven added Ark
-glyphs changed none of the original 167 rasters. The generator merges the five
+glyphs changed none of the original 167 rasters. The generator merges the seven
 hand-drawn glyphs after verifying both source checksums. Every advance leaves
 at least one blank column between adjacent ink boxes. JSON checksums are
 pinned so a source or FreeType change cannot silently alter shipping glyphs.
@@ -63,7 +62,7 @@ pinned so a source or FreeType change cannot silently alter shipping glyphs.
 
 Copyright (c) 2021, TakWolf. Ark Pixel Font is licensed under SIL Open Font
 License 1.1; the complete notice is retained in `LICENSE-Ark-Pixel.txt` and is
-packaged beside firmware containing the converted subset. The five supplemental
+packaged beside firmware containing the converted subset. The seven supplemental
 M8 drawings are original project artwork, not claimed as Ark Pixel glyphs.
 
 Only F411/UC1609 firmware compiles these tables. A00/A02, WS0010 and all F401

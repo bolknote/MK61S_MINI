@@ -249,6 +249,18 @@ static void test_m8_special_3x5_glyphs(void) {
     }
   }
   assert(memcmp(font3x5Bitmap(0x21BB), font3x5Bitmap(0x05), 2) != 0);
+  builtin_font::Raster le = {}, ge = {};
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_3X5, 0x2264, le));
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_3X5, 0x2265, ge));
+  for(u8 x = 0; x < 3; ++x) {
+    assert((le.data[3] & ((u8) 0x80U >> x)) == 0); // gap above equals bar
+    assert((le.data[4] & ((u8) 0x80U >> x)) != 0);
+    for(u8 y = 0; y < 5; ++y) {
+      const bool left = (le.data[y] & ((u8) 0x80U >> x)) != 0;
+      const bool right = (ge.data[y] & ((u8) 0x80U >> (2U - x))) != 0;
+      assert(left == right);
+    }
+  }
 }
 
 static void test_no_supplemental_cyrillic_glyphs(void) {
@@ -304,7 +316,20 @@ static void test_m8_special_5x8_glyphs(void) {
     assert(raster.width == 5 && raster.height == 8);
     assert(memcmp(raster.data, question.data, sizeof(raster.data)) != 0);
   }
-  assert(builtin_font::rows5x8(0x2264)[6] == 0b11111); // ≤ underline
+  const u8* le = builtin_font::rows5x8(0x2264);
+  const u8* ge = builtin_font::rows5x8(0x2265);
+  assert(le[5] == 0 && ge[5] == 0); // equals bar must not touch angle
+  assert(le[6] == 0b11111 && ge[6] == 0b11111);
+  for(u8 y = 0; y < 8; ++y) {
+    for(u8 x = 0; x < 5; ++x) {
+      assert(((le[y] >> x) & 1U) == ((ge[y] >> (4U - x)) & 1U));
+    }
+  }
+  builtin_font::Raster legacy_ge = {}, m8_ge = {};
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                              display_symbol::uc1609::GE, legacy_ge));
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, 0x2265, m8_ge));
+  assert(memcmp(legacy_ge.data, m8_ge.data, sizeof(m8_ge.data)) == 0);
   assert(builtin_font::rows5x8(0x21BB)[2] == 0b10000); // ↻ is open
   assert(builtin_font::rows5x8(0x21BB)[6] == 0b00111); // ↻ arrow tip
   assert(builtin_font::rows5x8(0x00D7)[3] == 0b00100); // × centre

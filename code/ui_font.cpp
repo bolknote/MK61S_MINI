@@ -64,10 +64,8 @@ Glyph glyph(Face face, uint32_t codepoint) {
   bool fallback = index < 0;
   if (index < 0) index = '?' - ' ';
   if (FACES[selected].records[index].offset == MISSING_OFFSET) {
-    // Ark deliberately omits ≤/≥. Preserve their direction with the matching
-    // ASCII comparison sign instead of carrying a second font for two glyphs.
-    index = codepoint == 0x2264U ? '<' - ' '
-          : codepoint == 0x2265U ? '>' - ' ' : '?' - ' ';
+    // The reviewed atlas is complete; keep a safe fallback if it ever isn't.
+    index = '?' - ' ';
     fallback = true;
   }
   const GlyphRecord& record = FACES[selected].records[index];
