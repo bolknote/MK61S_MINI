@@ -10,6 +10,7 @@
 #include "ws0010_charset.hpp"
 #include "ws0010_controller.hpp"
 #include "ws0010_graphics.hpp"
+#include "segment_ws0010.hpp"
 #include "ws0010_shifted_viewport.hpp"
 #include "oled_settings.hpp"
 
@@ -597,6 +598,57 @@ void test_graphics_address_policy(void) {
            ws0010::GraphicsOwner::QUALIFICATION), "qualification") == 0);
 }
 
+void test_segment_graphics_frame(void) {
+  static_assert(segment_ws0010::FRAME_BYTES ==
+                ws0010::GRAPHICS_VISIBLE_FRAME_BYTES,
+                "segment frame must fit the qualified visible window");
+  u8 masks[segment_ws0010::CELLS] = {};
+  u8 frame[segment_ws0010::FRAME_BYTES] = {};
+  u8 blank[segment_ws0010::FRAME_BYTES] = {};
+  segment_ws0010::render(masks, frame);
+  assert(memcmp(frame, blank, sizeof(frame)) == 0);
+
+  // Every segment, including the decimal point, has its own pixel footprint.
+  for(u8 bit = 0; bit < 8; ++bit) {
+    memset(masks, 0, sizeof(masks));
+    masks[0] = (u8) (1u << bit);
+    segment_ws0010::render(masks, frame);
+    bool lit = false;
+    for(u8 x = 0; x < segment_ws0010::WIDTH; ++x) {
+      for(u8 y = 0; y < segment_ws0010::HEIGHT; ++y) {
+        const bool on = (frame[(usize) (y / 8) * segment_ws0010::WIDTH + x] &
+                         (u8) (1u << (y % 8))) != 0;
+        if(on) {
+          lit = true;
+          assert(x >= segment_ws0010::LEFT_MARGIN);
+          assert(x < segment_ws0010::LEFT_MARGIN + segment_ws0010::CELL_WIDTH);
+        }
+      }
+    }
+    assert(lit);
+  }
+
+  // All 256 masks remain distinct; no CGROM approximations or CGRAM limit.
+  u8 pictures[256][segment_ws0010::FRAME_BYTES] = {};
+  for(u16 mask = 0; mask < 256; ++mask) {
+    memset(masks, 0, sizeof(masks));
+    masks[5] = (u8) mask;
+    segment_ws0010::render(masks, pictures[mask]);
+    for(u16 previous = 0; previous < mask; ++previous)
+      assert(memcmp(pictures[mask], pictures[previous],
+                    segment_ws0010::FRAME_BYTES) != 0);
+  }
+
+  // Twelve different masks can coexist; the last cell and dot stay visible.
+  for(u8 cell = 0; cell < segment_ws0010::CELLS; ++cell)
+    masks[cell] = (u8) (cell + 1);
+  masks[11] = 0x80;
+  segment_ws0010::render(masks, frame);
+  assert((frame[segment_ws0010::WIDTH +
+                segment_ws0010::LEFT_MARGIN + 11 *
+                segment_ws0010::CELL_WIDTH + 5] & 0x80u) != 0);
+}
+
 void test_character_control_state_model(void) {
   ws0010::CharacterState state;
   ws0010::applyCharacterCommand(state, ws0010::MODE_CHARACTER_POWER_ON);
@@ -1082,6 +1134,7 @@ int main(void) {
   test_reverse_distinct_cyrillic_mapping();
   test_complete_canonical_byte_map();
   test_graphics_address_policy();
+  test_segment_graphics_frame();
   test_character_control_state_model();
   test_graphics_pack_clip_stream_and_damage();
   test_oled_protection_state_machine();

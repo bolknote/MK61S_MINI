@@ -26,10 +26,18 @@ static constexpr NativeGlyph NATIVE_GLYPHS[] = {
   {0x77, 'A'}, {0x7C, 'b'}, {0x39, 'C'}, {0x58, 'c'}, {0x5E, 'd'},
   {0x79, 'E'}, {0x71, 'F'}, {0x76, 'H'}, {0x74, 'h'}, {0x1E, 'J'},
   {0x38, 'L'}, {0x54, 'n'}, {0x5C, 'o'}, {0x73, 'P'}, {0x50, 'r'},
-  {0x78, 't'}, {0x3E, 'U'}, {0x1C, 'u'}, {0x6E, 'y'},
+  {0x3E, 'U'}, {0x1C, 'u'}, {0x6E, 'y'},
+#if defined(MK61_LCD1602_A00)
+  {0x78, 0xCB}, // A00's 203 has a more seven-segment-like t
+  {0xC9, 0xD0}, // A00's 208: three horizontal bars and a point
+#else
+  {0x78, 't'},
+#endif
 #if defined(MK61_LCD1602_A02)
   {0x31, lcd_charset::CYR_GHE}, {0x37, lcd_charset::CYR_PE},
 #endif
+  // A00 147 / A02 Э also resemble mask 4F, but 4F is digit 3; A02 Ч
+  // resembles 66, but 66 is digit 4. Digits retain precedence.
 };
 
 inline bool native_character(u8 mask, u8& character) {

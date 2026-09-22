@@ -57,11 +57,23 @@ int main() {
          character == lcd_charset::CYR_GHE);
   assert(native_character(0x37, character) &&
          character == lcd_charset::CYR_PE);
+  assert(native_character(0x78, character) && character == 't');
+  assert(!native_character(0xC9, character));
+#elif defined(MK61_LCD1602_A00)
+  u8 character = 0;
+  assert(!native_character(0x31, character));
+  assert(!native_character(0x37, character));
+  assert(native_character(0x78, character) && character == 203);
+  assert(native_character(0xC9, character) && character == 208);
 #else
   u8 character = 0;
   assert(!native_character(0x31, character));
   assert(!native_character(0x37, character));
+  assert(native_character(0x78, character) && character == 't');
+  assert(!native_character(0xC9, character));
 #endif
+  assert(native_character(0x4F, character) && character == '3');
+  assert(native_character(0x66, character) && character == '4');
   assert(!native_character(0xBF, character)); // zero with decimal point
   assert(native_character(0x80, character) && character == '.');
   u8 all_segments[8] = {};

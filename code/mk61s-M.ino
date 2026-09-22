@@ -14,8 +14,12 @@ using namespace kbd;
 #if MK61_FIXED_CALCULATOR_FACE
 #include "calculator_face.hpp"
 #endif
-#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02) || \
+    defined(MK61_OLED1602_WS0010)
 #include "segment_lcd1602.hpp"
+#endif
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+#include "segment_ws0010.hpp"
 #endif
 #include "manual_lifetime.hpp"
 #include "lcd_gui.hpp"
@@ -86,9 +90,24 @@ static  bool        lcd_hooked;
 static  bool        need_draw_lock_message;
 static  bool        calculator_display_dirty;
 static  t_time_ms   maximum_next_lcd_update;
-#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02) || \
+    defined(MK61_OLED1602_WS0010)
 static bool        segment_lcd_active;
 static u32          segment_lcd_revision = ~0UL;
+#endif
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+static bool        segment_ws_graphics_active;
+static u32          segment_ws_revision = ~0UL;
+
+void release_segment_ws_graphics(void) {
+  if(!segment_ws_graphics_active) return;
+  if(main_lcd().ws0010GraphicsOwner() == ws0010::GraphicsOwner::API)
+    (void) main_lcd().endWs0010Graphics();
+  segment_ws_graphics_active = false;
+  segment_ws_revision = ~0UL;
+}
+#else
+static void release_segment_ws_graphics(void) {}
 #endif
 //static  bool        mk61_edit_program;
 
@@ -260,6 +279,7 @@ void reset_ext_program_state(void) {
 #include  "automate.hpp"
 
 void reinit_mk61_calculator_state(void) {
+  release_segment_ws_graphics();
   classic_timer::synchronize(false);
   const AngleUnit selected_angle = MK61Emu_GetAngleUnit();
   reset_ext_program_state();
@@ -283,6 +303,7 @@ void reinit_mk61_calculator_state(void) {
 void lcd_std_display_redraw(void) { // Принудительная отрисовка стандартного экрана MK61s_mini
     MK61DisplayUpdate update(main_lcd());
     main_lcd().endUiText();
+    release_segment_ws_graphics();
     // Меню, просмотрщики и часы могут временно занимать пользовательские
     // символы LCD1602 A00. Перед возвратом к калькулятору восстанавливаем
     // штатную CGRAM, иначе, например, код П (слот 1) рисует чужой глиф.
@@ -291,10 +312,11 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
     // обычную F в посторонний составной знак; стандартный экран курсором не
     // пользуется и обязан нормализовать это состояние на каждом возврате.
     main_lcd().cursorOff();
-#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
-    if(core_61::extended_display_segmented()) {
-      // The segment view borrows all eight CGRAM slots. Keep the normal
-      // calculator labels out of row 0 until the numeric view is restored.
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02) || \
+    defined(MK61_OLED1602_WS0010)
+    if(core_61::extended_display_segmented() && !core_61::edit_program) {
+      // Keep normal calculator labels out of the segment view. Character
+      // panels borrow CGRAM; a qualified WS0010 uses GDRAM instead.
       main_lcd().clear();
       segment_lcd_revision = ~0UL;
       mk61_display_refresh();
@@ -315,10 +337,48 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
 void mk61_display_refresh(void) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::DISPLAY_UPDATE);
   MK61DisplayUpdate update(main_lcd());
-#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
-  if(core_61::extended_display_segmented()) {
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02) || \
+    defined(MK61_OLED1602_WS0010)
+  if(core_61::extended_display_segmented() && !core_61::edit_program) {
     const u8* masks = core_61::segment_display_frame();
     const u32 revision = core_61::extended_display_revision();
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+    if(segment_ws_graphics_active &&
+       main_lcd().ws0010GraphicsOwner() != ws0010::GraphicsOwner::API) {
+      segment_ws_graphics_active = false;
+      segment_ws_revision = ~0UL;
+    }
+    if(!segment_ws_graphics_active &&
+       main_lcd().ws0010GraphicsOwner() != ws0010::GraphicsOwner::NONE)
+      return; // A diagnostic or another API session owns the panel.
+    if(masks != nullptr && main_lcd().supportsWs0010Graphics() &&
+       !main_lcd().usbScreenActive() &&
+       (segment_ws_graphics_active ||
+        main_lcd().ws0010GraphicsOwner() == ws0010::GraphicsOwner::NONE)) {
+      if(!segment_ws_graphics_active || revision != segment_ws_revision) {
+        if(segment_lcd_active) {
+          // A prior USB/unqualified character fallback may have replaced
+          // CGRAM. Restore calculator glyphs before handing GDRAM ownership
+          // to the segment renderer and later returning to ordinary UI.
+          lcd_ru::restore_default_font();
+          segment_lcd_active = false;
+        }
+        u8 bitmap[segment_ws0010::FRAME_BYTES];
+        segment_ws0010::render(masks, bitmap);
+        if(main_lcd().showWs0010GraphicsFrame(bitmap, sizeof(bitmap))) {
+          segment_ws_graphics_active = true;
+          segment_ws_revision = revision;
+          segment_lcd_active = false;
+        } else if(main_lcd().ws0010GraphicsOwner() ==
+                  ws0010::GraphicsOwner::API) {
+          // A partial graphics transaction may have left G/C selected.
+          (void) main_lcd().endWs0010Graphics();
+        }
+      }
+      if(segment_ws_graphics_active) return;
+    }
+    release_segment_ws_graphics();
+#endif
     if(masks != nullptr &&
        (!segment_lcd_active || revision != segment_lcd_revision)) {
       if(!segment_lcd_active) main_lcd().clear();
@@ -340,6 +400,15 @@ void mk61_display_refresh(void) {
     }
     return;
   }
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+  if(segment_ws_graphics_active) {
+    release_segment_ws_graphics();
+    lcd_ru::restore_default_font();
+    main_lcd().clear();
+    GRDLabel.print(MK61Emu_GetAngleUnit());
+    display_text[0] = (char) -1;
+  }
+#endif
   if(segment_lcd_active) {
     segment_lcd_active = false;
     lcd_ru::restore_default_font();
@@ -576,6 +645,7 @@ void setup() {
 //         Редактирование расширения программы МК61
 //===================================================================
 void  edit_extend_program(void) { 
+  release_segment_ws_graphics();
   const i32 back_step = core_61::get_IP() - 1;
   if(back_step < 0 || back_step >= (i32) core_61::program_steps()) return;
   if(core_61::get_code(core_61::get_ring_address(back_step)) != 0x50) return;
@@ -608,6 +678,7 @@ void  edit_extend_program(void) {
 }
 
 void  entry_programm_mode(void) { // Вход в режим ПРГ - событие генерируется key_mnemonics
+  release_segment_ws_graphics();
   // Мнемоники ПРГ сразу используют штатные CGRAM-коды (в частности П = 1),
   // не проходя через lcd_std_display_redraw().
   lcd_ru::restore_default_font();
@@ -682,14 +753,12 @@ inline void monitor_switch_angle_unit(t_time_ms now) {
 
 inline void mk61_process(void) {
   static bool m61_display_was_owned = false;
-#if MK61_FIXED_CALCULATOR_FACE
   static u32 last_extended_display_revision = 0;
   const u32 display_revision = core_61::extended_display_revision();
   if(display_revision != last_extended_display_revision) {
       last_extended_display_revision = display_revision;
       calculator_display_dirty = true;
   }
-#endif
   mk61_automate();
   if(core_61::is_displayed()) {
       core_61::clear_displayed();
@@ -887,6 +956,7 @@ void   mk61_baseloop_hook(i32 key) {
         #if MK61_USER_EXPLORER_SHORTCUT
         } else if(user_short_press_pending) {
           user_short_press_pending = false;
+          release_segment_ws_graphics();
           program_store_explorer_select();
           lcd_std_display_redraw();
         #endif
@@ -895,18 +965,21 @@ void   mk61_baseloop_hook(i32 key) {
     case  KEY_ESC_PRESS:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
         kbd::handoff(kbd::Event(key));
+        release_segment_ws_graphics();
         input_focus = &mk61_menu_hook;
         mk61_menu.select(-1);  // Отобразим меню
       break;
     case  KEY_LOAD:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
         kbd::handoff(kbd::Event(key));
+        release_segment_ws_graphics();
         if(Load() && !m61_text::active()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
         lcd_std_display_redraw(); 
       break;
     case  KEY_SAVE:
         kbd::get_key(); // очистим буфер клавиатуры от этого кода
         kbd::handoff(kbd::Event(key));
+        release_segment_ws_graphics();
         if(Store()) message_and_waitkey(library_mk61::text(" press any key! ", "   OK/KEY     "));
         lcd_std_display_redraw(); 
       break;

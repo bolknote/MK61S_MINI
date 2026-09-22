@@ -41,6 +41,11 @@
   #include "ws0010_charset.hpp"
   #include "ws0010_graphics.hpp"
 #endif
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+// A calculator-owned segment frame must yield before an M61 print command
+// writes character DDRAM. Other WS0010 graphics owners are left untouched.
+extern void release_segment_ws_graphics(void);
+#endif
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
@@ -3691,6 +3696,9 @@ bool class_terminal::print_value(const m61_print::ValueRef& value, void* user_da
 
 bool class_terminal::exec_print(bool script_mode) {
       MK61Display& display = main_lcd();
+#if defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16
+      release_segment_ws_graphics();
+#endif
       const m61_print::Control control =
           m61_print::parse_control(command_args());
       if(control != m61_print::Control::NONE) {
