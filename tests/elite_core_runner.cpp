@@ -13,11 +13,21 @@ unsigned elite_load_game(const char* directory);
 
 static const char symbols[]="0123456789-     ";
 static bool input_frame_stable=true;
+static unsigned frame_changes=0;
+void elite_tracked_step() {
+  u8 before[12];
+  const u8* frame=core_61::segment_display_frame();
+  const bool segmented=frame!=nullptr;
+  if(segmented)std::memcpy(before,frame,12);
+  core_61::step();
+  frame=core_61::segment_display_frame();
+  if(segmented && frame && std::memcmp(before,frame,12)!=0)++frame_changes;
+}
 static void press(int x,int y) {
   core_61::clear_displayed();
-  for(int i=0;i<4;i++) { MK61Emu_SetKeyPress(x,y); core_61::step(); if(core_61::is_RUN()) break; }
+  for(int i=0;i<4;i++) { MK61Emu_SetKeyPress(x,y); elite_tracked_step(); if(core_61::is_RUN()) break; }
   MK61Emu_SetKeyPress(0,0);
-  for(int i=0;i<512;i++) { core_61::step(); if(core_61::is_RUN()||core_61::is_displayed()) break; }
+  for(int i=0;i<512;i++) { elite_tracked_step(); if(core_61::is_RUN()||core_61::is_displayed()) break; }
 }
 static double number(const char* v) {
   std::string s=v[0]=='-'?"-":"";
@@ -56,6 +66,7 @@ static void dump(unsigned steps) {
     <<",\"error\":"<<(core_61::extended_program_error()||core_61::has_error()?"true":"false")
     <<",\"pc\":"<<unsigned(core_61::active_program_bank())*112+core_61::get_IP()
     <<",\"input_frame_stable\":"<<(input_frame_stable?"true":"false")
+    <<",\"frame_changes\":"<<frame_changes
     <<",\"auto_display\":"<<(core_61::extended_display_auto()?"true":"false")
     <<",\"segmented\":"<<(core_61::extended_display_segmented()?"true":"false")
     <<",\"revision\":"<<core_61::extended_display_revision()
@@ -70,15 +81,17 @@ static void dump(unsigned steps) {
 int main(int argc,char**argv){
   if(argc!=2)return 2;
   const unsigned initial_steps=elite_load_game(argv[1]);
+  const unsigned initial_frame_changes=frame_changes;
   bool initial_pending=true;
   if(std::getenv("ELITE_TRACE"))core_61::set_mk61_program_boundary_hook(trace_boundary);
   std::string line;
   while(std::getline(std::cin,line)){
+    frame_changes=0;
     std::istringstream in(line);std::string op;in>>op;
     if(op=="set"){int b,f;long long v;in>>b>>f>>v;page_word(b,f,v);continue;}
     if(initial_pending) {
       initial_pending=false;
-      if(op=="run" || op=="dump") { dump(initial_steps); continue; }
+      if(op=="run" || op=="dump") { frame_changes=initial_frame_changes; dump(initial_steps); continue; }
     }
     if(op=="input"){
       u8 before[12];std::memcpy(before,core_61::segment_display_frame(),12);
@@ -90,7 +103,7 @@ int main(int argc,char**argv){
     unsigned steps=0;
     if(op=="run"||op=="input"){
       press(2,9);
-      while(core_61::is_RUN()&&steps<2000000){core_61::step();steps++;}
+      while(core_61::is_RUN()&&steps<2000000){elite_tracked_step();steps++;}
     }
     dump(steps);
   }

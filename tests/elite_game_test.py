@@ -20,6 +20,7 @@ def play(commands):
     for s in states:
         assert not s['running'] and not s['error'],s
         assert s['input_frame_stable'] and not s['auto_display'] and s['segmented'],s
+        assert s['frame_changes']<=1,('partial display updates',s)
         assert s['frame'][-2:]==[57,55],s
         assert s['pages'][5][:4]==s['pages'][5][4:8],s
         assert s['pages'][4][6]==sum(hp>0 for hp in s['pages'][4][:5]),s
@@ -42,6 +43,10 @@ def test_worlds_and_display():
     assert port['pages'][0]==[1000,3160320,3160320,0,84,60,40,0,12345]
     number(credits,'C',1000)
     assert again['revision']==credits['revision']
+    # Catch a return of the slow ROM loops that took 657/1142/1180 core steps.
+    assert title['steps']<80 and port['steps']<220 and credits['steps']<150
+    assert title['frame_changes']==port['frame_changes']==credits['frame_changes']==1
+    assert again['frame_changes']==0
     # Exhaustive coordinate/name coverage exercises eight-digit packed masks.
     states=play(START+[f'input {70+i}' for i in range(256)])[2:]
     names=set()

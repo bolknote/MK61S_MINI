@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+void elite_tracked_step();
+
 namespace {
 struct File { std::string name, text; };
 std::vector<File> files;
@@ -26,12 +28,12 @@ unsigned written_bytes = 0;
 void press(int x, int y) {
   core_61::clear_displayed();
   for(unsigned i=0; i<4; ++i) {
-    MK61Emu_SetKeyPress(x,y); core_61::step();
+    MK61Emu_SetKeyPress(x,y); elite_tracked_step();
     if(core_61::is_RUN()) break;
   }
   MK61Emu_SetKeyPress(0,0);
   for(unsigned i=0; i<64; ++i) {
-    core_61::step();
+    elite_tracked_step();
     if(core_61::is_RUN() || core_61::is_displayed()) break;
   }
 }
@@ -119,7 +121,7 @@ unsigned elite_load_game(const char* path) {
   assert(core_61::write_absolute_program(0,0xEE));
   if(!m61_text::load_program("autoexec.m61")) std::exit(5);
   while(m61_text::active() && elapsed<20000) {
-    if(core_61::is_RUN()) core_61::step();
+    if(core_61::is_RUN()) elite_tracked_step();
     m61_text::service(); ++elapsed;
   }
   m61_text::Error error={};

@@ -63,7 +63,7 @@ def create_game():
     m.label('show_world').get(24,1).jump('draw_name')
     m.label('show_destination').get(24,2)
     m.label('draw_name');show_name(m);m.op('ret')
-    m.label('draw_number').visit(29,'number_frame').visit(29,'display').op('ret')
+    m.label('draw_number').visit(29,'number_frame').op('ret')
     m.label('show_invalid');show_text(m,'invalid');m.op('ret')
     m.label('stat_masks')
     m.raw(*(v for ch in 'CHSFtr' for v in [*(int(d) for d in f'{GLYPHS[ch]:03d}'),0x52]))
