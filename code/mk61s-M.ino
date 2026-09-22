@@ -14,6 +14,9 @@ using namespace kbd;
 #if MK61_FIXED_CALCULATOR_FACE
 #include "calculator_face.hpp"
 #endif
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
+#include "segment_lcd1602.hpp"
+#endif
 #include "manual_lifetime.hpp"
 #include "lcd_gui.hpp"
 #include "mnemo.hpp"
@@ -83,6 +86,10 @@ static  bool        lcd_hooked;
 static  bool        need_draw_lock_message;
 static  bool        calculator_display_dirty;
 static  t_time_ms   maximum_next_lcd_update;
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
+static bool        segment_lcd_active;
+static u32          segment_lcd_revision = ~0UL;
+#endif
 //static  bool        mk61_edit_program;
 
 extern const char terminal_symbols[16] = {
@@ -284,6 +291,17 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
     // обычную F в посторонний составной знак; стандартный экран курсором не
     // пользуется и обязан нормализовать это состояние на каждом возврате.
     main_lcd().cursorOff();
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
+    if(core_61::extended_display_segmented()) {
+      // The segment view borrows all eight CGRAM slots. Keep the normal
+      // calculator labels out of row 0 until the numeric view is restored.
+      main_lcd().clear();
+      segment_lcd_revision = ~0UL;
+      mk61_display_refresh();
+      return;
+    }
+    segment_lcd_active = false;
+#endif
     lcd_ru::restore_default_font();
     main_lcd().clear();
     GRDLabel.print(MK61Emu_GetAngleUnit());
@@ -297,6 +315,39 @@ void lcd_std_display_redraw(void) { // Принудительная отрисо
 void mk61_display_refresh(void) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::DISPLAY_UPDATE);
   MK61DisplayUpdate update(main_lcd());
+#if defined(MK61_LCD1602_A00) || defined(MK61_LCD1602_A02)
+  if(core_61::extended_display_segmented()) {
+    const u8* masks = core_61::segment_display_frame();
+    const u32 revision = core_61::extended_display_revision();
+    if(masks != nullptr &&
+       (!segment_lcd_active || revision != segment_lcd_revision)) {
+      if(!segment_lcd_active) main_lcd().clear();
+      const segment_lcd1602::Plan frame = segment_lcd1602::plan(masks);
+      for(u8 slot = 0; slot < frame.custom_count; ++slot) {
+        u8 rows[8];
+        segment_lcd1602::custom_rows(frame.custom_masks[slot], rows);
+        main_lcd().createChar(slot, rows);
+      }
+      main_lcd().setCursor(0, 0);
+      main_lcd().print(frame.overflow_count ? "SEG!" : "SEG ");
+      main_lcd().setCursor(0, 1);
+      for(u8 cell = 0; cell < segment_lcd1602::CELLS; ++cell)
+        main_lcd().write(frame.characters[cell]);
+      for(u8 cell = segment_lcd1602::CELLS; cell < main_lcd().cols(); ++cell)
+        main_lcd().write((u8) ' ');
+      segment_lcd_active = true;
+      segment_lcd_revision = revision;
+    }
+    return;
+  }
+  if(segment_lcd_active) {
+    segment_lcd_active = false;
+    lcd_ru::restore_default_font();
+    main_lcd().clear();
+    GRDLabel.print(MK61Emu_GetAngleUnit());
+    display_text[0] = (char) -1;
+  }
+#endif
 #if MK61_FIXED_CALCULATOR_FACE
   // The core still writes its canonical two-row model.  UC1609 presents that
   // model as a fixed twelve-position VFD face, independent of menu/font
