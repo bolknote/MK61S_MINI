@@ -30,7 +30,7 @@ def create_game():
     m.label('bad_action').set('A',99).op('ret')
 
     m=a.module(12,'input')
-    m.label('port_input').ld(0).n(9).op('-').jneg('set_view')
+    m.label('port_input').ld(0).n(10).op('-').jneg('set_view')
     m.ld(0).n(70).op('-').jge('select_check')
     m.ld(0).n(60).op('-').jz('jump')
     m.ld(0).n(50).op('-').jge('station_check')
@@ -45,7 +45,7 @@ def create_game():
     m.label('show').ld('A').n(99).op('-').jz('show_invalid').jge('show_result')
     m.ld(9).n(2).op('-').jnz('port_view')
     m.ld('A').jz('combat_view').n(9).op('-').jge('combat_view')
-    m.label('port_view')
+    m.label('port_view').ld('A').n(9).op('-').jz('distance_view')
     m.ld('A').jz('show_world').ld('A').n(8).op('-').jz('show_destination')
     m.ld('A').n(10).op('-').jneg('show_stat')
     m.ld('A').n(20).op('-').jneg('show_price')

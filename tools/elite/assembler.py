@@ -63,6 +63,7 @@ class Item:
     value: object
     target: str = ''
     short: bool = False
+    settle: bool = False
 
 class Module:
     def __init__(self, bank, name):
@@ -89,7 +90,11 @@ class Module:
     def ptr(self, r, label):
         self.items.append(Item('ptr', reg(r), label)); return self
     def branch(self, opcode, label):
-        self.items.append(Item('branch', opcode, label)); return self
+        previous=next((i for i in reversed(self.items) if i.kind!='label'),None)
+        arithmetic={0x0B,0x10,0x11,0x12,0x13,0x21,0x22,0x24,0x31,0x34,0x35}
+        settle=(previous is not None and previous.kind=='bytes' and
+                len(previous.value)==1 and previous.value[0] in arithmetic)
+        self.items.append(Item('branch', opcode, label,settle=settle)); return self
     def call(self, label): return self.branch(0x53, label)
     def jump(self, label): return self.branch(0x51, label)
     def jz(self, label): return self.branch(0x57, label)
@@ -118,7 +123,10 @@ class Assembler:
 
     @staticmethod
     def size(item):
-        return len(item.value) if item.kind=='bytes' else {'label':0,'ptr':6,'branch':2 if item.short else 4}[item.kind]
+        if item.kind=='bytes':return len(item.value)
+        if item.kind=='branch':
+            return 2 if item.short else (5 if item.settle and item.value in (0x57,0x59,0x5C,0x5E) else 4)
+        return {'label':0,'ptr':6}[item.kind]
 
     def layout(self):
         labels, placements, bridges, usage = {}, [], [], {}
@@ -140,7 +148,9 @@ class Assembler:
                 remaining=sum(self.size(i) for i in module.items[index:])
                 size=self.size(item)
                 needs_bridge=falls_through
-                if offset+remaining > 112 and offset+size > 112-(4 if needs_bridge else 0):
+                ends_flow=((item.kind=='bytes' and item.value[-1]==0x52) or
+                           (item.kind=='branch' and item.value==0x51))
+                if offset+remaining > 112 and offset+size > (112 if ends_flow else 108):
                     fits=[i for i,(_,o) in enumerate(free) if 112-o>=size+(4 if remaining>112-o else 0)]
                     if not fits: raise ValueError(f'bank budget exceeded in {module.name}')
                     pick=max(fits,key=lambda i:112-free[i][1])
@@ -160,45 +170,40 @@ class Assembler:
                 placements.append((address,item))
                 offset+=size
                 usage[bank][1]=offset
-                falls_through=not ((item.kind=='bytes' and item.value[-1]==0x52) or
-                                  (item.kind=='branch' and item.value==0x51))
+                falls_through=not ends_flow
             for label in pending_labels: labels[label]=bank*112+offset
             if 112-offset>=8:free.append((bank,offset))
         return labels,placements,bridges,usage
 
     def link(self):
-        # Use monotone relaxation only inside a stable bank assignment. If a
-        # short branch ends up crossing a bank after packing, expand and relink.
-        history=set()
+        # Start with near branches; expand crossing branches monotonically.
+        # Never shrink again: moving a continuation can otherwise oscillate.
         for m in self.modules:
             for i in m.items:
                 if i.kind=='branch':i.short=True
         for _ in range(100):
             labels,placements,bridges,usage=self.layout()
             changed=False
-            signature=[]
             for address,item in placements:
                 if item.kind=='branch':
                     desired=address//112==labels[item.target]//112
-                    signature.append(desired)
-                    if item.short != desired:
-                        item.short=desired; changed=True
-            signature=tuple(signature)
+                    if item.short and not desired:
+                        item.short=False; changed=True
             if not changed: break
-            if signature in history:
-                # Deterministic conservative fallback for a packing oscillation.
-                for m in self.modules:
-                    for i in m.items:
-                        if i.kind=='branch': i.short=False
-                labels,placements,bridges,usage=self.layout()
-                break
-            history.add(signature)
         else: raise ValueError('linker did not converge')
         banks={b:bytearray([0x50]*112) for b in usage}
+        occupied=set()
+        def claim(address, size):
+            positions=set(range(address,address+size))
+            if address//112!=(address+size-1)//112 or occupied & positions:
+                raise ValueError(f'overlapping or straddling instruction at {address}')
+            occupied.update(positions)
         for b,values in self.data.items():
             banks.setdefault(b,bytearray([0x50]*112))
+            claim(b*112,85)
             banks[b][:85]=data_page(values)
         for address,target in bridges:
+            claim(address,4)
             banks[address//112][address%112:address%112+4]=bytes([0x1F,0x51,*bcd(target)])
         for address,item in placements:
             if item.kind=='bytes': value=item.value
@@ -206,11 +211,18 @@ class Assembler:
             elif item.short:
                 offset=labels[item.target]%112
                 value=[item.value,(offset//10)*16+offset%10]
-            else: value=[0x1F,item.value,*bcd(labels[item.target])]
+            else:
+                # The ROM can still be committing an arithmetic sign at the
+                # prefetch hook used by 1F. One native NOP settles X before
+                # a far predicate samples it; unlike ENTER it preserves stack.
+                barrier=[0x54] if item.settle and item.value in (0x57,0x59,0x5C,0x5E) else []
+                value=[*barrier,0x1F,item.value,*bcd(labels[item.target])]
             assert len(value)==self.size(item)
+            claim(address,len(value))
             offset=address%112
             assert offset+len(value)<=112
             banks[address//112][offset:offset+len(value)]=bytes(value)
         for bank,buf in banks.items():
             assert len(buf)==112
-        return banks, {'labels':labels,'banks':{str(b):{'module':name,'used':used} for b,(name,used) in usage.items()}}
+        return banks, {'occupied_bytes':len(occupied),'free_bytes':32*112-len(occupied),
+                       'labels':labels,'banks':{str(b):{'module':name,'used':used} for b,(name,used) in usage.items()}}
