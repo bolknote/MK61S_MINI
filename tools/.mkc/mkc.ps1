@@ -1220,6 +1220,14 @@ function Get-LocalParent {
     } catch { return '' }
 }
 
+function Test-IgnoredHostMetadataName {
+    param([string]$Name)
+    if ([string]::IsNullOrEmpty($Name)) { return $false }
+    return $Name.StartsWith('._', [StringComparison]::Ordinal) -or
+        $Name -in @('.DS_Store', '.Spotlight-V100', '.Trashes',
+            '.fseventsd', 'System Volume Information')
+}
+
 function Set-PanelEntries {
     param([string]$Panel, [object[]]$Entries, [string]$OldName = '')
     $state = $script:Panels[$Panel]
@@ -1248,6 +1256,7 @@ function Load-LocalPanel {
     try {
         $items = @(Get-ChildItem -LiteralPath $script:LocalPath -Force -ErrorAction Stop)
         foreach ($item in @($items | Sort-Object @{Expression={ -not $_.PSIsContainer }}, Name)) {
+            if (Test-IgnoredHostMetadataName $item.Name) { continue }
             $kind = if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { 'l' }
                 elseif ($item.PSIsContainer) { 'd' }
                 elseif ($item -is [IO.FileInfo]) { 'f' }
@@ -1328,6 +1337,7 @@ function Add-LocalTreeToPlan {
     param([string]$Source, [string]$Destination)
     try { $item = Get-Item -LiteralPath $Source -Force }
     catch { $script:PlanError = "$(Split-Path -Leaf $Source): не читается"; return $false }
+    if (Test-IgnoredHostMetadataName $item.Name) { return $true }
     $kind = if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { 'l' }
         elseif ($item.PSIsContainer) { 'd' } else { 'f' }
     $reason = Get-UnsupportedReason $Source $kind

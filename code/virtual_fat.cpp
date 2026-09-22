@@ -144,16 +144,18 @@ static usize g_commit_compression_buffer_size;
 static u8 g_scratch_cache_slots;
 static u8 g_extra_cache_slots;
 static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
-// On small NOR, macOS AppleDouble entries (._*) must not consume the narrow
-// persistent staging journal. Larger volumes already have enough journal
-// space, and a full FAT12 bitmap would exceed the 20-KiB USBDISK.APP limit.
-static constexpr u16 SIDECAR_FILTER_MAX_NODES = 256;
-static constexpr u16 CLUSTER_MAP_BYTES = SIDECAR_FILTER_MAX_NODES / 8;
-static u8 g_sidecar_clusters[CLUSTER_MAP_BYTES];
-static u8 g_directory_clusters[CLUSTER_MAP_BYTES];
-static u8 g_scan_sidecars[CLUSTER_MAP_BYTES];
-static u8 g_scan_regular[CLUSTER_MAP_BYTES];
-static u8 g_scan_directories[CLUSTER_MAP_BYTES];
+static constexpr u16 CLUSTER_MAP_BYTES =
+    (storage_geometry::FAT12_MAX_DATA_CLUSTERS + 7) / 8;
+struct SidecarScanMaps {
+  u8 sidecars[CLUSTER_MAP_BYTES];
+  u8 regular[CLUSTER_MAP_BYTES];
+  u8 directories[CLUSTER_MAP_BYTES];
+};
+enum ClusterRole : u8 {
+  CLUSTER_ROLE_NONE = 0,
+  CLUSTER_ROLE_SIDECAR = 1,
+  CLUSTER_ROLE_DIRECTORY = 2
+};
 static bool g_sidecar_scan_pending;
 static bool g_sidecar_candidate_seen;
 static constexpr u8 EXPORTED_SIZE_CACHE_ENTRIES = 16;
@@ -309,13 +311,30 @@ static bool valid_cluster(u16 cluster) {
 }
 
 static bool sidecar_filter_enabled(void) {
-  return geometry().max_nodes <= SIDECAR_FILTER_MAX_NODES;
+  return g_session != NULL &&
+         geometry().max_nodes <= storage_geometry::FAT12_MAX_DATA_CLUSTERS;
 }
 
 static bool cluster_marked(const u8* map, u16 cluster) {
   if(!valid_cluster(cluster) || !sidecar_filter_enabled()) return false;
   const u16 id = (u16) (cluster - FIRST_DATA_CLUSTER);
   return (map[id >> 3] & (u8) (1U << (id & 7U))) != 0;
+}
+
+static ClusterRole cluster_role(u16 cluster) {
+  if(!valid_cluster(cluster) || !sidecar_filter_enabled()) {
+    return CLUSTER_ROLE_NONE;
+  }
+  const u16 id = (u16) (cluster - FIRST_DATA_CLUSTER);
+  const u16 bit = (u16) (id * 2U);
+  return (ClusterRole) ((session().desired_kinds[bit / 8] >> (bit & 7)) & 3U);
+}
+
+static void set_cluster_role(u16 cluster, ClusterRole role) {
+  const u16 id = (u16) (cluster - FIRST_DATA_CLUSTER);
+  const u16 bit = (u16) (id * 2U);
+  session().desired_kinds[bit / 8] = (u8) (
+      session().desired_kinds[bit / 8] | ((u8) role << (bit & 7)));
 }
 
 static void mark_cluster(u8* map, u16 cluster) {
@@ -327,7 +346,8 @@ static bool sidecar_data_lba(u32 lba) {
   if(lba < data_start() || !sidecar_filter_enabled()) return false;
   const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
   return id < geometry().max_nodes &&
-         cluster_marked(g_sidecar_clusters, (u16) (id + FIRST_DATA_CLUSTER));
+         cluster_role((u16) (id + FIRST_DATA_CLUSTER)) ==
+             CLUSTER_ROLE_SIDECAR;
 }
 
 static bool directory_metadata_lba(u32 lba) {
@@ -336,7 +356,8 @@ static bool directory_metadata_lba(u32 lba) {
   if(lba < data_start()) return false;
   const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
   return id < geometry().max_nodes &&
-         cluster_marked(g_directory_clusters, (u16) (id + FIRST_DATA_CLUSTER));
+         cluster_role((u16) (id + FIRST_DATA_CLUSTER)) ==
+             CLUSTER_ROLE_DIRECTORY;
 }
 
 static bool contains_sidecar_name(const u8* block) {
@@ -1444,10 +1465,11 @@ static bool scan_cluster_chain(u8* map, u16 first) {
   return true; // A transient host FAT loop is not a reason to reject WRITE.
 }
 
-static bool scan_host_directory(u16 first_cluster, u8 depth);
+static bool scan_host_directory(u16 first_cluster, u8 depth,
+                                SidecarScanMaps& maps);
 
 static bool scan_host_directory_sector(u32 lba, u8 depth, LfnState& lfn,
-                                       bool& end) {
+                                       bool& end, SidecarScanMaps& maps) {
   for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
     const u8* block = nullptr;
     if(!cached_effective_sector(lba, block)) return false;
@@ -1477,36 +1499,37 @@ static bool scan_host_directory_sector(u32 lba, u8 depth, LfnState& lfn,
     if((item[11] & ATTR_DIRECTORY) != 0) {
       if(depth < MAX_DEPTH &&
          !system_directory(name, item[11]) &&
-         !scan_host_directory(cluster, (u8) (depth + 1))) return false;
+         !scan_host_directory(cluster, (u8) (depth + 1), maps)) return false;
     } else if(host_sidecar_file(name)) {
-      if(!scan_cluster_chain(g_scan_sidecars, cluster)) return false;
-    } else if(!scan_cluster_chain(g_scan_regular, cluster)) {
+      if(!scan_cluster_chain(maps.sidecars, cluster)) return false;
+    } else if(!scan_cluster_chain(maps.regular, cluster)) {
       return false;
     }
   }
   return true;
 }
 
-static bool scan_host_directory(u16 first_cluster, u8 depth) {
+static bool scan_host_directory(u16 first_cluster, u8 depth,
+                                SidecarScanMaps& maps) {
   LfnState lfn;
   reset_lfn(lfn);
   bool end = false;
   if(first_cluster == 0) {
     for(u16 sector = 0; sector < geometry().root_sectors && !end; sector++) {
       if(!scan_host_directory_sector(root_start() + sector, depth,
-                                     lfn, end)) return false;
+                                     lfn, end, maps)) return false;
     }
     return true;
   }
   u16 cluster = first_cluster;
   for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
     if(!valid_cluster(cluster) ||
-       cluster_marked(g_scan_directories, cluster)) return true;
-    mark_cluster(g_scan_directories, cluster);
+       cluster_marked(maps.directories, cluster)) return true;
+    mark_cluster(maps.directories, cluster);
     for(u8 sector = 0; sector < geometry().sectors_per_cluster && !end;
         sector++) {
       if(!scan_host_directory_sector(cluster_lba(cluster, sector), depth,
-                                     lfn, end)) return false;
+                                     lfn, end, maps)) return false;
     }
     if(end) return true;
     u16 next = 0;
@@ -1519,19 +1542,19 @@ static bool scan_host_directory(u16 first_cluster, u8 depth) {
 
 static bool discard_known_sidecars(void) {
   if(!g_sidecar_scan_pending || !sidecar_filter_enabled()) return true;
-  memset(g_scan_sidecars, 0, sizeof(g_scan_sidecars));
-  memset(g_scan_regular, 0, sizeof(g_scan_regular));
-  memset(g_scan_directories, 0, sizeof(g_scan_directories));
-  if(!scan_host_directory(0, 0)) return false;
+  // These maps are needed only during this bounded scan. Keeping them on the
+  // stack avoids adding 1.5 KiB of permanent BSS to the 20-KiB USBDISK.APP.
+  SidecarScanMaps maps = {};
+  if(!scan_host_directory(0, 0, maps)) return false;
   for(u16 byte = 0; byte < CLUSTER_MAP_BYTES; byte++) {
     // A transient host directory may mention a cluster twice. Never discard
     // data if any ordinary file or directory still refers to that cluster.
-    g_scan_sidecars[byte] &=
-        (u8) ~(g_scan_regular[byte] | g_scan_directories[byte]);
+    maps.sidecars[byte] &=
+        (u8) ~(maps.regular[byte] | maps.directories[byte]);
   }
   for(u16 id = 0; id < geometry().max_nodes; id++) {
     const u16 cluster = cluster_for_id(id);
-    if(!cluster_marked(g_scan_sidecars, cluster)) continue;
+    if(!cluster_marked(maps.sidecars, cluster)) continue;
     for(u8 sector = 0; sector < geometry().sectors_per_cluster; sector++) {
       const u32 lba = cluster_lba(cluster, sector);
       program_store::vfat_stage_forget(lba, 1);
@@ -1540,9 +1563,18 @@ static bool discard_known_sidecars(void) {
       if(cached >= 0) session().cache[(u8) cached].state = CACHE_EMPTY;
     }
   }
-  memcpy(g_sidecar_clusters, g_scan_sidecars, sizeof(g_sidecar_clusters));
-  memcpy(g_directory_clusters, g_scan_directories,
-         sizeof(g_directory_clusters));
+  // The two-bit desired-kind workspace is idle between commits. Reuse it as
+  // the persistent sidecar/directory role map; commit validation clears and
+  // owns it under ScopedDesiredKinds below.
+  memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
+  for(u16 id = 0; id < geometry().max_nodes; id++) {
+    const u16 cluster = cluster_for_id(id);
+    if(cluster_marked(maps.sidecars, cluster)) {
+      set_cluster_role(cluster, CLUSTER_ROLE_SIDECAR);
+    } else if(cluster_marked(maps.directories, cluster)) {
+      set_cluster_role(cluster, CLUSTER_ROLE_DIRECTORY);
+    }
+  }
   g_sidecar_scan_pending = false;
   return true;
 }
@@ -2260,6 +2292,25 @@ class ScopedCommitScratch {
     u8 saved_extra_slots_;
 };
 
+class ScopedDesiredKinds {
+ public:
+  ScopedDesiredKinds() {
+    memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
+  }
+  ~ScopedDesiredKinds() {
+    // The same two-bit array stores transient AppleDouble roles while the
+    // volume is mounted. Never let partial validation kinds leak back into
+    // the write path after either a successful or rejected commit. If the
+    // MSC session continues after sync, rebuild those roles before accepting
+    // the next packet: a retryable commit failure keeps the host FAT batch.
+    memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
+    g_sidecar_scan_pending = g_sidecar_candidate_seen;
+  }
+
+  ScopedDesiredKinds(const ScopedDesiredKinds&) = delete;
+  ScopedDesiredKinds& operator=(const ScopedDesiredKinds&) = delete;
+};
+
 static bool flush_write_cache_internal(void) {
   if(!discard_known_sidecars()) return false;
   while(true) {
@@ -2572,7 +2623,7 @@ CommitResult flush_pending_result(void) {
   }
   startup_stage(50);
   ScopedCommitScratch commit_scratch;
-  memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
+  ScopedDesiredKinds desired_kinds;
   invalidate_clean_cache();
   startup_stage(51);
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
@@ -2676,8 +2727,6 @@ bool reset_session(void) {
   }
   startup_stage(3);
   memset(g_session, 0, sizeof(*g_session));
-  memset(g_sidecar_clusters, 0, sizeof(g_sidecar_clusters));
-  memset(g_directory_clusters, 0, sizeof(g_directory_clusters));
   g_sidecar_scan_pending = false;
   g_sidecar_candidate_seen = false;
   startup_stage(4);
@@ -2730,8 +2779,6 @@ void end_session(void) {
   g_extra_cache_slots = 0;
   update_cache_slot_count();
   g_session_volume_serial_valid = false;
-  memset(g_sidecar_clusters, 0, sizeof(g_sidecar_clusters));
-  memset(g_directory_clusters, 0, sizeof(g_directory_clusters));
   g_sidecar_scan_pending = false;
   g_sidecar_candidate_seen = false;
   clear_exported_size_cache();

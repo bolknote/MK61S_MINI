@@ -357,6 +357,14 @@ unsupported_reason() {
   fi
 }
 
+ignored_host_metadata_name() {
+  case "$1" in
+    ._*|.DS_Store|.Spotlight-V100|.Trashes|.fseventsd|'System Volume Information')
+      return 0 ;;
+  esac
+  return 1
+}
+
 cleanup() {
   local status=$?
   trap - EXIT INT TERM HUP
@@ -1033,6 +1041,7 @@ load_local_panel() {
       for entry in "${entries[@]}"; do
         [ -e "$entry" ] || [ -L "$entry" ] || continue
         name=${entry##*/}
+        ignored_host_metadata_name "$name" && continue
         if [ -L "$entry" ]; then kind=l
         elif [ -d "$entry" ]; then kind=d
         elif [ -f "$entry" ]; then kind=f
@@ -1194,6 +1203,8 @@ plan_add() {
 
 plan_local_tree() {
   local source=$1 destination=$2 kind reason child name size
+  name=${source##*/}
+  ignored_host_metadata_name "$name" && return 0
   if [ -L "$source" ]; then kind=l
   elif [ -d "$source" ]; then kind=d
   elif [ -f "$source" ]; then kind=f
@@ -1212,6 +1223,7 @@ plan_local_tree() {
     for child in "${children[@]}"; do
       [ -e "$child" ] || [ -L "$child" ] || continue
       name=${child##*/}
+      ignored_host_metadata_name "$name" && continue
       plan_local_tree "$child" "$(remote_join "$destination" "$name")" || return 1
     done
   fi

@@ -1872,13 +1872,13 @@ static void test_finder_appledouble_does_not_abort_batch(void) {
   assert(!program_store::entry_by_id((u16) (sidecar_cluster - 2), ignored));
 }
 
-static void test_finder_appledouble_is_discarded_when_named(void) {
-  fresh(512U * 1024U);
+static void test_finder_appledouble_is_discarded_when_named(u32 capacity) {
+  fresh(capacity);
   const Layout fs = layout();
   const u16 sidecar_first = 100;
   const u16 sidecar_second = 102;
   const u16 file_cluster = 101;
-  assert(fs.sectors_per_cluster == 4);
+  assert(fs.sectors_per_cluster == 4 || fs.sectors_per_cluster == 8);
 
   u8 fat[512];
   assert(virtual_fat::read_sector(1, fat));
@@ -1920,6 +1920,15 @@ static void test_finder_appledouble_is_discarded_when_named(void) {
     assert(!program_store::vfat_stage_exists(sidecar_first_lba + sector));
     assert(!program_store::vfat_stage_exists(sidecar_second_lba + sector));
   }
+
+  // The ordinary file has not arrived yet, so sync is rejected while the host
+  // batch remains mounted. Validation borrows the role bitmap; the next write
+  // must rebuild it and continue rejecting this sidecar chain.
+  assert(virtual_fat::flush_pending_result() ==
+         virtual_fat::CommitResult::REJECTED);
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_DATA);
+  assert(virtual_fat::write_sector(sidecar_first_lba, data));
+  assert(!program_store::vfat_stage_exists(sidecar_first_lba));
 
   memcpy(data, payload, sizeof(payload));
   assert(virtual_fat::write_sector(cluster_lba(fs, file_cluster), data));
@@ -2822,7 +2831,10 @@ int main(void) {
   test_incomplete_file_preflight_preserves_existing_tree();
   test_flush_result_distinguishes_media_failure();
   test_finder_appledouble_does_not_abort_batch();
-  test_finder_appledouble_is_discarded_when_named();
+  test_finder_appledouble_is_discarded_when_named(512U * 1024U);
+  // The production 16-MiB geometry used to disable the early filter and let
+  // Finder sidecars consume persistent staging until eject.
+  test_finder_appledouble_is_discarded_when_named(16U * 1024U * 1024U);
   test_markdown_import_keeps_t2_type();
   test_wbmp_import_uses_its_full_quota();
   test_wbmp_over_quota_is_rejected();

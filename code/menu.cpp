@@ -916,6 +916,11 @@ static bool usb_disk_mode(bool wait_for_key_on_error) {
     }
   }
 
+  // Stopping MSC may validate and commit a complete C6 batch. On a large
+  // directory this takes seconds; show that ESC/eject was accepted instead
+  // of leaving the interactive prompt frozen on screen.
+  draw_usb_disk_status(M8("USB-диск"), "USB Disk",
+                       M8("сохранение..."), "saving...");
   const bool clean_exit = usb_start_terminal_mode();
   if(host_configuration_timed_out || host_connection_lost) {
     virtual_fat::report_startup_failure(

@@ -30,6 +30,7 @@ int main() {
   check_system_window(M8("Файлы+настройки"), M8("OK да ESC нет"), 16);
   check_system_window(M8("Сброс настроек"), M8("Подождите"), 16);
   check_system_window(M8("Ошибка настроек"), M8("Любая клавиша"), 16);
+  check_system_window(M8("USB-диск"), M8("сохранение..."), 16);
 
   for(u8 byte = mk8::BYTE_LEFT_ARROW; byte <= mk8::BYTE_RETURN_ARROW;
       ++byte) {
