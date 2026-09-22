@@ -1234,7 +1234,26 @@ static void test_ret_returns_from_nested_script_and_ends_root(void) {
   assert(!m61_text::last_error(no_error));
 }
 
+static void test_nested_open_preserves_program_and_root_still_clears(void) {
+  reset_host();
+  add_script("ROOT", "open FIRST\nopen SECOND\nret\n");
+  add_script("FIRST", "ok\n");
+  add_script("SECOND", "open LEAF\nret\n");
+  add_script("LEAF", "ok\n");
+  assert(m61_text::load_program("ROOT"));
+  for(int i=0; i<10 && m61_text::active(); ++i) m61_text::service();
+  assert(!m61_text::active());
+  m61_text::Error error={};
+  assert(!m61_text::last_error(error));
+  // Three nested calls must not erase their caller's loaded program.
+  assert(clear_count==1);
+  assert(m61_text::open_program((u16) 1));
+  assert(!m61_text::active());
+  assert(clear_count==2); // A fresh launch still starts with empty memory.
+}
+
 int main(void) {
+  test_nested_open_preserves_program_and_root_still_clears();
   test_nested_interpreter_esc_cancels_scenario_silently();
   test_loadfont_is_m61_scoped_and_uses_script_directory();
   test_loadfont_default_and_all_exit_paths_restore();

@@ -1125,7 +1125,8 @@ static bool open_store_script(const char* name) {
     return false;
   }
   terminal_script::reset();
-  MK61Emu_ClearCodePage();
+  // Nested scripts share the caller's program, just as they share registers.
+  // Only a new root script or an explicit reinit starts with empty banks.
   runner_state = RunnerState::EXECUTING;
   return true;
 }
@@ -1144,7 +1145,6 @@ static bool open_store_script(u16 id) {
     return false;
   }
   terminal_script::reset();
-  MK61Emu_ClearCodePage();
   runner_state = RunnerState::EXECUTING;
   return true;
 }
