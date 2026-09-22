@@ -179,26 +179,6 @@ static const u8* standardCyrillicBitmap(u16 codepoint) {
 #endif
 #endif
 
-// The WS0010 FT=10 ROM contains the complete Russian alphabet, but not the
-// Ukrainian/Belarusian additions below.  They live in Flash and can be leased
-// into the same eight CGRAM cells as any other non-ROM Unicode glyph.  WS0010
-// and graphics preserve both cases; A00/A02 uppercase their two-line output,
-// so their lowercase copies would be unreachable.
-static const Glyph5x8 CYRILLIC_SUPPLEMENTAL[] = {
-  {0x0404, {0b01110, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b01110, 0b00000}}, // Є
-  {0x0406, {0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // І
-  {0x0407, {0b01010, 0b00000, 0b01110, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // Ї
-  {0x0490, {0b00001, 0b11111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000}}, // Ґ
-  {0x040E, {0b01010, 0b00100, 0b10001, 0b10001, 0b01111, 0b00001, 0b11110, 0b00000}}, // Ў
-#if MK61_BUILTIN_FULL_CYRILLIC || defined(MK61_OLED1602_WS0010)
-  {0x0454, {0b00000, 0b01110, 0b10000, 0b11110, 0b10000, 0b10000, 0b01110, 0b00000}}, // є
-  {0x0456, {0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // і
-  {0x0457, {0b01010, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000}}, // ї
-  {0x0491, {0b00001, 0b01111, 0b01000, 0b01000, 0b01000, 0b01000, 0b01000, 0b00000}}, // ґ
-  {0x045E, {0b01010, 0b00100, 0b10001, 0b10001, 0b01111, 0b00001, 0b11110, 0b00000}}, // ў
-#endif
-};
-
 // M8 text is decoded to Unicode before reaching the display grid. The
 // original UC1609 font has several of these drawings at unrelated C0 byte
 // positions, so indexing that font with an M8 byte would display the wrong
@@ -291,13 +271,6 @@ const u8* rows5x8(u16 codepoint) {
     if(CYRILLIC[i].codepoint == codepoint) return CYRILLIC[i].rows;
   }
 #endif
-  for(usize i = 0;
-      i < sizeof(CYRILLIC_SUPPLEMENTAL) / sizeof(CYRILLIC_SUPPLEMENTAL[0]);
-      i++) {
-    if(CYRILLIC_SUPPLEMENTAL[i].codepoint == codepoint) {
-      return CYRILLIC_SUPPLEMENTAL[i].rows;
-    }
-  }
   return NULL;
 }
 

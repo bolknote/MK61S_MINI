@@ -1257,7 +1257,7 @@ display test restore
 USB Screen, тайм-аут сна, фазу запуска и число recovery. В
 профиле WEH001602A остальные подкоманды выполняют аппаратную приёмку: смешанный
 текст, алфавит, все 256 байтов CGROM, 2x64 DDRAM, независимую строку, CGRAM,
-cursor/blink, clear/home, entry shift и сон. Числа: `alphabet 0..4`,
+cursor/blink, clear/home, entry shift и сон. Числа: `alphabet 0..2`,
 `map 0..7`, `ddram 0..63`, `row 0..1 0..63`.
 
 `display test zero` скрыто записывает 256 нулевых байтов — существенно больше

@@ -251,19 +251,16 @@ static void test_m8_special_3x5_glyphs(void) {
   assert(memcmp(font3x5Bitmap(0x21BB), font3x5Bitmap(0x05), 2) != 0);
 }
 
-static void test_supplemental_cyrillic_glyphs(void) {
+static void test_no_supplemental_cyrillic_glyphs(void) {
   static constexpr u16 codepoints[] = {
     0x0404, 0x0454, 0x0406, 0x0456, 0x0407,
     0x0457, 0x0490, 0x0491, 0x040E, 0x045E,
   };
   for(const u16 codepoint : codepoints) {
-    const u8* rows = builtin_font::rows5x8(codepoint);
-    assert(rows != nullptr);
-    bool has_ink = false;
-    for(u8 row = 0; row < 7; row++) has_ink = has_ink || rows[row] != 0;
-    assert(has_ink);
-    // WS0010 5x8 mode reserves row 7 for its hardware cursor.
-    assert(rows[7] == 0);
+    assert(builtin_font::rows5x8(codepoint) == nullptr);
+    builtin_font::Raster raster = {};
+    assert(!builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                                 codepoint, raster));
   }
 }
 
@@ -586,7 +583,7 @@ int main(int argc, char** argv) {
   test_uc1609_display_symbol_tokens();
   test_builtin_3x5_is_tightly_packed();
   test_m8_special_3x5_glyphs();
-  test_supplemental_cyrillic_glyphs();
+  test_no_supplemental_cyrillic_glyphs();
   test_m8_special_5x8_glyphs();
   test_text_grid();
   test_text_grid_skips_unchanged_cells();

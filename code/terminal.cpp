@@ -1062,18 +1062,6 @@ void class_terminal::display_test_alphabet(u8 page) {
         return;
       }
 
-      if(page == 3) {
-        // FT=10 has no Ukrainian І/Ї/Є/Ґ. These eight glyphs exercise the
-        // allocation-free CGRAM planner at its exact capacity.
-        lcd_ru::print_fixed_lines("ІіЇїЄєҐґ", "CGRAM Unicode");
-        return;
-      }
-      if(page == 4) {
-        lcd_ru::print_fixed_lines(M8_TERMINAL_BELARUS,
-                                  M8_TERMINAL_USB_RUSSIAN);
-        return;
-      }
-
       // The last alphabet characters plus deliberately interleaved Latin and
       // Cyrillic look-alikes. USB Screen must retain their Unicode identity
       // even where the WS0010 ROM intentionally shares a physical glyph.
@@ -1290,9 +1278,9 @@ terminal_protocol::Result class_terminal::exec_display(void) {
       }
       if(strcmp(test, "alphabet") == 0) {
         usize page = 0;
-        if(!terminal_core::parse_unsigned(cursor, 10, 4, page) ||
+        if(!terminal_core::parse_unsigned(cursor, 10, 2, page) ||
            !terminal_core::at_end(cursor)) {
-          Serial.println("Usage: display test alphabet <0..4>");
+          Serial.println("Usage: display test alphabet <0..2>");
           return terminal_protocol::Result::error();
         }
         display_test_alphabet((u8) page);

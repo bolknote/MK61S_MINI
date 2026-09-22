@@ -405,17 +405,17 @@ void test_cgram_cursor_row_policy(void) {
 
 void test_cgram_window_plan_reserves_fixed_symbols(void) {
   cgram_window_plan::Plan plan = {};
-  assert(cgram_window_plan::add(plan, 0x0406));
-  assert(cgram_window_plan::slotFor(plan, 0x0406) == 0);
+  assert(cgram_window_plan::add(plan, 0x2191));
+  assert(cgram_window_plan::slotFor(plan, 0x2191) == 0);
   cgram_window_plan::reserve(plan, 0);
-  assert(cgram_window_plan::slotFor(plan, 0x0406) == 1);
+  assert(cgram_window_plan::slotFor(plan, 0x2191) == 1);
   assert(plan.reserved_mask == 0x01);
 
-  assert(cgram_window_plan::add(plan, 0x0407));
-  assert(cgram_window_plan::slotFor(plan, 0x0407) == 2);
+  assert(cgram_window_plan::add(plan, 0x2193));
+  assert(cgram_window_plan::slotFor(plan, 0x2193) == 2);
   cgram_window_plan::reserve(plan, 2);
-  assert(cgram_window_plan::slotFor(plan, 0x0407) == 3);
-  assert(cgram_window_plan::slotFor(plan, 0x0406) == 1);
+  assert(cgram_window_plan::slotFor(plan, 0x2193) == 3);
+  assert(cgram_window_plan::slotFor(plan, 0x2191) == 1);
 
   for(u8 slot = 0; slot < cgram_window_plan::SLOT_COUNT; slot++) {
     cgram_window_plan::reserve(plan, slot);
@@ -423,7 +423,7 @@ void test_cgram_window_plan_reserves_fixed_symbols(void) {
   assert(plan.reserved_mask == 0xFF);
   assert(plan.count == 0);
   assert(plan.overflow);
-  assert(!cgram_window_plan::add(plan, 0x040E));
+  assert(!cgram_window_plan::add(plan, 0x221A));
 }
 
 void expect_mapping(u16 codepoint, u8 expected) {
