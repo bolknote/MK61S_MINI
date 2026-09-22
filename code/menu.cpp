@@ -184,7 +184,7 @@ const t_punct RANDOM_MK61S_punct  = {.size = 15, .action = (menu_action) &TurnRa
 const t_punct DATE_TIME_punct      = {.size = 11, .action = (menu_action) &SetDateTime,          .text = "Date & time"};
 const t_punct RTC_CALIBRATION_punct = {.size = 14, .action = (menu_action) &SetRtcCalibration,   .text = "RTC correction"};
 const t_punct LANGUAGE_EN_punct   = {.size = 15, .action = (menu_action) &TurnLanguage,         .text = "Language EN    "};
-static const auto LANGUAGE_RU_punct = M8_PUNCT(15, (menu_action) &TurnLanguage, "Язык рус");
+static constexpr auto LANGUAGE_RU_punct = M8_PUNCT(15, &TurnLanguage, "Язык рус");
 const t_punct IDLE_SIGNAL_OFF_punct = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep OFF "};
 const t_punct IDLE_SIGNAL_ON_punct  = {.size = 15, .action = (menu_action) &TurnIdleSignal,     .text = "5 min beep ON  "};
 const t_punct FLASH_punct         = {.size = 11, .action = (menu_action) &InfoData,             .text = "Information"};
@@ -198,32 +198,32 @@ const t_punct OLED_TIMEOUT_OFF_punct = {.size = 15, .action = (menu_action) &Tur
 const t_punct OLED_TIMEOUT_5M_punct  = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 5m  "};
 const t_punct OLED_TIMEOUT_15M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 15m "};
 const t_punct OLED_TIMEOUT_30M_punct = {.size = 15, .action = (menu_action) &TurnOledProtection, .text = "OLED sleep 30m "};
-static const auto RU_OLED_TIMEOUT_OFF_punct = M8_PUNCT(15, (menu_action) &TurnOledProtection, "OLED сон выкл");
-static const auto RU_OLED_TIMEOUT_5M_punct = M8_PUNCT(15, (menu_action) &TurnOledProtection, "OLED сон 5 мин");
-static const auto RU_OLED_TIMEOUT_15M_punct = M8_PUNCT(15, (menu_action) &TurnOledProtection, "OLED сон 15мин");
-static const auto RU_OLED_TIMEOUT_30M_punct = M8_PUNCT(15, (menu_action) &TurnOledProtection, "OLED сон 30мин");
+static constexpr auto RU_OLED_TIMEOUT_OFF_punct = M8_PUNCT(15, &TurnOledProtection, "OLED сон выкл");
+static constexpr auto RU_OLED_TIMEOUT_5M_punct = M8_PUNCT(15, &TurnOledProtection, "OLED сон 5 мин");
+static constexpr auto RU_OLED_TIMEOUT_15M_punct = M8_PUNCT(15, &TurnOledProtection, "OLED сон 15мин");
+static constexpr auto RU_OLED_TIMEOUT_30M_punct = M8_PUNCT(15, &TurnOledProtection, "OLED сон 30мин");
 #endif
 
-static const auto RU_DFU_mode_punct = M8_PUNCT(15, (menu_action) &DFU_enable, "DFU прошивка");
-static const auto RU_USB_DISK_punct = M8_PUNCT(15, (menu_action) &UsbDiskMode, "USB-диск");
+static constexpr auto RU_DFU_mode_punct = M8_PUNCT(15, &DFU_enable, "DFU прошивка");
+static constexpr auto RU_USB_DISK_punct = M8_PUNCT(15, &UsbDiskMode, "USB-диск");
 static constexpr auto RU_SETTINGS_punct = M8_PUNCT(15, &settings_select, "Настройки");
 static constexpr auto RU_EXPLORER_punct = M8_PUNCT(15, &program_store_explorer_select, "Проводник");
 static constexpr auto RU_DEVELOPMENT_punct = M8_PUNCT(15, &development_select, "Разработка");
 static constexpr auto RU_RESET_punct = M8_PUNCT(15, &ResetDevice, "Сброс");
-static const auto RU_ERASE_punct = M8_PUNCT(15, (menu_action) &EraseFlash, "Стереть FLASH");
-static const auto RU_SPEED_CLASSIC_punct = M8_PUNCT(15, (menu_action) &TurnSpeed, "Скорость норма");
-static const auto RU_SPEED_MAXIMUM_punct = M8_PUNCT(15, (menu_action) &TurnSpeed, "Скорость макс");
-static const auto RU_MEMORY_105_punct = M8_PUNCT(15, (menu_action) &TurnProgramMemory, "Память 105ШГ");
-static const auto RU_MEMORY_112_punct = M8_PUNCT(15, (menu_action) &TurnProgramMemory, "Память 112ШГ+ПF");
-static const auto RU_MEMORY_AUTO_punct = M8_PUNCT(15, (menu_action) &TurnProgramMemory, "Память АВТО");
-static const auto RU_RANDOM_MK61_punct = M8_PUNCT(15, (menu_action) &TurnRandomMode, "К СЧ MK61");
-static const auto RU_RANDOM_MK61S_punct = M8_PUNCT(15, (menu_action) &TurnRandomMode, "К СЧ MK61s");
-static const auto RU_DATE_TIME_punct = M8_PUNCT(15, (menu_action) &SetDateTime, "Дата и время");
-static const auto RU_RTC_CALIBRATION_punct = M8_PUNCT(15, (menu_action) &SetRtcCalibration, "Поправка RTC");
-static const auto RU_IDLE_SIGNAL_OFF_punct = M8_PUNCT(15, (menu_action) &TurnIdleSignal, "5 мин звук выкл");
-static const auto RU_IDLE_SIGNAL_ON_punct = M8_PUNCT(15, (menu_action) &TurnIdleSignal, "5 мин звук вкл");
-static const auto RU_FLASH_punct = M8_PUNCT(15, (menu_action) &InfoData, "Информация");
-static const auto RU_HARDWARE_punct = M8_PUNCT(15, (menu_action) &HardwareInfo, "Плата");
+static constexpr auto RU_ERASE_punct = M8_PUNCT(15, &EraseFlash, "Стереть FLASH");
+static constexpr auto RU_SPEED_CLASSIC_punct = M8_PUNCT(15, &TurnSpeed, "Скорость норма");
+static constexpr auto RU_SPEED_MAXIMUM_punct = M8_PUNCT(15, &TurnSpeed, "Скорость макс");
+static constexpr auto RU_MEMORY_105_punct = M8_PUNCT(15, &TurnProgramMemory, "Память 105ШГ");
+static constexpr auto RU_MEMORY_112_punct = M8_PUNCT(15, &TurnProgramMemory, "Память 112ШГ+ПF");
+static constexpr auto RU_MEMORY_AUTO_punct = M8_PUNCT(15, &TurnProgramMemory, "Память АВТО");
+static constexpr auto RU_RANDOM_MK61_punct = M8_PUNCT(15, &TurnRandomMode, "К СЧ MK61");
+static constexpr auto RU_RANDOM_MK61S_punct = M8_PUNCT(15, &TurnRandomMode, "К СЧ MK61s");
+static constexpr auto RU_DATE_TIME_punct = M8_PUNCT(15, &SetDateTime, "Дата и время");
+static constexpr auto RU_RTC_CALIBRATION_punct = M8_PUNCT(15, &SetRtcCalibration, "Поправка RTC");
+static constexpr auto RU_IDLE_SIGNAL_OFF_punct = M8_PUNCT(15, &TurnIdleSignal, "5 мин звук выкл");
+static constexpr auto RU_IDLE_SIGNAL_ON_punct = M8_PUNCT(15, &TurnIdleSignal, "5 мин звук вкл");
+static constexpr auto RU_FLASH_punct = M8_PUNCT(15, &InfoData, "Информация");
+static constexpr auto RU_HARDWARE_punct = M8_PUNCT(15, &HardwareInfo, "Плата");
 
 t_punct* MENU[] = {
       (t_punct*) &DFU_mode_punct,
