@@ -68,20 +68,20 @@ def run_segment_case(port: ScreenPort, position: int, mask: int) -> bytes:
     start = len(port.frames)
     command(port, "run")
     expect_x(port, mask, ip=9)
-    deadline = time.monotonic() + 5
-    while time.monotonic() < deadline:
-        for frame in port.frames[start:]:
-            if matching_segment_frame(frame, position, mask):
-                return frame
-        port.pump(.1)
-    raise AssertionError(
-        f"no 2F framebuffer for position={position}, mask={mask}; "
-        f"received {len(port.frames) - start} frames"
-    )
+    # RUN may finish before the UC1609 pages have all been transmitted. The
+    # first nonblank frame can still contain a mixture of old and new pages.
+    port.pump(1.0)
+    if len(port.frames) <= start:
+        raise AssertionError(f"no 2F framebuffer for position={position}, mask={mask}")
+    frame = port.frames[-1]
+    if not matching_segment_frame(frame, position, mask):
+        raise AssertionError(
+            f"wrong final 2F framebuffer for position={position}, mask={mask}"
+        )
+    return frame
 
 
-def run_display_sequence(port: ScreenPort, code: str, value: int,
-                         position: int, expected: bytes) -> bytes:
+def run_final_frame(port: ScreenPort, code: str, value: int) -> bytes:
     command(port, "reinit")
     command(port, f"hin 0000 {code}")
     start = len(port.frames)
@@ -91,7 +91,12 @@ def run_display_sequence(port: ScreenPort, code: str, value: int,
     port.pump(1.0)
     if len(port.frames) <= start:
         raise AssertionError(f"no USB Screen frame for {code}")
-    frame = port.frames[-1]
+    return port.frames[-1]
+
+
+def run_display_sequence(port: ScreenPort, code: str, value: int,
+                         position: int, expected: bytes) -> bytes:
+    frame = run_final_frame(port, code, value)
     if cell(frame, position) != expected or any(
             any(cell(frame, index)) for index in range(CELL_COUNT)
             if index != position):
@@ -148,16 +153,31 @@ def main() -> int:
 
             combined = bytes(a | b | c | d | e | f | g | h
                              for a, b, c, d, e, f, g, h in zip(*planes))
-            for position in (0, 9, 11):
+            for position in range(CELL_COUNT):
                 frame = run_segment_case(port, position, 255)
+                png(frame, args.output_dir / f"mask-ff-pos{position:02d}.png")
                 if cell(frame, position) != combined:
                     raise AssertionError(
-                        f"mask FF at position {position} differs from the eight planes"
+                        f"mask FF at position {position} differs from the eight planes: "
+                        f"actual={cell(frame, position).hex()} expected={combined.hex()}"
                     )
-                png(frame, args.output_dir / f"mask-ff-pos{position:02d}.png")
                 print(f"2F mask FF at position {position}: OK", flush=True)
 
             seven = bytes(a | b | c for a, b, c in zip(*planes[:3]))
+            rotated = run_display_sequence(
+                port, "2F502F2A072F252F0E50", 7, 1, seven)
+            png(rotated, args.output_dir / "rotated-seven-pos01.png")
+            print("2F 25 advances the cursor without drawing: OK", flush=True)
+
+            numeric = run_final_frame(port, "2F50072F0E50", 7)
+            restored = run_final_frame(
+                port, "2F502F2A072F0E2F302F0E50", 7)
+            if any(cell(numeric, position) != cell(restored, position)
+                   for position in range(CELL_COUNT)):
+                raise AssertionError("2F 30 did not restore the numeric framebuffer")
+            png(restored, args.output_dir / "restored-numeric-seven.png")
+            print("2F 30 restores numeric view: OK", flush=True)
+
             auto = run_display_sequence(port, "2F0B2F2A0750", 7, 11, seven)
             png(auto, args.output_dir / "auto-seven-pos11.png")
             print("2F automatic publication of X: OK", flush=True)

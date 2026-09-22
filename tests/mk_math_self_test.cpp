@@ -299,6 +299,34 @@ static void store_direct(u8 reg, u32 mantissa) {
   press_matrix(digit_key(reg));
 }
 
+static void set_register_integer(u8 reg, u16 value) {
+  // R_A..R_F have no single decimal key in the matrix. Seed the public ring
+  // layout directly so the same indirect-opcode test covers all 16 registers.
+  const usize base = (usize) reg * MK61_MEMORY_PAGE_TETRADES;
+  u8 exponent = 0;
+  u16 leading = value;
+  while(leading >= 10U) { leading /= 10U; exponent++; }
+  u8 digits[8] = {};
+  for(int index = exponent; index >= 0; --index) {
+    digits[index] = (u8) (value % 10U);
+    value /= 10U;
+  }
+  for(u8 index = 0; index < 8; ++index)
+    ringM[base + 21U - (usize) index * 3U] = digits[index];
+  ringM[base + 24U] = 0;
+  ringM[base + 27U] = exponent % 10U;
+  ringM[base + 30U] = exponent / 10U;
+  ringM[base + 33U] = 0;
+}
+
+static double read_register_decimal(u8 reg) {
+  char value[15] = {};
+  MK61Emu_ReadRegister(reg, value, SYMBOLS);
+  const int exponent = (value[12] - '0') * 10 + (value[13] - '0');
+  return std::strtod(value, nullptr) *
+      std::pow(10.0, value[11] == '-' ? -exponent : exponent);
+}
+
 static void prepare_indirect_registers(void) {
   core_61::enable();
   store_direct(5, 0x11111111U);
@@ -1050,29 +1078,33 @@ static void test_extended_prefixes(void) {
           !core_61::extended_program_error());
     }
   }
-  for(u8 value = 1; value <= 3; ++value) {
-    core_61::set_expanded_program_mode(false);
-    core_61::enable();
-    store_direct(0, value);
-    const u8 native_loop[] = {0x5D, 0x04, 0x07, 0x50, 0x08, 0x50};
-    run_program(native_loop, sizeof(native_loop));
-    const bool native_branches = core_61::get_IP() == 6;
-    core_61::set_expanded_program_mode(true);
-    core_61::enable();
-    core_61::clear_extended_program_banks();
-    store_direct(0, value);
-    check_true("write far loop target",
-        core_61::write_absolute_program(250, 0x50));
-    const u8 far_loop[] = {0x1F, 0x5D, 0x02, 0x50, 0x50};
-    run_program(far_loop, sizeof(far_loop));
-    char reg[15] = {};
-    MK61Emu_ReadRegister(0, reg, SYMBOLS);
-    check_true("far FL0 matches ROM branch",
-        core_61::active_program_bank() == (native_branches ? 2U : 0U) &&
-        !core_61::extended_program_error());
-    check_true("far FL0 counter value",
-        reg[1] == (char) ('0' + (value == 1 ? 1 : value - 1)) &&
-        reg[12] == '0' && reg[13] == '0');
+  static const struct { u8 opcode; u8 reg; } loop_commands[] = {
+      {0x58, 2}, {0x5A, 3}, {0x5B, 1}, {0x5D, 0}};
+  for(const auto& loop : loop_commands) {
+    for(u8 value = 1; value <= 3; ++value) {
+      core_61::set_expanded_program_mode(false);
+      core_61::enable();
+      store_direct(loop.reg, value);
+      const u8 native_loop[] = {loop.opcode, 0x04, 0x07, 0x50, 0x08, 0x50};
+      run_program(native_loop, sizeof(native_loop));
+      const bool native_branches = core_61::get_IP() == 6;
+      core_61::set_expanded_program_mode(true);
+      core_61::enable();
+      core_61::clear_extended_program_banks();
+      store_direct(loop.reg, value);
+      check_true("write far loop target",
+          core_61::write_absolute_program(250, 0x50));
+      const u8 far_loop[] = {0x1F, loop.opcode, 0x02, 0x50, 0x50};
+      run_program(far_loop, sizeof(far_loop));
+      char reg[15] = {};
+      MK61Emu_ReadRegister(loop.reg, reg, SYMBOLS);
+      check_true("far FL0..FL3 matches ROM branch",
+          core_61::active_program_bank() == (native_branches ? 2U : 0U) &&
+          !core_61::extended_program_error());
+      check_true("far FL0..FL3 counter value",
+          reg[1] == (char) ('0' + (value == 1 ? 1 : value - 1)) &&
+          reg[12] == '0' && reg[13] == '0');
+    }
   }
   core_61::set_expanded_program_mode(true);
   core_61::enable();
@@ -1384,6 +1416,111 @@ static void test_extended_prefixes(void) {
   run_program(clear_and_resume, sizeof(clear_and_resume));
   check_true("numeric display resumes", core_61::extended_display_auto());
   check_near("resume follows X", read_live_x(), 7.0, 1e-8);
+}
+
+static void test_extended_opcode_matrix(void) {
+  std::printf("expanded 1F/2F opcode matrix:\n");
+  core_61::set_expanded_program_mode(true);
+  static const u8 indirect_families[] = {
+      0x70, 0x80, 0x90, 0xA0, 0xC0, 0xE0};
+  const char one[8] = {'1','0','0','0','0','0','0','0'};
+  const char zero[8] = {'0','0','0','0','0','0','0','0'};
+  for(u8 family : indirect_families) {
+    const bool conditional = family == 0x70 || family == 0x90 ||
+                             family == 0xC0 || family == 0xE0;
+    for(u8 reg = 0; reg < 16; ++reg) {
+      const u8 opcode = (u8) (family | reg);
+      const u16 initial = reg <= 3 ? 251U : reg <= 6 ? 249U : 250U;
+      for(u8 path = 0; path < (conditional ? 2U : 1U); ++path) {
+        core_61::enable();
+        core_61::clear_extended_program_banks();
+        set_register_integer(reg, initial);
+        // A conditional indirect opcode takes its register address only when
+        // the native predicate is false. Exercise both paths for every Rn.
+        const bool take_target = path == 0;
+        const bool negative = family == 0x90 ? take_target :
+                              family == 0xC0 ? !take_target : false;
+        const bool x_is_zero = family == 0x70 ? take_target :
+                               family == 0xE0 ? !take_target : false;
+        write_stack_register(stack::X, negative ? '-' : ' ',
+                             x_is_zero ? zero : one, 0);
+        const bool wrote = core_61::write_absolute_program(250, 0x07) &&
+            core_61::write_absolute_program(251,
+                family == 0xA0 ? 0x52 : 0x50);
+        const u8 program[] = {0x1F, opcode, 0x08, 0x50};
+        if(wrote) run_program(program, sizeof(program));
+        const bool returned = family == 0xA0 ||
+                              (conditional && !take_target);
+        const u16 expected_reg = take_target ? 250U : initial;
+        const bool ok = wrote && core_61::is_CALC() &&
+            !core_61::extended_program_error() &&
+            core_61::active_program_bank() == (returned ? 0U : 2U) &&
+            std::fabs(read_register_decimal(reg) - expected_reg) < 1e-7 &&
+            std::fabs(read_live_x() - (returned ? 8.0 : 7.0)) < 1e-7;
+        if(!ok) {
+          std::printf("  FAIL 1F %02X %s: bank=%u X=%.8g R%X=%.8g error=%d\n",
+              opcode, take_target ? "taken" : "fallthrough",
+              core_61::active_program_bank(), read_live_x(), reg,
+              read_register_decimal(reg), core_61::extended_program_error());
+          g_failures++;
+        }
+      }
+    }
+  }
+  std::printf("  checked all 96 indirect opcodes and 64 conditional fallthroughs\n");
+
+  const char mask[8] = {'2','5','5','0','0','0','0','0'};
+  for(u8 position = 0; position < 12; ++position) {
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    write_stack_register(stack::X, ' ', mask, 2);
+    const u8 program[] = {0x2F, 0x50, 0x2F, position,
+                          0x2F, 0x2A, 0x2F, 0x0E, 0x50};
+    run_program(program, sizeof(program));
+    const u8* frame = core_61::segment_display_frame();
+    bool correct = frame != nullptr &&
+        core_61::extended_display_cursor() == (position + 1U) % 12U &&
+        !core_61::extended_program_error();
+    for(u8 index = 0; frame != nullptr && index < 12; ++index)
+      correct &= frame[index] == (index == position ? 0xFFU : 0U);
+    char label[64] = {};
+    std::snprintf(label, sizeof(label), "2F position %02X accepts mask FF", position);
+    check_true(label, correct);
+  }
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  set_x_bcd(0x00000007U);
+  const u8 rotate[] = {0x2F, 0x50, 0x2F, 0x2A, 0x2F, 0x25,
+                       0x2F, 0x0E, 0x50};
+  run_program(rotate, sizeof(rotate));
+  const u8* frame = core_61::segment_display_frame();
+  check_true("2F 25 rotates without drawing",
+      frame != nullptr && frame[0] == 0 && frame[1] == 7 &&
+      core_61::extended_display_cursor() == 2 &&
+      !core_61::extended_program_error());
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  set_x_bcd(0x00000007U);
+  const u8 numeric_view[] = {0x2F, 0x50, 0x2F, 0x2A,
+                             0x2F, 0x0E, 0x2F, 0x30, 0x50};
+  run_program(numeric_view, sizeof(numeric_view));
+  check_true("2F 30 restores numeric view",
+      core_61::segment_display_frame() == nullptr &&
+      !core_61::extended_display_segmented() &&
+      !core_61::extended_program_error());
+
+  const u8 unsupported_prefixes[] = {0x1F, 0x2F};
+  for(const u8 bad_prefix : unsupported_prefixes) {
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    const u8 invalid[] = {bad_prefix,
+        (u8) (bad_prefix == 0x1F ? 0x2F : 0x0C), 0x50};
+    run_program(invalid, sizeof(invalid));
+    check_true("unsupported prefix subcode stops with error",
+        core_61::is_CALC() && core_61::extended_program_error());
+  }
 }
 
 static double first_random(bool enhanced, u32 seed) {
@@ -2027,6 +2164,7 @@ int main(void) {
   test_transcendental();
   test_authentic_core_smoke();
   test_extended_prefixes();
+  test_extended_opcode_matrix();
   test_rom_command_hooks();
   test_mk61_command_lengths();
   test_mk61_command_hooks();
