@@ -1232,22 +1232,45 @@ static void test_extended_prefixes(void) {
   core_61::enable();
   core_61::clear_extended_program_banks();
   u8 highest_opcode = 0;
+  bool empty_banks_are_zero = true;
+  for(u16 address = core_61::MAX_PROGRAM_STEP;
+      address < core_61::EXTENDED_ADDRESS_LIMIT; ++address) {
+    u8 value = 0xFF;
+    if(!core_61::read_absolute_program(address, value) || value != 0)
+      empty_banks_are_zero = false;
+  }
+  check_true("unallocated banks read as zeros without allocating slots",
+      empty_banks_are_zero);
   check_true("highest absolute address is writable",
       core_61::write_absolute_program(9999, 0x07) &&
+      core_61::write_absolute_program(9970, 0xFF) &&
       core_61::read_absolute_program(9999, highest_opcode) &&
       highest_opcode == 0x07);
   core_61::clear_extended_program_banks();
   check_true("clear releases distant bank storage",
       core_61::read_absolute_program(9999, highest_opcode) &&
-      highest_opcode == 0x50 &&
+      highest_opcode == 0x00 &&
       core_61::write_absolute_program(9999, 0x08));
+  bool reused_bank_is_zero = true;
+  for(u16 address = 9968; address < 9999; ++address) {
+    u8 value = 0xFF;
+    if(!core_61::read_absolute_program(address, value) || value != 0)
+      reused_bank_is_zero = false;
+  }
+  check_true("reused bank storage keeps unwritten bytes zero", reused_bank_is_zero);
+  check_true("partial bank write leaves both neighbours zero",
+      core_61::write_absolute_program(250, 0x07) &&
+      core_61::read_absolute_program(249, highest_opcode) && highest_opcode == 0 &&
+      core_61::read_absolute_program(251, highest_opcode) && highest_opcode == 0);
 
   core_61::enable();
   core_61::clear_extended_program_banks();
   u8 populated_far_banks = 0;
   for(u16 bank = 1; bank <= 31; ++bank) {
     if(core_61::write_absolute_program(
-           (u16) (bank * core_61::MAX_PROGRAM_STEP), 0x07))
+           (u16) (bank * core_61::MAX_PROGRAM_STEP), 0x07) &&
+        core_61::write_absolute_program(
+           (u16) (bank * core_61::MAX_PROGRAM_STEP + 1), 0x50))
       populated_far_banks++;
   }
   check_true("32 bank slots include active bank",

@@ -90,10 +90,15 @@ def main() -> int:
         print(f"device={identity.public} build={identity.build} profile={identity.profile}")
 
         command(port, "reinit")
+        # In AUTO the prefix enables far memory; bank 2 remains unallocated.
+        command(port, "hin 0000 1F510250")
+        if "hin 0248 000000000000" not in command(port, "hout 0248 6"):
+            raise AssertionError("unallocated bank did not read as zeros")
         command(port, "hin 0250 0750")
         if "hin 0250 0750" not in command(port, "hout 0250 2"):
             raise AssertionError("far bank readback differs from written bytes")
-        command(port, "hin 0000 1F510250")
+        if "hin 0248 000007500000" not in command(port, "hout 0248 6"):
+            raise AssertionError("partial write did not leave unwritten bytes zero")
         command(port, "run")
         expect_x(port, 7.0)
         print("1F far jump and banked hin/hout: OK")
@@ -124,10 +129,10 @@ def main() -> int:
         print("32-slot limit and execution of a populated bank: OK")
 
         command(port, "reinit")
-        if "hin 0112 50" not in command(port, "hout 0112 1"):
+        command(port, "hin 0000 1F519968")
+        if "hin 0112 00" not in command(port, "hout 0112 1"):
             raise AssertionError("reinit kept the old far-bank program")
         command(port, "hin 9968 0750")
-        command(port, "hin 0000 1F519968")
         command(port, "run")
         expect_x(port, 7.0)
         print("reinit frees all bank slots; bank 89 can be reused: OK")

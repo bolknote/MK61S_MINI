@@ -1128,8 +1128,9 @@ static u8* ensure_extended_bank(u8 bank) {
   if(extended_program.bank_slots_used >= EXTENDED_BANK_SLOT_COUNT)
     return nullptr;
   u8* page = extended_bank_slots[extended_program.bank_slots_used++];
-  memset(page, 0x50, core_61::MAX_PROGRAM_STEP);
-  page[core_61::MAX_PROGRAM_STEP] = 0;
+  // Banks are also used as register snapshots and lookup tables. Their
+  // unwritten bytes have the same zero value as ordinary cleared memory.
+  memset(page, 0, core_61::CODE_PAGE_BUFFER_SIZE);
   extended_program.banks[bank] = page;
   return page;
 }
@@ -3966,8 +3967,6 @@ void clear_extended_program_banks(void) {
     u8 bank_zero[CODE_PAGE_BUFFER_SIZE] = {};
     if(extended_program.banks[0] != nullptr)
       memcpy(bank_zero, extended_program.banks[0], MAX_PROGRAM_STEP);
-    else
-      memset(bank_zero, 0x50, MAX_PROGRAM_STEP);
     set_code_page(bank_zero);
   }
   for(usize index = 0; index < EXTENDED_BANK_COUNT; index++) {
@@ -3988,7 +3987,7 @@ bool read_absolute_program(u16 address, u8& opcode) {
     opcode = get_code(get_ring_address(offset));
   } else {
     const u8* page = extended_program.banks[bank];
-    opcode = page == nullptr ? 0x50U : page[offset];
+    opcode = page == nullptr ? 0x00U : page[offset];
   }
   return true;
 }
