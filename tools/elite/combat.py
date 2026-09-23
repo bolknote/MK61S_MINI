@@ -13,7 +13,8 @@ def add_combat(a):
     m.n(5).op('-').jge('bad_action')
     m.ld(0).ld(2).op('-').n(10).op('/').st(1).n(5).op('-').jge('bad_action').jump('fight')
     m.label('choose_target').n(6).op('-').jge('bad_action')
-    m.n(6).op('+').st(1).call('target_hp').jz('bad_action').st(8)
+    # X1 retains 6 from the bound check; Lx undoes that subtraction.
+    m.raw(0x0F).op('+').st(1).call('target_hp').jz('bad_action').st(8)
     m.label('store_target').ld(1).st(5).put(27,5)
     m.ld(1).call('glyph').n(65).op('+').st(7).set('A',16).op('ret')
 
@@ -33,7 +34,7 @@ def add_combat(a):
     # RD/RE already carry range/attack until the PILOT callback. Avoid copies.
     m.ld('C').st(5).ld('F').st(8)
     m.ld(6).n(3).op('*').ld('E').op('+').st(4)
-    m.ld('D').n(19).op('-').jneg('incoming_ready').set(4,0).set('B',0)
+    m.ld('D').n(19).op('-').jneg('incoming_ready').set(4,0).st('B')
     m.label('incoming_ready').ld(1).n(4).op('-').jnz('weapon_ready')
     m.ld(4).n(2).op('/','int').st(4)
     # One PILOT opening resolves weapon/heat/shield and incoming damage.
@@ -55,19 +56,21 @@ def add_combat(a):
     m=a.module(14,'weapons')
     # PILOT callback: action RC, laser damage RD, incoming RE
     # -> player hull RC, outgoing shot RD. Shield boost precedes the hit.
+    # Assign the final outgoing RD in each arm and read incoming RE directly.
+    # Saturation reuses the comparison's bound in X1 (60 / 99999999).
     m.label('weapon').ld(7).n(10).op('-').max0().st(7)
     m.ld('C').n(1).op('-').jz('laser')
     m.n(1).op('-').jz('missile')
     m.n(1).op('-').jnz('no_shot')
-    m.add(5,18).n(60).op('-').jneg('no_shot').set(5,60)
-    m.label('no_shot').set('C',0).jump('weapon_done')
-    m.label('laser').ld(7).n(70).op('-').jge('no_shot').add(7,28).ld('D').st('C').jump('weapon_done')
-    m.label('missile').add(7,10).set('C',45)
-    m.label('weapon_done').ld('C').st('D').ld('E').st('C')
-    m.label('player_hit').ld(5).ld('C').op('-').st(5).jge('shield_holds')
-    m.ld(4).ld(5).op('+').max0().st(4).set(5,0)
+    m.add(5,18).n(60).op('-').jneg('no_shot').raw(0x0F).st(5)
+    m.label('no_shot').set('D',0).jump('weapon_done')
+    m.label('laser').ld(7).n(70).op('-').jge('no_shot').add(7,28).jump('weapon_done')
+    m.label('missile').add(7,10).set('D',45)
+    m.label('weapon_done')
+    m.label('player_hit').ld(5).ld('E').op('-').st(5).jge('shield_holds')
+    m.ld(4).op('+').max0().st(4).set(5,0)
     m.label('shield_holds').add(3,1).ld(4).st('C').op('ret')
-    m.label('reward').add(0,250).n(99999999).op('-').jneg('reward_done').set(0,99999999)
+    m.label('reward').add(0,250).n(99999999).op('-').jneg('reward_done').raw(0x0F).st(0)
     m.label('reward_done').op('ret')
     m.label('count_kill').add(8,1).op('ret')
 
@@ -76,12 +79,12 @@ def add_combat(a):
     # carrier's pre-hit attack RE, launch flag RF, laser damage RB.
     # All shots are simultaneous.
     m.label('enemy_tick').ld('C').st(4).n(4).op('-').jz('motion_ready')
-    m.n(2).op('+').jz('motion_ready').n(2).op('*').ld(2).op('+').max0().st(2)
+    m.n(2).op('+').jz('motion_ready').raw(0x0F).op('*').ld(2).op('+').max0().st(2)
     m.n(99).ld(2).op('-').jge('motion_ready').set(2,99)
     m.label('motion_ready').ld('D').n(4).op('-').jnz('charge_reset')
     m.add(6,1).jump('charge_ready')
     m.label('charge_reset').set(6,0)
-    m.label('charge_ready').set('E',0).set('F',0).ld(1).jz('enemy_ready')
+    m.label('charge_ready').set('E',0).st('F').ld(1).jz('enemy_ready')
     m.ld(7).st('E') # fixed carrier attack, prepared at contact
     # R3 counts 3,2,1 until a live carrier launches; no general remainder.
     m.ld(0).n(4).op('-').jnz('enemy_ready')

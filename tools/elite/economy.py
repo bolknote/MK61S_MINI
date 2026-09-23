@@ -39,10 +39,11 @@ def add_economy(a):
     # economy + 2*good is in 0..25: one subtraction replaces general mod 16.
     m.label('price_market').ld('B').n(2).op('*').ld(2).op('+').n(16).op('-').jge('price_wrapped')
     m.raw(0x0F).op('+')
-    m.label('price_wrapped').raw(0x0F).op('+').st('D')
+    m.label('price_wrapped').raw(0x0F).op('+')
     # Consecutive factors give an even product. This is exactly the original
     # floor((g+1)*(g+2)*10*(80+5*e)/100), with smaller integer intermediates.
-    m.ld('B').n(1).op('+','square').raw(0x0F).op('+').n(2).op('/').ld('D').op('*').st('D')
+    # Keep 16+e below the triangular factor in the stack; no RD spill/reload.
+    m.ld('B').n(1).op('+','square').raw(0x0F).op('+').n(2).op('/','*').st('D')
     m.ld('B').raw(0x20).op('+').st('B').n(30).raw(0xDB).st('E')
     m.op('-').n(2).op('*').ld('D').op('+').st('D').st('C').n(1).op('-').jge('price_ready')
     m.set('C',1).label('price_ready').op('ret')

@@ -236,6 +236,17 @@ def test_pirates_and_results():
     assert s['pages'][3][1]==30 and s['pages'][0][0]==700
     s=play(encounter()+['input 34']*4)
     assert s[-2]['pages'][0][5]==32 and s[-1]['frame']==screen('SAFE      СП')
+    # The cap must keep its exact constant even when Lx reuses it after a
+    # conditional branch. Cover both sides and equality, including 10^8.
+    for credits in (99999748,99999749,99999750,99999999):
+        s=play(encounter()+[f'set 24 0 {credits}','input 22','input 22'])[-1]
+        assert s['frame']==screen('YES. CLEAr СП')
+        assert s['pages'][0][0]==min(99999999,credits+250),s
+        assert s['pages'][1][8]==1,s
+    for shield in (41,42,43,60):
+        s=play(encounter()+[f'set 24 5 {shield}','input 23'])[-1]
+        assert s['pages'][0][4:6]==[84,min(60,shield+18)-14],s
+        assert s['pages'][3][1]==60,s
     print('ELITE: simultaneous fire, heat, range, missiles, escape, win/loss OK',flush=True)
 
 def test_thargoids():
