@@ -720,6 +720,36 @@ static void check_scenarios(bool expanded) {
   std::printf("PASS %s: %llu steps, %llu state/event frames; 3 trace mutants detected\n",
       scenario, compared_steps - steps_before, compared_frames - frames_before);
 }
+static void check_pending_far_context() {
+  scenario="pending far condition context";
+  bool observed=false;
+  for(unsigned padding=0;padding<16;padding++) {
+    initialize(true);
+    std::array<u8,32> code;
+    code.fill(0x54);
+    const u8 body[]={0,0x0E,1,9,0x11,0x1F,0x59,0x02,0x50,0x50};
+    std::memcpy(code.data()+padding,body,sizeof(body));
+    program(code.data(),padding+sizeof(body));
+    require(core_61::write_absolute_program(250,0x50),"cannot install far target");
+    press(2,9);
+    for(unsigned step=0;step<128 && core_61::is_RUN();step++) {
+      if(extended_program.pending_far_condition!=0) {
+        const State saved=snapshot();
+        const u16 pending=extended_program.pending_far_condition;
+        extended_program.pending_far_condition=0;
+        restore(saved);
+        require(extended_program.pending_far_condition==pending,
+                "context lost the pending condition");
+        observed=true;
+      }
+      compare_step();
+    }
+    require(!core_61::is_RUN() && core_61::active_program_bank()==2 &&
+            !core_61::extended_program_error(),"restored far condition took wrong path");
+  }
+  require(observed,"test never suspended a pending far condition");
+  std::printf("PASS pending far conditions survive context save/restore and scalar/native replay\n");
+}
 } // namespace native_test
 
 int main() {
@@ -739,6 +769,7 @@ int main() {
       require(command_events[source][phase] != 0, "command event source/phase not covered");
   for(auto count : rom_events) require(count != 0, "ROM hook for a chip not covered");
   require(yields != 0, "program yield events not covered");
+  check_pending_far_context();
   std::printf("PASS native verification: %llu body cases, %llu steps, %llu frames; "
       "9 defect types detected in both ring modes\n", body_cases, compared_steps, compared_frames);
   return 0;

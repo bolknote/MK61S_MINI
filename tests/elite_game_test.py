@@ -22,7 +22,9 @@ def play(commands):
         assert s['input_frame_stable'] and not s['auto_display'] and s['segmented'],s
         assert s['frame_changes']<=1,('partial display updates',s)
         assert s['frame'][-2:]==[57,55],s
-        assert s['pages'][5][:4]==s['pages'][5][4:8],s
+        frame=[(word >> shift) & 255 for word in s['pages'][5][:4]
+               for shift in (0,8,16)]
+        assert frame==s['frame'],s
         assert s['pages'][4][6]==sum(hp>0 for hp in s['pages'][4][:5]),s
         if s['regs'][9]==2:
             target=s['pages'][3][5]
@@ -55,6 +57,22 @@ def test_assembler_continuations():
     m.call('callee').label('return_entry').op('ret').label('callee').op('ret')
     banks,_=a.link()
     assert banks[0][0]==0x53 # a separately callable RET cannot be removed
+    a=Assembler();m=a.module(0,'local branch')
+    m.jz('target').raw(0x54).label('target').op('ret')
+    before=a.expand_branches()
+    assert not m.items[0].short
+    after=a.relax_branches()
+    assert m.items[0].short and after[0]['target']==before[0]['target']-2
+    a=Assembler();m=a.module(0,'closed-entry fallthrough')
+    m.n(3).st(0).jump('next').label('next').ld(0).op('ret')
+    banks,_=a.link()
+    assert banks[0][:5]==bytes([0x0e,3,0x40,0x60,0x52])
+    a=Assembler();m=a.module(0,'independent jump entry')
+    m.n(3).st(0).label('entry').jump('next').label('next').ld(0).op('ret')
+    banks,_=a.link()
+    assert banks[0][3]==0x51
+    # Re-linking an optimized assembler must be deterministic.
+    assert a.link()[0]==banks
     print('ELITE: far-call operand 52 and independently labelled return preserve control flow OK',flush=True)
 
 def test_worlds_and_display():
@@ -230,7 +248,7 @@ def test_destroyed_targets():
             assert state(s[-2])==state(s[-1]),(action,s[-1])
             assert s[-1]['frame']==screen('ErrOr     СП')
         s=play(setup+['dump','input 23','input 24'])
-        assert s[-2]['pages'][3][4]==s[-3]['pages'][3][4]+1
+        assert s[-2]['pages'][0][3]==s[-3]['pages'][0][3]+1
         assert s[-1]['pages'][3][6]==1 # a dead target cannot block escape
     s=play(encounter(3)+['input 81','input 21','input 81'])
     number(s[-2],'H',0)

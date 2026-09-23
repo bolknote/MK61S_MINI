@@ -18,6 +18,9 @@ def add_economy(a):
     m.label('sum_hold').ld(0)
     for i in range(1,6):m.ld(i).op('+')
     m.st('C').op('ret')
+    # HOLD callback: RB good -> RD held, RC free capacity, in one opening.
+    m.label('trade_hold').raw(0xDB).st('D').call('sum_hold')
+    m.ld(6).call('mod100').ld('C').op('-').st('C').op('ret')
     m.label('trade_money').ld('C').st(0).add(3,1).op('ret')
 
     m=a.module(5,'world')
@@ -40,25 +43,26 @@ def add_economy(a):
     # Consecutive factors give an even product. This is exactly the original
     # floor((g+1)*(g+2)*10*(80+5*e)/100), with smaller integer intermediates.
     m.ld('B').n(1).op('+').ld('B').n(2).op('+','*').n(2).op('/').ld('D').op('*').st('D')
-    m.ld('B').n(3).op('+').st('B').raw(0xDB)
+    m.ld('B').n(3).op('+').st('B').raw(0xDB).st('E')
     m.n(30).op('swap','-').n(2).op('*').ld('D').op('+').st('D').st('C').n(1).op('-').jge('price_ready')
     m.set('C',1).label('price_ready').op('ret')
 
     m=a.module(7,'trade')
-    m.label('trade').call('price').st(3).ld(7).jge('trade_quote')
+    m.label('trade').call('price').st(3).ld('E').st(6).ld(7).jge('trade_quote')
     # Four-credit spread prevents making money by buying and immediately
     # selling into the two-credit stock adjustment of the same market.
     m.ld(3).n(4).op('-').call('max0').st(3)
     m.label('trade_quote').get(24,0).st(4)
-    dynamic_get(m,25,1);m.st(5)
-    m.ld(1).n(3).op('+').st('B').far(0x53,26*112+63).st(6)
     m.ld(7).jneg('sell_checks')
     m.ld(4).ld(3).op('-').jneg('bad_action').ld(6).jz('bad_action')
-    m.visit(25,'sum_hold').ld('C').st(8).get(25,6).call('mod100').ld(8).op('-').jz('bad_action').jneg('bad_action')
+    m.ld(1).st('B').visit(25,'trade_hold').ld('D').st(5)
+    m.ld('C').jz('bad_action').jneg('bad_action')
     m.jump('trade_commit')
-    m.label('sell_checks').ld(5).jz('bad_action').ld(6).n(99).op('-').jge('bad_action')
+    m.label('sell_checks');dynamic_get(m,25,1)
+    m.st(5).jz('bad_action').ld(6).n(99).op('-').jge('bad_action')
     m.n(99999999).ld(3).op('-').ld(4).op('-').jneg('bad_action')
-    m.label('trade_commit').ld(3).ld(7).op('*').ld(4).op('swap','-').st('C').visit(24,'trade_money')
+    # Keep credits beneath the product in Y instead of swapping afterwards.
+    m.label('trade_commit').ld(4).ld(3).ld(7).op('*','-').st('C').visit(24,'trade_money')
     m.ld(5).ld(7).op('+');dynamic_put(m,25,1)
     m.ld(6).ld(7).op('-').st('C').ld(1).n(3).op('+').st('B').far(0x53,26*112+WRITE)
     # Keep the unclamped quote: at saturated stocks max(1, raw)+2 is wrong.
@@ -110,7 +114,7 @@ def add_economy(a):
     m.set(1,60).ld(0).n(4).op('-').jnz('enemy_fields').set(1,120)
     m.label('enemy_fields').ld(1).st('E').set(2,14).n(0)
     for i in range(3,7):m.st(i)
-    m.op('ret').label('init_drones').n(0)
+    m.set(4,3).op('ret').label('init_drones').n(0)
     for i in range(9):m.st(i)
     m.ld('C').n(4).op('-').jnz('drones_done').set(0,18).set(1,18).set(5,2).set(6,2)
     m.label('drones_done').ld(6).st('D').op('ret')

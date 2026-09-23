@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <initializer_list>
 
 #include "mk_math.hpp"       // MK61_MATH_BACKEND == CORE (задаётся через -D)
 #include "mk61emu_core.h"
@@ -1027,6 +1028,61 @@ static void test_authentic_core_smoke(void) {
   press_matrix(key_3);
   press_matrix(key_add);
   check_near("2 ENTER 3 +", read_live_x(), 5.0, 1e-8);
+}
+
+static void test_far_condition_writeback(void) {
+  std::printf("far conditions immediately after arithmetic:\n");
+  static const struct { u8 size; u8 bytes[10]; } expressions[] = {
+      {5,{0,0x0E,1,9,0x11}},       // 0-19: sign is late at prefix prefetch
+      {6,{1,9,0x0E,1,9,0x11}},    // zero after subtraction
+      {5,{1,9,0x0E,0,0x11}},      // positive subtraction
+      {6,{0,0x0E,1,9,0x11,0x0B}}, // sign change
+      {6,{0,0x0E,1,9,0x11,0x31}}, // absolute value
+      {5,{2,0x0B,0x0E,3,0x12}},   // negative product
+      {4,{2,0x0E,3,0x13}},        // fractional quotient
+      {4,{0,0x0A,9,0x34}},        // integer part becomes zero
+      {3,{1,9,0x22}},             // square
+      {3,{8,1,0x21}},             // square root
+  };
+  static const u8 conditions[]={0x57,0x59,0x5C,0x5E};
+  static const u8 indirect[]={0x77,0x97,0xC7,0xE7};
+  bool correct=true;
+  for(const auto& expression:expressions) {
+    for(usize condition=0;condition<4;condition++) {
+      char expected[5][15]={};
+      core_61::set_expanded_program_mode(true);core_61::enable();
+      core_61::clear_extended_program_banks();
+      u8 code[72];std::memset(code,0x50,sizeof(code));
+      std::memcpy(code,expression.bytes,expression.size);
+      code[expression.size]=conditions[condition];
+      code[expression.size+1]=0x70;
+      run_program(code,sizeof(code));
+      const bool taken=core_61::get_IP()==71;
+      for(int reg=0;reg<5;reg++)read_stack_register((stack)reg,expected[reg],SYMBOLS);
+      for(bool use_indirect:{false,true}) {
+        core_61::enable();core_61::clear_extended_program_banks();
+        set_register_integer(7,250);
+        core_61::write_absolute_program(250,0x50);
+        std::memset(code,0x50,sizeof(code));
+        std::memcpy(code,expression.bytes,expression.size);
+        code[expression.size]=0x1F;
+        code[expression.size+1]=use_indirect?indirect[condition]:conditions[condition];
+        if(!use_indirect)code[expression.size+2]=0x02;
+        run_program(code,sizeof(code));
+        bool equal=core_61::is_CALC() && !core_61::extended_program_error() &&
+            core_61::active_program_bank()==(taken?2:0);
+        for(int reg=0;reg<5;reg++) {
+          char actual[15]={};read_stack_register((stack)reg,actual,SYMBOLS);
+          equal=equal && std::memcmp(actual,expected[reg],15)==0;
+        }
+        if(!equal)std::printf("  expression=%lu condition=%02X indirect=%d bank=%u X=%.8g\n",
+            (unsigned long)(&expression-expressions),conditions[condition],use_indirect,
+            core_61::active_program_bank(),read_live_x());
+        correct=correct&&equal;
+      }
+    }
+  }
+  check_true("80 direct/indirect arithmetic predicates match native ROM and full stack",correct);
 }
 
 static void test_extended_prefixes(void) {
@@ -2266,6 +2322,7 @@ int main(void) {
   test_transcendental();
   test_authentic_core_smoke();
   test_extended_prefixes();
+  test_far_condition_writeback();
   test_extended_opcode_matrix();
   test_packed_segment_frames();
   test_rom_command_hooks();

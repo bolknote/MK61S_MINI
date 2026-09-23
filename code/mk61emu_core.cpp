@@ -1101,6 +1101,7 @@ static const usize indicator_pos[12] =
 struct ExtendedProgramState {
   u8* banks[EXTENDED_BANK_COUNT];
   u16 return_addresses[EXTENDED_RETURN_DEPTH];
+  u16 pending_far_condition; // absolute prefix address + 1; zero when idle
   u8 active_bank;
   u8 bank_slots_used;
   u8 return_depth;
@@ -1410,9 +1411,13 @@ static bool evaluate_far_condition(u8 opcode, bool& branch) {
   return x_condition(opcode, branch);
 }
 
-static bool execute_far_prefix(u8 local_address) {
-  const u16 absolute = (u16) (extended_program.active_bank *
-      core_61::MAX_PROGRAM_STEP + local_address);
+static bool far_x_condition(u8 opcode) {
+  return opcode == 0x57 || opcode == 0x59 || opcode == 0x5C || opcode == 0x5E ||
+      (opcode & 0xF0U) == 0x70 || (opcode & 0xF0U) == 0x90 ||
+      (opcode & 0xF0U) == 0xC0 || (opcode & 0xF0U) == 0xE0;
+}
+
+static bool execute_far_prefix(u16 absolute) {
   u8 opcode = 0;
   if(!core_61::read_absolute_program((u16) (absolute + 1U), opcode))
     return false;
@@ -1641,6 +1646,7 @@ static void reset_mk61_command_runtime(void) {
   memset(mk61_call_operand_visits, 0,
          sizeof(mk61_call_operand_visits));
   mk61_call_operand_depth = 0;
+  extended_program.pending_far_condition = 0;
 }
 
 static inline u8 __attribute__((always_inline)) decode_mk61_opcode(void) {
@@ -1676,6 +1682,25 @@ static bool dispatch_mk61_program_boundary(u8 program_address, u8 opcode) {
 static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     u8 address) {
   if(address == 0x06U) {
+    if(extended_program.pending_far_condition != 0) {
+      // The prefix's existing ROM NOP has now completed the previous numeric
+      // write-back. At its initial prefetch even 0-19 can still expose +19.
+      // Resolve the branch before decoding its operand, then feed the target's
+      // real opcode into this same fetch: no additional NOP or ROM step.
+      const u16 absolute = extended_program.pending_far_condition - 1U;
+      extended_program.pending_far_condition = 0;
+      u8 next_opcode = 0x50;
+      if(execute_far_prefix(absolute)) {
+        const u8 next = (u8) ((core_61::get_IP() + 1U) % core_61::MAX_PROGRAM_STEP);
+        core_61::set_IP(next);
+        if(!core_61::read_absolute_program((u16) (extended_program.active_bank *
+              core_61::MAX_PROGRAM_STEP + next), next_opcode))
+          extended_program.error = true;
+      } else {
+        extended_program.error = true;
+      }
+      encode_mk61_opcode(next_opcode);
+    }
     const u8 program_address = prefetched_program_address();
 
     // A branch's address byte can visit the same prefetch point as an opcode.
@@ -1720,7 +1745,16 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
         bool success = false;
         if(semantic_opcode == MK61_FAR_ADDRESS_PREFIX) {
           handled = true;
-          success = execute_far_prefix(program_address);
+          const u16 absolute = (u16) (extended_program.active_bank *
+              core_61::MAX_PROGRAM_STEP + program_address);
+          u8 far_opcode = 0;
+          if(core_61::read_absolute_program((u16) (absolute + 1U), far_opcode) &&
+             far_x_condition(far_opcode)) {
+            extended_program.pending_far_condition = absolute + 1U;
+            success = true;
+          } else {
+            success = execute_far_prefix(absolute);
+          }
         } else if(semantic_opcode == MK61_DISPLAY_PREFIX) {
           handled = true;
           success = execute_display_prefix(program_address);
@@ -3942,6 +3976,7 @@ void clear_extended_program_banks(void) {
   extended_program.active_bank = 0;
   extended_program.bank_slots_used = 0;
   extended_program.return_depth = 0;
+  extended_program.pending_far_condition = 0;
 }
 
 bool read_absolute_program(u16 address, u8& opcode) {
@@ -4213,6 +4248,7 @@ struct CoreContextSnapshot {
   u8 extended_cursor;
   u8 extended_held_comma;
   u8 extended_flags;
+  u16 extended_pending_far_condition;
 };
 
 static_assert((sizeof(ringM) & 1U) == 0,
@@ -4380,6 +4416,7 @@ static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
          snapshot.extended_return_depth <= EXTENDED_RETURN_DEPTH &&
          snapshot.extended_cursor < core_61::EXTENDED_DISPLAY_CELLS &&
          (snapshot.extended_flags & ~0x0FU) == 0 &&
+         snapshot.extended_pending_far_condition <= core_61::EXTENDED_ADDRESS_LIMIT &&
          valid_angle_unit(snapshot.emu.angle_unit);
 }
 
@@ -4531,6 +4568,7 @@ bool save_context(ContextBuffer& out) {
       (extended_program.segment_display ? 0x02U : 0U) |
       (extended_program.error ? 0x04U : 0U) |
       (extended_program.numeric_strobe_pending ? 0x08U : 0U);
+  snapshot.extended_pending_far_condition = extended_program.pending_far_condition;
   memset(out.bytes, 0, sizeof(out.bytes));
   memcpy(out.bytes, &snapshot, sizeof(snapshot));
   return true;
@@ -4596,6 +4634,7 @@ bool restore_context(const ContextBuffer& saved) {
   extended_program.error = (snapshot.extended_flags & 0x04U) != 0;
   extended_program.numeric_strobe_pending =
       (snapshot.extended_flags & 0x08U) != 0;
+  extended_program.pending_far_condition = snapshot.extended_pending_far_condition;
   return true;
 }
 

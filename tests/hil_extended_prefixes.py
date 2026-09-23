@@ -43,6 +43,32 @@ def expect_x(port: Port, value: float, ip: int | None = None) -> None:
     raise AssertionError(f"expected X={value}, IP={ip}; last stack:\n{last}")
 
 
+def check_arithmetic_conditions(port: Port) -> None:
+    """No settling NOP: compare all four predicates and both address forms."""
+    expressions = ((bytes.fromhex('000E010911'), -19),
+                   (bytes.fromhex('01090E010911'), 0),
+                   (bytes.fromhex('01090E0011'), 19))
+    count = 0
+    for expression, value in expressions:
+        conditions = ((0x57, 0x77, value == 0), (0x59, 0x97, value < 0),
+                      (0x5C, 0xC7, value >= 0), (0x5E, 0xE7, value != 0))
+        for direct, indirect, taken in conditions:
+            for use_indirect in (False, True):
+                command(port, 'reinit')
+                setup = bytes.fromhex('02050047') if use_indirect else b''
+                predicate = (bytes((0x1F, indirect)) if use_indirect else
+                             bytes((0x1F, direct, 0x02, 0x50)))
+                program = setup + expression + predicate + b'\x50'
+                command(port, 'hin 0000 ' + program.hex().upper())
+                command(port, 'hin 0250 50')
+                command(port, 'run')
+                # stk reports the local IP within a 112-byte bank.
+                expect_x(port, value, ip=250 % 112 + 1 if taken else len(program))
+                count += 1
+    print(f'{count} direct/indirect conditions after subtraction without NOP: OK',
+          flush=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", required=True)
@@ -117,6 +143,7 @@ def main() -> int:
             raise AssertionError("UC1609 graphics mode is inactive")
         print("2F accepts mask 255 at former sign position: OK")
 
+        check_arithmetic_conditions(port)
         health = command(port, "df")
         if (f"expected=0x{identity.build}" not in health or
                 "FIRMWARE CRC state=valid" not in health):

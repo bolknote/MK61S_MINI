@@ -6,6 +6,7 @@ Uploads and removes one temporary loader; never flashes firmware or replaces
 the installed game. Requires explicit --confirm-game-reset and a pinned ID.
 """
 import argparse
+from decimal import Decimal
 import json
 from pathlib import Path
 import re
@@ -44,19 +45,34 @@ def indicator(frame):
 def check_state(port,state,timeout=40):
     masks=state['frame']
     words=[sum(masks[i+j]<<(8*j) for j in range(3)) for i in range(0,12,3)]
-    expected=b''.join(pack_number(v) for v in words*2)
+    expected=b''.join(pack_number(v) for v in words)
+    kernel=re.search(r'^hin 0000 ([0-9A-F]{48})\s*$',
+                     port.command('hout 0000 24'),re.M)
+    assert kernel,'cannot read ELITE kernel bank'
+    def registers_match(report):
+        values={int(index,16):Decimal(value).scaleb(int(exponent))
+                for index,value,exponent in re.findall(
+                    r'^R([0-9A-E]) =\s*([+-]?[0-9.]+)\s+([+-]?[0-9]{2})\s*$',
+                    report,re.M)}
+        return (len(values)==15 and
+                all(values[i]==state['regs'][i] for i in range(15)) and
+                re.search(r'^IP: '+str(state['pc'])+r'\s*$',report,re.M))
     deadline=time.monotonic()+timeout
     while time.monotonic()<deadline:
-        report=port.command('hout 3248 56')
+        report=port.command('hout 3248 28')
         actual=b''.join(bytes.fromhex(line.split()[2]) for line in report.splitlines()
                         if re.fullmatch(r'hin \d{4} [0-9A-F]+',line))
         if actual==expected:
             report=port.command('reg')
-            if re.search(r'^IP: '+str(state['pc'])+r'\s*$',report,re.M):
-                port.pump(.4)
-                return
+            if registers_match(report):
+                # IP is local and may match in another bank while RUN is on.
+                # Argumentless hout reads the active ROM page: ELITE stops in B0.
+                active=port.command('hout')
+                if re.search(r'^0000 '+kernel.group(1)+r'\s*$',active,re.M):
+                    port.pump(.4)
+                    if registers_match(port.command('reg')):return
         port.pump(.1)
-    raise AssertionError('ELITE did not reach expected frame and stop')
+    raise AssertionError('ELITE did not reach expected frame, registers and kernel stop')
 
 
 def main():
@@ -90,9 +106,17 @@ def main():
             if path.is_file():read_file(port,'/games/ELITE/'+path.name,payload_for(path))
         print('Installed files match local sources.',flush=True)
         write_file(port,temporary,loader.encode('ascii'))
+        loader_exists=True
         try:
             port.command('open '+temporary)
             check_state(port,states[0])
+            # DETACH keeps the USB Screen session waiting for reconnection.
+            # Its overlay lease prevents C6 from acquiring the staging index
+            # for a catalog mutation. Remove our loader before attaching.
+            removed=port.command('rm "'+temporary+'"')
+            assert 'Removed 1 entry.' in removed,removed
+            assert not any('_bench.m61' in e for e in listing_entries(port.command('ls /games/ELITE')))
+            loader_exists=False
             port.attach();port.pump(.5)
             assert port.frames,'USB screen returned no frames'
             png(port.frames[-1],args.output_dir/'title.png')
@@ -121,12 +145,16 @@ def main():
             health=port.command('df')
             assert 'FIRMWARE CRC state=valid' in health,health
             assert 'CRASH none' in port.command('crash show')
-            port.command('open '+temporary)
+            # Exercise the normal loader and dismiss its opening manual.
+            port.open('/games/ELITE/autoexec.m61')
+            port.pump(.5)
+            port.close_app()
             check_state(port,states[0])
         finally:
             if port.attached:port.send(0x13);port.pump(.3)
-            port.command('rm "'+temporary+'"')
-            assert not any('_bench.m61' in e for e in listing_entries(port.command('ls /games/ELITE')))
+            if loader_exists:
+                port.command('rm "'+temporary+'"')
+                assert not any('_bench.m61' in e for e in listing_entries(port.command('ls /games/ELITE')))
     (args.output_dir/'measurements.json').write_text(json.dumps(measurements,indent=2)+'\n')
     print('ELITE HIL passed; returned to title, temporary loader removed.',flush=True)
 

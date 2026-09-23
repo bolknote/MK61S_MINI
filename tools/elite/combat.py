@@ -18,7 +18,7 @@ def add_combat(a):
     m.label('store_target').ld(1).put(27,5).set('A',16).op('ret')
 
     # Outside page callbacks: R1 maneuver, R2 action, R3 outgoing damage,
-    # R4 incoming damage, R5 target, R6 surviving drones, R7 range.
+    # R4 incoming damage, R5 target, R6 surviving drones.
     # Between commands R6/R8 cache live drones / selected hull; queries
     # preserve both. The pre-hit drone count is used for simultaneous fire.
     # During a turn R8 temporarily carries the enemy's launch flag.
@@ -29,9 +29,10 @@ def add_combat(a):
     m.ld(2).n(2).op('-').jnz('ammo_ready')
     m.get(25,7).jz('bad_action').n(1).op('-').put(25,7)
     m.label('ammo_ready').ld(1).st('C').ld(2).st('D').visit(27,'enemy_tick')
-    m.ld('C').st(5).ld('D').st(7).ld('E').st(4).ld('F').st(8)
-    m.ld(6).n(3).op('*').ld(4).op('+').st(4)
-    m.ld(7).n(19).op('-').jneg('incoming_ready').set(4,0).set('B',0)
+    # RD/RE already carry range/attack until the PILOT callback. Avoid copies.
+    m.ld('C').st(5).ld('F').st(8)
+    m.ld(6).n(3).op('*').ld('E').op('+').st(4)
+    m.ld('D').n(19).op('-').jneg('incoming_ready').set(4,0).set('B',0)
     m.label('incoming_ready').ld(1).n(4).op('-').jnz('weapon_ready')
     m.ld(4).n(2).op('/','int').st(4)
     # One PILOT opening resolves weapon/heat/shield and incoming damage.
@@ -78,12 +79,14 @@ def add_combat(a):
     m.label('enemy_tick').ld('C').st(3).n(4).op('-').jz('motion_ready')
     m.ld('C').n(2).op('-').jz('motion_ready').n(2).op('*').ld(2).op('+').call('max0').st(2)
     m.n(99).ld(2).op('-').jge('motion_ready').set(2,99)
-    m.label('motion_ready').add(4,1).ld('D').n(4).op('-').jnz('charge_reset')
+    m.label('motion_ready').ld('D').n(4).op('-').jnz('charge_reset')
     m.add(6,1).jump('charge_ready')
     m.label('charge_reset').set(6,0)
     m.label('charge_ready').set('E',0).set('F',0).ld(1).jz('enemy_ready')
     m.ld(7).st('E') # fixed carrier attack, prepared at contact
-    m.ld(0).n(4).op('-').jnz('enemy_ready').ld(4).mod(3).jnz('enemy_ready').set('F',1)
+    # R4 counts 3,2,1 until a live carrier launches; no general remainder.
+    m.ld(0).n(4).op('-').jnz('enemy_ready')
+    m.ld(4).n(1).op('-').st(4).jnz('enemy_ready').set(4,3).set('F',1)
     m.label('enemy_ready').ld(8).ld(2).op('-').st('B').ld(5).st('C').ld(2).st('D').op('ret')
     # RE arrives from drone_tick with the selected drone's remaining hull.
     # Return selected hull RC, carrier hull RD, escape charge RE.
@@ -106,7 +109,7 @@ def add_combat(a):
     m.n(1).op('-').jz('charge_view').jump('target_number')
     m.label('range_view').get(27,2).set('D',GLYPHS['r']).jump('draw_number')
     m.label('target_view').ld(8).st('C').set('D',GLYPHS['H']).jump('draw_number')
-    m.label('drones_view').get(28,6).set('D',GLYPHS['d']).jump('draw_number')
+    m.label('drones_view').ld(6).st('C').set('D',GLYPHS['d']).jump('draw_number')
     m.label('charge_view').get(27,6).set('D',GLYPHS['P']).jump('draw_number')
     m.label('target_number').get(27,5).set('D',GLYPHS['t']).jump('draw_number')
     m.label('contact_name').get(27,0).n(4).op('-').jz('alien_name')

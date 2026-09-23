@@ -9,9 +9,8 @@ FRAME_SUFFIX_WORD = chunks('          СП')[3]
 
 def add_ui(a):
     m=a.module(2,'display')
-    m.label('display').raw(0x2F,0x53)
-    for r in range(4):m.ld(r).st(r+4)
-    m.op('ret')
+    # 2F 53 compares with the visible frame itself; no second software copy.
+    m.label('display').raw(0x2F,0x53).op('ret')
     m.label('name_alphabet').raw(*(GLYPHS[ch] for ch in ALPHABET))
 
     m=a.module(3,'glyphs')

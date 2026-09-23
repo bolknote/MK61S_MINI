@@ -63,7 +63,6 @@ class Item:
     value: object
     target: str = ''
     short: bool = False
-    settle: bool = False
 
 class Module:
     def __init__(self, bank, name):
@@ -90,11 +89,7 @@ class Module:
     def ptr(self, r, label):
         self.items.append(Item('ptr', reg(r), label)); return self
     def branch(self, opcode, label):
-        previous=next((i for i in reversed(self.items) if i.kind!='label'),None)
-        arithmetic={0x0B,0x10,0x11,0x12,0x13,0x21,0x22,0x24,0x31,0x34,0x35}
-        settle=(previous is not None and previous.kind=='bytes' and
-                previous.value[-1] in arithmetic)
-        self.items.append(Item('branch', opcode, label,settle=settle)); return self
+        self.items.append(Item('branch', opcode, label)); return self
     def call(self, label): return self.branch(0x53, label)
     def jump(self, label): return self.branch(0x51, label)
     def jz(self, label): return self.branch(0x57, label)
@@ -143,11 +138,33 @@ class Assembler:
                 if folded:del items[index+1]
                 index+=1
 
+    def fold_fallthrough_jumps(self):
+        """Remove a jump over labels with a closed entry and a fresh recall.
+
+        A preceding store closes numeric entry. The target's recall replaces
+        X/X2 before either can be observed. A label on the jump is a separate
+        entry and deliberately prevents this local rewrite.
+        """
+        for module in self.modules:
+            items=module.items
+            for index in range(len(items)-2,0,-1):
+                item,previous=items[index],items[index-1]
+                if item.kind!='branch' or item.value!=0x51:continue
+                if previous.kind!='bytes' or not 0x40<=previous.value[-1]<=0x4F:continue
+                end=index+1
+                names=[]
+                while end<len(items) and items[end].kind=='label':
+                    names.append(items[end].value);end+=1
+                if item.target not in names or end==len(items):continue
+                first=items[end]
+                if first.kind=='bytes' and 0x60<=first.value[0]<=0x6F:
+                    del items[index]
+
     @staticmethod
     def size(item):
         if item.kind=='bytes':return len(item.value)
         if item.kind=='branch':
-            return 2 if item.short else (5 if item.settle and item.value in (0x57,0x59,0x5C,0x5E) else 4)
+            return 2 if item.short else 4
         return {'label':0,'ptr':6}[item.kind]
 
     def layout(self):
@@ -207,13 +224,8 @@ class Assembler:
             if 112-offset>=8:free.append((bank,offset))
         return labels,placements,bridges,usage
 
-    def link(self):
-        self.fold_tail_calls()
-        # Start with near branches; expand crossing branches monotonically.
-        # Never shrink again: moving a continuation can otherwise oscillate.
-        for m in self.modules:
-            for i in m.items:
-                if i.kind=='branch':i.short=True
+    def expand_branches(self):
+        """Reach a valid layout by widening only; never oscillate in a trial."""
         for _ in range(100):
             labels,placements,bridges,usage=self.layout()
             changed=False
@@ -224,6 +236,40 @@ class Assembler:
                         item.short=False; changed=True
             if not changed: break
         else: raise ValueError('linker did not converge')
+        return labels,placements,bridges,usage
+
+    def relax_branches(self):
+        """Try each newly local far branch as an independent transaction.
+
+        Relocation can make other branches far. Re-run widening and accept
+        only a strictly smaller complete artifact, otherwise restore all flags.
+        """
+        result=self.expand_branches()
+        branches=[i for m in self.modules for i in m.items if i.kind=='branch']
+        def cost(layout):
+            return sum(self.size(i) for _,i in layout[1])+4*len(layout[2])
+        while True:
+            labels,placements,_,_=result
+            baseline_cost=cost(result)
+            candidates=[i for address,i in placements if i.kind=='branch' and
+                        not i.short and address//112==labels[i.target]//112]
+            for candidate in candidates:
+                flags=[i.short for i in branches]
+                candidate.short=True
+                try:trial=self.expand_branches()
+                except ValueError:trial=None
+                if trial is not None and cost(trial)<baseline_cost:
+                    result=trial;break
+                for item,short in zip(branches,flags):item.short=short
+            else:return result
+
+    def link(self):
+        self.fold_tail_calls()
+        self.fold_fallthrough_jumps()
+        for m in self.modules:
+            for i in m.items:
+                if i.kind=='branch':i.short=True
+        labels,placements,bridges,usage=self.relax_branches()
         banks={b:bytearray([0x50]*112) for b in usage}
         occupied=set()
         def claim(address, size):
@@ -245,11 +291,8 @@ class Assembler:
                 offset=labels[item.target]%112
                 value=[item.value,(offset//10)*16+offset%10]
             else:
-                # The ROM can still be committing an arithmetic sign at the
-                # prefetch hook used by 1F. One native NOP settles X before
-                # a far predicate samples it; unlike ENTER it preserves stack.
-                barrier=[0x54] if item.settle and item.value in (0x57,0x59,0x5C,0x5E) else []
-                value=[*barrier,0x1F,item.value,*bcd(labels[item.target])]
+                # Firmware completes X write-back inside the far prefix.
+                value=[0x1F,item.value,*bcd(labels[item.target])]
             assert len(value)==self.size(item)
             claim(address,len(value))
             offset=address%112
