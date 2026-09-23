@@ -139,6 +139,10 @@ if command -v pwsh >/dev/null 2>&1; then
     -TestMockDevice "$mock_device" > "$work/mock-upload.txt"
   cmp "$mock_system/USBDISK.APP" "$mock_device/System/USBDISK.APP"
   grep -q 'Resident and System APP upload complete' "$work/mock-upload.txt"
+  grep -q 'Close every program using the MK61s COM port' \
+      "$platform/tools/mk61-app-upload.ps1"
+  grep -q 'Wait-Mk61SerialPortAccess' \
+      "$platform/tools/mk61-app-upload.ps1"
   mv "$mock_system/USBDISK.APP" "$work/missing-usbdisk.app"
   if pwsh -NoLogo -NoProfile -File \
       "$platform/tools/mk61-app-upload.ps1" \

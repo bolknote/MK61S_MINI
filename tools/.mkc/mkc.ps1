@@ -471,6 +471,14 @@ function New-ConfiguredSerialPort {
     return $serial
 }
 
+function Get-SerialOpenFailureText {
+    param([Exception]$Exception)
+    if ($Exception -is [UnauthorizedAccessException]) {
+        return 'порт занят другой программой — закройте все программы, использующие этот COM-порт'
+    }
+    return $Exception.Message
+}
+
 function Start-DirectSerial {
     $detected = if ($script:PortExplicit) { @() } else { @(Get-CdcPorts) }
     $candidates = @(Get-DirectSerialCandidates $script:Port $detected)
@@ -494,10 +502,7 @@ function Start-DirectSerial {
                 $matches.Add([pscustomobject]@{ Port = $candidate; Identity = $identity })
             } else { $failures.Add("${candidate}: это не MK61s") }
         } catch {
-            $message = $_.Exception.Message
-            if ($_.Exception -is [UnauthorizedAccessException]) {
-                $message = 'порт занят — закройте TeraTerm или Serial Monitor'
-            }
+            $message = Get-SerialOpenFailureText $_.Exception
             $failures.Add("${candidate}: $message")
         } finally {
             Close-DirectSerialPort $serial
@@ -535,7 +540,7 @@ function Start-DirectSerial {
         return $true
     } catch {
         Close-DirectSerialPort $serial
-        $script:StatusText = "$($chosen.Port): $($_.Exception.Message)"
+        $script:StatusText = "$($chosen.Port): $(Get-SerialOpenFailureText $_.Exception)"
         return $false
     }
 }

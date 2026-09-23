@@ -262,6 +262,9 @@ try {
     }
     $crc = Get-PosixChecksumBytes ([Text.Encoding]::ASCII.GetBytes('123456789'))
     Assert-True ($crc -eq 930766865) 'POSIX cksum implementation differs'
+    $busyText = Get-SerialOpenFailureText ([UnauthorizedAccessException]::new('denied'))
+    Assert-True ($busyText -match 'все программы' -and
+        $busyText -notmatch 'TeraTerm|Serial Monitor') 'busy COM message names individual programs'
 
     $script:MockRoot = $device
     $script:SessionDir = $session

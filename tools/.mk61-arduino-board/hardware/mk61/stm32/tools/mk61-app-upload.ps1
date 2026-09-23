@@ -26,6 +26,48 @@ function Stop-Mk61Upload {
     throw "MK61s F401 + APP upload: $Message"
 }
 
+function Wait-Mk61SerialPortAccess {
+    param([string]$PortName, [int]$TimeoutSeconds = 45)
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    $reportedBusy = $false
+    $seenPort = $false
+    do {
+        if (@([IO.Ports.SerialPort]::GetPortNames()) -contains $PortName) {
+            $seenPort = $true
+            $probe = $null
+            try {
+                $probe = New-Object System.IO.Ports.SerialPort
+                $probe.PortName = $PortName
+                $probe.BaudRate = 115200
+                $probe.DtrEnable = $false
+                $probe.RtsEnable = $false
+                $probe.Open()
+                return
+            } catch [UnauthorizedAccessException] {
+                if (-not $reportedBusy) {
+                    Write-Host ("$PortName is in use by another program. " +
+                        'Close every program using this device COM port; waiting for access...')
+                    $reportedBusy = $true
+                }
+            } catch [IO.IOException] {
+                # CDC may be listed just before its endpoint is ready after
+                # DFU. Keep this inside the same bounded readiness wait.
+            } finally {
+                if ($null -ne $probe) {
+                    try { if ($probe.IsOpen) { $probe.Close() } } catch {}
+                    try { $probe.Dispose() } catch {}
+                }
+            }
+        }
+        Start-Sleep -Milliseconds 500
+    } while ([DateTime]::UtcNow -lt $deadline)
+    if (-not $seenPort) {
+        Stop-Mk61Upload "CDC port $PortName did not return after DFU"
+    }
+    Stop-Mk61Upload ("cannot get exclusive access to $PortName. " +
+        'Close every program using this device COM port and retry Upload')
+}
+
 $system = ''
 try {
     $expectedBundle = "mk61s-M-$Profile-f401"
@@ -52,6 +94,8 @@ try {
             -not [IO.File]::Exists($Stm32Script)) {
             Stop-Mk61Upload 'STM32 DFU tools not found'
         }
+        Write-Host ('System APP installation needs exclusive access to the ' +
+            'MK61s COM port. Close every program using that port.')
         Write-Host "Uploading resident via STM32 DFU: $resident"
         & $Busybox sh $Stm32Script -i $Protocol -f $resident `
             -o $FlashOffset -v $Vid -p $UsbPid -a $Address -s $Start
@@ -63,17 +107,7 @@ try {
             if ($Port -notmatch '^COM[0-9]+$') {
                 Stop-Mk61Upload "selected port is not a Windows COM port: $Port"
             }
-            $deadline = [DateTime]::UtcNow.AddSeconds(45)
-            while ([DateTime]::UtcNow -lt $deadline) {
-                if (@([IO.Ports.SerialPort]::GetPortNames()) -contains $Port) {
-                    break
-                }
-                Start-Sleep -Milliseconds 500
-            }
-            if (@([IO.Ports.SerialPort]::GetPortNames()) -notcontains $Port) {
-                Stop-Mk61Upload "CDC port $Port did not return after DFU"
-            }
-            Start-Sleep -Seconds 2
+            Wait-Mk61SerialPortAccess $Port 45
         } else {
             $Port = ''
             Write-Host 'No COM port selected; MKC will require a unique MK61s CDC device.'
