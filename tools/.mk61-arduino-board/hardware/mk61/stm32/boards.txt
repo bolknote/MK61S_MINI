@@ -40,7 +40,7 @@ mk61_f401_app.upload.address=0x8000000
 mk61_f401_app.upload.start=0x8000000
 mk61_f401_app.upload.protocol=dfu
 mk61_f401_app.upload.options=-v {upload.vid} -p {upload.pid} -a {upload.address} -s {upload.start}
-mk61_f401_app.upload.tool=stm32CubeProg
+mk61_f401_app.upload.tool=mk61Upload
 
 # Values from the independent menus are joined here so Arduino IDE builds the
 # same resident profile as tools/mk61-firmware.cmd.

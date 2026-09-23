@@ -270,6 +270,25 @@ try {
     $script:SessionDir = $session
     $script:LocalPath = $local
 
+    # Windows cloud-sync clients mark placeholders as ReparsePoint without
+    # making them links.  They must stay navigable; true links remain blocked.
+    $cloudDirectory = [pscustomobject]@{
+        Attributes = ([IO.FileAttributes]::Directory -bor
+            [IO.FileAttributes]::ReparsePoint)
+        PSIsContainer = $true
+        LinkType = $null
+    }
+    Assert-True ((Get-LocalItemKind $cloudDirectory) -eq 'd') `
+        'PowerShell panel treated a cloud placeholder directory as a link'
+    $linkedDirectory = [pscustomobject]@{
+        Attributes = ([IO.FileAttributes]::Directory -bor
+            [IO.FileAttributes]::ReparsePoint)
+        PSIsContainer = $true
+        LinkType = 'SymbolicLink'
+    }
+    Assert-True ((Get-LocalItemKind $linkedDirectory) -eq 'l') `
+        'PowerShell panel accepted a symbolic-link directory as ordinary'
+
     # Enter on `..` and Backspace both restore the directory being left.
     # A hidden directory matches the original Windows regression.
     & {

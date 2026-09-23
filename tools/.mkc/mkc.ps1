@@ -850,6 +850,28 @@ function Write-M8Download {
     }
 }
 
+function Get-LocalItemKind {
+    param([object]$Item)
+    if ($null -eq $Item) { return 'o' }
+
+    # Dropbox/OneDrive cloud placeholders carry ReparsePoint too, but they
+    # are ordinary files and directories from the user's point of view.
+    # PowerShell exposes real symbolic links and junctions through LinkType;
+    # reject only those so recursive copies cannot escape or loop.
+    $isReparsePoint = (($Item.Attributes -band
+        [IO.FileAttributes]::ReparsePoint) -ne 0)
+    if ($isReparsePoint) {
+        $linkTypeProperty = $Item.PSObject.Properties['LinkType']
+        if ($null -ne $linkTypeProperty -and
+            -not [string]::IsNullOrEmpty([string]$linkTypeProperty.Value)) {
+            return 'l'
+        }
+    }
+    if ($Item.PSIsContainer) { return 'd' }
+    if ($Item -is [IO.FileInfo]) { return 'f' }
+    return 'o'
+}
+
 function Get-UnsupportedReason {
     param([string]$Path, [string]$Kind = '')
     $name = Split-Path -Leaf $Path
@@ -857,9 +879,7 @@ function Get-UnsupportedReason {
         if (-not (Test-Path -LiteralPath $Path)) { $Kind = 'o' }
         else {
             $item = Get-Item -LiteralPath $Path -Force
-            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { $Kind = 'l' }
-            elseif ($item.PSIsContainer) { $Kind = 'd' }
-            else { $Kind = 'f' }
+            $Kind = Get-LocalItemKind $item
         }
     }
     if ($Kind -eq 'l') { return 'символическая ссылка' }
@@ -1262,10 +1282,7 @@ function Load-LocalPanel {
         $items = @(Get-ChildItem -LiteralPath $script:LocalPath -Force -ErrorAction Stop)
         foreach ($item in @($items | Sort-Object @{Expression={ -not $_.PSIsContainer }}, Name)) {
             if (Test-IgnoredHostMetadataName $item.Name) { continue }
-            $kind = if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { 'l' }
-                elseif ($item.PSIsContainer) { 'd' }
-                elseif ($item -is [IO.FileInfo]) { 'f' }
-                else { 'o' }
+            $kind = Get-LocalItemKind $item
             $size = if ($kind -eq 'f') { [long]$item.Length } else { [long]0 }
             $reason = Get-UnsupportedReason $item.FullName $kind
             $entries.Add((New-PanelEntry $item.Name $kind $size $reason))
@@ -1343,8 +1360,7 @@ function Add-LocalTreeToPlan {
     try { $item = Get-Item -LiteralPath $Source -Force }
     catch { $script:PlanError = "$(Split-Path -Leaf $Source): не читается"; return $false }
     if (Test-IgnoredHostMetadataName $item.Name) { return $true }
-    $kind = if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { 'l' }
-        elseif ($item.PSIsContainer) { 'd' } else { 'f' }
+    $kind = Get-LocalItemKind $item
     $reason = Get-UnsupportedReason $Source $kind
     if (-not [string]::IsNullOrEmpty($reason)) {
         $script:PlanError = "$(Split-Path -Leaf $Source): $reason"
@@ -2733,6 +2749,10 @@ function Show-SelectedFile {
         Show-Alert 'View' 'F3 открывает файлы, а не каталоги'
         return
     }
+    if ($entry.Kind -ne 'f') {
+        Show-Alert 'View' 'Этот объект нельзя безопасно открыть'
+        return
+    }
     if ($panel -eq 'L') { $source = Join-Path $script:LocalPath $entry.Name }
     else {
         $source = Join-Path $script:SessionDir 'view.bin'
@@ -3166,8 +3186,7 @@ function Invoke-MkcApplication {
         $path = $script:ClassifyOnly
         if (Test-Path -LiteralPath $path) {
             $item = Get-Item -LiteralPath $path -Force
-            $kind = if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { 'l' }
-                elseif ($item.PSIsContainer) { 'd' } else { 'f' }
+            $kind = Get-LocalItemKind $item
         } else { $kind = 'o' }
         $reason = Get-UnsupportedReason $path $kind
         if ([string]::IsNullOrEmpty($reason)) { [Console]::WriteLine('supported'); return 0 }

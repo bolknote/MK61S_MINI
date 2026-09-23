@@ -44,7 +44,7 @@ cmp "$root/tools/seal-firmware.ps1" \
 grep -q '^mk61_f401_app.name=MK61s F401 + APP$' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
-grep -q '^mk61_f401_app.upload.tool=stm32CubeProg$' "$target/boards.txt"
+grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_platform.mini_v3=' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_platform.mini_v2=' \
@@ -59,7 +59,8 @@ grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
   "$target/boards.txt"
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
-grep -q '^tools.stm32CubeProg.upload.pattern.windows=' \
+grep -q '^tools.mk61Upload.upload.pattern=' "$target/platform.txt"
+grep -q '^tools.mk61Upload.upload.pattern.windows=' \
   "$target/platform.txt"
 grep -q -- '-Profile "{build.mk61_platform_id}-{build.mk61_display_id}"' \
   "$target/platform.txt"

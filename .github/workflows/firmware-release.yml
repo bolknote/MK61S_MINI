@@ -251,6 +251,24 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $null = Assert-SafeBuildCache
 
+      - name: Verify Windows Upload selects the MK61 compound uploader
+        shell: pwsh
+        run: |
+          $ideConfig = Join-Path `
+            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $properties = (& arduino-cli --config-file $ideConfig compile `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
+            --build-path (Join-Path $env:RUNNER_TEMP 'mk61-upload-properties') `
+            --show-properties=expanded code | Out-String)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($properties -notmatch '(?m)^upload\.tool=mk61Upload\r?$') {
+            throw 'Arduino resolved a stock uploader instead of mk61Upload'
+          }
+          if ($properties -notmatch `
+              '(?m)^tools\.mk61Upload\.upload\.pattern=.*mk61-app-upload\.ps1') {
+            throw 'Windows Upload recipe bypasses System APP installation'
+          }
+
       - name: Verify Windows font-license cleanup preserves its parent
         shell: pwsh
         run: |
