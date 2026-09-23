@@ -175,6 +175,9 @@ MKC устанавливает и проверяет файлы этого же 
 выключенные штатные APP удаляются; пользовательские файлы не трогаются.
 Плата использует собственный uploader `mk61Upload`, поэтому наследуемый
 рецепт STM32CubeProgrammer не может незаметно обойти второй этап.
+Windows-сборка кладёт `mk61-system-installer.ps1` рядом с временным каталогом
+`System`, и Upload запускает эту копию. Поэтому второй этап не зависит от
+`build.source.path`, который IDE может разрешить от `C:\Program Files\Arduino IDE`.
 После обновления исходников повторно установите плату командой
 `tools\mk61-arduino-board.cmd` и перезапустите IDE: старая копия `platform.txt`
 в sketchbook сама не обновится. Команда с `-Check` не ограничивается наличием
@@ -205,6 +208,8 @@ tools\mkc.cmd --install-system "binary\mk61s-M-classic-v2-uc1609-f401\System" --
 На macOS/Linux Upload пока прошивает только resident. Там по-прежнему нужно
 скопировать `System` из комплекта в `/System` через USB-диск или MKC. При
 первом переходе на ABI 6 обновите и resident, и файлы `/System`.
+
+<!-- pagebreak -->
 
 ## Самостоятельные APP и сжатие
 
@@ -244,6 +249,7 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `app/firmware mismatch` | Старый ABI 2/3/4 нужно пересобрать; для ABI 6 проверьте версию публичных сервисов. |
 | `python3.exe failed with exit code 9009` | Повторно установите свежий пакет платы; новая PowerShell-ветка проверяет `py -3`/`python.exe` и не выбирает пустой Windows Store alias. Если Python действительно отсутствует, установите Python 3.10+ и перезапустите IDE. |
 | `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются Python-скриптом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
-| `lto1.exe ... ���� ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
+| `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
 | Upload не находит устройство | Перевести STM32F401 в системный DFU и повторить Upload. |
+| `MKC terminal installer not found: C:\Program Files\Arduino IDE\tools\.mkc\mkc.ps1` | Используется старый uploader, который ошибочно полагается на `build.source.path` во время Upload. Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и заново соберите проект. Если resident уже прошит, достаточно приведённой выше команды `mkc.cmd --install-system`; повторный DFU не нужен. |
 | `System APP installation failed` | Resident уже может быть прошит. Проверьте COM-порт и закройте все программы, использующие его, затем выполните показанную выше команду `mkc.cmd --install-system` без повторного DFU. |
