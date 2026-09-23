@@ -106,6 +106,10 @@ try {
     Assert-True ([IO.File]::ReadAllBytes((Join-Path $device 'System/HELP0.TXT')).Length -eq
         "Помощь`n".Length) `
         'System bootstrap did not convert HELP0.TXT to M8'
+    $bootstrapText = $bootstrap.Output -join "`n"
+    Assert-True ($bootstrapText.IndexOf('Removed disabled /System/CHIP8.APP') -lt
+        $bootstrapText.IndexOf('Installed and verified /System/USBDISK.APP')) `
+        'System bootstrap did not free stale APP space before USBDISK.APP'
     $app = Invoke-MkcTool @('--classify', (Join-Path $local 'DEMO.APP'))
     Assert-True ($app.ExitCode -eq 0 -and ($app.Output -join '') -eq 'supported') 'PowerShell classifier rejected APP'
     $chip8 = Invoke-MkcTool @('--classify', (Join-Path $local 'game.ch8'))
@@ -428,6 +432,21 @@ try {
     Assert-True (-not [string]::IsNullOrEmpty($script:PlanError)) 'preflight did not report the bad file'
     Reset-CopyPlan
     Assert-True (Add-LocalTreeToPlan (Join-Path $local 'FOCAL.APP') '/System/FOCAL.APP') 'system APP upload was rejected'
+    $manualSystem = Join-Path $local 'System'
+    [void](New-Item -ItemType Directory -Path $manualSystem)
+    [IO.File]::WriteAllBytes((Join-Path $manualSystem 'BASIC.APP'), [byte[]]::new(64))
+    [IO.File]::WriteAllBytes((Join-Path $manualSystem 'USBDISK.APP'), [byte[]]::new(64))
+    Reset-CopyPlan
+    Assert-True (Add-LocalTreeToPlan $manualSystem '/System') 'complete System directory was rejected'
+    Assert-True ($script:CopyPlan.Count -eq 3 -and
+        $script:CopyPlan[1].Destination -eq '/System/USBDISK.APP') `
+        'manual System copy does not install USBDISK.APP first'
+    Remove-Item -LiteralPath (Join-Path $manualSystem 'USBDISK.APP')
+    Reset-CopyPlan
+    Assert-True (-not (Add-LocalTreeToPlan $manualSystem '/System')) `
+        'manual System copy without USBDISK.APP was accepted'
+    Assert-True ($script:PlanError -match 'USBDISK\.APP') `
+        'missing mandatory USBDISK.APP was not explained'
     Reset-CopyPlan
     Assert-True (Add-LocalTreeToPlan (Join-Path $local 'DEMO.APP') '/Applications/DEMO.APP') 'APP upload outside root was rejected'
     Reset-CopyPlan

@@ -1199,6 +1199,26 @@ function Install-SystemBundle {
     if (-not (New-RemoteDirectory '/System')) {
         throw "не удалось создать /System: $($script:StatusText)"
     }
+
+    # Free space before uploading the mandatory USB backend.  A compact build
+    # may deliberately omit large System APPs left by an earlier profile; if
+    # they are removed only after the upload, USBDISK.APP can be the one file
+    # that does not fit.  Remote names are compared case-insensitively because
+    # the store may return `BASIC.app` for a file uploaded as `BASIC.APP`.
+    $installed = @(Get-RemoteEntries '/System')
+    foreach ($entry in $installed) {
+        $name = [string]$entry.Name
+        $canonicalName = @($canonical | Where-Object { $_ -ieq $name } |
+            Select-Object -First 1)
+        if ($entry.Kind -ne 'f' -or $canonicalName.Count -eq 0) { continue }
+        if (Test-Path -LiteralPath (Join-Path $system $canonicalName[0]) `
+                -PathType Leaf) { continue }
+        if (-not (Remove-RemoteItem "/System/$name")) {
+            throw "удаление старого ${name}: $($script:StatusText)"
+        }
+        [Console]::WriteLine("Removed disabled /System/$name")
+    }
+
     foreach ($name in $canonical) {
         $source = Join-Path $system $name
         if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { continue }
@@ -1218,20 +1238,6 @@ function Install-SystemBundle {
             throw "проверка ${name}: содержимое отличается"
         }
         [Console]::WriteLine("Installed and verified /System/$name")
-    }
-    # Keep the canonical set in sync with this exact build. Leave user files
-    # and non-canonical APPs alone.
-    $installed = @(Get-RemoteEntries '/System')
-    foreach ($entry in $installed) {
-        $name = [string]$entry.Name
-        if ($entry.Kind -ne 'f' -or $canonical -cnotcontains $name -or
-            (Test-Path -LiteralPath (Join-Path $system $name) -PathType Leaf)) {
-            continue
-        }
-        if (-not (Remove-RemoteItem "/System/$name")) {
-            throw "удаление старого ${name}: $($script:StatusText)"
-        }
-        [Console]::WriteLine("Removed disabled /System/$name")
     }
     [Console]::WriteLine('System installation through CDC: OK')
 }
@@ -1371,7 +1377,22 @@ function Add-LocalTreeToPlan {
         return $true
     }
     Add-CopyPlanItem 'd' $Source $Destination
-    foreach ($child in @(Get-ChildItem -LiteralPath $Source -Force | Sort-Object Name)) {
+    $children = @(Get-ChildItem -LiteralPath $Source -Force | Sort-Object Name)
+    if ($Destination.TrimEnd('/') -ieq '/System') {
+        $usbDisk = @($children | Where-Object {
+            $_.Name -ieq 'USBDISK.APP' -and (Get-LocalItemKind $_) -eq 'f'
+        } | Select-Object -First 1)
+        if ($usbDisk.Count -eq 0) {
+            $script:PlanError = 'System: нет обязательного USBDISK.APP'
+            return $false
+        }
+        # A generic F5 copy must preserve the same invariant as
+        # --install-system: the backend needed to expose the disk goes first.
+        $children = @($usbDisk[0]) + @($children | Where-Object {
+            $_.FullName -ne $usbDisk[0].FullName
+        })
+    }
+    foreach ($child in $children) {
         if (-not (Add-LocalTreeToPlan $child.FullName (Join-RemotePath $Destination $child.Name))) {
             return $false
         }

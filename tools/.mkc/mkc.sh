@@ -1202,7 +1202,7 @@ plan_add() {
 }
 
 plan_local_tree() {
-  local source=$1 destination=$2 kind reason child name size
+  local source=$1 destination=$2 kind reason child name size system_usb=
   name=${source##*/}
   ignored_host_metadata_name "$name" && return 0
   if [ -L "$source" ]; then kind=l
@@ -1220,8 +1220,25 @@ plan_local_tree() {
   plan_add d "$source" "$destination" 0
   local children=("$source"/*)
   if [ "${#children[@]}" -gt 0 ]; then
+    if [ "${destination%/}" = /System ]; then
+      for child in "${children[@]}"; do
+        [ -e "$child" ] || [ -L "$child" ] || continue
+        name=${child##*/}
+        if [ "$(uppercase "$name")" = USBDISK.APP ] && [ -f "$child" ] && [ ! -L "$child" ]; then
+          system_usb=$child
+          break
+        fi
+      done
+      if [ -z "$system_usb" ]; then
+        PLAN_ERROR='System: нет обязательного USBDISK.APP'
+        return 1
+      fi
+      name=${system_usb##*/}
+      plan_local_tree "$system_usb" "$(remote_join "$destination" "$name")" || return 1
+    fi
     for child in "${children[@]}"; do
       [ -e "$child" ] || [ -L "$child" ] || continue
+      [ -n "$system_usb" ] && [ "$child" = "$system_usb" ] && continue
       name=${child##*/}
       ignored_host_metadata_name "$name" && continue
       plan_local_tree "$child" "$(remote_join "$destination" "$name")" || return 1

@@ -16,6 +16,9 @@ printf '# Demo\n' > "$work/local/manual.md"
 printf 'Привет → ≤ ↵\n' > "$work/local/Игра.m61"
 printf 'Ошибка 😀\n' > "$work/local/emoji.txt"
 printf '001\n' > "$work/local/Good/program.m61"
+mkdir -p "$work/local/System"
+dd if=/dev/zero of="$work/local/System/BASIC.APP" bs=1 count=64 2>/dev/null
+dd if=/dev/zero of="$work/local/System/USBDISK.APP" bs=1 count=64 2>/dev/null
 printf 'AppleDouble\n' > "$work/local/Good/._program.m61"
 printf 'metadata\n' > "$work/local/Good/.DS_Store"
 mkdir -p "$work/local/Good/System Volume Information"
@@ -420,6 +423,18 @@ plan_reset
 plan_local_tree "$work/local/FOCAL.APP" /System/FOCAL.APP
 test "${#PLAN_KINDS[@]}" -eq 1
 test "$PLAN_TOTAL" -eq 64
+
+plan_reset
+plan_local_tree "$work/local/System" /System
+test "${#PLAN_KINDS[@]}" -eq 3
+test "${PLAN_DESTINATIONS[1]}" = /System/USBDISK.APP
+rm "$work/local/System/USBDISK.APP"
+plan_reset
+if plan_local_tree "$work/local/System" /System; then
+  echo 'mkc: System directory without USBDISK.APP was accepted' >&2
+  exit 1
+fi
+case "$PLAN_ERROR" in *USBDISK.APP*) ;; *) exit 1 ;; esac
 
 plan_reset
 plan_local_tree "$work/local/DEMO.APP" /Applications/DEMO.APP
