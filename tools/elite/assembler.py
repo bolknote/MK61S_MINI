@@ -115,7 +115,9 @@ class Module:
         return self.st('C').set('B',field).far(0x53,bank*112+WRITE)
     def putn(self, bank, field, value): return self.n(value).put(bank,field)
     def visit(self, bank, callback):
-        return self.ptr('F',callback).far(0x53,bank*112+CALL)
+        # Callback arguments live in registers. All callers close number
+        # entry before VISIT; the old X and its stack lift are not needed.
+        return self.ptr('F',callback,lift=False).far(0x53,bank*112+CALL)
     def max0(self):
         target=f'clamp0_{self.bank}_{len(self.items)}'
         return self.jge(target).op('cx').label(target)

@@ -62,7 +62,7 @@ def add_ui(a):
     m.raw(0x2F,0x02,0x2F,0x6C,0x2F,0x53).op('ret')
     m.label('name_frame')
     m.op('cx').st(2).ld(8).st(3)
-    m.ptr('F','name_alphabet').raw(0x2F,0x00,0x2F,0x7C,0x2F,0x53).op('ret')
+    m.ptr('F','name_alphabet',lift=False).raw(0x2F,0x00,0x2F,0x7C,0x2F,0x53).op('ret')
 
     # Battle: RC hull, RB live drones, RD target mask minus decimal zero.
     # Gauge: RC value, RA selects the prefix, RE holds the bar pattern.
@@ -72,10 +72,10 @@ def add_ui(a):
     # Ordinary turns only copy these words, then replace the exact hull.
     m.label('battle_frame').ld(8).st(3).raw(0x2F,0x02,0x2F,0x6C).ld('B').ld(6).op('-').jz('formation_ready')
     m.ld('B').st(6).call('bar_pattern').n(16).op('*').st('E')
-    m.ptr('F','drone_alphabet').raw(0x2F,0x00,0x2F,0x7E).ld(0).st(4).ld(1).st(5)
+    m.ptr('F','drone_alphabet',lift=False).raw(0x2F,0x00,0x2F,0x7E).ld(0).st(4).ld(1).st(5)
     m.label('formation_ready').ld(4).st(0).ld(5).st(1)
     m.ld(2).ld('D').op('+').st(2).raw(0x2F,0x53).op('ret')
-    m.label('gauge_frame').ld('A').ld(7).op('*').ld('E').op('+').st('E').ptr('F','bar_alphabet')
+    m.label('gauge_frame').ld('A').ld(7).op('*').ld('E').op('+').st('E').ptr('F','bar_alphabet',lift=False)
     m.label('instrument_frame').ld(8).st(3).raw(0x2F,0x02,0x2F,0x6C,0x2F,0x00,0x2F,0x7E)
     m.ld(2).n(63).op('-').st(2).raw(0x2F,0x53).op('ret')
 
@@ -89,7 +89,7 @@ def add_ui(a):
     # laser boundary; enemies beyond 18 are always on its far side.
     m.label('range_frame').raw(0x2F,0x07,0x2F,0x6C)
     m.ld(0).n(GLYPHS['r']-63).op('+').st(0).set(1,GLYPHS['U']).ld(8).st(3)
-    m.ptr('F','range_alphabet').raw(0x2F,0x04,0x2F,0x7E,0x2F,0x53).op('ret')
+    m.ptr('F','range_alphabet',lift=False).raw(0x2F,0x04,0x2F,0x7E,0x2F,0x53).op('ret')
     m.label('draw_range').ld('C').n(19).op('-').jge('range_far')
     m.ld('C').n(4).op('/','int').jump('range_index')
     m.label('range_far').raw(5)
@@ -102,7 +102,7 @@ def add_ui(a):
     m.label('range_alphabet').raw(64,GLYPHS['H'],192,GLYPHS['H']|128,*([0]*12))
 
 def show_text(m, label):
-    m.ptr('F',label).call('show_message')
+    m.ptr('F',label,lift=False).call('show_message')
 
 def show_number(m, prefix):
     # X/RC from a page GET. Preserve it while setting the prefix.

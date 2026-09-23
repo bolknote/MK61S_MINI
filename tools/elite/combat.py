@@ -49,9 +49,9 @@ def add_combat(a):
     # enemy_hit already returned carrier hull and escape charge.
     m.ld('D').ld(6).op('+').jz('won')
     m.ld('E').n(4).op('-').jge('escaped').set('A',16).op('ret')
-    m.label('won').visit(24,'reward').visit(25,'count_kill').ptr(9,'result_input_entry',lift=False).ptr('A','victory').op('ret')
-    m.label('escaped').ptr(9,'result_input_entry',lift=False).ptr('A','escape').op('ret')
-    m.label('lost').ptr(9,'new_game',lift=False).ptr('A','defeat').op('ret')
+    m.label('won').visit(24,'reward').visit(25,'count_kill').ptr(9,'result_input_entry',lift=False).ptr('A','victory',lift=False).op('ret')
+    m.label('escaped').ptr(9,'result_input_entry',lift=False).ptr('A','escape',lift=False).op('ret')
+    m.label('lost').ptr(9,'new_game',lift=False).ptr('A','defeat',lift=False).op('ret')
 
     m=a.module(14,'weapons')
     # PILOT callback: action RC, laser damage RD, incoming RE

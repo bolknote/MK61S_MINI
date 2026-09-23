@@ -135,7 +135,7 @@ def test_worlds_and_display():
     number(credits,'C',1000)
     assert again['revision']==credits['revision']
     # Catch a return of the slow ROM loops that took 657/1142/1180 core steps.
-    assert title['steps']<80 and port['steps']<220 and credits['steps']<150
+    assert title['steps']<80 and port['steps']<=149 and credits['steps']<=71
     assert title['frame_changes']==port['frame_changes']==credits['frame_changes']==1
     assert again['frame_changes']==0
     # Exhaustive coordinate/name coverage exercises eight-digit packed masks.
@@ -146,7 +146,7 @@ def test_worlds_and_display():
         name=''.join(ALPHABET[(code>>shift)&15] for shift in (20,16,12,8,4,0))
         assert s['frame']==screen(name+'    СП'),(i,s)
         assert s['pages'][0][2]==code and s['pages'][0][3]==0,s
-        assert s['steps']<=88,('world generation regressed',i,s['steps'])
+        assert s['steps']<=86,('world generation regressed',i,s['steps'])
         names.add(name)
     assert len(names)==256
     print('ELITE: title, frozen display, 256 worlds and register F callbacks OK',flush=True)
@@ -154,9 +154,10 @@ def test_worlds_and_display():
 def test_trade_and_station():
     s=play(START+['input 10','input 30','input 20','input 40','input 40'])
     number(s[2],'1',19)
+    assert s[2]['steps']<=132,('price callback regressed',s[2]['steps'])
     assert s[3]['pages'][0][0]==981 and s[3]['pages'][1][0]==1
     assert s[3]['pages'][2][3]==29
-    assert s[3]['steps']<340,('trade recalculated the displayed quote',s[3])
+    assert s[3]['steps']<=247,('trade callbacks or cached quote regressed',s[3])
     number(s[4],'1',1)
     assert s[5]['pages'][0][0]==998 and s[5]['pages'][1][0]==0
     assert state(s[5])==state(s[6]) and s[6]['frame']==screen('ErrOr     СП')
