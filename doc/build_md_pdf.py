@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import os
 import re
 import unicodedata
@@ -28,6 +29,7 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+from PIL import Image as PILImage
 
 
 PAGE_SIZE = A4
@@ -204,7 +206,10 @@ def add_image(line: str, source_dir: Path, story: list, styles) -> bool:
         story.append(Paragraph(inline("[missing image: %s]" % image_path.name), styles["DocBase"]))
         return True
 
-    image = Image(str(image_path))
+    if image_path.suffix.lower() == ".wbmp":
+        image = Image(wbmp_png_stream(image_path))
+    else:
+        image = Image(str(image_path))
     if image.drawWidth > DOC_WIDTH:
         scale = DOC_WIDTH / image.drawWidth
         image.drawWidth *= scale
@@ -215,6 +220,45 @@ def add_image(line: str, source_dir: Path, story: list, styles) -> bool:
     block.append(Spacer(1, 5))
     story.append(KeepTogether(block))
     return True
+
+
+def read_wbmp_integer(data: bytes, offset: int) -> tuple[int, int]:
+    value = 0
+    for _ in range(5):
+        if offset >= len(data):
+            raise ValueError("truncated WBMP integer")
+        byte = data[offset]
+        offset += 1
+        value = (value << 7) | (byte & 0x7F)
+        if (byte & 0x80) == 0:
+            return value, offset
+    raise ValueError("WBMP integer is too long")
+
+
+def wbmp_png_stream(path: Path) -> io.BytesIO:
+    data = path.read_bytes()
+    offset = 0
+    image_type, offset = read_wbmp_integer(data, offset)
+    fixed_header, offset = read_wbmp_integer(data, offset)
+    width, offset = read_wbmp_integer(data, offset)
+    height, offset = read_wbmp_integer(data, offset)
+    if image_type != 0 or fixed_header != 0 or width <= 0 or height <= 0:
+        raise ValueError(f"unsupported WBMP image: {path}")
+    stride = (width + 7) // 8
+    expected = offset + stride * height
+    if expected > len(data):
+        raise ValueError(f"truncated WBMP image: {path}")
+    bitmap = PILImage.new("1", (width, height), 1)
+    pixels = bitmap.load()
+    for y in range(height):
+        row = offset + y * stride
+        for x in range(width):
+            if data[row + x // 8] & (0x80 >> (x & 7)):
+                pixels[x, y] = 0
+    stream = io.BytesIO()
+    bitmap.save(stream, format="PNG")
+    stream.seek(0)
+    return stream
 
 
 def build_story(markdown: str, source_dir: Path, styles, render_inline=inline) -> list:
