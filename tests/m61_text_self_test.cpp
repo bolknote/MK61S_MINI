@@ -293,6 +293,7 @@ bool OpenStoredFile(const char* name) {
 
 u8 m61_text_host_open_file(const char* name) {
   if(stop_nested_open && std::strcmp(name, "STOPPED") == 0) return 1;
+  if(std::strcmp(name, "UNAVAILABLE") == 0) return 2;
   return OpenStoredFile(name) ? 0 : 2;
 }
 
@@ -401,6 +402,32 @@ static void test_nested_interpreter_esc_cancels_scenario_silently(void) {
   assert(executed_lines[0] == "open STOPPED");
   m61_text::Error error = {};
   assert(!m61_text::last_error(error));
+}
+
+static void test_optional_open_skips_missing_content_but_keeps_strict_open(void) {
+  reset_host();
+  add_script("OPTIONAL", "open? UNAVAILABLE\nok\nret\n");
+  assert(m61_text::load_program("OPTIONAL"));
+  assert(!m61_text::active());
+  m61_text::Error error = {};
+  assert(!m61_text::last_error(error));
+  assert(executed_lines.size() == 2);
+  assert(executed_lines[0] == "ok");
+  assert(executed_lines[1] == "ret");
+
+  reset_host();
+  add_script("STRICT", "open UNAVAILABLE\nok\n");
+  assert(!m61_text::load_program("STRICT"));
+  assert(m61_text::last_error(error));
+  assert(error.line == 1);
+  assert(std::strcmp(error.message, "cannot open referenced file") == 0);
+
+  reset_host();
+  add_script("INVALID", "open?\nok\n");
+  assert(!m61_text::load_program("INVALID"));
+  assert(m61_text::last_error(error));
+  assert(error.line == 1);
+  assert(std::strcmp(error.message, "optional open needs a path") == 0);
 }
 
 static void add_script(const char* name, const std::string& source,
@@ -1334,6 +1361,7 @@ int main(void) {
   test_compressed_load_spans_children_and_blocks_incomplete_run();
   test_nested_open_preserves_program_and_root_still_clears();
   test_nested_interpreter_esc_cancels_scenario_silently();
+  test_optional_open_skips_missing_content_but_keeps_strict_open();
   test_loadfont_is_m61_scoped_and_uses_script_directory();
   test_loadfont_default_and_all_exit_paths_restore();
   test_loadfont_failures_are_reported_by_m61();

@@ -94,7 +94,7 @@ def main():
                           check=True,timeout=30)
     states=[json.loads(line) for line in result.stdout.splitlines()]
     temporary='/games/ELITE/_bench.m61'
-    loader=(ROOT/'programs/games/ELITE/autoexec.m61').read_text().replace('open manual.md\n','')
+    loader=(ROOT/'programs/games/ELITE/autoexec.m61').read_text().replace('open? manual.md\n','')
     measurements=[]
     with TimedScreenPort(args.port) as port:
         ident=parse_identity(port.command('identity'))

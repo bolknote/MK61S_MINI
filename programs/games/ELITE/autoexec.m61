@@ -1,4 +1,4 @@
-open manual.md
+open? manual.md
 reinit
 open part00.m61
 open part01.m61

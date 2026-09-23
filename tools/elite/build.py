@@ -28,7 +28,7 @@ def outputs():
     image=b''.join(banks[bank] for bank in range(max(banks)+1))
     parts={OUT/f'part{i:02d}.m61':text for i,text in enumerate(pack_parts(program_lines(image)))}
     files=dict(parts)
-    files[OUT/'autoexec.m61']='open manual.md\nreinit\n'+''.join(f'open {p.name}\n' for p in parts)+'run\n'
+    files[OUT/'autoexec.m61']='open? manual.md\nreinit\n'+''.join(f'open {p.name}\n' for p in parts)+'run\n'
     files[ROOT/'tools/elite/elite.map.json']=json.dumps(info,indent=2,ensure_ascii=False)+'\n'
     return files
 

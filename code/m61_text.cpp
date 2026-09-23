@@ -1398,6 +1398,19 @@ static ReferencedOpenResult open_referenced_file(const char* path) {
 #endif
 }
 
+// `open?` is the optional counterpart of the strict `open` command.  It is
+// intentionally handled by the M61 runner instead of the interactive terminal:
+// launchers may offer a manual or another enhancement when its viewer exists,
+// while every mandatory program part continues to use strict `open`.
+static const char* optional_open_arguments(const char* line) {
+  static const char keyword[] = "open?";
+  const char* p = skip_spaces(line);
+  const usize length = sizeof(keyword) - 1U;
+  if(strncmp(p, keyword, length) != 0 ||
+     (!is_space(p[length]) && !is_line_end(p[length]))) return NULL;
+  return skip_spaces(p + length);
+}
+
 #if M61_TEXT_FONT_COMMAND
 static bool loadfont_arguments(const char* line, const char*& args) {
   static const char keyword[] = "loadfont";
@@ -1532,6 +1545,29 @@ static bool execute_script_line(const char* raw_line) {
   const char* line = skip_spaces(raw_line);
   if(is_line_end(*line)) return true;
   if(*line == ':') return true; // Метка — точка перехода, сама по себе ничего не делает
+
+  const char* optional_path = optional_open_arguments(line);
+  if(optional_path != NULL) {
+    if(is_line_end(*optional_path)) {
+      line_error_message = "optional open needs a path";
+      return false;
+    }
+    switch(open_referenced_file(optional_path)) {
+      case ReferencedOpenResult::OPENED:
+        return true;
+      case ReferencedOpenResult::STOPPED:
+        // ESC inside a nested interpreter still means that the user wants to
+        // leave the whole scenario, exactly as it does for strict `open`.
+        cancel();
+        lcd_std_display_redraw();
+        return true;
+      case ReferencedOpenResult::FAILED:
+        // Optional content must never poison a later strict command with its
+        // diagnostic.  The script deliberately asked to continue silently.
+        line_error_message = NULL;
+        return true;
+    }
+  }
 
 #if M61_TEXT_FONT_COMMAND
   const char* font_args = NULL;

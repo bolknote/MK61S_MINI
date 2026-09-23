@@ -354,7 +354,7 @@ def main():
     directory=ROOT/'programs/games/ELITE'
     parts=sorted(directory.glob('part[0-9][0-9].m61'))
     assert len(parts)==2 and not list(directory.glob('b[0-9][0-9].m61'))
-    expected=['open manual.md','reinit']+[f'open {p.name}' for p in parts]+['run']
+    expected=['open? manual.md','reinit']+[f'open {p.name}' for p in parts]+['run']
     assert (directory/'autoexec.m61').read_text().splitlines()==expected
     # The real M61/core loader decodes all zin records before every scenario;
     # its checked CRC must describe the complete linked bank image.
