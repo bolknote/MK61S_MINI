@@ -229,6 +229,8 @@ function Build-Mk61Bundle {
         '--focal', $Focal, '--basic', $Basic, '--wbmp', $Wbmp,
         '--markdown', $Markdown, '--chip8', $Chip8,
         '--local-float-math', $LocalFloatMath)
+    Test-RequiredFile (Join-Path (Join-Path $script:Stage 'System') `
+        'USBDISK.APP') 'mandatory USBDISK.APP; reinstall the MK61s board'
 
     $output = Join-Path ([IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))) $Bundle
     $outputSystem = Join-Path $output 'System'
@@ -246,6 +248,8 @@ function Build-Mk61Bundle {
             Remove-Item -LiteralPath $target -Force
         }
     }
+    Test-RequiredFile (Join-Path $outputSystem 'USBDISK.APP') `
+        'published USBDISK.APP'
     Remove-Mk61BundledUiFontLicenses -Output $output
     if ($uiFonts -eq '1') {
         Invoke-Mk61Python @(

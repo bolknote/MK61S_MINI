@@ -137,6 +137,8 @@ build_bundle() {
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
     --markdown "$markdown" --chip8 "$chip8" \
     --local-float-math "$local_float_math"
+  [ -s "$stage/System/USBDISK.APP" ] ||
+    die 'mandatory USBDISK.APP is missing; reinstall the MK61s board'
 
   local output_root output canonical
   output_root="$(cd "$sketch/.." && pwd)/binary"
@@ -151,6 +153,8 @@ build_bundle() {
       rm -f "$output/System/$canonical"
     fi
   done
+  [ -s "$output/System/USBDISK.APP" ] ||
+    die 'published USBDISK.APP is missing'
   rm -rf "$output/licenses/ui-fonts"
   if [ "$ui_fonts" -eq 1 ]; then
     python3 "$sketch/../tools/.fmk-font/package_ui_font_licenses.py" \

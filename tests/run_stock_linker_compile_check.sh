@@ -35,20 +35,20 @@ cp -R "$root/code/." "$sketch/"
 # Deliberately omit compiler.c.elf.extra_flags and therefore
 # mk61-portable.ld.  This is the direct Generic STM32F4 Arduino IDE path that
 # exposed strong undefined __mk61_dynamic_begin/end references under LTO.
-common_flags='-DMK61_BOARD_CLASSIC_V2 -DMK61_ENABLE_FOCAL=1 -DMK61_ENABLE_TINYBASIC=1 -DMK61_ENABLE_WBMP_VIEWER=1 -DMK61_ENABLE_MARKDOWN_VIEWER=1 -DMK61_ENABLE_CHIP8=1 -DMK61_ENABLE_USB_SCREEN=1 -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=1 -DMK61_USER_EXPLORER_SHORTCUT=1 -DMK61_MATH_BACKEND=1 -Werror -Wno-error=cpp'
+common_flags='-DMK61_BOARD_CLASSIC_V2 -DMK61_ENABLE_FOCAL=1 -DMK61_ENABLE_TINYBASIC=1 -DMK61_ENABLE_WBMP_VIEWER=1 -DMK61_ENABLE_MARKDOWN_VIEWER=1 -DMK61_ENABLE_CHIP8=1 -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=1 -DMK61_USER_EXPLORER_SHORTCUT=1 -DMK61_MATH_BACKEND=1 -Werror -Wno-error=cpp'
 platform_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 
 compile_case() {
   local label=$1 part=$2 maximum_size=$3 minimum_headroom=$4
   local path="$build_root/$label" log="$build_root/$label.log"
   local fqbn="STMicroelectronics:stm32:GenF4:pnum=$part,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto"
-  local case_flags="$common_flags"
-  # The 256-KiB F401 can carry the complete UC1609 proportional UI only with
-  # its shipping policy, which removes service-only diagnostics.  Keep the
-  # stock-linker probe representative of that public image while F411 still
-  # exercises the unrestricted developer configuration below.
+  local case_flags="$common_flags -DMK61_ENABLE_USB_SCREEN=1"
+  # The F401 public Classic/UC1609 profile uses its physical display and does
+  # not also carry the optional USB Screen framebuffer. The latter is still
+  # exercised by F411 below. Keeping it here tested an artificial all-features
+  # combination and eventually overflowed the 256-KiB stock linker layout.
   if [[ "$label" == F401 ]]; then
-    case_flags="$case_flags -DMK61_F401_PRODUCT_BUILD=1"
+    case_flags="$common_flags -DMK61_ENABLE_USB_SCREEN=0 -DMK61_F401_PRODUCT_BUILD=1"
   fi
   mkdir -p "$path"
   set +e
