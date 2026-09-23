@@ -1141,7 +1141,17 @@ void MK61Display::noteDisplayActivity(u32 now) {
   }
 }
 
-void MK61Display::pollOledProtection(u32 now) {
+void MK61Display::pollOledProtection(u32 now,
+                                     bool passive_calculator_wait) {
+  // The timeout protects a static calculator prompt, not an elapsed wall-clock
+  // period.  RUN, menus and applications may spend minutes without producing a
+  // key event, but they are active foreground work and must keep the panel on.
+  // Treating them as activity also gives the user a fresh complete timeout
+  // after returning to the calculator and wakes a panel that was already off.
+  if(!passive_calculator_wait) {
+    noteDisplayActivity(now);
+    return;
+  }
   if(oled_protection_state.poll(now) ==
      oled_protection::Transition::DISPLAY_OFF) {
     display_control &= (u8) ~LCD_DISPLAYON;

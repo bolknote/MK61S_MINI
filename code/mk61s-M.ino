@@ -1332,7 +1332,25 @@ void idle_main_process(void) {
   led::control();
   main_lcd().flush();
 #if defined(MK61_OLED1602_WS0010)
-  main_lcd().pollOledProtection(millis());
+  bool passive_calculator_wait =
+      input_focus == &mk61_baseloop_hook &&
+      core_61::is_CALC() &&
+      !core_61::edit_program &&
+      !lcd_hooked &&
+      !m61_text::active() &&
+      !m61_text::calculator_suspended() &&
+      !user_short_press_pending &&
+      !kbd::handoff_pending() &&
+      mk61_calculator_is_idle() &&
+      !kbd::any_key_pressed();
+  #if MK61_IDLE_WFI_SUPPORTED
+  // A modal program calls idle_main_process() recursively.  Its calculator
+  // state may happen to look idle, so only the real top-level calculator wait
+  // is eligible for the OLED inactivity timeout.
+  passive_calculator_wait = passive_calculator_wait &&
+      top_level_idle_sleep_permitted && idle_main_depth == 1;
+  #endif
+  main_lcd().pollOledProtection(millis(), passive_calculator_wait);
 #endif
   idle_signal_poll();
   // Единственная production reload-точка IWDG: все foreground-сервисы этого

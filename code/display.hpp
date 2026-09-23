@@ -178,7 +178,7 @@ class MK61Display : public Print {
     bool showWs0010ZeroRunTest(void);
     void configureOledProtection(oled_protection::Timeout timeout, u32 now);
     void noteDisplayActivity(u32 now);
-    void pollOledProtection(u32 now);
+    void pollOledProtection(u32 now, bool passive_calculator_wait);
     void setDisplayEnabled(bool enabled, u32 now);
     bool displayEnabled(void) const { return oled_protection_state.awake(); }
     bool internalPowerEnabled(void) const {

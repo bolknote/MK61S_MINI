@@ -823,12 +823,13 @@ void test_graphics_pack_clip_stream_and_damage(void) {
 }
 
 void test_oled_protection_state_machine(void) {
+  static constexpr u32 FIVE_MINUTES = 5UL * 60UL * 1000UL;
   oled_protection::State state;
   state.configure(oled_protection::Timeout::MINUTES_5, 100);
   assert(state.awake());
-  assert(state.poll(100 + 5UL * 60UL * 1000UL - 1) ==
+  assert(state.poll(100 + FIVE_MINUTES - 1) ==
          oled_protection::Transition::NONE);
-  assert(state.poll(100 + 5UL * 60UL * 1000UL) ==
+  assert(state.poll(100 + FIVE_MINUTES) ==
          oled_protection::Transition::DISPLAY_OFF);
   assert(!state.awake());
   assert(state.poll(0xFFFFFFFFu) == oled_protection::Transition::NONE);
@@ -839,6 +840,20 @@ void test_oled_protection_state_machine(void) {
   assert(state.poll(0x00000010u) == oled_protection::Transition::NONE);
   state.configure(oled_protection::Timeout::OFF, 123);
   assert(state.poll(0xFFFFFFFFu) == oled_protection::Transition::NONE);
+
+  // Foreground work is fed through activity(), even if it produces no key
+  // events.  It must restart the whole inactivity interval rather than merely
+  // postponing one poll, otherwise a long RUN blanks the OLED and the display
+  // goes dark immediately after a program finishes.
+  oled_protection::State running;
+  running.configure(oled_protection::Timeout::MINUTES_5, 1000);
+  assert(running.activity(1000 + FIVE_MINUTES) ==
+         oled_protection::Transition::NONE);
+  assert(running.awake());
+  assert(running.poll(1000 + 2 * FIVE_MINUTES - 1) ==
+         oled_protection::Transition::NONE);
+  assert(running.poll(1000 + 2 * FIVE_MINUTES) ==
+         oled_protection::Transition::DISPLAY_OFF);
 }
 
 void test_oled_settings_reserve_unqualified_brightness_bits(void) {
