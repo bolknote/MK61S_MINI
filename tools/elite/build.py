@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from game import create_game
+from game import create_game, check_layout
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'tools'))
@@ -24,6 +24,7 @@ def pack_parts(lines):
 
 def outputs():
     banks,info=create_game().link()
+    check_layout(info)
     image=b''.join(banks[bank] for bank in range(max(banks)+1))
     parts={OUT/f'part{i:02d}.m61':text for i,text in enumerate(pack_parts(program_lines(image)))}
     files=dict(parts)

@@ -6,15 +6,14 @@ from economy import dynamic_get
 def add_combat(a):
     m=a.module(13,'combat')
     m.label('combat_input').ld(0).n(10).op('-').jneg('set_view')
-    m.ld(0).n(80).op('-').jge('choose_target')
-    m.ld(0).n(16).op('-').jneg('fight_command')
-    m.ld(0).n(20).op('-').jneg('set_view')
-    m.label('fight_command').ld(0).n(10).op('/','int').st(1)
-    m.ld(1).n(5).op('-').jge('bad_action')
-    m.ld(0).call('mod10').st(2).jz('bad_action')
-    m.ld(2).n(5).op('-').jge('bad_action').jump('fight')
-    m.label('choose_target').ld(0).n(86).op('-').jge('bad_action')
-    m.ld(0).n(80).op('-').st(1).call('target_hp').jz('bad_action').st(8)
+    m.n(70).op('-').jge('choose_target')
+    m.n(64).op('+').jneg('fight_command')
+    m.n(4).op('-').jneg('set_view')
+    m.label('fight_command').ld(0).st(2).raw(0x0C).st(2).jz('bad_action')
+    m.n(5).op('-').jge('bad_action')
+    m.ld(0).ld(2).op('-').n(10).op('/').st(1).n(5).op('-').jge('bad_action').jump('fight')
+    m.label('choose_target').n(6).op('-').jge('bad_action')
+    m.n(6).op('+').st(1).call('target_hp').jz('bad_action').st(8)
     m.label('store_target').ld(1).st(5).put(27,5)
     m.ld(1).call('glyph').n(65).op('+').st(7).set('A',16).op('ret')
 
@@ -49,14 +48,14 @@ def add_combat(a):
     # enemy_hit already returned carrier hull and escape charge.
     m.ld('D').ld(6).op('+').jz('won')
     m.ld('E').n(4).op('-').jge('escaped').set('A',16).op('ret')
-    m.label('won').visit(24,'reward').visit(25,'count_kill').set(9,3).ptr('A','victory').op('ret')
-    m.label('escaped').set(9,3).ptr('A','escape').op('ret')
-    m.label('lost').set(9,4).ptr('A','defeat').op('ret')
+    m.label('won').visit(24,'reward').visit(25,'count_kill').ptr(9,'result_input_entry',lift=False).ptr('A','victory').op('ret')
+    m.label('escaped').ptr(9,'result_input_entry',lift=False).ptr('A','escape').op('ret')
+    m.label('lost').ptr(9,'new_game',lift=False).ptr('A','defeat').op('ret')
 
     m=a.module(14,'weapons')
     # PILOT callback: action RC, laser damage RD, incoming RE
     # -> player hull RC, outgoing shot RD. Shield boost precedes the hit.
-    m.label('weapon').ld(7).n(10).op('-').call('max0').st(7)
+    m.label('weapon').ld(7).n(10).op('-').max0().st(7)
     m.ld('C').n(1).op('-').jz('laser')
     m.n(1).op('-').jz('missile')
     m.n(1).op('-').jnz('no_shot')
@@ -66,10 +65,8 @@ def add_combat(a):
     m.label('missile').add(7,10).set('C',45)
     m.label('weapon_done').ld('C').st('D').ld('E').st('C')
     m.label('player_hit').ld(5).ld('C').op('-').st(5).jge('shield_holds')
-    m.ld(4).ld(5).op('+').call('max0').st(4).set(5,0)
+    m.ld(4).ld(5).op('+').max0().st(4).set(5,0)
     m.label('shield_holds').add(3,1).ld(4).st('C').op('ret')
-    m.label('max0').jge('positive').n(0)
-    m.label('positive').op('ret')
     m.label('reward').add(0,250).n(99999999).op('-').jneg('reward_done').set(0,99999999)
     m.label('reward_done').op('ret')
     m.label('count_kill').add(8,1).op('ret')
@@ -78,29 +75,30 @@ def add_combat(a):
     # COMBAT callback: maneuver RC, action RD. Return target RC, range RD,
     # carrier's pre-hit attack RE, launch flag RF, laser damage RB.
     # All shots are simultaneous.
-    m.label('enemy_tick').ld('C').st(3).n(4).op('-').jz('motion_ready')
-    m.ld('C').n(2).op('-').jz('motion_ready').n(2).op('*').ld(2).op('+').call('max0').st(2)
+    m.label('enemy_tick').ld('C').st(4).n(4).op('-').jz('motion_ready')
+    m.n(2).op('+').jz('motion_ready').n(2).op('*').ld(2).op('+').max0().st(2)
     m.n(99).ld(2).op('-').jge('motion_ready').set(2,99)
     m.label('motion_ready').ld('D').n(4).op('-').jnz('charge_reset')
     m.add(6,1).jump('charge_ready')
     m.label('charge_reset').set(6,0)
     m.label('charge_ready').set('E',0).set('F',0).ld(1).jz('enemy_ready')
     m.ld(7).st('E') # fixed carrier attack, prepared at contact
-    # R4 counts 3,2,1 until a live carrier launches; no general remainder.
+    # R3 counts 3,2,1 until a live carrier launches; no general remainder.
     m.ld(0).n(4).op('-').jnz('enemy_ready')
-    m.ld(4).n(1).op('-').st(4).jnz('enemy_ready').set(4,3).set('F',1)
+    m.branch(0x5A,'enemy_ready').set(3,3).set('F',1)
     m.label('enemy_ready').ld(8).ld(2).op('-').st('B').ld(5).st('C').ld(2).st('D').op('ret')
     # RE arrives from drone_tick with the selected drone's remaining hull.
     # Return selected hull RC, carrier hull RD, escape charge RE.
-    m.label('enemy_hit').ld(5).jnz('enemy_hit_done').ld(1).ld('C').op('-').call('max0').st(1).st('E')
+    m.label('enemy_hit').ld(5).jnz('enemy_hit_done').ld(1).ld('C').op('-').max0().st(1).st('E')
     m.label('enemy_hit_done').ld('E').st('C').ld(1).st('D').ld(6).st('E').op('ret')
     # DRONES callback: shot RC, target RD, launch RE. R0..4 are hulls;
-    # the formation shares the carrier's range. R5 total launched, R6 alive.
-    m.label('drone_tick').ld('E').jz('drones_hit').ld(5).n(5).op('-').jge('drones_hit')
-    m.ld(5).st('B').n(18).raw(0xBB).add(5,1).add(6,1)
+    # the formation shares the carrier's range. R5 last launched index,
+    # R6 alive. K STO 5 increments R5 before writing the next drone's hull.
+    m.label('drone_tick').ld('E').jz('drones_hit').ld(5).n(4).op('-').jge('drones_hit')
+    m.n(18).raw(0xB5).add(6,1)
     m.label('drones_hit').ld('D').jz('drones_ready')
     m.n(1).op('-').st('B').raw(0xDB).st('E').jz('drones_ready')
-    m.ld('C').op('-').call('max0').raw(0xBB).st('E').jnz('drones_ready').add(6,-1)
+    m.ld('C').op('-').max0().raw(0xBB).st('E').jnz('drones_ready').add(6,-1)
     m.label('drones_ready').ld(6).st('D').op('ret')
 
     m=a.module(16,'combat views')

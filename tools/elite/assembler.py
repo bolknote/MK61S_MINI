@@ -63,6 +63,9 @@ class Item:
     value: object
     target: str = ''
     short: bool = False
+    digits: int = 4
+    negate: bool = False
+    lift: bool = True
 
 class Module:
     def __init__(self, bank, name):
@@ -79,15 +82,22 @@ class Module:
         return self.raw(*(OP[n] for n in names))
 
     def n(self, n):
-        return self.raw(0x0E,*(int(c) for c in str(abs(int(n)))),*([0x0B] if n<0 else []))
+        # Push a literal; callers with a dead X can explicitly clear it.
+        digits=str(abs(int(n)))
+        zeros=len(digits)-len(digits.rstrip('0')) if n else 0
+        raw=[int(c) for c in digits]
+        if zeros>2:raw=[*(int(c) for c in digits[:-zeros]),0x0C,*(int(c) for c in str(zeros))]
+        return self.raw(0x0E,*raw,*([0x0B] if n<0 else []))
 
     def ld(self, r): return self.raw(0x60 + reg(r))
     def st(self, r): return self.raw(0x40 + reg(r))
     def set(self, r, value):
-        return (self.op('cx') if value==0 else self.n(value)).st(r)
+        return (self.op('cx') if value==0 else self.raw(*(int(c) for c in str(abs(int(value)))),*([0x0B] if value<0 else []))).st(r)
     def add(self, r, value): return self.ld(r).n(value).op('+').st(r)
-    def ptr(self, r, label):
-        self.items.append(Item('ptr', reg(r), label)); return self
+    def ptr(self, r, label, negate=False, lift=True):
+        # lift=False is an assignment: the caller guarantees closed number
+        # entry and a dead prior X. A negative pointer can also be a flag.
+        self.items.append(Item('ptr', reg(r), label, negate=negate, lift=lift)); return self
     def branch(self, opcode, label):
         self.items.append(Item('branch', opcode, label)); return self
     def call(self, label): return self.branch(0x53, label)
@@ -104,9 +114,14 @@ class Module:
     def putn(self, bank, field, value): return self.n(value).put(bank,field)
     def visit(self, bank, callback):
         return self.ptr('F',callback).far(0x53,bank*112+CALL)
+    def max0(self):
+        target=f'clamp0_{self.bank}_{len(self.items)}'
+        return self.jge(target).op('cx').label(target)
+
     def mod(self, n):
+        # RC is scratch. X2 retains the divisor while RC holds the quotient.
         # Fraction extraction loses low bits on the eight-digit calculator.
-        return self.op('enter').n(n).op('/','int').n(n).op('*','-')
+        return self.op('enter').n(n).op('/','int').st('C').raw(0x0A).ld('C').op('*','-')
 
 class Assembler:
     def __init__(self):
@@ -165,7 +180,7 @@ class Assembler:
         if item.kind=='bytes':return len(item.value)
         if item.kind=='branch':
             return 2 if item.short else 4
-        return {'label':0,'ptr':6}[item.kind]
+        return 1+item.digits+int(item.negate)+int(item.lift) if item.kind=='ptr' else 0
 
     def layout(self):
         labels, placements, bridges, usage = {}, [], [], {}
@@ -194,7 +209,7 @@ class Assembler:
                         # Address bytes are operands, even when one is 52.
                         ends_flow=((len(value)==4 and value[1]==0x51) or
                                    (len(value)==2 and 0x80<=value[1]<=0x8F))
-                    else:ends_flow=value[-1]==0x52
+                    else:ends_flow=value[-1]==0x52 or (len(value)==1 and 0x80<=value[0]<=0x8F)
                 if offset+remaining > 112 and offset+size > (112 if ends_flow else 108):
                     fits=[i for i,(_,o) in enumerate(free) if 112-o>=size+(4 if remaining>112-o else 0)]
                     if not fits: raise ValueError(f'bank budget exceeded in {module.name}')
@@ -230,6 +245,8 @@ class Assembler:
             labels,placements,bridges,usage=self.layout()
             changed=False
             for address,item in placements:
+                if item.kind=='ptr' and item.digits<len(str(labels[item.target])):
+                    item.digits=len(str(labels[item.target]));changed=True
                 if item.kind=='branch':
                     desired=address//112==labels[item.target]//112
                     if item.short and not desired:
@@ -246,6 +263,7 @@ class Assembler:
         """
         result=self.expand_branches()
         branches=[i for m in self.modules for i in m.items if i.kind=='branch']
+        pointers=[i for m in self.modules for i in m.items if i.kind=='ptr']
         def cost(layout):
             return sum(self.size(i) for _,i in layout[1])+4*len(layout[2])
         while True:
@@ -255,12 +273,14 @@ class Assembler:
                         not i.short and address//112==labels[i.target]//112]
             for candidate in candidates:
                 flags=[i.short for i in branches]
+                widths=[i.digits for i in pointers]
                 candidate.short=True
                 try:trial=self.expand_branches()
                 except ValueError:trial=None
                 if trial is not None and cost(trial)<baseline_cost:
                     result=trial;break
                 for item,short in zip(branches,flags):item.short=short
+                for item,width in zip(pointers,widths):item.digits=width
             else:return result
 
     def link(self):
@@ -269,6 +289,7 @@ class Assembler:
         for m in self.modules:
             for i in m.items:
                 if i.kind=='branch':i.short=True
+                if i.kind=='ptr':i.digits=1
         labels,placements,bridges,usage=self.relax_branches()
         banks={b:bytearray(112) for b in usage}
         occupied=set()
@@ -279,6 +300,7 @@ class Assembler:
             occupied.update(positions)
         for b,values in self.data.items():
             banks.setdefault(b,bytearray(112))
+            usage.setdefault(b,['data',DATA_END])
             claim(b*112,DATA_END)
             banks[b][:DATA_END]=data_page(values)
         for address,target in bridges:
@@ -286,7 +308,7 @@ class Assembler:
             banks[address//112][address%112:address%112+4]=bytes([0x1F,0x51,*bcd(target)])
         for address,item in placements:
             if item.kind=='bytes': value=item.value
-            elif item.kind=='ptr': value=[0x0E,*map(int,f'{labels[item.target]:04d}'),0x40+item.value]
+            elif item.kind=='ptr': value=[*([0x0E] if item.lift else []),*map(int,f'{labels[item.target]:0{item.digits}d}'),*([0x0B] if item.negate else []),0x40+item.value]
             elif item.short:
                 offset=labels[item.target]%112
                 value=[item.value,(offset//10)*16+offset%10]

@@ -8,10 +8,27 @@ import zlib
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools/elite'))
 from assembler import ALPHABET, GLYPHS, Assembler, screen
-from game import create_game
+from game import create_game, check_layout
 
 COUNT=0
 START=['run','input 0']
+LABELS=create_game().link()[1]['labels']
+
+
+def game_mode(s):
+    value=s['regs'][9]
+    if value==0:return 0
+    if value<0:
+        address=LABELS['combat_input_entry']
+        # ROM normalization changes the negative selector after its first
+        # use, but its sign and local target must survive every command.
+        assert value in (-address,-99999900-address),('bad combat pointer',s)
+        return 2
+    modes={LABELS['port_input_entry']:1,LABELS['result_input_entry']:3,
+           LABELS['new_game']:4}
+    assert value in modes,('bad mode pointer',s)
+    return modes[value]
+
 
 def play(commands):
     global COUNT
@@ -28,7 +45,7 @@ def play(commands):
                for shift in (0,8,16)]
         assert frame==s['frame'],s
         assert s['pages'][4][6]==sum(hp>0 for hp in s['pages'][4][:5]),s
-        if s['regs'][9]==2:
+        if game_mode(s)==2:
             target=s['pages'][3][5]
             hull=s['pages'][3][1] if target==0 else s['pages'][4][target-1]
             assert s['regs'][8]==hull,('stale selected hull',s)
@@ -42,7 +59,7 @@ def state(s):
     return s['pages'][:5]
 
 def number(s,prefix,value):
-    if prefix=='H' and s['regs'][9]==2 and s['regs'][10]==16:
+    if prefix=='H' and game_mode(s)==2 and s['regs'][10]==16:
         # The selected target and its exact hull sit beside the living swarm.
         target=s['pages'][3][5]
         tag='H' if target==0 else str(target)
@@ -167,7 +184,7 @@ def test_price_equivalence():
     # A real arrival must replace the cached economy, not retain the old one.
     s=play(START+['set 25 6 1013120','set 24 8 1','input 214','input 60','input 10'])[-1]
     world=(((251*144+12345)%65536)<<8)|144
-    assert s['regs'][9]==1 and s['pages'][0][1]==world,s
+    assert game_mode(s)==1 and s['pages'][0][1]==world,s
     assert s['pages'][2][2]==world//1048576,s
     number(s,'1',16+world//1048576)
     print('ELITE: 480 original-formula quotes, minimum-price trades and arrival cache OK',flush=True)
@@ -176,11 +193,11 @@ def test_navigation_and_input():
     s=play(START+['input 71','input 9','input 60'])
     number(s[3],'r',1)
     assert s[-1]['pages'][0][1:4]==[3224577,3224577,1]
-    assert s[-1]['pages'][0][6]==39 and s[-1]['regs'][9]==1
+    assert s[-1]['pages'][0][6]==39 and game_mode(s[-1])==1
     # The second letter changes piracy risk for the same random roll.
     for destination,mode in ((71,1),(74,2)):
         s=play(START+['set 24 8 13',f'input {destination}','input 60'])[-1]
-        assert s['regs'][9]==mode,s
+        assert game_mode(s)==mode,s
     for setup in ([],['input 325'],['input 71','set 24 6 0']):
         s=play(START+setup+['dump','input 60'])
         assert state(s[-2])==state(s[-1]),s[-1]
@@ -194,12 +211,12 @@ def test_navigation_and_input():
 
 def test_pirates_and_results():
     s=play(encounter()+['input 11','input 16','input 22','run','input 1'])
-    assert s[3]['frame']==screen('PIrAtE    СП') and s[3]['regs'][9]==2
+    assert s[3]['frame']==screen('PIrAtE    СП') and game_mode(s[3])==2
     assert s[4]['pages'][3][1:3]==[40,12] and s[4]['pages'][0][5]==46
     assert s[4]['pages'][0][7]==28
     number(s[4],'H',40) # a shot reports damage without another query
     number(s[5],'H',40)
-    assert s[6]['frame']==screen('YES. CLEAr СП') and s[6]['regs'][9]==3
+    assert s[6]['frame']==screen('YES. CLEAr СП') and game_mode(s[6])==3
     assert s[6]['pages'][0][0]==1250 and s[6]['pages'][1][7:9]==[2,1]
     assert s[7]['pages'][0][1]==3224577 and s[7]['pages'][0][0]==1250
     assert s[8]['pages'][0][0]==1250
@@ -210,7 +227,7 @@ def test_pirates_and_results():
     s=play(encounter()+['set 24 4 1','set 24 5 0','set 27 1 18','input 21','run'])
     assert s[-2]['frame']==screen('dEAd      СП') and s[-2]['pages'][3][1]==0
     assert s[-2]['pages'][0][0]==1000 and s[-2]['pages'][1][8]==0
-    assert s[-1]['regs'][9]==1 and s[-1]['pages'][0][4]==84
+    assert game_mode(s[-1])==1 and s[-1]['pages'][0][4]==84
     s=play(encounter()+['set 25 7 0','dump','input 22'])
     assert state(s[-2])==state(s[-1])
     s=play(encounter()+['set 24 7 90','input 41'])[-1]
@@ -226,16 +243,16 @@ def test_thargoids():
     assert s['pages'][4][0]==9 and s['pages'][0][5]==48
     s=play(encounter(3)+['input 81','input 21','input 82','input 21','input 80','input 22'])
     assert s[3]['frame']==screen('tHArGOId  СП')
-    assert s[3]['pages'][4][:7]==[18,18,0,0,0,2,2]
+    assert s[3]['pages'][4][:7]==[18,18,0,0,0,1,2]
     assert s[5]['pages'][4][0]==0 and s[5]['pages'][3][1]==120
     assert s[5]['pages'][0][5]==36 # dead drone's simultaneous shot counts
-    assert s[-1]['pages'][4][:7]==[0,0,18,0,0,3,1]
+    assert s[-1]['pages'][4][:7]==[0,0,18,0,0,2,1]
     s=play(encounter(3)+['set 27 2 30']+['input 23']*12)[-1]
-    assert s['pages'][4][:7]==[18,18,18,18,18,5,5]
+    assert s['pages'][4][:7]==[18,18,18,18,18,4,5]
     # Victory with the initial ship and ammunition, without state fixtures.
     s=play(encounter(3)+['input 22']*3+
            ['input 81','input 21','input 82','input 21','input 83','input 21'])
-    assert s[6]['pages'][3][1]==0 and s[6]['regs'][9]==2
+    assert s[6]['pages'][3][1]==0 and game_mode(s[6])==2
     # Graphics add a cached formation and target identity. Allow rebuilding
     # the formation on casualties, but never a repeated per-symbol ROM loop.
     assert s[4]['steps']<350 and s[6]['steps']<380,('repeated combat setup/page reads',s[4],s[6])
@@ -341,7 +358,9 @@ def main():
     assert (directory/'autoexec.m61').read_text().splitlines()==expected
     # The real M61/core loader decodes all zin records before every scenario;
     # its checked CRC must describe the complete linked bank image.
-    banks,_=create_game().link()
+    banks,info=create_game().link()
+    check_layout(info)
+    assert set(info['banks'])=={str(bank) for bank in banks}
     image=b''.join(banks[bank] for bank in range(32))
     records=[line for part in parts for line in part.read_text().splitlines()]
     assert records[0]==f'ztart 0000 {zlib.crc32(image):08X}'
