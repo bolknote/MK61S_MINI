@@ -188,13 +188,35 @@ jobs:
               [string]::IsNullOrWhiteSpace($originalSketchbook)) {
             throw 'Cannot read Arduino IDE sketchbook configuration'
           }
+          $originalData = (& arduino-cli config get directories.data |
+            Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or
+              [string]::IsNullOrWhiteSpace($originalData)) {
+            throw 'Cannot read Arduino IDE data-directory configuration'
+          }
           $configuredSketchbook = Join-Path $env:RUNNER_TEMP `
             'Arduino IDE Роман'
-          & arduino-cli config set directories.user $configuredSketchbook
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $ideConfigDirectory = Join-Path $env:USERPROFILE '.arduinoIDE'
+          $ideConfig = Join-Path $ideConfigDirectory 'arduino-cli.yaml'
+          [IO.Directory]::CreateDirectory($ideConfigDirectory) | Out-Null
+
+          function Write-IdeConfig([string]$Sketchbook) {
+            $quotedData = "'" + $originalData.Replace("'", "''") + "'"
+            $quotedUser = "'" + $Sketchbook.Replace("'", "''") + "'"
+            [IO.File]::WriteAllLines($ideConfig, [string[]]@(
+              'directories:',
+              "  data: $quotedData",
+              "  user: $quotedUser"
+            ), [Text.UTF8Encoding]::new($false))
+          }
+
+          # Arduino CLI and Arduino IDE use different default config locations
+          # on the runner.  Write the real IDE file that our installer reads.
+          Write-IdeConfig $configuredSketchbook
           & ./tools/mk61-arduino-board.cmd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $boards = (& arduino-cli board listall | Out-String)
+          $boards = (& arduino-cli --config-file $ideConfig board listall |
+            Out-String)
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (-not $boards.Contains('mk61:stm32:mk61_f401_app')) {
             throw (
@@ -204,8 +226,7 @@ jobs:
 
           # Restore the sketchbook containing the pinned libraries before the
           # full recipe build, and install the board there as an IDE user does.
-          & arduino-cli config set directories.user $originalSketchbook
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-IdeConfig $originalSketchbook
           & ./tools/mk61-arduino-board.cmd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
