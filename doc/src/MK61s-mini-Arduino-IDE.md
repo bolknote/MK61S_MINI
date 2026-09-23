@@ -53,8 +53,11 @@ tools\mk61-arduino-board.cmd
 ```
 
 Это полиглотный launcher: в macOS/Linux он запускает shell-установщик, а в
-Windows — PowerShell. Он копирует маленький пакет платы в стандартный
-sketchbook и ничего не загружает из сети.
+Windows — PowerShell. Он копирует маленький пакет платы в sketchbook и ничего
+не загружает из сети. В Windows установщик читает фактический
+`directories.user` из `%USERPROFILE%\.arduinoIDE\arduino-cli.yaml`, поэтому
+перенесённый sketchbook и каталог Documents под OneDrive не требуют ручной
+догадки. В выводе команды всегда напечатаны выбранный путь и его источник.
 
 Если sketchbook перенесён из стандартного каталога:
 
@@ -77,8 +80,13 @@ tools\mk61-arduino-board.cmd -Check
 ```
 
 После обновления репозитория запустите установщик ещё раз: установленная плата
-является копией служебных файлов. Затем запустите или перезапустите Arduino
-IDE.
+является копией служебных файлов. Перед установкой закройте все окна Arduino
+IDE, после неё запустите IDE заново.
+
+`MK61s F401 + APP` — вручную установленная плата, поэтому её не будет в
+Boards Manager. В Boards Manager должен быть виден только зависимый пакет
+`STM32 MCU based boards 2.12.0`. Саму плату ищите по точному имени в Board
+Selector либо через `Tools → Board → Select Other Board and Port`.
 
 ## Выбор профиля
 
@@ -213,7 +221,7 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 
 | Сообщение | Что проверить |
 | --- | --- |
-| Плата не видна | Перезапустить IDE; повторить установщик с правильным sketchbook. |
+| Плата не видна | Закрыть все окна IDE, повторить установщик и сверить напечатанный sketchbook с `File → Preferences → Sketchbook location`; после запуска искать `MK61s F401 + APP` в Board Selector/`Tools → Board`, а не в Boards Manager. |
 | `LiquidCrystal.h: No such file` | Установить `LiquidCrystal 1.0.7` через Library Manager. |
 | Не найден `STM32duino RTC` | Установить `STM32duino RTC 1.9.0`. |
 | `incompatible platform/display pair` | Выбрать LCD для mini либо UC1609 для Classic/40th. |

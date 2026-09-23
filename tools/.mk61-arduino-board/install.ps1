@@ -8,6 +8,105 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+$requiredStm32Core = '2.12.0'
+
+function ConvertFrom-ArduinoYamlScalar {
+    param([string]$Value)
+
+    $result = $Value.Trim()
+    if ($result.Length -lt 2) {
+        return $result
+    }
+    $first = $result.Substring(0, 1)
+    $last = $result.Substring($result.Length - 1, 1)
+    if ($first -eq "'" -and $last -eq "'") {
+        return $result.Substring(1, $result.Length - 2).Replace("''", "'")
+    }
+    if ($first -eq '"' -and $last -eq '"') {
+        try {
+            return (ConvertFrom-Json -InputObject $result)
+        } catch {
+            return $result.Substring(1, $result.Length - 2)
+        }
+    }
+    return $result
+}
+
+function Get-ArduinoConfigDirectory {
+    param(
+        [string]$ConfigPath,
+        [string]$Name
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ConfigPath) -or
+        -not [IO.File]::Exists($ConfigPath)) {
+        return $null
+    }
+
+    $insideDirectories = $false
+    $pattern = '^\s+' + [regex]::Escape($Name) + ':\s*(.*?)\s*$'
+    foreach ($line in [IO.File]::ReadAllLines($ConfigPath)) {
+        if ($line -match '^directories:\s*$') {
+            $insideDirectories = $true
+            continue
+        }
+        if ($insideDirectories -and $line -match '^\S') {
+            break
+        }
+        if ($insideDirectories -and $line -match $pattern) {
+            return ConvertFrom-ArduinoYamlScalar $Matches[1]
+        }
+    }
+    return $null
+}
+
+function Get-ArduinoIdeConfigPath {
+    if (-not [string]::IsNullOrWhiteSpace(
+        $env:MK61_ARDUINO_CONFIG_FILE)) {
+        return [IO.Path]::GetFullPath($env:MK61_ARDUINO_CONFIG_FILE)
+    }
+    $profile = [Environment]::GetFolderPath('UserProfile')
+    if ([string]::IsNullOrWhiteSpace($profile)) {
+        return $null
+    }
+    return Join-Path $profile '.arduinoIDE\arduino-cli.yaml'
+}
+
+function Get-DefaultArduinoDataDirectory {
+    param([string]$ConfigPath)
+
+    $configured = Get-ArduinoConfigDirectory $ConfigPath 'data'
+    if (-not [string]::IsNullOrWhiteSpace($configured)) {
+        return [IO.Path]::GetFullPath($configured)
+    }
+    $localData = [Environment]::GetFolderPath('LocalApplicationData')
+    if ([string]::IsNullOrWhiteSpace($localData)) {
+        return $null
+    }
+    return Join-Path $localData 'Arduino15'
+}
+
+function Write-Stm32CoreStatus {
+    param([string]$DataDirectory)
+
+    if ([string]::IsNullOrWhiteSpace($DataDirectory)) {
+        Write-Host ("WARNING: cannot locate Arduino IDE data directory; " +
+                    "cannot verify STM32 core $requiredStm32Core.")
+        return
+    }
+    $corePath = Join-Path $DataDirectory (
+        "packages\STMicroelectronics\hardware\stm32\$requiredStm32Core")
+    if ([IO.File]::Exists((Join-Path $corePath 'platform.txt'))) {
+        Write-Host "STM32 MCU based boards $requiredStm32Core found in:"
+        Write-Host "  $corePath"
+        return
+    }
+    Write-Host ("WARNING: STM32 MCU based boards $requiredStm32Core was not " +
+                "found in:")
+    Write-Host "  $DataDirectory"
+    Write-Host ('Install that exact version in Arduino IDE Boards Manager ' +
+                'before compiling.')
+}
 
 function Show-Usage {
     @'
@@ -23,7 +122,8 @@ Options:
   -Help            show this help
 
 The installer does not install Arduino CLI.  The STM32 MCU based boards core
-2.12.0 must be installed from Arduino IDE's Boards Manager.
+2.12.0 must be installed from Arduino IDE's Boards Manager.  The MK61s board
+itself appears in Board Selector / Tools > Board, not in Boards Manager.
 '@ | Write-Host
 }
 
@@ -48,18 +148,31 @@ try {
         Show-Usage
         exit 0
     }
+    $configPath = Get-ArduinoIdeConfigPath
+    $sketchbookSource = 'command line'
     if ([string]::IsNullOrWhiteSpace($Sketchbook)) {
         if (-not [string]::IsNullOrWhiteSpace(
             $env:MK61_ARDUINO_SKETCHBOOK)) {
             $Sketchbook = $env:MK61_ARDUINO_SKETCHBOOK
+            $sketchbookSource = 'MK61_ARDUINO_SKETCHBOOK'
         } else {
-            $documents = [Environment]::GetFolderPath('MyDocuments')
-            if ([string]::IsNullOrWhiteSpace($documents)) {
-                throw 'Cannot locate the Windows Documents directory.'
+            $configuredSketchbook = Get-ArduinoConfigDirectory `
+                $configPath 'user'
+            if (-not [string]::IsNullOrWhiteSpace($configuredSketchbook)) {
+                $Sketchbook = $configuredSketchbook
+                $sketchbookSource = $configPath
+            } else {
+                $documents = [Environment]::GetFolderPath('MyDocuments')
+                if ([string]::IsNullOrWhiteSpace($documents)) {
+                    throw 'Cannot locate the Windows Documents directory.'
+                }
+                $Sketchbook = Join-Path $documents 'Arduino'
+                $sketchbookSource = 'Windows Documents fallback'
             }
-            $Sketchbook = Join-Path $documents 'Arduino'
         }
     }
+    $Sketchbook = [IO.Path]::GetFullPath($Sketchbook)
+    $dataDirectory = Get-DefaultArduinoDataDirectory $configPath
 
     $sourcePlatform = Join-Path $PSScriptRoot 'hardware\mk61\stm32'
     $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -69,6 +182,8 @@ try {
         if (Test-InstalledPlatform $target) {
             Write-Host 'MK61s F401 + APP is installed in:'
             Write-Host "  $target"
+            Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
+            Write-Stm32CoreStatus $dataDirectory
             exit 0
         }
         [Console]::Error.WriteLine(
@@ -111,9 +226,14 @@ try {
 
     Write-Host 'MK61s F401 + APP installed in:'
     Write-Host "  $target"
-    Write-Host ('Restart Arduino IDE, then select Tools > Board > ' +
-                'MK61s F401 + APP.')
-    Write-Host 'STM32 MCU based boards core 2.12.0 is required.'
+    Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
+    Write-Stm32CoreStatus $dataDirectory
+    Write-Host 'Close every Arduino IDE window, then start Arduino IDE again.'
+    Write-Host ('Open Board Selector (or Tools > Board > Select Other Board ' +
+                'and Port) and search for the exact name:')
+    Write-Host '  MK61s F401 + APP'
+    Write-Host ('Do not search for this manually installed board in Boards ' +
+                'Manager; only the STM32 core is listed there.')
 } catch {
     [Console]::Error.WriteLine("MK61s Arduino board: $($_.Exception.Message)")
     exit 1

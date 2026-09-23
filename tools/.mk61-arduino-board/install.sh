@@ -22,7 +22,8 @@ Options:
   -h, --help        show this help
 
 The installer does not install Arduino CLI.  The STM32 MCU based boards core
-2.12.0 must be installed from Arduino IDE's Boards Manager.
+2.12.0 must be installed from Arduino IDE's Boards Manager.  The MK61s board
+itself appears in Board Selector / Tools > Board, not in Boards Manager.
 EOF
 }
 

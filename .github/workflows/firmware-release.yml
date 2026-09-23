@@ -182,6 +182,30 @@ jobs:
       - name: Install MK61 Arduino board
         shell: pwsh
         run: |
+          $originalSketchbook = (& arduino-cli config get directories.user |
+            Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or
+              [string]::IsNullOrWhiteSpace($originalSketchbook)) {
+            throw 'Cannot read Arduino IDE sketchbook configuration'
+          }
+          $configuredSketchbook = Join-Path $env:RUNNER_TEMP `
+            'Arduino IDE Роман'
+          & arduino-cli config set directories.user $configuredSketchbook
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & ./tools/mk61-arduino-board.cmd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $boards = (& arduino-cli board listall | Out-String)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not $boards.Contains('mk61:stm32:mk61_f401_app')) {
+            throw (
+              'MK61 board is not visible from the configured Unicode ' +
+              'Arduino IDE sketchbook')
+          }
+
+          # Restore the sketchbook containing the pinned libraries before the
+          # full recipe build, and install the board there as an IDE user does.
+          & arduino-cli config set directories.user $originalSketchbook
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & ./tools/mk61-arduino-board.cmd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

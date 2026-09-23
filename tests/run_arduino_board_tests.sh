@@ -19,6 +19,7 @@ bash -n "$hook"
 grep -q 'MK61s F401 + APP' "$work/help.txt"
 grep -q -- '--sketchbook DIR' "$work/help.txt"
 grep -q 'does not install Arduino CLI' "$work/help.txt"
+grep -q 'not in Boards Manager' "$work/help.txt"
 
 shell_sketchbook="$work/shell-sketchbook"
 "$launcher" --sketchbook "$shell_sketchbook" > "$work/install.txt"
@@ -126,6 +127,34 @@ if command -v pwsh >/dev/null 2>&1; then
       "$ps_sketchbook/hardware/mk61/stm32/boards.txt"
   cmp "$platform/tools/mk61-app-upload.ps1" \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-upload.ps1"
+
+  # Arduino IDE 2 stores its real sketchbook in arduino-cli.yaml.  This is
+  # commonly different from Documents\Arduino on Windows because of OneDrive
+  # or an explicit preference.  Also exercise a Cyrillic user path.
+  ps_config="$work/arduino-cli.yaml"
+  ps_config_sketchbook="$work/Arduino Роман"
+  ps_config_data="$work/Arduino15 Роман"
+  mkdir -p \
+    "$ps_config_data/packages/STMicroelectronics/hardware/stm32/2.12.0"
+  : > "$ps_config_data/packages/STMicroelectronics/hardware/stm32/2.12.0/platform.txt"
+  cat > "$ps_config" <<EOF
+directories:
+    data: $ps_config_data
+    user: $ps_config_sketchbook
+locale: en
+EOF
+  MK61_ARDUINO_CONFIG_FILE="$ps_config" \
+    pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+      > "$work/install-configured-ps.txt"
+  cmp "$platform/boards.txt" \
+      "$ps_config_sketchbook/hardware/mk61/stm32/boards.txt"
+  grep -Fq 'Arduino IDE sketchbook source:' \
+      "$work/install-configured-ps.txt"
+  grep -Fq 'arduino-cli.yaml' "$work/install-configured-ps.txt"
+  grep -Fq 'STM32 MCU based boards 2.12.0 found in:' \
+      "$work/install-configured-ps.txt"
+  grep -Fq 'Do not search for this manually installed board in Boards Manager' \
+      "$work/install-configured-ps.txt"
   mock_build="$work/mock-build"
   mock_system="$mock_build/mk61-system-apps/mk61s-M-classic-v2-uc1609-f401/System"
   mock_device="$work/mock-device"
