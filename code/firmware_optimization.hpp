@@ -127,4 +127,22 @@
   #error "MK61_CORE_NATIVE_HOT_PATHS must be 0 or 1"
 #endif
 
+// Partially evaluate the fixed ROM decoder at compile time. Qualify the
+// larger dispatchers on F411; smaller targets keep the compact decoder.
+// Host tests run both paths from the same state through the native switch.
+#ifndef MK61_CORE_PREDECODED_ROM
+  #if MK61_CORE_NATIVE_HOT_PATHS && \
+      (defined(STM32F411xE) || !defined(ARDUINO))
+    #define MK61_CORE_PREDECODED_ROM 1
+  #else
+    #define MK61_CORE_PREDECODED_ROM 0
+  #endif
+#endif
+#if MK61_CORE_PREDECODED_ROM != 0 && MK61_CORE_PREDECODED_ROM != 1
+  #error "MK61_CORE_PREDECODED_ROM must be 0 or 1"
+#endif
+#if MK61_CORE_PREDECODED_ROM && !MK61_CORE_NATIVE_HOT_PATHS
+  #error "MK61_CORE_PREDECODED_ROM requires MK61_CORE_NATIVE_HOT_PATHS"
+#endif
+
 #endif

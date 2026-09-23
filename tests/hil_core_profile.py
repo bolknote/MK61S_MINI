@@ -12,7 +12,8 @@ from __future__ import annotations
 import argparse
 import re
 import statistics
-from hil_rtc_alarm import IDENTITY, Port
+from hil_rtc_alarm import IDENTITY
+from hil_portable_apps import ScreenPort
 
 
 CORE_STEP = re.compile(
@@ -40,7 +41,9 @@ def main() -> int:
 
     expected_steps = args.steps
     averages: list[int] = []
-    with Port(args.port) as port:
+    # A screen OFFER can follow the terminal prompt after context restore.
+    # Demultiplex binary packets so they cannot hide an otherwise valid reply.
+    with ScreenPort(args.port) as port:
         identity = port.command("identity")
         match = IDENTITY.search(identity)
         if not match:

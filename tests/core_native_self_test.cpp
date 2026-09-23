@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <type_traits>
 #include <vector>
 
 static void observe_core_boundary(unsigned cycle, unsigned boundary);
@@ -78,6 +79,90 @@ static void decoder_body(unsigned body) {
       IK1306_Tick(i, i - start);
   }
 }
+
+// Exercise every fixed-ROM specialization independently of game programs,
+// including nondecimal nibbles, keyboard sampling and wrapped register writes.
+#if MK61_CORE_PREDECODED_ROM
+static u32 micro_random_state = 0x4D613031;
+static u32 micro_random() {
+  micro_random_state ^= micro_random_state << 13;
+  micro_random_state ^= micro_random_state >> 17;
+  micro_random_state ^= micro_random_state << 5;
+  return micro_random_state;
+}
+
+template<class Chip, class Tick>
+static void check_microinstructions(Chip& chip, Tick tick, const char* name) {
+  u8 selection[9] = {}, before_ring[SIZE_RING_M], reference_ring[SIZE_RING_M];
+  bool visited[68] = {};
+  unsigned cases = 0;
+  for(unsigned encoded = 0; encoded < 68; ++encoded) {
+    // Above 59 the ROM selects even AMK, then adds one when L is clear.
+    if(encoded >= 60 && (encoded & 1)) continue;
+    for(unsigned signal = 0; signal < 42; ++signal)
+      for(unsigned sample = 0; sample < 64; ++sample) {
+        for(unsigned i = 0; i < 42; ++i) {
+          chip.R[i] = micro_random() & 15;
+          chip.ST[i] = micro_random() & 15;
+          chip.pM[i] = micro_random() & 15;
+        }
+        chip.S = micro_random() & 15;
+        chip.S1 = micro_random() & 15;
+        chip.L = micro_random() & 1;
+        chip.T = micro_random() & 1;
+        chip.P = micro_random() & 3;
+        chip.MOD = micro_random() & 3;
+        chip.flag_FC = micro_random() & 1;
+        chip.AMK = micro_random() % 68;
+        if constexpr(!std::is_same<Chip, IK1306>::value) {
+          chip.key_y = micro_random() & 15;
+          chip.key_xm = micro_random() & 15;
+          chip.comma = micro_random() % 14;
+        }
+        selection[0] = encoded;
+        chip.pAND_AMK = selection;
+        const Chip before = chip;
+        std::memcpy(before_ring, ringM, sizeof(ringM));
+        core_61::set_native_hot_paths_enabled(false);
+        tick(signal);
+        const Chip reference = chip;
+        std::memcpy(reference_ring, ringM, sizeof(ringM));
+        visited[chip.AMK] = true;
+
+        chip = before;
+        std::memcpy(ringM, before_ring, sizeof(ringM));
+        core_61::set_native_hot_paths_enabled(true);
+        tick(signal);
+        if(std::memcmp(&chip, &reference, sizeof(chip)) ||
+           std::memcmp(ringM, reference_ring, sizeof(ringM))) {
+          std::fprintf(stderr, "%s AMK=%u tick=%u sample=%u\n",
+              name, encoded, signal, sample);
+          require(false, "predecoded microinstruction changed chip or ring state");
+        }
+        ++cases;
+      }
+  }
+  for(bool covered : visited) require(covered, "uncovered microinstruction");
+  std::printf("PASS %s %s: %u cases, all 68 microinstructions and 42 ticks\n",
+      scenario, name, cases);
+}
+
+static void check_predecoded_microinstructions(bool expanded) {
+  scenario = expanded ? "expanded ROM specialization" : "classic ROM specialization";
+  initialize(expanded);
+  const State clean = snapshot();
+  check_microinstructions(m_IK1302,
+      [](unsigned i) { IK1302_Tick(i, 0, i / 3); }, "IK1302");
+  restore(clean);
+  check_microinstructions(m_IK1303,
+      [](unsigned i) { IK1303_Tick(i, 0, i / 3); }, "IK1303");
+  restore(clean);
+  check_microinstructions(m_IK1306,
+      [](unsigned i) { IK1306_Tick(i, 0); }, "IK1306");
+  // Remove the temporary selector pointer before ordinary context snapshots.
+  restore(clean);
+}
+#endif
 
 static void check_bodies(bool expanded) {
   scenario = expanded ? "expanded body enumeration" : "classic body enumeration";
@@ -641,6 +726,9 @@ int main() {
   using namespace native_test;
   std::setvbuf(stdout, nullptr, _IONBF, 0);
   for(bool expanded : {false, true}) {
+#if MK61_CORE_PREDECODED_ROM
+    check_predecoded_microinstructions(expanded);
+#endif
     check_bodies(expanded);
     check_wait_timing(expanded);
     check_scenarios(expanded);

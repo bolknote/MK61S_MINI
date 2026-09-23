@@ -3198,27 +3198,25 @@ inline void __attribute__((always_inline))  dump_1302(mtick_t signal_I, usize J_
   dbghexln(CORE61, ":flag_FC ", m_IK1302.flag_FC);
 }
 
-MK61_CORE_TICK_FUNCTION IK1302_Tick(
-    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
-    MK61_PACKED_AMK_PARAMETERS) {
- uint32_t  microinstruction;
- uint32_t  val, tmp;
- uint32_t  mi_hi;
+// All 68 ROM microinstructions, independent of the calculator program.
+// Keep one semantic implementation per chip for constant and scalar inputs.
+#if MK61_CORE_PREDECODED_ROM
+#define MK61_CORE_ROM_CASES(F) \
+  F(0x00) F(0x01) F(0x02) F(0x03) F(0x04) F(0x05) F(0x06) F(0x07) \
+  F(0x08) F(0x09) F(0x0A) F(0x0B) F(0x0C) F(0x0D) F(0x0E) F(0x0F) \
+  F(0x10) F(0x11) F(0x12) F(0x13) F(0x14) F(0x15) F(0x16) F(0x17) \
+  F(0x18) F(0x19) F(0x1A) F(0x1B) F(0x1C) F(0x1D) F(0x1E) F(0x1F) \
+  F(0x20) F(0x21) F(0x22) F(0x23) F(0x24) F(0x25) F(0x26) F(0x27) \
+  F(0x28) F(0x29) F(0x2A) F(0x2B) F(0x2C) F(0x2D) F(0x2E) F(0x2F) \
+  F(0x30) F(0x31) F(0x32) F(0x33) F(0x34) F(0x35) F(0x36) F(0x37) \
+  F(0x38) F(0x39) F(0x3A) F(0x3B) F(0x3C) F(0x3D) F(0x3E) F(0x3F) \
+  F(0x40) F(0x41) F(0x42) F(0x43)
+#endif
 
-  #if MK61_CORE_PACKED_AMK
-    (void) J_signal_I;
-    tmp = selected_amk;
-    microinstruction = selected_microinstruction;
-  #else
-    tmp = (uint8_t) m_IK1302.pAND_AMK[J_signal_I]; // чтение из pAND_AMK: 3D(61) => 3E(62), 3E(62) => 40(64), 3F(63) => 42(66) замены в оригинальном ПЗУ
-    if (tmp > 59 && m_IK1302.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
-       tmp++;
-    }
-    microinstruction = IK1302_MICROINSTRUCTIONS_ACTIVE[tmp];
-  #endif
-    m_IK1302.AMK = tmp;
-
-    mi_hi = (microinstruction >> 16);
+static inline void __attribute__((always_inline)) IK1302_Execute(
+    mtick_t signal_I, mtick_t signal_div3, u32 microinstruction, u32 dcw, u32 dcwa) {
+  u32 tmp, mi_hi, val;
+  mi_hi = (microinstruction >> 16);
   //---------------------------------------------------------
     if((((microinstruction >> 24) & 0x03) == 0x2) || (((microinstruction >> 24) & 0x03) == 0x3)) {
         if (signal_div3 != m_IK1302.key_xm)
@@ -3230,7 +3228,7 @@ MK61_CORE_TICK_FUNCTION IK1302_Tick(
     io_t sigma = 0;
 
     if((microinstruction & 0x7FFF) != 0){
-        switch(IK1302_DCWA_ACTIVE[tmp/*m_IK1302.AMK*/]) {
+        switch(dcwa) {
                 case 0: alpha = 0; break;
                 case 0x0002: alpha = m_IK1302.R[signal_I]; break;
                 case 0x0004: alpha = m_IK1302.pM[signal_I]; break;
@@ -3296,7 +3294,7 @@ MK61_CORE_TICK_FUNCTION IK1302_Tick(
   #endif
   //---------------------------------------------------------
     if (m_IK1302.MOD == 0 || signal_I >= 36) {
-        tmp = IK1302_DCW_ACTIVE[tmp/*m_IK1302.AMK*/];
+        tmp = dcw;
         if(tmp != 0){
           switch (tmp) {
             case 1: 
@@ -3348,28 +3346,46 @@ MK61_CORE_TICK_FUNCTION IK1302_Tick(
     }
 }
 
-MK61_CORE_TICK_FUNCTION IK1303_Tick(
+MK61_CORE_TICK_FUNCTION IK1302_Tick(
     mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
     MK61_PACKED_AMK_PARAMETERS) {
- uint32_t tmp;
- uint32_t microinstruction;
- uint32_t mi_hi;
+ uint32_t  microinstruction;
+ uint32_t  tmp;
 
- #if MK61_CORE_PACKED_AMK
- (void) J_signal_I;
- tmp = selected_amk;
- microinstruction = selected_microinstruction;
- #else
- tmp = (uint8_t) m_IK1303.pAND_AMK[J_signal_I];
- if (tmp > 59 && m_IK1303.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
-      tmp++;
- }
 
- microinstruction = IK1303_MICROINSTRUCTIONS_ACTIVE[tmp];
- #endif
- m_IK1303.AMK = tmp;
+  #if MK61_CORE_PACKED_AMK
+    (void) J_signal_I;
+    tmp = selected_amk;
+    microinstruction = selected_microinstruction;
+  #else
+    tmp = (uint8_t) m_IK1302.pAND_AMK[J_signal_I]; // чтение из pAND_AMK: 3D(61) => 3E(62), 3E(62) => 40(64), 3F(63) => 42(66) замены в оригинальном ПЗУ
+    if (tmp > 59 && m_IK1302.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
+       tmp++;
+    }
+    microinstruction = IK1302_MICROINSTRUCTIONS_ACTIVE[tmp];
+  #endif
+    m_IK1302.AMK = tmp;
+#if MK61_CORE_PREDECODED_ROM
+  if(native_hot_paths_are_enabled) {
+    // The same executor sees constant ROM fields here, so the compiler
+    // removes flag decoding. State changes stay on their original tick.
+    #define ROM_CASE(index) \
+      case index: \
+        IK1302_Execute(signal_I, signal_div3, \
+            ROM.IK1302.microinstructions[index], IK1302_DCW[index], IK1302_DCWA[index]); \
+        return;
+    switch(m_IK1302.AMK) { MK61_CORE_ROM_CASES(ROM_CASE) }
+    #undef ROM_CASE
+  }
+#endif
+  IK1302_Execute(signal_I, signal_div3, microinstruction,
+      IK1302_DCW_ACTIVE[m_IK1302.AMK], IK1302_DCWA_ACTIVE[m_IK1302.AMK]);
+}
 
- mi_hi = (microinstruction >> 16);
+static inline void __attribute__((always_inline)) IK1303_Execute(
+    mtick_t signal_I, mtick_t signal_div3, u32 microinstruction, u32 dcw) {
+  u32 tmp, mi_hi;
+  mi_hi = (microinstruction >> 16);
   //---------------------------------------------------------
  if((((microinstruction >> 24) & 0x03) == 0x2) || (((microinstruction >> 24) & 0x03) == 0x3)) {
      if (signal_div3 != m_IK1303.key_xm) {
@@ -3454,7 +3470,7 @@ MK61_CORE_TICK_FUNCTION IK1303_Tick(
   //---------------------------------------------------------
     if (m_IK1303.MOD == 0 || signal_I >= 36)
     {
-        tmp = IK1303_DCW_ACTIVE[m_IK1303.AMK];
+        tmp = dcw;
                 if(tmp != 0){
           switch (tmp)
           {
@@ -3507,27 +3523,47 @@ MK61_CORE_TICK_FUNCTION IK1303_Tick(
     }
 }
 
-MK61_CORE_TICK_FUNCTION IK1306_Tick(
-    mtick_t signal_I, usize J_signal_I
+MK61_CORE_TICK_FUNCTION IK1303_Tick(
+    mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
     MK61_PACKED_AMK_PARAMETERS) {
-    uint32_t tmp, mi_hi;
-    uint32_t microinstruction;
-
-  #if MK61_CORE_PACKED_AMK
-    (void) J_signal_I;
-    tmp = selected_amk;
-    microinstruction = selected_microinstruction;
-  #else
-    tmp = (uint8_t) m_IK1306.pAND_AMK[J_signal_I];            //    AMK = AND_AMK[ASPx9 + J_signal_I];
-    if (tmp > 59 && m_IK1306.L == 0){                         // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
-        tmp++;
-    }
-    microinstruction = IK1306_MICROINSTRUCTIONS_ACTIVE[tmp];
-  #endif
-    m_IK1306.AMK = tmp;
+ uint32_t tmp;
+ uint32_t microinstruction;
 
 
-    mi_hi = (microinstruction >> 16);
+ #if MK61_CORE_PACKED_AMK
+ (void) J_signal_I;
+ tmp = selected_amk;
+ microinstruction = selected_microinstruction;
+ #else
+ tmp = (uint8_t) m_IK1303.pAND_AMK[J_signal_I];
+ if (tmp > 59 && m_IK1303.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
+      tmp++;
+ }
+
+ microinstruction = IK1303_MICROINSTRUCTIONS_ACTIVE[tmp];
+ #endif
+ m_IK1303.AMK = tmp;
+#if MK61_CORE_PREDECODED_ROM
+  if(native_hot_paths_are_enabled) {
+    // The same executor sees constant ROM fields here, so the compiler
+    // removes flag decoding. State changes stay on their original tick.
+    #define ROM_CASE(index) \
+      case index: \
+        IK1303_Execute(signal_I, signal_div3, \
+            ROM.IK1303.microinstructions[index], IK1303_DCW[index]); \
+        return;
+    switch(m_IK1303.AMK) { MK61_CORE_ROM_CASES(ROM_CASE) }
+    #undef ROM_CASE
+  }
+#endif
+  IK1303_Execute(signal_I, signal_div3, microinstruction,
+      IK1303_DCW_ACTIVE[m_IK1303.AMK]);
+}
+
+static inline void __attribute__((always_inline)) IK1306_Execute(
+    mtick_t signal_I, u32 microinstruction, u32 dcw) {
+  u32 tmp, mi_hi;
+  mi_hi = (microinstruction >> 16);
   //---------------------------------------------------------
     io_t alpha = 0;
     io_t gamma = 0;
@@ -3577,7 +3613,7 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
   //---------------------------------------------------------
     if (m_IK1306.MOD == 0 || signal_I >= 36)
     {
-        tmp = IK1306_DCW_ACTIVE[m_IK1306.AMK];
+        tmp = dcw;
         if(tmp != 0){
           switch (tmp){
             case 1: m_IK1306.R[signal_I] = m_IK1306.R[MOD42(signal_I + 3)]; break;
@@ -3628,6 +3664,45 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
           }
     }
 }
+
+MK61_CORE_TICK_FUNCTION IK1306_Tick(
+    mtick_t signal_I, usize J_signal_I
+    MK61_PACKED_AMK_PARAMETERS) {
+    uint32_t tmp;
+    uint32_t microinstruction;
+
+  #if MK61_CORE_PACKED_AMK
+    (void) J_signal_I;
+    tmp = selected_amk;
+    microinstruction = selected_microinstruction;
+  #else
+    tmp = (uint8_t) m_IK1306.pAND_AMK[J_signal_I];            //    AMK = AND_AMK[ASPx9 + J_signal_I];
+    if (tmp > 59 && m_IK1306.L == 0){                         // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
+        tmp++;
+    }
+    microinstruction = IK1306_MICROINSTRUCTIONS_ACTIVE[tmp];
+  #endif
+    m_IK1306.AMK = tmp;
+#if MK61_CORE_PREDECODED_ROM
+  if(native_hot_paths_are_enabled) {
+    // The same executor sees constant ROM fields here, so the compiler
+    // removes flag decoding. State changes stay on their original tick.
+    #define ROM_CASE(index) \
+      case index: \
+        IK1306_Execute(signal_I, \
+            ROM.IK1306.microinstructions[index], IK1306_DCW[index]); \
+        return;
+    switch(m_IK1306.AMK) { MK61_CORE_ROM_CASES(ROM_CASE) }
+    #undef ROM_CASE
+  }
+#endif
+  IK1306_Execute(signal_I, microinstruction,
+      IK1306_DCW_ACTIVE[m_IK1306.AMK]);
+}
+
+#if MK61_CORE_PREDECODED_ROM
+#undef MK61_CORE_ROM_CASES
+#endif
 
 #if MK61_CORE_MERGED_TICK
 static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
