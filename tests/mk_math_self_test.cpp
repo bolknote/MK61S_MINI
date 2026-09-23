@@ -1269,6 +1269,93 @@ static void test_far_condition_writeback(void) {
   check_true("80 direct/indirect arithmetic predicates match native ROM and full stack",correct);
 }
 
+static void test_display_strobe_writeback(void) {
+  std::printf("display strobe immediately after arithmetic:\n");
+  static const struct { u8 size; u8 bytes[8]; double result; } expressions[] = {
+      {3,{8,1,0x21},9},                 // sqrt used to publish 81
+      {5,{9,0x0E,2,0x13,0x34},4},      // INT used to reject the transient 4.5
+      {5,{0,0x0E,1,9,0x11},-19},       // transient +19 must not become a mask
+      {6,{1,9,0x0E,1,9,0x11},0},
+      {5,{1,9,0x0E,0,0x11},19},
+      {4,{2,0x0E,3,0x12},6},
+      {4,{9,0x0E,3,0x13},3},
+      {2,{4,0x22},16},
+      {4,{1,0x0E,9,0x10},10},
+      {3,{2,5,5},255},
+      {3,{2,5,6},256},
+      {4,{9,0x0E,2,0x13},4.5},
+  };
+  struct Result {
+    char stack_values[5][15];
+    char indicator[INDICATOR_STRING_LENGTH];
+    u8 frame[12];
+    u8 cursor;
+    bool error;
+  };
+  bool correct=true, resumable=true;
+  core_61::set_expanded_program_mode(true);
+  for(const auto& expression:expressions) for(bool segmented:{false,true})
+    for(bool seam:{false,true}) {
+      Result reference={};
+      // A real ROM NOP provides the reference write-back barrier. The direct
+      // strobe must have the same result, without a NOP in the user's program.
+      for(bool barrier:{true,false}) {
+        core_61::enable();core_61::clear_extended_program_banks();
+        u8 code[112];std::memset(code,0x50,sizeof(code));
+        u16 address=seam ? 111U-4U-expression.size-(barrier?1U:0U) : 0;
+        if(seam) {
+          code[0]=0x1F;code[1]=0x51;code[2]=u8(address/100);
+          code[3]=u8(((address/10)%10)*16+address%10);
+        }
+        auto emit=[&](u8 opcode) {
+          if(address<112)code[address]=opcode;
+          else correct=core_61::write_absolute_program(address,opcode)&&correct;
+          ++address;
+        };
+        emit(0x2F);emit(0x50);emit(0x2F);emit(segmented?0x2A:0x30);
+        for(u8 i=0;i<expression.size;++i)emit(expression.bytes[i]);
+        if(barrier)emit(0x54);
+        emit(0x2F);emit(0x0E);emit(0x50);
+        if(barrier)run_program(code,sizeof(code));
+        else {
+          core_61::set_code_page(code);core_61::set_IP(0);
+          press_matrix({2,9});
+          for(int i=0;i<256 && core_61::is_RUN();++i) {
+            core_61::ContextBuffer snapshot={};
+            resumable=core_61::save_context(snapshot) &&
+                core_61::restore_context(snapshot) && resumable;
+            core_61::step();
+          }
+        }
+        Result result={};
+        for(int r=0;r<5;++r)
+          read_stack_register((stack)r,result.stack_values[r],SYMBOLS);
+        (void)core_61::update_indicator(result.indicator,SYMBOLS);
+        if(segmented)std::memcpy(result.frame,core_61::segment_display_frame(),12);
+        result.cursor=core_61::extended_display_cursor();
+        result.error=core_61::extended_program_error();
+        const bool invalid=segmented && (expression.result<0 ||
+            expression.result>255 || std::floor(expression.result)!=expression.result);
+        bool equal=core_61::is_CALC() && result.error==invalid &&
+            read_live_x()==expression.result;
+        if(segmented)equal=equal && result.cursor==(invalid?0:1) &&
+            result.frame[0]==(invalid?0:u8(expression.result));
+        if(barrier)reference=result;
+        else equal=equal && result.error==reference.error &&
+            result.cursor==reference.cursor &&
+            std::memcmp(result.frame,reference.frame,12)==0 &&
+            std::memcmp(result.stack_values,reference.stack_values,sizeof(result.stack_values))==0 &&
+            (segmented || std::strcmp(result.indicator,reference.indicator)==0);
+        if(!equal)std::printf("  expression=%lu segmented=%d seam=%d barrier=%d X=%.8g mask=%u error=%d\n",
+            (unsigned long)(&expression-expressions),segmented,seam,barrier,
+            read_live_x(),result.frame[0],result.error);
+        correct=correct&&equal;
+      }
+    }
+  check_true("48 numeric/segment arithmetic strobes match the ROM barrier and full stack",correct);
+  check_true("pending strobes survive context save/restore, including bank seams",resumable);
+}
+
 static void test_extended_prefixes(void) {
   std::printf("expanded far-address and display prefixes:\n");
   static const u8 prefixes[] = {0x1FU, 0x2FU};
@@ -2532,6 +2619,7 @@ int main(void) {
   test_virtual_return_x2();
   test_virtual_call_rom_addressing();
   test_far_condition_writeback();
+  test_display_strobe_writeback();
   test_extended_opcode_matrix();
   test_packed_segment_frames();
   test_rom_command_hooks();

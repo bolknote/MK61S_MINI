@@ -1101,7 +1101,7 @@ static const usize indicator_pos[12] =
 struct ExtendedProgramState {
   u8* banks[EXTENDED_BANK_COUNT];
   u16 return_addresses[EXTENDED_RETURN_DEPTH];
-  u16 pending_far_condition; // absolute prefix address + 1; zero when idle
+  u16 pending_prefix; // absolute address + 1, bit 15 selects a display strobe
   u8 active_bank;
   u8 bank_slots_used;
   u8 return_depth;
@@ -1448,9 +1448,7 @@ static bool execute_far_prefix(u16 absolute) {
   return true;
 }
 
-static bool execute_display_prefix(u8 local_address) {
-  const u16 absolute = (u16) (extended_program.active_bank *
-      core_61::MAX_PROGRAM_STEP + local_address);
+static bool execute_display_prefix(u16 absolute) {
   const u16 next = (u16) (absolute + 2U);
   u8 opcode = 0;
   if(next >= core_61::EXTENDED_ADDRESS_LIMIT ||
@@ -1627,7 +1625,7 @@ static void reset_mk61_command_runtime(void) {
   memset(mk61_call_operand_visits, 0,
          sizeof(mk61_call_operand_visits));
   mk61_call_operand_depth = 0;
-  extended_program.pending_far_condition = 0;
+  extended_program.pending_prefix = 0;
 }
 
 static inline u8 __attribute__((always_inline)) decode_mk61_opcode(void) {
@@ -1663,15 +1661,17 @@ static bool dispatch_mk61_program_boundary(u8 program_address, u8 opcode) {
 static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     u8 address) {
   if(address == 0x06U) {
-    if(extended_program.pending_far_condition != 0) {
+    if(extended_program.pending_prefix != 0) {
       // The prefix's existing ROM NOP has now completed the previous numeric
       // write-back. At its initial prefetch even 0-19 can still expose +19.
-      // Resolve the branch before decoding its operand, then feed the target's
+      // Resolve the prefix before decoding its operand, then feed the target's
       // real opcode into this same fetch: no additional NOP or ROM step.
-      const u16 absolute = extended_program.pending_far_condition - 1U;
-      extended_program.pending_far_condition = 0;
+      const u16 pending = extended_program.pending_prefix;
+      const u16 absolute = (pending & 0x7FFFU) - 1U;
+      extended_program.pending_prefix = 0;
       u8 next_opcode = 0x50;
-      if(execute_far_prefix(absolute)) {
+      if((pending & 0x8000U) ? execute_display_prefix(absolute)
+                            : execute_far_prefix(absolute)) {
         const u8 next = (u8) ((core_61::get_IP() + 1U) % core_61::MAX_PROGRAM_STEP);
         core_61::set_IP(next);
         if(!core_61::read_absolute_program((u16) (extended_program.active_bank *
@@ -1731,14 +1731,26 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
           u8 far_opcode = 0;
           if(core_61::read_absolute_program((u16) (absolute + 1U), far_opcode) &&
              far_x_condition(far_opcode)) {
-            extended_program.pending_far_condition = absolute + 1U;
+            extended_program.pending_prefix = absolute + 1U;
             success = true;
           } else {
             success = execute_far_prefix(absolute);
           }
         } else if(semantic_opcode == MK61_DISPLAY_PREFIX) {
           handled = true;
-          success = execute_display_prefix(program_address);
+          const u16 absolute = (u16) (extended_program.active_bank *
+              core_61::MAX_PROGRAM_STEP + program_address);
+          u8 display_opcode = 0;
+          if(core_61::read_absolute_program((u16) (absolute + 1U), display_opcode) &&
+             display_opcode == 0x0E) {
+            // X still contains a transient ROM value at prefetch: sqrt(81)
+            // can expose 81, INT can expose the original fraction. Reuse the
+            // prefix's NOP just as far predicates do, in either display view.
+            extended_program.pending_prefix = (absolute + 1U) | 0x8000U;
+            success = true;
+          } else {
+            success = execute_display_prefix(absolute);
+          }
         } else if(semantic_opcode == 0x53U ||
                   (semantic_opcode >= 0xA0U && semantic_opcode <= 0xAFU) ||
                   (semantic_opcode == 0x52U &&
@@ -3964,7 +3976,7 @@ void clear_extended_program_banks(void) {
   extended_program.active_bank = 0;
   extended_program.bank_slots_used = 0;
   extended_program.return_depth = 0;
-  extended_program.pending_far_condition = 0;
+  extended_program.pending_prefix = 0;
 }
 
 bool read_absolute_program(u16 address, u8& opcode) {
@@ -4236,7 +4248,7 @@ struct CoreContextSnapshot {
   u8 extended_cursor;
   u8 extended_held_comma;
   u8 extended_flags;
-  u16 extended_pending_far_condition;
+  u16 extended_pending_prefix;
 };
 
 static_assert((sizeof(ringM) & 1U) == 0,
@@ -4404,7 +4416,9 @@ static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
          snapshot.extended_return_depth <= EXTENDED_RETURN_DEPTH &&
          snapshot.extended_cursor < core_61::EXTENDED_DISPLAY_CELLS &&
          (snapshot.extended_flags & ~0x0FU) == 0 &&
-         snapshot.extended_pending_far_condition <= core_61::EXTENDED_ADDRESS_LIMIT &&
+         (snapshot.extended_pending_prefix == 0 ||
+          ((snapshot.extended_pending_prefix & 0x7FFFU) != 0 &&
+           (snapshot.extended_pending_prefix & 0x7FFFU) <= core_61::EXTENDED_ADDRESS_LIMIT)) &&
          valid_angle_unit(snapshot.emu.angle_unit);
 }
 
@@ -4556,7 +4570,7 @@ bool save_context(ContextBuffer& out) {
       (extended_program.segment_display ? 0x02U : 0U) |
       (extended_program.error ? 0x04U : 0U) |
       (extended_program.numeric_strobe_pending ? 0x08U : 0U);
-  snapshot.extended_pending_far_condition = extended_program.pending_far_condition;
+  snapshot.extended_pending_prefix = extended_program.pending_prefix;
   memset(out.bytes, 0, sizeof(out.bytes));
   memcpy(out.bytes, &snapshot, sizeof(snapshot));
   return true;
@@ -4622,7 +4636,7 @@ bool restore_context(const ContextBuffer& saved) {
   extended_program.error = (snapshot.extended_flags & 0x04U) != 0;
   extended_program.numeric_strobe_pending =
       (snapshot.extended_flags & 0x08U) != 0;
-  extended_program.pending_far_condition = snapshot.extended_pending_far_condition;
+  extended_program.pending_prefix = snapshot.extended_pending_prefix;
   return true;
 }
 
