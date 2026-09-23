@@ -1548,6 +1548,10 @@ static bool execute_script_line(const char* raw_line) {
 
   const char* optional_path = optional_open_arguments(line);
   if(optional_path != NULL) {
+    if(trap_context_valid()) {
+      line_error_message = "open? is not allowed in a trap handler";
+      return false;
+    }
     if(is_line_end(*optional_path)) {
       line_error_message = "optional open needs a path";
       return false;

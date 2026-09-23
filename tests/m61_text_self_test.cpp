@@ -428,6 +428,24 @@ static void test_optional_open_skips_missing_content_but_keeps_strict_open(void)
   assert(m61_text::last_error(error));
   assert(error.line == 1);
   assert(std::strcmp(error.message, "optional open needs a path") == 0);
+
+  reset_host();
+  add_script("TRAPOPTIONAL",
+             "trap 10 run :handler\n"
+             "run\n"
+             "ret\n"
+             ":handler\n"
+             "open? UNAVAILABLE\n"
+             "ret\n");
+  assert(m61_text::load_program("TRAPOPTIONAL"));
+  assert(boundary_hook != nullptr);
+  const core_61::Mk61ProgramBoundaryContext boundary = {10, 0};
+  assert(boundary_hook(boundary, boundary_user_data));
+  m61_text::service();
+  assert(m61_text::last_error(error));
+  assert(error.line == 5);
+  assert(std::strcmp(error.message,
+                     "open? is not allowed in a trap handler") == 0);
 }
 
 static void add_script(const char* name, const std::string& source,
