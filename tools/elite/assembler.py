@@ -194,12 +194,12 @@ class Assembler:
             usage[bank]=[module.name,0]
             pending_labels=[]
             falls_through=True
+            remaining=sum(self.size(i) for i in module.items)
             for index,item in enumerate(module.items):
                 if item.kind=='label':
                     pending_labels.append(item.value)
                     continue
                 # Reserve a far jump for a continuation unless no real code remains.
-                remaining=sum(self.size(i) for i in module.items[index:])
                 size=self.size(item)
                 needs_bridge=falls_through
                 ends_flow=item.kind=='branch' and item.value==0x51
@@ -233,6 +233,7 @@ class Assembler:
                 pending_labels.clear()
                 placements.append((address,item))
                 offset+=size
+                remaining-=size
                 usage[bank][1]=offset
                 falls_through=not ends_flow
             for label in pending_labels: labels[label]=bank*112+offset

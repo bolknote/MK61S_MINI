@@ -24,7 +24,11 @@ def add_economy(a):
     m.label('trade_money').ld('C').st(0).add(3,1).op('ret')
 
     m=a.module(5,'world')
-    m.label('world').st('D').n(251).op('*').n(12345).op('+').mod(65536).n(256).op('*').ld('D').op('+','ret')
+    # For i in 0..255 the packed world is (64257*i+3160320) mod 2**24.
+    # Subtract the modulus in the constant term; one add repairs negatives.
+    # All intermediates fit eight digits. Keep the same names and economies.
+    m.label('world').n(64257).op('*').n(13616896).op('-').jge('world_ready').n(16777216).op('+')
+    m.label('world_ready').op('ret')
     m.label('select_world').ld(0).n(70).op('-').call('world').put(24,2).set('A',8).op('ret')
     # Decode the world's economy once on arrival, in the formerly reserved R2.
     m.label('init_market').ld('C').st(0).n(1048576).op('/','int').st(2).ld('D').st(1).n(30)
