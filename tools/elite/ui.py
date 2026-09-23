@@ -4,6 +4,9 @@ def chunks(text):
     f=screen(text)
     return [sum(f[i+j]*256**j for j in range(3)) for i in range(0,12,3)]
 
+# The unused ninth word of the screen page is a persistent frame template.
+FRAME_SUFFIX_WORD = chunks('          СП')[3]
+
 def add_ui(a):
     m=a.module(2,'display')
     m.label('display').raw(0x2F,0x53)
@@ -12,8 +15,9 @@ def add_ui(a):
     m.label('name_alphabet').raw(*(GLYPHS[ch] for ch in ALPHABET))
 
     m=a.module(3,'glyphs')
-    # Fixed four-byte entries, called only after the lookup arithmetic.
-    for ch in '0123456789'+ALPHABET:
+    # Only the six commodity prefixes use this fixed four-byte lookup.
+    # Keep entry zero so the existing 4*index+336 addressing stays valid.
+    for ch in '0123456':
         m.raw(*(int(d) for d in f'{GLYPHS[ch]:03d}'),0x52)
 
     m=a.module(4,'arithmetic')
@@ -34,14 +38,14 @@ def add_ui(a):
         m.label(label)
         for i,v in enumerate(chunks(text)[:3]):m.set(i,v)
         m.jump('text_end')
-    m.label('text_end').set(3,chunks('          СП')[3]).jump('display')
+    m.label('text_end').ld(8).st(3).jump('display')
     m.label('show_message').far(0x53,29*112+CALL).op('ret')
 
     m=a.module(19,'format')
-    m.label('number_frame').ld('D').st(0).set(1,0).set(2,0).set(3,chunks('          СП')[3])
+    m.label('number_frame').ld('D').st(0).op('cx').st(1).st(2).ld(8).st(3)
     m.raw(0x2F,0x02,0x2F,0x6C).jump('display')
     m.label('name_frame')
-    for i,v in enumerate(chunks('          СП')):m.set(i,v)
+    m.op('cx').st(0).st(1).st(2).ld(8).st(3)
     m.ptr('F','name_alphabet').raw(0x2F,0x00,0x2F,0x7C).jump('display')
 
 def show_text(m, label):

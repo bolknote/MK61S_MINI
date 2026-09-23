@@ -1,6 +1,6 @@
 """ELITE module sources. All operations emit ordinary MK61/MK61s bytecode."""
 from assembler import Assembler, ALPHABET, GLYPHS, screen
-from ui import add_ui, show_text, show_number, show_name
+from ui import add_ui, show_text, show_number, show_name, FRAME_SUFFIX_WORD
 from economy import add_economy, dynamic_get
 from combat import add_combat
 
@@ -12,7 +12,7 @@ def create_game():
         26:[0,0,0,30,30,30,30,30,30],
         27:[0,0,0,0,0,0,0,0,0],
         28:[0]*9,
-        29:[0]*9,
+        29:[0]*8+[FRAME_SUFFIX_WORD],
     }
     m=a.module(0,'kernel')
     m.label('start').raw(0x2F,0x50,0x2F,0x2A).set(9,0).set('A',0)

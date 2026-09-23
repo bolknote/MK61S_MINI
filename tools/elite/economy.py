@@ -102,9 +102,9 @@ def add_economy(a):
     m.ld(8).n(253).op('*').n(13849).op('+').mod(65536).st(8).call('mod16').st('C').op('ret')
 
     m=a.module(11,'contacts')
-    m.label('start_contact').st('C').visit(27,'init_enemy').visit(28,'init_drones').set(9,2).set('A',0).op('ret')
+    m.label('start_contact').st('C').visit(27,'init_enemy').visit(28,'init_drones').ld('E').st(8).set(9,2).set('A',0).op('ret')
     m.label('init_enemy').ld('C').st(0).set(1,60).ld(0).n(4).op('-').jnz('enemy_fields').set(1,120)
-    m.label('enemy_fields').set(2,14).n(0)
+    m.label('enemy_fields').ld(1).st('E').set(2,14).n(0)
     for i in range(3,9):m.st(i)
     m.op('ret').label('init_drones').n(0)
     for i in range(9):m.st(i)

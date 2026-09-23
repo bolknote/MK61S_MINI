@@ -14,13 +14,18 @@ def add_combat(a):
     m.ld(0).call('mod10').st(2).jz('bad_action')
     m.ld(2).n(5).op('-').jge('bad_action').jump('fight')
     m.label('choose_target').ld(0).n(86).op('-').jge('bad_action')
-    m.ld(0).n(80).op('-').st(1).jz('store_target')
-    m.ld(1).n(1).op('-').st('B').far(0x53,28*112+63).jz('bad_action')
+    m.ld(0).n(80).op('-').st(1).call('target_hp').jz('bad_action').st(8)
     m.label('store_target').ld(1).put(27,5).set('A',16).op('ret')
 
     # Outside page callbacks: R1 maneuver, R2 action, R3 outgoing damage,
     # R4 incoming damage, R5 target, R6 surviving drones, R7 range.
-    m.label('fight').ld(2).n(2).op('-').jnz('ammo_ready')
+    # Between commands R8 caches the selected hull; every query preserves it.
+    # During a turn it temporarily carries the enemy's launch flag.
+    # Validate before consuming ammunition, advancing enemies or cooling.
+    # Shield and escape remain available after the selected target is dead.
+    m.label('fight').ld(2).n(3).op('-').jge('ammo_ready')
+    m.ld(8).jz('bad_action')
+    m.ld(2).n(2).op('-').jnz('ammo_ready')
     m.get(25,7).jz('bad_action').n(1).op('-').put(25,7)
     m.label('ammo_ready').ld(1).st('C').ld(2).st('D').visit(27,'enemy_tick')
     m.ld('C').st(5).ld('D').st(7).ld('E').st(4).ld('F').st(8)
@@ -35,10 +40,11 @@ def add_combat(a):
     m.ld(4).ld('C').op('+').st(4)
     m.label('incoming_ready').ld(1).n(4).op('-').jnz('apply_damage')
     m.ld(4).n(2).op('/','int').st(4)
-    m.label('apply_damage').ld(3).st('C').visit(27,'enemy_hit')
+    m.label('apply_damage').ld(3).st('C').visit(27,'enemy_hit').ld('C').st(8)
     m.ld(4).st('C').visit(24,'player_hit').ld('C').jz('lost')
-    m.get(27,1).ld(6).op('+').jz('won')
-    m.get(27,6).n(4).op('-').jge('escaped').set('A',9).op('ret')
+    # enemy_hit already returned hull and charge; player_hit preserves them.
+    m.ld('D').ld(6).op('+').jz('won')
+    m.ld('E').n(4).op('-').jge('escaped').set('A',16).op('ret')
     m.label('won').visit(24,'reward').visit(25,'count_kill').set(9,3).ptr('A','victory').op('ret')
     m.label('escaped').set(9,3).ptr('A','escape').op('ret')
     m.label('lost').set(9,4).ptr('A','defeat').op('ret')
@@ -75,16 +81,18 @@ def add_combat(a):
     m.ld(0).n(2).op('*').n(10).op('+').st('E')
     m.ld(0).n(4).op('-').jnz('enemy_ready').ld(4).mod(3).jnz('enemy_ready').set('F',1)
     m.label('enemy_ready').ld(5).st('C').ld(2).st('D').op('ret')
-    m.label('enemy_hit').ld(5).jnz('enemy_hit_done').ld(1).ld('C').op('-').call('max0').st(1)
-    m.label('enemy_hit_done').op('ret')
+    # RE arrives from drone_tick with the selected drone's remaining hull.
+    # Return selected hull RC, carrier hull RD, escape charge RE.
+    m.label('enemy_hit').ld(5).jnz('enemy_hit_done').ld(1).ld('C').op('-').call('max0').st(1).st('E')
+    m.label('enemy_hit_done').ld('E').st('C').ld(1).st('D').ld(6).st('E').op('ret')
     # DRONES callback: shot RC, target RD, launch RE. R0..4 are hulls;
     # the formation shares the carrier's range. R5 total launched, R6 alive.
     m.label('drone_tick').ld(6).st('F')
     m.ld('E').jz('drones_hit').ld(5).n(5).op('-').jge('drones_hit')
     m.ld(5).st('B').n(18).raw(0xBB).add(5,1).add(6,1)
     m.label('drones_hit').ld('D').jz('drones_ready')
-    m.n(1).op('-').st('B').raw(0xDB).jz('drones_ready')
-    m.ld('C').op('-').call('max0').raw(0xBB).jnz('drones_ready').add(6,-1)
+    m.n(1).op('-').st('B').raw(0xDB).st('E').jz('drones_ready')
+    m.ld('C').op('-').call('max0').raw(0xBB).st('E').jnz('drones_ready').add(6,-1)
     m.label('drones_ready').ld(6).st('D').ld('F').n(3).op('*').st('C').op('ret')
 
     m=a.module(16,'combat views')
@@ -94,10 +102,7 @@ def add_combat(a):
     m.ld('A').n(17).op('-').jz('drones_view')
     m.ld('A').n(18).op('-').jz('charge_view').jump('target_number')
     m.label('range_view').get(27,2).set('D',GLYPHS['r']).jump('draw_number')
-    m.label('target_view').get(27,5).jz('carrier_view')
-    m.n(1).op('-').st('B').far(0x53,28*112+63).jump('hull_prefix')
-    m.label('carrier_view').get(27,1)
-    m.label('hull_prefix').set('D',GLYPHS['H']).jump('draw_number')
+    m.label('target_view').ld(8).st('C').set('D',GLYPHS['H']).jump('draw_number')
     m.label('drones_view').get(28,6).set('D',GLYPHS['d']).jump('draw_number')
     m.label('charge_view').get(27,6).set('D',GLYPHS['P']).jump('draw_number')
     m.label('target_number').get(27,5).set('D',GLYPHS['t']).jump('draw_number')
@@ -105,3 +110,7 @@ def add_combat(a):
     show_text(m,'pirate');m.op('ret')
     m.label('alien_name');show_text(m,'thargoid');m.op('ret')
     m.label('show_result').ld('A').st('F').jump('show_message')
+    # X target index -> X/RC hull. R0..8 are preserved for command parsing.
+    m.label('target_hp').jz('carrier_hp')
+    m.n(1).op('-').st('B').far(0x53,28*112+63).op('ret')
+    m.label('carrier_hp').get(27,1).op('ret')

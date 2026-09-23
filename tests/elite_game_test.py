@@ -147,6 +147,7 @@ def test_pirates_and_results():
     assert s[3]['frame']==screen('PIrAtE    СП') and s[3]['regs'][9]==2
     assert s[4]['pages'][3][1:3]==[40,12] and s[4]['pages'][0][5]==46
     assert s[4]['pages'][0][7]==28
+    number(s[4],'H',40) # a shot reports damage without another query
     number(s[5],'H',40)
     assert s[6]['frame']==screen('YES. CLEAr СП') and s[6]['regs'][9]==3
     assert s[6]['pages'][0][0]==1250 and s[6]['pages'][1][7:9]==[2,1]
@@ -192,6 +193,27 @@ def test_thargoids():
         assert state(s[-2])==state(s[-1]),(cmd,s[-1])
     print('ELITE: carrier, independent targets, five drones and alien victory OK',flush=True)
 
+def test_destroyed_targets():
+    dead_carrier=encounter(3)+['input 22']*3
+    s=play(dead_carrier+['input 81','input 80'])
+    number(s[6],'H',0)
+    assert s[-1]['frame']==screen('ErrOr     СП')
+    assert state(s[-2])==state(s[-1]) and s[-1]['pages'][3][5]==1
+    # Both weapons reject a dead selected carrier or drone before any side
+    # effect, including a missile which is actually available to consume.
+    for setup in (dead_carrier,encounter(3)+['input 81','input 21']):
+        for action in ('11','22','31','42'):
+            s=play(setup+['set 25 7 2','dump',f'input {action}'])
+            assert state(s[-2])==state(s[-1]),(action,s[-1])
+            assert s[-1]['frame']==screen('ErrOr     СП')
+        s=play(setup+['dump','input 23','input 24'])
+        assert s[-2]['pages'][3][4]==s[-3]['pages'][3][4]+1
+        assert s[-1]['pages'][3][6]==1 # a dead target cannot block escape
+    s=play(encounter(3)+['input 81','input 21','input 81'])
+    number(s[-2],'H',0)
+    assert state(s[-2])==state(s[-1])
+    print('ELITE: dead targets reject selection/fire atomically; defence and escape remain available OK',flush=True)
+
 def main():
     directory=ROOT/'programs/games/ELITE'
     parts=sorted(directory.glob('part[0-9][0-9].m61'))
@@ -206,7 +228,7 @@ def main():
     for path in directory.glob('*.md'):
         assert path.stat().st_size<=1536
     tests=(test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
-           test_pirates_and_results,test_thargoids)
+           test_pirates_and_results,test_thargoids,test_destroyed_targets)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)

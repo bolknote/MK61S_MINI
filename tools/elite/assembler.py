@@ -121,6 +121,28 @@ class Assembler:
     def module(self, bank, name):
         m=Module(bank,name); self.modules.append(m); return m
 
+    def fold_tail_calls(self):
+        """A final call can reuse its caller's return address.
+
+        Only adjacent complete instructions qualify. In particular, a label
+        before RET is an independent entry and prevents the rewrite.
+        """
+        for module in self.modules:
+            items=module.items
+            index=0
+            while index+1<len(items):
+                call,ret=items[index:index+2]
+                folded=False
+                if ret.kind=='bytes' and ret.value==[OP['ret']]:
+                    if call.kind=='branch' and call.value==0x53:
+                        call.value=0x51; folded=True
+                    elif call.kind=='bytes' and len(call.value)==4 and call.value[:2]==[0x1F,0x53]:
+                        call.value[1]=0x51; folded=True
+                    elif call.kind=='bytes' and len(call.value)==2 and call.value[0]==0x1F and 0xA0<=call.value[1]<=0xAF:
+                        call.value[1]-=0x20; folded=True
+                if folded:del items[index+1]
+                index+=1
+
     @staticmethod
     def size(item):
         if item.kind=='bytes':return len(item.value)
@@ -176,6 +198,7 @@ class Assembler:
         return labels,placements,bridges,usage
 
     def link(self):
+        self.fold_tail_calls()
         # Start with near branches; expand crossing branches monotonically.
         # Never shrink again: moving a continuation can otherwise oscillate.
         for m in self.modules:
