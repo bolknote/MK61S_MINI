@@ -201,15 +201,18 @@ EOF
   grep -Fq 'Do not search for this manually installed board in Boards Manager' \
       "$work/install-configured-ps.txt"
   mock_build="$work/mock-build"
-  mock_system="$mock_build/mk61-system-apps/mk61s-M-classic-v2-uc1609-f401/System"
+  mock_stage="$mock_build/mk61-system-apps/mk61s-M-classic-v2-uc1609-f401"
+  mock_system="$mock_stage/System"
   mock_device="$work/mock-device"
   mkdir -p "$mock_system" "$mock_device"
   printf 'mock APP' > "$mock_system/USBDISK.APP"
+  cp "$root/tools/.mkc/mkc.ps1" "$mock_stage/mk61-system-installer.ps1"
   pwsh -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-upload.ps1" \
     -BuildPath "$mock_build" -Project code.ino \
     -Bundle mk61s-M-classic-v2-uc1609-f401 \
-    -Profile classic-v2-uc1609 -Sketch "$root/code" \
+    -Profile classic-v2-uc1609 \
+    -Sketch "$work/Program Files/Arduino IDE" \
     -TestMockDevice "$mock_device" > "$work/mock-upload.txt"
   cmp "$mock_system/USBDISK.APP" "$mock_device/System/USBDISK.APP"
   grep -q 'Resident and System APP upload complete' "$work/mock-upload.txt"
@@ -228,7 +231,7 @@ EOF
       "$platform/tools/mk61-app-upload.ps1" \
       -BuildPath "$mock_build" -Project code.ino \
       -Bundle mk61s-M-classic-v2-uc1609-f401 \
-      -Profile classic-v2-uc1609 -Sketch "$root/code" \
+      -Profile classic-v2-uc1609 \
       -TestMockDevice "$mock_device" > "$work/missing-usbdisk.txt" 2>&1; then
     echo 'Arduino upload accepted a bundle without USBDISK.APP' >&2
     exit 1
@@ -238,7 +241,7 @@ EOF
       "$platform/tools/mk61-app-upload.ps1" \
       -BuildPath "$mock_build" -Project code.ino \
       -Bundle mk61s-M-classic-v2-uc1609-f401 \
-      -Profile mini-v2-lcd1602-a00 -Sketch "$root/code" \
+      -Profile mini-v2-lcd1602-a00 \
       -TestMockDevice "$mock_device" > "$work/wrong-profile.txt" 2>&1; then
     echo 'Arduino upload accepted a mismatched System APP profile' >&2
     exit 1

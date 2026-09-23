@@ -216,6 +216,17 @@ function Build-Mk61Bundle {
     Copy-Item -LiteralPath $residentBin `
         -Destination (Join-Path $script:Stage "$Bundle.bin")
 
+    # Arduino's Upload recipe does not reliably retain build.source.path on
+    # Windows.  Keep the exact terminal installer used by this build beside
+    # its System bundle, so the upload phase never has to rediscover the
+    # repository from Arduino IDE's current working directory.
+    $mkcSource = [IO.Path]::GetFullPath(
+        (Join-Path $Sketch '../tools/.mkc/mkc.ps1'))
+    Test-RequiredFile $mkcSource 'MKC terminal installer'
+    $mkcStaged = Join-Path $script:Stage 'mk61-system-installer.ps1'
+    Copy-Item -LiteralPath $mkcSource -Destination $mkcStaged -Force
+    Test-RequiredFile $mkcStaged 'staged MKC terminal installer'
+
     $graphics = if ($CompileFlags -match
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609|MK61_ENABLE_USB_SCREEN=1|MK61_WS0010_GRAPHICS_100X16=1') { '1' } else { '0' }
     $uiFonts = if ($CompileFlags -match

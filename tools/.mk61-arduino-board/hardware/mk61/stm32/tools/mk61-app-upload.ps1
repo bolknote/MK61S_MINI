@@ -4,7 +4,10 @@ param(
     [Parameter(Mandatory = $true)][string]$Project,
     [Parameter(Mandatory = $true)][string]$Bundle,
     [Parameter(Mandatory = $true)][string]$Profile,
-    [Parameter(Mandatory = $true)][string]$Sketch,
+    # Kept optional for compatibility with already installed platform.txt.
+    # Arduino IDE may expand build.source.path relative to its own directory
+    # during Upload, so it must not be used to locate host-side tools.
+    [string]$Sketch,
     [string]$Busybox,
     [string]$Stm32Script,
     [string]$Protocol = 'dfu',
@@ -81,9 +84,12 @@ try {
         (Get-Item -LiteralPath $usbDisk).Length -eq 0) {
         Stop-Mk61Upload "current build has no System/USBDISK.APP: $system"
     }
-    $mkc = [IO.Path]::GetFullPath((Join-Path $Sketch '../tools/.mkc/mkc.ps1'))
+    $stage = Split-Path -Parent $system
+    $mkc = Join-Path $stage 'mk61-system-installer.ps1'
     if (-not [IO.File]::Exists($mkc)) {
-        Stop-Mk61Upload "MKC terminal installer not found: $mkc"
+        Stop-Mk61Upload (
+            "current build has no staged MKC terminal installer: $mkc. " +
+            'Recompile with the current MK61s board package')
     }
     $resident = Join-Path $BuildPath "$Project.bin"
     if ([string]::IsNullOrEmpty($TestMockDevice)) {
