@@ -20,6 +20,7 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+$closePortMessage = 'Close every program using the MK61s COM port.'
 
 function Stop-Mk61Upload {
     param([string]$Message)
@@ -45,8 +46,7 @@ function Wait-Mk61SerialPortAccess {
                 return
             } catch [UnauthorizedAccessException] {
                 if (-not $reportedBusy) {
-                    Write-Host ("$PortName is in use by another program. " +
-                        'Close every program using this device COM port; waiting for access...')
+                    Write-Host "$PortName is in use by another program. $closePortMessage Waiting for access..."
                     $reportedBusy = $true
                 }
             } catch [IO.IOException] {
@@ -65,7 +65,7 @@ function Wait-Mk61SerialPortAccess {
         Stop-Mk61Upload "CDC port $PortName did not return after DFU"
     }
     Stop-Mk61Upload ("cannot get exclusive access to $PortName. " +
-        'Close every program using this device COM port and retry Upload')
+        "$closePortMessage Retry Upload after the port is released")
 }
 
 $system = ''
@@ -94,8 +94,8 @@ try {
             -not [IO.File]::Exists($Stm32Script)) {
             Stop-Mk61Upload 'STM32 DFU tools not found'
         }
-        Write-Host ('System APP installation needs exclusive access to the ' +
-            'MK61s COM port. Close every program using that port.')
+        Write-Host 'System APP installation needs exclusive COM-port access.'
+        Write-Host $closePortMessage
         Write-Host "Uploading resident via STM32 DFU: $resident"
         & $Busybox sh $Stm32Script -i $Protocol -f $resident `
             -o $FlashOffset -v $Vid -p $UsbPid -a $Address -s $Start
