@@ -528,11 +528,13 @@
   #error "MK61_ENABLE_ANALOG_REPORT must be 0 or 1"
 #endif
 
-// The file-oriented `prof save` formatter is useful on a qualification image,
-// but duplicates the interactive profiler output. Product F401 artifacts omit
-// it together with the profiler itself.
+// The file-oriented `prof save` formatter duplicates the interactive profiler
+// output and costs meaningful Flash.  Keep it on the roomier F411
+// qualification image.  F401 qualification builds retain interactive `prof`
+// but omit only this duplicate save-to-file formatter; product F401 already
+// omits the profiler itself.
 #ifndef MK61_ENABLE_PROFILE_SAVE
-  #if MK61_F401_PRODUCT_BUILD
+  #if defined(STM32F401xC) || defined(STM32F401xE)
     #define MK61_ENABLE_PROFILE_SAVE 0
   #else
     #define MK61_ENABLE_PROFILE_SAVE 1

@@ -94,11 +94,17 @@ int main(void) {
                 "F411 settings must work without SETUP.APP");
   static_assert(!MK61_USBDISK_IS_LOADABLE && MK61_USBDISK_IS_BUILTIN,
                 "F411 USB disk must work without USBDISK.APP");
+  static_assert(MK61_ENABLE_PROFILE_SAVE == 1,
+                "F411 qualification builds must retain prof save");
 #else
   static_assert(MK61_SETUP_IS_LOADABLE,
                 "F401 settings must remain external");
   static_assert(MK61_USBDISK_IS_LOADABLE && !MK61_USBDISK_IS_BUILTIN,
                 "F401 USB disk must remain external");
+  #if defined(STM32F401xC) || defined(STM32F401xE)
+  static_assert(MK61_ENABLE_PROFILE_SAVE == 0,
+                "F401 must omit the duplicate prof save formatter");
+  #endif
 #endif
   static_assert(MK61_TERMINAL_HELP_IS_EXTERNAL,
                 "terminal help must stay external on both MCU families");
