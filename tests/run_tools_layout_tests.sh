@@ -13,6 +13,7 @@ expected="$(
     build_fmk_font.sh \
     build_fmk_from_ui_atlas.py \
     build_mk61_module_pack.sh \
+    build_mk61_program_pack.sh \
     build_portable_app.py \
     build_system_app_bundle.py \
     convert_fmk1_to_fmk2.py \
@@ -26,6 +27,7 @@ expected="$(
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \
+    program_pack.py \
     release-contract.json \
     release_contract.py \
     vfat_diagnostic.py \
