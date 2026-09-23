@@ -270,7 +270,7 @@ class Assembler:
             for i in m.items:
                 if i.kind=='branch':i.short=True
         labels,placements,bridges,usage=self.relax_branches()
-        banks={b:bytearray([0x50]*112) for b in usage}
+        banks={b:bytearray(112) for b in usage}
         occupied=set()
         def claim(address, size):
             positions=set(range(address,address+size))
@@ -278,7 +278,7 @@ class Assembler:
                 raise ValueError(f'overlapping or straddling instruction at {address}')
             occupied.update(positions)
         for b,values in self.data.items():
-            banks.setdefault(b,bytearray([0x50]*112))
+            banks.setdefault(b,bytearray(112))
             claim(b*112,DATA_END)
             banks[b][:DATA_END]=data_page(values)
         for address,target in bridges:

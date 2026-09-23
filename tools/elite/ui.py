@@ -4,8 +4,11 @@ def chunks(text):
     f=screen(text)
     return [sum(f[i+j]*256**j for j in range(3)) for i in range(0,12,3)]
 
-# The unused ninth word of the screen page is a persistent frame template.
+# The ninth word of the screen page is a persistent frame template.
 FRAME_SUFFIX_WORD = chunks('          СП')[3]
+
+DRONE_MASK = 0x63  # upper rectangle: a small ship, distinct from a digit
+BAR_MASK = 0x36    # two full-height vertical strokes
 
 def add_ui(a):
     m=a.module(2,'display')
@@ -14,9 +17,8 @@ def add_ui(a):
     m.label('name_alphabet').raw(*(GLYPHS[ch] for ch in ALPHABET))
 
     m=a.module(3,'glyphs')
-    # Only the six commodity prefixes use this fixed four-byte lookup.
-    # Keep entry zero so the existing 4*index+336 addressing stays valid.
-    for ch in '0123456':
+    # Entry zero is the carrier; 1..6 also serve the commodity prefixes.
+    for ch in 'H123456':
         m.raw(*(int(d) for d in f'{GLYPHS[ch]:03d}'),0x52)
 
     m=a.module(4,'arithmetic')
@@ -46,6 +48,48 @@ def add_ui(a):
     m.label('name_frame')
     m.op('cx').st(0).st(1).st(2).ld(8).st(3)
     m.ptr('F','name_alphabet').raw(0x2F,0x00,0x2F,0x7C).jump('display')
+
+    # Battle: RC hull, RB live drones, RD target mask minus decimal zero.
+    # Gauge: RC value, RB left prefix, RD=-63 clears slot six, RE graphics.
+    # Both formatters write the page, never the glass: only display publishes
+    # the completed twelve slots.
+    # The six-slot formation changes only on launch or destruction. Cache
+    # its two packed words in FRAME R4/R5, keyed by the live count in R6.
+    # Ordinary turns only copy these words, then replace the exact hull.
+    m.label('battle_frame').ld(8).st(3).raw(0x2F,0x02,0x2F,0x6C).ld('B').ld(6).op('-').jz('formation_ready')
+    m.ld('B').st(6).call('bar_pattern').n(16).op('*').st('E')
+    m.ptr('F','drone_alphabet').raw(0x2F,0x00,0x2F,0x7E).ld(0).st(4).ld(1).st(5)
+    m.label('formation_ready').ld(4).st(0).ld(5).st(1)
+    m.ld(2).ld('D').op('+').st(2).jump('display')
+    m.label('gauge_frame').ptr('F','bar_alphabet')
+    m.label('instrument_frame').ld(8).st(3).raw(0x2F,0x02,0x2F,0x6C,0x2F,0x00,0x2F,0x7E)
+    m.ld(0).ld('B').op('+').st(0).ld(2).ld('D').op('+').st(2).jump('display')
+
+    # Five bars, rounded upwards: even a small nonzero reserve is visible.
+    # RC value, RD prefix, RE units per cell. Preserves all outer R0..R8.
+    m.label('draw_gauge').ld('D').st('B').ld('C').ld('E').n(1).op('-','+').ld('E').op('/','int')
+    m.call('bar_pattern').st('E').set('D',-63).visit(29,'gauge_frame').op('ret')
+    m.label('bar_pattern').n(6).op('*').ptr('E','bar_patterns').op('+').st('E').raw(0x1F,0xAE).op('ret')
+    m.label('bar_patterns').raw(*(byte for value in (0,65536,69632,69888,69904,69905)
+                                for byte in [*(int(d) for d in f'{value:05d}'),0x52]))
+
+    # rNN, player U, six range cells. The dot in slot eight is the fixed
+    # laser boundary; enemies beyond 18 are always on its far side.
+    m.label('range_frame').raw(0x2F,0x07,0x2F,0x6C)
+    m.ld(0).n(GLYPHS['r']-63).op('+').st(0).set(1,GLYPHS['U']).ld(8).st(3)
+    m.ptr('F','range_alphabet').raw(0x2F,0x04,0x2F,0x7E).jump('display')
+    m.label('draw_range').ld('C').n(19).op('-').jge('range_far')
+    m.ld('C').n(4).op('/','int').jump('range_index')
+    m.label('range_far').n(5)
+    m.label('range_index').n(8).op('*').ptr('E','range_patterns').op('+').st('E').raw(0x1F,0xAE).st('E')
+    m.visit(29,'range_frame').op('ret')
+    m.label('range_patterns').raw(*(byte for value in (0x100020,0x010020,0x001020,0x000120,0x000030,0x000021)
+                                  for byte in [*(int(d) for d in f'{value:07d}'),0x52]))
+    # The two binary alphabets use only entries 0/1. Their remaining entries
+    # share storage with the next alphabet; every 2F 7n still has 16 bytes.
+    m.label('drone_alphabet').raw(0,DRONE_MASK)
+    m.label('bar_alphabet').raw(0,BAR_MASK)
+    m.label('range_alphabet').raw(64,GLYPHS['H'],192,GLYPHS['H']|128,*([0]*12))
 
 def show_text(m, label):
     m.ptr('F',label).call('show_message')

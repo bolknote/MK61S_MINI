@@ -6,7 +6,8 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools/elite'))
-from assembler import ALPHABET, Assembler, screen
+from assembler import ALPHABET, GLYPHS, Assembler, screen
+from game import create_game
 
 COUNT=0
 START=['run','input 0']
@@ -31,6 +32,8 @@ def play(commands):
             hull=s['pages'][3][1] if target==0 else s['pages'][4][target-1]
             assert s['regs'][8]==hull,('stale selected hull',s)
             assert s['regs'][6]==s['pages'][4][6],('stale live drones',s)
+            assert s['regs'][5]==target,('stale selected target',s)
+            assert s['regs'][7]==GLYPHS['H' if target==0 else str(target)]+65,('stale target glyph',s)
     COUNT+=len(states)
     return states
 
@@ -38,6 +41,13 @@ def state(s):
     return s['pages'][:5]
 
 def number(s,prefix,value):
+    if prefix=='H' and s['regs'][9]==2 and s['regs'][10]==16:
+        # The selected target and its exact hull sit beside the living swarm.
+        target=s['pages'][3][5]
+        tag='H' if target==0 else str(target)
+        count=s['pages'][4][6]
+        assert s['frame']==[99]*count+[0]*(6-count)+screen(f'{tag}.{value:03d}СП')[:6],s
+        return
     assert s['frame']==screen(f'{prefix} {value:08d}СП'),s
 
 def encounter(seed=8,extra=()):
@@ -225,8 +235,10 @@ def test_thargoids():
     s=play(encounter(3)+['input 22']*3+
            ['input 81','input 21','input 82','input 21','input 83','input 21'])
     assert s[6]['pages'][3][1]==0 and s[6]['regs'][9]==2
-    assert s[4]['steps']<330 and s[6]['steps']<355,('repeated combat setup/page reads',s[4],s[6])
-    assert s[8]['steps']<315,('extra ship-page opening in a laser turn',s[8])
+    # Graphics add a cached formation and target identity. Allow rebuilding
+    # the formation on casualties, but never a repeated per-symbol ROM loop.
+    assert s[4]['steps']<350 and s[6]['steps']<380,('repeated combat setup/page reads',s[4],s[6])
+    assert s[8]['steps']<335,('extra ship-page opening in a laser turn',s[8])
     assert s[-1]['frame']==screen('YES. CLEAr СП') and s[-1]['pages'][1][8]==1
     assert s[-1]['pages'][4][6]==0
     for cmd in ('input 81','input 85','input 86','input 10','input 15','input 45','input 60'):
@@ -279,21 +291,78 @@ def test_combat_cache_and_motion():
     assert s['pages'][3][8]==44 and s['pages'][3][1]==30,s
     print('ELITE: battle queries preserve cached hull; three lasers, all manoeuvres and re-equipped contact OK',flush=True)
 
+def test_instruments_and_formation():
+    # Independent threshold oracle: each lit cell covers the next interval,
+    # and the right-hand number remains exact at every zero/boundary/cap.
+    for view,field,prefix,step,values in (
+            (2,4,'H',20,(0,1,19,20,21,40,60,80,81,99)),
+            (3,5,'S',12,(0,1,11,12,13,24,36,48,49,60)),
+            (4,6,'F',20,(0,1,20,21,40,60,80,99)),
+            (5,7,'t',20,(0,1,20,40,60,69,70,79,80,99))):
+        commands=START.copy()
+        for value in values:commands += [f'set 24 {field} {value}',f'input {view}',f'input {view}']
+        rows=play(commands)[2:]
+        for value,before,again in zip(values,rows[::2],rows[1::2]):
+            cells=sum(value>threshold for threshold in range(0,5*step,step))
+            expected=[GLYPHS[prefix]]+[54]*cells+[0]*(6-cells)+screen(f'{value:03d}СП')[:5]
+            assert before['frame']==expected,(value,before)
+            assert again['revision']==before['revision'] and state(again)==state(before)
+    for value in (0,1,4,5,8,12,16,17,20):
+        s=play(START+[f'set 25 0 {value}','input 7'])[-1]
+        cells=sum(value>threshold for threshold in (0,4,8,12,16))
+        assert s['frame']==[62]+[54]*cells+[0]*(6-cells)+screen(f'{value:03d}СП')[:5],s
+
+    commands=encounter(3)
+    for distance in range(100):commands += [f'set 27 2 {distance}','input 9']
+    for distance,s in enumerate(play(commands)[4:]):
+        expected=screen(f'r{distance:02d}U-----.-СП')
+        position=4+min(distance//4,4) if distance<=18 else 9
+        expected[position]=118|(128 if position==8 else 0)
+        assert s['frame']==expected,(distance,s)
+        assert s['pages'][0][3]==1 and s['pages'][3][2]==distance,s
+
+    # Fill the formation, select every target, then remove drones one by one.
+    # Queries between shots must not invalidate the formation or glyph cache.
+    commands=encounter(3)+['set 27 2 30']+['input 23']*9+['set 25 7 9']
+    for target in range(1,6):
+        commands += [f'input {80+target}','input 3','input 9','input 16','input 22']
+    rows=play(commands)
+    for s in rows:
+        if s['regs'][10]==16:number(s,'H',s['regs'][8])
+    assert rows[-1]['pages'][4][6]==0 and rows[-1]['pages'][3][1]==120
+    print('ELITE: instrument boundaries, 100 range diagrams, five targets and cached formation OK',flush=True)
+
 def main():
     directory=ROOT/'programs/games/ELITE'
     parts=sorted(directory.glob('part[0-9][0-9].m61'))
-    assert len(parts)==6 and not list(directory.glob('b[0-9][0-9].m61'))
+    assert len(parts)==5 and not list(directory.glob('b[0-9][0-9].m61'))
     expected=['open manual.md','reinit']+[f'open {p.name}' for p in parts]+['run']
     assert (directory/'autoexec.m61').read_text().splitlines()==expected
-    addresses=[int(line.split()[1]) for p in parts for line in p.read_text().splitlines()]
-    assert addresses==list(range(0,32*112,112))
+    # Sparse hin records must reconstruct the exact linked image over clear
+    # memory, including zero instruction operands and nine-word data pages.
+    banks,_=create_game().link()
+    actual=bytearray(32*112)
+    written=set()
+    records=[line.split() for part in parts for line in part.read_text().splitlines()]
+    for op,address,hex_bytes in records:
+        assert op=='hin'
+        address=int(address);payload=bytes.fromhex(hex_bytes)
+        assert 0<len(payload)<=112 and address//112==(address+len(payload)-1)//112
+        positions=set(range(address,address+len(payload)))
+        assert not positions & written
+        written.update(positions)
+        actual[address:address+len(payload)]=payload
+    assert {address//112 for address in written}==set(banks)
+    assert actual==b''.join(banks[bank] for bank in range(32))
+    assert sum(path.stat().st_size for path in parts)<32*234
     for path in directory.glob('*.m61'):
         assert path.stat().st_size<=1536
         assert all(len(line)<=239 for line in path.read_text().splitlines())
     for path in directory.glob('*.md'):
         assert path.stat().st_size<=1536
     tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
-           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion)
+           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,
+           test_instruments_and_formation)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)

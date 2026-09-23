@@ -15,12 +15,14 @@ def add_combat(a):
     m.ld(2).n(5).op('-').jge('bad_action').jump('fight')
     m.label('choose_target').ld(0).n(86).op('-').jge('bad_action')
     m.ld(0).n(80).op('-').st(1).call('target_hp').jz('bad_action').st(8)
-    m.label('store_target').ld(1).put(27,5).set('A',16).op('ret')
+    m.label('store_target').ld(1).st(5).put(27,5)
+    m.ld(1).call('glyph').n(65).op('+').st(7).set('A',16).op('ret')
 
     # Outside page callbacks: R1 maneuver, R2 action, R3 outgoing damage,
     # R4 incoming damage, R5 target, R6 surviving drones.
-    # Between commands R6/R8 cache live drones / selected hull; queries
-    # preserve both. The pre-hit drone count is used for simultaneous fire.
+    # Between commands R5/R6/R7/R8 cache target / live drones / target glyph
+    # delta / selected hull; queries preserve them. The pre-hit drone count
+    # is used for simultaneous fire. The glyph changes only on selection.
     # During a turn R8 temporarily carries the enemy's launch flag.
     # Validate before consuming ammunition, advancing enemies or cooling.
     # Shield and escape remain available after the selected target is dead.
@@ -107,8 +109,8 @@ def add_combat(a):
     m.n(7).op('-').jz('target_view')
     m.n(1).op('-').jz('drones_view')
     m.n(1).op('-').jz('charge_view').jump('target_number')
-    m.label('range_view').get(27,2).set('D',GLYPHS['r']).jump('draw_number')
-    m.label('target_view').ld(8).st('C').set('D',GLYPHS['H']).jump('draw_number')
+    m.label('range_view').get(27,2).jump('draw_range')
+    m.label('target_view').ld(8).st('C').ld(7).st('D').ld(6).st('B').visit(29,'battle_frame').op('ret')
     m.label('drones_view').ld(6).st('C').set('D',GLYPHS['d']).jump('draw_number')
     m.label('charge_view').get(27,6).set('D',GLYPHS['P']).jump('draw_number')
     m.label('target_number').get(27,5).set('D',GLYPHS['t']).jump('draw_number')

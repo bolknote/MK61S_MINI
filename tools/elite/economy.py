@@ -109,7 +109,8 @@ def add_economy(a):
     # Equipment cannot change in flight. Decode the laser once per contact;
     # COMBAT R8 holds its base damage throughout the battle.
     m.label('start_contact').st(1).get(25,6).n(1000000).op('/','int').n(12).op('*').n(20).op('+').st('D')
-    m.ld(1).st('C').visit(27,'init_enemy').visit(28,'init_drones').ld('D').st(6).ld('E').st(8).set(9,2).set('A',0).op('ret')
+    m.ld(1).st('C').visit(27,'init_enemy').visit(28,'init_drones').ld('D').st(6).ld('E').st(8)
+    m.set(5,0).set(7,GLYPHS['H']+65).set(9,2).set('A',0).op('ret')
     m.label('init_enemy').ld('D').st(8).ld('C').st(0).n(2).op('*').n(10).op('+').st(7)
     m.set(1,60).ld(0).n(4).op('-').jnz('enemy_fields').set(1,120)
     m.label('enemy_fields').ld(1).st('E').set(2,14).n(0)

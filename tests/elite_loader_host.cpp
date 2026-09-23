@@ -128,7 +128,7 @@ unsigned elite_load_game(const char* path) {
   if(m61_text::last_error(error)) {
     std::cerr<<error.script<<':'<<error.line<<": "<<error.message<<'\n'; std::exit(6);
   }
-  if(m61_text::active() || core_61::is_RUN() || written_bytes!=32*112) {
+  if(m61_text::active() || core_61::is_RUN() || written_bytes==0) {
     std::cerr<<"ELITE loader failed to reach the title stop; bytes="<<written_bytes<<'\n';
     std::exit(7);
   }
