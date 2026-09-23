@@ -1030,6 +1030,190 @@ static void test_authentic_core_smoke(void) {
   check_near("2 ENTER 3 +", read_live_x(), 5.0, 1e-8);
 }
 
+static void test_virtual_call_rom_addressing(void) {
+  std::printf("virtual calls use ROM local address conversion:\n");
+  static const struct { u8 size; u8 bytes[4]; } expressions[] = {
+      {1,{0x20}}, {2,{0x20,0x22}}, {3,{0x20,0x20,0x24}},
+      {3,{0x20,0x22,0x22}}, {4,{0x20,0x22,0x22,0x22}},
+      {2,{0x20,0x15}}, {2,{0x20,0x17}}, {3,{0x0D,0x20,0x11}},
+      {1,{0x0D}},
+  };
+  unsigned checked=0;
+  bool correct=true;
+  for(const auto& expression : expressions) {
+    for(u8 reg : {0,3,4,6,7,14}) {
+      // Zero in a non-counter register would jump back to our entry jump.
+      if(expression.bytes[0]==0x0D && expression.size==1 && reg>=7)continue;
+      u8 code[105];std::memset(code,0x52,sizeof(code));
+      code[0]=0x51;code[1]=0x40;
+      usize pc=40;code[pc++]=4;code[pc++]=2;
+      std::memcpy(code+pc,expression.bytes,expression.size);pc+=expression.size;
+      code[pc++]=0x40+reg;code[pc++]=0x0A;code[pc++]=0x4D;
+      code[pc++]=0xA0+reg;code[pc++]=0x0A;code[pc++]=0x50;
+      char expected[6][15]={};
+      core_61::set_expanded_program_mode(false);core_61::enable();
+      run_program(code,sizeof(code));
+      for(int r=0;r<5;r++)read_stack_register((stack)r,expected[r],SYMBOLS);
+      MK61Emu_ReadRegister(reg,expected[5],SYMBOLS);
+      correct &= core_61::is_CALC() && !core_61::has_error();
+      for(u8 bank : {0,3}) {
+        core_61::set_expanded_program_mode(true);core_61::enable();
+        core_61::clear_extended_program_banks();
+        if(bank==0)run_program(code,sizeof(code));
+        else {
+          for(usize i=0;i<sizeof(code);i++)
+            correct &= core_61::write_absolute_program(bank*112+i,code[i]);
+          const u8 entry[]={0x1F,0x51,0x03,0x36}; // bank 3, local 00
+          run_program(entry,sizeof(entry));
+        }
+        bool equal=core_61::is_CALC() && !core_61::has_error() &&
+            !core_61::extended_program_error() && core_61::active_program_bank()==bank;
+        for(int r=0;r<6;r++) {
+          char actual[15]={};
+          if(r<5)read_stack_register((stack)r,actual,SYMBOLS);
+          else MK61Emu_ReadRegister(reg,actual,SYMBOLS);
+          equal &= std::memcmp(actual,expected[r],15)==0;
+        }
+        if(!equal)std::printf("  expr=%lu reg=%X bank=%u X=%.8g\n",
+            (unsigned long)(&expression-expressions),reg,bank,read_live_x());
+        correct &= equal;checked++;
+      }
+    }
+  }
+  check_true("104 fractional/negative/large/zero selectors match ROM stack and register",correct && checked==104);
+
+  bool dark_correct=true;
+  for(u8 target=0xF9;target<=0xFF && target>=0xF9;target++) {
+    for(bool indirect : {false,true}) {
+      char expected[5][15]={};
+      for(int profile=0;profile<3;profile++) {
+        const bool expanded=profile!=0;const u8 bank=profile==2?3:0;
+        core_61::set_expanded_program_mode(expanded);core_61::enable();
+        core_61::clear_extended_program_banks();
+        set_register_integer(7,target); // replace the mantissa with raw 00...F9/FA/...
+        const usize base=7*MK61_MEMORY_PAGE_TETRADES;
+        for(usize i=0;i<8;i++)ringM[base+21-i*3]=0;
+        ringM[base+3]=target>>4;ringM[base]=target&15;
+        ringM[base+27]=7;ringM[base+30]=0;
+        u8 page[core_61::CODE_PAGE_BUFFER_SIZE];std::memset(page,0x52,sizeof(page));
+        for(int i=47;i<=53;i++)page[i]=0x22;
+        page[78]=7;page[79]=0x4D;page[80]=indirect?0xA7:0x53;
+        usize end=81;if(!indirect)page[end++]=target;
+        page[end++]=0x0A;page[end]=0x50;
+        if(bank==0) {
+          core_61::set_code_page(page);core_61::set_IP(78);
+          press_matrix({2,9});
+          for(int i=0;i<256 && core_61::is_RUN();i++)core_61::step();
+        } else {
+          for(usize i=0;i<112;i++)
+            dark_correct &= core_61::write_absolute_program(bank*112+i,page[i]);
+          const u8 entry[]={0x1F,0x51,0x04,0x14}; // bank 3, local 78
+          run_program(entry,sizeof(entry));
+        }
+        bool equal=core_61::is_CALC() && !core_61::has_error() &&
+            !core_61::extended_program_error() && core_61::active_program_bank()==bank;
+        for(int r=0;r<5;r++) {
+          char actual[15]={};read_stack_register((stack)r,actual,SYMBOLS);
+          if(profile==0)std::memcpy(expected[r],actual,15);
+          else equal &= std::memcmp(actual,expected[r],15)==0;
+        }
+        equal &= std::fabs(read_live_x()-49.0)<1e-8;
+        if(!equal)std::printf("  dark=%02X indirect=%d profile=%d X=%.8g\n",target,indirect,profile,read_live_x());
+        dark_correct &= equal;
+      }
+    }
+  }
+  check_true("28 direct/indirect dark calls wrap then return in banks 0/3",dark_correct);
+  core_61::set_expanded_program_mode(false);
+}
+
+static void test_virtual_return_x2(void) {
+  std::printf("virtual returns preserve ROM X2 restoration:\n");
+  static const struct { u8 size; u8 bytes[6]; } expressions[] = {
+      {4,{7,0x0E,8,0x10}},       // 15, while X2 still contains 8
+      {5,{1,9,0x0E,7,0x11}},    // subtraction
+      {4,{2,0x0E,3,0x12}},       // multiplication
+      {3,{8,1,0x21}},            // square root
+      {5,{0,0x0E,1,9,0x11}},    // negative result
+      {5,{1,0,0x0E,2,0x13}},    // division
+      {4,{3,0x0E,3,0x11}},       // zero
+  };
+  static const u8 restores[] = {0x0A,0x0B,0x0C}; // dot, sign, exponent
+  bool correct = true;
+  for(const auto& expression : expressions) {
+    for(u8 restore : restores) {
+      for(bool nested : {false,true}) {
+        char expected[5][15] = {};
+        u8 code[97]; std::memset(code,0x50,sizeof(code));
+        std::memcpy(code,expression.bytes,expression.size);
+        code[expression.size] = 0x53; code[expression.size+1] = 0x90;
+        code[expression.size+2] = restore;
+        if(restore == 0x0C) code[expression.size+3] = 1;
+        code[90] = nested ? 0x53 : 0x52;
+        if(nested) {code[91]=0x95;code[92]=0x52;code[95]=0x22;code[96]=0x52;}
+        core_61::set_expanded_program_mode(false);core_61::enable();
+        run_program(code,sizeof(code));
+        for(int reg=0;reg<5;reg++)
+          read_stack_register((stack)reg,expected[reg],SYMBOLS);
+        correct &= core_61::is_CALC() && !core_61::has_error();
+        for(bool far : {false,true}) {
+          for(bool indirect : {false,true}) {
+            core_61::set_expanded_program_mode(true);core_61::enable();
+            core_61::clear_extended_program_banks();
+            const u16 target = far ? 250 : 90;
+            set_register_integer(7,target);
+            std::memset(code,0x50,sizeof(code));
+            std::memcpy(code,expression.bytes,expression.size);
+            usize pc=expression.size;
+            if(far)code[pc++]=0x1F;
+            code[pc++]=indirect ? 0xA7 : 0x53;
+            if(!indirect) {
+              if(far)code[pc++]=0x02;
+              code[pc++]=far ? 0x50 : 0x90;
+            }
+            code[pc++]=restore;
+            if(restore==0x0C)code[pc++]=1;
+            if(far) {
+              core_61::write_absolute_program(250,nested?0x53:0x52);
+              if(nested) {
+                core_61::write_absolute_program(251,0x31); // local 31 = 255
+                core_61::write_absolute_program(252,0x52);
+                core_61::write_absolute_program(255,0x22);
+                core_61::write_absolute_program(256,0x52);
+              }
+            } else {
+              code[90]=nested?0x53:0x52;
+              if(nested){code[91]=0x95;code[92]=0x52;code[95]=0x22;code[96]=0x52;}
+            }
+            run_program(code,sizeof(code));
+            bool equal=core_61::is_CALC() && !core_61::has_error() &&
+                !core_61::extended_program_error() && core_61::active_program_bank()==0;
+            for(int reg=0;reg<5;reg++) {
+              char actual[15]={};read_stack_register((stack)reg,actual,SYMBOLS);
+              equal &= std::memcmp(actual,expected[reg],15)==0;
+            }
+            if(!equal)std::printf("  expr=%lu restore=%02X nested=%d far=%d indirect=%d X=%.8g\n",
+                (unsigned long)(&expression-expressions),restore,nested,far,indirect,read_live_x());
+            correct &= equal;
+          }
+        }
+      }
+    }
+  }
+  check_true("168 near/far/direct/indirect returns match ROM X/Y/Z/T/X1 after X2 restore",correct);
+  for(bool expanded : {false,true}) {
+    core_61::set_expanded_program_mode(expanded);core_61::enable();
+    core_61::clear_extended_program_banks();
+    // 10^100 is still legal before synchronization; returning must normalize
+    // it and report the same overflow as an ordinary ROM return.
+    const u8 overflow[]={5,0,0x15,0x22,0x53,0x09,0x50,0x50,0x50,0x52};
+    run_program(overflow,sizeof(overflow));
+    check_true(expanded ? "virtual return normalizes overflow" : "ROM return normalizes overflow",
+        core_61::is_CALC() && core_61::has_error() && !core_61::extended_program_error());
+  }
+  core_61::set_expanded_program_mode(false);
+}
+
 static void test_far_condition_writeback(void) {
   std::printf("far conditions immediately after arithmetic:\n");
   static const struct { u8 size; u8 bytes[10]; } expressions[] = {
@@ -2345,6 +2529,8 @@ int main(void) {
   test_transcendental();
   test_authentic_core_smoke();
   test_extended_prefixes();
+  test_virtual_return_x2();
+  test_virtual_call_rom_addressing();
   test_far_condition_writeback();
   test_extended_opcode_matrix();
   test_packed_segment_frames();

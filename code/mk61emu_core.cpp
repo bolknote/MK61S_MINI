@@ -1340,19 +1340,6 @@ static bool read_bcd_absolute_address(u16 address, u16& target) {
   return target < core_61::EXTENDED_ADDRESS_LIMIT;
 }
 
-static bool read_near_address(u8 bank, u8 local, u16& target) {
-  u8 encoded = 0;
-  if(!core_61::read_absolute_program(
-         (u16) (bank * core_61::MAX_PROGRAM_STEP + local), encoded))
-    return false;
-  // The original ROM computes high_nibble*10 + low_nibble; the low nibble is
-  // not checked as BCD.  Thus an ordinary CALL operand 1F means step 25.
-  const u8 offset = (u8) ((encoded >> 4) * 10U + (encoded & 0x0FU));
-  if(offset >= core_61::MAX_PROGRAM_STEP) return false;
-  target = (u16) (bank * core_61::MAX_PROGRAM_STEP + offset);
-  return true;
-}
-
 static bool x_condition(u8 opcode, bool& branch) {
   char text[15] = {};
   read_stack_register(stack::X, text, EXTENDED_ASCII_DIGITS);
@@ -1540,25 +1527,18 @@ static bool execute_virtual_control(u8 local_address, u8 opcode) {
     return true;
   }
   if(extended_program.return_depth >= EXTENDED_RETURN_DEPTH) return false;
-  u16 destination = 0;
   u16 next = 0;
   if(opcode == 0x53) {
-    const u8 operand = (u8) ((local_address + 1U) %
-                             core_61::MAX_PROGRAM_STEP);
-    if(!read_near_address(bank, operand, destination)) return false;
     next = (u16) (bank * core_61::MAX_PROGRAM_STEP +
                   (local_address + 2U) % core_61::MAX_PROGRAM_STEP);
   } else if((opcode & 0xF0U) == 0xA0U) {
-    u16 offset = 0;
-    if(!read_indirect_target((u8) (opcode & 0x0FU),
-                             core_61::MAX_PROGRAM_STEP, offset)) return false;
-    destination = (u16) (bank * core_61::MAX_PROGRAM_STEP + offset);
     next = (u16) (bank * core_61::MAX_PROGRAM_STEP +
                   (local_address + 1U) % core_61::MAX_PROGRAM_STEP);
   } else {
     return false;
   }
-  if(!set_extended_next_pc(destination)) return false;
+  // Keep only the return address here. The matching ROM jump resolves the
+  // local target, including fractional/hex selectors and auto-counters.
   extended_program.return_addresses[extended_program.return_depth++] = next;
   return true;
 }
@@ -1768,7 +1748,16 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
         }
         if(handled) {
           if(!success) extended_program.error = true;
+          // A ROM return also synchronizes X -> X2 and normalizes X. The
+          // virtual stack handles only its control flow; F0 preserves the
+          // return's numeric side effects without touching the ROM stack.
           executed_opcode = success ? (u8) MK61_NOP : 0x50U;
+          if(success) {
+            if(semantic_opcode == 0x52U) executed_opcode = 0xF0U;
+            else if(semantic_opcode == 0x53U) executed_opcode = 0x51U;
+            else if((semantic_opcode & 0xF0U) == 0xA0U)
+              executed_opcode = semantic_opcode - 0x20U;
+          }
         }
       }
       encode_mk61_opcode(executed_opcode);
