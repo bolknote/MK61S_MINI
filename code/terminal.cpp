@@ -23,6 +23,7 @@
 #include "m61_text.hpp"
 #include "virtual_fat.hpp"
 #include "program_store.hpp"
+#include "program_load.hpp"
 #include "language_workspace.hpp"
 #if MK61_ANY_LOADABLE_MODULE
   #include "loadable_module_runtime.hpp"
@@ -3872,6 +3873,15 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
         // Незавершённая загрузка не должна переживать переход к другой
         // команде. Рабочая область между пакетами всё равно не удерживается.
         if(command_id != CMD_FS_PUT) cancel_file_upload();
+        if(program_load::blocked() &&
+           (command_id == CMD_HIN || command_id == CMD_SET_CODE ||
+            command_id == CMD_ASM || command_id == CMD_INS ||
+            command_id == CMD_KBD || command_id == CMD_CMD)) {
+          program_load::cancel();
+          Serial.println(program_load::error());
+          recive_pos = 0;
+          return terminal_protocol::Result::error();
+        }
         switch (command_id) {
           case  CMD_VERSION:
               output_version();
@@ -3942,6 +3952,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                     terminal_protocol::ResultKind::REINIT_CALCULATOR, "");
               }
               m61_text::cancel();
+              program_load::reset();
               reinit_mk61_calculator_state();
               Serial.println("Calculator reinitialized.");
             break;
@@ -4591,6 +4602,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 }
                 break;
               }
+              if(program_load::blocked()) {
+                Serial.println(program_load::error());
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
               if(script_mode) return script_action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
               kbd::push((i8) sw::F);   // F
               kbd::push((i8) sw::NEG); // /-/
@@ -4620,6 +4636,26 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
             break;
+          case CMD_ZTART:
+          case CMD_ZIN: {
+              bool ok;
+              if(command_id == CMD_ZTART) {
+                if(core_61::is_RUN()) {
+                  Serial.println("Stop calculator before ztart");
+                  recive_pos = 0;
+                  return terminal_protocol::Result::error();
+                }
+                const u16 limit = library_mk61::program_memory_mode() ==
+                    ProgramMemoryMode::CLASSIC_105 ? core_61::CLASSIC_PROGRAM_STEP :
+                    core_61::EXTENDED_ADDRESS_LIMIT;
+                ok = program_load::start(command_args(), limit);
+                // No output size is sent: in AUTO select banked memory up front.
+                if(ok) apply_program_memory_auto(nullptr, 0, true, true);
+              } else ok = program_load::data(command_args());
+              if(!ok) Serial.println(program_load::error());
+              recive_pos = 0;
+              return ok ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
+            }
           case  CMD_HIN:
           case  CMD_SET_CODE:
               if(!GetHexString(command_id == CMD_SET_CODE ? (const char*) &input_buffer[4] : command_args())) {

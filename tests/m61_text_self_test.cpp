@@ -1,6 +1,8 @@
 #include "m61_text.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
+#include "program_load.hpp"
+#include "base91.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
 
@@ -23,6 +25,7 @@ static std::vector<StoredScript> scripts;
 static int range_reads = 0;
 static int executed_commands = 0;
 static int clear_count = 0;
+static u8 loaded_program[10000] = {};
 static usize active_program_steps = core_61::CLASSIC_PROGRAM_STEP;
 static core_61::Mk61ProgramBoundaryHook boundary_hook = nullptr;
 static void* boundary_user_data = nullptr;
@@ -133,6 +136,15 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
 
 namespace core_61 {
 
+bool read_absolute_program(u16 address, u8& value) {
+  if(address>=sizeof(loaded_program)) return false;
+  value=loaded_program[address]; return true;
+}
+bool write_absolute_program(u16 address, u8 value) {
+  if(address>=sizeof(loaded_program)) return false;
+  loaded_program[address]=value; return true;
+}
+
 usize program_steps(void) { return active_program_steps; }
 
 void get_code_page(uint8_t* page) {
@@ -229,10 +241,12 @@ void hidden_start_loaded_program(void) {
 
 void MK61Emu_ClearCodePage(void) {
   clear_count++;
+  std::memset(loaded_program,0,sizeof(loaded_program));
 }
 
 void reinit_mk61_calculator_state(void) {
   reinit_count++;
+  std::memset(loaded_program,0,sizeof(loaded_program));
   m_IK1302.comma = 0;
 }
 
@@ -306,6 +320,10 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
     return terminal_protocol::Result::wait(500);
   }
   if(std::strcmp(line, "bad") == 0) return terminal_protocol::Result::error();
+  if(std::strncmp(line,"ztart ",6)==0)
+    return program_load::start(line+6,10000) ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
+  if(std::strncmp(line,"zin ",4)==0)
+    return program_load::data(line+4) ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
   if(std::strcmp(line, "run") == 0) return terminal_protocol::Result::action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
   if(std::strncmp(line, "run :", 5) == 0) {
     return terminal_protocol::Result::action(terminal_protocol::ResultKind::GOTO_LABEL, line + 5);
@@ -328,6 +346,7 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
 
 static void reset_host(void) {
   m61_text::cancel();
+  program_load::reset();
   assert((u8) core_61::context_buffer_owner == 0);
   scripts.clear();
   range_reads = 0;
@@ -1252,7 +1271,67 @@ static void test_nested_open_preserves_program_and_root_still_clears(void) {
   assert(clear_count==2); // A fresh launch still starts with empty memory.
 }
 
+static void test_compressed_load_spans_children_and_blocks_incomplete_run() {
+  const u8 expected[]={1,2,3,4,5,1,2,3,4,5,0x50};
+  // Fixture produced by the independent desktop optimal ZX0 compressor.
+  const char* encoded="ND#(:C?hHI~d.D";
+  u8 packed[32]; usize size;
+  assert(base91::decode(encoded,std::strlen(encoded),packed,sizeof(packed),size));
+  std::vector<std::string> lines;
+  for(usize i=0;i<size;++i) {
+    std::string line="zin ";
+    assert(base91::encode(packed+i,1,{&line,[](void* p,char ch) {
+      static_cast<std::string*>(p)->push_back(ch); return true;
+    }}));
+    lines.push_back(line+'\n');
+  }
+  std::string first="ztart 0000 F33F81CF\n", second;
+  for(usize i=0;i<lines.size();++i) (i<lines.size()/2 ? first : second)+=lines[i];
+  reset_host();
+  add_script("ROOT","open FIRST\nopen SECOND\nret\n");
+  add_script("FIRST",first.c_str());
+  add_script("SECOND",second.c_str());
+  assert(m61_text::load_program("ROOT"));
+  for(int i=0;i<20 && m61_text::active();++i) m61_text::service();
+  assert(!m61_text::active() && !program_load::blocked());
+  assert(std::memcmp(loaded_program,expected,sizeof(expected))==0);
+  assert(clear_count==1);
+  m61_text::Error error;
+  assert(!m61_text::last_error(error));
+
+  for(const char* tail:{"", "ret\n", "run\n"}) {
+    reset_host();
+    const std::string script="open FIRST\n"+std::string(tail);
+    add_script("ROOT",script.c_str());
+    add_script("FIRST",first.c_str());
+    (void)m61_text::load_program("ROOT");
+    for(int i=0;i<20 && m61_text::active();++i) m61_text::service();
+    assert(m61_text::last_error(error));
+    assert(std::strstr(error.message,"Incomplete")!=nullptr);
+    assert(!core_61::is_RUN() && program_load::blocked());
+    // A new root clears both the banks and a failed loader session.
+    add_script("FRESH","ret\n");
+    assert(m61_text::load_program("FRESH"));
+    assert(!program_load::blocked());
+  }
+  reset_host();
+  add_script("BADCRC","ztart 0000 F33F81CE\nzin ND#(:C?hHI~d.D\nrun\n");
+  assert(!m61_text::load_program("BADCRC"));
+  assert(m61_text::last_error(error) && error.line==2);
+  assert(std::strstr(error.message,"CRC32") && !core_61::is_RUN());
+
+  reset_host();
+  add_script("CANCEL","ztart 0000 F33F81CF\nwait 500\nrun\n");
+  assert(m61_text::load_program("CANCEL"));
+  m61_text::cancel();
+  assert(program_load::blocked() && !core_61::is_RUN());
+  reset_host();
+  add_script("RESET","ztart 0000 F33F81CF\nreinit\nret\n");
+  assert(m61_text::load_program("RESET") && !program_load::blocked());
+}
+
 int main(void) {
+  test_compressed_load_spans_children_and_blocks_incomplete_run();
   test_nested_open_preserves_program_and_root_still_clears();
   test_nested_interpreter_esc_cancels_scenario_silently();
   test_loadfont_is_m61_scoped_and_uses_script_directory();

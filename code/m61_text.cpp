@@ -3,6 +3,7 @@
 #include "bounded_string.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
+#include "program_load.hpp"
 #include "stm32_sram_bit_band.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
@@ -527,6 +528,7 @@ static void close_text_font_session(void) {
 }
 
 static void stop_runner(void) {
+  program_load::cancel();
   close_text_font_session();
   clear_trap_runtime(true);
   clear_bind_runtime();
@@ -1045,6 +1047,10 @@ static bool restore_return_frame(const ReturnFrame& returned) {
 
 static bool return_from_script(void) {
   if(return_stack_depth == 0) {
+    if(program_load::blocked()) {
+      fail_script(program_load::error(), script_line);
+      return false;
+    }
     if(any_trap_is_active() || any_bind_is_active()) {
       runner_state = RunnerState::WATCH_EVENTS;
       wait_until_ms = 0;
@@ -1561,6 +1567,10 @@ static bool execute_script_line(const char* raw_line) {
     case terminal_protocol::ResultKind::OK:
       return true;
     case terminal_protocol::ResultKind::RUN_PROGRAM:
+      if(program_load::blocked()) {
+        line_error_message = program_load::error();
+        return false;
+      }
       if(start_current_program()) return true;
       line_error_message = trap_context_valid()
           ? "cannot run calculator from a trap handler"
@@ -1609,11 +1619,13 @@ static bool execute_script_line(const char* raw_line) {
       }
       clear_active_handlers();
       display_claimed = false;
+      program_load::reset();
       reinit_mk61_calculator_state();
       return true;
     case terminal_protocol::ResultKind::ERROR:
     case terminal_protocol::ResultKind::KEY:
-      line_error_message = "terminal command failed";
+      line_error_message = program_load::blocked()
+          ? program_load::error() : "terminal command failed";
       return false;
   }
   return false;
@@ -1670,7 +1682,10 @@ void service(void) {
       return;
     }
     if(!execute_script_line(line)) {
-      fail_script(line_error_message == NULL ? "command failed" : line_error_message, line_number);
+      // A nested call/ret may already have reported the original failure and
+      // cleared its frame. Keep that script name, line and diagnostic intact.
+      if(!has_error)
+        fail_script(line_error_message == NULL ? "command failed" : line_error_message, line_number);
       return;
     }
   }
@@ -1711,6 +1726,7 @@ static bool load_frame(const ScriptFrame& frame) {
   boundary_hook_installed = true;
   terminal_script::reset();
   MK61Emu_ClearCodePage();
+  program_load::reset();
   runner_state = RunnerState::EXECUTING;
   service();
   return !has_error;

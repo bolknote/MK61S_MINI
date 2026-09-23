@@ -14,6 +14,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/code" \
   "$root/tests/m61_text_self_test.cpp" \
   "$root/code/m61_text.cpp" \
+  "$root/code/base91.cpp" "$root/code/zx0_stream.cpp" "$root/code/program_load.cpp" \
   -o "$out"
 
 "$out"

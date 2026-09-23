@@ -15,7 +15,7 @@ enum : u8 {
   CMD_FS_RMDIR, CMD_FS_STAT, CMD_DATE, CMD_FS_GET, CMD_FS_PUT,
   CMD_USB_SCREEN, CMD_PRINT, CMD_WAIT, CMD_RET, CMD_REINIT, CMD_PROFILE,
   CMD_CRASH, CMD_WATCHDOG, CMD_MPU, CMD_DISPLAY, CMD_IDENTITY,
-  CMD_BENCHMARK, CMD_ALARM, CMD_USB_DISK
+  CMD_BENCHMARK, CMD_ALARM, CMD_USB_DISK, CMD_ZTART, CMD_ZIN
 };
 
 // Файлы M61 — это данные, а не привилегированный сеанс терминала. Список
@@ -33,6 +33,8 @@ constexpr bool terminal_command_allowed_in_script(u8 id) {
     case CMD_LOAD:
     case CMD_1302:
     case CMD_HIN:
+    case CMD_ZTART:
+    case CMD_ZIN:
     case CMD_HOUT:
     case CMD_SET_CODE:
     case CMD_POKE:
