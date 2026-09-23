@@ -64,6 +64,7 @@ def test_trade_and_station():
     number(s[2],'1',19)
     assert s[3]['pages'][0][0]==981 and s[3]['pages'][1][0]==1
     assert s[3]['pages'][2][3]==29
+    assert s[3]['steps']<340,('trade recalculated the displayed quote',s[3])
     number(s[4],'1',1)
     assert s[5]['pages'][0][0]==998 and s[5]['pages'][1][0]==0
     assert state(s[5])==state(s[6]) and s[6]['frame']==screen('ErrOr     СП')
@@ -88,6 +89,38 @@ def test_trade_and_station():
     number(s[-2],'C',99999999)
     assert state(s[-2])==state(s[-1])
     print('ELITE: six goods, spread, capacity, money and station services OK',flush=True)
+
+def test_price_equivalence():
+    commands=START.copy()
+    expected=[]
+    for economy in range(16):
+        commands += [f'set 24 1 {economy*1048576}',
+                     f'set 26 0 {economy*1048576}',f'set 26 2 {economy}']
+        for good in range(6):
+            # The original unsimplified formula is the independent oracle.
+            base=((good+1)*(good+2)*10*(80+5*((economy+2*good)%16)))//100
+            for stock in (0,1,30,98,99):
+                commands += [f'set 26 {3+good} {stock}',f'input {10+good}']
+                expected.append((economy,good,max(1,base+2*(30-stock))))
+    for s,(economy,good,quote) in zip(play(commands)[2:],expected):
+        number(s,str(good+1),quote)
+        assert s['pages'][2][2]==economy,s
+
+    # Updating a clamped price as old_price+2 is wrong at abundant stock.
+    for stock,command,credits,next_stock,quote in (
+            (98,30,999,97,1),(40,30,999,39,1),(39,30,999,38,3),
+            (98,40,1000,99,1),(39,40,1000,40,1),(38,40,1000,39,1)):
+        s=play(START+[f'set 26 3 {stock}','set 25 0 1',f'input {command}'])[-1]
+        number(s,'1',quote)
+        assert s['pages'][0][0]==credits and s['pages'][2][3]==next_stock,s
+
+    # A real arrival must replace the cached economy, not retain the old one.
+    s=play(START+['set 25 6 1013120','set 24 8 1','input 214','input 60','input 10'])[-1]
+    world=(((251*144+12345)%65536)<<8)|144
+    assert s['regs'][9]==1 and s['pages'][0][1]==world,s
+    assert s['pages'][2][2]==world//1048576,s
+    number(s,'1',16+world//1048576)
+    print('ELITE: 480 original-formula quotes, minimum-price trades and arrival cache OK',flush=True)
 
 def test_navigation_and_input():
     s=play(START+['input 71','input 9','input 60'])
@@ -172,7 +205,7 @@ def main():
         assert all(len(line)<=239 for line in path.read_text().splitlines())
     for path in directory.glob('*.md'):
         assert path.stat().st_size<=1536
-    tests=(test_worlds_and_display,test_trade_and_station,test_navigation_and_input,
+    tests=(test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
            test_pirates_and_results,test_thargoids)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()

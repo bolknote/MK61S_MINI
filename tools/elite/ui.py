@@ -17,7 +17,13 @@ def add_ui(a):
         m.raw(*(int(d) for d in f'{GLYPHS[ch]:03d}'),0x52)
 
     m=a.module(4,'arithmetic')
-    for base in (10,16,100,256):m.label(f'mod{base}').mod(base).op('ret')
+    for base in (10,16,100,256):
+        m.label(f'mod{base}')
+        # Decimal shifts preserve all eight significant digits. Binary
+        # divisors still need subtraction: their fractions lose low bits.
+        if base in (10,100):m.n(base).op('/','frac').n(base).op('*')
+        else:m.mod(base)
+        m.op('ret')
     m.label('glyph').n(4).op('*').n(336).op('+').st('E').raw(0x1F,0xAE).op('ret')
 
     m=a.module(18,'messages')

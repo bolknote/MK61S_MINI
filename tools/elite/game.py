@@ -49,8 +49,12 @@ def create_game():
     m.ld('A').jz('show_world').ld('A').n(8).op('-').jz('show_destination')
     m.ld('A').n(10).op('-').jneg('show_stat')
     m.ld('A').n(20).op('-').jneg('show_price')
+    m.n(10).op('-').jge('show_cached_price')
     m.ld('A').n(20).op('-').st(1);dynamic_get(m,25,1)
     m.jump('good_prefix')
+    # Views 30..35 are one-use trade results in RC. Restore the normal price
+    # view before drawing, so the next command uses the usual dispatch.
+    m.label('show_cached_price').ld('A').n(20).op('-').st('A').jump('good_prefix')
     m.label('show_price').ld('A').n(10).op('-').st(1).call('price').st('C')
     m.label('good_prefix').ld(1).n(1).op('+').call('glyph').st('D').jump('draw_number')
     m.label('show_stat').ld('A').n(7).op('-').jz('show_hold')

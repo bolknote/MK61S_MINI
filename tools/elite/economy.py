@@ -23,19 +23,26 @@ def add_economy(a):
     m=a.module(5,'world')
     m.label('world').st('D').n(251).op('*').n(12345).op('+').mod(65536).n(256).op('*').ld('D').op('+','ret')
     m.label('select_world').ld(0).n(70).op('-').call('world').put(24,2).set('A',8).op('ret')
-    m.label('init_market').ld('C').st(0).ld('D').st(1).set(2,0).n(30)
+    # Decode the world's economy once on arrival, in the formerly reserved R2.
+    m.label('init_market').ld('C').st(0).n(1048576).op('/','int').st(2).ld('D').st(1).n(30)
     for i in range(3,9):m.st(i)
     m.op('ret')
     m.label('arrived_pilot').ld(2).st(1).st('C').ld(3).st('D').set(5,60).set(7,0).op('ret')
 
     m=a.module(6,'prices')
-    m.label('price').get(24,1).n(1048576).op('/','int').ld(1).n(2).op('*','+').call('mod16')
-    m.n(5).op('*').n(80).op('+').st(2)
-    m.ld(1).n(1).op('+').ld(1).n(2).op('+','*').n(10).op('*')
-    m.ld(2).op('*').n(100).op('/','int').st(2)
-    m.ld(1).n(3).op('+').st('B').far(0x53,26*112+63)
-    m.n(30).op('swap','-').n(2).op('*').ld(2).op('+').st(2).n(1).op('-').jge('price_ready')
-    m.set(2,1).label('price_ready').ld(2).op('ret')
+    # A single open market page supplies both economy and stock. RD retains
+    # the unclamped quote; R2 carries it back to a trade for its next display.
+    m.label('price').ld(1).st('B').visit(26,'price_market').ld('D').st(2).ld('C').op('ret')
+    # economy + 2*good is in 0..25: one subtraction replaces general mod 16.
+    m.label('price_market').ld('B').n(2).op('*').ld(2).op('+').n(16).op('-').jge('price_wrapped')
+    m.n(16).op('+')
+    m.label('price_wrapped').n(16).op('+').st('D')
+    # Consecutive factors give an even product. This is exactly the original
+    # floor((g+1)*(g+2)*10*(80+5*e)/100), with smaller integer intermediates.
+    m.ld('B').n(1).op('+').ld('B').n(2).op('+','*').n(2).op('/').ld('D').op('*').st('D')
+    m.ld('B').n(3).op('+').st('B').raw(0xDB)
+    m.n(30).op('swap','-').n(2).op('*').ld('D').op('+').st('D').st('C').n(1).op('-').jge('price_ready')
+    m.set('C',1).label('price_ready').op('ret')
 
     m=a.module(7,'trade')
     m.label('trade').call('price').st(3).ld(7).jge('trade_quote')
@@ -54,7 +61,10 @@ def add_economy(a):
     m.label('trade_commit').ld(3).ld(7).op('*').ld(4).op('swap','-').st('C').visit(24,'trade_money')
     m.ld(5).ld(7).op('+');dynamic_put(m,25,1)
     m.ld(6).ld(7).op('-').st('C').ld(1).n(3).op('+').st('B').far(0x53,26*112+WRITE)
-    m.ld(1).n(10).op('+').st('A').op('ret')
+    # Keep the unclamped quote: at saturated stocks max(1, raw)+2 is wrong.
+    m.ld(2).ld(7).n(2).op('*','+').st('C').n(1).op('-').jge('trade_price_ready')
+    m.set('C',1)
+    m.label('trade_price_ready').ld(1).n(30).op('+').st('A').op('ret')
 
     m=a.module(8,'station')
     m.label('station').set(3,5).set(4,6).set(5,24*112+WRITE).set(7,1).set(8,99)

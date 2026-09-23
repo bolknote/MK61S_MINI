@@ -1,6 +1,6 @@
 {
-  "occupied_bytes": 3311,
-  "free_bytes": 273,
+  "occupied_bytes": 3336,
+  "free_bytes": 248,
   "labels": {
     "start": 0,
     "new_game": 20,
@@ -16,26 +16,27 @@
     "set_view": 1442,
     "show": 1904,
     "port_view": 1937,
-    "show_price": 1991,
-    "good_prefix": 2002,
-    "show_stat": 2352,
-    "stat_get": 2386,
-    "show_missiles": 2392,
-    "stat_prefix": 2399,
-    "show_hold": 2422,
-    "show_world": 2440,
-    "show_destination": 2449,
-    "draw_name": 2456,
-    "draw_number": 2475,
-    "show_invalid": 2486,
-    "stat_masks": 2497,
+    "show_cached_price": 1999,
+    "show_price": 2009,
+    "good_prefix": 2362,
+    "show_stat": 2375,
+    "stat_get": 2403,
+    "show_missiles": 2409,
+    "stat_prefix": 2416,
+    "show_hold": 2439,
+    "show_world": 2457,
+    "show_destination": 2472,
+    "draw_name": 2479,
+    "draw_number": 2491,
+    "show_invalid": 2502,
+    "stat_masks": 2513,
     "display": 224,
     "name_alphabet": 235,
     "mod10": 448,
-    "mod16": 460,
-    "mod100": 472,
-    "mod256": 486,
-    "glyph": 500,
+    "mod16": 458,
+    "mod100": 470,
+    "mod256": 482,
+    "glyph": 496,
     "title": 2016,
     "victory": 2047,
     "defeat": 2079,
@@ -54,13 +55,16 @@
     "world": 560,
     "select_world": 598,
     "init_market": 617,
-    "arrived_pilot": 633,
+    "arrived_pilot": 642,
     "price": 672,
-    "price_ready": 756,
+    "price_market": 688,
+    "price_wrapped": 704,
+    "price_ready": 750,
     "trade": 784,
     "trade_quote": 801,
     "sell_checks": 879,
     "trade_commit": 3383,
+    "trade_price_ready": 3438,
     "station": 896,
     "service_hull": 967,
     "service_missile": 980,
@@ -86,13 +90,13 @@
     "store_target": 1560,
     "fight": 261,
     "ammo_ready": 292,
-    "range_ready": 2225,
-    "shot_ready": 2526,
-    "incoming_ready": 2555,
-    "apply_damage": 2567,
-    "won": 528,
-    "escaped": 1081,
-    "lost": 1091,
+    "range_ready": 2222,
+    "shot_ready": 2234,
+    "incoming_ready": 535,
+    "apply_damage": 547,
+    "won": 1083,
+    "escaped": 1113,
+    "lost": 2544,
     "weapon": 1568,
     "no_shot": 1610,
     "laser": 1613,
@@ -102,8 +106,8 @@
     "max0": 1662,
     "positive": 1666,
     "reward": 1667,
-    "reward_done": 3452,
-    "count_kill": 3453,
+    "reward_done": 211,
+    "count_kill": 212,
     "enemy_tick": 1680,
     "motion_ready": 1712,
     "charge_reset": 1730,
@@ -112,7 +116,7 @@
     "enemy_hit": 1774,
     "enemy_hit_done": 1785,
     "drone_tick": 1786,
-    "drones_hit": 216,
+    "drones_hit": 778,
     "drones_ready": 2887,
     "combat_view": 1792,
     "range_view": 1828,
@@ -141,15 +145,15 @@
     },
     "17": {
       "module": "views",
-      "used": 111
+      "used": 110
     },
     "21": {
       "module": " / views",
-      "used": 109
+      "used": 112
     },
     "22": {
       "module": " / views / combat",
-      "used": 109
+      "used": 90
     },
     "2": {
       "module": "display / combat",
@@ -161,7 +165,7 @@
     },
     "4": {
       "module": "arithmetic / combat",
-      "used": 107
+      "used": 111
     },
     "18": {
       "module": "messages",
@@ -173,27 +177,27 @@
     },
     "19": {
       "module": "format / combat",
-      "used": 111
+      "used": 112
     },
     "1": {
-      "module": "initialization / enemies",
-      "used": 109
+      "module": "initialization / weapons",
+      "used": 106
     },
     "5": {
       "module": "world",
-      "used": 85
+      "used": 94
     },
     "6": {
-      "module": "prices",
-      "used": 86
+      "module": "prices / enemies",
+      "used": 111
     },
     "7": {
       "module": "trade",
       "used": 109
     },
     "30": {
-      "module": " / trade / weapons",
-      "used": 99
+      "module": " / trade",
+      "used": 85
     },
     "8": {
       "module": "station",
@@ -201,11 +205,11 @@
     },
     "31": {
       "module": " / station / combat",
-      "used": 110
+      "used": 111
     },
     "9": {
       "module": "navigation / combat",
-      "used": 93
+      "used": 112
     },
     "10": {
       "module": "flight",
