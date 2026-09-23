@@ -66,13 +66,15 @@ class Item:
     digits: int = 4
     negate: bool = False
     lift: bool = True
+    keep_block: bool = False
 
 class Module:
     def __init__(self, bank, name):
         self.bank, self.name, self.items = bank, name, []
 
-    def label(self, name):
-        self.items.append(Item('label', name)); return self
+    def label(self, name, *, keep_block=False):
+        # Keep code through the next unconditional transfer in one bank.
+        self.items.append(Item('label', name, keep_block=keep_block)); return self
 
     def raw(self, *values):
         self.items.append(Item('bytes', list(values)))
@@ -182,6 +184,17 @@ class Assembler:
             return 2 if item.short else 4
         return 1+item.digits+int(item.negate)+int(item.lift) if item.kind=='ptr' else 0
 
+    @staticmethod
+    def ends_flow(item):
+        if item.kind=='branch':return item.value==0x51
+        if item.kind!='bytes':return False
+        value=item.value
+        if value[0]==0x1F:
+            # Address bytes are operands, even when one is 52.
+            return ((len(value)==4 and value[1]==0x51) or
+                    (len(value)==2 and 0x80<=value[1]<=0x8F))
+        return value[-1]==0x52 or (len(value)==1 and 0x80<=value[0]<=0x8F)
+
     def layout(self):
         labels, placements, bridges, usage = {}, [], [], {}
         preferred={m.bank for m in self.modules}
@@ -193,25 +206,34 @@ class Assembler:
                 raise ValueError(f'duplicate bank {bank}')
             usage[bank]=[module.name,0]
             pending_labels=[]
+            pending_block=False
+            protected=0
             falls_through=True
             remaining=sum(self.size(i) for i in module.items)
+            blocks=[0]*len(module.items)
+            block=0
+            for index in range(len(module.items)-1,-1,-1):
+                item=module.items[index]
+                block=self.size(item)+(0 if self.ends_flow(item) else block)
+                blocks[index]=block
             for index,item in enumerate(module.items):
                 if item.kind=='label':
                     pending_labels.append(item.value)
+                    pending_block |= item.keep_block
                     continue
                 # Reserve a far jump for a continuation unless no real code remains.
                 size=self.size(item)
                 needs_bridge=falls_through
-                ends_flow=item.kind=='branch' and item.value==0x51
-                if item.kind=='bytes':
-                    value=item.value
-                    if value[0]==0x1F:
-                        # Address bytes are operands, even when one is 52.
-                        ends_flow=((len(value)==4 and value[1]==0x51) or
-                                   (len(value)==2 and 0x80<=value[1]<=0x8F))
-                    else:ends_flow=value[-1]==0x52 or (len(value)==1 and 0x80<=value[0]<=0x8F)
-                if offset+remaining > 112 and offset+size > (112 if ends_flow else 108):
-                    fits=[i for i,(_,o) in enumerate(free) if 112-o>=size+(4 if remaining>112-o else 0)]
+                ends_flow=self.ends_flow(item)
+                if pending_block:protected=blocks[index]
+                if protected>112:
+                    raise ValueError(f'block exceeds one bank: {pending_labels}')
+                move_block=pending_block and offset+protected>112
+                move_item=(not protected and offset+remaining>112 and
+                           offset+size>(112 if ends_flow else 108))
+                if move_block or move_item:
+                    fits=[i for i,(_,o) in enumerate(free)
+                          if 112-o>=max(protected,size+(4 if remaining>112-o else 0))]
                     if not fits: raise ValueError(f'bank budget exceeded in {module.name}')
                     # Prefer the smallest hole holding the whole remainder.
                     # Otherwise use a large block to avoid extra bridges.
@@ -231,9 +253,11 @@ class Assembler:
                     if label in labels: raise ValueError('duplicate label '+label)
                     labels[label]=address
                 pending_labels.clear()
+                pending_block=False
                 placements.append((address,item))
                 offset+=size
                 remaining-=size
+                protected=max(0,protected-size)
                 usage[bank][1]=offset
                 falls_through=not ends_flow
             for label in pending_labels: labels[label]=bank*112+offset

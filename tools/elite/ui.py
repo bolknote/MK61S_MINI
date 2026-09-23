@@ -11,9 +11,9 @@ DRONE_MASK = 0x63  # upper rectangle: a small ship, distinct from a digit
 BAR_MASK = 0x36    # two full-height vertical strokes
 
 def add_ui(a):
-    m=a.module(2,'display')
+    m=a.module(2,'name alphabet')
+    # Publish/return is three bytes: inline it instead of a four-byte far JP.
     # 2F 53 compares with the visible frame itself; no second software copy.
-    m.label('display').raw(0x2F,0x53).op('ret')
     m.label('name_alphabet').raw(*(GLYPHS[ch] for ch in ALPHABET))
 
     m=a.module(3,'glyphs')
@@ -53,20 +53,20 @@ def add_ui(a):
         m.label(label)
         for i,v in enumerate(chunks(text)[:3]):m.set(i,v)
         m.jump('text_end')
-    m.label('text_end').ld(8).st(3).jump('display')
+    m.label('text_end').ld(8).st(3).raw(0x2F,0x53).op('ret')
     m.label('show_message').far(0x53,29*112+CALL).op('ret')
 
-    m=a.module(19,'format')
+    # Frequent FRAME callbacks have three-digit pointers in this low bank.
+    m=a.module(8,'format')
     m.label('number_frame').ld('D').st(0).ld(8).st(3)
-    m.raw(0x2F,0x02,0x2F,0x6C).jump('display')
+    m.raw(0x2F,0x02,0x2F,0x6C,0x2F,0x53).op('ret')
     m.label('name_frame')
     m.op('cx').st(2).ld(8).st(3)
-    m.ptr('F','name_alphabet').raw(0x2F,0x00,0x2F,0x7C).jump('display')
+    m.ptr('F','name_alphabet').raw(0x2F,0x00,0x2F,0x7C,0x2F,0x53).op('ret')
 
     # Battle: RC hull, RB live drones, RD target mask minus decimal zero.
     # Gauge: RC value, RA selects the prefix, RE holds the bar pattern.
-    # Both formatters write the page, never the glass: only display publishes
-    # the completed twelve slots.
+    # Both formatters build the page before 2F 53 publishes the twelve slots.
     # The six-slot formation changes only on launch or destruction. Cache
     # its two packed words in FRAME R4/R5, keyed by the live count in R6.
     # Ordinary turns only copy these words, then replace the exact hull.
@@ -74,20 +74,22 @@ def add_ui(a):
     m.ld('B').st(6).call('bar_pattern').n(16).op('*').st('E')
     m.ptr('F','drone_alphabet').raw(0x2F,0x00,0x2F,0x7E).ld(0).st(4).ld(1).st(5)
     m.label('formation_ready').ld(4).st(0).ld(5).st(1)
-    m.ld(2).ld('D').op('+').st(2).jump('display')
+    m.ld(2).ld('D').op('+').st(2).raw(0x2F,0x53).op('ret')
     m.label('gauge_frame').ld('A').ld(7).op('*').ld('E').op('+').st('E').ptr('F','bar_alphabet')
     m.label('instrument_frame').ld(8).st(3).raw(0x2F,0x02,0x2F,0x6C,0x2F,0x00,0x2F,0x7E)
-    m.ld(2).n(63).op('-').st(2).jump('display')
+    m.ld(2).n(63).op('-').st(2).raw(0x2F,0x53).op('ret')
 
     # Five bars, rounded upwards: even a small nonzero reserve is visible.
     # RC value, RA view/prefix, RE units per cell. Preserves outer R0..R8.
-    m.label('draw_gauge').ld('C').ld('E').n(1).op('-','+').ld('E').op('/','int')
+    # A few spare bytes at a bank end would otherwise split this hot entry
+    # and add a bridge to every gauge. Keep its final tail call with it.
+    m.label('draw_gauge',keep_block=True).ld('C').ld('E').n(1).op('-','+').ld('E').op('/','int')
     m.call('bar_pattern').st('E').visit(29,'gauge_frame').op('ret')
     # rNN, player U, six range cells. The dot in slot eight is the fixed
     # laser boundary; enemies beyond 18 are always on its far side.
     m.label('range_frame').raw(0x2F,0x07,0x2F,0x6C)
     m.ld(0).n(GLYPHS['r']-63).op('+').st(0).set(1,GLYPHS['U']).ld(8).st(3)
-    m.ptr('F','range_alphabet').raw(0x2F,0x04,0x2F,0x7E).jump('display')
+    m.ptr('F','range_alphabet').raw(0x2F,0x04,0x2F,0x7E,0x2F,0x53).op('ret')
     m.label('draw_range').ld('C').n(19).op('-').jge('range_far')
     m.ld('C').n(4).op('/','int').jump('range_index')
     m.label('range_far').raw(5)
