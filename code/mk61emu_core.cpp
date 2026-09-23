@@ -1378,9 +1378,13 @@ static bool read_indirect_target(u8 reg, u16 limit, u16& target) {
   return true;
 }
 
+static bool far_loop_opcode(u8 opcode) {
+  return opcode == 0x58 || opcode == 0x5A ||
+      opcode == 0x5B || opcode == 0x5D;
+}
+
 static bool evaluate_far_condition(u8 opcode, bool& branch) {
-  if(opcode == 0x58 || opcode == 0x5A ||
-     opcode == 0x5B || opcode == 0x5D) {
+  if(far_loop_opcode(opcode)) {
     const u8 reg = opcode == 0x58 ? 2U :
                    opcode == 0x5A ? 3U :
                    opcode == 0x5B ? 1U : 0U;
@@ -1405,7 +1409,7 @@ static bool far_x_condition(u8 opcode) {
       (opcode & 0xF0U) == 0xC0 || (opcode & 0xF0U) == 0xE0;
 }
 
-static bool execute_far_prefix(u16 absolute) {
+static bool execute_far_prefix(u16 absolute, bool* synchronize_x = nullptr) {
   u8 opcode = 0;
   if(!core_61::read_absolute_program((u16) (absolute + 1U), opcode))
     return false;
@@ -1431,7 +1435,13 @@ static bool execute_far_prefix(u16 absolute) {
     const u8 condition_opcode = direct ? opcode : (u8) (opcode & 0xF0U);
     if(!evaluate_far_condition(condition_opcode, branch)) return false;
   }
-  if(!branch) return set_extended_next_pc(next);
+  if(!branch) {
+    // A terminating ROM FL synchronizes X -> X2; a taken loop does not.
+    // Keep this distinction so '.', sign and exponent entry after a far
+    // loop see the same hidden operand as after the native instruction.
+    if(synchronize_x != nullptr) *synchronize_x = far_loop_opcode(opcode);
+    return set_extended_next_pc(next);
+  }
 
   u16 target = 0;
   if(direct) {
@@ -1724,6 +1734,7 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
       if(expanded_program_mode) {
         bool handled = false;
         bool success = false;
+        bool synchronize_x = false;
         if(semantic_opcode == MK61_FAR_ADDRESS_PREFIX) {
           handled = true;
           const u16 absolute = (u16) (extended_program.active_bank *
@@ -1734,7 +1745,7 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
             extended_program.pending_prefix = absolute + 1U;
             success = true;
           } else {
-            success = execute_far_prefix(absolute);
+            success = execute_far_prefix(absolute, &synchronize_x);
           }
         } else if(semantic_opcode == MK61_DISPLAY_PREFIX) {
           handled = true;
@@ -1760,12 +1771,12 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
         }
         if(handled) {
           if(!success) extended_program.error = true;
-          // A ROM return also synchronizes X -> X2 and normalizes X. The
-          // virtual stack handles only its control flow; F0 preserves the
-          // return's numeric side effects without touching the ROM stack.
+          // ROM returns and terminating loops synchronize X -> X2 and
+          // normalize X. F0 supplies those numeric effects while the
+          // extension handles their control flow.
           executed_opcode = success ? (u8) MK61_NOP : 0x50U;
           if(success) {
-            if(semantic_opcode == 0x52U) executed_opcode = 0xF0U;
+            if(semantic_opcode == 0x52U || synchronize_x) executed_opcode = 0xF0U;
             else if(semantic_opcode == 0x53U) executed_opcode = 0x51U;
             else if((semantic_opcode & 0xF0U) == 0xA0U)
               executed_opcode = semantic_opcode - 0x20U;
@@ -4765,6 +4776,19 @@ bool extended_display_segmented(void) {
 
 u8 extended_display_cursor(void) {
   return extended_program.cursor;
+}
+
+bool restore_standard_display(void) {
+  const bool changed = !extended_program.auto_display ||
+      extended_program.segment_display ||
+      extended_program.numeric_strobe_pending ||
+      extended_program.cursor != 0;
+  extended_program.cursor = 0;
+  extended_program.auto_display = true;
+  extended_program.segment_display = false;
+  extended_program.numeric_strobe_pending = false;
+  if(changed) extended_program.display_revision++;
+  return changed;
 }
 
 void publish_x_to_extended_display(void) {

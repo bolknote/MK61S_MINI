@@ -1353,12 +1353,18 @@ void idle_main_process(void) {
 void event_hold_key(i32 holded_key, i32 hold_quant) {
   switch(holded_key) {
       case KEY_CX:
-          if(hold_quant == 0 && m61_text::clear_bindings_and_traps()) {
-            dbgln(MINI, "HOLD [Cx]: clear M61 bind/trap");
+          if(hold_quant == 0) {
+            const bool handlers_cleared =
+                m61_text::clear_bindings_and_traps();
+            const bool display_restored =
+                core_61::restore_standard_display();
+            dbgln(MINI, "HOLD [Cx]: handlers=", handlers_cleared,
+                  " display=", display_restored);
             lcd_std_display_redraw();
           }
           // Длинное Cx — одноразовое действие. Короткое нажатие уже было
-          // передано калькулятору обычным путём.
+          // передано калькулятору обычным путём; удержание дополнительно
+          // снимает bind/trap и выходит из префиксного режима экрана.
           kbd::clear_hold_key();
         break;
       case KEY_USER_PRESS: // Удержание клавиши USER, вывод стека XYZT на экран

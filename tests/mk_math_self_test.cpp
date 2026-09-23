@@ -1269,6 +1269,75 @@ static void test_far_condition_writeback(void) {
   check_true("80 direct/indirect arithmetic predicates match native ROM and full stack",correct);
 }
 
+static void test_far_loop_x2(void) {
+  std::printf("far loops preserve ROM X2 on exit and on taken branches:\n");
+  static const struct { u8 size; u8 bytes[6]; } expressions[] = {
+      {4,{7,0x0E,8,0x10}},
+      {3,{8,1,0x21}},
+      {5,{0,0x0E,1,9,0x11}},
+      {4,{9,0x0E,2,0x13}},
+      {4,{3,0x0E,3,0x11}},
+      {4,{2,0x0E,3,0x12}},
+      {4,{5,0,0x15,0x22}}, // normalization of 10^100 also matches the ROM
+  };
+  static const u8 loops[]={0x58,0x5A,0x5B,0x5D};
+  static const u8 counters[]={2,3,1,0};
+  bool correct=true;
+  core_61::set_expanded_program_mode(true);
+  for(const auto& expression:expressions) for(u8 loop=0;loop<4;++loop)
+    for(u8 count:{1,2,3}) for(u8 restore:{0x0A,0x0B,0x0C}) {
+      char expected[5][15]={};
+      double expected_counter=0;
+      bool expected_error=false;
+      for(bool far:{false,true}) {
+        core_61::enable();core_61::clear_extended_program_banks();
+        set_register_integer(counters[loop],count);
+        u8 code[73];std::memset(code,0x50,sizeof(code));
+        std::memcpy(code,expression.bytes,expression.size);
+        u8 pc=expression.size;
+        if(far)code[pc++]=0x1F;
+        code[pc++]=loops[loop];
+        if(far)code[pc++]=0x02;
+        code[pc++]=far?0x50:0x70;
+        code[pc++]=restore;
+        if(restore==0x0C)code[pc]=1;
+        if(far) {
+          core_61::write_absolute_program(250,restore);
+          core_61::write_absolute_program(251,restore==0x0C?1:0x50);
+          core_61::write_absolute_program(252,0x50);
+        } else {
+          code[70]=restore;
+          if(restore==0x0C)code[71]=1;
+        }
+        run_program(code,sizeof(code));
+        // The extension stores a normalized decimal counter; ROM FL leaves
+        // it denormalized (e.g. 0.0000001e7). Compare numeric counter values.
+        const double actual_counter=read_register_decimal(counters[loop]);
+        if(!far) {
+          expected_error=core_61::has_error();
+          expected_counter=actual_counter;
+        }
+        bool equal=core_61::is_CALC() && !core_61::extended_program_error() &&
+            core_61::has_error()==expected_error &&
+            actual_counter==expected_counter;
+        for(int reg=0;reg<5;++reg) {
+          char actual[15]={};read_stack_register((stack)reg,actual,SYMBOLS);
+          if(!far)std::memcpy(expected[reg],actual,15);
+          else {
+            if(std::memcmp(actual,expected[reg],15)!=0 && &expression==expressions && loop==0 && count==2)
+              std::printf("    restore=%02X stack=%d expected='%s' actual='%s'\n",restore,reg,expected[reg],actual);
+            equal=equal && std::memcmp(actual,expected[reg],15)==0;
+          }
+        }
+        if(!equal)std::printf("  expr=%lu loop=%02X count=%u restore=%02X far=%d X=%.8g counter=%.8g/%.8g error=%d/%d\n",
+            (unsigned long)(&expression-expressions),loops[loop],count,restore,far,read_live_x(),
+            actual_counter,expected_counter,core_61::has_error(),expected_error);
+        correct=correct&&equal;
+      }
+    }
+  check_true("252 far FL variants match native counters, full stack, X2 restores and errors",correct);
+}
+
 static void test_display_strobe_writeback(void) {
   std::printf("display strobe immediately after arithmetic:\n");
   static const struct { u8 size; u8 bytes[8]; double result; } expressions[] = {
@@ -1735,6 +1804,18 @@ static void test_extended_prefixes(void) {
   frame = core_61::segment_display_frame();
   check_true("segment hold ignores later X", frame != nullptr && frame[1] == 0);
   check_near("hold leaves arithmetic X", read_live_x(), 7.0, 1e-8);
+  const u32 held_revision = core_61::extended_display_revision();
+  check_true("manual display recovery restores ordinary live X view",
+      core_61::restore_standard_display() &&
+      core_61::segment_display_frame() == nullptr &&
+      core_61::extended_display_auto() &&
+      !core_61::extended_display_segmented() &&
+      core_61::extended_display_cursor() == 0 &&
+      core_61::extended_display_revision() == held_revision + 1U);
+  check_true("ordinary display recovery is idempotent",
+      !core_61::restore_standard_display() &&
+      core_61::extended_display_revision() == held_revision + 1U);
+  check_near("manual display recovery leaves X", read_live_x(), 7.0, 1e-8);
 
   core_61::enable();
   core_61::clear_extended_program_banks();
@@ -2619,6 +2700,7 @@ int main(void) {
   test_virtual_return_x2();
   test_virtual_call_rom_addressing();
   test_far_condition_writeback();
+  test_far_loop_x2();
   test_display_strobe_writeback();
   test_extended_opcode_matrix();
   test_packed_segment_frames();

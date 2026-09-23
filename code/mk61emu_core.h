@@ -437,6 +437,9 @@ namespace core_61 {
   extern bool extended_display_auto(void);
   extern bool extended_display_segmented(void);
   extern u8 extended_display_cursor(void);
+  // Leave every display-prefix view and resume the ordinary live X display.
+  // Returns true when any persistent display-prefix state was changed.
+  extern bool restore_standard_display(void);
   extern void publish_x_to_extended_display(void);
   extern bool extended_program_error(void);
 }
