@@ -733,13 +733,13 @@ static void check_pending_far_context() {
     require(core_61::write_absolute_program(250,0x50),"cannot install far target");
     press(2,9);
     for(unsigned step=0;step<128 && core_61::is_RUN();step++) {
-      if(extended_program.pending_far_condition!=0) {
+      if(extended_program.pending_prefix!=0) {
         const State saved=snapshot();
-        const u16 pending=extended_program.pending_far_condition;
-        extended_program.pending_far_condition=0;
+        const u16 pending=extended_program.pending_prefix;
+        extended_program.pending_prefix=0;
         restore(saved);
-        require(extended_program.pending_far_condition==pending,
-                "context lost the pending condition");
+        require(extended_program.pending_prefix==pending,
+                "context lost the pending far prefix");
         observed=true;
       }
       compare_step();

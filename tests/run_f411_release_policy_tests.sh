@@ -68,7 +68,7 @@ grep -Fq 'minimum_headroom=65536' "$o3_build"
 grep -Fq 'BLACKPILL_F401CC' "$stock_linker_build"
 grep -Fq 'BLACKPILL_F411CE' "$stock_linker_build"
 grep -Fq 'opt=oslto' "$stock_linker_build"
-grep -Fq 'case_flags="$case_flags -DMK61_F401_PRODUCT_BUILD=1"' \
+grep -Fq 'case_flags="$common_flags -DMK61_ENABLE_USB_SCREEN=0 -DMK61_F401_PRODUCT_BUILD=1"' \
   "$stock_linker_build"
 grep -Fq '__mk61_dynamic_begin/end references under LTO' "$stock_linker_build"
 grep -Fq '#include "firmware_optimization.hpp"' "$config"
