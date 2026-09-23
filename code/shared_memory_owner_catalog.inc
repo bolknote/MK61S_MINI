@@ -68,3 +68,5 @@ MK61_SHARED_MEMORY_OWNER(APPLICATION, "app",
                          0, 0, 0, 0)
 MK61_SHARED_MEMORY_OWNER(SETUP, "setup", arena_mask(Arena::WORKSPACE),
                          0, 0, 0, 0)
+MK61_SHARED_MEMORY_OWNER(USB_SCREEN, "usb-screen",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
