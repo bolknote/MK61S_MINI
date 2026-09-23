@@ -20,6 +20,7 @@
 extern t_time_ms runtime_ms;
 extern void idle_main_process(void);
 extern void reset_ext_program_state(void);
+extern void lcd_std_display_redraw(void);
 extern bool usb_start_mass_storage_mode(void);
 extern bool usb_start_terminal_mode(void);
 
@@ -940,6 +941,11 @@ static bool usb_disk_mode(bool wait_for_key_on_error) {
     delay(900);
   }
   lcd_ru::restore_default_font();
+  // The ordinary menu owner redraws the calculator after MENU_EXIT.  The
+  // terminal/HIL entry has no menu frame to unwind, so without an explicit
+  // redraw the completed session leaves the last transient "saving..."
+  // message on the physical display even though CDC is already restored.
+  if(!wait_for_key_on_error && clean_exit) lcd_std_display_redraw();
   return action::MENU_EXIT;
 }
 
