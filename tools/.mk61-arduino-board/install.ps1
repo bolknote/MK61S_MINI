@@ -60,6 +60,127 @@ function Get-ArduinoConfigDirectory {
     return $null
 }
 
+function Get-ArduinoConfigBuildCacheDirectory {
+    param([string]$ConfigPath)
+
+    if ([string]::IsNullOrWhiteSpace($ConfigPath) -or
+        -not [IO.File]::Exists($ConfigPath)) {
+        return $null
+    }
+
+    $insideBuildCache = $false
+    foreach ($line in [IO.File]::ReadAllLines($ConfigPath)) {
+        if ($line -match '^build_cache:\s*$') {
+            $insideBuildCache = $true
+            continue
+        }
+        if ($insideBuildCache -and $line -match '^\S') {
+            break
+        }
+        if ($insideBuildCache -and $line -match '^\s+path:\s*(.*?)\s*$') {
+            return ConvertFrom-ArduinoYamlScalar $Matches[1]
+        }
+    }
+    return $null
+}
+
+function Test-Mk61AsciiPath {
+    param([string]$Path)
+
+    return (-not [string]::IsNullOrWhiteSpace($Path) -and
+            -not [regex]::IsMatch($Path, '[^\x20-\x7e]'))
+}
+
+function Get-Mk61SafeBuildCacheDirectory {
+    $publicDirectory = $env:PUBLIC
+    if (Test-Mk61AsciiPath $publicDirectory) {
+        $publicDirectory = Join-Path $publicDirectory 'Documents'
+    } else {
+        $systemDrive = $env:SystemDrive
+        if ([string]::IsNullOrWhiteSpace($systemDrive)) {
+            $systemDrive = 'C:'
+        }
+        $publicDirectory = Join-Path $systemDrive 'Users\Public\Documents'
+    }
+    if (-not (Test-Mk61AsciiPath $publicDirectory)) {
+        throw 'Cannot construct an ASCII-only public build-cache path.'
+    }
+
+    $identity = [Environment]::GetFolderPath('UserProfile')
+    if ([string]::IsNullOrWhiteSpace($identity)) {
+        $identity = "$($env:USERDOMAIN)\$($env:USERNAME)"
+    }
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    try {
+        $digest = $sha256.ComputeHash(
+            [Text.Encoding]::UTF8.GetBytes($identity))
+    } finally {
+        $sha256.Dispose()
+    }
+    $token = [BitConverter]::ToString($digest, 0, 6).Replace('-', '').ToLower()
+    return Join-Path $publicDirectory "MK61Arduino\build-cache-$token"
+}
+
+function Set-ArduinoConfigBuildCacheDirectory {
+    param(
+        [string]$ConfigPath,
+        [string]$Directory
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ConfigPath)) {
+        throw 'Cannot locate the Arduino IDE configuration file.'
+    }
+    $parent = Split-Path -Parent $ConfigPath
+    if (-not [string]::IsNullOrWhiteSpace($parent)) {
+        [IO.Directory]::CreateDirectory($parent) | Out-Null
+    }
+
+    $lines = New-Object 'System.Collections.Generic.List[string]'
+    if ([IO.File]::Exists($ConfigPath)) {
+        foreach ($line in [IO.File]::ReadAllLines($ConfigPath)) {
+            $lines.Add($line)
+        }
+    }
+
+    $sectionIndex = -1
+    $pathIndex = -1
+    $insertIndex = -1
+    for ($index = 0; $index -lt $lines.Count; ++$index) {
+        if ($lines[$index] -match '^build_cache:\s*$') {
+            $sectionIndex = $index
+            $insertIndex = $index + 1
+            for ($child = $index + 1; $child -lt $lines.Count; ++$child) {
+                if ($lines[$child] -match '^\S') {
+                    $insertIndex = $child
+                    break
+                }
+                $insertIndex = $child + 1
+                if ($lines[$child] -match '^\s+path:\s*') {
+                    $pathIndex = $child
+                }
+            }
+            break
+        }
+    }
+
+    $quoted = "'" + $Directory.Replace("'", "''") + "'"
+    $pathLine = "  path: $quoted"
+    if ($pathIndex -ge 0) {
+        $lines[$pathIndex] = $pathLine
+    } elseif ($sectionIndex -ge 0) {
+        $lines.Insert($insertIndex, $pathLine)
+    } else {
+        if ($lines.Count -gt 0 -and
+            -not [string]::IsNullOrWhiteSpace($lines[$lines.Count - 1])) {
+            $lines.Add('')
+        }
+        $lines.Add('build_cache:')
+        $lines.Add($pathLine)
+    }
+    [IO.File]::WriteAllLines(
+        $ConfigPath, $lines.ToArray(), [Text.UTF8Encoding]::new($false))
+}
+
 function Get-ArduinoIdeConfigPath {
     if (-not [string]::IsNullOrWhiteSpace(
         $env:MK61_ARDUINO_CONFIG_FILE)) {
@@ -84,6 +205,50 @@ function Get-DefaultArduinoDataDirectory {
         return $null
     }
     return Join-Path $localData 'Arduino15'
+}
+
+function Get-DefaultArduinoBuildCacheDirectory {
+    param([string]$ConfigPath)
+
+    $configured = Get-ArduinoConfigBuildCacheDirectory $ConfigPath
+    if (-not [string]::IsNullOrWhiteSpace($configured)) {
+        $expanded = [Environment]::ExpandEnvironmentVariables($configured)
+        return [IO.Path]::GetFullPath($expanded)
+    }
+    $localData = [Environment]::GetFolderPath('LocalApplicationData')
+    if ([string]::IsNullOrWhiteSpace($localData)) {
+        return $null
+    }
+    return Join-Path $localData 'arduino'
+}
+
+function Initialize-Mk61ArduinoBuildCache {
+    param(
+        [string]$ConfigPath,
+        [switch]$ReadOnly
+    )
+
+    $current = Get-DefaultArduinoBuildCacheDirectory $ConfigPath
+    if (($env:OS -ne 'Windows_NT') -or
+        (Test-Mk61AsciiPath $current)) {
+        return $current
+    }
+    if ($ReadOnly) {
+        Write-Host ('WARNING: Arduino IDE build cache contains non-ASCII ' +
+                    'characters:')
+        Write-Host "  $current"
+        Write-Host ('Run tools\mk61-arduino-board.cmd without -Check to ' +
+                    'select a safe build-cache directory for GNU Arm LTO.')
+        return $current
+    }
+
+    $safe = Get-Mk61SafeBuildCacheDirectory
+    [IO.Directory]::CreateDirectory($safe) | Out-Null
+    Set-ArduinoConfigBuildCacheDirectory $ConfigPath $safe
+    Write-Host ('Arduino IDE build cache contained non-ASCII characters; ' +
+                'selected a separate ASCII-only directory:')
+    Write-Host "  $safe"
+    return $safe
 }
 
 function Write-Stm32CoreStatus {
@@ -173,6 +338,8 @@ try {
     }
     $Sketchbook = [IO.Path]::GetFullPath($Sketchbook)
     $dataDirectory = Get-DefaultArduinoDataDirectory $configPath
+    $buildCacheDirectory = Initialize-Mk61ArduinoBuildCache `
+        $configPath -ReadOnly:$Check
 
     $sourcePlatform = Join-Path $PSScriptRoot 'hardware\mk61\stm32'
     $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -183,6 +350,9 @@ try {
             Write-Host 'MK61s F401 + APP is installed in:'
             Write-Host "  $target"
             Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
+            if (-not [string]::IsNullOrWhiteSpace($buildCacheDirectory)) {
+                Write-Host "Arduino IDE build cache: $buildCacheDirectory"
+            }
             Write-Stm32CoreStatus $dataDirectory
             exit 0
         }
@@ -227,6 +397,9 @@ try {
     Write-Host 'MK61s F401 + APP installed in:'
     Write-Host "  $target"
     Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
+    if (-not [string]::IsNullOrWhiteSpace($buildCacheDirectory)) {
+        Write-Host "Arduino IDE build cache: $buildCacheDirectory"
+    }
     Write-Stm32CoreStatus $dataDirectory
     Write-Host 'Close every Arduino IDE window, then start Arduino IDE again.'
     Write-Host ('Open Board Selector (or Tools > Board > Select Other Board ' +

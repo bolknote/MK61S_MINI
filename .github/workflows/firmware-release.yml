@@ -196,6 +196,8 @@ jobs:
           }
           $configuredSketchbook = Join-Path $env:RUNNER_TEMP `
             'Arduino IDE Роман'
+          $unsafeBuildCache = Join-Path $env:RUNNER_TEMP `
+            'Arduino сборка Роман'
           $ideConfigDirectory = Join-Path $env:USERPROFILE '.arduinoIDE'
           $ideConfig = Join-Path $ideConfigDirectory 'arduino-cli.yaml'
           [IO.Directory]::CreateDirectory($ideConfigDirectory) | Out-Null
@@ -203,11 +205,28 @@ jobs:
           function Write-IdeConfig([string]$Sketchbook) {
             $quotedData = "'" + $originalData.Replace("'", "''") + "'"
             $quotedUser = "'" + $Sketchbook.Replace("'", "''") + "'"
+            $quotedCache = "'" + $unsafeBuildCache.Replace("'", "''") + "'"
             [IO.File]::WriteAllLines($ideConfig, [string[]]@(
               'directories:',
               "  data: $quotedData",
-              "  user: $quotedUser"
+              "  user: $quotedUser",
+              'build_cache:',
+              "  path: $quotedCache"
             ), [Text.UTF8Encoding]::new($false))
+          }
+
+          function Assert-SafeBuildCache {
+            $cache = (& arduino-cli --config-file $ideConfig `
+              config get build_cache.path | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if ([string]::IsNullOrWhiteSpace($cache) -or
+                $cache -match '[^\x20-\x7e]') {
+              throw "MK61 installer kept an unsafe build cache: $cache"
+            }
+            if (-not (Test-Path -LiteralPath $cache -PathType Container)) {
+              throw "MK61 installer did not create build cache: $cache"
+            }
+            return $cache
           }
 
           # Arduino CLI and Arduino IDE use different default config locations
@@ -215,6 +234,7 @@ jobs:
           Write-IdeConfig $configuredSketchbook
           & ./tools/mk61-arduino-board.cmd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $null = Assert-SafeBuildCache
           $boards = (& arduino-cli --config-file $ideConfig board listall |
             Out-String)
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -229,6 +249,7 @@ jobs:
           Write-IdeConfig $originalSketchbook
           & ./tools/mk61-arduino-board.cmd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $null = Assert-SafeBuildCache
 
       - name: Verify Windows font-license cleanup preserves its parent
         shell: pwsh
@@ -266,8 +287,17 @@ jobs:
             throw 'The negative host-compiler sentinel unexpectedly exists'
           }
           $bundleName = 'mk61s-M-mini-v2-lcd1602-a00-f401'
-          $buildPath = Join-Path $env:RUNNER_TEMP 'arduino-ide-f401-mini-v2'
-          & arduino-cli compile `
+          $ideConfig = Join-Path `
+            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $safeCache = (& arduino-cli --config-file $ideConfig `
+            config get build_cache.path | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or
+              [string]::IsNullOrWhiteSpace($safeCache) -or
+              $safeCache -match '[^\x20-\x7e]') {
+            throw "Arduino IDE build cache is not ASCII-only: $safeCache"
+          }
+          $buildPath = Join-Path $safeCache 'arduino-ide-f401-mini-v2'
+          & arduino-cli --config-file $ideConfig compile `
             --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
             --build-path $buildPath code
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

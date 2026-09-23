@@ -382,8 +382,12 @@ ABI, сборка произвольных исходников и устано�
 tools\mk61-arduino-board.cmd
 ```
 
-Установщик только копирует описание платы в sketchbook Arduino и не ставит
-`arduino-cli`. В Boards Manager самой Arduino IDE должен быть установлен
+Установщик копирует описание платы в sketchbook Arduino и не ставит
+`arduino-cli`. Если Windows-профиль содержит не-ASCII символы, он также
+задаёт в конфигурации IDE отдельный каталог сборочного кэша под
+`C:\Users\Public\Documents\MK61Arduino`: это обходит ошибку GNU Arm LTO при открытии
+`objs.a`, не отключая LTO и не меняя имя пользователя. В Boards Manager
+самой Arduino IDE должен быть установлен
 `STM32 MCU based boards 2.12.0`, а в Library Manager —
 `LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`.
 На Windows путь sketchbook берётся из конфигурации самой IDE, включая OneDrive

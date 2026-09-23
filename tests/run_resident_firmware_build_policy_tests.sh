@@ -106,6 +106,9 @@ for installer in "$board_install_sh" "$board_install_ps"; do
   require_text "$installer" 'rust_types.h'
   require_text "$installer" 'seal-firmware.ps1'
 done
+require_text "$board_install_ps" 'build_cache:'
+require_text "$board_install_ps" 'selected a separate ASCII-only directory:'
+require_text "$board_install_ps" 'MK61Arduino\build-cache-'
 
 arduino_ide_job="$(sed -n \
   '/^  arduino-ide-windows:/,/^  build-release:/p' "$release_workflow")"
@@ -126,6 +129,8 @@ for required in \
   printf '%s\n' "$arduino_ide_job" | grep -Fq -- "$required" ||
     fail "Windows Arduino IDE V2 job is missing: $required"
 done
+printf '%s\n' "$arduino_ide_job" | grep -Fq -- 'build_cache.path' ||
+  fail 'Windows Arduino IDE job does not verify its ASCII build cache'
 if printf '%s\n' "$arduino_ide_job" |
     grep -Fq -- 'mk61_documents=disabled'; then
   fail 'Windows Arduino IDE V2 job disables the document APP'

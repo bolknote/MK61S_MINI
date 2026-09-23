@@ -134,16 +134,22 @@ if command -v pwsh >/dev/null 2>&1; then
   ps_config="$work/arduino-cli.yaml"
   ps_config_sketchbook="$work/Arduino Роман"
   ps_config_data="$work/Arduino15 Роман"
+  ps_config_cache="$work/Arduino сборка"
+  ps_public="$work/Public"
   mkdir -p \
-    "$ps_config_data/packages/STMicroelectronics/hardware/stm32/2.12.0"
+    "$ps_config_data/packages/STMicroelectronics/hardware/stm32/2.12.0" \
+    "$ps_config_cache" "$ps_public"
   : > "$ps_config_data/packages/STMicroelectronics/hardware/stm32/2.12.0/platform.txt"
   cat > "$ps_config" <<EOF
 directories:
     data: $ps_config_data
     user: $ps_config_sketchbook
+build_cache:
+    path: $ps_config_cache
 locale: en
 EOF
-  MK61_ARDUINO_CONFIG_FILE="$ps_config" \
+  OS=Windows_NT PUBLIC="$ps_public" \
+    MK61_ARDUINO_CONFIG_FILE="$ps_config" \
     pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
       > "$work/install-configured-ps.txt"
   cmp "$platform/boards.txt" \
@@ -153,6 +159,16 @@ EOF
   grep -Fq 'arduino-cli.yaml' "$work/install-configured-ps.txt"
   grep -Fq 'STM32 MCU based boards 2.12.0 found in:' \
       "$work/install-configured-ps.txt"
+  grep -Fq 'selected a separate ASCII-only directory:' \
+      "$work/install-configured-ps.txt"
+  grep -Eq "^  path: '.*[/\\]Public[/\\]Documents[/\\]MK61Arduino[/\\]build-cache-[0-9a-f]{12}'$" \
+      "$ps_config"
+  if grep -Fq 'Arduino сборка' "$ps_config"; then
+    echo 'PowerShell installer kept the unsafe Unicode build cache' >&2
+    exit 1
+  fi
+  find "$ps_public/Documents/MK61Arduino" -mindepth 1 -maxdepth 1 \
+    -type d -name 'build-cache-*' | grep -q .
   grep -Fq 'Do not search for this manually installed board in Boards Manager' \
       "$work/install-configured-ps.txt"
   mock_build="$work/mock-build"
