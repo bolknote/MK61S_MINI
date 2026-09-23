@@ -18,7 +18,7 @@ Usage:
 
 Options:
   --sketchbook DIR  Arduino IDE sketchbook directory
-  --check           only check whether the board is already installed
+  --check           check that the current board package is installed
   -h, --help        show this help
 
 The installer does not install Arduino CLI.  The STM32 MCU based boards core
@@ -76,8 +76,36 @@ platform_installed() {
     [ -f "$target/tools/mk61_module.ld" ]
 }
 
+platform_current() {
+  cmp -s "$source_platform/boards.txt" "$target/boards.txt" &&
+    cmp -s "$source_platform/platform.txt" "$target/platform.txt" &&
+    cmp -s "$source_platform/tools/mk61_module.ld" \
+      "$target/tools/mk61_module.ld" &&
+    cmp -s "$source_platform/tools/mk61-app-postbuild.sh" \
+      "$target/tools/mk61-app-postbuild.sh" &&
+    cmp -s "$source_platform/tools/mk61-app-postbuild.ps1" \
+      "$target/tools/mk61-app-postbuild.ps1" &&
+    cmp -s "$source_platform/tools/mk61-app-upload.ps1" \
+      "$target/tools/mk61-app-upload.ps1" &&
+    cmp -s "$project_root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
+      "$target/tools/mk61_firmware_seal.cpp" &&
+    cmp -s "$project_root/code/resident_firmware_format.hpp" \
+      "$target/tools/resident_firmware_format.hpp" &&
+    cmp -s "$project_root/code/rust_types.h" \
+      "$target/tools/rust_types.h" &&
+    cmp -s "$project_root/tools/seal-firmware.ps1" \
+      "$target/tools/seal-firmware.ps1"
+}
+
 if [ "$check_only" -eq 1 ]; then
   if platform_installed; then
+    if ! platform_current; then
+      printf 'MK61s F401 + APP is installed but stale in:\n  %s\n' \
+        "$target" >&2
+      printf '%s\n' \
+        'Run tools/mk61-arduino-board.cmd without --check, then restart Arduino IDE.' >&2
+      exit 1
+    fi
     printf 'MK61s F401 + APP is installed in:\n  %s\n' "$target"
     exit 0
   fi
@@ -114,6 +142,10 @@ cp "$project_root/tools/seal-firmware.ps1" \
    "$target/tools/seal-firmware.ps1"
 chmod +x "$target/tools/mk61-app-postbuild.sh"
 
+platform_installed && platform_current ||
+  die "installed board verification failed: $target"
+
 printf 'MK61s F401 + APP installed in:\n  %s\n' "$target"
+printf 'Verified uploader: mk61Upload (DFU + automatic /System install).\n'
 printf 'Restart Arduino IDE, then select Tools > Board > MK61s F401 + APP.\n'
 printf 'STM32 MCU based boards core 2.12.0 is required.\n'

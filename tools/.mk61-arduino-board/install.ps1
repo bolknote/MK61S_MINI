@@ -283,7 +283,7 @@ Usage:
 
 Options:
   -Sketchbook DIR  Arduino IDE sketchbook directory
-  -Check           only check whether the board is already installed
+  -Check           check that the current board package is installed
   -Help            show this help
 
 The installer does not install Arduino CLI.  The STM32 MCU based boards core
@@ -306,6 +306,66 @@ function Test-InstalledPlatform {
         [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware.ps1')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61_module.ld'))
     )
+}
+
+function Test-Mk61SameFile {
+    param(
+        [string]$Source,
+        [string]$Installed
+    )
+
+    if (-not [IO.File]::Exists($Source) -or
+        -not [IO.File]::Exists($Installed)) {
+        return $false
+    }
+    $sourceBytes = [IO.File]::ReadAllBytes($Source)
+    $installedBytes = [IO.File]::ReadAllBytes($Installed)
+    if ($sourceBytes.Length -ne $installedBytes.Length) {
+        return $false
+    }
+    for ($index = 0; $index -lt $sourceBytes.Length; ++$index) {
+        if ($sourceBytes[$index] -ne $installedBytes[$index]) {
+            return $false
+        }
+    }
+    return $true
+}
+
+function Test-InstalledPlatformCurrent {
+    param(
+        [string]$SourcePlatform,
+        [string]$ProjectRoot,
+        [string]$Target
+    )
+
+    $files = @(
+        @((Join-Path $SourcePlatform 'boards.txt'),
+          (Join-Path $Target 'boards.txt')),
+        @((Join-Path $SourcePlatform 'platform.txt'),
+          (Join-Path $Target 'platform.txt')),
+        @((Join-Path $SourcePlatform 'tools\mk61_module.ld'),
+          (Join-Path $Target 'tools\mk61_module.ld')),
+        @((Join-Path $SourcePlatform 'tools\mk61-app-postbuild.sh'),
+          (Join-Path $Target 'tools\mk61-app-postbuild.sh')),
+        @((Join-Path $SourcePlatform 'tools\mk61-app-postbuild.ps1'),
+          (Join-Path $Target 'tools\mk61-app-postbuild.ps1')),
+        @((Join-Path $SourcePlatform 'tools\mk61-app-upload.ps1'),
+          (Join-Path $Target 'tools\mk61-app-upload.ps1')),
+        @((Join-Path $ProjectRoot 'tools/.mk61-firmware-seal/mk61_firmware_seal.cpp'),
+          (Join-Path $Target 'tools\mk61_firmware_seal.cpp')),
+        @((Join-Path $ProjectRoot 'code/resident_firmware_format.hpp'),
+          (Join-Path $Target 'tools\resident_firmware_format.hpp')),
+        @((Join-Path $ProjectRoot 'code/rust_types.h'),
+          (Join-Path $Target 'tools\rust_types.h')),
+        @((Join-Path $ProjectRoot 'tools/seal-firmware.ps1'),
+          (Join-Path $Target 'tools\seal-firmware.ps1'))
+    )
+    foreach ($pair in $files) {
+        if (-not (Test-Mk61SameFile $pair[0] $pair[1])) {
+            return $false
+        }
+    }
+    return $true
 }
 
 try {
@@ -347,6 +407,14 @@ try {
 
     if ($Check) {
         if (Test-InstalledPlatform $target) {
+            if (-not (Test-InstalledPlatformCurrent `
+                    $sourcePlatform $projectRoot $target)) {
+                [Console]::Error.WriteLine(
+                    "MK61s F401 + APP is installed but stale in:`n  $target`n" +
+                    'Close Arduino IDE, run tools\mk61-arduino-board.cmd ' +
+                    'without -Check, then restart Arduino IDE.')
+                exit 1
+            }
             Write-Host 'MK61s F401 + APP is installed in:'
             Write-Host "  $target"
             Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
@@ -394,8 +462,15 @@ try {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'tools/seal-firmware.ps1') `
         -Destination (Join-Path $targetTools 'seal-firmware.ps1') -Force
 
+    if (-not (Test-InstalledPlatform $target) -or
+        -not (Test-InstalledPlatformCurrent `
+            $sourcePlatform $projectRoot $target)) {
+        throw "Installed board verification failed: $target"
+    }
+
     Write-Host 'MK61s F401 + APP installed in:'
     Write-Host "  $target"
+    Write-Host 'Verified uploader: mk61Upload (DFU + automatic /System install).'
     Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
     if (-not [string]::IsNullOrWhiteSpace($buildCacheDirectory)) {
         Write-Host "Arduino IDE build cache: $buildCacheDirectory"

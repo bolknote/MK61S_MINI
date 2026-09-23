@@ -25,6 +25,7 @@ shell_sketchbook="$work/shell-sketchbook"
 "$launcher" --sketchbook "$shell_sketchbook" > "$work/install.txt"
 "$launcher" --check --sketchbook "$shell_sketchbook" > "$work/check.txt"
 target="$shell_sketchbook/hardware/mk61/stm32"
+grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -40,6 +41,19 @@ cmp "$root/code/resident_firmware_format.hpp" \
 cmp "$root/code/rust_types.h" "$target/tools/rust_types.h"
 cmp "$root/tools/seal-firmware.ps1" \
     "$target/tools/seal-firmware.ps1"
+
+# Presence alone is not enough: an old copied platform silently falls back to
+# STM32CubeProgrammer and never installs System APP.  --check must reject it.
+cp "$target/platform.txt" "$work/current-platform.txt"
+printf '\n# stale test copy\n' >> "$target/platform.txt"
+if "$launcher" --check --sketchbook "$shell_sketchbook" \
+    > "$work/stale-check.txt" 2>&1; then
+  echo 'Arduino board check accepted a stale installed platform' >&2
+  exit 1
+fi
+grep -q 'installed but stale' "$work/stale-check.txt"
+"$launcher" --sketchbook "$shell_sketchbook" > "$work/reinstall.txt"
+cmp "$work/current-platform.txt" "$target/platform.txt"
 
 grep -q '^mk61_f401_app.name=MK61s F401 + APP$' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
@@ -124,10 +138,24 @@ if command -v pwsh >/dev/null 2>&1; then
     -Sketchbook "$ps_sketchbook" > "$work/install-ps.txt"
   pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
     -Check -Sketchbook "$ps_sketchbook" > "$work/check-ps.txt"
+  grep -q 'Verified uploader: mk61Upload' "$work/install-ps.txt"
   cmp "$platform/boards.txt" \
       "$ps_sketchbook/hardware/mk61/stm32/boards.txt"
   cmp "$platform/tools/mk61-app-upload.ps1" \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-upload.ps1"
+  printf '\n# stale test copy\n' >> \
+    "$ps_sketchbook/hardware/mk61/stm32/platform.txt"
+  if pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+      -Check -Sketchbook "$ps_sketchbook" \
+      > "$work/stale-check-ps.txt" 2>&1; then
+    echo 'PowerShell board check accepted a stale installed platform' >&2
+    exit 1
+  fi
+  grep -q 'installed but stale' "$work/stale-check-ps.txt"
+  pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+    -Sketchbook "$ps_sketchbook" > "$work/reinstall-ps.txt"
+  cmp "$platform/platform.txt" \
+      "$ps_sketchbook/hardware/mk61/stm32/platform.txt"
 
   # Arduino IDE 2 stores its real sketchbook in arduino-cli.yaml.  This is
   # commonly different from Documents\Arduino on Windows because of OneDrive
