@@ -187,6 +187,30 @@ struct Transaction {
   u8 count;
 };
 
+union WriteWorkspace {
+  alignas(4) u8 compression[ZX0_FALLBACK_WORKSPACE_SIZE];
+  Transaction transaction;
+};
+
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+// C6 writes are serialized by the store and already use process-wide
+// transaction state. F411 can therefore keep this temporary workspace in BSS
+// and preserve the production stack-headroom gate; the compact F401 APP keeps
+// the same workspace on the stack instead of permanently enlarging its arena.
+static WriteWorkspace g_write_workspace;
+// Catalog verification runs during every boot and may sit below several SPI
+// and CRC frames.  The store is single-owner, so its synchronous read helpers
+// can share one resident chunk instead of spending another 512 bytes of the
+// protected stack.  F401 keeps the buffer local to avoid growing the APP
+// arena, where RAM is much tighter than on F411.
+static u8 g_crc_read_chunk[MK61_PROGRAM_STORE_READ_CHUNK];
+// WAL replay and append never overlap: a failed append may reload the
+// catalog only after the outgoing record is no longer needed.  Sharing this
+// sector removes the other 512-byte boot-time frame without making the F401
+// loadable implementation permanently larger.
+static u8 g_wal_record[WAL_RECORD_SIZE];
+#endif
+
 static storage_geometry::Geometry g_geometry;
 static bool g_ready;
 static MountStatus g_mount_status;
@@ -408,7 +432,11 @@ static u32 crc32_bytes(const u8* data, usize len, u32 crc = 0xFFFFFFFFUL) {
 
 static bool crc32_flash(mk61_crc32::Context& crc,
                         u32 address, u32 len) {
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+  u8 (&buffer)[MK61_PROGRAM_STORE_READ_CHUNK] = g_crc_read_chunk;
+#else
   u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
+#endif
   while(len != 0) {
     const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
     if(!read_bytes(address, buffer, count) ||
@@ -428,7 +456,11 @@ static bool crc32_flash(u32 address, u32 len, u32& output) {
 
 static bool crc32_flash_software(u32 address, u32 len, u32& output) {
   u32 state = mk61_crc32::INITIAL_STATE;
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+  u8 (&buffer)[MK61_PROGRAM_STORE_READ_CHUNK] = g_crc_read_chunk;
+#else
   u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
+#endif
   while(len != 0) {
     const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
     if(!read_bytes(address, buffer, count)) return false;
@@ -827,7 +859,11 @@ static u8 new_overlay_slots(const Transaction& transaction) {
 // the catalog. This separate call also prevents LTO from merging the frames.
 __attribute__((noinline))
 static bool append_transaction_record(const Transaction& transaction) {
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+  u8 (&record)[WAL_RECORD_SIZE] = g_wal_record;
+#else
   u8 record[WAL_RECORD_SIZE];
+#endif
   memset(record, 0xFF, sizeof(record));
   record[0] = 'W';
   record[1] = '6';
@@ -1006,7 +1042,11 @@ static bool replay_wal(void) {
   g_wal_records = 0;
   g_wal_sealed = false;
   for(u8 record_index = 0; record_index < records_per_bank; record_index++) {
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+    u8 (&record)[WAL_RECORD_SIZE] = g_wal_record;
+#else
     u8 record[WAL_RECORD_SIZE];
+#endif
     if(!read_bytes(wal_address(g_active_bank) +
                        (u32) record_index * WAL_RECORD_SIZE,
                    record, sizeof(record))) return false;
@@ -1138,7 +1178,11 @@ static bool locator_matches_format(const u8* locator, const char* magic,
 // настройки было бы излишне и неожиданно. Этот ограниченный декодер доверяет
 // только полностью зафиксированному локатору с CRC и независимо защищённой CRC
 // метке на неизменившемся физическом конце.
-static bool load_capacity_for_reformat(void) {
+static
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+__attribute__((noinline))
+#endif
+bool load_capacity_for_reformat(void) {
 #ifndef SPI_FLASH
   return false;
 #else
@@ -1169,7 +1213,11 @@ static bool load_capacity_for_reformat(void) {
 #endif
 }
 
-static bool load_locator(void) {
+static
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+__attribute__((noinline))
+#endif
+bool load_locator(void) {
   u8 locator[LOCATOR_SIZE];
   storage_geometry::Geometry geometry;
   u32 epoch = 0;
@@ -1213,7 +1261,11 @@ static bool load_locator(void) {
 
 // C5 распознаётся только для безопасного отказа. Ни каталог, ни записи, ни
 // staging старого тома новая прошивка не читает и не переписывает.
-static bool load_legacy_c5_locator(void) {
+static
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+__attribute__((noinline))
+#endif
+bool load_legacy_c5_locator(void) {
   u8 locator[LOCATOR_SIZE];
   storage_geometry::Geometry geometry;
   u32 epoch = 0;
@@ -3386,10 +3438,11 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   if(!g_ready || !prepare_local_catalog_mutation()) return false;
   LargeWriteGuard large_guard;
   // The compression plan is consumed before the catalog transaction starts.
-  union {
-    alignas(4) u8 compression[ZX0_FALLBACK_WORKSPACE_SIZE];
-    Transaction transaction;
-  } write_workspace;
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+  WriteWorkspace& write_workspace = g_write_workspace;
+#else
+  WriteWorkspace write_workspace;
+#endif
   write_workspace.compression[0] = 0; // Start the trivial array's lifetime.
   auto& fallback_workspace = write_workspace.compression;
   const u16 max_data_len = maximum_data_len(type);

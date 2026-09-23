@@ -152,6 +152,13 @@ struct SidecarScanMaps {
   u8 regular[CLUSTER_MAP_BYTES];
   u8 directories[CLUSTER_MAP_BYTES];
 };
+#if defined(ARDUINO_ARCH_STM32) && MK61_USBDISK_IS_BUILTIN
+// The F411 has ample resident RAM, and keeping these three transient maps in
+// BSS preserves the production 12 KiB stack-headroom gate after a worst-case
+// FAT scan. The F401 APP still keeps them on the stack so its scarce dynamic
+// module arena is not permanently enlarged.
+static SidecarScanMaps g_sidecar_scan_maps;
+#endif
 enum ClusterRole : u8 {
   CLUSTER_ROLE_NONE = 0,
   CLUSTER_ROLE_SIDECAR = 1,
@@ -1543,9 +1550,14 @@ static bool scan_host_directory(u16 first_cluster, u8 depth,
 
 static bool discard_known_sidecars(void) {
   if(!g_sidecar_scan_pending || !sidecar_filter_enabled()) return true;
+#if defined(ARDUINO_ARCH_STM32) && MK61_USBDISK_IS_BUILTIN
+  SidecarScanMaps& maps = g_sidecar_scan_maps;
+  memset(&maps, 0, sizeof(maps));
+#else
   // These maps are needed only during this bounded scan. Keeping them on the
   // stack avoids adding 1.5 KiB of permanent BSS to the 20-KiB USBDISK.APP.
   SidecarScanMaps maps = {};
+#endif
   if(!scan_host_directory(0, 0, maps)) return false;
   for(u16 byte = 0; byte < CLUSTER_MAP_BYTES; byte++) {
     // A transient host directory may mention a cluster twice. Never discard
