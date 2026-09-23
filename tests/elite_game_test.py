@@ -101,7 +101,31 @@ def test_assembler_continuations():
     assert banks[0][3]==0x51
     # Re-linking an optimized assembler must be deterministic.
     assert a.link()[0]==banks
-    print('ELITE: far-call operand 52 and independently labelled return preserve control flow OK',flush=True)
+    a=Assembler();m=a.module(0,'whole entry')
+    m.raw(*([0x54]*100)).op('ret').label('helper',keep_block=True)
+    for _ in range(12):m.raw(0x54)
+    m.op('ret')
+    banks,info=a.link()
+    # Starting in the last eleven bytes would need a continuation jump.
+    # The independent entry instead moves as one block, without a bridge.
+    assert info['labels']['helper']==112 and info['occupied_bytes']==114
+    assert banks[1][:13]==bytes([0x54]*12+[0x52])
+    a=Assembler();m=a.module(0,'fallthrough into whole entry')
+    m.raw(*([0x54]*100)).label('helper',keep_block=True)
+    for _ in range(12):m.raw(0x54)
+    m.op('ret')
+    banks,info=a.link()
+    assert info['labels']['helper']==112
+    assert banks[0][100:104]==bytes([0x1F,0x51,0x01,0x12])
+    a=Assembler();m=a.module(0,'exact block fit')
+    m.raw(*([0x54]*90)).op('ret').label('helper',keep_block=True)
+    for _ in range(20):m.raw(0x54)
+    m.op('ret').label('next').op('ret')
+    banks,info=a.link()
+    # Do not reserve a bridge inside a protected block ending in RET at 111.
+    assert info['labels']['helper']==91 and banks[0][111]==0x52
+    assert info['labels']['next']==112 and info['occupied_bytes']==113
+    print('ELITE: control flow, operand 52, labelled returns and whole blocks OK',flush=True)
 
 def test_worlds_and_display():
     title,port,credits,again=play(START+['input 1','input 1'])
@@ -122,6 +146,7 @@ def test_worlds_and_display():
         name=''.join(ALPHABET[(code>>shift)&15] for shift in (20,16,12,8,4,0))
         assert s['frame']==screen(name+'    СП'),(i,s)
         assert s['pages'][0][2]==code and s['pages'][0][3]==0,s
+        assert s['steps']<=88,('world generation regressed',i,s['steps'])
         names.add(name)
     assert len(names)==256
     print('ELITE: title, frozen display, 256 worlds and register F callbacks OK',flush=True)
@@ -372,7 +397,7 @@ def main():
     banks,info=create_game().link()
     check_layout(info)
     assert set(info['banks'])=={str(bank) for bank in banks}
-    image=b''.join(banks[bank] for bank in range(32))
+    image=b''.join(banks.get(bank,bytes(112)) for bank in range(32))
     records=[line for part in parts for line in part.read_text().splitlines()]
     assert records[0]==f'ztart 0000 {zlib.crc32(image):08X}'
     assert all(line.startswith('zin ') for line in records[1:])

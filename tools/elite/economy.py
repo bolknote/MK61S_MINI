@@ -75,7 +75,7 @@ def add_economy(a):
     m.set('C',1)
     m.label('trade_price_ready').ld(1).n(30).op('+').st('A').op('ret')
 
-    m=a.module(8,'station')
+    m=a.module(19,'station')
     m.label('station').set(3,5).set(4,6).set(5,24*112+WRITE).set(7,1).set(8,99)
     m.ld(0).n(50).op('-').jz('service_ready')
     m.ld(0).n(51).op('-').jz('service_hull')

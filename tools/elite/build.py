@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 from game import create_game, check_layout
+from assembler import BANK_SIZE
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'tools'))
@@ -25,7 +26,9 @@ def pack_parts(lines):
 def outputs():
     banks,info=create_game().link()
     check_layout(info)
-    image=b''.join(banks[bank] for bank in range(max(banks)+1))
+    # A new layout may leave an entire bank free. Keep the complete image,
+    # including zero-filled holes, rather than requiring every bank as a key.
+    image=b''.join(banks.get(bank,bytes(BANK_SIZE)) for bank in range(32))
     parts={OUT/f'part{i:02d}.m61':text for i,text in enumerate(pack_parts(program_lines(image)))}
     files=dict(parts)
     files[OUT/'autoexec.m61']='open? manual.md\nreinit\n'+''.join(f'open {p.name}\n' for p in parts)+'run\n'
