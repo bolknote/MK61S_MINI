@@ -6,7 +6,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools/elite'))
-from assembler import ALPHABET, screen
+from assembler import ALPHABET, Assembler, screen
 
 COUNT=0
 START=['run','input 0']
@@ -24,6 +24,11 @@ def play(commands):
         assert s['frame'][-2:]==[57,55],s
         assert s['pages'][5][:4]==s['pages'][5][4:8],s
         assert s['pages'][4][6]==sum(hp>0 for hp in s['pages'][4][:5]),s
+        if s['regs'][9]==2:
+            target=s['pages'][3][5]
+            hull=s['pages'][3][1] if target==0 else s['pages'][4][target-1]
+            assert s['regs'][8]==hull,('stale selected hull',s)
+            assert s['regs'][6]==s['pages'][4][6],('stale live drones',s)
     COUNT+=len(states)
     return states
 
@@ -35,6 +40,22 @@ def number(s,prefix,value):
 
 def encounter(seed=8,extra=()):
     return START+list(extra)+[f'set 24 8 {seed}','input 71','input 60']
+
+def test_assembler_continuations():
+    a=Assembler()
+    m=a.module(0,'caller')
+    m.raw(*([0x54]*106)).label('call').far(0x53,152).raw(*([0x54]*5)).op('ret')
+    a.module(1,'callee').raw(*([0x54]*40)).op('ret')
+    banks,info=a.link()
+    address=info['labels']['call']+4
+    # The low address byte 52 must not masquerade as RET: execution after
+    # the call must reach the continuation, never padding/stopped memory.
+    assert banks[address//112][address%112] in (0x54,0x1F)
+    a=Assembler();m=a.module(0,'labelled return')
+    m.call('callee').label('return_entry').op('ret').label('callee').op('ret')
+    banks,_=a.link()
+    assert banks[0][0]==0x53 # a separately callable RET cannot be removed
+    print('ELITE: far-call operand 52 and independently labelled return preserve control flow OK',flush=True)
 
 def test_worlds_and_display():
     title,port,credits,again=play(START+['input 1','input 1'])
@@ -186,6 +207,8 @@ def test_thargoids():
     s=play(encounter(3)+['input 22']*3+
            ['input 81','input 21','input 82','input 21','input 83','input 21'])
     assert s[6]['pages'][3][1]==0 and s[6]['regs'][9]==2
+    assert s[4]['steps']<330 and s[6]['steps']<355,('repeated combat setup/page reads',s[4],s[6])
+    assert s[8]['steps']<315,('extra ship-page opening in a laser turn',s[8])
     assert s[-1]['frame']==screen('YES. CLEAr СП') and s[-1]['pages'][1][8]==1
     assert s[-1]['pages'][4][6]==0
     for cmd in ('input 81','input 85','input 86','input 10','input 15','input 45','input 60'):
@@ -214,6 +237,30 @@ def test_destroyed_targets():
     assert state(s[-2])==state(s[-1])
     print('ELITE: dead targets reject selection/fire atomically; defence and escape remain available OK',flush=True)
 
+def test_combat_cache_and_motion():
+    # Every legal free query, plus refused selections/commands, must retain
+    # the selected hull cache and leave all persistent battle data unchanged.
+    queries=[str(i) for i in range(10)]+['16','17','18','19','85','86','10','15','60']
+    for target in ('80','81'):
+        s=play(encounter(3)+[f'input {target}']+[f'input {q}' for q in queries])
+        assert all(state(row)==state(s[4]) for row in s[5:])
+        assert all(row['regs'][8]==s[4]['regs'][8] for row in s[5:])
+    # The equipment cache must refresh at each contact and cover all laser
+    # levels and manoeuvres, including range limits and evasive half-damage.
+    for level in (1,2,3):
+        for maneuver,initial_range,final_range in ((1,0,0),(1,14,12),(2,14,14),(3,18,20),(3,98,99),(4,14,14)):
+            setup=[f'input 53']*(level-1)
+            s=play(encounter(extra=setup)+[f'set 27 2 {initial_range}',f'input {maneuver}1'])[-1]
+            damage=0 if final_range>18 else 20+12*level-final_range
+            if maneuver==4:damage//=2
+            assert s['pages'][3][1:3]==[max(0,60-damage),final_range],s
+            assert s['pages'][3][8]==20+12*level,s
+            number(s,'H',max(0,60-damage))
+    # Returning to port and improving the laser must replace the old cache.
+    s=play(encounter()+['input 22']*2+['run','input 53','set 24 8 8','input 70','input 60','input 21'])[-1]
+    assert s['pages'][3][8]==44 and s['pages'][3][1]==30,s
+    print('ELITE: battle queries preserve cached hull; three lasers, all manoeuvres and re-equipped contact OK',flush=True)
+
 def main():
     directory=ROOT/'programs/games/ELITE'
     parts=sorted(directory.glob('part[0-9][0-9].m61'))
@@ -227,8 +274,8 @@ def main():
         assert all(len(line)<=239 for line in path.read_text().splitlines())
     for path in directory.glob('*.md'):
         assert path.stat().st_size<=1536
-    tests=(test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
-           test_pirates_and_results,test_thargoids,test_destroyed_targets)
+    tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
+           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)

@@ -102,11 +102,15 @@ def add_economy(a):
     m.ld(8).n(253).op('*').n(13849).op('+').mod(65536).st(8).call('mod16').st('C').op('ret')
 
     m=a.module(11,'contacts')
-    m.label('start_contact').st('C').visit(27,'init_enemy').visit(28,'init_drones').ld('E').st(8).set(9,2).set('A',0).op('ret')
-    m.label('init_enemy').ld('C').st(0).set(1,60).ld(0).n(4).op('-').jnz('enemy_fields').set(1,120)
+    # Equipment cannot change in flight. Decode the laser once per contact;
+    # COMBAT R8 holds its base damage throughout the battle.
+    m.label('start_contact').st(1).get(25,6).n(1000000).op('/','int').n(12).op('*').n(20).op('+').st('D')
+    m.ld(1).st('C').visit(27,'init_enemy').visit(28,'init_drones').ld('D').st(6).ld('E').st(8).set(9,2).set('A',0).op('ret')
+    m.label('init_enemy').ld('D').st(8).ld('C').st(0).n(2).op('*').n(10).op('+').st(7)
+    m.set(1,60).ld(0).n(4).op('-').jnz('enemy_fields').set(1,120)
     m.label('enemy_fields').ld(1).st('E').set(2,14).n(0)
-    for i in range(3,9):m.st(i)
+    for i in range(3,7):m.st(i)
     m.op('ret').label('init_drones').n(0)
     for i in range(9):m.st(i)
     m.ld('C').n(4).op('-').jnz('drones_done').set(0,18).set(1,18).set(5,2).set(6,2)
-    m.label('drones_done').op('ret')
+    m.label('drones_done').ld(6).st('D').op('ret')

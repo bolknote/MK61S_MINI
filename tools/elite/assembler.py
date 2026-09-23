@@ -170,12 +170,22 @@ class Assembler:
                 remaining=sum(self.size(i) for i in module.items[index:])
                 size=self.size(item)
                 needs_bridge=falls_through
-                ends_flow=((item.kind=='bytes' and item.value[-1]==0x52) or
-                           (item.kind=='branch' and item.value==0x51))
+                ends_flow=item.kind=='branch' and item.value==0x51
+                if item.kind=='bytes':
+                    value=item.value
+                    if value[0]==0x1F:
+                        # Address bytes are operands, even when one is 52.
+                        ends_flow=((len(value)==4 and value[1]==0x51) or
+                                   (len(value)==2 and 0x80<=value[1]<=0x8F))
+                    else:ends_flow=value[-1]==0x52
                 if offset+remaining > 112 and offset+size > (112 if ends_flow else 108):
                     fits=[i for i,(_,o) in enumerate(free) if 112-o>=size+(4 if remaining>112-o else 0)]
                     if not fits: raise ValueError(f'bank budget exceeded in {module.name}')
-                    pick=max(fits,key=lambda i:112-free[i][1])
+                    # Prefer the smallest hole holding the whole remainder.
+                    # Otherwise use a large block to avoid extra bridges.
+                    whole=[i for i in fits if 112-free[i][1]>=remaining]
+                    pick=(min(whole,key=lambda i:112-free[i][1]) if whole else
+                          max(fits,key=lambda i:112-free[i][1]))
                     next_bank,next_offset=free.pop(pick)
                     if needs_bridge:
                         bridges.append((bank*112+offset,next_bank*112+next_offset))
