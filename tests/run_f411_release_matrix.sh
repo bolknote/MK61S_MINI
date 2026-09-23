@@ -142,13 +142,14 @@ package_system_apps() {
     --compile-commands "$build_path/compile_commands.json" \
     --output-dir "$bundle/System" \
     --setup 0 \
+    --usbdisk 0 \
     --graphics "$graphics" --ui-fonts "$ui_fonts" \
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
     --markdown "$markdown" --chip8 "$chip8"
   cp "$build_path/mk61s-M.ino.bin" "$bundle/$bundle_name.bin"
   printf '%s\n' "$board_flags $platform_ram_flags $strict_flags" > "$bundle/build.flags"
   printf 'format 1\nabi 6\n' > "$bundle/build.apps"
-  local expected=(USBDISK.APP)
+  local expected=()
   [[ "$focal" == 0 ]] || expected+=(FOCAL.APP)
   [[ "$basic" == 0 ]] || expected+=(BASIC.APP)
   [[ "$wbmp" == 0 || "$markdown" == 1 ]] || expected+=(WBMP.APP)
@@ -277,6 +278,7 @@ compile_variant() {
   "$root/tests/check_core_native_hot_paths_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
+    --allow-usbdisk \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_power_monitor_elf.sh" \
     "$build_path/mk61s-M.ino.elf"

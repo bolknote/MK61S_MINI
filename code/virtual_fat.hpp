@@ -49,9 +49,10 @@ void clear_diagnostic(void);
 // Records a resident-side failure which happened before the FAT session could
 // expose its own detailed diagnostic (font/cache/APP/USB initialization).
 void report_startup_failure(u32 stage, const char* subject);
-// Internal session bridge: USBDISK.APP has ordinary volatile BSS, whereas the
-// public diagnostic must survive APP eviction until a successful import or an
-// explicit clear. The resident proxy restores its retained value on reload.
+// Internal session bridge: F401 USBDISK.APP has ordinary volatile BSS, whereas
+// the public diagnostic must survive APP eviction until a successful import
+// or an explicit clear. The resident proxy restores its retained value on
+// reload; the F411 resident implementation uses the same API directly.
 void restore_diagnostic(const Diagnostic& value);
 
 } // пространство имён virtual_fat

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Install and byte-verify an ABI 6 System bundle over the CDC terminal.
 
-This is the bootstrap path for a freshly formatted C6 volume: USBDISK.APP is
-not resident, so USB MSC cannot be used until that APP has first been copied
-to /System.  The target is pinned by its canonical public identity.  Existing
-files are never removed; replacement must be requested explicitly.
+This is the bootstrap path for a freshly formatted F401 C6 volume, where
+USBDISK.APP must be copied before USB MSC can start.  F411 embeds USB disk and
+passes ``--resident-usbdisk``.  The target is pinned by its canonical public
+identity. Existing files are never removed; replacement must be requested
+explicitly.
 """
 
 from __future__ import annotations
@@ -27,7 +28,6 @@ from hil_usb_disk_transaction import (
 
 
 CANONICAL_FILES = (
-    "USBDISK.APP",
     "HELP0.TXT",
     "HELP1.TXT",
     "FOCAL.APP",
@@ -84,16 +84,20 @@ def main() -> int:
     parser.add_argument("--public-id", required=True)
     parser.add_argument("--bundle", type=Path, required=True)
     parser.add_argument("--replace", action="store_true")
+    parser.add_argument("--resident-usbdisk", action="store_true",
+                        help="accept an F411 bundle without USBDISK.APP")
     args = parser.parse_args()
 
     expected_id = args.public_id.upper()
     if not re.fullmatch(r"[0-9A-F]{16}", expected_id):
         parser.error("--public-id must contain exactly 16 hexadecimal digits")
-    missing = [name for name in CANONICAL_FILES
+    required = (() if args.resident_usbdisk else ("USBDISK.APP",)) + \
+        CANONICAL_FILES
+    missing = [name for name in required
                if not (args.bundle / name).is_file()]
     if missing:
         parser.error(f"bundle is missing: {', '.join(missing)}")
-    files = CANONICAL_FILES + tuple(
+    files = required + tuple(
         name for name in OPTIONAL_FILES if (args.bundle / name).is_file()
     )
 

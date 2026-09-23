@@ -2073,6 +2073,7 @@ build_system_app_bundle() {
     --compile-commands "$compile_commands" \
     --output-dir "$bundle/System" \
     --setup 0 \
+    --usbdisk 0 \
     --graphics "$(system_bundle_graphics "$profile")" \
     --ui-fonts "$(system_bundle_ui_fonts "$profile")" \
     --focal "$ENABLE_FOCAL" \
@@ -2188,8 +2189,10 @@ prepare_and_compile_worker() {
 }
 
 expected_system_app_names() {
-  [ "$MCU" != f401 ] || printf '%s\n' SETUP.APP
-  printf '%s\n' USBDISK.APP HELP0.TXT HELP1.TXT
+  if [ "$MCU" = f401 ]; then
+    printf '%s\n' SETUP.APP USBDISK.APP
+  fi
+  printf '%s\n' HELP0.TXT HELP1.TXT
   [ "$ENABLE_FOCAL" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && printf '%s\n' BASIC.APP
   [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
@@ -2213,8 +2216,8 @@ system_app_enabled() {
       ;;
     MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] ;;
     CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] ;;
-    SETUP.APP) [ "$MCU" = f401 ] ;;
-    USBDISK.APP|HELP0.TXT|HELP1.TXT) return 0 ;;
+    SETUP.APP|USBDISK.APP) [ "$MCU" = f401 ] ;;
+    HELP0.TXT|HELP1.TXT) return 0 ;;
     *) return 1 ;;
   esac
 }

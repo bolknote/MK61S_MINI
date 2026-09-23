@@ -17,7 +17,9 @@
 #include "builtin_font.hpp"
 #include "mk_math.hpp"
 #include "mk8_codec.hpp"
-#include "usbdisk_backend.hpp"
+#if MK61_USBDISK_IS_LOADABLE
+  #include "usbdisk_backend.hpp"
+#endif
 #include "usb_mass_storage.hpp"
 #if MK61_NUMBER_IO_SERVICE_ENABLED
 #include "number_format.hpp"
@@ -183,8 +185,10 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_SETUP |
           MK61_SERVICE_CAP_FORMAT | MK61_SERVICE_CAP_DIALOGS |
           MK61_SERVICE_CAP_EDITOR | MK61_SERVICE_CAP_REGISTERS |
-          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME |
-          MK61_SERVICE_CAP_USBDISK
+          MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME
+#if MK61_USBDISK_IS_LOADABLE
+          | MK61_SERVICE_CAP_USBDISK
+#endif
 #if MK61_APP_LOCAL_FLOAT_MATH
           | MK61_SERVICE_CAP_FLOAT_CONVERT
 #endif
@@ -225,7 +229,9 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       }
 #endif
     case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
+#if MK61_USBDISK_IS_LOADABLE
     case MK61_SYS_USBDISK: return usbdisk_backend::call(a, b, c, 0, payload);
+#endif
     case MK61_SYS_DISPLAY: return display_call(a, b, c, payload);
     case MK61_SYS_KEYBOARD: return key_call(a, b);
     case MK61_SYS_MICROS: return micros();

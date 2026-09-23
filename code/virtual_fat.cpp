@@ -1,13 +1,14 @@
 #include "virtual_fat.hpp"
+#include "config.h"
 
-#if defined(ARDUINO_ARCH_STM32) && !defined(MK61_BUILD_USBDISK_MODULE)
+#if defined(ARDUINO_ARCH_STM32) && !defined(MK61_BUILD_USBDISK_MODULE) && \
+    MK61_USBDISK_IS_LOADABLE
 
 #include "virtual_fat_proxy.inc"
 
 #else
 
 #include "bounded_string.hpp"
-#include "config.h"
 #include "device_identity.hpp"
 #include "fat_name.hpp"
 #include "language_workspace.hpp"

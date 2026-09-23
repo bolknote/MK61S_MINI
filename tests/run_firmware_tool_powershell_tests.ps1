@@ -256,7 +256,7 @@ try {
     [IO.File]::WriteAllText(
         (Join-Path $f411Bundle 'mk61s-M-mini-v3-lcd1602-a00-f411.bin'),
         "resident-f411`n")
-    foreach ($resource in @('USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+    foreach ($resource in @('HELP0.TXT', 'HELP1.TXT')) {
         [IO.File]::WriteAllText(
             (Join-Path $f411System $resource), "f411-resource`n")
     }
@@ -266,10 +266,9 @@ try {
         'F411 did not install its ABI 6 System APP bundle'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $targetSystem 'SETUP.APP'))) `
         'F411 must not need an external SETUP.APP'
-    $installedUsbDisk = [IO.File]::ReadAllText(
-        (Join-Path $targetSystem 'USBDISK.APP')).Trim()
-    Assert-True ($installedUsbDisk -eq 'f411-resource') `
-        'F411 USBDISK.APP was not installed'
+    Assert-True (-not (Test-Path -LiteralPath (
+        Join-Path $targetSystem 'USBDISK.APP'))) `
+        'F411 must not need an external USBDISK.APP'
 } finally {
     $env:MK61_CONFIG_FILE = $oldConfig
     $env:MK61_BUILD_ROOT = $oldBuild

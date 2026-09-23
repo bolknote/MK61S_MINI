@@ -7,10 +7,10 @@ struct StartupDiagnostic {
   unsigned stage;
 };
 bool init(void);
-// Loads and validates USBDISK.APP, acquires its caches and opens the virtual
-// FAT session while CDC is still available. init() may call this itself, but
-// the mode switch uses the explicit phase so only the short USB-core handoff
-// happens after Serial.end().
+// Opens the virtual FAT implementation (resident on F411, USBDISK.APP on
+// F401), acquires its caches and validates the session while CDC is still
+// available. init() may call this itself, but the mode switch uses the
+// explicit phase so only the short USB-core handoff happens after Serial.end().
 bool prepare(void);
 bool deinit(void);
 bool active(void);
@@ -30,8 +30,8 @@ void service(void);
 // identifies the last entered stage after CDC comes back.
 StartupDiagnostic startup_diagnostic(void);
 void clear_startup_diagnostic(void);
-// Internal breadcrumb hook for resident services called by USBDISK.APP while
-// init() is still in progress. Calls after successful startup are ignored.
+// Internal breadcrumb hook used while init() is still in progress. Calls
+// after successful startup are ignored.
 void note_startup_stage(unsigned stage);
 }
 

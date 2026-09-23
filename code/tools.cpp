@@ -1122,11 +1122,13 @@ static void show_storage_message(const char* ru0, const char* en0,
 
 static bool confirm_storage_action(const char* ru_action,
                                    const char* en_action) {
-  // Both C6 operations remove /System/USBDISK.APP. Two deliberate OK presses
-  // keep the consequence visible on a two-row, 16-cell A00/A02 display.
+#if MK61_USBDISK_IS_LOADABLE
+  // On F401 both C6 operations remove /System/USBDISK.APP. Two deliberate OK
+  // presses keep the consequence visible on a two-row, 16-cell A00/A02 display.
   show_storage_message(M8("USB-диск уйдёт"), "USB disk lost",
                        M8("OK далее ESC нет"), "OK next ESC no");
   if(kbd::get_key_wait() != KEY_OK) return false;
+#endif
   show_storage_message(ru_action, en_action,
                        M8("OK да ESC нет"), "OK yes ESC no");
   return kbd::get_key_wait() == KEY_OK;

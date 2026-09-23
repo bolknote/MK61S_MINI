@@ -103,7 +103,7 @@ def main() -> int:
         if identity.public != expected_id:
             raise AssertionError(f"wrong board: {identity.public}")
         df = port.command("df", timeout=15)
-        if "Flash: " not in df or "192 total" not in df:
+        if "Flash: " not in df or "4084 total" not in df:
             raise AssertionError(f"unexpected C6 geometry:\n{df}")
         root = listing_entries(port.command("ls /", timeout=15))
         if len(root) != 1 or root[0].casefold() != "d\tsystem/":

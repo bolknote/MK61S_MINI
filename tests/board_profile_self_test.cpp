@@ -92,9 +92,13 @@ int main(void) {
 #if defined(STM32F411xE)
   static_assert(!MK61_SETUP_IS_LOADABLE,
                 "F411 settings must work without SETUP.APP");
+  static_assert(!MK61_USBDISK_IS_LOADABLE && MK61_USBDISK_IS_BUILTIN,
+                "F411 USB disk must work without USBDISK.APP");
 #else
   static_assert(MK61_SETUP_IS_LOADABLE,
                 "F401 settings must remain external");
+  static_assert(MK61_USBDISK_IS_LOADABLE && !MK61_USBDISK_IS_BUILTIN,
+                "F401 USB disk must remain external");
 #endif
   static_assert(MK61_TERMINAL_HELP_IS_EXTERNAL,
                 "terminal help must stay external on both MCU families");
@@ -110,6 +114,8 @@ int main(void) {
 #if defined(MK61_CONFIG_EXPECT_PORTABLE_SYSTEM_APPS)
   static_assert(MK61_SETUP_IS_LOADABLE == 1,
                 "external System APP must include SETUP");
+  static_assert(MK61_USBDISK_IS_LOADABLE == 1,
+                "external F401 System APP must include USBDISK");
 #endif
   static_assert(PIN_SPIFLASH_CS == PA4,
                 "all supported mini revisions use SPI1 NSS on PA4");

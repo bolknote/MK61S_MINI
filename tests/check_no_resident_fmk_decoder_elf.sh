@@ -2,12 +2,16 @@
 set -euo pipefail
 
 allow_fmk=0
-if [[ "${1:-}" == '--allow-fmk' ]]; then
-  allow_fmk=1
-  shift
-fi
+allow_usbdisk=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --allow-fmk) allow_fmk=1; shift ;;
+    --allow-usbdisk) allow_usbdisk=1; shift ;;
+    *) break ;;
+  esac
+done
 if [[ $# -ne 1 ]]; then
-  echo "usage: $0 [--allow-fmk] firmware.elf" >&2
+  echo "usage: $0 [--allow-fmk] [--allow-usbdisk] firmware.elf" >&2
   exit 2
 fi
 
@@ -51,14 +55,24 @@ if [[ "$allow_fmk" == 0 ]]; then
 fi
 
 # FAT12 directory synthesis, LFN conversion and the transactional import plan
-# belong to USBDISK.APP. The resident keeps only the pinned command proxy.
-fat_unexpected="$({ grep -E \
-  'virtual_fat::.*(render_node_dirent|walk_directory|parse_lfn|apply_file|process_node|prune_tree|ensure_all_directory_extents)' \
-  <<<"$symbols" || true; })"
-if [[ -n "$fat_unexpected" ]]; then
-  printf 'resident USBDISK ELF check: FAT/LFN implementation leaked into resident:\n%s\n' \
-    "$fat_unexpected" >&2
-  exit 1
+# belong to USBDISK.APP on F401. F411 deliberately embeds the same sources.
+if [[ "$allow_usbdisk" == 0 ]]; then
+  fat_unexpected="$({ grep -E \
+    'virtual_fat::.*(render_node_dirent|walk_directory|parse_lfn|apply_file|process_node|prune_tree|ensure_all_directory_extents)' \
+    <<<"$symbols" || true; })"
+  if [[ -n "$fat_unexpected" ]]; then
+    printf 'resident USBDISK ELF check: FAT/LFN implementation leaked into resident:\n%s\n' \
+      "$fat_unexpected" >&2
+    exit 1
+  fi
+else
+  fat_present="$({ grep -E \
+    'virtual_fat::.*(walk_directory|parse_lfn|prune_tree|ensure_all_directory_extents)' \
+    <<<"$symbols" || true; })"
+  if [[ -z "$fat_present" ]]; then
+    echo 'resident USBDISK ELF check: F411 FAT/LFN implementation is missing' >&2
+    exit 1
+  fi
 fi
 
 echo 'resident FMK/USBDISK payload ELF check: OK'

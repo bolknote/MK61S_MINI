@@ -30,7 +30,8 @@ python3 tools/build_system_app_bundle.py \
 ```
 
 По умолчанию он собирает `SETUP.APP` и `USBDISK.APP`; для F411 сборщик
-прошивки передаёт `--setup 0`, поскольку SETUP уже встроен в resident.
+прошивки передаёт `--setup 0 --usbdisk 0`, поскольку оба базовых сервиса уже
+встроены в resident.
 Сборщик извлекает из служебной INFO-секции resident согласованные
 `HELP0.TXT` и `HELP1.TXT`, добавляет включённые роли и
 атомарно заменяет только принадлежащие ему канонические файлы. Оболочка
@@ -38,7 +39,7 @@ python3 tools/build_system_app_bundle.py \
 `mk61-firmware` не имеют собственных реализаций упаковки System APP.
 
 Имена остаются стабильными: `/System/FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
-`MARKDOWN.APP`, `CHIP8.APP`, `USBDISK.APP` и (только на F401) `SETUP.APP`.
+`MARKDOWN.APP`, `CHIP8.APP`, а на F401 также `USBDISK.APP` и `SETUP.APP`.
 После прошивки resident скопируйте
 весь каталог `/System` из того же комплекта. ABI 2/3/4/5 намеренно не
 исполняются; старые APP нужно один раз пересобрать.

@@ -95,7 +95,7 @@ def build(args: argparse.Namespace) -> dict:
         "wbmp": args.wbmp and not args.markdown,
         "markdown": args.markdown,
         "chip8": args.chip8,
-        "usbdisk": True,
+        "usbdisk": args.usbdisk,
     }
     built: list[str] = []
     with tempfile.TemporaryDirectory(prefix="mk61-system-app-") as temporary:
@@ -163,6 +163,8 @@ def main() -> None:
     parser.add_argument("--graphics", type=boolean, default=True)
     parser.add_argument("--setup", type=boolean, default=True,
                         help="build SETUP.APP (0 when setup is resident on F411)")
+    parser.add_argument("--usbdisk", type=boolean, default=True,
+                        help="build USBDISK.APP (0 when USB disk is resident on F411)")
     parser.add_argument("--ui-fonts", type=boolean, default=True)
     parser.add_argument("--focal", type=boolean, default=True)
     parser.add_argument("--basic", type=boolean, default=True)

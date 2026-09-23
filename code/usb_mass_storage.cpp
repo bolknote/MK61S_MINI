@@ -416,11 +416,11 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
     return USBD_MSC_STORAGE_ERROR;
   }
 
-  // Resident builds deliberately return false here: USBDISK.APP must never
-  // run in USB/IRQ context, even when its RAM cache has enough free slots.
-  // The BOT packet remains owned by STM32duino while BUSY is returned, and
-  // service() hands it to the pinned APP from the main loop. Host tests of the
-  // full in-process FAT implementation may still exercise the fast cache path.
+  // The F401 proxy deliberately returns false here: USBDISK.APP must never run
+  // in USB/IRQ context, even when its RAM cache has enough free slots. The BOT
+  // packet remains owned by STM32duino while BUSY is returned, and service()
+  // hands it to the pinned APP from the main loop. F411 and host tests use the
+  // full in-process implementation and may exercise the fast cache path.
   if(virtual_fat::try_write_cached_sectors(block_addr, buf, block_len)) {
     return apply_session_event(
         usb_disk_session::Event::WRITE_ACCEPTED).accepted
@@ -475,10 +475,10 @@ static void release_session_resources(void) {
 }
 
 static void abort_session(void) {
-  // release_session_resources() captures the APP-side diagnostic while
-  // unloading USBDISK.APP.  A resident USB-core failure recorded just before
-  // this call is newer and more specific, so do not let an empty APP report
-  // erase it on the way back to CDC.
+  // release_session_resources() captures the FAT-side diagnostic while
+  // closing the resident implementation or unloading USBDISK.APP. A USB-core
+  // failure recorded just before this call is newer and more specific, so do
+  // not let an empty report erase it on the way back to CDC.
   const virtual_fat::Diagnostic failure = virtual_fat::diagnostic();
   release_session_resources();
   if(failure.code != virtual_fat::ErrorCode::NONE) {

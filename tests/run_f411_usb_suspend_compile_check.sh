@@ -141,7 +141,8 @@ compile_profile() {
   "$root/tests/check_rtc_alarm_elf.sh" "$elf"
   "$root/tests/check_usb_suspend_elf.sh" "$elf"
   "$root/tests/check_core_native_hot_paths_elf.sh" "$elf"
-  "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk "$elf"
+  "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
+    --allow-usbdisk "$elf"
 }
 
 profile_count="$(python3 "$contract" cases --group f411-stop --format count)"
