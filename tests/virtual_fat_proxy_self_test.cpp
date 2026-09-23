@@ -164,8 +164,9 @@ int main(void) {
   expect_events({EVENT_PIN});
   assert(virtual_fat::diagnostic().code ==
          virtual_fat::ErrorCode::STORAGE_UNAVAILABLE);
-  assert(virtual_fat::diagnostic().actual == 1);
-  assert(strcmp(virtual_fat::diagnostic().subject, "app-pin") == 0);
+  assert(virtual_fat::diagnostic().actual ==
+         (u32) RuntimeStatus::BUSY);
+  assert(strcmp(virtual_fat::diagnostic().subject, "app-busy") == 0);
 
   return 0;
 }

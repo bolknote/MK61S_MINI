@@ -23,6 +23,21 @@ static void proxy_startup_stage(u32 stage) {
 #endif
 }
 
+static const char* pin_failure_subject(loadable_module::RuntimeStatus status) {
+  using loadable_module::RuntimeStatus;
+  switch(status) {
+    case RuntimeStatus::DISABLED: return "app-disabled";
+    case RuntimeStatus::UNAVAILABLE: return "app-storage";
+    case RuntimeStatus::INVALID_MODULE: return "app-invalid";
+    case RuntimeStatus::INCOMPATIBLE_FIRMWARE: return "app-mismatch";
+    case RuntimeStatus::CORRUPT_MODULE: return "app-corrupt";
+    case RuntimeStatus::BUSY: return "app-busy";
+    case RuntimeStatus::IO_ERROR: return "app-io";
+    case RuntimeStatus::OK: break;
+  }
+  return "app-pin";
+}
+
 static bool invoke(loadable_module::Command command, u32 a, u32 b, u32 c,
                    u32& result) {
   return loadable_module::pinned(loadable_module::Kind::USBDISK) &&
@@ -149,7 +164,8 @@ bool reset_session(void) {
   const RuntimeStatus pin_status = pin(Kind::USBDISK);
   proxy_startup_stage(601U);
   if(pin_status != RuntimeStatus::OK) {
-    report_startup_failure(1, "app-pin");
+    report_startup_failure((u32) pin_status,
+                           pin_failure_subject(pin_status));
     return false;
   }
   u32 result = 0;
