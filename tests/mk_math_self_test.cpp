@@ -342,14 +342,23 @@ static void press_kip7(void) {
   press_matrix(digit_key(7));
 }
 
-static void run_program(const u8* code, usize length) {
+static bool run_program(const u8* code, usize length, bool resume_context=false) {
   u8 page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
   for(usize i = 0; i < core_61::program_steps(); i++) page[i] = 0x50;
   for(usize i = 0; i < length && i < core_61::program_steps(); i++) page[i] = code[i];
   core_61::set_code_page(page);
   core_61::set_IP(0);
   press_matrix({2, 9}); // C/P
-  for(int i = 0; i < 256 && core_61::is_RUN(); i++) core_61::step();
+  bool restored=true;
+  for(int i = 0; i < 256 && core_61::is_RUN(); i++) {
+    if(resume_context) {
+      core_61::ContextBuffer snapshot={};
+      restored=core_61::save_context(snapshot) &&
+          core_61::restore_context(snapshot) && restored;
+    }
+    core_61::step();
+  }
+  return restored;
 }
 
 static constexpr usize MS_PROGRAM_BYTE_HIGH_TETRADES[
@@ -1285,22 +1294,32 @@ static void test_far_loop_x2(void) {
   bool correct=true;
   core_61::set_expanded_program_mode(true);
   for(const auto& expression:expressions) for(u8 loop=0;loop<4;++loop)
-    for(u8 count:{1,2,3}) for(u8 restore:{0x0A,0x0B,0x0C}) {
-      char expected[5][15]={};
-      double expected_counter=0;
+    for(u8 count:{1,2,3}) for(u8 restore:{0x0A,0x0B,0x0C}) for(bool seam:{false,true}) {
+      if(seam && &expression!=expressions)continue;
+      char expected[5][15]={}, expected_counter[15]={};
       bool expected_error=false;
       for(bool far:{false,true}) {
         core_61::enable();core_61::clear_extended_program_banks();
         set_register_integer(counters[loop],count);
-        u8 code[73];std::memset(code,0x50,sizeof(code));
-        std::memcpy(code,expression.bytes,expression.size);
-        u8 pc=expression.size;
-        if(far)code[pc++]=0x1F;
-        code[pc++]=loops[loop];
-        if(far)code[pc++]=0x02;
-        code[pc++]=far?0x50:0x70;
-        code[pc++]=restore;
-        if(restore==0x0C)code[pc]=1;
+        u8 code[core_61::CODE_PAGE_BUFFER_SIZE];std::memset(code,0x50,sizeof(code));
+        u16 pc=far && seam ? 111U-expression.size : 0;
+        if(pc) {
+          code[0]=0x1F;code[1]=0x51;code[2]=u8(pc/100);
+          code[3]=u8(((pc/10)%10)*16+pc%10);
+        }
+        auto emit=[&](u8 opcode) {
+          if(pc<112)code[pc]=opcode;
+          else correct=core_61::write_absolute_program(pc,opcode)&&correct;
+          ++pc;
+        };
+        for(u8 i=0;i<expression.size;++i)emit(expression.bytes[i]);
+        if(far)emit(0x1F);
+        emit(loops[loop]);
+        if(far)emit(0x02);
+        emit(far?0x50:0x70);
+        emit(restore);
+        if(restore==0x0C)emit(1);
+        emit(0x50);
         if(far) {
           core_61::write_absolute_program(250,restore);
           core_61::write_absolute_program(251,restore==0x0C?1:0x50);
@@ -1309,33 +1328,35 @@ static void test_far_loop_x2(void) {
           code[70]=restore;
           if(restore==0x0C)code[71]=1;
         }
-        run_program(code,sizeof(code));
-        // The extension stores a normalized decimal counter; ROM FL leaves
-        // it denormalized (e.g. 0.0000001e7). Compare numeric counter values.
-        const double actual_counter=read_register_decimal(counters[loop]);
+        correct=run_program(code,sizeof(code),far)&&correct;
+        char actual_counter[15]={};
+        MK61Emu_ReadRegister(counters[loop],actual_counter,SYMBOLS);
         if(!far) {
           expected_error=core_61::has_error();
-          expected_counter=actual_counter;
+          std::memcpy(expected_counter,actual_counter,15);
         }
         bool equal=core_61::is_CALC() && !core_61::extended_program_error() &&
             core_61::has_error()==expected_error &&
-            actual_counter==expected_counter;
+            std::memcmp(actual_counter,expected_counter,15)==0;
         for(int reg=0;reg<5;++reg) {
           char actual[15]={};read_stack_register((stack)reg,actual,SYMBOLS);
           if(!far)std::memcpy(expected[reg],actual,15);
-          else {
-            if(std::memcmp(actual,expected[reg],15)!=0 && &expression==expressions && loop==0 && count==2)
-              std::printf("    restore=%02X stack=%d expected='%s' actual='%s'\n",restore,reg,expected[reg],actual);
-            equal=equal && std::memcmp(actual,expected[reg],15)==0;
-          }
+          else equal=equal && std::memcmp(actual,expected[reg],15)==0;
         }
-        if(!equal)std::printf("  expr=%lu loop=%02X count=%u restore=%02X far=%d X=%.8g counter=%.8g/%.8g error=%d/%d\n",
-            (unsigned long)(&expression-expressions),loops[loop],count,restore,far,read_live_x(),
+        if(!equal)std::printf("  expr=%lu loop=%02X count=%u restore=%02X far=%d seam=%d X=%.8g counter='%s'/'%s' error=%d/%d\n",
+            (unsigned long)(&expression-expressions),loops[loop],count,restore,far,seam,read_live_x(),
             actual_counter,expected_counter,core_61::has_error(),expected_error);
         correct=correct&&equal;
       }
     }
-  check_true("252 far FL variants match native counters, full stack, X2 restores and errors",correct);
+  check_true("288 far FL variants match ROM counters, full stack and input latches across context resumes/banks",correct);
+  // A second far iteration must accept the ROM's denormalized counter word.
+  core_61::enable();core_61::clear_extended_program_banks();
+  set_register_integer(0,3);
+  const u8 repeat[]={0x1F,0x5D,0x00,0x00,0x50};
+  check_true("far loop resumes from its own ROM counter representation",
+      run_program(repeat,sizeof(repeat),true) && core_61::is_CALC() &&
+      !core_61::extended_program_error() && read_register_decimal(0)==1);
 }
 
 static void test_display_strobe_writeback(void) {
@@ -1385,17 +1406,7 @@ static void test_display_strobe_writeback(void) {
         for(u8 i=0;i<expression.size;++i)emit(expression.bytes[i]);
         if(barrier)emit(0x54);
         emit(0x2F);emit(0x0E);emit(0x50);
-        if(barrier)run_program(code,sizeof(code));
-        else {
-          core_61::set_code_page(code);core_61::set_IP(0);
-          press_matrix({2,9});
-          for(int i=0;i<256 && core_61::is_RUN();++i) {
-            core_61::ContextBuffer snapshot={};
-            resumable=core_61::save_context(snapshot) &&
-                core_61::restore_context(snapshot) && resumable;
-            core_61::step();
-          }
-        }
+        resumable=run_program(code,sizeof(code),!barrier)&&resumable;
         Result result={};
         for(int r=0;r<5;++r)
           read_stack_register((stack)r,result.stack_values[r],SYMBOLS);
@@ -1484,6 +1495,8 @@ static void test_extended_prefixes(void) {
       const u8 native_loop[] = {loop.opcode, 0x04, 0x07, 0x50, 0x08, 0x50};
       run_program(native_loop, sizeof(native_loop));
       const bool native_branches = core_61::get_IP() == 6;
+      char native_counter[15] = {};
+      MK61Emu_ReadRegister(loop.reg, native_counter, SYMBOLS);
       core_61::set_expanded_program_mode(true);
       core_61::enable();
       core_61::clear_extended_program_banks();
@@ -1498,8 +1511,8 @@ static void test_extended_prefixes(void) {
           core_61::active_program_bank() == (native_branches ? 2U : 0U) &&
           !core_61::extended_program_error());
       check_true("far FL0..FL3 counter value",
-          reg[1] == (char) ('0' + (value == 1 ? 1 : value - 1)) &&
-          reg[12] == '0' && reg[13] == '0');
+          read_register_decimal(loop.reg) == (value == 1 ? 1 : value - 1) &&
+          std::memcmp(reg, native_counter, sizeof(reg)) == 0);
     }
   }
   core_61::set_expanded_program_mode(true);

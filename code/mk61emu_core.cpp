@@ -1101,7 +1101,8 @@ static const usize indicator_pos[12] =
 struct ExtendedProgramState {
   u8* banks[EXTENDED_BANK_COUNT];
   u16 return_addresses[EXTENDED_RETURN_DEPTH];
-  u16 pending_prefix; // absolute address + 1, bit 15 selects a display strobe
+  // Address + 1. Flags: 8000 display strobe; 4000 target after a ROM FL.
+  u16 pending_prefix;
   u8 active_bank;
   u8 bank_slots_used;
   u8 return_depth;
@@ -1383,24 +1384,27 @@ static bool far_loop_opcode(u8 opcode) {
       opcode == 0x5B || opcode == 0x5D;
 }
 
-static bool evaluate_far_condition(u8 opcode, bool& branch) {
-  if(far_loop_opcode(opcode)) {
-    const u8 reg = opcode == 0x58 ? 2U :
-                   opcode == 0x5A ? 3U :
-                   opcode == 0x5B ? 1U : 0U;
-    u16 value = 0;
-    if(!read_register_unsigned(reg, core_61::EXTENDED_ADDRESS_LIMIT, value) ||
-       value == 0) return false;
-    if(value == 1U) {
-      branch = false;
-      return true;
-    }
-    value--;
-    write_register_unsigned(reg, value);
-    branch = true;
-    return true;
+static bool prepare_far_loop(u16 absolute, u8 opcode, u8& delegated_opcode) {
+  const u8 reg = opcode == 0x58 ? 2U :
+                 opcode == 0x5A ? 3U :
+                 opcode == 0x5B ? 1U : 0U;
+  u16 value = 0;
+  u16 target = absolute + 4U;
+  if(target >= core_61::EXTENDED_ADDRESS_LIMIT ||
+     !read_register_unsigned(reg, core_61::EXTENDED_ADDRESS_LIMIT, value) ||
+     value == 0) return false;
+  if(value == 1U) {
+    // FL exit leaves the counter intact and runs the same normalization /
+    // X2 synchronization as F0. There is no ROM operand to consume here.
+    delegated_opcode = 0xF0;
+    return set_extended_next_pc(target);
   }
-  return x_condition(opcode, branch);
+  if(!read_bcd_absolute_address(absolute + 2U, target)) return false;
+  // Let the ROM perform a taken FL, including its counter representation and
+  // numeric-entry latches. Only the destination is replaced with a far one.
+  delegated_opcode = opcode;
+  extended_program.pending_prefix = (target + 1U) | 0x4000U;
+  return true;
 }
 
 static bool far_x_condition(u8 opcode) {
@@ -1409,13 +1413,13 @@ static bool far_x_condition(u8 opcode) {
       (opcode & 0xF0U) == 0xC0 || (opcode & 0xF0U) == 0xE0;
 }
 
-static bool execute_far_prefix(u16 absolute, bool* synchronize_x = nullptr) {
+static bool execute_far_prefix(u16 absolute) {
   u8 opcode = 0;
   if(!core_61::read_absolute_program((u16) (absolute + 1U), opcode))
     return false;
 
   const bool direct = opcode == 0x51 || opcode == 0x53 ||
-      (opcode >= 0x57 && opcode <= 0x5E);
+      opcode == 0x57 || opcode == 0x59 || opcode == 0x5C || opcode == 0x5E;
   const bool indirect = (opcode >= 0x70 && opcode <= 0xAF) ||
       (opcode >= 0xC0 && opcode <= 0xCF) ||
       (opcode >= 0xE0 && opcode <= 0xEF);
@@ -1433,15 +1437,9 @@ static bool execute_far_prefix(u16 absolute, bool* synchronize_x = nullptr) {
      (opcode >= 0xC0 && opcode <= 0xCF) ||
      (opcode >= 0xE0 && opcode <= 0xEF)) {
     const u8 condition_opcode = direct ? opcode : (u8) (opcode & 0xF0U);
-    if(!evaluate_far_condition(condition_opcode, branch)) return false;
+    if(!x_condition(condition_opcode, branch)) return false;
   }
-  if(!branch) {
-    // A terminating ROM FL synchronizes X -> X2; a taken loop does not.
-    // Keep this distinction so '.', sign and exponent entry after a far
-    // loop see the same hidden operand as after the native instruction.
-    if(synchronize_x != nullptr) *synchronize_x = far_loop_opcode(opcode);
-    return set_extended_next_pc(next);
-  }
+  if(!branch) return set_extended_next_pc(next);
 
   u16 target = 0;
   if(direct) {
@@ -1671,17 +1669,30 @@ static bool dispatch_mk61_program_boundary(u8 program_address, u8 opcode) {
 static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
     u8 address) {
   if(address == 0x06U) {
+    u8 program_address = prefetched_program_address();
+    // A branch operand also visits prefetch. Finish a delegated ROM FL before
+    // applying its pending far destination, and supply a harmless local
+    // operand even when the prefix straddles a bank boundary.
+    // Consume only this visit: a later jump to the operand is a real command.
+    const u8 jump_operand = mk61_jump_operand;
+    mk61_jump_operand = 0;
+    if((usize) program_address + 1U == jump_operand) {
+      if(extended_program.pending_prefix & 0x4000U) encode_mk61_opcode(0x00);
+      return false;
+    }
     if(extended_program.pending_prefix != 0) {
-      // The prefix's existing ROM NOP has now completed the previous numeric
-      // write-back. At its initial prefetch even 0-19 can still expose +19.
+      // The prefix's ROM NOP (or delegated FL) has completed its numeric work.
+      // At the initial prefetch even 0-19 can still expose +19.
       // Resolve the prefix before decoding its operand, then feed the target's
       // real opcode into this same fetch: no additional NOP or ROM step.
       const u16 pending = extended_program.pending_prefix;
-      const u16 absolute = (pending & 0x7FFFU) - 1U;
+      const u16 absolute = (pending & 0x3FFFU) - 1U;
       extended_program.pending_prefix = 0;
       u8 next_opcode = 0x50;
-      if((pending & 0x8000U) ? execute_display_prefix(absolute)
-                            : execute_far_prefix(absolute)) {
+      const bool success = (pending & 0x4000U) ? set_extended_next_pc(absolute) :
+          (pending & 0x8000U) ? execute_display_prefix(absolute) :
+                               execute_far_prefix(absolute);
+      if(success) {
         const u8 next = (u8) ((core_61::get_IP() + 1U) % core_61::MAX_PROGRAM_STEP);
         core_61::set_IP(next);
         if(!core_61::read_absolute_program((u16) (extended_program.active_bank *
@@ -1691,15 +1702,8 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
         extended_program.error = true;
       }
       encode_mk61_opcode(next_opcode);
+      program_address = prefetched_program_address();
     }
-    const u8 program_address = prefetched_program_address();
-
-    // A branch's address byte can visit the same prefetch point as an opcode.
-    // Consume only the immediately following visit: a jump to its own operand
-    // must expose that address as a real command on the subsequent visit.
-    const u8 jump_operand = mk61_jump_operand;
-    mk61_jump_operand = 0;
-    if((usize) program_address + 1U == jump_operand) return false;
 
     // Штатное ПЗУ ПП/CALL дважды показывает операнд по этому микроадресу:
     // при выборке цели и снова при возврате за эту ячейку. Ни одно посещение
@@ -1734,7 +1738,7 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
       if(expanded_program_mode) {
         bool handled = false;
         bool success = false;
-        bool synchronize_x = false;
+        u8 delegated_opcode = (u8) MK61_NOP;
         if(semantic_opcode == MK61_FAR_ADDRESS_PREFIX) {
           handled = true;
           const u16 absolute = (u16) (extended_program.active_bank *
@@ -1744,8 +1748,10 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
              far_x_condition(far_opcode)) {
             extended_program.pending_prefix = absolute + 1U;
             success = true;
+          } else if(far_loop_opcode(far_opcode)) {
+            success = prepare_far_loop(absolute, far_opcode, delegated_opcode);
           } else {
-            success = execute_far_prefix(absolute, &synchronize_x);
+            success = execute_far_prefix(absolute);
           }
         } else if(semantic_opcode == MK61_DISPLAY_PREFIX) {
           handled = true;
@@ -1771,12 +1777,12 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
         }
         if(handled) {
           if(!success) extended_program.error = true;
-          // ROM returns and terminating loops synchronize X -> X2 and
-          // normalize X. F0 supplies those numeric effects while the
-          // extension handles their control flow.
-          executed_opcode = success ? (u8) MK61_NOP : 0x50U;
+          // A ROM return also synchronizes X -> X2 and normalizes X. The
+          // virtual stack handles only its control flow; F0 preserves the
+          // return's numeric side effects without touching the ROM stack.
+          executed_opcode = success ? delegated_opcode : 0x50U;
           if(success) {
-            if(semantic_opcode == 0x52U || synchronize_x) executed_opcode = 0xF0U;
+            if(semantic_opcode == 0x52U) executed_opcode = 0xF0U;
             else if(semantic_opcode == 0x53U) executed_opcode = 0x51U;
             else if((semantic_opcode & 0xF0U) == 0xA0U)
               executed_opcode = semantic_opcode - 0x20U;
@@ -4428,8 +4434,9 @@ static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
          snapshot.extended_cursor < core_61::EXTENDED_DISPLAY_CELLS &&
          (snapshot.extended_flags & ~0x0FU) == 0 &&
          (snapshot.extended_pending_prefix == 0 ||
-          ((snapshot.extended_pending_prefix & 0x7FFFU) != 0 &&
-           (snapshot.extended_pending_prefix & 0x7FFFU) <= core_61::EXTENDED_ADDRESS_LIMIT)) &&
+          ((snapshot.extended_pending_prefix & 0xC000U) != 0xC000U &&
+           (snapshot.extended_pending_prefix & 0x3FFFU) != 0 &&
+           (snapshot.extended_pending_prefix & 0x3FFFU) <= core_61::EXTENDED_ADDRESS_LIMIT)) &&
          valid_angle_unit(snapshot.emu.angle_unit);
 }
 
