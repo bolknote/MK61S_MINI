@@ -2,30 +2,14 @@
 """Build deterministic bank files; --check detects stale committed output."""
 import argparse
 import json
+import sys
 from pathlib import Path
 from game import create_game
 
 ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'tools'))
+from program_pack import program_lines
 OUT=ROOT/'programs/games/ELITE'
-
-def sparse_lines(banks):
-    """After reinit, omit zeros when their hex costs more than a new hin.
-
-    Each extra line costs ten bytes (prefix, address, separator, newline).
-    Keep gaps of up to five zero bytes inside a record; longer gaps get
-    their own address. Bank boundaries still cap each record at 112 bytes.
-    """
-    for bank,code in sorted(banks.items()):
-        start=last=None
-        for offset,value in enumerate(code):
-            if value==0:continue
-            if start is not None and offset-last>6:
-                yield f'hin {bank*112+start:04d} {bytes(code[start:last+1]).hex().upper()}\n'
-                start=None
-            if start is None:start=offset
-            last=offset
-        if start is not None:
-            yield f'hin {bank*112+start:04d} {bytes(code[start:last+1]).hex().upper()}\n'
 
 def pack_parts(lines):
     parts=[]
@@ -40,7 +24,8 @@ def pack_parts(lines):
 
 def outputs():
     banks,info=create_game().link()
-    parts={OUT/f'part{i:02d}.m61':text for i,text in enumerate(pack_parts(sparse_lines(banks)))}
+    image=b''.join(banks[bank] for bank in range(max(banks)+1))
+    parts={OUT/f'part{i:02d}.m61':text for i,text in enumerate(pack_parts(program_lines(image)))}
     files=dict(parts)
     files[OUT/'autoexec.m61']='open manual.md\nreinit\n'+''.join(f'open {p.name}\n' for p in parts)+'run\n'
     files[ROOT/'tools/elite/elite.map.json']=json.dumps(info,indent=2,ensure_ascii=False)+'\n'

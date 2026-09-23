@@ -2,7 +2,4 @@ open manual.md
 reinit
 open part00.m61
 open part01.m61
-open part02.m61
-open part03.m61
-open part04.m61
 run

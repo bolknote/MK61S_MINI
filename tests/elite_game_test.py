@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import zlib
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools/elite'))
@@ -335,26 +336,17 @@ def test_instruments_and_formation():
 def main():
     directory=ROOT/'programs/games/ELITE'
     parts=sorted(directory.glob('part[0-9][0-9].m61'))
-    assert len(parts)==5 and not list(directory.glob('b[0-9][0-9].m61'))
+    assert len(parts)==2 and not list(directory.glob('b[0-9][0-9].m61'))
     expected=['open manual.md','reinit']+[f'open {p.name}' for p in parts]+['run']
     assert (directory/'autoexec.m61').read_text().splitlines()==expected
-    # Sparse hin records must reconstruct the exact linked image over clear
-    # memory, including zero instruction operands and nine-word data pages.
+    # The real M61/core loader decodes all zin records before every scenario;
+    # its checked CRC must describe the complete linked bank image.
     banks,_=create_game().link()
-    actual=bytearray(32*112)
-    written=set()
-    records=[line.split() for part in parts for line in part.read_text().splitlines()]
-    for op,address,hex_bytes in records:
-        assert op=='hin'
-        address=int(address);payload=bytes.fromhex(hex_bytes)
-        assert 0<len(payload)<=112 and address//112==(address+len(payload)-1)//112
-        positions=set(range(address,address+len(payload)))
-        assert not positions & written
-        written.update(positions)
-        actual[address:address+len(payload)]=payload
-    assert {address//112 for address in written}==set(banks)
-    assert actual==b''.join(banks[bank] for bank in range(32))
-    assert sum(path.stat().st_size for path in parts)<32*234
+    image=b''.join(banks[bank] for bank in range(32))
+    records=[line for part in parts for line in part.read_text().splitlines()]
+    assert records[0]==f'ztart 0000 {zlib.crc32(image):08X}'
+    assert all(line.startswith('zin ') for line in records[1:])
+    assert sum(path.stat().st_size for path in parts)<2800
     for path in directory.glob('*.m61'):
         assert path.stat().st_size<=1536
         assert all(len(line)<=239 for line in path.read_text().splitlines())

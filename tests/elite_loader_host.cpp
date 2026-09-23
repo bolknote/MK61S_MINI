@@ -4,6 +4,7 @@
 #include "m61_text.hpp"
 #include "mk61emu_core.h"
 #include "program_store.hpp"
+#include "program_load.hpp"
 #include "terminal_script.hpp"
 #include <algorithm>
 #include <cassert>
@@ -97,6 +98,13 @@ terminal_protocol::Result execute(const char* line, bool) {
   if(std::strncmp(line,"open ",5)==0) return Result::action(ResultKind::OPEN_FILE,line+5);
   if(std::strcmp(line,"reinit")==0) return Result::action(ResultKind::REINIT_CALCULATOR,"");
   if(std::strcmp(line,"run")==0) return Result::action(ResultKind::RUN_PROGRAM,"");
+  if(std::strncmp(line,"ztart ",6)==0)
+    return program_load::start(line+6,10000) ? Result::ok() : Result::error();
+  if(std::strncmp(line,"zin ",4)==0) {
+    const bool ok=program_load::data(line+4);
+    written_bytes=program_load::written();
+    return ok ? Result::ok() : Result::error();
+  }
   std::istringstream input(line);
   std::string op, hex, extra; unsigned address;
   if(!(input>>op>>address>>hex) || op!="hin" || input>>extra || hex.size()%2) return Result::error();
