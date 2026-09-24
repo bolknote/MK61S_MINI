@@ -69,6 +69,7 @@ printf '%s\n' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=0' \
   'MK61_ENABLE_USB_SCREEN=0' \
+  'MK61_EXTERNALIZE_USBDISK=0' \
   'MK61_ENABLE_LOADABLE_MODULES=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1' \
   'MK61_USER_EXPLORER_SHORTCUT=0' \
@@ -230,6 +231,7 @@ grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' <<< "$config"
 grep -q '^MK61_ENABLE_CHIP8=0$' <<< "$config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
+grep -q '^MK61_EXTERNALIZE_USBDISK=0$' <<< "$config"
 grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' <<< "$config"
 grep -q '^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$' <<< "$config"
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$config"
@@ -246,6 +248,7 @@ grep -q -- 'COMPILE_FLAGS=-DMK61_LCD1602_A00 ' <<< "$override"
 f401_override=$(MK61_CONFIG_FILE="$config_file" "$tool" \
   --mcu f401 --profile mini-v3-a00 --show-config)
 grep -q '^MCU=f401$' <<< "$f401_override"
+grep -q '^MK61_EXTERNALIZE_USBDISK=1$' <<< "$f401_override"
 
 hybrid_config="$legacy_root/hybrid.conf"
 printf '%s\n' \
@@ -278,6 +281,7 @@ grep -q '^MK61_ENABLE_FOCAL=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_CHIP8=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' "$legacy_config"
+grep -q '^MK61_EXTERNALIZE_USBDISK=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' "$legacy_config"
 ! grep -q '^MK61_ENABLE_USER_APPS=' "$legacy_config"
 
@@ -337,6 +341,8 @@ mv "$install_config.disabled" "$install_config"
 disabled_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" --show-config)
 disabled_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$disabled_selection")
 printf '%s\n' "$disabled_flags" > "$bundle/build.flags"
+rm -f "$bundle/System/FOCAL.APP" "$bundle/System/MARKDOWN.APP" \
+  "$bundle/System/CHIP8.APP"
 disabled_result=$(MK61_CONFIG_FILE="$install_config" \
   MK61_OUTPUT_DIR="$install_output" MK61_C6_MOUNT="$install_mount" \
   "$tool" --install-apps)
@@ -367,5 +373,31 @@ MK61_CONFIG_FILE="$install_config" MK61_OUTPUT_DIR="$install_output" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 test ! -e "$install_mount/System/SETUP.APP"
 test ! -e "$install_mount/System/USBDISK.APP"
+
+# A stale artifact from an older external-USBDISK build must not be accepted
+# as a current default F411 bundle.
+printf 'stale-usbdisk\n' > "$f411_bundle/System/USBDISK.APP"
+if MK61_CONFIG_FILE="$install_config" MK61_OUTPUT_DIR="$install_output" \
+    MK61_C6_MOUNT="$install_mount" "$tool" \
+    --mcu f411 --profile mini-v3-a00 --install-apps \
+    > "$installer_root/stale-f411.txt" 2>&1; then
+  echo 'default F411 accepted a stale USBDISK.APP bundle' >&2
+  exit 1
+fi
+grep -q 'stale disabled file' "$installer_root/stale-f411.txt"
+
+# Explicit opt-in makes the same canonical module required and installable.
+external_f411_config="$installer_root/f411-external.conf"
+cp "$install_config" "$external_f411_config"
+printf 'MK61_EXTERNALIZE_USBDISK=1\n' >> "$external_f411_config"
+external_f411_selection=$(MK61_CONFIG_FILE="$external_f411_config" "$tool" \
+  --mcu f411 --profile mini-v3-a00 --show-config)
+grep -q '^MK61_EXTERNALIZE_USBDISK=1$' <<< "$external_f411_selection"
+external_f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$external_f411_selection")
+printf '%s\n' "$external_f411_flags" > "$f411_bundle/build.flags"
+MK61_CONFIG_FILE="$external_f411_config" MK61_OUTPUT_DIR="$install_output" \
+  MK61_C6_MOUNT="$install_mount" "$tool" \
+  --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
+cmp "$f411_bundle/System/USBDISK.APP" "$install_mount/System/USBDISK.APP"
 
 printf 'firmware_tool_tests: ok\n'

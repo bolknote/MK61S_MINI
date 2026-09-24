@@ -579,6 +579,7 @@ try {
         "-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown",
         "-DMK61_ENABLE_CHIP8=$Chip8",
         "-DMK61_ENABLE_USB_SCREEN=$UsbScreen",
+        '-DMK61_EXTERNALIZE_USBDISK=1',
         "-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics",
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
@@ -708,6 +709,7 @@ try {
     $flagValues.Add("-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown")
     $flagValues.Add("-DMK61_ENABLE_CHIP8=$Chip8")
     $flagValues.Add("-DMK61_ENABLE_USB_SCREEN=$UsbScreen")
+    $flagValues.Add('-DMK61_EXTERNALIZE_USBDISK=1')
     $flagValues.Add("-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics")
     $flagValues.Add(
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")

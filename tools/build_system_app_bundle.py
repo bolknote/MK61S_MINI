@@ -164,7 +164,7 @@ def main() -> None:
     parser.add_argument("--setup", type=boolean, default=True,
                         help="build SETUP.APP (0 when setup is resident on F411)")
     parser.add_argument("--usbdisk", type=boolean, default=True,
-                        help="build USBDISK.APP (0 when USB disk is resident on F411)")
+                        help="build USBDISK.APP (0 when USB disk is resident)")
     parser.add_argument("--ui-fonts", type=boolean, default=True)
     parser.add_argument("--focal", type=boolean, default=True)
     parser.add_argument("--basic", type=boolean, default=True)

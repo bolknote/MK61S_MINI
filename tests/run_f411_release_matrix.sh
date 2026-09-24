@@ -117,12 +117,15 @@ define_value() {
 package_system_apps() {
   local profile="$1" board_flags="$2" artifact_name="$3" build_path="$4"
   local expect_ws0010_graphics="$5"
-  local focal basic markdown wbmp chip8 usb graphics ui_fonts bundle_name bundle
+  local focal basic markdown wbmp chip8 usb external_usbdisk graphics ui_fonts
+  local bundle_name bundle
   focal="$(define_value "$board_flags" MK61_ENABLE_FOCAL 1)"
   basic="$(define_value "$board_flags" MK61_ENABLE_TINYBASIC 1)"
   markdown="$(define_value "$board_flags" MK61_ENABLE_MARKDOWN_VIEWER 1)"
   chip8="$(define_value "$board_flags" MK61_ENABLE_CHIP8 0)"
   usb="$(define_value "$board_flags" MK61_ENABLE_USB_SCREEN 0)"
+  external_usbdisk="$(define_value "$board_flags" \
+    MK61_EXTERNALIZE_USBDISK 0)"
   graphics="$usb"
   ui_fonts=0
   case "$profile" in
@@ -142,7 +145,7 @@ package_system_apps() {
     --compile-commands "$build_path/compile_commands.json" \
     --output-dir "$bundle/System" \
     --setup 0 \
-    --usbdisk 0 \
+    --usbdisk "$external_usbdisk" \
     --graphics "$graphics" --ui-fonts "$ui_fonts" \
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
     --markdown "$markdown" --chip8 "$chip8"
@@ -155,6 +158,7 @@ package_system_apps() {
   [[ "$wbmp" == 0 || "$markdown" == 1 ]] || expected+=(WBMP.APP)
   [[ "$markdown" == 0 ]] || expected+=(MARKDOWN.APP)
   [[ "$chip8" == 0 ]] || expected+=(CHIP8.APP)
+  [[ "$external_usbdisk" == 0 ]] || expected+=(USBDISK.APP)
   local file wanted expected_file
   for file in "${expected[@]}" HELP0.TXT HELP1.TXT; do
     [[ -s "$bundle/System/$file" ]] ||
@@ -277,9 +281,16 @@ compile_variant() {
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_core_native_hot_paths_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
-  "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
-    --allow-usbdisk \
-    "$build_path/mk61s-M.ino.elf"
+  local external_usbdisk
+  external_usbdisk="$(define_value "$board_flags" \
+    MK61_EXTERNALIZE_USBDISK 0)"
+  if [[ "$external_usbdisk" == 1 ]]; then
+    "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
+      "$build_path/mk61s-M.ino.elf"
+  else
+    "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
+      --allow-usbdisk "$build_path/mk61s-M.ino.elf"
+  fi
   "$root/tests/check_power_monitor_elf.sh" \
     "$build_path/mk61s-M.ino.elf"
   "$root/tests/check_rtc_alarm_elf.sh" \

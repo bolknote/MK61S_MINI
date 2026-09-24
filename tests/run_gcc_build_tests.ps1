@@ -187,6 +187,9 @@ Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
 Assert-True ($cmakeText -match 'MK61_ENABLE_LOADABLE_MODULES=1') `
     'CMake build does not enable the unified APP runtime'
 Assert-True ($cmakeText -match
+    'MK61_EXTERNALIZE_USBDISK=\$\{MK61_EXTERNALIZE_USBDISK\}') `
+    'CMake build does not forward the mandatory F401 USBDISK APP policy'
+Assert-True ($cmakeText -match
     'MK61_APP_LOCAL_FLOAT_MATH=\$\{MK61_APP_LOCAL_FLOAT_MATH\}') `
     'CMake build does not condition the resident float bridge'
 Assert-True ($cmakeText -match 'MK61_WS0010_GRAPHICS_100X16') `
@@ -245,6 +248,7 @@ foreach ($setting in @(
     'MK61_ENABLE_MARKDOWN_VIEWER=1',
     'MK61_ENABLE_CHIP8=1',
     'MK61_ENABLE_USB_SCREEN=1',
+    'MK61_EXTERNALIZE_USBDISK=1',
     'MK61_ENABLE_LOADABLE_MODULES=1',
     'MK61_MATH_BACKEND=1',
     'System/FOCAL.APP',

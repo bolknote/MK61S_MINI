@@ -87,6 +87,7 @@ $script:State = [ordered]@{
     EnableMarkdown = 1
     EnableChip8 = 0
     EnableUsbScreen = 0
+    ExternalizeUsbDisk = 0
     EnableFonts = 0
     EnableExplorer = 1
     MathBackend = 0
@@ -292,6 +293,7 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "-DMK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "-DMK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
+        "-DMK61_EXTERNALIZE_USBDISK=$(Get-ExternalizeUsbDiskValue)"
         "-DMK61_ENABLE_LOADABLE_MODULES=1"
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "-DMK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
@@ -312,14 +314,20 @@ function Get-Checkbox {
     return $script:Glyphs.CheckOff
 }
 
+function Get-ExternalizeUsbDiskValue {
+    if ($script:State.Mcu -eq 'f401') { return 1 }
+    return [int]$script:State.ExternalizeUsbDisk
+}
+
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL · {1} BASIC · {2} WBMP · {3} MD · {4} CHIP-8 · {5} USB · {6} FONT · {7} USER · MATH {8}' -f
+    return ('{0} FOCAL · {1} BASIC · {2} WBMP · {3} MD · {4} CHIP-8 · {5} USB · {6} MSCAPP · {7} FONT · {8} USER · MATH {9}' -f
         (Get-Checkbox $script:State.EnableFocal),
         (Get-Checkbox $script:State.EnableTinyBasic),
         (Get-Checkbox $script:State.EnableWbmp),
         (Get-Checkbox $script:State.EnableMarkdown),
         (Get-Checkbox $script:State.EnableChip8),
         (Get-Checkbox $script:State.EnableUsbScreen),
+        (Get-Checkbox (Get-ExternalizeUsbDiskValue)),
         (Get-Checkbox $script:State.EnableFonts),
         (Get-Checkbox $script:State.EnableExplorer),
         (Get-MathBackendLabel))
@@ -349,6 +357,7 @@ function Get-CompileOptionsDetails {
         "$(Get-Checkbox $script:State.EnableMarkdown) Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
         "$(Get-Checkbox $script:State.EnableChip8) CHIP-8 (MK61_ENABLE_CHIP8)"
         "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
+        "$(Get-Checkbox (Get-ExternalizeUsbDiskValue)) USB-диск как USBDISK.APP (MK61_EXTERNALIZE_USBDISK)"
         "$($script:Glyphs.CheckOn) единый APP runtime ABI 6 (MK61_ENABLE_LOADABLE_MODULES)"
         "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
         "$(Get-Checkbox $script:State.EnableExplorer) USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)"
@@ -391,6 +400,7 @@ function Save-Config {
         "MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "MK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
         "MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
+        "MK61_EXTERNALIZE_USBDISK=$($script:State.ExternalizeUsbDisk)"
         'MK61_ENABLE_LOADABLE_MODULES=1'
         "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
         "MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
@@ -440,6 +450,7 @@ function Load-Config {
             'MK61_ENABLE_MARKDOWN_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableMarkdown = [int]$value } }
             'MK61_ENABLE_CHIP8' { if (Test-BooleanValue $value) { $script:State.EnableChip8 = [int]$value } }
             'MK61_ENABLE_USB_SCREEN' { if (Test-BooleanValue $value) { $script:State.EnableUsbScreen = [int]$value } }
+            'MK61_EXTERNALIZE_USBDISK' { if (Test-BooleanValue $value) { $script:State.ExternalizeUsbDisk = [int]$value } }
             'MK61_ENABLE_LOADABLE_MODULES' { }
             'MK61_ENABLE_USER_APPS' { } # legacy setting: APP runtime is always enabled
             'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
@@ -1133,7 +1144,7 @@ function Test-ArduinoLibrariesReady {
 
 function Test-SystemAppsEnabled {
     # Terminal help is external on both MCUs. F401 also needs SETUP and
-    # USBDISK; both services are resident on F411.
+    # USBDISK; F411 can explicitly externalize USBDISK.
     return $true
 }
 
@@ -1151,8 +1162,8 @@ function Get-ExpectedSystemAppNames {
     $names = New-Object 'System.Collections.Generic.List[string]'
     if ($script:State.Mcu -eq 'f401') {
         $names.Add('SETUP.APP')
-        $names.Add('USBDISK.APP')
     }
+    if ((Get-ExternalizeUsbDiskValue) -eq 1) { $names.Add('USBDISK.APP') }
     foreach ($name in @('HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
     if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
     if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
@@ -1904,6 +1915,7 @@ function Choose-CompileOptions {
     [int]$markdown = $script:State.EnableMarkdown
     [int]$chip8 = $script:State.EnableChip8
     [int]$usbScreen = $script:State.EnableUsbScreen
+    [int]$externalizeUsbDisk = $script:State.ExternalizeUsbDisk
     [int]$fonts = $script:State.EnableFonts
     [int]$explorer = $script:State.EnableExplorer
     [int]$mathBackend = $script:State.MathBackend
@@ -1911,6 +1923,11 @@ function Choose-CompileOptions {
     $selected = 'focal'
 
     while ($true) {
+        $usbDiskAppValue = if ($script:State.Mcu -eq 'f401') {
+            1
+        } else {
+            $externalizeUsbDisk
+        }
         $items = @(
             [pscustomobject]@{ Tag = 'focal'; Label = "$(Get-Checkbox $focal) FOCAL · MK61_ENABLE_FOCAL" }
             [pscustomobject]@{ Tag = 'tinybasic'; Label = "$(Get-Checkbox $tinyBasic) TinyBASIC · MK61_ENABLE_TINYBASIC" }
@@ -1918,6 +1935,7 @@ function Choose-CompileOptions {
             [pscustomobject]@{ Tag = 'markdown'; Label = "$(Get-Checkbox $markdown) Markdown + WBMP viewer" }
             [pscustomobject]@{ Tag = 'chip8'; Label = "$(Get-Checkbox $chip8) CHIP-8" }
             [pscustomobject]@{ Tag = 'usb_screen'; Label = "$(Get-Checkbox $usbScreen) USB-экран" }
+            [pscustomobject]@{ Tag = 'usbdisk_app'; Label = "$(Get-Checkbox $usbDiskAppValue) USB-диск как USBDISK.APP" }
             [pscustomobject]@{ Tag = 'fonts'; Label = "$(Get-Checkbox $fonts) Расширенные настройки шрифта" }
             [pscustomobject]@{ Tag = 'explorer'; Label = "$(Get-Checkbox $explorer) Клавиша USER открывает Explorer" }
             [pscustomobject]@{ Tag = 'math'; Label = "$($script:Glyphs.MenuChoice) Математика: $(Get-MathBackendLabelFor $mathBackend $appLocalFloat)  $($script:Glyphs.MenuNext)" }
@@ -1942,6 +1960,14 @@ function Choose-CompileOptions {
             }
             'chip8' { $chip8 = 1 - $chip8 }
             'usb_screen' { $usbScreen = 1 - $usbScreen }
+            'usbdisk_app' {
+                if ($script:State.Mcu -eq 'f401') {
+                    Show-Message 'USBDISK.APP обязателен' `
+                        'На F401 USB-диск всегда внешний: во Flash resident для него недостаточно места.'
+                } else {
+                    $externalizeUsbDisk = 1 - $externalizeUsbDisk
+                }
+            }
             'fonts' { $fonts = 1 - $fonts }
             'explorer' { $explorer = 1 - $explorer }
             'math' {
@@ -1963,6 +1989,7 @@ function Choose-CompileOptions {
                 $script:State.EnableMarkdown = $markdown
                 $script:State.EnableChip8 = $chip8
                 $script:State.EnableUsbScreen = $usbScreen
+                $script:State.ExternalizeUsbDisk = $externalizeUsbDisk
                 $script:State.EnableFonts = $fonts
                 $script:State.EnableExplorer = $explorer
                 $script:State.MathBackend = $mathBackend
@@ -2123,7 +2150,7 @@ function Invoke-SystemAppBundleBuild {
             '--output-dir', (Join-Path $Bundle 'System'),
             '--graphics', $graphics,
             '--setup', $(if ($script:State.Mcu -eq 'f411') { '0' } else { '1' }),
-            '--usbdisk', $(if ($script:State.Mcu -eq 'f411') { '0' } else { '1' }),
+            '--usbdisk', [string](Get-ExternalizeUsbDiskValue),
             '--ui-fonts', $uiFonts,
             '--focal', [string]$script:State.EnableFocal,
             '--basic', [string]$script:State.EnableTinyBasic,
@@ -2363,11 +2390,20 @@ function Test-SystemBundleReady {
         return $false
     }
     $source = Join-Path $bundle 'System'
-    foreach ($app in @(Get-ExpectedSystemAppNames)) {
+    $expectedApps = @(Get-ExpectedSystemAppNames)
+    foreach ($app in $expectedApps) {
         $path = Join-Path $source $app
         if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
             (Get-Item -LiteralPath $path).Length -eq 0) {
             Write-LastLog "Bundle is incomplete: $path is missing."
+            return $false
+        }
+    }
+    foreach ($app in @(Get-AllSystemAppNames)) {
+        $path = Join-Path $source $app
+        if ($app -notin $expectedApps -and
+            (Test-Path -LiteralPath $path)) {
+            Write-LastLog "Bundle contains stale disabled file: $path. Rebuild it first."
             return $false
         }
     }
@@ -2669,6 +2705,7 @@ function Show-Config {
     [Console]::WriteLine("MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)")
     [Console]::WriteLine("MK61_ENABLE_CHIP8=$($script:State.EnableChip8)")
     [Console]::WriteLine("MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)")
+    [Console]::WriteLine("MK61_EXTERNALIZE_USBDISK=$(Get-ExternalizeUsbDiskValue)")
     [Console]::WriteLine('MK61_ENABLE_LOADABLE_MODULES=1')
     [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")
     [Console]::WriteLine("MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)")

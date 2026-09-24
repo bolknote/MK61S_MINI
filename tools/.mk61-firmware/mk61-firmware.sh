@@ -55,6 +55,7 @@ ENABLE_WBMP_VIEWER=0
 ENABLE_MARKDOWN_VIEWER=1
 ENABLE_CHIP8=0
 ENABLE_USB_SCREEN=0
+EXTERNALIZE_USBDISK=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
 ENABLE_USER_EXPLORER=1
 MATH_BACKEND=0
@@ -1306,6 +1307,9 @@ load_config() {
       MK61_ENABLE_USB_SCREEN)
         boolean_valid "$value" && ENABLE_USB_SCREEN=$value
         ;;
+      MK61_EXTERNALIZE_USBDISK)
+        boolean_valid "$value" && EXTERNALIZE_USBDISK=$value
+        ;;
       MK61_ENABLE_EXTENDED_FONT_SETTINGS)
         boolean_valid "$value" && ENABLE_EXTENDED_FONT_SETTINGS=$value
         ;;
@@ -1358,6 +1362,7 @@ save_config() {
     printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
     printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
     printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
+    printf 'MK61_EXTERNALIZE_USBDISK=%s\n' "$EXTERNALIZE_USBDISK"
     # This is part of the firmware format contract, not a user-selectable
     # permission.  Persist it so Bash and PowerShell configs describe the
     # same always-on ABI 6 runtime and stale USER_APPS lines disappear.
@@ -1372,6 +1377,10 @@ save_config() {
 
 checkbox_marker() {
   if [ "$1" -eq 1 ]; then printf '☑'; else printf '☐'; fi
+}
+
+externalize_usbdisk_value() {
+  if [ "$MCU" = f401 ]; then printf '1'; else printf '%s' "$EXTERNALIZE_USBDISK"; fi
 }
 
 math_option_state_for() {
@@ -1432,6 +1441,7 @@ compile_option_flags() {
     " -DMK61_ENABLE_MARKDOWN_VIEWER=$ENABLE_MARKDOWN_VIEWER" \
     " -DMK61_ENABLE_CHIP8=$ENABLE_CHIP8" \
     " -DMK61_ENABLE_USB_SCREEN=$ENABLE_USB_SCREEN" \
+    " -DMK61_EXTERNALIZE_USBDISK=$(externalize_usbdisk_value)" \
     " -DMK61_ENABLE_LOADABLE_MODULES=1" \
     " -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ENABLE_EXTENDED_FONT_SETTINGS" \
     " -DMK61_USER_EXPLORER_SHORTCUT=$ENABLE_USER_EXPLORER" \
@@ -1447,13 +1457,14 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL · %s BASIC · %s WBMP · %s MD · %s CHIP-8 · %s USB · %s FONT · %s USER · MATH %s' \
+  printf '%s FOCAL · %s BASIC · %s WBMP · %s MD · %s CHIP-8 · %s USB · %s MSCAPP · %s FONT · %s USER · MATH %s' \
     "$(checkbox_marker "$ENABLE_FOCAL")" \
     "$(checkbox_marker "$ENABLE_TINYBASIC")" \
     "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")" \
     "$(checkbox_marker "$ENABLE_CHIP8")" \
     "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
+    "$(checkbox_marker "$(externalize_usbdisk_value)")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
     "$(checkbox_marker "$ENABLE_USER_EXPLORER")" \
     "$(math_backend_label)"
@@ -1468,6 +1479,8 @@ compile_options_details() {
     "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")"
   printf '%s CHIP-8 (MK61_ENABLE_CHIP8)\n' "$(checkbox_marker "$ENABLE_CHIP8")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
+  printf '%s USB-диск как USBDISK.APP (MK61_EXTERNALIZE_USBDISK)\n' \
+    "$(checkbox_marker "$(externalize_usbdisk_value)")"
   printf '☑ единый APP runtime ABI 6 (MK61_ENABLE_LOADABLE_MODULES=1)\n'
   printf '%s расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)\n' \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")"
@@ -1491,6 +1504,7 @@ show_config() {
   printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
   printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
   printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
+  printf 'MK61_EXTERNALIZE_USBDISK=%s\n' "$(externalize_usbdisk_value)"
   printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
   printf 'MK61_ENABLE_EXTENDED_FONT_SETTINGS=%s\n' "$ENABLE_EXTENDED_FONT_SETTINGS"
   printf 'MK61_USER_EXPLORER_SHORTCUT=%s\n' "$ENABLE_USER_EXPLORER"
@@ -1581,14 +1595,20 @@ choose_compile_options() {
   local markdown=$ENABLE_MARKDOWN_VIEWER
   local chip8=$ENABLE_CHIP8
   local usb_screen=$ENABLE_USB_SCREEN
+  local externalize_usbdisk=$EXTERNALIZE_USBDISK
   local fonts=$ENABLE_EXTENDED_FONT_SETTINGS
   local explorer=$ENABLE_USER_EXPLORER
   local math_backend=$MATH_BACKEND
   local app_float=$APP_LOCAL_FLOAT
   local selection=focal
-  local math_choice
+  local math_choice usbdisk_app_value
 
   while true; do
+    if [ "$MCU" = f401 ]; then
+      usbdisk_app_value=1
+    else
+      usbdisk_app_value=$externalize_usbdisk
+    fi
     selection=$(ui_menu 'Ключи компиляции' \
       'Enter переключает ключ или открывает вложенное меню. Изменения применяются только пунктом «Сохранить».' \
       "$selection" \
@@ -1598,6 +1618,7 @@ choose_compile_options() {
       markdown   "$(checkbox_marker "$markdown") Markdown + WBMP viewer" \
       chip8      "$(checkbox_marker "$chip8") CHIP-8" \
       usb_screen "$(checkbox_marker "$usb_screen") USB-экран" \
+      usbdisk_app "$(checkbox_marker "$usbdisk_app_value") USB-диск как USBDISK.APP" \
       fonts      "$(checkbox_marker "$fonts") Расширенные настройки шрифта" \
       explorer   "$(checkbox_marker "$explorer") Клавиша USER открывает Explorer" \
       math       "◉ Математика: $(math_backend_label_for "$math_backend" "$app_float")  ›" \
@@ -1616,6 +1637,14 @@ choose_compile_options() {
         ;;
       chip8) chip8=$((1 - chip8)) ;;
       usb_screen) usb_screen=$((1 - usb_screen)) ;;
+      usbdisk_app)
+        if [ "$MCU" = f401 ]; then
+          ui_msg 'USBDISK.APP обязателен' \
+            'На F401 USB-диск всегда внешний: во Flash resident для него недостаточно места.'
+        else
+          externalize_usbdisk=$((1 - externalize_usbdisk))
+        fi
+        ;;
       fonts) fonts=$((1 - fonts)) ;;
       explorer) explorer=$((1 - explorer)) ;;
       math)
@@ -1640,6 +1669,7 @@ choose_compile_options() {
         ENABLE_MARKDOWN_VIEWER=$markdown
         ENABLE_CHIP8=$chip8
         ENABLE_USB_SCREEN=$usb_screen
+        EXTERNALIZE_USBDISK=$externalize_usbdisk
         ENABLE_EXTENDED_FONT_SETTINGS=$fonts
         ENABLE_USER_EXPLORER=$explorer
         MATH_BACKEND=$math_backend
@@ -2073,7 +2103,7 @@ build_system_app_bundle() {
     --compile-commands "$compile_commands" \
     --output-dir "$bundle/System" \
     --setup 0 \
-    --usbdisk 0 \
+    --usbdisk "$(externalize_usbdisk_value)" \
     --graphics "$(system_bundle_graphics "$profile")" \
     --ui-fonts "$(system_bundle_ui_fonts "$profile")" \
     --focal "$ENABLE_FOCAL" \
@@ -2189,9 +2219,8 @@ prepare_and_compile_worker() {
 }
 
 expected_system_app_names() {
-  if [ "$MCU" = f401 ]; then
-    printf '%s\n' SETUP.APP USBDISK.APP
-  fi
+  [ "$MCU" = f401 ] && printf '%s\n' SETUP.APP
+  [ "$(externalize_usbdisk_value)" -eq 1 ] && printf '%s\n' USBDISK.APP
   printf '%s\n' HELP0.TXT HELP1.TXT
   [ "$ENABLE_FOCAL" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && printf '%s\n' BASIC.APP
@@ -2216,7 +2245,8 @@ system_app_enabled() {
       ;;
     MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] ;;
     CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] ;;
-    SETUP.APP|USBDISK.APP) [ "$MCU" = f401 ] ;;
+    SETUP.APP) [ "$MCU" = f401 ] ;;
+    USBDISK.APP) [ "$(externalize_usbdisk_value)" -eq 1 ] ;;
     HELP0.TXT|HELP1.TXT) return 0 ;;
     *) return 1 ;;
   esac
@@ -2317,6 +2347,13 @@ validate_system_bundle() {
   for app in $(expected_system_app_names); do
     if [ ! -s "$source/$app" ]; then
       printf 'Bundle is incomplete: %s is missing.\n' "$source/$app" >&2
+      return 1
+    fi
+  done
+  for app in $(all_system_app_names); do
+    if ! system_app_enabled "$app" && [ -e "$source/$app" ]; then
+      printf 'Bundle contains stale disabled file: %s. Rebuild it first.\n' \
+        "$source/$app" >&2
       return 1
     fi
   done

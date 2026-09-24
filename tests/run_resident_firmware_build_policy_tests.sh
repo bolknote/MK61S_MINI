@@ -71,6 +71,7 @@ require_text "$f401_bundle" 'seal-firmware.sh" seal --max-size 262144'
 require_text "$f401_bundle" 'analyze_stack_usage.py'
 require_text "$f401_bundle" 'opt=oslto'
 require_text "$f401_bundle" 'MK61_ENABLE_LOADABLE_MODULES=1'
+require_text "$f401_bundle" 'MK61_EXTERNALIZE_USBDISK=1'
 require_text "$f401_bundle" 'portable-layout.py'
 require_text "$f401_bundle" 'build_system_app_bundle.py'
 if grep -Fq -- '--export-dynamic-symbol-list=' "$f401_bundle" ||

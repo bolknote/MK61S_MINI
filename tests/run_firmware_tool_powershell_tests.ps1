@@ -88,6 +88,7 @@ try {
         'MK61_ENABLE_MARKDOWN_VIEWER=1'
         'MK61_ENABLE_CHIP8=0'
         'MK61_ENABLE_USB_SCREEN=0'
+        'MK61_EXTERNALIZE_USBDISK=0'
         'MK61_ENABLE_LOADABLE_MODULES=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=1'
         'MK61_USER_EXPLORER_SHORTCUT=0'
@@ -108,6 +109,8 @@ try {
     Assert-True ($configText -match '(?m)^MK61_ENABLE_MARKDOWN_VIEWER=1$') 'Markdown flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_CHIP8=0$') 'CHIP-8 flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_USB_SCREEN=0$') 'USB Screen flag was not preserved'
+    Assert-True ($configText -match '(?m)^MK61_EXTERNALIZE_USBDISK=0$') `
+        'F411 did not default to resident USB disk'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_LOADABLE_MODULES=1$') `
         'unified APP runtime is not enabled'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_EXTENDED_FONT_SETTINGS=1$') 'font flag was not preserved'
@@ -119,6 +122,9 @@ try {
     Assert-True (($override.Output -join "`n") -match '(?m)^PROFILE=mini-v3-a00$') 'CLI profile override failed'
     $f401Override = Invoke-Tool @('--mcu','f401','--profile','mini-v3-a00','--show-config')
     Assert-True (($f401Override.Output -join "`n") -match '(?m)^MCU=f401$') 'CLI MCU override failed'
+    Assert-True (($f401Override.Output -join "`n") -match
+        '(?m)^MK61_EXTERNALIZE_USBDISK=1$') `
+        'F401 did not force its required external USB disk'
 
     [IO.File]::WriteAllLines($config, @(
         'MCU=f401'
@@ -232,6 +238,10 @@ try {
     [IO.File]::WriteAllText(
         (Join-Path $bundle 'build.flags'),
         $disabledFlagLine.Substring('COMPILE_FLAGS='.Length) + [Environment]::NewLine)
+    foreach ($app in @('FOCAL.APP', 'MARKDOWN.APP', 'CHIP8.APP')) {
+        Remove-Item -LiteralPath (Join-Path $sourceSystem $app) `
+            -Force -ErrorAction SilentlyContinue
+    }
     $disabledInstall = Invoke-Tool @('--install-apps')
     Assert-True ($disabledInstall.ExitCode -eq 0) 'all-disabled System APP synchronization failed'
     Assert-True (($disabledInstall.Output -join "`n") -match 'Synchronized and verified') 'all-disabled removal was not reported'
@@ -269,6 +279,37 @@ try {
     Assert-True (-not (Test-Path -LiteralPath (
         Join-Path $targetSystem 'USBDISK.APP'))) `
         'F411 must not need an external USBDISK.APP'
+
+    [IO.File]::WriteAllText(
+        (Join-Path $f411System 'USBDISK.APP'), "stale-usbdisk`n")
+    $staleF411 = Invoke-Tool @(
+        '--mcu','f411','--profile','mini-v3-a00','--install-apps')
+    Assert-True ($staleF411.ExitCode -ne 0) `
+        'default F411 accepted a stale USBDISK.APP bundle'
+    Assert-True (($staleF411.Output -join "`n") -match 'stale disabled file') `
+        'stale F411 USBDISK.APP rejection was not explained'
+
+    [IO.File]::WriteAllLines(
+        $config, [string[]]@($disabledConfig + 'MK61_EXTERNALIZE_USBDISK=1'))
+    $externalF411 = Invoke-Tool @(
+        '--mcu','f411','--profile','mini-v3-a00','--show-config')
+    $externalF411Text = $externalF411.Output -join "`n"
+    Assert-True ($externalF411Text -match
+        '(?m)^MK61_EXTERNALIZE_USBDISK=1$') `
+        'explicit F411 USBDISK.APP mode was not selected'
+    $externalFlagLine = @($externalF411.Output |
+        Where-Object { $_ -like 'COMPILE_FLAGS=*' })[0]
+    [IO.File]::WriteAllText(
+        (Join-Path $f411Bundle 'build.flags'),
+        $externalFlagLine.Substring('COMPILE_FLAGS='.Length) +
+            [Environment]::NewLine)
+    $externalInstall = Invoke-Tool @(
+        '--mcu','f411','--profile','mini-v3-a00','--install-apps')
+    Assert-True ($externalInstall.ExitCode -eq 0) `
+        'explicit F411 USBDISK.APP was not installed'
+    Assert-True (Test-Path -LiteralPath (
+        Join-Path $targetSystem 'USBDISK.APP') -PathType Leaf) `
+        'explicit F411 USBDISK.APP is missing from C6'
 } finally {
     $env:MK61_CONFIG_FILE = $oldConfig
     $env:MK61_BUILD_ROOT = $oldBuild
@@ -286,6 +327,8 @@ try {
     Assert-True ($script:State.EnableUsbScreen -eq 0) 'USB Screen must be disabled by default'
     Assert-True ($script:State.EnableMarkdown -eq 1) 'Markdown must be enabled by default'
     Assert-True ($script:State.EnableChip8 -eq 0) 'CHIP-8 must be disabled by default'
+    Assert-True ($script:State.ExternalizeUsbDisk -eq 0) `
+        'F411 USB disk must be resident by default'
     Assert-True ($script:State.Mcu -eq 'f411') 'F411 must be the default MCU'
     Assert-True ((Get-ProfileArtifactName 'mini-v3-a00' 'f401') -eq 'mk61s-M-mini-v3-lcd1602-a00-f401.bin') 'F401 artifact name differs'
     Assert-True ($script:TextWidth -ge 74) 'default TUI is too narrow for the compile-option summary'
@@ -298,6 +341,8 @@ try {
         'staged math selection has the wrong label'
     Assert-True ((Get-CompileOptionsDetails) -notmatch '[☐☑]') 'Windows option details still contain unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
+    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_EXTERNALIZE_USBDISK') `
+        'USB disk APP selection is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_MARKDOWN_VIEWER') 'Markdown is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_CHIP8') 'CHIP-8 is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_LOADABLE_MODULES') `

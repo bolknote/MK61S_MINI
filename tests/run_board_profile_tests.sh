@@ -65,6 +65,13 @@ clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
   -o "$out-f411-unified-apps"
 "$out-f411-unified-apps"
 
+clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_EXTERNALIZE_USBDISK=1 \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_LOADABLE_MODULES \
+  -DMK61_CONFIG_EXPECT_EXTERNAL_USBDISK \
+  -o "$out-f411-external-usbdisk"
+"$out-f411-external-usbdisk"
+
 clang++ "${common[@]}" -DREVISION_V3 -DARDUINO_BLACKPILL_F401CC \
   -DMK61_ENABLE_FOCAL=0 -DMK61_ENABLE_TINYBASIC=0 \
   -DMK61_ENABLE_WBMP_VIEWER=0 -DMK61_ENABLE_MARKDOWN_VIEWER=0 \
@@ -214,6 +221,13 @@ if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
     -DMK61_ENABLE_LOADABLE_MODULES=2 -o "$out-invalid-modules" \
     >/dev/null 2>&1; then
   echo "invalid loadable module flag unexpectedly compiled" >&2
+  exit 1
+fi
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_EXTERNALIZE_USBDISK=2 -o "$out-invalid-usbdisk-mode" \
+    >/dev/null 2>&1; then
+  echo "invalid USBDISK externalization flag unexpectedly compiled" >&2
   exit 1
 fi
 

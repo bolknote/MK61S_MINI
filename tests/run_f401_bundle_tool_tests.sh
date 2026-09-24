@@ -112,6 +112,7 @@ test "$status" -eq 2
 # Полная ARM-сборка проходит в release matrix. Здесь фиксируем политику
 # общего ABI, не подменяя новый обязательный SETUP.APP старым «пустым» путём.
 grep -Fq 'MK61_ENABLE_LOADABLE_MODULES=1' "$tool"
+grep -Fq 'MK61_EXTERNALIZE_USBDISK=1' "$tool"
 grep -Fq 'tools/build_system_app_bundle.py' "$tool"
 grep -Fq 'tools/build_portable_app.py' "$tool"
 grep -Fq 'MK61_APP_LOCAL_FLOAT_MATH' "$tool"
