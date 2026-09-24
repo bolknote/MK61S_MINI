@@ -9,21 +9,19 @@
 #include "language_workspace.hpp"
 #include "lcd_ru.hpp"
 #include "m8_view.hpp"
+#include "markdown_document.hpp"
 #include "mk8_codec.hpp"
+#include "shared_scratch.hpp"
+#include "storage_path.hpp"
 
 #if MK61_MARKDOWN_USES_WBMP
   #include "builtin_font.hpp"
   #include "fmk_font.hpp"
-  #include "markdown_document.hpp"
   #include "markdown_scroll.hpp"
-  #include "shared_scratch.hpp"
-  #include "storage_path.hpp"
   #include "wbmp.hpp"
   #if MK61_UI_FONT_CLIENT
     #include "markdown_ui_font.hpp"
   #endif
-#else
-  #include "markdown_plain.hpp"
 #endif
 
 #include <stdio.h>
@@ -36,6 +34,8 @@ namespace {
 
 static constexpr i32 VIEWER_DISPLAY_CHANGED = -2;
 static constexpr i32 VIEWER_KEY_NONE = -1;
+static constexpr u16 PLAIN_CAPACITY = 2048;
+static constexpr u16 NO_LINK = 0xFFFFU;
 
 #if MK61_MARKDOWN_USES_WBMP
 
@@ -46,8 +46,6 @@ static constexpr usize MAX_FRAME_BYTES =
 static constexpr u8 SCROLL_CACHE_ROWS = 16;
 static constexpr usize MAX_SCROLL_CACHE_BYTES =
     (usize) MAX_DISPLAY_WIDTH * SCROLL_CACHE_ROWS / 8U;
-static constexpr u16 PLAIN_CAPACITY = 2048;
-
 struct GraphicBuffers {
   u8 frame[MAX_FRAME_BYTES];
   u8 incoming[MAX_SCROLL_CACHE_BYTES];
@@ -69,7 +67,8 @@ static_assert(sizeof(GraphicBuffers) <= PLAIN_CAPACITY,
 #else
 
 struct ViewerWorkspace {
-  char plain[markdown_plain::MAX_OUTPUT_SIZE];
+  u8 compiled[markdown::MAX_COMPILED_SIZE];
+  char plain[PLAIN_CAPACITY];
 };
 
 #endif
@@ -79,9 +78,8 @@ static_assert(sizeof(ViewerWorkspace) <= language_workspace::SIZE,
 
 struct Navigation {
   u16 plain_page;
-#if MK61_MARKDOWN_USES_WBMP
   u16 graphic_y;
-#endif
+  u16 selected_link;
 };
 
 static i32 scan_key(void) {
@@ -137,7 +135,81 @@ static bool fast_backward_key(i32 key) {
 #endif
 
 static bool exit_key(i32 key) {
-  return key == KEY_ESC || key == KEY_OK || key == KEY_OK_PRESS;
+  return key == KEY_ESC;
+}
+
+// Arrows form one continuous navigation sequence.  A visible link consumes
+// a step; stepping past the last/first visible link clears the selection and
+// lets the caller continue ordinary document scrolling in the same direction.
+static bool step_visible_links(u16& selected, u16 first, u16 last,
+                               bool forward) {
+  if(first == NO_LINK || last == NO_LINK) {
+    selected = NO_LINK;
+    return false;
+  }
+  if(selected == NO_LINK) {
+    selected = forward ? first : last;
+    return true;
+  }
+  if(forward && selected < last) {
+    selected++;
+    return true;
+  }
+  if(!forward && selected > first) {
+    selected--;
+    return true;
+  }
+  selected = NO_LINK;
+  return false;
+}
+
+static bool compiled_link_path(const u8* compiled, u16 compiled_size,
+                               u16 selected, char* output,
+                               usize capacity) {
+  if(compiled == nullptr || output == nullptr || capacity == 0) return false;
+  markdown::Reader reader(compiled, compiled_size);
+  u16 index = 0;
+  while(true) {
+    markdown::Event event = {};
+    if(reader.next(event) != markdown::Status::OK) return false;
+    if(event.kind == markdown::EventKind::END) return false;
+    if(event.kind != markdown::EventKind::LINK_BEGIN) continue;
+    if(index++ != selected) continue;
+    if(event.path_len == 0 || event.path_len >= capacity) return false;
+    u16 length = 0;
+    while(length < event.path_len && event.path[length] != '#') {
+      if(event.path[length] == 0) return false;
+      output[length] = (char) event.path[length];
+      length++;
+    }
+    output[length] = 0;
+    return length != 0;
+  }
+}
+
+static Result compile_entry(ViewerWorkspace& workspace,
+                            const program_store::Entry& entry,
+                            u16& compiled_size) {
+  if(entry.kind != program_store::NodeKind::FILE ||
+     entry.type != program_store::ProgramType::MARKDOWN ||
+     entry.data_len > program_store::MAX_MK61_TEXT_SIZE) {
+    return Result::INVALID_DOCUMENT;
+  }
+  shared_scratch::Lease source(
+      shared_scratch::Owner::MARKDOWN_VIEWER,
+      program_store::MAX_MK61_TEXT_SIZE);
+  if(!source.ok()) return Result::BUSY;
+  u16 source_size = 0;
+  if(!program_store::read_id(entry.id, source.data(), entry.data_len,
+                             &source_size) ||
+     source_size != entry.data_len) {
+    return Result::READ_ERROR;
+  }
+  compiled_size = 0;
+  return markdown::compile(
+      source.data(), source_size, workspace.compiled,
+      sizeof(workspace.compiled), compiled_size) == markdown::Status::OK
+      ? Result::OK : Result::INVALID_DOCUMENT;
 }
 
 struct PlainLine {
@@ -233,16 +305,12 @@ static void copy_plain_line(const u8* data, u16 len, u16 index,
   output[copied] = 0;
 }
 
-static void draw_plain_page(MK61Display& display, const u8* data, u16 len,
-                            u16 top_line) {
-  static constexpr u16 ROW_BYTES = lcd_display::COLS * 4U + 1U;
-  char rows[lcd_display::RUNTIME_MAX_ROWS][ROW_BYTES];
-  const u8 row_count = display.rows();
-  for(u8 row = 0; row < row_count; row++) {
-    copy_plain_line(data, len, (u16) (top_line + row),
-                    rows[row], sizeof(rows[row]));
-  }
+static constexpr u16 PLAIN_ROW_BYTES = lcd_display::COLS * 4U + 1U;
 
+static void show_plain_rows(
+    MK61Display& display,
+    char rows[lcd_display::RUNTIME_MAX_ROWS][PLAIN_ROW_BYTES]) {
+  const u8 row_count = display.rows();
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
   const char* lines[lcd_display::RUNTIME_MAX_ROWS];
   for(u8 row = 0; row < row_count; ++row) lines[row] = rows[row];
@@ -263,11 +331,73 @@ static void draw_plain_page(MK61Display& display, const u8* data, u16 len,
 #endif
 }
 
+static void draw_plain_page(MK61Display& display, const u8* data, u16 len,
+                            u16 top_line) {
+  char rows[lcd_display::RUNTIME_MAX_ROWS][PLAIN_ROW_BYTES] = {};
+  const u8 row_count = display.rows();
+  for(u8 row = 0; row < row_count; row++) {
+    copy_plain_line(data, len, (u16) (top_line + row),
+                    rows[row], sizeof(rows[row]));
+  }
+  show_plain_rows(display, rows);
+}
+
+static void draw_plain_link(MK61Display& display, const u8* data, u16 len,
+                            const markdown::PlainLink& link,
+                            u16 selected, u16 link_count) {
+  char rows[lcd_display::RUNTIME_MAX_ROWS][PLAIN_ROW_BYTES] = {};
+  rows[0][0] = '>';
+  rows[0][1] = ' ';
+  u16 source = link.begin;
+  u16 output = 2;
+  u8 cells = 2;
+  while(source < link.end && source < len &&
+        cells < lcd_display::COLS) {
+    const u16 next = m8_view::next_offset(data, len, source);
+    if(next <= source || output + next - source >= PLAIN_ROW_BYTES) break;
+    memcpy(rows[0] + output, data + source, next - source);
+    output = (u16) (output + next - source);
+    source = next;
+    cells++;
+  }
+  rows[0][output] = 0;
+  if(display.rows() > 1) {
+    snprintf(rows[1], sizeof(rows[1]), "%u/%u  OK",
+             (unsigned) selected + 1U, (unsigned) link_count);
+  }
+  show_plain_rows(display, rows);
+}
+
+static void plain_visible_links(
+    const u8* data, u16 len, const markdown::PlainLink* links,
+    u16 link_count, u16 top_line, u8 rows,
+    u16& first, u16& last) {
+  first = NO_LINK;
+  last = NO_LINK;
+  u16 line_offset = plain_line_offset(data, len, top_line);
+  for(u8 row = 0; row < rows && line_offset < len; row++) {
+    const PlainLine line = plain_line(data, len, line_offset);
+    for(u16 index = 0; index < link_count; index++) {
+      if(links[index].begin < line.end && links[index].end > line.begin) {
+        if(first == NO_LINK) first = index;
+        last = index;
+      }
+    }
+    if(line.next <= line_offset) break;
+    line_offset = line.next;
+  }
+}
+
 static Result view_plain_text(MK61Display& display,
                               const char* plain, u16 plain_size,
+                              const markdown::PlainLink* links,
+                              u16 link_count,
                               Navigation& navigation,
-                              bool& display_changed) {
+                              bool& display_changed, u16& open_link,
+                              bool& back_requested) {
   display_changed = false;
+  open_link = NO_LINK;
+  back_requested = false;
   const u8 rows = display.rows() == 0 ? 1 : display.rows();
   const u16 total_lines = plain_line_count(
       (const u8*) plain, plain_size);
@@ -278,36 +408,91 @@ static Result view_plain_text(MK61Display& display,
   }
 
   while(true) {
+    u16 first_visible = NO_LINK;
+    u16 last_visible = NO_LINK;
+    plain_visible_links(
+        (const u8*) plain, plain_size, links, link_count,
+        (u16) (navigation.plain_page * rows), rows,
+        first_visible, last_visible);
+    if(navigation.selected_link != NO_LINK &&
+       (first_visible == NO_LINK ||
+        navigation.selected_link < first_visible ||
+        navigation.selected_link > last_visible)) {
+      navigation.selected_link = NO_LINK;
+    }
+
     const u32 revision = display.displayModeRevision();
-    draw_plain_page(display, (const u8*) plain, plain_size,
-                    (u16) (navigation.plain_page * rows));
+    if(navigation.selected_link != NO_LINK) {
+      draw_plain_link(display, (const u8*) plain, plain_size,
+                      links[navigation.selected_link],
+                      navigation.selected_link, link_count);
+    } else {
+      draw_plain_page(display, (const u8*) plain, plain_size,
+                      (u16) (navigation.plain_page * rows));
+    }
     const i32 key = wait_key(display, revision);
     if(key == VIEWER_DISPLAY_CHANGED) {
       display_changed = true;
       return Result::OK;
     }
-    if(exit_key(key)) return Result::OK;
-    if(forward_key(key) && navigation.plain_page + 1U < page_count) {
-      navigation.plain_page++;
-    } else if(backward_key(key) && navigation.plain_page != 0) {
-      navigation.plain_page--;
+    if(exit_key(key)) {
+      if(navigation.selected_link != NO_LINK) {
+        navigation.selected_link = NO_LINK;
+        continue;
+      }
+      back_requested = true;
+      return Result::OK;
+    }
+    if(key == KEY_OK || key == KEY_OK_PRESS) {
+      if(navigation.selected_link != NO_LINK) {
+        open_link = navigation.selected_link;
+      } else {
+        back_requested = true;
+      }
+      return Result::OK;
+    }
+    if(forward_key(key)) {
+      if(step_visible_links(navigation.selected_link,
+                            first_visible, last_visible, true)) {
+        continue;
+      }
+      if(navigation.plain_page + 1U < page_count) {
+        navigation.plain_page++;
+      }
+    } else if(backward_key(key)) {
+      if(step_visible_links(navigation.selected_link,
+                            first_visible, last_visible, false)) {
+        continue;
+      }
+      if(navigation.plain_page != 0) {
+        navigation.plain_page--;
+      }
     }
   }
 }
 
-#if MK61_MARKDOWN_USES_WBMP
-
 static Result view_plain(MK61Display& display, ViewerWorkspace& workspace,
                          u16 compiled_size, Navigation& navigation,
-                         bool& display_changed) {
+                         bool& display_changed, u16& open_link,
+                         bool& back_requested) {
+  markdown::PlainLink links[markdown::MAX_PLAIN_LINKS];
+  u16 link_count = 0;
   u16 plain_size = 0;
-  const markdown::Status status = markdown::to_plain_text(
-      workspace.compiled, compiled_size, workspace.output.plain,
-      sizeof(workspace.output.plain), plain_size);
+  #if MK61_MARKDOWN_USES_WBMP
+  char* const plain = workspace.output.plain;
+  #else
+  char* const plain = workspace.plain;
+  #endif
+  const markdown::Status status = markdown::to_plain_text_with_links(
+      workspace.compiled, compiled_size, plain, PLAIN_CAPACITY, plain_size,
+      links, markdown::MAX_PLAIN_LINKS, link_count);
   if(status != markdown::Status::OK) return Result::INVALID_DOCUMENT;
-  return view_plain_text(display, workspace.output.plain, plain_size,
-                         navigation, display_changed);
+  return view_plain_text(display, plain, plain_size, links, link_count,
+                         navigation, display_changed, open_link,
+                         back_requested);
 }
+
+#if MK61_MARKDOWN_USES_WBMP
 
 using markdown::BlockKind;
 using markdown::ListKind;
@@ -319,6 +504,27 @@ using markdown::STYLE_ITALIC;
 using markdown::STYLE_STRIKE;
 using markdown::STYLE_CODE;
 using markdown::STYLE_LINK;
+
+static constexpr u8 STYLE_SELECTED = 1U << 7;
+struct LinkLayout {
+  u16 count;
+  u16 first_visible;
+  u16 last_visible;
+  u16 selected_top;
+  u16 selected_bottom;
+  bool selected_seen;
+  bool selected_visible;
+
+  void reset() {
+    count = 0;
+    first_visible = NO_LINK;
+    last_visible = NO_LINK;
+    selected_top = 0;
+    selected_bottom = 0;
+    selected_seen = false;
+    selected_visible = false;
+  }
+};
 
 struct GraphicViewport {
   u16 width;
@@ -355,17 +561,19 @@ struct GlyphCell {
   u16 codepoint;
   u8 style;
   u8 advance;
+  u16 link;
 };
 
 class GraphicLayout {
  public:
   GraphicLayout(u8* frame, u16 frame_width, u8 display_height,
                 u16 viewport_top, u8 viewport_height, u16 parent_id,
-                markdown_scroll::Probe& scroll_probe)
+                markdown_scroll::Probe& scroll_probe,
+                u16 selected_link, LinkLayout* links)
       : frame(frame), frame_width(frame_width),
         display_height(display_height), viewport_top(viewport_top),
         viewport_height(viewport_height), parent_id(parent_id),
-        scroll_probe(scroll_probe),
+        scroll_probe(scroll_probe), links(links),
         compact(frame_width <= 100U || display_height <= 16U),
         y(compact ? 0U : 2U), block_start_y(compact ? 0U : 2U),
         content_x(2),
@@ -376,7 +584,9 @@ class GraphicLayout {
         cell_width(0), first_visual_line(true), style(STYLE_NONE),
         block({BlockKind::PARAGRAPH, 0, ListKind::NONE,
                TaskState::NONE, 0}), block_open(false),
-        stream_valid(true), first_anchor(true) {
+        stream_valid(true), first_anchor(true), current_link(NO_LINK),
+        next_link(0), selected_link(selected_link) {
+    if(links != nullptr) links->reset();
     if(frame != nullptr && viewport_height != 0) {
       const usize bytes = (usize) frame_width *
           ((viewport_height + 7U) / 8U);
@@ -413,6 +623,13 @@ class GraphicLayout {
         case EventKind::IMAGE:
           render_image(event);
           break;
+        case EventKind::LINK_BEGIN:
+          current_link = next_link++;
+          if(links != nullptr) links->count = next_link;
+          break;
+        case EventKind::LINK_END:
+          current_link = NO_LINK;
+          break;
         case EventKind::END:
           break;
       }
@@ -433,6 +650,7 @@ class GraphicLayout {
   u8 viewport_height;
   u16 parent_id;
   markdown_scroll::Probe& scroll_probe;
+  LinkLayout* links;
 #if MK61_UI_FONT_CLIENT
   markdown_ui_font::Source ui_font_source;
 #endif
@@ -454,6 +672,9 @@ class GraphicLayout {
   bool block_open;
   bool stream_valid;
   bool first_anchor;
+  u16 current_link;
+  u16 next_link;
+  u16 selected_link;
 
   u8 glyph_advance(builtin_font::FaceId face, u8 scale) const {
     const u8 native_advance = face == builtin_font::FaceId::FONT_3X5
@@ -595,7 +816,8 @@ class GraphicLayout {
     const u8 advance = glyph_advance(selected_face, selected_scale);
     const i16 height = (i16) raster.height * selected_scale;
 #endif
-    const bool inverse = (glyph_style & STYLE_CODE) != 0;
+    const bool inverse =
+        (glyph_style & (STYLE_CODE | STYLE_SELECTED)) != 0;
     if(inverse) fill_rect(x, global_y, advance, height, true);
 
     for(u8 source_y = 0; source_y < raster.height; source_y++) {
@@ -787,12 +1009,37 @@ class GraphicLayout {
     }
   }
 
+  void note_link(u16 link, u16 line_y) {
+    if(links == nullptr || link == NO_LINK) return;
+    const u16 bottom = (u16) (line_y + line_height);
+    const bool visible = line_y < (u16) (viewport_top + viewport_height) &&
+                         bottom > viewport_top;
+    if(visible && links->first_visible == NO_LINK) {
+      links->first_visible = link;
+    }
+    if(visible) links->last_visible = link;
+    if(link != selected_link) return;
+    if(!links->selected_seen) {
+      links->selected_top = line_y;
+      links->selected_bottom = bottom;
+      links->selected_seen = true;
+    } else {
+      if(line_y < links->selected_top) links->selected_top = line_y;
+      if(bottom > links->selected_bottom) links->selected_bottom = bottom;
+    }
+    links->selected_visible = links->selected_visible || visible;
+  }
+
   void render_cells(u8 count) {
     record_anchor(y);
     draw_line_decorations(y);
     i16 x = content_x;
     for(u8 index = 0; index < count; index++) {
-      draw_glyph(cells[index].codepoint, cells[index].style, x, (i16) y,
+      note_link(cells[index].link, y);
+      const u8 glyph_style = cells[index].link == selected_link
+          ? (u8) (cells[index].style | STYLE_SELECTED)
+          : cells[index].style;
+      draw_glyph(cells[index].codepoint, glyph_style, x, (i16) y,
                  face, scale);
       x = (i16) (x + cells[index].advance);
     }
@@ -861,7 +1108,8 @@ class GraphicLayout {
     cells[cell_count++] = {
       codepoint,
       effective_style,
-      text_advance(codepoint, effective_style, face, scale)
+      text_advance(codepoint, effective_style, face, scale),
+      current_link
     };
     cell_width = (u16) (cell_width + cells[cell_count - 1U].advance);
     wrap_if_needed();
@@ -1041,11 +1289,13 @@ static Result layout_graphic_region(
     ViewerWorkspace& workspace, u16 compiled_size, u16 parent_id,
     const GraphicViewport& viewport, u8* bitmap,
     u16 region_top, u8 region_height, u16 metrics_top,
-    markdown_scroll::Metrics& scroll) {
+    markdown_scroll::Metrics& scroll, u16 selected_link = NO_LINK,
+    LinkLayout* links = nullptr) {
   markdown_scroll::Probe probe(metrics_top, viewport.height);
   GraphicLayout layout(
       bitmap, viewport.width, viewport.height,
-      region_top, region_height, parent_id, probe);
+      region_top, region_height, parent_id, probe,
+      selected_link, links);
   const u16 document_height =
       layout.render(workspace.compiled, compiled_size);
   if(!layout.valid()) return Result::INVALID_DOCUMENT;
@@ -1058,11 +1308,13 @@ static Result render_graphic_page(MK61Display& display,
                                   u16 compiled_size, u16 parent_id,
                                   const GraphicViewport& viewport,
                                   u16 viewport_top,
-                                  markdown_scroll::Metrics& scroll) {
+                                  markdown_scroll::Metrics& scroll,
+                                  u16 selected_link,
+                                  LinkLayout& links) {
   Result result = layout_graphic_region(
       workspace, compiled_size, parent_id, viewport,
       workspace.output.graphics.frame, viewport_top, viewport.height,
-      viewport_top, scroll);
+      viewport_top, scroll, selected_link, &links);
   if(result != Result::OK) return result;
   return display.showFullscreenBitmap(
       workspace.output.graphics.frame, viewport.frame_bytes)
@@ -1219,8 +1471,11 @@ static Result scroll_line(
 static Result view_graphics(MK61Display& display, ViewerWorkspace& workspace,
                             u16 compiled_size, u16 parent_id,
                             Navigation& navigation,
-                            bool& display_changed) {
+                            bool& display_changed, u16& open_link,
+                            bool& back_requested) {
   display_changed = false;
+  open_link = NO_LINK;
+  back_requested = false;
   if(!display.beginFullscreenBitmap()) return Result::DISPLAY_ERROR;
   GraphicViewport viewport = {};
   if(!graphic_viewport(display, viewport)) {
@@ -1232,9 +1487,12 @@ static Result view_graphics(MK61Display& display, ViewerWorkspace& workspace,
   while(true) {
     const u32 revision = display.displayModeRevision();
     markdown_scroll::Metrics scroll = {};
+    LinkLayout links = {};
     result = render_graphic_page(
         display, workspace, compiled_size, parent_id,
-        viewport, navigation.graphic_y, scroll);
+        viewport, navigation.graphic_y, scroll,
+        navigation.selected_link,
+        links);
     if(result != Result::OK) {
       if(display.displayModeRevision() != revision) {
         display_changed = true;
@@ -1247,20 +1505,57 @@ static Result view_graphics(MK61Display& display, ViewerWorkspace& workspace,
       continue;
     }
 
+    if(navigation.selected_link != NO_LINK &&
+       (navigation.selected_link >= links.count ||
+        !links.selected_visible)) {
+      navigation.selected_link = NO_LINK;
+      continue;
+    }
+
     const i32 key = wait_key(display, revision);
     if(key == VIEWER_DISPLAY_CHANGED) {
       display_changed = true;
       break;
     }
-    if(exit_key(key)) break;
-    if(line_forward_key(key) || line_backward_key(key)) {
+    if(exit_key(key)) {
+      if(navigation.selected_link != NO_LINK) {
+        navigation.selected_link = NO_LINK;
+        continue;
+      }
+      back_requested = true;
+      break;
+    }
+    if(key == KEY_OK || key == KEY_OK_PRESS) {
+      if(navigation.selected_link < links.count) {
+        open_link = navigation.selected_link;
+        break;
+      }
+      back_requested = true;
+      break;
+    }
+    if(line_forward_key(key)) {
+      if(step_visible_links(navigation.selected_link,
+                            links.first_visible, links.last_visible, true)) {
+        continue;
+      }
       result = scroll_line(
           display, workspace, compiled_size, parent_id, viewport, navigation,
-          line_forward_key(key), revision, scroll, display_changed);
+          true, revision, scroll, display_changed);
+      if(result != Result::OK || display_changed) break;
+    } else if(line_backward_key(key)) {
+      if(step_visible_links(navigation.selected_link,
+                            links.first_visible, links.last_visible, false)) {
+        continue;
+      }
+      result = scroll_line(
+          display, workspace, compiled_size, parent_id, viewport, navigation,
+          false, revision, scroll, display_changed);
       if(result != Result::OK || display_changed) break;
     } else if(fast_forward_key(key)) {
+      navigation.selected_link = NO_LINK;
       navigation.graphic_y = scroll.fast_next_anchor;
     } else if(fast_backward_key(key)) {
+      navigation.selected_link = NO_LINK;
       navigation.graphic_y = scroll.fast_previous_anchor;
     }
   }
@@ -1287,72 +1582,81 @@ Result view_entry(MK61Display& display,
   ViewerWorkspace& workspace =
       *(ViewerWorkspace*) workspace_lease.data();
 
-#if MK61_MARKDOWN_USES_WBMP
-
-  shared_scratch::Lease source(
-      shared_scratch::Owner::MARKDOWN_VIEWER,
-      program_store::MAX_MK61_TEXT_SIZE);
-  if(!source.ok()) return Result::BUSY;
-  u16 source_size = 0;
-  if(!program_store::read_id(entry.id, source.data(), entry.data_len,
-                             &source_size) ||
-     source_size != entry.data_len) {
-    return Result::READ_ERROR;
-  }
-
-  u16 compiled_size = 0;
-  const markdown::Status status = markdown::compile(
-      source.data(), source_size, workspace.compiled,
-      sizeof(workspace.compiled), compiled_size);
-  source.reset();
-  if(status != markdown::Status::OK) return Result::INVALID_DOCUMENT;
-
+  static constexpr u8 HISTORY_DEPTH = 8;
+  struct HistoryItem {
+    u16 entry_id;
+    Navigation navigation;
+  };
+  HistoryItem history[HISTORY_DEPTH] = {};
+  u8 history_depth = 0;
+  program_store::Entry current = entry;
   Navigation navigation = {};
+  navigation.selected_link = NO_LINK;
+  u16 compiled_size = 0;
+  Result result = compile_entry(workspace, current, compiled_size);
+  if(result != Result::OK) return result;
+
   while(true) {
     bool display_changed = false;
-    Result result = Result::OK;
+    u16 open_link = NO_LINK;
+    bool back_requested = false;
 #if MK61_MARKDOWN_USES_WBMP
     if(display.supportsFullscreenBitmap()) {
       result = view_graphics(display, workspace, compiled_size,
-                             entry.parent_id, navigation, display_changed);
-    } else
+                             current.parent_id, navigation, display_changed,
+                             open_link, back_requested);
+    } else {
 #endif
-    {
       result = view_plain(display, workspace, compiled_size,
-                          navigation, display_changed);
+                          navigation, display_changed, open_link,
+                          back_requested);
+#if MK61_MARKDOWN_USES_WBMP
     }
-    if(result != Result::OK || !display_changed) return result;
-  }
-
-#else
-
-  static_assert(markdown_plain::MAX_SOURCE_SIZE >=
-                    program_store::MAX_MK61_TEXT_SIZE,
-                "plain Markdown input buffer is too small");
-  u16 source_size = 0;
-  if(!program_store::read_id(
-         entry.id, (u8*) workspace.plain, entry.data_len, &source_size) ||
-     source_size != entry.data_len) {
-    return Result::READ_ERROR;
-  }
-
-  u16 plain_size = 0;
-  const markdown_plain::Status status = markdown_plain::convert(
-      (const u8*) workspace.plain, source_size,
-      workspace.plain, sizeof(workspace.plain), plain_size);
-  if(status != markdown_plain::Status::OK) {
-    return Result::INVALID_DOCUMENT;
-  }
-
-  Navigation navigation = {0};
-  while(true) {
-    bool display_changed = false;
-    const Result result = view_plain_text(
-        display, workspace.plain, plain_size, navigation, display_changed);
-    if(result != Result::OK || !display_changed) return result;
-  }
-
 #endif
+    if(result != Result::OK) return result;
+    if(display_changed) continue;
+
+    if(open_link != NO_LINK) {
+#if MK61_MARKDOWN_USES_WBMP
+      char* const path = workspace.output.plain;
+#else
+      char* const path = workspace.plain;
+#endif
+      if(!compiled_link_path(workspace.compiled, compiled_size,
+                             open_link, path, PLAIN_CAPACITY)) {
+        continue;
+      }
+      program_store::Entry target = {};
+      if(history_depth >= HISTORY_DEPTH ||
+         storage_path::resolve_file(
+             current.parent_id, path,
+             program_store::ProgramType::MARKDOWN,
+             target) != storage_path::Status::OK) {
+        continue;
+      }
+      history[history_depth++] = {current.id, navigation};
+      current = target;
+      navigation = {};
+      navigation.selected_link = NO_LINK;
+      result = compile_entry(workspace, current, compiled_size);
+      if(result != Result::OK) return result;
+      continue;
+    }
+
+    if(back_requested) {
+      if(history_depth == 0) return Result::OK;
+      const HistoryItem previous = history[--history_depth];
+      if(!program_store::entry_by_id(previous.entry_id, current)) {
+        return Result::READ_ERROR;
+      }
+      navigation = previous.navigation;
+      navigation.selected_link = NO_LINK;
+      result = compile_entry(workspace, current, compiled_size);
+      if(result != Result::OK) return result;
+      continue;
+    }
+    return Result::OK;
+  }
 }
 
 const char* result_text(Result result) {

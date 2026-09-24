@@ -526,6 +526,26 @@ def main():
                 m.load(packages['markdown-viewer']);m.files[43]=(10,'README',b'# Test\n\nHello **world**.\n');m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
                 assert m.call(2,0,43)==0
                 assert m.frames if m.graphics else any('Hello' in x for x in m.lines)
+                # Right selects a visible link before continuing normal
+                # scrolling, OK opens it, and ESC returns to the exact saved
+                # viewport before the final ESC closes the viewer.
+                m.files[43] = (10, 'README',
+                               b'# Links\n\n[Next](next.md)\n')
+                m.files[45] = (10, 'next.md',
+                               b'# Target\n\nArrived.\n')
+                m.keys = [m.mapping[37], m.mapping[38],
+                          m.mapping[39], m.mapping[39]]
+                m.frames = []; m.lines = []
+                assert m.call(2, 0, 43) == 0
+                if m.graphics:
+                    assert len(m.frames) >= 4, len(m.frames)
+                    assert m.frames[0] != m.frames[1]
+                    assert m.frames[0] != m.frames[2]
+                    assert m.frames[0] == m.frames[-1]
+                else:
+                    assert any(line.startswith('> Next') for line in m.lines), m.lines
+                    assert any('Arrived.' in line for line in m.lines), m.lines
+
                 if m.graphics:
                     inline_frames = {}
                     code_frame = None
@@ -551,11 +571,18 @@ def main():
                         if size not in inline_frames: inline_frames[size] = m.frames
                         assert m.frames == inline_frames[size]
                     m.ui_font = bytes((0, 14))
-                    m.files[43] = (10, 'README', b'# Test\n\nHello **world**.\n')
+                m.files[43] = (10, 'README', b'# Test\n\nHello **world**.\n')
                 m.load(packages['markdown-text']); m.lines=[]
                 m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
                 assert m.call(2,0,43)==0
                 assert any('Hello' in line for line in m.lines), m.lines
+                m.files[43] = (10, 'README', b'[Next](next.md)\n')
+                m.keys = [m.mapping[37], m.mapping[38],
+                          m.mapping[39], m.mapping[39]]
+                m.lines = []
+                assert m.call(2, 0, 43) == 0
+                assert any(line.startswith('> Next') for line in m.lines), m.lines
+                assert any('Arrived.' in line for line in m.lines), m.lines
                 m.load(packages['chip8']);m.files[44]=(9,'LOOP',bytes.fromhex('00e01200'));m.chip_exit=True;m.services=0
                 assert m.call(2,0,44)==(0 if m.graphics else 2)
                 # A truncated public service table is refused before callbacks run.

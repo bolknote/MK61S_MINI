@@ -11,6 +11,9 @@ namespace markdown {
 static constexpr u16 MAX_SOURCE_SIZE = 1536;
 static constexpr u16 MAX_COMPILED_SIZE = 6144;
 static constexpr u8 MAX_INLINE_DEPTH = 8;
+// The shortest accepted link is "[a](b)".  This is therefore a strict
+// upper bound for the number of links in one source document.
+static constexpr u16 MAX_PLAIN_LINKS = MAX_SOURCE_SIZE / 6U;
 
 enum class Status : u8 {
   OK = 0,
@@ -58,7 +61,9 @@ enum class EventKind : u8 {
   STYLE,
   TEXT,
   HARD_BREAK,
-  IMAGE
+  IMAGE,
+  LINK_BEGIN,
+  LINK_END
 };
 
 struct Block {
@@ -79,6 +84,11 @@ struct Event {
   u16 alt_len;
   const u8* path;
   u16 path_len;
+};
+
+struct PlainLink {
+  u16 begin;
+  u16 end;
 };
 
 class Reader {
@@ -106,6 +116,14 @@ Status compile(const u8* source, u16 source_size,
 // are removed, while list prefixes, task boxes and line structure are kept.
 Status to_plain_text(const u8* compiled, u16 compiled_size,
                      char* output, u16 output_capacity, u16& output_size);
+
+// Same semantic conversion, additionally returning the byte ranges occupied
+// by link labels in the plain text.  Targets stay in the compiled stream and
+// are resolved only when the user opens a selected link.
+Status to_plain_text_with_links(
+    const u8* compiled, u16 compiled_size,
+    char* output, u16 output_capacity, u16& output_size,
+    PlainLink* links, u16 link_capacity, u16& link_count);
 
 const char* status_text(Status status);
 

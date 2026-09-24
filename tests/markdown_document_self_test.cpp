@@ -1,5 +1,4 @@
 #include "../code/markdown_document.hpp"
-#include "../code/markdown_plain.hpp"
 #include "../code/markdown_scroll.hpp"
 
 #include <assert.h>
@@ -30,34 +29,6 @@ static void expect_plain(const char* source, const char* expected) {
     assert(false);
   }
 
-  char lightweight[markdown_plain::MAX_OUTPUT_SIZE];
-  u16 lightweight_size = 0;
-  assert(markdown_plain::convert(
-      (const u8*) source, (u16) strlen(source),
-      lightweight, sizeof(lightweight), lightweight_size) ==
-      markdown_plain::Status::OK);
-  assert(lightweight_size == strlen(lightweight));
-  if(strcmp(lightweight, expected) != 0) {
-    fprintf(stderr,
-            "lightweight source:\n%s\nexpected:\n%s\nactual:\n%s\n",
-            source, expected, lightweight);
-    assert(false);
-  }
-
-  char in_place[markdown_plain::MAX_OUTPUT_SIZE];
-  memcpy(in_place, source, strlen(source) + 1U);
-  u16 in_place_size = 0;
-  assert(markdown_plain::convert(
-      (const u8*) in_place, (u16) strlen(source),
-      in_place, sizeof(in_place), in_place_size) ==
-      markdown_plain::Status::OK);
-  if(in_place_size != lightweight_size ||
-     strcmp(in_place, expected) != 0) {
-    fprintf(stderr,
-            "in-place source:\n%s\nexpected:\n%s\nactual:\n%s\n",
-            source, expected, in_place);
-    assert(false);
-  }
 }
 
 static void test_plain_text_profile(void) {
@@ -125,6 +96,8 @@ static void test_event_styles_and_image(void) {
   bool italic = false;
   bool strike = false;
   bool link = false;
+  bool link_begin = false;
+  bool link_end = false;
   bool image = false;
   for(;;) {
     markdown::Event event = {};
@@ -138,6 +111,11 @@ static void test_event_styles_and_image(void) {
       italic = italic || (event.style & markdown::STYLE_ITALIC) != 0;
       strike = strike || (event.style & markdown::STYLE_STRIKE) != 0;
       link = link || (event.style & markdown::STYLE_LINK) != 0;
+    } else if(event.kind == markdown::EventKind::LINK_BEGIN) {
+      link_begin = event.path_len == 3 &&
+                   memcmp(event.path, "url", 3) == 0;
+    } else if(event.kind == markdown::EventKind::LINK_END) {
+      link_end = true;
     } else if(event.kind == markdown::EventKind::IMAGE) {
       image = event.alt_len == 3 &&
               memcmp(event.alt, "alt", 3) == 0 &&
@@ -145,7 +123,33 @@ static void test_event_styles_and_image(void) {
               memcmp(event.path, "pic.wbmp", 8) == 0;
     }
   }
-  assert(heading && bold && italic && strike && link && image);
+  assert(heading && bold && italic && strike && link &&
+         link_begin && link_end && image);
+}
+
+static void test_link_target_normalization(void) {
+  const char source[] =
+      "[one](  docs/one.md  ) [two](<../two.md>)";
+  u8 compiled[markdown::MAX_COMPILED_SIZE];
+  u16 compiled_size = 0;
+  assert(markdown::compile(
+      (const u8*) source, sizeof(source) - 1U,
+      compiled, sizeof(compiled), compiled_size) == markdown::Status::OK);
+
+  const char* expected[] = {"docs/one.md", "../two.md"};
+  u8 found = 0;
+  markdown::Reader reader(compiled, compiled_size);
+  for(;;) {
+    markdown::Event event = {};
+    assert(reader.next(event) == markdown::Status::OK);
+    if(event.kind == markdown::EventKind::END) break;
+    if(event.kind != markdown::EventKind::LINK_BEGIN) continue;
+    assert(found < 2);
+    assert(event.path_len == strlen(expected[found]));
+    assert(memcmp(event.path, expected[found], event.path_len) == 0);
+    found++;
+  }
+  assert(found == 2);
 }
 
 static void test_bounds_and_malformed_stream(void) {
@@ -167,49 +171,31 @@ static void test_bounds_and_malformed_stream(void) {
   markdown::Event event = {};
   assert(reader.next(event) == markdown::Status::INVALID_STREAM);
 
-  char plain[16];
-  u16 plain_size = 123;
-  assert(markdown_plain::convert(
-      source, sizeof(source), plain, sizeof(plain), plain_size) ==
-      markdown_plain::Status::SOURCE_TOO_LARGE);
-  assert(plain_size == 0);
-  assert(markdown_plain::convert(
-      (const u8*) "1234", 4, plain, 4, plain_size) ==
-      markdown_plain::Status::OUTPUT_TOO_SMALL);
-  assert(markdown_plain::convert(
-      nullptr, 0, plain, sizeof(plain), plain_size) ==
-      markdown_plain::Status::INVALID_ARGUMENT);
 }
 
-static void test_lightweight_in_place_conversion(void) {
-  static const char alphabet[] =
-      "ab01 *_~`[]()!#-+>\\\t\n\r&;./x";
-  u32 state = 0x61C0DEU;
-  for(u16 iteration = 0; iteration < 2000; iteration++) {
-    char source[257];
-    state = state * 1664525U + 1013904223U;
-    const u16 length = (u16) (state % sizeof(source));
-    for(u16 index = 0; index < length; index++) {
-      state = state * 1664525U + 1013904223U;
-      source[index] = alphabet[state % (sizeof(alphabet) - 1U)];
-    }
+static void test_plain_link_ranges(void) {
+  const char source[] = "[one](one.md) and [two](two.md)";
+  u8 compiled[markdown::MAX_COMPILED_SIZE];
+  u16 compiled_size = 0;
+  assert(markdown::compile(
+      (const u8*) source, sizeof(source) - 1U,
+      compiled, sizeof(compiled), compiled_size) == markdown::Status::OK);
 
-    char expected[markdown_plain::MAX_OUTPUT_SIZE];
-    u16 expected_size = 0;
-    assert(markdown_plain::convert(
-        (const u8*) source, length, expected, sizeof(expected),
-        expected_size) == markdown_plain::Status::OK);
-    assert(expected_size <= length);
+  char plain[64];
+  markdown::PlainLink links[2] = {};
+  u16 plain_size = 0;
+  u16 link_count = 0;
+  assert(markdown::to_plain_text_with_links(
+      compiled, compiled_size, plain, sizeof(plain), plain_size,
+      links, 2, link_count) == markdown::Status::OK);
+  assert(strcmp(plain, "one and two") == 0);
+  assert(link_count == 2);
+  assert(links[0].begin == 0 && links[0].end == 3);
+  assert(links[1].begin == 8 && links[1].end == 11);
 
-    char in_place[markdown_plain::MAX_OUTPUT_SIZE];
-    memcpy(in_place, source, length);
-    u16 actual_size = 0;
-    assert(markdown_plain::convert(
-        (const u8*) in_place, length, in_place, sizeof(in_place),
-        actual_size) == markdown_plain::Status::OK);
-    assert(actual_size == expected_size);
-    assert(memcmp(in_place, expected, expected_size + 1U) == 0);
-  }
+  assert(markdown::to_plain_text_with_links(
+      compiled, compiled_size, plain, sizeof(plain), plain_size,
+      links, 1, link_count) == markdown::Status::OUTPUT_TOO_SMALL);
 }
 
 static void test_adversarial_inline_density_fits(void) {
@@ -218,6 +204,23 @@ static void test_adversarial_inline_density_fits(void) {
   while(used + 4 <= markdown::MAX_SOURCE_SIZE) {
     memcpy(source + used, "*a* ", 4);
     used = (u16) (used + 4);
+  }
+  source[used] = 0;
+
+  u8 compiled[markdown::MAX_COMPILED_SIZE];
+  u16 compiled_size = 0;
+  assert(markdown::compile(
+      (const u8*) source, used, compiled, sizeof(compiled), compiled_size) ==
+      markdown::Status::OK);
+  assert(compiled_size <= sizeof(compiled));
+}
+
+static void test_adversarial_link_density_fits(void) {
+  char source[markdown::MAX_SOURCE_SIZE + 1];
+  u16 used = 0;
+  while(used + 7U <= markdown::MAX_SOURCE_SIZE) {
+    memcpy(source + used, "[a](b) ", 7);
+    used = (u16) (used + 7U);
   }
   source[used] = 0;
 
@@ -404,9 +407,11 @@ int main(void) {
   test_plain_text_profile();
   test_heading_forms_and_escapes();
   test_event_styles_and_image();
+  test_link_target_normalization();
+  test_plain_link_ranges();
   test_bounds_and_malformed_stream();
-  test_lightweight_in_place_conversion();
   test_adversarial_inline_density_fits();
+  test_adversarial_link_density_fits();
   test_adversarial_block_density_fits();
   test_graphic_scroll_frame_shift();
   test_graphic_scroll_navigation();

@@ -3,9 +3,8 @@
 #endif
 
 #if !defined(ARDUINO) || \
-    (MK61_MARKDOWN_USES_WBMP && \
-     (MK61_MARKDOWN_VIEWER_IS_BUILTIN || \
-      defined(MK61_BUILD_MARKDOWN_MODULE)))
+    (MK61_MARKDOWN_VIEWER_IS_BUILTIN || \
+     defined(MK61_BUILD_MARKDOWN_MODULE))
 
 #include "markdown_document.hpp"
 
@@ -21,7 +20,9 @@ enum class Op : u8 {
   STYLE = 3,
   TEXT = 4,
   HARD_BREAK = 5,
-  IMAGE = 6
+  IMAGE = 6,
+  LINK_BEGIN = 7,
+  LINK_END = 8
 };
 
 struct Range {
@@ -127,6 +128,17 @@ class Writer {
     return put_u8((u8) Op::IMAGE) &&
            put_u16(alt_len) && put_u16(path_len) &&
            put_bytes(alt, alt_len) && put_bytes(path, path_len);
+  }
+
+  bool link_begin(const u8* path, u16 path_len) {
+    close_text();
+    return put_u8((u8) Op::LINK_BEGIN) &&
+           put_u16(path_len) && put_bytes(path, path_len);
+  }
+
+  bool link_end(void) {
+    close_text();
+    return put_u8((u8) Op::LINK_END);
   }
 
  private:
@@ -378,15 +390,29 @@ static bool compile_link(Writer& writer, const u8* source,
   const u16 close_label =
       find_unescaped(source, (u16) (offset + 1U), end, "]", 1);
   if(close_label == end || close_label + 2U > end ||
-     source[close_label + 1] != '(') return false;
+     close_label == offset + 1U || source[close_label + 1] != '(') {
+    return false;
+  }
   const u16 close_target =
       find_unescaped(source, (u16) (close_label + 2U), end, ")", 1);
   if(close_target == end) return false;
 
-  if(!writer.style((u8) (style | STYLE_LINK)) ||
+  Range target = trim(source, {
+      (u16) (close_label + 2U), close_target
+  });
+  if(target.end > target.begin + 1U && source[target.begin] == '<' &&
+     source[target.end - 1U] == '>') {
+    target.begin++;
+    target.end--;
+  }
+  if(target.begin == target.end) return false;
+
+  if(!writer.link_begin(source + target.begin,
+                        (u16) (target.end - target.begin)) ||
+     !writer.style((u8) (style | STYLE_LINK)) ||
      !compile_inline(writer, source, (u16) (offset + 1U), close_label,
                      (u8) (style | STYLE_LINK), (u8) (depth + 1U)) ||
-     !writer.style(style)) {
+     !writer.style(style) || !writer.link_end()) {
     return false;
   }
   offset = (u16) (close_target + 1U);
@@ -421,7 +447,7 @@ static bool compile_inline(Writer& writer, const u8* source,
        compile_image(writer, source, offset, end)) {
       continue;
     }
-    if(source[offset] == '[' &&
+    if(source[offset] == '[' && (style & STYLE_LINK) == 0 &&
        compile_link(writer, source, offset, end, style, depth)) {
       continue;
     }
@@ -981,6 +1007,16 @@ Status Reader::next(Event& event) {
       }
       event.kind = EventKind::IMAGE;
       return Status::OK;
+    case Op::LINK_BEGIN:
+      if(!take_u16(event.path_len) ||
+         !take_bytes(event.path_len, event.path)) {
+        return Status::INVALID_STREAM;
+      }
+      event.kind = EventKind::LINK_BEGIN;
+      return Status::OK;
+    case Op::LINK_END:
+      event.kind = EventKind::LINK_END;
+      return Status::OK;
   }
   return Status::INVALID_STREAM;
 }
@@ -1001,16 +1037,20 @@ Status compile(const u8* source, u16 source_size,
   return Status::OK;
 }
 
-Status to_plain_text(const u8* compiled, u16 compiled_size,
-                     char* output, u16 output_capacity, u16& output_size) {
+Status to_plain_text_with_links(
+    const u8* compiled, u16 compiled_size,
+    char* output, u16 output_capacity, u16& output_size,
+    PlainLink* links, u16 link_capacity, u16& link_count) {
   output_size = 0;
+  link_count = 0;
   if(compiled == nullptr || compiled_size == 0 || output == nullptr ||
-     output_capacity == 0) {
+     output_capacity == 0 || (links == nullptr && link_capacity != 0)) {
     return Status::INVALID_ARGUMENT;
   }
   PlainWriter writer(output, output_capacity);
   Reader reader(compiled, compiled_size);
   bool block_open = false;
+  u16 active_link = 0xFFFFU;
   while(true) {
     Event event = {};
     const Status status = reader.next(event);
@@ -1060,6 +1100,20 @@ Status to_plain_text(const u8* compiled, u16 compiled_size,
           return Status::OUTPUT_TOO_SMALL;
         }
         break;
+      case EventKind::LINK_BEGIN:
+        if(links != nullptr) {
+          if(link_count >= link_capacity) return Status::OUTPUT_TOO_SMALL;
+          links[link_count] = {writer.size(), writer.size()};
+          active_link = link_count;
+        }
+        link_count++;
+        break;
+      case EventKind::LINK_END:
+        if(links != nullptr && active_link != 0xFFFFU) {
+          links[active_link].end = writer.size();
+          active_link = 0xFFFFU;
+        }
+        break;
       case EventKind::END:
         break;
     }
@@ -1068,6 +1122,14 @@ Status to_plain_text(const u8* compiled, u16 compiled_size,
   if(!writer.ok()) return Status::OUTPUT_TOO_SMALL;
   output_size = writer.size();
   return Status::OK;
+}
+
+Status to_plain_text(const u8* compiled, u16 compiled_size,
+                     char* output, u16 output_capacity, u16& output_size) {
+  u16 link_count = 0;
+  return to_plain_text_with_links(
+      compiled, compiled_size, output, output_capacity, output_size,
+      nullptr, 0, link_count);
 }
 
 const char* status_text(Status status) {

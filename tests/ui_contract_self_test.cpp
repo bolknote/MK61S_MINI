@@ -4,7 +4,6 @@
 #include "startup_splash.hpp"
 #include "virtual_fat_diagnostic.hpp"
 #include "markdown_document.hpp"
-#include "markdown_plain.hpp"
 #include "markdown_scroll.hpp"
 #include "ws0010_charset.hpp"
 #include "disasm_line.hpp"
@@ -437,7 +436,7 @@ int main() {
   assert(reader.next(event) == markdown::Status::OK);
   assert(event.kind == markdown::EventKind::BLOCK_BEGIN && event.block.kind == markdown::BlockKind::HEADING && event.block.level == 1);
   char text[128];
-  assert(markdown_plain::convert((const u8*) markdown, sizeof(markdown)-1, text, sizeof(text), text_size) == markdown_plain::Status::OK);
+  assert(markdown::to_plain_text(document, size, text, sizeof(text), text_size) == markdown::Status::OK);
   expect("Markdown header/text", text,
          "\307\340\343\356\353\356\342\356\352\n\n"
          "English \360\363\361\361\352\350\351");

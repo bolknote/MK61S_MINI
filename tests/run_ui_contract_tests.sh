@@ -16,7 +16,7 @@ for keyboard in MINI CLASSIC 40TH; do
       -DMK61_ENABLE_USB_SCREEN=0 -DMK61_ENABLE_EXTENDED_FONT_SETTINGS="$extended" \
       -I"$out" -I"$root/code" "$root/tests/ui_contract_self_test.cpp" \
       "$root/code/virtual_fat_diagnostic.cpp" "$root/code/markdown_document.cpp" \
-      "$root/code/markdown_plain.cpp" -o "$out/ui-contract"
+      -o "$out/ui-contract"
     "$out/ui-contract"
   done
 done
