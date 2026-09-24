@@ -284,7 +284,7 @@ enum class TbFunction : u8 {
   SIZE,
   COLS,
   ROWS,
-  PI,
+  PI_VALUE,
   RND,
   SIN,
   COS,
@@ -804,7 +804,7 @@ static const u8 TB_FUNCTION_WORDS[] = {
   (u8) TbFunction::SIZE,  0x14, 'S', 'I', 'Z', 'E',
   (u8) TbFunction::COLS,  0xF4, 'C', 'O', 'L', 'S',
   (u8) TbFunction::ROWS,  0xF4, 'R', 'O', 'W', 'S',
-  (u8) TbFunction::PI,    0xF2, 'P', 'I',
+  (u8) TbFunction::PI_VALUE, 0xF2, 'P', 'I',
   (u8) TbFunction::RND,   0x13, 'R', 'N', 'D',
   (u8) TbFunction::SIN,   0x23, 'S', 'I', 'N',
   (u8) TbFunction::COS,   0x13, 'C', 'O', 'S',
@@ -1398,7 +1398,7 @@ class TbExprParser {
         if(function_id == TbFunction::ROWS) {
           return evaluate ? (double) main_lcd().rows() : 0.0;
         }
-        if(function_id == TbFunction::PI) {
+        if(function_id == TbFunction::PI_VALUE) {
           return evaluate ? 3.14159265358979323846 : 0.0;
         }
         if(function_id == TbFunction::NONE) {
@@ -1464,7 +1464,7 @@ class TbExprParser {
           case TbFunction::SIZE:
           case TbFunction::COLS:
           case TbFunction::ROWS:
-          case TbFunction::PI:
+          case TbFunction::PI_VALUE:
           case TbFunction::RND:
           case TbFunction::SIN:
           case TbFunction::COS:

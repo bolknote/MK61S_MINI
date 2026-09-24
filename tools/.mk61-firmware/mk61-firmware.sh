@@ -54,6 +54,11 @@ ENABLE_TINYBASIC=1
 ENABLE_WBMP_VIEWER=0
 ENABLE_MARKDOWN_VIEWER=1
 ENABLE_CHIP8=0
+FOCAL_AS_APP=-1
+TINYBASIC_AS_APP=-1
+WBMP_VIEWER_AS_APP=-1
+MARKDOWN_VIEWER_AS_APP=-1
+CHIP8_AS_APP=-1
 ENABLE_USB_SCREEN=0
 EXTERNALIZE_USBDISK=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
@@ -134,7 +139,8 @@ Usage:
   tools/mk61-firmware.cmd --show-config           print saved selection and flags
 
 Options:
-  --mcu MCU       f411 (512 KiB Flash) or f401 (256 KiB Flash); both use /System APP
+  --mcu MCU       f411 (512 KiB Flash, components resident by default) or f401
+                  (256 KiB Flash, components as /System APP by default)
   --profile ID    mini-v3-a00, mini-v3-a02, mini-v3-ws0010,
                   mini-v2-a00, mini-v2-a02,
                   classic-v2, classic-v3, or 40th
@@ -157,8 +163,8 @@ mcu_valid() {
 
 mcu_label() {
   case "${1:-}" in
-    f411) printf '%s' 'STM32F411CE · 512 KiB Flash · APP в C6' ;;
-    f401) printf '%s' 'STM32F401CC · 256 KiB Flash · APP в C6' ;;
+    f411) printf '%s' 'STM32F411CE · 512 KiB Flash · встроено по умолчанию' ;;
+    f401) printf '%s' 'STM32F401CC · 256 KiB Flash · APP по умолчанию' ;;
     *) printf '%s' 'не выбран' ;;
   esac
 }
@@ -1236,6 +1242,26 @@ boolean_valid() {
   return 1
 }
 
+normalize_component_placements() {
+  local default=1
+  [ "$MCU" = f411 ] && default=0
+  boolean_valid "$FOCAL_AS_APP" || FOCAL_AS_APP=$default
+  boolean_valid "$TINYBASIC_AS_APP" || TINYBASIC_AS_APP=$default
+  boolean_valid "$WBMP_VIEWER_AS_APP" || WBMP_VIEWER_AS_APP=$default
+  boolean_valid "$MARKDOWN_VIEWER_AS_APP" || MARKDOWN_VIEWER_AS_APP=$default
+  boolean_valid "$CHIP8_AS_APP" || CHIP8_AS_APP=$default
+}
+
+reset_component_placements_for_mcu() {
+  local default=1
+  [ "$1" = f411 ] && default=0
+  FOCAL_AS_APP=$default
+  TINYBASIC_AS_APP=$default
+  WBMP_VIEWER_AS_APP=$default
+  MARKDOWN_VIEWER_AS_APP=$default
+  CHIP8_AS_APP=$default
+}
+
 math_backend_valid() {
   case "${1:-}" in 0|1) return 0 ;; esac
   return 1
@@ -1265,6 +1291,7 @@ load_config() {
         hardware_from_profile "$PROFILE" || true
       fi
     fi
+    normalize_component_placements
     if platform_valid "$HARDWARE_PLATFORM" || screen_valid "$SCREEN_KIND"; then
       save_config || true
     fi
@@ -1304,6 +1331,21 @@ load_config() {
       MK61_ENABLE_CHIP8)
         boolean_valid "$value" && ENABLE_CHIP8=$value
         ;;
+      MK61_FOCAL_AS_APP)
+        boolean_valid "$value" && FOCAL_AS_APP=$value
+        ;;
+      MK61_TINYBASIC_AS_APP)
+        boolean_valid "$value" && TINYBASIC_AS_APP=$value
+        ;;
+      MK61_WBMP_VIEWER_AS_APP)
+        boolean_valid "$value" && WBMP_VIEWER_AS_APP=$value
+        ;;
+      MK61_MARKDOWN_VIEWER_AS_APP)
+        boolean_valid "$value" && MARKDOWN_VIEWER_AS_APP=$value
+        ;;
+      MK61_CHIP8_AS_APP)
+        boolean_valid "$value" && CHIP8_AS_APP=$value
+        ;;
       MK61_ENABLE_USB_SCREEN)
         boolean_valid "$value" && ENABLE_USB_SCREEN=$value
         ;;
@@ -1325,9 +1367,10 @@ load_config() {
     esac
   done < "$CONFIG_FILE"
 
+  if [ "$CLI_MCU" -eq 0 ]; then MCU=$saved_mcu; fi
+  normalize_component_placements
   normalize_viewer_selection
   normalize_math_selection
-  if [ "$CLI_MCU" -eq 0 ]; then MCU=$saved_mcu; fi
   if [ "$CLI_PROFILE" -eq 1 ]; then
     hardware_from_profile "$PROFILE" || true
   else
@@ -1345,6 +1388,7 @@ load_config() {
 }
 
 save_config() {
+  normalize_component_placements
   normalize_viewer_selection
   normalize_math_selection
   sync_profile_from_hardware
@@ -1361,6 +1405,11 @@ save_config() {
     printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
     printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
     printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
+    printf 'MK61_FOCAL_AS_APP=%s\n' "$FOCAL_AS_APP"
+    printf 'MK61_TINYBASIC_AS_APP=%s\n' "$TINYBASIC_AS_APP"
+    printf 'MK61_WBMP_VIEWER_AS_APP=%s\n' "$WBMP_VIEWER_AS_APP"
+    printf 'MK61_MARKDOWN_VIEWER_AS_APP=%s\n' "$MARKDOWN_VIEWER_AS_APP"
+    printf 'MK61_CHIP8_AS_APP=%s\n' "$CHIP8_AS_APP"
     printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
     printf 'MK61_EXTERNALIZE_USBDISK=%s\n' "$EXTERNALIZE_USBDISK"
     # This is part of the firmware format contract, not a user-selectable
@@ -1377,6 +1426,32 @@ save_config() {
 
 checkbox_marker() {
   if [ "$1" -eq 1 ]; then printf '☑'; else printf '☐'; fi
+}
+
+component_mode_label() {
+  local enabled=$1 as_app=$2
+  if [ "$enabled" -eq 0 ]; then
+    printf 'выкл'
+  elif [ "$as_app" -eq 1 ]; then
+    printf 'APP'
+  else
+    printf 'встроен'
+  fi
+}
+
+cycle_component_mode() {
+  local enabled_name=$1 app_name=$2 enabled app
+  eval "enabled=\${$enabled_name}"
+  eval "app=\${$app_name}"
+  if [ "$enabled" -eq 1 ] && [ "$app" -eq 0 ]; then
+    eval "$app_name=1"
+  elif [ "$enabled" -eq 1 ]; then
+    eval "$enabled_name=0"
+    eval "$app_name=0"
+  else
+    eval "$enabled_name=1"
+    eval "$app_name=0"
+  fi
 }
 
 externalize_usbdisk_value() {
@@ -1440,6 +1515,11 @@ compile_option_flags() {
     " -DMK61_ENABLE_WBMP_VIEWER=$ENABLE_WBMP_VIEWER" \
     " -DMK61_ENABLE_MARKDOWN_VIEWER=$ENABLE_MARKDOWN_VIEWER" \
     " -DMK61_ENABLE_CHIP8=$ENABLE_CHIP8" \
+    " -DMK61_FOCAL_AS_APP=$FOCAL_AS_APP" \
+    " -DMK61_TINYBASIC_AS_APP=$TINYBASIC_AS_APP" \
+    " -DMK61_WBMP_VIEWER_AS_APP=$WBMP_VIEWER_AS_APP" \
+    " -DMK61_MARKDOWN_VIEWER_AS_APP=$MARKDOWN_VIEWER_AS_APP" \
+    " -DMK61_CHIP8_AS_APP=$CHIP8_AS_APP" \
     " -DMK61_ENABLE_USB_SCREEN=$ENABLE_USB_SCREEN" \
     " -DMK61_EXTERNALIZE_USBDISK=$(externalize_usbdisk_value)" \
     " -DMK61_ENABLE_LOADABLE_MODULES=1" \
@@ -1457,12 +1537,12 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf '%s FOCAL · %s BASIC · %s WBMP · %s MD · %s CHIP-8 · %s USB · %s MSCAPP · %s FONT · %s USER · MATH %s' \
-    "$(checkbox_marker "$ENABLE_FOCAL")" \
-    "$(checkbox_marker "$ENABLE_TINYBASIC")" \
-    "$(checkbox_marker "$ENABLE_WBMP_VIEWER")" \
-    "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")" \
-    "$(checkbox_marker "$ENABLE_CHIP8")" \
+  printf 'FOCAL:%s · BASIC:%s · WBMP:%s · MD:%s · CHIP-8:%s · %s USB · %s MSCAPP · %s FONT · %s USER · MATH %s' \
+    "$(component_mode_label "$ENABLE_FOCAL" "$FOCAL_AS_APP")" \
+    "$(component_mode_label "$ENABLE_TINYBASIC" "$TINYBASIC_AS_APP")" \
+    "$(component_mode_label "$ENABLE_WBMP_VIEWER" "$WBMP_VIEWER_AS_APP")" \
+    "$(component_mode_label "$ENABLE_MARKDOWN_VIEWER" "$MARKDOWN_VIEWER_AS_APP")" \
+    "$(component_mode_label "$ENABLE_CHIP8" "$CHIP8_AS_APP")" \
     "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
     "$(checkbox_marker "$(externalize_usbdisk_value)")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
@@ -1471,13 +1551,13 @@ compile_options_summary() {
 }
 
 compile_options_details() {
-  printf '%s FOCAL (MK61_ENABLE_FOCAL)\n' "$(checkbox_marker "$ENABLE_FOCAL")"
-  printf '%s TinyBASIC (MK61_ENABLE_TINYBASIC)\n' "$(checkbox_marker "$ENABLE_TINYBASIC")"
-  printf '%s WBMP viewer без Markdown (MK61_ENABLE_WBMP_VIEWER)\n' \
-    "$(checkbox_marker "$ENABLE_WBMP_VIEWER")"
-  printf '%s Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)\n' \
-    "$(checkbox_marker "$ENABLE_MARKDOWN_VIEWER")"
-  printf '%s CHIP-8 (MK61_ENABLE_CHIP8)\n' "$(checkbox_marker "$ENABLE_CHIP8")"
+  printf 'FOCAL: %s (MK61_ENABLE_FOCAL, MK61_FOCAL_AS_APP)\n' "$(component_mode_label "$ENABLE_FOCAL" "$FOCAL_AS_APP")"
+  printf 'TinyBASIC: %s (MK61_ENABLE_TINYBASIC, MK61_TINYBASIC_AS_APP)\n' "$(component_mode_label "$ENABLE_TINYBASIC" "$TINYBASIC_AS_APP")"
+  printf 'WBMP viewer без Markdown: %s (MK61_ENABLE_WBMP_VIEWER, MK61_WBMP_VIEWER_AS_APP)\n' \
+    "$(component_mode_label "$ENABLE_WBMP_VIEWER" "$WBMP_VIEWER_AS_APP")"
+  printf 'Markdown + WBMP viewer: %s (MK61_ENABLE_MARKDOWN_VIEWER, MK61_MARKDOWN_VIEWER_AS_APP)\n' \
+    "$(component_mode_label "$ENABLE_MARKDOWN_VIEWER" "$MARKDOWN_VIEWER_AS_APP")"
+  printf 'CHIP-8: %s (MK61_ENABLE_CHIP8, MK61_CHIP8_AS_APP)\n' "$(component_mode_label "$ENABLE_CHIP8" "$CHIP8_AS_APP")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
   printf '%s USB-диск как USBDISK.APP (MK61_EXTERNALIZE_USBDISK)\n' \
     "$(checkbox_marker "$(externalize_usbdisk_value)")"
@@ -1503,6 +1583,11 @@ show_config() {
   printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
   printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
   printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
+  printf 'MK61_FOCAL_AS_APP=%s\n' "$FOCAL_AS_APP"
+  printf 'MK61_TINYBASIC_AS_APP=%s\n' "$TINYBASIC_AS_APP"
+  printf 'MK61_WBMP_VIEWER_AS_APP=%s\n' "$WBMP_VIEWER_AS_APP"
+  printf 'MK61_MARKDOWN_VIEWER_AS_APP=%s\n' "$MARKDOWN_VIEWER_AS_APP"
+  printf 'MK61_CHIP8_AS_APP=%s\n' "$CHIP8_AS_APP"
   printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
   printf 'MK61_EXTERNALIZE_USBDISK=%s\n' "$(externalize_usbdisk_value)"
   printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
@@ -1520,9 +1605,12 @@ show_config() {
 choose_mcu() {
   local chosen
   chosen=$(ui_radiolist 'Контроллер' \
-    'Оба контроллера собирают resident и согласованные ABI 6 System APP для C6:' \
-    f411 'STM32F411CE · 512 KiB Flash · APP в C6' "$(mcu_state f411)" \
-    f401 'STM32F401CC · 256 KiB Flash · APP в C6' "$(mcu_state f401)") || return 1
+    'Выберите MCU; размещение каждого компонента можно изменить в ключах компиляции:' \
+    f411 'STM32F411CE · 512 KiB Flash · встроено по умолчанию' "$(mcu_state f411)" \
+    f401 'STM32F401CC · 256 KiB Flash · APP по умолчанию' "$(mcu_state f401)") || return 1
+  if [ "$chosen" != "$MCU" ]; then
+    reset_component_placements_for_mcu "$chosen"
+  fi
   MCU=$chosen
   save_config
 }
@@ -1594,6 +1682,11 @@ choose_compile_options() {
   local wbmp=$ENABLE_WBMP_VIEWER
   local markdown=$ENABLE_MARKDOWN_VIEWER
   local chip8=$ENABLE_CHIP8
+  local focal_as_app=$FOCAL_AS_APP
+  local tinybasic_as_app=$TINYBASIC_AS_APP
+  local wbmp_as_app=$WBMP_VIEWER_AS_APP
+  local markdown_as_app=$MARKDOWN_VIEWER_AS_APP
+  local chip8_as_app=$CHIP8_AS_APP
   local usb_screen=$ENABLE_USB_SCREEN
   local externalize_usbdisk=$EXTERNALIZE_USBDISK
   local fonts=$ENABLE_EXTENDED_FONT_SETTINGS
@@ -1610,13 +1703,13 @@ choose_compile_options() {
       usbdisk_app_value=$externalize_usbdisk
     fi
     selection=$(ui_menu 'Ключи компиляции' \
-      'Enter переключает ключ или открывает вложенное меню. Изменения применяются только пунктом «Сохранить».' \
+      'Enter меняет режим: встроен → APP → выкл, или открывает вложенное меню. Изменения применяются пунктом «Сохранить».' \
       "$selection" \
-      focal      "$(checkbox_marker "$focal") FOCAL · MK61_ENABLE_FOCAL" \
-      tinybasic  "$(checkbox_marker "$tinybasic") TinyBASIC · MK61_ENABLE_TINYBASIC" \
-      wbmp       "$(checkbox_marker "$wbmp") WBMP viewer без Markdown" \
-      markdown   "$(checkbox_marker "$markdown") Markdown + WBMP viewer" \
-      chip8      "$(checkbox_marker "$chip8") CHIP-8" \
+      focal      "FOCAL · $(component_mode_label "$focal" "$focal_as_app")" \
+      tinybasic  "TinyBASIC · $(component_mode_label "$tinybasic" "$tinybasic_as_app")" \
+      wbmp       "WBMP viewer без Markdown · $(component_mode_label "$wbmp" "$wbmp_as_app")" \
+      markdown   "Markdown + WBMP viewer · $(component_mode_label "$markdown" "$markdown_as_app")" \
+      chip8      "CHIP-8 · $(component_mode_label "$chip8" "$chip8_as_app")" \
       usb_screen "$(checkbox_marker "$usb_screen") USB-экран" \
       usbdisk_app "$(checkbox_marker "$usbdisk_app_value") USB-диск как USBDISK.APP" \
       fonts      "$(checkbox_marker "$fonts") Расширенные настройки шрифта" \
@@ -1625,17 +1718,17 @@ choose_compile_options() {
       save       '✓ Сохранить и вернуться') || return 1
 
     case "$selection" in
-      focal) focal=$((1 - focal)) ;;
-      tinybasic) tinybasic=$((1 - tinybasic)) ;;
+      focal) cycle_component_mode focal focal_as_app ;;
+      tinybasic) cycle_component_mode tinybasic tinybasic_as_app ;;
       wbmp)
-        wbmp=$((1 - wbmp))
+        cycle_component_mode wbmp wbmp_as_app
         [ "$wbmp" -eq 1 ] && markdown=0
         ;;
       markdown)
-        markdown=$((1 - markdown))
+        cycle_component_mode markdown markdown_as_app
         [ "$markdown" -eq 1 ] && wbmp=0
         ;;
-      chip8) chip8=$((1 - chip8)) ;;
+      chip8) cycle_component_mode chip8 chip8_as_app ;;
       usb_screen) usb_screen=$((1 - usb_screen)) ;;
       usbdisk_app)
         if [ "$MCU" = f401 ]; then
@@ -1668,6 +1761,11 @@ choose_compile_options() {
         ENABLE_WBMP_VIEWER=$wbmp
         ENABLE_MARKDOWN_VIEWER=$markdown
         ENABLE_CHIP8=$chip8
+        FOCAL_AS_APP=$focal_as_app
+        TINYBASIC_AS_APP=$tinybasic_as_app
+        WBMP_VIEWER_AS_APP=$wbmp_as_app
+        MARKDOWN_VIEWER_AS_APP=$markdown_as_app
+        CHIP8_AS_APP=$chip8_as_app
         ENABLE_USB_SCREEN=$usb_screen
         EXTERNALIZE_USBDISK=$externalize_usbdisk
         ENABLE_EXTENDED_FONT_SETTINGS=$fonts
@@ -1709,6 +1807,11 @@ f401_gcc_arguments() {
     -Wbmp "$ENABLE_WBMP_VIEWER" \
     -Markdown "$ENABLE_MARKDOWN_VIEWER" \
     -Chip8 "$ENABLE_CHIP8" \
+    -FocalAsApp "$FOCAL_AS_APP" \
+    -BasicAsApp "$TINYBASIC_AS_APP" \
+    -WbmpAsApp "$WBMP_VIEWER_AS_APP" \
+    -MarkdownAsApp "$MARKDOWN_VIEWER_AS_APP" \
+    -Chip8AsApp "$CHIP8_AS_APP" \
     -UsbScreen "$ENABLE_USB_SCREEN" \
     -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
     -UserExplorer "$ENABLE_USER_EXPLORER" \
@@ -2106,11 +2209,11 @@ build_system_app_bundle() {
     --usbdisk "$(externalize_usbdisk_value)" \
     --graphics "$(system_bundle_graphics "$profile")" \
     --ui-fonts "$(system_bundle_ui_fonts "$profile")" \
-    --focal "$ENABLE_FOCAL" \
-    --basic "$ENABLE_TINYBASIC" \
-    --wbmp "$ENABLE_WBMP_VIEWER" \
-    --markdown "$ENABLE_MARKDOWN_VIEWER" \
-    --chip8 "$ENABLE_CHIP8" \
+    --focal "$((ENABLE_FOCAL * FOCAL_AS_APP))" \
+    --basic "$((ENABLE_TINYBASIC * TINYBASIC_AS_APP))" \
+    --wbmp "$((ENABLE_WBMP_VIEWER * WBMP_VIEWER_AS_APP))" \
+    --markdown "$((ENABLE_MARKDOWN_VIEWER * MARKDOWN_VIEWER_AS_APP))" \
+    --chip8 "$((ENABLE_CHIP8 * CHIP8_AS_APP))" \
     --local-float-math "$APP_LOCAL_FLOAT"
 }
 
@@ -2199,6 +2302,11 @@ prepare_and_compile_f401_worker() {
     MK61_ENABLE_WBMP_VIEWER="$ENABLE_WBMP_VIEWER" \
     MK61_ENABLE_MARKDOWN_VIEWER="$ENABLE_MARKDOWN_VIEWER" \
     MK61_ENABLE_CHIP8="$ENABLE_CHIP8" \
+    MK61_FOCAL_AS_APP="$FOCAL_AS_APP" \
+    MK61_TINYBASIC_AS_APP="$TINYBASIC_AS_APP" \
+    MK61_WBMP_VIEWER_AS_APP="$WBMP_VIEWER_AS_APP" \
+    MK61_MARKDOWN_VIEWER_AS_APP="$MARKDOWN_VIEWER_AS_APP" \
+    MK61_CHIP8_AS_APP="$CHIP8_AS_APP" \
     MK61_ENABLE_USB_SCREEN="$ENABLE_USB_SCREEN" \
     MK61_ENABLE_EXTENDED_FONT_SETTINGS="$ENABLE_EXTENDED_FONT_SETTINGS" \
     MK61_USER_EXPLORER_SHORTCUT="$ENABLE_USER_EXPLORER" \
@@ -2222,12 +2330,12 @@ expected_system_app_names() {
   [ "$MCU" = f401 ] && printf '%s\n' SETUP.APP
   [ "$(externalize_usbdisk_value)" -eq 1 ] && printf '%s\n' USBDISK.APP
   printf '%s\n' HELP0.TXT HELP1.TXT
-  [ "$ENABLE_FOCAL" -eq 1 ] && printf '%s\n' FOCAL.APP
-  [ "$ENABLE_TINYBASIC" -eq 1 ] && printf '%s\n' BASIC.APP
-  [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
+  [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] && printf '%s\n' FOCAL.APP
+  [ "$ENABLE_TINYBASIC" -eq 1 ] && [ "$TINYBASIC_AS_APP" -eq 1 ] && printf '%s\n' BASIC.APP
+  [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && [ "$WBMP_VIEWER_AS_APP" -eq 1 ] && \
     [ "$ENABLE_MARKDOWN_VIEWER" -eq 0 ] && printf '%s\n' WBMP.APP
-  [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] && printf '%s\n' MARKDOWN.APP
-  [ "$ENABLE_CHIP8" -eq 1 ] && printf '%s\n' CHIP8.APP
+  [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] && [ "$MARKDOWN_VIEWER_AS_APP" -eq 1 ] && printf '%s\n' MARKDOWN.APP
+  [ "$ENABLE_CHIP8" -eq 1 ] && [ "$CHIP8_AS_APP" -eq 1 ] && printf '%s\n' CHIP8.APP
   return 0
 }
 
@@ -2237,14 +2345,15 @@ all_system_app_names() {
 
 system_app_enabled() {
   case "$1" in
-    FOCAL.APP) [ "$ENABLE_FOCAL" -eq 1 ] ;;
-    BASIC.APP) [ "$ENABLE_TINYBASIC" -eq 1 ] ;;
+    FOCAL.APP) [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] ;;
+    BASIC.APP) [ "$ENABLE_TINYBASIC" -eq 1 ] && [ "$TINYBASIC_AS_APP" -eq 1 ] ;;
     WBMP.APP)
       [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
+        [ "$WBMP_VIEWER_AS_APP" -eq 1 ] && \
         [ "$ENABLE_MARKDOWN_VIEWER" -eq 0 ]
       ;;
-    MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] ;;
-    CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] ;;
+    MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] && [ "$MARKDOWN_VIEWER_AS_APP" -eq 1 ] ;;
+    CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] && [ "$CHIP8_AS_APP" -eq 1 ] ;;
     SETUP.APP) [ "$MCU" = f401 ] ;;
     USBDISK.APP) [ "$(externalize_usbdisk_value)" -eq 1 ] ;;
     HELP0.TXT|HELP1.TXT) return 0 ;;

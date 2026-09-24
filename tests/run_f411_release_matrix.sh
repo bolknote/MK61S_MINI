@@ -118,11 +118,17 @@ package_system_apps() {
   local profile="$1" board_flags="$2" artifact_name="$3" build_path="$4"
   local expect_ws0010_graphics="$5"
   local focal basic markdown wbmp chip8 usb external_usbdisk graphics ui_fonts
+  local focal_app basic_app wbmp_app markdown_app chip8_app
   local bundle_name bundle
   focal="$(define_value "$board_flags" MK61_ENABLE_FOCAL 1)"
   basic="$(define_value "$board_flags" MK61_ENABLE_TINYBASIC 1)"
   markdown="$(define_value "$board_flags" MK61_ENABLE_MARKDOWN_VIEWER 1)"
   chip8="$(define_value "$board_flags" MK61_ENABLE_CHIP8 0)"
+  focal_app="$(define_value "$board_flags" MK61_FOCAL_AS_APP 0)"
+  basic_app="$(define_value "$board_flags" MK61_TINYBASIC_AS_APP 0)"
+  wbmp_app="$(define_value "$board_flags" MK61_WBMP_VIEWER_AS_APP 0)"
+  markdown_app="$(define_value "$board_flags" MK61_MARKDOWN_VIEWER_AS_APP 0)"
+  chip8_app="$(define_value "$board_flags" MK61_CHIP8_AS_APP 0)"
   usb="$(define_value "$board_flags" MK61_ENABLE_USB_SCREEN 0)"
   external_usbdisk="$(define_value "$board_flags" \
     MK61_EXTERNALIZE_USBDISK 0)"
@@ -147,17 +153,20 @@ package_system_apps() {
     --setup 0 \
     --usbdisk "$external_usbdisk" \
     --graphics "$graphics" --ui-fonts "$ui_fonts" \
-    --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
-    --markdown "$markdown" --chip8 "$chip8"
+    --focal "$((focal * focal_app))" \
+    --basic "$((basic * basic_app))" \
+    --wbmp "$((wbmp * wbmp_app))" \
+    --markdown "$((markdown * markdown_app))" \
+    --chip8 "$((chip8 * chip8_app))"
   cp "$build_path/mk61s-M.ino.bin" "$bundle/$bundle_name.bin"
   printf '%s\n' "$board_flags $platform_ram_flags $strict_flags" > "$bundle/build.flags"
   printf 'format 1\nabi 6\n' > "$bundle/build.apps"
   local expected=()
-  [[ "$focal" == 0 ]] || expected+=(FOCAL.APP)
-  [[ "$basic" == 0 ]] || expected+=(BASIC.APP)
-  [[ "$wbmp" == 0 || "$markdown" == 1 ]] || expected+=(WBMP.APP)
-  [[ "$markdown" == 0 ]] || expected+=(MARKDOWN.APP)
-  [[ "$chip8" == 0 ]] || expected+=(CHIP8.APP)
+  [[ "$focal" == 0 || "$focal_app" == 0 ]] || expected+=(FOCAL.APP)
+  [[ "$basic" == 0 || "$basic_app" == 0 ]] || expected+=(BASIC.APP)
+  [[ "$wbmp" == 0 || "$wbmp_app" == 0 || "$markdown" == 1 ]] || expected+=(WBMP.APP)
+  [[ "$markdown" == 0 || "$markdown_app" == 0 ]] || expected+=(MARKDOWN.APP)
+  [[ "$chip8" == 0 || "$chip8_app" == 0 ]] || expected+=(CHIP8.APP)
   [[ "$external_usbdisk" == 0 ]] || expected+=(USBDISK.APP)
   local file wanted expected_file
   for file in "${expected[@]}" HELP0.TXT HELP1.TXT; do

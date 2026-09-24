@@ -230,6 +230,11 @@ grep -q '^MK61_ENABLE_FOCAL=0$' <<< "$config"
 grep -q '^MK61_ENABLE_WBMP_VIEWER=0$' <<< "$config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' <<< "$config"
 grep -q '^MK61_ENABLE_CHIP8=0$' <<< "$config"
+grep -q '^MK61_FOCAL_AS_APP=0$' <<< "$config"
+grep -q '^MK61_TINYBASIC_AS_APP=0$' <<< "$config"
+grep -q '^MK61_WBMP_VIEWER_AS_APP=0$' <<< "$config"
+grep -q '^MK61_MARKDOWN_VIEWER_AS_APP=0$' <<< "$config"
+grep -q '^MK61_CHIP8_AS_APP=0$' <<< "$config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
 grep -q '^MK61_EXTERNALIZE_USBDISK=0$' <<< "$config"
 grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' <<< "$config"
@@ -249,6 +254,7 @@ f401_override=$(MK61_CONFIG_FILE="$config_file" "$tool" \
   --mcu f401 --profile mini-v3-a00 --show-config)
 grep -q '^MCU=f401$' <<< "$f401_override"
 grep -q '^MK61_EXTERNALIZE_USBDISK=1$' <<< "$f401_override"
+grep -q '^MK61_FOCAL_AS_APP=0$' <<< "$f401_override"
 
 hybrid_config="$legacy_root/hybrid.conf"
 printf '%s\n' \
@@ -260,6 +266,11 @@ printf '%s\n' \
 hybrid=$(MK61_CONFIG_FILE="$hybrid_config" "$tool" --show-config)
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$hybrid"
 grep -q '^MK61_APP_LOCAL_FLOAT_MATH=1$' <<< "$hybrid"
+grep -q '^MK61_FOCAL_AS_APP=1$' <<< "$hybrid"
+grep -q '^MK61_TINYBASIC_AS_APP=1$' <<< "$hybrid"
+grep -q '^MK61_WBMP_VIEWER_AS_APP=1$' <<< "$hybrid"
+grep -q '^MK61_MARKDOWN_VIEWER_AS_APP=1$' <<< "$hybrid"
+grep -q '^MK61_CHIP8_AS_APP=1$' <<< "$hybrid"
 grep -q -- 'COMPILE_FLAGS=.*-DMK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=1 ' <<< "$hybrid"
 grep -q -- "-LocalFloatMath.*State.AppLocalFloat" "$root/tools/.mk61-firmware/mk61-firmware.ps1"
 grep -q -- '-LocalFloatMath "$APP_LOCAL_FLOAT"' "$tool"
@@ -280,6 +291,11 @@ grep -q '^SCREEN=lcd1602-a02$' "$legacy_config"
 grep -q '^MK61_ENABLE_FOCAL=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_CHIP8=0$' "$legacy_config"
+grep -q '^MK61_FOCAL_AS_APP=0$' "$legacy_config"
+grep -q '^MK61_TINYBASIC_AS_APP=0$' "$legacy_config"
+grep -q '^MK61_WBMP_VIEWER_AS_APP=0$' "$legacy_config"
+grep -q '^MK61_MARKDOWN_VIEWER_AS_APP=0$' "$legacy_config"
+grep -q '^MK61_CHIP8_AS_APP=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' "$legacy_config"
 grep -q '^MK61_EXTERNALIZE_USBDISK=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' "$legacy_config"
@@ -299,6 +315,11 @@ printf '%s\n' \
   'MK61_ENABLE_WBMP_VIEWER=1' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=1' \
+  'MK61_FOCAL_AS_APP=1' \
+  'MK61_TINYBASIC_AS_APP=1' \
+  'MK61_WBMP_VIEWER_AS_APP=1' \
+  'MK61_MARKDOWN_VIEWER_AS_APP=1' \
+  'MK61_CHIP8_AS_APP=1' \
   'MK61_ENABLE_USB_SCREEN=1' \
   'MK61_ENABLE_LOADABLE_MODULES=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0' \
@@ -399,5 +420,39 @@ MK61_CONFIG_FILE="$external_f411_config" MK61_OUTPUT_DIR="$install_output" \
   MK61_C6_MOUNT="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 cmp "$f411_bundle/System/USBDISK.APP" "$install_mount/System/USBDISK.APP"
+
+# Component placement is independent on F411 as well: keep TinyBASIC and
+# Markdown resident, but install only FOCAL as a canonical APP.
+f411_mixed_config="$installer_root/f411-mixed.conf"
+printf '%s\n' \
+  'MCU=f411' \
+  'PLATFORM=mini-v3' \
+  'SCREEN=lcd1602-a00' \
+  'MK61_ENABLE_FOCAL=1' \
+  'MK61_ENABLE_TINYBASIC=1' \
+  'MK61_ENABLE_WBMP_VIEWER=0' \
+  'MK61_ENABLE_MARKDOWN_VIEWER=1' \
+  'MK61_ENABLE_CHIP8=0' \
+  'MK61_FOCAL_AS_APP=1' \
+  'MK61_TINYBASIC_AS_APP=0' \
+  'MK61_WBMP_VIEWER_AS_APP=0' \
+  'MK61_MARKDOWN_VIEWER_AS_APP=0' \
+  'MK61_CHIP8_AS_APP=0' \
+  'MK61_EXTERNALIZE_USBDISK=0' > "$f411_mixed_config"
+mixed_f411_selection=$(MK61_CONFIG_FILE="$f411_mixed_config" "$tool" \
+  --mcu f411 --profile mini-v3-a00 --show-config)
+mixed_f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$mixed_f411_selection")
+printf '%s\n' "$mixed_f411_flags" > "$f411_bundle/build.flags"
+rm -f "$f411_bundle/System/USBDISK.APP"
+printf 'focal-app\n' > "$f411_bundle/System/FOCAL.APP"
+MK61_CONFIG_FILE="$f411_mixed_config" MK61_OUTPUT_DIR="$install_output" \
+  MK61_C6_MOUNT="$install_mount" "$tool" \
+  --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
+cmp "$f411_bundle/System/FOCAL.APP" "$install_mount/System/FOCAL.APP"
+test ! -e "$install_mount/System/BASIC.APP"
+test ! -e "$install_mount/System/WBMP.APP"
+test ! -e "$install_mount/System/MARKDOWN.APP"
+test ! -e "$install_mount/System/CHIP8.APP"
+test ! -e "$install_mount/System/USBDISK.APP"
 
 printf 'firmware_tool_tests: ok\n'

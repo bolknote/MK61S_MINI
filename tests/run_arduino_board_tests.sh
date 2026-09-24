@@ -71,6 +71,38 @@ grep -q '^mk61_f401_app.menu.mk61_display.oled_ws0010=' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1$' \
   "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_focal.app.build.mk61_focal=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_focal.app.build.mk61_focal_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_focal.disabled.build.mk61_focal=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_basic.app.build.mk61_basic_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_basic.builtin.build.mk61_basic_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_basic.disabled.build.mk61_basic=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_documents.markdown.build.mk61_markdown_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_documents.markdown_builtin.build.mk61_markdown_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_documents.wbmp.build.mk61_wbmp_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_documents.wbmp_builtin.build.mk61_wbmp_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_documents.disabled.build.mk61_markdown=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_chip8.app.build.mk61_chip8_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_chip8.builtin.build.mk61_chip8_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_chip8.disabled.build.mk61_chip8=0$' \
+  "$target/boards.txt"
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
 grep -q '^tools.mk61Upload.upload.pattern=' "$target/platform.txt"
@@ -85,6 +117,10 @@ grep -q -- '-DMK61_F401_PRODUCT_BUILD=1' "$target/boards.txt"
 grep -q -- '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' "$target/boards.txt"
 grep -q -- '-DMK61_APP_LOCAL_FLOAT_MATH={build.mk61_app_math}' \
   "$target/boards.txt"
+for key in focal basic wbmp markdown chip8; do
+  grep -q -- "-DMK61_.*_AS_APP={build.mk61_${key}_app}" \
+    "$target/boards.txt"
+done
 ! grep -q 'mk61_user_apps' "$target/boards.txt"
 core_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.core=' \
   "$target/boards.txt" | cut -d: -f1)"
@@ -104,6 +140,11 @@ grep -q -- '--local-float-math "{build.mk61_app_math}"' \
   "$target/platform.txt"
 grep -q -- '-LocalFloatMath "{build.mk61_app_math}"' \
   "$target/platform.txt"
+grep -q -- '--focal "{build.mk61_focal_app}"' "$target/platform.txt"
+grep -q -- '--basic "{build.mk61_basic_app}"' "$target/platform.txt"
+grep -q -- '--wbmp "{build.mk61_wbmp_app}"' "$target/platform.txt"
+grep -q -- '--markdown "{build.mk61_markdown_app}"' "$target/platform.txt"
+grep -q -- '--chip8 "{build.mk61_chip8_app}"' "$target/platform.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"
@@ -354,7 +395,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   cp -R "$root/code/." "$shell_sketchbook/sketches/code/"
   ln -s "$root/tools" "$shell_sketchbook/sketches/tools"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build" "$shell_sketchbook/sketches/code"
 
   bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f401"
@@ -411,7 +452,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-all-options"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=enabled,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-all-options" "$shell_sketchbook/sketches/code"
   for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP SETUP.APP \
       USBDISK.APP; do
@@ -437,7 +478,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-classic"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=enabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-classic" "$shell_sketchbook/sketches/code"
   classic_bundle="$shell_sketchbook/sketches/binary/mk61s-M-classic-v2-uc1609-f401"
   test -s "$classic_bundle/mk61s-M-classic-v2-uc1609-f401.bin"

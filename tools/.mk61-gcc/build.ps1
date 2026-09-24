@@ -23,6 +23,21 @@ param(
     [string]$Chip8 = '0',
 
     [ValidateSet('0', '1')]
+    [string]$FocalAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$BasicAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$WbmpAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$MarkdownAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Chip8AsApp = '1',
+
+    [ValidateSet('0', '1')]
     [string]$UsbScreen = '0',
 
     [ValidateSet('0', '1')]
@@ -90,6 +105,9 @@ System APP:
   -Wbmp auto|0|1   default auto; standalone viewer when Markdown=0
   -Markdown 0|1    default 1; handles both T2 and I1 on graphics
   -Chip8 0|1       default 0
+  -FocalAsApp 0|1, -BasicAsApp 0|1, -WbmpAsApp 0|1,
+  -MarkdownAsApp 0|1, -Chip8AsApp 0|1
+                     0 embeds an enabled component; 1 packages it as APP
 
 Firmware options:
   -UsbScreen 0|1
@@ -389,6 +407,11 @@ try {
     if ($LocalFloatMath -eq '1' -and $MathBackend -ne '1') {
         Stop-GccBuild '-LocalFloatMath 1 requires -MathBackend 1 (CORE)'
     }
+    $focalApp = if ($Focal -eq '1' -and $FocalAsApp -eq '1') { '1' } else { '0' }
+    $basicApp = if ($Basic -eq '1' -and $BasicAsApp -eq '1') { '1' } else { '0' }
+    $wbmpApp = if ($Wbmp -eq '1' -and $WbmpAsApp -eq '1') { '1' } else { '0' }
+    $markdownApp = if ($Markdown -eq '1' -and $MarkdownAsApp -eq '1') { '1' } else { '0' }
+    $chip8App = if ($Chip8 -eq '1' -and $Chip8AsApp -eq '1') { '1' } else { '0' }
     $systemRequested = $true
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
     $productBuild = if ($null -ne $releaseCaseInfo -and
@@ -578,6 +601,11 @@ try {
         "-DMK61_ENABLE_WBMP_VIEWER=$Wbmp",
         "-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown",
         "-DMK61_ENABLE_CHIP8=$Chip8",
+        "-DMK61_FOCAL_AS_APP=$FocalAsApp",
+        "-DMK61_TINYBASIC_AS_APP=$BasicAsApp",
+        "-DMK61_WBMP_VIEWER_AS_APP=$WbmpAsApp",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=$MarkdownAsApp",
+        "-DMK61_CHIP8_AS_APP=$Chip8AsApp",
         "-DMK61_ENABLE_USB_SCREEN=$UsbScreen",
         '-DMK61_EXTERNALIZE_USBDISK=1',
         "-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics",
@@ -660,11 +688,11 @@ try {
             '-ResidentElf', $residentElf,
             '-CompileCommands', $compileCommands,
             '-OutputDirectory', (Join-Path $stage 'System'),
-            '-Focal', $Focal,
-            '-Basic', $Basic,
-            '-Wbmp', $Wbmp,
-            '-Markdown', $Markdown,
-            '-Chip8', $Chip8,
+            '-Focal', $focalApp,
+            '-Basic', $basicApp,
+            '-Wbmp', $wbmpApp,
+            '-Markdown', $markdownApp,
+            '-Chip8', $chip8App,
             '-LocalFloatMath', $LocalFloatMath,
             '-Graphics', $(if ($wbmpGraphics) { '1' } else { '0' }),
             '-UiFonts', $uiFonts)
@@ -708,6 +736,11 @@ try {
     $flagValues.Add("-DMK61_ENABLE_WBMP_VIEWER=$Wbmp")
     $flagValues.Add("-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown")
     $flagValues.Add("-DMK61_ENABLE_CHIP8=$Chip8")
+    $flagValues.Add("-DMK61_FOCAL_AS_APP=$FocalAsApp")
+    $flagValues.Add("-DMK61_TINYBASIC_AS_APP=$BasicAsApp")
+    $flagValues.Add("-DMK61_WBMP_VIEWER_AS_APP=$WbmpAsApp")
+    $flagValues.Add("-DMK61_MARKDOWN_VIEWER_AS_APP=$MarkdownAsApp")
+    $flagValues.Add("-DMK61_CHIP8_AS_APP=$Chip8AsApp")
     $flagValues.Add("-DMK61_ENABLE_USB_SCREEN=$UsbScreen")
     $flagValues.Add('-DMK61_EXTERNALIZE_USBDISK=1')
     $flagValues.Add("-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics")

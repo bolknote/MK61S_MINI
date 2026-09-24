@@ -90,6 +90,8 @@ Assert-True ($helpText -match '-Check\s+validate dependencies') `
     'help does not expose dependency preflight'
 Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
     'help does not expose the Markdown System APP'
+Assert-True ($helpText -match '-FocalAsApp 0\|1.+-BasicAsApp 0\|1') `
+    'help does not expose independent component placement'
 Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
 Assert-True ($helpText -match '-ProductBuild 0\|1') `
@@ -184,6 +186,15 @@ foreach ($section in @('_mk61_data', '_mk61_bss', '_mk61_noinit')) {
 }
 Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
     'CMake build does not forward the Markdown selection'
+foreach ($setting in @(
+    'MK61_FOCAL_AS_APP', 'MK61_TINYBASIC_AS_APP',
+    'MK61_WBMP_VIEWER_AS_APP', 'MK61_MARKDOWN_VIEWER_AS_APP',
+    'MK61_CHIP8_AS_APP')) {
+    Assert-True ($cmakeText -match [regex]::Escape($setting)) `
+        "CMake build does not forward $setting"
+    Assert-True ($backendText -match [regex]::Escape($setting)) `
+        "direct GCC backend does not expose $setting"
+}
 Assert-True ($cmakeText -match 'MK61_ENABLE_LOADABLE_MODULES=1') `
     'CMake build does not enable the unified APP runtime'
 Assert-True ($cmakeText -match
@@ -247,6 +258,11 @@ foreach ($setting in @(
     'MK61_ENABLE_WBMP_VIEWER=0',
     'MK61_ENABLE_MARKDOWN_VIEWER=1',
     'MK61_ENABLE_CHIP8=1',
+    'MK61_FOCAL_AS_APP=1',
+    'MK61_TINYBASIC_AS_APP=1',
+    'MK61_WBMP_VIEWER_AS_APP=1',
+    'MK61_MARKDOWN_VIEWER_AS_APP=1',
+    'MK61_CHIP8_AS_APP=1',
     'MK61_ENABLE_USB_SCREEN=1',
     'MK61_EXTERNALIZE_USBDISK=1',
     'MK61_ENABLE_LOADABLE_MODULES=1',
@@ -269,6 +285,10 @@ Assert-True ($f401ReleaseMatrixText -match
     'F401 release matrix does not enumerate the shared contract'
 Assert-True ($f401ReleaseMatrixText -match '-ReleaseCase "\$case_id"') `
     'F401 GCC builds are not bound to their selected release case'
+Assert-True ($f401ReleaseMatrixText -match
+    '(?s)-FocalAsApp 1.+?-BasicAsApp 1.+?-WbmpAsApp 1.+?' +
+    '-MarkdownAsApp 1.+?-Chip8AsApp 1') `
+    'F401 release matrix does not pin APP placement explicitly'
 Assert-True ($releaseWorkflowText -match
     '(?s)run: tests/run_f401_release_matrix\.sh.+?' +
     'find \. -type f ! -name SHA256SUMS\.txt -print0.+?' +

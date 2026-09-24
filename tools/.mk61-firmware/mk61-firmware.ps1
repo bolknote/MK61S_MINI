@@ -86,6 +86,11 @@ $script:State = [ordered]@{
     EnableWbmp = 0
     EnableMarkdown = 1
     EnableChip8 = 0
+    FocalAsApp = -1
+    TinyBasicAsApp = -1
+    WbmpAsApp = -1
+    MarkdownAsApp = -1
+    Chip8AsApp = -1
     EnableUsbScreen = 0
     ExternalizeUsbDisk = 0
     EnableFonts = 0
@@ -197,8 +202,8 @@ function Test-Mcu { param([string]$Id) return $Id -eq 'f411' -or $Id -eq 'f401' 
 function Get-McuLabel {
     param([string]$Id)
     switch ($Id) {
-        'f411' { return 'STM32F411CE · 512 KiB Flash · APP в C6' }
-        'f401' { return 'STM32F401CC · 256 KiB Flash · APP в C6' }
+        'f411' { return 'STM32F411CE · 512 KiB Flash · встроено по умолчанию' }
+        'f401' { return 'STM32F401CC · 256 KiB Flash · APP по умолчанию' }
     }
     return 'не выбран'
 }
@@ -292,6 +297,11 @@ function Get-CompileOptionFlags {
         "-DMK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
         "-DMK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "-DMK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
+        "-DMK61_FOCAL_AS_APP=$($script:State.FocalAsApp)"
+        "-DMK61_TINYBASIC_AS_APP=$($script:State.TinyBasicAsApp)"
+        "-DMK61_WBMP_VIEWER_AS_APP=$($script:State.WbmpAsApp)"
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=$($script:State.MarkdownAsApp)"
+        "-DMK61_CHIP8_AS_APP=$($script:State.Chip8AsApp)"
         "-DMK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
         "-DMK61_EXTERNALIZE_USBDISK=$(Get-ExternalizeUsbDiskValue)"
         "-DMK61_ENABLE_LOADABLE_MODULES=1"
@@ -314,18 +324,57 @@ function Get-Checkbox {
     return $script:Glyphs.CheckOff
 }
 
+function Get-ComponentModeLabel {
+    param([int]$Enabled, [int]$AsApp)
+    if ($Enabled -eq 0) { return 'выкл' }
+    if ($AsApp -eq 1) { return 'APP' }
+    return 'встроен'
+}
+
+function Get-NextComponentMode {
+    param([int]$Enabled, [int]$AsApp)
+    if ($Enabled -eq 1 -and $AsApp -eq 0) {
+        return [pscustomobject]@{ Enabled = 1; AsApp = 1 }
+    }
+    if ($Enabled -eq 1) {
+        return [pscustomobject]@{ Enabled = 0; AsApp = 0 }
+    }
+    return [pscustomobject]@{ Enabled = 1; AsApp = 0 }
+}
+
+function Normalize-ComponentPlacements {
+    $default = if ($script:State.Mcu -eq 'f411') { 0 } else { 1 }
+    foreach ($name in @(
+        'FocalAsApp', 'TinyBasicAsApp', 'WbmpAsApp',
+        'MarkdownAsApp', 'Chip8AsApp')) {
+        if ($script:State[$name] -notin @(0, 1)) {
+            $script:State[$name] = $default
+        }
+    }
+}
+
+function Set-DefaultComponentPlacements {
+    param([string]$Mcu)
+    $default = if ($Mcu -eq 'f411') { 0 } else { 1 }
+    $script:State.FocalAsApp = $default
+    $script:State.TinyBasicAsApp = $default
+    $script:State.WbmpAsApp = $default
+    $script:State.MarkdownAsApp = $default
+    $script:State.Chip8AsApp = $default
+}
+
 function Get-ExternalizeUsbDiskValue {
     if ($script:State.Mcu -eq 'f401') { return 1 }
     return [int]$script:State.ExternalizeUsbDisk
 }
 
 function Get-CompileOptionsSummary {
-    return ('{0} FOCAL · {1} BASIC · {2} WBMP · {3} MD · {4} CHIP-8 · {5} USB · {6} MSCAPP · {7} FONT · {8} USER · MATH {9}' -f
-        (Get-Checkbox $script:State.EnableFocal),
-        (Get-Checkbox $script:State.EnableTinyBasic),
-        (Get-Checkbox $script:State.EnableWbmp),
-        (Get-Checkbox $script:State.EnableMarkdown),
-        (Get-Checkbox $script:State.EnableChip8),
+    return ('FOCAL:{0} · BASIC:{1} · WBMP:{2} · MD:{3} · CHIP-8:{4} · {5} USB · {6} MSCAPP · {7} FONT · {8} USER · MATH {9}' -f
+        (Get-ComponentModeLabel $script:State.EnableFocal $script:State.FocalAsApp),
+        (Get-ComponentModeLabel $script:State.EnableTinyBasic $script:State.TinyBasicAsApp),
+        (Get-ComponentModeLabel $script:State.EnableWbmp $script:State.WbmpAsApp),
+        (Get-ComponentModeLabel $script:State.EnableMarkdown $script:State.MarkdownAsApp),
+        (Get-ComponentModeLabel $script:State.EnableChip8 $script:State.Chip8AsApp),
         (Get-Checkbox $script:State.EnableUsbScreen),
         (Get-Checkbox (Get-ExternalizeUsbDiskValue)),
         (Get-Checkbox $script:State.EnableFonts),
@@ -351,11 +400,11 @@ function Get-MathBackendLabelFor {
 function Get-CompileOptionsDetails {
     $mathText = "Математика: $(Get-MathBackendLabel) (MK61_MATH_BACKEND=$($script:State.MathBackend), MK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat))"
     return @(
-        "$(Get-Checkbox $script:State.EnableFocal) FOCAL (MK61_ENABLE_FOCAL)"
-        "$(Get-Checkbox $script:State.EnableTinyBasic) TinyBASIC (MK61_ENABLE_TINYBASIC)"
-        "$(Get-Checkbox $script:State.EnableWbmp) WBMP viewer без Markdown (MK61_ENABLE_WBMP_VIEWER)"
-        "$(Get-Checkbox $script:State.EnableMarkdown) Markdown + WBMP viewer (MK61_ENABLE_MARKDOWN_VIEWER)"
-        "$(Get-Checkbox $script:State.EnableChip8) CHIP-8 (MK61_ENABLE_CHIP8)"
+        "FOCAL: $(Get-ComponentModeLabel $script:State.EnableFocal $script:State.FocalAsApp) (MK61_ENABLE_FOCAL, MK61_FOCAL_AS_APP)"
+        "TinyBASIC: $(Get-ComponentModeLabel $script:State.EnableTinyBasic $script:State.TinyBasicAsApp) (MK61_ENABLE_TINYBASIC, MK61_TINYBASIC_AS_APP)"
+        "WBMP viewer без Markdown: $(Get-ComponentModeLabel $script:State.EnableWbmp $script:State.WbmpAsApp) (MK61_ENABLE_WBMP_VIEWER, MK61_WBMP_VIEWER_AS_APP)"
+        "Markdown + WBMP viewer: $(Get-ComponentModeLabel $script:State.EnableMarkdown $script:State.MarkdownAsApp) (MK61_ENABLE_MARKDOWN_VIEWER, MK61_MARKDOWN_VIEWER_AS_APP)"
+        "CHIP-8: $(Get-ComponentModeLabel $script:State.EnableChip8 $script:State.Chip8AsApp) (MK61_ENABLE_CHIP8, MK61_CHIP8_AS_APP)"
         "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
         "$(Get-Checkbox (Get-ExternalizeUsbDiskValue)) USB-диск как USBDISK.APP (MK61_EXTERNALIZE_USBDISK)"
         "$($script:Glyphs.CheckOn) единый APP runtime ABI 6 (MK61_ENABLE_LOADABLE_MODULES)"
@@ -381,6 +430,7 @@ function Normalize-MathSelection {
 }
 
 function Save-Config {
+    Normalize-ComponentPlacements
     Normalize-ViewerSelection
     Normalize-MathSelection
     Sync-ProfileFromHardware
@@ -399,6 +449,11 @@ function Save-Config {
         "MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
         "MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
         "MK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
+        "MK61_FOCAL_AS_APP=$($script:State.FocalAsApp)"
+        "MK61_TINYBASIC_AS_APP=$($script:State.TinyBasicAsApp)"
+        "MK61_WBMP_VIEWER_AS_APP=$($script:State.WbmpAsApp)"
+        "MK61_MARKDOWN_VIEWER_AS_APP=$($script:State.MarkdownAsApp)"
+        "MK61_CHIP8_AS_APP=$($script:State.Chip8AsApp)"
         "MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
         "MK61_EXTERNALIZE_USBDISK=$($script:State.ExternalizeUsbDisk)"
         'MK61_ENABLE_LOADABLE_MODULES=1'
@@ -422,6 +477,7 @@ function Load-Config {
                 [void](Set-HardwareFromProfile $legacy)
             }
         }
+        Normalize-ComponentPlacements
         if ((Test-Platform $script:State.Platform) -or (Test-Screen $script:State.Screen)) {
             Save-Config
         }
@@ -449,6 +505,11 @@ function Load-Config {
             'MK61_ENABLE_WBMP_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableWbmp = [int]$value } }
             'MK61_ENABLE_MARKDOWN_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableMarkdown = [int]$value } }
             'MK61_ENABLE_CHIP8' { if (Test-BooleanValue $value) { $script:State.EnableChip8 = [int]$value } }
+            'MK61_FOCAL_AS_APP' { if (Test-BooleanValue $value) { $script:State.FocalAsApp = [int]$value } }
+            'MK61_TINYBASIC_AS_APP' { if (Test-BooleanValue $value) { $script:State.TinyBasicAsApp = [int]$value } }
+            'MK61_WBMP_VIEWER_AS_APP' { if (Test-BooleanValue $value) { $script:State.WbmpAsApp = [int]$value } }
+            'MK61_MARKDOWN_VIEWER_AS_APP' { if (Test-BooleanValue $value) { $script:State.MarkdownAsApp = [int]$value } }
+            'MK61_CHIP8_AS_APP' { if (Test-BooleanValue $value) { $script:State.Chip8AsApp = [int]$value } }
             'MK61_ENABLE_USB_SCREEN' { if (Test-BooleanValue $value) { $script:State.EnableUsbScreen = [int]$value } }
             'MK61_EXTERNALIZE_USBDISK' { if (Test-BooleanValue $value) { $script:State.ExternalizeUsbDisk = [int]$value } }
             'MK61_ENABLE_LOADABLE_MODULES' { }
@@ -460,9 +521,10 @@ function Load-Config {
         }
     }
 
+    if (-not $script:State.CliMcu) { $script:State.Mcu = $savedMcu }
+    Normalize-ComponentPlacements
     Normalize-ViewerSelection
     Normalize-MathSelection
-    if (-not $script:State.CliMcu) { $script:State.Mcu = $savedMcu }
     if ($script:State.CliProfile) {
         [void](Set-HardwareFromProfile $script:State.Profile)
         return
@@ -1165,14 +1227,20 @@ function Get-ExpectedSystemAppNames {
     }
     if ((Get-ExternalizeUsbDiskValue) -eq 1) { $names.Add('USBDISK.APP') }
     foreach ($name in @('HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
-    if ($script:State.EnableFocal -eq 1) { $names.Add('FOCAL.APP') }
-    if ($script:State.EnableTinyBasic -eq 1) { $names.Add('BASIC.APP') }
+    if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) {
+        $names.Add('FOCAL.APP')
+    }
+    if ($script:State.EnableTinyBasic -eq 1 -and
+        $script:State.TinyBasicAsApp -eq 1) { $names.Add('BASIC.APP') }
     if ($script:State.EnableWbmp -eq 1 -and
+        $script:State.WbmpAsApp -eq 1 -and
         $script:State.EnableMarkdown -eq 0) {
         $names.Add('WBMP.APP')
     }
-    if ($script:State.EnableMarkdown -eq 1) { $names.Add('MARKDOWN.APP') }
-    if ($script:State.EnableChip8 -eq 1) { $names.Add('CHIP8.APP') }
+    if ($script:State.EnableMarkdown -eq 1 -and
+        $script:State.MarkdownAsApp -eq 1) { $names.Add('MARKDOWN.APP') }
+    if ($script:State.EnableChip8 -eq 1 -and
+        $script:State.Chip8AsApp -eq 1) { $names.Add('CHIP8.APP') }
     return $names.ToArray()
 }
 
@@ -1226,6 +1294,11 @@ function Get-F401GccOptionArguments {
         '-Wbmp', [string]$script:State.EnableWbmp,
         '-Markdown', [string]$script:State.EnableMarkdown,
         '-Chip8', [string]$script:State.EnableChip8,
+        '-FocalAsApp', [string]$script:State.FocalAsApp,
+        '-BasicAsApp', [string]$script:State.TinyBasicAsApp,
+        '-WbmpAsApp', [string]$script:State.WbmpAsApp,
+        '-MarkdownAsApp', [string]$script:State.MarkdownAsApp,
+        '-Chip8AsApp', [string]$script:State.Chip8AsApp,
         '-UsbScreen', [string]$script:State.EnableUsbScreen,
         '-ExtendedFontSettings', [string]$script:State.EnableFonts,
         '-UserExplorer', [string]$script:State.EnableExplorer,
@@ -1870,18 +1943,21 @@ function Choose-Mcu {
     $items = @(
         [pscustomobject]@{
             Tag = 'f411'
-            Label = 'STM32F411CE · 512 KiB Flash · APP в C6'
+            Label = 'STM32F411CE · 512 KiB Flash · встроено по умолчанию'
             State = if ($script:State.Mcu -eq 'f411') { 'on' } else { 'off' }
         }
         [pscustomobject]@{
             Tag = 'f401'
-            Label = 'STM32F401CC · 256 KiB Flash · APP в C6'
+            Label = 'STM32F401CC · 256 KiB Flash · APP по умолчанию'
             State = if ($script:State.Mcu -eq 'f401') { 'on' } else { 'off' }
         }
     )
     $chosen = Show-RadioList 'Контроллер' `
-        'Оба контроллера собирают resident и согласованные ABI 6 System APP для C6:' $items
+        'Выберите MCU; размещение каждого компонента можно изменить в ключах компиляции:' $items
     if ([string]::IsNullOrEmpty($chosen)) { return $false }
+    if ($chosen -ne $script:State.Mcu) {
+        Set-DefaultComponentPlacements $chosen
+    }
     $script:State.Mcu = $chosen
     Save-Config
     return $true
@@ -1914,6 +1990,11 @@ function Choose-CompileOptions {
     [int]$wbmp = $script:State.EnableWbmp
     [int]$markdown = $script:State.EnableMarkdown
     [int]$chip8 = $script:State.EnableChip8
+    [int]$focalAsApp = $script:State.FocalAsApp
+    [int]$tinyBasicAsApp = $script:State.TinyBasicAsApp
+    [int]$wbmpAsApp = $script:State.WbmpAsApp
+    [int]$markdownAsApp = $script:State.MarkdownAsApp
+    [int]$chip8AsApp = $script:State.Chip8AsApp
     [int]$usbScreen = $script:State.EnableUsbScreen
     [int]$externalizeUsbDisk = $script:State.ExternalizeUsbDisk
     [int]$fonts = $script:State.EnableFonts
@@ -1929,11 +2010,11 @@ function Choose-CompileOptions {
             $externalizeUsbDisk
         }
         $items = @(
-            [pscustomobject]@{ Tag = 'focal'; Label = "$(Get-Checkbox $focal) FOCAL · MK61_ENABLE_FOCAL" }
-            [pscustomobject]@{ Tag = 'tinybasic'; Label = "$(Get-Checkbox $tinyBasic) TinyBASIC · MK61_ENABLE_TINYBASIC" }
-            [pscustomobject]@{ Tag = 'wbmp'; Label = "$(Get-Checkbox $wbmp) WBMP viewer без Markdown" }
-            [pscustomobject]@{ Tag = 'markdown'; Label = "$(Get-Checkbox $markdown) Markdown + WBMP viewer" }
-            [pscustomobject]@{ Tag = 'chip8'; Label = "$(Get-Checkbox $chip8) CHIP-8" }
+            [pscustomobject]@{ Tag = 'focal'; Label = "FOCAL · $(Get-ComponentModeLabel $focal $focalAsApp)" }
+            [pscustomobject]@{ Tag = 'tinybasic'; Label = "TinyBASIC · $(Get-ComponentModeLabel $tinyBasic $tinyBasicAsApp)" }
+            [pscustomobject]@{ Tag = 'wbmp'; Label = "WBMP viewer без Markdown · $(Get-ComponentModeLabel $wbmp $wbmpAsApp)" }
+            [pscustomobject]@{ Tag = 'markdown'; Label = "Markdown + WBMP viewer · $(Get-ComponentModeLabel $markdown $markdownAsApp)" }
+            [pscustomobject]@{ Tag = 'chip8'; Label = "CHIP-8 · $(Get-ComponentModeLabel $chip8 $chip8AsApp)" }
             [pscustomobject]@{ Tag = 'usb_screen'; Label = "$(Get-Checkbox $usbScreen) USB-экран" }
             [pscustomobject]@{ Tag = 'usbdisk_app'; Label = "$(Get-Checkbox $usbDiskAppValue) USB-диск как USBDISK.APP" }
             [pscustomobject]@{ Tag = 'fonts'; Label = "$(Get-Checkbox $fonts) Расширенные настройки шрифта" }
@@ -1942,23 +2023,34 @@ function Choose-CompileOptions {
             [pscustomobject]@{ Tag = 'save'; Label = "$($script:Glyphs.MenuCheck) Сохранить и вернуться" }
         )
         $choice = Show-Menu 'Ключи компиляции' `
-            'Enter переключает ключ или открывает вложенное меню. Изменения применяются только пунктом «Сохранить».' `
+            'Enter меняет режим: встроен → APP → выкл, или открывает вложенное меню. Изменения применяются пунктом «Сохранить».' `
             $items $selected
         if ([string]::IsNullOrEmpty($choice)) { return $false }
         $selected = $choice
 
         switch ($choice) {
-            'focal' { $focal = 1 - $focal }
-            'tinybasic' { $tinyBasic = 1 - $tinyBasic }
+            'focal' {
+                $next = Get-NextComponentMode $focal $focalAsApp
+                $focal = $next.Enabled; $focalAsApp = $next.AsApp
+            }
+            'tinybasic' {
+                $next = Get-NextComponentMode $tinyBasic $tinyBasicAsApp
+                $tinyBasic = $next.Enabled; $tinyBasicAsApp = $next.AsApp
+            }
             'wbmp' {
-                $wbmp = 1 - $wbmp
+                $next = Get-NextComponentMode $wbmp $wbmpAsApp
+                $wbmp = $next.Enabled; $wbmpAsApp = $next.AsApp
                 if ($wbmp -eq 1) { $markdown = 0 }
             }
             'markdown' {
-                $markdown = 1 - $markdown
+                $next = Get-NextComponentMode $markdown $markdownAsApp
+                $markdown = $next.Enabled; $markdownAsApp = $next.AsApp
                 if ($markdown -eq 1) { $wbmp = 0 }
             }
-            'chip8' { $chip8 = 1 - $chip8 }
+            'chip8' {
+                $next = Get-NextComponentMode $chip8 $chip8AsApp
+                $chip8 = $next.Enabled; $chip8AsApp = $next.AsApp
+            }
             'usb_screen' { $usbScreen = 1 - $usbScreen }
             'usbdisk_app' {
                 if ($script:State.Mcu -eq 'f401') {
@@ -1988,6 +2080,11 @@ function Choose-CompileOptions {
                 $script:State.EnableWbmp = $wbmp
                 $script:State.EnableMarkdown = $markdown
                 $script:State.EnableChip8 = $chip8
+                $script:State.FocalAsApp = $focalAsApp
+                $script:State.TinyBasicAsApp = $tinyBasicAsApp
+                $script:State.WbmpAsApp = $wbmpAsApp
+                $script:State.MarkdownAsApp = $markdownAsApp
+                $script:State.Chip8AsApp = $chip8AsApp
                 $script:State.EnableUsbScreen = $usbScreen
                 $script:State.ExternalizeUsbDisk = $externalizeUsbDisk
                 $script:State.EnableFonts = $fonts
@@ -2069,6 +2166,11 @@ function Invoke-F401CustomBundleBuild {
         MK61_ENABLE_WBMP_VIEWER = [string]$script:State.EnableWbmp
         MK61_ENABLE_MARKDOWN_VIEWER = [string]$script:State.EnableMarkdown
         MK61_ENABLE_CHIP8 = [string]$script:State.EnableChip8
+        MK61_FOCAL_AS_APP = [string]$script:State.FocalAsApp
+        MK61_TINYBASIC_AS_APP = [string]$script:State.TinyBasicAsApp
+        MK61_WBMP_VIEWER_AS_APP = [string]$script:State.WbmpAsApp
+        MK61_MARKDOWN_VIEWER_AS_APP = [string]$script:State.MarkdownAsApp
+        MK61_CHIP8_AS_APP = [string]$script:State.Chip8AsApp
         MK61_ENABLE_USB_SCREEN = [string]$script:State.EnableUsbScreen
         MK61_ENABLE_LOADABLE_MODULES = '1'
         MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
@@ -2152,11 +2254,11 @@ function Invoke-SystemAppBundleBuild {
             '--setup', $(if ($script:State.Mcu -eq 'f411') { '0' } else { '1' }),
             '--usbdisk', [string](Get-ExternalizeUsbDiskValue),
             '--ui-fonts', $uiFonts,
-            '--focal', [string]$script:State.EnableFocal,
-            '--basic', [string]$script:State.EnableTinyBasic,
-            '--wbmp', [string]$script:State.EnableWbmp,
-            '--markdown', [string]$script:State.EnableMarkdown,
-            '--chip8', [string]$script:State.EnableChip8,
+            '--focal', $(if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) { '1' } else { '0' }),
+            '--basic', $(if ($script:State.EnableTinyBasic -eq 1 -and $script:State.TinyBasicAsApp -eq 1) { '1' } else { '0' }),
+            '--wbmp', $(if ($script:State.EnableWbmp -eq 1 -and $script:State.WbmpAsApp -eq 1) { '1' } else { '0' }),
+            '--markdown', $(if ($script:State.EnableMarkdown -eq 1 -and $script:State.MarkdownAsApp -eq 1) { '1' } else { '0' }),
+            '--chip8', $(if ($script:State.EnableChip8 -eq 1 -and $script:State.Chip8AsApp -eq 1) { '1' } else { '0' }),
             '--local-float-math', [string]$script:State.AppLocalFloat))
     return Invoke-ExternalWithProgress 'System APP' `
         'Собираю единый ABI 6 комплект' $script:LastLog 'indeterminate' `
@@ -2704,6 +2806,11 @@ function Show-Config {
     [Console]::WriteLine("MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)")
     [Console]::WriteLine("MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)")
     [Console]::WriteLine("MK61_ENABLE_CHIP8=$($script:State.EnableChip8)")
+    [Console]::WriteLine("MK61_FOCAL_AS_APP=$($script:State.FocalAsApp)")
+    [Console]::WriteLine("MK61_TINYBASIC_AS_APP=$($script:State.TinyBasicAsApp)")
+    [Console]::WriteLine("MK61_WBMP_VIEWER_AS_APP=$($script:State.WbmpAsApp)")
+    [Console]::WriteLine("MK61_MARKDOWN_VIEWER_AS_APP=$($script:State.MarkdownAsApp)")
+    [Console]::WriteLine("MK61_CHIP8_AS_APP=$($script:State.Chip8AsApp)")
     [Console]::WriteLine("MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)")
     [Console]::WriteLine("MK61_EXTERNALIZE_USBDISK=$(Get-ExternalizeUsbDiskValue)")
     [Console]::WriteLine('MK61_ENABLE_LOADABLE_MODULES=1')
@@ -2806,7 +2913,8 @@ Profiles:
   classic-v2, classic-v3, 40th
 
 MCU:
-  f411 (512 KiB Flash) or f401 (256 KiB Flash); both use /System APP
+  f411 (512 KiB Flash, components resident by default) or f401
+  (256 KiB Flash, components as /System APP by default)
 
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,

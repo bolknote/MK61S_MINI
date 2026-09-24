@@ -115,7 +115,7 @@ arduino_ide_job="$(sed -n \
   '/^  arduino-ide-windows:/,/^  build-release:/p' "$release_workflow")"
 for required in \
     'mk61_platform=mini_v2,mk61_display=lcd_a00' \
-    'mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown' \
+    'mk61_focal=app,mk61_basic=app,mk61_documents=markdown' \
     "'FOCAL.APP' = 1" \
     "'BASIC.APP' = 2" \
     "'MARKDOWN.APP' = 6" \
@@ -126,7 +126,10 @@ for required in \
     '-DREVISION_V2' \
     '-DMK61_ENABLE_FOCAL=1' \
     '-DMK61_ENABLE_TINYBASIC=1' \
-    '-DMK61_ENABLE_MARKDOWN_VIEWER=1'; do
+    '-DMK61_ENABLE_MARKDOWN_VIEWER=1' \
+    '-DMK61_FOCAL_AS_APP=1' \
+    '-DMK61_TINYBASIC_AS_APP=1' \
+    '-DMK61_MARKDOWN_VIEWER_AS_APP=1'; do
   printf '%s\n' "$arduino_ide_job" | grep -Fq -- "$required" ||
     fail "Windows Arduino IDE V2 job is missing: $required"
 done

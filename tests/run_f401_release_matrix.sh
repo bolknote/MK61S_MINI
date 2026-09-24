@@ -54,6 +54,11 @@ build_group() {
       -Wbmp "$wbmp" \
       -Markdown "$markdown" \
       -Chip8 "$chip8" \
+      -FocalAsApp 1 \
+      -BasicAsApp 1 \
+      -WbmpAsApp 1 \
+      -MarkdownAsApp 1 \
+      -Chip8AsApp 1 \
       -UsbScreen "$usb_screen" \
       -Ws0010Graphics "$ws0010_graphics" \
       -ExtendedFontSettings "$extended_font" \
@@ -123,6 +128,11 @@ PY
           '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' \
           "-DMK61_PORTABLE_UI_FONTS=$expected_ui_fonts" \
           '-DMK61_ENABLE_LOADABLE_MODULES=1' \
+          '-DMK61_FOCAL_AS_APP=1' \
+          '-DMK61_TINYBASIC_AS_APP=1' \
+          '-DMK61_WBMP_VIEWER_AS_APP=1' \
+          '-DMK61_MARKDOWN_VIEWER_AS_APP=1' \
+          '-DMK61_CHIP8_AS_APP=1' \
           "-DMK61_MATH_BACKEND=$math_backend" \
           "-DMK61_ENABLE_LTO=$lto"; do
         grep -Fq -- "$flag" "$bundle_root/build.flags" ||

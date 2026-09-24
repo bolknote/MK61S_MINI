@@ -312,8 +312,11 @@
 
 // Все внешние APP используют один runtime и ABI: FOCAL, TinyBASIC,
 // просмотрщики, CHIP-8 и обычные APPLICATION отличаются только Kind и
-// способом поиска файла. SETUP встроен в resident на F411, но остаётся
-// внешним APP на F401.
+// способом поиска файла. Каждый опциональный компонент имеет два
+// ортогональных ключа: MK61_ENABLE_* включает функцию, *_AS_APP
+// выбирает APP вместо resident. Так получаются три режима: выключен,
+// встроен или APP. F411 по умолчанию встраивает включённые функции; другие
+// MCU, в том числе F401, по умолчанию выносят их в APP.
 #ifndef MK61_ENABLE_LOADABLE_MODULES
   #define MK61_ENABLE_LOADABLE_MODULES 1
 #endif
@@ -326,7 +329,45 @@
 // IDE не запускает post-build для /System, а запаса Flash на F411 достаточно.
 // На F401 он остаётся внешним, чтобы сохранить запас Flash.
 #ifdef MK61_EXTERNALIZE_SYSTEM_APPS
-  #error "MK61_EXTERNALIZE_SYSTEM_APPS was removed; use MK61_EXTERNALIZE_USBDISK"
+  #error "MK61_EXTERNALIZE_SYSTEM_APPS was removed; use per-component *_AS_APP flags"
+#endif
+
+#if defined(STM32F411xE)
+  #define MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP 0
+#else
+  #define MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP 1
+#endif
+
+#ifndef MK61_FOCAL_AS_APP
+  #define MK61_FOCAL_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_TINYBASIC_AS_APP
+  #define MK61_TINYBASIC_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_WBMP_VIEWER_AS_APP
+  #define MK61_WBMP_VIEWER_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_MARKDOWN_VIEWER_AS_APP
+  #define MK61_MARKDOWN_VIEWER_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_CHIP8_AS_APP
+  #define MK61_CHIP8_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+
+#if MK61_FOCAL_AS_APP != 0 && MK61_FOCAL_AS_APP != 1
+  #error "MK61_FOCAL_AS_APP must be 0 or 1"
+#endif
+#if MK61_TINYBASIC_AS_APP != 0 && MK61_TINYBASIC_AS_APP != 1
+  #error "MK61_TINYBASIC_AS_APP must be 0 or 1"
+#endif
+#if MK61_WBMP_VIEWER_AS_APP != 0 && MK61_WBMP_VIEWER_AS_APP != 1
+  #error "MK61_WBMP_VIEWER_AS_APP must be 0 or 1"
+#endif
+#if MK61_MARKDOWN_VIEWER_AS_APP != 0 && MK61_MARKDOWN_VIEWER_AS_APP != 1
+  #error "MK61_MARKDOWN_VIEWER_AS_APP must be 0 or 1"
+#endif
+#if MK61_CHIP8_AS_APP != 0 && MK61_CHIP8_AS_APP != 1
+  #error "MK61_CHIP8_AS_APP must be 0 or 1"
 #endif
 
 // FAT/LFN USB-диска по умолчанию встроен в F411, но лабораторная или
@@ -345,20 +386,22 @@
   #error "MK61_EXTERNALIZE_USBDISK must be 0 or 1"
 #endif
 
-// Ключ каждого системного компонента остаётся главным: выключенный компонент
-// не получает APP-артефакта.
-#define MK61_FOCAL_IS_LOADABLE (MK61_ENABLE_FOCAL)
-#define MK61_TINYBASIC_IS_LOADABLE (MK61_ENABLE_TINYBASIC)
+// Выключенный компонент не занимает ни resident Flash, ни место в /System.
+#define MK61_FOCAL_IS_LOADABLE \
+  (MK61_ENABLE_FOCAL && MK61_FOCAL_AS_APP)
+#define MK61_TINYBASIC_IS_LOADABLE \
+  (MK61_ENABLE_TINYBASIC && MK61_TINYBASIC_AS_APP)
 // NUMBER_IO нужен штатным языковым APP. Сборка без обоих языков сохраняет
 // номера ABI-операций, но не объявляет capability и не держит реализацию в
 // резидентной Flash.
 #define MK61_NUMBER_IO_SERVICE_ENABLED \
   (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
-  (MK61_STANDALONE_WBMP_VIEWER_ENABLED)
+  (MK61_STANDALONE_WBMP_VIEWER_ENABLED && MK61_WBMP_VIEWER_AS_APP)
 #define MK61_MARKDOWN_VIEWER_IS_LOADABLE \
-  (MK61_ENABLE_MARKDOWN_VIEWER)
-#define MK61_CHIP8_IS_LOADABLE (MK61_ENABLE_CHIP8)
+  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_MARKDOWN_VIEWER_AS_APP)
+#define MK61_CHIP8_IS_LOADABLE \
+  (MK61_ENABLE_CHIP8 && MK61_CHIP8_AS_APP)
 #if defined(STM32F411xE)
   #define MK61_SETUP_IS_LOADABLE 0
 #else
@@ -372,11 +415,16 @@
 
 #define MK61_USBDISK_IS_BUILTIN (!MK61_USBDISK_IS_LOADABLE)
 
-#define MK61_FOCAL_IS_BUILTIN 0
-#define MK61_TINYBASIC_IS_BUILTIN 0
-#define MK61_WBMP_VIEWER_IS_BUILTIN 0
-#define MK61_MARKDOWN_VIEWER_IS_BUILTIN 0
-#define MK61_CHIP8_IS_BUILTIN 0
+#define MK61_FOCAL_IS_BUILTIN \
+  (MK61_ENABLE_FOCAL && !MK61_FOCAL_AS_APP)
+#define MK61_TINYBASIC_IS_BUILTIN \
+  (MK61_ENABLE_TINYBASIC && !MK61_TINYBASIC_AS_APP)
+#define MK61_WBMP_VIEWER_IS_BUILTIN \
+  (MK61_STANDALONE_WBMP_VIEWER_ENABLED && !MK61_WBMP_VIEWER_AS_APP)
+#define MK61_MARKDOWN_VIEWER_IS_BUILTIN \
+  (MK61_ENABLE_MARKDOWN_VIEWER && !MK61_MARKDOWN_VIEWER_AS_APP)
+#define MK61_CHIP8_IS_BUILTIN \
+  (MK61_ENABLE_CHIP8 && !MK61_CHIP8_AS_APP)
 
 // Графический Markdown владеет полным I1-viewer и WBMP-декодером: он показывает
 // как локальные блоки изображений, так и самостоятельные .wbmp. Это правило

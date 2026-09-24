@@ -72,23 +72,49 @@ int main(void) {
                 "every profile must enable the common APP runtime");
   static_assert(MK61_APP_RUNTIME_AVAILABLE && MK61_ANY_LOADABLE_MODULE,
                 "ordinary and System APP must share one runtime");
-  static_assert(MK61_FOCAL_IS_LOADABLE == MK61_ENABLE_FOCAL &&
-                MK61_TINYBASIC_IS_LOADABLE == MK61_ENABLE_TINYBASIC,
-                "enabled language runtimes must use the common APP ABI");
+  static_assert(MK61_FOCAL_IS_LOADABLE ==
+                    (MK61_ENABLE_FOCAL && MK61_FOCAL_AS_APP) &&
+                MK61_TINYBASIC_IS_LOADABLE ==
+                    (MK61_ENABLE_TINYBASIC && MK61_TINYBASIC_AS_APP),
+                "language placement must follow its independent APP flag");
   static_assert(MK61_NUMBER_IO_SERVICE_ENABLED ==
                     (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC),
                 "NUMBER_IO must follow the packaged language APP set");
   static_assert(MK61_WBMP_VIEWER_IS_LOADABLE ==
-                    MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
+                    (MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
+                     MK61_WBMP_VIEWER_AS_APP) &&
                 MK61_MARKDOWN_VIEWER_IS_LOADABLE ==
-                    MK61_ENABLE_MARKDOWN_VIEWER &&
-                MK61_CHIP8_IS_LOADABLE == MK61_ENABLE_CHIP8,
-                "enabled graphical runtimes must become modules");
-  static_assert(!MK61_FOCAL_IS_BUILTIN && !MK61_TINYBASIC_IS_BUILTIN &&
-                !MK61_WBMP_VIEWER_IS_BUILTIN &&
-                !MK61_MARKDOWN_VIEWER_IS_BUILTIN &&
-                !MK61_CHIP8_IS_BUILTIN,
-                "optional languages and viewers must remain external");
+                    (MK61_ENABLE_MARKDOWN_VIEWER &&
+                     MK61_MARKDOWN_VIEWER_AS_APP) &&
+                MK61_CHIP8_IS_LOADABLE ==
+                    (MK61_ENABLE_CHIP8 && MK61_CHIP8_AS_APP),
+                "graphical placement must follow its independent APP flag");
+  static_assert(MK61_FOCAL_IS_BUILTIN ==
+                    (MK61_ENABLE_FOCAL && !MK61_FOCAL_AS_APP) &&
+                MK61_TINYBASIC_IS_BUILTIN ==
+                    (MK61_ENABLE_TINYBASIC && !MK61_TINYBASIC_AS_APP) &&
+                MK61_WBMP_VIEWER_IS_BUILTIN ==
+                    (MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
+                     !MK61_WBMP_VIEWER_AS_APP) &&
+                MK61_MARKDOWN_VIEWER_IS_BUILTIN ==
+                    (MK61_ENABLE_MARKDOWN_VIEWER &&
+                     !MK61_MARKDOWN_VIEWER_AS_APP) &&
+                MK61_CHIP8_IS_BUILTIN ==
+                    (MK61_ENABLE_CHIP8 && !MK61_CHIP8_AS_APP),
+                "builtin placement must be the inverse of APP placement");
+#if defined(MK61_CONFIG_EXPECT_DEFAULT_COMPONENT_PLACEMENT)
+  #if defined(STM32F411xE)
+  static_assert(!MK61_FOCAL_AS_APP && !MK61_TINYBASIC_AS_APP &&
+                !MK61_WBMP_VIEWER_AS_APP && !MK61_MARKDOWN_VIEWER_AS_APP &&
+                !MK61_CHIP8_AS_APP,
+                "F411 must embed optional components by default");
+  #else
+  static_assert(MK61_FOCAL_AS_APP && MK61_TINYBASIC_AS_APP &&
+                MK61_WBMP_VIEWER_AS_APP && MK61_MARKDOWN_VIEWER_AS_APP &&
+                MK61_CHIP8_AS_APP,
+                "non-F411 builds must externalize optional components by default");
+  #endif
+#endif
 #if defined(STM32F411xE)
   static_assert(!MK61_SETUP_IS_LOADABLE,
                 "F411 settings must work without SETUP.APP");
@@ -121,6 +147,11 @@ int main(void) {
                 !MK61_MARKDOWN_VIEWER_IS_LOADABLE &&
                 !MK61_CHIP8_IS_LOADABLE,
                 "disabled features must not leave optional System APP");
+  static_assert(!MK61_FOCAL_IS_BUILTIN && !MK61_TINYBASIC_IS_BUILTIN &&
+                !MK61_WBMP_VIEWER_IS_BUILTIN &&
+                !MK61_MARKDOWN_VIEWER_IS_BUILTIN &&
+                !MK61_CHIP8_IS_BUILTIN,
+                "disabled features must not leave builtin implementations");
   static_assert(!MK61_NUMBER_IO_SERVICE_ENABLED,
                 "a language-free build must not retain NUMBER_IO");
 #endif

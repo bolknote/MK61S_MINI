@@ -108,6 +108,13 @@ try {
     Assert-True ($configText -match '(?m)^MK61_ENABLE_FOCAL=0$') 'FOCAL flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_MARKDOWN_VIEWER=1$') 'Markdown flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_ENABLE_CHIP8=0$') 'CHIP-8 flag was not preserved'
+    foreach ($name in @(
+        'MK61_FOCAL_AS_APP', 'MK61_TINYBASIC_AS_APP',
+        'MK61_WBMP_VIEWER_AS_APP', 'MK61_MARKDOWN_VIEWER_AS_APP',
+        'MK61_CHIP8_AS_APP')) {
+        Assert-True ($configText -match "(?m)^${name}=0$") `
+            "F411 legacy migration did not embed ${name}"
+    }
     Assert-True ($configText -match '(?m)^MK61_ENABLE_USB_SCREEN=0$') 'USB Screen flag was not preserved'
     Assert-True ($configText -match '(?m)^MK61_EXTERNALIZE_USBDISK=0$') `
         'F411 did not default to resident USB disk'
@@ -125,6 +132,9 @@ try {
     Assert-True (($f401Override.Output -join "`n") -match
         '(?m)^MK61_EXTERNALIZE_USBDISK=1$') `
         'F401 did not force its required external USB disk'
+    Assert-True (($f401Override.Output -join "`n") -match
+        '(?m)^MK61_FOCAL_AS_APP=0$') `
+        'an explicit resident component placement was lost by the MCU override'
 
     [IO.File]::WriteAllLines($config, @(
         'MCU=f401'
@@ -139,6 +149,13 @@ try {
         'hybrid did not keep resident CORE'
     Assert-True ($hybridText -match '(?m)^MK61_APP_LOCAL_FLOAT_MATH=1$') `
         'hybrid APP float flag was lost'
+    foreach ($name in @(
+        'MK61_FOCAL_AS_APP', 'MK61_TINYBASIC_AS_APP',
+        'MK61_WBMP_VIEWER_AS_APP', 'MK61_MARKDOWN_VIEWER_AS_APP',
+        'MK61_CHIP8_AS_APP')) {
+        Assert-True ($hybridText -match "(?m)^${name}=1$") `
+            "fresh F401 config did not default ${name} to APP"
+    }
     Assert-True ($hybridText -match 'COMPILE_FLAGS=.*MK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=1 ') `
         'hybrid flags were not forwarded to the resident build'
 
@@ -165,6 +182,11 @@ try {
         'MK61_ENABLE_WBMP_VIEWER=1'
         'MK61_ENABLE_MARKDOWN_VIEWER=1'
         'MK61_ENABLE_CHIP8=1'
+        'MK61_FOCAL_AS_APP=1'
+        'MK61_TINYBASIC_AS_APP=1'
+        'MK61_WBMP_VIEWER_AS_APP=1'
+        'MK61_MARKDOWN_VIEWER_AS_APP=1'
+        'MK61_CHIP8_AS_APP=1'
         'MK61_ENABLE_USB_SCREEN=1'
         'MK61_ENABLE_LOADABLE_MODULES=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
@@ -330,6 +352,32 @@ try {
     Assert-True ($script:State.ExternalizeUsbDisk -eq 0) `
         'F411 USB disk must be resident by default'
     Assert-True ($script:State.Mcu -eq 'f411') 'F411 must be the default MCU'
+    Normalize-ComponentPlacements
+    Assert-True (
+        $script:State.FocalAsApp -eq 0 -and
+        $script:State.TinyBasicAsApp -eq 0 -and
+        $script:State.WbmpAsApp -eq 0 -and
+        $script:State.MarkdownAsApp -eq 0 -and
+        $script:State.Chip8AsApp -eq 0) `
+        'F411 components must be resident by default'
+    $next = Get-NextComponentMode 1 0
+    Assert-True ($next.Enabled -eq 1 -and $next.AsApp -eq 1) `
+        'component mode did not advance from resident to APP'
+    $next = Get-NextComponentMode $next.Enabled $next.AsApp
+    Assert-True ($next.Enabled -eq 0 -and $next.AsApp -eq 0) `
+        'component mode did not advance from APP to disabled'
+    $next = Get-NextComponentMode $next.Enabled $next.AsApp
+    Assert-True ($next.Enabled -eq 1 -and $next.AsApp -eq 0) `
+        'component mode did not advance from disabled to resident'
+    Set-DefaultComponentPlacements 'f401'
+    Assert-True (
+        $script:State.FocalAsApp -eq 1 -and
+        $script:State.TinyBasicAsApp -eq 1 -and
+        $script:State.WbmpAsApp -eq 1 -and
+        $script:State.MarkdownAsApp -eq 1 -and
+        $script:State.Chip8AsApp -eq 1) `
+        'selecting F401 did not apply its APP placement defaults'
+    Set-DefaultComponentPlacements 'f411'
     Assert-True ((Get-ProfileArtifactName 'mini-v3-a00' 'f401') -eq 'mk61s-M-mini-v3-lcd1602-a00-f401.bin') 'F401 artifact name differs'
     Assert-True ($script:TextWidth -ge 74) 'default TUI is too narrow for the compile-option summary'
     Assert-True ($script:Glyphs.Selector -eq '>') 'Windows selector is not conhost-safe'

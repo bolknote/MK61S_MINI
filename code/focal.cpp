@@ -298,7 +298,7 @@ enum class FocalOp : u8 {
 // dispatch instead of carrying ten nearly identical wrappers.
 enum class FocalFunction : u8 {
   NONE,
-  PI,
+  PI_VALUE,
   RND,
   SIN,
   COS,
@@ -646,7 +646,7 @@ static bool focal_streq(const char* a, const char* b) {
 // A second zero byte terminates the table.  Besides saving the identifier
 // buffer, this replaces the repeated strcmp-style chains in expression parsing.
 static const u8 FOCAL_FUNCTION_WORDS[] = {
-  (2u << 5) | (u8) FocalFunction::PI,    'P', 'I', 0,
+  (2u << 5) | (u8) FocalFunction::PI_VALUE, 'P', 'I', 0,
   (3u << 5) | (u8) FocalFunction::RND,   'R', 'N', 'D', 0,
   (3u << 5) | (u8) FocalFunction::SIN,   'S', 'I', 'N', 0,
   (3u << 5) | (u8) FocalFunction::COS,   'C', 'O', 'S', 0,
@@ -1236,7 +1236,7 @@ static double expr_parse_identifier(ExprParser& parser) {
 
   const FocalFunction function =
       focal_function_from_range(name_begin, parser.p);
-  if(function == FocalFunction::PI) {
+  if(function == FocalFunction::PI_VALUE) {
     return parser.evaluate ? 3.14159265358979323846 : 0.0;
   }
   if(function == FocalFunction::NONE) {

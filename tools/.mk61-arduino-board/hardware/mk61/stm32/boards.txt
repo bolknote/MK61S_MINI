@@ -44,7 +44,7 @@ mk61_f401_app.upload.tool=mk61Upload
 
 # Values from the independent menus are joined here so Arduino IDE builds the
 # same resident profile as tools/mk61-firmware.cmd.
-mk61_f401_app.build.st_extra_flags=-D{build.product_line} {build.enable_usb} {build.xSerial} {build.bootloader_flags} -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 {build.mk61_platform_flags} {build.mk61_display_flags} -DMK61_ENABLE_FOCAL={build.mk61_focal} -DMK61_ENABLE_TINYBASIC={build.mk61_basic} -DMK61_ENABLE_WBMP_VIEWER={build.mk61_wbmp} -DMK61_ENABLE_MARKDOWN_VIEWER={build.mk61_markdown} -DMK61_ENABLE_CHIP8={build.mk61_chip8} -DMK61_ENABLE_USB_SCREEN={build.mk61_usb_screen} -DMK61_ENABLE_EXTENDED_FONT_SETTINGS={build.mk61_font_settings} -DMK61_USER_EXPLORER_SHORTCUT={build.mk61_explorer} -DMK61_MATH_BACKEND={build.mk61_math} -DMK61_APP_LOCAL_FLOAT_MATH={build.mk61_app_math}
+mk61_f401_app.build.st_extra_flags=-D{build.product_line} {build.enable_usb} {build.xSerial} {build.bootloader_flags} -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 {build.mk61_platform_flags} {build.mk61_display_flags} -DMK61_ENABLE_FOCAL={build.mk61_focal} -DMK61_ENABLE_TINYBASIC={build.mk61_basic} -DMK61_ENABLE_WBMP_VIEWER={build.mk61_wbmp} -DMK61_ENABLE_MARKDOWN_VIEWER={build.mk61_markdown} -DMK61_ENABLE_CHIP8={build.mk61_chip8} -DMK61_FOCAL_AS_APP={build.mk61_focal_app} -DMK61_TINYBASIC_AS_APP={build.mk61_basic_app} -DMK61_WBMP_VIEWER_AS_APP={build.mk61_wbmp_app} -DMK61_MARKDOWN_VIEWER_AS_APP={build.mk61_markdown_app} -DMK61_CHIP8_AS_APP={build.mk61_chip8_app} -DMK61_ENABLE_USB_SCREEN={build.mk61_usb_screen} -DMK61_ENABLE_EXTENDED_FONT_SETTINGS={build.mk61_font_settings} -DMK61_USER_EXPLORER_SHORTCUT={build.mk61_explorer} -DMK61_MATH_BACKEND={build.mk61_math} -DMK61_APP_LOCAL_FLOAT_MATH={build.mk61_app_math}
 
 # Platform and display stay separate.  The pre-build hook rejects incompatible
 # pairs before the compiler starts.
@@ -84,30 +84,61 @@ mk61_f401_app.menu.mk61_display.uc1609=UC1609
 mk61_f401_app.menu.mk61_display.uc1609.build.mk61_display_id=uc1609
 mk61_f401_app.menu.mk61_display.uc1609.build.mk61_display_flags=
 
-mk61_f401_app.menu.mk61_focal.enabled=APP
-mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal=1
+mk61_f401_app.menu.mk61_focal.app=APP
+mk61_f401_app.menu.mk61_focal.app.build.mk61_focal=1
+mk61_f401_app.menu.mk61_focal.app.build.mk61_focal_app=1
+mk61_f401_app.menu.mk61_focal.builtin=Встроен
+mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal=1
+mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal_app=0
 mk61_f401_app.menu.mk61_focal.disabled=Выключен
 mk61_f401_app.menu.mk61_focal.disabled.build.mk61_focal=0
+mk61_f401_app.menu.mk61_focal.disabled.build.mk61_focal_app=0
 
-mk61_f401_app.menu.mk61_basic.enabled=APP
-mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic=1
+mk61_f401_app.menu.mk61_basic.app=APP
+mk61_f401_app.menu.mk61_basic.app.build.mk61_basic=1
+mk61_f401_app.menu.mk61_basic.app.build.mk61_basic_app=1
+mk61_f401_app.menu.mk61_basic.builtin=Встроен
+mk61_f401_app.menu.mk61_basic.builtin.build.mk61_basic=1
+mk61_f401_app.menu.mk61_basic.builtin.build.mk61_basic_app=0
 mk61_f401_app.menu.mk61_basic.disabled=Выключен
 mk61_f401_app.menu.mk61_basic.disabled.build.mk61_basic=0
+mk61_f401_app.menu.mk61_basic.disabled.build.mk61_basic_app=0
 
 mk61_f401_app.menu.mk61_documents.markdown=MARKDOWN.APP · T2 + I1
 mk61_f401_app.menu.mk61_documents.markdown.build.mk61_wbmp=0
+mk61_f401_app.menu.mk61_documents.markdown.build.mk61_wbmp_app=0
 mk61_f401_app.menu.mk61_documents.markdown.build.mk61_markdown=1
+mk61_f401_app.menu.mk61_documents.markdown.build.mk61_markdown_app=1
+mk61_f401_app.menu.mk61_documents.markdown_builtin=Markdown встроен · T2 + I1
+mk61_f401_app.menu.mk61_documents.markdown_builtin.build.mk61_wbmp=0
+mk61_f401_app.menu.mk61_documents.markdown_builtin.build.mk61_wbmp_app=0
+mk61_f401_app.menu.mk61_documents.markdown_builtin.build.mk61_markdown=1
+mk61_f401_app.menu.mk61_documents.markdown_builtin.build.mk61_markdown_app=0
 mk61_f401_app.menu.mk61_documents.wbmp=WBMP.APP · только I1
 mk61_f401_app.menu.mk61_documents.wbmp.build.mk61_wbmp=1
+mk61_f401_app.menu.mk61_documents.wbmp.build.mk61_wbmp_app=1
 mk61_f401_app.menu.mk61_documents.wbmp.build.mk61_markdown=0
+mk61_f401_app.menu.mk61_documents.wbmp.build.mk61_markdown_app=0
+mk61_f401_app.menu.mk61_documents.wbmp_builtin=WBMP встроен · только I1
+mk61_f401_app.menu.mk61_documents.wbmp_builtin.build.mk61_wbmp=1
+mk61_f401_app.menu.mk61_documents.wbmp_builtin.build.mk61_wbmp_app=0
+mk61_f401_app.menu.mk61_documents.wbmp_builtin.build.mk61_markdown=0
+mk61_f401_app.menu.mk61_documents.wbmp_builtin.build.mk61_markdown_app=0
 mk61_f401_app.menu.mk61_documents.disabled=Выключены
 mk61_f401_app.menu.mk61_documents.disabled.build.mk61_wbmp=0
+mk61_f401_app.menu.mk61_documents.disabled.build.mk61_wbmp_app=0
 mk61_f401_app.menu.mk61_documents.disabled.build.mk61_markdown=0
+mk61_f401_app.menu.mk61_documents.disabled.build.mk61_markdown_app=0
 
 mk61_f401_app.menu.mk61_chip8.disabled=Выключен
 mk61_f401_app.menu.mk61_chip8.disabled.build.mk61_chip8=0
-mk61_f401_app.menu.mk61_chip8.enabled=APP · C1
-mk61_f401_app.menu.mk61_chip8.enabled.build.mk61_chip8=1
+mk61_f401_app.menu.mk61_chip8.disabled.build.mk61_chip8_app=0
+mk61_f401_app.menu.mk61_chip8.app=APP · C1
+mk61_f401_app.menu.mk61_chip8.app.build.mk61_chip8=1
+mk61_f401_app.menu.mk61_chip8.app.build.mk61_chip8_app=1
+mk61_f401_app.menu.mk61_chip8.builtin=Встроен · C1
+mk61_f401_app.menu.mk61_chip8.builtin.build.mk61_chip8=1
+mk61_f401_app.menu.mk61_chip8.builtin.build.mk61_chip8_app=0
 
 mk61_f401_app.menu.mk61_usb_screen.disabled=Выключен
 mk61_f401_app.menu.mk61_usb_screen.disabled.build.mk61_usb_screen=0

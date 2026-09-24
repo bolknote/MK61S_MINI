@@ -116,15 +116,19 @@ System APP в одном каталоге `binary/`. Этот режим исп�
 а USB-диск — по умолчанию; при `MK61_EXTERNALIZE_USBDISK=1` второй шаг
 устанавливает и `USBDISK.APP`,
 а также синхронизирует пять имён дополнительных компонентов: копирует
-включённые APP и удаляет прежний `FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
-`MARKDOWN.APP` или `CHIP8.APP`, если соответствующий ключ выключен. Остальные
+выбранные как APP и удаляет прежний `FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
+`MARKDOWN.APP` или `CHIP8.APP`, если компонент встроен или выключен. Остальные
 файлы C6 он не изменяет. На F411 он удаляет устаревший `SETUP.APP`, а
 `USBDISK.APP` синхронизирует с выбранным режимом размещения.
 
 Во всех профилях F401/F411 единый загрузчик обязателен, но отдельные ключи
 `MK61_ENABLE_FOCAL`, `MK61_ENABLE_TINYBASIC`,
 `MK61_ENABLE_WBMP_VIEWER`, `MK61_ENABLE_MARKDOWN_VIEWER` и
-`MK61_ENABLE_CHIP8` остаются определяющими для системных APP. Даже если все
+`MK61_ENABLE_CHIP8` определяют, включён ли компонент. Парные
+`MK61_FOCAL_AS_APP`, `MK61_TINYBASIC_AS_APP`, `MK61_WBMP_VIEWER_AS_APP`,
+`MK61_MARKDOWN_VIEWER_AS_APP` и `MK61_CHIP8_AS_APP` выбирают APP вместо
+встроенной реализации. На F411 они по умолчанию равны `0`, на F401 — `1`.
+Даже если все
 пять выключены, справка остаётся в C6 на обеих платформах. SETUP лежит
 в C6 только на F401; USBDISK — на F401 или в явно включённом внешнем режиме F411.
 Обычные APPLICATION запускаются
@@ -140,9 +144,10 @@ System APP в одном каталоге `binary/`. Этот режим исп�
 
 ### Единая схема работы APP на F401/F411
 
-1. `build-gcc.cmd` собирает resident с прокси-входами, таблицами C API и
-   динамическим выделением APP сверху свободной RAM. FOCAL, TinyBASIC,
-   просмотр документов и CHIP-8 остаются System APP; на F401 туда же вынесены
+1. `build-gcc.cmd` собирает resident с таблицами C API и динамическим
+   выделением APP сверху свободной RAM. Для FOCAL, TinyBASIC, просмотра
+   документов и CHIP-8 он либо линкует встроенную реализацию, либо оставляет
+   прокси-вход для System APP; на F401 туда же вынесены
    SETUP и FAT/LFN-логика USBDISK. F411 всегда линкует SETUP в resident,
    а USBDISK — в resident по умолчанию или в APP при `MK61_EXTERNALIZE_USBDISK=1`.
    Каждый System APP
