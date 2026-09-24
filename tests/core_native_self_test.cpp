@@ -147,6 +147,56 @@ static void check_microinstructions(Chip& chip, Tick tick, const char* name) {
       scenario, name, cases);
 }
 
+template<unsigned A, unsigned B> static void check_sequences(bool expanded) {
+  scenario = expanded ? "expanded fixed sequence" : "classic fixed sequence";
+  initialize(expanded);
+  const State clean = snapshot();
+  unsigned cases = 0;
+  for(unsigned sample = 0; sample < 65536; ++sample) {
+    for(unsigned i = 0; i < sizeof(ringM); ++i) ringM[i] = micro_random() & 15;
+    auto randomize = [](auto* chip) {
+      for(unsigned i = 0; i < 42; ++i) {
+        chip->R[i] = micro_random() & 15; chip->ST[i] = micro_random() & 15;
+      }
+      chip->S = micro_random() & 15; chip->S1 = micro_random() & 15;
+      chip->L = micro_random() & 1; chip->T = micro_random() & 1;
+      chip->P = micro_random() & 3; chip->MOD = micro_random() & 3;
+      chip->flag_FC = micro_random() & 1; chip->AMK = micro_random() % 68;
+      chip->key_y = micro_random() & 15; chip->key_xm = micro_random() & 15;
+      chip->comma = micro_random() % 14;
+    };
+    randomize(&m_IK1302);
+    randomize(&m_IK1303);
+    m_IK1302.pAND_AMK = and_amk_body(IK1302_AND_AMK_ACTIVE, A);
+    m_IK1303.pAND_AMK = and_amk_body(IK1303_AND_AMK_ACTIVE, B);
+    const IK1302 before2 = m_IK1302;
+    const IK1303 before3 = m_IK1303;
+    std::array<u8, SIZE_RING_M> before_ring, reference_ring;
+    std::memcpy(before_ring.data(), ringM, sizeof(ringM));
+    core_61::set_native_hot_paths_enabled(false);
+    for(unsigned j = 0; j < 6; ++j) {
+      IK1302_Tick(36+j, j, (36+j)/3);
+      IK1303_Tick(36+j, j, (36+j)/3);
+    }
+    const IK1302 reference2 = m_IK1302;
+    const IK1303 reference3 = m_IK1303;
+    std::memcpy(reference_ring.data(), ringM, sizeof(ringM));
+    m_IK1302 = before2;
+    m_IK1303 = before3;
+    std::memcpy(ringM, before_ring.data(), sizeof(ringM));
+    core_61::set_native_hot_paths_enabled(true);
+    native_ik1302_1303_region3<A, B>();
+    require(!std::memcmp(&reference2, &m_IK1302, sizeof(m_IK1302)) &&
+            !std::memcmp(&reference3, &m_IK1303, sizeof(m_IK1303)) &&
+            !std::memcmp(reference_ring.data(), ringM, sizeof(ringM)),
+            "six-tick sequence changed full state");
+    ++cases;
+  }
+  restore(clean);
+  std::printf("PASS %s %02X/%02X: %u random full-state cases\n",
+      scenario, A, B, cases);
+}
+
 static void check_predecoded_microinstructions(bool expanded) {
   scenario = expanded ? "expanded ROM specialization" : "classic ROM specialization";
   initialize(expanded);
@@ -758,6 +808,8 @@ int main() {
   for(bool expanded : {false, true}) {
 #if MK61_CORE_PREDECODED_ROM
     check_predecoded_microinstructions(expanded);
+    check_sequences<0, 0x13>(expanded);
+    check_sequences<1, 0x13>(expanded);
 #endif
     check_bodies(expanded);
     check_wait_timing(expanded);
@@ -772,5 +824,10 @@ int main() {
   check_pending_far_context();
   std::printf("PASS native verification: %llu body cases, %llu steps, %llu frames; "
       "9 defect types detected in both ring modes\n", body_cases, compared_steps, compared_frames);
+#if MK61_CORE_PREDECODED_ROM
+  std::printf("Sequence hits %llu (including 262144 direct random cases)\n",
+      native_sequence_hits);
+  require(native_sequence_hits > 262144, "sequence never used by actual ROM");
+#endif
   return 0;
 }

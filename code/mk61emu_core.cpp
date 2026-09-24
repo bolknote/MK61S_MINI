@@ -3001,6 +3001,16 @@ static void arm_external_random_seed(
   }
 }
 
+#if MK61_CORE_PREDECODED_ROM
+template<unsigned A, unsigned B>
+static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
+native_ik1302_1303_region3();
+#if !defined(ARDUINO)
+// Host-only coverage; no counter or diagnostic command in firmware.
+static u64 native_sequence_hits = 0;
+#endif
+#endif
+
 void MK61_CORE_HOT_O3 cycle(void) {
   mtick_t signal_I;
   const int MAX_CYCLE = (sergey_anvarov_hack_enable)? 280 : 560;
@@ -3173,12 +3183,27 @@ void MK61_CORE_HOT_O3 cycle(void) {
           if(native_hot_paths_are_enabled &&
              (IK1306_region3 == 0x06U || IK1306_region3 == 0x07U ||
               IK1306_region3 == 0x09U)) {
-            CycleBWithoutIK1306(0); // 36
-            CycleBWithoutIK1306(1); // 37
-            CycleBWithoutIK1306(2); // 38
-            CycleBWithoutIK1306(3); // 39
-            CycleBWithoutIK1306(4); // 40
-            CycleEWithoutIK1306(5); // 41
+#if MK61_CORE_PREDECODED_ROM
+            if(IK1302_uI_hi <= 1U && IK1303_uI_hi == 0x13U
+#if MK61_DWT_CORE_DETAIL_SUPPORTED
+                && !ik1302_time.active()
+#endif
+            ) {
+              if(IK1302_uI_hi == 0)
+                native_ik1302_1303_region3<0, 0x13>();
+              else
+                native_ik1302_1303_region3<1, 0x13>();
+              signal_I = 41;
+            } else
+#endif
+            {
+              CycleBWithoutIK1306(0); // 36
+              CycleBWithoutIK1306(1); // 37
+              CycleBWithoutIK1306(2); // 38
+              CycleBWithoutIK1306(3); // 39
+              CycleBWithoutIK1306(4); // 40
+              CycleEWithoutIK1306(5); // 41
+            }
 #if MK61_DWT_CORE_DETAIL_SUPPORTED
             {
               MK61_PROFILE_ACCUMULATE_SCOPE(ik1306_time);
@@ -3612,6 +3637,49 @@ MK61_CORE_TICK_FUNCTION IK1303_Tick(
   IK1303_Execute(signal_I, signal_div3, microinstruction,
       IK1303_DCW_ACTIVE[m_IK1303.AMK]);
 }
+
+#if MK61_CORE_PREDECODED_ROM
+// Fold fixed ROM bodies. Conditional AMK selection still observes
+// each chip's carry on the original tick; chip order and ring writes stay exact.
+template<unsigned J, unsigned A, unsigned B>
+static inline void __attribute__((always_inline))
+native_region3_tick() {
+  constexpr unsigned signal = 36 + J;
+  constexpr unsigned a = IK1302_AND_AMK_EXPANDED[A * AND_AMK_RUNTIME_STRIDE + J];
+  constexpr unsigned b = IK1303_AND_AMK_EXPANDED[B * AND_AMK_RUNTIME_STRIDE + J];
+  if(a > 59 && m_IK1302.L == 0) {
+    m_IK1302.AMK = a + 1;
+    IK1302_Execute(signal, signal / 3, ROM.IK1302.microinstructions[a+1],
+        IK1302_DCW[a+1], IK1302_DCWA[a+1]);
+  } else {
+    m_IK1302.AMK = a;
+    IK1302_Execute(signal, signal / 3, ROM.IK1302.microinstructions[a],
+        IK1302_DCW[a], IK1302_DCWA[a]);
+  }
+  if(b > 59 && m_IK1303.L == 0) {
+    m_IK1303.AMK = b + 1;
+    IK1303_Execute(signal, signal / 3, ROM.IK1303.microinstructions[b+1],
+        IK1303_DCW[b+1]);
+  } else {
+    m_IK1303.AMK = b;
+    IK1303_Execute(signal, signal / 3, ROM.IK1303.microinstructions[b],
+        IK1303_DCW[b]);
+  }
+}
+template<unsigned A, unsigned B>
+static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
+native_ik1302_1303_region3() {
+#if !defined(ARDUINO)
+  ++native_sequence_hits;
+#endif
+  native_region3_tick<0, A, B>();
+  native_region3_tick<1, A, B>();
+  native_region3_tick<2, A, B>();
+  native_region3_tick<3, A, B>();
+  native_region3_tick<4, A, B>();
+  native_region3_tick<5, A, B>();
+}
+#endif
 
 static inline void __attribute__((always_inline)) IK1306_Execute(
     mtick_t signal_I, u32 microinstruction, u32 dcw) {

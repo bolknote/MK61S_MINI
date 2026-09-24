@@ -22,7 +22,7 @@ def add_economy(a):
     # RB good -> RC old free capacity. Only a positive capacity commits the
     # item here; this avoids opening HOLD a second time after paying.
     m.label('trade_hold').raw(0xDB).st('D').call('sum_hold')
-    m.ld(6).call('mod100').ld('C').op('-').st('C').jneg('buy_done').jz('buy_done')
+    m.ld(6).n(100).op('/','frac').n(100).op('*').ld('C').op('-').st('C').jneg('buy_done').jz('buy_done')
     m.ld('D').n(1).op('+').raw(0xBB)
     m.label('buy_done').op('ret')
     m.label('trade_money').ld('C').st(0).add(3,1).op('ret')
@@ -107,7 +107,7 @@ def add_economy(a):
 
     m=a.module(10,'flight')
     m.label('jump').call('distance').jz('bad_action')
-    m.get(25,6).n(100).op('/','int').call('mod100').ld(2).op('-').jneg('bad_action')
+    m.get(25,6).n(100).op('/','int').n(100).op('/','frac').n(100).op('*').ld(2).op('-').jneg('bad_action')
     m.get(24,6).ld(2).op('-').jneg('bad_action')
     m.ld(2).st('C').visit(24,'jump_tick').ld('C').jz('alien_contact')
     m.st(3).get(24,2).n(65536).op('/','int').call('mod16').n(4).op('/','int').n(2).op('+')

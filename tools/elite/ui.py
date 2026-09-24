@@ -37,11 +37,13 @@ def add_ui(a):
     m.label('range_pattern').n(8).op('*').st('E').raw(0x8E)
 
     m=a.module(4,'arithmetic')
-    for base in (10,16,100,256):
+    # mod10 has no callers; the two mod100 expressions are shorter in place
+    # once their shared procedure and its bank continuation are removed.
+    for base in (16,256):
         m.label(f'mod{base}')
-        # Decimal shifts are exact; mod16 is exact on its 0..65535 domain.
+        # mod16 is exact on its 0..65535 domain.
         # The 24-bit world codes still need integer subtraction for mod256.
-        if base in (10,16,100):m.n(base).op('/','frac').n(base).op('*')
+        if base==16:m.n(base).op('/','frac').n(base).op('*')
         else:m.mod(base)
         m.op('ret')
 
